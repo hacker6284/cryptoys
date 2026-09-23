@@ -1,0 +1,54 @@
+name: pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: hacker6284/sudocode
+          path: .sudocode
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .sudocode/sudoc
+      - name: Build sudoc
+        run: cargo build --release --manifest-path .sudocode/sudoc/Cargo.toml
+      - name: Test scramble
+        run: |
+          mkdir -p /tmp/scramble-test
+          .sudocode/sudoc/target/release/sudoc build --target js --tests -o /tmp/scramble-test primitives/hash/scramble/scramble.sudo
+          node /tmp/scramble-test/_scramble_impl.mjs
+      - name: Generate the demo
+        run: |
+          mkdir -p demos/scramble/generated
+          .sudocode/sudoc/target/release/sudoc build --target js -o demos/scramble/generated primitives/hash/scramble/scramble.sudo
+          cp primitives/hash/scramble/SPEC.md demos/scramble/SPEC.md
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: demos
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,7 @@
+# sudoc output for a demo, and the copy of primitives/**/SPEC.md that its
+# spec button fetches. The normative spec stays under primitives/.
+demos/**/generated/
+demos/**/SPEC.md
+
+# Local checkout of hacker6284/sudocode, matching the Pages workflow.
+.sudocode/

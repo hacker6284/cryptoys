@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scramble</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./vendor/cube.js"></script>
+  <script src="./vendor/solve.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="shell">
+    <section class="stage">
+      <header class="stage-head">
+        <p class="eyebrow"><span id="gen-label">Gen 2</span> · toy digest · 65.2 bits</p>
+        <h1>Scramble</h1>
+      </header>
+      <canvas></canvas>
+    </section>
+    <aside class="panel">
+      <div class="row">
+        <button id="play" type="button">Play</button>
+        <button id="step" type="button">Step</button>
+        <button id="reset" type="button">Reset</button>
+        <button id="digest-btn" type="button">Digest</button>
+        <button id="solve" type="button">Solve</button>
+        <button id="spec-btn" type="button">Spec</button>
+      </div>
+      <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
+      <p id="status" class="status">Solved start · white up, green front, red right</p>
+      <p id="digest" class="digest"></p>
+      <p id="error" class="error"></p>
+      <div class="row">
+        <button type="button" data-version="1">Gen 1</button>
+        <button type="button" class="on" data-version="2">Gen 2</button>
+        <button type="button" class="on" data-encoding="text">text</button>
+        <button type="button" data-encoding="hex">hex</button>
+      </div>
+      <textarea id="message" rows="6" spellcheck="false" placeholder="hello"></textarea>
+      <p class="fine">A message scrambles a solved cube. The seated pose is the digest. This is a toy.</p>
+    </aside>
+  </div>
+  <dialog id="spec">
+    <div class="spec-bar">
+      <strong>Specification</strong>
+      <button id="spec-close" type="button">Close</button>
+    </div>
+    <article id="spec-body"></article>
+  </dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

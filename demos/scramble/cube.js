@@ -120,11 +120,13 @@ export function parseMove(move) {
     return { face, turns };
 }
 
-// One quarter of this face, as a right-handed radians step about a world axis.
+// One quarter of this face, in Three.js's right-handed rotation.
+// +90° about +Y is the U/D map. +90° about +X is the L map, so R is the opposite sign.
+// +90° about +Z is the B map, so F is the opposite sign.
 export function quarterSpin(face) {
     if (face === 0 || face === 1) return { axis: "y", sign: 1 };
-    if (face === 2) return { axis: "x", sign: 1 };
-    if (face === 3) return { axis: "x", sign: -1 };
+    if (face === 2) return { axis: "x", sign: -1 };
+    if (face === 3) return { axis: "x", sign: 1 };
     if (face === 4) return { axis: "z", sign: -1 };
     return { axis: "z", sign: 1 };
 }

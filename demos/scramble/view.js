@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { SPOTS, parseMove, quarterSpin } from "./cube.js";
 
 const COLOR = {
@@ -50,7 +51,14 @@ export function mountCube(canvas) {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
     camera.position.set(4.2, 4.6, 6.4);
-    camera.lookAt(0, 0, 0);
+    const controls = new OrbitControls(camera, canvas);
+    controls.target.set(0, 0, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.autoRotate = false;
+    controls.minDistance = 4;
+    controls.maxDistance = 20;
+    controls.update();
     scene.add(new THREE.AmbientLight(0xffffff, 0.72));
     const key = new THREE.DirectionalLight(0xffffff, 1.4);
     key.position.set(4, 8, 5);
@@ -92,6 +100,7 @@ export function mountCube(canvas) {
     function loop() {
         frame = requestAnimationFrame(loop);
         resize();
+        controls.update();
         renderer.render(scene, camera);
     }
     loop();
@@ -160,6 +169,7 @@ export function mountCube(canvas) {
 
     function dispose() {
         cancelAnimationFrame(frame);
+        controls.dispose();
         renderer.dispose();
     }
 

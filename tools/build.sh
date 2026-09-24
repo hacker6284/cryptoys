@@ -13,4 +13,4 @@ build_one() {
 }
 
 build_one scramble "$root/primitives/hash/scramble/scramble.sudo"
-build_one twodeck "$root/primitives/cipher/twodeck/twodeck.sudo"
+build_one doubledeal "$root/primitives/cipher/doubledeal/doubledeal.sudo"

@@ -51,7 +51,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 
 ## Lean package
 
-Toolchain **4.14.0**, no Mathlib — same pin as TwoDeck. From a checkout with [elan](https://github.com/leanprover/elan):
+Toolchain **4.14.0**, no Mathlib — same pin as DoubleDeal. From a checkout with [elan](https://github.com/leanprover/elan):
 
 ```sh
 cd proofs/megadreifach/lean
@@ -60,7 +60,7 @@ lake build
 
 `lake exe megadreifach` prints a one-line summary **and** runs the KAT metadata checks. The library target is `MegaDreifach`. Namespaces are `MegaDreifach`.
 
-Shipped theorems contain no `sorry` and no `native_decide`. Kernel `decide` is used on closed numerals (`2^224 < 52!`, `|G| < 256^29`, IV-COOK12 list predicates), matching TwoDeck S5. The proofs CI job (`proofs.yml`) runs a sorry / `native_decide` gate, `lake build`, and `lake exe megadreifach`.
+Shipped theorems contain no `sorry` and no `native_decide`. Kernel `decide` is used on closed numerals (`2^224 < 52!`, `|G| < 256^29`, IV-COOK12 list predicates), matching DoubleDeal S5. The proofs CI job (`proofs.yml`) runs a sorry / `native_decide` gate, `lake build`, and `lake exe megadreifach`.
 
 ## Reading order
 

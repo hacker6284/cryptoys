@@ -7,7 +7,7 @@
  * Back reverses. Hover rims the algorithm's shelf toys (and the chest if
  * extras will be needed). Click skips; prefers-reduced-motion snaps in place.
  *
- * Not implemented in this PR. TwoDeck and Scramble stay on their own pages.
+ * Not implemented in this PR. DoubleDeal and Scramble stay on their own pages.
  */
 
 export function createToyDirector(/* world */) {

@@ -10,7 +10,7 @@ def Injective {α β : Type _} (f : α → β) : Prop :=
 
 theorem id_injective {α : Type _} : Injective (@id α) := fun h => h
 
-/-- Factorial, same recurrence as TwoDeck. -/
+/-- Factorial, same recurrence as DoubleDeal. -/
 def factorial : Nat → Nat
   | 0 => 1
   | n + 1 => (n + 1) * factorial n

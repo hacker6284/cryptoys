@@ -1,7 +1,7 @@
 import { DEN } from "./constants.js";
 
 // Named person-camera poses. Horizon stays level (no roll).
-// `lean` is a stub for a later look-down over the felt; TwoDeck/Scramble
+// `lean` is a stub for a later look-down over the felt; DoubleDeal/Scramble
 // will specialize it once those adapters sit in the room.
 
 export const POSES = {

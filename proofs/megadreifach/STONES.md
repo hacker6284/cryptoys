@@ -27,7 +27,7 @@ A green Lean build is not a security claim.
 | M10 | F3 blank rounds are pure group ops (t=12) — well-defined, deterministic | **Proved** (algebraic) | `IV.lean`: `f3_12`, `f3Iter_deterministic`. Concrete Up+1 face-turn is an argument, not a cubie table. |
 | M11 | IV-COOK12 is a fixed legal position | **Proved** (list predicates) | `IV.lean`: `ivCook12Of_legal`, `ivCook12_lists_legal` (kernel `decide` on the COOK12 arrays). Face-turn generator is hypothesized. |
 | M12 | MD chaining: multi-block compose of DM; digest of final `h` | **Proved** (algebraic) | `Chain.lean`: `mdChain`, `hashBlocks_eq_digest_of_final`, `digestOf_length` |
-| M13 | Vector agreement: Lean digests of exported KATs match `kats/megaminx_hash_kats.json` | **OPEN** (metadata only) | `Vectors.lean` / `VectorCheck.lean`: pad lengths, block counts, digest width, `\|G\|`. Research Hash hexes are not sudo-asserted. |
+| M13 | Vector agreement: proof-package digests of exported KATs match `kats/megaminx_hash_kats.json` | **OPEN** (metadata only) | Hexes refreshed 2026-09-24 to current sudo (Python = emitted Lean). Algorithm is `Generated.v_Hash`. No handwritten `Hash`. |
 
 ## Explicitly out of scope (do not claim)
 

@@ -1,8 +1,11 @@
 /-
-  Concrete DoubleDeal: real PassKey key schedule wired as Compose `pos` maps,
-  plus list-level encrypt/decrypt matching doubledeal.sudo. The abstract
-  round-trip theorems in Round.lean apply once the master key is a
-  permutation of 0..51 (Perm52). Correctness, not bit-security.
+  PROOF-ONLY. Wires the algebraic PassKey schedule into the S2 skeleton
+  so encryptDeckFn_rt typechecks. List wrappers (encryptDeck, …) exist
+  so the proof-package KAT exe can compare this *skeleton* to JSON.
+
+  The algorithm is Generated.encrypt (from doubledeal.sudo). Do not treat
+  encryptDeck as the cipher. OPEN: no theorem that encryptDeck equals
+  Generated.encrypt. See proofs/ANTI_DRIFT.md.
 -/
 import DoubleDeal.Basic
 import DoubleDeal.Compose

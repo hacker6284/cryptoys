@@ -1,7 +1,8 @@
 /-
-  Known-answer checks: Lean model vs vectors exported from doubledeal.sudo
-  (via the sudoc JS target). Trust base is compiled Lean evaluation
-  (`lake exe doubledeal`), not kernel `decide`. See proofs/doubledeal/README.md.
+  Algebraic-skeleton KATs vs JSON from the sudoc JS target.
+  Algorithm-level sudo tests live in lean/Generated/ (TAP 12/12).
+  This exe is evidence the *proof skeleton* matches those decks, not
+  a proof that sudo = Lean, and not the algorithm source of truth.
 -/
 import DoubleDeal.Concrete
 import DoubleDeal.Vectors

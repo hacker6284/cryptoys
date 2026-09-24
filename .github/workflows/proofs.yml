@@ -6,12 +6,14 @@ on:
       - "proofs/**"
       - "primitives/cipher/doubledeal/**"
       - "primitives/hash/megadreifach/**"
+      - "tools/emit_lean.py"
       - ".github/workflows/proofs.yml"
   pull_request:
     paths:
       - "proofs/**"
       - "primitives/cipher/doubledeal/**"
       - "primitives/hash/megadreifach/**"
+      - "tools/emit_lean.py"
       - ".github/workflows/proofs.yml"
   workflow_dispatch:
 
@@ -19,6 +21,61 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  # Anti-drift: committed Generated/ Lean must match emit from current .sudo
+  # via the pinned sudocode Lean backend (PR #5; not origin/main).
+  generated-fresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Read Lean backend pin
+        id: pin
+        run: |
+          commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_LEAN_PIN)"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          test -n "$commit"
+      - uses: actions/checkout@v5
+        with:
+          repository: hacker6284/sudocode
+          ref: ${{ steps.pin.outputs.commit }}
+          path: .sudocode-lean
+      - name: Lean backend present (main lacks it)
+        run: |
+          test -f .sudocode-lean/backends/lean/emit.py
+          test "$(git -C .sudocode-lean rev-parse HEAD)" = "${{ steps.pin.outputs.commit }}"
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .sudocode-lean/sudoc
+      - name: Build sudoc
+        run: cargo build --release --manifest-path .sudocode-lean/sudoc/Cargo.toml
+      - name: Generated Lean matches emit (full peer, no --require terminates)
+        env:
+          SUDOCODE_DIR: ${{ github.workspace }}/.sudocode-lean
+          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
+        run: proofs/emit_lean.sh --check
+
+  doubledeal-generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/doubledeal/lean/Generated
+      - name: Generated TAP (sudo tests)
+        working-directory: proofs/doubledeal/lean/Generated
+        run: ./.lake/build/bin/doubledeal_test
+
+  megadreifach-generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/megadreifach/lean/Generated
+      - name: Generated TAP (sudo tests)
+        working-directory: proofs/megadreifach/lean/Generated
+        run: ./.lake/build/bin/megadreifach_test
+
   doubledeal-lean:
     runs-on: ubuntu-latest
     steps:
@@ -38,6 +95,8 @@ jobs:
           bad_native = []
           root = Path("proofs/doubledeal/lean")
           for path in root.rglob("*.lean"):
+              if "Generated" in path.parts:
+                  continue
               rel = str(path)
               text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
               allow = allowed_native.get(rel, set())
@@ -86,6 +145,8 @@ jobs:
           bad_native = []
           root = Path("proofs/megadreifach/lean")
           for path in root.rglob("*.lean"):
+              if "Generated" in path.parts:
+                  continue
               rel = str(path)
               text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
               allow = allowed_native.get(rel, set())

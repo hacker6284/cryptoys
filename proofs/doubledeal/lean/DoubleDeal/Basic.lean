@@ -1,5 +1,7 @@
 /-
-  CHaSeD card ids and rank/suit for DoubleDeal (SPEC §2).
+  PROOF-ONLY. CHaSeD card ids and rank/suit for DoubleDeal stones (SPEC §2).
+  Algorithm source of truth is primitives/cipher/doubledeal/doubledeal.sudo;
+  executable Lean is lean/Generated/ (see proofs/ANTI_DRIFT.md).
 -/
 namespace DoubleDeal
 

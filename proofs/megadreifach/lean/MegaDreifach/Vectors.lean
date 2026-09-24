@@ -1,9 +1,8 @@
 /-
-  KAT metadata committed next to the Lean model (layer (b) evidence).
-  Trust base is compiled Lean evaluation (`lake exe megadreifach`), not
-  kernel `decide`. Full digest agreement (M13) needs the G2 runner and is
-  OPEN; this file checks pad lengths, block counts, digest width, and
-  `|G|` against `kats/megaminx_hash_kats.json`.
+  KAT metadata next to the proof-only package. Hexes refreshed 2026-09-24
+  to current megadreifach.sudo (Python and emitted Lean agree).
+  Full digest evaluation in *this* package is still M13 OPEN; algorithm
+  Hash is Generated.v_Hash. See proofs/ANTI_DRIFT.md.
 -/
 namespace MegaDreifach.Vectors
 
@@ -27,14 +26,14 @@ def ivCook12DigestHex : String :=
   "0000021aeb876eb76dd8bf833457a2c02613e55656963e02d8dfedb5aa"
 
 def vectors : List HashVec :=
-  [ { name := "empty",     msgLen := 0,   paddedLen := 28,  nBlocks := 1, digestHex := "02c61941965591f80bc8745dbd40b49d4f1b472577831237e56786337a" }
-  , { name := "short_abc", msgLen := 3,   paddedLen := 28,  nBlocks := 1, digestHex := "020edc31b9adaa4c48ea1f923c52628dad132ac97c4505eab6d00eb61f" }
-  , { name := "short_one", msgLen := 1,   paddedLen := 28,  nBlocks := 1, digestHex := "01f8b3eefdff0e0784675521c4e904aa11abcc7a1a1a9d50940607fc93" }
-  , { name := "edge_27",   msgLen := 27,  paddedLen := 56,  nBlocks := 2, digestHex := "0186323895f62c1abe61b59620cbadd66593f8454c7e25ce79d6920cbc" }
-  , { name := "edge_28",   msgLen := 28,  paddedLen := 56,  nBlocks := 2, digestHex := "01ee6c5410a01d9a257f6d0852aeab2c1f0379d91e3bfa2d6acba66d24" }
-  , { name := "edge_29",   msgLen := 29,  paddedLen := 56,  nBlocks := 2, digestHex := "02a0a2b9009cada74ea8de85add20a08c288023b76289724bf089b1132" }
-  , { name := "multi_56",  msgLen := 56,  paddedLen := 84,  nBlocks := 3, digestHex := "002184ae974e5828d00ced7e9c0b974674dcd0dc06700f12b3664a98bf" }
-  , { name := "multi_100", msgLen := 100, paddedLen := 112, nBlocks := 4, digestHex := "03653417a3db817cdd0df1398ca93f957c0d78f7887ffca8f0b116ebcd" }
+  [ { name := "empty",     msgLen := 0,   paddedLen := 28,  nBlocks := 1, digestHex := "037ef5274eebea6ed847821573d575f9d7a0d593d31787d8a50bedf55e" }
+  , { name := "short_abc", msgLen := 3,   paddedLen := 28,  nBlocks := 1, digestHex := "025959c0ab2cdad7536956e3490cec6b2711b5d73c5731af2d4ecff550" }
+  , { name := "short_one", msgLen := 1,   paddedLen := 28,  nBlocks := 1, digestHex := "02e8785e47149ea0d03cc39c4ffd5c3ee21568197394a48744cc3c53f5" }
+  , { name := "edge_27",   msgLen := 27,  paddedLen := 56,  nBlocks := 2, digestHex := "01d701043ab21d88a52ffed94b46896dc18e15f775c3d661fec3f9fed8" }
+  , { name := "edge_28",   msgLen := 28,  paddedLen := 56,  nBlocks := 2, digestHex := "0354488e90201f310b87eb4cdda3ac1fabcd9671fd08f4836b325cf8f1" }
+  , { name := "edge_29",   msgLen := 29,  paddedLen := 56,  nBlocks := 2, digestHex := "01b991a6db6297877c7c4f72283cf3f6c8e7a3f91f0a82c141562b9835" }
+  , { name := "multi_56",  msgLen := 56,  paddedLen := 84,  nBlocks := 3, digestHex := "00a5059319ad22533bc2156fa140dc17d8969dfa6bafe751848eebe724" }
+  , { name := "multi_100", msgLen := 100, paddedLen := 112, nBlocks := 4, digestHex := "0156e9f32a565e585893eab5229ea6a12c959c743d9c3e420827139e20" }
   ]
 
 end MegaDreifach.Vectors

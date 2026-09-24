@@ -1,0 +1,6 @@
+# sudocode Lean backend pin.
+# Main hacker6284/sudocode does not ship backends/lean/ yet (not in ALL_BACKENDS).
+# This is sudocode PR #5 branch cursor/lean-external-backend-36b2, head that
+# includes the _fs Flow-binder shadow fix. Bump only when you intend to
+# change the emitter, then re-run proofs/emit_lean.sh.
+df152a2dcd33c6c8652a228e476aae5868333330

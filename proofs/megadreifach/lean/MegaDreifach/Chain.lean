@@ -1,7 +1,7 @@
 /-
-  M12 — Merkle–Damgård chaining is the fold of DM compressions;
-  the digest is the rank-encoding of the final chaining value.
-  Zero sorry. No native_decide.
+  PROOF-ONLY M12. Algebraic MD fold. The algorithm is Generated.v_Hash
+  (from megadreifach.sudo). hashBlocks is not Hash. OPEN: no theorem
+  that this fold equals the emitted program. See proofs/ANTI_DRIFT.md.
 -/
 import MegaDreifach.DaviesMeyer
 import MegaDreifach.Pad

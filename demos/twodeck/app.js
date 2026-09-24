@@ -106,11 +106,11 @@ function specFor(step) {
     if (step.kind === "sumrow" || step.kind === "sumcol") return "4.2 SumRanks (SubBytes)";
     if (step.kind === "shift") return "4.3 ShiftRows";
     if (step.kind === "place" || step.kind === "scan" || step.kind === "mark" || step.kind === "take") return "3.5 GridCycle (MixColumns stand-in)";
-    if (step.kind === "pass" || step.kind === "unpass") return "3.7 PassKey F";
+    if (step.kind === "pass" || step.kind === "unpass") return "3.7 PassKey (F)";
     if (step.kind === "compose" || step.kind === "uncompose") return "3.6 Compose / InverseCompose";
     if (step.kind === "deal" || step.kind === "dealrm" || step.kind === "scoopcm" || step.kind === "scooprm") return "4.1 Deal / scoop conventions";
     if (step.kind === "reset") return "3.8 expand_keys";
-    if (step.kind === "counter") return "5.2 CTR";
+    if (step.kind === "counter") return "5.2 CTR (pinned)";
     return "3.9 Rounds, encrypt, decrypt";
 }
 
@@ -137,7 +137,7 @@ function passMath(step) {
     let math = `Controller ${cardName(step.card)} (suit ${step.row}, rank ${step.col}).`;
     if (step.amount > 0) math += ` Suit-rotate hand left by ${step.amount}.`;
     if (step.flag === 1) math += ` Proper rank cut on the hand by ${step.total}.`;
-    if (step.flag === 0) math += ` No proper rank cut (rank ≥ packet size).`;
+    if (step.flag === 0) math += ` No proper rank cut (hand empty or rank ≥ packet size).`;
     math += " Controller goes on top of the key pile.";
     return math;
 }
@@ -162,6 +162,19 @@ function analogue(step) {
 
 function annotate(step, index) {
     const n = trace.length;
+    if (!step && n && index >= n) {
+        const encrypting = direction === "encrypt";
+        const hex = outputEl.value || "";
+        return {
+            kicker: `done · ${n} steps`,
+            title: encrypting ? "Ciphertext" : "Plaintext",
+            math: hex || (encrypting ? "The left deck is the ciphertext." : "The left deck is the plaintext."),
+            why: encrypting
+                ? "The table shows the first block after the last operation."
+                : "The table shows the recovered first block.",
+            spec: "3.9 Rounds, encrypt, decrypt",
+        };
+    }
     const kicker = !step || index < 0 ? `start · ${n} steps` : `step ${index + 1} of ${n} · ${step.label}`;
     if (!step || index < 0) {
         return { kicker, title: "Ready", math: "Plaintext on the left. Key on the right.", why: "Step through parks at the first operation without autoplay.", spec: "3.9 Rounds, encrypt, decrypt" };
@@ -434,8 +447,10 @@ function outlineSections() {
 function refreshTeach() {
     const viewI = viewedIndex();
     const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
-    renderCard(annotate(step, step ? viewI : -1));
-    teachPos.textContent = step ? `${viewI + 1} / ${trace.length}` : `${Math.max(0, cursor + 1)} / ${trace.length}`;
+    renderCard(annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1)));
+    teachPos.textContent = step
+        ? `${viewI + 1} / ${trace.length}`
+        : (viewI >= trace.length && trace.length ? `${trace.length} / ${trace.length}` : `0 / ${trace.length}`);
     const currentKey = !step
         ? ""
         : `${stageKey(step)}:${(step.kind === "sumrow" || step.kind === "sumcol" || step.kind === "shift") ? viewI : firstIndexOfStage(viewI)}`;
@@ -469,31 +484,51 @@ function setTeaching(on) {
 }
 
 function ensureSnaps() {
-    if (snaps || !startMessage || !startKey) return;
+    if (!startMessage || !startKey) return;
+    if (snaps) return;
     view.showDecks(startMessage, startKey);
-    snaps = [view.snapshot()];
-    for (const step of trace) {
-        view.applyInstant(step);
-        snaps.push(view.snapshot());
+    snaps = new Array(trace.length + 1);
+    snaps[0] = view.snapshot();
+}
+
+function getSnap(index) {
+    ensureSnaps();
+    if (!snaps) return null;
+    const i = Math.max(0, Math.min(snaps.length - 1, index));
+    if (snaps[i]) {
+        view.restore(snaps[i]);
+        return snaps[i];
     }
+    let from = i;
+    while (from > 0 && !snaps[from]) from -= 1;
+    if (!snaps[from]) {
+        view.showDecks(startMessage, startKey);
+        snaps[0] = view.snapshot();
+        from = 0;
+    } else {
+        view.restore(snaps[from]);
+    }
+    for (let k = from; k < i; k++) {
+        view.applyInstant(trace[k]);
+        if ((k + 1) % 16 === 0 || k + 1 === i) snaps[k + 1] = view.snapshot();
+    }
+    return snaps[i];
 }
 
 function showPaused() {
-    ensureSnaps();
     if (teaching) {
         const viewI = viewedIndex();
-        if (snaps) {
-            const snapI = Math.max(0, Math.min(snaps.length - 1, viewI < 0 ? 0 : viewI));
-            view.restore(snaps[snapI]);
-        }
+        const snapI = viewI < 0 ? 0 : viewI;
+        getSnap(snapI);
         const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
         if (step) captionEl.textContent = caption(step);
+        else if (viewI >= trace.length) captionEl.textContent = direction === "encrypt" ? "Ciphertext on the left. Key on the right." : "Plaintext on the left. Key on the right.";
         applyHighlight(step);
-        view.frameTeach(step ? step.kind : "deal");
+        view.frameTeach(step ? step.kind : (viewI >= trace.length ? "compose" : "deal"));
         refreshTeach();
         return;
     }
-    if (snaps) view.restore(cursor < 0 ? snaps[0] : snaps[cursor + 1]);
+    if (snaps) getSnap(cursor < 0 ? 0 : cursor + 1);
     const step = cursor >= 0 ? trace[cursor] : null;
     if (step) captionEl.textContent = caption(step);
 }
@@ -730,7 +765,7 @@ bindTeachKeys({
         void jumpTo(nextGroup(trace, Math.max(0, viewedIndex()), stageKey, dir) - 1, false);
     },
     home: () => { if (teaching) void jumpTo(-1, false); },
-    end: () => { if (teaching && trace.length) void jumpTo(trace.length - 2, false); },
+    end: () => { if (teaching && trace.length) void jumpTo(trace.length - 1, false); },
 });
 
 const specDialog = document.querySelector("#spec");

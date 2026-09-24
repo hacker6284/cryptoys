@@ -1,5 +1,9 @@
 export function headingId(text) {
-    return String(text).toLowerCase().replace(/[^\w]+/g, "-").replace(/^-|-$/g, "");
+    return String(text)
+        .replace(/\\[()[\]]/g, "")
+        .toLowerCase()
+        .replace(/[^\w]+/g, "-")
+        .replace(/^-|-$/g, "");
 }
 
 export function stampHeadingIds(root) {

@@ -375,6 +375,28 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         marker.material.opacity = 0;
     }
 
+    // Inverse settle: lift C off the key pile and return it to the hand.
+    // Cut/rotate undo is still posed from the post-step piles, not a reverse of pass().
+    async function unpass(step, ms) {
+        const controller = key[step.card];
+        faceUp(controller);
+        await moveTo(controller, new THREE.Vector3(0, 1.1, 0), ms, false);
+        const handIds = step.hand.slice();
+        const keyIds = step.key.slice();
+        await Promise.all([
+            ...handIds.map((id, index) => {
+                if (id !== step.card) faceDown(key[id]);
+                return moveTo(key[id], passPile("hand", index, handIds.length), ms, id === step.card);
+            }),
+            ...keyIds.map((id, index) => {
+                faceDown(key[id]);
+                return moveTo(key[id], passPile("key", index, keyIds.length), ms, false);
+            }),
+        ]);
+        faceUp(controller);
+        marker.material.opacity = 0;
+    }
+
     function laidOut(order, deck, centerX) {
         if (order.length !== 52) throw new Error("Each deck on the table is 52 cards.");
         const seen = new Set(order);
@@ -487,12 +509,15 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         if (step.kind === "pass" || step.kind === "unpass") {
             const handIds = step.hand.slice();
             const keyIds = step.key.slice();
+            const onHand = step.kind === "unpass";
             handIds.forEach((id, index) => {
-                faceDown(key[id]);
+                if (onHand && id === step.card) faceUp(key[id]);
+                else faceDown(key[id]);
                 key[id].position.copy(passPile("hand", index, handIds.length));
             });
             keyIds.forEach((id, index) => {
-                if (id !== step.card) faceDown(key[id]);
+                if (!onHand && id === step.card) faceUp(key[id]);
+                else faceDown(key[id]);
                 key[id].position.copy(passPile("key", index, keyIds.length));
             });
             faceUp(key[step.card]);
@@ -696,8 +721,12 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
             await resetKey(step, ms);
             return;
         }
-        if (step.kind === "pass" || step.kind === "unpass") {
+        if (step.kind === "pass") {
             await pass(step, ms);
+            return;
+        }
+        if (step.kind === "unpass") {
+            await unpass(step, ms);
             return;
         }
         if (step.kind === "counter") {

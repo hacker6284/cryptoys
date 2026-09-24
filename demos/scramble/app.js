@@ -90,6 +90,9 @@ function captionFor(step) {
 }
 
 function caption() {
+    if (teaching && viewedIndex() >= trace.length && trace.length) {
+        return digestEl.textContent ? `Digest · ${digestEl.textContent}` : "The seated pose is the digest.";
+    }
     const step = teaching
         ? (viewedIndex() < trace.length ? trace[viewedIndex()] : null)
         : (cursor < 0 ? null : trace[cursor]);
@@ -178,6 +181,15 @@ function outlineSections() {
 
 function annotate(step, index) {
     const n = trace.length;
+    if (!step && n && index >= n) {
+        return {
+            kicker: `done · ${n} steps`,
+            title: "Seated digest",
+            math: digestEl.textContent || "The seated pose is the digest.",
+            why: "The seated pose is the digest.",
+            spec: "Closer and seat",
+        };
+    }
     const pos = !step || index < 0 ? `start · ${n} steps` : `step ${index + 1} of ${n}`;
     if (!step || index < 0) {
         return {
@@ -279,8 +291,10 @@ function refreshTeach() {
     const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
     const activeBlock = step && (step.kind === "move" || step.kind === "ruleB") ? step.block : -1;
     renderTape(activeBlock);
-    renderCard(annotate(step, step ? viewI : -1));
-    teachPos.textContent = step ? `${viewI + 1} / ${trace.length}` : `${Math.max(0, cursor + 1)} / ${trace.length}`;
+    renderCard(annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1)));
+    teachPos.textContent = step
+        ? `${viewI + 1} / ${trace.length}`
+        : (viewI >= trace.length && trace.length ? `${trace.length} / ${trace.length}` : `0 / ${trace.length}`);
     renderOutline(outlineEl, outlineSections(), step ? String(viewI) : "", (index) => {
         void jumpTo(index - 1, false);
     });
@@ -624,7 +638,7 @@ bindTeachKeys({
         void jumpTo(nextGroup(trace, Math.max(0, viewedIndex()), stageKey, dir) - 1, false);
     },
     home: () => { if (teaching) void jumpTo(-1, false); },
-    end: () => { if (teaching && trace.length) void jumpTo(trace.length - 2, false); },
+    end: () => { if (teaching && trace.length) void jumpTo(trace.length - 1, false); },
 });
 
 showFace(solved);

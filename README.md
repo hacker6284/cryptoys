@@ -11,6 +11,7 @@ demos/scramble/
 primitives/cipher/twodeck/SPEC.md
 primitives/cipher/twodeck/twodeck.sudo
 demos/twodeck/
+proofs/
 ```
 
 ## Scramble
@@ -42,3 +43,7 @@ node /tmp/scramble/_scramble_impl.mjs
 ```
 
 GitHub Actions builds `sudoc` from [hacker6284/sudocode](https://github.com/hacker6284/sudocode), runs those tests, and publishes `demos/`.
+
+## Proofs
+
+What this library will and will not claim is in `proofs/README.md`. TwoDeck correctness stones are under `proofs/twodeck/`.

@@ -593,7 +593,7 @@ export async function mountWorld(canvas) {
         if (name === "cube") {
             return {
                 position: { x: DEN.x, y: feltTopY() + CUBE / 2, z: DEN.z },
-                rotation: { x: 0, y: 0, z: 0 },
+                rotation: { x: -0.18, y: 0.55, z: 0 },
             };
         }
         return {

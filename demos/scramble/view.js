@@ -67,7 +67,9 @@ function tween(ms, step) {
  * `edge` is the physical bounding size in world units (57 mm in the room).
  */
 export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {}) {
+    const root = new THREE.Group();
     const group = new THREE.Group();
+    root.add(group);
     const scale = edge / ABSTRACT_EDGE;
     const cubie = 0.94 * scale;
     const pitch = 1.02 * scale;
@@ -200,11 +202,12 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
             const mats = Array.isArray(object.material) ? object.material : [object.material];
             for (const mat of mats) mat?.dispose();
         });
-        if (group.parent) group.parent.remove(group);
+        if (root.parent) root.parent.remove(root);
     }
 
     return {
-        group,
+        group: root,
+        inner: group,
         paint,
         animateMove,
         animateReorient,

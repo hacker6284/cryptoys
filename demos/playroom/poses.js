@@ -23,11 +23,11 @@ export const POSES = {
         fov: 36,
         overlays: { title: true, menu: false },
     },
-    // ~44 cm from the 57 mm cube, look-down ~33°, narrow FOV so the cube reads.
+    // Lean on the cube but keep the table rim and a sliver of room in frame.
     scramble: {
-        position: [DEN.x + 0.14, 1.04, DEN.z + 0.34],
+        position: [DEN.x + 0.32, 1.20, DEN.z + 0.78],
         target: [DEN.x, 0.80, DEN.z],
-        fov: 23,
+        fov: 28,
         overlays: { title: true, menu: false, teach: true },
     },
 };

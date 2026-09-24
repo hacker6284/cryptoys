@@ -1,34 +1,45 @@
+/* Window, not wallpaper. The canvas is a framed viewport into the den.
+   Cool instrument UI lives outside that frame. */
+
 html,
 body.playroom {
   height: 100%;
-  overflow: hidden;
 }
 
 body.playroom {
-  background: #0e0b09;
+  overflow: hidden;
+  background: var(--bg);
 }
 
-#playroom {
-  display: block;
-  width: 100%;
+.playroom-app {
+  display: flex;
+  flex-direction: column;
   height: 100dvh;
-  touch-action: none;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.playroom-chrome {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 0 0 auto;
+  min-height: var(--chrome-height);
+  padding: 12px 20px 8px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
 }
 
 .playroom-title {
-  position: fixed;
-  left: 20px;
-  top: 16px;
   margin: 0;
-  z-index: 2;
   font-family: var(--font-display);
   font-weight: 520;
-  font-size: clamp(32px, 3.4vw, 38px);
+  font-size: clamp(28px, 3.2vw, 36px);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: color-mix(in srgb, var(--fg) 72%, transparent);
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
+  color: var(--fg);
   opacity: 0;
 }
 
@@ -36,48 +47,47 @@ body.playroom {
   opacity: 1;
 }
 
+.playroom-chrome-end {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 20px;
+  min-width: 0;
+}
+
 .playroom-menu {
-  position: fixed;
-  right: 22px;
-  top: 20px;
-  z-index: 2;
   margin: 0;
   padding: 0;
   background: none;
   border: 0;
-  border-radius: 0;
   color: var(--muted);
   text-align: right;
-  opacity: 0;
-  pointer-events: none;
+  display: none;
 }
 
 .playroom-menu.on {
-  opacity: 1;
-  pointer-events: auto;
+  display: block;
 }
 
 .playroom-menu-label {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: color-mix(in srgb, var(--accent) 70%, transparent);
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+  color: var(--accent);
 }
 
 .playroom-menu a,
 .playroom-menu .playroom-algo {
   display: block;
   width: 100%;
-  padding: 3px 0;
+  padding: 2px 0;
   margin: 0;
   border: 0;
   border-radius: 0;
   background: none;
-  color: color-mix(in srgb, var(--fg) 62%, transparent);
+  color: var(--muted);
   text-align: right;
   text-decoration: none;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
   cursor: pointer;
   font: inherit;
 }
@@ -94,20 +104,10 @@ body.playroom {
 }
 
 .playroom-pose {
-  position: fixed;
-  left: 20px;
-  bottom: 16px;
-  z-index: 4;
-}
-
-html[data-algo]:not([data-algo=""]) .playroom-pose {
-  top: 58px;
-  bottom: auto;
-}
-
-html[data-algo]:not([data-algo=""]) .playroom-pose .chrome-action {
-  color: color-mix(in srgb, var(--fg) 82%, transparent);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
 }
 
 body.playroom:not(.is-ready) .playroom-pose {
@@ -118,14 +118,65 @@ body.playroom:not(.is-ready) .playroom-pose {
   display: none;
 }
 
+.playroom-body {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  padding: 14px 16px 16px;
+  gap: 14px;
+}
+
+html[data-panel="teach"] .playroom-body {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+}
+
+.playroom-stage {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.playroom-window {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: #0e0b09;
+  box-shadow: inset 0 0 0 1px rgba(243, 239, 230, 0.04);
+}
+
+#playroom {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.playroom-panel {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  color: var(--fg);
+}
+
+.playroom-panel[hidden] {
+  display: none;
+}
+
 #load-error {
-  position: fixed;
-  left: 20px;
-  right: 20px;
-  bottom: 56px;
-  z-index: 3;
+  flex: 0 0 auto;
+  margin: 0 20px 12px;
   max-width: 36rem;
-  margin: 0;
   color: var(--danger);
   font-family: var(--font-mono);
   font-size: 13px;
@@ -145,60 +196,36 @@ body.playroom:not(.is-ready) .playroom-menu {
   transition: none;
 }
 
-body.playroom.is-ready .playroom-title,
-body.playroom.is-ready .playroom-menu {
+body.playroom.is-ready .playroom-title {
   transition: opacity 280ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.playroom.is-ready .playroom-title,
-  body.playroom.is-ready .playroom-menu {
+  body.playroom.is-ready .playroom-title {
     transition: none;
   }
 }
 
 .playroom-dock {
-  position: fixed;
-  inset: auto 20px 48px 20px;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
-  gap: 28px 40px;
-  align-items: end;
-  pointer-events: none;
-  opacity: 0;
-}
-
-.playroom-dock.on {
-  opacity: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
 }
 
 .playroom-dock[hidden] {
   display: none;
 }
 
-.playroom-note,
-.playroom-hands {
-  pointer-events: none;
+.playroom-teach-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
 }
 
 .playroom-note[hidden] {
   display: none;
-}
-
-.playroom-note-body,
-.playroom-hands,
-.playroom-note .tape,
-.playroom-note .transport,
-.playroom-hands .row,
-.playroom-hands .slider,
-.playroom-hands textarea,
-.playroom-hands .outline {
-  pointer-events: auto;
-}
-
-.playroom-note-body {
-  max-width: 36rem;
 }
 
 .playroom-note-body .kicker,
@@ -206,21 +233,19 @@ body.playroom.is-ready .playroom-menu {
 .playroom-hands .status,
 .playroom-hands .digest,
 .playroom-note .transport .pos {
-  margin: 0 0 6px;
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: color-mix(in srgb, var(--fg) 78%, transparent);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 14px rgba(0, 0, 0, 0.55);
+  color: var(--muted);
 }
 
 .playroom-note-body h2 {
-  margin: 0 0 8px;
+  margin: 4px 0 8px;
   font-family: var(--font-display);
   font-weight: 520;
   font-size: clamp(22px, 2.4vw, 28px);
   letter-spacing: -0.02em;
-  color: color-mix(in srgb, var(--fg) 92%, transparent);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 2px 16px rgba(0, 0, 0, 0.55);
+  color: var(--fg);
 }
 
 .playroom-note-body .math,
@@ -228,8 +253,7 @@ body.playroom.is-ready .playroom-menu {
   margin: 0 0 8px;
   font-size: 15px;
   line-height: 1.45;
-  color: color-mix(in srgb, var(--fg) 86%, transparent);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 14px rgba(0, 0, 0, 0.5);
+  color: var(--fg);
 }
 
 .playroom-note-body .math {
@@ -237,50 +261,90 @@ body.playroom.is-ready .playroom-menu {
   font-size: 13px;
 }
 
-.playroom-note-body .why {
-  color: color-mix(in srgb, var(--muted) 92%, transparent);
+.playroom-note-body .why,
+.playroom-note-body .inline-link {
+  display: none;
 }
 
 .playroom-note .tape {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 8px;
-  margin: 0 0 12px;
+  gap: 4px;
+  margin: 0 0 4px;
 }
 
 .playroom-dock .tape-cell {
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  color: color-mix(in srgb, var(--fg) 48%, transparent);
+  min-width: 1.6em;
+  padding: 3px 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--raised);
+  color: var(--muted);
   font-family: var(--font-mono);
   font-size: 12px;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+  text-align: center;
 }
 
-.playroom-dock .tape-cell.pad { opacity: 0.7; }
-.playroom-dock .tape-cell.marker { color: var(--accent); }
+.playroom-dock .tape-cell.pad {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+.playroom-dock .tape-cell.marker {
+  color: var(--accent);
+}
 
 .playroom-dock .tape-cell.on {
-  color: var(--fg);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  background: none;
-  border: 0;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
 }
 
 .playroom-note .transport {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.playroom-note .transport .chrome-action,
+.playroom-note .transport button {
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.playroom-teach-more {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.playroom-teach-more summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  list-style: none;
+}
+
+.playroom-teach-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.playroom-teach-more summary::after {
+  content: " ▾";
+  color: var(--accent);
+}
+
+.playroom-teach-more[open] summary {
+  margin-bottom: 12px;
 }
 
 .playroom-hands {
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .playroom-hands .digest {
@@ -291,95 +355,97 @@ body.playroom.is-ready .playroom-menu {
   min-height: 0;
 }
 
-.playroom-hands .row {
-  justify-content: flex-end;
-}
-
-.playroom-dock .chrome-action {
-  border: 0;
-  background: none;
-  padding: 2px 0;
-  color: color-mix(in srgb, var(--fg) 62%, transparent);
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
-}
-
-.playroom-dock .chrome-action:hover,
-.playroom-dock .chrome-action:focus-visible {
-  background: none;
-  border: 0;
-  color: var(--fg);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.playroom-dock .chrome-action.on {
-  color: var(--fg);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  background: none;
-  border: 0;
-}
-
 .playroom-dock .slider {
-  justify-content: flex-end;
-  color: color-mix(in srgb, var(--muted) 88%, transparent);
+  color: var(--muted);
 }
 
 .playroom-dock textarea {
-  margin-top: 8px;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
-  border-radius: 0;
-  color: color-mix(in srgb, var(--fg) 78%, transparent);
-  text-align: right;
-  resize: none;
+  min-height: 4.5em;
 }
 
 .playroom-dock .outline {
+  overflow: auto;
+  max-height: 22vh;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  padding: 6px 0;
+}
+
+.playroom-dock .outline[hidden] {
   display: none;
 }
 
 .playroom-dock .outline summary,
 .playroom-dock .outline-item {
-  color: color-mix(in srgb, var(--fg) 58%, transparent);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+  color: var(--muted);
+}
+
+.playroom-dock .outline-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  padding: 4px 8px;
+  border-radius: var(--radius);
 }
 
 .playroom-dock .outline-item.on {
-  background: none;
-  color: var(--fg);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .playroom-dock dialog {
   pointer-events: auto;
 }
 
-body.playroom.is-ready .playroom-dock {
-  transition: opacity 280ms ease;
-}
+@media (min-width: 901px) {
+  .playroom-teach-more summary {
+    display: none;
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  body.playroom.is-ready .playroom-dock {
-    transition: none;
+  .playroom-teach-more > .playroom-hands {
+    display: flex;
   }
 }
 
-@media (max-width: 600px) {
-  .playroom-menu {
-    top: 60px;
-    right: 16px;
+@media (max-width: 900px) {
+  body.playroom {
+    overflow: auto;
   }
 
-  .playroom-dock {
-    inset: auto 16px 56px 16px;
+  .playroom-app {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .playroom-chrome {
+    padding: 12px 14px 8px;
+  }
+
+  .playroom-body {
     grid-template-columns: 1fr;
-    gap: 18px;
+    padding: 10px 12px 16px;
   }
 
-  .playroom-hands { text-align: left; }
-  .playroom-hands .row { justify-content: flex-start; }
-  .playroom-dock textarea { text-align: left; }
+  html[data-panel="teach"] .playroom-body {
+    grid-template-columns: 1fr;
+  }
+
+  html[data-panel="teach"] .playroom-stage {
+    flex: 0 0 auto;
+  }
+
+  html[data-panel="teach"] .playroom-window {
+    flex: 0 0 auto;
+    aspect-ratio: 4 / 3;
+    max-height: 42vh;
+    min-height: 220px;
+  }
+
+  .playroom-panel {
+    max-height: none;
+  }
 }

@@ -93,6 +93,7 @@ try {
             await Promise.all([fly, warm]);
             if (leaving) return;
             await adapters.scramble.enter();
+            world.resize();
             writeQuery({ pose: "seated", algo: "scramble" });
             syncOverlays({
                 name: poses.name,
@@ -122,6 +123,7 @@ try {
         }
         leaving = true;
         adapters.scramble.leave();
+        world.resize();
         const reduced = poses.prefersReducedMotion();
         ignoreSkipUntil = performance.now() + LIFT_MS;
         const home = director.home({ snap: reduced });
@@ -183,7 +185,7 @@ try {
     function shouldSkip(event) {
         if (performance.now() < ignoreSkipUntil) return false;
         if (!director.busy && !poses.busy) return false;
-        if (event.target.closest("a[href], button, input, textarea, select, dialog, .playroom-dock, .playroom-menu")) {
+        if (event.target.closest("a[href], button, input, textarea, select, dialog, .playroom-dock, .playroom-menu, .playroom-chrome, .playroom-panel")) {
             return false;
         }
         return true;
@@ -204,6 +206,11 @@ try {
     });
 
     window.addEventListener("resize", () => world.resize());
+    const stage = document.querySelector(".playroom-window") || canvas;
+    if (typeof ResizeObserver === "function") {
+        const observer = new ResizeObserver(() => world.resize());
+        observer.observe(stage);
+    }
 
     function tick(now) {
         director.update(now);

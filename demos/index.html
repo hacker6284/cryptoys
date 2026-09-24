@@ -20,18 +20,31 @@
   </script>
 </head>
 <body class="playroom">
-  <canvas id="playroom" aria-label="Evening playroom"></canvas>
-  <h1 class="playroom-title" id="title">cryptoys</h1>
-  <nav class="playroom-menu" id="menu" aria-label="Algorithms">
-    <p class="playroom-menu-label">algorithms</p>
-    <a href="./doubledeal/" data-algo="doubledeal">DoubleDeal</a>
-    <button type="button" class="playroom-algo" data-algo="scramble">Scramble</button>
-  </nav>
-  <div class="playroom-pose" id="pose-ui">
-    <button type="button" class="chrome-action" id="sit" hidden>Sit at the table</button>
-    <button type="button" class="chrome-action" id="back" hidden>Back</button>
+  <div class="playroom-app">
+    <header class="playroom-chrome">
+      <h1 class="playroom-title" id="title">cryptoys</h1>
+      <div class="playroom-chrome-end">
+        <div class="playroom-pose" id="pose-ui">
+          <button type="button" class="chrome-action" id="sit" hidden>Sit at the table</button>
+          <button type="button" class="chrome-action" id="back" hidden>Back</button>
+        </div>
+        <nav class="playroom-menu" id="menu" aria-label="Algorithms">
+          <p class="playroom-menu-label">algorithms</p>
+          <a href="./doubledeal/" data-algo="doubledeal">DoubleDeal</a>
+          <button type="button" class="playroom-algo" data-algo="scramble">Scramble</button>
+        </nav>
+      </div>
+    </header>
+    <div class="playroom-body">
+      <section class="playroom-stage" aria-label="Playroom window">
+        <div class="playroom-window">
+          <canvas id="playroom" aria-label="Evening playroom"></canvas>
+        </div>
+      </section>
+      <aside class="playroom-panel" id="playroom-panel" hidden></aside>
+    </div>
+    <p id="load-error" class="error" hidden></p>
   </div>
-  <p id="load-error" class="error" hidden></p>
   <noscript>
     <p class="playroom-noscript">The playroom needs JavaScript. The teaching demos are still at <a href="./doubledeal/">DoubleDeal</a> and <a href="./scramble/">Scramble</a>.</p>
   </noscript>

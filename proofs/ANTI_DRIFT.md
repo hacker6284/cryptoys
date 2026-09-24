@@ -75,16 +75,16 @@ shadow fix (a sudo `for s` must not capture the loop payload).
 ## Terminates gate is off
 
 Do **not** pass `sudoc emit-ir --require terminates` at emit time.
-MegaDreifach (`Hash` → `pad_message` / `trim`, …) and Scramble still
-have unmeasured `while`s, so a repo-wide gate would `RefusedExport`
-those publics.
+Scramble still has unmeasured `while`s, so a repo-wide gate would
+`RefusedExport` those publics.
 
-DoubleDeal production and trace paths are now bounded `for`
-(PassKey drain over initial `deck.length`; overflow scans `0 to 3`).
-`sudoc emit-ir --require terminates` on `doubledeal.sudo` should
-accept the exports. Test-only `while`s that scan traces by `kind`
-are stripped under the gate. Flip `terminates_gate` in
-`emit_lean.sh` after MegaDreifach matches.
+DoubleDeal and MegaDreifach production paths are now bounded `for`
+(PassKey drain over initial `deck.length`; overflow scans `0 to 3`;
+MD bigint trim/peel/carry, φ / even-perm search, Hash MD walk).
+`sudoc emit-ir --require terminates` on `doubledeal.sudo` and
+`megadreifach.sudo` should accept the exports. DoubleDeal test-only
+`while`s that scan traces by `kind` are stripped under the gate.
+Flip `terminates_gate` in `emit_lean.sh` after Scramble matches.
 
 The registered Lean backend profile is **full peer** (empty
 `predicates`): fuel-total `while` / `for` via `SudoRt.natIter`.
@@ -109,7 +109,7 @@ total-fragment / terminating-subset emitter.
 | sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
 | Algebraic `passToKeyCutFallback` = `Generated.passkey` | OPEN. S3/S4 stay on the list-level proof model. sudo already *tests* `passkey_inv ∘ passkey = id` (generated TAP). |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | OPEN. S2 stays on the Fin-packet skeleton. Generated TAP checks sudo's encrypt/decrypt tests. |
-| `--require terminates` on these publics | DoubleDeal ready (bounded `for`). OFF at emit until MegaDreifach (and Scramble) match. |
+| `--require terminates` on these publics | DoubleDeal and MegaDreifach ready (bounded `for`). OFF at emit until Scramble matches. |
 | PassKey / stone proofs *about* `Except Trap` emitted defs | OPEN. Fuel-total monadic programs are not the Fin algebra the stones use. |
 | Scramble generated Lean | Out of this drop. |
 | MegaDreifach M13 (proof-package digest = KAT hex) | Still OPEN in the algebraic package (no handwritten `Hash`). Research hexes were refreshed to current sudo; Python and emitted Lean agree. |

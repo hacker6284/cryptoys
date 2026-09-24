@@ -806,34 +806,48 @@ def big_zero : Except SudoRt.Trap (BigInt) :=
 
 def trim (limbs : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let n := (SudoRt.listLen limbs)
-    let _init159 := n
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init159 (2 ^ 32) (fun σ =>
-    let n := σ
+    let n := (0 : Int)
+    let _t152 ← SudoRt.subI (SudoRt.listLen limbs) (1 : Int)
+    let _fromV := _t152
+    let _toV := (0 : Int)
+    let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
+    let _init160 := (_fromV, n)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init160 fuel (fun σ =>
+    let i := σ.1
+    let n := σ.2
     do
-      let _t148 ← (if (decide (n > (0 : Int))) then (do
-  let _t149 ← SudoRt.subI n (1 : Int)
-  let _t150 ← SudoRt.atL limbs _t149
-  pure (SudoRt.SEq.beq _t150 (0 : Int))) else pure false)
-      if !(_t148) then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) n)
+      if i < _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, n))
       else
         match ← ((do
-  let _t146 ← SudoRt.subI n (1 : Int)
-  let n := _t146
-  pure (SudoRt.Flow.cont (ρ := Array (Int)) n)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+  let _t147 ← (if (SudoRt.SEq.beq n (0 : Int)) then (do
+  let _t148 ← SudoRt.atL limbs i
+  pure (!(SudoRt.SEq.beq _t148 (0 : Int)))) else pure false)
+  if _t147 then
+    do
+      let _t150 ← SudoRt.addI i (1 : Int)
+      let n := _t150
+      pure (SudoRt.Flow.cont (ρ := Array (Int)) n)
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Array (Int)) n)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) _fs)
-        | .cont _fs => (let n := _fs; pure (SudoRt.Flow.cont (ρ := Array (Int)) n))) (fun σ =>
-    let n := σ
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.subI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let n := σ.2
     do
       let out := (#[] : Array (Int))
-      let _t157 ← SudoRt.subI n (1 : Int)
+      let _t158 ← SudoRt.subI n (1 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t157
+      let _toV := _t158
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init158 := (_fromV, out)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init158 fuel (fun σ =>
+      let _init159 := (_fromV, out)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init159 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -841,12 +855,12 @@ def trim (limbs : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
       else
         match ← ((do
-  let _t153 ← SudoRt.atL limbs i
-  let _mb154 := SudoRt.appendL out _t153
-  let ⟨_nr155, _⟩ := _mb154
-  let out := _nr155
+  let _t154 ← SudoRt.atL limbs i
+  let _mb155 := SudoRt.appendL out _t154
+  let ⟨_nr156, _⟩ := _mb155
+  let out := _nr156
   let _hm144 := ()
-  let _u156 := _hm144
+  let _u157 := _hm144
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -864,12 +878,12 @@ def trim (limbs : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
 
 def make_big (negative : Bool) (limbs : Array (Int)) : Except SudoRt.Trap (BigInt) :=
   do
-    let _t160 ← trim limbs
-    let t := _t160
+    let _t161 ← trim limbs
+    let t := _t161
     if (SudoRt.SEq.beq (SudoRt.listLen t) (0 : Int)) then
       do
-        let _t163 ← big_zero
-        pure _t163
+        let _t164 ← big_zero
+        pure _t164
     else
       do
         pure ({ sudo_6BigInt_8negative := negative, sudo_6BigInt_5limbs := t } : BigInt)
@@ -878,8 +892,8 @@ def mag_cmp (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Int) :=
   do
     if (decide ((SudoRt.listLen a) < (SudoRt.listLen b))) then
       do
-        let _t167 ← SudoRt.negI (1 : Int)
-        pure _t167
+        let _t168 ← SudoRt.negI (1 : Int)
+        pure _t168
     else
       do
         if (decide ((SudoRt.listLen b) < (SudoRt.listLen a))) then
@@ -887,29 +901,29 @@ def mag_cmp (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Int) :=
             pure (1 : Int)
         else
           do
-            let _t180 ← SudoRt.subI (SudoRt.listLen a) (1 : Int)
-            let _fromV := _t180
+            let _t181 ← SudoRt.subI (SudoRt.listLen a) (1 : Int)
+            let _fromV := _t181
             let _toV := (0 : Int)
             let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
-            let _init181 := _fromV
-            let _out ← (SudoRt.runLoopOn (ρ := Int) _init181 fuel (fun σ =>
+            let _init182 := _fromV
+            let _out ← (SudoRt.runLoopOn (ρ := Int) _init182 fuel (fun σ =>
     let i := σ
     do
       if i < _toV then
         pure (SudoRt.Flow.brk (ρ := Int) i)
       else
         match ← ((do
-  let _t172 ← SudoRt.atL a i
-  let _t173 ← SudoRt.atL b i
-  if (decide (_t172 < _t173)) then
+  let _t173 ← SudoRt.atL a i
+  let _t174 ← SudoRt.atL b i
+  if (decide (_t173 < _t174)) then
     do
-      let _t175 ← SudoRt.negI (1 : Int)
-      pure (SudoRt.Flow.ret (ρ := Int) _t175)
+      let _t176 ← SudoRt.negI (1 : Int)
+      pure (SudoRt.Flow.ret (ρ := Int) _t176)
   else
     do
-      let _t176 ← SudoRt.atL b i
-      let _t177 ← SudoRt.atL a i
-      if (decide (_t176 < _t177)) then
+      let _t177 ← SudoRt.atL b i
+      let _t178 ← SudoRt.atL a i
+      if (decide (_t177 < _t178)) then
         do
           pure (SudoRt.Flow.ret (ρ := Int) (1 : Int))
       else
@@ -935,16 +949,16 @@ def mag_add (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Array (Int
     if (decide ((SudoRt.listLen b) > n)) then
       do
         let n := (SudoRt.listLen b)
-        let _t221 ← SudoRt.subI n (1 : Int)
+        let _t222 ← SudoRt.subI n (1 : Int)
         let _fromV := (0 : Int)
-        let _toV := _t221
+        let _toV := _t222
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init228 := (_fromV, (out, carry))
-        let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init228 fuel (fun σ =>
+        let _init229 := (_fromV, (out, carry))
+        let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init229 fuel (fun σ =>
     let i := σ.1
     let out := σ.2.1
-    let _sp226 := σ.2.2
-    let carry := _sp226
+    let _sp227 := σ.2.2
+    let carry := _sp227
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (out, carry)))
@@ -953,60 +967,60 @@ def mag_add (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Array (Int
   let cur := carry
   if (decide (i < (SudoRt.listLen a))) then
     do
-      let _t191 ← SudoRt.atL a i
-      let _t192 ← SudoRt.addI cur _t191
-      let cur := _t192
+      let _t192 ← SudoRt.atL a i
+      let _t193 ← SudoRt.addI cur _t192
+      let cur := _t193
       if (decide (i < (SudoRt.listLen b))) then
         do
-          let _t195 ← SudoRt.atL b i
-          let _t196 ← SudoRt.addI cur _t195
-          let cur := _t196
-          let _t197 ← SudoRt.modI cur limb_base
-          let _mb198 := SudoRt.appendL out _t197
-          let ⟨_nr199, _⟩ := _mb198
-          let out := _nr199
-          let _hm182 := ()
-          let _u200 := _hm182
-          let _t201 ← SudoRt.divI cur limb_base
-          let carry := _t201
+          let _t196 ← SudoRt.atL b i
+          let _t197 ← SudoRt.addI cur _t196
+          let cur := _t197
+          let _t198 ← SudoRt.modI cur limb_base
+          let _mb199 := SudoRt.appendL out _t198
+          let ⟨_nr200, _⟩ := _mb199
+          let out := _nr200
+          let _hm183 := ()
+          let _u201 := _hm183
+          let _t202 ← SudoRt.divI cur limb_base
+          let carry := _t202
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (out, carry))
       else
         do
-          let _t202 ← SudoRt.modI cur limb_base
-          let _mb203 := SudoRt.appendL out _t202
-          let ⟨_nr204, _⟩ := _mb203
-          let out := _nr204
-          let _hm182 := ()
-          let _u205 := _hm182
-          let _t206 ← SudoRt.divI cur limb_base
-          let carry := _t206
+          let _t203 ← SudoRt.modI cur limb_base
+          let _mb204 := SudoRt.appendL out _t203
+          let ⟨_nr205, _⟩ := _mb204
+          let out := _nr205
+          let _hm183 := ()
+          let _u206 := _hm183
+          let _t207 ← SudoRt.divI cur limb_base
+          let carry := _t207
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (out, carry))
   else
     do
       if (decide (i < (SudoRt.listLen b))) then
         do
-          let _t209 ← SudoRt.atL b i
-          let _t210 ← SudoRt.addI cur _t209
-          let cur := _t210
-          let _t211 ← SudoRt.modI cur limb_base
-          let _mb212 := SudoRt.appendL out _t211
-          let ⟨_nr213, _⟩ := _mb212
-          let out := _nr213
-          let _hm182 := ()
-          let _u214 := _hm182
-          let _t215 ← SudoRt.divI cur limb_base
-          let carry := _t215
+          let _t210 ← SudoRt.atL b i
+          let _t211 ← SudoRt.addI cur _t210
+          let cur := _t211
+          let _t212 ← SudoRt.modI cur limb_base
+          let _mb213 := SudoRt.appendL out _t212
+          let ⟨_nr214, _⟩ := _mb213
+          let out := _nr214
+          let _hm183 := ()
+          let _u215 := _hm183
+          let _t216 ← SudoRt.divI cur limb_base
+          let carry := _t216
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (out, carry))
       else
         do
-          let _t216 ← SudoRt.modI cur limb_base
-          let _mb217 := SudoRt.appendL out _t216
-          let ⟨_nr218, _⟩ := _mb217
-          let out := _nr218
-          let _hm182 := ()
-          let _u219 := _hm182
-          let _t220 ← SudoRt.divI cur limb_base
-          let carry := _t220
+          let _t217 ← SudoRt.modI cur limb_base
+          let _mb218 := SudoRt.appendL out _t217
+          let ⟨_nr219, _⟩ := _mb218
+          let out := _nr219
+          let _hm183 := ()
+          let _u220 := _hm183
+          let _t221 ← SudoRt.divI cur limb_base
+          let carry := _t221
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (out, carry))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1017,16 +1031,16 @@ def mag_add (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Array (Int
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let out := σ.2.1
-    let _sp227 := σ.2.2
-    let carry := _sp227
+    let _sp228 := σ.2.2
+    let carry := _sp228
     do
       if (decide (carry > (0 : Int))) then
         do
-          let _mb223 := SudoRt.appendL out carry
-          let ⟨_nr224, _⟩ := _mb223
-          let out := _nr224
-          let _hm183 := ()
-          let _u225 := _hm183
+          let _mb224 := SudoRt.appendL out carry
+          let ⟨_nr225, _⟩ := _mb224
+          let out := _nr225
+          let _hm184 := ()
+          let _u226 := _hm184
           pure out
       else
         do
@@ -1034,16 +1048,16 @@ def mag_add (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Array (Int
         pure _out
     else
       do
-        let _t262 ← SudoRt.subI n (1 : Int)
+        let _t263 ← SudoRt.subI n (1 : Int)
         let _fromV := (0 : Int)
-        let _toV := _t262
+        let _toV := _t263
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init269 := (_fromV, (out, carry))
-        let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init269 fuel (fun σ =>
+        let _init270 := (_fromV, (out, carry))
+        let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init270 fuel (fun σ =>
     let i := σ.1
     let out := σ.2.1
-    let _sp267 := σ.2.2
-    let carry := _sp267
+    let _sp268 := σ.2.2
+    let carry := _sp268
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (out, carry)))
@@ -1052,60 +1066,60 @@ def mag_add (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Array (Int
   let cur := carry
   if (decide (i < (SudoRt.listLen a))) then
     do
-      let _t232 ← SudoRt.atL a i
-      let _t233 ← SudoRt.addI cur _t232
-      let cur := _t233
+      let _t233 ← SudoRt.atL a i
+      let _t234 ← SudoRt.addI cur _t233
+      let cur := _t234
       if (decide (i < (SudoRt.listLen b))) then
         do
-          let _t236 ← SudoRt.atL b i
-          let _t237 ← SudoRt.addI cur _t236
-          let cur := _t237
-          let _t238 ← SudoRt.modI cur limb_base
-          let _mb239 := SudoRt.appendL out _t238
-          let ⟨_nr240, _⟩ := _mb239
-          let out := _nr240
-          let _hm182 := ()
-          let _u241 := _hm182
-          let _t242 ← SudoRt.divI cur limb_base
-          let carry := _t242
+          let _t237 ← SudoRt.atL b i
+          let _t238 ← SudoRt.addI cur _t237
+          let cur := _t238
+          let _t239 ← SudoRt.modI cur limb_base
+          let _mb240 := SudoRt.appendL out _t239
+          let ⟨_nr241, _⟩ := _mb240
+          let out := _nr241
+          let _hm183 := ()
+          let _u242 := _hm183
+          let _t243 ← SudoRt.divI cur limb_base
+          let carry := _t243
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (out, carry))
       else
         do
-          let _t243 ← SudoRt.modI cur limb_base
-          let _mb244 := SudoRt.appendL out _t243
-          let ⟨_nr245, _⟩ := _mb244
-          let out := _nr245
-          let _hm182 := ()
-          let _u246 := _hm182
-          let _t247 ← SudoRt.divI cur limb_base
-          let carry := _t247
+          let _t244 ← SudoRt.modI cur limb_base
+          let _mb245 := SudoRt.appendL out _t244
+          let ⟨_nr246, _⟩ := _mb245
+          let out := _nr246
+          let _hm183 := ()
+          let _u247 := _hm183
+          let _t248 ← SudoRt.divI cur limb_base
+          let carry := _t248
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (out, carry))
   else
     do
       if (decide (i < (SudoRt.listLen b))) then
         do
-          let _t250 ← SudoRt.atL b i
-          let _t251 ← SudoRt.addI cur _t250
-          let cur := _t251
-          let _t252 ← SudoRt.modI cur limb_base
-          let _mb253 := SudoRt.appendL out _t252
-          let ⟨_nr254, _⟩ := _mb253
-          let out := _nr254
-          let _hm182 := ()
-          let _u255 := _hm182
-          let _t256 ← SudoRt.divI cur limb_base
-          let carry := _t256
+          let _t251 ← SudoRt.atL b i
+          let _t252 ← SudoRt.addI cur _t251
+          let cur := _t252
+          let _t253 ← SudoRt.modI cur limb_base
+          let _mb254 := SudoRt.appendL out _t253
+          let ⟨_nr255, _⟩ := _mb254
+          let out := _nr255
+          let _hm183 := ()
+          let _u256 := _hm183
+          let _t257 ← SudoRt.divI cur limb_base
+          let carry := _t257
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (out, carry))
       else
         do
-          let _t257 ← SudoRt.modI cur limb_base
-          let _mb258 := SudoRt.appendL out _t257
-          let ⟨_nr259, _⟩ := _mb258
-          let out := _nr259
-          let _hm182 := ()
-          let _u260 := _hm182
-          let _t261 ← SudoRt.divI cur limb_base
-          let carry := _t261
+          let _t258 ← SudoRt.modI cur limb_base
+          let _mb259 := SudoRt.appendL out _t258
+          let ⟨_nr260, _⟩ := _mb259
+          let out := _nr260
+          let _hm183 := ()
+          let _u261 := _hm183
+          let _t262 ← SudoRt.divI cur limb_base
+          let carry := _t262
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (out, carry))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1116,16 +1130,16 @@ def mag_add (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Array (Int
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let out := σ.2.1
-    let _sp268 := σ.2.2
-    let carry := _sp268
+    let _sp269 := σ.2.2
+    let carry := _sp269
     do
       if (decide (carry > (0 : Int))) then
         do
-          let _mb264 := SudoRt.appendL out carry
-          let ⟨_nr265, _⟩ := _mb264
-          let out := _nr265
-          let _hm183 := ()
-          let _u266 := _hm183
+          let _mb265 := SudoRt.appendL out carry
+          let ⟨_nr266, _⟩ := _mb265
+          let out := _nr266
+          let _hm184 := ()
+          let _u267 := _hm184
           pure out
       else
         do
@@ -1136,70 +1150,70 @@ def mag_sub (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Array (Int
   do
     let out := (#[] : Array (Int))
     let borrow := (0 : Int)
-    let _t295 ← SudoRt.subI (SudoRt.listLen a) (1 : Int)
+    let _t296 ← SudoRt.subI (SudoRt.listLen a) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t295
+    let _toV := _t296
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init299 := (_fromV, (borrow, out))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init299 fuel (fun σ =>
+    let _init300 := (_fromV, (borrow, out))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init300 fuel (fun σ =>
     let i := σ.1
     let borrow := σ.2.1
-    let _sp297 := σ.2.2
-    let out := _sp297
+    let _sp298 := σ.2.2
+    let out := _sp298
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (borrow, out)))
       else
         match ← ((do
-  let _t272 ← SudoRt.atL a i
-  let _t273 ← SudoRt.subI _t272 borrow
-  let cur := _t273
+  let _t273 ← SudoRt.atL a i
+  let _t274 ← SudoRt.subI _t273 borrow
+  let cur := _t274
   if (decide (i < (SudoRt.listLen b))) then
     do
-      let _t276 ← SudoRt.atL b i
-      let _t277 ← SudoRt.subI cur _t276
-      let cur := _t277
+      let _t277 ← SudoRt.atL b i
+      let _t278 ← SudoRt.subI cur _t277
+      let cur := _t278
       if (decide (cur < (0 : Int))) then
         do
-          let _t279 ← SudoRt.addI cur limb_base
-          let cur := _t279
+          let _t280 ← SudoRt.addI cur limb_base
+          let cur := _t280
           let borrow := (1 : Int)
-          let _mb280 := SudoRt.appendL out cur
-          let ⟨_nr281, _⟩ := _mb280
-          let out := _nr281
-          let _hm270 := ()
-          let _u282 := _hm270
+          let _mb281 := SudoRt.appendL out cur
+          let ⟨_nr282, _⟩ := _mb281
+          let out := _nr282
+          let _hm271 := ()
+          let _u283 := _hm271
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (borrow, out))
       else
         do
           let borrow := (0 : Int)
-          let _mb283 := SudoRt.appendL out cur
-          let ⟨_nr284, _⟩ := _mb283
-          let out := _nr284
-          let _hm270 := ()
-          let _u285 := _hm270
+          let _mb284 := SudoRt.appendL out cur
+          let ⟨_nr285, _⟩ := _mb284
+          let out := _nr285
+          let _hm271 := ()
+          let _u286 := _hm271
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (borrow, out))
   else
     do
       if (decide (cur < (0 : Int))) then
         do
-          let _t287 ← SudoRt.addI cur limb_base
-          let cur := _t287
+          let _t288 ← SudoRt.addI cur limb_base
+          let cur := _t288
           let borrow := (1 : Int)
-          let _mb288 := SudoRt.appendL out cur
-          let ⟨_nr289, _⟩ := _mb288
-          let out := _nr289
-          let _hm270 := ()
-          let _u290 := _hm270
+          let _mb289 := SudoRt.appendL out cur
+          let ⟨_nr290, _⟩ := _mb289
+          let out := _nr290
+          let _hm271 := ()
+          let _u291 := _hm271
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (borrow, out))
       else
         do
           let borrow := (0 : Int)
-          let _mb291 := SudoRt.appendL out cur
-          let ⟨_nr292, _⟩ := _mb291
-          let out := _nr292
-          let _hm270 := ()
-          let _u293 := _hm270
+          let _mb292 := SudoRt.appendL out cur
+          let ⟨_nr293, _⟩ := _mb292
+          let out := _nr293
+          let _hm271 := ()
+          let _u294 := _hm271
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (borrow, out))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1210,78 +1224,92 @@ def mag_sub (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Array (Int
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let borrow := σ.2.1
-    let _sp298 := σ.2.2
-    let out := _sp298
+    let _sp299 := σ.2.2
+    let out := _sp299
     do
-      let _t296 ← trim out
-      pure _t296) (fun r => pure r))
+      let _t297 ← trim out
+      pure _t297) (fun r => pure r))
     pure _out
 
 def big_from_int (v : Int) : Except SudoRt.Trap (BigInt) :=
   do
     if (SudoRt.SEq.beq v (0 : Int)) then
       do
-        let _t302 ← big_zero
-        pure _t302
+        let _t303 ← big_zero
+        pure _t303
     else
       do
-        let _as304 ← SudoRt.sudoAssert (decide (v ≥ (0 : Int))) 380
+        let _as305 ← SudoRt.sudoAssert (decide (v ≥ (0 : Int))) 381
         let limbs := (#[] : Array (Int))
         let m := v
-        let _init314 := (limbs, m)
-        let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init314 (2 ^ 32) (fun σ =>
-    let limbs := σ.1
-    let _sp312 := σ.2
-    let m := _sp312
+        let _fromV := (1 : Int)
+        let _toV := (3 : Int)
+        let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+        let _init315 := (_fromV, (limbs, m))
+        let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init315 fuel (fun σ =>
+    let peel := σ.1
+    let limbs := σ.2.1
+    let _sp313 := σ.2.2
+    let m := _sp313
     do
-      if !((decide (m > (0 : Int)))) then
-        pure (SudoRt.Flow.brk (ρ := BigInt) (limbs, m))
+      if peel > _toV then
+        pure (SudoRt.Flow.brk (ρ := BigInt) (peel, (limbs, m)))
       else
         match ← ((do
-  let _t305 ← SudoRt.modI m limb_base
-  let _mb306 := SudoRt.appendL limbs _t305
-  let ⟨_nr307, _⟩ := _mb306
-  let limbs := _nr307
-  let _hm300 := ()
-  let _u308 := _hm300
-  let _t309 ← SudoRt.divI m limb_base
-  let m := _t309
-  pure (SudoRt.Flow.cont (ρ := BigInt) (limbs, m))) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
+  if (decide (m > (0 : Int))) then
+    do
+      let _t308 ← SudoRt.modI m limb_base
+      let _mb309 := SudoRt.appendL limbs _t308
+      let ⟨_nr310, _⟩ := _mb309
+      let limbs := _nr310
+      let _hm301 := ()
+      let _u311 := _hm301
+      let _t312 ← SudoRt.divI m limb_base
+      let m := _t312
+      pure (SudoRt.Flow.cont (ρ := BigInt) (limbs, m))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := BigInt) (limbs, m))) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) _fs)
-        | .cont _fs => (let limbs := _fs.1; let _sp311 := _fs.2; let m := _sp311; pure (SudoRt.Flow.cont (ρ := BigInt) (limbs, m)))) (fun σ =>
-    let limbs := σ.1
-    let _sp313 := σ.2
-    let m := _sp313
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) (peel, _fs))
+        | .cont _fs => do
+            if peel == _toV then
+              pure (SudoRt.Flow.brk (ρ := BigInt) (peel, _fs))
+            else do
+              let i' ← SudoRt.addI peel (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := BigInt) (i', _fs))) (fun σ =>
+    let limbs := σ.2.1
+    let _sp314 := σ.2.2
+    let m := _sp314
     do
       pure ({ sudo_6BigInt_8negative := false, sudo_6BigInt_5limbs := limbs } : BigInt)) (fun r => pure r))
         pure _out
 
 def big_add (a : BigInt) (b : BigInt) : Except SudoRt.Trap (BigInt) :=
   do
-    let _t315 ← mag_add (a).sudo_6BigInt_5limbs (b).sudo_6BigInt_5limbs
-    let _t316 ← make_big false _t315
-    pure _t316
+    let _t316 ← mag_add (a).sudo_6BigInt_5limbs (b).sudo_6BigInt_5limbs
+    let _t317 ← make_big false _t316
+    pure _t317
 
 def big_mul (a : BigInt) (b : BigInt) : Except SudoRt.Trap (BigInt) :=
   do
-    let _t319 ← (if (SudoRt.SEq.beq (SudoRt.listLen (a).sudo_6BigInt_5limbs) (0 : Int)) then pure true else (do
+    let _t320 ← (if (SudoRt.SEq.beq (SudoRt.listLen (a).sudo_6BigInt_5limbs) (0 : Int)) then pure true else (do
   pure (SudoRt.SEq.beq (SudoRt.listLen (b).sudo_6BigInt_5limbs) (0 : Int))))
-    if _t319 then
+    if _t320 then
       do
-        let _t322 ← big_zero
-        pure _t322
+        let _t323 ← big_zero
+        pure _t323
     else
       do
-        let _t325 ← SudoRt.addI (SudoRt.listLen (a).sudo_6BigInt_5limbs) (SudoRt.listLen (b).sudo_6BigInt_5limbs)
-        let _t326 ← SudoRt.filledL _t325 (0 : Int)
-        let out := _t326
-        let _t364 ← SudoRt.subI (SudoRt.listLen (a).sudo_6BigInt_5limbs) (1 : Int)
+        let _t326 ← SudoRt.addI (SudoRt.listLen (a).sudo_6BigInt_5limbs) (SudoRt.listLen (b).sudo_6BigInt_5limbs)
+        let _t327 ← SudoRt.filledL _t326 (0 : Int)
+        let out := _t327
+        let _t363 ← SudoRt.subI (SudoRt.listLen (a).sudo_6BigInt_5limbs) (1 : Int)
         let _fromV := (0 : Int)
-        let _toV := _t364
+        let _toV := _t363
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init366 := (_fromV, out)
-        let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init366 fuel (fun σ =>
+        let _init365 := (_fromV, out)
+        let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init365 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -1290,36 +1318,36 @@ def big_mul (a : BigInt) (b : BigInt) : Except SudoRt.Trap (BigInt) :=
       else
         match ← ((do
   let carry := (0 : Int)
-  let _t342 ← SudoRt.subI (SudoRt.listLen (b).sudo_6BigInt_5limbs) (1 : Int)
+  let _t343 ← SudoRt.subI (SudoRt.listLen (b).sudo_6BigInt_5limbs) (1 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t342
+  let _toV := _t343
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init362 := (_fromV, (out, carry))
-  let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init362 fuel (fun σ =>
+  let _init361 := (_fromV, (out, carry))
+  let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init361 fuel (fun σ =>
     let j := σ.1
     let out := σ.2.1
-    let _sp360 := σ.2.2
-    let carry := _sp360
+    let _sp359 := σ.2.2
+    let carry := _sp359
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := BigInt) (j, (out, carry)))
       else
         match ← ((do
-  let _t329 ← SudoRt.addI i j
-  let _t330 ← SudoRt.atL out _t329
-  let _t331 ← SudoRt.atL (a).sudo_6BigInt_5limbs i
-  let _t332 ← SudoRt.atL (b).sudo_6BigInt_5limbs j
-  let _t333 ← SudoRt.mulI _t331 _t332
-  let _t334 ← SudoRt.addI _t330 _t333
-  let _t335 ← SudoRt.addI _t334 carry
-  let cur := _t335
-  let _t336 ← SudoRt.addI i j
-  let _ix337 := _t336
-  let _t338 ← SudoRt.modI cur limb_base
-  let _t339 ← SudoRt.putL out _ix337 _t338
-  let out := _t339
-  let _t340 ← SudoRt.divI cur limb_base
-  let carry := _t340
+  let _t330 ← SudoRt.addI i j
+  let _t331 ← SudoRt.atL out _t330
+  let _t332 ← SudoRt.atL (a).sudo_6BigInt_5limbs i
+  let _t333 ← SudoRt.atL (b).sudo_6BigInt_5limbs j
+  let _t334 ← SudoRt.mulI _t332 _t333
+  let _t335 ← SudoRt.addI _t331 _t334
+  let _t336 ← SudoRt.addI _t335 carry
+  let cur := _t336
+  let _t337 ← SudoRt.addI i j
+  let _ix338 := _t337
+  let _t339 ← SudoRt.modI cur limb_base
+  let _t340 ← SudoRt.putL out _ix338 _t339
+  let out := _t340
+  let _t341 ← SudoRt.divI cur limb_base
+  let carry := _t341
   pure (SudoRt.Flow.cont (ρ := BigInt) (out, carry))) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) (j, _fs))
@@ -1330,43 +1358,52 @@ def big_mul (a : BigInt) (b : BigInt) : Except SudoRt.Trap (BigInt) :=
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := BigInt) (i', _fs))) (fun σ =>
     let out := σ.2.1
-    let _sp361 := σ.2.2
-    let carry := _sp361
+    let _sp360 := σ.2.2
+    let carry := _sp360
     do
-      let _t344 ← SudoRt.addI i (SudoRt.listLen (b).sudo_6BigInt_5limbs)
-      let k := _t344
-      let _init359 := (out, carry, k)
-      let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init359 (2 ^ 32) (fun σ =>
-    let out := σ.1
-    let _sp355 := σ.2
-    let carry := _sp355.1
-    let _sp356 := _sp355.2
-    let k := _sp356
+      let _t345 ← SudoRt.addI i (SudoRt.listLen (b).sudo_6BigInt_5limbs)
+      let k0 := _t345
+      let _t355 ← SudoRt.subI (SudoRt.listLen out) (1 : Int)
+      let _fromV := k0
+      let _toV := _t355
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init358 := (_fromV, (out, carry))
+      let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init358 fuel (fun σ =>
+    let k := σ.1
+    let out := σ.2.1
+    let _sp356 := σ.2.2
+    let carry := _sp356
     do
-      if !((decide (carry > (0 : Int)))) then
-        pure (SudoRt.Flow.brk (ρ := BigInt) (out, carry, k))
+      if k > _toV then
+        pure (SudoRt.Flow.brk (ρ := BigInt) (k, (out, carry)))
       else
         match ← ((do
-  let _t345 ← SudoRt.atL out k
-  let _t346 ← SudoRt.addI _t345 carry
-  let cur := _t346
-  let _ix347 := k
-  let _t348 ← SudoRt.modI cur limb_base
-  let _t349 ← SudoRt.putL out _ix347 _t348
-  let out := _t349
-  let _t350 ← SudoRt.divI cur limb_base
-  let carry := _t350
-  let _t351 ← SudoRt.addI k (1 : Int)
-  let k := _t351
-  pure (SudoRt.Flow.cont (ρ := BigInt) (out, carry, k))) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
+  if (decide (carry > (0 : Int))) then
+    do
+      let _t348 ← SudoRt.atL out k
+      let _t349 ← SudoRt.addI _t348 carry
+      let cur := _t349
+      let _ix350 := k
+      let _t351 ← SudoRt.modI cur limb_base
+      let _t352 ← SudoRt.putL out _ix350 _t351
+      let out := _t352
+      let _t353 ← SudoRt.divI cur limb_base
+      let carry := _t353
+      pure (SudoRt.Flow.cont (ρ := BigInt) (out, carry))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := BigInt) (out, carry))) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) _fs)
-        | .cont _fs => (let out := _fs.1; let _sp353 := _fs.2; let carry := _sp353.1; let _sp354 := _sp353.2; let k := _sp354; pure (SudoRt.Flow.cont (ρ := BigInt) (out, carry, k)))) (fun σ =>
-    let out := σ.1
-    let _sp357 := σ.2
-    let carry := _sp357.1
-    let _sp358 := _sp357.2
-    let k := _sp358
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) (k, _fs))
+        | .cont _fs => do
+            if k == _toV then
+              pure (SudoRt.Flow.brk (ρ := BigInt) (k, _fs))
+            else do
+              let i' ← SudoRt.addI k (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := BigInt) (i', _fs))) (fun σ =>
+    let out := σ.2.1
+    let _sp357 := σ.2.2
+    let carry := _sp357
     do
       pure (SudoRt.Flow.cont (ρ := BigInt) out)) (fun r => pure (SudoRt.Flow.ret (ρ := BigInt) r)))
       pure _out) (fun r => pure (SudoRt.Flow.ret (ρ := BigInt) r)))
@@ -1381,49 +1418,49 @@ def big_mul (a : BigInt) (b : BigInt) : Except SudoRt.Trap (BigInt) :=
               pure (SudoRt.Flow.cont (ρ := BigInt) (i', _fs))) (fun σ =>
     let out := σ.2
     do
-      let _t365 ← make_big false out
-      pure _t365) (fun r => pure r))
+      let _t364 ← make_big false out
+      pure _t364) (fun r => pure r))
         pure _out
 
 def big_divmod_small (a : BigInt) (d : Int) : Except SudoRt.Trap ((BigInt) × (Int)) :=
   do
-    let _t368 ← (if (decide (d > (0 : Int))) then (do
+    let _t367 ← (if (decide (d > (0 : Int))) then (do
   pure (decide (d < limb_base))) else pure false)
-    let _as370 ← SudoRt.sudoAssert _t368 410
+    let _as369 ← SudoRt.sudoAssert _t367 412
     if (SudoRt.SEq.beq (SudoRt.listLen (a).sudo_6BigInt_5limbs) (0 : Int)) then
       do
-        let _t373 ← big_zero
-        pure (_t373, (0 : Int))
+        let _t372 ← big_zero
+        pure (_t372, (0 : Int))
     else
       do
-        let _t375 ← SudoRt.filledL (SudoRt.listLen (a).sudo_6BigInt_5limbs) (0 : Int)
-        let q := _t375
+        let _t374 ← SudoRt.filledL (SudoRt.listLen (a).sudo_6BigInt_5limbs) (0 : Int)
+        let q := _t374
         let rem := (0 : Int)
-        let _t385 ← SudoRt.subI (SudoRt.listLen (a).sudo_6BigInt_5limbs) (1 : Int)
-        let _fromV := _t385
+        let _t384 ← SudoRt.subI (SudoRt.listLen (a).sudo_6BigInt_5limbs) (1 : Int)
+        let _fromV := _t384
         let _toV := (0 : Int)
         let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
-        let _init389 := (_fromV, (q, rem))
-        let _out ← (SudoRt.runLoopOn (ρ := (BigInt) × (Int)) _init389 fuel (fun σ =>
+        let _init388 := (_fromV, (q, rem))
+        let _out ← (SudoRt.runLoopOn (ρ := (BigInt) × (Int)) _init388 fuel (fun σ =>
     let i := σ.1
     let q := σ.2.1
-    let _sp387 := σ.2.2
-    let rem := _sp387
+    let _sp386 := σ.2.2
+    let rem := _sp386
     do
       if i < _toV then
         pure (SudoRt.Flow.brk (ρ := (BigInt) × (Int)) (i, (q, rem)))
       else
         match ← ((do
-  let _t377 ← SudoRt.mulI rem limb_base
-  let _t378 ← SudoRt.atL (a).sudo_6BigInt_5limbs i
-  let _t379 ← SudoRt.addI _t377 _t378
-  let cur := _t379
-  let _ix380 := i
-  let _t381 ← SudoRt.divI cur d
-  let _t382 ← SudoRt.putL q _ix380 _t381
-  let q := _t382
-  let _t383 ← SudoRt.modI cur d
-  let rem := _t383
+  let _t376 ← SudoRt.mulI rem limb_base
+  let _t377 ← SudoRt.atL (a).sudo_6BigInt_5limbs i
+  let _t378 ← SudoRt.addI _t376 _t377
+  let cur := _t378
+  let _ix379 := i
+  let _t380 ← SudoRt.divI cur d
+  let _t381 ← SudoRt.putL q _ix379 _t380
+  let q := _t381
+  let _t382 ← SudoRt.modI cur d
+  let rem := _t382
   pure (SudoRt.Flow.cont (ρ := (BigInt) × (Int)) (q, rem))) : Except SudoRt.Trap (SudoRt.Flow _ ((BigInt) × (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (BigInt) × (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (BigInt) × (Int)) (i, _fs))
@@ -1434,25 +1471,25 @@ def big_divmod_small (a : BigInt) (d : Int) : Except SudoRt.Trap ((BigInt) × (I
               let i' ← SudoRt.subI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (BigInt) × (Int)) (i', _fs))) (fun σ =>
     let q := σ.2.1
-    let _sp388 := σ.2.2
-    let rem := _sp388
+    let _sp387 := σ.2.2
+    let rem := _sp387
     do
-      let _t386 ← make_big false q
-      pure (_t386, rem)) (fun r => pure r))
+      let _t385 ← make_big false q
+      pure (_t385, rem)) (fun r => pure r))
         pure _out
 
 def big_from_be (bs : Array (Int)) : Except SudoRt.Trap (BigInt) :=
   do
-    let _t390 ← big_zero
-    let n := _t390
-    let _t391 ← big_from_int (256 : Int)
-    let two56 := _t391
-    let _t398 ← SudoRt.subI (SudoRt.listLen bs) (1 : Int)
+    let _t389 ← big_zero
+    let n := _t389
+    let _t390 ← big_from_int (256 : Int)
+    let two56 := _t390
+    let _t397 ← SudoRt.subI (SudoRt.listLen bs) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t398
+    let _toV := _t397
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init399 := (_fromV, n)
-    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init399 fuel (fun σ =>
+    let _init398 := (_fromV, n)
+    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init398 fuel (fun σ =>
     let i := σ.1
     let n := σ.2
     do
@@ -1460,11 +1497,11 @@ def big_from_be (bs : Array (Int)) : Except SudoRt.Trap (BigInt) :=
         pure (SudoRt.Flow.brk (ρ := BigInt) (i, n))
       else
         match ← ((do
-  let _t393 ← big_mul n two56
-  let _t394 ← SudoRt.atL bs i
-  let _t395 ← big_from_int _t394
-  let _t396 ← big_add _t393 _t395
-  let n := _t396
+  let _t392 ← big_mul n two56
+  let _t393 ← SudoRt.atL bs i
+  let _t394 ← big_from_int _t393
+  let _t395 ← big_add _t392 _t394
+  let n := _t395
   pure (SudoRt.Flow.cont (ρ := BigInt) n)) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) (i, _fs))
@@ -1486,24 +1523,24 @@ def big_to_be (n : BigInt) (width : Int) : Except SudoRt.Trap (Array (Int)) :=
     let _fromV := (1 : Int)
     let _toV := width
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init417 := (_fromV, (acc, rev))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init417 fuel (fun σ =>
+    let _init416 := (_fromV, (acc, rev))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init416 fuel (fun σ =>
     let i := σ.1
     let acc := σ.2.1
-    let _sp415 := σ.2.2
-    let rev := _sp415
+    let _sp414 := σ.2.2
+    let rev := _sp414
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (acc, rev)))
       else
         match ← ((do
-  let _t403 ← big_divmod_small acc (256 : Int)
-  let ⟨acc, r⟩ := _t403
-  let _mb404 := SudoRt.appendL rev r
-  let ⟨_nr405, _⟩ := _mb404
-  let rev := _nr405
-  let _hm400 := ()
-  let _u406 := _hm400
+  let _t402 ← big_divmod_small acc (256 : Int)
+  let ⟨acc, r⟩ := _t402
+  let _mb403 := SudoRt.appendL rev r
+  let ⟨_nr404, _⟩ := _mb403
+  let rev := _nr404
+  let _hm399 := ()
+  let _u405 := _hm399
   pure (SudoRt.Flow.cont (ρ := Array (Int)) (acc, rev))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1514,16 +1551,16 @@ def big_to_be (n : BigInt) (width : Int) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let acc := σ.2.1
-    let _sp416 := σ.2.2
-    let rev := _sp416
+    let _sp415 := σ.2.2
+    let rev := _sp415
     do
       let out := (#[] : Array (Int))
-      let _t413 ← SudoRt.subI (SudoRt.listLen rev) (1 : Int)
-      let _fromV := _t413
+      let _t412 ← SudoRt.subI (SudoRt.listLen rev) (1 : Int)
+      let _fromV := _t412
       let _toV := (0 : Int)
       let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
-      let _init414 := (_fromV, out)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init414 fuel (fun σ =>
+      let _init413 := (_fromV, out)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init413 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -1531,12 +1568,12 @@ def big_to_be (n : BigInt) (width : Int) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
       else
         match ← ((do
-  let _t408 ← SudoRt.atL rev i
-  let _mb409 := SudoRt.appendL out _t408
-  let ⟨_nr410, _⟩ := _mb409
-  let out := _nr410
-  let _hm401 := ()
-  let _u411 := _hm401
+  let _t407 ← SudoRt.atL rev i
+  let _mb408 := SudoRt.appendL out _t407
+  let ⟨_nr409, _⟩ := _mb408
+  let out := _nr409
+  let _hm400 := ()
+  let _u410 := _hm400
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1554,13 +1591,13 @@ def big_to_be (n : BigInt) (width : Int) : Except SudoRt.Trap (Array (Int)) :=
 
 def big_factorial (n : Int) : Except SudoRt.Trap (BigInt) :=
   do
-    let _t418 ← big_from_int (1 : Int)
-    let r := _t418
+    let _t417 ← big_from_int (1 : Int)
+    let r := _t417
     let _fromV := (2 : Int)
     let _toV := n
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init422 := (_fromV, r)
-    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init422 fuel (fun σ =>
+    let _init421 := (_fromV, r)
+    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init421 fuel (fun σ =>
     let i := σ.1
     let r := σ.2
     do
@@ -1568,9 +1605,9 @@ def big_factorial (n : Int) : Except SudoRt.Trap (BigInt) :=
         pure (SudoRt.Flow.brk (ρ := BigInt) (i, r))
       else
         match ← ((do
-  let _t420 ← big_from_int i
-  let _t421 ← big_mul r _t420
-  let r := _t421
+  let _t419 ← big_from_int i
+  let _t420 ← big_mul r _t419
+  let r := _t420
   pure (SudoRt.Flow.cont (ρ := BigInt) r)) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) (i, _fs))
@@ -1587,15 +1624,15 @@ def big_factorial (n : Int) : Except SudoRt.Trap (BigInt) :=
 
 def two224 : Except SudoRt.Trap (BigInt) :=
   do
-    let _t423 ← big_from_int (1 : Int)
-    let n := _t423
-    let _t424 ← big_from_int (2 : Int)
-    let two := _t424
+    let _t422 ← big_from_int (1 : Int)
+    let n := _t422
+    let _t423 ← big_from_int (2 : Int)
+    let two := _t423
     let _fromV := (1 : Int)
     let _toV := (224 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init427 := (_fromV, n)
-    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init427 fuel (fun σ =>
+    let _init426 := (_fromV, n)
+    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init426 fuel (fun σ =>
     let i := σ.1
     let n := σ.2
     do
@@ -1603,8 +1640,8 @@ def two224 : Except SudoRt.Trap (BigInt) :=
         pure (SudoRt.Flow.brk (ρ := BigInt) (i, n))
       else
         match ← ((do
-  let _t426 ← big_mul n two
-  let n := _t426
+  let _t425 ← big_mul n two
+  let n := _t425
   pure (SudoRt.Flow.cont (ρ := BigInt) n)) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) (i, _fs))
@@ -1621,38 +1658,38 @@ def two224 : Except SudoRt.Trap (BigInt) :=
 
 def even30 : Except SudoRt.Trap (BigInt) :=
   do
-    let _t428 ← big_factorial (30 : Int)
-    let f := _t428
-    let _t429 ← big_divmod_small f (2 : Int)
-    let ⟨q, r⟩ := _t429
-    let _as430 ← SudoRt.sudoAssertEq r (0 : Int) 455
+    let _t427 ← big_factorial (30 : Int)
+    let f := _t427
+    let _t428 ← big_divmod_small f (2 : Int)
+    let ⟨q, r⟩ := _t428
+    let _as429 ← SudoRt.sudoAssertEq r (0 : Int) 457
     pure q
 
 def limb_to_small (n : BigInt) : Except SudoRt.Trap (Int) :=
   do
     let acc := (0 : Int)
     let place := (1 : Int)
-    let _t437 ← SudoRt.subI (SudoRt.listLen (n).sudo_6BigInt_5limbs) (1 : Int)
+    let _t436 ← SudoRt.subI (SudoRt.listLen (n).sudo_6BigInt_5limbs) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t437
+    let _toV := _t436
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init440 := (_fromV, (acc, place))
-    let _out ← (SudoRt.runLoopOn (ρ := Int) _init440 fuel (fun σ =>
+    let _init439 := (_fromV, (acc, place))
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init439 fuel (fun σ =>
     let i := σ.1
     let acc := σ.2.1
-    let _sp438 := σ.2.2
-    let place := _sp438
+    let _sp437 := σ.2.2
+    let place := _sp437
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) (i, (acc, place)))
       else
         match ← ((do
-  let _t432 ← SudoRt.atL (n).sudo_6BigInt_5limbs i
-  let _t433 ← SudoRt.mulI _t432 place
-  let _t434 ← SudoRt.addI acc _t433
-  let acc := _t434
-  let _t435 ← SudoRt.mulI place limb_base
-  let place := _t435
+  let _t431 ← SudoRt.atL (n).sudo_6BigInt_5limbs i
+  let _t432 ← SudoRt.mulI _t431 place
+  let _t433 ← SudoRt.addI acc _t432
+  let acc := _t433
+  let _t434 ← SudoRt.mulI place limb_base
+  let place := _t434
   pure (SudoRt.Flow.cont (ρ := Int) (acc, place))) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) (i, _fs))
@@ -1663,8 +1700,8 @@ def limb_to_small (n : BigInt) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) (i', _fs))) (fun σ =>
     let acc := σ.2.1
-    let _sp439 := σ.2.2
-    let place := _sp439
+    let _sp438 := σ.2.2
+    let place := _sp438
     do
       pure acc) (fun r => pure r))
     pure _out
@@ -1675,8 +1712,8 @@ def peel_leading (n : BigInt) (d : Int) : Except SudoRt.Trap ((BigInt) × (Int))
     let _fromV := (2 : Int)
     let _toV := d
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init449 := (_fromV, q)
-    let _out ← (SudoRt.runLoopOn (ρ := (BigInt) × (Int)) _init449 fuel (fun σ =>
+    let _init448 := (_fromV, q)
+    let _out ← (SudoRt.runLoopOn (ρ := (BigInt) × (Int)) _init448 fuel (fun σ =>
     let f := σ.1
     let q := σ.2
     do
@@ -1684,8 +1721,8 @@ def peel_leading (n : BigInt) (d : Int) : Except SudoRt.Trap ((BigInt) × (Int))
         pure (SudoRt.Flow.brk (ρ := (BigInt) × (Int)) (f, q))
       else
         match ← ((do
-  let _t442 ← big_divmod_small q f
-  let ⟨q, rr⟩ := _t442
+  let _t441 ← big_divmod_small q f
+  let ⟨q, rr⟩ := _t441
   pure (SudoRt.Flow.cont (ρ := (BigInt) × (Int)) q)) : Except SudoRt.Trap (SudoRt.Flow _ ((BigInt) × (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (BigInt) × (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (BigInt) × (Int)) (f, _fs))
@@ -1697,47 +1734,47 @@ def peel_leading (n : BigInt) (d : Int) : Except SudoRt.Trap ((BigInt) × (Int))
               pure (SudoRt.Flow.cont (ρ := (BigInt) × (Int)) (i', _fs))) (fun σ =>
     let q := σ.2
     do
-      let _t443 ← limb_to_small q
-      let idx := _t443
-      let _t444 ← big_factorial d
-      let fact := _t444
-      let _t445 ← big_from_int idx
-      let _t446 ← big_mul _t445 fact
-      let prod := _t446
-      let _t447 ← mag_sub (n).sudo_6BigInt_5limbs (prod).sudo_6BigInt_5limbs
-      let _t448 ← make_big false _t447
-      let rest := _t448
+      let _t442 ← limb_to_small q
+      let idx := _t442
+      let _t443 ← big_factorial d
+      let fact := _t443
+      let _t444 ← big_from_int idx
+      let _t445 ← big_mul _t444 fact
+      let prod := _t445
+      let _t446 ← mag_sub (n).sudo_6BigInt_5limbs (prod).sudo_6BigInt_5limbs
+      let _t447 ← make_big false _t446
+      let rest := _t447
       pure (rest, idx)) (fun r => pure r))
     pure _out
 
 def pad_z (msg_len : Int) : Except SudoRt.Trap (Int) :=
   do
-    let _t450 ← SudoRt.addI msg_len (1 : Int)
-    let _t451 ← SudoRt.addI _t450 len_field
-    let _t452 ← SudoRt.modI _t451 pad_block
-    let _t453 ← SudoRt.subI pad_block _t452
-    let _t454 ← SudoRt.modI _t453 pad_block
-    pure _t454
+    let _t449 ← SudoRt.addI msg_len (1 : Int)
+    let _t450 ← SudoRt.addI _t449 len_field
+    let _t451 ← SudoRt.modI _t450 pad_block
+    let _t452 ← SudoRt.subI pad_block _t451
+    let _t453 ← SudoRt.modI _t452 pad_block
+    pure _t453
 
 def pad_message (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t467 ← SudoRt.subI (SudoRt.listLen msg) (1 : Int)
+    let _t466 ← SudoRt.subI (SudoRt.listLen msg) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t467
+    let _toV := _t466
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init496 := _fromV
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init496 fuel (fun σ =>
+    let _init495 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init495 fuel (fun σ =>
     let i := σ
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) i)
       else
         match ← ((do
-  let _t460 ← SudoRt.atL msg i
-  let _t462 ← (if (decide (_t460 ≥ (0 : Int))) then (do
-  let _t463 ← SudoRt.atL msg i
-  pure (decide (_t463 ≤ (255 : Int)))) else pure false)
-  let _as465 ← SudoRt.sudoAssert _t462 481
+  let _t459 ← SudoRt.atL msg i
+  let _t461 ← (if (decide (_t459 ≥ (0 : Int))) then (do
+  let _t462 ← SudoRt.atL msg i
+  pure (decide (_t462 ≤ (255 : Int)))) else pure false)
+  let _as464 ← SudoRt.sudoAssert _t461 483
   pure (SudoRt.Flow.cont (ρ := Array (Int)) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) i)
@@ -1748,48 +1785,14 @@ def pad_message (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) i')) (fun σ =>
     do
-      let _t469 ← SudoRt.mulI (8 : Int) (SudoRt.listLen msg)
-      let bitlen := _t469
-      let _t471 ← pad_z (SudoRt.listLen msg)
-      let z := _t471
+      let _t468 ← SudoRt.mulI (8 : Int) (SudoRt.listLen msg)
+      let bitlen := _t468
+      let _t470 ← pad_z (SudoRt.listLen msg)
+      let z := _t470
       let out := (#[] : Array (Int))
-      let _t478 ← SudoRt.subI (SudoRt.listLen msg) (1 : Int)
+      let _t477 ← SudoRt.subI (SudoRt.listLen msg) (1 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t478
-      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init495 := (_fromV, out)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init495 fuel (fun σ =>
-    let i := σ.1
-    let out := σ.2
-    do
-      if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
-      else
-        match ← ((do
-  let _t473 ← SudoRt.atL msg i
-  let _mb474 := SudoRt.appendL out _t473
-  let ⟨_nr475, _⟩ := _mb474
-  let out := _nr475
-  let _hm455 := ()
-  let _u476 := _hm455
-  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-        | .cont _fs => do
-            if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-            else do
-              let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
-    let out := σ.2
-    do
-      let _mb479 := SudoRt.appendL out (128 : Int)
-      let ⟨_nr480, _⟩ := _mb479
-      let out := _nr480
-      let _hm456 := ()
-      let _u481 := _hm456
-      let _fromV := (1 : Int)
-      let _toV := z
+      let _toV := _t477
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
       let _init494 := (_fromV, out)
       let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init494 fuel (fun σ =>
@@ -1800,11 +1803,12 @@ def pad_message (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
       else
         match ← ((do
-  let _mb483 := SudoRt.appendL out (0 : Int)
-  let ⟨_nr484, _⟩ := _mb483
-  let out := _nr484
-  let _hm457 := ()
-  let _u485 := _hm457
+  let _t472 ← SudoRt.atL msg i
+  let _mb473 := SudoRt.appendL out _t472
+  let ⟨_nr474, _⟩ := _mb473
+  let out := _nr474
+  let _hm454 := ()
+  let _u475 := _hm454
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1816,11 +1820,13 @@ def pad_message (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let out := σ.2
     do
-      let _t486 ← big_from_int bitlen
-      let _t487 ← big_to_be _t486 (8 : Int)
-      let lenb := _t487
-      let _fromV := (0 : Int)
-      let _toV := (7 : Int)
+      let _mb478 := SudoRt.appendL out (128 : Int)
+      let ⟨_nr479, _⟩ := _mb478
+      let out := _nr479
+      let _hm455 := ()
+      let _u480 := _hm455
+      let _fromV := (1 : Int)
+      let _toV := z
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
       let _init493 := (_fromV, out)
       let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init493 fuel (fun σ =>
@@ -1831,12 +1837,43 @@ def pad_message (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
       else
         match ← ((do
-  let _t489 ← SudoRt.atL lenb i
-  let _mb490 := SudoRt.appendL out _t489
-  let ⟨_nr491, _⟩ := _mb490
-  let out := _nr491
-  let _hm458 := ()
-  let _u492 := _hm458
+  let _mb482 := SudoRt.appendL out (0 : Int)
+  let ⟨_nr483, _⟩ := _mb482
+  let out := _nr483
+  let _hm456 := ()
+  let _u484 := _hm456
+  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let out := σ.2
+    do
+      let _t485 ← big_from_int bitlen
+      let _t486 ← big_to_be _t485 (8 : Int)
+      let lenb := _t486
+      let _fromV := (0 : Int)
+      let _toV := (7 : Int)
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init492 := (_fromV, out)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init492 fuel (fun σ =>
+    let i := σ.1
+    let out := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
+      else
+        match ← ((do
+  let _t488 ← SudoRt.atL lenb i
+  let _mb489 := SudoRt.appendL out _t488
+  let ⟨_nr490, _⟩ := _mb489
+  let out := _nr490
+  let _hm457 := ()
+  let _u491 := _hm457
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1856,59 +1893,59 @@ def pad_message (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
 
 def phi_chunk (chunk : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _as501 ← SudoRt.sudoAssertEq (SudoRt.listLen chunk) pad_block 496
-    let _t502 ← big_from_be chunk
-    let rem := _t502
-    let _t503 ← range_list (52 : Int)
-    let avail := _t503
+    let _as500 ← SudoRt.sudoAssertEq (SudoRt.listLen chunk) pad_block 498
+    let _t501 ← big_from_be chunk
+    let rem := _t501
+    let _t502 ← range_list (52 : Int)
+    let avail := _t502
     let out := (#[] : Array (Int))
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init534 := (_fromV, (out, rem, avail))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init534 fuel (fun σ =>
+    let _init533 := (_fromV, (out, rem, avail))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init533 fuel (fun σ =>
     let i := σ.1
     let out := σ.2.1
-    let _sp530 := σ.2.2
-    let rem := _sp530.1
-    let _sp531 := _sp530.2
-    let avail := _sp531
+    let _sp529 := σ.2.2
+    let rem := _sp529.1
+    let _sp530 := _sp529.2
+    let avail := _sp530
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (out, rem, avail)))
       else
         match ← ((do
-  let _t505 ← SudoRt.subI (51 : Int) i
-  let d := _t505
+  let _t504 ← SudoRt.subI (51 : Int) i
+  let d := _t504
   if (SudoRt.SEq.beq d (0 : Int)) then
     do
-      let _t507 ← SudoRt.atL avail (0 : Int)
-      let _mb508 := SudoRt.appendL out _t507
-      let ⟨_nr509, _⟩ := _mb508
-      let out := _nr509
-      let _hm497 := ()
-      let _u510 := _hm497
+      let _t506 ← SudoRt.atL avail (0 : Int)
+      let _mb507 := SudoRt.appendL out _t506
+      let ⟨_nr508, _⟩ := _mb507
+      let out := _nr508
+      let _hm496 := ()
+      let _u509 := _hm496
       pure (SudoRt.Flow.cont (ρ := Array (Int)) (out, rem, avail))
   else
     do
-      let _t511 ← peel_leading rem d
-      let ⟨rem, idx⟩ := _t511
-      let _t513 ← (if (decide (idx ≥ (0 : Int))) then (do
+      let _t510 ← peel_leading rem d
+      let ⟨rem, idx⟩ := _t510
+      let _t512 ← (if (decide (idx ≥ (0 : Int))) then (do
   pure (decide (idx < (SudoRt.listLen avail)))) else pure false)
-      let _as516 ← SudoRt.sudoAssert _t513 506
-      let _t517 ← SudoRt.atL avail idx
-      let _mb518 := SudoRt.appendL out _t517
-      let ⟨_nr519, _⟩ := _mb518
-      let out := _nr519
-      let _hm498 := ()
-      let _u520 := _hm498
+      let _as515 ← SudoRt.sudoAssert _t512 508
+      let _t516 ← SudoRt.atL avail idx
+      let _mb517 := SudoRt.appendL out _t516
+      let ⟨_nr518, _⟩ := _mb517
+      let out := _nr518
+      let _hm497 := ()
+      let _u519 := _hm497
       let fresh := (#[] : Array (Int))
-      let _t528 ← SudoRt.subI (SudoRt.listLen avail) (1 : Int)
+      let _t527 ← SudoRt.subI (SudoRt.listLen avail) (1 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t528
+      let _toV := _t527
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init529 := (_fromV, fresh)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init529 fuel (fun σ =>
+      let _init528 := (_fromV, fresh)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init528 fuel (fun σ =>
     let t := σ.1
     let fresh := σ.2
     do
@@ -1918,12 +1955,12 @@ def phi_chunk (chunk : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         match ← ((do
   if (!(SudoRt.SEq.beq t idx)) then
     do
-      let _t523 ← SudoRt.atL avail t
-      let _mb524 := SudoRt.appendL fresh _t523
-      let ⟨_nr525, _⟩ := _mb524
-      let fresh := _nr525
-      let _hm499 := ()
-      let _u526 := _hm499
+      let _t522 ← SudoRt.atL avail t
+      let _mb523 := SudoRt.appendL fresh _t522
+      let ⟨_nr524, _⟩ := _mb523
+      let fresh := _nr524
+      let _hm498 := ()
+      let _u525 := _hm498
       pure (SudoRt.Flow.cont (ρ := Array (Int)) fresh)
   else
     do
@@ -1950,67 +1987,86 @@ def phi_chunk (chunk : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let out := σ.2.1
-    let _sp532 := σ.2.2
-    let rem := _sp532.1
-    let _sp533 := _sp532.2
-    let avail := _sp533
+    let _sp531 := σ.2.2
+    let rem := _sp531.1
+    let _sp532 := _sp531.2
+    let avail := _sp532
     do
       pure out) (fun r => pure r))
     pure _out
 
 def phi_inv (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t536 ← range_list (52 : Int)
-    let avail := _t536
-    let _t537 ← big_zero
-    let n := _t537
+    let _t535 ← range_list (52 : Int)
+    let avail := _t535
+    let _t536 ← big_zero
+    let n := _t536
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init565 := (_fromV, (n, avail))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init565 fuel (fun σ =>
+    let _init571 := (_fromV, (n, avail))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init571 fuel (fun σ =>
     let i := σ.1
     let n := σ.2.1
-    let _sp563 := σ.2.2
-    let avail := _sp563
+    let _sp569 := σ.2.2
+    let avail := _sp569
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (n, avail)))
       else
         match ← ((do
-  let _t539 ← SudoRt.atL deal i
-  let v := _t539
-  let idx := (0 : Int)
-  let _init557 := idx
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init557 (2 ^ 32) (fun σ =>
-    let idx := σ
+  let _t538 ← SudoRt.atL deal i
+  let v := _t538
+  let _t539 ← SudoRt.negI (1 : Int)
+  let found := _t539
+  let _t546 ← SudoRt.subI (SudoRt.listLen avail) (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t546
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init563 := (_fromV, found)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init563 fuel (fun σ =>
+    let t := σ.1
+    let found := σ.2
     do
-      let _t541 ← SudoRt.atL avail idx
-      if !((!(SudoRt.SEq.beq _t541 v))) then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) idx)
+      if t > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (t, found))
       else
         match ← ((do
-  let _t540 ← SudoRt.addI idx (1 : Int)
-  let idx := _t540
-  pure (SudoRt.Flow.cont (ρ := Array (Int)) idx)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) _fs)
-        | .cont _fs => (let idx := _fs; pure (SudoRt.Flow.cont (ρ := Array (Int)) idx))) (fun σ =>
-    let idx := σ
+  let _t542 ← (if (decide (found < (0 : Int))) then (do
+  let _t543 ← SudoRt.atL avail t
+  pure (SudoRt.SEq.beq _t543 v)) else pure false)
+  if _t542 then
     do
-      let _t543 ← SudoRt.subI (52 : Int) i
-      let _t544 ← big_from_int _t543
-      let _t545 ← big_mul n _t544
-      let _t546 ← big_from_int idx
-      let _t547 ← big_add _t545 _t546
-      let n := _t547
+      let found := t
+      pure (SudoRt.Flow.cont (ρ := Array (Int)) found)
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Array (Int)) found)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (t, _fs))
+        | .cont _fs => do
+            if t == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (t, _fs))
+            else do
+              let i' ← SudoRt.addI t (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let found := σ.2
+    do
+      let _as548 ← SudoRt.sudoAssert (decide (found ≥ (0 : Int))) 526
+      let idx := found
+      let _t549 ← SudoRt.subI (52 : Int) i
+      let _t550 ← big_from_int _t549
+      let _t551 ← big_mul n _t550
+      let _t552 ← big_from_int idx
+      let _t553 ← big_add _t551 _t552
+      let n := _t553
       let fresh := (#[] : Array (Int))
-      let _t555 ← SudoRt.subI (SudoRt.listLen avail) (1 : Int)
+      let _t561 ← SudoRt.subI (SudoRt.listLen avail) (1 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t555
+      let _toV := _t561
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init556 := (_fromV, fresh)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init556 fuel (fun σ =>
+      let _init562 := (_fromV, fresh)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init562 fuel (fun σ =>
     let t := σ.1
     let fresh := σ.2
     do
@@ -2020,12 +2076,12 @@ def phi_inv (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         match ← ((do
   if (!(SudoRt.SEq.beq t idx)) then
     do
-      let _t550 ← SudoRt.atL avail t
-      let _mb551 := SudoRt.appendL fresh _t550
-      let ⟨_nr552, _⟩ := _mb551
-      let fresh := _nr552
-      let _hm535 := ()
-      let _u553 := _hm535
+      let _t556 ← SudoRt.atL avail t
+      let _mb557 := SudoRt.appendL fresh _t556
+      let ⟨_nr558, _⟩ := _mb557
+      let fresh := _nr558
+      let _hm534 := ()
+      let _u559 := _hm534
       pure (SudoRt.Flow.cont (ρ := Array (Int)) fresh)
   else
     do
@@ -2053,26 +2109,26 @@ def phi_inv (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let n := σ.2.1
-    let _sp564 := σ.2.2
-    let avail := _sp564
+    let _sp570 := σ.2.2
+    let avail := _sp570
     do
-      let _t558 ← two224
-      let _t559 ← mag_cmp (n).sudo_6BigInt_5limbs (_t558).sudo_6BigInt_5limbs
-      let _as561 ← SudoRt.sudoAssert (decide (_t559 < (0 : Int))) 529
-      let _t562 ← big_to_be n pad_block
-      pure _t562) (fun r => pure r))
+      let _t564 ← two224
+      let _t565 ← mag_cmp (n).sudo_6BigInt_5limbs (_t564).sudo_6BigInt_5limbs
+      let _as567 ← SudoRt.sudoAssert (decide (_t565 < (0 : Int))) 534
+      let _t568 ← big_to_be n pad_block
+      pure _t568) (fun r => pure r))
     pure _out
 
 def require_permutation (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _as567 ← SudoRt.sudoAssertEq (SudoRt.listLen deal) body_len 533
-    let _t568 ← SudoRt.filledL (52 : Int) (0 : Int)
-    let seen := _t568
+    let _as573 ← SudoRt.sudoAssertEq (SudoRt.listLen deal) body_len 538
+    let _t574 ← SudoRt.filledL (52 : Int) (0 : Int)
+    let seen := _t574
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init579 := (_fromV, seen)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init579 fuel (fun σ =>
+    let _init585 := (_fromV, seen)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init585 fuel (fun σ =>
     let i := σ.1
     let seen := σ.2
     do
@@ -2080,16 +2136,16 @@ def require_permutation (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) 
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, seen))
       else
         match ← ((do
-  let _t570 ← SudoRt.atL deal i
-  let c := _t570
-  let _t572 ← (if (decide (c ≥ (0 : Int))) then (do
+  let _t576 ← SudoRt.atL deal i
+  let c := _t576
+  let _t578 ← (if (decide (c ≥ (0 : Int))) then (do
   pure (decide (c < (52 : Int)))) else pure false)
-  let _as574 ← SudoRt.sudoAssert _t572 537
-  let _t575 ← SudoRt.atL seen c
-  let _as576 ← SudoRt.sudoAssertEq _t575 (0 : Int) 538
-  let _ix577 := c
-  let _t578 ← SudoRt.putL seen _ix577 (1 : Int)
-  let seen := _t578
+  let _as580 ← SudoRt.sudoAssert _t578 542
+  let _t581 ← SudoRt.atL seen c
+  let _as582 ← SudoRt.sudoAssertEq _t581 (0 : Int) 543
+  let _ix583 := c
+  let _t584 ← SudoRt.putL seen _ix583 (1 : Int)
+  let seen := _t584
   pure (SudoRt.Flow.cont (ρ := Array (Int)) seen)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -2107,57 +2163,76 @@ def require_permutation (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) 
 def even_perm_rank_big (perm : Array (Int)) : Except SudoRt.Trap (BigInt) :=
   do
     let n := (SudoRt.listLen perm)
-    let _t582 ← range_list n
-    let avail := _t582
-    let _t583 ← big_zero
-    let rank := _t583
-    let _t604 ← SudoRt.subI n (3 : Int)
+    let _t588 ← range_list n
+    let avail := _t588
+    let _t589 ← big_zero
+    let rank := _t589
+    let _t617 ← SudoRt.subI n (3 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t604
+    let _toV := _t617
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init607 := (_fromV, (rank, avail))
-    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init607 fuel (fun σ =>
+    let _init620 := (_fromV, (rank, avail))
+    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init620 fuel (fun σ =>
     let i := σ.1
     let rank := σ.2.1
-    let _sp605 := σ.2.2
-    let avail := _sp605
+    let _sp618 := σ.2.2
+    let avail := _sp618
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := BigInt) (i, (rank, avail)))
       else
         match ← ((do
-  let idx := (0 : Int)
-  let _init603 := idx
-  let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init603 (2 ^ 32) (fun σ =>
-    let idx := σ
+  let _t591 ← SudoRt.negI (1 : Int)
+  let found := _t591
+  let _t599 ← SudoRt.subI (SudoRt.listLen avail) (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t599
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init616 := (_fromV, found)
+  let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init616 fuel (fun σ =>
+    let t := σ.1
+    let found := σ.2
     do
-      let _t586 ← SudoRt.atL avail idx
-      let _t587 ← SudoRt.atL perm i
-      if !((!(SudoRt.SEq.beq _t586 _t587))) then
-        pure (SudoRt.Flow.brk (ρ := BigInt) idx)
+      if t > _toV then
+        pure (SudoRt.Flow.brk (ρ := BigInt) (t, found))
       else
         match ← ((do
-  let _t585 ← SudoRt.addI idx (1 : Int)
-  let idx := _t585
-  pure (SudoRt.Flow.cont (ρ := BigInt) idx)) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) _fs)
-        | .cont _fs => (let idx := _fs; pure (SudoRt.Flow.cont (ρ := BigInt) idx))) (fun σ =>
-    let idx := σ
+  let _t594 ← (if (decide (found < (0 : Int))) then (do
+  let _t595 ← SudoRt.atL avail t
+  let _t596 ← SudoRt.atL perm i
+  pure (SudoRt.SEq.beq _t595 _t596)) else pure false)
+  if _t594 then
     do
-      let _t589 ← SudoRt.subI n i
-      let _t590 ← big_from_int _t589
-      let _t591 ← big_mul rank _t590
-      let _t592 ← big_from_int idx
-      let _t593 ← big_add _t591 _t592
-      let rank := _t593
+      let found := t
+      pure (SudoRt.Flow.cont (ρ := BigInt) found)
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := BigInt) found)) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) (t, _fs))
+        | .cont _fs => do
+            if t == _toV then
+              pure (SudoRt.Flow.brk (ρ := BigInt) (t, _fs))
+            else do
+              let i' ← SudoRt.addI t (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := BigInt) (i', _fs))) (fun σ =>
+    let found := σ.2
+    do
+      let _as601 ← SudoRt.sudoAssert (decide (found ≥ (0 : Int))) 556
+      let idx := found
+      let _t602 ← SudoRt.subI n i
+      let _t603 ← big_from_int _t602
+      let _t604 ← big_mul rank _t603
+      let _t605 ← big_from_int idx
+      let _t606 ← big_add _t604 _t605
+      let rank := _t606
       let fresh := (#[] : Array (Int))
-      let _t601 ← SudoRt.subI (SudoRt.listLen avail) (1 : Int)
+      let _t614 ← SudoRt.subI (SudoRt.listLen avail) (1 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t601
+      let _toV := _t614
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init602 := (_fromV, fresh)
-      let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init602 fuel (fun σ =>
+      let _init615 := (_fromV, fresh)
+      let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init615 fuel (fun σ =>
     let t := σ.1
     let fresh := σ.2
     do
@@ -2167,12 +2242,12 @@ def even_perm_rank_big (perm : Array (Int)) : Except SudoRt.Trap (BigInt) :=
         match ← ((do
   if (!(SudoRt.SEq.beq t idx)) then
     do
-      let _t596 ← SudoRt.atL avail t
-      let _mb597 := SudoRt.appendL fresh _t596
-      let ⟨_nr598, _⟩ := _mb597
-      let fresh := _nr598
-      let _hm580 := ()
-      let _u599 := _hm580
+      let _t609 ← SudoRt.atL avail t
+      let _mb610 := SudoRt.appendL fresh _t609
+      let ⟨_nr611, _⟩ := _mb610
+      let fresh := _nr611
+      let _hm586 := ()
+      let _u612 := _hm586
       pure (SudoRt.Flow.cont (ρ := BigInt) fresh)
   else
     do
@@ -2200,23 +2275,23 @@ def even_perm_rank_big (perm : Array (Int)) : Except SudoRt.Trap (BigInt) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := BigInt) (i', _fs))) (fun σ =>
     let rank := σ.2.1
-    let _sp606 := σ.2.2
-    let avail := _sp606
+    let _sp619 := σ.2.2
+    let avail := _sp619
     do
       pure rank) (fun r => pure r))
     pure _out
 
 def pack_ori3 (co : Array (Int)) : Except SudoRt.Trap (BigInt) :=
   do
-    let _t608 ← big_zero
-    let n := _t608
-    let _t609 ← big_from_int (3 : Int)
-    let three := _t609
+    let _t621 ← big_zero
+    let n := _t621
+    let _t622 ← big_from_int (3 : Int)
+    let three := _t622
     let _fromV := (0 : Int)
     let _toV := (18 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init615 := (_fromV, n)
-    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init615 fuel (fun σ =>
+    let _init628 := (_fromV, n)
+    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init628 fuel (fun σ =>
     let i := σ.1
     let n := σ.2
     do
@@ -2224,11 +2299,11 @@ def pack_ori3 (co : Array (Int)) : Except SudoRt.Trap (BigInt) :=
         pure (SudoRt.Flow.brk (ρ := BigInt) (i, n))
       else
         match ← ((do
-  let _t611 ← big_mul n three
-  let _t612 ← SudoRt.atL co i
-  let _t613 ← big_from_int _t612
-  let _t614 ← big_add _t611 _t613
-  let n := _t614
+  let _t624 ← big_mul n three
+  let _t625 ← SudoRt.atL co i
+  let _t626 ← big_from_int _t625
+  let _t627 ← big_add _t624 _t626
+  let n := _t627
   pure (SudoRt.Flow.cont (ρ := BigInt) n)) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) (i, _fs))
@@ -2245,15 +2320,15 @@ def pack_ori3 (co : Array (Int)) : Except SudoRt.Trap (BigInt) :=
 
 def pack_ori2 (eo : Array (Int)) : Except SudoRt.Trap (BigInt) :=
   do
-    let _t616 ← big_zero
-    let n := _t616
-    let _t617 ← big_from_int (2 : Int)
-    let two := _t617
+    let _t629 ← big_zero
+    let n := _t629
+    let _t630 ← big_from_int (2 : Int)
+    let two := _t630
     let _fromV := (0 : Int)
     let _toV := (28 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init623 := (_fromV, n)
-    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init623 fuel (fun σ =>
+    let _init636 := (_fromV, n)
+    let _out ← (SudoRt.runLoopOn (ρ := BigInt) _init636 fuel (fun σ =>
     let i := σ.1
     let n := σ.2
     do
@@ -2261,11 +2336,11 @@ def pack_ori2 (eo : Array (Int)) : Except SudoRt.Trap (BigInt) :=
         pure (SudoRt.Flow.brk (ρ := BigInt) (i, n))
       else
         match ← ((do
-  let _t619 ← big_mul n two
-  let _t620 ← SudoRt.atL eo i
-  let _t621 ← big_from_int _t620
-  let _t622 ← big_add _t619 _t621
-  let n := _t622
+  let _t632 ← big_mul n two
+  let _t633 ← SudoRt.atL eo i
+  let _t634 ← big_from_int _t633
+  let _t635 ← big_add _t632 _t634
+  let n := _t635
   pure (SudoRt.Flow.cont (ρ := BigInt) n)) : Except SudoRt.Trap (SudoRt.Flow _ (BigInt))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := BigInt) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := BigInt) (i, _fs))
@@ -2282,54 +2357,54 @@ def pack_ori2 (eo : Array (Int)) : Except SudoRt.Trap (BigInt) :=
 
 def position_to_bytes (p : Position) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t624 ← even_perm_rank_big (p).sudo_8Position_2cp
-    let n := _t624
-    let _t625 ← big_from_int ori3_span
-    let _t626 ← big_mul n _t625
-    let _t627 ← pack_ori3 (p).sudo_8Position_2co
-    let _t628 ← big_add _t626 _t627
-    let n := _t628
-    let _t629 ← even30
-    let _t630 ← big_mul n _t629
-    let n := _t630
-    let _t631 ← even_perm_rank_big (p).sudo_8Position_2ep
-    let _t632 ← big_add n _t631
-    let n := _t632
-    let _t633 ← big_from_int ori2_span
-    let _t634 ← big_mul n _t633
-    let n := _t634
-    let _t635 ← pack_ori2 (p).sudo_8Position_2eo
-    let _t636 ← big_add n _t635
-    let n := _t636
-    let _t637 ← big_to_be n digest_len
-    pure _t637
+    let _t637 ← even_perm_rank_big (p).sudo_8Position_2cp
+    let n := _t637
+    let _t638 ← big_from_int ori3_span
+    let _t639 ← big_mul n _t638
+    let _t640 ← pack_ori3 (p).sudo_8Position_2co
+    let _t641 ← big_add _t639 _t640
+    let n := _t641
+    let _t642 ← even30
+    let _t643 ← big_mul n _t642
+    let n := _t643
+    let _t644 ← even_perm_rank_big (p).sudo_8Position_2ep
+    let _t645 ← big_add n _t644
+    let n := _t645
+    let _t646 ← big_from_int ori2_span
+    let _t647 ← big_mul n _t646
+    let n := _t647
+    let _t648 ← pack_ori2 (p).sudo_8Position_2eo
+    let _t649 ← big_add n _t648
+    let n := _t649
+    let _t650 ← big_to_be n digest_len
+    pure _t650
 
 def noon_phys (phys : Int) (o : Array (Int)) : Except SudoRt.Trap (Int) :=
   do
-    let _t638 ← SudoRt.atL o held_up
-    let up := _t638
-    let _t639 ← SudoRt.atL o held_front
-    let front := _t639
+    let _t651 ← SudoRt.atL o held_up
+    let up := _t651
+    let _t652 ← SudoRt.atL o held_front
+    let front := _t652
     if (SudoRt.SEq.beq phys up) then
       do
         pure front
     else
       do
-        let _t641 ← face_nbrs phys
-        let nbrs := _t641
+        let _t654 ← face_nbrs phys
+        let nbrs := _t654
         let _fromV := (0 : Int)
         let _toV := (4 : Int)
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init655 := _fromV
-        let _out ← (SudoRt.runLoopOn (ρ := Int) _init655 fuel (fun σ =>
+        let _init668 := _fromV
+        let _out ← (SudoRt.runLoopOn (ρ := Int) _init668 fuel (fun σ =>
     let i := σ
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) i)
       else
         match ← ((do
-  let _t643 ← SudoRt.atL nbrs i
-  if (SudoRt.SEq.beq _t643 up) then
+  let _t656 ← SudoRt.atL nbrs i
+  if (SudoRt.SEq.beq _t656 up) then
     do
       pure (SudoRt.Flow.ret (ρ := Int) up)
   else
@@ -2344,13 +2419,13 @@ def noon_phys (phys : Int) (o : Array (Int)) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _t645 ← face_nbrs up
-      let upn := _t645
+      let _t658 ← face_nbrs up
+      let upn := _t658
       let _fromV := (0 : Int)
       let _toV := (4 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init654 := _fromV
-      let _out ← (SudoRt.runLoopOn (ρ := Int) _init654 fuel (fun σ =>
+      let _init667 := _fromV
+      let _out ← (SudoRt.runLoopOn (ρ := Int) _init667 fuel (fun σ =>
     let i := σ
     do
       if i > _toV then
@@ -2360,20 +2435,20 @@ def noon_phys (phys : Int) (o : Array (Int)) : Except SudoRt.Trap (Int) :=
   let _fromV := (0 : Int)
   let _toV := (4 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init652 := _fromV
-  let _out ← (SudoRt.runLoopOn (ρ := Int) _init652 fuel (fun σ =>
+  let _init665 := _fromV
+  let _out ← (SudoRt.runLoopOn (ρ := Int) _init665 fuel (fun σ =>
     let j := σ
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) j)
       else
         match ← ((do
-  let _t648 ← SudoRt.atL nbrs i
-  let _t649 ← SudoRt.atL upn j
-  if (SudoRt.SEq.beq _t648 _t649) then
+  let _t661 ← SudoRt.atL nbrs i
+  let _t662 ← SudoRt.atL upn j
+  if (SudoRt.SEq.beq _t661 _t662) then
     do
-      let _t651 ← SudoRt.atL nbrs i
-      pure (SudoRt.Flow.ret (ρ := Int) _t651)
+      let _t664 ← SudoRt.atL nbrs i
+      pure (SudoRt.Flow.ret (ρ := Int) _t664)
   else
     do
       pure (SudoRt.Flow.cont (ρ := Int) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
@@ -2397,35 +2472,35 @@ def noon_phys (phys : Int) (o : Array (Int)) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _t653 ← SudoRt.atL nbrs (0 : Int)
-      pure _t653) (fun r => pure r))
+      let _t666 ← SudoRt.atL nbrs (0 : Int)
+      pure _t666) (fun r => pure r))
       pure _out) (fun r => pure r))
         pure _out
 
 def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t657 ← SudoRt.modI k (5 : Int)
-    let k := _t657
+    let _t670 ← SudoRt.modI k (5 : Int)
+    let k := _t670
     if (SudoRt.SEq.beq k (0 : Int)) then
       do
         pure o
     else
       do
-        let _t659 ← SudoRt.atL o held_up
-        let up := _t659
-        let _t660 ← SudoRt.atL opposites up
-        let down := _t660
-        let _t661 ← face_nbrs up
-        let nbrs := _t661
-        let _t662 ← face_nbrs down
-        let dnbrs := _t662
-        let _t663 ← range_list (12 : Int)
-        let phys := _t663
+        let _t672 ← SudoRt.atL o held_up
+        let up := _t672
+        let _t673 ← SudoRt.atL opposites up
+        let down := _t673
+        let _t674 ← face_nbrs up
+        let nbrs := _t674
+        let _t675 ← face_nbrs down
+        let dnbrs := _t675
+        let _t676 ← range_list (12 : Int)
+        let phys := _t676
         let _fromV := (0 : Int)
         let _toV := (4 : Int)
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init691 := (_fromV, phys)
-        let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init691 fuel (fun σ =>
+        let _init704 := (_fromV, phys)
+        let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init704 fuel (fun σ =>
     let i := σ.1
     let phys := σ.2
     do
@@ -2433,13 +2508,13 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, phys))
       else
         match ← ((do
-  let _t665 ← SudoRt.atL nbrs i
-  let _ix666 := _t665
-  let _t667 ← SudoRt.addI i k
-  let _t668 ← SudoRt.modI _t667 (5 : Int)
-  let _t669 ← SudoRt.atL nbrs _t668
-  let _t670 ← SudoRt.putL phys _ix666 _t669
-  let phys := _t670
+  let _t678 ← SudoRt.atL nbrs i
+  let _ix679 := _t678
+  let _t680 ← SudoRt.addI i k
+  let _t681 ← SudoRt.modI _t680 (5 : Int)
+  let _t682 ← SudoRt.atL nbrs _t681
+  let _t683 ← SudoRt.putL phys _ix679 _t682
+  let phys := _t683
   pure (SudoRt.Flow.cont (ρ := Array (Int)) phys)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -2454,8 +2529,8 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
       let _fromV := (0 : Int)
       let _toV := (4 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init690 := (_fromV, phys)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init690 fuel (fun σ =>
+      let _init703 := (_fromV, phys)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init703 fuel (fun σ =>
     let i := σ.1
     let phys := σ.2
     do
@@ -2463,14 +2538,14 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, phys))
       else
         match ← ((do
-  let _t672 ← SudoRt.atL dnbrs i
-  let _ix673 := _t672
-  let _t674 ← SudoRt.subI i k
-  let _t675 ← SudoRt.addI _t674 (5 : Int)
-  let _t676 ← SudoRt.modI _t675 (5 : Int)
-  let _t677 ← SudoRt.atL dnbrs _t676
-  let _t678 ← SudoRt.putL phys _ix673 _t677
-  let phys := _t678
+  let _t685 ← SudoRt.atL dnbrs i
+  let _ix686 := _t685
+  let _t687 ← SudoRt.subI i k
+  let _t688 ← SudoRt.addI _t687 (5 : Int)
+  let _t689 ← SudoRt.modI _t688 (5 : Int)
+  let _t690 ← SudoRt.atL dnbrs _t689
+  let _t691 ← SudoRt.putL phys _ix686 _t690
+  let phys := _t691
   pure (SudoRt.Flow.cont (ρ := Array (Int)) phys)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -2482,18 +2557,18 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let phys := σ.2
     do
-      let _ix679 := up
-      let _t680 ← SudoRt.putL phys _ix679 up
-      let phys := _t680
-      let _ix681 := down
-      let _t682 ← SudoRt.putL phys _ix681 down
-      let phys := _t682
+      let _ix692 := up
+      let _t693 ← SudoRt.putL phys _ix692 up
+      let phys := _t693
+      let _ix694 := down
+      let _t695 ← SudoRt.putL phys _ix694 down
+      let phys := _t695
       let out := (#[] : Array (Int))
       let _fromV := (0 : Int)
       let _toV := (11 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init689 := (_fromV, out)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init689 fuel (fun σ =>
+      let _init702 := (_fromV, out)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init702 fuel (fun σ =>
     let h := σ.1
     let out := σ.2
     do
@@ -2501,13 +2576,13 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (h, out))
       else
         match ← ((do
-  let _t684 ← SudoRt.atL o h
-  let _t685 ← SudoRt.atL phys _t684
-  let _mb686 := SudoRt.appendL out _t685
-  let ⟨_nr687, _⟩ := _mb686
-  let out := _nr687
-  let _hm656 := ()
-  let _u688 := _hm656
+  let _t697 ← SudoRt.atL o h
+  let _t698 ← SudoRt.atL phys _t697
+  let _mb699 := SudoRt.appendL out _t698
+  let ⟨_nr700, _⟩ := _mb699
+  let out := _nr700
+  let _hm669 := ()
+  let _u701 := _hm669
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (h, _fs))
@@ -2529,21 +2604,21 @@ def abs_reorient (c1 : Int) (c2 : Int) : Except SudoRt.Trap (Array (Int)) :=
     let _fromV := (0 : Int)
     let _toV := (59 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init701 := _fromV
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init701 fuel (fun σ =>
+    let _init714 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init714 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) s)
       else
         match ← ((do
-  let _t693 ← rot_at s
-  let r := _t693
-  let _t694 ← SudoRt.atL r (0 : Int)
-  let _t696 ← (if (SudoRt.SEq.beq _t694 c1) then (do
-  let _t697 ← SudoRt.atL r (1 : Int)
-  pure (SudoRt.SEq.beq _t697 c2)) else pure false)
-  if _t696 then
+  let _t706 ← rot_at s
+  let r := _t706
+  let _t707 ← SudoRt.atL r (0 : Int)
+  let _t709 ← (if (SudoRt.SEq.beq _t707 c1) then (do
+  let _t710 ← SudoRt.atL r (1 : Int)
+  pure (SudoRt.SEq.beq _t710 c2)) else pure false)
+  if _t709 then
     do
       pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
   else
@@ -2558,9 +2633,9 @@ def abs_reorient (c1 : Int) (c2 : Int) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) i')) (fun σ =>
     do
-      let _as699 ← SudoRt.sudoAssert false 622
-      let _t700 ← range_list (12 : Int)
-      pure _t700) (fun r => pure r))
+      let _as712 ← SudoRt.sudoAssert false 630
+      let _t713 ← range_list (12 : Int)
+      pure _t713) (fun r => pure r))
     pure _out
 
 def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int) (c2 : Int) (ori : Int) : Except SudoRt.Trap (Int) :=
@@ -2572,10 +2647,10 @@ def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int
         if (SudoRt.SEq.beq face f2) then
           do
             let loc := (2 : Int)
-            let _t704 ← SudoRt.subI loc ori
-            let _t705 ← SudoRt.addI _t704 (3 : Int)
-            let _t706 ← SudoRt.modI _t705 (3 : Int)
-            let k := _t706
+            let _t717 ← SudoRt.subI loc ori
+            let _t718 ← SudoRt.addI _t717 (3 : Int)
+            let _t719 ← SudoRt.modI _t718 (3 : Int)
+            let k := _t719
             if (SudoRt.SEq.beq k (0 : Int)) then
               do
                 pure c0
@@ -2589,10 +2664,10 @@ def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int
                     pure c2
         else
           do
-            let _t709 ← SudoRt.subI loc ori
-            let _t710 ← SudoRt.addI _t709 (3 : Int)
-            let _t711 ← SudoRt.modI _t710 (3 : Int)
-            let k := _t711
+            let _t722 ← SudoRt.subI loc ori
+            let _t723 ← SudoRt.addI _t722 (3 : Int)
+            let _t724 ← SudoRt.modI _t723 (3 : Int)
+            let k := _t724
             if (SudoRt.SEq.beq k (0 : Int)) then
               do
                 pure c0
@@ -2609,10 +2684,10 @@ def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int
         if (SudoRt.SEq.beq face f2) then
           do
             let loc := (2 : Int)
-            let _t715 ← SudoRt.subI loc ori
-            let _t716 ← SudoRt.addI _t715 (3 : Int)
-            let _t717 ← SudoRt.modI _t716 (3 : Int)
-            let k := _t717
+            let _t728 ← SudoRt.subI loc ori
+            let _t729 ← SudoRt.addI _t728 (3 : Int)
+            let _t730 ← SudoRt.modI _t729 (3 : Int)
+            let k := _t730
             if (SudoRt.SEq.beq k (0 : Int)) then
               do
                 pure c0
@@ -2626,10 +2701,10 @@ def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int
                     pure c2
         else
           do
-            let _t720 ← SudoRt.subI loc ori
-            let _t721 ← SudoRt.addI _t720 (3 : Int)
-            let _t722 ← SudoRt.modI _t721 (3 : Int)
-            let k := _t722
+            let _t733 ← SudoRt.subI loc ori
+            let _t734 ← SudoRt.addI _t733 (3 : Int)
+            let _t735 ← SudoRt.modI _t734 (3 : Int)
+            let k := _t735
             if (SudoRt.SEq.beq k (0 : Int)) then
               do
                 pure c0
@@ -2647,16 +2722,16 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
     let x := a
     let y := b
     let z := c
-    let _t726 ← (if (decide (b < a)) then (do
+    let _t739 ← (if (decide (b < a)) then (do
   pure (decide (b < c))) else pure false)
-    if _t726 then
+    if _t739 then
       do
         let x := b
         let y := c
         let z := a
-        let _t729 ← (if (decide (c < a)) then (do
+        let _t742 ← (if (decide (c < a)) then (do
   pure (decide (c < b))) else pure false)
-        if _t729 then
+        if _t742 then
           do
             let x := c
             let y := a
@@ -2664,21 +2739,21 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
             let _fromV := (0 : Int)
             let _toV := (19 : Int)
             let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-            let _init739 := _fromV
-            let _out ← (SudoRt.runLoopOn (ρ := Int) _init739 fuel (fun σ =>
+            let _init752 := _fromV
+            let _out ← (SudoRt.runLoopOn (ρ := Int) _init752 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) s)
       else
         match ← ((do
-  let _t732 ← corner_faces s
-  let ⟨f0, f1, f2⟩ := _t732
-  let _t734 ← (if (SudoRt.SEq.beq f0 x) then (do
+  let _t745 ← corner_faces s
+  let ⟨f0, f1, f2⟩ := _t745
+  let _t747 ← (if (SudoRt.SEq.beq f0 x) then (do
   pure (SudoRt.SEq.beq f1 y)) else pure false)
-  let _t736 ← (if _t734 then (do
+  let _t749 ← (if _t747 then (do
   pure (SudoRt.SEq.beq f2 z)) else pure false)
-  if _t736 then
+  if _t749 then
     do
       pure (SudoRt.Flow.ret (ρ := Int) s)
   else
@@ -2693,7 +2768,7 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as738 ← SudoRt.sudoAssert false 654
+      let _as751 ← SudoRt.sudoAssert false 662
       pure (0 : Int)) (fun r => pure r))
             pure _out
         else
@@ -2701,21 +2776,21 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
             let _fromV := (0 : Int)
             let _toV := (19 : Int)
             let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-            let _init748 := _fromV
-            let _out ← (SudoRt.runLoopOn (ρ := Int) _init748 fuel (fun σ =>
+            let _init761 := _fromV
+            let _out ← (SudoRt.runLoopOn (ρ := Int) _init761 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) s)
       else
         match ← ((do
-  let _t741 ← corner_faces s
-  let ⟨f0, f1, f2⟩ := _t741
-  let _t743 ← (if (SudoRt.SEq.beq f0 x) then (do
+  let _t754 ← corner_faces s
+  let ⟨f0, f1, f2⟩ := _t754
+  let _t756 ← (if (SudoRt.SEq.beq f0 x) then (do
   pure (SudoRt.SEq.beq f1 y)) else pure false)
-  let _t745 ← (if _t743 then (do
+  let _t758 ← (if _t756 then (do
   pure (SudoRt.SEq.beq f2 z)) else pure false)
-  if _t745 then
+  if _t758 then
     do
       pure (SudoRt.Flow.ret (ρ := Int) s)
   else
@@ -2730,14 +2805,14 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as747 ← SudoRt.sudoAssert false 654
+      let _as760 ← SudoRt.sudoAssert false 662
       pure (0 : Int)) (fun r => pure r))
             pure _out
     else
       do
-        let _t750 ← (if (decide (c < a)) then (do
+        let _t763 ← (if (decide (c < a)) then (do
   pure (decide (c < b))) else pure false)
-        if _t750 then
+        if _t763 then
           do
             let x := c
             let y := a
@@ -2745,21 +2820,21 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
             let _fromV := (0 : Int)
             let _toV := (19 : Int)
             let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-            let _init760 := _fromV
-            let _out ← (SudoRt.runLoopOn (ρ := Int) _init760 fuel (fun σ =>
+            let _init773 := _fromV
+            let _out ← (SudoRt.runLoopOn (ρ := Int) _init773 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) s)
       else
         match ← ((do
-  let _t753 ← corner_faces s
-  let ⟨f0, f1, f2⟩ := _t753
-  let _t755 ← (if (SudoRt.SEq.beq f0 x) then (do
+  let _t766 ← corner_faces s
+  let ⟨f0, f1, f2⟩ := _t766
+  let _t768 ← (if (SudoRt.SEq.beq f0 x) then (do
   pure (SudoRt.SEq.beq f1 y)) else pure false)
-  let _t757 ← (if _t755 then (do
+  let _t770 ← (if _t768 then (do
   pure (SudoRt.SEq.beq f2 z)) else pure false)
-  if _t757 then
+  if _t770 then
     do
       pure (SudoRt.Flow.ret (ρ := Int) s)
   else
@@ -2774,7 +2849,7 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as759 ← SudoRt.sudoAssert false 654
+      let _as772 ← SudoRt.sudoAssert false 662
       pure (0 : Int)) (fun r => pure r))
             pure _out
         else
@@ -2782,21 +2857,21 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
             let _fromV := (0 : Int)
             let _toV := (19 : Int)
             let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-            let _init769 := _fromV
-            let _out ← (SudoRt.runLoopOn (ρ := Int) _init769 fuel (fun σ =>
+            let _init782 := _fromV
+            let _out ← (SudoRt.runLoopOn (ρ := Int) _init782 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) s)
       else
         match ← ((do
-  let _t762 ← corner_faces s
-  let ⟨f0, f1, f2⟩ := _t762
-  let _t764 ← (if (SudoRt.SEq.beq f0 x) then (do
+  let _t775 ← corner_faces s
+  let ⟨f0, f1, f2⟩ := _t775
+  let _t777 ← (if (SudoRt.SEq.beq f0 x) then (do
   pure (SudoRt.SEq.beq f1 y)) else pure false)
-  let _t766 ← (if _t764 then (do
+  let _t779 ← (if _t777 then (do
   pure (SudoRt.SEq.beq f2 z)) else pure false)
-  if _t766 then
+  if _t779 then
     do
       pure (SudoRt.Flow.ret (ρ := Int) s)
   else
@@ -2811,40 +2886,40 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as768 ← SudoRt.sudoAssert false 654
+      let _as781 ← SudoRt.sudoAssert false 662
       pure (0 : Int)) (fun r => pure r))
             pure _out
 
 def colours_at (g : Position) (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap ((Int) × (Int)) :=
   do
-    let _t770 ← corner_slot a b c
-    let slot := _t770
-    let _t771 ← corner_faces slot
-    let ⟨f0, f1, f2⟩ := _t771
-    let _t772 ← SudoRt.atL (g).sudo_8Position_2cp slot
-    let cubie := _t772
-    let _t773 ← SudoRt.atL (g).sudo_8Position_2co slot
-    let ori := _t773
-    let _t774 ← corner_faces cubie
-    let ⟨c0, c1, c2⟩ := _t774
-    let _t775 ← colour_on a f0 f1 f2 c0 c1 c2 ori
-    let cf0 := _t775
-    let _t776 ← colour_on b f0 f1 f2 c0 c1 c2 ori
-    let cf1 := _t776
+    let _t783 ← corner_slot a b c
+    let slot := _t783
+    let _t784 ← corner_faces slot
+    let ⟨f0, f1, f2⟩ := _t784
+    let _t785 ← SudoRt.atL (g).sudo_8Position_2cp slot
+    let cubie := _t785
+    let _t786 ← SudoRt.atL (g).sudo_8Position_2co slot
+    let ori := _t786
+    let _t787 ← corner_faces cubie
+    let ⟨c0, c1, c2⟩ := _t787
+    let _t788 ← colour_on a f0 f1 f2 c0 c1 c2 ori
+    let cf0 := _t788
+    let _t789 ← colour_on b f0 f1 f2 c0 c1 c2 ori
+    let cf1 := _t789
     pure (cf0, cf1)
 
 def recipe_a (g : Position) (phys : Int) (o : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t777 ← noon_phys phys o
-    let noon := _t777
-    let _t778 ← face_nbrs phys
-    let nbrs := _t778
+    let _t790 ← noon_phys phys o
+    let noon := _t790
+    let _t791 ← face_nbrs phys
+    let nbrs := _t791
     let ni := (0 : Int)
     let _fromV := (0 : Int)
     let _toV := (4 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init787 := (_fromV, ni)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init787 fuel (fun σ =>
+    let _init800 := (_fromV, ni)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init800 fuel (fun σ =>
     let i := σ.1
     let ni := σ.2
     do
@@ -2852,8 +2927,8 @@ def recipe_a (g : Position) (phys : Int) (o : Array (Int)) : Except SudoRt.Trap 
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, ni))
       else
         match ← ((do
-  let _t780 ← SudoRt.atL nbrs i
-  if (SudoRt.SEq.beq _t780 noon) then
+  let _t793 ← SudoRt.atL nbrs i
+  if (SudoRt.SEq.beq _t793 noon) then
     do
       let ni := i
       pure (SudoRt.Flow.cont (ρ := Array (Int)) ni)
@@ -2870,117 +2945,117 @@ def recipe_a (g : Position) (phys : Int) (o : Array (Int)) : Except SudoRt.Trap 
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let ni := σ.2
     do
-      let _t782 ← SudoRt.addI ni (1 : Int)
-      let _t783 ← SudoRt.modI _t782 (5 : Int)
-      let _t784 ← SudoRt.atL nbrs _t783
-      let next_cw := _t784
-      let _t785 ← colours_at g phys noon next_cw
-      let ⟨c1, c2⟩ := _t785
-      let _t786 ← abs_reorient c1 c2
-      pure _t786) (fun r => pure r))
+      let _t795 ← SudoRt.addI ni (1 : Int)
+      let _t796 ← SudoRt.modI _t795 (5 : Int)
+      let _t797 ← SudoRt.atL nbrs _t796
+      let next_cw := _t797
+      let _t798 ← colours_at g phys noon next_cw
+      let ⟨c1, c2⟩ := _t798
+      let _t799 ← abs_reorient c1 c2
+      pure _t799) (fun r => pure r))
     pure _out
 
 def g2_step (g : Position) (o : Array (Int)) (card : Int) : Except SudoRt.Trap ((Position) × (Array (Int))) :=
   do
-    let _t788 ← SudoRt.divI card (4 : Int)
-    let rank := _t788
-    let _t789 ← SudoRt.modI card (4 : Int)
-    let suit := _t789
-    let _t790 ← SudoRt.addI suit (1 : Int)
-    let amt := _t790
+    let _t801 ← SudoRt.divI card (4 : Int)
+    let rank := _t801
+    let _t802 ← SudoRt.modI card (4 : Int)
+    let suit := _t802
+    let _t803 ← SudoRt.addI suit (1 : Int)
+    let amt := _t803
     let o_work := o
     let held := rank
     if (decide (rank < (12 : Int))) then
       do
-        let _t792 ← SudoRt.atL o_work held
-        let _t793 ← face_turn g _t792 amt
-        let g := _t793
-        let _t794 ← SudoRt.atL o_work held
-        let _t795 ← noon_phys _t794 o_work
-        let noon := _t795
-        let _t796 ← SudoRt.atL o_work held
-        if (!(SudoRt.SEq.beq noon _t796)) then
+        let _t805 ← SudoRt.atL o_work held
+        let _t806 ← face_turn g _t805 amt
+        let g := _t806
+        let _t807 ← SudoRt.atL o_work held
+        let _t808 ← noon_phys _t807 o_work
+        let noon := _t808
+        let _t809 ← SudoRt.atL o_work held
+        if (!(SudoRt.SEq.beq noon _t809)) then
           do
-            let _t798 ← face_turn g noon (1 : Int)
-            let g := _t798
-            let _t799 ← SudoRt.atL o_work held_front
-            let _t800 ← face_turn g _t799 (1 : Int)
-            let g := _t800
-            let _t801 ← SudoRt.atL o_work held
-            let _t802 ← recipe_a g _t801 o_work
-            pure (g, _t802)
+            let _t811 ← face_turn g noon (1 : Int)
+            let g := _t811
+            let _t812 ← SudoRt.atL o_work held_front
+            let _t813 ← face_turn g _t812 (1 : Int)
+            let g := _t813
+            let _t814 ← SudoRt.atL o_work held
+            let _t815 ← recipe_a g _t814 o_work
+            pure (g, _t815)
         else
           do
-            let _t803 ← SudoRt.atL o_work held_front
-            let _t804 ← face_turn g _t803 (1 : Int)
-            let g := _t804
-            let _t805 ← SudoRt.atL o_work held
-            let _t806 ← recipe_a g _t805 o_work
-            pure (g, _t806)
+            let _t816 ← SudoRt.atL o_work held_front
+            let _t817 ← face_turn g _t816 (1 : Int)
+            let g := _t817
+            let _t818 ← SudoRt.atL o_work held
+            let _t819 ← recipe_a g _t818 o_work
+            pure (g, _t819)
     else
       do
         let held := held_up
-        let _t807 ← SudoRt.atL o_work held
-        let _t808 ← SudoRt.subI (5 : Int) amt
-        let _t809 ← SudoRt.modI _t808 (5 : Int)
-        let _t810 ← face_turn g _t807 _t809
-        let g := _t810
-        let _t811 ← spin_about_up o_work amt
-        let o_work := _t811
-        let _t812 ← SudoRt.atL o_work held
-        let _t813 ← noon_phys _t812 o_work
-        let noon := _t813
-        let _t814 ← SudoRt.atL o_work held
-        if (!(SudoRt.SEq.beq noon _t814)) then
+        let _t820 ← SudoRt.atL o_work held
+        let _t821 ← SudoRt.subI (5 : Int) amt
+        let _t822 ← SudoRt.modI _t821 (5 : Int)
+        let _t823 ← face_turn g _t820 _t822
+        let g := _t823
+        let _t824 ← spin_about_up o_work amt
+        let o_work := _t824
+        let _t825 ← SudoRt.atL o_work held
+        let _t826 ← noon_phys _t825 o_work
+        let noon := _t826
+        let _t827 ← SudoRt.atL o_work held
+        if (!(SudoRt.SEq.beq noon _t827)) then
           do
-            let _t816 ← face_turn g noon (1 : Int)
-            let g := _t816
-            let _t817 ← SudoRt.atL o_work held_front
-            let _t818 ← face_turn g _t817 (1 : Int)
-            let g := _t818
-            let _t819 ← SudoRt.atL o_work held
-            let _t820 ← recipe_a g _t819 o_work
-            pure (g, _t820)
+            let _t829 ← face_turn g noon (1 : Int)
+            let g := _t829
+            let _t830 ← SudoRt.atL o_work held_front
+            let _t831 ← face_turn g _t830 (1 : Int)
+            let g := _t831
+            let _t832 ← SudoRt.atL o_work held
+            let _t833 ← recipe_a g _t832 o_work
+            pure (g, _t833)
         else
           do
-            let _t821 ← SudoRt.atL o_work held_front
-            let _t822 ← face_turn g _t821 (1 : Int)
-            let g := _t822
-            let _t823 ← SudoRt.atL o_work held
-            let _t824 ← recipe_a g _t823 o_work
-            pure (g, _t824)
+            let _t834 ← SudoRt.atL o_work held_front
+            let _t835 ← face_turn g _t834 (1 : Int)
+            let g := _t835
+            let _t836 ← SudoRt.atL o_work held
+            let _t837 ← recipe_a g _t836 o_work
+            pure (g, _t837)
 
 def f3_step (g : Position) (o : Array (Int)) : Except SudoRt.Trap ((Position) × (Array (Int))) :=
   do
-    let _t825 ← SudoRt.atL o held_up
-    let _t826 ← face_turn g _t825 (1 : Int)
-    let g := _t826
-    let _t827 ← SudoRt.atL o held_up
-    let _t828 ← recipe_a g _t827 o
-    pure (g, _t828)
+    let _t838 ← SudoRt.atL o held_up
+    let _t839 ← face_turn g _t838 (1 : Int)
+    let g := _t839
+    let _t840 ← SudoRt.atL o held_up
+    let _t841 ← recipe_a g _t840 o
+    pure (g, _t841)
 
 def em_block (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position) :=
   do
     let g := h
-    let _t829 ← range_list (12 : Int)
-    let o := _t829
+    let _t842 ← range_list (12 : Int)
+    let o := _t842
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init840 := (_fromV, (g, o))
-    let _out ← (SudoRt.runLoopOn (ρ := Position) _init840 fuel (fun σ =>
+    let _init853 := (_fromV, (g, o))
+    let _out ← (SudoRt.runLoopOn (ρ := Position) _init853 fuel (fun σ =>
     let i := σ.1
     let g := σ.2.1
-    let _sp838 := σ.2.2
-    let o := _sp838
+    let _sp851 := σ.2.2
+    let o := _sp851
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Position) (i, (g, o)))
       else
         match ← ((do
-  let _t831 ← SudoRt.atL deal i
-  let _t832 ← g2_step g o _t831
-  let ⟨g, o⟩ := _t832
+  let _t844 ← SudoRt.atL deal i
+  let _t845 ← g2_step g o _t844
+  let ⟨g, o⟩ := _t845
   pure (SudoRt.Flow.cont (ρ := Position) (g, o))) : Except SudoRt.Trap (SudoRt.Flow _ (Position))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Position) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Position) (i, _fs))
@@ -2991,25 +3066,25 @@ def em_block (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position)
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Position) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp839 := σ.2.2
-    let o := _sp839
+    let _sp852 := σ.2.2
+    let o := _sp852
     do
       let _fromV := (1 : Int)
       let _toV := f3_t
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init837 := (_fromV, (g, o))
-      let _out ← (SudoRt.runLoopOn (ρ := Position) _init837 fuel (fun σ =>
+      let _init850 := (_fromV, (g, o))
+      let _out ← (SudoRt.runLoopOn (ρ := Position) _init850 fuel (fun σ =>
     let t := σ.1
     let g := σ.2.1
-    let _sp835 := σ.2.2
-    let o := _sp835
+    let _sp848 := σ.2.2
+    let o := _sp848
     do
       if t > _toV then
         pure (SudoRt.Flow.brk (ρ := Position) (t, (g, o)))
       else
         match ← ((do
-  let _t834 ← f3_step g o
-  let ⟨g, o⟩ := _t834
+  let _t847 ← f3_step g o
+  let ⟨g, o⟩ := _t847
   pure (SudoRt.Flow.cont (ρ := Position) (g, o))) : Except SudoRt.Trap (SudoRt.Flow _ (Position))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Position) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Position) (t, _fs))
@@ -3020,8 +3095,8 @@ def em_block (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position)
               let i' ← SudoRt.addI t (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Position) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp836 := σ.2.2
-    let o := _sp836
+    let _sp849 := σ.2.2
+    let o := _sp849
     do
       pure g) (fun r => pure r))
       pure _out) (fun r => pure r))
@@ -3029,30 +3104,36 @@ def em_block (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position)
 
 def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t842 ← pad_message msg
-    let padded := _t842
-    let _as845 ← SudoRt.sudoAssert (decide ((SudoRt.listLen padded) > (0 : Int))) 711
-    let _t847 ← SudoRt.modI (SudoRt.listLen padded) pad_block
-    let _as848 ← SudoRt.sudoAssertEq _t847 (0 : Int) 712
-    let _t849 ← iv_cook12
-    let h := _t849
-    let i := (0 : Int)
-    let _init867 := (h, i)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init867 (2 ^ 32) (fun σ =>
-    let h := σ.1
-    let _sp865 := σ.2
-    let i := _sp865
+    let _t855 ← pad_message msg
+    let padded := _t855
+    let _as858 ← SudoRt.sudoAssert (decide ((SudoRt.listLen padded) > (0 : Int))) 719
+    let _t860 ← SudoRt.modI (SudoRt.listLen padded) pad_block
+    let _as861 ← SudoRt.sudoAssertEq _t860 (0 : Int) 720
+    let _t862 ← iv_cook12
+    let h := _t862
+    let _t864 ← SudoRt.divI (SudoRt.listLen padded) pad_block
+    let nblocks := _t864
+    let _t877 ← SudoRt.subI nblocks (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t877
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init879 := (_fromV, h)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init879 fuel (fun σ =>
+    let b := σ.1
+    let h := σ.2
     do
-      if !((decide (i < (SudoRt.listLen padded)))) then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) (h, i))
+      if b > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (b, h))
       else
         match ← ((do
+  let _t866 ← SudoRt.mulI b pad_block
+  let i := _t866
   let chunk := (#[] : Array (Int))
   let _fromV := (0 : Int)
   let _toV := (27 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init860 := (_fromV, chunk)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init860 fuel (fun σ =>
+  let _init876 := (_fromV, chunk)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init876 fuel (fun σ =>
     let j := σ.1
     let chunk := σ.2
     do
@@ -3060,13 +3141,13 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, chunk))
       else
         match ← ((do
-  let _t851 ← SudoRt.addI i j
-  let _t852 ← SudoRt.atL padded _t851
-  let _mb853 := SudoRt.appendL chunk _t852
-  let ⟨_nr854, _⟩ := _mb853
-  let chunk := _nr854
-  let _hm841 := ()
-  let _u855 := _hm841
+  let _t868 ← SudoRt.addI i j
+  let _t869 ← SudoRt.atL padded _t868
+  let _mb870 := SudoRt.appendL chunk _t869
+  let ⟨_nr871, _⟩ := _mb870
+  let chunk := _nr871
+  let _hm854 := ()
+  let _u872 := _hm854
   pure (SudoRt.Flow.cont (ρ := Array (Int)) chunk)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, _fs))
@@ -3078,76 +3159,77 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let chunk := σ.2
     do
-      let _t856 ← phi_chunk chunk
-      let deal := _t856
-      let _t857 ← em_block h deal
-      let e := _t857
-      let _t858 ← compose h e
-      let h := _t858
-      let _t859 ← SudoRt.addI i pad_block
-      let i := _t859
-      pure (SudoRt.Flow.cont (ρ := Array (Int)) (h, i))) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
+      let _t873 ← phi_chunk chunk
+      let deal := _t873
+      let _t874 ← em_block h deal
+      let e := _t874
+      let _t875 ← compose h e
+      let h := _t875
+      pure (SudoRt.Flow.cont (ρ := Array (Int)) h)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) _fs)
-        | .cont _fs => (let h := _fs.1; let _sp863 := _fs.2; let i := _sp863; pure (SudoRt.Flow.cont (ρ := Array (Int)) (h, i)))) (fun σ =>
-    let h := σ.1
-    let _sp866 := σ.2
-    let i := _sp866
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (b, _fs))
+        | .cont _fs => do
+            if b == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (b, _fs))
+            else do
+              let i' ← SudoRt.addI b (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let h := σ.2
     do
-      let _t864 ← position_to_bytes h
-      pure _t864) (fun r => pure r))
+      let _t878 ← position_to_bytes h
+      pure _t878) (fun r => pure r))
     pure _out
 
 def v_MegaDreifach (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t868 ← v_Hash msg
-    pure _t868
+    let _t880 ← v_Hash msg
+    pure _t880
 
 def v_HashDeck (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t869 ← require_permutation deal
-    let deal := _t869
-    let _t870 ← phi_inv deal
-    let «raw» := _t870
-    let _t871 ← v_Hash «raw»
-    pure _t871
+    let _t881 ← require_permutation deal
+    let deal := _t881
+    let _t882 ← phi_inv deal
+    let «raw» := _t882
+    let _t883 ← v_Hash «raw»
+    pure _t883
 
 def v_MegaDreifachDeck (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t872 ← v_HashDeck deal
-    pure _t872
+    let _t884 ← v_HashDeck deal
+    pure _t884
 
 def body_from (deal : Array (Int)) (h : Position) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t873 ← require_permutation deal
-    let deal := _t873
-    let _t874 ← em_block h deal
-    let e := _t874
-    let _t875 ← compose h e
-    let _t876 ← position_to_bytes _t875
-    pure _t876
+    let _t885 ← require_permutation deal
+    let deal := _t885
+    let _t886 ← em_block h deal
+    let e := _t886
+    let _t887 ← compose h e
+    let _t888 ← position_to_bytes _t887
+    pure _t888
 
 def v_HashDeckBody (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t877 ← iv_cook12
-    let _t878 ← body_from deal _t877
-    pure _t878
+    let _t889 ← iv_cook12
+    let _t890 ← body_from deal _t889
+    pure _t890
 
 def v_MegaDreifachBody (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t879 ← v_HashDeckBody deal
-    pure _t879
+    let _t891 ← v_HashDeckBody deal
+    pure _t891
 
 def v_HashDeckBodyFrom (deal : Array (Int)) (h : Position) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t880 ← body_from deal h
-    pure _t880
+    let _t892 ← body_from deal h
+    pure _t892
 
 def v_MegaDreifachBodyFrom (deal : Array (Int)) (h : Position) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t881 ← v_HashDeckBodyFrom deal h
-    pure _t881
+    let _t893 ← v_HashDeckBodyFrom deal h
+    pure _t893
 
 def hex_iv : Except SudoRt.Trap (Array (Int)) :=
   do

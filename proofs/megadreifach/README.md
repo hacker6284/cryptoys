@@ -2,7 +2,7 @@
 
 Normative product name: **MegaDreifach**. The puzzle/group library stays **megaminx**.
 
-The published definition is [`primitives/hash/megadreifach/SPEC.md`](../../primitives/hash/megadreifach/SPEC.md) plus [`megadreifach.sudo`](../../primitives/hash/megadreifach/megadreifach.sudo). Sudo is normative. Emitted Lean under `lean/Generated/` is the algorithm (`v_Hash`). `lean/MegaDreifach/` is the obligation ledger for algebraic stones sudo does not express. It is not a second `Hash`. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). This does **not** claim sudo↔Lean semantic-equivalence theorems. The terminates gate is off.
+The published definition is [`primitives/hash/megadreifach/SPEC.md`](../../primitives/hash/megadreifach/SPEC.md) plus [`megadreifach.sudo`](../../primitives/hash/megadreifach/megadreifach.sudo). Sudo is normative. Emitted Lean under `lean/Generated/` is the algorithm (`v_Hash`). `lean/MegaDreifach/` is the obligation ledger for algebraic stones sudo does not express. It is not a second `Hash`. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). This does **not** claim sudo↔Lean semantic-equivalence theorems. The emit terminates gate is still off (repo-wide, until Scramble). MegaDreifach sudo itself is terminates-ready: bigint trim/peel/carry, φ / even-perm search, and the Hash MD walk are bounded `for`.
 
 MegaDreifach is a toy Merkle–Damgård hash on the megaminx group. The Lean package below proves **correctness / algebraic** facts (position legality, group law, encodings, pad injectivity, DM algebra). It does **not** prove collision resistance, ideal-cipher-on-G, or AES-class security. A green `lake build` is not a security claim.
 

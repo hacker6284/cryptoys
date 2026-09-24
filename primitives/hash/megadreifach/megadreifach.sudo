@@ -315,9 +315,10 @@ func big_zero() -> BigInt
     return BigInt(false, empty)
 
 func trim(limbs: List<int>) -> List<int>
-    n = limbs.length
-    while n > 0 and limbs[n - 1] == 0
-        n = n - 1
+    n = 0
+    for i = limbs.length - 1 downto 0
+        if (n == 0) and (limbs[i] != 0)
+            n = i + 1
     out: List<int> = []
     for i = 0 to n - 1
         out.append(limbs[i])
@@ -380,9 +381,10 @@ func big_from_int(v: int) -> BigInt
     assert v >= 0
     limbs: List<int> = []
     m = v
-    while m > 0
-        limbs.append(m mod limb_base)
-        m = m / limb_base
+    for peel = 1 to 3
+        if m > 0
+            limbs.append(m mod limb_base)
+            m = m / limb_base
     return BigInt(false, limbs)
 
 func big_add(a: BigInt, b: BigInt) -> BigInt
@@ -398,12 +400,12 @@ func big_mul(a: BigInt, b: BigInt) -> BigInt
             cur = out[i + j] + a.limbs[i] * b.limbs[j] + carry
             out[i + j] = cur mod limb_base
             carry = cur / limb_base
-        k = i + b.limbs.length
-        while carry > 0
-            cur = out[k] + carry
-            out[k] = cur mod limb_base
-            carry = cur / limb_base
-            k = k + 1
+        k0 = i + b.limbs.length
+        for k = k0 to out.length - 1
+            if carry > 0
+                cur = out[k] + carry
+                out[k] = cur mod limb_base
+                carry = cur / limb_base
     return make_big(false, out)
 
 func big_divmod_small(a: BigInt, d: int) -> (BigInt, int)
@@ -517,9 +519,12 @@ func phi_inv(deal: List<int>) -> List<int>
     n = big_zero()
     for i = 0 to 51
         v = deal[i]
-        idx = 0
-        while avail[idx] != v
-            idx = idx + 1
+        found = -1
+        for t = 0 to avail.length - 1
+            if (found < 0) and (avail[t] == v)
+                found = t
+        assert found >= 0
+        idx = found
         n = big_add(big_mul(n, big_from_int(52 - i)), big_from_int(idx))
         fresh: List<int> = []
         for t = 0 to avail.length - 1
@@ -544,9 +549,12 @@ func even_perm_rank_big(perm: List<int>) -> BigInt
     avail = range_list(n)
     rank = big_zero()
     for i = 0 to n - 3
-        idx = 0
-        while avail[idx] != perm[i]
-            idx = idx + 1
+        found = -1
+        for t = 0 to avail.length - 1
+            if (found < 0) and (avail[t] == perm[i])
+                found = t
+        assert found >= 0
+        idx = found
         rank = big_add(big_mul(rank, big_from_int(n - i)), big_from_int(idx))
         fresh: List<int> = []
         for t = 0 to avail.length - 1
@@ -711,15 +719,15 @@ export func Hash(msg: List<int>) -> List<int>
     assert padded.length > 0
     assert padded.length mod pad_block == 0
     h = iv_cook12()
-    i = 0
-    while i < padded.length
+    nblocks = padded.length / pad_block
+    for b = 0 to nblocks - 1
+        i = b * pad_block
         chunk: List<int> = []
         for j = 0 to 27
             chunk.append(padded[i + j])
         deal = phi_chunk(chunk)
         e = em_block(h, deal)
         h = compose(h, e)
-        i = i + pad_block
     return position_to_bytes(h)
 
 export func MegaDreifach(msg: List<int>) -> List<int>

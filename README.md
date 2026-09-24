@@ -24,7 +24,10 @@ proofs/
 
 Scramble is a hash. A message walks a solved cube. The digest is the seated pose, encoded as the cube-group index in 9 bytes. `scramble_v1` is superseded. `scramble_v2` is current.
 
-The specification is `primitives/hash/scramble/SPEC.md`.
+The specification is `primitives/hash/scramble/SPEC.md`. Emitted Lean
+for `update` / `evaluate` lives under `proofs/scramble/lean/Generated/`.
+This is not a sudo↔Lean equivalence theorem. A green Lean build is not
+a security claim. See `proofs/ANTI_DRIFT.md`.
 
 ## MegaDreifach
 
@@ -76,4 +79,4 @@ GitHub Actions builds `sudoc` from [hacker6284/sudocode](https://github.com/hack
 
 ## Proofs
 
-What this library will and will not claim is in `proofs/README.md`. Anti-drift (sudo normative, Lean algorithms generated) is `proofs/ANTI_DRIFT.md`. DoubleDeal stones are under `proofs/doubledeal/`. MegaDreifach stones are under `proofs/megadreifach/`.
+What this library will and will not claim is in `proofs/README.md`. Anti-drift (sudo normative, Lean algorithms generated) is `proofs/ANTI_DRIFT.md`. DoubleDeal stones are under `proofs/doubledeal/`. MegaDreifach stones are under `proofs/megadreifach/`. Scramble Generated Lean is under `proofs/scramble/`.

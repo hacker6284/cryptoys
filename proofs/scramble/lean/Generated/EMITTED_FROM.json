@@ -1,6 +1,6 @@
 {
-  "sudo_file": "primitives/hash/megadreifach/megadreifach.sudo",
-  "sudo_sha256": "51ec2331de8f15ee6677191e85d7f924791f156ec9bd2f1686a1cafc34ae91ca",
+  "sudo_file": "primitives/hash/scramble/scramble.sudo",
+  "sudo_sha256": "85af1f23b924e49baa4e4472202be0b6b87cd6126db59487b78b45223bede10d",
   "sudocode_lean_commit": "ff63b629406bd5d3ab9e9434ea2d4695a2921d8a",
   "sudocode_lean_ref": "main",
   "terminates_gate": true,

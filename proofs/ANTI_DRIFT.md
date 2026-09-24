@@ -6,7 +6,7 @@ backend. They are not a second handwritten model.
 
 This document is the anti-drift contract. It does **not** claim
 sudo↔Lean semantic-equivalence theorems. A green `lake build` is not
-a security claim.
+a security claim. The Lean emitter is **trusted-not-proved**.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ proofs/*/lean/<Name>/*.lean   # algebraic ledger, not a second encrypt/Hash
 
 | Tree | What lives here | What must not live here |
 | --- | --- | --- |
-| `lean/Generated/` | Emitted `encrypt` / `passkey` / `v_Hash` / TAP tests. Standalone Lake package. | Hand edits. Proof lemmas. |
+| `lean/Generated/` | Emitted `encrypt` / `passkey` / `v_Hash` / `update` / TAP tests. Standalone Lake package. | Hand edits. Proof lemmas. |
 | `lean/DoubleDeal/` or `lean/MegaDreifach/` | Stones and lemmas sudo does not express (bijections, PassKey inverse theorems, pad injectivity, …). | A second `encrypt` / `Hash` treated as the algorithm. |
 
 `Generated/` is **not** imported by the proof package. Types do not
@@ -40,9 +40,9 @@ encrypt by hand and thinks they changed the cipher.
 From the repo root:
 
 ```sh
-proofs/emit_lean.sh              # write both Generated/ trees
+proofs/emit_lean.sh              # write all three Generated/ trees
 proofs/emit_lean.sh --check      # CI: fail if committed Lean is stale
-proofs/emit_lean.sh doubledeal   # one algorithm
+proofs/emit_lean.sh scramble     # one algorithm
 ```
 
 Optional: `SUDOC=/path/to/sudoc` and `SUDOCODE_DIR=/path/to/sudocode`
@@ -54,11 +54,12 @@ Then:
 ```sh
 cd proofs/doubledeal/lean/Generated && lake build && ./.lake/build/bin/doubledeal_test
 cd proofs/megadreifach/lean/Generated && lake build && ./.lake/build/bin/megadreifach_test
+cd proofs/scramble/lean/Generated && lake build && ./.lake/build/bin/scramble_test
 ```
 
 Expected TAP: DoubleDeal **10/10** (two test-only kind-scan `while`s
 stripped under the terminates gate; JS still runs all twelve),
-MegaDreifach **11/11**.
+MegaDreifach **11/11**, Scramble **15/15**.
 
 ## Pin (sudocode main)
 
@@ -66,19 +67,20 @@ MegaDreifach **11/11**.
 | --- | --- |
 | Repo | [hacker6284/sudocode](https://github.com/hacker6284/sudocode) |
 | Branch | `main` |
-| Commit | `4286093e791e85e2be0b72b524319ba64bda002b` (file: [`SUDOCODE_LEAN_PIN`](SUDOCODE_LEAN_PIN)) — squash merge of [PR #5](https://github.com/hacker6284/sudocode/pull/5) |
-| Spike | [PR #6](https://github.com/hacker6284/sudocode/pull/6) (CONDITIONAL GO) |
+| Commit | `ff63b629406bd5d3ab9e9434ea2d4695a2921d8a` (file: [`SUDOCODE_LEAN_PIN`](SUDOCODE_LEAN_PIN)) — squash merge of [PR #8](https://github.com/hacker6284/sudocode/pull/8) |
+| Prior pin | [PR #5](https://github.com/hacker6284/sudocode/pull/5) `4286093e791e85e2be0b72b524319ba64bda002b` (first `backends/lean/` on main) |
 
-This pin is **durable on sudocode main**. `backends/lean/` ships there
-as of #5. Lean is still **not** in `ALL_BACKENDS` (unfinished lockstep
-peer; out of scope here). The merge includes the `_fs` Flow-binder
-shadow fix (a sudo `for s` must not capture the loop payload).
+This pin is **durable on sudocode main**. Lean is an `ALL_BACKENDS`
+lockstep peer as of #8 (empty predicates, full IR). cryptoys still
+**only consumes the emitter**, not sudocode lockstep. Emitter
+soundness remains **trusted-not-proved**. The `_fs` Flow-binder
+shadow fix from #5 is included.
 
 ## Terminates gate is on
 
 `proofs/emit_lean.sh` passes `sudoc emit-ir --require terminates` for
-DoubleDeal and MegaDreifach. All three public `.sudo` files (DoubleDeal,
-MegaDreifach, Scramble) accept that flag on their exports.
+DoubleDeal, MegaDreifach, and Scramble. All three public `.sudo`
+files accept that flag on their exports.
 
 Production loops are bounded `for` (PassKey drain over initial
 `deck.length`; overflow scans `0 to 3`; MD bigint trim/peel/carry,
@@ -87,9 +89,6 @@ remainders and `digest_bytes` over the 12-byte buffer). DoubleDeal
 test-only `while`s that scan traces by `kind` are stripped under the
 gate (JS/Python still run those tests). Generated TAP is the remaining
 tests.
-
-Scramble has no Generated Lean in this drop. Its sudo is
-terminates-clean; adding a Generated tree is a follow-up.
 
 The registered Lean backend profile is **full peer** (empty
 `predicates`): fuel-total `while` / `for` via `SudoRt.natIter`.
@@ -104,8 +103,8 @@ total-fragment / terminating-subset emitter.
 - Not a claim that `Generated.v_Hash` equals the algebraic
   `hashBlocks` fold in `MegaDreifach/`.
 - Not bit-security, MDS, collision-resistance, or an AEAD security theorem. DoubleDeal-CBC-HMAC is specified in `primitives/aead/`; no Generated Lean for it in this drop.
-- Not adding Lean to sudocode `ALL_BACKENDS` (peer registration is
-  a sudocode follow-up; this repo only consumes the emitter).
+- Not sudocode lockstep. Lean *is* in sudocode `ALL_BACKENDS`; this
+  repo still only consumes the protocol-4 emitter.
 
 ## OPEN
 
@@ -114,9 +113,9 @@ total-fragment / terminating-subset emitter.
 | sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
 | Algebraic `passToKeyCutFallback` = `Generated.passkey` | OPEN. S3/S4 stay on the list-level proof model. sudo already *tests* `passkey_inv ∘ passkey = id` (generated TAP). |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | OPEN. S2 stays on the Fin-packet skeleton. Generated TAP checks sudo's encrypt/decrypt tests. |
-| `--require terminates` on these publics | ON at emit for DoubleDeal and MegaDreifach. All three publics ready (bounded `for`). Scramble has no Generated Lean. |
+| `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, and Scramble. All three publics ready (bounded `for`). |
 | PassKey / stone proofs *about* `Except Trap` emitted defs | OPEN. Fuel-total monadic programs are not the Fin algebra the stones use. |
-| Scramble generated Lean | Out of this drop. |
+| Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |
 | MegaDreifach M13 (proof-package digest = KAT hex) | Still OPEN in the algebraic package (no handwritten `Hash`). Research hexes were refreshed to current sudo; Python and emitted Lean agree. |
 
 ## Proofs that remain handwritten

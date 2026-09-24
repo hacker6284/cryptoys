@@ -1,6 +1,7 @@
 # sudocode Lean backend pin.
-# Durable: sudocode main, squash merge of PR #5
-# (4286093e791e85e2be0b72b524319ba64bda002b). backends/lean/ now
-# ships on main; Lean is still not in ALL_BACKENDS. Bump only when
-# you intend to change the emitter, then re-run proofs/emit_lean.sh.
-4286093e791e85e2be0b72b524319ba64bda002b
+# Durable: sudocode main, squash merge of PR #8
+# (ff63b629406bd5d3ab9e9434ea2d4695a2921d8a). Lean is in
+# ALL_BACKENDS (empty predicates, full IR). cryptoys consumes
+# the emitter only, not lockstep. Bump only when you intend
+# to change the emitter, then re-run proofs/emit_lean.sh.
+ff63b629406bd5d3ab9e9434ea2d4695a2921d8a

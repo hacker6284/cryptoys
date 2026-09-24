@@ -3,18 +3,18 @@
 # sudocode protocol-4 Lean backend.
 #
 # Pin: hacker6284/sudocode main @ SUDOCODE_LEAN_COMMIT
-#   (PR #5 squash merge; backends/lean/ is on main).
+#   (PR #8 squash merge; Lean is in ALL_BACKENDS).
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
 # DoubleDeal, MegaDreifach, and Scramble production paths are bounded
-# `for`. Scramble is not in this emit list (no Generated Lean yet).
-# DoubleDeal test-only kind-scan whiles are stripped under the gate.
+# `for`. DoubleDeal test-only kind-scan whiles are stripped under the gate.
 #
 # Usage (from repo root):
 #   proofs/emit_lean.sh              # write Generated/
 #   proofs/emit_lean.sh --check      # CI: fail if committed Generated/ is stale
 #   proofs/emit_lean.sh doubledeal   # one algorithm
 #   proofs/emit_lean.sh megadreifach
+#   proofs/emit_lean.sh scramble
 #
 # Optional:
 #   SUDOC=/path/to/sudoc
@@ -24,7 +24,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# sudocode main at the PR #5 squash merge (includes _fs Flow-binder fix).
+# sudocode main at the PR #8 squash merge (Lean lockstep peer).
 # Bump proofs/SUDOCODE_LEAN_PIN only when you intend to change the emitter.
 SUDOCODE_LEAN_REPO="${SUDOCODE_LEAN_REPO:-https://github.com/hacker6284/sudocode.git}"
 SUDOCODE_LEAN_REF="${SUDOCODE_LEAN_REF:-main}"
@@ -43,15 +43,15 @@ TARGETS=()
 for arg in "$@"; do
   case "$arg" in
     --check) CHECK=1 ;;
-    doubledeal|megadreifach) TARGETS+=("$arg") ;;
+    doubledeal|megadreifach|scramble) TARGETS+=("$arg") ;;
     *)
-      echo "usage: $0 [--check] [doubledeal|megadreifach ...]" >&2
+      echo "usage: $0 [--check] [doubledeal|megadreifach|scramble ...]" >&2
       exit 2
       ;;
   esac
 done
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(doubledeal megadreifach)
+  TARGETS=(doubledeal megadreifach scramble)
 fi
 
 if [[ -n "${SUDOC:-}" ]]; then
@@ -83,7 +83,7 @@ if [[ "$need_fetch" -eq 1 && -z "${SUDOC:-}" ]]; then
   git -C "$SUDOCODE_DIR" checkout --detach "$SUDOCODE_LEAN_COMMIT"
   if [[ ! -f "$SUDOCODE_DIR/backends/lean/emit.py" ]]; then
     echo "blocker: $SUDOCODE_LEAN_COMMIT has no backends/lean/emit.py" >&2
-    echo "expected sudocode main at/after the PR #5 merge (4286093)." >&2
+    echo "expected sudocode main at/after the PR #8 merge (ff63b629)." >&2
     exit 1
   fi
   cargo build --release --manifest-path "$SUDOCODE_DIR/sudoc/Cargo.toml"
@@ -136,6 +136,11 @@ for t in "${TARGETS[@]}"; do
       emit_one megadreifach \
         "$ROOT/primitives/hash/megadreifach/megadreifach.sudo" \
         "$ROOT/proofs/megadreifach/lean/Generated"
+      ;;
+    scramble)
+      emit_one scramble \
+        "$ROOT/primitives/hash/scramble/scramble.sudo" \
+        "$ROOT/proofs/scramble/lean/Generated"
       ;;
   esac
 done

@@ -9,8 +9,7 @@ Reproduces the spike path that was green on DoubleDeal / MegaDreifach:
       → unpack files/
 
 Emit uses `sudoc emit-ir --require terminates`. DoubleDeal, MegaDreifach,
-and Scramble production paths are bounded `for`. Scramble has no Generated
-Lean in this drop. See proofs/ANTI_DRIFT.md.
+and Scramble production paths are bounded `for`. See proofs/ANTI_DRIFT.md.
 
 This is not a claim of sudo↔Lean semantic equivalence.
 """
@@ -233,8 +232,8 @@ def main() -> int:
     if not emit_py.is_file():
         print(
             f"Lean emitter not found at {emit_py}.\n"
-            "Main sudocode does not ship backends/lean/. Pin the Lean backend "
-            "branch (see proofs/ANTI_DRIFT.md).",
+            "Checkout sudocode at the pin in proofs/SUDOCODE_LEAN_PIN "
+            "(see proofs/ANTI_DRIFT.md).",
             file=sys.stderr,
         )
         return 1

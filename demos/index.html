@@ -9,34 +9,33 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./shared/tokens.css">
   <link rel="stylesheet" href="./shared/base.css">
-  <link rel="stylesheet" href="./shared/hub.css">
+  <link rel="stylesheet" href="./playroom/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
-<body>
-  <header class="site-chrome">
-    <nav class="site-nav" aria-label="Site">
-      <a class="site-brand" href="./">cryptoys</a>
-    </nav>
-  </header>
-  <main class="hub">
-    <header class="hub-intro">
-      <h1>cryptoys</h1>
-      <p class="lede">Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys. Nothing here is for real use.</p>
-    </header>
-    <section class="gallery" aria-label="Instruments">
-      <a class="instrument" href="./scramble/">
-        <div class="mark mark-cube" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-        <p class="instrument-kind">Hash</p>
-        <h2>Scramble</h2>
-        <p>A message walks a cube. The seated pose is the digest.</p>
-      </a>
-      <a class="instrument" href="./twodeck/">
-        <div class="mark mark-decks" aria-hidden="true"><span></span><span></span></div>
-        <p class="instrument-kind">Cipher</p>
-        <h2>TwoDeck</h2>
-        <p>A 52-card substitution-permutation network.</p>
-      </a>
-    </section>
-    <p class="disclaimer">Teaching instruments, not games and not production crypto. More primitives will sit here when they exist.</p>
-  </main>
+<body class="playroom">
+  <canvas id="playroom" aria-label="Evening playroom"></canvas>
+  <h1 class="playroom-title" id="title">cryptoys</h1>
+  <nav class="playroom-menu" id="menu" aria-label="Algorithms">
+    <p class="playroom-menu-label">algorithms</p>
+    <a href="./twodeck/" data-algo="twodeck">TwoDeck</a>
+    <a href="./scramble/" data-algo="scramble">Scramble</a>
+    <p class="fine">Teaching instruments. Not for real use.</p>
+  </nav>
+  <div class="playroom-pose" id="pose-ui">
+    <button type="button" class="chrome-action" id="sit" hidden>Sit at the table</button>
+    <button type="button" class="chrome-action" id="back" hidden>Back</button>
+  </div>
+  <p id="load-error" class="error" hidden></p>
+  <noscript>
+    <p class="playroom-noscript">The playroom needs JavaScript. The teaching demos are still at <a href="./twodeck/">TwoDeck</a> and <a href="./scramble/">Scramble</a>.</p>
+  </noscript>
+  <script type="module" src="./playroom/app.js"></script>
 </body>
 </html>

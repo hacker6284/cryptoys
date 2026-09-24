@@ -484,7 +484,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
             });
             return;
         }
-        if (step.kind === "pass") {
+        if (step.kind === "pass" || step.kind === "unpass") {
             const handIds = step.hand.slice();
             const keyIds = step.key.slice();
             handIds.forEach((id, index) => {
@@ -696,7 +696,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
             await resetKey(step, ms);
             return;
         }
-        if (step.kind === "pass") {
+        if (step.kind === "pass" || step.kind === "unpass") {
             await pass(step, ms);
             return;
         }
@@ -816,7 +816,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
 
     function frameTeach(kind) {
         follow = false;
-        if (kind === "pass" || kind === "reset") {
+        if (kind === "pass" || kind === "unpass" || kind === "reset") {
             const points = [
                 new THREE.Vector3(PASS_HAND_X - 1.2, 0, PASS_Z - 0.8),
                 new THREE.Vector3(PASS_KEY_X + 1.2, 0, PASS_Z + 0.8),

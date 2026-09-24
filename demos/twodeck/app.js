@@ -72,8 +72,12 @@ function caption(step) {
     if (step.kind === "take") return `${step.label} · inverse GridCycle lifts a card`;
     if (step.kind === "scan") return `${step.label} · GridCycle overflow · scanning row ${step.row + 1}`;
     if (step.kind === "place" && step.flag === 1) return `${step.label} · GridCycle overflow into (${step.row + 1}, ${step.col + 1})`;
-    if (step.kind === "pass" && step.flag === 2) return `${step.label} · rank cut on the key pile`;
-    if (step.kind === "pass" && step.flag === 1) return `${step.label} · suit cut, then rank cut on the hand`;
+    if (step.kind === "pass" && step.flag === 2) return `${step.label} · proper rank cut on the key pile`;
+    if (step.kind === "pass" && step.flag === 1) return `${step.label} · suit-rotate hand, then proper rank cut on the hand`;
+    if (step.kind === "pass" && step.flag === 0) return `${step.label} · no proper rank cut`;
+    if (step.kind === "unpass" && step.flag === 2) return `${step.label} · undo rank cut on the key pile`;
+    if (step.kind === "unpass" && step.flag === 1) return `${step.label} · undo rank cut on the hand`;
+    if (step.kind === "unpass") return step.label;
     return step.label;
 }
 
@@ -90,6 +94,7 @@ function stageKey(step) {
     if (step.kind === "sumcol") return `${step.label}::sumcol`;
     if (step.kind === "shift") return `${step.label}::shift`;
     if (step.kind === "pass") return `${step.label}::pass`;
+    if (step.kind === "unpass") return `${step.label}::unpass`;
     return `${step.label}::${step.kind}`;
 }
 
@@ -101,15 +106,47 @@ function specFor(step) {
     if (step.kind === "sumrow" || step.kind === "sumcol") return "4.2 SumRanks (SubBytes)";
     if (step.kind === "shift") return "4.3 ShiftRows";
     if (step.kind === "place" || step.kind === "scan" || step.kind === "mark" || step.kind === "take") return "3.5 GridCycle (MixColumns stand-in)";
-    if (step.kind === "pass") return "3.7 PassKey F";
+    if (step.kind === "pass" || step.kind === "unpass") return "3.7 PassKey F";
     if (step.kind === "compose" || step.kind === "uncompose") return "3.6 Compose / InverseCompose";
     if (step.kind === "deal" || step.kind === "dealrm" || step.kind === "scoopcm" || step.kind === "scooprm") return "4.1 Deal / scoop conventions";
     if (step.kind === "reset") return "3.8 expand_keys";
+    if (step.kind === "counter") return "5.2 CTR";
     return "3.9 Rounds, encrypt, decrypt";
 }
 
 function viewedIndex() {
     return teaching ? cursor + 1 : cursor;
+}
+
+function isOpeningPlace(step) {
+    const index = trace.indexOf(step);
+    if (index <= 0) return step.row === 2 && step.col === 0;
+    const prev = trace[index - 1];
+    return prev.kind === "mark" && prev.label === step.label;
+}
+
+function finalNote(step, why) {
+    if (String(step.label).includes("no GridCycle")) return `${why} Final round: SumRanks → ShiftRows → Compose; skip GridCycle.`;
+    return why;
+}
+
+function passMath(step) {
+    if (step.flag === 2) {
+        return `Controller ${cardName(step.card)}. Suit-rotate the hand (if any), then proper rank cut on the key pile by ${step.total} (fallback). Controller on top of the key pile.`;
+    }
+    let math = `Controller ${cardName(step.card)} (suit ${step.row}, rank ${step.col}).`;
+    if (step.amount > 0) math += ` Suit-rotate hand left by ${step.amount}.`;
+    if (step.flag === 1) math += ` Proper rank cut on the hand by ${step.total}.`;
+    if (step.flag === 0) math += ` No proper rank cut (rank ≥ packet size).`;
+    math += " Controller goes on top of the key pile.";
+    return math;
+}
+
+function unpassMath(step) {
+    const who = `Controller ${cardName(step.card)}.`;
+    if (step.flag === 1) return `${who} Undo proper rank cut on the hand (bottom→top by rank), then undo suit-rotate on the hand; controller returns to the hand.`;
+    if (step.flag === 2) return `${who} Undo proper rank cut on the key pile (bottom→top), then undo suit-rotate on the hand; controller returns to the hand.`;
+    return `${who} No cut to undo; undo suit-rotate on the hand if needed; controller returns to the hand.`;
 }
 
 function analogue(step) {
@@ -119,6 +156,7 @@ function analogue(step) {
     if (step.kind === "compose") return "Compose · AddRoundKey stand-in";
     if (step.kind === "uncompose") return "InverseCompose · AddRoundKey stand-in";
     if (step.kind === "pass") return "PassKey";
+    if (step.kind === "unpass") return "Un-pass · PassKey inverse";
     return step.label;
 }
 
@@ -171,19 +209,26 @@ function annotate(step, index) {
         return {
             kicker,
             title: analogue(step),
-            math: `Overflow. Scanning row ${step.row + 1} for a free seat. Card ${cardName(step.card)}.`,
-            why: "When the (suit, rank) step lands on an occupied seat, the overflow machine seeks the next free one.",
+            math: `Overflow. CHaSeD marker on row ${step.row + 1} (suit index ${step.row}); scan left→right for a free seat. Card ${cardName(step.card)}.`,
+            why: "Step target occupied: scan the row named by the CHaSeD overflow marker left→right for the first free seat, place there, then advance the marker ♣→♥→♠→♦. If that row is full, advance and try the next.",
             spec: specFor(step),
         };
     }
     if (step.kind === "place") {
+        const opening = isOpeningPlace(step);
         return {
             kicker,
             title: analogue(step),
             math: step.flag === 1
-                ? `${cardName(step.card)} overflowed into seat (${step.row + 1}, ${step.col + 1}). Suit step ${Math.floor(step.card / 13)}, rank step ${(step.card % 13) + 1}.`
-                : `${cardName(step.card)} steps suit ${Math.floor(step.card / 13)} / rank ${(step.card % 13) + 1} to seat (${step.row + 1}, ${step.col + 1}).`,
-            why: "GridCycle walks from the Ace-of-Spades home seat (2, 0). Suit is the row step; rank is the column step.",
+                ? `${cardName(step.card)} overflowed into seat (${step.row + 1}, ${step.col + 1}) via the CHaSeD marker scan (not the suit/rank step).`
+                : opening
+                    ? `${cardName(step.card)} is placed on the start seat (2, 0) — no step yet.`
+                    : `${cardName(step.card)} steps suit ${Math.floor(step.card / 13)} / rank ${(step.card % 13) + 1} to seat (${step.row + 1}, ${step.col + 1}).`,
+            why: step.flag === 1
+                ? "Step target occupied: scan the row named by the CHaSeD overflow marker left→right for the first free seat, place there, then advance the marker ♣→♥→♠→♦. If that row is full, advance and try the next."
+                : opening
+                    ? "The first card uses start seat (2, 0). Suit/rank stepping starts from the second card."
+                    : "GridCycle walks from the Ace-of-Spades home seat (2, 0). Suit is the row step; rank is the column step.",
             spec: specFor(step),
         };
     }
@@ -197,25 +242,33 @@ function annotate(step, index) {
         };
     }
     if (step.kind === "pass") {
-        const pile = step.flag === 2;
         return {
             kicker,
             title: analogue(step),
-            math: pile
-                ? `Controller ${cardName(step.card)}. Rank cut on the key pile (fallback).`
-                : `Controller ${cardName(step.card)}. Suit cut, then rank cut on the hand.`,
-            why: pile
-                ? "If the hand cannot take a proper rank cut, PassKey cuts the key pile instead. Not an error."
-                : "PassKey deals a controller from the hand and cuts before burying it on the key pile.",
+            math: passMath(step),
+            why: (step.flag === 2 ? "If the hand cannot take a proper rank cut, PassKey cuts the key pile instead. Not an error. " : "")
+                + "Deal controller C. Suit-rotate the remaining hand left by suit(C) mod hand size. Proper-cut only if rank(C) < packet size (hand, else key pile, else skip). Put C on top of the key pile.",
+            spec: specFor(step),
+        };
+    }
+    if (step.kind === "unpass") {
+        return {
+            kicker,
+            title: analogue(step),
+            math: unpassMath(step),
+            why: "F⁻¹. Lift C off the key pile; undo cut; undo suit rotate; put C on the hand. Decrypt: six forward passes to K6, then one un-pass per remaining round to K0.",
             spec: specFor(step),
         };
     }
     if (step.kind === "compose") {
+        const whitening = String(step.label).startsWith("Whitening");
         return {
             kicker,
             title: analogue(step),
             math: "Message cards are reindexed by the key deck: M[pos_K(j)] goes to slot j.",
-            why: "The only keyed layer in a round.",
+            why: whitening
+                ? "Whitening: Compose with K0 before any PassKey. Still the keyed AddRoundKey stand-in; not inside a numbered round."
+                : "The only keyed layer in a round.",
             spec: specFor(step),
         };
     }
@@ -233,7 +286,16 @@ function annotate(step, index) {
             kicker,
             title: step.label,
             math: step.amount > 0 ? `Re-deal the master key, then PassKey ${step.amount} times.` : "Re-deal the master key as K0.",
-            why: "Decrypt cannot undo a pass, so each round key is rebuilt from the master.",
+            why: "This trace rebuilds the round key from the master by re-dealing and passing.",
+            spec: specFor(step),
+        };
+    }
+    if (step.kind === "counter") {
+        return {
+            kicker,
+            title: "CTR counter deck",
+            math: "Seats 0–38: Clubs+Hearts+Spades nonce. Seats 39–51: Diamonds factoradic counter.",
+            why: "Only the diamond rail changes between block indices; nonce stays put.",
             spec: specFor(step),
         };
     }
@@ -242,7 +304,7 @@ function annotate(step, index) {
             kicker,
             title: step.label,
             math: step.kind === "deal" ? "Deal column-major: down column 0, then 1, …" : "Deal row-major: across row 0, then 1, …",
-            why: "Column-major is the SumRanks table. Row-major is GridCycle inverse entry.",
+            why: finalNote(step, "Column-major is the SumRanks table. Row-major is GridCycle inverse entry."),
             spec: specFor(step),
         };
     }
@@ -251,7 +313,7 @@ function annotate(step, index) {
             kicker,
             title: step.label,
             math: step.kind === "scoopcm" ? "Scoop column-major into a packet." : "Scoop row-major into a packet.",
-            why: "GridCycle output scoops row-major. SumRanks exits column-major.",
+            why: finalNote(step, "GridCycle output scoops row-major. SumRanks exits column-major."),
             spec: specFor(step),
         };
     }
@@ -326,7 +388,7 @@ function applyHighlight(step) {
     else if (step.kind === "mark") {
         view.clearHighlights();
         view.highlightSeat(2, 0);
-    } else if (step.kind === "pass") {
+    } else if (step.kind === "pass" || step.kind === "unpass") {
         view.clearHighlights();
         view.highlightCard(step.card, "key", step.flag === 2 ? 0xe7b15a : 0xc4a574);
     } else view.clearHighlights();
@@ -351,6 +413,7 @@ function outlineSections() {
             else if (step.kind === "sumcol") label = `SumRanks col ${step.col + 1}`;
             else if (step.kind === "shift") label = `ShiftRows row ${step.row + 1}`;
             else if (step.kind === "pass") label = `PassKey · ${rows.filter((r) => r.step.kind === "pass").length} controllers`;
+            else if (step.kind === "unpass") label = `Un-pass · ${rows.filter((r) => r.step.kind === "unpass").length} controllers`;
             else if (step.kind === "place" || step.kind === "scan" || step.kind === "mark") label = "GridCycle";
             else if (step.kind === "take") label = "Inverse GridCycle";
             else if (step.kind === "compose") label = "Compose";
@@ -532,7 +595,9 @@ async function start() {
             captionEl.textContent = `Encrypting.${blocks.length > 1 ? ` Hex has ${blocks.length} blocks. The table plays the first.` : ""}`;
         } else {
             const walk = mode === "ecb"
-                ? "The master key is dealt again and passed 6 times, then 5, then 4, then 3, then 2, then 1."
+                ? (trace.some((item) => item.kind === "unpass")
+                    ? "The master key is passed forward 6 times to K6, then un-passed back to K0."
+                    : "The master key is dealt again and passed 6 times, then 5, then 4, then 3, then 2, then 1.")
                 : "The counter is encrypted, then the ciphertext is inverse-composed with that keystream.";
             const more = blocks.length > 1 ? ` The table plays the first of ${blocks.length} blocks.` : "";
             captionEl.textContent = `Decrypting. ${walk}${more}`;

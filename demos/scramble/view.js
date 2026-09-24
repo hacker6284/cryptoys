@@ -147,9 +147,23 @@ export function mountCube(canvas) {
         clearHighlights();
         const mesh = meshes.get(`${x},${y},${z}`);
         if (!mesh) return;
-        glow(mesh, 0x6b4e18, 1.12);
-        mesh.material[AXIS.yp].emissive.setHex(0xe6c48a);
-        mesh.material[AXIS.zp].emissive.setHex(0xe6c48a);
+        glow(mesh, 0x3d3118, 1.04);
+    }
+
+    function highlightRuleB(facelets, up, front) {
+        clearHighlights();
+        const probe = meshes.get("1,1,1");
+        if (probe) glow(probe, 0x3d3118, 1.03);
+        const upAt = centerOf(facelets, up);
+        const frontAt = centerOf(facelets, front);
+        if (upAt) {
+            const mesh = meshes.get(upAt.join(","));
+            if (mesh) glow(mesh, 0xc4a574, 1.14);
+        }
+        if (frontAt) {
+            const mesh = meshes.get(frontAt.join(","));
+            if (mesh) glow(mesh, 0xe6c48a, 1.14);
+        }
     }
 
     function meshesOn(face) {
@@ -207,5 +221,5 @@ export function mountCube(canvas) {
         renderer.dispose();
     }
 
-    return { paint, animateMove, animateReorient, highlightLayer, highlightCubie, clearHighlights, dispose };
+    return { paint, animateMove, animateReorient, highlightLayer, highlightCubie, highlightRuleB, clearHighlights, dispose };
 }

@@ -198,10 +198,16 @@ function annotate(step, index) {
                 ? `Nybble ${step.nybble} → ${pair}. This is turn ${step.index + 1} of 2.`
                 : `Nybble ${step.nybble} → ${step.move}.`,
             why: pad
-                ? (step.nybble === "8"
-                    ? "Evaluate appends marker nybble 8, then fills the tape."
-                    : "Filler from the padding cycle. It is not part of the message.")
-                : "The nybble chooses the face turns that walk the cube.",
+                ? (version === 2
+                    ? (step.nybble === "8"
+                        ? "Evaluate appends marker nybble 8, then the cycle 6 0 7 1 until the tape is at least 12 nybbles."
+                        : "Padding filler from the cycle 6 0 7 1 (not message). Tape must reach at least 12 nybbles.")
+                    : (step.nybble === "8"
+                        ? "Evaluate appends marker nybble 8, then n = (8 − len mod 8) mod 8 of 6 0 7 1 8 2 9 3, then that octet until the tape is at least 24 nybbles."
+                        : "Padding filler from the cycle 6 0 7 1 8 2 9 3 (not message). Tape must reach at least 24 nybbles."))
+                : (version === 2
+                    ? "Each nybble is two clockwise quarter turns, then Rule B."
+                    : "Each nybble is one clockwise quarter turn. A block is 8 nybbles, then Rule B."),
             spec: version === 2 ? "scramble_v2" : "scramble_v1",
         };
     }
@@ -210,7 +216,7 @@ function annotate(step, index) {
             kicker: pos,
             title: "Rule B",
             math: `Cubie (1,1,1) reads ${colorName(step.up)} up, ${colorName(step.front)} front.`,
-            why: "Rotate the whole cube so that cubie's up and front become world up and front.",
+            why: "Whole-cube rotation: seat the face center of that up color on Up (+Y) and the face center of that front color on Front (+Z).",
             spec: "Rule B",
         };
     }
@@ -263,7 +269,8 @@ function applyHighlight(step) {
         return;
     }
     if (step.kind === "move" || step.kind === "closer") view.highlightLayer(parseMove(step.move).face);
-    else if (step.kind === "ruleB" || step.kind === "canonicalize") view.highlightCubie(1, 1, 1);
+    else if (step.kind === "ruleB") view.highlightRuleB(facelets, step.up, step.front);
+    else if (step.kind === "canonicalize") view.highlightRuleB(facelets, "W", "G");
     else view.clearHighlights();
 }
 

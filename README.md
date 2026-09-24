@@ -8,6 +8,8 @@ Each primitive is a directory holding a normative specification and one [sudocod
 primitives/hash/scramble/SPEC.md
 primitives/hash/scramble/scramble.sudo
 demos/scramble/
+primitives/hash/megadreifach/SPEC.md
+primitives/hash/megadreifach/megadreifach.sudo
 primitives/cipher/twodeck/SPEC.md
 primitives/cipher/twodeck/twodeck.sudo
 demos/twodeck/
@@ -19,6 +21,10 @@ proofs/
 Scramble is a hash. A message walks a solved cube. The digest is the seated pose, encoded as the cube-group index in 9 bytes. `scramble_v1` is superseded. `scramble_v2` is current.
 
 The specification is `primitives/hash/scramble/SPEC.md`.
+
+## MegaDreifach
+
+MegaDreifach is a toy three-megaminx Merkle–Damgård hash. The product name is locked; the puzzle/group library stays megaminx. Digest is 29 bytes. Length extension on bare Hash is accepted by design. The published definition is `primitives/hash/megadreifach/SPEC.md` plus `megadreifach.sudo`. Correctness Lean under `proofs/megadreifach/` is a hand-written model of that algebra, not a proof that the sudo text equals Lean. A green Lean build is not a security claim.
 
 ## TwoDeck
 
@@ -35,15 +41,17 @@ sh tools/build.sh
 
 `tools/build.sh` looks for `sudoc` at `~/Documents/Projects/sudocode/sudoc/target/debug/sudoc` when `SUDOC` is unset. Then serve `demos/` and open `scramble/`.
 
-The conformance tests are inside `scramble.sudo`. With `sudoc` on the path:
+The conformance tests are inside each `.sudo` file. With `sudoc` on the path:
 
 ```sh
 sudoc build --target js --tests -o /tmp/scramble primitives/hash/scramble/scramble.sudo
 node /tmp/scramble/_scramble_impl.mjs
+sudoc build --target js --tests -o /tmp/megadreifach primitives/hash/megadreifach/megadreifach.sudo
+node /tmp/megadreifach/_megadreifach_impl.mjs
 ```
 
 GitHub Actions builds `sudoc` from [hacker6284/sudocode](https://github.com/hacker6284/sudocode), runs those tests, and publishes `demos/`.
 
 ## Proofs
 
-What this library will and will not claim is in `proofs/README.md`. TwoDeck correctness stones are under `proofs/twodeck/`.
+What this library will and will not claim is in `proofs/README.md`. TwoDeck correctness stones are under `proofs/twodeck/`. MegaDreifach correctness stones are under `proofs/megadreifach/`.

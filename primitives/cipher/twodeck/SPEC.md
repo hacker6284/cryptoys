@@ -2,7 +2,7 @@
 
 This document is the normative specification. `twodeck.sudo` is the conformance implementation. A mismatch is a bug in the implementation. TwoDeck is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim. It is not for protecting anything.
 
-The demo at `demos/twodeck/` plays `trace_encrypt` and `trace_decrypt`. It does not contain a second copy of the rounds. `decrypt` keeps the round-key list. The decrypt trace does not: it re-deals the master key and passes it 6 times, then 5, then 4, then 3, then 2, then 1.
+The demo at `demos/twodeck/` plays `trace_encrypt` and `trace_decrypt`. It does not contain a second copy of the rounds. `decrypt` may keep the round-key list from `expand_keys`. The decrypt trace does not: it passes the master key forward 6 times to \(K_6\), then un-passes once per remaining round back to \(K_0\). Ciphertext is the same either way; only the key-derivation choreography differs.
 
 ---
 
@@ -23,7 +23,6 @@ The demo at `demos/twodeck/` plays `trace_encrypt` and `trace_decrypt`. It does 
 - No claim of AES-class security, MDS MixColumns, or cryptographically strong key schedule.
 - No CBC / CFB / OFB / AEAD. No authentication.
 - No jokers (unlike the older 54-card Solitaire-style schedule).
-- PassKey injectivity is **not** claimed (open problem / soft probe only).
 - GridCycle is **not** MDS; SumRanks is **not** an AES S-box / \(\mathrm{GF}(2^8)\) inverse.
 - Hand/math “refinement” obligations are agenda items, not proved here.
 - No AES-style 16-byte blocks. One block is one deck, about 28 bytes of injective message capacity.
@@ -82,7 +81,7 @@ N_r = 6,\qquad \mathrm{SHIFT} = (0,1,2,3).
 
 Notation: decks are 0-indexed lists. Grid cells hold card ids. All modular arithmetic on row/column indices uses moduli \(4\) and \(13\) respectively.
 
-### Bijectivity summary (claimed vs open)
+### Bijectivity summary (status)
 
 | Map | Bijective on decks / grids? | Claim status |
 |-----|------------------------------|--------------|
@@ -94,8 +93,7 @@ Notation: decks are 0-indexed lists. Grid cells hold card ids. All modular arith
 | Compose / InverseCompose (fixed \(K\)) | Yes | Claimed |
 | Full / final round (fixed round key) | Yes | Claimed via layer RT |
 | Encrypt / Decrypt (fixed \(K_0\)) | Yes | Claimed; RT in self_test |
-| PassKey \(F\) | Deterministic, content-preserving | Claimed |
-| PassKey \(F\) injective | — | **Open** (not claimed) |
+| PassKey \(F\) / \(F^{-1}\) | Yes (on \(S_{52}\)) | Proved in `proofs/twodeck/` (`passKey_leftInverse` / `passKey_rightInverse`); cycle structure still evidence only |
 
 ---
 
@@ -276,17 +274,40 @@ F(deck):
   return key                                # key[0] = last controller dealt
 ```
 
-**Claimed:** deterministic; preserves card multiset (= set of 52).  
-**Not claimed:** injectivity / surjectivity of \(F\) on \(S_{52}\). Soft probes (no collisions in 20k samples, no fixed points in 5k) are evidence only — see §6.
+**Left rotate / right rotate.** Top = index \(0\). Left rotate by \(k\) moves the top \(k\) cards to the bottom. Right rotate by \(k\) moves the bottom \(k\) cards to the top. They are inverses (empty list and \(k=0\) are fixed).
+
+```
+F^{-1}(deck):
+  key ← copy(deck); hand ← []
+  while key nonempty:
+    C ← pop front of key
+    n ← len(hand)                 # hand size just after C was popped in F
+    if n > 0 and rank(C) < n:
+      hand ← right_rotate(hand, rank(C))
+    else if key nonempty and rank(C) < len(key):
+      key ← right_rotate(key, rank(C))
+    else:
+      skip cut
+    if n > 0:
+      k ← suit(C) mod n
+      if k > 0: hand ← right_rotate(hand, k)
+    insert C at front of hand
+  return hand
+```
+
+**Claim:** \(F\) is a bijection on \(S_{52}\). \(F^{-1}\circ F=\mathrm{id}\) and \(F\circ F^{-1}=\mathrm{id}\). Deterministic; preserves the card multiset.
+
+**Why:** at step \(i\) the controller \(C\) is on top of the key pile, so the inverse can read it. Every branch depends only on \(C\) and the pile sizes (hand \(=51-i\) after the pop, key \(=i\)), never on hidden card identities. Each step is a bijection on \((\mathrm{hand},\mathrm{key})\) states of those sizes, and \(F\) is their composition. Lean: `proofs/twodeck/lean/TwoDeck/PassKey.lean`, theorems `passKey_leftInverse` and `passKey_rightInverse` (on `main` via PR #2). Cycle structure / orbit lengths of \(F\) on \(S_{52}\) are not claimed.
 
 ## 3.8 expand_keys
 
 \[
 \mathrm{expand\_keys}(K_0, N_r) = [K_0,K_1,\ldots,K_{N_r}],
-\quad K_r = F(K_{r-1})\ \text{for}\ r=1..N_r.
+\quad K_r = F(K_{r-1})\ \text{for}\ r=1..N_r,
+\quad K_{r-1} = F^{-1}(K_r).
 \]
 
-Forward only. There is **no** `schedule_backward`. \(K_r\) is PassKey applied \(r\) times to \(K_0\). The functions keep the list. At the table, decrypt re-deals the master key and passes it \(r\) times whenever it needs \(K_r\).
+The functions may keep the list. At the table, one key deck is enough: encrypt passes forward; decrypt passes forward to \(K_6\) and then un-passes (§4.8). Ciphertexts do not change.
 
 ## 3.9 Rounds, encrypt, decrypt
 
@@ -344,9 +365,24 @@ decrypt(C, K_0):
   return InverseCompose(M, keys[0])
 ```
 
-**Claim:** \(\mathrm{decrypt}(\mathrm{encrypt}(M,K_0),K_0)=M\) for all valid decks (self_test; pressure harness).
+Same ciphertext, walking the one key deck (what `decrypt` and §4.8 do):
 
-`expand_keys` is how the functions above name \(K_0,\ldots,K_6\). At the table there is one key deck: whitening uses it as \(K_0\), and each PassKey turns that same deck into the next round key before the round that uses it (§4.7). Decrypt cannot undo a pass, so each round key is built again from the master key (§4.8).
+```
+decrypt_walk(C, K_0):
+  K ← K_0
+  for r in 1..6:
+    K ← F(K)                          # now K_6
+  M ← inv_final_round(C, K)
+  for r in 5..1:
+    K ← F^{-1}(K)                     # K_r
+    M ← inv_full_round(M, K)
+  K ← F^{-1}(K)                       # K_0
+  return InverseCompose(M, K)
+```
+
+**Claim:** \(\mathrm{decrypt}(\mathrm{encrypt}(M,K_0),K_0)=M\) for all valid decks (self_test; pressure harness). \(\mathrm{decrypt}=\mathrm{decrypt\_walk}\).
+
+`expand_keys` is how the list form names \(K_0,\ldots,K_6\). At the table there is one key deck: whitening uses it as \(K_0\), and each PassKey turns that same deck into the next round key before the round that uses it (§4.7). Decrypt un-passes that deck from \(K_6\) back to \(K_0\) (§4.8). The round-key values, and therefore every ciphertext, are the same either way.
 
 ### Alternating majors (choreography invariant)
 
@@ -430,9 +466,18 @@ No jokers. No round number. One full pass turns this round’s \(K\) into the ne
    - Place C **on top** of the key pile.
 3. When the hand is empty, the key pile **is** the next round key (its top is the last C you dealt).
 
-On encrypt, do this once per step \(K_0 \to K_1 \to \cdots \to K_6\), on the same deck, after that deck has been used and before the next round. Whitening is the use that happens before the first pass. A pass cannot be undone. Decrypt does not continue from the deck it just used: \(K_r = F^r(K_0)\), so each round key is a fresh run of \(r\) passes starting from the master key (§4.8).
+On encrypt, do this once per step \(K_0 \to K_1 \to \cdots \to K_6\), on the same deck, after that deck has been used and before the next round. Whitening is the use that happens before the first pass.
 
-Near the end of a pass, emphasize **key-pile** cuts — that fallback is intentional so short hands do not force silent no-ops.
+**Un-pass** (\(F^{-1}\)). Start with the current round key as the **key pile** and an empty **hand**. Repeat 52 times:
+
+1. Lift the top card **C** off the key pile.
+2. Undo the cut: if the hand has cards and C’s rank \(<\) hand size, move that many cards from the **bottom** of the hand to the top; else if the key pile is nonempty and C’s rank \(<\) key-pile size, do the same on the key pile; else nothing.
+3. Undo the suit rotation: if the hand has cards, move \((\mathrm{suit}(C)\bmod\text{hand size})\) cards from the bottom of the hand to the top.
+4. Put C on top of the hand.
+
+When the key pile is empty, the hand is the previous round key. Forward “rotate left by \(k\)” moves the top \(k\) cards to the bottom, so this undo moves the bottom \(k\) to the top. Decrypt uses un-pass (§4.8).
+
+Near the end of a (forward) pass, emphasize **key-pile** cuts — that fallback is intentional so short hands do not force silent no-ops.
 
 ## 4.7 Full encrypt walkthrough
 
@@ -454,13 +499,13 @@ Those decks are \(K_0,\ldots,K_6\) from `expand_keys`. Encrypt at the table neve
 
 ## 4.8 Decrypt sketch
 
-Keep the master key. Every round key is dealt from it again. Passing onward from \(K_6\) does not reach \(K_5\); five more passes would be \(K_{11}\).
+One key deck. Pass it forward to \(K_6\), then un-pass back. Ciphertext is the same as if you had kept every \(K_r\) from `expand_keys`.
 
 1. Arrange the key deck as \(K_0\). PassKey **6** times. The deck is \(K_6\). InverseCompose the ciphertext with it; lay column-major; inverse ShiftRows; inverse SumRanks; scoop column-major.
-2. For \(r = 5, 4, 3, 2, 1\): arrange the key deck as \(K_0\) again. PassKey **\(r\)** times. InverseCompose with that deck; inverse GridCycle (row-major lay and walk); lay column-major; inverse ShiftRows; inverse SumRanks; scoop column-major.
-3. InverseCompose with \(K_0\), the master key, with no pass.
+2. For \(r = 5, 4, 3, 2, 1\): un-pass **once**. The deck is \(K_r\). InverseCompose with that deck; inverse GridCycle (row-major lay and walk); lay column-major; inverse ShiftRows; inverse SumRanks; scoop column-major.
+3. Un-pass **once** more. The deck is \(K_0\). InverseCompose with it.
 
-That is 6 passes, then 5, then 4, then 3, then 2, then 1. Twenty-one passes, each run starting from the master key.
+That is 6 forward passes and 6 un-passes: **12** passes on one deck. If a separate copy of the master key is kept, the last un-pass can be skipped (**11**).
 
 Matching majors throughout: col-major around SumRanks+ShiftRows; row-major around GridCycle.
 
@@ -576,7 +621,7 @@ Prioritized backlog. Tags: **Lean** (machine-checked proof), **property-test** (
 | S1 | Layer bijections: lay/scoop cm & rm; SumRanks; ShiftRows; GridCycle; Compose | P0 | Lean + property-test | **Proof** target (Lean); evidence already in `self_test` | Port from existing Lean Compose / Basic patterns |
 | S2 | Round-trip: `inv_full_round ∘ full_round`, `inv_final ∘ final`, `decrypt ∘ encrypt` | P0 | Lean + property-test | **Proof** target; evidence green (self_test, pressure B1) | Depends on S1 |
 | S3 | PassKey determinism + content-preservation (\(\{F(K)\}=\{K\}\) as sets) | P0 | Lean + property-test | **Proof** (easy content); determinism trivial | Soft-lock companion |
-| S4 | PassKey injectivity / cycle structure on \(S_{52}\) | P2 | Lean (hard) / cryptanalysis script | **Open problem**; evidence only (0/20k collisions, 0/5k fixed points, long-period probes) | Do **not** claim bijection in teaching materials |
+| S4 | PassKey injectivity on \(S_{52}\) | P0 | Lean + property-test | **Proof** | Constructive \(F^{-1}\) in §3.7; Lean `passKey_leftInverse` / `passKey_rightInverse` in `proofs/twodeck/`. Cycle structure / orbit lengths remain evidence only. |
 | S5 | CTR factoradic unranking is a bijection \(\mathbb{Z}/13!\mathbb{Z} \leftrightarrow S_{13}\) (and 39! ↔ \(S_{39}\) for software nonce helper) | P1 | Lean + property-test | **Proof** target | Classic combinatorics; pin exact digit convention to `unrank_perm` |
 | S6 | CTR merge: `counter_deck` always a full CHaSeD perm; consec \(i,i+1\) agree on seats 0..38 | P1 | property-test + Lean | **Proof** / evidence | Already demonstrated in pressure C |
 | S7 | Hand↔math refinement: player-sheet procedures refine §3 ops (esp. overflow scan, proper-cut fallback, col vs row scoop) | P1 | TLA or Lean refinement + checklist | **Proof** of refinement obligations; interim: manual audit checklist | Ambiguity surface for stranger play |
@@ -587,9 +632,9 @@ Prioritized backlog. Tags: **Lean** (machine-checked proof), **property-test** (
 | S12 | Unkeyed peel: full_round = Compose(unkeyed(M), K) | P0 | Lean + property-test | **Proof** / evidence (pressure B4) | Structural teaching lemma |
 | S13 | §5.3 bytes ↔ deck: 28-byte unrank is injective; 29-byte rank/unrank is a bijection with \(\{0,\ldots,52!-1\}\); `0x80` padding strips uniquely | P1 | property-test | **Evidence** (`demos/twodeck/cards.js`) | Same digit convention as §5.2. `52!` does not fit in a sudocode `int` |
 
-**Suggested order of attack:** S1 → S2 → S12 → S3 → S5 → S6 → S11 → S7, with S4 parked as open, S13 as a property-test of the byte encoding, and S8–S10 as living evidence notebooks — never promoted to “security results.”
+**Suggested order of attack:** S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7, S13 as a property-test of the byte encoding, and S8–S10 as living evidence notebooks — never promoted to “security results.” Cycle structure of PassKey stays evidence.
 
-Existing Lean tree (`lean/TwoDeck/`) covers older reference primitives (Compose, Milk, …); TwoDeck's layers are new stones.
+Lean for TwoDeck layers, including the PassKey inverse, lives under `proofs/twodeck/lean`.
 
 ---
 
@@ -651,9 +696,9 @@ Prefer **permutation arcs in 3D**: each card in \(M\) arcs from its old seat to 
 
 ### PassKey
 
-One key deck. Whitening uses it as dealt. Each later encrypt round is preceded by one pass of that same deck; the pile at the end of the pass is the round key about to be used. Do not deal \(K_1,\ldots,K_6\) out before whitening. Decrypt re-deals the master key for each round key: six passes, then five, then four, then three, then two, then one.
+One key deck. Whitening uses it as dealt. Each later encrypt round is preceded by one pass of that same deck; the pile at the end of the pass is the round key about to be used. Do not deal \(K_1,\ldots,K_6\) out before whitening. Decrypt passes that deck forward six times to \(K_6\), then un-passes once per remaining round back to \(K_0\). Do not re-deal the master key for each round key. Un-pass: controller lifts off the key pile; cut undo (bottom packet to top on hand or key pile); suit undo on the hand; controller settles on the hand.
 
-**Split view** — hand left, key pile right. Controller card lifts and flashes **suit** (hand rotate) then **rank** (cut target glow on hand **or** key pile). Cut = clean packet lift-and-rejoin. Controller settles on key pile with a soft thud. **Near end of pass:** key-pile cuts use a **different accent color** so the fallback rule is teachable (not a failure state).
+**Split view** — hand left, key pile right. Forward: controller lifts from the hand, flashes **suit** (hand rotate) then **rank** (cut target glow on hand **or** key pile). Cut = clean packet lift-and-rejoin. Controller settles on the **key pile** with a soft thud. Un-pass: controller lifts from the key pile; cut undo (bottom packet to top on hand or key pile); suit undo on the hand; controller settles on the **hand**. **Near end of pass:** key-pile cuts use a **different accent color** so the fallback rule is teachable (not a failure state).
 
 ### CTR diamond counter
 

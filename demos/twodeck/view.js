@@ -778,7 +778,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
             camera.updateMatrixWorld(true);
             const inside = points.every((point) => {
                 const ndc = point.clone().project(camera);
-                return ndc.z < 1 && Math.abs(ndc.x) < 0.9 && ndc.y < top && ndc.y > -0.55;
+                return ndc.z < 1 && Math.abs(ndc.x) < 0.9 && ndc.y < top && ndc.y > -0.7;
             });
             if (inside) {
                 best = dist;
@@ -822,7 +822,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
                 new THREE.Vector3(PASS_KEY_X + 1.2, 0, PASS_Z + 0.8),
                 ...gridPoints(KEY_X),
             ];
-            framePoints(points, new THREE.Vector3(KEY_X, 0, PASS_Z * 0.35), 0.52);
+            framePoints(points, new THREE.Vector3(KEY_X, 0, PASS_Z * 0.35), 0.42);
             return;
         }
         if (kind === "compose" || kind === "uncompose") {
@@ -830,10 +830,10 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
                 new THREE.Vector3(-6, 0, -3.6),
                 new THREE.Vector3(6, 0, 3.6),
             ];
-            framePoints(points, new THREE.Vector3(0, 0, 0), 0.52);
+            framePoints(points, new THREE.Vector3(0, 0, 0), 0.42);
             return;
         }
-        framePoints(gridPoints(MESSAGE_X), new THREE.Vector3(MESSAGE_X, 0, 0), 0.52);
+        framePoints(gridPoints(MESSAGE_X), new THREE.Vector3(MESSAGE_X, 0, 0), 0.42);
     }
 
     let frame = 0;

@@ -116,7 +116,9 @@ export function mountCube(canvas) {
         }
         SPOTS.forEach(([x, y, z, axis], i) => {
             const mesh = meshes.get(`${x},${y},${z}`);
-            mesh.material[AXIS[axis]].color.setHex(COLOR[facelets[i]]);
+            const mat = mesh.material[AXIS[axis]];
+            mat.color.setHex(COLOR[facelets[i]]);
+            mat.needsUpdate = true;
         });
     }
 

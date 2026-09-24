@@ -6,34 +6,37 @@
   <title>cryptoys</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    :root { color: #f3efe6; background: #0c0c0e; font-family: "Source Sans 3", sans-serif; }
-    body { margin: 0; min-height: 100dvh; }
-    main { max-width: 720px; padding: 64px 28px; }
-    h1 { font-family: Fraunces, serif; font-weight: 520; font-size: 64px; letter-spacing: -0.03em; margin: 0 0 12px; }
-    p { color: #9a958c; font-size: 18px; line-height: 1.5; }
-    a { color: #f3efe6; }
-    ul { padding: 0; list-style: none; }
-    li { margin: 18px 0; }
-    .name { font-family: Fraunces, serif; font-size: 28px; }
-    .meta { color: #9a958c; }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./shared/tokens.css">
+  <link rel="stylesheet" href="./shared/base.css">
+  <link rel="stylesheet" href="./shared/hub.css">
 </head>
 <body>
-  <main>
-    <h1>cryptoys</h1>
-    <p>Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys. Nothing here is for real use.</p>
-    <ul>
-      <li>
-        <a class="name" href="./scramble/">Scramble</a>
-        <div class="meta">Hash · a message walks a cube, and the seated pose is the digest</div>
-      </li>
-      <li>
-        <a class="name" href="./twodeck/">TwoDeck</a>
-        <div class="meta">Cipher · a 52-card substitution-permutation network</div>
-      </li>
-    </ul>
+  <header class="site-chrome">
+    <nav class="site-nav" aria-label="Site">
+      <a class="site-brand" href="./">cryptoys</a>
+    </nav>
+  </header>
+  <main class="hub">
+    <header class="hub-intro">
+      <h1>cryptoys</h1>
+      <p class="lede">Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys. Nothing here is for real use.</p>
+    </header>
+    <section class="gallery" aria-label="Instruments">
+      <a class="instrument" href="./scramble/">
+        <div class="mark mark-cube" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <p class="instrument-kind">Hash</p>
+        <h2>Scramble</h2>
+        <p>A message walks a cube. The seated pose is the digest.</p>
+      </a>
+      <a class="instrument" href="./twodeck/">
+        <div class="mark mark-decks" aria-hidden="true"><span></span><span></span></div>
+        <p class="instrument-kind">Cipher</p>
+        <h2>TwoDeck</h2>
+        <p>A 52-card substitution-permutation network.</p>
+      </a>
+    </section>
+    <p class="disclaimer">Teaching instruments, not games and not production crypto. More primitives will sit here when they exist.</p>
   </main>
 </body>
 </html>

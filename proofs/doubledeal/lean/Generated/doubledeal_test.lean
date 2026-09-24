@@ -41,10 +41,10 @@ def test_column_and_row_deals_are_inverses : Except SudoRt.Trap Unit :=
     do
       let _t6 ← lay_cm deck
       let _t7 ← scoop_cm _t6
-      let _as8 ← SudoRt.sudoAssertEq _t7 deck 763
+      let _as8 ← SudoRt.sudoAssertEq _t7 deck 765
       let _t9 ← lay_rm deck
       let _t10 ← scoop_rm _t9
-      let _as11 ← SudoRt.sudoAssertEq _t10 deck 764
+      let _as11 ← SudoRt.sudoAssertEq _t10 deck 766
       pure ()) (fun r => pure r))
     pure _out
 
@@ -85,12 +85,12 @@ def test_sum_ranks_and_shift_rows_invert : Except SudoRt.Trap Unit :=
       let _t21 ← sum_ranks _t20
       let _t22 ← inv_sum_ranks _t21
       let _t23 ← scoop_cm _t22
-      let _as24 ← SudoRt.sudoAssertEq _t23 deck 770
+      let _as24 ← SudoRt.sudoAssertEq _t23 deck 772
       let _t25 ← lay_cm deck
       let _t26 ← shift_rows _t25
       let _t27 ← inv_shift_rows _t26
       let _t28 ← scoop_cm _t27
-      let _as29 ← SudoRt.sudoAssertEq _t28 deck 771
+      let _as29 ← SudoRt.sudoAssertEq _t28 deck 773
       pure ()) (fun r => pure r))
     pure _out
 
@@ -128,7 +128,7 @@ def test_grid_cycle_inverts : Except SudoRt.Trap Unit :=
     do
       let _t37 ← mix_columns deck
       let _t38 ← inv_mix_columns _t37
-      let _as39 ← SudoRt.sudoAssertEq _t38 deck 777
+      let _as39 ← SudoRt.sudoAssertEq _t38 deck 779
       pure ()) (fun r => pure r))
     pure _out
 
@@ -176,12 +176,12 @@ def test_compose_inverts_and_passkey_keeps_the_deck : Except SudoRt.Trap Unit :=
     do
       let _t51 ← compose deck key
       let _t52 ← inverse_compose _t51 key
-      let _as53 ← SudoRt.sudoAssertEq _t52 deck 785
+      let _as53 ← SudoRt.sudoAssertEq _t52 deck 787
       let _t54 ← passkey deck
       let derived := _t54
-      let _as56 ← SudoRt.sudoAssertEq (SudoRt.listLen derived) (52 : Int) 787
+      let _as56 ← SudoRt.sudoAssertEq (SudoRt.listLen derived) (52 : Int) 789
       let _t57 ← same_cards derived deck
-      let _as58 ← SudoRt.sudoAssert _t57 788
+      let _as58 ← SudoRt.sudoAssert _t57 790
       pure ()) (fun r => pure r))
     pure _out
 
@@ -231,28 +231,28 @@ def test_passkey_inverse_is_a_two_sided_inverse : Except SudoRt.Trap Unit :=
       let key := (#[(48 : Int), (42 : Int), (25 : Int), (26 : Int), (3 : Int), (37 : Int), (39 : Int), (50 : Int), (11 : Int), (2 : Int), (43 : Int), (8 : Int), (10 : Int), (7 : Int), (40 : Int), (38 : Int), (34 : Int), (0 : Int), (49 : Int), (51 : Int), (22 : Int), (27 : Int), (23 : Int), (9 : Int), (12 : Int), (15 : Int), (44 : Int), (41 : Int), (21 : Int), (28 : Int), (20 : Int), (13 : Int), (19 : Int), (14 : Int), (45 : Int), (31 : Int), (35 : Int), (18 : Int), (17 : Int), (30 : Int), (6 : Int), (36 : Int), (47 : Int), (16 : Int), (1 : Int), (33 : Int), (29 : Int), (5 : Int), (46 : Int), (32 : Int), (24 : Int), (4 : Int)] : Array (Int))
       let _t72 ← passkey identity
       let _t73 ← passkey_inv _t72
-      let _as74 ← SudoRt.sudoAssertEq _t73 identity 798
+      let _as74 ← SudoRt.sudoAssertEq _t73 identity 800
       let _t75 ← passkey_inv identity
       let _t76 ← passkey _t75
-      let _as77 ← SudoRt.sudoAssertEq _t76 identity 799
+      let _as77 ← SudoRt.sudoAssertEq _t76 identity 801
       let _t78 ← passkey reversed
       let _t79 ← passkey_inv _t78
-      let _as80 ← SudoRt.sudoAssertEq _t79 reversed 800
+      let _as80 ← SudoRt.sudoAssertEq _t79 reversed 802
       let _t81 ← passkey_inv reversed
       let _t82 ← passkey _t81
-      let _as83 ← SudoRt.sudoAssertEq _t82 reversed 801
+      let _as83 ← SudoRt.sudoAssertEq _t82 reversed 803
       let _t84 ← passkey mixed
       let _t85 ← passkey_inv _t84
-      let _as86 ← SudoRt.sudoAssertEq _t85 mixed 802
+      let _as86 ← SudoRt.sudoAssertEq _t85 mixed 804
       let _t87 ← passkey_inv mixed
       let _t88 ← passkey _t87
-      let _as89 ← SudoRt.sudoAssertEq _t88 mixed 803
+      let _as89 ← SudoRt.sudoAssertEq _t88 mixed 805
       let _t90 ← passkey key
       let _t91 ← passkey_inv _t90
-      let _as92 ← SudoRt.sudoAssertEq _t91 key 804
+      let _as92 ← SudoRt.sudoAssertEq _t91 key 806
       let _t93 ← passkey_inv key
       let _t94 ← passkey _t93
-      let _as95 ← SudoRt.sudoAssertEq _t94 key 805
+      let _as95 ← SudoRt.sudoAssertEq _t94 key 807
       let built := key
       let _fromV := (1 : Int)
       let _toV := (6 : Int)
@@ -304,7 +304,7 @@ def test_passkey_inverse_is_a_two_sided_inverse : Except SudoRt.Trap Unit :=
               pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
     let built := σ.2
     do
-      let _as100 ← SudoRt.sudoAssertEq built key 811
+      let _as100 ← SudoRt.sudoAssertEq built key 813
       pure ()) (fun r => pure r))
       pure _out) (fun r => pure r))
       pure _out) (fun r => pure r))
@@ -316,9 +316,9 @@ def test_decrypt_undoes_encrypt : Except SudoRt.Trap Unit :=
     let key := (#[(48 : Int), (42 : Int), (25 : Int), (26 : Int), (3 : Int), (37 : Int), (39 : Int), (50 : Int), (11 : Int), (2 : Int), (43 : Int), (8 : Int), (10 : Int), (7 : Int), (40 : Int), (38 : Int), (34 : Int), (0 : Int), (49 : Int), (51 : Int), (22 : Int), (27 : Int), (23 : Int), (9 : Int), (12 : Int), (15 : Int), (44 : Int), (41 : Int), (21 : Int), (28 : Int), (20 : Int), (13 : Int), (19 : Int), (14 : Int), (45 : Int), (31 : Int), (35 : Int), (18 : Int), (17 : Int), (30 : Int), (6 : Int), (36 : Int), (47 : Int), (16 : Int), (1 : Int), (33 : Int), (29 : Int), (5 : Int), (46 : Int), (32 : Int), (24 : Int), (4 : Int)] : Array (Int))
     let cipher := (#[(49 : Int), (48 : Int), (9 : Int), (39 : Int), (29 : Int), (37 : Int), (22 : Int), (0 : Int), (16 : Int), (44 : Int), (24 : Int), (43 : Int), (8 : Int), (23 : Int), (33 : Int), (14 : Int), (12 : Int), (17 : Int), (41 : Int), (4 : Int), (19 : Int), (46 : Int), (34 : Int), (26 : Int), (50 : Int), (13 : Int), (51 : Int), (20 : Int), (10 : Int), (28 : Int), (1 : Int), (35 : Int), (6 : Int), (7 : Int), (38 : Int), (31 : Int), (47 : Int), (36 : Int), (5 : Int), (30 : Int), (3 : Int), (27 : Int), (11 : Int), (2 : Int), (18 : Int), (42 : Int), (15 : Int), (40 : Int), (25 : Int), (32 : Int), (45 : Int), (21 : Int)] : Array (Int))
     let _t106 ← encrypt message key
-    let _as107 ← SudoRt.sudoAssertEq _t106 cipher 817
+    let _as107 ← SudoRt.sudoAssertEq _t106 cipher 819
     let _t108 ← decrypt cipher key
-    let _as109 ← SudoRt.sudoAssertEq _t108 message 818
+    let _as109 ← SudoRt.sudoAssertEq _t108 message 820
     pure ()
 
 def test_walking_decrypt_matches_expand_keys_decrypt : Except SudoRt.Trap Unit :=
@@ -362,8 +362,8 @@ def test_walking_decrypt_matches_expand_keys_decrypt : Except SudoRt.Trap Unit :
       let _t118 ← inverse_compose listed _t117
       let listed := _t118
       let _t119 ← decrypt cipher key
-      let _as120 ← SudoRt.sudoAssertEq listed _t119 829
-      let _as121 ← SudoRt.sudoAssertEq listed message 830
+      let _as120 ← SudoRt.sudoAssertEq listed _t119 831
+      let _as121 ← SudoRt.sudoAssertEq listed message 832
       pure ()) (fun r => pure r))
     pure _out
 
@@ -377,8 +377,8 @@ def test_trace_ends_at_the_ciphertext : Except SudoRt.Trap Unit :=
     let _t126 ← SudoRt.atL traced _t125
     let last := _t126
     let _t127 ← encrypt message key
-    let _as128 ← SudoRt.sudoAssertEq (last).sudo_4Step_4hand _t127 837
-    let _as129 ← SudoRt.sudoAssertEq (last).sudo_4Step_4kind (#[99, 111, 109, 112, 111, 115, 101] : Array Int) 838
+    let _as128 ← SudoRt.sudoAssertEq (last).sudo_4Step_4hand _t127 839
+    let _as129 ← SudoRt.sudoAssertEq (last).sudo_4Step_4kind (#[99, 111, 109, 112, 111, 115, 101] : Array Int) 840
     let marked := (0 : Int)
     let held := (0 : Int)
     let passes := (0 : Int)
@@ -488,9 +488,9 @@ def test_trace_ends_at_the_ciphertext : Except SudoRt.Trap Unit :=
     let _sp178 := _sp177.2
     let passes := _sp178
     do
-      let _as172 ← SudoRt.sudoAssertEq marked (5 : Int) 849
-      let _as173 ← SudoRt.sudoAssertEq held (6 : Int) 850
-      let _as174 ← SudoRt.sudoAssertEq passes (312 : Int) 851
+      let _as172 ← SudoRt.sudoAssertEq marked (5 : Int) 851
+      let _as173 ← SudoRt.sudoAssertEq held (6 : Int) 852
+      let _as174 ← SudoRt.sudoAssertEq passes (312 : Int) 853
       pure ()) (fun r => pure r))
     pure _out
 
@@ -501,9 +501,9 @@ def test_one_key_deck_is_passed_between_the_rounds_that_use_it : Except SudoRt.T
     let _t180 ← trace_encrypt message key
     let traced := _t180
     let _t181 ← SudoRt.atL traced (0 : Int)
-    let _as182 ← SudoRt.sudoAssertEq (_t181).sudo_4Step_4kind (#[99, 111, 109, 112, 111, 115, 101] : Array Int) 857
+    let _as182 ← SudoRt.sudoAssertEq (_t181).sudo_4Step_4kind (#[99, 111, 109, 112, 111, 115, 101] : Array Int) 859
     let _t183 ← SudoRt.atL traced (0 : Int)
-    let _as184 ← SudoRt.sudoAssertEq (_t183).sudo_4Step_3key key 858
+    let _as184 ← SudoRt.sudoAssertEq (_t183).sudo_4Step_3key key 860
     let i := (1 : Int)
     let built := key
     let _fromV := (1 : Int)
@@ -535,7 +535,7 @@ def test_one_key_deck_is_passed_between_the_rounds_that_use_it : Except SudoRt.T
       else
         match ← ((do
   let _t188 ← SudoRt.atL traced i
-  let _as189 ← SudoRt.sudoAssertEq (_t188).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int) 864
+  let _as189 ← SudoRt.sudoAssertEq (_t188).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int) 866
   let _t190 ← SudoRt.addI i (1 : Int)
   let i := _t190
   pure (SudoRt.Flow.cont (ρ := Unit) i)) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
@@ -550,9 +550,9 @@ def test_one_key_deck_is_passed_between_the_rounds_that_use_it : Except SudoRt.T
     let i := σ.2
     do
       let _t191 ← SudoRt.atL traced i
-      let _as192 ← SudoRt.sudoAssertEq (_t191).sudo_4Step_4kind (#[100, 101, 97, 108] : Array Int) 866
+      let _as192 ← SudoRt.sudoAssertEq (_t191).sudo_4Step_4kind (#[100, 101, 97, 108] : Array Int) 868
       let _t193 ← SudoRt.atL traced i
-      let _as194 ← SudoRt.sudoAssertEq (_t193).sudo_4Step_3key built 867
+      let _as194 ← SudoRt.sudoAssertEq (_t193).sudo_4Step_3key built 869
       let _t195 ← SudoRt.addI i (1 : Int)
       let i := _t195
       let _init205 := i
@@ -565,7 +565,7 @@ def test_one_key_deck_is_passed_between_the_rounds_that_use_it : Except SudoRt.T
       else
         match ← ((do
   let _t196 ← SudoRt.atL traced i
-  let _as198 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (_t196).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int))) 870
+  let _as198 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (_t196).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int))) 872
   let _t199 ← SudoRt.addI i (1 : Int)
   let i := _t199
   pure (SudoRt.Flow.cont (ρ := Unit) i)) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
@@ -575,7 +575,7 @@ def test_one_key_deck_is_passed_between_the_rounds_that_use_it : Except SudoRt.T
     let i := σ
     do
       let _t202 ← SudoRt.atL traced i
-      let _as203 ← SudoRt.sudoAssertEq (_t202).sudo_4Step_3key built 872
+      let _as203 ← SudoRt.sudoAssertEq (_t202).sudo_4Step_3key built 874
       let _t204 ← SudoRt.addI i (1 : Int)
       let i := _t204
       pure (SudoRt.Flow.cont (ρ := Unit) (built, i))) (fun r => pure (SudoRt.Flow.ret (ρ := Unit) r)))
@@ -593,7 +593,7 @@ def test_one_key_deck_is_passed_between_the_rounds_that_use_it : Except SudoRt.T
     let _sp210 := σ.2.2
     let i := _sp210
     do
-      let _as208 ← SudoRt.sudoAssertEq i (SudoRt.listLen traced) 874
+      let _as208 ← SudoRt.sudoAssertEq i (SudoRt.listLen traced) 876
       pure ()) (fun r => pure r))
     pure _out
 
@@ -606,10 +606,10 @@ def test_decrypt_trace_un_passes_from_k6 : Except SudoRt.Trap Unit :=
     let _t214 ← SudoRt.subI (SudoRt.listLen traced) (1 : Int)
     let _t215 ← SudoRt.atL traced _t214
     let last := _t215
-    let _as216 ← SudoRt.sudoAssertEq (last).sudo_4Step_4kind (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) 881
-    let _as217 ← SudoRt.sudoAssertEq (last).sudo_4Step_3key key 882
+    let _as216 ← SudoRt.sudoAssertEq (last).sudo_4Step_4kind (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) 883
+    let _as217 ← SudoRt.sudoAssertEq (last).sudo_4Step_3key key 884
     let _t218 ← decrypt cipher key
-    let _as219 ← SudoRt.sudoAssertEq (last).sudo_4Step_4hand _t218 883
+    let _as219 ← SudoRt.sudoAssertEq (last).sudo_4Step_4hand _t218 885
     let i := (0 : Int)
     let passes := (0 : Int)
     let unpasses := (0 : Int)
@@ -647,7 +647,7 @@ def test_decrypt_trace_un_passes_from_k6 : Except SudoRt.Trap Unit :=
       else
         match ← ((do
   let _t223 ← SudoRt.atL traced i
-  let _as224 ← SudoRt.sudoAssertEq (_t223).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int) 891
+  let _as224 ← SudoRt.sudoAssertEq (_t223).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int) 893
   let _t225 ← SudoRt.addI passes (1 : Int)
   let passes := _t225
   let _t226 ← SudoRt.addI i (1 : Int)
@@ -682,9 +682,9 @@ def test_decrypt_trace_un_passes_from_k6 : Except SudoRt.Trap Unit :=
     let i := _sp278
     do
       let _t230 ← SudoRt.atL traced i
-      let _as231 ← SudoRt.sudoAssertEq (_t230).sudo_4Step_4kind (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) 894
+      let _as231 ← SudoRt.sudoAssertEq (_t230).sudo_4Step_4kind (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) 896
       let _t232 ← SudoRt.atL traced i
-      let _as233 ← SudoRt.sudoAssertEq (_t232).sudo_4Step_3key built 895
+      let _as233 ← SudoRt.sudoAssertEq (_t232).sudo_4Step_3key built 897
       let _t234 ← SudoRt.addI i (1 : Int)
       let i := _t234
       let _init274 := i
@@ -697,7 +697,7 @@ def test_decrypt_trace_un_passes_from_k6 : Except SudoRt.Trap Unit :=
       else
         match ← ((do
   let _t235 ← SudoRt.atL traced i
-  let _as237 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (_t235).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int))) 898
+  let _as237 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (_t235).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int))) 900
   let _t238 ← SudoRt.addI i (1 : Int)
   let i := _t238
   pure (SudoRt.Flow.cont (ρ := Unit) i)) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
@@ -739,7 +739,7 @@ def test_decrypt_trace_un_passes_from_k6 : Except SudoRt.Trap Unit :=
       else
         match ← ((do
   let _t244 ← SudoRt.atL traced i
-  let _as245 ← SudoRt.sudoAssertEq (_t244).sudo_4Step_4kind (#[117, 110, 112, 97, 115, 115] : Array Int) 903
+  let _as245 ← SudoRt.sudoAssertEq (_t244).sudo_4Step_4kind (#[117, 110, 112, 97, 115, 115] : Array Int) 905
   let _t246 ← SudoRt.addI unpasses (1 : Int)
   let unpasses := _t246
   let _t247 ← SudoRt.addI i (1 : Int)
@@ -758,9 +758,9 @@ def test_decrypt_trace_un_passes_from_k6 : Except SudoRt.Trap Unit :=
     let i := _sp262
     do
       let _t248 ← SudoRt.atL traced i
-      let _as249 ← SudoRt.sudoAssertEq (_t248).sudo_4Step_4kind (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) 906
+      let _as249 ← SudoRt.sudoAssertEq (_t248).sudo_4Step_4kind (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) 908
       let _t250 ← SudoRt.atL traced i
-      let _as251 ← SudoRt.sudoAssertEq (_t250).sudo_4Step_3key built 907
+      let _as251 ← SudoRt.sudoAssertEq (_t250).sudo_4Step_3key built 909
       let _t252 ← SudoRt.addI i (1 : Int)
       let i := _t252
       if (decide (r > (0 : Int))) then
@@ -775,7 +775,7 @@ def test_decrypt_trace_un_passes_from_k6 : Except SudoRt.Trap Unit :=
       else
         match ← ((do
   let _t254 ← SudoRt.atL traced i
-  let _as256 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (_t254).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int))) 911
+  let _as256 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (_t254).sudo_4Step_4kind (#[112, 97, 115, 115] : Array Int))) 913
   let _t257 ← SudoRt.addI i (1 : Int)
   let i := _t257
   pure (SudoRt.Flow.cont (ρ := Unit) i)) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
@@ -804,10 +804,10 @@ def test_decrypt_trace_un_passes_from_k6 : Except SudoRt.Trap Unit :=
     let _sp272 := _sp271.2
     let i := _sp272
     do
-      let _as265 ← SudoRt.sudoAssertEq i (SudoRt.listLen traced) 913
-      let _as266 ← SudoRt.sudoAssertEq built key 914
-      let _as267 ← SudoRt.sudoAssertEq passes (312 : Int) 915
-      let _as268 ← SudoRt.sudoAssertEq unpasses (312 : Int) 916
+      let _as265 ← SudoRt.sudoAssertEq i (SudoRt.listLen traced) 915
+      let _as266 ← SudoRt.sudoAssertEq built key 916
+      let _as267 ← SudoRt.sudoAssertEq passes (312 : Int) 917
+      let _as268 ← SudoRt.sudoAssertEq unpasses (312 : Int) 918
       pure ()) (fun r => pure r))
       pure _out) (fun r => pure r))
       pure _out) (fun r => pure r))
@@ -860,9 +860,9 @@ def test_counter_rail_keeps_the_nonce_and_permutes_diamonds : Except SudoRt.Trap
       else
         match ← ((do
   let _t288 ← SudoRt.atL a i
-  let _as289 ← SudoRt.sudoAssertEq _t288 i 925
+  let _as289 ← SudoRt.sudoAssertEq _t288 i 927
   let _t290 ← SudoRt.atL b i
-  let _as291 ← SudoRt.sudoAssertEq _t290 i 926
+  let _as291 ← SudoRt.sudoAssertEq _t290 i 928
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) i)
@@ -874,13 +874,13 @@ def test_counter_rail_keeps_the_nonce_and_permutes_diamonds : Except SudoRt.Trap
               pure (SudoRt.Flow.cont (ρ := Unit) i')) (fun σ =>
     do
       let _t292 ← SudoRt.atL a (50 : Int)
-      let _as293 ← SudoRt.sudoAssertEq _t292 (50 : Int) 927
+      let _as293 ← SudoRt.sudoAssertEq _t292 (50 : Int) 929
       let _t294 ← SudoRt.atL a (51 : Int)
-      let _as295 ← SudoRt.sudoAssertEq _t294 (51 : Int) 928
+      let _as295 ← SudoRt.sudoAssertEq _t294 (51 : Int) 930
       let _t296 ← SudoRt.atL b (50 : Int)
-      let _as297 ← SudoRt.sudoAssertEq _t296 (51 : Int) 929
+      let _as297 ← SudoRt.sudoAssertEq _t296 (51 : Int) 931
       let _t298 ← SudoRt.atL b (51 : Int)
-      let _as299 ← SudoRt.sudoAssertEq _t298 (50 : Int) 930
+      let _as299 ← SudoRt.sudoAssertEq _t298 (50 : Int) 932
       pure ()) (fun r => pure r))
       pure _out) (fun r => pure r))
     pure _out
@@ -904,9 +904,9 @@ def test_ecb_repeats_a_block_and_ctr_does_not : Except SudoRt.Trap Unit :=
     let ecb := _t311
     let _t312 ← SudoRt.atL ecb (0 : Int)
     let _t313 ← SudoRt.atL ecb (1 : Int)
-    let _as314 ← SudoRt.sudoAssertEq _t312 _t313 939
+    let _as314 ← SudoRt.sudoAssertEq _t312 _t313 941
     let _t315 ← ecb_decrypt ecb key
-    let _as316 ← SudoRt.sudoAssertEq _t315 blocks 940
+    let _as316 ← SudoRt.sudoAssertEq _t315 blocks 942
     let nonce := (#[] : Array (Int))
     let _fromV := (0 : Int)
     let _toV := (38 : Int)
@@ -941,9 +941,9 @@ def test_ecb_repeats_a_block_and_ctr_does_not : Except SudoRt.Trap Unit :=
       let ctr := _t322
       let _t323 ← SudoRt.atL ctr (0 : Int)
       let _t324 ← SudoRt.atL ctr (1 : Int)
-      let _as326 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq _t323 _t324)) 945
+      let _as326 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq _t323 _t324)) 947
       let _t327 ← ctr_decrypt ctr key nonce
-      let _as328 ← SudoRt.sudoAssertEq _t327 blocks 946
+      let _as328 ← SudoRt.sudoAssertEq _t327 blocks 948
       pure ()) (fun r => pure r))
     pure _out
 

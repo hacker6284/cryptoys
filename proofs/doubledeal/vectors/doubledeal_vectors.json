@@ -2,7 +2,7 @@
   "schema": 1,
   "generated_by": "proofs/doubledeal/vectors/regen.sh",
   "source": "primitives/cipher/doubledeal/doubledeal.sudo",
-  "sudo_sha256": "c2514a1541d5e91866dd45a9a87b770665e35e2834482162d0a3ec4d3c998191",
+  "sudo_sha256": "7476bc2637acf7b7d64e4191164f2f4d33265be0ed35b3a9d48561df3344a833",
   "sudocode_commit": "606f06f4d852aac7f37bccd4823775d00d2ba5a6",
   "note": "Known-answer vectors from the sudo tests plus extras evaluated by the sudoc JS target. Evidence that the Lean model agrees with doubledeal.sudo on these inputs \u2014 not a proof that the sudo text equals the Lean model.",
   "decks_are": "52-element arrays of CHaSeD card ids (0..51)",

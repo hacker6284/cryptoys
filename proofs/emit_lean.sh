@@ -5,8 +5,9 @@
 # Pin: hacker6284/sudocode main @ SUDOCODE_LEAN_COMMIT
 #   (PR #5 squash merge; backends/lean/ is on main).
 #
-# Full-peer emit (no --require terminates). Cryptoys publics have unmeasured
-# whiles; the totality gate refuses them.
+# Full-peer emit (no --require terminates). DoubleDeal is now bounded-for /
+# terminates-ready; MegaDreifach still has unmeasured whiles. Flip
+# terminates_gate after MegaDreifach too.
 #
 # Usage (from repo root):
 #   proofs/emit_lean.sh              # write Generated/

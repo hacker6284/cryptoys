@@ -248,7 +248,8 @@ func drop_front(xs: List<int>) -> (int, List<int>)
 func passkey(deck: List<int>) -> List<int>
     hand = deck
     key: List<int> = []
-    while hand.length > 0
+    n = deck.length
+    for i = 1 to n
         c, hand = drop_front(hand)
         if hand.length > 0
             k = suit_of(c) mod hand.length
@@ -264,7 +265,8 @@ func passkey(deck: List<int>) -> List<int>
 func passkey_inv(deck: List<int>) -> List<int>
     key = deck
     hand: List<int> = []
-    while key.length > 0
+    n_deck = deck.length
+    for i = 1 to n_deck
         c, key = drop_front(key)
         n = hand.length
         if (n > 0) and (rank_of(c) < n)
@@ -336,7 +338,8 @@ func round_label(prefix: text, r: int) -> text
 func trace_pass(deck: List<int>, steps: List<Step>, label: text) -> (List<int>, List<Step>)
     hand = deck
     key: List<int> = []
-    while hand.length > 0
+    n = deck.length
+    for i = 1 to n
         c, next_hand = drop_front(hand)
         suit_cut = 0
         if next_hand.length > 0
@@ -361,7 +364,8 @@ func trace_pass(deck: List<int>, steps: List<Step>, label: text) -> (List<int>, 
 func trace_unpass(deck: List<int>, steps: List<Step>, label: text) -> (List<int>, List<Step>)
     key = deck
     hand: List<int> = []
-    while key.length > 0
+    n_deck = deck.length
+    for i = 1 to n_deck
         c, next_key = drop_front(key)
         n = hand.length
         rank_cut = 0
@@ -448,20 +452,19 @@ func trace_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, List
                     occ.append(marks)
                 scan = t
                 found = -1
-                tries = 0
-                while (found < 0) and (tries < 4)
-                    steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, -1, 0, 0, card, 1)
-                    for col = 0 to 12
-                        if (found < 0) and (occ[scan][col] == 0)
-                            found = col
-                    if found >= 0
-                        r = scan
-                        c = found
-                        t = (scan + 1) mod 4
-                    else
-                        scan = (scan + 1) mod 4
-                        t = scan
-                    tries = tries + 1
+                for tries = 0 to 3
+                    if found < 0
+                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, -1, 0, 0, card, 1)
+                        for col = 0 to 12
+                            if (found < 0) and (occ[scan][col] == 0)
+                                found = col
+                        if found >= 0
+                            r = scan
+                            c = found
+                            t = (scan + 1) mod 4
+                        else
+                            scan = (scan + 1) mod 4
+                            t = scan
         row = grid[r]
         row[c] = card
         grid[r] = row
@@ -578,20 +581,19 @@ func trace_inv_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, 
             else
                 scan = t
                 found = -1
-                tries = 0
-                while (found < 0) and (tries < 4)
-                    steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, -1, 0, 0, -1, 1)
-                    for col = 0 to 12
-                        if (found < 0) and (visited[scan][col] == 0)
-                            found = col
-                    if found >= 0
-                        r = scan
-                        c = found
-                        t = (scan + 1) mod 4
-                    else
-                        scan = (scan + 1) mod 4
-                        t = scan
-                    tries = tries + 1
+                for tries = 0 to 3
+                    if found < 0
+                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, -1, 0, 0, -1, 1)
+                        for col = 0 to 12
+                            if (found < 0) and (visited[scan][col] == 0)
+                                found = col
+                        if found >= 0
+                            r = scan
+                            c = found
+                            t = (scan + 1) mod 4
+                        else
+                            scan = (scan + 1) mod 4
+                            t = scan
         card = grid[r][c]
         steps = add_step(steps, "take", label, no_cards(), no_cards(), no_cards(), r, c, i, 0, card, 0)
         hand.append(card)

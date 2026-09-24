@@ -110,8 +110,11 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         }
         if (opts.snap || prefersReducedMotion()) return snap(resolved);
         const now = performance.now();
+        const viaName = opts.via ? resolvePoseName(opts.via) : null;
         tween = {
             from: capture(),
+            via: viaName ? readPose(viaName) : null,
+            viaT: opts.viaT ?? 0.36,
             to: pose,
             delay: opts.delay || 0,
             holdElapsed: 0,
@@ -146,7 +149,13 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         tween.elapsed += dt;
         const trackPos = readTrack(tween.track);
         const u = Math.min(1, tween.elapsed / tween.duration);
-        apply(tween.to, u, tween.from, trackPos);
+        if (tween.via && u < tween.viaT) {
+            apply(tween.via, u / tween.viaT, tween.from, null);
+        } else if (tween.via) {
+            apply(tween.to, (u - tween.viaT) / (1 - tween.viaT), tween.via, trackPos);
+        } else {
+            apply(tween.to, u, tween.from, trackPos);
+        }
         if (u >= 1) {
             current = tween.to.name;
             tween = null;

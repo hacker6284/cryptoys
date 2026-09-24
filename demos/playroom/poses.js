@@ -11,6 +11,13 @@ export const POSES = {
         fov: 40,
         overlays: { title: true, menu: true },
     },
+    // Close enough that a 57 mm cube leaving its slot actually reads.
+    shelf: {
+        position: [0.22, 1.46, -0.92],
+        target: [-0.55, 1.30, -2.15],
+        fov: 34,
+        overlays: { title: true, menu: false },
+    },
     seated: {
         position: [DEN.x, 1.28, DEN.z + 1.35],
         target: [DEN.x, 0.78, DEN.z],
@@ -35,6 +42,8 @@ export const POSES = {
 const ALIASES = {
     landing: "landing",
     three_q: "landing",
+    shelf: "shelf",
+    shelf_cube: "shelf",
     seated: "seated",
     arrive_table: "seated",
     a4_seated: "seated",

@@ -84,8 +84,9 @@ try {
                 poses.snap("scramble");
             } else {
                 poses.goTo("scramble", {
-                    duration: FLY_MS - HOLD_MS,
-                    delay: HOLD_MS,
+                    duration: FLY_MS,
+                    via: "shelf",
+                    viaT: HOLD_MS / FLY_MS,
                     track: trackCube(world),
                 });
             }
@@ -126,8 +127,10 @@ try {
         if (reduced) poses.snap("landing");
         else {
             poses.goTo("landing", {
-                duration: FLY_MS - HOLD_MS,
-                delay: HOLD_MS,
+                duration: FLY_MS - LIFT_MS,
+                via: "shelf",
+                viaT: 0.42,
+                delay: LIFT_MS,
                 track: trackCube(world),
             });
         }

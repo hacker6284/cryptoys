@@ -365,6 +365,10 @@ body.playroom.is-ready .playroom-dock {
     min-width: 0;
     max-width: none;
   }
+
+  .playroom-dock:has(#teach:not([hidden])) {
+    max-height: 56dvh;
+  }
 }
 
 @media (max-height: 500px) {

@@ -1,9 +1,16 @@
 #!/bin/sh
-# Generate the JavaScript the Scramble demo imports, and copy the spec beside it.
+# Generate each demo's JavaScript and copy its spec beside the page.
 set -eu
 root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 sudoc=${SUDOC:-"$HOME/Documents/Projects/sudocode/sudoc/target/debug/sudoc"}
-out="$root/demos/scramble/generated"
-mkdir -p "$out"
-"$sudoc" build --target js -o "$out" "$root/primitives/hash/scramble/scramble.sudo"
-cp "$root/primitives/hash/scramble/SPEC.md" "$root/demos/scramble/SPEC.md"
+build_one() {
+    name=$1
+    src=$2
+    out="$root/demos/$name/generated"
+    mkdir -p "$out"
+    "$sudoc" build --target js -o "$out" "$src"
+    cp "$(dirname "$src")/SPEC.md" "$root/demos/$name/SPEC.md"
+}
+
+build_one scramble "$root/primitives/hash/scramble/scramble.sudo"
+build_one twodeck "$root/primitives/cipher/twodeck/twodeck.sudo"

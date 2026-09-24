@@ -8,6 +8,9 @@ Each primitive is a directory holding a normative specification and one [sudocod
 primitives/hash/scramble/SPEC.md
 primitives/hash/scramble/scramble.sudo
 demos/scramble/
+primitives/cipher/twodeck/SPEC.md
+primitives/cipher/twodeck/twodeck.sudo
+demos/twodeck/
 ```
 
 ## Scramble
@@ -15,6 +18,12 @@ demos/scramble/
 Scramble is a hash. A message walks a solved cube. The digest is the seated pose, encoded as the cube-group index in 9 bytes. `scramble_v1` is superseded. `scramble_v2` is current.
 
 The specification is `primitives/hash/scramble/SPEC.md`.
+
+## TwoDeck
+
+TwoDeck is a toy block cipher on a 52-card deck. A block is one deck. ECB encrypts each block on its own. CTR encrypts a counter deck and composes that keystream with the message. Diamonds carry the counter. The other three suits are the nonce. SumRanks, ShiftRows, and GridCycle are the unkeyed layers. Compose is the keyed layer. PassKey expands the master deck into the round keys. It has no security claim. Section 5.3 encodes a byte string as decks, outside `encrypt` and `decrypt`: 28-byte blocks unrank into decks, and ciphertext is 29 bytes per deck because 52! does not fit in 28 bytes. A demo box is that text as UTF-8, unless it starts with `0x`, in which case the rest is hex.
+
+The specification is `primitives/cipher/twodeck/SPEC.md`.
 
 Build the demo's JavaScript with a local `sudoc`:
 

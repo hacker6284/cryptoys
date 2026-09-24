@@ -47,11 +47,10 @@ body.playroom {
   opacity: 1;
 }
 
-.playroom-chrome-end {
+.playroom-chrome-start {
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  gap: 20px;
+  align-items: baseline;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -107,7 +106,6 @@ body.playroom {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-top: 8px;
 }
 
 body.playroom:not(.is-ready) .playroom-pose {
@@ -364,37 +362,7 @@ body.playroom.is-ready .playroom-title {
 }
 
 .playroom-dock .outline {
-  overflow: auto;
-  max-height: 22vh;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--bg);
-  padding: 6px 0;
-}
-
-.playroom-dock .outline[hidden] {
   display: none;
-}
-
-.playroom-dock .outline summary,
-.playroom-dock .outline-item {
-  color: var(--muted);
-}
-
-.playroom-dock .outline-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  border: 0;
-  background: transparent;
-  color: var(--fg);
-  padding: 4px 8px;
-  border-radius: var(--radius);
-}
-
-.playroom-dock .outline-item.on {
-  background: var(--accent-soft);
-  color: var(--accent);
 }
 
 .playroom-dock dialog {

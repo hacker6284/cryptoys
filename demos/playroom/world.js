@@ -445,11 +445,18 @@ export async function mountWorld(canvas) {
     addWallSconce(-2.78, 1.72, CHEST.z - 0.15, 0);
     addWallSconce(1.35, 1.68, SHELF_Z + 0.08, -Math.PI / 2);
 
-    const shelfWash = new THREE.SpotLight(0xffe0c0, 1.35, 5.2, Math.PI / 2.0, 0.9, 1.35);
+    const shelfWash = new THREE.SpotLight(0xffe0c0, 1.85, 5.2, Math.PI / 2.0, 0.9, 1.35);
     shelfWash.position.set(-0.2, 2.15, SHELF_Z + 1.7);
     shelfWash.target.position.set(-0.5, 1.05, SHELF_Z);
     scene.add(shelfWash);
     scene.add(shelfWash.target);
+    // A quiet key on the cube slot so the 57 mm toy reads at rest and
+    // the empty ring reads after it lifts — not a hover-only trick.
+    const cubeSlotKey = new THREE.SpotLight(0xffd8b0, 2.6, 2.6, Math.PI / 5, 0.45, 1.3);
+    cubeSlotKey.position.set(SLOTS.cube.x + 0.12, SHELF_Y1 + 0.62, SHELF_Z + 0.62);
+    cubeSlotKey.target.position.set(SLOTS.cube.x, SHELF_Y1 + 0.04, SHELF_Z);
+    scene.add(cubeSlotKey);
+    scene.add(cubeSlotKey.target);
 
     const chestKiss = new THREE.PointLight(0xffc090, 0.55, 2.5, 2);
     chestKiss.position.set(CHEST.x + 0.8, 0.18, CHEST.z + 0.3);

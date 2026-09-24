@@ -26,3 +26,8 @@ export const SLOTS = {
 };
 
 export const TWEEN_MS = 1100;
+export const FLY_MS = 1800;
+export const LIFT_MS = 380;
+// Hold the current shot this long so the cube leaving its slot is on camera
+// before the lens dollies. Click/Escape still skip after LIFT_MS.
+export const HOLD_MS = 760;

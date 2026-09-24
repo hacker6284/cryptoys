@@ -12,7 +12,7 @@ export function stampHeadingIds(root) {
     });
 }
 
-export function bindTeachKeys(handlers) {
+export function bindTeachKeys(handlers, { signal } = {}) {
     window.addEventListener("keydown", (event) => {
         const tag = event.target && event.target.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
@@ -24,7 +24,7 @@ export function bindTeachKeys(handlers) {
         else if (event.key === "End") handlers.end?.();
         else return;
         event.preventDefault();
-    });
+    }, signal ? { signal } : undefined);
 }
 
 export function firstOfGroup(trace, index, keyOf) {

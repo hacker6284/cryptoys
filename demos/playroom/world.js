@@ -222,7 +222,7 @@ function rigChestLid(chestRoot) {
 
 export async function mountWorld(canvas) {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -383,7 +383,7 @@ export async function mountWorld(canvas) {
     pendant.position.set(DEN.x, SHADE_Y - 0.02, DEN.z);
     pendant.target.position.set(DEN.x, 0.75, DEN.z);
     pendant.castShadow = true;
-    pendant.shadow.mapSize.set(1024, 1024);
+    pendant.shadow.mapSize.set(512, 512);
     pendant.shadow.bias = -0.0002;
     pendant.shadow.normalBias = 0.03;
     scene.add(pendant);
@@ -445,11 +445,18 @@ export async function mountWorld(canvas) {
     addWallSconce(-2.78, 1.72, CHEST.z - 0.15, 0);
     addWallSconce(1.35, 1.68, SHELF_Z + 0.08, -Math.PI / 2);
 
-    const shelfWash = new THREE.SpotLight(0xffe0c0, 1.35, 5.2, Math.PI / 2.0, 0.9, 1.35);
+    const shelfWash = new THREE.SpotLight(0xffe0c0, 1.85, 5.2, Math.PI / 2.0, 0.9, 1.35);
     shelfWash.position.set(-0.2, 2.15, SHELF_Z + 1.7);
     shelfWash.target.position.set(-0.5, 1.05, SHELF_Z);
     scene.add(shelfWash);
     scene.add(shelfWash.target);
+    // A quiet key on the cube slot so the 57 mm toy reads at rest and
+    // the empty ring reads after it lifts — not a hover-only trick.
+    const cubeSlotKey = new THREE.SpotLight(0xffd8b0, 2.6, 2.6, Math.PI / 5, 0.45, 1.3);
+    cubeSlotKey.position.set(SLOTS.cube.x + 0.12, SHELF_Y1 + 0.62, SHELF_Z + 0.62);
+    cubeSlotKey.target.position.set(SLOTS.cube.x, SHELF_Y1 + 0.04, SHELF_Z);
+    scene.add(cubeSlotKey);
+    scene.add(cubeSlotKey.target);
 
     const chestKiss = new THREE.PointLight(0xffc090, 0.55, 2.5, 2);
     chestKiss.position.set(CHEST.x + 0.8, 0.18, CHEST.z + 0.3);
@@ -523,13 +530,25 @@ export async function mountWorld(canvas) {
 
     function makeSlot(x, y) {
         const group = new THREE.Group();
-        const ring = new THREE.Mesh(
-            new THREE.RingGeometry(0.055, 0.072, 24),
+        const disk = new THREE.Mesh(
+            new THREE.CircleGeometry(0.048, 24),
             new THREE.MeshBasicMaterial({
-                color: 0x5a5044,
+                color: 0x2a2218,
                 transparent: true,
-                opacity: 0.45,
+                opacity: 0.4,
+                depthWrite: false,
+            }),
+        );
+        disk.rotation.x = -Math.PI / 2;
+        group.add(disk);
+        const ring = new THREE.Mesh(
+            new THREE.RingGeometry(0.048, 0.078, 24),
+            new THREE.MeshBasicMaterial({
+                color: 0x8a7358,
+                transparent: true,
+                opacity: 0.55,
                 side: THREE.DoubleSide,
+                depthWrite: false,
             }),
         );
         ring.rotation.x = -Math.PI / 2;
@@ -575,17 +594,107 @@ export async function mountWorld(canvas) {
     };
     Object.values(toys).forEach((toy) => scene.add(toy));
 
-    function shelfHome(name) {
-        const slot = slots[name];
-        if (!slot) return;
-        const height = name === "cube" ? CUBE / 2 : 0.046;
-        const toy = toys[name];
-        toy.visible = true;
-        toy.position.set(slot.x, slot.y + height, SHELF_Z);
-        if (name === "cube") toy.rotation.set(-0.15, 0.45, 0);
-        else toy.rotation.set(0, 0.15, 0);
-        slot.slot.visible = false;
+    function feltTopY() {
+        return TOP_Y + 0.032;
     }
+
+    function getShelfPose(name) {
+        const slot = slots[name];
+        if (!slot) return null;
+        const height = name === "cube" ? CUBE / 2 : 0.046;
+        return {
+            position: { x: slot.x, y: slot.y + height, z: SHELF_Z },
+            rotation: name === "cube" ? { x: -0.15, y: 0.45, z: 0 } : { x: 0, y: 0.15, z: 0 },
+        };
+    }
+
+    function getTablePose(name) {
+        if (name === "cube") {
+            return {
+                position: { x: DEN.x, y: feltTopY() + CUBE / 2, z: DEN.z },
+                rotation: { x: -0.18, y: 0.55, z: 0 },
+            };
+        }
+        return {
+            position: { x: DEN.x, y: feltTopY() + 0.012, z: DEN.z },
+            rotation: { x: 0, y: 0, z: 0 },
+        };
+    }
+
+    function applyPose(object, pose) {
+        if (!object || !pose) return;
+        object.position.set(pose.position.x, pose.position.y, pose.position.z);
+        object.rotation.set(pose.rotation.x, pose.rotation.y, pose.rotation.z);
+        object.quaternion.setFromEuler(object.rotation);
+    }
+
+    function shelfHome(name) {
+        const toy = toys[name];
+        const pose = getShelfPose(name);
+        if (!toy || !pose) return;
+        toy.visible = true;
+        applyPose(toy, pose);
+        slots[name].slot.visible = false;
+    }
+
+    function setSlotEmpty(name, empty) {
+        if (slots[name]) slots[name].slot.visible = Boolean(empty);
+    }
+
+    function replaceToy(name, next) {
+        const prev = toys[name];
+        if (prev) {
+            prev.visible = false;
+            if (prev.parent) prev.parent.remove(prev);
+            else scene.remove(prev);
+        }
+        toys[name] = next;
+        next.visible = true;
+        if (next && !next.parent) scene.add(next);
+        return prev;
+    }
+
+    function applyEmissive(root, on, { chest = false } = {}) {
+        root.traverse((object) => {
+            if (!object.isMesh) return;
+            const mats = Array.isArray(object.material) ? object.material : [object.material];
+            for (const mat of mats) {
+                if (!mat || !mat.emissive) continue;
+                mat.emissive.setHex(on ? 0xd48630 : 0x000000);
+                mat.emissiveIntensity = on ? 0.62 : 0;
+            }
+        });
+        let light = root.userData.rimLight;
+        if (!light) {
+            light = new THREE.PointLight(0xffc078, 0, chest ? 1.6 : 0.9, 2);
+            light.position.set(chest ? 0.15 : 0.06, chest ? 0.22 : 0.08, chest ? 0.12 : 0.12);
+            root.add(light);
+            root.userData.rimLight = light;
+        }
+        light.intensity = on ? (chest ? 1.05 : 3.2) : 0;
+    }
+
+    function createTravelLight(toy) {
+        if (toy.userData.travelLight) return toy.userData.travelLight;
+        const light = new THREE.PointLight(0xffd0a0, 0, 1.4, 2);
+        light.position.set(0.08, 0.1, 0.12);
+        toy.add(light);
+        toy.userData.travelLight = light;
+        return light;
+    }
+
+    function setHighlight(names, on) {
+        const list = Array.isArray(names) ? names : [names];
+        for (const name of list) {
+            if (name === "chest") {
+                applyEmissive(chestGroup, on, { chest: true });
+                continue;
+            }
+            const toy = toys[name];
+            if (toy) applyEmissive(toy, on);
+        }
+    }
+
     shelfHome("deck");
     shelfHome("cube");
 
@@ -601,7 +710,7 @@ export async function mountWorld(canvas) {
     function resize() {
         const width = canvas.clientWidth || window.innerWidth;
         const height = canvas.clientHeight || window.innerHeight;
-        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const ratio = Math.min(window.devicePixelRatio || 1, 1.25);
         renderer.setPixelRatio(ratio);
         renderer.setSize(width, height, false);
         camera.aspect = width / Math.max(1, height);
@@ -624,8 +733,15 @@ export async function mountWorld(canvas) {
         renderer,
         toys,
         slots,
-        table: { group: tableGroup, radius: TABLE_R, topY: TOP_Y, den: { ...DEN } },
+        table: { group: tableGroup, radius: TABLE_R, topY: TOP_Y, feltTopY: feltTopY(), den: { ...DEN } },
         chest: { group: chestGroup, setOpen: setChestOpen },
+        getShelfPose,
+        getTablePose,
+        applyPose,
+        setSlotEmpty,
+        replaceToy,
+        setHighlight,
+        createTravelLight,
         shelfHome,
         resize,
         render,

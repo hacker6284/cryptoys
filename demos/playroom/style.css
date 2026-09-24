@@ -210,7 +210,9 @@ body.playroom.is-ready .playroom-title {
 .playroom-dock {
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   gap: 18px;
+  height: auto;
   min-height: 0;
 }
 

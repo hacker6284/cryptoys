@@ -222,7 +222,7 @@ function rigChestLid(chestRoot) {
 
 export async function mountWorld(canvas) {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -383,7 +383,7 @@ export async function mountWorld(canvas) {
     pendant.position.set(DEN.x, SHADE_Y - 0.02, DEN.z);
     pendant.target.position.set(DEN.x, 0.75, DEN.z);
     pendant.castShadow = true;
-    pendant.shadow.mapSize.set(1024, 1024);
+    pendant.shadow.mapSize.set(512, 512);
     pendant.shadow.bias = -0.0002;
     pendant.shadow.normalBias = 0.03;
     scene.add(pendant);
@@ -710,7 +710,7 @@ export async function mountWorld(canvas) {
     function resize() {
         const width = canvas.clientWidth || window.innerWidth;
         const height = canvas.clientHeight || window.innerHeight;
-        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const ratio = Math.min(window.devicePixelRatio || 1, 1.25);
         renderer.setPixelRatio(ratio);
         renderer.setSize(width, height, false);
         camera.aspect = width / Math.max(1, height);

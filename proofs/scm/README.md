@@ -1,5 +1,7 @@
 # DoubleDeal-SCM proofs
 
-Placeholder. DoubleDeal-SCM (and SMAC) are not in `primitives/` yet. When they land, this directory will hold their proof ledger: correctness first, then any reduction or attack-bound that is actually earned.
+Placeholder. DoubleDeal-SCM (and SMAC) are **not** the AEAD that landed. The published authenticated construction is **DoubleDeal-CBC-HMAC** under `primitives/aead/doubledeal-cbc-hmac/`. SCM / SMAC stay later.
 
-Until then there are no SCM theorems, no AEAD claims, and no tag-security numbers here. DoubleDeal's cipher SPEC is ECB + CTR only.
+This directory will hold an SCM proof ledger if that product is specified: correctness first, then any reduction or attack-bound that is actually earned. Until then there are no SCM theorems and no tag-security numbers here.
+
+DoubleDeal-CBC-HMAC itself does not claim a MAC/PRF theorem. Its evidence is the sudo + JS KATs, not this folder.

@@ -103,7 +103,7 @@ total-fragment / terminating-subset emitter.
   `encrypt6` / `encryptDeck` in `DoubleDeal/`.
 - Not a claim that `Generated.v_Hash` equals the algebraic
   `hashBlocks` fold in `MegaDreifach/`.
-- Not bit-security, MDS, collision-resistance, or AEAD.
+- Not bit-security, MDS, collision-resistance, or an AEAD security theorem. DoubleDeal-CBC-HMAC is specified in `primitives/aead/`; no Generated Lean for it in this drop.
 - Not adding Lean to sudocode `ALL_BACKENDS` (peer registration is
   a sudocode follow-up; this repo only consumes the emitter).
 

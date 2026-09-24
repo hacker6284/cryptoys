@@ -45,7 +45,7 @@ proofs/
   doubledeal/               # DoubleDeal correctness stones
   megadreifach/             # MegaDreifach correctness stones
   scramble/                 # teaching / lineage placeholder; no Lean
-  scm/                      # placeholder until DoubleDeal-SCM exists
+  scm/                      # placeholder; SCM/SMAC stay later (CBC-HMAC is the AEAD)
 ```
 
 Deprecated algorithms, when they appear, get their own directory under `proofs/` (or a `deprecated/` child) for vulnerability proofs. There are none yet.
@@ -57,6 +57,7 @@ Deprecated algorithms, when they appear, get their own directory under `proofs/`
 | DoubleDeal | `primitives/cipher/doubledeal/` | **Generated** Lean under `doubledeal/lean/Generated/` (from `doubledeal.sudo`; TAP 10/10 under the terminates gate). Proof-only stones under `doubledeal/lean/DoubleDeal/`. PassKey injectivity is **proved** on the list model (PR #3). Equivalence to `Generated.passkey` is OPEN. |
 | MegaDreifach | `primitives/hash/megadreifach/` (SPEC + `megadreifach.sudo` + KATs) | **Generated** Lean under `megadreifach/lean/Generated/` (TAP 11/11). Proof-only stones under `megadreifach/lean/MegaDreifach/`. M1–M7 packing/algebra **proved** (M3 even-perm glue still open). M8 is a net-distinctness reduction. M9 / M13 full KAT digests in the proof package **OPEN**. Research Hash hexes refreshed to current sudo. A green Lean build is not a security claim. |
 | Scramble | `scramble_v2` | Placeholder only. Teaching hash; single-cube birthday ceiling. Production `while`s rewritten to bounded `for`; sudo `--require terminates` is clean. No Generated Lean. Not bumped. |
-| DoubleDeal-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. |
+| DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | Evidence in that tree (sudo + JS KATs). No Generated Lean this drop. Not SCM. |
+| DoubleDeal-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. Stays later. |
 
 See `doubledeal/README.md` for DoubleDeal proved-versus-open, and `doubledeal/STONES.md` for the SPEC §6 checklist. See `megadreifach/README.md` and `megadreifach/STONES.md` for MegaDreifach.

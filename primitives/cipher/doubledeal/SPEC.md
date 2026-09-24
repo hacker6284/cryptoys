@@ -15,13 +15,14 @@ The demo at `demos/doubledeal/` plays `trace_encrypt` and `trace_decrypt`. It do
 - Keyed layer: **Compose** (AddRoundKey stand-in), using a 52-card round key as core.
 - Key schedule: **PassKey** — forward iteration \(K_r = F(K_{r-1})\) with \(F =\) `pass_to_key_cut_fallback`.
 - Round count \(N_r = 6\): whitening with \(K_0\), five full rounds with \(K_1,\ldots,K_5\), final round with \(K_6\) (no MixColumns).
-- Modes: **ECB** and **CTR** only. CTR counter encoding is pinned: Diamonds in seats 39–51 via factoradic; Clubs+Hearts+Spades in seats 0–38 as nonce.
+- Modes: **ECB**, **CTR**, and **CBC**. CTR counter encoding is pinned: Diamonds in seats 39–51 via factoradic; Clubs+Hearts+Spades in seats 0–38 as nonce. CBC is byte-domain on the §5.3 28-byte encoding (§5.4).
+- Authenticated encryption: **DoubleDeal-CBC-HMAC** — CBC, then Encrypt-then-MAC with HMAC-MegaDreifach. Normative AEAD rules live in `primitives/aead/doubledeal-cbc-hmac/SPEC.md`.
 - A byte encoding outside `encrypt` / `decrypt` (§5.3). It is not a second block size. One block is still one deck.
 
 ## Non-goals
 
 - No claim of AES-class security, MDS MixColumns, or cryptographically strong key schedule.
-- No CBC / CFB / OFB / AEAD. No authentication.
+- No CFB / OFB. DoubleDeal-SCM / SMAC stay later; they are not this CBC-HMAC product.
 - No jokers (unlike the older 54-card Solitaire-style schedule).
 - GridCycle is **not** MDS; SumRanks is **not** an AES S-box / \(\mathrm{GF}(2^8)\) inverse.
 - Hand/math “refinement” obligations are agenda items, not proved here.
@@ -513,7 +514,7 @@ Matching majors throughout: col-major around SumRanks+ShiftRows; row-major aroun
 
 # 5. Modes
 
-Spec family allows **ECB + CTR only**.
+ECB and CTR stay deck-domain in `doubledeal.sudo`. CBC is byte-domain on the §5.3 encoding (§5.4). DoubleDeal-CBC-HMAC is the AEAD (§5.5). CFB / OFB / SCM / SMAC are not in this family.
 
 ## 5.1 ECB
 
@@ -610,6 +611,18 @@ Twenty-eight bytes is not “the whole of \(S_{52}\)”. \(2^{224} < 52!\) leave
 
 `52!` does not fit in a sudocode `int`, and `std.bigint` cannot cross a module boundary, so this encoding is not in `doubledeal.sudo`. The loop above is the one in §5.2. `demos/doubledeal/cards.js` is the software copy for 52-card ranks. The rounds stay in `doubledeal.sudo`.
 
+## 5.4 CBC (byte domain)
+
+AES-spirit CBC: XOR in the 28-byte message encoding, then `unrank` → `encrypt` → 29-byte rank. Compose-CBC on decks is not this mode. IV is 28 bytes and must be unique under the encryption key. The next chaining value is the last 28 bytes of the previous 29-byte ranked ciphertext (drop the most-significant byte). Pad is the same `0x80` / `0x00` rule as ECB.
+
+Full rules, IV misuse, and the rank-truncation honesty note are in `primitives/aead/doubledeal-cbc-hmac/SPEC.md` §3.
+
+## 5.5 DoubleDeal-CBC-HMAC
+
+CBC, then Encrypt-then-MAC. The MAC is HMAC with MegaDreifach as the hash (\(B=28\), tag = 29-byte digest). The master secret is split into an encryption deck and an HMAC key; they are not the same bytes. AAD is in the MAC, length-delimited. Decrypt verifies the tag before releasing plaintext.
+
+Normative specification: `primitives/aead/doubledeal-cbc-hmac/SPEC.md`. Conformance sudo: `doubledeal_cbc_hmac.sudo`. This is not DoubleDeal-SCM.
+
 ---
 
 # 6. Formal verification and analysis agenda (“stones”)
@@ -631,8 +644,9 @@ Prioritized backlog. Tags: **Lean** (machine-checked proof), **property-test** (
 | S11 | Mode lemmas: ECB identical-block leak; CTR KP recovery under nonce reuse | P1 | Lean (algebra of Compose) + script demo | **Proof** for Compose KP algebra; evidence for end-to-end demo | Pressure C already shows KP path |
 | S12 | Unkeyed peel: full_round = Compose(unkeyed(M), K) | P0 | Lean + property-test | **Proof** / evidence (pressure B4) | Structural teaching lemma |
 | S13 | §5.3 bytes ↔ deck: 28-byte unrank is injective; 29-byte rank/unrank is a bijection with \(\{0,\ldots,52!-1\}\); `0x80` padding strips uniquely | P1 | property-test | **Evidence** (`demos/doubledeal/cards.js`) | Same digit convention as §5.2. `52!` does not fit in a sudocode `int` |
+| S14 | DoubleDeal-CBC-HMAC: CBC round-trip; tag-tamper reject; AAD / IV in the MAC | P1 | property-test | **Evidence** (`primitives/aead/doubledeal-cbc-hmac/`) | Not a MAC/PRF theorem. SCM / Lean refinement out of scope |
 
-**Suggested order of attack:** S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7, S13 as a property-test of the byte encoding, and S8–S10 as living evidence notebooks — never promoted to “security results.” Cycle structure of PassKey stays evidence.
+**Suggested order of attack:** S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7, S13 as a property-test of the byte encoding, S14 as AEAD evidence (not a theorem), and S8–S10 as living evidence notebooks — never promoted to “security results.” Cycle structure of PassKey stays evidence.
 
 Lean for DoubleDeal layers, including the PassKey inverse, lives under `proofs/doubledeal/lean`.
 
@@ -729,6 +743,7 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 | Byte encoding | `demos/doubledeal/cards.js` | §5.3, outside `encrypt` / `decrypt`. A demo box is the text you type, as UTF-8, then this encoding. A leading `0x` means the rest of the box is hex bytes. Ciphertext is written with that prefix. The key box is one deck: those bytes are a single 28-byte block, filled with the §5.3 pad when shorter than 28 bytes, used as-is when exactly 28, and rejected when longer. The nonce box is not §5.3. §5.2's nonce is a 39-card order; the page unranks up to 19 bytes into cards \(0..38\) and rejects an integer \(\ge 39!\). |
 | Demo | `demos/doubledeal/` | Three.js table. Plays `trace_encrypt` and `trace_decrypt` from the sudo module |
 | Correctness proofs | `proofs/doubledeal/` | Lean 4 algebraic stones (bijections, round-trip, content-preservation). Not bit-security. |
+| DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | CBC + HMAC-MegaDreifach AEAD. Not SCM. |
 
 ---
 

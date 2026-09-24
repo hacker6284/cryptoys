@@ -17,5 +17,6 @@ Checklist for [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/cipher/d
 | S11 | ECB identical-block leak; CTR KP recovery under nonce reuse | **Proof** (Compose algebra) | `Compose.lean` (`compose_kp_unique`, `compose_kp_unique_52`); `Modes.lean` (`ctr_kp_unique_52`, `ctr_nonce_prefix_stable`, `compose_ecb_equal_blocks`) | Algebra of Compose, not an end-to-end demo script. |
 | S12 | Unkeyed peel: `full_round = Compose(unkeyed(M), K)` | **Proof** | `Round.lean`: `fullRound_peel`, `fullRoundNoMix_peel` | Definitional. |
 | S13 | §5.3 bytes ↔ deck; `0x80` pad strips uniquely | **Evidence** | none in Lean | `primitives/cipher/doubledeal/encoding.test.mjs` and `demos/doubledeal/cards.js`. Same digit convention as §5.2. |
+| S14 | DoubleDeal-CBC-HMAC round-trip and tag reject | **Evidence** | none in Lean | `primitives/aead/doubledeal-cbc-hmac/`. Not a MAC theorem. SCM stays later. |
 
 **Suggested order:** S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7. Keep S8–S10 as evidence notebooks. Cycle structure of PassKey stays evidence.

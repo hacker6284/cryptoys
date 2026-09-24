@@ -1,0 +1,282 @@
+// DoubleDeal-CBC-HMAC. The rules are primitives/aead/doubledeal-cbc-hmac/SPEC.md.
+// Toy Encrypt-then-MAC: DoubleDeal CBC, then HMAC-MegaDreifach. Not for real use.
+// Product name DoubleDeal-CBC-HMAC is locked. SCM / SMAC stay later.
+// New loops are bounded for. emit-ir --require terminates must pass.
+
+import megadreifach
+
+hmac_block = 28
+digest_len = 29
+cipher_block = 29
+ipad_byte = 54
+opad_byte = 92
+
+version_label = "DoubleDeal-CBC-HMAC/v1"
+enc_label = "DoubleDeal-CBC-HMAC/v1/enc"
+mac_label = "DoubleDeal-CBC-HMAC/v1/mac"
+
+func require_bytes(xs: List<int>)
+    for i = 0 to xs.length - 1
+        assert (xs[i] >= 0) and (xs[i] <= 255)
+
+func xor_byte(a: int, b: int) -> int
+    assert (a >= 0) and (a <= 255)
+    assert (b >= 0) and (b <= 255)
+    out = 0
+    place = 1
+    left = a
+    right = b
+    for bit = 0 to 7
+        la = left mod 2
+        rb = right mod 2
+        if la != rb
+            out = out + place
+        left = left / 2
+        right = right / 2
+        place = place * 2
+    return out
+
+export func xor_bytes(a: List<int>, b: List<int>) -> List<int>
+    assert a.length == b.length
+    require_bytes(a)
+    require_bytes(b)
+    out: List<int> = []
+    for i = 0 to a.length - 1
+        out.append(xor_byte(a[i], b[i]))
+    return out
+
+func u16be(n: int) -> List<int>
+    assert (n >= 0) and (n <= 65535)
+    out: List<int> = []
+    out.append(n / 256)
+    out.append(n mod 256)
+    return out
+
+func u64be(n: int) -> List<int>
+    assert n >= 0
+    parts: List<int> = []
+    rest = n
+    for i = 1 to 8
+        parts.append(rest mod 256)
+        rest = rest / 256
+    assert rest == 0
+    out: List<int> = []
+    for i = 7 downto 0
+        out.append(parts[i])
+    return out
+
+func take_prefix(xs: List<int>, n: int) -> List<int>
+    assert n >= 0
+    assert xs.length >= n
+    out: List<int> = []
+    for i = 0 to n - 1
+        out.append(xs[i])
+    return out
+
+func pad_zeros(xs: List<int>, n: int) -> List<int>
+    assert n >= xs.length
+    out: List<int> = []
+    for i = 0 to n - 1
+        if i < xs.length
+            out.append(xs[i])
+        else
+            out.append(0)
+    return out
+
+export func hmac_normalize_key(key: List<int>) -> List<int>
+    require_bytes(key)
+    k = key
+    if k.length > hmac_block
+        k = megadreifach.Hash(k)
+    if k.length > hmac_block
+        k = take_prefix(k, hmac_block)
+    return pad_zeros(k, hmac_block)
+
+func xor_pad(key: List<int>, pad: int) -> List<int>
+    assert key.length == hmac_block
+    out: List<int> = []
+    for i = 0 to hmac_block - 1
+        out.append(xor_byte(key[i], pad))
+    return out
+
+export func HMAC(key: List<int>, msg: List<int>) -> List<int>
+    require_bytes(msg)
+    k = hmac_normalize_key(key)
+    inner = megadreifach.Hash(xor_pad(k, ipad_byte) + msg)
+    tag = megadreifach.Hash(xor_pad(k, opad_byte) + inner)
+    assert tag.length == digest_len
+    return tag
+
+export func HMAC_MegaDreifach(key: List<int>, msg: List<int>) -> List<int>
+    return HMAC(key, msg)
+
+export func pad_iso7816(msg: List<int>) -> List<int>
+    require_bytes(msg)
+    out = msg + [128]
+    nzero = (hmac_block - (out.length mod hmac_block)) mod hmac_block
+    for i = 1 to nzero
+        out.append(0)
+    assert out.length mod hmac_block == 0
+    return out
+
+export func unpad_iso7816(msg: List<int>) -> List<int>
+    assert msg.length > 0
+    assert msg.length mod hmac_block == 0
+    require_bytes(msg)
+    i = msg.length - 1
+    found = 0
+    for n = 1 to msg.length
+        if found == 0
+            if msg[i] == 0
+                i = i - 1
+            else if msg[i] == 128
+                found = 1
+            else
+                assert false
+    assert found == 1
+    assert i >= 0
+    out: List<int> = []
+    for j = 0 to i - 1
+        out.append(msg[j])
+    return out
+
+export func mac_input(aad: List<int>, iv: List<int>, ciphertext: List<int>) -> List<int>
+    require_bytes(aad)
+    require_bytes(iv)
+    require_bytes(ciphertext)
+    ver = version_label
+    return u16be(ver.length) + ver + u64be(aad.length) + aad + u64be(iv.length) + iv + u64be(ciphertext.length) + ciphertext
+
+export func derive_keys(master: List<int>) -> (List<int>, List<int>)
+    require_bytes(master)
+    assert master.length > 0
+    enc_digest = megadreifach.Hash(u16be(enc_label.length) + enc_label + u64be(master.length) + master)
+    mac_digest = megadreifach.Hash(u16be(mac_label.length) + mac_label + u64be(master.length) + master)
+    assert enc_digest.length == digest_len
+    assert mac_digest.length == digest_len
+    return (take_prefix(enc_digest, hmac_block), mac_digest)
+
+export func cbc_chain_from_cipher_block(block: List<int>) -> List<int>
+    assert block.length == cipher_block
+    require_bytes(block)
+    out: List<int> = []
+    for i = 1 to hmac_block
+        out.append(block[i])
+    return out
+
+export func tags_equal(a: List<int>, b: List<int>) -> bool
+    if a.length != b.length
+        return false
+    ok = true
+    for i = 0 to a.length - 1
+        if a[i] != b[i]
+            ok = false
+    return ok
+
+test "xor is bitwise and involutive"
+    assert xor_byte(0, 0) == 0
+    assert xor_byte(255, 0) == 255
+    assert xor_byte(54, 54) == 0
+    assert xor_byte(92, 255) == 163
+    a = [1, 2, 3, 4]
+    b = [255, 0, 1, 128]
+    x = xor_bytes(a, b)
+    assert xor_bytes(x, b) == a
+    assert xor_bytes(a, a) == [0, 0, 0, 0]
+
+test "iso7816 pad matches DoubleDeal ECB"
+    empty = pad_iso7816([])
+    assert empty.length == 28
+    assert empty[0] == 128
+    for i = 1 to 27
+        assert empty[i] == 0
+    assert unpad_iso7816(empty) == []
+    exact: List<int> = []
+    for i = 0 to 27
+        exact.append(i)
+    twice = pad_iso7816(exact)
+    assert twice.length == 56
+    assert unpad_iso7816(twice) == exact
+    mid = [1, 2, 128]
+    assert unpad_iso7816(pad_iso7816(mid)) == mid
+
+test "hmac key shorter than B is zero-padded"
+    k = hmac_normalize_key([1, 2, 3])
+    assert k.length == 28
+    assert k[0] == 1
+    assert k[1] == 2
+    assert k[2] == 3
+    for i = 3 to 27
+        assert k[i] == 0
+    z = hmac_normalize_key([])
+    assert z == filled(28, 0)
+
+test "cbc chain drops the most significant rank byte"
+    block: List<int> = []
+    for i = 0 to 28
+        block.append(i)
+    chain = cbc_chain_from_cipher_block(block)
+    assert chain.length == 28
+    for i = 0 to 27
+        assert chain[i] == i + 1
+
+test "mac input is length delimited"
+    aad = [1, 2]
+    iv = filled(28, 7)
+    c = filled(29, 9)
+    m = mac_input(aad, iv, c)
+    assert m[0] == 0
+    assert m[1] == version_label.length
+    assert take_prefix(m, 2 + version_label.length) == u16be(version_label.length) + version_label
+
+test "HMAC aliases agree and returns 29 bytes"
+    tag = HMAC([99, 114, 121, 112, 116, 111, 121], [97, 98, 99])
+    assert tag.length == 29
+    assert HMAC_MegaDreifach([99, 114, 121, 112, 116, 111, 121], [97, 98, 99]) == tag
+    published = [1, 105, 39, 111, 136, 146, 139, 218, 84, 110, 16, 142, 181, 159, 241, 182, 136, 174, 139, 125, 230, 82, 40, 242, 28, 47, 4, 157, 114]
+    assert tag == published
+
+test "HMAC depends on the key and the message"
+    k1 = [1, 2, 3]
+    k2 = [1, 2, 4]
+    m1 = [97]
+    m2 = [98]
+    a = HMAC(k1, m1)
+    assert HMAC(k1, m1) == a
+    assert HMAC(k1, m2) != a
+    assert HMAC(k2, m1) != a
+
+test "a long HMAC key is hashed then truncated to B"
+    long: List<int> = []
+    for i = 0 to 39
+        long.append((i * 17) mod 256)
+    hashed = megadreifach.Hash(long)
+    expected = hmac_normalize_key(take_prefix(hashed, 28))
+    assert hmac_normalize_key(long) == expected
+    assert HMAC(long, [1]) != HMAC(take_prefix(long, 28), [1])
+
+test "derive_keys splits the master secret"
+    master = [1, 2, 3, 4, 5, 6, 7, 8]
+    enc_a, mac_a = derive_keys(master)
+    enc_b, mac_b = derive_keys(master)
+    assert enc_a == enc_b
+    assert mac_a == mac_b
+    assert enc_a.length == 28
+    assert mac_a.length == 29
+    assert enc_a != take_prefix(mac_a, 28)
+    other, other_mac = derive_keys([1, 2, 3, 4, 5, 6, 7, 9])
+    assert other != enc_a
+    assert other_mac != mac_a
+
+test "empty master key is rejected"
+    expect_trap AssertFailed
+        enc, mac = derive_keys([])
+
+test "tag compare is full length"
+    a = filled(29, 1)
+    b = filled(29, 1)
+    c = filled(29, 1)
+    c[28] = 2
+    assert tags_equal(a, b)
+    assert not tags_equal(a, c)
+    assert not tags_equal(a, filled(28, 1))

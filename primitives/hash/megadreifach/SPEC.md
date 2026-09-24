@@ -4,7 +4,7 @@ This document is the normative specification. `megadreifach.sudo` is the conform
 
 The product name **MegaDreifach** is locked. The puzzle, group, and library stay called **megaminx**.
 
-Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. A green Lean build is not a security claim. Hand-written Lean is not a proof that the sudo text equals the Lean model.
+Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. **HMAC-MegaDreifach** is that construction: standard HMAC with this `Hash`, block size \(B=28\), tag = the 29-byte digest. It lives in `primitives/aead/doubledeal-cbc-hmac/` as part of DoubleDeal-CBC-HMAC (not a second hash). A green Lean build is not a security claim. Hand-written Lean is not a proof that the sudo text equals the Lean model.
 
 ---
 
@@ -25,6 +25,7 @@ Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a 
 - No proof that mid-block L3 collisions are absent. They exist. Free-start `HashDeckBodyFrom` is broken.
 - Relative reorient recipes are rejected (research disproof). Absolute Recipe A only.
 - No claim that Lean equals this sudo text. That is a future emitter proof.
+- HMAC-MegaDreifach does not make `Hash` collision-resistant. It is a correctly wired HMAC over this toy hash.
 
 ---
 

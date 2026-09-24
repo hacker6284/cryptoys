@@ -145,8 +145,9 @@ try {
     });
 
     scrambleLink?.addEventListener("click", (event) => {
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
+        event.stopPropagation();
         void startScramble();
     });
 

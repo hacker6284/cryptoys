@@ -69,7 +69,6 @@ try {
     async function startScramble({ snap = false } = {}) {
         if (activeAlgo === "scramble" || starting || leaving) return;
         starting = true;
-        director.clearHighlight();
         activeAlgo = "scramble";
         syncOverlays({
             name: poses.name,

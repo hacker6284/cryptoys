@@ -109,7 +109,7 @@ export function createToyDirector(world) {
             light = world.createTravelLight?.(toy);
             if (!light) return;
         }
-        light.intensity = on ? 2.4 : 0;
+        light.intensity = on ? 4.2 : 0;
     }
 
     function applyFlight(t) {
@@ -182,11 +182,11 @@ export function createToyDirector(world) {
         }
         if (occupied === algorithmId && !flight) return recipe;
         if (flight) skip();
-        clearHighlight();
         occupied = algorithmId;
         const name = recipe.toys[0];
         world.setSlotEmpty(name, true);
         await flyToy(name, world.getTablePose(name), { snap });
+        clearHighlight();
         return recipe;
     }
 

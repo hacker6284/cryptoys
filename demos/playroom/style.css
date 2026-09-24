@@ -158,19 +158,11 @@ body.playroom.is-ready .playroom-menu {
   }
 }
 
-/* Instrument is an edge strip. Teach may appear as a temporary card. */
+/* Landscape: four window edges. No region cards. */
 .playroom-dock {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 3;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: flex-start;
-  gap: 10px;
-  max-height: min(46dvh, 32rem);
-  overflow: auto;
   pointer-events: none;
   opacity: 0;
 }
@@ -183,68 +175,92 @@ body.playroom.is-ready .playroom-menu {
   display: none;
 }
 
-.playroom-hands,
+.playroom-io,
+.playroom-anim,
 .playroom-note,
 .playroom-dock dialog {
   pointer-events: auto;
+}
+
+.playroom-io,
+.playroom-anim,
+.playroom-note {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--fg);
+}
+
+.playroom-io {
+  top: 16px;
+  right: 20px;
+  width: min(22rem, 36vw);
+  text-align: right;
+}
+
+.playroom-anim {
+  left: 20px;
+  bottom: 16px;
+  width: min(28rem, 46vw);
+}
+
+.playroom-note {
+  right: 20px;
+  bottom: 16px;
+  width: min(26rem, 40vw);
+  text-align: right;
 }
 
 .playroom-note[hidden] {
   display: none;
 }
 
-.playroom-hands {
+.playroom-io,
+.playroom-anim,
+.playroom-note {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  align-self: stretch;
-  width: 100%;
-  margin: 0;
-  padding: 16px 20px 14px;
-  border: 0;
-  border-radius: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    color-mix(in srgb, #0e0b09 58%, transparent) 22%,
-    color-mix(in srgb, #0e0b09 86%, transparent) 100%
-  );
-  color: var(--fg);
+  gap: 8px;
 }
 
-.playroom-note {
-  margin: 0 16px;
-  padding: 10px 12px 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
-  color: var(--fg);
-  max-width: min(28rem, calc(100% - 32px));
+.playroom-io .row,
+.playroom-anim .row {
+  justify-content: flex-end;
+}
+
+.playroom-anim .row {
+  justify-content: flex-start;
 }
 
 .playroom-note .tape {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin: 0 0 8px;
+  justify-content: flex-end;
+  gap: 6px 8px;
+  margin: 0;
 }
 
 .playroom-note .transport {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  margin: 8px 0 0;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
 }
 
 .playroom-note-body .kicker,
 .playroom-hands-label,
-.playroom-hands .status,
+.playroom-io .status,
 .playroom-note .transport .pos {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--fg) 78%, transparent);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .playroom-message-label {
@@ -254,14 +270,16 @@ body.playroom.is-ready .playroom-menu {
   font-size: 13px;
   font-weight: 500;
   color: var(--fg);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 
-.playroom-hands .digest {
+.playroom-io .digest {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 13px;
   color: var(--fg);
   word-break: break-all;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .playroom-note-body h2 {
@@ -271,6 +289,7 @@ body.playroom.is-ready .playroom-menu {
   font-size: clamp(20px, 2.2vw, 26px);
   letter-spacing: -0.02em;
   color: var(--fg);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 2px 14px rgba(0, 0, 0, 0.5);
 }
 
 .playroom-note-body .math,
@@ -278,7 +297,8 @@ body.playroom.is-ready .playroom-menu {
   margin: 0;
   font-size: 14px;
   line-height: 1.4;
-  color: var(--fg);
+  color: color-mix(in srgb, var(--fg) 88%, transparent);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 
 .playroom-note-body .math {
@@ -292,20 +312,19 @@ body.playroom.is-ready .playroom-menu {
 }
 
 .playroom-dock .tape-cell {
-  min-width: 1.5em;
-  padding: 2px 5px;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  background: var(--raised);
-  color: var(--muted);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: color-mix(in srgb, var(--fg) 52%, transparent);
   font-family: var(--font-mono);
   font-size: 12px;
-  text-align: center;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
 .playroom-dock .tape-cell.pad {
-  border-style: dashed;
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
 .playroom-dock .tape-cell.marker {
@@ -313,40 +332,48 @@ body.playroom.is-ready .playroom-menu {
 }
 
 .playroom-dock .tape-cell.on {
-  background: var(--accent);
-  color: var(--accent-fg);
-  border-color: var(--accent);
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
 }
 
-.playroom-note .transport button,
-.playroom-hands button {
+.playroom-dock button {
   padding: 6px 10px;
   font-family: var(--font-mono);
   font-size: 13px;
 }
 
-.playroom-hands .error {
+.playroom-io .error {
   min-height: 0;
 }
 
-.playroom-hands .error:empty {
+.playroom-io .error:empty {
   display: none;
 }
 
 .playroom-dock .slider {
-  flex: 1 1 10rem;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--muted) 92%, transparent);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
-.playroom-meta {
+.playroom-crypto {
   align-items: center;
 }
 
 .playroom-dock textarea {
-  width: min(42rem, 100%);
+  width: 100%;
   min-height: 3.4em;
-  padding: 10px 12px;
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  padding: 6px 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 28%, transparent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg);
+  text-align: right;
+  resize: vertical;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
 }
 
 .playroom-dock .outline {
@@ -363,32 +390,35 @@ body.playroom.is-ready .playroom-dock {
   }
 }
 
-@media (max-width: 700px) {
+/* Portrait: rough stack. Landscape four-corners is the lock. */
+@media (max-width: 700px) and (orientation: portrait) {
   .playroom-menu {
     top: 60px;
     right: 16px;
   }
 
-  .playroom-dock {
-    max-height: 50dvh;
+  .playroom-io {
+    top: 72px;
+    right: 14px;
+    left: 14px;
+    width: auto;
+    max-height: 36dvh;
+    overflow: auto;
   }
 
-  .playroom-hands {
-    padding: 14px 14px 12px;
+  .playroom-anim {
+    left: 14px;
+    right: 14px;
+    bottom: 12px;
+    width: auto;
   }
 
   .playroom-note {
-    margin: 0 12px;
-    max-width: calc(100% - 24px);
-  }
-
-  .playroom-dock:has(#teach:not([hidden])) {
-    max-height: 58dvh;
-  }
-}
-
-@media (max-height: 500px) {
-  .playroom-dock {
-    max-height: 48dvh;
+    right: 14px;
+    left: 14px;
+    bottom: 88px;
+    width: auto;
+    max-height: 28dvh;
+    overflow: auto;
   }
 }

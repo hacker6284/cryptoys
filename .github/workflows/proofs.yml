@@ -48,7 +48,7 @@ jobs:
           workspaces: .sudocode-lean/sudoc
       - name: Build sudoc
         run: cargo build --release --manifest-path .sudocode-lean/sudoc/Cargo.toml
-      - name: Generated Lean matches emit (full peer, no --require terminates)
+      - name: Generated Lean matches emit (--require terminates)
         env:
           SUDOCODE_DIR: ${{ github.workspace }}/.sudocode-lean
           SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc

@@ -7,13 +7,13 @@ Nothing in this repository is for real use. A green Lean build is not a security
 Sudo is normative. Lean *algorithm* definitions are generated from `*.sudo`
 into `proofs/*/lean/Generated/`. See [`ANTI_DRIFT.md`](ANTI_DRIFT.md). This
 does **not** claim sudo↔Lean semantic-equivalence theorems. The terminates
-gate is off at emit (Scramble still has unmeasured `while`s).
-DoubleDeal and MegaDreifach are terminates-ready.
+gate is on at emit for DoubleDeal and MegaDreifach. All three publics
+(DD / MD / Scramble) are terminates-ready. Scramble has no Generated Lean.
 
 Four layers of evidence, and only the first is a theorem:
 
 1. **Theorems about the proof-only Lean model** — bijections, round-trip, PassKey injectivity. Zero `sorry`. The Lean kernel checks these theorems; there is no `native_decide` in the shipped DoubleDeal Lean. These modules are **not** the algorithm.
-2. **Generated TAP** — `sudoc emit-ir` → protocol-4 Lean backend → `lake` → TAP, from the same `.sudo` that JS/Python compile. DoubleDeal 12/12, MegaDreifach 11/11. Evidence the emitter ran, **not** a sudo=Lean theorem.
+2. **Generated TAP** — `sudoc emit-ir --require terminates` → protocol-4 Lean backend → `lake` → TAP, from the same `.sudo` that JS/Python compile. DoubleDeal 10/10 (two test-only kind-scan `while`s stripped under the gate; JS still runs all twelve), MegaDreifach 11/11. Evidence the emitter ran, **not** a sudo=Lean theorem.
 3. **Vector agreement (algebraic skeleton vs JS JSON)** — known-answer decks evaluated in the proof package against JSON from the sudoc JS target. Evidence the *skeleton* matches those inputs, **not** a proof it equals `Generated.encrypt`.
 4. **Future: equivalence** — a theorem that the sudo text *is* the generated Lean, or that the algebraic skeleton equals the generated program. OPEN. Fuel-total `natIter` is not a total-fragment emitter.
 
@@ -54,9 +54,9 @@ Deprecated algorithms, when they appear, get their own directory under `proofs/`
 
 | Primitive | Current version | This tree |
 | --- | --- | --- |
-| DoubleDeal | `primitives/cipher/doubledeal/` | **Generated** Lean under `doubledeal/lean/Generated/` (from `doubledeal.sudo`; TAP 12/12). Proof-only stones under `doubledeal/lean/DoubleDeal/`. PassKey injectivity is **proved** on the list model (PR #3). Equivalence to `Generated.passkey` is OPEN. |
+| DoubleDeal | `primitives/cipher/doubledeal/` | **Generated** Lean under `doubledeal/lean/Generated/` (from `doubledeal.sudo`; TAP 10/10 under the terminates gate). Proof-only stones under `doubledeal/lean/DoubleDeal/`. PassKey injectivity is **proved** on the list model (PR #3). Equivalence to `Generated.passkey` is OPEN. |
 | MegaDreifach | `primitives/hash/megadreifach/` (SPEC + `megadreifach.sudo` + KATs) | **Generated** Lean under `megadreifach/lean/Generated/` (TAP 11/11). Proof-only stones under `megadreifach/lean/MegaDreifach/`. M1–M7 packing/algebra **proved** (M3 even-perm glue still open). M8 is a net-distinctness reduction. M9 / M13 full KAT digests in the proof package **OPEN**. Research Hash hexes refreshed to current sudo. A green Lean build is not a security claim. |
-| Scramble | `scramble_v2` | Placeholder only. Teaching hash; single-cube birthday ceiling. No Lean. Not bumped. |
+| Scramble | `scramble_v2` | Placeholder only. Teaching hash; single-cube birthday ceiling. Production `while`s rewritten to bounded `for`; sudo `--require terminates` is clean. No Generated Lean. Not bumped. |
 | DoubleDeal-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. |
 
 See `doubledeal/README.md` for DoubleDeal proved-versus-open, and `doubledeal/STONES.md` for the SPEC §6 checklist. See `megadreifach/README.md` and `megadreifach/STONES.md` for MegaDreifach.

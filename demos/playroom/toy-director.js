@@ -165,7 +165,8 @@ export function createToyDirector(world) {
                 lift,
                 mid,
                 to: dest,
-                origin: performance.now(),
+                last: performance.now(),
+                elapsed: 0,
                 duration,
                 onDone: resolve,
             };
@@ -212,7 +213,12 @@ export function createToyDirector(world) {
 
     function update() {
         if (!flight) return;
-        const u = Math.min(1, (performance.now() - flight.origin) / flight.duration);
+        const now = performance.now();
+        // 50ms cap: 60fps stays real-time (~1.8s). A hitch cannot skip
+        // the arc, and software-GL still draws the in-between poses.
+        flight.elapsed += Math.min(50, Math.max(0, now - flight.last));
+        flight.last = now;
+        const u = Math.min(1, flight.elapsed / flight.duration);
         applyFlight(u);
         if (u >= 1) finishFlight();
     }

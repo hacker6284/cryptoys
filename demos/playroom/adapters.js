@@ -42,6 +42,12 @@ function disposeObject(object) {
     object.parent?.remove(object);
 }
 
+/**
+ * Product model (Zach, 2026-09-24): these demo pages are the only
+ * place on the internet to perform the algorithms without writing
+ * code. Using the hash is primary. Teach is opt-in (Step through /
+ * Step) and must not hide or replace the instrument.
+ */
 function mountDock() {
     let root = document.querySelector("#scramble-dock");
     if (root) return root;
@@ -153,6 +159,7 @@ function createScrambleAdapter() {
                     root,
                     exposeTeach: true,
                 });
+                // Stay in use mode. Session enterTeach() is for Step through.
                 root.hidden = false;
                 root.classList.add("on");
                 return session;

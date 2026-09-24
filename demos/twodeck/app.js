@@ -63,7 +63,7 @@ function applyLabels() {
     const encrypting = direction === "encrypt";
     inputLabel.textContent = encrypting ? "Plaintext" : "Ciphertext";
     outputLabel.textContent = encrypting ? "Ciphertext" : "Plaintext";
-    copyButton.textContent = encrypting ? "Copy ciphertext" : "Copy plaintext";
+    copyButton.textContent = "Copy";
 }
 
 function preview() {
@@ -298,9 +298,11 @@ async function openSpec() {
     specDialog.showModal();
 }
 
-document.querySelector("#spec-btn").addEventListener("click", () => {
-    openSpec().catch((err) => {
-        setError(err instanceof Error ? err.message : "Could not open the specification.");
+document.querySelectorAll("[data-open-spec]").forEach((el) => {
+    el.addEventListener("click", () => {
+        openSpec().catch((err) => {
+            setError(err instanceof Error ? err.message : "Could not open the specification.");
+        });
     });
 });
 document.querySelector("#spec-close").addEventListener("click", () => specDialog.close());

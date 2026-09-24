@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/tokens.css">
+  <link rel="stylesheet" href="../shared/base.css">
   <link rel="stylesheet" href="./style.css">
   <script src="./vendor/cube.js"></script>
   <script src="./vendor/solve.js"></script>
@@ -20,6 +22,14 @@
   </script>
 </head>
 <body>
+  <header class="site-chrome">
+    <nav class="site-nav" aria-label="Site">
+      <a class="site-brand" href="../">cryptoys</a>
+      <span class="site-sep" aria-hidden="true">/</span>
+      <span class="site-current">Scramble</span>
+    </nav>
+    <button id="spec-btn" class="chrome-action" type="button">Spec</button>
+  </header>
   <div class="shell">
     <section class="stage">
       <header class="stage-head">
@@ -30,12 +40,11 @@
     </section>
     <aside class="panel">
       <div class="row">
-        <button id="play" type="button">Play</button>
+        <button id="play" class="primary" type="button">Play</button>
         <button id="step" type="button">Step</button>
         <button id="reset" type="button">Reset</button>
         <button id="digest-btn" type="button">Digest</button>
         <button id="solve" type="button">Solve</button>
-        <button id="spec-btn" type="button">Spec</button>
       </div>
       <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
       <p id="status" class="status">Solved start · white up, green front, red right</p>

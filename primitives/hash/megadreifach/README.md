@@ -10,7 +10,7 @@ This directory is the published primitive:
 | `megadreifach.sudo` | Conformance implementation |
 | `kats/megaminx_hash_kats.json` | Published KAT file (pad / IV / `|G|` metadata; research Hash hexes) |
 
-Length extension on bare `Hash` is accepted by design. A green Lean build under `proofs/megadreifach/` is not a security claim. Hand-written Lean is not a proof that this sudo text equals the Lean model.
+Length extension on bare `Hash` is accepted by design. HMAC-MegaDreifach (the keyed construction) is specified with DoubleDeal-CBC-HMAC under `primitives/aead/doubledeal-cbc-hmac/`. A green Lean build under `proofs/megadreifach/` is not a security claim. Hand-written Lean is not a proof that this sudo text equals the Lean model.
 
 ```sh
 sudoc build --target js --tests -o /tmp/megadreifach primitives/hash/megadreifach/megadreifach.sudo

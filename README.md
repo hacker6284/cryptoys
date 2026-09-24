@@ -14,6 +14,8 @@ primitives/hash/megadreifach/SPEC.md
 primitives/hash/megadreifach/megadreifach.sudo
 primitives/cipher/doubledeal/SPEC.md
 primitives/cipher/doubledeal/doubledeal.sudo
+primitives/aead/doubledeal-cbc-hmac/SPEC.md
+primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
 demos/doubledeal/
 proofs/
 ```
@@ -34,6 +36,19 @@ DoubleDeal (formerly TwoDeck) is a toy block cipher on a 52-card deck. A block i
 
 The specification is `primitives/cipher/doubledeal/SPEC.md`. Emitted Lean for `encrypt` lives under `proofs/doubledeal/lean/Generated/`. PassKey stones are proof-only. See `proofs/ANTI_DRIFT.md`.
 
+## DoubleDeal-CBC-HMAC
+
+DoubleDeal-CBC-HMAC is Encrypt-then-MAC: DoubleDeal in **CBC** on the 28-byte §5.3 encoding, then **HMAC** with MegaDreifach as the hash. It is not DoubleDeal-SCM. The specification is `primitives/aead/doubledeal-cbc-hmac/SPEC.md`. No AES-class claim. SCM / SMAC stay later.
+
+```sh
+sudoc emit-ir --require terminates -I primitives/hash/megadreifach \
+    primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo > /dev/null
+sudoc build --target js --tests -o /tmp/ddch \
+    -I primitives/hash/megadreifach \
+    primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
+node /tmp/ddch/_doubledeal_cbc_hmac_impl.mjs
+```
+
 Build the demo's JavaScript with a local `sudoc`:
 
 ```sh
@@ -50,6 +65,11 @@ sudoc build --target js --tests -o /tmp/scramble primitives/hash/scramble/scramb
 node /tmp/scramble/_scramble_impl.mjs
 sudoc build --target js --tests -o /tmp/megadreifach primitives/hash/megadreifach/megadreifach.sudo
 node /tmp/megadreifach/_megadreifach_impl.mjs
+sudoc build --target js --tests -o /tmp/doubledeal primitives/cipher/doubledeal/doubledeal.sudo
+node /tmp/doubledeal/_doubledeal_impl.mjs
+sudoc build --target js --tests -o /tmp/ddch -I primitives/hash/megadreifach \
+    primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
+node /tmp/ddch/_doubledeal_cbc_hmac_impl.mjs
 ```
 
 GitHub Actions builds `sudoc` from [hacker6284/sudocode](https://github.com/hacker6284/sudocode), runs those tests, and publishes `demos/`.

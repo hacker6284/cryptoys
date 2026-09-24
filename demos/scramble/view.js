@@ -45,7 +45,7 @@ function orientMatrix(up, front) {
     return m;
 }
 
-export function mountCube(canvas) {
+export function mountCube(canvas, options = {}) {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     const scene = new THREE.Scene();
@@ -55,9 +55,12 @@ export function mountCube(canvas) {
     controls.target.set(0, 0, 0);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
-    controls.autoRotate = false;
-    controls.minDistance = 4;
-    controls.maxDistance = 20;
+    controls.autoRotate = Boolean(options.autoRotate);
+    controls.autoRotateSpeed = options.autoRotateSpeed ?? 0.45;
+    controls.enableZoom = options.enableZoom !== false;
+    controls.enablePan = options.enablePan !== false;
+    controls.minDistance = options.minDistance ?? 4;
+    controls.maxDistance = options.maxDistance ?? 20;
     controls.update();
     scene.add(new THREE.AmbientLight(0xffffff, 0.72));
     const key = new THREE.DirectionalLight(0xffffff, 1.4);

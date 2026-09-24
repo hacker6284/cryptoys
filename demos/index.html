@@ -3,40 +3,99 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>cryptoys</title>
+  <title>cryptoys · toy cryptography</title>
+  <meta name="description" content="Toy cryptography, in both senses. Scramble hashes by walking a cube. TwoDeck is a block cipher on a 52-card deck. Nothing here is for real use.">
+  <meta name="theme-color" content="#0c0c0e">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./shared/tokens.css">
   <link rel="stylesheet" href="./shared/base.css">
   <link rel="stylesheet" href="./shared/hub.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
-<body>
+<body class="home">
   <header class="site-chrome">
     <nav class="site-nav" aria-label="Site">
       <a class="site-brand" href="./">cryptoys</a>
     </nav>
   </header>
-  <main class="hub">
-    <header class="hub-intro">
-      <h1>cryptoys</h1>
-      <p class="lede">Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys. Nothing here is for real use.</p>
-    </header>
-    <section class="gallery" aria-label="Instruments">
-      <a class="instrument" href="./scramble/">
-        <div class="mark mark-cube" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">toy cryptography, in both senses</p>
+        <h1>cryptoys</h1>
+        <p class="lede">The algorithms are experiments, and they are built out of actual toys.</p>
+        <aside class="warning" aria-label="Warning">
+          <strong>Warning</strong>
+          <p>Not for cryptographic use. Contains small parts.</p>
+        </aside>
+      </div>
+      <figure class="hero-stage">
+        <div class="cube-well">
+          <canvas id="cube" aria-label="Scramble digest of the current message"></canvas>
+        </div>
+        <figcaption>
+          <p id="cube-caption">Seating today’s cube…</p>
+          <p id="cube-digest" class="digest"></p>
+        </figcaption>
+        <form class="play" autocomplete="off">
+          <label for="message">Type a message</label>
+          <div class="play-row">
+            <input id="message" type="text" spellcheck="false" autocorrect="off" autocapitalize="off" enterkeyhint="done">
+            <button id="today" type="button" hidden>Today’s cube</button>
+          </div>
+          <p class="play-hint">The cube seats itself as the digest. Empty, it is today’s cube.</p>
+        </form>
+        <p id="home-error" class="error" hidden></p>
+      </figure>
+    </section>
+
+    <section class="instruments" aria-label="Primitives">
+      <article class="instrument">
         <p class="instrument-kind">Hash</p>
+        <div class="mark mark-cube" id="scramble-face" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
         <h2>Scramble</h2>
-        <p>A message walks a cube. The seated pose is the digest.</p>
-      </a>
-      <a class="instrument" href="./twodeck/">
-        <div class="mark mark-decks" aria-hidden="true"><span></span><span></span></div>
+        <p>A message walks a solved cube. The seated pose is the digest. The stamp is the up face of the cube on this page.</p>
+        <p class="instrument-links">
+          <a href="./scramble/">Demo</a>
+          <a href="./scramble/SPEC.md">Spec</a>
+        </p>
+      </article>
+      <article class="instrument instrument-deck">
         <p class="instrument-kind">Cipher</p>
         <h2>TwoDeck</h2>
-        <p>A 52-card substitution-permutation network.</p>
-      </a>
+        <p>A block is one 52-card deck. The fan is a real ciphertext, not a drawing of one.</p>
+        <div class="felt" aria-hidden="true">
+          <div class="fan" id="fan"></div>
+        </div>
+        <p class="instrument-caption" id="fan-caption">Dealing the demo hand…</p>
+        <p class="instrument-links">
+          <a href="./twodeck/">Demo</a>
+          <a href="./twodeck/SPEC.md">Spec</a>
+        </p>
+      </article>
     </section>
-    <p class="disclaimer">Teaching instruments, not games and not production crypto. More primitives will sit here when they exist.</p>
   </main>
+  <footer class="site-foot">
+    <p>Specified in prose. Compiled from <a href="https://github.com/hacker6284/sudocode">sudocode</a>.</p>
+    <p><a href="https://github.com/hacker6284/cryptoys">Source</a></p>
+  </footer>
+  <noscript>
+    <p class="noscript">This table needs JavaScript to seat the cube and deal the cards. The <a href="./scramble/">Scramble</a> and <a href="./twodeck/">TwoDeck</a> demos are still there.</p>
+  </noscript>
+  <script type="module" src="./home.js"></script>
 </body>
 </html>

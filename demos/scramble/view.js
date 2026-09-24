@@ -111,11 +111,59 @@ export function mountCube(canvas) {
             mesh.position.copy(mesh.userData.home);
             mesh.quaternion.identity();
             mesh.rotation.set(0, 0, 0);
+            mesh.scale.set(1, 1, 1);
+            for (const mat of mesh.material) mat.emissive.setHex(0x000000);
         }
         SPOTS.forEach(([x, y, z, axis], i) => {
             const mesh = meshes.get(`${x},${y},${z}`);
-            mesh.material[AXIS[axis]].color.setHex(COLOR[facelets[i]]);
+            const mat = mesh.material[AXIS[axis]];
+            mat.color.setHex(COLOR[facelets[i]]);
+            mat.needsUpdate = true;
         });
+    }
+
+    function clearHighlights() {
+        for (const mesh of meshes.values()) {
+            mesh.scale.set(1, 1, 1);
+            for (const mat of mesh.material) mat.emissive.setHex(0x000000);
+        }
+    }
+
+    function glow(mesh, hex, scale) {
+        mesh.scale.setScalar(scale || 1);
+        for (const mat of mesh.material) mat.emissive.setHex(hex);
+    }
+
+    function highlightLayer(face) {
+        clearHighlights();
+        const axis = face === 0 ? "yp" : face === 1 ? "yn" : face === 2 ? "xp" : face === 3 ? "xn" : face === 4 ? "zp" : "zn";
+        for (const mesh of meshesOn(face)) {
+            glow(mesh, 0x5a3d12, 1.05);
+            mesh.material[AXIS[axis]].emissive.setHex(0xc4a574);
+        }
+    }
+
+    function highlightCubie(x, y, z) {
+        clearHighlights();
+        const mesh = meshes.get(`${x},${y},${z}`);
+        if (!mesh) return;
+        glow(mesh, 0x3d3118, 1.04);
+    }
+
+    function highlightRuleB(facelets, up, front) {
+        clearHighlights();
+        const probe = meshes.get("1,1,1");
+        if (probe) glow(probe, 0x3d3118, 1.03);
+        const upAt = centerOf(facelets, up);
+        const frontAt = centerOf(facelets, front);
+        if (upAt) {
+            const mesh = meshes.get(upAt.join(","));
+            if (mesh) glow(mesh, 0xc4a574, 1.14);
+        }
+        if (frontAt) {
+            const mesh = meshes.get(frontAt.join(","));
+            if (mesh) glow(mesh, 0xe6c48a, 1.14);
+        }
     }
 
     function meshesOn(face) {
@@ -173,5 +221,5 @@ export function mountCube(canvas) {
         renderer.dispose();
     }
 
-    return { paint, animateMove, animateReorient, dispose };
+    return { paint, animateMove, animateReorient, highlightLayer, highlightCubie, highlightRuleB, clearHighlights, dispose };
 }

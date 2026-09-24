@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../shared/tokens.css">
   <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="../shared/step.css">
   <link rel="stylesheet" href="./style.css">
   <script src="./vendor/cube.js"></script>
   <script src="./vendor/solve.js"></script>
@@ -37,10 +38,24 @@
         <h1>Scramble</h1>
       </header>
       <canvas></canvas>
+      <div class="teach" id="teach" hidden>
+        <div id="tape" class="tape" aria-label="Message tape"></div>
+        <article class="teach-card" id="teach-card"></article>
+        <div class="transport" id="transport">
+          <button type="button" data-jump="round-back" title="Previous symbol">«</button>
+          <button type="button" data-jump="stage-back" title="Previous stage">‹</button>
+          <button type="button" data-jump="back">Back</button>
+          <span class="pos" id="teach-pos">—</span>
+          <button type="button" data-jump="fwd">Forward</button>
+          <button type="button" data-jump="stage-fwd" title="Next stage">›</button>
+          <button type="button" data-jump="round-fwd" title="Next symbol">»</button>
+        </div>
+      </div>
     </section>
     <aside class="panel">
       <div class="row">
         <button id="play" class="primary" type="button">Play</button>
+        <button id="step-through" type="button">Step through</button>
         <button id="step" type="button">Step</button>
         <button id="reset" type="button">Reset</button>
         <button id="digest-btn" type="button">Digest</button>
@@ -57,6 +72,7 @@
         <button type="button" data-encoding="hex">hex</button>
       </div>
       <textarea id="message" rows="6" spellcheck="false" placeholder="hello"></textarea>
+      <div id="outline" class="outline" hidden></div>
       <p class="fine">A message scrambles a solved cube. The seated pose is the digest. This is a toy.</p>
     </aside>
   </div>

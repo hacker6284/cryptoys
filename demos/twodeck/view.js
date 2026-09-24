@@ -3,6 +3,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import {
     CARD_D,
     CARD_W,
+    COL_PITCH,
     KEY_X,
     MESSAGE_X,
     ROW_PITCH,
@@ -374,6 +375,28 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         marker.material.opacity = 0;
     }
 
+    // Inverse settle: lift C off the key pile and return it to the hand.
+    // Cut/rotate undo is still posed from the post-step piles, not a reverse of pass().
+    async function unpass(step, ms) {
+        const controller = key[step.card];
+        faceUp(controller);
+        await moveTo(controller, new THREE.Vector3(0, 1.1, 0), ms, false);
+        const handIds = step.hand.slice();
+        const keyIds = step.key.slice();
+        await Promise.all([
+            ...handIds.map((id, index) => {
+                if (id !== step.card) faceDown(key[id]);
+                return moveTo(key[id], passPile("hand", index, handIds.length), ms, id === step.card);
+            }),
+            ...keyIds.map((id, index) => {
+                faceDown(key[id]);
+                return moveTo(key[id], passPile("key", index, keyIds.length), ms, false);
+            }),
+        ]);
+        faceUp(controller);
+        marker.material.opacity = 0;
+    }
+
     function laidOut(order, deck, centerX) {
         if (order.length !== 52) throw new Error("Each deck on the table is 52 cards.");
         const seen = new Set(order);
@@ -395,6 +418,284 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         laidOut(nextKey, key, KEY_X);
         const gap = measure().between;
         if (!(gap > 0)) throw new Error("The two decks overlap on the table.");
+    }
+
+    function poseOf(mesh) {
+        return { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z, rx: mesh.rotation.x, ry: mesh.rotation.y, rz: mesh.rotation.z };
+    }
+
+    function applyPose(mesh, pose) {
+        mesh.position.set(pose.x, pose.y, pose.z);
+        mesh.rotation.set(pose.rx, pose.ry, pose.rz);
+    }
+
+    function snapshot() {
+        return {
+            message: message.map(poseOf),
+            key: key.map(poseOf),
+            grid: grid.map((row) => row.map((mesh) => (mesh ? message.indexOf(mesh) : -1))),
+            packet: packet.map((mesh) => message.indexOf(mesh)),
+            marker: { x: marker.position.x, y: marker.position.y, z: marker.position.z, opacity: marker.material.opacity, color: marker.material.color.getHex() },
+        };
+    }
+
+    function restore(snap) {
+        generation += 1;
+        snap.message.forEach((pose, id) => applyPose(message[id], pose));
+        snap.key.forEach((pose, id) => applyPose(key[id], pose));
+        for (let r = 0; r < 4; r++) {
+            for (let c = 0; c < 13; c++) {
+                const id = snap.grid[r][c];
+                grid[r][c] = id < 0 ? null : message[id];
+            }
+        }
+        packet = snap.packet.map((id) => message[id]);
+        marker.position.set(snap.marker.x, snap.marker.y, snap.marker.z);
+        marker.material.opacity = snap.marker.opacity;
+        marker.material.color.setHex(snap.marker.color);
+        clearHighlights();
+    }
+
+    function slideRowInstant(row, amount) {
+        if (amount % 13 === 0) return;
+        const next = Array(13).fill(null);
+        for (let c = 0; c < 13; c++) {
+            const mesh = grid[row][c];
+            if (!mesh) continue;
+            const dest = (c - amount + 130) % 13;
+            next[dest] = mesh;
+            mesh.position.copy(gridPos(row, dest, MESSAGE_X));
+        }
+        grid[row] = next;
+    }
+
+    function beltColumnInstant(col, amount) {
+        if (amount % 4 === 0) return;
+        const next = [null, null, null, null];
+        for (let r = 0; r < 4; r++) {
+            const mesh = grid[r][col];
+            if (!mesh) continue;
+            const dest = ((r + amount) % 4 + 4) % 4;
+            next[dest] = mesh;
+            mesh.position.copy(gridPos(dest, col, MESSAGE_X));
+        }
+        for (let r = 0; r < 4; r++) grid[r][col] = next[r];
+    }
+
+    function scoopInstant(major) {
+        const sequence = [];
+        if (major === "col") {
+            for (let c = 0; c < 13; c++) for (let r = 0; r < 4; r++) sequence.push(grid[r][c]);
+        } else {
+            for (let r = 0; r < 4; r++) for (let c = 0; c < 13; c++) sequence.push(grid[r][c]);
+        }
+        clearGrid();
+        packet = [];
+        sequence.forEach((mesh, index) => {
+            if (!mesh) return;
+            packet.push(mesh);
+            mesh.position.copy(pilePos("hand", index, 52));
+        });
+    }
+
+    function applyInstant(step) {
+        if (step.kind === "reset") {
+            step.key.forEach((id, index) => {
+                faceUp(key[id]);
+                key[id].position.copy(gridPos(Math.floor(index / 13), index % 13, KEY_X));
+            });
+            return;
+        }
+        if (step.kind === "pass" || step.kind === "unpass") {
+            const handIds = step.hand.slice();
+            const keyIds = step.key.slice();
+            const onHand = step.kind === "unpass";
+            handIds.forEach((id, index) => {
+                if (onHand && id === step.card) faceUp(key[id]);
+                else faceDown(key[id]);
+                key[id].position.copy(passPile("hand", index, handIds.length));
+            });
+            keyIds.forEach((id, index) => {
+                if (!onHand && id === step.card) faceUp(key[id]);
+                else faceDown(key[id]);
+                key[id].position.copy(passPile("key", index, keyIds.length));
+            });
+            faceUp(key[step.card]);
+            marker.material.opacity = 0;
+            return;
+        }
+        if (step.kind === "counter") {
+            step.message.forEach((id, index) => {
+                faceUp(message[id]);
+                const row = Math.floor(index / 13);
+                const col = index % 13;
+                message[id].position.copy(gridPos(row, col, MESSAGE_X));
+                if (index >= 39) message[id].position.y = 0.55;
+            });
+            return;
+        }
+        if (step.kind === "deal" || step.kind === "dealrm") {
+            const major = step.kind === "deal" ? "col" : "row";
+            clearGrid();
+            packet = step.message.map((id) => message[id]);
+            step.message.forEach((id, index) => {
+                faceUp(message[id]);
+                const row = major === "row" ? Math.floor(index / 13) : index % 4;
+                const col = major === "row" ? index % 13 : Math.floor(index / 4);
+                grid[row][col] = message[id];
+                message[id].position.copy(gridPos(row, col, MESSAGE_X));
+            });
+            return;
+        }
+        if (step.kind === "sumrow" || step.kind === "shift") {
+            slideRowInstant(step.row, step.amount);
+            return;
+        }
+        if (step.kind === "sumcol") {
+            beltColumnInstant(step.col, step.amount);
+            return;
+        }
+        if (step.kind === "scoopcm") {
+            scoopInstant("col");
+            return;
+        }
+        if (step.kind === "scooprm") {
+            scoopInstant("row");
+            return;
+        }
+        if (step.kind === "mark") {
+            clearGrid();
+            marker.material.opacity = 0.9;
+            marker.material.color.setHex(0xf2d48a);
+            marker.position.copy(gridPos(2, 0, MESSAGE_X));
+            marker.position.y = 0.02;
+            return;
+        }
+        if (step.kind === "scan") {
+            marker.material.opacity = 0.85;
+            marker.material.color.setHex(0xf2d48a);
+            marker.position.copy(gridPos(step.row, 6, MESSAGE_X));
+            marker.position.y = 0.02;
+            return;
+        }
+        if (step.kind === "place") {
+            const mesh = message[step.card];
+            faceUp(mesh);
+            mesh.position.copy(gridPos(step.row, step.col, MESSAGE_X));
+            grid[step.row][step.col] = mesh;
+            marker.material.opacity = step.flag === 1 ? 0.55 : 0;
+            if (step.flag === 1) marker.position.copy(gridPos(step.row, step.col, MESSAGE_X));
+            return;
+        }
+        if (step.kind === "take") {
+            const mesh = message[step.card];
+            faceUp(mesh);
+            if (grid[step.row][step.col] === mesh) grid[step.row][step.col] = null;
+            mesh.position.copy(pilePos("hand", step.amount, 52));
+            return;
+        }
+        if (step.kind === "compose") {
+            step.key.forEach((id, index) => {
+                faceUp(key[id]);
+                key[id].position.copy(rowPos("key", index));
+            });
+            for (let j = 0; j < 52; j++) {
+                const seat = step.key.indexOf(j);
+                const card = step.message[seat];
+                faceUp(message[card]);
+                message[card].position.copy(rowPos("out", j));
+            }
+            return;
+        }
+        if (step.kind === "uncompose") {
+            step.key.forEach((id, index) => {
+                faceUp(key[id]);
+                key[id].position.copy(rowPos("key", index));
+            });
+            for (let j = 0; j < 52; j++) {
+                const seat = step.key.indexOf(j);
+                const card = step.message[j];
+                faceUp(message[card]);
+                message[card].position.copy(rowPos("out", seat));
+            }
+        }
+    }
+
+    const hilites = [];
+    function makeHilite() {
+        const mesh = new THREE.Mesh(
+            new THREE.BoxGeometry(1, 0.02, 1),
+            new THREE.MeshBasicMaterial({ color: 0xc4a574, transparent: true, opacity: 0, depthWrite: false }),
+        );
+        mesh.position.y = 0.03;
+        scene.add(mesh);
+        hilites.push(mesh);
+        return mesh;
+    }
+    const rowHilite = makeHilite();
+    const colHilite = makeHilite();
+    const seatHilite = makeHilite();
+    const fromHilite = makeHilite();
+
+    function clearHighlights() {
+        for (const mesh of hilites) mesh.material.opacity = 0;
+        marker.material.opacity = Math.min(marker.material.opacity, 0.9);
+    }
+
+    function highlightRow(row, color) {
+        clearHighlights();
+        rowHilite.scale.set(13 * COL_PITCH, 1, CARD_D + 0.08);
+        const at = gridPos(row, 6, MESSAGE_X);
+        rowHilite.position.set(at.x, 0.015, at.z);
+        rowHilite.material.color.setHex(color || 0xc4a574);
+        rowHilite.material.opacity = 0.45;
+    }
+
+    function highlightCol(col, color) {
+        clearHighlights();
+        colHilite.scale.set(CARD_W + 0.08, 1, 4 * ROW_PITCH);
+        const at = gridPos(1.5, col, MESSAGE_X);
+        colHilite.position.set(at.x, 0.015, at.z);
+        colHilite.material.color.setHex(color || 0xc4a574);
+        colHilite.material.opacity = 0.45;
+    }
+
+    function highlightSeat(row, col, color, which) {
+        const mesh = which === "from" ? fromHilite : seatHilite;
+        mesh.scale.set(CARD_W + 0.12, 1, CARD_D + 0.12);
+        const at = gridPos(row, col, MESSAGE_X);
+        mesh.position.set(at.x, 0.02, at.z);
+        mesh.material.color.setHex(color || 0xc4a574);
+        mesh.material.opacity = which === "from" ? 0.22 : 0.4;
+    }
+
+    function highlightCard(id, deckName, color) {
+        const mesh = deckName === "key" ? key[id] : message[id];
+        if (!mesh) return;
+        seatHilite.scale.set(CARD_W + 0.14, 1, CARD_D + 0.14);
+        seatHilite.position.set(mesh.position.x, 0.04, mesh.position.z);
+        seatHilite.material.color.setHex(color || 0xc4a574);
+        seatHilite.material.opacity = 0.45;
+    }
+
+    function rowRanks(row) {
+        const ranks = [];
+        for (let c = 0; c < 13; c++) {
+            const mesh = grid[row][c];
+            if (!mesh) continue;
+            ranks.push((message.indexOf(mesh) % 13) + 1);
+        }
+        return ranks;
+    }
+
+    function colRanks(col) {
+        const ranks = [];
+        for (let r = 0; r < 4; r++) {
+            const mesh = grid[r][col];
+            if (!mesh) continue;
+            ranks.push((message.indexOf(mesh) % 13) + 1);
+        }
+        return ranks;
     }
 
     function measure() {
@@ -422,6 +723,10 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         }
         if (step.kind === "pass") {
             await pass(step, ms);
+            return;
+        }
+        if (step.kind === "unpass") {
+            await unpass(step, ms);
             return;
         }
         if (step.kind === "counter") {
@@ -488,32 +793,21 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         }
     }
 
-    function frameTable() {
-        const dir = new THREE.Vector3(0, 1.25, 1).normalize();
-        const points = [];
-        for (const center of [MESSAGE_X, KEY_X]) {
-            for (const col of [0, 12]) {
-                for (const row of [0, 3]) {
-                    const at = gridPos(row, col, center);
-                    for (const sx of [-1, 1]) {
-                        for (const sz of [-1, 1]) {
-                            points.push(at.clone().add(new THREE.Vector3(sx * CARD_W / 2, 0, sz * CARD_D / 2)));
-                        }
-                    }
-                }
-            }
-        }
-        let lo = 4;
+    function framePoints(points, target, yTop) {
+        const dir = new THREE.Vector3(0, 1.35, 1).normalize();
+        const look = target || new THREE.Vector3(0, 0, 0);
+        const top = yTop ?? 0.78;
+        let lo = 3;
         let hi = 140;
         let best = hi;
         for (let i = 0; i < 28; i++) {
             const dist = (lo + hi) / 2;
-            camera.position.copy(dir).multiplyScalar(dist);
-            camera.lookAt(0, 0, 0);
+            camera.position.copy(look).add(dir.clone().multiplyScalar(dist));
+            camera.lookAt(look);
             camera.updateMatrixWorld(true);
             const inside = points.every((point) => {
                 const ndc = point.clone().project(camera);
-                return ndc.z < 1 && Math.abs(ndc.x) < 0.92 && Math.abs(ndc.y) < 0.78;
+                return ndc.z < 1 && Math.abs(ndc.x) < 0.9 && ndc.y < top && ndc.y > -0.7;
             });
             if (inside) {
                 best = dist;
@@ -522,11 +816,53 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
                 lo = dist;
             }
         }
-        camera.position.copy(dir).multiplyScalar(best);
-        camera.lookAt(0, 0, 0);
+        camera.position.copy(look).add(dir.clone().multiplyScalar(best));
+        camera.lookAt(look);
         camera.updateMatrixWorld(true);
-        controls.target.set(0, 0, 0);
+        controls.target.copy(look);
         controls.update();
+    }
+
+    function gridPoints(centerX) {
+        const points = [];
+        for (const col of [0, 12]) {
+            for (const row of [0, 3]) {
+                const at = gridPos(row, col, centerX);
+                for (const sx of [-1, 1]) {
+                    for (const sz of [-1, 1]) {
+                        points.push(at.clone().add(new THREE.Vector3(sx * CARD_W / 2, 0, sz * CARD_D / 2)));
+                    }
+                }
+            }
+        }
+        return points;
+    }
+
+    function frameTable() {
+        follow = true;
+        framePoints(gridPoints(MESSAGE_X).concat(gridPoints(KEY_X)), new THREE.Vector3(0, 0, 0), 0.78);
+    }
+
+    function frameTeach(kind) {
+        follow = false;
+        if (kind === "pass" || kind === "unpass" || kind === "reset") {
+            const points = [
+                new THREE.Vector3(PASS_HAND_X - 1.2, 0, PASS_Z - 0.8),
+                new THREE.Vector3(PASS_KEY_X + 1.2, 0, PASS_Z + 0.8),
+                ...gridPoints(KEY_X),
+            ];
+            framePoints(points, new THREE.Vector3(KEY_X, 0, PASS_Z * 0.35), 0.42);
+            return;
+        }
+        if (kind === "compose" || kind === "uncompose") {
+            const points = [
+                new THREE.Vector3(-6, 0, -3.6),
+                new THREE.Vector3(6, 0, 3.6),
+            ];
+            framePoints(points, new THREE.Vector3(0, 0, 0), 0.42);
+            return;
+        }
+        framePoints(gridPoints(MESSAGE_X), new THREE.Vector3(MESSAGE_X, 0, 0), 0.42);
     }
 
     let frame = 0;
@@ -560,5 +896,22 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         renderer.dispose();
     }
 
-    return { showDecks, play, measure, dispose };
+    return {
+        showDecks,
+        play,
+        measure,
+        snapshot,
+        restore,
+        applyInstant,
+        frameTeach,
+        frameTable,
+        highlightRow,
+        highlightCol,
+        highlightSeat,
+        highlightCard,
+        clearHighlights,
+        rowRanks,
+        colRanks,
+        dispose,
+    };
 }

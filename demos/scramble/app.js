@@ -1,6 +1,15 @@
 import { scramble_v1, scramble_v2, update, evaluate, solved_facelets } from "./generated/scramble.mjs";
 import { mountCube } from "./view.js";
-import { SOLVED_FACELETS, applyMove, isSolved, shortSolve, toCubejs, flipU } from "./cube.js";
+import { SOLVED_FACELETS, applyMove, isSolved, shortSolve, toCubejs, flipU, parseMove } from "./cube.js";
+import {
+    bindTeachKeys,
+    colorName,
+    headingId,
+    nextGroup,
+    renderOutline,
+    setDisabled,
+    stampHeadingIds,
+} from "../shared/teach.js";
 
 const canvas = document.querySelector("canvas");
 const input = document.querySelector("#message");
@@ -10,12 +19,24 @@ const errorEl = document.querySelector("#error");
 const specDialog = document.querySelector("#spec");
 const specBody = document.querySelector("#spec-body");
 const speed = document.querySelector("#speed");
+const teachEl = document.querySelector("#teach");
+const tapeEl = document.querySelector("#tape");
+const teachCard = document.querySelector("#teach-card");
+const teachPos = document.querySelector("#teach-pos");
+const outlineEl = document.querySelector("#outline");
 
 const view = mountCube(canvas);
 const solved = solved_facelets();
 if (solved !== SOLVED_FACELETS) {
     throw new Error("The demo cube and the reference cube disagree on the solved pose.");
 }
+
+const V2_TURNS = {
+    0: "U R", 1: "U F", 2: "U L", 3: "U B",
+    4: "D R", 5: "D F", 6: "R U", 7: "R D",
+    8: "F U", 9: "F D", A: "B U", B: "F R",
+    C: "L U", D: "F L", E: "R F", F: "R B",
+};
 
 let version = 2;
 let encoding = "text";
@@ -24,8 +45,11 @@ let facelets = solved;
 let cursor = -1;
 let playing = false;
 let solving = false;
+let busy = false;
+let teaching = false;
 let job = 0;
 let solverReady = false;
+let messageBytes = [];
 
 function bytesOf(text) {
     if (encoding === "hex") {
@@ -52,14 +76,27 @@ function symbolWord(step) {
         .join("");
 }
 
-function caption() {
-    if (cursor < 0) return "Solved start · white up, green front, red right";
-    const step = trace[cursor];
+function viewedIndex() {
+    return teaching ? cursor + 1 : cursor;
+}
+
+function captionFor(step) {
+    if (!step) return "Solved start · white up, green front, red right";
     if (step.kind === "ruleB") return `Rule B · ${step.up} up, ${step.front} front`;
     if (step.kind === "closer") return `Closer · ${step.move}`;
     if (step.kind === "canonicalize") return "Seat white up, green front";
     if (version === 2) return `Symbol ${step.block + 1} · ${step.nybble} → ${symbolWord(step)} · ${step.move}`;
     return `Block ${step.block + 1} · ${step.nybble} → ${step.move}`;
+}
+
+function caption() {
+    if (teaching && viewedIndex() >= trace.length && trace.length) {
+        return digestEl.textContent ? `Digest · ${digestEl.textContent}` : "The seated pose is the digest.";
+    }
+    const step = teaching
+        ? (viewedIndex() < trace.length ? trace[viewedIndex()] : null)
+        : (cursor < 0 ? null : trace[cursor]);
+    return captionFor(step);
 }
 
 function showStatus(text) {
@@ -71,26 +108,254 @@ function showFace(next) {
     view.paint(next);
 }
 
+function messageNybbleCount() {
+    return messageBytes.length * 2;
+}
+
+function tapeCells() {
+    const seen = new Map();
+    for (const step of trace) {
+        if (step.kind === "move" && step.nybble) seen.set(step.block, step.nybble);
+    }
+    const msg = messageNybbleCount();
+    return [...seen.entries()].sort((a, b) => a[0] - b[0]).map(([block, nybble]) => ({
+        block,
+        nybble,
+        padding: block >= msg,
+        marker: block === msg && nybble === "8",
+    }));
+}
+
+function renderTape(activeBlock) {
+    tapeEl.replaceChildren();
+    for (const cell of tapeCells()) {
+        const el = document.createElement("span");
+        el.className = "tape-cell";
+        if (cell.padding) el.classList.add("pad");
+        if (cell.marker) el.classList.add("marker");
+        if (cell.block === activeBlock) el.classList.add("on");
+        el.textContent = cell.nybble;
+        el.title = cell.marker ? "padding marker 8" : cell.padding ? "padding" : "message";
+        tapeEl.append(el);
+    }
+}
+
+function stageKey(step) {
+    if (step.kind === "move") return `move:${step.block}:${step.index}`;
+    if (step.kind === "ruleB") return `ruleB:${step.block}`;
+    return step.kind + (step.move || "");
+}
+
+function roundKey(step) {
+    if (step.kind === "move" || step.kind === "ruleB") return `sym:${step.block}`;
+    return step.kind === "closer" ? "closer" : "seat";
+}
+
+function outlineSections() {
+    const msg = messageNybbleCount();
+    const sections = [];
+    const byRound = new Map();
+    trace.forEach((step, index) => {
+        let title;
+        if (step.kind === "move" || step.kind === "ruleB") {
+            const pad = step.block >= msg;
+            title = pad
+                ? (step.block === msg && (step.nybble === "8" || !step.nybble) ? "Padding · marker 8" : `Padding · nybble ${step.block + 1}`)
+                : version === 2 ? `Symbol ${step.block + 1}` : `Block ${step.block + 1}`;
+        } else if (step.kind === "closer") title = "Closer";
+        else title = "Seat";
+        if (!byRound.has(title)) byRound.set(title, []);
+        const label = step.kind === "move"
+            ? `Turn ${step.index + 1} · ${step.move}`
+            : step.kind === "ruleB" ? "Rule B"
+            : step.kind === "closer" ? step.move
+            : "Seat W up, G front";
+        byRound.get(title).push({ key: String(index), label, index });
+    });
+    const openAt = viewedIndex();
+    for (const [title, items] of byRound) {
+        sections.push({ title, items, open: items.some((item) => item.index === openAt) });
+    }
+    return sections;
+}
+
+function annotate(step, index) {
+    const n = trace.length;
+    if (!step && n && index >= n) {
+        return {
+            kicker: `done · ${n} steps`,
+            title: "Seated digest",
+            math: digestEl.textContent || "The seated pose is the digest.",
+            why: "The seated pose is the digest.",
+            spec: "Closer and seat",
+        };
+    }
+    const pos = !step || index < 0 ? `start · ${n} steps` : `step ${index + 1} of ${n}`;
+    if (!step || index < 0) {
+        return {
+            kicker: pos,
+            title: "Solved start",
+            math: "White up, green front, red right.",
+            why: "Step through walks the padded tape one turn at a time.",
+            spec: version === 2 ? "scramble_v2" : "scramble_v1",
+        };
+    }
+    const pad = (step.kind === "move" || step.kind === "ruleB") && step.block >= messageNybbleCount();
+    if (step.kind === "move") {
+        const pair = version === 2 ? V2_TURNS[step.nybble] : step.move;
+        return {
+            kicker: pos + (pad ? " · padding" : ` · symbol ${step.block + 1}`),
+            title: pad && step.nybble === "8" ? "Padding marker" : `Turn ${step.move}`,
+            math: version === 2
+                ? `Nybble ${step.nybble} → ${pair}. This is turn ${step.index + 1} of 2.`
+                : `Nybble ${step.nybble} → ${step.move}.`,
+            why: pad
+                ? (version === 2
+                    ? (step.nybble === "8"
+                        ? "Evaluate appends marker nybble 8, then the cycle 6 0 7 1 until the tape is at least 12 nybbles."
+                        : "Padding filler from the cycle 6 0 7 1 (not message). Tape must reach at least 12 nybbles.")
+                    : (step.nybble === "8"
+                        ? "Evaluate appends marker nybble 8, then n = (8 − len mod 8) mod 8 of 6 0 7 1 8 2 9 3, then that octet until the tape is at least 24 nybbles."
+                        : "Padding filler from the cycle 6 0 7 1 8 2 9 3 (not message). Tape must reach at least 24 nybbles."))
+                : (version === 2
+                    ? "Each nybble is two clockwise quarter turns, then Rule B."
+                    : "Each nybble is one clockwise quarter turn. A block is 8 nybbles, then Rule B."),
+            spec: version === 2 ? "scramble_v2" : "scramble_v1",
+        };
+    }
+    if (step.kind === "ruleB") {
+        return {
+            kicker: pos,
+            title: "Rule B",
+            math: `Cubie (1,1,1) reads ${colorName(step.up)} up, ${colorName(step.front)} front.`,
+            why: "Whole-cube rotation: seat the face center of that up color on Up (+Y) and the face center of that front color on Front (+Z).",
+            spec: "Rule B",
+        };
+    }
+    if (step.kind === "closer") {
+        return {
+            kicker: pos,
+            title: `Closer · ${step.move}`,
+            math: step.move === "F2" ? "Half turn of the front face." : "Half turn of the back face.",
+            why: "After the padded tape: F2, then B2, then the seat.",
+            spec: "Closer and seat",
+        };
+    }
+    return {
+        kicker: pos,
+        title: "Seat",
+        math: "Same rotation as Rule B, with up = W and front = G.",
+        why: "The seated pose is the digest.",
+        spec: "Closer and seat",
+    };
+}
+
+function renderCard(note) {
+    teachCard.replaceChildren();
+    const kicker = document.createElement("p");
+    kicker.className = "kicker";
+    kicker.textContent = note.kicker;
+    const title = document.createElement("h2");
+    title.textContent = note.title;
+    const math = document.createElement("p");
+    math.className = "math";
+    math.textContent = note.math;
+    const why = document.createElement("p");
+    why.className = "why";
+    why.textContent = note.why;
+    const spec = document.createElement("button");
+    spec.type = "button";
+    spec.className = "inline-link";
+    spec.textContent = `SPEC · ${note.spec}`;
+    spec.addEventListener("click", () => {
+        openSpec(note.spec).catch((err) => {
+            errorEl.textContent = err.message;
+        });
+    });
+    teachCard.append(kicker, title, math, why, spec);
+}
+
+function applyHighlight(step) {
+    if (!step) {
+        view.clearHighlights();
+        return;
+    }
+    if (step.kind === "move" || step.kind === "closer") view.highlightLayer(parseMove(step.move).face);
+    else if (step.kind === "ruleB") view.highlightRuleB(facelets, step.up, step.front);
+    else if (step.kind === "canonicalize") view.highlightRuleB(facelets, "W", "G");
+    else view.clearHighlights();
+}
+
+function refreshTeach() {
+    const viewI = viewedIndex();
+    const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
+    const activeBlock = step && (step.kind === "move" || step.kind === "ruleB") ? step.block : -1;
+    renderTape(activeBlock);
+    renderCard(annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1)));
+    teachPos.textContent = step
+        ? `${viewI + 1} / ${trace.length}`
+        : (viewI >= trace.length && trace.length ? `${trace.length} / ${trace.length}` : `0 / ${trace.length}`);
+    renderOutline(outlineEl, outlineSections(), step ? String(viewI) : "", (index) => {
+        void jumpTo(index - 1, false);
+    });
+    const atStart = cursor < 0;
+    const atEnd = cursor >= trace.length - 1;
+    document.querySelectorAll("[data-jump]").forEach((button) => {
+        const jump = button.dataset.jump;
+        setDisabled(button, (jump === "back" || jump === "stage-back" || jump === "round-back") ? atStart : atEnd);
+    });
+}
+
+function setTeaching(on) {
+    teaching = on;
+    teachEl.hidden = !on;
+    outlineEl.hidden = !on;
+    if (!on) view.clearHighlights();
+}
+
+function showPaused() {
+    if (teaching) {
+        const viewI = viewedIndex();
+        if (viewI >= 0 && viewI < trace.length) {
+            showFace(viewI === 0 ? solved : trace[viewI - 1].facelets);
+            applyHighlight(trace[viewI]);
+        } else if (trace.length) {
+            showFace(trace[trace.length - 1].facelets);
+            applyHighlight(null);
+        } else {
+            showFace(solved);
+            applyHighlight(null);
+        }
+        showStatus(caption());
+        refreshTeach();
+        return;
+    }
+    if (cursor < 0) showFace(solved);
+    else showFace(trace[cursor].facelets);
+    showStatus(caption());
+}
+
 function recompute() {
     job += 1;
     playing = false;
     solving = false;
+    busy = false;
     errorEl.textContent = "";
-    let bytes;
     try {
-        bytes = bytesOf(input.value);
+        messageBytes = bytesOf(input.value);
     } catch (err) {
         errorEl.textContent = err.message;
         return;
     }
     const state = version === 2 ? scramble_v2() : scramble_v1();
-    update(state, bytes);
+    update(state, messageBytes);
     const result = evaluate(state);
     trace = result.trace;
     digestEl.textContent = digestHex(result.digest);
     cursor = -1;
     showFace(solved);
     showStatus(caption());
+    if (teaching) refreshTeach();
 }
 
 function duration(kind) {
@@ -107,13 +372,17 @@ async function playStep(token) {
     else await view.animateReorient(from, "W", "G", duration(step.kind));
     if (token !== job) return false;
     cursor += 1;
+    if (teaching) {
+        showPaused();
+        return true;
+    }
     showFace(step.facelets);
     showStatus(caption());
     return true;
 }
 
 async function play() {
-    if (playing || solving) return;
+    if (playing || solving || busy) return;
     playing = true;
     const token = job;
     while (playing && token === job && cursor < trace.length - 1) {
@@ -121,6 +390,37 @@ async function play() {
         if (!ok) break;
     }
     playing = false;
+}
+
+async function jumpTo(index, animate) {
+    if (trace.length === 0 || busy) return;
+    const next = Math.max(-1, Math.min(trace.length - 1, index));
+    if (animate && next === cursor + 1) {
+        playing = false;
+        busy = true;
+        const token = job;
+        await playStep(token);
+        busy = false;
+        return;
+    }
+    job += 1;
+    playing = false;
+    cursor = next;
+    showPaused();
+}
+
+async function stepBy(dir) {
+    if (!teaching) enterTeach();
+    if (dir < 0) return jumpTo(cursor - 1, false);
+    return jumpTo(cursor + 1, true);
+}
+
+function enterTeach() {
+    if (trace.length === 0) recompute();
+    setTeaching(true);
+    cursor = -1;
+    playing = false;
+    showPaused();
 }
 
 async function ensureSolver() {
@@ -137,6 +437,7 @@ async function solve() {
     if (solving) return;
     playing = false;
     solving = true;
+    setTeaching(false);
     const token = ++job;
     errorEl.textContent = "";
     try {
@@ -182,6 +483,7 @@ function renderMarkdown(markdown) {
     let i = 0;
     const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     const inline = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    const hid = (title) => ` id="${headingId(title)}"`;
     while (i < lines.length) {
         const line = lines[i];
         if (line.startsWith("```")) {
@@ -210,17 +512,20 @@ function renderMarkdown(markdown) {
             continue;
         }
         if (line.startsWith("### ")) {
-            html += `<h3>${inline(line.slice(4))}</h3>`;
+            const title = line.slice(4);
+            html += `<h3${hid(title)}>${inline(title)}</h3>`;
             i += 1;
             continue;
         }
         if (line.startsWith("## ")) {
-            html += `<h2>${inline(line.slice(3))}</h2>`;
+            const title = line.slice(3);
+            html += `<h2${hid(title)}>${inline(title)}</h2>`;
             i += 1;
             continue;
         }
         if (line.startsWith("# ")) {
-            html += `<h1>${inline(line.slice(2))}</h1>`;
+            const title = line.slice(2);
+            html += `<h1${hid(title)}>${inline(title)}</h1>`;
             i += 1;
             continue;
         }
@@ -251,12 +556,17 @@ function versionSlice(markdown) {
     return common + section;
 }
 
-async function openSpec() {
+async function openSpec(heading) {
     const response = await fetch("./SPEC.md");
     if (!response.ok) throw new Error("The specification file is missing. Run tools/build.sh.");
     const markdown = await response.text();
     specBody.innerHTML = renderMarkdown(versionSlice(markdown));
+    stampHeadingIds(specBody);
     specDialog.showModal();
+    if (heading) {
+        const target = specBody.querySelector("#" + CSS.escape(headingId(heading)));
+        if (target) target.scrollIntoView();
+    }
 }
 
 document.querySelectorAll("[data-version]").forEach((button) => {
@@ -278,16 +588,18 @@ document.querySelectorAll("[data-encoding]").forEach((button) => {
 });
 
 document.querySelector("#play").addEventListener("click", () => void play());
+document.querySelector("#step-through").addEventListener("click", () => enterTeach());
 document.querySelector("#step").addEventListener("click", () => {
-    playing = false;
-    const token = ++job;
-    void playStep(token);
+    if (!teaching) enterTeach();
+    else void stepBy(1);
 });
 document.querySelector("#reset").addEventListener("click", () => {
     job += 1;
     playing = false;
     solving = false;
+    busy = false;
     cursor = -1;
+    setTeaching(false);
     showFace(solved);
     showStatus(caption());
 });
@@ -306,5 +618,44 @@ document.querySelector("#spec-btn").addEventListener("click", () => void openSpe
 document.querySelector("#spec-close").addEventListener("click", () => specDialog.close());
 input.addEventListener("input", () => recompute());
 
+document.querySelectorAll("[data-jump]").forEach((button) => {
+    button.addEventListener("click", () => {
+        const jump = button.dataset.jump;
+        const viewI = Math.max(0, viewedIndex());
+        if (jump === "back") void stepBy(-1);
+        else if (jump === "fwd") void stepBy(1);
+        else if (jump === "stage-back") void jumpTo(nextGroup(trace, viewI, stageKey, -1) - 1, false);
+        else if (jump === "stage-fwd") void jumpTo(nextGroup(trace, viewI, stageKey, 1) - 1, false);
+        else if (jump === "round-back") void jumpTo(nextGroup(trace, viewI, roundKey, -1) - 1, false);
+        else if (jump === "round-fwd") void jumpTo(nextGroup(trace, viewI, roundKey, 1) - 1, false);
+    });
+});
+
+bindTeachKeys({
+    step: (dir) => { if (teaching) void stepBy(dir); },
+    stage: (dir) => {
+        if (!teaching || !trace.length) return;
+        void jumpTo(nextGroup(trace, Math.max(0, viewedIndex()), stageKey, dir) - 1, false);
+    },
+    home: () => { if (teaching) void jumpTo(-1, false); },
+    end: () => { if (teaching && trace.length) void jumpTo(trace.length - 1, false); },
+});
+
 showFace(solved);
 recompute();
+
+Object.assign(window, {
+    __teach: {
+        enter: enterTeach,
+        jumpView: (index) => jumpTo(index - 1, false),
+        steps: () => trace.map((step, index) => ({
+            index,
+            kind: step.kind,
+            nybble: step.nybble,
+            block: step.block,
+            move: step.move,
+            up: step.up,
+            front: step.front,
+        })),
+    },
+});

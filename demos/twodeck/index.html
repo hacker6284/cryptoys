@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../shared/tokens.css">
   <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="../shared/step.css">
   <link rel="stylesheet" href="./style.css">
   <script type="importmap">
     {
@@ -36,6 +37,18 @@
       </header>
       <canvas></canvas>
       <p id="caption" class="caption">Plaintext on the left. Key on the right.</p>
+      <div class="teach" id="teach" hidden>
+        <article class="teach-card" id="teach-card"></article>
+        <div class="transport" id="transport">
+          <button type="button" data-jump="round-back" title="Previous round">«</button>
+          <button type="button" data-jump="stage-back" title="Previous stage">‹</button>
+          <button type="button" data-jump="back">Back</button>
+          <span class="pos" id="teach-pos">—</span>
+          <button type="button" data-jump="fwd">Forward</button>
+          <button type="button" data-jump="stage-fwd" title="Next stage">›</button>
+          <button type="button" data-jump="round-fwd" title="Next round">»</button>
+        </div>
+      </div>
     </section>
     <aside class="panel">
       <p class="note">A block is one deck. Encoding is <button type="button" class="inline-link" data-open-spec>§5.3 of the Spec</button>, outside the cipher.</p>
@@ -47,6 +60,7 @@
       </div>
       <div class="row">
         <button id="start" class="primary" type="button">Start</button>
+        <button id="step-through" type="button">Step through</button>
         <button id="step" type="button">Step</button>
         <button id="stop" type="button">Stop</button>
       </div>
@@ -69,6 +83,7 @@
         <span class="field-head"><label id="output-label" for="output">Ciphertext</label> <button id="copy" type="button">Copy</button></span>
         <textarea id="output" rows="3" spellcheck="false" readonly></textarea>
       </div>
+      <div id="outline" class="outline" hidden></div>
       <p id="error" class="error"></p>
     </aside>
   </div>

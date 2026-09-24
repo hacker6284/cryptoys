@@ -1,6 +1,7 @@
 import { CUBE } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { createCubeRig } from "../scramble/view.js";
+import { lucideSvg } from "../shared/icons.js";
 
 /**
  * Demo adapters — Unify-1 implements Scramble.
@@ -104,15 +105,15 @@ function mountDock() {
         <p id="status" class="status">Solved start · white up, green front, red right</p>
         <p id="error" class="error"></p>
         <div class="row playroom-crypto">
-          <span id="gen-label" class="playroom-hands-label">Gen 2</span>
-          <button type="button" data-version="1">Gen 1</button>
-          <button type="button" class="on" data-version="2">Gen 2</button>
-          <button type="button" class="on" data-encoding="text">text</button>
-          <button type="button" data-encoding="hex">hex</button>
-          <button id="digest-btn" type="button">Digest</button>
-          <button id="solve" type="button">Solve</button>
-          <button id="spec-btn" type="button">Spec</button>
-          <button type="button" class="playroom-info" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">i</button>
+          <span id="gen-label" class="playroom-hands-label" hidden>Gen 2</span>
+          <button type="button" class="text-action" data-version="1">Gen 1</button>
+          <button type="button" class="text-action on" data-version="2">Gen 2</button>
+          <button type="button" class="text-action on" data-encoding="text">text</button>
+          <button type="button" class="text-action" data-encoding="hex">hex</button>
+          <button id="digest-btn" class="text-action" type="button">Digest</button>
+          <button id="solve" class="text-action" type="button">Solve</button>
+          <button id="spec-btn" class="text-action" type="button">Spec</button>
+          <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">${lucideSvg("info", 18)}</button>
         </div>
         <p class="playroom-info-hint" id="teach-hint">Step through to see each turn.</p>
         <div id="teach" class="playroom-note" hidden>
@@ -132,10 +133,13 @@ function mountDock() {
       </div>
       <div class="playroom-anim">
         <div class="row playroom-actions">
-          <button id="play" class="primary" type="button">Play</button>
-          <button id="step-through" type="button">Step through</button>
-          <button id="step" type="button">Step</button>
-          <button id="reset" type="button">Reset</button>
+          <button id="play" class="icon-btn icon-primary" type="button" aria-label="Play" title="Play">
+            <span class="icon-play">${lucideSvg("play")}</span>
+            <span class="icon-pause">${lucideSvg("pause")}</span>
+          </button>
+          <button id="step-through" class="icon-btn" type="button" aria-label="Step through" title="Step through">${lucideSvg("skip-forward")}</button>
+          <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
+          <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
         </div>
         <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
       </div>

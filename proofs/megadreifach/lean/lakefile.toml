@@ -1,0 +1,10 @@
+name = "MegaDreifach"
+version = "0.1.0"
+defaultTargets = ["megadreifach"]
+
+[[lean_lib]]
+name = "MegaDreifach"
+
+[[lean_exe]]
+name = "megadreifach"
+root = "Main"

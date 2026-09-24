@@ -8,6 +8,7 @@ Each primitive is a directory holding a normative specification and one [sudocod
 primitives/hash/scramble/SPEC.md
 primitives/hash/scramble/scramble.sudo
 demos/scramble/
+primitives/hash/megadreifach/SPEC.md
 primitives/cipher/twodeck/SPEC.md
 primitives/cipher/twodeck/twodeck.sudo
 demos/twodeck/
@@ -19,6 +20,10 @@ proofs/
 Scramble is a hash. A message walks a solved cube. The digest is the seated pose, encoded as the cube-group index in 9 bytes. `scramble_v1` is superseded. `scramble_v2` is current.
 
 The specification is `primitives/hash/scramble/SPEC.md`.
+
+## MegaDreifach
+
+MegaDreifach is a toy three-megaminx Merkle–Damgård hash. The product name is locked; the puzzle/group library stays megaminx. Digest is 29 bytes. Length extension on bare Hash is accepted by design. The reference in `primitives/hash/megadreifach/` currently lands the group library plus pad/φ/IV; the abs-G2 compression runner is a follow-up. Correctness Lean is under `proofs/megadreifach/`. A green Lean build is not a security claim.
 
 ## TwoDeck
 
@@ -46,4 +51,4 @@ GitHub Actions builds `sudoc` from [hacker6284/sudocode](https://github.com/hack
 
 ## Proofs
 
-What this library will and will not claim is in `proofs/README.md`. TwoDeck correctness stones are under `proofs/twodeck/`.
+What this library will and will not claim is in `proofs/README.md`. TwoDeck correctness stones are under `proofs/twodeck/`. MegaDreifach correctness stones are under `proofs/megadreifach/`.

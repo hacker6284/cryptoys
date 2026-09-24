@@ -623,7 +623,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         const at = gridPos(row, 6, MESSAGE_X);
         rowHilite.position.set(at.x, 0.015, at.z);
         rowHilite.material.color.setHex(color || 0xc4a574);
-        rowHilite.material.opacity = 0.28;
+        rowHilite.material.opacity = 0.45;
     }
 
     function highlightCol(col, color) {
@@ -632,7 +632,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         const at = gridPos(1.5, col, MESSAGE_X);
         colHilite.position.set(at.x, 0.015, at.z);
         colHilite.material.color.setHex(color || 0xc4a574);
-        colHilite.material.opacity = 0.28;
+        colHilite.material.opacity = 0.45;
     }
 
     function highlightSeat(row, col, color, which) {
@@ -764,32 +764,21 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         }
     }
 
-    function frameTable() {
-        const dir = new THREE.Vector3(0, 1.25, 1).normalize();
-        const points = [];
-        for (const center of [MESSAGE_X, KEY_X]) {
-            for (const col of [0, 12]) {
-                for (const row of [0, 3]) {
-                    const at = gridPos(row, col, center);
-                    for (const sx of [-1, 1]) {
-                        for (const sz of [-1, 1]) {
-                            points.push(at.clone().add(new THREE.Vector3(sx * CARD_W / 2, 0, sz * CARD_D / 2)));
-                        }
-                    }
-                }
-            }
-        }
-        let lo = 4;
+    function framePoints(points, target, yTop) {
+        const dir = new THREE.Vector3(0, 1.35, 1).normalize();
+        const look = target || new THREE.Vector3(0, 0, 0);
+        const top = yTop ?? 0.78;
+        let lo = 3;
         let hi = 140;
         let best = hi;
         for (let i = 0; i < 28; i++) {
             const dist = (lo + hi) / 2;
-            camera.position.copy(dir).multiplyScalar(dist);
-            camera.lookAt(0, 0, 0);
+            camera.position.copy(look).add(dir.clone().multiplyScalar(dist));
+            camera.lookAt(look);
             camera.updateMatrixWorld(true);
             const inside = points.every((point) => {
                 const ndc = point.clone().project(camera);
-                return ndc.z < 1 && Math.abs(ndc.x) < 0.92 && Math.abs(ndc.y) < 0.78;
+                return ndc.z < 1 && Math.abs(ndc.x) < 0.9 && ndc.y < top && ndc.y > -0.55;
             });
             if (inside) {
                 best = dist;
@@ -798,11 +787,53 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
                 lo = dist;
             }
         }
-        camera.position.copy(dir).multiplyScalar(best);
-        camera.lookAt(0, 0, 0);
+        camera.position.copy(look).add(dir.clone().multiplyScalar(best));
+        camera.lookAt(look);
         camera.updateMatrixWorld(true);
-        controls.target.set(0, 0, 0);
+        controls.target.copy(look);
         controls.update();
+    }
+
+    function gridPoints(centerX) {
+        const points = [];
+        for (const col of [0, 12]) {
+            for (const row of [0, 3]) {
+                const at = gridPos(row, col, centerX);
+                for (const sx of [-1, 1]) {
+                    for (const sz of [-1, 1]) {
+                        points.push(at.clone().add(new THREE.Vector3(sx * CARD_W / 2, 0, sz * CARD_D / 2)));
+                    }
+                }
+            }
+        }
+        return points;
+    }
+
+    function frameTable() {
+        follow = true;
+        framePoints(gridPoints(MESSAGE_X).concat(gridPoints(KEY_X)), new THREE.Vector3(0, 0, 0), 0.78);
+    }
+
+    function frameTeach(kind) {
+        follow = false;
+        if (kind === "pass" || kind === "reset") {
+            const points = [
+                new THREE.Vector3(PASS_HAND_X - 1.2, 0, PASS_Z - 0.8),
+                new THREE.Vector3(PASS_KEY_X + 1.2, 0, PASS_Z + 0.8),
+                ...gridPoints(KEY_X),
+            ];
+            framePoints(points, new THREE.Vector3(KEY_X, 0, PASS_Z * 0.35), 0.52);
+            return;
+        }
+        if (kind === "compose" || kind === "uncompose") {
+            const points = [
+                new THREE.Vector3(-6, 0, -3.6),
+                new THREE.Vector3(6, 0, 3.6),
+            ];
+            framePoints(points, new THREE.Vector3(0, 0, 0), 0.52);
+            return;
+        }
+        framePoints(gridPoints(MESSAGE_X), new THREE.Vector3(MESSAGE_X, 0, 0), 0.52);
     }
 
     let frame = 0;
@@ -843,6 +874,8 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         snapshot,
         restore,
         applyInstant,
+        frameTeach,
+        frameTable,
         highlightRow,
         highlightCol,
         highlightSeat,

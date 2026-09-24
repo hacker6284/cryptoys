@@ -134,16 +134,20 @@ export function mountCube(canvas) {
 
     function highlightLayer(face) {
         clearHighlights();
-        for (const mesh of meshesOn(face)) glow(mesh, 0x3d3118, 1.02);
+        const axis = face === 0 ? "yp" : face === 1 ? "yn" : face === 2 ? "xp" : face === 3 ? "xn" : face === 4 ? "zp" : "zn";
+        for (const mesh of meshesOn(face)) {
+            glow(mesh, 0x5a3d12, 1.05);
+            mesh.material[AXIS[axis]].emissive.setHex(0xc4a574);
+        }
     }
 
     function highlightCubie(x, y, z) {
         clearHighlights();
         const mesh = meshes.get(`${x},${y},${z}`);
         if (!mesh) return;
-        glow(mesh, 0x5a4520, 1.08);
-        mesh.material[AXIS.yp].emissive.setHex(0xc4a574);
-        mesh.material[AXIS.zp].emissive.setHex(0xc4a574);
+        glow(mesh, 0x6b4e18, 1.12);
+        mesh.material[AXIS.yp].emissive.setHex(0xe6c48a);
+        mesh.material[AXIS.zp].emissive.setHex(0xe6c48a);
     }
 
     function meshesOn(face) {

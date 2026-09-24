@@ -399,7 +399,10 @@ function setTeaching(on) {
     teaching = on;
     teachEl.hidden = !on;
     outlineEl.hidden = !on;
-    if (!on) view.clearHighlights();
+    if (!on) {
+        view.clearHighlights();
+        view.frameTable();
+    }
 }
 
 function ensureSnaps() {
@@ -423,6 +426,7 @@ function showPaused() {
         const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
         if (step) captionEl.textContent = caption(step);
         applyHighlight(step);
+        view.frameTeach(step ? step.kind : "deal");
         refreshTeach();
         return;
     }

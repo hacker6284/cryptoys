@@ -45,9 +45,42 @@ function disposeObject(object) {
 /**
  * Product model (Zach, 2026-09-24): these demo pages are the only
  * place on the internet to perform the algorithms without writing
- * code. Using the hash is primary. Teach is opt-in (Step through /
- * Step) and must not hide or replace the instrument.
+ * code. Using the hash is primary. Message is the field that always
+ * matters. Teach is opt-in (Step through / Step) and must not hide
+ * or replace the instrument. The always-on tool is an edge strip,
+ * not a floating card.
  */
+function specUrlCandidates() {
+    const fromModule = new URL("../scramble/SPEC.md", import.meta.url).href;
+    const fromPage = new URL("scramble/SPEC.md", document.baseURI).href;
+    return [...new Set([fromModule, fromPage])];
+}
+
+async function resolveSpecUrl() {
+    for (const href of specUrlCandidates()) {
+        try {
+            const response = await fetch(href);
+            if (!response.ok) continue;
+            const text = await response.text();
+            if (!text || /^\s*</.test(text)) continue;
+            return URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
+        } catch {
+            // Preview and local checkouts can miss one candidate; try the next.
+        }
+    }
+    return specUrlCandidates()[0];
+}
+
+function bindInstrumentChrome(root) {
+    const error = root.querySelector("#error");
+    const spec = root.querySelector("#spec");
+    const clearError = () => {
+        if (error) error.textContent = "";
+    };
+    root.querySelector("#reset")?.addEventListener("click", clearError);
+    spec?.addEventListener("close", clearError);
+}
+
 function mountDock() {
     let root = document.querySelector("#scramble-dock");
     if (root) return root;
@@ -57,9 +90,10 @@ function mountDock() {
     root.hidden = true;
     root.innerHTML = `
       <div class="playroom-hands">
-        <p class="playroom-hands-label"><span id="gen-label">Gen 2</span> · scramble</p>
-        <p id="status" class="status">Solved start · white up, green front, red right</p>
+        <label class="playroom-message-label" for="message">Message</label>
+        <textarea id="message" rows="3" spellcheck="false" placeholder="hello">hello</textarea>
         <p id="digest" class="digest"></p>
+        <p id="status" class="status">Solved start · white up, green front, red right</p>
         <p id="error" class="error"></p>
         <div class="row playroom-actions">
           <button id="play" class="primary" type="button">Play</button>
@@ -73,14 +107,13 @@ function mountDock() {
         <div class="row playroom-meta">
           <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
           <div class="row playroom-toggles">
+            <span id="gen-label" class="playroom-hands-label">Gen 2</span>
             <button type="button" data-version="1">Gen 1</button>
             <button type="button" class="on" data-version="2">Gen 2</button>
             <button type="button" class="on" data-encoding="text">text</button>
             <button type="button" data-encoding="hex">hex</button>
           </div>
         </div>
-        <label class="playroom-message-label" for="message">Message</label>
-        <textarea id="message" rows="2" spellcheck="false" placeholder="hello">hello</textarea>
         <div id="outline" class="outline" hidden></div>
       </div>
       <div id="teach" class="playroom-note" hidden>
@@ -104,6 +137,7 @@ function mountDock() {
         <article id="spec-body"></article>
       </dialog>
     `;
+    bindInstrumentChrome(root);
     document.body.append(root);
     return root;
 }
@@ -115,6 +149,7 @@ function createScrambleAdapter() {
     let entering = false;
     let sessionMod = null;
     let preloadPromise = null;
+    let specObjectUrl = null;
 
     async function preload() {
         if (sessionMod) return sessionMod;
@@ -153,9 +188,11 @@ function createScrambleAdapter() {
             try {
                 root = mountDock();
                 const { createScrambleSession } = await preload();
+                const specUrl = await resolveSpecUrl();
+                if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
                 session = createScrambleSession({
                     view: rig,
-                    specUrl: new URL("../scramble/SPEC.md", import.meta.url).href,
+                    specUrl,
                     root,
                     exposeTeach: true,
                 });
@@ -170,6 +207,10 @@ function createScrambleAdapter() {
         leave() {
             session?.dispose();
             session = null;
+            if (specObjectUrl) {
+                URL.revokeObjectURL(specObjectUrl);
+                specObjectUrl = null;
+            }
             if (root) {
                 root.classList.remove("on");
                 root.hidden = true;

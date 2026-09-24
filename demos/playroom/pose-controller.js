@@ -29,15 +29,34 @@ function readPose(name) {
 
 export function createPoseController(camera, { duration = TWEEN_MS, onChange } = {}) {
     const look = new THREE.Vector3();
+    const tracked = new THREE.Vector3();
     let current = "landing";
     let tween = null;
 
-    function apply(pose, t = 1, from = null) {
+    function readTrack(track) {
+        if (!track) return null;
+        const value = typeof track === "function" ? track() : track;
+        if (!value) return null;
+        if (value.isVector3) return tracked.copy(value);
+        tracked.set(value.x, value.y, value.z);
+        return tracked;
+    }
+
+    function apply(pose, t = 1, from = null, trackPos = null) {
         if (from && t < 1) {
             const k = easeInOutCubic(t);
             camera.position.lerpVectors(from.position, pose.position, k);
-            look.lerpVectors(from.target, pose.target, k);
             camera.fov = from.fov + (pose.fov - from.fov) * k;
+            if (trackPos) {
+                if (t < 0.72) look.copy(trackPos);
+                else look.lerpVectors(trackPos, pose.target, (t - 0.72) / 0.28);
+            } else {
+                look.lerpVectors(from.target, pose.target, k);
+            }
+        } else if (from && t <= 0 && trackPos) {
+            camera.position.copy(from.position);
+            camera.fov = from.fov;
+            look.copy(trackPos);
         } else {
             camera.position.copy(pose.position);
             look.copy(pose.target);
@@ -81,17 +100,19 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         const resolved = resolvePoseName(name, current);
         const pose = readPose(resolved);
         if (!pose) return current;
-        if (resolved === current && !tween) return current;
-        if (tween && tween.to.name === resolved) {
+        if (resolved === current && !tween && !opts.track) return current;
+        if (tween && tween.to.name === resolved && !opts.track) {
             skip();
             return current;
         }
         if (opts.snap || prefersReducedMotion()) return snap(resolved);
+        const now = performance.now();
         tween = {
             from: capture(),
             to: pose,
-            start: performance.now(),
+            start: now + (opts.delay || 0),
             duration: opts.duration ?? duration,
+            track: opts.track || null,
         };
         emit(current, { tweening: true, next: resolved });
         return current;
@@ -104,8 +125,13 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
 
     function update(now = performance.now()) {
         if (!tween) return current;
+        const trackPos = readTrack(tween.track);
+        if (now < tween.start) {
+            apply(tween.to, 0, tween.from, trackPos);
+            return current;
+        }
         const u = Math.min(1, (now - tween.start) / tween.duration);
-        apply(tween.to, u, tween.from);
+        apply(tween.to, u, tween.from, trackPos);
         if (u >= 1) {
             current = tween.to.name;
             tween = null;

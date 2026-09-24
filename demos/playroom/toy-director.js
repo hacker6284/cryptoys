@@ -1,12 +1,11 @@
-import { FLY_MS } from "./constants.js";
+import { FLY_MS, LIFT_MS } from "./constants.js";
 
 /**
  * Toy director — Unify-1.
  *
- * Shelf holds one of each kind. Scramble borrows the cube, flies it to the
- * round table, and hands off to the adapter. Back reverses. Hover rims the
- * algorithm's shelf toys (and the chest if extras will be needed). Click
- * skips; prefers-reduced-motion snaps in place.
+ * Shelf holds one of each kind. Scramble borrows the cube: lift from the
+ * slot, then arc to the felt. Camera follow is the pose controller's job;
+ * this module only moves toys. Click skips; prefers-reduced-motion snaps.
  *
  * DoubleDeal borrow / chest extras are Unify-2.
  */
@@ -19,6 +18,10 @@ const RECIPES = {
 
 function prefersReducedMotion() {
     return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+}
+
+function easeOutCubic(t) {
+    return 1 - (1 - t) ** 3;
 }
 
 function easeInOutCubic(t) {
@@ -39,20 +42,26 @@ function poseOf(object) {
     };
 }
 
-function midPoint(a, b) {
-    return {
-        x: (a.x + b.x) * 0.5,
-        y: Math.max(a.y, b.y) + 0.32,
-        z: (a.z + b.z) * 0.5,
-    };
+function lerp(a, b, t) {
+    return a + (b - a) * t;
 }
 
-function bezier(a, m, b, t) {
-    const u = 1 - t;
+function samplePath(from, lift, mid, to, t) {
+    const liftEnd = LIFT_MS / FLY_MS;
+    if (t <= liftEnd) {
+        const u = easeOutCubic(t / liftEnd);
+        return {
+            x: lerp(from.x, lift.x, u),
+            y: lerp(from.y, lift.y, u),
+            z: lerp(from.z, lift.z, u),
+        };
+    }
+    const u = easeInOutCubic((t - liftEnd) / (1 - liftEnd));
+    const s = 1 - u;
     return {
-        x: u * u * a.x + 2 * u * t * m.x + t * t * b.x,
-        y: u * u * a.y + 2 * u * t * m.y + t * t * b.y,
-        z: u * u * a.z + 2 * u * t * m.z + t * t * b.z,
+        x: s * s * lift.x + 2 * s * u * mid.x + u * u * to.x,
+        y: s * s * lift.y + 2 * s * u * mid.y + u * u * to.y,
+        z: s * s * lift.z + 2 * s * u * mid.z + u * u * to.z,
     };
 }
 
@@ -63,6 +72,16 @@ export function createToyDirector(world) {
 
     function recipeOf(id) {
         return RECIPES[id] || null;
+    }
+
+    function writeFlightDebug(u, toy) {
+        const root = document.documentElement;
+        root.dataset.flight = Number.isFinite(u) ? String(Math.round(Math.min(1, Math.max(0, u)) * 100)) : "";
+        if (toy) {
+            root.dataset.cubeX = toy.position.x.toFixed(2);
+            root.dataset.cubeY = toy.position.y.toFixed(2);
+            root.dataset.cubeZ = toy.position.z.toFixed(2);
+        }
     }
 
     function highlight(algorithmId) {
@@ -85,45 +104,86 @@ export function createToyDirector(world) {
         highlightId = null;
     }
 
+    function setTravelLight(toy, on) {
+        let light = toy.userData.travelLight;
+        if (!light) {
+            light = world.createTravelLight?.(toy);
+            if (!light) return;
+        }
+        light.intensity = on ? 2.4 : 0;
+    }
+
     function applyFlight(t) {
         if (!flight) return;
-        const k = easeInOutCubic(t);
-        const { toy, from, to, mid } = flight;
-        const p = bezier(from.position, mid, to.position, k);
+        const { toy, from, lift, mid, to } = flight;
+        const p = samplePath(from.position, lift, mid, to.position, t);
         toy.position.set(p.x, p.y, p.z);
         toy.rotation.set(
-            from.rotation.x + (to.rotation.x - from.rotation.x) * k,
-            from.rotation.y + (to.rotation.y - from.rotation.y) * k,
-            from.rotation.z + (to.rotation.z - from.rotation.z) * k,
+            lerp(from.rotation.x, to.rotation.x, t),
+            lerp(from.rotation.y, to.rotation.y, t),
+            lerp(from.rotation.z, to.rotation.z, t),
         );
         toy.quaternion.setFromEuler(toy.rotation);
+        toy.updateMatrixWorld(true);
+        writeFlightDebug(t, toy);
     }
 
     function finishFlight() {
         if (!flight) return;
         applyFlight(1);
+        setTravelLight(flight.toy, false);
+        if (flight.raf) cancelAnimationFrame(flight.raf);
         const done = flight.onDone;
         flight = null;
+        writeFlightDebug(1);
         done?.();
     }
 
     function flyToy(name, to, { snap, duration = FLY_MS } = {}) {
         const toy = world.toys[name];
+        if (!toy) return Promise.resolve();
         const from = poseOf(toy);
+        const dest = clonePose(to);
         if (snap || prefersReducedMotion()) {
-            world.applyPose(toy, to);
+            world.applyPose(toy, dest);
+            toy.updateMatrixWorld(true);
+            writeFlightDebug(1, toy);
             return Promise.resolve();
         }
+        const lift = {
+            x: from.position.x,
+            y: from.position.y + 0.34,
+            z: from.position.z,
+        };
+        const mid = {
+            x: from.position.x * 0.35 + dest.position.x * 0.65,
+            y: Math.max(from.position.y, dest.position.y) + 0.52,
+            z: from.position.z * 0.35 + dest.position.z * 0.65,
+        };
         return new Promise((resolve) => {
+            if (flight?.raf) cancelAnimationFrame(flight.raf);
             flight = {
                 toy,
                 from,
-                to: clonePose(to),
-                mid: midPoint(from.position, to.position),
+                lift,
+                mid,
+                to: dest,
                 start: performance.now(),
                 duration,
                 onDone: resolve,
+                raf: 0,
             };
+            setTravelLight(toy, true);
+            applyFlight(0);
+            const step = () => {
+                if (!flight || flight.onDone !== resolve) return;
+                const now = performance.now();
+                const u = Math.min(1, (now - flight.start) / flight.duration);
+                applyFlight(u);
+                if (u >= 1) finishFlight();
+                else flight.raf = requestAnimationFrame(step);
+            };
+            flight.raf = requestAnimationFrame(step);
         });
     }
 
@@ -133,7 +193,7 @@ export function createToyDirector(world) {
         if (algorithmId !== "scramble") {
             throw new Error("toy director: DoubleDeal borrow is Unify-2");
         }
-        if (occupied === algorithmId) return recipe;
+        if (occupied === algorithmId && !flight) return recipe;
         if (flight) skip();
         clearHighlight();
         occupied = algorithmId;
@@ -151,6 +211,7 @@ export function createToyDirector(world) {
         await flyToy(name, world.getShelfPose(name), { snap });
         world.setSlotEmpty(name, false);
         occupied = null;
+        writeFlightDebug("", world.toys[name]);
     }
 
     function skip() {
@@ -158,11 +219,9 @@ export function createToyDirector(world) {
         finishFlight();
     }
 
-    function update(now = performance.now()) {
-        if (!flight) return;
-        const u = Math.min(1, (now - flight.start) / flight.duration);
-        applyFlight(u);
-        if (u >= 1) finishFlight();
+    function update() {
+        // Flights drive their own rAF so they cannot stall if the render
+        // loop passes a mismatched timestamp. Kept as a no-op hook.
     }
 
     return {
@@ -179,6 +238,9 @@ export function createToyDirector(world) {
         },
         get occupied() {
             return occupied;
+        },
+        get flying() {
+            return flight?.toy ?? null;
         },
     };
 }

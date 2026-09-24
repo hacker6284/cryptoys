@@ -65,20 +65,27 @@ body.playroom {
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
 }
 
-.playroom-menu a {
+.playroom-menu a,
+.playroom-menu .playroom-algo {
   display: block;
+  width: 100%;
   padding: 3px 0;
   margin: 0;
   border: 0;
   border-radius: 0;
   background: none;
   color: color-mix(in srgb, var(--fg) 62%, transparent);
+  text-align: right;
   text-decoration: none;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  font: inherit;
 }
 
 .playroom-menu a:hover,
-.playroom-menu a:focus-visible {
+.playroom-menu a:focus-visible,
+.playroom-menu .playroom-algo:hover,
+.playroom-menu .playroom-algo:focus-visible {
   background: none;
   border: 0;
   color: var(--fg);

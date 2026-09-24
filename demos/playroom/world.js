@@ -624,8 +624,13 @@ export async function mountWorld(canvas) {
 
     function replaceToy(name, next) {
         const prev = toys[name];
-        if (prev && prev.parent) prev.parent.remove(prev);
+        if (prev) {
+            prev.visible = false;
+            if (prev.parent) prev.parent.remove(prev);
+            else scene.remove(prev);
+        }
         toys[name] = next;
+        next.visible = true;
         if (next && !next.parent) scene.add(next);
         return prev;
     }
@@ -648,6 +653,15 @@ export async function mountWorld(canvas) {
             root.userData.rimLight = light;
         }
         light.intensity = on ? (chest ? 1.05 : 3.2) : 0;
+    }
+
+    function createTravelLight(toy) {
+        if (toy.userData.travelLight) return toy.userData.travelLight;
+        const light = new THREE.PointLight(0xffd0a0, 0, 1.4, 2);
+        light.position.set(0.08, 0.1, 0.12);
+        toy.add(light);
+        toy.userData.travelLight = light;
+        return light;
     }
 
     function setHighlight(names, on) {
@@ -708,6 +722,7 @@ export async function mountWorld(canvas) {
         setSlotEmpty,
         replaceToy,
         setHighlight,
+        createTravelLight,
         shelfHome,
         resize,
         render,

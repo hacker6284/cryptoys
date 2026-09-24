@@ -1,5 +1,5 @@
 import { adapters } from "./adapters.js";
-import { FLY_MS } from "./constants.js";
+import { FLY_MS, LIFT_MS } from "./constants.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { createToyDirector } from "./toy-director.js";
@@ -17,6 +17,7 @@ const scrambleLink = menuEl.querySelector("[data-algo='scramble']");
 let activeAlgo = null;
 let leaving = false;
 let starting = false;
+let ignoreSkipUntil = 0;
 
 function writeQuery({ pose, algo }) {
     const url = new URL(location.href);
@@ -39,6 +40,10 @@ function syncOverlays({ name, overlays, tweening }) {
     document.documentElement.dataset.playroomTween = tweening ? "1" : "0";
     const dock = document.querySelector("#scramble-dock");
     if (dock) dock.classList.toggle("on", Boolean(activeAlgo) && !tweening && !leaving);
+}
+
+function trackCube(world) {
+    return () => world.toys.cube.position;
 }
 
 try {
@@ -72,10 +77,19 @@ try {
             tweening: !snap && !poses.prefersReducedMotion(),
         });
         try {
-            const fly = director.borrow("scramble", { snap });
+            const reduced = snap || poses.prefersReducedMotion();
+            ignoreSkipUntil = performance.now() + LIFT_MS;
+            const fly = director.borrow("scramble", { snap: reduced });
             const warm = adapters.scramble.preload();
-            if (snap || poses.prefersReducedMotion()) poses.snap("scramble");
-            else poses.goTo("scramble", { duration: FLY_MS });
+            if (reduced) {
+                poses.snap("scramble");
+            } else {
+                poses.goTo("scramble", {
+                    duration: FLY_MS - LIFT_MS,
+                    delay: LIFT_MS,
+                    track: trackCube(world),
+                });
+            }
             await Promise.all([fly, warm]);
             await adapters.scramble.enter();
             writeQuery({ pose: "seated", algo: "scramble" });
@@ -106,12 +120,18 @@ try {
             return;
         }
         leaving = true;
-        if (director.busy) director.skip();
-        if (poses.busy) poses.skip();
         adapters.scramble.leave();
-        const home = director.home({ snap: poses.prefersReducedMotion() });
-        if (poses.prefersReducedMotion()) poses.snap("landing");
-        else poses.goTo("landing", { duration: FLY_MS });
+        const reduced = poses.prefersReducedMotion();
+        ignoreSkipUntil = performance.now() + LIFT_MS;
+        const home = director.home({ snap: reduced });
+        if (reduced) poses.snap("landing");
+        else {
+            poses.goTo("landing", {
+                duration: FLY_MS - LIFT_MS,
+                delay: LIFT_MS,
+                track: trackCube(world),
+            });
+        }
         await home;
         activeAlgo = null;
         leaving = false;
@@ -156,9 +176,17 @@ try {
     sitBtn.addEventListener("click", () => poses.goTo("seated"));
     backBtn.addEventListener("click", () => void leaveAlgo());
 
+    function shouldSkip(event) {
+        if (performance.now() < ignoreSkipUntil) return false;
+        if (!director.busy && !poses.busy) return false;
+        if (event.target.closest("a[href], button, input, textarea, select, dialog, .playroom-dock, .playroom-menu")) {
+            return false;
+        }
+        return true;
+    }
+
     window.addEventListener("pointerdown", (event) => {
-        if (!director.busy && !poses.busy) return;
-        if (event.target.closest("a[href], button, input, textarea, select, dialog, .playroom-dock, .playroom-menu")) return;
+        if (!shouldSkip(event)) return;
         director.skip();
         poses.skip();
     });
@@ -175,7 +203,7 @@ try {
 
     function tick(now) {
         director.update(now);
-        poses.update(now);
+        poses.update(performance.now());
         world.render();
         requestAnimationFrame(tick);
     }

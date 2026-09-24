@@ -43,7 +43,14 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
     }
 
     function apply(pose, t = 1, from = null, trackPos = null) {
-        if (from && t < 1) {
+        if (from && t <= 0) {
+            // Hold the captured shot. Do not look at the table or the toy
+            // during the delay — that is what made the shelf departure miss
+            // the frame while the camera rushed to seated.
+            camera.position.copy(from.position);
+            camera.fov = from.fov;
+            look.copy(from.target);
+        } else if (from && t < 1) {
             const k = easeInOutCubic(t);
             camera.position.lerpVectors(from.position, pose.position, k);
             camera.fov = from.fov + (pose.fov - from.fov) * k;
@@ -53,10 +60,6 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
             } else {
                 look.lerpVectors(from.target, pose.target, k);
             }
-        } else if (from && t <= 0 && trackPos) {
-            camera.position.copy(from.position);
-            camera.fov = from.fov;
-            look.copy(trackPos);
         } else {
             camera.position.copy(pose.position);
             look.copy(pose.target);
@@ -127,7 +130,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         if (!tween) return current;
         const trackPos = readTrack(tween.track);
         if (now < tween.start) {
-            apply(tween.to, 0, tween.from, trackPos);
+            apply(tween.to, 0, tween.from, null);
             return current;
         }
         const u = Math.min(1, (now - tween.start) / tween.duration);

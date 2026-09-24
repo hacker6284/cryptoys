@@ -1,5 +1,5 @@
 import { adapters } from "./adapters.js";
-import { FLY_MS, LIFT_MS } from "./constants.js";
+import { FLY_MS, HOLD_MS, LIFT_MS } from "./constants.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { createToyDirector } from "./toy-director.js";
@@ -85,8 +85,8 @@ try {
                 poses.snap("scramble");
             } else {
                 poses.goTo("scramble", {
-                    duration: FLY_MS - LIFT_MS,
-                    delay: LIFT_MS,
+                    duration: FLY_MS - HOLD_MS,
+                    delay: HOLD_MS,
                     track: trackCube(world),
                 });
             }
@@ -127,8 +127,8 @@ try {
         if (reduced) poses.snap("landing");
         else {
             poses.goTo("landing", {
-                duration: FLY_MS - LIFT_MS,
-                delay: LIFT_MS,
+                duration: FLY_MS - HOLD_MS,
+                delay: HOLD_MS,
                 track: trackCube(world),
             });
         }
@@ -152,6 +152,7 @@ try {
 
     document.body.classList.add("is-ready");
     document.documentElement.dataset.playroomReady = "1";
+    document.documentElement.dataset.motion = poses.prefersReducedMotion() ? "reduce" : "full";
 
     menuEl.addEventListener("pointerenter", (event) => {
         const item = event.target.closest("[data-algo]");

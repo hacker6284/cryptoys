@@ -24,10 +24,6 @@ function easeOutCubic(t) {
     return 1 - (1 - t) ** 3;
 }
 
-function easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
-}
-
 function clonePose(pose) {
     return {
         position: { ...pose.position },
@@ -56,7 +52,10 @@ function samplePath(from, lift, mid, to, t) {
             z: lerp(from.z, lift.z, u),
         };
     }
-    const u = easeInOutCubic((t - liftEnd) / (1 - liftEnd));
+    // Leave the slot promptly (ease-out). ease-in-out kept the cube on the
+    // shelf for most of the first second, so the landing shot never read
+    // a departure — only a later pop on the felt.
+    const u = easeOutCubic((t - liftEnd) / (1 - liftEnd));
     const s = 1 - u;
     return {
         x: s * s * lift.x + 2 * s * u * mid.x + u * u * to.x,
@@ -132,7 +131,6 @@ export function createToyDirector(world) {
         if (!flight) return;
         applyFlight(1);
         setTravelLight(flight.toy, false);
-        if (flight.raf) cancelAnimationFrame(flight.raf);
         const done = flight.onDone;
         flight = null;
         writeFlightDebug(1);
@@ -152,16 +150,15 @@ export function createToyDirector(world) {
         }
         const lift = {
             x: from.position.x,
-            y: from.position.y + 0.34,
+            y: from.position.y + 0.38,
             z: from.position.z,
         };
         const mid = {
-            x: from.position.x * 0.35 + dest.position.x * 0.65,
-            y: Math.max(from.position.y, dest.position.y) + 0.52,
-            z: from.position.z * 0.35 + dest.position.z * 0.65,
+            x: from.position.x * 0.28 + dest.position.x * 0.72,
+            y: Math.max(from.position.y, dest.position.y) + 0.58,
+            z: from.position.z * 0.28 + dest.position.z * 0.72,
         };
         return new Promise((resolve) => {
-            if (flight?.raf) cancelAnimationFrame(flight.raf);
             flight = {
                 toy,
                 from,
@@ -171,19 +168,9 @@ export function createToyDirector(world) {
                 start: performance.now(),
                 duration,
                 onDone: resolve,
-                raf: 0,
             };
             setTravelLight(toy, true);
             applyFlight(0);
-            const step = () => {
-                if (!flight || flight.onDone !== resolve) return;
-                const now = performance.now();
-                const u = Math.min(1, (now - flight.start) / flight.duration);
-                applyFlight(u);
-                if (u >= 1) finishFlight();
-                else flight.raf = requestAnimationFrame(step);
-            };
-            flight.raf = requestAnimationFrame(step);
         });
     }
 
@@ -220,8 +207,10 @@ export function createToyDirector(world) {
     }
 
     function update() {
-        // Flights drive their own rAF so they cannot stall if the render
-        // loop passes a mismatched timestamp. Kept as a no-op hook.
+        if (!flight) return;
+        const u = Math.min(1, (performance.now() - flight.start) / flight.duration);
+        applyFlight(u);
+        if (u >= 1) finishFlight();
     }
 
     return {

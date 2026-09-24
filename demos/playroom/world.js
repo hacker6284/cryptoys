@@ -523,13 +523,25 @@ export async function mountWorld(canvas) {
 
     function makeSlot(x, y) {
         const group = new THREE.Group();
-        const ring = new THREE.Mesh(
-            new THREE.RingGeometry(0.055, 0.072, 24),
+        const disk = new THREE.Mesh(
+            new THREE.CircleGeometry(0.048, 24),
             new THREE.MeshBasicMaterial({
-                color: 0x5a5044,
+                color: 0x2a2218,
                 transparent: true,
-                opacity: 0.45,
+                opacity: 0.4,
+                depthWrite: false,
+            }),
+        );
+        disk.rotation.x = -Math.PI / 2;
+        group.add(disk);
+        const ring = new THREE.Mesh(
+            new THREE.RingGeometry(0.048, 0.078, 24),
+            new THREE.MeshBasicMaterial({
+                color: 0x8a7358,
+                transparent: true,
+                opacity: 0.55,
                 side: THREE.DoubleSide,
+                depthWrite: false,
             }),
         );
         ring.rotation.x = -Math.PI / 2;

@@ -1,5 +1,6 @@
-/* Window, not wallpaper. The canvas is a framed viewport into the den.
-   Cool instrument UI lives outside that frame. */
+/* Window, not wallpaper. Minimal shell: framed viewport + instrument panel.
+   Fluid reflow (stack vs side) so any aspect ratio stays readable.
+   Not a finished visual system — structure for mock discussion. */
 
 html,
 body.playroom {
@@ -120,13 +121,15 @@ body.playroom:not(.is-ready) .playroom-pose {
   flex: 1 1 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   min-height: 0;
-  padding: 14px 16px 16px;
-  gap: 14px;
+  padding: 10px 12px 12px;
+  gap: 10px;
 }
 
 html[data-panel="teach"] .playroom-body {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(120px, 36dvh) minmax(0, 1fr);
 }
 
 .playroom-stage {
@@ -160,7 +163,7 @@ html[data-panel="teach"] .playroom-body {
   min-width: 0;
   min-height: 0;
   overflow: auto;
-  padding: 16px 16px 18px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
@@ -241,7 +244,7 @@ body.playroom.is-ready .playroom-title {
   margin: 4px 0 8px;
   font-family: var(--font-display);
   font-weight: 520;
-  font-size: clamp(22px, 2.4vw, 28px);
+  font-size: clamp(18px, 2.4vw, 28px);
   letter-spacing: -0.02em;
   color: var(--fg);
 }
@@ -354,41 +357,30 @@ body.playroom.is-ready .playroom-title {
   pointer-events: auto;
 }
 
-@media (max-width: 900px) {
-  body.playroom {
-    overflow: auto;
+/* Wide enough and not portrait: window | panel. Covers landscape phone and desktop. */
+@media (min-aspect-ratio: 5 / 4) and (min-width: 600px) {
+  html[data-panel="teach"] .playroom-body {
+    grid-template-columns: minmax(0, 1fr) minmax(200px, min(34vw, 380px));
+    grid-template-rows: minmax(0, 1fr);
   }
+}
 
-  .playroom-app {
-    height: auto;
-    min-height: 100dvh;
-  }
-
+@media (max-height: 500px) {
   .playroom-chrome {
-    padding: 12px 14px 8px;
+    min-height: 0;
+    padding: 6px 12px 4px;
+  }
+
+  .playroom-title {
+    font-size: clamp(20px, 5vh, 28px);
   }
 
   .playroom-body {
-    grid-template-columns: 1fr;
-    padding: 10px 12px 16px;
-  }
-
-  html[data-panel="teach"] .playroom-body {
-    grid-template-columns: 1fr;
-  }
-
-  html[data-panel="teach"] .playroom-stage {
-    flex: 0 0 auto;
-  }
-
-  html[data-panel="teach"] .playroom-window {
-    flex: 0 0 auto;
-    aspect-ratio: 4 / 3;
-    max-height: 42vh;
-    min-height: 220px;
+    padding: 6px 8px 8px;
+    gap: 8px;
   }
 
   .playroom-panel {
-    max-height: none;
+    padding: 8px 10px;
   }
 }

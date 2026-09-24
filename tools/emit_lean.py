@@ -8,8 +8,9 @@ Reproduces the spike path that was green on DoubleDeal / MegaDreifach:
       → python3 backends/lean/emit.py
       → unpack files/
 
-Full-peer emit (no --require terminates). Cryptoys publics have unmeasured
-whiles; the totality gate RefusedExport-s them. See proofs/ANTI_DRIFT.md.
+Full-peer emit (no --require terminates). DoubleDeal is terminates-ready
+(bounded `for`); MegaDreifach still has unmeasured whiles. See
+proofs/ANTI_DRIFT.md.
 
 This is not a claim of sudo↔Lean semantic equivalence.
 """

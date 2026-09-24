@@ -9,7 +9,9 @@ DoubleDeal is a toy block cipher. It has no cryptographic security claim. The Le
 Sudo is normative. Emitted Lean under `lean/Generated/` is the algorithm.
 `lean/DoubleDeal/` is proof-only. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md).
 This does **not** claim sudo↔Lean semantic-equivalence theorems. The
-terminates gate is off.
+emit terminates gate is still off (repo-wide, until MegaDreifach).
+DoubleDeal sudo itself is terminates-ready: PassKey and trace overflow
+scans are bounded `for`.
 
 | Layer | What it is | Trust base |
 | --- | --- | --- |

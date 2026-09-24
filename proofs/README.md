@@ -7,7 +7,8 @@ Nothing in this repository is for real use. A green Lean build is not a security
 Sudo is normative. Lean *algorithm* definitions are generated from `*.sudo`
 into `proofs/*/lean/Generated/`. See [`ANTI_DRIFT.md`](ANTI_DRIFT.md). This
 does **not** claim sudo↔Lean semantic-equivalence theorems. The terminates
-gate is off (unmeasured `while`s).
+gate is off at emit (MegaDreifach / Scramble still have unmeasured `while`s).
+DoubleDeal is terminates-ready.
 
 Four layers of evidence, and only the first is a theorem:
 

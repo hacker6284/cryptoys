@@ -166,10 +166,10 @@ body.playroom.is-ready .playroom-menu {
   bottom: 16px;
   z-index: 3;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: flex-end;
   gap: 12px;
-  max-height: min(44dvh, 32rem);
+  max-height: min(42dvh, 30rem);
   overflow: auto;
   pointer-events: none;
   opacity: 0;
@@ -195,7 +195,7 @@ body.playroom.is-ready .playroom-menu {
 
 .playroom-note,
 .playroom-hands {
-  padding: 12px 14px 10px;
+  padding: 10px 12px 8px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--panel) 94%, transparent);
@@ -205,13 +205,15 @@ body.playroom.is-ready .playroom-menu {
 .playroom-hands {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 1 1 22rem;
-  max-width: min(36rem, 100%);
+  gap: 6px;
+  flex: 1 1 24rem;
+  min-width: min(22rem, 100%);
+  max-width: min(38rem, 100%);
 }
 
 .playroom-note {
   flex: 1 1 18rem;
+  min-width: min(16rem, 100%);
   max-width: min(28rem, 100%);
 }
 
@@ -312,7 +314,12 @@ body.playroom.is-ready .playroom-menu {
 }
 
 .playroom-dock .slider {
+  flex: 1 1 10rem;
   color: var(--muted);
+}
+
+.playroom-meta {
+  align-items: center;
 }
 
 .playroom-message-label {
@@ -320,7 +327,8 @@ body.playroom.is-ready .playroom-menu {
 }
 
 .playroom-dock textarea {
-  min-height: 3.5em;
+  min-height: 2.6em;
+  padding: 8px 10px;
 }
 
 .playroom-dock .outline {
@@ -347,12 +355,14 @@ body.playroom.is-ready .playroom-dock {
     left: 12px;
     right: 12px;
     bottom: 12px;
+    flex-wrap: wrap;
     max-height: 46dvh;
   }
 
   .playroom-hands,
   .playroom-note {
     flex: 1 1 100%;
+    min-width: 0;
     max-width: none;
   }
 }

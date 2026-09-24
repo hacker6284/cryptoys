@@ -2,7 +2,7 @@
 
 Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys.
 
-Each primitive is a directory holding a normative specification and one [sudocode](https://github.com/hacker6284/sudocode) implementation. Demos are rendered with Three.js, and published from this repository with GitHub Pages.
+Each primitive is a directory holding a normative specification and one [sudocode](https://github.com/hacker6284/sudocode) implementation. Demos are rendered with Three.js, and published from this repository with GitHub Pages. Demos-touching PRs also get a playroom preview at `https://hacker6284.github.io/cryptoys/pr/<N>/` — see `demos/README.md`.
 
 ```text
 primitives/hash/scramble/SPEC.md

@@ -46,9 +46,8 @@ function disposeObject(object) {
  * Product model (Zach, 2026-09-24): these demo pages are the only
  * place on the internet to perform the algorithms without writing
  * code. Using the hash is primary. Message is the field that always
- * matters. Teach is opt-in (Step through / Step) and must not hide
- * or replace the instrument. The always-on tool is an edge strip,
- * not a floating card.
+ * matters (top-right). Teach is opt-in (bottom-right). Landscape
+ * chrome uses the four window edges — no floating cards.
  */
 function specUrlCandidates() {
     const fromModule = new URL("../scramble/SPEC.md", import.meta.url).href;
@@ -89,32 +88,32 @@ function mountDock() {
     root.className = "playroom-dock";
     root.hidden = true;
     root.innerHTML = `
-      <div class="playroom-hands">
+      <div class="playroom-io">
         <label class="playroom-message-label" for="message">Message</label>
         <textarea id="message" rows="3" spellcheck="false" placeholder="hello">hello</textarea>
         <p id="digest" class="digest"></p>
         <p id="status" class="status">Solved start · white up, green front, red right</p>
         <p id="error" class="error"></p>
+        <div class="row playroom-crypto">
+          <span id="gen-label" class="playroom-hands-label">Gen 2</span>
+          <button type="button" data-version="1">Gen 1</button>
+          <button type="button" class="on" data-version="2">Gen 2</button>
+          <button type="button" class="on" data-encoding="text">text</button>
+          <button type="button" data-encoding="hex">hex</button>
+          <button id="digest-btn" type="button">Digest</button>
+          <button id="solve" type="button">Solve</button>
+          <button id="spec-btn" type="button">Spec</button>
+        </div>
+        <div id="outline" class="outline" hidden></div>
+      </div>
+      <div class="playroom-anim">
         <div class="row playroom-actions">
           <button id="play" class="primary" type="button">Play</button>
           <button id="step-through" type="button">Step through</button>
           <button id="step" type="button">Step</button>
           <button id="reset" type="button">Reset</button>
-          <button id="digest-btn" type="button">Digest</button>
-          <button id="solve" type="button">Solve</button>
-          <button id="spec-btn" type="button">Spec</button>
         </div>
-        <div class="row playroom-meta">
-          <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
-          <div class="row playroom-toggles">
-            <span id="gen-label" class="playroom-hands-label">Gen 2</span>
-            <button type="button" data-version="1">Gen 1</button>
-            <button type="button" class="on" data-version="2">Gen 2</button>
-            <button type="button" class="on" data-encoding="text">text</button>
-            <button type="button" data-encoding="hex">hex</button>
-          </div>
-        </div>
-        <div id="outline" class="outline" hidden></div>
+        <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
       </div>
       <div id="teach" class="playroom-note" hidden>
         <div id="tape" class="tape" aria-label="Message tape"></div>

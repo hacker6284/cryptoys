@@ -23,7 +23,7 @@ a:hover { color: var(--fg); }
   display: flex;
   align-items: center;
   min-height: var(--chrome-height);
-  padding: 0 22px;
+  padding: 0 28px;
   border-bottom: 1px solid var(--line);
   background: var(--bg);
 }
@@ -33,11 +33,12 @@ a:hover { color: var(--fg); }
   align-items: baseline;
   gap: 0;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .site-brand {
   color: var(--accent);
+  font-weight: 500;
   text-decoration: none;
 }
 

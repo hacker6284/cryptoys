@@ -66,9 +66,9 @@
 }
 
 .mark {
-  width: 36px;
-  height: 36px;
-  margin-bottom: 16px;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 18px;
 }
 
 .mark-cube {
@@ -78,32 +78,34 @@
 }
 
 .mark-cube span {
-  background: var(--raised);
-  border: 1px solid var(--line);
+  background: transparent;
+  border: 1px solid #6a655c;
   border-radius: 2px;
 }
 
-.mark-cube span:nth-child(5) { background: var(--accent); border-color: var(--accent); }
-
-.mark-decks {
-  position: relative;
+.mark-cube span:nth-child(5) {
+  background: var(--accent);
+  border-color: var(--accent);
 }
+
+.mark-decks { position: relative; }
 
 .mark-decks span {
   position: absolute;
-  width: 22px;
-  height: 30px;
-  border: 1px solid var(--line);
+  width: 24px;
+  height: 34px;
+  border: 1px solid #6a655c;
   border-radius: 2px;
-  background: var(--raised);
+  background: #1c1a16;
 }
 
-.mark-decks span:first-child { left: 0; top: 4px; }
+.mark-decks span:first-child { left: 0; top: 6px; }
 
 .mark-decks span:last-child {
-  left: 10px;
+  left: 12px;
   top: 0;
   border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .disclaimer {

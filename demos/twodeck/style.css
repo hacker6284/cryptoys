@@ -1,7 +1,7 @@
 .shell {
   display: grid;
   min-height: calc(100dvh - var(--chrome-height));
-  grid-template-columns: minmax(0, 1fr) 380px;
+  grid-template-columns: minmax(0, 1fr) 400px;
 }
 
 .stage { position: relative; min-height: 70dvh; }

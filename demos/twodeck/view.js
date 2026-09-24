@@ -610,6 +610,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
     const rowHilite = makeHilite();
     const colHilite = makeHilite();
     const seatHilite = makeHilite();
+    const fromHilite = makeHilite();
 
     function clearHighlights() {
         for (const mesh of hilites) mesh.material.opacity = 0;
@@ -634,12 +635,13 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         colHilite.material.opacity = 0.28;
     }
 
-    function highlightSeat(row, col, color) {
-        seatHilite.scale.set(CARD_W + 0.12, 1, CARD_D + 0.12);
+    function highlightSeat(row, col, color, which) {
+        const mesh = which === "from" ? fromHilite : seatHilite;
+        mesh.scale.set(CARD_W + 0.12, 1, CARD_D + 0.12);
         const at = gridPos(row, col, MESSAGE_X);
-        seatHilite.position.set(at.x, 0.02, at.z);
-        seatHilite.material.color.setHex(color || 0xc4a574);
-        seatHilite.material.opacity = 0.4;
+        mesh.position.set(at.x, 0.02, at.z);
+        mesh.material.color.setHex(color || 0xc4a574);
+        mesh.material.opacity = which === "from" ? 0.22 : 0.4;
     }
 
     function highlightCard(id, deckName, color) {

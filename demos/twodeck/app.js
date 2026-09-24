@@ -108,6 +108,10 @@ function specFor(step) {
     return "3.9 Rounds, encrypt, decrypt";
 }
 
+function viewedIndex() {
+    return teaching ? cursor + 1 : cursor;
+}
+
 function analogue(step) {
     if (step.kind === "sumrow" || step.kind === "sumcol") return "SumRanks · SubBytes stand-in";
     if (step.kind === "shift") return "ShiftRows";
@@ -118,10 +122,10 @@ function analogue(step) {
     return step.label;
 }
 
-function annotate(step) {
+function annotate(step, index) {
     const n = trace.length;
-    const kicker = cursor < 0 ? `start · ${n} steps` : `step ${cursor + 1} of ${n} · ${step.label}`;
-    if (cursor < 0 || !step) {
+    const kicker = !step || index < 0 ? `start · ${n} steps` : `step ${index + 1} of ${n} · ${step.label}`;
+    if (!step || index < 0) {
         return { kicker, title: "Ready", math: "Plaintext on the left. Key on the right.", why: "Step through parks at the first operation without autoplay.", spec: "3.9 Rounds, encrypt, decrypt" };
     }
     if (step.kind === "sumrow") {
@@ -177,8 +181,8 @@ function annotate(step) {
             kicker,
             title: analogue(step),
             math: step.flag === 1
-                ? `${cardName(step.card)} overflowed into seat (${step.row + 1}, ${step.col + 1}).`
-                : `${cardName(step.card)} steps to seat (${step.row + 1}, ${step.col + 1}).`,
+                ? `${cardName(step.card)} overflowed into seat (${step.row + 1}, ${step.col + 1}). Suit step ${Math.floor(step.card / 13)}, rank step ${(step.card % 13) + 1}.`
+                : `${cardName(step.card)} steps suit ${Math.floor(step.card / 13)} / rank ${(step.card % 13) + 1} to seat (${step.row + 1}, ${step.col + 1}).`,
             why: "GridCycle walks from the Ace-of-Spades home seat (2, 0). Suit is the row step; rank is the column step.",
             spec: specFor(step),
         };
@@ -294,6 +298,18 @@ function renderCard(note) {
     teachCard.append(kicker, title, math, why, spec);
 }
 
+function gridFrom(step) {
+    const index = trace.indexOf(step);
+    if (index <= 0) return { row: 2, col: 0 };
+    for (let i = index - 1; i >= 0; i--) {
+        const prev = trace[i];
+        if (prev.kind === "place" || prev.kind === "take") return { row: prev.row, col: prev.col };
+        if (prev.kind === "mark") return { row: 2, col: 0 };
+        if (prev.label !== step.label) break;
+    }
+    return null;
+}
+
 function applyHighlight(step) {
     if (!step) {
         view.clearHighlights();
@@ -301,8 +317,10 @@ function applyHighlight(step) {
     }
     if (step.kind === "sumrow" || step.kind === "shift") view.highlightRow(step.row);
     else if (step.kind === "sumcol") view.highlightCol(step.col);
-    else if (step.kind === "place" || step.kind === "take") {
+    else     if (step.kind === "place" || step.kind === "take") {
         view.clearHighlights();
+        const from = gridFrom(step);
+        if (from) view.highlightSeat(from.row, from.col, 0x6b5340, "from");
         view.highlightSeat(step.row, step.col, step.flag === 1 ? 0xe7b15a : 0xc4a574);
     } else if (step.kind === "scan") view.highlightRow(step.row, 0xe7b15a);
     else if (step.kind === "mark") {
@@ -344,20 +362,22 @@ function outlineSections() {
             else if (step.kind === "reset") label = "Re-deal master key";
             items.push({ key: `${stage}:${index}`, label, index });
         }
-        sections.push({ title, items, open: rows.some((row) => row.index === cursor) });
+        const openAt = viewedIndex();
+        sections.push({ title, items, open: rows.some((row) => row.index === openAt) });
     }
     return sections;
 }
 
 function refreshTeach() {
-    const step = cursor >= 0 ? trace[cursor] : null;
-    renderCard(annotate(step));
-    teachPos.textContent = cursor < 0 ? `0 / ${trace.length}` : `${cursor + 1} / ${trace.length}`;
-    const currentKey = cursor < 0 || !step
+    const viewI = viewedIndex();
+    const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
+    renderCard(annotate(step, step ? viewI : -1));
+    teachPos.textContent = step ? `${viewI + 1} / ${trace.length}` : `${Math.max(0, cursor + 1)} / ${trace.length}`;
+    const currentKey = !step
         ? ""
-        : `${stageKey(step)}:${(step.kind === "sumrow" || step.kind === "sumcol" || step.kind === "shift") ? cursor : firstIndexOfStage(cursor)}`;
+        : `${stageKey(step)}:${(step.kind === "sumrow" || step.kind === "sumcol" || step.kind === "shift") ? viewI : firstIndexOfStage(viewI)}`;
     renderOutline(outlineEl, outlineSections(), currentKey, (index) => {
-        void jumpTo(index, false);
+        void jumpTo(index - 1, false);
     });
     const atStart = cursor < 0;
     const atEnd = cursor >= trace.length - 1;
@@ -394,13 +414,21 @@ function ensureSnaps() {
 
 function showPaused() {
     ensureSnaps();
+    if (teaching) {
+        const viewI = viewedIndex();
+        if (snaps) {
+            const snapI = Math.max(0, Math.min(snaps.length - 1, viewI < 0 ? 0 : viewI));
+            view.restore(snaps[snapI]);
+        }
+        const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
+        if (step) captionEl.textContent = caption(step);
+        applyHighlight(step);
+        refreshTeach();
+        return;
+    }
     if (snaps) view.restore(cursor < 0 ? snaps[0] : snaps[cursor + 1]);
     const step = cursor >= 0 ? trace[cursor] : null;
     if (step) captionEl.textContent = caption(step);
-    if (teaching) {
-        applyHighlight(step);
-        refreshTeach();
-    }
 }
 
 function preview() {
@@ -518,7 +546,7 @@ function enterTeach() {
         if (trace.length === 0) computeTrace();
         snaps = null;
         setTeaching(true);
-        cursor = 0;
+        cursor = -1;
         showPaused();
     } catch (err) {
         setError(err instanceof Error ? err.message : "That input could not be read.");
@@ -534,15 +562,12 @@ async function jumpTo(index, animate) {
         const token = ++job;
         cursor = next;
         captionEl.textContent = caption(trace[cursor]);
-        if (teaching) refreshTeach();
         await view.play(trace[cursor], Number(speedEl.value));
         if (token !== job) {
             busy = false;
             return;
         }
-        if (snaps) view.restore(snaps[cursor + 1]);
-        if (teaching) applyHighlight(trace[cursor]);
-        if (teaching) refreshTeach();
+        showPaused();
         busy = false;
         return;
     }
@@ -619,20 +644,24 @@ keyEl.addEventListener("input", preview);
 document.querySelectorAll("[data-jump]").forEach((button) => {
     button.addEventListener("click", () => {
         const jump = button.dataset.jump;
+        const viewI = Math.max(0, viewedIndex());
         if (jump === "back") void stepBy(-1);
         else if (jump === "fwd") void stepBy(1);
-        else if (jump === "stage-back") void jumpTo(cursor < 0 ? -1 : nextGroup(trace, Math.max(0, cursor), stageKey, -1), false);
-        else if (jump === "stage-fwd") void jumpTo(cursor < 0 ? 0 : nextGroup(trace, cursor, stageKey, 1), false);
-        else if (jump === "round-back") void jumpTo(cursor < 0 ? -1 : nextGroup(trace, Math.max(0, cursor), roundKey, -1), false);
-        else if (jump === "round-fwd") void jumpTo(cursor < 0 ? 0 : nextGroup(trace, cursor, roundKey, 1), false);
+        else if (jump === "stage-back") void jumpTo(nextGroup(trace, viewI, stageKey, -1) - 1, false);
+        else if (jump === "stage-fwd") void jumpTo(nextGroup(trace, viewI, stageKey, 1) - 1, false);
+        else if (jump === "round-back") void jumpTo(nextGroup(trace, viewI, roundKey, -1) - 1, false);
+        else if (jump === "round-fwd") void jumpTo(nextGroup(trace, viewI, roundKey, 1) - 1, false);
     });
 });
 
 bindTeachKeys({
     step: (dir) => { if (teaching) void stepBy(dir); },
-    stage: (dir) => { if (teaching && cursor >= 0) void jumpTo(nextGroup(trace, cursor, stageKey, dir), false); },
-    home: () => { if (teaching) void jumpTo(0, false); },
-    end: () => { if (teaching) void jumpTo(trace.length - 1, false); },
+    stage: (dir) => {
+        if (!teaching || !trace.length) return;
+        void jumpTo(nextGroup(trace, Math.max(0, viewedIndex()), stageKey, dir) - 1, false);
+    },
+    home: () => { if (teaching) void jumpTo(-1, false); },
+    end: () => { if (teaching && trace.length) void jumpTo(trace.length - 2, false); },
 });
 
 const specDialog = document.querySelector("#spec");
@@ -732,3 +761,21 @@ document.querySelectorAll("[data-open-spec]").forEach((el) => {
     });
 });
 document.querySelector("#spec-close").addEventListener("click", () => specDialog.close());
+
+Object.assign(window, {
+    __teach: {
+        enter: enterTeach,
+        jumpView: (index) => jumpTo(index - 1, false),
+        steps: () => trace.map((step, index) => ({
+            index,
+            kind: step.kind,
+            label: step.label,
+            row: step.row,
+            col: step.col,
+            amount: step.amount,
+            total: step.total,
+            flag: step.flag,
+            card: step.card,
+        })),
+    },
+});

@@ -76,14 +76,24 @@ function symbolWord(step) {
         .join("");
 }
 
-function caption() {
-    if (cursor < 0) return "Solved start · white up, green front, red right";
-    const step = trace[cursor];
+function viewedIndex() {
+    return teaching ? cursor + 1 : cursor;
+}
+
+function captionFor(step) {
+    if (!step) return "Solved start · white up, green front, red right";
     if (step.kind === "ruleB") return `Rule B · ${step.up} up, ${step.front} front`;
     if (step.kind === "closer") return `Closer · ${step.move}`;
     if (step.kind === "canonicalize") return "Seat white up, green front";
     if (version === 2) return `Symbol ${step.block + 1} · ${step.nybble} → ${symbolWord(step)} · ${step.move}`;
     return `Block ${step.block + 1} · ${step.nybble} → ${step.move}`;
+}
+
+function caption() {
+    const step = teaching
+        ? (viewedIndex() < trace.length ? trace[viewedIndex()] : null)
+        : (cursor < 0 ? null : trace[cursor]);
+    return captionFor(step);
 }
 
 function showStatus(text) {
@@ -159,16 +169,17 @@ function outlineSections() {
             : "Seat W up, G front";
         byRound.get(title).push({ key: String(index), label, index });
     });
+    const openAt = viewedIndex();
     for (const [title, items] of byRound) {
-        sections.push({ title, items, open: items.some((item) => item.index === cursor) });
+        sections.push({ title, items, open: items.some((item) => item.index === openAt) });
     }
     return sections;
 }
 
-function annotate(step) {
+function annotate(step, index) {
     const n = trace.length;
-    const pos = cursor < 0 ? `start · ${n} steps` : `step ${cursor + 1} of ${n}`;
-    if (cursor < 0 || !step) {
+    const pos = !step || index < 0 ? `start · ${n} steps` : `step ${index + 1} of ${n}`;
+    if (!step || index < 0) {
         return {
             kicker: pos,
             title: "Solved start",
@@ -257,13 +268,14 @@ function applyHighlight(step) {
 }
 
 function refreshTeach() {
-    const step = cursor >= 0 ? trace[cursor] : null;
+    const viewI = viewedIndex();
+    const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
     const activeBlock = step && (step.kind === "move" || step.kind === "ruleB") ? step.block : -1;
     renderTape(activeBlock);
-    renderCard(annotate(step));
-    teachPos.textContent = cursor < 0 ? `0 / ${trace.length}` : `${cursor + 1} / ${trace.length}`;
-    renderOutline(outlineEl, outlineSections(), cursor < 0 ? "" : String(cursor), (index) => {
-        void jumpTo(index, false);
+    renderCard(annotate(step, step ? viewI : -1));
+    teachPos.textContent = step ? `${viewI + 1} / ${trace.length}` : `${Math.max(0, cursor + 1)} / ${trace.length}`;
+    renderOutline(outlineEl, outlineSections(), step ? String(viewI) : "", (index) => {
+        void jumpTo(index - 1, false);
     });
     const atStart = cursor < 0;
     const atEnd = cursor >= trace.length - 1;
@@ -281,11 +293,25 @@ function setTeaching(on) {
 }
 
 function showPaused() {
+    if (teaching) {
+        const viewI = viewedIndex();
+        if (viewI >= 0 && viewI < trace.length) {
+            showFace(viewI === 0 ? solved : trace[viewI - 1].facelets);
+            applyHighlight(trace[viewI]);
+        } else if (trace.length) {
+            showFace(trace[trace.length - 1].facelets);
+            applyHighlight(null);
+        } else {
+            showFace(solved);
+            applyHighlight(null);
+        }
+        showStatus(caption());
+        refreshTeach();
+        return;
+    }
     if (cursor < 0) showFace(solved);
     else showFace(trace[cursor].facelets);
-    if (teaching) applyHighlight(cursor >= 0 ? trace[cursor] : null);
     showStatus(caption());
-    if (teaching) refreshTeach();
 }
 
 function recompute() {
@@ -325,10 +351,12 @@ async function playStep(token) {
     else await view.animateReorient(from, "W", "G", duration(step.kind));
     if (token !== job) return false;
     cursor += 1;
+    if (teaching) {
+        showPaused();
+        return true;
+    }
     showFace(step.facelets);
-    if (teaching) applyHighlight(step);
     showStatus(caption());
-    if (teaching) refreshTeach();
     return true;
 }
 
@@ -369,12 +397,9 @@ async function stepBy(dir) {
 function enterTeach() {
     if (trace.length === 0) recompute();
     setTeaching(true);
-    if (cursor < 0 && trace.length) {
-        cursor = 0;
-        showPaused();
-    } else {
-        showPaused();
-    }
+    cursor = -1;
+    playing = false;
+    showPaused();
 }
 
 async function ensureSolver() {
@@ -575,21 +600,41 @@ input.addEventListener("input", () => recompute());
 document.querySelectorAll("[data-jump]").forEach((button) => {
     button.addEventListener("click", () => {
         const jump = button.dataset.jump;
+        const viewI = Math.max(0, viewedIndex());
         if (jump === "back") void stepBy(-1);
         else if (jump === "fwd") void stepBy(1);
-        else if (jump === "stage-back") void jumpTo(cursor < 0 ? -1 : nextGroup(trace, Math.max(0, cursor), stageKey, -1), false);
-        else if (jump === "stage-fwd") void jumpTo(cursor < 0 ? 0 : nextGroup(trace, cursor, stageKey, 1), false);
-        else if (jump === "round-back") void jumpTo(cursor < 0 ? -1 : nextGroup(trace, Math.max(0, cursor), roundKey, -1), false);
-        else if (jump === "round-fwd") void jumpTo(cursor < 0 ? 0 : nextGroup(trace, cursor, roundKey, 1), false);
+        else if (jump === "stage-back") void jumpTo(nextGroup(trace, viewI, stageKey, -1) - 1, false);
+        else if (jump === "stage-fwd") void jumpTo(nextGroup(trace, viewI, stageKey, 1) - 1, false);
+        else if (jump === "round-back") void jumpTo(nextGroup(trace, viewI, roundKey, -1) - 1, false);
+        else if (jump === "round-fwd") void jumpTo(nextGroup(trace, viewI, roundKey, 1) - 1, false);
     });
 });
 
 bindTeachKeys({
     step: (dir) => { if (teaching) void stepBy(dir); },
-    stage: (dir) => { if (teaching && cursor >= 0) void jumpTo(nextGroup(trace, cursor, stageKey, dir), false); },
-    home: () => { if (teaching) void jumpTo(0, false); },
-    end: () => { if (teaching) void jumpTo(trace.length - 1, false); },
+    stage: (dir) => {
+        if (!teaching || !trace.length) return;
+        void jumpTo(nextGroup(trace, Math.max(0, viewedIndex()), stageKey, dir) - 1, false);
+    },
+    home: () => { if (teaching) void jumpTo(-1, false); },
+    end: () => { if (teaching && trace.length) void jumpTo(trace.length - 2, false); },
 });
 
 showFace(solved);
 recompute();
+
+Object.assign(window, {
+    __teach: {
+        enter: enterTeach,
+        jumpView: (index) => jumpTo(index - 1, false),
+        steps: () => trace.map((step, index) => ({
+            index,
+            kind: step.kind,
+            nybble: step.nybble,
+            block: step.block,
+            move: step.move,
+            up: step.up,
+            front: step.front,
+        })),
+    },
+});

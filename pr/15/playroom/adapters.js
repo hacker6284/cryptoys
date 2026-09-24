@@ -120,13 +120,13 @@ function mountDock() {
           <div id="tape" class="tape" aria-label="Message tape"></div>
           <article id="teach-card" class="playroom-note-body"></article>
           <div class="transport" id="transport">
-            <button type="button" data-jump="round-back" title="Previous symbol">«</button>
-            <button type="button" data-jump="stage-back" title="Previous stage">‹</button>
-            <button type="button" data-jump="back">Prev</button>
-            <span class="pos" id="teach-pos">—</span>
-            <button type="button" data-jump="fwd">Next</button>
-            <button type="button" data-jump="stage-fwd" title="Next stage">›</button>
-            <button type="button" data-jump="round-fwd" title="Next symbol">»</button>
+          <button type="button" class="icon-btn" data-jump="round-back" aria-label="Previous symbol" title="Previous symbol">${lucideSvg("chevrons-left", 18)}</button>
+          <button type="button" class="icon-btn" data-jump="stage-back" aria-label="Previous stage" title="Previous stage">${lucideSvg("chevron-left", 18)}</button>
+          <button type="button" class="icon-btn" data-jump="back" aria-label="Prev" title="Prev">${lucideSvg("chevron-left", 18)}</button>
+          <span class="pos" id="teach-pos">—</span>
+          <button type="button" class="icon-btn" data-jump="fwd" aria-label="Next" title="Next">${lucideSvg("chevron-right", 18)}</button>
+          <button type="button" class="icon-btn" data-jump="stage-fwd" aria-label="Next stage" title="Next stage">${lucideSvg("chevron-right", 18)}</button>
+          <button type="button" class="icon-btn" data-jump="round-fwd" aria-label="Next symbol" title="Next symbol">${lucideSvg("chevrons-right", 18)}</button>
           </div>
         </div>
         <div id="outline" class="outline" hidden></div>

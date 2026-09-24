@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/tokens.css">
+  <link rel="stylesheet" href="../shared/base.css">
   <link rel="stylesheet" href="./style.css">
   <script src="./vendor/cube.js"></script>
   <script src="./vendor/solve.js"></script>
@@ -20,6 +22,13 @@
   </script>
 </head>
 <body>
+  <header class="site-chrome">
+    <nav class="site-nav" aria-label="Site">
+      <a class="site-brand" href="../">cryptoys</a>
+      <span class="site-sep" aria-hidden="true">/</span>
+      <span class="site-current">Scramble</span>
+    </nav>
+  </header>
   <div class="shell">
     <section class="stage">
       <header class="stage-head">
@@ -30,7 +39,7 @@
     </section>
     <aside class="panel">
       <div class="row">
-        <button id="play" type="button">Play</button>
+        <button id="play" class="primary" type="button">Play</button>
         <button id="step" type="button">Step</button>
         <button id="reset" type="button">Reset</button>
         <button id="digest-btn" type="button">Digest</button>

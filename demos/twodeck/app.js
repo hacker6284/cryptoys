@@ -298,9 +298,11 @@ async function openSpec() {
     specDialog.showModal();
 }
 
-document.querySelector("#spec-btn").addEventListener("click", () => {
-    openSpec().catch((err) => {
-        setError(err instanceof Error ? err.message : "Could not open the specification.");
+document.querySelectorAll("[data-open-spec]").forEach((el) => {
+    el.addEventListener("click", () => {
+        openSpec().catch((err) => {
+            setError(err instanceof Error ? err.message : "Could not open the specification.");
+        });
     });
 });
 document.querySelector("#spec-close").addEventListener("click", () => specDialog.close());

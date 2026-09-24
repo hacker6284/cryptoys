@@ -165,8 +165,7 @@ export function createToyDirector(world) {
                 lift,
                 mid,
                 to: dest,
-                last: performance.now(),
-                elapsed: 0,
+                origin: performance.now(),
                 duration,
                 onDone: resolve,
             };
@@ -193,7 +192,11 @@ export function createToyDirector(world) {
 
     async function home({ snap = false } = {}) {
         if (!occupied) return;
-        if (flight) skip();
+        if (flight) {
+            const resolve = flight.onDone;
+            flight = null;
+            resolve?.();
+        }
         const recipe = recipeOf(occupied);
         const name = recipe.toys[0];
         await flyToy(name, world.getShelfPose(name), { snap });
@@ -209,13 +212,7 @@ export function createToyDirector(world) {
 
     function update() {
         if (!flight) return;
-        const now = performance.now();
-        // Cap the step so a hitch or a late first rAF cannot skip the
-        // whole shelf→felt arc (that read as a pop on the felt).
-        const dt = Math.min(200, Math.max(0, now - flight.last));
-        flight.last = now;
-        flight.elapsed += dt;
-        const u = Math.min(1, flight.elapsed / flight.duration);
+        const u = Math.min(1, (performance.now() - flight.origin) / flight.duration);
         applyFlight(u);
         if (u >= 1) finishFlight();
     }

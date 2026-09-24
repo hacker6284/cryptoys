@@ -116,11 +116,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
             via: viaName ? readPose(viaName) : null,
             viaT: opts.viaT ?? 0.36,
             to: pose,
-            delay: opts.delay || 0,
-            holdElapsed: 0,
-            elapsed: 0,
-            last: now,
-            holding: true,
+            start: now + (opts.delay || 0),
             duration: opts.duration ?? duration,
             track: opts.track || null,
         };
@@ -135,20 +131,12 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
 
     function update(now = performance.now()) {
         if (!tween) return current;
-        const dt = Math.min(200, Math.max(0, now - tween.last));
-        tween.last = now;
-        if (tween.holding) {
-            tween.holdElapsed += dt;
-            if (tween.holdElapsed < tween.delay) {
-                apply(tween.to, 0, tween.from, null);
-                return current;
-            }
-            tween.holding = false;
-            tween.elapsed = 0;
+        if (now < tween.start) {
+            apply(tween.to, 0, tween.from, null);
+            return current;
         }
-        tween.elapsed += dt;
         const trackPos = readTrack(tween.track);
-        const u = Math.min(1, tween.elapsed / tween.duration);
+        const u = Math.min(1, (now - tween.start) / tween.duration);
         if (tween.via && u < tween.viaT) {
             apply(tween.via, u / tween.viaT, tween.from, null);
         } else if (tween.via) {

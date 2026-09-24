@@ -91,6 +91,7 @@ try {
                 });
             }
             await Promise.all([fly, warm]);
+            if (leaving) return;
             await adapters.scramble.enter();
             writeQuery({ pose: "seated", algo: "scramble" });
             syncOverlays({

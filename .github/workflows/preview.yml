@@ -86,6 +86,32 @@ jobs:
           commit_message: "Preview playroom for PR ${{ github.event.pull_request.number || inputs.pr_number }} (${{ github.sha }})"
           user_name: github-actions[bot]
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
+      - name: Bootstrap production root if missing
+        id: boot
+        run: |
+          set -eu
+          if ! git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/gh-pages >/dev/null; then
+            echo "have_root=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git clone --depth 1 --branch gh-pages \
+            "https://github.com/${GITHUB_REPOSITORY}.git" /tmp/gh-pages-check
+          if [ -f /tmp/gh-pages-check/index.html ]; then
+            echo "have_root=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "have_root=0" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish production root bootstrap
+        if: steps.boot.outputs.have_root == '0'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./demos
+          keep_files: true
+          force_orphan: false
+          commit_message: "Bootstrap Pages root from PR ${{ github.event.pull_request.number || inputs.pr_number }} (${{ github.sha }})"
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
       - name: Resolve published commit
         id: published
         run: |
@@ -114,9 +140,11 @@ jobs:
               `- Preview: ${pages}`,
               `- Generated module (expect HTTP 200): ${moduleUrl}`,
               "",
+              "GitHub Actions, same `sudoc` generate as `pages.yml`. Not Render PR previews.",
+              "",
               "GitHub Pages is a single-artifact deploy from `main`, so the `github.io` URL goes live after [republish-pages](https://github.com/hacker6284/cryptoys/actions/workflows/republish-pages.yml) runs, or after the next `pages` deploy from `main`. This workflow already wrote the same tree to `gh-pages` at `pr/" + n + "/`.",
               "",
-              `Immediate same-commit copy (jsDelivr, correct JS MIME): ${immediate}`,
+              `Immediate same-commit copy (jsDelivr, correct JS MIME for the generated module): ${immediate}scramble/generated/scramble.mjs`,
               "",
               "Pattern: `https://hacker6284.github.io/cryptoys/pr/<N>/`. Same-repo PRs that touch `demos/**`, generate workflows, or the sudo that feeds generate. Removed when the PR closes.",
             ].join("\n");

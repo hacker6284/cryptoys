@@ -732,14 +732,22 @@ export func HashDeck(deal: List<int>) -> List<int>
 export func MegaDreifachDeck(deal: List<int>) -> List<int>
     return HashDeck(deal)
 
-export func HashDeckBody(deal: List<int>) -> List<int>
+func body_from(deal: List<int>, h: Position) -> List<int>
     deal = require_permutation(deal)
-    h = iv_cook12()
     e = em_block(h, deal)
     return position_to_bytes(compose(h, e))
 
+export func HashDeckBody(deal: List<int>) -> List<int>
+    return body_from(deal, iv_cook12())
+
 export func MegaDreifachBody(deal: List<int>) -> List<int>
     return HashDeckBody(deal)
+
+export func HashDeckBodyFrom(deal: List<int>, h: Position) -> List<int>
+    return body_from(deal, h)
+
+export func MegaDreifachBodyFrom(deal: List<int>, h: Position) -> List<int>
+    return HashDeckBodyFrom(deal, h)
 
 func hex_iv() -> List<int>
     return [0, 0, 2, 26, 235, 135, 110, 183, 109, 216, 191, 131, 52, 87, 162, 192, 38, 19, 229, 86, 86, 150, 62, 2, 216, 223, 237, 181, 170]
@@ -825,6 +833,16 @@ test "HashDeckBody on the identity deal is 29 bytes"
     b = HashDeckBody(deal)
     assert b.length == digest_len
     assert MegaDreifachBody(deal) == b
+
+test "HashDeckBodyFrom at IV matches HashDeckBody"
+    deal = range_list(52)
+    iv = iv_cook12()
+    from_iv = HashDeckBodyFrom(deal, iv)
+    assert from_iv == HashDeckBody(deal)
+    assert MegaDreifachBodyFrom(deal, iv) == MegaDreifachBody(deal)
+    from_id = HashDeckBodyFrom(deal, identity())
+    assert from_id.length == digest_len
+    assert from_id != from_iv
 
 test "require_permutation rejects a duplicate"
     bad = filled(52, 0)

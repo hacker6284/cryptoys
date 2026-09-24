@@ -6,7 +6,7 @@ This directory is the published primitive:
 
 | File | Role |
 | --- | --- |
-| `SPEC.md` | Normative specification (`Hash` / `HashDeck` / `HashDeckBody`, plus `MegaDreifach*` aliases) |
+| `SPEC.md` | Normative specification (`Hash` / `HashDeck` / `HashDeckBody`, plus `MegaDreifach*` aliases; `*BodyFrom` is the free-start analysis surface) |
 | `megadreifach.sudo` | Conformance implementation |
 | `kats/megaminx_hash_kats.json` | Published KAT file (pad / IV / `|G|` metadata; research Hash hexes) |
 

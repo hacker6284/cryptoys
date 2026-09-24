@@ -14,14 +14,15 @@ Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a 
 
 - A general byte hash `Hash` / `MegaDreifach`.
 - `HashDeck` / `MegaDreifachDeck`: `Hash(φ⁻¹(deal))` when the deal is in the image of φ.
-- `HashDeckBody` / `MegaDreifachBody`: one Davies–Meyer compression on a required 52-card permutation.
+- `HashDeckBody` / `MegaDreifachBody`: one Davies–Meyer compression on a required 52-card permutation, from IV-COOK12.
+- `HashDeckBodyFrom` / `MegaDreifachBodyFrom`: the same compression from a caller chaining value (free-start analysis surface; broken).
 - Pad B=28, factoradic φ, abs-G2 + F3 t=12, IV-COOK12, 29-byte digest rank.
 
 ## Non-goals
 
 - No collision resistance, preimage resistance, or ideal-cipher-on-G claim.
 - No AES-class numbers. Birthday ≈ 2^113 is honesty about `|G| ≈ 2^{225.9}`, not a theorem.
-- No proof that mid-block L3 collisions are absent. They exist. Free-start `HashDeckBody` is broken.
+- No proof that mid-block L3 collisions are absent. They exist. Free-start `HashDeckBodyFrom` is broken.
 - Relative reorient recipes are rejected (research disproof). Absolute Recipe A only.
 - No claim that Lean equals this sudo text. That is a future emitter proof.
 
@@ -33,7 +34,10 @@ Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a 
 | --- | --- |
 | `Hash(msg)` / `MegaDreifach(msg)` | Byte hash. The only public message domain. |
 | `HashDeck(deal)` / `MegaDreifachDeck(deal)` | `Hash(φ⁻¹(deal))` when the deal’s factoradic rank is `< 2^{224}`. Often two MD blocks after the outer pad. |
-| `HashDeckBody(deal[, h])` / `MegaDreifachBody(deal[, h])` | One DM compression on a **52-card permutation** from chaining value `h` (default IV-COOK12). No outer pad, no φ. Non-permutations are rejected. |
+| `HashDeckBody(deal)` / `MegaDreifachBody(deal)` | Public v1 Body. One DM compression on a **52-card permutation** from **IV-COOK12**. No outer pad, no φ. Non-permutations are rejected. |
+| `HashDeckBodyFrom(deal, h)` / `MegaDreifachBodyFrom(deal, h)` | Free-start analysis surface. Same DM from caller chaining value `h`. **Broken** (collisions exist). Not a security API. |
+
+Sudocode has no optional parameters, so the soft-lock prose `HashDeckBody(deal[, h])` splits: omit `h` → `HashDeckBody(deal)` (always IV-COOK12); supply `h` → `HashDeckBodyFrom(deal, h)`. Identically, `HashDeckBody(deal)` is `HashDeckBodyFrom(deal, IV-COOK12)`.
 
 Cards appear after φ, or as a deal body for `HashDeckBody`. There is no arbitrary-card public message API.
 

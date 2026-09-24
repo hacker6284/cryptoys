@@ -22,7 +22,7 @@ env:
 
 jobs:
   # Anti-drift: committed Generated/ Lean must match emit from current .sudo
-  # via the pinned sudocode Lean backend (PR #5; not origin/main).
+  # via the pinned sudocode main commit (PR #5 merge; see SUDOCODE_LEAN_PIN).
   generated-fresh:
     runs-on: ubuntu-latest
     steps:

@@ -2,10 +2,8 @@
 # Regenerate (or --check) emitted Lean from normative .sudo files via the
 # sudocode protocol-4 Lean backend.
 #
-# Pin: hacker6284/sudocode @ SUDOCODE_LEAN_COMMIT on branch
-#   cursor/lean-external-backend-36b2  (sudocode PR #5).
-# Main sudocode does not ship backends/lean/ yet. Do not fetch origin/main
-# and expect emit.py to exist.
+# Pin: hacker6284/sudocode main @ SUDOCODE_LEAN_COMMIT
+#   (PR #5 squash merge; backends/lean/ is on main).
 #
 # Full-peer emit (no --require terminates). Cryptoys publics have unmeasured
 # whiles; the totality gate refuses them.
@@ -24,10 +22,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# sudocode PR #5 head that includes the _fs Flow-binder shadow fix.
+# sudocode main at the PR #5 squash merge (includes _fs Flow-binder fix).
 # Bump proofs/SUDOCODE_LEAN_PIN only when you intend to change the emitter.
 SUDOCODE_LEAN_REPO="${SUDOCODE_LEAN_REPO:-https://github.com/hacker6284/sudocode.git}"
-SUDOCODE_LEAN_REF="${SUDOCODE_LEAN_REF:-cursor/lean-external-backend-36b2}"
+SUDOCODE_LEAN_REF="${SUDOCODE_LEAN_REF:-main}"
 PIN_FILE="$ROOT/proofs/SUDOCODE_LEAN_PIN"
 if [[ -z "${SUDOCODE_LEAN_COMMIT:-}" ]]; then
   SUDOCODE_LEAN_COMMIT="$(grep -E '^[0-9a-f]{40}$' "$PIN_FILE")"
@@ -83,7 +81,7 @@ if [[ "$need_fetch" -eq 1 && -z "${SUDOC:-}" ]]; then
   git -C "$SUDOCODE_DIR" checkout --detach "$SUDOCODE_LEAN_COMMIT"
   if [[ ! -f "$SUDOCODE_DIR/backends/lean/emit.py" ]]; then
     echo "blocker: $SUDOCODE_LEAN_COMMIT has no backends/lean/emit.py" >&2
-    echo "main sudocode does not ship the Lean backend yet (PR #5)." >&2
+    echo "expected sudocode main at/after the PR #5 merge (4286093)." >&2
     exit 1
   fi
   cargo build --release --manifest-path "$SUDOCODE_DIR/sudoc/Cargo.toml"

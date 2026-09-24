@@ -1,7 +1,6 @@
 # sudocode Lean backend pin.
-# Residual merge risk: this is an unmerged draft (sudocode PR #5),
-# not a commit on main. Main does not ship backends/lean/ (not in
-# ALL_BACKENDS). Branch cursor/lean-external-backend-36b2, includes
-# the _fs Flow-binder shadow fix. Bump only when you intend to
-# change the emitter, then re-run proofs/emit_lean.sh.
-df152a2dcd33c6c8652a228e476aae5868333330
+# Durable: sudocode main, squash merge of PR #5
+# (4286093e791e85e2be0b72b524319ba64bda002b). backends/lean/ now
+# ships on main; Lean is still not in ALL_BACKENDS. Bump only when
+# you intend to change the emitter, then re-run proofs/emit_lean.sh.
+4286093e791e85e2be0b72b524319ba64bda002b

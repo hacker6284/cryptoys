@@ -58,24 +58,19 @@ cd proofs/megadreifach/lean/Generated && lake build && ./.lake/build/bin/megadre
 
 Expected TAP: DoubleDeal **12/12**, MegaDreifach **11/11**.
 
-## Pin (Lean backend is not on sudocode main)
+## Pin (sudocode main)
 
 | Field | Value |
 | --- | --- |
 | Repo | [hacker6284/sudocode](https://github.com/hacker6284/sudocode) |
-| Branch | `cursor/lean-external-backend-36b2` ([PR #5](https://github.com/hacker6284/sudocode/pull/5)) |
-| Commit | `df152a2dcd33c6c8652a228e476aae5868333330` (file: [`SUDOCODE_LEAN_PIN`](SUDOCODE_LEAN_PIN)) |
+| Branch | `main` |
+| Commit | `4286093e791e85e2be0b72b524319ba64bda002b` (file: [`SUDOCODE_LEAN_PIN`](SUDOCODE_LEAN_PIN)) — squash merge of [PR #5](https://github.com/hacker6284/sudocode/pull/5) |
 | Spike | [PR #6](https://github.com/hacker6284/sudocode/pull/6) (CONDITIONAL GO) |
 
-**Residual merge risk:** the pin is an **unmerged draft** (sudocode
-PR #5), not a commit on sudocode `main`. `backends/lean/` is not
-there on main. Lean is not in `ALL_BACKENDS`. This cryptoys PR stays
-draft until Generated TAP is green **and** that pin is durable (for
-example #5 lands). Do not treat the pin as if it were on main. This
-repo does not merge or vendor that PR.
-
-The commit includes the `_fs` Flow-binder shadow fix (a sudo `for s`
-must not capture the loop payload). MegaDreifach needs that fix.
+This pin is **durable on sudocode main**. `backends/lean/` ships there
+as of #5. Lean is still **not** in `ALL_BACKENDS` (unfinished lockstep
+peer; out of scope here). The merge includes the `_fs` Flow-binder
+shadow fix (a sudo `for s` must not capture the loop payload).
 
 ## Terminates gate is off
 
@@ -96,7 +91,8 @@ total-fragment / terminating-subset emitter.
 - Not a claim that `Generated.v_Hash` equals the algebraic
   `hashBlocks` fold in `MegaDreifach/`.
 - Not bit-security, MDS, collision-resistance, or AEAD.
-- Not merging sudocode #5 or adding Lean to `ALL_BACKENDS`.
+- Not adding Lean to sudocode `ALL_BACKENDS` (peer registration is
+  a sudocode follow-up; this repo only consumes the emitter).
 
 ## OPEN
 

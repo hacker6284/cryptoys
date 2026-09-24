@@ -42,12 +42,6 @@ function disposeObject(object) {
     object.parent?.remove(object);
 }
 
-function showPanel(on) {
-    const panel = document.querySelector("#playroom-panel");
-    if (panel) panel.hidden = !on;
-    document.documentElement.dataset.panel = on ? "teach" : "";
-}
-
 function setDockMode(root, mode) {
     const next = mode === "hands" ? "hands" : "teach";
     root.dataset.mode = next;
@@ -115,8 +109,7 @@ function mountDock() {
     root.querySelector("#dock-mode")?.addEventListener("click", () => {
         setDockMode(root, root.dataset.mode === "hands" ? "teach" : "hands");
     });
-    const panel = document.querySelector("#playroom-panel");
-    (panel || document.body).append(root);
+    document.body.append(root);
     return root;
 }
 
@@ -175,7 +168,6 @@ function createScrambleAdapter() {
                 setDockMode(root, "teach");
                 root.hidden = false;
                 root.classList.add("on");
-                showPanel(true);
                 return session;
             } finally {
                 entering = false;
@@ -189,7 +181,6 @@ function createScrambleAdapter() {
                 root.classList.remove("on");
                 root.hidden = true;
             }
-            showPanel(false);
             if (rig) {
                 rig.clearHighlights();
                 rig.paint(SOLVED_FACELETS);

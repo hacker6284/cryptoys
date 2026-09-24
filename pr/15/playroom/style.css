@@ -1,46 +1,36 @@
-/* Window, not wallpaper. Minimal shell: framed viewport + instrument panel.
-   Fluid reflow (stack vs side) so any aspect ratio stays readable.
-   Not a finished visual system — structure for mock discussion. */
+/* Locked 2026-09-24: world always visible; overlays OK; copy must not bury the toys. */
 
 html,
 body.playroom {
   height: 100%;
+  overflow: hidden;
 }
 
 body.playroom {
-  overflow: hidden;
-  background: var(--bg);
+  background: #0e0b09;
 }
 
-.playroom-app {
-  display: flex;
-  flex-direction: column;
+#playroom {
+  display: block;
+  width: 100%;
   height: 100dvh;
-  min-height: 100dvh;
-  background: var(--bg);
-  color: var(--fg);
-}
-
-.playroom-chrome {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex: 0 0 auto;
-  min-height: var(--chrome-height);
-  padding: 12px 20px 8px;
-  border-bottom: 1px solid var(--line);
-  background: var(--bg);
+  touch-action: none;
 }
 
 .playroom-title {
+  position: fixed;
+  left: 20px;
+  top: 16px;
   margin: 0;
+  z-index: 2;
   font-family: var(--font-display);
   font-weight: 520;
-  font-size: clamp(28px, 3.2vw, 36px);
+  font-size: clamp(32px, 3.4vw, 38px);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--fg);
+  color: color-mix(in srgb, var(--fg) 78%, transparent);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
   opacity: 0;
 }
 
@@ -48,46 +38,47 @@ body.playroom {
   opacity: 1;
 }
 
-.playroom-chrome-start {
-  display: flex;
-  align-items: baseline;
-  gap: 16px;
-  min-width: 0;
-}
-
 .playroom-menu {
+  position: fixed;
+  right: 22px;
+  top: 20px;
+  z-index: 2;
   margin: 0;
   padding: 0;
   background: none;
   border: 0;
   color: var(--muted);
   text-align: right;
-  display: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .playroom-menu.on {
-  display: block;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .playroom-menu-label {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--accent);
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
 }
 
 .playroom-menu a,
 .playroom-menu .playroom-algo {
   display: block;
   width: 100%;
-  padding: 2px 0;
+  padding: 3px 0;
   margin: 0;
   border: 0;
   border-radius: 0;
   background: none;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
   text-align: right;
   text-decoration: none;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
   cursor: pointer;
   font: inherit;
 }
@@ -104,9 +95,20 @@ body.playroom {
 }
 
 .playroom-pose {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  position: fixed;
+  left: 20px;
+  bottom: 16px;
+  z-index: 4;
+}
+
+html[data-algo]:not([data-algo=""]) .playroom-pose {
+  top: 58px;
+  bottom: auto;
+}
+
+html[data-algo]:not([data-algo=""]) .playroom-pose .chrome-action {
+  color: color-mix(in srgb, var(--fg) 82%, transparent);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 body.playroom:not(.is-ready) .playroom-pose {
@@ -117,67 +119,14 @@ body.playroom:not(.is-ready) .playroom-pose {
   display: none;
 }
 
-.playroom-body {
-  flex: 1 1 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr);
-  min-height: 0;
-  padding: 10px 12px 12px;
-  gap: 10px;
-}
-
-html[data-panel="teach"] .playroom-body {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(120px, 36dvh) minmax(0, 1fr);
-}
-
-.playroom-stage {
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-}
-
-.playroom-window {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  width: 100%;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: #0e0b09;
-  box-shadow: inset 0 0 0 1px rgba(243, 239, 230, 0.04);
-}
-
-#playroom {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  touch-action: none;
-}
-
-.playroom-panel {
-  min-width: 0;
-  min-height: 0;
-  overflow: auto;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
-  color: var(--fg);
-}
-
-.playroom-panel[hidden] {
-  display: none;
-}
-
 #load-error {
-  flex: 0 0 auto;
-  margin: 0 20px 12px;
+  position: fixed;
+  left: 20px;
+  right: 20px;
+  bottom: 56px;
+  z-index: 3;
   max-width: 36rem;
+  margin: 0;
   color: var(--danger);
   font-family: var(--font-mono);
   font-size: 13px;
@@ -197,38 +146,71 @@ body.playroom:not(.is-ready) .playroom-menu {
   transition: none;
 }
 
-body.playroom.is-ready .playroom-title {
+body.playroom.is-ready .playroom-title,
+body.playroom.is-ready .playroom-menu {
   transition: opacity 280ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.playroom.is-ready .playroom-title {
+  body.playroom.is-ready .playroom-title,
+  body.playroom.is-ready .playroom-menu {
     transition: none;
   }
 }
 
+/* Teach is screen content, not felt. Keep it off the cube (center). */
 .playroom-dock {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 18px;
-  height: auto;
-  min-height: 0;
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 3;
+  width: min(22rem, calc(100vw - 32px));
+  max-height: min(46dvh, 28rem);
+  overflow: auto;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.playroom-dock.on {
+  opacity: 1;
 }
 
 .playroom-dock[hidden] {
   display: none;
 }
 
-.playroom-teach-primary {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
+.playroom-teach-primary,
+.playroom-hands,
+.playroom-mode {
+  pointer-events: auto;
 }
 
 .playroom-note[hidden] {
   display: none;
+}
+
+.playroom-note,
+.playroom-hands {
+  padding: 12px 14px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  color: var(--fg);
+}
+
+.playroom-note .tape {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 8px;
+}
+
+.playroom-note .transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
 }
 
 .playroom-note-body .kicker,
@@ -243,19 +225,19 @@ body.playroom.is-ready .playroom-title {
 }
 
 .playroom-note-body h2 {
-  margin: 4px 0 8px;
+  margin: 4px 0 6px;
   font-family: var(--font-display);
   font-weight: 520;
-  font-size: clamp(18px, 2.4vw, 28px);
+  font-size: clamp(20px, 2.2vw, 26px);
   letter-spacing: -0.02em;
   color: var(--fg);
 }
 
 .playroom-note-body .math,
 .playroom-note-body .why {
-  margin: 0 0 8px;
-  font-size: 15px;
-  line-height: 1.45;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
   color: var(--fg);
 }
 
@@ -269,16 +251,9 @@ body.playroom.is-ready .playroom-title {
   display: none;
 }
 
-.playroom-note .tape {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin: 0 0 4px;
-}
-
 .playroom-dock .tape-cell {
-  min-width: 1.6em;
-  padding: 3px 5px;
+  min-width: 1.5em;
+  padding: 2px 5px;
   border: 1px solid var(--line);
   border-radius: 3px;
   background: var(--raised);
@@ -303,15 +278,6 @@ body.playroom.is-ready .playroom-title {
   border-color: var(--accent);
 }
 
-.playroom-note .transport {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.playroom-note .transport .chrome-action,
 .playroom-note .transport button {
   padding: 6px 10px;
   font-family: var(--font-mono);
@@ -324,9 +290,10 @@ body.playroom.is-ready .playroom-title {
 }
 
 .playroom-mode {
-  align-self: flex-start;
-  margin: 0;
+  display: block;
+  margin: 8px 2px 0;
   padding: 0;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
 }
 
 .playroom-hands {
@@ -348,7 +315,7 @@ body.playroom.is-ready .playroom-title {
 }
 
 .playroom-dock textarea {
-  min-height: 4.5em;
+  min-height: 3.5em;
 }
 
 .playroom-dock .outline {
@@ -359,30 +326,27 @@ body.playroom.is-ready .playroom-title {
   pointer-events: auto;
 }
 
-/* Wide enough and not portrait: window | panel. Covers landscape phone and desktop. */
-@media (min-aspect-ratio: 5 / 4) and (min-width: 600px) {
-  html[data-panel="teach"] .playroom-body {
-    grid-template-columns: minmax(0, 1fr) minmax(200px, min(34vw, 380px));
-    grid-template-rows: minmax(0, 1fr);
+body.playroom.is-ready .playroom-dock {
+  transition: opacity 280ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.playroom.is-ready .playroom-dock {
+    transition: none;
   }
 }
 
-@media (max-height: 500px) {
-  .playroom-chrome {
-    min-height: 0;
-    padding: 6px 12px 4px;
+@media (max-width: 600px) {
+  .playroom-menu {
+    top: 60px;
+    right: 16px;
   }
 
-  .playroom-title {
-    font-size: clamp(20px, 5vh, 28px);
-  }
-
-  .playroom-body {
-    padding: 6px 8px 8px;
-    gap: 8px;
-  }
-
-  .playroom-panel {
-    padding: 8px 10px;
+  .playroom-dock {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-height: 42dvh;
   }
 }

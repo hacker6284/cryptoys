@@ -44,6 +44,7 @@ function syncOverlays({ name, overlays, tweening }) {
 try {
     const world = await mountWorld(canvas);
     adapters.scramble.install(world);
+    void adapters.scramble.preload();
     const director = createToyDirector(world);
     const params = new URLSearchParams(location.search);
     const initialPose = resolvePoseName(params.get("pose"));
@@ -72,9 +73,10 @@ try {
         });
         try {
             const fly = director.borrow("scramble", { snap });
+            const warm = adapters.scramble.preload();
             if (snap || poses.prefersReducedMotion()) poses.snap("scramble");
             else poses.goTo("scramble", { duration: FLY_MS });
-            await fly;
+            await Promise.all([fly, warm]);
             await adapters.scramble.enter();
             writeQuery({ pose: "seated", algo: "scramble" });
             syncOverlays({

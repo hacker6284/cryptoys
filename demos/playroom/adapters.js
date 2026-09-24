@@ -104,6 +104,21 @@ function createScrambleAdapter() {
     let session = null;
     let root = null;
     let entering = false;
+    let sessionMod = null;
+    let preloadPromise = null;
+
+    async function preload() {
+        if (sessionMod) return sessionMod;
+        if (!preloadPromise) {
+            preloadPromise = (async () => {
+                await loadScript(new URL("../scramble/vendor/cube.js", import.meta.url).href);
+                await loadScript(new URL("../scramble/vendor/solve.js", import.meta.url).href);
+                sessionMod = await import("../scramble/session.js");
+                return sessionMod;
+            })();
+        }
+        return preloadPromise;
+    }
 
     return {
         id: "scramble",
@@ -119,6 +134,7 @@ function createScrambleAdapter() {
             world.applyPose(rig.group, world.getShelfPose("cube"));
             return rig;
         },
+        preload,
         view() {
             return rig;
         },
@@ -127,9 +143,7 @@ function createScrambleAdapter() {
             entering = true;
             try {
                 root = mountDock();
-                await loadScript(new URL("../scramble/vendor/cube.js", import.meta.url).href);
-                await loadScript(new URL("../scramble/vendor/solve.js", import.meta.url).href);
-                const { createScrambleSession } = await import("../scramble/session.js");
+                const { createScrambleSession } = await preload();
                 session = createScrambleSession({
                     view: rig,
                     specUrl: new URL("../scramble/SPEC.md", import.meta.url).href,

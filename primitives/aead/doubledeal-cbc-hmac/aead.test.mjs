@@ -96,6 +96,7 @@ mustReject("aad flip", () => aead.decrypt(sample, master, iv, [8]));
 mustReject("iv flip", () => aead.decrypt(sample, master, flip(iv, 0), [9]));
 mustReject("truncated tag", () => aead.decrypt(sample.slice(0, -1), master, iv, [9]));
 mustReject("empty master", () => aead.encrypt([1], [], iv, []));
+mustReject("wrong master key", () => aead.decrypt(sample, flip(master, 0), iv, [9]));
 
 const otherIv = flip(iv, 3);
 const other = aead.encrypt([1, 2, 3], master, otherIv, [9]);

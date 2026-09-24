@@ -19,4 +19,4 @@ Checklist for [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/cipher/d
 | S13 | §5.3 bytes ↔ deck; `0x80` pad strips uniquely | **Evidence** | none in Lean | `primitives/cipher/doubledeal/encoding.test.mjs` and `demos/doubledeal/cards.js`. Same digit convention as §5.2. |
 | S14 | DoubleDeal-CBC-HMAC round-trip and tag reject | **Evidence** | none in Lean | `primitives/aead/doubledeal-cbc-hmac/`. Not a MAC theorem. SCM stays later. |
 
-**Suggested order:** S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7. Keep S8–S10 as evidence notebooks. Cycle structure of PassKey stays evidence.
+**Suggested order:** S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7, S13 as a property-test of the byte encoding, S14 as AEAD evidence (not a theorem), and S8–S10 as living evidence notebooks — never promoted to “security results.” Cycle structure of PassKey stays evidence.

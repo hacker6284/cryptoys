@@ -47,7 +47,7 @@ Deprecated algorithms, when they appear, get their own directory under `proofs/`
 
 | Primitive | Current version | This tree |
 | --- | --- | --- |
-| TwoDeck | `primitives/cipher/twodeck/` | Correctness Lean under `twodeck/lean/`. PassKey injectivity is **proved**. Known-answer vectors under `twodeck/vectors/` agree with `twodeck.sudo`. Merge with PR #3 (or #3 immediately after) so SPEC §3.7 / S4 stop saying injectivity is open. |
+| TwoDeck | `primitives/cipher/twodeck/` | Correctness Lean under `twodeck/lean/`. PassKey injectivity is **proved** (PR #3, on `main`). Known-answer vectors under `twodeck/vectors/` agree with `twodeck.sudo`. |
 | MegaDreifach | `primitives/hash/megadreifach/` (SPEC + `megadreifach.sudo` + KATs) | Correctness Lean under `megadreifach/lean/`. M1–M7 packing/algebra **proved** (M3 even-perm glue still open). M8 is a net-distinctness reduction. M9 / full KAT digests **OPEN**. Hand-written Lean is not a proof that the sudo text equals the Lean model. A green Lean build is not a security claim. |
 | Scramble | `scramble_v2` | Placeholder only. Teaching hash; single-cube birthday ceiling. No Lean. Not bumped. |
 | TwoDeck-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. |

@@ -768,6 +768,9 @@ test "compose inverse round trip"
     assert left.ep == idp.ep
     assert left.eo == idp.eo
     assert right.cp == idp.cp
+    assert right.co == idp.co
+    assert right.ep == idp.ep
+    assert right.eo == idp.eo
 
 test "IV-COOK12 digest"
     d = position_to_bytes(iv_cook12())

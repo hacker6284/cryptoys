@@ -1,8 +1,9 @@
 /-
-  M3 — Digest rank bijection on legal positions ↔ `[0, |G|)`.
-  Layout matches `megaminx.rank_position`:
+  M3 — Digest rank packing (not a full bijection theorem yet).
+  Layout matches SPEC §6:
     even cp (20!/2) | co[0..18] (3^19) | even ep (30!/2) | eo[0..28] (2^29).
-  Zero sorry. No native_decide.
+  Proved at the packing layer. Open glue: evenRank injectivity on even S_n
+  (Lehmer prefix + even completion). Zero sorry. No native_decide.
 -/
 import MegaDreifach.Position
 import MegaDreifach.Factoradic

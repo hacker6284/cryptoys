@@ -4,6 +4,12 @@ This tree is the library's proof ledger. Specifications under `primitives/` stay
 
 Nothing in this repository is for real use. A green Lean build is not a security claim.
 
+Three layers of evidence, and only the first is a theorem:
+
+1. **Theorems about the Lean model** — bijections, round-trip, PassKey injectivity. Kernel-checked, zero `sorry`.
+2. **Vector agreement** — the same known-answer decks are evaluated in Lean and in `twodeck.sudo` (via the sudoc JS target). This is evidence that the hand-written model matches the conformance implementation on those inputs, **not** a proof that the sudo text equals the Lean model.
+3. **Future: emitter proof** — a sudocode total-fragment Lean emitter will be the place to prove that the sudo code *is* the Lean model. That emitter does not exist yet.
+
 ## Taxonomy
 
 Four kinds. The first three apply to **current** algorithms. The fourth applies only after an algorithm is **deprecated**.
@@ -40,7 +46,7 @@ Deprecated algorithms, when they appear, get their own directory under `proofs/`
 
 | Primitive | Current version | This tree |
 | --- | --- | --- |
-| TwoDeck | `primitives/cipher/twodeck/` | Correctness Lean under `twodeck/lean/`. PassKey injectivity is **proved** (constructive inverse); SPEC text still says open. |
+| TwoDeck | `primitives/cipher/twodeck/` | Correctness Lean under `twodeck/lean/`. PassKey injectivity is **proved**. Known-answer vectors under `twodeck/vectors/` agree with `twodeck.sudo`. SPEC text on this branch still says injectivity is open. |
 | Scramble | `scramble_v2` | Placeholder only. Teaching hash; single-cube birthday ceiling. No Lean. Not bumped. |
 | TwoDeck-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. |
 

@@ -28,6 +28,11 @@ jobs:
               sys.exit(1)
           print("no sorry/admit in theorem code")
           PY
+      - name: Vectors.lean matches committed JSON
+        run: python3 proofs/twodeck/vectors/json_to_lean.py --check
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/twodeck/lean
+      - name: Known-answer vectors (compiled Lean)
+        working-directory: proofs/twodeck/lean
+        run: lake exe twodeck

@@ -4,6 +4,14 @@ Normative definition: [`primitives/cipher/twodeck/SPEC.md`](../../primitives/cip
 
 TwoDeck is a toy block cipher. It has no cryptographic security claim. The Lean package below proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
 
+## Three layers (be honest)
+
+| Layer | What it is | Trust base |
+| --- | --- | --- |
+| **(a) Theorems about the Lean model** | Bijections, `encrypt6_rt` under Compose-key bijections, PassKey `F_inv ∘ F = id`, and the same round-trip with the **real PassKey schedule** (`encryptDeckFn_rt`). | Lean kernel. `lake build`. No `sorry`. |
+| **(b) Vector agreement** | Every deck in `vectors/twodeck_vectors.json` is checked by `lake exe twodeck` against the Lean functions. JSON is generated from a sudoc JS build of `twodeck.sudo`, not hand-copied. | Compiled Lean evaluation (the `twodeck` executable), plus the committed JSON. **Not** kernel `decide`. **Not** a proof that sudo = Lean. |
+| **(c) Future: emitter proof** | A sudocode total-fragment Lean emitter should eventually show the sudo text *is* this model. | Does not exist yet. Do not read (b) as a substitute. |
+
 ## What is proved
 
 Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES.md).
@@ -11,7 +19,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | Stone | Claim | Status |
 | --- | --- | --- |
 | S1 | Lay/scoop, SumRanks, ShiftRows, GridCycle, Compose are invertible as stated | Proved (GridCycle: `invMix ∘ Mix = id`) |
-| S2 | Full / final round and Nr=6 encrypt/decrypt round-trip | Proved under abstract Compose-key bijections |
+| S2 | Full / final round and Nr=6 encrypt/decrypt round-trip | Proved under abstract Compose-key bijections; concrete PassKey schedule inherits `encrypt6_rt` |
 | S3 | PassKey is deterministic and content-preserving | Proved (`List.Perm`) |
 | S4 | PassKey is injective (constructive inverse) | Proved (`Function.LeftInverse` / right inverse). Cycle structure is not. |
 | S5 | Factoradic `unrankPerm` returns a permutation of its items | Proved; injectivity only for `3!` in Lean |
@@ -28,8 +36,8 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | S7 | Hand sheet refines §3 math | Open |
 | S8–S10 | Differentials, slide, randomness stats | Evidence only; never "security results" |
 | S13 | §5.3 bytes ↔ deck | Evidence in `encoding.test.mjs` / `demos/twodeck/cards.js` |
+| — | sudo text equals the Lean model | Open; vector agreement is layer (b) only. Future emitter is layer (c). |
 | — | `mixColumns ∘ invMixColumns = id` on arbitrary packets | Open (needs image / seat characterization) |
-| — | Concrete PassKey output wired as the Compose `pos` map | Open; S2 uses abstract bijections |
 
 ## Lean package
 
@@ -40,9 +48,26 @@ cd proofs/twodeck/lean
 lake build
 ```
 
-`lake exe twodeck` prints a one-line summary. The library target is `TwoDeck`. Namespaces are `TwoDeck`, not a workspace lineage name.
+`lake exe twodeck` prints a one-line summary **and** runs the known-answer vector checks. The library target is `TwoDeck`. Namespaces are `TwoDeck`, not a workspace lineage name.
 
-Shipped theorems contain no `sorry`. A proofs CI job runs `lake build` here and does not gate the Pages demo build.
+Shipped theorems contain no `sorry`. A proofs CI job (`proofs.yml`) runs `lake build` and `lake exe twodeck`. It does not gate the Pages demo build.
+
+### Regenerating vectors
+
+Do not hand-edit `vectors/twodeck_vectors.json` or `lean/TwoDeck/Vectors.lean`. From the repo root, with network enough to clone [sudocode](https://github.com/hacker6284/sudocode) (same compiler as `.github/workflows/pages.yml`):
+
+```sh
+proofs/twodeck/vectors/regen.sh
+```
+
+That builds `twodeck.sudo` to JS, evaluates the published sudo tests plus extra KATs, writes the JSON, then emits `Vectors.lean`. If the JSON is already current:
+
+```sh
+python3 proofs/twodeck/vectors/json_to_lean.py          # write Vectors.lean
+python3 proofs/twodeck/vectors/json_to_lean.py --check  # CI: stale Lean fails
+```
+
+Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
 
 ## Reading order
 

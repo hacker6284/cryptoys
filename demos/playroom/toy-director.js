@@ -212,7 +212,7 @@ export function createToyDirector(world) {
         const now = performance.now();
         // Cap the step so a hitch or a late first rAF cannot skip the
         // whole shelf→felt arc (that read as a pop on the felt).
-        const dt = Math.min(100, Math.max(0, now - flight.last));
+        const dt = Math.min(200, Math.max(0, now - flight.last));
         flight.last = now;
         flight.elapsed += dt;
         const u = Math.min(1, flight.elapsed / flight.duration);

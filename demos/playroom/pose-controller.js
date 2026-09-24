@@ -132,7 +132,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
 
     function update(now = performance.now()) {
         if (!tween) return current;
-        const dt = Math.min(100, Math.max(0, now - tween.last));
+        const dt = Math.min(200, Math.max(0, now - tween.last));
         tween.last = now;
         if (tween.holding) {
             tween.holdElapsed += dt;

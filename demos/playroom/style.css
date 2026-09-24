@@ -345,6 +345,15 @@ body.playroom.is-ready .playroom-menu {
   border: 0;
 }
 
+.playroom-dock .playroom-anim button,
+.playroom-dock .playroom-crypto button,
+.playroom-dock .playroom-io button,
+.playroom-dock .playroom-note button {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .playroom-dock .icon-btn {
   display: inline-flex;
   align-items: center;

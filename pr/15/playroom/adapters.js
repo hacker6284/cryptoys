@@ -46,9 +46,10 @@ function disposeObject(object) {
 /**
  * Product model (Zach, 2026-09-24): these demo pages are the only
  * place on the internet to perform the algorithms without writing
- * code. Using the hash is primary. Message is the field that always
- * matters (landscape top-right; portrait dark band). Teach is
- * opt-in: landscape bottom-right, portrait behind (i). No cards.
+ * code. Using the hash is primary. Maps chrome: landscape four
+ * corners (TL algorithm, TR input card, BL transport card, BR
+ * Solve/Spec). Portrait: stage on top (transport over the 3D),
+ * input card in the dark band. Teach is opt-in via Step / (i).
  */
 function specUrlCandidates() {
     const fromModule = new URL("../scramble/SPEC.md", import.meta.url).href;
@@ -88,6 +89,9 @@ function bindInstrumentChrome(root) {
         setInfo(false);
     });
     spec?.addEventListener("close", clearError);
+    root.querySelector("#digest")?.addEventListener("focus", (event) => {
+        event.currentTarget.select?.();
+    });
 }
 
 function mountDock() {
@@ -99,21 +103,35 @@ function mountDock() {
     root.hidden = true;
     root.innerHTML = `
       <div class="playroom-io">
-        <label class="playroom-message-label" for="message">Message</label>
-        <textarea id="message" rows="3" spellcheck="false" placeholder="hello">hello</textarea>
-        <p id="digest" class="digest"></p>
-        <p id="status" class="status">Solved start · white up, green front, red right</p>
-        <p id="error" class="error"></p>
-        <div class="row playroom-crypto">
-          <span id="gen-label" class="playroom-hands-label" hidden>Gen 2</span>
-          <button type="button" class="text-action" data-version="1">Gen 1</button>
-          <button type="button" class="text-action on" data-version="2">Gen 2</button>
-          <button type="button" class="text-action on" data-encoding="text">text</button>
-          <button type="button" class="text-action" data-encoding="hex">hex</button>
-          <button id="digest-btn" class="text-action" type="button">Digest</button>
-          <button id="solve" class="text-action" type="button">Solve</button>
-          <button id="spec-btn" class="text-action" type="button">Spec</button>
-          <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">${lucideSvg("info", 18)}</button>
+        <div class="playroom-card playroom-card--io">
+          <div class="playroom-io-grid">
+            <div class="playroom-ctl">
+              <span class="playroom-label" id="gen-legend">Gen</span>
+              <span id="gen-label" hidden>Gen 2</span>
+              <div class="playroom-seg" role="group" aria-labelledby="gen-legend">
+                <button type="button" class="seg-btn" data-version="1">1</button>
+                <button type="button" class="seg-btn on" data-version="2">2</button>
+              </div>
+            </div>
+            <div class="playroom-ctl">
+              <span class="playroom-label" id="enc-legend">Encoding</span>
+              <div class="playroom-seg" role="group" aria-labelledby="enc-legend">
+                <button type="button" class="seg-btn on" data-encoding="text">Text</button>
+                <button type="button" class="seg-btn" data-encoding="hex">Hex</button>
+              </div>
+            </div>
+          </div>
+          <label class="playroom-ctl playroom-ctl--field" for="message">
+            <span class="playroom-label">Message</span>
+            <textarea id="message" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+          </label>
+          <label class="playroom-ctl playroom-ctl--field" for="digest">
+            <span class="playroom-label">Digest</span>
+            <input id="digest" class="digest" type="text" readonly spellcheck="false" autocomplete="off">
+          </label>
+          <p id="status" class="status playroom-status">Solved start · white up, green front, red right</p>
+          <p id="error" class="error"></p>
+          <button id="digest-btn" type="button" hidden>Digest</button>
         </div>
         <p class="playroom-info-hint" id="teach-hint">Step through to see each turn.</p>
         <div id="teach" class="playroom-note" hidden>
@@ -132,16 +150,23 @@ function mountDock() {
         <div id="outline" class="outline" hidden></div>
       </div>
       <div class="playroom-anim">
-        <div class="row playroom-actions">
-          <button id="play" class="icon-btn icon-primary" type="button" aria-label="Play" title="Play">
-            <span class="icon-play">${lucideSvg("play")}</span>
-            <span class="icon-pause">${lucideSvg("pause")}</span>
-          </button>
-          <button id="step-through" class="icon-btn" type="button" aria-label="Step through" title="Step through">${lucideSvg("skip-forward")}</button>
-          <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
-          <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
+        <div class="playroom-card playroom-card--transport">
+          <div class="row playroom-actions">
+            <button id="play" class="icon-btn icon-primary" type="button" aria-label="Play" title="Play">
+              <span class="icon-play">${lucideSvg("play")}</span>
+              <span class="icon-pause">${lucideSvg("pause")}</span>
+            </button>
+            <button id="step-through" class="icon-btn" type="button" aria-label="Step through" title="Step through">${lucideSvg("skip-forward")}</button>
+            <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
+            <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
+          </div>
+          <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
         </div>
-        <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
+      </div>
+      <div class="playroom-digins">
+        <button id="solve" class="playroom-digin" type="button">Solve</button>
+        <button id="spec-btn" class="playroom-digin" type="button">Spec</button>
+        <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">${lucideSvg("info", 18)}</button>
       </div>
       <dialog id="spec">
         <div class="spec-bar">

@@ -32,6 +32,10 @@ function writeQuery({ pose, algo }) {
 
 function syncOverlays({ name, overlays, tweening }) {
     const showMenu = Boolean(overlays?.menu) && !tweening && !activeAlgo;
+    const algoName = activeAlgo === "scramble" ? "Scramble" : "cryptoys";
+    titleEl.textContent = algoName;
+    if (activeAlgo) document.title = algoName;
+    else document.title = "cryptoys";
     titleEl.classList.toggle("on", Boolean(overlays?.title));
     menuEl.classList.toggle("on", showMenu);
     sitBtn.hidden = name !== "landing" || tweening || Boolean(activeAlgo);

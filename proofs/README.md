@@ -40,7 +40,7 @@ Deprecated algorithms, when they appear, get their own directory under `proofs/`
 
 | Primitive | Current version | This tree |
 | --- | --- | --- |
-| TwoDeck | `primitives/cipher/twodeck/` | Correctness Lean under `twodeck/lean/`. PassKey injectivity remains **open**. |
+| TwoDeck | `primitives/cipher/twodeck/` | Correctness Lean under `twodeck/lean/`. PassKey injectivity is **proved** (constructive inverse); SPEC text still says open. |
 | Scramble | `scramble_v2` | Placeholder only. Teaching hash; single-cube birthday ceiling. No Lean. Not bumped. |
 | TwoDeck-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. |
 

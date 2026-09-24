@@ -46,8 +46,8 @@ function disposeObject(object) {
  * Product model (Zach, 2026-09-24): these demo pages are the only
  * place on the internet to perform the algorithms without writing
  * code. Using the hash is primary. Message is the field that always
- * matters (top-right). Teach is opt-in (bottom-right). Landscape
- * chrome uses the four window edges — no floating cards.
+ * matters (landscape top-right; portrait dark band). Teach is
+ * opt-in: landscape bottom-right, portrait behind (i). No cards.
  */
 function specUrlCandidates() {
     const fromModule = new URL("../scramble/SPEC.md", import.meta.url).href;
@@ -73,10 +73,19 @@ async function resolveSpecUrl() {
 function bindInstrumentChrome(root) {
     const error = root.querySelector("#error");
     const spec = root.querySelector("#spec");
+    const info = root.querySelector("#teach-info");
     const clearError = () => {
         if (error) error.textContent = "";
     };
-    root.querySelector("#reset")?.addEventListener("click", clearError);
+    const setInfo = (on) => {
+        root.dataset.info = on ? "1" : "";
+        info?.setAttribute("aria-expanded", on ? "true" : "false");
+    };
+    info?.addEventListener("click", () => setInfo(root.dataset.info !== "1"));
+    root.querySelector("#reset")?.addEventListener("click", () => {
+        clearError();
+        setInfo(false);
+    });
     spec?.addEventListener("close", clearError);
 }
 
@@ -103,6 +112,21 @@ function mountDock() {
           <button id="digest-btn" type="button">Digest</button>
           <button id="solve" type="button">Solve</button>
           <button id="spec-btn" type="button">Spec</button>
+          <button type="button" class="playroom-info" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">i</button>
+        </div>
+        <p class="playroom-info-hint" id="teach-hint">Step through to see each turn.</p>
+        <div id="teach" class="playroom-note" hidden>
+          <div id="tape" class="tape" aria-label="Message tape"></div>
+          <article id="teach-card" class="playroom-note-body"></article>
+          <div class="transport" id="transport">
+            <button type="button" data-jump="round-back" title="Previous symbol">«</button>
+            <button type="button" data-jump="stage-back" title="Previous stage">‹</button>
+            <button type="button" data-jump="back">Prev</button>
+            <span class="pos" id="teach-pos">—</span>
+            <button type="button" data-jump="fwd">Next</button>
+            <button type="button" data-jump="stage-fwd" title="Next stage">›</button>
+            <button type="button" data-jump="round-fwd" title="Next symbol">»</button>
+          </div>
         </div>
         <div id="outline" class="outline" hidden></div>
       </div>
@@ -114,19 +138,6 @@ function mountDock() {
           <button id="reset" type="button">Reset</button>
         </div>
         <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
-      </div>
-      <div id="teach" class="playroom-note" hidden>
-        <div id="tape" class="tape" aria-label="Message tape"></div>
-        <article id="teach-card" class="playroom-note-body"></article>
-        <div class="transport" id="transport">
-          <button type="button" data-jump="round-back" title="Previous symbol">«</button>
-          <button type="button" data-jump="stage-back" title="Previous stage">‹</button>
-          <button type="button" data-jump="back">Prev</button>
-          <span class="pos" id="teach-pos">—</span>
-          <button type="button" data-jump="fwd">Next</button>
-          <button type="button" data-jump="stage-fwd" title="Next stage">›</button>
-          <button type="button" data-jump="round-fwd" title="Next symbol">»</button>
-        </div>
       </div>
       <dialog id="spec">
         <div class="spec-bar">

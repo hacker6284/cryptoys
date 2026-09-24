@@ -420,7 +420,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
             await resetKey(step, ms);
             return;
         }
-        if (step.kind === "pass") {
+        if (step.kind === "pass" || step.kind === "unpass") {
             await pass(step, ms);
             return;
         }

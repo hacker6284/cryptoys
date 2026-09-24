@@ -56,6 +56,9 @@ function caption(step) {
     if (step.kind === "place" && step.flag === 1) return `${step.label} · GridCycle overflow into (${step.row + 1}, ${step.col + 1})`;
     if (step.kind === "pass" && step.flag === 2) return `${step.label} · rank cut on the key pile`;
     if (step.kind === "pass" && step.flag === 1) return `${step.label} · suit cut, then rank cut on the hand`;
+    if (step.kind === "unpass" && step.flag === 2) return `${step.label} · undo rank cut on the key pile`;
+    if (step.kind === "unpass" && step.flag === 1) return `${step.label} · undo rank cut on the hand`;
+    if (step.kind === "unpass") return step.label;
     return step.label;
 }
 
@@ -146,7 +149,7 @@ async function start() {
             laidEnd = { blocks: result, key, caption: `Plaintext on the left. Key on the right.${extra}` };
             view.showDecks(blocks[0], key);
             const walk = mode === "ecb"
-                ? "The master key is dealt again and passed 6 times, then 5, then 4, then 3, then 2, then 1."
+                ? "The master key is passed forward 6 times to K6, then un-passed back to K0."
                 : "The counter is encrypted, then the ciphertext is inverse-composed with that keystream.";
             const more = blocks.length > 1 ? ` The table plays the first of ${blocks.length} blocks.` : "";
             captionEl.textContent = `Decrypting. ${walk}${more}`;

@@ -21,6 +21,15 @@ func left_rotate(xs: List<int>, k: int) -> List<int>
         out.append(xs[i])
     return out
 
+func right_rotate(xs: List<int>, k: int) -> List<int>
+    n = xs.length
+    if n == 0
+        return xs
+    k = k mod n
+    if k == 0
+        return xs
+    return left_rotate(xs, n - k)
+
 func empty_rows() -> List<List<int>>
     g: List<List<int>> = []
     for r = 0 to 3
@@ -252,6 +261,23 @@ func passkey(deck: List<int>) -> List<int>
         key = push_front(key, c)
     return key
 
+func passkey_inv(deck: List<int>) -> List<int>
+    key = deck
+    hand: List<int> = []
+    while key.length > 0
+        c, key = drop_front(key)
+        n = hand.length
+        if (n > 0) and (rank_of(c) < n)
+            hand = right_rotate(hand, rank_of(c))
+        else if (key.length > 0) and (rank_of(c) < key.length)
+            key = right_rotate(key, rank_of(c))
+        if n > 0
+            k = suit_of(c) mod n
+            if k > 0
+                hand = right_rotate(hand, k)
+        hand = push_front(hand, c)
+    return hand
+
 func expand_keys(k0: List<int>) -> List<List<int>>
     keys: List<List<int>> = []
     keys.append(k0)
@@ -331,6 +357,32 @@ func trace_pass(deck: List<int>, steps: List<Step>, label: text) -> (List<int>, 
         hand = next_hand
         steps = add_step(steps, "pass", label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on)
     return (key, steps)
+
+func trace_unpass(deck: List<int>, steps: List<Step>, label: text) -> (List<int>, List<Step>)
+    key = deck
+    hand: List<int> = []
+    while key.length > 0
+        c, next_key = drop_front(key)
+        n = hand.length
+        rank_cut = 0
+        cut_on = 0
+        if (n > 0) and (rank_of(c) < n)
+            rank_cut = rank_of(c)
+            cut_on = 1
+            hand = right_rotate(hand, rank_cut)
+        else if (next_key.length > 0) and (rank_of(c) < next_key.length)
+            rank_cut = rank_of(c)
+            cut_on = 2
+            next_key = right_rotate(next_key, rank_cut)
+        suit_cut = 0
+        if n > 0
+            suit_cut = suit_of(c) mod n
+            if suit_cut > 0
+                hand = right_rotate(hand, suit_cut)
+        hand = push_front(hand, c)
+        key = next_key
+        steps = add_step(steps, "unpass", label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on)
+    return (hand, steps)
 
 func trace_sum(g: List<List<int>>, steps: List<Step>, label: text) -> (List<List<int>>, List<Step>)
     for i = 0 to 3
@@ -572,18 +624,15 @@ func trace_inv_full(c: List<int>, kr: List<int>, steps: List<Step>, label: text)
 
 export func trace_decrypt(cipher: List<int>, key: List<int>) -> List<Step>
     steps: List<Step> = []
-    m = cipher
-    for r = 6 downto 1
-        steps = add_step(steps, "reset", "Deal the master key", no_cards(), key, key, -1, -1, r, 0, -1, 0)
-        built = key
-        for n = 1 to r
-            built, steps = trace_pass(built, steps, round_label("PassKey ", r))
-        if r == 6
-            m, steps = trace_inv_final(m, built, steps, "Inverse final round")
-        else
-            m, steps = trace_inv_full(m, built, steps, round_label("Inverse round ", r))
-    steps = add_step(steps, "reset", "Deal the master key", no_cards(), key, key, -1, -1, 0, 0, -1, 0)
-    m, steps = trace_uncompose(m, key, steps, "InverseCompose · K0")
+    built = key
+    for r = 1 to 6
+        built, steps = trace_pass(built, steps, round_label("PassKey K", r))
+    m, steps = trace_inv_final(cipher, built, steps, "Inverse final round")
+    for r = 5 downto 1
+        built, steps = trace_unpass(built, steps, round_label("Un-pass K", r))
+        m, steps = trace_inv_full(m, built, steps, round_label("Inverse round ", r))
+    built, steps = trace_unpass(built, steps, "Un-pass K0")
+    m, steps = trace_uncompose(m, built, steps, "InverseCompose · K0")
     return steps
 
 export func trace_ctr(blocks: List<List<int>>, key: List<int>, nonce: List<int>) -> List<Step>
@@ -620,11 +669,15 @@ export func encrypt(message: List<int>, key: List<int>) -> List<int>
     return final_round(m, keys[6])
 
 export func decrypt(cipher: List<int>, key: List<int>) -> List<int>
-    keys = expand_keys(key)
-    m = inv_final_round(cipher, keys[6])
+    built = key
+    for r = 1 to 6
+        built = passkey(built)
+    m = inv_final_round(cipher, built)
     for r = 5 downto 1
-        m = inv_full_round(m, keys[r])
-    return inverse_compose(m, keys[0])
+        built = passkey_inv(built)
+        m = inv_full_round(m, built)
+    built = passkey_inv(built)
+    return inverse_compose(m, built)
 
 func factorial(n: int) -> int
     r = 1
@@ -734,6 +787,29 @@ test "compose inverts and passkey keeps the deck"
     assert derived.length == 52
     assert same_cards(derived, deck)
 
+test "passkey inverse is a two-sided inverse"
+    identity: List<int> = []
+    reversed: List<int> = []
+    for i = 0 to 51
+        identity.append(i)
+        reversed.append(51 - i)
+    mixed = [0, 32, 38, 42, 13, 19, 17, 5, 41, 25, 48, 6, 31, 44, 3, 16, 7, 4, 34, 40, 18, 49, 14, 51, 20, 46, 28, 11, 10, 15, 45, 43, 2, 26, 22, 8, 37, 33, 12, 35, 24, 50, 39, 30, 21, 1, 27, 47, 36, 23, 29, 9]
+    key = [48, 42, 25, 26, 3, 37, 39, 50, 11, 2, 43, 8, 10, 7, 40, 38, 34, 0, 49, 51, 22, 27, 23, 9, 12, 15, 44, 41, 21, 28, 20, 13, 19, 14, 45, 31, 35, 18, 17, 30, 6, 36, 47, 16, 1, 33, 29, 5, 46, 32, 24, 4]
+    assert passkey_inv(passkey(identity)) == identity
+    assert passkey(passkey_inv(identity)) == identity
+    assert passkey_inv(passkey(reversed)) == reversed
+    assert passkey(passkey_inv(reversed)) == reversed
+    assert passkey_inv(passkey(mixed)) == mixed
+    assert passkey(passkey_inv(mixed)) == mixed
+    assert passkey_inv(passkey(key)) == key
+    assert passkey(passkey_inv(key)) == key
+    built = key
+    for r = 1 to 6
+        built = passkey(built)
+    for r = 1 to 6
+        built = passkey_inv(built)
+    assert built == key
+
 test "decrypt undoes encrypt"
     message = [0, 32, 38, 42, 13, 19, 17, 5, 41, 25, 48, 6, 31, 44, 3, 16, 7, 4, 34, 40, 18, 49, 14, 51, 20, 46, 28, 11, 10, 15, 45, 43, 2, 26, 22, 8, 37, 33, 12, 35, 24, 50, 39, 30, 21, 1, 27, 47, 36, 23, 29, 9]
     key = [48, 42, 25, 26, 3, 37, 39, 50, 11, 2, 43, 8, 10, 7, 40, 38, 34, 0, 49, 51, 22, 27, 23, 9, 12, 15, 44, 41, 21, 28, 20, 13, 19, 14, 45, 31, 35, 18, 17, 30, 6, 36, 47, 16, 1, 33, 29, 5, 46, 32, 24, 4]
@@ -785,7 +861,7 @@ test "one key deck is passed between the rounds that use it"
         i = i + 1
     assert i == traced.length
 
-test "decrypt trace re-deals the master key for each round key"
+test "decrypt trace un-passes from K6"
     cipher = [49, 48, 9, 39, 29, 37, 22, 0, 16, 44, 24, 43, 8, 23, 33, 14, 12, 17, 41, 4, 19, 46, 34, 26, 50, 13, 51, 20, 10, 28, 1, 35, 6, 7, 38, 31, 47, 36, 5, 30, 3, 27, 11, 2, 18, 42, 15, 40, 25, 32, 45, 21]
     key = [48, 42, 25, 26, 3, 37, 39, 50, 11, 2, 43, 8, 10, 7, 40, 38, 34, 0, 49, 51, 22, 27, 23, 9, 12, 15, 44, 41, 21, 28, 20, 13, 19, 14, 45, 31, 35, 18, 17, 30, 6, 36, 47, 16, 1, 33, 29, 5, 46, 32, 24, 4]
     traced = trace_decrypt(cipher, key)
@@ -795,29 +871,37 @@ test "decrypt trace re-deals the master key for each round key"
     assert last.hand == decrypt(cipher, key)
     i = 0
     passes = 0
-    for r = 6 downto 1
-        assert traced[i].kind == "reset"
-        assert traced[i].key == key
+    unpasses = 0
+    built = key
+    for r = 1 to 6
+        built = passkey(built)
+        for p = 0 to 51
+            assert traced[i].kind == "pass"
+            passes = passes + 1
+            i = i + 1
+    assert traced[i].kind == "uncompose"
+    assert traced[i].key == built
+    i = i + 1
+    while traced[i].kind != "unpass"
+        assert traced[i].kind != "pass"
         i = i + 1
-        built = key
-        for n = 1 to r
-            built = passkey(built)
-            for p = 0 to 51
-                assert traced[i].kind == "pass"
-                passes = passes + 1
-                i = i + 1
+    for r = 5 downto 0
+        built = passkey_inv(built)
+        for p = 0 to 51
+            assert traced[i].kind == "unpass"
+            unpasses = unpasses + 1
+            i = i + 1
         assert traced[i].kind == "uncompose"
         assert traced[i].key == built
         i = i + 1
-        while traced[i].kind != "reset"
-            assert traced[i].kind != "pass"
-            i = i + 1
-    assert traced[i].kind == "reset"
-    assert traced[i].key == key
-    i = i + 1
-    assert traced[i].kind == "uncompose"
-    assert i == traced.length - 1
-    assert passes == 1092
+        if r > 0
+            while traced[i].kind != "unpass"
+                assert traced[i].kind != "pass"
+                i = i + 1
+    assert i == traced.length
+    assert built == key
+    assert passes == 312
+    assert unpasses == 312
 
 test "counter rail keeps the nonce and permutes diamonds"
     nonce: List<int> = []

@@ -111,7 +111,7 @@ def emit_one(
 def install_into(files_dir: Path, generated: Path) -> None:
     """Replace generated/ with the unpacked emit files (keep README if present)."""
     generated.mkdir(parents=True, exist_ok=True)
-    keep = {"README.md", ".gitignore"}
+    keep = {"README.md", ".gitignore", "lake-manifest.json"}
     for child in generated.iterdir():
         if child.name in keep:
             continue
@@ -125,6 +125,20 @@ def install_into(files_dir: Path, generated: Path) -> None:
             shutil.copytree(src, dest)
         else:
             shutil.copy2(src, dest)
+    write_lake_manifest(generated)
+
+
+def write_lake_manifest(generated: Path) -> None:
+    """Lake 5 / lean-action require a committed lake-manifest.json (no deps)."""
+    path = generated / "lake-manifest.json"
+    path.write_text(
+        '{\n'
+        ' "version": "1.1.0",\n'
+        ' "packagesDir": ".lake/packages",\n'
+        ' "packages": [],\n'
+        ' "name": "sudo",\n'
+        ' "lakeDir": ".lake"}\n'
+    )
 
 
 # Committed sidecar files that emit.py does not produce.

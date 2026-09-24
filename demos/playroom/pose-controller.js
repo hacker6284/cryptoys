@@ -113,7 +113,10 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         tween = {
             from: capture(),
             to: pose,
-            start: now + (opts.delay || 0),
+            holdUntil: now + (opts.delay || 0),
+            elapsed: 0,
+            last: now,
+            holding: true,
             duration: opts.duration ?? duration,
             track: opts.track || null,
         };
@@ -128,12 +131,19 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
 
     function update(now = performance.now()) {
         if (!tween) return current;
-        const trackPos = readTrack(tween.track);
-        if (now < tween.start) {
-            apply(tween.to, 0, tween.from, null);
-            return current;
+        const dt = Math.min(33, Math.max(0, now - tween.last));
+        tween.last = now;
+        if (tween.holding) {
+            if (now < tween.holdUntil) {
+                apply(tween.to, 0, tween.from, null);
+                return current;
+            }
+            tween.holding = false;
+            tween.elapsed = 0;
         }
-        const u = Math.min(1, (now - tween.start) / tween.duration);
+        tween.elapsed += dt;
+        const trackPos = readTrack(tween.track);
+        const u = Math.min(1, tween.elapsed / tween.duration);
         apply(tween.to, u, tween.from, trackPos);
         if (u >= 1) {
             current = tween.to.name;

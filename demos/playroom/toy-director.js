@@ -165,7 +165,8 @@ export function createToyDirector(world) {
                 lift,
                 mid,
                 to: dest,
-                start: performance.now(),
+                last: performance.now(),
+                elapsed: 0,
                 duration,
                 onDone: resolve,
             };
@@ -208,7 +209,13 @@ export function createToyDirector(world) {
 
     function update() {
         if (!flight) return;
-        const u = Math.min(1, (performance.now() - flight.start) / flight.duration);
+        const now = performance.now();
+        // Cap the step so a hitch or a late first rAF cannot skip the
+        // whole shelf→felt arc (that read as a pop on the felt).
+        const dt = Math.min(33, Math.max(0, now - flight.last));
+        flight.last = now;
+        flight.elapsed += dt;
+        const u = Math.min(1, flight.elapsed / flight.duration);
         applyFlight(u);
         if (u >= 1) finishFlight();
     }

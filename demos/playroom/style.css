@@ -1,4 +1,4 @@
-/* Locked 2026-09-24: world always visible; overlays OK; copy must not bury the toys. */
+/* Maps toolkit chrome (Zach, 2026-09-24): four corners / four edges. */
 
 html,
 body.playroom {
@@ -7,7 +7,11 @@ body.playroom {
 }
 
 body.playroom {
+  --font-body: "IBM Plex Sans", "Helvetica Neue", sans-serif;
+  --font-display: "IBM Plex Sans", "Helvetica Neue", sans-serif;
+  --font-mono: "IBM Plex Sans", "Helvetica Neue", sans-serif;
   background: #0e0b09;
+  font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
 }
 
 #playroom {
@@ -23,12 +27,12 @@ body.playroom {
   top: 16px;
   margin: 0;
   z-index: 2;
-  font-family: var(--font-display);
-  font-weight: 520;
-  font-size: clamp(32px, 3.4vw, 38px);
+  font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
+  font-weight: 500;
+  font-size: clamp(28px, 3.2vw, 36px);
   line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: color-mix(in srgb, var(--fg) 78%, transparent);
+  letter-spacing: -0.03em;
+  color: color-mix(in srgb, var(--fg) 88%, transparent);
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
   pointer-events: none;
   opacity: 0;
@@ -36,6 +40,10 @@ body.playroom {
 
 .playroom-title.on {
   opacity: 1;
+}
+
+html[data-algo]:not([data-algo=""]) .playroom-title {
+  color: #f6f1e8;
 }
 
 .playroom-menu {
@@ -60,7 +68,6 @@ body.playroom {
 
 .playroom-menu-label {
   margin: 0 0 8px;
-  font-family: var(--font-mono);
   font-size: 12px;
   color: color-mix(in srgb, var(--accent) 70%, transparent);
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
@@ -102,12 +109,14 @@ body.playroom {
 }
 
 html[data-algo]:not([data-algo=""]) .playroom-pose {
-  top: 58px;
+  top: 54px;
   bottom: auto;
 }
 
 html[data-algo]:not([data-algo=""]) .playroom-pose .chrome-action {
-  color: color-mix(in srgb, var(--fg) 82%, transparent);
+  font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
@@ -128,7 +137,6 @@ body.playroom:not(.is-ready) .playroom-pose {
   max-width: 36rem;
   margin: 0;
   color: var(--danger);
-  font-family: var(--font-mono);
   font-size: 13px;
 }
 
@@ -158,13 +166,13 @@ body.playroom.is-ready .playroom-menu {
   }
 }
 
-/* Landscape: four window edges. No region cards. */
 .playroom-dock {
   position: fixed;
   inset: 0;
   z-index: 3;
   pointer-events: none;
   opacity: 0;
+  font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
 }
 
 .playroom-dock.on {
@@ -178,39 +186,43 @@ body.playroom.is-ready .playroom-menu {
 .playroom-io,
 .playroom-anim,
 .playroom-note,
+.playroom-digins,
 .playroom-dock dialog {
   pointer-events: auto;
 }
 
 .playroom-io,
 .playroom-anim,
-.playroom-note {
+.playroom-note,
+.playroom-digins {
   position: absolute;
   margin: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  color: var(--fg);
 }
 
 .playroom-io {
   top: 16px;
   right: 20px;
-  width: min(22rem, 36vw);
-  text-align: right;
+  width: min(22rem, 38vw);
 }
 
 .playroom-anim {
   left: 20px;
   bottom: 16px;
-  width: min(28rem, 46vw);
+  width: auto;
+}
+
+.playroom-digins {
+  right: 22px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .playroom-note {
   position: fixed;
-  right: 20px;
-  bottom: 16px;
+  right: 22px;
+  bottom: 52px;
   width: min(26rem, 40vw);
   text-align: right;
 }
@@ -224,21 +236,152 @@ body.playroom.is-ready .playroom-menu {
   display: none;
 }
 
-.playroom-io,
-.playroom-anim,
+.playroom-card {
+  background: rgba(16, 14, 12, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+  color: var(--fg);
+}
+
+.playroom-card--io {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px 18px;
+}
+
+.playroom-card--transport {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px 14px;
+  width: max-content;
+  padding: 8px 16px 8px 10px;
+}
+
+.playroom-io-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+.playroom-ctl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.playroom-label {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--fg) 58%, transparent);
+}
+
+.playroom-seg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.playroom-dock .seg-btn {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.playroom-dock .seg-btn:hover,
+.playroom-dock .seg-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+  border: 0;
+  color: var(--fg);
+}
+
+.playroom-dock .seg-btn.on {
+  background: rgba(255, 255, 255, 0.1);
+  border: 0;
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.playroom-dock textarea,
+.playroom-dock #digest {
+  display: block;
+  width: 100%;
+  height: 2.55rem;
+  min-height: 2.55rem;
+  max-height: 2.55rem;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: #0b0a09;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 2.5rem;
+  text-align: left;
+  resize: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-shadow: none;
+  cursor: text;
+}
+
+.playroom-dock #digest {
+  font-variant-numeric: tabular-nums;
+}
+
+.playroom-dock:has([data-encoding="hex"].on) textarea {
+  font-variant-numeric: tabular-nums;
+}
+
+.playroom-dock textarea:focus,
+.playroom-dock #digest:focus {
+  outline: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 1px;
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.playroom-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.playroom-io .error {
+  min-height: 0;
+  font-family: inherit;
+}
+
+.playroom-io .error:empty {
+  display: none;
+}
+
+.playroom-ctl--field {
+  width: 100%;
+}
+
 .playroom-note {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.playroom-io .row,
-.playroom-anim .row {
-  justify-content: flex-end;
-}
-
-.playroom-anim .row {
-  justify-content: flex-start;
 }
 
 .playroom-note .tape {
@@ -259,40 +402,18 @@ body.playroom.is-ready .playroom-menu {
 }
 
 .playroom-note-body .kicker,
-.playroom-hands-label,
-.playroom-io .status,
 .playroom-note .transport .pos {
   margin: 0;
-  font-family: var(--font-mono);
   font-size: 12px;
   color: color-mix(in srgb, var(--fg) 78%, transparent);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
-.playroom-message-label {
-  display: block;
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--fg);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.45);
-}
-
-.playroom-io .digest {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--fg);
-  word-break: break-all;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 12px rgba(0, 0, 0, 0.5);
-}
-
 .playroom-note-body h2 {
   margin: 4px 0 6px;
-  font-family: var(--font-display);
-  font-weight: 520;
-  font-size: clamp(20px, 2.2vw, 26px);
+  font-family: inherit;
+  font-weight: 500;
+  font-size: clamp(18px, 2vw, 22px);
   letter-spacing: -0.02em;
   color: var(--fg);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 2px 14px rgba(0, 0, 0, 0.5);
@@ -308,7 +429,7 @@ body.playroom.is-ready .playroom-menu {
 }
 
 .playroom-note-body .math {
-  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 13px;
 }
 
@@ -324,8 +445,8 @@ body.playroom.is-ready .playroom-menu {
   border-radius: 0;
   background: none;
   color: color-mix(in srgb, var(--fg) 52%, transparent);
-  font-family: var(--font-mono);
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
@@ -345,10 +466,15 @@ body.playroom.is-ready .playroom-menu {
   border: 0;
 }
 
-.playroom-dock .playroom-anim button,
-.playroom-dock .playroom-crypto button,
-.playroom-dock .playroom-io button,
-.playroom-dock .playroom-note button {
+.playroom-card--transport .row {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: 2px;
+}
+
+.playroom-dock .playroom-card button,
+.playroom-dock .playroom-note button,
+.playroom-dock .playroom-digin {
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -358,36 +484,31 @@ body.playroom.is-ready .playroom-menu {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.25rem;
+  height: 2.25rem;
   padding: 0;
   border: 0;
-  border-radius: 0;
+  border-radius: 8px;
   background: none;
-  color: color-mix(in srgb, var(--fg) 78%, transparent);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75)) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
+  color: color-mix(in srgb, var(--fg) 82%, transparent);
 }
 
 .playroom-dock .icon-btn:hover,
 .playroom-dock .icon-btn:focus-visible {
-  background: none;
+  background: rgba(255, 255, 255, 0.06);
   border: 0;
   color: var(--fg);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8)) drop-shadow(0 2px 12px rgba(0, 0, 0, 0.5));
 }
 
 .playroom-dock .icon-btn:focus-visible {
   outline: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
 .playroom-dock .icon-primary,
-.playroom-dock #play:not(.is-playing) {
-  color: var(--accent);
-}
-
+.playroom-dock #play:not(.is-playing),
 .playroom-dock #play.is-playing {
-  color: var(--accent);
+  color: var(--fg);
 }
 
 .playroom-dock .icon-pause {
@@ -406,20 +527,16 @@ body.playroom.is-ready .playroom-menu {
   display: block;
 }
 
-.playroom-dock .text-action,
 .playroom-note .transport button {
   padding: 2px 0;
   border: 0;
   border-radius: 0;
   background: none;
   color: color-mix(in srgb, var(--fg) 62%, transparent);
-  font-family: var(--font-mono);
   font-size: 13px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 10px rgba(0, 0, 0, 0.45);
 }
 
-.playroom-dock .text-action:hover,
-.playroom-dock .text-action:focus-visible,
 .playroom-note .transport button:hover,
 .playroom-note .transport button:focus-visible {
   background: none;
@@ -427,85 +544,76 @@ body.playroom.is-ready .playroom-menu {
   color: var(--fg);
 }
 
-.playroom-dock .text-action.on {
-  color: var(--fg);
-  font-weight: 500;
+.playroom-digin {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: color-mix(in srgb, var(--fg) 72%, transparent);
+  font-family: inherit;
+  font-size: 14px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.playroom-digin:hover,
+.playroom-digin:focus-visible {
   background: none;
   border: 0;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: var(--accent);
-}
-
-.playroom-hands-label[hidden] {
-  display: none;
-}
-
-.playroom-io .error {
-  min-height: 0;
-}
-
-.playroom-io .error:empty {
-  display: none;
+  color: var(--fg);
 }
 
 .playroom-anim .slider {
   gap: 10px;
-  color: color-mix(in srgb, var(--muted) 92%, transparent);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+  margin: 0;
+  color: color-mix(in srgb, var(--fg) 70%, transparent);
+  font-family: inherit;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .playroom-anim .slider input[type="range"] {
-  height: 12px;
-  max-width: 7.5rem;
+  width: 7.25rem;
+  max-width: 7.25rem;
+  height: 14px;
 }
 
 .playroom-anim .slider input[type="range"]::-webkit-slider-runnable-track {
-  height: 1px;
-  background: color-mix(in srgb, var(--fg) 38%, transparent);
-  border-radius: 0;
+  height: 2px;
+  background: color-mix(in srgb, var(--fg) 28%, transparent);
+  border-radius: 999px;
 }
 
 .playroom-anim .slider input[type="range"]::-webkit-slider-thumb {
-  width: 10px;
-  height: 10px;
-  margin-top: -4.5px;
-  background: var(--accent);
+  width: 12px;
+  height: 12px;
+  margin-top: -5px;
+  background: #f3efe6;
 }
 
 .playroom-anim .slider input[type="range"]::-moz-range-track {
-  height: 1px;
-  background: color-mix(in srgb, var(--fg) 38%, transparent);
-  border-radius: 0;
+  height: 2px;
+  background: color-mix(in srgb, var(--fg) 28%, transparent);
+  border-radius: 999px;
 }
 
 .playroom-anim .slider input[type="range"]::-moz-range-thumb {
-  width: 10px;
-  height: 10px;
-  background: var(--accent);
-}
-
-.playroom-crypto {
-  align-items: center;
-  gap: 12px 14px;
-}
-
-.playroom-dock textarea {
-  width: 100%;
-  min-height: 3.4em;
-  padding: 6px 0;
-  border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--fg) 28%, transparent);
-  border-radius: 0;
-  background: transparent;
-  color: var(--fg);
-  text-align: right;
-  resize: vertical;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+  width: 12px;
+  height: 12px;
+  background: #f3efe6;
 }
 
 .playroom-dock .outline {
   display: none;
+}
+
+.playroom-dock dialog,
+.playroom-dock .spec-bar,
+.playroom-dock #spec-body,
+.playroom-dock #spec-body h1,
+.playroom-dock #spec-body h2,
+.playroom-dock #spec-body h3,
+.playroom-dock #spec-body code {
+  font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
 }
 
 body.playroom.is-ready .playroom-dock {
@@ -518,7 +626,7 @@ body.playroom.is-ready .playroom-dock {
   }
 }
 
-/* Narrow portrait: 3D stage + manufactured dark band. Four edges, not corners. */
+/* Narrow portrait: stage on top, input card in the dark band. */
 @media (max-width: 700px) and (orientation: portrait) {
   .playroom-menu {
     top: 60px;
@@ -526,11 +634,22 @@ body.playroom.is-ready .playroom-dock {
   }
 
   html[data-algo="scramble"] {
-    --io-band: min(36dvh, 17.5rem);
+    --io-band: min(38dvh, 20rem);
   }
 
   html[data-algo="scramble"] #playroom {
     height: calc(100dvh - var(--io-band));
+  }
+
+  html[data-algo="scramble"] .playroom-title {
+    left: 16px;
+    top: 14px;
+    font-size: 28px;
+  }
+
+  html[data-algo="scramble"] .playroom-pose {
+    top: 48px;
+    left: 16px;
   }
 
   html[data-algo="scramble"] .playroom-io {
@@ -540,38 +659,41 @@ body.playroom.is-ready .playroom-dock {
     bottom: 0;
     width: 100%;
     height: var(--io-band);
-    padding: 12px 16px 14px;
-    text-align: left;
+    padding: 12px 14px 16px;
     background: #0e0b09;
     overflow: auto;
   }
 
-  html[data-algo="scramble"] .playroom-anim {
-    left: 0;
-    right: 0;
-    bottom: var(--io-band);
+  html[data-algo="scramble"] .playroom-card--io {
     width: 100%;
-    padding: 8px 14px 10px;
   }
 
-  html[data-algo="scramble"] .playroom-io .row,
-  html[data-algo="scramble"] .playroom-anim .row {
-    justify-content: flex-start;
+  html[data-algo="scramble"] .playroom-anim {
+    left: 50%;
+    right: auto;
+    bottom: calc(var(--io-band) + 12px);
+    width: auto;
+    transform: translateX(-50%);
   }
 
-  html[data-algo="scramble"] .playroom-dock textarea {
-    text-align: left;
+  html[data-algo="scramble"] .playroom-digins {
+    top: 16px;
+    right: 16px;
+    bottom: auto;
+    left: auto;
   }
 
   html[data-algo="scramble"] .playroom-dock .playroom-info {
     display: inline-flex;
     width: 1.75rem;
     height: 1.75rem;
+    filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.45));
   }
 
   html[data-algo="scramble"] .playroom-note {
     position: static;
     width: auto;
+    margin-top: 10px;
     text-align: left;
     display: none;
   }
@@ -587,8 +709,7 @@ body.playroom.is-ready .playroom-dock {
 
   html[data-algo="scramble"] .playroom-dock[data-info="1"] .playroom-info-hint {
     display: block;
-    margin: 0;
-    font-family: var(--font-mono);
+    margin: 8px 0 0;
     font-size: 13px;
     color: var(--muted);
   }

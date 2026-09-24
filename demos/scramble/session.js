@@ -77,8 +77,20 @@ export function createScrambleSession({
         return Array.from(new TextEncoder().encode(text));
     }
 
+    function digestValue() {
+        if (!digestEl) return "";
+        return digestEl.matches("input, textarea") ? digestEl.value : digestEl.textContent;
+    }
+
+    function setDigest(text) {
+        if (!digestEl) return;
+        if (digestEl.matches("input, textarea")) digestEl.value = text;
+        else digestEl.textContent = text;
+    }
+
     function digestHex(bytes) {
-        return bytes.map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase().slice(1);
+        const hex = bytes.map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase().slice(1);
+        return hex ? `0x${hex}` : "";
     }
 
     function symbolWord(step) {
@@ -104,7 +116,7 @@ export function createScrambleSession({
 
     function caption() {
         if (teaching && viewedIndex() >= trace.length && trace.length) {
-            return digestEl.textContent ? `Digest · ${digestEl.textContent}` : "The seated pose is the digest.";
+            return digestValue() ? `Digest · ${digestValue()}` : "The seated pose is the digest.";
         }
         const step = teaching
             ? (viewedIndex() < trace.length ? trace[viewedIndex()] : null)
@@ -198,7 +210,7 @@ export function createScrambleSession({
             return {
                 kicker: `done · ${n} steps`,
                 title: "Seated digest",
-                math: digestEl.textContent || "The seated pose is the digest.",
+                math: digestValue() || "The seated pose is the digest.",
                 why: "The seated pose is the digest.",
                 spec: "Closer and seat",
             };
@@ -364,7 +376,7 @@ export function createScrambleSession({
         update(state, messageBytes);
         const result = evaluate(state);
         trace = result.trace;
-        digestEl.textContent = digestHex(result.digest);
+        setDigest(digestHex(result.digest));
         cursor = -1;
         showFace(solved);
         showStatus(caption());
@@ -633,7 +645,7 @@ export function createScrambleSession({
     }, listen);
     $("#digest-btn")?.addEventListener("click", async () => {
         try {
-            await navigator.clipboard.writeText(digestEl.textContent);
+            await navigator.clipboard.writeText(digestValue());
             showStatus("Digest copied");
         } catch {
             errorEl.textContent = "Could not copy the digest.";

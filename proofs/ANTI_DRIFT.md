@@ -56,7 +56,9 @@ cd proofs/doubledeal/lean/Generated && lake build && ./.lake/build/bin/doubledea
 cd proofs/megadreifach/lean/Generated && lake build && ./.lake/build/bin/megadreifach_test
 ```
 
-Expected TAP: DoubleDeal **12/12**, MegaDreifach **11/11**.
+Expected TAP: DoubleDeal **10/10** (two test-only kind-scan `while`s
+stripped under the terminates gate; JS still runs all twelve),
+MegaDreifach **11/11**.
 
 ## Pin (sudocode main)
 
@@ -72,19 +74,22 @@ as of #5. Lean is still **not** in `ALL_BACKENDS` (unfinished lockstep
 peer; out of scope here). The merge includes the `_fs` Flow-binder
 shadow fix (a sudo `for s` must not capture the loop payload).
 
-## Terminates gate is off
+## Terminates gate is on
 
-Do **not** pass `sudoc emit-ir --require terminates` at emit time.
-Scramble still has unmeasured `while`s, so a repo-wide gate would
-`RefusedExport` those publics.
+`proofs/emit_lean.sh` passes `sudoc emit-ir --require terminates` for
+DoubleDeal and MegaDreifach. All three public `.sudo` files (DoubleDeal,
+MegaDreifach, Scramble) accept that flag on their exports.
 
-DoubleDeal and MegaDreifach production paths are now bounded `for`
-(PassKey drain over initial `deck.length`; overflow scans `0 to 3`;
-MD bigint trim/peel/carry, φ / even-perm search, Hash MD walk).
-`sudoc emit-ir --require terminates` on `doubledeal.sudo` and
-`megadreifach.sudo` should accept the exports. DoubleDeal test-only
-`while`s that scan traces by `kind` are stripped under the gate.
-Flip `terminates_gate` in `emit_lean.sh` after Scramble matches.
+Production loops are bounded `for` (PassKey drain over initial
+`deck.length`; overflow scans `0 to 3`; MD bigint trim/peel/carry,
+φ / even-perm search, Hash MD walk; Scramble pad / apply / evaluate
+remainders and `digest_bytes` over the 12-byte buffer). DoubleDeal
+test-only `while`s that scan traces by `kind` are stripped under the
+gate (JS/Python still run those tests). Generated TAP is the remaining
+tests.
+
+Scramble has no Generated Lean in this drop. Its sudo is
+terminates-clean; adding a Generated tree is a follow-up.
 
 The registered Lean backend profile is **full peer** (empty
 `predicates`): fuel-total `while` / `for` via `SudoRt.natIter`.
@@ -109,7 +114,7 @@ total-fragment / terminating-subset emitter.
 | sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
 | Algebraic `passToKeyCutFallback` = `Generated.passkey` | OPEN. S3/S4 stay on the list-level proof model. sudo already *tests* `passkey_inv ∘ passkey = id` (generated TAP). |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | OPEN. S2 stays on the Fin-packet skeleton. Generated TAP checks sudo's encrypt/decrypt tests. |
-| `--require terminates` on these publics | DoubleDeal and MegaDreifach ready (bounded `for`). OFF at emit until Scramble matches. |
+| `--require terminates` on these publics | ON at emit for DoubleDeal and MegaDreifach. All three publics ready (bounded `for`). Scramble has no Generated Lean. |
 | PassKey / stone proofs *about* `Except Trap` emitted defs | OPEN. Fuel-total monadic programs are not the Fin algebra the stones use. |
 | Scramble generated Lean | Out of this drop. |
 | MegaDreifach M13 (proof-package digest = KAT hex) | Still OPEN in the algebraic package (no handwritten `Hash`). Research hexes were refreshed to current sudo; Python and emitted Lean agree. |

@@ -3,6 +3,6 @@
   "sudo_sha256": "51ec2331de8f15ee6677191e85d7f924791f156ec9bd2f1686a1cafc34ae91ca",
   "sudocode_lean_commit": "4286093e791e85e2be0b72b524319ba64bda002b",
   "sudocode_lean_ref": "main",
-  "terminates_gate": false,
+  "terminates_gate": true,
   "with_tests": true
 }

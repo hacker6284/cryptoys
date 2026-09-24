@@ -8,9 +8,9 @@ Reproduces the spike path that was green on DoubleDeal / MegaDreifach:
       → python3 backends/lean/emit.py
       → unpack files/
 
-Full-peer emit (no --require terminates). DoubleDeal and MegaDreifach
-are terminates-ready (bounded `for`); Scramble still has unmeasured
-whiles. See proofs/ANTI_DRIFT.md.
+Emit uses `sudoc emit-ir --require terminates`. DoubleDeal, MegaDreifach,
+and Scramble production paths are bounded `for`. Scramble has no Generated
+Lean in this drop. See proofs/ANTI_DRIFT.md.
 
 This is not a claim of sudo↔Lean semantic equivalence.
 """
@@ -47,7 +47,17 @@ def emit_one(
         shutil.rmtree(files_dir)
     files_dir.mkdir()
 
-    cmd = [str(sudoc), "emit-ir", "-I", str(stdlib), "-o", str(ir_path), str(sudo_file)]
+    cmd = [
+        str(sudoc),
+        "emit-ir",
+        "--require",
+        "terminates",
+        "-I",
+        str(stdlib),
+        "-o",
+        str(ir_path),
+        str(sudo_file),
+    ]
     r = run(cmd)
     if r.returncode != 0:
         print(f"emit-ir failed rc={r.returncode}", file=sys.stderr)

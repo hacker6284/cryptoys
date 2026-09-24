@@ -1,6 +1,6 @@
 /-
   Algebraic-skeleton KATs vs JSON from the sudoc JS target.
-  Algorithm-level sudo tests live in lean/Generated/ (TAP 12/12).
+  Algorithm-level sudo tests live in lean/Generated/ (TAP 10/10 under the terminates gate).
   This exe is evidence the *proof skeleton* matches those decks, not
   a proof that sudo = Lean, and not the algorithm source of truth.
 -/

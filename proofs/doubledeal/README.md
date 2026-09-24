@@ -9,14 +9,15 @@ DoubleDeal is a toy block cipher. It has no cryptographic security claim. The Le
 Sudo is normative. Emitted Lean under `lean/Generated/` is the algorithm.
 `lean/DoubleDeal/` is proof-only. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md).
 This does **not** claim sudo↔Lean semantic-equivalence theorems. The
-emit terminates gate is still off (repo-wide, until Scramble).
-DoubleDeal sudo itself is terminates-ready: PassKey and trace overflow
-scans are bounded `for`.
+emit terminates gate is on. DoubleDeal production paths are bounded
+`for` (PassKey drain, overflow scans `0 to 3`). Two test-only
+kind-scan `while`s are stripped under the gate; JS still runs all
+twelve sudo tests.
 
 | Layer | What it is | Trust base |
 | --- | --- | --- |
 | **(a) Theorems about the proof-only model** | Bijections, `encrypt6_rt` under Compose-key bijections, PassKey `F_inv ∘ F = id`, and the same round-trip with the algebraic PassKey schedule (`encryptDeckFn_rt`). | Lean kernel. `lake build` of the proof package. No `sorry`. No `native_decide`. **Not** the cipher. |
-| **(b) Generated TAP** | `proofs/emit_lean.sh` → `lake` → `doubledeal_test` (12/12), including sudo's encrypt/decrypt and `passkey_inv` tests. | Compiled emitted Lean. **Not** a sudo=Lean theorem. |
+| **(b) Generated TAP** | `proofs/emit_lean.sh` → `lake` → `doubledeal_test` (10/10), including sudo's encrypt/decrypt and `passkey_inv` tests. Two kind-scan tests are stripped under `--require terminates`. | Compiled emitted Lean. **Not** a sudo=Lean theorem. |
 | **(c) Skeleton vs JS JSON** | `lake exe doubledeal` vs `vectors/doubledeal_vectors.json` (from sudoc JS). | Evidence the *skeleton* matches those decks. OPEN that it equals `Generated.encrypt`. |
 | **(d) Equivalence** | sudo text = generated Lean, or skeleton = generated. | OPEN. |
 

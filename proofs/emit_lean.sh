@@ -5,9 +5,10 @@
 # Pin: hacker6284/sudocode main @ SUDOCODE_LEAN_COMMIT
 #   (PR #5 squash merge; backends/lean/ is on main).
 #
-# Full-peer emit (no --require terminates). DoubleDeal and MegaDreifach
-# are bounded-for / terminates-ready; Scramble still has unmeasured
-# whiles. Flip terminates_gate after Scramble too.
+# Terminates gate ON: sudoc emit-ir --require terminates.
+# DoubleDeal, MegaDreifach, and Scramble production paths are bounded
+# `for`. Scramble is not in this emit list (no Generated Lean yet).
+# DoubleDeal test-only kind-scan whiles are stripped under the gate.
 #
 # Usage (from repo root):
 #   proofs/emit_lean.sh              # write Generated/
@@ -115,7 +116,7 @@ stamp = {
     "sudo_sha256": hashlib.sha256(sudo.read_bytes()).hexdigest(),
     "sudocode_lean_commit": "$SUDOCODE_LEAN_COMMIT",
     "sudocode_lean_ref": "$SUDOCODE_LEAN_REF",
-    "terminates_gate": False,
+    "terminates_gate": True,
     "with_tests": True,
 }
 pathlib.Path("$generated/EMITTED_FROM.json").write_text(json.dumps(stamp, indent=2) + "\n")

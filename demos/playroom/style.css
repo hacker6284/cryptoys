@@ -345,10 +345,91 @@ body.playroom.is-ready .playroom-menu {
   border: 0;
 }
 
-.playroom-dock button {
-  padding: 6px 10px;
+.playroom-dock .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: color-mix(in srgb, var(--fg) 78%, transparent);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75)) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
+}
+
+.playroom-dock .icon-btn:hover,
+.playroom-dock .icon-btn:focus-visible {
+  background: none;
+  border: 0;
+  color: var(--fg);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8)) drop-shadow(0 2px 12px rgba(0, 0, 0, 0.5));
+}
+
+.playroom-dock .icon-btn:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 3px;
+}
+
+.playroom-dock .icon-primary,
+.playroom-dock #play:not(.is-playing) {
+  color: var(--accent);
+}
+
+.playroom-dock #play.is-playing {
+  color: var(--accent);
+}
+
+.playroom-dock .icon-pause {
+  display: none;
+}
+
+.playroom-dock #play.is-playing .icon-play {
+  display: none;
+}
+
+.playroom-dock #play.is-playing .icon-pause {
+  display: inline-flex;
+}
+
+.playroom-dock .lucide {
+  display: block;
+}
+
+.playroom-dock .text-action,
+.playroom-note .transport button {
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
   font-family: var(--font-mono);
   font-size: 13px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75), 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.playroom-dock .text-action:hover,
+.playroom-dock .text-action:focus-visible,
+.playroom-note .transport button:hover,
+.playroom-note .transport button:focus-visible {
+  background: none;
+  border: 0;
+  color: var(--fg);
+}
+
+.playroom-dock .text-action.on {
+  color: var(--fg);
+  font-weight: 500;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--accent);
+}
+
+.playroom-hands-label[hidden] {
+  display: none;
 }
 
 .playroom-io .error {
@@ -359,13 +440,45 @@ body.playroom.is-ready .playroom-menu {
   display: none;
 }
 
-.playroom-dock .slider {
+.playroom-anim .slider {
+  gap: 10px;
   color: color-mix(in srgb, var(--muted) 92%, transparent);
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
+.playroom-anim .slider input[type="range"] {
+  height: 12px;
+  max-width: 7.5rem;
+}
+
+.playroom-anim .slider input[type="range"]::-webkit-slider-runnable-track {
+  height: 1px;
+  background: color-mix(in srgb, var(--fg) 38%, transparent);
+  border-radius: 0;
+}
+
+.playroom-anim .slider input[type="range"]::-webkit-slider-thumb {
+  width: 10px;
+  height: 10px;
+  margin-top: -4.5px;
+  background: var(--accent);
+}
+
+.playroom-anim .slider input[type="range"]::-moz-range-track {
+  height: 1px;
+  background: color-mix(in srgb, var(--fg) 38%, transparent);
+  border-radius: 0;
+}
+
+.playroom-anim .slider input[type="range"]::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+}
+
 .playroom-crypto {
   align-items: center;
+  gap: 12px 14px;
 }
 
 .playroom-dock textarea {
@@ -443,10 +556,8 @@ body.playroom.is-ready .playroom-dock {
 
   html[data-algo="scramble"] .playroom-info {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2em;
-    padding: 6px 8px;
+    width: 1.75rem;
+    height: 1.75rem;
   }
 
   html[data-algo="scramble"] .playroom-note {

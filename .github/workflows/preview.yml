@@ -185,13 +185,16 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Remove pr/${{ github.event.pull_request.number || inputs.pr_number }}/
-        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
         run: |
           set -eu
           n="$PR_NUMBER"
+          if ! git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/gh-pages >/dev/null; then
+            echo "gh-pages does not exist yet; nothing to remove"
+            exit 0
+          fi
           git clone --depth 1 --branch gh-pages \
             "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" site
           cd site

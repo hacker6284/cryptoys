@@ -111,11 +111,39 @@ export function mountCube(canvas) {
             mesh.position.copy(mesh.userData.home);
             mesh.quaternion.identity();
             mesh.rotation.set(0, 0, 0);
+            mesh.scale.set(1, 1, 1);
+            for (const mat of mesh.material) mat.emissive.setHex(0x000000);
         }
         SPOTS.forEach(([x, y, z, axis], i) => {
             const mesh = meshes.get(`${x},${y},${z}`);
             mesh.material[AXIS[axis]].color.setHex(COLOR[facelets[i]]);
         });
+    }
+
+    function clearHighlights() {
+        for (const mesh of meshes.values()) {
+            mesh.scale.set(1, 1, 1);
+            for (const mat of mesh.material) mat.emissive.setHex(0x000000);
+        }
+    }
+
+    function glow(mesh, hex, scale) {
+        mesh.scale.setScalar(scale || 1);
+        for (const mat of mesh.material) mat.emissive.setHex(hex);
+    }
+
+    function highlightLayer(face) {
+        clearHighlights();
+        for (const mesh of meshesOn(face)) glow(mesh, 0x3d3118, 1.02);
+    }
+
+    function highlightCubie(x, y, z) {
+        clearHighlights();
+        const mesh = meshes.get(`${x},${y},${z}`);
+        if (!mesh) return;
+        glow(mesh, 0x5a4520, 1.08);
+        mesh.material[AXIS.yp].emissive.setHex(0xc4a574);
+        mesh.material[AXIS.zp].emissive.setHex(0xc4a574);
     }
 
     function meshesOn(face) {
@@ -173,5 +201,5 @@ export function mountCube(canvas) {
         renderer.dispose();
     }
 
-    return { paint, animateMove, animateReorient, dispose };
+    return { paint, animateMove, animateReorient, highlightLayer, highlightCubie, clearHighlights, dispose };
 }

@@ -35,6 +35,8 @@
   font-size: 22px;
 }
 
+.stage:has(.teach:not([hidden])) .caption { display: none; }
+
 h1 {
   margin: 4px 0 0;
   font-family: var(--font-display);

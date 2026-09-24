@@ -48,6 +48,13 @@ function showPanel(on) {
     document.documentElement.dataset.panel = on ? "teach" : "";
 }
 
+function setDockMode(root, mode) {
+    const next = mode === "hands" ? "hands" : "teach";
+    root.dataset.mode = next;
+    const flip = root.querySelector("#dock-mode");
+    if (flip) flip.textContent = next === "hands" ? "Teach" : "Hands";
+}
+
 function mountDock() {
     let root = document.querySelector("#scramble-dock");
     if (root) return root;
@@ -71,33 +78,31 @@ function mountDock() {
           </div>
         </div>
       </div>
-      <details class="playroom-teach-more">
-        <summary>Play, reset, and message</summary>
-        <div class="playroom-hands">
-          <p class="playroom-hands-label"><span id="gen-label">Gen 2</span> · scramble</p>
-          <p id="status" class="status">Solved start · white up, green front, red right</p>
-          <p id="digest" class="digest"></p>
-          <p id="error" class="error"></p>
-          <div class="row playroom-actions">
-            <button id="play" class="primary" type="button">Play</button>
-            <button id="step-through" type="button">Step through</button>
-            <button id="step" type="button">Step</button>
-            <button id="reset" type="button">Reset</button>
-            <button id="digest-btn" type="button">Digest</button>
-            <button id="solve" type="button">Solve</button>
-            <button id="spec-btn" type="button">Spec</button>
-          </div>
-          <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
-          <div class="row playroom-toggles">
-            <button type="button" data-version="1">Gen 1</button>
-            <button type="button" class="on" data-version="2">Gen 2</button>
-            <button type="button" class="on" data-encoding="text">text</button>
-            <button type="button" data-encoding="hex">hex</button>
-          </div>
-          <textarea id="message" rows="2" spellcheck="false" placeholder="hello">hello</textarea>
-          <div id="outline" class="outline" hidden></div>
+      <div class="playroom-hands">
+        <p class="playroom-hands-label"><span id="gen-label">Gen 2</span> · scramble</p>
+        <p id="status" class="status">Solved start · white up, green front, red right</p>
+        <p id="digest" class="digest"></p>
+        <p id="error" class="error"></p>
+        <div class="row playroom-actions">
+          <button id="play" class="primary" type="button">Play</button>
+          <button id="step-through" type="button">Step through</button>
+          <button id="step" type="button">Step</button>
+          <button id="reset" type="button">Reset</button>
+          <button id="digest-btn" type="button">Digest</button>
+          <button id="solve" type="button">Solve</button>
+          <button id="spec-btn" type="button">Spec</button>
         </div>
-      </details>
+        <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
+        <div class="row playroom-toggles">
+          <button type="button" data-version="1">Gen 1</button>
+          <button type="button" class="on" data-version="2">Gen 2</button>
+          <button type="button" class="on" data-encoding="text">text</button>
+          <button type="button" data-encoding="hex">hex</button>
+        </div>
+        <textarea id="message" rows="2" spellcheck="false" placeholder="hello">hello</textarea>
+        <div id="outline" class="outline" hidden></div>
+      </div>
+      <button type="button" class="chrome-action playroom-mode" id="dock-mode">Hands</button>
       <dialog id="spec">
         <div class="spec-bar">
           <strong>Specification</strong>
@@ -106,13 +111,10 @@ function mountDock() {
         <article id="spec-body"></article>
       </dialog>
     `;
-    const more = root.querySelector(".playroom-teach-more");
-    if (more) {
-        const mq = window.matchMedia("(min-width: 901px)");
-        const sync = () => { more.open = mq.matches; };
-        sync();
-        mq.addEventListener?.("change", sync);
-    }
+    setDockMode(root, "teach");
+    root.querySelector("#dock-mode")?.addEventListener("click", () => {
+        setDockMode(root, root.dataset.mode === "hands" ? "teach" : "hands");
+    });
     const panel = document.querySelector("#playroom-panel");
     (panel || document.body).append(root);
     return root;
@@ -170,6 +172,7 @@ function createScrambleAdapter() {
                     exposeTeach: true,
                 });
                 session.enterTeach();
+                setDockMode(root, "teach");
                 root.hidden = false;
                 root.classList.add("on");
                 showPanel(true);
@@ -182,6 +185,7 @@ function createScrambleAdapter() {
             session?.dispose();
             session = null;
             if (root) {
+                setDockMode(root, "teach");
                 root.classList.remove("on");
                 root.hidden = true;
             }

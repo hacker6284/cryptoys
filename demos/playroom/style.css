@@ -207,7 +207,7 @@ body.playroom.is-ready .playroom-title {
 .playroom-dock {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   min-height: 0;
 }
 
@@ -313,30 +313,15 @@ body.playroom.is-ready .playroom-title {
   font-size: 13px;
 }
 
-.playroom-teach-more {
-  border-top: 1px solid var(--line);
-  padding-top: 12px;
-}
-
-.playroom-teach-more summary {
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--muted);
-  list-style: none;
-}
-
-.playroom-teach-more summary::-webkit-details-marker {
+.playroom-dock[data-mode="teach"] .playroom-hands,
+.playroom-dock[data-mode="hands"] .playroom-teach-primary {
   display: none;
 }
 
-.playroom-teach-more summary::after {
-  content: " ▾";
-  color: var(--accent);
-}
-
-.playroom-teach-more[open] summary {
-  margin-bottom: 12px;
+.playroom-mode {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0;
 }
 
 .playroom-hands {
@@ -367,16 +352,6 @@ body.playroom.is-ready .playroom-title {
 
 .playroom-dock dialog {
   pointer-events: auto;
-}
-
-@media (min-width: 901px) {
-  .playroom-teach-more summary {
-    display: none;
-  }
-
-  .playroom-teach-more > .playroom-hands {
-    display: flex;
-  }
 }
 
 @media (max-width: 900px) {

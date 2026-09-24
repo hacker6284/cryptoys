@@ -7,6 +7,8 @@ Each primitive is a directory holding a normative specification and one [sudocod
 ```text
 primitives/hash/scramble/SPEC.md
 primitives/hash/scramble/scramble.sudo
+demos/                    # GitHub Pages root — playroom hub
+demos/playroom/           # mounted three.js room, poses, overlays
 demos/scramble/
 primitives/cipher/twodeck/SPEC.md
 primitives/cipher/twodeck/twodeck.sudo
@@ -33,7 +35,7 @@ export SUDOC=/path/to/sudoc
 sh tools/build.sh
 ```
 
-`tools/build.sh` looks for `sudoc` at `~/Documents/Projects/sudocode/sudoc/target/debug/sudoc` when `SUDOC` is unset. Then serve `demos/` and open `scramble/`.
+`tools/build.sh` looks for `sudoc` at `~/Documents/Projects/sudocode/sudoc/target/debug/sudoc` when `SUDOC` is unset. Then serve `demos/` for the playroom hub, or open `scramble/` and `twodeck/` for the teaching pages.
 
 The conformance tests are inside `scramble.sudo`. With `sudoc` on the path:
 

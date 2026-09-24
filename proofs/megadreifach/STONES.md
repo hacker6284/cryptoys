@@ -10,7 +10,7 @@ A green Lean build is not a security claim.
 
 | ID | Claim | Status | Lean coverage |
 |----|--------|--------|---------------|
-| M1 | Megaminx **position** model + legality predicates (even cp, co parity, even ep, eo parity as in `megaminx.py`) | **Proved** | `lean/MegaDreifach/Position.lean`: `Position`, `isLegal`, `identity_isLegal`, `legal_*`, `listOf_inj`, `listOfOri_inj` |
+| M1 | Megaminx **position** model + legality predicates (even cp, co parity, even ep, eo parity as in SPEC.md) | **Proved** | `lean/MegaDreifach/Position.lean`: `Position`, `isLegal`, `identity_isLegal`, `legal_*`, `listOf_inj`, `listOfOri_inj` |
 | M2 | Face turns / left-multiply action; **compose** associative; **inverse** round-trip | **Proved** | `Group.lean`: `compose_assoc`, `compose_left_inv`, `compose_right_inv`, `compose_inverse_rt`, `leftMul_cancel`. Inverse takes hypothesized `icp`/`iep` (TwoDeck-style). |
 | M3 | `rank_position` / 29-byte digest **bijection** on legal G ↔ `[0, \|G\|)` | **Proved at packing layer** | `Rank.lean`: `evenComplete_even`, `evenComplete_unique`, `packOri3_inj`, `packOri2_inj`, `last_ori3_unique`, `rankLists_components_eq`, `positionToBytes_rank_inj`, `groupOrder_lt_digest`, `packOri*_unpack`. `Position.listOf_inj`. **Open glue:** `evenRank` injectivity on even `S_n` as one theorem (Lehmer prefix + even completion). No `sorry` stand-in. |
 | M4 | Factoradic / Lehmer **φ**: injective for `n < 2^224` → 52-card permutations | **Proved** | `Factoradic.lean`: `lehmerUnrank_inj`, `phiUnrank_inj`, `phiUnrank_perm`, `two_pow_224_lt_fact_52` (kernel `decide`) |
@@ -27,7 +27,7 @@ A green Lean build is not a security claim.
 | M10 | F3 blank rounds are pure group ops (t=12) — well-defined, deterministic | **Proved** (algebraic) | `IV.lean`: `f3_12`, `f3Iter_deterministic`. Concrete Up+1 face-turn is an argument, not a cubie table. |
 | M11 | IV-COOK12 is a fixed legal position | **Proved** (list predicates) | `IV.lean`: `ivCook12Of_legal`, `ivCook12_lists_legal` (kernel `decide` on the COOK12 arrays). Face-turn generator is hypothesized. |
 | M12 | MD chaining: multi-block compose of DM; digest of final `h` | **Proved** (algebraic) | `Chain.lean`: `mdChain`, `hashBlocks_eq_digest_of_final`, `digestOf_length` |
-| M13 | Vector agreement: Lean digests of exported KATs match `kats/megaminx_hash_kats.json` | **OPEN** (metadata only) | `Vectors.lean` / `VectorCheck.lean`: pad lengths, block counts, digest width, `\|G\|`. Full Hash needs `E_m` (`em_spike_r4`). |
+| M13 | Vector agreement: Lean digests of exported KATs match `kats/megaminx_hash_kats.json` | **OPEN** (metadata only) | `Vectors.lean` / `VectorCheck.lean`: pad lengths, block counts, digest width, `\|G\|`. Research Hash hexes are not sudo-asserted. |
 
 ## Explicitly out of scope (do not claim)
 
@@ -70,7 +70,8 @@ proofs/megadreifach/
   README.md
   STONES.md
   lean/                 # Lake project (toolchain 4.14.0, no Mathlib)
-  vectors/              # KAT export for metadata agreement
-primitives/hash/megadreifach/   # megaminx group + pad/φ/domain/IV front end
-                                # E_m / hash_bytes: follow-up (needs abs-G2 runner)
+  vectors/              # KAT copy for Lean metadata agreement
+primitives/hash/megadreifach/   # published primitive: SPEC + megadreifach.sudo + kats/
 ```
+
+Hand-written Lean is not a proof that `megadreifach.sudo` equals this model. The sudocode→Lean emitter is future work and is not a blocker. M8 nets and M9 stay OPEN.

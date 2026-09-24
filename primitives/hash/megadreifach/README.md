@@ -1,15 +1,18 @@
-# MegaDreifach reference (partial)
+# MegaDreifach
 
-Landed in this PR:
+Toy three-megaminx Merkle–Damgård hash. Not for real use. The product name **MegaDreifach** is locked; the puzzle/group stays **megaminx**.
 
-- `megaminx.py` — group library (technical name **megaminx**)
-- `front.py` — pad B=28, φ, `require_permutation`, IV-COOK12, 29-byte digest encode
-- `selfcheck.py` — agrees with KAT *metadata* and IV-COOK12 digest hex
+This directory is the published primitive:
 
-Not landed (follow-up PR):
+| File | Role |
+| --- | --- |
+| `SPEC.md` | Normative specification (`Hash` / `HashDeck` / `HashDeckBody`, plus `MegaDreifach*` aliases) |
+| `megadreifach.sudo` | Conformance implementation |
+| `kats/megaminx_hash_kats.json` | Published KAT file (pad / IV / `|G|` metadata; research Hash hexes) |
 
-- abs-G2 + F3 runner (`em_spike_r4`)
-- `hash_bytes` / `hash_deck` / `hash_deck_body` full compression
-- Lean M13 digest equality
+Length extension on bare `Hash` is accepted by design. A green Lean build under `proofs/megadreifach/` is not a security claim. Hand-written Lean is not a proof that this sudo text equals the Lean model.
 
-Product name **MegaDreifach** is locked. See `SPEC.md`.
+```sh
+sudoc build --target js --tests -o /tmp/megadreifach primitives/hash/megadreifach/megadreifach.sudo
+node /tmp/megadreifach/_megadreifach_impl.mjs
+```

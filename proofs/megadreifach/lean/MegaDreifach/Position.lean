@@ -1,6 +1,6 @@
 /-
   M1 — Megaminx position model and legality predicates.
-  Matches `megaminx.py`: even cp, corner-ori sum ≡ 0 (mod 3),
+  Matches SPEC.md: even cp, corner-ori sum ≡ 0 (mod 3),
   even ep, edge-ori sum ≡ 0 (mod 2). Zero sorry. No native_decide.
 -/
 import MegaDreifach.Basic

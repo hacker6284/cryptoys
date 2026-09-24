@@ -104,8 +104,6 @@ jobs:
               sys.exit(1)
           print("no sorry/admit; no unlisted native_decide")
           PY
-      - name: Front-end self-check (pad / φ / domain / IV)
-        run: python3 primitives/hash/megadreifach/selfcheck.py
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/megadreifach/lean

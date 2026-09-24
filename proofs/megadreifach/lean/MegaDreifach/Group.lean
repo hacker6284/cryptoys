@@ -1,6 +1,6 @@
 /-
   M2 — Group law on positions: compose is associative; inverse round-trip.
-  Software convention matches `megaminx.py`: `compose g h` = apply `h` then `g`.
+  Software convention matches SPEC.md: `compose g h` = apply `h` then `g`.
   Zero sorry. No native_decide.
 -/
 import MegaDreifach.Position

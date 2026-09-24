@@ -30,6 +30,8 @@ jobs:
           sudoc=.sudocode/sudoc/target/release/sudoc
           "$sudoc" build --target js --tests -o /tmp/scramble-test primitives/hash/scramble/scramble.sudo
           node /tmp/scramble-test/_scramble_impl.mjs
+          "$sudoc" build --target js --tests -o /tmp/megadreifach-test primitives/hash/megadreifach/megadreifach.sudo
+          node /tmp/megadreifach-test/_megadreifach_impl.mjs
           "$sudoc" build --target js --tests -o /tmp/twodeck-test primitives/cipher/twodeck/twodeck.sudo
           node /tmp/twodeck-test/_twodeck_impl.mjs
       - name: Generate the demos

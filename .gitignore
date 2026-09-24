@@ -1,5 +1,6 @@
 # sudoc output for a demo, and the copy of primitives/**/SPEC.md that its
 # spec button fetches. The normative spec stays under primitives/.
+# Render serves the generated copies from the `render-site` branch, not main.
 demos/**/generated/
 demos/**/SPEC.md
 

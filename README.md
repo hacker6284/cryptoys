@@ -42,7 +42,7 @@ sudoc build --target js --tests -o /tmp/scramble primitives/hash/scramble/scramb
 node /tmp/scramble/_scramble_impl.mjs
 ```
 
-GitHub Actions builds `sudoc` from [hacker6284/sudocode](https://github.com/hacker6284/sudocode), runs those tests, and publishes `demos/`.
+GitHub Actions builds `sudoc` from [hacker6284/sudocode](https://github.com/hacker6284/sudocode), runs those tests, and publishes `demos/` to GitHub Pages. The same generated tree is force-pushed to `render-site` for the Render static site. Render should watch branch `render-site`, publish path `.`, and use an empty build command (or `true`).
 
 ## Proofs
 

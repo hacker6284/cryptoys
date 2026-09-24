@@ -1,0 +1,72 @@
+# Publish the generated demos tree to branch `render-site` for Render.
+#
+# Render static site settings (dashboard):
+#   branch:        render-site
+#   publish path:  .
+#   build command: (empty) or `true`
+#
+# Generated JS and SPEC.md copies stay gitignored on main. This workflow
+# builds them the same way pages.yml does, then force-pushes only
+# `render-site` (orphan commit, site root = demos contents).
+
+name: render-site
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: render-site
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: hacker6284/sudocode
+          path: .sudocode
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .sudocode/sudoc
+      - name: Build sudoc
+        run: cargo build --release --manifest-path .sudocode/sudoc/Cargo.toml
+      - name: Test the primitives
+        run: |
+          sudoc=.sudocode/sudoc/target/release/sudoc
+          "$sudoc" build --target js --tests -o /tmp/scramble-test primitives/hash/scramble/scramble.sudo
+          node /tmp/scramble-test/_scramble_impl.mjs
+          "$sudoc" build --target js --tests -o /tmp/twodeck-test primitives/cipher/twodeck/twodeck.sudo
+          node /tmp/twodeck-test/_twodeck_impl.mjs
+      - name: Generate the demos
+        run: |
+          SUDOC="$GITHUB_WORKSPACE/.sudocode/sudoc/target/release/sudoc" sh tools/build.sh
+          node primitives/cipher/twodeck/encoding.test.mjs
+      - name: Publish demos to render-site
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          test -f demos/index.html
+          test -f demos/scramble/generated/scramble.mjs
+          test -f demos/twodeck/generated/twodeck.mjs
+          test -f demos/scramble/SPEC.md
+          test -f demos/twodeck/SPEC.md
+
+          work=$(mktemp -d)
+          cp -a demos/. "$work/"
+          printf '%s\n' "Published from ${GITHUB_SHA} by .github/workflows/render-site.yml" > "$work/.generated-from"
+
+          git -C "$work" init -b render-site
+          git -C "$work" config user.name "github-actions[bot]"
+          git -C "$work" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$work" add -A
+          git -C "$work" commit -m "Publish demos for Render (${GITHUB_SHA})"
+          git -C "$work" push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:render-site

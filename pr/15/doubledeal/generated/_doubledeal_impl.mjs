@@ -508,21 +508,26 @@ export function drop_front(xs) {
 export function passkey(deck) {
     let hand = _rt.dup(deck);
     let key = _rt.lst([]);
-    while (globalThis.BigInt(hand.length) > 0n) {
-        let c;
-        [c, hand] = drop_front(hand);
-        if (globalThis.BigInt(hand.length) > 0n) {
-            let k = _rt.mod_i64(suit_of(c), globalThis.BigInt(hand.length));
-            if (k > 0n) {
-                hand = left_rotate(hand, k);
+    let n = globalThis.BigInt(deck.length);
+    {
+        const _sudo_from_i = 1n;
+        const _sudo_to_i = n;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            let c;
+            [c, hand] = drop_front(hand);
+            if (globalThis.BigInt(hand.length) > 0n) {
+                let k = _rt.mod_i64(suit_of(c), globalThis.BigInt(hand.length));
+                if (k > 0n) {
+                    hand = left_rotate(hand, k);
+                }
             }
+            if (globalThis.BigInt(hand.length) > 0n && rank_of(c) < globalThis.BigInt(hand.length)) {
+                hand = left_rotate(hand, rank_of(c));
+            } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
+                key = left_rotate(key, rank_of(c));
+            }
+            key = push_front(key, c);
         }
-        if (globalThis.BigInt(hand.length) > 0n && rank_of(c) < globalThis.BigInt(hand.length)) {
-            hand = left_rotate(hand, rank_of(c));
-        } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
-            key = left_rotate(key, rank_of(c));
-        }
-        key = push_front(key, c);
     }
     return _rt.dup(key);
 }
@@ -530,22 +535,27 @@ export function passkey(deck) {
 export function passkey_inv(deck) {
     let key = _rt.dup(deck);
     let hand = _rt.lst([]);
-    while (globalThis.BigInt(key.length) > 0n) {
-        let c;
-        [c, key] = drop_front(key);
-        let n = globalThis.BigInt(hand.length);
-        if (n > 0n && rank_of(c) < n) {
-            hand = right_rotate(hand, rank_of(c));
-        } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
-            key = right_rotate(key, rank_of(c));
-        }
-        if (n > 0n) {
-            let k = _rt.mod_i64(suit_of(c), n);
-            if (k > 0n) {
-                hand = right_rotate(hand, k);
+    let n_deck = globalThis.BigInt(deck.length);
+    {
+        const _sudo_from_i = 1n;
+        const _sudo_to_i = n_deck;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            let c;
+            [c, key] = drop_front(key);
+            let n = globalThis.BigInt(hand.length);
+            if (n > 0n && rank_of(c) < n) {
+                hand = right_rotate(hand, rank_of(c));
+            } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
+                key = right_rotate(key, rank_of(c));
             }
+            if (n > 0n) {
+                let k = _rt.mod_i64(suit_of(c), n);
+                if (k > 0n) {
+                    hand = right_rotate(hand, k);
+                }
+            }
+            hand = push_front(hand, c);
         }
-        hand = push_front(hand, c);
     }
     return _rt.dup(hand);
 }
@@ -611,31 +621,36 @@ export function trace_pass(deck, steps, label) {
     steps = _rt.dup(steps);
     let hand = _rt.dup(deck);
     let key = _rt.lst([]);
-    while (globalThis.BigInt(hand.length) > 0n) {
-        let c;
-        let next_hand;
-        [c, next_hand] = drop_front(hand);
-        let suit_cut = 0n;
-        if (globalThis.BigInt(next_hand.length) > 0n) {
-            suit_cut = _rt.mod_i64(suit_of(c), globalThis.BigInt(next_hand.length));
-            if (suit_cut > 0n) {
-                next_hand = left_rotate(next_hand, suit_cut);
+    let n = globalThis.BigInt(deck.length);
+    {
+        const _sudo_from_i = 1n;
+        const _sudo_to_i = n;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            let c;
+            let next_hand;
+            [c, next_hand] = drop_front(hand);
+            let suit_cut = 0n;
+            if (globalThis.BigInt(next_hand.length) > 0n) {
+                suit_cut = _rt.mod_i64(suit_of(c), globalThis.BigInt(next_hand.length));
+                if (suit_cut > 0n) {
+                    next_hand = left_rotate(next_hand, suit_cut);
+                }
             }
+            let rank_cut = 0n;
+            let cut_on = 0n;
+            if (globalThis.BigInt(next_hand.length) > 0n && rank_of(c) < globalThis.BigInt(next_hand.length)) {
+                rank_cut = rank_of(c);
+                cut_on = 1n;
+                next_hand = left_rotate(next_hand, rank_cut);
+            } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
+                rank_cut = rank_of(c);
+                cut_on = 2n;
+                key = left_rotate(key, rank_cut);
+            }
+            key = push_front(key, c);
+            hand = _rt.dup(next_hand);
+            steps = add_step(steps, _rt.txt("pass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on);
         }
-        let rank_cut = 0n;
-        let cut_on = 0n;
-        if (globalThis.BigInt(next_hand.length) > 0n && rank_of(c) < globalThis.BigInt(next_hand.length)) {
-            rank_cut = rank_of(c);
-            cut_on = 1n;
-            next_hand = left_rotate(next_hand, rank_cut);
-        } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
-            rank_cut = rank_of(c);
-            cut_on = 2n;
-            key = left_rotate(key, rank_cut);
-        }
-        key = push_front(key, c);
-        hand = _rt.dup(next_hand);
-        steps = add_step(steps, _rt.txt("pass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on);
     }
     return [_rt.dup(key), _rt.dup(steps)];
 }
@@ -644,32 +659,37 @@ export function trace_unpass(deck, steps, label) {
     steps = _rt.dup(steps);
     let key = _rt.dup(deck);
     let hand = _rt.lst([]);
-    while (globalThis.BigInt(key.length) > 0n) {
-        let c;
-        let next_key;
-        [c, next_key] = drop_front(key);
-        let n = globalThis.BigInt(hand.length);
-        let rank_cut = 0n;
-        let cut_on = 0n;
-        if (n > 0n && rank_of(c) < n) {
-            rank_cut = rank_of(c);
-            cut_on = 1n;
-            hand = right_rotate(hand, rank_cut);
-        } else if (globalThis.BigInt(next_key.length) > 0n && rank_of(c) < globalThis.BigInt(next_key.length)) {
-            rank_cut = rank_of(c);
-            cut_on = 2n;
-            next_key = right_rotate(next_key, rank_cut);
-        }
-        let suit_cut = 0n;
-        if (n > 0n) {
-            suit_cut = _rt.mod_i64(suit_of(c), n);
-            if (suit_cut > 0n) {
-                hand = right_rotate(hand, suit_cut);
+    let n_deck = globalThis.BigInt(deck.length);
+    {
+        const _sudo_from_i = 1n;
+        const _sudo_to_i = n_deck;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            let c;
+            let next_key;
+            [c, next_key] = drop_front(key);
+            let n = globalThis.BigInt(hand.length);
+            let rank_cut = 0n;
+            let cut_on = 0n;
+            if (n > 0n && rank_of(c) < n) {
+                rank_cut = rank_of(c);
+                cut_on = 1n;
+                hand = right_rotate(hand, rank_cut);
+            } else if (globalThis.BigInt(next_key.length) > 0n && rank_of(c) < globalThis.BigInt(next_key.length)) {
+                rank_cut = rank_of(c);
+                cut_on = 2n;
+                next_key = right_rotate(next_key, rank_cut);
             }
+            let suit_cut = 0n;
+            if (n > 0n) {
+                suit_cut = _rt.mod_i64(suit_of(c), n);
+                if (suit_cut > 0n) {
+                    hand = right_rotate(hand, suit_cut);
+                }
+            }
+            hand = push_front(hand, c);
+            key = _rt.dup(next_key);
+            steps = add_step(steps, _rt.txt("unpass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on);
         }
-        hand = push_front(hand, c);
-        key = _rt.dup(next_key);
-        steps = add_step(steps, _rt.txt("unpass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on);
     }
     return [_rt.dup(hand), _rt.dup(steps)];
 }
@@ -801,27 +821,31 @@ export function trace_mix(d, steps, label) {
                     }
                     let scan = t;
                     let found = _rt.neg(1n);
-                    let tries = 0n;
-                    while (found < 0n && tries < 4n) {
-                        steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, _rt.neg(1n), 0n, 0n, card, 1n);
-                        {
-                            const _sudo_from_col = 0n;
-                            const _sudo_to_col = 12n;
-                            for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
-                                if (found < 0n && _rt.at(_rt.at(occ, scan), col) === 0n) {
-                                    found = col;
+                    {
+                        const _sudo_from_tries = 0n;
+                        const _sudo_to_tries = 3n;
+                        for (let tries = _sudo_from_tries; tries <= _sudo_to_tries; tries += 1n) {
+                            if (found < 0n) {
+                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, _rt.neg(1n), 0n, 0n, card, 1n);
+                                {
+                                    const _sudo_from_col = 0n;
+                                    const _sudo_to_col = 12n;
+                                    for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
+                                        if (found < 0n && _rt.at(_rt.at(occ, scan), col) === 0n) {
+                                            found = col;
+                                        }
+                                    }
+                                }
+                                if (found >= 0n) {
+                                    r = scan;
+                                    c = found;
+                                    t = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
+                                } else {
+                                    scan = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
+                                    t = scan;
                                 }
                             }
                         }
-                        if (found >= 0n) {
-                            r = scan;
-                            c = found;
-                            t = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
-                        } else {
-                            scan = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
-                            t = scan;
-                        }
-                        tries = _rt.chk(tries + 1n);
                     }
                 }
             }
@@ -1032,27 +1056,31 @@ export function trace_inv_mix(d, steps, label) {
                 } else {
                     let scan = t;
                     let found = _rt.neg(1n);
-                    let tries = 0n;
-                    while (found < 0n && tries < 4n) {
-                        steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, _rt.neg(1n), 0n, 0n, _rt.neg(1n), 1n);
-                        {
-                            const _sudo_from_col = 0n;
-                            const _sudo_to_col = 12n;
-                            for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
-                                if (found < 0n && _rt.at(_rt.at(visited, scan), col) === 0n) {
-                                    found = col;
+                    {
+                        const _sudo_from_tries = 0n;
+                        const _sudo_to_tries = 3n;
+                        for (let tries = _sudo_from_tries; tries <= _sudo_to_tries; tries += 1n) {
+                            if (found < 0n) {
+                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, _rt.neg(1n), 0n, 0n, _rt.neg(1n), 1n);
+                                {
+                                    const _sudo_from_col = 0n;
+                                    const _sudo_to_col = 12n;
+                                    for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
+                                        if (found < 0n && _rt.at(_rt.at(visited, scan), col) === 0n) {
+                                            found = col;
+                                        }
+                                    }
+                                }
+                                if (found >= 0n) {
+                                    r = scan;
+                                    c = found;
+                                    t = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
+                                } else {
+                                    scan = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
+                                    t = scan;
                                 }
                             }
                         }
-                        if (found >= 0n) {
-                            r = scan;
-                            c = found;
-                            t = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
-                        } else {
-                            scan = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
-                            t = scan;
-                        }
-                        tries = _rt.chk(tries + 1n);
                     }
                 }
             }
@@ -1260,7 +1288,7 @@ export function diamond_cards() {
 }
 
 export function counter_deck(nonce, index) {
-    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 711);
+    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 713);
     let diamonds = unrank(diamond_cards(), index);
     let out = _rt.lst([]);
     {

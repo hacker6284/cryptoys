@@ -71,6 +71,7 @@ theorem get_indexOf :
         rw [this]
         exact get_indexOf xs c hm
 
+set_option linter.unusedVariables false in
 theorem indexOf_eq_of_get :
     ∀ (l : List Nat) (i : Nat) (hi : i < l.length) (hn : l.Nodup),
       indexOf l (l[i]'hi) = i
@@ -206,34 +207,90 @@ theorem encryptDeckFn_rt_range (m : Fin 52 → Nat) :
     decryptDeckFn (encryptDeckFn m (List.range 52)) (List.range 52) = m :=
   encryptDeckFn_rt m (List.range 52) perm52_range
 
+/-- Materialize a packet once. `Array.ofFn f` would recompute a lazy `f` 52 times. -/
+def snap (f : Fin 52 → Nat) : Array Nat := Array.ofFn f
+
+def arrAt (a : Array Nat) (i : Fin 52) : Nat := a[i.val]?.getD 0
+
+def arrFn (a : Array Nat) : Fin 52 → Nat := fun i => arrAt a i
+
+def mixColumnsOnce (hand : Fin 52 → Nat) : Array Nat :=
+  let g := placedGrid hand
+  snap fun k => g (rmRow k) (rmCol k)
+
+def composeOnce (m : Fin 52 → Nat) (pos : Fin 52 → Fin 52) : Array Nat :=
+  snap fun j => m (pos j)
+
+def unkeyedNoMixOnce (m : Fin 52 → Nat) : Array Nat :=
+  snap (unkeyedNoMix m)
+
+def unkeyedMixOnce (m : Fin 52 → Nat) : Array Nat :=
+  mixColumnsOnce (unkeyedNoMix m)
+
+/-- Eager encrypt: one PassKey schedule, one MixColumns walk per mix round.
+    Same maps as `encryptDeckFn`, but each stage is snapshotted so compiled
+    evaluation does not re-run `placeN` once per seat. -/
+def invMixColumnsOnce (packet : Fin 52 → Nat) : Array Nat :=
+  let out := (invN (layRowMajor packet) 52).1
+  snap out
+
+def invUnkeyedMixOnce (c : Fin 52 → Nat) : Array Nat :=
+  snap (invUnkeyedNoMix (arrFn (invMixColumnsOnce c)))
+
+def invFullRoundOnce (c : Fin 52 → Nat) (invPos : Fin 52 → Fin 52) : Array Nat :=
+  invUnkeyedMixOnce (fun i => c (invPos i))
+
+def invFullRoundNoMixOnce (c : Fin 52 → Nat) (invPos : Fin 52 → Fin 52) : Array Nat :=
+  snap (invUnkeyedNoMix (fun i => c (invPos i)))
+
 def encryptDeck (message key : List Nat) : List Nat :=
-  if h : message.length = 52 then toDeck (encryptDeckFn (ofDeck message h) key)
+  if h : message.length = 52 then
+    let m := ofDeck message h
+    let ks := expandKeys key
+    let pos (r : Nat) := keyPos (ks.getD r key)
+    let m0 := composeOnce m (pos 0)
+    let m1 := composeOnce (arrFn (unkeyedMixOnce (arrFn m0))) (pos 1)
+    let m2 := composeOnce (arrFn (unkeyedMixOnce (arrFn m1))) (pos 2)
+    let m3 := composeOnce (arrFn (unkeyedMixOnce (arrFn m2))) (pos 3)
+    let m4 := composeOnce (arrFn (unkeyedMixOnce (arrFn m3))) (pos 4)
+    let m5 := composeOnce (arrFn (unkeyedMixOnce (arrFn m4))) (pos 5)
+    (composeOnce (arrFn (unkeyedNoMixOnce (arrFn m5))) (pos 6)).toList
   else message
 
 def decryptDeck (cipher key : List Nat) : List Nat :=
-  if h : cipher.length = 52 then toDeck (decryptDeckFn (ofDeck cipher h) key)
+  if h : cipher.length = 52 then
+    let c := ofDeck cipher h
+    let ks := expandKeys key
+    let inv (r : Nat) := keyInvPos (ks.getD r key)
+    let afterFinal := invFullRoundNoMixOnce c (inv 6)
+    let m5 := invFullRoundOnce (arrFn afterFinal) (inv 5)
+    let m4 := invFullRoundOnce (arrFn m5) (inv 4)
+    let m3 := invFullRoundOnce (arrFn m4) (inv 3)
+    let m2 := invFullRoundOnce (arrFn m3) (inv 2)
+    let m1 := invFullRoundOnce (arrFn m2) (inv 1)
+    (composeOnce (arrFn m1) (inv 0)).toList
   else cipher
 
 /-! ## Layer packets used by known-answer vectors -/
 
-def mixColumnsDeck (d : List Nat) : List Nat := onDeck mixColumns d
+def mixColumnsDeck (d : List Nat) : List Nat :=
+  if h : d.length = 52 then (mixColumnsOnce (ofDeck d h)).toList else d
 
 def sumRanksDeck (d : List Nat) : List Nat :=
   if h : d.length = 52 then
-    toDeck (scoopColumnMajor (sumRanks cardRank (layColumnMajor (ofDeck d h))))
+    (snap (scoopColumnMajor (sumRanks cardRank (layColumnMajor (ofDeck d h))))).toList
   else d
 
 def shiftRowsDeck (d : List Nat) : List Nat :=
   if h : d.length = 52 then
-    toDeck (scoopColumnMajor (shiftRows (layColumnMajor (ofDeck d h))))
+    (snap (scoopColumnMajor (shiftRows (layColumnMajor (ofDeck d h))))).toList
   else d
 
-def unkeyedFullDeck (d : List Nat) : List Nat := onDeck unkeyedWithMix d
+def unkeyedFullDeck (d : List Nat) : List Nat :=
+  if h : d.length = 52 then (unkeyedMixOnce (ofDeck d h)).toList else d
 
 def composeDeck (m k : List Nat) : List Nat :=
-  if h : m.length = 52 then
-    toDeck (composeVec 52 Nat (ofDeck m h) (keyPos k))
-  else m
+  if h : m.length = 52 then (composeOnce (ofDeck m h) (keyPos k)).toList else m
 
 def ctrEncryptBlocks (blocks : List (List Nat)) (key nonce : List Nat) :
     List (List Nat) :=

@@ -15,27 +15,89 @@ def gridStep (card : Nat) (pos : Fin 4 × Fin 13) : Fin 4 × Fin 13 :=
   (⟨(pos.1.val + suit card) % 4, Nat.mod_lt _ (by decide)⟩,
    ⟨(pos.2.val + rank card) % 13, Nat.mod_lt _ (by decide)⟩)
 
-/-! ## Occupancy -/
+/-! ## Occupancy
 
-abbrev Occ := Fin 4 → Fin 13 → Bool
+A 52-slot array (column-major bit index `r + 4*c`). Function-valued
+occupancy made MixColumns too slow to evaluate; this is the same walk.
+-/
 
-def emptyOcc : Occ := fun _ _ => false
+abbrev Occ := Array Bool
+
+def occBit (r : Fin 4) (c : Fin 13) : Nat := r.val + 4 * c.val
+
+theorem occBit_lt (r : Fin 4) (c : Fin 13) : occBit r c < 52 := by
+  unfold occBit
+  have := r.isLt
+  have := c.isLt
+  omega
+
+theorem occBit_inj {r₁ r₂ : Fin 4} {c₁ c₂ : Fin 13}
+    (h : occBit r₁ c₁ = occBit r₂ c₂) : r₁ = r₂ ∧ c₁ = c₂ := by
+  have hr₁ := r₁.isLt; have hr₂ := r₂.isLt
+  have hc₁ := c₁.isLt; have hc₂ := c₂.isLt
+  have : r₁.val = r₂.val ∧ c₁.val = c₂.val := by
+    simp only [occBit] at h; omega
+  exact ⟨Fin.ext this.1, Fin.ext this.2⟩
+
+def emptyOcc : Occ := Array.mkArray 52 false
+
+theorem size_emptyOcc : emptyOcc.size = 52 := Array.size_mkArray 52 false
+
+def occGet (occ : Occ) (r : Fin 4) (c : Fin 13) : Bool :=
+  match occ[occBit r c]? with
+  | some b => b
+  | none => false
+
+def occAt (occ : Occ) (p : Fin 4 × Fin 13) : Bool := occGet occ p.1 p.2
 
 def setOcc (occ : Occ) (p : Fin 4 × Fin 13) : Occ :=
-  fun r c => decide (r = p.1 ∧ c = p.2) || occ r c
+  if h : occBit p.1 p.2 < occ.size then
+    occ.set ⟨occBit p.1 p.2, h⟩ true
+  else occ
 
-abbrev occAt (occ : Occ) (p : Fin 4 × Fin 13) : Bool := occ p.1 p.2
+theorem occGet_empty : ∀ r : Fin 4, ∀ c : Fin 13, occGet emptyOcc r c = false := by
+  native_decide
 
-theorem setOcc_at_self (occ : Occ) (p : Fin 4 × Fin 13) :
+theorem occAt_empty (p : Fin 4 × Fin 13) : occAt emptyOcc p = false :=
+  occGet_empty p.1 p.2
+
+theorem size_setOcc (occ : Occ) (p : Fin 4 × Fin 13) :
+    (setOcc occ p).size = occ.size := by
+  unfold setOcc
+  split
+  · exact Array.size_set occ _ true
+  · rfl
+
+theorem occGet_setOcc (occ : Occ) (p : Fin 4 × Fin 13) (r : Fin 4) (c : Fin 13)
+    (hsz : occ.size = 52) :
+    occGet (setOcc occ p) r c = (decide (r = p.1 ∧ c = p.2) || occGet occ r c) := by
+  have hbitp : occBit p.1 p.2 < occ.size := by rw [hsz]; exact occBit_lt _ _
+  unfold occGet setOcc
+  simp only [hbitp, ↓reduceDIte]
+  rw [Array.get?_set]
+  by_cases hb : occBit p.1 p.2 = occBit r c
+  · have ⟨hr, hc⟩ := occBit_inj hb
+    simp only [hb, ↓reduceIte, hr, hc]
+    rfl
+  · have hne : ¬ (r = p.1 ∧ c = p.2) := fun ⟨hr, hc⟩ =>
+      hb (by simp [hr, hc])
+    simp only [hb, ↓reduceIte, hne, ↓reduceIte]
+    rfl
+
+theorem setOcc_at_self (occ : Occ) (p : Fin 4 × Fin 13) (hsz : occ.size = 52) :
     occAt (setOcc occ p) p = true := by
-  simp [occAt, setOcc]
+  unfold occAt
+  rw [occGet_setOcc occ p p.1 p.2 hsz]
+  simp
 
-theorem setOcc_at_ne (occ : Occ) {p q : Fin 4 × Fin 13} (hne : p ≠ q) :
+theorem setOcc_at_ne (occ : Occ) {p q : Fin 4 × Fin 13} (hne : p ≠ q)
+    (hsz : occ.size = 52) :
     occAt (setOcc occ p) q = occAt occ q := by
-  simp only [occAt, setOcc]
-  by_cases hq : q.1 = p.1 ∧ q.2 = p.2
-  · exact False.elim (hne (Prod.ext hq.1 hq.2).symm)
-  · simp [decide_eq_false hq]
+  have hne' : ¬ (q.1 = p.1 ∧ q.2 = p.2) := fun hq =>
+    hne (Prod.ext hq.1 hq.2).symm
+  unfold occAt
+  rw [occGet_setOcc occ p q.1 q.2 hsz]
+  simp only [decide_eq_false hne', Bool.false_or]
 
 theorem eq_false_of_ne_true {b : Bool} (h : ¬b = true) : b = false := by
   cases b <;> simp_all
@@ -60,13 +122,13 @@ theorem nodup_fins13 : fins13.Nodup := by decide
 theorem nodup_fins4 : fins4.Nodup := by decide
 
 def countCols (occ : Occ) (r : Fin 4) : Nat :=
-  (fins13.filter (fun c => occ r c)).length
+  (fins13.filter (fun c => occGet occ r c)).length
 
 def occCount (occ : Occ) : Nat :=
   (fins4.map (countCols occ)).sum
 
 theorem countCols_le (occ : Occ) (r : Fin 4) : countCols occ r ≤ 13 := by
-  simpa [countCols, length_fins13] using List.length_filter_le (fun c => occ r c) fins13
+  simpa [countCols, length_fins13] using List.length_filter_le (fun c => occGet occ r c) fins13
 
 theorem occCount_le (occ : Occ) : occCount occ ≤ 52 := by
   simp only [occCount, fins4, List.map, List.sum_cons, List.sum_nil, Nat.add_zero]
@@ -76,19 +138,21 @@ theorem occCount_le (occ : Occ) : occCount occ ≤ 52 := by
   have a3 := countCols_le occ 3
   omega
 
-theorem occCount_empty : occCount emptyOcc = 0 := rfl
+theorem occCount_empty : occCount emptyOcc = 0 := by
+  simp [occCount, countCols, emptyOcc, occGet, Array.getD, Array.size_mkArray]
+  native_decide
 
-theorem countCols_full (occ : Occ) (r : Fin 4) (h : ∀ c, occ r c = true) :
+theorem countCols_full (occ : Occ) (r : Fin 4) (h : ∀ c, occGet occ r c = true) :
     countCols occ r = 13 := by
   simp only [countCols]
-  have : fins13.filter (fun c => occ r c) = fins13 :=
+  have : fins13.filter (fun c => occGet occ r c) = fins13 :=
     List.filter_eq_self.mpr fun c _ => h c
   simp [this, length_fins13]
 
 theorem occCount_full (occ : Occ) (h : ∀ p : Fin 4 × Fin 13, occAt occ p = true) :
     occCount occ = 52 := by
   simp only [occCount, fins4, List.map, List.sum_cons, List.sum_nil, Nat.add_zero]
-  have hr : ∀ r : Fin 4, ∀ c, occ r c = true := fun r c => h (r, c)
+  have hr : ∀ r : Fin 4, ∀ c, occGet occ r c = true := fun r c => h (r, c)
   simp [countCols_full occ 0 (hr 0), countCols_full occ 1 (hr 1),
         countCols_full occ 2 (hr 2), countCols_full occ 3 (hr 3)]
 
@@ -141,20 +205,31 @@ theorem filter_mark_one {α : Type} [DecidableEq α]
         split <;> simp [ih']
 
 theorem countCols_set_free (occ : Occ) (r : Fin 4) (c : Fin 13)
-    (hfree : occ r c = false) :
+    (hsz : occ.size = 52) (hfree : occGet occ r c = false) :
     countCols (setOcc occ (r, c)) r = countCols occ r + 1 := by
-  simp only [countCols, setOcc, true_and]
-  exact filter_mark_one c (occ r) fins13 nodup_fins13 (mem_fins13 c) hfree
+  have hfun : ∀ col, occGet (setOcc occ (r, c)) r col =
+      (decide (col = c) || occGet occ r col) := by
+    intro col
+    have h := occGet_setOcc occ (r, c) r col hsz
+    simp only [true_and] at h
+    exact h
+  unfold countCols
+  have hfilter :
+      fins13.filter (fun col => occGet (setOcc occ (r, c)) r col) =
+        fins13.filter (fun col => decide (col = c) || occGet occ r col) :=
+    List.filter_congr fun col _ => by rw [hfun col]
+  rw [hfilter]
+  exact filter_mark_one c (occGet occ r) fins13 nodup_fins13 (mem_fins13 c) hfree
 
 theorem countCols_set_other_row (occ : Occ) (r : Fin 4) (p : Fin 4 × Fin 13)
-    (hne : r ≠ p.1) :
+    (hsz : occ.size = 52) (hne : r ≠ p.1) :
     countCols (setOcc occ p) r = countCols occ r := by
-  simp only [countCols, setOcc]
+  simp only [countCols]
   apply congrArg List.length
   exact List.filter_congr fun col _ => by
     have : decide (r = p.1 ∧ col = p.2) = false :=
       decide_eq_false fun ⟨hr, _⟩ => hne hr
-    simp [this]
+    simp [occGet_setOcc occ p r col hsz, this]
 
 theorem sum_incr_at {α : Type} [DecidableEq α]
     (f : α → Nat) (r0 : α) (xs : List α)
@@ -184,7 +259,7 @@ theorem sum_incr_at {α : Type} [DecidableEq α]
       omega
 
 theorem occCount_set_free (occ : Occ) (p : Fin 4 × Fin 13)
-    (hfree : occAt occ p = false) :
+    (hsz : occ.size = 52) (hfree : occAt occ p = false) :
     occCount (setOcc occ p) = occCount occ + 1 := by
   simp only [occCount]
   have hmap :
@@ -194,8 +269,8 @@ theorem occCount_set_free (occ : Occ) (p : Fin 4 × Fin 13)
     intro r _
     by_cases he : r = p.1
     · cases he
-      simp [countCols_set_free occ p.1 p.2 hfree]
-    · simp [he, countCols_set_other_row occ r p he]
+      simp [countCols_set_free occ p.1 p.2 hsz hfree]
+    · simp [he, countCols_set_other_row occ r p hsz he]
   rw [hmap]
   exact sum_incr_at (countCols occ) p.1 fins4 nodup_fins4 (mem_fins4 p.1)
 
@@ -207,7 +282,7 @@ def scanRowN (occ : Occ) (row : Fin 4) : Nat → Nat → Option (Fin 13)
   | fuel + 1, col =>
       if h : col < 13 then
         let c : Fin 13 := ⟨col, h⟩
-        if occ row c then scanRowN occ row fuel (col + 1) else some c
+        if occGet occ row c then scanRowN occ row fuel (col + 1) else some c
       else none
 
 def scanRow (occ : Occ) (row : Fin 4) : Option (Fin 13) :=
@@ -215,7 +290,7 @@ def scanRow (occ : Occ) (row : Fin 4) : Option (Fin 13) :=
 
 theorem scanRowN_some_free (occ : Occ) (row : Fin 4) :
     ∀ (fuel col : Nat) (c : Fin 13),
-      scanRowN occ row fuel col = some c → occ row c = false
+      scanRowN occ row fuel col = some c → occGet occ row c = false
   | 0, col, c, h => by cases h
   | fuel + 1, col, c, h => by
       simp only [scanRowN] at h
@@ -230,7 +305,7 @@ theorem scanRowN_some_free (occ : Occ) (row : Fin 4) :
 
 theorem scanRowN_none_occupied (occ : Occ) (row : Fin 4) :
     ∀ (fuel col : Nat), scanRowN occ row fuel col = none →
-      ∀ c : Fin 13, col ≤ c.val → c.val < col + fuel → occ row c = true
+      ∀ c : Fin 13, col ≤ c.val → c.val < col + fuel → occGet occ row c = true
   | 0, col, _, c, hc1, hc2 => by omega
   | fuel + 1, col, hnone, c, hc1, hc2 => by
       simp only [scanRowN] at hnone
@@ -247,12 +322,12 @@ theorem scanRowN_none_occupied (occ : Occ) (row : Fin 4) :
       · next => omega
 
 theorem scanRow_none_full (occ : Occ) (row : Fin 4) (h : scanRow occ row = none) :
-    ∀ c : Fin 13, occ row c = true := by
+    ∀ c : Fin 13, occGet occ row c = true := by
   intro c
   exact scanRowN_none_occupied occ row 13 0 h c (by omega) (by have := c.isLt; omega)
 
 theorem scanRow_some_free (occ : Occ) (row : Fin 4) (c : Fin 13)
-    (h : scanRow occ row = some c) : occ row c = false :=
+    (h : scanRow occ row = some c) : occGet occ row c = false :=
   scanRowN_some_free occ row 13 0 c h
 
 def overflowN (occ : Occ) : Nat → Nat → Option ((Fin 4 × Fin 13) × Nat)
@@ -313,7 +388,7 @@ theorem mod4_cover (t : Nat) (r : Fin 4) :
 theorem overflowN_none_row_full (occ : Occ) :
     ∀ (fuel t : Nat), overflowN occ fuel t = none →
       ∀ i : Nat, i < fuel → ∀ c : Fin 13,
-        occ ⟨(t + i) % 4, Nat.mod_lt _ (by decide)⟩ c = true
+        occGet occ ⟨(t + i) % 4, Nat.mod_lt _ (by decide)⟩ c = true
   | 0, t, _, i, hi, c => by omega
   | fuel + 1, t, hnone, i, hi, c => by
       match hs : scanRow occ ⟨t % 4, Nat.mod_lt _ (by decide)⟩ with
@@ -456,6 +531,15 @@ def invMixColumns (packet : Fin 52 → Nat) : Fin 52 → Nat :=
 
 /-! ## Placement succeeds: after n ≤ 52 steps, occCount = n and last choose was free -/
 
+theorem placeN_occ_size (hand : Fin 52 → Nat) :
+    ∀ n, (placeN hand n).2.occ.size = 52
+  | 0 => by simp [placeN, initWalk, size_emptyOcc]
+  | n + 1 => by
+      simp only [placeN]
+      split
+      · rw [advance, size_setOcc]; exact placeN_occ_size hand n
+      · exact placeN_occ_size hand n
+
 theorem placeN_count (hand : Fin 52 → Nat) :
     ∀ n : Nat, n ≤ 52 → occCount (placeN hand n).2.occ = n
   | 0, _ => by simp [placeN, initWalk, occCount_empty]
@@ -473,7 +557,7 @@ theorem placeN_count (hand : Fin 52 → Nat) :
         | none =>
             cases n with
             | zero =>
-                exact Or.inr (by simp [placeN, initWalk, occAt, emptyOcc])
+                exact Or.inr (by simp [placeN, initWalk, occAt_empty])
             | succ n' =>
                 simp only [placeN, show n' < 52 by omega, ↓reduceDIte, advance] at hpv
                 cases hpv
@@ -482,7 +566,7 @@ theorem placeN_count (hand : Fin 52 → Nat) :
       change occCount
           (setOcc (placeN hand n).2.occ (chooseSeat! (placeN hand n).2).1) = n + 1
       have hset := occCount_set_free (placeN hand n).2.occ
-          (chooseSeat! (placeN hand n).2).1 hfree
+          (chooseSeat! (placeN hand n).2).1 (placeN_occ_size hand n) hfree
       omega
 
 /-- Alias kept for Round imports / length lemmas. -/
@@ -512,7 +596,7 @@ theorem placeN_choose_free (hand : Fin 52 → Nat) (n : Nat) (hn : n < 52) :
   cases hpv : (placeN hand n).2.prev with
   | none =>
       cases n with
-      | zero => exact Or.inr (by simp [placeN, initWalk, occAt, emptyOcc])
+      | zero => exact Or.inr (by simp [placeN, initWalk, occAt_empty])
       | succ n' =>
           simp only [placeN, show n' < 52 by omega, ↓reduceDIte, advance] at hpv
           cases hpv
@@ -534,15 +618,15 @@ theorem occ_mono (hand : Fin 52 → Nat) :
         have hlt : m < 52 := by omega
         simp only [placeN, hlt, ↓reduceDIte, advance]
         by_cases he : p = (chooseSeat! (placeN hand m).2).1
-        · cases he; exact setOcc_at_self _ _
-        · rw [setOcc_at_ne (placeN hand m).2.occ (Ne.symm he)]; exact hprev
+        · cases he; exact setOcc_at_self _ _ (placeN_occ_size hand m)
+        · rw [setOcc_at_ne (placeN hand m).2.occ (Ne.symm he) (placeN_occ_size hand m)]; exact hprev
       · have : n = m + 1 := by omega
         cases this; exact hp
 
 theorem seat_occupied_after (hand : Fin 52 → Nat) (n : Nat) (hn : n < 52) :
     occAt (placeN hand (n + 1)).2.occ (placeSeat hand n hn) = true := by
   simp only [placeN, placeSeat, hn, ↓reduceDIte, advance]
-  exact setOcc_at_self _ _
+  exact setOcc_at_self _ _ (placeN_occ_size hand n)
 
 theorem place_write_stable (hand : Fin 52 → Nat) (n : Nat) (hn : n < 52)
     (m : Nat) (hnm : n < m) (hm : m ≤ 52) :
@@ -614,7 +698,8 @@ theorem inv_place_agree (hand : Fin 52 → Nat) (n : Nat) (hn : n ≤ 52) :
           simp only [he, ↓reduceIte]
           exact hout i hil
 
-set_option maxHeartbeats 400000 in
+attribute [irreducible] setOcc occGet emptyOcc
+
 theorem invMixColumns_mixColumns (hand : Fin 52 → Nat) :
     invMixColumns (mixColumns hand) = hand := by
   funext i

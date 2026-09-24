@@ -66,9 +66,7 @@ def foldChecks {α} (f : α → IO Bool) (xs : List α) (acc : Nat × Nat) : IO 
 
 def runVectorChecks : IO Nat := do
   let acc := (0, 0)
-  let acc ← Vectors.encryptVecs.foldlM (fun a v => do
-      let (ok, n) ← checkEncrypt v
-      return (a.1 + ok, a.2 + n)) acc
+  IO.println "checking passkey / expand_keys / counter / layers first..."
   let acc ← foldChecks checkPassKey Vectors.passkeyVecs acc
   let acc ← foldChecks checkExpand Vectors.expandKeysVecs acc
   let acc ← foldChecks checkCounter Vectors.counterDeckVecs acc
@@ -77,6 +75,12 @@ def runVectorChecks : IO Nat := do
   let acc ← foldChecks checkShift Vectors.shiftRowsVecs acc
   let acc ← foldChecks checkUnkeyed Vectors.unkeyedFullVecs acc
   let acc ← foldChecks checkCompose Vectors.composeVecs acc
+  IO.println "checking encrypt/decrypt KATs..."
+  let acc ← Vectors.encryptVecs.foldlM (fun a v => do
+      IO.println s!"  {v.name}"
+      let (ok, n) ← checkEncrypt v
+      return (a.1 + ok, a.2 + n)) acc
+  IO.println "checking CTR..."
   let acc ← foldChecks checkCtr Vectors.ctrEncryptVecs acc
   let (ok, n) := acc
   if ok ≠ n then

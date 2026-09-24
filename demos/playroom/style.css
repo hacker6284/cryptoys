@@ -215,7 +215,7 @@ body.playroom.is-ready .playroom-menu {
   text-align: right;
 }
 
-.playroom-info,
+.playroom-dock .playroom-info,
 .playroom-info-hint {
   display: none;
 }
@@ -554,7 +554,7 @@ body.playroom.is-ready .playroom-dock {
     text-align: left;
   }
 
-  html[data-algo="scramble"] .playroom-info {
+  html[data-algo="scramble"] .playroom-dock .playroom-info {
     display: inline-flex;
     width: 1.75rem;
     height: 1.75rem;

@@ -67,9 +67,12 @@ Expected TAP: DoubleDeal **12/12**, MegaDreifach **11/11**.
 | Commit | `df152a2dcd33c6c8652a228e476aae5868333330` (file: [`SUDOCODE_LEAN_PIN`](SUDOCODE_LEAN_PIN)) |
 | Spike | [PR #6](https://github.com/hacker6284/sudocode/pull/6) (CONDITIONAL GO) |
 
-**Blocker if you point at sudocode `main`:** `backends/lean/` is not
-there. Lean is not in `ALL_BACKENDS`. This repo pins the PR #5
-branch commit above; it does not merge or vendor that PR.
+**Residual merge risk:** the pin is an **unmerged draft** (sudocode
+PR #5), not a commit on sudocode `main`. `backends/lean/` is not
+there on main. Lean is not in `ALL_BACKENDS`. This cryptoys PR stays
+draft until Generated TAP is green **and** that pin is durable (for
+example #5 lands). Do not treat the pin as if it were on main. This
+repo does not merge or vendor that PR.
 
 The commit includes the `_fs` Flow-binder shadow fix (a sudo `for s`
 must not capture the loop payload). MegaDreifach needs that fix.

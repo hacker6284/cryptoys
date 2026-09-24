@@ -15,31 +15,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
-        with:
-          repository: hacker6284/sudocode
-          path: .sudocode
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: .sudocode/sudoc
-      - name: Build sudoc
-        run: cargo build --release --manifest-path .sudocode/sudoc/Cargo.toml
-      - name: Test the primitives
-        run: |
-          sudoc=.sudocode/sudoc/target/release/sudoc
-          "$sudoc" build --target js --tests -o /tmp/scramble-test primitives/hash/scramble/scramble.sudo
-          node /tmp/scramble-test/_scramble_impl.mjs
-          "$sudoc" build --target js --tests -o /tmp/megadreifach-test primitives/hash/megadreifach/megadreifach.sudo
-          node /tmp/megadreifach-test/_megadreifach_impl.mjs
-          "$sudoc" build --target js --tests -o /tmp/doubledeal-test primitives/cipher/doubledeal/doubledeal.sudo
-          node /tmp/doubledeal-test/_doubledeal_impl.mjs
-      - name: Generate the demos
-        run: |
-          sudoc=.sudocode/sudoc/target/release/sudoc
-          mkdir -p demos/scramble/generated demos/doubledeal/generated
-          "$sudoc" build --target js -o demos/scramble/generated primitives/hash/scramble/scramble.sudo
-          cp primitives/hash/scramble/SPEC.md demos/scramble/SPEC.md
-          "$sudoc" build --target js -o demos/doubledeal/generated primitives/cipher/doubledeal/doubledeal.sudo
-          cp primitives/cipher/doubledeal/SPEC.md demos/doubledeal/SPEC.md
-          node primitives/cipher/doubledeal/encoding.test.mjs
+      - uses: ./.github/actions/generate-demos

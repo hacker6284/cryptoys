@@ -1,0 +1,209 @@
+# Per-PR playroom preview.
+#
+# deploy-pages is a single full-site artifact and the github-pages
+# environment only allows the main branch, so this workflow cannot
+# publish incrementally through Actions Pages. It writes the generated
+# demos tree to gh-pages under pr/<N>/ instead.
+#
+# Live URL after main republishes the combined tree (or if Pages is
+# switched to the gh-pages branch):
+#   https://hacker6284.github.io/cryptoys/pr/<N>/
+#
+# Same-repo PRs only. Forks do not get a preview (GITHUB_TOKEN cannot
+# push to gh-pages from a fork).
+
+name: preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - "demos/**"
+      - "primitives/hash/scramble/**"
+      - "primitives/cipher/doubledeal/**"
+      - "tools/build.sh"
+      - ".github/actions/generate-demos/**"
+      - ".github/workflows/pages.yml"
+      - ".github/workflows/check.yml"
+      - ".github/workflows/preview.yml"
+      - ".github/workflows/republish-pages.yml"
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to publish or remove
+        required: true
+      action:
+        description: deploy or remove
+        type: choice
+        options: [deploy, remove]
+        default: deploy
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    if: >
+      (github.event_name == 'workflow_dispatch' && inputs.action == 'deploy')
+      || (
+        github.event_name == 'pull_request'
+        && github.event.action != 'closed'
+        && github.event.pull_request.head.repo.full_name == github.repository
+      )
+    runs-on: ubuntu-latest
+    concurrency:
+      group: preview-generate-${{ github.event.pull_request.number || inputs.pr_number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/generate-demos
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demos
+          path: demos
+          retention-days: 3
+
+  publish:
+    needs: generate
+    runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: demos
+          path: demos
+      - name: Publish pr/${{ github.event.pull_request.number || inputs.pr_number }}/
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./demos
+          destination_dir: pr/${{ github.event.pull_request.number || inputs.pr_number }}
+          keep_files: true
+          force_orphan: false
+          commit_message: "Preview playroom for PR ${{ github.event.pull_request.number || inputs.pr_number }} (${{ github.sha }})"
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+      - name: Resolve published commit
+        id: published
+        run: |
+          sha=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/gh-pages | awk '{print $1}')
+          test -n "$sha"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+      - name: Comment the preview URL
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+          PAGES_SHA: ${{ steps.published.outputs.sha }}
+        with:
+          script: |
+            const n = process.env.PR_NUMBER;
+            const sha = process.env.PAGES_SHA;
+            const pages = `https://hacker6284.github.io/cryptoys/pr/${n}/`;
+            const moduleUrl = `${pages}scramble/generated/scramble.mjs`;
+            const immediate = `https://cdn.jsdelivr.net/gh/hacker6284/cryptoys@${sha}/pr/${n}/`;
+            const marker = "<!-- cryptoys-playroom-preview -->";
+            const body = [
+              marker,
+              "## Playroom preview",
+              "",
+              "**Open this URL, click Scramble, and confirm the generated module loads** (teach dock appears; no import / 404 error).",
+              "",
+              `- Preview: ${pages}`,
+              `- Generated module (expect HTTP 200): ${moduleUrl}`,
+              "",
+              "GitHub Pages is a single-artifact deploy from `main`, so the `github.io` URL goes live after [republish-pages](https://github.com/hacker6284/cryptoys/actions/workflows/republish-pages.yml) runs, or after the next `pages` deploy from `main`. This workflow already wrote the same tree to `gh-pages` at `pr/" + n + "/`.",
+              "",
+              `Immediate same-commit copy (jsDelivr, correct JS MIME): ${immediate}`,
+              "",
+              "Pattern: `https://hacker6284.github.io/cryptoys/pr/<N>/`. Same-repo PRs that touch `demos/**`, generate workflows, or the sudo that feeds generate. Removed when the PR closes.",
+            ].join("\n");
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(n),
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: Number(n),
+                body,
+              });
+            }
+
+  cleanup:
+    if: >
+      (github.event_name == 'workflow_dispatch' && inputs.action == 'remove')
+      || (
+        github.event_name == 'pull_request'
+        && github.event.action == 'closed'
+        && github.event.pull_request.head.repo.full_name == github.repository
+      )
+    runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
+    steps:
+      - name: Remove pr/${{ github.event.pull_request.number || inputs.pr_number }}/
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        run: |
+          set -eu
+          n="$PR_NUMBER"
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" site
+          cd site
+          if [ ! -d "pr/${n}" ]; then
+            echo "no preview folder for PR ${n}"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf "pr/${n}"
+          rmdir pr 2>/dev/null || true
+          git add -A
+          git commit -m "Remove playroom preview for PR ${n}"
+          git push
+      - name: Update the preview comment
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        with:
+          script: |
+            const n = process.env.PR_NUMBER;
+            const marker = "<!-- cryptoys-playroom-preview -->";
+            const body = [
+              marker,
+              "## Playroom preview",
+              "",
+              `Preview for PR #${n} was removed when the pull request closed.`,
+            ].join("\n");
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(n),
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            }

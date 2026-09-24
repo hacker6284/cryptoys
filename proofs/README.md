@@ -4,11 +4,17 @@ This tree is the library's proof ledger. Specifications under `primitives/` stay
 
 Nothing in this repository is for real use. A green Lean build is not a security claim.
 
-Three layers of evidence, and only the first is a theorem:
+Sudo is normative. Lean *algorithm* definitions are generated from `*.sudo`
+into `proofs/*/lean/Generated/`. See [`ANTI_DRIFT.md`](ANTI_DRIFT.md). This
+does **not** claim sudo↔Lean semantic-equivalence theorems. The terminates
+gate is off (unmeasured `while`s).
 
-1. **Theorems about the Lean model** — bijections, round-trip, PassKey injectivity. Zero `sorry`. The Lean kernel checks these theorems; there is no `native_decide` in the shipped DoubleDeal Lean.
-2. **Vector agreement** — the same known-answer decks are evaluated in Lean and in `doubledeal.sudo` (via the sudoc JS target). This is evidence that the hand-written model matches the conformance implementation on those inputs, **not** a proof that the sudo text equals the Lean model.
-3. **Future: emitter proof** — a sudocode total-fragment Lean emitter will be the place to prove that the sudo code *is* the Lean model. That emitter does not exist yet.
+Four layers of evidence, and only the first is a theorem:
+
+1. **Theorems about the proof-only Lean model** — bijections, round-trip, PassKey injectivity. Zero `sorry`. The Lean kernel checks these theorems; there is no `native_decide` in the shipped DoubleDeal Lean. These modules are **not** the algorithm.
+2. **Generated TAP** — `sudoc emit-ir` → protocol-4 Lean backend → `lake` → TAP, from the same `.sudo` that JS/Python compile. DoubleDeal 12/12, MegaDreifach 11/11. Evidence the emitter ran, **not** a sudo=Lean theorem.
+3. **Vector agreement (algebraic skeleton vs JS JSON)** — known-answer decks evaluated in the proof package against JSON from the sudoc JS target. Evidence the *skeleton* matches those inputs, **not** a proof it equals `Generated.encrypt`.
+4. **Future: equivalence** — a theorem that the sudo text *is* the generated Lean, or that the algebraic skeleton equals the generated program. OPEN. Fuel-total `natIter` is not a total-fragment emitter.
 
 ## Taxonomy
 
@@ -47,8 +53,8 @@ Deprecated algorithms, when they appear, get their own directory under `proofs/`
 
 | Primitive | Current version | This tree |
 | --- | --- | --- |
-| DoubleDeal | `primitives/cipher/doubledeal/` | Correctness Lean under `doubledeal/lean/`. PassKey injectivity is **proved** (PR #3, on `main`). Known-answer vectors under `doubledeal/vectors/` agree with `doubledeal.sudo`. |
-| MegaDreifach | `primitives/hash/megadreifach/` (SPEC + `megadreifach.sudo` + KATs) | Correctness Lean under `megadreifach/lean/`. M1–M7 packing/algebra **proved** (M3 even-perm glue still open). M8 is a net-distinctness reduction. M9 / full KAT digests **OPEN**. Hand-written Lean is not a proof that the sudo text equals the Lean model. A green Lean build is not a security claim. |
+| DoubleDeal | `primitives/cipher/doubledeal/` | **Generated** Lean under `doubledeal/lean/Generated/` (from `doubledeal.sudo`; TAP 12/12). Proof-only stones under `doubledeal/lean/DoubleDeal/`. PassKey injectivity is **proved** on the list model (PR #3). Equivalence to `Generated.passkey` is OPEN. |
+| MegaDreifach | `primitives/hash/megadreifach/` (SPEC + `megadreifach.sudo` + KATs) | **Generated** Lean under `megadreifach/lean/Generated/` (TAP 11/11). Proof-only stones under `megadreifach/lean/MegaDreifach/`. M1–M7 packing/algebra **proved** (M3 even-perm glue still open). M8 is a net-distinctness reduction. M9 / M13 full KAT digests in the proof package **OPEN**. Research Hash hexes refreshed to current sudo. A green Lean build is not a security claim. |
 | Scramble | `scramble_v2` | Placeholder only. Teaching hash; single-cube birthday ceiling. No Lean. Not bumped. |
 | DoubleDeal-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. |
 

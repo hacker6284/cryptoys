@@ -1,7 +1,7 @@
 {
   "spec": "MegaDreifach",
-  "date": "2026-09-23",
-  "digest_encoding": "LOCKED position_to_bytes 29-byte BE rank (SPEC §3 / §6)",
+  "date": "2026-09-24",
+  "digest_encoding": "LOCKED position_to_bytes 29-byte BE rank (SPEC \u00a73 / \u00a76)",
   "digest_len": 29,
   "pad_block": 28,
   "body": 52,
@@ -17,7 +17,7 @@
       "msg_len": 0,
       "padded_len": 28,
       "n_blocks": 1,
-      "digest_hex": "02c61941965591f80bc8745dbd40b49d4f1b472577831237e56786337a"
+      "digest_hex": "037ef5274eebea6ed847821573d575f9d7a0d593d31787d8a50bedf55e"
     },
     {
       "name": "short_abc",
@@ -25,7 +25,7 @@
       "msg_len": 3,
       "padded_len": 28,
       "n_blocks": 1,
-      "digest_hex": "020edc31b9adaa4c48ea1f923c52628dad132ac97c4505eab6d00eb61f"
+      "digest_hex": "025959c0ab2cdad7536956e3490cec6b2711b5d73c5731af2d4ecff550"
     },
     {
       "name": "short_one",
@@ -33,7 +33,7 @@
       "msg_len": 1,
       "padded_len": 28,
       "n_blocks": 1,
-      "digest_hex": "01f8b3eefdff0e0784675521c4e904aa11abcc7a1a1a9d50940607fc93"
+      "digest_hex": "02e8785e47149ea0d03cc39c4ffd5c3ee21568197394a48744cc3c53f5"
     },
     {
       "name": "edge_27",
@@ -41,7 +41,7 @@
       "msg_len": 27,
       "padded_len": 56,
       "n_blocks": 2,
-      "digest_hex": "0186323895f62c1abe61b59620cbadd66593f8454c7e25ce79d6920cbc"
+      "digest_hex": "01d701043ab21d88a52ffed94b46896dc18e15f775c3d661fec3f9fed8"
     },
     {
       "name": "edge_28",
@@ -49,7 +49,7 @@
       "msg_len": 28,
       "padded_len": 56,
       "n_blocks": 2,
-      "digest_hex": "01ee6c5410a01d9a257f6d0852aeab2c1f0379d91e3bfa2d6acba66d24"
+      "digest_hex": "0354488e90201f310b87eb4cdda3ac1fabcd9671fd08f4836b325cf8f1"
     },
     {
       "name": "edge_29",
@@ -57,7 +57,7 @@
       "msg_len": 29,
       "padded_len": 56,
       "n_blocks": 2,
-      "digest_hex": "02a0a2b9009cada74ea8de85add20a08c288023b76289724bf089b1132"
+      "digest_hex": "01b991a6db6297877c7c4f72283cf3f6c8e7a3f91f0a82c141562b9835"
     },
     {
       "name": "multi_56",
@@ -65,7 +65,7 @@
       "msg_len": 56,
       "padded_len": 84,
       "n_blocks": 3,
-      "digest_hex": "002184ae974e5828d00ced7e9c0b974674dcd0dc06700f12b3664a98bf"
+      "digest_hex": "00a5059319ad22533bc2156fa140dc17d8969dfa6bafe751848eebe724"
     },
     {
       "name": "multi_100",
@@ -73,7 +73,7 @@
       "msg_len": 100,
       "padded_len": 112,
       "n_blocks": 4,
-      "digest_hex": "03653417a3db817cdd0df1398ca93f957c0d78f7887ffca8f0b116ebcd"
+      "digest_hex": "0156e9f32a565e585893eab5229ea6a12c959c743d9c3e420827139e20"
     }
   ],
   "hash_deck": {
@@ -133,7 +133,8 @@
       51
     ],
     "phi_inv_hex": "00000000000000000000000000000000000000000000000000000000",
-    "digest_hex": "0019905c82e17a81ec9577a4f83e2412cd26d748c50250729caf6296b8",
+    "digest_hex": "026d40a93e365750ef2c85c9c97d6cff7f4b49e44af645ae8209b6864f",
     "match_hash_bytes_zero28": true
-  }
+  },
+  "digest_note": "Research Hash hexes refreshed 2026-09-24 to current megadreifach.sudo. Python and emitted Lean agree; previous hexes were stale vs sudo."
 }

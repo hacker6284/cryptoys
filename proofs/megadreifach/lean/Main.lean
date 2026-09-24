@@ -11,5 +11,6 @@ def main : IO UInt32 := do
   IO.println "        HashDeckBody require_permutation (M7),"
   IO.println "        G2 one-card injectivity as a net-distinctness reduction (M8)."
   IO.println "Open: concrete 60×52 net distinctness; abs-G2 L2 (M9); full KAT digests (M13)."
-  IO.println "These are correctness / algebraic theorems, not bit-security."
+  IO.println "These are correctness / algebraic theorems about the proof-only"
+  IO.println "model, not Generated.v_Hash, and not bit-security (see ANTI_DRIFT.md)."
   MegaDreifach.runVectorChecks

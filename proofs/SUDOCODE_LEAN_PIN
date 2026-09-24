@@ -1,0 +1,6 @@
+# sudocode Lean backend pin.
+# Durable: sudocode main, squash merge of PR #5
+# (4286093e791e85e2be0b72b524319ba64bda002b). backends/lean/ now
+# ships on main; Lean is still not in ALL_BACKENDS. Bump only when
+# you intend to change the emitter, then re-run proofs/emit_lean.sh.
+4286093e791e85e2be0b72b524319ba64bda002b

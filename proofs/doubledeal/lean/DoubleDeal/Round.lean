@@ -1,11 +1,8 @@
 /-
-  Round / encrypt structure for DoubleDeal (Nr = 6).
-  Peel lemma S12 is definitional.
-  Proved: encryptNoMix_rt, invUnkeyedWithMix_rt, encrypt1WithMix_rt,
-  invFullRound_fullRound, invFullRoundNoMix_fullRoundNoMix,
-  applyInvFullRounds_applyFullRounds, encryptN_rt, encrypt6_rt.
-  Round keys are abstract pos bijections (PassKey is not required for this stone).
-  These are correctness / algebraic theorems, not bit-security.
+  PROOF-ONLY. Algebraic Nr=6 skeleton for S2 / S12 (abstract Compose keys).
+  The algorithm is Generated.encrypt / Generated.decrypt (from
+  doubledeal.sudo). encrypt6 here is not the cipher. OPEN: no theorem
+  that this skeleton equals the emitted program. See proofs/ANTI_DRIFT.md.
 -/
 import DoubleDeal.Basic
 import DoubleDeal.Grid

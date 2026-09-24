@@ -4,13 +4,19 @@ Normative definition: [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/
 
 DoubleDeal is a toy block cipher. It has no cryptographic security claim. The Lean package below proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
 
-## Three layers (be honest)
+## Layers (be honest)
+
+Sudo is normative. Emitted Lean under `lean/Generated/` is the algorithm.
+`lean/DoubleDeal/` is proof-only. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md).
+This does **not** claim sudo↔Lean semantic-equivalence theorems. The
+terminates gate is off.
 
 | Layer | What it is | Trust base |
 | --- | --- | --- |
-| **(a) Theorems about the Lean model** | Bijections, `encrypt6_rt` under Compose-key bijections, PassKey `F_inv ∘ F = id`, and the same round-trip with the **real PassKey schedule** (`encryptDeckFn_rt`). List wrappers used by KATs agree: `encryptDeck_eq_encryptDeckFn`, `decryptDeck_eq_decryptDeckFn`. | Lean kernel. `lake build`. No `sorry`. No `native_decide`. |
-| **(b) Vector agreement** | Every deck in `vectors/doubledeal_vectors.json` is checked by `lake exe doubledeal` against the Lean functions. JSON is generated from a sudoc JS build of `doubledeal.sudo`, not hand-copied. | Compiled Lean evaluation (the `doubledeal` executable), plus the committed JSON. **Not** kernel `decide`. **Not** a proof that sudo = Lean. |
-| **(c) Future: emitter proof** | A sudocode total-fragment Lean emitter should eventually show the sudo text *is* this model. | Does not exist yet. Do not read (b) as a substitute. |
+| **(a) Theorems about the proof-only model** | Bijections, `encrypt6_rt` under Compose-key bijections, PassKey `F_inv ∘ F = id`, and the same round-trip with the algebraic PassKey schedule (`encryptDeckFn_rt`). | Lean kernel. `lake build` of the proof package. No `sorry`. No `native_decide`. **Not** the cipher. |
+| **(b) Generated TAP** | `proofs/emit_lean.sh` → `lake` → `doubledeal_test` (12/12), including sudo's encrypt/decrypt and `passkey_inv` tests. | Compiled emitted Lean. **Not** a sudo=Lean theorem. |
+| **(c) Skeleton vs JS JSON** | `lake exe doubledeal` vs `vectors/doubledeal_vectors.json` (from sudoc JS). | Evidence the *skeleton* matches those decks. OPEN that it equals `Generated.encrypt`. |
+| **(d) Equivalence** | sudo text = generated Lean, or skeleton = generated. | OPEN. |
 
 ## What is proved
 
@@ -36,21 +42,32 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | S7 | Hand sheet refines §3 math | Open |
 | S8–S10 | Differentials, slide, randomness stats | Evidence only; never "security results" |
 | S13 | §5.3 bytes ↔ deck | Evidence in `encoding.test.mjs` / `demos/doubledeal/cards.js` |
-| — | sudo text equals the Lean model | Open; vector agreement is layer (b) only. Future emitter is layer (c). |
+| — | sudo text equals generated Lean; skeleton equals `Generated.encrypt` / `Generated.passkey` | OPEN. Generated TAP is layer (b), not a theorem. |
 | — | `mixColumns ∘ invMixColumns = id` on arbitrary packets | Open (needs image / seat characterization) |
 
-## Lean package
+## Lean packages
 
-Toolchain **4.14.0**, no Mathlib. From a checkout with [elan](https://github.com/leanprover/elan):
+Two Lake packages, same toolchain **4.14.0**, no Mathlib.
+
+**Generated (algorithm).** Do not edit. From the repo root:
+
+```sh
+proofs/emit_lean.sh doubledeal
+cd proofs/doubledeal/lean/Generated && lake build && ./.lake/build/bin/doubledeal_test
+```
+
+Pin and regenerating: [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md).
+
+**Proof-only.** From a checkout with [elan](https://github.com/leanprover/elan):
 
 ```sh
 cd proofs/doubledeal/lean
 lake build
 ```
 
-`lake exe doubledeal` prints a one-line summary **and** runs the known-answer vector checks. The library target is `DoubleDeal`. Namespaces are `DoubleDeal`, not a workspace lineage name.
+`lake exe doubledeal` prints a one-line summary **and** runs the skeleton-vs-JSON checks. The library target is `DoubleDeal`. Namespaces are `DoubleDeal`.
 
-Shipped theorems contain no `sorry` and no `native_decide`. The proofs CI job (`proofs.yml`) runs a sorry / `native_decide` gate, `check_source.py` (JSON `sudo_sha256` vs the current `doubledeal.sudo`), `lake build`, and `lake exe doubledeal`. It does not gate the Pages demo build. Path filters: `proofs/**`, `primitives/cipher/doubledeal/**`, and the workflow file.
+Shipped theorems contain no `sorry` and no `native_decide`. The proofs CI job (`proofs.yml`) also emits Lean from `doubledeal.sudo` against the pin, builds `Generated/`, and runs TAP. Path filters: `proofs/**`, `primitives/cipher/doubledeal/**`, `tools/emit_lean.py`, and the workflow file.
 
 ### Regenerating vectors
 
@@ -71,7 +88,7 @@ Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
 
 ## Reading order
 
-SPEC §6 suggested order: **S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7**, S13 as an encoding property test, and S8–S10 as living evidence. PassKey injectivity is proved here. Merge this PR with [PR #3](https://github.com/hacker6284/cryptoys/pull/3) (or land #3 immediately after) so SPEC §3.7 / S4 name `passKey_leftInverse` / `passKey_rightInverse` in `proofs/doubledeal/lean/DoubleDeal/PassKey.lean` and stop saying injectivity is open.
+SPEC §6 suggested order: **S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7**, S13 as an encoding property test, and S8–S10 as living evidence. PassKey injectivity is proved on the **proof-only** list model. OPEN: that model equals `Generated.passkey`. sudo already tests `passkey_inv` on several decks in Generated TAP.
 
 ### Why PassKey is invertible
 

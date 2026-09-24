@@ -51,19 +51,33 @@ h1 {
 
 .panel {
   border-left: 1px solid var(--line);
-  padding: 22px 18px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   background: var(--panel);
   overflow: auto;
 }
 
 .note {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 1.4;
   color: var(--muted);
+}
+
+.field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.field-head button {
+  padding: 4px 8px;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 @media (max-width: 900px) {

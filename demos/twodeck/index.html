@@ -26,6 +26,7 @@
       <span class="site-sep" aria-hidden="true">/</span>
       <span class="site-current">TwoDeck</span>
     </nav>
+    <button id="spec-btn" class="chrome-action" type="button" data-open-spec>Spec</button>
   </header>
   <div class="shell">
     <section class="stage">
@@ -37,42 +38,36 @@
       <p id="caption" class="caption">Plaintext on the left. Key on the right.</p>
     </section>
     <aside class="panel">
-      <p class="note">A block is one deck. How text becomes cards is <button type="button" class="inline-link" data-open-spec>§5.3 of the Spec</button>, outside encrypt and decrypt.</p>
+      <p class="note">A block is one deck. Encoding is <button type="button" class="inline-link" data-open-spec>§5.3 of the Spec</button>, outside the cipher.</p>
       <div class="row">
         <button type="button" data-mode="ecb" class="on">ECB</button>
         <button type="button" data-mode="ctr">CTR</button>
         <button type="button" data-direction="encrypt" class="on">Encrypt</button>
         <button type="button" data-direction="decrypt">Decrypt</button>
-        <button id="spec-btn" type="button" data-open-spec>Spec</button>
       </div>
-      <label class="field"><span id="input-label">Plaintext</span>
-        <textarea id="message" rows="4" spellcheck="false">hello</textarea>
-      </label>
-      <label class="field">Key
-        <textarea id="key" rows="2" spellcheck="false">cryptoy</textarea>
-      </label>
-      <div class="row">
-        <button id="random-key" type="button">Random key</button>
-      </div>
-      <div id="nonce-field" hidden>
-        <label class="field">Nonce
-          <textarea id="nonce" rows="2" spellcheck="false">nonce</textarea>
-        </label>
-        <div class="row">
-          <button id="random-nonce" type="button">Random nonce</button>
-        </div>
-      </div>
-      <label class="field"><span id="output-label">Ciphertext</span>
-        <textarea id="output" rows="5" spellcheck="false" readonly></textarea>
-      </label>
       <div class="row">
         <button id="start" class="primary" type="button">Start</button>
         <button id="step" type="button">Step</button>
         <button id="stop" type="button">Stop</button>
       </div>
       <label class="slider">Speed <input id="speed" type="range" min="0.6" max="24" step="0.1" value="1.8"></label>
-      <div class="row">
-        <button id="copy" type="button">Copy ciphertext</button>
+      <div class="field">
+        <label id="input-label" for="message">Plaintext</label>
+        <textarea id="message" rows="2" spellcheck="false">hello</textarea>
+      </div>
+      <div class="field">
+        <span class="field-head"><label for="key">Key</label> <button id="random-key" type="button">Random</button></span>
+        <textarea id="key" rows="1" spellcheck="false">cryptoy</textarea>
+      </div>
+      <div id="nonce-field" hidden>
+        <div class="field">
+          <span class="field-head"><label for="nonce">Nonce</label> <button id="random-nonce" type="button">Random</button></span>
+          <textarea id="nonce" rows="1" spellcheck="false">nonce</textarea>
+        </div>
+      </div>
+      <div class="field">
+        <span class="field-head"><label id="output-label" for="output">Ciphertext</label> <button id="copy" type="button">Copy</button></span>
+        <textarea id="output" rows="3" spellcheck="false" readonly></textarea>
       </div>
       <p id="error" class="error"></p>
     </aside>

@@ -63,7 +63,7 @@ function applyLabels() {
     const encrypting = direction === "encrypt";
     inputLabel.textContent = encrypting ? "Plaintext" : "Ciphertext";
     outputLabel.textContent = encrypting ? "Ciphertext" : "Plaintext";
-    copyButton.textContent = encrypting ? "Copy ciphertext" : "Copy plaintext";
+    copyButton.textContent = "Copy";
 }
 
 function preview() {

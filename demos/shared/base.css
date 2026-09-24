@@ -22,6 +22,8 @@ a:hover { color: var(--fg); }
 .site-chrome {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   min-height: var(--chrome-height);
   padding: 0 28px;
   border-bottom: 1px solid var(--line);
@@ -55,6 +57,21 @@ a:hover { color: var(--fg); }
 }
 
 .site-current { color: var(--fg); }
+
+button.chrome-action {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+button.chrome-action:hover {
+  background: transparent;
+  color: var(--accent);
+  filter: none;
+}
 
 /* Buttons: secondary default, primary for Play/Start */
 button {
@@ -139,7 +156,49 @@ textarea, input[type="text"] {
   font-size: 12px;
 }
 
-.slider input { flex: 1; }
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 14px;
+  margin: 0;
+  background: transparent;
+  accent-color: var(--accent);
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--line);
+  border-radius: 999px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: var(--line);
+  border: 0;
+  border-radius: 999px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
 
 .row { display: flex; flex-wrap: wrap; gap: 8px; }
 

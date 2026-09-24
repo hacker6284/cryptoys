@@ -1,5 +1,5 @@
 .hub {
-  max-width: 920px;
+  max-width: 1040px;
   padding: 48px 28px 80px;
 }
 
@@ -21,7 +21,7 @@
 
 .gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 16px;
   margin: 0;
 }

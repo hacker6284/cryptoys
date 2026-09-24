@@ -42,13 +42,6 @@ function disposeObject(object) {
     object.parent?.remove(object);
 }
 
-function setDockMode(root, mode) {
-    const next = mode === "hands" ? "hands" : "teach";
-    root.dataset.mode = next;
-    const flip = root.querySelector("#dock-mode");
-    if (flip) flip.textContent = next === "hands" ? "Teach" : "Hands";
-}
-
 function mountDock() {
     let root = document.querySelector("#scramble-dock");
     if (root) return root;
@@ -57,21 +50,6 @@ function mountDock() {
     root.className = "playroom-dock";
     root.hidden = true;
     root.innerHTML = `
-      <div class="playroom-teach-primary">
-        <div id="teach" class="playroom-note" hidden>
-          <div id="tape" class="tape" aria-label="Message tape"></div>
-          <article id="teach-card" class="playroom-note-body"></article>
-          <div class="transport" id="transport">
-            <button type="button" data-jump="round-back" title="Previous symbol">«</button>
-            <button type="button" data-jump="stage-back" title="Previous stage">‹</button>
-            <button type="button" data-jump="back">Prev</button>
-            <span class="pos" id="teach-pos">—</span>
-            <button type="button" data-jump="fwd">Next</button>
-            <button type="button" data-jump="stage-fwd" title="Next stage">›</button>
-            <button type="button" data-jump="round-fwd" title="Next symbol">»</button>
-          </div>
-        </div>
-      </div>
       <div class="playroom-hands">
         <p class="playroom-hands-label"><span id="gen-label">Gen 2</span> · scramble</p>
         <p id="status" class="status">Solved start · white up, green front, red right</p>
@@ -93,10 +71,23 @@ function mountDock() {
           <button type="button" class="on" data-encoding="text">text</button>
           <button type="button" data-encoding="hex">hex</button>
         </div>
+        <label class="playroom-message-label" for="message">Message</label>
         <textarea id="message" rows="2" spellcheck="false" placeholder="hello">hello</textarea>
         <div id="outline" class="outline" hidden></div>
       </div>
-      <button type="button" class="chrome-action playroom-mode" id="dock-mode">Hands</button>
+      <div id="teach" class="playroom-note" hidden>
+        <div id="tape" class="tape" aria-label="Message tape"></div>
+        <article id="teach-card" class="playroom-note-body"></article>
+        <div class="transport" id="transport">
+          <button type="button" data-jump="round-back" title="Previous symbol">«</button>
+          <button type="button" data-jump="stage-back" title="Previous stage">‹</button>
+          <button type="button" data-jump="back">Prev</button>
+          <span class="pos" id="teach-pos">—</span>
+          <button type="button" data-jump="fwd">Next</button>
+          <button type="button" data-jump="stage-fwd" title="Next stage">›</button>
+          <button type="button" data-jump="round-fwd" title="Next symbol">»</button>
+        </div>
+      </div>
       <dialog id="spec">
         <div class="spec-bar">
           <strong>Specification</strong>
@@ -105,10 +96,6 @@ function mountDock() {
         <article id="spec-body"></article>
       </dialog>
     `;
-    setDockMode(root, "teach");
-    root.querySelector("#dock-mode")?.addEventListener("click", () => {
-        setDockMode(root, root.dataset.mode === "hands" ? "teach" : "hands");
-    });
     document.body.append(root);
     return root;
 }
@@ -164,8 +151,6 @@ function createScrambleAdapter() {
                     root,
                     exposeTeach: true,
                 });
-                session.enterTeach();
-                setDockMode(root, "teach");
                 root.hidden = false;
                 root.classList.add("on");
                 return session;
@@ -177,7 +162,6 @@ function createScrambleAdapter() {
             session?.dispose();
             session = null;
             if (root) {
-                setDockMode(root, "teach");
                 root.classList.remove("on");
                 root.hidden = true;
             }

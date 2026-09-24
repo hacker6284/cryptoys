@@ -1,6 +1,6 @@
 # cryptoys
 
-Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys. Nothing in this repository is for real use.
+Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys.
 
 Each primitive is a directory holding a normative specification and one [sudocode](https://github.com/hacker6284/sudocode) implementation. Demos are rendered with Three.js, and published from this repository with GitHub Pages.
 
@@ -30,7 +30,7 @@ MegaDreifach is a toy three-megaminx Merkle–Damgård hash. The product name is
 
 ## TwoDeck
 
-TwoDeck is a toy block cipher on a 52-card deck. A block is one deck. ECB encrypts each block on its own. CTR encrypts a counter deck and composes that keystream with the message. Diamonds carry the counter. The other three suits are the nonce. SumRanks, ShiftRows, and GridCycle are the unkeyed layers. Compose is the keyed layer. PassKey expands the master deck into the round keys. It has no security claim. Section 5.3 encodes a byte string as decks, outside `encrypt` and `decrypt`: 28-byte blocks unrank into decks, and ciphertext is 29 bytes per deck because 52! does not fit in 28 bytes. A demo box is that text as UTF-8, unless it starts with `0x`, in which case the rest is hex.
+TwoDeck is a toy block cipher on a 52-card deck. A block is one deck. ECB encrypts each block on its own. CTR encrypts a counter deck and composes that keystream with the message. Diamonds carry the counter. The other three suits are the nonce. SumRanks, ShiftRows, and GridCycle are the unkeyed layers. Compose is the keyed layer. PassKey expands the master deck into the round keys. Section 5.3 encodes a byte string as decks, outside `encrypt` and `decrypt`: 28-byte blocks unrank into decks, and ciphertext is 29 bytes per deck because 52! does not fit in 28 bytes. A demo box is that text as UTF-8, unless it starts with `0x`, in which case the rest is hex.
 
 The specification is `primitives/cipher/twodeck/SPEC.md`.
 

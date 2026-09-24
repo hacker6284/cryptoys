@@ -122,7 +122,7 @@ Between blocks, puzzles `(A,B,C) = (h, h⁻¹, id)`. Run E_m on A; solve B onto 
 
 Last orientations are completed by the parity rules. Parse rejects integers `≥ |G|`. Encoding is injective on legal positions. It is not surjective onto `{0,1}^{232}`.
 
-A sudocode `int` is 64-bit and overflow traps. `|G|` and `52!` do not fit. `std.bigint` cannot cross a module boundary; the conformance file pastes the limb arithmetic it needs (same limitation TwoDeck records for 52-card ranks).
+A sudocode `int` is 64-bit and overflow traps. `|G|` and `52!` do not fit. `std.bigint` cannot cross a module boundary; the conformance file pastes the limb arithmetic it needs (same limitation DoubleDeal records for 52-card ranks).
 
 ---
 

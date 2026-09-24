@@ -4,13 +4,13 @@ on:
   push:
     paths:
       - "proofs/**"
-      - "primitives/cipher/twodeck/**"
+      - "primitives/cipher/doubledeal/**"
       - "primitives/hash/megadreifach/**"
       - ".github/workflows/proofs.yml"
   pull_request:
     paths:
       - "proofs/**"
-      - "primitives/cipher/twodeck/**"
+      - "primitives/cipher/doubledeal/**"
       - "primitives/hash/megadreifach/**"
       - ".github/workflows/proofs.yml"
   workflow_dispatch:
@@ -19,7 +19,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  twodeck-lean:
+  doubledeal-lean:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -36,7 +36,7 @@ jobs:
           }
           bad_sorry = []
           bad_native = []
-          root = Path("proofs/twodeck/lean")
+          root = Path("proofs/doubledeal/lean")
           for path in root.rglob("*.lean"):
               rel = str(path)
               text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
@@ -57,15 +57,15 @@ jobs:
           print("no sorry/admit; no unlisted native_decide")
           PY
       - name: Vectors.lean matches committed JSON
-        run: python3 proofs/twodeck/vectors/json_to_lean.py --check
-      - name: JSON was generated from current twodeck.sudo
-        run: python3 proofs/twodeck/vectors/check_source.py
+        run: python3 proofs/doubledeal/vectors/json_to_lean.py --check
+      - name: JSON was generated from current doubledeal.sudo
+        run: python3 proofs/doubledeal/vectors/check_source.py
       - uses: leanprover/lean-action@v1
         with:
-          lake-package-directory: proofs/twodeck/lean
+          lake-package-directory: proofs/doubledeal/lean
       - name: Known-answer vectors (compiled Lean)
-        working-directory: proofs/twodeck/lean
-        run: lake exe twodeck
+        working-directory: proofs/doubledeal/lean
+        run: lake exe doubledeal
 
   megadreifach-lean:
     runs-on: ubuntu-latest

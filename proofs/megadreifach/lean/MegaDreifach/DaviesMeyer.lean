@@ -13,7 +13,7 @@ def daviesMeyer (h e : Position) : Position := compose h e
 
 theorem daviesMeyer_def (h e : Position) : daviesMeyer h e = compose h e := rfl
 
-/-- Pair of mutual inverses (TwoDeck-style: hypothesized bijections). -/
+/-- Pair of mutual inverses (DoubleDeal-style: hypothesized bijections). -/
 def isInverse (g inv : Position) : Prop :=
   compose g inv = identity ∧ compose inv g = identity
 

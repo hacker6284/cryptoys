@@ -190,7 +190,7 @@ theorem lehmerUnrank_inj (n r1 r2 : Nat)
     have hr : (descending n)[i]?.getD 0 = n - i := descending_get n i hi'
     simpa [List.length_range, hr] using hb
 
-/-- `2^224 < 52!`. Kernel `decide` on closed numerals (same policy as TwoDeck S5). -/
+/-- `2^224 < 52!`. Kernel `decide` on closed numerals (same policy as DoubleDeal S5). -/
 theorem two_pow_224_lt_fact_52 : phiMax < factorial 52 := by
   decide
 

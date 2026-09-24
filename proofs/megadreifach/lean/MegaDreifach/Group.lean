@@ -91,7 +91,7 @@ def compose (g h : Position) : Position where
   ep := h.ep ∘ g.ep
   eo := fun s => h.eo (g.ep s) + g.eo s
 
-/-- Inverse given explicit permutation inverses (TwoDeck-style hypotheses). -/
+/-- Inverse given explicit permutation inverses (DoubleDeal-style hypotheses). -/
 def inverseWith (g : Position) (icp : Fin 20 → Fin 20) (iep : Fin 30 → Fin 30) : Position where
   cp := icp
   co := fun s => neg3 (g.co (icp s))

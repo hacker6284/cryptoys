@@ -80,7 +80,7 @@ try {
     console.error(err);
     document.body.classList.add("is-error");
     errorEl.hidden = false;
-    errorEl.textContent = "The playroom failed to load. TwoDeck and Scramble still work from the menu."
+    errorEl.textContent = "The playroom failed to load. DoubleDeal and Scramble still work from the menu."
         + (err && err.message ? ` (${err.message})` : "");
     titleEl.classList.add("on");
     menuEl.classList.add("on");

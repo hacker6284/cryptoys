@@ -1,5 +1,5 @@
-# TwoDeck-SCM proofs
+# DoubleDeal-SCM proofs
 
-Placeholder. TwoDeck-SCM (and SMAC) are not in `primitives/` yet. When they land, this directory will hold their proof ledger: correctness first, then any reduction or attack-bound that is actually earned.
+Placeholder. DoubleDeal-SCM (and SMAC) are not in `primitives/` yet. When they land, this directory will hold their proof ledger: correctness first, then any reduction or attack-bound that is actually earned.
 
-Until then there are no SCM theorems, no AEAD claims, and no tag-security numbers here. TwoDeck's cipher SPEC is ECB + CTR only.
+Until then there are no SCM theorems, no AEAD claims, and no tag-security numbers here. DoubleDeal's cipher SPEC is ECB + CTR only.

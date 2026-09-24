@@ -6,8 +6,8 @@ Nothing in this repository is for real use. A green Lean build is not a security
 
 Three layers of evidence, and only the first is a theorem:
 
-1. **Theorems about the Lean model** — bijections, round-trip, PassKey injectivity. Zero `sorry`. The Lean kernel checks these theorems; there is no `native_decide` in the shipped TwoDeck Lean.
-2. **Vector agreement** — the same known-answer decks are evaluated in Lean and in `twodeck.sudo` (via the sudoc JS target). This is evidence that the hand-written model matches the conformance implementation on those inputs, **not** a proof that the sudo text equals the Lean model.
+1. **Theorems about the Lean model** — bijections, round-trip, PassKey injectivity. Zero `sorry`. The Lean kernel checks these theorems; there is no `native_decide` in the shipped DoubleDeal Lean.
+2. **Vector agreement** — the same known-answer decks are evaluated in Lean and in `doubledeal.sudo` (via the sudoc JS target). This is evidence that the hand-written model matches the conformance implementation on those inputs, **not** a proof that the sudo text equals the Lean model.
 3. **Future: emitter proof** — a sudocode total-fragment Lean emitter will be the place to prove that the sudo code *is* the Lean model. That emitter does not exist yet.
 
 ## Taxonomy
@@ -35,10 +35,10 @@ Current algorithms get correctness now, and stronger security proofs (reductions
 ```text
 proofs/
   README.md                 # this taxonomy
-  twodeck/                  # TwoDeck correctness stones
+  doubledeal/               # DoubleDeal correctness stones
   megadreifach/             # MegaDreifach correctness stones
   scramble/                 # teaching / lineage placeholder; no Lean
-  scm/                      # placeholder until TwoDeck-SCM exists
+  scm/                      # placeholder until DoubleDeal-SCM exists
 ```
 
 Deprecated algorithms, when they appear, get their own directory under `proofs/` (or a `deprecated/` child) for vulnerability proofs. There are none yet.
@@ -47,9 +47,9 @@ Deprecated algorithms, when they appear, get their own directory under `proofs/`
 
 | Primitive | Current version | This tree |
 | --- | --- | --- |
-| TwoDeck | `primitives/cipher/twodeck/` | Correctness Lean under `twodeck/lean/`. PassKey injectivity is **proved** (PR #3, on `main`). Known-answer vectors under `twodeck/vectors/` agree with `twodeck.sudo`. |
+| DoubleDeal | `primitives/cipher/doubledeal/` | Correctness Lean under `doubledeal/lean/`. PassKey injectivity is **proved** (PR #3, on `main`). Known-answer vectors under `doubledeal/vectors/` agree with `doubledeal.sudo`. |
 | MegaDreifach | `primitives/hash/megadreifach/` (SPEC + `megadreifach.sudo` + KATs) | Correctness Lean under `megadreifach/lean/`. M1–M7 packing/algebra **proved** (M3 even-perm glue still open). M8 is a net-distinctness reduction. M9 / full KAT digests **OPEN**. Hand-written Lean is not a proof that the sudo text equals the Lean model. A green Lean build is not a security claim. |
 | Scramble | `scramble_v2` | Placeholder only. Teaching hash; single-cube birthday ceiling. No Lean. Not bumped. |
-| TwoDeck-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. |
+| DoubleDeal-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. |
 
-See `twodeck/README.md` for TwoDeck proved-versus-open, and `twodeck/STONES.md` for the SPEC §6 checklist. See `megadreifach/README.md` and `megadreifach/STONES.md` for MegaDreifach.
+See `doubledeal/README.md` for DoubleDeal proved-versus-open, and `doubledeal/STONES.md` for the SPEC §6 checklist. See `megadreifach/README.md` and `megadreifach/STONES.md` for MegaDreifach.

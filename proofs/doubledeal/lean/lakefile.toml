@@ -1,0 +1,10 @@
+name = "DoubleDeal"
+version = "0.1.0"
+defaultTargets = ["doubledeal"]
+
+[[lean_lib]]
+name = "DoubleDeal"
+
+[[lean_exe]]
+name = "doubledeal"
+root = "Main"

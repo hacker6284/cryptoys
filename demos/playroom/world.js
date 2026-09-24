@@ -575,17 +575,93 @@ export async function mountWorld(canvas) {
     };
     Object.values(toys).forEach((toy) => scene.add(toy));
 
-    function shelfHome(name) {
-        const slot = slots[name];
-        if (!slot) return;
-        const height = name === "cube" ? CUBE / 2 : 0.046;
-        const toy = toys[name];
-        toy.visible = true;
-        toy.position.set(slot.x, slot.y + height, SHELF_Z);
-        if (name === "cube") toy.rotation.set(-0.15, 0.45, 0);
-        else toy.rotation.set(0, 0.15, 0);
-        slot.slot.visible = false;
+    function feltTopY() {
+        return TOP_Y + 0.032;
     }
+
+    function getShelfPose(name) {
+        const slot = slots[name];
+        if (!slot) return null;
+        const height = name === "cube" ? CUBE / 2 : 0.046;
+        return {
+            position: { x: slot.x, y: slot.y + height, z: SHELF_Z },
+            rotation: name === "cube" ? { x: -0.15, y: 0.45, z: 0 } : { x: 0, y: 0.15, z: 0 },
+        };
+    }
+
+    function getTablePose(name) {
+        if (name === "cube") {
+            return {
+                position: { x: DEN.x, y: feltTopY() + CUBE / 2, z: DEN.z },
+                rotation: { x: 0, y: 0, z: 0 },
+            };
+        }
+        return {
+            position: { x: DEN.x, y: feltTopY() + 0.012, z: DEN.z },
+            rotation: { x: 0, y: 0, z: 0 },
+        };
+    }
+
+    function applyPose(object, pose) {
+        if (!object || !pose) return;
+        object.position.set(pose.position.x, pose.position.y, pose.position.z);
+        object.rotation.set(pose.rotation.x, pose.rotation.y, pose.rotation.z);
+        object.quaternion.setFromEuler(object.rotation);
+    }
+
+    function shelfHome(name) {
+        const toy = toys[name];
+        const pose = getShelfPose(name);
+        if (!toy || !pose) return;
+        toy.visible = true;
+        applyPose(toy, pose);
+        slots[name].slot.visible = false;
+    }
+
+    function setSlotEmpty(name, empty) {
+        if (slots[name]) slots[name].slot.visible = Boolean(empty);
+    }
+
+    function replaceToy(name, next) {
+        const prev = toys[name];
+        if (prev && prev.parent) prev.parent.remove(prev);
+        toys[name] = next;
+        if (next && !next.parent) scene.add(next);
+        return prev;
+    }
+
+    function applyEmissive(root, on, { chest = false } = {}) {
+        root.traverse((object) => {
+            if (!object.isMesh) return;
+            const mats = Array.isArray(object.material) ? object.material : [object.material];
+            for (const mat of mats) {
+                if (!mat || !mat.emissive) continue;
+                mat.emissive.setHex(on ? 0xd48630 : 0x000000);
+                mat.emissiveIntensity = on ? 0.62 : 0;
+            }
+        });
+        let light = root.userData.rimLight;
+        if (!light) {
+            light = new THREE.PointLight(0xffc078, 0, chest ? 1.6 : 0.9, 2);
+            light.position.set(chest ? 0.15 : 0.06, chest ? 0.22 : 0.08, chest ? 0.12 : 0.12);
+            root.add(light);
+            root.userData.rimLight = light;
+        }
+        light.intensity = on ? (chest ? 1.05 : 3.2) : 0;
+    }
+
+    function setHighlight(names, on) {
+        const list = Array.isArray(names) ? names : [names];
+        for (const name of list) {
+            if (name === "chest") {
+                applyEmissive(chestGroup, on, { chest: true });
+                continue;
+            }
+            const toy = toys[name];
+            if (toy) applyEmissive(toy, on);
+        }
+    }
+
     shelfHome("deck");
     shelfHome("cube");
 
@@ -624,8 +700,14 @@ export async function mountWorld(canvas) {
         renderer,
         toys,
         slots,
-        table: { group: tableGroup, radius: TABLE_R, topY: TOP_Y, den: { ...DEN } },
+        table: { group: tableGroup, radius: TABLE_R, topY: TOP_Y, feltTopY: feltTopY(), den: { ...DEN } },
         chest: { group: chestGroup, setOpen: setChestOpen },
+        getShelfPose,
+        getTablePose,
+        applyPose,
+        setSlotEmpty,
+        replaceToy,
+        setHighlight,
         shelfHome,
         resize,
         render,

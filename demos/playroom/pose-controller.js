@@ -77,7 +77,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         return current;
     }
 
-    function goTo(name) {
+    function goTo(name, opts = {}) {
         const resolved = resolvePoseName(name, current);
         const pose = readPose(resolved);
         if (!pose) return current;
@@ -86,12 +86,12 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
             skip();
             return current;
         }
-        if (prefersReducedMotion()) return snap(resolved);
+        if (opts.snap || prefersReducedMotion()) return snap(resolved);
         tween = {
             from: capture(),
             to: pose,
             start: performance.now(),
-            duration,
+            duration: opts.duration ?? duration,
         };
         emit(current, { tweening: true, next: resolved });
         return current;

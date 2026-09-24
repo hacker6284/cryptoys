@@ -1,11 +1,9 @@
 import { adapters } from "./adapters.js";
+import { FLY_MS } from "./constants.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { createToyDirector } from "./toy-director.js";
 import { mountWorld } from "./world.js";
-
-// Adapters stay stubbed this PR; imported so the hub session owns the slot.
-void adapters;
 
 const canvas = document.querySelector("#playroom");
 const titleEl = document.querySelector("#title");
@@ -14,35 +12,122 @@ const sitBtn = document.querySelector("#sit");
 const backBtn = document.querySelector("#back");
 const errorEl = document.querySelector("#load-error");
 
-function writePoseQuery(name) {
+const scrambleLink = menuEl.querySelector("[data-algo='scramble']");
+
+let activeAlgo = null;
+let leaving = false;
+let starting = false;
+
+function writeQuery({ pose, algo }) {
     const url = new URL(location.href);
-    if (name === "landing") url.searchParams.delete("pose");
-    else url.searchParams.set("pose", name);
+    const poseName = pose === "scramble" ? "seated" : pose;
+    if (!poseName || poseName === "landing") url.searchParams.delete("pose");
+    else url.searchParams.set("pose", poseName);
+    if (!algo) url.searchParams.delete("algo");
+    else url.searchParams.set("algo", algo);
     history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
 function syncOverlays({ name, overlays, tweening }) {
-    const showMenu = Boolean(overlays?.menu) && !tweening;
+    const showMenu = Boolean(overlays?.menu) && !tweening && !activeAlgo;
     titleEl.classList.toggle("on", Boolean(overlays?.title));
     menuEl.classList.toggle("on", showMenu);
-    sitBtn.hidden = name !== "landing" || tweening;
-    backBtn.hidden = (name !== "seated" && name !== "lean") || tweening;
+    sitBtn.hidden = name !== "landing" || tweening || Boolean(activeAlgo);
+    backBtn.hidden = tweening || (name === "landing" && !activeAlgo);
     document.documentElement.dataset.pose = name;
+    document.documentElement.dataset.algo = activeAlgo || "";
     document.documentElement.dataset.playroomTween = tweening ? "1" : "0";
+    const dock = document.querySelector("#scramble-dock");
+    if (dock) dock.classList.toggle("on", Boolean(activeAlgo) && !tweening && !leaving);
 }
 
 try {
     const world = await mountWorld(canvas);
+    adapters.scramble.install(world);
     const director = createToyDirector(world);
-    const initial = resolvePoseName(new URLSearchParams(location.search).get("pose"));
+    const params = new URLSearchParams(location.search);
+    const initialPose = resolvePoseName(params.get("pose"));
+    const initialAlgo = String(params.get("algo") || "").trim().toLowerCase();
     const poses = createPoseController(world.camera, {
         onChange(state) {
             syncOverlays(state);
-            if (!state.tweening) writePoseQuery(state.name);
+            if (!state.tweening) {
+                writeQuery({
+                    pose: state.name,
+                    algo: activeAlgo,
+                });
+            }
         },
     });
 
-    poses.snap(initial);
+    async function startScramble({ snap = false } = {}) {
+        if (activeAlgo === "scramble" || starting || leaving) return;
+        starting = true;
+        director.clearHighlight();
+        activeAlgo = "scramble";
+        syncOverlays({
+            name: poses.name,
+            overlays: { title: true, menu: false },
+            tweening: !snap && !poses.prefersReducedMotion(),
+        });
+        try {
+            const fly = director.borrow("scramble", { snap });
+            if (snap || poses.prefersReducedMotion()) poses.snap("scramble");
+            else poses.goTo("scramble", { duration: FLY_MS });
+            await fly;
+            await adapters.scramble.enter();
+            writeQuery({ pose: "seated", algo: "scramble" });
+            syncOverlays({
+                name: poses.name,
+                overlays: { title: true, menu: false, teach: true },
+                tweening: poses.busy,
+            });
+        } catch (err) {
+            console.error(err);
+            adapters.scramble.leave();
+            await director.home({ snap: true });
+            activeAlgo = null;
+            errorEl.hidden = false;
+            errorEl.textContent = err && err.message
+                ? err.message
+                : "Scramble could not start in the playroom.";
+            poses.snap("landing");
+        } finally {
+            starting = false;
+        }
+    }
+
+    async function leaveAlgo() {
+        if (leaving) return;
+        if (!activeAlgo) {
+            poses.goTo("landing");
+            return;
+        }
+        leaving = true;
+        if (director.busy) director.skip();
+        if (poses.busy) poses.skip();
+        adapters.scramble.leave();
+        const home = director.home({ snap: poses.prefersReducedMotion() });
+        if (poses.prefersReducedMotion()) poses.snap("landing");
+        else poses.goTo("landing", { duration: FLY_MS });
+        await home;
+        activeAlgo = null;
+        leaving = false;
+        writeQuery({ pose: "landing", algo: null });
+        syncOverlays({
+            name: poses.name,
+            overlays: { title: true, menu: true },
+            tweening: poses.busy,
+        });
+    }
+
+    if (initialAlgo === "scramble") {
+        poses.snap("scramble");
+        await startScramble({ snap: true });
+    } else {
+        poses.snap(initialPose);
+    }
+
     document.body.classList.add("is-ready");
     document.documentElement.dataset.playroomReady = "1";
 
@@ -51,18 +136,33 @@ try {
         if (item) director.highlight(item.dataset.algo);
     }, true);
     menuEl.addEventListener("pointerleave", () => director.clearHighlight());
+    menuEl.addEventListener("focusin", (event) => {
+        const item = event.target.closest("[data-algo]");
+        if (item) director.highlight(item.dataset.algo);
+    });
+    menuEl.addEventListener("focusout", (event) => {
+        if (!menuEl.contains(event.relatedTarget)) director.clearHighlight();
+    });
+
+    scrambleLink?.addEventListener("click", (event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+        event.preventDefault();
+        void startScramble();
+    });
 
     sitBtn.addEventListener("click", () => poses.goTo("seated"));
-    backBtn.addEventListener("click", () => poses.goTo("landing"));
+    backBtn.addEventListener("click", () => void leaveAlgo());
 
     window.addEventListener("pointerdown", (event) => {
-        if (!poses.busy) return;
-        if (event.target.closest("a[href]")) return;
+        if (!director.busy && !poses.busy) return;
+        if (event.target.closest("a[href], button, input, textarea, select, dialog, .playroom-dock, .playroom-menu")) return;
+        director.skip();
         poses.skip();
     });
 
     window.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && poses.busy) {
+        if (event.key === "Escape" && (poses.busy || director.busy)) {
+            director.skip();
             poses.skip();
             event.preventDefault();
         }
@@ -71,6 +171,7 @@ try {
     window.addEventListener("resize", () => world.resize());
 
     function tick(now) {
+        director.update(now);
         poses.update(now);
         world.render();
         requestAnimationFrame(tick);

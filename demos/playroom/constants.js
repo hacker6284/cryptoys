@@ -26,3 +26,4 @@ export const SLOTS = {
 };
 
 export const TWEEN_MS = 1100;
+export const FLY_MS = 1600;

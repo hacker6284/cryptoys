@@ -140,9 +140,235 @@ body.playroom.is-ready .playroom-menu {
   }
 }
 
+.playroom-dock {
+  position: fixed;
+  inset: auto 20px 48px 20px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
+  gap: 28px 40px;
+  align-items: end;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.playroom-dock.on {
+  opacity: 1;
+}
+
+.playroom-dock[hidden] {
+  display: none;
+}
+
+.playroom-note,
+.playroom-hands {
+  pointer-events: none;
+}
+
+.playroom-note[hidden] {
+  display: none;
+}
+
+.playroom-note-body,
+.playroom-hands,
+.playroom-note .tape,
+.playroom-note .transport,
+.playroom-hands .row,
+.playroom-hands .slider,
+.playroom-hands textarea,
+.playroom-hands .outline {
+  pointer-events: auto;
+}
+
+.playroom-note-body {
+  max-width: 36rem;
+}
+
+.playroom-note-body .kicker,
+.playroom-hands-label,
+.playroom-hands .status,
+.playroom-hands .digest,
+.playroom-note .transport .pos {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+.playroom-note-body h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-weight: 520;
+  font-size: clamp(22px, 2.4vw, 28px);
+  letter-spacing: -0.02em;
+  color: color-mix(in srgb, var(--fg) 80%, transparent);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
+}
+
+.playroom-note-body .math,
+.playroom-note-body .why {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--fg) 70%, transparent);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+.playroom-note-body .math {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.playroom-note-body .why {
+  color: color-mix(in srgb, var(--muted) 92%, transparent);
+}
+
+.playroom-note .tape {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin: 0 0 12px;
+}
+
+.playroom-dock .tape-cell {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: color-mix(in srgb, var(--fg) 48%, transparent);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.playroom-dock .tape-cell.pad { opacity: 0.7; }
+.playroom-dock .tape-cell.marker { color: var(--accent); }
+
+.playroom-dock .tape-cell.on {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
+}
+
+.playroom-note .transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.playroom-hands {
+  text-align: right;
+}
+
+.playroom-hands .digest {
+  word-break: break-all;
+}
+
+.playroom-hands .error {
+  min-height: 0;
+}
+
+.playroom-hands .row {
+  justify-content: flex-end;
+}
+
+.playroom-dock .chrome-action {
+  border: 0;
+  background: none;
+  padding: 2px 0;
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+}
+
+.playroom-dock .chrome-action:hover,
+.playroom-dock .chrome-action:focus-visible {
+  background: none;
+  border: 0;
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.playroom-dock .chrome-action.on {
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
+}
+
+.playroom-dock .slider {
+  justify-content: flex-end;
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+}
+
+.playroom-dock textarea {
+  margin-top: 8px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
+  border-radius: 0;
+  color: color-mix(in srgb, var(--fg) 78%, transparent);
+  text-align: right;
+  resize: none;
+}
+
+.playroom-dock .outline {
+  max-height: 22vh;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+}
+
+.playroom-dock .outline summary,
+.playroom-dock .outline-item {
+  color: color-mix(in srgb, var(--fg) 58%, transparent);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.playroom-dock .outline-item.on {
+  background: none;
+  color: var(--fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.playroom-dock dialog {
+  pointer-events: auto;
+}
+
+body.playroom.is-ready .playroom-dock {
+  transition: opacity 280ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.playroom.is-ready .playroom-dock {
+    transition: none;
+  }
+}
+
 @media (max-width: 600px) {
   .playroom-menu {
     top: 60px;
     right: 16px;
   }
+
+  .playroom-dock {
+    inset: auto 16px 56px 16px;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .playroom-hands { text-align: left; }
+  .playroom-hands .row { justify-content: flex-start; }
+  .playroom-dock textarea { text-align: left; }
 }

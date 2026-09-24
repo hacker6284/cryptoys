@@ -41,7 +41,7 @@ export SUDOC=/path/to/sudoc
 sh tools/build.sh
 ```
 
-`tools/build.sh` looks for `sudoc` at `~/Documents/Projects/sudocode/sudoc/target/debug/sudoc` when `SUDOC` is unset. Then serve `demos/` for the playroom hub, or open `scramble/` and `doubledeal/` for the teaching pages.
+`tools/build.sh` looks for `sudoc` at `~/Documents/Projects/sudocode/sudoc/target/debug/sudoc` when `SUDOC` is unset. Then serve `demos/` for the playroom hub. Scramble runs in the room (`?algo=scramble`); DoubleDeal is still its own teaching page.
 
 The conformance tests are inside each `.sudo` file. With `sudoc` on the path:
 

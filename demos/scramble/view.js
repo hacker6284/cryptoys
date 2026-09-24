@@ -21,6 +21,9 @@ const CENTERS = [
     [49, 0, 0, -1],
 ];
 
+// Cubie 0.94 + pitch 1.02 → bounding edge ≈ 2.98 in the standalone camera.
+const ABSTRACT_EDGE = 2.98;
+
 function centerOf(facelets, color) {
     for (const [index, x, y, z] of CENTERS) {
         if (facelets[index] === color) return [x, y, z];
@@ -45,30 +48,30 @@ function orientMatrix(up, front) {
     return m;
 }
 
-export function mountCube(canvas) {
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
-    camera.position.set(4.2, 4.6, 6.4);
-    const controls = new OrbitControls(camera, canvas);
-    controls.target.set(0, 0, 0);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.autoRotate = false;
-    controls.minDistance = 4;
-    controls.maxDistance = 20;
-    controls.update();
-    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-    const key = new THREE.DirectionalLight(0xffffff, 1.4);
-    key.position.set(4, 8, 5);
-    scene.add(key);
-    const fill = new THREE.DirectionalLight(0x9bb7ff, 0.35);
-    fill.position.set(-5, 2, -3);
-    scene.add(fill);
+function tween(ms, step) {
+    return new Promise((resolve) => {
+        const start = performance.now();
+        function tick(now) {
+            const t = Math.min(1, (now - start) / ms);
+            const eased = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
+            step(eased);
+            if (t < 1) requestAnimationFrame(tick);
+            else resolve();
+        }
+        requestAnimationFrame(tick);
+    });
+}
 
+/**
+ * Live cube used by the standalone page and the playroom adapter.
+ * `edge` is the physical bounding size in world units (57 mm in the room).
+ */
+export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {}) {
     const group = new THREE.Group();
-    scene.add(group);
+    const scale = edge / ABSTRACT_EDGE;
+    const cubie = 0.94 * scale;
+    const pitch = 1.02 * scale;
+
     const meshes = new Map();
     for (let x = -1; x <= 1; x++) {
         for (let y = -1; y <= 1; y++) {
@@ -76,10 +79,16 @@ export function mountCube(canvas) {
                 if (x === 0 && y === 0 && z === 0) continue;
                 const materials = [];
                 for (let i = 0; i < 6; i++) {
-                    materials.push(new THREE.MeshStandardMaterial({ color: PLASTIC, roughness: 0.45, metalness: 0.04 }));
+                    materials.push(new THREE.MeshStandardMaterial({
+                        color: PLASTIC,
+                        roughness: 0.55,
+                        metalness: 0.04,
+                    }));
                 }
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.94, 0.94), materials);
-                mesh.position.set(x * 1.02, y * 1.02, z * 1.02);
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(cubie, cubie, cubie), materials);
+                mesh.position.set(x * pitch, y * pitch, z * pitch);
+                mesh.castShadow = castShadow;
+                mesh.receiveShadow = castShadow;
                 mesh.userData.home = mesh.position.clone();
                 mesh.userData.slot = { x, y, z };
                 group.add(mesh);
@@ -87,23 +96,6 @@ export function mountCube(canvas) {
             }
         }
     }
-
-    let frame = 0;
-    function resize() {
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight;
-        if (width === 0 || height === 0) return;
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-        renderer.setSize(width, height, false);
-    }
-    function loop() {
-        frame = requestAnimationFrame(loop);
-        resize();
-        controls.update();
-        renderer.render(scene, camera);
-    }
-    loop();
 
     function paint(facelets) {
         group.quaternion.identity();
@@ -129,8 +121,8 @@ export function mountCube(canvas) {
         }
     }
 
-    function glow(mesh, hex, scale) {
-        mesh.scale.setScalar(scale || 1);
+    function glow(mesh, hex, scaleValue) {
+        mesh.scale.setScalar(scaleValue || 1);
         for (const mat of mesh.material) mat.emissive.setHex(hex);
     }
 
@@ -177,20 +169,6 @@ export function mountCube(canvas) {
         return out;
     }
 
-    function tween(ms, step) {
-        return new Promise((resolve) => {
-            const start = performance.now();
-            function tick(now) {
-                const t = Math.min(1, (now - start) / ms);
-                const eased = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
-                step(eased);
-                if (t < 1) requestAnimationFrame(tick);
-                else resolve();
-            }
-            requestAnimationFrame(tick);
-        });
-    }
-
     async function animateMove(move, ms) {
         const { face, turns } = parseMove(move);
         const spin = quarterSpin(face);
@@ -216,10 +194,85 @@ export function mountCube(canvas) {
     }
 
     function dispose() {
+        group.traverse((object) => {
+            if (!object.isMesh) return;
+            object.geometry?.dispose();
+            const mats = Array.isArray(object.material) ? object.material : [object.material];
+            for (const mat of mats) mat?.dispose();
+        });
+        if (group.parent) group.parent.remove(group);
+    }
+
+    return {
+        group,
+        paint,
+        animateMove,
+        animateReorient,
+        highlightLayer,
+        highlightCubie,
+        highlightRuleB,
+        clearHighlights,
+        dispose,
+    };
+}
+
+export function mountCube(canvas) {
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+    camera.position.set(4.2, 4.6, 6.4);
+    const controls = new OrbitControls(camera, canvas);
+    controls.target.set(0, 0, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.autoRotate = false;
+    controls.minDistance = 4;
+    controls.maxDistance = 20;
+    controls.update();
+    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+    const key = new THREE.DirectionalLight(0xffffff, 1.4);
+    key.position.set(4, 8, 5);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0x9bb7ff, 0.35);
+    fill.position.set(-5, 2, -3);
+    scene.add(fill);
+
+    const rig = createCubeRig();
+    scene.add(rig.group);
+
+    let frame = 0;
+    function resize() {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        if (width === 0 || height === 0) return;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height, false);
+    }
+    function loop() {
+        frame = requestAnimationFrame(loop);
+        resize();
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    loop();
+
+    function dispose() {
         cancelAnimationFrame(frame);
         controls.dispose();
         renderer.dispose();
+        rig.dispose();
     }
 
-    return { paint, animateMove, animateReorient, highlightLayer, highlightCubie, highlightRuleB, clearHighlights, dispose };
+    return {
+        paint: rig.paint,
+        animateMove: rig.animateMove,
+        animateReorient: rig.animateReorient,
+        highlightLayer: rig.highlightLayer,
+        highlightCubie: rig.highlightCubie,
+        highlightRuleB: rig.highlightRuleB,
+        clearHighlights: rig.clearHighlights,
+        dispose,
+    };
 }

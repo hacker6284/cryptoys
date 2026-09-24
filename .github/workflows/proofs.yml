@@ -1,0 +1,33 @@
+name: proofs
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  twodeck-lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: No sorry in shipped theorems
+        run: |
+          python3 - <<'PY'
+          import re, sys
+          from pathlib import Path
+          pat = re.compile(r"\b(sorry|admit)\b")
+          bad = []
+          for path in Path("proofs/twodeck/lean").rglob("*.lean"):
+              text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
+              for i, line in enumerate(text.splitlines(), 1):
+                  code = re.sub(r"--.*", "", line)
+                  if pat.search(code):
+                      bad.append(f"{path}:{i}:{line}")
+          if bad:
+              print("shipped Lean still contains sorry/admit:", *bad, sep="\n", file=sys.stderr)
+              sys.exit(1)
+          print("no sorry/admit in theorem code")
+          PY
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/twodeck/lean

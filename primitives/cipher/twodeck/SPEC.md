@@ -93,7 +93,7 @@ Notation: decks are 0-indexed lists. Grid cells hold card ids. All modular arith
 | Compose / InverseCompose (fixed \(K\)) | Yes | Claimed |
 | Full / final round (fixed round key) | Yes | Claimed via layer RT |
 | Encrypt / Decrypt (fixed \(K_0\)) | Yes | Claimed; RT in self_test |
-| PassKey \(F\) / \(F^{-1}\) | Yes (on \(S_{52}\)) | Proved in `proofs/twodeck/` (PR #2); cycle structure still evidence only |
+| PassKey \(F\) / \(F^{-1}\) | Yes (on \(S_{52}\)) | Proved in `proofs/twodeck/` (`passKey_leftInverse` / `passKey_rightInverse`); cycle structure still evidence only |
 
 ---
 
@@ -297,7 +297,7 @@ F^{-1}(deck):
 
 **Claim:** \(F\) is a bijection on \(S_{52}\). \(F^{-1}\circ F=\mathrm{id}\) and \(F\circ F^{-1}=\mathrm{id}\). Deterministic; preserves the card multiset.
 
-**Why:** at step \(i\) the controller \(C\) is on top of the key pile, so the inverse can read it. Every branch depends only on \(C\) and the pile sizes (hand \(=51-i\) after the pop, key \(=i\)), never on hidden card identities. Each step is a bijection on \((\mathrm{hand},\mathrm{key})\) states of those sizes, and \(F\) is their composition. Machine-checked proof is in `proofs/twodeck/` (PR #2); this branch does not ship that Lean. Cycle structure / orbit lengths of \(F\) on \(S_{52}\) are not claimed.
+**Why:** at step \(i\) the controller \(C\) is on top of the key pile, so the inverse can read it. Every branch depends only on \(C\) and the pile sizes (hand \(=51-i\) after the pop, key \(=i\)), never on hidden card identities. Each step is a bijection on \((\mathrm{hand},\mathrm{key})\) states of those sizes, and \(F\) is their composition. Lean: `proofs/twodeck/lean/TwoDeck/PassKey.lean`, theorems `passKey_leftInverse` and `passKey_rightInverse` (on `main` via PR #2). Cycle structure / orbit lengths of \(F\) on \(S_{52}\) are not claimed.
 
 ## 3.8 expand_keys
 
@@ -621,7 +621,7 @@ Prioritized backlog. Tags: **Lean** (machine-checked proof), **property-test** (
 | S1 | Layer bijections: lay/scoop cm & rm; SumRanks; ShiftRows; GridCycle; Compose | P0 | Lean + property-test | **Proof** target (Lean); evidence already in `self_test` | Port from existing Lean Compose / Basic patterns |
 | S2 | Round-trip: `inv_full_round ∘ full_round`, `inv_final ∘ final`, `decrypt ∘ encrypt` | P0 | Lean + property-test | **Proof** target; evidence green (self_test, pressure B1) | Depends on S1 |
 | S3 | PassKey determinism + content-preservation (\(\{F(K)\}=\{K\}\) as sets) | P0 | Lean + property-test | **Proof** (easy content); determinism trivial | Soft-lock companion |
-| S4 | PassKey injectivity on \(S_{52}\) | P0 | Lean + property-test | **Proof** (PR #2) | Constructive \(F^{-1}\) in §3.7; proved in `proofs/twodeck/` (PR #2). Cycle structure / orbit lengths remain evidence only. |
+| S4 | PassKey injectivity on \(S_{52}\) | P0 | Lean + property-test | **Proof** | Constructive \(F^{-1}\) in §3.7; Lean `passKey_leftInverse` / `passKey_rightInverse` in `proofs/twodeck/`. Cycle structure / orbit lengths remain evidence only. |
 | S5 | CTR factoradic unranking is a bijection \(\mathbb{Z}/13!\mathbb{Z} \leftrightarrow S_{13}\) (and 39! ↔ \(S_{39}\) for software nonce helper) | P1 | Lean + property-test | **Proof** target | Classic combinatorics; pin exact digit convention to `unrank_perm` |
 | S6 | CTR merge: `counter_deck` always a full CHaSeD perm; consec \(i,i+1\) agree on seats 0..38 | P1 | property-test + Lean | **Proof** / evidence | Already demonstrated in pressure C |
 | S7 | Hand↔math refinement: player-sheet procedures refine §3 ops (esp. overflow scan, proper-cut fallback, col vs row scoop) | P1 | TLA or Lean refinement + checklist | **Proof** of refinement obligations; interim: manual audit checklist | Ambiguity surface for stranger play |
@@ -634,7 +634,7 @@ Prioritized backlog. Tags: **Lean** (machine-checked proof), **property-test** (
 
 **Suggested order of attack:** S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7, S13 as a property-test of the byte encoding, and S8–S10 as living evidence notebooks — never promoted to “security results.” Cycle structure of PassKey stays evidence.
 
-Lean for TwoDeck layers, including the PassKey inverse, is in `proofs/twodeck/` (PR #2). Land #2 before this PR so those files exist on `main`. This branch does not copy that tree.
+Lean for TwoDeck layers, including the PassKey inverse, lives under `proofs/twodeck/lean`.
 
 ---
 

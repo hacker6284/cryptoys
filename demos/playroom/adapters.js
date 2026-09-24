@@ -64,12 +64,14 @@ function mountDock() {
           <button id="solve" type="button">Solve</button>
           <button id="spec-btn" type="button">Spec</button>
         </div>
-        <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
-        <div class="row playroom-toggles">
-          <button type="button" data-version="1">Gen 1</button>
-          <button type="button" class="on" data-version="2">Gen 2</button>
-          <button type="button" class="on" data-encoding="text">text</button>
-          <button type="button" data-encoding="hex">hex</button>
+        <div class="row playroom-meta">
+          <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
+          <div class="row playroom-toggles">
+            <button type="button" data-version="1">Gen 1</button>
+            <button type="button" class="on" data-version="2">Gen 2</button>
+            <button type="button" class="on" data-encoding="text">text</button>
+            <button type="button" data-encoding="hex">hex</button>
+          </div>
         </div>
         <label class="playroom-message-label" for="message">Message</label>
         <textarea id="message" rows="2" spellcheck="false" placeholder="hello">hello</textarea>

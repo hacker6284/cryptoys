@@ -13,3 +13,7 @@ lean_lib Doubledeal
 @[default_target]
 lean_exe doubledeal_test where
   root := `doubledeal_test
+  moreLinkArgs := if System.Platform.isOSX then
+    #["-Wl,-rename_segment,__DATA_CONST,__DATA",
+      "-Wl,-rpath,@loader_path"]
+    else #[]

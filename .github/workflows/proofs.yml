@@ -6,6 +6,7 @@ on:
       - "proofs/**"
       - "primitives/cipher/doubledeal/**"
       - "primitives/hash/megadreifach/**"
+      - "primitives/hash/scramble/**"
       - "tools/emit_lean.py"
       - ".github/workflows/proofs.yml"
   pull_request:
@@ -13,6 +14,7 @@ on:
       - "proofs/**"
       - "primitives/cipher/doubledeal/**"
       - "primitives/hash/megadreifach/**"
+      - "primitives/hash/scramble/**"
       - "tools/emit_lean.py"
       - ".github/workflows/proofs.yml"
   workflow_dispatch:
@@ -22,7 +24,7 @@ env:
 
 jobs:
   # Anti-drift: committed Generated/ Lean must match emit from current .sudo
-  # via the pinned sudocode main commit (PR #5 merge; see SUDOCODE_LEAN_PIN).
+  # via the pinned sudocode main commit (PR #8 merge; see SUDOCODE_LEAN_PIN).
   generated-fresh:
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +40,7 @@ jobs:
           repository: hacker6284/sudocode
           ref: ${{ steps.pin.outputs.commit }}
           path: .sudocode-lean
-      - name: Lean backend present (main lacks it)
+      - name: Lean backend present at pin
         run: |
           test -f .sudocode-lean/backends/lean/emit.py
           test "$(git -C .sudocode-lean rev-parse HEAD)" = "${{ steps.pin.outputs.commit }}"
@@ -75,6 +77,17 @@ jobs:
       - name: Generated TAP (sudo tests)
         working-directory: proofs/megadreifach/lean/Generated
         run: ./.lake/build/bin/megadreifach_test
+
+  scramble-generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/scramble/lean/Generated
+      - name: Generated TAP (sudo tests)
+        working-directory: proofs/scramble/lean/Generated
+        run: ./.lake/build/bin/scramble_test
 
   doubledeal-lean:
     runs-on: ubuntu-latest

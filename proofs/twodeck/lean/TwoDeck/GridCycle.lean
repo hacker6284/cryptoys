@@ -55,8 +55,9 @@ def setOcc (occ : Occ) (p : Fin 4 × Fin 13) : Occ :=
     occ.set ⟨occBit p.1 p.2, h⟩ true
   else occ
 
-theorem occGet_empty : ∀ r : Fin 4, ∀ c : Fin 13, occGet emptyOcc r c = false := by
-  native_decide
+theorem occGet_empty (r : Fin 4) (c : Fin 13) : occGet emptyOcc r c = false := by
+  have hi : occBit r c < 52 := occBit_lt r c
+  simp only [occGet, emptyOcc, Array.getElem?_mkArray, hi, ↓reduceIte]
 
 theorem occAt_empty (p : Fin 4 × Fin 13) : occAt emptyOcc p = false :=
   occGet_empty p.1 p.2
@@ -139,8 +140,14 @@ theorem occCount_le (occ : Occ) : occCount occ ≤ 52 := by
   omega
 
 theorem occCount_empty : occCount emptyOcc = 0 := by
-  simp [occCount, countCols, emptyOcc, occGet, Array.getD, Array.size_mkArray]
-  native_decide
+  have z : ∀ r : Fin 4, countCols emptyOcc r = 0 := by
+    intro r
+    simp only [countCols]
+    have : fins13.filter (fun c => occGet emptyOcc r c) = [] := by
+      refine (List.filter_eq_nil_iff (l := fins13)).mpr ?_
+      intro c _; simp [occGet_empty r c]
+    simp [this]
+  simp [occCount, fins4, List.map, List.sum_cons, List.sum_nil, z]
 
 theorem countCols_full (occ : Occ) (r : Fin 4) (h : ∀ c, occGet occ r c = true) :
     countCols occ r = 13 := by
@@ -453,11 +460,28 @@ def chooseSeat? (st : WalkState) : Option ((Fin 4 × Fin 13) × Nat) :=
       if occAt st.occ target then overflowSeat st.occ st.t
       else some (target, st.t)
 
-/-- Total choose; fallback unused when count < 52. -/
+/-- `chooseSeat?` returns `some` while a free seat exists. Matches sudo
+    `overflow_seat`'s `assert false` being unreachable on a 52-card walk. -/
+theorem chooseSeat?_isSome (st : WalkState) (hct : occCount st.occ < 52) :
+    (chooseSeat? st).isSome := by
+  match hprev_eq : st.prev with
+  | none =>
+      simp [chooseSeat?, hprev_eq, Option.isSome]
+  | some pair =>
+      simp only [chooseSeat?, hprev_eq, Option.isSome]
+      by_cases ht : occAt st.occ (gridStep pair.1 pair.2)
+      · simp only [ht, ↓reduceIte]
+        obtain ⟨p, t', hs, _hf⟩ := overflow_some_of_count_lt st.occ st.t hct
+        simp [hs]
+      · simp [eq_false_of_ne_true ht]
+
+/-- Total choose. The `none` branch is unreachable under `chooseSeat?_isSome`
+    (occCount < 52). Fail like twodeck.sudo `assert false`, not a silent AS. -/
 def chooseSeat! (st : WalkState) : (Fin 4 × Fin 13) × Nat :=
   match chooseSeat? st with
   | some x => x
-  | none => (asStart, st.t)
+  | none =>
+      panic! "TwoDeck.chooseSeat!: overflow scan returned none (grid full?)"
 
 theorem chooseSeat!_free (st : WalkState) (hct : occCount st.occ < 52)
     (hprev : st.prev.isSome ∨ occAt st.occ asStart = false) :

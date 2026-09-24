@@ -2,34 +2,62 @@ name: proofs
 
 on:
   push:
+    paths:
+      - "proofs/**"
+      - "primitives/cipher/twodeck/**"
+      - ".github/workflows/proofs.yml"
   pull_request:
+    paths:
+      - "proofs/**"
+      - "primitives/cipher/twodeck/**"
+      - ".github/workflows/proofs.yml"
   workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   twodeck-lean:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: No sorry in shipped theorems
+      - uses: actions/checkout@v5
+      - name: No sorry / unlisted native_decide
         run: |
           python3 - <<'PY'
           import re, sys
           from pathlib import Path
-          pat = re.compile(r"\b(sorry|admit)\b")
-          bad = []
-          for path in Path("proofs/twodeck/lean").rglob("*.lean"):
+          sorry_pat = re.compile(r"\b(sorry|admit)\b")
+          native_pat = re.compile(r"\bnative_decide\b")
+          # Documented TCB sites only. Empty means every native_decide is a CI fail.
+          allowed_native = {
+              # none: GridCycle / diamondCards / unrankPerm_inj_3 are kernel decide.
+          }
+          bad_sorry = []
+          bad_native = []
+          root = Path("proofs/twodeck/lean")
+          for path in root.rglob("*.lean"):
+              rel = str(path)
               text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
+              allow = allowed_native.get(rel, set())
               for i, line in enumerate(text.splitlines(), 1):
                   code = re.sub(r"--.*", "", line)
-                  if pat.search(code):
-                      bad.append(f"{path}:{i}:{line}")
-          if bad:
-              print("shipped Lean still contains sorry/admit:", *bad, sep="\n", file=sys.stderr)
+                  if sorry_pat.search(code):
+                      bad_sorry.append(f"{path}:{i}:{line}")
+                  if native_pat.search(code) and i not in allow:
+                      bad_native.append(f"{path}:{i}:{line}")
+          if bad_sorry:
+              print("shipped Lean still contains sorry/admit:", *bad_sorry, sep="\n", file=sys.stderr)
+          if bad_native:
+              print("unlisted native_decide (add to READMEs + allowlist, or replace):",
+                    *bad_native, sep="\n", file=sys.stderr)
+          if bad_sorry or bad_native:
               sys.exit(1)
-          print("no sorry/admit in theorem code")
+          print("no sorry/admit; no unlisted native_decide")
           PY
       - name: Vectors.lean matches committed JSON
         run: python3 proofs/twodeck/vectors/json_to_lean.py --check
+      - name: JSON was generated from current twodeck.sudo
+        run: python3 proofs/twodeck/vectors/check_source.py
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/twodeck/lean

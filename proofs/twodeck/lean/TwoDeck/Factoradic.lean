@@ -73,11 +73,11 @@ theorem unrankPerm_perm {α} (items : List α) (rank : Nat) :
   unfold unrankPerm
   exact unrankPermGo_perm items.length items _ (Nat.le_refl _)
 
-/-- S5 fragment: injective on Fin 3! via native_decide. -/
+/-- S5 fragment: injective on Fin 3! (kernel `decide`). -/
 theorem unrankPerm_inj_3 :
     ∀ k m : Fin (factorial 3), k ≠ m →
       unrankPerm [0, 1, 2] k.val ≠ unrankPerm [0, 1, 2] m.val := by
-  native_decide
+  decide
 
 def diamondCards : List Nat :=
   [39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
@@ -111,6 +111,6 @@ theorem diamondPerm_perm (i : Nat) : List.Perm (diamondPerm i) diamondCards :=
 theorem diamondPerm_nodup (i : Nat) : (diamondPerm i).Nodup :=
   (diamondCards_nodup : diamondCards.Nodup).perm (diamondPerm_perm i).symm
 where
-  diamondCards_nodup : diamondCards.Nodup := by native_decide
+  diamondCards_nodup : diamondCards.Nodup := by decide
 
 end TwoDeck

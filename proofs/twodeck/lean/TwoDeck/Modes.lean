@@ -8,12 +8,12 @@ import TwoDeck.Factoradic
 
 namespace TwoDeck
 
-/-- ECB identical-block observation: encrypt is a pure function of the block,
-    so equal plaintexts under fixed key yield equal ciphertexts.
-    (Stated for the Compose layer as the keyed step.) -/
-theorem compose_deterministic (n : Nat) (α : Type _)
-    (M : Fin n → α) (pos : Fin n → Fin n) :
-    TwoDeck.composeVec n α M pos = TwoDeck.composeVec n α M pos := rfl
+/-- ECB identical-block observation at the Compose layer: equal messages
+    under the same `pos` give equal ciphertexts. -/
+theorem compose_ecb_equal_blocks {n : Nat} {α : Type _}
+    {M₁ M₂ : Fin n → α} (pos : Fin n → Fin n) (h : M₁ = M₂) :
+    TwoDeck.composeVec n α M₁ pos = TwoDeck.composeVec n α M₂ pos :=
+  h ▸ rfl
 
 /-- Re-export KP uniqueness (S11 / CTR nonce-reuse). -/
 theorem ctr_kp_unique_52 {α} (M : Fin 52 → α) (pos : Fin 52 → Fin 52)

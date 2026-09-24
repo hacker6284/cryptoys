@@ -243,33 +243,139 @@ def invFullRoundOnce (c : Fin 52 → Nat) (invPos : Fin 52 → Fin 52) : Array N
 def invFullRoundNoMixOnce (c : Fin 52 → Nat) (invPos : Fin 52 → Fin 52) : Array Nat :=
   snap (invUnkeyedNoMix (fun i => c (invPos i)))
 
+/-- Eager encrypt walk used by `encryptDeck`. Same maps as `encrypt6`. -/
+def encryptDeckSnap (m : Fin 52 → Nat) (pos : Nat → Fin 52 → Fin 52) : List Nat :=
+  let m0 := composeOnce m (pos 0)
+  let m1 := composeOnce (arrFn (unkeyedMixOnce (arrFn m0))) (pos 1)
+  let m2 := composeOnce (arrFn (unkeyedMixOnce (arrFn m1))) (pos 2)
+  let m3 := composeOnce (arrFn (unkeyedMixOnce (arrFn m2))) (pos 3)
+  let m4 := composeOnce (arrFn (unkeyedMixOnce (arrFn m3))) (pos 4)
+  let m5 := composeOnce (arrFn (unkeyedMixOnce (arrFn m4))) (pos 5)
+  (composeOnce (arrFn (unkeyedNoMixOnce (arrFn m5))) (pos 6)).toList
+
+/-- Eager decrypt walk used by `decryptDeck`. Same maps as `decrypt6`. -/
+def decryptDeckSnap (c : Fin 52 → Nat) (inv : Nat → Fin 52 → Fin 52) : List Nat :=
+  let afterFinal := invFullRoundNoMixOnce c (inv 6)
+  let m5 := invFullRoundOnce (arrFn afterFinal) (inv 5)
+  let m4 := invFullRoundOnce (arrFn m5) (inv 4)
+  let m3 := invFullRoundOnce (arrFn m4) (inv 3)
+  let m2 := invFullRoundOnce (arrFn m3) (inv 2)
+  let m1 := invFullRoundOnce (arrFn m2) (inv 1)
+  (composeOnce (arrFn m1) (inv 0)).toList
+
 def encryptDeck (message key : List Nat) : List Nat :=
   if h : message.length = 52 then
-    let m := ofDeck message h
-    let ks := expandKeys key
-    let pos (r : Nat) := keyPos (ks.getD r key)
-    let m0 := composeOnce m (pos 0)
-    let m1 := composeOnce (arrFn (unkeyedMixOnce (arrFn m0))) (pos 1)
-    let m2 := composeOnce (arrFn (unkeyedMixOnce (arrFn m1))) (pos 2)
-    let m3 := composeOnce (arrFn (unkeyedMixOnce (arrFn m2))) (pos 3)
-    let m4 := composeOnce (arrFn (unkeyedMixOnce (arrFn m3))) (pos 4)
-    let m5 := composeOnce (arrFn (unkeyedMixOnce (arrFn m4))) (pos 5)
-    (composeOnce (arrFn (unkeyedNoMixOnce (arrFn m5))) (pos 6)).toList
+    encryptDeckSnap (ofDeck message h) (fun r => keyPos ((expandKeys key).getD r key))
   else message
 
 def decryptDeck (cipher key : List Nat) : List Nat :=
   if h : cipher.length = 52 then
-    let c := ofDeck cipher h
-    let ks := expandKeys key
-    let inv (r : Nat) := keyInvPos (ks.getD r key)
-    let afterFinal := invFullRoundNoMixOnce c (inv 6)
-    let m5 := invFullRoundOnce (arrFn afterFinal) (inv 5)
-    let m4 := invFullRoundOnce (arrFn m5) (inv 4)
-    let m3 := invFullRoundOnce (arrFn m4) (inv 3)
-    let m2 := invFullRoundOnce (arrFn m3) (inv 2)
-    let m1 := invFullRoundOnce (arrFn m2) (inv 1)
-    (composeOnce (arrFn m1) (inv 0)).toList
+    decryptDeckSnap (ofDeck cipher h) (fun r => keyInvPos ((expandKeys key).getD r key))
   else cipher
+
+/-! ## Snapshots equal the proved packet maps -/
+
+theorem arrAt_snap (f : Fin 52 → Nat) (i : Fin 52) : arrAt (snap f) i = f i := by
+  have hi : i.val < 52 := i.isLt
+  simp only [arrAt, snap, Array.getElem?_ofFn, hi, ↓reduceDIte, Option.getD]
+
+theorem arrFn_snap (f : Fin 52 → Nat) : arrFn (snap f) = f := by
+  funext i; exact arrAt_snap f i
+
+theorem toList_snap (f : Fin 52 → Nat) : (snap f).toList = toDeck f := rfl
+
+theorem composeOnce_spec (m : Fin 52 → Nat) (pos : Fin 52 → Fin 52) :
+    arrFn (composeOnce m pos) = TwoDeck.composeVec 52 Nat m pos :=
+  arrFn_snap _
+
+theorem composeOnce_toList (m : Fin 52 → Nat) (pos : Fin 52 → Fin 52) :
+    (composeOnce m pos).toList = toDeck (TwoDeck.composeVec 52 Nat m pos) :=
+  toList_snap _
+
+theorem mixColumnsOnce_spec (hand : Fin 52 → Nat) :
+    arrFn (mixColumnsOnce hand) = mixColumns hand := by
+  funext k
+  simp only [mixColumnsOnce, mixColumns, scoopRowMajor]
+  rw [arrFn_snap]
+
+theorem unkeyedNoMixOnce_spec (m : Fin 52 → Nat) :
+    arrFn (unkeyedNoMixOnce m) = unkeyedNoMix m :=
+  arrFn_snap _
+
+theorem unkeyedMixOnce_spec (m : Fin 52 → Nat) :
+    arrFn (unkeyedMixOnce m) = unkeyedWithMix m := by
+  simp only [unkeyedMixOnce, unkeyedWithMix]
+  exact mixColumnsOnce_spec _
+
+theorem invMixColumnsOnce_spec (packet : Fin 52 → Nat) :
+    arrFn (invMixColumnsOnce packet) = invMixColumns packet :=
+  arrFn_snap _
+
+theorem invUnkeyedMixOnce_spec (c : Fin 52 → Nat) :
+    arrFn (invUnkeyedMixOnce c) = invUnkeyedWithMix c := by
+  simp only [invUnkeyedMixOnce, invUnkeyedWithMix]
+  rw [arrFn_snap, invMixColumnsOnce_spec]
+
+theorem invFullRoundOnce_spec (c : Fin 52 → Nat) (invPos : Fin 52 → Fin 52) :
+    arrFn (invFullRoundOnce c invPos) = invFullRound c invPos invPos :=
+  invUnkeyedMixOnce_spec _
+
+theorem invFullRoundNoMixOnce_spec (c : Fin 52 → Nat) (invPos : Fin 52 → Fin 52) :
+    arrFn (invFullRoundNoMixOnce c invPos) = invFullRoundNoMix c invPos invPos :=
+  arrFn_snap _
+
+theorem expandKeys_getD (key : List Nat) (r : Nat) (hr : r < 7) :
+    (expandKeys key).getD r key = passKeyIter r key := by
+  have hr' : r = 0 ∨ r = 1 ∨ r = 2 ∨ r = 3 ∨ r = 4 ∨ r = 5 ∨ r = 6 := by omega
+  rcases hr' with (h | h | h | h | h | h | h) <;> subst h <;> rfl
+
+theorem encryptDeckSnap_eq (m : Fin 52 → Nat) (pos : Nat → Fin 52 → Fin 52) :
+    encryptDeckSnap m pos =
+    toDeck (encrypt6 m (pos 0) (fun r => pos (r + 1)) (pos 6)) := by
+  simp only [encryptDeckSnap, encrypt6, encryptN, applyFullRounds, fullRound, fullRoundNoMix,
+    composeOnce_toList, composeOnce_spec, unkeyedMixOnce_spec, unkeyedNoMixOnce_spec]
+
+theorem decryptDeckSnap_eq (c : Fin 52 → Nat) (inv : Nat → Fin 52 → Fin 52) :
+    decryptDeckSnap c inv =
+    toDeck (decrypt6 c (inv 0) (inv 0)
+      (fun r => inv (r + 1)) (fun r => inv (r + 1))
+      (inv 6) (inv 6)) := by
+  simp only [decryptDeckSnap, decrypt6, decryptN, applyInvFullRounds, invFullRound, invFullRoundNoMix,
+    composeOnce_toList, composeOnce_spec, invFullRoundOnce_spec,
+    invFullRoundNoMixOnce_spec, invUnkeyedMixOnce_spec]
+
+theorem encryptDeck_eq_encryptDeckFn
+    (message key : List Nat) (h : message.length = 52) :
+    encryptDeck message key = toDeck (encryptDeckFn (ofDeck message h) key) := by
+  simp only [encryptDeck, h, ↓reduceDIte]
+  rw [encryptDeckSnap_eq]
+  apply congrArg toDeck
+  simp only [encryptDeckFn, encrypt6, encryptN, applyFullRounds,
+    expandKeys_getD key 0 (by decide : 0 < 7),
+    expandKeys_getD key 1 (by decide : 1 < 7),
+    expandKeys_getD key 2 (by decide : 2 < 7),
+    expandKeys_getD key 3 (by decide : 3 < 7),
+    expandKeys_getD key 4 (by decide : 4 < 7),
+    expandKeys_getD key 5 (by decide : 5 < 7),
+    expandKeys_getD key 6 (by decide : 6 < 7),
+    passKeyIter]
+
+theorem decryptDeck_eq_decryptDeckFn
+    (cipher key : List Nat) (h : cipher.length = 52) :
+    decryptDeck cipher key = toDeck (decryptDeckFn (ofDeck cipher h) key) := by
+  simp only [decryptDeck, h, ↓reduceDIte]
+  rw [decryptDeckSnap_eq]
+  apply congrArg toDeck
+  simp only [decryptDeckFn, decrypt6, decryptN, applyInvFullRounds,
+    invFullRound, invFullRoundNoMix,
+    expandKeys_getD key 0 (by decide : 0 < 7),
+    expandKeys_getD key 1 (by decide : 1 < 7),
+    expandKeys_getD key 2 (by decide : 2 < 7),
+    expandKeys_getD key 3 (by decide : 3 < 7),
+    expandKeys_getD key 4 (by decide : 4 < 7),
+    expandKeys_getD key 5 (by decide : 5 < 7),
+    expandKeys_getD key 6 (by decide : 6 < 7),
+    passKeyIter]
 
 /-! ## Layer packets used by known-answer vectors -/
 

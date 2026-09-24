@@ -238,10 +238,21 @@ add({
   output: ctrOut,
 });
 
+const sudoSha = process.env.TWODECK_SUDO_SHA256;
+const sudocodeCommit = process.env.SUDOCODE_COMMIT;
+if (!sudoSha || !sudocodeCommit) {
+  console.error(
+    "collect_vectors.mjs: set TWODECK_SUDO_SHA256 and SUDOCODE_COMMIT (regen.sh does this)",
+  );
+  process.exit(1);
+}
+
 const doc = {
   schema: 1,
   generated_by: "proofs/twodeck/vectors/regen.sh",
   source: "primitives/cipher/twodeck/twodeck.sudo",
+  sudo_sha256: sudoSha,
+  sudocode_commit: sudocodeCommit,
   note:
     "Known-answer vectors from the sudo tests plus extras evaluated by the sudoc JS target. " +
     "Evidence that the Lean model agrees with twodeck.sudo on these inputs — not a proof that the sudo text equals the Lean model.",

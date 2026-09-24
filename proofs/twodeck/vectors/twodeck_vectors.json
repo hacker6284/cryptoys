@@ -2,7 +2,9 @@
   "schema": 1,
   "generated_by": "proofs/twodeck/vectors/regen.sh",
   "source": "primitives/cipher/twodeck/twodeck.sudo",
-  "note": "Known-answer vectors from the sudo tests plus extras evaluated by the sudoc JS target. Evidence that the Lean model agrees with twodeck.sudo on these inputs — not a proof that the sudo text equals the Lean model.",
+  "sudo_sha256": "a8aaf879f414bb5f5614f08fc3b7b4b55011e39df3c37f2bc1f0342da4f8adf8",
+  "sudocode_commit": "606f06f4d852aac7f37bccd4823775d00d2ba5a6",
+  "note": "Known-answer vectors from the sudo tests plus extras evaluated by the sudoc JS target. Evidence that the Lean model agrees with twodeck.sudo on these inputs \u2014 not a proof that the sudo text equals the Lean model.",
   "decks_are": "52-element arrays of CHaSeD card ids (0..51)",
   "vectors": [
     {

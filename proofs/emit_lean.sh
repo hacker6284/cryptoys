@@ -5,9 +5,9 @@
 # Pin: hacker6284/sudocode main @ SUDOCODE_LEAN_COMMIT
 #   (PR #5 squash merge; backends/lean/ is on main).
 #
-# Full-peer emit (no --require terminates). DoubleDeal is now bounded-for /
-# terminates-ready; MegaDreifach still has unmeasured whiles. Flip
-# terminates_gate after MegaDreifach too.
+# Full-peer emit (no --require terminates). DoubleDeal and MegaDreifach
+# are bounded-for / terminates-ready; Scramble still has unmeasured
+# whiles. Flip terminates_gate after Scramble too.
 #
 # Usage (from repo root):
 #   proofs/emit_lean.sh              # write Generated/

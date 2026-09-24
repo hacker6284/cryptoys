@@ -20,6 +20,8 @@ Scramble runs in the room (`?algo=scramble`). DoubleDeal is still its own teachi
 
 ## PR previews
 
+GitHub Actions, same `sudoc` generate as `pages.yml`. Not Render PR previews.
+
 Same-repo PRs that touch `demos/**`, the generate workflows, or the sudo that feeds generate publish a playroom at:
 
 ```text
@@ -32,6 +34,4 @@ The workflow leaves a sticky PR comment with that link.
 
 Files land on the `gh-pages` branch under `pr/<N>/`. Official Pages is a single artifact from `main`, so the `github.io` URL appears after `republish-pages` (or the next `pages` deploy) copies that branch. Closing the PR deletes `pr/<N>/`.
 
-Optional: Settings → Pages → **Deploy from a branch** (`gh-pages` / `/`). Then every push to `gh-pages` is live without waiting for republish. Keep `.nojekyll` (sudoc emits `_*.mjs`).
-
-Render (`cryptoys.onrender.com`) currently serves raw `main` / `demos/`, so `scramble/generated/scramble.mjs` 404s. Point that static site at `gh-pages` (publish path `/`) to serve the same generated tree as Pages.
+Optional: after a `pages` deploy from `main` has written the production root to `gh-pages`, Settings → Pages → **Deploy from a branch** (`gh-pages` / `/`) makes every `gh-pages` push live without republish. Do not switch while the branch is preview-only or production 404s. Keep `.nojekyll` (sudoc emits `_*.mjs`).

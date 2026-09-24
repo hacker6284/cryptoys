@@ -208,10 +208,16 @@ body.playroom.is-ready .playroom-menu {
 }
 
 .playroom-note {
+  position: fixed;
   right: 20px;
   bottom: 16px;
   width: min(26rem, 40vw);
   text-align: right;
+}
+
+.playroom-info,
+.playroom-info-hint {
+  display: none;
 }
 
 .playroom-note[hidden] {
@@ -390,35 +396,84 @@ body.playroom.is-ready .playroom-dock {
   }
 }
 
-/* Portrait: rough stack. Landscape four-corners is the lock. */
+/* Narrow portrait: 3D stage + manufactured dark band. Four edges, not corners. */
 @media (max-width: 700px) and (orientation: portrait) {
   .playroom-menu {
     top: 60px;
     right: 16px;
   }
 
-  .playroom-io {
-    top: 72px;
-    right: 14px;
-    left: 14px;
-    width: auto;
-    max-height: 36dvh;
+  html[data-algo="scramble"] {
+    --io-band: min(36dvh, 17.5rem);
+  }
+
+  html[data-algo="scramble"] #playroom {
+    height: calc(100dvh - var(--io-band));
+  }
+
+  html[data-algo="scramble"] .playroom-io {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: var(--io-band);
+    padding: 12px 16px 14px;
+    text-align: left;
+    background: #0e0b09;
     overflow: auto;
   }
 
-  .playroom-anim {
-    left: 14px;
-    right: 14px;
-    bottom: 12px;
-    width: auto;
+  html[data-algo="scramble"] .playroom-anim {
+    left: 0;
+    right: 0;
+    bottom: var(--io-band);
+    width: 100%;
+    padding: 8px 14px 10px;
   }
 
-  .playroom-note {
-    right: 14px;
-    left: 14px;
-    bottom: 88px;
+  html[data-algo="scramble"] .playroom-io .row,
+  html[data-algo="scramble"] .playroom-anim .row {
+    justify-content: flex-start;
+  }
+
+  html[data-algo="scramble"] .playroom-dock textarea {
+    text-align: left;
+  }
+
+  html[data-algo="scramble"] .playroom-info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2em;
+    padding: 6px 8px;
+  }
+
+  html[data-algo="scramble"] .playroom-note {
+    position: static;
     width: auto;
-    max-height: 28dvh;
-    overflow: auto;
+    text-align: left;
+    display: none;
+  }
+
+  html[data-algo="scramble"] .playroom-note .tape,
+  html[data-algo="scramble"] .playroom-note .transport {
+    display: none;
+  }
+
+  html[data-algo="scramble"] .playroom-dock[data-info="1"] .playroom-note:not([hidden]) {
+    display: flex;
+  }
+
+  html[data-algo="scramble"] .playroom-dock[data-info="1"] .playroom-info-hint {
+    display: block;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  html[data-algo="scramble"] .playroom-dock[data-info="1"]:has(#teach:not([hidden])) .playroom-info-hint {
+    display: none;
   }
 }

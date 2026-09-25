@@ -20,6 +20,8 @@ Scramble and DoubleDeal both run in the room (`?algo=scramble`, `?algo=doubledea
 
 Scramble’s 3D cube is cubing.js (`createTwistyRig` in `playroom/twisty-rig.js`), adopted into the playroom scene. Session Play / Step / Reset / speed drive `player.alg` and the Twisty timeline. Notes, license, and remaining hand-rolled bits: `playroom/CUBING.md`. Rollback: `?legacyCube=1`.
 
+Research only (not on the hub): [`unbox-spike/`](./unbox-spike/) — shelf → unbox → deal takes for DoubleDeal. Production enter is still the #29 fade. Notes: `unbox-spike/NOTES.md`.
+
 **Render must generate, then publish `demos/`.** `generated/*.mjs` is gitignored on `main`. The static site deploys from `main` with build command `sh tools/render-build.sh` (same `sudoc` + `tools/build.sh` path as Pages) and publish directory `demos`. Do not publish ungenerated `demos/` and do not point Render at `gh-pages`. Dashboard fields: `.github/RENDER.md`.
 
 ## PR previews

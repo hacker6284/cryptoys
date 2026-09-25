@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>unbox spike</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/tokens.css">
+  <link rel="stylesheet" href="../shared/base.css">
+  <link rel="stylesheet" href="../playroom/style.css">
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body class="playroom unbox-spike">
+  <canvas id="playroom" aria-label="Shelf to unbox to deal spike"></canvas>
+  <h1 class="playroom-title" id="title">unbox spike</h1>
+  <nav class="spike-takes" id="takes" aria-label="Takes">
+    <button type="button" class="spike-take on" data-take="physical" aria-pressed="true">physical</button>
+    <button type="button" class="spike-take" data-take="bloom" aria-pressed="false">bloom</button>
+  </nav>
+  <div class="spike-pose">
+    <button type="button" class="chrome-action" id="replay" hidden>Replay</button>
+    <p class="spike-note">research only · production DoubleDeal is unchanged</p>
+  </div>
+  <p class="spike-beat" id="beat"></p>
+  <p id="load-error" class="error" hidden></p>
+  <noscript>
+    <p class="playroom-noscript">This spike needs JavaScript. Production DoubleDeal is still at <a href="../?algo=doubledeal">the playroom</a>.</p>
+  </noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

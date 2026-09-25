@@ -1,0 +1,91 @@
+/**
+ * Spike-only beat clock.
+ *
+ * Same generation + rAF pattern as `demos/doubledeal/table.js` and
+ * `demos/playroom/toy-director.js`. Not a second animation engine —
+ * labeled waits/tweens so skip / Replay / reduced-motion snap cleanly.
+ */
+
+export function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+
+export function easeOutCubic(t) {
+    return 1 - (1 - t) ** 3;
+}
+
+export function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+export function easeOutQuart(t) {
+    return 1 - (1 - t) ** 4;
+}
+
+export function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
+}
+
+export function prefersReducedMotion() {
+    return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+}
+
+export function createBeatClock({ reduced } = {}) {
+    let gen = 0;
+    const snap = Boolean(reduced || prefersReducedMotion());
+
+    function skip() {
+        gen += 1;
+    }
+
+    function begin() {
+        gen += 1;
+        return gen;
+    }
+
+    function dead(g) {
+        return g !== gen;
+    }
+
+    function tween(ms, step, { ease = easeInOutCubic, generation: g } = {}) {
+        const apply = (t) => step(ease(Math.min(1, Math.max(0, t))));
+        if (snap || !(ms > 0) || dead(g)) {
+            apply(1);
+            return Promise.resolve();
+        }
+        return new Promise((resolve) => {
+            const start = performance.now();
+            const mine = g;
+            function tick(now) {
+                if (mine !== gen) {
+                    apply(1);
+                    resolve();
+                    return;
+                }
+                const t = Math.min(1, (now - start) / ms);
+                apply(t);
+                if (t < 1) requestAnimationFrame(tick);
+                else resolve();
+            }
+            requestAnimationFrame(tick);
+        });
+    }
+
+    function wait(ms, g) {
+        return tween(ms, () => {}, { ease: (t) => t, generation: g });
+    }
+
+    return {
+        begin,
+        skip,
+        dead,
+        tween,
+        wait,
+        get generation() {
+            return gen;
+        },
+        get reduced() {
+            return snap;
+        },
+    };
+}

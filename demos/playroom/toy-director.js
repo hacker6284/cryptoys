@@ -1,20 +1,18 @@
 import { FLY_MS, LIFT_MS } from "./constants.js";
 
 /**
- * Toy director — Unify-1.
+ * Toy director.
  *
- * Shelf holds one of each kind. Scramble borrows the cube: lift from the
- * slot, then arc to the felt. Camera follow / in-frame tracking is the
- * pose controller's job; this module only moves toys. Click skips;
- * prefers-reduced-motion snaps.
- *
- * DoubleDeal borrow / chest extras are Unify-2.
+ * Shelf holds one of each kind. Scramble borrows the cube and DoubleDeal
+ * borrows the deck: lift from the slot, then arc to the felt. Camera
+ * follow is the pose controller's job. Click skips; reduced-motion snaps.
+ * Chest extras highlight only; unbox / deal choreography is later.
  */
 
 const RECIPES = {
     scramble: { toys: ["cube"], extras: [], pose: "scramble" },
-    doubledeal: { toys: ["deck"], extras: ["chest"], pose: "seated" },
-    twodeck: { toys: ["deck"], extras: ["chest"], pose: "seated" },
+    doubledeal: { toys: ["deck"], extras: ["chest"], pose: "doubledeal" },
+    twodeck: { toys: ["deck"], extras: ["chest"], pose: "doubledeal" },
 };
 
 function prefersReducedMotion() {
@@ -75,13 +73,13 @@ export function createToyDirector(world) {
     }
 
     function writeFlightDebug(u, toy) {
-        const root = document.documentElement;
-        if (root.dataset.playroomDebug !== "1") return;
+        const root = typeof document !== "undefined" ? document.documentElement : null;
+        if (!root || root.dataset.playroomDebug !== "1") return;
         root.dataset.flight = Number.isFinite(u) ? String(Math.round(Math.min(1, Math.max(0, u)) * 100)) : "";
         if (toy) {
-            root.dataset.cubeX = toy.position.x.toFixed(2);
-            root.dataset.cubeY = toy.position.y.toFixed(2);
-            root.dataset.cubeZ = toy.position.z.toFixed(2);
+            root.dataset.toyX = toy.position.x.toFixed(2);
+            root.dataset.toyY = toy.position.y.toFixed(2);
+            root.dataset.toyZ = toy.position.z.toFixed(2);
         }
     }
 
@@ -183,9 +181,6 @@ export function createToyDirector(world) {
     async function borrow(algorithmId, { snap = false } = {}) {
         const recipe = recipeOf(algorithmId);
         if (!recipe) throw new Error(`unknown algorithm: ${algorithmId}`);
-        if (algorithmId !== "scramble") {
-            throw new Error("toy director: DoubleDeal borrow is Unify-2");
-        }
         if (occupied === algorithmId && !flight) return recipe;
         if (flight) skip();
         occupied = algorithmId;

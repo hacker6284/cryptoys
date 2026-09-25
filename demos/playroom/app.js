@@ -12,7 +12,10 @@ const sitBtn = document.querySelector("#sit");
 const backBtn = document.querySelector("#back");
 const errorEl = document.querySelector("#load-error");
 
-const scrambleLink = menuEl.querySelector("[data-algo='scramble']");
+const ALGOS = {
+    scramble: { title: "Scramble", pose: "scramble", toy: "cube" },
+    doubledeal: { title: "DoubleDeal", pose: "doubledeal", toy: "deck" },
+};
 
 let activeAlgo = null;
 let leaving = false;
@@ -22,7 +25,7 @@ let resizeWorld = () => {};
 
 function writeQuery({ pose, algo }) {
     const url = new URL(location.href);
-    const poseName = pose === "scramble" ? "seated" : pose;
+    const poseName = pose === "scramble" || pose === "doubledeal" ? "seated" : pose;
     if (!poseName || poseName === "landing") url.searchParams.delete("pose");
     else url.searchParams.set("pose", poseName);
     if (!algo) url.searchParams.delete("algo");
@@ -32,7 +35,7 @@ function writeQuery({ pose, algo }) {
 
 function syncOverlays({ name, overlays, tweening }) {
     const showMenu = Boolean(overlays?.menu) && !tweening && !activeAlgo;
-    const algoName = activeAlgo === "scramble" ? "Scramble" : "cryptoys";
+    const algoName = ALGOS[activeAlgo]?.title || "cryptoys";
     titleEl.textContent = algoName;
     if (activeAlgo) document.title = algoName;
     else document.title = "cryptoys";
@@ -43,13 +46,15 @@ function syncOverlays({ name, overlays, tweening }) {
     document.documentElement.dataset.pose = name;
     document.documentElement.dataset.algo = activeAlgo || "";
     document.documentElement.dataset.playroomTween = tweening ? "1" : "0";
-    const dock = document.querySelector("#scramble-dock");
-    if (dock) dock.classList.toggle("on", Boolean(activeAlgo) && !tweening && !leaving);
+    document.querySelectorAll(".playroom-dock").forEach((dock) => {
+        const on = Boolean(activeAlgo) && !tweening && !leaving && dock.id === `${activeAlgo}-dock`;
+        dock.classList.toggle("on", on);
+    });
     requestAnimationFrame(() => resizeWorld());
 }
 
-function trackCube(world) {
-    return () => world.toys.cube.position;
+function trackToy(world, name) {
+    return () => world.toys[name]?.position;
 }
 
 try {
@@ -71,17 +76,23 @@ try {
             }
         },
     });
-    adapters.scramble.install(world, {
+    const installOpts = {
         poses,
         prefersReducedMotion: () => poses.prefersReducedMotion(),
-    });
+    };
+    adapters.scramble.install(world, installOpts);
+    adapters.doubledeal.install(world, installOpts);
     void adapters.scramble.preload();
+    void adapters.doubledeal.preload();
     const director = createToyDirector(world);
 
-    async function startScramble({ snap = false } = {}) {
-        if (activeAlgo === "scramble" || starting || leaving) return;
+    async function startAlgo(id, { snap = false } = {}) {
+        const meta = ALGOS[id];
+        const adapter = adapters[id];
+        if (!meta || !adapter) return;
+        if (activeAlgo === id || starting || leaving) return;
         starting = true;
-        activeAlgo = "scramble";
+        activeAlgo = id;
         syncOverlays({
             name: poses.name,
             overlays: { title: true, menu: false },
@@ -90,23 +101,23 @@ try {
         try {
             const reduced = snap || poses.prefersReducedMotion();
             ignoreSkipUntil = performance.now() + LIFT_MS;
-            const fly = director.borrow("scramble", { snap: reduced });
-            const warm = adapters.scramble.preload();
+            const fly = director.borrow(id, { snap: reduced });
+            const warm = adapter.preload();
             if (reduced) {
-                poses.snap("scramble");
+                poses.snap(meta.pose);
             } else {
-                poses.goTo("scramble", {
+                poses.goTo(meta.pose, {
                     duration: FLY_MS,
                     via: "shelf",
                     viaT: HOLD_MS / FLY_MS,
-                    track: trackCube(world),
+                    track: trackToy(world, meta.toy),
                 });
             }
             await Promise.all([fly, warm]);
             if (leaving) return;
-            adapters.scramble.view()?.rememberSeated?.();
-            await adapters.scramble.enter();
-            writeQuery({ pose: "seated", algo: "scramble" });
+            adapter.view()?.rememberSeated?.();
+            await adapter.enter({ snap: reduced });
+            writeQuery({ pose: "seated", algo: id });
             syncOverlays({
                 name: poses.name,
                 overlays: { title: true, menu: false, teach: true },
@@ -114,13 +125,14 @@ try {
             });
         } catch (err) {
             console.error(err);
-            adapters.scramble.leave();
+            await adapter.leave({ snap: true });
             await director.home({ snap: true });
+            adapter.revealShelf?.();
             activeAlgo = null;
             errorEl.hidden = false;
             errorEl.textContent = err && err.message
                 ? err.message
-                : "Scramble could not start in the playroom.";
+                : `${meta.title} could not start in the playroom.`;
             poses.snap("landing");
         } finally {
             starting = false;
@@ -134,8 +146,10 @@ try {
             return;
         }
         leaving = true;
-        adapters.scramble.leave();
+        const id = activeAlgo;
+        const meta = ALGOS[id];
         const reduced = poses.prefersReducedMotion();
+        const fade = adapters[id]?.leave?.({ snap: reduced });
         ignoreSkipUntil = performance.now() + LIFT_MS;
         const home = director.home({ snap: reduced });
         if (reduced) poses.snap("landing");
@@ -145,10 +159,11 @@ try {
                 via: "shelf",
                 viaT: 0.42,
                 delay: LIFT_MS,
-                track: trackCube(world),
+                track: trackToy(world, meta?.toy || "cube"),
             });
         }
-        await home;
+        await Promise.all([fade, home]);
+        adapters[id]?.revealShelf?.();
         activeAlgo = null;
         leaving = false;
         writeQuery({ pose: "landing", algo: null });
@@ -159,9 +174,9 @@ try {
         });
     }
 
-    if (initialAlgo === "scramble") {
-        poses.snap("scramble");
-        await startScramble({ snap: true });
+    if (ALGOS[initialAlgo]) {
+        poses.snap(ALGOS[initialAlgo].pose);
+        await startAlgo(initialAlgo, { snap: true });
     } else {
         poses.snap(initialPose);
     }
@@ -183,11 +198,13 @@ try {
         if (!menuEl.contains(event.relatedTarget)) director.clearHighlight();
     });
 
-    scrambleLink?.addEventListener("click", (event) => {
+    menuEl.addEventListener("click", (event) => {
+        const item = event.target.closest("[data-algo]");
+        if (!item) return;
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
         event.stopPropagation();
-        void startScramble();
+        void startAlgo(item.dataset.algo);
     });
 
     sitBtn.addEventListener("click", () => poses.goTo("seated"));

@@ -640,26 +640,26 @@ body.playroom.is-ready .playroom-dock {
     right: 16px;
   }
 
-  html[data-algo="scramble"] {
+  html[data-algo]:not([data-algo=""]) {
     --io-band: min(38dvh, 20rem);
   }
 
-  html[data-algo="scramble"] #playroom {
+  html[data-algo]:not([data-algo=""]) #playroom {
     height: calc(100dvh - var(--io-band));
   }
 
-  html[data-algo="scramble"] .playroom-title {
+  html[data-algo]:not([data-algo=""]) .playroom-title {
     left: 16px;
     top: 14px;
     font-size: 28px;
   }
 
-  html[data-algo="scramble"] .playroom-pose {
+  html[data-algo]:not([data-algo=""]) .playroom-pose {
     top: 48px;
     left: 16px;
   }
 
-  html[data-algo="scramble"] .playroom-io {
+  html[data-algo]:not([data-algo=""]) .playroom-io {
     top: auto;
     right: 0;
     left: 0;
@@ -671,11 +671,32 @@ body.playroom.is-ready .playroom-dock {
     overflow: auto;
   }
 
-  html[data-algo="scramble"] .playroom-card--io {
+  html[data-algo]:not([data-algo=""]) .playroom-card--io {
     width: 100%;
   }
 
-  html[data-algo="scramble"] .playroom-anim {
+  html[data-algo="doubledeal"] .playroom-card--io {
+    gap: 8px;
+    padding: 10px 14px 12px;
+  }
+
+  html[data-algo="doubledeal"] .playroom-io-grid {
+    gap: 6px 12px;
+  }
+
+  html[data-algo="doubledeal"] .playroom-ctl {
+    gap: 4px;
+  }
+
+  html[data-algo="doubledeal"] .playroom-dock textarea,
+  html[data-algo="doubledeal"] .playroom-dock #digest {
+    height: 2.15rem;
+    min-height: 2.15rem;
+    max-height: 2.15rem;
+    line-height: 2.1rem;
+  }
+
+  html[data-algo]:not([data-algo=""]) .playroom-anim {
     left: 50%;
     right: auto;
     bottom: calc(var(--io-band) + 12px);
@@ -683,23 +704,23 @@ body.playroom.is-ready .playroom-dock {
     transform: translateX(-50%);
   }
 
-  html[data-algo="scramble"] .playroom-digins {
+  html[data-algo]:not([data-algo=""]) .playroom-digins {
     top: 16px;
     right: 16px;
     bottom: auto;
     left: auto;
   }
 
-  html[data-algo="scramble"] .playroom-dock .playroom-info,
-  html[data-algo="scramble"] .playroom-dock .playroom-info.icon-btn,
-  html[data-algo="scramble"] .playroom-dock #teach-info {
+  html[data-algo]:not([data-algo=""]) .playroom-dock .playroom-info,
+  html[data-algo]:not([data-algo=""]) .playroom-dock .playroom-info.icon-btn,
+  html[data-algo]:not([data-algo=""]) .playroom-dock #teach-info {
     display: inline-flex !important;
     width: 1.75rem;
     height: 1.75rem;
     filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.45));
   }
 
-  html[data-algo="scramble"] .playroom-note {
+  html[data-algo]:not([data-algo=""]) .playroom-note {
     position: static;
     width: auto;
     margin-top: 10px;
@@ -707,23 +728,23 @@ body.playroom.is-ready .playroom-dock {
     display: none;
   }
 
-  html[data-algo="scramble"] .playroom-note .tape,
-  html[data-algo="scramble"] .playroom-note .transport {
+  html[data-algo]:not([data-algo=""]) .playroom-note .tape,
+  html[data-algo]:not([data-algo=""]) .playroom-note .transport {
     display: none;
   }
 
-  html[data-algo="scramble"] .playroom-dock[data-info="1"] .playroom-note:not([hidden]) {
+  html[data-algo]:not([data-algo=""]) .playroom-dock[data-info="1"] .playroom-note:not([hidden]) {
     display: flex;
   }
 
-  html[data-algo="scramble"] .playroom-dock[data-info="1"] .playroom-info-hint {
+  html[data-algo]:not([data-algo=""]) .playroom-dock[data-info="1"] .playroom-info-hint {
     display: block;
     margin: 8px 0 0;
     font-size: 13px;
     color: var(--muted);
   }
 
-  html[data-algo="scramble"] .playroom-dock[data-info="1"]:has(#teach:not([hidden])) .playroom-info-hint {
+  html[data-algo]:not([data-algo=""]) .playroom-dock[data-info="1"]:has(#teach:not([hidden])) .playroom-info-hint {
     display: none;
   }
 }

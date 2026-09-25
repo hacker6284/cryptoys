@@ -19,6 +19,11 @@ body.playroom {
   width: 100%;
   height: 100dvh;
   touch-action: none;
+  cursor: grab;
+}
+
+#playroom:active {
+  cursor: grabbing;
 }
 
 .playroom-title {

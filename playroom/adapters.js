@@ -2,6 +2,7 @@ import { CUBE } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { createCubeRig } from "../scramble/view.js";
 import { lucideSvg } from "../shared/icons.js";
+import { stageCubeView } from "./cube-stage.js";
 
 /**
  * Demo adapters — Unify-1 implements Scramble.
@@ -205,16 +206,17 @@ function createScrambleAdapter() {
 
     return {
         id: "scramble",
-        install(world) {
+        install(world, { poses, prefersReducedMotion } = {}) {
             if (rig) return rig;
-            rig = createCubeRig({ edge: CUBE, castShadow: true });
+            const live = createCubeRig({ edge: CUBE, castShadow: true });
             const prev = world.toys.cube;
-            rig.group.position.copy(prev.position);
-            rig.group.rotation.copy(prev.rotation);
-            world.replaceToy("cube", rig.group);
+            live.group.position.copy(prev.position);
+            live.group.rotation.copy(prev.rotation);
+            world.replaceToy("cube", live.group);
             disposeObject(prev);
-            rig.paint(SOLVED_FACELETS);
-            world.applyPose(rig.group, world.getShelfPose("cube"));
+            live.paint(SOLVED_FACELETS);
+            world.applyPose(live.group, world.getShelfPose("cube"));
+            rig = stageCubeView(live, { poses, prefersReducedMotion });
             return rig;
         },
         preload,
@@ -235,6 +237,7 @@ function createScrambleAdapter() {
                     root,
                     exposeTeach: true,
                 });
+                rig.rememberSeated?.();
                 // Stay in use mode. Session enterTeach() is for Step through.
                 root.hidden = false;
                 root.classList.add("on");
@@ -255,6 +258,7 @@ function createScrambleAdapter() {
                 root.hidden = true;
             }
             if (rig) {
+                void rig.settle?.({ snap: true });
                 rig.clearHighlights();
                 rig.paint(SOLVED_FACELETS);
             }

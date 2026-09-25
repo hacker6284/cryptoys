@@ -141,3 +141,18 @@ beat. The recommendation is physical as the enter.
 
 Wiring `adapter.enter`. Beauty-pass on the production fade. Chest
 choreography. Normative SPEC / `.sudo`.
+
+## Browser check (this spike)
+
+Headless SwiftShader is flatter and slower than the shipped room (rAF
+starves if we pause to screenshot). What still read clearly:
+
+- Quiet chrome: title, physical/bloom, Replay, research-only note. No
+  Maps dock / Message-Key panel.
+- Shelf departure: empty deck ring, cube stays put.
+- Landed KEY tuck-box with cream flap open (burgundy cardboard, label).
+- First card (7♣) hopping onto the felt in front of the same box.
+
+Hold the camera on the fly (`travel`) and only then close up — a tight
+unbox shot before the box lands is an empty felt. Packet stays hidden
+until the flap moves so we do not flash face cards out of the top.

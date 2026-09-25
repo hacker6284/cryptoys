@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { FLY_MS, HOLD_MS, LIFT_MS } from "../playroom/constants.js";
+import { FLY_MS, HOLD_MS, LIFT_MS, SHELF_Y1, SHELF_Z, SLOTS } from "../playroom/constants.js";
 import { createToyDirector } from "../playroom/toy-director.js";
 import { mountWorld } from "../playroom/world.js";
 import { createUnboxRig } from "./deck-rig.js";
@@ -77,6 +77,12 @@ try {
     const director = createToyDirector(world);
     const clock = createBeatClock({ reduced });
 
+    const shelfKey = new THREE.SpotLight(0xffd8b0, 2.1, 2.4, Math.PI / 5.5, 0.45, 1.3);
+    shelfKey.position.set(SLOTS.deck.x + 0.10, SHELF_Y1 + 0.58, SHELF_Z + 0.58);
+    shelfKey.target.position.set(SLOTS.deck.x, SHELF_Y1 + 0.05, SHELF_Z);
+    world.scene.add(shelfKey);
+    world.scene.add(shelfKey.target);
+
     const keyLight = new THREE.SpotLight(0xffc898, 0, 2.4, Math.PI / 5.4, 0.5, 1.15);
     keyLight.position.set(world.table.den.x + 0.16, 1.16, world.table.den.z + 0.30);
     keyLight.target.position.set(world.table.den.x, world.table.feltTopY + 0.04, world.table.den.z);
@@ -124,18 +130,21 @@ try {
 
         running = (async () => {
             try {
+                await playShot(world.camera, SPIKE_SHOTS.shelf, clock, mine, {
+                    ms: reduced ? 0 : 720,
+                });
+                document.documentElement.dataset.beat = "shelf-hold";
+                if (clock.dead(mine)) {
+                    finishTableau(world, rig, world.camera, keyLight);
+                    return;
+                }
                 const fly = director.borrow("doubledeal", { snap: reduced });
-                const cam = (async () => {
-                    await playShot(world.camera, SPIKE_SHOTS.shelf, clock, mine, {
-                        ms: reduced ? 0 : 720,
-                    });
-                    await clock.wait(HOLD_MS * 0.55, mine);
-                    await playShot(world.camera, SPIKE_SHOTS.unbox, clock, mine, {
-                        ms: reduced ? 0 : FLY_MS - 280,
-                        track: trackBox,
-                    });
-                })();
-                await Promise.all([fly, cam]);
+                await clock.wait(HOLD_MS * 0.45, mine);
+                await playShot(world.camera, SPIKE_SHOTS.travel, clock, mine, {
+                    ms: reduced ? 0 : FLY_MS - 200,
+                    track: trackBox,
+                });
+                await fly;
                 if (clock.dead(mine)) {
                     finishTableau(world, rig, world.camera, keyLight);
                     return;

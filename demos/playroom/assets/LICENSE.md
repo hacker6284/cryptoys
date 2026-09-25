@@ -59,3 +59,11 @@ License.txt: Creative Commons Zero (CC0).
 ## Attribution note
 
 CC0 does not require attribution; Kenney / Quaternius / ambientCG / Poly Haven credited here for clarity.
+
+## cubing.js (playroom Scramble, not an asset file)
+
+Loaded at runtime from `https://cdn.cubing.net/v0/js/cubing/twisty`. Not vendored, not forked.
+
+| Source | License | Notes |
+|--------|---------|-------|
+| [cubing/cubing.js](https://github.com/cubing/cubing.js) (js.cubing.net team) | **MPL-2.0 OR GPL-3.0-or-later** | Library use. Do not patch in-tree without publishing those modifications. See `demos/playroom/CUBING.md`. |

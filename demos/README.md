@@ -18,6 +18,8 @@ https://hacker6284.github.io/cryptoys/ and https://cryptoygraphy.com/ (`cryptoys
 
 Scramble and DoubleDeal both run in the room (`?algo=scramble`, `?algo=doubledeal`). The standalone teaching pages remain at `scramble/?standalone=1` and `doubledeal/?standalone=1`.
 
+Scramble’s 3D cube is cubing.js (`createTwistyRig` in `playroom/twisty-rig.js`), adopted into the playroom scene. Session Play / Step / Reset / speed drive `player.alg` and the Twisty timeline. Notes, license, and remaining hand-rolled bits: `playroom/CUBING.md`. Rollback: `?legacyCube=1`.
+
 **Render must generate, then publish `demos/`.** `generated/*.mjs` is gitignored on `main`. The static site deploys from `main` with build command `sh tools/render-build.sh` (same `sudoc` + `tools/build.sh` path as Pages) and publish directory `demos`. Do not publish ungenerated `demos/` and do not point Render at `gh-pages`. Dashboard fields: `.github/RENDER.md`.
 
 ## PR previews

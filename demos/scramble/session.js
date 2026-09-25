@@ -1,5 +1,6 @@
 import { scramble_v1, scramble_v2, update, evaluate, solved_facelets } from "./generated/scramble.mjs";
 import { SOLVED_FACELETS, applyMove, isSolved, shortSolve, toCubejs, flipU, parseMove } from "./cube.js";
+import { mapTraceToAlg, prefixAlg } from "../playroom/scramble-alg.js";
 import {
     bindTeachKeys,
     colorName,
@@ -54,6 +55,7 @@ export function createScrambleSession({
     let version = 2;
     let encoding = "text";
     let trace = [];
+    let mappedAlg = mapTraceToAlg([]);
     let facelets = solved;
     let cursor = -1;
     let playing = false;
@@ -128,9 +130,27 @@ export function createScrambleSession({
         status.textContent = text;
     }
 
+    function usesTimeline() {
+        return typeof view.setAlg === "function" && typeof view.playLeaves === "function";
+    }
+
     function showFace(next) {
         facelets = next;
-        view.paint(next);
+        if (!usesTimeline()) view.paint?.(next);
+    }
+
+    function bindAlg() {
+        mappedAlg = mapTraceToAlg(trace);
+        if (!usesTimeline()) return;
+        view.setAlg(mappedAlg.alg);
+        view.setTempo?.(Number(speed?.value) || 1.4);
+        void view.jumpToLeaf?.(-1);
+    }
+
+    function jumpViewToCursor() {
+        if (!usesTimeline()) return;
+        if (cursor < 0) void view.jumpToLeaf(-1);
+        else void view.jumpToLeaf((mappedAlg.ranges[cursor]?.to ?? 1) - 1);
     }
 
     function settleView(opts) {
@@ -309,10 +329,10 @@ export function createScrambleSession({
             view.clearHighlights();
             return;
         }
-        if (step.kind === "move" || step.kind === "closer") view.highlightLayer(parseMove(step.move).face);
-        else if (step.kind === "ruleB") view.highlightRuleB(facelets, step.up, step.front);
-        else if (step.kind === "canonicalize") view.highlightRuleB(facelets, "W", "G");
-        else view.clearHighlights();
+        if (step.kind === "move" || step.kind === "closer") view.highlightLayer?.(parseMove(step.move).face);
+        else if (step.kind === "ruleB") view.highlightRuleB?.(facelets, step.up, step.front);
+        else if (step.kind === "canonicalize") view.highlightRuleB?.(facelets, "W", "G");
+        else view.clearHighlights?.();
     }
 
     function refreshTeach() {
@@ -339,7 +359,7 @@ export function createScrambleSession({
         teaching = on;
         if (teachEl) teachEl.hidden = !on;
         if (outlineEl) outlineEl.hidden = !on;
-        if (!on) view.clearHighlights();
+        if (!on) view.clearHighlights?.();
     }
 
     function showPaused() {
@@ -357,11 +377,13 @@ export function createScrambleSession({
             }
             showStatus(caption());
             refreshTeach();
+            jumpViewToCursor();
             return;
         }
         if (cursor < 0) showFace(solved);
         else showFace(trace[cursor].facelets);
         showStatus(caption());
+        jumpViewToCursor();
     }
 
     function recompute() {
@@ -381,8 +403,10 @@ export function createScrambleSession({
         update(state, messageBytes);
         const result = evaluate(state);
         trace = result.trace;
+        mappedAlg = mapTraceToAlg(trace);
         setDigest(digestHex(result.digest));
         cursor = -1;
+        bindAlg();
         showFace(solved);
         showStatus(caption());
         if (teaching) refreshTeach();
@@ -397,9 +421,16 @@ export function createScrambleSession({
         if (cursor >= trace.length - 1) return false;
         const step = trace[cursor + 1];
         const from = facelets;
-        if (step.kind === "move" || step.kind === "closer") await view.animateMove(step.move, duration(step.kind));
-        else if (step.kind === "ruleB") await view.animateReorient(from, step.up, step.front, duration(step.kind));
-        else await view.animateReorient(from, "W", "G", duration(step.kind));
+        const range = mappedAlg.ranges[cursor + 1];
+        if (usesTimeline() && range) {
+            await view.playLeaves(range.from, range.to);
+        } else if (step.kind === "move" || step.kind === "closer") {
+            await view.animateMove(step.move, duration(step.kind));
+        } else if (step.kind === "ruleB") {
+            await view.animateReorient(from, step.up, step.front, duration(step.kind));
+        } else {
+            await view.animateReorient(from, "W", "G", duration(step.kind));
+        }
         if (token !== job) return false;
         cursor += 1;
         if (teaching) {
@@ -504,13 +535,22 @@ export function createScrambleSession({
             }
             showStatus(`Solve · ${moves.length} moves`);
             let current = facelets;
-            for (let i = 0; i < moves.length; i++) {
+            if (usesTimeline() && view.playMoves) {
+                await view.playMoves(moves, { setup: prefixAlg(mappedAlg, cursor) });
                 if (token !== job) return;
-                showStatus(`Solve ${i + 1}/${moves.length} · ${moves[i]}`);
-                await view.animateMove(moves[i], duration("move"));
-                if (token !== job) return;
-                current = applyMove(current, moves[i]);
-                showFace(current);
+                view.setAlg(mappedAlg.alg);
+                void view.jumpToLeaf?.(-1);
+                current = solved;
+                showFace(solved);
+            } else {
+                for (let i = 0; i < moves.length; i++) {
+                    if (token !== job) return;
+                    showStatus(`Solve ${i + 1}/${moves.length} · ${moves[i]}`);
+                    await view.animateMove(moves[i], duration("move"));
+                    if (token !== job) return;
+                    current = applyMove(current, moves[i]);
+                    showFace(current);
+                }
             }
             if (!isSolved(current)) throw new Error("Solver returned a sequence that does not solve this cube.");
             showStatus(`Solve · ${moves.length} moves`);
@@ -647,7 +687,11 @@ export function createScrambleSession({
         setTeaching(false);
         settleView();
         showFace(solved);
+        jumpViewToCursor();
         showStatus(caption());
+    }, listen);
+    speed?.addEventListener("input", () => {
+        view.setTempo?.(Number(speed.value) || 1);
     }, listen);
     $("#digest-btn")?.addEventListener("click", async () => {
         try {
@@ -702,6 +746,7 @@ export function createScrambleSession({
             setTeaching(false);
             settleView();
             showFace(solved);
+            jumpViewToCursor();
             showStatus(caption());
         },
         dispose() {
@@ -711,6 +756,8 @@ export function createScrambleSession({
             busy = false;
             setTeaching(false);
             settleView({ snap: true });
+            view.pauseTimeline?.();
+            view.resetTimeline?.();
             view.clearHighlights?.();
             abort.abort();
             if (exposeTeach && window.__teach) delete window.__teach;

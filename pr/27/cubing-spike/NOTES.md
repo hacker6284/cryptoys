@@ -31,6 +31,7 @@ Thin `createTwistyRig` in `twisty-rig.js`:
 | `setTempo` | `player.tempoScale` |
 | seat / fly | translate `rig.group` (same object `toy-director` already flies) |
 | lift-off-felt | translate `rig.lift.position.y` |
+| size | scale `rig.fit`, never the adopted Object3D |
 
 Do **not** keyframe the adopted puzzle object. TwistyPlayer owns layer animation.
 

@@ -243,12 +243,6 @@ export async function createUnboxRig({ anisotropy = 4, textures, sharedMaps = fa
         innerGlow,
         count: cards.length,
         restow,
-        setSleeveOpacity(opacity) {
-            setMatsOpacity(sleeve, opacity);
-        },
-        setPacketOpacity(opacity) {
-            setMatsOpacity(packet, opacity);
-        },
         setFlap(t) {
             flapPivot.rotation.x = -2.15 * t;
         },

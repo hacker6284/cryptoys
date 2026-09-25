@@ -29,10 +29,20 @@ assert.equal(picked.faces[7], "face-6");
 const adapters = readFileSync(new URL("./adapters.js", import.meta.url), "utf8");
 assert.match(adapters, /playPhysical/);
 assert.match(adapters, /createUnboxRig/);
-assert.match(adapters, /handoffToTable/);
+assert.match(adapters, /cutToTable/);
+assert.equal(adapters.includes("handoffToTable"), false);
+assert.equal(adapters.includes("fadeTree"), false, "enter does not fade");
+assert.equal(adapters.includes("fadeIn"), false, "enter does not fade the table in");
+assert.equal(adapters.includes("fadeOut"), false, "leave does not fade the table out");
+assert.equal(adapters.includes("setTreeOpacity"), false, "adapter does not lerp material opacity");
 assert.equal(adapters.includes("playBloom"), false, "bloom is not the production enter");
 assert.equal(adapters.includes("gsap"), false, "GSAP stays out of the room");
 assert.equal(adapters.includes("DEAL_SCALE"), false, "adapter does not scale the unbox to 104 seats");
+
+const cardStage = readFileSync(new URL("./card-stage.js", import.meta.url), "utf8");
+assert.equal(cardStage.includes("fadeTree"), false);
+assert.equal(cardStage.includes("fadeIn"), false);
+assert.equal(cardStage.includes("setTreeOpacity"), false);
 
 const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
 assert.match(app, /unbox_travel/);

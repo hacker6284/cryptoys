@@ -3,7 +3,7 @@ import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { createCubeRig } from "../scramble/view.js";
 import { lucideSvg } from "../shared/icons.js";
 import { createBeatClock } from "./beat-clock.js";
-import { fadeTree, setTreeOpacity, stageCardTable } from "./card-stage.js";
+import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
 import { normalizePuzzleId, readPuzzleSearchParam } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
@@ -532,7 +532,6 @@ function createDoubleDealAdapter() {
         if (unbox.packet.parent !== unbox.group) unbox.group.add(unbox.packet);
         unbox.restow();
         unbox.group.visible = false;
-        setTreeOpacity(unbox.group, 1);
         if (keyLight) keyLight.intensity = 0;
     }
 
@@ -559,49 +558,20 @@ function createDoubleDealAdapter() {
         }
         unbox.restow();
         unbox.group.visible = true;
-        setTreeOpacity(unbox.group, 1);
         if (!unbox.group.userData.flightBusy) world.shelfHome("deck");
         return unbox;
     }
 
-    async function handoffToTable({ snap = false } = {}) {
-        const box = unbox?.group || world?.toys.deck;
-        const fadeMs = snap ? 0 : 220;
-        const jobs = [];
-        if (unbox) {
-            jobs.push(fadeTree(unbox.sleeve, 0, { ms: fadeMs, snap }));
-            jobs.push(fadeTree(unbox.packet, 0, { ms: fadeMs, snap }));
-            for (const mesh of unbox.cards) {
-                jobs.push(fadeTree(mesh, 0, { ms: fadeMs, snap }));
-            }
-        } else if (box) {
-            jobs.push(fadeTree(box, 0, { ms: snap ? 0 : 200, snap }));
-        }
-        if (table) jobs.push(table.fadeIn({ ms: snap ? 0 : 260, snap }));
-        if (keyLight) {
-            const from = keyLight.intensity;
-            jobs.push(new Promise((resolve) => {
-                if (snap || fadeMs <= 0) {
-                    keyLight.intensity = 0;
-                    resolve();
-                    return;
-                }
-                const start = performance.now();
-                function tick(now) {
-                    const t = Math.min(1, (now - start) / fadeMs);
-                    keyLight.intensity = from * (1 - t);
-                    if (t < 1) requestAnimationFrame(tick);
-                    else resolve();
-                }
-                requestAnimationFrame(tick);
-            }));
-        }
-        await Promise.all(jobs);
+    function hideProp() {
         if (unbox) stowUnboxHidden();
-        else if (box) {
-            box.visible = false;
-            setTreeOpacity(box, 1);
-        }
+        else if (world?.toys.deck) world.toys.deck.visible = false;
+        if (keyLight) keyLight.intensity = 0;
+    }
+
+    function cutToTable() {
+        // Hard cut only. No opacity lerp, dissolve, or box↔table fade.
+        hideProp();
+        table?.show?.();
     }
 
     function skipEnter() {
@@ -641,6 +611,17 @@ function createDoubleDealAdapter() {
                 const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
                 poses?.lockOrbit?.();
                 if (!keyLight && world) keyLight = createDealerKey(world);
+                table = stageCardTable(world, loaded.textures, { poses, visible: false });
+                const specUrl = await resolveSpecUrl("doubledeal");
+                if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
+                session = loaded.sessionMod.createDoubleDealSession({
+                    view: table,
+                    specUrl,
+                    root,
+                    exposeTeach: true,
+                    liveDigest: true,
+                });
+                table.rememberSeated?.();
                 clock = createBeatClock({ reduced });
                 enterGen = clock.begin();
                 if (!reduced && !cancelEnter && unbox) {
@@ -654,23 +635,9 @@ function createDoubleDealAdapter() {
                         trackBox: () => world.toys.deck?.position,
                     });
                 }
-                if (cancelEnter) return null;
-                const skipped = reduced || clock.dead(enterGen);
-                if (!skipped) await clock.wait(200, enterGen);
-                table = stageCardTable(world, loaded.textures, { poses, snap: skipped });
-                const specUrl = await resolveSpecUrl("doubledeal");
-                if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
-                session = loaded.sessionMod.createDoubleDealSession({
-                    view: table,
-                    specUrl,
-                    root,
-                    exposeTeach: true,
-                    liveDigest: true,
-                });
-                table.rememberSeated?.();
-                poses?.snap?.("doubledeal");
-                await handoffToTable({ snap: skipped || clock.dead(enterGen) });
                 if (cancelEnter) return session;
+                poses?.snap?.("doubledeal");
+                cutToTable();
                 showDock();
                 return session;
             } finally {
@@ -679,7 +646,7 @@ function createDoubleDealAdapter() {
                 poses?.unlockOrbit?.();
             }
         },
-        async leave({ snap = false } = {}) {
+        async leave() {
             cancelEnter = true;
             skipEnter();
             session?.dispose();
@@ -693,12 +660,10 @@ function createDoubleDealAdapter() {
                 root.hidden = true;
             }
             if (table) {
-                await table.fadeOut({ ms: 180, snap });
                 table.dispose();
                 table = null;
             }
-            if (unbox) stowUnboxHidden();
-            else if (world?.toys.deck) world.toys.deck.visible = false;
+            hideProp();
             disposeDealerKey(world, keyLight);
             keyLight = null;
             poses?.unlockOrbit?.();
@@ -706,12 +671,7 @@ function createDoubleDealAdapter() {
         revealShelf() {
             const box = world?.toys.deck;
             if (!box) return;
-            if (unbox) {
-                unbox.restow();
-                setTreeOpacity(unbox.group, 1);
-            } else {
-                setTreeOpacity(box, 1);
-            }
+            if (unbox) unbox.restow();
             box.visible = true;
         },
     };

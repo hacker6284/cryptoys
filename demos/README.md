@@ -18,6 +18,8 @@ https://hacker6284.github.io/cryptoys/ and https://cryptoygraphy.com/ (`cryptoys
 
 Scramble runs in the room (`?algo=scramble`). DoubleDeal is still its own teaching page.
 
+**SPIKE (not production):** `demos/cubing-spike/` embeds cubing.js (`TwistyPlayer.experimentalCurrentThreeJSPuzzleObject`) into the playroom scene for 3×3, megaminx, and pyraminx. Production Scramble still uses `createCubeRig`. Notes and cutover: `demos/cubing-spike/NOTES.md`.
+
 **Render must generate, then publish `demos/`.** `generated/*.mjs` is gitignored on `main`. The static site deploys from `main` with build command `sh tools/render-build.sh` (same `sudoc` + `tools/build.sh` path as Pages) and publish directory `demos`. Do not publish ungenerated `demos/` and do not point Render at `gh-pages`. Dashboard fields: `.github/RENDER.md`.
 
 ## PR previews

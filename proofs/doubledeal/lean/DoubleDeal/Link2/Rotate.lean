@@ -305,5 +305,87 @@ theorem left_rotate_refines (xs : List Nat) (k : Nat) (hfits : FitsLen xs.length
         rw [embed_append, embed_drop, embed_take]
       rw [hjoin, rotL_eq_drop_take xs k h0]
 
+/-- Algebraic right rotate is left rotate by the complementary offset. -/
+theorem rotR_eq_rotL (xs : List α) (k : Nat) (hne : xs.length ≠ 0) :
+    rotR xs k = rotL xs (xs.length - k % xs.length) := by
+  have hpos : 0 < xs.length := Nat.pos_of_ne_zero hne
+  unfold rotR rotL
+  simp only [hne, ↓reduceIte]
+  by_cases hz : k % xs.length = 0
+  · rw [hz, Nat.sub_zero, Nat.mod_self, List.drop_length, List.take_length,
+        List.drop_zero, List.take_zero, List.nil_append, List.append_nil]
+  · have hlt : xs.length - k % xs.length < xs.length :=
+      Nat.sub_lt hpos (Nat.pos_of_ne_zero hz)
+    rw [Nat.mod_eq_of_lt hlt]
+
+theorem rotR_mod_zero (xs : List α) (k : Nat) (hne : xs.length ≠ 0)
+    (hk : k % xs.length = 0) : rotR xs k = xs := by
+  unfold rotR
+  simp only [hne, ↓reduceIte, hk, Nat.sub_zero, List.drop_length, List.take_length,
+    List.nil_append]
+
+theorem right_rotate_nil (k : Nat) :
+    Doubledeal.right_rotate (embed []) (Int.ofNat k) = .ok (embed []) := by
+  unfold Doubledeal.right_rotate
+  rw [listLen_embed]
+  dsimp
+  have hbeq : SudoRt.SEq.beq (0 : Int) (0 : Int) = true := rfl
+  rw [hbeq]
+  rfl
+
+/-- Generated `right_rotate` is algebraic `rotR` on a well-formed list.
+    Emitted body is `left_rotate` by `n - (k % n)`; reuses `left_rotate_refines`. -/
+theorem right_rotate_refines (xs : List Nat) (k : Nat) (hfits : FitsLen xs.length) :
+    Doubledeal.right_rotate (embed xs) (Int.ofNat k) =
+      .ok (embed (rotR xs k)) := by
+  by_cases h0 : xs.length = 0
+  · have hxs : xs = [] := List.eq_nil_of_length_eq_zero h0
+    subst hxs
+    simpa [rotR] using right_rotate_nil k
+  · unfold Doubledeal.right_rotate
+    rw [listLen_embed]
+    dsimp
+    have hbeq : ¬ (SudoRt.SEq.beq (xs.length : Int) (0 : Int) = true) := by
+      rw [sEq_natCast_zero, decide_eq_false h0]
+      decide
+    rw [if_neg hbeq]
+    have hmod : SudoRt.modI (k : Int) (xs.length : Int) =
+        .ok (Int.ofNat (k % xs.length)) := by
+      rw [← ofNat_eq_natCast k, ← ofNat_eq_natCast xs.length]
+      exact modI_ofNat k h0
+    rw [hmod]
+    simp only [ok_bind]
+    by_cases hk0 : k % xs.length = 0
+    · have hbeq0 : SudoRt.SEq.beq (Int.ofNat (k % xs.length)) (0 : Int) = true := by
+        rw [hk0]; rfl
+      rw [ofNat_eq_natCast (k % xs.length)] at hbeq0 ⊢
+      rw [hk0] at hbeq0 ⊢
+      dsimp at hbeq0 ⊢
+      rw [show SudoRt.SEq.beq (0 : Int) (0 : Int) = true from rfl]
+      change (if true = true then
+          (pure (embed xs) : Except SudoRt.Trap (Array Int)) else _) = _
+      simp only [↓reduceIte]
+      rw [rotR_mod_zero xs k h0 hk0]
+      rfl
+    · have hbeq0 : ¬ (SudoRt.SEq.beq (Int.ofNat (k % xs.length)) (0 : Int) = true) :=
+        not_sEq_zero hk0
+      rw [ofNat_eq_natCast (k % xs.length)] at hbeq0 ⊢
+      rw [if_neg hbeq0]
+      have hklt : k % xs.length < xs.length :=
+        Nat.mod_lt k (Nat.pos_of_ne_zero h0)
+      erw [subI_ofNat xs.length (k % xs.length) hfits (Nat.le_of_lt hklt)]
+      simp only [ok_bind]
+      rw [left_rotate_refines xs (xs.length - k % xs.length) hfits]
+      apply congrArg Except.ok
+      apply congrArg embed
+      exact (rotR_eq_rotL xs k h0).symm
+
+theorem right_rotate_refines_natCast (xs : List Nat) (k : Nat)
+    (hfits : FitsLen xs.length) :
+    Doubledeal.right_rotate (embed xs) (k : Int) =
+      .ok (embed (rotR xs k)) := by
+  rw [← ofNat_eq_natCast k]
+  exact right_rotate_refines xs k hfits
+
 end DoubleDeal.Link2
 

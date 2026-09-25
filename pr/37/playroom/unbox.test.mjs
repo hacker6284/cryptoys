@@ -38,6 +38,9 @@ const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
 assert.match(app, /unbox_travel/);
 assert.match(app, /skipEnter/);
 assert.match(app, /prepareEnter/);
+const tickAt = app.indexOf("requestAnimationFrame(tick)");
+const deepLinkAt = app.indexOf("await startAlgo(initialAlgo)");
+assert.ok(tickAt >= 0 && deepLinkAt > tickAt, "rAF tick starts before deep-link DoubleDeal enter");
 
 const physical = readFileSync(new URL("./unbox-physical.js", import.meta.url), "utf8");
 assert.match(physical, /setFlap/);

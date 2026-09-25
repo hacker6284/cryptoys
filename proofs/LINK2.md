@@ -24,7 +24,8 @@ one side into the other **without editing Generated sources**.
 Well-formedness is the domain where Trap does not fire and the
 `Array Int` value is in the image of the algebraic embedding (Nats
 that fit the i64 index arithmetic the emitter uses). PassKey does not
-need the Fin-52 packet; encrypt will.
+need the Fin-52 packet; encrypt uses `CardBound` and `Perm52`
+(`encrypt_refines`).
 
 ```text
 List Nat  --embed-->  Array Int
@@ -34,17 +35,17 @@ List Nat  --embed-->  Array Int
 List Nat  <--decode--  Array Int     (on success, no Trap)
 ```
 
-## This drop (DoubleDeal encrypt refinement)
+## This drop (DoubleDeal S3/S4 on Except Trap)
 
-Builds on #26/#28/#30 (rotate twins, `passkey` / `passkey_inv`,
-`runLoopOn`). On the well-formed domain — message length 52, every
-card id `CardBound` (`c ≤ i64MaxNat - 4`, so `step_seat` does not
-Trap), key `Perm52` — emitted `Doubledeal.encrypt` equals algebraic
-`encryptDeck` / `encrypt6` (`encrypt_refines`). The bridge reuses the
-same inclusive-loop twins: `lay_cm`, `sum_ranks`, `shift_rows`,
-`scoop_cm` / `scoop_rm`, `mix_columns_refines`, `full_round_refines`,
-`final_round_refines`, `expand_keys_refines`, `compose_refines`.
-Algebraic Link 2 only — not bit-security, not emitter soundness.
+Builds on #26/#28/#30 (`passkey_refines`, `passkey_inv_refines`, twin
+`runLoopOn`) and #32 (`encrypt_refines`). On the well-formed domain —
+`FitsLen` lists, and `WellFormed` for emitted `Array Int` — algebraic
+S3/S4 hold for `Doubledeal.passkey` and `Doubledeal.passkey_inv`
+(`Except SudoRt.Trap`): card multiset (`List.Perm`), `passkey_inv`
+after `passkey` is the identity, `passkey` after `passkey_inv` is the
+identity, and both are injective. The proofs are the two passkey glues
+plus the list algebra. They do not re-induct on `runLoopOn`. Algebraic
+Link 2 only — not bit-security, not emitter soundness.
 
 | Item | Status |
 | --- | --- |
@@ -66,8 +67,8 @@ Algebraic Link 2 only — not bit-security, not emitter soundness.
 | `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | **CLOSED** (`encrypt_refines`; `CardBound` message, `Perm52` key, length 52) |
 | `mix_columns` ≃ `mixColumns` | **CLOSED** (`mix_columns_refines`) |
 | `full_round` / `final_round` ≃ `fullRound` / `fullRoundNoMix` | **CLOSED** (`full_round_refines`, `final_round_refines`) |
-| S3/S4 transfer onto `Except Trap` (injectivity of emitted passkey, …) | **OPEN** next; rides on the two passkey glues |
-| MegaDreifach / Scramble algebraic ≃ Generated | OPEN (Scramble has little ledger; MD Hash is M13) |
+| S3/S4 transfer onto `Except Trap` (multiset, inverse, injectivity) | **CLOSED** (`passkey_perm`, `passkey_inv_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, `passkey_inv_injective`, and the `WellFormed` Array forms in `Link2/PassKeyTransfer.lean`) |
+| MegaDreifach / Scramble algebraic ≃ Generated | **OPEN** next (Scramble has little ledger; MD Hash is M13) |
 | DoubleDeal-CBC-HMAC algebraic ≃ Generated | OPEN. Generated TAP exists (`#22`); no algebraic ledger. Not AEAD security. |
 | sudo text = generated Lean (deep embedding) | OPEN — Link 1, not this file |
 | Bit-security, MDS, collision-resistance, AEAD | Not a Link 2 claim |

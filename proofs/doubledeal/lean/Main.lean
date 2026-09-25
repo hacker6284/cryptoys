@@ -9,5 +9,6 @@ def main : IO Unit := do
   IO.println "        CTR prefix stability, Compose KP uniqueness."
   IO.println "These are correctness / algebraic theorems about the proof-only"
   IO.println "skeleton, not bit-security. Link 2 refines Generated.encrypt"
-  IO.println "on CardBound messages (see proofs/LINK2.md), not emitter soundness."
+  IO.println "on CardBound messages and transfers PassKey S3/S4 onto"
+  IO.println "Except Trap (see proofs/LINK2.md), not emitter soundness."
   let _ ← DoubleDeal.runVectorChecks

@@ -16,6 +16,17 @@ const HALF_D = 1.5 * ROW_PITCH + CARD_D / 2;
 export const MESSAGE_X = -(HALF_W + GUTTER / 2);
 export const KEY_X = HALF_W + GUTTER / 2;
 
+export function tableSpan() {
+    return {
+        minX: MESSAGE_X - HALF_W,
+        maxX: KEY_X + HALF_W,
+        minZ: -HALF_D,
+        maxZ: HALF_D,
+        width: 4 * HALF_W + GUTTER,
+        depth: 2 * HALF_D,
+    };
+}
+
 export function cell(row, col, centerX) {
     return {
         x: centerX + (col - 6) * COL_PITCH,

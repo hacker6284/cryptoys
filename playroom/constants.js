@@ -6,6 +6,12 @@ export const ASSET_BASE = new URL("./assets/", import.meta.url);
 export const CARD_W = 0.063;
 export const CARD_D = 0.088;
 export const CUBE = 0.057;
+// Standing deck box in world.makeDeckBox (bw × bh × bd).
+export const DECK_H = 0.092;
+
+export function toyHalfHeight(name) {
+    return name === "deck" ? DECK_H / 2 : CUBE / 2;
+}
 
 export const DEN = { x: -0.35, z: 0.15 };
 export const SHELF_Z = -2.15;
@@ -37,3 +43,7 @@ export const SETTLE_HOLD_MS = 90;
 // Hold the current shot this long so the cube leaving its slot is on camera
 // before the lens dollies. Click/Escape still skip after LIFT_MS.
 export const HOLD_MS = 760;
+
+// Standalone DoubleDeal table is ~17.4 units wide. Scale the live card
+// group onto the playroom felt. Unbox / deal choreography is later.
+export const DEAL_SCALE = 0.068;

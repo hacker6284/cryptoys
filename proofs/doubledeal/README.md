@@ -19,7 +19,8 @@ twelve sudo tests.
 | **(a) Theorems about the proof-only model** | Bijections, `encrypt6_rt` under Compose-key bijections, PassKey `F_inv ∘ F = id`, and the same round-trip with the algebraic PassKey schedule (`encryptDeckFn_rt`). | Lean kernel. `lake build` of the proof package. No `sorry`. No `native_decide`. **Not** the cipher. |
 | **(b) Generated TAP** | `proofs/emit_lean.sh` → `lake` → `doubledeal_test` (10/10), including sudo's encrypt/decrypt and `passkey_inv` tests. Two kind-scan tests are stripped under `--require terminates`. | Compiled emitted Lean. **Not** a sudo=Lean theorem. |
 | **(c) Skeleton vs JS JSON** | `lake exe doubledeal` vs `vectors/doubledeal_vectors.json` (from sudoc JS). | Evidence the *skeleton* matches those decks. OPEN that it equals `Generated.encrypt`. |
-| **(d) Equivalence** | sudo text = generated Lean, or skeleton = generated. | OPEN. |
+| **(d) Equivalence** | sudo text = generated Lean, or skeleton = generated. | OPEN (Link 1). |
+| **(e) Link 2 refinement** | Algebraic stones ≃ Generated on the well-formed domain. | Started: embed/decode, `drop_front` / `push_front`, `passkey` on length ≤ 1. General `passkey` and `encrypt` are NEXT. Not emitter soundness. See [`../LINK2.md`](../LINK2.md). |
 
 ## What is proved
 
@@ -45,7 +46,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | S7 | Hand sheet refines §3 math | Open |
 | S8–S10 | Differentials, slide, randomness stats | Evidence only; never "security results" |
 | S13 | §5.3 bytes ↔ deck | Evidence in `encoding.test.mjs` / `demos/doubledeal/cards.js` |
-| — | sudo text equals generated Lean; skeleton equals `Generated.encrypt` / `Generated.passkey` | OPEN. Generated TAP is layer (b), not a theorem. |
+| — | sudo text equals generated Lean; skeleton equals `Generated.encrypt` | OPEN. Generated TAP is layer (b), not a theorem. Link 2 started for `passkey` on length ≤ 1 and for `drop_front` / `push_front`. |
 | — | `mixColumns ∘ invMixColumns = id` on arbitrary packets | Open (needs image / seat characterization) |
 
 ## Lean packages
@@ -68,7 +69,7 @@ cd proofs/doubledeal/lean
 lake build
 ```
 
-`lake exe doubledeal` prints a one-line summary **and** runs the skeleton-vs-JSON checks. The library target is `DoubleDeal`. Namespaces are `DoubleDeal`.
+`lake exe doubledeal` prints a one-line summary **and** runs the skeleton-vs-JSON checks. The library target is `DoubleDeal`. Namespaces are `DoubleDeal`. Link 2 lives in `lean/DoubleDeal/Link2/` and path-requires `Generated/` (do not edit Generated).
 
 Shipped theorems contain no `sorry` and no `native_decide`. The proofs CI job (`proofs.yml`) also emits Lean from `doubledeal.sudo` against the pin, builds `Generated/`, and runs TAP. Path filters: `proofs/**`, `primitives/cipher/doubledeal/**`, `primitives/hash/megadreifach/**`, `primitives/hash/scramble/**`, `tools/emit_lean.py`, and the workflow file.
 
@@ -91,7 +92,7 @@ Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
 
 ## Reading order
 
-SPEC §6 suggested order: **S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7**, S13 as an encoding property test, and S8–S10 as living evidence. PassKey injectivity is proved on the **proof-only** list model. OPEN: that model equals `Generated.passkey`. sudo already tests `passkey_inv` on several decks in Generated TAP.
+SPEC §6 suggested order: **S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7**, S13 as an encoding property test, and S8–S10 as living evidence. PassKey injectivity is proved on the **proof-only** list model. Link 2 started: that model equals `Generated.passkey` on length ≤ 1. General lists remain OPEN. sudo already tests `passkey_inv` on several decks in Generated TAP.
 
 ### Why PassKey is invertible
 

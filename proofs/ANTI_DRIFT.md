@@ -29,11 +29,14 @@ proofs/*/lean/<Name>/*.lean   # algebraic ledger, not a second encrypt/Hash
 | `lean/Generated/` | Emitted `encrypt` / `passkey` / `v_Hash` / `update` / TAP tests. Standalone Lake package. | Hand edits. Proof lemmas. |
 | `lean/DoubleDeal/` or `lean/MegaDreifach/` | Stones and lemmas sudo does not express (bijections, PassKey inverse theorems, pad injectivity, …). | A second `encrypt` / `Hash` treated as the algorithm. |
 
-`Generated/` is **not** imported by the proof package. Types do not
-match: emitted functions are fuel-total `Except SudoRt.Trap` over
-`Array Int`; stones are Fin / `List Nat` algebra. Bridging them is
-OPEN (see below). Separation is deliberate so nobody edits a second
-encrypt by hand and thinks they changed the cipher.
+`Generated/` is a standalone Lake package (TAP lives there). Link 2
+starts importing it from the DoubleDeal proof package via a **path
+require** — the bridge lives in `lean/DoubleDeal/Link2/`, not in
+`Generated/`. Types still do not match on their own: emitted functions
+are fuel-total `Except SudoRt.Trap` over `Array Int`; stones are Fin /
+`List Nat` algebra. The bridge interprets one into the other on the
+well-formed domain. See [`LINK2.md`](LINK2.md). Do not edit
+`Generated/` by hand.
 
 ## How to regenerate
 
@@ -120,8 +123,8 @@ total-fragment / terminating-subset emitter.
 | Item | Status |
 | --- | --- |
 | sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
-| Algebraic `passToKeyCutFallback` = `Generated.passkey` | OPEN. S3/S4 stay on the list-level proof model. sudo already *tests* `passkey_inv ∘ passkey = id` (generated TAP). |
-| Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | OPEN. S2 stays on the Fin-packet skeleton. Generated TAP checks sudo's encrypt/decrypt tests. |
+| Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 start. Length ≤ 1 proved (`passkey_nil`, `passkey_singleton`). General lists **NEXT**. See [`LINK2.md`](LINK2.md). S3/S4 stay on the list-level proof model until the full refinement lands. |
+| Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | OPEN / NEXT. S2 stays on the Fin-packet skeleton. Statement sketched in `DoubleDeal/Link2.lean`. Generated TAP checks sudo's encrypt/decrypt tests. |
 | `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All four publics ready (bounded `for`). |
 | PassKey / stone proofs *about* `Except Trap` emitted defs | OPEN. Fuel-total monadic programs are not the Fin algebra the stones use. |
 | Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |

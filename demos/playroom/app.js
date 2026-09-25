@@ -201,6 +201,17 @@ try {
     document.documentElement.dataset.playroomReady = "1";
     document.documentElement.dataset.motion = poses.prefersReducedMotion() ? "reduce" : "full";
 
+    function tick(now) {
+        director.update(now);
+        poses.update(performance.now());
+        world.render();
+        requestAnimationFrame(tick);
+    }
+    // The rAF clock must run before any non-snap enter. Deep-link
+    // DoubleDeal awaits the physical unbox; fly / flap need director
+    // + pose updates on this loop (hub clicks already have it).
+    requestAnimationFrame(tick);
+
     if (ALGOS[initialAlgo]) {
         if (initialAlgo === "doubledeal" && !poses.prefersReducedMotion()) {
             await startAlgo(initialAlgo);
@@ -272,14 +283,6 @@ try {
     });
 
     window.addEventListener("resize", () => world.resize());
-
-    function tick(now) {
-        director.update(now);
-        poses.update(performance.now());
-        world.render();
-        requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
 } catch (err) {
     console.error(err);
     document.body.classList.add("is-error");

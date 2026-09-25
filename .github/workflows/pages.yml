@@ -1,6 +1,7 @@
 # Publishes the generated demos tree to gh-pages (site root = demos/).
-# cryptoygraphy.com / Render static site `cryptoys` must track gh-pages and
-# publish `.` — not main + demos/. See .github/RENDER.md.
+# Render static site `cryptoys` deploys from main and must run the same
+# generate path (tools/render-build.sh → tools/generate-demos.sh) before
+# publishing demos/. See .github/RENDER.md.
 
 name: pages
 

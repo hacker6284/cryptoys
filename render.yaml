@@ -1,18 +1,21 @@
 # cryptoygraphy.com / cryptoys.onrender.com
 #
-# gh-pages already IS the generated demos tree (index.html at branch root).
-# Do not point this service at main + publish demos/ — those generated/*.mjs
-# files are gitignored and 404, so the three.js demos never boot.
+# Deploy from main. The build must generate demos/**/generated/*.mjs
+# (gitignored on main) the same way GitHub Pages does, then publish demos/.
+# Do not point this service at gh-pages or publish ungenerated demos/.
 # See .github/RENDER.md.
 services:
   - type: web
     name: cryptoys
     runtime: static
-    branch: gh-pages
-    buildCommand: "true"
-    staticPublishPath: .
+    branch: main
+    buildCommand: sh tools/render-build.sh
+    staticPublishPath: demos
     autoDeployTrigger: commit
     domains:
       - cryptoygraphy.com
     previews:
       generation: "off"
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"

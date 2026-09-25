@@ -1,6 +1,7 @@
 import { CUBE } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { createCubeRig } from "../scramble/view.js";
+import { lucideSvg } from "../shared/icons.js";
 
 /**
  * Demo adapters — Unify-1 implements Scramble.
@@ -42,6 +43,57 @@ function disposeObject(object) {
     object.parent?.remove(object);
 }
 
+/**
+ * Product model (Zach, 2026-09-24): these demo pages are the only
+ * place on the internet to perform the algorithms without writing
+ * code. Using the hash is primary. Maps chrome: landscape four
+ * corners (TL algorithm, TR input card, BL transport card, BR
+ * Solve/Spec). Portrait: stage on top (transport over the 3D),
+ * input card in the dark band. Teach is opt-in via Step / (i).
+ */
+function specUrlCandidates() {
+    const fromModule = new URL("../scramble/SPEC.md", import.meta.url).href;
+    const fromPage = new URL("scramble/SPEC.md", document.baseURI).href;
+    return [...new Set([fromModule, fromPage])];
+}
+
+async function resolveSpecUrl() {
+    for (const href of specUrlCandidates()) {
+        try {
+            const response = await fetch(href);
+            if (!response.ok) continue;
+            const text = await response.text();
+            if (!text || /^\s*</.test(text)) continue;
+            return URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
+        } catch {
+            // Preview and local checkouts can miss one candidate; try the next.
+        }
+    }
+    return specUrlCandidates()[0];
+}
+
+function bindInstrumentChrome(root) {
+    const error = root.querySelector("#error");
+    const spec = root.querySelector("#spec");
+    const info = root.querySelector("#teach-info");
+    const clearError = () => {
+        if (error) error.textContent = "";
+    };
+    const setInfo = (on) => {
+        root.dataset.info = on ? "1" : "";
+        info?.setAttribute("aria-expanded", on ? "true" : "false");
+    };
+    info?.addEventListener("click", () => setInfo(root.dataset.info !== "1"));
+    root.querySelector("#reset")?.addEventListener("click", () => {
+        clearError();
+        setInfo(false);
+    });
+    spec?.addEventListener("close", clearError);
+    root.querySelector("#digest")?.addEventListener("focus", (event) => {
+        event.currentTarget.select?.();
+    });
+}
+
 function mountDock() {
     let root = document.querySelector("#scramble-dock");
     if (root) return root;
@@ -50,42 +102,71 @@ function mountDock() {
     root.className = "playroom-dock";
     root.hidden = true;
     root.innerHTML = `
-      <div id="teach" class="playroom-note" hidden>
-        <div id="tape" class="tape" aria-label="Message tape"></div>
-        <article id="teach-card" class="playroom-note-body"></article>
-        <div class="transport" id="transport">
-          <button type="button" class="chrome-action" data-jump="round-back" title="Previous symbol">«</button>
-          <button type="button" class="chrome-action" data-jump="stage-back" title="Previous stage">‹</button>
-          <button type="button" class="chrome-action" data-jump="back">Prev</button>
+      <div class="playroom-io">
+        <div class="playroom-card playroom-card--io">
+          <div class="playroom-io-grid">
+            <div class="playroom-ctl">
+              <span class="playroom-label" id="gen-legend">Gen</span>
+              <span id="gen-label" hidden>Gen 2</span>
+              <div class="playroom-seg" role="group" aria-labelledby="gen-legend">
+                <button type="button" class="seg-btn" data-version="1">1</button>
+                <button type="button" class="seg-btn on" data-version="2">2</button>
+              </div>
+            </div>
+            <div class="playroom-ctl">
+              <span class="playroom-label" id="enc-legend">Encoding</span>
+              <div class="playroom-seg" role="group" aria-labelledby="enc-legend">
+                <button type="button" class="seg-btn on" data-encoding="text">Text</button>
+                <button type="button" class="seg-btn" data-encoding="hex">Hex</button>
+              </div>
+            </div>
+          </div>
+          <label class="playroom-ctl playroom-ctl--field" for="message">
+            <span class="playroom-label">Message</span>
+            <textarea id="message" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+          </label>
+          <label class="playroom-ctl playroom-ctl--field" for="digest">
+            <span class="playroom-label">Digest</span>
+            <input id="digest" class="digest" type="text" readonly spellcheck="false" autocomplete="off">
+          </label>
+          <p id="status" class="status playroom-status">Solved start · white up, green front, red right</p>
+          <p id="error" class="error"></p>
+          <button id="digest-btn" type="button" hidden>Digest</button>
+        </div>
+        <p class="playroom-info-hint" id="teach-hint">Step through to see each turn.</p>
+        <div id="teach" class="playroom-note" hidden>
+          <div id="tape" class="tape" aria-label="Message tape"></div>
+          <article id="teach-card" class="playroom-note-body"></article>
+          <div class="transport" id="transport">
+          <button type="button" class="icon-btn" data-jump="round-back" aria-label="Previous symbol" title="Previous symbol">${lucideSvg("chevrons-left", 18)}</button>
+          <button type="button" class="icon-btn" data-jump="stage-back" aria-label="Previous stage" title="Previous stage">${lucideSvg("chevron-left", 18)}</button>
+          <button type="button" class="icon-btn" data-jump="back" aria-label="Prev" title="Prev">${lucideSvg("chevron-left", 18)}</button>
           <span class="pos" id="teach-pos">—</span>
-          <button type="button" class="chrome-action" data-jump="fwd">Next</button>
-          <button type="button" class="chrome-action" data-jump="stage-fwd" title="Next stage">›</button>
-          <button type="button" class="chrome-action" data-jump="round-fwd" title="Next symbol">»</button>
+          <button type="button" class="icon-btn" data-jump="fwd" aria-label="Next" title="Next">${lucideSvg("chevron-right", 18)}</button>
+          <button type="button" class="icon-btn" data-jump="stage-fwd" aria-label="Next stage" title="Next stage">${lucideSvg("chevron-right", 18)}</button>
+          <button type="button" class="icon-btn" data-jump="round-fwd" aria-label="Next symbol" title="Next symbol">${lucideSvg("chevrons-right", 18)}</button>
+          </div>
+        </div>
+        <div id="outline" class="outline" hidden></div>
+      </div>
+      <div class="playroom-anim">
+        <div class="playroom-card playroom-card--transport">
+          <div class="row playroom-actions">
+            <button id="play" class="icon-btn icon-primary" type="button" aria-label="Play" title="Play">
+              <span class="icon-play">${lucideSvg("play")}</span>
+              <span class="icon-pause">${lucideSvg("pause")}</span>
+            </button>
+            <button id="step-through" class="icon-btn" type="button" aria-label="Step through" title="Step through">${lucideSvg("skip-forward")}</button>
+            <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
+            <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
+          </div>
+          <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
         </div>
       </div>
-      <div class="playroom-hands">
-        <p class="playroom-hands-label"><span id="gen-label">Gen 2</span> · scramble</p>
-        <p id="status" class="status">Solved start · white up, green front, red right</p>
-        <p id="digest" class="digest"></p>
-        <p id="error" class="error"></p>
-        <div class="row playroom-actions">
-          <button id="play" class="chrome-action" type="button">Play</button>
-          <button id="step-through" class="chrome-action" type="button">Step through</button>
-          <button id="step" class="chrome-action" type="button">Step</button>
-          <button id="reset" class="chrome-action" type="button">Reset</button>
-          <button id="digest-btn" class="chrome-action" type="button">Digest</button>
-          <button id="solve" class="chrome-action" type="button">Solve</button>
-          <button id="spec-btn" class="chrome-action" type="button">Spec</button>
-        </div>
-        <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
-        <div class="row playroom-toggles">
-          <button type="button" class="chrome-action" data-version="1">Gen 1</button>
-          <button type="button" class="chrome-action on" data-version="2">Gen 2</button>
-          <button type="button" class="chrome-action on" data-encoding="text">text</button>
-          <button type="button" class="chrome-action" data-encoding="hex">hex</button>
-        </div>
-        <textarea id="message" rows="2" spellcheck="false" placeholder="hello">hello</textarea>
-        <div id="outline" class="outline" hidden></div>
+      <div class="playroom-digins">
+        <button id="solve" class="playroom-digin" type="button">Solve</button>
+        <button id="spec-btn" class="playroom-digin" type="button">Spec</button>
+        <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">${lucideSvg("info", 18)}</button>
       </div>
       <dialog id="spec">
         <div class="spec-bar">
@@ -95,6 +176,7 @@ function mountDock() {
         <article id="spec-body"></article>
       </dialog>
     `;
+    bindInstrumentChrome(root);
     document.body.append(root);
     return root;
 }
@@ -106,6 +188,7 @@ function createScrambleAdapter() {
     let entering = false;
     let sessionMod = null;
     let preloadPromise = null;
+    let specObjectUrl = null;
 
     async function preload() {
         if (sessionMod) return sessionMod;
@@ -144,13 +227,15 @@ function createScrambleAdapter() {
             try {
                 root = mountDock();
                 const { createScrambleSession } = await preload();
+                const specUrl = await resolveSpecUrl();
+                if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
                 session = createScrambleSession({
                     view: rig,
-                    specUrl: new URL("../scramble/SPEC.md", import.meta.url).href,
+                    specUrl,
                     root,
                     exposeTeach: true,
                 });
-                session.enterTeach();
+                // Stay in use mode. Session enterTeach() is for Step through.
                 root.hidden = false;
                 root.classList.add("on");
                 return session;
@@ -161,6 +246,10 @@ function createScrambleAdapter() {
         leave() {
             session?.dispose();
             session = null;
+            if (specObjectUrl) {
+                URL.revokeObjectURL(specObjectUrl);
+                specObjectUrl = null;
+            }
             if (root) {
                 root.classList.remove("on");
                 root.hidden = true;

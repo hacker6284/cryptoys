@@ -18,6 +18,7 @@ let activeAlgo = null;
 let leaving = false;
 let starting = false;
 let ignoreSkipUntil = 0;
+let resizeWorld = () => {};
 
 function writeQuery({ pose, algo }) {
     const url = new URL(location.href);
@@ -31,6 +32,10 @@ function writeQuery({ pose, algo }) {
 
 function syncOverlays({ name, overlays, tweening }) {
     const showMenu = Boolean(overlays?.menu) && !tweening && !activeAlgo;
+    const algoName = activeAlgo === "scramble" ? "Scramble" : "cryptoys";
+    titleEl.textContent = algoName;
+    if (activeAlgo) document.title = algoName;
+    else document.title = "cryptoys";
     titleEl.classList.toggle("on", Boolean(overlays?.title));
     menuEl.classList.toggle("on", showMenu);
     sitBtn.hidden = name !== "landing" || tweening || Boolean(activeAlgo);
@@ -40,6 +45,7 @@ function syncOverlays({ name, overlays, tweening }) {
     document.documentElement.dataset.playroomTween = tweening ? "1" : "0";
     const dock = document.querySelector("#scramble-dock");
     if (dock) dock.classList.toggle("on", Boolean(activeAlgo) && !tweening && !leaving);
+    requestAnimationFrame(() => resizeWorld());
 }
 
 function trackCube(world) {
@@ -48,6 +54,7 @@ function trackCube(world) {
 
 try {
     const world = await mountWorld(canvas);
+    resizeWorld = () => world.resize();
     adapters.scramble.install(world);
     void adapters.scramble.preload();
     const director = createToyDirector(world);

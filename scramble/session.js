@@ -77,8 +77,20 @@ export function createScrambleSession({
         return Array.from(new TextEncoder().encode(text));
     }
 
+    function digestValue() {
+        if (!digestEl) return "";
+        return digestEl.matches("input, textarea") ? digestEl.value : digestEl.textContent;
+    }
+
+    function setDigest(text) {
+        if (!digestEl) return;
+        if (digestEl.matches("input, textarea")) digestEl.value = text;
+        else digestEl.textContent = text;
+    }
+
     function digestHex(bytes) {
-        return bytes.map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase().slice(1);
+        const hex = bytes.map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase().slice(1);
+        return hex ? `0x${hex}` : "";
     }
 
     function symbolWord(step) {
@@ -104,7 +116,7 @@ export function createScrambleSession({
 
     function caption() {
         if (teaching && viewedIndex() >= trace.length && trace.length) {
-            return digestEl.textContent ? `Digest · ${digestEl.textContent}` : "The seated pose is the digest.";
+            return digestValue() ? `Digest · ${digestValue()}` : "The seated pose is the digest.";
         }
         const step = teaching
             ? (viewedIndex() < trace.length ? trace[viewedIndex()] : null)
@@ -198,7 +210,7 @@ export function createScrambleSession({
             return {
                 kicker: `done · ${n} steps`,
                 title: "Seated digest",
-                math: digestEl.textContent || "The seated pose is the digest.",
+                math: digestValue() || "The seated pose is the digest.",
                 why: "The seated pose is the digest.",
                 spec: "Closer and seat",
             };
@@ -350,7 +362,7 @@ export function createScrambleSession({
 
     function recompute() {
         job += 1;
-        playing = false;
+        markPlay(false);
         solving = false;
         busy = false;
         errorEl.textContent = "";
@@ -364,7 +376,7 @@ export function createScrambleSession({
         update(state, messageBytes);
         const result = evaluate(state);
         trace = result.trace;
-        digestEl.textContent = digestHex(result.digest);
+        setDigest(digestHex(result.digest));
         cursor = -1;
         showFace(solved);
         showStatus(caption());
@@ -394,22 +406,36 @@ export function createScrambleSession({
         return true;
     }
 
+    function markPlay(on) {
+        playing = on;
+        const playBtn = $("#play");
+        playBtn?.classList.toggle("is-playing", on);
+        if (playBtn?.classList.contains("icon-btn")) {
+            playBtn.setAttribute("aria-label", on ? "Pause" : "Play");
+            playBtn.title = on ? "Pause" : "Play";
+        }
+    }
+
     async function play() {
-        if (playing || solving || busy) return;
-        playing = true;
+        if (solving || busy) return;
+        if (playing) {
+            markPlay(false);
+            return;
+        }
+        markPlay(true);
         const token = job;
         while (playing && token === job && cursor < trace.length - 1) {
             const ok = await playStep(token);
             if (!ok) break;
         }
-        playing = false;
+        markPlay(false);
     }
 
     async function jumpTo(index, animate) {
         if (trace.length === 0 || busy) return;
         const next = Math.max(-1, Math.min(trace.length - 1, index));
         if (animate && next === cursor + 1) {
-            playing = false;
+            markPlay(false);
             busy = true;
             const token = job;
             await playStep(token);
@@ -417,7 +443,7 @@ export function createScrambleSession({
             return;
         }
         job += 1;
-        playing = false;
+        markPlay(false);
         cursor = next;
         showPaused();
     }
@@ -432,7 +458,7 @@ export function createScrambleSession({
         if (trace.length === 0) recompute();
         setTeaching(true);
         cursor = -1;
-        playing = false;
+        markPlay(false);
         showPaused();
     }
 
@@ -448,7 +474,7 @@ export function createScrambleSession({
 
     async function solve() {
         if (solving) return;
-        playing = false;
+        markPlay(false);
         solving = true;
         setTeaching(false);
         const token = ++job;
@@ -609,7 +635,7 @@ export function createScrambleSession({
     }, listen);
     $("#reset")?.addEventListener("click", () => {
         job += 1;
-        playing = false;
+        markPlay(false);
         solving = false;
         busy = false;
         cursor = -1;
@@ -619,7 +645,7 @@ export function createScrambleSession({
     }, listen);
     $("#digest-btn")?.addEventListener("click", async () => {
         try {
-            await navigator.clipboard.writeText(digestEl.textContent);
+            await navigator.clipboard.writeText(digestValue());
             showStatus("Digest copied");
         } catch {
             errorEl.textContent = "Could not copy the digest.";
@@ -663,7 +689,7 @@ export function createScrambleSession({
         recompute,
         reset() {
             job += 1;
-            playing = false;
+            markPlay(false);
             solving = false;
             busy = false;
             cursor = -1;
@@ -673,7 +699,7 @@ export function createScrambleSession({
         },
         dispose() {
             job += 1;
-            playing = false;
+            markPlay(false);
             solving = false;
             busy = false;
             setTeaching(false);

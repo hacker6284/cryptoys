@@ -68,7 +68,7 @@ function renderLookNotes(current) {
       <p><strong>Embed:</strong> ${current.fallback
         ? `adopt failed (${current.fallbackError}). TwistyPlayer canvas is the fallback — room lights still run.`
         : `<code>experimentalCurrentThreeJSPuzzleObject</code> → playroom <code>scene</code>. Twisty host is a 80×56 off-to-the-corner canvas.`}</p>
-      <p><strong>three.js:</strong> playroom r${current.skew.ourRevision}; <code>instanceof Object3D</code> ${same} (<code>${current.skew.constructorName}</code>).</p>
+      <p><strong>three.js:</strong> playroom r${current.skew.ourRevision}; <code>instanceof Object3D</code> ${same} (<code>${current.skew.constructorName}</code>). Native bbox max ${current.framed.nativeMax.toFixed(3)}, fitted ${Number(current.framed.fittedMax || 0).toFixed(3)}.</p>
       <p><strong>Default look:</strong> ${current.look.meshCount} meshes; ${types}. Standard/physical materials: ${current.look.standardLike}. Twisty stickers are brighter and less “plastic” than our MeshStandard cubies — see NOTES.md.</p>
       <p><strong>Hand-rolled remaining:</strong> seat/fly, local lift, room camera framing, chrome. Not cubies, not facelet animation, not megaminx/pyraminx meshes.</p>
     `;

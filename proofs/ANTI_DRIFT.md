@@ -123,7 +123,7 @@ total-fragment / terminating-subset emitter.
 | Item | Status |
 | --- | --- |
 | sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
-| Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 start. Length ≤ 1 proved (`passkey_nil`, `passkey_singleton`). General lists **NEXT**. See [`LINK2.md`](LINK2.md). S3/S4 stay on the list-level proof model until the full refinement lands. |
+| Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2. Length ≤ 1 on `Generated.passkey` (`passkey_nil`, `passkey_singleton`). One step ≃ `passKeyStep` and twin-loop induction on every well-formed list (`passkey_loop_refines`). Residual stepper glue for `Generated.passkey` on all lists **NEXT**. See [`LINK2.md`](LINK2.md). S3/S4 stay on the list-level proof model until that glue lands. |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | OPEN / NEXT. S2 stays on the Fin-packet skeleton. Statement sketched in `DoubleDeal/Link2.lean`. Generated TAP checks sudo's encrypt/decrypt tests. |
 | `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All four publics ready (bounded `for`). |
 | PassKey / stone proofs *about* `Except Trap` emitted defs | OPEN. Fuel-total monadic programs are not the Fin algebra the stones use. |

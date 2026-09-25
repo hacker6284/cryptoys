@@ -12,16 +12,19 @@ import DoubleDeal.Link2.Embed
 import DoubleDeal.Link2.Sudo
 import DoubleDeal.Link2.Helpers
 import DoubleDeal.Link2.Append
+import DoubleDeal.Link2.Rotate
 import DoubleDeal.Link2.PassKey
 
 namespace DoubleDeal.Link2
 
 /-!
-  NEXT (not this PR): general `passkey_refines` on every well-formed list
-  (length ≤ 1 is `passkey_refines_nil_and_singleton`). Needs one generated
-  PassKey step ≃ `passKeyStep`, then induction on `passKeyGoN`.
+  This drop: `left_rotate` ≃ `rotL`; one PassKey step ≃ `passKeyStep`;
+  induction of the proof-side twin loop (`passkey_loop_refines`,
+  `passkey_twin_refines`). Length ≤ 1 still ties `Doubledeal.passkey` itself
+  (`passkey_refines_nil_and_singleton`). Connecting the emitted residual
+  stepper to `passkeyStepGen` (do-elaboration / nested suit-rotate) is OPEN.
 
-  NEXT (not this PR): encrypt refinement on the Fin-52 / Perm52 domain.
+  NEXT: that residual glue, then `passkey_inv`, then encrypt on Fin-52.
 
   ```
   theorem encrypt_refines (message key : List Nat)
@@ -31,8 +34,8 @@ namespace DoubleDeal.Link2
   ```
 
   Needs helper refinements for compose / unkeyed / mix_columns / expand_keys
-  on top of `passkey_refines`. Stay on the well-formed domain (length 52,
-  Trap does not fire). Still not emitter soundness.
+  on top of a glued `passkey_refines`. Stay on the well-formed domain
+  (length 52, Trap does not fire). Still not emitter soundness.
 -/
 
 end DoubleDeal.Link2

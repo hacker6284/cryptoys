@@ -34,17 +34,22 @@ List Nat  --embed-->  Array Int
 List Nat  <--decode--  Array Int     (on success, no Trap)
 ```
 
-## This drop (DoubleDeal first slice)
+## This drop (DoubleDeal passkey induction)
+
+Builds on the first slice (embed/decode, `suit_of` / `rank_of`,
+`drop_front` / `push_front`, `passkey` on length ≤ 1).
 
 | Item | Status |
 | --- | --- |
-| Scaffolding + well-formedness + embed/decode | This PR (`DoubleDeal/Link2/Embed.lean`) |
-| `suit_of` / `rank_of` refine the stones | This PR |
-| `Generated.drop_front` ≃ algebraic `uncons` (nonempty, `FitsLen`) | This PR |
-| `Generated.push_front` ≃ algebraic `cons` (`FitsLen`) | This PR |
-| `Generated.passkey` ≃ `passToKeyCutFallback` on length ≤ 1 | This PR |
-| `Generated.passkey` ≃ `passToKeyCutFallback` on every well-formed list | **NEXT** (needs one generated step ≃ `passKeyStep`) |
-| `Generated.left_rotate` ≃ `rotL` | OPEN (same range-copy stepper as drop/push) |
+| Scaffolding + well-formedness + embed/decode | Landed (`DoubleDeal/Link2/Embed.lean`) |
+| `suit_of` / `rank_of` refine the stones | Landed |
+| `Generated.drop_front` ≃ algebraic `uncons` (nonempty, `FitsLen`) | Landed |
+| `Generated.push_front` ≃ algebraic `cons` (`FitsLen`) | Landed |
+| `Generated.left_rotate` ≃ algebraic `rotL` (`FitsLen`) | This PR (`Link2/Rotate.lean`) |
+| One generated PassKey body ≃ `passKeyStep` (rotate / cut / push) | This PR (`maybeRotate_refines`, `maybeCut_push_refines`, `passKeyStep_refines`) |
+| Twin `runLoopOn` inducts to `passKeyGoN` on every well-formed list | This PR (`passkey_loop_refines`, `passkey_twin_refines`) |
+| `Generated.passkey` ≃ `passToKeyCutFallback` on length ≤ 1 | Landed (`passkey_nil`, `passkey_singleton`) |
+| `Generated.passkey` residual stepper = `passkeyStepGen` (all lists) | **NEXT** (do-elaboration / nested suit-rotate; not a second algorithm) |
 | `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | **NEXT** (statement sketched in `DoubleDeal/Link2.lean`) |
 | `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` | OPEN |
 | S2/S3/S4 transfer onto `Except Trap` (injectivity of emitted passkey, …) | OPEN |

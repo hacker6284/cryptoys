@@ -41,6 +41,22 @@ theorem bind_match_flow {σ ρ α}
   | error e => simp
   | ok fl => cases fl <;> simp
 
+/-- Generated PassKey wraps the pile update as `Flow.cont`, then unwraps. -/
+theorem bind_pure_flow_cont {σ ρ α}
+    (m : Except SudoRt.Trap σ)
+    (onRet : ρ → Except SudoRt.Trap α)
+    (onBrk : σ → Except SudoRt.Trap α)
+    (onCont : σ → Except SudoRt.Trap α) :
+    (do
+      match ← (do let s ← m; pure (SudoRt.Flow.cont (ρ := ρ) s)) with
+      | .ret r => onRet r
+      | .brk fs => onBrk fs
+      | .cont fs => onCont fs) =
+    (do let s ← m; onCont s) := by
+  cases m with
+  | error e => rfl
+  | ok s => rfl
+
 /-! ## Int / i64 helpers -/
 
 theorem i64Min_lt_zero : SudoRt.i64Min < 0 := by decide
@@ -139,6 +155,41 @@ theorem listLen_eq (a : Array α) : SudoRt.listLen a = Int.ofNat a.size := rfl
 
 theorem listLen_embed (xs : List Nat) : SudoRt.listLen (embed xs) = Int.ofNat xs.length := by
   rw [listLen_eq, size_embed]
+
+theorem sEq_int (x y : Int) : SudoRt.SEq.beq x y = decide (x = y) := rfl
+
+theorem ofNat_eq_zero_iff (n : Nat) : Int.ofNat n = (0 : Int) ↔ n = 0 :=
+  ⟨fun h => Int.ofNat.inj (h.trans (rfl : (0 : Int) = Int.ofNat 0)),
+   fun h => h ▸ rfl⟩
+
+theorem ofNat_pos_iff (n : Nat) : Int.ofNat n > (0 : Int) ↔ 0 < n := by
+  change Int.ofNat 0 < Int.ofNat n ↔ 0 < n
+  exact Int.ofNat_lt
+
+theorem ofNat_lt_iff (a b : Nat) : Int.ofNat a < Int.ofNat b ↔ a < b :=
+  Int.ofNat_lt
+
+theorem sEq_ofNat_zero (n : Nat) :
+    SudoRt.SEq.beq (Int.ofNat n) (0 : Int) = decide (n = 0) := by
+  rw [sEq_int, decide_eq_decide, ofNat_eq_zero_iff]
+
+theorem decide_ofNat_pos (n : Nat) :
+    decide (Int.ofNat n > (0 : Int)) = decide (0 < n) := by
+  rw [decide_eq_decide, ofNat_pos_iff]
+
+theorem decide_ofNat_lt (a b : Nat) :
+    decide (Int.ofNat a < Int.ofNat b) = decide (a < b) := by
+  rw [decide_eq_decide, ofNat_lt_iff]
+
+theorem listLen_pos_decide (xs : List Nat) :
+    decide (SudoRt.listLen (embed xs) > (0 : Int)) = decide (0 < xs.length) := by
+  rw [listLen_embed, decide_ofNat_pos]
+
+/-- Nonneg `Int` modulo agrees with `Nat` modulo. Residual `dsimp` may
+    rewrite `Int.ofNat (k % n)` into `↑k % ↑n`. -/
+theorem natCast_mod (a b : Nat) : (a : Int) % (b : Int) = Int.ofNat (a % b) := by
+  rw [← ofNat_eq_natCast a, ← ofNat_eq_natCast b]
+  exact Int.ofNat_emod a b
 
 theorem appendL_spec (a : Array α) (v : α) : SudoRt.appendL a v = (a.push v, ()) := rfl
 

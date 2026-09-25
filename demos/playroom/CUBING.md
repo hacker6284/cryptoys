@@ -29,9 +29,15 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 Session moves (including Rule B / seat as `x`/`y`/`z`) become `player.alg`.
 `createScrambleSession` drives that timeline via `playLeaves` / `jumpToLeaf`.
 
-Scramble is 3×3. `PUZZLES` + `swapPuzzle` (recreate the player) are the
-megaminx / pyraminx hooks. Recreate on puzzle change — cubing leaves the
-adopted object stale.
+Product puzzle mode (quiet toolkit control, like Gen / encoding): 3×3,
+megaminx, pyraminx. Selection calls `swapPuzzle` (recreate the player —
+cubing leaves the adopted object stale). Deep link: `?algo=scramble&puzzle=megaminx`.
+
+The hash walk is 3×3 only (normative Scramble SPEC). Digest stays the 3×3
+Scramble digest on every puzzle. Megaminx can turn the same U/R/F/D/L/B +
+`x`/`y`/`z` letters (visual only). Pyraminx drops F/D (and closer `F2`) —
+Play/Step still advance; those leaves are empty. Solve is 3×3 only.
+MegaDreifach is a different product; this UI does not run it.
 
 ## Host / matrix / three.js
 

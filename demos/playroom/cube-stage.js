@@ -139,6 +139,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         inner: rig.inner ?? rig.lift,
         lift: rig.lift,
         fit: rig.fit,
+        puzzleId: rig.puzzleId,
         paint: (facelets) => rig.paint?.(facelets),
         animateMove: (move, ms) => withLift(() => rig.animateMove(move, ms)),
         animateReorient: (from, up, front, ms) => withLift(() => rig.animateReorient(from, up, front, ms)),

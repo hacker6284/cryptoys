@@ -1,4 +1,12 @@
 import * as THREE from "three";
+import { PUZZLES, PUZZLE_IDS, normalizePuzzleId } from "./puzzles.js";
+
+export { PUZZLES, PUZZLE_IDS, normalizePuzzleId };
+export {
+    puzzleHashes,
+    readPuzzleSearchParam,
+    writePuzzleSearchParam,
+} from "./puzzles.js";
 
 /**
  * Adopt a cubing.js TwistyPlayer puzzle into the playroom scene.
@@ -26,14 +34,6 @@ import * as THREE from "three";
  */
 
 export const CUBING_TWISTY_URL = "https://cdn.cubing.net/v0/js/cubing/twisty";
-
-export const PUZZLES = {
-    "3x3x3": { id: "3x3x3", label: "3×3×3", alg: "" },
-    megaminx: { id: "megaminx", label: "Megaminx", alg: "" },
-    pyraminx: { id: "pyraminx", label: "Pyraminx", alg: "" },
-};
-
-export const PUZZLE_IDS = Object.keys(PUZZLES);
 
 let twistyMod = null;
 
@@ -165,7 +165,7 @@ export async function adoptTwistyPuzzle(seat, {
     onStage,
     adoptTimeoutMs = 20000,
 } = {}) {
-    const spec = PUZZLES[puzzle] || PUZZLES["3x3x3"];
+    const spec = PUZZLES[normalizePuzzleId(puzzle)] || PUZZLES["3x3x3"];
     const edge = seat.edge ?? 0.057;
     onStage?.("import cubing/twisty");
     const { TwistyPlayer } = await loadTwisty();

@@ -6,7 +6,83 @@ import { SOLVED_FACELETS } from "../scramble/cube.js";
  * Face turns stay WCA (U/R/F/…). Rule B / seat are whole-cube rotations
  * (`x`/`y`/`z`) so TwistyPlayer can own interpolation. Centers only —
  * face turns never move them.
+ *
+ * The hash walk is 3×3 only (SPEC). Megaminx / pyraminx project that
+ * same walk onto moves the toy can turn. Digest stays the 3×3 Scramble
+ * digest — do not treat a projected alg as another hash.
  */
+
+export const HASH_PUZZLE = "3x3x3";
+
+/** Face families each Twisty puzzle will accept from a Scramble trace. */
+export const PUZZLE_ALPHABET = {
+    "3x3x3": {
+        faces: ["U", "R", "F", "D", "L", "B"],
+        rotations: ["x", "y", "z"],
+        hash: true,
+    },
+    megaminx: {
+        faces: ["U", "R", "F", "D", "L", "B", "BL", "BR", "FL", "FR", "DL", "DR"],
+        rotations: ["x", "y", "z"],
+        hash: false,
+    },
+    pyraminx: {
+        faces: ["U", "R", "L", "B"],
+        rotations: ["x", "y", "z"],
+        hash: false,
+    },
+};
+
+export function unitFamily(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return { kind: "empty", face: "" };
+    if (/^[xyz]/i.test(raw)) return { kind: "rotation", face: raw[0].toLowerCase() };
+    const face = raw.replace(/[2'+\-]+$/g, "").toUpperCase();
+    return { kind: "face", face };
+}
+
+export function unitInAlphabet(text, puzzleId = HASH_PUZZLE) {
+    const spec = PUZZLE_ALPHABET[puzzleId] || PUZZLE_ALPHABET[HASH_PUZZLE];
+    const unit = unitFamily(text);
+    if (unit.kind === "rotation") return spec.rotations.includes(unit.face);
+    if (unit.kind === "face") return spec.faces.includes(unit.face);
+    return false;
+}
+
+/**
+ * Keep session step ranges; drop units the current puzzle cannot turn.
+ * 3×3 is identity. Empty ranges are honest no-ops (Play/Step still advance).
+ */
+export function projectAlgForPuzzle(mapped, puzzleId = HASH_PUZZLE) {
+    const spec = PUZZLE_ALPHABET[puzzleId] || PUZZLE_ALPHABET[HASH_PUZZLE];
+    const empty = { alg: "", units: [], ranges: [], hash: spec.hash, dropped: 0 };
+    if (!mapped) return empty;
+    if (spec.hash) {
+        return {
+            alg: mapped.alg,
+            units: mapped.units,
+            ranges: mapped.ranges,
+            hash: true,
+            dropped: 0,
+        };
+    }
+    const units = [];
+    const ranges = [];
+    for (const range of mapped.ranges || []) {
+        const from = units.length;
+        for (const unit of (mapped.units || []).slice(range.from, range.to)) {
+            if (unitInAlphabet(unit.text, puzzleId)) units.push(unit);
+        }
+        ranges.push({ from, to: units.length });
+    }
+    return {
+        alg: units.map((unit) => unit.text).join(" "),
+        units,
+        ranges,
+        hash: false,
+        dropped: (mapped.units?.length || 0) - units.length,
+    };
+}
 
 export const FACE_CENTERS = { U: 4, R: 13, F: 22, D: 31, L: 40, B: 49 };
 

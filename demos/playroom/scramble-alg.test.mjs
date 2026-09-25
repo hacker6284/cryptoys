@@ -5,7 +5,9 @@ import {
     colorOnFace,
     mapTraceToAlg,
     prefixAlg,
+    projectAlgForPuzzle,
     reorientMoves,
+    unitInAlphabet,
 } from "./scramble-alg.js";
 
 assert.deepEqual(reorientMoves(SOLVED_FACELETS, "W", "G"), []);
@@ -45,6 +47,30 @@ assert.deepEqual(mapped.ranges, [
 assert.equal(prefixAlg(mapped, -1), "");
 assert.equal(prefixAlg(mapped, 0), "R");
 assert.equal(prefixAlg(mapped, 1), "R z'");
+
+const cubeProj = projectAlgForPuzzle(mapped, "3x3x3");
+assert.equal(cubeProj.alg, mapped.alg);
+assert.equal(cubeProj.hash, true);
+assert.equal(cubeProj.dropped, 0);
+
+const megaProj = projectAlgForPuzzle(mapped, "megaminx");
+assert.equal(megaProj.alg, "R z' F2 z");
+assert.equal(megaProj.hash, false);
+assert.equal(megaProj.dropped, 0);
+
+const pyraProj = projectAlgForPuzzle(mapped, "pyraminx");
+assert.equal(pyraProj.alg, "R z' z");
+assert.equal(pyraProj.hash, false);
+assert.equal(pyraProj.dropped, 1);
+assert.deepEqual(pyraProj.ranges, [
+    { from: 0, to: 1 },
+    { from: 1, to: 2 },
+    { from: 2, to: 2 },
+    { from: 2, to: 3 },
+]);
+assert.equal(unitInAlphabet("F2", "pyraminx"), false);
+assert.equal(unitInAlphabet("B2", "pyraminx"), true);
+assert.equal(unitInAlphabet("x'", "megaminx"), true);
 
 const identityB = mapTraceToAlg([
     { kind: "move", move: "U", facelets: applyMove(SOLVED_FACELETS, "U") },

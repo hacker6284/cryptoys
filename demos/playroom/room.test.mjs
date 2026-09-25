@@ -174,3 +174,4 @@ console.log("playroom room tests ok");
 
 await import("./scramble-alg.test.mjs");
 await import("./twisty-rig.test.mjs");
+await import("./puzzles.test.mjs");

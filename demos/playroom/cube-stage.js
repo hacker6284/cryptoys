@@ -31,7 +31,6 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
     let lifted = false;
     let token = 0;
     let settleTimer = 0;
-    let moving = null;
 
     function reduced() {
         return Boolean(prefersReducedMotion?.());
@@ -51,6 +50,14 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         return seatedY == null ? rig.group.position.y : seatedY;
     }
 
+    function cancelEase() {
+        token += 1;
+        window.clearTimeout(settleTimer);
+        rig.group.userData.easeBusy = false;
+    }
+
+    rig.group.userData.cancelEase = cancelEase;
+
     function engageFrame() {
         poses?.frame?.(cubeTarget);
     }
@@ -67,15 +74,14 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
             return true;
         }
         const my = ++token;
-        const run = tween(TURN_LIFT_MS, (t) => {
+        rig.group.userData.easeBusy = true;
+        await tween(TURN_LIFT_MS, (t) => {
             if (my !== token) return;
             toy.position.y = fromY + (toY - fromY) * t;
         }, snap || reduced());
-        moving = run;
-        await run;
         if (my !== token) return false;
         toy.position.y = toY;
-        moving = null;
+        rig.group.userData.easeBusy = false;
         return true;
     }
 
@@ -106,14 +112,6 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         return setDown({ snap });
     }
 
-    // Playroom debug: lift/set-down state for headless checks.
-    rig.group.userData.stage = () => ({
-        seatedY,
-        lifted,
-        y: rig.group.position.y,
-        dest: destY(),
-    });
-
     function scheduleSetDown() {
         window.clearTimeout(settleTimer);
         settleTimer = window.setTimeout(() => {
@@ -141,8 +139,9 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         highlightRuleB: (...args) => rig.highlightRuleB(...args),
         clearHighlights: () => rig.clearHighlights(),
         dispose: () => {
-            window.clearTimeout(settleTimer);
-            token += 1;
+            cancelEase();
+            rig.group.position.y = destY();
+            lifted = false;
             releaseFrame();
             rig.dispose();
         },

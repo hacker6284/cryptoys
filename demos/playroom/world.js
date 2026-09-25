@@ -611,6 +611,15 @@ export async function mountWorld(canvas) {
                 rotation: { ...rotation },
             };
         }
+        // Measuring mutates the live mesh; never do that on top of a
+        // lift/set-down ease or a shelf↔table flight.
+        if (object.userData.easeBusy) object.userData.cancelEase?.();
+        if (object.userData.flightBusy) {
+            return {
+                position: { x, y: surfaceY + fallback, z },
+                rotation: { x: rotation.x, y: rotation.y, z: rotation.z },
+            };
+        }
         const prev = {
             position: object.position.clone(),
             quaternion: object.quaternion.clone(),

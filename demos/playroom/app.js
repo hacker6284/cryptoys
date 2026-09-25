@@ -212,14 +212,6 @@ try {
     // + pose updates on this loop (hub clicks already have it).
     requestAnimationFrame(tick);
 
-    if (ALGOS[initialAlgo]) {
-        if (initialAlgo === "doubledeal" && !poses.prefersReducedMotion()) {
-            await startAlgo(initialAlgo);
-        } else {
-            await startAlgo(initialAlgo, { snap: true });
-        }
-    }
-
     menuEl.addEventListener("pointerenter", (event) => {
         const item = event.target.closest("[data-algo]");
         if (item) director.highlight(item.dataset.algo);
@@ -283,6 +275,14 @@ try {
     });
 
     window.addEventListener("resize", () => world.resize());
+
+    if (ALGOS[initialAlgo]) {
+        if (initialAlgo === "doubledeal" && !poses.prefersReducedMotion()) {
+            void startAlgo(initialAlgo);
+        } else {
+            void startAlgo(initialAlgo, { snap: true });
+        }
+    }
 } catch (err) {
     console.error(err);
     document.body.classList.add("is-error");

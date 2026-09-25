@@ -1,6 +1,9 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { TWEEN_MS } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
+
+const FRAME_LAMBDA = 7.2;
 
 function prefersReducedMotion() {
     return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
@@ -27,11 +30,35 @@ function readPose(name) {
     };
 }
 
-export function createPoseController(camera, { duration = TWEEN_MS, onChange } = {}) {
+export function createPoseController(camera, { duration = TWEEN_MS, onChange, domElement } = {}) {
     const look = new THREE.Vector3();
     const tracked = new THREE.Vector3();
+    const frameScratch = new THREE.Vector3();
+    const frameDelta = new THREE.Vector3();
     let current = "landing";
     let tween = null;
+    let framing = null;
+    let lastFrame = performance.now();
+
+    const controls = domElement ? new OrbitControls(camera, domElement) : null;
+    if (controls) {
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.085;
+        controls.enablePan = true;
+        controls.screenSpacePanning = true;
+        controls.enableZoom = true;
+        controls.minDistance = 0.38;
+        controls.maxDistance = 8;
+        controls.minPolarAngle = 0.2;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05;
+        controls.enabled = false;
+    }
+
+    function setControlsEnabled(on) {
+        if (!controls) return;
+        controls.enabled = Boolean(on);
+        if (on) controls.target.copy(look);
+    }
 
     function readTrack(track) {
         if (!track) return null;
@@ -68,6 +95,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         camera.up.set(0, 1, 0);
         camera.updateProjectionMatrix();
         camera.lookAt(look);
+        if (controls) controls.target.copy(look);
     }
 
     function capture() {
@@ -94,6 +122,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         if (!pose) return current;
         tween = null;
         current = resolved;
+        setControlsEnabled(false);
         apply(pose, 1);
         emit(current, { tweening: false });
         return current;
@@ -109,6 +138,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
             return current;
         }
         if (opts.snap || prefersReducedMotion()) return snap(resolved);
+        setControlsEnabled(false);
         const now = performance.now();
         const viaName = opts.via ? resolvePoseName(opts.via) : null;
         tween = {
@@ -133,33 +163,79 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         return snap(tween.to.name);
     }
 
-    function update(now = performance.now()) {
-        if (!tween) return current;
-        const dt = Math.min(50, Math.max(0, now - tween.last));
-        tween.last = now;
-        if (tween.holding) {
-            tween.holdElapsed += dt;
-            if (tween.holdElapsed < tween.delay) {
-                apply(tween.to, 0, tween.from, null);
-                return current;
-            }
-            tween.holding = false;
-        }
-        tween.elapsed += dt;
-        const trackPos = readTrack(tween.track);
-        const u = Math.min(1, tween.elapsed / tween.duration);
-        if (tween.via && u < tween.viaT) {
-            apply(tween.via, u / tween.viaT, tween.from, null);
-        } else if (tween.via) {
-            apply(tween.to, (u - tween.viaT) / (1 - tween.viaT), tween.via, trackPos);
+    function readFrameTarget() {
+        if (!framing) return null;
+        const value = typeof framing === "function" ? framing() : framing;
+        if (!value) return null;
+        if (value.isVector3) return frameScratch.copy(value);
+        frameScratch.set(value.x, value.y, value.z);
+        return frameScratch;
+    }
+
+    function applyFraming(dtMs) {
+        const want = readFrameTarget();
+        if (!want) return;
+        const dt = Math.min(0.05, Math.max(0, dtMs / 1000));
+        const k = 1 - Math.exp(-FRAME_LAMBDA * dt);
+        if (controls) {
+            frameDelta.copy(want).sub(controls.target).multiplyScalar(k);
+            controls.target.add(frameDelta);
+            camera.position.add(frameDelta);
+            look.copy(controls.target);
         } else {
-            apply(tween.to, u, tween.from, trackPos);
+            look.lerp(want, k);
+            camera.lookAt(look);
         }
-        if (u >= 1) {
-            current = tween.to.name;
-            tween = null;
-            emit(current, { tweening: false });
+    }
+
+    function frame(getTarget) {
+        framing = getTarget || null;
+    }
+
+    function releaseFrame() {
+        framing = null;
+    }
+
+    function update(now = performance.now()) {
+        const dt = Math.min(50, Math.max(0, now - lastFrame));
+        lastFrame = now;
+        if (tween) {
+            setControlsEnabled(false);
+            const stepDt = Math.min(50, Math.max(0, now - tween.last));
+            tween.last = now;
+            if (tween.holding) {
+                tween.holdElapsed += stepDt;
+                if (tween.holdElapsed < tween.delay) {
+                    apply(tween.to, 0, tween.from, null);
+                    return current;
+                }
+                tween.holding = false;
+            }
+            tween.elapsed += stepDt;
+            const trackPos = readTrack(tween.track);
+            const u = Math.min(1, tween.elapsed / tween.duration);
+            if (tween.via && u < tween.viaT) {
+                apply(tween.via, u / tween.viaT, tween.from, null);
+            } else if (tween.via) {
+                apply(tween.to, (u - tween.viaT) / (1 - tween.viaT), tween.via, trackPos);
+            } else {
+                apply(tween.to, u, tween.from, trackPos);
+            }
+            if (u >= 1) {
+                current = tween.to.name;
+                tween = null;
+                emit(current, { tweening: false });
+            }
+            return current;
         }
+        if (!controls) {
+            applyFraming(dt);
+            return current;
+        }
+        if (!controls.enabled) setControlsEnabled(true);
+        applyFraming(dt);
+        controls.update();
+        look.copy(controls.target);
         return current;
     }
 
@@ -173,9 +249,14 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange } =
         get lookTarget() {
             return look;
         },
+        get framing() {
+            return Boolean(framing);
+        },
         snap,
         goTo,
         skip,
+        frame,
+        releaseFrame,
         update,
         prefersReducedMotion,
     };

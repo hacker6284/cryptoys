@@ -133,6 +133,10 @@ export function createScrambleSession({
         view.paint(next);
     }
 
+    function settleView(opts) {
+        view.settle?.(opts);
+    }
+
     function messageNybbleCount() {
         return messageBytes.length * 2;
     }
@@ -365,6 +369,7 @@ export function createScrambleSession({
         markPlay(false);
         solving = false;
         busy = false;
+        settleView();
         errorEl.textContent = "";
         try {
             messageBytes = bytesOf(input.value);
@@ -640,6 +645,7 @@ export function createScrambleSession({
         busy = false;
         cursor = -1;
         setTeaching(false);
+        settleView({ snap: true });
         showFace(solved);
         showStatus(caption());
     }, listen);
@@ -694,6 +700,7 @@ export function createScrambleSession({
             busy = false;
             cursor = -1;
             setTeaching(false);
+            settleView({ snap: true });
             showFace(solved);
             showStatus(caption());
         },
@@ -703,6 +710,7 @@ export function createScrambleSession({
             solving = false;
             busy = false;
             setTeaching(false);
+            settleView({ snap: true });
             view.clearHighlights?.();
             abort.abort();
             if (exposeTeach && window.__teach) delete window.__teach;

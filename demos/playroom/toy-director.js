@@ -4,8 +4,9 @@ import { FLY_MS, LIFT_MS } from "./constants.js";
  * Toy director — Unify-1.
  *
  * Shelf holds one of each kind. Scramble borrows the cube: lift from the
- * slot, then arc to the felt. Camera follow is the pose controller's job;
- * this module only moves toys. Click skips; prefers-reduced-motion snaps.
+ * slot, then arc to the felt. Camera follow / in-frame tracking is the
+ * pose controller's job; this module only moves toys. Click skips;
+ * prefers-reduced-motion snaps.
  *
  * DoubleDeal borrow / chest extras are Unify-2.
  */
@@ -187,6 +188,8 @@ export function createToyDirector(world) {
         const name = recipe.toys[0];
         world.setSlotEmpty(name, true);
         await flyToy(name, world.getTablePose(name), { snap });
+        const toy = world.toys[name];
+        if (toy) toy.userData.seatedY = toy.position.y;
         clearHighlight();
         return recipe;
     }

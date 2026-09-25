@@ -55,13 +55,11 @@ function trackCube(world) {
 try {
     const world = await mountWorld(canvas);
     resizeWorld = () => world.resize();
-    adapters.scramble.install(world);
-    void adapters.scramble.preload();
-    const director = createToyDirector(world);
     const params = new URLSearchParams(location.search);
     const initialPose = resolvePoseName(params.get("pose"));
     const initialAlgo = String(params.get("algo") || "").trim().toLowerCase();
     const poses = createPoseController(world.camera, {
+        domElement: canvas,
         onChange(state) {
             syncOverlays(state);
             if (!state.tweening) {
@@ -72,6 +70,12 @@ try {
             }
         },
     });
+    adapters.scramble.install(world, {
+        poses,
+        prefersReducedMotion: () => poses.prefersReducedMotion(),
+    });
+    void adapters.scramble.preload();
+    const director = createToyDirector(world);
 
     async function startScramble({ snap = false } = {}) {
         if (activeAlgo === "scramble" || starting || leaving) return;
@@ -99,6 +103,7 @@ try {
             }
             await Promise.all([fly, warm]);
             if (leaving) return;
+            adapters.scramble.view()?.rememberSeated?.();
             await adapters.scramble.enter();
             writeQuery({ pose: "seated", algo: "scramble" });
             syncOverlays({

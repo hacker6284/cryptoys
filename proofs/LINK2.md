@@ -68,7 +68,8 @@ Link 2 only — not bit-security, not emitter soundness.
 | `mix_columns` ≃ `mixColumns` | **CLOSED** (`mix_columns_refines`) |
 | `full_round` / `final_round` ≃ `fullRound` / `fullRoundNoMix` | **CLOSED** (`full_round_refines`, `final_round_refines`) |
 | S3/S4 transfer onto `Except Trap` (multiset, inverse, injectivity) | **CLOSED** (`passkey_perm`, `passkey_inv_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, `passkey_inv_injective`, and the `WellFormed` Array forms in `Link2/PassKeyTransfer.lean`) |
-| MegaDreifach / Scramble algebraic ≃ Generated | **OPEN** next (Scramble has little ledger; MD Hash is M13) |
+| MegaDreifach `pad_message` ≃ algebraic `pad` | **CLOSED** (`pad_message_refines`, `pad_message_refines_array`, `pad_z_refines`). Domain `PadWf`: bytes `≤ 255` and `8 * length` fits in an i64. Not `v_Hash`. |
+| MegaDreifach full `v_Hash` / Scramble algebraic ≃ Generated | **OPEN** next (Scramble has little ledger; MD Hash is M13) |
 | DoubleDeal-CBC-HMAC algebraic ≃ Generated | OPEN. Generated TAP exists (`#22`); no algebraic ledger. Not AEAD security. |
 | sudo text = generated Lean (deep embedding) | OPEN — Link 1, not this file |
 | Bit-security, MDS, collision-resistance, AEAD | Not a Link 2 claim |

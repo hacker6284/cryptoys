@@ -12,3 +12,4 @@ import MegaDreifach.IV
 import MegaDreifach.Chain
 import MegaDreifach.Vectors
 import MegaDreifach.VectorCheck
+import MegaDreifach.Link2

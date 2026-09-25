@@ -14,7 +14,11 @@ import { SOLVED_FACELETS } from "../scramble/cube.js";
 
 export const HASH_PUZZLE = "3x3x3";
 
-/** Face families each Twisty puzzle will accept from a Scramble trace. */
+/**
+ * Face families each Twisty puzzle will accept from a Scramble trace.
+ * cubing.js megaminx / pyraminx reject the whole alg if it contains
+ * `x`/`y`/`z` (0 leaves). Drop those units; do not pass them through.
+ */
 export const PUZZLE_ALPHABET = {
     "3x3x3": {
         faces: ["U", "R", "F", "D", "L", "B"],
@@ -22,13 +26,13 @@ export const PUZZLE_ALPHABET = {
         hash: true,
     },
     megaminx: {
-        faces: ["U", "R", "F", "D", "L", "B", "BL", "BR", "FL", "FR", "DL", "DR"],
-        rotations: ["x", "y", "z"],
+        faces: ["U", "R", "F", "D", "L", "B"],
+        rotations: [],
         hash: false,
     },
     pyraminx: {
         faces: ["U", "R", "L", "B"],
-        rotations: ["x", "y", "z"],
+        rotations: [],
         hash: false,
     },
 };

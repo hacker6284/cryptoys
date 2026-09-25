@@ -34,10 +34,11 @@ megaminx, pyraminx. Selection calls `swapPuzzle` (recreate the player —
 cubing leaves the adopted object stale). Deep link: `?algo=scramble&puzzle=megaminx`.
 
 The hash walk is 3×3 only (normative Scramble SPEC). Digest stays the 3×3
-Scramble digest on every puzzle. Megaminx can turn the same U/R/F/D/L/B +
-`x`/`y`/`z` letters (visual only). Pyraminx drops F/D (and closer `F2`) —
-Play/Step still advance; those leaves are empty. Solve is 3×3 only.
-MegaDreifach is a different product; this UI does not run it.
+Scramble digest on every puzzle. Megaminx plays U/R/F/D/L/B face turns
+(visual only). Pyraminx plays U/R/L/B. cubing.js rejects the whole alg if
+it contains `x`/`y`/`z` on those puzzles, so Rule B / seat rotations are
+dropped — Play/Step still advance; those leaves are empty. Solve is 3×3
+only. MegaDreifach is a different product; this UI does not run it.
 
 ## Host / matrix / three.js
 

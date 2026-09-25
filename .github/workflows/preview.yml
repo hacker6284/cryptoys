@@ -22,6 +22,8 @@ on:
       - "primitives/hash/scramble/**"
       - "primitives/cipher/doubledeal/**"
       - "tools/build.sh"
+      - "tools/generate-demos.sh"
+      - "tools/render-build.sh"
       - ".github/actions/generate-demos/**"
       - ".github/workflows/pages.yml"
       - ".github/workflows/check.yml"

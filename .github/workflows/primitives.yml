@@ -5,11 +5,15 @@ on:
   pull_request:
     paths:
       - "primitives/**"
+      - "tools/build.sh"
+      - "tools/generate-demos.sh"
       - ".github/actions/generate-demos/**"
       - ".github/workflows/primitives.yml"
   push:
     paths:
       - "primitives/**"
+      - "tools/build.sh"
+      - "tools/generate-demos.sh"
       - ".github/actions/generate-demos/**"
       - ".github/workflows/primitives.yml"
   workflow_dispatch:

@@ -244,6 +244,11 @@ export async function adoptTwistyPuzzle(seat, {
     });
     seat.fit.add(puzzleObject);
     const framed = frameInWrapper(seat.fit, puzzleObject, edge);
+    seat.group.userData.twistyFramed = {
+        nativeMax: framed.nativeMax,
+        fittedMax: framed.fittedMax,
+    };
+    seat.group.userData.twistySkew = skew;
     enableShadows(puzzleObject);
     const look = inspectMaterials(puzzleObject);
     const skew = describeThreeSkew(puzzleObject);
@@ -306,15 +311,29 @@ export async function adoptTwistyPuzzle(seat, {
         requestTimestamp(snap ? endTs : startTs);
         await frame();
         if (snap) return { index: end - 1, total };
+        let tempo = 1;
+        try {
+            tempo = Number(await player.experimentalModel.tempoScale.get()) || 1;
+        } catch {
+            // tempoScale getter is write-only on the element
+        }
+        let duration = 0;
+        for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
         player.play();
-        const deadline = performance.now() + 30000;
+        const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
+        const deadline = performance.now() + budget;
         while (performance.now() < deadline) {
-            const info = await player.experimentalModel.detailedTimelineInfo.get();
-            if (info.timestamp >= endTs - 2) break;
+            try {
+                const info = await player.experimentalModel.detailedTimelineInfo.get();
+                if (info.timestamp >= endTs - 2) break;
+            } catch {
+                break;
+            }
             await frame();
         }
         player.pause();
         requestTimestamp(endTs);
+        await frame();
         return { index: end - 1, total };
     }
 

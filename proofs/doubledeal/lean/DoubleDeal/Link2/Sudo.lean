@@ -126,6 +126,13 @@ theorem fmod_ofNat (a b : Nat) :
 theorem beq_int_iff (x y : Int) : (x == y) = true ↔ x = y := by
   simp [BEq.beq, decide_eq_true_eq]
 
+/-- `if x == y` on `Int` is `if x = y`. Residual `dsimp` keeps `BEq`. -/
+theorem ite_int_beq {α} (x y : Int) (t e : α) :
+    (if x == y then t else e) = (if x = y then t else e) := by
+  by_cases h : x = y
+  · simp [h, beq_int_iff]
+  · simp [h, beq_int_iff]
+
 theorem divI_ofNat (a : Nat) {b : Nat} (hb : b ≠ 0) :
     SudoRt.divI (Int.ofNat a) (Int.ofNat b) = .ok (Int.ofNat (a / b)) := by
   unfold SudoRt.divI

@@ -171,3 +171,5 @@ assert.equal(cubeWorld.toys.cube.position.x, SLOTS.cube.x);
 assert.equal(cubeWorld.slotsEmpty.cube, false);
 
 console.log("playroom room tests ok");
+
+await import("./scramble-alg.test.mjs");

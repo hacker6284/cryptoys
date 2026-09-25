@@ -1,6 +1,11 @@
 import { scramble_v1, scramble_v2, update, evaluate, solved_facelets } from "./generated/scramble.mjs";
 import { SOLVED_FACELETS, applyMove, isSolved, shortSolve, toCubejs, flipU, parseMove } from "./cube.js";
-import { mapTraceToAlg, prefixAlg } from "../playroom/scramble-alg.js";
+import { mapTraceToAlg, prefixAlg, projectAlgForPuzzle } from "../playroom/scramble-alg.js";
+import {
+    normalizePuzzleId,
+    puzzleHashes,
+    writePuzzleSearchParam,
+} from "../playroom/puzzles.js";
 import {
     bindTeachKeys,
     colorName,
@@ -24,6 +29,8 @@ export function createScrambleSession({
     root = document,
     exposeTeach = false,
     signal,
+    puzzle = "3x3x3",
+    swapPuzzle,
 } = {}) {
     const abort = new AbortController();
     if (signal) {
@@ -54,8 +61,10 @@ export function createScrambleSession({
 
     let version = 2;
     let encoding = "text";
+    let puzzleId = normalizePuzzleId(puzzle);
     let trace = [];
     let mappedAlg = mapTraceToAlg([]);
+    let projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
     let facelets = solved;
     let cursor = -1;
     let playing = false;
@@ -117,13 +126,14 @@ export function createScrambleSession({
     }
 
     function caption() {
+        const visual = hashesThisPuzzle() ? "" : "Visual puzzle · ";
         if (teaching && viewedIndex() >= trace.length && trace.length) {
-            return digestValue() ? `Digest · ${digestValue()}` : "The seated pose is the digest.";
+            return visual + (digestValue() ? `Digest · ${digestValue()}` : "The seated pose is the digest.");
         }
         const step = teaching
             ? (viewedIndex() < trace.length ? trace[viewedIndex()] : null)
             : (cursor < 0 ? null : trace[cursor]);
-        return captionFor(step);
+        return visual + captionFor(step);
     }
 
     function showStatus(text) {
@@ -134,6 +144,31 @@ export function createScrambleSession({
         return typeof view.setAlg === "function" && typeof view.playLeaves === "function";
     }
 
+    function hashesThisPuzzle() {
+        return puzzleHashes(puzzleId);
+    }
+
+    function syncPuzzleChrome() {
+        $$("[data-puzzle]").forEach((button) => {
+            button.classList.toggle("on", normalizePuzzleId(button.dataset.puzzle) === puzzleId);
+        });
+        const note = $("#puzzle-note");
+        if (note) {
+            note.hidden = hashesThisPuzzle();
+            note.textContent = hashesThisPuzzle()
+                ? ""
+                : "Digest is 3×3 Scramble. This puzzle is visual.";
+        }
+        if (root?.dataset) root.dataset.puzzle = puzzleId;
+        if (root.querySelector("[data-puzzle]")) {
+            try {
+                history.replaceState(null, "", writePuzzleSearchParam(puzzleId));
+            } catch {
+                // file: or test hosts may not have a URL
+            }
+        }
+    }
+
     function showFace(next) {
         facelets = next;
         if (!usesTimeline()) view.paint?.(next);
@@ -141,8 +176,9 @@ export function createScrambleSession({
 
     function bindAlg() {
         mappedAlg = mapTraceToAlg(trace);
+        projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
         if (!usesTimeline()) return;
-        view.setAlg(mappedAlg.alg);
+        view.setAlg(projectedAlg.alg);
         view.setTempo?.(Number(speed?.value) || 1.4);
         void view.jumpToLeaf?.(-1);
     }
@@ -150,7 +186,7 @@ export function createScrambleSession({
     function jumpViewToCursor() {
         if (!usesTimeline()) return;
         if (cursor < 0) void view.jumpToLeaf(-1);
-        else void view.jumpToLeaf((mappedAlg.ranges[cursor]?.to ?? 1) - 1);
+        else void view.jumpToLeaf((projectedAlg.ranges[cursor]?.to ?? 1) - 1);
     }
 
     function settleView(opts) {
@@ -404,6 +440,7 @@ export function createScrambleSession({
         const result = evaluate(state);
         trace = result.trace;
         mappedAlg = mapTraceToAlg(trace);
+        projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
         setDigest(digestHex(result.digest));
         cursor = -1;
         bindAlg();
@@ -421,7 +458,7 @@ export function createScrambleSession({
         if (cursor >= trace.length - 1) return false;
         const step = trace[cursor + 1];
         const from = facelets;
-        const range = mappedAlg.ranges[cursor + 1];
+        const range = projectedAlg.ranges[cursor + 1];
         if (usesTimeline() && range) {
             await view.playLeaves(range.from, range.to);
         } else if (step.kind === "move" || step.kind === "closer") {
@@ -509,6 +546,10 @@ export function createScrambleSession({
     }
 
     async function solve() {
+        if (!hashesThisPuzzle()) {
+            errorEl.textContent = "Solve is 3×3 only.";
+            return;
+        }
         if (solving) return;
         markPlay(false);
         solving = true;
@@ -672,6 +713,40 @@ export function createScrambleSession({
         }, listen);
     });
 
+    async function applyPuzzle(nextRaw) {
+        const nextId = normalizePuzzleId(nextRaw);
+        if (nextId === puzzleId) {
+            syncPuzzleChrome();
+            return;
+        }
+        job += 1;
+        markPlay(false);
+        solving = false;
+        busy = false;
+        settleView();
+        errorEl.textContent = "";
+        if (typeof swapPuzzle === "function") {
+            try {
+                const nextView = await swapPuzzle(nextId);
+                if (nextView) view = nextView;
+            } catch (err) {
+                errorEl.textContent = err.message || "Could not switch puzzle.";
+                return;
+            }
+        }
+        puzzleId = nextId;
+        cursor = -1;
+        syncPuzzleChrome();
+        bindAlg();
+        showFace(solved);
+        showStatus(caption());
+        if (teaching) refreshTeach();
+    }
+
+    $$("[data-puzzle]").forEach((button) => {
+        button.addEventListener("click", () => void applyPuzzle(button.dataset.puzzle), listen);
+    });
+
     $("#play")?.addEventListener("click", () => void play(), listen);
     $("#step-through")?.addEventListener("click", () => enterTeach(), listen);
     $("#step")?.addEventListener("click", () => {
@@ -732,11 +807,19 @@ export function createScrambleSession({
     }, listen);
 
     showFace(solved);
+    syncPuzzleChrome();
     recompute();
 
     const api = {
         enterTeach,
         recompute,
+        setView(next) {
+            if (next) view = next;
+            bindAlg();
+        },
+        setPuzzle(id) {
+            return applyPuzzle(id);
+        },
         reset() {
             job += 1;
             markPlay(false);

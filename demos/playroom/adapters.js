@@ -4,6 +4,7 @@ import { createCubeRig } from "../scramble/view.js";
 import { lucideSvg } from "../shared/icons.js";
 import { fadeTree, setTreeOpacity, stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
+import { normalizePuzzleId, readPuzzleSearchParam } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 
 /**
@@ -107,6 +108,14 @@ function mountDock() {
       <div class="playroom-io">
         <div class="playroom-card playroom-card--io">
           <div class="playroom-io-grid">
+            <div class="playroom-ctl playroom-ctl--puzzle" data-puzzle-ctl>
+              <span class="playroom-label" id="puzzle-legend">Puzzle</span>
+              <div class="playroom-seg" role="group" aria-labelledby="puzzle-legend">
+                <button type="button" class="seg-btn on" data-puzzle="3x3x3" aria-label="3×3">3×3</button>
+                <button type="button" class="seg-btn" data-puzzle="megaminx" aria-label="Megaminx">Mega</button>
+                <button type="button" class="seg-btn" data-puzzle="pyraminx" aria-label="Pyraminx">Pyra</button>
+              </div>
+            </div>
             <div class="playroom-ctl">
               <span class="playroom-label" id="gen-legend">Gen</span>
               <span id="gen-label" hidden>Gen 2</span>
@@ -131,6 +140,7 @@ function mountDock() {
             <span class="playroom-label">Digest</span>
             <input id="digest" class="digest" type="text" readonly spellcheck="false" autocomplete="off">
           </label>
+          <p id="puzzle-note" class="playroom-puzzle-note" hidden>Digest is 3×3 Scramble. This puzzle is visual.</p>
           <p id="status" class="status playroom-status">Solved start · white up, green front, red right</p>
           <p id="error" class="error"></p>
           <button id="digest-btn" type="button" hidden>Digest</button>
@@ -191,13 +201,14 @@ function wantsLegacyCube() {
     }
 }
 
-function pendingTwistyRig(seat) {
+function pendingTwistyRig(seat, puzzleId = "3x3x3") {
     const noop = () => {};
     return {
         group: seat.group,
         lift: seat.lift,
         fit: seat.fit,
         inner: seat.lift,
+        puzzleId,
         paint: noop,
         animateMove: async () => {},
         animateReorient: async () => {},
@@ -213,11 +224,41 @@ function createScrambleAdapter() {
     let rig = null;
     let session = null;
     let root = null;
+    let world = null;
+    let installOpts = null;
+    let puzzleId = "3x3x3";
     let entering = false;
     let sessionMod = null;
     let preloadPromise = null;
     let specObjectUrl = null;
     let adoptPromise = null;
+
+    async function applyPuzzle(nextRaw) {
+        const nextId = normalizePuzzleId(nextRaw);
+        if (adoptPromise) {
+            try {
+                await adoptPromise;
+            } catch {
+                // adopt already logged a fallback
+            }
+        }
+        if (typeof rig?.swapPuzzle !== "function") {
+            throw new Error("This cube cannot change puzzle.");
+        }
+        if ((rig.puzzleId || puzzleId) === nextId) return rig;
+        const prev = rig;
+        const live = await prev.swapPuzzle(nextId, "");
+        if (typeof live.setAlg !== "function" || typeof live.playLeaves !== "function") {
+            live.dispose?.();
+            throw new Error("cubing.js rig missing timeline API");
+        }
+        prev.dispose?.();
+        if (world) world.replaceToy("cube", live.group);
+        rig = stageCubeView(live, installOpts);
+        puzzleId = nextId;
+        rig.rememberSeated?.();
+        return rig;
+    }
 
     function installLegacy(world, { poses, prefersReducedMotion } = {}) {
         const live = createCubeRig({ edge: CUBE, castShadow: true });
@@ -253,14 +294,17 @@ function createScrambleAdapter() {
 
     return {
         id: "scramble",
-        install(world, opts = {}) {
+        install(nextWorld, opts = {}) {
             if (rig) return rig;
-            if (wantsLegacyCube()) return installLegacy(world, opts);
+            world = nextWorld;
+            installOpts = opts;
+            if (wantsLegacyCube()) return installLegacy(nextWorld, opts);
             // Seat is sync so toy-director can fly it before cubing.js
             // adopts. createTwistyRig() is the one-shot helper (swapPuzzle).
+            puzzleId = readPuzzleSearchParam();
             const seat = createTwistySeat({ edge: CUBE });
-            const prev = world.toys.cube;
-            world.replaceToy("cube", seat.group);
+            const prev = nextWorld.toys.cube;
+            nextWorld.replaceToy("cube", seat.group);
             if (prev) {
                 prev.visible = true;
                 prev.position.set(0, 0, 0);
@@ -269,9 +313,9 @@ function createScrambleAdapter() {
                 seat.fit.add(prev);
                 seat.placeholder = prev;
             }
-            world.applyPose(seat.group, world.getShelfPose("cube"));
-            rig = stageCubeView(pendingTwistyRig(seat), opts);
-            adoptPromise = adoptTwistyPuzzle(seat, { puzzle: "3x3x3", edge: CUBE })
+            nextWorld.applyPose(seat.group, nextWorld.getShelfPose("cube"));
+            rig = stageCubeView(pendingTwistyRig(seat, puzzleId), opts);
+            adoptPromise = adoptTwistyPuzzle(seat, { puzzle: puzzleId, edge: CUBE })
                 .then((live) => {
                     if (typeof live.setAlg !== "function" || typeof live.playLeaves !== "function") {
                         live.dispose?.();
@@ -306,11 +350,15 @@ function createScrambleAdapter() {
                 const { createScrambleSession } = await preload();
                 const specUrl = await resolveSpecUrl();
                 if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
+                const puzzleCtl = root.querySelector("[data-puzzle-ctl]");
+                if (puzzleCtl) puzzleCtl.hidden = typeof rig?.swapPuzzle !== "function";
                 session = createScrambleSession({
                     view: rig,
                     specUrl,
                     root,
                     exposeTeach: true,
+                    puzzle: puzzleId,
+                    swapPuzzle: applyPuzzle,
                 });
                 rig.rememberSeated?.();
                 // Stay in use mode. Session enterTeach() is for Step through.

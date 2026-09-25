@@ -275,6 +275,25 @@ body.playroom.is-ready .playroom-menu {
   gap: 12px 16px;
 }
 
+.playroom-ctl--puzzle {
+  grid-column: 1 / -1;
+}
+
+.playroom-ctl--puzzle[hidden] {
+  display: none;
+}
+
+.playroom-puzzle-note {
+  margin: -6px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--fg) 46%, transparent);
+}
+
+.playroom-puzzle-note[hidden] {
+  display: none;
+}
+
 .playroom-ctl {
   display: flex;
   flex-direction: column;

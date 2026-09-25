@@ -76,6 +76,7 @@ export function createToyDirector(world) {
 
     function writeFlightDebug(u, toy) {
         const root = document.documentElement;
+        if (root.dataset.playroomDebug !== "1") return;
         root.dataset.flight = Number.isFinite(u) ? String(Math.round(Math.min(1, Math.max(0, u)) * 100)) : "";
         if (toy) {
             root.dataset.cubeX = toy.position.x.toFixed(2);
@@ -132,6 +133,7 @@ export function createToyDirector(world) {
         if (!flight) return;
         applyFlight(1);
         setTravelLight(flight.toy, false);
+        flight.toy.userData.flightBusy = false;
         const done = flight.onDone;
         flight = null;
         writeFlightDebug(1);
@@ -144,6 +146,7 @@ export function createToyDirector(world) {
         const from = poseOf(toy);
         const dest = clonePose(to);
         if (snap || prefersReducedMotion()) {
+            toy.userData.flightBusy = false;
             world.applyPose(toy, dest);
             toy.updateMatrixWorld(true);
             writeFlightDebug(1, toy);
@@ -160,6 +163,7 @@ export function createToyDirector(world) {
             z: from.position.z * 0.28 + dest.position.z * 0.72,
         };
         return new Promise((resolve) => {
+            toy.userData.flightBusy = true;
             flight = {
                 toy,
                 from,
@@ -197,6 +201,7 @@ export function createToyDirector(world) {
     async function home({ snap = false } = {}) {
         if (!occupied) return;
         if (flight) {
+            flight.toy.userData.flightBusy = false;
             const resolve = flight.onDone;
             flight = null;
             resolve?.();

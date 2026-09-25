@@ -56,6 +56,7 @@ try {
     const world = await mountWorld(canvas);
     resizeWorld = () => world.resize();
     const params = new URLSearchParams(location.search);
+    if (params.get("debug") === "1") document.documentElement.dataset.playroomDebug = "1";
     const initialPose = resolvePoseName(params.get("pose"));
     const initialAlgo = String(params.get("algo") || "").trim().toLowerCase();
     const poses = createPoseController(world.camera, {
@@ -220,19 +221,6 @@ try {
     function tick(now) {
         director.update(now);
         poses.update(performance.now());
-        const cube = world.toys.cube;
-        if (cube) {
-            document.documentElement.dataset.cubeX = cube.position.x.toFixed(3);
-            document.documentElement.dataset.cubeY = cube.position.y.toFixed(3);
-            document.documentElement.dataset.cubeZ = cube.position.z.toFixed(3);
-            const stage = cube.userData.stage?.();
-            if (stage) {
-                document.documentElement.dataset.cubeSeatedY = Number.isFinite(stage.seatedY)
-                    ? stage.seatedY.toFixed(3)
-                    : "";
-                document.documentElement.dataset.cubeLifted = stage.lifted ? "1" : "";
-            }
-        }
         world.render();
         requestAnimationFrame(tick);
     }

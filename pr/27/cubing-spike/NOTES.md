@@ -71,7 +71,7 @@ Official cubing CDN (workers / WASM-safe). Not vendored, not npm — load only o
 ## Risks
 
 1. **Experimental / deprecated API.** `experimentalCurrentThreeJSPuzzleObject` may go away or leave the main thread. Adopt-into-scene is the whole spike; have a fallback (keep TwistyPlayer as a hidden viewport, or fork a thin PG3D loader) before committing the room to it.
-2. **three.js instance skew — confirmed.** `instanceof THREE.Object3D` is false on the live page; cubing ships its own `three` despite the import map. Meshes still render. Reset local TRS after `removeFromParent()` before fitting or Twisty's scene matrix poisons scale (pyraminx went invisible).
+2. **three.js instance skew — confirmed.** `instanceof THREE.Object3D` is false on the live page; cubing ships its own `three` despite the import map. Meshes still render. Scale a wrapper (`rig.fit`), never the adopted object — Twisty keeps writing that matrix.
 3. **Player must stay connected and paintable.** `display:none` / `visibility:hidden` / offscreen-far canvases can prevent the 3D object from ever existing. Extra WebGL context inside Twisty is waste; software GL (SwiftShader) may fail the second context and trip the fallback canvas.
 4. **Stale object on `puzzle` change.** Recreate the rig (this spike does).
 5. **Alg / orientation.** 3×3 WCA, megaminx `R++ D++`, pyraminx. Scramble’s facelet string and “white up, green front, red right” still have to be mapped onto cubing.js setup/alg — not done here.

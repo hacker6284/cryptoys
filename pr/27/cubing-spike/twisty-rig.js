@@ -49,19 +49,40 @@ export async function loadTwisty() {
 }
 
 function hidePlayerHost(player) {
+    // Must stay in-flow and not `display:none` / `visibility:hidden`.
+    // TwistyPlayer never builds the 3D Object3D if the vantage canvas is
+    // treated as hidden, so experimentalCurrentThreeJSPuzzleObject hangs.
     player.setAttribute("data-cubing-spike", "host");
     player.style.cssText = [
         "position:fixed",
-        "left:-9999px",
-        "top:0",
-        "width:96px",
-        "height:64px",
-        "opacity:0",
+        "left:0",
+        "bottom:0",
+        "width:80px",
+        "height:56px",
+        "opacity:0.02",
         "pointer-events:none",
         "overflow:hidden",
-        "visibility:hidden",
+        "z-index:0",
     ].join(";");
     document.body.append(player);
+}
+
+function withTimeout(promise, ms, label) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new Error(`${label} timed out after ${ms}ms`));
+        }, ms);
+        promise.then(
+            (value) => {
+                clearTimeout(timer);
+                resolve(value);
+            },
+            (err) => {
+                clearTimeout(timer);
+                reject(err);
+            },
+        );
+    });
 }
 
 function centerAndFit(object, edge) {
@@ -128,9 +149,13 @@ export async function createTwistyRig({
     alg,
     tempoScale = 1.4,
     onRenderScheduled,
+    onStage,
+    adoptTimeoutMs = 20000,
 } = {}) {
     const spec = PUZZLES[puzzle] || PUZZLES["3x3x3"];
+    onStage?.("import cubing/twisty");
     const { TwistyPlayer } = await loadTwisty();
+    onStage?.("construct TwistyPlayer");
     const player = new TwistyPlayer({
         puzzle: spec.id,
         alg: alg ?? spec.alg,
@@ -148,15 +173,43 @@ export async function createTwistyRig({
     lift.name = "twisty-lift";
     group.add(lift);
 
-    const puzzleObject = await player.experimentalCurrentThreeJSPuzzleObject(() => {
-        onRenderScheduled?.();
-    });
-    const framed = centerAndFit(puzzleObject, edge);
-    enableShadows(puzzleObject);
-    lift.add(puzzleObject);
+    onStage?.("experimentalCurrentThreeJSPuzzleObject");
+    let puzzleObject = null;
+    let adoptError = null;
+    try {
+        puzzleObject = await withTimeout(
+            player.experimentalCurrentThreeJSPuzzleObject(() => {
+                onRenderScheduled?.();
+            }),
+            adoptTimeoutMs,
+            "experimentalCurrentThreeJSPuzzleObject",
+        );
+    } catch (err) {
+        adoptError = err;
+        player.style.cssText = [
+            "position:fixed",
+            "right:20px",
+            "top:72px",
+            "width:220px",
+            "height:160px",
+            "z-index:5",
+            "background:#111",
+            "border:1px solid rgba(255,255,255,0.12)",
+            "border-radius:12px",
+        ].join(";");
+        player.removeAttribute("data-cubing-spike");
+    }
 
-    const look = inspectMaterials(puzzleObject);
-    const skew = describeThreeSkew(puzzleObject);
+    let framed = { size: new THREE.Vector3(), nativeMax: 0 };
+    let look = { meshCount: 0, standardLike: 0, types: [] };
+    let skew = describeThreeSkew(puzzleObject);
+    if (puzzleObject) {
+        framed = centerAndFit(puzzleObject, edge);
+        enableShadows(puzzleObject);
+        lift.add(puzzleObject);
+        look = inspectMaterials(puzzleObject);
+        skew = describeThreeSkew(puzzleObject);
+    }
 
     let disposed = false;
 
@@ -192,6 +245,8 @@ export async function createTwistyRig({
         framed,
         look,
         skew,
+        fallback: Boolean(adoptError),
+        fallbackError: adoptError ? String(adoptError.message || adoptError) : null,
         play() {
             player.play();
         },

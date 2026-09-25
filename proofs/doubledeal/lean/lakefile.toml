@@ -2,6 +2,11 @@ name = "DoubleDeal"
 version = "0.1.0"
 defaultTargets = ["doubledeal"]
 
+# Link 2: import emitted Lean as a path dependency. Do not edit Generated/.
+[[require]]
+name = "sudo"
+path = "Generated"
+
 [[lean_lib]]
 name = "DoubleDeal"
 

@@ -12,3 +12,4 @@ import DoubleDeal.Modes
 import DoubleDeal.Concrete
 import DoubleDeal.Vectors
 import DoubleDeal.VectorCheck
+import DoubleDeal.Link2

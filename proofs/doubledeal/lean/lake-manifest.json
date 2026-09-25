@@ -1,5 +1,12 @@
 {"version": "1.1.0",
  "packagesDir": ".lake/packages",
- "packages": [],
+ "packages":
+ [{"type": "path",
+   "scope": "",
+   "name": "sudo",
+   "manifestFile": "lake-manifest.json",
+   "inherited": false,
+   "dir": "./Generated",
+   "configFile": "lakefile.lean"}],
  "name": "DoubleDeal",
  "lakeDir": ".lake"}

@@ -14,20 +14,21 @@ import DoubleDeal.Link2.Helpers
 import DoubleDeal.Link2.Append
 import DoubleDeal.Link2.Rotate
 import DoubleDeal.Link2.PassKey
+import DoubleDeal.Link2.PassKeyInv
 
 namespace DoubleDeal.Link2
 
 /-!
-  This drop: full passkey induction glue. On the well-formed domain,
-  `Generated.passkey` equals algebraic `passToKeyCutFallback` for every
-  well-formed length (`passkey_refines`), via residual stepper
-  `passkey_step_eq` / `passkey_inlined_cut_eq` and
-  `passkey_eq_twin_loop`. Nested suit-rotate after `dsimp` is the emitted
-  shape; `passkeyStepGen` is the sequential twin, not a second algorithm.
+  This drop: full `passkey_inv` glue. On the well-formed domain,
+  `Generated.passkey_inv` equals algebraic `passToKeyCutFallbackInv`
+  (`passkey_inv_refines`), via residual stepper `passkey_inv_step_eq`
+  and `passkey_inv_eq_twin_loop`. Nested undo-cut / suit-rotate after
+  `dsimp` is the emitted shape; `passkeyInvStepGen` is the sequential
+  twin, not a second algorithm. Reuses #26/#28 `runLoopOn` /
+  `right_rotate_refines`. Algebraic correctness only — not bit-security.
 
-  NEXT: `passkey_inv` (same twin / `runLoopOn` pattern; needed before
-  injectivity transfers onto `Except Trap`). Encrypt refinement stays
-  after that; S3/S4 transfer after that.
+  NEXT: encrypt refinement (same well-formed domain). S3/S4 Except Trap
+  transfer rides on the two passkey glues after that.
 
   ```
   theorem encrypt_refines (message key : List Nat)

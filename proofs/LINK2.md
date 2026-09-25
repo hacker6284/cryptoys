@@ -34,13 +34,13 @@ List Nat  --embed-->  Array Int
 List Nat  <--decode--  Array Int     (on success, no Trap)
 ```
 
-## This drop (DoubleDeal full passkey glue)
+## This drop (DoubleDeal `passkey_inv` glue)
 
-Builds on #26 (`left_rotate` ≃ `rotL`; one PassKey body ≃ `passKeyStep`;
-twin `runLoopOn` inducts to `passKeyGoN`). Residual stepper glue is
-**CLOSED**: emitted `Doubledeal.passkey` equals algebraic
-`passToKeyCutFallback` on every well-formed list (`FitsLen`; Trap does
-not fire; `List Nat`).
+Builds on #26/#28 (`left_rotate` ≃ `rotL`; `right_rotate` ≃ `rotR`;
+one-step bodies; twin `runLoopOn`). Residual inverse stepper glue is
+**CLOSED**: emitted `Doubledeal.passkey_inv` equals algebraic
+`passToKeyCutFallbackInv` on every well-formed list (`FitsLen`; Trap
+does not fire; `List Nat`). Algebraic Link 2 only — not bit-security.
 
 | Item | Status |
 | --- | --- |
@@ -49,14 +49,18 @@ not fire; `List Nat`).
 | `Generated.drop_front` ≃ algebraic `uncons` (nonempty, `FitsLen`) | Landed |
 | `Generated.push_front` ≃ algebraic `cons` (`FitsLen`) | Landed |
 | `Generated.left_rotate` ≃ algebraic `rotL` (`FitsLen`) | Landed (`Link2/Rotate.lean`) |
+| `Generated.right_rotate` ≃ algebraic `rotR` (`FitsLen`) | Landed (`right_rotate_refines`; via `left_rotate` + `rotR_eq_rotL`) |
 | One generated PassKey body ≃ `passKeyStep` (rotate / cut / push) | Landed (`maybeRotate_refines`, `maybeCut_push_refines`, `passKeyStep_refines`) |
 | Twin `runLoopOn` inducts to `passKeyGoN` on every well-formed list | Landed (`passkey_loop_refines`, `passkey_twin_refines`) |
 | `Generated.passkey` ≃ `passToKeyCutFallback` on length ≤ 1 | Landed (`passkey_nil`, `passkey_singleton`) |
 | Residual stepper of `Doubledeal.passkey` = `passkeyStepGen` | **CLOSED** (`passkey_step_eq`, `passkey_inlined_cut_eq`; nested suit-rotate / do-elaboration, not a second algorithm) |
 | `Generated.passkey` ≃ `passToKeyCutFallback` on every well-formed list | **CLOSED** (`passkey_eq_twin_loop`, `passkey_refines`) |
-| `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` | **NEXT** (same twin / `runLoopOn` pattern; needed before injectivity transfers onto `Except Trap`) |
-| `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | After `passkey_inv` (statement sketched in `DoubleDeal/Link2.lean`) |
-| S3/S4 transfer onto `Except Trap` (injectivity of emitted passkey, …) | After `passkey_inv` |
+| One generated inverse body ≃ `invPassKeyStep` | Landed (`maybeCutInv_refines`, `maybeRotateInv_refines`, `invPassKeyStep_refines`) |
+| Twin inverse `runLoopOn` inducts to `passKeyInvGoN` | Landed (`passkey_inv_loop_refines`, `passkey_inv_twin_refines`) |
+| Residual stepper of `Doubledeal.passkey_inv` = `passkeyInvStepGen` | **CLOSED** (`passkey_inv_step_eq`, `passkey_inv_eq_twin_loop`; nested undo-cut / do-elaboration, not a second algorithm) |
+| `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` on every well-formed list | **CLOSED** (`passkey_inv_refines`) |
+| `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | **NEXT** (statement sketched in `DoubleDeal/Link2.lean`) |
+| S3/S4 transfer onto `Except Trap` (injectivity of emitted passkey, …) | After encrypt refinement; rides on the two passkey glues |
 | MegaDreifach / Scramble algebraic ≃ Generated | OPEN (Scramble has little ledger; MD Hash is M13) |
 | DoubleDeal-CBC-HMAC algebraic ≃ Generated | OPEN. Generated TAP exists (`#22`); no algebraic ledger. Not AEAD security. |
 | sudo text = generated Lean (deep embedding) | OPEN — Link 1, not this file |

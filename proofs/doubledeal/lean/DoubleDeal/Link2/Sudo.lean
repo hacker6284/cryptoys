@@ -23,6 +23,12 @@ theorem except_bind_pure {ε α} (m : Except ε α) :
 @[simp] theorem map_ok {ε α β} (f : α → β) (a : α) :
     (f <$> (Except.ok a : Except ε α)) = Except.ok (f a) := rfl
 
+/-- Pull `if` out of `Except.bind` so residual `__do_lift ← if` reduces. -/
+theorem except_ite_bind {ε α β} {p : Prop} [Decidable p]
+    (t e : Except ε α) (f : α → Except ε β) :
+    ((if p then t else e) >>= f) = if p then t >>= f else e >>= f := by
+  by_cases h : p <;> simp [h]
+
 theorem bind_match_flow {σ ρ α}
     (m : Except SudoRt.Trap (SudoRt.Flow σ ρ))
     (onRet : ρ → Except SudoRt.Trap α)
@@ -91,15 +97,20 @@ theorem addI_ofNat_one (n : Nat) (h : FitsLen (n + 1)) :
     SudoRt.addI (Int.ofNat n) 1 = .ok (Int.ofNat (n + 1)) :=
   narrowI_ofNat (n + 1) h
 
+theorem subI_ofNat (a b : Nat) (hfits : FitsLen a) (hle : b ≤ a) :
+    SudoRt.subI (Int.ofNat a) (Int.ofNat b) = .ok (Int.ofNat (a - b)) := by
+  unfold SudoRt.subI
+  have : Int.ofNat a - Int.ofNat b = Int.ofNat (a - b) := by
+    rw [ofNat_eq_natCast a, ofNat_eq_natCast b, ← Int.ofNat_sub hle,
+        ofNat_eq_natCast]
+  rw [this]
+  exact narrowI_ofNat (a - b) (FitsLen.of_le hfits (Nat.sub_le _ _))
+
 theorem subI_ofNat_one (n : Nat) (hpos : 0 < n) (h : FitsLen n) :
     SudoRt.subI (Int.ofNat n) 1 = .ok (Int.ofNat (n - 1)) := by
-  unfold SudoRt.subI
-  have : Int.ofNat n - 1 = Int.ofNat (n - 1) := by
-    have hn : n = (n - 1) + 1 := (Nat.sub_add_cancel (Nat.succ_le_of_lt hpos)).symm
-    rw [hn]
-    simp [Int.ofNat_add]
+  have : (1 : Int) = Int.ofNat 1 := rfl
   rw [this]
-  exact narrowI_ofNat (n - 1) (FitsLen.of_le h (Nat.sub_le _ _))
+  exact subI_ofNat n 1 h (Nat.succ_le_of_lt hpos)
 
 theorem subI_zero_one : SudoRt.subI (0 : Int) 1 = .ok (-1) := by
   unfold SudoRt.subI SudoRt.narrowI

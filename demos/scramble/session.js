@@ -645,7 +645,7 @@ export function createScrambleSession({
         busy = false;
         cursor = -1;
         setTeaching(false);
-        settleView({ snap: true });
+        settleView();
         showFace(solved);
         showStatus(caption());
     }, listen);
@@ -700,7 +700,7 @@ export function createScrambleSession({
             busy = false;
             cursor = -1;
             setTeaching(false);
-            settleView({ snap: true });
+            settleView();
             showFace(solved);
             showStatus(caption());
         },

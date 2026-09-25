@@ -225,6 +225,13 @@ try {
             document.documentElement.dataset.cubeX = cube.position.x.toFixed(3);
             document.documentElement.dataset.cubeY = cube.position.y.toFixed(3);
             document.documentElement.dataset.cubeZ = cube.position.z.toFixed(3);
+            const stage = cube.userData.stage?.();
+            if (stage) {
+                document.documentElement.dataset.cubeSeatedY = Number.isFinite(stage.seatedY)
+                    ? stage.seatedY.toFixed(3)
+                    : "";
+                document.documentElement.dataset.cubeLifted = stage.lifted ? "1" : "";
+            }
         }
         world.render();
         requestAnimationFrame(tick);

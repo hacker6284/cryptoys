@@ -32,7 +32,7 @@ export const FLY_MS = 1800;
 export const LIFT_MS = 380;
 // Pick the cube up this far for face turns so layers clear the felt/rim.
 export const TURN_LIFT = 0.14;
-export const TURN_LIFT_MS = 260;
+export const TURN_LIFT_MS = 320;
 export const SETTLE_HOLD_MS = 90;
 // Hold the current shot this long so the cube leaving its slot is on camera
 // before the lens dollies. Click/Escape still skip after LIFT_MS.

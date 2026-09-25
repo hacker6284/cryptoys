@@ -1,0 +1,140 @@
+/* Isolated cubing.js spike chrome. Playroom scene/lighting stay untouched. */
+
+.cubing-spike .spike-banner {
+  position: fixed;
+  left: 20px;
+  top: 56px;
+  z-index: 3;
+  margin: 0;
+  max-width: 22rem;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 80%, #fff);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.cubing-spike .playroom-menu {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.spike-dock {
+  position: fixed;
+  right: 20px;
+  bottom: 18px;
+  z-index: 4;
+  width: min(26rem, calc(100vw - 40px));
+  pointer-events: none;
+}
+
+.spike-card {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 16px;
+}
+
+.spike-card .playroom-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.spike-card .seg-btn {
+  min-width: 4.5rem;
+  height: 2rem;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: color-mix(in srgb, var(--fg) 70%, transparent);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.spike-card .seg-btn.on {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.spike-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spike-actions .icon-btn {
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.spike-actions .icon-btn.on,
+.spike-actions .icon-primary.on {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.spike-alg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spike-alg input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+}
+
+.spike-notes {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.spike-notes p {
+  margin: 0 0 8px;
+}
+
+.spike-notes p:last-child {
+  margin-bottom: 0;
+}
+
+.spike-notes code {
+  font-size: 11px;
+  color: color-mix(in srgb, var(--fg) 80%, var(--accent));
+}
+
+@media (max-width: 720px) {
+  .cubing-spike .spike-banner {
+    top: auto;
+    bottom: auto;
+    left: 16px;
+    right: 16px;
+    max-width: none;
+  }
+
+  .spike-dock {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+  }
+}

@@ -14,9 +14,11 @@ sh tools/build.sh
 
 ## Production
 
-https://hacker6284.github.io/cryptoys/
+https://hacker6284.github.io/cryptoys/ and https://cryptoygraphy.com/ (`cryptoys.onrender.com`).
 
 Scramble runs in the room (`?algo=scramble`). DoubleDeal is still its own teaching page.
+
+**Render must not publish ungenerated `demos/` from `main`.** `generated/*.mjs` is gitignored on `main`; Pages CI writes it to `gh-pages` (that branch already *is* the demos tree). Point the existing `cryptoys` static site at branch `gh-pages`, publish directory `.` (not `demos/`), build command empty or `true`. Dashboard steps: `.github/RENDER.md`.
 
 ## PR previews
 

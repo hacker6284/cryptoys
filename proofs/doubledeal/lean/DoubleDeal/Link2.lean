@@ -15,31 +15,21 @@ import DoubleDeal.Link2.Append
 import DoubleDeal.Link2.Rotate
 import DoubleDeal.Link2.PassKey
 import DoubleDeal.Link2.PassKeyInv
+import DoubleDeal.Link2.Encrypt
 
 namespace DoubleDeal.Link2
 
 /-!
-  This drop: full `passkey_inv` glue. On the well-formed domain,
-  `Generated.passkey_inv` equals algebraic `passToKeyCutFallbackInv`
-  (`passkey_inv_refines`), via residual stepper `passkey_inv_step_eq`
-  and `passkey_inv_eq_twin_loop`. Nested undo-cut / suit-rotate after
-  `dsimp` is the emitted shape; `passkeyInvStepGen` is the sequential
-  twin, not a second algorithm. Reuses #26/#28 `runLoopOn` /
-  `right_rotate_refines`. Algebraic correctness only — not bit-security.
+  This drop: encrypt refinement on the well-formed domain.
+  `Generated.encrypt` equals algebraic `encryptDeck` / `encrypt6`
+  (`encrypt_refines`) when the message has length 52, every card id is
+  `CardBound` (so `step_seat` does not Trap), and the key is `Perm52`.
+  The bridge is the same twin `runLoopOn` used for passkey (#26/#28/#30):
+  lay / sum / shift / scoop, `mix_columns_refines`, `full_round_refines`,
+  `final_round_refines`. Algebraic Link 2 only — not bit-security.
 
-  NEXT: encrypt refinement (same well-formed domain). S3/S4 Except Trap
-  transfer rides on the two passkey glues after that.
-
-  ```
-  theorem encrypt_refines (message key : List Nat)
-      (hm : message.length = 52) (hk : Perm52 key) :
-      Doubledeal.encrypt (embed message) (embed key)
-        = .ok (embed (encryptDeck message key))
-  ```
-
-  Needs helper refinements for compose / unkeyed / mix_columns / expand_keys
-  on top of glued `passkey` / `passkey_inv`. Stay on the well-formed domain
-  (length 52, Trap does not fire). Still not emitter soundness.
+  OPEN: S3/S4 Except Trap transfer. Not MegaDreifach, Scramble, or
+  CBC-HMAC.
 -/
 
 end DoubleDeal.Link2

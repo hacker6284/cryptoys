@@ -644,10 +644,6 @@ body.playroom.is-ready .playroom-dock {
     --io-band: min(38dvh, 20rem);
   }
 
-  html[data-algo="doubledeal"] {
-    --io-band: min(46dvh, 24rem);
-  }
-
   html[data-algo]:not([data-algo=""]) #playroom {
     height: calc(100dvh - var(--io-band));
   }
@@ -677,6 +673,27 @@ body.playroom.is-ready .playroom-dock {
 
   html[data-algo]:not([data-algo=""]) .playroom-card--io {
     width: 100%;
+  }
+
+  html[data-algo="doubledeal"] .playroom-card--io {
+    gap: 8px;
+    padding: 10px 14px 12px;
+  }
+
+  html[data-algo="doubledeal"] .playroom-io-grid {
+    gap: 6px 12px;
+  }
+
+  html[data-algo="doubledeal"] .playroom-ctl {
+    gap: 4px;
+  }
+
+  html[data-algo="doubledeal"] .playroom-dock textarea,
+  html[data-algo="doubledeal"] .playroom-dock #digest {
+    height: 2.15rem;
+    min-height: 2.15rem;
+    max-height: 2.15rem;
+    line-height: 2.1rem;
   }
 
   html[data-algo]:not([data-algo=""]) .playroom-anim {

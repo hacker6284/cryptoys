@@ -148,11 +148,14 @@ export async function createUnboxRig({ anisotropy = 4, textures } = {}) {
     back.castShadow = true;
     sleeve.add(back);
 
-    const frontH = BH * 0.78;
+    const frontH = BH * 0.92;
     const front = new THREE.Mesh(new THREE.BoxGeometry(BW, frontH, WALL), board);
     front.position.set(0, -BH / 2 + WALL + frontH / 2, BD / 2 - WALL / 2);
     front.castShadow = true;
     sleeve.add(front);
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(BW, WALL * 1.6, BD), board);
+    rim.position.y = BH / 2 - WALL;
+    sleeve.add(rim);
 
     const inner = new THREE.Mesh(new THREE.BoxGeometry(BW - WALL * 2.2, frontH * 0.72, 0.0004), liner);
     inner.position.set(0, front.position.y + 0.004, BD / 2 - WALL - 0.0004);
@@ -175,10 +178,10 @@ export async function createUnboxRig({ anisotropy = 4, textures } = {}) {
     const flapPivot = new THREE.Group();
     flapPivot.position.set(0, BH / 2 - 0.0004, -BD / 2 + WALL);
     const flap = new THREE.Mesh(
-        new THREE.BoxGeometry(BW * 0.96, 0.0015, BD * 0.94),
+        new THREE.BoxGeometry(BW * 0.97, 0.0032, BD * 0.98),
         [liner, liner, board, liner, liner, liner],
     );
-    flap.position.set(0, 0.0004, BD * 0.47);
+    flap.position.set(0, 0.0016, BD * 0.49);
     flap.castShadow = true;
     flapPivot.add(flap);
     const lip = new THREE.Mesh(new THREE.BoxGeometry(BW * 0.7, 0.0007, 0.003), foil);
@@ -221,7 +224,7 @@ export async function createUnboxRig({ anisotropy = 4, textures } = {}) {
 
     function restow() {
         flapPivot.rotation.x = 0;
-        packet.visible = true;
+        packet.visible = false;
         if (packet.parent !== group) group.add(packet);
         packet.position.set(0, 0, 0);
         packet.rotation.set(0, 0, 0);

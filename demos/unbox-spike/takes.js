@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { CARD_D, CARD_W, DEN } from "../playroom/constants.js";
+import { CARD_W, DEN } from "../playroom/constants.js";
 import { POSES } from "../playroom/poses.js";
 import { CARD_T } from "./deck-rig.js";
 import { easeInOut, easeInOutCubic, easeOutCubic, easeOutQuart, lerp } from "./timeline.js";
@@ -15,15 +15,22 @@ export const SPIKE_SHOTS = {
         target: new THREE.Vector3(...POSES.shelf.target),
         fov: POSES.shelf.fov,
     },
-    // Close enough that a 67 mm tuck box is the subject, not the room.
-    unbox: {
-        position: new THREE.Vector3(DEN.x + 0.18, 1.00, DEN.z + 0.40),
+    // Travel with the box; keep the table in frame so an empty close-up
+    // cannot land before the prop does (the #29 shelf-hold lesson).
+    travel: {
+        position: new THREE.Vector3(DEN.x + 0.48, 1.24, DEN.z + 0.92),
         target: new THREE.Vector3(DEN.x, 0.86, DEN.z),
-        fov: 24,
+        fov: 32,
+    },
+    // Three-quarter of the landed 67 mm box — front label + closed flap.
+    unbox: {
+        position: new THREE.Vector3(DEN.x + 0.12, 0.95, DEN.z + 0.34),
+        target: new THREE.Vector3(DEN.x, 0.83, DEN.z),
+        fov: 26,
     },
     deal: {
-        position: new THREE.Vector3(DEN.x + 0.22, 1.10, DEN.z + 0.70),
-        target: new THREE.Vector3(DEN.x, 0.82, DEN.z + 0.10),
+        position: new THREE.Vector3(DEN.x + 0.20, 1.08, DEN.z + 0.62),
+        target: new THREE.Vector3(DEN.x, 0.82, DEN.z + 0.12),
         fov: 28,
     },
     seated: {
@@ -34,11 +41,6 @@ export const SPIKE_SHOTS = {
 };
 
 const look = new THREE.Vector3();
-const fromPos = new THREE.Vector3();
-const fromTarget = new THREE.Vector3();
-const toPos = new THREE.Vector3();
-const toTarget = new THREE.Vector3();
-const trackPos = new THREE.Vector3();
 
 export function applyShot(camera, shot) {
     camera.position.copy(shot.position);
@@ -66,12 +68,13 @@ export function playShot(camera, to, clock, gen, {
     track = null,
     ease = easeInOutCubic,
 } = {}) {
-    fromPos.copy(camera.position);
-    fromTarget.copy(look);
+    const fromPos = camera.position.clone();
+    const fromTarget = look.clone();
     const fromFov = camera.fov;
-    toPos.copy(to.position);
-    toTarget.copy(to.target);
+    const toPos = to.position.clone();
+    const toTarget = to.target.clone();
     const toFov = to.fov;
+    const tracked = new THREE.Vector3();
 
     async function run() {
         if (delay > 0) await clock.wait(delay, gen);
@@ -85,8 +88,8 @@ export function playShot(camera, to, clock, gen, {
             } else if (track) {
                 const p = track();
                 if (p) {
-                    trackPos.set(p.x, p.y, p.z);
-                    look.lerpVectors(trackPos, toTarget, (t - 0.74) / 0.26);
+                    tracked.set(p.x, p.y, p.z);
+                    look.lerpVectors(tracked, toTarget, (t - 0.74) / 0.26);
                 } else {
                     look.lerpVectors(fromTarget, toTarget, t);
                 }
@@ -97,6 +100,7 @@ export function playShot(camera, to, clock, gen, {
             camera.lookAt(look);
             camera.updateProjectionMatrix();
         }, { ease, generation: gen });
+        if (!track) applyShot(camera, to);
     }
     return run();
 }
@@ -185,6 +189,7 @@ export async function playPhysical({ world, rig, camera, clock, gen, keyLight, t
     if (clock.dead(gen)) return;
 
     mark("flap");
+    rig.packet.visible = true;
     await clock.tween(720, (t) => {
         rig.setFlap(t);
         if (keyLight) keyLight.intensity = lerp(2.15, 2.55, t);
@@ -194,6 +199,7 @@ export async function playPhysical({ world, rig, camera, clock, gen, keyLight, t
 
     mark("extract");
     const packet = rig.packet;
+    packet.visible = true;
     const fromY = packet.position.y;
     await clock.tween(780, (t) => {
         packet.position.y = lerp(fromY, 0.086, easeOutQuart(t));
@@ -313,6 +319,7 @@ export async function playBloom({ world, rig, camera, clock, gen, keyLight }) {
     if (clock.dead(gen)) return;
 
     mark("bloom");
+    rig.packet.visible = true;
     world.scene.attach(rig.packet);
     const dests = rig.cards.map((_, i) => cardSeat(i, rig.cards.length, origin, surfaceY));
     const bloom = clock.tween(1100, (t) => {

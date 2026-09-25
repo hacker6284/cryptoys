@@ -16,20 +16,20 @@ import DoubleDeal.Link2.Rotate
 import DoubleDeal.Link2.PassKey
 import DoubleDeal.Link2.PassKeyInv
 import DoubleDeal.Link2.Encrypt
+import DoubleDeal.Link2.PassKeyTransfer
 
 namespace DoubleDeal.Link2
 
 /-!
-  This drop: encrypt refinement on the well-formed domain.
-  `Generated.encrypt` equals algebraic `encryptDeck` / `encrypt6`
-  (`encrypt_refines`) when the message has length 52, every card id is
-  `CardBound` (so `step_seat` does not Trap), and the key is `Perm52`.
-  The bridge is the same twin `runLoopOn` used for passkey (#26/#28/#30):
-  lay / sum / shift / scoop, `mix_columns_refines`, `full_round_refines`,
-  `final_round_refines`. Algebraic Link 2 only — not bit-security.
+  This drop: S3/S4 on `Except Trap`. Emitted `Doubledeal.passkey` and
+  `Doubledeal.passkey_inv` inherit card-multiset preservation, mutual
+  inversion, and injectivity on `FitsLen` / `WellFormed`
+  (`passkey_perm`, `passkey_inv_perm`, `passkey_leftInverse`,
+  `passkey_rightInverse`, `passkey_injective`, `passkey_inv_injective`,
+  and the `WellFormed` Array forms). The proofs ride `passkey_refines`
+  and `passkey_inv_refines`. Algebraic Link 2 only — not bit-security.
 
-  OPEN: S3/S4 Except Trap transfer. Not MegaDreifach, Scramble, or
-  CBC-HMAC.
+  OPEN: MegaDreifach / Scramble algebraic ≃ Generated. Not CBC-HMAC.
 -/
 
 end DoubleDeal.Link2

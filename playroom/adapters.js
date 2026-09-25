@@ -4,6 +4,7 @@ import { createCubeRig } from "../scramble/view.js";
 import { lucideSvg } from "../shared/icons.js";
 import { fadeTree, setTreeOpacity, stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
+import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 
 /**
  * Demo adapters — Scramble and DoubleDeal share the playroom shell.
@@ -182,6 +183,32 @@ function mountDock() {
     return root;
 }
 
+function wantsLegacyCube() {
+    try {
+        return new URLSearchParams(location.search).get("legacyCube") === "1";
+    } catch {
+        return false;
+    }
+}
+
+function pendingTwistyRig(seat) {
+    const noop = () => {};
+    return {
+        group: seat.group,
+        lift: seat.lift,
+        fit: seat.fit,
+        inner: seat.lift,
+        paint: noop,
+        animateMove: async () => {},
+        animateReorient: async () => {},
+        highlightLayer: noop,
+        highlightCubie: noop,
+        highlightRuleB: noop,
+        clearHighlights: noop,
+        dispose: noop,
+    };
+}
+
 function createScrambleAdapter() {
     let rig = null;
     let session = null;
@@ -190,14 +217,34 @@ function createScrambleAdapter() {
     let sessionMod = null;
     let preloadPromise = null;
     let specObjectUrl = null;
+    let adoptPromise = null;
+
+    function installLegacy(world, { poses, prefersReducedMotion } = {}) {
+        const live = createCubeRig({ edge: CUBE, castShadow: true });
+        const prev = world.toys.cube;
+        live.group.position.copy(prev.position);
+        live.group.rotation.copy(prev.rotation);
+        world.replaceToy("cube", live.group);
+        disposeObject(prev);
+        live.paint(SOLVED_FACELETS);
+        rig = stageCubeView(live, { poses, prefersReducedMotion });
+        return rig;
+    }
 
     async function preload() {
-        if (sessionMod) return sessionMod;
+        if (sessionMod && !adoptPromise) return sessionMod;
         if (!preloadPromise) {
             preloadPromise = (async () => {
+                const adopt = adoptPromise ? adoptPromise.catch((err) => {
+                    console.warn("cubing.js adopt failed; using createCubeRig", err);
+                }) : Promise.resolve();
                 await loadScript(new URL("../scramble/vendor/cube.js", import.meta.url).href);
                 await loadScript(new URL("../scramble/vendor/solve.js", import.meta.url).href);
-                sessionMod = await import("../scramble/session.js");
+                const [, mod] = await Promise.all([
+                    adopt,
+                    import("../scramble/session.js"),
+                ]);
+                sessionMod = mod;
                 return sessionMod;
             })();
         }
@@ -206,17 +253,45 @@ function createScrambleAdapter() {
 
     return {
         id: "scramble",
-        install(world, { poses, prefersReducedMotion } = {}) {
+        install(world, opts = {}) {
             if (rig) return rig;
-            const live = createCubeRig({ edge: CUBE, castShadow: true });
+            if (wantsLegacyCube()) return installLegacy(world, opts);
+            // Seat is sync so toy-director can fly it before cubing.js
+            // adopts. createTwistyRig() is the one-shot helper (swapPuzzle).
+            const seat = createTwistySeat({ edge: CUBE });
             const prev = world.toys.cube;
-            live.group.position.copy(prev.position);
-            live.group.rotation.copy(prev.rotation);
-            world.replaceToy("cube", live.group);
-            disposeObject(prev);
-            live.paint(SOLVED_FACELETS);
-            world.applyPose(live.group, world.getShelfPose("cube"));
-            rig = stageCubeView(live, { poses, prefersReducedMotion });
+            world.replaceToy("cube", seat.group);
+            if (prev) {
+                prev.visible = true;
+                prev.position.set(0, 0, 0);
+                prev.rotation.set(0, 0, 0);
+                prev.quaternion?.identity?.();
+                seat.fit.add(prev);
+                seat.placeholder = prev;
+            }
+            world.applyPose(seat.group, world.getShelfPose("cube"));
+            rig = stageCubeView(pendingTwistyRig(seat), opts);
+            adoptPromise = adoptTwistyPuzzle(seat, { puzzle: "3x3x3", edge: CUBE })
+                .then((live) => {
+                    if (typeof live.setAlg !== "function" || typeof live.playLeaves !== "function") {
+                        live.dispose?.();
+                        throw new Error("cubing.js rig missing timeline API");
+                    }
+                    if (seat.placeholder) {
+                        disposeObject(seat.placeholder);
+                        seat.placeholder = null;
+                    }
+                    rig = stageCubeView(live, opts);
+                    if (typeof rig.setAlg !== "function" || typeof rig.playLeaves !== "function") {
+                        throw new Error("staged cubing.js rig missing timeline API");
+                    }
+                    return rig;
+                })
+                .catch((err) => {
+                    console.warn("cubing.js adopt failed; using createCubeRig", err);
+                    adoptPromise = null;
+                    return installLegacy(world, opts);
+                });
             return rig;
         },
         preload,
@@ -259,8 +334,11 @@ function createScrambleAdapter() {
             }
             if (rig) {
                 void rig.settle?.({ snap: true });
-                rig.clearHighlights();
-                rig.paint(SOLVED_FACELETS);
+                rig.clearHighlights?.();
+                rig.pauseTimeline?.();
+                rig.resetTimeline?.();
+                rig.jumpToLeaf?.(-1);
+                rig.paint?.(SOLVED_FACELETS);
             }
         },
     };

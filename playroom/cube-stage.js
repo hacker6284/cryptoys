@@ -130,24 +130,49 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         }
     }
 
+    function call(name, fallback) {
+        return typeof rig[name] === "function" ? (...args) => rig[name](...args) : fallback;
+    }
+
     return {
         group: rig.group,
-        inner: rig.inner,
-        paint: (facelets) => rig.paint(facelets),
+        inner: rig.inner ?? rig.lift,
+        lift: rig.lift,
+        fit: rig.fit,
+        paint: (facelets) => rig.paint?.(facelets),
         animateMove: (move, ms) => withLift(() => rig.animateMove(move, ms)),
         animateReorient: (from, up, front, ms) => withLift(() => rig.animateReorient(from, up, front, ms)),
-        highlightLayer: (...args) => rig.highlightLayer(...args),
-        highlightCubie: (...args) => rig.highlightCubie(...args),
-        highlightRuleB: (...args) => rig.highlightRuleB(...args),
-        clearHighlights: () => rig.clearHighlights(),
+        playLeaves: rig.playLeaves
+            ? (from, to, opts = {}) => withLift(() => rig.playLeaves(from, to, {
+                ...opts,
+                snap: Boolean(opts.snap) || reduced(),
+            }))
+            : undefined,
+        playMoves: rig.playMoves
+            ? (moves, opts = {}) => withLift(() => rig.playMoves(moves, {
+                ...opts,
+                snap: Boolean(opts.snap) || reduced(),
+            }))
+            : undefined,
+        jumpToLeaf: call("jumpToLeaf"),
+        setAlg: call("setAlg"),
+        setSetup: call("setSetup"),
+        setTempo: call("setTempo"),
+        resetTimeline: call("reset"),
+        pauseTimeline: call("pause"),
+        highlightLayer: call("highlightLayer", () => {}),
+        highlightCubie: call("highlightCubie", () => {}),
+        highlightRuleB: call("highlightRuleB", () => {}),
+        clearHighlights: call("clearHighlights", () => {}),
         dispose: () => {
             cancelEase();
             rig.group.position.y = destY();
             lifted = false;
             releaseFrame();
-            rig.dispose();
+            rig.dispose?.();
         },
         rememberSeated,
         settle,
+        swapPuzzle: call("swapPuzzle"),
     };
 }

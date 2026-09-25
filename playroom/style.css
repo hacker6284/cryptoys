@@ -748,3 +748,17 @@ body.playroom.is-ready .playroom-dock {
     display: none;
   }
 }
+
+/* cubing.js host. Must stay paintable — never display:none / visibility:hidden. */
+twisty-player.twisty-host,
+.twisty-host {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 80px;
+  height: 56px;
+  opacity: 0.02;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}

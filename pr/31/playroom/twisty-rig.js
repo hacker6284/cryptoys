@@ -409,6 +409,7 @@ export async function adoptTwistyPuzzle(seat, {
     }
 }
 
+/** One-shot: new seat + adopt. Playroom install uses the split so the seat exists before adopt. */
 export async function createTwistyRig(opts = {}) {
     const seat = opts.seat || createTwistySeat({ edge: opts.edge });
     return adoptTwistyPuzzle(seat, opts);

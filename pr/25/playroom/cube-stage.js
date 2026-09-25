@@ -29,9 +29,9 @@ function tween(ms, step, snap) {
 export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
     let seatedY = null;
     let lifted = false;
-    let motion = null;
     let token = 0;
     let settleTimer = 0;
+    let moving = null;
 
     function reduced() {
         return Boolean(prefersReducedMotion?.());
@@ -47,6 +47,10 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         rig.group.userData.seatedY = seatedY;
     }
 
+    function destY() {
+        return seatedY == null ? rig.group.position.y : seatedY;
+    }
+
     function engageFrame() {
         poses?.frame?.(cubeTarget);
     }
@@ -58,39 +62,41 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
     async function moveY(toY, { snap = false } = {}) {
         const toy = rig.group;
         const fromY = toy.position.y;
+        if (Math.abs(fromY - toY) < 1e-4) {
+            toy.position.y = toY;
+            return true;
+        }
         const my = ++token;
-        motion = tween(TURN_LIFT_MS, (t) => {
+        const run = tween(TURN_LIFT_MS, (t) => {
             if (my !== token) return;
             toy.position.y = fromY + (toY - fromY) * t;
         }, snap || reduced());
-        await motion;
-        if (my === token) toy.position.y = toY;
-        if (my === token) motion = null;
+        moving = run;
+        await run;
+        if (my !== token) return false;
+        toy.position.y = toY;
+        moving = null;
+        return true;
     }
 
     async function lift() {
         window.clearTimeout(settleTimer);
         engageFrame();
-        if (lifted) return;
         if (seatedY == null) rememberSeated();
-        if (motion) await motion;
-        if (lifted) return;
-        await moveY(seatedY + TURN_LIFT);
-        lifted = true;
+        const up = destY() + TURN_LIFT;
+        if (Math.abs(rig.group.position.y - up) < 1e-3) {
+            lifted = true;
+            return;
+        }
+        const ok = await moveY(up);
+        if (ok) lifted = true;
     }
 
     async function setDown({ snap = false } = {}) {
         window.clearTimeout(settleTimer);
-        token += 1;
-        motion = null;
-        if (!lifted && seatedY != null) {
-            if (Math.abs(rig.group.position.y - seatedY) < 1e-4) {
-                releaseFrame();
-                return;
-            }
-        }
-        const dest = seatedY == null ? rig.group.position.y : seatedY;
-        await moveY(dest, { snap });
+        const dest = destY();
+        const ok = await moveY(dest, { snap });
+        if (!ok) return;
         lifted = false;
         releaseFrame();
     }
@@ -99,6 +105,14 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         window.clearTimeout(settleTimer);
         return setDown({ snap });
     }
+
+    // Playroom debug: lift/set-down state for headless checks.
+    rig.group.userData.stage = () => ({
+        seatedY,
+        lifted,
+        y: rig.group.position.y,
+        dest: destY(),
+    });
 
     function scheduleSetDown() {
         window.clearTimeout(settleTimer);

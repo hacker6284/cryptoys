@@ -13,7 +13,7 @@ Query: `?puzzle=megaminx` or `?puzzle=pyraminx`.
 
 ## What this proves
 
-`TwistyPlayer.experimentalCurrentThreeJSPuzzleObject(cb)` returns a three.js `Object3D`. We parent it under a seat/lift group and add that group to the existing playroom scene (`mountWorld` renderer, lights, camera, HDR). The TwistyPlayer custom element stays in the DOM (required for the 3D object to exist) but is offscreen — no second canvas in the room.
+`TwistyPlayer.experimentalCurrentThreeJSPuzzleObject(cb)` returns a three.js `Object3D`. We parent it under a seat/lift group and add that group to the existing playroom scene (`mountWorld` renderer, lights, camera, HDR). The TwistyPlayer custom element stays in the DOM (required for the 3D object to exist) as a tiny in-viewport host — **not** `display:none` / `visibility:hidden`, which prevents the vantage from ever creating the Object3D (the adopt promise never resolves). If adopt times out (second WebGL context / software GL), the player is shown as a corner canvas fallback so playback can still be proven.
 
 Same adapter surface for **3×3×3**, **megaminx**, and **pyraminx**. Switching puzzles recreates the player: cubing.js documents that changing `puzzle` leaves the adopted object stale.
 
@@ -72,7 +72,7 @@ Official cubing CDN (workers / WASM-safe). Not vendored, not npm — load only o
 
 1. **Experimental / deprecated API.** `experimentalCurrentThreeJSPuzzleObject` may go away or leave the main thread. Adopt-into-scene is the whole spike; have a fallback (keep TwistyPlayer as a hidden viewport, or fork a thin PG3D loader) before committing the room to it.
 2. **three.js instance skew.** If cubing bundles its own `three`, `instanceof Object3D` fails. Meshes often still render; `replaceToy` / shadows / dispose get sharper. Import map `"three"` → 0.170.0 is the intended share. Check the on-page skew line.
-3. **Player must stay connected.** The custom element is hidden, not destroyed, while the puzzle is shown. Extra WebGL context inside Twisty is waste; we should confirm whether cubing still spins its own renderer after adopt.
+3. **Player must stay connected and paintable.** `display:none` / `visibility:hidden` / offscreen-far canvases can prevent the 3D object from ever existing. Extra WebGL context inside Twisty is waste; software GL (SwiftShader) may fail the second context and trip the fallback canvas.
 4. **Stale object on `puzzle` change.** Recreate the rig (this spike does).
 5. **Alg / orientation.** 3×3 WCA, megaminx `R++ D++`, pyraminx. Scramble’s facelet string and “white up, green front, red right” still have to be mapped onto cubing.js setup/alg — not done here.
 6. **License / CDN.** Floating v0 + MPL source-mod publish if we patch.

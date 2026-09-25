@@ -65,7 +65,9 @@ function renderLookNotes(current) {
     const types = current.look.types.map(([type, n]) => `${type}×${n}`).join(", ") || "none";
     const same = current.skew.instanceofOurObject3D ? "yes" : "NO — two three.js copies";
     notesEl.innerHTML = `
-      <p><strong>Embed:</strong> <code>experimentalCurrentThreeJSPuzzleObject</code> → playroom <code>scene</code>. Twisty canvas is offscreen.</p>
+      <p><strong>Embed:</strong> ${current.fallback
+        ? `adopt failed (${current.fallbackError}). TwistyPlayer canvas is the fallback — room lights still run.`
+        : `<code>experimentalCurrentThreeJSPuzzleObject</code> → playroom <code>scene</code>. Twisty host is a 80×56 off-to-the-corner canvas.`}</p>
       <p><strong>three.js:</strong> playroom r${current.skew.ourRevision}; <code>instanceof Object3D</code> ${same} (<code>${current.skew.constructorName}</code>).</p>
       <p><strong>Default look:</strong> ${current.look.meshCount} meshes; ${types}. Standard/physical materials: ${current.look.standardLike}. Twisty stickers are brighter and less “plastic” than our MeshStandard cubies — see NOTES.md.</p>
       <p><strong>Hand-rolled remaining:</strong> seat/fly, local lift, room camera framing, chrome. Not cubies, not facelet animation, not megaminx/pyraminx meshes.</p>
@@ -94,6 +96,7 @@ async function mountPuzzle(puzzleId) {
         puzzle: puzzleId,
         edge: CUBE,
         alg: algInput?.value.trim() || PUZZLES[puzzleId].alg,
+        onStage: (stage) => setStatus(`Loading ${PUZZLES[puzzleId]?.label || puzzleId} · ${stage}`),
         onRenderScheduled: () => {
             // Playroom already has a rAF loop; callback is the official hook
             // if we ever render on-demand.
@@ -109,7 +112,7 @@ async function mountPuzzle(puzzleId) {
     markTransport();
     writeQuery(puzzleId);
     renderLookNotes(next);
-    await refreshStatus("adopted");
+    await refreshStatus(next.fallback ? "Twisty canvas fallback" : "adopted");
 }
 
 try {
@@ -121,11 +124,17 @@ try {
     document.title = "cubing.js spike";
 
     if (algInput) algInput.value = PUZZLES[initialPuzzle].alg;
-    await mountPuzzle(initialPuzzle);
 
     document.body.classList.add("is-ready");
     document.documentElement.dataset.playroomReady = "1";
     document.documentElement.dataset.algo = "cubing-spike";
+    window.addEventListener("resize", () => world.resize());
+    function tick(now) {
+        poses.update(now);
+        world.render();
+        requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
 
     for (const button of puzzleButtons) {
         button.addEventListener("click", () => {
@@ -189,14 +198,8 @@ try {
         void refreshStatus("alg set");
     });
 
-    window.addEventListener("resize", () => world.resize());
+    await mountPuzzle(initialPuzzle);
 
-    function tick(now) {
-        poses.update(now);
-        world.render();
-        requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
 } catch (err) {
     console.error(err);
     document.body.classList.add("is-error");

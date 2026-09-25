@@ -16,7 +16,7 @@ sh tools/build.sh
 
 https://hacker6284.github.io/cryptoys/ and https://cryptoygraphy.com/ (`cryptoys.onrender.com`).
 
-Scramble and DoubleDeal both run in the room (`?algo=scramble`, `?algo=doubledeal`). Scramble puzzle mode: `?algo=scramble&puzzle=megaminx` or `puzzle=pyraminx` (default 3×3). The standalone teaching pages remain at `scramble/?standalone=1` and `doubledeal/?standalone=1`.
+Scramble and DoubleDeal both run in the room (`?algo=scramble`, `?algo=doubledeal`). DoubleDeal enter is the physical shelf → tuck-box unbox, then a hard cut to the existing 4×13 session table. Playroom scene transitions do not fade. Scramble puzzle mode: `?algo=scramble&puzzle=megaminx` or `puzzle=pyraminx` (default 3×3). The standalone teaching pages remain at `scramble/?standalone=1` and `doubledeal/?standalone=1`.
 
 Scramble’s 3D cube is cubing.js (`createTwistyRig` in `playroom/twisty-rig.js`), adopted into the playroom scene. Session Play / Step / Reset / speed drive `player.alg` and the Twisty timeline. Notes, license, and remaining hand-rolled bits: `playroom/CUBING.md`. Rollback: `?legacyCube=1`.
 

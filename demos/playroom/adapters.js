@@ -2,10 +2,14 @@ import { CUBE } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { createCubeRig } from "../scramble/view.js";
 import { lucideSvg } from "../shared/icons.js";
-import { fadeTree, setTreeOpacity, stageCardTable } from "./card-stage.js";
+import { createBeatClock } from "./beat-clock.js";
+import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
 import { normalizePuzzleId, readPuzzleSearchParam } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
+import { pickHandTextures } from "./unbox-hand.js";
+import { createDealerKey, disposeDealerKey, playPhysical } from "./unbox-physical.js";
+import { createUnboxRig } from "./unbox-rig.js";
 
 /**
  * Demo adapters — Scramble and DoubleDeal share the playroom shell.
@@ -498,6 +502,11 @@ function createDoubleDealAdapter() {
     let textures = null;
     let preloadPromise = null;
     let specObjectUrl = null;
+    let unbox = null;
+    let clock = null;
+    let enterGen = 0;
+    let keyLight = null;
+    let cancelEnter = false;
 
     async function preload() {
         if (sessionMod && textures) return { sessionMod, textures };
@@ -515,6 +524,66 @@ function createDoubleDealAdapter() {
         return preloadPromise;
     }
 
+    function stowUnboxHidden() {
+        if (!unbox) return;
+        for (const mesh of unbox.cards) {
+            if (mesh.parent && mesh.parent !== unbox.packet) unbox.packet.attach(mesh);
+        }
+        if (unbox.packet.parent !== unbox.group) unbox.group.add(unbox.packet);
+        unbox.restow();
+        unbox.group.visible = false;
+        if (keyLight) keyLight.intensity = 0;
+    }
+
+    async function prepareEnter() {
+        if (!world) return null;
+        const loaded = await preload();
+        if (!unbox) {
+            const anisotropy = Math.min(8, world.renderer?.capabilities?.getMaxAnisotropy?.() || 4);
+            unbox = await createUnboxRig({
+                anisotropy,
+                textures: pickHandTextures(loaded.textures),
+                sharedMaps: true,
+            });
+            const prev = world.toys.deck;
+            if (prev) {
+                unbox.group.position.copy(prev.position);
+                unbox.group.rotation.copy(prev.rotation);
+                if (prev.quaternion && unbox.group.quaternion) {
+                    unbox.group.quaternion.copy(prev.quaternion);
+                }
+            }
+            world.replaceToy("deck", unbox.group);
+            disposeObject(prev);
+        }
+        unbox.restow();
+        unbox.group.visible = true;
+        if (!unbox.group.userData.flightBusy) world.shelfHome("deck");
+        return unbox;
+    }
+
+    function hideProp() {
+        if (unbox) stowUnboxHidden();
+        else if (world?.toys.deck) world.toys.deck.visible = false;
+        if (keyLight) keyLight.intensity = 0;
+    }
+
+    function cutToTable() {
+        // Hard cut only. No opacity lerp, dissolve, or box↔table fade.
+        hideProp();
+        table?.show?.();
+    }
+
+    function skipEnter() {
+        clock?.skip();
+    }
+
+    function showDock() {
+        if (!root) return;
+        root.hidden = false;
+        root.classList.add("on");
+    }
+
     return {
         id: "doubledeal",
         install(nextWorld, { poses: nextPoses } = {}) {
@@ -523,17 +592,26 @@ function createDoubleDealAdapter() {
             return world.toys.deck;
         },
         preload,
+        prepareEnter,
+        skipEnter,
+        get busy() {
+            return Boolean(entering && clock && !clock.dead(enterGen));
+        },
         view() {
             return table || (world ? { group: world.toys.deck } : null);
         },
         async enter({ snap = false } = {}) {
             if (session || entering) return session;
             entering = true;
+            cancelEnter = false;
             try {
                 const loaded = await preload();
+                if (!unbox) await prepareEnter();
                 root = mountDoubleDealDock();
-                table = stageCardTable(world, loaded.textures, { poses, snap });
-                const box = world.toys.deck;
+                const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
+                poses?.lockOrbit?.();
+                if (!keyLight && world) keyLight = createDealerKey(world);
+                table = stageCardTable(world, loaded.textures, { poses, visible: false });
                 const specUrl = await resolveSpecUrl("doubledeal");
                 if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
                 session = loaded.sessionMod.createDoubleDealSession({
@@ -544,28 +622,33 @@ function createDoubleDealAdapter() {
                     liveDigest: true,
                 });
                 table.rememberSeated?.();
-                root.hidden = false;
-                root.classList.add("on");
-                if (box) {
-                    if (snap) {
-                        box.visible = false;
-                        setTreeOpacity(box, 1);
-                    } else {
-                        await Promise.all([
-                            table.fadeIn({ ms: 260 }),
-                            fadeTree(box, 0, { ms: 200 }).then(() => {
-                                box.visible = false;
-                                setTreeOpacity(box, 1);
-                            }),
-                        ]);
-                    }
+                clock = createBeatClock({ reduced });
+                enterGen = clock.begin();
+                if (!reduced && !cancelEnter && unbox) {
+                    await playPhysical({
+                        world,
+                        rig: unbox,
+                        poses,
+                        clock,
+                        gen: enterGen,
+                        keyLight,
+                        trackBox: () => world.toys.deck?.position,
+                    });
                 }
+                if (cancelEnter) return session;
+                poses?.snap?.("doubledeal");
+                cutToTable();
+                showDock();
                 return session;
             } finally {
                 entering = false;
+                clock = null;
+                poses?.unlockOrbit?.();
             }
         },
-        async leave({ snap = false } = {}) {
+        async leave() {
+            cancelEnter = true;
+            skipEnter();
             session?.dispose();
             session = null;
             if (specObjectUrl) {
@@ -577,18 +660,18 @@ function createDoubleDealAdapter() {
                 root.hidden = true;
             }
             if (table) {
-                await table.fadeOut({ ms: 180, snap });
                 table.dispose();
                 table = null;
             }
-            // Keep the shelf prop hidden until it is home. Showing it
-            // on the felt here is the flash Back used to make.
-            if (world?.toys.deck) world.toys.deck.visible = false;
+            hideProp();
+            disposeDealerKey(world, keyLight);
+            keyLight = null;
+            poses?.unlockOrbit?.();
         },
         revealShelf() {
             const box = world?.toys.deck;
             if (!box) return;
-            setTreeOpacity(box, 1);
+            if (unbox) unbox.restow();
             box.visible = true;
         },
     };

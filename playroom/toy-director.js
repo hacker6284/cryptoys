@@ -6,7 +6,7 @@ import { FLY_MS, LIFT_MS } from "./constants.js";
  * Shelf holds one of each kind. Scramble borrows the cube and DoubleDeal
  * borrows the deck: lift from the slot, then arc to the felt. Camera
  * follow is the pose controller's job. Click skips; reduced-motion snaps.
- * Chest extras highlight only; unbox / deal choreography is later.
+ * Chest extras highlight only. DoubleDeal unbox lives in the adapter.
  */
 
 const RECIPES = {

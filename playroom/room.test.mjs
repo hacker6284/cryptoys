@@ -27,6 +27,14 @@ assert.ok(POSES.doubledeal, "doubledeal pose exists");
 assert.equal(resolvePoseName("doubledeal"), "doubledeal");
 assert.equal(resolvePoseName("lean_deck"), "doubledeal");
 assert.equal(resolvePoseName("scramble"), "scramble");
+assert.ok(POSES.unbox, "unbox close-up exists");
+assert.ok(POSES.unbox_travel, "unbox travel shot exists");
+assert.ok(POSES.unbox_deal, "unbox deal shot exists");
+assert.equal(resolvePoseName("unbox"), "unbox");
+assert.ok(POSES.unbox.fov < POSES.doubledeal.fov, "unbox close-up is tighter than the seated lean");
+assert.ok(POSES.unbox_travel.fov >= POSES.doubledeal.fov, "travel stays wide enough to hold the felt");
+assert.ok(!POSES.unbox.overlays.teach, "unbox chrome stays quiet");
+assert.ok(!POSES.unbox_travel.overlays.menu, "travel chrome stays quiet");
 assert.ok(POSES.doubledeal.fov <= 32, "doubledeal FOV stays in the scramble-lean family");
 assert.ok(POSES.doubledeal.position[1] <= 1.28, "doubledeal camera height matches seated lean");
 assert.ok(POSES.doubledeal.position[2] - DEN.z <= 1.05, "doubledeal stay close to the felt");
@@ -172,6 +180,8 @@ assert.equal(cubeWorld.slotsEmpty.cube, false);
 
 console.log("playroom room tests ok");
 
+await import("./beat-clock.test.mjs");
+await import("./unbox.test.mjs");
 await import("./scramble-alg.test.mjs");
 await import("./twisty-rig.test.mjs");
 await import("./puzzles.test.mjs");

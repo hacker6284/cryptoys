@@ -44,6 +44,7 @@ export const SETTLE_HOLD_MS = 90;
 // before the lens dollies. Click/Escape still skip after LIFT_MS.
 export const HOLD_MS = 760;
 
-// Standalone DoubleDeal table is ~17.4 units wide. Scale the live card
-// group onto the playroom felt. Unbox / deal choreography is later.
+// Standalone DoubleDeal table is ~17.4 units wide. Scale the live 4×13
+// session onto the playroom felt. The physical unbox deals a stand-in
+// packet, then hands off — do not animate these 104 seats as the enter.
 export const DEAL_SCALE = 0.068;

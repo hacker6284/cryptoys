@@ -20,12 +20,20 @@ const ALGOS = {
 let activeAlgo = null;
 let leaving = false;
 let starting = false;
+let skippedStart = false;
 let ignoreSkipUntil = 0;
 let resizeWorld = () => {};
 
+function seatedQueryPose(pose) {
+    if (!pose) return pose;
+    if (pose === "scramble" || pose === "doubledeal") return "seated";
+    if (String(pose).startsWith("unbox")) return "seated";
+    return pose;
+}
+
 function writeQuery({ pose, algo }) {
     const url = new URL(location.href);
-    const poseName = pose === "scramble" || pose === "doubledeal" ? "seated" : pose;
+    const poseName = seatedQueryPose(pose);
     if (!poseName || poseName === "landing") url.searchParams.delete("pose");
     else url.searchParams.set("pose", poseName);
     if (!algo) url.searchParams.delete("algo");
@@ -93,6 +101,7 @@ try {
         if (!meta || !adapter) return;
         if (activeAlgo === id || starting || leaving) return;
         starting = true;
+        skippedStart = false;
         activeAlgo = id;
         syncOverlays({
             name: poses.name,
@@ -102,12 +111,14 @@ try {
         try {
             const reduced = snap || poses.prefersReducedMotion();
             ignoreSkipUntil = performance.now() + LIFT_MS;
-            const fly = director.borrow(id, { snap: reduced });
             const warm = adapter.preload();
+            await adapter.prepareEnter?.();
+            const fly = director.borrow(id, { snap: reduced });
+            const flyPose = id === "doubledeal" ? "unbox_travel" : meta.pose;
             if (reduced) {
                 poses.snap(meta.pose);
             } else {
-                poses.goTo(meta.pose, {
+                poses.goTo(flyPose, {
                     duration: FLY_MS,
                     via: "shelf",
                     viaT: HOLD_MS / FLY_MS,
@@ -117,7 +128,8 @@ try {
             await Promise.all([fly, warm]);
             if (leaving) return;
             adapter.view()?.rememberSeated?.();
-            await adapter.enter({ snap: reduced });
+            await adapter.enter({ snap: reduced || skippedStart });
+            if (leaving) return;
             writeQuery({ pose: "seated", algo: id });
             syncOverlays({
                 name: poses.name,
@@ -176,8 +188,11 @@ try {
     }
 
     if (ALGOS[initialAlgo]) {
-        poses.snap(ALGOS[initialAlgo].pose);
-        await startAlgo(initialAlgo, { snap: true });
+        if (initialAlgo === "doubledeal" && !poses.prefersReducedMotion()) {
+            poses.snap("landing");
+        } else {
+            poses.snap(ALGOS[initialAlgo].pose);
+        }
     } else {
         poses.snap(initialPose);
     }
@@ -185,6 +200,17 @@ try {
     document.body.classList.add("is-ready");
     document.documentElement.dataset.playroomReady = "1";
     document.documentElement.dataset.motion = poses.prefersReducedMotion() ? "reduce" : "full";
+
+    function tick(now) {
+        director.update(now);
+        poses.update(performance.now());
+        world.render();
+        requestAnimationFrame(tick);
+    }
+    // The rAF clock must run before any non-snap enter. Deep-link
+    // DoubleDeal awaits the physical unbox; fly / flap need director
+    // + pose updates on this loop (hub clicks already have it).
+    requestAnimationFrame(tick);
 
     menuEl.addEventListener("pointerenter", (event) => {
         const item = event.target.closest("[data-algo]");
@@ -211,9 +237,25 @@ try {
     sitBtn.addEventListener("click", () => poses.goTo("seated"));
     backBtn.addEventListener("click", () => void leaveAlgo());
 
+    function enterBusy() {
+        return Boolean(adapters[activeAlgo]?.busy);
+    }
+
+    function skipMotion() {
+        if (performance.now() < ignoreSkipUntil) return;
+        skippedStart = true;
+        director.skip();
+        adapters[activeAlgo]?.skipEnter?.();
+        if (activeAlgo === "doubledeal" && (starting || enterBusy())) {
+            poses.snap("doubledeal");
+        } else {
+            poses.skip();
+        }
+    }
+
     function shouldSkip(event) {
         if (performance.now() < ignoreSkipUntil) return false;
-        if (!director.busy && !poses.busy) return false;
+        if (!director.busy && !poses.busy && !enterBusy()) return false;
         if (event.target.closest("a[href], button, input, textarea, select, dialog, .playroom-dock, .playroom-menu")) {
             return false;
         }
@@ -222,27 +264,25 @@ try {
 
     window.addEventListener("pointerdown", (event) => {
         if (!shouldSkip(event)) return;
-        director.skip();
-        poses.skip();
+        skipMotion();
     });
 
     window.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && (poses.busy || director.busy)) {
-            director.skip();
-            poses.skip();
+        if (event.key === "Escape" && (poses.busy || director.busy || enterBusy())) {
+            skipMotion();
             event.preventDefault();
         }
     });
 
     window.addEventListener("resize", () => world.resize());
 
-    function tick(now) {
-        director.update(now);
-        poses.update(performance.now());
-        world.render();
-        requestAnimationFrame(tick);
+    if (ALGOS[initialAlgo]) {
+        if (initialAlgo === "doubledeal" && !poses.prefersReducedMotion()) {
+            void startAlgo(initialAlgo);
+        } else {
+            void startAlgo(initialAlgo, { snap: true });
+        }
     }
-    requestAnimationFrame(tick);
 } catch (err) {
     console.error(err);
     document.body.classList.add("is-error");

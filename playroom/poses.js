@@ -44,6 +44,27 @@ export const POSES = {
         fov: 30,
         overlays: { title: true, menu: false, teach: true },
     },
+    // Travel with the box so a tight unbox close-up cannot land on
+    // empty felt (the #29 shelf-hold lesson). Quiet chrome — no teach.
+    unbox_travel: {
+        position: [DEN.x + 0.48, 1.24, DEN.z + 0.92],
+        target: [DEN.x, 0.86, DEN.z],
+        fov: 32,
+        overlays: { title: true, menu: false },
+    },
+    // Three-quarter of the landed 67 mm KEY tuck-box.
+    unbox: {
+        position: [DEN.x + 0.12, 0.95, DEN.z + 0.34],
+        target: [DEN.x, 0.83, DEN.z],
+        fov: 26,
+        overlays: { title: true, menu: false },
+    },
+    unbox_deal: {
+        position: [DEN.x + 0.20, 1.08, DEN.z + 0.62],
+        target: [DEN.x, 0.82, DEN.z + 0.12],
+        fov: 28,
+        overlays: { title: true, menu: false },
+    },
 };
 
 const ALIASES = {
@@ -60,6 +81,9 @@ const ALIASES = {
     lean_cube: "scramble",
     doubledeal: "doubledeal",
     lean_deck: "doubledeal",
+    unbox_travel: "unbox_travel",
+    unbox: "unbox",
+    unbox_deal: "unbox_deal",
 };
 
 export function resolvePoseName(raw, fallback = "landing") {

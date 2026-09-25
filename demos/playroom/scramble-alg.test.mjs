@@ -54,23 +54,29 @@ assert.equal(cubeProj.hash, true);
 assert.equal(cubeProj.dropped, 0);
 
 const megaProj = projectAlgForPuzzle(mapped, "megaminx");
-assert.equal(megaProj.alg, "R z' F2 z");
+assert.equal(megaProj.alg, "R F2");
 assert.equal(megaProj.hash, false);
-assert.equal(megaProj.dropped, 0);
-
-const pyraProj = projectAlgForPuzzle(mapped, "pyraminx");
-assert.equal(pyraProj.alg, "R z' z");
-assert.equal(pyraProj.hash, false);
-assert.equal(pyraProj.dropped, 1);
-assert.deepEqual(pyraProj.ranges, [
+assert.equal(megaProj.dropped, 2);
+assert.deepEqual(megaProj.ranges, [
     { from: 0, to: 1 },
+    { from: 1, to: 1 },
     { from: 1, to: 2 },
     { from: 2, to: 2 },
-    { from: 2, to: 3 },
+]);
+
+const pyraProj = projectAlgForPuzzle(mapped, "pyraminx");
+assert.equal(pyraProj.alg, "R");
+assert.equal(pyraProj.hash, false);
+assert.equal(pyraProj.dropped, 3);
+assert.deepEqual(pyraProj.ranges, [
+    { from: 0, to: 1 },
+    { from: 1, to: 1 },
+    { from: 1, to: 1 },
+    { from: 1, to: 1 },
 ]);
 assert.equal(unitInAlphabet("F2", "pyraminx"), false);
 assert.equal(unitInAlphabet("B2", "pyraminx"), true);
-assert.equal(unitInAlphabet("x'", "megaminx"), true);
+assert.equal(unitInAlphabet("x'", "megaminx"), false);
 
 const identityB = mapTraceToAlg([
     { kind: "move", move: "U", facelets: applyMove(SOLVED_FACELETS, "U") },

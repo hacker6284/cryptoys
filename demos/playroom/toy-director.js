@@ -4,8 +4,9 @@ import { FLY_MS, LIFT_MS } from "./constants.js";
  * Toy director — Unify-1.
  *
  * Shelf holds one of each kind. Scramble borrows the cube: lift from the
- * slot, then arc to the felt. Camera follow is the pose controller's job;
- * this module only moves toys. Click skips; prefers-reduced-motion snaps.
+ * slot, then arc to the felt. Camera follow / in-frame tracking is the
+ * pose controller's job; this module only moves toys. Click skips;
+ * prefers-reduced-motion snaps.
  *
  * DoubleDeal borrow / chest extras are Unify-2.
  */
@@ -75,6 +76,7 @@ export function createToyDirector(world) {
 
     function writeFlightDebug(u, toy) {
         const root = document.documentElement;
+        if (root.dataset.playroomDebug !== "1") return;
         root.dataset.flight = Number.isFinite(u) ? String(Math.round(Math.min(1, Math.max(0, u)) * 100)) : "";
         if (toy) {
             root.dataset.cubeX = toy.position.x.toFixed(2);
@@ -131,6 +133,7 @@ export function createToyDirector(world) {
         if (!flight) return;
         applyFlight(1);
         setTravelLight(flight.toy, false);
+        flight.toy.userData.flightBusy = false;
         const done = flight.onDone;
         flight = null;
         writeFlightDebug(1);
@@ -143,6 +146,7 @@ export function createToyDirector(world) {
         const from = poseOf(toy);
         const dest = clonePose(to);
         if (snap || prefersReducedMotion()) {
+            toy.userData.flightBusy = false;
             world.applyPose(toy, dest);
             toy.updateMatrixWorld(true);
             writeFlightDebug(1, toy);
@@ -159,6 +163,7 @@ export function createToyDirector(world) {
             z: from.position.z * 0.28 + dest.position.z * 0.72,
         };
         return new Promise((resolve) => {
+            toy.userData.flightBusy = true;
             flight = {
                 toy,
                 from,
@@ -187,6 +192,8 @@ export function createToyDirector(world) {
         const name = recipe.toys[0];
         world.setSlotEmpty(name, true);
         await flyToy(name, world.getTablePose(name), { snap });
+        const toy = world.toys[name];
+        if (toy) toy.userData.seatedY = toy.position.y;
         clearHighlight();
         return recipe;
     }
@@ -194,6 +201,7 @@ export function createToyDirector(world) {
     async function home({ snap = false } = {}) {
         if (!occupied) return;
         if (flight) {
+            flight.toy.userData.flightBusy = false;
             const resolve = flight.onDone;
             flight = null;
             resolve?.();

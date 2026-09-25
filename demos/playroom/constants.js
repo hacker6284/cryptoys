@@ -19,6 +19,8 @@ export const CHEST = { x: -2.30, z: 1.05 };
 
 export const SHELF_Y1 = 1.22;
 export const SHELF_Y0 = 0.78;
+export const SHELF_THICK = 0.04;
+export const SHELF_TOP = SHELF_Y1 + SHELF_THICK / 2;
 
 export const SLOTS = {
     deck: { x: -1.35, y: SHELF_Y1 },
@@ -28,6 +30,10 @@ export const SLOTS = {
 export const TWEEN_MS = 1100;
 export const FLY_MS = 1800;
 export const LIFT_MS = 380;
+// Pick the cube up this far for face turns so layers clear the felt/rim.
+export const TURN_LIFT = 0.14;
+export const TURN_LIFT_MS = 320;
+export const SETTLE_HOLD_MS = 90;
 // Hold the current shot this long so the cube leaving its slot is on camera
 // before the lens dollies. Click/Escape still skip after LIFT_MS.
 export const HOLD_MS = 760;

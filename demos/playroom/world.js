@@ -6,6 +6,8 @@ import {
     CUBE,
     DEN,
     SHELF_Z,
+    SHELF_THICK,
+    SHELF_TOP,
     TOP_Y,
     TABLE_R,
     CEIL_Y,
@@ -509,7 +511,7 @@ export async function mountWorld(canvas) {
     contactShadow(tableGroup, 1.05, 1.05, 0.002);
     scene.add(tableGroup);
 
-    const shelf = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.04, 0.30), shelfM);
+    const shelf = new THREE.Mesh(new THREE.BoxGeometry(4.4, SHELF_THICK, 0.30), shelfM);
     shelf.position.set(0, SHELF_Y1, SHELF_Z);
     shelf.castShadow = true;
     shelf.receiveShadow = true;
@@ -528,7 +530,7 @@ export async function mountWorld(canvas) {
         scene.add(bracket);
     });
 
-    function makeSlot(x, y) {
+    function makeSlot(x) {
         const group = new THREE.Group();
         const disk = new THREE.Mesh(
             new THREE.CircleGeometry(0.048, 24),
@@ -553,15 +555,15 @@ export async function mountWorld(canvas) {
         );
         ring.rotation.x = -Math.PI / 2;
         group.add(ring);
-        group.position.set(x, y + 0.022, SHELF_Z);
+        group.position.set(x, SHELF_TOP + 0.002, SHELF_Z);
         group.visible = false;
         scene.add(group);
         return group;
     }
 
     const slots = {
-        deck: { ...SLOTS.deck, slot: makeSlot(SLOTS.deck.x, SLOTS.deck.y) },
-        cube: { ...SLOTS.cube, slot: makeSlot(SLOTS.cube.x, SLOTS.cube.y) },
+        deck: { ...SLOTS.deck, slot: makeSlot(SLOTS.deck.x) },
+        cube: { ...SLOTS.cube, slot: makeSlot(SLOTS.cube.x) },
     };
 
     const chestGroup = new THREE.Group();
@@ -598,22 +600,75 @@ export async function mountWorld(canvas) {
         return TOP_Y + 0.032;
     }
 
+    // Measure the live mesh so the lowest point sits on a surface. The
+    // previous rest pose used SHELF_Y1 (board center) plus a pitched
+    // rotation, so the cube sat inside the shelf and stabbed the felt.
+    function seatOn(object, { x, surfaceY, z, rotation }) {
+        const fallback = CUBE / 2;
+        if (!object) {
+            return {
+                position: { x, y: surfaceY + fallback, z },
+                rotation: { ...rotation },
+            };
+        }
+        // Measuring mutates the live mesh; never do that on top of a
+        // lift/set-down ease or a shelf↔table flight.
+        if (object.userData.easeBusy) object.userData.cancelEase?.();
+        if (object.userData.flightBusy) {
+            return {
+                position: { x, y: surfaceY + fallback, z },
+                rotation: { x: rotation.x, y: rotation.y, z: rotation.z },
+            };
+        }
+        const prev = {
+            position: object.position.clone(),
+            quaternion: object.quaternion.clone(),
+            rotation: object.rotation.clone(),
+        };
+        object.position.set(x, 0, z);
+        object.rotation.set(rotation.x, rotation.y, rotation.z);
+        object.quaternion.setFromEuler(object.rotation);
+        object.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(object);
+        const y = Number.isFinite(box.min.y)
+            ? surfaceY - box.min.y
+            : surfaceY + fallback;
+        object.position.copy(prev.position);
+        object.rotation.copy(prev.rotation);
+        object.quaternion.copy(prev.quaternion);
+        object.updateMatrixWorld(true);
+        return {
+            position: { x, y, z },
+            rotation: { x: rotation.x, y: rotation.y, z: rotation.z },
+        };
+    }
+
     function getShelfPose(name) {
         const slot = slots[name];
         if (!slot) return null;
-        const height = name === "cube" ? CUBE / 2 : 0.046;
+        if (name === "cube") {
+            return seatOn(toys.cube, {
+                x: slot.x,
+                surfaceY: SHELF_TOP + 0.001,
+                z: SHELF_Z,
+                // Yaw only — pitch was driving corners through the board.
+                rotation: { x: 0, y: 0.45, z: 0 },
+            });
+        }
         return {
-            position: { x: slot.x, y: slot.y + height, z: SHELF_Z },
-            rotation: name === "cube" ? { x: -0.15, y: 0.45, z: 0 } : { x: 0, y: 0.15, z: 0 },
+            position: { x: slot.x, y: slot.y + 0.046, z: SHELF_Z },
+            rotation: { x: 0, y: 0.15, z: 0 },
         };
     }
 
     function getTablePose(name) {
         if (name === "cube") {
-            return {
-                position: { x: DEN.x, y: feltTopY() + CUBE / 2, z: DEN.z },
-                rotation: { x: -0.18, y: 0.55, z: 0 },
-            };
+            return seatOn(toys.cube, {
+                x: DEN.x,
+                surfaceY: feltTopY() + 0.001,
+                z: DEN.z,
+                rotation: { x: 0, y: 0, z: 0 },
+            });
         }
         return {
             position: { x: DEN.x, y: feltTopY() + 0.012, z: DEN.z },

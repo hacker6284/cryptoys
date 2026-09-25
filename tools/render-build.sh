@@ -25,17 +25,25 @@ ensure_cargo() {
     echo "Installing stable rustup (sudoc is a Rust crate; Pages uses dtolnay/rust-toolchain@stable)"
     export CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}"
     export RUSTUP_HOME="${RUSTUP_HOME:-$HOME/.rustup}"
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-        | sh -s -- -y --profile minimal --default-toolchain stable
+    # Write the installer first so a failed curl cannot become `sh` on empty stdin
+    # (POSIX sh has no pipefail).
+    init=$(mktemp)
+    curl --proto '=https' --tlsv1.2 -fsSf https://sh.rustup.rs -o "$init"
+    sh "$init" -y --profile minimal --default-toolchain stable
+    rm -f "$init"
     # shellcheck disable=SC1091
     . "$CARGO_HOME/env"
-    command -v cargo >/dev/null 2>&1
+    if ! command -v cargo >/dev/null 2>&1; then
+        echo "error: rustup finished but cargo is not on PATH" >&2
+        exit 1
+    fi
 }
 
 ensure_cargo
 
 # Always refresh. Render's build cache can leave a stale sudocode tip if
-# we skip the clone when .sudocode/.git already exists.
+# we skip the clone when .sudocode/.git already exists. Floating default-
+# branch tip, same as Pages generate-demos (no pin).
 rm -rf .sudocode
 git clone --depth 1 https://github.com/hacker6284/sudocode.git .sudocode
 cargo build --release --manifest-path .sudocode/sudoc/Cargo.toml

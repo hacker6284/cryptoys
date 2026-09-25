@@ -25,7 +25,9 @@ Same path as GitHub Pages (`.github/actions/generate-demos` →
    ```
 
 `tools/render-build.sh` is that sequence for Render (install rustup if `cargo`
-is missing, clone sudocode, cargo build, then `tools/generate-demos.sh`).
+is missing, wipe and shallow-clone sudocode every build, cargo build, then
+`tools/generate-demos.sh`). Sudoc is the default-branch tip on both Pages and
+Render (no pin); pin later if deploys must be reproducible.
 
 ## Dashboard settings (existing service — do not create a second site)
 

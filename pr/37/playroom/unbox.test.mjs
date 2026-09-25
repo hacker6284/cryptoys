@@ -39,8 +39,9 @@ assert.match(app, /unbox_travel/);
 assert.match(app, /skipEnter/);
 assert.match(app, /prepareEnter/);
 const tickAt = app.indexOf("requestAnimationFrame(tick)");
-const deepLinkAt = app.indexOf("await startAlgo(initialAlgo)");
+const deepLinkAt = app.indexOf("void startAlgo(initialAlgo)");
 assert.ok(tickAt >= 0 && deepLinkAt > tickAt, "rAF tick starts before deep-link DoubleDeal enter");
+assert.ok(app.indexOf("addEventListener(\"pointerdown\"") < deepLinkAt, "skip is bound before deep-link enter");
 
 const physical = readFileSync(new URL("./unbox-physical.js", import.meta.url), "utf8");
 assert.match(physical, /setFlap/);

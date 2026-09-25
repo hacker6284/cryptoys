@@ -34,10 +34,10 @@ ensure_cargo() {
 
 ensure_cargo
 
-if [ ! -d .sudocode/.git ]; then
-    rm -rf .sudocode
-    git clone --depth 1 https://github.com/hacker6284/sudocode.git .sudocode
-fi
+# Always refresh. Render's build cache can leave a stale sudocode tip if
+# we skip the clone when .sudocode/.git already exists.
+rm -rf .sudocode
+git clone --depth 1 https://github.com/hacker6284/sudocode.git .sudocode
 cargo build --release --manifest-path .sudocode/sudoc/Cargo.toml
 
 export SUDOC="$root/.sudocode/sudoc/target/release/sudoc"

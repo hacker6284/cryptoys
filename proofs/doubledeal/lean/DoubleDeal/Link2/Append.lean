@@ -253,6 +253,88 @@ theorem fuelRange_eq (fromV toV : Int) :
     (if fromV > toV then 1 else (toV - fromV).natAbs + 1) = fuelRange fromV toV :=
   rfl
 
+/-- Inclusive copy, then an arbitrary continuation of the collected array.
+    `onRet` is unused: `copyStep` never emits `.ret`. Used by `left_rotate`
+    (copy the tail, then copy the head). -/
+theorem copy_loop_gt_after {α} (xs : Array Int) (fromV toV : Int) (acc : Array Int)
+    (after : Array Int → Except SudoRt.Trap α)
+    (onRet : Array Int → Except SudoRt.Trap α)
+    (hgt : fromV > toV) :
+    SudoRt.runLoopOn (ρ := Array Int) (fromV, acc) (fuelRange fromV toV)
+        (copyStep (Array Int) xs toV)
+        (fun σ => after σ.2) onRet =
+      after acc := by
+  rw [fuelRange_gt hgt, show 1 = 0 + 1 from rfl, runLoopOn_succ]
+  rw [copyStep_gt (Array Int) xs toV fromV acc hgt]
+
+theorem copy_loop_after {α} (xs : Array Int) (fromN toN : Nat)
+    (acc : Array Int) (after : Array Int → Except SudoRt.Trap α)
+    (onRet : Array Int → Except SudoRt.Trap α)
+    (hfrom : fromN ≤ toN + 1)
+    (hto : toN < xs.size ∨ fromN = toN + 1)
+    (hfits : FitsLen xs.size)
+    (hfromB : fromN ≤ xs.size) :
+    SudoRt.runLoopOn (ρ := Array Int) (Int.ofNat fromN, acc)
+        (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
+        (copyStep (Array Int) xs (Int.ofNat toN))
+        (fun σ => after σ.2) onRet =
+      after (Array.mk (acc.toList ++
+        List.take (toN + 1 - fromN) (xs.toList.drop fromN))) := by
+  generalize hrem : toN + 1 - fromN = rem
+  induction rem generalizing fromN acc with
+  | zero =>
+    have hEq : fromN = toN + 1 := by omega
+    subst hEq
+    have hgt : Int.ofNat (toN + 1) > Int.ofNat toN :=
+      Int.ofNat_lt.mpr (Nat.lt_succ_self _)
+    rw [copy_loop_gt_after xs (Int.ofNat (toN + 1)) (Int.ofNat toN) acc after onRet hgt]
+    simp [Nat.sub_self, mk_toList]
+  | succ rem ih =>
+    have hle : fromN ≤ toN := by omega
+    have hto' : toN < xs.size := by
+      cases hto with
+      | inl h => exact h
+      | inr h => omega
+    have hidx : fromN < xs.size := Nat.lt_of_le_of_lt hle hto'
+    rw [fuelRange_le hle, runLoopOn_succ,
+        copyStep_hit (Array Int) xs toN fromN acc hle hidx hfits]
+    by_cases heq : fromN = toN
+    · rw [if_pos heq]
+      have htk : List.take 1 (List.drop fromN xs.toList) =
+          [xs.get ⟨fromN, hidx⟩] := by
+        have : fromN < xs.toList.length := by
+          rw [toList_length]; exact hidx
+        rw [drop_eq_cons xs.toList fromN this]
+        rfl
+      have hrem1 : rem + 1 = 1 := by
+        have : fromN = toN := heq
+        omega
+      simp [toList_push, htk, hrem1]
+      apply congrArg after
+      calc acc.push (xs.get ⟨fromN, hidx⟩)
+          = Array.mk (acc.push (xs.get ⟨fromN, hidx⟩)).toList := (mk_toList _).symm
+        _ = Array.mk (acc.toList ++ [xs.get ⟨fromN, hidx⟩]) := by rw [toList_push]
+    · have hlt : fromN < toN := Nat.lt_of_le_of_ne hle heq
+      rw [if_neg heq]
+      simp
+      have hfuel : toN - fromN = fuelRange (Int.ofNat (fromN + 1)) (Int.ofNat toN) := by
+        rw [fuelRange_le (Nat.succ_le_of_lt hlt)]
+        omega
+      rw [hfuel]
+      have ih' := ih (fromN + 1) (acc.push (xs.get ⟨fromN, hidx⟩))
+        (by omega) (Or.inl hto') (by omega) (by omega)
+      rw [natCast_succ fromN]
+      rw [← ofNat_eq_natCast toN]
+      have hg : xs[fromN] = xs.get ⟨fromN, hidx⟩ := rfl
+      rw [hg, ih']
+      have hdrop : List.drop fromN xs.toList =
+          xs.get ⟨fromN, hidx⟩ :: List.drop (fromN + 1) xs.toList := by
+        have : fromN < xs.toList.length := by
+          rw [toList_length]; exact hidx
+        exact drop_eq_cons xs.toList fromN this
+      rw [toList_push, hdrop]
+      simp [List.take]
+
 /-- Generated `drop_front` is algebraic `uncons` on a nonempty well-formed list. -/
 theorem drop_front_refines (c : Nat) (rest : List Nat)
     (hfits : FitsLen (rest.length + 1)) :

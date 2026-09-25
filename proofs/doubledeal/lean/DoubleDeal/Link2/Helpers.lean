@@ -30,4 +30,34 @@ theorem rank_of_refines (c : Nat) :
   rw [hadd]
   rfl
 
+/-- Generated cut-predicate: nonempty pile and `rank c < length`. -/
+theorem suit_of_refines_natCast (c : Nat) :
+    Doubledeal.suit_of (c : Int) = .ok (Int.ofNat (DoubleDeal.suit c)) := by
+  rw [← ofNat_eq_natCast c]
+  exact suit_of_refines c
+
+theorem rank_of_refines_natCast (c : Nat) :
+    Doubledeal.rank_of (c : Int) = .ok (Int.ofNat (DoubleDeal.rank c)) := by
+  rw [← ofNat_eq_natCast c]
+  exact rank_of_refines c
+
+theorem rank_lt_flag (c : Nat) (xs : List Nat) :
+    (if decide (SudoRt.listLen (embed xs) > (0 : Int)) then
+      (do
+        let r ← Doubledeal.rank_of (Int.ofNat c)
+        pure (decide (r < SudoRt.listLen (embed xs))))
+     else pure false) =
+      Except.ok (decide (0 < xs.length ∧ DoubleDeal.rank c < xs.length)) := by
+  rw [listLen_pos_decide]
+  by_cases hpos : 0 < xs.length
+  · rw [decide_eq_true hpos]
+    simp only []
+    rw [rank_of_refines]
+    simp only [ok_bind, listLen_embed, decide_ofNat_lt]
+    simp [hpos]
+    rfl
+  · rw [decide_eq_false hpos]
+    simp [hpos]
+    rfl
+
 end DoubleDeal.Link2

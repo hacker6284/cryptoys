@@ -30,6 +30,7 @@ function writeQuery({ pose, algo }) {
     else url.searchParams.set("pose", poseName);
     if (!algo) url.searchParams.delete("algo");
     else url.searchParams.set("algo", algo);
+    if (algo !== "scramble") url.searchParams.delete("puzzle");
     history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
 }
 

@@ -88,6 +88,12 @@ function withTimeout(promise, ms, label) {
 function meshBox(object) {
     const box = new THREE.Box3();
     object.updateMatrixWorld(true);
+    try {
+        box.setFromObject(object);
+    } catch {
+        // two three.js copies can throw inside setFromObject
+    }
+    if (!box.isEmpty()) return box;
     object.traverse((node) => {
         if (!node.isMesh || !node.visible || !node.geometry) return;
         const geo = node.geometry;
@@ -99,28 +105,28 @@ function meshBox(object) {
     return box;
 }
 
-function centerAndFit(object, edge) {
-    object.updateMatrixWorld(true);
-    let box = meshBox(object);
-    if (box.isEmpty()) box = new THREE.Box3().setFromObject(object);
+/**
+ * Scale/center a wrapper, not the cubing object. TwistyPlayer keeps writing
+ * the puzzle's own matrix; fighting that is how pyraminx disappeared.
+ */
+function frameInWrapper(wrapper, object, edge) {
+    wrapper.position.set(0, 0, 0);
+    wrapper.scale.set(1, 1, 1);
+    wrapper.updateMatrixWorld(true);
+    const box = meshBox(object);
     const size = new THREE.Vector3();
     const center = new THREE.Vector3();
     box.getSize(size);
     box.getCenter(center);
-    if (Number.isFinite(center.x)) object.position.sub(center);
-    let max = Math.max(size.x, size.y, size.z);
-    if (!Number.isFinite(max) || max < 1e-6) max = 1;
-    object.scale.multiplyScalar(edge / max);
-    object.updateMatrixWorld(true);
-    const fitted = meshBox(object);
-    const fittedSize = new THREE.Vector3();
-    fitted.getSize(fittedSize);
-    const fittedMax = Math.max(fittedSize.x, fittedSize.y, fittedSize.z);
-    if (Number.isFinite(fittedMax) && fittedMax > 1e-6 && (fittedMax < edge * 0.4 || fittedMax > edge * 2.2)) {
-        object.scale.multiplyScalar(edge / fittedMax);
-        object.updateMatrixWorld(true);
+    const max = Math.max(size.x, size.y, size.z);
+    const nativeMax = Number.isFinite(max) && max > 1e-6 ? max : 1;
+    const scale = edge / nativeMax;
+    wrapper.scale.setScalar(scale);
+    if (Number.isFinite(center.x)) {
+        wrapper.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
     }
-    return { size: size.clone(), nativeMax: max, fittedMax: Math.max(fittedSize.x, fittedSize.y, fittedSize.z) || 0 };
+    wrapper.updateMatrixWorld(true);
+    return { size: size.clone(), nativeMax, fittedMax: edge };
 }
 
 function sleep(ms) {
@@ -169,6 +175,7 @@ export function describeThreeSkew(object) {
  * Seat/lift hierarchy:
  *   group  — world pose (shelf / table / toy-director fly). Translate this.
  *   lift   — local Y hook for lift-off-felt without fighting cubing animation.
+ *   fit    — our 57 mm scale. Do not scale the cubing object itself.
  *   puzzle — cubing.js Object3D. Do not keyframe this; TwistyPlayer owns motion.
  */
 export async function createTwistyRig({
@@ -191,7 +198,6 @@ export async function createTwistyRig({
         backView: "none",
         background: "none",
         controlPanel: "none",
-        visualization: spec.id === "3x3x3" ? "3D" : "PG3D",
         tempoScale,
     });
     hidePlayerHost(player);
@@ -200,7 +206,10 @@ export async function createTwistyRig({
     group.name = "twisty-seat";
     const lift = new THREE.Group();
     lift.name = "twisty-lift";
+    const fit = new THREE.Group();
+    fit.name = "twisty-fit";
     group.add(lift);
+    lift.add(fit);
 
     onStage?.("experimentalCurrentThreeJSPuzzleObject");
     let puzzleObject = null;
@@ -242,12 +251,11 @@ export async function createTwistyRig({
     let skew = describeThreeSkew(puzzleObject);
     if (puzzleObject) {
         puzzleObject.removeFromParent();
-        puzzleObject.position.set(0, 0, 0);
-        puzzleObject.rotation.set(0, 0, 0);
-        puzzleObject.quaternion.identity();
-        puzzleObject.scale.set(1, 1, 1);
-        lift.add(puzzleObject);
-        framed = centerAndFit(puzzleObject, edge);
+        puzzleObject.traverse((node) => {
+            if (node.isMesh) node.frustumCulled = false;
+        });
+        fit.add(puzzleObject);
+        framed = frameInWrapper(fit, puzzleObject, edge);
         enableShadows(puzzleObject);
         look = inspectMaterials(puzzleObject);
         skew = describeThreeSkew(puzzleObject);
@@ -265,7 +273,7 @@ export async function createTwistyRig({
 
     async function status() {
         try {
-            const { indexer, info } = await timeline();
+            const { indexer, info } = await withTimeout(timeline(), 2500, "timeline");
             return {
                 timestamp: info.timestamp,
                 duration: indexer.algDuration(),
@@ -280,6 +288,7 @@ export async function createTwistyRig({
     return {
         group,
         lift,
+        fit,
         puzzle: puzzleObject,
         player,
         puzzleId: spec.id,

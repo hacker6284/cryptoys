@@ -14,7 +14,7 @@ a security claim. The Lean emitter is **trusted-not-proved**.
 primitives/**/*.sudo          # normative algorithm
         │
         │  proofs/emit_lean.sh
-        │  (sudoc emit-ir -I stdlib  →  protocol-4 envelope
+        │  (sudoc emit-ir -I stdlib [-I extra]  →  protocol-4 envelope
         │   →  backends/lean/emit.py  →  lake)
         ▼
 proofs/*/lean/Generated/      # executable Lean (DO NOT EDIT)
@@ -40,9 +40,10 @@ encrypt by hand and thinks they changed the cipher.
 From the repo root:
 
 ```sh
-proofs/emit_lean.sh              # write all three Generated/ trees
+proofs/emit_lean.sh              # write all four Generated/ trees
 proofs/emit_lean.sh --check      # CI: fail if committed Lean is stale
 proofs/emit_lean.sh scramble     # one algorithm
+proofs/emit_lean.sh cbc-hmac     # alias: doubledeal-cbc-hmac
 ```
 
 Optional: `SUDOC=/path/to/sudoc` and `SUDOCODE_DIR=/path/to/sudocode`
@@ -55,11 +56,14 @@ Then:
 cd proofs/doubledeal/lean/Generated && lake build && ./.lake/build/bin/doubledeal_test
 cd proofs/megadreifach/lean/Generated && lake build && ./.lake/build/bin/megadreifach_test
 cd proofs/scramble/lean/Generated && lake build && ./.lake/build/bin/scramble_test
+cd proofs/doubledeal-cbc-hmac/lean/Generated && lake build && ./.lake/build/bin/doubledeal_cbc_hmac_test
 ```
 
 Expected TAP: DoubleDeal **10/10** (two test-only kind-scan `while`s
 stripped under the terminates gate; JS still runs all twelve),
-MegaDreifach **11/11**, Scramble **15/15**.
+MegaDreifach **11/11**, Scramble **15/15**, DoubleDeal-CBC-HMAC
+**11/11** (HMAC / KDF / pad / MAC-input tests; byte-domain CBC
+that ranks a deck stays in JS because `52!` is not a sudo `int`).
 
 ## Pin (sudocode main)
 
@@ -79,16 +83,19 @@ shadow fix from #5 is included.
 ## Terminates gate is on
 
 `proofs/emit_lean.sh` passes `sudoc emit-ir --require terminates` for
-DoubleDeal, MegaDreifach, and Scramble. All three public `.sudo`
-files accept that flag on their exports.
+DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All
+four public `.sudo` files accept that flag on their exports.
+CBC-HMAC emit adds `-I primitives/hash/megadreifach` so the imported
+`Hash` is the MegaDreifach module, not a handwritten second model.
 
 Production loops are bounded `for` (PassKey drain over initial
 `deck.length`; overflow scans `0 to 3`; MD bigint trim/peel/carry,
 φ / even-perm search, Hash MD walk; Scramble pad / apply / evaluate
-remainders and `digest_bytes` over the 12-byte buffer). DoubleDeal
-test-only `while`s that scan traces by `kind` are stripped under the
-gate (JS/Python still run those tests). Generated TAP is the remaining
-tests.
+remainders and `digest_bytes` over the 12-byte buffer; CBC-HMAC
+`xor_byte` over 8 bits, pad/unpad, and length-delimited MAC input).
+DoubleDeal test-only `while`s that scan traces by `kind` are stripped
+under the gate (JS/Python still run those tests). Generated TAP is
+the remaining tests.
 
 The registered Lean backend profile is **full peer** (empty
 `predicates`): fuel-total `while` / `for` via `SudoRt.natIter`.
@@ -102,7 +109,9 @@ total-fragment / terminating-subset emitter.
   `encrypt6` / `encryptDeck` in `DoubleDeal/`.
 - Not a claim that `Generated.v_Hash` equals the algebraic
   `hashBlocks` fold in `MegaDreifach/`.
-- Not bit-security, MDS, collision-resistance, or an AEAD security theorem. DoubleDeal-CBC-HMAC is specified in `primitives/aead/`; no Generated Lean for it in this drop.
+- Not bit-security, MDS, collision-resistance, or an AEAD security theorem.
+  DoubleDeal-CBC-HMAC Generated Lean is HMAC / KDF / pad evidence, not
+  a reduction or a nonce-misuse theorem.
 - Not sudocode lockstep. Lean *is* in sudocode `ALL_BACKENDS`; this
   repo still only consumes the protocol-4 emitter.
 
@@ -113,9 +122,12 @@ total-fragment / terminating-subset emitter.
 | sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
 | Algebraic `passToKeyCutFallback` = `Generated.passkey` | OPEN. S3/S4 stay on the list-level proof model. sudo already *tests* `passkey_inv ∘ passkey = id` (generated TAP). |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | OPEN. S2 stays on the Fin-packet skeleton. Generated TAP checks sudo's encrypt/decrypt tests. |
-| `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, and Scramble. All three publics ready (bounded `for`). |
+| `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All four publics ready (bounded `for`). |
 | PassKey / stone proofs *about* `Except Trap` emitted defs | OPEN. Fuel-total monadic programs are not the Fin algebra the stones use. |
 | Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |
+| DoubleDeal-CBC-HMAC generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach via emit-ir `-I`. No Link 2. No AEAD security theorem. |
+| sudo↔Lean / algebraic≃Generated for CBC-HMAC (Link 2) | OPEN. Not started. |
+| AEAD security (EtM reduction, HMAC-MD PRF, CBC confidentiality) | OPEN. Not claimed. SCM stays later. |
 | MegaDreifach M13 (proof-package digest = KAT hex) | Still OPEN in the algebraic package (no handwritten `Hash`). Research hexes were refreshed to current sudo; Python and emitted Lean agree. |
 
 ## Proofs that remain handwritten

@@ -24,7 +24,7 @@ DoubleDeal-CBC-HMAC is a toy Encrypt-then-MAC construction. It makes no cryptogr
 - No DoubleDeal-SCM / SMAC. Those names stay reserved for a later construction.
 - No CFB / OFB.
 - No constant-time claim. Tag compare is a full-length equality; this is a toy.
-- Link-2 refinement proofs and Generated Lean for this module are out of scope here.
+- Link-2 refinement proofs and AEAD security theorems are out of scope here. Generated Lean for HMAC / KDF / pad is under `proofs/doubledeal-cbc-hmac/`; it is not those theorems.
 
 ---
 
@@ -256,6 +256,7 @@ AEAD_OUT=/tmp/ddch node primitives/aead/doubledeal-cbc-hmac/aead.test.mjs
 | --- | --- | --- |
 | This specification | `primitives/aead/doubledeal-cbc-hmac/SPEC.md` | Normative AEAD rules |
 | Conformance sudo | `primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo` | HMAC, KDF, pad, MAC input, CBC byte helpers |
+| Generated Lean | `proofs/doubledeal-cbc-hmac/lean/Generated/` | Emitted HMAC / KDF / pad + TAP. Not Link 2. Not AEAD security. |
 | Byte-domain AEAD | `primitives/aead/doubledeal-cbc-hmac/aead.mjs` | CBC over §5.3 + sudo HMAC |
 | KATs | `primitives/aead/doubledeal-cbc-hmac/kats/doubledeal_cbc_hmac_kats.json` | Published vectors |
 | DoubleDeal rounds | `primitives/cipher/doubledeal/doubledeal.sudo` | `encrypt` / `decrypt` |

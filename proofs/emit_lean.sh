@@ -6,15 +6,17 @@
 #   (PR #8 squash merge; Lean is in ALL_BACKENDS).
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
-# DoubleDeal, MegaDreifach, and Scramble production paths are bounded
-# `for`. DoubleDeal test-only kind-scan whiles are stripped under the gate.
+# DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC production
+# paths are bounded `for`. DoubleDeal test-only kind-scan whiles are
+# stripped under the gate. CBC-HMAC imports MegaDreifach via extra -I.
 #
 # Usage (from repo root):
-#   proofs/emit_lean.sh              # write Generated/
+#   proofs/emit_lean.sh              # write Generated/ (all four)
 #   proofs/emit_lean.sh --check      # CI: fail if committed Generated/ is stale
 #   proofs/emit_lean.sh doubledeal   # one algorithm
 #   proofs/emit_lean.sh megadreifach
 #   proofs/emit_lean.sh scramble
+#   proofs/emit_lean.sh cbc-hmac     # alias: doubledeal-cbc-hmac
 #
 # Optional:
 #   SUDOC=/path/to/sudoc
@@ -43,15 +45,17 @@ TARGETS=()
 for arg in "$@"; do
   case "$arg" in
     --check) CHECK=1 ;;
-    doubledeal|megadreifach|scramble) TARGETS+=("$arg") ;;
+    doubledeal|megadreifach|scramble|cbc-hmac) TARGETS+=("$arg") ;;
+    doubledeal-cbc-hmac) TARGETS+=("cbc-hmac") ;;
     *)
-      echo "usage: $0 [--check] [doubledeal|megadreifach|scramble ...]" >&2
+      echo "usage: $0 [--check] [doubledeal|megadreifach|scramble|cbc-hmac ...]" >&2
+      echo "  cbc-hmac is also accepted as doubledeal-cbc-hmac" >&2
       exit 2
       ;;
   esac
 done
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(doubledeal megadreifach scramble)
+  TARGETS=(doubledeal megadreifach scramble cbc-hmac)
 fi
 
 if [[ -n "${SUDOC:-}" ]]; then
@@ -97,6 +101,8 @@ emit_one() {
   local name="$1"
   local sudo_path="$2"
   local generated="$3"
+  shift 3
+  local includes=("$@")
   local scratch="${TMPDIR:-/tmp}/cryptoys-emit-${name}"
   rm -rf "$scratch"
   mkdir -p "$scratch"
@@ -106,19 +112,37 @@ emit_one() {
   else
     extra+=(--install "$generated")
   fi
-  python3 "$ROOT/tools/emit_lean.py" "$sudo_path" --out "$scratch" "${extra[@]}"
+  local inc_args=()
+  local inc
+  for inc in "${includes[@]}"; do
+    inc_args+=(-I "$inc")
+  done
+  python3 "$ROOT/tools/emit_lean.py" "$sudo_path" --out "$scratch" "${extra[@]}" "${inc_args[@]}"
   if [[ "$CHECK" -eq 0 ]]; then
     python3 - <<PY
 import hashlib, json, pathlib
+root = pathlib.Path("$ROOT")
 sudo = pathlib.Path("$sudo_path")
+includes = [pathlib.Path(p) for p in """$(printf '%s\n' "${includes[@]}")""".splitlines() if p]
+imported = []
+for inc in includes:
+    for child in sorted(inc.glob("*.sudo")):
+        imported.append({
+            "sudo_file": str(child.relative_to(root)),
+            "sudo_sha256": hashlib.sha256(child.read_bytes()).hexdigest(),
+        })
 stamp = {
-    "sudo_file": str(sudo.relative_to("$ROOT")),
+    "sudo_file": str(sudo.relative_to(root)),
     "sudo_sha256": hashlib.sha256(sudo.read_bytes()).hexdigest(),
     "sudocode_lean_commit": "$SUDOCODE_LEAN_COMMIT",
     "sudocode_lean_ref": "$SUDOCODE_LEAN_REF",
     "terminates_gate": True,
     "with_tests": True,
 }
+if includes:
+    stamp["include_paths"] = [str(p.relative_to(root)) for p in includes]
+if imported:
+    stamp["imported_sudo"] = imported
 pathlib.Path("$generated/EMITTED_FROM.json").write_text(json.dumps(stamp, indent=2) + "\n")
 print("wrote $generated/EMITTED_FROM.json")
 PY
@@ -141,6 +165,12 @@ for t in "${TARGETS[@]}"; do
       emit_one scramble \
         "$ROOT/primitives/hash/scramble/scramble.sudo" \
         "$ROOT/proofs/scramble/lean/Generated"
+      ;;
+    cbc-hmac)
+      emit_one cbc-hmac \
+        "$ROOT/primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo" \
+        "$ROOT/proofs/doubledeal-cbc-hmac/lean/Generated" \
+        "$ROOT/primitives/hash/megadreifach"
       ;;
   esac
 done

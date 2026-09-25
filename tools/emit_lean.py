@@ -3,13 +3,16 @@
 
 Reproduces the spike path that was green on DoubleDeal / MegaDreifach:
 
-    sudoc emit-ir -I stdlib FILE
+    sudoc emit-ir -I stdlib [-I extra ...] FILE
       → wrap {protocol:4, cmd:emit, entry, with_tests, modules}
       → python3 backends/lean/emit.py
       → unpack files/
 
 Emit uses `sudoc emit-ir --require terminates`. DoubleDeal, MegaDreifach,
-and Scramble production paths are bounded `for`. See proofs/ANTI_DRIFT.md.
+Scramble, and DoubleDeal-CBC-HMAC production paths are bounded `for`.
+CBC-HMAC imports MegaDreifach; pass `-I primitives/hash/megadreifach`
+so emit-ir resolves that module instead of flattening a second Hash.
+See proofs/ANTI_DRIFT.md.
 
 This is not a claim of sudo↔Lean semantic equivalence.
 """
@@ -35,6 +38,7 @@ def emit_one(
     sudo_file: Path,
     dest: Path,
     with_tests: bool,
+    include_paths: list[Path] | None = None,
 ) -> int:
     dest.mkdir(parents=True, exist_ok=True)
     stem = sudo_file.stem
@@ -53,10 +57,10 @@ def emit_one(
         "terminates",
         "-I",
         str(stdlib),
-        "-o",
-        str(ir_path),
-        str(sudo_file),
     ]
+    for extra in include_paths or []:
+        cmd.extend(["-I", str(extra)])
+    cmd.extend(["-o", str(ir_path), str(sudo_file)])
     r = run(cmd)
     if r.returncode != 0:
         print(f"emit-ir failed rc={r.returncode}", file=sys.stderr)
@@ -215,6 +219,14 @@ def main() -> int:
         default="",
         help="sudocode checkout containing backends/lean and stdlib (or SUDOCODE_DIR)",
     )
+    ap.add_argument(
+        "-I",
+        "--include",
+        action="append",
+        default=[],
+        dest="include_paths",
+        help="extra sudoc emit-ir include directory (repeatable; stdlib is always first)",
+    )
     args = ap.parse_args()
 
     import os
@@ -243,7 +255,16 @@ def main() -> int:
 
     src = Path(args.sudo_file).resolve()
     out = Path(args.out).resolve()
-    rc = emit_one(sudoc, emit_py, stdlib, src, out, with_tests=not args.no_tests)
+    include_paths = [Path(p).resolve() for p in args.include_paths]
+    rc = emit_one(
+        sudoc,
+        emit_py,
+        stdlib,
+        src,
+        out,
+        with_tests=not args.no_tests,
+        include_paths=include_paths,
+    )
     if rc != 0:
         return rc
 

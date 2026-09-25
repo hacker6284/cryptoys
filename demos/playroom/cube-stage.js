@@ -119,6 +119,8 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         }, SETTLE_HOLD_MS);
     }
 
+    // Per-move lift; the settle-hold timer is cleared by the next lift so a
+    // Play/Solve sequence stays up until the last turn's hold expires.
     async function withLift(run) {
         await lift();
         try {

@@ -229,8 +229,9 @@ body.playroom.is-ready .playroom-menu {
 
 .playroom-dock .playroom-info,
 .playroom-dock .playroom-info.icon-btn,
+.playroom-dock #teach-info,
 .playroom-info-hint {
-  display: none;
+  display: none !important;
 }
 
 .playroom-note[hidden] {
@@ -685,8 +686,9 @@ body.playroom.is-ready .playroom-dock {
   }
 
   html[data-algo="scramble"] .playroom-dock .playroom-info,
-  html[data-algo="scramble"] .playroom-dock .playroom-info.icon-btn {
-    display: inline-flex;
+  html[data-algo="scramble"] .playroom-dock .playroom-info.icon-btn,
+  html[data-algo="scramble"] .playroom-dock #teach-info {
+    display: inline-flex !important;
     width: 1.75rem;
     height: 1.75rem;
     filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.45));

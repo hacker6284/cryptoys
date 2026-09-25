@@ -34,13 +34,17 @@ List Nat  --embed-->  Array Int
 List Nat  <--decode--  Array Int     (on success, no Trap)
 ```
 
-## This drop (DoubleDeal `passkey_inv` glue)
+## This drop (DoubleDeal encrypt refinement)
 
-Builds on #26/#28 (`left_rotate` ≃ `rotL`; `right_rotate` ≃ `rotR`;
-one-step bodies; twin `runLoopOn`). Residual inverse stepper glue is
-**CLOSED**: emitted `Doubledeal.passkey_inv` equals algebraic
-`passToKeyCutFallbackInv` on every well-formed list (`FitsLen`; Trap
-does not fire; `List Nat`). Algebraic Link 2 only — not bit-security.
+Builds on #26/#28/#30 (rotate twins, `passkey` / `passkey_inv`,
+`runLoopOn`). On the well-formed domain — message length 52, every
+card id `CardBound` (`c ≤ i64MaxNat - 4`, so `step_seat` does not
+Trap), key `Perm52` — emitted `Doubledeal.encrypt` equals algebraic
+`encryptDeck` / `encrypt6` (`encrypt_refines`). The bridge reuses the
+same inclusive-loop twins: `lay_cm`, `sum_ranks`, `shift_rows`,
+`scoop_cm` / `scoop_rm`, `mix_columns_refines`, `full_round_refines`,
+`final_round_refines`, `expand_keys_refines`, `compose_refines`.
+Algebraic Link 2 only — not bit-security, not emitter soundness.
 
 | Item | Status |
 | --- | --- |
@@ -59,8 +63,10 @@ does not fire; `List Nat`). Algebraic Link 2 only — not bit-security.
 | Twin inverse `runLoopOn` inducts to `passKeyInvGoN` | Landed (`passkey_inv_loop_refines`, `passkey_inv_twin_refines`) |
 | Residual stepper of `Doubledeal.passkey_inv` = `passkeyInvStepGen` | **CLOSED** (`passkey_inv_step_eq`, `passkey_inv_eq_twin_loop`; nested undo-cut / do-elaboration, not a second algorithm) |
 | `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` on every well-formed list | **CLOSED** (`passkey_inv_refines`) |
-| `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | **NEXT** (statement sketched in `DoubleDeal/Link2.lean`) |
-| S3/S4 transfer onto `Except Trap` (injectivity of emitted passkey, …) | After encrypt refinement; rides on the two passkey glues |
+| `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | **CLOSED** (`encrypt_refines`; `CardBound` message, `Perm52` key, length 52) |
+| `mix_columns` ≃ `mixColumns` | **CLOSED** (`mix_columns_refines`) |
+| `full_round` / `final_round` ≃ `fullRound` / `fullRoundNoMix` | **CLOSED** (`full_round_refines`, `final_round_refines`) |
+| S3/S4 transfer onto `Except Trap` (injectivity of emitted passkey, …) | **OPEN** next; rides on the two passkey glues |
 | MegaDreifach / Scramble algebraic ≃ Generated | OPEN (Scramble has little ledger; MD Hash is M13) |
 | DoubleDeal-CBC-HMAC algebraic ≃ Generated | OPEN. Generated TAP exists (`#22`); no algebraic ledger. Not AEAD security. |
 | sudo text = generated Lean (deep embedding) | OPEN — Link 1, not this file |

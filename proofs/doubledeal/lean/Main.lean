@@ -8,5 +8,6 @@ def main : IO Unit := do
   IO.println "        factoradic unrankPerm permutes its items (injectivity only for 3!),"
   IO.println "        CTR prefix stability, Compose KP uniqueness."
   IO.println "These are correctness / algebraic theorems about the proof-only"
-  IO.println "skeleton, not bit-security, and not Generated.encrypt (see ANTI_DRIFT.md)."
+  IO.println "skeleton, not bit-security. Link 2 refines Generated.encrypt"
+  IO.println "on CardBound messages (see proofs/LINK2.md), not emitter soundness."
   let _ ← DoubleDeal.runVectorChecks

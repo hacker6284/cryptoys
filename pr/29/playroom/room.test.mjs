@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { tableSpan } from "../doubledeal/layout.js";
-import { DEAL_SCALE, TABLE_R } from "./constants.js";
+import { DEAL_SCALE, DEN, TABLE_R } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
 import { createToyDirector } from "./toy-director.js";
 
@@ -17,6 +17,9 @@ assert.ok(POSES.doubledeal, "doubledeal pose exists");
 assert.equal(resolvePoseName("doubledeal"), "doubledeal");
 assert.equal(resolvePoseName("lean_deck"), "doubledeal");
 assert.equal(resolvePoseName("scramble"), "scramble");
+assert.ok(POSES.doubledeal.fov <= 32, "doubledeal FOV stays in the scramble-lean family");
+assert.ok(POSES.doubledeal.position[1] <= 1.28, "doubledeal camera height matches seated lean");
+assert.ok(POSES.doubledeal.position[2] - DEN.z <= 1.05, "doubledeal stay close to the felt");
 
 const director = createToyDirector({});
 const recipe = director.recipeOf("doubledeal");

@@ -2,7 +2,7 @@ import { CUBE } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { createCubeRig } from "../scramble/view.js";
 import { lucideSvg } from "../shared/icons.js";
-import { stageCardTable } from "./card-stage.js";
+import { fadeTree, setTreeOpacity, stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
 
 /**
@@ -400,14 +400,14 @@ function createDoubleDealAdapter() {
         view() {
             return table || (world ? { group: world.toys.deck } : null);
         },
-        async enter() {
+        async enter({ snap = false } = {}) {
             if (session || entering) return session;
             entering = true;
             try {
                 const loaded = await preload();
                 root = mountDoubleDealDock();
-                table = stageCardTable(world, loaded.textures, { poses });
-                if (world.toys.deck) world.toys.deck.visible = false;
+                table = stageCardTable(world, loaded.textures, { poses, snap });
+                const box = world.toys.deck;
                 const specUrl = await resolveSpecUrl("doubledeal");
                 if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
                 session = loaded.sessionMod.createDoubleDealSession({
@@ -420,12 +420,26 @@ function createDoubleDealAdapter() {
                 table.rememberSeated?.();
                 root.hidden = false;
                 root.classList.add("on");
+                if (box) {
+                    if (snap) {
+                        box.visible = false;
+                        setTreeOpacity(box, 1);
+                    } else {
+                        await Promise.all([
+                            table.fadeIn({ ms: 260 }),
+                            fadeTree(box, 0, { ms: 200 }).then(() => {
+                                box.visible = false;
+                                setTreeOpacity(box, 1);
+                            }),
+                        ]);
+                    }
+                }
                 return session;
             } finally {
                 entering = false;
             }
         },
-        leave() {
+        async leave({ snap = false } = {}) {
             session?.dispose();
             session = null;
             if (specObjectUrl) {
@@ -436,9 +450,20 @@ function createDoubleDealAdapter() {
                 root.classList.remove("on");
                 root.hidden = true;
             }
-            table?.dispose();
-            table = null;
-            if (world?.toys.deck) world.toys.deck.visible = true;
+            if (table) {
+                await table.fadeOut({ ms: 180, snap });
+                table.dispose();
+                table = null;
+            }
+            // Keep the shelf prop hidden until it is home. Showing it
+            // on the felt here is the flash Back used to make.
+            if (world?.toys.deck) world.toys.deck.visible = false;
+        },
+        revealShelf() {
+            const box = world?.toys.deck;
+            if (!box) return;
+            setTreeOpacity(box, 1);
+            box.visible = true;
         },
     };
 }

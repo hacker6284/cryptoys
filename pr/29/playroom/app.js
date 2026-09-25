@@ -116,7 +116,7 @@ try {
             await Promise.all([fly, warm]);
             if (leaving) return;
             adapter.view()?.rememberSeated?.();
-            await adapter.enter();
+            await adapter.enter({ snap: reduced });
             writeQuery({ pose: "seated", algo: id });
             syncOverlays({
                 name: poses.name,
@@ -125,8 +125,9 @@ try {
             });
         } catch (err) {
             console.error(err);
-            adapter.leave();
+            await adapter.leave({ snap: true });
             await director.home({ snap: true });
+            adapter.revealShelf?.();
             activeAlgo = null;
             errorEl.hidden = false;
             errorEl.textContent = err && err.message
@@ -145,9 +146,10 @@ try {
             return;
         }
         leaving = true;
-        const meta = ALGOS[activeAlgo];
-        adapters[activeAlgo]?.leave();
+        const id = activeAlgo;
+        const meta = ALGOS[id];
         const reduced = poses.prefersReducedMotion();
+        const fade = adapters[id]?.leave?.({ snap: reduced });
         ignoreSkipUntil = performance.now() + LIFT_MS;
         const home = director.home({ snap: reduced });
         if (reduced) poses.snap("landing");
@@ -160,7 +162,8 @@ try {
                 track: trackToy(world, meta?.toy || "cube"),
             });
         }
-        await home;
+        await Promise.all([fade, home]);
+        adapters[id]?.revealShelf?.();
         activeAlgo = null;
         leaving = false;
         writeQuery({ pose: "landing", algo: null });

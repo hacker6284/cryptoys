@@ -36,12 +36,12 @@ export const POSES = {
         fov: 28,
         overlays: { title: true, menu: false, teach: true },
     },
-    // Lean over both scaled decks. Wider than scramble so the 4×13
-    // grids read; still a seated look, not a showroom pull-back.
+    // Same seated-lean family as scramble (height / distance / FOV).
+    // A hair more z and 2° more FOV so both grids still read.
     doubledeal: {
-        position: [DEN.x, 1.62, DEN.z + 1.42],
-        target: [DEN.x, 0.77, DEN.z],
-        fov: 40,
+        position: [DEN.x + 0.28, 1.22, DEN.z + 0.96],
+        target: [DEN.x, 0.80, DEN.z],
+        fov: 30,
         overlays: { title: true, menu: false, teach: true },
     },
 };

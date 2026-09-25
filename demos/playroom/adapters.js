@@ -256,6 +256,8 @@ function createScrambleAdapter() {
         install(world, opts = {}) {
             if (rig) return rig;
             if (wantsLegacyCube()) return installLegacy(world, opts);
+            // Seat is sync so toy-director can fly it before cubing.js
+            // adopts. createTwistyRig() is the one-shot helper (swapPuzzle).
             const seat = createTwistySeat({ edge: CUBE });
             const prev = world.toys.cube;
             world.replaceToy("cube", seat.group);

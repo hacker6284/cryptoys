@@ -7,6 +7,7 @@ on:
       - "primitives/cipher/doubledeal/**"
       - "primitives/hash/megadreifach/**"
       - "primitives/hash/scramble/**"
+      - "primitives/aead/doubledeal-cbc-hmac/**"
       - "tools/emit_lean.py"
       - ".github/workflows/proofs.yml"
   pull_request:
@@ -15,6 +16,7 @@ on:
       - "primitives/cipher/doubledeal/**"
       - "primitives/hash/megadreifach/**"
       - "primitives/hash/scramble/**"
+      - "primitives/aead/doubledeal-cbc-hmac/**"
       - "tools/emit_lean.py"
       - ".github/workflows/proofs.yml"
   workflow_dispatch:
@@ -88,6 +90,17 @@ jobs:
       - name: Generated TAP (sudo tests)
         working-directory: proofs/scramble/lean/Generated
         run: ./.lake/build/bin/scramble_test
+
+  cbc-hmac-generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/doubledeal-cbc-hmac/lean/Generated
+      - name: Generated TAP (sudo tests)
+        working-directory: proofs/doubledeal-cbc-hmac/lean/Generated
+        run: ./.lake/build/bin/doubledeal_cbc_hmac_test
 
   doubledeal-lean:
     runs-on: ubuntu-latest

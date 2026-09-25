@@ -1,0 +1,17 @@
+{
+  "sudo_file": "primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo",
+  "sudo_sha256": "577d9673a249f7bd1bc1284ab03673a8237f916d79c755f1961b48e9a0566b9d",
+  "sudocode_lean_commit": "ff63b629406bd5d3ab9e9434ea2d4695a2921d8a",
+  "sudocode_lean_ref": "main",
+  "terminates_gate": true,
+  "with_tests": true,
+  "include_paths": [
+    "primitives/hash/megadreifach"
+  ],
+  "imported_sudo": [
+    {
+      "sudo_file": "primitives/hash/megadreifach/megadreifach.sudo",
+      "sudo_sha256": "51ec2331de8f15ee6677191e85d7f924791f156ec9bd2f1686a1cafc34ae91ca"
+    }
+  ]
+}

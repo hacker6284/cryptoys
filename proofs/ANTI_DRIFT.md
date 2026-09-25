@@ -124,8 +124,8 @@ total-fragment / terminating-subset emitter.
 | --- | --- |
 | sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
 | Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 **CLOSED** on every well-formed list (`passkey_refines`, `passkey_eq_twin_loop`, `passkey_step_eq`). See [`LINK2.md`](LINK2.md). |
-| Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | **NEXT**. Same twin / `runLoopOn` pattern. Needed before S3/S4 injectivity transfers onto `Except Trap`. |
-| Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | After `passkey_inv`. S2 stays on the Fin-packet skeleton. Statement sketched in `DoubleDeal/Link2.lean`. Generated TAP checks sudo's encrypt/decrypt tests. |
+| Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | Link 2 **CLOSED** on every well-formed list (`passkey_inv_refines`, `passkey_inv_eq_twin_loop`, `passkey_inv_step_eq`). Algebraic correctness only — not bit-security. |
+| Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | **NEXT**. S2 stays on the Fin-packet skeleton. Statement sketched in `DoubleDeal/Link2.lean`. Generated TAP checks sudo's encrypt/decrypt tests. |
 | `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All four publics ready (bounded `for`). |
 | PassKey / stone proofs *about* `Except Trap` emitted defs | OPEN. Fuel-total monadic programs are not the Fin algebra the stones use. |
 | Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |

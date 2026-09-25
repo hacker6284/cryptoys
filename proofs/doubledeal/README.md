@@ -20,7 +20,7 @@ twelve sudo tests.
 | **(b) Generated TAP** | `proofs/emit_lean.sh` → `lake` → `doubledeal_test` (10/10), including sudo's encrypt/decrypt and `passkey_inv` tests. Two kind-scan tests are stripped under `--require terminates`. | Compiled emitted Lean. **Not** a sudo=Lean theorem. |
 | **(c) Skeleton vs JS JSON** | `lake exe doubledeal` vs `vectors/doubledeal_vectors.json` (from sudoc JS). | Evidence the *skeleton* matches those decks. OPEN that it equals `Generated.encrypt`. |
 | **(d) Equivalence** | sudo text = generated Lean, or skeleton = generated. | OPEN (Link 1). |
-| **(e) Link 2 refinement** | Algebraic stones ≃ Generated on the well-formed domain. | embed/decode, `drop_front` / `push_front` / `left_rotate`, `Generated.passkey` ≃ `passToKeyCutFallback` on every well-formed list. NEXT is `passkey_inv`. Encrypt after that. Not emitter soundness. See [`../LINK2.md`](../LINK2.md). |
+| **(e) Link 2 refinement** | Algebraic stones ≃ Generated on the well-formed domain. | embed/decode, `drop_front` / `push_front` / `left_rotate` / `right_rotate`, `Generated.passkey` ≃ `passToKeyCutFallback` and `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` on every well-formed list. NEXT is encrypt refinement. Not emitter soundness. Not bit-security. See [`../LINK2.md`](../LINK2.md). |
 
 ## What is proved
 
@@ -46,7 +46,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | S7 | Hand sheet refines §3 math | Open |
 | S8–S10 | Differentials, slide, randomness stats | Evidence only; never "security results" |
 | S13 | §5.3 bytes ↔ deck | Evidence in `encoding.test.mjs` / `demos/doubledeal/cards.js` |
-| — | sudo text equals generated Lean; skeleton equals `Generated.encrypt` | OPEN. Generated TAP is layer (b), not a theorem. Link 2: `Generated.passkey` ≃ algebraic on every well-formed list. NEXT is `passkey_inv`; encrypt after that. |
+| — | sudo text equals generated Lean; skeleton equals `Generated.encrypt` | OPEN. Generated TAP is layer (b), not a theorem. Link 2: `Generated.passkey` / `passkey_inv` ≃ algebraic on every well-formed list. NEXT is encrypt refinement. |
 | — | `mixColumns ∘ invMixColumns = id` on arbitrary packets | Open (needs image / seat characterization) |
 
 ## Lean packages
@@ -92,7 +92,7 @@ Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
 
 ## Reading order
 
-SPEC §6 suggested order: **S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7**, S13 as an encoding property test, and S8–S10 as living evidence. PassKey injectivity is proved on the **proof-only** list model. Link 2: that model equals `Generated.passkey` on every well-formed list. NEXT is `passkey_inv` (same twin / `runLoopOn` pattern; needed before injectivity transfers onto `Except Trap`). sudo already tests `passkey_inv` on several decks in Generated TAP.
+SPEC §6 suggested order: **S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7**, S13 as an encoding property test, and S8–S10 as living evidence. PassKey injectivity is proved on the **proof-only** list model. Link 2: that model equals `Generated.passkey` and `Generated.passkey_inv` on every well-formed list. NEXT is encrypt refinement. S3/S4 transfer onto `Except Trap` rides on those glues. sudo already tests `passkey_inv` on several decks in Generated TAP.
 
 ### Why PassKey is invertible
 

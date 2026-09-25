@@ -220,6 +220,12 @@ try {
     function tick(now) {
         director.update(now);
         poses.update(performance.now());
+        const cube = world.toys.cube;
+        if (cube) {
+            document.documentElement.dataset.cubeX = cube.position.x.toFixed(3);
+            document.documentElement.dataset.cubeY = cube.position.y.toFixed(3);
+            document.documentElement.dataset.cubeZ = cube.position.z.toFixed(3);
+        }
         world.render();
         requestAnimationFrame(tick);
     }

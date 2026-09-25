@@ -37,3 +37,7 @@ export const SETTLE_HOLD_MS = 90;
 // Hold the current shot this long so the cube leaving its slot is on camera
 // before the lens dollies. Click/Escape still skip after LIFT_MS.
 export const HOLD_MS = 760;
+
+// Standalone DoubleDeal table is ~17.4 units wide. Scale the live card
+// group onto the playroom felt. Unbox / deal choreography is later.
+export const DEAL_SCALE = 0.068;

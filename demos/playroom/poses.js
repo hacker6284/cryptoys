@@ -1,8 +1,7 @@
 import { DEN } from "./constants.js";
 
 // Named person-camera poses. Horizon stays level (no roll).
-// `lean` is a stub for a later look-down over the felt; DoubleDeal/Scramble
-// will specialize it once those adapters sit in the room.
+// Scramble and DoubleDeal each lean on their toy without leaving the room.
 
 export const POSES = {
     landing: {
@@ -37,6 +36,14 @@ export const POSES = {
         fov: 28,
         overlays: { title: true, menu: false, teach: true },
     },
+    // Lean over both scaled decks. Wider than scramble so the 4×13
+    // grids read; still a seated look, not a showroom pull-back.
+    doubledeal: {
+        position: [DEN.x, 1.62, DEN.z + 1.42],
+        target: [DEN.x, 0.77, DEN.z],
+        fov: 40,
+        overlays: { title: true, menu: false, teach: true },
+    },
 };
 
 const ALIASES = {
@@ -51,6 +58,8 @@ const ALIASES = {
     lean_msg: "lean",
     scramble: "scramble",
     lean_cube: "scramble",
+    doubledeal: "doubledeal",
+    lean_deck: "doubledeal",
 };
 
 export function resolvePoseName(raw, fallback = "landing") {

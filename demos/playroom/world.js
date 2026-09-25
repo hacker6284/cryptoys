@@ -646,34 +646,22 @@ export async function mountWorld(canvas) {
     function getShelfPose(name) {
         const slot = slots[name];
         if (!slot) return null;
-        if (name === "cube") {
-            return seatOn(toys.cube, {
-                x: slot.x,
-                surfaceY: SHELF_TOP + 0.001,
-                z: SHELF_Z,
-                // Yaw only — pitch was driving corners through the board.
-                rotation: { x: 0, y: 0.45, z: 0 },
-            });
-        }
-        return {
-            position: { x: slot.x, y: slot.y + 0.046, z: SHELF_Z },
-            rotation: { x: 0, y: 0.15, z: 0 },
-        };
+        return seatOn(toys[name], {
+            x: slot.x,
+            surfaceY: SHELF_TOP + 0.001,
+            z: SHELF_Z,
+            // Yaw only — pitch was driving corners through the board.
+            rotation: { x: 0, y: name === "cube" ? 0.45 : 0.15, z: 0 },
+        });
     }
 
     function getTablePose(name) {
-        if (name === "cube") {
-            return seatOn(toys.cube, {
-                x: DEN.x,
-                surfaceY: feltTopY() + 0.001,
-                z: DEN.z,
-                rotation: { x: 0, y: 0, z: 0 },
-            });
-        }
-        return {
-            position: { x: DEN.x, y: feltTopY() + 0.012, z: DEN.z },
+        return seatOn(toys[name], {
+            x: DEN.x,
+            surfaceY: feltTopY() + 0.001,
+            z: DEN.z,
             rotation: { x: 0, y: 0, z: 0 },
-        };
+        });
     }
 
     function applyPose(object, pose) {

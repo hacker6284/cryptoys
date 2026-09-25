@@ -34,4 +34,5 @@ test -f demos/scramble/generated/scramble.mjs
 test -f demos/doubledeal/generated/doubledeal.mjs
 test -f demos/scramble/SPEC.md
 test -f demos/doubledeal/SPEC.md
+node demos/playroom/room.test.mjs
 touch demos/.nojekyll

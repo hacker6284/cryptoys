@@ -146,36 +146,6 @@ function enableShadows(root) {
     });
 }
 
-export function inspectMaterials(root) {
-    const counts = new Map();
-    let meshCount = 0;
-    let lit = 0;
-    root.traverse((node) => {
-        if (!node.isMesh) return;
-        meshCount += 1;
-        const mats = Array.isArray(node.material) ? node.material : [node.material];
-        for (const mat of mats) {
-            if (!mat) continue;
-            const type = mat.type || mat.constructor?.name || "unknown";
-            counts.set(type, (counts.get(type) || 0) + 1);
-            if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) lit += 1;
-        }
-    });
-    return {
-        meshCount,
-        standardLike: lit,
-        types: [...counts.entries()].sort((a, b) => b[1] - a[1]),
-    };
-}
-
-export function describeThreeSkew(object) {
-    return {
-        instanceofOurObject3D: object instanceof THREE.Object3D,
-        constructorName: object?.constructor?.name || "unknown",
-        ourRevision: THREE.REVISION,
-    };
-}
-
 function noopHighlight() {}
 
 /**
@@ -229,32 +199,21 @@ export async function adoptTwistyPuzzle(seat, {
         await Promise.race([painted, sleep(1500)]);
         await frame();
         await frame();
-    } catch (err) {
-        player.remove();
-        throw err;
-    }
 
-    if (seat.placeholder) {
-        seat.fit.remove(seat.placeholder);
-    }
+        if (seat.placeholder) {
+            seat.fit.remove(seat.placeholder);
+        }
 
-    puzzleObject.removeFromParent();
-    puzzleObject.traverse((node) => {
-        if (node.isMesh) node.frustumCulled = false;
-    });
-    seat.fit.add(puzzleObject);
-    const framed = frameInWrapper(seat.fit, puzzleObject, edge);
-    seat.group.userData.twistyFramed = {
-        nativeMax: framed.nativeMax,
-        fittedMax: framed.fittedMax,
-    };
-    seat.group.userData.twistySkew = skew;
-    enableShadows(puzzleObject);
-    const look = inspectMaterials(puzzleObject);
-    const skew = describeThreeSkew(puzzleObject);
+        puzzleObject.removeFromParent();
+        puzzleObject.traverse((node) => {
+            if (node.isMesh) node.frustumCulled = false;
+        });
+        seat.fit.add(puzzleObject);
+        const framed = frameInWrapper(seat.fit, puzzleObject, edge);
+        enableShadows(puzzleObject);
 
-    let disposed = false;
-    let currentAlg = String(alg ?? spec.alg ?? "");
+        let disposed = false;
+        let currentAlg = String(alg ?? spec.alg ?? "");
 
     async function timeline() {
         const [indexer, info] = await Promise.all([
@@ -300,7 +259,9 @@ export async function adoptTwistyPuzzle(seat, {
     }
 
     async function playLeaves(from, to, { snap = false } = {}) {
+        if (disposed) return { index: 0, total: 0 };
         const { indexer } = await timeline();
+        if (disposed) return { index: 0, total: 0 };
         const total = indexer.numAnimatedLeaves();
         const start = Math.max(0, from);
         const end = Math.max(start, Math.min(to, total));
@@ -310,6 +271,7 @@ export async function adoptTwistyPuzzle(seat, {
         player.pause();
         requestTimestamp(snap ? endTs : startTs);
         await frame();
+        if (disposed) return { index: start, total };
         if (snap) return { index: end - 1, total };
         let tempo = 1;
         try {
@@ -319,10 +281,12 @@ export async function adoptTwistyPuzzle(seat, {
         }
         let duration = 0;
         for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
+        if (disposed) return { index: start, total };
         player.play();
         const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
         const deadline = performance.now() + budget;
         while (performance.now() < deadline) {
+            if (disposed) return { index: start, total };
             try {
                 const info = await player.experimentalModel.detailedTimelineInfo.get();
                 if (info.timestamp >= endTs - 2) break;
@@ -331,6 +295,7 @@ export async function adoptTwistyPuzzle(seat, {
             }
             await frame();
         }
+        if (disposed) return { index: start, total };
         player.pause();
         requestTimestamp(endTs);
         await frame();
@@ -346,8 +311,6 @@ export async function adoptTwistyPuzzle(seat, {
         player,
         puzzleId: spec.id,
         framed,
-        look,
-        skew,
         fallback: false,
         play() {
             player.play();
@@ -430,12 +393,20 @@ export async function adoptTwistyPuzzle(seat, {
         dispose() {
             if (disposed) return;
             disposed = true;
-            player.pause();
+            try {
+                player.pause();
+            } catch {
+                // player may already be gone
+            }
             if (puzzleObject?.parent) puzzleObject.parent.remove(puzzleObject);
             player.remove();
         },
     };
-    return api;
+        return api;
+    } catch (err) {
+        player.remove();
+        throw err;
+    }
 }
 
 export async function createTwistyRig(opts = {}) {

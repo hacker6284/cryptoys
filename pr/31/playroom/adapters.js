@@ -271,11 +271,18 @@ function createScrambleAdapter() {
             rig = stageCubeView(pendingTwistyRig(seat), opts);
             adoptPromise = adoptTwistyPuzzle(seat, { puzzle: "3x3x3", edge: CUBE })
                 .then((live) => {
+                    if (typeof live.setAlg !== "function" || typeof live.playLeaves !== "function") {
+                        live.dispose?.();
+                        throw new Error("cubing.js rig missing timeline API");
+                    }
                     if (seat.placeholder) {
                         disposeObject(seat.placeholder);
                         seat.placeholder = null;
                     }
                     rig = stageCubeView(live, opts);
+                    if (typeof rig.setAlg !== "function" || typeof rig.playLeaves !== "function") {
+                        throw new Error("staged cubing.js rig missing timeline API");
+                    }
                     return rig;
                 })
                 .catch((err) => {

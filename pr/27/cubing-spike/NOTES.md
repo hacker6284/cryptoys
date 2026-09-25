@@ -40,7 +40,7 @@ Today `toy-director` samples a lift → arc → table path on `world.toys.cube`.
 
 ## Materials / look (honest)
 
-Default Twisty stickers are the Twizzle look: saturated speedcube colors, thin plastic, often Lambert/Phong (or PG3D equivalents), not our `MeshStandardMaterial` cubies (`roughness ~0.55`, `metalness ~0.04`, muted room palette). Under playroom ACES + dim HDR they read brighter and flatter than the hand-rolled 57 mm toy.
+Live spike (playroom r170): adopted meshes are **`MeshBasicMaterial`** (3×3 ~114, megaminx ~14, pyraminx ~6–20). Zero `MeshStandardMaterial`. `object instanceof THREE.Object3D` is **false** — cubing.js is bringing its own `three` copy even with our import map. Meshes still render in the room renderer. Twizzle stickers are saturated and unlit; they ignore pendant/HDR, so they look flatter and brighter than our plastic cubies.
 
 To match the plastic room aesthetic later (optional, not this spike):
 
@@ -71,7 +71,7 @@ Official cubing CDN (workers / WASM-safe). Not vendored, not npm — load only o
 ## Risks
 
 1. **Experimental / deprecated API.** `experimentalCurrentThreeJSPuzzleObject` may go away or leave the main thread. Adopt-into-scene is the whole spike; have a fallback (keep TwistyPlayer as a hidden viewport, or fork a thin PG3D loader) before committing the room to it.
-2. **three.js instance skew.** If cubing bundles its own `three`, `instanceof Object3D` fails. Meshes often still render; `replaceToy` / shadows / dispose get sharper. Import map `"three"` → 0.170.0 is the intended share. Check the on-page skew line.
+2. **three.js instance skew — confirmed.** `instanceof THREE.Object3D` is false on the live page; cubing ships its own `three` despite the import map. Meshes still render. Reset local TRS after `removeFromParent()` before fitting or Twisty's scene matrix poisons scale (pyraminx went invisible).
 3. **Player must stay connected and paintable.** `display:none` / `visibility:hidden` / offscreen-far canvases can prevent the 3D object from ever existing. Extra WebGL context inside Twisty is waste; software GL (SwiftShader) may fail the second context and trip the fallback canvas.
 4. **Stale object on `puzzle` change.** Recreate the rig (this spike does).
 5. **Alg / orientation.** 3×3 WCA, megaminx `R++ D++`, pyraminx. Scramble’s facelet string and “white up, green front, red right” still have to be mapped onto cubing.js setup/alg — not done here.

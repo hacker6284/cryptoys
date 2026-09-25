@@ -85,18 +85,46 @@ function withTimeout(promise, ms, label) {
     });
 }
 
+function meshBox(object) {
+    const box = new THREE.Box3();
+    object.updateMatrixWorld(true);
+    object.traverse((node) => {
+        if (!node.isMesh || !node.visible || !node.geometry) return;
+        const geo = node.geometry;
+        if (!geo.boundingBox) geo.computeBoundingBox();
+        if (!geo.boundingBox) return;
+        const next = geo.boundingBox.clone().applyMatrix4(node.matrixWorld);
+        if (!next.isEmpty()) box.union(next);
+    });
+    return box;
+}
+
 function centerAndFit(object, edge) {
     object.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(object);
+    let box = meshBox(object);
+    if (box.isEmpty()) box = new THREE.Box3().setFromObject(object);
     const size = new THREE.Vector3();
     const center = new THREE.Vector3();
     box.getSize(size);
     box.getCenter(center);
-    object.position.sub(center);
-    const max = Math.max(size.x, size.y, size.z) || 1;
+    if (Number.isFinite(center.x)) object.position.sub(center);
+    let max = Math.max(size.x, size.y, size.z);
+    if (!Number.isFinite(max) || max < 1e-6) max = 1;
     object.scale.multiplyScalar(edge / max);
     object.updateMatrixWorld(true);
-    return { size: size.clone(), nativeMax: max };
+    const fitted = meshBox(object);
+    const fittedSize = new THREE.Vector3();
+    fitted.getSize(fittedSize);
+    const fittedMax = Math.max(fittedSize.x, fittedSize.y, fittedSize.z);
+    if (Number.isFinite(fittedMax) && fittedMax > 1e-6 && (fittedMax < edge * 0.4 || fittedMax > edge * 2.2)) {
+        object.scale.multiplyScalar(edge / fittedMax);
+        object.updateMatrixWorld(true);
+    }
+    return { size: size.clone(), nativeMax: max, fittedMax: Math.max(fittedSize.x, fittedSize.y, fittedSize.z) || 0 };
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function enableShadows(root) {
@@ -163,6 +191,7 @@ export async function createTwistyRig({
         backView: "none",
         background: "none",
         controlPanel: "none",
+        visualization: spec.id === "3x3x3" ? "3D" : "PG3D",
         tempoScale,
     });
     hidePlayerHost(player);
@@ -176,14 +205,22 @@ export async function createTwistyRig({
     onStage?.("experimentalCurrentThreeJSPuzzleObject");
     let puzzleObject = null;
     let adoptError = null;
+    let firstPaint = null;
+    const painted = new Promise((resolve) => {
+        firstPaint = resolve;
+    });
     try {
         puzzleObject = await withTimeout(
             player.experimentalCurrentThreeJSPuzzleObject(() => {
+                firstPaint?.();
                 onRenderScheduled?.();
             }),
             adoptTimeoutMs,
             "experimentalCurrentThreeJSPuzzleObject",
         );
+        await Promise.race([painted, sleep(1500)]);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        await new Promise((resolve) => requestAnimationFrame(resolve));
     } catch (err) {
         adoptError = err;
         player.style.cssText = [
@@ -204,9 +241,14 @@ export async function createTwistyRig({
     let look = { meshCount: 0, standardLike: 0, types: [] };
     let skew = describeThreeSkew(puzzleObject);
     if (puzzleObject) {
+        puzzleObject.removeFromParent();
+        puzzleObject.position.set(0, 0, 0);
+        puzzleObject.rotation.set(0, 0, 0);
+        puzzleObject.quaternion.identity();
+        puzzleObject.scale.set(1, 1, 1);
+        lift.add(puzzleObject);
         framed = centerAndFit(puzzleObject, edge);
         enableShadows(puzzleObject);
-        lift.add(puzzleObject);
         look = inspectMaterials(puzzleObject);
         skew = describeThreeSkew(puzzleObject);
     }

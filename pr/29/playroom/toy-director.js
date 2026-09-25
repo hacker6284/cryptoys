@@ -73,13 +73,13 @@ export function createToyDirector(world) {
     }
 
     function writeFlightDebug(u, toy) {
-        const root = document.documentElement;
-        if (root.dataset.playroomDebug !== "1") return;
+        const root = typeof document !== "undefined" ? document.documentElement : null;
+        if (!root || root.dataset.playroomDebug !== "1") return;
         root.dataset.flight = Number.isFinite(u) ? String(Math.round(Math.min(1, Math.max(0, u)) * 100)) : "";
         if (toy) {
-            root.dataset.cubeX = toy.position.x.toFixed(2);
-            root.dataset.cubeY = toy.position.y.toFixed(2);
-            root.dataset.cubeZ = toy.position.z.toFixed(2);
+            root.dataset.toyX = toy.position.x.toFixed(2);
+            root.dataset.toyY = toy.position.y.toFixed(2);
+            root.dataset.toyZ = toy.position.z.toFixed(2);
         }
     }
 

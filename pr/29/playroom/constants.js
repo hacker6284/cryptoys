@@ -6,6 +6,12 @@ export const ASSET_BASE = new URL("./assets/", import.meta.url);
 export const CARD_W = 0.063;
 export const CARD_D = 0.088;
 export const CUBE = 0.057;
+// Standing deck box in world.makeDeckBox (bw × bh × bd).
+export const DECK_H = 0.092;
+
+export function toyHalfHeight(name) {
+    return name === "deck" ? DECK_H / 2 : CUBE / 2;
+}
 
 export const DEN = { x: -0.35, z: 0.15 };
 export const SHELF_Z = -2.15;

@@ -4,6 +4,7 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import {
     ASSET_BASE,
     CUBE,
+    DECK_H,
     DEN,
     SHELF_Z,
     SHELF_THICK,
@@ -16,6 +17,7 @@ import {
     SHELF_Y0,
     SHELF_Y1,
     SLOTS,
+    toyHalfHeight,
 } from "./constants.js";
 
 function asset(path) {
@@ -95,7 +97,7 @@ function applyWoodMaps(mat, maps, tint = 0xffffff) {
 function makeDeckBox(bodyColor, labelText) {
     const group = new THREE.Group();
     const bw = 0.067;
-    const bh = 0.092;
+    const bh = DECK_H;
     const bd = 0.020;
     const cardboard = new THREE.MeshStandardMaterial({
         color: bodyColor,
@@ -603,8 +605,8 @@ export async function mountWorld(canvas) {
     // Measure the live mesh so the lowest point sits on a surface. The
     // previous rest pose used SHELF_Y1 (board center) plus a pitched
     // rotation, so the cube sat inside the shelf and stabbed the felt.
-    function seatOn(object, { x, surfaceY, z, rotation }) {
-        const fallback = CUBE / 2;
+    function seatOn(object, { x, surfaceY, z, rotation, name }) {
+        const fallback = toyHalfHeight(name);
         if (!object) {
             return {
                 position: { x, y: surfaceY + fallback, z },
@@ -652,6 +654,7 @@ export async function mountWorld(canvas) {
             z: SHELF_Z,
             // Yaw only — pitch was driving corners through the board.
             rotation: { x: 0, y: name === "cube" ? 0.45 : 0.15, z: 0 },
+            name,
         });
     }
 
@@ -661,6 +664,7 @@ export async function mountWorld(canvas) {
             surfaceY: feltTopY() + 0.001,
             z: DEN.z,
             rotation: { x: 0, y: 0, z: 0 },
+            name,
         });
     }
 

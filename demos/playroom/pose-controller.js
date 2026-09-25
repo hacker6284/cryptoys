@@ -38,6 +38,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     let current = "landing";
     let tween = null;
     let framing = null;
+    let orbitLocked = false;
     let lastFrame = performance.now();
 
     const controls = domElement ? new OrbitControls(camera, domElement) : null;
@@ -116,11 +117,19 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         });
     }
 
+    function finishTween(name, { emitChange = true } = {}) {
+        const waiters = tween?.waiters || [];
+        tween = null;
+        if (name) current = name;
+        if (emitChange) emit(current, { tweening: false });
+        for (const waiter of waiters) waiter(current);
+    }
+
     function snap(name) {
         const resolved = resolvePoseName(name, current);
         const pose = readPose(resolved);
         if (!pose) return current;
-        tween = null;
+        finishTween(resolved, { emitChange: false });
         current = resolved;
         setControlsEnabled(false);
         apply(pose, 1);
@@ -138,6 +147,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             return current;
         }
         if (opts.snap || prefersReducedMotion()) return snap(resolved);
+        if (tween) finishTween(current, { emitChange: false });
         setControlsEnabled(false);
         const now = performance.now();
         const viaName = opts.via ? resolvePoseName(opts.via) : null;
@@ -153,9 +163,27 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             holding: true,
             duration: opts.duration ?? duration,
             track: opts.track || null,
+            waiters: [],
         };
         emit(current, { tweening: true, next: resolved });
         return current;
+    }
+
+    function playTo(name, opts = {}) {
+        goTo(name, opts);
+        if (!tween) return Promise.resolve(current);
+        return new Promise((resolve) => {
+            tween.waiters.push(resolve);
+        });
+    }
+
+    function lockOrbit() {
+        orbitLocked = true;
+        setControlsEnabled(false);
+    }
+
+    function unlockOrbit() {
+        orbitLocked = false;
     }
 
     function skip() {
@@ -221,14 +249,10 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             } else {
                 apply(tween.to, u, tween.from, trackPos);
             }
-            if (u >= 1) {
-                current = tween.to.name;
-                tween = null;
-                emit(current, { tweening: false });
-            }
+            if (u >= 1) finishTween(tween.to.name);
             return current;
         }
-        if (!controls) {
+        if (orbitLocked || !controls) {
             applyFraming(dt);
             return current;
         }
@@ -246,6 +270,9 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         get busy() {
             return Boolean(tween);
         },
+        get locked() {
+            return orbitLocked;
+        },
         get lookTarget() {
             return look;
         },
@@ -254,7 +281,10 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         },
         snap,
         goTo,
+        playTo,
         skip,
+        lockOrbit,
+        unlockOrbit,
         frame,
         releaseFrame,
         update,

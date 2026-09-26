@@ -20,6 +20,7 @@ import MegaDreifach.Link2.PackOri
 import MegaDreifach.Link2.EvenRank
 import MegaDreifach.Link2.PosBytes
 import MegaDreifach.Link2.FromBe
+import MegaDreifach.Link2.FromBeShort
 import MegaDreifach.Link2.Factorial
 
 namespace MegaDreifach.Link2
@@ -76,10 +77,17 @@ namespace MegaDreifach.Link2
   factoradic digit is `0 / d! = 0` and the remainder is `0`. Not a positive
   rank. Not `phi_chunk`. Not `phi_inv`.
 
+  CLOSED: `big_from_be_short`, `big_from_be_short_array`, `big_from_be_byte`.
+  Domain `BeShortWf`: length `≤ 3`, every byte `≤ 255`. `fromBE < 256^3 < 10^9`,
+  one limb (empty if zero). Each step `acc * 256 + b` uses the one-limb
+  multiply and add. Not length 4 (`256^4 > 10^9`). Not the 28-byte pad block.
+  Not `phi_chunk`. Not `phi_inv`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
-  (a positive chunk still peels `d!` up to `51!`). Positive `range_list`
-  (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in
-  `EvenRank.lean`. A positive corner or edge rank is outside this limb fragment.
+  (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
+  bytes). Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
+  `range_list_refines` in `EvenRank.lean`. A positive corner or edge rank is
+  outside this limb fragment.
 -/
 
 end MegaDreifach.Link2

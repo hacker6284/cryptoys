@@ -15,6 +15,7 @@ import MegaDreifach.Link2.Big
 import MegaDreifach.Link2.Be
 import MegaDreifach.Link2.PadRef
 import MegaDreifach.Link2.Compose
+import MegaDreifach.Link2.RequirePerm
 
 namespace MegaDreifach.Link2
 
@@ -27,6 +28,11 @@ namespace MegaDreifach.Link2
   Domain `PosWf`: table lengths 20/20/30/30, nonnegative in-range indices,
   orientations `< 3` / `< 2` (trap-free, i64-safe). Generated `compose`
   equals algebraic `compose`.
+
+  CLOSED: `require_permutation_refines`, `require_permutation_refines_array`.
+  Domain `DealWf` / `isPermutation52`: length 52, nonnegative card ids `< 52`,
+  no duplicates (trap-free, i64-safe). Generated `require_permutation` equals
+  algebraic `requirePermutation`.
 
   OPEN: full `v_Hash` refinement.
 -/

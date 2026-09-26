@@ -363,6 +363,7 @@ export async function adoptTwistyPuzzle(seat, {
             return { index, total };
         },
         setAlg(next) {
+            // Session binds this on Play / Step / teach, not on Message input.
             currentAlg = String(next || "");
             player.experimentalSetupAlg = "";
             player.alg = currentAlg;

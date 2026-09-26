@@ -24,7 +24,7 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 | Tempo | `player.tempoScale` (speed slider) |
 | Seat / fly | translate `rig.group` (toy-director from motion #25) |
 | Lift-off-felt | `stageCubeView` still lifts `rig.group.y` (#25). `rig.lift` is the local hook. |
-| Size | scale `rig.fit` only — never the adopted Object3D. Target edge is `CUBE` (120 mm). Fit from **local** TRS (`fitToLocalEdge` / `keepFitted`), then re-apply on every Twisty `render-scheduled` and again in `world.render` so a post-spawn layout cannot permanently crush the cube. |
+| Size | scale `rig.fit` only — never the adopted Object3D. Target edge is `CUBE` (57 mm, real-life 3×3). Fit from **local** TRS (`fitToLocalEdge` / `keepFitted`), then re-apply on every Twisty `render-scheduled` and again in `world.render` so a post-spawn layout cannot permanently crush the cube. |
 
 Session moves (including Rule B / seat as `x`/`y`/`z`) become `player.alg`.
 `createScrambleSession` drives that timeline via `playLeaves` / `jumpToLeaf`.
@@ -61,8 +61,10 @@ only. MegaDreifach is a different product; this UI does not run it.
 - Seat surface is explicit (`userData.seatSurface`). Borrow writes
   `table`, home writes `shelf`. Fit-change reseat uses that, never
   `flightBusy ? table : shelf`.
-- Judge size in **world space** (`userData.worldEdge` / AABB Y). Wide
-  hub frames looking small are camera distance, not underscale.
+- Judge size in **world space** (`userData.worldEdge` / AABB Y, ~0.057 m).
+  Wide hub frames looking small are camera distance, not underscale.
+  Real-life check: a classic 3×3 is slightly shorter than a poker card
+  width (63 mm) and shorter than the standing deck box.
 - **`instanceof THREE.Object3D` is false.** cubing ships its own `three`
   despite the import map. Meshes still render.
 - Adopted look is **MeshBasicMaterial**. Stickers ignore pendant/HDR.

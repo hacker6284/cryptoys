@@ -108,7 +108,7 @@ export { fitToLocalEdge, keepFitted };
 
 /**
  * Scale `wrapper` so the child's *local* max edge equals `edge`
- * (playroom `CUBE`, 120 mm). Local TRS only — see `fitToLocalEdge`.
+ * (playroom `CUBE`, 57 mm). Local TRS only — see `fitToLocalEdge`.
  */
 export function frameInWrapper(wrapper, object, edge) {
     return fitToLocalEdge(wrapper, object, edge);
@@ -130,7 +130,7 @@ function noopHighlight() {}
  *   lift   — local Y hook. Playroom #25 lifts `group` for turns; this stays
  *            available so cubing animation and room motion need not share
  *            a transform.
- *   fit    — `CUBE` (120 mm) scale. Do not scale the cubing object itself.
+ *   fit    — `CUBE` (57 mm) scale. Do not scale the cubing object itself.
  *   puzzle — cubing.js Object3D. Do not keyframe; TwistyPlayer owns motion.
  */
 export async function adoptTwistyPuzzle(seat, {

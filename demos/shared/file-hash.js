@@ -14,7 +14,9 @@ import { DEMO_INPUT_MAX_CHARS } from "./input-cap.js";
 
 export const DEMO_FILE_MAX_BYTES = 10 * 1024 * 1024;
 export const DEMO_FILE_TEACH_MAX_BYTES = DEMO_INPUT_MAX_CHARS;
-export const DEMO_FILE_CHUNK_BYTES = 32 * 1024;
+export const DEMO_FILE_CHUNK_BYTES = 8 * 1024;
+export const DEMO_FILE_HOST_CHUNK_BYTES = 4 * 1024;
+export const DEMO_FILE_WORKER_READY_MS = 1000;
 
 export function formatFileSize(bytes) {
     const n = Number(bytes) || 0;
@@ -259,6 +261,11 @@ function postWorker(worker, data, transfer) {
  * Hash `file` with the demo worker. `createWorker` / `hashInline` are
  * test seams. Product path uses a module Worker so `evaluate` never
  * runs on the main thread for the file.
+ *
+ * GitHub Pages serves the worker as `application/javascript` at the
+ * real `import.meta.url` (not a blob — blob workers break relative
+ * `./generated/*.mjs` imports). If `ready` is not posted within ~1s,
+ * fall back to host silent hash so Digest cannot stall empty.
  */
 export async function hashFile(file, {
     version = 2,
@@ -269,7 +276,7 @@ export async function hashFile(file, {
     createWorker,
     hashInline,
     fallback,
-    readyMs = 8000,
+    readyMs = DEMO_FILE_WORKER_READY_MS,
 } = {}) {
     const check = checkFileSize(file);
     if (!check.ok) throw new Error(check.message);
@@ -409,7 +416,10 @@ export function bindMessageFile({
 }
 
 export function showFileChip({ input, fileChip, fileNameEl, file }) {
-    if (input) input.hidden = true;
+    // Keep the Message textarea on its own row with the paperclip.
+    // Filename lives on the next full-width row — never hide the field
+    // or the chip slides up beside the clip.
+    if (input) input.hidden = false;
     if (fileChip) fileChip.hidden = false;
     if (fileNameEl) fileNameEl.textContent = formatFileLabel(file);
 }

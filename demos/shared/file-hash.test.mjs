@@ -3,8 +3,10 @@ import { readFileSync } from "node:fs";
 import { existsSync } from "node:fs";
 import {
     DEMO_FILE_CHUNK_BYTES,
+    DEMO_FILE_HOST_CHUNK_BYTES,
     DEMO_FILE_MAX_BYTES,
     DEMO_FILE_TEACH_MAX_BYTES,
+    DEMO_FILE_WORKER_READY_MS,
     canWalkFile,
     checkFileSize,
     createGeneratedHasher,
@@ -21,6 +23,8 @@ import { DEMO_INPUT_MAX_CHARS } from "./input-cap.js";
 assert.equal(DEMO_FILE_MAX_BYTES, 10 * 1024 * 1024, "first file ceiling is 10 MB");
 assert.equal(DEMO_FILE_TEACH_MAX_BYTES, DEMO_INPUT_MAX_CHARS, "Play/teach cap matches typed Message");
 assert.ok(DEMO_FILE_CHUNK_BYTES >= 4 * 1024);
+assert.ok(DEMO_FILE_HOST_CHUNK_BYTES >= 4 * 1024);
+assert.equal(DEMO_FILE_WORKER_READY_MS, 1000, "worker ready must fail over in ~1s");
 
 assert.equal(formatFileSize(0), "0 B");
 assert.equal(formatFileSize(512), "512 B");
@@ -135,6 +139,25 @@ const viaFallback = await hashFile(file, {
 });
 assert.deepEqual(viaFallback.digest, [9, 9], "hashFile falls back when a worker cannot start");
 
+function silentWorker() {
+    return {
+        addEventListener() {},
+        removeEventListener() {},
+        terminate() {},
+        postMessage() {},
+    };
+}
+const readyStarted = Date.now();
+const timedOut = await hashFile(file, {
+    version: 2,
+    workerUrl: "mock:hash-worker",
+    readyMs: 40,
+    createWorker: () => silentWorker(),
+    fallback: async () => ({ digest: [3, 1, 4] }),
+});
+assert.deepEqual(timedOut.digest, [3, 1, 4], "no worker ready → host fallback still writes Digest");
+assert.ok(Date.now() - readyStarted < 400, "ready timeout does not sit on the old 8s stall");
+
 const implUrl = new URL("../scramble/generated/_scramble_impl.mjs", import.meta.url);
 if (existsSync(implUrl)) {
     const impl = await import(implUrl);
@@ -201,7 +224,10 @@ assert.doesNotMatch(scramble, /if \(modest\) \{\s*got = await hashWithPublicApi/
 const hashFn = scramble.match(/async function hashSelectedFile\(\) \{[\s\S]*?\n    \}/);
 assert.ok(hashFn, "hashSelectedFile is the file Digest path");
 assert.match(hashFn[0], /hashFile\(/, "every file size auto-hashes on pick");
+assert.match(hashFn[0], /readyMs: DEMO_FILE_WORKER_READY_MS/, "Pages worker gets ~1s then host silent hash");
 assert.match(hashFn[0], /applyFileDigest\(digest/, "Digest hex is written when the hasher finishes");
+assert.match(hashFn[0], /setFileProgress/, "hashing shows determinate progress");
+assert.match(hashFn[0], /clearFileProgress/);
 assert.doesNotMatch(hashFn[0], /view\.setAlg/, "file hash must not call setAlg while hashing");
 assert.doesNotMatch(hashFn[0], /bindAlg\(/);
 assert.doesNotMatch(hashFn[0], /mapTraceToAlg/);
@@ -214,6 +240,7 @@ assert.match(adapters, /id="message-file-btn"/);
 assert.match(adapters, /class="file-btn"/);
 assert.match(adapters, /lucideSvg\("paperclip"/);
 assert.match(adapters, /id="message-file"/);
+assert.match(adapters, /id="message-file-progress"/, "quiet hashing progress lives under the filename row");
 const scrambleDock = adapters.slice(0, adapters.indexOf("function mountDoubleDealDock"));
 const messageRow = scrambleDock.match(/<div class="playroom-message-row">[\s\S]*?<\/div>/);
 assert.ok(messageRow, "Message line is its own row");

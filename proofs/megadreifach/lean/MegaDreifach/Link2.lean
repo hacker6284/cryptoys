@@ -20,6 +20,7 @@ import MegaDreifach.Link2.PackOri
 import MegaDreifach.Link2.EvenRank
 import MegaDreifach.Link2.PosBytes
 import MegaDreifach.Link2.FromBe
+import MegaDreifach.Link2.Factorial
 
 namespace MegaDreifach.Link2
 
@@ -66,8 +67,17 @@ namespace MegaDreifach.Link2
   so the emitted bigint is the empty limb list. Not a general pad block
   (`2^224` is many limbs). Not `phi_chunk`. Not `phi_inv`.
 
+  CLOSED: `big_factorial_refines`. Domain `n ≤ 13`. `12! < 10^9` (one limb);
+  `13! = 12! · 13` is the last product of the proved one-limb multiply.
+  Not `51!`.
+
+  CLOSED: `peel_leading_zero`, `peel_leading_zero_digit`. Domain `d ≤ 13`
+  on the zero bigint. Divisors `2..d` stay on the empty limb list. The
+  factoradic digit is `0 / d! = 0` and the remainder is `0`. Not a positive
+  rank. Not `phi_chunk`. Not `phi_inv`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
-  (`peel_leading` still builds `d!` up to `51!`). Positive `range_list`
+  (a positive chunk still peels `d!` up to `51!`). Positive `range_list`
   (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in
   `EvenRank.lean`. A positive corner or edge rank is outside this limb fragment.
 -/

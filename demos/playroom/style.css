@@ -357,7 +357,7 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   height: auto;
   padding: 0.55rem 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  border-radius: var(--grow-field-radius, 8px);
   background: #0b0a09;
   color: var(--fg);
   font-family: inherit;

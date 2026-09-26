@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 const growCss = readFileSync(new URL("./grow-field.css", import.meta.url), "utf8");
 const growRules = growCss.replace(/\/\*[\s\S]*?\*\//g, "");
 assert.match(growCss, /--grow-field-max:\s*8\.5rem/, "cap is documented in CSS tokens");
+assert.match(growRules, /--grow-field-radius:\s*8px/, "radius stays fixed; does not scale with height");
 assert.match(growRules, /field-sizing:\s*content/);
 assert.match(growRules, /overflow-wrap:\s*anywhere/);
 assert.match(growRules, /white-space:\s*pre-wrap/);
@@ -17,6 +18,16 @@ assert.match(growJs, /8\.5rem/);
 
 const playroomCss = readFileSync(new URL("../playroom/style.css", import.meta.url), "utf8");
 assert.match(playroomCss, /\.playroom-dock textarea\.grow-field/);
+assert.match(
+    playroomCss,
+    /\.playroom-dock textarea\.grow-field[^{]*\{[^}]*border-radius:\s*var\(--grow-field-radius/,
+    "dock fields use the small fixed radius, not a pill",
+);
+assert.doesNotMatch(
+    playroomCss,
+    /\.playroom-dock textarea\.grow-field[^{]*\{[^}]*border-radius:\s*999px/,
+    "tall Message must not use a pill radius",
+);
 assert.doesNotMatch(
     playroomCss,
     /text-overflow:\s*ellipsis/,

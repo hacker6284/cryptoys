@@ -1,6 +1,6 @@
 import { DEAL_SCALE, GATHER_MS } from "./constants.js";
 import { easeInOutCubic, lerp } from "./beat-clock.js";
-import { hopTo } from "./motion.js";
+import { hopTo, markBeat } from "./motion.js";
 import { HAND_FACE_INDEXES, MSG_FACE_INDEXES } from "./unbox-hand.js";
 
 /**
@@ -22,6 +22,7 @@ export async function formSessionTable({
 }) {
     if (!table || !messageOrder?.length || !keyOrder?.length) return;
 
+    markBeat("table-form");
     table.group.visible = true;
     table.pileAtWorld(messageOrder, keyOrder, messageBox, keyBox);
 
@@ -90,6 +91,7 @@ export async function formSessionTable({
 
     await Promise.all(jobs);
     table.showDecks(messageOrder, keyOrder);
+    markBeat("table-settle");
 }
 
 function localFromWorld(group, world) {

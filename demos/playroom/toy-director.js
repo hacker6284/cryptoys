@@ -228,15 +228,18 @@ export function createToyDirector(world) {
         let extraJob = null;
         if (recipe.extras.includes("chest") && extras.length) {
             extraJob = (async () => {
+                markBeat("lid-open");
                 await animateLid(1, { snap, duration: LID_OPEN_MS });
                 if (token !== borrowGen || startedSkip !== skipGen) return;
                 for (const name of extras) {
                     if (token !== borrowGen || startedSkip !== skipGen) return;
                     world.setSlotEmpty(name, true);
                     if (world.toys[name]) world.toys[name].userData.seatSurface = "table";
+                    markBeat("msg-out");
                     await flyToy(name, world.getTablePose(name), { snap, duration: FLY_MS - 200 });
                 }
                 if (token !== borrowGen || startedSkip !== skipGen) return;
+                markBeat("lid-close");
                 await animateLid(0, { snap, duration: LID_CLOSE_MS });
             })();
         }
@@ -280,6 +283,7 @@ export function createToyDirector(world) {
             const recipe = recipeOf(occupied);
             const names = recipe.toys.filter((name) => world.toys[name]);
             if (recipe.extras.includes("chest")) {
+                markBeat("lid-receive");
                 await animateLid(1, { snap, duration: LID_OPEN_MS });
             }
             markBeat("fly-home");
@@ -293,6 +297,7 @@ export function createToyDirector(world) {
             }));
             for (const name of names) world.setSlotEmpty(name, false);
             if (recipe.extras.includes("chest")) {
+                markBeat("lid-shut");
                 await animateLid(0, { snap, duration: LID_CLOSE_MS });
             }
             occupied = null;

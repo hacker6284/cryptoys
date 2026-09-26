@@ -193,6 +193,12 @@ assert.equal(motion.includes("fadeTree"), false, "shared motion does not fade");
 assert.equal(motion.includes("gsap"), false);
 assert.equal(motion.includes("cutToTable"), false);
 
+const captureSrc = readFileSync(new URL("./capture-strip.js", import.meta.url), "utf8");
+assert.match(captureSrc, /debugCapture/);
+assert.match(captureSrc, /installCapture/);
+assert.match(app, /installCapture/);
+assert.equal(captureSrc.includes("gsap"), false);
+
 const posesCtl = readFileSync(new URL("./pose-controller.js", import.meta.url), "utf8");
 assert.match(posesCtl, /function followTo/);
 assert.match(posesCtl, /function applyFollow/);

@@ -70,6 +70,7 @@ try {
     resizeWorld = () => world.resize();
     const params = new URLSearchParams(location.search);
     if (params.get("debug") === "1") document.documentElement.dataset.playroomDebug = "1";
+    const capture = installCapture(canvas);
     const initialPose = resolvePoseName(params.get("pose"));
     const initialAlgo = String(params.get("algo") || "").trim().toLowerCase();
     const poses = createPoseController(world.camera, {
@@ -203,15 +204,11 @@ try {
             });
         }
         await adapters[id]?.leave?.({ snap: reduced });
+        markBeat("leave-home");
         await director.home({ snap: reduced });
         poses.followLive?.(null);
         adapters[id]?.revealShelf?.();
         markBeat("hub-settle");
-        if (capture.enabled) {
-            await new Promise((resolve) => setTimeout(resolve, 1600));
-            markBeat("hub-hold");
-            capture.snapshot?.("hub-hold");
-        }
         activeAlgo = null;
         leaving = false;
         capture.end();
@@ -236,6 +233,7 @@ try {
     document.body.classList.add("is-ready");
     document.documentElement.dataset.playroomReady = "1";
     document.documentElement.dataset.motion = poses.prefersReducedMotion() ? "reduce" : "full";
+    if (!ALGOS[initialAlgo]) markBeat("hub-rest");
 
     function tick(now) {
         director.update(now);

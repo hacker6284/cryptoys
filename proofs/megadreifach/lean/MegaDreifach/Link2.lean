@@ -25,6 +25,7 @@ import MegaDreifach.Link2.FromBeLimb2
 import MegaDreifach.Link2.Factorial
 import MegaDreifach.Link2.PeelLimb
 import MegaDreifach.Link2.FactTwo
+import MegaDreifach.Link2.FactThree
 import MegaDreifach.Link2.PeelFact
 
 namespace MegaDreifach.Link2
@@ -118,13 +119,21 @@ namespace MegaDreifach.Link2
   is the digit `1` times that factorial. Not an arbitrary positive two-limb
   rank. Not `20!`. Not `51!`. Not `phi_chunk`. Not `phi_inv`.
 
+  CLOSED: `big_factorial_three`, `big_mul_three`, `big_mul_three_limbs`.
+  Domain `n ≤ 20`. `12!` is one limb; `13!` through `19!` are two limbs.
+  `20! = 19! · 20` is the first three-limb factorial
+  (`10^18 ≤ 20! < 10^27`). `big_mul_three` is the two-limb × one-limb product
+  whose third limb is nonzero. Not `21!` (that multiplies a three-limb
+  accumulator). Not `51!`. Not `phi_chunk`. Not `phi_inv`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
-  bytes; zero peel reaches `d ≤ 19`, and peeling `d!` itself yields digit `1`
-  through `d ≤ 19`, not a general two-limb rank and not 51; `big_from_be`
-  reaches length `≤ 7`, not the 28-byte pad block). Positive `range_list`
-  (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in
-  `EvenRank.lean`. A positive corner or edge rank is outside this limb fragment.
+  bytes; zero peel reaches `d ≤ 19`, peeling `d!` itself yields digit `1`
+  through `d ≤ 19`, and `big_factorial` reaches `20!`, not a general two-limb
+  rank and not 51; `big_from_be` reaches length `≤ 7`, not the 28-byte pad
+  block). Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
+  `range_list_refines` in `EvenRank.lean`. A positive corner or edge rank is
+  outside this limb fragment.
 -/
 
 end MegaDreifach.Link2

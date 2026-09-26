@@ -188,9 +188,9 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         }
         const focus = trackPos ? followFocus.copy(trackPos) : followFocus.copy(pose.target);
         fitFollowPos(pose, focus, trackedRadius);
-        const lookU = easeInOutCubic(smoothstep(0, 0.5, t));
-        const moveU = easeInOutCubic(smoothstep(0.08, 0.86, t));
-        const settleStart = Math.min(0.94, Math.max(0.72, settleAt ?? 0.86));
+        const lookU = easeInOutCubic(smoothstep(0.06, 0.55, t));
+        const moveU = easeInOutCubic(smoothstep(0.2, 0.9, t));
+        const settleStart = Math.min(0.95, Math.max(0.8, settleAt ?? 0.9));
         const settleU = easeInOutCubic(smoothstep(settleStart, 1, t));
         chasePos.copy(from.position).lerp(followPos, moveU);
         camera.position.copy(chasePos).lerp(pose.position, settleU);

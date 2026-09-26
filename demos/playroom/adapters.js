@@ -5,7 +5,7 @@ import { lucideSvg } from "../shared/icons.js";
 import { createBeatClock } from "./beat-clock.js";
 import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
-import { normalizePuzzleId, readPuzzleSearchParam } from "./puzzles.js";
+import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { continueTo, waitToyIdle } from "./motion.js";
 import { formSessionTable } from "./table-form.js";
@@ -114,7 +114,7 @@ function mountDock() {
       <div class="playroom-io">
         <div class="playroom-card playroom-card--io">
           <div class="playroom-io-grid">
-            <div class="playroom-ctl playroom-ctl--puzzle" data-puzzle-ctl>
+            <div class="playroom-ctl playroom-ctl--puzzle" data-puzzle-ctl hidden>
               <span class="playroom-label" id="puzzle-legend">Puzzle</span>
               <div class="playroom-seg" role="group" aria-labelledby="puzzle-legend">
                 <button type="button" class="seg-btn on" data-puzzle="3x3x3" aria-label="3×3">3×3</button>
@@ -240,7 +240,7 @@ function createScrambleAdapter() {
     let adoptPromise = null;
 
     async function applyPuzzle(nextRaw) {
-        const nextId = normalizePuzzleId(nextRaw);
+        const nextId = resolveProductPuzzleId(nextRaw);
         if (adoptPromise) {
             try {
                 await adoptPromise;
@@ -357,7 +357,9 @@ function createScrambleAdapter() {
                 const specUrl = await resolveSpecUrl();
                 if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
                 const puzzleCtl = root.querySelector("[data-puzzle-ctl]");
-                if (puzzleCtl) puzzleCtl.hidden = typeof rig?.swapPuzzle !== "function";
+                if (puzzleCtl) {
+                    puzzleCtl.hidden = !playroomDebugEnabled() || typeof rig?.swapPuzzle !== "function";
+                }
                 session = createScrambleSession({
                     view: rig,
                     specUrl,

@@ -1,6 +1,10 @@
 /**
  * Scramble product puzzle modes. 3×3 is the hash toy.
  * Megaminx / pyraminx are visual — see scramble-alg.js projection.
+ *
+ * Product dock is 3×3 only. Mega / Pyra chrome and `?puzzle=` deep
+ * links require the room debug flag (`?debug=1`, same as flight /
+ * beat debug on `document.documentElement.dataset.playroomDebug`).
  */
 
 export const PUZZLES = {
@@ -28,13 +32,27 @@ export function normalizePuzzleId(raw, fallback = "3x3x3") {
     return PUZZLES[key] ? key : fallback;
 }
 
+export function playroomDebugEnabled(search = typeof location !== "undefined" ? location.search : "") {
+    try {
+        return new URLSearchParams(search).get("debug") === "1";
+    } catch {
+        return false;
+    }
+}
+
+/** Product hash toy. Alt puzzles only resolve when `?debug=1`. */
+export function resolveProductPuzzleId(raw, search = typeof location !== "undefined" ? location.search : "") {
+    if (!playroomDebugEnabled(search)) return "3x3x3";
+    return normalizePuzzleId(raw);
+}
+
 export function puzzleHashes(id) {
     return Boolean(PUZZLES[normalizePuzzleId(id)]?.hash);
 }
 
 export function readPuzzleSearchParam(search = location.search) {
     try {
-        return normalizePuzzleId(new URLSearchParams(search).get("puzzle"));
+        return resolveProductPuzzleId(new URLSearchParams(search).get("puzzle"), search);
     } catch {
         return "3x3x3";
     }
@@ -43,7 +61,7 @@ export function readPuzzleSearchParam(search = location.search) {
 export function writePuzzleSearchParam(id, href = location.href) {
     const url = new URL(href);
     const norm = normalizePuzzleId(id);
-    if (norm === "3x3x3") url.searchParams.delete("puzzle");
+    if (norm === "3x3x3" || !playroomDebugEnabled(url.search)) url.searchParams.delete("puzzle");
     else url.searchParams.set("puzzle", norm);
     return `${url.pathname}${url.search}${url.hash}`;
 }

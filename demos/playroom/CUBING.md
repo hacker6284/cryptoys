@@ -29,9 +29,12 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 Session moves (including Rule B / seat as `x`/`y`/`z`) become `player.alg`.
 `createScrambleSession` drives that timeline via `playLeaves` / `jumpToLeaf`.
 
-Product puzzle mode (quiet toolkit control, like Gen / encoding): 3×3,
-megaminx, pyraminx. Selection calls `swapPuzzle` (recreate the player —
-cubing leaves the adopted object stale). Deep link: `?algo=scramble&puzzle=megaminx`.
+Product Scramble is 3×3 only. Megaminx / pyraminx stay in the dock as a
+debug toolkit (`?debug=1`, same flag as flight / beat debug): 3×3,
+Mega, Pyra. Selection calls `swapPuzzle` (recreate the player — cubing
+leaves the adopted object stale). Deep link:
+`?algo=scramble&debug=1&puzzle=megaminx`. Without debug, `?puzzle=` is
+ignored and the control is hidden.
 
 The hash walk is 3×3 only (normative Scramble SPEC). Digest stays the 3×3
 Scramble digest on every puzzle. Megaminx plays U/R/F/D/L/B face turns

@@ -136,14 +136,14 @@ try {
             await Promise.all([fly, warm]);
             markBeat("enter-landed");
             if (leaving) {
-                await capture.end();
+                capture.end();
                 return;
             }
             adapter.view()?.rememberSeated?.();
             await adapter.enter({ snap: reduced || skippedStart });
             starting = false;
             markBeat("enter-done");
-            await capture.end();
+            capture.end();
             if (leaving) return;
             writeQuery({ pose: "seated", algo: id });
             syncOverlays({
@@ -162,7 +162,7 @@ try {
                 ? err.message
                 : `${meta.title} could not start in the playroom.`;
             poses.snap("landing");
-            await capture.end();
+            capture.end();
         } finally {
             starting = false;
         }
@@ -204,9 +204,9 @@ try {
         poses.followLive?.(null);
         adapters[id]?.revealShelf?.();
         markBeat("hub-settle");
-        await capture.end();
         activeAlgo = null;
         leaving = false;
+        capture.end();
         writeQuery({ pose: "landing", algo: null });
         syncOverlays({
             name: poses.name,

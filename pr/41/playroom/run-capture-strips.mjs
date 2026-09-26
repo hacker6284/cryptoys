@@ -65,9 +65,10 @@ const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
 
 async function dumpSequence(name) {
-    const seq = await page.evaluate((key) => {
+    const seq = await page.evaluate(async (key) => {
         const cap = window.__playroomCapture;
-        return cap?.sequences?.[key] || null;
+        if (!cap?.exportSheet) return cap?.sequences?.[key] || null;
+        return cap.exportSheet(key);
     }, name);
     if (!seq?.frames?.length) {
         console.warn("missing sequence", name);
@@ -116,7 +117,7 @@ try {
         () => document.documentElement.dataset.pose === "landing"
             && !document.documentElement.dataset.algo
             && window.__playroomCapture?.sequences?.["doubledeal-leave"],
-        { timeout: 90000 },
+        { timeout: 120000 },
     );
     await dumpSequence("doubledeal-leave");
 

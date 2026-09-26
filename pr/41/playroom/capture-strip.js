@@ -53,6 +53,9 @@ function noopCapture() {
         peek() {
             return null;
         },
+        async exportSheet() {
+            return null;
+        },
     };
 }
 
@@ -148,7 +151,7 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
         return id;
     }
 
-    async function end() {
+    function end() {
         if (!active) return null;
         snapshot(active.beat || "end");
         const done = {
@@ -156,12 +159,18 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
             frames: active.frames,
             sheet: "",
         };
-        done.sheet = await composeContactSheet(done.frames);
         sequences[done.name] = done;
         root.dataset.captureSeq = done.name;
         root.dataset.captureFrames = String(done.frames.length);
         active = null;
         return done;
+    }
+
+    async function exportSheet(name) {
+        const seq = name ? sequences[name] : null;
+        if (!seq) return null;
+        if (!seq.sheet) seq.sheet = await composeContactSheet(seq.frames);
+        return seq;
     }
 
     function tick() {
@@ -181,6 +190,7 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
         enabled: true,
         begin,
         end,
+        exportSheet,
         tick,
         snapshot,
         get sequences() {

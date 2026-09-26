@@ -39,10 +39,12 @@ assert.equal(off.enabled, false);
 off.begin("nope");
 assert.equal(off.end(), null);
 off.tick();
+assert.equal(await off.exportSheet(), null);
 
 const src = readFileSync(new URL("./capture-strip.js", import.meta.url), "utf8");
 assert.match(src, /debugCapture/);
 assert.match(src, /composeContactSheet/);
+assert.match(src, /exportSheet/);
 assert.equal(src.includes("gsap"), false);
 
 const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");

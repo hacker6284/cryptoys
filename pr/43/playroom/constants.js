@@ -1,11 +1,15 @@
-// 1:1 playroom measures. Poker card 63×88 mm; cube 57 mm; table ~2 m Ø.
+// 1:1 playroom measures. Poker card 63×88 mm; cube presentation 120 mm; table ~2 m Ø.
 // Demo-layer presentation only.
 
 export const ASSET_BASE = new URL("./assets/", import.meta.url);
 
 export const CARD_W = 0.063;
 export const CARD_D = 0.088;
-export const CUBE = 0.057;
+// Presentation edge for the playroom Twisty cube. A store 57 mm cube
+// reads as a speck from the hub / fly cameras and as the undersized
+// cubing.js still (too-small-sunk). 120 mm matches the approved
+// on-table cream-cube size; seatOnSurface plants the live AABB.
+export const CUBE = 0.12;
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = 0.092;
 

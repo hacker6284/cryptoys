@@ -89,6 +89,9 @@ try {
         prefersReducedMotion: () => poses.prefersReducedMotion(),
     };
     const capture = installCapture(canvas);
+    if (typeof window !== "undefined" && (params.get("debug") === "1" || params.get("debugCapture") === "1")) {
+        window.__playroomWorld = world;
+    }
     adapters.scramble.install(world, installOpts);
     adapters.doubledeal.install(world, installOpts);
     void adapters.scramble.preload();

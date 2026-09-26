@@ -18,9 +18,7 @@ function reply(data) {
 
 async function hashBytes(bytes) {
     const total = bytes.length;
-    if (!total) {
-        reply({ type: "progress", processed: 0, total: 0 });
-    }
+    reply({ type: "progress", processed: 0, total });
     for (let i = 0; i < total; i += STEP) {
         const end = Math.min(i + STEP, total);
         hasher.push(bytes.subarray(i, end));

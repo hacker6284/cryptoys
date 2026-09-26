@@ -27,7 +27,7 @@ assert.equal(DEMO_FILE_MAX_BYTES, 10 * 1024 * 1024, "first file ceiling is 10 MB
 assert.equal(DEMO_FILE_TEACH_MAX_BYTES, DEMO_INPUT_MAX_CHARS, "Play/teach cap matches typed Message");
 assert.ok(DEMO_FILE_CHUNK_BYTES >= 4 * 1024);
 assert.ok(DEMO_FILE_HOST_CHUNK_BYTES >= 4 * 1024);
-assert.equal(DEMO_FILE_WORKER_READY_MS, 1000, "worker ready must fail over in ~1s");
+assert.equal(DEMO_FILE_WORKER_READY_MS, 4000, "worker module graph gets a few seconds to post ready");
 assert.equal(DEMO_FILE_BUSY_MS, 200, "tiny picks still show hashing chrome briefly");
 assert.equal(DEMO_FILE_DETERMINATE_BYTES, 1024 * 1024, "multi-MB picks use a determinate bar");
 
@@ -209,7 +209,7 @@ const timedOut = await hashFile(file, {
     fallback: async () => ({ digest: [3, 1, 4] }),
 });
 assert.deepEqual(timedOut.digest, [3, 1, 4], "no worker ready → host fallback still writes Digest");
-assert.ok(Date.now() - readyStarted < 400, "ready timeout does not sit on the old 8s stall");
+assert.ok(Date.now() - readyStarted < 400, "ready timeout does not sit on a multi-second stall");
 
 const implUrl = new URL("../scramble/generated/_scramble_impl.mjs", import.meta.url);
 if (existsSync(implUrl)) {
@@ -260,6 +260,7 @@ assert.match(src, /createSilentHasher/);
 assert.match(src, /createFastHasher/);
 assert.match(src, /dropTeachTrace/);
 assert.match(src, /new Worker/);
+assert.doesNotMatch(src, /Hash worker stalled/, "a live worker must not be killed mid-JPEG");
 
 const worker = readFileSync(new URL("../scramble/hash-worker.js", import.meta.url), "utf8");
 assert.match(worker, /createFastHasher/, "worker uses the fast JS cube, not generated update");

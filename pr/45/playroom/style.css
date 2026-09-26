@@ -369,7 +369,7 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   overflow-y: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  word-break: break-word;
+  word-break: normal;
   text-overflow: clip;
   box-shadow: none;
   cursor: text;

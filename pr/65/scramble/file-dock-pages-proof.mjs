@@ -52,7 +52,7 @@ async function prove(page, { width, height, label }) {
     const url = new URL(BASE);
     url.searchParams.set("algo", "scramble");
     url.searchParams.set("pose", "seated");
-    await page.goto(url.href, { waitUntil: "networkidle0", timeout: 60000 });
+    await page.goto(url.href, { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.waitForFunction(() => {
         const digest = document.querySelector("#digest");
         const input = document.querySelector("#message-file-input");

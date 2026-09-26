@@ -1,15 +1,19 @@
 /-
   LINK 2. `Generated.pack_ori2` refines algebraic `packOri2` on edge
   orientation lists (`Ori2Wf`). CLOSED: `pack_ori2_refines`,
-  `pack_ori2_refines_array`. There is no `pack_ori3_refines` in this slice.
+  `pack_ori2_refines_array`.
+
+  `Generated.pack_ori3` refines algebraic `packOri3` on corner
+  orientation lists (`Ori3Wf`). CLOSED: `pack_ori3_refines`,
+  `pack_ori3_refines_array`.
 
   Edge orientations have length 30 and entries `< 2`. The emitted Horner
   loop (`n = n * r + d`) stays below `2^29`, so every limb product fits in
   an i64 and the bigint has one base-10^9 limb.
 
-  Ori3 Horner helpers (`packOri3_horner`, `oriAcc_pack3`, `Ori3Wf` /
-  `WellFormedOri3`, two-limb `3^19` bounds) are preparatory scaffolding
-  for a future `pack_ori3_refines` slice — not a Link 2 refine claim here.
+  Corner orientations have length 20 and entries `< 3`. The emitted Horner
+  loop stays below `3^19`, so every limb product fits in an i64 and the
+  bigint has at most two base-10^9 limbs.
 
   Algebraic Link 2 only. Not `v_Hash`. Not emitter soundness.
   Not collision resistance. `phi_chunk` stays open (it builds `51!`).
@@ -116,7 +120,7 @@ theorem packOri2_horner (eo : List Nat) (hlen : 29 ≤ eo.length) :
   unfold packOri2
   rw [hornerAcc_mix, htake]
 
-/-- Preparatory: algebraic Horner form of `packOri3`. Not a Link 2 refine. -/
+/-- Algebraic Horner form of `packOri3`. -/
 theorem packOri3_horner (co : List Nat) (hlen : 19 ≤ co.length) :
     packOri3 co = hornerAcc 3 0 (co.take 19) := by
   have htake : (co.take 19).length = 19 := by
@@ -128,7 +132,7 @@ theorem oriAcc_pack2 (eo : List Nat) (hlen : 29 ≤ eo.length) :
     oriAcc 2 eo 29 = packOri2 eo := by
   rw [oriAcc, packOri2_horner eo hlen]
 
-/-- Preparatory: `oriAcc` at 19 digits is `packOri3`. Not a Link 2 refine. -/
+/-- `oriAcc` at 19 digits is `packOri3`. -/
 theorem oriAcc_pack3 (co : List Nat) (hlen : 19 ≤ co.length) :
     oriAcc 3 co 19 = packOri3 co := by
   rw [oriAcc, packOri3_horner co hlen]
@@ -146,9 +150,8 @@ structure Ori2Wf (eo : List Nat) : Prop where
 
 /-- Trap-free domain for `Generated.pack_ori3`.
 
-    Preparatory scaffolding for a future `pack_ori3_refines` slice — not
-    claimed in this PR. Length 20 is the corner-orientation width. Entries
-    `< 3` keep the Horner value below `3^19`, inside two limbs. -/
+    Length 20 is the corner-orientation width. Entries `< 3` keep the Horner
+    value below `3^19`, inside two limbs. -/
 structure Ori3Wf (co : List Nat) : Prop where
   len : co.length = 20
   bound : ∀ o ∈ co, o < 3
@@ -158,7 +161,7 @@ structure WellFormedOri2 (a : Array Int) : Prop where
   nn : Nonneg a
   bound : ∀ x ∈ decode a, x < 2
 
-/-- Array-side ori3 domain. Preparatory; no `pack_ori3_refines` yet. -/
+/-- Array-side ori3 domain for `pack_ori3_refines_array`. -/
 structure WellFormedOri3 (a : Array Int) : Prop where
   len : a.size = 20
   nn : Nonneg a
@@ -173,7 +176,7 @@ theorem ori2Wf_decode (a : Array Int) (h : WellFormedOri2 a) : Ori2Wf (decode a)
   len := by simp [decode, h.len]
   bound := h.bound
 
-/-- Preparatory embed/decode glue for ori3. Not a Link 2 refine claim. -/
+/-- Embed/decode glue for ori3. -/
 theorem ori3Wf_embed (co : List Nat) (h : Ori3Wf co) : WellFormedOri3 (embed co) where
   len := by simp [size_embed, h.len]
   nn := nonneg_embed co
@@ -193,7 +196,7 @@ theorem two_pow29_fits : FitsLen (2 ^ 29) := by
   unfold FitsLen i64MaxNat
   decide
 
-/-- Preparatory two-limb ori3 bounds (`3^19` crosses one limb). Not claimed. -/
+/-- Two-limb ori3 bounds (`3^19` crosses one limb). -/
 theorem three_pow18_lt_limb : 3 ^ 18 < limbBase := by decide
 
 theorem three_pow19_lt_twoLimb : 3 ^ 19 < 2 * limbBase := by decide
@@ -766,6 +769,233 @@ theorem big_add_small (x y : Nat) (hx : x < limbBase) (hy : y < limbBase)
       rw [← bigNat_limb x hx hx0, ← bigNat_limb y hy hy0] at h
       exact h
 
+/-! ## `big_add` across one limb boundary (`< 2 · 10^9`) -/
+
+private theorem two_limb_le_sq : 2 * limbBase ≤ limbBase ^ 2 := by
+  unfold limbBase
+  decide
+
+private theorem two_limb_fits {n : Nat} (h : n < 2 * limbBase) : FitsLen n := by
+  have hb : 2 * limbBase ≤ i64MaxNat := by
+    unfold i64MaxNat limbBase
+    decide
+  exact Nat.le_trans (Nat.le_of_lt h) hb
+
+private theorem div_eq_one {n : Nat} (hlo : limbBase ≤ n) (hhi : n < 2 * limbBase) :
+    n / limbBase = 1 := by
+  have hlt : n / limbBase < 2 := div_lt_of_lt_mul limbBase_pos hhi
+  have hpos : 0 < n / limbBase := div_pos_of_le limbBase_pos hlo
+  omega
+
+private theorem mod_sub_base {n : Nat} (hlo : limbBase ≤ n) (hhi : n < 2 * limbBase) :
+    n % limbBase = n - limbBase := by
+  have hdiv : n / limbBase = 1 := div_eq_one hlo hhi
+  have h := Nat.mod_add_div n limbBase
+  rw [hdiv, Nat.mul_one] at h
+  omega
+
+private theorem add_base_hi {lo : Nat} (hlo : lo < limbBase) :
+    lo + limbBase < 2 * limbBase := by
+  have : lo + limbBase < limbBase + limbBase := Nat.add_lt_add_right hlo _
+  rw [Nat.two_mul]
+  exact this
+
+private theorem add_base_limbs (lo : Nat) (hlo : lo < limbBase) :
+    (lo + limbBase) % limbBase = lo ∧ (lo + limbBase) / limbBase = 1 := by
+  have hge : limbBase ≤ lo + limbBase := Nat.le_add_left _ _
+  have hhi := add_base_hi hlo
+  refine ⟨?_, div_eq_one hge hhi⟩
+  have h := mod_sub_base hge hhi
+  rwa [Nat.add_sub_cancel] at h
+
+private theorem bigNat_add_base (lo : Nat) (hlo : lo < limbBase) :
+    bigNat (lo + limbBase) = bigOf [lo, 1] := by
+  have hge : limbBase ≤ lo + limbBase := Nat.le_add_left _ _
+  have hsq : lo + limbBase < limbBase ^ 2 :=
+    Nat.lt_of_lt_of_le (add_base_hi hlo) two_limb_le_sq
+  obtain ⟨hm, hd⟩ := add_base_limbs lo hlo
+  rw [bigNat_two (lo + limbBase) hge hsq, hm, hd]
+
+private theorem atL_second (x0 x1 : Nat) :
+    SudoRt.atL (embed [x0, x1]) (1 : Int) = .ok (Int.ofNat x1) := by
+  erw [atL_embed [x0, x1] 1 (by simp)]
+  simp
+
+private theorem append_nat (xs : List Nat) (d : Nat) :
+    (SudoRt.appendL (embed xs) (Int.ofNat d)).1 = embed (xs ++ [d]) := by
+  rw [appendL_spec]
+  exact push_embed xs d
+
+/-- One limb plus one limb, with a single carry into a second limb. -/
+private theorem big_add_carry (x y : Nat) (_hx0 : 0 < x) (_hy0 : 0 < y)
+    (hx : x < limbBase) (_hy : y < limbBase)
+    (hlo : limbBase ≤ x + y) (hhi : x + y < 2 * limbBase) :
+    Megadreifach.big_add (bigOf [x]) (bigOf [y]) = .ok (bigNat (x + y)) := by
+  have hfit : FitsLen (x + y) := two_limb_fits hhi
+  unfold Megadreifach.big_add Megadreifach.mag_add
+  dsimp [bigOf]
+  have hlenx : SudoRt.listLen (embed [x]) = (1 : Int) := by rw [listLen_embed]; rfl
+  have hleny : SudoRt.listLen (embed [y]) = (1 : Int) := by rw [listLen_embed]; rfl
+  rw [hlenx, hleny]
+  have hcmp : decide ((1 : Int) > (1 : Int)) = false := by decide
+  rw [hcmp, if_neg (by decide : ¬ ((false : Bool) = true))]
+  rw [subI_one_one, ok_bind]
+  dsimp
+  rw [show (1 : Nat) = 0 + 1 from rfl, runLoopOn_succ]
+  dsimp
+  rw [atL_head [x] (by simp), ok_bind]
+  simp only [List.getElem_cons_zero]
+  rw [addI_zero_nat x (fits_of_lt_limb hx), ok_bind, atL_head [y] (by simp), ok_bind]
+  simp only [List.getElem_cons_zero]
+  rw [addI_ofNat x y hfit, ok_bind, modI_nat_base (x + y), ok_bind]
+  have hmod : (x + y) % limbBase = x + y - limbBase := mod_sub_base hlo hhi
+  have hdiv : (x + y) / limbBase = 1 := div_eq_one hlo hhi
+  rw [hmod]
+  have happ :
+      (SudoRt.appendL (#[] : Array Int) (Int.ofNat (x + y - limbBase))).1 =
+        embed [x + y - limbBase] := by
+    simp [appendL_spec, embed]
+  rw [happ, divI_nat_base (x + y), ok_bind, hdiv]
+  simp only [ok_bind, show decide ((1 : Int) > 0) = true from by decide,
+    show decide (Int.ofNat 1 > (0 : Int)) = true from by decide,
+    match_ok_cont, match_ok_brk, toPure_eq_ok]
+  rw [if_true, ok_bind, ok_bind, append_nat [x + y - limbBase] 1]
+  have hlist : [x + y - limbBase] ++ [1] = [x + y - limbBase, 1] := rfl
+  rw [hlist, make_big_false [x + y - limbBase, 1] (by simp [fits_le3]), ok_bind]
+  have hdrop : dropTrail [x + y - limbBase, 1] = [x + y - limbBase, 1] := by
+    simp [dropTrail_two]
+  have hnat : bigNat (x + y) = bigOf [x + y - limbBase, 1] := by
+    have hsq : x + y < limbBase ^ 2 := Nat.lt_of_lt_of_le hhi two_limb_le_sq
+    rw [bigNat_two (x + y) hlo hsq, mod_sub_base hlo hhi, div_eq_one hlo hhi]
+  rw [hdrop, ← hnat]
+
+/-- `[lo, 1] + []` keeps the two-limb value `lo + 10^9`. -/
+private theorem big_add_two0 (lo : Nat) (hlo : lo < limbBase) :
+    Megadreifach.big_add (bigOf [lo, 1]) (bigOf []) = .ok (bigNat (lo + limbBase)) := by
+  unfold Megadreifach.big_add Megadreifach.mag_add
+  dsimp [bigOf]
+  have hlenx : SudoRt.listLen (embed [lo, 1]) = (2 : Int) := by rw [listLen_embed]; rfl
+  have hleny : SudoRt.listLen (embed ([] : List Nat)) = (0 : Int) := by rw [listLen_embed]; rfl
+  rw [hlenx, hleny]
+  have hcmp : decide ((0 : Int) > (2 : Int)) = false := by decide
+  rw [hcmp, if_neg (by decide : ¬ ((false : Bool) = true)), subI_two_one, ok_bind]
+  dsimp
+  rw [show (2 : Nat) = 1 + 1 from rfl, runLoopOn_succ]
+  dsimp
+  rw [atL_head [lo, 1] (by simp), ok_bind]
+  simp only [List.getElem_cons_zero]
+  rw [addI_zero_nat lo (fits_of_lt_limb hlo), ok_bind, modI_nat_base lo, ok_bind]
+  have hmod : lo % limbBase = lo := Nat.mod_eq_of_lt hlo
+  have hdiv : lo / limbBase = 0 := Nat.div_eq_of_lt hlo
+  have happ : (SudoRt.appendL (#[] : Array Int) (Int.ofNat lo)).1 = embed [lo] := by
+    simp [appendL_spec, embed]
+  rw [hmod, happ, divI_nat_base lo, ok_bind, hdiv, bind_pure_flow]
+  simp only [show ((0 : Int) == (1 : Int)) = false from by decide, toPure_eq_ok,
+    addI_zero_one, ok_bind, match_ok_cont]
+  rw [show (1 : Nat) = 0 + 1 from rfl, runLoopOn_succ]
+  dsimp
+  rw [atL_second lo 1, ok_bind, addI_zero_nat 1 FitsLen.one, ok_bind,
+    modI_nat_base 1, ok_bind, divI_nat_base 1, ok_bind]
+  have hmod1 : (1 : Nat) % limbBase = 1 := Nat.mod_eq_of_lt (by decide : (1 : Nat) < limbBase)
+  have hdiv1 : (1 : Nat) / limbBase = 0 := Nat.div_eq_of_lt (by decide : (1 : Nat) < limbBase)
+  rw [hmod1, hdiv1, append_nat [lo] 1, ok_bind]
+  have hlist : [lo] ++ [1] = [lo, 1] := rfl
+  rw [hlist]
+  dsimp
+  rw [make_big_false [lo, 1] (by simp [fits_le3]), ok_bind]
+  have hdrop : dropTrail [lo, 1] = [lo, 1] := by simp [dropTrail_two]
+  rw [hdrop, ← bigNat_add_base lo hlo]
+
+/-- `[lo, 1] + [d]` with no further carry. Sum is `(lo + d) + 10^9`. -/
+private theorem big_add_hi (lo d : Nat) (hlo : lo < limbBase) (_hd0 : 0 < d)
+    (_hd : d < limbBase) (hsum : lo + d < limbBase) :
+    Megadreifach.big_add (bigOf [lo, 1]) (bigOf [d]) =
+      .ok (bigNat (lo + d + limbBase)) := by
+  have hfit : FitsLen (lo + d) := fits_of_lt_limb hsum
+  unfold Megadreifach.big_add Megadreifach.mag_add
+  dsimp [bigOf]
+  have hlenx : SudoRt.listLen (embed [lo, 1]) = (2 : Int) := by rw [listLen_embed]; rfl
+  have hleny : SudoRt.listLen (embed [d]) = (1 : Int) := by rw [listLen_embed]; rfl
+  rw [hlenx, hleny]
+  have hcmp : decide ((1 : Int) > (2 : Int)) = false := by decide
+  rw [hcmp, if_neg (by decide : ¬ ((false : Bool) = true)), subI_two_one, ok_bind]
+  dsimp
+  rw [show (2 : Nat) = 1 + 1 from rfl, runLoopOn_succ]
+  dsimp
+  rw [atL_head [lo, 1] (by simp), ok_bind]
+  simp only [List.getElem_cons_zero]
+  rw [addI_zero_nat lo (fits_of_lt_limb hlo), ok_bind, atL_head [d] (by simp), ok_bind]
+  simp only [List.getElem_cons_zero]
+  rw [addI_ofNat lo d hfit, ok_bind, modI_nat_base (lo + d), ok_bind]
+  have hmod : (lo + d) % limbBase = lo + d := Nat.mod_eq_of_lt hsum
+  have hdiv : (lo + d) / limbBase = 0 := Nat.div_eq_of_lt hsum
+  rw [hmod]
+  have happ :
+      (SudoRt.appendL (#[] : Array Int) (Int.ofNat (lo + d))).1 = embed [lo + d] := by
+    simp [appendL_spec, embed]
+  rw [happ, divI_nat_base (lo + d), ok_bind, hdiv, bind_pure_flow]
+  simp only [show ((0 : Int) == (1 : Int)) = false from by decide, toPure_eq_ok,
+    addI_zero_one, ok_bind, match_ok_cont]
+  rw [show (1 : Nat) = 0 + 1 from rfl, runLoopOn_succ]
+  dsimp
+  rw [atL_second lo 1, ok_bind, addI_zero_nat 1 FitsLen.one, ok_bind,
+    modI_nat_base 1, ok_bind, divI_nat_base 1, ok_bind]
+  have hmod1 : (1 : Nat) % limbBase = 1 := Nat.mod_eq_of_lt (by decide : (1 : Nat) < limbBase)
+  have hdiv1 : (1 : Nat) / limbBase = 0 := Nat.div_eq_of_lt (by decide : (1 : Nat) < limbBase)
+  rw [hmod1, hdiv1, append_nat [lo + d] 1, ok_bind]
+  have hlist : [lo + d] ++ [1] = [lo + d, 1] := rfl
+  rw [hlist]
+  dsimp
+  rw [make_big_false [lo + d, 1] (by simp [fits_le3]), ok_bind]
+  have hdrop : dropTrail [lo + d, 1] = [lo + d, 1] := by simp [dropTrail_two]
+  rw [hdrop, ← bigNat_add_base (lo + d) hsum]
+
+/-- Add a one-limb digit to a value that stays below `2 · 10^9`. -/
+theorem big_add_wide (x d : Nat) (hx : x < 2 * limbBase) (hd : d < limbBase)
+    (hs : x + d < 2 * limbBase) :
+    Megadreifach.big_add (bigNat x) (bigNat d) = .ok (bigNat (x + d)) := by
+  by_cases hxL : x < limbBase
+  · by_cases hsL : x + d < limbBase
+    · exact big_add_small x d hxL hd hsL
+    · have hlo : limbBase ≤ x + d := Nat.le_of_not_lt hsL
+      have hx0 : 0 < x := by
+        cases x with
+        | zero =>
+            have : d < limbBase := hd
+            omega
+        | succ _ => exact Nat.succ_pos _
+      have hd0 : 0 < d := by
+        cases d with
+        | zero =>
+            rw [Nat.add_zero] at hlo
+            omega
+        | succ _ => exact Nat.succ_pos _
+      rw [bigNat_limb x hxL (Nat.ne_of_gt hx0), bigNat_limb d hd (Nat.ne_of_gt hd0)]
+      exact big_add_carry x d hx0 hd0 hxL hd hlo hs
+  · have hge : limbBase ≤ x := Nat.le_of_not_lt hxL
+    have hdiv : x / limbBase = 1 := div_eq_one hge hx
+    have hmod : x % limbBase = x - limbBase := mod_sub_base hge hx
+    have hsq : x < limbBase ^ 2 := Nat.lt_of_lt_of_le hx two_limb_le_sq
+    have hloLt : x % limbBase < limbBase := Nat.mod_lt _ limbBase_pos
+    have hloSum : x % limbBase + d < limbBase := by
+      have hrepr : x = x % limbBase + limbBase := by
+        have h := Nat.mod_add_div x limbBase
+        rw [hdiv, Nat.mul_one] at h
+        omega
+      omega
+    rw [bigNat_two x hge hsq, hdiv, hmod]
+    have hloLt' : x - limbBase < limbBase := by simpa [hmod] using hloLt
+    by_cases hd0 : d = 0
+    · rw [hd0, Nat.add_zero, bigNat_zero, big_add_two0 (x - limbBase) hloLt']
+      rw [Nat.sub_add_cancel hge]
+    · have hloSum' : x - limbBase + d < limbBase := by simpa [hmod] using hloSum
+      rw [bigNat_limb d hd hd0,
+        big_add_hi (x - limbBase) d hloLt' (Nat.pos_of_ne_zero hd0) hd hloSum']
+      have hshift : x - limbBase + d + limbBase = x + d := by
+        have hback : x - limbBase + limbBase = x := Nat.sub_add_cancel hge
+        omega
+      rw [hshift]
+
 /-! ## Pack loop -/
 
 private def packBody (radix : Megadreifach.BigInt) (digits : Array Int)
@@ -908,6 +1138,112 @@ theorem pack_ori2_refines (eo : List Nat) (h : Ori2Wf eo) :
 theorem pack_ori2_refines_array (a : Array Int) (h : WellFormedOri2 a) :
     Megadreifach.pack_ori2 a = .ok (bigNat (packOri2 (decode a))) := by
   have hr := pack_ori2_refines (decode a) (ori2Wf_decode a h)
+  simpa [embed_decode a h.nn] using hr
+
+/-! ## `pack_ori3` (length 20, value `< 3^19`, at most two limbs) -/
+
+private theorem three_lt_limb : 3 < limbBase := by decide
+
+private theorem pow_le_pow_three {i : Nat} (hi : i ≤ 18) : 3 ^ i ≤ 3 ^ 18 :=
+  Nat.pow_le_pow_right (by decide) hi
+
+private theorem ori3_acc_limb (co : List Nat) (h : Ori3Wf co) (i : Nat) (hi : i ≤ 18) :
+    oriAcc 3 co i < limbBase := by
+  have hlen : i ≤ co.length := by rw [h.len]; omega
+  have hlt := oriAcc_lt co h.bound i hlen
+  exact Nat.lt_of_lt_of_le (Nat.lt_of_lt_of_le hlt (pow_le_pow_three hi))
+    (Nat.le_of_lt three_pow18_lt_limb)
+
+private theorem ori3_sum_two (co : List Nat) (h : Ori3Wf co) (i : Nat)
+    (hi : i ≤ 18) (hiLen : i < co.length) :
+    oriAcc 3 co i * 3 + co[i] < 2 * limbBase := by
+  have hnext : oriAcc 3 co (i + 1) < 3 ^ (i + 1) := by
+    have hlen : i + 1 ≤ co.length := by rw [h.len]; omega
+    exact oriAcc_lt co h.bound (i + 1) hlen
+  have hpow : 3 ^ (i + 1) ≤ 3 ^ 19 := by
+    have : i + 1 ≤ 19 := by omega
+    exact Nat.pow_le_pow_right (by decide) this
+  rw [← oriAcc_succ 3 co i hiLen]
+  exact Nat.lt_of_lt_of_le (Nat.lt_of_lt_of_le hnext hpow)
+    (Nat.le_of_lt three_pow19_lt_twoLimb)
+
+private theorem packStep_ori3 (co : List Nat) (h : Ori3Wf co) (i : Nat) (hi : i ≤ 18) :
+    packStep (bigNat 3) (embed co) (18 : Int) (Int.ofNat i, bigNat (oriAcc 3 co i)) =
+      if i = 18 then
+        .ok (SudoRt.Flow.brk (Int.ofNat i, bigNat (oriAcc 3 co (i + 1))))
+      else
+        .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), bigNat (oriAcc 3 co (i + 1)))) := by
+  have hiLen : i < co.length := by rw [h.len]; omega
+  have hacc := ori3_acc_limb co h i hi
+  have hdig : co[i] < 3 := h.bound _ (List.getElem_mem hiLen)
+  have hsum := ori3_sum_two co h i hi hiLen
+  have hprod : oriAcc 3 co i * 3 < 2 * limbBase :=
+    Nat.lt_of_le_of_lt (Nat.le_add_right _ _) hsum
+  have hdigL : co[i] < limbBase := Nat.lt_trans hdig three_lt_limb
+  unfold packStep packBody
+  dsimp
+  have hngt : ¬ (i : Int) > (18 : Int) := ofNat_not_gt hi
+  have hat : SudoRt.atL (embed co) (i : Int) = .ok (Int.ofNat (co[i])) := by
+    erw [atL_embed co i hiLen]
+  rw [if_neg hngt, big_mul_acc (oriAcc 3 co i) 3 (by decide) three_lt_limb hacc, ok_bind,
+    hat, ok_bind]
+  have hfitD : FitsLen (co[i]) := FitsLen.of_le fits_three (by omega)
+  rw [big_from_int_refines (co[i]) hfitD, ok_bind]
+  have hbig : bigOf (limbsOfNat (co[i])) = bigNat (co[i]) := rfl
+  rw [hbig, big_add_wide (oriAcc 3 co i * 3) (co[i]) hprod hdigL hsum, ok_bind,
+    oriAcc_succ 3 co i hiLen]
+  by_cases heq : i = 18
+  · simp [heq, toPure_eq_ok]
+  · have hneI : ¬ (i : Int) = (18 : Int) := fun hq => heq (Int.ofNat.inj hq)
+    have hadd := addI_ofNat_one i (by
+      unfold FitsLen i64MaxNat
+      omega)
+    rw [ofNat_eq_natCast i] at hadd
+    have hbeq : ((i : Int) == (18 : Int)) = false := by
+      simpa [beq_int_iff] using hneI
+    rw [hbeq, toPure_eq_ok, hadd, ok_bind]
+    simp [heq]
+
+private theorem packRun3 (co : List Nat) (h : Ori3Wf co) :
+    SudoRt.runLoopOn (ρ := Megadreifach.BigInt)
+      ((0 : Int), bigNat 0)
+      (fuelRange (0 : Int) (18 : Int))
+      (packStep (bigNat 3) (embed co) (18 : Int))
+      (fun σ => pure σ.2)
+      (fun r => pure r) =
+      .ok (bigNat (packOri3 co)) := by
+  have h0 : bigNat 0 = bigNat (oriAcc 3 co 0) := by simp [oriAcc_zero]
+  rw [h0]
+  apply chain_loop (f := fun i => bigNat (oriAcc 3 co i)) (fromN := 0) (toN := 18)
+    (hle := by decide) (goal := .ok (bigNat (packOri3 co)))
+  · intro i _ hi
+    simpa using packStep_ori3 co h i hi
+  · rw [oriAcc_pack3 co (by rw [h.len]; omega)]
+    rfl
+
+/-- `Generated.pack_ori3` is algebraic `packOri3` on length-20 corner orientations. -/
+theorem pack_ori3_refines (co : List Nat) (h : Ori3Wf co) :
+    Megadreifach.pack_ori3 (embed co) = .ok (bigNat (packOri3 co)) := by
+  unfold Megadreifach.pack_ori3
+  rw [big_zero_spec, ok_bind, show (3 : Int) = Int.ofNat 3 from rfl,
+    big_from_int_refines 3 fits_three, ok_bind]
+  dsimp
+  have hfuel : fuelRange (0 : Int) (18 : Int) = 19 := by
+    rw [show (0 : Int) = Int.ofNat 0 from rfl, show (18 : Int) = Int.ofNat 18 from rfl,
+      fuelRange_le (by decide)]
+  rw [except_bind_pure, ← hfuel]
+  apply Eq.trans
+  · apply runLoopOn_step_pointwise (step' := packStep (bigNat 3) (embed co) (18 : Int))
+    intro σ
+    unfold packStep packBody
+    dsimp
+    rfl
+  · rw [← bigNat_zero]
+    exact packRun3 co h
+
+theorem pack_ori3_refines_array (a : Array Int) (h : WellFormedOri3 a) :
+    Megadreifach.pack_ori3 a = .ok (bigNat (packOri3 (decode a))) := by
+  have hr := pack_ori3_refines (decode a) (ori3Wf_decode a h)
   simpa [embed_decode a h.nn] using hr
 
 end MegaDreifach.Link2

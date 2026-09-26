@@ -72,7 +72,8 @@ Link 2 only — not bit-security, not emitter soundness.
 | MegaDreifach `compose` ≃ algebraic `compose` | **CLOSED** (`compose_refines`, `compose_refines_array`). Domain `PosWf`: lengths 20/20/30/30, nonnegative in-range indices, orientations `< 3` / `< 2` (trap-free, i64-safe). Not `v_Hash`. |
 | MegaDreifach `require_permutation` ≃ algebraic `requirePermutation` | **CLOSED** (`require_permutation_refines`, `require_permutation_refines_array`). Domain `DealWf` / `isPermutation52`: length 52, nonnegative card ids `< 52`, no duplicates (trap-free, i64-safe). Not `v_Hash`. |
 | MegaDreifach `pack_ori2` ≃ algebraic `packOri2` | **CLOSED** (`pack_ori2_refines`, `pack_ori2_refines_array`). Domain `Ori2Wf`: length 30, entries `< 2`. Horner value `< 2^29`, one limb, trap-free i64 arithmetic. Not `v_Hash`. |
-| MegaDreifach full `v_Hash` / Scramble algebraic ≃ Generated | **OPEN** (`v_Hash` is M13; Scramble has little ledger). The pad, compose, `require_permutation`, and `pack_ori2` slices are closed. `phi_chunk` / `phi_inv` and `pack_ori3` are still open. |
+| MegaDreifach `pack_ori3` ≃ algebraic `packOri3` | **CLOSED** (`pack_ori3_refines`, `pack_ori3_refines_array`). Domain `Ori3Wf`: length 20, entries `< 3`. Horner value `< 3^19`, at most two base-10^9 limbs, trap-free i64 arithmetic. Not `v_Hash`. |
+| MegaDreifach full `v_Hash` / Scramble algebraic ≃ Generated | **OPEN** (`v_Hash` is M13; Scramble has little ledger). The pad, compose, `require_permutation`, `pack_ori2`, and `pack_ori3` slices are closed. `phi_chunk` / `phi_inv` are still open. |
 | DoubleDeal-CBC-HMAC algebraic ≃ Generated | OPEN. Generated TAP exists (`#22`); no algebraic ledger. Not AEAD security. |
 | sudo text = generated Lean (deep embedding) | OPEN — Link 1, not this file |
 | Bit-security, MDS, collision-resistance, AEAD | Not a Link 2 claim |

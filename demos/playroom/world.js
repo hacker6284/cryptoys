@@ -661,6 +661,7 @@ export async function mountWorld(canvas) {
         if (!toy || !pose) return;
         toy.visible = true;
         applyPose(toy, pose);
+        toy.userData.seatSurface = "shelf";
         if (slots[name]) slots[name].slot.visible = false;
     }
 

@@ -51,6 +51,8 @@ assert.equal(adapters.includes("createCubeRig"), false, "playroom has no hand-ro
 assert.equal(adapters.includes("legacyCube"), false, "no ?legacyCube=1 fallback");
 assert.match(adapters, /prepareEnter/);
 assert.match(adapters, /reseatCube/);
+assert.match(adapters, /seatSurface/, "reseat uses the intended surface, not flightBusy");
+assert.equal(adapters.includes("flightBusy ? \"table\" : \"shelf\""), false, "do not infer table vs shelf from flightBusy");
 assert.match(adapters, /playDualUnbox/);
 assert.match(adapters, /followLive/);
 assert.match(adapters, /createUnboxRig/);
@@ -84,6 +86,8 @@ assert.equal(worldSrc.includes("-gb.min.z"), false, "lid is not rebuilt from geo
 assert.equal(worldSrc.includes("rotation.x = -0.95"), false, "old front-hinge swing is gone");
 
 const directorSrc = readFileSync(new URL("./toy-director.js", import.meta.url), "utf8");
+assert.match(directorSrc, /seatSurface = "table"/, "enter fly records table as the intended seat");
+assert.match(directorSrc, /seatSurface = "shelf"/, "leave fly records shelf as the intended seat");
 assert.match(directorSrc, /animateLid\(0/, "chest closes after MSG leaves");
 assert.equal(directorSrc.includes("setChestLid?.(1)"), false, "skip does not leave the chest stuck open");
 assert.match(directorSrc, /setChestLid\?\.\(0\)/);

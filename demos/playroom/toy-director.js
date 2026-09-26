@@ -226,6 +226,7 @@ export function createToyDirector(world) {
                 for (const name of extras) {
                     if (token !== borrowGen || startedSkip !== skipGen) return;
                     world.setSlotEmpty(name, true);
+                    if (world.toys[name]) world.toys[name].userData.seatSurface = "table";
                     await flyToy(name, world.getTablePose(name), { snap, duration: FLY_MS - 200 });
                 }
                 if (token !== borrowGen || startedSkip !== skipGen) return;
@@ -233,6 +234,7 @@ export function createToyDirector(world) {
             })();
         }
         markBeat(primary === "cube" ? "cube-fly" : "key-fly");
+        if (world.toys[primary]) world.toys[primary].userData.seatSurface = "table";
         await flyToy(primary, world.getTablePose(primary), { snap });
         if (snap && extraJob) await extraJob;
         const toy = world.toys[primary];
@@ -249,7 +251,11 @@ export function createToyDirector(world) {
         const names = recipe.toys.filter((name) => world.toys[name]);
         if (recipe.extras.includes("chest")) await animateLid(1, { snap, duration: 420 });
         markBeat("fly-home");
-        await Promise.all(names.map((name) => flyToy(name, world.getShelfPose(name), { snap })));
+        await Promise.all(names.map((name) => {
+            const toy = world.toys[name];
+            if (toy) toy.userData.seatSurface = "shelf";
+            return flyToy(name, world.getShelfPose(name), { snap });
+        }));
         for (const name of names) world.setSlotEmpty(name, false);
         if (recipe.extras.includes("chest")) await animateLid(0, { snap, duration: 520 });
         occupied = null;
@@ -273,6 +279,7 @@ export function createToyDirector(world) {
             const pose = world.getTablePose?.(name);
             if (!toy || !pose) continue;
             toy.userData.flightBusy = false;
+            toy.userData.seatSurface = "table";
             world.applyPose(toy, pose);
             toy.updateMatrixWorld?.(true);
         }

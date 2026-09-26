@@ -54,9 +54,13 @@ only. MegaDreifach is a different product; this UI does not run it.
   rotated world box. Shelf yaw used to inflate the measured edge and
   lock in an undersized scale for the rest of the scene.
 - `keepFitted` runs on Twisty's render-scheduled callback and on every
-  host frame. It never resets `fit.scale` to 1 (that flash is
-  spawn-big-then-shrink). If the local edge drifts (late `puzzle.scale`
-  1/3, `setAlg` layout), `fit` is corrected and the cube is reseated.
+  host frame. Rest-pose `nativeMax` is locked; only a *root*
+  `puzzle.scale` change remesures. Face-turn cubie AABB swell cannot
+  pulse scale. `playLeaves` sets `turnBusy` so mid-turn frames skip
+  remesure entirely.
+- Seat surface is explicit (`userData.seatSurface`). Borrow writes
+  `table`, home writes `shelf`. Fit-change reseat uses that, never
+  `flightBusy ? table : shelf`.
 - Judge size in **world space** (`userData.worldEdge` / AABB Y). Wide
   hub frames looking small are camera distance, not underscale.
 - **`instanceof THREE.Object3D` is false.** cubing ships its own `three`

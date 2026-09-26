@@ -205,7 +205,11 @@ export async function adoptTwistyPuzzle(seat, {
             } catch {
                 // foreign three.js may ignore the flag
             }
-            const next = keepFitted(seat.fit, puzzleObject, edge, framed);
+            const turning = seat.group.userData.turnBusy || seat.group.userData.easeBusy;
+            const next = turning
+                ? { ...framed, changed: false }
+                : keepFitted(seat.fit, puzzleObject, edge, framed);
+            if (turning) seat.fit.updateMatrixWorld?.(true);
             if (next.changed) {
                 framed = next;
                 seat.group.userData.boundsDirty = true;
@@ -277,46 +281,51 @@ export async function adoptTwistyPuzzle(seat, {
 
     async function playLeaves(from, to, { snap = false } = {}) {
         if (disposed) return { index: 0, total: 0 };
-        const { indexer } = await timeline();
-        if (disposed) return { index: 0, total: 0 };
-        const total = indexer.numAnimatedLeaves();
-        const start = Math.max(0, from);
-        const end = Math.max(start, Math.min(to, total));
-        if (end <= start) return { index: start, total };
-        const startTs = indexer.indexToMoveStartTimestamp(start);
-        const endTs = indexer.indexToMoveStartTimestamp(end - 1) + indexer.moveDuration(end - 1);
-        player.pause();
-        requestTimestamp(snap ? endTs : startTs);
-        await frame();
-        if (disposed) return { index: start, total };
-        if (snap) return { index: end - 1, total };
-        let tempo = 1;
+        seat.group.userData.turnBusy = true;
         try {
-            tempo = Number(await player.experimentalModel.tempoScale.get()) || 1;
-        } catch {
-            // tempoScale getter is write-only on the element
-        }
-        let duration = 0;
-        for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
-        if (disposed) return { index: start, total };
-        player.play();
-        const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
-        const deadline = performance.now() + budget;
-        while (performance.now() < deadline) {
-            if (disposed) return { index: start, total };
-            try {
-                const info = await player.experimentalModel.detailedTimelineInfo.get();
-                if (info.timestamp >= endTs - 2) break;
-            } catch {
-                break;
-            }
+            const { indexer } = await timeline();
+            if (disposed) return { index: 0, total: 0 };
+            const total = indexer.numAnimatedLeaves();
+            const start = Math.max(0, from);
+            const end = Math.max(start, Math.min(to, total));
+            if (end <= start) return { index: start, total };
+            const startTs = indexer.indexToMoveStartTimestamp(start);
+            const endTs = indexer.indexToMoveStartTimestamp(end - 1) + indexer.moveDuration(end - 1);
+            player.pause();
+            requestTimestamp(snap ? endTs : startTs);
             await frame();
+            if (disposed) return { index: start, total };
+            if (snap) return { index: end - 1, total };
+            let tempo = 1;
+            try {
+                tempo = Number(await player.experimentalModel.tempoScale.get()) || 1;
+            } catch {
+                // tempoScale getter is write-only on the element
+            }
+            let duration = 0;
+            for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
+            if (disposed) return { index: start, total };
+            player.play();
+            const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
+            const deadline = performance.now() + budget;
+            while (performance.now() < deadline) {
+                if (disposed) return { index: start, total };
+                try {
+                    const info = await player.experimentalModel.detailedTimelineInfo.get();
+                    if (info.timestamp >= endTs - 2) break;
+                } catch {
+                    break;
+                }
+                await frame();
+            }
+            if (disposed) return { index: start, total };
+            player.pause();
+            requestTimestamp(endTs);
+            await frame();
+            return { index: end - 1, total };
+        } finally {
+            seat.group.userData.turnBusy = false;
         }
-        if (disposed) return { index: start, total };
-        player.pause();
-        requestTimestamp(endTs);
-        await frame();
-        return { index: end - 1, total };
     }
 
     const api = {

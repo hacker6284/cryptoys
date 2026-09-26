@@ -335,6 +335,26 @@ export function fitToLocalEdge(wrapper, object, edge) {
     wrapper.updateMatrixWorld?.(true);
     return {
         size: { ...size },
+        center: { ...center },
+        nativeMax,
+        fittedMax: edge,
+        scale,
+        changed: true,
+        rootScale: Number(object?.scale?.x),
+    };
+}
+
+function applyLockedFit(wrapper, edge, previous) {
+    const nativeMax = previous.nativeMax || 1;
+    const scale = edge / nativeMax;
+    const center = previous.center || { x: 0, y: 0, z: 0 };
+    wrapper.scale.setScalar(scale);
+    if (Number.isFinite(center.x)) {
+        wrapper.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+    }
+    wrapper.updateMatrixWorld?.(true);
+    return {
+        ...previous,
         nativeMax,
         fittedMax: edge,
         scale,
@@ -343,22 +363,39 @@ export function fitToLocalEdge(wrapper, object, edge) {
 }
 
 /**
- * Re-apply the presentation edge if cubing.js changed puzzle scale /
- * local bounds after the first paint. No-op when already within 2%.
+ * Re-apply the presentation edge if cubing.js changed *root* puzzle
+ * scale after the first paint. Rest-pose `nativeMax` is locked so a
+ * mid-turn cubie AABB swell cannot pulse wrapper.scale.
  */
 export function keepFitted(wrapper, object, edge, previous = null) {
-    const box = measureLocalBox(object);
-    const size = box?.size || previous?.size || { x: 1, y: 1, z: 1 };
-    const max = Math.max(size.x, size.y, size.z);
-    const nativeMax = Number.isFinite(max) && max > 1e-6 ? max : previous?.nativeMax || 1;
-    const scale = edge / nativeMax;
-    const have = wrapper?.scale?.x;
-    const drifted = !Number.isFinite(have) || Math.abs(have - scale) > Math.abs(scale) * 0.02;
-    if (!drifted && previous) {
-        wrapper.updateMatrixWorld?.(true);
-        return { ...previous, changed: false, nativeMax, scale: have };
+    const rootScale = Number(object?.scale?.x);
+    const rootChanged = Number.isFinite(rootScale)
+        && Number.isFinite(previous?.rootScale)
+        && Math.abs(rootScale - previous.rootScale) > 1e-4;
+    if (previous?.nativeMax && !rootChanged) {
+        const scale = edge / previous.nativeMax;
+        const have = wrapper?.scale?.x;
+        const drifted = !Number.isFinite(have) || Math.abs(have - scale) > Math.abs(scale) * 0.02;
+        if (!drifted) {
+            wrapper.updateMatrixWorld?.(true);
+            return {
+                ...previous,
+                changed: false,
+                nativeMax: previous.nativeMax,
+                scale: have,
+                rootScale: Number.isFinite(rootScale) ? rootScale : previous.rootScale,
+            };
+        }
+        return {
+            ...applyLockedFit(wrapper, edge, previous),
+            rootScale: Number.isFinite(rootScale) ? rootScale : previous.rootScale,
+        };
     }
-    return fitToLocalEdge(wrapper, object, edge);
+    const fitted = fitToLocalEdge(wrapper, object, edge);
+    return {
+        ...fitted,
+        rootScale: Number.isFinite(rootScale) ? rootScale : fitted.rootScale,
+    };
 }
 
 /**

@@ -167,6 +167,16 @@ assert.match(rigSrc, /bodyHex/);
 const form = readFileSync(new URL("./table-form.js", import.meta.url), "utf8");
 assert.match(form, /formSessionTable/);
 assert.match(form, /gatherSessionTable/);
+assert.match(adapters, /setCardsVisible/);
+{
+    const gatherStart = form.indexOf("export async function gatherSessionTable");
+    const gatherEnd = form.indexOf("function hopSeat");
+    assert.equal(
+        form.slice(gatherStart, gatherEnd).includes("setCardsVisible"),
+        false,
+        "gather leaves piles visible; adapter hides on restow",
+    );
+}
 assert.match(form, /shrinkHero/);
 assert.match(form, /msgPacket/);
 assert.match(form, /MSG_FACE_INDEXES/);
@@ -196,6 +206,8 @@ assert.equal(motion.includes("cutToTable"), false);
 const captureSrc = readFileSync(new URL("./capture-strip.js", import.meta.url), "utf8");
 assert.match(captureSrc, /debugCapture/);
 assert.match(captureSrc, /installCapture/);
+assert.match(captureSrc, /pendingBeat/);
+assert.match(captureSrc, /CLOCK_STEP_MS/);
 assert.match(app, /installCapture/);
 assert.equal(captureSrc.includes("gsap"), false);
 
@@ -206,6 +218,8 @@ assert.match(posesCtl, /function applyReturn/);
 assert.match(posesCtl, /function followLive/);
 assert.match(posesCtl, /mode: opts.mode === "return" \? "return" : "follow"/);
 assert.match(posesCtl, /settleAt/);
+assert.match(posesCtl, /easeOutCubic/);
+assert.match(posesCtl, /CLOCK_STEP_MS/);
 assert.equal(posesCtl.includes("look.copy(trackPos)"), false, "goTo track eases look, never copies");
 assert.equal(posesCtl.includes("gsap"), false);
 

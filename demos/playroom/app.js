@@ -198,7 +198,11 @@ try {
             // no look.copy, no cut to landing while flights are live.
             followLeave(poses, {
                 to: "landing",
-                track: trackToys(world, flyToys),
+                track: trackToys(
+                    world,
+                    flyToys,
+                    world.chest?.group ? [world.chest.group] : [],
+                ),
                 holdMs: 0,
                 duration: prepMs + homeMs,
             });

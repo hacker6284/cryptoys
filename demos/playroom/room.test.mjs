@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { tableSpan } from "../doubledeal/layout.js";
 import {
+    CLOCK_STEP_MS,
     CUBE,
     DEAL_SCALE,
     DEN,
@@ -71,6 +72,7 @@ assert.equal(
     LID_OPEN_MS + FLY_MS + LID_CLOSE_MS,
 );
 assert.equal(recipeDirector.borrowMs("doubledeal"), recipeDirector.homeMs("doubledeal"));
+assert.equal(CLOCK_STEP_MS, 50);
 
 function vec3(x = 0, y = 0, z = 0) {
     return {

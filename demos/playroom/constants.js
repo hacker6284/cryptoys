@@ -38,7 +38,9 @@ export const SLOTS = {
     cube: { x: -0.55, y: SHELF_Y1 },
 };
 
-// Shared rAF step cap (director / beat-clock / capture harness).
+// Shared rAF step cap. 60fps is unchanged (~16ms). Software-GL and
+// capture hitch cannot skip a beat-clock tween while the director
+// and camera stay capped — that is what made gather look like a snap.
 export const CLOCK_STEP_MS = 50;
 
 export const TWEEN_MS = 1100;

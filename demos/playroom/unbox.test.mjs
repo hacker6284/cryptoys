@@ -42,6 +42,10 @@ assert.equal(adapters.includes("playBloom"), false, "bloom is not the production
 assert.equal(adapters.includes("gsap"), false, "GSAP stays out of the room");
 assert.equal(adapters.includes("DEAL_SCALE"), false, "adapter does not scale the unbox to 104 seats");
 
+const worldSrc = readFileSync(new URL("./world.js", import.meta.url), "utf8");
+assert.match(worldSrc, /if \(slots\[name\]\) slots\[name\]\.slot/, "chest deck has no shelf slot");
+assert.match(worldSrc, /deck2/);
+
 const cardStage = readFileSync(new URL("./card-stage.js", import.meta.url), "utf8");
 assert.equal(cardStage.includes("fadeTree"), false);
 assert.equal(cardStage.includes("fadeIn"), false);
@@ -51,6 +55,8 @@ const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
 assert.match(app, /unbox_travel/);
 assert.match(app, /skipEnter/);
 assert.match(app, /prepareEnter/);
+assert.match(app, /delay: HOLD_MS/);
+assert.ok(app.indexOf("via: \"shelf\"") > app.indexOf("id === \"doubledeal\""), "via:shelf stays on Scramble only");
 const tickAt = app.indexOf("requestAnimationFrame(tick)");
 const deepLinkAt = app.indexOf("void startAlgo(initialAlgo)");
 assert.ok(tickAt >= 0 && deepLinkAt > tickAt, "rAF tick starts before deep-link DoubleDeal enter");

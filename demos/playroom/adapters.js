@@ -647,18 +647,26 @@ function createDoubleDealAdapter() {
                     await restBoxes({ world, clock, gen: enterGen });
                 }
                 if (cancelEnter) return session;
+                for (let i = 0; i < 40 && world.toys.deck2?.userData.flightBusy; i++) {
+                    await clock.wait(40, enterGen);
+                }
                 const seated = poses?.playTo
                     ? poses.playTo("doubledeal", { duration: reduced ? 480 : 1280 })
                     : Promise.resolve();
                 if (layout && !cancelEnter) {
+                    const keyBox = world.toys.deck?.position;
+                    const msgToy = world.toys.deck2;
+                    const messageBox = msgToy?.userData.flightBusy
+                        ? world.getBoxRestPose?.("deck2")?.position
+                        : msgToy?.position || keyBox;
                     await formSessionTable({
                         table,
                         clock,
                         gen: enterGen,
                         messageOrder: layout.message,
                         keyOrder: layout.key,
-                        keyBox: world.toys.deck?.position,
-                        messageBox: world.toys.deck2?.position || world.toys.deck?.position,
+                        keyBox,
+                        messageBox,
                         packet: reduced || !unbox ? null : unbox,
                     });
                 }

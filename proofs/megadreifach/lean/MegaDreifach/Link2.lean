@@ -19,6 +19,7 @@ import MegaDreifach.Link2.RequirePerm
 import MegaDreifach.Link2.PackOri
 import MegaDreifach.Link2.EvenRank
 import MegaDreifach.Link2.PosBytes
+import MegaDreifach.Link2.FromBe
 
 namespace MegaDreifach.Link2
 
@@ -59,8 +60,16 @@ namespace MegaDreifach.Link2
   The 29 bytes are `toBE 29 (packOri2 eo)`. `even30` equals `30!/2` and multiplies
   a zero accumulator. Not every legal position. Not `v_Hash`.
 
-  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open.
-  A positive corner or edge rank is outside this limb fragment.
+  CLOSED: `big_from_be_zeros`, `big_from_be_zeros_fromBE`, `big_from_be_zero_pad`.
+  Domain: `k` zero bytes with `k` fitting in an i64, including the empty
+  string and the 28-byte pad block. The Horner value is `0` (`fromBE`),
+  so the emitted bigint is the empty limb list. Not a general pad block
+  (`2^224` is many limbs). Not `phi_chunk`. Not `phi_inv`.
+
+  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
+  (`peel_leading` still builds `d!` up to `51!`). Positive `range_list`
+  (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in
+  `EvenRank.lean`. A positive corner or edge rank is outside this limb fragment.
 -/
 
 end MegaDreifach.Link2

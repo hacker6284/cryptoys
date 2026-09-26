@@ -107,7 +107,7 @@ try {
         () => document.querySelector("#doubledeal-dock.on")
             && document.documentElement.dataset.playroomTween !== "1"
             && window.__playroomCapture?.sequences?.["doubledeal-enter"],
-        { timeout: 120000 },
+        { timeout: 300000 },
     );
     await dumpSequence("doubledeal-enter");
 
@@ -117,7 +117,7 @@ try {
         () => document.documentElement.dataset.pose === "landing"
             && !document.documentElement.dataset.algo
             && window.__playroomCapture?.sequences?.["doubledeal-leave"],
-        { timeout: 120000 },
+        { timeout: 240000 },
     );
     await dumpSequence("doubledeal-leave");
 
@@ -127,7 +127,7 @@ try {
         () => document.querySelector("#scramble-dock.on")
             && document.documentElement.dataset.playroomTween !== "1"
             && window.__playroomCapture?.sequences?.["scramble-enter"],
-        { timeout: 90000 },
+        { timeout: 180000 },
     );
     await dumpSequence("scramble-enter");
 
@@ -137,7 +137,7 @@ try {
         () => document.documentElement.dataset.pose === "landing"
             && !document.documentElement.dataset.algo
             && window.__playroomCapture?.sequences?.["scramble-leave"],
-        { timeout: 60000 },
+        { timeout: 180000 },
     );
     await dumpSequence("scramble-leave");
     console.log("done", join(OUT, TAG));

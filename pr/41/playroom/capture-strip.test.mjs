@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
     CAPTURE_INTERVAL_MS,
+    CAPTURE_MAX_WIDTH,
     captureEnabled,
     frameIsBlank,
     installCapture,
@@ -17,6 +18,7 @@ assert.equal(captureEnabled("?debugCapture=0"), false);
 assert.equal(captureEnabled("?debugCapture=1"), true);
 assert.equal(captureEnabled("?algo=doubledeal&debugCapture=1"), true);
 assert.ok(CAPTURE_INTERVAL_MS >= 200 && CAPTURE_INTERVAL_MS <= 300);
+assert.ok(CAPTURE_MAX_WIDTH >= 480 && CAPTURE_MAX_WIDTH <= 800);
 assert.equal(CLOCK_STEP_MS, 50);
 assert.equal(frameIsBlank(new Uint8ClampedArray(16)), true);
 assert.equal(frameIsBlank(new Uint8ClampedArray([200, 180, 90, 255])), false);

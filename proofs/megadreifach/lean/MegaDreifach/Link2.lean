@@ -21,6 +21,7 @@ import MegaDreifach.Link2.EvenRank
 import MegaDreifach.Link2.PosBytes
 import MegaDreifach.Link2.FromBe
 import MegaDreifach.Link2.FromBeShort
+import MegaDreifach.Link2.FromBeLimb2
 import MegaDreifach.Link2.Factorial
 import MegaDreifach.Link2.PeelLimb
 import MegaDreifach.Link2.FactTwo
@@ -85,6 +86,13 @@ namespace MegaDreifach.Link2
   multiply and add. Not length 4 (`256^4 > 10^9`). Not the 28-byte pad block.
   Not `phi_chunk`. Not `phi_inv`.
 
+  CLOSED: `big_from_be_limb2`, `big_from_be_limb2_array`, `big_add_byte`.
+  Domain `BeLimb2Wf`: length `≤ 7`, every byte `≤ 255`. `fromBE < 256^7 < 10^18`,
+  at most two limbs. A prefix of length `≤ 3` is still one limb; the fourth
+  byte may carry. Each step is the proved one-limb or two-limb multiply by
+  256 (product below `10^18`) plus `big_add_byte`. Not length 8
+  (`256^8 > 10^18`). Not the 28-byte pad block. Not `phi_chunk`. Not `phi_inv`.
+
   CLOSED: `peel_leading_limb`, `peel_leading_factorial`.
   Domain: `d ≤ 12` and `n < 10^9`. `d!` is one limb, and so is every quotient
   of `n`. Generated `peel_leading` returns `(n % d!, n / d!)`. The digit is
@@ -104,7 +112,8 @@ namespace MegaDreifach.Link2
 
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
-  bytes; zero peel now reaches `d ≤ 19`, not 51). Positive `range_list`
+  bytes; zero peel now reaches `d ≤ 19`, not 51; `big_from_be` now reaches
+  length `≤ 7`, not the 28-byte pad block). Positive `range_list`
   (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in
   `EvenRank.lean`. A positive corner or edge rank is outside this limb fragment.
 -/

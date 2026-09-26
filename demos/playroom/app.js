@@ -1,5 +1,6 @@
 import { adapters } from "./adapters.js";
 import { FLY_MS, HOLD_MS, LIFT_MS } from "./constants.js";
+import { continueTo, trackEnter, trackToy } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { createToyDirector } from "./toy-director.js";
@@ -62,10 +63,6 @@ function syncOverlays({ name, overlays, tweening }) {
     requestAnimationFrame(() => resizeWorld());
 }
 
-function trackToy(world, name) {
-    return () => world.toys[name]?.position;
-}
-
 try {
     const world = await mountWorld(canvas);
     resizeWorld = () => world.resize();
@@ -120,10 +117,11 @@ try {
                 // One story: hold the landing so KEY leaving the slot
                 // is on camera, then track it to the table. No via:shelf
                 // cut that can land on empty felt.
-                poses.goTo("unbox_travel", {
-                    duration: FLY_MS - HOLD_MS,
-                    delay: HOLD_MS,
+                trackEnter(poses, {
+                    to: "unbox_travel",
                     track: trackToy(world, meta.toy),
+                    holdMs: HOLD_MS,
+                    duration: FLY_MS - HOLD_MS,
                 });
             } else {
                 poses.goTo(meta.pose, {
@@ -256,7 +254,7 @@ try {
         adapters[activeAlgo]?.skipEnter?.();
         if (activeAlgo === "doubledeal" && (starting || enterBusy())) {
             // Continue from the live shot — do not snap to a named seat.
-            poses.goTo("doubledeal", { duration: 720 });
+            continueTo(poses, "doubledeal", { duration: 720 });
         } else {
             poses.skip();
         }

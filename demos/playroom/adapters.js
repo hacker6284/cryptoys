@@ -7,6 +7,7 @@ import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
 import { normalizePuzzleId, readPuzzleSearchParam } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
+import { continueTo, waitToyIdle } from "./motion.js";
 import { formSessionTable } from "./table-form.js";
 import { pickHandTextures } from "./unbox-hand.js";
 import { createDealerKey, disposeDealerKey, playPhysical, restBoxes } from "./unbox-physical.js";
@@ -647,12 +648,10 @@ function createDoubleDealAdapter() {
                     await restBoxes({ world, clock, gen: enterGen });
                 }
                 if (cancelEnter) return session;
-                for (let i = 0; i < 40 && world.toys.deck2?.userData.flightBusy; i++) {
-                    await clock.wait(40, enterGen);
-                }
-                const seated = poses?.playTo
-                    ? poses.playTo("doubledeal", { duration: reduced ? 480 : 1280 })
-                    : Promise.resolve();
+                await waitToyIdle(world.toys.deck2, clock, enterGen);
+                const seated = continueTo(poses, "doubledeal", {
+                    duration: reduced ? 480 : 1280,
+                });
                 if (layout && !cancelEnter) {
                     const keyBox = world.toys.deck?.position;
                     const msgToy = world.toys.deck2;

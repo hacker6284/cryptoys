@@ -48,7 +48,8 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | Link 2 | `peel_leading` ≃ factoradic digit on one limb (`d ≤ 12`, `n < 10^9`) | Proved (`peel_leading_limb`, `peel_leading_factorial`). Pair is `(n % d!, n / d!)`. Digit `1` on `d!` itself. Not `d ≥ 13`. Not `51!`. Not `phi_chunk`. Not `v_Hash`. |
 | Link 2 | `big_factorial n` ≃ `factorial n` for `n ≤ 19`, and `peel_leading` of zero for `d ≤ 19` | Proved (`big_factorial_two`, `big_mul_two`, `peel_leading_zero_two`). `13!`–`19!` are two limbs (`19! < 10^18`); `20!` is three limbs. Zero digit `0 / d!`. Not a positive two-limb peel. Not `51!`. Not `phi_chunk`. Not `v_Hash`. |
 | Link 2 | `peel_leading` of `d!` ≃ digit `1` for `d ≤ 19` | Proved (`peel_leading_factorial_two`, `divmod_sq`, `big_mul_one`). Remainder `0`. Two-limb division of values below `10^18`. Not an arbitrary positive rank. Not `20!`. Not `51!`. Not `phi_chunk`. Not `v_Hash`. |
-| Link 2 | `big_factorial n` ≃ `factorial n` for `n ≤ 20` | Proved (`big_factorial_three`, `big_mul_three`). `20! = 19! · 20` is three limbs (`10^18 ≤ 20! < 10^27`). Not `21!`. Not `51!`. Not `phi_chunk`. Not `v_Hash`. |
+| Link 2 | `big_factorial n` ≃ `factorial n` for `n ≤ 20` | Proved (`big_factorial_three`, `big_mul_three`). `20! = 19! · 20` is three limbs (`10^18 ≤ 20! < 10^27`). Not `51!`. Not `phi_chunk`. Not `v_Hash`. |
+| Link 2 | `big_factorial n` ≃ `factorial n` for `n ≤ 26` | Proved (`big_factorial_acc3`, `big_mul_acc3`). `21!`–`26!` multiply a three-limb accumulator by `i ≤ 26` and stay below `10^27`. Not `27!`. Not `51!`. Not `phi_chunk`. Not `v_Hash`. |
 
 ## What is open or not claimed
 
@@ -59,7 +60,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | M9 | Abs-G2 L2 mid-block: no 2-card local collision | OPEN (sketch in STONES.md). Informal proof in research `G2_PROOF.md`. Not a blocker. |
 | M13 | Proof-package digests of exported KATs equal `kats/megaminx_hash_kats.json` | OPEN; metadata only. Hexes refreshed 2026-09-24 to current sudo (Python = emitted Lean). No handwritten `Hash` body. |
 | — | sudo text equals generated Lean; algebraic fold equals `Generated.v_Hash` | OPEN. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). |
-| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, `require_permutation`, `pack_ori2`, `pack_ori3`, length-20 `even_perm_rank_big` (`Rank20Wf`), zero-rank `position_to_bytes` (`PosBytesWf`), zero-byte `big_from_be`, short `big_from_be` (`BeShortWf`, length `≤ 3`), two-limb `big_from_be` (`BeLimb2Wf`, length `≤ 7`), `big_factorial` (`n ≤ 20`), zero `peel_leading` (`d ≤ 19`), one-limb `peel_leading` (`d ≤ 12`, `n < 10^9`), and `peel_leading` of `d!` for `d ≤ 19` are closed. `phi_chunk` / `phi_inv` are still open. Not collision resistance. |
+| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, `require_permutation`, `pack_ori2`, `pack_ori3`, length-20 `even_perm_rank_big` (`Rank20Wf`), zero-rank `position_to_bytes` (`PosBytesWf`), zero-byte `big_from_be`, short `big_from_be` (`BeShortWf`, length `≤ 3`), two-limb `big_from_be` (`BeLimb2Wf`, length `≤ 7`), `big_factorial` (`n ≤ 26`), zero `peel_leading` (`d ≤ 19`), one-limb `peel_leading` (`d ≤ 12`, `n < 10^9`), and `peel_leading` of `d!` for `d ≤ 19` are closed. `phi_chunk` / `phi_inv` are still open. Not collision resistance. |
 | — | Collision resistance of Hash; IV-anchored collision | Not claimed. Free-start `HashDeckBody` is broken; L3 collisions **exist** |
 | — | Ideal-cipher-on-G / PRF of `E_m` | Not claimed |
 | — | Birthday ≈ 2^113 as a theorem | SPEC honesty only |

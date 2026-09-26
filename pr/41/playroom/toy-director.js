@@ -1,5 +1,6 @@
 import { FLY_MS, LID_CLOSE_MS, LID_OPEN_MS, LIFT_MS } from "./constants.js";
 import { easeInOutCubic, easeOutCubic } from "./beat-clock.js";
+import { markBeat } from "./motion.js";
 
 /**
  * Toy director.
@@ -222,17 +223,21 @@ export function createToyDirector(world) {
         let extraJob = null;
         if (recipe.extras.includes("chest") && extras.length) {
             extraJob = (async () => {
+                markBeat("lid-open");
                 await animateLid(1, { snap, duration: LID_OPEN_MS });
                 if (token !== borrowGen || startedSkip !== skipGen) return;
                 for (const name of extras) {
                     if (token !== borrowGen || startedSkip !== skipGen) return;
                     world.setSlotEmpty(name, true);
+                    markBeat("msg-out");
                     await flyToy(name, world.getTablePose(name), { snap, duration: FLY_MS });
                 }
                 if (token !== borrowGen || startedSkip !== skipGen) return;
+                markBeat("lid-close");
                 await animateLid(0, { snap, duration: LID_CLOSE_MS });
             })();
         }
+        markBeat(primary === "cube" ? "cube-fly" : "key-fly");
         await flyToy(primary, world.getTablePose(primary), { snap });
         if (snap && extraJob) await extraJob;
         const toy = world.toys[primary];
@@ -271,14 +276,17 @@ export function createToyDirector(world) {
             const recipe = recipeOf(occupied);
             const names = recipe.toys.filter((name) => world.toys[name]);
             if (recipe.extras.includes("chest")) {
+                markBeat("lid-receive");
                 await animateLid(1, { snap, duration: LID_OPEN_MS });
             }
+            markBeat("fly-home");
             await Promise.all(names.map((name) => flyToy(name, world.getShelfPose(name), {
                 snap,
                 ease: easeInOutCubic,
             })));
             for (const name of names) world.setSlotEmpty(name, false);
             if (recipe.extras.includes("chest")) {
+                markBeat("lid-shut");
                 await animateLid(0, { snap, duration: LID_CLOSE_MS });
             }
             occupied = null;

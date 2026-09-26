@@ -224,6 +224,7 @@ console.log("playroom room tests ok");
 
 await import("./beat-clock.test.mjs");
 await import("./motion.test.mjs");
+await import("./capture-strip.test.mjs");
 await import("./unbox.test.mjs");
 await import("./scramble-alg.test.mjs");
 await import("./twisty-rig.test.mjs");

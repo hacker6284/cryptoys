@@ -11,9 +11,23 @@
 
 import { easeInOutCubic, easeOutCubic, lerp } from "./beat-clock.js";
 
+const beatListeners = [];
+
+export function onMarkBeat(fn) {
+    if (typeof fn !== "function") return () => {};
+    beatListeners.push(fn);
+    return () => {
+        const i = beatListeners.indexOf(fn);
+        if (i >= 0) beatListeners.splice(i, 1);
+    };
+}
+
 export function markBeat(beat) {
     const root = typeof document !== "undefined" ? document.documentElement : null;
-    if (root?.dataset?.playroomDebug === "1") root.dataset.beat = beat;
+    if (root && (root.dataset.playroomDebug === "1" || root.dataset.playroomCapture === "1")) {
+        root.dataset.beat = beat;
+    }
+    for (const fn of beatListeners) fn(beat);
 }
 
 export function pose3(raw) {

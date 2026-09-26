@@ -1,6 +1,7 @@
 import { adapters } from "./adapters.js";
 import { FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
-import { continueTo, followEnter, followLeave, trackActive, trackToys } from "./motion.js";
+import { installCapture } from "./capture-strip.js";
+import { continueTo, followEnter, followLeave, markBeat, trackActive, trackToys } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { playroomDebugEnabled } from "./puzzles.js";
@@ -69,6 +70,7 @@ try {
     resizeWorld = () => world.resize();
     const params = new URLSearchParams(location.search);
     if (params.get("debug") === "1") document.documentElement.dataset.playroomDebug = "1";
+    const capture = installCapture(canvas);
     const initialPose = resolvePoseName(params.get("pose"));
     const initialAlgo = String(params.get("algo") || "").trim().toLowerCase();
     const poses = createPoseController(world.camera, {
@@ -101,6 +103,8 @@ try {
         starting = true;
         skippedStart = false;
         activeAlgo = id;
+        capture.begin(`${id}-enter`);
+        markBeat("enter-start");
         syncOverlays({
             name: poses.name,
             overlays: { title: true, menu: false },
@@ -130,10 +134,16 @@ try {
                 poses.followLive?.(enterTrack);
             }
             await Promise.all([fly, warm]);
-            if (leaving) return;
+            markBeat("enter-landed");
+            if (leaving) {
+                await capture.end();
+                return;
+            }
             adapter.view()?.rememberSeated?.();
             await adapter.enter({ snap: reduced || skippedStart });
             starting = false;
+            markBeat("enter-done");
+            await capture.end();
             if (leaving) return;
             writeQuery({ pose: "seated", algo: id });
             syncOverlays({
@@ -152,6 +162,7 @@ try {
                 ? err.message
                 : `${meta.title} could not start in the playroom.`;
             poses.snap("landing");
+            await capture.end();
         } finally {
             starting = false;
         }
@@ -165,6 +176,8 @@ try {
         }
         leaving = true;
         const id = activeAlgo;
+        capture.begin(`${id}-leave`);
+        markBeat("leave-start");
         const meta = ALGOS[id];
         const reduced = poses.prefersReducedMotion();
         const recipe = director.recipeOf(id);
@@ -186,9 +199,12 @@ try {
             });
         }
         await adapters[id]?.leave?.({ snap: reduced });
+        markBeat("leave-home");
         await director.home({ snap: reduced });
         poses.followLive?.(null);
         adapters[id]?.revealShelf?.();
+        markBeat("hub-settle");
+        await capture.end();
         activeAlgo = null;
         leaving = false;
         writeQuery({ pose: "landing", algo: null });
@@ -212,11 +228,13 @@ try {
     document.body.classList.add("is-ready");
     document.documentElement.dataset.playroomReady = "1";
     document.documentElement.dataset.motion = poses.prefersReducedMotion() ? "reduce" : "full";
+    if (!ALGOS[initialAlgo]) markBeat("hub-rest");
 
     function tick(now) {
         director.update(now);
         poses.update(performance.now());
         world.render();
+        capture.tick(now);
         requestAnimationFrame(tick);
     }
     // The rAF clock must run before any non-snap enter. Deep-link

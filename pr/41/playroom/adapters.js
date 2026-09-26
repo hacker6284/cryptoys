@@ -7,7 +7,7 @@ import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
-import { continueTo, trackActive, waitToyIdle } from "./motion.js";
+import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";
 import { formSessionTable, gatherSessionTable } from "./table-form.js";
 import { pickHandTextures, pickMsgTextures } from "./unbox-hand.js";
 import { createDealerKey, disposeDealerKey, playDualUnbox, playRestow, restBoxes } from "./unbox-physical.js";
@@ -735,6 +735,7 @@ function createDoubleDealAdapter() {
             if (table && !reduced) {
                 clock = createBeatClock({ reduced: false });
                 const gen = clock.begin();
+                markBeat("leave-gather");
                 await gatherSessionTable({
                     table,
                     clock,
@@ -744,6 +745,7 @@ function createDoubleDealAdapter() {
                 });
                 table.dispose();
                 table = null;
+                markBeat("leave-restow");
                 await Promise.all([
                     playRestow({ rig: unbox, clock, gen, ms: RESTOW_MS }),
                     playRestow({ rig: unbox2, clock, gen, ms: RESTOW_MS }),

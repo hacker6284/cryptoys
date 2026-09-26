@@ -28,7 +28,7 @@ textarea.grow-field {
   overflow-y: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  word-break: break-word;
+  word-break: normal;
   text-overflow: clip;
   resize: none;
 }

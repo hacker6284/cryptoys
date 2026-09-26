@@ -22,6 +22,7 @@ import MegaDreifach.Link2.PosBytes
 import MegaDreifach.Link2.FromBe
 import MegaDreifach.Link2.FromBeShort
 import MegaDreifach.Link2.Factorial
+import MegaDreifach.Link2.PeelLimb
 
 namespace MegaDreifach.Link2
 
@@ -82,6 +83,13 @@ namespace MegaDreifach.Link2
   one limb (empty if zero). Each step `acc * 256 + b` uses the one-limb
   multiply and add. Not length 4 (`256^4 > 10^9`). Not the 28-byte pad block.
   Not `phi_chunk`. Not `phi_inv`.
+
+  CLOSED: `peel_leading_limb`, `peel_leading_factorial`.
+  Domain: `d ≤ 12` and `n < 10^9`. `d!` is one limb, and so is every quotient
+  of `n`. Generated `peel_leading` returns `(n % d!, n / d!)`. The digit is
+  positive when `d! ≤ n`; peeling `d!` itself yields `(0, 1)`. Not `d ≥ 13`
+  (a positive digit times a two-limb factorial). Not `51!`. Not `phi_chunk`.
+  Not `phi_inv`.
 
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28

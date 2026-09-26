@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { CUBE } from "./constants.js";
 
 const src = readFileSync(new URL("./twisty-rig.js", import.meta.url), "utf8");
 
@@ -16,6 +17,8 @@ assert.match(src, /userData.keepFitted/, "host render can re-apply fit");
 assert.match(src, /userData.worldEdge/, "debug size is world AABB Y, not pixels");
 assert.equal(src.includes("wrapper.scale.set(1, 1, 1)"), false, "do not flash native scale on refit");
 assert.equal(src.includes("Box3().setFromObject"), false, "do not Box3.setFromObject across two threes");
+
+assert.equal(CUBE, 0.057, "Twisty presentation edge is real-life 57 mm");
 
 const { fitToLocalEdge, keepFitted } = await import("./motion.js");
 
@@ -57,32 +60,32 @@ const wrapper = {
     updateMatrixWorld() {},
 };
 const puzzle = makeMesh(3);
-const framed = fitToLocalEdge(wrapper, puzzle, 0.12);
-assert.ok(Math.abs(framed.scale - 0.04) < 1e-6);
-assert.ok(Math.abs(wrapper.scale.x - 0.04) < 1e-6);
+const framed = fitToLocalEdge(wrapper, puzzle, CUBE);
+assert.ok(Math.abs(framed.scale - CUBE / 3) < 1e-6);
+assert.ok(Math.abs(wrapper.scale.x - CUBE / 3) < 1e-6);
 
 // Late cubing.js 1/3 would crush a one-shot world fit. keepFitted
-// sees the local scale and restores the 120 mm edge.
+// sees the local scale and restores the 57 mm edge.
 puzzle.scale.setScalar(1 / 3);
-const held = keepFitted(wrapper, puzzle, 0.12, framed);
+const held = keepFitted(wrapper, puzzle, CUBE, framed);
 assert.equal(held.changed, true);
-assert.ok(Math.abs(held.scale - 0.12) < 1e-6, "late 1/3 is compensated on fit");
-assert.ok(Math.abs(wrapper.scale.x - 0.12) < 1e-6);
+assert.ok(Math.abs(held.scale - CUBE) < 1e-6, "late 1/3 is compensated on fit");
+assert.ok(Math.abs(wrapper.scale.x - CUBE) < 1e-6);
 
-const again = keepFitted(wrapper, puzzle, 0.12, held);
+const again = keepFitted(wrapper, puzzle, CUBE, held);
 assert.equal(again.changed, false, "stable local edge is a no-op");
 
 // Mid-turn cubie AABB swell must not pulse the locked rest fit.
 const turning = makeMesh(3);
 turning.scale.setScalar(1 / 3);
-const rest = fitToLocalEdge(wrapper, turning, 0.12);
+const rest = fitToLocalEdge(wrapper, turning, CUBE);
 turning.children = [makeMesh(5)];
-const midTurn = keepFitted(wrapper, turning, 0.12, rest);
+const midTurn = keepFitted(wrapper, turning, CUBE, rest);
 assert.equal(midTurn.changed, false, "turning cubies do not remesure nativeMax");
 assert.ok(Math.abs(wrapper.scale.x - rest.scale) < 1e-6, "rest scale holds mid-turn");
-assert.equal(rest.fittedMax, 0.12, "rest presentation edge is 120 mm");
-assert.equal(held.fittedMax, 0.12, "late 1/3 still targets 120 mm");
-assert.equal(midTurn.fittedMax, 0.12, "mid-turn lock stays 120 mm");
+assert.equal(rest.fittedMax, 0.057, "rest presentation edge is 57 mm");
+assert.equal(held.fittedMax, 0.057, "late 1/3 still targets 57 mm");
+assert.equal(midTurn.fittedMax, 0.057, "mid-turn lock stays 57 mm");
 
 assert.match(src, /turnBusy/, "playLeaves marks the turn so keep-fit can skip");
 

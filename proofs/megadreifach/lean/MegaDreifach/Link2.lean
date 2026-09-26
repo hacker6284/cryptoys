@@ -17,6 +17,7 @@ import MegaDreifach.Link2.PadRef
 import MegaDreifach.Link2.Compose
 import MegaDreifach.Link2.RequirePerm
 import MegaDreifach.Link2.PackOri
+import MegaDreifach.Link2.EvenRank
 
 namespace MegaDreifach.Link2
 
@@ -45,7 +46,14 @@ namespace MegaDreifach.Link2
   algebraic `packOri3`. The Horner value stays below `3^19`, so it fits in
   two base-10^9 limbs (the last step may carry).
 
-  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open.
+  CLOSED: `even_perm_rank_big_refines`, `even_perm_rank_big_refines_array`.
+  Domain `Rank20Wf`: length 20, a permutation of `0..19`, and `evenRank < 2·10^9`.
+  Generated `even_perm_rank_big` equals algebraic `evenRank` (Lehmer prefix).
+  The bound keeps every Horner step in the one-limb multiply / two-limb add.
+  Not every corner rank (`20!/2` is three limbs). Not length 30. Not M3 glue.
+
+  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` and `position_to_bytes`
+  are still open.
 -/
 
 end MegaDreifach.Link2

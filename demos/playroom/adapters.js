@@ -1,5 +1,6 @@
 import { CUBE } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
+import { bindGrowFields } from "../shared/grow-field.js";
 import { lucideSvg } from "../shared/icons.js";
 import { createBeatClock } from "./beat-clock.js";
 import { stageCardTable } from "./card-stage.js";
@@ -100,6 +101,7 @@ function bindInstrumentChrome(root) {
     root.querySelector("#digest")?.addEventListener("focus", (event) => {
         event.currentTarget.select?.();
     });
+    bindGrowFields(root);
 }
 
 function mountDock() {
@@ -139,11 +141,11 @@ function mountDock() {
           </div>
           <label class="playroom-ctl playroom-ctl--field" for="message">
             <span class="playroom-label">Message</span>
-            <textarea id="message" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
           </label>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label">Digest</span>
-            <input id="digest" class="digest" type="text" readonly spellcheck="false" autocomplete="off">
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
           </label>
           <p id="puzzle-note" class="playroom-puzzle-note" hidden>Digest is 3×3 Scramble. This puzzle is visual.</p>
           <p id="status" class="status playroom-status">Solved start · white up, green front, red right</p>
@@ -455,21 +457,21 @@ function mountDoubleDealDock() {
           </div>
           <label class="playroom-ctl playroom-ctl--field" for="message">
             <span class="playroom-label" id="input-label">Message</span>
-            <textarea id="message" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
           </label>
           <label class="playroom-ctl playroom-ctl--field" for="key">
             <span class="playroom-label">Key</span>
-            <textarea id="key" rows="1" spellcheck="false" placeholder="cryptoy">cryptoy</textarea>
+            <textarea id="key" class="grow-field" rows="1" spellcheck="false" placeholder="cryptoy">cryptoy</textarea>
           </label>
           <div id="nonce-field" hidden>
             <label class="playroom-ctl playroom-ctl--field" for="nonce">
               <span class="playroom-label">Nonce</span>
-              <textarea id="nonce" rows="1" spellcheck="false" placeholder="nonce">nonce</textarea>
+              <textarea id="nonce" class="grow-field" rows="1" spellcheck="false" placeholder="nonce">nonce</textarea>
             </label>
           </div>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label" id="output-label">Digest</span>
-            <input id="digest" class="digest" type="text" readonly spellcheck="false" autocomplete="off">
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
           </label>
           <p id="status" class="status playroom-status">Plaintext on the left. Key on the right.</p>
           <p id="error" class="error"></p>

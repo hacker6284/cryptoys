@@ -8,6 +8,7 @@ import {
     resolveProductPuzzleId,
     writePuzzleSearchParam,
 } from "../playroom/puzzles.js";
+import { bindGrowFields } from "../shared/grow-field.js";
 import {
     bindTeachKeys,
     colorName,
@@ -55,6 +56,7 @@ export function createScrambleSession({
     const teachCard = $("#teach-card");
     const teachPos = $("#teach-pos");
     const outlineEl = $("#outline");
+    bindGrowFields(root);
 
     const solved = solved_facelets();
     if (solved !== SOLVED_FACELETS) {

@@ -1,5 +1,6 @@
 import { ecb_encrypt, ecb_decrypt, ctr_encrypt, ctr_decrypt, trace_ecb, trace_ctr, trace_decrypt, trace_ctr_decrypt } from "./generated/doubledeal.mjs";
 import { decksToHex, decksToText, hexToDecks, randomHex, textToDecks, textToKey, textToNonce } from "./cards.js";
+import { bindGrowFields, growField } from "../shared/grow-field.js";
 import {
     bindTeachKeys,
     cardName,
@@ -42,6 +43,7 @@ export function createDoubleDealSession({
     const teachCard = $("#teach-card");
     const teachPos = $("#teach-pos");
     const outlineEl = $("#outline");
+    bindGrowFields(root);
 
     let mode = "ecb";
     let direction = "encrypt";
@@ -840,6 +842,7 @@ export function createDoubleDealSession({
             mode = button.dataset.mode;
             $$("[data-mode]").forEach((item) => item.classList.toggle("on", item === button));
             if (nonceField) nonceField.hidden = mode !== "ctr";
+            if (mode === "ctr") growField(nonceEl);
             preview();
         }, listen);
     });

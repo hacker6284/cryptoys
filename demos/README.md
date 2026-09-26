@@ -2,6 +2,10 @@
 
 The playroom hub is `demos/`. GitHub Pages publishes that tree.
 
+## IO fields
+
+Message / Key / Nonce / Digest (and standalone DoubleDeal output) use the shared growable field in `shared/grow-field.css` + `shared/grow-field.js`. Fields start at one row and grow with content. Cap is `--grow-field-max: 8.5rem` (~5–6 lines at 15px / 1.4); past that the field scrolls so one box cannot eat the stage or the portrait IO band. Portrait transport stays on the stage (`--io-band`). Prefer grow over truncate — do not clip with ellipsis or a one-line `<input>`.
+
 ## Local
 
 ```sh

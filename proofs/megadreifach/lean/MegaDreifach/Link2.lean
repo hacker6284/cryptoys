@@ -29,6 +29,7 @@ import MegaDreifach.Link2.FactThree
 import MegaDreifach.Link2.AccThree
 import MegaDreifach.Link2.PeelFact
 import MegaDreifach.Link2.PeelCube
+import MegaDreifach.Link2.PeelZeroThree
 
 namespace MegaDreifach.Link2
 
@@ -142,9 +143,15 @@ namespace MegaDreifach.Link2
   `1` times that factorial. Not an arbitrary positive three-limb rank.
   Not `27!`. Not `51!`. Not `phi_chunk`. Not `phi_inv`.
 
+  CLOSED: `peel_leading_zero_three`, `peel_leading_zero_digit_three`.
+  Domain `d ≤ 26` on the zero bigint. The factoradic digit is `0 / d! = 0`
+  and the remainder is `0`. For `d ≥ 20` the factorial is three limbs; the
+  closing multiply is the zero coefficient, which short-circuits. Not a
+  positive rank. Not `27!`. Not `51!`. Not `phi_chunk`. Not `phi_inv`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
-  bytes; zero peel reaches `d ≤ 19`, peeling `d!` itself yields digit `1`
+  bytes; zero peel reaches `d ≤ 26`, peeling `d!` itself yields digit `1`
   through `d ≤ 26`, and `big_factorial` reaches `26!`, not `27!` and not 51;
   `big_from_be` reaches length `≤ 7`, not the 28-byte pad block). Positive
   `range_list` (`0 < n`, `FitsLen`, including 52) is already

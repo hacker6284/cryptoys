@@ -147,7 +147,6 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
             frames: [],
         };
         lastSample = -Infinity;
-        snapshot("start");
         return id;
     }
 

@@ -194,7 +194,7 @@ try {
             followLeave(poses, {
                 to: "landing",
                 track: trackToys(world, flyToys),
-                holdMs: FOLLOW_HOLD_MS,
+                holdMs: 0,
                 duration: prepMs + homeMs,
             });
         }

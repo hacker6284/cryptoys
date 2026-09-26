@@ -1,5 +1,6 @@
 import { adapters } from "./adapters.js";
 import { FLY_MS, HOLD_MS, LIFT_MS } from "./constants.js";
+import { continueTo, trackEnter, trackToy } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { createToyDirector } from "./toy-director.js";
@@ -62,10 +63,6 @@ function syncOverlays({ name, overlays, tweening }) {
     requestAnimationFrame(() => resizeWorld());
 }
 
-function trackToy(world, name) {
-    return () => world.toys[name]?.position;
-}
-
 try {
     const world = await mountWorld(canvas);
     resizeWorld = () => world.resize();
@@ -114,11 +111,20 @@ try {
             const warm = adapter.preload();
             await adapter.prepareEnter?.();
             const fly = director.borrow(id, { snap: reduced });
-            const flyPose = id === "doubledeal" ? "unbox_travel" : meta.pose;
             if (reduced) {
                 poses.snap(meta.pose);
+            } else if (id === "doubledeal") {
+                // One story: hold the landing so KEY leaving the slot
+                // is on camera, then track it to the table. No via:shelf
+                // cut that can land on empty felt.
+                trackEnter(poses, {
+                    to: "unbox_travel",
+                    track: trackToy(world, meta.toy),
+                    holdMs: HOLD_MS,
+                    duration: FLY_MS - HOLD_MS,
+                });
             } else {
-                poses.goTo(flyPose, {
+                poses.goTo(meta.pose, {
                     duration: FLY_MS,
                     via: "shelf",
                     viaT: HOLD_MS / FLY_MS,
@@ -247,7 +253,8 @@ try {
         director.skip();
         adapters[activeAlgo]?.skipEnter?.();
         if (activeAlgo === "doubledeal" && (starting || enterBusy())) {
-            poses.snap("doubledeal");
+            // Continue from the live shot — do not snap to a named seat.
+            continueTo(poses, "doubledeal", { duration: 720 });
         } else {
             poses.skip();
         }

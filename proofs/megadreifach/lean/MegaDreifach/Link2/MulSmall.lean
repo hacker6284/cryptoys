@@ -390,15 +390,15 @@ theorem jDigitFlow (q : Nat) (xs out : List Nat) (j c : Nat)
   rfl
 
 /-- Accumulator after consuming the first `j` limbs of a small-left multiply. -/
-private def jSt (q : Nat) (xs : List Nat) (j : Nat) : Array Int × Int :=
+def jSt (q : Nat) (xs : List Nat) (j : Nat) : Array Int × Int :=
   let s := scanMul q 0 (xs.take j)
   (embed (padZero s.1 (1 + xs.length)), Int.ofNat s.2)
 
-private theorem jSt_zero (q : Nat) (xs : List Nat) :
+theorem jSt_zero (q : Nat) (xs : List Nat) :
     jSt q xs 0 = (embed (List.replicate (1 + xs.length) 0), (0 : Int)) := by
   simp [jSt, scanMul, padZero, List.replicate_succ, Nat.add_comm]
 
-private def mulJStep (a b : Megadreifach.BigInt) (i toJ : Int)
+def mulJStep (a b : Megadreifach.BigInt) (i toJ : Int)
     (σ1 : Int × (Array Int × Int)) :
     Except SudoRt.Trap (SudoRt.Flow (Int × (Array Int × Int)) Megadreifach.BigInt) :=
   if σ1.fst > toJ then

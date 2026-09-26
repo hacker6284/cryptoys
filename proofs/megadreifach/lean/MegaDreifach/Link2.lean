@@ -39,6 +39,7 @@ import MegaDreifach.Link2.MulSmall
 import MegaDreifach.Link2.DivWide
 import MegaDreifach.Link2.DivInd
 import MegaDreifach.Link2.MulWide
+import MegaDreifach.Link2.MulLeft
 import MegaDreifach.Link2.Fact51
 
 namespace MegaDreifach.Link2
@@ -198,22 +199,26 @@ namespace MegaDreifach.Link2
   CLOSED: `big_mul_wide_refines`, `big_mul_nat`. A canonical digit string
   times a one-limb factor is `natLimbs` of the product. The right factor is
   the small one (`big_factorial`, Horner `* 256`). Each cell
-  `digit * q + carry` stays below `10^18`. Not the opposite orientation
-  (one limb on the left, wide factorial on the right).
+  `digit * q + carry` stays below `10^18`.
+
+  CLOSED: `big_mul_left_refines`, `big_mul_left_nat`. The opposite
+  orientation: one limb on the left, a canonical digit string on the right
+  (`peel_leading`'s digit times `d!`). The product is `natLimbs (q * value)`.
+  Not `mag_sub`. Not `peel_leading` for `d > 26`. Not `v_Hash`.
 
   CLOSED: `big_factorial_51`. Domain `n ≤ 51`. `51! < 10^72`, at most eight
   base-`10^9` limbs. Each step is `big_mul_nat`. Not `phi_chunk`. Not
   `phi_inv`. Not `v_Hash`.
 
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open.
-  `big_factorial` now reaches `51!`, but `peel_leading` still stops at
-  `d ≤ 26`: the closing product is a one-limb digit times a wide factorial
-  (the other `big_mul` orientation), and the remainder is `mag_sub`.
-  `big_from_be` reaches length `≤ 7`, not the 28-byte pad block (Horner
-  needs `big_add` at arbitrary width). Positive `range_list` (`0 < n`,
-  `FitsLen`, including 52) is already `range_list_refines` in
-  `EvenRank.lean`. A positive corner or edge rank is outside this limb
-  fragment.
+  `big_factorial` reaches `51!` and both `big_mul` orientations are closed,
+  but `peel_leading` still stops at `d ≤ 26`: the remainder is `mag_sub`
+  at arbitrary width, and `limb_to_small` of the quotient is only proved
+  for one limb inside the old peel. `big_from_be` reaches length `≤ 7`,
+  not the 28-byte pad block (Horner needs `big_add` at arbitrary width).
+  Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
+  `range_list_refines` in `EvenRank.lean`. A positive corner or edge rank
+  is outside this limb fragment.
 -/
 
 end MegaDreifach.Link2

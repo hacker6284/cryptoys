@@ -40,6 +40,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | Link 2 | `pack_ori2` ≃ algebraic `packOri2` on `Ori2Wf` (length 30, entries `< 2`) | Proved (`pack_ori2_refines`, `pack_ori2_refines_array`). Value `< 2^29`, one limb. Not `v_Hash`. |
 | Link 2 | `pack_ori3` ≃ algebraic `packOri3` on `Ori3Wf` (length 20, entries `< 3`) | Proved (`pack_ori3_refines`, `pack_ori3_refines_array`). Value `< 3^19`, at most two limbs. Not `v_Hash`. |
 | Link 2 | `even_perm_rank_big` ≃ algebraic `evenRank` on `Rank20Wf` (length 20, permutation of `0..19`, rank `< 2·10^9`) | Proved (`even_perm_rank_big_refines`, `even_perm_rank_big_refines_array`). One-limb multiply, two-limb sum. Not every corner rank. Not length 30. Not M3 injectivity. Not `v_Hash`. |
+| Link 2 | `position_to_bytes` ≃ algebraic `positionToBytes` on `PosBytesWf` (corner rank 0, corner-ori pack 0, edge prefix `0..27`, any `Ori2Wf` edge ori) | Proved (`position_to_bytes_refines`, `position_to_bytes_refines_array`). Digest is `toBE 29 (packOri2 eo)`. `even30` = `30!/2` on a zero accumulator. Not every legal position. Not `v_Hash`. |
 
 ## What is open or not claimed
 
@@ -50,7 +51,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | M9 | Abs-G2 L2 mid-block: no 2-card local collision | OPEN (sketch in STONES.md). Informal proof in research `G2_PROOF.md`. Not a blocker. |
 | M13 | Proof-package digests of exported KATs equal `kats/megaminx_hash_kats.json` | OPEN; metadata only. Hexes refreshed 2026-09-24 to current sudo (Python = emitted Lean). No handwritten `Hash` body. |
 | — | sudo text equals generated Lean; algebraic fold equals `Generated.v_Hash` | OPEN. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). |
-| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, `require_permutation`, `pack_ori2`, `pack_ori3`, and length-20 `even_perm_rank_big` (`Rank20Wf`) are closed. `phi_chunk` / `phi_inv` and `position_to_bytes` are still open. Not collision resistance. |
+| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, `require_permutation`, `pack_ori2`, `pack_ori3`, length-20 `even_perm_rank_big` (`Rank20Wf`), and zero-rank `position_to_bytes` (`PosBytesWf`) are closed. `phi_chunk` / `phi_inv` are still open. Not collision resistance. |
 | — | Collision resistance of Hash; IV-anchored collision | Not claimed. Free-start `HashDeckBody` is broken; L3 collisions **exist** |
 | — | Ideal-cipher-on-G / PRF of `E_m` | Not claimed |
 | — | Birthday ≈ 2^113 as a theorem | SPEC honesty only |

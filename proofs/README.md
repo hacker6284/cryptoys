@@ -49,9 +49,11 @@ proofs/
   scramble/                 # Generated Lean + teaching / lineage; no algebraic stones
   doubledeal-cbc-hmac/      # Generated Lean for HMAC / KDF / pad (no algebraic stones)
   scm/                      # placeholder; SCM/SMAC stay later (CBC-HMAC is the AEAD)
+  deprecated/               # vulnerability proofs for deprecated, frozen algorithms
+    doubledeal-v8/          # DoubleDeal v8 relabelling distinguisher + witness
 ```
 
-Deprecated algorithms, when they appear, get their own directory under `proofs/` (or a `deprecated/` child) for vulnerability proofs. There are none yet.
+Deprecated algorithms get a directory under `proofs/deprecated/` for vulnerability proofs, next to their frozen artifact. The first is DoubleDeal v8 (`proofs/deprecated/doubledeal-v8/`): a same-rank relabelling distinguisher with a checkable witness evaluated on the emitted frozen v8 `encrypt` (compiled check; kernel `decide` was too heavy). See [`deprecated/README.md`](deprecated/README.md).
 
 ## Status
 
@@ -62,5 +64,6 @@ Deprecated algorithms, when they appear, get their own directory under `proofs/`
 | Scramble | `scramble_v2` | **Generated** Lean under `scramble/lean/Generated/` (from `scramble.sudo`; TAP 15/15 under the terminates gate). Teaching hash; single-cube birthday ceiling. No algebraic stones. Not a collision-resistance claim. |
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | **Generated** Lean under `doubledeal-cbc-hmac/lean/Generated/` (from `doubledeal_cbc_hmac.sudo` + imported MegaDreifach; TAP 11/11). HMAC / KDF / pad / MAC-input evidence. No Link 2. No AEAD security theorem. Not SCM. |
 | DoubleDeal-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. Stays later. |
+| DoubleDeal v8 (deprecated) | `primitives/cipher/doubledeal/v8/` (frozen) | **Vulnerability proof** under `deprecated/doubledeal-v8/`: witness (compiled check of emitted v8 `encrypt`; JSON) that v8 commutes with K♣↔K♦ on one (key, message); measured rate ≈1e-3 per pair is evidence. Distinguisher, not key recovery. |
 
 See `doubledeal/README.md` for DoubleDeal proved-versus-open, and `doubledeal/STONES.md` for the SPEC §6 checklist. See `megadreifach/README.md` and `megadreifach/STONES.md` for MegaDreifach.

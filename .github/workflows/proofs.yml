@@ -102,6 +102,25 @@ jobs:
         working-directory: proofs/doubledeal-cbc-hmac/lean/Generated
         run: ./.lake/build/bin/doubledeal_cbc_hmac_test
 
+  doubledeal-v8-deprecated:
+    # Frozen, deprecated DoubleDeal v8: emitted TAP + vulnerability-proof witness
+    # (compiled check of emitted v8 encrypt). Not a security claim about v9.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v8/lean/Generated
+      - name: Generated v8 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/doubledeal-v8/lean/Generated
+        run: ./.lake/build/bin/doubledeal_v8_test
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v8/lean
+      - name: v8 relabelling witness (compiled emitted encrypt)
+        working-directory: proofs/deprecated/doubledeal-v8/lean
+        run: lake exe doubledeal_v8_witness
+
   doubledeal-lean:
     runs-on: ubuntu-latest
     steps:

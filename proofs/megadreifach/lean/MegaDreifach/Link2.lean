@@ -41,6 +41,8 @@ import MegaDreifach.Link2.DivInd
 import MegaDreifach.Link2.MulWide
 import MegaDreifach.Link2.MulLeft
 import MegaDreifach.Link2.Fact51
+import MegaDreifach.Link2.MagSub
+import MegaDreifach.Link2.Peel51
 
 namespace MegaDreifach.Link2
 
@@ -210,15 +212,22 @@ namespace MegaDreifach.Link2
   base-`10^9` limbs. Each step is `big_mul_nat`. Not `phi_chunk`. Not
   `phi_inv`. Not `v_Hash`.
 
+  CLOSED: `mag_sub_nat`. Canonical limb strings with the subtrahend at most
+  the minuend. The trimmed digits are `natLimbs (n - m)` at any width.
+  The final borrow is `0`. Not `big_add`. Not `phi_chunk`. Not `v_Hash`.
+
+  CLOSED: `peel_leading_51`. Domain `d ≤ 51` and `n / d! < 10^9`. The pair
+  is `(n % d!, n / d!)`. The digit is one limb, so `limb_to_small` and
+  `big_mul_left` apply, and `mag_sub_nat` subtracts the product. `n` stays
+  below `10^81`. Not a two-limb digit. Not `big_from_be` past length 7.
+  Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open.
-  `big_factorial` reaches `51!` and both `big_mul` orientations are closed,
-  but `peel_leading` still stops at `d ≤ 26`: the remainder is `mag_sub`
-  at arbitrary width, and `limb_to_small` of the quotient is only proved
-  for one limb inside the old peel. `big_from_be` reaches length `≤ 7`,
-  not the 28-byte pad block (Horner needs `big_add` at arbitrary width).
-  Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
-  `range_list_refines` in `EvenRank.lean`. A positive corner or edge rank
-  is outside this limb fragment.
+  `peel_leading` now covers every one-limb factoradic digit for `d ≤ 51`
+  (`phi`'s digits are at most 51), but a 28-byte chunk still needs
+  `big_from_be` past length 7, and that Horner step needs `big_add` /
+  `mag_add` at arbitrary width. Positive `range_list` (`0 < n`, `FitsLen`,
+  including 52) is already `range_list_refines` in `EvenRank.lean`.
 -/
 
 end MegaDreifach.Link2

@@ -7,9 +7,26 @@
  * no overlay, no toDataURL.
  */
 
+import { CLOCK_STEP_MS } from "./constants.js";
 import { onMarkBeat } from "./motion.js";
 
 export const CAPTURE_INTERVAL_MS = 240;
+
+/**
+ * True when an RGBA buffer is nearly black. Used to drop the first
+ * pre-render canvas sample so strips do not open on a blank frame.
+ */
+export function frameIsBlank(pixels, { minLit = 0.02 } = {}) {
+    if (!pixels?.length) return true;
+    const n = Math.floor(pixels.length / 4);
+    if (n <= 0) return true;
+    let lit = 0;
+    for (let i = 0; i < n; i += 1) {
+        const o = i * 4;
+        if (pixels[o] + pixels[o + 1] + pixels[o + 2] > 24) lit += 1;
+    }
+    return lit < n * minLit;
+}
 
 export function captureEnabled(search = typeof location !== "undefined" ? location.search : "") {
     try {
@@ -116,17 +133,23 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
     const sequences = {};
     let active = null;
     let lastSample = -Infinity;
+    let lastNow = 0;
+    let animElapsed = 0;
+    let pendingBeat = false;
     let unlisten = () => {};
 
     function snapshot(beat) {
-        if (!active) return;
+        if (!active) return false;
         const w = canvas.width || canvas.clientWidth || 1280;
         const h = canvas.height || canvas.clientHeight || 800;
-        if (!(w > 0 && h > 0)) return;
+        if (!(w > 0 && h > 0)) return false;
         scratch.width = w;
         scratch.height = h;
         const ctx = scratch.getContext("2d");
         ctx.drawImage(canvas, 0, 0, w, h);
+        const probe = Math.min(48, w);
+        const probeH = Math.min(32, h);
+        if (frameIsBlank(ctx.getImageData(0, 0, probe, probeH).data)) return false;
         const ms = performance.now() - active.started;
         const label = frameLabel(beat || active.beat, ms);
         drawLabel(ctx, label, w);
@@ -135,7 +158,8 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
             beat: beat || active.beat,
             dataUrl: scratch.toDataURL("image/jpeg", 0.74),
         });
-        lastSample = performance.now();
+        lastSample = animElapsed;
+        return true;
     }
 
     function begin(name) {
@@ -147,6 +171,10 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
             frames: [],
         };
         lastSample = -Infinity;
+        lastNow = 0;
+        animElapsed = 0;
+        // Sample the next rendered frame — never the pre-render canvas.
+        pendingBeat = true;
         return id;
     }
 
@@ -162,6 +190,7 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
         root.dataset.captureSeq = done.name;
         root.dataset.captureFrames = String(done.frames.length);
         active = null;
+        pendingBeat = false;
         return done;
     }
 
@@ -172,16 +201,20 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
         return seq;
     }
 
-    function tick() {
+    function tick(now = performance.now()) {
         if (!active) return;
-        const now = performance.now();
-        if (now - lastSample >= intervalMs) snapshot(active.beat);
+        if (!lastNow) lastNow = now;
+        animElapsed += Math.min(CLOCK_STEP_MS, Math.max(0, now - lastNow));
+        lastNow = now;
+        if (pendingBeat || animElapsed - lastSample >= intervalMs) {
+            if (snapshot(active.beat)) pendingBeat = false;
+        }
     }
 
     unlisten = onMarkBeat((beat) => {
         if (!active) return;
         active.beat = beat;
-        snapshot(beat);
+        pendingBeat = true;
         root.dataset.beat = beat;
     });
 

@@ -743,13 +743,14 @@ function createDoubleDealAdapter() {
                     keyBox: world?.toys?.deck?.position,
                     messageBox: world?.toys?.deck2?.position,
                 });
-                table.dispose();
-                table = null;
                 markBeat("leave-restow");
+                table.setCardsVisible?.(false);
                 await Promise.all([
                     playRestow({ rig: unbox, clock, gen, ms: RESTOW_MS }),
                     playRestow({ rig: unbox2, clock, gen, ms: RESTOW_MS }),
                 ]);
+                table.dispose();
+                table = null;
             } else {
                 if (table) {
                     table.dispose();

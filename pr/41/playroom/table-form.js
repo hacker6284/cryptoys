@@ -150,7 +150,8 @@ export async function gatherSessionTable({
             }
         }, { ease: (t) => t, generation: gen });
     }
-    table.setCardsVisible?.(false);
+    // Leave the piles visible for the restow beat. The adapter hides
+    // them as the flaps ease shut — no 104-card vanish mid-gather.
 }
 
 function hopSeat(mesh, dest, clock, gen, opts) {

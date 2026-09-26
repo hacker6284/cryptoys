@@ -3,10 +3,12 @@ import { readFileSync } from "node:fs";
 import {
     CAPTURE_INTERVAL_MS,
     captureEnabled,
+    frameIsBlank,
     installCapture,
     sheetLayout,
     slugBeat,
 } from "./capture-strip.js";
+import { CLOCK_STEP_MS } from "./constants.js";
 import { markBeat, onMarkBeat } from "./motion.js";
 
 assert.equal(captureEnabled(""), false);
@@ -15,6 +17,9 @@ assert.equal(captureEnabled("?debugCapture=0"), false);
 assert.equal(captureEnabled("?debugCapture=1"), true);
 assert.equal(captureEnabled("?algo=doubledeal&debugCapture=1"), true);
 assert.ok(CAPTURE_INTERVAL_MS >= 200 && CAPTURE_INTERVAL_MS <= 300);
+assert.equal(CLOCK_STEP_MS, 50);
+assert.equal(frameIsBlank(new Uint8ClampedArray(16)), true);
+assert.equal(frameIsBlank(new Uint8ClampedArray([200, 180, 90, 255])), false);
 
 assert.equal(slugBeat("lid-open"), "lid-open");
 assert.equal(slugBeat("MSG out!"), "msg-out");
@@ -45,6 +50,13 @@ const src = readFileSync(new URL("./capture-strip.js", import.meta.url), "utf8")
 assert.match(src, /debugCapture/);
 assert.match(src, /composeContactSheet/);
 assert.match(src, /exportSheet/);
+assert.match(src, /pendingBeat/);
+assert.match(src, /frameIsBlank/);
+assert.match(src, /onMarkBeat\(\(beat\) => \{/);
+assert.ok(
+    /onMarkBeat\(\(beat\) => \{[^}]*pendingBeat = true/s.test(src),
+    "markBeat labels; tick samples after render",
+);
 assert.equal(src.includes("gsap"), false);
 
 const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");

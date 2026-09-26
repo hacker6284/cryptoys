@@ -1,4 +1,4 @@
-import { FLY_MS, LID_CLOSE_MS, LID_OPEN_MS, LIFT_MS } from "./constants.js";
+import { CLOCK_STEP_MS, FLY_MS, LID_CLOSE_MS, LID_OPEN_MS, LIFT_MS } from "./constants.js";
 import { easeInOutCubic, easeOutCubic } from "./beat-clock.js";
 import { markBeat } from "./motion.js";
 
@@ -335,7 +335,7 @@ export function createToyDirector(world) {
     function update() {
         const now = performance.now();
         if (lidAnim) {
-            lidAnim.elapsed += Math.min(50, Math.max(0, now - lidAnim.last));
+            lidAnim.elapsed += Math.min(CLOCK_STEP_MS, Math.max(0, now - lidAnim.last));
             lidAnim.last = now;
             const u = Math.min(1, lidAnim.elapsed / lidAnim.duration);
             world.setChestLid?.(lerp(lidAnim.from, lidAnim.to, easeInOutCubic(u)));
@@ -346,10 +346,11 @@ export function createToyDirector(world) {
             }
         }
         if (!flights.length) return;
-        // 50ms cap: 60fps stays real-time (~1.8s). A hitch cannot skip
-        // the arc, and software-GL still draws the in-between poses.
+        // CLOCK_STEP_MS cap: 60fps stays real-time (~1.8s). A hitch
+        // cannot skip the arc, and software-GL still draws the
+        // in-between poses (same cap as beat-clock + camera).
         for (const item of [...flights]) {
-            item.elapsed += Math.min(50, Math.max(0, now - item.last));
+            item.elapsed += Math.min(CLOCK_STEP_MS, Math.max(0, now - item.last));
             item.last = now;
             const u = Math.min(1, item.elapsed / item.duration);
             applyFlight(item, u);

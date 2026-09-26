@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { TWEEN_MS } from "./constants.js";
+import { easeOutCubic } from "./beat-clock.js";
+import { CLOCK_STEP_MS, TWEEN_MS } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
 
 const FRAME_LAMBDA = 7.2;
@@ -91,10 +92,10 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             : destDist;
         // Wide enough to hold two decks + chest. The old 1.42 cap
         // cropped to empty felt and dropped MSG out of frame.
-        const cap = radius > 0.32 ? 3.35 : 2.15;
-        const dist = Math.min(cap, Math.max(0.7, fit));
+        const cap = radius > 0.32 ? 3.6 : 2.45;
+        const dist = Math.min(cap, Math.max(0.95, fit));
         followPos.copy(focus).addScaledVector(destOffset, dist);
-        followPos.y = Math.max(followPos.y, focus.y + 0.48);
+        followPos.y = Math.max(followPos.y, focus.y + 0.58);
         return followPos;
     }
 
@@ -150,11 +151,14 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             apply(pose, 1);
             return;
         }
-        const moveU = easeInOutCubic(smoothstep(0, 0.7, t));
+        // Ease-out pull-back: open the seated crop immediately so
+        // gather / restow / fly-home read in the room, not on empty felt.
+        const openAt = Math.min(0.7, Math.max(0.45, settleAt ?? 0.62));
+        const moveU = easeOutCubic(smoothstep(0, openAt, t));
         camera.position.lerpVectors(from.position, pose.position, moveU);
         camera.fov = from.fov + (pose.fov - from.fov) * moveU;
-        const roomU = easeInOutCubic(smoothstep(0.06, 0.82, t));
-        const lookU = easeInOutCubic(smoothstep(0.1, 0.5, t)) * 0.22;
+        const roomU = easeOutCubic(smoothstep(0, 0.5, t));
+        const lookU = easeInOutCubic(smoothstep(0.16, 0.58, t)) * 0.16;
         if (trackPos) {
             chaseLook.copy(from.target).lerp(pose.target, roomU);
             chaseLook.lerp(trackPos, lookU);
@@ -324,7 +328,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         const dt = Math.min(0.05, Math.max(0, dtMs / 1000));
         const k = 1 - Math.exp(-5.1 * dt);
         camera.position.lerp(followPos, k);
-        camera.position.y = Math.max(camera.position.y, focus.y + 0.34);
+        camera.position.y = Math.max(camera.position.y, focus.y + 0.52);
         look.lerp(focus, k);
         const wantFov = trackedRadius > 0.5 ? Math.min(46, pose.fov + 8) : pose.fov;
         camera.fov += (wantFov - camera.fov) * k;
@@ -390,11 +394,11 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     }
 
     function update(now = performance.now()) {
-        const dt = Math.min(50, Math.max(0, now - lastFrame));
+        const dt = Math.min(CLOCK_STEP_MS, Math.max(0, now - lastFrame));
         lastFrame = now;
         if (tween) {
             setControlsEnabled(false);
-            const stepDt = Math.min(50, Math.max(0, now - tween.last));
+            const stepDt = Math.min(CLOCK_STEP_MS, Math.max(0, now - tween.last));
             tween.last = now;
             if (tween.holding) {
                 tween.holdElapsed += stepDt;

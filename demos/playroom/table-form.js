@@ -124,29 +124,30 @@ export async function gatherSessionTable({
     table.group.updateMatrixWorld?.(true);
     const keyAt = localFromWorld(table.group, keyBox);
     const msgAt = localFromWorld(table.group, messageBox || keyBox);
-    const jobs = [];
-    let n = 0;
+    const movers = [];
     function pile(meshes, dest) {
         eachCard(meshes, (mesh) => {
-            if (!mesh?.visible) return;
-            const i = n++;
-            jobs.push(hopTo(mesh, {
-                x: dest.x,
-                y: dest.y + 0.03,
-                z: dest.z,
-            }, clock, gen, {
-                delay: Math.min(4 * i, 160),
-                ms: Math.max(360, GATHER_MS - 160),
-                lift: 2.6,
-                ease: easeInOutCubic,
-            }).then(() => {
-                mesh.visible = false;
-            }));
+            if (!mesh?.visible || !mesh.position) return;
+            movers.push({
+                mesh,
+                from: mesh.position.clone(),
+                to: dest,
+            });
         });
     }
     pile(table.cardsOf?.("key"), keyAt);
     pile(table.cardsOf?.("message"), msgAt);
-    await Promise.all(jobs);
+    if (movers.length) {
+        await clock.tween(GATHER_MS, (t) => {
+            const k = easeInOutCubic(t);
+            const lift = Math.sin(Math.PI * t) * 2.6;
+            for (const { mesh, from, to } of movers) {
+                mesh.position.x = lerp(from.x, to.x, k);
+                mesh.position.y = lerp(from.y, to.y + 0.03, k) + lift;
+                mesh.position.z = lerp(from.z, to.z, k);
+            }
+        }, { ease: (t) => t, generation: gen });
+    }
     table.setCardsVisible?.(false);
 }
 

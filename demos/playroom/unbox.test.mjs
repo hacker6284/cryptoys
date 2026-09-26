@@ -55,6 +55,15 @@ assert.match(adapters, /seatSurface/, "reseat uses the intended surface, not fli
 assert.equal(adapters.includes("flightBusy ? \"table\" : \"shelf\""), false, "do not infer table vs shelf from flightBusy");
 assert.match(adapters, /playDualUnbox/);
 assert.match(adapters, /playRestow/);
+{
+    const enterFn = adapters.slice(adapters.indexOf("async enter"), adapters.indexOf("async leave"));
+    assert.ok(
+        enterFn.indexOf("playDualUnbox") < enterFn.indexOf("stageCardTable")
+            || enterFn.indexOf("unboxJob = playDualUnbox") < enterFn.indexOf("setupJob"),
+        "physical unbox starts before the 104-card table alloc",
+    );
+    assert.match(adapters, /if \(unbox && unbox2\) return unbox/, "click must not re-adopt / shelfHome");
+}
 assert.match(adapters, /gatherSessionTable/);
 assert.match(adapters, /followLive/);
 assert.match(adapters, /createUnboxRig/);
@@ -113,8 +122,15 @@ assert.match(app, /prepareEnter/);
 assert.match(app, /followEnter/);
 assert.match(app, /followLeave/);
 assert.match(app, /trackToys/);
-assert.match(app, /trackActive/);
 assert.match(app, /FOLLOW_HOLD_MS/);
+{
+    const startAlgo = app.slice(app.indexOf("async function startAlgo"), app.indexOf("async function leaveAlgo"));
+    assert.ok(
+        startAlgo.indexOf("followEnter") < startAlgo.indexOf("await prep;"),
+        "hub camera starts before prepareEnter finishes",
+    );
+    assert.match(startAlgo, /trackToys\(/, "enter frames the full toy set, not busy-only");
+}
 assert.match(app, /continueTo/);
 assert.match(app, /borrowMs/);
 assert.match(app, /homeMs/);
@@ -220,6 +236,7 @@ assert.match(posesCtl, /mode: opts.mode === "return" \? "return" : "follow"/);
 assert.match(posesCtl, /settleAt/);
 assert.match(posesCtl, /easeOutCubic/);
 assert.match(posesCtl, /CLOCK_STEP_MS/);
+assert.match(posesCtl, /tween.from = capture\(\)/, "enter hold recaptures so look-lead does not snap back");
 assert.equal(posesCtl.includes("look.copy(trackPos)"), false, "goTo track eases look, never copies");
 assert.equal(posesCtl.includes("gsap"), false);
 

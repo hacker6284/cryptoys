@@ -13,6 +13,7 @@ assert.match(src, /keepFitted/, "post-spawn Twisty writes are re-fitted");
 assert.match(src, /export function frameInWrapper/, "fit is exported for seat/scale tests");
 assert.match(src, /keepPuzzleFitted/, "Twisty render-scheduled re-applies fit");
 assert.match(src, /userData.keepFitted/, "host render can re-apply fit");
+assert.match(src, /userData.worldEdge/, "debug size is world AABB Y, not pixels");
 assert.equal(src.includes("wrapper.scale.set(1, 1, 1)"), false, "do not flash native scale on refit");
 assert.equal(src.includes("Box3().setFromObject"), false, "do not Box3.setFromObject across two threes");
 

@@ -214,6 +214,17 @@ export async function adoptTwistyPuzzle(seat, {
             } else {
                 seat.fit.updateMatrixWorld?.(true);
             }
+            // World Y is the cube edge even when shelf yaw inflates xz.
+            // Judge size from this, not pixel footprint in a wide shot.
+            const worldBox = measureWorldBox(seat.group);
+            const worldEdge = worldBox?.size?.y;
+            if (Number.isFinite(worldEdge)) {
+                seat.group.userData.worldEdge = worldEdge;
+                const root = typeof document !== "undefined" ? document.documentElement : null;
+                if (root && (root.dataset.playroomDebug === "1" || root.dataset.playroomCapture === "1")) {
+                    root.dataset.cubeEdge = worldEdge.toFixed(3);
+                }
+            }
             return next;
         }
         fitHooks.keep = keepPuzzleFitted;

@@ -57,6 +57,8 @@ only. MegaDreifach is a different product; this UI does not run it.
   host frame. It never resets `fit.scale` to 1 (that flash is
   spawn-big-then-shrink). If the local edge drifts (late `puzzle.scale`
   1/3, `setAlg` layout), `fit` is corrected and the cube is reseated.
+- Judge size in **world space** (`userData.worldEdge` / AABB Y). Wide
+  hub frames looking small are camera distance, not underscale.
 - **`instanceof THREE.Object3D` is false.** cubing ships its own `three`
   despite the import map. Meshes still render.
 - Adopted look is **MeshBasicMaterial**. Stickers ignore pendant/HDR.

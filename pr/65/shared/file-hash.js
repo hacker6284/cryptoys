@@ -173,6 +173,8 @@ export async function hashFile(file, {
     signal,
     createWorker,
     hashInline,
+    fallback,
+    readyMs = 8000,
 } = {}) {
     const check = checkFileSize(file);
     if (!check.ok) throw new Error(check.message);
@@ -181,14 +183,25 @@ export async function hashFile(file, {
         return hashInline({ file, version, onProgress, signal, chunkBytes });
     }
 
-    const canWorker = Boolean(workerUrl) && (createWorker || typeof Worker === "function");
+    const runFallback = (err) => {
+        if (typeof fallback !== "function") throw err;
+        return fallback({ file, version, onProgress, signal, chunkBytes, error: err });
+    };
+
+    const href = typeof workerUrl === "string" ? workerUrl : workerUrl ? String(workerUrl) : "";
+    const canWorker = Boolean(href) && (createWorker || typeof Worker === "function");
     if (!canWorker) {
-        throw new Error("File hashing needs a Web Worker.");
+        return runFallback(new Error("File hashing needs a Web Worker."));
     }
 
-    const worker = createWorker
-        ? createWorker(workerUrl)
-        : new Worker(workerUrl, { type: "module" });
+    let worker;
+    try {
+        worker = createWorker
+            ? createWorker(href)
+            : new Worker(href, { type: "module" });
+    } catch (err) {
+        return runFallback(err instanceof Error ? err : new Error("Could not hash this file."));
+    }
 
     let settled = false;
     const pending = [];
@@ -220,7 +233,14 @@ export async function hashFile(file, {
     worker.addEventListener("message", onMessage);
     worker.addEventListener("error", onError);
 
+    let readyTimer = 0;
+    const clearReady = () => {
+        if (readyTimer) clearTimeout(readyTimer);
+        readyTimer = 0;
+    };
+
     const stop = () => {
+        clearReady();
         if (settled) return;
         settled = true;
         worker.removeEventListener("message", onMessage);
@@ -245,7 +265,13 @@ export async function hashFile(file, {
 
     try {
         postWorker(worker, { type: "start", version });
+        if (readyMs > 0) {
+            readyTimer = setTimeout(() => {
+                failAll(new Error("Could not hash this file."));
+            }, readyMs);
+        }
         await waitReply("ready");
+        clearReady();
         await readFileChunks(file, {
             chunkBytes,
             signal,
@@ -258,7 +284,12 @@ export async function hashFile(file, {
         });
         postWorker(worker, { type: "finish" });
         const done = await waitReply("done");
-        return { digest: Array.from(done.digest || []) };
+        const digest = Array.from(done.digest || []);
+        if (!digest.length) throw new Error("Could not hash this file.");
+        return { digest };
+    } catch (err) {
+        if (err?.name === "AbortError") throw err;
+        return runFallback(err instanceof Error ? err : new Error("Could not hash this file."));
     } finally {
         stop();
     }

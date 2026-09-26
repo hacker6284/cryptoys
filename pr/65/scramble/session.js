@@ -17,9 +17,11 @@ import {
     bindMessageFile,
     canWalkFile,
     checkFileSize,
+    createIncrementalHasher,
     formatFileSize,
     hashFile,
     hideFileChip,
+    readFileChunks,
     showFileChip,
 } from "../shared/file-hash.js";
 import {
@@ -77,7 +79,7 @@ export function createScrambleSession({
     const fileChip = $("#message-file");
     const fileNameEl = $("#message-file-name");
     const fileClear = $("#message-file-clear");
-    const workerUrl = fileWorkerUrl || new URL("./hash-worker.js", import.meta.url);
+    const workerUrl = String(fileWorkerUrl || new URL("./hash-worker.js", import.meta.url));
     bindGrowFields(root);
 
     const solved = solved_facelets();
@@ -551,6 +553,29 @@ export function createScrambleSession({
         showStatus(caption());
     }
 
+    async function hashWithPublicApi(file, { onProgress, signal } = {}) {
+        // Same host-facing update / evaluate as typed Message.
+        if (canWalkFile(file)) {
+            const bytes = Array.from(new Uint8Array(await file.arrayBuffer()));
+            const state = version === 2 ? scramble_v2() : scramble_v1();
+            update(state, bytes);
+            const result = evaluate(state);
+            return { digest: result.digest, bytes, trace: result.trace };
+        }
+        const hasher = createIncrementalHasher({ scramble_v1, scramble_v2, update, evaluate });
+        hasher.start(version);
+        await readFileChunks(file, {
+            chunkBytes: DEMO_FILE_CHUNK_BYTES,
+            signal,
+            async onChunk(bytes, progress) {
+                hasher.push(bytes);
+                onProgress?.(progress);
+                await new Promise((resolve) => setTimeout(resolve, 0));
+            },
+        });
+        return { digest: hasher.finish().digest, bytes: [], trace: [] };
+    }
+
     async function hashSelectedFile() {
         const file = fileSource;
         if (!file) return;
@@ -561,28 +586,32 @@ export function createScrambleSession({
         hashing = true;
         setDigest("");
         live.afterDigest();
-        const keepBytes = canWalkFile(file);
-        const collected = keepBytes ? [] : null;
+        const modest = canWalkFile(file);
+        const onProgress = ({ processed, total }) => {
+            if (token !== job) return;
+            setIoNote(`Hashing ${formatFileSize(processed)} / ${formatFileSize(total)}.`);
+        };
         try {
-            const { digest } = await hashFile(file, {
-                version,
-                workerUrl,
-                chunkBytes: DEMO_FILE_CHUNK_BYTES,
-                signal: abort.signal,
-                hashInline: hashFileFn,
-                onProgress({ processed, total }) {
-                    if (token !== job) return;
-                    setIoNote(`Hashing ${formatFileSize(processed)} / ${formatFileSize(total)}.`);
-                },
-            });
-            if (keepBytes) {
-                const buf = await file.arrayBuffer();
-                collected.push(...new Uint8Array(buf));
+            let got;
+            if (modest) {
+                got = await hashWithPublicApi(file, { signal: abort.signal });
+            } else {
+                const { digest } = await hashFile(file, {
+                    version,
+                    workerUrl,
+                    chunkBytes: DEMO_FILE_CHUNK_BYTES,
+                    signal: abort.signal,
+                    hashInline: hashFileFn,
+                    onProgress,
+                    fallback: (opts) => hashWithPublicApi(opts.file, opts),
+                });
+                got = { digest, bytes: [], trace: [] };
             }
             if (token !== job || abort.signal.aborted) return;
             hashing = false;
-            setIoNote(keepBytes ? "" : walkNote());
-            applyFileDigest(digest, collected || []);
+            if (got.trace?.length) trace = got.trace;
+            setIoNote(modest ? "" : walkNote());
+            applyFileDigest(got.digest, got.bytes || []);
         } catch (err) {
             if (err?.name === "AbortError") return;
             if (token !== job) return;

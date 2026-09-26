@@ -357,6 +357,22 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   color: var(--fg);
 }
 
+.playroom-dock .playroom-card .file-btn {
+  width: var(--grow-field-min, 2.55rem);
+  height: var(--grow-field-min, 2.55rem);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--grow-field-radius, 8px);
+  background: #0b0a09;
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+}
+
+.playroom-dock .playroom-card .file-btn:hover,
+.playroom-dock .playroom-card .file-btn:focus-visible {
+  color: var(--fg);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: #0b0a09;
+}
+
 .playroom-dock .file-action {
   color: color-mix(in srgb, var(--fg) 46%, transparent);
 }

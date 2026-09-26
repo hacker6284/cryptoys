@@ -64,6 +64,42 @@ textarea.grow-field {
   gap: 8px;
 }
 
+.playroom-message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.playroom-message-row > .grow-field,
+.playroom-message-row > .file-chip {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.file-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--grow-field-min);
+  height: var(--grow-field-min);
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: var(--grow-field-radius);
+  background: var(--bg, #0b0a09);
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.file-btn:hover,
+.file-btn:focus-visible {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--fg) 28%, transparent);
+}
+
 .file-action {
   margin: 0;
   padding: 0;

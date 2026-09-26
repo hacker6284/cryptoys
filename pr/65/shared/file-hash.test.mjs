@@ -127,6 +127,13 @@ const viaWorker = await hashFile(file, {
 assert.deepEqual(viaWorker.digest, [0, 2, 4], "worker protocol returns the incremental digest");
 assert.deepEqual(workerProgress, [2, 4], "main thread only hears progress, never setAlg");
 
+const viaFallback = await hashFile(file, {
+    version: 2,
+    workerUrl: "",
+    fallback: async () => ({ digest: [9, 9] }),
+});
+assert.deepEqual(viaFallback.digest, [9, 9], "hashFile falls back when a worker cannot start");
+
 const implUrl = new URL("../scramble/generated/_scramble_impl.mjs", import.meta.url);
 if (existsSync(implUrl)) {
     const impl = await import(implUrl);
@@ -150,7 +157,8 @@ assert.match(src, /dropTeachTrace/);
 assert.match(src, /new Worker/);
 
 const worker = readFileSync(new URL("../scramble/hash-worker.js", import.meta.url), "utf8");
-assert.match(worker, /createGeneratedHasher/, "worker hashes on the generated impl");
+assert.match(worker, /createGeneratedHasher/, "worker prefers the generated impl");
+assert.match(worker, /createIncrementalHasher/, "worker falls back to the host Message API");
 assert.match(worker, /_scramble_impl\.mjs/);
 assert.doesNotMatch(worker, /setAlg/);
 assert.doesNotMatch(worker, /mapTraceToAlg/);
@@ -159,6 +167,8 @@ const scramble = readFileSync(new URL("../scramble/session.js", import.meta.url)
 assert.match(scramble, /hashFile\(/);
 assert.match(scramble, /function applyFile\(/);
 assert.match(scramble, /function hashSelectedFile\(\)/);
+assert.match(scramble, /function hashWithPublicApi\(/, "modest files use the typed Message hash API");
+assert.match(scramble, /if \(modest\) \{\s*got = await hashWithPublicApi/);
 const hashFn = scramble.match(/async function hashSelectedFile\(\) \{[\s\S]*?\n    \}/);
 assert.ok(hashFn, "hashSelectedFile is the file Digest path");
 assert.doesNotMatch(hashFn[0], /view\.setAlg/, "file hash must not call setAlg while hashing");
@@ -169,6 +179,8 @@ assert.match(scramble, /canWalkPayload/);
 
 const adapters = readFileSync(new URL("../playroom/adapters.js", import.meta.url), "utf8");
 assert.match(adapters, /id="message-file-btn"/);
+assert.match(adapters, /class="file-btn"/);
+assert.match(adapters, /lucideSvg\("paperclip"/);
 assert.match(adapters, /id="message-file"/);
 const doubleDealDock = adapters.slice(adapters.indexOf("function mountDoubleDealDock"));
 assert.doesNotMatch(doubleDealDock, /message-file/, "DoubleDeal Message is not a hash file input");

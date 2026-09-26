@@ -81,6 +81,11 @@ h1 {
   color: var(--muted);
 }
 
+.message-field .file-btn {
+  background: var(--bg);
+  border-color: var(--line);
+}
+
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }
   .stage { min-height: 68dvh; }

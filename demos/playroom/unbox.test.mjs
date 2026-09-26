@@ -110,6 +110,7 @@ assert.match(app, /skipEnter/);
 assert.match(app, /prepareEnter/);
 assert.match(app, /followEnter/);
 assert.match(app, /followLeave/);
+assert.match(app, /trackToys/);
 assert.match(app, /trackActive/);
 assert.match(app, /FOLLOW_HOLD_MS/);
 assert.match(app, /continueTo/);
@@ -136,7 +137,7 @@ assert.equal(
     "hub→play is one director for both algos",
 );
 assert.equal(app.includes("via: \"shelf\""), false, "leave does not ease home via shelf");
-assert.equal(app.includes("trackToy"), false, "leave tracks the full toy set, not one named toy");
+assert.equal(app.includes("trackToy("), false, "leave tracks the full toy set, not one named toy");
 const tickAt = app.indexOf("requestAnimationFrame(tick)");
 const deepLinkAt = app.indexOf("void startAlgo(initialAlgo)");
 assert.ok(tickAt >= 0 && deepLinkAt > tickAt, "rAF tick starts before deep-link DoubleDeal enter");
@@ -193,8 +194,9 @@ assert.equal(motion.includes("cutToTable"), false);
 const posesCtl = readFileSync(new URL("./pose-controller.js", import.meta.url), "utf8");
 assert.match(posesCtl, /function followTo/);
 assert.match(posesCtl, /function applyFollow/);
+assert.match(posesCtl, /function applyReturn/);
 assert.match(posesCtl, /function followLive/);
-assert.match(posesCtl, /mode: "follow"/);
+assert.match(posesCtl, /mode: opts.mode === "return" \? "return" : "follow"/);
 assert.match(posesCtl, /settleAt/);
 assert.equal(posesCtl.includes("look.copy(trackPos)"), false, "goTo track eases look, never copies");
 assert.equal(posesCtl.includes("gsap"), false);

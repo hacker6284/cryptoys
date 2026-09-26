@@ -648,6 +648,7 @@ function followShot(poses, {
     duration,
     reduced = false,
     settleAt,
+    mode,
 } = {}) {
     if (!poses) return;
     if (reduced) {
@@ -660,6 +661,7 @@ function followShot(poses, {
             delay: holdMs || 0,
             track,
             settleAt,
+                    mode,
         });
     }
     poses.goTo(to, {
@@ -686,7 +688,8 @@ export function followLeave(poses, opts = {}) {
     return followShot(poses, {
         ...opts,
         to: opts.to || "landing",
-        settleAt: opts.settleAt ?? 0.86,
+        settleAt: opts.settleAt ?? 0.78,
+        mode: opts.mode || "return",
     });
 }
 

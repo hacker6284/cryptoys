@@ -1,11 +1,15 @@
 /-
-  LINK 2. `Generated.pack_ori3` / `pack_ori2` refine algebraic `packOri3` /
-  `packOri2` on orientation lists.
+  LINK 2. `Generated.pack_ori2` refines algebraic `packOri2` on edge
+  orientation lists (`Ori2Wf`). CLOSED: `pack_ori2_refines`,
+  `pack_ori2_refines_array`. There is no `pack_ori3_refines` in this slice.
 
-  Corner orientations have length 20 and entries `< 3`. Edge orientations have
-  length 30 and entries `< 2`. The emitted Horner loop (`n = n * r + d`)
-  stays below `3^19` / `2^29`, so every limb product fits in an i64 and the
-  bigint has at most two base-10^9 limbs.
+  Edge orientations have length 30 and entries `< 2`. The emitted Horner
+  loop (`n = n * r + d`) stays below `2^29`, so every limb product fits in
+  an i64 and the bigint has one base-10^9 limb.
+
+  Ori3 Horner helpers (`packOri3_horner`, `oriAcc_pack3`, `Ori3Wf` /
+  `WellFormedOri3`, two-limb `3^19` bounds) are preparatory scaffolding
+  for a future `pack_ori3_refines` slice — not a Link 2 refine claim here.
 
   Algebraic Link 2 only. Not `v_Hash`. Not emitter soundness.
   Not collision resistance. `phi_chunk` stays open (it builds `51!`).
@@ -112,6 +116,7 @@ theorem packOri2_horner (eo : List Nat) (hlen : 29 ≤ eo.length) :
   unfold packOri2
   rw [hornerAcc_mix, htake]
 
+/-- Preparatory: algebraic Horner form of `packOri3`. Not a Link 2 refine. -/
 theorem packOri3_horner (co : List Nat) (hlen : 19 ≤ co.length) :
     packOri3 co = hornerAcc 3 0 (co.take 19) := by
   have htake : (co.take 19).length = 19 := by
@@ -123,6 +128,7 @@ theorem oriAcc_pack2 (eo : List Nat) (hlen : 29 ≤ eo.length) :
     oriAcc 2 eo 29 = packOri2 eo := by
   rw [oriAcc, packOri2_horner eo hlen]
 
+/-- Preparatory: `oriAcc` at 19 digits is `packOri3`. Not a Link 2 refine. -/
 theorem oriAcc_pack3 (co : List Nat) (hlen : 19 ≤ co.length) :
     oriAcc 3 co 19 = packOri3 co := by
   rw [oriAcc, packOri3_horner co hlen]
@@ -140,8 +146,9 @@ structure Ori2Wf (eo : List Nat) : Prop where
 
 /-- Trap-free domain for `Generated.pack_ori3`.
 
-    Length 20 is the corner-orientation width. Entries `< 3` keep the Horner
-    value below `3^19`, inside two limbs. -/
+    Preparatory scaffolding for a future `pack_ori3_refines` slice — not
+    claimed in this PR. Length 20 is the corner-orientation width. Entries
+    `< 3` keep the Horner value below `3^19`, inside two limbs. -/
 structure Ori3Wf (co : List Nat) : Prop where
   len : co.length = 20
   bound : ∀ o ∈ co, o < 3
@@ -151,6 +158,7 @@ structure WellFormedOri2 (a : Array Int) : Prop where
   nn : Nonneg a
   bound : ∀ x ∈ decode a, x < 2
 
+/-- Array-side ori3 domain. Preparatory; no `pack_ori3_refines` yet. -/
 structure WellFormedOri3 (a : Array Int) : Prop where
   len : a.size = 20
   nn : Nonneg a
@@ -165,6 +173,7 @@ theorem ori2Wf_decode (a : Array Int) (h : WellFormedOri2 a) : Ori2Wf (decode a)
   len := by simp [decode, h.len]
   bound := h.bound
 
+/-- Preparatory embed/decode glue for ori3. Not a Link 2 refine claim. -/
 theorem ori3Wf_embed (co : List Nat) (h : Ori3Wf co) : WellFormedOri3 (embed co) where
   len := by simp [size_embed, h.len]
   nn := nonneg_embed co
@@ -184,6 +193,7 @@ theorem two_pow29_fits : FitsLen (2 ^ 29) := by
   unfold FitsLen i64MaxNat
   decide
 
+/-- Preparatory two-limb ori3 bounds (`3^19` crosses one limb). Not claimed. -/
 theorem three_pow18_lt_limb : 3 ^ 18 < limbBase := by decide
 
 theorem three_pow19_lt_twoLimb : 3 ^ 19 < 2 * limbBase := by decide

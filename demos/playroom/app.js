@@ -70,7 +70,6 @@ try {
     resizeWorld = () => world.resize();
     const params = new URLSearchParams(location.search);
     if (params.get("debug") === "1") document.documentElement.dataset.playroomDebug = "1";
-    const capture = installCapture(canvas);
     const initialPose = resolvePoseName(params.get("pose"));
     const initialAlgo = String(params.get("algo") || "").trim().toLowerCase();
     const poses = createPoseController(world.camera, {

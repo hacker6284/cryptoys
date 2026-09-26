@@ -139,10 +139,18 @@ function mountDock() {
               </div>
             </div>
           </div>
-          <label class="playroom-ctl playroom-ctl--field" for="message">
-            <span class="playroom-label">Message</span>
+          <div class="playroom-ctl playroom-ctl--field" data-message-field>
+            <div class="playroom-field-head">
+              <label class="playroom-label" for="message">Message</label>
+              <button type="button" class="file-action" id="message-file-btn" aria-label="Hash a file">File</button>
+            </div>
             <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
-          </label>
+            <div id="message-file" class="file-chip" hidden>
+              <span id="message-file-name"></span>
+              <button type="button" class="file-action" id="message-file-clear" aria-label="Clear file">Clear</button>
+            </div>
+            <input id="message-file-input" type="file" hidden>
+          </div>
           <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label">Digest</span>

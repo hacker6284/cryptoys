@@ -94,6 +94,11 @@ const nodes = {
     "teach-pos": el("span", { id: "teach-pos" }),
     outline: el("div", { id: "outline" }),
     "io-note": el("p", { id: "io-note" }),
+    "message-file-btn": el("button", { id: "message-file-btn" }),
+    "message-file-input": el("input", { id: "message-file-input" }),
+    "message-file": el("div", { id: "message-file" }),
+    "message-file-name": el("span", { id: "message-file-name" }),
+    "message-file-clear": el("button", { id: "message-file-clear" }),
     play: el("button", { id: "play" }),
     "step-through": el("button", { id: "step-through" }),
     step: el("button", { id: "step" }),
@@ -154,11 +159,26 @@ const view = {
     highlightRuleB() {},
 };
 
+const { createIncrementalHasher } = await import("../shared/file-hash.js");
+const { DEMO_FILE_MAX_BYTES, DEMO_FILE_TEACH_MAX_BYTES } = await import("../shared/file-hash.js");
+
+async function hashInline({ file, version, onProgress }) {
+    const { scramble_v1, scramble_v2, update, evaluate } = await import("./generated/scramble.mjs");
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    onProgress?.({ processed: Math.min(1, bytes.length), total: bytes.length || 1 });
+    const hasher = createIncrementalHasher({ scramble_v1, scramble_v2, update, evaluate });
+    hasher.start(version);
+    hasher.push(bytes);
+    onProgress?.({ processed: bytes.length, total: bytes.length });
+    return hasher.finish();
+}
+
 const { createScrambleSession } = await import("./session.js");
 const session = createScrambleSession({
     view,
     specUrl: "about:blank",
     root,
+    hashFile: hashInline,
 });
 
 assert.ok(nodes.digest.value.startsWith("0x"), "initial Digest is live hex");
@@ -181,6 +201,37 @@ session.recompute();
 assert.equal(algs.length, 1, "typing after teach updates Digest only");
 session.enterTeach();
 assert.equal(algs.length, 2, "Play / Step after a new Message calls setAlg");
+
+const algsAfterType = algs.length;
+const modest = new File([new Uint8Array([104, 101, 108, 108, 111])], "hello.bin");
+await session.applyFile(modest);
+assert.ok(nodes.digest.value.startsWith("0x"), "file Digest fills when the hasher finishes");
+assert.match(nodes["message-file-name"].textContent, /hello\.bin/);
+assert.match(nodes["message-file-name"].textContent, /5 B/);
+assert.equal(nodes.message.hidden, true, "file path does not dump bytes into Message");
+assert.equal(algs.length, algsAfterType, "setAlg is not called during file hash progress");
+
+session.enterTeach();
+assert.equal(algs.length, algsAfterType + 1, "Play / Step after a modest file binds the timeline");
+
+const tooBig = { name: "huge.bin", size: DEMO_FILE_MAX_BYTES + 1 };
+assert.equal(await session.applyFile(tooBig), false, "oversized files are rejected");
+assert.match(nodes["io-note"].textContent, /10 MB/);
+assert.match(nodes["message-file-name"].textContent, /hello\.bin/, "reject keeps the current file");
+assert.equal(algs.length, algsAfterType + 1, "oversized reject does not setAlg");
+
+session.clearFile();
+assert.equal(nodes.message.hidden, false, "clear restores the typed Message field");
+assert.ok(nodes.digest.value.startsWith("0x"), "clear rehashes typed Message");
+assert.equal(algs.length, algsAfterType + 1, "clearing a file updates Digest only");
+
+const large = new File([new Uint8Array(DEMO_FILE_TEACH_MAX_BYTES + 8)], "wide.bin");
+await session.applyFile(large);
+assert.ok(nodes.digest.value.startsWith("0x"), "large file still fills Digest");
+assert.match(nodes["io-note"].textContent, /Play \/ Step stay off/);
+const algsAfterLarge = algs.length;
+session.enterTeach();
+assert.equal(algs.length, algsAfterLarge, "large file must not build a leave timeline");
 
 session.dispose();
 console.log("scramble session digest/timeline tests ok");

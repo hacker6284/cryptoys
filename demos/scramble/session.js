@@ -12,6 +12,17 @@ import { bindGrowFields } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
 import { createLiveDigest } from "../shared/live-digest.js";
 import {
+    DEMO_FILE_CHUNK_BYTES,
+    DEMO_FILE_TEACH_MAX_BYTES,
+    bindMessageFile,
+    canWalkFile,
+    checkFileSize,
+    formatFileSize,
+    hashFile,
+    hideFileChip,
+    showFileChip,
+} from "../shared/file-hash.js";
+import {
     bindTeachKeys,
     colorName,
     headingId,
@@ -36,6 +47,8 @@ export function createScrambleSession({
     signal,
     puzzle = "3x3x3",
     swapPuzzle,
+    hashFile: hashFileFn,
+    fileWorkerUrl,
 } = {}) {
     const abort = new AbortController();
     if (signal) {
@@ -59,6 +72,12 @@ export function createScrambleSession({
     const teachPos = $("#teach-pos");
     const outlineEl = $("#outline");
     const ioNote = $("#io-note");
+    const fileInput = $("#message-file-input");
+    const fileBtn = $("#message-file-btn");
+    const fileChip = $("#message-file");
+    const fileNameEl = $("#message-file-name");
+    const fileClear = $("#message-file-clear");
+    const workerUrl = fileWorkerUrl || new URL("./hash-worker.js", import.meta.url);
     bindGrowFields(root);
 
     const solved = solved_facelets();
@@ -81,6 +100,9 @@ export function createScrambleSession({
     let job = 0;
     let solverReady = false;
     let messageBytes = [];
+    let fileSource = null;
+    let hashing = false;
+    let fileAbort = null;
     const live = createLiveDigest();
 
     function bytesOf(text) {
@@ -148,6 +170,21 @@ export function createScrambleSession({
         status.textContent = text;
     }
 
+    function setIoNote(text) {
+        if (!ioNote) return;
+        const next = text || "";
+        ioNote.hidden = !next;
+        ioNote.textContent = next;
+    }
+
+    function walkNote() {
+        return `Digest is the whole file. Play / Step stay off above ${formatFileSize(DEMO_FILE_TEACH_MAX_BYTES)}.`;
+    }
+
+    function canWalkPayload() {
+        return !fileSource || canWalkFile(fileSource);
+    }
+
     function usesTimeline() {
         return typeof view.setAlg === "function" && typeof view.playLeaves === "function";
     }
@@ -189,14 +226,30 @@ export function createScrambleSession({
         void view.jumpToLeaf?.(-1);
     }
 
+    function materializeTrace() {
+        if (trace.length || !messageBytes.length) return;
+        const state = version === 2 ? scramble_v2() : scramble_v1();
+        update(state, messageBytes);
+        const result = evaluate(state);
+        trace = result.trace;
+        setDigest(digestHex(result.digest));
+    }
+
     function bindTimeline() {
+        if (!canWalkPayload()) return;
+        materializeTrace();
         mappedAlg = mapTraceToAlg(trace);
         projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
         bindAlg();
     }
 
     function ensureTimeline() {
+        if (!canWalkPayload()) {
+            setIoNote(walkNote());
+            return false;
+        }
         live.ensureTimeline(bindTimeline);
+        return true;
     }
 
     function jumpViewToCursor() {
@@ -439,6 +492,10 @@ export function createScrambleSession({
     }
 
     function refreshDigest() {
+        if (fileSource) {
+            void hashSelectedFile();
+            return;
+        }
         // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / teach.
         job += 1;
         markPlay(false);
@@ -466,6 +523,96 @@ export function createScrambleSession({
         view.resetTimeline?.();
         showFace(solved);
         showStatus(caption());
+    }
+
+    function beginDigestJob() {
+        job += 1;
+        markPlay(false);
+        solving = false;
+        busy = false;
+        settleView();
+        errorEl.textContent = "";
+        trace = [];
+        mappedAlg = { alg: "", units: [], ranges: [] };
+        projectedAlg = { alg: "", units: [], ranges: [], hash: hashesThisPuzzle(), dropped: 0 };
+        cursor = -1;
+        setTeaching(false);
+        view.pauseTimeline?.();
+        view.resetTimeline?.();
+        showFace(solved);
+        showStatus(caption());
+        return job;
+    }
+
+    function applyFileDigest(digest, bytes) {
+        messageBytes = bytes || [];
+        setDigest(digestHex(digest));
+        live.afterDigest();
+        showStatus(caption());
+    }
+
+    async function hashSelectedFile() {
+        const file = fileSource;
+        if (!file) return;
+        fileAbort?.abort();
+        const abort = new AbortController();
+        fileAbort = abort;
+        const token = beginDigestJob();
+        hashing = true;
+        setDigest("");
+        live.afterDigest();
+        const keepBytes = canWalkFile(file);
+        const collected = keepBytes ? [] : null;
+        try {
+            const { digest } = await hashFile(file, {
+                version,
+                workerUrl,
+                chunkBytes: DEMO_FILE_CHUNK_BYTES,
+                signal: abort.signal,
+                hashInline: hashFileFn,
+                onProgress({ processed, total }) {
+                    if (token !== job) return;
+                    setIoNote(`Hashing ${formatFileSize(processed)} / ${formatFileSize(total)}.`);
+                },
+            });
+            if (keepBytes) {
+                const buf = await file.arrayBuffer();
+                collected.push(...new Uint8Array(buf));
+            }
+            if (token !== job || abort.signal.aborted) return;
+            hashing = false;
+            setIoNote(keepBytes ? "" : walkNote());
+            applyFileDigest(digest, collected || []);
+        } catch (err) {
+            if (err?.name === "AbortError") return;
+            if (token !== job) return;
+            hashing = false;
+            setDigest("");
+            live.afterDigest();
+            setIoNote(err?.message || "Could not hash this file.");
+        }
+    }
+
+    async function applyFile(file) {
+        const check = checkFileSize(file);
+        if (!check.ok) {
+            setIoNote(check.message);
+            return false;
+        }
+        fileSource = file;
+        showFileChip({ input, fileChip, fileNameEl, file });
+        await hashSelectedFile();
+        return true;
+    }
+
+    function clearFile() {
+        fileAbort?.abort();
+        fileAbort = null;
+        hashing = false;
+        fileSource = null;
+        hideFileChip({ input, fileChip, fileNameEl });
+        setIoNote("");
+        refreshDigest();
     }
 
     function duration(kind) {
@@ -509,12 +656,12 @@ export function createScrambleSession({
     }
 
     async function play() {
-        if (solving || busy) return;
+        if (solving || busy || hashing) return;
         if (playing) {
             markPlay(false);
             return;
         }
-        ensureTimeline();
+        if (!ensureTimeline()) return;
         markPlay(true);
         const token = job;
         while (playing && token === job && cursor < trace.length - 1) {
@@ -548,8 +695,13 @@ export function createScrambleSession({
     }
 
     function enterTeach() {
-        if (trace.length === 0) refreshDigest();
-        ensureTimeline();
+        if (hashing) return;
+        if (!canWalkPayload()) {
+            setIoNote(walkNote());
+            return;
+        }
+        if (trace.length === 0 && !fileSource) refreshDigest();
+        if (!ensureTimeline()) return;
         setTeaching(true);
         cursor = -1;
         markPlay(false);
@@ -571,11 +723,14 @@ export function createScrambleSession({
             errorEl.textContent = "Solve is 3×3 only.";
             return;
         }
-        if (solving) return;
+        if (solving || hashing) return;
         markPlay(false);
         solving = true;
         setTeaching(false);
-        ensureTimeline();
+        if (!ensureTimeline()) {
+            solving = false;
+            return;
+        }
         const token = ++job;
         errorEl.textContent = "";
         try {
@@ -811,6 +966,14 @@ export function createScrambleSession({
         onChange: () => refreshDigest(),
         signal: abort.signal,
     });
+    bindMessageFile({
+        fileInput,
+        fileBtn,
+        fileClear,
+        onPick: applyFile,
+        onClear: clearFile,
+        signal: abort.signal,
+    });
 
     $$("[data-jump]").forEach((button) => {
         button.addEventListener("click", () => {
@@ -842,6 +1005,8 @@ export function createScrambleSession({
     const api = {
         enterTeach,
         recompute: refreshDigest,
+        applyFile,
+        clearFile,
         setView(next) {
             if (next) view = next;
             live.dropTimeline();
@@ -863,6 +1028,9 @@ export function createScrambleSession({
             showStatus(caption());
         },
         dispose() {
+            fileAbort?.abort();
+            fileAbort = null;
+            hashing = false;
             job += 1;
             markPlay(false);
             solving = false;

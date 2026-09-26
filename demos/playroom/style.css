@@ -349,6 +349,23 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   font-weight: 500;
 }
 
+.playroom-dock .file-chip {
+  padding: 0.55rem 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--grow-field-radius, 8px);
+  background: #0b0a09;
+  color: var(--fg);
+}
+
+.playroom-dock .file-action {
+  color: color-mix(in srgb, var(--fg) 46%, transparent);
+}
+
+.playroom-dock .file-action:hover,
+.playroom-dock .file-action:focus-visible {
+  color: var(--fg);
+}
+
 .playroom-dock textarea.grow-field {
   display: block;
   width: 100%;

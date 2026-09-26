@@ -8,6 +8,8 @@ Message / Key / Nonce / Digest (and standalone DoubleDeal output) use the shared
 
 Live-hashed inputs (Message, plus DoubleDeal Key / Nonce) also have a **4096-character** length cap (`shared/input-cap.js`). Paste/input over the cap keeps the first 4 KiB, drops the rest, and shows a quiet “Kept the first 4,096 characters.” note. Digest updates are debounced (150ms). **Typing updates Digest only** (`shared/live-digest.js`). Scramble does not call cubing.js `setAlg` / rebuild the leave-trace until Play, Step, or teach. DoubleDeal already keeps `preview` (Digest + first-block layout) off the play `computeTrace`. Digest for a capped message still shows in full.
 
+Scramble can also hash a **file** (`shared/file-hash.js`, `scramble/hash-worker.js`). File is a separate path: first ceiling **10 MB**, Message shows filename + size (never the bytes), and the worker `update`s in chunks while dropping the teach step list. Digest fills when the worker finishes. Play / Step stay on for files ≤ 4 KiB (same scale as typed Message) via `ensureTimeline`; larger files keep Digest correct and skip the leave list. Oversized picks are rejected with a quiet note. Clear/replace returns to typed Message. DoubleDeal Message is cipher plaintext, not a hash input — no file path there.
+
 ## Local
 
 ```sh

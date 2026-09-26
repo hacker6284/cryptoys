@@ -14,6 +14,9 @@
   Length cap (live-hashed inputs): 4096 characters — see input-cap.js.
   A screenplay paste is clipped there so Scramble never builds a move
   timeline from megabytes of text.
+
+  File hash is a separate path (file-hash.js): ~10 MB ceiling, filename
+  + size in a chip, never the raw bytes in the textarea.
 */
 
 :root {
@@ -51,4 +54,171 @@ textarea.grow-field {
 
 .io-note[hidden] {
   display: none;
+}
+
+.playroom-field-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+[data-message-field] {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  width: 100%;
+}
+
+.playroom-message-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.playroom-message-row > .grow-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.playroom-message-row > .file-btn {
+  margin-left: auto;
+}
+
+.playroom-message-row > .file-chip,
+[data-message-field] .playroom-message-row .file-chip {
+  display: none !important;
+}
+
+.message-file-stack {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+
+.file-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--grow-field-min);
+  height: var(--grow-field-min);
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: var(--grow-field-radius);
+  background: var(--bg, #0b0a09);
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.file-btn:hover,
+.file-btn:focus-visible {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--fg) 28%, transparent);
+}
+
+.file-action {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--fg) 46%, transparent);
+  cursor: pointer;
+}
+
+.file-action:hover,
+.file-action:focus-visible {
+  color: var(--fg);
+  background: none;
+  border: 0;
+}
+
+.file-chip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 0 0 auto;
+  align-self: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-height: var(--grow-field-min);
+  max-height: var(--grow-field-max);
+  padding: 0.55rem 16px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: var(--grow-field-radius);
+  background: var(--bg, #0b0a09);
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.file-chip[hidden] {
+  display: none !important;
+}
+
+.file-progress {
+  display: block;
+  flex: 0 0 auto;
+  align-self: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  height: 3px;
+  margin: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+  overflow: hidden;
+}
+
+.file-progress[hidden] {
+  display: none !important;
+}
+
+.file-progress-bar {
+  height: 100%;
+  width: 0;
+  background: color-mix(in srgb, var(--fg) 42%, transparent);
+  transition: width 120ms linear;
+}
+
+.file-progress.is-busy .file-progress-bar {
+  width: 32%;
+  transition: none;
+  animation: file-progress-busy 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes file-progress-busy {
+  from { transform: translateX(-10%); }
+  to { transform: translateX(220%); }
+}
+
+.file-chip #message-file-name,
+.file-chip [id="message-file-name"] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.file-chip .file-action {
+  flex-shrink: 0;
+}
+
+textarea.grow-field[hidden] {
+  display: none !important;
 }

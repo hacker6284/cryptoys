@@ -139,10 +139,23 @@ function mountDock() {
               </div>
             </div>
           </div>
-          <label class="playroom-ctl playroom-ctl--field" for="message">
-            <span class="playroom-label">Message</span>
-            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
-          </label>
+          <div class="playroom-ctl playroom-ctl--field" data-message-field>
+            <label class="playroom-label" for="message">Message</label>
+            <div class="playroom-message-row">
+              <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+              <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file" title="Hash a file">${lucideSvg("paperclip", 16)}</button>
+            </div>
+            <div class="message-file-stack">
+              <div id="message-file" class="file-chip" hidden>
+                <span id="message-file-name"></span>
+                <button type="button" class="file-action" id="message-file-clear" aria-label="Clear file">Clear</button>
+              </div>
+              <div id="message-file-progress" class="file-progress" hidden role="progressbar" aria-label="Hashing" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="file-progress-bar" id="message-file-progress-bar"></div>
+              </div>
+            </div>
+            <input id="message-file-input" type="file" hidden>
+          </div>
           <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label">Digest</span>

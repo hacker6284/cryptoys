@@ -81,7 +81,25 @@
         <button type="button" class="on" data-encoding="text">text</button>
         <button type="button" data-encoding="hex">hex</button>
       </div>
-      <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello"></textarea>
+      <div class="message-field" data-message-field>
+        <label class="playroom-label" for="message">Message</label>
+        <div class="playroom-message-row">
+          <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello"></textarea>
+          <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file" title="Hash a file">
+            <svg class="lucide lucide-paperclip" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+        </div>
+        <div class="message-file-stack">
+          <div id="message-file" class="file-chip" hidden>
+            <span id="message-file-name"></span>
+            <button type="button" class="file-action" id="message-file-clear" aria-label="Clear file">Clear</button>
+          </div>
+          <div id="message-file-progress" class="file-progress" hidden role="progressbar" aria-label="Hashing" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="file-progress-bar" id="message-file-progress-bar"></div>
+          </div>
+        </div>
+        <input id="message-file-input" type="file" hidden>
+      </div>
       <p id="io-note" class="io-note" hidden></p>
       <div id="outline" class="outline" hidden></div>
       <p class="fine">A message scrambles a solved cube. The seated pose is the digest.</p>

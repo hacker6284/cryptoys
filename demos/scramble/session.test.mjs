@@ -69,6 +69,11 @@ function el(tag = "div", extras = {}) {
         },
         setAttribute(name, value) {
             if (name === "aria-label") this.title = value;
+            this.attrs = this.attrs || {};
+            this.attrs[name] = value;
+        },
+        removeAttribute(name) {
+            if (this.attrs) delete this.attrs[name];
         },
         replaceChildren(...next) {
             this.children = next;
@@ -94,6 +99,13 @@ const nodes = {
     "teach-pos": el("span", { id: "teach-pos" }),
     outline: el("div", { id: "outline" }),
     "io-note": el("p", { id: "io-note" }),
+    "message-file-btn": el("button", { id: "message-file-btn" }),
+    "message-file-input": el("input", { id: "message-file-input" }),
+    "message-file": el("div", { id: "message-file" }),
+    "message-file-name": el("span", { id: "message-file-name" }),
+    "message-file-clear": el("button", { id: "message-file-clear" }),
+    "message-file-progress": el("div", { id: "message-file-progress" }),
+    "message-file-progress-bar": el("div", { id: "message-file-progress-bar" }),
     play: el("button", { id: "play" }),
     "step-through": el("button", { id: "step-through" }),
     step: el("button", { id: "step" }),
@@ -154,11 +166,36 @@ const view = {
     highlightRuleB() {},
 };
 
+const { createFastHasher, createIncrementalHasher } = await import("../shared/file-hash.js");
+const { DEMO_FILE_MAX_BYTES, DEMO_FILE_TEACH_MAX_BYTES } = await import("../shared/file-hash.js");
+
+async function hashInline({ file, version, onProgress }) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    onProgress?.({ processed: Math.min(1, bytes.length), total: bytes.length || 1 });
+    if (existsSync(impl)) {
+        const hasher = createFastHasher();
+        hasher.start(version);
+        hasher.push(bytes);
+        onProgress?.({ processed: bytes.length, total: bytes.length });
+        assert.equal(nodes["message-file-progress"].hidden, false, "progress is visible while hashing");
+        assert.equal(nodes["message-file-progress"].classList.contains("is-busy"), bytes.length < 1024 * 1024, "small files use the busy pulse");
+        return hasher.finish();
+    }
+    const { scramble_v1, scramble_v2, update, evaluate } = await import("./generated/scramble.mjs");
+    const hasher = createIncrementalHasher({ scramble_v1, scramble_v2, update, evaluate });
+    hasher.start(version);
+    hasher.push(bytes);
+    onProgress?.({ processed: bytes.length, total: bytes.length });
+    assert.equal(nodes["message-file-progress"].hidden, false, "progress is visible while hashing");
+    return hasher.finish();
+}
+
 const { createScrambleSession } = await import("./session.js");
 const session = createScrambleSession({
     view,
     specUrl: "about:blank",
     root,
+    hashFile: hashInline,
 });
 
 assert.ok(nodes.digest.value.startsWith("0x"), "initial Digest is live hex");
@@ -182,5 +219,65 @@ assert.equal(algs.length, 1, "typing after teach updates Digest only");
 session.enterTeach();
 assert.equal(algs.length, 2, "Play / Step after a new Message calls setAlg");
 
+const algsAfterType = algs.length;
+const modest = new File([new Uint8Array([104, 101, 108, 108, 111])], "hello.bin");
+await session.applyFile(modest);
+assert.ok(nodes.digest.value.startsWith("0x"), "file Digest fills when the hasher finishes");
+assert.match(nodes["message-file-name"].textContent, /hello\.bin/);
+assert.match(nodes["message-file-name"].textContent, /5 B/);
+assert.equal(nodes.message.hidden, false, "Message textarea stays on the paperclip row");
+assert.equal(nodes["message-file-progress"].hidden, true, "progress clears when Digest lands");
+assert.equal(algs.length, algsAfterType, "setAlg is not called during file hash progress");
+
+session.enterTeach();
+assert.equal(algs.length, algsAfterType + 1, "Play / Step after a modest file binds the timeline");
+
+const tooBig = { name: "huge.bin", size: DEMO_FILE_MAX_BYTES + 1 };
+assert.equal(await session.applyFile(tooBig), false, "oversized files are rejected");
+assert.match(nodes["io-note"].textContent, /10 MB/);
+assert.match(nodes["message-file-name"].textContent, /hello\.bin/, "reject keeps the current file");
+assert.equal(algs.length, algsAfterType + 1, "oversized reject does not setAlg");
+
+session.clearFile();
+assert.equal(nodes.message.hidden, false, "clear restores the typed Message field");
+assert.ok(nodes.digest.value.startsWith("0x"), "clear rehashes typed Message");
+assert.equal(algs.length, algsAfterType + 1, "clearing a file updates Digest only");
+
+const jpeg = new Uint8Array(DEMO_FILE_TEACH_MAX_BYTES + 64);
+jpeg[0] = 0xff;
+jpeg[1] = 0xd8;
+jpeg[2] = 0xff;
+const image = new File([jpeg], "shot.jpg", { type: "image/jpeg" });
+await session.applyFile(image);
+assert.ok(nodes.digest.value.startsWith("0x"), "JPEG pick writes Digest without a second click");
+assert.match(nodes["message-file-name"].textContent, /shot\.jpg/);
+assert.equal(nodes.message.hidden, false, "filename is not wedged into the Message line");
+assert.equal(nodes["message-file-progress"].hidden, true, "progress clears after the JPEG digest");
+assert.match(nodes["io-note"].textContent, /Play \/ Step stay off/);
+const algsAfterLarge = algs.length;
+session.enterTeach();
+assert.equal(algs.length, algsAfterLarge, "large file must not build a leave timeline");
+
 session.dispose();
+
+const dockSession = createScrambleSession({
+    view,
+    specUrl: "about:blank",
+    root,
+});
+nodes.message.value = "hello";
+nodes.digest.value = "";
+const dockBytes = new Uint8Array(24 * 1024);
+dockBytes[0] = 0xff;
+dockBytes[1] = 0xd8;
+dockBytes[2] = 0xff;
+await dockSession.applyFile(new File([dockBytes], "dock.jpg", { type: "image/jpeg" }));
+assert.ok(nodes.digest.value.startsWith("0x"), "dock path (no hashFileFn) writes Digest");
+assert.ok(nodes.digest.value.length > 4, "dock Digest is nonempty hex");
+assert.equal(nodes["message-file-progress"].hidden, true, "dock path clears progress after Digest");
+assert.match(nodes["message-file-name"].textContent, /dock\.jpg/);
+const dockHex = nodes.digest.value;
+dockSession.recompute();
+assert.equal(nodes.digest.value, dockHex, "recompute must not restart or clear a file Digest");
+dockSession.dispose();
 console.log("scramble session digest/timeline tests ok");

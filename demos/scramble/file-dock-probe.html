@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>file-dock-probe</title>
+  <link rel="stylesheet" href="../shared/grow-field.css">
+  <link rel="stylesheet" href="../playroom/style.css">
+  <style>
+    :root { --fg: #f4f0ea; --bg: #0b0a09; --line: rgba(255,255,255,0.1); --accent: #c9a36a; }
+    body { margin: 0; background: #1a1612; color: var(--fg); font: 15px/1.4 ui-sans-serif, system-ui; }
+    #scramble-dock { position: relative; width: 22rem; margin: 24px; opacity: 1; }
+    #scramble-dock[hidden] { display: block; }
+    .playroom-io { position: static; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="scramble-dock" class="playroom-dock on">
+    <div class="playroom-io">
+      <div class="playroom-card playroom-card--io">
+        <div class="playroom-ctl playroom-ctl--field" data-message-field>
+          <label class="playroom-label" for="message">Message</label>
+          <div class="playroom-message-row">
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+            <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file">clip</button>
+          </div>
+          <div class="message-file-stack">
+            <div id="message-file" class="file-chip" hidden>
+              <span id="message-file-name"></span>
+              <button type="button" class="file-action" id="message-file-clear">Clear</button>
+            </div>
+            <div id="message-file-progress" class="file-progress" hidden role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="file-progress-bar" id="message-file-progress-bar"></div>
+            </div>
+          </div>
+          <input id="message-file-input" type="file" hidden>
+        </div>
+        <p id="io-note" class="io-note" hidden></p>
+        <label class="playroom-ctl playroom-ctl--field" for="digest">
+          <span class="playroom-label">Digest</span>
+          <textarea id="digest" class="digest grow-field" rows="1" readonly></textarea>
+        </label>
+        <p id="status" class="status playroom-status"></p>
+        <p id="error" class="error"></p>
+      </div>
+    </div>
+  </div>
+  <pre id="proof"></pre>
+  <script type="module">
+    import { createScrambleSession } from "./session.js";
+    import { createFastHasher } from "../shared/file-hash.js";
+
+    const view = {
+      setAlg() {},
+      async playLeaves() { return { index: 0, total: 1 }; },
+      async jumpToLeaf() {},
+      setTempo() {},
+      pauseTimeline() {},
+      resetTimeline() {},
+      settle() {},
+      clearHighlights() {},
+      paint() {},
+    };
+
+    const session = createScrambleSession({
+      view,
+      specUrl: "about:blank",
+      root: document.querySelector("#scramble-dock"),
+    });
+
+    const png = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xde,
+      0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41, 0x54,
+      0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00, 0x00,
+      0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc, 0x33,
+      0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
+      0xae, 0x42, 0x60, 0x82,
+    ]);
+    const extra = new Uint8Array(12 * 1024);
+    extra.set(png, 0);
+    extra[png.length] = 0xff;
+    extra[png.length + 1] = 0xd8;
+    const file = new File([extra], "probe.png", { type: "image/png" });
+
+    const hasher = createFastHasher();
+    hasher.start(2);
+    hasher.push(extra);
+    const expected = hasher.finish().digest
+      .map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase().slice(1);
+
+    await session.applyFile(file);
+
+    const large = new Uint8Array(1610613);
+    large[0] = 0xff;
+    large[1] = 0xd8;
+    large[2] = 0xff;
+    large[3] = 0xe0;
+    const largeFile = new File([large], "scramble-large-fronalpstock-3840.jpg", { type: "image/jpeg" });
+    const largeStarted = Date.now();
+    await session.applyFile(largeFile);
+    const largeMs = Date.now() - largeStarted;
+    session.recompute();
+
+    const message = document.querySelector("#message");
+    const clip = document.querySelector("#message-file-btn");
+    const chip = document.querySelector("#message-file");
+    const digest = document.querySelector("#digest");
+    const progress = document.querySelector("#message-file-progress");
+    const mr = message.getBoundingClientRect();
+    const cr = clip.getBoundingClientRect();
+    const fr = chip.getBoundingClientRect();
+    const sameRow = Math.abs((mr.top + mr.bottom) / 2 - (cr.top + cr.bottom) / 2) < Math.max(mr.height, cr.height);
+    const chipBelow = fr.top > mr.bottom - 0.5;
+    const notBetween = fr.left >= mr.right - 0.5 || fr.right <= mr.left + 0.5 || chipBelow;
+    const hex = String(digest.value || "");
+    const digestOk = hex.startsWith("0x") && hex.length > 4;
+    const nameOk = /scramble-large-fronalpstock-3840\.jpg/.test(document.querySelector("#message-file-name").textContent);
+    const largeOk = digestOk && largeMs < 60000;
+    const pass = digestOk && nameOk && chipBelow && sameRow && notBetween && progress.hidden && largeOk;
+    const report = {
+      pass,
+      digest: hex,
+      smallExpected: `0x${expected}`,
+      filename: document.querySelector("#message-file-name").textContent,
+      largeBytes: large.length,
+      largeMs,
+      chipTop: fr.top,
+      messageBottom: mr.bottom,
+      paperclipMid: (cr.top + cr.bottom) / 2,
+      messageMid: (mr.top + mr.bottom) / 2,
+      chipBelow,
+      paperclipOnMessageRow: sameRow,
+      chipNotBetween: notBetween,
+    };
+    document.querySelector("#proof").textContent = JSON.stringify(report, null, 2);
+    document.title = pass ? "file-dock-probe PASS" : "file-dock-probe FAIL";
+    document.documentElement.dataset.proof = pass ? "pass" : "fail";
+    window.__fileDockProof = report;
+  </script>
+</body>
+</html>

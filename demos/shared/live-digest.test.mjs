@@ -41,6 +41,7 @@ assert.match(
 
 const digestFn = scramble.match(/function refreshDigest\(\) \{[\s\S]*?\n    \}/);
 assert.ok(digestFn, "refreshDigest is the live Message path");
+assert.match(digestFn[0], /if \(fileSource\) return/, "file Digest must not restart from Message input");
 assert.doesNotMatch(digestFn[0], /view\.setAlg/, "Digest path must not call setAlg");
 assert.doesNotMatch(digestFn[0], /bindAlg\(/, "Digest path must not bind the move timeline");
 assert.doesNotMatch(digestFn[0], /mapTraceToAlg/, "leave-trace mapping waits for Play / Step / teach");
@@ -48,6 +49,8 @@ assert.doesNotMatch(digestFn[0], /mapTraceToAlg/, "leave-trace mapping waits for
 assert.match(scramble, /function play\(\) \{[\s\S]*?ensureTimeline\(\)/, "Play binds the timeline");
 assert.match(scramble, /function enterTeach\(\) \{[\s\S]*?ensureTimeline\(\)/, "Step / teach binds the timeline");
 assert.match(scramble, /async function solve\(\) \{[\s\S]*?ensureTimeline\(\)/, "Solve binds the current Message first");
+assert.match(scramble, /hashSelectedFile/, "file hash is a separate Digest path");
+assert.match(scramble, /hashSilentOnHost/, "file Digest fallback is the silent walk, not text update");
 
 const doubledeal = readFileSync(new URL("../doubledeal/session.js", import.meta.url), "utf8");
 assert.match(doubledeal, /function preview\(\)/, "DoubleDeal keeps a Digest-friendly input path");

@@ -40,8 +40,12 @@ namespace MegaDreifach.Link2
   algebraic `packOri2` (Horner / mixed-radix). The value stays below `2^29`,
   inside one base-10^9 limb.
 
-  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` and `pack_ori3`
-  are still open (`pack_ori3` crosses into a second limb).
+  CLOSED: `pack_ori3_refines`, `pack_ori3_refines_array`.
+  Domain `Ori3Wf`: length 20, every entry `< 3`. Generated `pack_ori3` equals
+  algebraic `packOri3`. The Horner value stays below `3^19`, so it fits in
+  two base-10^9 limbs (the last step may carry).
+
+  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open.
 -/
 
 end MegaDreifach.Link2

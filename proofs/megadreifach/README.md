@@ -37,6 +37,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | Link 2 | `pad_message` ≃ algebraic `pad` on `PadWf` (bytes `≤ 255`, `8 * length` fits in an i64) | Proved (`pad_message_refines`, `pad_message_refines_array`, `pad_z_refines`). Not collision resistance. Not `v_Hash`. |
 | Link 2 | `compose` ≃ algebraic `compose` on `PosWf` (lengths 20/20/30/30, in-range indices, orientations `< 3` / `< 2`) | Proved (`compose_refines`, `compose_refines_array`). Trap-free i64 indices. Not `v_Hash`. |
 | Link 2 | `require_permutation` ≃ algebraic `requirePermutation` on `DealWf` (length 52, nonnegative ids `< 52`, no duplicates) | Proved (`require_permutation_refines`, `require_permutation_refines_array`). Trap-free i64 indices. Not `v_Hash`. |
+| Link 2 | `pack_ori2` ≃ algebraic `packOri2` on `Ori2Wf` (length 30, entries `< 2`) | Proved (`pack_ori2_refines`, `pack_ori2_refines_array`). Value `< 2^29`, one limb. Not `v_Hash`. |
 
 ## What is open or not claimed
 
@@ -47,7 +48,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | M9 | Abs-G2 L2 mid-block: no 2-card local collision | OPEN (sketch in STONES.md). Informal proof in research `G2_PROOF.md`. Not a blocker. |
 | M13 | Proof-package digests of exported KATs equal `kats/megaminx_hash_kats.json` | OPEN; metadata only. Hexes refreshed 2026-09-24 to current sudo (Python = emitted Lean). No handwritten `Hash` body. |
 | — | sudo text equals generated Lean; algebraic fold equals `Generated.v_Hash` | OPEN. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). |
-| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, and `require_permutation` slices are closed. Not collision resistance. |
+| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, `require_permutation`, and `pack_ori2` slices are closed. `phi_chunk` and `pack_ori3` are still open. Not collision resistance. |
 | — | Collision resistance of Hash; IV-anchored collision | Not claimed. Free-start `HashDeckBody` is broken; L3 collisions **exist** |
 | — | Ideal-cipher-on-G / PRF of `E_m` | Not claimed |
 | — | Birthday ≈ 2^113 as a theorem | SPEC honesty only |

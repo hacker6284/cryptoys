@@ -35,6 +35,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | M11 | IV-COOK12 arrays satisfy legality predicates | Proved (kernel `decide` on the lists) |
 | M12 | MD chain is the fold of DM; digest of the final `h` | Proved (algebraic) |
 | Link 2 | `pad_message` ≃ algebraic `pad` on `PadWf` (bytes `≤ 255`, `8 * length` fits in an i64) | Proved (`pad_message_refines`, `pad_message_refines_array`, `pad_z_refines`). Not collision resistance. Not `v_Hash`. |
+| Link 2 | `compose` ≃ algebraic `compose` on `PosWf` (lengths 20/20/30/30, in-range indices, orientations `< 3` / `< 2`) | Proved (`compose_refines`, `compose_refines_array`). Trap-free i64 indices. Not `v_Hash`. |
 
 ## What is open or not claimed
 
@@ -45,7 +46,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | M9 | Abs-G2 L2 mid-block: no 2-card local collision | OPEN (sketch in STONES.md). Informal proof in research `G2_PROOF.md`. Not a blocker. |
 | M13 | Proof-package digests of exported KATs equal `kats/megaminx_hash_kats.json` | OPEN; metadata only. Hexes refreshed 2026-09-24 to current sudo (Python = emitted Lean). No handwritten `Hash` body. |
 | — | sudo text equals generated Lean; algebraic fold equals `Generated.v_Hash` | OPEN. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). |
-| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN next. The pad slice above is closed. Not collision resistance. |
+| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN. Pad and `compose` slices are closed. Not collision resistance. |
 | — | Collision resistance of Hash; IV-anchored collision | Not claimed. Free-start `HashDeckBody` is broken; L3 collisions **exist** |
 | — | Ideal-cipher-on-G / PRF of `E_m` | Not claimed |
 | — | Birthday ≈ 2^113 as a theorem | SPEC honesty only |

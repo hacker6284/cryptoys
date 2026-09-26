@@ -11,7 +11,7 @@ import { CLOCK_STEP_MS } from "./constants.js";
 import { onMarkBeat } from "./motion.js";
 
 export const CAPTURE_INTERVAL_MS = 240;
-export const CAPTURE_MAX_WIDTH = 640;
+export const CAPTURE_MAX_WIDTH = 480;
 
 /**
  * True when an RGBA buffer is nearly black. Used to drop the first
@@ -160,7 +160,7 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
         active.frames.push({
             ms: Math.round(ms),
             beat: beat || active.beat,
-            dataUrl: scratch.toDataURL("image/jpeg", 0.74),
+            dataUrl: scratch.toDataURL("image/jpeg", 0.55),
         });
         lastSample = animElapsed;
         return true;
@@ -210,9 +210,10 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
         if (!lastNow) lastNow = now;
         animElapsed += Math.min(CLOCK_STEP_MS, Math.max(0, now - lastNow));
         lastNow = now;
-        if (pendingBeat || animElapsed - lastSample >= intervalMs) {
-            if (snapshot(active.beat)) pendingBeat = false;
-        }
+        const due = pendingBeat
+            ? animElapsed - lastSample >= 80
+            : animElapsed - lastSample >= intervalMs;
+        if (due && snapshot(active.beat)) pendingBeat = false;
     }
 
     unlisten = onMarkBeat((beat) => {

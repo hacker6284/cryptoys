@@ -50,6 +50,7 @@ mkdirSync(OUT, { recursive: true });
 const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: "new",
+    protocolTimeout: 600000,
     args: [
         "--no-sandbox",
         "--disable-dev-shm-usage",
@@ -63,6 +64,27 @@ const browser = await puppeteer.launch({
 
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
+page.on("pageerror", (err) => console.warn("pageerror", err.message));
+
+async function waitPred(fn, { timeout, label } = {}) {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+        try {
+            if (await page.evaluate(fn)) return;
+        } catch (err) {
+            console.warn(label, "evaluate", err.message);
+        }
+        const beat = await page.evaluate(() => ({
+            beat: document.documentElement.dataset.beat || "",
+            seq: document.documentElement.dataset.captureSeq || "",
+            frames: document.documentElement.dataset.captureFrames || "",
+            peek: window.__playroomCapture?.peek?.() || null,
+        })).catch(() => null);
+        console.log(label, `${Date.now() - start}ms`, beat);
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+    }
+    throw new Error(`timeout ${label}`);
+}
 
 async function dumpSequence(name) {
     const seq = await page.evaluate(async (key) => {
@@ -89,55 +111,51 @@ async function dumpSequence(name) {
     }
 }
 
-async function waitReady() {
-    await page.waitForFunction(
-        () => document.documentElement.dataset.playroomReady === "1"
-            && window.__playroomCapture?.enabled,
-        { timeout: 60000 },
-    );
-}
-
 try {
     await page.goto(`${BASE}/?debugCapture=1`, { waitUntil: "networkidle0", timeout: 60000 });
-    await waitReady();
+    await waitPred(
+        () => document.documentElement.dataset.playroomReady === "1"
+            && window.__playroomCapture?.enabled,
+        { timeout: 60000, label: "ready" },
+    );
 
     console.log("doubledeal enter");
     await page.click('[data-algo="doubledeal"]');
-    await page.waitForFunction(
+    await waitPred(
         () => document.querySelector("#doubledeal-dock.on")
             && document.documentElement.dataset.playroomTween !== "1"
             && window.__playroomCapture?.sequences?.["doubledeal-enter"],
-        { timeout: 300000 },
+        { timeout: 480000, label: "doubledeal-enter" },
     );
     await dumpSequence("doubledeal-enter");
 
     console.log("doubledeal leave");
     await page.click("#back");
-    await page.waitForFunction(
+    await waitPred(
         () => document.documentElement.dataset.pose === "landing"
             && !document.documentElement.dataset.algo
             && window.__playroomCapture?.sequences?.["doubledeal-leave"],
-        { timeout: 240000 },
+        { timeout: 360000, label: "doubledeal-leave" },
     );
     await dumpSequence("doubledeal-leave");
 
     console.log("scramble enter");
     await page.click('[data-algo="scramble"]');
-    await page.waitForFunction(
+    await waitPred(
         () => document.querySelector("#scramble-dock.on")
             && document.documentElement.dataset.playroomTween !== "1"
             && window.__playroomCapture?.sequences?.["scramble-enter"],
-        { timeout: 180000 },
+        { timeout: 300000, label: "scramble-enter" },
     );
     await dumpSequence("scramble-enter");
 
     console.log("scramble leave");
     await page.click("#back");
-    await page.waitForFunction(
+    await waitPred(
         () => document.documentElement.dataset.pose === "landing"
             && !document.documentElement.dataset.algo
             && window.__playroomCapture?.sequences?.["scramble-leave"],
-        { timeout: 180000 },
+        { timeout: 300000, label: "scramble-leave" },
     );
     await dumpSequence("scramble-leave");
     console.log("done", join(OUT, TAG));

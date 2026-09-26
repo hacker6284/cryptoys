@@ -10,7 +10,7 @@ export const CUBE = 0.057;
 export const DECK_H = 0.092;
 
 export function toyHalfHeight(name) {
-    return name === "deck" ? DECK_H / 2 : CUBE / 2;
+    return name === "deck" || name === "deck2" ? DECK_H / 2 : CUBE / 2;
 }
 
 export const DEN = { x: -0.35, z: 0.15 };
@@ -45,6 +45,7 @@ export const SETTLE_HOLD_MS = 90;
 export const HOLD_MS = 760;
 
 // Standalone DoubleDeal table is ~17.4 units wide. Scale the live 4×13
-// session onto the playroom felt. The physical unbox deals a stand-in
-// packet, then hands off — do not animate these 104 seats as the enter.
+// session onto the playroom felt. Enter lays these seats from the two
+// physical decks after the short unbox packet — do not teleport a
+// hidden pre-seated grid in.
 export const DEAL_SCALE = 0.068;

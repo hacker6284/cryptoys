@@ -6,7 +6,9 @@ import { DEAL_SCALE } from "./constants.js";
  * Playroom-only card table: the standalone DoubleDeal meshes, scaled
  * onto the felt. Camera stay/orbit is the pose controller's job.
  *
- * No opacity fades. Show/hide is a hard `visible` cut.
+ * No opacity fades. Enter lays the 4×13 from the two physical decks —
+ * cards start hidden and stream from the boxes, never a hide-prop /
+ * show-table snap.
  */
 export function stageCardTable(world, textures, { poses, visible = true } = {}) {
     const group = new THREE.Group();
@@ -21,6 +23,20 @@ export function stageCardTable(world, textures, { poses, visible = true } = {}) 
         navy: textures.navy,
         red: textures.red,
     });
+    table.setCardsVisible(false);
+
+    const scratch = new THREE.Vector3();
+
+    function pileAtWorld(messageOrder, keyOrder, messageWorld, keyWorld) {
+        group.updateMatrixWorld(true);
+        const messageAt = messageWorld
+            ? group.worldToLocal(scratch.copy(messageWorld)).clone()
+            : null;
+        const keyAt = keyWorld
+            ? group.worldToLocal(scratch.copy(keyWorld)).clone()
+            : null;
+        table.pileDecks(messageOrder, keyOrder, messageAt, keyAt);
+    }
 
     const look = new THREE.Vector3();
     function tableTarget() {
@@ -62,6 +78,10 @@ export function stageCardTable(world, textures, { poses, visible = true } = {}) 
         settle() {
             frameTable();
         },
+        pileAtWorld,
+        cardsOf: table.cardsOf,
+        setCardsVisible: table.setCardsVisible,
+        seatLocal: table.seatLocal,
         show() {
             group.visible = true;
         },

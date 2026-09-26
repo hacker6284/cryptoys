@@ -406,6 +406,42 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         if (!(gap > 0)) throw new Error("The two decks overlap on the table.");
     }
 
+    function cardsOf(side) {
+        return side === "key" ? key : message;
+    }
+
+    function setCardsVisible(on) {
+        const show = Boolean(on);
+        for (const mesh of message) mesh.visible = show;
+        for (const mesh of key) mesh.visible = show;
+    }
+
+    function seatLocal(side, index) {
+        const row = Math.floor(index / 13);
+        const col = index % 13;
+        const centerX = side === "key" ? KEY_X : MESSAGE_X;
+        return gridPos(row, col, centerX).clone();
+    }
+
+    function pileDecks(messageOrder, keyOrder, messageAt, keyAt) {
+        generation += 1;
+        clearGrid();
+        marker.material.opacity = 0;
+        const stack = (order, deck, at) => {
+            if (!order || !at) return;
+            order.forEach((id, index) => {
+                const mesh = deck[id];
+                if (!mesh) return;
+                faceUp(mesh);
+                mesh.visible = true;
+                mesh.position.set(at.x, at.y + index * 0.006, at.z);
+                mesh.rotation.set(0, 0, 0);
+            });
+        };
+        stack(messageOrder, message, messageAt);
+        stack(keyOrder, key, keyAt);
+    }
+
     function poseOf(mesh) {
         return { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z, rx: mesh.rotation.x, ry: mesh.rotation.y, rz: mesh.rotation.z };
     }
@@ -834,6 +870,10 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
     return {
         group: parent,
         showDecks,
+        pileDecks,
+        cardsOf,
+        setCardsVisible,
+        seatLocal,
         play,
         measure,
         snapshot,

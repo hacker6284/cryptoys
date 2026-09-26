@@ -34,19 +34,30 @@ function paintTexture(image, anisotropy) {
     return texture;
 }
 
-function makeLabel(bodyHex) {
+function hexCss(bodyHex) {
+    if (typeof bodyHex === "string") return bodyHex.startsWith("#") ? bodyHex : `#${bodyHex}`;
+    return `#${Number(bodyHex).toString(16).padStart(6, "0")}`;
+}
+
+function hexNum(bodyHex) {
+    if (typeof bodyHex === "number") return bodyHex;
+    return parseInt(String(bodyHex).replace("#", ""), 16);
+}
+
+function makeLabel(bodyHex, text = "KEY") {
+    const fill = hexCss(bodyHex);
     const canvas = document.createElement("canvas");
     canvas.width = 128;
     canvas.height = 180;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = bodyHex;
+    ctx.fillStyle = fill;
     ctx.fillRect(0, 0, 128, 180);
     ctx.fillStyle = "#e8dcc8";
     ctx.fillRect(10, 18, 108, 28);
-    ctx.fillStyle = bodyHex;
+    ctx.fillStyle = fill;
     ctx.font = "bold 16px Georgia,serif";
     ctx.textAlign = "center";
-    ctx.fillText("KEY", 64, 38);
+    ctx.fillText(text, 64, 38);
     ctx.strokeStyle = "#e8dcc8";
     ctx.lineWidth = 3;
     ctx.strokeRect(8, 8, 112, 164);
@@ -116,15 +127,22 @@ function cardLocalInSleeve(index, count) {
     };
 }
 
-export async function createUnboxRig({ anisotropy = 4, textures, sharedMaps = false } = {}) {
+export async function createUnboxRig({
+    anisotropy = 4,
+    textures,
+    sharedMaps = false,
+    label = "KEY",
+    bodyHex = "#6b1e1e",
+} = {}) {
     const maps = textures || await loadHandTextures(anisotropy);
     const ownsMaps = !textures;
+    const body = hexNum(bodyHex);
     const group = new THREE.Group();
-    group.name = "unbox-deck";
+    group.name = label === "MSG" ? "unbox-deck-msg" : "unbox-deck";
 
     const sleeve = new THREE.Group();
     sleeve.name = "sleeve";
-    const board = paper(0x6b1e1e, { roughness: 0.84 });
+    const board = paper(body, { roughness: 0.84 });
     const liner = paper(0xe8dcc8, { roughness: 0.9 });
     const foil = paper(0xc4a574, { roughness: 0.42, metalness: 0.28 });
 
@@ -161,7 +179,7 @@ export async function createUnboxRig({ anisotropy = 4, textures, sharedMaps = fa
 
     const label = new THREE.Mesh(
         new THREE.PlaneGeometry(BW * 0.9, BH * 0.72),
-        paper(0xffffff, { map: makeLabel("#6b1e1e"), roughness: 0.88 }),
+        paper(0xffffff, { map: makeLabel(bodyHex, label), roughness: 0.88 }),
     );
     label.position.set(0, -0.004, BD / 2 + 0.0005);
     sleeve.add(label);

@@ -1,6 +1,6 @@
 import { adapters } from "./adapters.js";
-import { FLY_MS, HOLD_MS, LIFT_MS } from "./constants.js";
-import { continueTo, trackEnter, trackToy } from "./motion.js";
+import { FLY_MS, FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
+import { continueTo, followEnter, trackActive, trackToy } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { createToyDirector } from "./toy-director.js";
@@ -110,25 +110,19 @@ try {
             ignoreSkipUntil = performance.now() + LIFT_MS;
             const warm = adapter.preload();
             await adapter.prepareEnter?.();
+            const recipe = director.recipeOf(id);
+            const flyToys = recipe?.toys || [meta.toy];
             const fly = director.borrow(id, { snap: reduced });
             if (reduced) {
                 poses.snap(meta.pose);
-            } else if (id === "doubledeal") {
-                // One story: hold the landing so KEY leaving the slot
-                // is on camera, then track it to the table. No via:shelf
-                // cut that can land on empty felt.
-                trackEnter(poses, {
-                    to: "unbox_travel",
-                    track: trackToy(world, meta.toy),
-                    holdMs: HOLD_MS,
-                    duration: FLY_MS - HOLD_MS,
-                });
             } else {
-                poses.goTo(meta.pose, {
+                // Shared hub→play: follow whatever is in flight, then
+                // land at the algo pose. No named via-shot chain.
+                followEnter(poses, {
+                    to: meta.pose,
+                    track: trackActive(world, flyToys),
+                    holdMs: FOLLOW_HOLD_MS,
                     duration: FLY_MS,
-                    via: "shelf",
-                    viaT: HOLD_MS / FLY_MS,
-                    track: trackToy(world, meta.toy),
                 });
             }
             await Promise.all([fly, warm]);
@@ -252,9 +246,9 @@ try {
         skippedStart = true;
         director.skip();
         adapters[activeAlgo]?.skipEnter?.();
-        if (activeAlgo === "doubledeal" && (starting || enterBusy())) {
+        if (activeAlgo && (starting || enterBusy())) {
             // Continue from the live shot — do not snap to a named seat.
-            continueTo(poses, "doubledeal", { duration: 720 });
+            continueTo(poses, ALGOS[activeAlgo].pose, { duration: 720 });
         } else {
             poses.skip();
         }

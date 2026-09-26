@@ -35,6 +35,11 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     const tracked = new THREE.Vector3();
     const frameScratch = new THREE.Vector3();
     const frameDelta = new THREE.Vector3();
+    const followFocus = new THREE.Vector3();
+    const followPos = new THREE.Vector3();
+    const destOffset = new THREE.Vector3();
+    const chasePos = new THREE.Vector3();
+    const chaseLook = new THREE.Vector3();
     let current = "landing";
     let tween = null;
     let framing = null;
@@ -93,6 +98,43 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             look.copy(pose.target);
             camera.fov = pose.fov;
         }
+        camera.up.set(0, 1, 0);
+        camera.updateProjectionMatrix();
+        camera.lookAt(look);
+        if (controls) controls.target.copy(look);
+    }
+
+    function smoothstep(edge0, edge1, x) {
+        if (edge1 <= edge0) return x >= edge1 ? 1 : 0;
+        const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+        return t * t * (3 - 2 * t);
+    }
+
+    /**
+     * Follow-cam: look eases onto the live track (never copies/snaps),
+     * camera chases a dest-relative offset of that focus, then both
+     * settle into the named play pose. No via named shots.
+     */
+    function applyFollow(pose, t = 1, from = null, trackPos = null) {
+        if (!from || t <= 0) {
+            apply(pose, 0, from, null);
+            return;
+        }
+        if (t >= 1) {
+            apply(pose, 1);
+            return;
+        }
+        const focus = trackPos ? followFocus.copy(trackPos) : followFocus.copy(pose.target);
+        destOffset.copy(pose.position).sub(pose.target);
+        followPos.copy(focus).add(destOffset);
+        const lookU = easeInOutCubic(smoothstep(0, 0.46, t));
+        const moveU = easeInOutCubic(smoothstep(0.05, 0.86, t));
+        const settleU = easeInOutCubic(smoothstep(0.58, 1, t));
+        chasePos.copy(from.position).lerp(followPos, moveU);
+        camera.position.copy(chasePos).lerp(pose.position, settleU);
+        chaseLook.copy(from.target).lerp(focus, lookU);
+        look.copy(chaseLook).lerp(pose.target, settleU);
+        camera.fov = from.fov + (pose.fov - from.fov) * moveU;
         camera.up.set(0, 1, 0);
         camera.updateProjectionMatrix();
         camera.lookAt(look);
@@ -169,6 +211,37 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         return current;
     }
 
+    function followTo(name, opts = {}) {
+        const resolved = resolvePoseName(name, current);
+        const pose = readPose(resolved);
+        if (!pose) return current;
+        if (opts.snap || prefersReducedMotion()) return snap(resolved);
+        if (tween) finishTween(current, { emitChange: false });
+        setControlsEnabled(false);
+        const now = performance.now();
+        tween = {
+            from: capture(),
+            via: null,
+            viaT: 0,
+            to: pose,
+            delay: opts.delay || 0,
+            holdElapsed: 0,
+            elapsed: 0,
+            last: now,
+            holding: true,
+            duration: opts.duration ?? duration,
+            track: opts.track || null,
+            mode: "follow",
+            waiters: [],
+        };
+        emit(current, { tweening: true, next: resolved });
+        return current;
+    }
+
+    function setTrack(track) {
+        if (tween) tween.track = track || null;
+    }
+
     function playTo(name, opts = {}) {
         goTo(name, opts);
         if (!tween) return Promise.resolve(current);
@@ -242,7 +315,9 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             tween.elapsed += stepDt;
             const trackPos = readTrack(tween.track);
             const u = Math.min(1, tween.elapsed / tween.duration);
-            if (tween.via && u < tween.viaT) {
+            if (tween.mode === "follow") {
+                applyFollow(tween.to, u, tween.from, trackPos);
+            } else if (tween.via && u < tween.viaT) {
                 apply(tween.via, u / tween.viaT, tween.from, null);
             } else if (tween.via) {
                 apply(tween.to, (u - tween.viaT) / (1 - tween.viaT), tween.via, trackPos);
@@ -281,6 +356,8 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         },
         snap,
         goTo,
+        followTo,
+        setTrack,
         playTo,
         skip,
         lockOrbit,

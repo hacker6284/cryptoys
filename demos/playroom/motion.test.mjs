@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import { createBeatClock, lerp } from "./beat-clock.js";
 import {
+    centroidOf,
     continueTo,
+    followEnter,
     hopTo,
     pose3,
     seatToys,
+    trackActive,
     trackEnter,
     trackToy,
+    trackToys,
     waitToyIdle,
 } from "./motion.js";
 
@@ -48,12 +52,30 @@ await idle;
 
 const world = { toys: { cube: { position: { x: 9, y: 8, z: 7 } } } };
 assert.deepEqual(trackToy(world, "cube")(), { x: 9, y: 8, z: 7 });
+assert.deepEqual(centroidOf([{ x: 0, y: 0, z: 0 }, { x: 2, y: 4, z: 6 }]), { x: 1, y: 2, z: 3 });
+assert.equal(centroidOf([]), null);
+
+const two = {
+    toys: {
+        deck: { position: { x: 0, y: 1, z: 0 }, userData: { flightBusy: true } },
+        deck2: { position: { x: 4, y: 1, z: 0 }, userData: {} },
+        cube: { position: { x: 9, y: 8, z: 7 }, userData: {} },
+    },
+};
+assert.deepEqual(trackToys(two, ["deck", "deck2"])(), { x: 2, y: 1, z: 0 });
+assert.deepEqual(trackActive(two, ["deck", "deck2"])(), { x: 0, y: 1, z: 0 }, "active frames the flying toy");
+two.toys.deck.userData.flightBusy = false;
+assert.deepEqual(trackActive(two, ["deck", "deck2"])(), { x: 2, y: 1, z: 0 }, "idle falls back to the set");
+two.toys.deck2.userData.unboxBusy = true;
+assert.deepEqual(trackActive(two, ["deck", "deck2"])(), { x: 4, y: 1, z: 0 });
 
 const snaps = [];
 const goes = [];
+const follows = [];
 const poses = {
     snap(name) { snaps.push(name); return name; },
     goTo(name, opts) { goes.push({ name, opts }); return name; },
+    followTo(name, opts) { follows.push({ name, opts }); return name; },
     playTo(name, opts) { goes.push({ name, play: true, opts }); return Promise.resolve(name); },
 };
 trackEnter(poses, { to: "lean", track: () => {}, holdMs: 760, duration: 1000, reduced: true });
@@ -63,6 +85,14 @@ assert.equal(goes[0].name, "unbox_travel");
 assert.equal(goes[0].opts.delay, 760);
 assert.equal(goes[0].opts.duration, 1040);
 assert.equal(goes[0].opts.track, "fn");
+
+followEnter(poses, { to: "scramble", track: "cube", holdMs: 220, duration: 1800, reduced: true });
+assert.equal(snaps.at(-1), "scramble");
+followEnter(poses, { to: "doubledeal", track: "toys", holdMs: 220, duration: 1800 });
+assert.equal(follows[0].name, "doubledeal");
+assert.equal(follows[0].opts.delay, 220);
+assert.equal(follows[0].opts.duration, 1800);
+assert.equal(follows[0].opts.track, "toys");
 
 await continueTo(poses, "doubledeal", { duration: 1280 });
 assert.equal(goes.at(-1).name, "doubledeal");

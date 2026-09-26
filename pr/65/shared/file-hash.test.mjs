@@ -9,6 +9,7 @@ import {
     DEMO_FILE_WORKER_READY_MS,
     canWalkFile,
     checkFileSize,
+    createFastHasher,
     createGeneratedHasher,
     createIncrementalHasher,
     createSilentHasher,
@@ -171,47 +172,46 @@ if (existsSync(implUrl)) {
     gen.push(hello.slice(2));
     assert.deepEqual(gen.finish().digest, helloV2, "generated impl hasher matches SPEC hello v2");
 
-    const silent = createSilentHasher({ impl, rt });
+    const silent = createSilentHasher();
     silent.start(2);
     silent.push(new Uint8Array(hello.slice(0, 2)));
     silent.push(new ArrayBuffer(0));
     silent.push(new Uint8Array(hello.slice(2)));
-    assert.deepEqual(silent.finish().digest, helloV2, "silent hasher matches SPEC hello v2");
+    assert.deepEqual(silent.finish().digest, helloV2, "fast hasher matches SPEC hello v2");
 
     const pngish = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0x00, 0x7f, 0x80]);
     const state = host.scramble_v2();
     host.update(state, Array.from(pngish));
     const expected = host.evaluate(state).digest;
-    const fromBuf = createSilentHasher({ impl, rt });
+    const fromBuf = createFastHasher();
     fromBuf.start(2);
     fromBuf.push(pngish.buffer);
-    assert.deepEqual(fromBuf.finish().digest, expected, "silent hasher treats ArrayBuffer as raw bytes, not text");
+    assert.deepEqual(fromBuf.finish().digest, expected, "fast hasher treats ArrayBuffer as raw bytes, not text");
 
-    const imageSized = new Uint8Array(8 * 1024);
+    const imageSized = new Uint8Array(64 * 1024);
     imageSized[0] = 0xff;
     imageSized[1] = 0xd8;
     imageSized[2] = 0xff;
     const t0 = Date.now();
-    const jpeg = createSilentHasher({ impl, rt });
+    const jpeg = createFastHasher();
     jpeg.start(2);
-    jpeg.push(imageSized.subarray(0, 4096));
-    jpeg.push(imageSized.subarray(4096));
+    jpeg.push(imageSized);
     const jpegDigest = jpeg.finish().digest;
     assert.equal(jpegDigest.length, 9, "image-sized file still produces a 9-byte digest");
-    assert.ok(Date.now() - t0 < 8000, "silent 8 KiB JPEG-shaped hash finishes without push_step stall");
+    assert.ok(Date.now() - t0 < 2000, "64 KiB JPEG-shaped hash finishes on the fast cube");
 }
 
 const src = readFileSync(new URL("./file-hash.js", import.meta.url), "utf8");
 assert.match(src, /createIncrementalHasher/);
 assert.match(src, /createGeneratedHasher/);
 assert.match(src, /createSilentHasher/);
+assert.match(src, /createFastHasher/);
 assert.match(src, /dropTeachTrace/);
 assert.match(src, /new Worker/);
 
 const worker = readFileSync(new URL("../scramble/hash-worker.js", import.meta.url), "utf8");
-assert.match(worker, /createSilentHasher/, "worker prefers the silent digest walk");
-assert.match(worker, /createIncrementalHasher/, "worker falls back to the host Message API");
-assert.match(worker, /_scramble_impl\.mjs/);
+assert.match(worker, /createFastHasher/, "worker uses the fast JS cube, not generated update");
+assert.doesNotMatch(worker, /_scramble_impl\.mjs/);
 assert.doesNotMatch(worker, /setAlg/);
 assert.doesNotMatch(worker, /mapTraceToAlg/);
 
@@ -223,8 +223,7 @@ assert.match(scramble, /function hashSilentOnHost\(/, "host fallback is the sile
 assert.doesNotMatch(scramble, /if \(modest\) \{\s*got = await hashWithPublicApi/);
 const hashFn = scramble.match(/async function hashSelectedFile\(\) \{[\s\S]*?\n    \}/);
 assert.ok(hashFn, "hashSelectedFile is the file Digest path");
-assert.match(hashFn[0], /hashFile\(/, "every file size auto-hashes on pick");
-assert.match(hashFn[0], /readyMs: DEMO_FILE_WORKER_READY_MS/, "Pages worker gets ~1s then host silent hash");
+assert.match(hashFn[0], /hashSilentOnHost/, "playroom dock hashes on the fast host cube");
 assert.match(hashFn[0], /applyFileDigest\(digest/, "Digest hex is written when the hasher finishes");
 assert.match(hashFn[0], /setFileProgress/, "hashing shows determinate progress");
 assert.match(hashFn[0], /clearFileProgress/);
@@ -247,7 +246,7 @@ assert.ok(messageRow, "Message line is its own row");
 assert.match(messageRow[0], /id="message"/);
 assert.match(messageRow[0], /file-btn/);
 assert.doesNotMatch(messageRow[0], /id="message-file"/, "filename chip is not between Message and paperclip");
-assert.match(scrambleDock, /playroom-message-row[\s\S]*file-btn[\s\S]*id="message-file"/);
+assert.match(scrambleDock, /playroom-message-row[\s\S]*file-btn[\s\S]*message-file-stack[\s\S]*id="message-file"/);
 const standalone = readFileSync(new URL("../scramble/index.html", import.meta.url), "utf8");
 const standaloneRow = standalone.match(/<div class="playroom-message-row">[\s\S]*?<\/div>/);
 assert.doesNotMatch(standaloneRow[0], /id="message-file"/, "standalone filename chip is also on the next row");

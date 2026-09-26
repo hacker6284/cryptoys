@@ -18,6 +18,7 @@ assert.match(growJs, /8\.5rem/);
 
 const playroomCss = readFileSync(new URL("../playroom/style.css", import.meta.url), "utf8");
 assert.match(growRules, /\[data-message-field\][\s\S]*flex-direction:\s*column/, "filename cannot share a row with the paperclip");
+assert.match(growRules, /\.message-file-stack[\s\S]*display:\s*block/);
 assert.match(growRules, /\.file-progress\[hidden\][\s\S]*display:\s*none\s*!important/);
 assert.match(growRules, /textarea\.grow-field\[hidden\][\s\S]*display:\s*none\s*!important/, "hidden Message must beat dock display:block");
 assert.match(playroomCss, /\.playroom-dock textarea\.grow-field\[hidden\][\s\S]*display:\s*none\s*!important/);

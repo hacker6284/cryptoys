@@ -349,6 +349,12 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   font-weight: 500;
 }
 
+.playroom-dock .message-file-stack {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
 .playroom-dock .file-chip {
   display: flex;
   width: 100%;

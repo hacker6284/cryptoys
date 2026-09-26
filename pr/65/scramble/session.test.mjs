@@ -161,16 +161,14 @@ const view = {
     highlightRuleB() {},
 };
 
-const { createIncrementalHasher, createSilentHasher } = await import("../shared/file-hash.js");
+const { createFastHasher, createIncrementalHasher } = await import("../shared/file-hash.js");
 const { DEMO_FILE_MAX_BYTES, DEMO_FILE_TEACH_MAX_BYTES } = await import("../shared/file-hash.js");
 
 async function hashInline({ file, version, onProgress }) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     onProgress?.({ processed: Math.min(1, bytes.length), total: bytes.length || 1 });
     if (existsSync(impl)) {
-        const scrambleImpl = await import("./generated/_scramble_impl.mjs");
-        const rt = await import("./generated/_sudo_rt.mjs");
-        const hasher = createSilentHasher({ impl: scrambleImpl, rt });
+        const hasher = createFastHasher();
         hasher.start(version);
         hasher.push(bytes);
         onProgress?.({ processed: bytes.length, total: bytes.length });

@@ -37,6 +37,8 @@ import MegaDreifach.Link2.PeelWide
 import MegaDreifach.Link2.NatLimbs
 import MegaDreifach.Link2.MulSmall
 import MegaDreifach.Link2.DivWide
+import MegaDreifach.Link2.DivInd
+import MegaDreifach.Link2.MulWide
 
 namespace MegaDreifach.Link2
 
@@ -186,14 +188,16 @@ namespace MegaDreifach.Link2
   times `d!`. Not `d ≥ 27`. Not `27!`. Not `51!`. Not `phi_chunk`.
   Not `phi_inv`.
 
-  The arbitrary-width limb model is in `NatLimbs.lean`: `natLimbs`,
-  `scanMul` (one-limb multiply) and `divLE` (one-limb division, high limb
-  first). `divGenStep_at` is one emitted `big_divmod_small` step at any
-  index; `jDigitAt` is one emitted `big_mul` digit for a one-limb left
-  factor; `big_mul_left_loop` reduces that multiply to the schoolbook loop.
-  Stacking those steps into `big_mul`, `big_divmod_small`, `big_factorial`
-  through `51!`, 28-byte `big_from_be`, `peel_leading`, and `phi_chunk`
-  is still open.
+  CLOSED: `big_divmod_small_refines`, `big_divmod_nat`.
+  Any canonical limb string, divided by a positive one-limb divisor,
+  yields `(natLimbs (value / d), value % d)`. The countdown is
+  `divGenStep_at` stacked by `chain_down`. `rem * 10^9 + digit` stays
+  below `10^18`. Not `51!`. Not `phi_chunk`. Not `v_Hash`.
+
+  The wide-by-small multiply loop is exposed (`big_mul_wide_open`) and
+  the carry walk is `kLoop_write` / `kLoop_idle` on `mulAcc`. The
+  per-digit induction that would make `big_mul` equal `natLimbs (q * n)`,
+  and therefore `big_factorial` through `51!`, is still open.
 
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28

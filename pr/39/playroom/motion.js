@@ -82,13 +82,42 @@ export function trackToy(world, name) {
     return () => world.toys[name]?.position;
 }
 
+function worldXYZ(node) {
+    if (!node) return null;
+    if (typeof node.updateMatrixWorld === "function") {
+        node.updateMatrixWorld(true);
+        const e = node.matrixWorld?.elements;
+        if (e && e.length >= 15 && Number.isFinite(e[12])) {
+            return { x: e[12], y: e[13], z: e[14] };
+        }
+    }
+    const p = node.position || node;
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z)) {
+        return { x: p.x, y: p.y, z: p.z };
+    }
+    return null;
+}
+
 function pushPoint(points, value) {
     if (!value) return;
     const node = typeof value === "function" ? value() : value;
-    const p = node?.position || node;
+    const p = worldXYZ(node) || (node && Number.isFinite(node.x) ? node : null);
     if (p && Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z)) {
         points.push(p);
     }
+}
+
+function focusOf(points) {
+    const c = centroidOf(points);
+    if (!c) return null;
+    let r = 0.05;
+    for (const p of points) {
+        const dx = p.x - c.x;
+        const dy = p.y - c.y;
+        const dz = p.z - c.z;
+        r = Math.max(r, Math.hypot(dx, dy, dz));
+    }
+    return { x: c.x, y: c.y, z: c.z, r };
 }
 
 /** Average of live world-space points. Empty set → null. */
@@ -117,7 +146,7 @@ export function trackToys(world, names, extras = []) {
         const points = [];
         for (const name of list) pushPoint(points, world.toys?.[name]);
         for (const extra of extras) pushPoint(points, extra);
-        return centroidOf(points);
+        return focusOf(points);
     };
 }
 
@@ -137,13 +166,16 @@ export function trackActive(world, names, extras = []) {
             pushPoint(all, toy);
             if (toy.userData?.flightBusy || toy.userData?.unboxBusy) pushPoint(busy, toy);
         }
+        const extracting = [];
         for (const extra of extras) {
             const node = typeof extra === "function" ? extra() : extra;
             if (!node) continue;
             pushPoint(all, node);
             if (node.userData?.flightBusy || node.userData?.unboxBusy) pushPoint(busy, node);
+            if (node.userData?.unboxBusy && node.name === "packet") pushPoint(extracting, node);
         }
-        return centroidOf(busy.length ? busy : all);
+        if (extracting.length) return focusOf(extracting);
+        return focusOf(busy.length ? busy : all);
     };
 }
 

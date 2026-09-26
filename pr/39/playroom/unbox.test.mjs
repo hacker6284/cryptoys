@@ -48,6 +48,7 @@ assert.equal(pickedMsg.faces[0], "face-13");
 
 const adapters = readFileSync(new URL("./adapters.js", import.meta.url), "utf8");
 assert.match(adapters, /playDualUnbox/);
+assert.match(adapters, /followLive/);
 assert.match(adapters, /createUnboxRig/);
 assert.match(adapters, /pickMsgTextures/);
 assert.match(adapters, /formSessionTable/);
@@ -122,7 +123,7 @@ assert.equal(physical.includes("gsap"), false);
 assert.ok(!physical.includes("104"), "physical take does not deal 104 cipher seats");
 
 const rigSrc = readFileSync(new URL("./unbox-rig.js", import.meta.url), "utf8");
-assert.match(rigSrc, /label = "KEY"/);
+assert.match(rigSrc, /label: labelText = "KEY"/);
 assert.match(rigSrc, /bodyHex/);
 
 const form = readFileSync(new URL("./table-form.js", import.meta.url), "utf8");
@@ -149,6 +150,7 @@ assert.equal(motion.includes("cutToTable"), false);
 const posesCtl = readFileSync(new URL("./pose-controller.js", import.meta.url), "utf8");
 assert.match(posesCtl, /function followTo/);
 assert.match(posesCtl, /function applyFollow/);
+assert.match(posesCtl, /function followLive/);
 assert.match(posesCtl, /mode: "follow"/);
 assert.equal(posesCtl.includes("gsap"), false);
 

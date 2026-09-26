@@ -213,7 +213,9 @@ export async function playDualUnbox({
         keyLight,
         name: "deck",
     });
-    await clock.wait(1280, gen);
+    // Let KEY finish extract so the follow-cam can sit on that box
+    // before MSG pulls the lens to the second sleeve.
+    await clock.wait(2100, gen);
     if (clock.dead(gen)) {
         await keyJob;
         return;

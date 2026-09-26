@@ -40,6 +40,8 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     const destOffset = new THREE.Vector3();
     const chasePos = new THREE.Vector3();
     const chaseLook = new THREE.Vector3();
+    let trackedRadius = 0;
+    let liveFollow = null;
     let current = "landing";
     let tween = null;
     let framing = null;
@@ -70,9 +72,27 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         if (!track) return null;
         const value = typeof track === "function" ? track() : track;
         if (!value) return null;
-        if (value.isVector3) return tracked.copy(value);
+        if (value.isVector3) {
+            trackedRadius = 0;
+            return tracked.copy(value);
+        }
         tracked.set(value.x, value.y, value.z);
+        trackedRadius = Number.isFinite(value.r) ? value.r : 0;
         return tracked;
+    }
+
+    function fitFollowPos(pose, focus, radius) {
+        destOffset.copy(pose.position).sub(pose.target);
+        const destDist = destOffset.length() || 1;
+        destOffset.multiplyScalar(1 / destDist);
+        const fovRad = ((pose.fov || 36) * Math.PI) / 180;
+        const fit = radius > 0
+            ? (radius / Math.tan(Math.max(0.12, fovRad / 2))) * 1.18
+            : destDist;
+        const dist = Math.min(1.42, Math.max(0.46, fit));
+        followPos.copy(focus).addScaledVector(destOffset, dist);
+        followPos.y = Math.max(followPos.y, focus.y + 0.36);
+        return followPos;
     }
 
     function apply(pose, t = 1, from = null, trackPos = null) {
@@ -121,20 +141,25 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             return;
         }
         if (t >= 1) {
+            if (liveFollow) {
+                applyLiveFollow(16);
+                return;
+            }
             apply(pose, 1);
             return;
         }
         const focus = trackPos ? followFocus.copy(trackPos) : followFocus.copy(pose.target);
-        destOffset.copy(pose.position).sub(pose.target);
-        followPos.copy(focus).add(destOffset);
-        const lookU = easeInOutCubic(smoothstep(0, 0.46, t));
-        const moveU = easeInOutCubic(smoothstep(0.05, 0.86, t));
-        const settleU = easeInOutCubic(smoothstep(0.58, 1, t));
+        fitFollowPos(pose, focus, trackedRadius);
+        const lookU = easeInOutCubic(smoothstep(0, 0.42, t));
+        const moveU = easeInOutCubic(smoothstep(0.04, 0.8, t));
+        const settleU = easeInOutCubic(smoothstep(0.78, 1, t));
         chasePos.copy(from.position).lerp(followPos, moveU);
         camera.position.copy(chasePos).lerp(pose.position, settleU);
+        camera.position.y = Math.max(camera.position.y, focus.y + 0.34);
         chaseLook.copy(from.target).lerp(focus, lookU);
         look.copy(chaseLook).lerp(pose.target, settleU);
-        camera.fov = from.fov + (pose.fov - from.fov) * moveU;
+        const wide = trackedRadius > 0.5 ? Math.min(46, pose.fov + 8) : pose.fov;
+        camera.fov = from.fov + (wide - from.fov) * moveU;
         camera.up.set(0, 1, 0);
         camera.updateProjectionMatrix();
         camera.lookAt(look);
@@ -168,6 +193,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     }
 
     function snap(name) {
+        liveFollow = null;
         const resolved = resolvePoseName(name, current);
         const pose = readPose(resolved);
         if (!pose) return current;
@@ -240,6 +266,32 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
 
     function setTrack(track) {
         if (tween) tween.track = track || null;
+    }
+
+    function followLive(track) {
+        liveFollow = track || null;
+        if (liveFollow) setControlsEnabled(false);
+    }
+
+    function applyLiveFollow(dtMs) {
+        if (!liveFollow) return;
+        const pose = readPose(current) || readPose("seated");
+        if (!pose) return;
+        const trackPos = readTrack(liveFollow);
+        if (!trackPos) return;
+        const focus = followFocus.copy(trackPos);
+        fitFollowPos(pose, focus, trackedRadius || 0.08);
+        const dt = Math.min(0.05, Math.max(0, dtMs / 1000));
+        const k = 1 - Math.exp(-5.1 * dt);
+        camera.position.lerp(followPos, k);
+        camera.position.y = Math.max(camera.position.y, focus.y + 0.34);
+        look.lerp(focus, k);
+        const wantFov = trackedRadius > 0.5 ? Math.min(46, pose.fov + 8) : pose.fov;
+        camera.fov += (wantFov - camera.fov) * k;
+        camera.up.set(0, 1, 0);
+        camera.updateProjectionMatrix();
+        camera.lookAt(look);
+        if (controls) controls.target.copy(look);
     }
 
     function playTo(name, opts = {}) {
@@ -327,6 +379,11 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             if (u >= 1) finishTween(tween.to.name);
             return current;
         }
+        if (liveFollow) {
+            setControlsEnabled(false);
+            applyLiveFollow(dt);
+            return current;
+        }
         if (orbitLocked || !controls) {
             applyFraming(dt);
             return current;
@@ -352,12 +409,13 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             return look;
         },
         get framing() {
-            return Boolean(framing);
+            return Boolean(framing || liveFollow);
         },
         snap,
         goTo,
         followTo,
         setTrack,
+        followLive,
         playTo,
         skip,
         lockOrbit,

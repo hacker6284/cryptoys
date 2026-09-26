@@ -62,12 +62,32 @@ const two = {
         cube: { position: { x: 9, y: 8, z: 7 }, userData: {} },
     },
 };
-assert.deepEqual(trackToys(two, ["deck", "deck2"])(), { x: 2, y: 1, z: 0 });
-assert.deepEqual(trackActive(two, ["deck", "deck2"])(), { x: 0, y: 1, z: 0 }, "active frames the flying toy");
+const both = trackToys(two, ["deck", "deck2"])();
+assert.equal(both.x, 2);
+assert.equal(both.y, 1);
+assert.equal(both.z, 0);
+assert.ok(both.r >= 2, "bounds span both decks");
+const flying = trackActive(two, ["deck", "deck2"])();
+assert.equal(flying.x, 0);
+assert.equal(flying.y, 1);
+assert.equal(flying.z, 0);
 two.toys.deck.userData.flightBusy = false;
-assert.deepEqual(trackActive(two, ["deck", "deck2"])(), { x: 2, y: 1, z: 0 }, "idle falls back to the set");
+const rested = trackActive(two, ["deck", "deck2"])();
+assert.equal(rested.x, 2);
+assert.equal(rested.z, 0);
 two.toys.deck2.userData.unboxBusy = true;
-assert.deepEqual(trackActive(two, ["deck", "deck2"])(), { x: 4, y: 1, z: 0 });
+const unbox = trackActive(two, ["deck", "deck2"])();
+assert.equal(unbox.x, 4);
+assert.equal(unbox.z, 0);
+
+const packet = {
+    name: "packet",
+    position: { x: 1, y: 2, z: 3 },
+    userData: { unboxBusy: true },
+};
+const extract = trackActive(two, ["deck", "deck2"], [packet])();
+assert.equal(extract.x, 1);
+assert.equal(extract.z, 3);
 
 const snaps = [];
 const goes = [];

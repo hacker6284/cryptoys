@@ -656,7 +656,7 @@ function createDoubleDealAdapter() {
                     () => unbox2?.packet,
                 ]);
                 if (!reduced && !cancelEnter && unbox) {
-                    poses?.frame?.(enterTrack);
+                    poses?.followLive?.(enterTrack);
                     poses?.setTrack?.(enterTrack);
                     await playDualUnbox({
                         world,
@@ -675,6 +675,7 @@ function createDoubleDealAdapter() {
                 }
                 if (cancelEnter) return session;
                 await waitToyIdle(world.toys.deck2, clock, enterGen);
+                poses?.followLive?.(null);
                 poses?.releaseFrame?.();
                 const seated = continueTo(poses, "doubledeal", {
                     duration: reduced ? 480 : 1280,
@@ -712,6 +713,7 @@ function createDoubleDealAdapter() {
         async leave() {
             cancelEnter = true;
             skipEnter();
+            poses?.followLive?.(null);
             poses?.releaseFrame?.();
             session?.dispose();
             session = null;

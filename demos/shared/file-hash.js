@@ -16,7 +16,7 @@ export const DEMO_FILE_MAX_BYTES = 10 * 1024 * 1024;
 export const DEMO_FILE_TEACH_MAX_BYTES = DEMO_INPUT_MAX_CHARS;
 export const DEMO_FILE_CHUNK_BYTES = 32 * 1024;
 export const DEMO_FILE_HOST_CHUNK_BYTES = 32 * 1024;
-export const DEMO_FILE_WORKER_READY_MS = 1000;
+export const DEMO_FILE_WORKER_READY_MS = 4000;
 export const DEMO_FILE_BUSY_MS = 200;
 export const DEMO_FILE_DETERMINATE_BYTES = 1024 * 1024;
 
@@ -118,13 +118,18 @@ const EY = [1, 1, 1, 1, -1, -1, -1, -1, 0, 0, 0, 0];
 const EZ = [0, 1, 0, -1, 0, 1, 0, -1, 1, 1, -1, -1];
 const EAX = [2, 0, 2, 4, 2, 1, 2, 5, 3, 0, 3, 4, 3, 1, 3, 5, 4, 0, 4, 1, 5, 1, 5, 0];
 
+function pidx(x, y, z) {
+    return (x + 1) * 9 + (y + 1) * 3 + (z + 1);
+}
+
 function solvedFastCube() {
     const cube = [];
+    const at = new Array(27);
     for (let x = -1; x <= 1; x += 1) {
         for (let y = -1; y <= 1; y += 1) {
             for (let z = -1; z <= 1; z += 1) {
                 if (!x && !y && !z) continue;
-                cube.push({
+                const c = {
                     x, y, z,
                     xp: x === 1 ? 3 : 0,
                     xn: x === -1 ? 4 : 0,
@@ -132,32 +137,41 @@ function solvedFastCube() {
                     yn: y === -1 ? 2 : 0,
                     zp: z === 1 ? 6 : 0,
                     zn: z === -1 ? 5 : 0,
-                });
+                };
+                cube.push(c);
+                at[pidx(x, y, z)] = c;
             }
         }
     }
+    cube.at = at;
     return cube;
 }
 
-function rotXyz(face, x, y, z) {
-    if (face === 0 || face === 1) return [z, y, -x];
-    if (face === 2) return [x, z, -y];
-    if (face === 3) return [x, -z, y];
-    if (face === 4) return [y, -x, z];
-    return [-y, x, z];
-}
-
-function writeAxis(xp, xn, yp, yn, zp, zn, x, y, z, color) {
-    if (x === 1 && y === 0 && z === 0) return [color, xn, yp, yn, zp, zn];
-    if (x === -1 && y === 0 && z === 0) return [xp, color, yp, yn, zp, zn];
-    if (x === 0 && y === 1 && z === 0) return [xp, xn, color, yn, zp, zn];
-    if (x === 0 && y === -1 && z === 0) return [xp, xn, yp, color, zp, zn];
-    if (x === 0 && y === 0 && z === 1) return [xp, xn, yp, yn, color, zn];
-    return [xp, xn, yp, yn, zp, color];
-}
-
 function turnCubie(c, face) {
-    const [nx, ny, nz] = rotXyz(face, c.x, c.y, c.z);
+    let nx;
+    let ny;
+    let nz;
+    if (face === 0 || face === 1) {
+        nx = c.z;
+        ny = c.y;
+        nz = -c.x;
+    } else if (face === 2) {
+        nx = c.x;
+        ny = c.z;
+        nz = -c.y;
+    } else if (face === 3) {
+        nx = c.x;
+        ny = -c.z;
+        nz = c.y;
+    } else if (face === 4) {
+        nx = c.y;
+        ny = -c.x;
+        nz = c.z;
+    } else {
+        nx = -c.y;
+        ny = c.x;
+        nz = c.z;
+    }
     let xp = 0;
     let xn = 0;
     let yp = 0;
@@ -166,8 +180,36 @@ function turnCubie(c, face) {
     let zn = 0;
     const paint = (ax, ay, az, color) => {
         if (!color) return;
-        const [rx, ry, rz] = rotXyz(face, ax, ay, az);
-        [xp, xn, yp, yn, zp, zn] = writeAxis(xp, xn, yp, yn, zp, zn, rx, ry, rz, color);
+        let rx;
+        let ry;
+        let rz;
+        if (face === 0 || face === 1) {
+            rx = az;
+            ry = ay;
+            rz = -ax;
+        } else if (face === 2) {
+            rx = ax;
+            ry = az;
+            rz = -ay;
+        } else if (face === 3) {
+            rx = ax;
+            ry = -az;
+            rz = ay;
+        } else if (face === 4) {
+            rx = ay;
+            ry = -ax;
+            rz = az;
+        } else {
+            rx = -ay;
+            ry = ax;
+            rz = az;
+        }
+        if (rx === 1) xp = color;
+        else if (rx === -1) xn = color;
+        else if (ry === 1) yp = color;
+        else if (ry === -1) yn = color;
+        else if (rz === 1) zp = color;
+        else zn = color;
     };
     paint(1, 0, 0, c.xp);
     paint(-1, 0, 0, c.xn);
@@ -196,11 +238,14 @@ function onFace(face, x, y, z) {
 }
 
 function applyTurns(cube, face, turns) {
+    const at = cube.at;
     const n = Number(turns) || 0;
     for (let t = 0; t < n; t += 1) {
         for (let i = 0; i < cube.length; i += 1) {
             const c = cube[i];
-            if (onFace(face, c.x, c.y, c.z)) turnCubie(c, face);
+            if (!onFace(face, c.x, c.y, c.z)) continue;
+            turnCubie(c, face);
+            at[pidx(c.x, c.y, c.z)] = c;
         }
     }
 }
@@ -215,38 +260,44 @@ function stickerOn(c, axis) {
 }
 
 function cubieAt(cube, x, y, z) {
-    for (let i = 0; i < cube.length; i += 1) {
-        const c = cube[i];
-        if (c.x === x && c.y === y && c.z === z) return i;
-    }
-    return 0;
+    return cube.at[pidx(x, y, z)];
 }
 
 function hasColor(c, color) {
     return c.xp === color || c.xn === color || c.yp === color || c.yn === color || c.zp === color || c.zn === color;
 }
 
-function centerDir(cube, color) {
-    for (let i = 0; i < cube.length; i += 1) {
-        const c = cube[i];
-        const zeros = (c.x === 0 ? 1 : 0) + (c.y === 0 ? 1 : 0) + (c.z === 0 ? 1 : 0);
-        if (zeros === 2 && hasColor(c, color)) return [c.x, c.y, c.z];
-    }
-    return [0, 0, 0];
-}
+const DIR_UP = [0, 0, 0];
+const DIR_FRONT = [0, 0, 0];
 
-function mulVec(m, x, y, z) {
-    return [
-        m[0][0] * x + m[0][1] * y + m[0][2] * z,
-        m[1][0] * x + m[1][1] * y + m[1][2] * z,
-        m[2][0] * x + m[2][1] * y + m[2][2] * z,
+function centerDirTo(cube, color, out) {
+    const at = cube.at;
+    const centers = [
+        at[pidx(1, 0, 0)], at[pidx(-1, 0, 0)],
+        at[pidx(0, 1, 0)], at[pidx(0, -1, 0)],
+        at[pidx(0, 0, 1)], at[pidx(0, 0, -1)],
     ];
+    for (let i = 0; i < 6; i += 1) {
+        const c = centers[i];
+        if (c && hasColor(c, color)) {
+            out[0] = c.x;
+            out[1] = c.y;
+            out[2] = c.z;
+            return;
+        }
+    }
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
 }
 
-function applyMatrix(cube, m) {
+function applyMatrixNums(cube, m00, m01, m02, m10, m11, m12, m20, m21, m22) {
+    const at = cube.at;
     for (let i = 0; i < cube.length; i += 1) {
         const c = cube[i];
-        const [nx, ny, nz] = mulVec(m, c.x, c.y, c.z);
+        const nx = m00 * c.x + m01 * c.y + m02 * c.z;
+        const ny = m10 * c.x + m11 * c.y + m12 * c.z;
+        const nz = m20 * c.x + m21 * c.y + m22 * c.z;
         let xp = 0;
         let xn = 0;
         let yp = 0;
@@ -255,8 +306,15 @@ function applyMatrix(cube, m) {
         let zn = 0;
         const paint = (ax, ay, az, color) => {
             if (!color) return;
-            const [rx, ry, rz] = mulVec(m, ax, ay, az);
-            [xp, xn, yp, yn, zp, zn] = writeAxis(xp, xn, yp, yn, zp, zn, rx, ry, rz, color);
+            const rx = m00 * ax + m01 * ay + m02 * az;
+            const ry = m10 * ax + m11 * ay + m12 * az;
+            const rz = m20 * ax + m21 * ay + m22 * az;
+            if (rx === 1) xp = color;
+            else if (rx === -1) xn = color;
+            else if (ry === 1) yp = color;
+            else if (ry === -1) yn = color;
+            else if (rz === 1) zp = color;
+            else zn = color;
         };
         paint(1, 0, 0, c.xp);
         paint(-1, 0, 0, c.xn);
@@ -273,21 +331,28 @@ function applyMatrix(cube, m) {
         c.yn = yn;
         c.zp = zp;
         c.zn = zn;
+        at[pidx(nx, ny, nz)] = c;
     }
 }
 
 function reorient(cube, up, front) {
-    const [ux, uy, uz] = centerDir(cube, up);
-    const [px, py, pz] = centerDir(cube, front);
+    centerDirTo(cube, up, DIR_UP);
+    centerDirTo(cube, front, DIR_FRONT);
+    const ux = DIR_UP[0];
+    const uy = DIR_UP[1];
+    const uz = DIR_UP[2];
+    const px = DIR_FRONT[0];
+    const py = DIR_FRONT[1];
+    const pz = DIR_FRONT[2];
     if (ux === 0 && uy === 1 && uz === 0 && px === 0 && py === 0 && pz === 1) return;
     const vx = uy * pz - uz * py;
     const vy = uz * px - ux * pz;
     const vz = ux * py - uy * px;
-    applyMatrix(cube, [[vx, vy, vz], [ux, uy, uz], [px, py, pz]]);
+    applyMatrixNums(cube, vx, vy, vz, ux, uy, uz, px, py, pz);
 }
 
 function ruleB(cube) {
-    const c = cube[cubieAt(cube, 1, 1, 1)];
+    const c = cubieAt(cube, 1, 1, 1);
     reorient(cube, c.yp, c.zp);
 }
 
@@ -428,7 +493,7 @@ function indexBytes(cube) {
     let oriAcc = 0n;
     let pow3 = 1n;
     for (let i = 0; i < 8; i += 1) {
-        const c = cube[cubieAt(cube, CX[i], CY[i], CZ[i])];
+        const c = cubieAt(cube, CX[i], CY[i], CZ[i]);
         const a0 = stickerOn(c, CAX[i * 3]);
         const a1 = stickerOn(c, CAX[i * 3 + 1]);
         const a2 = stickerOn(c, CAX[i * 3 + 2]);
@@ -446,7 +511,7 @@ function indexBytes(cube) {
     let eori = 0n;
     let bit = 1n;
     for (let i = 0; i < 12; i += 1) {
-        const c = cube[cubieAt(cube, EX[i], EY[i], EZ[i])];
+        const c = cubieAt(cube, EX[i], EY[i], EZ[i]);
         const a0 = stickerOn(c, EAX[i * 2]);
         const a1 = stickerOn(c, EAX[i * 2 + 1]);
         eperm.push(edgePiece(a0, a1));
@@ -490,9 +555,12 @@ export function createFastHasher() {
                 }
                 return;
             }
-            const ny = nybblesOf(chunk);
-            for (let i = 0; i < ny.length; i += 1) applyV2(cube, ny[i]);
-            processed += ny.length;
+            for (let i = 0; i < chunk.length; i += 1) {
+                const b = chunk[i] & 255;
+                applyV2(cube, b >> 4);
+                applyV2(cube, b & 15);
+            }
+            processed += chunk.length * 2;
         },
         finish() {
             if (!cube) throw new Error("Hasher was not started.");
@@ -597,8 +665,9 @@ function postWorker(worker, data, transfer) {
  *
  * GitHub Pages serves the worker as `application/javascript` at the
  * real `import.meta.url` (not a blob — blob workers break relative
- * imports). If `ready` is not posted within ~1s, or the worker stalls
- * ~4s without a beat, fall back to host silent hash.
+ * imports). If `ready` is not posted within a few seconds, fall back
+ * to host silent hash. A working worker is never killed for being slow:
+ * a 1.5 MB V2 walk can take tens of seconds and must still post `done`.
  */
 export async function hashFile(file, {
     version = 2,
@@ -649,10 +718,8 @@ export async function hashFile(file, {
         while (pending.length) pending.shift().reject(err);
     };
 
-    let lastBeat = Date.now();
     const onMessage = (event) => {
         const msg = event?.data || {};
-        lastBeat = Date.now();
         if (msg.type === "error") {
             failAll(new Error(msg.message || "Could not hash this file."));
             return;
@@ -712,32 +779,13 @@ export async function hashFile(file, {
         }
         await waitReply("ready");
         clearReady();
-        lastBeat = Date.now();
-
-        const waitDone = async () => {
-            const doneP = waitReply("done");
-            const stalled = new Promise((_, reject) => {
-                const id = setInterval(() => {
-                    if (Date.now() - lastBeat > 12000) {
-                        clearInterval(id);
-                        reject(new Error("Hash worker stalled."));
-                    }
-                }, 400);
-                doneP.finally(() => clearInterval(id));
-            });
-            return Promise.race([doneP, stalled]);
-        };
 
         if (!createWorker) {
             const buf = await file.arrayBuffer();
             if (signal?.aborted) throw abortError();
-            const bytes = new Uint8Array(buf);
-            postWorker(
-                worker,
-                { type: "hash", version, bytes },
-                bytes.byteLength ? [bytes.buffer] : undefined,
-            );
-            const done = await waitDone();
+            const bytes = new Uint8Array(buf.slice(0));
+            postWorker(worker, { type: "hash", version, bytes });
+            const done = await waitReply("done");
             const digest = Array.from(done.digest || []);
             if (!digest.length) throw new Error("Could not hash this file.");
             return { digest };
@@ -754,7 +802,7 @@ export async function hashFile(file, {
             },
         });
         postWorker(worker, { type: "finish" });
-        const done = await waitDone();
+        const done = await waitReply("done");
         const digest = Array.from(done.digest || []);
         if (!digest.length) throw new Error("Could not hash this file.");
         return { digest };

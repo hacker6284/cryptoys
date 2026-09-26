@@ -94,7 +94,7 @@ theorem scan_raw_trim (q : Nat) (xs : List Nat) (hq : q < limbBase)
   simpa [raw] using heq
 
 
-private def mulIStep (a b : Megadreifach.BigInt) (toV : Int) (σ : Int × Array Int) :
+def mulSchoolStep (a b : Megadreifach.BigInt) (toV : Int) (σ : Int × Array Int) :
     Except SudoRt.Trap (SudoRt.Flow (Int × Array Int) Megadreifach.BigInt) :=
   if σ.fst > toV then
     pure (SudoRt.Flow.brk (σ.fst, σ.snd))
@@ -223,7 +223,7 @@ theorem big_mul_left_loop (q : Nat) (xs : List Nat) (hq0 : 0 < q) (hq : q < limb
     (hne : xs ≠ []) (hfits : FitsLen (xs.length + 1)) :
     Megadreifach.big_mul (bigOf [q]) (bigOf xs) =
       SudoRt.runLoopOn ((0 : Int), embed (List.replicate (1 + xs.length) 0))
-        1 (mulIStep (bigOf [q]) (bigOf xs) 0)
+        1 (mulSchoolStep (bigOf [q]) (bigOf xs) 0)
         (fun σ => do
           let t ← Megadreifach.make_big false σ.2
           pure t)
@@ -264,9 +264,9 @@ theorem big_mul_left_loop (q : Nat) (xs : List Nat) (hq0 : 0 < q) (hq : q < limb
   dsimp
   rw [except_bind_pure]
   apply Eq.trans
-  · apply runLoopOn_step_pointwise (step' := mulIStep (bigOf [q]) (bigOf xs) 0)
+  · apply runLoopOn_step_pointwise (step' := mulSchoolStep (bigOf [q]) (bigOf xs) 0)
     intro σ
-    unfold mulIStep
+    unfold mulSchoolStep
     dsimp [bigOf]
     rfl
   rfl

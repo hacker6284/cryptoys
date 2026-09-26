@@ -39,6 +39,7 @@ import MegaDreifach.Link2.MulSmall
 import MegaDreifach.Link2.DivWide
 import MegaDreifach.Link2.DivInd
 import MegaDreifach.Link2.MulWide
+import MegaDreifach.Link2.Fact51
 
 namespace MegaDreifach.Link2
 
@@ -194,17 +195,23 @@ namespace MegaDreifach.Link2
   `divGenStep_at` stacked by `chain_down`. `rem * 10^9 + digit` stays
   below `10^18`. Not `51!`. Not `phi_chunk`. Not `v_Hash`.
 
-  The wide-by-small multiply loop is exposed (`big_mul_wide_open`) and
-  the carry walk is `kLoop_write` / `kLoop_idle` on `mulAcc`. The
-  per-digit induction that would make `big_mul` equal `natLimbs (q * n)`,
-  and therefore `big_factorial` through `51!`, is still open.
+  CLOSED: `big_mul_wide_refines`, `big_mul_nat`. A canonical digit string
+  times a one-limb factor is `natLimbs` of the product. The right factor is
+  the small one (`big_factorial`, Horner `* 256`). Each cell
+  `digit * q + carry` stays below `10^18`. Not the opposite orientation
+  (one limb on the left, wide factorial on the right).
 
-  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
-  (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
-  bytes; `peel_leading` returns every digit below `limbCap d` for `d ≤ 26`,
-  and `big_factorial` reaches `26!`, not `27!` and not 51; `big_from_be`
-  reaches length `≤ 7`, not the 28-byte pad block). Positive `range_list`
-  (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in
+  CLOSED: `big_factorial_51`. Domain `n ≤ 51`. `51! < 10^72`, at most eight
+  base-`10^9` limbs. Each step is `big_mul_nat`. Not `phi_chunk`. Not
+  `phi_inv`. Not `v_Hash`.
+
+  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open.
+  `big_factorial` now reaches `51!`, but `peel_leading` still stops at
+  `d ≤ 26`: the closing product is a one-limb digit times a wide factorial
+  (the other `big_mul` orientation), and the remainder is `mag_sub`.
+  `big_from_be` reaches length `≤ 7`, not the 28-byte pad block (Horner
+  needs `big_add` at arbitrary width). Positive `range_list` (`0 < n`,
+  `FitsLen`, including 52) is already `range_list_refines` in
   `EvenRank.lean`. A positive corner or edge rank is outside this limb
   fragment.
 -/

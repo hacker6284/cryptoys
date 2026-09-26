@@ -327,7 +327,7 @@ private theorem jDigit (q x c : Nat) (out : List Nat) (j : Nat)
   rw [embed_set_nat out j ((q * x + c) % limbBase) hj, Nat.mul_comm q x]
   rfl
 
-private theorem jDigitAt (q : Nat) (xs out : List Nat) (j c : Nat)
+theorem jDigitAt (q : Nat) (xs out : List Nat) (j c : Nat)
     (hj : j < out.length) (hjx : j < xs.length) (h0 : out[j] = 0)
     (hx : xs[j] < limbBase) (hq : q < limbBase) (hc : c < limbBase)
     (hfits : FitsLen (j + 1)) :
@@ -360,6 +360,34 @@ private theorem jDigitAt (q : Nat) (xs out : List Nat) (j c : Nat)
   -- `jDigit` reads with literal `0`, while this loop reuses `ij`.
   -- Both are `j` after the first `addI`, so unfold that equality by `jDigit`'s proof shape:
   exact hbody
+
+/-- `jDigitAt`, wrapped as the `Flow.cont` the schoolbook loop returns. -/
+theorem jDigitFlow (q : Nat) (xs out : List Nat) (j c : Nat)
+    (hj : j < out.length) (hjx : j < xs.length) (h0 : out[j] = 0)
+    (hx : xs[j] < limbBase) (hq : q < limbBase) (hc : c < limbBase)
+    (hfits : FitsLen (j + 1)) :
+    ((do
+      let p ←
+        (do
+          let ij ← SudoRt.addI (0 : Int) (Int.ofNat j)
+          let cur0 ← SudoRt.atL (embed out) ij
+          let ai ← SudoRt.atL (embed [q]) (0 : Int)
+          let bj ← SudoRt.atL (embed xs) (Int.ofNat j)
+          let prod ← SudoRt.mulI ai bj
+          let s1 ← SudoRt.addI cur0 prod
+          let cur ← SudoRt.addI s1 (Int.ofNat c)
+          let ij2 ← SudoRt.addI (0 : Int) (Int.ofNat j)
+          let digit ← SudoRt.modI cur Megadreifach.limb_base
+          let out ← SudoRt.putL (embed out) ij2 digit
+          let carry ← SudoRt.divI cur Megadreifach.limb_base
+          pure (out, carry))
+      pure (SudoRt.Flow.cont p)) :
+        Except SudoRt.Trap (SudoRt.Flow (Array Int × Int) Megadreifach.BigInt)) =
+      .ok (SudoRt.Flow.cont
+        (embed (out.set j ((xs[j] * q + c) % limbBase)),
+          Int.ofNat ((xs[j] * q + c) / limbBase))) := by
+  rw [jDigitAt q xs out j c hj hjx h0 hx hq hc hfits, ok_bind]
+  rfl
 
 /-- Accumulator after consuming the first `j` limbs of a small-left multiply. -/
 private def jSt (q : Nat) (xs : List Nat) (j : Nat) : Array Int × Int :=

@@ -17,6 +17,8 @@ assert.match(growJs, /export function bindGrowFields/);
 assert.match(growJs, /8\.5rem/);
 
 const playroomCss = readFileSync(new URL("../playroom/style.css", import.meta.url), "utf8");
+assert.match(growRules, /textarea\.grow-field\[hidden\][\s\S]*display:\s*none\s*!important/, "hidden Message must beat dock display:block");
+assert.match(playroomCss, /\.playroom-dock textarea\.grow-field\[hidden\][\s\S]*display:\s*none\s*!important/);
 assert.match(playroomCss, /\.playroom-dock textarea\.grow-field/);
 assert.match(
     playroomCss,

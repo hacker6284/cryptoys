@@ -49,7 +49,7 @@ assert.match(scramble, /function play\(\) \{[\s\S]*?ensureTimeline\(\)/, "Play b
 assert.match(scramble, /function enterTeach\(\) \{[\s\S]*?ensureTimeline\(\)/, "Step / teach binds the timeline");
 assert.match(scramble, /async function solve\(\) \{[\s\S]*?ensureTimeline\(\)/, "Solve binds the current Message first");
 assert.match(scramble, /hashSelectedFile/, "file hash is a separate Digest path");
-assert.match(scramble, /hashWithPublicApi/, "modest file Digest uses the typed update/evaluate path");
+assert.match(scramble, /hashSilentOnHost/, "file Digest fallback is the silent walk, not text update");
 
 const doubledeal = readFileSync(new URL("../doubledeal/session.js", import.meta.url), "utf8");
 assert.match(doubledeal, /function preview\(\)/, "DoubleDeal keeps a Digest-friendly input path");

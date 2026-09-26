@@ -382,6 +382,10 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   color: var(--fg);
 }
 
+.playroom-dock textarea.grow-field[hidden] {
+  display: none !important;
+}
+
 .playroom-dock textarea.grow-field {
   display: block;
   width: 100%;

@@ -17,7 +17,7 @@ import {
     bindMessageFile,
     canWalkFile,
     checkFileSize,
-    createIncrementalHasher,
+    createSilentHasher,
     formatFileSize,
     hashFile,
     hideFileChip,
@@ -553,16 +553,10 @@ export function createScrambleSession({
         showStatus(caption());
     }
 
-    async function hashWithPublicApi(file, { onProgress, signal } = {}) {
-        // Same host-facing update / evaluate as typed Message.
-        if (canWalkFile(file)) {
-            const bytes = Array.from(new Uint8Array(await file.arrayBuffer()));
-            const state = version === 2 ? scramble_v2() : scramble_v1();
-            update(state, bytes);
-            const result = evaluate(state);
-            return { digest: result.digest, bytes, trace: result.trace };
-        }
-        const hasher = createIncrementalHasher({ scramble_v1, scramble_v2, update, evaluate });
+    async function hashSilentOnHost(file, { onProgress, signal } = {}) {
+        const impl = await import("./generated/_scramble_impl.mjs");
+        const rt = await import("./generated/_sudo_rt.mjs");
+        const hasher = createSilentHasher({ impl, rt });
         hasher.start(version);
         await readFileChunks(file, {
             chunkBytes: DEMO_FILE_CHUNK_BYTES,
@@ -573,7 +567,7 @@ export function createScrambleSession({
                 await new Promise((resolve) => setTimeout(resolve, 0));
             },
         });
-        return { digest: hasher.finish().digest, bytes: [], trace: [] };
+        return { digest: hasher.finish().digest };
     }
 
     async function hashSelectedFile() {
@@ -592,26 +586,20 @@ export function createScrambleSession({
             setIoNote(`Hashing ${formatFileSize(processed)} / ${formatFileSize(total)}.`);
         };
         try {
-            let got;
-            if (modest) {
-                got = await hashWithPublicApi(file, { signal: abort.signal });
-            } else {
-                const { digest } = await hashFile(file, {
-                    version,
-                    workerUrl,
-                    chunkBytes: DEMO_FILE_CHUNK_BYTES,
-                    signal: abort.signal,
-                    hashInline: hashFileFn,
-                    onProgress,
-                    fallback: (opts) => hashWithPublicApi(opts.file, opts),
-                });
-                got = { digest, bytes: [], trace: [] };
-            }
+            const { digest } = await hashFile(file, {
+                version,
+                workerUrl,
+                chunkBytes: DEMO_FILE_CHUNK_BYTES,
+                signal: abort.signal,
+                hashInline: hashFileFn,
+                onProgress,
+                fallback: (opts) => hashSilentOnHost(opts.file, opts),
+            });
             if (token !== job || abort.signal.aborted) return;
             hashing = false;
-            if (got.trace?.length) trace = got.trace;
+            const bytes = modest ? Array.from(new Uint8Array(await file.arrayBuffer())) : [];
             setIoNote(modest ? "" : walkNote());
-            applyFileDigest(got.digest, got.bytes || []);
+            applyFileDigest(digest, bytes);
         } catch (err) {
             if (err?.name === "AbortError") return;
             if (token !== job) return;

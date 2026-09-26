@@ -159,13 +159,22 @@ const view = {
     highlightRuleB() {},
 };
 
-const { createIncrementalHasher } = await import("../shared/file-hash.js");
+const { createIncrementalHasher, createSilentHasher } = await import("../shared/file-hash.js");
 const { DEMO_FILE_MAX_BYTES, DEMO_FILE_TEACH_MAX_BYTES } = await import("../shared/file-hash.js");
 
 async function hashInline({ file, version, onProgress }) {
-    const { scramble_v1, scramble_v2, update, evaluate } = await import("./generated/scramble.mjs");
     const bytes = new Uint8Array(await file.arrayBuffer());
     onProgress?.({ processed: Math.min(1, bytes.length), total: bytes.length || 1 });
+    if (existsSync(impl)) {
+        const scrambleImpl = await import("./generated/_scramble_impl.mjs");
+        const rt = await import("./generated/_sudo_rt.mjs");
+        const hasher = createSilentHasher({ impl: scrambleImpl, rt });
+        hasher.start(version);
+        hasher.push(bytes);
+        onProgress?.({ processed: bytes.length, total: bytes.length });
+        return hasher.finish();
+    }
+    const { scramble_v1, scramble_v2, update, evaluate } = await import("./generated/scramble.mjs");
     const hasher = createIncrementalHasher({ scramble_v1, scramble_v2, update, evaluate });
     hasher.start(version);
     hasher.push(bytes);
@@ -225,9 +234,15 @@ assert.equal(nodes.message.hidden, false, "clear restores the typed Message fiel
 assert.ok(nodes.digest.value.startsWith("0x"), "clear rehashes typed Message");
 assert.equal(algs.length, algsAfterType + 1, "clearing a file updates Digest only");
 
-const large = new File([new Uint8Array(DEMO_FILE_TEACH_MAX_BYTES + 8)], "wide.bin");
-await session.applyFile(large);
-assert.ok(nodes.digest.value.startsWith("0x"), "large file still fills Digest");
+const jpeg = new Uint8Array(DEMO_FILE_TEACH_MAX_BYTES + 64);
+jpeg[0] = 0xff;
+jpeg[1] = 0xd8;
+jpeg[2] = 0xff;
+const image = new File([jpeg], "shot.jpg", { type: "image/jpeg" });
+await session.applyFile(image);
+assert.ok(nodes.digest.value.startsWith("0x"), "JPEG pick writes Digest without a second click");
+assert.match(nodes["message-file-name"].textContent, /shot\.jpg/);
+assert.equal(nodes.message.hidden, true, "filename replaces the Message content, not the paperclip slot");
 assert.match(nodes["io-note"].textContent, /Play \/ Step stay off/);
 const algsAfterLarge = algs.length;
 session.enterTeach();

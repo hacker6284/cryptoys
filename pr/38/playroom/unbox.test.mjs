@@ -30,6 +30,8 @@ const adapters = readFileSync(new URL("./adapters.js", import.meta.url), "utf8")
 assert.match(adapters, /playPhysical/);
 assert.match(adapters, /createUnboxRig/);
 assert.match(adapters, /formSessionTable/);
+assert.match(adapters, /waitToyIdle/);
+assert.match(adapters, /continueTo/);
 assert.match(adapters, /deck2/);
 assert.equal(adapters.includes("cutToTable"), false, "enter does not hide-prop / show-table");
 assert.equal(adapters.includes("hideProp"), false, "happy path does not hide the unbox prop");
@@ -55,7 +57,9 @@ const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
 assert.match(app, /unbox_travel/);
 assert.match(app, /skipEnter/);
 assert.match(app, /prepareEnter/);
-assert.match(app, /delay: HOLD_MS/);
+assert.match(app, /trackEnter/);
+assert.match(app, /holdMs: HOLD_MS/);
+assert.match(app, /continueTo/);
 assert.ok(app.indexOf("via: \"shelf\"") > app.indexOf("id === \"doubledeal\""), "via:shelf stays on Scramble only");
 const tickAt = app.indexOf("requestAnimationFrame(tick)");
 const deepLinkAt = app.indexOf("void startAlgo(initialAlgo)");
@@ -65,6 +69,8 @@ assert.equal(app.includes("poses.snap(\"doubledeal\")"), false, "skip does not s
 
 const physical = readFileSync(new URL("./unbox-physical.js", import.meta.url), "utf8");
 assert.match(physical, /setFlap/);
+assert.match(physical, /hopTo/);
+assert.match(physical, /seatToys/);
 assert.match(physical, /restPose|getBoxRestPose/);
 assert.equal(physical.includes("playShot"), false, "physical take does not snap named camera shots");
 assert.equal(physical.includes("playBloom"), false);
@@ -74,7 +80,18 @@ assert.ok(!physical.includes("104"), "physical take does not deal 104 cipher sea
 const form = readFileSync(new URL("./table-form.js", import.meta.url), "utf8");
 assert.match(form, /formSessionTable/);
 assert.match(form, /shrinkHero/);
+assert.match(form, /hopTo/);
 assert.equal(form.includes("opacity"), false, "table form does not fade");
 assert.equal(form.includes("gsap"), false);
+
+const motion = readFileSync(new URL("./motion.js", import.meta.url), "utf8");
+assert.match(motion, /export function hopTo/);
+assert.match(motion, /export function trackEnter/);
+assert.match(motion, /export function continueTo/);
+assert.match(motion, /export async function waitToyIdle/);
+assert.match(motion, /export async function seatToys/);
+assert.equal(motion.includes("fadeTree"), false, "shared motion does not fade");
+assert.equal(motion.includes("gsap"), false);
+assert.equal(motion.includes("cutToTable"), false);
 
 console.log("unbox tests ok");

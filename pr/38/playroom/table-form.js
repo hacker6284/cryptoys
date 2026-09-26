@@ -1,5 +1,6 @@
 import { DEAL_SCALE } from "./constants.js";
-import { easeInOutCubic, easeOutCubic, lerp } from "./beat-clock.js";
+import { easeInOutCubic, lerp } from "./beat-clock.js";
+import { hopTo } from "./motion.js";
 import { HAND_FACE_INDEXES } from "./unbox-hand.js";
 
 /**
@@ -35,9 +36,8 @@ export async function formSessionTable({
     messageOrder.forEach((id, index) => {
         const mesh = msgMeshes[id];
         if (!mesh) return;
-        const from = mesh.position.clone();
         const to = table.seatLocal("message", index);
-        jobs.push(hopCard(mesh, from, to, clock, gen, {
+        jobs.push(hopSeat(mesh, to, clock, gen, {
             delay: 11 * index,
             ms: 440,
             lift: 0.32,
@@ -48,9 +48,8 @@ export async function formSessionTable({
         if (packetFaces.has(id)) return;
         const mesh = keyMeshes[id];
         if (!mesh) return;
-        const from = mesh.position.clone();
         const to = table.seatLocal("key", index);
-        jobs.push(hopCard(mesh, from, to, clock, gen, {
+        jobs.push(hopSeat(mesh, to, clock, gen, {
             delay: 11 * index + 36,
             ms: 440,
             lift: 0.32,
@@ -83,15 +82,9 @@ export async function formSessionTable({
     table.showDecks(messageOrder, keyOrder);
 }
 
-function hopCard(mesh, from, to, clock, gen, { delay = 0, ms = 440, lift = 0.3 } = {}) {
+function hopSeat(mesh, dest, clock, gen, opts) {
     mesh.visible = true;
-    return (async () => {
-        if (delay) await clock.wait(delay, gen);
-        await clock.tween(ms, (t) => {
-            mesh.position.lerpVectors(from, to, t);
-            mesh.position.y = lerp(from.y, to.y, t) + Math.sin(Math.PI * t) * lift;
-        }, { ease: easeOutCubic, generation: gen });
-    })();
+    return hopTo(mesh, dest, clock, gen, opts);
 }
 
 function shrinkHero(mesh, dest, clock, gen, { delay = 0, ms = 620 } = {}) {

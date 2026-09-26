@@ -18,6 +18,7 @@ import MegaDreifach.Link2.Compose
 import MegaDreifach.Link2.RequirePerm
 import MegaDreifach.Link2.PackOri
 import MegaDreifach.Link2.EvenRank
+import MegaDreifach.Link2.PosBytes
 
 namespace MegaDreifach.Link2
 
@@ -52,8 +53,14 @@ namespace MegaDreifach.Link2
   The bound keeps every Horner step in the one-limb multiply / two-limb add.
   Not every corner rank (`20!/2` is three limbs). Not length 30. Not M3 glue.
 
-  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` and `position_to_bytes`
-  are still open.
+  CLOSED: `position_to_bytes_refines`, `position_to_bytes_refines_array`.
+  Domain `PosBytesWf` / `BytesWf`: corner `evenRank = 0`, corner-ori `packOri3 = 0`,
+  edge Lehmer prefix `0..27` (`EdgeZero`, so `evenRank = 0`), edge ori any `Ori2Wf`.
+  The 29 bytes are `toBE 29 (packOri2 eo)`. `even30` equals `30!/2` and multiplies
+  a zero accumulator. Not every legal position. Not `v_Hash`.
+
+  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open.
+  A positive corner or edge rank is outside this limb fragment.
 -/
 
 end MegaDreifach.Link2

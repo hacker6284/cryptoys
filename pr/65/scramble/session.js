@@ -12,7 +12,9 @@ import { bindGrowFields } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
 import { createLiveDigest } from "../shared/live-digest.js";
 import {
+    DEMO_FILE_BUSY_MS,
     DEMO_FILE_CHUNK_BYTES,
+    DEMO_FILE_DETERMINATE_BYTES,
     DEMO_FILE_HOST_CHUNK_BYTES,
     DEMO_FILE_TEACH_MAX_BYTES,
     DEMO_FILE_WORKER_READY_MS,
@@ -561,13 +563,15 @@ export function createScrambleSession({
         if (!fileProgress || !fileProgressBar) return;
         const max = Number(total) || 0;
         const done = Number(processed) || 0;
-        if (max <= 0) {
-            fileProgress.hidden = true;
-            fileProgressBar.style.width = "0%";
+        fileProgress.hidden = false;
+        if (max < DEMO_FILE_DETERMINATE_BYTES) {
+            fileProgress.classList.add("is-busy");
+            fileProgress.removeAttribute("aria-valuenow");
+            fileProgressBar.style.width = "";
             return;
         }
-        const pct = Math.max(0, Math.min(100, Math.round((done / max) * 100)));
-        fileProgress.hidden = false;
+        fileProgress.classList.remove("is-busy");
+        const pct = done <= 0 ? 0 : Math.max(1, Math.min(100, Math.round((done / max) * 100)));
         fileProgress.setAttribute("aria-valuenow", String(pct));
         fileProgressBar.style.width = `${pct}%`;
     }
@@ -575,9 +579,15 @@ export function createScrambleSession({
     function clearFileProgress() {
         if (fileProgress) {
             fileProgress.hidden = true;
+            fileProgress.classList.remove("is-busy");
             fileProgress.setAttribute("aria-valuenow", "0");
         }
         if (fileProgressBar) fileProgressBar.style.width = "0%";
+    }
+
+    async function holdFileBusy(started) {
+        const wait = DEMO_FILE_BUSY_MS - (Date.now() - started);
+        if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
     }
 
     async function hashSilentOnHost(file, { onProgress, signal } = {}) {
@@ -606,6 +616,7 @@ export function createScrambleSession({
         setDigest("");
         live.afterDigest();
         const modest = canWalkFile(file);
+        const started = Date.now();
         setFileProgress(0, file.size || 1);
         const onProgress = ({ processed, total }) => {
             if (token !== job) return;
@@ -632,6 +643,8 @@ export function createScrambleSession({
             const bytes = modest ? Array.from(new Uint8Array(await file.arrayBuffer())) : [];
             setIoNote(modest ? "" : walkNote());
             applyFileDigest(digest, bytes);
+            await holdFileBusy(started);
+            if (token !== job || abort.signal.aborted) return;
             clearFileProgress();
         } catch (err) {
             if (err?.name === "AbortError") return;
@@ -639,6 +652,8 @@ export function createScrambleSession({
             hashing = false;
             setDigest("");
             live.afterDigest();
+            await holdFileBusy(started);
+            if (token !== job) return;
             clearFileProgress();
             setIoNote(err?.message || "Could not hash this file.");
         }

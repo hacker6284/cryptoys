@@ -6,6 +6,8 @@ import {
     DEMO_FILE_HOST_CHUNK_BYTES,
     DEMO_FILE_MAX_BYTES,
     DEMO_FILE_TEACH_MAX_BYTES,
+    DEMO_FILE_BUSY_MS,
+    DEMO_FILE_DETERMINATE_BYTES,
     DEMO_FILE_WORKER_READY_MS,
     canWalkFile,
     checkFileSize,
@@ -26,6 +28,8 @@ assert.equal(DEMO_FILE_TEACH_MAX_BYTES, DEMO_INPUT_MAX_CHARS, "Play/teach cap ma
 assert.ok(DEMO_FILE_CHUNK_BYTES >= 4 * 1024);
 assert.ok(DEMO_FILE_HOST_CHUNK_BYTES >= 4 * 1024);
 assert.equal(DEMO_FILE_WORKER_READY_MS, 1000, "worker ready must fail over in ~1s");
+assert.equal(DEMO_FILE_BUSY_MS, 200, "tiny picks still show hashing chrome briefly");
+assert.equal(DEMO_FILE_DETERMINATE_BYTES, 1024 * 1024, "multi-MB picks use a determinate bar");
 
 assert.equal(formatFileSize(0), "0 B");
 assert.equal(formatFileSize(512), "512 B");
@@ -225,8 +229,10 @@ const hashFn = scramble.match(/async function hashSelectedFile\(\) \{[\s\S]*?\n 
 assert.ok(hashFn, "hashSelectedFile is the file Digest path");
 assert.match(hashFn[0], /hashSilentOnHost/, "playroom dock hashes on the fast host cube");
 assert.match(hashFn[0], /applyFileDigest\(digest/, "Digest hex is written when the hasher finishes");
-assert.match(hashFn[0], /setFileProgress/, "hashing shows determinate progress");
+assert.match(hashFn[0], /setFileProgress/, "hashing shows progress chrome on pick");
+assert.match(hashFn[0], /holdFileBusy/, "tiny files keep the busy bar for ~200ms");
 assert.match(hashFn[0], /clearFileProgress/);
+assert.match(scramble, /is-busy/);
 assert.doesNotMatch(hashFn[0], /view\.setAlg/, "file hash must not call setAlg while hashing");
 assert.doesNotMatch(hashFn[0], /bindAlg\(/);
 assert.doesNotMatch(hashFn[0], /mapTraceToAlg/);

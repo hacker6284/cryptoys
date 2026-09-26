@@ -69,6 +69,11 @@ function el(tag = "div", extras = {}) {
         },
         setAttribute(name, value) {
             if (name === "aria-label") this.title = value;
+            this.attrs = this.attrs || {};
+            this.attrs[name] = value;
+        },
+        removeAttribute(name) {
+            if (this.attrs) delete this.attrs[name];
         },
         replaceChildren(...next) {
             this.children = next;
@@ -173,6 +178,7 @@ async function hashInline({ file, version, onProgress }) {
         hasher.push(bytes);
         onProgress?.({ processed: bytes.length, total: bytes.length });
         assert.equal(nodes["message-file-progress"].hidden, false, "progress is visible while hashing");
+        assert.equal(nodes["message-file-progress"].classList.contains("is-busy"), bytes.length < 1024 * 1024, "small files use the busy pulse");
         return hasher.finish();
     }
     const { scramble_v1, scramble_v2, update, evaluate } = await import("./generated/scramble.mjs");

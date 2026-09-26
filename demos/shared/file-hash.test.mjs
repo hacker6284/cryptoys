@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import {
     DEMO_FILE_CHUNK_BYTES,
     DEMO_FILE_MAX_BYTES,
     DEMO_FILE_TEACH_MAX_BYTES,
     canWalkFile,
     checkFileSize,
+    createGeneratedHasher,
     createIncrementalHasher,
     dropTeachTrace,
     formatFileLabel,
@@ -125,14 +127,31 @@ const viaWorker = await hashFile(file, {
 assert.deepEqual(viaWorker.digest, [0, 2, 4], "worker protocol returns the incremental digest");
 assert.deepEqual(workerProgress, [2, 4], "main thread only hears progress, never setAlg");
 
+const implUrl = new URL("../scramble/generated/_scramble_impl.mjs", import.meta.url);
+if (existsSync(implUrl)) {
+    const impl = await import(implUrl);
+    const rt = await import(new URL("../scramble/generated/_sudo_rt.mjs", import.meta.url));
+    const hello = [104, 101, 108, 108, 111];
+    const gen = createGeneratedHasher({ impl, rt });
+    gen.start(2);
+    gen.push(hello.slice(0, 2));
+    gen.push(hello.slice(2));
+    assert.deepEqual(
+        gen.finish().digest,
+        [0, 82, 163, 199, 209, 34, 145, 209, 64],
+        "generated impl hasher matches SPEC hello v2",
+    );
+}
+
 const src = readFileSync(new URL("./file-hash.js", import.meta.url), "utf8");
 assert.match(src, /createIncrementalHasher/);
+assert.match(src, /createGeneratedHasher/);
 assert.match(src, /dropTeachTrace/);
 assert.match(src, /new Worker/);
 
 const worker = readFileSync(new URL("../scramble/hash-worker.js", import.meta.url), "utf8");
-assert.match(worker, /createIncrementalHasher/, "worker reuses the shared incremental hasher");
-assert.match(worker, /generated\/scramble\.mjs/);
+assert.match(worker, /createGeneratedHasher/, "worker hashes on the generated impl");
+assert.match(worker, /_scramble_impl\.mjs/);
 assert.doesNotMatch(worker, /setAlg/);
 assert.doesNotMatch(worker, /mapTraceToAlg/);
 

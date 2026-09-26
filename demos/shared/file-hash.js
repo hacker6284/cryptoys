@@ -62,10 +62,10 @@ export function dropTeachTrace(state) {
 }
 
 /**
- * Incremental Scramble hasher. `update` applies message nybbles to the
- * cube; we drop the teach step list after each chunk so a multi-MB file
- * cannot accumulate a Bee-Movie-scale leave trace in the worker.
- * `evaluate` then only pads + closer + seat.
+ * Incremental Scramble hasher on the host-facing generated API.
+ * Fine for tests and tiny messages. Each `update` converts the whole
+ * teach list back to host objects — do not use this for multi-KB files.
+ * The worker uses `createGeneratedHasher` on the impl instead.
  */
 export function createIncrementalHasher({ scramble_v1, scramble_v2, update, evaluate }) {
     let state = null;
@@ -87,6 +87,40 @@ export function createIncrementalHasher({ scramble_v1, scramble_v2, update, eval
             const result = evaluate(state);
             const digest = result?.digest ? Array.from(result.digest) : [];
             dropTeachTrace(state);
+            state = null;
+            return { digest };
+        },
+    };
+}
+
+/**
+ * Same math, on sudoc's internal records. Drop `steps` after each
+ * chunk so we never convert a leave list through the host wrapper.
+ * Digest still comes from generated `evaluate` (pad + closer + seat).
+ */
+export function createGeneratedHasher({ impl, rt }) {
+    let state = null;
+
+    const emptySteps = () => (typeof rt.lst === "function" ? rt.lst([]) : []);
+
+    return {
+        start(version) {
+            state = Number(version) === 1 ? impl.scramble_v1() : impl.scramble_v2();
+            if (state) state.steps = emptySteps();
+        },
+        push(bytes) {
+            if (!state) throw new Error("Hasher was not started.");
+            const list = rt.host_list(Array.from(bytes || []), (v) => rt.host_int(v));
+            if (!list.length) return;
+            state = impl.update(state, list);
+            if (state) state.steps = emptySteps();
+        },
+        finish() {
+            if (!state) throw new Error("Hasher was not started.");
+            const out = impl.evaluate(state);
+            const result = Array.isArray(out) ? out[0] : out;
+            const raw = result?.digest || [];
+            const digest = Array.from(raw, (v) => Number(rt.int_out(v)));
             state = null;
             return { digest };
         },

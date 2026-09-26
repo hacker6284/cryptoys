@@ -1,12 +1,16 @@
 /**
  * Incremental Scramble hash. Main thread streams file chunks; this
- * worker `update`s the cube and drops the teach trace so a multi-MB
- * file cannot freeze the dock or build a leave list.
+ * worker updates the generated impl cube and drops the teach list so a
+ * multi-MB file cannot freeze the dock or build a leave list.
+ *
+ * Uses `_scramble_impl.mjs` (not the host wrapper) so each chunk does
+ * not convert thousands of Step records to plain objects.
  */
-import { scramble_v1, scramble_v2, update, evaluate } from "./generated/scramble.mjs";
-import { createIncrementalHasher } from "../shared/file-hash.js";
+import * as impl from "./generated/_scramble_impl.mjs";
+import * as rt from "./generated/_sudo_rt.mjs";
+import { createGeneratedHasher } from "../shared/file-hash.js";
 
-const hasher = createIncrementalHasher({ scramble_v1, scramble_v2, update, evaluate });
+const hasher = createGeneratedHasher({ impl, rt });
 
 function reply(data) {
     self.postMessage(data);

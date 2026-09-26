@@ -42,6 +42,7 @@ import MegaDreifach.Link2.MulWide
 import MegaDreifach.Link2.MulLeft
 import MegaDreifach.Link2.Fact51
 import MegaDreifach.Link2.MagSub
+import MegaDreifach.Link2.MagAdd
 import MegaDreifach.Link2.Peel51
 
 namespace MegaDreifach.Link2

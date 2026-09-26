@@ -5,8 +5,9 @@ import { FLY_MS, LIFT_MS } from "./constants.js";
  *
  * Shelf holds one of each kind. Scramble borrows the cube. DoubleDeal
  * borrows two decks: KEY lifts from the shelf slot, MSG lifts from the
- * toy chest. Camera follow is the pose controller's job. Click skips;
- * reduced-motion snaps. DoubleDeal unbox lives in the adapter.
+ * toy chest (lid hinges open, deck leaves, lid closes). Camera follow
+ * is the pose controller's job. Click skips; reduced-motion snaps.
+ * DoubleDeal unbox lives in the adapter.
  */
 
 const RECIPES = {
@@ -181,7 +182,7 @@ export function createToyDirector(world) {
         });
     }
 
-    function animateLid(to, { snap, duration = 320 } = {}) {
+    function animateLid(to, { snap, duration = 480 } = {}) {
         if (!world.setChestLid) return Promise.resolve();
         if (snap || prefersReducedMotion()) {
             world.setChestLid(to);
@@ -214,13 +215,15 @@ export function createToyDirector(world) {
         let extraJob = null;
         if (recipe.extras.includes("chest") && extras.length) {
             extraJob = (async () => {
-                await animateLid(1, { snap });
+                await animateLid(1, { snap, duration: 480 });
                 if (token !== borrowGen || startedSkip !== skipGen) return;
                 for (const name of extras) {
                     if (token !== borrowGen || startedSkip !== skipGen) return;
                     world.setSlotEmpty(name, true);
                     await flyToy(name, world.getTablePose(name), { snap, duration: FLY_MS - 200 });
                 }
+                if (token !== borrowGen || startedSkip !== skipGen) return;
+                await animateLid(0, { snap, duration: 560 });
             })();
         }
         await flyToy(primary, world.getTablePose(primary), { snap });
@@ -237,9 +240,10 @@ export function createToyDirector(world) {
         if (flights.length || lidAnim) skip();
         const recipe = recipeOf(occupied);
         const names = recipe.toys.filter((name) => world.toys[name]);
+        if (recipe.extras.includes("chest")) await animateLid(1, { snap, duration: 420 });
         await Promise.all(names.map((name) => flyToy(name, world.getShelfPose(name), { snap })));
         for (const name of names) world.setSlotEmpty(name, false);
-        if (recipe.extras.includes("chest")) await animateLid(0, { snap });
+        if (recipe.extras.includes("chest")) await animateLid(0, { snap, duration: 520 });
         occupied = null;
         writeFlightDebug("", world.toys[names[0]]);
     }
@@ -256,7 +260,6 @@ export function createToyDirector(world) {
         if (!occupied) return;
         const recipe = recipeOf(occupied);
         if (!recipe) return;
-        if (recipe.extras.includes("chest")) world.setChestLid?.(1);
         for (const name of recipe.toys.slice(1)) {
             const toy = world.toys[name];
             const pose = world.getTablePose?.(name);
@@ -265,6 +268,7 @@ export function createToyDirector(world) {
             world.applyPose(toy, pose);
             toy.updateMatrixWorld?.(true);
         }
+        if (recipe.extras.includes("chest")) world.setChestLid?.(0);
     }
 
     function update() {

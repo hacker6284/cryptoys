@@ -1,12 +1,12 @@
 import { DEAL_SCALE } from "./constants.js";
 import { easeInOutCubic, lerp } from "./beat-clock.js";
 import { hopTo } from "./motion.js";
-import { HAND_FACE_INDEXES } from "./unbox-hand.js";
+import { HAND_FACE_INDEXES, MSG_FACE_INDEXES } from "./unbox-hand.js";
 
 /**
  * Lay the live 4×13 from the two physical decks. Message cards stream
  * from the toy-chest box; key cards stream from the shelf KEY box.
- * The short unbox packet continues into its key seats by shrinking
+ * Each short unbox packet continues into its seats by shrinking
  * into place — no hide-prop / show-table cut, no material dissolve.
  */
 export async function formSessionTable({
@@ -18,6 +18,7 @@ export async function formSessionTable({
     keyBox,
     messageBox,
     packet,
+    msgPacket,
 }) {
     if (!table || !messageOrder?.length || !keyOrder?.length) return;
 
@@ -25,15 +26,20 @@ export async function formSessionTable({
     table.pileAtWorld(messageOrder, keyOrder, messageBox, keyBox);
 
     const packetFaces = new Set(packet?.cards?.length ? HAND_FACE_INDEXES : []);
+    const msgFaces = new Set(msgPacket?.cards?.length ? MSG_FACE_INDEXES : []);
     const keyMeshes = table.cardsOf("key");
     const msgMeshes = table.cardsOf("message");
     for (const id of packetFaces) {
         if (keyMeshes[id]) keyMeshes[id].visible = false;
     }
+    for (const id of msgFaces) {
+        if (msgMeshes[id]) msgMeshes[id].visible = false;
+    }
 
     const jobs = [];
 
     messageOrder.forEach((id, index) => {
+        if (msgFaces.has(id)) return;
         const mesh = msgMeshes[id];
         if (!mesh) return;
         const to = table.seatLocal("message", index);
@@ -56,18 +62,19 @@ export async function formSessionTable({
         }));
     });
 
-    if (packet?.cards) {
-        packet.cards.forEach((hero, i) => {
-            const faceId = HAND_FACE_INDEXES[i];
-            const seatIndex = keyOrder.indexOf(faceId);
+    function shrinkPacket(rig, faceIds, side, order, meshes) {
+        if (!rig?.cards) return;
+        rig.cards.forEach((hero, i) => {
+            const faceId = faceIds[i];
+            const seatIndex = order.indexOf(faceId);
             const destIndex = seatIndex >= 0 ? seatIndex : i;
-            const seatLocal = table.seatLocal("key", destIndex);
+            const seatLocal = table.seatLocal(side, destIndex);
             const seatWorld = table.group.localToWorld(seatLocal.clone());
             jobs.push(shrinkHero(hero, seatWorld, clock, gen, {
                 delay: 28 * i,
                 ms: 620,
             }).then(() => {
-                const live = keyMeshes[faceId];
+                const live = meshes[faceId];
                 if (live) {
                     live.position.copy(seatLocal);
                     live.rotation.set(0, 0, 0);
@@ -77,6 +84,9 @@ export async function formSessionTable({
             }));
         });
     }
+
+    shrinkPacket(packet, HAND_FACE_INDEXES, "key", keyOrder, keyMeshes);
+    shrinkPacket(msgPacket, MSG_FACE_INDEXES, "message", messageOrder, msgMeshes);
 
     await Promise.all(jobs);
     table.showDecks(messageOrder, keyOrder);

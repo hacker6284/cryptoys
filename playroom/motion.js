@@ -1,10 +1,12 @@
 /**
  * Small playroom motion helpers. Continuous hops, holds, and camera
- * tracks — no opacity fades, no hide/show cuts. Used by DoubleDeal
- * enter today; named for Scramble and future toys.
+ * tracks — no opacity fades, no hide/show cuts. Shared by Scramble
+ * and DoubleDeal enter (follow-cam + hops), not one-off per-algo
+ * spaghetti.
  *
  * Not a second animation engine. Tweens stay on `beat-clock`.
- * Shelf / toybox fly-in stays on `toy-director`.
+ * Shelf / toybox fly-in stays on `toy-director`. Camera follow lives
+ * on the pose controller (`followTo`).
  */
 
 import { easeInOutCubic, easeOutCubic, lerp } from "./beat-clock.js";
@@ -80,9 +82,107 @@ export function trackToy(world, name) {
     return () => world.toys[name]?.position;
 }
 
+function worldXYZ(node) {
+    if (!node) return null;
+    if (typeof node.updateMatrixWorld === "function") {
+        node.updateMatrixWorld(true);
+        const e = node.matrixWorld?.elements;
+        if (e && e.length >= 15 && Number.isFinite(e[12])) {
+            return { x: e[12], y: e[13], z: e[14] };
+        }
+    }
+    const p = node.position || node;
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z)) {
+        return { x: p.x, y: p.y, z: p.z };
+    }
+    return null;
+}
+
+function pushPoint(points, value) {
+    if (!value) return;
+    const node = typeof value === "function" ? value() : value;
+    const p = worldXYZ(node) || (node && Number.isFinite(node.x) ? node : null);
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z)) {
+        points.push(p);
+    }
+}
+
+function focusOf(points) {
+    const c = centroidOf(points);
+    if (!c) return null;
+    let r = 0.05;
+    for (const p of points) {
+        const dx = p.x - c.x;
+        const dy = p.y - c.y;
+        const dz = p.z - c.z;
+        r = Math.max(r, Math.hypot(dx, dy, dz));
+    }
+    return { x: c.x, y: c.y, z: c.z, r };
+}
+
+/** Average of live world-space points. Empty set → null. */
+export function centroidOf(points) {
+    if (!points?.length) return null;
+    let x = 0;
+    let y = 0;
+    let z = 0;
+    for (const p of points) {
+        x += p.x;
+        y += p.y;
+        z += p.z;
+    }
+    const n = points.length;
+    return { x: x / n, y: y / n, z: z / n };
+}
+
+/**
+ * Frame the named toys (and optional extra meshes / getters).
+ * Always the full set — use `trackActive` when only in-flight
+ * props should pull the lens.
+ */
+export function trackToys(world, names, extras = []) {
+    const list = Array.isArray(names) ? names : [names];
+    return () => {
+        const points = [];
+        for (const name of list) pushPoint(points, world.toys?.[name]);
+        for (const extra of extras) pushPoint(points, extra);
+        return focusOf(points);
+    };
+}
+
+/**
+ * Dynamic enter framing: centroid of toys that are flying or
+ * unboxing, falling back to the whole set so the lens never
+ * snaps to a named empty shot.
+ */
+export function trackActive(world, names, extras = []) {
+    const list = Array.isArray(names) ? names : [names];
+    return () => {
+        const busy = [];
+        const all = [];
+        for (const name of list) {
+            const toy = world.toys?.[name];
+            if (!toy) continue;
+            pushPoint(all, toy);
+            if (toy.userData?.flightBusy || toy.userData?.unboxBusy) pushPoint(busy, toy);
+        }
+        const extracting = [];
+        for (const extra of extras) {
+            const node = typeof extra === "function" ? extra() : extra;
+            if (!node) continue;
+            pushPoint(all, node);
+            if (node.userData?.flightBusy || node.userData?.unboxBusy) pushPoint(busy, node);
+            if (node.userData?.unboxBusy && node.name === "packet") pushPoint(extracting, node);
+        }
+        if (extracting.length) return focusOf(extracting);
+        return focusOf(busy.length ? busy : all);
+    };
+}
+
 /**
  * Hold the current shot so a toy leaving home stays in frame, then
- * ease to `to` while tracking. No named-shot snap on the happy path.
+ * ease to `to` while tracking. Kept for callers that still want a
+ * named-shot ease; happy-path hub→play uses `followEnter`.
  */
 export function trackEnter(poses, {
     to,
@@ -95,6 +195,37 @@ export function trackEnter(poses, {
     if (reduced) {
         poses.snap?.(to);
         return;
+    }
+    poses.goTo(to, {
+        duration,
+        delay: holdMs || 0,
+        track,
+    });
+}
+
+/**
+ * Shared hub→play enter for Scramble and DoubleDeal. Starts from the
+ * live hub framing, follows the actual flying toys (no via:shelf /
+ * unbox_travel chain), and lands at `to` without a cut.
+ */
+export function followEnter(poses, {
+    to,
+    track,
+    holdMs = 0,
+    duration,
+    reduced = false,
+} = {}) {
+    if (!poses) return;
+    if (reduced) {
+        poses.snap?.(to);
+        return;
+    }
+    if (poses.followTo) {
+        return poses.followTo(to, {
+            duration,
+            delay: holdMs || 0,
+            track,
+        });
     }
     poses.goTo(to, {
         duration,

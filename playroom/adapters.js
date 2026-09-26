@@ -7,10 +7,10 @@ import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
-import { continueTo, waitToyIdle } from "./motion.js";
+import { continueTo, trackActive, waitToyIdle } from "./motion.js";
 import { formSessionTable } from "./table-form.js";
-import { pickHandTextures } from "./unbox-hand.js";
-import { createDealerKey, disposeDealerKey, playPhysical, restBoxes } from "./unbox-physical.js";
+import { pickHandTextures, pickMsgTextures } from "./unbox-hand.js";
+import { createDealerKey, disposeDealerKey, playDualUnbox, restBoxes } from "./unbox-physical.js";
 import { createUnboxRig } from "./unbox-rig.js";
 
 /**
@@ -507,6 +507,7 @@ function createDoubleDealAdapter() {
     let preloadPromise = null;
     let specObjectUrl = null;
     let unbox = null;
+    let unbox2 = null;
     let clock = null;
     let enterGen = 0;
     let keyLight = null;
@@ -528,45 +529,64 @@ function createDoubleDealAdapter() {
         return preloadPromise;
     }
 
-    function restowUnbox() {
-        if (!unbox) return;
-        for (const mesh of unbox.cards) {
-            if (mesh.parent && mesh.parent !== unbox.packet) unbox.packet.attach(mesh);
+    function restowOne(rig) {
+        if (!rig) return;
+        for (const mesh of rig.cards) {
+            if (mesh.parent && mesh.parent !== rig.packet) rig.packet.attach(mesh);
         }
-        if (unbox.packet.parent !== unbox.group) unbox.group.add(unbox.packet);
-        unbox.restow();
-        unbox.group.visible = true;
+        if (rig.packet.parent !== rig.group) rig.group.add(rig.packet);
+        rig.restow();
+        rig.group.visible = true;
+        rig.group.userData.unboxBusy = false;
+        if (rig.packet) rig.packet.userData.unboxBusy = false;
+    }
+
+    function restowUnbox() {
+        restowOne(unbox);
+        restowOne(unbox2);
         if (keyLight) keyLight.intensity = 0;
+    }
+
+    async function adoptRig(name, rig, prev) {
+        if (prev) {
+            rig.group.position.copy(prev.position);
+            rig.group.rotation.copy(prev.rotation);
+            if (prev.quaternion && rig.group.quaternion) {
+                rig.group.quaternion.copy(prev.quaternion);
+            }
+        }
+        world.replaceToy(name, rig.group);
+        disposeObject(prev);
+        return rig;
     }
 
     async function prepareEnter() {
         if (!world) return null;
         const loaded = await preload();
+        const anisotropy = Math.min(8, world.renderer?.capabilities?.getMaxAnisotropy?.() || 4);
         if (!unbox) {
-            const anisotropy = Math.min(8, world.renderer?.capabilities?.getMaxAnisotropy?.() || 4);
             unbox = await createUnboxRig({
                 anisotropy,
                 textures: pickHandTextures(loaded.textures),
                 sharedMaps: true,
+                label: "KEY",
+                bodyHex: "#6b1e1e",
             });
-            const prev = world.toys.deck;
-            if (prev) {
-                unbox.group.position.copy(prev.position);
-                unbox.group.rotation.copy(prev.rotation);
-                if (prev.quaternion && unbox.group.quaternion) {
-                    unbox.group.quaternion.copy(prev.quaternion);
-                }
-            }
-            world.replaceToy("deck", unbox.group);
-            disposeObject(prev);
+            await adoptRig("deck", unbox, world.toys.deck);
         }
-        unbox.restow();
-        unbox.group.visible = true;
+        if (!unbox2) {
+            unbox2 = await createUnboxRig({
+                anisotropy,
+                textures: pickMsgTextures(loaded.textures),
+                sharedMaps: true,
+                label: "MSG",
+                bodyHex: "#1a2a44",
+            });
+            await adoptRig("deck2", unbox2, world.toys.deck2);
+        }
+        restowUnbox();
         if (!unbox.group.userData.flightBusy) world.shelfHome("deck");
-        if (world.toys.deck2 && !world.toys.deck2.userData.flightBusy) {
-            world.shelfHome("deck2");
-            world.toys.deck2.visible = true;
-        }
+        if (unbox2 && !unbox2.group.userData.flightBusy) world.shelfHome("deck2");
         return unbox;
     }
 
@@ -633,11 +653,17 @@ function createDoubleDealAdapter() {
                 table.rememberSeated?.();
                 clock = createBeatClock({ reduced });
                 enterGen = clock.begin();
+                const enterTrack = trackActive(world, ["deck", "deck2"], [
+                    () => unbox?.packet,
+                    () => unbox2?.packet,
+                ]);
                 if (!reduced && !cancelEnter && unbox) {
-                    await playPhysical({
+                    poses?.followLive?.(enterTrack);
+                    poses?.setTrack?.(enterTrack);
+                    await playDualUnbox({
                         world,
-                        rig: unbox,
-                        poses,
+                        key: unbox,
+                        msg: unbox2,
                         clock,
                         gen: enterGen,
                         keyLight,
@@ -651,6 +677,8 @@ function createDoubleDealAdapter() {
                 }
                 if (cancelEnter) return session;
                 await waitToyIdle(world.toys.deck2, clock, enterGen);
+                poses?.followLive?.(null);
+                poses?.releaseFrame?.();
                 const seated = continueTo(poses, "doubledeal", {
                     duration: reduced ? 480 : 1280,
                 });
@@ -669,6 +697,7 @@ function createDoubleDealAdapter() {
                         keyBox,
                         messageBox,
                         packet: reduced || !unbox ? null : unbox,
+                        msgPacket: reduced || !unbox2 ? null : unbox2,
                     });
                 }
                 holdLayout = false;
@@ -686,6 +715,8 @@ function createDoubleDealAdapter() {
         async leave() {
             cancelEnter = true;
             skipEnter();
+            poses?.followLive?.(null);
+            poses?.releaseFrame?.();
             session?.dispose();
             session = null;
             if (specObjectUrl) {
@@ -707,9 +738,9 @@ function createDoubleDealAdapter() {
             poses?.unlockOrbit?.();
         },
         revealShelf() {
-            const box = world?.toys.deck;
             if (unbox) unbox.restow();
-            if (box) box.visible = true;
+            if (unbox2) unbox2.restow();
+            if (world?.toys.deck) world.toys.deck.visible = true;
             if (world?.toys.deck2) world.toys.deck2.visible = true;
         },
     };

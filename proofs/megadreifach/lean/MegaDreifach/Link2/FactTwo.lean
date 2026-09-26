@@ -434,7 +434,8 @@ private theorem big_mul_two_limbs_rfl (lo hi r : Nat) (_hr0 : 0 < r) :
     rfl
   rfl
 
-private theorem mulIStep_low (lo hi r : Nat) (hlo : lo < limbBase) (hr : r < limbBase) :
+/-- Low limb of a two-limb × one-limb product. The carry stays below `10^9`. -/
+theorem mulIStep_low (lo hi r : Nat) (hlo : lo < limbBase) (hr : r < limbBase) :
     mulIStep (bigOf [lo, hi]) (bigOf [r]) (1 : Int)
         ((0 : Int), Array.mkArray 3 (0 : Int)) =
       .ok (SudoRt.Flow.cont

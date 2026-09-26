@@ -145,12 +145,8 @@ try {
             }
             adapter.view()?.rememberSeated?.();
             await adapter.enter({ snap: reduced || skippedStart });
+            starting = false;
             markBeat("enter-done");
-            if (capture.enabled) {
-                await new Promise((resolve) => setTimeout(resolve, 1600));
-                markBeat("enter-hold");
-                capture.snapshot?.("enter-hold");
-            }
             capture.end();
             if (leaving) return;
             writeQuery({ pose: "seated", algo: id });

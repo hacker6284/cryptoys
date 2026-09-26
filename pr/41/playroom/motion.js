@@ -259,7 +259,7 @@ function followShot(poses, {
 export function followEnter(poses, opts = {}) {
     return followShot(poses, {
         ...opts,
-        settleAt: opts.settleAt ?? 0.86,
+        settleAt: opts.settleAt ?? 0.9,
     });
 }
 

@@ -2,7 +2,9 @@
 
 Normative definition: [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/cipher/doubledeal/SPEC.md). Stones live in SPEC §6. This directory is the correctness ledger for those stones, not a second specification.
 
-DoubleDeal is a toy block cipher. It has no cryptographic security claim. The Lean package below proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
+DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v9** (current). v8 is deprecated; its vulnerability proof is in [`../deprecated/doubledeal-v8/`](../deprecated/doubledeal-v8/).
+
+> **Stage-1 status (v9 bump).** Generated Lean, TAP (10/10), and vectors are regenerated for v9. The algebraic stones and Link 2 still describe v8 SumRanks (rank-only columns) and v8 GridCycle overflow (scan from column 0); the affected theorems are listed in the v9 porting table below and stay OPEN until stage 2. The Lean package below proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
 
 ## Layers (be honest)
 
@@ -89,6 +91,27 @@ python3 proofs/doubledeal/vectors/json_to_lean.py --check  # CI: stale Lean fail
 ```
 
 Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
+
+## v9 porting table (stage 1 → stage 2)
+
+v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). The Generated tree, TAP, and vectors are v9. The hand-written algebraic model (`SumRanks.lean`, `GridCycle.lean`, `Round.lean`, `Concrete.lean`) and the Link 2 glue still describe **v8**. Rows marked **BROKEN** fail `lake build`. Rows marked **STALE** still compile, but they prove v8 facts and must be re-stated for v9. Measured on branch `doubledeal-v9` with Lean 4.14.0.
+
+| File | Theorem / def | Status | Why | Stage-2 work |
+| --- | --- | --- | --- | --- |
+| `Link2/Compose.lean` | `compose_as_loop` (assert line) | fixed (mechanical) | sudo line shift, `sudoAssert false 219` → `221` | done |
+| `Link2/SumLink.lean` | `sum_ranks_as_loop` (l. 324) | **BROKEN** (`rfl`) | the `colRankStep` mirror lacks `+ suit_of` | add the suit term to the mirror |
+| `Link2/SumLink.lean` | `colRankStep`, `colRankStep_hit`, `colRank_pref`, `rank_loop`, `colsSummed`, `colsSummed_all`, `sumColStep_hit`, `col_loop`, `sum_ranks_refines` | STALE (only compile because they sit on top of the v8 mirror) | column weight is `cardRank` | re-thread with the column weight `rank + suit` |
+| `Link2/Mix.lean` | `scanColStep`, `scanCol_hit`, `scan_loop`, `scanRowN_spec`, `scanFound_encode`, `attempt_refines` | STALE | the inner scan is now `col = (start + k) mod 13` | rotated-scan versions |
+| `Link2/Mix.lean` | `overflowStep` / `overflow_as_loop` (l. 396–446) | **BROKEN** | `overflow_seat` takes a third argument, `start` | new mirror plus loop lemma |
+| `Link2/Mix.lean` | `overflowStep_hit`, `overflow_fuel_some`, `overflow_seat_refines` (l. 448–537) | **BROKEN** | follow from the above | redo against the B3 `overflowSeat` |
+| `Link2/Mix.lean` | `mixStep` def, `placeN_step` (l. 843–943) | **BROKEN** (type mismatch) | the `overflow_seat occ t tc` call | new mirror |
+| `Link2/Mix.lean` | `mixStep_hit` (l. 1243), `mix_columns_as_loop` (l. 1391), `mix_columns_refines` | **BROKEN** | downstream | re-glue |
+| `Link2/Encrypt.lean`, `DoubleDeal/Link2.lean` | `full_round_refines`, `final_round_refines`, `encrypt_refines`, `mix_bound` | blocked (these build once SumLink and Mix are stubbed) | imports | re-glue, small |
+| `SumRanks.lean` / `Round.lean` | `sumRanks`, `invSumRanks_sumRanks`, `sumRanks_invSumRanks`; `Round` uses `sumRanks cardRank` | STALE | one weight for rows and columns | split into a row weight (`cardRank`) and a column weight (`cardRank + cardSuit`); the generic RT proofs should carry over |
+| `GridCycle.lean` | `scanRow`, `overflowSeat`, `chooseSeat`, `invMixColumns_mixColumns`, `inv_place_agree` | STALE | the overflow scan starts at column 0 | scan from the blocked target's column; redo the inverse walk agreement |
+| `Concrete.lean`, `VectorCheck.lean` (`lake exe doubledeal`) | encrypt/decrypt KATs | STALE: **15/35** vector checks pass against the v9 JSON | the skeleton is v8 | green once the two model changes land |
+
+Link 1 (sudo = Generated) stays OPEN, as before. v8's own proofs are not kept alive under `deprecated/`; only its Generated TAP and the witness check are.
 
 ## Reading order
 

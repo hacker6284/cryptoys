@@ -5,10 +5,11 @@ export const ASSET_BASE = new URL("./assets/", import.meta.url);
 
 export const CARD_W = 0.063;
 export const CARD_D = 0.088;
-// Presentation edge for the playroom Twisty cube. A store 57 mm cube
-// reads as a speck from the hub / fly cameras and as the undersized
-// cubing.js still (too-small-sunk). 120 mm matches the approved
-// on-table cream-cube size; seatOnSurface plants the live AABB.
+// Presentation edge for the playroom Twisty cube. Locked for the
+// whole scene: cubing.js may spawn at native size, then a later
+// layout / world-AABB / 1/3 puzzle.scale must not crush it. 120 mm
+// is the approved on-table cream-cube size; seatOnSurface plants
+// the live post-scale AABB.
 export const CUBE = 0.12;
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = 0.092;

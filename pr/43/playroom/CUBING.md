@@ -24,7 +24,7 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 | Tempo | `player.tempoScale` (speed slider) |
 | Seat / fly | translate `rig.group` (toy-director from motion #25) |
 | Lift-off-felt | `stageCubeView` still lifts `rig.group.y` (#25). `rig.lift` is the local hook. |
-| Size | scale `rig.fit` only — never the adopted Object3D. Target edge is `CUBE` (120 mm presentation, not a store 57 mm speck). |
+| Size | scale `rig.fit` only — never the adopted Object3D. Target edge is `CUBE` (120 mm). Fit from **local** TRS (`fitToLocalEdge` / `keepFitted`), then re-apply on every Twisty `render-scheduled` and again in `world.render` so a post-spawn layout cannot permanently crush the cube. |
 
 Session moves (including Rule B / seat as `x`/`y`/`z`) become `player.alg`.
 `createScrambleSession` drives that timeline via `playLeaves` / `jumpToLeaf`.
@@ -50,6 +50,13 @@ only. MegaDreifach is a different product; this UI does not run it.
 - Do not write the adopted Object3D matrix. Twisty keeps writing it; a
   wrapper (`rig.fit`) is how we hit the playroom `CUBE` edge. Mutating the puzzle object made
   pyraminx vanish on the spike.
+- Fit from the puzzle's **local** AABB (parent-space TRS), not a
+  rotated world box. Shelf yaw used to inflate the measured edge and
+  lock in an undersized scale for the rest of the scene.
+- `keepFitted` runs on Twisty's render-scheduled callback and on every
+  host frame. It never resets `fit.scale` to 1 (that flash is
+  spawn-big-then-shrink). If the local edge drifts (late `puzzle.scale`
+  1/3, `setAlg` layout), `fit` is corrected and the cube is reseated.
 - **`instanceof THREE.Object3D` is false.** cubing ships its own `three`
   despite the import map. Meshes still render.
 - Adopted look is **MeshBasicMaterial**. Stickers ignore pendant/HDR.

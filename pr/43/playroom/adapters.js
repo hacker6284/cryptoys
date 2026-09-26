@@ -311,7 +311,8 @@ function createScrambleAdapter() {
             world = nextWorld;
             installOpts = opts;
             // Seat is sync so the hub can hold the wrapper. Fly waits
-            // for adopt via prepareEnter / ready so scale is final.
+            // for adopt via prepareEnter / ready. Fit is kept on every
+            // Twisty render so a later layout cannot crush scale.
             puzzleId = readPuzzleSearchParam();
             const seat = createTwistySeat({ edge: CUBE });
             const prev = nextWorld.toys.cube;
@@ -319,7 +320,14 @@ function createScrambleAdapter() {
             if (prev) disposeObject(prev);
             nextWorld.applyPose(seat.group, nextWorld.getShelfPose("cube"));
             rig = stageCubeView(pendingTwistyRig(seat, puzzleId), opts);
-            adoptPromise = adoptTwistyPuzzle(seat, { puzzle: puzzleId, edge: CUBE })
+            adoptPromise = adoptTwistyPuzzle(seat, {
+                puzzle: puzzleId,
+                edge: CUBE,
+                onFitChange() {
+                    const group = world?.toys?.cube || seat.group;
+                    reseatCube(group, group.userData?.flightBusy ? "table" : "shelf");
+                },
+            })
                 .then((live) => {
                     if (typeof live.setAlg !== "function" || typeof live.playLeaves !== "function") {
                         live.dispose?.();

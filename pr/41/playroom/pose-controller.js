@@ -404,8 +404,22 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
                 tween.holdElapsed += stepDt;
                 if (tween.holdElapsed < tween.delay) {
                     apply(tween.to, 0, tween.from, null);
+                    // Hub hold keeps the room position so the lift
+                    // reads, but look eases onto the toys. A frozen
+                    // look then a whip at delay-end was the hub→enter
+                    // jump. Leave uses holdMs 0 and never hits this.
+                    if (tween.mode === "follow") {
+                        const lead = readTrack(tween.track);
+                        if (lead) {
+                            const u = easeInOutCubic(tween.holdElapsed / tween.delay);
+                            look.copy(tween.from.target).lerp(lead, u * 0.4);
+                            camera.lookAt(look);
+                            if (controls) controls.target.copy(look);
+                        }
+                    }
                     return current;
                 }
+                if (tween.mode === "follow") tween.from = capture();
                 tween.holding = false;
             }
             tween.elapsed += stepDt;

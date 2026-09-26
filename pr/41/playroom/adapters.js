@@ -589,6 +589,9 @@ function createDoubleDealAdapter() {
 
     async function prepareEnter() {
         if (!world) return null;
+        // Already adopted: do not restow / shelfHome on click — that
+        // snapped both decks at the hub→enter handoff.
+        if (unbox && unbox2) return unbox;
         const loaded = await preload();
         const anisotropy = Math.min(8, world.renderer?.capabilities?.getMaxAnisotropy?.() || 4);
         if (!unbox) {
@@ -614,6 +617,9 @@ function createDoubleDealAdapter() {
         restowUnbox();
         if (!unbox.group.userData.flightBusy) world.shelfHome("deck");
         if (unbox2 && !unbox2.group.userData.flightBusy) world.shelfHome("deck2");
+        if (!table && loaded.textures) {
+            table = stageCardTable(world, loaded.textures, { poses, visible: false });
+        }
         return unbox;
     }
 
@@ -652,46 +658,24 @@ function createDoubleDealAdapter() {
             entering = true;
             cancelEnter = false;
             try {
-                const loaded = await preload();
                 if (!unbox) await prepareEnter();
                 root = mountDoubleDealDock();
                 const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
                 poses?.lockOrbit?.();
                 if (!keyLight && world) keyLight = createDealerKey(world);
-                table = stageCardTable(world, loaded.textures, { poses, visible: true });
-                const specUrl = await resolveSpecUrl("doubledeal");
-                if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
-                // Zach 2026-09-25 continuity lock: no fades and no hard
-                // cuts. Session preview would seat the 4×13 immediately;
-                // hold that layout and lay it from the two decks instead.
-                let holdLayout = true;
-                let layout = null;
-                const view = {
-                    ...table,
-                    showDecks(message, key) {
-                        layout = { message: message.slice(), key: key.slice() };
-                        if (holdLayout) return;
-                        table.showDecks(message, key);
-                    },
-                };
-                session = loaded.sessionMod.createDoubleDealSession({
-                    view,
-                    specUrl,
-                    root,
-                    exposeTeach: true,
-                    liveDigest: true,
-                });
-                table.rememberSeated?.();
                 clock = createBeatClock({ reduced });
                 enterGen = clock.begin();
                 const enterTrack = trackActive(world, ["deck", "deck2"], [
                     () => unbox?.packet,
                     () => unbox2?.packet,
                 ]);
+                // Flap first. 104-card table + SPEC fetch used to run
+                // here and freeze the room after the fly landed.
+                let unboxJob = Promise.resolve();
                 if (!reduced && !cancelEnter && unbox) {
                     poses?.followLive?.(enterTrack);
                     poses?.setTrack?.(enterTrack);
-                    await playDualUnbox({
+                    unboxJob = playDualUnbox({
                         world,
                         key: unbox,
                         msg: unbox2,
@@ -704,12 +688,44 @@ function createDoubleDealAdapter() {
                     // both boxes slide to a standing rest, then cards
                     // stream from those piles. Instant seat only happens
                     // if the shared pose controller snaps for a11y.
-                    await restBoxes({ world, clock, gen: enterGen });
+                    unboxJob = restBoxes({ world, clock, gen: enterGen });
                 }
+                let holdLayout = true;
+                let layout = null;
+                const setupJob = (async () => {
+                    await new Promise((resolve) => requestAnimationFrame(resolve));
+                    if (cancelEnter) return;
+                    const loaded = await preload();
+                    if (!table) {
+                        table = stageCardTable(world, loaded.textures, { poses, visible: true });
+                    } else {
+                        table.show();
+                    }
+                    const specUrl = await resolveSpecUrl("doubledeal");
+                    if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
+                    const view = {
+                        ...table,
+                        showDecks(message, key) {
+                            layout = { message: message.slice(), key: key.slice() };
+                            if (holdLayout) return;
+                            table.showDecks(message, key);
+                        },
+                    };
+                    session = loaded.sessionMod.createDoubleDealSession({
+                        view,
+                        specUrl,
+                        root,
+                        exposeTeach: true,
+                        liveDigest: true,
+                    });
+                    table.rememberSeated?.();
+                })();
+                await unboxJob;
                 if (cancelEnter) return session;
                 await waitToyIdle(world.toys.deck2, clock, enterGen);
                 poses?.followLive?.(null);
                 poses?.releaseFrame?.();
+                await setupJob;
                 const seated = continueTo(poses, "doubledeal", {
                     duration: reduced ? 480 : 1280,
                 });

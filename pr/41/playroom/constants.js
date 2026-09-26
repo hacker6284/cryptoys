@@ -59,7 +59,7 @@ export const SETTLE_HOLD_MS = 90;
 // Brief hub hold so a lift reads in the landing frame before the
 // shared follow-cam starts chasing. Click/Escape still skip after LIFT_MS.
 export const HOLD_MS = 760;
-export const FOLLOW_HOLD_MS = 360;
+export const FOLLOW_HOLD_MS = 360; // position hold; look already eases onto the toys
 
 // Standalone DoubleDeal table is ~17.4 units wide. Scale the live 4×13
 // session onto the playroom felt. Enter lays these seats from the two

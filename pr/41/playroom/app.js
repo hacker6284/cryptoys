@@ -1,7 +1,7 @@
 import { adapters } from "./adapters.js";
 import { FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
 import { installCapture } from "./capture-strip.js";
-import { continueTo, followEnter, followLeave, markBeat, trackActive, trackToys } from "./motion.js";
+import { continueTo, followEnter, followLeave, markBeat, trackToys } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { playroomDebugEnabled } from "./puzzles.js";
@@ -97,6 +97,7 @@ try {
     void adapters.scramble.preload();
     void adapters.doubledeal.preload();
     await adapters.scramble.ready?.();
+    void adapters.doubledeal.prepareEnter?.();
     const director = createToyDirector(world);
 
     async function startAlgo(id, { snap = false } = {}) {
@@ -118,17 +119,22 @@ try {
             const reduced = snap || poses.prefersReducedMotion();
             ignoreSkipUntil = performance.now() + LIFT_MS;
             const warm = adapter.preload();
-            await adapter.prepareEnter?.();
+            const prep = adapter.prepareEnter?.() ?? Promise.resolve();
             const recipe = director.recipeOf(id);
             const flyToys = recipe?.toys || [meta.toy];
-            const fly = director.borrow(id, { snap: reduced });
+            // Full set from the first frame — trackActive would jump
+            // the look to KEY alone the moment it lifts, then whip to
+            // MSG. Leave already frames the whole set this way.
+            const enterTrack = trackToys(
+                world,
+                flyToys,
+                world.chest?.group ? [world.chest.group] : [],
+            );
             if (reduced) {
                 poses.snap(meta.pose);
             } else {
-                // Shared hub→play: follow whatever is in flight for
-                // the full borrow (lid + extras), then keep tracking
-                // so unbox does not cut to a named seat.
-                const enterTrack = trackActive(world, flyToys);
+                // Camera leaves the hub now. Building the tuck-boxes
+                // must not freeze the first frames of follow.
                 followEnter(poses, {
                     to: meta.pose,
                     track: enterTrack,
@@ -137,6 +143,8 @@ try {
                 });
                 poses.followLive?.(enterTrack);
             }
+            await prep;
+            const fly = director.borrow(id, { snap: reduced });
             await Promise.all([fly, warm]);
             markBeat("enter-landed");
             if (leaving) {

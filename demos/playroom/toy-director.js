@@ -1,4 +1,5 @@
 import { FLY_MS, LIFT_MS } from "./constants.js";
+import { markBeat } from "./motion.js";
 
 /**
  * Toy director.
@@ -231,6 +232,7 @@ export function createToyDirector(world) {
                 await animateLid(0, { snap, duration: 560 });
             })();
         }
+        markBeat(primary === "cube" ? "cube-fly" : "key-fly");
         await flyToy(primary, world.getTablePose(primary), { snap });
         if (snap && extraJob) await extraJob;
         const toy = world.toys[primary];
@@ -246,6 +248,7 @@ export function createToyDirector(world) {
         const recipe = recipeOf(occupied);
         const names = recipe.toys.filter((name) => world.toys[name]);
         if (recipe.extras.includes("chest")) await animateLid(1, { snap, duration: 420 });
+        markBeat("fly-home");
         await Promise.all(names.map((name) => flyToy(name, world.getShelfPose(name), { snap })));
         for (const name of names) world.setSlotEmpty(name, false);
         if (recipe.extras.includes("chest")) await animateLid(0, { snap, duration: 520 });

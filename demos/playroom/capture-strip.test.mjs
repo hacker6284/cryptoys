@@ -108,4 +108,8 @@ assert.match(app, /markBeat\("enter-landed"\)/);
 assert.match(app, /markBeat\("leave-start"\)/);
 assert.match(app, /markBeat\("hub-settle"\)/);
 
+const director = readFileSync(new URL("./toy-director.js", import.meta.url), "utf8");
+assert.match(director, /cube-fly/);
+assert.match(director, /markBeat\("fly-home"\)/);
+
 console.log("capture-strip tests ok");

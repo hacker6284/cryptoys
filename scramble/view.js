@@ -63,9 +63,8 @@ function tween(ms, step) {
 }
 
 /**
- * Hand-rolled cubie rig. Playroom Scramble uses cubing.js (`createTwistyRig`)
- * unless `?legacyCube=1`. This stays for the standalone page and that gate.
- * `edge` is the physical bounding size in world units (57 mm in the room).
+ * Hand-rolled cubie rig for the standalone teaching page
+ * (`scramble/?standalone=1`). Playroom Scramble is cubing.js only.
  */
 export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {}) {
     const root = new THREE.Group();

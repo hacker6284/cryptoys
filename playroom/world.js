@@ -3,7 +3,6 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import {
     ASSET_BASE,
-    CUBE,
     DECK_H,
     DEN,
     SHELF_Z,
@@ -19,6 +18,7 @@ import {
     SLOTS,
     toyHalfHeight,
 } from "./constants.js";
+import { seatOnSurface } from "./motion.js";
 
 function asset(path) {
     return new URL(path, ASSET_BASE).href;
@@ -145,38 +145,10 @@ function makeDeckBox(bodyColor, labelText) {
     return group;
 }
 
-function makeCubeToy() {
-    const FACE = { U: 0xf2f0e8, D: 0xf0d24a, F: 0x3a7fd4, B: 0x3aa86a, L: 0xd4552a, R: 0xd43a3a };
-    const gap = 0.0018;
-    const cubie = (CUBE - 2 * gap) / 3;
-    const pitch = cubie + gap;
-    const root = new THREE.Group();
-    const black = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.7 });
-    const plastic = (color) => new THREE.MeshStandardMaterial({
-        color,
-        roughness: 0.68,
-        metalness: 0.02,
-    });
-    for (let x = -1; x <= 1; x++) {
-        for (let y = -1; y <= 1; y++) {
-            for (let z = -1; z <= 1; z++) {
-                if (!x && !y && !z) continue;
-                const mats = [black, black, black, black, black, black];
-                if (x === 1) mats[0] = plastic(FACE.R);
-                if (x === -1) mats[1] = plastic(FACE.L);
-                if (y === 1) mats[2] = plastic(FACE.U);
-                if (y === -1) mats[3] = plastic(FACE.D);
-                if (z === 1) mats[4] = plastic(FACE.F);
-                if (z === -1) mats[5] = plastic(FACE.B);
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(cubie, cubie, cubie), mats);
-                mesh.position.set(x * pitch, y * pitch, z * pitch);
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
-                root.add(mesh);
-            }
-        }
-    }
-    return root;
+function makeCubeSlot() {
+    const group = new THREE.Group();
+    group.name = "cube-slot";
+    return group;
 }
 
 function placePlant(scene, gltf, x, y, z, maxDim, ry = 0) {
@@ -461,7 +433,7 @@ export async function mountWorld(canvas) {
     shelfWash.target.position.set(-0.5, 1.05, SHELF_Z);
     scene.add(shelfWash);
     scene.add(shelfWash.target);
-    // A quiet key on the cube slot so the 57 mm toy reads at rest and
+    // A quiet key on the cube slot so the seated toy reads at rest and
     // the empty ring reads after it lifts — not a hover-only trick.
     const cubeSlotKey = new THREE.SpotLight(0xffd8b0, 2.6, 2.6, Math.PI / 5, 0.45, 1.3);
     cubeSlotKey.position.set(SLOTS.cube.x + 0.12, SHELF_Y1 + 0.62, SHELF_Z + 0.62);
@@ -602,7 +574,7 @@ export async function mountWorld(canvas) {
     const toys = {
         deck: makeDeckBox(0x6b1e1e, "KEY"),
         deck2: makeDeckBox(0x1a2a44, "MSG"),
-        cube: makeCubeToy(),
+        cube: makeCubeSlot(),
     };
     Object.values(toys).forEach((toy) => scene.add(toy));
 
@@ -610,47 +582,16 @@ export async function mountWorld(canvas) {
         return TOP_Y + 0.032;
     }
 
-    // Measure the live mesh so the lowest point sits on a surface. The
-    // previous rest pose used SHELF_Y1 (board center) plus a pitched
-    // rotation, so the cube sat inside the shelf and stabbed the felt.
+    // Shared post-scale AABB seat. Lowest measured point lands on the
+    // surface — scale changes must not float or clip.
     function seatOn(object, { x, surfaceY, z, rotation, name }) {
-        const fallback = toyHalfHeight(name);
-        if (!object) {
-            return {
-                position: { x, y: surfaceY + fallback, z },
-                rotation: { ...rotation },
-            };
-        }
-        // Measuring mutates the live mesh; never do that on top of a
-        // lift/set-down ease or a shelf↔table flight.
-        if (object.userData.easeBusy) object.userData.cancelEase?.();
-        if (object.userData.flightBusy) {
-            return {
-                position: { x, y: surfaceY + fallback, z },
-                rotation: { x: rotation.x, y: rotation.y, z: rotation.z },
-            };
-        }
-        const prev = {
-            position: object.position.clone(),
-            quaternion: object.quaternion.clone(),
-            rotation: object.rotation.clone(),
-        };
-        object.position.set(x, 0, z);
-        object.rotation.set(rotation.x, rotation.y, rotation.z);
-        object.quaternion.setFromEuler(object.rotation);
-        object.updateMatrixWorld(true);
-        const box = new THREE.Box3().setFromObject(object);
-        const y = Number.isFinite(box.min.y)
-            ? surfaceY - box.min.y
-            : surfaceY + fallback;
-        object.position.copy(prev.position);
-        object.rotation.copy(prev.rotation);
-        object.quaternion.copy(prev.quaternion);
-        object.updateMatrixWorld(true);
-        return {
-            position: { x, y, z },
-            rotation: { x: rotation.x, y: rotation.y, z: rotation.z },
-        };
+        return seatOnSurface(object, {
+            x,
+            surfaceY,
+            z,
+            rotation,
+            fallbackHalfHeight: toyHalfHeight(name),
+        });
     }
 
     function getChestPose(name) {
@@ -720,6 +661,7 @@ export async function mountWorld(canvas) {
         if (!toy || !pose) return;
         toy.visible = true;
         applyPose(toy, pose);
+        toy.userData.seatSurface = "shelf";
         if (slots[name]) slots[name].slot.visible = false;
     }
 
@@ -816,6 +758,9 @@ export async function mountWorld(canvas) {
     }
 
     function render() {
+        // Re-apply Twisty fit after cubing.js's own rAF so a late
+        // matrix/scale write cannot stick as the drawn size.
+        toys.cube?.userData?.keepFitted?.();
         renderer.render(scene, camera);
     }
 

@@ -283,6 +283,12 @@ body.playroom.is-ready .playroom-menu {
   display: none;
 }
 
+/* Product Scramble is 3×3. Mega / Pyra chrome is ?debug=1 only. */
+html:not([data-playroom-debug="1"]) .playroom-ctl--puzzle,
+html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
+  display: none;
+}
+
 .playroom-puzzle-note {
   margin: -6px 0 0;
   font-size: 12px;

@@ -191,7 +191,10 @@ const captureSrc = readFileSync(new URL("./capture-strip.js", import.meta.url), 
 assert.match(captureSrc, /debugCapture/);
 assert.match(captureSrc, /installCapture/);
 assert.match(captureSrc, /pendingBeat/);
+assert.match(captureSrc, /camAccel/);
+assert.match(captureSrc, /nextGridAt/);
 assert.match(captureSrc, /CLOCK_STEP_MS/);
+assert.match(app, /poses\.lookTarget/);
 assert.match(app, /installCapture/);
 assert.equal(captureSrc.includes("gsap"), false);
 

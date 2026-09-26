@@ -238,7 +238,7 @@ try {
         director.update(now);
         poses.update(performance.now());
         world.render();
-        capture.tick(now);
+        capture.tick(now, world.camera, poses.lookTarget);
         requestAnimationFrame(tick);
     }
     // The rAF clock must run before any non-snap enter. Deep-link

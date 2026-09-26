@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Headless runner for `?debugCapture=1` proof strips.
+ * Headless runner for `?debugCapture=1` proof strips
+ * (fixed-Δt grid ∪ beats ∪ camAccel).
  *
  *   CAPTURE_URL=http://127.0.0.1:4173 \
  *   CAPTURE_OUT=/opt/cursor/artifacts/strips \

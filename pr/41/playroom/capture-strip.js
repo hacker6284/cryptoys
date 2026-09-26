@@ -1,7 +1,14 @@
 /**
  * Motion proof-strip harness. Off unless `?debugCapture=1`.
- * Samples the playroom canvas on named beats and on a steady clock
- * so enter/leave can be audited as a contact sheet — not one still.
+ *
+ * Composition (one sequence):
+ *   fixed-Δt grid  ∪  named beats  ∪  camera-accel spikes
+ *
+ * The grid is a constant clock for the whole enter/leave (200 ms of
+ * play time — same CLOCK_STEP_MS-capped clock as director / beat-clock
+ * / camera, so 60fps wall time ≈ play time). Beats and camAccel are
+ * *additional* labeled frames when they fire. They do not reset or
+ * redistribute the grid. Near-duplicates within ~1 frame are dropped.
  *
  * Production path: `installCapture` returns no-ops. No rAF work,
  * no overlay, no toDataURL.
@@ -10,8 +17,12 @@
 import { CLOCK_STEP_MS } from "./constants.js";
 import { onMarkBeat } from "./motion.js";
 
-export const CAPTURE_INTERVAL_MS = 240;
+export const CAPTURE_INTERVAL_MS = 200;
+export const CAPTURE_DEDUPE_MS = CLOCK_STEP_MS;
 export const CAPTURE_MAX_WIDTH = 480;
+export const CAM_ACCEL_POS = 18;
+export const CAM_ACCEL_LOOK = 14;
+export const CAM_ACCEL_COOLDOWN_MS = 160;
 
 /**
  * True when an RGBA buffer is nearly black. Used to drop the first
@@ -27,6 +38,50 @@ export function frameIsBlank(pixels, { minLit = 0.02 } = {}) {
         if (pixels[o] + pixels[o + 1] + pixels[o + 2] > 24) lit += 1;
     }
     return lit < n * minLit;
+}
+
+function len3(v) {
+    return Math.hypot(v.x, v.y, v.z);
+}
+
+function sub3(a, b) {
+    return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
+}
+
+function dot3(a, b) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+function readVec(value) {
+    if (!value) return null;
+    const x = value.x;
+    const y = value.y;
+    const z = value.z;
+    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null;
+    return { x, y, z };
+}
+
+/**
+ * Finite-difference acceleration of camera position and look, plus
+ * a velocity-reversal flag for turnarounds.
+ */
+export function cameraAccel(prevVel, vel, dtSec) {
+    if (!(dtSec > 0) || !prevVel || !vel) {
+        return { pos: 0, look: 0, reverse: false };
+    }
+    const aPos = len3(sub3(vel.pos, prevVel.pos)) / dtSec;
+    const aLook = len3(sub3(vel.look, prevVel.look)) / dtSec;
+    const reverse = (dot3(vel.pos, prevVel.pos) < 0 && len3(vel.pos) > 0.35 && len3(prevVel.pos) > 0.35)
+        || (dot3(vel.look, prevVel.look) < 0 && len3(vel.look) > 0.25 && len3(prevVel.look) > 0.25);
+    return { pos: aPos, look: aLook, reverse };
+}
+
+export function isCamAccelSpike(accel, {
+    posMin = CAM_ACCEL_POS,
+    lookMin = CAM_ACCEL_LOOK,
+} = {}) {
+    if (!accel) return false;
+    return Boolean(accel.reverse) || accel.pos >= posMin || accel.look >= lookMin;
 }
 
 export function captureEnabled(search = typeof location !== "undefined" ? location.search : "") {
@@ -133,10 +188,16 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
     const scratch = document.createElement("canvas");
     const sequences = {};
     let active = null;
-    let lastSample = -Infinity;
     let lastNow = 0;
-    let animElapsed = 0;
+    let playElapsed = 0;
+    let nextGridAt = 0;
+    let lastAnyAt = -Infinity;
+    let lastAccelAt = -Infinity;
     let pendingBeat = false;
+    let pendingAccel = false;
+    let lastPos = null;
+    let lastLook = null;
+    let lastVel = null;
     let unlisten = () => {};
 
     function snapshot(beat) {
@@ -154,7 +215,7 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
         const probe = Math.min(48, dw);
         const probeH = Math.min(32, dh);
         if (frameIsBlank(ctx.getImageData(0, 0, probe, probeH).data)) return false;
-        const ms = performance.now() - active.started;
+        const ms = playElapsed;
         const label = frameLabel(beat || active.beat, ms);
         drawLabel(ctx, label, dw);
         active.frames.push({
@@ -162,8 +223,44 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
             beat: beat || active.beat,
             dataUrl: scratch.toDataURL("image/jpeg", 0.55),
         });
-        lastSample = animElapsed;
+        lastAnyAt = playElapsed;
         return true;
+    }
+
+    function take(beat) {
+        if (lastAnyAt >= 0 && playElapsed - lastAnyAt < CAPTURE_DEDUPE_MS) return false;
+        return snapshot(beat);
+    }
+
+    function watchCamera(camera, lookTarget, dtMs) {
+        const pos = readVec(camera?.position);
+        const look = readVec(lookTarget) || readVec(camera?.userData?.look);
+        if (!pos || !look || !(dtMs > 0)) return;
+        const dtSec = dtMs / 1000;
+        if (lastPos && lastLook) {
+            const vel = {
+                pos: {
+                    x: (pos.x - lastPos.x) / dtSec,
+                    y: (pos.y - lastPos.y) / dtSec,
+                    z: (pos.z - lastPos.z) / dtSec,
+                },
+                look: {
+                    x: (look.x - lastLook.x) / dtSec,
+                    y: (look.y - lastLook.y) / dtSec,
+                    z: (look.z - lastLook.z) / dtSec,
+                },
+            };
+            if (lastVel && playElapsed - lastAccelAt >= CAM_ACCEL_COOLDOWN_MS) {
+                const accel = cameraAccel(lastVel, vel, dtSec);
+                if (isCamAccelSpike(accel)) {
+                    pendingAccel = true;
+                    lastAccelAt = playElapsed;
+                }
+            }
+            lastVel = vel;
+        }
+        lastPos = pos;
+        lastLook = look;
     }
 
     function begin(name) {
@@ -174,17 +271,22 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
             started: performance.now(),
             frames: [],
         };
-        lastSample = -Infinity;
         lastNow = 0;
-        animElapsed = 0;
-        // Sample the next rendered frame — never the pre-render canvas.
+        playElapsed = 0;
+        nextGridAt = 0;
+        lastAnyAt = -Infinity;
+        lastAccelAt = -Infinity;
         pendingBeat = true;
+        pendingAccel = false;
+        lastPos = null;
+        lastLook = null;
+        lastVel = null;
         return id;
     }
 
     function end() {
         if (!active) return null;
-        snapshot(active.beat || "end");
+        take(active.beat || "end");
         const done = {
             name: active.name,
             frames: active.frames,
@@ -195,6 +297,7 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
         root.dataset.captureFrames = String(done.frames.length);
         active = null;
         pendingBeat = false;
+        pendingAccel = false;
         return done;
     }
 
@@ -205,15 +308,26 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
         return seq;
     }
 
-    function tick(now = performance.now()) {
+    function tick(now = performance.now(), camera = null, lookTarget = null) {
         if (!active) return;
         if (!lastNow) lastNow = now;
-        animElapsed += Math.min(CLOCK_STEP_MS, Math.max(0, now - lastNow));
+        const dtMs = Math.min(CLOCK_STEP_MS, Math.max(0, now - lastNow));
         lastNow = now;
-        const due = pendingBeat
-            ? animElapsed - lastSample >= 80
-            : animElapsed - lastSample >= intervalMs;
-        if (due && snapshot(active.beat)) pendingBeat = false;
+        playElapsed += dtMs;
+        watchCamera(camera, lookTarget, dtMs);
+
+        if (pendingBeat && take(active.beat)) pendingBeat = false;
+        else if (pendingAccel && take("camAccel")) pendingAccel = false;
+
+        if (playElapsed >= nextGridAt) {
+            if (playElapsed - lastAnyAt >= CAPTURE_DEDUPE_MS || lastAnyAt < 0) {
+                take(active.beat || "tick");
+            }
+            nextGridAt += intervalMs;
+            if (nextGridAt <= playElapsed) {
+                nextGridAt = Math.floor(playElapsed / intervalMs) * intervalMs + intervalMs;
+            }
+        }
     }
 
     unlisten = onMarkBeat((beat) => {

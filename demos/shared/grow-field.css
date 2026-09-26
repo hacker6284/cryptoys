@@ -198,6 +198,17 @@ textarea.grow-field {
   transition: width 120ms linear;
 }
 
+.file-progress.is-busy .file-progress-bar {
+  width: 32%;
+  transition: none;
+  animation: file-progress-busy 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes file-progress-busy {
+  from { transform: translateX(-10%); }
+  to { transform: translateX(220%); }
+}
+
 .file-chip #message-file-name,
 .file-chip [id="message-file-name"] {
   min-width: 0;

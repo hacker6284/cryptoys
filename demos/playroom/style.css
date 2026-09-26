@@ -380,6 +380,10 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   background: rgba(255, 255, 255, 0.28);
 }
 
+.playroom-dock .file-progress.is-busy .file-progress-bar {
+  width: 32%;
+}
+
 .playroom-dock .playroom-card .file-btn {
   width: var(--grow-field-min, 2.55rem);
   height: var(--grow-field-min, 2.55rem);

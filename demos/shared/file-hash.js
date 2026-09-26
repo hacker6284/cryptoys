@@ -17,6 +17,8 @@ export const DEMO_FILE_TEACH_MAX_BYTES = DEMO_INPUT_MAX_CHARS;
 export const DEMO_FILE_CHUNK_BYTES = 8 * 1024;
 export const DEMO_FILE_HOST_CHUNK_BYTES = 4 * 1024;
 export const DEMO_FILE_WORKER_READY_MS = 1000;
+export const DEMO_FILE_BUSY_MS = 200;
+export const DEMO_FILE_DETERMINATE_BYTES = 1024 * 1024;
 
 export function formatFileSize(bytes) {
     const n = Number(bytes) || 0;

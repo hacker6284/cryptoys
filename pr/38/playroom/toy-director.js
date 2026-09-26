@@ -181,7 +181,7 @@ export function createToyDirector(world) {
         });
     }
 
-    function animateLid(to, { snap, duration = 520 } = {}) {
+    function animateLid(to, { snap, duration = 320 } = {}) {
         if (!world.setChestLid) return Promise.resolve();
         if (snap || prefersReducedMotion()) {
             world.setChestLid(to);

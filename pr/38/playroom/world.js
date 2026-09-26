@@ -713,7 +713,7 @@ export async function mountWorld(canvas) {
         if (!toy || !pose) return;
         toy.visible = true;
         applyPose(toy, pose);
-        slots[name].slot.visible = false;
+        if (slots[name]) slots[name].slot.visible = false;
     }
 
     function setSlotEmpty(name, empty) {

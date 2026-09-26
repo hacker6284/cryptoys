@@ -114,11 +114,19 @@ try {
             const warm = adapter.preload();
             await adapter.prepareEnter?.();
             const fly = director.borrow(id, { snap: reduced });
-            const flyPose = id === "doubledeal" ? "unbox_travel" : meta.pose;
             if (reduced) {
                 poses.snap(meta.pose);
+            } else if (id === "doubledeal") {
+                // One story: hold the landing so KEY leaving the slot
+                // is on camera, then track it to the table. No via:shelf
+                // cut that can land on empty felt.
+                poses.goTo("unbox_travel", {
+                    duration: FLY_MS - HOLD_MS,
+                    delay: HOLD_MS,
+                    track: trackToy(world, meta.toy),
+                });
             } else {
-                poses.goTo(flyPose, {
+                poses.goTo(meta.pose, {
                     duration: FLY_MS,
                     via: "shelf",
                     viaT: HOLD_MS / FLY_MS,

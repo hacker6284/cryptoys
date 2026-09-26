@@ -1,6 +1,6 @@
 import { adapters } from "./adapters.js";
 import { FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
-import { continueTo, followEnter, followLeave, trackActive } from "./motion.js";
+import { continueTo, followEnter, followLeave, trackActive, trackToys } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { playroomDebugEnabled } from "./puzzles.js";
@@ -180,7 +180,7 @@ try {
             // no look.copy, no cut to landing while flights are live.
             followLeave(poses, {
                 to: "landing",
-                track: trackActive(world, flyToys),
+                track: trackToys(world, flyToys),
                 holdMs: FOLLOW_HOLD_MS,
                 duration: prepMs + homeMs,
             });

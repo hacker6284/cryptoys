@@ -134,6 +134,38 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     }
 
     /**
+     * Play→hub pull-back. Camera eases from the live seated shot to
+     * the room pose (never a dest-offset crop of one toy). Look
+     * tracks the full toy set, then settles on the hub target.
+     */
+    function applyReturn(pose, t = 1, from = null, trackPos = null, settleAt = 0.78) {
+        if (!from || t <= 0) {
+            apply(pose, 0, from, null);
+            return;
+        }
+        if (t >= 1) {
+            apply(pose, 1);
+            return;
+        }
+        const moveU = easeInOutCubic(smoothstep(0.04, 0.9, t));
+        camera.position.lerpVectors(from.position, pose.position, moveU);
+        camera.fov = from.fov + (pose.fov - from.fov) * moveU;
+        const lookU = easeInOutCubic(smoothstep(0, 0.36, t));
+        const settleStart = Math.min(0.92, Math.max(0.62, settleAt));
+        const settleU = easeInOutCubic(smoothstep(settleStart, 1, t));
+        if (trackPos) {
+            chaseLook.copy(from.target).lerp(trackPos, lookU);
+            look.copy(chaseLook).lerp(pose.target, Math.max(settleU, moveU * 0.32));
+        } else {
+            look.lerpVectors(from.target, pose.target, moveU);
+        }
+        camera.up.set(0, 1, 0);
+        camera.updateProjectionMatrix();
+        camera.lookAt(look);
+        if (controls) controls.target.copy(look);
+    }
+
+    /**
      * Follow-cam: look eases onto the live track (never copies/snaps),
      * camera chases a dest-relative offset of that focus, then both
      * settle into the named play pose. No via named shots.
@@ -261,7 +293,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             holding: true,
             duration: opts.duration ?? duration,
             track: opts.track || null,
-            mode: "follow",
+            mode: opts.mode === "return" ? "return" : "follow",
             settleAt: opts.settleAt,
             waiters: [],
         };
@@ -372,7 +404,9 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             tween.elapsed += stepDt;
             const trackPos = readTrack(tween.track);
             const u = Math.min(1, tween.elapsed / tween.duration);
-            if (tween.mode === "follow") {
+            if (tween.mode === "return") {
+                applyReturn(tween.to, u, tween.from, trackPos, tween.settleAt);
+            } else if (tween.mode === "follow") {
                 applyFollow(tween.to, u, tween.from, trackPos, tween.settleAt);
             } else if (tween.via && u < tween.viaT) {
                 apply(tween.via, u / tween.viaT, tween.from, null);

@@ -122,7 +122,8 @@ assert.equal(follows[1].name, "landing");
 assert.equal(follows[1].opts.delay, 220);
 assert.equal(follows[1].opts.duration, 2880);
 assert.equal(follows[1].opts.track, "home");
-assert.equal(follows[1].opts.settleAt, 0.86);
+assert.equal(follows[1].opts.settleAt, 0.78);
+assert.equal(follows[1].opts.mode, "return");
 
 await continueTo(poses, "doubledeal", { duration: 1280 });
 assert.equal(goes.at(-1).name, "doubledeal");

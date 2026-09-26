@@ -5,6 +5,7 @@ import {
     continueTo,
     followEnter,
     hopTo,
+    measureLocalBox,
     measureWorldBox,
     pose3,
     seatOnSurface,
@@ -167,6 +168,53 @@ assert.ok(box);
 assert.ok(Math.abs(box.min.y + 0.1) < 1e-6);
 assert.ok(Math.abs(box.max.y - 0.3) < 1e-6);
 assert.ok(Math.abs(box.size.y - 0.4) < 1e-6);
+
+const crushedWorld = {
+    visible: true,
+    isMesh: true,
+    position: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 },
+    quaternion: { x: 0, y: 0, z: 0, w: 1 },
+    geometry: {
+        attributes: {
+            position: {
+                count: 2,
+                itemSize: 3,
+                array: new Float32Array([-1, -1, -1, 1, 1, 1]),
+            },
+        },
+    },
+    // Twisty world write: 1/3 of local. Local measure must ignore it.
+    matrixWorld: {
+        elements: [1 / 3, 0, 0, 0, 0, 1 / 3, 0, 0, 0, 0, 1 / 3, 0, 0, 0, 0, 1],
+    },
+    children: [],
+};
+const local = measureLocalBox(crushedWorld);
+assert.ok(local);
+assert.ok(Math.abs(local.size.x - 2) < 1e-6, "local edge ignores matrixWorld crush");
+const worldCrushed = measureWorldBox(crushedWorld);
+assert.ok(Math.abs(worldCrushed.size.x - 2 / 3) < 1e-6, "world box sees the Twisty write");
+
+const scaledPuzzle = {
+    visible: true,
+    isMesh: true,
+    position: { x: 0, y: 0, z: 0 },
+    scale: { x: 1 / 3, y: 1 / 3, z: 1 / 3 },
+    quaternion: { x: 0, y: 0, z: 0, w: 1 },
+    geometry: {
+        attributes: {
+            position: {
+                count: 2,
+                itemSize: 3,
+                array: new Float32Array([-1.5, -1.5, -1.5, 1.5, 1.5, 1.5]),
+            },
+        },
+    },
+    children: [],
+};
+const lateScale = measureLocalBox(scaledPuzzle);
+assert.ok(Math.abs(lateScale.size.x - 1) < 1e-6, "local box includes puzzle.scale 1/3");
 
 const scaled = makeObject(0, 2, 0);
 scaled.half = 0.08;

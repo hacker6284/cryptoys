@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { CUBE } from "./constants.js";
-import { measureWorldBox } from "./motion.js";
+import { fitToLocalEdge, keepFitted, measureWorldBox } from "./motion.js";
 import { PUZZLES, PUZZLE_IDS, normalizePuzzleId } from "./puzzles.js";
 
 export { PUZZLES, PUZZLE_IDS, normalizePuzzleId };
@@ -104,42 +104,14 @@ export function meshBox(object) {
     return measureWorldBox(object);
 }
 
+export { fitToLocalEdge, keepFitted };
+
 /**
- * Scale `wrapper` so the child's measured AABB max edge equals
- * `edge` (playroom `CUBE`, 120 mm). Centers the mesh on the wrapper
- * origin so seat-on-surface can read the post-scale bottom. A second
- * pass corrects if the first measure was off (foreign three.js graphs).
+ * Scale `wrapper` so the child's *local* max edge equals `edge`
+ * (playroom `CUBE`, 120 mm). Local TRS only — see `fitToLocalEdge`.
  */
 export function frameInWrapper(wrapper, object, edge) {
-    wrapper.position.set(0, 0, 0);
-    wrapper.scale.set(1, 1, 1);
-    wrapper.updateMatrixWorld(true);
-    const box = measureWorldBox(object);
-    const size = box?.size || { x: 1, y: 1, z: 1 };
-    const center = box?.center || { x: 0, y: 0, z: 0 };
-    const max = Math.max(size.x, size.y, size.z);
-    const nativeMax = Number.isFinite(max) && max > 1e-6 ? max : 1;
-    let scale = edge / nativeMax;
-    wrapper.scale.setScalar(scale);
-    if (Number.isFinite(center.x)) {
-        wrapper.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-    }
-    wrapper.updateMatrixWorld(true);
-    const fitted = measureWorldBox(wrapper);
-    const fittedMax = Math.max(fitted?.size.x || 0, fitted?.size.y || 0, fitted?.size.z || 0);
-    if (fittedMax > 1e-6 && Math.abs(fittedMax - edge) > edge * 0.04) {
-        const correct = edge / fittedMax;
-        scale *= correct;
-        wrapper.scale.multiplyScalar(correct);
-        wrapper.position.multiplyScalar(correct);
-        wrapper.updateMatrixWorld(true);
-    }
-    return {
-        size: { ...size },
-        nativeMax,
-        fittedMax: edge,
-        scale,
-    };
+    return fitToLocalEdge(wrapper, object, edge);
 }
 
 function enableShadows(root) {
@@ -166,6 +138,7 @@ export async function adoptTwistyPuzzle(seat, {
     alg = "",
     tempoScale = 1.4,
     onRenderScheduled,
+    onFitChange,
     onStage,
     adoptTimeoutMs = 20000,
 } = {}) {
@@ -191,10 +164,13 @@ export async function adoptTwistyPuzzle(seat, {
         firstPaint = resolve;
     });
     let puzzleObject;
+    let disposed = false;
+    const fitHooks = { keep: null };
     try {
         puzzleObject = await withTimeout(
             player.experimentalCurrentThreeJSPuzzleObject(() => {
                 firstPaint?.();
+                fitHooks.keep?.();
                 onRenderScheduled?.();
             }),
             adoptTimeoutMs,
@@ -213,12 +189,36 @@ export async function adoptTwistyPuzzle(seat, {
             if (node.isMesh) node.frustumCulled = false;
         });
         seat.fit.add(puzzleObject);
-        const framed = frameInWrapper(seat.fit, puzzleObject, edge);
+        // Cube3D's native edge is ~3 units. Pre-fit so the first host
+        // frame is not a meter-scale spawn that later gets crushed.
+        if (seat.fit.scale.x === 1) seat.fit.scale.setScalar(edge / 3);
+        let framed = fitToLocalEdge(seat.fit, puzzleObject, edge);
         enableShadows(puzzleObject);
         seat.group.userData.boundsDirty = true;
         seat.group.userData.fittedEdge = framed.fittedMax;
+        function keepPuzzleFitted() {
+            if (disposed) return framed;
+            try {
+                if (puzzleObject && puzzleObject.matrixWorldAutoUpdate === false) {
+                    puzzleObject.matrixWorldAutoUpdate = true;
+                }
+            } catch {
+                // foreign three.js may ignore the flag
+            }
+            const next = keepFitted(seat.fit, puzzleObject, edge, framed);
+            if (next.changed) {
+                framed = next;
+                seat.group.userData.boundsDirty = true;
+                seat.group.userData.fittedEdge = next.fittedMax;
+                onFitChange?.(next);
+            } else {
+                seat.fit.updateMatrixWorld?.(true);
+            }
+            return next;
+        }
+        fitHooks.keep = keepPuzzleFitted;
+        seat.group.userData.keepFitted = keepPuzzleFitted;
 
-        let disposed = false;
         let currentAlg = String(alg ?? spec.alg ?? "");
 
     async function timeline() {
@@ -317,6 +317,7 @@ export async function adoptTwistyPuzzle(seat, {
         player,
         puzzleId: spec.id,
         framed,
+        keepFitted: keepPuzzleFitted,
         fallback: false,
         play() {
             player.play();
@@ -384,6 +385,7 @@ export async function adoptTwistyPuzzle(seat, {
                 alg: nextAlg,
                 tempoScale,
                 onRenderScheduled,
+                onFitChange,
                 adoptTimeoutMs,
             });
             next.group.position.copy(seat.group.position);

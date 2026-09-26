@@ -757,6 +757,9 @@ export async function mountWorld(canvas) {
     }
 
     function render() {
+        // Re-apply Twisty fit after cubing.js's own rAF so a late
+        // matrix/scale write cannot stick as the drawn size.
+        toys.cube?.userData?.keepFitted?.();
         renderer.render(scene, camera);
     }
 

@@ -143,6 +143,10 @@ try {
             adapter.view()?.rememberSeated?.();
             await adapter.enter({ snap: reduced || skippedStart });
             markBeat("enter-done");
+            if (capture.enabled) {
+                await new Promise((resolve) => setTimeout(resolve, 1600));
+                markBeat("enter-hold");
+            }
             capture.end();
             if (leaving) return;
             writeQuery({ pose: "seated", algo: id });
@@ -196,6 +200,10 @@ try {
         await Promise.all([fade, home]);
         adapters[id]?.revealShelf?.();
         markBeat("hub-settle");
+        if (capture.enabled) {
+            await new Promise((resolve) => setTimeout(resolve, 1600));
+            markBeat("hub-hold");
+        }
         activeAlgo = null;
         leaving = false;
         capture.end();

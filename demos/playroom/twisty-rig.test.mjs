@@ -8,9 +8,68 @@ assert.equal(src.includes("export function describeThreeSkew"), false, "spike de
 assert.equal(src.includes("userData.twistySkew"), false, "no twistySkew probe");
 assert.equal(src.includes("look,"), false, "rig.look probe stays out");
 assert.match(src, /if \(disposed\) return/, "playLeaves bails after dispose");
-assert.match(src, /measureWorldBox/, "fit uses the shared AABB walker");
+assert.match(src, /fitToLocalEdge/, "fit uses parent-space TRS, not world AABB");
+assert.match(src, /keepFitted/, "post-spawn Twisty writes are re-fitted");
 assert.match(src, /export function frameInWrapper/, "fit is exported for seat/scale tests");
+assert.match(src, /keepPuzzleFitted/, "Twisty render-scheduled re-applies fit");
+assert.match(src, /userData.keepFitted/, "host render can re-apply fit");
+assert.equal(src.includes("wrapper.scale.set(1, 1, 1)"), false, "do not flash native scale on refit");
 assert.equal(src.includes("Box3().setFromObject"), false, "do not Box3.setFromObject across two threes");
+
+const { fitToLocalEdge, keepFitted } = await import("./motion.js");
+
+function vec3(x = 0, y = 0, z = 0) {
+    return {
+        x, y, z,
+        set(nx, ny, nz) { this.x = nx; this.y = ny; this.z = nz; return this; },
+        setScalar(s) { this.x = this.y = this.z = s; return this; },
+        multiplyScalar(s) { this.x *= s; this.y *= s; this.z *= s; return this; },
+    };
+}
+
+function makeMesh(edge = 2) {
+    const h = edge / 2;
+    return {
+        visible: true,
+        isMesh: true,
+        position: vec3(),
+        scale: vec3(1, 1, 1),
+        quaternion: { x: 0, y: 0, z: 0, w: 1 },
+        geometry: {
+            attributes: {
+                position: {
+                    count: 2,
+                    itemSize: 3,
+                    array: new Float32Array([-h, -h, -h, h, h, h]),
+                },
+            },
+        },
+        matrixWorld: { elements: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] },
+        children: [],
+        updateMatrixWorld() {},
+    };
+}
+
+const wrapper = {
+    position: vec3(),
+    scale: vec3(1, 1, 1),
+    updateMatrixWorld() {},
+};
+const puzzle = makeMesh(3);
+const framed = fitToLocalEdge(wrapper, puzzle, 0.12);
+assert.ok(Math.abs(framed.scale - 0.04) < 1e-6);
+assert.ok(Math.abs(wrapper.scale.x - 0.04) < 1e-6);
+
+// Late cubing.js 1/3 would crush a one-shot world fit. keepFitted
+// sees the local scale and restores the 120 mm edge.
+puzzle.scale.setScalar(1 / 3);
+const held = keepFitted(wrapper, puzzle, 0.12, framed);
+assert.equal(held.changed, true);
+assert.ok(Math.abs(held.scale - 0.12) < 1e-6, "late 1/3 is compensated on fit");
+assert.ok(Math.abs(wrapper.scale.x - 0.12) < 1e-6);
+
+const again = keepFitted(wrapper, puzzle, 0.12, held);
+assert.equal(again.changed, false, "stable local edge is a no-op");
 
 const hostRemove = src.indexOf("hidePlayerHost(player)");
 const tryAt = src.indexOf("try {", hostRemove);

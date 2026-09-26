@@ -174,6 +174,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         },
         rememberSeated,
         settle,
+        keepFitted: call("keepFitted"),
         swapPuzzle: call("swapPuzzle"),
     };
 }

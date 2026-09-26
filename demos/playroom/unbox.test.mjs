@@ -75,6 +75,7 @@ assert.equal(adapters.includes("DEAL_SCALE"), false, "adapter does not scale the
 const worldSrc = readFileSync(new URL("./world.js", import.meta.url), "utf8");
 assert.equal(worldSrc.includes("function makeCubeToy"), false, "hub cube is not a hand-rolled mesh");
 assert.match(worldSrc, /seatOnSurface/, "world seats through the shared helper");
+assert.match(worldSrc, /keepFitted/, "host render re-applies Twisty fit before draw");
 assert.match(worldSrc, /if \(slots\[name\]\) slots\[name\]\.slot/, "chest deck has no shelf slot");
 assert.match(worldSrc, /deck2/);
 assert.match(worldSrc, /pivot\.attach\(lid\)/, "lid keeps its authored closed pose");
@@ -154,6 +155,9 @@ const motion = readFileSync(new URL("./motion.js", import.meta.url), "utf8");
 assert.match(motion, /export function hopTo/);
 assert.match(motion, /export function onMarkBeat/);
 assert.match(motion, /export function seatOnSurface/);
+assert.match(motion, /export function measureLocalBox/);
+assert.match(motion, /export function fitToLocalEdge/);
+assert.match(motion, /export function keepFitted/);
 assert.match(motion, /export function measureWorldBox/);
 assert.match(motion, /export function followEnter/);
 assert.match(motion, /export function trackActive/);

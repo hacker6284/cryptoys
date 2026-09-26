@@ -30,6 +30,232 @@ export function markBeat(beat) {
     for (const listener of beatListeners) listener(beat);
 }
 
+function transformPoint(e, x, y, z) {
+    return {
+        x: e[0] * x + e[4] * y + e[8] * z + e[12],
+        y: e[1] * x + e[5] * y + e[9] * z + e[13],
+        z: e[2] * x + e[6] * y + e[10] * z + e[14],
+    };
+}
+
+function multiply4(a, b) {
+    const te = new Array(16);
+    const a11 = a[0];
+    const a12 = a[4];
+    const a13 = a[8];
+    const a14 = a[12];
+    const a21 = a[1];
+    const a22 = a[5];
+    const a23 = a[9];
+    const a24 = a[13];
+    const a31 = a[2];
+    const a32 = a[6];
+    const a33 = a[10];
+    const a34 = a[14];
+    const a41 = a[3];
+    const a42 = a[7];
+    const a43 = a[11];
+    const a44 = a[15];
+    const b11 = b[0];
+    const b12 = b[4];
+    const b13 = b[8];
+    const b14 = b[12];
+    const b21 = b[1];
+    const b22 = b[5];
+    const b23 = b[9];
+    const b24 = b[13];
+    const b31 = b[2];
+    const b32 = b[6];
+    const b33 = b[10];
+    const b34 = b[14];
+    const b41 = b[3];
+    const b42 = b[7];
+    const b43 = b[11];
+    const b44 = b[15];
+    te[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
+    te[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
+    te[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
+    te[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
+    te[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
+    te[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
+    te[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
+    te[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
+    te[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
+    te[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
+    te[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
+    te[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
+    te[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
+    te[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
+    te[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
+    te[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
+    return te;
+}
+
+function eulerXYZToQuat(rot) {
+    const x = rot?.x || 0;
+    const y = rot?.y || 0;
+    const z = rot?.z || 0;
+    const c1 = Math.cos(x / 2);
+    const c2 = Math.cos(y / 2);
+    const c3 = Math.cos(z / 2);
+    const s1 = Math.sin(x / 2);
+    const s2 = Math.sin(y / 2);
+    const s3 = Math.sin(z / 2);
+    return {
+        x: s1 * c2 * c3 + c1 * s2 * s3,
+        y: c1 * s2 * c3 - s1 * c2 * s3,
+        z: c1 * c2 * s3 + s1 * s2 * c3,
+        w: c1 * c2 * c3 - s1 * s2 * s3,
+    };
+}
+
+/** Column-major TRS, same layout as three.js `Matrix4.compose`. */
+export function composeLocalMatrix(position, quaternion, scale) {
+    const q = quaternion && Number.isFinite(quaternion.w)
+        ? quaternion
+        : { x: 0, y: 0, z: 0, w: 1 };
+    const x = q.x || 0;
+    const y = q.y || 0;
+    const z = q.z || 0;
+    const w = Number.isFinite(q.w) ? q.w : 1;
+    const sx = scale?.x ?? 1;
+    const sy = scale?.y ?? 1;
+    const sz = scale?.z ?? 1;
+    const x2 = x + x;
+    const y2 = y + y;
+    const z2 = z + z;
+    const xx = x * x2;
+    const xy = x * y2;
+    const xz = x * z2;
+    const yy = y * y2;
+    const yz = y * z2;
+    const zz = z * z2;
+    const wx = w * x2;
+    const wy = w * y2;
+    const wz = w * z2;
+    return [
+        (1 - (yy + zz)) * sx,
+        (xy + wz) * sx,
+        (xz - wy) * sx,
+        0,
+        (xy - wz) * sy,
+        (1 - (xx + zz)) * sy,
+        (yz + wx) * sy,
+        0,
+        (xz + wy) * sz,
+        (yz - wx) * sz,
+        (1 - (xx + yy)) * sz,
+        0,
+        position?.x || 0,
+        position?.y || 0,
+        position?.z || 0,
+        1,
+    ];
+}
+
+function localMatrixOf(node) {
+    if (node.matrixAutoUpdate === false && node.matrix?.elements?.length >= 16) {
+        return node.matrix.elements;
+    }
+    const position = node.position || { x: 0, y: 0, z: 0 };
+    const scale = node.scale || { x: 1, y: 1, z: 1 };
+    const quaternion = node.quaternion && Number.isFinite(node.quaternion.w)
+        ? node.quaternion
+        : eulerXYZToQuat(node.rotation);
+    return composeLocalMatrix(position, quaternion, scale);
+}
+
+function finishBox(minX, minY, minZ, maxX, maxY, maxZ, hits) {
+    if (!hits) return null;
+    return {
+        min: { x: minX, y: minY, z: minZ },
+        max: { x: maxX, y: maxY, z: maxZ },
+        size: { x: maxX - minX, y: maxY - minY, z: maxZ - minZ },
+        center: {
+            x: (minX + maxX) / 2,
+            y: (minY + maxY) / 2,
+            z: (minZ + maxZ) / 2,
+        },
+    };
+}
+
+function absorbGeometry(node, e, absorb, absorbBox) {
+    const geo = (node.isMesh || node.isInstancedMesh) ? node.geometry : null;
+    if (!geo || !e || e.length < 16) return;
+    const pos = geo.attributes?.position;
+    const count = pos?.count || 0;
+    if (count > 0 && count <= 256 && pos.array) {
+        const stride = pos.itemSize || 3;
+        const arr = pos.array;
+        for (let i = 0; i < arr.length; i += stride) {
+            const w = transformPoint(e, arr[i], arr[i + 1], arr[i + 2]);
+            absorb(w.x, w.y, w.z);
+        }
+        return;
+    }
+    if (geo.boundingBox) absorbBox(e, geo.boundingBox);
+    else if (typeof geo.computeBoundingBox === "function") {
+        geo.computeBoundingBox();
+        if (geo.boundingBox) absorbBox(e, geo.boundingBox);
+    }
+}
+
+/**
+ * AABB in `object`'s parent space from local TRS — never `matrixWorld`.
+ * Ancestor yaw and Twisty world-matrix writes cannot inflate the edge
+ * we fit to. Includes `object.scale` so a late cubing.js 1/3 is seen.
+ */
+export function measureLocalBox(object) {
+    if (!object) return null;
+    let minX = Infinity;
+    let minY = Infinity;
+    let minZ = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let maxZ = -Infinity;
+    let hits = 0;
+
+    function absorb(x, y, z) {
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return;
+        hits += 1;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (z < minZ) minZ = z;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+        if (z > maxZ) maxZ = z;
+    }
+
+    function absorbBox(e, box) {
+        if (!box?.min || !box?.max) return;
+        const xs = [box.min.x, box.max.x];
+        const ys = [box.min.y, box.max.y];
+        const zs = [box.min.z, box.max.z];
+        for (const x of xs) {
+            for (const y of ys) {
+                for (const z of zs) {
+                    const w = transformPoint(e, x, y, z);
+                    absorb(w.x, w.y, w.z);
+                }
+            }
+        }
+    }
+
+    function walk(node, parentE) {
+        if (!node || node.visible === false) return;
+        const local = localMatrixOf(node);
+        const e = parentE ? multiply4(parentE, local) : local;
+        absorbGeometry(node, e, absorb, absorbBox);
+        const kids = node.children;
+        if (kids) {
+            for (const child of kids) walk(child, e);
+        }
+    }
+
+    walk(object, null);
+    return finishBox(minX, minY, minZ, maxX, maxY, maxZ, hits);
+}
+
 /**
  * World AABB from live mesh vertices / bounding-box corners.
  * Walks foreign three.js graphs (cubing.js ships its own copy) by
@@ -58,14 +284,6 @@ export function measureWorldBox(object) {
         if (z > maxZ) maxZ = z;
     }
 
-    function worldPoint(e, x, y, z) {
-        return {
-            x: e[0] * x + e[4] * y + e[8] * z + e[12],
-            y: e[1] * x + e[5] * y + e[9] * z + e[13],
-            z: e[2] * x + e[6] * y + e[10] * z + e[14],
-        };
-    }
-
     function absorbBox(e, box) {
         if (!box?.min || !box?.max) return;
         const xs = [box.min.x, box.max.x];
@@ -74,7 +292,7 @@ export function measureWorldBox(object) {
         for (const x of xs) {
             for (const y of ys) {
                 for (const z of zs) {
-                    const w = worldPoint(e, x, y, z);
+                    const w = transformPoint(e, x, y, z);
                     absorb(w.x, w.y, w.z);
                 }
             }
@@ -84,25 +302,7 @@ export function measureWorldBox(object) {
     function walk(node) {
         if (!node || node.visible === false) return;
         const e = node.matrixWorld?.elements;
-        const geo = (node.isMesh || node.isInstancedMesh) ? node.geometry : null;
-        if (geo && e && e.length >= 16) {
-            const pos = geo.attributes?.position;
-            const count = pos?.count || 0;
-            if (count > 0 && count <= 256 && pos.array) {
-                const stride = pos.itemSize || 3;
-                const arr = pos.array;
-                for (let i = 0; i < arr.length; i += stride) {
-                    const w = worldPoint(e, arr[i], arr[i + 1], arr[i + 2]);
-                    absorb(w.x, w.y, w.z);
-                }
-            } else {
-                if (geo.boundingBox) absorbBox(e, geo.boundingBox);
-                else if (typeof geo.computeBoundingBox === "function") {
-                    geo.computeBoundingBox();
-                    if (geo.boundingBox) absorbBox(e, geo.boundingBox);
-                }
-            }
-        }
+        absorbGeometry(node, e, absorb, absorbBox);
         const kids = node.children;
         if (kids) {
             for (const child of kids) walk(child);
@@ -110,17 +310,55 @@ export function measureWorldBox(object) {
     }
 
     walk(object);
-    if (!hits) return null;
+    return finishBox(minX, minY, minZ, maxX, maxY, maxZ, hits);
+}
+
+/**
+ * Scale `wrapper` so the child's *local* max edge equals `edge`.
+ * Parent-space TRS only — never `matrixWorld` — so ancestor yaw and
+ * Twisty world writes cannot inflate the box and crush the cube.
+ * Does not reset wrapper.scale to 1 (that flash is spawn-then-shrink).
+ */
+export function fitToLocalEdge(wrapper, object, edge) {
+    const box = measureLocalBox(object);
+    const size = box?.size || { x: 1, y: 1, z: 1 };
+    const center = box?.center || { x: 0, y: 0, z: 0 };
+    const max = Math.max(size.x, size.y, size.z);
+    const nativeMax = Number.isFinite(max) && max > 1e-6 ? max : 1;
+    const scale = edge / nativeMax;
+    wrapper.scale.setScalar(scale);
+    if (Number.isFinite(center.x)) {
+        wrapper.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+    } else {
+        wrapper.position.set(0, 0, 0);
+    }
+    wrapper.updateMatrixWorld?.(true);
     return {
-        min: { x: minX, y: minY, z: minZ },
-        max: { x: maxX, y: maxY, z: maxZ },
-        size: { x: maxX - minX, y: maxY - minY, z: maxZ - minZ },
-        center: {
-            x: (minX + maxX) / 2,
-            y: (minY + maxY) / 2,
-            z: (minZ + maxZ) / 2,
-        },
+        size: { ...size },
+        nativeMax,
+        fittedMax: edge,
+        scale,
+        changed: true,
     };
+}
+
+/**
+ * Re-apply the presentation edge if cubing.js changed puzzle scale /
+ * local bounds after the first paint. No-op when already within 2%.
+ */
+export function keepFitted(wrapper, object, edge, previous = null) {
+    const box = measureLocalBox(object);
+    const size = box?.size || previous?.size || { x: 1, y: 1, z: 1 };
+    const max = Math.max(size.x, size.y, size.z);
+    const nativeMax = Number.isFinite(max) && max > 1e-6 ? max : previous?.nativeMax || 1;
+    const scale = edge / nativeMax;
+    const have = wrapper?.scale?.x;
+    const drifted = !Number.isFinite(have) || Math.abs(have - scale) > Math.abs(scale) * 0.02;
+    if (!drifted && previous) {
+        wrapper.updateMatrixWorld?.(true);
+        return { ...previous, changed: false, nativeMax, scale: have };
+    }
+    return fitToLocalEdge(wrapper, object, edge);
 }
 
 /**

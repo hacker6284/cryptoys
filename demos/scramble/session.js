@@ -3,7 +3,9 @@ import { SOLVED_FACELETS, applyMove, isSolved, shortSolve, toCubejs, flipU, pars
 import { mapTraceToAlg, prefixAlg, projectAlgForPuzzle } from "../playroom/scramble-alg.js";
 import {
     normalizePuzzleId,
+    playroomDebugEnabled,
     puzzleHashes,
+    resolveProductPuzzleId,
     writePuzzleSearchParam,
 } from "../playroom/puzzles.js";
 import {
@@ -61,7 +63,7 @@ export function createScrambleSession({
 
     let version = 2;
     let encoding = "text";
-    let puzzleId = normalizePuzzleId(puzzle);
+    let puzzleId = resolveProductPuzzleId(puzzle);
     let trace = [];
     let mappedAlg = mapTraceToAlg([]);
     let projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
@@ -154,7 +156,7 @@ export function createScrambleSession({
         });
         const note = $("#puzzle-note");
         if (note) {
-            note.hidden = hashesThisPuzzle();
+            note.hidden = hashesThisPuzzle() || !playroomDebugEnabled();
             note.textContent = hashesThisPuzzle()
                 ? ""
                 : "Digest is 3×3 Scramble. This puzzle is visual.";
@@ -714,7 +716,7 @@ export function createScrambleSession({
     });
 
     async function applyPuzzle(nextRaw) {
-        const nextId = normalizePuzzleId(nextRaw);
+        const nextId = resolveProductPuzzleId(nextRaw);
         if (nextId === puzzleId) {
             syncPuzzleChrome();
             return;

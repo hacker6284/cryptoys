@@ -3,6 +3,7 @@ import { FLY_MS, HOLD_MS, LIFT_MS } from "./constants.js";
 import { continueTo, trackEnter, trackToy } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
+import { playroomDebugEnabled } from "./puzzles.js";
 import { createToyDirector } from "./toy-director.js";
 import { mountWorld } from "./world.js";
 
@@ -39,7 +40,7 @@ function writeQuery({ pose, algo }) {
     else url.searchParams.set("pose", poseName);
     if (!algo) url.searchParams.delete("algo");
     else url.searchParams.set("algo", algo);
-    if (algo !== "scramble") url.searchParams.delete("puzzle");
+    if (algo !== "scramble" || !playroomDebugEnabled(url.search)) url.searchParams.delete("puzzle");
     history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
 }
 

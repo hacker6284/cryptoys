@@ -30,6 +30,7 @@ import MegaDreifach.Link2.AccThree
 import MegaDreifach.Link2.PeelFact
 import MegaDreifach.Link2.PeelCube
 import MegaDreifach.Link2.PeelZeroThree
+import MegaDreifach.Link2.PeelBelow
 
 namespace MegaDreifach.Link2
 
@@ -149,11 +150,21 @@ namespace MegaDreifach.Link2
   closing multiply is the zero coefficient, which short-circuits. Not a
   positive rank. Not `27!`. Not `51!`. Not `phi_chunk`. Not `phi_inv`.
 
+  CLOSED: `peel_leading_below`, `peel_leading_below_digit`, `mag_sub_zero_right`.
+  Domain `n < d!` and `d ≤ 26`. The factoradic digit is `n / d! = 0` and the
+  remainder is `n`. For `13 ≤ d` a positive rank `10^9 ≤ n < d!` is two limbs;
+  for `20 ≤ d` a rank `10^18 ≤ n < d!` is three limbs (`26! < 10^27`).
+  `divmod_cube` divides each prefix quotient. The closing multiply is the
+  zero coefficient, and `mag_sub` copies the rank. Not `d!` itself (digit `1`).
+  Not an arbitrary rank `n ≥ d!`. Not a positive digit. Not `27!`. Not `51!`.
+  Not `phi_chunk`. Not `phi_inv`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
-  bytes; zero peel reaches `d ≤ 26`, peeling `d!` itself yields digit `1`
-  through `d ≤ 26`, and `big_factorial` reaches `26!`, not `27!` and not 51;
-  `big_from_be` reaches length `≤ 7`, not the 28-byte pad block). Positive
+  bytes; zero peel and the strict-below peel reach `d ≤ 26`, peeling `d!`
+  itself yields digit `1` through `d ≤ 26`, and `big_factorial` reaches `26!`,
+  not `27!` and not 51; `big_from_be` reaches length `≤ 7`, not the 28-byte
+  pad block). A positive digit on a multi-limb rank is still open. Positive
   `range_list` (`0 < n`, `FitsLen`, including 52) is already
   `range_list_refines` in `EvenRank.lean`. A positive corner or edge rank is
   outside this limb fragment.

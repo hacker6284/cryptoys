@@ -70,7 +70,6 @@ try {
     resizeWorld = () => world.resize();
     const params = new URLSearchParams(location.search);
     if (params.get("debug") === "1") document.documentElement.dataset.playroomDebug = "1";
-    const capture = installCapture(canvas);
     const initialPose = resolvePoseName(params.get("pose"));
     const initialAlgo = String(params.get("algo") || "").trim().toLowerCase();
     const poses = createPoseController(world.camera, {
@@ -89,10 +88,15 @@ try {
         poses,
         prefersReducedMotion: () => poses.prefersReducedMotion(),
     };
+    const capture = installCapture(canvas);
+    if (typeof window !== "undefined" && (params.get("debug") === "1" || params.get("debugCapture") === "1")) {
+        window.__playroomWorld = world;
+    }
     adapters.scramble.install(world, installOpts);
     adapters.doubledeal.install(world, installOpts);
     void adapters.scramble.preload();
     void adapters.doubledeal.preload();
+    await adapters.scramble.ready?.();
     const director = createToyDirector(world);
 
     async function startAlgo(id, { snap = false } = {}) {

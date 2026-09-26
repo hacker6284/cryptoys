@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { tableSpan } from "../doubledeal/layout.js";
 import {
     CLOCK_STEP_MS,
@@ -16,6 +17,7 @@ import {
     toyHalfHeight,
 } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
+import { seatOnSurface } from "./motion.js";
 import { createToyDirector, recipeMotionMs } from "./toy-director.js";
 
 const span = tableSpan();
@@ -42,6 +44,17 @@ assert.ok(POSES.doubledeal.fov <= 32, "doubledeal FOV stays in the scramble-lean
 assert.ok(POSES.doubledeal.position[1] <= 1.28, "doubledeal camera height matches seated lean");
 assert.ok(POSES.doubledeal.position[2] - DEN.z <= 1.05, "doubledeal stay close to the felt");
 
+assert.equal(CUBE, 0.057, "playroom cube is the 57 mm real-life edge");
+assert.match(
+    readFileSync(new URL("./twisty-rig.js", import.meta.url), "utf8"),
+    /userData\.worldEdge = worldEdge/,
+    "live size metric is world AABB Y (~0.057) at hub / fly / land / leave",
+);
+assert.match(
+    readFileSync(new URL("./twisty-rig.js", import.meta.url), "utf8"),
+    /dataset\.cubeEdge = worldEdge\.toFixed\(3\)/,
+    "debug/capture publishes data-cube-edge from world AABB Y",
+);
 assert.equal(toyHalfHeight("cube"), CUBE / 2);
 assert.equal(toyHalfHeight("deck"), 0.046);
 assert.equal(toyHalfHeight("deck2"), 0.046);
@@ -84,8 +97,9 @@ function vec3(x = 0, y = 0, z = 0) {
     };
 }
 
-function makeToy(x, y, z) {
+function makeToy(x, y, z, name = "cube") {
     return {
+        half: toyHalfHeight(name),
         position: vec3(x, y, z),
         rotation: vec3(),
         quaternion: { setFromEuler() {}, clone() { return {}; }, copy() {} },
@@ -94,19 +108,31 @@ function makeToy(x, y, z) {
     };
 }
 
-// Mirrors world.seatOn fallback (no live Box3 in Node).
-function seatOn(object, { x, surfaceY, z, rotation, name }) {
-    const fallback = toyHalfHeight(name);
-    if (!object || object.userData?.flightBusy) {
-        return {
-            position: { x, y: surfaceY + fallback, z },
-            rotation: { x: rotation.x, y: rotation.y, z: rotation.z },
-        };
-    }
+function measureToy(object) {
+    const half = object.half;
     return {
-        position: { x, y: surfaceY + fallback, z },
-        rotation: { x: rotation.x, y: rotation.y, z: rotation.z },
+        min: {
+            x: object.position.x - half,
+            y: object.position.y - half,
+            z: object.position.z - half,
+        },
+        max: {
+            x: object.position.x + half,
+            y: object.position.y + half,
+            z: object.position.z + half,
+        },
     };
+}
+
+function seatOn(object, { x, surfaceY, z, rotation, name }) {
+    return seatOnSurface(object, {
+        x,
+        surfaceY,
+        z,
+        rotation,
+        fallbackHalfHeight: toyHalfHeight(name),
+        measureBox: object ? measureToy : undefined,
+    });
 }
 
 function makeMockWorld() {
@@ -114,9 +140,9 @@ function makeMockWorld() {
     const slotsEmpty = { deck: false, cube: false };
     const chest = { x: -2.2, y: 0.12 + toyHalfHeight("deck"), z: 1.05 };
     const toys = {
-        deck: makeToy(SLOTS.deck.x, SHELF_TOP + toyHalfHeight("deck"), SHELF_Z),
-        deck2: makeToy(chest.x, chest.y, chest.z),
-        cube: makeToy(SLOTS.cube.x, SHELF_TOP + toyHalfHeight("cube"), SHELF_Z),
+        deck: makeToy(SLOTS.deck.x, SHELF_TOP + toyHalfHeight("deck"), SHELF_Z, "deck"),
+        deck2: makeToy(chest.x, chest.y, chest.z, "deck"),
+        cube: makeToy(SLOTS.cube.x, SHELF_TOP + toyHalfHeight("cube"), SHELF_Z, "cube"),
     };
     return {
         toys,
@@ -186,6 +212,29 @@ const missingDeck = seatOn(null, {
 });
 assert.equal(missingDeck.position.y, 1 + toyHalfHeight("deck"));
 assert.notEqual(missingDeck.position.y, 1 + CUBE / 2);
+
+const tallCube = makeToy(0, 0, 0, "cube");
+tallCube.half = 0.12;
+const tallSeat = seatOn(tallCube, {
+    x: 0,
+    surfaceY: 1,
+    z: 0,
+    rotation: { x: 0, y: 0, z: 0 },
+    name: "cube",
+});
+assert.equal(tallSeat.position.y, 1.12, "taller mesh seats higher from AABB, not CUBE/2");
+assert.notEqual(tallSeat.position.y, 1 + CUBE / 2);
+
+const shortCube = makeToy(0, 0, 0, "cube");
+shortCube.half = 0.01;
+const shortSeat = seatOn(shortCube, {
+    x: 0,
+    surfaceY: 1,
+    z: 0,
+    rotation: { x: 0, y: 0, z: 0 },
+    name: "cube",
+});
+assert.equal(shortSeat.position.y, 1.01, "shorter mesh seats lower from AABB");
 
 const world = makeMockWorld();
 const director = createToyDirector(world);

@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { CUBE } from "./constants.js";
+import { fitToLocalEdge, keepFitted, measureWorldBox } from "./motion.js";
 import { PUZZLES, PUZZLE_IDS, normalizePuzzleId } from "./puzzles.js";
 
 export { PUZZLES, PUZZLE_IDS, normalizePuzzleId };
@@ -42,7 +44,7 @@ export async function loadTwisty() {
     return twistyMod;
 }
 
-export function createTwistySeat({ edge = 0.057 } = {}) {
+export function createTwistySeat({ edge = CUBE } = {}) {
     const group = new THREE.Group();
     group.name = "twisty-seat";
     const lift = new THREE.Group();
@@ -98,44 +100,18 @@ function frame() {
     return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
-function meshBox(object) {
-    const box = new THREE.Box3();
-    object.updateMatrixWorld(true);
-    try {
-        box.setFromObject(object);
-    } catch {
-        // two three.js copies can throw inside setFromObject
-    }
-    if (!box.isEmpty()) return box;
-    object.traverse((node) => {
-        if (!node.isMesh || !node.visible || !node.geometry) return;
-        const geo = node.geometry;
-        if (!geo.boundingBox) geo.computeBoundingBox();
-        if (!geo.boundingBox) return;
-        const next = geo.boundingBox.clone().applyMatrix4(node.matrixWorld);
-        if (!next.isEmpty()) box.union(next);
-    });
-    return box;
+export function meshBox(object) {
+    return measureWorldBox(object);
 }
 
-function frameInWrapper(wrapper, object, edge) {
-    wrapper.position.set(0, 0, 0);
-    wrapper.scale.set(1, 1, 1);
-    wrapper.updateMatrixWorld(true);
-    const box = meshBox(object);
-    const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    box.getSize(size);
-    box.getCenter(center);
-    const max = Math.max(size.x, size.y, size.z);
-    const nativeMax = Number.isFinite(max) && max > 1e-6 ? max : 1;
-    const scale = edge / nativeMax;
-    wrapper.scale.setScalar(scale);
-    if (Number.isFinite(center.x)) {
-        wrapper.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-    }
-    wrapper.updateMatrixWorld(true);
-    return { size: size.clone(), nativeMax, fittedMax: edge };
+export { fitToLocalEdge, keepFitted };
+
+/**
+ * Scale `wrapper` so the child's *local* max edge equals `edge`
+ * (playroom `CUBE`, 57 mm). Local TRS only — see `fitToLocalEdge`.
+ */
+export function frameInWrapper(wrapper, object, edge) {
+    return fitToLocalEdge(wrapper, object, edge);
 }
 
 function enableShadows(root) {
@@ -154,7 +130,7 @@ function noopHighlight() {}
  *   lift   — local Y hook. Playroom #25 lifts `group` for turns; this stays
  *            available so cubing animation and room motion need not share
  *            a transform.
- *   fit    — 57 mm scale. Do not scale the cubing object itself.
+ *   fit    — `CUBE` (57 mm) scale. Do not scale the cubing object itself.
  *   puzzle — cubing.js Object3D. Do not keyframe; TwistyPlayer owns motion.
  */
 export async function adoptTwistyPuzzle(seat, {
@@ -162,11 +138,12 @@ export async function adoptTwistyPuzzle(seat, {
     alg = "",
     tempoScale = 1.4,
     onRenderScheduled,
+    onFitChange,
     onStage,
     adoptTimeoutMs = 20000,
 } = {}) {
     const spec = PUZZLES[normalizePuzzleId(puzzle)] || PUZZLES["3x3x3"];
-    const edge = seat.edge ?? 0.057;
+    const edge = seat.edge ?? CUBE;
     onStage?.("import cubing/twisty");
     const { TwistyPlayer } = await loadTwisty();
     onStage?.("construct TwistyPlayer");
@@ -187,10 +164,13 @@ export async function adoptTwistyPuzzle(seat, {
         firstPaint = resolve;
     });
     let puzzleObject;
+    let disposed = false;
+    const fitHooks = { keep: null };
     try {
         puzzleObject = await withTimeout(
             player.experimentalCurrentThreeJSPuzzleObject(() => {
                 firstPaint?.();
+                fitHooks.keep?.();
                 onRenderScheduled?.();
             }),
             adoptTimeoutMs,
@@ -209,10 +189,51 @@ export async function adoptTwistyPuzzle(seat, {
             if (node.isMesh) node.frustumCulled = false;
         });
         seat.fit.add(puzzleObject);
-        const framed = frameInWrapper(seat.fit, puzzleObject, edge);
+        // Cube3D's native edge is ~3 units. Pre-fit so the first host
+        // frame is not a meter-scale spawn that later gets crushed.
+        if (seat.fit.scale.x === 1) seat.fit.scale.setScalar(edge / 3);
+        let framed = fitToLocalEdge(seat.fit, puzzleObject, edge);
         enableShadows(puzzleObject);
+        seat.group.userData.boundsDirty = true;
+        seat.group.userData.fittedEdge = framed.fittedMax;
+        function keepPuzzleFitted() {
+            if (disposed) return framed;
+            try {
+                if (puzzleObject && puzzleObject.matrixWorldAutoUpdate === false) {
+                    puzzleObject.matrixWorldAutoUpdate = true;
+                }
+            } catch {
+                // foreign three.js may ignore the flag
+            }
+            const turning = seat.group.userData.turnBusy || seat.group.userData.easeBusy;
+            const next = turning
+                ? { ...framed, changed: false }
+                : keepFitted(seat.fit, puzzleObject, edge, framed);
+            if (turning) seat.fit.updateMatrixWorld?.(true);
+            if (next.changed) {
+                framed = next;
+                seat.group.userData.boundsDirty = true;
+                seat.group.userData.fittedEdge = next.fittedMax;
+                onFitChange?.(next);
+            } else {
+                seat.fit.updateMatrixWorld?.(true);
+            }
+            // World Y is the cube edge even when shelf yaw inflates xz.
+            // Judge size from this, not pixel footprint in a wide shot.
+            const worldBox = measureWorldBox(seat.group);
+            const worldEdge = worldBox?.size?.y;
+            if (Number.isFinite(worldEdge)) {
+                seat.group.userData.worldEdge = worldEdge;
+                const root = typeof document !== "undefined" ? document.documentElement : null;
+                if (root && (root.dataset.playroomDebug === "1" || root.dataset.playroomCapture === "1")) {
+                    root.dataset.cubeEdge = worldEdge.toFixed(3);
+                }
+            }
+            return next;
+        }
+        fitHooks.keep = keepPuzzleFitted;
+        seat.group.userData.keepFitted = keepPuzzleFitted;
 
-        let disposed = false;
         let currentAlg = String(alg ?? spec.alg ?? "");
 
     async function timeline() {
@@ -260,46 +281,51 @@ export async function adoptTwistyPuzzle(seat, {
 
     async function playLeaves(from, to, { snap = false } = {}) {
         if (disposed) return { index: 0, total: 0 };
-        const { indexer } = await timeline();
-        if (disposed) return { index: 0, total: 0 };
-        const total = indexer.numAnimatedLeaves();
-        const start = Math.max(0, from);
-        const end = Math.max(start, Math.min(to, total));
-        if (end <= start) return { index: start, total };
-        const startTs = indexer.indexToMoveStartTimestamp(start);
-        const endTs = indexer.indexToMoveStartTimestamp(end - 1) + indexer.moveDuration(end - 1);
-        player.pause();
-        requestTimestamp(snap ? endTs : startTs);
-        await frame();
-        if (disposed) return { index: start, total };
-        if (snap) return { index: end - 1, total };
-        let tempo = 1;
+        seat.group.userData.turnBusy = true;
         try {
-            tempo = Number(await player.experimentalModel.tempoScale.get()) || 1;
-        } catch {
-            // tempoScale getter is write-only on the element
-        }
-        let duration = 0;
-        for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
-        if (disposed) return { index: start, total };
-        player.play();
-        const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
-        const deadline = performance.now() + budget;
-        while (performance.now() < deadline) {
-            if (disposed) return { index: start, total };
-            try {
-                const info = await player.experimentalModel.detailedTimelineInfo.get();
-                if (info.timestamp >= endTs - 2) break;
-            } catch {
-                break;
-            }
+            const { indexer } = await timeline();
+            if (disposed) return { index: 0, total: 0 };
+            const total = indexer.numAnimatedLeaves();
+            const start = Math.max(0, from);
+            const end = Math.max(start, Math.min(to, total));
+            if (end <= start) return { index: start, total };
+            const startTs = indexer.indexToMoveStartTimestamp(start);
+            const endTs = indexer.indexToMoveStartTimestamp(end - 1) + indexer.moveDuration(end - 1);
+            player.pause();
+            requestTimestamp(snap ? endTs : startTs);
             await frame();
+            if (disposed) return { index: start, total };
+            if (snap) return { index: end - 1, total };
+            let tempo = 1;
+            try {
+                tempo = Number(await player.experimentalModel.tempoScale.get()) || 1;
+            } catch {
+                // tempoScale getter is write-only on the element
+            }
+            let duration = 0;
+            for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
+            if (disposed) return { index: start, total };
+            player.play();
+            const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
+            const deadline = performance.now() + budget;
+            while (performance.now() < deadline) {
+                if (disposed) return { index: start, total };
+                try {
+                    const info = await player.experimentalModel.detailedTimelineInfo.get();
+                    if (info.timestamp >= endTs - 2) break;
+                } catch {
+                    break;
+                }
+                await frame();
+            }
+            if (disposed) return { index: start, total };
+            player.pause();
+            requestTimestamp(endTs);
+            await frame();
+            return { index: end - 1, total };
+        } finally {
+            seat.group.userData.turnBusy = false;
         }
-        if (disposed) return { index: start, total };
-        player.pause();
-        requestTimestamp(endTs);
-        await frame();
-        return { index: end - 1, total };
     }
 
     const api = {
@@ -311,6 +337,7 @@ export async function adoptTwistyPuzzle(seat, {
         player,
         puzzleId: spec.id,
         framed,
+        keepFitted: keepPuzzleFitted,
         fallback: false,
         play() {
             player.play();
@@ -378,6 +405,7 @@ export async function adoptTwistyPuzzle(seat, {
                 alg: nextAlg,
                 tempoScale,
                 onRenderScheduled,
+                onFitChange,
                 adoptTimeoutMs,
             });
             next.group.position.copy(seat.group.position);

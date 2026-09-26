@@ -24,7 +24,7 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 | Tempo | `player.tempoScale` (speed slider) |
 | Seat / fly | translate `rig.group` (toy-director from motion #25) |
 | Lift-off-felt | `stageCubeView` still lifts `rig.group.y` (#25). `rig.lift` is the local hook. |
-| Size | scale `rig.fit` only — never the adopted Object3D |
+| Size | scale `rig.fit` only — never the adopted Object3D. Target edge is `CUBE` (57 mm, real-life 3×3). Fit from **local** TRS (`fitToLocalEdge` / `keepFitted`), then re-apply on every Twisty `render-scheduled` and again in `world.render` so a post-spawn layout cannot permanently crush the cube. |
 
 Session moves (including Rule B / seat as `x`/`y`/`z`) become `player.alg`.
 `createScrambleSession` drives that timeline via `playLeaves` / `jumpToLeaf`.
@@ -48,8 +48,23 @@ only. MegaDreifach is a different product; this UI does not run it.
 - Host stays a tiny in-viewport canvas (`80×56`, opacity `0.02`).
   `display:none` / `visibility:hidden` hang adopt forever.
 - Do not write the adopted Object3D matrix. Twisty keeps writing it; a
-  wrapper (`rig.fit`) is how we hit 57 mm. Mutating the puzzle object made
+  wrapper (`rig.fit`) is how we hit the playroom `CUBE` edge. Mutating the puzzle object made
   pyraminx vanish on the spike.
+- Fit from the puzzle's **local** AABB (parent-space TRS), not a
+  rotated world box. Shelf yaw used to inflate the measured edge and
+  lock in an undersized scale for the rest of the scene.
+- `keepFitted` runs on Twisty's render-scheduled callback and on every
+  host frame. Rest-pose `nativeMax` is locked; only a *root*
+  `puzzle.scale` change remesures. Face-turn cubie AABB swell cannot
+  pulse scale. `playLeaves` sets `turnBusy` so mid-turn frames skip
+  remesure entirely.
+- Seat surface is explicit (`userData.seatSurface`). Borrow writes
+  `table`, home writes `shelf`. Fit-change reseat uses that, never
+  `flightBusy ? table : shelf`.
+- Judge size in **world space** (`userData.worldEdge` / AABB Y, ~0.057 m).
+  Wide hub frames looking small are camera distance, not underscale.
+  Real-life check: a classic 3×3 is slightly shorter than a poker card
+  width (63 mm) and shorter than the standing deck box.
 - **`instanceof THREE.Object3D` is false.** cubing ships its own `three`
   despite the import map. Meshes still render.
 - Adopted look is **MeshBasicMaterial**. Stickers ignore pendant/HDR.
@@ -62,9 +77,10 @@ are no-ops. Teach copy still names the turn.
 
 ## `createCubeRig`
 
-Gated, not deleted. Playroom uses cubing.js. `?legacyCube=1` (and adopt
-failure) still install the hand-rolled cubie rig. Standalone
-`scramble/?standalone=1` still uses `createCubeRig`.
+Playroom has one drawing path: cubing.js `TwistyPlayer`. There is no
+`?legacyCube=1` fallback and no hand-rolled hub mesh. Standalone
+`scramble/?standalone=1` still uses `createCubeRig` for the teaching
+page (not a playroom twisty toy).
 
 ## Deps / license
 

@@ -1,10 +1,15 @@
-// 1:1 playroom measures. Poker card 63×88 mm; cube 57 mm; table ~2 m Ø.
+// 1:1 playroom measures. Poker card 63×88 mm; classic 3×3 ~57 mm; table ~2 m Ø.
 // Demo-layer presentation only.
 
 export const ASSET_BASE = new URL("./assets/", import.meta.url);
 
 export const CARD_W = 0.063;
 export const CARD_D = 0.088;
+// Presentation edge for the playroom Twisty cube. Locked for the
+// whole scene: cubing.js may spawn at native size, then a later
+// layout / world-AABB / 1/3 puzzle.scale must not crush it. 57 mm
+// is real-life 3×3 scale (120 mm was ~2× life size); seatOnSurface
+// plants the live post-scale AABB.
 export const CUBE = 0.057;
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = 0.092;

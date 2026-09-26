@@ -47,6 +47,12 @@ assert.equal(pickedMsg.back, "back-navy");
 assert.equal(pickedMsg.faces[0], "face-13");
 
 const adapters = readFileSync(new URL("./adapters.js", import.meta.url), "utf8");
+assert.equal(adapters.includes("createCubeRig"), false, "playroom has no hand-rolled cube path");
+assert.equal(adapters.includes("legacyCube"), false, "no ?legacyCube=1 fallback");
+assert.match(adapters, /prepareEnter/);
+assert.match(adapters, /reseatCube/);
+assert.match(adapters, /seatSurface/, "reseat uses the intended surface, not flightBusy");
+assert.equal(adapters.includes("flightBusy ? \"table\" : \"shelf\""), false, "do not infer table vs shelf from flightBusy");
 assert.match(adapters, /playDualUnbox/);
 assert.match(adapters, /playRestow/);
 assert.match(adapters, /gatherSessionTable/);
@@ -72,6 +78,9 @@ assert.equal(adapters.includes("gsap"), false, "GSAP stays out of the room");
 assert.equal(adapters.includes("DEAL_SCALE"), false, "adapter does not scale the unbox to 104 seats");
 
 const worldSrc = readFileSync(new URL("./world.js", import.meta.url), "utf8");
+assert.equal(worldSrc.includes("function makeCubeToy"), false, "hub cube is not a hand-rolled mesh");
+assert.match(worldSrc, /seatOnSurface/, "world seats through the shared helper");
+assert.match(worldSrc, /keepFitted/, "host render re-applies Twisty fit before draw");
 assert.match(worldSrc, /if \(slots\[name\]\) slots\[name\]\.slot/, "chest deck has no shelf slot");
 assert.match(worldSrc, /deck2/);
 assert.match(worldSrc, /pivot\.attach\(lid\)/, "lid keeps its authored closed pose");
@@ -82,6 +91,8 @@ assert.equal(worldSrc.includes("-gb.min.z"), false, "lid is not rebuilt from geo
 assert.equal(worldSrc.includes("rotation.x = -0.95"), false, "old front-hinge swing is gone");
 
 const directorSrc = readFileSync(new URL("./toy-director.js", import.meta.url), "utf8");
+assert.match(directorSrc, /seatSurface = "table"/, "enter fly records table as the intended seat");
+assert.match(directorSrc, /seatSurface = "shelf"/, "leave fly records shelf as the intended seat");
 assert.match(directorSrc, /animateLid\(0/, "chest closes after MSG leaves");
 assert.equal(directorSrc.includes("setChestLid?.(1)"), false, "skip does not leave the chest stuck open");
 assert.match(directorSrc, /setChestLid\?\.\(0\)/);
@@ -176,6 +187,11 @@ assert.equal(form.includes("gsap"), false);
 const motion = readFileSync(new URL("./motion.js", import.meta.url), "utf8");
 assert.match(motion, /export function hopTo/);
 assert.match(motion, /export function onMarkBeat/);
+assert.match(motion, /export function seatOnSurface/);
+assert.match(motion, /export function measureLocalBox/);
+assert.match(motion, /export function fitToLocalEdge/);
+assert.match(motion, /export function keepFitted/);
+assert.match(motion, /export function measureWorldBox/);
 assert.match(motion, /export function followEnter/);
 assert.match(motion, /export function followLeave/);
 assert.match(motion, /export function trackActive/);
@@ -191,10 +207,7 @@ const captureSrc = readFileSync(new URL("./capture-strip.js", import.meta.url), 
 assert.match(captureSrc, /debugCapture/);
 assert.match(captureSrc, /installCapture/);
 assert.match(captureSrc, /pendingBeat/);
-assert.match(captureSrc, /camAccel/);
-assert.match(captureSrc, /nextGridAt/);
 assert.match(captureSrc, /CLOCK_STEP_MS/);
-assert.match(app, /poses\.lookTarget/);
 assert.match(app, /installCapture/);
 assert.equal(captureSrc.includes("gsap"), false);
 

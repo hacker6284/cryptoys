@@ -16,6 +16,7 @@ import MegaDreifach.Link2.Be
 import MegaDreifach.Link2.PadRef
 import MegaDreifach.Link2.Compose
 import MegaDreifach.Link2.RequirePerm
+import MegaDreifach.Link2.PackOri
 
 namespace MegaDreifach.Link2
 
@@ -34,7 +35,13 @@ namespace MegaDreifach.Link2
   no duplicates (trap-free, i64-safe). Generated `require_permutation` equals
   algebraic `requirePermutation`.
 
-  OPEN: full `v_Hash` refinement.
+  CLOSED: `pack_ori2_refines`, `pack_ori2_refines_array`.
+  Domain `Ori2Wf`: length 30, every entry `< 2`. Generated `pack_ori2` equals
+  algebraic `packOri2` (Horner / mixed-radix). The value stays below `2^29`,
+  inside one base-10^9 limb.
+
+  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` and `pack_ori3`
+  are still open (`pack_ori3` crosses into a second limb).
 -/
 
 end MegaDreifach.Link2

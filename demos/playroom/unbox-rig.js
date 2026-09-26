@@ -131,14 +131,14 @@ export async function createUnboxRig({
     anisotropy = 4,
     textures,
     sharedMaps = false,
-    label = "KEY",
+    label: labelText = "KEY",
     bodyHex = "#6b1e1e",
 } = {}) {
     const maps = textures || await loadHandTextures(anisotropy);
     const ownsMaps = !textures;
     const body = hexNum(bodyHex);
     const group = new THREE.Group();
-    group.name = label === "MSG" ? "unbox-deck-msg" : "unbox-deck";
+    group.name = labelText === "MSG" ? "unbox-deck-msg" : "unbox-deck";
 
     const sleeve = new THREE.Group();
     sleeve.name = "sleeve";
@@ -179,7 +179,7 @@ export async function createUnboxRig({
 
     const label = new THREE.Mesh(
         new THREE.PlaneGeometry(BW * 0.9, BH * 0.72),
-        paper(0xffffff, { map: makeLabel(bodyHex, label), roughness: 0.88 }),
+        paper(0xffffff, { map: makeLabel(bodyHex, labelText), roughness: 0.88 }),
     );
     label.position.set(0, -0.004, BD / 2 + 0.0005);
     sleeve.add(label);

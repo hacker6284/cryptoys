@@ -1,33 +1,19 @@
 /**
- * Incremental Scramble hash. Main thread streams file chunks; this
- * worker walks the cube without teach steps so a JPEG / PNG can finish
- * and post `done` (host/impl `update` stalls on `push_step`).
- *
- * Prefer the silent impl walk. Fall back to the host Message API.
+ * Incremental Scramble hash. Fast JS cube (no generated CowList), so a
+ * JPEG can finish and post `done` on GitHub Pages without importing
+ * `.mjs` from the worker.
  */
-import { createSilentHasher, createIncrementalHasher } from "../shared/file-hash.js";
+import { createFastHasher } from "../shared/file-hash.js";
 
-async function makeHasher() {
-    try {
-        const impl = await import("./generated/_scramble_impl.mjs");
-        const rt = await import("./generated/_sudo_rt.mjs");
-        return createSilentHasher({ impl, rt });
-    } catch {
-        const api = await import("./generated/scramble.mjs");
-        return createIncrementalHasher(api);
-    }
-}
-
-const hasherPromise = makeHasher();
+const hasher = createFastHasher();
 
 function reply(data) {
     self.postMessage(data);
 }
 
-self.onmessage = async (event) => {
+self.onmessage = (event) => {
     const msg = event.data || {};
     try {
-        const hasher = await hasherPromise;
         if (msg.type === "start") {
             hasher.start(msg.version);
             reply({ type: "ready" });

@@ -95,6 +95,14 @@ textarea.grow-field {
   display: none !important;
 }
 
+.message-file-stack {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+
 .file-btn {
   flex: 0 0 auto;
   display: inline-flex;

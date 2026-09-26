@@ -19,7 +19,7 @@ import {
     bindMessageFile,
     canWalkFile,
     checkFileSize,
-    createSilentHasher,
+    createFastHasher,
     formatFileSize,
     hashFile,
     hideFileChip,
@@ -581,9 +581,7 @@ export function createScrambleSession({
     }
 
     async function hashSilentOnHost(file, { onProgress, signal } = {}) {
-        const impl = await import("./generated/_scramble_impl.mjs");
-        const rt = await import("./generated/_sudo_rt.mjs");
-        const hasher = createSilentHasher({ impl, rt });
+        const hasher = createFastHasher();
         hasher.start(version);
         await readFileChunks(file, {
             chunkBytes: DEMO_FILE_HOST_CHUNK_BYTES,
@@ -614,16 +612,21 @@ export function createScrambleSession({
             setFileProgress(processed, total);
         };
         try {
-            const { digest } = await hashFile(file, {
-                version,
-                workerUrl,
-                chunkBytes: DEMO_FILE_CHUNK_BYTES,
-                readyMs: DEMO_FILE_WORKER_READY_MS,
-                signal: abort.signal,
-                hashInline: hashFileFn,
-                onProgress,
-                fallback: (opts) => hashSilentOnHost(opts.file, opts),
-            });
+            const { digest } = hashFileFn
+                ? await hashFile(file, {
+                    version,
+                    workerUrl,
+                    chunkBytes: DEMO_FILE_CHUNK_BYTES,
+                    readyMs: DEMO_FILE_WORKER_READY_MS,
+                    signal: abort.signal,
+                    hashInline: hashFileFn,
+                    onProgress,
+                    fallback: (opts) => hashSilentOnHost(opts.file, opts),
+                })
+                : await hashSilentOnHost(file, {
+                    onProgress,
+                    signal: abort.signal,
+                });
             if (token !== job || abort.signal.aborted) return;
             hashing = false;
             const bytes = modest ? Array.from(new Uint8Array(await file.arrayBuffer())) : [];

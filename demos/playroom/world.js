@@ -190,37 +190,44 @@ function placePlant(scene, gltf, x, y, z, maxDim, ry = 0) {
     return root;
 }
 
-function rigChestLid(chestRoot) {
-    let lidMesh = null;
-    chestRoot.traverse((object) => {
-        if (object.isMesh && (object.name || "").toLowerCase().includes("lid")) lidMesh = object;
+/**
+ * Kenney chest: body + sibling `lid`. Hasp/latch lives on −Z; the
+ * back seam is +Z. Reparent with `attach` so the authored closed
+ * pose stays put — do not reset rotation or guess from geometry
+ * bbox (that stood the lid up as a shard).
+ */
+function findLidNode(root) {
+    let found = null;
+    root.traverse((object) => {
+        const name = (object.name || "").toLowerCase();
+        if (name === "lid" || name.startsWith("lid")) found = found || object;
     });
+    return found;
+}
+
+function rigChestLid(chestRoot) {
+    const lid = findLidNode(chestRoot);
     const pivot = new THREE.Group();
-    if (!lidMesh) {
+    pivot.name = "chest-lid-pivot";
+    // ~83° over the back hinge — lid stands open into the room
+    // after the chest's π/2 yaw, without dropping through the floor.
+    pivot.userData.openAngle = 1.45;
+    if (!lid) {
         chestRoot.add(pivot);
         return pivot;
     }
-    const lidWorld = new THREE.Box3().setFromObject(lidMesh);
+    chestRoot.updateMatrixWorld(true);
+    const lidWorld = new THREE.Box3().setFromObject(lid);
     const hinge = new THREE.Vector3(
         (lidWorld.min.x + lidWorld.max.x) / 2,
         lidWorld.min.y,
-        lidWorld.min.z,
+        lidWorld.max.z,
     );
     chestRoot.worldToLocal(hinge);
-    lidMesh.parent.remove(lidMesh);
     pivot.position.copy(hinge);
     chestRoot.add(pivot);
     chestRoot.updateMatrixWorld(true);
-    lidMesh.geometry.computeBoundingBox();
-    const gb = lidMesh.geometry.boundingBox.clone();
-    pivot.add(lidMesh);
-    lidMesh.rotation.set(0, 0, 0);
-    const cx = (gb.min.x + gb.max.x) / 2;
-    lidMesh.position.set(
-        -cx * (lidMesh.scale.x || 1),
-        -gb.min.y * (lidMesh.scale.y || 1),
-        -gb.min.z * (lidMesh.scale.z || 1),
-    );
+    pivot.attach(lid);
     return pivot;
 }
 
@@ -784,7 +791,8 @@ export async function mountWorld(canvas) {
 
     function setChestLid(t) {
         const k = Math.min(1, Math.max(0, t));
-        if (chestLidPivot) chestLidPivot.rotation.x = -0.95 * k;
+        const angle = chestLidPivot?.userData.openAngle ?? 1.45;
+        if (chestLidPivot) chestLidPivot.rotation.x = angle * k;
         chestGroup.userData.lid = k;
     }
 

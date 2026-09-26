@@ -44,9 +44,8 @@ export const POSES = {
         fov: 30,
         overlays: { title: true, menu: false, teach: true },
     },
-    // Travel with the KEY box off the shelf. Enter stays on this
-    // family through unbox, then eases to `doubledeal` as the table
-    // lays — no tight cut that lands on empty felt (#29).
+    // Legacy named travel shot. Production enter uses followTo and
+    // does not snap or ease through this pose.
     unbox_travel: {
         position: [DEN.x + 0.48, 1.24, DEN.z + 0.92],
         target: [DEN.x, 0.86, DEN.z],

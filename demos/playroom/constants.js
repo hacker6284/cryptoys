@@ -40,9 +40,10 @@ export const LIFT_MS = 380;
 export const TURN_LIFT = 0.14;
 export const TURN_LIFT_MS = 320;
 export const SETTLE_HOLD_MS = 90;
-// Hold the current shot this long so the cube leaving its slot is on camera
-// before the lens dollies. Click/Escape still skip after LIFT_MS.
+// Brief hub hold so a lift reads in the landing frame before the
+// shared follow-cam starts chasing. Click/Escape still skip after LIFT_MS.
 export const HOLD_MS = 760;
+export const FOLLOW_HOLD_MS = 220;
 
 // Standalone DoubleDeal table is ~17.4 units wide. Scale the live 4×13
 // session onto the playroom felt. Enter lays these seats from the two

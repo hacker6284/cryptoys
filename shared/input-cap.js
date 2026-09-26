@@ -3,9 +3,11 @@
  * Key / Nonce).
  *
  * Pasting a screenplay (Bee Movie, …) used to freeze Scramble: every
- * `input` ran `recompute()` → full hash trace → `view.setAlg(alg)` for
- * a move timeline proportional to the paste. Cap is the freeze fix;
- * field scroll is only UI comfort. Discarded surplus is never hashed
+ * `input` ran a full hash walk and `view.setAlg(alg)` for a move
+ * timeline proportional to the paste. Cap still drops surplus so we
+ * never hash megabytes. Within the cap, typing updates Digest only
+ * (`createLiveDigest`); Play / Step / teach bind cubing.js `setAlg`.
+ * Field scroll is only UI comfort. Discarded surplus is never hashed
  * or animated.
  *
  * Cap: 4096 characters (~4 KiB of ASCII). Quiet note when we drop the

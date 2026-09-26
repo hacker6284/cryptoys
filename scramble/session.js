@@ -10,6 +10,7 @@ import {
 } from "../playroom/puzzles.js";
 import { bindGrowFields } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
+import { createLiveDigest } from "../shared/live-digest.js";
 import {
     bindTeachKeys,
     colorName,
@@ -80,6 +81,7 @@ export function createScrambleSession({
     let job = 0;
     let solverReady = false;
     let messageBytes = [];
+    const live = createLiveDigest();
 
     function bytesOf(text) {
         if (encoding === "hex") {
@@ -181,12 +183,20 @@ export function createScrambleSession({
     }
 
     function bindAlg() {
-        mappedAlg = mapTraceToAlg(trace);
-        projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
         if (!usesTimeline()) return;
         view.setAlg(projectedAlg.alg);
         view.setTempo?.(Number(speed?.value) || 1.4);
         void view.jumpToLeaf?.(-1);
+    }
+
+    function bindTimeline() {
+        mappedAlg = mapTraceToAlg(trace);
+        projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
+        bindAlg();
+    }
+
+    function ensureTimeline() {
+        live.ensureTimeline(bindTimeline);
     }
 
     function jumpViewToCursor() {
@@ -428,7 +438,8 @@ export function createScrambleSession({
         jumpViewToCursor();
     }
 
-    function recompute() {
+    function refreshDigest() {
+        // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / teach.
         job += 1;
         markPlay(false);
         solving = false;
@@ -445,14 +456,16 @@ export function createScrambleSession({
         update(state, messageBytes);
         const result = evaluate(state);
         trace = result.trace;
-        mappedAlg = mapTraceToAlg(trace);
-        projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
+        mappedAlg = { alg: "", units: [], ranges: [] };
+        projectedAlg = { alg: "", units: [], ranges: [], hash: hashesThisPuzzle(), dropped: 0 };
         setDigest(digestHex(result.digest));
         cursor = -1;
-        bindAlg();
+        live.afterDigest();
+        setTeaching(false);
+        view.pauseTimeline?.();
+        view.resetTimeline?.();
         showFace(solved);
         showStatus(caption());
-        if (teaching) refreshTeach();
     }
 
     function duration(kind) {
@@ -501,6 +514,7 @@ export function createScrambleSession({
             markPlay(false);
             return;
         }
+        ensureTimeline();
         markPlay(true);
         const token = job;
         while (playing && token === job && cursor < trace.length - 1) {
@@ -534,7 +548,8 @@ export function createScrambleSession({
     }
 
     function enterTeach() {
-        if (trace.length === 0) recompute();
+        if (trace.length === 0) refreshDigest();
+        ensureTimeline();
         setTeaching(true);
         cursor = -1;
         markPlay(false);
@@ -560,6 +575,7 @@ export function createScrambleSession({
         markPlay(false);
         solving = true;
         setTeaching(false);
+        ensureTimeline();
         const token = ++job;
         errorEl.textContent = "";
         try {
@@ -706,7 +722,7 @@ export function createScrambleSession({
             $$("[data-version]").forEach((item) => item.classList.toggle("on", item === button));
             const genLabel = $("#gen-label");
             if (genLabel) genLabel.textContent = `Gen ${version}`;
-            recompute();
+            refreshDigest();
         }, listen);
     });
 
@@ -715,7 +731,7 @@ export function createScrambleSession({
             encoding = button.dataset.encoding;
             $$("[data-encoding]").forEach((item) => item.classList.toggle("on", item === button));
             input.placeholder = encoding === "hex" ? "a7  or  0xA7" : "hello";
-            recompute();
+            refreshDigest();
         }, listen);
     });
 
@@ -743,10 +759,13 @@ export function createScrambleSession({
         puzzleId = nextId;
         cursor = -1;
         syncPuzzleChrome();
-        bindAlg();
+        live.dropTimeline();
+        if (teaching) {
+            ensureTimeline();
+            refreshTeach();
+        }
         showFace(solved);
         showStatus(caption());
-        if (teaching) refreshTeach();
     }
 
     $$("[data-puzzle]").forEach((button) => {
@@ -789,7 +808,7 @@ export function createScrambleSession({
     $("#spec-close")?.addEventListener("click", () => specDialog.close(), listen);
     bindCappedInput(input, {
         noteEl: ioNote,
-        onChange: () => recompute(),
+        onChange: () => refreshDigest(),
         signal: abort.signal,
     });
 
@@ -818,14 +837,15 @@ export function createScrambleSession({
 
     showFace(solved);
     syncPuzzleChrome();
-    recompute();
+    refreshDigest();
 
     const api = {
         enterTeach,
-        recompute,
+        recompute: refreshDigest,
         setView(next) {
             if (next) view = next;
-            bindAlg();
+            live.dropTimeline();
+            if (teaching) ensureTimeline();
         },
         setPuzzle(id) {
             return applyPuzzle(id);

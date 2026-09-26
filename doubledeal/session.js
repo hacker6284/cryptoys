@@ -584,6 +584,9 @@ export function createDoubleDealSession({
     }
 
     function preview() {
+        // Digest path (same split as `createLiveDigest`): hex/text + first
+        // block layout only. Teach snaps / play trace wait for Play / Step
+        // (`computeTrace`).
         setError("");
         stopPlay();
         laidEnd = null;

@@ -14,8 +14,8 @@ import { DEMO_INPUT_MAX_CHARS } from "./input-cap.js";
 
 export const DEMO_FILE_MAX_BYTES = 10 * 1024 * 1024;
 export const DEMO_FILE_TEACH_MAX_BYTES = DEMO_INPUT_MAX_CHARS;
-export const DEMO_FILE_CHUNK_BYTES = 8 * 1024;
-export const DEMO_FILE_HOST_CHUNK_BYTES = 4 * 1024;
+export const DEMO_FILE_CHUNK_BYTES = 32 * 1024;
+export const DEMO_FILE_HOST_CHUNK_BYTES = 32 * 1024;
 export const DEMO_FILE_WORKER_READY_MS = 1000;
 export const DEMO_FILE_BUSY_MS = 200;
 export const DEMO_FILE_DETERMINATE_BYTES = 1024 * 1024;
@@ -317,17 +317,27 @@ function nybblesOf(bytes) {
 
 function padTape(ny, version) {
     const out = ny.slice();
-    out.push(8);
-    if (version === 1) {
-        const n = (8 - (out.length % 8)) % 8;
-        for (let i = 0; i < n; i += 1) out.push(TAPE_F[i]);
-        const remaining = 24 - out.length;
-        for (let i = 0; i < remaining; i += 1) out.push(TAPE_F[i % 8]);
-        return out;
-    }
-    const remaining = 12 - out.length;
-    for (let k = 0; k < remaining; k += 1) out.push(TAPE_I[k % 4]);
+    const suffix = padSuffixNybbles(ny.length, version);
+    for (let i = 0; i < suffix.length; i += 1) out.push(suffix[i]);
     return out;
+}
+
+function padSuffixNybbles(nyLen, version) {
+    const suffix = [8];
+    let len = nyLen + 1;
+    if (version === 1) {
+        const n = (8 - (len % 8)) % 8;
+        for (let i = 0; i < n; i += 1) suffix.push(TAPE_F[i]);
+        len += n;
+        const remaining = 24 - len;
+        for (let i = 0; i < remaining; i += 1) suffix.push(TAPE_F[i % 8]);
+        return suffix;
+    }
+    const remaining = 12 - len;
+    if (remaining > 0) {
+        for (let k = 0; k < remaining; k += 1) suffix.push(TAPE_I[k % 4]);
+    }
+    return suffix;
 }
 
 function has3(a, b, c, color) {
@@ -464,36 +474,37 @@ export function createFastHasher() {
         start(nextVersion) {
             version = Number(nextVersion) === 1 ? 1 : 2;
             cube = solvedFastCube();
-            message = [];
+            message = version === 1 ? [] : null;
             processed = 0;
         },
         push(bytes) {
             if (!cube) throw new Error("Hasher was not started.");
             const chunk = asBytes(bytes);
             if (!chunk.length) return;
-            for (let i = 0; i < chunk.length; i += 1) message.push(chunk[i]);
-            const ny = nybblesOf(chunk);
             if (version === 1) {
+                for (let i = 0; i < chunk.length; i += 1) message.push(chunk[i]);
                 const all = nybblesOf(message);
                 while (processed + 8 <= all.length) {
                     applyV1Block(cube, all, processed / 8);
                     processed += 8;
                 }
-            } else {
-                for (let i = 0; i < ny.length; i += 1) applyV2(cube, ny[i]);
-                processed += ny.length;
+                return;
             }
+            const ny = nybblesOf(chunk);
+            for (let i = 0; i < ny.length; i += 1) applyV2(cube, ny[i]);
+            processed += ny.length;
         },
         finish() {
             if (!cube) throw new Error("Hasher was not started.");
-            const padded = padTape(nybblesOf(message), version);
             if (version === 1) {
+                const padded = padTape(nybblesOf(message), version);
                 while (processed + 8 <= padded.length) {
                     applyV1Block(cube, padded, processed / 8);
                     processed += 8;
                 }
             } else {
-                for (let i = processed; i < padded.length; i += 1) applyV2(cube, padded[i]);
+                const suffix = padSuffixNybbles(processed, 2);
+                for (let i = 0; i < suffix.length; i += 1) applyV2(cube, suffix[i]);
             }
             applyTurns(cube, 4, 2);
             applyTurns(cube, 5, 2);
@@ -581,13 +592,13 @@ function postWorker(worker, data, transfer) {
 
 /**
  * Hash `file` with the demo worker. `createWorker` / `hashInline` are
- * test seams. Product path uses a module Worker so `evaluate` never
- * runs on the main thread for the file.
+ * test seams. Product path posts one `hash` to a module Worker so the
+ * cube walk is off the playroom main thread; `done` writes Digest.
  *
  * GitHub Pages serves the worker as `application/javascript` at the
  * real `import.meta.url` (not a blob — blob workers break relative
- * `./generated/*.mjs` imports). If `ready` is not posted within ~1s,
- * fall back to host silent hash so Digest cannot stall empty.
+ * imports). If `ready` is not posted within ~1s, or the worker stalls
+ * ~4s without a beat, fall back to host silent hash.
  */
 export async function hashFile(file, {
     version = 2,
@@ -638,11 +649,16 @@ export async function hashFile(file, {
         while (pending.length) pending.shift().reject(err);
     };
 
+    let lastBeat = Date.now();
     const onMessage = (event) => {
         const msg = event?.data || {};
+        lastBeat = Date.now();
         if (msg.type === "error") {
             failAll(new Error(msg.message || "Could not hash this file."));
             return;
+        }
+        if (msg.type === "progress" && Number.isFinite(msg.processed) && Number.isFinite(msg.total)) {
+            onProgress?.({ processed: msg.processed, total: msg.total });
         }
         const next = pending[0];
         if (next && next.expect === msg.type) {
@@ -696,6 +712,37 @@ export async function hashFile(file, {
         }
         await waitReply("ready");
         clearReady();
+        lastBeat = Date.now();
+
+        const waitDone = async () => {
+            const doneP = waitReply("done");
+            const stalled = new Promise((_, reject) => {
+                const id = setInterval(() => {
+                    if (Date.now() - lastBeat > 12000) {
+                        clearInterval(id);
+                        reject(new Error("Hash worker stalled."));
+                    }
+                }, 400);
+                doneP.finally(() => clearInterval(id));
+            });
+            return Promise.race([doneP, stalled]);
+        };
+
+        if (!createWorker) {
+            const buf = await file.arrayBuffer();
+            if (signal?.aborted) throw abortError();
+            const bytes = new Uint8Array(buf);
+            postWorker(
+                worker,
+                { type: "hash", version, bytes },
+                bytes.byteLength ? [bytes.buffer] : undefined,
+            );
+            const done = await waitDone();
+            const digest = Array.from(done.digest || []);
+            if (!digest.length) throw new Error("Could not hash this file.");
+            return { digest };
+        }
+
         await readFileChunks(file, {
             chunkBytes,
             signal,
@@ -707,7 +754,7 @@ export async function hashFile(file, {
             },
         });
         postWorker(worker, { type: "finish" });
-        const done = await waitReply("done");
+        const done = await waitDone();
         const digest = Array.from(done.digest || []);
         if (!digest.length) throw new Error("Could not hash this file.");
         return { digest };

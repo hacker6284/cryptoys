@@ -133,9 +133,14 @@ export function createToyDirector(world) {
 
     function finishFlight(item) {
         if (!item) return;
+        if (item.toy.userData.pendingDest) {
+            item.to = clonePose(item.toy.userData.pendingDest);
+            delete item.toy.userData.pendingDest;
+        }
         applyFlight(item, 1);
         setTravelLight(item.toy, false);
         item.toy.userData.flightBusy = false;
+        item.toy.userData.seatedY = item.toy.position.y;
         flights = flights.filter((entry) => entry !== item);
         writeFlightDebug(1, item.toy);
         item.onDone?.();

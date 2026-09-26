@@ -11,9 +11,168 @@
 
 import { easeInOutCubic, easeOutCubic, lerp } from "./beat-clock.js";
 
+const beatListeners = [];
+
+export function onMarkBeat(fn) {
+    if (typeof fn !== "function") return () => {};
+    beatListeners.push(fn);
+    return () => {
+        const i = beatListeners.indexOf(fn);
+        if (i >= 0) beatListeners.splice(i, 1);
+    };
+}
+
 export function markBeat(beat) {
     const root = typeof document !== "undefined" ? document.documentElement : null;
-    if (root?.dataset?.playroomDebug === "1") root.dataset.beat = beat;
+    if (root && (root.dataset.playroomDebug === "1" || root.dataset.playroomCapture === "1")) {
+        root.dataset.beat = beat;
+    }
+    for (const listener of beatListeners) listener(beat);
+}
+
+/**
+ * World AABB from live mesh vertices / bounding-box corners.
+ * Walks foreign three.js graphs (cubing.js ships its own copy) by
+ * reading `matrixWorld.elements` and geometry arrays — never
+ * `Box3.setFromObject`, which throws across two three copies.
+ */
+export function measureWorldBox(object) {
+    if (!object) return null;
+    object.updateMatrixWorld?.(true);
+    let minX = Infinity;
+    let minY = Infinity;
+    let minZ = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let maxZ = -Infinity;
+    let hits = 0;
+
+    function absorb(x, y, z) {
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return;
+        hits += 1;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (z < minZ) minZ = z;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+        if (z > maxZ) maxZ = z;
+    }
+
+    function worldPoint(e, x, y, z) {
+        return {
+            x: e[0] * x + e[4] * y + e[8] * z + e[12],
+            y: e[1] * x + e[5] * y + e[9] * z + e[13],
+            z: e[2] * x + e[6] * y + e[10] * z + e[14],
+        };
+    }
+
+    function absorbBox(e, box) {
+        if (!box?.min || !box?.max) return;
+        const xs = [box.min.x, box.max.x];
+        const ys = [box.min.y, box.max.y];
+        const zs = [box.min.z, box.max.z];
+        for (const x of xs) {
+            for (const y of ys) {
+                for (const z of zs) {
+                    const w = worldPoint(e, x, y, z);
+                    absorb(w.x, w.y, w.z);
+                }
+            }
+        }
+    }
+
+    function walk(node) {
+        if (!node || node.visible === false) return;
+        const e = node.matrixWorld?.elements;
+        const geo = (node.isMesh || node.isInstancedMesh) ? node.geometry : null;
+        if (geo && e && e.length >= 16) {
+            const pos = geo.attributes?.position;
+            const count = pos?.count || 0;
+            if (count > 0 && count <= 256 && pos.array) {
+                const stride = pos.itemSize || 3;
+                const arr = pos.array;
+                for (let i = 0; i < arr.length; i += stride) {
+                    const w = worldPoint(e, arr[i], arr[i + 1], arr[i + 2]);
+                    absorb(w.x, w.y, w.z);
+                }
+            } else {
+                if (geo.boundingBox) absorbBox(e, geo.boundingBox);
+                else if (typeof geo.computeBoundingBox === "function") {
+                    geo.computeBoundingBox();
+                    if (geo.boundingBox) absorbBox(e, geo.boundingBox);
+                }
+            }
+        }
+        const kids = node.children;
+        if (kids) {
+            for (const child of kids) walk(child);
+        }
+    }
+
+    walk(object);
+    if (!hits) return null;
+    return {
+        min: { x: minX, y: minY, z: minZ },
+        max: { x: maxX, y: maxY, z: maxZ },
+        size: { x: maxX - minX, y: maxY - minY, z: maxZ - minZ },
+        center: {
+            x: (minX + maxX) / 2,
+            y: (minY + maxY) / 2,
+            z: (minZ + maxZ) / 2,
+        },
+    };
+}
+
+/**
+ * Seat any toy from its *post-scale* AABB: the lowest measured point
+ * lands on `surfaceY`. Never a hardcoded Y that assumes a puzzle size.
+ * Probe pose is applied and restored synchronously so a flight rAF
+ * never sees it.
+ */
+export function seatOnSurface(object, {
+    x,
+    surfaceY,
+    z,
+    rotation = { x: 0, y: 0, z: 0 },
+    fallbackHalfHeight = 0,
+    measureBox = measureWorldBox,
+} = {}) {
+    const rot = {
+        x: rotation.x ?? 0,
+        y: rotation.y ?? 0,
+        z: rotation.z ?? 0,
+    };
+    if (!object) {
+        return {
+            position: { x, y: surfaceY + fallbackHalfHeight, z },
+            rotation: rot,
+        };
+    }
+    if (object.userData?.easeBusy) object.userData.cancelEase?.();
+    const prev = {
+        x: object.position.x,
+        y: object.position.y,
+        z: object.position.z,
+        rx: object.rotation?.x ?? 0,
+        ry: object.rotation?.y ?? 0,
+        rz: object.rotation?.z ?? 0,
+        quat: object.quaternion?.clone?.(),
+    };
+    object.position.set(x, 0, z);
+    object.rotation?.set?.(rot.x, rot.y, rot.z);
+    object.quaternion?.setFromEuler?.(object.rotation);
+    object.updateMatrixWorld?.(true);
+    const box = typeof measureBox === "function" ? measureBox(object) : null;
+    const minY = box?.min?.y;
+    const y = Number.isFinite(minY) ? surfaceY - minY : surfaceY + fallbackHalfHeight;
+    object.position.set(prev.x, prev.y, prev.z);
+    object.rotation?.set?.(prev.rx, prev.ry, prev.rz);
+    if (prev.quat && object.quaternion?.copy) object.quaternion.copy(prev.quat);
+    object.updateMatrixWorld?.(true);
+    return {
+        position: { x, y, z },
+        rotation: rot,
+    };
 }
 
 export function pose3(raw) {

@@ -62,9 +62,10 @@ are no-ops. Teach copy still names the turn.
 
 ## `createCubeRig`
 
-Gated, not deleted. Playroom uses cubing.js. `?legacyCube=1` (and adopt
-failure) still install the hand-rolled cubie rig. Standalone
-`scramble/?standalone=1` still uses `createCubeRig`.
+Playroom has one drawing path: cubing.js `TwistyPlayer`. There is no
+`?legacyCube=1` fallback and no hand-rolled hub mesh. Standalone
+`scramble/?standalone=1` still uses `createCubeRig` for the teaching
+page (not a playroom twisty toy).
 
 ## Deps / license
 

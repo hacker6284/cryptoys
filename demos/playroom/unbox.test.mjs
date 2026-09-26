@@ -47,6 +47,10 @@ assert.equal(pickedMsg.back, "back-navy");
 assert.equal(pickedMsg.faces[0], "face-13");
 
 const adapters = readFileSync(new URL("./adapters.js", import.meta.url), "utf8");
+assert.equal(adapters.includes("createCubeRig"), false, "playroom has no hand-rolled cube path");
+assert.equal(adapters.includes("legacyCube"), false, "no ?legacyCube=1 fallback");
+assert.match(adapters, /prepareEnter/);
+assert.match(adapters, /reseatCube/);
 assert.match(adapters, /playDualUnbox/);
 assert.match(adapters, /followLive/);
 assert.match(adapters, /createUnboxRig/);
@@ -69,6 +73,8 @@ assert.equal(adapters.includes("gsap"), false, "GSAP stays out of the room");
 assert.equal(adapters.includes("DEAL_SCALE"), false, "adapter does not scale the unbox to 104 seats");
 
 const worldSrc = readFileSync(new URL("./world.js", import.meta.url), "utf8");
+assert.equal(worldSrc.includes("function makeCubeToy"), false, "hub cube is not a hand-rolled mesh");
+assert.match(worldSrc, /seatOnSurface/, "world seats through the shared helper");
 assert.match(worldSrc, /if \(slots\[name\]\) slots\[name\]\.slot/, "chest deck has no shelf slot");
 assert.match(worldSrc, /deck2/);
 assert.match(worldSrc, /pivot\.attach\(lid\)/, "lid keeps its authored closed pose");
@@ -146,6 +152,9 @@ assert.equal(form.includes("gsap"), false);
 
 const motion = readFileSync(new URL("./motion.js", import.meta.url), "utf8");
 assert.match(motion, /export function hopTo/);
+assert.match(motion, /export function onMarkBeat/);
+assert.match(motion, /export function seatOnSurface/);
+assert.match(motion, /export function measureWorldBox/);
 assert.match(motion, /export function followEnter/);
 assert.match(motion, /export function trackActive/);
 assert.match(motion, /export function trackToys/);

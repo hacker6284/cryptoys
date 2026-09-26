@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { measureWorldBox } from "./motion.js";
 import { PUZZLES, PUZZLE_IDS, normalizePuzzleId } from "./puzzles.js";
 
 export { PUZZLES, PUZZLE_IDS, normalizePuzzleId };
@@ -98,44 +99,46 @@ function frame() {
     return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
-function meshBox(object) {
-    const box = new THREE.Box3();
-    object.updateMatrixWorld(true);
-    try {
-        box.setFromObject(object);
-    } catch {
-        // two three.js copies can throw inside setFromObject
-    }
-    if (!box.isEmpty()) return box;
-    object.traverse((node) => {
-        if (!node.isMesh || !node.visible || !node.geometry) return;
-        const geo = node.geometry;
-        if (!geo.boundingBox) geo.computeBoundingBox();
-        if (!geo.boundingBox) return;
-        const next = geo.boundingBox.clone().applyMatrix4(node.matrixWorld);
-        if (!next.isEmpty()) box.union(next);
-    });
-    return box;
+export function meshBox(object) {
+    return measureWorldBox(object);
 }
 
-function frameInWrapper(wrapper, object, edge) {
+/**
+ * Scale `wrapper` so the child's measured AABB max edge equals
+ * `edge` (playroom 57 mm). Centers the mesh on the wrapper origin
+ * so seat-on-surface can read the post-scale bottom. A second pass
+ * corrects if the first measure was off (foreign three.js graphs).
+ */
+export function frameInWrapper(wrapper, object, edge) {
     wrapper.position.set(0, 0, 0);
     wrapper.scale.set(1, 1, 1);
     wrapper.updateMatrixWorld(true);
-    const box = meshBox(object);
-    const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
-    box.getSize(size);
-    box.getCenter(center);
+    const box = measureWorldBox(object);
+    const size = box?.size || { x: 1, y: 1, z: 1 };
+    const center = box?.center || { x: 0, y: 0, z: 0 };
     const max = Math.max(size.x, size.y, size.z);
     const nativeMax = Number.isFinite(max) && max > 1e-6 ? max : 1;
-    const scale = edge / nativeMax;
+    let scale = edge / nativeMax;
     wrapper.scale.setScalar(scale);
     if (Number.isFinite(center.x)) {
         wrapper.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
     }
     wrapper.updateMatrixWorld(true);
-    return { size: size.clone(), nativeMax, fittedMax: edge };
+    const fitted = measureWorldBox(wrapper);
+    const fittedMax = Math.max(fitted?.size.x || 0, fitted?.size.y || 0, fitted?.size.z || 0);
+    if (fittedMax > 1e-6 && Math.abs(fittedMax - edge) > edge * 0.04) {
+        const correct = edge / fittedMax;
+        scale *= correct;
+        wrapper.scale.multiplyScalar(correct);
+        wrapper.position.multiplyScalar(correct);
+        wrapper.updateMatrixWorld(true);
+    }
+    return {
+        size: { ...size },
+        nativeMax,
+        fittedMax: edge,
+        scale,
+    };
 }
 
 function enableShadows(root) {
@@ -211,6 +214,8 @@ export async function adoptTwistyPuzzle(seat, {
         seat.fit.add(puzzleObject);
         const framed = frameInWrapper(seat.fit, puzzleObject, edge);
         enableShadows(puzzleObject);
+        seat.group.userData.boundsDirty = true;
+        seat.group.userData.fittedEdge = framed.fittedMax;
 
         let disposed = false;
         let currentAlg = String(alg ?? spec.alg ?? "");

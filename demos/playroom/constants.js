@@ -33,6 +33,9 @@ export const SLOTS = {
     cube: { x: -0.55, y: SHELF_Y1 },
 };
 
+// Shared rAF step cap (director / beat-clock / capture harness).
+export const CLOCK_STEP_MS = 50;
+
 export const TWEEN_MS = 1100;
 export const FLY_MS = 1800;
 export const LIFT_MS = 380;

@@ -1,6 +1,7 @@
 import { adapters } from "./adapters.js";
 import { FLY_MS, FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
-import { continueTo, followEnter, trackActive, trackToy } from "./motion.js";
+import { installCapture } from "./capture-strip.js";
+import { continueTo, followEnter, markBeat, trackActive, trackToy } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { playroomDebugEnabled } from "./puzzles.js";
@@ -87,10 +88,12 @@ try {
         poses,
         prefersReducedMotion: () => poses.prefersReducedMotion(),
     };
+    const capture = installCapture(canvas);
     adapters.scramble.install(world, installOpts);
     adapters.doubledeal.install(world, installOpts);
     void adapters.scramble.preload();
     void adapters.doubledeal.preload();
+    await adapters.scramble.ready?.();
     const director = createToyDirector(world);
 
     async function startAlgo(id, { snap = false } = {}) {
@@ -101,6 +104,8 @@ try {
         starting = true;
         skippedStart = false;
         activeAlgo = id;
+        capture.begin(`${id}-enter`);
+        markBeat("enter-start");
         syncOverlays({
             name: poses.name,
             overlays: { title: true, menu: false },
@@ -127,9 +132,15 @@ try {
                 });
             }
             await Promise.all([fly, warm]);
-            if (leaving) return;
+            markBeat("enter-landed");
+            if (leaving) {
+                capture.end();
+                return;
+            }
             adapter.view()?.rememberSeated?.();
             await adapter.enter({ snap: reduced || skippedStart });
+            markBeat("enter-done");
+            capture.end();
             if (leaving) return;
             writeQuery({ pose: "seated", algo: id });
             syncOverlays({
@@ -148,6 +159,7 @@ try {
                 ? err.message
                 : `${meta.title} could not start in the playroom.`;
             poses.snap("landing");
+            capture.end();
         } finally {
             starting = false;
         }
@@ -161,6 +173,8 @@ try {
         }
         leaving = true;
         const id = activeAlgo;
+        capture.begin(`${id}-leave`);
+        markBeat("leave-start");
         const meta = ALGOS[id];
         const reduced = poses.prefersReducedMotion();
         const fade = adapters[id]?.leave?.({ snap: reduced });
@@ -178,8 +192,10 @@ try {
         }
         await Promise.all([fade, home]);
         adapters[id]?.revealShelf?.();
+        markBeat("hub-settle");
         activeAlgo = null;
         leaving = false;
+        capture.end();
         writeQuery({ pose: "landing", algo: null });
         syncOverlays({
             name: poses.name,
@@ -206,6 +222,7 @@ try {
         director.update(now);
         poses.update(performance.now());
         world.render();
+        capture.tick(now, world.camera, poses.lookTarget);
         requestAnimationFrame(tick);
     }
     // The rAF clock must run before any non-snap enter. Deep-link

@@ -5,7 +5,10 @@ import {
     continueTo,
     followEnter,
     hopTo,
+    measureLocalBox,
+    measureWorldBox,
     pose3,
+    seatOnSurface,
     seatToys,
     trackActive,
     trackEnter,
@@ -24,7 +27,17 @@ assert.deepEqual(pose3({
 
 function makeObject(x, y, z) {
     return {
-        position: { x, y, z },
+        position: {
+            x,
+            y,
+            z,
+            set(nx, ny, nz) {
+                this.x = nx;
+                this.y = ny;
+                this.z = nz;
+                return this;
+            },
+        },
         rotation: { x: 0, y: 0, z: 0, set(nx, ny, nz) {
             this.x = nx; this.y = ny; this.z = nz;
         } },
@@ -128,5 +141,109 @@ await seatToys(restWorld, clock, gen, ["deck"]);
 assert.equal(restWorld.toys.deck.position.x, 3);
 assert.equal(restWorld.toys.deck.position.z, -1);
 assert.ok(Math.abs(lerp(0, 1, 0.5) - 0.5) < 1e-9);
+
+const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+const mesh = {
+    visible: true,
+    isMesh: true,
+    geometry: {
+        attributes: {
+            position: {
+                count: 2,
+                itemSize: 3,
+                array: new Float32Array([-0.2, -0.1, -0.2, 0.2, 0.3, 0.2]),
+            },
+        },
+    },
+    matrixWorld: { elements: identity },
+    children: [],
+};
+const root = {
+    updateMatrixWorld() {},
+    visible: true,
+    children: [mesh],
+};
+const box = measureWorldBox(root);
+assert.ok(box);
+assert.ok(Math.abs(box.min.y + 0.1) < 1e-6);
+assert.ok(Math.abs(box.max.y - 0.3) < 1e-6);
+assert.ok(Math.abs(box.size.y - 0.4) < 1e-6);
+
+const crushedWorld = {
+    visible: true,
+    isMesh: true,
+    position: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 },
+    quaternion: { x: 0, y: 0, z: 0, w: 1 },
+    geometry: {
+        attributes: {
+            position: {
+                count: 2,
+                itemSize: 3,
+                array: new Float32Array([-1, -1, -1, 1, 1, 1]),
+            },
+        },
+    },
+    // Twisty world write: 1/3 of local. Local measure must ignore it.
+    matrixWorld: {
+        elements: [1 / 3, 0, 0, 0, 0, 1 / 3, 0, 0, 0, 0, 1 / 3, 0, 0, 0, 0, 1],
+    },
+    children: [],
+};
+const local = measureLocalBox(crushedWorld);
+assert.ok(local);
+assert.ok(Math.abs(local.size.x - 2) < 1e-6, "local edge ignores matrixWorld crush");
+const worldCrushed = measureWorldBox(crushedWorld);
+assert.ok(Math.abs(worldCrushed.size.x - 2 / 3) < 1e-6, "world box sees the Twisty write");
+
+const scaledPuzzle = {
+    visible: true,
+    isMesh: true,
+    position: { x: 0, y: 0, z: 0 },
+    scale: { x: 1 / 3, y: 1 / 3, z: 1 / 3 },
+    quaternion: { x: 0, y: 0, z: 0, w: 1 },
+    geometry: {
+        attributes: {
+            position: {
+                count: 2,
+                itemSize: 3,
+                array: new Float32Array([-1.5, -1.5, -1.5, 1.5, 1.5, 1.5]),
+            },
+        },
+    },
+    children: [],
+};
+const lateScale = measureLocalBox(scaledPuzzle);
+assert.ok(Math.abs(lateScale.size.x - 1) < 1e-6, "local box includes puzzle.scale 1/3");
+
+const scaled = makeObject(0, 2, 0);
+scaled.half = 0.08;
+const seated = seatOnSurface(scaled, {
+    x: 1,
+    surfaceY: 5,
+    z: 3,
+    rotation: { x: 0, y: 0.2, z: 0 },
+    fallbackHalfHeight: 0.0285,
+    measureBox(object) {
+        return {
+            min: { x: object.position.x - object.half, y: object.position.y - object.half, z: object.position.z - object.half },
+            max: { x: object.position.x + object.half, y: object.position.y + object.half, z: object.position.z + object.half },
+        };
+    },
+});
+assert.equal(seated.position.x, 1);
+assert.equal(seated.position.z, 3);
+assert.equal(seated.position.y, 5.08);
+assert.equal(scaled.position.y, 2, "probe pose is restored");
+assert.notEqual(seated.position.y, 5.0285);
+
+const missing = seatOnSurface(null, {
+    x: 0,
+    surfaceY: 2,
+    z: 0,
+    rotation: { x: 0, y: 0, z: 0 },
+    fallbackHalfHeight: 0.046,
+});
+assert.equal(missing.position.y, 2.046);
 
 console.log("motion tests ok");

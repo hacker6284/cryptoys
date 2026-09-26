@@ -1,4 +1,5 @@
 import { FLY_MS, LIFT_MS } from "./constants.js";
+import { markBeat } from "./motion.js";
 
 /**
  * Toy director.
@@ -133,9 +134,14 @@ export function createToyDirector(world) {
 
     function finishFlight(item) {
         if (!item) return;
+        if (item.toy.userData.pendingDest) {
+            item.to = clonePose(item.toy.userData.pendingDest);
+            delete item.toy.userData.pendingDest;
+        }
         applyFlight(item, 1);
         setTravelLight(item.toy, false);
         item.toy.userData.flightBusy = false;
+        item.toy.userData.seatedY = item.toy.position.y;
         flights = flights.filter((entry) => entry !== item);
         writeFlightDebug(1, item.toy);
         item.onDone?.();
@@ -220,12 +226,15 @@ export function createToyDirector(world) {
                 for (const name of extras) {
                     if (token !== borrowGen || startedSkip !== skipGen) return;
                     world.setSlotEmpty(name, true);
+                    if (world.toys[name]) world.toys[name].userData.seatSurface = "table";
                     await flyToy(name, world.getTablePose(name), { snap, duration: FLY_MS - 200 });
                 }
                 if (token !== borrowGen || startedSkip !== skipGen) return;
                 await animateLid(0, { snap, duration: 560 });
             })();
         }
+        markBeat(primary === "cube" ? "cube-fly" : "key-fly");
+        if (world.toys[primary]) world.toys[primary].userData.seatSurface = "table";
         await flyToy(primary, world.getTablePose(primary), { snap });
         if (snap && extraJob) await extraJob;
         const toy = world.toys[primary];
@@ -241,7 +250,12 @@ export function createToyDirector(world) {
         const recipe = recipeOf(occupied);
         const names = recipe.toys.filter((name) => world.toys[name]);
         if (recipe.extras.includes("chest")) await animateLid(1, { snap, duration: 420 });
-        await Promise.all(names.map((name) => flyToy(name, world.getShelfPose(name), { snap })));
+        markBeat("fly-home");
+        await Promise.all(names.map((name) => {
+            const toy = world.toys[name];
+            if (toy) toy.userData.seatSurface = "shelf";
+            return flyToy(name, world.getShelfPose(name), { snap });
+        }));
         for (const name of names) world.setSlotEmpty(name, false);
         if (recipe.extras.includes("chest")) await animateLid(0, { snap, duration: 520 });
         occupied = null;
@@ -265,6 +279,7 @@ export function createToyDirector(world) {
             const pose = world.getTablePose?.(name);
             if (!toy || !pose) continue;
             toy.userData.flightBusy = false;
+            toy.userData.seatSurface = "table";
             world.applyPose(toy, pose);
             toy.updateMatrixWorld?.(true);
         }

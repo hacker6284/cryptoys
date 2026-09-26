@@ -24,7 +24,7 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 | Tempo | `player.tempoScale` (speed slider) |
 | Seat / fly | translate `rig.group` (toy-director from motion #25) |
 | Lift-off-felt | `stageCubeView` still lifts `rig.group.y` (#25). `rig.lift` is the local hook. |
-| Size | scale `rig.fit` only — never the adopted Object3D |
+| Size | scale `rig.fit` only — never the adopted Object3D. Target edge is `CUBE` (120 mm presentation, not a store 57 mm speck). |
 
 Session moves (including Rule B / seat as `x`/`y`/`z`) become `player.alg`.
 `createScrambleSession` drives that timeline via `playLeaves` / `jumpToLeaf`.
@@ -48,7 +48,7 @@ only. MegaDreifach is a different product; this UI does not run it.
 - Host stays a tiny in-viewport canvas (`80×56`, opacity `0.02`).
   `display:none` / `visibility:hidden` hang adopt forever.
 - Do not write the adopted Object3D matrix. Twisty keeps writing it; a
-  wrapper (`rig.fit`) is how we hit 57 mm. Mutating the puzzle object made
+  wrapper (`rig.fit`) is how we hit the playroom `CUBE` edge. Mutating the puzzle object made
   pyraminx vanish on the spike.
 - **`instanceof THREE.Object3D` is false.** cubing ships its own `three`
   despite the import map. Meshes still render.

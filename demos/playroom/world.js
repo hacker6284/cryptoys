@@ -433,7 +433,7 @@ export async function mountWorld(canvas) {
     shelfWash.target.position.set(-0.5, 1.05, SHELF_Z);
     scene.add(shelfWash);
     scene.add(shelfWash.target);
-    // A quiet key on the cube slot so the 57 mm toy reads at rest and
+    // A quiet key on the cube slot so the seated toy reads at rest and
     // the empty ring reads after it lifts — not a hover-only trick.
     const cubeSlotKey = new THREE.SpotLight(0xffd8b0, 2.6, 2.6, Math.PI / 5, 0.45, 1.3);
     cubeSlotKey.position.set(SLOTS.cube.x + 0.12, SHELF_Y1 + 0.62, SHELF_Z + 0.62);

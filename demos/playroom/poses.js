@@ -10,7 +10,7 @@ export const POSES = {
         fov: 40,
         overlays: { title: true, menu: true },
     },
-    // Close enough that a 57 mm cube leaving its slot actually reads.
+    // Close enough that the shelf cube leaving its slot actually reads.
     shelf: {
         position: [0.22, 1.46, -0.92],
         target: [-0.55, 1.30, -2.15],

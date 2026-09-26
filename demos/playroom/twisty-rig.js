@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { CUBE } from "./constants.js";
 import { measureWorldBox } from "./motion.js";
 import { PUZZLES, PUZZLE_IDS, normalizePuzzleId } from "./puzzles.js";
 
@@ -43,7 +44,7 @@ export async function loadTwisty() {
     return twistyMod;
 }
 
-export function createTwistySeat({ edge = 0.057 } = {}) {
+export function createTwistySeat({ edge = CUBE } = {}) {
     const group = new THREE.Group();
     group.name = "twisty-seat";
     const lift = new THREE.Group();
@@ -105,9 +106,9 @@ export function meshBox(object) {
 
 /**
  * Scale `wrapper` so the child's measured AABB max edge equals
- * `edge` (playroom 57 mm). Centers the mesh on the wrapper origin
- * so seat-on-surface can read the post-scale bottom. A second pass
- * corrects if the first measure was off (foreign three.js graphs).
+ * `edge` (playroom `CUBE`, 120 mm). Centers the mesh on the wrapper
+ * origin so seat-on-surface can read the post-scale bottom. A second
+ * pass corrects if the first measure was off (foreign three.js graphs).
  */
 export function frameInWrapper(wrapper, object, edge) {
     wrapper.position.set(0, 0, 0);
@@ -157,7 +158,7 @@ function noopHighlight() {}
  *   lift   — local Y hook. Playroom #25 lifts `group` for turns; this stays
  *            available so cubing animation and room motion need not share
  *            a transform.
- *   fit    — 57 mm scale. Do not scale the cubing object itself.
+ *   fit    — `CUBE` (120 mm) scale. Do not scale the cubing object itself.
  *   puzzle — cubing.js Object3D. Do not keyframe; TwistyPlayer owns motion.
  */
 export async function adoptTwistyPuzzle(seat, {
@@ -169,7 +170,7 @@ export async function adoptTwistyPuzzle(seat, {
     adoptTimeoutMs = 20000,
 } = {}) {
     const spec = PUZZLES[normalizePuzzleId(puzzle)] || PUZZLES["3x3x3"];
-    const edge = seat.edge ?? 0.057;
+    const edge = seat.edge ?? CUBE;
     onStage?.("import cubing/twisty");
     const { TwistyPlayer } = await loadTwisty();
     onStage?.("construct TwistyPlayer");

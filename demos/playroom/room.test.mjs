@@ -39,6 +39,7 @@ assert.ok(POSES.doubledeal.fov <= 32, "doubledeal FOV stays in the scramble-lean
 assert.ok(POSES.doubledeal.position[1] <= 1.28, "doubledeal camera height matches seated lean");
 assert.ok(POSES.doubledeal.position[2] - DEN.z <= 1.05, "doubledeal stay close to the felt");
 
+assert.equal(CUBE, 0.12, "playroom cube is the 120 mm presentation edge");
 assert.equal(toyHalfHeight("cube"), CUBE / 2);
 assert.equal(toyHalfHeight("deck"), 0.046);
 assert.equal(toyHalfHeight("deck2"), 0.046);

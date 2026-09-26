@@ -154,9 +154,14 @@ function makeMockWorld() {
         setSlotEmpty(name, empty) {
             slotsEmpty[name] = Boolean(empty);
         },
-        setChestLid() {},
+        lid: 0,
+        lids: [],
+        setChestLid(t) {
+            this.lid = t;
+            this.lids.push(t);
+        },
         getChestLid() {
-            return 0;
+            return this.lid;
         },
     };
 }
@@ -186,6 +191,7 @@ assert.equal(world.toys.deck.position.z, DEN.z);
 assert.equal(world.toys.deck.position.y, tableY);
 assert.notEqual(world.toys.deck.position.y, TOP_Y + 0.033 + CUBE / 2);
 assert.ok(world.toys.deck2.position.x < DEN.x, "MSG deck seats on the message side");
+assert.deepEqual(world.lids, [1, 0], "toybox opens for MSG then closes after it leaves");
 
 await director.home({ snap: true });
 assert.equal(director.occupied, null);
@@ -194,6 +200,7 @@ assert.equal(world.toys.deck.position.x, SLOTS.deck.x);
 assert.equal(world.toys.deck.position.z, SHELF_Z);
 assert.equal(world.toys.deck.position.y, shelfY);
 assert.ok(world.toys.deck2.position.x < -1.5, "MSG deck homes to the chest");
+assert.deepEqual(world.lids, [1, 0, 1, 0], "toybox opens to receive MSG and closes after");
 
 const cubeWorld = makeMockWorld();
 const cubeDirector = createToyDirector(cubeWorld);

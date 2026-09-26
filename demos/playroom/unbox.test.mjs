@@ -71,6 +71,15 @@ assert.equal(adapters.includes("DEAL_SCALE"), false, "adapter does not scale the
 const worldSrc = readFileSync(new URL("./world.js", import.meta.url), "utf8");
 assert.match(worldSrc, /if \(slots\[name\]\) slots\[name\]\.slot/, "chest deck has no shelf slot");
 assert.match(worldSrc, /deck2/);
+assert.match(worldSrc, /pivot\.attach\(lid\)/, "lid keeps its authored closed pose");
+assert.match(worldSrc, /lidWorld\.max\.z/, "hinge is the back seam, not the hasp");
+assert.equal(worldSrc.includes("-gb.min.z"), false, "lid is not rebuilt from geometry bbox");
+assert.equal(worldSrc.includes("rotation.x = -0.95"), false, "old front-hinge swing is gone");
+
+const directorSrc = readFileSync(new URL("./toy-director.js", import.meta.url), "utf8");
+assert.match(directorSrc, /animateLid\(0/, "chest closes after MSG leaves");
+assert.equal(directorSrc.includes("setChestLid?.(1)"), false, "skip does not leave the chest stuck open");
+assert.match(directorSrc, /setChestLid\?\.\(0\)/);
 
 const cardStage = readFileSync(new URL("./card-stage.js", import.meta.url), "utf8");
 assert.equal(cardStage.includes("fadeTree"), false);

@@ -45,6 +45,7 @@ assert.match(adapters, /<textarea id="digest" class="digest grow-field"/);
 assert.match(adapters, /<textarea id="message" class="grow-field"/);
 assert.match(adapters, /<textarea id="key" class="grow-field"/);
 assert.match(adapters, /bindGrowFields/);
+assert.match(adapters, /id="io-note"/);
 
 const scrambleSession = readFileSync(new URL("../scramble/session.js", import.meta.url), "utf8");
 const doubleSession = readFileSync(new URL("../doubledeal/session.js", import.meta.url), "utf8");

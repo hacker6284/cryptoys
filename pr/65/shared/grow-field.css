@@ -1,0 +1,122 @@
+/*
+  Growable text fields — Message, Key, Nonce, Digest / output.
+
+  Cause this replaces: playroom dock fields were one pill row
+  (height = min-height = max-height = 2.55rem, white-space: nowrap,
+  text-overflow: ellipsis, overflow-y: hidden). Digest was a single-line
+  <input>, so hex could not wrap. Prefer grow over truncate.
+
+  Height cap: --grow-field-max = 8.5rem (~5–6 lines at 15px / 1.4). Past
+  that the field scrolls so one box cannot eat the playroom stage or the
+  portrait IO band. Portrait transport stays on the stage; the dark
+  band already scrolls as a whole (--io-band).
+
+  Length cap (live-hashed inputs): 4096 characters — see input-cap.js.
+  A screenplay paste is clipped there so Scramble never builds a move
+  timeline from megabytes of text.
+
+  File hash is a separate path (file-hash.js): ~10 MB ceiling, filename
+  + size in a chip, never the raw bytes in the textarea.
+*/
+
+:root {
+  --grow-field-min: 2.55rem;
+  --grow-field-max: 8.5rem;
+  /* Fixed, small — same as dock icon-btn / --radius-lg. Do not use
+     999px: a pill radius scales with height and a tall Message
+     becomes a stadium / circle. */
+  --grow-field-radius: 8px;
+}
+
+textarea.grow-field {
+  field-sizing: content;
+  display: block;
+  width: 100%;
+  min-height: var(--grow-field-min);
+  max-height: var(--grow-field-max);
+  height: auto;
+  border-radius: var(--grow-field-radius);
+  overflow-x: hidden;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-overflow: clip;
+  resize: none;
+}
+
+.io-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--fg) 46%, transparent);
+}
+
+.io-note[hidden] {
+  display: none;
+}
+
+.playroom-field-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.file-action {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--fg) 46%, transparent);
+  cursor: pointer;
+}
+
+.file-action:hover,
+.file-action:focus-visible {
+  color: var(--fg);
+  background: none;
+  border: 0;
+}
+
+.file-chip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--grow-field-min);
+  max-height: var(--grow-field-max);
+  padding: 0.55rem 16px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.1));
+  border-radius: var(--grow-field-radius);
+  background: var(--bg, #0b0a09);
+  color: var(--fg);
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.file-chip[hidden] {
+  display: none;
+}
+
+.file-chip #message-file-name,
+.file-chip [id="message-file-name"] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.file-chip .file-action {
+  flex-shrink: 0;
+}
+
+textarea.grow-field[hidden] {
+  display: none;
+}

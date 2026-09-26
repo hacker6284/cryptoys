@@ -350,11 +350,28 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
 }
 
 .playroom-dock .file-chip {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.55rem 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--grow-field-radius, 8px);
   background: #0b0a09;
   color: var(--fg);
+}
+
+.playroom-dock .file-chip[hidden] {
+  display: none !important;
+}
+
+.playroom-dock .file-progress {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.playroom-dock .file-progress-bar {
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .playroom-dock .playroom-card .file-btn {
@@ -443,7 +460,12 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   display: none;
 }
 
-.playroom-ctl--field {
+.playroom-ctl--field,
+.playroom-dock [data-message-field] {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
   width: 100%;
 }
 

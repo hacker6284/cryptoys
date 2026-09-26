@@ -99,6 +99,8 @@ const nodes = {
     "message-file": el("div", { id: "message-file" }),
     "message-file-name": el("span", { id: "message-file-name" }),
     "message-file-clear": el("button", { id: "message-file-clear" }),
+    "message-file-progress": el("div", { id: "message-file-progress" }),
+    "message-file-progress-bar": el("div", { id: "message-file-progress-bar" }),
     play: el("button", { id: "play" }),
     "step-through": el("button", { id: "step-through" }),
     step: el("button", { id: "step" }),
@@ -172,6 +174,7 @@ async function hashInline({ file, version, onProgress }) {
         hasher.start(version);
         hasher.push(bytes);
         onProgress?.({ processed: bytes.length, total: bytes.length });
+        assert.equal(nodes["message-file-progress"].hidden, false, "progress is visible while hashing");
         return hasher.finish();
     }
     const { scramble_v1, scramble_v2, update, evaluate } = await import("./generated/scramble.mjs");
@@ -179,6 +182,7 @@ async function hashInline({ file, version, onProgress }) {
     hasher.start(version);
     hasher.push(bytes);
     onProgress?.({ processed: bytes.length, total: bytes.length });
+    assert.equal(nodes["message-file-progress"].hidden, false, "progress is visible while hashing");
     return hasher.finish();
 }
 
@@ -217,7 +221,8 @@ await session.applyFile(modest);
 assert.ok(nodes.digest.value.startsWith("0x"), "file Digest fills when the hasher finishes");
 assert.match(nodes["message-file-name"].textContent, /hello\.bin/);
 assert.match(nodes["message-file-name"].textContent, /5 B/);
-assert.equal(nodes.message.hidden, true, "file path does not dump bytes into Message");
+assert.equal(nodes.message.hidden, false, "Message textarea stays on the paperclip row");
+assert.equal(nodes["message-file-progress"].hidden, true, "progress clears when Digest lands");
 assert.equal(algs.length, algsAfterType, "setAlg is not called during file hash progress");
 
 session.enterTeach();
@@ -242,7 +247,8 @@ const image = new File([jpeg], "shot.jpg", { type: "image/jpeg" });
 await session.applyFile(image);
 assert.ok(nodes.digest.value.startsWith("0x"), "JPEG pick writes Digest without a second click");
 assert.match(nodes["message-file-name"].textContent, /shot\.jpg/);
-assert.equal(nodes.message.hidden, true, "filename replaces the Message content, not the paperclip slot");
+assert.equal(nodes.message.hidden, false, "filename is not wedged into the Message line");
+assert.equal(nodes["message-file-progress"].hidden, true, "progress clears after the JPEG digest");
 assert.match(nodes["io-note"].textContent, /Play \/ Step stay off/);
 const algsAfterLarge = algs.length;
 session.enterTeach();

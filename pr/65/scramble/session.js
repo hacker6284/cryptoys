@@ -13,7 +13,9 @@ import { bindCappedInput } from "../shared/input-cap.js";
 import { createLiveDigest } from "../shared/live-digest.js";
 import {
     DEMO_FILE_CHUNK_BYTES,
+    DEMO_FILE_HOST_CHUNK_BYTES,
     DEMO_FILE_TEACH_MAX_BYTES,
+    DEMO_FILE_WORKER_READY_MS,
     bindMessageFile,
     canWalkFile,
     checkFileSize,
@@ -79,6 +81,8 @@ export function createScrambleSession({
     const fileChip = $("#message-file");
     const fileNameEl = $("#message-file-name");
     const fileClear = $("#message-file-clear");
+    const fileProgress = $("#message-file-progress");
+    const fileProgressBar = $("#message-file-progress-bar");
     const workerUrl = String(fileWorkerUrl || new URL("./hash-worker.js", import.meta.url));
     bindGrowFields(root);
 
@@ -553,13 +557,36 @@ export function createScrambleSession({
         showStatus(caption());
     }
 
+    function setFileProgress(processed, total) {
+        if (!fileProgress || !fileProgressBar) return;
+        const max = Number(total) || 0;
+        const done = Number(processed) || 0;
+        if (max <= 0) {
+            fileProgress.hidden = true;
+            fileProgressBar.style.width = "0%";
+            return;
+        }
+        const pct = Math.max(0, Math.min(100, Math.round((done / max) * 100)));
+        fileProgress.hidden = false;
+        fileProgress.setAttribute("aria-valuenow", String(pct));
+        fileProgressBar.style.width = `${pct}%`;
+    }
+
+    function clearFileProgress() {
+        if (fileProgress) {
+            fileProgress.hidden = true;
+            fileProgress.setAttribute("aria-valuenow", "0");
+        }
+        if (fileProgressBar) fileProgressBar.style.width = "0%";
+    }
+
     async function hashSilentOnHost(file, { onProgress, signal } = {}) {
         const impl = await import("./generated/_scramble_impl.mjs");
         const rt = await import("./generated/_sudo_rt.mjs");
         const hasher = createSilentHasher({ impl, rt });
         hasher.start(version);
         await readFileChunks(file, {
-            chunkBytes: DEMO_FILE_CHUNK_BYTES,
+            chunkBytes: DEMO_FILE_HOST_CHUNK_BYTES,
             signal,
             async onChunk(bytes, progress) {
                 hasher.push(bytes);
@@ -581,15 +608,17 @@ export function createScrambleSession({
         setDigest("");
         live.afterDigest();
         const modest = canWalkFile(file);
+        setFileProgress(0, file.size || 1);
         const onProgress = ({ processed, total }) => {
             if (token !== job) return;
-            setIoNote(`Hashing ${formatFileSize(processed)} / ${formatFileSize(total)}.`);
+            setFileProgress(processed, total);
         };
         try {
             const { digest } = await hashFile(file, {
                 version,
                 workerUrl,
                 chunkBytes: DEMO_FILE_CHUNK_BYTES,
+                readyMs: DEMO_FILE_WORKER_READY_MS,
                 signal: abort.signal,
                 hashInline: hashFileFn,
                 onProgress,
@@ -600,12 +629,14 @@ export function createScrambleSession({
             const bytes = modest ? Array.from(new Uint8Array(await file.arrayBuffer())) : [];
             setIoNote(modest ? "" : walkNote());
             applyFileDigest(digest, bytes);
+            clearFileProgress();
         } catch (err) {
             if (err?.name === "AbortError") return;
             if (token !== job) return;
             hashing = false;
             setDigest("");
             live.afterDigest();
+            clearFileProgress();
             setIoNote(err?.message || "Could not hash this file.");
         }
     }
@@ -628,6 +659,7 @@ export function createScrambleSession({
         hashing = false;
         fileSource = null;
         hideFileChip({ input, fileChip, fileNameEl });
+        clearFileProgress();
         setIoNote("");
         refreshDigest();
     }

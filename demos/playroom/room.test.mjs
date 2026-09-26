@@ -258,6 +258,7 @@ assert.equal(cubeWorld.slotsEmpty.cube, false);
 console.log("playroom room tests ok");
 
 await import("../shared/grow-field.test.mjs");
+await import("../shared/input-cap.test.mjs");
 await import("./beat-clock.test.mjs");
 await import("./motion.test.mjs");
 await import("./capture-strip.test.mjs");

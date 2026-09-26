@@ -143,6 +143,7 @@ function mountDock() {
             <span class="playroom-label">Message</span>
             <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
           </label>
+          <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label">Digest</span>
             <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
@@ -459,6 +460,7 @@ function mountDoubleDealDock() {
             <span class="playroom-label" id="input-label">Message</span>
             <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
           </label>
+          <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="key">
             <span class="playroom-label">Key</span>
             <textarea id="key" class="grow-field" rows="1" spellcheck="false" placeholder="cryptoy">cryptoy</textarea>

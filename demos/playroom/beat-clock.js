@@ -30,6 +30,14 @@ export function prefersReducedMotion() {
     return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
 }
 
+/** One paint so mesh/CSS work cannot starve the 3D rAF loop. */
+export function yieldFrame() {
+    return new Promise((resolve) => {
+        if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => resolve());
+        else setTimeout(resolve, 0);
+    });
+}
+
 export function createBeatClock({ reduced } = {}) {
     let gen = 0;
     const snap = Boolean(reduced || prefersReducedMotion());

@@ -25,7 +25,6 @@ let leaving = false;
 let starting = false;
 let skippedStart = false;
 let ignoreSkipUntil = 0;
-let resizeWorld = () => {};
 
 function seatedQueryPose(pose) {
     if (!pose) return pose;
@@ -62,12 +61,13 @@ function syncOverlays({ name, overlays, tweening }) {
         const on = Boolean(activeAlgo) && !tweening && !leaving && !starting && dock.id === `${activeAlgo}-dock`;
         dock.classList.toggle("on", on);
     });
-    requestAnimationFrame(() => resizeWorld());
+    document.documentElement.dataset.playroomTray = (
+        Boolean(activeAlgo) && !tweening && !leaving && !starting
+    ) ? "1" : "0";
 }
 
 try {
     const world = await mountWorld(canvas);
-    resizeWorld = () => world.resize();
     const params = new URLSearchParams(location.search);
     if (params.get("debug") === "1") document.documentElement.dataset.playroomDebug = "1";
     const initialPose = resolvePoseName(params.get("pose"));
@@ -97,7 +97,6 @@ try {
     void adapters.scramble.preload();
     void adapters.doubledeal.preload();
     await adapters.scramble.ready?.();
-    void adapters.doubledeal.prepareEnter?.();
     const director = createToyDirector(world);
 
     async function startAlgo(id, { snap = false } = {}) {
@@ -125,11 +124,10 @@ try {
             // Full set from the first frame — trackActive would jump
             // the look to KEY alone the moment it lifts, then whip to
             // MSG. Leave already frames the whole set this way.
-            const enterTrack = trackToys(
-                world,
-                flyToys,
-                world.chest?.group ? [world.chest.group] : [],
-            );
+            const chestExtra = recipe?.extras?.includes("chest") && world.chest?.group
+                ? [world.chest.group]
+                : [];
+            const enterTrack = trackToys(world, flyToys, chestExtra);
             if (reduced) {
                 poses.snap(meta.pose);
             } else {

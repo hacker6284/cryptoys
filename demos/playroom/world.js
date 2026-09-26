@@ -749,9 +749,14 @@ export async function mountWorld(canvas) {
     }
     setChestOpen(false);
 
+    let viewW = 0;
+    let viewH = 0;
     function resize() {
         const width = canvas.clientWidth || window.innerWidth;
         const height = canvas.clientHeight || window.innerHeight;
+        if (width === viewW && height === viewH) return;
+        viewW = width;
+        viewH = height;
         const ratio = Math.min(window.devicePixelRatio || 1, 1.25);
         renderer.setPixelRatio(ratio);
         renderer.setSize(width, height, false);

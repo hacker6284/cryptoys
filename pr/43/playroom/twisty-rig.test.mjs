@@ -72,6 +72,17 @@ assert.ok(Math.abs(wrapper.scale.x - 0.12) < 1e-6);
 const again = keepFitted(wrapper, puzzle, 0.12, held);
 assert.equal(again.changed, false, "stable local edge is a no-op");
 
+// Mid-turn cubie AABB swell must not pulse the locked rest fit.
+const turning = makeMesh(3);
+turning.scale.setScalar(1 / 3);
+const rest = fitToLocalEdge(wrapper, turning, 0.12);
+turning.children = [makeMesh(5)];
+const midTurn = keepFitted(wrapper, turning, 0.12, rest);
+assert.equal(midTurn.changed, false, "turning cubies do not remesure nativeMax");
+assert.ok(Math.abs(wrapper.scale.x - rest.scale) < 1e-6, "rest scale holds mid-turn");
+
+assert.match(src, /turnBusy/, "playLeaves marks the turn so keep-fit can skip");
+
 const hostRemove = src.indexOf("hidePlayerHost(player)");
 const tryAt = src.indexOf("try {", hostRemove);
 const catchRemove = src.indexOf("player.remove();", tryAt);

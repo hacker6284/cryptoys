@@ -260,14 +260,27 @@ function createScrambleAdapter() {
         return rig;
     }
 
-    function reseatCube(group = world?.toys?.cube, surface = "shelf") {
+    function cubeSurface(group) {
+        const named = group?.userData?.seatSurface;
+        return named === "table" || named === "shelf" ? named : "shelf";
+    }
+
+    function reseatCube(group = world?.toys?.cube, surface) {
         if (!world || !group) return null;
-        const dest = surface === "table"
+        const destSurface = surface === "table" || surface === "shelf"
+            ? surface
+            : cubeSurface(group);
+        group.userData.seatSurface = destSurface;
+        const dest = destSurface === "table"
             ? world.getTablePose("cube")
             : world.getShelfPose("cube");
         if (!dest) return null;
         if (group.userData?.flightBusy) {
+            // Refresh landing Y for the surface we are already flying to.
+            // Never invent table vs shelf from flightBusy.
             group.userData.pendingDest = dest;
+        } else if (group.userData?.easeBusy) {
+            group.userData.seatedY = dest.position.y;
         } else {
             world.applyPose(group, dest);
             group.userData.seatedY = dest.position.y;
@@ -319,13 +332,14 @@ function createScrambleAdapter() {
             nextWorld.replaceToy("cube", seat.group);
             if (prev) disposeObject(prev);
             nextWorld.applyPose(seat.group, nextWorld.getShelfPose("cube"));
+            seat.group.userData.seatSurface = "shelf";
             rig = stageCubeView(pendingTwistyRig(seat, puzzleId), opts);
             adoptPromise = adoptTwistyPuzzle(seat, {
                 puzzle: puzzleId,
                 edge: CUBE,
                 onFitChange() {
                     const group = world?.toys?.cube || seat.group;
-                    reseatCube(group, group.userData?.flightBusy ? "table" : "shelf");
+                    reseatCube(group);
                 },
             })
                 .then((live) => {
@@ -341,7 +355,7 @@ function createScrambleAdapter() {
                     if (typeof rig.setAlg !== "function" || typeof rig.playLeaves !== "function") {
                         throw new Error("staged cubing.js rig missing timeline API");
                     }
-                    reseatCube(live.group, live.group.userData?.flightBusy ? "table" : "shelf");
+                    reseatCube(live.group);
                     return rig;
                 })
                 .catch((err) => {

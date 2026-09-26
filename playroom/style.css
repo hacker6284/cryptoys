@@ -349,27 +349,28 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   font-weight: 500;
 }
 
-.playroom-dock textarea,
-.playroom-dock #digest {
+.playroom-dock textarea.grow-field {
   display: block;
   width: 100%;
-  height: 2.55rem;
-  min-height: 2.55rem;
-  max-height: 2.55rem;
-  padding: 0 16px;
+  min-height: var(--grow-field-min, 2.55rem);
+  max-height: var(--grow-field-max, 8.5rem);
+  height: auto;
+  padding: 0.55rem 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  border-radius: var(--grow-field-radius, 8px);
   background: #0b0a09;
   color: var(--fg);
   font-family: inherit;
   font-size: 15px;
-  line-height: 2.5rem;
+  line-height: 1.4;
   text-align: left;
   resize: none;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  overflow-x: hidden;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-overflow: clip;
   box-shadow: none;
   cursor: text;
 }
@@ -378,12 +379,11 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   font-variant-numeric: tabular-nums;
 }
 
-.playroom-dock:has([data-encoding="hex"].on) textarea {
+.playroom-dock:has([data-encoding="hex"].on) textarea.grow-field {
   font-variant-numeric: tabular-nums;
 }
 
-.playroom-dock textarea:focus,
-.playroom-dock #digest:focus {
+.playroom-dock textarea.grow-field:focus {
   outline: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 1px;
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
@@ -715,14 +715,6 @@ body.playroom.is-ready .playroom-dock {
 
   html[data-algo="doubledeal"] .playroom-ctl {
     gap: 4px;
-  }
-
-  html[data-algo="doubledeal"] .playroom-dock textarea,
-  html[data-algo="doubledeal"] .playroom-dock #digest {
-    height: 2.15rem;
-    min-height: 2.15rem;
-    max-height: 2.15rem;
-    line-height: 2.1rem;
   }
 
   html[data-algo]:not([data-algo=""]) .playroom-anim {

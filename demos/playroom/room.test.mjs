@@ -5,6 +5,9 @@ import {
     CUBE,
     DEAL_SCALE,
     DEN,
+    FLY_MS,
+    LID_CLOSE_MS,
+    LID_OPEN_MS,
     SHELF_TOP,
     SHELF_Z,
     SLOTS,
@@ -14,7 +17,7 @@ import {
 } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
 import { seatOnSurface } from "./motion.js";
-import { createToyDirector } from "./toy-director.js";
+import { createToyDirector, recipeMotionMs } from "./toy-director.js";
 
 const span = tableSpan();
 const feltDiameter = 2 * (TABLE_R - 0.08);
@@ -62,6 +65,12 @@ assert.deepEqual(recipe.toys, ["deck", "deck2"]);
 assert.deepEqual(recipe.extras, ["chest"]);
 assert.equal(recipe.pose, "doubledeal");
 assert.equal(recipeDirector.recipeOf("scramble").toys[0], "cube");
+assert.equal(recipeMotionMs(recipeDirector.recipeOf("scramble")), FLY_MS);
+assert.equal(
+    recipeMotionMs(recipeDirector.recipeOf("doubledeal")),
+    LID_OPEN_MS + FLY_MS + LID_CLOSE_MS,
+);
+assert.equal(recipeDirector.borrowMs("doubledeal"), recipeDirector.homeMs("doubledeal"));
 
 function vec3(x = 0, y = 0, z = 0) {
     return {

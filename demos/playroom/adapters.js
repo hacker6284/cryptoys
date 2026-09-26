@@ -1,4 +1,4 @@
-import { CUBE } from "./constants.js";
+import { CUBE, GATHER_MS, RESTOW_MS } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { lucideSvg } from "../shared/icons.js";
 import { createBeatClock } from "./beat-clock.js";
@@ -7,9 +7,9 @@ import { stageCubeView } from "./cube-stage.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { continueTo, trackActive, waitToyIdle } from "./motion.js";
-import { formSessionTable } from "./table-form.js";
+import { formSessionTable, gatherSessionTable } from "./table-form.js";
 import { pickHandTextures, pickMsgTextures } from "./unbox-hand.js";
-import { createDealerKey, disposeDealerKey, playDualUnbox, restBoxes } from "./unbox-physical.js";
+import { createDealerKey, disposeDealerKey, playDualUnbox, playRestow, restBoxes } from "./unbox-physical.js";
 import { createUnboxRig } from "./unbox-rig.js";
 
 /**
@@ -640,6 +640,10 @@ function createDoubleDealAdapter() {
         get busy() {
             return Boolean(entering && clock && !clock.dead(enterGen));
         },
+        leaveMs({ snap = false } = {}) {
+            if (snap || Boolean(poses?.prefersReducedMotion?.())) return 0;
+            return table ? GATHER_MS + RESTOW_MS : RESTOW_MS;
+        },
         view() {
             return table || (world ? { group: world.toys.deck } : null);
         },
@@ -739,7 +743,7 @@ function createDoubleDealAdapter() {
                 poses?.unlockOrbit?.();
             }
         },
-        async leave() {
+        async leave({ snap = false } = {}) {
             cancelEnter = true;
             skipEnter();
             poses?.followLive?.(null);
@@ -754,14 +758,34 @@ function createDoubleDealAdapter() {
                 root.classList.remove("on");
                 root.hidden = true;
             }
-            if (table) {
+            const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
+            if (table && !reduced) {
+                clock = createBeatClock({ reduced: false });
+                const gen = clock.begin();
+                await gatherSessionTable({
+                    table,
+                    clock,
+                    gen,
+                    keyBox: world?.toys?.deck?.position,
+                    messageBox: world?.toys?.deck2?.position,
+                });
                 table.dispose();
                 table = null;
+                await Promise.all([
+                    playRestow({ rig: unbox, clock, gen, ms: RESTOW_MS }),
+                    playRestow({ rig: unbox2, clock, gen, ms: RESTOW_MS }),
+                ]);
+            } else {
+                if (table) {
+                    table.dispose();
+                    table = null;
+                }
+                restowUnbox();
             }
-            restowUnbox();
             if (world?.toys.deck2) world.toys.deck2.visible = true;
             disposeDealerKey(world, keyLight);
             keyLight = null;
+            clock = null;
             poses?.unlockOrbit?.();
         },
         revealShelf() {

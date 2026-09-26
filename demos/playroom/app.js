@@ -1,7 +1,7 @@
 import { adapters } from "./adapters.js";
-import { FLY_MS, FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
+import { FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
 import { installCapture } from "./capture-strip.js";
-import { continueTo, followEnter, markBeat, trackActive, trackToy } from "./motion.js";
+import { continueTo, followEnter, followLeave, markBeat, trackActive } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { playroomDebugEnabled } from "./puzzles.js";
@@ -59,7 +59,7 @@ function syncOverlays({ name, overlays, tweening }) {
     document.documentElement.dataset.algo = activeAlgo || "";
     document.documentElement.dataset.playroomTween = tweening ? "1" : "0";
     document.querySelectorAll(".playroom-dock").forEach((dock) => {
-        const on = Boolean(activeAlgo) && !tweening && !leaving && dock.id === `${activeAlgo}-dock`;
+        const on = Boolean(activeAlgo) && !tweening && !leaving && !starting && dock.id === `${activeAlgo}-dock`;
         dock.classList.toggle("on", on);
     });
     requestAnimationFrame(() => resizeWorld());
@@ -125,14 +125,17 @@ try {
             if (reduced) {
                 poses.snap(meta.pose);
             } else {
-                // Shared hub→play: follow whatever is in flight, then
-                // land at the algo pose. No named via-shot chain.
+                // Shared hub→play: follow whatever is in flight for
+                // the full borrow (lid + extras), then keep tracking
+                // so unbox does not cut to a named seat.
+                const enterTrack = trackActive(world, flyToys);
                 followEnter(poses, {
                     to: meta.pose,
-                    track: trackActive(world, flyToys),
+                    track: enterTrack,
                     holdMs: FOLLOW_HOLD_MS,
-                    duration: FLY_MS,
+                    duration: director.borrowMs(id),
                 });
+                poses.followLive?.(enterTrack);
             }
             await Promise.all([fly, warm]);
             markBeat("enter-landed");
@@ -185,20 +188,27 @@ try {
         markBeat("leave-start");
         const meta = ALGOS[id];
         const reduced = poses.prefersReducedMotion();
-        const fade = adapters[id]?.leave?.({ snap: reduced });
+        const recipe = director.recipeOf(id);
+        const flyToys = recipe?.toys || [meta.toy];
+        const prepMs = adapters[id]?.leaveMs?.({ snap: reduced }) ?? 0;
+        const homeMs = director.homeMs(id);
         ignoreSkipUntil = performance.now() + LIFT_MS;
-        const home = director.home({ snap: reduced });
+        director.prepareHome?.();
         if (reduced) poses.snap("landing");
         else {
-            poses.goTo("landing", {
-                duration: FLY_MS - LIFT_MS,
-                via: "shelf",
-                viaT: 0.42,
-                delay: LIFT_MS,
-                track: trackToy(world, meta?.toy || "cube"),
+            // Shared play→hub: one follow shot covering gather + home.
+            // Toys and camera stay on the same clock — no via:shelf,
+            // no look.copy, no cut to landing while flights are live.
+            followLeave(poses, {
+                to: "landing",
+                track: trackActive(world, flyToys),
+                holdMs: FOLLOW_HOLD_MS,
+                duration: prepMs + homeMs,
             });
         }
-        await Promise.all([fade, home]);
+        await adapters[id]?.leave?.({ snap: reduced });
+        await director.home({ snap: reduced });
+        poses.followLive?.(null);
         adapters[id]?.revealShelf?.();
         markBeat("hub-settle");
         if (capture.enabled) {

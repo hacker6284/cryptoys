@@ -638,16 +638,16 @@ export function trackEnter(poses, {
 }
 
 /**
- * Shared hub→play enter for Scramble and DoubleDeal. Starts from the
- * live hub framing, follows the actual flying toys (no via:shelf /
- * unbox_travel chain), and lands at `to` without a cut.
+ * Continuous follow-cam hop. Shared by hub→play and play→hub so
+ * neither path falls back to via:shelf / look.copy snaps.
  */
-export function followEnter(poses, {
+function followShot(poses, {
     to,
     track,
     holdMs = 0,
     duration,
     reduced = false,
+    settleAt,
 } = {}) {
     if (!poses) return;
     if (reduced) {
@@ -659,12 +659,34 @@ export function followEnter(poses, {
             duration,
             delay: holdMs || 0,
             track,
+            settleAt,
         });
     }
     poses.goTo(to, {
         duration,
         delay: holdMs || 0,
         track,
+    });
+}
+
+/**
+ * Shared hub→play enter for Scramble and DoubleDeal. Starts from the
+ * live hub framing, follows the actual flying toys (no via:shelf /
+ * unbox_travel chain), and lands at `to` without a cut.
+ */
+export function followEnter(poses, opts = {}) {
+    return followShot(poses, opts);
+}
+
+/**
+ * Shared play→hub return. Same follow primitive as enter: live track,
+ * eased look, late settle into the room pose. No via:shelf, no cut.
+ */
+export function followLeave(poses, opts = {}) {
+    return followShot(poses, {
+        ...opts,
+        to: opts.to || "landing",
+        settleAt: opts.settleAt ?? 0.86,
     });
 }
 

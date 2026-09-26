@@ -44,6 +44,12 @@ export const CLOCK_STEP_MS = 50;
 export const TWEEN_MS = 1100;
 export const FLY_MS = 1800;
 export const LIFT_MS = 380;
+// Shared lid + leave-prep beats. Borrow and home use the same
+// hinge timing so enter and return stay on one clock.
+export const LID_OPEN_MS = 520;
+export const LID_CLOSE_MS = 560;
+export const GATHER_MS = 680;
+export const RESTOW_MS = 380;
 // Pick the cube up this far for face turns so layers clear the felt/rim.
 export const TURN_LIFT = 0.14;
 export const TURN_LIFT_MS = 320;

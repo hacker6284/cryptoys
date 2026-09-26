@@ -1,4 +1,4 @@
-import { DEAL_SCALE } from "./constants.js";
+import { DEAL_SCALE, GATHER_MS } from "./constants.js";
 import { easeInOutCubic, lerp } from "./beat-clock.js";
 import { hopTo } from "./motion.js";
 import { HAND_FACE_INDEXES, MSG_FACE_INDEXES } from "./unbox-hand.js";
@@ -90,6 +90,64 @@ export async function formSessionTable({
 
     await Promise.all(jobs);
     table.showDecks(messageOrder, keyOrder);
+}
+
+function localFromWorld(group, world) {
+    if (!world || !group?.worldToLocal) return { x: 0, y: 0.04, z: 0 };
+    const v = group.position.clone();
+    v.set(world.x, world.y, world.z);
+    group.worldToLocal(v);
+    return { x: v.x, y: v.y, z: v.z };
+}
+
+function eachCard(meshes, fn) {
+    if (!meshes) return;
+    if (Array.isArray(meshes)) {
+        meshes.forEach(fn);
+        return;
+    }
+    Object.values(meshes).forEach(fn);
+}
+
+/**
+ * Reverse of formSessionTable: cards hop back toward the two boxes,
+ * then hide. No dissolve, no instant 104-card vanish.
+ */
+export async function gatherSessionTable({
+    table,
+    clock,
+    gen,
+    keyBox,
+    messageBox,
+} = {}) {
+    if (!table?.group || !clock) return;
+    table.group.updateMatrixWorld?.(true);
+    const keyAt = localFromWorld(table.group, keyBox);
+    const msgAt = localFromWorld(table.group, messageBox || keyBox);
+    const jobs = [];
+    let n = 0;
+    function pile(meshes, dest) {
+        eachCard(meshes, (mesh) => {
+            if (!mesh?.visible) return;
+            const i = n++;
+            jobs.push(hopTo(mesh, {
+                x: dest.x,
+                y: dest.y + 0.03,
+                z: dest.z,
+            }, clock, gen, {
+                delay: Math.min(4 * i, 160),
+                ms: Math.max(360, GATHER_MS - 160),
+                lift: 2.6,
+                ease: easeInOutCubic,
+            }).then(() => {
+                mesh.visible = false;
+            }));
+        });
+    }
+    pile(table.cardsOf?.("key"), keyAt);
+    pile(table.cardsOf?.("message"), msgAt);
+    await Promise.all(jobs);
+    table.setCardsVisible?.(false);
 }
 
 function hopSeat(mesh, dest, clock, gen, opts) {

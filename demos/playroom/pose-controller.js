@@ -108,8 +108,11 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             camera.position.lerpVectors(from.position, pose.position, k);
             camera.fov = from.fov + (pose.fov - from.fov) * k;
             if (trackPos) {
-                if (t < 0.72) look.copy(trackPos);
-                else look.lerpVectors(trackPos, pose.target, (t - 0.72) / 0.28);
+                // Ease onto the live toy — never copy/snap the look.
+                const lookU = easeInOutCubic(smoothstep(0, 0.4, t));
+                const settleU = easeInOutCubic(smoothstep(0.72, 1, t));
+                chaseLook.copy(from.target).lerp(trackPos, lookU);
+                look.copy(chaseLook).lerp(pose.target, settleU);
             } else {
                 look.lerpVectors(from.target, pose.target, k);
             }
@@ -135,7 +138,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
      * camera chases a dest-relative offset of that focus, then both
      * settle into the named play pose. No via named shots.
      */
-    function applyFollow(pose, t = 1, from = null, trackPos = null) {
+    function applyFollow(pose, t = 1, from = null, trackPos = null, settleAt = 0.78) {
         if (!from || t <= 0) {
             apply(pose, 0, from, null);
             return;
@@ -151,8 +154,9 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         const focus = trackPos ? followFocus.copy(trackPos) : followFocus.copy(pose.target);
         fitFollowPos(pose, focus, trackedRadius);
         const lookU = easeInOutCubic(smoothstep(0, 0.42, t));
-        const moveU = easeInOutCubic(smoothstep(0.04, 0.8, t));
-        const settleU = easeInOutCubic(smoothstep(0.78, 1, t));
+        const moveU = easeInOutCubic(smoothstep(0.04, 0.82, t));
+        const settleStart = Math.min(0.92, Math.max(0.62, settleAt));
+        const settleU = easeInOutCubic(smoothstep(settleStart, 1, t));
         chasePos.copy(from.position).lerp(followPos, moveU);
         camera.position.copy(chasePos).lerp(pose.position, settleU);
         camera.position.y = Math.max(camera.position.y, focus.y + 0.34);
@@ -258,6 +262,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             duration: opts.duration ?? duration,
             track: opts.track || null,
             mode: "follow",
+            settleAt: opts.settleAt,
             waiters: [],
         };
         emit(current, { tweening: true, next: resolved });
@@ -368,7 +373,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             const trackPos = readTrack(tween.track);
             const u = Math.min(1, tween.elapsed / tween.duration);
             if (tween.mode === "follow") {
-                applyFollow(tween.to, u, tween.from, trackPos);
+                applyFollow(tween.to, u, tween.from, trackPos, tween.settleAt);
             } else if (tween.via && u < tween.viaT) {
                 apply(tween.via, u / tween.viaT, tween.from, null);
             } else if (tween.via) {

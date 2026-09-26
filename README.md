@@ -20,7 +20,7 @@ Scramble and DoubleDeal both run in the room (`?algo=scramble`, `?algo=doubledea
 
 Scramble’s 3D cube is cubing.js only (`createTwistyRig` in `playroom/twisty-rig.js`), adopted into the playroom scene, scaled to the real-life 57 mm table edge from local (not world) bounds, kept at that edge for the whole scene, and seated from the post-scale AABB. Session Play / Step / Reset / speed drive `player.alg` and the Twisty timeline. Notes, license, and remaining hand-rolled bits: `playroom/CUBING.md`. The standalone teaching page remains at `scramble/?standalone=1`.
 
-Motion proof strips (agents / review): `?debugCapture=1` samples the canvas **after** `world.render`. Headless:
+Motion proof strips (agents / review): `?debugCapture=1` samples the canvas **after** `world.render` on a **fixed 200 ms play-time grid**, plus named beats and `camAccel` spikes. Beats do not redistribute the grid. Nearly-black frames are dropped. Production is a no-op without the flag. Headless:
 
 ```sh
 # serve demos/, then
@@ -28,6 +28,8 @@ CAPTURE_TAG=after CAPTURE_URL=http://127.0.0.1:4173 \
   CAPTURE_OUT=/opt/cursor/artifacts/strips \
   node demos/playroom/run-capture-strips.mjs
 ```
+
+Sheets land in `$CAPTURE_OUT` as `{tag}_{algo}-{enter|leave}_strip.png` plus per-frame JPEGs under `{tag}/{algo}-{enter|leave}/`. Overlay on each frame: beat label + ms. Do not claim enter/leave smoothness without a strip. Chest hinge is locked (opens into the room) unless a strip shows a regression.
 
 **Render must generate, then publish `demos/`.** `generated/*.mjs` is gitignored on `main`. The static site deploys from `main` with build command `sh tools/render-build.sh` (same `sudoc` + `tools/build.sh` path as Pages) and publish directory `demos`. Do not publish ungenerated `demos/` and do not point Render at `gh-pages`. Dashboard fields: `.github/RENDER.md`.
 

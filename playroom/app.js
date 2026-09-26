@@ -1,7 +1,7 @@
 import { adapters } from "./adapters.js";
-import { FLY_MS, FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
+import { FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
 import { installCapture } from "./capture-strip.js";
-import { continueTo, followEnter, markBeat, trackActive, trackToy } from "./motion.js";
+import { continueTo, followEnter, followLeave, markBeat, trackToys } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
 import { playroomDebugEnabled } from "./puzzles.js";
@@ -25,7 +25,6 @@ let leaving = false;
 let starting = false;
 let skippedStart = false;
 let ignoreSkipUntil = 0;
-let resizeWorld = () => {};
 
 function seatedQueryPose(pose) {
     if (!pose) return pose;
@@ -59,15 +58,16 @@ function syncOverlays({ name, overlays, tweening }) {
     document.documentElement.dataset.algo = activeAlgo || "";
     document.documentElement.dataset.playroomTween = tweening ? "1" : "0";
     document.querySelectorAll(".playroom-dock").forEach((dock) => {
-        const on = Boolean(activeAlgo) && !tweening && !leaving && dock.id === `${activeAlgo}-dock`;
+        const on = Boolean(activeAlgo) && !tweening && !leaving && !starting && dock.id === `${activeAlgo}-dock`;
         dock.classList.toggle("on", on);
     });
-    requestAnimationFrame(() => resizeWorld());
+    document.documentElement.dataset.playroomTray = (
+        Boolean(activeAlgo) && !tweening && !leaving && !starting
+    ) ? "1" : "0";
 }
 
 try {
     const world = await mountWorld(canvas);
-    resizeWorld = () => world.resize();
     const params = new URLSearchParams(location.search);
     if (params.get("debug") === "1") document.documentElement.dataset.playroomDebug = "1";
     const initialPose = resolvePoseName(params.get("pose"));
@@ -118,22 +118,31 @@ try {
             const reduced = snap || poses.prefersReducedMotion();
             ignoreSkipUntil = performance.now() + LIFT_MS;
             const warm = adapter.preload();
-            await adapter.prepareEnter?.();
+            const prep = adapter.prepareEnter?.() ?? Promise.resolve();
             const recipe = director.recipeOf(id);
             const flyToys = recipe?.toys || [meta.toy];
-            const fly = director.borrow(id, { snap: reduced });
+            // Full set from the first frame — trackActive would jump
+            // the look to KEY alone the moment it lifts, then whip to
+            // MSG. Leave already frames the whole set this way.
+            const chestExtra = recipe?.extras?.includes("chest") && world.chest?.group
+                ? [world.chest.group]
+                : [];
+            const enterTrack = trackToys(world, flyToys, chestExtra);
             if (reduced) {
                 poses.snap(meta.pose);
             } else {
-                // Shared hub→play: follow whatever is in flight, then
-                // land at the algo pose. No named via-shot chain.
+                // Camera leaves the hub now. Building the tuck-boxes
+                // must not freeze the first frames of follow.
                 followEnter(poses, {
                     to: meta.pose,
-                    track: trackActive(world, flyToys),
+                    track: enterTrack,
                     holdMs: FOLLOW_HOLD_MS,
-                    duration: FLY_MS,
+                    duration: director.borrowMs(id),
                 });
+                poses.followLive?.(enterTrack);
             }
+            await prep;
+            const fly = director.borrow(id, { snap: reduced });
             await Promise.all([fly, warm]);
             markBeat("enter-landed");
             if (leaving) {
@@ -142,12 +151,8 @@ try {
             }
             adapter.view()?.rememberSeated?.();
             await adapter.enter({ snap: reduced || skippedStart });
+            starting = false;
             markBeat("enter-done");
-            if (capture.enabled) {
-                await new Promise((resolve) => setTimeout(resolve, 1600));
-                markBeat("enter-hold");
-                capture.snapshot?.("enter-hold");
-            }
             capture.end();
             if (leaving) return;
             writeQuery({ pose: "seated", algo: id });
@@ -185,27 +190,34 @@ try {
         markBeat("leave-start");
         const meta = ALGOS[id];
         const reduced = poses.prefersReducedMotion();
-        const fade = adapters[id]?.leave?.({ snap: reduced });
+        const recipe = director.recipeOf(id);
+        const flyToys = recipe?.toys || [meta.toy];
+        const prepMs = adapters[id]?.leaveMs?.({ snap: reduced }) ?? 0;
+        const homeMs = director.homeMs(id);
         ignoreSkipUntil = performance.now() + LIFT_MS;
-        const home = director.home({ snap: reduced });
+        director.prepareHome?.();
         if (reduced) poses.snap("landing");
         else {
-            poses.goTo("landing", {
-                duration: FLY_MS - LIFT_MS,
-                via: "shelf",
-                viaT: 0.42,
-                delay: LIFT_MS,
-                track: trackToy(world, meta?.toy || "cube"),
+            // Shared play→hub: one follow shot covering gather + home.
+            // Toys and camera stay on the same clock — no via:shelf,
+            // no look.copy, no cut to landing while flights are live.
+            followLeave(poses, {
+                to: "landing",
+                track: trackToys(
+                    world,
+                    flyToys,
+                    world.chest?.group ? [world.chest.group] : [],
+                ),
+                holdMs: 0,
+                duration: prepMs + homeMs,
             });
         }
-        await Promise.all([fade, home]);
+        await adapters[id]?.leave?.({ snap: reduced });
+        markBeat("leave-home");
+        await director.home({ snap: reduced });
+        poses.followLive?.(null);
         adapters[id]?.revealShelf?.();
         markBeat("hub-settle");
-        if (capture.enabled) {
-            await new Promise((resolve) => setTimeout(resolve, 1600));
-            markBeat("hub-hold");
-            capture.snapshot?.("hub-hold");
-        }
         activeAlgo = null;
         leaving = false;
         capture.end();
@@ -230,6 +242,7 @@ try {
     document.body.classList.add("is-ready");
     document.documentElement.dataset.playroomReady = "1";
     document.documentElement.dataset.motion = poses.prefersReducedMotion() ? "reduce" : "full";
+    if (!ALGOS[initialAlgo]) markBeat("hub-rest");
 
     function tick(now) {
         director.update(now);

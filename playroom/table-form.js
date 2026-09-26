@@ -1,6 +1,6 @@
-import { DEAL_SCALE } from "./constants.js";
+import { DEAL_SCALE, GATHER_MS } from "./constants.js";
 import { easeInOutCubic, lerp } from "./beat-clock.js";
-import { hopTo } from "./motion.js";
+import { hopTo, markBeat } from "./motion.js";
 import { HAND_FACE_INDEXES, MSG_FACE_INDEXES } from "./unbox-hand.js";
 
 /**
@@ -22,6 +22,7 @@ export async function formSessionTable({
 }) {
     if (!table || !messageOrder?.length || !keyOrder?.length) return;
 
+    markBeat("table-form");
     table.group.visible = true;
     table.pileAtWorld(messageOrder, keyOrder, messageBox, keyBox);
 
@@ -90,6 +91,67 @@ export async function formSessionTable({
 
     await Promise.all(jobs);
     table.showDecks(messageOrder, keyOrder);
+    markBeat("table-settle");
+}
+
+function localFromWorld(group, world) {
+    if (!world || !group?.worldToLocal) return { x: 0, y: 0.04, z: 0 };
+    const v = group.position.clone();
+    v.set(world.x, world.y, world.z);
+    group.worldToLocal(v);
+    return { x: v.x, y: v.y, z: v.z };
+}
+
+function eachCard(meshes, fn) {
+    if (!meshes) return;
+    if (Array.isArray(meshes)) {
+        meshes.forEach(fn);
+        return;
+    }
+    Object.values(meshes).forEach(fn);
+}
+
+/**
+ * Reverse of formSessionTable: cards hop back toward the two boxes,
+ * then hide. No dissolve, no instant 104-card vanish.
+ */
+export async function gatherSessionTable({
+    table,
+    clock,
+    gen,
+    keyBox,
+    messageBox,
+} = {}) {
+    if (!table?.group || !clock) return;
+    table.group.updateMatrixWorld?.(true);
+    const keyAt = localFromWorld(table.group, keyBox);
+    const msgAt = localFromWorld(table.group, messageBox || keyBox);
+    const movers = [];
+    function pile(meshes, dest) {
+        eachCard(meshes, (mesh) => {
+            if (!mesh?.visible || !mesh.position) return;
+            movers.push({
+                mesh,
+                from: mesh.position.clone(),
+                to: dest,
+            });
+        });
+    }
+    pile(table.cardsOf?.("key"), keyAt);
+    pile(table.cardsOf?.("message"), msgAt);
+    if (movers.length) {
+        await clock.tween(GATHER_MS, (t) => {
+            const k = easeInOutCubic(t);
+            const lift = Math.sin(Math.PI * t) * 2.6;
+            for (const { mesh, from, to } of movers) {
+                mesh.position.x = lerp(from.x, to.x, k);
+                mesh.position.y = lerp(from.y, to.y + 0.03, k) + lift;
+                mesh.position.z = lerp(from.z, to.z, k);
+            }
+        }, { ease: (t) => t, generation: gen });
+    }
+    // Leave the piles visible for the restow beat. The adapter hides
+    // them as the flaps ease shut — no 104-card vanish mid-gather.
 }
 
 function hopSeat(mesh, dest, clock, gen, opts) {

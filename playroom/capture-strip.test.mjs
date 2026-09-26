@@ -105,15 +105,20 @@ assert.match(app, /capture\.end/);
 
 assert.match(app, /markBeat\("enter-start"\)/);
 assert.match(app, /markBeat\("enter-landed"\)/);
-assert.match(app, /markBeat\("enter-hold"\)/);
-assert.match(app, /capture\.snapshot\?\.\("enter-hold"\)/);
+assert.match(app, /markBeat\("enter-done"\)/);
 assert.match(app, /markBeat\("leave-start"\)/);
+assert.match(app, /markBeat\("leave-home"\)/);
 assert.match(app, /markBeat\("hub-settle"\)/);
-assert.match(app, /markBeat\("hub-hold"\)/);
-assert.match(app, /capture\.snapshot\?\.\("hub-hold"\)/);
+assert.equal(app.includes("enter-hold"), false, "enter does not park 1600ms for a capture hold");
+assert.equal(app.includes("hub-hold"), false, "leave does not park 1600ms for a capture hold");
 
 const director = readFileSync(new URL("./toy-director.js", import.meta.url), "utf8");
-assert.match(director, /cube-fly/);
+assert.match(director, /markBeat\("lid-open"\)/);
+assert.match(director, /markBeat\("lid-receive"\)/);
 assert.match(director, /markBeat\("fly-home"\)/);
+assert.match(director, /cube-fly/);
+
+const adapters = readFileSync(new URL("./adapters.js", import.meta.url), "utf8");
+assert.match(adapters, /markBeat\("leave-gather"\)/);
 
 console.log("capture-strip tests ok");

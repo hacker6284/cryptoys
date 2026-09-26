@@ -32,6 +32,7 @@ import MegaDreifach.Link2.PeelCube
 import MegaDreifach.Link2.PeelZeroThree
 import MegaDreifach.Link2.PeelBelow
 import MegaDreifach.Link2.PeelOne
+import MegaDreifach.Link2.PeelOneThree
 
 namespace MegaDreifach.Link2
 
@@ -167,11 +168,20 @@ namespace MegaDreifach.Link2
   `mag_sub` may borrow. Not `d ≥ 20`. Not a digit `q ≥ 2`. Not `27!`.
   Not `51!`. Not `phi_chunk`. Not `phi_inv`.
 
+  CLOSED: `peel_leading_one_three`, `peel_leading_one_three_digit`,
+  `mag_sub_three_le`. Domain `d! ≤ n < 2·d!` and `d ≤ 26`. The factoradic
+  digit is `1` and the remainder is `n - d!`, which may be positive.
+  For `20 ≤ d` the rank and `d!` are three limbs (`2·26! < 10^27`);
+  `mag_sub` may borrow. `d ≤ 19` reuses the two-limb theorem. Not a digit
+  `q ≥ 2`. Not `n ≥ 2·d!`. Not `27!`. Not `51!`. Not `phi_chunk`.
+  Not `phi_inv`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
   bytes; zero peel and the strict-below peel reach `d ≤ 26`, peeling `d!`
   itself yields digit `1` through `d ≤ 26`, digit `1` on `[d!, 2·d!)` reaches
-  `d ≤ 19`, and `big_factorial` reaches `26!`, not `27!` and not 51;
+  `d ≤ 26` (three limbs from `d ≥ 20`, positive remainder allowed), and
+  `big_factorial` reaches `26!`, not `27!` and not 51;
   `big_from_be` reaches length `≤ 7`, not the 28-byte pad block). A digit
   `q ≥ 2` on a multi-limb rank is still open. Positive `range_list`
   (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in

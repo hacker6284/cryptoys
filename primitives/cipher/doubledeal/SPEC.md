@@ -1,6 +1,6 @@
 # DoubleDeal
 
-Formerly TwoDeck (TDSPN elegant-v8). This document is the normative specification. `doubledeal.sudo` is the conformance implementation. A mismatch is a bug in the implementation. DoubleDeal is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim. It is not for protecting anything.
+Formerly TwoDeck (TDSPN elegant-v8). **This is DoubleDeal v9.** Two changes from v8: SumRanks columns read suit as well as rank (§3.3), and the GridCycle overflow scan starts at the blocked seat's column (§3.5). v8 is deprecated and frozen at `v8/SPEC.md`; its vulnerability proof is in `proofs/deprecated/doubledeal-v8/`. This document is the normative specification. `doubledeal.sudo` is the conformance implementation. A mismatch is a bug in the implementation. DoubleDeal is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim. It is not for protecting anything.
 
 The demo at `demos/doubledeal/` plays `trace_encrypt` and `trace_decrypt`. It does not contain a second copy of the rounds. `decrypt` may keep the round-key list from `expand_keys`. The decrypt trace does not: it passes the master key forward 6 times to \(K_6\), then un-passes once per remaining round back to \(K_0\). Ciphertext is the same either way; only the key-derivation choreography differs.
 
@@ -13,6 +13,7 @@ The demo at `demos/doubledeal/` plays `trace_encrypt` and `trace_decrypt`. It do
 - A single-block SPN on permutations of a 52-card CHaSeD deck.
 - Unkeyed layers: **SumRanks** (SubBytes stand-in), **ShiftRows**, **GridCycle** (MixColumns stand-in).
 - Keyed layer: **Compose** (AddRoundKey stand-in), using a 52-card round key as core.
+- **AES role map.** SumRanks is the SubBytes stand-in: the data-dependent, nonlinear step. It is the only layer that looks at every card's value in a sum. In v9 it reads **suit and rank**, so no two cards look alike to it. ShiftRows is ShiftRows (fixed row rotations). GridCycle is the MixColumns stand-in (diffusion: each card's suit and rank steer where the next card lands). Compose is AddRoundKey. No layer here changes a card's face; every layer only moves cards between seats, so "nonlinear" means "the move depends on the cards", not an S-box table.
 - Key schedule: **PassKey** — forward iteration \(K_r = F(K_{r-1})\) with \(F =\) `pass_to_key_cut_fallback`.
 - Round count \(N_r = 6\): whitening with \(K_0\), five full rounds with \(K_1,\ldots,K_5\), final round with \(K_6\) (no MixColumns).
 - Modes: **ECB**, **CTR**, and **CBC**. CTR counter encoding is pinned: Diamonds in seats 39–51 via factoradic; Clubs+Hearts+Spades in seats 0–38 as nonce. CBC is byte-domain on the §5.3 28-byte encoding (§5.4).
@@ -132,7 +133,7 @@ Used for GridCycle **output** scoop and GridCycle **inverse** lay.
 
 ## 3.3 SumRanks and inverse
 
-Operate on a filled \(4\times13\) grid \(G\). Ranks only; suits unused here.
+Operate on a filled \(4\times13\) grid \(G\). Rows read ranks; columns read rank **and** suit. The pair \((\mathrm{rank}(c) \bmod 13,\ (\mathrm{rank}(c)+\mathrm{suit}(c)) \bmod 4)\) determines \(c\) (since \(13 \equiv 1 \pmod 4\), \(\mathrm{rank}+\mathrm{suit} \equiv c+1\)), so no two cards are interchangeable to SumRanks. v8 read ranks only; that made the unkeyed stem commute with every rank-preserving relabelling of the cards (see `proofs/deprecated/doubledeal-v8/`).
 
 **Row stage (forward).** For each row \(i=0..3\):
 
@@ -146,7 +147,7 @@ G'[i] = G[i][t_i{:}] + G[i][{:}t_i]
 **Column stage (forward).** For each column \(j=0..12\), let \(\mathrm{col} = (G'[0,j],\ldots,G'[3,j])\):
 
 \[
-s_j = \Bigl(\sum_{i=0}^{3} \mathrm{rank}(\mathrm{col}[i])\Bigr) \bmod 4,
+s_j = \Bigl(\sum_{i=0}^{3} \bigl(\mathrm{rank}(\mathrm{col}[i]) + \mathrm{suit}(\mathrm{col}[i])\bigr)\Bigr) \bmod 4,
 \qquad
 \mathrm{new}[i] = \mathrm{col}[(i - s_j)\bmod 4]
 \quad\text{(top→bottom by \(s_j\))}.
@@ -156,7 +157,7 @@ Write \(\mathrm{new}\) back into column \(j\). Then \(\mathrm{SumRanks}(G)\) is 
 
 **Order:** row-then-column (locked hand-feel revision: separates SumRanks row rotate from ShiftRows).
 
-**Inverse.** Rank-sums are invariant under their own rotates, so the same \(t_i,s_j\) can be recomputed after the forward move.
+**Inverse.** Row rank-sums and column rank-plus-suit sums are invariant under their own rotates, so the same \(t_i,s_j\) can be recomputed after the forward move.
 
 1. Undo columns: \(\mathrm{new}[i] = \mathrm{col}[(i + s_j)\bmod 4]\).
 2. Undo rows: right rotate by \(t_i\): \(G[i] = G[i][-t_i{:}] + G[i][{:}-t_i]\).
@@ -188,18 +189,21 @@ Maps a **packet** (deck) to a packet. Walk places cards onto an empty \(4\times1
 (c + \mathrm{rank}(x))\bmod 13\bigr).
 \]
 
-**Overflow machine.** State \(t \in \{0,1,2,3\}\), initially \(0\). On overflow, seek the next free seat:
+**Overflow machine.** State \(t \in \{0,1,2,3\}\), initially \(0\). On overflow at blocked target \((r^\ast, c^\ast)\), seek the next free seat, scanning each marker row **from column \(c^\ast\)** rightward with wrap (v9; v8 scanned from column 0):
 
 ```
-overflow_seat(occupied, t):
+overflow_seat(occupied, t, start):   # start = c* = column of the blocked target
   repeat up to 4 times:
     row ← CHASED[t]          # 0,1,2,3 = ♣♥♠♦
-    for col in 0..12:
+    for k in 0..12:
+      col ← (start + k) mod 13
       if not occupied(row, col):
         return (row, col), (t+1) mod 4
     t ← (t+1) mod 4
   fail  # unreachable on a 52-seat grid with <52 occupied
 ```
+
+Why: \(c^\ast\) comes from the previous card's rank, so the overflow seat now depends on the cards, not only on which seats are full. The inverse knows \(c^\ast\) (it has the previous card and seat), so it can repeat the scan.
 
 **Forward** `mix_columns(D)`:
 
@@ -214,7 +218,7 @@ for i, card in enumerate(D):
     if grid[target] is empty:
       pos ← target
     else:
-      pos, t ← overflow_seat(λ(r,c). grid[r,c] occupied, t)
+      pos, t ← overflow_seat(λ(r,c). grid[r,c] occupied, t, target.col)
   place card at pos
   prev_card, prev_pos ← card, pos
 return scoop_row_major(grid)
@@ -227,8 +231,8 @@ grid ← lay_row_major(D)      # recover placement
 visited ← all false
 t ← 0; hand ← []
 for i in 0..51:
-  choose pos by the same AS_START / step / overflow rule,
-    treating “occupied” as “visited”
+  choose pos by the same AS_START / step / overflow rule
+    (scan starts at the blocked target's column), treating “occupied” as “visited”
   append grid[pos] to hand; mark visited[pos]
 return hand
 ```
@@ -419,11 +423,13 @@ Do **not** use the same cascade motion for col-major and row-major; the majors a
 On the column-major table:
 
 1. For each **row** of 13: sum the thirteen ranks; rotate that row **left** by (sum mod 13) — move that many cards from the left end to the right end.
-2. For each **column** of 4: sum the four ranks; rotate that column **top→bottom** (sum mod 4) times.
+2. For each **column** of 4: sum the four ranks **plus the four suit numbers** (♣=0 ♥=1 ♠=2 ♦=3); rotate that column **top→bottom** (sum mod 4) times. Shortcut: only the total mod 4 matters, so you may count each card as (rank + suit) mod 4, i.e. a number 0–3, and add four small numbers.
 
 Rows first, then columns (separates the row stage from ShiftRows).
 
-**Inverse:** sums unchanged under rotate. Undo columns first (rotate the other way by sum mod 4), then undo rows (rotate the other way by sum mod 13). Enter/exit with the same column-major deal/scoop.
+**At the table (v9).** Rows are exactly as before. Columns add one small number per card: its suit (♣ 0, ♥ 1, ♠ 2, ♦ 3). Easiest by hand: for each card say (rank + suit) mod 4 — a number 0–3 — and add the four. About 52 extra tiny additions per SumRanks; no new moves.
+
+**Inverse:** row rank sums and column rank-plus-suit sums are unchanged under rotate. Undo columns first (rotate the other way by sum mod 4), then undo rows (rotate the other way by sum mod 13). Enter/exit with the same column-major deal/scoop.
 
 ## 4.3 ShiftRows
 
@@ -441,10 +447,10 @@ Then **scoop column-major** into a packet (full round continues to GridCycle; fi
 3. For each next hand card: from the seat you just filled, using the card you just placed, step  
    `new_row = (row + suit) mod 4`, `new_col = (col + rank) mod 13`.  
    - If that seat is **empty**, place there.  
-   - If **full** (overflow): in the row named by the overflow marker’s suit, scan left→right for the first empty seat; place there; advance the marker one suit. If that whole row is full, advance the marker and try the next suit’s row the same way.
+   - If **full** (overflow): keep your finger on the **column** of the blocked seat. In the row named by the overflow marker’s suit, start at that column and scan right (wrapping from column 13 back to column 1) for the first empty seat; place there; advance the marker one suit. If that whole row is full, advance the marker and scan the next suit’s row the same way, again starting at the blocked column.
 4. Scoop **row-major** → packet.
 
-**Inverse:** lay the packet **row-major**. Use visited markers. Start seat’s card was first in the hand. Walk with the same step; if the stepped seat is already visited, use the same CHaSeD overflow on **unvisited** seats. Each chosen seat’s card is the next hand card.
+**Inverse:** lay the packet **row-major**. Use visited markers. Start seat’s card was first in the hand. Walk with the same step; if the stepped seat is already visited, use the same CHaSeD overflow on **unvisited** seats, starting the scan at the blocked seat's column. Each chosen seat’s card is the next hand card.
 
 ## 4.5 Compose (AddRoundKey)
 
@@ -683,7 +689,7 @@ Entire row slides as a **rigid ribbon** on a slight arc (felt friction, not ice)
 
 ### SumRanks — column rotate
 
-Column **lifts slightly** (hover) then cycles **top→bottom like a belt**. Sum mod 4 shown as **four dots** with the active count filled. Settle with a soft drop shadow pulse.
+Column **lifts slightly** (hover) then cycles **top→bottom like a belt**. (Rank + suit) sum mod 4 shown as **four dots** with the active count filled; flash each card's suit pip as it is counted. Settle with a soft drop shadow pulse.
 
 ### ShiftRows
 
@@ -697,7 +703,7 @@ Rows 1–3 slide left-to-right-end with overlapping ease (row 1 starts first, th
 
 - Empty grid; **start seat (2,0)** highlights.
 - Each placement: card arcs from hand to seat along the \((\Delta\mathrm{row}=\mathrm{suit},\,\Delta\mathrm{col}=\mathrm{rank})\) step as a visible **polyline on the grid**, suit **color-coded**.
-- On **overflow**: show the **CHaSeD marker chip** walking suits and a **scan-line** seeking the empty seat in that row — make overflow **readable, not embarrassing**. No error flash; treat overflow as a first-class rule.
+- On **overflow**: show the **CHaSeD marker chip** walking suits and a **scan-line** that starts under the blocked seat's column and sweeps right (wrapping) for the empty seat in that row — make overflow **readable, not embarrassing**. No error flash; treat overflow as a first-class rule.
 - After 52 placements: scoop **row-major** (see below).
 
 ### Scoop row-major
@@ -734,11 +740,21 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 
 ---
 
+# 7a. Version history
+
+| Version | Status | Change |
+| --- | --- | --- |
+| v8 (TDSPN elegant-v8) | **Deprecated**, frozen at `v8/SPEC.md` + `v8/doubledeal_v8.sudo` | SumRanks read ranks only. Same-rank relabellings (e.g. K♣↔K♦) commuted with every layer except GridCycle, giving a chosen-plaintext distinguisher (~\(10^{-3}\) per pair). Vulnerability proof: `proofs/deprecated/doubledeal-v8/`. |
+| v9 | **Current** | SumRanks columns sum \((\mathrm{rank}+\mathrm{suit}) \bmod 4\); GridCycle overflow scans from the blocked column. Toy evidence only: the same relation family measured at 0 hits in \(2\times10^6\) full-cipher pairs for the worst transposition found by a one-round screen (95% upper bound \(1.5\times10^{-6}\)). That is not a security claim. |
+
+---
+
 # 8. In this repository
 
 | Artifact | Path | Role |
 | --- | --- | --- |
-| This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules |
+| This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules (v9) |
+| Deprecated v8 | `primitives/cipher/doubledeal/v8/` | Frozen v8 SPEC and sudo; vulnerability proof in `proofs/deprecated/doubledeal-v8/` |
 | Conformance implementation | `primitives/cipher/doubledeal/doubledeal.sudo` | The only copy of the rounds |
 | Byte encoding | `demos/doubledeal/cards.js` | §5.3, outside `encrypt` / `decrypt`. A demo box is the text you type, as UTF-8, then this encoding. A leading `0x` means the rest of the box is hex bytes. Ciphertext is written with that prefix. The key box is one deck: those bytes are a single 28-byte block, filled with the §5.3 pad when shorter than 28 bytes, used as-is when exactly 28, and rejected when longer. The nonce box is not §5.3. §5.2's nonce is a 39-card order; the page unranks up to 19 bytes into cards \(0..38\) and rejects an integer \(\ge 39!\). |
 | Demo | `demos/doubledeal/` | Three.js table. Plays `trace_encrypt` and `trace_decrypt` from the sudo module |

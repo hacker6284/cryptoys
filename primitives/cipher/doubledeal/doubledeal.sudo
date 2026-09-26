@@ -1,4 +1,5 @@
-// DoubleDeal. The rules are primitives/cipher/doubledeal/SPEC.md.
+// DoubleDeal v9. The rules are primitives/cipher/doubledeal/SPEC.md.
+// v8 is deprecated and frozen under primitives/cipher/doubledeal/v8/.
 // A toy block cipher on a 52-card deck. Not for real use.
 
 func suit_of(c: int) -> int
@@ -85,7 +86,7 @@ func sum_ranks(g: List<List<int>>) -> List<List<int>>
             col.append(g[i][j])
         total = 0
         for i = 0 to 3
-            total = total + rank_of(col[i])
+            total = total + rank_of(col[i]) + suit_of(col[i])
         s = total mod 4
         fresh: List<int> = []
         for i = 0 to 3
@@ -103,7 +104,7 @@ func inv_sum_ranks(g: List<List<int>>) -> List<List<int>>
             col.append(g[i][j])
         total = 0
         for i = 0 to 3
-            total = total + rank_of(col[i])
+            total = total + rank_of(col[i]) + suit_of(col[i])
         s = total mod 4
         fresh: List<int> = []
         for i = 0 to 3
@@ -130,11 +131,12 @@ func inv_shift_rows(g: List<List<int>>) -> List<List<int>>
         g[i] = left_rotate(g[i], 0 - i)
     return g
 
-func overflow_seat(occ: List<List<int>>, t: int) -> (int, int, int)
+func overflow_seat(occ: List<List<int>>, t: int, start: int) -> (int, int, int)
     for attempt = 0 to 3
         row = t
         found = -1
-        for col = 0 to 12
+        for k = 0 to 12
+            col = (start + k) mod 13
             if (found < 0) and (occ[row][col] == 0)
                 found = col
         if found >= 0
@@ -171,7 +173,7 @@ func mix_columns(d: List<int>) -> List<int>
                         else
                             marks.append(1)
                     occ.append(marks)
-                r, c, t = overflow_seat(occ, t)
+                r, c, t = overflow_seat(occ, t, tc)
         row = grid[r]
         row[c] = card
         grid[r] = row
@@ -202,7 +204,7 @@ func inv_mix_columns(d: List<int>) -> List<int>
                 r = tr
                 c = tc
             else
-                r, c, t = overflow_seat(visited, t)
+                r, c, t = overflow_seat(visited, t, tc)
         hand.append(grid[r][c])
         row = visited[r]
         row[c] = 1
@@ -403,7 +405,7 @@ func trace_sum(g: List<List<int>>, steps: List<Step>, label: text) -> (List<List
             col.append(g[i][j])
         total = 0
         for i = 0 to 3
-            total = total + rank_of(col[i])
+            total = total + rank_of(col[i]) + suit_of(col[i])
         amount = total mod 4
         fresh: List<int> = []
         for i = 0 to 3
@@ -455,7 +457,8 @@ func trace_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, List
                 for tries = 0 to 3
                     if found < 0
                         steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, -1, 0, 0, card, 1)
-                        for col = 0 to 12
+                        for k = 0 to 12
+                            col = (tc + k) mod 13
                             if (found < 0) and (occ[scan][col] == 0)
                                 found = col
                         if found >= 0
@@ -536,7 +539,7 @@ func trace_inv_sum(g: List<List<int>>, steps: List<Step>, label: text) -> (List<
             col.append(g[i][j])
         total = 0
         for i = 0 to 3
-            total = total + rank_of(col[i])
+            total = total + rank_of(col[i]) + suit_of(col[i])
         s = total mod 4
         fresh: List<int> = []
         for i = 0 to 3
@@ -584,7 +587,8 @@ func trace_inv_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, 
                 for tries = 0 to 3
                     if found < 0
                         steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, -1, 0, 0, -1, 1)
-                        for col = 0 to 12
+                        for k = 0 to 12
+                            col = (tc + k) mod 13
                             if (found < 0) and (visited[scan][col] == 0)
                                 found = col
                         if found >= 0
@@ -815,7 +819,7 @@ test "passkey inverse is a two-sided inverse"
 test "decrypt undoes encrypt"
     message = [0, 32, 38, 42, 13, 19, 17, 5, 41, 25, 48, 6, 31, 44, 3, 16, 7, 4, 34, 40, 18, 49, 14, 51, 20, 46, 28, 11, 10, 15, 45, 43, 2, 26, 22, 8, 37, 33, 12, 35, 24, 50, 39, 30, 21, 1, 27, 47, 36, 23, 29, 9]
     key = [48, 42, 25, 26, 3, 37, 39, 50, 11, 2, 43, 8, 10, 7, 40, 38, 34, 0, 49, 51, 22, 27, 23, 9, 12, 15, 44, 41, 21, 28, 20, 13, 19, 14, 45, 31, 35, 18, 17, 30, 6, 36, 47, 16, 1, 33, 29, 5, 46, 32, 24, 4]
-    cipher = [49, 48, 9, 39, 29, 37, 22, 0, 16, 44, 24, 43, 8, 23, 33, 14, 12, 17, 41, 4, 19, 46, 34, 26, 50, 13, 51, 20, 10, 28, 1, 35, 6, 7, 38, 31, 47, 36, 5, 30, 3, 27, 11, 2, 18, 42, 15, 40, 25, 32, 45, 21]
+    cipher = [25, 31, 24, 6, 36, 26, 40, 9, 44, 10, 28, 23, 50, 7, 22, 45, 11, 46, 39, 27, 43, 29, 5, 48, 3, 42, 17, 37, 35, 49, 15, 2, 34, 51, 20, 8, 41, 14, 32, 16, 47, 19, 33, 21, 0, 38, 30, 12, 4, 1, 18, 13]
     assert encrypt(message, key) == cipher
     assert decrypt(cipher, key) == message
 
@@ -876,7 +880,7 @@ test "one key deck is passed between the rounds that use it"
     assert i == traced.length
 
 test "decrypt trace un-passes from K6"
-    cipher = [49, 48, 9, 39, 29, 37, 22, 0, 16, 44, 24, 43, 8, 23, 33, 14, 12, 17, 41, 4, 19, 46, 34, 26, 50, 13, 51, 20, 10, 28, 1, 35, 6, 7, 38, 31, 47, 36, 5, 30, 3, 27, 11, 2, 18, 42, 15, 40, 25, 32, 45, 21]
+    cipher = [25, 31, 24, 6, 36, 26, 40, 9, 44, 10, 28, 23, 50, 7, 22, 45, 11, 46, 39, 27, 43, 29, 5, 48, 3, 42, 17, 37, 35, 49, 15, 2, 34, 51, 20, 8, 41, 14, 32, 16, 47, 19, 33, 21, 0, 38, 30, 12, 4, 1, 18, 13]
     key = [48, 42, 25, 26, 3, 37, 39, 50, 11, 2, 43, 8, 10, 7, 40, 38, 34, 0, 49, 51, 22, 27, 23, 9, 12, 15, 44, 41, 21, 28, 20, 13, 19, 14, 45, 31, 35, 18, 17, 30, 6, 36, 47, 16, 1, 33, 29, 5, 46, 32, 24, 4]
     traced = trace_decrypt(cipher, key)
     last = traced[traced.length - 1]

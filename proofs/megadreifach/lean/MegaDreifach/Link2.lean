@@ -31,6 +31,7 @@ import MegaDreifach.Link2.PeelFact
 import MegaDreifach.Link2.PeelCube
 import MegaDreifach.Link2.PeelZeroThree
 import MegaDreifach.Link2.PeelBelow
+import MegaDreifach.Link2.PeelOne
 
 namespace MegaDreifach.Link2
 
@@ -159,15 +160,22 @@ namespace MegaDreifach.Link2
   Not an arbitrary rank `n ≥ d!`. Not a positive digit. Not `27!`. Not `51!`.
   Not `phi_chunk`. Not `phi_inv`.
 
+  CLOSED: `peel_leading_one`, `peel_leading_one_digit`, `mag_sub_two_le`.
+  Domain `d! ≤ n < 2·d!` and `d ≤ 19`. The factoradic digit is `1` and the
+  remainder is `n - d!`. For `13 ≤ d` the rank is two limbs (`2·19! < 10^18`);
+  the remainder may be positive, so this is not the pure `d!` corner.
+  `mag_sub` may borrow. Not `d ≥ 20`. Not a digit `q ≥ 2`. Not `27!`.
+  Not `51!`. Not `phi_chunk`. Not `phi_inv`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
   bytes; zero peel and the strict-below peel reach `d ≤ 26`, peeling `d!`
-  itself yields digit `1` through `d ≤ 26`, and `big_factorial` reaches `26!`,
-  not `27!` and not 51; `big_from_be` reaches length `≤ 7`, not the 28-byte
-  pad block). A positive digit on a multi-limb rank is still open. Positive
-  `range_list` (`0 < n`, `FitsLen`, including 52) is already
-  `range_list_refines` in `EvenRank.lean`. A positive corner or edge rank is
-  outside this limb fragment.
+  itself yields digit `1` through `d ≤ 26`, digit `1` on `[d!, 2·d!)` reaches
+  `d ≤ 19`, and `big_factorial` reaches `26!`, not `27!` and not 51;
+  `big_from_be` reaches length `≤ 7`, not the 28-byte pad block). A digit
+  `q ≥ 2` on a multi-limb rank is still open. Positive `range_list`
+  (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in
+  `EvenRank.lean`. A positive corner or edge rank is outside this limb fragment.
 -/
 
 end MegaDreifach.Link2

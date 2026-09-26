@@ -81,7 +81,9 @@ assert.match(worldSrc, /keepFitted/, "host render re-applies Twisty fit before d
 assert.match(worldSrc, /if \(slots\[name\]\) slots\[name\]\.slot/, "chest deck has no shelf slot");
 assert.match(worldSrc, /deck2/);
 assert.match(worldSrc, /pivot\.attach\(lid\)/, "lid keeps its authored closed pose");
-assert.match(worldSrc, /lidWorld\.max\.z/, "hinge is the back seam, not the hasp");
+assert.match(worldSrc, /lidWorld\.min\.z/, "hinge is the wall seam after +π/2 yaw");
+assert.match(worldSrc, /openAngle = -1\.45/, "lid swings −X so the cavity faces the room");
+assert.equal(worldSrc.includes("lidWorld.max.z"), false, "do not hinge on the room-facing +Z seam");
 assert.equal(worldSrc.includes("-gb.min.z"), false, "lid is not rebuilt from geometry bbox");
 assert.equal(worldSrc.includes("rotation.x = -0.95"), false, "old front-hinge swing is gone");
 

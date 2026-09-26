@@ -133,6 +133,7 @@ try {
             if (leaving) return;
             adapter.view()?.rememberSeated?.();
             await adapter.enter({ snap: reduced || skippedStart });
+            starting = false;
             if (leaving) return;
             writeQuery({ pose: "seated", algo: id });
             syncOverlays({

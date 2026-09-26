@@ -89,9 +89,12 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         const fit = radius > 0
             ? (radius / Math.tan(Math.max(0.12, fovRad / 2))) * 1.18
             : destDist;
-        const dist = Math.min(1.42, Math.max(0.46, fit));
+        // Wide enough to hold two decks + chest. The old 1.42 cap
+        // cropped to empty felt and dropped MSG out of frame.
+        const cap = radius > 0.32 ? 3.35 : 2.15;
+        const dist = Math.min(cap, Math.max(0.7, fit));
         followPos.copy(focus).addScaledVector(destOffset, dist);
-        followPos.y = Math.max(followPos.y, focus.y + 0.36);
+        followPos.y = Math.max(followPos.y, focus.y + 0.48);
         return followPos;
     }
 
@@ -147,15 +150,15 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             apply(pose, 1);
             return;
         }
-        const moveU = easeInOutCubic(smoothstep(0.04, 0.9, t));
+        const moveU = easeInOutCubic(smoothstep(0, 0.7, t));
         camera.position.lerpVectors(from.position, pose.position, moveU);
         camera.fov = from.fov + (pose.fov - from.fov) * moveU;
-        const lookU = easeInOutCubic(smoothstep(0, 0.36, t));
-        const settleStart = Math.min(0.92, Math.max(0.62, settleAt));
-        const settleU = easeInOutCubic(smoothstep(settleStart, 1, t));
+        const roomU = easeInOutCubic(smoothstep(0.06, 0.82, t));
+        const lookU = easeInOutCubic(smoothstep(0.1, 0.5, t)) * 0.22;
         if (trackPos) {
-            chaseLook.copy(from.target).lerp(trackPos, lookU);
-            look.copy(chaseLook).lerp(pose.target, Math.max(settleU, moveU * 0.32));
+            chaseLook.copy(from.target).lerp(pose.target, roomU);
+            chaseLook.lerp(trackPos, lookU);
+            look.copy(chaseLook);
         } else {
             look.lerpVectors(from.target, pose.target, moveU);
         }
@@ -185,16 +188,16 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         }
         const focus = trackPos ? followFocus.copy(trackPos) : followFocus.copy(pose.target);
         fitFollowPos(pose, focus, trackedRadius);
-        const lookU = easeInOutCubic(smoothstep(0, 0.42, t));
-        const moveU = easeInOutCubic(smoothstep(0.04, 0.82, t));
-        const settleStart = Math.min(0.92, Math.max(0.62, settleAt));
+        const lookU = easeInOutCubic(smoothstep(0, 0.5, t));
+        const moveU = easeInOutCubic(smoothstep(0.08, 0.86, t));
+        const settleStart = Math.min(0.94, Math.max(0.72, settleAt ?? 0.86));
         const settleU = easeInOutCubic(smoothstep(settleStart, 1, t));
         chasePos.copy(from.position).lerp(followPos, moveU);
         camera.position.copy(chasePos).lerp(pose.position, settleU);
-        camera.position.y = Math.max(camera.position.y, focus.y + 0.34);
+        camera.position.y = Math.max(camera.position.y, focus.y + 0.5);
         chaseLook.copy(from.target).lerp(focus, lookU);
         look.copy(chaseLook).lerp(pose.target, settleU);
-        const wide = trackedRadius > 0.5 ? Math.min(46, pose.fov + 8) : pose.fov;
+        const wide = trackedRadius > 0.28 ? Math.min(44, Math.max(from.fov, pose.fov + 8)) : pose.fov;
         camera.fov = from.fov + (wide - from.fov) * moveU;
         camera.up.set(0, 1, 0);
         camera.updateProjectionMatrix();

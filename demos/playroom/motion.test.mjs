@@ -127,6 +127,7 @@ assert.equal(follows[0].name, "doubledeal");
 assert.equal(follows[0].opts.delay, 220);
 assert.equal(follows[0].opts.duration, 1800);
 assert.equal(follows[0].opts.track, "toys");
+assert.equal(follows[0].opts.settleAt, 0.86);
 
 followLeave(poses, { track: "home", holdMs: 220, duration: 2880, reduced: true });
 assert.equal(snaps.at(-1), "landing");

@@ -677,7 +677,10 @@ function followShot(poses, {
  * unbox_travel chain), and lands at `to` without a cut.
  */
 export function followEnter(poses, opts = {}) {
-    return followShot(poses, opts);
+    return followShot(poses, {
+        ...opts,
+        settleAt: opts.settleAt ?? 0.86,
+    });
 }
 
 /**

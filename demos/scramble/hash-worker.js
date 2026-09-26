@@ -1,24 +1,34 @@
 /**
  * Incremental Scramble hash. Main thread streams file chunks; this
- * worker updates the generated impl cube and drops the teach list so a
- * multi-MB file cannot freeze the dock or build a leave list.
+ * worker updates the cube and drops the teach list so a multi-MB file
+ * cannot freeze the dock or build a leave list.
  *
- * Uses `_scramble_impl.mjs` (not the host wrapper) so each chunk does
- * not convert thousands of Step records to plain objects.
+ * Prefer the generated impl (no host conversion of Step records).
+ * Fall back to the same host API typed Message uses.
  */
-import * as impl from "./generated/_scramble_impl.mjs";
-import * as rt from "./generated/_sudo_rt.mjs";
-import { createGeneratedHasher } from "../shared/file-hash.js";
+import { createGeneratedHasher, createIncrementalHasher } from "../shared/file-hash.js";
 
-const hasher = createGeneratedHasher({ impl, rt });
+async function makeHasher() {
+    try {
+        const impl = await import("./generated/_scramble_impl.mjs");
+        const rt = await import("./generated/_sudo_rt.mjs");
+        return createGeneratedHasher({ impl, rt });
+    } catch {
+        const api = await import("./generated/scramble.mjs");
+        return createIncrementalHasher(api);
+    }
+}
+
+const hasherPromise = makeHasher();
 
 function reply(data) {
     self.postMessage(data);
 }
 
-self.onmessage = (event) => {
+self.onmessage = async (event) => {
     const msg = event.data || {};
     try {
+        const hasher = await hasherPromise;
         if (msg.type === "start") {
             hasher.start(msg.version);
             reply({ type: "ready" });

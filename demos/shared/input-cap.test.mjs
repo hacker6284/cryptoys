@@ -21,6 +21,8 @@ const doubledeal = readFileSync(new URL("../doubledeal/session.js", import.meta.
 assert.match(scramble, /bindCappedInput/);
 assert.match(doubledeal, /bindCappedInput/);
 assert.doesNotMatch(scramble, /input\?\.addEventListener\("input", \(\) => recompute\(\)/);
+assert.doesNotMatch(scramble, /onChange:\s*\(\)\s*=>\s*recompute\(\)/);
+assert.match(scramble, /onChange:\s*\(\)\s*=>\s*refreshDigest\(\)/);
 assert.doesNotMatch(doubledeal, /messageEl\?\.addEventListener\("input", preview/);
 
 const adapters = readFileSync(new URL("../playroom/adapters.js", import.meta.url), "utf8");

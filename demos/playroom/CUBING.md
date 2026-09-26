@@ -28,6 +28,8 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 
 Session moves (including Rule B / seat as `x`/`y`/`z`) become `player.alg`.
 `createScrambleSession` drives that timeline via `playLeaves` / `jumpToLeaf`.
+Typing / paste updates Digest only; `setAlg` waits for Play / Step / teach
+(`shared/live-digest.js`).
 
 Product Scramble is 3×3 only. Megaminx / pyraminx stay in the dock as a
 debug toolkit (`?debug=1`, same flag as flight / beat debug): 3×3,

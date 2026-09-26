@@ -71,10 +71,13 @@ textarea.grow-field {
   width: 100%;
 }
 
-.playroom-message-row > .grow-field,
-.playroom-message-row > .file-chip {
+.playroom-message-row > .grow-field {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.playroom-message-row > .file-btn {
+  margin-left: auto;
 }
 
 .file-btn {
@@ -154,5 +157,5 @@ textarea.grow-field {
 }
 
 textarea.grow-field[hidden] {
-  display: none;
+  display: none !important;
 }

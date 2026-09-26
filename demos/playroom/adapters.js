@@ -143,11 +143,11 @@ function mountDock() {
             <label class="playroom-label" for="message">Message</label>
             <div class="playroom-message-row">
               <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
-              <div id="message-file" class="file-chip" hidden>
-                <span id="message-file-name"></span>
-                <button type="button" class="file-action" id="message-file-clear" aria-label="Clear file">Clear</button>
-              </div>
               <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file" title="Hash a file">${lucideSvg("paperclip", 16)}</button>
+            </div>
+            <div id="message-file" class="file-chip" hidden>
+              <span id="message-file-name"></span>
+              <button type="button" class="file-action" id="message-file-clear" aria-label="Clear file">Clear</button>
             </div>
             <input id="message-file-input" type="file" hidden>
           </div>

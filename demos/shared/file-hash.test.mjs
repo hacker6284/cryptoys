@@ -9,6 +9,7 @@ import {
     checkFileSize,
     createGeneratedHasher,
     createIncrementalHasher,
+    createSilentHasher,
     dropTeachTrace,
     formatFileLabel,
     formatFileSize,
@@ -138,26 +139,54 @@ const implUrl = new URL("../scramble/generated/_scramble_impl.mjs", import.meta.
 if (existsSync(implUrl)) {
     const impl = await import(implUrl);
     const rt = await import(new URL("../scramble/generated/_sudo_rt.mjs", import.meta.url));
+    const host = await import(new URL("../scramble/generated/scramble.mjs", import.meta.url));
     const hello = [104, 101, 108, 108, 111];
+    const helloV2 = [0, 82, 163, 199, 209, 34, 145, 209, 64];
     const gen = createGeneratedHasher({ impl, rt });
     gen.start(2);
     gen.push(hello.slice(0, 2));
     gen.push(hello.slice(2));
-    assert.deepEqual(
-        gen.finish().digest,
-        [0, 82, 163, 199, 209, 34, 145, 209, 64],
-        "generated impl hasher matches SPEC hello v2",
-    );
+    assert.deepEqual(gen.finish().digest, helloV2, "generated impl hasher matches SPEC hello v2");
+
+    const silent = createSilentHasher({ impl, rt });
+    silent.start(2);
+    silent.push(new Uint8Array(hello.slice(0, 2)));
+    silent.push(new ArrayBuffer(0));
+    silent.push(new Uint8Array(hello.slice(2)));
+    assert.deepEqual(silent.finish().digest, helloV2, "silent hasher matches SPEC hello v2");
+
+    const pngish = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0x00, 0x7f, 0x80]);
+    const state = host.scramble_v2();
+    host.update(state, Array.from(pngish));
+    const expected = host.evaluate(state).digest;
+    const fromBuf = createSilentHasher({ impl, rt });
+    fromBuf.start(2);
+    fromBuf.push(pngish.buffer);
+    assert.deepEqual(fromBuf.finish().digest, expected, "silent hasher treats ArrayBuffer as raw bytes, not text");
+
+    const imageSized = new Uint8Array(8 * 1024);
+    imageSized[0] = 0xff;
+    imageSized[1] = 0xd8;
+    imageSized[2] = 0xff;
+    const t0 = Date.now();
+    const jpeg = createSilentHasher({ impl, rt });
+    jpeg.start(2);
+    jpeg.push(imageSized.subarray(0, 4096));
+    jpeg.push(imageSized.subarray(4096));
+    const jpegDigest = jpeg.finish().digest;
+    assert.equal(jpegDigest.length, 9, "image-sized file still produces a 9-byte digest");
+    assert.ok(Date.now() - t0 < 8000, "silent 8 KiB JPEG-shaped hash finishes without push_step stall");
 }
 
 const src = readFileSync(new URL("./file-hash.js", import.meta.url), "utf8");
 assert.match(src, /createIncrementalHasher/);
 assert.match(src, /createGeneratedHasher/);
+assert.match(src, /createSilentHasher/);
 assert.match(src, /dropTeachTrace/);
 assert.match(src, /new Worker/);
 
 const worker = readFileSync(new URL("../scramble/hash-worker.js", import.meta.url), "utf8");
-assert.match(worker, /createGeneratedHasher/, "worker prefers the generated impl");
+assert.match(worker, /createSilentHasher/, "worker prefers the silent digest walk");
 assert.match(worker, /createIncrementalHasher/, "worker falls back to the host Message API");
 assert.match(worker, /_scramble_impl\.mjs/);
 assert.doesNotMatch(worker, /setAlg/);
@@ -167,13 +196,16 @@ const scramble = readFileSync(new URL("../scramble/session.js", import.meta.url)
 assert.match(scramble, /hashFile\(/);
 assert.match(scramble, /function applyFile\(/);
 assert.match(scramble, /function hashSelectedFile\(\)/);
-assert.match(scramble, /function hashWithPublicApi\(/, "modest files use the typed Message hash API");
-assert.match(scramble, /if \(modest\) \{\s*got = await hashWithPublicApi/);
+assert.match(scramble, /function hashSilentOnHost\(/, "host fallback is the silent walk, not text update");
+assert.doesNotMatch(scramble, /if \(modest\) \{\s*got = await hashWithPublicApi/);
 const hashFn = scramble.match(/async function hashSelectedFile\(\) \{[\s\S]*?\n    \}/);
 assert.ok(hashFn, "hashSelectedFile is the file Digest path");
+assert.match(hashFn[0], /hashFile\(/, "every file size auto-hashes on pick");
+assert.match(hashFn[0], /applyFileDigest\(digest/, "Digest hex is written when the hasher finishes");
 assert.doesNotMatch(hashFn[0], /view\.setAlg/, "file hash must not call setAlg while hashing");
 assert.doesNotMatch(hashFn[0], /bindAlg\(/);
 assert.doesNotMatch(hashFn[0], /mapTraceToAlg/);
+assert.doesNotMatch(hashFn[0], /bytesOf\(/, "file path must not encode bytes as typed Message text");
 assert.match(scramble, /function play\(\) \{[\s\S]*?ensureTimeline\(\)/);
 assert.match(scramble, /canWalkPayload/);
 
@@ -182,6 +214,16 @@ assert.match(adapters, /id="message-file-btn"/);
 assert.match(adapters, /class="file-btn"/);
 assert.match(adapters, /lucideSvg\("paperclip"/);
 assert.match(adapters, /id="message-file"/);
+const scrambleDock = adapters.slice(0, adapters.indexOf("function mountDoubleDealDock"));
+const messageRow = scrambleDock.match(/<div class="playroom-message-row">[\s\S]*?<\/div>/);
+assert.ok(messageRow, "Message line is its own row");
+assert.match(messageRow[0], /id="message"/);
+assert.match(messageRow[0], /file-btn/);
+assert.doesNotMatch(messageRow[0], /id="message-file"/, "filename chip is not between Message and paperclip");
+assert.match(scrambleDock, /playroom-message-row[\s\S]*file-btn[\s\S]*id="message-file"/);
+const standalone = readFileSync(new URL("../scramble/index.html", import.meta.url), "utf8");
+const standaloneRow = standalone.match(/<div class="playroom-message-row">[\s\S]*?<\/div>/);
+assert.doesNotMatch(standaloneRow[0], /id="message-file"/, "standalone filename chip is also on the next row");
 const doubleDealDock = adapters.slice(adapters.indexOf("function mountDoubleDealDock"));
 assert.doesNotMatch(doubleDealDock, /message-file/, "DoubleDeal Message is not a hash file input");
 

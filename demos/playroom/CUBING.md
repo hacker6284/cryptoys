@@ -29,8 +29,9 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 Session moves (including Rule B / seat as `x`/`y`/`z`) become `player.alg`.
 `createScrambleSession` drives that timeline via `playLeaves` / `jumpToLeaf`.
 Typing / paste updates Digest only; `setAlg` waits for Play / Step / teach
-(`shared/live-digest.js`). A File pick hashes in a worker and also updates
-Digest only; `setAlg` still waits for Play on modest files (≤ 4 KiB) and
+(`shared/live-digest.js`). A File pick hashes raw bytes in a worker
+(silent cube walk — images included) and writes Digest when the worker
+finishes; `setAlg` still waits for Play on modest files (≤ 4 KiB) and
 stays off for larger ones so the leave list cannot freeze the room.
 
 Product Scramble is 3×3 only. Megaminx / pyraminx stay in the dock as a

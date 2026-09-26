@@ -65,7 +65,7 @@ export function dropTeachTrace(state) {
  * Incremental Scramble hasher on the host-facing generated API.
  * Fine for tests and tiny messages. Each `update` converts the whole
  * teach list back to host objects — do not use this for multi-KB files.
- * The worker uses `createGeneratedHasher` on the impl instead.
+ * The worker uses `createSilentHasher` on the impl instead.
  */
 export function createIncrementalHasher({ scramble_v1, scramble_v2, update, evaluate }) {
     let state = null;
@@ -93,6 +93,100 @@ export function createIncrementalHasher({ scramble_v1, scramble_v2, update, eval
     };
 }
 
+export function asBytes(bytes) {
+    if (bytes instanceof Uint8Array) return bytes;
+    if (bytes instanceof ArrayBuffer) return new Uint8Array(bytes);
+    return new Uint8Array(bytes || []);
+}
+
+function silentRuleB(impl, rt, cube) {
+    const c = rt.dup(rt.at(cube, impl.cubie_at(cube, 1n, 1n, 1n)));
+    return impl.reorient(cube, c.yp, c.zp);
+}
+
+function silentV2(impl, rt, cube, n) {
+    cube = impl.apply_turns(cube, rt.at(impl.v2_a, n), 1n);
+    cube = impl.apply_turns(cube, rt.at(impl.v2_b, n), 1n);
+    return silentRuleB(impl, rt, cube);
+}
+
+function silentV1Block(impl, rt, cube, ny, block) {
+    const base = block * 8n;
+    for (let k = 0n; k <= 7n; k += 1n) {
+        const n = rt.at(ny, base + k);
+        cube = impl.apply_turns(cube, rt.at(impl.v1_face, n), rt.at(impl.v1_turns, n));
+    }
+    return silentRuleB(impl, rt, cube);
+}
+
+/**
+ * Digest-only walk: same turns as generated update/evaluate, no teach
+ * Step / facelets list. Required for images — a JPEG is far above 4 KiB
+ * and `push_step` makes the host/impl update path stall.
+ */
+export function createSilentHasher({ impl, rt }) {
+    let version = 2;
+    let cube = null;
+    let message = null;
+    let processed = 0;
+
+    const nyOf = (bytes) => impl.nybbles_of(rt.host_list(bytes, (v) => rt.host_int(v)));
+
+    return {
+        start(nextVersion) {
+            version = Number(nextVersion) === 1 ? 1 : 2;
+            cube = impl.solved_cube();
+            message = [];
+            processed = 0;
+        },
+        push(bytes) {
+            if (!cube) throw new Error("Hasher was not started.");
+            const chunk = asBytes(bytes);
+            if (!chunk.length) return;
+            for (let i = 0; i < chunk.length; i += 1) message.push(chunk[i]);
+            const ny = nyOf(chunk);
+            const added = Number(ny.length);
+            if (version === 1) {
+                const all = nyOf(message);
+                const len = Number(all.length);
+                while (processed + 8 <= len) {
+                    cube = silentV1Block(impl, rt, cube, all, BigInt(processed / 8));
+                    processed += 8;
+                }
+            } else {
+                for (let i = 0; i < added; i += 1) {
+                    cube = silentV2(impl, rt, cube, rt.at(ny, BigInt(i)));
+                }
+                processed += added;
+            }
+        },
+        finish() {
+            if (!cube) throw new Error("Hasher was not started.");
+            const ny = nyOf(message);
+            const padded = impl.pad_tape(ny, version === 1 ? 1n : 2n);
+            const padLen = Number(padded.length);
+            if (version === 1) {
+                while (processed + 8 <= padLen) {
+                    cube = silentV1Block(impl, rt, cube, padded, BigInt(processed / 8));
+                    processed += 8;
+                }
+            } else {
+                for (let i = processed; i < padLen; i += 1) {
+                    cube = silentV2(impl, rt, cube, rt.at(padded, BigInt(i)));
+                }
+            }
+            cube = impl.apply_turns(cube, 4n, 2n);
+            cube = impl.apply_turns(cube, 5n, 2n);
+            cube = impl.reorient(cube, 1n, 6n);
+            const raw = impl.index_bytes(cube);
+            const digest = Array.from(raw, (v) => rt.int_out(v));
+            cube = null;
+            message = null;
+            return { digest };
+        },
+    };
+}
+
 /**
  * Same math, on sudoc's internal records. Drop `steps` after each
  * chunk so we never convert a leave list through the host wrapper.
@@ -110,8 +204,9 @@ export function createGeneratedHasher({ impl, rt }) {
         },
         push(bytes) {
             if (!state) throw new Error("Hasher was not started.");
-            const list = rt.host_list(Array.from(bytes || []), (v) => rt.host_int(v));
-            if (!list.length) return;
+            const chunk = asBytes(bytes);
+            if (!chunk.length) return;
+            const list = rt.host_list(chunk, (v) => rt.host_int(v));
             state = impl.update(state, list);
             if (state) state.steps = emptySteps();
         },

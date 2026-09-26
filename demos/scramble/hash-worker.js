@@ -1,18 +1,17 @@
 /**
  * Incremental Scramble hash. Main thread streams file chunks; this
- * worker updates the cube and drops the teach list so a multi-MB file
- * cannot freeze the dock or build a leave list.
+ * worker walks the cube without teach steps so a JPEG / PNG can finish
+ * and post `done` (host/impl `update` stalls on `push_step`).
  *
- * Prefer the generated impl (no host conversion of Step records).
- * Fall back to the same host API typed Message uses.
+ * Prefer the silent impl walk. Fall back to the host Message API.
  */
-import { createGeneratedHasher, createIncrementalHasher } from "../shared/file-hash.js";
+import { createSilentHasher, createIncrementalHasher } from "../shared/file-hash.js";
 
 async function makeHasher() {
     try {
         const impl = await import("./generated/_scramble_impl.mjs");
         const rt = await import("./generated/_sudo_rt.mjs");
-        return createGeneratedHasher({ impl, rt });
+        return createSilentHasher({ impl, rt });
     } catch {
         const api = await import("./generated/scramble.mjs");
         return createIncrementalHasher(api);

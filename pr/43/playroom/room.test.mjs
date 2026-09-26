@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { tableSpan } from "../doubledeal/layout.js";
 import {
     CUBE,
@@ -40,6 +41,11 @@ assert.ok(POSES.doubledeal.position[1] <= 1.28, "doubledeal camera height matche
 assert.ok(POSES.doubledeal.position[2] - DEN.z <= 1.05, "doubledeal stay close to the felt");
 
 assert.equal(CUBE, 0.12, "playroom cube is the 120 mm presentation edge");
+assert.match(
+    readFileSync(new URL("./twisty-rig.js", import.meta.url), "utf8"),
+    /userData\.worldEdge = worldEdge/,
+    "live size metric is world AABB Y (~0.120) at hub / fly / land / leave",
+);
 assert.equal(toyHalfHeight("cube"), CUBE / 2);
 assert.equal(toyHalfHeight("deck"), 0.046);
 assert.equal(toyHalfHeight("deck2"), 0.046);

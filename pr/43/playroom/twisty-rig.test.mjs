@@ -80,6 +80,9 @@ turning.children = [makeMesh(5)];
 const midTurn = keepFitted(wrapper, turning, 0.12, rest);
 assert.equal(midTurn.changed, false, "turning cubies do not remesure nativeMax");
 assert.ok(Math.abs(wrapper.scale.x - rest.scale) < 1e-6, "rest scale holds mid-turn");
+assert.equal(rest.fittedMax, 0.12, "rest presentation edge is 120 mm");
+assert.equal(held.fittedMax, 0.12, "late 1/3 still targets 120 mm");
+assert.equal(midTurn.fittedMax, 0.12, "mid-turn lock stays 120 mm");
 
 assert.match(src, /turnBusy/, "playLeaves marks the turn so keep-fit can skip");
 

@@ -27,11 +27,10 @@ assert.ok(POSES.doubledeal, "doubledeal pose exists");
 assert.equal(resolvePoseName("doubledeal"), "doubledeal");
 assert.equal(resolvePoseName("lean_deck"), "doubledeal");
 assert.equal(resolvePoseName("scramble"), "scramble");
-assert.ok(POSES.unbox, "unbox close-up exists");
+assert.ok(POSES.unbox, "unbox family exists");
 assert.ok(POSES.unbox_travel, "unbox travel shot exists");
 assert.ok(POSES.unbox_deal, "unbox deal shot exists");
 assert.equal(resolvePoseName("unbox"), "unbox");
-assert.ok(POSES.unbox.fov < POSES.doubledeal.fov, "unbox close-up is tighter than the seated lean");
 assert.ok(POSES.unbox_travel.fov >= POSES.doubledeal.fov, "travel stays wide enough to hold the felt");
 assert.ok(!POSES.unbox.overlays.teach, "unbox chrome stays quiet");
 assert.ok(!POSES.unbox_travel.overlays.menu, "travel chrome stays quiet");
@@ -41,11 +40,12 @@ assert.ok(POSES.doubledeal.position[2] - DEN.z <= 1.05, "doubledeal stay close t
 
 assert.equal(toyHalfHeight("cube"), CUBE / 2);
 assert.equal(toyHalfHeight("deck"), 0.046);
+assert.equal(toyHalfHeight("deck2"), 0.046);
 assert.notEqual(toyHalfHeight("deck"), CUBE / 2, "deck seatOn fallback is not the cube half-height");
 
 const recipeDirector = createToyDirector({});
 const recipe = recipeDirector.recipeOf("doubledeal");
-assert.deepEqual(recipe.toys, ["deck"]);
+assert.deepEqual(recipe.toys, ["deck", "deck2"]);
 assert.deepEqual(recipe.extras, ["chest"]);
 assert.equal(recipe.pose, "doubledeal");
 assert.equal(recipeDirector.recipeOf("scramble").toys[0], "cube");
@@ -101,14 +101,25 @@ function seatOn(object, { x, surfaceY, z, rotation, name }) {
 function makeMockWorld() {
     const feltTopY = TOP_Y + 0.032;
     const slotsEmpty = { deck: false, cube: false };
+    const chest = { x: -2.2, y: 0.12 + toyHalfHeight("deck"), z: 1.05 };
     const toys = {
         deck: makeToy(SLOTS.deck.x, SHELF_TOP + toyHalfHeight("deck"), SHELF_Z),
+        deck2: makeToy(chest.x, chest.y, chest.z),
         cube: makeToy(SLOTS.cube.x, SHELF_TOP + toyHalfHeight("cube"), SHELF_Z),
     };
     return {
         toys,
         slotsEmpty,
         getShelfPose(name) {
+            if (name === "deck2") {
+                return seatOn(toys[name], {
+                    x: chest.x,
+                    surfaceY: 0.12,
+                    z: chest.z,
+                    rotation: { x: 0, y: Math.PI / 2, z: 0 },
+                    name: "deck",
+                });
+            }
             const slot = SLOTS[name];
             return seatOn(toys[name], {
                 x: slot.x,
@@ -119,6 +130,15 @@ function makeMockWorld() {
             });
         },
         getTablePose(name) {
+            if (name === "deck2") {
+                return seatOn(toys[name], {
+                    x: DEN.x - 0.78,
+                    surfaceY: feltTopY + 0.001,
+                    z: DEN.z - 0.34,
+                    rotation: { x: 0, y: -0.2, z: 0 },
+                    name: "deck",
+                });
+            }
             return seatOn(toys[name], {
                 x: DEN.x,
                 surfaceY: feltTopY + 0.001,
@@ -133,6 +153,10 @@ function makeMockWorld() {
         },
         setSlotEmpty(name, empty) {
             slotsEmpty[name] = Boolean(empty);
+        },
+        setChestLid() {},
+        getChestLid() {
+            return 0;
         },
     };
 }
@@ -161,6 +185,7 @@ assert.equal(world.toys.deck.position.x, DEN.x);
 assert.equal(world.toys.deck.position.z, DEN.z);
 assert.equal(world.toys.deck.position.y, tableY);
 assert.notEqual(world.toys.deck.position.y, TOP_Y + 0.033 + CUBE / 2);
+assert.ok(world.toys.deck2.position.x < DEN.x, "MSG deck seats on the message side");
 
 await director.home({ snap: true });
 assert.equal(director.occupied, null);
@@ -168,6 +193,7 @@ assert.equal(world.slotsEmpty.deck, false);
 assert.equal(world.toys.deck.position.x, SLOTS.deck.x);
 assert.equal(world.toys.deck.position.z, SHELF_Z);
 assert.equal(world.toys.deck.position.y, shelfY);
+assert.ok(world.toys.deck2.position.x < -1.5, "MSG deck homes to the chest");
 
 const cubeWorld = makeMockWorld();
 const cubeDirector = createToyDirector(cubeWorld);

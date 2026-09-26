@@ -44,25 +44,26 @@ export const POSES = {
         fov: 30,
         overlays: { title: true, menu: false, teach: true },
     },
-    // Travel with the box so a tight unbox close-up cannot land on
-    // empty felt (the #29 shelf-hold lesson). Quiet chrome — no teach.
+    // Travel with the KEY box off the shelf. Enter stays on this
+    // family through unbox, then eases to `doubledeal` as the table
+    // lays — no tight cut that lands on empty felt (#29).
     unbox_travel: {
         position: [DEN.x + 0.48, 1.24, DEN.z + 0.92],
         target: [DEN.x, 0.86, DEN.z],
         fov: 32,
         overlays: { title: true, menu: false },
     },
-    // Three-quarter of the landed 67 mm KEY tuck-box.
+    // Kept as an alias family. Production enter does not snap here.
     unbox: {
-        position: [DEN.x + 0.12, 0.95, DEN.z + 0.34],
-        target: [DEN.x, 0.83, DEN.z],
-        fov: 26,
+        position: [DEN.x + 0.36, 1.12, DEN.z + 0.74],
+        target: [DEN.x, 0.84, DEN.z],
+        fov: 30,
         overlays: { title: true, menu: false },
     },
     unbox_deal: {
-        position: [DEN.x + 0.20, 1.08, DEN.z + 0.62],
-        target: [DEN.x, 0.82, DEN.z + 0.12],
-        fov: 28,
+        position: [DEN.x + 0.32, 1.16, DEN.z + 0.84],
+        target: [DEN.x, 0.82, DEN.z + 0.04],
+        fov: 30,
         overlays: { title: true, menu: false },
     },
 };

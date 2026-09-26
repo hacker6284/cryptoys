@@ -219,6 +219,7 @@ export async function createUnboxRig({ anisotropy = 4, textures, sharedMaps = fa
         if (packet.parent !== group) group.add(packet);
         packet.position.set(0, 0, 0);
         packet.rotation.set(0, 0, 0);
+        packet.scale.set(1, 1, 1);
         setMatsOpacity(sleeve, 1);
         setMatsOpacity(packet, 1);
         innerGlow.intensity = 0;
@@ -227,8 +228,10 @@ export async function createUnboxRig({ anisotropy = 4, textures, sharedMaps = fa
             if (mesh.parent !== packet) packet.add(mesh);
             applyLocal(mesh, rest[i]);
             mesh.visible = true;
+            mesh.scale.set(1, 1, 1);
             setMatsOpacity(mesh, 1);
         }
+        group.scale.set(1, 1, 1);
         group.updateMatrixWorld(true);
     }
 

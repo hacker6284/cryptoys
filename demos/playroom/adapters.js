@@ -7,8 +7,9 @@ import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
 import { normalizePuzzleId, readPuzzleSearchParam } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
+import { formSessionTable } from "./table-form.js";
 import { pickHandTextures } from "./unbox-hand.js";
-import { createDealerKey, disposeDealerKey, playPhysical } from "./unbox-physical.js";
+import { createDealerKey, disposeDealerKey, playPhysical, restBoxes } from "./unbox-physical.js";
 import { createUnboxRig } from "./unbox-rig.js";
 
 /**
@@ -524,14 +525,14 @@ function createDoubleDealAdapter() {
         return preloadPromise;
     }
 
-    function stowUnboxHidden() {
+    function restowUnbox() {
         if (!unbox) return;
         for (const mesh of unbox.cards) {
             if (mesh.parent && mesh.parent !== unbox.packet) unbox.packet.attach(mesh);
         }
         if (unbox.packet.parent !== unbox.group) unbox.group.add(unbox.packet);
         unbox.restow();
-        unbox.group.visible = false;
+        unbox.group.visible = true;
         if (keyLight) keyLight.intensity = 0;
     }
 
@@ -559,19 +560,11 @@ function createDoubleDealAdapter() {
         unbox.restow();
         unbox.group.visible = true;
         if (!unbox.group.userData.flightBusy) world.shelfHome("deck");
+        if (world.toys.deck2 && !world.toys.deck2.userData.flightBusy) {
+            world.shelfHome("deck2");
+            world.toys.deck2.visible = true;
+        }
         return unbox;
-    }
-
-    function hideProp() {
-        if (unbox) stowUnboxHidden();
-        else if (world?.toys.deck) world.toys.deck.visible = false;
-        if (keyLight) keyLight.intensity = 0;
-    }
-
-    function cutToTable() {
-        // Hard cut only. No opacity lerp, dissolve, or box↔table fade.
-        hideProp();
-        table?.show?.();
     }
 
     function skipEnter() {
@@ -611,11 +604,24 @@ function createDoubleDealAdapter() {
                 const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
                 poses?.lockOrbit?.();
                 if (!keyLight && world) keyLight = createDealerKey(world);
-                table = stageCardTable(world, loaded.textures, { poses, visible: false });
+                table = stageCardTable(world, loaded.textures, { poses, visible: true });
                 const specUrl = await resolveSpecUrl("doubledeal");
                 if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
+                // Zach 2026-09-25 continuity lock: no fades and no hard
+                // cuts. Session preview would seat the 4×13 immediately;
+                // hold that layout and lay it from the two decks instead.
+                let holdLayout = true;
+                let layout = null;
+                const view = {
+                    ...table,
+                    showDecks(message, key) {
+                        layout = { message: message.slice(), key: key.slice() };
+                        if (holdLayout) return;
+                        table.showDecks(message, key);
+                    },
+                };
                 session = loaded.sessionMod.createDoubleDealSession({
-                    view: table,
+                    view,
                     specUrl,
                     root,
                     exposeTeach: true,
@@ -632,12 +638,34 @@ function createDoubleDealAdapter() {
                         clock,
                         gen: enterGen,
                         keyLight,
-                        trackBox: () => world.toys.deck?.position,
                     });
+                } else if (!cancelEnter) {
+                    // Abbreviated continuous path (skip / reduced-motion):
+                    // both boxes slide to a standing rest, then cards
+                    // stream from those piles. Instant seat only happens
+                    // if the shared pose controller snaps for a11y.
+                    await restBoxes({ world, clock, gen: enterGen });
                 }
                 if (cancelEnter) return session;
-                poses?.snap?.("doubledeal");
-                cutToTable();
+                const seated = poses?.playTo
+                    ? poses.playTo("doubledeal", { duration: reduced ? 480 : 1280 })
+                    : Promise.resolve();
+                if (layout && !cancelEnter) {
+                    await formSessionTable({
+                        table,
+                        clock,
+                        gen: enterGen,
+                        messageOrder: layout.message,
+                        keyOrder: layout.key,
+                        keyBox: world.toys.deck?.position,
+                        messageBox: world.toys.deck2?.position || world.toys.deck?.position,
+                        packet: reduced || !unbox ? null : unbox,
+                    });
+                }
+                holdLayout = false;
+                if (layout) table.showDecks(layout.message, layout.key);
+                await seated;
+                if (cancelEnter) return session;
                 showDock();
                 return session;
             } finally {
@@ -663,16 +691,17 @@ function createDoubleDealAdapter() {
                 table.dispose();
                 table = null;
             }
-            hideProp();
+            restowUnbox();
+            if (world?.toys.deck2) world.toys.deck2.visible = true;
             disposeDealerKey(world, keyLight);
             keyLight = null;
             poses?.unlockOrbit?.();
         },
         revealShelf() {
             const box = world?.toys.deck;
-            if (!box) return;
             if (unbox) unbox.restow();
-            box.visible = true;
+            if (box) box.visible = true;
+            if (world?.toys.deck2) world.toys.deck2.visible = true;
         },
     };
 }

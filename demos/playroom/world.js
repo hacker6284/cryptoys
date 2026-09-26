@@ -594,6 +594,7 @@ export async function mountWorld(canvas) {
 
     const toys = {
         deck: makeDeckBox(0x6b1e1e, "KEY"),
+        deck2: makeDeckBox(0x1a2a44, "MSG"),
         cube: makeCubeToy(),
     };
     Object.values(toys).forEach((toy) => scene.add(toy));
@@ -645,7 +646,37 @@ export async function mountWorld(canvas) {
         };
     }
 
+    function getChestPose(name) {
+        const box = new THREE.Box3().setFromObject(chestGroup);
+        const x = Number.isFinite(box.min.x)
+            ? box.min.x * 0.42 + box.max.x * 0.58
+            : CHEST.x + 0.12;
+        const z = Number.isFinite(box.min.z)
+            ? box.min.z * 0.52 + box.max.z * 0.48
+            : CHEST.z;
+        const surfaceY = Number.isFinite(box.min.y) ? box.min.y + 0.055 : 0.08;
+        return seatOn(toys[name], {
+            x,
+            surfaceY,
+            z,
+            rotation: { x: 0, y: Math.PI / 2 + 0.1, z: 0 },
+            name: name === "deck2" ? "deck" : name,
+        });
+    }
+
+    function getBoxRestPose(name) {
+        const side = name === "deck2" ? -1 : 1;
+        return seatOn(toys[name], {
+            x: DEN.x + side * 0.78,
+            surfaceY: feltTopY() + 0.001,
+            z: DEN.z - 0.34,
+            rotation: { x: 0, y: side * 0.2, z: 0 },
+            name: name === "deck2" ? "deck" : name,
+        });
+    }
+
     function getShelfPose(name) {
+        if (name === "deck2") return getChestPose(name);
         const slot = slots[name];
         if (!slot) return null;
         return seatOn(toys[name], {
@@ -659,6 +690,7 @@ export async function mountWorld(canvas) {
     }
 
     function getTablePose(name) {
+        if (name === "deck2") return getBoxRestPose(name);
         return seatOn(toys[name], {
             x: DEN.x,
             surfaceY: feltTopY() + 0.001,
@@ -744,13 +776,24 @@ export async function mountWorld(canvas) {
 
     shelfHome("deck");
     shelfHome("cube");
+    shelfHome("deck2");
 
     placePlant(scene, plantAGltf, 0.35, SHELF_Y1, SHELF_Z, 0.22, 0.2);
     placePlant(scene, plantBGltf, 1.05, SHELF_Y1, SHELF_Z, 0.18, -0.35);
     placePlant(scene, floorPlantGltf, -2.15, 0, SHELF_Z + 0.35, 0.55, 0.4);
 
+    function setChestLid(t) {
+        const k = Math.min(1, Math.max(0, t));
+        if (chestLidPivot) chestLidPivot.rotation.x = -0.95 * k;
+        chestGroup.userData.lid = k;
+    }
+
+    function getChestLid() {
+        return chestGroup.userData.lid || 0;
+    }
+
     function setChestOpen(open) {
-        if (chestLidPivot) chestLidPivot.rotation.x = open ? -0.95 : 0;
+        setChestLid(open ? 1 : 0);
     }
     setChestOpen(false);
 
@@ -781,9 +824,13 @@ export async function mountWorld(canvas) {
         toys,
         slots,
         table: { group: tableGroup, radius: TABLE_R, topY: TOP_Y, feltTopY: feltTopY(), den: { ...DEN } },
-        chest: { group: chestGroup, setOpen: setChestOpen },
+        chest: { group: chestGroup, setOpen: setChestOpen, setLid: setChestLid, getLid: getChestLid },
         getShelfPose,
         getTablePose,
+        getChestPose,
+        getBoxRestPose,
+        setChestLid,
+        getChestLid,
         applyPose,
         setSlotEmpty,
         replaceToy,

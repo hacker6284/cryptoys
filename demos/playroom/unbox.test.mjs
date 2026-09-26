@@ -29,7 +29,10 @@ assert.equal(picked.faces[7], "face-6");
 const adapters = readFileSync(new URL("./adapters.js", import.meta.url), "utf8");
 assert.match(adapters, /playPhysical/);
 assert.match(adapters, /createUnboxRig/);
-assert.match(adapters, /cutToTable/);
+assert.match(adapters, /formSessionTable/);
+assert.match(adapters, /deck2/);
+assert.equal(adapters.includes("cutToTable"), false, "enter does not hide-prop / show-table");
+assert.equal(adapters.includes("hideProp"), false, "happy path does not hide the unbox prop");
 assert.equal(adapters.includes("handoffToTable"), false);
 assert.equal(adapters.includes("fadeTree"), false, "enter does not fade");
 assert.equal(adapters.includes("fadeIn"), false, "enter does not fade the table in");
@@ -52,12 +55,20 @@ const tickAt = app.indexOf("requestAnimationFrame(tick)");
 const deepLinkAt = app.indexOf("void startAlgo(initialAlgo)");
 assert.ok(tickAt >= 0 && deepLinkAt > tickAt, "rAF tick starts before deep-link DoubleDeal enter");
 assert.ok(app.indexOf("addEventListener(\"pointerdown\"") < deepLinkAt, "skip is bound before deep-link enter");
+assert.equal(app.includes("poses.snap(\"doubledeal\")"), false, "skip does not snap the seated shot");
 
 const physical = readFileSync(new URL("./unbox-physical.js", import.meta.url), "utf8");
 assert.match(physical, /setFlap/);
-assert.match(physical, /unbox_deal/);
+assert.match(physical, /restPose|getBoxRestPose/);
+assert.equal(physical.includes("playShot"), false, "physical take does not snap named camera shots");
 assert.equal(physical.includes("playBloom"), false);
 assert.equal(physical.includes("gsap"), false);
 assert.ok(!physical.includes("104"), "physical take does not deal 104 cipher seats");
+
+const form = readFileSync(new URL("./table-form.js", import.meta.url), "utf8");
+assert.match(form, /formSessionTable/);
+assert.match(form, /shrinkHero/);
+assert.equal(form.includes("opacity"), false, "table form does not fade");
+assert.equal(form.includes("gsap"), false);
 
 console.log("unbox tests ok");

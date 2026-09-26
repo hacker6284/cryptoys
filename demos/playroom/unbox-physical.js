@@ -56,15 +56,6 @@ function mark(beat) {
     if (root?.dataset?.playroomDebug === "1") root.dataset.beat = beat;
 }
 
-function playShot(poses, name, clock, gen, opts = {}) {
-    if (!poses?.playTo) return Promise.resolve();
-    if (clock.dead(gen)) {
-        poses.snap?.(name);
-        return Promise.resolve();
-    }
-    return poses.playTo(name, opts);
-}
-
 export function tableOrigin(world) {
     return {
         x: world.table.den.x,
@@ -73,34 +64,62 @@ export function tableOrigin(world) {
     };
 }
 
-export function recedeSleevePose(world, boxY) {
+function restPose(world, name) {
+    if (world.getBoxRestPose) return world.getBoxRestPose(name);
     const origin = tableOrigin(world);
+    const side = name === "deck2" ? -1 : 1;
     return {
-        x: origin.x - 0.16,
-        y: boxY - 0.006,
-        z: origin.z - 0.02,
-        rx: 0.15,
-        ry: 0.22,
-        rz: 0.38,
+        position: {
+            x: origin.x + side * 0.78,
+            y: origin.y + 0.047,
+            z: origin.z - 0.34,
+        },
+        rotation: { x: 0, y: side * 0.2, z: 0 },
     };
+}
+
+function slideBox(group, dest, clock, gen, { ms = 760, lift = 0.05 } = {}) {
+    const from = group.position.clone();
+    const fromR = group.rotation.clone();
+    const to = dest.position;
+    const toR = dest.rotation;
+    return clock.tween(ms, (t) => {
+        group.position.lerpVectors(from, to, t);
+        group.position.y = lerp(from.y, to.y, t) + Math.sin(Math.PI * t) * lift;
+        group.rotation.set(
+            lerp(fromR.x, toR.x, t),
+            lerp(fromR.y, toR.y, t),
+            lerp(fromR.z, toR.z, t),
+        );
+        group.quaternion.setFromEuler(group.rotation);
+    }, { ease: easeInOutCubic, generation: gen });
+}
+
+export async function restBoxes({ world, clock, gen, names = ["deck", "deck2"] } = {}) {
+    const jobs = names.map((name) => {
+        const toy = world.toys[name];
+        if (!toy) return Promise.resolve();
+        return slideBox(toy, restPose(world, name), clock, gen, { ms: 520, lift: 0.03 });
+    });
+    await Promise.all(jobs);
 }
 
 /**
  * Physical take: hold the landed KEY tuck-box, open the flap, extract
- * a short packet, recede the sleeve, hop eight faces, pull to the
- * seated DoubleDeal lean. Does not write the live 4×13 seats.
+ * a short packet, set the empty sleeve standing on the felt, hop eight
+ * faces. Camera stays with the room story — this file does not snap
+ * named shots. Does not write the live 4×13 seats.
  */
-export async function playPhysical({ world, rig, poses, clock, gen, keyLight, trackBox }) {
+export async function playPhysical({ world, rig, poses, clock, gen, keyLight }) {
     const origin = tableOrigin(world);
     const surfaceY = feltY(world);
 
     mark("settle");
-    await clock.wait(360, gen);
+    await clock.wait(90, gen);
     if (clock.dead(gen)) return;
 
     mark("unbox-hold");
-    await playShot(poses, "unbox", clock, gen, { duration: 640 });
-    await clock.tween(420, (t) => {
+    await clock.tween(320, (t) => {
         if (keyLight) keyLight.intensity = lerp(0.2, 2.15, t);
         rig.innerGlow.intensity = lerp(0, 0.55, t);
     }, { ease: easeOutCubic, generation: gen });
@@ -108,18 +127,18 @@ export async function playPhysical({ world, rig, poses, clock, gen, keyLight, tr
 
     mark("flap");
     rig.packet.visible = true;
-    await clock.tween(720, (t) => {
+    await clock.tween(680, (t) => {
         rig.setFlap(t);
         if (keyLight) keyLight.intensity = lerp(2.15, 2.55, t);
     }, { ease: easeOutCubic, generation: gen });
-    await clock.wait(180, gen);
+    await clock.wait(120, gen);
     if (clock.dead(gen)) return;
 
     mark("extract");
     const packet = rig.packet;
     packet.visible = true;
     const fromY = packet.position.y;
-    await clock.tween(780, (t) => {
+    await clock.tween(760, (t) => {
         packet.position.y = lerp(fromY, 0.086, easeOutQuart(t));
         // Top card leads a few millimetres so the stack is not a brick.
         for (let i = 0; i < rig.cards.length; i++) {
@@ -147,7 +166,7 @@ export async function playPhysical({ world, rig, poses, clock, gen, keyLight, tr
         ry: 0.08,
         rz: 0,
     };
-    await clock.tween(640, (t) => {
+    await clock.tween(600, (t) => {
         packet.position.set(
             lerp(layFrom.x, layTo.x, t),
             lerp(layFrom.y, layTo.y, t) + Math.sin(Math.PI * t) * 0.04,
@@ -162,41 +181,21 @@ export async function playPhysical({ world, rig, poses, clock, gen, keyLight, tr
     }, { ease: easeInOutCubic, generation: gen });
     if (clock.dead(gen)) return;
 
-    mark("recede");
-    const boxFrom = rig.group.position.clone();
-    const boxRot = rig.group.rotation.clone();
-    const recedeTo = recedeSleevePose(world, boxFrom.y);
-    const recede = playShot(poses, "unbox_deal", clock, gen, {
-        duration: 1100,
-        track: trackBox,
-    });
-    const slide = clock.tween(900, (t) => {
-        rig.group.position.set(
-            lerp(boxFrom.x, recedeTo.x, t),
-            lerp(boxFrom.y, recedeTo.y, t),
-            lerp(boxFrom.z, recedeTo.z, t),
-        );
-        rig.group.rotation.set(
-            lerp(boxRot.x, recedeTo.rx, t),
-            lerp(boxRot.y, recedeTo.ry, t),
-            lerp(boxRot.z, recedeTo.rz, t),
-        );
-        rig.group.quaternion.setFromEuler(rig.group.rotation);
-        if (keyLight) keyLight.intensity = lerp(2.55, 1.1, t);
-        rig.innerGlow.intensity = lerp(0.55, 0, t);
-    }, { ease: easeInOutCubic, generation: gen });
+    mark("aside");
+    const rest = restPose(world, "deck");
+    const slide = slideBox(rig.group, rest, clock, gen, { ms: 780, lift: 0.055 });
 
     mark("deal");
     const dests = rig.cards.map((_, i) => cardSeat(i, rig.cards.length, origin, surfaceY));
-    const jobs = [recede, slide];
+    const jobs = [slide];
     for (let i = 0; i < rig.cards.length; i++) {
         const mesh = rig.cards[i];
         const dest = dests[i];
         jobs.push((async () => {
-            await clock.wait(70 * i, gen);
+            await clock.wait(64 * i, gen);
             world.scene.attach(mesh);
             await hopTo(mesh, dest, clock, gen, {
-                ms: 540,
+                ms: 560,
                 lift: 0.07,
                 ease: easeOutCubic,
             });
@@ -205,12 +204,10 @@ export async function playPhysical({ world, rig, poses, clock, gen, keyLight, tr
     await Promise.all(jobs);
     if (clock.dead(gen)) return;
 
-    mark("pull");
-    await playShot(poses, "doubledeal", clock, gen, { duration: 980 });
     if (keyLight) {
-        await clock.tween(400, (t) => {
-            keyLight.intensity = lerp(keyLight.intensity, 0.35, t);
+        await clock.tween(280, (t) => {
+            keyLight.intensity = lerp(keyLight.intensity, 0.45, t);
         }, { generation: gen });
     }
-    mark("done");
+    mark("dealt");
 }

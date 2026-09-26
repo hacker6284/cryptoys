@@ -247,7 +247,8 @@ try {
         director.skip();
         adapters[activeAlgo]?.skipEnter?.();
         if (activeAlgo === "doubledeal" && (starting || enterBusy())) {
-            poses.snap("doubledeal");
+            // Continue from the live shot — do not snap to a named seat.
+            poses.goTo("doubledeal", { duration: 720 });
         } else {
             poses.skip();
         }

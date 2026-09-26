@@ -3,16 +3,16 @@ import { FLY_MS, LIFT_MS } from "./constants.js";
 /**
  * Toy director.
  *
- * Shelf holds one of each kind. Scramble borrows the cube and DoubleDeal
- * borrows the deck: lift from the slot, then arc to the felt. Camera
- * follow is the pose controller's job. Click skips; reduced-motion snaps.
- * Chest extras highlight only. DoubleDeal unbox lives in the adapter.
+ * Shelf holds one of each kind. Scramble borrows the cube. DoubleDeal
+ * borrows two decks: KEY lifts from the shelf slot, MSG lifts from the
+ * toy chest. Camera follow is the pose controller's job. Click skips;
+ * reduced-motion snaps. DoubleDeal unbox lives in the adapter.
  */
 
 const RECIPES = {
     scramble: { toys: ["cube"], extras: [], pose: "scramble" },
-    doubledeal: { toys: ["deck"], extras: ["chest"], pose: "doubledeal" },
-    twodeck: { toys: ["deck"], extras: ["chest"], pose: "doubledeal" },
+    doubledeal: { toys: ["deck", "deck2"], extras: ["chest"], pose: "doubledeal" },
+    twodeck: { toys: ["deck", "deck2"], extras: ["chest"], pose: "doubledeal" },
 };
 
 function prefersReducedMotion() {
@@ -65,8 +65,11 @@ function samplePath(from, lift, mid, to, t) {
 
 export function createToyDirector(world) {
     let highlightId = null;
-    let flight = null;
+    let flights = [];
+    let lidAnim = null;
     let occupied = null;
+    let borrowGen = 0;
+    let skipGen = 0;
 
     function recipeOf(id) {
         return RECIPES[id] || null;
@@ -112,9 +115,9 @@ export function createToyDirector(world) {
         light.intensity = on ? 4.2 : 0;
     }
 
-    function applyFlight(t) {
-        if (!flight) return;
-        const { toy, from, lift, mid, to } = flight;
+    function applyFlight(item, t) {
+        if (!item) return;
+        const { toy, from, lift, mid, to } = item;
         const p = samplePath(from.position, lift, mid, to.position, t);
         toy.position.set(p.x, p.y, p.z);
         toy.rotation.set(
@@ -127,20 +130,19 @@ export function createToyDirector(world) {
         writeFlightDebug(t, toy);
     }
 
-    function finishFlight() {
-        if (!flight) return;
-        applyFlight(1);
-        setTravelLight(flight.toy, false);
-        flight.toy.userData.flightBusy = false;
-        const done = flight.onDone;
-        flight = null;
-        writeFlightDebug(1);
-        done?.();
+    function finishFlight(item) {
+        if (!item) return;
+        applyFlight(item, 1);
+        setTravelLight(item.toy, false);
+        item.toy.userData.flightBusy = false;
+        flights = flights.filter((entry) => entry !== item);
+        writeFlightDebug(1, item.toy);
+        item.onDone?.();
     }
 
     function flyToy(name, to, { snap, duration = FLY_MS } = {}) {
         const toy = world.toys[name];
-        if (!toy) return Promise.resolve();
+        if (!toy || !to) return Promise.resolve();
         const from = poseOf(toy);
         const dest = clonePose(to);
         if (snap || prefersReducedMotion()) {
@@ -162,7 +164,7 @@ export function createToyDirector(world) {
         };
         return new Promise((resolve) => {
             toy.userData.flightBusy = true;
-            flight = {
+            const item = {
                 toy,
                 from,
                 lift,
@@ -173,21 +175,57 @@ export function createToyDirector(world) {
                 duration,
                 onDone: resolve,
             };
+            flights.push(item);
             setTravelLight(toy, true);
-            applyFlight(0);
+            applyFlight(item, 0);
+        });
+    }
+
+    function animateLid(to, { snap, duration = 520 } = {}) {
+        if (!world.setChestLid) return Promise.resolve();
+        if (snap || prefersReducedMotion()) {
+            world.setChestLid(to);
+            return Promise.resolve();
+        }
+        const from = world.getChestLid?.() ?? 0;
+        return new Promise((resolve) => {
+            lidAnim = {
+                from,
+                to,
+                elapsed: 0,
+                last: performance.now(),
+                duration,
+                onDone: resolve,
+            };
         });
     }
 
     async function borrow(algorithmId, { snap = false } = {}) {
         const recipe = recipeOf(algorithmId);
         if (!recipe) throw new Error(`unknown algorithm: ${algorithmId}`);
-        if (occupied === algorithmId && !flight) return recipe;
-        if (flight) skip();
+        if (occupied === algorithmId && !flights.length && !lidAnim) return recipe;
+        if (flights.length || lidAnim) skip();
         occupied = algorithmId;
-        const name = recipe.toys[0];
-        world.setSlotEmpty(name, true);
-        await flyToy(name, world.getTablePose(name), { snap });
-        const toy = world.toys[name];
+        const token = ++borrowGen;
+        const primary = recipe.toys[0];
+        world.setSlotEmpty(primary, true);
+        const extras = recipe.toys.slice(1);
+        const startedSkip = skipGen;
+        let extraJob = null;
+        if (recipe.extras.includes("chest") && extras.length) {
+            extraJob = (async () => {
+                await animateLid(1, { snap });
+                if (token !== borrowGen || startedSkip !== skipGen) return;
+                for (const name of extras) {
+                    if (token !== borrowGen || startedSkip !== skipGen) return;
+                    world.setSlotEmpty(name, true);
+                    await flyToy(name, world.getTablePose(name), { snap, duration: FLY_MS - 200 });
+                }
+            })();
+        }
+        await flyToy(primary, world.getTablePose(primary), { snap });
+        if (snap && extraJob) await extraJob;
+        const toy = world.toys[primary];
         if (toy) toy.userData.seatedY = toy.position.y;
         clearHighlight();
         return recipe;
@@ -195,35 +233,63 @@ export function createToyDirector(world) {
 
     async function home({ snap = false } = {}) {
         if (!occupied) return;
-        if (flight) {
-            flight.toy.userData.flightBusy = false;
-            const resolve = flight.onDone;
-            flight = null;
-            resolve?.();
-        }
+        borrowGen += 1;
+        if (flights.length || lidAnim) skip();
         const recipe = recipeOf(occupied);
-        const name = recipe.toys[0];
-        await flyToy(name, world.getShelfPose(name), { snap });
-        world.setSlotEmpty(name, false);
+        const names = recipe.toys.filter((name) => world.toys[name]);
+        await Promise.all(names.map((name) => flyToy(name, world.getShelfPose(name), { snap })));
+        for (const name of names) world.setSlotEmpty(name, false);
+        if (recipe.extras.includes("chest")) await animateLid(0, { snap });
         occupied = null;
-        writeFlightDebug("", world.toys[name]);
+        writeFlightDebug("", world.toys[names[0]]);
     }
 
     function skip() {
-        if (!flight) return;
-        finishFlight();
+        skipGen += 1;
+        if (lidAnim) {
+            world.setChestLid?.(lidAnim.to);
+            const done = lidAnim.onDone;
+            lidAnim = null;
+            done?.();
+        }
+        for (const item of [...flights]) finishFlight(item);
+        if (!occupied) return;
+        const recipe = recipeOf(occupied);
+        if (!recipe) return;
+        if (recipe.extras.includes("chest")) world.setChestLid?.(1);
+        for (const name of recipe.toys.slice(1)) {
+            const toy = world.toys[name];
+            const pose = world.getTablePose?.(name);
+            if (!toy || !pose) continue;
+            toy.userData.flightBusy = false;
+            world.applyPose(toy, pose);
+            toy.updateMatrixWorld?.(true);
+        }
     }
 
     function update() {
-        if (!flight) return;
         const now = performance.now();
+        if (lidAnim) {
+            lidAnim.elapsed += Math.min(50, Math.max(0, now - lidAnim.last));
+            lidAnim.last = now;
+            const u = Math.min(1, lidAnim.elapsed / lidAnim.duration);
+            world.setChestLid?.(lerp(lidAnim.from, lidAnim.to, easeOutCubic(u)));
+            if (u >= 1) {
+                const done = lidAnim.onDone;
+                lidAnim = null;
+                done?.();
+            }
+        }
+        if (!flights.length) return;
         // 50ms cap: 60fps stays real-time (~1.8s). A hitch cannot skip
         // the arc, and software-GL still draws the in-between poses.
-        flight.elapsed += Math.min(50, Math.max(0, now - flight.last));
-        flight.last = now;
-        const u = Math.min(1, flight.elapsed / flight.duration);
-        applyFlight(u);
-        if (u >= 1) finishFlight();
+        for (const item of [...flights]) {
+            item.elapsed += Math.min(50, Math.max(0, now - item.last));
+            item.last = now;
+            const u = Math.min(1, item.elapsed / item.duration);
+            applyFlight(item, u);
+            if (u >= 1) finishFlight(item);
+        }
     }
 
     return {
@@ -236,13 +302,13 @@ export function createToyDirector(world) {
         recipeOf,
         prefersReducedMotion,
         get busy() {
-            return Boolean(flight);
+            return Boolean(flights.length || lidAnim);
         },
         get occupied() {
             return occupied;
         },
         get flying() {
-            return flight?.toy ?? null;
+            return flights[0]?.toy ?? null;
         },
     };
 }

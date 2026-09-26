@@ -23,6 +23,7 @@ import MegaDreifach.Link2.FromBe
 import MegaDreifach.Link2.FromBeShort
 import MegaDreifach.Link2.Factorial
 import MegaDreifach.Link2.PeelLimb
+import MegaDreifach.Link2.FactTwo
 
 namespace MegaDreifach.Link2
 
@@ -91,11 +92,21 @@ namespace MegaDreifach.Link2
   (a positive digit times a two-limb factorial). Not `51!`. Not `phi_chunk`.
   Not `phi_inv`.
 
+  CLOSED: `big_factorial_two`, `big_mul_two`. Domain `n ≤ 19`. `12!` is one
+  limb. `13!` through `19!` are two limbs (`19! < 10^18`); each step multiplies
+  that accumulator by `i ≤ 19` and the product stays below `10^18`. `20!` is
+  three limbs. Not `51!`.
+
+  CLOSED: `peel_leading_zero_two`, `peel_leading_zero_digit_two`. Domain
+  `d ≤ 19` on the zero bigint. The factoradic digit is `0 / d! = 0`. The
+  closing multiply is the zero coefficient times `d!` (two limbs for `d ≥ 13`),
+  which short-circuits. Not a positive rank. Not `phi_chunk`. Not `phi_inv`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
-  bytes). Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
-  `range_list_refines` in `EvenRank.lean`. A positive corner or edge rank is
-  outside this limb fragment.
+  bytes; zero peel now reaches `d ≤ 19`, not 51). Positive `range_list`
+  (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in
+  `EvenRank.lean`. A positive corner or edge rank is outside this limb fragment.
 -/
 
 end MegaDreifach.Link2

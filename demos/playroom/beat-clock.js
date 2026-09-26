@@ -1,3 +1,5 @@
+import { CLOCK_STEP_MS } from "./constants.js";
+
 /**
  * Labeled waits/tweens on the same rAF + generation pattern as
  * `table.js` and `toy-director.js`. Skip / reduced-motion snap to the
@@ -28,6 +30,14 @@ export function prefersReducedMotion() {
     return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
 }
 
+/** One paint so mesh/CSS work cannot starve the 3D rAF loop. */
+export function yieldFrame() {
+    return new Promise((resolve) => {
+        if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => resolve());
+        else setTimeout(resolve, 0);
+    });
+}
+
 export function createBeatClock({ reduced } = {}) {
     let gen = 0;
     const snap = Boolean(reduced || prefersReducedMotion());
@@ -53,6 +63,8 @@ export function createBeatClock({ reduced } = {}) {
         }
         return new Promise((resolve) => {
             const start = performance.now();
+            let last = start;
+            let elapsed = 0;
             const mine = g;
             function tick(now) {
                 if (mine !== gen) {
@@ -60,7 +72,9 @@ export function createBeatClock({ reduced } = {}) {
                     resolve();
                     return;
                 }
-                const t = Math.min(1, (now - start) / ms);
+                elapsed += Math.min(CLOCK_STEP_MS, Math.max(0, now - last));
+                last = now;
+                const t = Math.min(1, elapsed / ms);
                 apply(t);
                 if (t < 1) requestAnimationFrame(tick);
                 else resolve();

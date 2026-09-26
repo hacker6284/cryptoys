@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { createBeatClock, easeInOutCubic, easeOutCubic, easeOutQuart, lerp } from "./beat-clock.js";
+import { createBeatClock, easeInOutCubic, easeOutCubic, easeOutQuart, lerp, yieldFrame } from "./beat-clock.js";
+
+assert.equal(typeof yieldFrame, "function");
 
 assert.equal(lerp(0, 10, 0), 0);
 assert.equal(lerp(0, 10, 1), 10);

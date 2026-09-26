@@ -54,6 +54,17 @@ assert.match(adapters, /reseatCube/);
 assert.match(adapters, /seatSurface/, "reseat uses the intended surface, not flightBusy");
 assert.equal(adapters.includes("flightBusy ? \"table\" : \"shelf\""), false, "do not infer table vs shelf from flightBusy");
 assert.match(adapters, /playDualUnbox/);
+assert.match(adapters, /playRestow/);
+{
+    const enterFn = adapters.slice(adapters.indexOf("async enter"), adapters.indexOf("async leave"));
+    assert.ok(
+        enterFn.indexOf("playDualUnbox") < enterFn.indexOf("stageCardTable")
+            || enterFn.indexOf("unboxJob = playDualUnbox") < enterFn.indexOf("setupJob"),
+        "physical unbox starts before the 104-card table alloc",
+    );
+    assert.match(adapters, /if \(unbox && unbox2\) return unbox/, "click must not re-adopt / shelfHome");
+}
+assert.match(adapters, /gatherSessionTable/);
 assert.match(adapters, /followLive/);
 assert.match(adapters, /createUnboxRig/);
 assert.match(adapters, /pickMsgTextures/);
@@ -63,6 +74,7 @@ assert.match(adapters, /continueTo/);
 assert.match(adapters, /deck2/);
 assert.match(adapters, /msgPacket/);
 assert.match(adapters, /label: "MSG"/);
+assert.match(adapters, /leaveMs/);
 assert.equal(adapters.includes("cutToTable"), false, "enter does not hide-prop / show-table");
 assert.equal(adapters.includes("hideProp"), false, "happy path does not hide the unbox prop");
 assert.equal(adapters.includes("handoffToTable"), false);
@@ -77,11 +89,14 @@ assert.equal(adapters.includes("DEAL_SCALE"), false, "adapter does not scale the
 const worldSrc = readFileSync(new URL("./world.js", import.meta.url), "utf8");
 assert.equal(worldSrc.includes("function makeCubeToy"), false, "hub cube is not a hand-rolled mesh");
 assert.match(worldSrc, /seatOnSurface/, "world seats through the shared helper");
+assert.match(worldSrc, /width === viewW/, "resize is a no-op when the canvas did not change");
 assert.match(worldSrc, /keepFitted/, "host render re-applies Twisty fit before draw");
 assert.match(worldSrc, /if \(slots\[name\]\) slots\[name\]\.slot/, "chest deck has no shelf slot");
 assert.match(worldSrc, /deck2/);
 assert.match(worldSrc, /pivot\.attach\(lid\)/, "lid keeps its authored closed pose");
-assert.match(worldSrc, /lidWorld\.max\.z/, "hinge is the back seam, not the hasp");
+assert.match(worldSrc, /lidWorld\.min\.z/, "hinge is the wall seam after +π/2 yaw");
+assert.match(worldSrc, /openAngle = -1\.45/, "lid swings −X so the cavity faces the room");
+assert.equal(worldSrc.includes("lidWorld.max.z"), false, "do not hinge on the room-facing +Z seam");
 assert.equal(worldSrc.includes("-gb.min.z"), false, "lid is not rebuilt from geometry bbox");
 assert.equal(worldSrc.includes("rotation.x = -0.95"), false, "old front-hinge swing is gone");
 
@@ -91,6 +106,11 @@ assert.match(directorSrc, /seatSurface = "shelf"/, "leave fly records shelf as t
 assert.match(directorSrc, /animateLid\(0/, "chest closes after MSG leaves");
 assert.equal(directorSrc.includes("setChestLid?.(1)"), false, "skip does not leave the chest stuck open");
 assert.match(directorSrc, /setChestLid\?\.\(0\)/);
+assert.match(directorSrc, /abandonFlights/);
+assert.match(directorSrc, /prepareHome/);
+assert.match(directorSrc, /homing/);
+assert.match(directorSrc, /recipeMotionMs/);
+assert.match(directorSrc, /easeInOutCubic/);
 
 const cardStage = readFileSync(new URL("./card-stage.js", import.meta.url), "utf8");
 assert.equal(cardStage.includes("fadeTree"), false);
@@ -101,9 +121,33 @@ const app = readFileSync(new URL("./app.js", import.meta.url), "utf8");
 assert.match(app, /skipEnter/);
 assert.match(app, /prepareEnter/);
 assert.match(app, /followEnter/);
-assert.match(app, /trackActive/);
+assert.match(app, /followLeave/);
+assert.match(app, /trackToys/);
 assert.match(app, /FOLLOW_HOLD_MS/);
+{
+    const startAlgo = app.slice(app.indexOf("async function startAlgo"), app.indexOf("async function leaveAlgo"));
+    assert.ok(
+        startAlgo.indexOf("followEnter") < startAlgo.indexOf("await prep;"),
+        "hub camera starts before prepareEnter finishes",
+    );
+    assert.match(startAlgo, /trackToys\(/, "enter frames the full toy set, not busy-only");
+    assert.match(startAlgo, /extras\?\.includes\("chest"\)/, "Scramble enter does not track the chest");
+}
+assert.equal(app.includes("doubledeal.prepareEnter"), false, "do not hide-build DD on the hub");
+assert.match(app, /playroomTray/);
+
+const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
+assert.equal(
+    css.includes("height: calc(100dvh - var(--io-band))"),
+    false,
+    "portrait tray must not shrink the WebGL canvas",
+);
+assert.match(css, /translateY\(100%\)/, "portrait io band slides over the canvas");
 assert.match(app, /continueTo/);
+assert.match(app, /borrowMs/);
+assert.match(app, /homeMs/);
+assert.match(app, /leaveMs/);
+assert.match(app, /prepareHome/);
 const startAt = app.indexOf("async function startAlgo");
 const leaveAt = app.indexOf("async function leaveAlgo");
 assert.ok(startAt >= 0 && leaveAt > startAt);
@@ -122,7 +166,8 @@ assert.equal(
     false,
     "hub→play is one director for both algos",
 );
-assert.ok(app.includes("via: \"shelf\""), "leave may still ease home via shelf");
+assert.equal(app.includes("via: \"shelf\""), false, "leave does not ease home via shelf");
+assert.equal(app.includes("trackToy("), false, "leave tracks the full toy set, not one named toy");
 const tickAt = app.indexOf("requestAnimationFrame(tick)");
 const deepLinkAt = app.indexOf("void startAlgo(initialAlgo)");
 assert.ok(tickAt >= 0 && deepLinkAt > tickAt, "rAF tick starts before deep-link DoubleDeal enter");
@@ -132,6 +177,7 @@ assert.equal(app.includes("poses.snap(\"doubledeal\")"), false, "skip does not s
 const physical = readFileSync(new URL("./unbox-physical.js", import.meta.url), "utf8");
 assert.match(physical, /export async function playUnbox/);
 assert.match(physical, /export async function playDualUnbox/);
+assert.match(physical, /export async function playRestow/);
 assert.match(physical, /setFlap/);
 assert.match(physical, /hopTo/);
 assert.match(physical, /seatToys/);
@@ -148,6 +194,17 @@ assert.match(rigSrc, /bodyHex/);
 
 const form = readFileSync(new URL("./table-form.js", import.meta.url), "utf8");
 assert.match(form, /formSessionTable/);
+assert.match(form, /gatherSessionTable/);
+assert.match(adapters, /setCardsVisible/);
+{
+    const gatherStart = form.indexOf("export async function gatherSessionTable");
+    const gatherEnd = form.indexOf("function hopSeat");
+    assert.equal(
+        form.slice(gatherStart, gatherEnd).includes("setCardsVisible"),
+        false,
+        "gather leaves piles visible; adapter hides on restow",
+    );
+}
 assert.match(form, /shrinkHero/);
 assert.match(form, /msgPacket/);
 assert.match(form, /MSG_FACE_INDEXES/);
@@ -164,6 +221,7 @@ assert.match(motion, /export function fitToLocalEdge/);
 assert.match(motion, /export function keepFitted/);
 assert.match(motion, /export function measureWorldBox/);
 assert.match(motion, /export function followEnter/);
+assert.match(motion, /export function followLeave/);
 assert.match(motion, /export function trackActive/);
 assert.match(motion, /export function trackToys/);
 assert.match(motion, /export function continueTo/);
@@ -173,11 +231,25 @@ assert.equal(motion.includes("fadeTree"), false, "shared motion does not fade");
 assert.equal(motion.includes("gsap"), false);
 assert.equal(motion.includes("cutToTable"), false);
 
+const captureSrc = readFileSync(new URL("./capture-strip.js", import.meta.url), "utf8");
+assert.match(captureSrc, /debugCapture/);
+assert.match(captureSrc, /installCapture/);
+assert.match(captureSrc, /pendingBeat/);
+assert.match(captureSrc, /CLOCK_STEP_MS/);
+assert.match(app, /installCapture/);
+assert.equal(captureSrc.includes("gsap"), false);
+
 const posesCtl = readFileSync(new URL("./pose-controller.js", import.meta.url), "utf8");
 assert.match(posesCtl, /function followTo/);
 assert.match(posesCtl, /function applyFollow/);
+assert.match(posesCtl, /function applyReturn/);
 assert.match(posesCtl, /function followLive/);
-assert.match(posesCtl, /mode: "follow"/);
+assert.match(posesCtl, /mode: opts.mode === "return" \? "return" : "follow"/);
+assert.match(posesCtl, /settleAt/);
+assert.match(posesCtl, /easeOutCubic/);
+assert.match(posesCtl, /CLOCK_STEP_MS/);
+assert.match(posesCtl, /tween.from = capture\(\)/, "enter hold recaptures so look-lead does not snap back");
+assert.equal(posesCtl.includes("look.copy(trackPos)"), false, "goTo track eases look, never copies");
 assert.equal(posesCtl.includes("gsap"), false);
 
 console.log("unbox tests ok");

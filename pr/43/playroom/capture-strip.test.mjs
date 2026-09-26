@@ -106,9 +106,11 @@ assert.match(app, /capture\.end/);
 assert.match(app, /markBeat\("enter-start"\)/);
 assert.match(app, /markBeat\("enter-landed"\)/);
 assert.match(app, /markBeat\("enter-hold"\)/);
+assert.match(app, /capture\.snapshot\?\.\("enter-hold"\)/);
 assert.match(app, /markBeat\("leave-start"\)/);
 assert.match(app, /markBeat\("hub-settle"\)/);
 assert.match(app, /markBeat\("hub-hold"\)/);
+assert.match(app, /capture\.snapshot\?\.\("hub-hold"\)/);
 
 const director = readFileSync(new URL("./toy-director.js", import.meta.url), "utf8");
 assert.match(director, /cube-fly/);

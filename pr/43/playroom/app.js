@@ -146,6 +146,7 @@ try {
             if (capture.enabled) {
                 await new Promise((resolve) => setTimeout(resolve, 1600));
                 markBeat("enter-hold");
+                capture.snapshot?.("enter-hold");
             }
             capture.end();
             if (leaving) return;
@@ -203,6 +204,7 @@ try {
         if (capture.enabled) {
             await new Promise((resolve) => setTimeout(resolve, 1600));
             markBeat("hub-hold");
+            capture.snapshot?.("hub-hold");
         }
         activeAlgo = null;
         leaving = false;

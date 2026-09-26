@@ -500,10 +500,10 @@ export function createScrambleSession({
     }
 
     function refreshDigest() {
-        if (fileSource) {
-            void hashSelectedFile();
-            return;
-        }
+        // Typed Message only. A selected file must not be rehashed from
+        // input/recompute — that abort+restart loop leaves Digest empty
+        // while the progress bar keeps moving.
+        if (fileSource) return;
         // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / teach.
         job += 1;
         markPlay(false);
@@ -623,23 +623,19 @@ export function createScrambleSession({
             setFileProgress(processed, total);
         };
         try {
-            const { digest } = hashFileFn
-                ? await hashFile(file, {
-                    version,
-                    workerUrl,
-                    chunkBytes: DEMO_FILE_CHUNK_BYTES,
-                    readyMs: DEMO_FILE_WORKER_READY_MS,
-                    signal: abort.signal,
-                    hashInline: hashFileFn,
-                    onProgress,
-                    fallback: (opts) => hashSilentOnHost(opts.file, opts),
-                })
-                : await hashSilentOnHost(file, {
-                    onProgress,
-                    signal: abort.signal,
-                });
+            const { digest } = await hashFile(file, {
+                version,
+                workerUrl,
+                chunkBytes: DEMO_FILE_CHUNK_BYTES,
+                readyMs: DEMO_FILE_WORKER_READY_MS,
+                signal: abort.signal,
+                hashInline: hashFileFn,
+                onProgress,
+                fallback: (opts) => hashSilentOnHost(opts.file, opts),
+            });
             if (token !== job || abort.signal.aborted) return;
             hashing = false;
+            if (!digest?.length) throw new Error("Could not hash this file.");
             const bytes = modest ? Array.from(new Uint8Array(await file.arrayBuffer())) : [];
             setIoNote(modest ? "" : walkNote());
             applyFileDigest(digest, bytes);
@@ -944,6 +940,10 @@ export function createScrambleSession({
             $$("[data-version]").forEach((item) => item.classList.toggle("on", item === button));
             const genLabel = $("#gen-label");
             if (genLabel) genLabel.textContent = `Gen ${version}`;
+            if (fileSource) {
+                void hashSelectedFile();
+                return;
+            }
             refreshDigest();
         }, listen);
     });
@@ -953,6 +953,7 @@ export function createScrambleSession({
             encoding = button.dataset.encoding;
             $$("[data-encoding]").forEach((item) => item.classList.toggle("on", item === button));
             input.placeholder = encoding === "hex" ? "a7  or  0xA7" : "hello";
+            if (fileSource) return;
             refreshDigest();
         }, listen);
     });

@@ -259,4 +259,25 @@ session.enterTeach();
 assert.equal(algs.length, algsAfterLarge, "large file must not build a leave timeline");
 
 session.dispose();
+
+const dockSession = createScrambleSession({
+    view,
+    specUrl: "about:blank",
+    root,
+});
+nodes.message.value = "hello";
+nodes.digest.value = "";
+const dockBytes = new Uint8Array(24 * 1024);
+dockBytes[0] = 0xff;
+dockBytes[1] = 0xd8;
+dockBytes[2] = 0xff;
+await dockSession.applyFile(new File([dockBytes], "dock.jpg", { type: "image/jpeg" }));
+assert.ok(nodes.digest.value.startsWith("0x"), "dock path (no hashFileFn) writes Digest");
+assert.ok(nodes.digest.value.length > 4, "dock Digest is nonempty hex");
+assert.equal(nodes["message-file-progress"].hidden, true, "dock path clears progress after Digest");
+assert.match(nodes["message-file-name"].textContent, /dock\.jpg/);
+const dockHex = nodes.digest.value;
+dockSession.recompute();
+assert.equal(nodes.digest.value, dockHex, "recompute must not restart or clear a file Digest");
+dockSession.dispose();
 console.log("scramble session digest/timeline tests ok");

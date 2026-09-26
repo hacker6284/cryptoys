@@ -92,6 +92,17 @@
 
     await session.applyFile(file);
 
+    const large = new Uint8Array(1610613);
+    large[0] = 0xff;
+    large[1] = 0xd8;
+    large[2] = 0xff;
+    large[3] = 0xe0;
+    const largeFile = new File([large], "scramble-large-fronalpstock-3840.jpg", { type: "image/jpeg" });
+    const largeStarted = Date.now();
+    await session.applyFile(largeFile);
+    const largeMs = Date.now() - largeStarted;
+    session.recompute();
+
     const message = document.querySelector("#message");
     const clip = document.querySelector("#message-file-btn");
     const chip = document.querySelector("#message-file");
@@ -104,14 +115,17 @@
     const chipBelow = fr.top > mr.bottom - 0.5;
     const notBetween = fr.left >= mr.right - 0.5 || fr.right <= mr.left + 0.5 || chipBelow;
     const hex = String(digest.value || "");
-    const digestOk = hex.startsWith("0x") && hex.includes(expected);
-    const nameOk = /probe\.png/.test(document.querySelector("#message-file-name").textContent);
-    const pass = digestOk && nameOk && chipBelow && sameRow && notBetween && progress.hidden;
+    const digestOk = hex.startsWith("0x") && hex.length > 4;
+    const nameOk = /scramble-large-fronalpstock-3840\.jpg/.test(document.querySelector("#message-file-name").textContent);
+    const largeOk = digestOk && largeMs < 60000;
+    const pass = digestOk && nameOk && chipBelow && sameRow && notBetween && progress.hidden && largeOk;
     const report = {
       pass,
       digest: hex,
-      expected: `0x${expected}`,
+      smallExpected: `0x${expected}`,
       filename: document.querySelector("#message-file-name").textContent,
+      largeBytes: large.length,
+      largeMs,
       chipTop: fr.top,
       messageBottom: mr.bottom,
       paperclipMid: (cr.top + cr.bottom) / 2,

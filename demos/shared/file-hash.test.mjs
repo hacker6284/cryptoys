@@ -137,6 +137,54 @@ const viaWorker = await hashFile(file, {
 assert.deepEqual(viaWorker.digest, [0, 2, 4], "worker protocol returns the incremental digest");
 assert.deepEqual(workerProgress, [2, 4], "main thread only hears progress, never setAlg");
 
+function mockOneShotWorker() {
+    const inc = createIncrementalHasher(stubApi());
+    const listeners = { message: [], error: [] };
+    return {
+        addEventListener(type, fn) { (listeners[type] ||= []).push(fn); },
+        removeEventListener(type, fn) {
+            listeners[type] = (listeners[type] || []).filter((item) => item !== fn);
+        },
+        terminate() {},
+        postMessage(data) {
+            queueMicrotask(() => {
+                let replies = [];
+                if (data.type === "start") {
+                    replies = [{ type: "ready" }];
+                } else if (data.type === "hash") {
+                    inc.start(data.version);
+                    inc.push(data.bytes);
+                    replies = [
+                        { type: "progress", processed: data.bytes.length, total: data.bytes.length },
+                        { type: "done", digest: inc.finish().digest },
+                    ];
+                }
+                for (const reply of replies) {
+                    for (const fn of listeners.message) fn({ data: reply });
+                }
+            });
+        },
+    };
+}
+
+const prevWorker = globalThis.Worker;
+globalThis.Worker = function Worker() {
+    return mockOneShotWorker();
+};
+try {
+    const oneShotProgress = [];
+    const viaOneShot = await hashFile(file, {
+        version: 2,
+        workerUrl: "mock:hash-worker",
+        onProgress(info) { oneShotProgress.push(info.processed); },
+    });
+    assert.deepEqual(viaOneShot.digest, [0, 2, 4], "one-shot worker hash writes Digest");
+    assert.deepEqual(oneShotProgress, [4], "one-shot worker posts progress before done");
+} finally {
+    if (prevWorker) globalThis.Worker = prevWorker;
+    else delete globalThis.Worker;
+}
+
 const viaFallback = await hashFile(file, {
     version: 2,
     workerUrl: "",
@@ -215,6 +263,7 @@ assert.match(src, /new Worker/);
 
 const worker = readFileSync(new URL("../scramble/hash-worker.js", import.meta.url), "utf8");
 assert.match(worker, /createFastHasher/, "worker uses the fast JS cube, not generated update");
+assert.match(worker, /type === "hash"/, "worker accepts one-shot hash so done cannot stall");
 assert.doesNotMatch(worker, /_scramble_impl\.mjs/);
 assert.doesNotMatch(worker, /setAlg/);
 assert.doesNotMatch(worker, /mapTraceToAlg/);
@@ -227,7 +276,9 @@ assert.match(scramble, /function hashSilentOnHost\(/, "host fallback is the sile
 assert.doesNotMatch(scramble, /if \(modest\) \{\s*got = await hashWithPublicApi/);
 const hashFn = scramble.match(/async function hashSelectedFile\(\) \{[\s\S]*?\n    \}/);
 assert.ok(hashFn, "hashSelectedFile is the file Digest path");
-assert.match(hashFn[0], /hashSilentOnHost/, "playroom dock hashes on the fast host cube");
+assert.match(hashFn[0], /await hashFile\(/, "playroom dock uses hashFile (worker + host fallback)");
+assert.doesNotMatch(hashFn[0], /hashFileFn\s*\?/, "dock must not skip the worker on the product path");
+assert.match(hashFn[0], /hashSilentOnHost/, "host fallback is the silent walk, not text update");
 assert.match(hashFn[0], /applyFileDigest\(digest/, "Digest hex is written when the hasher finishes");
 assert.match(hashFn[0], /setFileProgress/, "hashing shows progress chrome on pick");
 assert.match(hashFn[0], /holdFileBusy/, "tiny files keep the busy bar for ~200ms");
@@ -239,6 +290,9 @@ assert.doesNotMatch(hashFn[0], /mapTraceToAlg/);
 assert.doesNotMatch(hashFn[0], /bytesOf\(/, "file path must not encode bytes as typed Message text");
 assert.match(scramble, /function play\(\) \{[\s\S]*?ensureTimeline\(\)/);
 assert.match(scramble, /canWalkPayload/);
+const digestFn = scramble.match(/function refreshDigest\(\) \{[\s\S]*?\n    \}/);
+assert.ok(digestFn, "refreshDigest is the live Message path");
+assert.match(digestFn[0], /if \(fileSource\) return/, "typed Message must not abort an in-flight file hash");
 
 const adapters = readFileSync(new URL("../playroom/adapters.js", import.meta.url), "utf8");
 assert.match(adapters, /id="message-file-btn"/);

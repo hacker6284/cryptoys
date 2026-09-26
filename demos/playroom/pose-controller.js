@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { TWEEN_MS } from "./constants.js";
+import { easeOutCubic } from "./beat-clock.js";
+import { CLOCK_STEP_MS, TWEEN_MS } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
 
 const FRAME_LAMBDA = 7.2;
@@ -89,9 +90,12 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         const fit = radius > 0
             ? (radius / Math.tan(Math.max(0.12, fovRad / 2))) * 1.18
             : destDist;
-        const dist = Math.min(1.42, Math.max(0.46, fit));
+        // Wide enough to hold two decks + chest. The old 1.42 cap
+        // cropped to empty felt and dropped MSG out of frame.
+        const cap = radius > 0.32 ? 3.6 : 2.45;
+        const dist = Math.min(cap, Math.max(0.95, fit));
         followPos.copy(focus).addScaledVector(destOffset, dist);
-        followPos.y = Math.max(followPos.y, focus.y + 0.36);
+        followPos.y = Math.max(followPos.y, focus.y + 0.58);
         return followPos;
     }
 
@@ -108,8 +112,11 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             camera.position.lerpVectors(from.position, pose.position, k);
             camera.fov = from.fov + (pose.fov - from.fov) * k;
             if (trackPos) {
-                if (t < 0.72) look.copy(trackPos);
-                else look.lerpVectors(trackPos, pose.target, (t - 0.72) / 0.28);
+                // Ease onto the live toy — never copy/snap the look.
+                const lookU = easeInOutCubic(smoothstep(0, 0.4, t));
+                const settleU = easeInOutCubic(smoothstep(0.72, 1, t));
+                chaseLook.copy(from.target).lerp(trackPos, lookU);
+                look.copy(chaseLook).lerp(pose.target, settleU);
             } else {
                 look.lerpVectors(from.target, pose.target, k);
             }
@@ -131,11 +138,46 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     }
 
     /**
+     * Play→hub pull-back. Camera eases from the live seated shot to
+     * the room pose (never a dest-offset crop of one toy). Look
+     * tracks the full toy set, then settles on the hub target.
+     */
+    function applyReturn(pose, t = 1, from = null, trackPos = null, settleAt = 0.78) {
+        if (!from || t <= 0) {
+            apply(pose, 0, from, null);
+            return;
+        }
+        if (t >= 1) {
+            apply(pose, 1);
+            return;
+        }
+        // Ease-out pull-back: open the seated crop immediately so
+        // gather / restow / fly-home read in the room, not on empty felt.
+        const openAt = Math.min(0.7, Math.max(0.45, settleAt ?? 0.62));
+        const moveU = easeOutCubic(smoothstep(0, openAt, t));
+        camera.position.lerpVectors(from.position, pose.position, moveU);
+        camera.fov = from.fov + (pose.fov - from.fov) * moveU;
+        const roomU = easeOutCubic(smoothstep(0, 0.5, t));
+        const lookU = easeInOutCubic(smoothstep(0.16, 0.58, t)) * 0.16;
+        if (trackPos) {
+            chaseLook.copy(from.target).lerp(pose.target, roomU);
+            chaseLook.lerp(trackPos, lookU);
+            look.copy(chaseLook);
+        } else {
+            look.lerpVectors(from.target, pose.target, moveU);
+        }
+        camera.up.set(0, 1, 0);
+        camera.updateProjectionMatrix();
+        camera.lookAt(look);
+        if (controls) controls.target.copy(look);
+    }
+
+    /**
      * Follow-cam: look eases onto the live track (never copies/snaps),
      * camera chases a dest-relative offset of that focus, then both
      * settle into the named play pose. No via named shots.
      */
-    function applyFollow(pose, t = 1, from = null, trackPos = null) {
+    function applyFollow(pose, t = 1, from = null, trackPos = null, settleAt = 0.78) {
         if (!from || t <= 0) {
             apply(pose, 0, from, null);
             return;
@@ -150,15 +192,16 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         }
         const focus = trackPos ? followFocus.copy(trackPos) : followFocus.copy(pose.target);
         fitFollowPos(pose, focus, trackedRadius);
-        const lookU = easeInOutCubic(smoothstep(0, 0.42, t));
-        const moveU = easeInOutCubic(smoothstep(0.04, 0.8, t));
-        const settleU = easeInOutCubic(smoothstep(0.78, 1, t));
+        const lookU = easeInOutCubic(smoothstep(0.06, 0.55, t));
+        const moveU = easeInOutCubic(smoothstep(0.2, 0.9, t));
+        const settleStart = Math.min(0.95, Math.max(0.8, settleAt ?? 0.9));
+        const settleU = easeInOutCubic(smoothstep(settleStart, 1, t));
         chasePos.copy(from.position).lerp(followPos, moveU);
         camera.position.copy(chasePos).lerp(pose.position, settleU);
-        camera.position.y = Math.max(camera.position.y, focus.y + 0.34);
+        camera.position.y = Math.max(camera.position.y, focus.y + 0.5);
         chaseLook.copy(from.target).lerp(focus, lookU);
         look.copy(chaseLook).lerp(pose.target, settleU);
-        const wide = trackedRadius > 0.5 ? Math.min(46, pose.fov + 8) : pose.fov;
+        const wide = trackedRadius > 0.28 ? Math.min(44, Math.max(from.fov, pose.fov + 8)) : pose.fov;
         camera.fov = from.fov + (wide - from.fov) * moveU;
         camera.up.set(0, 1, 0);
         camera.updateProjectionMatrix();
@@ -257,7 +300,8 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
             holding: true,
             duration: opts.duration ?? duration,
             track: opts.track || null,
-            mode: "follow",
+            mode: opts.mode === "return" ? "return" : "follow",
+            settleAt: opts.settleAt,
             waiters: [],
         };
         emit(current, { tweening: true, next: resolved });
@@ -284,7 +328,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         const dt = Math.min(0.05, Math.max(0, dtMs / 1000));
         const k = 1 - Math.exp(-5.1 * dt);
         camera.position.lerp(followPos, k);
-        camera.position.y = Math.max(camera.position.y, focus.y + 0.34);
+        camera.position.y = Math.max(camera.position.y, focus.y + 0.52);
         look.lerp(focus, k);
         const wantFov = trackedRadius > 0.5 ? Math.min(46, pose.fov + 8) : pose.fov;
         camera.fov += (wantFov - camera.fov) * k;
@@ -350,25 +394,41 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     }
 
     function update(now = performance.now()) {
-        const dt = Math.min(50, Math.max(0, now - lastFrame));
+        const dt = Math.min(CLOCK_STEP_MS, Math.max(0, now - lastFrame));
         lastFrame = now;
         if (tween) {
             setControlsEnabled(false);
-            const stepDt = Math.min(50, Math.max(0, now - tween.last));
+            const stepDt = Math.min(CLOCK_STEP_MS, Math.max(0, now - tween.last));
             tween.last = now;
             if (tween.holding) {
                 tween.holdElapsed += stepDt;
                 if (tween.holdElapsed < tween.delay) {
                     apply(tween.to, 0, tween.from, null);
+                    // Hub hold keeps the room position so the lift
+                    // reads, but look eases onto the toys. A frozen
+                    // look then a whip at delay-end was the hub→enter
+                    // jump. Leave uses holdMs 0 and never hits this.
+                    if (tween.mode === "follow") {
+                        const lead = readTrack(tween.track);
+                        if (lead) {
+                            const u = easeInOutCubic(tween.holdElapsed / tween.delay);
+                            look.copy(tween.from.target).lerp(lead, u * 0.4);
+                            camera.lookAt(look);
+                            if (controls) controls.target.copy(look);
+                        }
+                    }
                     return current;
                 }
+                if (tween.mode === "follow") tween.from = capture();
                 tween.holding = false;
             }
             tween.elapsed += stepDt;
             const trackPos = readTrack(tween.track);
             const u = Math.min(1, tween.elapsed / tween.duration);
-            if (tween.mode === "follow") {
-                applyFollow(tween.to, u, tween.from, trackPos);
+            if (tween.mode === "return") {
+                applyReturn(tween.to, u, tween.from, trackPos, tween.settleAt);
+            } else if (tween.mode === "follow") {
+                applyFollow(tween.to, u, tween.from, trackPos, tween.settleAt);
             } else if (tween.via && u < tween.viaT) {
                 apply(tween.via, u / tween.viaT, tween.from, null);
             } else if (tween.via) {

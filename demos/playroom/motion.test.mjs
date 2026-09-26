@@ -4,6 +4,7 @@ import {
     centroidOf,
     continueTo,
     followEnter,
+    followLeave,
     hopTo,
     measureLocalBox,
     measureWorldBox,
@@ -126,6 +127,17 @@ assert.equal(follows[0].name, "doubledeal");
 assert.equal(follows[0].opts.delay, 220);
 assert.equal(follows[0].opts.duration, 1800);
 assert.equal(follows[0].opts.track, "toys");
+assert.equal(follows[0].opts.settleAt, 0.9);
+
+followLeave(poses, { track: "home", holdMs: 220, duration: 2880, reduced: true });
+assert.equal(snaps.at(-1), "landing");
+followLeave(poses, { track: "home", holdMs: 220, duration: 2880 });
+assert.equal(follows[1].name, "landing");
+assert.equal(follows[1].opts.delay, 220);
+assert.equal(follows[1].opts.duration, 2880);
+assert.equal(follows[1].opts.track, "home");
+assert.equal(follows[1].opts.settleAt, 0.78);
+assert.equal(follows[1].opts.mode, "return");
 
 await continueTo(poses, "doubledeal", { duration: 1280 });
 assert.equal(goes.at(-1).name, "doubledeal");

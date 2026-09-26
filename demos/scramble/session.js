@@ -8,6 +8,8 @@ import {
     resolveProductPuzzleId,
     writePuzzleSearchParam,
 } from "../playroom/puzzles.js";
+import { bindGrowFields } from "../shared/grow-field.js";
+import { bindCappedInput } from "../shared/input-cap.js";
 import {
     bindTeachKeys,
     colorName,
@@ -55,6 +57,8 @@ export function createScrambleSession({
     const teachCard = $("#teach-card");
     const teachPos = $("#teach-pos");
     const outlineEl = $("#outline");
+    const ioNote = $("#io-note");
+    bindGrowFields(root);
 
     const solved = solved_facelets();
     if (solved !== SOLVED_FACELETS) {
@@ -783,7 +787,11 @@ export function createScrambleSession({
         errorEl.textContent = err.message;
     }), listen);
     $("#spec-close")?.addEventListener("click", () => specDialog.close(), listen);
-    input?.addEventListener("input", () => recompute(), listen);
+    bindCappedInput(input, {
+        noteEl: ioNote,
+        onChange: () => recompute(),
+        signal: abort.signal,
+    });
 
     $$("[data-jump]").forEach((button) => {
         button.addEventListener("click", () => {

@@ -1,15 +1,16 @@
-import { CUBE } from "./constants.js";
+import { CUBE, GATHER_MS, RESTOW_MS } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
+import { bindGrowFields } from "../shared/grow-field.js";
 import { lucideSvg } from "../shared/icons.js";
-import { createBeatClock } from "./beat-clock.js";
+import { createBeatClock, yieldFrame } from "./beat-clock.js";
 import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
-import { continueTo, trackActive, waitToyIdle } from "./motion.js";
-import { formSessionTable } from "./table-form.js";
+import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";
+import { formSessionTable, gatherSessionTable } from "./table-form.js";
 import { pickHandTextures, pickMsgTextures } from "./unbox-hand.js";
-import { createDealerKey, disposeDealerKey, playDualUnbox, restBoxes } from "./unbox-physical.js";
+import { createDealerKey, disposeDealerKey, playDualUnbox, playRestow, restBoxes } from "./unbox-physical.js";
 import { createUnboxRig } from "./unbox-rig.js";
 
 /**
@@ -100,6 +101,7 @@ function bindInstrumentChrome(root) {
     root.querySelector("#digest")?.addEventListener("focus", (event) => {
         event.currentTarget.select?.();
     });
+    bindGrowFields(root);
 }
 
 function mountDock() {
@@ -139,11 +141,12 @@ function mountDock() {
           </div>
           <label class="playroom-ctl playroom-ctl--field" for="message">
             <span class="playroom-label">Message</span>
-            <textarea id="message" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
           </label>
+          <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label">Digest</span>
-            <input id="digest" class="digest" type="text" readonly spellcheck="false" autocomplete="off">
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
           </label>
           <p id="puzzle-note" class="playroom-puzzle-note" hidden>Digest is 3×3 Scramble. This puzzle is visual.</p>
           <p id="status" class="status playroom-status">Solved start · white up, green front, red right</p>
@@ -455,21 +458,22 @@ function mountDoubleDealDock() {
           </div>
           <label class="playroom-ctl playroom-ctl--field" for="message">
             <span class="playroom-label" id="input-label">Message</span>
-            <textarea id="message" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
           </label>
+          <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="key">
             <span class="playroom-label">Key</span>
-            <textarea id="key" rows="1" spellcheck="false" placeholder="cryptoy">cryptoy</textarea>
+            <textarea id="key" class="grow-field" rows="1" spellcheck="false" placeholder="cryptoy">cryptoy</textarea>
           </label>
           <div id="nonce-field" hidden>
             <label class="playroom-ctl playroom-ctl--field" for="nonce">
               <span class="playroom-label">Nonce</span>
-              <textarea id="nonce" rows="1" spellcheck="false" placeholder="nonce">nonce</textarea>
+              <textarea id="nonce" class="grow-field" rows="1" spellcheck="false" placeholder="nonce">nonce</textarea>
             </label>
           </div>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label" id="output-label">Digest</span>
-            <input id="digest" class="digest" type="text" readonly spellcheck="false" autocomplete="off">
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
           </label>
           <p id="status" class="status playroom-status">Plaintext on the left. Key on the right.</p>
           <p id="error" class="error"></p>
@@ -589,6 +593,9 @@ function createDoubleDealAdapter() {
 
     async function prepareEnter() {
         if (!world) return null;
+        // Already adopted: do not restow / shelfHome on click — that
+        // snapped both decks at the hub→enter handoff.
+        if (unbox && unbox2) return unbox;
         const loaded = await preload();
         const anisotropy = Math.min(8, world.renderer?.capabilities?.getMaxAnisotropy?.() || 4);
         if (!unbox) {
@@ -600,6 +607,7 @@ function createDoubleDealAdapter() {
                 bodyHex: "#6b1e1e",
             });
             await adoptRig("deck", unbox, world.toys.deck);
+            await yieldFrame();
         }
         if (!unbox2) {
             unbox2 = await createUnboxRig({
@@ -610,6 +618,7 @@ function createDoubleDealAdapter() {
                 bodyHex: "#1a2a44",
             });
             await adoptRig("deck2", unbox2, world.toys.deck2);
+            await yieldFrame();
         }
         restowUnbox();
         if (!unbox.group.userData.flightBusy) world.shelfHome("deck");
@@ -640,6 +649,10 @@ function createDoubleDealAdapter() {
         get busy() {
             return Boolean(entering && clock && !clock.dead(enterGen));
         },
+        leaveMs({ snap = false } = {}) {
+            if (snap || Boolean(poses?.prefersReducedMotion?.())) return 0;
+            return table ? GATHER_MS + RESTOW_MS : RESTOW_MS;
+        },
         view() {
             return table || (world ? { group: world.toys.deck } : null);
         },
@@ -648,46 +661,24 @@ function createDoubleDealAdapter() {
             entering = true;
             cancelEnter = false;
             try {
-                const loaded = await preload();
                 if (!unbox) await prepareEnter();
                 root = mountDoubleDealDock();
                 const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
                 poses?.lockOrbit?.();
                 if (!keyLight && world) keyLight = createDealerKey(world);
-                table = stageCardTable(world, loaded.textures, { poses, visible: true });
-                const specUrl = await resolveSpecUrl("doubledeal");
-                if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
-                // Zach 2026-09-25 continuity lock: no fades and no hard
-                // cuts. Session preview would seat the 4×13 immediately;
-                // hold that layout and lay it from the two decks instead.
-                let holdLayout = true;
-                let layout = null;
-                const view = {
-                    ...table,
-                    showDecks(message, key) {
-                        layout = { message: message.slice(), key: key.slice() };
-                        if (holdLayout) return;
-                        table.showDecks(message, key);
-                    },
-                };
-                session = loaded.sessionMod.createDoubleDealSession({
-                    view,
-                    specUrl,
-                    root,
-                    exposeTeach: true,
-                    liveDigest: true,
-                });
-                table.rememberSeated?.();
                 clock = createBeatClock({ reduced });
                 enterGen = clock.begin();
                 const enterTrack = trackActive(world, ["deck", "deck2"], [
                     () => unbox?.packet,
                     () => unbox2?.packet,
                 ]);
+                // Flap first. 104-card table + SPEC fetch used to run
+                // here and freeze the room after the fly landed.
+                let unboxJob = Promise.resolve();
                 if (!reduced && !cancelEnter && unbox) {
                     poses?.followLive?.(enterTrack);
                     poses?.setTrack?.(enterTrack);
-                    await playDualUnbox({
+                    unboxJob = playDualUnbox({
                         world,
                         key: unbox,
                         msg: unbox2,
@@ -700,12 +691,44 @@ function createDoubleDealAdapter() {
                     // both boxes slide to a standing rest, then cards
                     // stream from those piles. Instant seat only happens
                     // if the shared pose controller snaps for a11y.
-                    await restBoxes({ world, clock, gen: enterGen });
+                    unboxJob = restBoxes({ world, clock, gen: enterGen });
                 }
+                let holdLayout = true;
+                let layout = null;
+                const setupJob = (async () => {
+                    await yieldFrame();
+                    if (cancelEnter) return;
+                    const loaded = await preload();
+                    if (!table) {
+                        table = stageCardTable(world, loaded.textures, { poses, visible: true });
+                    } else {
+                        table.show();
+                    }
+                    const specUrl = await resolveSpecUrl("doubledeal");
+                    if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
+                    const view = {
+                        ...table,
+                        showDecks(message, key) {
+                            layout = { message: message.slice(), key: key.slice() };
+                            if (holdLayout) return;
+                            table.showDecks(message, key);
+                        },
+                    };
+                    session = loaded.sessionMod.createDoubleDealSession({
+                        view,
+                        specUrl,
+                        root,
+                        exposeTeach: true,
+                        liveDigest: true,
+                    });
+                    table.rememberSeated?.();
+                })();
+                await unboxJob;
                 if (cancelEnter) return session;
                 await waitToyIdle(world.toys.deck2, clock, enterGen);
                 poses?.followLive?.(null);
                 poses?.releaseFrame?.();
+                await setupJob;
                 const seated = continueTo(poses, "doubledeal", {
                     duration: reduced ? 480 : 1280,
                 });
@@ -739,7 +762,7 @@ function createDoubleDealAdapter() {
                 poses?.unlockOrbit?.();
             }
         },
-        async leave() {
+        async leave({ snap = false } = {}) {
             cancelEnter = true;
             skipEnter();
             poses?.followLive?.(null);
@@ -754,14 +777,37 @@ function createDoubleDealAdapter() {
                 root.classList.remove("on");
                 root.hidden = true;
             }
-            if (table) {
+            const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
+            if (table && !reduced) {
+                clock = createBeatClock({ reduced: false });
+                const gen = clock.begin();
+                markBeat("leave-gather");
+                await gatherSessionTable({
+                    table,
+                    clock,
+                    gen,
+                    keyBox: world?.toys?.deck?.position,
+                    messageBox: world?.toys?.deck2?.position,
+                });
+                markBeat("leave-restow");
+                table.setCardsVisible?.(false);
+                await Promise.all([
+                    playRestow({ rig: unbox, clock, gen, ms: RESTOW_MS }),
+                    playRestow({ rig: unbox2, clock, gen, ms: RESTOW_MS }),
+                ]);
                 table.dispose();
                 table = null;
+            } else {
+                if (table) {
+                    table.dispose();
+                    table = null;
+                }
+                restowUnbox();
             }
-            restowUnbox();
             if (world?.toys.deck2) world.toys.deck2.visible = true;
             disposeDealerKey(world, keyLight);
             keyLight = null;
+            clock = null;
             poses?.unlockOrbit?.();
         },
         revealShelf() {

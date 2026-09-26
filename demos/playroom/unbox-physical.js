@@ -215,7 +215,7 @@ export async function playDualUnbox({
     });
     // Let KEY finish extract so the follow-cam can sit on that box
     // before MSG pulls the lens to the second sleeve.
-    await clock.wait(2100, gen);
+    await clock.wait(1880, gen);
     if (clock.dead(gen)) {
         await keyJob;
         return;
@@ -230,4 +230,21 @@ export async function playDualUnbox({
         })
         : Promise.resolve();
     await Promise.all([keyJob, msgJob]);
+}
+
+/**
+ * Close the tuck-box flap, then restow the packet. Used on leave so
+ * the sleeve does not snap shut before the toys fly home.
+ */
+export async function playRestow({ rig, clock, gen, ms = 380 } = {}) {
+    if (!rig) return;
+    const from = Math.abs(rig.flapPivot?.rotation?.x || 0) / 2.15;
+    if (clock && gen != null && from > 0.01 && !clock.dead(gen)) {
+        await clock.tween(ms, (t) => {
+            rig.setFlap?.(from * (1 - t));
+        }, { ease: easeInOutCubic, generation: gen });
+    }
+    rig.restow?.();
+    if (rig.group) rig.group.userData.unboxBusy = false;
+    if (rig.packet) rig.packet.userData.unboxBusy = false;
 }

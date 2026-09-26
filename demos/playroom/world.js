@@ -163,10 +163,12 @@ function placePlant(scene, gltf, x, y, z, maxDim, ry = 0) {
 }
 
 /**
- * Kenney chest: body + sibling `lid`. Hasp/latch lives on −Z; the
- * back seam is +Z. Reparent with `attach` so the authored closed
- * pose stays put — do not reset rotation or guess from geometry
- * bbox (that stood the lid up as a shard).
+ * Kenney chest: body + sibling `lid`. Hasp/latch lives on model −Z;
+ * the authored back seam is +Z. The group yaw is +π/2 against the
+ * −X wall, so local −Z (hasp) faces the wall and local +Z faces
+ * the table. Hinge on the WALL seam (`min.z`) and swing −X so the
+ * cavity opens into the room — hinging on +Z opened into the wall.
+ * Reparent with `attach` so the authored closed pose stays put.
  */
 function findLidNode(root) {
     let found = null;
@@ -181,9 +183,9 @@ function rigChestLid(chestRoot) {
     const lid = findLidNode(chestRoot);
     const pivot = new THREE.Group();
     pivot.name = "chest-lid-pivot";
-    // ~83° over the back hinge — lid stands open into the room
-    // after the chest's π/2 yaw, without dropping through the floor.
-    pivot.userData.openAngle = 1.45;
+    // ~83° over the wall-side hinge. Negative X lifts the lid
+    // toward the table after the chest's +π/2 yaw.
+    pivot.userData.openAngle = -1.45;
     if (!lid) {
         chestRoot.add(pivot);
         return pivot;
@@ -193,7 +195,7 @@ function rigChestLid(chestRoot) {
     const hinge = new THREE.Vector3(
         (lidWorld.min.x + lidWorld.max.x) / 2,
         lidWorld.min.y,
-        lidWorld.max.z,
+        lidWorld.min.z,
     );
     chestRoot.worldToLocal(hinge);
     pivot.position.copy(hinge);
@@ -733,7 +735,7 @@ export async function mountWorld(canvas) {
 
     function setChestLid(t) {
         const k = Math.min(1, Math.max(0, t));
-        const angle = chestLidPivot?.userData.openAngle ?? 1.45;
+        const angle = chestLidPivot?.userData.openAngle ?? -1.45;
         if (chestLidPivot) chestLidPivot.rotation.x = angle * k;
         chestGroup.userData.lid = k;
     }
@@ -747,9 +749,14 @@ export async function mountWorld(canvas) {
     }
     setChestOpen(false);
 
+    let viewW = 0;
+    let viewH = 0;
     function resize() {
         const width = canvas.clientWidth || window.innerWidth;
         const height = canvas.clientHeight || window.innerHeight;
+        if (width === viewW && height === viewH) return;
+        viewW = width;
+        viewH = height;
         const ratio = Math.min(window.devicePixelRatio || 1, 1.25);
         renderer.setPixelRatio(ratio);
         renderer.setSize(width, height, false);

@@ -38,12 +38,20 @@ export const SLOTS = {
     cube: { x: -0.55, y: SHELF_Y1 },
 };
 
-// Shared rAF step cap (director / beat-clock / capture harness).
+// Shared rAF step cap. 60fps is unchanged (~16ms). Software-GL and
+// capture hitch cannot skip a beat-clock tween while the director
+// and camera stay capped — that is what made gather look like a snap.
 export const CLOCK_STEP_MS = 50;
 
 export const TWEEN_MS = 1100;
 export const FLY_MS = 1800;
 export const LIFT_MS = 380;
+// Shared lid + leave-prep beats. Borrow and home use the same
+// hinge timing so enter and return stay on one clock.
+export const LID_OPEN_MS = 520;
+export const LID_CLOSE_MS = 560;
+export const GATHER_MS = 680;
+export const RESTOW_MS = 380;
 // Pick the cube up this far for face turns so layers clear the felt/rim.
 export const TURN_LIFT = 0.14;
 export const TURN_LIFT_MS = 320;
@@ -51,7 +59,7 @@ export const SETTLE_HOLD_MS = 90;
 // Brief hub hold so a lift reads in the landing frame before the
 // shared follow-cam starts chasing. Click/Escape still skip after LIFT_MS.
 export const HOLD_MS = 760;
-export const FOLLOW_HOLD_MS = 220;
+export const FOLLOW_HOLD_MS = 360; // position hold; look already eases onto the toys
 
 // Standalone DoubleDeal table is ~17.4 units wide. Scale the live 4×13
 // session onto the playroom felt. Enter lays these seats from the two

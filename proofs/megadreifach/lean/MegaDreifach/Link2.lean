@@ -28,6 +28,7 @@ import MegaDreifach.Link2.FactTwo
 import MegaDreifach.Link2.FactThree
 import MegaDreifach.Link2.AccThree
 import MegaDreifach.Link2.PeelFact
+import MegaDreifach.Link2.PeelCube
 
 namespace MegaDreifach.Link2
 
@@ -133,10 +134,18 @@ namespace MegaDreifach.Link2
   scratch limb is zero. Not `27!` (four limbs). Not `51!`. Not `phi_chunk`.
   Not `phi_inv`.
 
+  CLOSED: `peel_leading_factorial_three`, `divmod_cube`, `big_mul_one_three`.
+  Domain `d ≤ 26`: peeling `d!` yields digit `1` and remainder `0`
+  (`d! / d!`). For `d ≥ 20` the factorial is three limbs
+  (`10^18 ≤ 20!` and `26! < 10^27`). `divmod_cube` divides any value below
+  `10^27` by a positive one-limb divisor. The closing product is the digit
+  `1` times that factorial. Not an arbitrary positive three-limb rank.
+  Not `27!`. Not `51!`. Not `phi_chunk`. Not `phi_inv`.
+
   OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
   (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
   bytes; zero peel reaches `d ≤ 19`, peeling `d!` itself yields digit `1`
-  through `d ≤ 19`, and `big_factorial` reaches `26!`, not `27!` and not 51;
+  through `d ≤ 26`, and `big_factorial` reaches `26!`, not `27!` and not 51;
   `big_from_be` reaches length `≤ 7`, not the 28-byte pad block). Positive
   `range_list` (`0 < n`, `FitsLen`, including 52) is already
   `range_list_refines` in `EvenRank.lean`. A positive corner or edge rank is

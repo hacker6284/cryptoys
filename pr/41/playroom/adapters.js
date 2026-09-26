@@ -1,7 +1,7 @@
 import { CUBE, GATHER_MS, RESTOW_MS } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { lucideSvg } from "../shared/icons.js";
-import { createBeatClock } from "./beat-clock.js";
+import { createBeatClock, yieldFrame } from "./beat-clock.js";
 import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
@@ -603,6 +603,7 @@ function createDoubleDealAdapter() {
                 bodyHex: "#6b1e1e",
             });
             await adoptRig("deck", unbox, world.toys.deck);
+            await yieldFrame();
         }
         if (!unbox2) {
             unbox2 = await createUnboxRig({
@@ -613,13 +614,11 @@ function createDoubleDealAdapter() {
                 bodyHex: "#1a2a44",
             });
             await adoptRig("deck2", unbox2, world.toys.deck2);
+            await yieldFrame();
         }
         restowUnbox();
         if (!unbox.group.userData.flightBusy) world.shelfHome("deck");
         if (unbox2 && !unbox2.group.userData.flightBusy) world.shelfHome("deck2");
-        if (!table && loaded.textures) {
-            table = stageCardTable(world, loaded.textures, { poses, visible: false });
-        }
         return unbox;
     }
 
@@ -693,7 +692,7 @@ function createDoubleDealAdapter() {
                 let holdLayout = true;
                 let layout = null;
                 const setupJob = (async () => {
-                    await new Promise((resolve) => requestAnimationFrame(resolve));
+                    await yieldFrame();
                     if (cancelEnter) return;
                     const loaded = await preload();
                     if (!table) {

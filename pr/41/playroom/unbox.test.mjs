@@ -89,6 +89,7 @@ assert.equal(adapters.includes("DEAL_SCALE"), false, "adapter does not scale the
 const worldSrc = readFileSync(new URL("./world.js", import.meta.url), "utf8");
 assert.equal(worldSrc.includes("function makeCubeToy"), false, "hub cube is not a hand-rolled mesh");
 assert.match(worldSrc, /seatOnSurface/, "world seats through the shared helper");
+assert.match(worldSrc, /width === viewW/, "resize is a no-op when the canvas did not change");
 assert.match(worldSrc, /keepFitted/, "host render re-applies Twisty fit before draw");
 assert.match(worldSrc, /if \(slots\[name\]\) slots\[name\]\.slot/, "chest deck has no shelf slot");
 assert.match(worldSrc, /deck2/);
@@ -130,7 +131,18 @@ assert.match(app, /FOLLOW_HOLD_MS/);
         "hub camera starts before prepareEnter finishes",
     );
     assert.match(startAlgo, /trackToys\(/, "enter frames the full toy set, not busy-only");
+    assert.match(startAlgo, /extras\?\.includes\("chest"\)/, "Scramble enter does not track the chest");
 }
+assert.equal(app.includes("doubledeal.prepareEnter"), false, "do not hide-build DD on the hub");
+assert.match(app, /playroomTray/);
+
+const css = readFileSync(new URL("./style.css", import.meta.url), "utf8");
+assert.equal(
+    css.includes("height: calc(100dvh - var(--io-band))"),
+    false,
+    "portrait tray must not shrink the WebGL canvas",
+);
+assert.match(css, /translateY\(100%\)/, "portrait io band slides over the canvas");
 assert.match(app, /continueTo/);
 assert.match(app, /borrowMs/);
 assert.match(app, /homeMs/);

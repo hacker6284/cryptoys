@@ -60,6 +60,8 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | Link 2 | `big_mul` of a wide left factor by one limb ≃ `natLimbs (q · n)` | Proved (`big_mul_wide_refines`, `big_mul_nat`). Accumulator on the left. Not `v_Hash`. |
 | Link 2 | `big_mul` of one limb on the left by a wide digit string ≃ `natLimbs (q · n)` | Proved (`big_mul_left_refines`, `big_mul_left_nat`). Digit times a wide factorial, the orientation `peel_leading` emits. Not `mag_sub`. Not `peel_leading` for `d > 26`. Not `v_Hash`. |
 | Link 2 | `big_factorial n` ≃ `factorial n` for `n ≤ 51` | Proved (`big_factorial_51`). `51! < 10^72`, at most eight limbs. Not `peel_leading` for `d > 26`. Not `phi_chunk`. Not `v_Hash`. |
+| Link 2 | `mag_sub` ≃ `n - m` on canonical limbs, any width, `m ≤ n` | Proved (`mag_sub_nat`). Trimmed digits are `natLimbs (n - m)`. Not `big_add`. Not `v_Hash`. |
+| Link 2 | `peel_leading` ≃ `(n % d!, n / d!)` for `d ≤ 51` and `n / d! < 10^9` | Proved (`peel_leading_51`). One-limb digit. `n < 10^81`. Not a 28-byte `big_from_be`. Not `phi_chunk`. Not `v_Hash`. |
 
 ## What is open or not claimed
 
@@ -70,7 +72,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | M9 | Abs-G2 L2 mid-block: no 2-card local collision | OPEN (sketch in STONES.md). Informal proof in research `G2_PROOF.md`. Not a blocker. |
 | M13 | Proof-package digests of exported KATs equal `kats/megaminx_hash_kats.json` | OPEN; metadata only. Hexes refreshed 2026-09-24 to current sudo (Python = emitted Lean). No handwritten `Hash` body. |
 | — | sudo text equals generated Lean; algebraic fold equals `Generated.v_Hash` | OPEN. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). |
-| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, `require_permutation`, `pack_ori2`, `pack_ori3`, length-20 `even_perm_rank_big` (`Rank20Wf`), zero-rank `position_to_bytes` (`PosBytesWf`), zero-byte `big_from_be`, short and two-limb `big_from_be`, `big_factorial` (`n ≤ 51`), `peel_leading` below `limbCap d` for `d ≤ 26`, arbitrary-width `big_divmod_small`, wide-by-small `big_mul`, and one-limb-times-wide `big_mul` (`big_mul_left_nat`) are closed. Still open: arbitrary-width `mag_sub` / `big_add`, 28-byte `big_from_be`, `peel_leading` for `d ≤ 51`, and `phi_chunk` / `phi_inv`. Full `v_Hash` is still open. Not collision resistance. |
+| — | Full `Generated.v_Hash` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, `require_permutation`, `pack_ori2`, `pack_ori3`, length-20 `even_perm_rank_big` (`Rank20Wf`), zero-rank `position_to_bytes` (`PosBytesWf`), zero-byte `big_from_be`, short and two-limb `big_from_be`, `big_factorial` (`n ≤ 51`), `peel_leading` below `limbCap d` for `d ≤ 26`, `peel_leading` for `d ≤ 51` when `n / d! < 10^9` (`peel_leading_51`), arbitrary-width `mag_sub` (`mag_sub_nat`), arbitrary-width `big_divmod_small`, wide-by-small `big_mul`, and one-limb-times-wide `big_mul` (`big_mul_left_nat`) are closed. Still open: arbitrary-width `big_add` / `mag_add`, 28-byte `big_from_be`, and `phi_chunk` / `phi_inv`. Full `v_Hash` is still open. Not collision resistance. |
 | — | Collision resistance of Hash; IV-anchored collision | Not claimed. Free-start `HashDeckBody` is broken; L3 collisions **exist** |
 | — | Ideal-cipher-on-G / PRF of `E_m` | Not claimed |
 | — | Birthday ≈ 2^113 as a theorem | SPEC honesty only |

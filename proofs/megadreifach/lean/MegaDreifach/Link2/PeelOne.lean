@@ -224,7 +224,7 @@ private theorem decide_len (i len : Nat) (h : i < len) :
 
 /-- One limb of `mag_sub`, both arrays long enough to contain index `i`.
     Incoming borrow is `0` or `1`. The outgoing digit is `subDigit`. -/
-private theorem magSub_at
+theorem magSub_at
     (xs ys out : List Nat) (i toV ai bi br : Nat)
     (hi : i < xs.length) (hy : i < ys.length)
     (hxi : xs[i]'(hi) = ai) (hyi : ys[i]'(hy) = bi)

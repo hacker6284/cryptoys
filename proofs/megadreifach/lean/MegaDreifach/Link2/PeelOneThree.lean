@@ -134,7 +134,7 @@ private theorem decide_len (i len : Nat) (h : i < len) :
 
 /-- One limb of `mag_sub`, both arrays long enough to contain index `i`.
     Incoming borrow is `0` or `1`. The outgoing digit is `subDigit`. -/
-private theorem magSub_at
+private theorem magSub_at3
     (xs ys out : List Nat) (i toV ai bi br : Nat)
     (hi : i < xs.length) (hy : i < ys.length)
     (hxi : xs[i]'(hi) = ai) (hyi : ys[i]'(hy) = bi)
@@ -734,7 +734,7 @@ private theorem mag_sub_limbs3 (n0 n1 n2 m0 m1 m2 : Nat)
     dsimp
     rfl
   rw [show (3 : Nat) = 2 + 1 from rfl, runLoopOn_succ]
-  have h0 := magSub_at [n0, n1, n2] [m0, m1, m2] [] 0 2 n0 m0 0
+  have h0 := magSub_at3 [n0, n1, n2] [m0, m1, m2] [] 0 2 n0 m0 0
     (by simp) (by simp) (by simp) (by simp) hn0 hm0 (by decide) (by decide) fits1
   have hinit : ((0 : Int), ((0 : Int), (#[] : Array Int))) =
       (Int.ofNat 0, (Int.ofNat 0, embed ([] : List Nat))) := by
@@ -743,7 +743,7 @@ private theorem mag_sub_limbs3 (n0 n1 n2 m0 m1 m2 : Nat)
   erw [h0]
   dsimp
   rw [show (2 : Nat) = 1 + 1 from rfl, runLoopOn_succ]
-  have h1 := magSub_at [n0, n1, n2] [m0, m1, m2] [d0] 1 2 n1 m1 br1
+  have h1 := magSub_at3 [n0, n1, n2] [m0, m1, m2] [d0] 1 2 n1 m1 br1
     (by simp) (by simp) (by simp) (by simp) hn1 hm1 hbr1 (by decide) fits2
   have hst1 : ((1 : Int), ((subDigit n0 m0 0).2 : Int), embed [(subDigit n0 m0 0).1]) =
       (Int.ofNat 1, (Int.ofNat br1), embed [d0]) := by
@@ -751,7 +751,7 @@ private theorem mag_sub_limbs3 (n0 n1 n2 m0 m1 m2 : Nat)
   erw [hst1, h1]
   dsimp
   rw [show (1 : Nat) = 0 + 1 from rfl, runLoopOn_succ]
-  have h2 := magSub_at [n0, n1, n2] [m0, m1, m2] [d0, d1] 2 2 n2 m2 br2
+  have h2 := magSub_at3 [n0, n1, n2] [m0, m1, m2] [d0, d1] 2 2 n2 m2 br2
     (by simp) (by simp) (by simp) (by simp) hn2 hm2 hbr2 (Nat.le_refl _) fits3
   have hst2 :
       ((2 : Int), ((subDigit n1 m1 br1).2 : Int),

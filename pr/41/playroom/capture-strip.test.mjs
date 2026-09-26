@@ -46,7 +46,7 @@ const still = cameraAccel(
     0.05,
 );
 assert.ok(still.pos < CAM_ACCEL_POS, "ease-sized Δv is not a spike");
-assert.equal(isCamAccelSpike(still), false);
+assert.equal(isCamAccelSpike(still, {}, { pos: { x: 0.4, y: 0, z: 0 }, look: { x: 0, y: 0, z: 0 } }, { pos: { x: 0.2, y: 0, z: 0 }, look: { x: 0, y: 0, z: 0 } }), false);
 
 const snap = cameraAccel(
     { pos: { x: 0, y: 0, z: 0 }, look: { x: 0, y: 0, z: 0 } },

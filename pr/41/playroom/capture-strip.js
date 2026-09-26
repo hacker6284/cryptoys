@@ -20,9 +20,9 @@ import { onMarkBeat } from "./motion.js";
 export const CAPTURE_INTERVAL_MS = 200;
 export const CAPTURE_DEDUPE_MS = CLOCK_STEP_MS;
 export const CAPTURE_MAX_WIDTH = 480;
-export const CAM_ACCEL_POS = 18;
-export const CAM_ACCEL_LOOK = 14;
-export const CAM_ACCEL_COOLDOWN_MS = 160;
+export const CAM_ACCEL_POS = 42;
+export const CAM_ACCEL_LOOK = 30;
+export const CAM_ACCEL_COOLDOWN_MS = 420;
 
 /**
  * True when an RGBA buffer is nearly black. Used to drop the first
@@ -79,9 +79,14 @@ export function cameraAccel(prevVel, vel, dtSec) {
 export function isCamAccelSpike(accel, {
     posMin = CAM_ACCEL_POS,
     lookMin = CAM_ACCEL_LOOK,
-} = {}) {
+} = {}, vel = null, prevVel = null) {
     if (!accel) return false;
-    return Boolean(accel.reverse) || accel.pos >= posMin || accel.look >= lookMin;
+    if (accel.reverse) return true;
+    const onset = prevVel && vel
+        && len3(prevVel.pos) < 0.45
+        && len3(vel.pos) > 1.15;
+    if (onset && (accel.pos >= posMin * 0.55 || accel.look >= lookMin * 0.55)) return true;
+    return accel.pos >= posMin || accel.look >= lookMin;
 }
 
 export function captureEnabled(search = typeof location !== "undefined" ? location.search : "") {
@@ -252,7 +257,7 @@ export function installCapture(canvas, { intervalMs = CAPTURE_INTERVAL_MS } = {}
             };
             if (lastVel && playElapsed - lastAccelAt >= CAM_ACCEL_COOLDOWN_MS) {
                 const accel = cameraAccel(lastVel, vel, dtSec);
-                if (isCamAccelSpike(accel)) {
+                if (isCamAccelSpike(accel, {}, vel, lastVel)) {
                     pendingAccel = true;
                     lastAccelAt = playElapsed;
                 }

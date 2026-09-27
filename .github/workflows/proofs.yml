@@ -61,6 +61,10 @@ jobs:
         env:
           SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/deprecated/doubledeal-v8/vectors/regen_v8.sh --check
+      - name: Frozen v9 vectors rebuild byte-identically from v9/doubledeal_v9.sudo
+        env:
+          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
+        run: proofs/deprecated/doubledeal-v9/vectors/regen_v9.sh --check
 
   doubledeal-generated:
     runs-on: ubuntu-latest
@@ -128,6 +132,37 @@ jobs:
       - name: v8 relabelling witness (compiled emitted encrypt)
         working-directory: proofs/deprecated/doubledeal-v8/lean
         run: lake exe doubledeal_v8_witness
+
+  doubledeal-v9-deprecated:
+    # Frozen, deprecated DoubleDeal v9 (draft, awaiting a decision; no successor
+    # yet): emitted TAP + kernel-checked K♣↔Q♥ witness
+    # (see proofs/deprecated/doubledeal-v9/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No native_decide / sorry / admit in the v9 witness package
+        run: |
+          ! grep -rnE '\b(native_decide|sorry|admit)\b' --include='*.lean' \
+              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9 \
+              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9.lean
+      - name: Witness Lean data matches witness_v9.json
+        run: python3 proofs/deprecated/doubledeal-v9/lean/witness_to_lean.py --check
+      - name: Frozen v9 vectors (sha + Python port) and recorded witnesses
+        run: |
+          python3 proofs/deprecated/doubledeal-v9/attack/check_vectors.py
+          python3 proofs/deprecated/doubledeal-v9/attack/check_witnesses.py
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v9/lean/Generated
+      - name: Generated v9 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/doubledeal-v9/lean/Generated
+        run: ./.lake/build/bin/doubledeal_v9_test
+      - name: Kernel witness build (decide! per stage; ~11 min, ~11 GB peak)
+        uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v9/lean
+      - name: Axiom audit (witness theorems use only propext, Classical.choice, Quot.sound)
+        run: python3 proofs/doubledeal/check_axioms.py v9-deprecated
 
   doubledeal-lean:
     runs-on: ubuntu-latest

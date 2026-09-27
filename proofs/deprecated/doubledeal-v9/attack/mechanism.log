@@ -1,0 +1,79 @@
+# v9 swap mechanism, 400000 random decks per measurement, seed 7
+
+## 1. Per-layer survival for one round (state = uniform random deck)
+pair      P_S meas  P_S theory  P_G|S meas  P_G (fresh deck)  round  1/round
+K♣↔Q♥  0.2363    0.2353      0.1834      0.1837          0.0433   23.1
+A♥↔K♥  0.2357    0.2353      0.0905      0.0935          0.0213   46.9
+K♠↔Q♦  0.2347    0.2353      0.0648      0.0672          0.0152   65.7
+
+## 2. Prediction F_r = P_S^r P_G^(r-1), E_r = (P_S P_G)^r  vs  results/kq_scaling.jsonl + F6 run
+target pair     measured (hits/n)            predicted   meas/pred
+F2     K♣↔Q♥  1.043e-02 (1043/1e+05)  1.026e-02   1.02
+F2     A♥↔K♥  4.830e-03 (483/1e+05)  5.195e-03   0.93
+F2     K♠↔Q♦  3.760e-03 (376/1e+05)  3.701e-03   1.02
+E2     K♣↔Q♥  1.728e-03 (691/4e+05)  1.884e-03   0.92
+E2     A♥↔K♥  4.600e-04 (184/4e+05)  4.858e-04   0.95
+E2     K♠↔Q♦  1.975e-04 (79/4e+05)  2.485e-04   0.79
+F3     K♣↔Q♥  4.365e-04 (873/2e+06)  4.453e-04   0.98
+F3     A♥↔K♥  1.115e-04 (223/2e+06)  1.145e-04   0.97
+F3     K♠↔Q♦  6.050e-05 (121/2e+06)  5.834e-05   1.04
+E3     K♣↔Q♥  7.769e-05 (1243/2e+07)  8.180e-05   0.95
+E3     A♥↔K♥  9.375e-06 (150/2e+07)  1.071e-05   0.88
+E3     K♠↔Q♦  2.625e-06 (42/2e+07)  3.917e-06   0.67
+F4     K♣↔Q♥  1.813e-05 (290/2e+07)  1.933e-05   0.94
+F4     A♥↔K♥  2.312e-06 (37/2e+07)  2.524e-06   0.92
+F4     K♠↔Q♦  3.750e-07 (6/2e+07)  9.196e-07   0.41
+F5     K♣↔Q♥  7.437e-07 (119/2e+08)  8.391e-07   0.89
+F6     K♣↔Q♥  3.500e-08 (14/4e+08)  3.642e-08   0.96
+
+## 3. GridCycle detail for K♣↔Q♥ (step after the earlier of the two cards)
+K♣ = (suit 0, rank 13): its step (Δrow 0, Δcol 13≡0) always targets its own seat -> always overflows
+from column c. Q♥ = (1, 12): target (r+1, c-1); if blocked it scans row t from c-1.
+Same seat iff (r+1, c-1) is occupied and (t, c-1) is occupied [one cell if t = r+1],
+or the scan row is full except one cell (rare). Measured per position i of the card:
+ step after K♣: ok=0.246 (earlier card), Q♥-target blocked=1.000, P(t = row+1)=0.467
+ step after Q♥: ok=0.246 (earlier card), Q♥-target blocked=1.000, P(t = row+1)=0.473
+ model f(i) = phi (q + (1-q) phi), phi = i/51 (fill), q = P(t=row+1); f(51) = 1
+ pos   measured ok   model
+  0- 5  0.011         0.025
+  6-11  0.074         0.093
+ 12-17  0.173         0.177
+ 18-23  0.301         0.275
+ 24-29  0.435         0.387
+ 30-35  0.564         0.515
+ 36-41  0.688         0.657
+ 42-47  0.799         0.814
+ 48-51  0.903         0.956
+ model: mean f = 0.413; P_G ≈ E[f(i) f(j)], i≠j = 0.169 (measured 0.184); per round ≈ 12/51 × 0.169 = 1/25.2
+
+## 4. All 1326 transpositions: P_S, P_G, per-round survival, predicted F6
+936 transpositions have different rank and different w4: SumRanks never commutes (P_S = 0 exactly).
+equal-w4: 312 pairs; P_S mean 0.2354 [0.2311, 0.2404]; P_G mean 0.0382 [0.0144, 0.1839]; predicted F6 median 4.1e-12, max 3.7e-08
+same-rank: 78 pairs; P_S mean 0.0588 [0.0570, 0.0602]; P_G mean 0.1269 [0.0849, 0.2633]; predicted F6 median 1.2e-12, max 4.9e-11
+
+Top 20 by predicted F6:
+pair      class     Δ(suit,rank)  P_S     P_G     1/round  pred F6
+K♣↔Q♥  equal-w4  (1, 12)       0.2369  0.1839    23.0   3.7e-08
+Q♣↔J♥  equal-w4  (1, 12)       0.2337  0.1203    35.6   4.1e-09
+J♣↔T♥  equal-w4  (1, 12)       0.2371  0.1104    38.2   2.9e-09
+T♣↔9♥  equal-w4  (1, 12)       0.2330  0.1054    40.7   2.1e-09
+9♣↔8♥  equal-w4  (1, 12)       0.2364  0.1016    41.6   1.9e-09
+8♣↔7♥  equal-w4  (1, 12)       0.2374  0.0994    42.4   1.7e-09
+A♥↔K♥  equal-w4  (0, 12)       0.2354  0.0964    44.1   1.4e-09
+7♣↔6♥  equal-w4  (1, 12)       0.2351  0.0950    44.8   1.3e-09
+6♣↔5♥  equal-w4  (1, 12)       0.2358  0.0917    46.2   1.1e-09
+5♣↔4♥  equal-w4  (1, 12)       0.2362  0.0880    48.1   9.1e-10
+A♣↔K♣  equal-w4  (0, 12)       0.2343  0.0888    48.1   9.1e-10
+4♣↔3♥  equal-w4  (1, 12)       0.2373  0.0861    48.9   8.5e-10
+J♣↔Q♦  equal-w4  (3, 1)        0.2358  0.0833    50.9   6.9e-10
+T♣↔J♦  equal-w4  (3, 1)        0.2350  0.0809    52.6   5.8e-10
+Q♣↔K♦  equal-w4  (3, 1)        0.2342  0.0809    52.8   5.7e-10
+3♣↔2♥  equal-w4  (1, 12)       0.2363  0.0790    53.6   5.4e-10
+9♣↔T♦  equal-w4  (3, 1)        0.2346  0.0777    54.9   4.7e-10
+8♣↔9♦  equal-w4  (3, 1)        0.2352  0.0764    55.7   4.4e-10
+J♥↔T♠  equal-w4  (1, 12)       0.2372  0.0754    55.9   4.3e-10
+7♣↔8♦  equal-w4  (3, 1)        0.2375  0.0751    56.1   4.3e-10
+
+K♣ (self-blocking card) pairs: 12; P_G mean 0.0554 vs non-K♣ equal-w4 mean 0.0375
+
+(wrote results/mechanism_pairs.json; 76s)

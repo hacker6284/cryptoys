@@ -59,8 +59,11 @@ def indexOfStep (deck : Array Int) (card toV : Int) (i : Int) :
             let i' ← SudoRt.addI i (1 : Int)
             pure (SudoRt.Flow.cont (ρ := Int) i')
 
+/-- The emitted loop, up to the sudo line number of its not-found assert.
+Stated with `∃ ln` (witness found by `rfl`) so sudo edits that move the
+assert do not reach into Link 2. -/
 theorem index_of_as_loop (deck : Array Int) (card : Int) :
-    Doubledeal.index_of deck card =
+    ∃ ln : Nat, Doubledeal.index_of deck card =
       (do
         let _fromV := (0 : Int)
         let _toV := (51 : Int)
@@ -68,20 +71,19 @@ theorem index_of_as_loop (deck : Array Int) (card : Int) :
         let _out ← (SudoRt.runLoopOn (ρ := Int) _fromV fuel
           (indexOfStep deck card _toV)
           (fun _σ => do
-            let _as ← SudoRt.sudoAssert false 219
+            let _as ← SudoRt.sudoAssert false ln
             pure (0 : Int))
           (fun r => pure r))
-        pure _out) := by
-  unfold Doubledeal.index_of
-  rfl
+        pure _out) :=
+  ⟨_, by unfold Doubledeal.index_of; rfl⟩
 
-theorem index_of_found (key : List Nat) (hk : Perm52 key) (j : Nat) (hj : j < 52)
+theorem index_of_found (ln : Nat) (key : List Nat) (hk : Perm52 key) (j : Nat) (hj : j < 52)
     (i : Nat) (hi : i ≤ indexOf key j) (hidx : indexOf key j ≤ 51) :
     SudoRt.runLoopOn (Int.ofNat i)
       (fuelRange (Int.ofNat i) (Int.ofNat 51))
       (indexOfStep (embed key) (Int.ofNat j) 51)
       (fun _σ => do
-        let _as ← SudoRt.sudoAssert false 219
+        let _as ← SudoRt.sudoAssert false ln
         pure (0 : Int))
       (fun r => pure r) =
       .ok (Int.ofNat (indexOf key j)) := by
@@ -131,7 +133,8 @@ theorem index_of_found (key : List Nat) (hk : Perm52 key) (j : Nat) (hj : j < 52
 theorem index_of_refines (key : List Nat) (hk : Perm52 key) (j : Nat) (hj : j < 52) :
     Doubledeal.index_of (embed key) (Int.ofNat j) =
       .ok (Int.ofNat (indexOf key j)) := by
-  rw [index_of_as_loop]
+  obtain ⟨ln, hloop⟩ := index_of_as_loop (embed key) (Int.ofNat j)
+  rw [hloop]
   have hmem : j ∈ key := hk.complete ⟨j, hj⟩
   have hlt := indexOf_lt_of_mem key j hmem
   have h52 : indexOf key j ≤ 51 := by rw [hk.length] at hlt; omega
@@ -140,7 +143,7 @@ theorem index_of_refines (key : List Nat) (hk : Perm52 key) (j : Nat) (hj : j < 
     rw [fuelRange_le (Nat.zero_le _)]
     decide
   simp only [hfuel, except_bind_pure]
-  exact index_of_found key hk j hj 0 (Nat.zero_le _) h52
+  exact index_of_found ln key hk j hj 0 (Nat.zero_le _) h52
 
 def seat (m k : List Nat) (hm : m.length = 52) (hk : Perm52 k)
     (j : Nat) (hj : j < 52) : Nat :=

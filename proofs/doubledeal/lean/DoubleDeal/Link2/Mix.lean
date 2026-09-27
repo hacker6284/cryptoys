@@ -18,9 +18,6 @@ import DoubleDeal.Link2.SumLink
 
 namespace DoubleDeal.Link2
 
-/-- Card values for which `r + suit` stays inside i64 when `r < 4`. -/
-def CardBound (c : Nat) : Prop := c ≤ i64MaxNat - 4
-
 theorem step_seat_refines (card r c : Nat) (hr : r ≤ 3) (hc : c ≤ 12) (hb : CardBound card) :
     Doubledeal.step_seat (Int.ofNat card) (Int.ofNat r) (Int.ofNat c) =
       .ok (Int.ofNat ((r + suit card) % 4), Int.ofNat ((c + rank card) % 13)) := by
@@ -51,349 +48,234 @@ theorem gridStep_coords (card : Nat) (r : Fin 4) (c : Fin 13) :
     (gridStep card (r, c)).2.val = (c.val + rank card) % 13 := by
   simp [gridStep]
 
-/-- Generated occupancy-scan column step. `found = -1` until the first empty mark. -/
-def scanColStep (occ : Array (Array Int)) (row toV : Int) (σ : Int × Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Int × Int) (Int × Int × Int)) :=
-  let col := σ.1
+/-! ### `scan_row`: first free seat of one marker row, from column `start`
+
+The emitted helper scans `col = (start + k) mod 13` for `k = 0 .. 12` and
+keeps the first column whose mark is `0` (`found = -1` until then).
+-/
+
+/-- Loop body of the emitted `scan_row` (one offset `k`). -/
+def scanBody (occ : Array (Array Int)) (row start k found : Int) :
+    Except SudoRt.Trap (SudoRt.Flow Int Int) := do
+  let s ← SudoRt.addI start k
+  let col ← SudoRt.modI s (13 : Int)
+  let hit ← (if decide (found < (0 : Int)) then (do
+    let rowA ← SudoRt.atL occ row
+    let cell ← SudoRt.atL rowA col
+    pure (SudoRt.SEq.beq cell (0 : Int))) else pure false)
+  if hit then
+    pure (SudoRt.Flow.cont (ρ := Int) col)
+  else
+    pure (SudoRt.Flow.cont (ρ := Int) found)
+
+def scanRowStep (occ : Array (Array Int)) (row start toV : Int) (σ : Int × Int) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Int) Int) :=
+  let k := σ.1
   let found := σ.2
   do
-    if col > toV then
-      pure (SudoRt.Flow.brk (ρ := Int × Int × Int) (col, found))
+    if k > toV then
+      pure (SudoRt.Flow.brk (ρ := Int) (k, found))
     else
-      match ← ((do
-        let hit ← (if decide (found < (0 : Int)) then (do
-          let rowA ← SudoRt.atL occ row
-          let cell ← SudoRt.atL rowA col
-          pure (SudoRt.SEq.beq cell (0 : Int))) else pure false)
-        if hit then
-          pure (SudoRt.Flow.cont (ρ := Int × Int × Int) col)
-        else
-          pure (SudoRt.Flow.cont (ρ := Int × Int × Int) found)
-      ) : Except SudoRt.Trap (SudoRt.Flow _ (Int × Int × Int))) with
-      | .ret r => pure (SudoRt.Flow.ret (ρ := Int × Int × Int) r)
-      | .brk fs => pure (SudoRt.Flow.brk (ρ := Int × Int × Int) (col, fs))
+      match ← scanBody occ row start k found with
+      | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
+      | .brk fs => pure (SudoRt.Flow.brk (ρ := Int) (k, fs))
       | .cont fs =>
-          if (col == toV) = true then
-            pure (SudoRt.Flow.brk (ρ := Int × Int × Int) (col, fs))
+          if (k == toV) = true then
+            pure (SudoRt.Flow.brk (ρ := Int) (k, fs))
           else do
-            let col' ← SudoRt.addI col 1
-            pure (SudoRt.Flow.cont (ρ := Int × Int × Int) (col', fs))
+            let k' ← SudoRt.addI k 1
+            pure (SudoRt.Flow.cont (ρ := Int) (k', fs))
 
-def scanFound (empty : Nat → Bool) : Nat → Int
-  | 0 => -1
-  | n + 1 =>
-    let prev := scanFound empty n
-    if prev < 0 ∧ empty n then Int.ofNat n else prev
-
-theorem scanFound_neg_or_lt (empty : Nat → Bool) : ∀ n, scanFound empty n < 0 ∨
-    ∃ k, k < n ∧ scanFound empty n = Int.ofNat k
-  | 0 => Or.inl (by simp [scanFound])
-  | n + 1 => by
-    simp only [scanFound]
-    have ih := scanFound_neg_or_lt empty n
-    by_cases h : scanFound empty n < 0 ∧ empty n
-    · exact Or.inr ⟨n, Nat.lt_succ_self _, by simp [h]⟩
-    · simpa [h] using
-        ih.imp_right (fun ⟨k, hk, he⟩ => ⟨k, Nat.lt_succ_of_lt hk, he⟩)
+theorem scan_row_as_loop (occ : Array (Array Int)) (row start : Int) :
+    Doubledeal.scan_row occ row start =
+      (do
+        let found ← SudoRt.negI (1 : Int)
+        let _out ← (SudoRt.runLoopOn (ρ := Int) ((0 : Int), found) fuel13
+          (scanRowStep occ row start 12)
+          (fun σ => pure σ.2)
+          (fun r => pure r))
+        pure _out) := by
+  unfold Doubledeal.scan_row
+  rfl
 
 def occMarks (occ : Occ) : Grid Nat :=
   fun r c => if occGet occ r c then 1 else 0
 
-def rowEmpty (occ : Occ) (row : Fin 4) (i : Nat) : Bool :=
-  if h : i < 13 then !occGet occ row ⟨i, h⟩ else false
+theorem scanRowN_succ (occ : Occ) (row : Fin 4) (start fuel k : Nat) :
+    scanRowN occ row start (fuel + 1) k =
+      if occGet occ row (rotCol start k) then scanRowN occ row start fuel (k + 1)
+      else some (rotCol start k) := rfl
 
-theorem scanCol_hit (occ : Occ) (row : Fin 4) (j : Nat) (hj : j ≤ 12) :
-    scanColStep (embedGrid (occMarks occ)) (Int.ofNat row.val) 12
-      (Int.ofNat j, scanFound (rowEmpty occ row) j) =
-      if j = 12 then
-        .ok (SudoRt.Flow.brk (Int.ofNat j, scanFound (rowEmpty occ row) (j + 1)))
-      else
-        .ok (SudoRt.Flow.cont (Int.ofNat (j + 1), scanFound (rowEmpty occ row) (j + 1))) := by
-  have hj13 : j < 13 := by omega
-  unfold scanColStep
-  rw [if_neg (show ¬ Int.ofNat j > (12 : Int) from ofNat_not_gt hj)]
-  have hrow := embedGrid_get (occMarks occ) row
-  have hat := atL_ofNat (embedGrid (occMarks occ)) row.val (by rw [embedGrid_size]; exact row.isLt)
-  have hat' :
-      (embedGrid (occMarks occ))[row.val]'(by rw [embedGrid_size]; exact row.isLt) =
-        embed (toList13 (occMarks occ row)) := by simpa using hrow
-  rw [hat'] at hat
-  have hget := getElem_toList13 (occMarks occ row) ⟨j, hj13⟩
-  have hatC := atL_embed (toList13 (occMarks occ row)) j (by rw [length_toList13]; exact hj13)
-  by_cases hlt : scanFound (rowEmpty occ row) j < 0
-  · have hd : decide (scanFound (rowEmpty occ row) j < 0) = true := decide_eq_true hlt
-    simp only [hat, hd, ↓reduceIte, ok_bind]
+/-- `found` after offsets `0 .. n-1`. -/
+def scanFoundR (occ : Occ) (row : Fin 4) (start : Nat) : Nat → Int
+  | 0 => -1
+  | n + 1 =>
+    let prev := scanFoundR occ row start n
+    if prev < 0 ∧ occGet occ row (rotCol start n) = false then
+      Int.ofNat (rotCol start n).val
+    else prev
+
+/-- Sudo encoding of a scan result: the column, or `-1`. -/
+def encCol : Option (Fin 13) → Int
+  | some c => Int.ofNat c.val
+  | none => -1
+
+theorem scanBody_hit (occ : Occ) (row : Fin 4) (start : Nat) (hs : start < 13)
+    (j : Nat) (hj : j ≤ 12) :
+    scanBody (embedGrid (occMarks occ)) (Int.ofNat row.val) (Int.ofNat start) (Int.ofNat j)
+      (scanFoundR occ row start j) =
+      .ok (SudoRt.Flow.cont (scanFoundR occ row start (j + 1))) := by
+  unfold scanBody
+  rw [addI_ofNat start j (fits52 (by omega))]
+  simp only [ok_bind]
+  rw [show (13 : Int) = Int.ofNat 13 from rfl, modI_ofNat (start + j) (by decide)]
+  simp only [ok_bind]
+  have hm : (start + j) % 13 < 13 := Nat.mod_lt _ (by decide)
+  by_cases hlt : scanFoundR occ row start j < 0
+  · have hd : decide (scanFoundR occ row start j < 0) = true := decide_eq_true hlt
+    have hat := atL_ofNat (embedGrid (occMarks occ)) row.val
+      (by rw [embedGrid_size]; exact row.isLt)
+    have hat' :
+        (embedGrid (occMarks occ))[row.val]'(by rw [embedGrid_size]; exact row.isLt) =
+          embed (toList13 (occMarks occ row)) := by simpa using embedGrid_get (occMarks occ) row
+    rw [hat'] at hat
+    have hatC := atL_embed (toList13 (occMarks occ row)) ((start + j) % 13)
+      (by rw [length_toList13]; exact hm)
+    have hget := getElem_toList13 (occMarks occ row) ⟨(start + j) % 13, hm⟩
+    simp only [hd, ↓reduceIte, hat, ok_bind]
     rw [hatC]
     simp only [ok_bind, hget]
-    have hbit : occMarks occ row ⟨j, hj13⟩ = if rowEmpty occ row j then 0 else 1 := by
-      cases hb : occGet occ row ⟨j, hj13⟩ <;> simp [occMarks, rowEmpty, hj13, hb]
-    by_cases hempty : rowEmpty occ row j
-    · have hbeq : SudoRt.SEq.beq (Int.ofNat (occMarks occ row ⟨j, hj13⟩)) (0 : Int) = true := by
-        simp [hbit, hempty, SudoRt.SEq.beq, beq_int_iff]
-      simp only [hbeq, ↓reduceIte]
-      have hnext : scanFound (rowEmpty occ row) (j + 1) = Int.ofNat j := by
-        simp [scanFound, hlt, hempty]
-      simp only [hnext]
-      -- break or continue
-      by_cases heq : j = 12
-      · subst heq
-        simp only [ok_bind]
-        have hb : ((12 : Int) == (12 : Int)) = true := by decide
-        simp [hb, Pure.pure, Except.pure]
-      · simp only [Pure.pure, Except.pure, ok_bind]
-        have hb : ((Int.ofNat j) == (12 : Int)) = false := by
-          cases hbv : (Int.ofNat j) == (12 : Int) with
-          | false => rfl
-          | true =>
-            exact absurd (Int.ofNat.inj (by simpa [ofNat_eq_natCast] using (beq_int_iff _ _).mp hbv)) heq
-        simp only [hb, ↓reduceIte]
-        rw [addI_ofNat_one j (fits_succ_lt hj13 (by decide : 13 ≤ 52))]
-        simp [ok_bind, heq]
-    · have hbeq : SudoRt.SEq.beq (Int.ofNat (occMarks occ row ⟨j, hj13⟩)) (0 : Int) = false := by
-        simp [hbit, hempty, SudoRt.SEq.beq, beq_int_iff]
-      simp only [hbeq, ↓reduceIte]
-      have hnext : scanFound (rowEmpty occ row) (j + 1) = scanFound (rowEmpty occ row) j := by
-        simp [scanFound, hlt, hempty]
-      simp only [hnext]
-      by_cases heq : j = 12
-      · subst heq
-        simp only [ok_bind]
-        have hb : ((12 : Int) == (12 : Int)) = true := by decide
-        simp [hb, Pure.pure, Except.pure]
-      · simp only [Pure.pure, Except.pure, ok_bind]
-        have hb : ((Int.ofNat j) == (12 : Int)) = false := by
-          cases hbv : (Int.ofNat j) == (12 : Int) with
-          | false => rfl
-          | true =>
-            exact absurd (Int.ofNat.inj (by simpa [ofNat_eq_natCast] using (beq_int_iff _ _).mp hbv)) heq
-        simp only [hb, ↓reduceIte]
-        rw [addI_ofNat_one j (fits_succ_lt hj13 (by decide : 13 ≤ 52))]
-        simp [ok_bind, heq]
-  · have hd : decide (scanFound (rowEmpty occ row) j < 0) = false := decide_eq_false hlt
-    simp only [hat, hd, ↓reduceIte, ok_bind]
-    have hnext : scanFound (rowEmpty occ row) (j + 1) = scanFound (rowEmpty occ row) j := by
-      simp [scanFound, hlt]
-    simp only [hnext]
-    by_cases heq : j = 12
-    · subst heq
-      simp only [ok_bind]
-      have hb : ((12 : Int) == (12 : Int)) = true := by decide
-      simp [hb, Pure.pure, Except.pure]
-    · simp only [Pure.pure, Except.pure, ok_bind]
-      have hb : ((Int.ofNat j) == (12 : Int)) = false := by
-        cases hbv : (Int.ofNat j) == (12 : Int) with
-        | false => rfl
-        | true =>
-          exact absurd (Int.ofNat.inj (by simpa [ofNat_eq_natCast] using (beq_int_iff _ _).mp hbv)) heq
-      simp only [hb, ↓reduceIte]
-      rw [addI_ofNat_one j (fits_succ_lt hj13 (by decide : 13 ≤ 52))]
-      simp [ok_bind, heq]
+    cases hocc : occGet occ row (rotCol start j)
+    · have hbit : occMarks occ row ⟨(start + j) % 13, hm⟩ = 0 := by
+        simpa [occMarks, rotCol] using hocc
+      have hnext : scanFoundR occ row start (j + 1) = Int.ofNat ((start + j) % 13) := by
+        show (if scanFoundR occ row start j < 0 ∧ occGet occ row (rotCol start j) = false then
+          Int.ofNat (rotCol start j).val else scanFoundR occ row start j) = _
+        rw [if_pos ⟨hlt, hocc⟩]
+        rfl
+      rw [hbit, hnext]
+      rfl
+    · have hbit : occMarks occ row ⟨(start + j) % 13, hm⟩ = 1 := by
+        simpa [occMarks, rotCol] using hocc
+      have hnext : scanFoundR occ row start (j + 1) = scanFoundR occ row start j := by
+        simp [scanFoundR, hocc]
+      rw [hbit, hnext]
+      rfl
+  · have hd : decide (scanFoundR occ row start j < 0) = false := decide_eq_false hlt
+    have hnext : scanFoundR occ row start (j + 1) = scanFoundR occ row start j := by
+      simp [scanFoundR, hlt]
+    simp [hd, hnext, Pure.pure, Except.pure]
 
-theorem scan_loop {β : Type} (occ : Occ) (row : Fin 4)
-    (after : Int × Int → Except SudoRt.Trap β)
-    (onRet : (Int × Int × Int) → Except SudoRt.Trap β)
-    (goal : Except SudoRt.Trap β)
-    (hafter : after (Int.ofNat 12, scanFound (rowEmpty occ row) 13) = goal) :
-    SudoRt.runLoopOn ((0 : Int), (-1 : Int)) fuel13
-      (scanColStep (embedGrid (occMarks occ)) (Int.ofNat row.val) 12)
-      after onRet = goal := by
+theorem scanRowStep_hit (occ : Occ) (row : Fin 4) (start : Nat) (hs : start < 13)
+    (j : Nat) (hj : j ≤ 12) :
+    scanRowStep (embedGrid (occMarks occ)) (Int.ofNat row.val) (Int.ofNat start) 12
+      (Int.ofNat j, scanFoundR occ row start j) =
+      if j = 12 then
+        .ok (SudoRt.Flow.brk (Int.ofNat j, scanFoundR occ row start (j + 1)))
+      else
+        .ok (SudoRt.Flow.cont (Int.ofNat (j + 1), scanFoundR occ row start (j + 1))) := by
+  have hj13 : j < 13 := by omega
+  unfold scanRowStep
+  dsimp only
+  rw [if_neg (show ¬ Int.ofNat j > (12 : Int) from ofNat_not_gt hj)]
+  rw [scanBody_hit occ row start hs j hj]
+  simp only [ok_bind]
+  by_cases heq : j = 12
+  · subst heq
+    have hb : ((12 : Int) == (12 : Int)) = true := by decide
+    simp [hb, Pure.pure, Except.pure]
+  · have hb : ((Int.ofNat j) == (12 : Int)) = false := by
+      cases hbv : (Int.ofNat j) == (12 : Int) with
+      | false => rfl
+      | true =>
+        exact absurd (Int.ofNat.inj (by simpa [ofNat_eq_natCast] using (beq_int_iff _ _).mp hbv)) heq
+    simp only [hb, ↓reduceIte, Bool.false_eq_true]
+    rw [addI_ofNat_one j (fits_succ_lt hj13 (by decide : 13 ≤ 52))]
+    simp [ok_bind, heq, Pure.pure, Except.pure]
+
+theorem scanFoundR_stable (occ : Occ) (row : Fin 4) (start n : Nat)
+    (h : 0 ≤ scanFoundR occ row start n) :
+    ∀ j, scanFoundR occ row start (n + j) = scanFoundR occ row start n
+  | 0 => rfl
+  | j + 1 => by
+    have ih := scanFoundR_stable occ row start n h j
+    rw [← Nat.add_assoc]
+    simp only [scanFoundR, ih]
+    have : ¬ scanFoundR occ row start n < 0 := by omega
+    simp [this]
+
+theorem scanFoundR_encode_from (occ : Occ) (row : Fin 4) (start : Nat) :
+    ∀ m n, n + m = 13 → scanFoundR occ row start n = -1 →
+      scanFoundR occ row start 13 = encCol (scanRowN occ row start m n)
+  | 0, n, hnm, h => by
+    have : n = 13 := by omega
+    subst this
+    simp [h, scanRowN, encCol]
+  | m + 1, n, hnm, h => by
+    rw [scanRowN_succ]
+    cases hocc : occGet occ row (rotCol start n)
+    · have hnext : scanFoundR occ row start (n + 1) = Int.ofNat (rotCol start n).val := by
+        simp [scanFoundR, h, hocc]
+      have hst := scanFoundR_stable occ row start (n + 1)
+        (by rw [hnext]; exact Int.ofNat_nonneg _) m
+      rw [show n + 1 + m = 13 by omega, hnext] at hst
+      simp [hst, encCol]
+    · have hnext : scanFoundR occ row start (n + 1) = -1 := by
+        simp [scanFoundR, h, hocc]
+      simpa using scanFoundR_encode_from occ row start m (n + 1) (by omega) hnext
+
+theorem scanFoundR_encode (occ : Occ) (row : Fin 4) (start : Nat) :
+    scanFoundR occ row start 13 = encCol (scanRow occ row start) :=
+  scanFoundR_encode_from occ row start 13 0 rfl rfl
+
+/-- Emitted `scan_row` = the model's rotated `scanRow`, encoded as a column or `-1`. -/
+theorem scan_row_refines (occ : Occ) (row : Fin 4) (start : Nat) (hs : start < 13) :
+    Doubledeal.scan_row (embedGrid (occMarks occ)) (Int.ofNat row.val) (Int.ofNat start) =
+      .ok (encCol (scanRow occ row start)) := by
+  rw [scan_row_as_loop, negI_one]
+  simp only [ok_bind]
   have hstep : ∀ j, 0 ≤ j → j ≤ 12 →
-      scanColStep (embedGrid (occMarks occ)) (Int.ofNat row.val) 12
-        (Int.ofNat j, scanFound (rowEmpty occ row) j) =
+      scanRowStep (embedGrid (occMarks occ)) (Int.ofNat row.val) (Int.ofNat start) 12
+        (Int.ofNat j, scanFoundR occ row start j) =
         if j = 12 then
-          .ok (SudoRt.Flow.brk (Int.ofNat j, scanFound (rowEmpty occ row) (j + 1)))
+          .ok (SudoRt.Flow.brk (Int.ofNat j, scanFoundR occ row start (j + 1)))
         else
-          .ok (SudoRt.Flow.cont (Int.ofNat (j + 1), scanFound (rowEmpty occ row) (j + 1))) :=
-    fun j _ hj => scanCol_hit occ row j hj
+          .ok (SudoRt.Flow.cont (Int.ofNat (j + 1), scanFoundR occ row start (j + 1))) :=
+    fun j _ hj => scanRowStep_hit occ row start hs j hj
   have hrun := chain_loop
-    (scanColStep (embedGrid (occMarks occ)) (Int.ofNat row.val) 12)
-    after onRet (fun j => scanFound (rowEmpty occ row) j) 0 12 (Nat.zero_le _) hstep goal hafter
+    (scanRowStep (embedGrid (occMarks occ)) (Int.ofNat row.val) (Int.ofNat start) 12)
+    (fun σ => pure σ.2) (fun r => pure r)
+    (fun j => scanFoundR occ row start j) 0 12 (Nat.zero_le _) hstep
+    (.ok (encCol (scanRow occ row start)))
+    (by simp [scanFoundR_encode, Pure.pure, Except.pure])
   have hcast :
       SudoRt.runLoopOn ((0 : Int), (-1 : Int)) fuel13
-        (scanColStep (embedGrid (occMarks occ)) (Int.ofNat row.val) 12) after onRet =
-      SudoRt.runLoopOn (Int.ofNat 0, scanFound (rowEmpty occ row) 0)
+        (scanRowStep (embedGrid (occMarks occ)) (Int.ofNat row.val) (Int.ofNat start) 12)
+        (fun σ => pure σ.2) (fun r => pure r) =
+      SudoRt.runLoopOn (Int.ofNat 0, scanFoundR occ row start 0)
         (fuelRange (Int.ofNat 0) (Int.ofNat 12))
-        (scanColStep (embedGrid (occMarks occ)) (Int.ofNat row.val) 12) after onRet := by
-    rw [fuel13_eq, scanFound, show (0 : Int) = Int.ofNat 0 from rfl]
-  exact hcast.trans hrun
+        (scanRowStep (embedGrid (occMarks occ)) (Int.ofNat row.val) (Int.ofNat start) 12)
+        (fun σ => pure σ.2) (fun r => pure r) := by
+    rw [fuel13_eq, scanFoundR, show (0 : Int) = Int.ofNat 0 from rfl]
+  rw [hcast, hrun, except_bind_pure]
 
-/-- `scanFound n` is the first empty column below `n`, or `-1`. -/
-theorem scanFound_spec (empty : Nat → Bool) :
-    ∀ n, (∀ i, i < n → empty i = false) ∧ scanFound empty n = -1 ∨
-      ∃ k, k < n ∧ empty k = true ∧ (∀ i, i < k → empty i = false) ∧
-        scanFound empty n = Int.ofNat k
-  | 0 => Or.inl ⟨fun i hi => by omega, by simp [scanFound]⟩
-  | n + 1 => by
-    have ih := scanFound_spec empty n
-    simp only [scanFound]
-    cases ih with
-    | inl hfull =>
-      by_cases hempty : empty n
-      · refine Or.inr ⟨n, Nat.lt_succ_self _, hempty, hfull.1, ?_⟩
-        simp [hfull.2, hempty]
-      · refine Or.inl ⟨?_, by simp [hfull.2, hempty]⟩
-        intro i hi
-        by_cases hi' : i < n
-        · exact hfull.1 i hi'
-        · have : i = n := by omega
-          simpa [this] using hempty
-    | inr hsome =>
-      obtain ⟨k, hk, hemp, hbefore, hkval⟩ := hsome
-      refine Or.inr ⟨k, Nat.lt_succ_of_lt hk, hemp, hbefore, ?_⟩
-      have hk0 : ¬ Int.ofNat k < (0 : Int) := Int.not_lt.mpr (Int.ofNat_zero_le _)
-      rw [hkval]
-      rw [if_neg (fun h : Int.ofNat k < 0 ∧ empty n = true => hk0 h.1)]
+/-! ### `overflow_seat`: marker rows `t, t+1, …`, each scanned from `start` -/
 
-def occNat (occ : Occ) (row : Fin 4) (i : Nat) : Bool :=
-  if h : i < 13 then occGet occ row ⟨i, h⟩ else true
+/-- Loop body of the emitted `overflow_seat` (one attempt on row `t`). -/
+def overflowBody (occ : Array (Array Int)) (start t : Int) :
+    Except SudoRt.Trap (SudoRt.Flow Int (Int × Int × Int)) := do
+  let row := t
+  let found ← Doubledeal.scan_row occ row start
+  if decide (found ≥ (0 : Int)) then do
+    let t1 ← SudoRt.addI t 1
+    let t' ← SudoRt.modI t1 4
+    pure (SudoRt.Flow.ret (ρ := Int × Int × Int) (row, found, t'))
+  else do
+    let t1 ← SudoRt.addI t 1
+    let t' ← SudoRt.modI t1 4
+    pure (SudoRt.Flow.cont (ρ := Int × Int × Int) t')
 
-theorem scanRowN_spec (occ : Occ) (row : Fin 4) :
-    ∀ fuel col, col + fuel ≤ 13 →
-      (∀ i, col ≤ i → i < col + fuel → occNat occ row i = true) ∧
-        scanRowN occ row fuel col = none ∨
-      ∃ c : Fin 13, col ≤ c.val ∧ c.val < col + fuel ∧ occGet occ row c = false ∧
-        (∀ i, col ≤ i → i < c.val → occNat occ row i = true) ∧
-        scanRowN occ row fuel col = some c
-  | 0, col, _ => Or.inl ⟨fun i _ hi => by omega, by simp [scanRowN]⟩
-  | fuel + 1, col, hsum => by
-    have hclt : col < 13 := by omega
-    simp only [scanRowN, hclt, ↓reduceDIte]
-    by_cases hocc : occGet occ row ⟨col, hclt⟩
-    · have ih := scanRowN_spec occ row fuel (col + 1) (by omega)
-      simp only [hocc, ↓reduceIte]
-      cases ih with
-      | inl hfull =>
-        refine Or.inl ⟨?_, hfull.2⟩
-        intro i hi1 hi2
-        by_cases heq : i = col
-        · subst heq
-          simp [occNat, hclt, hocc]
-        · exact hfull.1 i (by omega) (by omega)
-      | inr hsome =>
-        obtain ⟨c, hc1, hc2, hemp, hbefore, hcval⟩ := hsome
-        have hc2' : c.val < col + (fuel + 1) := by omega
-        refine Or.inr ⟨c, by omega, hc2', hemp, ?_, hcval⟩
-        intro i hi1 hi2
-        by_cases heq : i = col
-        · subst heq
-          simp [occNat, hclt, hocc]
-        · exact hbefore i (by omega) hi2
-    · have hfalse : occGet occ row ⟨col, hclt⟩ = false := by
-        simpa [Bool.not_eq_true] using hocc
-      refine Or.inr ⟨⟨col, hclt⟩, Nat.le_refl _, ?_, hfalse,
-        fun i _ hi2 => by
-          have : (⟨col, hclt⟩ : Fin 13).val = col := rfl
-          omega, ?_⟩
-      · have : (⟨col, hclt⟩ : Fin 13).val = col := rfl
-        omega
-      · simp [hfalse]
-
-theorem scanFound_encode (occ : Occ) (row : Fin 4) :
-    scanFound (rowEmpty occ row) 13 =
-      match scanRow occ row with
-      | some c => Int.ofNat c.val
-      | none => -1 := by
-  have hf := scanFound_spec (rowEmpty occ row) 13
-  have hs := scanRowN_spec occ row 13 0 (by decide)
-  simp only [scanRow] at hs
-  cases hf with
-  | inl hfull =>
-    cases hs with
-    | inl hnone =>
-      rw [scanRow, hfull.2, hnone.2]
-    | inr hsome =>
-      obtain ⟨c, hc1, hc2, hemp, _, _⟩ := hsome
-      have hempty : rowEmpty occ row c.val = true := by simp [rowEmpty, c.isLt, hemp]
-      exact absurd hempty (by simpa using hfull.1 c.val hc2)
-  | inr hsome =>
-    obtain ⟨k, hk, hemp, hbefore, hkval⟩ := hsome
-    have hklt : k < 13 := hk
-    cases hs with
-    | inl hnone =>
-      have hocc : occNat occ row k = true := hnone.1 k (by omega) (by omega)
-      have hempty : rowEmpty occ row k = false := by
-        simp [rowEmpty, occNat, hklt] at hocc ⊢
-        simpa [Bool.not_eq_true] using hocc
-      exact absurd hemp (by simpa using hempty)
-    | inr hrow =>
-      obtain ⟨c, hc1, hc2, hemp', hbefore', hcval⟩ := hrow
-      have hempk : occGet occ row ⟨k, hklt⟩ = false := by
-        simpa [rowEmpty, hklt] using hemp
-      have hk' : k = c.val := by
-        cases Nat.lt_trichotomy k c.val with
-        | inl hlt =>
-          have hnat : occNat occ row k = true := hbefore' k (Nat.zero_le _) hlt
-          simp [occNat, hklt, hempk] at hnat
-        | inr hrest =>
-          cases hrest with
-          | inl heq => exact heq
-          | inr hgt =>
-            have hem : rowEmpty occ row c.val = false := hbefore c.val hgt
-            simp [rowEmpty, c.isLt, hemp'] at hem
-      cases hk'
-      rw [scanRow, hkval, hcval]
-
-theorem attempt_refines (occ : Occ) (t : Nat) (ht : t < 4) :
-    (do
-      let row := Int.ofNat t
-      let found ← SudoRt.negI (1 : Int)
-      let fl ← (SudoRt.runLoopOn (ρ := Int × Int × Int) ((0 : Int), found) fuel13
-        (scanColStep (embedGrid (occMarks occ)) row 12)
-        (fun σ => do
-          let found := σ.2
-          if decide (found ≥ (0 : Int)) then
-            let t1 ← SudoRt.addI row 1
-            let t' ← SudoRt.modI t1 4
-            pure (SudoRt.Flow.ret (ρ := Int × Int × Int) (row, found, t'))
-          else
-            let t1 ← SudoRt.addI row 1
-            let t' ← SudoRt.modI t1 4
-            pure (SudoRt.Flow.cont (ρ := Int × Int × Int) t'))
-        (fun r => pure (SudoRt.Flow.ret (ρ := Int × Int × Int) r)))
-      pure fl) =
-      match scanRow occ ⟨t, ht⟩ with
-      | some c => .ok (SudoRt.Flow.ret (Int.ofNat t, Int.ofNat c.val, Int.ofNat ((t + 1) % 4)))
-      | none => .ok (SudoRt.Flow.cont (Int.ofNat ((t + 1) % 4))) := by
-  rw [negI_one]
-  simp only [ok_bind]
-  have hfuel : fuel13 = fuelRange (Int.ofNat 0) (Int.ofNat 12) := fuel13_eq
-  -- `scan_loop` starts at literal `-1`, which `negI` just produced.
-  have hscan := scan_loop occ ⟨t, ht⟩
-    (fun σ => do
-      let found := σ.2
-      if decide (found ≥ (0 : Int)) then
-        let t1 ← SudoRt.addI (Int.ofNat t) 1
-        let t' ← SudoRt.modI t1 4
-        pure (SudoRt.Flow.ret (ρ := Int × Int × Int) (Int.ofNat t, found, t'))
-      else
-        let t1 ← SudoRt.addI (Int.ofNat t) 1
-        let t' ← SudoRt.modI t1 4
-        pure (SudoRt.Flow.cont (ρ := Int × Int × Int) t'))
-    (fun r => pure (SudoRt.Flow.ret (ρ := Int × Int × Int) r))
-    (match scanRow occ ⟨t, ht⟩ with
-      | some c => .ok (SudoRt.Flow.ret (Int.ofNat t, Int.ofNat c.val, Int.ofNat ((t + 1) % 4)))
-      | none => .ok (SudoRt.Flow.cont (Int.ofNat ((t + 1) % 4))))
-    (by
-      rw [scanFound_encode]
-      have hadd := addI_ofNat_one t (fits_succ_lt ht (by decide : 4 ≤ 52))
-      rw [show (4 : Int) = Int.ofNat 4 from rfl]
-      cases hscanR : scanRow occ ⟨t, ht⟩ with
-      | some c =>
-        simp only [hscanR]
-        have hge : decide (Int.ofNat c.val ≥ (0 : Int)) = true := by
-          simp [decide_eq_true_eq, Int.ofNat_nonneg]
-        simp only [hge, ↓reduceIte, hadd, ok_bind]
-        rw [modI_ofNat (t + 1) (by decide)]
-        rfl
-      | none =>
-        simp only [hscanR]
-        have hge : decide ((-1 : Int) ≥ (0 : Int)) = false := by decide
-        simp only [hge, ↓reduceIte, hadd, ok_bind]
-        rw [modI_ofNat (t + 1) (by decide)]
-        rfl)
-  simpa [except_bind_pure, hfuel] using hscan
-
-def overflowStep (occ : Array (Array Int)) (toV : Int) (σ : Int × Int) :
+def overflowStep (occ : Array (Array Int)) (start toV : Int) (σ : Int × Int) :
     Except SudoRt.Trap (SudoRt.Flow (Int × Int) (Int × Int × Int)) :=
   let attempt := σ.1
   let t := σ.2
@@ -401,25 +283,7 @@ def overflowStep (occ : Array (Array Int)) (toV : Int) (σ : Int × Int) :
     if attempt > toV then
       pure (SudoRt.Flow.brk (ρ := Int × Int × Int) (attempt, t))
     else
-      match ← ((do
-        let row := t
-        let found ← SudoRt.negI (1 : Int)
-        let fuel : Nat := if (0 : Int) > 12 then 1 else ((12 : Int) - 0).natAbs + 1
-        let fl ← (SudoRt.runLoopOn (ρ := Int × Int × Int) ((0 : Int), found) fuel
-          (scanColStep occ row 12)
-          (fun σ => do
-            let found := σ.2
-            if decide (found ≥ (0 : Int)) then
-              let t1 ← SudoRt.addI t 1
-              let t' ← SudoRt.modI t1 4
-              pure (SudoRt.Flow.ret (ρ := Int × Int × Int) (row, found, t'))
-            else
-              let t1 ← SudoRt.addI t 1
-              let t' ← SudoRt.modI t1 4
-              pure (SudoRt.Flow.cont (ρ := Int × Int × Int) t'))
-          (fun r => pure (SudoRt.Flow.ret (ρ := Int × Int × Int) r)))
-        pure fl
-      ) : Except SudoRt.Trap (SudoRt.Flow _ (Int × Int × Int))) with
+      match ← overflowBody occ start t with
       | .ret r => pure (SudoRt.Flow.ret (ρ := Int × Int × Int) r)
       | .brk fs => pure (SudoRt.Flow.brk (ρ := Int × Int × Int) (attempt, fs))
       | .cont fs =>
@@ -429,25 +293,54 @@ def overflowStep (occ : Array (Array Int)) (toV : Int) (σ : Int × Int) :
             let attempt' ← SudoRt.addI attempt 1
             pure (SudoRt.Flow.cont (ρ := Int × Int × Int) (attempt', fs))
 
-theorem overflow_as_loop (occ : Array (Array Int)) (t : Int) :
-    Doubledeal.overflow_seat occ t =
+/-- The emitted loop, up to the sudo line number of its unreachable
+`assert false`. Stated with `∃ ln` (witness found by `rfl`) so sudo edits
+that move the assert do not reach into Link 2. -/
+theorem overflow_as_loop (occ : Array (Array Int)) (t start : Int) :
+    ∃ ln : Nat, Doubledeal.overflow_seat occ t start =
       (do
         let _fromV := (0 : Int)
         let _toV := (3 : Int)
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
         let _out ← (SudoRt.runLoopOn (ρ := Int × Int × Int) (_fromV, t) fuel
-          (overflowStep occ _toV)
-          (fun σ => do
-            let _as ← SudoRt.sudoAssert false 143
+          (overflowStep occ start _toV)
+          (fun _σ => do
+            let _as ← SudoRt.sudoAssert false ln
             pure ((0 : Int), (0 : Int), (0 : Int)))
           (fun r => pure r))
-        pure _out) := by
-  unfold Doubledeal.overflow_seat
-  rfl
+        pure _out) :=
+  ⟨_, by unfold Doubledeal.overflow_seat; rfl⟩
 
-theorem overflowStep_hit (occ : Occ) (attempt t : Nat) (ht : t < 4) (ha : attempt ≤ 3) :
-    overflowStep (embedGrid (occMarks occ)) 3 (Int.ofNat attempt, Int.ofNat t) =
-      match scanRow occ ⟨t, ht⟩ with
+theorem overflowBody_hit (occ : Occ) (t : Nat) (ht : t < 4) (start : Nat) (hs : start < 13) :
+    overflowBody (embedGrid (occMarks occ)) (Int.ofNat start) (Int.ofNat t) =
+      match scanRow occ ⟨t, ht⟩ start with
+      | some c => .ok (SudoRt.Flow.ret (Int.ofNat t, Int.ofNat c.val, Int.ofNat ((t + 1) % 4)))
+      | none => .ok (SudoRt.Flow.cont (Int.ofNat ((t + 1) % 4))) := by
+  unfold overflowBody
+  have hscan := scan_row_refines occ ⟨t, ht⟩ start hs
+  simp only at hscan
+  dsimp only
+  rw [hscan]
+  simp only [ok_bind]
+  have hadd := addI_ofNat_one t (fits_succ_lt ht (by decide : 4 ≤ 52))
+  rw [show (4 : Int) = Int.ofNat 4 from rfl]
+  cases hscanR : scanRow occ ⟨t, ht⟩ start with
+  | some c =>
+    have hge : decide (Int.ofNat c.val ≥ (0 : Int)) = true := by
+      simp [decide_eq_true_eq, Int.ofNat_nonneg]
+    simp only [encCol, hge, ↓reduceIte, hadd, ok_bind]
+    rw [modI_ofNat (t + 1) (by decide)]
+    rfl
+  | none =>
+    have hge : decide ((-1 : Int) ≥ (0 : Int)) = false := by decide
+    simp only [encCol, hge, ↓reduceIte, hadd, ok_bind, Bool.false_eq_true]
+    rw [modI_ofNat (t + 1) (by decide)]
+    rfl
+
+theorem overflowStep_hit (occ : Occ) (start : Nat) (hs : start < 13)
+    (attempt t : Nat) (ht : t < 4) (ha : attempt ≤ 3) :
+    overflowStep (embedGrid (occMarks occ)) (Int.ofNat start) 3 (Int.ofNat attempt, Int.ofNat t) =
+      match scanRow occ ⟨t, ht⟩ start with
       | some c =>
         .ok (SudoRt.Flow.ret (Int.ofNat t, Int.ofNat c.val, Int.ofNat ((t + 1) % 4)))
       | none =>
@@ -456,16 +349,14 @@ theorem overflowStep_hit (occ : Occ) (attempt t : Nat) (ht : t < 4) (ha : attemp
         else
           .ok (SudoRt.Flow.cont (Int.ofNat (attempt + 1), Int.ofNat ((t + 1) % 4))) := by
   unfold overflowStep
+  dsimp only
   rw [if_neg (show ¬ Int.ofNat attempt > (3 : Int) from ofNat_not_gt ha)]
-  have hatt := attempt_refines occ t ht
-  rw [show (if (0 : Int) > 12 then 1 else ((12 : Int) - 0).natAbs + 1) = fuel13 from rfl]
-  rw [hatt]
-  simp only [ok_bind]
-  cases hrow : scanRow occ ⟨t, ht⟩ with
+  rw [overflowBody_hit occ t ht start hs]
+  cases hrow : scanRow occ ⟨t, ht⟩ start with
   | some c =>
-    simp only [hrow, ok_bind, Pure.pure, Except.pure]
+    simp only [ok_bind, Pure.pure, Except.pure]
   | none =>
-    simp only [hrow, Pure.pure, Except.pure]
+    simp only [ok_bind, Pure.pure, Except.pure]
     by_cases heq : attempt = 3
     · subst heq
       have hb : ((3 : Int) == (3 : Int)) = true := by decide
@@ -475,17 +366,18 @@ theorem overflowStep_hit (occ : Occ) (attempt t : Nat) (ht : t < 4) (ha : attemp
         | false => rfl
         | true =>
           exact absurd (Int.ofNat.inj (by simpa [ofNat_eq_natCast] using (beq_int_iff _ _).mp hbv)) heq
-      simp only [hb, ↓reduceIte]
+      simp only [hb, ↓reduceIte, Bool.false_eq_true]
       rw [addI_ofNat_one attempt (fits_succ_lt (by omega : attempt < 3) (by decide : 3 ≤ 52))]
       simp [ok_bind, heq]
 
-theorem overflow_fuel_some (occ : Occ) (fuel t : Nat) (ht : t < 4) (hf : fuel ≤ 4)
+theorem overflow_fuel_some (occ : Occ) (start : Nat) (hs : start < 13) (ln : Nat)
+    (fuel t : Nat) (ht : t < 4) (hf : fuel ≤ 4)
     (r : Fin 4) (c : Fin 13) (t' : Nat)
-    (h : overflowN occ fuel t = some ((r, c), t')) :
+    (h : overflowN occ start fuel t = some ((r, c), t')) :
     SudoRt.runLoopOn (Int.ofNat (4 - fuel), Int.ofNat t) fuel
-      (overflowStep (embedGrid (occMarks occ)) 3)
+      (overflowStep (embedGrid (occMarks occ)) (Int.ofNat start) 3)
       (fun _ => do
-        let _as ← SudoRt.sudoAssert false 143
+        let _as ← SudoRt.sudoAssert false ln
         pure ((0 : Int), (0 : Int), (0 : Int)))
       (fun x => pure x) =
       .ok (Int.ofNat r.val, Int.ofNat c.val, Int.ofNat t') := by
@@ -493,12 +385,12 @@ theorem overflow_fuel_some (occ : Occ) (fuel t : Nat) (ht : t < 4) (hf : fuel �
   | zero => simp [overflowN] at h
   | succ fuel ih =>
     have hstart : 4 - (fuel + 1) ≤ 3 := by omega
-    have hstep := overflowStep_hit occ (4 - (fuel + 1)) t ht hstart
+    have hstep := overflowStep_hit occ start hs (4 - (fuel + 1)) t ht hstart
     rw [runLoopOn_succ]
     rw [hstep]
     have htmod : t % 4 = t := Nat.mod_eq_of_lt ht
     simp only [overflowN, htmod] at h
-    cases hscan : scanRow occ ⟨t, ht⟩ with
+    cases hscan : scanRow occ ⟨t, ht⟩ start with
     | some c0 =>
       simp only [hscan, h, Pure.pure, Except.pure] at h ⊢
       injection h with hpair
@@ -520,17 +412,18 @@ theorem overflow_fuel_some (occ : Occ) (fuel t : Nat) (ht : t < 4) (hf : fuel �
       have hrec := ih ((t + 1) % 4) ht' hf' r c t' h
       simpa [hfuelEq] using hrec
 
-theorem overflow_seat_refines (occ : Occ) (t : Nat) (ht : t < 4)
+theorem overflow_seat_refines (occ : Occ) (t : Nat) (ht : t < 4) (start : Nat) (hs : start < 13)
     (r : Fin 4) (c : Fin 13) (t' : Nat)
-    (h : overflowSeat occ t = some ((r, c), t')) :
-    Doubledeal.overflow_seat (embedGrid (occMarks occ)) (Int.ofNat t) =
+    (h : overflowSeat occ t start = some ((r, c), t')) :
+    Doubledeal.overflow_seat (embedGrid (occMarks occ)) (Int.ofNat t) (Int.ofNat start) =
       .ok (Int.ofNat r.val, Int.ofNat c.val, Int.ofNat t') := by
-  rw [overflow_as_loop]
+  obtain ⟨ln, hloop⟩ := overflow_as_loop (embedGrid (occMarks occ)) (Int.ofNat t) (Int.ofNat start)
+  rw [hloop]
   dsimp only
   have hfuel : (if (0 : Int) > (3 : Int) then 1 else ((3 : Int) - 0).natAbs + 1) = 4 := by
     decide
   rw [hfuel, except_bind_pure]
-  have hgo := overflow_fuel_some occ 4 t ht (Nat.le_refl _) r c t' (by
+  have hgo := overflow_fuel_some occ start hs ln 4 t ht (Nat.le_refl _) r c t' (by
     simpa [overflowSeat] using h)
   rw [show (0 : Int) = Int.ofNat 0 from rfl]
   exact hgo
@@ -575,8 +468,8 @@ theorem seatArr_full (g : NatGrid) (occ : Occ) (h : ∀ r c, occGet occ r c = tr
     rw [seatArr_get g occ ⟨i, hi4⟩, embedGrid_get g ⟨i, hi4⟩]
     simp [embed, seatRow, h, map_toList13_ofNat]
 
-theorem overflowN_t_lt (occ : Occ) :
-    ∀ fuel t r c t', overflowN occ fuel t = some ((r, c), t') → t' < 4
+theorem overflowN_t_lt (occ : Occ) (start : Nat) :
+    ∀ fuel t r c t', overflowN occ start fuel t = some ((r, c), t') → t' < 4
   | 0, t, r, c, t', h => by simp [overflowN] at h
   | fuel + 1, t, r, c, t', h => by
     simp only [overflowN] at h
@@ -585,7 +478,7 @@ theorem overflowN_t_lt (occ : Occ) :
       cases h
       exact Nat.mod_lt _ (by decide)
     · next hn =>
-      exact overflowN_t_lt occ fuel _ r c t' h
+      exact overflowN_t_lt occ start fuel _ r c t' h
 
 /-- One column of the occupancy bitmap: `0` if the seat is empty, else `1`. -/
 def markColStep (grid : Array (Array Int)) (rr toV : Int) (σ : Int × Array Int) :
@@ -879,7 +772,7 @@ def mixStep (d : Array Int) (toV : Int)
                   (fun σ =>
                     let occ := σ.2
                     do
-                      let stepped ← Doubledeal.overflow_seat occ t
+                      let stepped ← Doubledeal.overflow_seat occ t tc
                       let ⟨r, c, t⟩ := stepped
                       let row ← SudoRt.atL grid r
                       let row ← SudoRt.putL row c card
@@ -915,9 +808,10 @@ theorem chooseSeat!_t_lt (st : WalkState) (ht : st.t < 4) (hct : occCount st.occ
   | some pair =>
     by_cases hocc : occAt st.occ (gridStep pair.1 pair.2) = true
     · simp only [chooseSeat!, chooseSeat?, hprev, hocc, ↓reduceIte]
-      obtain ⟨p, t', hs, _hf⟩ := overflow_some_of_count_lt st.occ st.t hct
+      obtain ⟨p, t', hs, _hf⟩ :=
+        overflow_some_of_count_lt st.occ st.t (gridStep pair.1 pair.2).2.val hct
       simp only [hs]
-      exact overflowN_t_lt st.occ 4 st.t p.1 p.2 t' (by simpa [overflowSeat] using hs)
+      exact overflowN_t_lt st.occ _ 4 st.t p.1 p.2 t' (by simpa [overflowSeat] using hs)
     · have hf : occAt st.occ (gridStep pair.1 pair.2) = false := eq_false_of_ne_true hocc
       simp [chooseSeat!, chooseSeat?, hprev, hf]
       exact ht
@@ -954,7 +848,7 @@ theorem chooseSeat!_free_target (st : WalkState) (card : Nat) (pos : Fin 4 × Fi
 theorem chooseSeat!_overflow (st : WalkState) (card : Nat) (pos p : Fin 4 × Fin 13) (t' : Nat)
     (hprev : st.prev = some (card, pos))
     (hocc : occAt st.occ (gridStep card pos) = true)
-    (hov : overflowSeat st.occ st.t = some (p, t')) :
+    (hov : overflowSeat st.occ st.t (gridStep card pos).2.val = some (p, t')) :
     chooseSeat! st = (p, t') := by
   simp [chooseSeat!, chooseSeat?, hprev, hocc, hov]
 
@@ -1353,11 +1247,12 @@ theorem mixStep_hit (hand : Fin 52 → Nat) (hcard : ∀ i, CardBound (hand i))
       have hct : occCount (placeN hand n).2.occ < 52 := by
         rw [placeN_count hand n (Nat.le_of_lt hlen)]; omega
       obtain ⟨p, t', hov, hfr⟩ := overflow_some_of_count_lt (placeN hand n).2.occ
-        (placeN hand n).2.t hct
+        (placeN hand n).2.t target.2.val hct
       have hloop : SudoRt.runLoopOn ((0 : Int), (#[] : Array (Array Int))) fuel4
           (markRowStep (seatArr (placeN hand n).1 (placeN hand n).2.occ) 3)
           (fun σ => do
             let stepped ← Doubledeal.overflow_seat σ.2 (Int.ofNat (placeN hand n).2.t)
+              (Int.ofNat target.2.val)
             let row ← SudoRt.atL (seatArr (placeN hand n).1 (placeN hand n).2.occ) stepped.1
             let row ← SudoRt.putL row stepped.2.1 (Int.ofNat (hand ⟨n, hlen⟩))
             let grid ← SudoRt.putL (seatArr (placeN hand n).1 (placeN hand n).2.occ) stepped.1 row
@@ -1371,7 +1266,7 @@ theorem mixStep_hit (hand : Fin 52 → Nat) (hcard : ∀ i, CardBound (hand i))
               Int.ofNat (hand ⟨n, hlen⟩), Int.ofNat p.1.val, Int.ofNat p.2.val)) := by
         refine occ_rows_loop (placeN hand n).1 (placeN hand n).2.occ _ _ _ ?_
         have hseat := overflow_seat_refines (placeN hand n).2.occ (placeN hand n).2.t htlt
-          p.1 p.2 t' hov
+          target.2.val target.2.isLt p.1 p.2 t' hov
         simp only [hseat, ok_bind]
         have hget : occGet (placeN hand n).2.occ p.1 p.2 = false := hfr
         have hpl := place_cont (placeN hand n).1 (placeN hand n).2.occ p.1 p.2

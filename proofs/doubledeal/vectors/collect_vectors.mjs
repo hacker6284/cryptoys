@@ -4,8 +4,9 @@
 //
 // Usage: node collect_vectors.mjs <sudoc-js-outdir>
 
+import { readFileSync } from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const outDir = process.argv[2];
 if (!outDir) {
@@ -41,22 +42,30 @@ const identity = Array.from({ length: 52 }, (_, i) => i);
 const reverse = Array.from({ length: 52 }, (_, i) => 51 - i);
 const mul17 = Array.from({ length: 52 }, (_, i) => (i * 17) % 52);
 
-// Published encrypt/decrypt KAT from doubledeal.sudo "decrypt undoes encrypt".
-const publishedMessage = [
-  0, 32, 38, 42, 13, 19, 17, 5, 41, 25, 48, 6, 31, 44, 3, 16, 7, 4, 34, 40, 18,
-  49, 14, 51, 20, 46, 28, 11, 10, 15, 45, 43, 2, 26, 22, 8, 37, 33, 12, 35, 24,
-  50, 39, 30, 21, 1, 27, 47, 36, 23, 29, 9,
-];
-const publishedKey = [
-  48, 42, 25, 26, 3, 37, 39, 50, 11, 2, 43, 8, 10, 7, 40, 38, 34, 0, 49, 51, 22,
-  27, 23, 9, 12, 15, 44, 41, 21, 28, 20, 13, 19, 14, 45, 31, 35, 18, 17, 30, 6,
-  36, 47, 16, 1, 33, 29, 5, 46, 32, 24, 4,
-];
-const publishedCipher = [
-  49, 48, 9, 39, 29, 37, 22, 0, 16, 44, 24, 43, 8, 23, 33, 14, 12, 17, 41, 4, 19,
-  46, 34, 26, 50, 13, 51, 20, 10, 28, 1, 35, 6, 7, 38, 31, 47, 36, 5, 30, 3, 27,
-  11, 2, 18, 42, 15, 40, 25, 32, 45, 21,
-];
+// Published encrypt/decrypt KAT: message, key and cipher are read from the
+// doubledeal.sudo test "decrypt undoes encrypt" (no second hand-kept copy).
+// publishedCipher is then computed with the JS target and asserted equal to
+// the test's cipher below.
+const sudoPath =
+  process.env.DOUBLEDEAL_SUDO ||
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../primitives/cipher/doubledeal/doubledeal.sudo");
+
+function publishedTestDecks(sudoText) {
+  const start = sudoText.indexOf('test "decrypt undoes encrypt"');
+  assert(start >= 0, `no test "decrypt undoes encrypt" in ${sudoPath}`);
+  const next = sudoText.indexOf("\ntest ", start + 1);
+  const body = sudoText.slice(start, next < 0 ? undefined : next);
+  const deck = (name) => {
+    const m = body.match(new RegExp(`^\\s+${name} = \\[([0-9, ]+)\\]`, "m"));
+    assert(m, `test "decrypt undoes encrypt": no ${name} literal`);
+    return m[1].split(",").map((x) => Number(x.trim()));
+  };
+  return { message: deck("message"), key: deck("key"), cipher: deck("cipher") };
+}
+
+const publishedTest = publishedTestDecks(readFileSync(sudoPath, "utf8"));
+const publishedMessage = publishedTest.message;
+const publishedKey = publishedTest.key;
 
 const identityNonce = Array.from({ length: 39 }, (_, i) => i);
 const reverseNonce = Array.from({ length: 39 }, (_, i) => 38 - i);
@@ -92,10 +101,10 @@ function counterDeck(nonce, index) {
   return api.counter_deck(nonce, index);
 }
 
-const gotPublished = encrypt(publishedMessage, publishedKey);
+const publishedCipher = encrypt(publishedMessage, publishedKey);
 assert(
-  eq(gotPublished, publishedCipher),
-  `published encrypt mismatch:\n got ${JSON.stringify(gotPublished)}\n want ${JSON.stringify(publishedCipher)}`,
+  eq(publishedCipher, publishedTest.cipher),
+  `published encrypt mismatch with the sudo test:\n got ${JSON.stringify(publishedCipher)}\n want ${JSON.stringify(publishedTest.cipher)}`,
 );
 assert(eq(decrypt(publishedCipher, publishedKey), publishedMessage), "published decrypt mismatch");
 
@@ -260,4 +269,8 @@ const doc = {
   vectors,
 };
 
-process.stdout.write(JSON.stringify(doc, null, 2) + "\n");
+// Pin the serializer: escape non-ASCII so the note's em dash stays \u2014
+// (the escaped form the vectors were first committed with, before v9).
+const asciiJson = (v) =>
+  JSON.stringify(v, null, 2).replace(/[\u007f-\uffff]/g, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+process.stdout.write(asciiJson(doc) + "\n");

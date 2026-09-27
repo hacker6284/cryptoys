@@ -6,14 +6,16 @@
 #   (PR #8 squash merge; Lean is in ALL_BACKENDS).
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
-# DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC production
-# paths are bounded `for`. DoubleDeal test-only kind-scan whiles are
-# stripped under the gate. CBC-HMAC imports MegaDreifach via extra -I.
+# Production paths are bounded `for` in DoubleDeal (v9, and frozen v8),
+# MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. DoubleDeal's test-only
+# kind-scan whiles are stripped under the gate. CBC-HMAC imports
+# MegaDreifach via an extra -I.
 #
 # Usage (from repo root):
-#   proofs/emit_lean.sh              # write Generated/ (all four)
+#   proofs/emit_lean.sh              # write Generated/ (all five targets)
 #   proofs/emit_lean.sh --check      # CI: fail if committed Generated/ is stale
 #   proofs/emit_lean.sh doubledeal   # one algorithm
+#   proofs/emit_lean.sh doubledeal-v8  # frozen deprecated v8
 #   proofs/emit_lean.sh megadreifach
 #   proofs/emit_lean.sh scramble
 #   proofs/emit_lean.sh cbc-hmac     # alias: doubledeal-cbc-hmac
@@ -45,17 +47,17 @@ TARGETS=()
 for arg in "$@"; do
   case "$arg" in
     --check) CHECK=1 ;;
-    doubledeal|megadreifach|scramble|cbc-hmac) TARGETS+=("$arg") ;;
+    doubledeal|doubledeal-v8|megadreifach|scramble|cbc-hmac) TARGETS+=("$arg") ;;
     doubledeal-cbc-hmac) TARGETS+=("cbc-hmac") ;;
     *)
-      echo "usage: $0 [--check] [doubledeal|megadreifach|scramble|cbc-hmac ...]" >&2
+      echo "usage: $0 [--check] [doubledeal|doubledeal-v8|megadreifach|scramble|cbc-hmac ...]" >&2
       echo "  cbc-hmac is also accepted as doubledeal-cbc-hmac" >&2
       exit 2
       ;;
   esac
 done
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(doubledeal megadreifach scramble cbc-hmac)
+  TARGETS=(doubledeal doubledeal-v8 megadreifach scramble cbc-hmac)
 fi
 
 if [[ -n "${SUDOC:-}" ]]; then
@@ -155,6 +157,12 @@ for t in "${TARGETS[@]}"; do
       emit_one doubledeal \
         "$ROOT/primitives/cipher/doubledeal/doubledeal.sudo" \
         "$ROOT/proofs/doubledeal/lean/Generated"
+      ;;
+    doubledeal-v8)
+      # Frozen, deprecated v8 (vulnerability-proof target). Do not change.
+      emit_one doubledeal-v8 \
+        "$ROOT/primitives/cipher/doubledeal/v8/doubledeal_v8.sudo" \
+        "$ROOT/proofs/deprecated/doubledeal-v8/lean/Generated"
       ;;
     megadreifach)
       emit_one megadreifach \

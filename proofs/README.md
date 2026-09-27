@@ -14,7 +14,7 @@ Generated Lean.
 Five layers of evidence. (1) and (4) are theorems; (2) and (3) are evidence; (5) is OPEN:
 
 1. **Theorems about the proof-only Lean model** — bijections, round-trip, PassKey injectivity. Zero `sorry`. The Lean kernel checks these theorems; there is no `native_decide` in the shipped DoubleDeal Lean. These modules are **not** the algorithm.
-2. **Generated TAP** — `sudoc emit-ir --require terminates` → protocol-4 Lean backend → `lake` → TAP, from the same `.sudo` that JS/Python compile. DoubleDeal 10/10 (two test-only kind-scan `while`s stripped under the gate; JS still runs all twelve), MegaDreifach 11/11, Scramble 15/15, DoubleDeal-CBC-HMAC 11/11. Evidence the emitter ran, **not** a sudo=Lean theorem.
+2. **Generated TAP** — `sudoc emit-ir --require terminates` → protocol-4 Lean backend → `lake` → TAP, from the same `.sudo` that JS/Python compile. DoubleDeal: every sudo `test` passes except the two test-only kind-scan `while`s, which the gate strips (JS runs them all), MegaDreifach 11/11, Scramble 15/15, DoubleDeal-CBC-HMAC 11/11. Evidence the emitter ran, **not** a sudo=Lean theorem.
 3. **Vector agreement (algebraic skeleton vs JS JSON)** — known-answer decks evaluated in the proof package against JSON from the sudoc JS target. Evidence the *skeleton* matches those inputs, **not** a proof it equals `Generated.encrypt`.
 4. **Link 2 refinement** — algebraic skeleton equals the generated program on the well-formed domain. DoubleDeal: `drop_front` / `push_front` / `left_rotate` / `right_rotate`; `Generated.passkey` ≃ `passToKeyCutFallback` and `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` on every well-formed list; PassKey S3/S4 (multiset, inverse, injectivity) on `Except Trap`; `Generated.encrypt` ≃ `encryptDeck` on `CardBound` messages. NEXT is MegaDreifach Link 2. Not emitter soundness (that stays layer-2 TAP / Link 1). Not bit-security. See [`LINK2.md`](LINK2.md).
 5. **Future: Link 1 equivalence** — a theorem that the sudo text *is* the generated Lean. OPEN. Fuel-total `natIter` is not a total-fragment emitter.
@@ -49,18 +49,21 @@ proofs/
   scramble/                 # Generated Lean + teaching / lineage; no algebraic stones
   doubledeal-cbc-hmac/      # Generated Lean for HMAC / KDF / pad (no algebraic stones)
   scm/                      # placeholder; SCM/SMAC stay later (CBC-HMAC is the AEAD)
+  deprecated/               # vulnerability proofs for deprecated, frozen algorithms
+    doubledeal-v8/          # DoubleDeal v8 relabelling distinguisher + witness
 ```
 
-Deprecated algorithms, when they appear, get their own directory under `proofs/` (or a `deprecated/` child) for vulnerability proofs. There are none yet.
+Deprecated algorithms get a directory under `proofs/deprecated/` for vulnerability proofs, next to their frozen artifact. The first is DoubleDeal v8 (`proofs/deprecated/doubledeal-v8/`): a same-rank relabelling distinguisher with a checkable witness evaluated on the emitted frozen v8 `encrypt` (compiled check; kernel `decide` was too heavy). See [`deprecated/README.md`](deprecated/README.md).
 
 ## Status
 
 | Primitive | Current version | This tree |
 | --- | --- | --- |
-| DoubleDeal | `primitives/cipher/doubledeal/` | **Generated** Lean under `doubledeal/lean/Generated/` (from `doubledeal.sudo`; TAP 10/10 under the terminates gate). Proof-only stones under `doubledeal/lean/DoubleDeal/`. PassKey injectivity is **proved** on the list model (PR #3) and on emitted `passkey` / `passkey_inv` (`FitsLen`). Link 2: those functions ≃ the list model on every well-formed list, and `Generated.encrypt` ≃ `encryptDeck` on `CardBound` messages. NEXT is MegaDreifach Link 2. |
+| DoubleDeal | `primitives/cipher/doubledeal/` | **Generated** Lean under `doubledeal/lean/Generated/` (from `doubledeal.sudo`; TAP all-pass under the terminates gate). Proof-only stones under `doubledeal/lean/DoubleDeal/`. PassKey injectivity is **proved** on the list model (PR #3) and on emitted `passkey` / `passkey_inv` (`FitsLen`). Link 2: those functions ≃ the list model on every well-formed list, and `Generated.encrypt` ≃ `encryptDeck` on `CardBound` messages. NEXT is MegaDreifach Link 2. |
 | MegaDreifach | `primitives/hash/megadreifach/` (SPEC + `megadreifach.sudo` + KATs) | **Generated** Lean under `megadreifach/lean/Generated/` (TAP 11/11). Proof-only stones under `megadreifach/lean/MegaDreifach/`. M1–M7 packing/algebra **proved** (M3 even-perm glue still open). M8 is a net-distinctness reduction. M9 / M13 full KAT digests in the proof package **OPEN**. Research Hash hexes refreshed to current sudo. A green Lean build is not a security claim. |
 | Scramble | `scramble_v2` | **Generated** Lean under `scramble/lean/Generated/` (from `scramble.sudo`; TAP 15/15 under the terminates gate). Teaching hash; single-cube birthday ceiling. No algebraic stones. Not a collision-resistance claim. |
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | **Generated** Lean under `doubledeal-cbc-hmac/lean/Generated/` (from `doubledeal_cbc_hmac.sudo` + imported MegaDreifach; TAP 11/11). HMAC / KDF / pad / MAC-input evidence. No Link 2. No AEAD security theorem. Not SCM. |
 | DoubleDeal-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. Stays later. |
+| DoubleDeal v8 (deprecated) | `primitives/cipher/doubledeal/v8/` (frozen) | **Vulnerability proof** under `deprecated/doubledeal-v8/`: witness (compiled check of emitted v8 `encrypt`; JSON) that v8 commutes with K♣↔K♦ on one (key, message); measured rate ≈1e-3 per pair is evidence. Distinguisher, not key recovery. |
 
 See `doubledeal/README.md` for DoubleDeal proved-versus-open, and `doubledeal/STONES.md` for the SPEC §6 checklist. See `megadreifach/README.md` and `megadreifach/STONES.md` for MegaDreifach.

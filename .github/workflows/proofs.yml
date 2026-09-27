@@ -57,6 +57,10 @@ jobs:
           SUDOCODE_DIR: ${{ github.workspace }}/.sudocode-lean
           SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/emit_lean.sh --check
+      - name: Frozen v8 vectors rebuild byte-identically from v8/doubledeal_v8.sudo
+        env:
+          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
+        run: proofs/deprecated/doubledeal-v8/vectors/regen_v8.sh --check
 
   doubledeal-generated:
     runs-on: ubuntu-latest
@@ -101,6 +105,29 @@ jobs:
       - name: Generated TAP (sudo tests)
         working-directory: proofs/doubledeal-cbc-hmac/lean/Generated
         run: ./.lake/build/bin/doubledeal_cbc_hmac_test
+
+  doubledeal-v8-deprecated:
+    # Frozen, deprecated DoubleDeal v8: emitted TAP + vulnerability-proof witness
+    # (see proofs/deprecated/doubledeal-v8/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Witness Lean data matches witness_v8.json
+        run: python3 proofs/deprecated/doubledeal-v8/lean/witness_to_lean.py --check
+      - name: Frozen v8 vectors (sha + Python port)
+        run: python3 proofs/deprecated/doubledeal-v8/attack/check_vectors.py
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v8/lean/Generated
+      - name: Generated v8 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/doubledeal-v8/lean/Generated
+        run: ./.lake/build/bin/doubledeal_v8_test
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v8/lean
+      - name: v8 relabelling witness (compiled emitted encrypt)
+        working-directory: proofs/deprecated/doubledeal-v8/lean
+        run: lake exe doubledeal_v8_witness
 
   doubledeal-lean:
     runs-on: ubuntu-latest
@@ -151,6 +178,9 @@ jobs:
       - name: Known-answer vectors (compiled Lean)
         working-directory: proofs/doubledeal/lean
         run: lake exe doubledeal
+      - name: Axiom audit (top theorems use only propext, Classical.choice, Quot.sound)
+        working-directory: proofs/doubledeal/lean
+        run: python3 ../check_axioms.py
 
   megadreifach-lean:
     runs-on: ubuntu-latest

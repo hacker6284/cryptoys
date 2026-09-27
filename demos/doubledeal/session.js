@@ -97,6 +97,9 @@ export function createDoubleDealSession({
         return textToNonce(nonceEl?.value || "");
     }
 
+    const OVERFLOW_WHY =
+        "Step target occupied: in the row named by the CHaSeD overflow marker, start at the blocked seat's column and scan right (wrapping) for the first free seat, place there, then advance the marker ♣→♥→♠→♦. If that row is full, advance and try the next row from the same column.";
+
     function caption(step) {
         if (step.kind === "sumrow" && step.amount < 0) return `${step.label} · inverse SumRanks row ${step.row + 1} · back ${-step.amount}`;
         if (step.kind === "sumcol" && step.amount < 0) return `${step.label} · inverse SumRanks column ${step.col + 1} · back ${-step.amount}`;
@@ -108,7 +111,7 @@ export function createDoubleDealSession({
         if (step.kind === "reset" && step.amount > 0) return `${step.label} · ${step.amount} passes from here`;
         if (step.kind === "reset") return step.label;
         if (step.kind === "take") return `${step.label} · inverse GridCycle lifts a card`;
-        if (step.kind === "scan") return `${step.label} · GridCycle overflow · scanning row ${step.row + 1}`;
+        if (step.kind === "scan") return `${step.label} · GridCycle overflow · scanning row ${step.row + 1} from column ${step.col + 1}`;
         if (step.kind === "place" && step.flag === 1) return `${step.label} · GridCycle overflow into (${step.row + 1}, ${step.col + 1})`;
         if (step.kind === "pass" && step.flag === 2) return `${step.label} · proper rank cut on the key pile`;
         if (step.kind === "pass" && step.flag === 1) return `${step.label} · suit-rotate hand, then proper rank cut on the hand`;
@@ -234,16 +237,20 @@ export function createDoubleDealSession({
             };
         }
         if (step.kind === "sumcol") {
-            const ranks = view.colRanks(step.col);
-            const listed = ranks.length ? ranks.join(" + ") + ` = ${step.total}` : `sum ${step.total}`;
+            const terms = view.colTerms(step.col);
+            const listed = terms.length
+                ? terms.map((t) => `(${t.rank}+${t.suit})`).join(" + ") + ` = ${step.total}`
+                : `sum ${step.total}`;
             const inverse = step.amount < 0;
             return {
                 kicker,
                 title: analogue(step),
                 math: inverse
-                    ? `Column ${step.col + 1} ranks ${listed}. Rotate the other way by ${-step.amount}.`
-                    : `Column ${step.col + 1} ranks ${listed}. ${step.total} mod 4 = ${step.amount}. Cycle top→bottom ${step.amount}.`,
-                why: inverse ? "Inverse SumRanks undoes columns first, then rows." : "After the rows, each column cycles by the sum of its ranks, modulo 4.",
+                    ? `Column ${step.col + 1} rank + suit ${listed}. Rotate the other way by ${-step.amount}.`
+                    : `Column ${step.col + 1} rank + suit ${listed}. ${step.total} mod 4 = ${step.amount}. Cycle top→bottom ${step.amount}.`,
+                why: inverse
+                    ? "Inverse SumRanks undoes columns first, then rows. The column's rank + suit sum is unchanged by its rotate."
+                    : "After the rows, each column cycles by the sum of its cards' rank + suit (♣0 ♥1 ♠2 ♦3), modulo 4. Shortcut: count each card as (rank + suit) mod 4, a number 0–3, and add the four.",
                 spec: specFor(step),
             };
         }
@@ -262,8 +269,8 @@ export function createDoubleDealSession({
             return {
                 kicker,
                 title: analogue(step),
-                math: `Overflow. CHaSeD marker on row ${step.row + 1} (suit index ${step.row}); scan left→right for a free seat. Card ${cardName(step.card)}.`,
-                why: "Step target occupied: scan the row named by the CHaSeD overflow marker left→right for the first free seat, place there, then advance the marker ♣→♥→♠→♦. If that row is full, advance and try the next.",
+                math: `Overflow. CHaSeD marker on row ${step.row + 1} (suit index ${step.row}); the blocked seat is in column ${step.col + 1}, so scan right from column ${step.col + 1}, wrapping from column 13 to column 1, for a free seat. Card ${cardName(step.card)}.`,
+                why: OVERFLOW_WHY,
                 spec: specFor(step),
             };
         }
@@ -275,13 +282,13 @@ export function createDoubleDealSession({
                 math: step.flag === 1
                     ? `${cardName(step.card)} overflowed into seat (${step.row + 1}, ${step.col + 1}) via the CHaSeD marker scan (not the suit/rank step).`
                     : opening
-                        ? `${cardName(step.card)} is placed on the start seat (2, 0) — no step yet.`
+                        ? `${cardName(step.card)} is placed on the start seat (3, 1) — no step yet.`
                         : `${cardName(step.card)} steps suit ${Math.floor(step.card / 13)} / rank ${(step.card % 13) + 1} to seat (${step.row + 1}, ${step.col + 1}).`,
                 why: step.flag === 1
-                    ? "Step target occupied: scan the row named by the CHaSeD overflow marker left→right for the first free seat, place there, then advance the marker ♣→♥→♠→♦. If that row is full, advance and try the next."
+                    ? OVERFLOW_WHY
                     : opening
-                        ? "The first card uses start seat (2, 0). Suit/rank stepping starts from the second card."
-                        : "GridCycle walks from the Ace-of-Spades home seat (2, 0). Suit is the row step; rank is the column step.",
+                        ? "The first card uses start seat (3, 1). Suit/rank stepping starts from the second card."
+                        : "GridCycle walks from the Ace-of-Spades home seat (3, 1), row 3 being the ♠ row. Suit is the row step; rank is the column step.",
                 spec: specFor(step),
             };
         }
@@ -289,7 +296,7 @@ export function createDoubleDealSession({
             return {
                 kicker,
                 title: analogue(step),
-                math: "Start seat (2, 0) — Ace-of-Spades home, positional.",
+                math: "Start seat (3, 1) — Ace-of-Spades home (row 3 is the ♠ row), positional.",
                 why: "The walk begins at that seat, not by finding the Ace of Spades card.",
                 spec: specFor(step),
             };
@@ -356,7 +363,7 @@ export function createDoubleDealSession({
             return {
                 kicker,
                 title: step.label,
-                math: step.kind === "deal" ? "Deal column-major: down column 0, then 1, …" : "Deal row-major: across row 0, then 1, …",
+                math: step.kind === "deal" ? "Deal column-major: down column 1, then 2, …" : "Deal row-major: across row 1, then 2, …",
                 why: finalNote(step, "Column-major is the SumRanks table. Row-major is GridCycle inverse entry."),
                 spec: specFor(step),
             };

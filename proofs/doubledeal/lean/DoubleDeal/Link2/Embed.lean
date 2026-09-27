@@ -108,4 +108,12 @@ theorem embed_inj {xs ys : List Nat} (h : embed xs = embed ys) : xs = ys := by
   have := congrArg decode h
   simpa [decode_embed] using this
 
+/-- Card ids small enough that the emitted SumRanks column sums and the
+GridCycle `r + suit` step stay inside i64. -/
+def CardBound (c : Nat) : Prop := c ≤ i64MaxNat - 4
+
+theorem cardBound_zero : CardBound 0 := by
+  unfold CardBound i64MaxNat
+  decide
+
 end DoubleDeal.Link2

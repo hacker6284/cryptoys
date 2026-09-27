@@ -723,14 +723,17 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         return ranks;
     }
 
-    function colRanks(col) {
-        const ranks = [];
+    // A SumRanks column turns by the sum of its cards' rank + suit (♣0 ♥1 ♠2 ♦3).
+    // One {rank, suit} per seated card, top to bottom.
+    function colTerms(col) {
+        const terms = [];
         for (let r = 0; r < 4; r++) {
             const mesh = grid[r][col];
             if (!mesh) continue;
-            ranks.push((message.indexOf(mesh) % 13) + 1);
+            const id = message.indexOf(mesh);
+            terms.push({ rank: (id % 13) + 1, suit: Math.floor(id / 13) });
         }
-        return ranks;
+        return terms;
     }
 
     function measure() {
@@ -900,7 +903,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         highlightCard,
         clearHighlights,
         rowRanks,
-        colRanks,
+        colTerms,
         tablePoints,
         teachPoints,
         dispose,

@@ -2,7 +2,9 @@
 
 Normative definition: [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/cipher/doubledeal/SPEC.md). Stones live in SPEC §6. This directory is the correctness ledger for those stones, not a second specification.
 
-DoubleDeal is a toy block cipher. It has no cryptographic security claim. The Lean package below proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
+DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v9** (current). v8 is deprecated; its vulnerability proof is in [`../deprecated/doubledeal-v8/`](../deprecated/doubledeal-v8/).
+
+> **Status: v9.** Generated Lean, TAP, vectors, the algebraic model and Link 2 all describe v9 (see "v9 changes" below). `lake build` is green with no `sorry` and no `native_decide`, `lake exe doubledeal` passes every known-answer vector, and `check_axioms.py` (run in CI) confirms the top theorems in [`lean/Axioms.lean`](lean/Axioms.lean) use only propext, Classical.choice and Quot.sound. The Lean package proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
 
 ## Layers (be honest)
 
@@ -11,13 +13,13 @@ Sudo is normative. Emitted Lean under `lean/Generated/` is the algorithm.
 This does **not** claim sudo↔Lean semantic-equivalence theorems. The
 emit terminates gate is on. DoubleDeal production paths are bounded
 `for` (PassKey drain, overflow scans `0 to 3`). Two test-only
-kind-scan `while`s are stripped under the gate; JS still runs all
-twelve sudo tests.
+kind-scan `while`s are stripped under the gate; JS runs every sudo
+test.
 
 | Layer | What it is | Trust base |
 | --- | --- | --- |
 | **(a) Theorems about the proof-only model** | Bijections, `encrypt6_rt` under Compose-key bijections, PassKey `F_inv ∘ F = id`, and the same round-trip with the algebraic PassKey schedule (`encryptDeckFn_rt`). | Lean kernel. `lake build` of the proof package. No `sorry`. No `native_decide`. **Not** the cipher. |
-| **(b) Generated TAP** | `proofs/emit_lean.sh` → `lake` → `doubledeal_test` (10/10), including sudo's encrypt/decrypt and `passkey_inv` tests. Two kind-scan tests are stripped under `--require terminates`. | Compiled emitted Lean. **Not** a sudo=Lean theorem. |
+| **(b) Generated TAP** | `proofs/emit_lean.sh` → `lake` → `doubledeal_test` (every emitted sudo `test` passes), including sudo's encrypt/decrypt and `passkey_inv` tests. Two kind-scan tests are stripped under `--require terminates`. | Compiled emitted Lean. **Not** a sudo=Lean theorem. |
 | **(c) Skeleton vs JS JSON** | `lake exe doubledeal` vs `vectors/doubledeal_vectors.json` (from sudoc JS). | Evidence the *skeleton* matches those decks. OPEN that it equals `Generated.encrypt`. |
 | **(d) Equivalence** | sudo text = generated Lean, or skeleton = generated. | OPEN (Link 1). |
 | **(e) Link 2 refinement** | Algebraic stones ≃ Generated on the well-formed domain. | embed/decode, `drop_front` / `push_front` / `left_rotate` / `right_rotate`, `Generated.passkey` ≃ `passToKeyCutFallback` and `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` on every well-formed list, S3/S4 on `Except Trap`, and `Generated.encrypt` ≃ `encryptDeck` on `CardBound` messages. Not emitter soundness. Not bit-security. See [`../LINK2.md`](../LINK2.md). |
@@ -89,6 +91,12 @@ python3 proofs/doubledeal/vectors/json_to_lean.py --check  # CI: stale Lean fail
 ```
 
 Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
+
+## v9 changes
+
+v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). **A2:** SumRanks takes separate weights, rank for rows and `cardColumnWeight` = rank + suit for columns (`sumRanks cardRank cardColumnWeight`; the round-trip theorems hold for any pair of weights). In Link 2, `sum_ranks_refines` follows the emitted `column_weight`; because suit grows with the card id it needs `CardBound` cells, the same bound `encrypt_refines` already puts on messages. **B3:** the GridCycle overflow scan starts at the blocked target's column (`rotCol`, `scanRow occ row start`, `overflowSeat occ t start`). `invMixColumns_mixColumns` needed no change, because the forward and inverse walks share `chooseSeat!`. In Link 2, `scan_row_refines` covers the emitted `scan_row` helper, and `overflow_seat_refines` / `mix_columns_refines` sit on top of it. The emitted asserts in `index_of` and `overflow_seat` are matched as `∃ ln` (witness by `rfl`), so sudo edits that move a line no longer reach into Link 2.
+
+Link 1 (sudo = Generated) stays OPEN, as before. v8's own proofs are not kept alive under `deprecated/`; only its Generated TAP and the witness check are.
 
 ## Reading order
 

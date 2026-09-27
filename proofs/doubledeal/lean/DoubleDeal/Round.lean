@@ -13,16 +13,19 @@ import DoubleDeal.Compose
 
 namespace DoubleDeal
 
-/-- CHaSeD rank function on Nat card ids. -/
+/-- CHaSeD rank function on Nat card ids (SumRanks row weight). -/
 def cardRank (c : Nat) : Nat := rank c
+
+/-- SumRanks column weight: rank + suit (SPEC §3.3; sudo `column_weight`). -/
+def cardColumnWeight (c : Nat) : Nat := rank c + suit c
 
 /-- Unkeyed stem without GridCycle: scoopCM ∘ ShiftRows ∘ SumRanks ∘ layCM. -/
 def unkeyedNoMix (m : Fin 52 → Nat) : Fin 52 → Nat :=
-  scoopColumnMajor (shiftRows (sumRanks cardRank (layColumnMajor m)))
+  scoopColumnMajor (shiftRows (sumRanks cardRank cardColumnWeight (layColumnMajor m)))
 
 /-- Inverse of unkeyedNoMix. -/
 def invUnkeyedNoMix (c : Fin 52 → Nat) : Fin 52 → Nat :=
-  scoopColumnMajor (invSumRanks cardRank (invShiftRows (layColumnMajor c)))
+  scoopColumnMajor (invSumRanks cardRank cardColumnWeight (invShiftRows (layColumnMajor c)))
 
 theorem invUnkeyedNoMix_unkeyedNoMix (m : Fin 52 → Nat) :
     invUnkeyedNoMix (unkeyedNoMix m) = m := by

@@ -31,11 +31,13 @@ export function createLights(scene) {
             return light;
         },
         seal() {
-            let visible = 0;
-            scene.traverseVisible((o) => { if (o.isLight) visible++; });
-            if (visible !== byKey.size) {
-                throw new Error(`${byKey.size} lights registered, ${visible} visible at seal`);
+            const visible = new Set();
+            scene.traverseVisible((o) => { if (o.isLight) visible.add(o); });
+            for (const [key, light] of byKey) {
+                if (!visible.delete(light)) throw new Error(`light "${key}" not visible at seal`);
             }
+            const [stray] = visible;
+            if (stray) throw new Error(`unregistered ${stray.type} visible at seal`);
             sealed = signature();
         },
         check() {

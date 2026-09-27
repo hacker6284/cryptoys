@@ -14,18 +14,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import dd_v8 as dd  # noqa: E402
+from relabel import app, swap  # noqa: E402
 
 MODES = ('attack', 'control', 'ctr')
-
-
-def tau_swap(x, y):
-    t = list(range(52))
-    t[x], t[y] = y, x
-    return t
-
-
-def app(t, deck):
-    return [t[c] for c in deck]
 
 
 def ks(msg, cipher):
@@ -42,7 +33,7 @@ def one_pair(mode, R, keys):
         R.shuffle(nonce)
         r = R.randrange(13)
         s1, s2 = R.sample(range(3), 2)   # swap within C/H/S only (the nonce has no diamonds)
-        t = tau_swap(13*s1 + r, 13*s2 + r)
+        t = swap(13*s1 + r, 13*s2 + r)
         nonce2 = app(t, nonce)
         i = R.randrange(10**6)
         msg = list(range(52))
@@ -55,13 +46,13 @@ def one_pair(mode, R, keys):
     if mode == 'attack':
         r = R.randrange(13)
         s1, s2 = R.sample(range(4), 2)
-        t = tau_swap(13*s1 + r, 13*s2 + r)
+        t = swap(13*s1 + r, 13*s2 + r)
     else:  # control: two cards of different rank
         while True:
             x, y = R.sample(range(52), 2)
             if dd.rank(x) != dd.rank(y):
                 break
-        t = tau_swap(x, y)
+        t = swap(x, y)
     c1 = dd.encrypt_keys(msg, keys)
     c2 = dd.encrypt_keys(app(t, msg), keys)
     return c2 == app(t, c1), msg

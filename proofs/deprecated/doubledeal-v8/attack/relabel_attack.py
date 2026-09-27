@@ -13,12 +13,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import dd_v8 as dd  # noqa: E402
-
-
-def swap(x, y):
-    t = list(range(52))
-    t[x], t[y] = y, x
-    return t
+from relabel import swap  # noqa: E402
 
 
 TAUS = {'KC-KD': swap(12, 51), 'control-KC-QD': swap(12, 50)}

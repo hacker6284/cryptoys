@@ -57,6 +57,10 @@ jobs:
           SUDOCODE_DIR: ${{ github.workspace }}/.sudocode-lean
           SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/emit_lean.sh --check
+      - name: Frozen v8 vectors rebuild byte-identically from v8/doubledeal_v8.sudo
+        env:
+          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
+        run: proofs/deprecated/doubledeal-v8/vectors/regen_v8.sh --check
 
   doubledeal-generated:
     runs-on: ubuntu-latest

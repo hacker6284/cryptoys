@@ -13,15 +13,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import dd_v8 as dd  # noqa: E402
+from relabel import app, tau_swap  # noqa: E402
 
 KINDS = ('same_rank_swap', 'same_suit_swap', 'suit_perm_swap', 'rank_shift',
          'id_plus4', 'id_plus13', 'diff_rank_swap')
 
-def tau_swap(pairs):
-    t = list(range(52))
-    for x, y in pairs: t[x], t[y] = t[y], t[x]
-    return t
-def app(t, D): return [t[c] for c in D]
 
 def make_tau(kind, R):
     if kind == 'same_rank_swap':   # 5C<->5H
@@ -77,16 +73,20 @@ def run(args):
             tot+=1
     return kind, exact, agree_sum, tot
 
-if __name__=='__main__':
-    nkeys=int(sys.argv[1]) if len(sys.argv)>1 else 6
-    npair=int(sys.argv[2]) if len(sys.argv)>2 else 4000
-    kinds = list(KINDS)
+
+def main():
+    nkeys = int(sys.argv[1]) if len(sys.argv) > 1 else 6
+    npair = int(sys.argv[2]) if len(sys.argv) > 2 else 4000
     # sanity: taus are perms
-    Rc=random.Random(0)
-    for kd in kinds:
-        assert is_perm(make_tau(kd,Rc)), kd
-    with Pool(min(8,len(kinds))) as p:
-        res=p.map(run,[(kd,nkeys,npair) for kd in kinds])
+    Rc = random.Random(0)
+    for kd in KINDS:
+        assert is_perm(make_tau(kd, Rc)), kd
+    with Pool(min(8, len(KINDS))) as p:
+        res = p.map(run, [(kd, nkeys, npair) for kd in KINDS])
     print(f'DoubleDeal v8, keys={nkeys}, pairs/key={npair}, random-perm baseline mean-agree~1.0, exact~0')
-    for kind,exact,agree_sum,tot in sorted(res,key=lambda r:-r[2]/r[3]):
+    for kind, exact, agree_sum, tot in sorted(res, key=lambda r: -r[2]/r[3]):
         print(f'  {kind:16s} exact={exact:6d}/{tot} ({exact/tot:.2e})  mean_agree={agree_sum/tot:6.3f}/52')
+
+
+if __name__ == '__main__':
+    main()

@@ -10,17 +10,13 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import dd_v8 as dd  # noqa: E402
+from relabel import app, swap  # noqa: E402
 
 OUT = HERE.parent / "witness_v8.json"
 
 
-def app(t, deck):
-    return [t[c] for c in deck]
-
-
 def main():
-    tau = list(range(52))
-    tau[12], tau[51] = 51, 12
+    tau = swap(12, 51)
     rng = random.Random(20260926)
     key = list(range(52))
     rng.shuffle(key)

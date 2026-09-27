@@ -47,9 +47,6 @@ namespace DoubleDealV8.Witness
 def tauA : Nat := {x}
 def tauB : Nat := {y}
 
-/-- Random trials the search (attack/find_witness.py) needed. -/
-def trials : Nat := {int(doc["trials"])}
-
 def key : List Nat := {lean_list(doc["key"])}
 def message : List Nat := {lean_list(doc["message"])}
 def cipher : List Nat := {lean_list(doc["cipher"])}

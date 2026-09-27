@@ -672,11 +672,13 @@ export function createDoubleDealSession({
             await view.play(trace[i], Number(speedEl?.value || 1));
         }
         markPlay(false);
-        if (token === job && laidEnd) {
-            view.showDecks(laidEnd.blocks[0], laidEnd.key);
-            showCaption(laidEnd.caption);
-            snaps = null;
-        }
+        if (token === job && laidEnd) showEnd();
+    }
+
+    function showEnd() {
+        view.showDecks(laidEnd.blocks[0], laidEnd.key);
+        showCaption(laidEnd.caption);
+        snaps = null;
     }
 
     async function start() {
@@ -732,9 +734,7 @@ export function createDoubleDealSession({
             if (!trace.length || !laidEnd) return;
             cursor = trace.length - 1;
             if (teaching) setTeaching(false);
-            snaps = null;
-            view.showDecks(laidEnd.blocks[0], laidEnd.key);
-            showCaption(laidEnd.caption);
+            showEnd();
         } catch (err) {
             setError(err instanceof Error ? err.message : "That input could not be read.");
         }

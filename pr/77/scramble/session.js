@@ -524,6 +524,14 @@ export function createScrambleSession({
         markPlay(false);
     }
 
+    function seek(index) {
+        job += 1;
+        busy = false;
+        markPlay(false);
+        cursor = index;
+        showPaused();
+    }
+
     async function jumpTo(index, animate) {
         if (trace.length === 0 || busy) return;
         const next = Math.max(-1, Math.min(trace.length - 1, index));
@@ -535,10 +543,7 @@ export function createScrambleSession({
             busy = false;
             return;
         }
-        job += 1;
-        markPlay(false);
-        cursor = next;
-        showPaused();
+        seek(next);
     }
 
     async function stepBy(dir) {
@@ -560,10 +565,9 @@ export function createScrambleSession({
         if (solving) return;
         if (!trace.length) refreshDigest();
         if (!trace.length) return;
-        busy = false;
         ensureTimeline();
         setTeaching(false);
-        void jumpTo(trace.length - 1, false);
+        seek(trace.length - 1);
         settleView();
     }
 

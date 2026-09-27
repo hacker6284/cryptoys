@@ -48,14 +48,12 @@ function orientMatrix(up, front) {
     return m;
 }
 
-let cubeMotion = 0;
-
-function tween(ms, step) {
-    const gen = cubeMotion;
+function tween(ms, step, live) {
+    const gen = live();
     return new Promise((resolve) => {
         const start = performance.now();
         function tick(now) {
-            if (gen !== cubeMotion) return resolve();
+            if (gen !== live()) return resolve();
             const t = Math.min(1, (now - start) / ms);
             const eased = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
             step(eased);
@@ -103,11 +101,10 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
         }
     }
 
+    let cubeMotion = 0;
     let shown = null;
 
-    function paint(facelets) {
-        cubeMotion += 1;
-        shown = facelets;
+    function draw(facelets) {
         group.quaternion.identity();
         for (const mesh of meshes.values()) {
             mesh.position.copy(mesh.userData.home);
@@ -122,6 +119,12 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
             mat.color.setHex(COLOR[facelets[i]]);
             mat.needsUpdate = true;
         });
+    }
+
+    function paint(facelets) {
+        cubeMotion += 1;
+        shown = facelets;
+        draw(facelets);
     }
 
     function clearHighlights() {
@@ -189,10 +192,10 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
         const pivot = new THREE.Group();
         group.add(pivot);
         for (const mesh of chosen) pivot.attach(mesh);
-        await tween(ms, (t) => pivot.setRotationFromAxisAngle(axis, angle * t));
+        await tween(ms, (t) => pivot.setRotationFromAxisAngle(axis, angle * t), () => cubeMotion);
         for (const mesh of chosen) group.attach(mesh);
         group.remove(pivot);
-        if (gen !== cubeMotion) paint(shown);
+        if (gen !== cubeMotion) draw(shown);
     }
 
     async function animateReorient(from, up, front, ms) {
@@ -203,8 +206,8 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
         await tween(ms, (t) => {
             group.quaternion.identity();
             group.quaternion.slerp(quat, t);
-        });
-        if (gen !== cubeMotion) paint(shown);
+        }, () => cubeMotion);
+        if (gen !== cubeMotion) draw(shown);
     }
 
     function dispose() {

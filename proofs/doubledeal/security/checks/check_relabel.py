@@ -109,8 +109,9 @@ for v in (8, 9):
         rates.append(sum(commutes_sr(s, v, decks=[rdeck()]) for _ in range(N)) / N)
     print(f"    v{v}: per-deck SumRanks commute rate: K♣↔K♦ {rates[0]:.3f}, A♣↔A♥ {rates[1]:.3f}, A♣↔5♣ {rates[2]:.3f}")
 
-# 2b. v10 SumRanks: the group v10Sym commutes ("if", proved in SumRanksV10.lean);
-# the converse is not proved: here, every other sampled sigma fails on some random deck.
+# 2b. v10 SumRanks: the group v10Sym commutes, and nothing else does (both directions
+# proved: sumRanksV10_commutes_iff in SumRanksV10Iff.lean). Numerical cross-check:
+# every other sampled sigma fails on some random deck.
 # [2b] draws from its own RNG (seed 10), so the v8/v9 lines after it keep their pre-v10 values.
 _rng_main = rng; rng = random.Random(10)
 LABEL = P.LABEL; SUIT_OF_LABEL = [LABEL.index(l) for l in range(4)]

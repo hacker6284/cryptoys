@@ -5,6 +5,7 @@ import DoubleDealSecurity.Decks
 import DoubleDealSecurity.Relabel
 import DoubleDealSecurity.SumRanks
 import DoubleDealSecurity.SumRanksV10
+import DoubleDealSecurity.SumRanksV10Iff
 import DoubleDealSecurity.Walk
 import DoubleDealSecurity.GridCycle
 import DoubleDealSecurity.BranchNumber

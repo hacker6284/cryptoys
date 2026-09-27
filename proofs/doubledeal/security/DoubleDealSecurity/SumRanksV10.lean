@@ -8,13 +8,8 @@
   every column's own suit sum and `(1 ⊕ w ⊕ w²) x = 0` to the previous
   column's weighted value.
 
-  NOT PROVED: the converse (that these are the only commuting relabellings).
-  v9 had a full "iff" (`v9_sumRanks_commutes_iff`) because v9 rotations were
-  plain weight sums; v10 rotations are chained and position-weighted, and the
-  pair-swap argument does not carry over as is. Sampled, not proved
-  (`checks/check_relabel.py` [2b]): every other σ sampled (all 1326
-  transpositions, 500 random σ, the 50 nontrivial `v9Sym` outside `v10Sym`)
-  fails to commute on some random deck.
+  The converse (these are the only relabellings that commute on decks) is
+  proved in `SumRanksV10Iff.lean`: `sumRanksV10_commutes_iff`.
   The group is `ℤ/13 × (ℤ/2)²`, not cyclic (v9's was `ℤ/52`).
 -/
 import DoubleDealSecurity.SumRanks
@@ -205,7 +200,8 @@ theorem sumRanksChain_commutes (σ : Relabel) (rt : (Fin 13 → Nat) → Nat)
   rw [hrows 4, hcols _ (rowsDone_bound rt (· < 52) g hg 4) 13]
 
 /-- **v10 SumRanks, "if"** (PROVED): every `v10Sym a x` commutes with v10
-    SumRanks on every card-valued grid. The converse is not proved. -/
+    SumRanks on every card-valued grid. The converse is
+    `v10Sym_of_sumRanksV10_commutes` (`SumRanksV10Iff.lean`). -/
 theorem sumRanksV10_commutes_v10Sym (a : Fin 13) (x : Fin 4) :
     CommutesG (v10Sym a x) sumRanksV10 :=
   sumRanksChain_commutes _ _ _ (rowTurnV10_rel a x) (colTurnV10_rel a x)

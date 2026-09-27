@@ -26,7 +26,8 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `Decks` | named cards, witness decks, the cell-map interface |
 | `Relabel` | relabellings, decks, commuting/covariance notions |
 | `SumRanks` | **deprecated v8/v9 models.** Two-weight SumRanks commutes iff σ is a constant weight shift; v8 rank-preserving; the 52-element v9 group `v9Sym` |
-| `SumRanksV10` | v10 SumRanks commutes with every `v10Sym a x` (rank + a mod 13, GF(4) suit label ⊕ x; 52 elements, ℤ/13 × (ℤ/2)², not cyclic): `sumRanksV10_commutes_v10Sym`. **Only the "if" direction is proved**; the converse is not: every other σ sampled (all 1326 transpositions, 500 random σ, and the 50 nontrivial `v9Sym` outside `v10Sym`) fails to commute on some random deck (`checks/check_relabel.py` [2b]); that is a sample, not a proof. The v9 analogue `v9_sumRanks_commutes_iff` was a full iff |
+| `SumRanksV10` | v10 SumRanks commutes with every `v10Sym a x` (rank + a mod 13, GF(4) suit label ⊕ x; 52 elements, ℤ/13 × (ℤ/2)², not cyclic): `sumRanksV10_commutes_v10Sym` ("if", on every card-valued grid) |
+| `SumRanksV10Iff` | the converse and the full characterisation `sumRanksV10_commutes_iff`: σ commutes with v10 SumRanks on every deck iff σ = `v10Sym a x` for some a, x. Proof: the chained steps are one row rotation then one column rotation (`sumRanksChain_eq`); commuting on a deck forces equal amounts; two decks differing in the last card of row 0 force a constant rank shift mod 13, and two differing in the top card of column 1 force a constant suit-label shift. Like v9's `sumRanks_commutes_iff` |
 | `Walk` | the GridCycle seat walk, generic in the seat chooser |
 | `GridCycle` | GridCycle commutes only with σ = 1 (v9/v10, unchanged in v10, and the frozen v8 model) |
 | `BranchNumber` | trivial branch-number floor (`≥ 4` for any deck bijection); GridCycle attains it by swapping walk cards 50 and 51 (v9/v10 GridCycle and the frozen v8 model). Not a wide-trail bound |

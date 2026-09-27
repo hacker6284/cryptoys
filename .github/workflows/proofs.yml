@@ -182,6 +182,36 @@ jobs:
         working-directory: proofs/doubledeal/lean
         run: python3 ../check_axioms.py
 
+  doubledeal-security:
+    # Mathlib security package (T1 relabellings). A green run means the listed
+    # theorems check, not that the cipher is secure; see its README.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No admit / native_decide / sorryAx / axiom; sorry only in the allowlisted conjecture
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py
+      - name: V8Vectors.lean matches frozen v8 JSON
+        run: python3 proofs/doubledeal/security/checks/gen_v8_vectors.py --check
+      - name: Python port + relabelling checks
+        run: |
+          python3 proofs/doubledeal/security/checks/selftest.py
+          python3 proofs/doubledeal/security/checks/check_relabel.py
+          python3 proofs/doubledeal/security/checks/check_covariant.py
+      # One reusable cache entry for the Mathlib download (keyed on manifest +
+      # toolchain only), instead of lean-action's per-SHA .lake cache.
+      - uses: actions/cache@v4
+        with:
+          path: proofs/doubledeal/security/.lake/packages
+          key: lake-packages-${{ runner.os }}-${{ hashFiles('proofs/doubledeal/security/lake-manifest.json', 'proofs/doubledeal/security/lean-toolchain') }}
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/doubledeal/security
+          use-github-cache: false
+          use-mathlib-cache: true  # lake exe cache get: prebuilt Mathlib; never build it from source
+      - name: Axiom audit of every DoubleDealSecurity theorem (KNOWN_SORRY allowlist by name)
+        working-directory: proofs/doubledeal/security
+        run: python3 ../check_axioms.py security
+
   megadreifach-lean:
     runs-on: ubuntu-latest
     steps:

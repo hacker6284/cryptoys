@@ -11,13 +11,13 @@
 import DoubleDeal.Basic
 import DoubleDeal.Rotate
 
-/- Lean 4.14 prelude has no `Function.LeftInverse` (that lives in Mathlib / later Init). -/
-namespace Function
+namespace DoubleDeal
+
+/- Lean 4.14 core has no `Function.LeftInverse` (it lives in Mathlib). These
+   local versions stay in the `DoubleDeal` namespace so the package can be
+   imported next to Mathlib (proofs/doubledeal/security). -/
 def LeftInverse (g : β → α) (f : α → β) : Prop := ∀ x, g (f x) = x
 def RightInverse (g : β → α) (f : α → β) : Prop := LeftInverse f g
-end Function
-
-namespace DoubleDeal
 
 def rotateLeft (xs : List α) (n : Nat) : List α := rotL xs n
 
@@ -460,11 +460,11 @@ theorem passToKeyCutFallback_rightInverse (d : List Nat) :
   simpa [passKeyGoN] using h
 
 theorem passKey_leftInverse :
-    Function.LeftInverse passToKeyCutFallbackInv passToKeyCutFallback :=
+    LeftInverse passToKeyCutFallbackInv passToKeyCutFallback :=
   passToKeyCutFallback_leftInverse
 
 theorem passKey_rightInverse :
-    Function.RightInverse passToKeyCutFallbackInv passToKeyCutFallback :=
+    RightInverse passToKeyCutFallbackInv passToKeyCutFallback :=
   passToKeyCutFallback_rightInverse
 
 /-- S4: PassKey is injective on lists (hence on \(S_{52}\)). -/

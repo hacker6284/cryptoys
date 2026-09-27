@@ -27,7 +27,7 @@ DECL = re.compile(
 
 
 # `let rec f ...` inside a declaration (compiled to its own declaration `top.f`)
-HELPER = re.compile(r"^\s+let\s+rec\s+([A-Za-z_][\w'.]*)\b")
+LET_REC = re.compile(r"^\s+let\s+rec\s+([A-Za-z_][\w'.]*)\b")
 # an item of a `where` block: `  f (x : α) : β := ...`
 WHERE_ITEM = re.compile(r"^\s+([A-Za-z_][\w'.]*)\b[^:=|]*(?::[^=]|:=)")
 
@@ -45,7 +45,7 @@ def scan(sources):
         decl = None      # current top-level declaration
         top = None
         in_where = False
-        helper_indent = None
+        let_rec_indent = None
         text = strip_block_comments(raw)
         for i, line in enumerate(text.splitlines(), 1):
             code = re.sub(r"--.*", "", line)
@@ -53,16 +53,16 @@ def scan(sources):
             if m:
                 top = decl = (m.group(1) or "<anonymous>").split(".")[-1]
                 in_where = False
-                helper_indent = None
+                let_rec_indent = None
             elif top is not None:
                 # a `let rec` / `where` item gets its own name (`top.f`), so a sorry
                 # there is neither attributed to nor counted for the parent
                 indent = len(code) - len(code.lstrip())
-                if helper_indent is not None and code.strip() and indent <= helper_indent:
-                    decl, helper_indent = top, None   # left the `let rec` body
-                h = HELPER.match(code)
+                if let_rec_indent is not None and code.strip() and indent <= let_rec_indent:
+                    decl, let_rec_indent = top, None   # left the `let rec` body
+                h = LET_REC.match(code)
                 if h:
-                    decl, helper_indent = f"{top}.{h.group(1)}", indent
+                    decl, let_rec_indent = f"{top}.{h.group(1)}", indent
                 elif in_where:
                     w = WHERE_ITEM.match(code)
                     if w:
@@ -117,7 +117,8 @@ SELFTEST = [
     ("have stays with parent", f"theorem {C} : P := by\n  have h : Q := by\n    sorry\n  exact h\n", True, None),
     ("have adds to parent", f"theorem {C} : P := by\n  have h : Q := by\n    sorry\n  sorry\n", False, "found 2"),
     ("let rec is its own decl", f"theorem {C} : P := by\n  let rec aux : Q := by\n    sorry\n  sorry\n", False, f"(in {C}.aux)"),
-    ("let rec body ends", f"def d : Nat :=\n  let rec aux : Nat := 0\n  aux\ntheorem {C} : P := by\n  sorry\n", True, None),
+    ("let rec body ends", f"theorem {C} : P := by\n  let rec aux : Nat := 0\n  sorry\n", True, None),
+    ("inline where item", f"theorem {C} : P := by\n  sorry\ndef wh : Nat := go where go : Nat := sorry\n", False, "(in wh.go)"),
     ("where item", f"theorem {C} : P := by\n  sorry\ndef wh : Nat := go\nwhere\n  go : Nat := sorry\n", False, "(in wh.go)"),
     ("admit", f"theorem {C} : P := by\n  sorry\ntheorem t : Q := by admit\n", False, "admit/native_decide/sorryAx"),
     ("native_decide", f"theorem {C} : P := by\n  sorry\ntheorem t : Q := by native_decide\n", False, "admit/native_decide/sorryAx"),
@@ -141,4 +142,7 @@ def selftest() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(selftest() if sys.argv[1:] == ["--selftest"] else main())
+    args = sys.argv[1:]
+    if args not in ([], ["--selftest"]):
+        sys.exit("usage: scan_sorry.py [--selftest]")
+    sys.exit(selftest() if args else main())

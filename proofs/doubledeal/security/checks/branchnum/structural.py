@@ -1,5 +1,5 @@
 """Structural checks behind the low-weight cases (analysis only; empirical confirmation of
-statements that are proposed as Lean lemmas in NOTES.md).
+statements discussed as Lean lemmas in NOTES.md §4; [1] is proved there, the rest are open).
 
  [1] GridCycle tail lemma: for every deck d, GC(swap d 50 51) differs from GC(d) in exactly 2 seats,
      and GC(d)[26] = d[0] (walk card 0 sits at seat (2,0) = row-major index 26).
@@ -11,17 +11,19 @@ statements that are proposed as Lean lemmas in NOTES.md).
      so two same-rank cards give the same seat once both are blocked). A second route exists: one
      target free and the other overflowing into exactly that seat; it desynchronises t, so it only
      gives w = 2 if no later overflow notices.
- [3] SumRanks exact swap classification (positions i,j of the column-major lay; a=d[i], b=d[j]):
-       same row, a = b mod 4 (v9: rank+suit = c+1 mod 4) / rank = rank mod 4 (v8)   -> w = 2
-       same row, otherwise                                                        -> w = 8
-       different rows, same rank, same column after row rotation                  -> w = 2
-       different rows, same rank, different columns after rotation: v9 -> 8, v8 -> 2
-       different rows, different ranks                                            -> w >= M (measured)
+ [3] SumRanks exact swap classification (column-major seats i, j; rows i mod 4, j mod 4;
+     a = d[i], b = d[j]; colW(x) = rank + suit in v9, rank in v8, compared mod 4):
+       same row, colW(a) = colW(b) (mod 4) [v9: a = b mod 4]            -> w = 2 (v8: 2)
+       same row, otherwise                                              -> w = 8 (v8: 8)
+       different rows, same rank, same column after the row stage       -> w = 2 (v8: 2)
+       different rows, same rank, different columns after the row stage -> w = 8 (v8: 2)
+       different rows, different ranks                                  -> w >= 26 (random min 30,
+                                                                           search min 26; same in v8)
  [4] Anatomy of weight-2 events of the unkeyed full round SRGC.
 """
 import random, collections
-from common import *
-from dd_v8 import rank, suit
+from common import GC, P, SR, rdeck, swap, wt
+from dd_v8 import rank, suit, lay_cm
 
 rng = random.Random(4242)
 NDECK = 400
@@ -35,8 +37,8 @@ for v in (8, 9):
     print(f'[1] v{v}: 20000 random decks: GC(swap 50 51) has weight exactly 2; GC(d)[26] == d[0]')
 
 # ---------- [2] weight-2 characterisation of GC
-def step_info(d, v, seats, k):
-    """At step k (card d[k] just placed at seats[k]): target of d[k] and whether it is occupied."""
+def occupied(seats, k):
+    """Occupancy grid after step k (seats[0..k] taken)."""
     occ = [[False]*13 for _ in range(4)]
     for (r, c) in seats[:k+1]: occ[r][c] = True
     return occ
@@ -71,7 +73,7 @@ def kinds_at(d, e, v, p, q):
     labs = []
     for k in (p, q):
         if k == 51: labs.append('end'); continue
-        occ = step_info(d, v, sd, k); r, c = sd[k]
+        occ = occupied(sd, k); r, c = sd[k]
         _, _, kx = next_seat(occ, td[k+1], r, c, d[k], v)
         _, _, ky = next_seat(occ, te[k+1], r, c, e[k], v)
         assert kx == 'ovf' or ky == 'ovf'      # distinct cards have distinct step offsets
@@ -123,6 +125,8 @@ for v in (8, 9):
 # ---------- [4] anatomy of SRGC weight-2 events
 for v in (8, 9):
     st = lambda d: P.stem(d, v); g = GC(v); anat = collections.Counter(); n = 0
+    anat_sr_w = collections.Counter()   # weight of the SumRanks stage (GC is a bijection on decks,
+                                        # so a heavier SR difference could in principle map to 2)
     for _ in range(NDECK):
         d = rdeck(rng); s0 = st(d); o0 = g(s0)
         for i in range(52):
@@ -131,8 +135,12 @@ for v in (8, 9):
                 if wt(o0, g(s1)) != 2: continue
                 n += 1
                 diff = [k for k in range(52) if s0[k] != s1[k]]
-                assert len(diff) == 2   # SR stage must itself be a swap (GC is a bijection on 2-diffs only)
+                anat_sr_w[len(diff)] += 1
+                if len(diff) != 2:
+                    anat[(sr_class(d, i, j, v), f'SR weight {len(diff)}')] += 1
+                    continue
                 p, q = diff
                 anat[(sr_class(d, i, j, v), 'tail(50,51)' if (p, q) == (50, 51) else ('q=51' if q == 51 else 'double-overflow'))] += 1
-    print(f'[4] v{v} SRGC weight-2 events over {NDECK} decks x 1326 swaps: {n}')
+    print(f'[4] v{v} SRGC weight-2 events over {NDECK} decks x 1326 swaps: {n}; '
+          f'SumRanks-stage weight among them: {dict(sorted(anat_sr_w.items()))}')
     for k, c in anat.most_common(): print(f'      {c:6d}  SR class {k[0]:26s} GC mechanism {k[1]}')

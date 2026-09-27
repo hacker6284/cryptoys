@@ -1,20 +1,22 @@
 # DoubleDeal: is there an AES-style branch number? (measurement + proposal, analysis only)
 
-Scope. Everything here is an empirical measurement on the Python port or a proof *sketch*.
+Scope. Everything here is an empirical measurement on the Python port or a proof *sketch*, except
+the floor and GridCycle tail statements of §4, which are proved in Lean (PR #84).
 Nothing here is a security or bit-security claim, and nothing proposes a change to the cipher.
 Where a search did not find something, that is reported as "not found by this search", not as
 "does not exist".
 
 ## Setup
 
-* Port: `../ddport.py` (v8 = frozen `dd_v8.py`; v9 adds A2 + B3). `check_port.py` re-checks v9
-  against the repo vectors (13/13 layer and encrypt vectors: `encrypt`, `mix_columns`,
-  `unkeyed_full`, `sum_ranks`); `dd_v8.py` passes its own `check_vectors.py` (29/29). `measure.py`
+* Port: `../ddport.py` (v8 = frozen `dd_v8.py`; v9 adds A2 + B3). `../selftest.py` (run in CI)
+  checks v9 against the repo vectors (`encrypt`, `mix_columns`, `unkeyed_full`, `sum_ranks`) and
+  the v8 path against the frozen `dd_v8.py`; `dd_v8.py` passes its own `check_vectors.py` (29/29). `measure.py`
   also asserts ddport's v8 GridCycle equals the frozen `dd_v8.mix_columns` on every deck it uses.
 * Spec note: v9 SumRanks rotates **rows by (sum of rank) mod 13** and **columns by
-  (sum of rank + suit) mod 4** (SPEC §3.3). The brief described the columns as "mod 13"; I followed
-  the spec and the port.
-* Weight of a difference = number of seats where two decks differ. Two distinct decks differ in
+  (sum of rank + suit) mod 4** (SPEC §3.3), as in the port.
+* The notion measured is the **differential (pair) branch number over seat weight**; there is no
+  linear analogue because no layer has linear structure.
+  Weight of a difference = number of seats where two decks differ. Two distinct decks differ in
   at least 2 seats, so for any bijection F on decks, `wt_in + wt_out >= 4`. **4 is the trivial
   floor**; the question is whether any layer beats it. (AES's scale is different: a byte can change
   value in place, so weight 1 exists there; here every layer only moves cards.)
@@ -46,8 +48,8 @@ it; no adversarial search is needed. So the branch number (min of `wt_in + wt_ou
 **exactly 4, the trivial floor**, for GC, SR, SR->GC and one keyed round, in v8 and v9.
 
 Other difference weights (`search.py`, hill climbing, `search.log`): for 3-cycles (in = 3) the
-minimum output weight is 2 for GC, SRGC and RK (in+out = 5), and 3 for SR (in+out = 6). None of
-this improves on the swap minimum.
+minimum output weight is 2 for GC, SRGC and RK (in+out = 5). For SR, minimum found 3 (hill
+climbing; 2 not excluded), so in+out = 6 found. None of this improves on the swap minimum.
 
 ## 2. Adversarial / targeted search (`search.log`, `search2.log`, `trail_*.log`)
 
@@ -114,7 +116,7 @@ and no bit figures.
   room to spread, but they do not force weight 2 on their own.
 * **Tail lemma (universal).** For *every* deck, swapping walk cards 50 and 51 gives output weight
   exactly 2: seats s_0..s_50 depend only on cards 0..49, and s_51 is the one seat left, whatever
-  card 50's step says. Checked on 20000 decks per version; a proof sketch is in §4.
+  card 50's step says. Checked on 20000 decks per version, and proved in Lean for every deck (`mixColumns_swap_tail`, §4).
 * **Characterisation.** For a swap of walk indices p < q: `wt = 2 <=> the seat sequence is
   unchanged` (held on all 265 200 swaps checked). Distinct cards have distinct step offsets
   (suit mod 4, rank mod 13), so the two walks can only leave seat p (and seat q, unless q = 51) for
@@ -168,42 +170,62 @@ Why this holds (proof idea):
 ### 3.3 One round (`structural.py` [4])
 
 Among the SRGC weight-2 events (1349 in v9, 6782 in v8, over 400 decks), the SumRanks stage was
-always itself weight 2 (asserted; GC is a bijection, so in principle a weight-8 GC input could map
-to weight 2, but none was seen). GridCycle then contributed through the double-overflow coincidence
+itself weight 2 in every case (counted in `structural.log`; GC is a bijection on decks, so in
+principle a heavier SumRanks difference could map to weight 2, but none was seen). GridCycle then contributed through the double-overflow coincidence
 (most cases), through q = 51 (the last walk card), or through the tail pair (50, 51). In v9 the
 SumRanks classes are only "same row with a ≡ b mod 4" and "same rank, same column". This is why
 only those two value relations survive a round (§2).
 
 ## 4. Can a branch-number-style bound be proven?
 
-**Not a nontrivial one for any layer or combination.** GC, SR, SR->GC, one keyed round, and
-(v9) up to 4 keyed rounds all have explicit weight-2 -> weight-2 witnesses. The best possible
-unconditional statement is the trivial floor (`>= 4`), and it is tight. What *is* provable and
-clean are the following statements. The first two are proofs of the floor and of tightness; the
-others characterise when it is attained or give class-restricted bounds.
+For every layer measured (GC, SR, SR→GC, one keyed round, for every key), the floor 4 is
+attained. For v9 multi-round we have witnesses up to 4 rounds for one key only. None was found at
+5 rounds or for the full encrypt. A random bijection would be expected to have about
+1326²/2 ≈ 8.8e5 swap→swap pairs, so 4 is expected there too, but it is not exhibited.
+
+The floor and GridCycle's tightness are now proved in Lean; the characterisations T2 and T3 below
+remain open.
+
+**Proved** in `DoubleDealSecurity/BranchNumber.lean`
+([PR #84](https://github.com/hacker6284/cryptoys/pull/84)): T0, T1 and seat 26, for v9 and
+the frozen v8 model.
+
+```lean
+namespace DoubleDeal.Security
+-- weight = Mathlib `hammingDist a b` (seats where a and b differ); `swapAt m i j` = m ∘ Equiv.swap i j
+
+/-- (T0) Trivial floor: distinct decks differ in at least 2 seats ... -/
+theorem two_le_hammingDist {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b) (h : a ≠ b) :
+    2 ≤ hammingDist a b
+/-- ... so any map that keeps decks and separates them has branch number ≥ 4. -/
+theorem four_le_branch {F : (Fin 52 → Nat) → (Fin 52 → Nat)}
+    (hdeck : ∀ m, IsDeck m → IsDeck (F m))
+    (hsep : ∀ {a b : Fin 52 → Nat}, IsDeck a → IsDeck b → a ≠ b → F a ≠ F b)
+    {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b) (h : a ≠ b) :
+    4 ≤ hammingDist a b + hammingDist (F a) (F b)
+
+/-- (T1) GridCycle tail lemma: for every deck, swapping walk cards 50 and 51 moves exactly
+    two output seats, so GridCycle's branch number is exactly 4. -/
+theorem mixColumns_swap_tail (m : Fin 52 → Nat) (hm : IsDeck m) :
+    hammingDist (mixColumns m) (mixColumns (swapAt m 50 51)) = 2
+theorem mixColumns_tail_branch (m : Fin 52 → Nat) (hm : IsDeck m) :
+    hammingDist m (swapAt m 50 51) +
+      hammingDist (mixColumns m) (mixColumns (swapAt m 50 51)) = 4
+/-- (T1') Walk card 0 always lands at output seat 26 (corollary of the generic
+    `scoop_gridW_seat26`, for any chooser that starts at `asStart`). -/
+theorem mixColumns_seat26 (m : Fin 52 → Nat) : mixColumns m 26 = m 0
+-- v8 twins: v8_mixColumns_swap_tail, v8_mixColumns_tail_branch, v8_mixColumns_seat26
+end DoubleDeal.Security
+```
+
+**Open** (proposed statements, not proved):
 
 ```lean
 namespace DoubleDeal.Security
 
-/-- Seats where two decks differ. -/
-def diffWeight (a b : Fin 52 → Nat) : Nat := (Finset.univ.filter fun i => a i ≠ b i).card
-/-- Exchange the cards at seats i and j. -/
-def swapAt (m : Fin 52 → Nat) (i j : Fin 52) : Fin 52 → Nat := m ∘ Equiv.swap i j
-
-/-- (T0) Trivial floor: distinct decks differ in at least 2 seats, so any deck bijection
-    has branch number ≥ 4. -/
-theorem two_le_diffWeight {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b) (h : a ≠ b) :
-    2 ≤ diffWeight a b
-
-/-- (T1) GridCycle tail lemma: for every deck, swapping walk cards 50 and 51 moves exactly
-    two output seats (so GridCycle's branch number is exactly 4, with no computation). -/
-theorem mixColumns_swap_tail (m : Fin 52 → Nat) (hm : IsDeck m) :
-    diffWeight (mixColumns m) (mixColumns (swapAt m 50 51)) = 2
-theorem mixColumns_seat26 (m : Fin 52 → Nat) : mixColumns m 26 = m 0
-
 /-- (T2) Weight 2 iff the seat walk is unchanged. -/
 theorem mixColumns_swap_two_iff (m : Fin 52 → Nat) (hm : IsDeck m) {i j : Fin 52} (hij : i ≠ j) :
-    diffWeight (mixColumns m) (mixColumns (swapAt m i j)) = 2 ↔
+    hammingDist (mixColumns m) (mixColumns (swapAt m i j)) = 2 ↔
       ∀ n : Fin 52, walkSeat (swapAt m i j) n = walkSeat m n
 
 /-- SumRanks on decks (column-major lay/scoop), v9. -/
@@ -211,46 +233,40 @@ def sr9 (m : Fin 52 → Nat) : Fin 52 → Nat := scoopColumnMajor (sumRanksV9 (l
 
 /-- (T3) SumRanks swap classification, v9: the weight is 2, 8, or at least 26. -/
 theorem sr9_swap_weight (m : Fin 52 → Nat) (hm : IsDeck m) {i j : Fin 52} (hij : i ≠ j) :
-    let w := diffWeight (sr9 m) (sr9 (swapAt m i j))
+    let w := hammingDist (sr9 m) (sr9 (swapAt m i j))
     w = 2 ∨ w = 8 ∨ 26 ≤ w
 theorem sr9_swap_cross (m : Fin 52 → Nat) (hm : IsDeck m) {i j : Fin 52}
     (hrow : cmRow i ≠ cmRow j) (hrank : rank (m i) ≠ rank (m j)) :
-    26 ≤ diffWeight (sr9 m) (sr9 (swapAt m i j))
+    26 ≤ hammingDist (sr9 m) (sr9 (swapAt m i j))
 /-- Only same-rank or ≡ (mod 4) value pairs can pass SumRanks as a swap (v9). -/
 theorem sr9_swap_two_imp (m : Fin 52 → Nat) (hm : IsDeck m) {i j : Fin 52} (hij : i ≠ j)
-    (h : diffWeight (sr9 m) (sr9 (swapAt m i j)) = 2) :
+    (h : hammingDist (sr9 m) (sr9 (swapAt m i j)) = 2) :
     rank (m i) = rank (m j) ∨ m i % 4 = m j % 4
 
 end DoubleDeal.Security
 ```
 
-Proof plan and effort, reusing `Walk.lean` (`placeW`, `seatW_injective`, `seatW_surj`,
-`gridW_at_seat`) and the `rowRotate_apply` / `colRotate_apply` / `grid_inj` lemmas in
-`SumRanks.lean`:
+Proof plan and effort for the open statements, reusing `Walk.lean` (`placeW`, `seatW_injective`,
+`seatW_surj`, `gridW_at_seat`), the prefix lemmas of `BranchNumber.lean`, and the
+`rowRotate_apply` / `colRotate_apply` / `grid_inj` lemmas in `SumRanks.lean`:
 
-* T0: one counting lemma (a single differing seat contradicts injectivity plus equal card sets).
-  About 0.5 day.
-* T1: prefix lemma "`placeW ch hand n` depends only on `hand` below n" (induction), then "seat 51 is
-  the unique seat not among seats 0..50" (from `seatW_injective`/`seatW_surj`), then
-  `gridW_at_seat`. About 1-2 days, 150-250 lines. It works for any `FreeChooser`, so v8 comes free.
-  T1' (seat 26) is a few lines.
-* T2: same infrastructure. (⇐) comes from `gridW_at_seat`. (⇒) holds because weight 2 forces every
-  other card to its old seat, and seat injectivity then gives the whole sequence. About 1-2 days on
-  top of T1.
+* T2: same infrastructure as T1. (⇐) comes from `gridW_at_seat`. (⇒) holds because weight 2 forces
+  every other card to its old seat, and seat injectivity then gives the whole sequence. About 1-2
+  days.
 * T3: case split on rows and ranks, rotation arithmetic, and the column-coincidence count for the
   26 bound (the hard part: a Finset card bound summed over 13 columns). About 4-7 days,
   400-700 lines. Parametrise over `colW` to get v8 in about +1 day.
 * Tightness witnesses per layer (single swaps, e.g. those in `witnesses.json`) can be checked by
-  `decide!` on single layers, as the existing `mixColumns_KC_KD_fails` does. T1 makes GridCycle
-  tightness universal anyway. I would not attempt kernel checks of the multi-round trails (the v8
-  README records that full-encrypt `decide` exceeded 14 GB).
+  `decide!` on single layers, as the existing `mixColumns_KC_KD_fails` does; T1 already makes
+  GridCycle tightness universal. I would not attempt kernel checks of the multi-round trails (the
+  v8 README records that full-encrypt `decide` exceeded 14 GB).
 
-Total for T0-T3 is about 1.5-2.5 weeks. These would give honest, precisely scoped statements:
-"branch number 4 (trivial, tight) for GridCycle, with an exact description of when weight 2
-happens"; "SumRanks swap weights are in {2, 8} ∪ [26, 52], with exact class conditions". None of
-them is a wide-trail bound.
+T2 and T3 together are about 1-2 weeks. With T0/T1 they would give honest, precisely scoped
+statements: "branch number 4 (trivial, tight) for GridCycle, with an exact description of when
+weight 2 happens"; "SumRanks swap weights are in {2, 8} ∪ [26, 52], with exact class conditions".
+None of them is a wide-trail bound.
 
-## 5. Notes for Zachary (observations only, not proposals)
+## 5. Observations
 
 * Every layer only moves cards, and the data-dependent amounts are sums over a row, column or
   walk prefix. A swap that leaves the relevant sums (mod 13 / mod 4), or the overflow outcome,
@@ -263,12 +279,12 @@ them is a wide-trail bound.
 
 ## Files
 
-`common.py` (harness), `check_port.py`, `measure.py` -> `measure.log`, `structural.py` ->
+`common.py` (harness), `measure.py` -> `measure.log`, `structural.py` ->
 `structural.log`, `search.py` -> `search.log` / `search2.log`, `multiround.py` ->
 `multiround.log`, `trail_search.py` -> `trail_v9_4.log`, `trail_v9_5.log`, `trail_v9_enc.log`,
 `witnesses.py` -> `witnesses.log`, `witnesses.json`.
-Reproduce: `python3 check_port.py; python3 measure.py 1000 2026; python3 structural.py;
-python3 search.py 120 777; python3 search.py 400 991 'q<=|4 keyed|5 keyed|encrypt';
+Port check: `python3 ../selftest.py` (CI). Reproduce: `python3 measure.py 1000 2026; python3 structural.py;
+python3 search.py 120 777; python3 search.py 480 991 'q<=|4 keyed|5 keyed|encrypt';
 python3 multiround.py 3000 5; python3 trail_search.py 9 4 600 8 31; python3 trail_search.py 9 5 1200 4 51;
 python3 trail_search.py 9 enc 1200 4 61; python3 witnesses.py`. The searches are time-budgeted, so
 reruns find different (verified) witnesses.

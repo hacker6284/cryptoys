@@ -4,7 +4,7 @@ usage: python3 witnesses.py > witnesses.log
 """
 import re, json, ast
 from pathlib import Path
-from common import *
+from common import FIXED_KEY, NAMES, show, swap, wt
 import search as S   # reuses TARGETS / apply_cycle (search's __main__ block does not run on import)
 
 out = []

@@ -10,9 +10,9 @@ usage: python3 multiround.py N seed > multiround.log
 """
 import sys, random, collections
 from multiprocessing import Pool
-from common import *
+from common import FIXED_KEY, FIXED_KEY_SEED, rdeck, swap, wt
 import ddport
-from dd_v8 import expand_keys, rank, suit
+from dd_v8 import expand_keys, rank
 N, SEED = int(sys.argv[1]), int(sys.argv[2])
 KS = expand_keys(FIXED_KEY)
 

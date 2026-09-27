@@ -12,9 +12,8 @@ Weight of a difference between two decks = number of positions where they differ
 import sys, random
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-sys.path.insert(0, str(Path(__file__).resolve().parents[4] / 'proofs/deprecated/doubledeal-v8/attack'))
-import ddport as P
-from dd_v8 import lay_cm, scoop_cm, shift_rows, compose
+import ddport as P          # ddport puts the frozen v8 attack dir (dd_v8) on sys.path
+from dd_v8 import lay_cm, scoop_cm
 
 FIXED_KEY_SEED = 20260927
 _kr = random.Random(FIXED_KEY_SEED)

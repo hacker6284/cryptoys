@@ -12,9 +12,9 @@ usage: python3 trail_search.py v R seconds nproc seed > trail_vV_R.log
 """
 import sys, time, random
 from multiprocessing import Pool
-from common import *
+from common import FIXED_KEY, NAMES, rdeck, swap, wt
 import ddport
-from dd_v8 import expand_keys
+from dd_v8 import expand_keys, compose
 V, RA, SECS, NPROC, SEED = int(sys.argv[1]), sys.argv[2], float(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])
 KS = expand_keys(FIXED_KEY)
 if RA == 'enc':

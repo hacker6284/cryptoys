@@ -6,7 +6,7 @@ Analysis only: empirical distributions over random decks, not a bound.
 """
 import sys, random, collections
 from multiprocessing import Pool
-from common import *
+from common import FIXED_KEY_SEED, LAYERS, rdeck, swap, wt
 from dd_v8 import mix_columns as v8_mix
 
 N, SEED = int(sys.argv[1]), int(sys.argv[2])
@@ -42,7 +42,8 @@ if __name__ == '__main__':
     bq = {v: collections.defaultdict(lambda: 10**9) for v in (8, 9)}
     best = {v: {k: (99, None) for k in KEYS} for v in (8, 9)}
     with Pool() as pool:
-        for v, h, p, q, b in pool.imap_unordered(work, jobs, chunksize=4):
+        # imap keeps job order, so a tie in the best weight goes to the lowest seed
+        for v, h, p, q, b in pool.imap(work, jobs, chunksize=4):
             for k in KEYS:
                 agg[v][k].update(h[k])
                 if b[k][0] < best[v][k][0]: best[v][k] = b[k]

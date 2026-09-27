@@ -12,7 +12,7 @@
 [3] v9 SR rows,diff-rank             n= 381752 weights min=30 max=52 mean=45.50
 [3] v9 SR rows,same-rank:diff-col    n=  22064 weights min=8 max=8 dist={8: 22064}
 [3] v9 SR rows,same-rank:same-col    n=   1784 weights min=2 max=2 dist={2: 1784}
-[4] v8 SRGC weight-2 events over 400 decks x 1326 swaps: 6782
+[4] v8 SRGC weight-2 events over 400 decks x 1326 swaps: 6782; SumRanks-stage weight among them: {2: 6782}
         3030  SR class row:same-w4                GC mechanism double-overflow
         2706  SR class rows,same-rank:diff-col    GC mechanism double-overflow
          369  SR class row:same-w4                GC mechanism q=51
@@ -20,7 +20,7 @@
          292  SR class rows,same-rank:diff-col    GC mechanism q=51
           28  SR class row:same-w4                GC mechanism tail(50,51)
           23  SR class rows,same-rank:diff-col    GC mechanism tail(50,51)
-[4] v9 SRGC weight-2 events over 400 decks x 1326 swaps: 1349
+[4] v9 SRGC weight-2 events over 400 decks x 1326 swaps: 1349; SumRanks-stage weight among them: {2: 1349}
          849  SR class row:same-w4                GC mechanism double-overflow
          295  SR class rows,same-rank:same-col    GC mechanism double-overflow
          184  SR class row:same-w4                GC mechanism q=51

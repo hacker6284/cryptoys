@@ -3,13 +3,13 @@ weight. State = (deck d, difference delta), where delta is a cycle on a few posi
 (length 2 = swap, length 3 = 3-cycle). Objective = wt(F(d), F(d o delta)).
 
 usage: python3 search.py seconds_per_target seed [regex] > search.log
-  (search.log: first pass, default targets; search2.log: regex 'q<=|4 keyed|5 keyed|encrypt')
+  (search.log: `search.py 120 777`; search2.log: `search.py 480 991 'q<=|4 keyed|5 keyed|encrypt'`)
 Analysis only. A found minimum is a witness (an upper bound on the branch number); failing to go
 lower is not a proof of anything.
 """
-import sys, time, random
+import sys, time, random, re
 from multiprocessing import Pool
-from common import *
+from common import FIXED_KEY, FIXED_KEY_SEED, GC, LAYERS, SR, rdeck, wt
 import ddport
 from dd_v8 import rank, expand_keys
 
@@ -50,6 +50,14 @@ for v in (8, 9):
     TARGETS[f'v{v} 5 keyed rounds swap'] = (lambda v=v: rounds(v, 5), 2, None, None)
     TARGETS[f'v{v} encrypt swap'] = (lambda v=v: (lambda d: ddport.encrypt(d, FIXED_KEY, v)), 2, None, None)
 
+def keys_note(name):
+    """Which keys a target uses, for the log."""
+    m = re.search(r'(\d) keyed rounds', name)
+    if m: return f'  keys K1..K{m.group(1)}'
+    if name.endswith('encrypt swap'): return '  keys K0..K6 (whole cipher)'
+    if ' RK ' in name: return '  key FIXED_KEY (one round)'
+    return ''
+
 def climb(name, seed):
     build, L, ok, p0 = TARGETS[name]
     F = build(); rng = random.Random(seed)
@@ -83,15 +91,15 @@ def climb(name, seed):
     return name, best, evals, restarts
 
 if __name__ == '__main__':
-    import re
     pat = sys.argv[3] if len(sys.argv) > 3 else None
     second = re.compile('q<=|4 keyed|5 keyed|encrypt')
     names = [n for n in TARGETS if (re.search(pat, n) if pat else not second.search(n))]
     with Pool() as pool:
         res = pool.starmap(climb, [(n, SEED + i) for i, n in enumerate(names)])
     print(f'# hill climbing, {SECS:.0f}s budget per target (stops early at weight 2), seed {SEED}')
-    print(f'# fixed key = shuffle(seed {FIXED_KEY_SEED}); multi-round targets use PassKey keys K1..K3 of that master key')
+    print(f'# fixed key = shuffle(seed {FIXED_KEY_SEED}); an n-round target uses the real PassKey keys '
+          f'K1..Kn of that master key (shown per target)')
     for name, (s, d, pos), evals, restarts in res:
         inw = len(pos)
-        print(f'{name:36s} min out={s:2d}  in+out={inw + s:2d}  evals={evals} restarts={restarts}')
+        print(f'{name:36s} min out={s:2d}  in+out={inw + s:2d}  evals={evals} restarts={restarts}{keys_note(name)}')
         print(f'    positions={pos} deck={d}')

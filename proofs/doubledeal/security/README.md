@@ -65,3 +65,8 @@ Link 1 (sudo = Generated) remains open.
   both scripts, and `check_covariant.py` exits non-zero if any sampled σ is
   covariant) and
   `measure_v9sym.log` (minutes; measurement only).
+- `checks/branchnum/` holds the branch-number measurements (analysis only; see its
+  `NOTES.md`). Runtimes on 8 cores: `measure.py` about 3-5 min, `structural.py` about
+  2.5 min, the time-budgeted searches (`search.py`, `trail_search.py`) about 1 h wall
+  time in total. CI only re-verifies the committed witnesses: `witnesses.py` must
+  reproduce `witnesses.json` exactly.

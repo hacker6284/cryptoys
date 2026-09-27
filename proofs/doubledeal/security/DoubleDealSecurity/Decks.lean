@@ -1,10 +1,10 @@
 /-
-  Shared, Mathlib-free definitions for the security package: named cards,
-  the witness decks, and the card-map interface used by the Link 2 transfer.
+  Named cards, witness decks, and the cell-map interface used by the Link 2
+  transfer (`Link.lean`).
 -/
 import DoubleDeal.Basic
 
-namespace DoubleDeal.SecurityLink
+namespace DoubleDeal.Security
 
 /-! ## Named cards (CHaSeD ids: suit ♣0 ♥1 ♠2 ♦3, id = 13·suit + rank − 1) -/
 
@@ -27,4 +27,4 @@ structure CardMap (f : Nat → Nat) : Prop where
 /-- The transposition of two values, on `Nat` cells. -/
 def swapNat (a b n : Nat) : Nat := if n = a then b else if n = b then a else n
 
-end DoubleDeal.SecurityLink
+end DoubleDeal.Security

@@ -1,16 +1,15 @@
 /-
-  T1 DRAFT — Link 2 transfer for relabellings (Mathlib-free).
+  T1 — Link 2 transfer for relabellings.
 
-  Generic in a cell map `f : Nat → Nat` (`CardMap f`). A relabelling
-  `σ : Equiv.Perm (Fin 52)` enters through `σ.app` (bridge lemmas
-  `Relabel.app_cardMap`, `Relabel.swap_KC_KD_app` in `DoubleDealSecurity`).
+  Generic lemmas take a cell map `f : Nat → Nat` (`CardMap f`); the headline
+  statements are about `σ : Equiv.Perm (Fin 52)` acting through `σ.app`.
   Link 1 (sudo = Generated) stays open: these are facts about the emitted Lean.
 -/
 import DoubleDeal.Concrete
 import DoubleDeal.Link2.Encrypt
-import DoubleDealSecurityLink.Decks
+import DoubleDealSecurity.Relabel
 
-namespace DoubleDeal.SecurityLink
+namespace DoubleDeal.Security
 
 open DoubleDeal
 
@@ -126,4 +125,45 @@ theorem generated_encrypt_KC_KD_not_equivariant :
   rw [Link2.encrypt_refines _ _ hm' perm52_range hc, ← toDeck_map] at h
   exact encryptDeck_KC_KD_not_equivariant (embed_inj (Except.ok.inj h))
 
-end DoubleDeal.SecurityLink
+/-! ## Headline statements for `σ : Equiv.Perm (Fin 52)` -/
+
+theorem ofDeck_map_rel (σ : Relabel) (xs : List Nat) (h : xs.length = 52)
+    (h' : (xs.map σ.app).length = 52) :
+    ofDeck (xs.map σ.app) h' = rel σ (ofDeck xs h) := ofDeck_map σ.app xs h h'
+
+/-- (PROVED) Relabelling the key moves positions: seat `j` of `Compose(M, σK)`
+    holds what seat `σ⁻¹ j` of `Compose(M, K)` held. -/
+theorem keyPos_relabel_key (σ : Relabel) (key : List Nat) (j : Fin 52) :
+    keyPos (key.map σ.app) j = keyPos key (σ.symm j) := by
+  have h := keyPos_map_key σ.app (fun _ _ e => σ.app_inj e) key (σ.symm j).val (σ.symm j).isLt
+    (σ.app_lt (σ.symm j).isLt)
+  have hj : (⟨σ.app (σ.symm j).val, σ.app_lt (σ.symm j).isLt⟩ : Fin 52) = j := by
+    apply Fin.ext; simp [σ.app_fin]
+  rw [hj] at h
+  exact h
+
+/-- (PROVED) For `σ : Equiv.Perm (Fin 52)`, the emitted `Doubledeal.encrypt`
+    satisfies `E_K(σM) = σ E_K(M)` exactly when the algebraic model does. -/
+theorem generated_encrypt_relabel_iff (σ : Relabel) (message key : List Nat)
+    (hm : message.length = 52) (hk : Perm52 key) (hc : ∀ x ∈ message, x < 52) :
+    Doubledeal.encrypt (Link2.embed (message.map σ.app)) (Link2.embed key) =
+        .ok (Link2.embed ((encryptDeck message key).map σ.app)) ↔
+      encryptDeckFn (rel σ (ofDeck message hm)) key =
+        rel σ (encryptDeckFn (ofDeck message hm) key) :=
+  generated_encrypt_map_iff σ.app (app_cardMap σ) message key hm hk hc
+
+/-- (PROVED) Headline: there is a relabelling `σ : Equiv.Perm (Fin 52)` — the
+    transposition K♣↔K♦ — such that the emitted v9 `encrypt` does not commute
+    with it: on message `K♦, A♣, 2♣, …` and the identity key,
+    `E_K(σM) ≠ σ E_K(M)`. -/
+theorem generated_encrypt_not_relabel_equivariant :
+    ∃ (σ : Equiv.Perm (Fin 52)) (message key : List Nat),
+      Perm52 key ∧ message.length = 52 ∧
+      Doubledeal.encrypt (Link2.embed (message.map (Relabel.app σ))) (Link2.embed key) ≠
+        .ok (Link2.embed ((encryptDeck message key).map (Relabel.app σ))) := by
+  have h := generated_encrypt_KC_KD_not_equivariant
+  rw [← swap_KC_KD_app] at h
+  exact ⟨Equiv.swap KC KD, toDeck (firstDeck 51), List.range 52, perm52_range,
+    length_toDeck _, h⟩
+
+end DoubleDeal.Security

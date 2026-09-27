@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Fail unless every theorem in Axioms.lean / AxiomsLink.lean uses only the
+"""Fail unless every theorem in Axioms.lean uses only the
 standard axioms (propext, Classical.choice, Quot.sound).
 
-Security-package twin of proofs/doubledeal/check_axioms.py. Two files because
-the Mathlib side and the Link 2 side cannot share one environment. Run after
+Security-package twin of proofs/doubledeal/check_axioms.py. Run after
 `lake build` in proofs/doubledeal/security.
 """
 import re
@@ -13,7 +12,7 @@ from pathlib import Path
 
 ALLOWED = {"propext", "Classical.choice", "Quot.sound"}
 PKG = Path(__file__).resolve().parent
-FILES = ["Axioms.lean", "AxiomsLink.lean"]
+FILES = ["Axioms.lean"]
 
 
 def audit(fname: str) -> int:

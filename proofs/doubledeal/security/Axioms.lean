@@ -4,7 +4,6 @@
   fails on purpose.
 -/
 import DoubleDealSecurity
-import DoubleDealSecurity.V8Vectors
 
 -- Proved
 #print axioms DoubleDeal.Security.compose_commutes
@@ -29,6 +28,12 @@ import DoubleDealSecurity.V8Vectors
 #print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_identity
 #print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_reverse
 #print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_mul17
+
+-- Link 2 transfer (emitted encrypt)
+#print axioms DoubleDeal.Security.keyPos_relabel_key
+#print axioms DoubleDeal.Security.generated_encrypt_relabel_iff
+#print axioms DoubleDeal.Security.encryptDeck_KC_KD_not_equivariant
+#print axioms DoubleDeal.Security.generated_encrypt_not_relabel_equivariant
 
 -- Draft (rest on DRAFT-SORRY lemmas)
 #print axioms DoubleDeal.Security.sumRanks_commutes_iff

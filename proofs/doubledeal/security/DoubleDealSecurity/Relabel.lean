@@ -12,18 +12,17 @@
   on the model's `Nat` cells. All statements are about the proof-only algebraic
   model (`Round.lean`, `GridCycle.lean`, `SumRanks.lean` in ../lean). The
   transfer to the emitted `Doubledeal.encrypt` (Link 2, `encrypt_refines`) is in
-  the Mathlib-free library `DoubleDealSecurityLink`, because the core package's
-  PassKey shims clash with Mathlib. Link 1 (sudo = Generated) stays open.
+  `Link.lean`. Link 1 (sudo = Generated) stays open.
   Structural facts, not a security proof.
 -/
 import Mathlib.GroupTheory.Perm.Basic
 import Mathlib.Logic.Equiv.Fin
 import DoubleDeal.Round
-import DoubleDealSecurityLink.Decks
+import DoubleDealSecurity.Decks
 
 namespace DoubleDeal.Security
 
-open DoubleDeal DoubleDeal.SecurityLink
+open DoubleDeal
 
 /-! ## Relabellings -/
 
@@ -106,7 +105,7 @@ theorem CommutesG.onDecks {σ F} (h : CommutesG σ F) : CommutesOnDecksG σ F :=
   have := hg.1 (cmFlat r c)
   simpa [scoopColumnMajor, (cm_cmFlat r c).1, (cm_cmFlat r c).2] using this
 
-/-! ## Bridge to the Mathlib-free Link 2 side (`DoubleDealSecurityLink`) -/
+/-! ## Bridge to the cell-map lemmas of `Link.lean` -/
 
 /-- `σ.app` is a card map in the sense of the Link-side transfer theorems. -/
 theorem app_cardMap (σ : Relabel) : CardMap σ.app := ⟨fun _ h => σ.app_lt h⟩
@@ -131,7 +130,7 @@ theorem cards_firstDeck : Cards (firstDeck 51) := firstDeck_lt
 Compose/AddRoundKey is `C[j] = M[keyPos K j]`: the key only supplies
 positions. So the right form is `E_K(σM) = σ E_K(M)` with the key NOT
 relabelled. Relabelling the key instead permutes the output positions
-(`SecurityLink.keyPos_map_key`), and PassKey is value-dependent, so neither
+(`keyPos_relabel_key` in `Link.lean`), and PassKey is value-dependent, so neither
 `E_{σK}(M)` nor `E_{σK}(σM)` is related to `σ E_K(M)` in general. -/
 
 theorem compose_rel (σ : Relabel) (m : Fin 52 → Nat) (pos : Fin 52 → Fin 52) :

@@ -1,5 +1,7 @@
 /-
-  DoubleDeal security theorems (Mathlib). Draft: T1 relabellings.
+  DoubleDeal security theorems (Mathlib). T1: card relabellings.
 -/
+import DoubleDealSecurity.Decks
 import DoubleDealSecurity.Relabel
+import DoubleDealSecurity.Link
 import DoubleDealSecurity.V8Vectors

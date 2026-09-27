@@ -36,7 +36,7 @@ low-weight families are exhaustive, and hill-climbs were run on top. Result:
   swap-only "worst ≈ 1/221" as the SumRanks-alone worst case.
 - The same-suit swap is 1/221. Nothing except the 51 exact `v10Sym` symmetries exceeds 1/64.
 - Proved in Lean (`sumRanksV10_survival_le`, `../../security/SUMRANKS_DP.md`): no non-symmetry
-  relabelling survives SumRanks alone on more than 1/64 of the decks. The exact 9/1105 is measured only.
+  relabelling survives SumRanks alone on more than 1/64 of the decks. The measured worst case 9/1105 is not formalised.
 - Mechanism: SumRanks reads 17 totals. Row totals see only ranks and column totals see only suits, so a
   same-suit cycle is invisible to every column. Each row holding a moved card must keep its weighted rank sum
   mod 13. Three cards in one row balance that sum in 1 of 11 placements; a swap in one row never balances.

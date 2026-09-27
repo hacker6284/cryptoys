@@ -36,7 +36,7 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt` (v10), K♣↔K♦ witness (re-checked on v10) |
 | `V8Vectors` | frozen v8 vectors checked against the v8 model (generated, `--check`) |
 | `RealKey` | commuting relabellings closed under powers; every nontrivial `v10Sym a x` has a power equal to one of four witnesses `v10Sym 1 0`, `v10Sym 0 1`, `v10Sym 0 2`, `v10Sym 0 3` (v9 needed two; `v10Sym` is not cyclic); pull-back from the emitted `encrypt` |
-| `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma inventory and method: `SUMRANKS_DP.md` |
+| `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma map: `SUMRANKS_DP.md`; paper proof: `sumranks-dp-paper/PROOF.md` |
 | `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`). **Deprecated-v9 model**; kept as the proof of the v9 mechanism, not a statement about v10 |
 | `Audit` | the `#audit_all Root` command used by `Axioms.lean` / `AxiomsHeavy.lean` |
 | `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v10 `encrypt` under the identity master key (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
@@ -58,7 +58,7 @@ Measured near-symmetries of v10 SumRanks alone (empirical, not proved) are in
 a same-suit 3-cycle at exactly 9/1105 ≈ 1/123; the same-suit swap is 1/221.
 Proved (`sumRanksV10_survival_le`, `SumRanksDP/Main.lean`): no non-symmetry
 relabelling survives v10 SumRanks alone on more than 1/64 of the decks. The
-9/1105 supremum itself is not formalised.
+measured worst case 9/1105 is not formalised.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at

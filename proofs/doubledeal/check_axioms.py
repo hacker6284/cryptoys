@@ -92,15 +92,6 @@ def heavy_registry_problems():
     return bad
 
 
-def unloaded_modules(lib, out):
-    """Module files under security/<lib>/ that the audit's environment did not load."""
-    sec = ROOT / "security"
-    on_disk = {".".join(p.relative_to(sec).with_suffix("").parts) for p in (sec / lib).rglob("*.lean")}
-    loaded = set(re.findall(r"\bloaded module (\S+)", out))
-    return [f"module {m} is not imported by {lib}.lean (the audit never loaded it)"
-            for m in sorted(on_disk - loaded)]
-
-
 REPORT = re.compile(r"'(\S+?)' depends on axioms: \[([^\]]*)\]")
 
 
@@ -150,8 +141,7 @@ def main(argv) -> int:
     if len(expected) < cfg["min"]:
         bad.append(f"only {len(expected)} theorems audited (expected at least {cfg['min']})")
     if pkg.startswith("security"):
-        bad += heavy_registry_problems() + unloaded_modules(
-            "DoubleDealSecurityHeavy" if pkg == "security-heavy" else "DoubleDealSecurity", out)
+        bad += heavy_registry_problems()
     for name in sorted(cfg.get("required", set()) - set(seen)):
         bad.append(f"required theorem {name} was not reported by the audit")
     for name in sorted(known_sorry - set(seen)):

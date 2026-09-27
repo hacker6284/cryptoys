@@ -54,7 +54,7 @@ permutation-key `encrypt6_commutes_iff_id` rest on it.
 
 CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 - `checks/scan_sorry.py`: `sorry` only in `roundBody_covariant_iff_id`; no
-  `admit`, `admitGoal`, `native_decide`, `sorryAx` or `axiom` declarations anywhere. A sorry
+  `admit`, `admitGoal`, `native_decide`, `sorryAx`, `initialize` or `axiom` declarations anywhere. A sorry
   counts for its top-level declaration (inside `have` too); `let rec` and `where`
   items count under their own name `top.f`, as Lean and the axiom gate name them.
   `--selftest` checks these cases.
@@ -64,11 +64,11 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
   the three KNOWN_SORRY theorems above. Any axiom declared in the package fails,
   and so does a stale KNOWN_SORRY entry. It does not import the heavy library, but it fails if the `HEAVY_THEOREMS`
   registry and the theorems declared in `DoubleDealSecurityHeavy/` disagree.
-  `#audit_all` also prints every module under its root that Lean actually loaded,
-  and each mode fails if a file under its library directory (`DoubleDealSecurity/`
-  here, `DoubleDealSecurityHeavy/` in the heavy mode) was not loaded, since the
-  audit never saw it. Lean decides what is imported, so commented-out imports
-  cannot fool it. A private and a public theorem with the same user name also fail.
+  The audit itself (`#audit_all`, in Lean) raises an error when a `.lean` file
+  under its library directory (`DoubleDealSecurity/` here, `DoubleDealSecurityHeavy/`
+  in the heavy mode) was not loaded by the environment, since the audit never saw
+  it; any Lean error fails `check_axioms.py`. Lean decides what is imported, so
+  commented-out imports cannot fool it. A private and a public theorem with the same user name also fail.
 
 CI (`proofs-heavy.yml`, job `doubledeal-security-heavy`) builds the heavy library
 and runs `../check_axioms.py security-heavy` (same rules, no KNOWN_SORRY; every

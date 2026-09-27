@@ -125,6 +125,7 @@ SELFTEST = [
     ("admitGoal", f"theorem {C} : P := by\n  sorry\nelab \"trustme\" : tactic => do\n  admitGoal (← getMainGoal)\n", False, "forbidden admitGoal:"),
     ("sorryAx", f"theorem {C} : P := by\n  sorry\ntheorem t : Q := sorryAx Q\n", False, "forbidden sorryAx:"),
     ("initialize", f"theorem {C} : P := by\n  sorry\ninitialize IO.println \"loaded module X\"\n", False, "forbidden initialize:"),
+    ("builtin_initialize", f"theorem {C} : P := by\n  sorry\nbuiltin_initialize IO.println \"loaded module X\"\n", False, "forbidden builtin_initialize:"),
     ("axiom declaration", f"theorem {C} : P := by\n  sorry\naxiom ax : False\n", False, "axiom declaration"),
 ]
 

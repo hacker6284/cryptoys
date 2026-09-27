@@ -69,7 +69,7 @@ The T1 results in `proofs/doubledeal/security/` are statements about **all** dec
 | `attack/mechanism.py`, `layers.c`, `mechanism.log` | The per-layer measurements and the class scan above |
 | `attack/lowdiff.py`, `relations.py`, `scan.py`, `stats.py`, `summarize.py`, `NOTES.md`, `results/` | The original reduced-round analysis that found the break (1326 transpositions at E2/F2/F3, the 12↔24 scaling to F6) |
 | `attack/verify_witness.mjs`, `check_witnesses.py` | All 14 F6 witnesses on the JS target and on the Python port |
-| `candidates/` | Candidate-fix analysis (`CANDIDATES.md`) |
+| `candidates/` | Candidate-fix analysis: `candidates/CANDIDATES.md` (table), `candidates/measure.log` (raw run) |
 
 ## Reproduce
 

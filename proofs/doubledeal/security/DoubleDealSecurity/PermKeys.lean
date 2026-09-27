@@ -31,13 +31,6 @@ def encrypt6P (m : Fin 52 → Nat) (k0 : Key) (kMix : Nat → Key) (kF : Key) : 
 
 /-! ## Decks as permutations -/
 
-noncomputable def deckPerm (d : Fin 52 → Nat) (hd : IsDeck d) : Equiv.Perm (Fin 52) :=
-  Equiv.ofBijective (fun i => ⟨d i, hd.1 i⟩)
-    (Finite.injective_iff_bijective.1 (fun _ _ h => hd.2 (congrArg Fin.val h)))
-
-@[simp] theorem deckPerm_val (d : Fin 52 → Nat) (hd : IsDeck d) (i : Fin 52) :
-    (deckPerm d hd i).val = d i := rfl
-
 theorem isDeck_rel (σ : Relabel) {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck (rel σ m) :=
   ⟨fun i => σ.app_lt (hm.1 i), fun _ _ h => hm.2 (σ.app_inj h)⟩
 

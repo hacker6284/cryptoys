@@ -58,11 +58,9 @@ theorem swapAt_ne_iff {m : Fin 52 → Nat} (hm : Function.Injective m) {i j : Fi
 
 /-- A deck uses every card value. -/
 theorem isDeck_surj {m : Fin 52 → Nat} (hm : IsDeck m) {c : Nat} (hc : c < 52) :
-    ∃ i, m i = c := by
-  let f : Fin 52 → Fin 52 := fun i => ⟨m i, hm.1 i⟩
-  have hinj : Function.Injective f := fun i j h => hm.2 (congrArg Fin.val h)
-  obtain ⟨i, hi⟩ := (Finite.injective_iff_surjective.mp hinj) ⟨c, hc⟩
-  exact ⟨i, congrArg Fin.val hi⟩
+    ∃ i, m i = c :=
+  let ⟨i, hi⟩ := (deckPerm m hm).surjective ⟨c, hc⟩
+  ⟨i, congrArg Fin.val hi⟩
 
 /-- (T0, PROVED) Distinct decks differ in at least two seats. One differing
     seat would leave the other 51 cards fixed, so the missing value at that

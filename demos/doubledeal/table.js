@@ -175,6 +175,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
     }
 
     function seatPacket(order, deck, major) {
+        const gen = generation;
         clearGrid();
         packet = order.map((id) => deck[id]);
         return Promise.all(order.map((id, index) => new Promise((resolve) => {
@@ -184,7 +185,8 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             const col = major === "row" ? index % 13 : Math.floor(index / 4);
             grid[row][col] = mesh;
             setTimeout(() => {
-                moveTo(mesh, gridPos(row, col, MESSAGE_X), 260, true).then(resolve);
+                if (gen !== generation) resolve();
+                else moveTo(mesh, gridPos(row, col, MESSAGE_X), 260, true).then(resolve);
             }, index * (36 / pace));
         })));
     }
@@ -267,9 +269,11 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
     }
 
     async function showScan(row) {
+        const gen = generation;
         marker.material.opacity = 0.85;
         marker.material.color.setHex(0xf2d48a);
         for (let c = 0; c < 13; c++) {
+            if (gen !== generation) return;
             await tween(8, (t) => {
                 marker.position.copy(gridPos(row, c, MESSAGE_X));
                 marker.position.y = 0.02;
@@ -279,6 +283,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
     }
 
     async function uncompose(step, ms) {
+        const gen = generation;
         const jobs = [];
         step.key.forEach((id, index) => {
             faceUp(key[id]);
@@ -290,6 +295,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         });
         await Promise.all(jobs);
         for (let j = 0; j < 52; j++) {
+            if (gen !== generation) return;
             const seat = step.key.indexOf(j);
             const card = step.message[j];
             key[j].position.y = 0.45;
@@ -316,6 +322,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
     }
 
     async function compose(step, ms) {
+        const gen = generation;
         const jobs = [];
         step.key.forEach((id, index) => {
             faceUp(key[id]);
@@ -327,6 +334,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         });
         await Promise.all(jobs);
         for (let j = 0; j < 52; j++) {
+            if (gen !== generation) return;
             const seat = step.key.indexOf(j);
             const card = step.message[seat];
             key[j].position.y = 0.45;
@@ -337,14 +345,17 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
     }
 
     async function pass(step, ms) {
+        const gen = generation;
         const controller = key[step.card];
         faceUp(controller);
         await moveTo(controller, new THREE.Vector3(0, 1.1, 0), ms, false);
+        if (gen !== generation) return;
         const handIds = step.hand.slice();
         const keyIds = step.key.slice();
         if (step.amount > 0) {
             const spinning = handIds.slice(0, step.amount);
             await Promise.all(spinning.map((id) => moveTo(key[id], new THREE.Vector3(PASS_HAND_X, 0.9, PASS_Z), ms * 0.6, false)));
+            if (gen !== generation) return;
         }
         if (step.flag === 2) marker.material.color.setHex(0xe7b15a);
         await Promise.all([
@@ -364,9 +375,11 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
     // Inverse settle: lift C off the key pile and return it to the hand.
     // Cut/rotate undo is still posed from the post-step piles, not a reverse of pass().
     async function unpass(step, ms) {
+        const gen = generation;
         const controller = key[step.card];
         faceUp(controller);
         await moveTo(controller, new THREE.Vector3(0, 1.1, 0), ms, false);
+        if (gen !== generation) return;
         const handIds = step.hand.slice();
         const keyIds = step.key.slice();
         await Promise.all([
@@ -755,7 +768,9 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             return;
         }
         if (step.kind === "counter") {
+            const gen = generation;
             await seatPacket(step.message, message);
+            if (gen !== generation) return;
             await Promise.all(step.message.slice(39).map((id) => {
                 const mesh = message[id];
                 const lifted = mesh.position.clone();

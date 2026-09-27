@@ -2,7 +2,7 @@
  * Split live Message hashing from expensive teach / play prep.
  *
  * Typing or pasting must update Digest only. cubing.js `setAlg`,
- * leave-trace, and teach snaps wait for Play / Step / teach
+ * leave-trace, and teach snaps wait for Play / Step / Skip to end
  * (`ensureTimeline`). Hash math is cheap; rebuilding a move timeline
  * on every keystroke is not.
  *

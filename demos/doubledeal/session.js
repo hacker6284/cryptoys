@@ -220,7 +220,7 @@ export function createDoubleDealSession({
         }
         const kicker = !step || index < 0 ? `start · ${n} steps` : `step ${index + 1} of ${n} · ${step.label}`;
         if (!step || index < 0) {
-            return { kicker, title: "Ready", math: "Plaintext on the left. Key on the right.", why: "Step through parks at the first operation without autoplay.", spec: "3.9 Rounds, encrypt, decrypt" };
+            return { kicker, title: "Ready", math: "Plaintext on the left. Key on the right.", why: "Step parks at the first operation without autoplay.", spec: "3.9 Rounds, encrypt, decrypt" };
         }
         if (step.kind === "sumrow") {
             const ranks = view.rowRanks(step.row);
@@ -679,11 +679,13 @@ export function createDoubleDealSession({
             await view.play(trace[i], Number(speedEl?.value || 1));
         }
         markPlay(false);
-        if (token === job && laidEnd) {
-            view.showDecks(laidEnd.blocks[0], laidEnd.key);
-            showCaption(laidEnd.caption);
-            snaps = null;
-        }
+        if (token === job && laidEnd) showEnd();
+    }
+
+    function showEnd() {
+        view.showDecks(laidEnd.blocks[0], laidEnd.key);
+        showCaption(laidEnd.caption);
+        snaps = null;
     }
 
     async function start() {
@@ -725,6 +727,21 @@ export function createDoubleDealSession({
             setTeaching(true);
             cursor = -1;
             showPaused();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "That input could not be read.");
+        }
+    }
+
+    function skipToEnd() {
+        setError("");
+        stopPlay();
+        busy = false;
+        try {
+            if (!trace.length || !laidEnd) computeTrace();
+            if (!trace.length || !laidEnd) return;
+            cursor = trace.length - 1;
+            if (teaching) setTeaching(false);
+            showEnd();
         } catch (err) {
             setError(err instanceof Error ? err.message : "That input could not be read.");
         }
@@ -876,7 +893,7 @@ export function createDoubleDealSession({
 
     $("#play")?.addEventListener("click", () => void start(), listen);
     $("#start")?.addEventListener("click", () => void start(), listen);
-    $("#step-through")?.addEventListener("click", () => enterTeach(), listen);
+    $("#skip-end")?.addEventListener("click", () => skipToEnd(), listen);
     $("#stop")?.addEventListener("click", () => stopPlay(), listen);
     $("#reset")?.addEventListener("click", () => {
         stopPlay();

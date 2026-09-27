@@ -165,6 +165,7 @@ export async function adoptTwistyPuzzle(seat, {
     });
     let puzzleObject;
     let disposed = false;
+    let seekGen = 0;
     const fitHooks = { keep: null };
     try {
         puzzleObject = await withTimeout(
@@ -263,28 +264,30 @@ export async function adoptTwistyPuzzle(seat, {
     }
 
     async function jumpToLeafEnd(index) {
+        const mine = ++seekGen;
         player.pause();
         if (index < 0) {
             player.jumpToStart();
             return;
         }
         const { indexer } = await timeline();
+        if (disposed || mine !== seekGen) return;
         const total = indexer.numAnimatedLeaves();
         if (!total) {
             player.jumpToStart();
             return;
         }
         const leaf = Math.max(0, Math.min(index, total - 1));
-        const end = indexer.indexToMoveStartTimestamp(leaf) + indexer.moveDuration(leaf);
-        requestTimestamp(end);
+        requestTimestamp(indexer.indexToMoveStartTimestamp(leaf) + indexer.moveDuration(leaf));
     }
 
     async function playLeaves(from, to, { snap = false } = {}) {
         if (disposed) return { index: 0, total: 0 };
+        const mine = seekGen;
         seat.group.userData.turnBusy = true;
         try {
             const { indexer } = await timeline();
-            if (disposed) return { index: 0, total: 0 };
+            if (disposed || mine !== seekGen) return { index: 0, total: 0 };
             const total = indexer.numAnimatedLeaves();
             const start = Math.max(0, from);
             const end = Math.max(start, Math.min(to, total));
@@ -294,7 +297,7 @@ export async function adoptTwistyPuzzle(seat, {
             player.pause();
             requestTimestamp(snap ? endTs : startTs);
             await frame();
-            if (disposed) return { index: start, total };
+            if (disposed || mine !== seekGen) return { index: start, total };
             if (snap) return { index: end - 1, total };
             let tempo = 1;
             try {
@@ -304,12 +307,12 @@ export async function adoptTwistyPuzzle(seat, {
             }
             let duration = 0;
             for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
-            if (disposed) return { index: start, total };
+            if (disposed || mine !== seekGen) return { index: start, total };
             player.play();
             const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
             const deadline = performance.now() + budget;
             while (performance.now() < deadline) {
-                if (disposed) return { index: start, total };
+                if (disposed || mine !== seekGen) return { index: start, total };
                 try {
                     const info = await player.experimentalModel.detailedTimelineInfo.get();
                     if (info.timestamp >= endTs - 2) break;
@@ -318,7 +321,7 @@ export async function adoptTwistyPuzzle(seat, {
                 }
                 await frame();
             }
-            if (disposed) return { index: start, total };
+            if (disposed || mine !== seekGen) return { index: start, total };
             player.pause();
             requestTimestamp(endTs);
             await frame();

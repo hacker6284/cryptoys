@@ -42,7 +42,10 @@ import MegaDreifach.Link2.MulWide
 import MegaDreifach.Link2.MulLeft
 import MegaDreifach.Link2.Fact51
 import MegaDreifach.Link2.MagSub
+import MegaDreifach.Link2.MagAdd
+import MegaDreifach.Link2.FromBePad
 import MegaDreifach.Link2.Peel51
+import MegaDreifach.Link2.PhiChunk
 
 namespace MegaDreifach.Link2
 
@@ -214,20 +217,34 @@ namespace MegaDreifach.Link2
 
   CLOSED: `mag_sub_nat`. Canonical limb strings with the subtrahend at most
   the minuend. The trimmed digits are `natLimbs (n - m)` at any width.
-  The final borrow is `0`. Not `big_add`. Not `phi_chunk`. Not `v_Hash`.
+  The final borrow is `0`. Not `phi_chunk`. Not `v_Hash`.
+
+  CLOSED: `mag_add_nat`, `big_add_nat`. Canonical limb strings at any width.
+  The trimmed digits are `natLimbs (n + m)`; `FitsLen` of the longer string
+  plus one covers the final carry limb. Not `phi_chunk`. Not `v_Hash`.
+
+  CLOSED: `big_from_be_pad`, `big_from_be_pad_array`, `fromBE_pad_lt_limb8`.
+  Domain `BePadWf` / `WellFormedBePad`: length `≤ 28`, every byte `≤ 255`.
+  `256^28 < 10^72 = limbBase^8`, so every Horner prefix is at most eight
+  limbs and the value is `bigOf (natLimbs (fromBE bs))`. Each step
+  `acc * 256 + b` is `big_mul_nat` then `big_add_nat`. This is the 28-byte
+  pad block. Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
 
   CLOSED: `peel_leading_51`. Domain `d ≤ 51` and `n / d! < 10^9`. The pair
   is `(n % d!, n / d!)`. The digit is one limb, so `limb_to_small` and
   `big_mul_left` apply, and `mag_sub_nat` subtracts the product. `n` stays
-  below `10^81`. Not a two-limb digit. Not `big_from_be` past length 7.
-  Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
+  below `10^81`. Not a two-limb digit. Not `phi_chunk`. Not `phi_inv`.
+  Not `v_Hash`.
 
-  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open.
-  `peel_leading` now covers every one-limb factoradic digit for `d ≤ 51`
-  (`phi`'s digits are at most 51), but a 28-byte chunk still needs
-  `big_from_be` past length 7, and that Horner step needs `big_add` /
-  `mag_add` at arbitrary width. Positive `range_list` (`0 < n`, `FitsLen`,
-  including 52) is already `range_list_refines` in `EvenRank.lean`.
+  CLOSED: `phi_chunk_refines`, `phi_chunk_refines_array`.
+  Domain `PhiChunkWf` / `WellFormedPhiChunk`: length 28, every byte `≤ 255`.
+  Generated `phi_chunk` equals `phiUnrank (fromBE bs)`, walking the outer
+  `chain_loop` from `0` to `51` at `phiState rank`. The inner erase step is
+  `phiErase_breaks`. Not `phi_inv`. Not `v_Hash`.
+
+  OPEN: full `v_Hash` refinement. `phi_inv` is still open.
+  Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
+  `range_list_refines` in `EvenRank.lean`.
 -/
 
 end MegaDreifach.Link2

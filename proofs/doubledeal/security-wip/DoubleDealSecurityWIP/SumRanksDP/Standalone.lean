@@ -51,13 +51,46 @@ theorem wS_mul_rot1 (w : Fin 13 → ZMod 13) (σ : Equiv.Perm (Fin 13)) :
   rw [h, Equiv.sum_comp σ w]
   simp
 
+/-- The fibre over `c` and the fibre over `c - D` have the same size (`σ ↦ σ * rot1`). -/
+theorem card_fib_rot (w : Fin 13 → ZMod 13) (c : ZMod 13) :
+    (univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c).card =
+      (univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c - ∑ j, w j).card := by
+  apply card_nbij' (fun σ => σ * rot1) (fun σ => σ * rot1⁻¹)
+  · intro σ hσ
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq] at hσ ⊢
+    rw [wS_mul_rot1, hσ]
+  · intro σ hσ
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq] at hσ ⊢
+    have h := wS_mul_rot1 w (σ * rot1⁻¹)
+    rw [mul_assoc, inv_mul_cancel, mul_one, hσ] at h
+    linear_combination -h
+  · intro σ _; simp [mul_assoc]
+  · intro σ _; simp [mul_assoc]
+
+theorem card_fib_rot_iter (w : Fin 13 → ZMod 13) (c : ZMod 13) (k : ℕ) :
+    (univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c).card =
+      (univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c - k * ∑ j, w j).card := by
+  induction k with
+  | zero => simp
+  | succ k ih =>
+    rw [ih, card_fib_rot, show c - (k : ZMod 13) * ∑ j, w j - ∑ j, w j =
+      c - ((k + 1 : ℕ) : ZMod 13) * ∑ j, w j by push_cast; ring]
+
 /-- **Lemma 2(a)** (PROOF.md §2): if `D = Σ w ≠ 0`, every value of `S` is taken
     by exactly `13!/13` arrangements. Suggested proof: `wS_mul_rot1` gives a
     bijection from the fibre over `c` to the fibre over `c - D`; `D` generates
     `ZMod 13`, so all 13 fibres have the same size, and they partition `Perm`. -/
 theorem lemma2a (w : Fin 13 → ZMod 13) (hD : ∑ j, w j ≠ 0) (c : ZMod 13) :
     13 * (univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c).card = Nat.factorial 13 := by
-  sorry
+  have hall : ∀ c' : ZMod 13, (univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c').card =
+      (univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c).card := by
+    intro c'
+    rw [card_fib_rot_iter w c ((c - c') / ∑ j, w j).val, ZMod.natCast_zmod_val,
+      div_mul_cancel₀ _ hD, sub_sub_cancel]
+  have h := card_eq_sum_card_fiberwise (s := (univ : Finset (Equiv.Perm (Fin 13))))
+    (t := (univ : Finset (ZMod 13))) (f := wS w) (fun _ _ => mem_univ _)
+  rw [card_univ, Fintype.card_perm, Fintype.card_fin] at h
+  rw [h, sum_congr rfl fun c' _ => hall c', sum_const, card_univ, ZMod.card, smul_eq_mul]
 
 /-- **Lemma 2(b)** (PROOF.md §2, one-card switching): if some seat value
     differs from `v`, and `v` occurs `z` times, at most `13!/(z+1)` arrangements

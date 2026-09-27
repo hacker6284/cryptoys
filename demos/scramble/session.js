@@ -560,13 +560,10 @@ export function createScrambleSession({
         if (solving) return;
         if (!trace.length) refreshDigest();
         if (!trace.length) return;
-        job += 1;
         busy = false;
-        markPlay(false);
         ensureTimeline();
         setTeaching(false);
-        cursor = trace.length - 1;
-        showPaused();
+        void jumpTo(trace.length - 1, false);
         settleView();
     }
 

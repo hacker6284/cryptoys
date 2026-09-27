@@ -192,7 +192,6 @@ assert.equal(algs.length, 2, "skip to end does not rebuild a current timeline");
 assert.equal(nodes.teach.hidden, true, "skip finishes in the played state, not the teach walk");
 assert.match(nodes.status.textContent, /Seat white up/, "skip shows the seated digest pose");
 assert.ok(jumps.at(-1) >= 0, "skip seeks the final leaf");
-assert.notEqual(jumps.at(-1), -1, "skip does not rewind to the solved start");
 const endLeaf = jumps.at(-1);
 click("skip-end");
 assert.equal(jumps.at(-1), endLeaf, "a second skip stays on the final leaf");

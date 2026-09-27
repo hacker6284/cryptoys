@@ -10,3 +10,5 @@ import DoubleDealSecurity.Rounds
 import DoubleDealSecurity.PermKeys
 import DoubleDealSecurity.Link
 import DoubleDealSecurity.V8Vectors
+import DoubleDealSecurity.RealKey
+import DoubleDealSecurity.Audit

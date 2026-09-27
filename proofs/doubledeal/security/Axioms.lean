@@ -8,26 +8,12 @@
   theorems that rest on it) may also use `sorryAx`. Any other axiom, any other
   theorem using `sorryAx`, an `axiom` declared in the package (used or not), or
   a stale KNOWN_SORRY entry fails.
+
+  The heavy library `DoubleDealSecurityHeavy` (kernel witnesses, not a default
+  target) is NOT imported here; it is audited separately by `AxiomsHeavy.lean`
+  (`check_axioms.py security-heavy`, CI job `doubledeal-security-heavy`).
 -/
 import DoubleDealSecurity
+import DoubleDealSecurity.Audit
 
-open Lean Elab Command in
-elab "#audit_all" : command => do
-  let env ← getEnv
-  let mut count := 0
-  for (n, ci) in env.constants.toList do
-    let some i := env.getModuleIdxFor? n | continue
-    unless (env.header.moduleNames[i.toNat]!).getRoot == `DoubleDealSecurity do continue
-    -- compiler auxiliaries (`_elambda`, `_spec`, ...) are internal names;
-    -- `private` declarations are audited under their user-facing name
-    if ((privateToUserName? n).getD n).isInternal then continue
-    if ci matches .axiomInfo _ then
-      logInfo m!"'{n}' is an axiom declared in the package"
-      continue
-    unless ci matches .thmInfo _ do continue
-    let axs ← collectAxioms n
-    logInfo m!"'{n}' depends on axioms: {axs.toList}"
-    count := count + 1
-  logInfo m!"audited {count}"
-
-#audit_all
+#audit_all DoubleDealSecurity

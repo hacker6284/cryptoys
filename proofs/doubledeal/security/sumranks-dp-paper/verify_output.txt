@@ -1,0 +1,239 @@
+
+====================================================================================================
+0. Model: pure-Python model.py == verified sbox.c (outputs and all 17 amounts)
+====================================================================================================
+  [PASS] 3000 random grids, mismatches = 0
+  [PASS] inverse row phase really inverts the row phase (so the post-row grid H is uniform)
+  [PASS] v10Sym(a,x) (delta==a, eps==x) survives on 300 random grids
+
+====================================================================================================
+1. Lemma 1 (per deck): survival <=> all 17 amounts equal <=> the 17 'trajectory' conditions
+   R_i : S(A_i) == t_i * D(A_i) (mod 13)   [A_i = original row i, t_i = G's turn applied to row i before it is read]
+   K_j : V(eps(column j-1 as read)) == S(eps(column j))   [only needed when all rows agree]
+====================================================================================================
+   (survive, amounts equal, trajectory conditions) counts: {(False, False, False): 8598, (True, True, True): 1902}
+  [PASS] equivalence holds on every tested deck, including >500 surviving decks
+
+====================================================================================================
+1b. Rotation identity: turn(rot_left(x,t)) - turn(x) == t * (sum of ranks)  and  S(rot x) = S(x) - t D(x)
+====================================================================================================
+  [PASS] 3000 random rows
+
+====================================================================================================
+2. Lemma 2 (one row): D != 0 -> exactly 1/13 for every target; D = 0 -> p0; exhaustive scan of all 13-multisets
+====================================================================================================
+classes=33429  D!=0 non-uniform count=0
+Lemma 2(b) exhaustive: 226002 (class, value) checks of max_c P[S=c] <= 1/(z_v+1), violations=0
+Lemma 2(c) exhaustive: cancelling-pair classes with P[S=0]>0: 0
+max p0 (D=0, nonconstant) = 0.090909 = 1/11.000  at counts: 9 2 0 0 0 0 0 0 0 0 0 0 2
+max P[S=c], c!=0, D=0 = 0.083333 = 1/12.000
+z= 1  max p0=0.076949 = 1/12.996   one-card bound 1/(z+1)=0.5000
+z= 2  max p0=0.076966 = 1/12.993   one-card bound 1/(z+1)=0.3333
+z= 3  max p0=0.077240 = 1/12.947   one-card bound 1/(z+1)=0.2500
+z= 4  max p0=0.077576 = 1/12.891   one-card bound 1/(z+1)=0.2000
+z= 5  max p0=0.078788 = 1/12.692   one-card bound 1/(z+1)=0.1667
+z= 6  max p0=0.078788 = 1/12.692   one-card bound 1/(z+1)=0.1429
+z= 7  max p0=0.078788 = 1/12.692   one-card bound 1/(z+1)=0.1250
+z= 8  max p0=0.078788 = 1/12.692   one-card bound 1/(z+1)=0.1111
+z= 9  max p0=0.090909 = 1/11.000   one-card bound 1/(z+1)=0.1000
+z=10  max p0=0.090909 = 1/11.000   one-card bound 1/(z+1)=0.0909
+
+  [PASS] every nonconstant row multiset with D=0 has p0 <= 1/11; D!=0 is exactly uniform
+  [PASS] Lemma 2(b) EXHAUSTIVE for p=13: every nonconstant 13-multiset (all 33,429 affine classes; the bound is affine-invariant), every value v in it, every target c: P[S=c] <= 1/(z_v+1)
+  [PASS] Lemma 2(c) exhaustive for p=13
+  [PASS] prime analogue p=5: Lemma 2(a),(b),(c) by brute force over all 126 multisets x 120 arrangements
+  [PASS] prime analogue p=7: Lemma 2(a),(b),(c) by brute force over all 1716 multisets x 5040 arrangements
+  [PASS] Lemma 2(b) cross-check with the independent Python DP on 300 random 13-rows (every value class)
+  [PASS] a row whose only non-majority cards are a cancelling pair (u,-u) never passes (p0 = 0)
+
+====================================================================================================
+2b. Lemma 3 (row chain, exact): given the partition into row SETS, P[all 4 row conditions] = prod_i rho(M_i).
+    Test: fix row sets, shuffle inside rows, compare the model's row-amount agreement rate with prod rho.
+====================================================================================================
+   3-cycle AC->row0, 2C->row0, 3C->row0   predicted     1/11 = 0.09091  observed 0.08942 (5365 hits, z = -1.27)
+  [PASS] AC->row0, 2C->row0, 3C->row0: observed matches prod rho (with >= 50 expected hits)
+   3-cycle AC->row1, 2C->row1, 3C->row1   predicted     1/11 = 0.09091  observed 0.09202 (5521 hits, z = +0.94)
+  [PASS] AC->row1, 2C->row1, 3C->row1: observed matches prod rho (with >= 50 expected hits)
+   3-cycle AC->row2, 2C->row2, 3C->row3   predicted    1/169 = 0.00592  observed 0.00580 (870 hits, z = -0.59)
+  [PASS] AC->row2, 2C->row2, 3C->row3: observed matches prod rho (with >= 50 expected hits)
+   3-cycle AC->row0, 2C->row1, 3C->row1   predicted    1/169 = 0.00592  observed 0.00623 (935 hits, z = +1.60)
+  [PASS] AC->row0, 2C->row1, 3C->row1: observed matches prod rho (with >= 50 expected hits)
+   3-cycle AC->row3, 2C->row0, 3C->row0   predicted    1/169 = 0.00592  observed 0.00610 (915 hits, z = +0.92)
+  [PASS] AC->row3, 2C->row0, 3C->row0: observed matches prod rho (with >= 50 expected hits)
+   3-cycle AC->row1, 2C->row2, 3C->row3   predicted   1/2197 = 0.00046  observed 0.00044 (131 hits, z = -0.48)
+  [PASS] AC->row1, 2C->row2, 3C->row3: observed matches prod rho (with >= 50 expected hits)
+
+====================================================================================================
+3. Case A, SIDE ROUTE of PROOF.md section 8 (uses the exhaustive Lemma R p0 <= 1/11). m = 52 - (largest delta class).
+   The MAIN route (A1)-(A3) is checked in section 3c and section 6.
+====================================================================================================
+   m = 2  : bound (exact) 39/51 * 1/169 = 1/221 = 1/221
+   3<=m<=12: bound (10 q_m + 1)/121, q_m = 4 C(13,m)/C(52,m); worst m=3: q_3 = 22/425 -> 0.012543 = 1/79.73
+   m >= 13: P[row const] <= 0.012791, P[rows 0,1 const] <= 1.66e-05; bound 1/121 + 2*0.01279/11 + ... = 0.010607 = 1/94.28
+  [PASS] all Case A bounds < 1/64 = 0.015625 (max = 0.012543)
+  [PASS] smoothing facts over all partitions of 52 into <=13 parts each <=39: max sum C(n,13)=8122425445, max sum C(n,26)=8122425444, max pair-sum=216344960720000
+
+====================================================================================================
+3b. Case A: exact row-only survival E[prod rho] vs model Monte Carlo vs bound, for many rank-changing tau
+====================================================================================================
+   same-suit swap 2C<->7C           m= 2 exact row-only 0.004525 (=1/221) MC row-only 0.005025 full MC 0.004695  bound 0.004525
+  [PASS] same-suit swap 2C<->7C: exact formula matches model, full <= row-only <= bound
+   same-suit 3-cycle AC->2C->3C     m= 3 exact row-only 0.008145 (=9/1105) MC row-only 0.007700 full MC 0.008060  bound 0.012543
+  [PASS] same-suit 3-cycle AC->2C->3C: exact formula matches model, full <= row-only <= bound
+   same-suit 3-cycle AC->8C->JC     m= 3 exact row-only 0.008145 (=9/1105) MC row-only 0.008100 full MC 0.008440  bound 0.012543
+  [PASS] same-suit 3-cycle AC->8C->JC: exact formula matches model, full <= row-only <= bound
+   same-suit 4-cycle                m= 4 exact row-only 0.002811 (=761/270725) MC row-only 0.002575 full MC 0.002733  bound 0.009138
+  [PASS] same-suit 4-cycle: exact formula matches model, full <= row-only <= bound
+   (AC 2C)(5C 6C)                   m= 4 exact row-only 0.002294 (=621/270725) MC row-only 0.001925 full MC 0.002245  bound 0.009138
+  [PASS] (AC 2C)(5C 6C): exact formula matches model, full <= row-only <= bound
+   mixed swap AC<->2H               m= 2 exact row-only 0.004525 (=1/221) MC row-only 0.004075 full MC 0.000000  bound 0.004525
+  [PASS] mixed swap AC<->2H: exact formula matches model, full <= row-only <= bound
+   mixed 3-cycle AC->5H->9S         m= 3 exact row-only 0.008145 (=9/1105) MC row-only 0.007625 full MC 0.000048  bound 0.012543
+  [PASS] mixed 3-cycle AC->5H->9S: exact formula matches model, full <= row-only <= bound
+  [PASS] same-suit 3-cycle row-only exact = 9/1105 (README: 9/1105)
+  [PASS] same-suit swap row-only exact = 1/221 (README: 1/221)
+   rank shift in clubs (13-cycle)   m=13  E[prod rho] (MC over partitions) 5.57e-05   model row-only MC 1.67e-05   bound 0.0106
+  [PASS] rank shift in clubs (13-cycle): well below the Case A bound
+   rank x2 on every card            m=48  E[prod rho] (MC over partitions) 3.5e-05   model row-only MC 3.33e-05   bound 0.0106
+  [PASS] rank x2 on every card: well below the Case A bound
+   uniformly random permutation     m=43  E[prod rho] (MC over partitions) 3.5e-05   model row-only MC 3.33e-05   bound 0.0106
+  [PASS] uniformly random permutation: well below the Case A bound
+
+====================================================================================================
+3c. Case A, MAIN route (PROOF.md section 3: A1 n*=50, A2 9<=n*<=49 via h(z*), A3 n*<=12 via pigeonhole)
+====================================================================================================
+  [PASS] same-suit 3-cycle (n*=49): prod rho <= prod h(z*) (A2) / <= 1/81 when every row repeats a value (A3), 150 random partitions
+  [PASS] same-suit 5-cycle (n*=47): prod rho <= prod h(z*) (A2) / <= 1/81 when every row repeats a value (A3), 150 random partitions
+  [PASS] rank shift in clubs (13-cycle) (n*=39): prod rho <= prod h(z*) (A2) / <= 1/81 when every row repeats a value (A3), 150 random partitions
+  [PASS] rank +1 on C,H,S (n*=39): prod rho <= prod h(z*) (A2) / <= 1/81 when every row repeats a value (A3), 150 random partitions
+  [PASS] rank x2 on every card (n*=4) (n*=4): prod rho <= prod h(z*) (A2) / <= 1/81 when every row repeats a value (A3), 150 random partitions
+  [PASS] rank negation (n*=4) (n*=4): prod rho <= prod h(z*) (A2) / <= 1/81 when every row repeats a value (A3), 150 random partitions
+  [PASS] same-suit swap 2C<->7C             n*=50: full model survival 0.004640 <= main-route bound 0.004525 (+4.5 se = 0.000479; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] same-suit 3-cycle AC->2C->3C       n*=49: full model survival 0.007930 <= main-route bound 0.008416 (+4.5 se = 0.000653; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] same-suit 3-cycle AC->8C->JC       n*=49: full model survival 0.008228 <= main-route bound 0.008416 (+4.5 se = 0.000653; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] same-suit 4-cycle                  n*=48: full model survival 0.002680 <= main-route bound 0.003437 (+4.5 se = 0.000417; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] (AC 2C)(5C 6C)                     n*=48: full model survival 0.002270 <= main-route bound 0.003437 (+4.5 se = 0.000417; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] mixed swap AC<->2H                 n*=50: full model survival 0.000000 <= main-route bound 0.004525 (+4.5 se = 0.000479; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] mixed 3-cycle AC->5H->9S           n*=49: full model survival 0.000028 <= main-route bound 0.008416 (+4.5 se = 0.000653; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] rank shift in clubs (13-cycle)     n*=39: full model survival 0.000058 <= main-route bound 0.000133 (+4.5 se = 0.000082; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] rank +1 on C,H,S                   n*=39: full model survival 0.000045 <= main-route bound 0.000133 (+4.5 se = 0.000082; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] rank x2 on every card (n*=4)       n*= 4: full model survival 0.000030 <= main-route bound 0.012768 (+4.5 se = 0.000804; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] rank negation (n*=4)               n*= 4: full model survival 0.000030 <= main-route bound 0.012768 (+4.5 se = 0.000804; the n*=50 bound 1/221 is exact for same-suit swaps)
+  [PASS] main route: max over all n* in [4,50] of the bound = 0.012768 < 1/64
+
+====================================================================================================
+4. Case B (delta constant): per-column table, exact transfer-matrix formula, exhaustive scan
+====================================================================================================
+  [PASS] V(eps) distribution under a uniform column order: Z->{0}, P->uniform on nonzero, F->(1/2,1/6,1/6,1/6), else uniform; S!=0 <=> type U
+   same-rank 3-cycle 2C->2H->2S                         eps counts [49, 1, 1, 1]  exact F = 0.001176  model MC 0.001156 (|z|=0.87)
+  [PASS] same-rank 3-cycle 2C->2H->2S: transfer-matrix exact value matches the model
+   label+1 on rank 2 (2C<->2D)(2H<->2S)                 eps counts [48, 4, 0, 0]  exact F = 0.0001441  model MC 0.00014 (|z|=0.48)
+  [PASS] label+1 on rank 2 (2C<->2D)(2H<->2S): transfer-matrix exact value matches the model
+   same-rank swaps on ranks 2,3,4                       eps counts [46, 4, 2, 0]  exact F = 6.726e-06  model MC 6e-06 (|z|=0.40)
+  [PASS] same-rank swaps on ranks 2,3,4: transfer-matrix exact value matches the model
+   same-rank 3-cycles on 5 ranks                        eps counts [37, 5, 5, 5]  exact F = 2.95e-08  model MC 0 (|z|=0.24)
+  [PASS] same-rank 3-cycles on 5 ranks: transfer-matrix exact value matches the model
+   label x w on ranks 0..3 (suit 3-cycles incl. clubs fixed) eps counts [40, 4, 4, 4]  exact F = 8.118e-08  model MC 0 (|z|=0.40)
+  [PASS] label x w on ranks 0..3 (suit 3-cycles incl. clubs fixed): transfer-matrix exact value matches the model
+   random suit permutation on every rank                eps counts [16, 14, 14, 8]  exact F = 1.49e-08  model MC 0 (|z|=0.17)
+  [PASS] random suit permutation on every rank: transfer-matrix exact value matches the model
+  [PASS] transfer matrix reproduces exact.py: same-rank 3-cycle 1/850, label map on one rank 3/20825, same-rank swap 0
+   fixed H-column sets (3-cycle cards in column 5): predicted prod phi = 1/2 ; observed 0.4985
+  [PASS] given the column sets of H, survival = prod_c phi(M_c, S(M_{c+1})) exactly
+partitions scanned: 1284
+max F = 0.001176470588 = 1/850.000 at (49,3,0,0)
+restricted to realisable vectors (sum eps = 0, i.e. #odd counts != 2): 374 vectors, max F = 0.001176470588 = 1/850.000 at (49,1,1,1)
+max by m' = 52 - n0:
+  m'= 3  max F=0.00117647 = 1/850.0  at (49,3,0,0)
+  m'= 4  max F=0.000144058 = 1/6941.7  at (48,4,0,0)
+  m'= 5  max F=2.40096e-05 = 1/41650.0  at (47,4,1,0)
+  m'= 6  max F=1.66024e-05 = 1/60232.3  at (46,6,0,0)
+  m'= 7  max F=6.4133e-06 = 1/155926.1  at (45,7,0,0)
+  m'= 8  max F=2.17663e-06 = 1/459425.0  at (44,8,0,0)
+  m'= 9  max F=1.12365e-06 = 1/889955.3  at (43,9,0,0)
+  m'=10  max F=6.22881e-07 = 1/1605441.9  at (42,10,0,0)
+  m'=11  max F=3.39184e-07 = 1/2948249.2  at (41,11,0,0)
+  m'=12  max F=2.00563e-07 = 1/4985973.3  at (40,12,0,0)
+  m'=13  max F=1.28197e-07 = 1/7800478.6  at (39,13,0,0)
+  m'=14  max F=8.65115e-08 = 1/11559151.7  at (38,14,0,0)
+  m'=15  max F=6.10957e-08 = 1/16367772.0  at (37,15,0,0)
+  m'=16  max F=4.48776e-08 = 1/22282845.8  at (36,16,0,0)
+  m'=17  max F=3.47453e-08 = 1/28780908.5  at (35,16,1,0)
+  m'=18  max F=2.84348e-08 = 1/35168140.8  at (34,16,1,1)
+  m'=19  max F=2.39767e-08 = 1/41707156.4  at (33,17,1,1)
+  m'=20  max F=2.08629e-08 = 1/47931988.0  at (32,17,2,1)
+  m'=21  max F=1.88928e-08 = 1/52930352.9  at (31,17,2,2)
+  m'=22  max F=1.74132e-08 = 1/57427814.5  at (30,17,3,2)
+  m'=23  max F=1.65087e-08 = 1/60574172.9  at (29,17,3,3)
+  m'=24  max F=1.585e-08 = 1/63091460.4  at (28,17,4,3)
+  m'=25  max F=1.54748e-08 = 1/64621276.2  at (27,17,4,4)
+  m'=26  max F=1.52125e-08 = 1/65735476.6  at (26,17,5,4)
+  m'=27  max F=1.50792e-08 = 1/66316547.0  at (25,17,5,5)
+  m'=28  max F=1.49941e-08 = 1/66693111.9  at (24,16,6,6)
+  m'=29  max F=1.4951e-08 = 1/66885380.9  at (23,17,6,6)
+  m'=30  max F=1.49284e-08 = 1/66986518.5  at (22,16,7,7)
+  m'=31  max F=1.49152e-08 = 1/67045703.6  at (21,17,7,7)
+  m'=32  max F=1.49084e-08 = 1/67076456.1  at (20,16,8,8)
+  m'=33  max F=1.49255e-08 = 1/66999445.4  at (19,16,15,2)
+  m'=34  max F=1.49489e-08 = 1/66894739.1  at (18,16,16,2)
+  m'=35  max F=1.49569e-08 = 1/66858926.5  at (17,17,16,2)
+  m'=36  max F=1.49322e-08 = 1/66969490.1  at (16,16,16,4)
+  m'=37  max F=1.49031e-08 = 1/67100254.0  at (15,13,12,12)
+  m'=38  max F=1.49036e-08 = 1/67097707.7  at (14,13,13,12)
+  m'=39  max F=1.49042e-08 = 1/67095220.4  at (13,13,13,13)
+
+  [PASS] exhaustive: over ALL 1284 eps-count vectors (nonconstant), Case B survival <= 1/850 (the argmax listed, (49,3,0,0), is NOT realisable since sum eps must be 0; harmless, it only over-covers)
+  [PASS] restricted to vectors compatible with sum(eps)=0: max is still exactly 1/850, attained at (49,1,1,1) = the same-rank 3-cycle
+   m'=20: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.01431
+   m'=21: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.01250
+   m'=22: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.01116
+   m'=23: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.01027
+   m'=24: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00989
+   m'=25: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.01020
+   m'=26: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.01168
+   m'=27: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00643
+   m'=28: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00393
+   m'=29: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00257
+   m'=30: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00177
+   m'=31: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00126
+   m'=32: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00093
+   m'=33: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00071
+   m'=34: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00057
+   m'=35: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00044
+   m'=36: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00032
+   m'=37: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00024
+   m'=38: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00018
+   m'=39: analytic bound beta^m' * E[beta^(-4 z4)] <= 0.00014
+  [PASS] analytic Case B bound (no transfer matrix) < 1/64 for every m' >= 20
+
+====================================================================================================
+6. The computer-free route used in PROOF.md (Theorems A and B): one-parameter exact sums
+====================================================================================================
+  [PASS] max over partitions of 52 into 13 parts of prod n_v = 4^13 (AM-GM)
+   n* <= 12: E[prod rho] <= 1/81 + 4*4^13/C(52,13) = 0.012768
+  [PASS] rows with a repeated value: every P[S=c] <= 1/3 (300 random high-entropy rows)
+   9 <= n* <= 49: max_n* E[prod h(z*_i)] = 0.012651
+  [PASS] Theorem A (computer-free route): all regimes < 1/64; max = 0.012768 = 1/78.3
+  [PASS] phi(M_c, S(M_{c+1})) <= f(y_c, y_{c+1}) for every pair of columns and every majority value eps* (65536 x 4 cases)
+   m' table (first/last lines): {2: '0.0196', 3: '0.00235', 4: '0.00139', 5: '0.000485'} ... {38: '0.000351', 39: '0.000542'}
+  [PASS] Theorem B (computer-free route): for m' >= 3 the bound is <= 0.002353 = 1/425
+  [PASS] m' = 2 (a same-rank swap, possibly composed with a symmetry) never survives: exact 0, and 0 in 400k model decks each
+  [PASS] same-rank swap composed with rank+3 symmetry: 0 in 400k
+
+====================================================================================================
+7. Corollary (PROOF.md section 5b): the exact supremum over non-symmetries is 9/1105, attained by same-suit 3-cycles
+   (uses the computer-checked Lemma R only in the regime n* <= 12)
+====================================================================================================
+   n* = 49 delta-classes (off values up to scaling) and exact row-only survival: {(1, 1, 11): '9/1105', (1, 2, 10): '9/1105', (1, 3, 9): '9/1105'}
+  [PASS] n* = 49: EVERY delta-class has row-only survival exactly 9/1105 (so full survival <= 9/1105)
+  [PASS] 13 <= n* <= 48: E_A <= E_A(13) = 0.003975 < 9/1105
+  [PASS] n* <= 12: <= 11^-4 (all four rows nonconstant, Lemma R); n* = 50: 1/221; Case B: <= 1/425 -- all < 9/1105
+  [PASS] attained: same-suit 3-cycles have eps = 0, so full survival = row-only = 9/1105 exactly
+
+====================================================================================================
+5. Theorem sanity: full-model survival of many random non-symmetry tau and the worst known classes
+====================================================================================================
+   max observed survival over tested tau = 0.00820  (1/64 = 0.015625)
+  [PASS] no tested non-symmetry tau reaches 1/64
+
+TOTAL FAILS: 0   (100s)

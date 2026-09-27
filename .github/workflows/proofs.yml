@@ -104,10 +104,14 @@ jobs:
 
   doubledeal-v8-deprecated:
     # Frozen, deprecated DoubleDeal v8: emitted TAP + vulnerability-proof witness
-    # (compiled check of emitted v8 encrypt). Not a security claim about v9.
+    # (see proofs/deprecated/doubledeal-v8/README.md).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Witness Lean data matches witness_v8.json
+        run: python3 proofs/deprecated/doubledeal-v8/lean/witness_to_lean.py --check
+      - name: Frozen v8 vectors (sha + Python port)
+        run: python3 proofs/deprecated/doubledeal-v8/attack/check_vectors.py
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/deprecated/doubledeal-v8/lean/Generated

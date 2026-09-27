@@ -1,12 +1,12 @@
 # DoubleDeal v8 — vulnerability proof (DEPRECATED algorithm)
 
-**Kind:** vulnerability proof (see [`proofs/README.md`](../../README.md) taxonomy). DoubleDeal v8 is deprecated and frozen at [`primitives/cipher/doubledeal/v8/`](../../../primitives/cipher/doubledeal/v8/). v9 is current ([`primitives/cipher/doubledeal/SPEC.md`](../../../primitives/cipher/doubledeal/SPEC.md)). Nothing here is a claim about v9.
+**Kind:** vulnerability proof (see [`proofs/README.md`](../../README.md) taxonomy). DoubleDeal v8 is deprecated and frozen at [`primitives/cipher/doubledeal/v8/`](../../../primitives/cipher/doubledeal/v8/). v9 is current ([`primitives/cipher/doubledeal/SPEC.md`](../../../primitives/cipher/doubledeal/SPEC.md)). Nothing here is a claim about v9, and nothing here is a security claim.
 
 **What is proved, and what is only measured:**
 
 | Claim | Status |
 | --- | --- |
-| There is a key \(K\) and message \(M\) with \(E_K(\tau M) = \tau\,E_K(M)\) and \(\tau E_K(M) \ne E_K(M)\), on the full 6-round **emitted** v8 `encrypt`, for \(\tau\) = K♣↔K♦ | **Checkable witness, compiled evaluation**: `lake exe doubledeal_v8_witness` (TAP 3/3) runs emitted `Doubledeal_v8.encrypt` on `witness_v8.json`. Also checked on the sudo JS target (`attack/check_witness.mjs`) and the Python port. **Not a kernel theorem:** kernel `decide` on the full 6-round emitted `encrypt` exceeded ~14 GB RAM (killed, exit 137) on the build box, so it is not shipped. No `native_decide` is used anywhere. |
+| There is a key \(K\) and message \(M\) with \(E_K(\tau M) = \tau\,E_K(M)\) and \(\tau E_K(M) \ne E_K(M)\), on the full 6-round **emitted** v8 `encrypt`, for \(\tau\) = K♣↔K♦ | **Checkable witness, compiled evaluation**: `lake exe doubledeal_v8_witness` (TAP 2/2) runs emitted `Doubledeal_v8.encrypt` on `witness_v8.json`. The Lean data is generated from the JSON (`lean/witness_to_lean.py`, CI runs `--check`); kernel `decide` facts tie the JSON's \(\tau M\), \(\tau C\) to \(\tau\) applied cardwise and show \(\tau C \ne C\). Also checked on the sudo JS target (`attack/check_witness.mjs`) and the Python port. **Not a kernel theorem:** kernel `decide` on the full 6-round emitted `encrypt` exceeded ~14 GB RAM (killed, exit 137) on the build box, so it is not shipped. No `native_decide` is used anywhere. |
 | Per-pair rate \(\approx 1.1\text{–}1.6\times10^{-3}\) for K♣↔K♦; decay \(\approx 0.27\times\) per round | **Evidence** (Python scripts below). Not a theorem. |
 | Key recovery | **Not claimed.** This is a distinguisher. |
 
@@ -53,7 +53,7 @@ Other relations tried (`attack/gen_attack.py`, `attack/per_layer.py`, logs along
 | Path | What |
 | --- | --- |
 | `witness_v8.json` | \(\tau\), key, message, cipher, \(\tau M\), \(\tau C\) |
-| `lean/` | Lake package: `DoubleDealV8/Witness.lean` (witness data, `enc` = emitted v8 `encrypt`, kernel fact `cipherTau_ne`), `WitnessMain.lean` (compiled TAP check). Path-requires `lean/Generated/` (emitted, do not edit). |
+| `lean/` | Lake package: `DoubleDealV8/WitnessData.lean` (generated from `witness_v8.json` by `witness_to_lean.py`; do not edit), `DoubleDealV8/Witness.lean` (`enc` = emitted v8 `encrypt`, kernel facts `messageTauJson_eq`, `cipherTauJson_eq`, `cipherTau_ne`), `WitnessMain.lean` (compiled TAP check). Path-requires `lean/Generated/` (emitted, do not edit). |
 | `vectors/doubledeal_v8_vectors.json` | Frozen v8 known-answer vectors (29). `vectors/regen_v8.sh --check` rebuilds them from `v8/doubledeal_v8.sudo` via the sudoc JS target and requires a byte-identical file |
 | `attack/dd_v8.py` | Python port of `v8/doubledeal_v8.sudo` (29/29 on the frozen vectors via `check_vectors.py`, which also checks their `sudo_sha256`) |
 | `attack/find_witness.py` | Search that produced the witness (739 trials) |
@@ -67,7 +67,7 @@ Other relations tried (`attack/gen_attack.py`, `attack/per_layer.py`, logs along
 proofs/emit_lean.sh --check doubledeal-v8
 cd proofs/deprecated/doubledeal-v8/lean/Generated && lake build && ./.lake/build/bin/doubledeal_v8_test
 # Witness (compiled check)
-cd .. && lake build && lake exe doubledeal_v8_witness
+cd .. && python3 witness_to_lean.py --check && lake build && lake exe doubledeal_v8_witness
 sudoc build --target js -o /tmp/dd-v8-js primitives/cipher/doubledeal/v8/doubledeal_v8.sudo && node attack/check_witness.mjs /tmp/dd-v8-js
 # Evidence
 vectors/regen_v8.sh --check

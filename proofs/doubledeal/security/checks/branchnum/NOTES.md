@@ -61,7 +61,7 @@ Every witness below is re-verified from scratch by `witnesses.py`, which writes 
   with key `FIXED_KEY`.
 * v9 GC, the walk-card-0 case (p = 0): swap seats (0, 6) = K♣, K♠ (weight 2), deck
   `KC 9C 2D KD AH 4D KS QS 7H 3S QC 8H QH 5H 3H 8C 2H QD 5S 3C 6C TH TD 6S 2S AS 6D JH 7C 4H 6H KH 4C 5C JD 7D 9S JS 5D 8S 9D JC AC 9H 4S 8D 2C 3D AD TS 7S TC`.
-* v9 SR, cross-row and different-rank class, minimum found 26 (= the proven-looking floor, §3.2):
+* v9 SR, cross-row and different-rank class, minimum found 26 (= the conjectured floor (T3, open), §3.2):
   swap seats (19, 40) = J♣, 4♦, deck
   `9S 5C 4S TH 6S KD 9H 8H AD KH 3H 4C KC QD 2H 2S 5S 7H AH JC 6D TD TS 9C KS 5D 3S 6C 3D 8C JD JH 7D 7S AS JS 4H 3C QH 2C 4D 9D AC QS QC 8S 5H 7C TC 8D 6H 2D`.
 * Several keyed rounds (real PassKey keys K1..Kr of `FIXED_KEY`), with the difference still a
@@ -103,8 +103,8 @@ The reason is structural: while the difference stays a swap, the same two card *
 being exchanged. In v9, **every** pair that survived even one round as a swap was either same-rank
 (22%) or a ≡ b (mod 4) with different ranks (78%). Those are exactly the pairs for which SumRanks
 can return weight 2 (§3.2); they make up only 390 of the 1326 value pairs. In v8, same-rank pairs
-dominate increasingly (63% after round 1, 98% after round 3). I give no extrapolation to 6 rounds
-and no bit figures.
+dominate increasingly (63% after round 1, 98% after round 3). No extrapolation to 6 rounds and no
+bit figures are given.
 
 ## 3. Structure behind the low-weight cases
 
@@ -179,12 +179,16 @@ only those two value relations survive a round (§2).
 ## 4. Can a branch-number-style bound be proven?
 
 For every layer measured (GC, SR, SR→GC, one keyed round, for every key), the floor 4 is
-attained. For v9 multi-round, this PR's searches have witnesses up to 4 rounds for one key only;
+attained. For v9 multi-round, the searches here have witnesses up to 4 rounds for one key only;
 they found none at 5 rounds or for the full encrypt. A random bijection would be expected to have
 about 1326²/2 ≈ 8.8e5 swap→swap pairs, so 4 is expected there too, but these searches do not
 exhibit one. The separate related-plaintext search in
 [PR #86](https://github.com/hacker6284/cryptoys/pull/86) found 14 K♣↔Q♥ swap→swap pairs on the
-full v9 encrypt under random real keys (about 3.5e-8 per pair).
+full v9 encrypt under random real keys (about 3.5e-8 per pair). Averaged over keys, that rate
+means about 3.5e-8 × 52!/2 ≈ 1.4e60 swap→swap pairs per key for that one swap alone (14 hits, so
+roughly ±30%; per-key variation was not measured). That is far more than the ≈ 8.8e5 a random
+bijection is expected to have over all 1326 swaps together, and a random bijection would have
+about 0.5 for this specific swap.
 
 The floor and GridCycle's tightness are now proved in Lean; the characterisations T2 and T3 below
 remain open.
@@ -261,7 +265,7 @@ Proof plan and effort for the open statements, reusing `Walk.lean` (`placeW`, `s
   400-700 lines. Parametrise over `colW` to get v8 in about +1 day.
 * Tightness witnesses per layer (single swaps, e.g. those in `witnesses.json`) can be checked by
   `decide!` on single layers, as the existing `mixColumns_KC_KD_fails` does; T1 already makes
-  GridCycle tightness universal. I would not attempt kernel checks of the multi-round trails (the
+  GridCycle tightness universal. Kernel checks of the multi-round trails are not attempted (the
   v8 README records that full-encrypt `decide` exceeded 14 GB).
 
 T2 and T3 together are about 1-2 weeks. With T0/T1 they would give honest, precisely scoped

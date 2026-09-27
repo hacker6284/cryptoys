@@ -230,6 +230,8 @@ jobs:
           python3 proofs/doubledeal/security/checks/selftest.py
           python3 proofs/doubledeal/security/checks/check_relabel.py
           python3 proofs/doubledeal/security/checks/check_covariant.py
+          python3 proofs/doubledeal/security/checks/branchnum/witnesses.py > /dev/null
+          git diff --exit-code proofs/doubledeal/security/checks/branchnum/witnesses.json
       # One reusable cache entry for the Mathlib download (keyed on OS, arch,
       # manifest and toolchain; no SHA), instead of lean-action's per-SHA .lake cache.
       - uses: actions/cache@v5

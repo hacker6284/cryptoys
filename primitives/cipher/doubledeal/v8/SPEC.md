@@ -747,12 +747,12 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 
 | Artifact | Path | Role |
 | --- | --- | --- |
-| This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules |
-| Conformance implementation | `primitives/cipher/doubledeal/doubledeal.sudo` | The only copy of the rounds |
+| This specification | `primitives/cipher/doubledeal/v8/SPEC.md` | Normative rules for v8 (frozen, deprecated). Current: `primitives/cipher/doubledeal/SPEC.md` (v9) |
+| Conformance implementation | `primitives/cipher/doubledeal/v8/doubledeal_v8.sudo` | The only copy of the v8 rounds (frozen) |
 | Byte encoding | `demos/doubledeal/cards.js` | §5.3, outside `encrypt` / `decrypt`. A demo box is the text you type, as UTF-8, then this encoding. A leading `0x` means the rest of the box is hex bytes. Ciphertext is written with that prefix. The key box is one deck: those bytes are a single 28-byte block, filled with the §5.3 pad when shorter than 28 bytes, used as-is when exactly 28, and rejected when longer. The nonce box is not §5.3. §5.2's nonce is a 39-card order; the page unranks up to 19 bytes into cards \(0..38\) and rejects an integer \(\ge 39!\). |
-| Demo | `demos/doubledeal/` | Three.js table. Plays `trace_encrypt` and `trace_decrypt` from the sudo module |
-| Correctness proofs | `proofs/doubledeal/` | Lean 4 algebraic stones (bijections, round-trip, content-preservation). Not bit-security. |
-| DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | CBC + HMAC-MegaDreifach AEAD. Not SCM. |
+| Demo | `demos/doubledeal/` | Three.js table. Plays `trace_encrypt` and `trace_decrypt` from the current (v9) sudo module; v8 is not demoed |
+| Vulnerability proof | `proofs/deprecated/doubledeal-v8/` | Same-rank relabelling distinguisher, witness, attack scripts, frozen v8 vectors. The algebraic stones in `proofs/doubledeal/` track v9. |
+| DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | CBC + HMAC-MegaDreifach AEAD over the current (v9) cipher. Not SCM. |
 
 ---
 

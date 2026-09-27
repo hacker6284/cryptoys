@@ -62,9 +62,14 @@ theorem zfxH.eq_1 : True := trivial
 
 end ZfxFixture
 """
-FIX = [("DupFixture", DUP_ISDECK), ("ZfxBase", ZFX_BASE)]
-FIX += [(f"ZfxUse{t}", ZFX_USE.replace("{tag}", t)) for t in ("A", "B")]
-FIX += [(f"ZfxH{t}", ZFX_H) for t in ("1", "2")]
+FIX = [
+    ("DupFixture", DUP_ISDECK),
+    ("ZfxBase", ZFX_BASE),
+    ("ZfxUseA", ZFX_USE.format(tag="A")),
+    ("ZfxUseB", ZFX_USE.format(tag="B")),
+    ("ZfxH1", ZFX_H),
+    ("ZfxH2", ZFX_H),
+]
 MODS = [f"DoubleDealSecurity.{name}" for name, _ in FIX]
 RUN = ("import DoubleDealSecurity\n" + "".join(f"import {m}\n" for m in MODS)
        + "import DoubleDealSecurity.Audit\n\n#audit_all DoubleDealSecurity\n")

@@ -1,13 +1,46 @@
-"""Search for a v8 witness: key K, message M with E_K(tau M) = tau E_K(M), tau = KC(12) <-> KD(51)."""
-import random, sys, json; sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(__file__))); import dd_v8 as dd
-tau = list(range(52)); tau[12], tau[51] = 51, 12
-app = lambda t, D: [t[c] for c in D]
-R = random.Random(20260926)
-K = list(range(52)); R.shuffle(K); keys = dd.expand_keys(K)
-for trial in range(1, 200000):
-    M = list(range(52)); R.shuffle(M)
-    C = dd.encrypt_keys(M, keys); C2 = dd.encrypt_keys(app(tau, M), keys)
-    if C2 == app(tau, C) and C != C2:
-        assert dd.encrypt(M, K) == C and dd.encrypt(app(tau, M), K) == C2
-        w = dict(tau=[12, 51], key=K, message=M, cipher=C, message_tau=app(tau, M), cipher_tau=C2, trials=trial)
-        json.dump(w, open(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)), '..', 'witness_v8.json'), 'w'), indent=1); print('found after', trial, 'trials'); print(json.dumps(w)); break
+"""Search for a v8 witness: key K, message M with E_K(tau M) = tau E_K(M), tau = KC(12) <-> KD(51).
+
+Writes ../witness_v8.json. Deterministic (seed 20260926); the committed witness took 739 trials.
+"""
+import json
+import random
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import dd_v8 as dd  # noqa: E402
+
+OUT = HERE.parent / "witness_v8.json"
+
+
+def app(t, deck):
+    return [t[c] for c in deck]
+
+
+def main():
+    tau = list(range(52))
+    tau[12], tau[51] = 51, 12
+    rng = random.Random(20260926)
+    key = list(range(52))
+    rng.shuffle(key)
+    keys = dd.expand_keys(key)
+    for trial in range(1, 200000):
+        msg = list(range(52))
+        rng.shuffle(msg)
+        c1 = dd.encrypt_keys(msg, keys)
+        c2 = dd.encrypt_keys(app(tau, msg), keys)
+        if c2 == app(tau, c1) and c1 != c2:
+            assert dd.encrypt(msg, key) == c1
+            assert dd.encrypt(app(tau, msg), key) == c2
+            w = dict(tau=[12, 51], key=key, message=msg, cipher=c1,
+                     message_tau=app(tau, msg), cipher_tau=c2, trials=trial)
+            with OUT.open('w') as f:
+                json.dump(w, f, indent=1)
+            print('found after', trial, 'trials')
+            print(json.dumps(w))
+            return
+
+
+if __name__ == '__main__':
+    main()

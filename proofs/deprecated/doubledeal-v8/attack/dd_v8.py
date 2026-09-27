@@ -1,4 +1,8 @@
-"""Faithful Python port of primitives/cipher/doubledeal/doubledeal.sudo (analysis only)."""
+"""Python port of primitives/cipher/doubledeal/v8/doubledeal_v8.sudo (frozen, deprecated v8).
+
+Analysis only. Checked against vectors/doubledeal_v8_vectors.json by check_vectors.py.
+Not the current cipher: v9 lives in primitives/cipher/doubledeal/doubledeal.sudo.
+"""
 from math import factorial
 def suit(c): return c // 13
 def rank(c): return c % 13 + 1
@@ -50,28 +54,37 @@ def overflow_seat(occ, t):
     raise AssertionError
 def mix_columns(d, info=None):
     grid = [[-1]*13 for _ in range(4)]
-    t = 0; pc = pr = pcc = 0; nover = 0
+    t = 0
+    pc = pr = pcc = 0
+    nover = 0
     for i in range(52):
-        card = d[i]; r, c = 2, 0
+        card = d[i]
+        r, c = 2, 0
         if i > 0:
             tr, tc = (pr + suit(pc)) % 4, (pcc + rank(pc)) % 13
             if grid[tr][tc] < 0: r, c = tr, tc
             else:
                 occ = [[grid[a][b] >= 0 for b in range(13)] for a in range(4)]
-                r, c, t = overflow_seat(occ, t); nover += 1
-        grid[r][c] = card; pc, pr, pcc = card, r, c
+                r, c, t = overflow_seat(occ, t)
+                nover += 1
+        grid[r][c] = card
+        pc, pr, pcc = card, r, c
     if info is not None: info['overflows'] = nover
     return scoop_rm(grid)
 def inv_mix_columns(d):
-    grid = lay_rm(d); vis = [[False]*13 for _ in range(4)]
-    t = 0; hand = []; pc = pr = pcc = 0
+    grid = lay_rm(d)
+    vis = [[False]*13 for _ in range(4)]
+    t = 0
+    hand = []
+    pc = pr = pcc = 0
     for i in range(52):
         r, c = 2, 0
         if i > 0:
             tr, tc = (pr + suit(pc)) % 4, (pcc + rank(pc)) % 13
             if not vis[tr][tc]: r, c = tr, tc
             else: r, c, t = overflow_seat(vis, t)
-        hand.append(grid[r][c]); vis[r][c] = True
+        hand.append(grid[r][c])
+        vis[r][c] = True
         pc, pr, pcc = hand[-1], r, c
     return hand
 def compose(m, k):
@@ -83,7 +96,8 @@ def inverse_compose(c, k):
     for j in range(52): out[k.index(j)] = c[j]
     return out
 def passkey(deck):
-    hand = list(deck); key = []
+    hand = list(deck)
+    key = []
     for _ in range(len(deck)):
         c = hand.pop(0)
         if hand:
@@ -94,9 +108,11 @@ def passkey(deck):
         key = [c] + key
     return key
 def passkey_inv(deck):
-    key = list(deck); hand = []
+    key = list(deck)
+    hand = []
     for _ in range(len(deck)):
-        c = key.pop(0); n = len(hand)
+        c = key.pop(0)
+        n = len(hand)
         if n > 0 and rank(c) < n: hand = rotr(hand, rank(c))
         elif key and rank(c) < len(key): key = rotr(key, rank(c))
         if n > 0:
@@ -129,9 +145,13 @@ def decrypt(c, k0):
     for r in range(5, 0, -1): m = inv_full_round(m, keys[r])
     return inverse_compose(m, keys[0])
 def unrank(items, r):
-    items = list(items); r %= factorial(len(items)); out = []
+    items = list(items)
+    r %= factorial(len(items))
+    out = []
     for k in range(len(items), 0, -1):
-        f = factorial(k - 1); out.append(items.pop(r // f)); r %= f
+        f = factorial(k - 1)
+        out.append(items.pop(r // f))
+        r %= f
     return out
 def counter_deck(nonce, i):
     assert len(nonce) == 39
@@ -141,10 +161,15 @@ def ctr_encrypt(blocks, key, nonce):
 def ecb_encrypt(blocks, key): return [encrypt(b, key) for b in blocks]
 # permutation helpers: deck D as function seat->card
 def perm_sign(p):
-    seen = [False]*len(p); s = 1
+    seen = [False]*len(p)
+    s = 1
     for i in range(len(p)):
         if not seen[i]:
-            j = i; L = 0
-            while not seen[j]: seen[j] = True; j = p[j]; L += 1
+            j = i
+            L = 0
+            while not seen[j]:
+                seen[j] = True
+                j = p[j]
+                L += 1
             if L % 2 == 0: s = -s
     return s

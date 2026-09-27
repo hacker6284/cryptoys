@@ -1,0 +1,4 @@
+# python3 success_rate.py  (defaults: 16384 pairs/key, 24 keys; deterministic seeds)
+[attack] keys=24 pairs/key=16384 queries/key=32768: success=20/24 total_hits=43 rate/pair=1.09e-04 median first-hit pair#=3973
+[control] keys=24 pairs/key=16384 queries/key=32768: success=0/24 total_hits=0 rate/pair=0.00e+00 median first-hit pair#=None
+[ctr] keys=24 pairs/key=16384 queries/key=32768: success=23/24 total_hits=63 rate/pair=1.60e-04 median first-hit pair#=4400

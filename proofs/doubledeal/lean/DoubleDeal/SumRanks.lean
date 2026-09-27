@@ -1,6 +1,9 @@
 /-
   SumRanks / inv SumRanks on 4×13 grids — correctness, zero sorry.
   Row-then-column; inverse undoes columns then rows (SPEC §3.3).
+  Rows and columns take separate weights (`rowW`, `colW`): the cipher uses
+  rank for rows and rank + suit for columns. The inverse theorems hold for
+  any pair of weights.
 -/
 import DoubleDeal.Grid
 import DoubleDeal.Rotate
@@ -169,11 +172,12 @@ def applyColRotates (rank : α → Nat) (g : Grid α) : Grid α :=
 def applyColRotatesInv (rank : α → Nat) (g : Grid α) : Grid α :=
   colRotateInv g (fun c => colRankSum rank g c)
 
-def sumRanks (rank : α → Nat) (g : Grid α) : Grid α :=
-  applyColRotates rank (applyRowRotates rank g)
+/-- Row stage by `rowW` sums, then column stage by `colW` sums. -/
+def sumRanks (rowW colW : α → Nat) (g : Grid α) : Grid α :=
+  applyColRotates colW (applyRowRotates rowW g)
 
-def invSumRanks (rank : α → Nat) (g : Grid α) : Grid α :=
-  applyRowRotatesInv rank (applyColRotatesInv rank g)
+def invSumRanks (rowW colW : α → Nat) (g : Grid α) : Grid α :=
+  applyRowRotatesInv rowW (applyColRotatesInv colW g)
 
 theorem applyRowRotatesInv_applyRowRotates (rank : α → Nat) (g : Grid α) :
     applyRowRotatesInv rank (applyRowRotates rank g) = g := by
@@ -211,13 +215,13 @@ theorem applyColRotates_applyColRotatesInv (rank : α → Nat) (g : Grid α) :
   rw [hs]
   exact colRotate_colRotateInv g _
 
-theorem invSumRanks_sumRanks (rank : α → Nat) (g : Grid α) :
-    invSumRanks rank (sumRanks rank g) = g := by
+theorem invSumRanks_sumRanks (rowW colW : α → Nat) (g : Grid α) :
+    invSumRanks rowW colW (sumRanks rowW colW g) = g := by
   dsimp [invSumRanks, sumRanks]
   rw [applyColRotatesInv_applyColRotates, applyRowRotatesInv_applyRowRotates]
 
-theorem sumRanks_invSumRanks (rank : α → Nat) (g : Grid α) :
-    sumRanks rank (invSumRanks rank g) = g := by
+theorem sumRanks_invSumRanks (rowW colW : α → Nat) (g : Grid α) :
+    sumRanks rowW colW (invSumRanks rowW colW g) = g := by
   dsimp [invSumRanks, sumRanks]
   rw [applyRowRotates_applyRowRotatesInv, applyColRotates_applyColRotatesInv]
 

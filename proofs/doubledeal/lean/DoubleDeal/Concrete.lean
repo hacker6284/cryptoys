@@ -387,7 +387,7 @@ def mixColumnsDeck (d : List Nat) : List Nat :=
 
 def sumRanksDeck (d : List Nat) : List Nat :=
   if h : d.length = 52 then
-    (snap (scoopColumnMajor (sumRanks cardRank (layColumnMajor (ofDeck d h))))).toList
+    (snap (scoopColumnMajor (sumRanks cardRank cardColW (layColumnMajor (ofDeck d h))))).toList
   else d
 
 def shiftRowsDeck (d : List Nat) : List Nat :=

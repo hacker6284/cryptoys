@@ -59,4 +59,5 @@ elab "#audit_all " root:ident : command => do
       if mine.contains n then owners := owners.insert n ((owners.findD n #[]).push mod)
   for (n, ms) in owners do
     if ms.size > 1 then
-      logError m!"DUP {n}: declared in more than one module: {", ".intercalate ((ms.qsort Name.lt).toList.map toString)}"
+      let where_ := ", ".intercalate ((ms.qsort Name.lt).toList.map toString)
+      logError m!"DUP {n}: declared in more than one module: {where_}"

@@ -76,6 +76,10 @@ registered theorem must be reported) plus `scan_sorry.py`. It runs on PRs that
 touch the security sources, the core/Generated Lean, `check_axioms.py` or the
 doubledeal sudo spec; on pushes to main; weekly; and on `workflow_dispatch`.
 
+Both jobs (`doubledeal-security` and `doubledeal-security-heavy`) must be green
+before merge (not enforced by branch protection): each audit checks only its own
+library, so a stray module can fail just one of them.
+
 So any new sorry, and any new theorem built on the conjecture, fails CI. A
 green run means the theorems check as stated; it is not a security claim.
 Link 1 (sudo = Generated) remains open.

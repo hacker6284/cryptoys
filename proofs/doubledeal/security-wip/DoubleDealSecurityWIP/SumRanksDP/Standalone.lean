@@ -92,6 +92,33 @@ theorem lemma2a (w : Fin 13 → ZMod 13) (hD : ∑ j, w j ≠ 0) (c : ZMod 13) :
   rw [card_univ, Fintype.card_perm, Fintype.card_fin] at h
   rw [h, sum_congr rfl fun c' _ => hall c', sum_const, card_univ, ZMod.card, smul_eq_mul]
 
+theorem wS_eq_inv (w : Fin 13 → ZMod 13) (σ : Equiv.Perm (Fin 13)) :
+    wS w σ = ∑ i, ((σ⁻¹ i).val : ZMod 13) * w i := by
+  unfold wS; exact Fintype.sum_equiv σ _ _ (fun j => by simp)
+
+/-- Swapping the seats of entry `i₀` and a `v`-entry `k` shifts `S` by
+    `(w i₀ − v)·(pos k − pos i₀)` (PROOF.md §2, one-card switching). -/
+theorem wS_swap (w : Fin 13 → ZMod 13) (v : ZMod 13) (i₀ k : Fin 13) (hk : k ≠ i₀)
+    (hwk : w k = v) (σ : Equiv.Perm (Fin 13)) :
+    wS w (Equiv.swap i₀ k * σ) =
+      wS w σ + (w i₀ - v) * (((σ⁻¹ k).val : ZMod 13) - ((σ⁻¹ i₀).val : ZMod 13)) := by
+  rw [wS_eq_inv, wS_eq_inv]
+  have h1 : ∀ i, (Equiv.swap i₀ k * σ)⁻¹ i = σ⁻¹ (Equiv.swap i₀ k i) := by
+    intro i; simp [mul_inv_rev, Equiv.swap_inv]
+  simp only [h1]
+  rw [← Equiv.sum_comp (Equiv.swap i₀ k)
+    (fun i => ((σ⁻¹ (Equiv.swap i₀ k i)).val : ZMod 13) * w i)]
+  simp only [Equiv.swap_apply_self]
+  have hd : ∑ i, ((σ⁻¹ i).val : ZMod 13) * w (Equiv.swap i₀ k i) -
+      ∑ i, ((σ⁻¹ i).val : ZMod 13) * w i =
+      ((σ⁻¹ i₀).val : ZMod 13) * (w k - w i₀) + ((σ⁻¹ k).val : ZMod 13) * (w i₀ - w k) := by
+    rw [← sum_sub_distrib, Fintype.sum_eq_add i₀ k hk.symm]
+    · simp only [Equiv.swap_apply_left, Equiv.swap_apply_right]; ring
+    · intro i hi
+      rw [Equiv.swap_apply_of_ne_of_ne hi.1 hi.2, sub_self]
+  rw [hwk] at hd
+  linear_combination hd
+
 /-- **Lemma 2(b)** (PROOF.md §2, one-card switching): if some seat value
     differs from `v`, and `v` occurs `z` times, at most `13!/(z+1)` arrangements
     have `S = c`. Suggested proof: double counting with
@@ -102,7 +129,53 @@ theorem lemma2a (w : Fin 13 → ZMod 13) (hD : ∑ j, w j ≠ 0) (c : ZMod 13) :
 theorem lemma2b (w : Fin 13 → ZMod 13) (v : ZMod 13) (hnc : ∃ i, w i ≠ v) (c : ZMod 13) :
     ((univ.filter fun i => w i = v).card + 1) *
         (univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c).card ≤ Nat.factorial 13 := by
-  sorry
+  classical
+  obtain ⟨i₀, hi₀⟩ := hnc
+  set V := univ.filter fun i => w i = v with hV
+  set G := univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c with hG
+  set B := univ.filter fun σ : Equiv.Perm (Fin 13) => ¬ wS w σ = c with hB
+  have hd : w i₀ - v ≠ 0 := sub_ne_zero.2 hi₀
+  have hcast : ∀ a b : Fin 13, ((a.val : ℕ) : ZMod 13) = (b.val : ZMod 13) → a = b := by decide
+  have hVw : ∀ k ∈ V, w k = v := fun k hk => (mem_filter.1 hk).2
+  have hVne : ∀ k ∈ V, k ≠ i₀ := fun k hk e => hi₀ (by rw [← e]; exact hVw k hk)
+  have huniq : ∀ (σ' : Equiv.Perm (Fin 13)) k₁ k₂, k₁ ∈ V → k₂ ∈ V →
+      wS w (Equiv.swap i₀ k₁ * σ') = c → wS w (Equiv.swap i₀ k₂ * σ') = c → k₁ = k₂ := by
+    intro σ' k₁ k₂ h1 h2 e1 e2
+    rw [wS_swap w v i₀ k₁ (hVne k₁ h1) (hVw k₁ h1)] at e1
+    rw [wS_swap w v i₀ k₂ (hVne k₂ h2) (hVw k₂ h2)] at e2
+    have : (w i₀ - v) * ((σ'⁻¹ k₁).val : ZMod 13) = (w i₀ - v) * ((σ'⁻¹ k₂).val : ZMod 13) := by
+      linear_combination e1 - e2
+    exact σ'⁻¹.injective (hcast _ _ (mul_left_cancel₀ hd this))
+  have hinj : (G ×ˢ V).card ≤ B.card := by
+    apply card_le_card_of_injOn (fun x => Equiv.swap i₀ x.2 * x.1)
+    · intro x hx
+      simp only [hG, hV, hB, coe_product, coe_filter, Set.mem_prod, Set.mem_setOf_eq, mem_coe,
+        mem_product, mem_filter, mem_univ, true_and] at hx ⊢
+      rw [wS_swap w v i₀ x.2 (hVne x.2 (by simp [hV, hx.2])) hx.2, hx.1]
+      intro e
+      have h0 : (w i₀ - v) * (((x.1⁻¹ x.2).val : ZMod 13) - ((x.1⁻¹ i₀).val : ZMod 13)) = 0 := by
+        linear_combination e
+      rcases mul_eq_zero.1 h0 with h | h
+      · exact hd h
+      · exact hVne x.2 (by simp [hV, hx.2]) (x.1⁻¹.injective (hcast _ _ (sub_eq_zero.1 h)))
+    · intro x hx y hy e
+      simp only [hG, hV, coe_product, coe_filter, Set.mem_prod, Set.mem_setOf_eq, mem_coe,
+        mem_product, mem_filter, mem_univ, true_and] at hx hy
+      simp only at e
+      have ex : x.1 = Equiv.swap i₀ x.2 * (Equiv.swap i₀ x.2 * x.1) := by
+        rw [Equiv.swap_mul_self_mul]
+      have ey : y.1 = Equiv.swap i₀ y.2 * (Equiv.swap i₀ x.2 * x.1) := by
+        rw [e, Equiv.swap_mul_self_mul]
+      have hk : x.2 = y.2 := huniq _ x.2 y.2 (by simp [hV, hx.2]) (by simp [hV, hy.2])
+        (by rw [← ex]; exact hx.1) (by rw [← ey]; exact hy.1)
+      have h1 : x.1 = y.1 := by rw [hk] at e; exact mul_left_cancel e
+      exact Prod.ext h1 hk
+  rw [card_product] at hinj
+  have htot := filter_card_add_filter_neg_card_eq_card (s := (univ : Finset (Equiv.Perm (Fin 13))))
+    (fun σ => wS w σ = c)
+  rw [card_univ, Fintype.card_perm, Fintype.card_fin] at htot
+  rw [← hG, ← hB] at htot
+  nlinarith
 
 /-- `Σ_j j = 78 ≡ 0 (mod 13)`: a constant row has `S = 0` (PROOF.md §1, Case B remark). -/
 theorem sum_seat_weights : ∑ j : Fin 13, (j.val : ZMod 13) = 0 := by

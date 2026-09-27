@@ -8,9 +8,7 @@ export function createDealerKey(world) {
     const keyLight = new THREE.SpotLight(0xffc898, 0, 2.4, Math.PI / 5.4, 0.5, 1.15);
     keyLight.position.set(world.table.den.x + 0.16, 1.16, world.table.den.z + 0.30);
     keyLight.target.position.set(world.table.den.x, world.table.feltTopY + 0.04, world.table.den.z);
-    world.scene.add(keyLight);
-    world.scene.add(keyLight.target);
-    return keyLight;
+    return world.lights.add("dealerKey", keyLight);
 }
 
 function feltY(world) {
@@ -90,7 +88,7 @@ export async function playUnbox({
     markBeat(name === "deck2" ? "msg-unbox-hold" : "unbox-hold");
     await clock.tween(320, (t) => {
         if (keyLight && !clock.dead(gen)) keyLight.intensity = lerp(keyLight.intensity || 0.2, 2.15, t);
-        if (rig.innerGlow) rig.innerGlow.intensity = lerp(0, 0.55, t);
+        if (rig.innerGlow && !clock.dead(gen)) rig.innerGlow.intensity = lerp(0, 0.55, t);
     }, { ease: easeOutCubic, generation: gen });
     if (clock.dead(gen)) {
         busy(rig, false);

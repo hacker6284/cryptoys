@@ -19,6 +19,7 @@ import {
     toyHalfHeight,
 } from "./constants.js";
 import { seatOnSurface } from "./motion.js";
+import { createLights } from "../shared/lights.js";
 
 function asset(path) {
     return new URL(path, ASSET_BASE).href;
@@ -217,18 +218,15 @@ export async function mountWorld(canvas) {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0e0b09);
     scene.fog = new THREE.Fog(0x0e0b09, 8, 18);
+    const lights = createLights(scene);
 
     const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 40);
     camera.up.set(0, 1, 0);
 
-    scene.add(new THREE.HemisphereLight(0xffd8b0, 0x0e0b09, 0.08));
-    scene.add(new THREE.AmbientLight(0xffe0d0, 0.03));
-    const wallFill = new THREE.DirectionalLight(0xe8dcc8, 0.02);
-    wallFill.position.set(-2.2, 2.6, 2.2);
-    scene.add(wallFill);
-    const backFill = new THREE.DirectionalLight(0xffd8b0, 0.015);
-    backFill.position.set(0.4, 2.0, -2.8);
-    scene.add(backFill);
+    lights.add("hemi", new THREE.HemisphereLight(0xffd8b0, 0x0e0b09, 0.08));
+    lights.add("ambient", new THREE.AmbientLight(0xffe0d0, 0.03));
+    lights.add("wallFill", new THREE.DirectionalLight(0xe8dcc8, 0.02)).position.set(-2.2, 2.6, 2.2);
+    lights.add("backFill", new THREE.DirectionalLight(0xffd8b0, 0.015)).position.set(0.4, 2.0, -2.8);
 
     const texLoader = new THREE.TextureLoader();
     const gltfLoader = new GLTFLoader();
@@ -371,16 +369,13 @@ export async function mountWorld(canvas) {
     pendant.shadow.mapSize.set(512, 512);
     pendant.shadow.bias = -0.0002;
     pendant.shadow.normalBias = 0.03;
-    scene.add(pendant);
-    scene.add(pendant.target);
+    lights.add("pendant", pendant);
     const pendantWash = new THREE.SpotLight(0xffb878, 5.5, 9.0, Math.PI / 2.4, 0.95, 1.0);
     pendantWash.position.set(DEN.x, SHADE_Y - 0.02, DEN.z);
     pendantWash.target.position.set(DEN.x, 0.4, DEN.z);
-    scene.add(pendantWash);
-    scene.add(pendantWash.target);
-    const pendantFill = new THREE.PointLight(0xffa860, 3.5, 2.5, 2);
+    lights.add("pendantWash", pendantWash);
+    const pendantFill = lights.add("pendantFill", new THREE.PointLight(0xffa860, 3.5, 2.5, 2));
     pendantFill.position.set(DEN.x, SHADE_Y - 0.08, DEN.z);
-    scene.add(pendantFill);
 
     const sconceMetal = new THREE.MeshStandardMaterial({ color: 0x5a4e42, roughness: 0.45, metalness: 0.55 });
     const sconceShade = new THREE.MeshStandardMaterial({
@@ -392,7 +387,7 @@ export async function mountWorld(canvas) {
     });
     const sconceGlow = new THREE.MeshBasicMaterial({ color: 0xffc878 });
 
-    function addWallSconce(x, y, z, faceY) {
+    function addWallSconce(key, x, y, z, faceY) {
         const group = new THREE.Group();
         group.position.set(x, y, z);
         group.rotation.y = faceY;
@@ -422,30 +417,25 @@ export async function mountWorld(canvas) {
         glow.position.set(0.042, 0, 0);
         group.add(glow);
         scene.add(group);
-        const light = new THREE.PointLight(0xffb878, 1.15, 3.0, 2);
+        const light = lights.add(key, new THREE.PointLight(0xffb878, 1.15, 3.0, 2));
         light.position.set(x + Math.cos(faceY) * 0.12, y - 0.02, z - Math.sin(faceY) * 0.12);
-        scene.add(light);
-        return light;
     }
-    addWallSconce(-2.78, 1.72, CHEST.z - 0.15, 0);
-    addWallSconce(1.35, 1.68, SHELF_Z + 0.08, -Math.PI / 2);
+    addWallSconce("sconceChest", -2.78, 1.72, CHEST.z - 0.15, 0);
+    addWallSconce("sconceShelf", 1.35, 1.68, SHELF_Z + 0.08, -Math.PI / 2);
 
     const shelfWash = new THREE.SpotLight(0xffe0c0, 1.85, 5.2, Math.PI / 2.0, 0.9, 1.35);
     shelfWash.position.set(-0.2, 2.15, SHELF_Z + 1.7);
     shelfWash.target.position.set(-0.5, 1.05, SHELF_Z);
-    scene.add(shelfWash);
-    scene.add(shelfWash.target);
+    lights.add("shelfWash", shelfWash);
     // A quiet key on the cube slot so the seated toy reads at rest and
     // the empty ring reads after it lifts — not a hover-only trick.
     const cubeSlotKey = new THREE.SpotLight(0xffd8b0, 2.6, 2.6, Math.PI / 5, 0.45, 1.3);
     cubeSlotKey.position.set(SLOTS.cube.x + 0.12, SHELF_Y1 + 0.62, SHELF_Z + 0.62);
     cubeSlotKey.target.position.set(SLOTS.cube.x, SHELF_Y1 + 0.04, SHELF_Z);
-    scene.add(cubeSlotKey);
-    scene.add(cubeSlotKey.target);
+    lights.add("cubeSlotKey", cubeSlotKey);
 
-    const chestKiss = new THREE.PointLight(0xffc090, 0.55, 2.5, 2);
+    const chestKiss = lights.add("chestKiss", new THREE.PointLight(0xffc090, 0.55, 2.5, 2));
     chestKiss.position.set(CHEST.x + 0.8, 0.18, CHEST.z + 0.3);
-    scene.add(chestKiss);
 
     const tableGroup = new THREE.Group();
     tableGroup.position.set(DEN.x, 0, DEN.z);
@@ -571,6 +561,8 @@ export async function mountWorld(canvas) {
         chestGroup.position.x += (-2.85 + pad) - box.min.x;
     }
     contactShadow(chestGroup, 1.05, 0.75, 0.002);
+    const chestRim = lights.add("rim:chest", new THREE.PointLight(0xffc078, 0, 1.6, 2), chestGroup);
+    chestRim.position.set(0.15, 0.22, 0.12);
     scene.add(chestGroup);
 
     const toys = {
@@ -578,7 +570,14 @@ export async function mountWorld(canvas) {
         deck2: makeDeckBox(0x1a2a44, "MSG"),
         cube: makeCubeSlot(),
     };
-    Object.values(toys).forEach((toy) => scene.add(toy));
+    for (const [name, toy] of Object.entries(toys)) {
+        scene.add(toy);
+        // Hover rim and flight glow ride the toy (moved on replaceToy).
+        const rim = lights.add(`rim:${name}`, new THREE.PointLight(0xffc078, 0, 0.9, 2), toy);
+        rim.position.set(0.06, 0.08, 0.12);
+        const travel = lights.add(`travel:${name}`, new THREE.PointLight(0xffd0a0, 0, 1.4, 2), toy);
+        travel.position.set(0.08, 0.1, 0.12);
+    }
 
     function feltTopY() {
         return TOP_Y + 0.032;
@@ -674,6 +673,7 @@ export async function mountWorld(canvas) {
     function replaceToy(name, next) {
         const prev = toys[name];
         if (prev) {
+            next.add(lights.get(`rim:${name}`), lights.get(`travel:${name}`));
             prev.visible = false;
             if (prev.parent) prev.parent.remove(prev);
             else scene.remove(prev);
@@ -684,7 +684,7 @@ export async function mountWorld(canvas) {
         return prev;
     }
 
-    function applyEmissive(root, on, { chest = false } = {}) {
+    function applyEmissive(root, on) {
         root.traverse((object) => {
             if (!object.isMesh) return;
             const mats = Array.isArray(object.material) ? object.material : [object.material];
@@ -694,34 +694,15 @@ export async function mountWorld(canvas) {
                 mat.emissiveIntensity = on ? 0.62 : 0;
             }
         });
-        let light = root.userData.rimLight;
-        if (!light) {
-            light = new THREE.PointLight(0xffc078, 0, chest ? 1.6 : 0.9, 2);
-            light.position.set(chest ? 0.15 : 0.06, chest ? 0.22 : 0.08, chest ? 0.12 : 0.12);
-            root.add(light);
-            root.userData.rimLight = light;
-        }
-        light.intensity = on ? (chest ? 1.05 : 3.2) : 0;
-    }
-
-    function createTravelLight(toy) {
-        if (toy.userData.travelLight) return toy.userData.travelLight;
-        const light = new THREE.PointLight(0xffd0a0, 0, 1.4, 2);
-        light.position.set(0.08, 0.1, 0.12);
-        toy.add(light);
-        toy.userData.travelLight = light;
-        return light;
     }
 
     function setHighlight(names, on) {
         const list = Array.isArray(names) ? names : [names];
         for (const name of list) {
-            if (name === "chest") {
-                applyEmissive(chestGroup, on, { chest: true });
-                continue;
-            }
-            const toy = toys[name];
-            if (toy) applyEmissive(toy, on);
+            const root = name === "chest" ? chestGroup : toys[name];
+            if (!root) continue;
+            applyEmissive(root, on);
+            lights.get(`rim:${name}`).intensity = on ? (name === "chest" ? 1.05 : 3.2) : 0;
         }
     }
 
@@ -781,6 +762,7 @@ export async function mountWorld(canvas) {
         scene,
         camera,
         renderer,
+        lights,
         toys,
         slots,
         table: { group: tableGroup, radius: TABLE_R, topY: TOP_Y, feltTopY: feltTopY(), den: { ...DEN } },
@@ -795,7 +777,6 @@ export async function mountWorld(canvas) {
         setSlotEmpty,
         replaceToy,
         setHighlight,
-        createTravelLight,
         shelfHome,
         resize,
         render,

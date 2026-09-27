@@ -11,7 +11,7 @@ import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";
 import { formSessionTable, gatherSessionTable } from "./table-form.js";
 import { pickHandTextures, pickMsgTextures } from "./unbox-hand.js";
 import { createDealerKey, playDualUnbox, playRestow, restBoxes } from "./unbox-physical.js";
-import { createUnboxRig } from "./unbox-rig.js";
+import { createInnerGlow, createUnboxRig } from "./unbox-rig.js";
 
 /**
  * Demo adapters — Scramble and DoubleDeal share the playroom shell.
@@ -248,15 +248,14 @@ function createScrambleAdapter() {
         if ((rig.puzzleId || puzzleId) === nextId) return rig;
         const prev = rig;
         const live = await prev.swapPuzzle(nextId, "");
+        // swapPuzzle detached the old seat: move its lights before any throw.
+        if (world) world.replaceToy("cube", live.group);
         if (typeof live.setAlg !== "function" || typeof live.playLeaves !== "function") {
             live.dispose?.();
             throw new Error("cubing.js rig missing timeline API");
         }
         prev.dispose?.();
-        if (world) {
-            world.replaceToy("cube", live.group);
-            reseatCube(live.group, "table");
-        }
+        if (world) reseatCube(live.group, "table");
         rig = stageCubeView(live, installOpts);
         puzzleId = nextId;
         rig.rememberSeated?.();
@@ -575,7 +574,6 @@ function createDoubleDealAdapter() {
     function restowUnbox() {
         restowOne(unbox);
         restowOne(unbox2);
-        if (keyLight) keyLight.intensity = 0;
     }
 
     async function adoptRig(name, rig, prev) {
@@ -586,6 +584,7 @@ function createDoubleDealAdapter() {
                 rig.group.quaternion.copy(prev.quaternion);
             }
         }
+        // Sleeve glow rejoins the scene here; no await since createUnboxRig.
         world.replaceToy(name, rig.group);
         disposeObject(prev);
         return rig;
@@ -605,6 +604,7 @@ function createDoubleDealAdapter() {
                 sharedMaps: true,
                 label: "KEY",
                 bodyHex: "#6b1e1e",
+                innerGlow: world.lights.get("glow:deck"),
             });
             await adoptRig("deck", unbox, world.toys.deck);
             await yieldFrame();
@@ -616,6 +616,7 @@ function createDoubleDealAdapter() {
                 sharedMaps: true,
                 label: "MSG",
                 bodyHex: "#1a2a44",
+                innerGlow: world.lights.get("glow:deck2"),
             });
             await adoptRig("deck2", unbox2, world.toys.deck2);
             await yieldFrame();
@@ -641,9 +642,11 @@ function createDoubleDealAdapter() {
         install(nextWorld, { poses: nextPoses } = {}) {
             world = nextWorld;
             poses = nextPoses;
-            // Add the dark dealer key at boot: adding a light mid-scene
-            // recompiles every lit shader, which froze the unbox.
+            // Add the dark dealer key and sleeve glows at boot: adding a
+            // light mid-scene recompiles every lit shader (unbox freeze).
             keyLight = createDealerKey(world);
+            world.lights.add("glow:deck", createInnerGlow());
+            world.lights.add("glow:deck2", createInnerGlow());
             return world.toys.deck;
         },
         preload,

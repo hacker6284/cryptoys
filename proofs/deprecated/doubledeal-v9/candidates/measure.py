@@ -63,6 +63,9 @@ def main():
                 print(f"{nm(x, y)}: P_S {pS:.4f}, P_G(fresh) {pG:.4f}, P(round) {pr:.2e} (1/{1 / pr if pr else float('inf'):.0f}); "
                       f"product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = {f6:.1e}")
                 row = {}
+                # NB: the seed below depends on x + y only, so pairs with the same x + y share
+                # decks/keys; a future rerun should use SEED + 1000 * r + 52 * x + y. The committed
+                # measure.log was produced with this line as is (not rerun for the seed alone).
                 for tgt, n3 in (("F2", int(1e6 * S)), ("F3", int(4e6 * S)), ("F4", int(1.6e7 * S))):
                     h, n = par_exact(pool, var, transposition(x, y), tgt, n3, SEED + 1000 * int(tgt[1]) + x + y)
                     row[tgt] = (h, n)

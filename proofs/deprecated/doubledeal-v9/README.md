@@ -7,7 +7,7 @@
 | Claim | Status |
 | --- | --- |
 | There is a key \(K\) and a message \(M\) with \(E_K(\sigma M) = \sigma E_K(M)\) and \(\sigma E_K(M) \ne E_K(M)\) on the full emitted v9 `encrypt` (whitening, 5 full rounds, final round, PassKey schedule), for \(\sigma\) = K♣↔Q♥ (card ids 12↔24) | **Kernel theorem** `DoubleDealV9.Witness.v9_KC_QH_swap_commutes_on_witness` in `lean/DoubleDealV9/Witness.lean`. The stages are checked with `decide!` (kernel reduction): six PassKey steps, then whitening, 5 rounds and the final round for \(M\) and for \(\sigma M\). They are chained by the generic lemmas in `Glue.lean`. **No `native_decide`.** `lean/Axioms.lean` together with `check_axioms.py v9-deprecated` shows it depends only on `propext` and `Quot.sound`. Build on the shared box: 659 s wall, peak ≈ 10.8 GB total Lean RSS. One PassKey `decide!` is ≈ 46 s and 5.2 GB. A single `decide!` over the whole `expand_keys` was OOM-killed at 12.8 GB, and that is why the proof is split into stages. |
-| Equal-w4 swaps commute with v9 SumRanks on every deck where the two cards share a row (and so, for K♣↔Q♥ in particular) | **Kernel theorem** (Mathlib package): `DoubleDeal.Security.sumRanksV9_swap_commutes_of_same_row` and `sumRanksV9_KC_QH_of_same_row` in [`proofs/doubledeal/security/DoubleDealSecurity/SwapMechanism.lean`](../../doubledeal/security/DoubleDealSecurity/SwapMechanism.lean). This is one direction of the SumRanks condition below. |
+| On one deck, SumRanks commutes with σ **iff** σ leaves every row weight sum (mod 13) and every column weight sum after the row stage (mod 4) unchanged. As a consequence, equal-w4 swaps commute with v9 SumRanks on every deck where the two cards share a row, and in particular K♣↔Q♥ does. | **Kernel theorems** (Mathlib package, [`SwapMechanism.lean`](../../doubledeal/security/DoubleDealSecurity/SwapMechanism.lean)): `DoubleDeal.Security.sumRanks_rel_iff_sums`, which combines `sumRanks_rel_of_sums` with T1's converse `commute_rotations` (`SumRanks.lean`); then `sumRanksV9_swap_commutes_of_same_row` and `sumRanksV9_KC_QH_of_same_row`. The "same row or equal rank / same column or equal w4" reading of the sum condition for a transposition is **claimed, not proved** (the "same row" case is proved). |
 | Per-layer survival probabilities, the ≈1/23 per-round rate, F6 ≈ 3.5e-8, and the vulnerable class | **Measured** (`attack/mechanism.py`, `attack/mechanism.log`, `attack/results/`). Not a theorem. The ≈12/51 SumRanks share is exact counting for a uniform deck. The GridCycle share has a model that is approximate only. |
 | Key recovery | **Not claimed.** This is a distinguisher. |
 
@@ -15,16 +15,16 @@ As everywhere in the repo, Link 1 (sudo text = emitted Lean) stays open. The JS 
 
 ## Mechanism, layer by layer
 
-Notation: card \(c \in 0..51\), rank \(= c \bmod 13 + 1\) (A=1 … K=13), suit \(= \lfloor c/13\rfloor\) (♣♥♠♦). A relabelling \(\sigma\) renames card faces. "Commutes" means \(L(\sigma x) = \sigma L(x)\) for a layer \(L\). The ciphertext relation holds exactly when every layer applied along the way commutes on the state it actually receives.
+Notation: card \(c \in 0..51\), rank \(= c \bmod 13 + 1\) (A=1 … K=13), suit \(= \lfloor c/13\rfloor\) (♣♥♠♦). A relabelling \(\sigma\) renames card faces. "Commutes" means \(L(\sigma x) = \sigma L(x)\) for a layer \(L\). If every layer commutes on the state it actually receives, the ciphertext relation holds. The converse is how the survival rates are counted, but it is not proved here.
 
 **Correction to a common description:** v9 SumRanks rotates **rows** by Σrank mod 13 (rank only) and **columns** by Σ(rank+suit) mod 4. Only the column weight involves the suit. Write \(w_4(c) = (\text{rank}+\text{suit}) \bmod 4\).
 
 | Layer | When it commutes with \(\sigma = x \leftrightarrow y\) | Probability per use, K♣↔Q♥ |
 | --- | --- | --- |
-| Compose (AddRoundKey stand-in), lay/scoop, ShiftRows | Always. These are positional: they move seats and never read faces. | 1 |
+| Compose (AddRoundKey stand-in), lay/scoop, ShiftRows | Always. These are positional: they move seats and never read faces. **Proved:** `compose_rel` and `shiftRows_rel` (`Relabel.lean`). | 1 |
 | PassKey | Never touches the message. | n/a |
-| SumRanks (SubBytes stand-in) | Exactly when (\(x, y\) are in the same row **or** have equal rank) **and** (they are in the same column after the row step **or** have equal \(w_4\)). The row sums are symmetric in the row's cards, so swapping two cards inside one row changes no row sum. K♣ has \(w_4 = 13 \bmod 4 = 1\) and Q♥ has \(w_4 = 13 \bmod 4 = 1\), and their ranks differ. | 12/51 = 0.2353 exactly (uniform deck: the other card is in the same row). Measured 0.2363. |
-| GridCycle (MixColumns stand-in) | Exactly when the seat chosen for the card after \(x\) equals the seat chosen for the card after \(y\). | ≈ 0.184 measured (see below) |
+| SumRanks (SubBytes stand-in) | **Proved:** iff σ keeps every row sum and every post-row column sum (`sumRanks_rel_iff_sums`, built from `sumRanks_rel_of_sums` and `commute_rotations`). **Claimed (not proved) refinement for a transposition:** (\(x, y\) in the same row **or** equal rank) **and** (same column after the row step **or** equal \(w_4\)). The "same row, equal \(w_4\)" case is proved (`sumRanksV9_swap_commutes_of_same_row`). The row sums are symmetric in the row's cards, so swapping two cards inside one row changes no row sum. K♣ has \(w_4 = 13 \bmod 4 = 1\) and Q♥ has \(w_4 = 13 \bmod 4 = 1\), and their ranks differ. | 12/51 = 0.2353 exactly (uniform deck: the other card is in the same row). Measured 0.2363. |
+| GridCycle (MixColumns stand-in) | **Proved:** on a deck, GridCycle commutes with σ iff the seat walk (the sequence of seats chosen) is unchanged (`mixColumns_rel_iff_walk`, `GridCycle.lean`). **Claimed (not proved) refinement for a transposition:** the seat chosen for the card after \(x\) equals the seat chosen for the card after \(y\). | ≈ 0.184 measured (see below) |
 
 **Why GridCycle survives so often for K♣↔Q♥.** K♣ = (suit 0, rank 13). Its step (Δrow 0, Δcol 13 ≡ 0) targets its own seat, so K♣ **always overflows** and scans the marker row \(t\) from its column \(c\). Q♥ targets \((r+1, c-1)\). If that seat is blocked, Q♥ scans row \(t\) from \(c-1\). The two choices coincide when \((r+1, c-1)\) is occupied and the scan from \(c\) and from \(c-1\) lands on the same cell. That holds when \((t, c-1)\) is already occupied, which is the same cell when \(t = r+1\) (≈ 0.47 of the time, because after an overflow the marker is row+1). A per-position model \(f(i) = \varphi(q + (1-q)\varphi)\), \(\varphi = i/51\), \(q \approx 0.47\), gives \(P_G \approx 0.169\), against 0.184 measured. Other pairs lack the self-blocking card, so their GridCycle survival is lower (mean 0.038 over the equal-w4 class).
 
@@ -34,10 +34,10 @@ Notation: card \(c \in 0..51\), rank \(= c \bmod 13 + 1\) (A=1 … K=13), suit \
 | --- | --- | --- | --- |
 | F2 | 1.04e-2 (1043/1e5) | 1.03e-2 | 1.02 |
 | F3 | 4.37e-4 (873/2e6) | 4.45e-4 | 0.98 |
-| F4 | 1.81e-5 (290/2e7) | 1.93e-5 | 0.94 |
-| F5 | 7.44e-7 (119/2e8) | 8.39e-7 | 0.89 |
+| F4 | 1.81e-5 (290/1.6e7) | 1.93e-5 | 0.94 |
+| F5 | 7.44e-7 (119/1.6e8) | 8.39e-7 | 0.89 |
 | **F6 (real v9)** | **3.5e-8 (14/4e8)** | **3.64e-8** | 0.96 |
-| E2, E3 | 1.73e-3, 7.77e-5 | 1.88e-3, 8.18e-5 | 0.92, 0.95 |
+| E2, E3 | 1.73e-3 (691/4e5), 7.77e-5 (1243/1.6e7) | 1.88e-3, 8.18e-5 | 0.92, 0.95 |
 
 An ideal cipher gives ≈ 1/52!. Distinguisher: query \(E_K(M)\) and \(E_K(\sigma M)\) for about \(10^8\) random \(M\) and answer "v9" on any hit.
 
@@ -49,7 +49,7 @@ An ideal cipher gives ≈ 1/52!. Distinguisher: query \(E_K(M)\) and \(E_K(\sigm
 
 ## Reconciling with T1 (WeightShift, "v9Sym has no transpositions")
 
-The T1 results in `proofs/doubledeal/security/` are statements about **all** decks. They say which relabellings commute with SumRanks on every deck (the WeightShift group v9Sym, 51 elements, no transpositions), and that GridCycle commutes with σ on every deck only when σ = id (`mixColumns_commutes_iff_id`). Consequences such as `encrypt6_not_commutes_v9Sym` are also universal statements. Both remain true. The attack needs commutation only on the decks the cipher actually visits, with non-negligible probability: K♣↔Q♥ commutes with SumRanks on 12/51 of decks and fails on the rest, so it is correctly excluded from v9Sym. "No transposition commutes universally" does not imply "no transposition commutes often". The new lemma `sumRanksV9_swap_commutes_of_same_row` makes the 12/51 set explicit. v9Sym itself gives nothing: SumRanks commutes on all decks, GridCycle and the full round 0/1,020,000, and v9Sym(0,1) F2 0/1e6 (`candidates/measure.log`).
+The T1 results in `proofs/doubledeal/security/` are statements about **all** decks. They say which relabellings commute with SumRanks on every deck (the WeightShift group v9Sym, 51 elements, no transpositions), and that GridCycle commutes with σ on every deck only when σ = id (`mixColumns_commutes_iff_id`). Consequences such as `encrypt6_not_commutes_v9Sym` are also universal statements. Both remain true. The attack needs commutation only on the decks the cipher actually visits, with non-negligible probability: K♣↔Q♥ commutes with SumRanks on 12/51 of decks and fails on the rest, so it is correctly excluded from v9Sym. "No transposition commutes universally" does not imply "no transposition commutes often". The new lemma `sumRanksV9_swap_commutes_of_same_row` makes the 12/51 set explicit. v9Sym itself gives nothing: SumRanks commutes on all decks, GridCycle and the full round 0/1,020,000, and v9Sym(0,1) F2 0/1e6 (<3e-6, 95%) (`candidates/measure.log`).
 
 ## Limits
 

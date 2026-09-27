@@ -1,0 +1,4 @@
+1. rank+1 on every card passes on 2000 / 2000 random decks
+2. AC->2C->3C with AC,3C,2C at row 0 columns 1,2,3 passes on 2000 / 2000 random completions
+   why: row 1's turn reads row 0's total sum (13-k)*rank; the three changes are +1 at k=1, +1 at k=3, -2 at k=2, so the total moves by 12*1 + 10*1 + 11*(-2) = 0; no other row holds a moved card, and suits are unchanged, so no column total moves either
+   over 40000 fully random decks: 352 passes (0.0088; exact 9/1105 = 0.0081)

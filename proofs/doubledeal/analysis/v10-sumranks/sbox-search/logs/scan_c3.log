@@ -1,0 +1,28 @@
+c3: 2550 differences, N = 200000 decks each (seed 7). Top 25:
+  3-cycle AC->8C->JC                       same    1739/200000 = 0.008695
+  3-cycle AC->7C->TC                       same    1737/200000 = 0.008685
+  3-cycle AC->6C->JC                       same    1728/200000 = 0.00864
+  3-cycle AC->7C->3C                       same    1722/200000 = 0.00861
+  3-cycle AC->TC->6C                       same    1708/200000 = 0.00854
+  3-cycle AC->8C->QC                       same    1708/200000 = 0.00854
+  3-cycle AC->5C->3C                       same    1708/200000 = 0.00854
+  3-cycle AC->QC->JC                       same    1707/200000 = 0.008535
+  3-cycle AC->9C->QC                       same    1706/200000 = 0.00853
+  3-cycle AC->JC->2C                       same    1697/200000 = 0.008485
+  3-cycle AC->2C->JC                       same    1697/200000 = 0.008485
+  3-cycle AC->7C->6C                       same    1694/200000 = 0.00847
+  3-cycle AC->2C->8C                       same    1694/200000 = 0.00847
+  3-cycle AC->3C->QC                       same    1693/200000 = 0.008465
+  3-cycle AC->4C->9C                       same    1690/200000 = 0.00845
+  3-cycle AC->3C->4C                       same    1689/200000 = 0.008445
+  3-cycle AC->8C->4C                       same    1686/200000 = 0.00843
+  3-cycle AC->5C->JC                       same    1686/200000 = 0.00843
+  3-cycle AC->2C->7C                       same    1686/200000 = 0.00843
+  3-cycle AC->8C->TC                       same    1681/200000 = 0.008405
+  3-cycle AC->9C->7C                       same    1676/200000 = 0.00838
+  3-cycle AC->7C->9C                       same    1676/200000 = 0.00838
+  3-cycle AC->3C->5C                       same    1675/200000 = 0.008375
+  3-cycle AC->TC->QC                       same    1673/200000 = 0.008365
+  3-cycle AC->5C->QC                       same    1672/200000 = 0.00836
+  histogram of score in units of 1/64 (bucket: count): {0: 2550}
+  number above 1/221: 132  above 1/64: 0

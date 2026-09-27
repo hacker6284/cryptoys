@@ -1,0 +1,60 @@
+
+=== v9 ===
+transpositions with SumRanks survival > 0: 390/1326; max P_S 0.2445; max P(round) 4.24e-02  [n=20000 decks each]
+top 5 by per-round survival: K♣↔Q♥ 4.24e-02 (P_S 0.236, P_G 0.184), Q♣↔J♥ 2.83e-02 (P_S 0.236, P_G 0.124), J♣↔T♥ 2.43e-02 (P_S 0.238, P_G 0.113), 7♣↔6♥ 2.30e-02 (P_S 0.241, P_G 0.096), T♣↔9♥ 2.29e-02 (P_S 0.230, P_G 0.105)
+K♣↔Q♥: P_S 0.2337, P_G(fresh) 0.1849, P(round) 4.27e-02 (1/23); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 3.3e-08
+   exact E(sM)=sE(M): F2 10184/1.0e+06 = 1.02e-02; F3 1654/4.0e+06 = 4.14e-04; F4 292/1.6e+07 = 1.82e-05
+v8 same-rank K♣↔K♦: P_S 0.0592, P(round) 1.69e-02, F2 exact 1017/1.0e+06 = 1.02e-03
+v9Sym (51 elements): SumRanks commutes on 1.000-1.000 of decks; GridCycle commutes 0/1020000; round 0/1020000; v9Sym(0,1) F2 exact 0/1.0e+06 (<3.0e-06, 95%)
+
+=== A3 ===
+transpositions with SumRanks survival > 0: 390/1326; max P_S 0.2421; max P(round) 2.94e-02  [n=20000 decks each]
+top 5 by per-round survival: K♣↔Q♦ 2.94e-02 (P_S 0.237, P_G 0.130), J♥↔Q♠ 2.38e-02 (P_S 0.234, P_G 0.095), T♥↔J♠ 2.32e-02 (P_S 0.238, P_G 0.100), 9♥↔T♠ 2.25e-02 (P_S 0.239, P_G 0.099), A♣↔K♣ 2.20e-02 (P_S 0.239, P_G 0.087)
+K♣↔Q♥: P_S 0.0000, P_G(fresh) 0.1849, P(round) 0.00e+00 (1/inf); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 0.0e+00
+   exact E(sM)=sE(M): F2 0/1.0e+06 (<3.0e-06, 95%); F3 0/4.0e+06 (<7.5e-07, 95%); F4 0/1.6e+07 (<1.9e-07, 95%)
+K♣↔Q♦: P_S 0.2356, P_G(fresh) 0.1317, P(round) 3.07e-02 (1/33); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 6.4e-09
+   exact E(sM)=sE(M): F2 7252/1.0e+06 = 7.25e-03; F3 863/4.0e+06 = 2.16e-04; F4 123/1.6e+07 = 7.69e-06
+v8 same-rank K♣↔K♦: P_S 0.0592, P(round) 1.73e-02, F2 exact 1027/1.0e+06 = 1.03e-03
+v9Sym (51 elements): SumRanks commutes on 0.000-1.000 of decks; GridCycle commutes 0/1020000; round 0/1020000; v9Sym(0,1) F2 exact 0/1.0e+06 (<3.0e-06, 95%)
+
+=== R2 ===
+transpositions with SumRanks survival > 0: 390/1326; max P_S 0.0643; max P(round) 1.46e-02  [n=20000 decks each]
+top 5 by per-round survival: K♣↔K♦ 1.46e-02 (P_S 0.055, P_G 0.265), K♣↔K♥ 1.38e-02 (P_S 0.058, P_G 0.252), K♣↔K♠ 1.34e-02 (P_S 0.056, P_G 0.254), K♣↔Q♥ 1.05e-02 (P_S 0.058, P_G 0.184), Q♣↔Q♦ 9.80e-03 (P_S 0.060, P_G 0.161)
+K♣↔Q♥: P_S 0.0584, P_G(fresh) 0.1849, P(round) 1.03e-02 (1/97); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 6.8e-12
+   exact E(sM)=sE(M): F2 642/1.0e+06 = 6.42e-04; F3 31/4.0e+06 = 7.75e-06; F4 2/1.6e+07 = 1.25e-07
+K♣↔K♦: P_S 0.0586, P_G(fresh) 0.2622, P(round) 1.56e-02 (1/64); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 5.4e-11
+   exact E(sM)=sE(M): F2 908/1.0e+06 = 9.08e-04; F3 55/4.0e+06 = 1.38e-05; F4 2/1.6e+07 = 1.25e-07
+v8 same-rank K♣↔K♦: P_S 0.0592, P(round) 1.58e-02, F2 exact 941/1.0e+06 = 9.41e-04
+v9Sym (51 elements): SumRanks commutes on 1.000-1.000 of decks; GridCycle commutes 0/1020000; round 0/1020000; v9Sym(0,1) F2 exact 0/1.0e+06 (<3.0e-06, 95%)
+
+=== G ===
+transpositions with SumRanks survival > 0: 390/1326; max P_S 0.2445; max P(round) 3.62e-02  [n=20000 decks each]
+top 5 by per-round survival: 4♣↔8♣ 3.62e-02 (P_S 0.237, P_G 0.152), 5♣↔9♣ 3.37e-02 (P_S 0.235, P_G 0.152), 7♠↔T♦ 2.93e-02 (P_S 0.236, P_G 0.117), A♣↔7♠ 2.79e-02 (P_S 0.238, P_G 0.112), Q♥↔J♠ 2.73e-02 (P_S 0.233, P_G 0.115)
+K♣↔Q♥: P_S 0.2337, P_G(fresh) 0.0039, P(round) 8.90e-04 (1/1124); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 1.3e-16
+   exact E(sM)=sE(M): F2 210/1.0e+06 = 2.10e-04; F3 2/4.0e+06 = 5.00e-07; F4 0/1.6e+07 (<1.9e-07, 95%)
+4♣↔8♣: P_S 0.2379, P_G(fresh) 0.1498, P(round) 3.53e-02 (1/28); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 1.3e-08
+   exact E(sM)=sE(M): F2 8353/1.0e+06 = 8.35e-03; F3 1184/4.0e+06 = 2.96e-04; F4 148/1.6e+07 = 9.25e-06
+v8 same-rank K♣↔K♦: P_S 0.0592, P(round) 9.06e-03, F2 exact 514/1.0e+06 = 5.14e-04
+v9Sym (51 elements): SumRanks commutes on 1.000-1.000 of decks; GridCycle commutes 0/1020000; round 0/1020000; v9Sym(0,1) F2 exact 0/1.0e+06 (<3.0e-06, 95%)
+
+=== GR2 ===
+transpositions with SumRanks survival > 0: 390/1326; max P_S 0.0643; max P(round) 1.62e-02  [n=20000 decks each]
+top 5 by per-round survival: K♣↔K♠ 1.62e-02 (P_S 0.056, P_G 0.295), K♥↔K♦ 1.35e-02 (P_S 0.056, P_G 0.243), K♠↔K♦ 1.11e-02 (P_S 0.058, P_G 0.196), K♥↔K♠ 1.08e-02 (P_S 0.058, P_G 0.198), 4♣↔8♣ 8.45e-03 (P_S 0.059, P_G 0.152)
+K♣↔Q♥: P_S 0.0584, P_G(fresh) 0.0039, P(round) 1.60e-04 (1/6250); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 6.1e-21
+   exact E(sM)=sE(M): F2 11/1.0e+06 = 1.10e-05; F3 0/4.0e+06 (<7.5e-07, 95%); F4 0/1.6e+07 (<1.9e-07, 95%)
+K♣↔K♠: P_S 0.0582, P_G(fresh) 0.2912, P(round) 1.68e-02 (1/59); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 7.9e-11
+   exact E(sM)=sE(M): F2 1034/1.0e+06 = 1.03e-03; F3 62/4.0e+06 = 1.55e-05; F4 5/1.6e+07 = 3.13e-07
+v8 same-rank K♣↔K♦: P_S 0.0592, P(round) 6.63e-03, F2 exact 376/1.0e+06 = 3.76e-04
+v9Sym (51 elements): SumRanks commutes on 1.000-1.000 of decks; GridCycle commutes 0/1020000; round 0/1020000; v9Sym(0,1) F2 exact 0/1.0e+06 (<3.0e-06, 95%)
+
+=== B4 ===
+transpositions with SumRanks survival > 0: 390/1326; max P_S 0.2445; max P(round) 2.31e-01  [n=20000 decks each]
+top 5 by per-round survival: A♣↔K♣ 2.31e-01 (P_S 0.239, P_G 0.970), A♦↔K♦ 6.10e-02 (P_S 0.238, P_G 0.259), A♠↔K♠ 5.69e-02 (P_S 0.233, P_G 0.228), A♥↔K♥ 5.17e-02 (P_S 0.232, P_G 0.228), A♣↔9♣ 2.40e-02 (P_S 0.239, P_G 0.092)
+K♣↔Q♥: P_S 0.2337, P_G(fresh) 0.0095, P(round) 2.16e-03 (1/462); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 1.1e-14
+   exact E(sM)=sE(M): F2 497/1.0e+06 = 4.97e-04; F3 5/4.0e+06 = 1.25e-06; F4 0/1.6e+07 (<1.9e-07, 95%)
+A♣↔K♣: P_S 0.2355, P_G(fresh) 0.9677, P(round) 2.28e-01 (1/4); product-formula F6 ≈ P_S^6 (P_round/P_S)^5 = 1.4e-04
+   exact E(sM)=sE(M): F2 53689/1.0e+06 = 5.37e-02; F3 48571/4.0e+06 = 1.21e-02; F4 44617/1.6e+07 = 2.79e-03
+v8 same-rank K♣↔K♦: P_S 0.0592, P(round) 4.48e-03, F2 exact 245/1.0e+06 = 2.45e-04
+v9Sym (51 elements): SumRanks commutes on 1.000-1.000 of decks; GridCycle commutes 0/1020000; round 0/1020000; v9Sym(0,1) F2 exact 0/1.0e+06 (<3.0e-06, 95%)
+
+(2353s)

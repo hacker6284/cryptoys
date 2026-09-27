@@ -197,10 +197,17 @@ jobs:
           python3 proofs/doubledeal/security/checks/selftest.py
           python3 proofs/doubledeal/security/checks/check_relabel.py
           python3 proofs/doubledeal/security/checks/check_covariant.py
+      # One reusable cache entry for the Mathlib download (keyed on manifest +
+      # toolchain only), instead of lean-action's per-SHA .lake cache.
+      - uses: actions/cache@v4
+        with:
+          path: proofs/doubledeal/security/.lake/packages
+          key: lake-packages-${{ runner.os }}-${{ hashFiles('proofs/doubledeal/security/lake-manifest.json', 'proofs/doubledeal/security/lean-toolchain') }}
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/doubledeal/security
-          use-mathlib-cache: true  # prebuilt Mathlib; never build it from source
+          use-github-cache: false
+          use-mathlib-cache: true  # lake exe cache get: prebuilt Mathlib; never build it from source
       - name: Axiom audit of every DoubleDealSecurity theorem (KNOWN_SORRY allowlist by name)
         working-directory: proofs/doubledeal/security
         run: python3 ../check_axioms.py security

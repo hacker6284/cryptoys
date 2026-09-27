@@ -66,6 +66,11 @@ PACKAGES = {
             "DoubleDeal.Security.encrypt6_commutes_iff_id",    # via round_covariant_of_encrypt6
         },
         "min": 100,  # sanity: the audit must actually see the package
+        # Headline theorems that must be reported (and axiom-clean) by the audit.
+        "required": {
+            "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_le",
+            "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_le'",
+        },
     },
     "security-heavy": {
         "dir": ROOT / "security",

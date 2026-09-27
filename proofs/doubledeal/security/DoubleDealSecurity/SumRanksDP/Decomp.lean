@@ -1,5 +1,5 @@
 /-
-  WIP (not built by CI): shared decomposition lemmas for the row and column
+  Shared decomposition lemmas for the row and column
   chains (PROOF.md §2 Lemma 3, §4 Lemma 5).
 
   * `nested_count`: counting tuples `σ : Fin n → α` subject to conditions
@@ -10,7 +10,7 @@
     (`sum_mul_card_shuf`) is the "fix the row sets, shuffle inside rows" step.
 -/
 import DoubleDealSecurity.SumRanksV10Iff
-import DoubleDealSecurityWIP.SumRanksDP.Standalone
+import DoubleDealSecurity.SumRanksDP.Standalone
 
 namespace DoubleDeal.Security.SumRanksDP
 

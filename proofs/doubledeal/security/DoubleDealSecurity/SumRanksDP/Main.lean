@@ -1,10 +1,10 @@
 /-
-  WIP (not built by CI): every relabelling outside `v10Sym` commutes with v10
+  Every relabelling outside `v10Sym` commutes with v10
   SumRanks on at most `52!/64` decks (`sumRanksV10_survival_le`).
 
   Skeleton of the counting proof in PROOF.md (paper proof of the bound
   `0.012768 · 52!`; Lean target `52!/64`). Each lemma carries the PROOF.md
-  section it formalises. Everything is proved (no `sorry`); see `../../LEMMAS.md`.
+  section it formalises. Everything is proved (no `sorry`); see `../../SUMRANKS_DP.md`.
   The self-contained combinatorics and numerics are in `Standalone.lean`.
 
   Decks are counted as position permutations `π : Equiv.Perm (Fin 52)` laid
@@ -13,7 +13,7 @@
   of `CommutesOnDecksG τ sumRanksV10` at that deck holds.
 -/
 import DoubleDealSecurity.SumRanksV10Iff
-import DoubleDealSecurityWIP.SumRanksDP.Decomp
+import DoubleDealSecurity.SumRanksDP.Decomp
 
 namespace DoubleDeal.Security.SumRanksDP
 

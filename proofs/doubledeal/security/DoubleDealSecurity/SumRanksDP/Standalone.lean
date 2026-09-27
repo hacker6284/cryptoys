@@ -1,5 +1,5 @@
 /-
-  WIP (not built by CI): v10 SumRanks survival bound, the self-contained part.
+  v10 SumRanks survival bound, the self-contained part.
 
   Mathlib-only lemmas with no repository definitions: the one-row lemma
   (Lemma 2), the GF(4) column table (Lemma 4), a generic fibre bound, the two

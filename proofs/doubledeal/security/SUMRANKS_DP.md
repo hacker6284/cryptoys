@@ -1,9 +1,24 @@
-# Lemmas of `sumRanksV10_survival_le`: all proved (0 `sorry`)
+# `sumRanksV10_survival_le`: the v10 SumRanks survival bound
 
+Sources: `DoubleDealSecurity/SumRanksDP/` (`Standalone.lean`, Mathlib only;
+`Decomp.lean`; `Main.lean`), part of the default `DoubleDealSecurity` build and
+of the `#audit_all` axiom audit. Exact rational re-check of tables A and B:
+`checks/sumranks_dp_tables.py`. Every lemma below is proved (no `sorry`);
 `#print axioms sumRanksV10_survival_le`: `propext`, `Classical.choice`,
 `Quot.sound`. No `native_decide`, no new axioms.
 
-**Main theorem** (proved, modulo the lemmas below), `Main.lean`:
+What it says: SumRanks v10 alone (one layer, no key, no rounds). For every card
+relabelling τ outside the 52-element symmetry group `v10Sym`, at most `52!/64`
+of the `52!` decks satisfy `sumRanksV10 (τ·g) = τ·(sumRanksV10 g)`. It is not a
+security statement about the cipher. The paper's sharper constant `0.012768`
+and the measured worst case `9/1105` (same-suit 3-cycle,
+`../analysis/v10-sumranks/sbox-search/`) are not formalised.
+
+The rest of this file is the lemma inventory from the proof's development
+(kept for reference; the S/R and difficulty columns described how the work was
+split).
+
+**Main theorem**, `Main.lean`:
 
 ```lean
 theorem sumRanksV10_survival_le (τ : Relabel) (h : ¬ ∃ a x, τ = v10Sym a x) :

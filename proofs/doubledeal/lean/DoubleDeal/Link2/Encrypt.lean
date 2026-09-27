@@ -38,14 +38,6 @@ theorem toDeck_ofDeck (d : List Nat) (h : d.length = 52) :
   · intro i hi hi'
     simp [toDeck, ofDeck, Array.getElem_toList, Array.getElem_ofFn]
 
--- `CardBound`, `cardBound_zero`, `rowRotate_bound`, `colRotate_bound` live in SumLink.
-
-theorem sumRanks_bound (g : Grid Nat) (hb : ∀ r c, CardBound (g r c)) :
-    ∀ r c, CardBound (sumRanks cardRank cardColW g r c) := by
-  intro r c
-  unfold sumRanks applyColRotates applyRowRotates
-  exact colRotate_bound _ _ (fun r' c' => rowRotate_bound g _ hb r' c') r c
-
 theorem shiftRows_bound (g : Grid Nat) (hb : ∀ r c, CardBound (g r c)) :
     ∀ r c, CardBound (shiftRows g r c) := by
   intro r c
@@ -62,7 +54,7 @@ theorem unkeyed_bound (m : Fin 52 → Nat) (hb : ∀ i, CardBound (m i)) :
     ∀ i, CardBound (unkeyedNoMix m i) := by
   intro i
   simp [unkeyedNoMix, scoopColumnMajor]
-  exact shiftRows_bound _ (sumRanks_bound _ (lay_bound m hb)) _ _
+  exact shiftRows_bound _ (sumRanks_bound CardBound cardRank cardColumnWeight _ (lay_bound m hb)) _ _
 
 theorem placeN_cell_bound (hand : Fin 52 → Nat) (hb : ∀ i, CardBound (hand i)) :
     ∀ n, n ≤ 52 → ∀ r c, CardBound ((placeN hand n).1 r c)
@@ -125,22 +117,6 @@ theorem encAt_rounds (m : Fin 52 → Nat) (key : List Nat) :
   | n + 1 => by
       simp [encAt, applyFullRounds, encAt_rounds m key n]
 
-theorem stem_refines (m : Fin 52 → Nat) (hb : ∀ i, CardBound (m i)) :
-    (do
-      let g ← Doubledeal.lay_cm (embed (toDeck m))
-      let g ← Doubledeal.sum_ranks g
-      let g ← Doubledeal.shift_rows g
-      Doubledeal.scoop_cm g) =
-    .ok (embed (toDeck (unkeyedNoMix m))) := by
-  rw [lay_cm_refines (toDeck m) (length_toDeck m)]
-  simp only [ok_bind, ofDeck_toDeck]
-  rw [sum_ranks_refines _ (lay_bound m hb)]
-  simp only [ok_bind]
-  rw [shift_rows_refines]
-  simp only [ok_bind]
-  rw [scoop_cm_refines]
-  simp [unkeyedNoMix]
-
 theorem compose_toDeck (m : Fin 52 → Nat) (key : List Nat) :
     composeDeck (toDeck m) key =
       toDeck (DoubleDeal.composeVec 52 Nat m (keyPos key)) := by
@@ -162,7 +138,7 @@ theorem final_round_refines (m : Fin 52 → Nat) (key : List Nat) (hk : Perm52 k
   simp only [ok_bind]
   rw [scoop_cm_refines]
   simp only [ok_bind]
-  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank cardColW (layColumnMajor m))) = unkeyedNoMix m from rfl]
+  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank cardColumnWeight (layColumnMajor m))) = unkeyedNoMix m from rfl]
   rw [compose_refines (toDeck (unkeyedNoMix m)) key (length_toDeck _) hk]
   rw [compose_toDeck, except_bind_pure]
   simp [fullRoundNoMix]
@@ -179,7 +155,7 @@ theorem unkeyed_full_refines (m : Fin 52 → Nat) (hb : ∀ i, CardBound (m i)) 
   simp only [ok_bind]
   rw [scoop_cm_refines]
   simp only [ok_bind]
-  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank cardColW (layColumnMajor m))) = unkeyedNoMix m from rfl]
+  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank cardColumnWeight (layColumnMajor m))) = unkeyedNoMix m from rfl]
   rw [mix_columns_refines (unkeyedNoMix m) (unkeyed_bound m hb)]
   rw [except_bind_pure]
   simp [unkeyedWithMix]

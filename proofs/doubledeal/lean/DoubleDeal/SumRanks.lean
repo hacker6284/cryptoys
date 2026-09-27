@@ -134,43 +134,43 @@ theorem colRotate_colRotateInv (g : Grid α) (s : Fin 13 → Nat) :
   rw [ofList4_eq _ (length_toList4 (fun r' => g r' c)) heq]
   exact congrFun (ofList4_toList4 (fun r' => g r' c)) r
 
-def rowRankSum (rank : α → Nat) (g : Grid α) (r : Fin 4) : Nat :=
-  rankSum rank (toList13 (g r))
+def rowWeightSum (w : α → Nat) (g : Grid α) (r : Fin 4) : Nat :=
+  weightSum w (toList13 (g r))
 
-def colRankSum (rank : α → Nat) (g : Grid α) (c : Fin 13) : Nat :=
-  rankSum rank (toList4 (fun r => g r c))
+def colWeightSum (w : α → Nat) (g : Grid α) (c : Fin 13) : Nat :=
+  weightSum w (toList4 (fun r => g r c))
 
-theorem rowRankSum_rowRotate (rank : α → Nat) (g : Grid α) (t : Fin 4 → Nat) (r : Fin 4) :
-    rowRankSum rank (rowRotate g t) r = rowRankSum rank g r := by
-  dsimp [rowRankSum, rowRotate]
-  rw [toList13_ofList13, rankSum_rotL]
+theorem rowWeightSum_rowRotate (w : α → Nat) (g : Grid α) (t : Fin 4 → Nat) (r : Fin 4) :
+    rowWeightSum w (rowRotate g t) r = rowWeightSum w g r := by
+  dsimp [rowWeightSum, rowRotate]
+  rw [toList13_ofList13, weightSum_rotL]
 
-theorem rowRankSum_rowRotateInv (rank : α → Nat) (g : Grid α) (t : Fin 4 → Nat) (r : Fin 4) :
-    rowRankSum rank (rowRotateInv g t) r = rowRankSum rank g r := by
-  dsimp [rowRankSum, rowRotateInv]
-  rw [toList13_ofList13, rankSum_rotR]
+theorem rowWeightSum_rowRotateInv (w : α → Nat) (g : Grid α) (t : Fin 4 → Nat) (r : Fin 4) :
+    rowWeightSum w (rowRotateInv g t) r = rowWeightSum w g r := by
+  dsimp [rowWeightSum, rowRotateInv]
+  rw [toList13_ofList13, weightSum_rotR]
 
-theorem colRankSum_colRotate (rank : α → Nat) (g : Grid α) (s : Fin 13 → Nat) (c : Fin 13) :
-    colRankSum rank (colRotate g s) c = colRankSum rank g c := by
-  dsimp [colRankSum, colRotate]
-  rw [toList4_ofList4, rankSum_rotR]
+theorem colWeightSum_colRotate (w : α → Nat) (g : Grid α) (s : Fin 13 → Nat) (c : Fin 13) :
+    colWeightSum w (colRotate g s) c = colWeightSum w g c := by
+  dsimp [colWeightSum, colRotate]
+  rw [toList4_ofList4, weightSum_rotR]
 
-theorem colRankSum_colRotateInv (rank : α → Nat) (g : Grid α) (s : Fin 13 → Nat) (c : Fin 13) :
-    colRankSum rank (colRotateInv g s) c = colRankSum rank g c := by
-  dsimp [colRankSum, colRotateInv]
-  rw [toList4_ofList4, rankSum_rotL]
+theorem colWeightSum_colRotateInv (w : α → Nat) (g : Grid α) (s : Fin 13 → Nat) (c : Fin 13) :
+    colWeightSum w (colRotateInv g s) c = colWeightSum w g c := by
+  dsimp [colWeightSum, colRotateInv]
+  rw [toList4_ofList4, weightSum_rotL]
 
-def applyRowRotates (rank : α → Nat) (g : Grid α) : Grid α :=
-  rowRotate g (fun r => rowRankSum rank g r)
+def applyRowRotates (w : α → Nat) (g : Grid α) : Grid α :=
+  rowRotate g (fun r => rowWeightSum w g r)
 
-def applyRowRotatesInv (rank : α → Nat) (g : Grid α) : Grid α :=
-  rowRotateInv g (fun r => rowRankSum rank g r)
+def applyRowRotatesInv (w : α → Nat) (g : Grid α) : Grid α :=
+  rowRotateInv g (fun r => rowWeightSum w g r)
 
-def applyColRotates (rank : α → Nat) (g : Grid α) : Grid α :=
-  colRotate g (fun c => colRankSum rank g c)
+def applyColRotates (w : α → Nat) (g : Grid α) : Grid α :=
+  colRotate g (fun c => colWeightSum w g c)
 
-def applyColRotatesInv (rank : α → Nat) (g : Grid α) : Grid α :=
-  colRotateInv g (fun c => colRankSum rank g c)
+def applyColRotatesInv (w : α → Nat) (g : Grid α) : Grid α :=
+  colRotateInv g (fun c => colWeightSum w g c)
 
 /-- Row stage by `rowW` sums, then column stage by `colW` sums. -/
 def sumRanks (rowW colW : α → Nat) (g : Grid α) : Grid α :=
@@ -179,39 +179,39 @@ def sumRanks (rowW colW : α → Nat) (g : Grid α) : Grid α :=
 def invSumRanks (rowW colW : α → Nat) (g : Grid α) : Grid α :=
   applyRowRotatesInv rowW (applyColRotatesInv colW g)
 
-theorem applyRowRotatesInv_applyRowRotates (rank : α → Nat) (g : Grid α) :
-    applyRowRotatesInv rank (applyRowRotates rank g) = g := by
+theorem applyRowRotatesInv_applyRowRotates (w : α → Nat) (g : Grid α) :
+    applyRowRotatesInv w (applyRowRotates w g) = g := by
   dsimp [applyRowRotatesInv, applyRowRotates]
-  have ht : (fun r => rowRankSum rank (rowRotate g (fun r => rowRankSum rank g r)) r) =
-            (fun r => rowRankSum rank g r) := by
-    funext r; exact rowRankSum_rowRotate rank g _ r
+  have ht : (fun r => rowWeightSum w (rowRotate g (fun r => rowWeightSum w g r)) r) =
+            (fun r => rowWeightSum w g r) := by
+    funext r; exact rowWeightSum_rowRotate w g _ r
   rw [ht]
   exact rowRotateInv_rowRotate g _
 
-theorem applyColRotatesInv_applyColRotates (rank : α → Nat) (g : Grid α) :
-    applyColRotatesInv rank (applyColRotates rank g) = g := by
+theorem applyColRotatesInv_applyColRotates (w : α → Nat) (g : Grid α) :
+    applyColRotatesInv w (applyColRotates w g) = g := by
   dsimp [applyColRotatesInv, applyColRotates]
-  have hs : (fun c => colRankSum rank (colRotate g (fun c => colRankSum rank g c)) c) =
-            (fun c => colRankSum rank g c) := by
-    funext c; exact colRankSum_colRotate rank g _ c
+  have hs : (fun c => colWeightSum w (colRotate g (fun c => colWeightSum w g c)) c) =
+            (fun c => colWeightSum w g c) := by
+    funext c; exact colWeightSum_colRotate w g _ c
   rw [hs]
   exact colRotateInv_colRotate g _
 
-theorem applyRowRotates_applyRowRotatesInv (rank : α → Nat) (g : Grid α) :
-    applyRowRotates rank (applyRowRotatesInv rank g) = g := by
+theorem applyRowRotates_applyRowRotatesInv (w : α → Nat) (g : Grid α) :
+    applyRowRotates w (applyRowRotatesInv w g) = g := by
   dsimp [applyRowRotates, applyRowRotatesInv]
-  have ht : (fun r => rowRankSum rank (rowRotateInv g (fun r => rowRankSum rank g r)) r) =
-            (fun r => rowRankSum rank g r) := by
-    funext r; exact rowRankSum_rowRotateInv rank g _ r
+  have ht : (fun r => rowWeightSum w (rowRotateInv g (fun r => rowWeightSum w g r)) r) =
+            (fun r => rowWeightSum w g r) := by
+    funext r; exact rowWeightSum_rowRotateInv w g _ r
   rw [ht]
   exact rowRotate_rowRotateInv g _
 
-theorem applyColRotates_applyColRotatesInv (rank : α → Nat) (g : Grid α) :
-    applyColRotates rank (applyColRotatesInv rank g) = g := by
+theorem applyColRotates_applyColRotatesInv (w : α → Nat) (g : Grid α) :
+    applyColRotates w (applyColRotatesInv w g) = g := by
   dsimp [applyColRotates, applyColRotatesInv]
-  have hs : (fun c => colRankSum rank (colRotateInv g (fun c => colRankSum rank g c)) c) =
-            (fun c => colRankSum rank g c) := by
-    funext c; exact colRankSum_colRotateInv rank g _ c
+  have hs : (fun c => colWeightSum w (colRotateInv g (fun c => colWeightSum w g c)) c) =
+            (fun c => colWeightSum w g c) := by
+    funext c; exact colWeightSum_colRotateInv w g _ c
   rw [hs]
   exact colRotate_colRotateInv g _
 
@@ -225,12 +225,53 @@ theorem sumRanks_invSumRanks (rowW colW : α → Nat) (g : Grid α) :
   dsimp [invSumRanks, sumRanks]
   rw [applyRowRotates_applyRowRotatesInv, applyColRotates_applyColRotatesInv]
 
-theorem rankSum_row_invariant (rank : α → Nat) (g : Grid α) (r : Fin 4) :
-    rowRankSum rank (applyRowRotates rank g) r = rowRankSum rank g r :=
-  rowRankSum_rowRotate rank g _ r
+theorem weightSum_row_invariant (w : α → Nat) (g : Grid α) (r : Fin 4) :
+    rowWeightSum w (applyRowRotates w g) r = rowWeightSum w g r :=
+  rowWeightSum_rowRotate w g _ r
 
-theorem rankSum_col_invariant (rank : α → Nat) (g : Grid α) (c : Fin 13) :
-    colRankSum rank (applyColRotates rank g) c = colRankSum rank g c :=
-  colRankSum_colRotate rank g _ c
+theorem weightSum_col_invariant (w : α → Nat) (g : Grid α) (c : Fin 13) :
+    colWeightSum w (applyColRotates w g) c = colWeightSum w g c :=
+  colWeightSum_colRotate w g _ c
+
+
+/-! ## Cell predicates survive the rotations
+
+Rotations only move cells, so any predicate that holds on every cell of the
+input holds on every cell of the output. -/
+
+theorem rowRotate_bound (P : α → Prop) (g : Grid α) (t : Fin 4 → Nat)
+    (hb : ∀ r c, P (g r c)) : ∀ r c, P (rowRotate g t r c) := by
+  intro r c
+  unfold rowRotate ofList13
+  have hne : (toList13 (g r)).length ≠ 0 := by simp [length_toList13]
+  have hget := rotL_get_eq (toList13 (g r)) (t r) c.val hne c.isLt
+  rw [hget]
+  simp only [length_toList13]
+  have hj : (c.val + t r % 13) % 13 < 13 := Nat.mod_lt _ (by decide)
+  rw [getElem_toList13 (g r) ⟨(c.val + t r % 13) % 13, hj⟩]
+  exact hb r ⟨(c.val + t r % 13) % 13, hj⟩
+
+theorem colRotate_bound (P : α → Prop) (g : Grid α) (s : Fin 13 → Nat)
+    (hb : ∀ r c, P (g r c)) : ∀ r c, P (colRotate g s r c) := by
+  intro r c
+  unfold colRotate ofList4
+  have hne : (toList4 (fun r' => g r' c)).length ≠ 0 := by simp [length_toList4]
+  have hget := getElem_rotR (toList4 (fun r' => g r' c)) (s c) r.val hne r.isLt
+  rw [hget]
+  have hj : (r.val + (4 - s c % 4)) % 4 < 4 := Nat.mod_lt _ (by decide)
+  have hcell := getElem_toList4 (fun r' => g r' c) ⟨(r.val + (4 - s c % 4)) % 4, hj⟩
+  simpa [length_toList4, hcell] using hb ⟨(r.val + (4 - s c % 4)) % 4, hj⟩ c
+
+theorem applyRowRotates_bound (P : α → Prop) (w : α → Nat) (g : Grid α)
+    (hb : ∀ r c, P (g r c)) : ∀ r c, P (applyRowRotates w g r c) :=
+  rowRotate_bound P g _ hb
+
+theorem applyColRotates_bound (P : α → Prop) (w : α → Nat) (g : Grid α)
+    (hb : ∀ r c, P (g r c)) : ∀ r c, P (applyColRotates w g r c) :=
+  colRotate_bound P g _ hb
+
+theorem sumRanks_bound (P : α → Prop) (rowW colW : α → Nat) (g : Grid α)
+    (hb : ∀ r c, P (g r c)) : ∀ r c, P (sumRanks rowW colW g r c) :=
+  applyColRotates_bound P colW _ (applyRowRotates_bound P rowW g hb)
 
 end DoubleDeal

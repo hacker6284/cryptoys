@@ -288,11 +288,14 @@ The scan of a marker row starts at column `start` (the blocked target's
 column) and wraps from 12 back to 0 (SPEC §3.5; sudo `scan_row`).
 -/
 
+/-- Column visited at offset `k` of a scan from `start`. -/
+def rotCol (start k : Nat) : Fin 13 := ⟨(start + k) % 13, Nat.mod_lt _ (by decide)⟩
+
 def scanRowN (occ : Occ) (row : Fin 4) (start : Nat) : Nat → Nat → Option (Fin 13)
   | 0, _ => none
   | fuel + 1, k =>
-      let c : Fin 13 := ⟨(start + k) % 13, Nat.mod_lt _ (by decide)⟩
-      if occGet occ row c then scanRowN occ row start fuel (k + 1) else some c
+      if occGet occ row (rotCol start k) then scanRowN occ row start fuel (k + 1)
+      else some (rotCol start k)
 
 def scanRow (occ : Occ) (row : Fin 4) (start : Nat) : Option (Fin 13) :=
   scanRowN occ row start 13 0
@@ -311,8 +314,7 @@ theorem scanRowN_some_free (occ : Occ) (row : Fin 4) (start : Nat) :
 
 theorem scanRowN_none_occupied (occ : Occ) (row : Fin 4) (start : Nat) :
     ∀ (fuel k : Nat), scanRowN occ row start fuel k = none →
-      ∀ j : Nat, k ≤ j → j < k + fuel →
-        occGet occ row ⟨(start + j) % 13, Nat.mod_lt _ (by decide)⟩ = true
+      ∀ j : Nat, k ≤ j → j < k + fuel → occGet occ row (rotCol start j) = true
   | 0, k, _, j, hj1, hj2 => by omega
   | fuel + 1, k, hnone, j, hj1, hj2 => by
       simp only [scanRowN] at hnone
@@ -337,7 +339,7 @@ theorem scanRow_none_full (occ : Occ) (row : Fin 4) (start : Nat)
   intro c
   obtain ⟨k, hk, hkc⟩ := mod13_cover start c
   have := scanRowN_none_occupied occ row start 13 0 h k (by omega) (by omega)
-  have hfin : (⟨(start + k) % 13, Nat.mod_lt _ (by decide)⟩ : Fin 13) = c := Fin.ext hkc
+  have hfin : rotCol start k = c := Fin.ext hkc
   rwa [hfin] at this
 
 theorem scanRow_some_free (occ : Occ) (row : Fin 4) (start : Nat) (c : Fin 13)

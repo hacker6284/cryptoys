@@ -61,7 +61,7 @@ theorem beq_ofNat_eq_true_iff (a b : Nat) :
   exact Int.ofNat_inj
 
 /-- `Int.fmod (a - b) n` is the nonnegative residue when `a, b < n`. -/
-theorem fmod_sub_small (a b n : Nat) (ha : a < n) (hb : b < n) (hn : 0 < n) :
+theorem fmod_sub_small (a b n : Nat) (ha : a < n) (hb : b < n) (_hn : 0 < n) :
     Int.fmod ((a : Int) - (b : Int)) (n : Int) =
       Int.ofNat ((a + (n - b)) % n) := by
   have hn0 : (0 : Int) ≤ (n : Int) := Int.ofNat_zero_le _

@@ -18,8 +18,6 @@ import DoubleDeal.Link2.SumLink
 
 namespace DoubleDeal.Link2
 
--- `CardBound` (i64-safe card ids) lives in SumLink.
-
 theorem step_seat_refines (card r c : Nat) (hr : r ≤ 3) (hc : c ≤ 12) (hb : CardBound card) :
     Doubledeal.step_seat (Int.ofNat card) (Int.ofNat r) (Int.ofNat c) =
       .ok (Int.ofNat ((r + suit card) % 4), Int.ofNat ((c + rank card) % 13)) := by
@@ -102,9 +100,6 @@ theorem scan_row_as_loop (occ : Array (Array Int)) (row start : Int) :
 
 def occMarks (occ : Occ) : Grid Nat :=
   fun r c => if occGet occ r c then 1 else 0
-
-/-- Column visited at offset `k` of a scan from `start`. -/
-def rotCol (start k : Nat) : Fin 13 := ⟨(start + k) % 13, Nat.mod_lt _ (by decide)⟩
 
 theorem scanRowN_succ (occ : Occ) (row : Fin 4) (start fuel k : Nat) :
     scanRowN occ row start (fuel + 1) k =

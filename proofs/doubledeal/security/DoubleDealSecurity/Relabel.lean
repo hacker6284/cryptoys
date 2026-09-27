@@ -19,6 +19,7 @@ import Mathlib.GroupTheory.Perm.Basic
 import Mathlib.Logic.Equiv.Fin
 import DoubleDeal.Round
 import DoubleDealSecurity.Decks
+import DoubleDealSecurity.Walk
 
 namespace DoubleDeal.Security
 
@@ -718,15 +719,57 @@ theorem seat2_inj : ∀ a b : Fin 52, seat2 a.val = seat2 b.val →
     a = b ∨ (a = KC ∧ b = KS) ∨ (a = KS ∧ b = KC) := by
   decide!
 
-/-- (DRAFT-SORRY) On a well-formed deck, GridCycle commutes with σ iff the seat
-    walk is unchanged. Plan: placement writes card `n` at `walkSeat n` and the
-    scoop is a bijection (existing `placed_at_seat`, `inv_place_agree`); cards
-    are distinct, so equal outputs force equal seats and conversely.
-    Effort: ~150 lines. -/
+theorem rel_scoopRowMajor (σ : Relabel) (g : NatGrid) :
+    rel σ (scoopRowMajor g) = scoopRowMajor (relG σ g) := rfl
+
+/-- (PROVED) Generic walk: on a well-formed deck, placing-then-scooping commutes
+    with σ iff the seat walk is unchanged. Card `n` sits at seat `n`
+    (`gridW_at_seat`), the 52 seats cover the grid (`seatW_surj`), and the cards
+    are distinct. -/
+theorem walkW_rel_iff (ch : Chooser) (hch : FreeChooser ch) (σ : Relabel)
+    (m : Fin 52 → Nat) (hm : IsDeck m) :
+    scoopRowMajor (gridW ch (rel σ m)) = rel σ (scoopRowMajor (gridW ch m)) ↔
+      ∀ n < 52, seatW ch (rel σ m) n = seatW ch m n := by
+  rw [rel_scoopRowMajor]
+  constructor
+  · intro h n hn
+    have hg : gridW ch (rel σ m) = relG σ (gridW ch m) := by
+      have := congrArg layRowMajor h
+      rwa [lay_scoop_rowMajor, lay_scoop_rowMajor] at this
+    obtain ⟨k, hk⟩ := seatW_surj ch hch m (seatW ch (rel σ m) n)
+    have h1 := gridW_at_seat ch hch (rel σ m) ⟨n, hn⟩
+    rw [hg, ← hk] at h1
+    have h2 := gridW_at_seat ch hch m k
+    simp only [relG, h2, rel] at h1
+    have hkn := hm.2 _ _ (σ.app_inj h1)
+    rw [← hk, hkn]
+  · intro h
+    suffices hg : gridW ch (rel σ m) = relG σ (gridW ch m) by rw [hg]
+    funext r c
+    obtain ⟨k, hk⟩ := seatW_surj ch hch m (r, c)
+    have h1 := gridW_at_seat ch hch (rel σ m) k
+    rw [h k.val k.isLt, hk] at h1
+    have h2 := gridW_at_seat ch hch m k
+    rw [hk] at h2
+    simp only [relG]
+    simp only at h1 h2
+    rw [h1, h2]; rfl
+
+theorem walkSeat_eq (hand : Fin 52 → Nat) (n : Nat) :
+    walkSeat hand n = seatW chooseSeat! hand n := by
+  simp only [walkSeat, seatW, placeN_eq_placeW]
+
+theorem mixColumns_eq (hand : Fin 52 → Nat) :
+    mixColumns hand = scoopRowMajor (gridW chooseSeat! hand) := by
+  simp only [mixColumns, placedGrid, gridW, placeN_eq_placeW]
+
+/-- (PROVED) On a well-formed deck, GridCycle commutes with σ iff the seat walk
+    is unchanged. -/
 theorem mixColumns_rel_iff_walk (σ : Relabel) (m : Fin 52 → Nat) (hm : IsDeck m) :
     mixColumns (rel σ m) = rel σ (mixColumns m) ↔
       ∀ n < 52, walkSeat (rel σ m) n = walkSeat m n := by
-  sorry -- DRAFT-SORRY
+  simp only [mixColumns_eq, walkSeat_eq]
+  exact walkW_rel_iff _ freeChooser_v9 σ m hm
 
 /-- (PROVED, kernel `decide!`) K♣↔K♦ does not commute with v9 GridCycle:
     on the deck `K♦, A♣, 2♣, …` the second card goes to (1,0) but, after the
@@ -746,17 +789,84 @@ theorem mixColumns_KC_KS_fails :
   revert this
   decide!
 
-/-- (DRAFT-SORRY) GridCycle commutes with σ on all decks iff σ = id.
-    Plan: "if" by `rel id = id` on card decks. "Only if": pick `c` with
-    `σ c ≠ c`. Unless `{c, σ c} = {K♣, K♠}`, the deck `firstDeck c` has
-    `walkSeat 1` changed (`walkSeat_one`, `seat2_inj`), so the outputs differ
-    (`mixColumns_rel_iff_walk`). Otherwise σ swaps K♣,K♠; if σ moves any other
-    card use that card, else σ = (K♣ K♠) and `mixColumns_KC_KS_fails` applies.
-    Needs `firstDeck c` well-formed (finite, decide). Effort: ~100 lines on top
-    of `mixColumns_rel_iff_walk`. -/
+theorem firstDeck_isDeck (c : Fin 52) : IsDeck (firstDeck c.val) := by
+  have hc := c.isLt
+  constructor
+  · intro i; have := i.isLt; unfold firstDeck; split_ifs <;> omega
+  · intro i j h; unfold firstDeck at h; apply Fin.ext; split_ifs at h <;> omega
+
+theorem firstDeck_zero (c : Nat) : firstDeck c ⟨0, by decide⟩ = c := by simp [firstDeck]
+
+/-- (PROVED) Generic "only identity" for a walk whose second seat is `seat2` of
+    the first card and which separates K♣/K♠ on `firstDeck 12`. -/
+theorem walkW_only_id (ch : Chooser) (hch : FreeChooser ch)
+    (hs2 : ∀ hand : Fin 52 → Nat, hand ⟨0, by decide⟩ < 52 →
+      seatW ch hand 1 = seat2 (hand ⟨0, by decide⟩))
+    (hKS : scoopRowMajor (gridW ch (rel (swap KC KS) (firstDeck 12))) ≠
+      rel (swap KC KS) (scoopRowMajor (gridW ch (firstDeck 12))))
+    (σ : Relabel)
+    (h : ∀ m, IsDeck m → scoopRowMajor (gridW ch (rel σ m)) = rel σ (scoopRowMajor (gridW ch m))) :
+    σ.IsId := by
+  have key : ∀ c : Fin 52, σ c = c ∨ (σ c = KC ∧ c = KS) ∨ (σ c = KS ∧ c = KC) := by
+    intro c
+    have hw := (walkW_rel_iff ch hch σ _ (firstDeck_isDeck c)).1
+      (h _ (firstDeck_isDeck c)) 1 (by decide)
+    have e1 : rel σ (firstDeck c.val) ⟨0, by decide⟩ = (σ c).val := by
+      simp only [rel, firstDeck_zero, app_fin]
+    rw [hs2 _ (by rw [e1]; exact (σ c).isLt), hs2 _ (by rw [firstDeck_zero]; exact c.isLt),
+      e1, firstDeck_zero] at hw
+    exact seat2_inj _ _ hw
+  have hne : KC ≠ KS := by decide
+  rw [isId_iff]
+  by_cases hKC : σ KC = KC
+  · have hKS' : σ KS = KS := by
+      rcases key KS with h1 | ⟨h1, _⟩ | ⟨_, h2⟩
+      · exact h1
+      · exact absurd (σ.injective (h1.trans hKC.symm)) hne.symm
+      · exact absurd h2.symm hne
+    intro c
+    rcases key c with h1 | ⟨h1, rfl⟩ | ⟨h1, rfl⟩
+    · exact h1
+    · exact absurd (h1.symm.trans hKS') hne
+    · exact hKC
+  · exfalso
+    have hKCS : σ KC = KS := by
+      rcases key KC with h1 | ⟨_, h2⟩ | ⟨h1, _⟩
+      · exact absurd h1 hKC
+      · exact absurd h2 hne
+      · exact h1
+    have hKSC : σ KS = KC := by
+      rcases key KS with h1 | ⟨h1, _⟩ | ⟨_, h2⟩
+      · exact absurd (σ.injective (h1.trans hKCS.symm)) hne.symm
+      · exact h1
+      · exact absurd h2.symm hne
+    have hσ : σ = swap KC KS := by
+      apply Equiv.ext; intro c
+      rcases key c with h1 | ⟨h1, rfl⟩ | ⟨h1, rfl⟩
+      · have hc1 : c ≠ KC := fun e => hKC (e ▸ h1)
+        have hc2 : c ≠ KS := fun e => by rw [e, hKSC] at h1; exact hne h1
+        rw [h1, Equiv.swap_apply_of_ne_of_ne hc1 hc2]
+      · rw [Equiv.swap_apply_right]; exact h1
+      · rw [Equiv.swap_apply_left]; exact h1
+    subst hσ
+    exact hKS (h _ (firstDeck_isDeck KC))
+
+/-- (PROVED) GridCycle commutes with σ on all decks iff σ = id. "Only if": for
+    `c` moved by σ, the deck `firstDeck c` changes the second seat
+    (`walkSeat_one`, `seat2_inj`) unless σ swaps K♣,K♠ and fixes all else,
+    which `mixColumns_KC_KS_fails` excludes. -/
 theorem mixColumns_commutes_iff_id (σ : Relabel) :
     CommutesOnDecks σ mixColumns ↔ σ.IsId := by
-  sorry -- DRAFT-SORRY
+  constructor
+  · intro h
+    refine walkW_only_id chooseSeat! freeChooser_v9
+      (fun hand _ => by rw [← walkSeat_eq]; rfl) ?_ σ ?_
+    · simpa only [mixColumns_eq] using mixColumns_KC_KS_fails
+    · intro m hm; simpa only [mixColumns_eq] using h m hm
+  · intro hid m _
+    unfold IsId at hid; subst hid
+    have e : ∀ x, rel 1 x = x := fun x => funext fun i => app_one _
+    rw [e, e]
 
 /-! ### 3a. Frozen v8 GridCycle model (overflow scan starts at column 0)
 
@@ -808,12 +918,65 @@ theorem v8_mixColumns_KC_KD_fails :
   revert this
   decide!
 
-/-- (DRAFT-SORRY) v8 GridCycle commutes with σ on all decks iff σ = id.
-    Same proof as `mixColumns_commutes_iff_id` (the first two seats never scan
-    past column 0, so v8 and v9 agree on `seat2`). -/
+/-- (PROVED, kernel `decide!`) The K♣/K♠ collision is broken on the third card (v8). -/
+theorem v8_mixColumns_KC_KS_fails :
+    V8.mixColumns (rel (swap KC KS) (firstDeck 12)) ≠
+      rel (swap KC KS) (V8.mixColumns (firstDeck 12)) := by
+  intro h
+  have := congrFun h ⟨4, by decide⟩
+  revert this
+  decide!
+
+theorem V8.placeN_eq_placeW (hand : Fin 52 → Nat) :
+    ∀ n, V8.placeN hand n = placeW V8.chooseSeat! hand n
+  | 0 => rfl
+  | n + 1 => by
+      simp only [V8.placeN, placeW, V8.placeN_eq_placeW hand n]
+
+theorem V8.freeChooser : FreeChooser V8.chooseSeat! := by
+  intro st hct hprev
+  match hprev_eq : st.prev with
+  | none =>
+      have : V8.chooseSeat? st = some (asStart, st.t) := by simp [V8.chooseSeat?, hprev_eq]
+      simp only [V8.chooseSeat!, this]
+      cases hprev with
+      | inl h => simp [hprev_eq] at h
+      | inr h => exact h
+  | some pair =>
+      simp only [V8.chooseSeat!, V8.chooseSeat?, hprev_eq]
+      by_cases ht : occAt st.occ (gridStep pair.1 pair.2)
+      · simp only [ht, ↓reduceIte]
+        obtain ⟨p, t', hs, hf⟩ := overflow_some_of_count_lt st.occ st.t 0 hct
+        simp only [hs]
+        exact hf
+      · have hf := eq_false_of_ne_true ht
+        simp [hf]
+
+/-- (PROVED, kernel `decide!`) v8 and v9 agree on the second seat. -/
+theorem V8.seat2_eq : ∀ c : Fin 52,
+    (V8.chooseSeat! (advance initWalk c.val asStart 0)).1 = seat2 c.val := by
+  decide!
+
+theorem V8.mixColumns_eq (hand : Fin 52 → Nat) :
+    V8.mixColumns hand = scoopRowMajor (gridW V8.chooseSeat! hand) := by
+  simp only [V8.mixColumns, gridW, V8.placeN_eq_placeW]
+
+/-- (PROVED) v8 GridCycle commutes with σ on all decks iff σ = id (same
+    argument; v8 and v9 agree on the second seat, `V8.seat2_eq`). -/
 theorem v8_mixColumns_commutes_iff_id (σ : Relabel) :
     CommutesOnDecks σ V8.mixColumns ↔ σ.IsId := by
-  sorry -- DRAFT-SORRY
+  constructor
+  · intro h
+    refine walkW_only_id V8.chooseSeat! V8.freeChooser
+      (fun hand h0 => by
+        show (V8.chooseSeat! (advance initWalk (hand ⟨0, by decide⟩) asStart 0)).1 = _
+        exact V8.seat2_eq ⟨_, h0⟩) ?_ σ ?_
+    · simpa only [V8.mixColumns_eq] using v8_mixColumns_KC_KS_fails
+    · intro m hm; simpa only [V8.mixColumns_eq] using h m hm
+  · intro hid m _
+    unfold IsId at hid; subst hid
+    have e : ∀ x, rel 1 x = x := fun x => funext fun i => app_one _
+    rw [e, e]
 
 /-! ## 4. Rounds and encrypt -/
 
@@ -902,13 +1065,41 @@ theorem encryptN_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV9)
   exact fullRoundNoMix_commutes σ hs posFinal _
     (cards_applyFullRounds posMix nMix (cards_compose hm pos0))
 
-/-- (DRAFT-SORRY, plumbing) The stem maps well-formed decks onto well-formed
-    decks: it only moves cells, and `invUnkeyedNoMix` is a two-sided inverse.
-    Needs "a position permutation of an injective deck is injective" for the
-    input-dependent rotations. Effort: ~100 lines. -/
+/-- (PROVED) The stem only moves cells: every output cell is an input cell. -/
+theorem unkeyedNoMix_cells (m : Fin 52 → Nat) (k : Fin 52) : ∃ i, unkeyedNoMix m k = m i := by
+  have hs := sumRanks_bound (fun v => ∃ i, v = m i) cardRank cardColumnWeight
+    (layColumnMajor m) (fun r c => ⟨_, rfl⟩)
+  obtain ⟨i, hi⟩ := hs (cmRow k) ⟨((cmCol k).val + (cmRow k).val) % 13, Nat.mod_lt _ (by decide)⟩
+  exact ⟨i, hi⟩
+
+theorem unkeyedNoMix_invUnkeyedNoMix (x : Fin 52 → Nat) :
+    unkeyedNoMix (invUnkeyedNoMix x) = x := by
+  simp only [invUnkeyedNoMix, unkeyedNoMix]
+  rw [lay_scoop_columnMajor, sumRanks_invSumRanks, shiftRows_invShiftRows,
+    scoop_lay_columnMajor]
+
+/-- (PROVED) The stem maps well-formed decks onto well-formed decks. The
+    preimage is `invUnkeyedNoMix x`; since `x = unkeyedNoMix m` only moves cells
+    of `m` and `x` has 52 distinct cells, the cell map is a bijection of
+    positions, so `m` is a deck too. -/
 theorem unkeyedNoMix_onto_decks (x : Fin 52 → Nat) (hx : IsDeck x) :
     ∃ m, IsDeck m ∧ unkeyedNoMix m = x := by
-  sorry -- DRAFT-SORRY
+  classical
+  set m := invUnkeyedNoMix x
+  have hmx : unkeyedNoMix m = x := unkeyedNoMix_invUnkeyedNoMix x
+  choose ρ hρ using unkeyedNoMix_cells m
+  have hρ' : ∀ k, x k = m (ρ k) := fun k => hmx ▸ hρ k
+  have hinj : Function.Injective ρ := by
+    intro k k' h
+    exact hx.2 _ _ (by rw [hρ' k, hρ' k', h])
+  have hsurj := Finite.injective_iff_surjective.1 hinj
+  refine ⟨m, ⟨fun i => ?_, fun i j h => ?_⟩, hmx⟩
+  · obtain ⟨k, rfl⟩ := hsurj i
+    rw [← hρ' k]; exact hx.1 k
+  · obtain ⟨k, rfl⟩ := hsurj i
+    obtain ⟨k', rfl⟩ := hsurj j
+    rw [← hρ' k, ← hρ' k'] at h
+    rw [hx.2 _ _ h]
 
 /-- (PROVED from the lemmas above) If σ ≠ id commutes with the v9 stem
     (i.e. σ is one of the 51 nontrivial `v9Sym a b`), then no full round

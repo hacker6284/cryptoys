@@ -12,9 +12,12 @@ path dependency.
 
 One library, `DoubleDealSecurity`: T1 relabellings `σ : Equiv.Perm (Fin 52)`
 against Compose, ShiftRows, SumRanks, GridCycle, rounds and encrypt
-(`Relabel.lean`); the Link 2 transfer to the emitted `Doubledeal.encrypt`
+(`Relabel.lean`, with the chooser-generic GridCycle walk in `Walk.lean`); the Link 2 transfer to the emitted `Doubledeal.encrypt`
 (`Link.lean`); the proof-only v8 model checked against the frozen v8 vectors
 (`V8Vectors.lean`).
 
 T1 is a draft: `DRAFT-SORRY` marks statements that are checked numerically but
-not yet proved. Link 1 (sudo = Generated) remains open.
+not yet proved (currently only the round/encrypt conjectures
+`fullRound_commutes_iff_id` and `encrypt6_commutes_iff_id`).
+`checks/measure_v9sym.py` (log committed) measures the v9Sym relabellings
+against GridCycle, one round and the full cipher. Link 1 (sudo = Generated) remains open.

@@ -28,6 +28,22 @@ import DoubleDealSecurity
 #print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_identity
 #print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_reverse
 #print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_mul17
+#print axioms DoubleDeal.Security.sumRanks_commutes_iff
+#print axioms DoubleDeal.Security.v9_sumRanks_commutes_iff
+#print axioms DoubleDeal.Security.v9_no_swap_commutes_sumRanks
+#print axioms DoubleDeal.Security.sumRanks_shift_of_commutes
+#print axioms DoubleDeal.Security.mixColumns_rel_iff_walk
+#print axioms DoubleDeal.Security.mixColumns_commutes_iff_id
+#print axioms DoubleDeal.Security.v8_mixColumns_commutes_iff_id
+#print axioms DoubleDeal.Security.walkW_rel_iff
+#print axioms DoubleDeal.Security.walkW_only_id
+#print axioms DoubleDeal.Security.seatW_surj
+#print axioms DoubleDeal.Security.V8.seat2_eq
+#print axioms DoubleDeal.Security.v8_mixColumns_KC_KS_fails
+#print axioms DoubleDeal.Security.firstDeck_isDeck
+#print axioms DoubleDeal.Security.fullRound_not_commutes_of_stem
+#print axioms DoubleDeal.Security.unkeyedNoMix_onto_decks
+#print axioms DoubleDeal.Security.unkeyedNoMix_invUnkeyedNoMix
 
 -- Link 2 transfer (emitted encrypt)
 #print axioms DoubleDeal.Security.keyPos_relabel_key
@@ -36,12 +52,5 @@ import DoubleDealSecurity
 #print axioms DoubleDeal.Security.generated_encrypt_not_relabel_equivariant
 
 -- Draft (rest on DRAFT-SORRY lemmas)
-#print axioms DoubleDeal.Security.sumRanks_commutes_iff
-#print axioms DoubleDeal.Security.v9_sumRanks_commutes_iff
-#print axioms DoubleDeal.Security.v9_no_swap_commutes_sumRanks
-#print axioms DoubleDeal.Security.mixColumns_rel_iff_walk
-#print axioms DoubleDeal.Security.mixColumns_commutes_iff_id
-#print axioms DoubleDeal.Security.v8_mixColumns_commutes_iff_id
-#print axioms DoubleDeal.Security.fullRound_not_commutes_of_stem
 #print axioms DoubleDeal.Security.fullRound_commutes_iff_id
 #print axioms DoubleDeal.Security.encrypt6_commutes_iff_id

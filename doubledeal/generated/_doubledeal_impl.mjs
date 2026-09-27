@@ -158,130 +158,147 @@ export function scoop_rm(g) {
     return _rt.dup(out);
 }
 
-export function column_weight(c) {
-    return _rt.chk(rank_of(c) + suit_of(c));
+export function row_total(row) {
+    let total = 0n;
+    {
+        const _sudo_from_j = 0n;
+        const _sudo_to_j = 12n;
+        for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
+            total = _rt.chk(total + _rt.chk(_rt.chk(13n - j) * rank_of(_rt.at(row, j))));
+        }
+    }
+    return total;
+}
+
+export function row_turn(row) {
+    return _rt.mod_i64(row_total(row), 13n);
+}
+
+export function sum_rows(g) {
+    g = _rt.dup(g);
+    {
+        const _sudo_from_a = 1n;
+        const _sudo_to_a = 4n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let i = _rt.mod_i64(a, 4n);
+            _rt.put(g, i, left_rotate(_rt.at(g, i), row_turn(_rt.at(g, _rt.mod_i64(_rt.chk(i + 3n), 4n)))));
+        }
+    }
+    return _rt.dup(g);
+}
+
+export function inv_sum_rows(g) {
+    g = _rt.dup(g);
+    {
+        const _sudo_from_a = 0n;
+        const _sudo_to_a = 3n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let i = _rt.mod_i64(_rt.chk(4n - a), 4n);
+            _rt.put(g, i, left_rotate(_rt.at(g, i), _rt.chk(0n - row_turn(_rt.at(g, _rt.mod_i64(_rt.chk(i + 3n), 4n))))));
+        }
+    }
+    return _rt.dup(g);
+}
+
+export function suit_label(c) {
+    let s = suit_of(c);
+    if (s === 0n) {
+        return 0n;
+    }
+    return _rt.chk(_rt.mod_i64(s, 3n) + 1n);
+}
+
+export function gf_add(a, b) {
+    let low = _rt.mod_i64(_rt.chk(_rt.mod_i64(a, 2n) + _rt.mod_i64(b, 2n)), 2n);
+    let high = _rt.mod_i64(_rt.chk(_rt.div(a, 2n) + _rt.div(b, 2n)), 2n);
+    return _rt.chk(low + _rt.chk(2n * high));
+}
+
+export function gf_times_w(x) {
+    if (x === 0n) {
+        return 0n;
+    }
+    return _rt.chk(_rt.mod_i64(x, 3n) + 1n);
+}
+
+export function column_value(g, p) {
+    let v = suit_label(_rt.at(_rt.at(g, 1n), p));
+    v = gf_add(v, gf_times_w(suit_label(_rt.at(_rt.at(g, 2n), p))));
+    return gf_add(v, gf_times_w(gf_times_w(suit_label(_rt.at(_rt.at(g, 3n), p)))));
+}
+
+export function column_suits(g, j) {
+    let v = gf_add(suit_label(_rt.at(_rt.at(g, 0n), j)), suit_label(_rt.at(_rt.at(g, 1n), j)));
+    v = gf_add(v, suit_label(_rt.at(_rt.at(g, 2n), j)));
+    return gf_add(v, suit_label(_rt.at(_rt.at(g, 3n), j)));
+}
+
+export function column_turn(g, j) {
+    return gf_add(column_value(g, _rt.mod_i64(_rt.chk(j + 12n), 13n)), column_suits(g, j));
+}
+
+export function turn_column(g, j, s) {
+    g = _rt.dup(g);
+    let col = _rt.lst([]);
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = 3n;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            col.push(_rt.at(_rt.at(g, i), j));
+        }
+    }
+    let fresh = _rt.lst([]);
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = 3n;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i - s), 4n)));
+        }
+    }
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = 3n;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            let row = _rt.dup(_rt.at(g, i));
+            _rt.put(row, j, _rt.at(fresh, i));
+            _rt.put(g, i, _rt.dup(row));
+        }
+    }
+    return _rt.dup(g);
+}
+
+export function sum_columns(g) {
+    g = _rt.dup(g);
+    {
+        const _sudo_from_a = 1n;
+        const _sudo_to_a = 13n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let j = _rt.mod_i64(a, 13n);
+            g = turn_column(g, j, column_turn(g, j));
+        }
+    }
+    return _rt.dup(g);
+}
+
+export function inv_sum_columns(g) {
+    g = _rt.dup(g);
+    {
+        const _sudo_from_a = 0n;
+        const _sudo_to_a = 12n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let j = _rt.mod_i64(_rt.chk(13n - a), 13n);
+            g = turn_column(g, j, _rt.chk(0n - column_turn(g, j)));
+        }
+    }
+    return _rt.dup(g);
 }
 
 export function sum_ranks(g) {
-    g = _rt.dup(g);
-    {
-        const _sudo_from_i = 0n;
-        const _sudo_to_i = 3n;
-        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let row = _rt.dup(_rt.at(g, i));
-            let total = 0n;
-            {
-                const _sudo_from_j = 0n;
-                const _sudo_to_j = 12n;
-                for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(row, j)));
-                }
-            }
-            _rt.put(g, i, left_rotate(row, _rt.mod_i64(total, 13n)));
-        }
-    }
-    {
-        const _sudo_from_j = 0n;
-        const _sudo_to_j = 12n;
-        for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-            let col = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    col.push(_rt.at(_rt.at(g, i), j));
-                }
-            }
-            let total = 0n;
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + column_weight(_rt.at(col, i)));
-                }
-            }
-            let s = _rt.mod_i64(total, 4n);
-            let fresh = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i - s), 4n)));
-                }
-            }
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    let row = _rt.dup(_rt.at(g, i));
-                    _rt.put(row, j, _rt.at(fresh, i));
-                    _rt.put(g, i, _rt.dup(row));
-                }
-            }
-        }
-    }
-    return _rt.dup(g);
+    return sum_columns(sum_rows(g));
 }
 
 export function inv_sum_ranks(g) {
-    g = _rt.dup(g);
-    {
-        const _sudo_from_j = 0n;
-        const _sudo_to_j = 12n;
-        for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-            let col = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    col.push(_rt.at(_rt.at(g, i), j));
-                }
-            }
-            let total = 0n;
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + column_weight(_rt.at(col, i)));
-                }
-            }
-            let s = _rt.mod_i64(total, 4n);
-            let fresh = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i + s), 4n)));
-                }
-            }
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    let row = _rt.dup(_rt.at(g, i));
-                    _rt.put(row, j, _rt.at(fresh, i));
-                    _rt.put(g, i, _rt.dup(row));
-                }
-            }
-        }
-    }
-    {
-        const _sudo_from_i = 0n;
-        const _sudo_to_i = 3n;
-        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let row = _rt.dup(_rt.at(g, i));
-            let total = 0n;
-            {
-                const _sudo_from_j = 0n;
-                const _sudo_to_j = 12n;
-                for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(row, j)));
-                }
-            }
-            _rt.put(g, i, left_rotate(row, _rt.chk(0n - _rt.mod_i64(total, 13n))));
-        }
-    }
-    return _rt.dup(g);
+    return inv_sum_rows(inv_sum_columns(g));
 }
 
 export function shift_rows(g) {
@@ -336,7 +353,7 @@ export function overflow_seat(occ, t, start) {
             t = _rt.mod_i64(_rt.chk(t + 1n), 4n);
         }
     }
-    _rt.sudo_assert(false, 155);
+    _rt.sudo_assert(false, 205);
     return [0n, 0n, 0n];
 }
 
@@ -461,7 +478,7 @@ export function index_of(deck, card) {
             }
         }
     }
-    _rt.sudo_assert(false, 231);
+    _rt.sudo_assert(false, 281);
     return 0n;
 }
 
@@ -708,62 +725,25 @@ export function trace_sum(g, steps, label) {
     g = _rt.dup(g);
     steps = _rt.dup(steps);
     {
-        const _sudo_from_i = 0n;
-        const _sudo_to_i = 3n;
-        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let row = _rt.dup(_rt.at(g, i));
-            let total = 0n;
-            {
-                const _sudo_from_j = 0n;
-                const _sudo_to_j = 12n;
-                for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(row, j)));
-                }
-            }
+        const _sudo_from_a = 1n;
+        const _sudo_to_a = 4n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let i = _rt.mod_i64(a, 4n);
+            let above = _rt.mod_i64(_rt.chk(i + 3n), 4n);
+            let total = row_total(_rt.at(g, above));
             let amount = _rt.mod_i64(total, 13n);
-            _rt.put(g, i, left_rotate(row, amount));
-            steps = add_step(steps, _rt.txt("sumrow"), label, no_cards(), no_cards(), no_cards(), i, _rt.neg(1n), amount, total, _rt.neg(1n), 0n);
+            _rt.put(g, i, left_rotate(_rt.at(g, i), amount));
+            steps = add_step(steps, _rt.txt("sumrow"), label, no_cards(), no_cards(), no_cards(), i, _rt.neg(1n), amount, total, _rt.neg(1n), above);
         }
     }
     {
-        const _sudo_from_j = 0n;
-        const _sudo_to_j = 12n;
-        for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-            let col = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    col.push(_rt.at(_rt.at(g, i), j));
-                }
-            }
-            let total = 0n;
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + column_weight(_rt.at(col, i)));
-                }
-            }
-            let amount = _rt.mod_i64(total, 4n);
-            let fresh = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i - amount), 4n)));
-                }
-            }
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    let row = _rt.dup(_rt.at(g, i));
-                    _rt.put(row, j, _rt.at(fresh, i));
-                    _rt.put(g, i, _rt.dup(row));
-                }
-            }
-            steps = add_step(steps, _rt.txt("sumcol"), label, no_cards(), no_cards(), no_cards(), _rt.neg(1n), j, amount, total, _rt.neg(1n), 0n);
+        const _sudo_from_a = 1n;
+        const _sudo_to_a = 13n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let j = _rt.mod_i64(a, 13n);
+            let amount = column_turn(g, j);
+            g = turn_column(g, j, amount);
+            steps = add_step(steps, _rt.txt("sumcol"), label, no_cards(), no_cards(), no_cards(), _rt.neg(1n), j, amount, column_value(g, _rt.mod_i64(_rt.chk(j + 12n), 13n)), _rt.neg(1n), column_suits(g, j));
         }
     }
     return [_rt.dup(g), _rt.dup(steps)];
@@ -956,62 +936,25 @@ export function trace_inv_sum(g, steps, label) {
     g = _rt.dup(g);
     steps = _rt.dup(steps);
     {
-        const _sudo_from_j = 0n;
-        const _sudo_to_j = 12n;
-        for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-            let col = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    col.push(_rt.at(_rt.at(g, i), j));
-                }
-            }
-            let total = 0n;
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + column_weight(_rt.at(col, i)));
-                }
-            }
-            let s = _rt.mod_i64(total, 4n);
-            let fresh = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i + s), 4n)));
-                }
-            }
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    let row = _rt.dup(_rt.at(g, i));
-                    _rt.put(row, j, _rt.at(fresh, i));
-                    _rt.put(g, i, _rt.dup(row));
-                }
-            }
-            steps = add_step(steps, _rt.txt("sumcol"), label, no_cards(), no_cards(), no_cards(), _rt.neg(1n), j, _rt.chk(0n - s), total, _rt.neg(1n), 0n);
+        const _sudo_from_a = 0n;
+        const _sudo_to_a = 12n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let j = _rt.mod_i64(_rt.chk(13n - a), 13n);
+            let amount = column_turn(g, j);
+            g = turn_column(g, j, _rt.chk(0n - amount));
+            steps = add_step(steps, _rt.txt("sumcol"), label, no_cards(), no_cards(), no_cards(), _rt.neg(1n), j, _rt.chk(0n - amount), column_value(g, _rt.mod_i64(_rt.chk(j + 12n), 13n)), _rt.neg(1n), column_suits(g, j));
         }
     }
     {
-        const _sudo_from_i = 0n;
-        const _sudo_to_i = 3n;
-        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let row = _rt.dup(_rt.at(g, i));
-            let total = 0n;
-            {
-                const _sudo_from_j = 0n;
-                const _sudo_to_j = 12n;
-                for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(row, j)));
-                }
-            }
+        const _sudo_from_a = 0n;
+        const _sudo_to_a = 3n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let i = _rt.mod_i64(_rt.chk(4n - a), 4n);
+            let above = _rt.mod_i64(_rt.chk(i + 3n), 4n);
+            let total = row_total(_rt.at(g, above));
             let amount = _rt.mod_i64(total, 13n);
-            _rt.put(g, i, left_rotate(row, _rt.chk(0n - amount)));
-            steps = add_step(steps, _rt.txt("sumrow"), label, no_cards(), no_cards(), no_cards(), i, _rt.neg(1n), _rt.chk(0n - amount), total, _rt.neg(1n), 0n);
+            _rt.put(g, i, left_rotate(_rt.at(g, i), _rt.chk(0n - amount)));
+            steps = add_step(steps, _rt.txt("sumrow"), label, no_cards(), no_cards(), no_cards(), i, _rt.neg(1n), _rt.chk(0n - amount), total, _rt.neg(1n), above);
         }
     }
     return [_rt.dup(g), _rt.dup(steps)];
@@ -1282,7 +1225,7 @@ export function diamond_cards() {
 }
 
 export function counter_deck(nonce, index) {
-    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 721);
+    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 750);
     let diamonds = unrank(diamond_cards(), index);
     let out = _rt.lst([]);
     {
@@ -1372,6 +1315,16 @@ export function sorted_copy(xs) {
         }
     }
     return _rt.dup(out);
+}
+
+export function swap_card(c, x, y) {
+    if (c === x) {
+        return y;
+    }
+    if (c === y) {
+        return x;
+    }
+    return c;
 }
 
 export function same_cards(a, b) {

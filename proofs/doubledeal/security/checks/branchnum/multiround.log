@@ -1,0 +1,10 @@
+# 3000 random decks x 1326 swaps per version; keys K1..K3 = PassKey chain of fixed master (seed 20260927)
+v8: P(w1=2) 51117/3978000 = 1.285e-02 | P(w2=2 | w1=2) 5356/51117 = 1.048e-01 | P(w3=2 | w2=2) 777/5356 = 1.451e-01
+v8: value relation of pairs still a swap after round 1: {'same rank': 32097, 'a=b mod 4': 4787, 'other': 14233}  (baseline over all 1326 pairs: same rank 78, a=b mod 4 ~312, other rest)
+v8: value relation of pairs still a swap after round 2: {'same rank': 4766, 'other': 441, 'a=b mod 4': 149}  (baseline over all 1326 pairs: same rank 78, a=b mod 4 ~312, other rest)
+v8: value relation of pairs still a swap after round 3: {'same rank': 758, 'a=b mod 4': 3, 'other': 16}  (baseline over all 1326 pairs: same rank 78, a=b mod 4 ~312, other rest)
+v8: most frequent round-1 output swap positions (after K1): [((9, 40), 107), ((25, 33), 93), ((30, 40), 90), ((0, 40), 90), ((14, 25), 89), ((46, 50), 89), ((10, 40), 89), ((48, 51), 88)]
+v9: P(w1=2) 10398/3978000 = 2.614e-03 | P(w2=2 | w1=2) 122/10398 = 1.173e-02 | P(w3=2 | w2=2) 0/122 = 0.000e+00
+v9: value relation of pairs still a swap after round 1: {'a=b mod 4': 8117, 'same rank': 2281}  (baseline over all 1326 pairs: same rank 78, a=b mod 4 ~312, other rest)
+v9: value relation of pairs still a swap after round 2: {'a=b mod 4': 100, 'same rank': 22}  (baseline over all 1326 pairs: same rank 78, a=b mod 4 ~312, other rest)
+v9: most frequent round-1 output swap positions (after K1): [((13, 43), 24), ((36, 49), 21), ((13, 36), 20), ((7, 13), 19), ((0, 36), 18), ((13, 49), 18), ((17, 23), 18), ((28, 42), 17)]

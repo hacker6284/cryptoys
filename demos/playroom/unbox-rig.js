@@ -127,12 +127,18 @@ function cardLocalInSleeve(index, count) {
     };
 }
 
+// Registered dark at boot; createUnboxRig moves it into the sleeve.
+export function createInnerGlow() {
+    return new THREE.PointLight(0xffd2a0, 0, 0.28, 2);
+}
+
 export async function createUnboxRig({
     anisotropy = 4,
     textures,
     sharedMaps = false,
     label: labelText = "KEY",
     bodyHex = "#6b1e1e",
+    innerGlow,
 } = {}) {
     const maps = textures || await loadHandTextures(anisotropy);
     const ownsMaps = !textures;
@@ -198,7 +204,6 @@ export async function createUnboxRig({
     flapPivot.add(lip);
     sleeve.add(flapPivot);
 
-    const innerGlow = new THREE.PointLight(0xffd2a0, 0, 0.28, 2);
     innerGlow.position.set(0, 0.01, 0.002);
     sleeve.add(innerGlow);
 

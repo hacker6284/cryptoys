@@ -12,7 +12,7 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent
 # Known open conjectures (DRAFT-SORRY). Each must contain exactly one sorry.
-ALLOWED_SORRY = {"fullRound_commutes_iff_id"}
+ALLOWED_SORRY = {"fullRound_covariant_iff_id"}
 
 DECL = re.compile(
     r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable|partial)\s+)*"

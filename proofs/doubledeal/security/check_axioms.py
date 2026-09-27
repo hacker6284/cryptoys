@@ -3,7 +3,7 @@
 standard axioms (propext, Classical.choice, Quot.sound).
 
 Exception, by exact name: the theorems in KNOWN_SORRY rest on the open
-conjecture `fullRound_commutes_iff_id` (DRAFT-SORRY) and may additionally use
+conjecture `fullRound_covariant_iff_id` (DRAFT-SORRY) and may additionally use
 `sorryAx`. The list must match exactly: any other theorem using sorryAx fails,
 and a listed theorem that no longer uses sorryAx fails too (remove it here and
 from ALLOWED_SORRY in checks/scan_sorry.py).
@@ -20,8 +20,9 @@ ALLOWED = {"propext", "Classical.choice", "Quot.sound"}
 PKG = Path(__file__).resolve().parent
 FILES = ["Axioms.lean"]
 KNOWN_SORRY = {
-    "DoubleDeal.Security.fullRound_commutes_iff_id",  # the conjecture itself
-    "DoubleDeal.Security.encrypt6_commutes_iff_id",   # reduces to it (round_of_encrypt6)
+    "DoubleDeal.Security.fullRound_covariant_iff_id",  # the conjecture itself
+    "DoubleDeal.Security.fullRound_commutes_iff_id",   # its case tau = sigma
+    "DoubleDeal.Security.encrypt6_commutes_iff_id",    # via round_covariant_of_encrypt6
 }
 
 

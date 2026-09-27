@@ -196,6 +196,7 @@ jobs:
         run: |
           python3 proofs/doubledeal/security/checks/selftest.py
           python3 proofs/doubledeal/security/checks/check_relabel.py
+          python3 proofs/doubledeal/security/checks/check_covariant.py
       - name: Install elan
         run: |
           curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none

@@ -1121,37 +1121,92 @@ theorem fullRound_not_commutes_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
   have := congrFun h1 (invPos i)
   simpa [composeVec, rel, hR] using this
 
-/-- (DRAFT-SORRY, CONJECTURE — checked, not proved) v9: no nontrivial σ commutes
-    with a full round for any key. Checked on all 1,326 transpositions, all 51
-    nontrivial `v9Sym`, and 200 random σ (3 random decks/keys each: every one
-    fails). The 51 `v9Sym` cases follow from `fullRound_not_commutes_of_stem`;
-    the remaining σ fail at SumRanks, but a failing layer inside a composite
-    does not by itself make the composite fail, so this needs its own argument
-    (e.g. track the first two cards the walk places, which are the stem's first
-    output cell and its seat-2 successor). Effort: uncertain, ~1–2 weeks.
+/-! ### 4b. Covariance: the output relabelling may differ from σ
 
-    Assessment (T1 pass 2): commuting with the round (pos = id) is equivalent
-    to the grid identity `gridW (stem (σ·m)) = σ · gridW (stem m)` on all decks
-    (`walkW_rel_iff` machinery). Its AS cell gives `stem(σ·m)₀ = σ(stem(m)₀)`,
-    i.e. the SumRanks rotation amounts that select the source cell of output 0
-    (row sum mod 13 of one row, column-0 sum mod 4 after the row rotation) are
-    σ-invariant on every deck. Turning that single-cell invariance into
+With permutation round keys, encrypt only pins down that the round body maps
+σ-relabelled decks to τ-relabelled decks for *some* τ (see `PermKeys.lean`).
+So the conjecture is stated in that (stronger) covariant form; the commuting
+form is the case τ = σ. -/
+
+/-- `F` maps σ-relabelled decks to τ-relabelled outputs for one fixed τ. -/
+def Covariant (σ : Relabel) (F : (Fin 52 → Nat) → (Fin 52 → Nat)) : Prop :=
+  ∃ τ : Relabel, ∀ m, IsDeck m → F (rel σ m) = rel τ (F m)
+
+theorem rel_one (x : Fin 52 → Nat) : rel 1 x = x := funext fun _ => app_one _
+
+/-- GridCycle writes the first card at `AS` = (2,0), row-major index 26. -/
+theorem mixColumns_at_AS (h : Fin 52 → Nat) :
+    mixColumns h ⟨26, by decide⟩ = h ⟨0, by decide⟩ := by
+  rw [mixColumns_eq]
+  have := gridW_at_seat _ freeChooser_v9 h ⟨0, by decide⟩
+  exact this
+
+/-- (PROVED) If σ ≠ id commutes with the v9 stem (σ is a nontrivial `v9Sym`),
+    the round body is not σ-covariant for any τ: the first card sits at `AS`,
+    which forces τ = σ, and then GridCycle would commute with σ. -/
+theorem fullRound_not_covariant_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
+    (hs : CommutesG σ sumRanksV9) : ¬ Covariant σ unkeyedWithMix := by
+  rintro ⟨τ, hτ⟩
+  apply hid
+  have hmix : ∀ x, IsDeck x → mixColumns (rel σ x) = rel τ (mixColumns x) := by
+    intro x hx
+    obtain ⟨m, hm, rfl⟩ := unkeyedNoMix_onto_decks x hx
+    have := hτ m hm
+    simp only [unkeyedWithMix] at this
+    rwa [unkeyedNoMix_commutes σ hs m hm.1] at this
+  have hστ : τ = σ := by
+    apply Equiv.ext; intro c
+    have := congrFun (hmix _ (firstDeck_isDeck c)) ⟨26, by decide⟩
+    simp only [rel, mixColumns_at_AS, firstDeck_zero, app_fin] at this
+    exact (Fin.ext this).symm
+  subst hστ
+  exact (mixColumns_commutes_iff_id τ).1 hmix
+
+/-- (DRAFT-SORRY, CONJECTURE — checked, not proved) v9: no nontrivial σ makes
+    the unkeyed round body covariant, i.e. there is no pair (σ, τ) with σ ≠ id
+    and `F(σ·m) = τ·F(m)` on every deck, `F = GridCycle ∘ stem`.
+    Checked (`checks/check_covariant.py`, log committed): all 1,326
+    transpositions, all 51 nontrivial `v9Sym` and 200 random σ are
+    non-covariant, for v8 and v9. The `v9Sym` cases are proved
+    (`fullRound_not_covariant_of_stem`).
+
+    Assessment: the other σ already fail at SumRanks, but a failing layer
+    inside a composite does not by itself make the composite fail. Covariance
+    is equivalent to `gridW (stem (σ·m)) = τ · gridW (stem m)` on all decks
+    (`walkW_rel_iff` machinery). Its AS cell gives `stem(σ·m)₀ = τ(stem(m)₀)`,
+    a single-cell condition on the SumRanks rotation amounts (row sum mod 13 of
+    one row, column-0 sum mod 4 after the row rotation). Turning that into
     "σ ∈ v9Sym" needs a swap-pair argument like `sumRanks_shift_of_commutes`,
-    but with only one cell and the column sum depending on the row rotations;
-    the remaining cells interleave the two different walks. Not attempted
-    further. -/
+    but with one cell and the column sum depending on the row rotations; the
+    remaining cells interleave two different walks. Effort: uncertain,
+    ~1–2 weeks. Not attempted further. -/
+theorem fullRound_covariant_iff_id (σ : Relabel) :
+    Covariant σ unkeyedWithMix ↔ σ.IsId := by
+  constructor
+  · intro h
+    sorry -- DRAFT-SORRY (conjecture)
+  · intro hid
+    unfold IsId at hid; subst hid
+    exact ⟨1, fun m _ => by rw [rel_one, rel_one]⟩
+
+/-- (PROVED from the covariant conjecture) No nontrivial σ commutes with the
+    full round for all keys (the case τ = σ, key = id). -/
 theorem fullRound_commutes_iff_id (σ : Relabel) :
     (∀ pos, CommutesOnDecks σ (fun m => fullRound m pos)) ↔ σ.IsId := by
-  sorry -- DRAFT-SORRY (conjecture)
+  constructor
+  · intro h
+    exact (fullRound_covariant_iff_id σ).1 ⟨σ, fun m hm => h id m hm⟩
+  · intro hid _ m _
+    unfold IsId at hid; subst hid
+    simp only [rel_one]
 
-/-! ### 4b. Encrypt reduces to the round (degenerate model keys)
+/-! ### 4c. Degenerate model keys (constant, non-permutation)
 
-The model quantifies over all key maps `Fin 52 → Fin 52`, not only
-permutations. With constant round keys every mixing round outputs a constant
-vector, so `encrypt6` exposes one cell of the unkeyed round body per key; over
-all constants this is the whole body. Hence the encrypt statement follows from
-the round statement. (For permutation keys only, this reduction does not
-apply.) -/
+Clearly labelled side lemma, not the headline: the Lean model allows any key
+map `Fin 52 → Fin 52`. With constant round keys every mixing round outputs a
+constant vector, so `encrypt6` exposes one cell of the round body per key.
+Real keys are permutations; the permutation-key statement is
+`encrypt6_commutes_iff_id` in `PermKeys.lean`. -/
 
 def constDeck (c : Nat) : Fin 52 → Nat := fun _ => c
 
@@ -1175,8 +1230,9 @@ theorem applyFullRounds_constKey (m : Fin 52 → Nat) (k : Fin 52) :
       simp only [fullRound, unkeyedWithMix, unkeyedNoMix_const, mixColumns_const]
       rfl
 
-/-- (PROVED) With `pos0 = posFinal = id` and every round key constant `k`,
-    `encrypt6` outputs the constant deck `unkeyedWithMix m k`. -/
+/-- (PROVED, degenerate keys) With `pos0 = posFinal = id` and every round key
+    the constant map to `k`, `encrypt6` outputs the constant deck
+    `unkeyedWithMix m k`. -/
 theorem encrypt6_constKey (m : Fin 52 → Nat) (k : Fin 52) :
     encrypt6 m id (fun _ _ => k) id = constDeck (unkeyedWithMix m k) := by
   simp only [encrypt6, encryptN]
@@ -1184,9 +1240,10 @@ theorem encrypt6_constKey (m : Fin 52 → Nat) (k : Fin 52) :
   simp only [fullRoundNoMix, unkeyedNoMix_const]
   rfl
 
-/-- (PROVED) If σ commutes with `encrypt6` for all model keys, it commutes with
-    the full round for all keys. -/
-theorem round_of_encrypt6 (σ : Relabel)
+/-- (PROVED, degenerate keys — NOT permutation keys) If σ commutes with
+    `encrypt6` for all key *maps* (including constant, non-bijective ones), it
+    commutes with the full round for all keys. -/
+theorem round_of_encrypt6_constKey (σ : Relabel)
     (h : ∀ pos0 posMix posFinal,
       CommutesOnDecks σ (fun m => encrypt6 m pos0 posMix posFinal)) :
     ∀ pos, CommutesOnDecks σ (fun m => fullRound m pos) := by
@@ -1197,19 +1254,6 @@ theorem round_of_encrypt6 (σ : Relabel)
     simp only [encrypt6_constKey] at this
     simpa [constDeck, rel] using this
   simp only [fullRound]; rw [hF]; rfl
-
-/-- (PROVED modulo the round conjecture) Same for encrypt: no nontrivial σ gives
-    `E_K(σM) = σ E_K(M)` for all model keys and decks. Reduces to
-    `fullRound_commutes_iff_id` via `round_of_encrypt6`. -/
-theorem encrypt6_commutes_iff_id (σ : Relabel) :
-    (∀ pos0 posMix posFinal, CommutesOnDecks σ (fun m => encrypt6 m pos0 posMix posFinal)) ↔
-      σ.IsId := by
-  constructor
-  · intro h; exact (fullRound_commutes_iff_id σ).1 (round_of_encrypt6 σ h)
-  · intro hid _ _ _ m _
-    unfold IsId at hid; subst hid
-    have e : ∀ x, rel 1 x = x := fun x => funext fun i => app_one _
-    simp only [e]
 
 /-! ### 4a. v8 consequences -/
 

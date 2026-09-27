@@ -1,8 +1,9 @@
 /-
   Axiom audit, Mathlib side (`DoubleDealSecurity`). Run by check_axioms.py.
-  The two theorems under "Draft" rest on the open conjecture
-  `fullRound_commutes_iff_id` and report `sorryAx`; check_axioms.py allows that
-  for exactly these names (KNOWN_SORRY) and nothing else.
+  The three theorems under "Draft" are the open conjecture
+  `fullRound_covariant_iff_id` and the two theorems that rest on it; they report
+  `sorryAx`, which check_axioms.py allows for exactly these names (KNOWN_SORRY)
+  and nothing else.
 -/
 import DoubleDealSecurity
 
@@ -46,7 +47,14 @@ import DoubleDealSecurity
 #print axioms DoubleDeal.Security.unkeyedNoMix_onto_decks
 #print axioms DoubleDeal.Security.unkeyedNoMix_invUnkeyedNoMix
 #print axioms DoubleDeal.Security.encrypt6_constKey
-#print axioms DoubleDeal.Security.round_of_encrypt6
+#print axioms DoubleDeal.Security.round_of_encrypt6_constKey
+#print axioms DoubleDeal.Security.fullRound_not_covariant_of_stem
+#print axioms DoubleDeal.Security.isDeck_unkeyedNoMix
+#print axioms DoubleDeal.Security.isDeck_mixColumns
+#print axioms DoubleDeal.Security.tail_injective
+#print axioms DoubleDeal.Security.round_covariant_of_encrypt6
+#print axioms DoubleDeal.Security.encrypt6_not_commutes_of_stem
+#print axioms DoubleDeal.Security.encrypt6_not_commutes_v9Sym
 
 -- Link 2 transfer (emitted encrypt)
 #print axioms DoubleDeal.Security.keyPos_relabel_key
@@ -55,5 +63,6 @@ import DoubleDealSecurity
 #print axioms DoubleDeal.Security.generated_encrypt_not_relabel_equivariant
 
 -- Draft (rest on DRAFT-SORRY lemmas)
+#print axioms DoubleDeal.Security.fullRound_covariant_iff_id
 #print axioms DoubleDeal.Security.fullRound_commutes_iff_id
 #print axioms DoubleDeal.Security.encrypt6_commutes_iff_id

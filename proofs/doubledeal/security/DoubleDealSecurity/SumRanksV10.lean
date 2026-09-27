@@ -1,12 +1,12 @@
 /-
   T1 for v10 SumRanks (SPEC §3.3, `DoubleDeal.sumRanksV10`).
 
-  PROVED ("if" direction only): the 52 relabellings `v10Sym a x` — rank index
-  `+a (mod 13)` and GF(4) suit label `⊕ x` — commute with v10 SumRanks on
-  every card-valued grid. Why: a rank shift adds `a · (13 + 12 + … + 1) = 91 a
-  ≡ 0 (mod 13)` to every row total; a label shift adds `x ⊕ x ⊕ x ⊕ x = 0` to
-  every column's own suit sum and `(1 ⊕ w ⊕ w²) x = 0` to the previous
-  column's weighted value.
+  PROVED ("if"; the converse is in SumRanksV10Iff.lean): the 52 relabellings
+  `v10Sym a x` — rank index `+a (mod 13)` and GF(4) suit label `⊕ x` — commute
+  with v10 SumRanks on every card-valued grid. Why: a rank shift adds
+  `a · (13 + 12 + … + 1) = 91 a ≡ 0 (mod 13)` to every row total; a label shift
+  adds `x ⊕ x ⊕ x ⊕ x = 0` to every column's own suit sum and `(1 ⊕ w ⊕ w²) x = 0`
+  to the previous column's weighted value.
 
   The converse (these are the only relabellings that commute on decks) is
   proved in `SumRanksV10Iff.lean`: `sumRanksV10_commutes_iff`.

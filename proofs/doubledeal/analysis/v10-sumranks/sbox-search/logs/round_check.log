@@ -1,0 +1,9 @@
+N = 1000000 random decks; columns: SumRanks+ShiftRows ('stem'), GridCycle alone (fresh deck), whole round
+  rank+1 on every card (v10Sym)              stem  1000000  gridcycle        0  round      0  (round 0, 95% CI [0,3.8e-06])
+  label^1 on every card (v10Sym)             stem  1000000  gridcycle        0  round      0  (round 0, 95% CI [0,3.8e-06])
+  rank+5, label^2 (v10Sym)                   stem  1000000  gridcycle        0  round      0  (round 0, 95% CI [0,3.8e-06])
+  3-cycle AC->2C->3C                         stem     8049  gridcycle     7441  round     83  (round 8.3e-05, 95% CI [6.7e-05,0.0001])
+  3-cycle AC->8C->JC                         stem     8141  gridcycle     3461  round     43  (round 4.3e-05, 95% CI [3.2e-05,5.8e-05])
+  3-cycle 5H->9H->KH                         stem     8251  gridcycle     4284  round     69  (round 6.9e-05, 95% CI [5.5e-05,8.7e-05])
+  swap 2C<->7C                               stem     4646  gridcycle    17451  round    483  (round 0.000483, 95% CI [0.00044,0.00053])
+  swap KC<->KD (the v8 distinguisher pair)   stem        0  gridcycle   261074  round      0  (round 0, 95% CI [0,3.8e-06])

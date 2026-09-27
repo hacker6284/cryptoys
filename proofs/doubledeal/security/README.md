@@ -52,6 +52,9 @@ by the real PassKey chain, no nontrivial `v10Sym` commutes with the emitted
 to exist, not named; the key is never relabelled; it excludes exact symmetry
 only, not near-symmetries or statistical distinguishers (v8 and v9 each fell
 to one); it is not the open per-key statement.
+Measured near-symmetries of v10 SumRanks alone (empirical, not proved) are in
+`../analysis/v10-sumranks/sbox-search/`: the worst non-symmetry relabelling is
+a same-suit 3-cycle at exactly 9/1105 ≈ 1/123; the same-suit swap is 1/221.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at

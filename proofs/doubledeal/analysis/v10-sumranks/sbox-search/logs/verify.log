@@ -1,0 +1,3 @@
+C S-box matches 1 v10 sum_ranks vectors, 6 v10 encrypt vectors (as the SumRanks inside ddport.encrypt), and ddport.sum_ranks_v10 on 20000 random grids
+repo check_cand.py:
+v9 variant matches 6 frozen encrypt vectors (Python and C); W5c matches 6/6 v10 encrypt vectors (Python and C); cand.c == candidates.py and decrypt(encrypt) = id on 1500 cases over 25 variants

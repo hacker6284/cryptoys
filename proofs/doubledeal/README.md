@@ -4,7 +4,7 @@ Normative definition: [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/
 
 DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v9** (current). v8 is deprecated; its vulnerability proof is in [`../deprecated/doubledeal-v8/`](../deprecated/doubledeal-v8/).
 
-> **Status: v9 (stage 2 done).** Generated Lean, TAP, and vectors are v9. The algebraic model is v9: SumRanks (row weight rank, column weight rank + suit) and GridCycle (overflow scan from the blocked target's column), with `invMixColumns_mixColumns` and the round-trip theorems re-proved; `lake exe doubledeal` passes 35/35. Link 2 is re-proved for v9: `sum_ranks_refines`, `scan_row_refines`, `overflow_seat_refines`, `mix_columns_refines`, and `encrypt_refines` (`CardBound` message, `Perm52` key, length 52). `lake build` is green with no `sorry` and no `native_decide` (see the v9 porting table below). The Lean package below proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
+> **Status: v9.** Generated Lean, TAP, vectors, the algebraic model and Link 2 all describe v9 (see "v9 changes" below). `lake build` is green with no `sorry` and no `native_decide`, `lake exe doubledeal` passes every known-answer vector, and `check_axioms.py` (run in CI) confirms the top theorems in [`lean/Axioms.lean`](lean/Axioms.lean) use only propext, Classical.choice and Quot.sound. The Lean package proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
 
 ## Layers (be honest)
 
@@ -13,8 +13,8 @@ Sudo is normative. Emitted Lean under `lean/Generated/` is the algorithm.
 This does **not** claim sudo↔Lean semantic-equivalence theorems. The
 emit terminates gate is on. DoubleDeal production paths are bounded
 `for` (PassKey drain, overflow scans `0 to 3`). Two test-only
-kind-scan `while`s are stripped under the gate; JS still runs all
-twelve sudo tests.
+kind-scan `while`s are stripped under the gate; JS runs every sudo
+test.
 
 | Layer | What it is | Trust base |
 | --- | --- | --- |
@@ -92,26 +92,9 @@ python3 proofs/doubledeal/vectors/json_to_lean.py --check  # CI: stale Lean fail
 
 Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
 
-## v9 porting table (stage 1 → stage 2)
+## v9 changes
 
-v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). The Generated tree, TAP, and vectors are v9. Both are ported: SumRanks (A2) in `SumRanks.lean`, `Round.lean`, `Concrete.lean` and `Link2/SumLink.lean`; GridCycle (B3) in `GridCycle.lean` and `Link2/Mix.lean`; `Link2/Encrypt.lean` is re-glued. The table records what stage 1 broke and how stage 2 fixed it. Measured on branch `doubledeal-v9` with Lean 4.14.0.
-
-| File | Theorem / def | Status | Why | Stage-2 work |
-| --- | --- | --- | --- | --- |
-| `Link2/Compose.lean` | `index_of_as_loop`, `index_of_found` (assert line) | fixed (generic) | sudo line shifts moved `sudoAssert false 219` → `221` → `231` | done: `index_of_as_loop` is stated `∃ ln` (witness by `rfl`) and `index_of_found` is generic in `ln`, so sudo edits no longer reach Link 2 here |
-| `Link2/Mix.lean` | `overflow_as_loop` assert literal | fixed (generic) | sudo line shifts (`143` in v8, then `145`, then `155`) | done: stated `∃ ln` (witness by `rfl`); `overflow_fuel_some` is generic in `ln` |
-| `Link2/SumLink.lean` | `sum_ranks_as_loop` | fixed | the `colRankStep` mirror now calls `Doubledeal.column_weight` | done |
-| `Link2/SumLink.lean` | `colRankStep_hit`, `colRank_pref`, `rank_loop`, `colsSummed`, `colsSummed_all`, `sumColStep_hit`, `col_loop`, `sum_ranks_refines` | fixed (v9) | column weight is `cardColW` = rank + suit (`column_weight_refines`, prefix sums `colPref`) | done. `sum_ranks_refines` now needs `CardBound` cells, because suit grows with the card id; `CardBound` and the rotate bound lemmas moved here from Mix / Encrypt |
-| `Link2/Mix.lean` | `scanColStep`, `scanCol_hit`, `scan_loop`, `scanRowN_spec`, `scanFound_encode`, `attempt_refines` | replaced (v9) | the inner scan is now the emitted helper `Doubledeal.scan_row occ row start` with `col = (start + k) mod 13` | done: `scanBody` / `scanRowStep` mirror, `scanFoundR`, and `scan_row_refines` (rotated scan, `start < 13`); `overflowBody_hit` replaces `attempt_refines` |
-| `Link2/Mix.lean` | `overflowStep` / `overflow_as_loop` | fixed (v9) | `overflow_seat` takes a third argument, `start` | done: mirror calls `Doubledeal.scan_row occ row start` |
-| `Link2/Mix.lean` | `overflowStep_hit`, `overflow_fuel_some`, `overflow_seat_refines` | fixed (v9) | follow from the above | done against the B3 `overflowSeat occ t start` |
-| `Link2/Mix.lean` | `mixStep` def, `placeN_step` | fixed (v9) | the `overflow_seat occ t tc` call | done |
-| `trace_*` (sudo) | not in Link 2 | n/a | `trace_mix` / `trace_inv_mix` also call `scan_row`; `scan` steps now carry the start column | none (trace is demo-only) |
-| `Link2/Mix.lean` | `mixStep_hit`, `mix_columns_as_loop`, `mix_columns_refines` | fixed (v9) | downstream | done (overflow scan starts at the blocked target's column) |
-| `Link2/Encrypt.lean`, `DoubleDeal/Link2.lean` | `full_round_refines`, `final_round_refines`, `encrypt_refines`, `mix_bound` | fixed (v9) | imports | done: `stem_refines` / `final_round_refines` take `CardBound` for the SumRanks column sums |
-| `SumRanks.lean` / `Round.lean` | `sumRanks rowW colW`, `invSumRanks_sumRanks`, `sumRanks_invSumRanks`; `Round` uses `sumRanks cardRank cardColW` | fixed (v9) | rows and columns take separate weights | done; the RT proofs hold for any pair of weights |
-| `GridCycle.lean` | `scanRow`, `overflowSeat`, `chooseSeat`, `invMixColumns_mixColumns`, `inv_place_agree` | fixed (v9) | the overflow scan starts at column 0 | done: `scanRow occ row start` checks `(start + k) mod 13`, `overflowSeat occ t start`, and `chooseSeat?` passes the target's column. The inverse proofs are unchanged, because `placeN` and `invN` share `chooseSeat!` |
-| `Concrete.lean`, `VectorCheck.lean` (`lake exe doubledeal`) | encrypt/decrypt KATs | fixed: **35/35** vector checks pass against the v9 JSON (measured with Link 2 built against a `mix_columns_refines` stub; the executable itself only needs the model) | the skeleton was v8 | done |
+v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). **A2:** SumRanks takes separate weights, rank for rows and `cardColumnWeight` = rank + suit for columns (`sumRanks cardRank cardColumnWeight`; the round-trip theorems hold for any pair of weights). In Link 2, `sum_ranks_refines` follows the emitted `column_weight`; because suit grows with the card id it needs `CardBound` cells, the same bound `encrypt_refines` already puts on messages. **B3:** the GridCycle overflow scan starts at the blocked target's column (`rotCol`, `scanRow occ row start`, `overflowSeat occ t start`). `invMixColumns_mixColumns` needed no change, because the forward and inverse walks share `chooseSeat!`. In Link 2, `scan_row_refines` covers the emitted `scan_row` helper, and `overflow_seat_refines` / `mix_columns_refines` sit on top of it. The emitted asserts in `index_of` and `overflow_seat` are matched as `∃ ln` (witness by `rfl`), so sudo edits that move a line no longer reach into Link 2.
 
 Link 1 (sudo = Generated) stays OPEN, as before. v8's own proofs are not kept alive under `deprecated/`; only its Generated TAP and the witness check are.
 

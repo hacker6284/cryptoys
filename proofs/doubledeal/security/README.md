@@ -32,6 +32,7 @@ skips it).
 | `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt`, K♣↔K♦ witness |
 | `V8Vectors` | frozen v8 vectors checked against the v8 model (generated, `--check`) |
 | `RealKey` | commuting relabellings closed under powers; every nontrivial `v9Sym` has a power `v9Sym 0 2` or `v9Sym 1 0`; pull-back from the emitted `encrypt` |
+| `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`) |
 | `Audit` | the `#audit_all Root` command used by `Axioms.lean` / `AxiomsHeavy.lean` |
 | `DoubleDealSecurityHeavy.RealKey` | three `decide!` encryptions under the identity master key; `generated_encrypt_realKey_not_v9Sym_equivariant` |
 

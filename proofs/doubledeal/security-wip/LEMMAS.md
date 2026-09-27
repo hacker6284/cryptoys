@@ -1,4 +1,7 @@
-# Open lemmas of `sumRanksV10_survival_le` (10 `sorry`s, all in `Standalone.lean`)
+# Lemmas of `sumRanksV10_survival_le`: all proved (0 `sorry`)
+
+`#print axioms sumRanksV10_survival_le`: `propext`, `Classical.choice`,
+`Quot.sound`. No `native_decide`, no new axioms.
 
 **Main theorem** (proved, modulo the lemmas below), `Main.lean`:
 
@@ -33,6 +36,39 @@ theorem sumRanksV10_survival_le (τ : Relabel) (h : ¬ ∃ a x, τ = v10Sym a x)
 * `card_filter_product_le`: the generic two-level fibre bound.
 * `A3_const`: `1/81 + 4·4¹³/C(52,13) ≤ 1/64`.
 * `sLab_of_offCount_zero`, `sLab_of_offCount_one`, `x4_solve`.
+* `maxClass_le_50`, `exists_class_ge_13` (Mathematician's hand patch).
+* `lemma2a`: `card_fib_rot` (`σ ↦ σ * rot1` maps the fibre over `c` onto the
+  fibre over `c − D`), iterated `((c − c')/D).val` times; the 13 equal fibres
+  partition `Perm (Fin 13)`.
+* `lemma2b`: `wS_swap` (swapping entry `i₀` with a `v`-entry `k` shifts `S` by
+  `(w i₀ − v)(pos k − pos i₀)`); the map `(σ, k) ↦ swap i₀ k * σ` injects
+  good × V into bad, so `z·#good ≤ 13! − #good`.
+* `hyper_rows`, `hyper_cols`: one generic lemma `hyper_gen` for any block
+  structure `e : Fin 52 ≃ ι × κ` (`preW` = seats of `W`; each `n`-set of seats is
+  hit by `n!(52−n)!` decks, `card_fibre_preW`, by a symmetry `exists_perm_mapsTo`
+  plus a fibre sum; seat sets with block counts `z` biject with
+  `piFinset (powersetCard (z i))`, `card_sets_bvec`), instantiated with
+  `rcEquiv` (rows) and `crEquiv` (columns).
+* `distinct_row_count`: fibres over the card set of row `r` (`card_fibre_preW`
+  again), and `card_transversals_le`: 13-sets with distinct values are images
+  of choice functions, `≤ Π_v n_v ≤ 4¹³` (`amgm13`, from
+  `Real.geom_mean_le_arith_mean_weighted`).
+* `lemma4_count_le`: `cnt4` is invariant under shifting by `xs` (`vLab_shift`,
+  since `1 + w + w² = 0`) and under reordering `e` (`cnt4_comp_perm`); sort with
+  `Tuple.sort`, then a 140-case kernel check `lemma4_core` (`decide!`, ≈1.3 s)
+  over an explicit list `perms4` of the 24 permutations (`perms4_eq`,
+  `decide!`, ≈0.5 s).
+* `EA_le`: `sum_comps4_eq_coeff` (coefficient of `(Σ f j Xʲ)⁴`), integer table
+  `GA = 360360·C(13,k)·h(k)`, its convolution square `LA2` (`LA2_spec`,
+  `decide!`, ≈0.3 s), and `tableA_nat` (`decide!`, ≈1.5 s).
+* `EB_le`: `trace_pow13` (`tr(A¹³)` = sum over cyclic 13-sequences, via
+  `pow_apply_paths`), transfer matrix `aN = 12·C(4,v)·f(u,v)` evaluated at
+  `X = 10³⁰` in `ℕ` (`TB`), coefficients read off as base-`10³⁰` digits
+  (`digit_sum`, valid since `TB 1 < 10³⁰`), `tableB_nat` (`decide!`, <0.5 s).
+
+The kernel checks use `decide!` (Lean 4.14's kernel-reduction `decide`; no
+axiom, unlike `native_decide`). The largest takes about 1.5 s; `Standalone.lean`
+compiles in about 38 s in total (of which about 13 s is linting).
 
 **Main.lean:**
 * `deckGrid_apply`, `isDeck_deckGrid`, `survivors_eq_univ_of_commutes`.
@@ -74,15 +110,10 @@ theorem sumRanksV10_survival_le (τ : Relabel) (h : ¬ ∃ a x, τ = v10Sym a x)
   "deck = block sets + per-block arrangements" fibre identity, used by both
   chain lemmas).
 
-Remaining `sorry` dependencies of the 11 (all are swarm lemmas):
-`rowChain_le` ← `lemma2a`; `caseA2` ← `hyper_rows`, `lemma2b`; `caseA3` ←
-`distinct_row_count`, `lemma2b`; `mStar_bounds` ← `exists_class_ge_13`;
-`caseB_sum` ← `hyper_cols`, `lemma4_count_le`. `traj_of_survives`,
-`rowEq_of_rowCondsTraj`, `thetaG_prefix`, `caseA1`, `colConds_H_card` and
-`colChain_le` are fully `sorry`-free (`#print axioms`: `propext`,
-`Classical.choice`, `Quot.sound` only).
 
-## Open: Standalone.lean (hand these to the swarm first)
+## Standalone.lean: all proved
+
+Kept for reference; every row below is now proved (see above).
 
 Definitions used (all in `Standalone.lean`, namespace `SRDP`):
 * `wS w σ = Σ_j (j.val : ZMod 13) * w (σ j)`.
@@ -164,13 +195,10 @@ Definitions (in `Main.lean`, namespace `DoubleDeal.Security.SumRanksDP`):
 | 20 | `mStar_bounds` (§4) | `(τ) (h : ∃ c, eps τ c ≠ eps τ 0) : 2 ≤ mStar τ ∧ mStar τ ≤ 39` | `exists_class_ge_13` (upper bound); lower bound: XOR-sum of `eps` is 0 (encode `Fin 4` as `ZMod 2 × ZMod 2`, `Equiv.sum_comp τ`), so exactly one off card is impossible | M | R |
 | 21 | `caseB_sum` (§4, Thm B) | `(τ) (h : ∃ c, eps τ c ≠ eps τ 0) : ∑ π, ∏ j, phi τ (colOf π (prevCol j)) (colOf π j) ≤ (Nat.factorial 52 : ℕ) * EB (mStar τ)` | `lemma4_count_le`, `sLab_of_offCount_zero/one`, `hyper_cols` (W = off cards of a most common ε-value; the column-`j` count is `yCol W π j`), `prevCol j = j - 1` | M | R |
 
-## Dependency order (suggested)
+## Dependency order
 
-1. The swarm, in parallel: #3, #4, #1, #10, #2, then #5/#6, #7, and #8/#9
-   (numeric engineering).
-2. Repo side: done (#11–#21 all proved; `Decomp.lean` holds the shared
-   decomposition used by #14 and #19). #5/#6 (`hyper_rows`/`hyper_cols`) remain
-   with the swarm; `Decomp.lean`'s `cmEquiv` may help there.
+Done: all 21 lemmas are proved. Next step is promotion into
+`DoubleDealSecurity/` (see `README.md`).
 
 ## Honesty notes
 

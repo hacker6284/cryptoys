@@ -4,7 +4,7 @@
 
   Skeleton of the counting proof in PROOF.md (paper proof of the bound
   `0.012768 · 52!`; Lean target `52!/64`). Each lemma carries the PROOF.md
-  section it formalises. Lemmas marked `sorry` are open; see `../../LEMMAS.md`.
+  section it formalises. Everything is proved (no `sorry`); see `../../LEMMAS.md`.
   The self-contained combinatorics and numerics are in `Standalone.lean`.
 
   Decks are counted as position permutations `π : Equiv.Perm (Fin 52)` laid

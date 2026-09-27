@@ -1,7 +1,8 @@
 /-
   Axiom audit, Mathlib side (`DoubleDealSecurity`). Run by check_axioms.py.
-  While T1 is a draft, the DRAFT-SORRY theorems report `sorryAx` and the gate
-  fails on purpose.
+  The two theorems under "Draft" rest on the open conjecture
+  `fullRound_commutes_iff_id` and report `sorryAx`; check_axioms.py allows that
+  for exactly these names (KNOWN_SORRY) and nothing else.
 -/
 import DoubleDealSecurity
 

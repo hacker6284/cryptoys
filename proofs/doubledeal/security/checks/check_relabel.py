@@ -1,4 +1,4 @@
-"""T1 sanity checks for the relabelling statements (v8 and v9 ports)."""
+"""T1 sanity checks for the relabelling statements (v8, v9 and v10 ports)."""
 import random, itertools, ddport as P
 from dd_v8 import suit, rank, lay_cm, scoop_cm, shift_rows, compose, passkey
 rng = random.Random(2026)
@@ -109,6 +109,29 @@ for v in (8, 9):
         rates.append(sum(commutes_sr(s, v, decks=[rdeck()]) for _ in range(N)) / N)
     print(f"    v{v}: per-deck SumRanks commute rate: K♣↔K♦ {rates[0]:.3f}, A♣↔A♥ {rates[1]:.3f}, A♣↔5♣ {rates[2]:.3f}")
 
+# 2b. v10 SumRanks: the group v10Sym commutes ("if", proved in SumRanksV10.lean);
+# the converse is not proved: here, every other sampled sigma fails on some random deck.
+LABEL = P.LABEL; SUIT_OF_LABEL = [LABEL.index(l) for l in range(4)]
+def sig10(a, x): return [13 * SUIT_OF_LABEL[LABEL[c // 13] ^ x] + (c % 13 + a) % 13 for c in range(52)]
+G10 = [sig10(a, x) for a in range(13) for x in range(4)]
+assert all(sorted(s) == ID for s in G10) and len({tuple(s) for s in G10}) == 52
+assert all(commutes_sr(s, 10) for s in G10)
+print("[2b] v10: all 52 v10Sym (rank + a, suit label XOR x) are bijections and commute with v10 SumRanks on 20 random decks each")
+def fails_somewhere(s, v, tries=40):
+    return any(P.sum_ranks(appg(s, lay_cm(m)), v) != appg(s, P.sum_ranks(lay_cm(m), v)) for m in (rdeck() for _ in range(tries)))
+tr_all = [transp(a, b) for a, b in itertools.combinations(range(52), 2)]
+n_tr = sum(fails_somewhere(s, 10) for s in tr_all)
+g10set = {tuple(s) for s in G10}
+rsig = [s for s in (rdeck() for _ in range(500)) if tuple(s) not in g10set]
+n_rnd = sum(fails_somewhere(s, 10) for s in rsig)
+n_g9 = sum(fails_somewhere(s, 10) for s in G[1:])
+print(f"    v10: SumRanks fails to commute (some deck out of 40) for {n_tr}/1326 transpositions, {n_rnd}/{len(rsig)} random sigma, {n_g9}/51 nontrivial v9Sym")
+rates = []
+for a, b in ((KC, card(12, 1)), (KC, KD), (0, 13), (0, 4)):
+    s = transp(a, b); N = 2000
+    rates.append(sum(commutes_sr(s, 10, decks=[rdeck()]) for _ in range(N)) / N)
+print(f"    v10: per-deck SumRanks commute rate: K♣↔Q♥ {rates[0]:.4f}, K♣↔K♦ {rates[1]:.4f}, A♣↔A♥ {rates[2]:.4f}, A♣↔5♣ {rates[3]:.4f}")
+
 # 3. GridCycle
 def seat2(c, v): return P.walk([c] + [x for x in range(52) if x != c], v)[1]
 for v in (8, 9):
@@ -141,14 +164,14 @@ for v in (8, 9):
     print(f"    v{v}: commute <-> equal walk on {agree}/3000")
 
 # 4. round / encrypt level
-for v in (8, 9):
+for v in (8, 9, 10):
     def rnd(m, k): return P.full_round(m, k, v)
     allfail = True
     for a, b in itertools.combinations(range(52), 2):
         s = transp(a, b)
         if all(rnd(app(s, m), k) == app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))):
             allfail = False; print("   round commutes?", a, b)
-    gfail = all(any(rnd(app(s, m), k) != app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))) for s in G[1:])
+    gfail = all(any(rnd(app(s, m), k) != app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))) for s in (G10[1:] if v == 10 else G[1:]))
     rfail = all(any(rnd(app(s, m), k) != app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))) for s in (rdeck() for _ in range(200)))
     efail = all(P.encrypt(app(s, m), k, v) != app(s, P.encrypt(m, k, v)) for s, m, k in ((transp(*rng.sample(range(52), 2)), rdeck(), rdeck()) for _ in range(200)))
     print(f"[4] v{v}: full round fails for every transposition: {allfail}; every nontrivial G52: {gfail}; 200 random sigma: {rfail}; encrypt fails 200/200 random transposition trials: {efail}")

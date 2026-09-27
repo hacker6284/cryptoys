@@ -1,6 +1,14 @@
 /-
-  T1: SumRanks versus relabellings. Exact iff (constant weight shift), the v8
-  rank-preserving case, and the 52-element v9 group `v9Sym`.
+  T1: weight-sum SumRanks versus relabellings. Exact iff (constant weight
+  shift), the v8 rank-preserving case, and the 52-element v9 group `v9Sym`.
+
+  DEPRECATED MODELS. `sumRanks rowW colW` is the v8/v9 SumRanks shape (every
+  row / column rotated by a plain weight sum). The cipher is v10
+  (`DoubleDeal.sumRanksV10`, chained position-aware rows and GF(4) suit
+  columns); its relabelling theorem is in `SumRanksV10.lean`. These v8/v9
+  statements are kept as the models of the deprecated ciphers (v9 is
+  deprecated by its K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`)
+  and as the generic rotation lemmas `SumRanksV10.lean` reuses.
 -/
 import DoubleDealSecurity.Relabel
 
@@ -385,7 +393,8 @@ theorem sumRanks_commutes_iff (σ : Relabel) (rowW colW : Nat → Nat) :
 /-- v8 (frozen) SumRanks: column weight is rank, as in the deprecated cipher. -/
 def sumRanksV8 : Grid Nat → Grid Nat := sumRanks cardRank cardRank
 
-/-- v9 SumRanks: column weight rank + suit (A2). -/
+/-- v9 (deprecated) SumRanks: column weight rank + suit (A2). Not the cipher;
+    v10 is `sumRanksV10`. -/
 def sumRanksV9 : Grid Nat → Grid Nat := sumRanks cardRank cardColumnWeight
 
 /-- (PROVED) For the v8 weights, the two shift conditions hold iff σ preserves

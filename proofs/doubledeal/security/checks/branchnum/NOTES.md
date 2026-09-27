@@ -1,5 +1,7 @@
 # DoubleDeal: is there an AES-style branch number? (measurement + proposal, analysis only)
 
+> **v10 note.** These measurements were made for v8 and v9 and were **not rerun for v10**. v10 changes only SumRanks, so the GridCycle statements (the proved floor and the cards-50/51 tail swap) carry over unchanged; every SumRanks, round and multi-round number below is about v8/v9 SumRanks, not v10.
+
 Scope. Everything here is an empirical measurement on the Python port or a proof *sketch*, except
 the floor and GridCycle tail statements of §4, which are proved in Lean (PR #84).
 Nothing here is a security or bit-security claim, and nothing proposes a change to the cipher.

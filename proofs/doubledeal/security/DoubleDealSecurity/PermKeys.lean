@@ -42,11 +42,7 @@ theorem invUnkeyedNoMix_cells (x : Fin 52 → Nat) (i : Fin 52) :
     ∃ k, invUnkeyedNoMix x i = x k := by
   have h1 : ∀ r c, (fun v => ∃ k, v = x k) (invShiftRows (layColumnMajor x) r c) :=
     fun r c => ⟨_, rfl⟩
-  have h2 := colRotateInv_bound (fun v => ∃ k, v = x k) (invShiftRows (layColumnMajor x))
-    (fun c => colWeightSum cardColumnWeight (invShiftRows (layColumnMajor x)) c) h1
-  have h3 := rowRotateInv_bound (fun v => ∃ k, v = x k) (applyColRotatesInv cardColumnWeight (invShiftRows (layColumnMajor x)))
-    (fun r => rowWeightSum cardRank
-      (applyColRotatesInv cardColumnWeight (invShiftRows (layColumnMajor x))) r) h2
+  have h3 := invSumRanksV10_bound (fun v => ∃ k, v = x k) (invShiftRows (layColumnMajor x)) h1
   obtain ⟨k, hk⟩ := h3 (cmRow i) (cmCol i)
   exact ⟨k, hk⟩
 
@@ -174,23 +170,22 @@ theorem encrypt6_commutes_iff_id (σ : Relabel) :
   · intro h; exact (roundBody_covariant_iff_id σ).1 (round_covariant_of_encrypt6 σ h)
   · rintro rfl _ _ _; exact commutesOnDecks_one _
 
-/-- (PROVED, no conjecture) No nontrivial σ that commutes with the v9 stem
-    (i.e. no nontrivial `v9Sym a b`) gives `E_K(σM) = σ E_K(M)` for all
+/-- (PROVED, no conjecture) No nontrivial σ that commutes with v10 SumRanks
+    (e.g. no nontrivial `v10Sym a x`) gives `E_K(σM) = σ E_K(M)` for all
     permutation round keys. -/
 theorem encrypt6_not_commutes_of_stem (σ : Relabel) (hid : σ ≠ 1)
-    (hs : CommutesG σ sumRanksV9) :
+    (hs : CommutesG σ sumRanksV10) :
     ¬ ∀ k0 kMix kF, CommutesOnDecks σ (fun m => encrypt6P m k0 kMix kF) :=
   fun h => roundBody_not_covariant_of_stem σ hid hs (round_covariant_of_encrypt6 σ h)
 
-/-- (PROVED) The 51 nontrivial `v9Sym a b` (e.g. the suit rotation `v9Sym 0 1`):
-    for each there are permutation round keys and a deck with
-    `E_K(σM) ≠ σ E_K(M)`. -/
-theorem encrypt6_not_commutes_v9Sym (a : Fin 13) (b : Fin 4) (hab : (a, b) ≠ (0, 0)) :
-    ¬ ∀ k0 kMix kF, CommutesOnDecks (v9Sym a b) (fun m => encrypt6P m k0 kMix kF) := by
-  obtain ⟨hr, hc⟩ := (v9_shift_iff (v9Sym a b)).2 ⟨a, b, fun _ => rfl⟩
-  refine encrypt6_not_commutes_of_stem _ ?_ (sumRanks_commutes_of_shift _ _ _ hr hc)
+/-- (PROVED) The 51 nontrivial `v10Sym a x` (e.g. the label shift `v10Sym 0 1`,
+    ♣↔♦ and ♥↔♠ within each rank): for each there are permutation round keys
+    and a deck with `E_K(σM) ≠ σ E_K(M)`. -/
+theorem encrypt6_not_commutes_v10Sym (a : Fin 13) (x : Fin 4) (hax : (a, x) ≠ (0, 0)) :
+    ¬ ∀ k0 kMix kF, CommutesOnDecks (v10Sym a x) (fun m => encrypt6P m k0 kMix kF) := by
+  refine encrypt6_not_commutes_of_stem _ ?_ (v10_sumRanks_commutes_of_sym a x)
   intro hid
-  obtain ⟨rfl, rfl⟩ := v9SymFn_fixed a b ⟨0, by decide⟩ (Equiv.congr_fun hid _)
-  exact hab rfl
+  obtain ⟨rfl, rfl⟩ := v10SymFn_fixed a x ⟨0, by decide⟩ (Equiv.congr_fun hid _)
+  exact hax rfl
 
 end DoubleDeal.Security

@@ -92,7 +92,8 @@ theorem generated_encrypt_map_iff (f : Nat → Nat) (hf : CardMap f) (message ke
   · intro h; rw [h]
 
 /-- (PROVED, kernel `decide!`, ~80 s) Model-level K♣↔K♦ counterexample for the
-    full v9 encrypt (message `K♦, A♣, 2♣, …`, identity key). -/
+    full v10 encrypt (message `K♦, A♣, 2♣, …`, identity key). Rechecked for
+    v10: the same message and key still break K♣↔K♦. -/
 theorem encryptDeck_KC_KD_not_equivariant :
     encryptDeck (toDeck (fun i => swapNat 12 51 (firstDeck 51 i))) (List.range 52) ≠
       (encryptDeck (toDeck (firstDeck 51)) (List.range 52)).map (swapNat 12 51) := by
@@ -101,7 +102,7 @@ theorem encryptDeck_KC_KD_not_equivariant :
 theorem swapNat_cardMap : CardMap (swapNat 12 51) :=
   ⟨fun n h => by unfold swapNat; split <;> (try split) <;> omega⟩
 
-/-- (PROVED) The emitted v9 `encrypt` is not K♣↔K♦-equivariant: on message
+/-- (PROVED) The emitted v10 `encrypt` is not K♣↔K♦-equivariant: on message
     `K♦, A♣, 2♣, …` with the identity key, `E_K(σM) ≠ σ E_K(M)`. -/
 theorem generated_encrypt_KC_KD_not_equivariant :
     Doubledeal.encrypt (Link2.embed ((toDeck (firstDeck 51)).map (swapNat 12 51)))
@@ -148,7 +149,7 @@ theorem generated_encrypt_relabel_iff (σ : Relabel) (message key : List Nat)
   generated_encrypt_map_iff σ.app (app_cardMap σ) message key hm hk hc
 
 /-- (PROVED) Headline: there is a relabelling `σ : Equiv.Perm (Fin 52)` — the
-    transposition K♣↔K♦ — such that the emitted v9 `encrypt` does not commute
+    transposition K♣↔K♦ — such that the emitted v10 `encrypt` does not commute
     with it: on message `K♦, A♣, 2♣, …` and the identity key,
     `E_K(σM) ≠ σ E_K(M)`. -/
 theorem generated_encrypt_not_relabel_equivariant :

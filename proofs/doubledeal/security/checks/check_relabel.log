@@ -8,19 +8,23 @@
     v8 shift <-> rank-preserving on pool: True ; v9Sym ∩ rank-preserving = [(0, 0), (0, 1), (0, 2), (0, 3)] (the 4 suit rotations)
     v8: per-deck SumRanks commute rate: K♣↔K♦ 1.000, A♣↔A♥ 1.000, A♣↔5♣ 0.223
     v9: per-deck SumRanks commute rate: K♣↔K♦ 0.048, A♣↔A♥ 0.064, A♣↔5♣ 0.232
+[2b] v10: all 52 v10Sym (rank + a, suit label XOR x) are bijections and commute with v10 SumRanks on 20 random decks each
+    v10: SumRanks fails to commute (some deck out of 40) for 1326/1326 transpositions, 500/500 random sigma, 50/51 nontrivial v9Sym
+    v10: per-deck SumRanks commute rate: K♣↔Q♥ 0.0000, K♣↔K♦ 0.0000, A♣↔A♥ 0.0000, A♣↔5♣ 0.0035
 [3] v8: seat2 collisions [(12, 38)]  (K♣=12, K♠=38)
 [3] v9: seat2 collisions [(12, 38)]  (K♣=12, K♠=38)
     v8: K♣<->K♦ on deck [K♦, 0..]: commutes? False; seats of 2nd card (1, 0) vs (0, 0)
     v8: K♣<->K♠ witness found: True; cfirst(K♣) works: True
     v8: every transposition fails GridCycle on a c-first deck: True
     v8: every nontrivial G52 element fails GridCycle on some c-first deck: True
-    v8: GridCycle commutes with K♣<->K♦ on 5447/20000 random decks
+    v8: GridCycle commutes with K♣<->K♦ on 5347/20000 random decks
     v8: commute <-> equal walk on 3000/3000
     v9: K♣<->K♦ on deck [K♦, 0..]: commutes? False; seats of 2nd card (1, 0) vs (0, 0)
     v9: K♣<->K♠ witness found: True; cfirst(K♣) works: True
     v9: every transposition fails GridCycle on a c-first deck: True
     v9: every nontrivial G52 element fails GridCycle on some c-first deck: True
-    v9: GridCycle commutes with K♣<->K♦ on 5238/20000 random decks
+    v9: GridCycle commutes with K♣<->K♦ on 5118/20000 random decks
     v9: commute <-> equal walk on 3000/3000
 [4] v8: full round fails for every transposition: True; every nontrivial G52: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
 [4] v9: full round fails for every transposition: True; every nontrivial G52: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
+[4] v10: full round fails for every transposition: True; every nontrivial G52: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True

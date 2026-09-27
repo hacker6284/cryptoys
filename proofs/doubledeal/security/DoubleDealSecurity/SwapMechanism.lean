@@ -1,5 +1,9 @@
 /-
   T1 addendum: why the v9 K♣↔Q♥ distinguisher does not contradict T1.
+  DEPRECATED-v9 MODEL: every statement here is about `sumRanksV9`, the
+  deprecated v9 SumRanks, and explains the vulnerability that retired it.
+  v10 SumRanks (`sumRanksV10`) chains rows and columns; its same-row swap
+  survival is measured, not proved (`proofs/doubledeal/analysis/v10-sumranks/`).
 
   T1 (`SumRanks.lean`) characterises relabellings that commute with SumRanks
   on EVERY deck: exactly the constant weight shifts (`v9Sym`), and no

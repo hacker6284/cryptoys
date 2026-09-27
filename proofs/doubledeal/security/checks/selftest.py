@@ -1,19 +1,28 @@
-"""Check the v8/v9 Python port: v9 against the current vectors, v8 against frozen dd_v8.py."""
+"""Check the v8/v9/v10 Python port: v10 against the current vectors, v9 against the frozen
+v9 vectors, v8 against frozen dd_v8.py."""
 import json, random, sys, ddport as P, dd_v8 as V8
 from ddport import REPO
 from dd_v8 import lay_cm, scoop_cm
 d = json.load(open(REPO / 'proofs/doubledeal/vectors/doubledeal_vectors.json'))
-n = 0
-for vec in d['vectors']:
-    k = vec['kind']
-    if k == 'encrypt': got, exp = P.encrypt(vec['message'], vec['key'], 9), vec['cipher']
-    elif k == 'mix_columns': got, exp = P.mix_columns(vec['input'], 9), vec['output']
-    elif k == 'sum_ranks': got, exp = scoop_cm(P.sum_ranks(lay_cm(vec['input']), 9)), vec['output']
-    elif k == 'unkeyed_full': got, exp = P.mix_columns(P.stem(vec['input'], 9), 9), vec['output']
-    else: continue
-    if got != exp: print('MISMATCH', vec['name']); sys.exit(1)
-    n += 1
-print('v9 port matches', n, 'vectors')
+def check(d, v):
+    n = 0
+    for vec in d['vectors']:
+        k = vec['kind']
+        if k == 'encrypt': got, exp = P.encrypt(vec['message'], vec['key'], v), vec['cipher']
+        elif k == 'mix_columns': got, exp = P.mix_columns(vec['input'], v), vec['output']
+        elif k == 'sum_ranks': got, exp = scoop_cm(P.sum_ranks(lay_cm(vec['input']), v)), vec['output']
+        elif k == 'unkeyed_full': got, exp = P.mix_columns(P.stem(vec['input'], v), v), vec['output']
+        else: continue
+        if got != exp: print(f'MISMATCH v{v}', vec['name']); sys.exit(1)
+        n += 1
+    print(f'v{v} port matches', n, 'vectors')
+check(d, 10)
+check(json.load(open(REPO / 'proofs/deprecated/doubledeal-v9/vectors/doubledeal_v9_vectors.json')), 9)
+for _ in range(50):
+    m = list(range(52)); random.shuffle(m)
+    g = lay_cm(m)
+    assert P.inv_sum_ranks_v10(P.sum_ranks_v10(g)) == g
+print('v10 inv SumRanks undoes SumRanks on 50 random decks')
 rng = random.Random(1)
 for _ in range(300):
     m = list(range(52)); rng.shuffle(m); k = list(range(52)); rng.shuffle(k)

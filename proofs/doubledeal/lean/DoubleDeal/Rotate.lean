@@ -226,4 +226,12 @@ theorem getElem_rotR (xs : List α) (k i : Nat)
       exact Nat.mod_eq_of_lt (by omega)
     simp [hmod]
 
+theorem rotL_congr_mod (xs : List α) {n n' : Nat} (h : n % xs.length = n' % xs.length) :
+    rotL xs n = rotL xs n' := by
+  unfold rotL; rw [h]
+
+theorem rotR_congr_mod (xs : List α) {n n' : Nat} (h : n % xs.length = n' % xs.length) :
+    rotR xs n = rotR xs n' := by
+  unfold rotR; rw [h]
+
 end DoubleDeal

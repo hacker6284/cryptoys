@@ -274,4 +274,42 @@ theorem sumRanks_bound (P : α → Prop) (rowW colW : α → Nat) (g : Grid α)
     (hb : ∀ r c, P (g r c)) : ∀ r c, P (sumRanks rowW colW g r c) :=
   applyColRotates_bound P colW _ (applyRowRotates_bound P rowW g hb)
 
+/-! ## Generic list/rotation facts (used by the Mathlib security package) -/
+
+theorem mem_toList13 {f : Fin 13 → α} {x : α} (h : x ∈ toList13 f) : ∃ c, f c = x := by
+  obtain ⟨i, hi, hx⟩ := List.getElem_of_mem h
+  have hi' : i < 13 := by simpa [length_toList13] using hi
+  exact ⟨⟨i, hi'⟩, by rw [← getElem_toList13 f ⟨i, hi'⟩]; exact hx⟩
+
+theorem mem_toList4 {f : Fin 4 → α} {x : α} (h : x ∈ toList4 f) : ∃ c, f c = x := by
+  obtain ⟨i, hi, hx⟩ := List.getElem_of_mem h
+  have hi' : i < 4 := by simpa [length_toList4] using hi
+  exact ⟨⟨i, hi'⟩, by rw [← getElem_toList4 f ⟨i, hi'⟩]; exact hx⟩
+
+/-- The inverse rotations only move cells: a property of every input cell
+    holds on every output cell. -/
+theorem rowRotateInv_bound (P : α → Prop) (g : Grid α) (t : Fin 4 → Nat)
+    (hb : ∀ r c, P (g r c)) : ∀ r c, P (rowRotateInv g t r c) := by
+  intro r c
+  unfold rowRotateInv ofList13
+  have hne : (toList13 (g r)).length ≠ 0 := by simp [length_toList13]
+  have hget := getElem_rotR (toList13 (g r)) (t r) c.val hne c.isLt
+  rw [hget]
+  have hj : (c.val + (13 - t r % 13)) % 13 < 13 := Nat.mod_lt _ (by decide)
+  have hcell := getElem_toList13 (g r) ⟨(c.val + (13 - t r % 13)) % 13, hj⟩
+  simpa [length_toList13, hcell] using hb r ⟨(c.val + (13 - t r % 13)) % 13, hj⟩
+
+theorem colRotateInv_bound (P : α → Prop) (g : Grid α) (s : Fin 13 → Nat)
+    (hb : ∀ r c, P (g r c)) : ∀ r c, P (colRotateInv g s r c) := by
+  intro r c
+  unfold colRotateInv ofList4
+  have hne : (toList4 (fun r' => g r' c)).length ≠ 0 := by simp [length_toList4]
+  have hget := rotL_get_eq (toList4 (fun r' => g r' c)) (s c) r.val hne r.isLt
+  rw [hget]
+  have hj : (r.val + s c % 4) % 4 < 4 := Nat.mod_lt _ (by decide)
+  have hcell := getElem_toList4 (fun r' => g r' c) ⟨(r.val + s c % 4) % 4, hj⟩
+  simp only [length_toList4]
+  rw [hcell]
+  exact hb _ c
+
 end DoubleDeal

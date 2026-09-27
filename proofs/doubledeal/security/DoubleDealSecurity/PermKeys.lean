@@ -16,7 +16,7 @@
   key) produces; the argument uses the identity for all rounds but the first
   mixing round, which a real schedule need not reach.
 -/
-import DoubleDealSecurity.Relabel
+import DoubleDealSecurity.Rounds
 
 namespace DoubleDeal.Security
 
@@ -44,32 +44,6 @@ theorem isDeck_rel (σ : Relabel) {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck 
 theorem isDeck_compose {m : Fin 52 → Nat} (hm : IsDeck m) (p : Key) :
     IsDeck (composeVec 52 Nat m p) :=
   ⟨fun _ => hm.1 _, fun _ _ h => p.injective (hm.2 _ _ h)⟩
-
-/-! ## Inverse rotations only move cells -/
-
-theorem rowRotateInv_bound (P : α → Prop) (g : Grid α) (t : Fin 4 → Nat)
-    (hb : ∀ r c, P (g r c)) : ∀ r c, P (rowRotateInv g t r c) := by
-  intro r c
-  unfold rowRotateInv ofList13
-  have hne : (toList13 (g r)).length ≠ 0 := by simp [length_toList13]
-  have hget := getElem_rotR (toList13 (g r)) (t r) c.val hne c.isLt
-  rw [hget]
-  have hj : (c.val + (13 - t r % 13)) % 13 < 13 := Nat.mod_lt _ (by decide)
-  have hcell := getElem_toList13 (g r) ⟨(c.val + (13 - t r % 13)) % 13, hj⟩
-  simpa [length_toList13, hcell] using hb r ⟨(c.val + (13 - t r % 13)) % 13, hj⟩
-
-theorem colRotateInv_bound (P : α → Prop) (g : Grid α) (s : Fin 13 → Nat)
-    (hb : ∀ r c, P (g r c)) : ∀ r c, P (colRotateInv g s r c) := by
-  intro r c
-  unfold colRotateInv ofList4
-  have hne : (toList4 (fun r' => g r' c)).length ≠ 0 := by simp [length_toList4]
-  have hget := rotL_get_eq (toList4 (fun r' => g r' c)) (s c) r.val hne r.isLt
-  rw [hget]
-  have hj : (r.val + s c % 4) % 4 < 4 := Nat.mod_lt _ (by decide)
-  have hcell := getElem_toList4 (fun r' => g r' c) ⟨(r.val + s c % 4) % 4, hj⟩
-  simp only [length_toList4]
-  rw [hcell]
-  exact hb _ c
 
 theorem invUnkeyedNoMix_cells (x : Fin 52 → Nat) (i : Fin 52) :
     ∃ k, invUnkeyedNoMix x i = x k := by

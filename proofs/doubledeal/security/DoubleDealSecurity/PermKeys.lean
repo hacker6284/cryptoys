@@ -31,8 +31,6 @@ def encrypt6P (m : Fin 52 → Nat) (k0 : Key) (kMix : Nat → Key) (kF : Key) : 
 
 /-! ## Decks as permutations -/
 
--- `deckPerm` (a deck as a permutation of `Fin 52`) lives in `Relabel.lean`.
-
 theorem isDeck_rel (σ : Relabel) {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck (rel σ m) :=
   ⟨fun i => σ.app_lt (hm.1 i), fun _ _ h => hm.2 (σ.app_inj h)⟩
 

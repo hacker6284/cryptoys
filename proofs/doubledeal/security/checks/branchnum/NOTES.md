@@ -185,10 +185,10 @@ about 1326²/2 ≈ 8.8e5 swap→swap pairs, so 4 is expected there too, but thes
 exhibit one. The separate related-plaintext search in
 [PR #86](https://github.com/hacker6284/cryptoys/pull/86) found 14 K♣↔Q♥ swap→swap pairs on the
 full v9 encrypt under random real keys (about 3.5e-8 per pair). Averaged over keys, that rate
-means about 3.5e-8 × 52!/2 ≈ 1.4e60 swap→swap pairs per key for that one swap alone (14 hits, so
-roughly ±30%; per-key variation was not measured). That is far more than the ≈ 8.8e5 a random
-bijection is expected to have over all 1326 swaps together, and a random bijection would have
-about 0.5 for this specific swap.
+means about 3.5e-8 × 52!/2 ≈ 1.4e60 swap→swap pairs per key for that one swap alone (14 hits:
+±27% at 1 SE; 95% interval 0.55–1.7×; per-key variation not measured). That is far more than the
+≈ 8.8e5 a random bijection is expected to have over all 1326 swaps together, and a random
+bijection would have about 0.5 for this specific swap.
 
 The floor and GridCycle's tightness are now proved in Lean; the characterisations T2 and T3 below
 remain open.

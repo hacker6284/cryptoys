@@ -44,22 +44,19 @@ elab "#audit_all " root:ident : command => do
   -- Lean 4.14 silently merges an identical theorem imported from two modules, so the
   -- constant table cannot show this; each module's `constNames` still lists it. The
   -- other owner may be outside the roots (an identical redeclaration of a Mathlib or
-  -- core name). Skipped: private names (module-local, cannot collide) and the
-  -- auto-generated equation lemmas `.eq_<n>` / `.eq_def`, which several modules may
-  -- generate for the same definition.
-  let generated : Name → Bool
-    | .str _ s => s == "eq_def" || (s.length > 3 && s.startsWith "eq_" && (s.drop 3).all Char.isDigit)
-    | _ => false
+  -- core name). Skipped: private names (module-local, cannot collide) and reserved
+  -- (auto-generated) names, which several modules may generate on demand for the same
+  -- definition.
   let mods := env.header.moduleNames.zip env.header.moduleData
   let mut mine : NameSet := {}
   for (mod, d) in mods do
     if mod.getRoot == root then
       for n in d.constNames do
-        unless isPrivateName n || generated n do mine := mine.insert n
+        unless isPrivateName n || isReservedName env n do mine := mine.insert n
   let mut owners : NameMap (Array Name) := {}
   for (mod, d) in mods do
     for n in d.constNames do
       if mine.contains n then owners := owners.insert n ((owners.findD n #[]).push mod)
   for (n, ms) in owners do
     if ms.size > 1 then
-      logError m!"DUP {n}: declared in more than one module: {", ".intercalate (ms.toList.map toString)}"
+      logError m!"DUP {n}: declared in more than one module: {", ".intercalate ((ms.qsort Name.lt).toList.map toString)}"

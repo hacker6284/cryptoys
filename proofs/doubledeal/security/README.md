@@ -79,8 +79,8 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
   commented-out imports cannot fool it. A private and a public theorem with the same user name also fail.
   The audit also raises `DUP n` for any non-private name declared under its root that
   more than one module declares, including an identical redeclaration of a Mathlib or
-  core name (Lean 4.14 merges identical imported theorems silently). Auto-generated
-  `.eq_<n>` / `.eq_def` lemmas are skipped. `checks/audit_dup_selftest.py` (CI) builds a
+  core name (Lean 4.14 merges identical imported theorems silently). Reserved
+  (auto-generated) names are skipped. `checks/audit_dup_selftest.py` (CI) builds a
   throwaway module duplicating `isDeck_mixColumns` and requires that error.
 
 CI (`proofs-heavy.yml`, job `doubledeal-security-heavy`) builds the heavy library

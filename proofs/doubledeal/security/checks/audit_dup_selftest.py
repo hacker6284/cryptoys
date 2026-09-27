@@ -3,7 +3,7 @@
 Writes a throwaway module DoubleDealSecurity/DupFixture.lean holding an identical copy of
 PermKeys' `isDeck_mixColumns` (same namespace, opens and proof, without importing PermKeys),
 builds it, runs `#audit_all DoubleDealSecurity` in an environment that loads both modules,
-and requires the error `DUP DoubleDeal.Security.isDeck_mixColumns`. Lean 4.14 merges the two
+and requires exactly one DUP error, the full expected message (modules sorted). Lean 4.14 merges the two
 identical imported theorems silently, so this is exactly the case the check exists for.
 The fixture source and its build outputs are always removed again.
 usage (from proofs/doubledeal/security): python3 checks/audit_dup_selftest.py
@@ -32,7 +32,8 @@ import DoubleDealSecurity.Audit
 
 #audit_all DoubleDealSecurity
 """
-WANT = "DUP DoubleDeal.Security.isDeck_mixColumns"
+WANT = ("DUP DoubleDeal.Security.isDeck_mixColumns: declared in more than one module: "
+        "DoubleDealSecurity.DupFixture, DoubleDealSecurity.PermKeys")
 
 
 def main() -> int:
@@ -43,7 +44,7 @@ def main() -> int:
     try:
         FIX.write_text(FIXTURE)
         RUNNER.write_text(RUN)
-        b = subprocess.run(["lake", "build", "DoubleDealSecurity.DupFixture"], cwd=SEC,
+        b = subprocess.run(["lake", "build", "DoubleDealSecurity.Audit", "DoubleDealSecurity.DupFixture"], cwd=SEC,
                            capture_output=True, text=True)
         if b.returncode != 0:
             print(b.stdout + b.stderr, file=sys.stderr)
@@ -51,13 +52,13 @@ def main() -> int:
             return 1
         r = subprocess.run(["lake", "env", "lean", RUNNER.name], cwd=SEC, capture_output=True, text=True)
         out = r.stdout + r.stderr
-        dups = [l for l in out.splitlines() if "DUP " in l]
-        if not any(WANT in l for l in dups) or len(dups) != 1:
+        dups = [l.split("error: ", 1)[-1] for l in out.splitlines() if "DUP " in l]
+        if dups != [WANT]:
             print(out, file=sys.stderr)
-            print(f"audit_dup_selftest: expected exactly one '{WANT}' error, got {len(dups)} DUP lines",
+            print(f"audit_dup_selftest: expected exactly the DUP error '{WANT}', got {dups}",
                   file=sys.stderr)
             return 1
-        print(f"audit_dup_selftest: an identical duplicate in two modules gives: {dups[0].split('error: ')[-1]}")
+        print(f"audit_dup_selftest: an identical duplicate in two modules gives: {dups[0]}")
         return 0
     finally:
         FIX.unlink(missing_ok=True)

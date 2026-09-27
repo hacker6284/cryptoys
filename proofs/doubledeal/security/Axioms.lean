@@ -44,6 +44,8 @@ import DoubleDealSecurity
 #print axioms DoubleDeal.Security.fullRound_not_commutes_of_stem
 #print axioms DoubleDeal.Security.unkeyedNoMix_onto_decks
 #print axioms DoubleDeal.Security.unkeyedNoMix_invUnkeyedNoMix
+#print axioms DoubleDeal.Security.encrypt6_constKey
+#print axioms DoubleDeal.Security.round_of_encrypt6
 
 -- Link 2 transfer (emitted encrypt)
 #print axioms DoubleDeal.Security.keyPos_relabel_key

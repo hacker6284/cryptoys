@@ -9,17 +9,17 @@
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { createAead } from "../aead.mjs";
+import { createAead } from "./aead.mjs";
 import {
     bytesToDeck,
     cipherBytesToDeck,
     deckToCipherBytes,
     deckToMessageBytes,
-} from "../../../../demos/doubledeal/cards.js";
+} from "../../../demos/doubledeal/cards.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
-export const repoRoot = resolve(here, "../../../..");
-export const katsPath = join(here, "doubledeal_cbc_hmac_kats.json");
+export const repoRoot = resolve(here, "../../..");
+export const katsPath = join(here, "kats", "doubledeal_cbc_hmac_kats.json");
 
 export function hexToBytes(hex) {
     const clean = hex.startsWith("0x") ? hex.slice(2) : hex;

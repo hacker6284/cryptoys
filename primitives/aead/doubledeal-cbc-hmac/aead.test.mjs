@@ -1,4 +1,4 @@
-import { bytesToHex, hexToBytes, loadAead, readKats } from "./kats/aead_harness.mjs";
+import { bytesToHex, hexToBytes, loadAead, readKats } from "./aead_harness.mjs";
 
 function assert(cond, message) {
     if (!cond) throw new Error(message);
@@ -10,7 +10,7 @@ function flip(bytes, index) {
     return out;
 }
 
-// AEAD_OUT / DD_MJS: see kats/aead_harness.mjs.
+// AEAD_OUT / DD_MJS: see aead_harness.mjs.
 const aead = await loadAead();
 const kats = readKats();
 

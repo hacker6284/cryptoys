@@ -6,9 +6,10 @@
 #   (PR #8 squash merge; Lean is in ALL_BACKENDS).
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
-# DoubleDeal (v9, and frozen v8), MegaDreifach, Scramble, and
-# DoubleDeal-CBC-HMAC production paths are bounded `for`. DoubleDeal test-only kind-scan whiles are
-# stripped under the gate. CBC-HMAC imports MegaDreifach via extra -I.
+# Production paths are bounded `for` in DoubleDeal (v9, and frozen v8),
+# MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. DoubleDeal's test-only
+# kind-scan whiles are stripped under the gate. CBC-HMAC imports
+# MegaDreifach via an extra -I.
 #
 # Usage (from repo root):
 #   proofs/emit_lean.sh              # write Generated/ (all five targets)

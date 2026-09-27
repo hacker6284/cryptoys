@@ -1,5 +1,7 @@
 # DoubleDeal
 
+> **v9 is deprecated (draft, awaiting Zachary's decision).** A related-plaintext distinguisher breaks the full 6-round v9: swapping K♣ and Q♥ in the plaintext swaps them in the ciphertext with probability about \(3.5\times10^{-8}\) per pair (about \(1/52!\) for an ideal cipher). v9 is frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo`; the vulnerability proof is in `proofs/deprecated/doubledeal-v9/`. **No successor has been chosen yet**, so this file and `doubledeal.sudo` still describe v9 and stay byte-for-byte the v9 algorithm until a successor is chosen. Candidate patches (analysis only) are in `proofs/deprecated/doubledeal-v9/candidates/CANDIDATES.md` (log: `proofs/deprecated/doubledeal-v9/candidates/measure.log`).
+
 Formerly TwoDeck (TDSPN elegant-v8). **This is DoubleDeal v9.** Two changes from v8: SumRanks columns read suit as well as rank (§3.3), and the GridCycle overflow scan starts at the blocked seat's column (§3.5). v8 is deprecated and frozen at `v8/SPEC.md`; its vulnerability proof is in `proofs/deprecated/doubledeal-v8/`. This document is the normative specification. `doubledeal.sudo` is the conformance implementation. A mismatch is a bug in the implementation. DoubleDeal is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim. It is not for protecting anything.
 
 The demo at `demos/doubledeal/` plays `trace_encrypt` and `trace_decrypt`. It does not contain a second copy of the rounds. `decrypt` may keep the round-key list from `expand_keys`. The decrypt trace does not: it passes the master key forward 6 times to \(K_6\), then un-passes once per remaining round back to \(K_0\). Ciphertext is the same either way; only the key-derivation choreography differs.
@@ -751,7 +753,7 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 | Version | Status | Change |
 | --- | --- | --- |
 | v8 (TDSPN elegant-v8) | **Deprecated**, frozen at `v8/SPEC.md` + `v8/doubledeal_v8.sudo` | SumRanks read ranks only, and the GridCycle overflow scanned each marker row from column 0. Same-rank relabellings (e.g. K♣↔K♦) commuted with every layer except GridCycle, giving a chosen-plaintext distinguisher (~\(10^{-3}\) per pair). Vulnerability proof: `proofs/deprecated/doubledeal-v8/`. |
-| v9 | **Current** | SumRanks columns sum \((\mathrm{rank}+\mathrm{suit}) \bmod 4\); GridCycle overflow scans from the blocked column. Toy evidence only: the same relation family measured at 0 hits in \(2\times10^6\) full-cipher pairs for the worst transposition found by a one-round screen (95% upper bound \(1.5\times10^{-6}\)). That is not a security claim. |
+| v9 | **Deprecated** (draft), frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo`; still the text of this file until a successor is chosen | SumRanks columns sum \((\mathrm{rank}+\mathrm{suit}) \bmod 4\); GridCycle overflow scans from the blocked column. Toy evidence only: the same relation family measured at 0 hits in \(2\times10^6\) full-cipher pairs for the worst transposition found by a one-round screen (95% upper bound \(1.5\times10^{-6}\)). That is not a security claim. Superseded: a transposition the one-round screen did not rank first, K♣↔Q♥, commutes with the full cipher at about \(3.5\times10^{-8}\) per pair (14 hits in \(4\times10^8\) pairs, below what \(2\times10^6\) pairs can see). Vulnerability proof: `proofs/deprecated/doubledeal-v9/`. |
 
 ---
 
@@ -761,6 +763,7 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 | --- | --- | --- |
 | This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules (v9) |
 | Deprecated v8 | `primitives/cipher/doubledeal/v8/` | Frozen v8 SPEC and sudo; vulnerability proof in `proofs/deprecated/doubledeal-v8/` |
+| Deprecated v9 | `primitives/cipher/doubledeal/v9/` | Frozen v9 SPEC and sudo; vulnerability proof in `proofs/deprecated/doubledeal-v9/` |
 | Conformance implementation | `primitives/cipher/doubledeal/doubledeal.sudo` | The only copy of the rounds |
 | Byte encoding | `demos/doubledeal/cards.js` | §5.3, outside `encrypt` / `decrypt`. A demo box is the text you type, as UTF-8, then this encoding. A leading `0x` means the rest of the box is hex bytes. Ciphertext is written with that prefix. The key box is one deck: those bytes are a single 28-byte block, filled with the §5.3 pad when shorter than 28 bytes, used as-is when exactly 28, and rejected when longer. The nonce box is not §5.3. §5.2's nonce is a 39-card order; the page unranks up to 19 bytes into cards \(0..38\) and rejects an integer \(\ge 39!\). |
 | Demo | `demos/doubledeal/` | Three.js table. Plays `trace_encrypt` and `trace_decrypt` from the sudo module |

@@ -142,18 +142,25 @@ theorem CommutesG.onDecks {σ F} (h : CommutesG σ F) : CommutesOnDecksG σ F :=
 /-- `σ.app` is a card map in the sense of the Link-side transfer theorems. -/
 theorem app_cardMap (σ : Relabel) : CardMap σ.app := ⟨fun _ h => σ.app_lt h⟩
 
-/-- `swap K♣ K♦` acts on cells as the Link-side `swapNat 12 51`. -/
-theorem swap_KC_KD_app : (swap KC KD).app = swapNat 12 51 := by
-  funext n
+/-- A transposition acts on cells as the Link-side `swapNat`. -/
+theorem swap_app_eq (a b : Fin 52) : (swap a b).app = swapNat a.val b.val := by
+  funext x
   unfold Relabel.app swapNat
-  by_cases h : n < 52
-  · simp only [h, ↓reduceDIte]
-    have : ∀ c : Fin 52, ((swap KC KD) c).val =
-        (if c.val = 12 then 51 else if c.val = 51 then 12 else c.val) := by decide
-    rw [this ⟨n, h⟩]
-  · have h12 : n ≠ 12 := by omega
-    have h51 : n ≠ 51 := by omega
-    simp [h, h12, h51]
+  by_cases hx : x < 52
+  · simp only [hx, ↓reduceDIte]
+    by_cases ha : x = a.val
+    · subst ha; simp [Equiv.swap_apply_left]
+    · by_cases hb : x = b.val
+      · subst hb; simp [Equiv.swap_apply_right, ha]
+      · have ha' : (⟨x, hx⟩ : Fin 52) ≠ a := fun e => ha (congrArg Fin.val e)
+        have hb' : (⟨x, hx⟩ : Fin 52) ≠ b := fun e => hb (congrArg Fin.val e)
+        simp [Equiv.swap_apply_of_ne_of_ne ha' hb', ha, hb]
+  · have ha : x ≠ a.val := fun e => hx (e ▸ a.isLt)
+    have hb : x ≠ b.val := fun e => hx (e ▸ b.isLt)
+    simp [hx, ha, hb]
+
+/-- `swap K♣ K♦` acts on cells as the Link-side `swapNat 12 51`. -/
+theorem swap_KC_KD_app : (swap KC KD).app = swapNat 12 51 := swap_app_eq KC KD
 
 theorem cards_firstDeck : Cards (firstDeck 51) := firstDeck_lt
 

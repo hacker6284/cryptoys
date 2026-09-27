@@ -12,6 +12,7 @@ def KC : Fin 52 := ⟨12, by decide⟩   -- K♣
 def KH : Fin 52 := ⟨25, by decide⟩   -- K♥
 def KS : Fin 52 := ⟨38, by decide⟩   -- K♠
 def KD : Fin 52 := ⟨51, by decide⟩   -- K♦
+def QH : Fin 52 := ⟨24, by decide⟩   -- Q♥
 
 /-- The deck `c, 0, 1, …` (card `c` first, then the rest in order). -/
 def firstDeck (c : Nat) : Fin 52 → Nat := fun i =>

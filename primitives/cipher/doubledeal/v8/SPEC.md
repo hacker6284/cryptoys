@@ -1,6 +1,6 @@
 # DoubleDeal v8 (DEPRECATED, frozen)
 
-> **Deprecated.** This is the frozen v8 specification (TDSPN elegant-v8), kept verbatim below this banner so the published vectors and the vulnerability proof keep a fixed target. Do not change its behavior. v9 is current: [`../SPEC.md`](../SPEC.md).
+> **Deprecated.** This is the frozen v8 specification (TDSPN elegant-v8), kept verbatim below this banner so the published vectors and the vulnerability proof keep a fixed target. Do not change its behavior. The successor, v9, is now deprecated too (draft; no successor yet). It is still the live spec: [`../SPEC.md`](../SPEC.md).
 >
 > **Why deprecated.** v8 SumRanks reads ranks only. Compose, SumRanks, ShiftRows, and PassKey all commute with any relabelling of the deck that keeps ranks (for example K♣↔K♦), so only GridCycle stands in the way. A chosen-plaintext distinguisher follows: \(\Pr[E_K(\tau M) = \tau E_K(M)] \approx 1.1\times10^{-3}\) per pair for \(\tau = \) K♣↔K♦, against about \(1/52!\) for a random permutation. It is a distinguisher, not key recovery. Write-up, witness, and scripts: [`proofs/deprecated/doubledeal-v8/`](../../../../proofs/deprecated/doubledeal-v8/).
 >

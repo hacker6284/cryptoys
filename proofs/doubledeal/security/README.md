@@ -81,8 +81,10 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
   The audit also raises `DUP n` for any non-private name declared under its root that
   more than one module declares, including an identical redeclaration of a Mathlib or
   core name (Lean 4.14 merges identical imported theorems silently). Reserved
-  (auto-generated) names are skipped. `checks/audit_dup_selftest.py` (CI) builds a
-  throwaway module duplicating `isDeck_mixColumns` and requires that error.
+  (auto-generated) names are skipped. `checks/audit_dup_selftest.py` (CI) builds
+  throwaway modules and requires exactly two DUPs (an identical `isDeck_mixColumns`, and
+  a user-declared `zfxH.eq_1`) and none for the on-demand reserved `zfxF.eq_unfold` /
+  `zfxF.induct`.
 
 CI (`proofs-heavy.yml`, job `doubledeal-security-heavy`) builds the heavy library
 and runs `../check_axioms.py security-heavy` (same rules, no KNOWN_SORRY; every

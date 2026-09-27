@@ -157,6 +157,11 @@ theorem survives_iff_amounts (τ : Relabel) (g : Grid Nat) (hg : IsDeck (scoopCo
   · rintro ⟨hr, hc⟩
     rw [relG_colRotate_rowRotate, rowRotate_congr _ _ _ hr, colRotate_congr _ _ _ hc]
 
+theorem relG_colRotate (σ : Relabel) (g : Grid Nat) (s : Fin 13 → Nat) :
+    relG σ (colRotate g s) = colRotate (relG σ g) s := by
+  funext r c
+  simp only [relG, colRotate_apply]
+
 /-- Row conditions along `G`'s own trajectory (PROOF.md §1, Lemma 1(3)): row `r`
     turns by the same amount in `τ G` as in `G`, read off `τ` of `G`'s state. -/
 def RowCondsTraj (τ : Relabel) (g : Grid Nat) : Prop :=
@@ -186,7 +191,35 @@ instance (τ : Relabel) (H : Grid Nat) : Decidable (ColCondsTraj τ H) := by
 theorem traj_of_survives (τ : Relabel) (g : Grid Nat) (hg : IsDeck (scoopColumnMajor g))
     (h : sumRanksV10 (relG τ g) = relG τ (sumRanksV10 g)) :
     RowCondsTraj τ g ∧ ColCondsTraj τ (rowsDone rowTurnV10 g 4) := by
-  sorry
+  obtain ⟨hr, hc⟩ := (survives_iff_amounts τ g hg).1 h
+  have hrows : ∀ n, n ≤ 4 → rowsDone rowTurnV10 (relG τ g) n = relG τ (rowsDone rowTurnV10 g n) := by
+    intro n hn
+    rw [rowsDone_eq_partial _ _ _ hn, rowsDone_eq_partial _ _ _ hn, relG_rowRotate]
+    apply rowRotate_congr
+    intro r
+    split_ifs
+    · exact hr r
+    · rfl
+  have hH := hrows 4 le_rfl
+  have hcols : ∀ n, n ≤ 13 → colsDone colTurnV10 (relG τ (rowsDone rowTurnV10 g 4)) n =
+      relG τ (colsDone colTurnV10 (rowsDone rowTurnV10 g 4) n) := by
+    intro n hn
+    rw [colsDone_eq_partial _ _ _ hn, colsDone_eq_partial _ _ _ hn, relG_colRotate]
+    apply colRotate_congr
+    intro c
+    split_ifs
+    · have := hc c; rw [hH] at this; exact this
+    · rfl
+  refine ⟨fun r => ?_, fun c => ?_⟩
+  · have h1 := hr r
+    unfold rowAmt at h1
+    rw [hrows _ (by unfold rowStepOf; split <;> omega)] at h1
+    unfold rowTurnV10 at h1 ⊢
+    simpa only [Nat.mod_mod] using h1
+  · have h1 := hc c
+    unfold colAmt at h1
+    rw [hH, hcols _ (by unfold colStepOf; split <;> omega)] at h1
+    rwa [Nat.mod_eq_of_lt (colTurnV10_lt _ _), Nat.mod_eq_of_lt (colTurnV10_lt _ _)] at h1
 
 /-! ## §1 Corollary 1: the row equations -/
 
@@ -195,6 +228,46 @@ def rowOf (π : Equiv.Perm (Fin 52)) (r : Fin 4) : Fin 13 → Fin 52 := fun j =>
 
 /-- Column `j` of the deck `π`. -/
 def colOf (π : Equiv.Perm (Fin 52)) (j : Fin 13) : Fin 4 → Fin 52 := fun r => π (cmFlat r j)
+
+theorem rowStepOf_le : ∀ r : Fin 4, rowStepOf r ≤ 4 := by decide
+theorem prevRow_succ : ∀ p : Fin 4, prevRow (p + 1) = p := by decide
+theorem rowStep_read_iff : ∀ p : Fin 4, rowStepOf p ≤ rowStepOf (p + 1) - 1 ↔ p ≠ 0 := by decide
+theorem rowStepOf_of_ne : ∀ r : Fin 4, r ≠ 0 → rowStepOf r = r.val := by decide
+theorem prevRow_val_of_ne : ∀ r : Fin 4, r ≠ 0 → (prevRow r).val = r.val - 1 := by decide
+
+/-- Row `r`'s turn (`1 ≤ r`) depends only on rows `0, …, r-1`. -/
+theorem rowAmt_congr (g g' : Grid Nat) : ∀ (m : ℕ) (r : Fin 4), r.val = m → 1 ≤ m →
+    (∀ r' : Fin 4, r'.val < m → g r' = g' r') →
+    rowAmt rowTurnV10 g r = rowAmt rowTurnV10 g' r := by
+  intro m
+  induction m with
+  | zero => intro r _ h; omega
+  | succ m ih =>
+    intro r hr _ hrows
+    have hr0 : r ≠ 0 := by intro e; rw [e] at hr; simp at hr
+    have hstep := rowStepOf_of_ne r hr0
+    have hprev := prevRow_val_of_ne r hr0
+    unfold rowAmt
+    rw [rowsDone_eq_partial _ g _ (by have := r.isLt; omega),
+      rowsDone_eq_partial _ g' _ (by have := r.isLt; omega)]
+    have hamt : (if rowStepOf (prevRow r) ≤ rowStepOf r - 1 then rowAmt rowTurnV10 g (prevRow r)
+        else 0) = (if rowStepOf (prevRow r) ≤ rowStepOf r - 1 then
+          rowAmt rowTurnV10 g' (prevRow r) else 0) := by
+      by_cases hp0 : prevRow r = 0
+      · have h4 : ¬ rowStepOf (prevRow r) ≤ rowStepOf r - 1 := by
+          rw [hp0, hstep]; have := r.isLt; simp only [rowStepOf]; simp; omega
+        rw [if_neg h4, if_neg h4]
+      · have hpv : (prevRow r).val ≠ 0 := fun e => hp0 (Fin.ext e)
+        split_ifs
+        · exact ih (prevRow r) (by omega) (by omega) (fun r' hr' => hrows r' (by omega))
+        · rfl
+    have hrow : rowRotate g (fun r' => if rowStepOf r' ≤ rowStepOf r - 1 then
+          rowAmt rowTurnV10 g r' else 0) (prevRow r) =
+        rowRotate g' (fun r' => if rowStepOf r' ≤ rowStepOf r - 1 then
+          rowAmt rowTurnV10 g' r' else 0) (prevRow r) := by
+      funext j
+      rw [rowRotate_apply, rowRotate_apply, hamt, hrows _ (by omega)]
+    rw [hrow]
 
 /-- `θ_r`: how far row `r` has turned when it is read (PROOF.md §1 Cor. 1):
     `θ₀ = 0`, `θ_r = t_r` (row `r`'s own turn) for `r = 1, 2, 3`. -/
@@ -208,12 +281,49 @@ def thetaG (π : Equiv.Perm (Fin 52)) (r : Fin 4) : ZMod 13 :=
 theorem rowEq_of_rowCondsTraj (τ : Relabel) (π : Equiv.Perm (Fin 52))
     (h : RowCondsTraj τ (deckGrid π)) :
     ∀ r, rowS τ (rowOf π r) = thetaG π r * rowD τ (rowOf π r) := by
-  sorry
+  intro p
+  have hc := h (p + 1)
+  rw [prevRow_succ, rowsDone_eq_partial _ _ _ (by have := rowStepOf_le (p + 1); omega)] at hc
+  set A := (if rowStepOf p ≤ rowStepOf (p + 1) - 1 then rowAmt rowTurnV10 (deckGrid π) p else 0)
+    with hA
+  let k : Fin 13 := ⟨A % 13, Nat.mod_lt _ (by decide)⟩
+  have hrow : ∀ G : Grid Nat, G = deckGrid π →
+      rowRotate G (fun r => if rowStepOf r ≤ rowStepOf (p + 1) - 1 then
+        rowAmt rowTurnV10 (deckGrid π) r else 0) p = fun j => (rowOf π p (j + k)).val := by
+    intro G hG
+    funext j
+    rw [rowRotate_apply, hG, deckGrid_apply]
+    simp only [rowOf]
+    congr 3
+  have hrel : ∀ (G : Grid Nat), relG τ G p = fun j => τ.app (G p j) := fun _ => rfl
+  rw [hrel, hrow _ rfl] at hc
+  have h0 := (rowTurn_rel_iff τ (fun j => rowOf π p (j + k))).1 hc
+  rw [rowS_rotate, sub_eq_zero] at h0
+  rw [h0]
+  congr 1
+  simp only [thetaG, k]
+  by_cases hp : p = 0
+  · rw [if_pos hp]
+    have : A = 0 := by rw [hA, if_neg]; rw [rowStep_read_iff]; exact not_not.2 hp
+    simp [this]
+  · rw [if_neg hp]
+    have : A = rowAmt rowTurnV10 (deckGrid π) p := by rw [hA, if_pos ((rowStep_read_iff p).2 hp)]
+    rw [this, ZMod.natCast_mod]
 
 /-- `θ_r` depends only on rows `0..r-1` (PROOF.md §1 Cor. 1, used in Lemma 3). -/
 theorem thetaG_prefix (π π' : Equiv.Perm (Fin 52)) (r : Fin 4)
     (h : ∀ r' < r, rowOf π r' = rowOf π' r') : thetaG π r = thetaG π' r := by
-  sorry
+  unfold thetaG
+  split_ifs with hr
+  · rfl
+  · have hr1 : 1 ≤ r.val := by
+      rcases Nat.eq_zero_or_pos r.val with e | e
+      · exact absurd (Fin.ext e) hr
+      · exact e
+    rw [rowAmt_congr _ _ r.val r rfl hr1 fun r' hr' => ?_]
+    funext j
+    rw [deckGrid_apply, deckGrid_apply]
+    exact congrArg Fin.val (congrFun (h r' (Fin.lt_def.2 hr')) j)
 
 /-! ## §2 One row: `ρ` and Lemma 3 -/
 

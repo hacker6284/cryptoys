@@ -179,9 +179,12 @@ only those two value relations survive a round (§2).
 ## 4. Can a branch-number-style bound be proven?
 
 For every layer measured (GC, SR, SR→GC, one keyed round, for every key), the floor 4 is
-attained. For v9 multi-round we have witnesses up to 4 rounds for one key only. None was found at
-5 rounds or for the full encrypt. A random bijection would be expected to have about
-1326²/2 ≈ 8.8e5 swap→swap pairs, so 4 is expected there too, but it is not exhibited.
+attained. For v9 multi-round, this PR's searches have witnesses up to 4 rounds for one key only;
+they found none at 5 rounds or for the full encrypt. A random bijection would be expected to have
+about 1326²/2 ≈ 8.8e5 swap→swap pairs, so 4 is expected there too, but these searches do not
+exhibit one. The separate related-plaintext search in
+[PR #86](https://github.com/hacker6284/cryptoys/pull/86) found 14 K♣↔Q♥ swap→swap pairs on the
+full v9 encrypt under random real keys (about 3.5e-8 per pair).
 
 The floor and GridCycle's tightness are now proved in Lean; the characterisations T2 and T3 below
 remain open.

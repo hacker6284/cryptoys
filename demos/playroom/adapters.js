@@ -248,15 +248,14 @@ function createScrambleAdapter() {
         if ((rig.puzzleId || puzzleId) === nextId) return rig;
         const prev = rig;
         const live = await prev.swapPuzzle(nextId, "");
+        // swapPuzzle detached the old seat: move its lights before any throw.
+        if (world) world.replaceToy("cube", live.group);
         if (typeof live.setAlg !== "function" || typeof live.playLeaves !== "function") {
             live.dispose?.();
             throw new Error("cubing.js rig missing timeline API");
         }
         prev.dispose?.();
-        if (world) {
-            world.replaceToy("cube", live.group);
-            reseatCube(live.group, "table");
-        }
+        if (world) reseatCube(live.group, "table");
         rig = stageCubeView(live, installOpts);
         puzzleId = nextId;
         rig.rememberSeated?.();
@@ -586,6 +585,7 @@ function createDoubleDealAdapter() {
                 rig.group.quaternion.copy(prev.quaternion);
             }
         }
+        // Sleeve glow rejoins the scene here; no await since createUnboxRig.
         world.replaceToy(name, rig.group);
         disposeObject(prev);
         return rig;

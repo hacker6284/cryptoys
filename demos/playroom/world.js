@@ -374,7 +374,8 @@ export async function mountWorld(canvas) {
     pendantWash.position.set(DEN.x, SHADE_Y - 0.02, DEN.z);
     pendantWash.target.position.set(DEN.x, 0.4, DEN.z);
     lights.add("pendantWash", pendantWash);
-    lights.add("pendantFill", new THREE.PointLight(0xffa860, 3.5, 2.5, 2)).position.set(DEN.x, SHADE_Y - 0.08, DEN.z);
+    const pendantFill = lights.add("pendantFill", new THREE.PointLight(0xffa860, 3.5, 2.5, 2));
+    pendantFill.position.set(DEN.x, SHADE_Y - 0.08, DEN.z);
 
     const sconceMetal = new THREE.MeshStandardMaterial({ color: 0x5a4e42, roughness: 0.45, metalness: 0.55 });
     const sconceShade = new THREE.MeshStandardMaterial({
@@ -433,7 +434,8 @@ export async function mountWorld(canvas) {
     cubeSlotKey.target.position.set(SLOTS.cube.x, SHELF_Y1 + 0.04, SHELF_Z);
     lights.add("cubeSlotKey", cubeSlotKey);
 
-    lights.add("chestKiss", new THREE.PointLight(0xffc090, 0.55, 2.5, 2)).position.set(CHEST.x + 0.8, 0.18, CHEST.z + 0.3);
+    const chestKiss = lights.add("chestKiss", new THREE.PointLight(0xffc090, 0.55, 2.5, 2));
+    chestKiss.position.set(CHEST.x + 0.8, 0.18, CHEST.z + 0.3);
 
     const tableGroup = new THREE.Group();
     tableGroup.position.set(DEN.x, 0, DEN.z);
@@ -559,7 +561,8 @@ export async function mountWorld(canvas) {
         chestGroup.position.x += (-2.85 + pad) - box.min.x;
     }
     contactShadow(chestGroup, 1.05, 0.75, 0.002);
-    lights.add("rim:chest", new THREE.PointLight(0xffc078, 0, 1.6, 2), chestGroup).position.set(0.15, 0.22, 0.12);
+    const chestRim = lights.add("rim:chest", new THREE.PointLight(0xffc078, 0, 1.6, 2), chestGroup);
+    chestRim.position.set(0.15, 0.22, 0.12);
     scene.add(chestGroup);
 
     const toys = {
@@ -570,8 +573,10 @@ export async function mountWorld(canvas) {
     for (const [name, toy] of Object.entries(toys)) {
         scene.add(toy);
         // Hover rim and flight glow ride the toy (moved on replaceToy).
-        lights.add(`rim:${name}`, new THREE.PointLight(0xffc078, 0, 0.9, 2), toy).position.set(0.06, 0.08, 0.12);
-        lights.add(`travel:${name}`, new THREE.PointLight(0xffd0a0, 0, 1.4, 2), toy).position.set(0.08, 0.1, 0.12);
+        const rim = lights.add(`rim:${name}`, new THREE.PointLight(0xffc078, 0, 0.9, 2), toy);
+        rim.position.set(0.06, 0.08, 0.12);
+        const travel = lights.add(`travel:${name}`, new THREE.PointLight(0xffd0a0, 0, 1.4, 2), toy);
+        travel.position.set(0.08, 0.1, 0.12);
     }
 
     function feltTopY() {

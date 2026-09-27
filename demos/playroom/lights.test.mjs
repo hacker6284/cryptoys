@@ -71,6 +71,16 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     }
     assert.throws(() => lights.get("nope"), /unknown light/);
 }
+{
+    // seal: a registered light lost (hidden parent) before seal throws.
+    const scene = new THREE.Scene();
+    const lights = createLights(scene);
+    const oldRoot = new THREE.Group();
+    scene.add(oldRoot);
+    lights.add("rim", new THREE.PointLight(0xffffff, 0), oldRoot);
+    oldRoot.visible = false;
+    assert.throws(() => lights.seal(), /1 lights registered, 0 visible at seal/);
+}
 
 // Playroom stand-in: toys carry rim / travel lights like world.js.
 const scene = new THREE.Scene();
@@ -79,6 +89,7 @@ const toys = {};
 for (const name of ["deck", "deck2", "cube"]) {
     toys[name] = new THREE.Group();
     scene.add(toys[name]);
+    lights.add(`rim:${name}`, new THREE.PointLight(0xffc078, 0), toys[name]);
     lights.add(`travel:${name}`, new THREE.PointLight(0xffd0a0, 0), toys[name]);
 }
 const pose = { position: { x: 0, y: 0.8, z: 0 }, rotation: { x: 0, y: 0, z: 0 } };
@@ -133,16 +144,19 @@ const gen = clock.begin();
 const unbox = playUnbox({ world, rig, clock, gen, keyLight });
 while (!(glow.intensity > 0)) await sleep(5);
 lights.check();
-clock.skip(); // leave: skipEnter, then restow darkens both
-glow.intensity = 0;
-keyLight.intensity = 0;
+clock.skip(); // as leave's skipEnter does; the dead tween must not write
+const [glowAtSkip, keyAtSkip] = [glow.intensity, keyLight.intensity];
+assert.ok(glowAtSkip < 0.55, "skipped mid-tween");
 await unbox;
 await sleep(40);
-assert.equal(glow.intensity, 0, "skipped unbox does not relight the sleeve glow");
-assert.equal(keyLight.intensity, 0, "skipped unbox does not relight the dealer key");
+assert.equal(glow.intensity, glowAtSkip, "skipped unbox does not relight the sleeve glow");
+assert.equal(keyLight.intensity, keyAtSkip, "skipped unbox does not relight the dealer key");
 
+// This stand-in rig is not the adapter's, so leave's restow cannot reach
+// the glow here; the dealer key it must darken.
+keyLight.intensity = 2.55;
 await dd.leave({ snap: true });
 lights.check();
-assert.equal(keyLight.intensity, 0);
+assert.equal(keyLight.intensity, 0, "leave darkens the dealer key");
 
 console.log("lights.test.mjs ok");

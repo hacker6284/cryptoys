@@ -518,7 +518,9 @@ theorem hyper_cols (W : Finset (Fin 52)) (F : (Fin 13 → ℕ) → ℚ) :
     ∑ π : Equiv.Perm (Fin 52), F (yCol W π) =
       ∑ y ∈ comps13 W.card, (∏ j, ((Nat.choose 4 (y j) : ℕ) : ℚ)) *
         (W.card.factorial * (52 - W.card).factorial : ℕ) * F y := by
-  sorry
+  simp only [yCol_eq_bvec]
+  rw [hyper_gen crEquiv W F]
+  simp only [bcomps, comps13, Fintype.card_fin]
 
 /-- Rows with no repeated value (PROOF.md §3 (A3)): if the 52 cards carry
     values `val : Fin 52 → ZMod 13`, the decks whose row `r` holds 13 distinct

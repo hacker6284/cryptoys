@@ -158,6 +158,10 @@ export function scoop_rm(g) {
     return _rt.dup(out);
 }
 
+export function column_weight(c) {
+    return _rt.chk(rank_of(c) + suit_of(c));
+}
+
 export function sum_ranks(g) {
     g = _rt.dup(g);
     {
@@ -193,7 +197,7 @@ export function sum_ranks(g) {
                 const _sudo_from_i = 0n;
                 const _sudo_to_i = 3n;
                 for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(col, i)));
+                    total = _rt.chk(total + column_weight(_rt.at(col, i)));
                 }
             }
             let s = _rt.mod_i64(total, 4n);
@@ -238,7 +242,7 @@ export function inv_sum_ranks(g) {
                 const _sudo_from_i = 0n;
                 const _sudo_to_i = 3n;
                 for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(col, i)));
+                    total = _rt.chk(total + column_weight(_rt.at(col, i)));
                 }
             }
             let s = _rt.mod_i64(total, 4n);
@@ -304,29 +308,35 @@ export function inv_shift_rows(g) {
     return _rt.dup(g);
 }
 
-export function overflow_seat(occ, t) {
+export function scan_row(occ, row, start) {
+    let found = _rt.neg(1n);
+    {
+        const _sudo_from_k = 0n;
+        const _sudo_to_k = 12n;
+        for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
+            let col = _rt.mod_i64(_rt.chk(start + k), 13n);
+            if (found < 0n && _rt.at(_rt.at(occ, row), col) === 0n) {
+                found = col;
+            }
+        }
+    }
+    return found;
+}
+
+export function overflow_seat(occ, t, start) {
     {
         const _sudo_from_attempt = 0n;
         const _sudo_to_attempt = 3n;
         for (let attempt = _sudo_from_attempt; attempt <= _sudo_to_attempt; attempt += 1n) {
             let row = t;
-            let found = _rt.neg(1n);
-            {
-                const _sudo_from_col = 0n;
-                const _sudo_to_col = 12n;
-                for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
-                    if (found < 0n && _rt.at(_rt.at(occ, row), col) === 0n) {
-                        found = col;
-                    }
-                }
-            }
+            let found = scan_row(occ, row, start);
             if (found >= 0n) {
                 return [row, found, _rt.mod_i64(_rt.chk(t + 1n), 4n)];
             }
             t = _rt.mod_i64(_rt.chk(t + 1n), 4n);
         }
     }
-    _rt.sudo_assert(false, 143);
+    _rt.sudo_assert(false, 155);
     return [0n, 0n, 0n];
 }
 
@@ -375,7 +385,7 @@ export function mix_columns(d) {
                             occ.push(_rt.dup(marks));
                         }
                     }
-                    [r, c, t] = overflow_seat(occ, t);
+                    [r, c, t] = overflow_seat(occ, t, tc);
                 }
             }
             let row = _rt.dup(_rt.at(grid, r));
@@ -426,7 +436,7 @@ export function inv_mix_columns(d) {
                     r = tr;
                     c = tc;
                 } else {
-                    [r, c, t] = overflow_seat(visited, t);
+                    [r, c, t] = overflow_seat(visited, t, tc);
                 }
             }
             hand.push(_rt.at(_rt.at(grid, r), c));
@@ -451,7 +461,7 @@ export function index_of(deck, card) {
             }
         }
     }
-    _rt.sudo_assert(false, 219);
+    _rt.sudo_assert(false, 231);
     return 0n;
 }
 
@@ -732,7 +742,7 @@ export function trace_sum(g, steps, label) {
                 const _sudo_from_i = 0n;
                 const _sudo_to_i = 3n;
                 for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(col, i)));
+                    total = _rt.chk(total + column_weight(_rt.at(col, i)));
                 }
             }
             let amount = _rt.mod_i64(total, 4n);
@@ -826,16 +836,8 @@ export function trace_mix(d, steps, label) {
                         const _sudo_to_tries = 3n;
                         for (let tries = _sudo_from_tries; tries <= _sudo_to_tries; tries += 1n) {
                             if (found < 0n) {
-                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, _rt.neg(1n), 0n, 0n, card, 1n);
-                                {
-                                    const _sudo_from_col = 0n;
-                                    const _sudo_to_col = 12n;
-                                    for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
-                                        if (found < 0n && _rt.at(_rt.at(occ, scan), col) === 0n) {
-                                            found = col;
-                                        }
-                                    }
-                                }
+                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, tc, 0n, 0n, card, 1n);
+                                found = scan_row(occ, scan, tc);
                                 if (found >= 0n) {
                                     r = scan;
                                     c = found;
@@ -970,7 +972,7 @@ export function trace_inv_sum(g, steps, label) {
                 const _sudo_from_i = 0n;
                 const _sudo_to_i = 3n;
                 for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(col, i)));
+                    total = _rt.chk(total + column_weight(_rt.at(col, i)));
                 }
             }
             let s = _rt.mod_i64(total, 4n);
@@ -1061,16 +1063,8 @@ export function trace_inv_mix(d, steps, label) {
                         const _sudo_to_tries = 3n;
                         for (let tries = _sudo_from_tries; tries <= _sudo_to_tries; tries += 1n) {
                             if (found < 0n) {
-                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, _rt.neg(1n), 0n, 0n, _rt.neg(1n), 1n);
-                                {
-                                    const _sudo_from_col = 0n;
-                                    const _sudo_to_col = 12n;
-                                    for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
-                                        if (found < 0n && _rt.at(_rt.at(visited, scan), col) === 0n) {
-                                            found = col;
-                                        }
-                                    }
-                                }
+                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, tc, 0n, 0n, _rt.neg(1n), 1n);
+                                found = scan_row(visited, scan, tc);
                                 if (found >= 0n) {
                                     r = scan;
                                     c = found;
@@ -1288,7 +1282,7 @@ export function diamond_cards() {
 }
 
 export function counter_deck(nonce, index) {
-    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 713);
+    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 721);
     let diamonds = unrank(diamond_cards(), index);
     let out = _rt.lst([]);
     {

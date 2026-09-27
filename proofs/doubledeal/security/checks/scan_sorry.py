@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CI gate for the security package: no admit / native_decide / sorryAx / axiom
+"""CI gate for the security package: no admit / admitGoal / native_decide / sorryAx / initialize / axiom
 declarations anywhere, and
 `sorry` only inside the listed known conjectures (by declaration name).
 
@@ -72,8 +72,8 @@ def scan(sources):
                 w = re.search(r"\bwhere\s+([A-Za-z_][\w'.]*)", code)
                 if w:
                     decl = f"{top}.{w.group(1)}"
-            if re.search(r"\b(admit|native_decide|sorryAx)\b", code):
-                bad.append(f"{path}:{i}: admit/native_decide/sorryAx: {line.strip()}")
+            for f in re.finditer(r"\b(admit|admitGoal|native_decide|sorryAx|initialize|builtin_initialize)\b", code):
+                bad.append(f"{path}:{i}: forbidden {f.group(1)}: {line.strip()}")
             if re.match(r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable)\s+)*axiom\b", code):
                 bad.append(f"{path}:{i}: axiom declaration: {line.strip()}")
             for _ in re.finditer(r"\bsorry\b", code):
@@ -100,7 +100,7 @@ def main() -> int:
     if bad:
         print(*bad, sep="\n", file=sys.stderr)
         return 1
-    print("security package: no admit, native_decide, sorryAx or axiom declarations; "
+    print("security package: no admit, admitGoal, native_decide, sorryAx, initialize or axiom declarations; "
           f"sorry only in {sorted(ALLOWED_SORRY)} (exactly once each)")
     return 0
 
@@ -120,9 +120,11 @@ SELFTEST = [
     ("let rec body ends", f"theorem {C} : P := by\n  let rec aux : Nat := 0\n  sorry\n", True, None),
     ("inline where item", f"theorem {C} : P := by\n  sorry\ndef wh : Nat := go where go : Nat := sorry\n", False, "(in wh.go)"),
     ("where item", f"theorem {C} : P := by\n  sorry\ndef wh : Nat := go\nwhere\n  go : Nat := sorry\n", False, "(in wh.go)"),
-    ("admit", f"theorem {C} : P := by\n  sorry\ntheorem t : Q := by admit\n", False, "admit/native_decide/sorryAx"),
-    ("native_decide", f"theorem {C} : P := by\n  sorry\ntheorem t : Q := by native_decide\n", False, "admit/native_decide/sorryAx"),
-    ("sorryAx", f"theorem {C} : P := by\n  sorry\ntheorem t : Q := sorryAx Q\n", False, "admit/native_decide/sorryAx"),
+    ("admit", f"theorem {C} : P := by\n  sorry\ntheorem t : Q := by admit\n", False, "forbidden admit:"),
+    ("native_decide", f"theorem {C} : P := by\n  sorry\ntheorem t : Q := by native_decide\n", False, "forbidden native_decide:"),
+    ("admitGoal", f"theorem {C} : P := by\n  sorry\nelab \"trustme\" : tactic => do\n  admitGoal (← getMainGoal)\n", False, "forbidden admitGoal:"),
+    ("sorryAx", f"theorem {C} : P := by\n  sorry\ntheorem t : Q := sorryAx Q\n", False, "forbidden sorryAx:"),
+    ("initialize", f"theorem {C} : P := by\n  sorry\ninitialize IO.println \"loaded module X\"\n", False, "forbidden initialize:"),
     ("axiom declaration", f"theorem {C} : P := by\n  sorry\naxiom ax : False\n", False, "axiom declaration"),
 ]
 

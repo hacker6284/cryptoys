@@ -16,3 +16,8 @@ path = "../lean"
 
 [[lean_lib]]
 name = "DoubleDealSecurity"
+
+# Heavy kernel witnesses (minutes of `decide!`). Not a default target: built and
+# audited by the separate `doubledeal-security-heavy` job (proofs-heavy.yml).
+[[lean_lib]]
+name = "DoubleDealSecurityHeavy"

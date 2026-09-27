@@ -178,6 +178,9 @@ jobs:
       - name: Known-answer vectors (compiled Lean)
         working-directory: proofs/doubledeal/lean
         run: lake exe doubledeal
+      - name: Axiom audit (top theorems use only propext, Classical.choice, Quot.sound)
+        working-directory: proofs/doubledeal/lean
+        run: python3 ../check_axioms.py
 
   megadreifach-lean:
     runs-on: ubuntu-latest

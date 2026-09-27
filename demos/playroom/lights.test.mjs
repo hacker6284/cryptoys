@@ -72,14 +72,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     assert.throws(() => lights.get("nope"), /unknown light/);
 }
 {
-    // seal: a registered light lost (hidden parent) before seal throws.
+    // seal: a registered light lost (hidden parent) before seal throws,
+    // even when a stray unregistered light keeps the count equal.
     const scene = new THREE.Scene();
     const lights = createLights(scene);
     const oldRoot = new THREE.Group();
     scene.add(oldRoot);
     lights.add("rim", new THREE.PointLight(0xffffff, 0), oldRoot);
     oldRoot.visible = false;
-    assert.throws(() => lights.seal(), /1 lights registered, 0 visible at seal/);
+    const stray = new THREE.PointLight();
+    scene.add(stray);
+    assert.throws(() => lights.seal(), /light "rim" not visible at seal/);
+    oldRoot.visible = true;
+    assert.throws(() => lights.seal(), /unregistered light visible at seal/);
+    scene.remove(stray);
+    lights.seal();
 }
 
 // Playroom stand-in: toys carry rim / travel lights like world.js.

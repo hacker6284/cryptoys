@@ -522,6 +522,61 @@ theorem hyper_cols (W : Finset (Fin 52)) (F : (Fin 13 → ℕ) → ℚ) :
   rw [hyper_gen crEquiv W F]
   simp only [bcomps, comps13, Fintype.card_fin]
 
+/-- AM–GM for 13 class sizes summing to 52: `Π_v n_v ≤ 4¹³`. -/
+theorem amgm13 (n : ZMod 13 → ℕ) (h : ∑ v, n v = 52) : ∏ v, n v ≤ 4 ^ 13 := by
+  have hw := Real.geom_mean_le_arith_mean_weighted (s := univ) (fun _ => (1 / 13 : ℝ))
+    (fun v => (n v : ℝ)) (fun _ _ => by norm_num)
+    (by rw [sum_const, card_univ, ZMod.card, nsmul_eq_mul]; norm_num) (fun _ _ => by positivity)
+  rw [← mul_sum] at hw
+  have hs : (∑ v, (n v : ℝ)) = 52 := by exact_mod_cast h
+  rw [hs] at hw
+  have hp : (∏ v, ((n v : ℝ) ^ (1 / 13 : ℝ))) ^ (13 : ℕ) = ∏ v, (n v : ℝ) := by
+    rw [← prod_pow]
+    apply prod_congr rfl; intro v _
+    rw [← Real.rpow_natCast, ← Real.rpow_mul (by positivity)]; norm_num
+  have h0 : 0 ≤ ∏ v, ((n v : ℝ) ^ (1 / 13 : ℝ)) := prod_nonneg fun v _ => by positivity
+  have : (∏ v, (n v : ℝ)) ≤ 4 ^ 13 := by
+    rw [← hp]
+    calc _ ≤ ((1 / 13) * 52 : ℝ) ^ 13 := pow_le_pow_left₀ h0 hw 13
+      _ = 4 ^ 13 := by norm_num
+  exact_mod_cast this
+
+/-- 13-card sets with pairwise distinct values number at most `4¹³`
+    (they are transversals of the value classes). -/
+theorem card_transversals_le (val : Fin 52 → ZMod 13) :
+    ((powersetCard 13 (univ : Finset (Fin 52))).filter fun B =>
+      ∀ a ∈ B, ∀ b ∈ B, a ≠ b → val a ≠ val b).card ≤ 4 ^ 13 := by
+  classical
+  set cl : ZMod 13 → Finset (Fin 52) := fun v => univ.filter fun c => val c = v
+  have hsub : ((powersetCard 13 (univ : Finset (Fin 52))).filter fun B =>
+      ∀ a ∈ B, ∀ b ∈ B, a ≠ b → val a ≠ val b) ⊆
+      (Fintype.piFinset cl).image (fun f => univ.image f) := by
+    intro B hB
+    have hB' := mem_filter.1 hB
+    have hBc := (mem_powersetCard.1 hB'.1).2
+    have inj : Set.InjOn val B := fun a ha b hb e => by
+      by_contra hne; exact hB'.2 a ha b hb hne e
+    have himg : B.image val = univ :=
+      eq_univ_of_card _ (by rw [card_image_of_injOn inj, hBc, ZMod.card])
+    have hsurj : ∀ v, ∃ b ∈ B, val b = v := fun v => by
+      have : v ∈ B.image val := by rw [himg]; exact mem_univ v
+      simpa using this
+    choose f hfB hfv using hsurj
+    refine mem_image.2 ⟨f, Fintype.mem_piFinset.2 fun v => by simp [cl, hfv v], ?_⟩
+    ext b
+    simp only [mem_image, mem_univ, true_and]
+    constructor
+    · rintro ⟨v, rfl⟩; exact hfB v
+    · intro hb
+      exact ⟨val b, inj (hfB (val b)) hb (hfv (val b))⟩
+  refine (card_le_card hsub).trans (card_image_le.trans ?_)
+  rw [Fintype.card_piFinset]
+  apply amgm13
+  have := card_eq_sum_card_fiberwise (s := (univ : Finset (Fin 52))) (t := univ) (f := val)
+    (fun _ _ => mem_univ _)
+  rw [card_univ, Fintype.card_fin] at this
+  exact this.symm
+
 /-- Rows with no repeated value (PROOF.md §3 (A3)): if the 52 cards carry
     values `val : Fin 52 → ZMod 13`, the decks whose row `r` holds 13 distinct
     values number `13! · 39! · Π_v n_v ≤ 4¹³ · 52! / C(52,13)` (AM–GM on
@@ -530,7 +585,56 @@ theorem distinct_row_count (val : Fin 52 → ZMod 13) (r : Fin 4) :
     (univ.filter fun π : Equiv.Perm (Fin 52) =>
         ∀ p q : Fin 52, p.val % 4 = r.val → q.val % 4 = r.val → p ≠ q →
           val (π p) ≠ val (π q)).card * Nat.choose 52 13 ≤ 4 ^ 13 * Nat.factorial 52 := by
-  sorry
+  classical
+  set R := univ.filter fun p : Fin 52 => p.val % 4 = r.val with hR
+  have hRc : R.card = 13 := by
+    have : ∀ r : Fin 4, (univ.filter fun p : Fin 52 => p.val % 4 = r.val).card = 13 := by decide
+    exact this r
+  set T := (powersetCard 13 (univ : Finset (Fin 52))).filter fun B =>
+    ∀ a ∈ B, ∀ b ∈ B, a ≠ b → val a ≠ val b with hT
+  have hST : (univ.filter fun π : Equiv.Perm (Fin 52) =>
+      ∀ p q : Fin 52, p.val % 4 = r.val → q.val % 4 = r.val → p ≠ q →
+        val (π p) ≠ val (π q)).card = T.card * (Nat.factorial 13 * Nat.factorial 39) := by
+    rw [card_eq_sum_card_fiberwise (f := fun π : Equiv.Perm (Fin 52) => R.map π.toEmbedding)
+      (t := T)]
+    · rw [← smul_eq_mul, ← sum_const]
+      apply sum_congr rfl
+      intro B hB
+      have hB' := mem_filter.1 hB
+      have hBc := (mem_powersetCard.1 hB'.1).2
+      have hK := card_fibre_preW B R (hRc.trans hBc.symm)
+      rw [hBc] at hK
+      rw [← hK]
+      apply congrArg card
+      ext π
+      simp only [mem_filter, mem_univ, true_and]
+      constructor
+      · rintro ⟨-, hm⟩
+        ext p
+        simp only [preW, mem_filter, mem_univ, true_and]
+        rw [← hm, mem_map_equiv]; simp
+      · intro hp
+        have hm : R.map π.toEmbedding = B := by
+          ext c
+          rw [mem_map_equiv, ← hp]; simp [preW]
+        refine ⟨fun p q hpr hqr hpq => ?_, hm⟩
+        have hpB : π p ∈ B := by rw [← hm, mem_map_equiv]; simpa [hR] using hpr
+        have hqB : π q ∈ B := by rw [← hm, mem_map_equiv]; simpa [hR] using hqr
+        exact hB'.2 _ hpB _ hqB (fun e => hpq (π.injective e))
+    · intro π hπ
+      simp only [mem_filter, mem_univ, true_and] at hπ
+      simp only [hT, mem_filter, mem_powersetCard, subset_univ, true_and, card_map, hRc]
+      intro a ha b hb hab
+      rw [mem_map_equiv] at ha hb
+      simp only [hR, mem_filter, mem_univ, true_and] at ha hb
+      have := hπ _ _ ha hb (fun e => hab (π.symm.injective e))
+      simpa using this
+  rw [hST]
+  have hc : Nat.choose 52 13 * Nat.factorial 13 * Nat.factorial 39 = Nat.factorial 52 :=
+    Nat.choose_mul_factorial_mul_factorial (n := 52) (k := 13) (by norm_num)
+  calc T.card * (Nat.factorial 13 * Nat.factorial 39) * Nat.choose 52 13
+      = T.card * Nat.factorial 52 := by rw [← hc]; ring
+    _ ≤ 4 ^ 13 * Nat.factorial 52 := Nat.mul_le_mul_right _ (card_transversals_le val)
 
 /-! ## Numeric tables (PROOF.md §3 and §4)
 

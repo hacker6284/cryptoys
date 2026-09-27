@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { createLights } from "../shared/lights.js";
 import { CARD_W, KEY_X, MESSAGE_X } from "./layout.js";
 import { createCardTable, loadCardTextures, PASS_Z } from "./table.js";
 
@@ -26,13 +27,11 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
     controls.addEventListener("start", () => {
         follow = false;
     });
-    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-    const lamp = new THREE.DirectionalLight(0xfff6e8, 1.45);
-    lamp.position.set(-6, 22, 10);
-    scene.add(lamp);
-    const fill = new THREE.DirectionalLight(0xd6e4f5, 0.55);
-    fill.position.set(8, 12, -6);
-    scene.add(fill);
+    const lights = createLights(scene);
+    lights.add("ambient", new THREE.AmbientLight(0xffffff, 0.72));
+    lights.add("lamp", new THREE.DirectionalLight(0xfff6e8, 1.45)).position.set(-6, 22, 10);
+    lights.add("fill", new THREE.DirectionalLight(0xd6e4f5, 0.55)).position.set(8, 12, -6);
+    lights.seal();
     const feltRadius = Math.hypot(KEY_X + 6 * (CARD_W + 0.07) + CARD_W, 6) + 2;
     const felt = new THREE.Mesh(
         new THREE.CircleGeometry(feltRadius, 96),

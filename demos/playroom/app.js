@@ -94,6 +94,8 @@ try {
     }
     adapters.scramble.install(world, installOpts);
     adapters.doubledeal.install(world, installOpts);
+    world.lights.seal();
+    let checkLights = params.get("debug") === "1";
     void adapters.scramble.preload();
     void adapters.doubledeal.preload();
     await adapters.scramble.ready?.();
@@ -248,6 +250,14 @@ try {
         director.update(now);
         poses.update(performance.now());
         world.render();
+        if (checkLights) {
+            try {
+                world.lights.check();
+            } catch (err) {
+                checkLights = false;
+                console.error(err);
+            }
+        }
         capture.tick(now, world.camera, poses.lookTarget);
         requestAnimationFrame(tick);
     }

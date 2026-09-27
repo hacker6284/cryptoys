@@ -31,6 +31,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
     let lifted = false;
     let token = 0;
     let settleTimer = 0;
+    let epoch = 0;
 
     function reduced() {
         return Boolean(prefersReducedMotion?.());
@@ -108,6 +109,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
     }
 
     function settle({ snap = false } = {}) {
+        epoch += 1;
         window.clearTimeout(settleTimer);
         return setDown({ snap });
     }
@@ -122,7 +124,9 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
     // Per-move lift; the settle-hold timer is cleared by the next lift so a
     // Play/Solve sequence stays up until the last turn's hold expires.
     async function withLift(run) {
+        const mine = epoch;
         await lift();
+        if (mine !== epoch) return undefined;
         try {
             return await run();
         } finally {

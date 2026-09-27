@@ -713,6 +713,81 @@ def sLab (e : Fin 4 → Fin 4) : Fin 4 := x4 (x4 (x4 (e 0) (e 1)) (e 2)) (e 3)
 /-- Number of entries different from `xs`. -/
 def offCount (e : Fin 4 → Fin 4) (xs : Fin 4) : ℕ := (univ.filter fun i => e i ≠ xs).card
 
+/-- The 24 permutations of `Fin 4`, as functions (for a cheap kernel check). -/
+def perms4 : List (Fin 4 → Fin 4) :=
+  [![0,1,2,3], ![0,1,3,2], ![0,2,1,3], ![0,2,3,1], ![0,3,1,2], ![0,3,2,1],
+   ![1,0,2,3], ![1,0,3,2], ![1,2,0,3], ![1,2,3,0], ![1,3,0,2], ![1,3,2,0],
+   ![2,0,1,3], ![2,0,3,1], ![2,1,0,3], ![2,1,3,0], ![2,3,0,1], ![2,3,1,0],
+   ![3,0,1,2], ![3,0,2,1], ![3,1,0,2], ![3,1,2,0], ![3,2,0,1], ![3,2,1,0]]
+
+theorem perms4_eq : (univ : Finset (Equiv.Perm (Fin 4))).map
+    ⟨fun σ : Equiv.Perm (Fin 4) => (σ : Fin 4 → Fin 4), DFunLike.coe_injective⟩ =
+      perms4.toFinset := by decide!
+
+theorem perms4_nodup : perms4.Nodup := by decide
+
+theorem card_perm4_filter (P : (Fin 4 → Fin 4) → Prop) [DecidablePred P] :
+    (univ.filter fun σ : Equiv.Perm (Fin 4) => P σ).card = (perms4.filter fun f => P f).length := by
+  have h1 : (univ.filter fun σ : Equiv.Perm (Fin 4) => P σ).card =
+      (((univ : Finset (Equiv.Perm (Fin 4))).map
+        ⟨fun σ : Equiv.Perm (Fin 4) => (σ : Fin 4 → Fin 4), DFunLike.coe_injective⟩).filter P).card := by
+    rw [filter_map, card_map]; rfl
+  rw [h1, perms4_eq, ← List.toFinset_card_of_nodup (perms4_nodup.filter _)]
+  congr 1; ext f; simp
+
+/-- Count of orders hitting target `t`. -/
+def cnt4 (e : Fin 4 → Fin 4) (t : Fin 4) : ℕ :=
+  (univ.filter fun σ : Equiv.Perm (Fin 4) => vLab (e ∘ σ) = t).card
+
+theorem cnt4_comp_perm (e : Fin 4 → Fin 4) (τ : Equiv.Perm (Fin 4)) (t : Fin 4) :
+    cnt4 (e ∘ τ) t = cnt4 e t := by
+  unfold cnt4
+  apply card_nbij' (fun σ => τ * σ) (fun σ => τ⁻¹ * σ)
+  · intro σ hσ
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq] at hσ ⊢
+    rw [← hσ]; rfl
+  · intro σ hσ
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq] at hσ ⊢
+    rw [← hσ]; congr 1; funext i; simp
+  · intro σ _; simp
+  · intro σ _; simp
+
+theorem offCount_comp_perm (e : Fin 4 → Fin 4) (τ : Equiv.Perm (Fin 4)) (xs : Fin 4) :
+    offCount (e ∘ τ) xs = offCount e xs := by
+  unfold offCount
+  apply card_nbij' (fun i => τ i) (fun i => τ⁻¹ i)
+  · intro i hi; simpa using hi
+  · intro i hi; simpa using hi
+  · intro i _; simp
+  · intro i _; simp
+
+theorem vLab_shift : ∀ a b c x : Fin 4,
+    x4 (x4 (x4 a x) (w4 (x4 b x))) (w4 (w4 (x4 c x))) = x4 (x4 a (w4 b)) (w4 (w4 c)) := by
+  decide
+
+theorem cnt4_shift (e : Fin 4 → Fin 4) (x t : Fin 4) :
+    cnt4 (fun i => x4 (e i) x) t = cnt4 e t := by
+  unfold cnt4
+  apply congrArg card; apply filter_congr; intro σ _
+  simp only [vLab, Function.comp_apply, vLab_shift]
+
+theorem x4_ne_iff : ∀ a x : Fin 4, x4 a x ≠ 0 ↔ a ≠ x := by decide
+
+theorem offCount_shift (e : Fin 4 → Fin 4) (x : Fin 4) :
+    offCount (fun i => x4 (e i) x) 0 = offCount e x := by
+  unfold offCount
+  apply congrArg card; apply filter_congr; intro i _
+  exact x4_ne_iff _ _
+
+/-- The finite check behind Lemma 4, on sorted shifted columns (35 · 4 cases). -/
+theorem lemma4_core : ∀ a b c d t : Fin 4, a ≤ b → b ≤ c → c ≤ d →
+    (offCount ![a, b, c, d] 0 = 0 → t ≠ 0 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length = 0) ∧
+    (offCount ![a, b, c, d] 0 = 1 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 6) ∧
+    (offCount ![a, b, c, d] 0 = 2 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 8) ∧
+    (offCount ![a, b, c, d] 0 = 2 → t = 0 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 6) ∧
+    (offCount ![a, b, c, d] 0 = 3 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 12) := by
+  decide!
+
 /-- **Lemma 4 as used** (PROOF.md §4): the probability over the 24 orders that
     `V` hits the target `t` is at most `f(y, y')`, where `y` is the column's off
     count and the next column's off count `y'` constrains the target through
@@ -723,7 +798,46 @@ theorem lemma4_count_le (e : Fin 4 → Fin 4) (xs t : Fin 4) (y' : ℕ)
     (h0 : y' = 0 → t = 0) (h1 : y' = 1 → t ≠ 0) :
     ((univ.filter fun σ : Equiv.Perm (Fin 4) => vLab (e ∘ σ) = t).card : ℚ) / 24 ≤
       fB (offCount e xs) y' := by
-  sorry
+  set d : Fin 4 → Fin 4 := fun i => x4 (e i) xs
+  set s := Tuple.sort d
+  have hm := Tuple.monotone_sort d
+  set d' := d ∘ s
+  have hN : (univ.filter fun σ : Equiv.Perm (Fin 4) => vLab (e ∘ σ) = t).card =
+      (perms4.filter fun f => vLab (![d' 0, d' 1, d' 2, d' 3] ∘ f) = t).length := by
+    have h2 : ![d' 0, d' 1, d' 2, d' 3] = d' := by
+      funext i; fin_cases i <;> rfl
+    rw [h2, ← card_perm4_filter]
+    change cnt4 e t = cnt4 (d ∘ s) t
+    rw [cnt4_comp_perm, cnt4_shift]
+  have hO : offCount e xs = offCount ![d' 0, d' 1, d' 2, d' 3] 0 := by
+    have h2 : ![d' 0, d' 1, d' 2, d' 3] = d' := by
+      funext i; fin_cases i <;> rfl
+    rw [h2, offCount_comp_perm, offCount_shift]
+  have hc := lemma4_core (d' 0) (d' 1) (d' 2) (d' 3) t (hm (by decide)) (hm (by decide))
+    (hm (by decide))
+  rw [hN, hO]
+  set N := (perms4.filter fun f => vLab (![d' 0, d' 1, d' 2, d' 3] ∘ f) = t).length
+  set y := offCount ![d' 0, d' 1, d' 2, d' 3] 0
+  have hN24 : N ≤ 24 := (List.length_filter_le _ _).trans (by rfl)
+  have hy4 : y ≤ 4 := (card_le_univ _).trans (by simp)
+  have hN24q : (N : ℚ) ≤ 24 := by exact_mod_cast hN24
+  obtain ⟨c0, c1, c2, c2', c3⟩ := hc
+  interval_cases y
+  · simp only [fB]
+    split_ifs with hy
+    · rw [c0 rfl (h1 hy)]; norm_num
+    · linarith
+  · have : (N : ℚ) ≤ 6 := by exact_mod_cast c1 rfl
+    simp only [fB]; linarith
+  · simp only [fB]
+    split_ifs with hy
+    · have : (N : ℚ) ≤ 6 := by exact_mod_cast c2' rfl (h0 hy)
+      linarith
+    · have : (N : ℚ) ≤ 8 := by exact_mod_cast c2 rfl
+      linarith
+  · have : (N : ℚ) ≤ 12 := by exact_mod_cast c3 rfl
+    simp only [fB]; linarith
+  · simp only [fB]; linarith
 
 /-- A column with no off entries has `Σ = 0` (`4 x = 0` in characteristic 2). -/
 theorem sLab_of_offCount_zero (e : Fin 4 → Fin 4) (xs : Fin 4) (h : offCount e xs = 0) :

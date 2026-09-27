@@ -21,7 +21,7 @@ v10 SumRanks is the candidate called **W5c** here. It was chosen from the W fami
 
 The product formula is a heuristic independence assumption, not a measured six-round rate, and not a bound. The v10 full cipher was not measured at six rounds (the expected hit counts are far too small for Monte Carlo).
 
-Structural facts that *are* proved in Lean (and are the reason same-suit pairs are the survivors): SumRanks v10 commutes with every relabelling in `v10Sym` (rank + a mod 13, suit label ⊕ x), `v10_sumRanks_commutes_of_sym` in [`../../security/DoubleDealSecurity/SumRanksV10.lean`](../../security/DoubleDealSecurity/SumRanksV10.lean). For each non-identity `v10Sym` element there are permutation round keys and a deck on which the 6-round model does not commute with it (`encrypt6_not_commutes_v10Sym`), and under one fixed master key (the identity deck with the real PassKey schedule) no non-identity `v10Sym` element commutes with the emitted `encrypt` (`generated_encrypt_realKey_not_v10Sym_equivariant`, heavy target). These exclude exact symmetries only; they say nothing about near-symmetries such as the measured same-suit survival.
+Structural facts that *are* proved in Lean: SumRanks v10 commutes with every relabelling in `v10Sym` (rank + a mod 13, suit label ⊕ x), `sumRanksV10_commutes_v10Sym` in [`../../security/DoubleDealSecurity/SumRanksV10.lean`](../../security/DoubleDealSecurity/SumRanksV10.lean). The converse is not proved: every other σ sampled (all 1326 transpositions, 500 random σ, the 50 nontrivial `v9Sym` outside `v10Sym`) fails to commute on some random deck (`../../security/checks/check_relabel.py` [2b]). For each non-identity `v10Sym` element there are permutation round keys and a deck on which the 6-round model does not commute with it (`encrypt6_not_commutes_v10Sym`), and under one fixed master key (the identity deck with the real PassKey schedule) no non-identity `v10Sym` element commutes with the emitted `encrypt` (`generated_encrypt_realKey_not_v10Sym_equivariant`, heavy target). These exclude exact symmetries only; they say nothing about near-symmetries such as the measured same-suit survival.
 
 ## Files
 
@@ -29,10 +29,9 @@ Structural facts that *are* proved in Lean (and are the reason same-suit pairs a
 | --- | --- |
 | `EXPERIMENTS.md` | The experiment log (verbatim copy, with a banner) |
 | `candidates.py`, `cand.c`, `cport.py` | Python and C models of v9 plus every candidate variant; W5c is `VARIANTS['W5c']` (bit 131072 in `cand.c`). Reuses `../../../deprecated/doubledeal-v9/attack/dd_v9.py` |
-| `check_cand.py` | v9 variant matches the frozen v9 vectors; C == Python; decrypt(encrypt) = id for every variant |
-| `sronly2.py`, `sronly2*.log` | SumRanks-only survival per pair (writes `sronly2_<V>.npy`, not committed) |
+| `check_cand.py` | v9 variant matches the frozen v9 vectors; the W5c variant matches all 6 current v10 encrypt vectors (Python and C); C == Python; decrypt(encrypt) = id for every variant |
+| `sronly2.py`, `sronly2_all.log` | SumRanks-only survival per pair (writes `sronly2_<V>.npy`, not committed) |
 | `blindclass.py`, `blindclass.log` | Per-class breakdown of the SumRanks-only survival |
 | `allpairs.py`, `allpairs_W.log` | Full-round per-pair survival |
-| `extrap.py`, `extrap_SR.log` | F6 extrapolation helpers |
 
-The v10 conformance check against the sudo-emitted vectors is `../../security/checks/ddport.py` / `selftest.py`, not these scripts. `python3 check_cand.py` needs numpy and gcc; it builds `build/libcand.so` (gitignored).
+The maintained v10 conformance check is `../../security/checks/ddport.py` / `selftest.py`; `check_cand.py` only confirms that W5c here is the same cipher. `EXPERIMENTS.md` also mentions files that stayed in scratch (the F6 extrapolation `extrap.py` / `extrap*.log`, `measure*`, `exp1*`); those numbers cannot be reproduced from this folder. `python3 check_cand.py` needs numpy and gcc; it builds `build/libcand.so` (gitignored).

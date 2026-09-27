@@ -326,13 +326,192 @@ def comps4 (n : ℕ) : Finset (Fin 4 → ℕ) :=
 def comps13 (m : ℕ) : Finset (Fin 13 → ℕ) :=
   (Fintype.piFinset fun _ => range 5).filter fun y => ∑ j, y j = m
 
+/-! ### Generic block hypergeometric count -/
+
+theorem exists_perm_mapsTo {α : Type*} [Fintype α] [DecidableEq α] (A A' : Finset α)
+    (h : A.card = A'.card) : ∃ τ : Equiv.Perm α, ∀ p, p ∈ A' ↔ τ p ∈ A := by
+  have e : {x // x ∈ A'} ≃ {x // x ∈ A} := Fintype.equivOfCardEq (by simp [h])
+  have f : {x // ¬ x ∈ A'} ≃ {x // ¬ x ∈ A} := Fintype.equivOfCardEq (by
+    rw [Fintype.card_subtype_compl, Fintype.card_subtype_compl]; simp [h])
+  refine ⟨Equiv.subtypeCongr e f, fun p => ?_⟩
+  by_cases hp : p ∈ A'
+  · have := (e ⟨p, hp⟩).2
+    simp [Equiv.subtypeCongr, hp] at this ⊢
+  · have := (f ⟨p, hp⟩).2
+    simpa [Equiv.subtypeCongr, hp] using this
+
+/-- The seats holding cards of `W`. -/
+def preW (W : Finset (Fin 52)) (π : Equiv.Perm (Fin 52)) : Finset (Fin 52) :=
+  univ.filter fun p => π p ∈ W
+
+theorem card_preW (W : Finset (Fin 52)) (π : Equiv.Perm (Fin 52)) : (preW W π).card = W.card := by
+  have : preW W π = W.map π.symm.toEmbedding := by
+    ext p; simp [preW, mem_map_equiv]
+  rw [this, card_map]
+
+theorem card_fibre_preW_eq (W A A' : Finset (Fin 52)) (h : A.card = A'.card) :
+    (univ.filter fun π => preW W π = A).card = (univ.filter fun π => preW W π = A').card := by
+  obtain ⟨τ, hτ⟩ := exists_perm_mapsTo A A' h
+  apply card_nbij' (fun π => π * τ) (fun π => π * τ⁻¹)
+  · intro π hπ
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq] at hπ ⊢
+    ext p
+    rw [hτ p, ← hπ]
+    simp [preW]
+  · intro π hπ
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq] at hπ ⊢
+    ext p
+    have := hτ (τ⁻¹ p)
+    simp only [Equiv.Perm.apply_inv_self] at this
+    rw [← this, ← hπ]
+    simp [preW]
+  · intro π _; simp [mul_assoc]
+  · intro π _; simp [mul_assoc]
+
+/-- Each `n`-set of seats is the `W`-seat set of exactly `n!(52−n)!` decks. -/
+theorem card_fibre_preW (W A : Finset (Fin 52)) (h : A.card = W.card) :
+    (univ.filter fun π => preW W π = A).card = W.card.factorial * (52 - W.card).factorial := by
+  set n := W.card
+  have hn : n ≤ 52 := by simpa using card_le_univ W
+  have hsum := card_eq_sum_card_fiberwise (s := (univ : Finset (Equiv.Perm (Fin 52))))
+    (t := powersetCard n (univ : Finset (Fin 52))) (f := preW W)
+    (fun π _ => mem_powersetCard.2 ⟨subset_univ _, card_preW W π⟩)
+  rw [sum_congr rfl fun A' hA' => card_fibre_preW_eq W A' A
+    ((mem_powersetCard.1 hA').2.trans h.symm), sum_const, card_powersetCard] at hsum
+  simp only [card_univ, Fintype.card_perm, Fintype.card_fin, smul_eq_mul] at hsum
+  have hc := Nat.choose_mul_factorial_mul_factorial hn
+  rw [mul_assoc] at hc
+  exact Nat.eq_of_mul_eq_mul_left (Nat.choose_pos hn) (hsum.symm.trans hc.symm)
+
+section HyperGen
+
+variable {ι κ : Type} [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq κ]
+
+/-- Block counts of a seat set. -/
+def bvec (e : Fin 52 ≃ ι × κ) (A : Finset (Fin 52)) (i : ι) : ℕ :=
+  (univ.filter fun p => (e p).1 = i ∧ p ∈ A).card
+
+theorem card_block (e : Fin 52 ≃ ι × κ) (i : ι) (P : Fin 52 → Prop) [DecidablePred P] :
+    (univ.filter fun p => (e p).1 = i ∧ P p).card =
+      (univ.filter fun k => P (e.symm (i, k))).card := by
+  apply card_nbij' (fun p => (e p).2) (fun k => e.symm (i, k))
+  · intro p hp
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq] at hp ⊢
+    rw [← hp.1, Prod.mk.eta, Equiv.symm_apply_apply]; exact hp.2
+  · intro k hk
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq] at hk ⊢
+    simpa using hk
+  · intro p hp
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq] at hp
+    rw [← hp.1, Prod.mk.eta, Equiv.symm_apply_apply]
+  · intro k _; simp
+
+/-- Admissible block-count vectors. -/
+def bcomps (n : ℕ) : Finset (ι → ℕ) :=
+  (Fintype.piFinset fun _ => range (Fintype.card κ + 1)).filter fun z => ∑ i, z i = n
+
+theorem sum_bvec (e : Fin 52 ≃ ι × κ) (A : Finset (Fin 52)) : ∑ i, bvec e A i = A.card := by
+  have := card_eq_sum_card_fiberwise (s := A) (t := (univ : Finset ι)) (f := fun p => (e p).1)
+    (fun _ _ => mem_univ _)
+  rw [this]
+  apply sum_congr rfl; intro i _
+  unfold bvec; congr 1; ext p; simp [and_comm]
+
+theorem bvec_mem (e : Fin 52 ≃ ι × κ) (A : Finset (Fin 52)) :
+    bvec e A ∈ bcomps (κ := κ) A.card := by
+  simp only [bcomps, mem_filter, Fintype.mem_piFinset, mem_range]
+  refine ⟨fun i => ?_, sum_bvec e A⟩
+  rw [bvec, card_block]
+  exact Nat.lt_succ_of_le (card_le_univ _)
+
+/-- Number of seat sets with block counts `z`. -/
+theorem card_sets_bvec (e : Fin 52 ≃ ι × κ) (n : ℕ) (z : ι → ℕ) (hz : z ∈ bcomps (κ := κ) n) :
+    ((powersetCard n univ).filter fun A => bvec e A = z).card =
+      ∏ i, Nat.choose (Fintype.card κ) (z i) := by
+  have hzs : ∑ i, z i = n := (mem_filter.1 hz).2
+  rw [show ∏ i, Nat.choose (Fintype.card κ) (z i) =
+      (Fintype.piFinset fun i => powersetCard (z i) (univ : Finset κ)).card by
+    rw [Fintype.card_piFinset]; simp [card_powersetCard]]
+  apply card_nbij' (fun A i => univ.filter fun k => e.symm (i, k) ∈ A)
+    (fun B => univ.filter fun p => (e p).2 ∈ B (e p).1)
+  · intro A hA
+    simp only [mem_coe, mem_filter, mem_powersetCard, Fintype.mem_piFinset] at hA ⊢
+    intro i
+    refine ⟨subset_univ _, ?_⟩
+    rw [← hA.2]; unfold bvec; rw [card_block]
+  · intro B hB
+    simp only [mem_coe, mem_filter, mem_powersetCard, Fintype.mem_piFinset] at hB ⊢
+    have hb : bvec e (univ.filter fun p => (e p).2 ∈ B (e p).1) = z := by
+      funext i; unfold bvec; rw [card_block]; simp only [mem_filter, mem_univ, true_and,
+        Equiv.apply_symm_apply]
+      rw [filter_mem_eq_inter, univ_inter]; exact (hB i).2
+    refine ⟨⟨subset_univ _, ?_⟩, hb⟩
+    rw [← sum_bvec e, hb, hzs]
+  · intro A _; ext p; simp
+  · intro B _; funext i; ext k; simp
+
+
+theorem hyper_gen (e : Fin 52 ≃ ι × κ) (W : Finset (Fin 52)) (F : (ι → ℕ) → ℚ) :
+    ∑ π : Equiv.Perm (Fin 52), F (bvec e (preW W π)) =
+      ∑ z ∈ bcomps (κ := κ) W.card, (∏ i, ((Nat.choose (Fintype.card κ) (z i) : ℕ) : ℚ)) *
+        (W.card.factorial * (52 - W.card).factorial : ℕ) * F z := by
+  rw [← sum_fiberwise_of_maps_to (fun π (_ : π ∈ (univ : Finset (Equiv.Perm (Fin 52)))) =>
+    mem_powersetCard.2 ⟨subset_univ (preW W π), card_preW W π⟩)]
+  have h1 : ∀ A ∈ powersetCard W.card (univ : Finset (Fin 52)),
+      ∑ π ∈ univ.filter (fun π => preW W π = A), F (bvec e (preW W π)) =
+        ((W.card.factorial * (52 - W.card).factorial : ℕ) : ℚ) * F (bvec e A) := by
+    intro A hA
+    rw [sum_congr rfl fun π hπ => congrArg (fun B => F (bvec e B)) (mem_filter.1 hπ).2,
+      sum_const, card_fibre_preW W A (mem_powersetCard.1 hA).2, nsmul_eq_mul]
+  rw [sum_congr rfl h1]
+  rw [← sum_fiberwise_of_maps_to (fun A (hA : A ∈ powersetCard W.card (univ : Finset (Fin 52))) =>
+    (show bvec e A ∈ bcomps (κ := κ) W.card by
+      have := bvec_mem e A; rwa [(mem_powersetCard.1 hA).2] at this))]
+  apply sum_congr rfl
+  intro z hz
+  rw [sum_congr rfl fun A hA => congrArg (fun y => ((W.card.factorial * (52 - W.card).factorial : ℕ) : ℚ) * F y)
+      (mem_filter.1 hA).2, sum_const, card_sets_bvec e _ z hz, nsmul_eq_mul]
+  push_cast; ring
+
+
+end HyperGen
+
+/-- Seats as (row, column): `p ↦ (p % 4, p / 4)`. -/
+def rcEquiv : Fin 52 ≃ Fin 4 × Fin 13 where
+  toFun p := (⟨p.val % 4, by omega⟩, ⟨p.val / 4, by omega⟩)
+  invFun x := ⟨x.1.val + 4 * x.2.val, by omega⟩
+  left_inv p := by apply Fin.ext; simp only; omega
+  right_inv x := by
+    ext
+    · simp only; omega
+    · simp only; omega
+
+/-- Seats as (column, row). -/
+def crEquiv : Fin 52 ≃ Fin 13 × Fin 4 := rcEquiv.trans (Equiv.prodComm _ _)
+
+theorem zRow_eq_bvec (W : Finset (Fin 52)) (π : Equiv.Perm (Fin 52)) :
+    zRow W π = bvec rcEquiv (preW W π) := by
+  funext r
+  unfold zRow bvec
+  apply congrArg card; apply filter_congr; intro p _
+  simp [preW, rcEquiv, Fin.ext_iff]
+
+theorem yCol_eq_bvec (W : Finset (Fin 52)) (π : Equiv.Perm (Fin 52)) :
+    yCol W π = bvec crEquiv (preW W π) := by
+  funext j
+  unfold yCol bvec
+  apply congrArg card; apply filter_congr; intro p _
+  simp [preW, crEquiv, rcEquiv, Fin.ext_iff]
+
 /-- **Multivariate hypergeometric law, rows** (PROOF.md §3 (A2)): the number of
     decks with row counts `z` is `Π_r C(13, z_r) · n! · (52 − n)!`. -/
 theorem hyper_rows (W : Finset (Fin 52)) (F : (Fin 4 → ℕ) → ℚ) :
     ∑ π : Equiv.Perm (Fin 52), F (zRow W π) =
       ∑ z ∈ comps4 W.card, (∏ r, ((Nat.choose 13 (z r) : ℕ) : ℚ)) *
         (W.card.factorial * (52 - W.card).factorial : ℕ) * F z := by
-  sorry
+  simp only [zRow_eq_bvec]
+  rw [hyper_gen rcEquiv W F]
+  simp only [bcomps, comps4, Fintype.card_fin]
 
 /-- **Multivariate hypergeometric law, columns** (PROOF.md §4 Theorem B). -/
 theorem hyper_cols (W : Finset (Fin 52)) (F : (Fin 13 → ℕ) → ℚ) :

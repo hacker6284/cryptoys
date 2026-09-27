@@ -13,11 +13,6 @@ namespace DoubleDeal.Security
 
 open DoubleDeal Relabel
 
-/-- The identity deck `A♣, 2♣, …, K♦`. -/
-def idDeck : Fin 52 → Nat := fun i => i.val
-
-theorem isDeck_idDeck : IsDeck idDeck := ⟨fun i => i.isLt, fun _ _ h => Fin.ext h⟩
-
 /-- (PROVED, kernel `decide!`) Identity message, identity master key. -/
 theorem realKey_enc_id :
     encryptDeck (toDeck idDeck) (List.range 52) = [27, 31, 21, 15, 3, 30, 22, 19, 44, 20, 38, 12, 6, 11, 25, 10, 35, 2, 14, 8, 24, 51, 43, 32, 18, 4, 29, 49, 17, 23, 9, 0, 45, 42, 16, 28, 26, 46, 47, 34, 1, 13, 36, 48, 50, 39, 5, 37, 41, 7, 40, 33] := by
@@ -32,19 +27,6 @@ theorem realKey_enc_v9Sym02 :
 theorem realKey_enc_v9Sym10 :
     encryptDeck (toDeck (rel (v9Sym 1 0) idDeck)) (List.range 52) = [46, 32, 30, 16, 27, 23, 9, 42, 21, 5, 44, 51, 18, 2, 6, 43, 19, 35, 15, 7, 12, 25, 8, 26, 47, 4, 11, 0, 49, 34, 40, 17, 20, 41, 24, 1, 48, 29, 28, 10, 22, 39, 50, 36, 33, 45, 31, 14, 38, 3, 13, 37] := by
   decide!
-
-theorem realE_toDeck (m : Fin 52 → Nat) :
-    toDeck (realE m) = encryptDeck (toDeck m) (List.range 52) := by
-  rw [encryptDeck_eq_encryptDeckFn _ _ (length_toDeck m), Link2.ofDeck_toDeck]; rfl
-
-theorem not_commutesOnDecks_of_witness (σ : Relabel)
-    (h : encryptDeck (toDeck (rel σ idDeck)) (List.range 52) ≠
-      (encryptDeck (toDeck idDeck) (List.range 52)).map σ.app) :
-    ¬ CommutesOnDecks σ realE := by
-  intro hc
-  apply h
-  rw [← realE_toDeck, ← realE_toDeck, hc idDeck isDeck_idDeck]
-  exact toDeck_map σ.app (realE idDeck)
 
 /-- (PROVED) `v9Sym 0 2` does not commute with the identity-key encrypt. -/
 theorem v9Sym02_not_commutes_realE : ¬ CommutesOnDecks (v9Sym 0 2) realE :=

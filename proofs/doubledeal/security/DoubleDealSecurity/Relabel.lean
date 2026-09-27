@@ -65,6 +65,15 @@ def rel (σ : Relabel) (m : Fin 52 → Nat) : Fin 52 → Nat := fun i => σ.app 
 
 theorem rel_one (x : Fin 52 → Nat) : rel 1 x = x := funext fun _ => app_one _
 
+theorem app_mul (σ τ : Relabel) (n : Nat) : (σ * τ).app n = σ.app (τ.app n) := by
+  unfold app
+  by_cases h : n < 52
+  · simp [h, (τ ⟨n, h⟩).isLt, Equiv.Perm.mul_apply]
+  · simp [h]
+
+theorem rel_mul (σ τ : Relabel) (m : Fin 52 → Nat) : rel (σ * τ) m = rel σ (rel τ m) :=
+  funext fun i => app_mul σ τ (m i)
+
 /-- Relabel every card of a grid. -/
 def relG (σ : Relabel) (g : Grid Nat) : Grid Nat := fun r c => σ.app (g r c)
 

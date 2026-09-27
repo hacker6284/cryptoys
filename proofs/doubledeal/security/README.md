@@ -54,7 +54,7 @@ permutation-key `encrypt6_commutes_iff_id` rest on it.
 
 CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 - `checks/scan_sorry.py`: `sorry` only in `roundBody_covariant_iff_id`; no
-  `admit`, `native_decide`, `sorryAx` or `axiom` declarations anywhere. A sorry
+  `admit`, `admitGoal`, `native_decide`, `sorryAx` or `axiom` declarations anywhere. A sorry
   counts for its top-level declaration (inside `have` too); `let rec` and `where`
   items count under their own name `top.f`, as Lean and the axiom gate name them.
   `--selftest` checks these cases.
@@ -64,6 +64,9 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
   the three KNOWN_SORRY theorems above. Any axiom declared in the package fails,
   and so does a stale KNOWN_SORRY entry. It does not import the heavy library, but it fails if the `HEAVY_THEOREMS`
   registry and the theorems declared in `DoubleDealSecurityHeavy/` disagree.
+  Both security modes also fail if a module under `DoubleDealSecurity/` (or
+  `DoubleDealSecurityHeavy/`) is not imported by its library root, since neither
+  audit would see it.
 
 CI (`proofs-heavy.yml`, job `doubledeal-security-heavy`) builds the heavy library
 and runs `../check_axioms.py security-heavy` (same rules, no KNOWN_SORRY; every

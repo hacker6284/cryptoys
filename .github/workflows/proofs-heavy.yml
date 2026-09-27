@@ -3,7 +3,7 @@ name: proofs-heavy
 # Heavy kernel witnesses of the DoubleDeal security package (lean_lib
 # DoubleDealSecurityHeavy, not a default build target, so the normal
 # doubledeal-security job in proofs.yml stays fast). Runs on PRs that touch what
-# those proofs depend on, on pushes to main, weekly and by hand.
+# those proofs depend on, on pushes to main that touch them, weekly and by hand.
 on:
   pull_request:
     paths:
@@ -14,12 +14,22 @@ on:
       - ".github/workflows/proofs-heavy.yml"
   push:
     branches: [main]
+    paths:
+      - "proofs/doubledeal/security/**"
+      - "proofs/doubledeal/lean/**"          # core model + Generated/ (emitted Lean)
+      - "proofs/doubledeal/check_axioms.py"
+      - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
+      - ".github/workflows/proofs-heavy.yml"
   schedule:
     - cron: "17 4 * * 1"  # Mondays 04:17 UTC
   workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   doubledeal-security-heavy:

@@ -36,7 +36,8 @@ if [[ ! -x "$SUDOC_BIN" ]]; then
 fi
 
 DOUBLEDEAL_SUDO_SHA256="$(sha256sum "$SUDO" | awk '{print $1}')"
-export DOUBLEDEAL_SUDO_SHA256 SUDOCODE_COMMIT
+DOUBLEDEAL_SUDO="$SUDO"
+export DOUBLEDEAL_SUDO DOUBLEDEAL_SUDO_SHA256 SUDOCODE_COMMIT
 
 OUT="${TMPDIR:-/tmp}/doubledeal-vector-js"
 rm -rf "$OUT"

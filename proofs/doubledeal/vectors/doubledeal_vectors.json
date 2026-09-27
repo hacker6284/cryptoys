@@ -4,7 +4,7 @@
   "source": "primitives/cipher/doubledeal/doubledeal.sudo",
   "sudo_sha256": "8b40c4c74b8c47260499d27e6104e4b92529e8f7b59f288594718bb9dae01184",
   "sudocode_commit": "606f06f4d852aac7f37bccd4823775d00d2ba5a6",
-  "note": "Known-answer vectors from the sudo tests plus extras evaluated by the sudoc JS target. Evidence that the Lean model agrees with doubledeal.sudo on these inputs — not a proof that the sudo text equals the Lean model.",
+  "note": "Known-answer vectors from the sudo tests plus extras evaluated by the sudoc JS target. Evidence that the Lean model agrees with doubledeal.sudo on these inputs \u2014 not a proof that the sudo text equals the Lean model.",
   "decks_are": "52-element arrays of CHaSeD card ids (0..51)",
   "vectors": [
     {

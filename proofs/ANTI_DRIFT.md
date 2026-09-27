@@ -43,7 +43,7 @@ well-formed domain. See [`LINK2.md`](LINK2.md). Do not edit
 From the repo root:
 
 ```sh
-proofs/emit_lean.sh              # write all four Generated/ trees
+proofs/emit_lean.sh              # write all five Generated/ trees (incl. frozen doubledeal-v8)
 proofs/emit_lean.sh --check      # CI: fail if committed Lean is stale
 proofs/emit_lean.sh scramble     # one algorithm
 proofs/emit_lean.sh cbc-hmac     # alias: doubledeal-cbc-hmac

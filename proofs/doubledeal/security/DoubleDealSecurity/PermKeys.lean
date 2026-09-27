@@ -183,7 +183,7 @@ theorem encrypt6_not_commutes_of_stem (σ : Relabel) (hid : σ ≠ 1)
     and a deck with `E_K(σM) ≠ σ E_K(M)`. -/
 theorem encrypt6_not_commutes_v10Sym (a : Fin 13) (x : Fin 4) (hax : (a, x) ≠ (0, 0)) :
     ¬ ∀ k0 kMix kF, CommutesOnDecks (v10Sym a x) (fun m => encrypt6P m k0 kMix kF) := by
-  refine encrypt6_not_commutes_of_stem _ ?_ (v10_sumRanks_commutes_of_sym a x)
+  refine encrypt6_not_commutes_of_stem _ ?_ (sumRanksV10_commutes_v10Sym a x)
   intro hid
   obtain ⟨rfl, rfl⟩ := v10SymFn_fixed a x ⟨0, by decide⟩ (Equiv.congr_fun hid _)
   exact hax rfl

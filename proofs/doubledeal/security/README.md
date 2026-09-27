@@ -26,7 +26,7 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `Decks` | named cards, witness decks, the cell-map interface |
 | `Relabel` | relabellings, decks, commuting/covariance notions |
 | `SumRanks` | **deprecated v8/v9 models.** Two-weight SumRanks commutes iff σ is a constant weight shift; v8 rank-preserving; the 52-element v9 group `v9Sym` |
-| `SumRanksV10` | v10 SumRanks commutes with every `v10Sym a x` (rank + a mod 13, GF(4) suit label ⊕ x; 52 elements, ℤ/13 × (ℤ/2)², not cyclic): `v10_sumRanks_commutes_of_sym`. **Only the "if" direction is proved**; that no other σ commutes is checked numerically (`checks/check_covariant.py`, `checks/check_relabel.py` [2b]), not proved. The v9 analogue `v9_sumRanks_commutes_iff` was a full iff |
+| `SumRanksV10` | v10 SumRanks commutes with every `v10Sym a x` (rank + a mod 13, GF(4) suit label ⊕ x; 52 elements, ℤ/13 × (ℤ/2)², not cyclic): `sumRanksV10_commutes_v10Sym`. **Only the "if" direction is proved**; the converse is not: every other σ sampled (all 1326 transpositions, 500 random σ, and the 50 nontrivial `v9Sym` outside `v10Sym`) fails to commute on some random deck (`checks/check_relabel.py` [2b]); that is a sample, not a proof. The v9 analogue `v9_sumRanks_commutes_iff` was a full iff |
 | `Walk` | the GridCycle seat walk, generic in the seat chooser |
 | `GridCycle` | GridCycle commutes only with σ = 1 (v9/v10, unchanged in v10, and the frozen v8 model) |
 | `BranchNumber` | trivial branch-number floor (`≥ 4` for any deck bijection); GridCycle attains it by swapping walk cards 50 and 51 (v9/v10 GridCycle and the frozen v8 model). Not a wide-trail bound |
@@ -45,12 +45,12 @@ Generic list/rotation lemmas live in the Mathlib-free core package
 ## Status and gates
 
 `generated_encrypt_realKey_not_v10Sym_equivariant` (heavy library; v9 had
-`…_not_v9Sym_equivariant`): under ONE
-master key, the identity deck expanded by the real PassKey chain, no nontrivial
-`v10Sym` commutes with the emitted `encrypt`. Read it narrowly: one atypical key;
-the breaking message is shown to exist, not named; the key is never relabelled;
-it excludes exact symmetry only, not near-symmetries or statistical
-distinguishers (v8 fell to one); it is not the open per-key statement.
+`…_not_v9Sym_equivariant`): under ONE master key, the identity deck expanded
+by the real PassKey chain, no nontrivial `v10Sym` commutes with the emitted
+`encrypt`. Read it narrowly: one atypical key; the breaking message is shown
+to exist, not named; the key is never relabelled; it excludes exact symmetry
+only, not near-symmetries or statistical distinguishers (v8 and v9 each fell
+to one); it is not the open per-key statement.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at

@@ -111,6 +111,8 @@ for v in (8, 9):
 
 # 2b. v10 SumRanks: the group v10Sym commutes ("if", proved in SumRanksV10.lean);
 # the converse is not proved: here, every other sampled sigma fails on some random deck.
+# [2b] draws from its own RNG (seed 10), so the v8/v9 lines after it keep their pre-v10 values.
+_rng_main = rng; rng = random.Random(10)
 LABEL = P.LABEL; SUIT_OF_LABEL = [LABEL.index(l) for l in range(4)]
 def sig10(a, x): return [13 * SUIT_OF_LABEL[LABEL[c // 13] ^ x] + (c % 13 + a) % 13 for c in range(52)]
 G10 = [sig10(a, x) for a in range(13) for x in range(4)]
@@ -124,13 +126,16 @@ n_tr = sum(fails_somewhere(s, 10) for s in tr_all)
 g10set = {tuple(s) for s in G10}
 rsig = [s for s in (rdeck() for _ in range(500)) if tuple(s) not in g10set]
 n_rnd = sum(fails_somewhere(s, 10) for s in rsig)
-n_g9 = sum(fails_somewhere(s, 10) for s in G[1:])
-print(f"    v10: SumRanks fails to commute (some deck out of 40) for {n_tr}/1326 transpositions, {n_rnd}/{len(rsig)} random sigma, {n_g9}/51 nontrivial v9Sym")
+g9_out = [s for s in G[1:] if tuple(s) not in g10set]
+n_g9 = sum(fails_somewhere(s, 10) for s in g9_out)
+print(f"    v10: SumRanks fails to commute (some deck out of 40) for {n_tr}/1326 transpositions, {n_rnd}/{len(rsig)} random sigma, "
+      f"{n_g9}/{len(g9_out)} nontrivial v9Sym outside v10Sym (the other {51 - len(g9_out)}, v9Sym 0 2 = v10Sym 0 3, is in v10Sym)")
 rates = []
 for a, b in ((KC, card(12, 1)), (KC, KD), (0, 13), (0, 4)):
     s = transp(a, b); N = 2000
     rates.append(sum(commutes_sr(s, 10, decks=[rdeck()]) for _ in range(N)) / N)
 print(f"    v10: per-deck SumRanks commute rate: K♣↔Q♥ {rates[0]:.4f}, K♣↔K♦ {rates[1]:.4f}, A♣↔A♥ {rates[2]:.4f}, A♣↔5♣ {rates[3]:.4f}")
+rng = _rng_main
 
 # 3. GridCycle
 def seat2(c, v): return P.walk([c] + [x for x in range(52) if x != c], v)[1]
@@ -174,4 +179,4 @@ for v in (8, 9, 10):
     gfail = all(any(rnd(app(s, m), k) != app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))) for s in (G10[1:] if v == 10 else G[1:]))
     rfail = all(any(rnd(app(s, m), k) != app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))) for s in (rdeck() for _ in range(200)))
     efail = all(P.encrypt(app(s, m), k, v) != app(s, P.encrypt(m, k, v)) for s, m, k in ((transp(*rng.sample(range(52), 2)), rdeck(), rdeck()) for _ in range(200)))
-    print(f"[4] v{v}: full round fails for every transposition: {allfail}; every nontrivial G52: {gfail}; 200 random sigma: {rfail}; encrypt fails 200/200 random transposition trials: {efail}")
+    print(f"[4] v{v}: full round fails for every transposition: {allfail}; every nontrivial {'v10Sym' if v == 10 else 'G52'}: {gfail}; 200 random sigma: {rfail}; encrypt fails 200/200 random transposition trials: {efail}")

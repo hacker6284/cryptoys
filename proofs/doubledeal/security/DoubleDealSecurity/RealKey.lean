@@ -51,23 +51,23 @@ def v10SymWitnessExp (a : Fin 13) (x : Fin 4) : Nat :=
   if x.val = 0 then inv13.getD a.val 0 else 13
 
 /-- The witness reached: `v10Sym 1 0` if `x = 0`, else `v10Sym 0 x`. -/
-def v10SymWitness (_a : Fin 13) (x : Fin 4) : Fin 13 × Fin 4 :=
+def v10SymWitness (x : Fin 4) : Fin 13 × Fin 4 :=
   if x.val = 0 then (1, 0) else (0, x)
 
 /-- (PROVED, kernel `decide!`) -/
 theorem v10Sym_iter_hits : ∀ (a : Fin 13) (x : Fin 4), (a, x) ≠ (0, 0) →
     ∀ c, (v10SymFn a x)^[v10SymWitnessExp a x] c =
-      v10SymFn (v10SymWitness a x).1 (v10SymWitness a x).2 c := by
+      v10SymFn (v10SymWitness x).1 (v10SymWitness x).2 c := by
   decide!
 
 /-- (PROVED) If a nontrivial `v10Sym a x` commutes with a deck map on all decks,
     then so does its witness (`v10Sym 1 0` or `v10Sym 0 x`). -/
 theorem commutesOnDecks_v10Sym_reduce {F : (Fin 52 → Nat) → (Fin 52 → Nat)}
     (a : Fin 13) (x : Fin 4) (hax : (a, x) ≠ (0, 0)) (h : CommutesOnDecks (v10Sym a x) F) :
-    CommutesOnDecks (v10Sym (v10SymWitness a x).1 (v10SymWitness a x).2) F := by
+    CommutesOnDecks (v10Sym (v10SymWitness x).1 (v10SymWitness x).2) F := by
   have hn := commutesOnDecks_pow h (v10SymWitnessExp a x)
   have e : v10Sym a x ^ v10SymWitnessExp a x =
-      v10Sym (v10SymWitness a x).1 (v10SymWitness a x).2 :=
+      v10Sym (v10SymWitness x).1 (v10SymWitness x).2 :=
     Equiv.ext fun c => by rw [Equiv.Perm.coe_pow]; exact v10Sym_iter_hits a x hax c
   exact e ▸ hn
 

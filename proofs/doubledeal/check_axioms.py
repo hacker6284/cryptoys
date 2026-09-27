@@ -41,11 +41,15 @@ ROOT = Path(__file__).resolve().parent
 HEAVY_DIR = ROOT / "security" / "DoubleDealSecurityHeavy"
 HEAVY_THEOREMS = {
     "DoubleDeal.Security.realKey_enc_id",
-    "DoubleDeal.Security.realKey_enc_v9Sym02",
-    "DoubleDeal.Security.realKey_enc_v9Sym10",
-    "DoubleDeal.Security.v9Sym02_not_commutes_realE",
-    "DoubleDeal.Security.v9Sym10_not_commutes_realE",
-    "DoubleDeal.Security.generated_encrypt_realKey_not_v9Sym_equivariant",
+    "DoubleDeal.Security.realKey_enc_v10Sym10",
+    "DoubleDeal.Security.realKey_enc_v10Sym01",
+    "DoubleDeal.Security.realKey_enc_v10Sym02",
+    "DoubleDeal.Security.realKey_enc_v10Sym03",
+    "DoubleDeal.Security.v10Sym10_not_commutes_realE",
+    "DoubleDeal.Security.v10Sym01_not_commutes_realE",
+    "DoubleDeal.Security.v10Sym02_not_commutes_realE",
+    "DoubleDeal.Security.v10Sym03_not_commutes_realE",
+    "DoubleDeal.Security.generated_encrypt_realKey_not_v10Sym_equivariant",
 }
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},

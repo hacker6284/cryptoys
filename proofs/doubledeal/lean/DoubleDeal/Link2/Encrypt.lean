@@ -10,6 +10,7 @@ import DoubleDeal.Round
 import DoubleDeal.Grid
 import DoubleDeal.GridCycle
 import DoubleDeal.SumRanks
+import DoubleDeal.SumRanksV10
 import DoubleDeal.ShiftRows
 import DoubleDeal.Compose
 import DoubleDeal.Link2.Embed
@@ -54,7 +55,7 @@ theorem unkeyed_bound (m : Fin 52 → Nat) (hb : ∀ i, CardBound (m i)) :
     ∀ i, CardBound (unkeyedNoMix m i) := by
   intro i
   simp [unkeyedNoMix, scoopColumnMajor]
-  exact shiftRows_bound _ (sumRanks_bound CardBound cardRank cardColumnWeight _ (lay_bound m hb)) _ _
+  exact shiftRows_bound _ (sumRanksV10_bound CardBound _ (lay_bound m hb)) _ _
 
 theorem placeN_cell_bound (hand : Fin 52 → Nat) (hb : ∀ i, CardBound (hand i)) :
     ∀ n, n ≤ 52 → ∀ r c, CardBound ((placeN hand n).1 r c)
@@ -138,7 +139,7 @@ theorem final_round_refines (m : Fin 52 → Nat) (key : List Nat) (hk : Perm52 k
   simp only [ok_bind]
   rw [scoop_cm_refines]
   simp only [ok_bind]
-  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank cardColumnWeight (layColumnMajor m))) = unkeyedNoMix m from rfl]
+  rw [show scoopColumnMajor (shiftRows (sumRanksV10 (layColumnMajor m))) = unkeyedNoMix m from rfl]
   rw [compose_refines (toDeck (unkeyedNoMix m)) key (length_toDeck _) hk]
   rw [compose_toDeck, except_bind_pure]
   simp [fullRoundNoMix]
@@ -155,7 +156,7 @@ theorem unkeyed_full_refines (m : Fin 52 → Nat) (hb : ∀ i, CardBound (m i)) 
   simp only [ok_bind]
   rw [scoop_cm_refines]
   simp only [ok_bind]
-  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank cardColumnWeight (layColumnMajor m))) = unkeyedNoMix m from rfl]
+  rw [show scoopColumnMajor (shiftRows (sumRanksV10 (layColumnMajor m))) = unkeyedNoMix m from rfl]
   rw [mix_columns_refines (unkeyedNoMix m) (unkeyed_bound m hb)]
   rw [except_bind_pure]
   simp [unkeyedWithMix]

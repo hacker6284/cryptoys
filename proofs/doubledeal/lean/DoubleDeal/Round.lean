@@ -7,6 +7,7 @@
 import DoubleDeal.Basic
 import DoubleDeal.Grid
 import DoubleDeal.SumRanks
+import DoubleDeal.SumRanksV10
 import DoubleDeal.ShiftRows
 import DoubleDeal.GridCycle
 import DoubleDeal.Compose
@@ -16,21 +17,23 @@ namespace DoubleDeal
 /-- CHaSeD rank function on Nat card ids (SumRanks row weight). -/
 def cardRank (c : Nat) : Nat := rank c
 
-/-- SumRanks column weight: rank + suit (SPEC §3.3; sudo `column_weight`). -/
+/-- Deprecated v9 SumRanks column weight: rank + suit (v9 SPEC §3.3). Kept for
+    the deprecated-v9 model theorems in `proofs/doubledeal/security`; v10 does
+    not use it (v10 columns use `colTurnV10`). -/
 def cardColumnWeight (c : Nat) : Nat := rank c + suit c
 
-/-- Unkeyed stem without GridCycle: scoopCM ∘ ShiftRows ∘ SumRanks ∘ layCM. -/
+/-- Unkeyed stem without GridCycle: scoopCM ∘ ShiftRows ∘ SumRanks(v10) ∘ layCM. -/
 def unkeyedNoMix (m : Fin 52 → Nat) : Fin 52 → Nat :=
-  scoopColumnMajor (shiftRows (sumRanks cardRank cardColumnWeight (layColumnMajor m)))
+  scoopColumnMajor (shiftRows (sumRanksV10 (layColumnMajor m)))
 
 /-- Inverse of unkeyedNoMix. -/
 def invUnkeyedNoMix (c : Fin 52 → Nat) : Fin 52 → Nat :=
-  scoopColumnMajor (invSumRanks cardRank cardColumnWeight (invShiftRows (layColumnMajor c)))
+  scoopColumnMajor (invSumRanksV10 (invShiftRows (layColumnMajor c)))
 
 theorem invUnkeyedNoMix_unkeyedNoMix (m : Fin 52 → Nat) :
     invUnkeyedNoMix (unkeyedNoMix m) = m := by
   simp only [invUnkeyedNoMix, unkeyedNoMix]
-  rw [lay_scoop_columnMajor, invShiftRows_shiftRows, invSumRanks_sumRanks,
+  rw [lay_scoop_columnMajor, invShiftRows_shiftRows, invSumRanksV10_sumRanksV10,
       scoop_lay_columnMajor]
 
 /-- Unkeyed stem with MixColumns (matches SPEC §3.9 full round body before Compose):

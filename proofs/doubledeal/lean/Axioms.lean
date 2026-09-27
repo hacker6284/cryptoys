@@ -18,6 +18,7 @@ import DoubleDeal
 #print axioms DoubleDeal.Link2.index_of_refines
 
 -- Algebraic model: layer bijections and round trip.
-#print axioms DoubleDeal.invSumRanks_sumRanks
+#print axioms DoubleDeal.invSumRanksV10_sumRanksV10
+#print axioms DoubleDeal.sumRanksV10_invSumRanksV10
 #print axioms DoubleDeal.invMixColumns_mixColumns
 #print axioms DoubleDeal.encrypt6_rt

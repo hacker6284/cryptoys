@@ -94,11 +94,12 @@ Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
 
 ## v9 porting table (stage 1 → stage 2)
 
-v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). The Generated tree, TAP, and vectors are v9. The hand-written algebraic model (`SumRanks.lean`, `GridCycle.lean`, `Round.lean`, `Concrete.lean`) and the Link 2 glue still describe **v8**. Rows marked **BROKEN** fail `lake build`. Rows marked **STALE** still compile, but they prove v8 facts and must be re-stated for v9. Measured on branch `doubledeal-v9` with Lean 4.14.0.
+v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). The Generated tree, TAP, and vectors are v9. The hand-written algebraic model (`SumRanks.lean`, `GridCycle.lean`, `Round.lean`, `Concrete.lean`) and the Link 2 glue still describe **v8**. Every Link 2 file whose `lake build` breaks is listed, `Link2/Mix.lean` included. Rows marked **BROKEN** fail `lake build`. Rows marked **STALE** still compile, but they prove v8 facts and must be re-stated for v9. Measured on branch `doubledeal-v9` with Lean 4.14.0.
 
 | File | Theorem / def | Status | Why | Stage-2 work |
 | --- | --- | --- | --- | --- |
 | `Link2/Compose.lean` | `compose_as_loop` (assert line) | fixed (mechanical) | sudo line shift, `sudoAssert false 219` → `221` | done |
+| `Link2/Mix.lean` | `overflowStep` / `overflow_as_loop` assert literal (l. 441, 488) | fixed (mechanical) | was the v8 line `143`; the emitted v9 `overflow_seat` asserts at line `145` | done (the mirror itself is still BROKEN, below) |
 | `Link2/SumLink.lean` | `sum_ranks_as_loop` (l. 324) | **BROKEN** (`rfl`) | the `colRankStep` mirror lacks `+ suit_of` | add the suit term to the mirror |
 | `Link2/SumLink.lean` | `colRankStep`, `colRankStep_hit`, `colRank_pref`, `rank_loop`, `colsSummed`, `colsSummed_all`, `sumColStep_hit`, `col_loop`, `sum_ranks_refines` | STALE (only compile because they sit on top of the v8 mirror) | column weight is `cardRank` | re-thread with the column weight `rank + suit` |
 | `Link2/Mix.lean` | `scanColStep`, `scanCol_hit`, `scan_loop`, `scanRowN_spec`, `scanFound_encode`, `attempt_refines` | STALE | the inner scan is now `col = (start + k) mod 13` | rotated-scan versions |

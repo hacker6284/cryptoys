@@ -18,8 +18,7 @@ import DoubleDeal.Link2.SumLink
 
 namespace DoubleDeal.Link2
 
-/-- Card values for which `r + suit` stays inside i64 when `r < 4`. -/
-def CardBound (c : Nat) : Prop := c ≤ i64MaxNat - 4
+-- `CardBound` (i64-safe card ids) lives in SumLink.
 
 theorem step_seat_refines (card r c : Nat) (hr : r ≤ 3) (hc : c ≤ 12) (hb : CardBound card) :
     Doubledeal.step_seat (Int.ofNat card) (Int.ofNat r) (Int.ofNat c) =

@@ -38,59 +38,10 @@ theorem toDeck_ofDeck (d : List Nat) (h : d.length = 52) :
   · intro i hi hi'
     simp [toDeck, ofDeck, Array.getElem_toList, Array.getElem_ofFn]
 
-theorem cardBound_zero : CardBound 0 := by
-  unfold CardBound i64MaxNat
-  decide
-
-theorem rotL_get_eq {α : Type} (xs : List α) (k i : Nat)
-    (hne : xs.length ≠ 0) (hi : i < xs.length) :
-    (rotL xs k)[i]'(by rw [length_rotL]; exact hi) =
-      xs[(i + k % xs.length) % xs.length]'(Nat.mod_lt _ (Nat.pos_of_ne_zero hne)) := by
-  unfold rotL
-  simp only [hne, ↓reduceIte]
-  have hk : k % xs.length < xs.length := Nat.mod_lt _ (Nat.pos_of_ne_zero hne)
-  have hdrop : (xs.drop (k % xs.length)).length = xs.length - k % xs.length := by
-    rw [List.length_drop]
-  by_cases hi' : i < xs.length - k % xs.length
-  · have hidx : i < (xs.drop (k % xs.length)).length := by rw [hdrop]; exact hi'
-    rw [List.getElem_append_left hidx, List.getElem_drop]
-    have hlt : i + k % xs.length < xs.length := by omega
-    simp [Nat.mod_eq_of_lt hlt, Nat.add_comm]
-  · have hge : (xs.drop (k % xs.length)).length ≤ i := by rw [hdrop]; omega
-    rw [List.getElem_append_right hge]
-    simp only [hdrop]
-    rw [List.getElem_take]
-    have hmod : (i + k % xs.length) % xs.length = i - (xs.length - k % xs.length) := by
-      have : i + k % xs.length = xs.length + (i - (xs.length - k % xs.length)) := by omega
-      rw [this, Nat.add_mod_left]
-      exact Nat.mod_eq_of_lt (by omega)
-    simp [hmod]
-
-theorem rowRotate_bound (g : Grid Nat) (t : Fin 4 → Nat)
-    (hb : ∀ r c, CardBound (g r c)) (r : Fin 4) (c : Fin 13) :
-    CardBound (rowRotate g t r c) := by
-  unfold rowRotate ofList13
-  have hne : (toList13 (g r)).length ≠ 0 := by simp [length_toList13]
-  have hget := rotL_get_eq (toList13 (g r)) (t r) c.val hne c.isLt
-  rw [hget]
-  simp only [length_toList13]
-  have hj : (c.val + t r % 13) % 13 < 13 := Nat.mod_lt _ (by decide)
-  rw [getElem_toList13 (g r) ⟨(c.val + t r % 13) % 13, hj⟩]
-  exact hb r ⟨(c.val + t r % 13) % 13, hj⟩
-
-theorem colRotate_bound (g : Grid Nat) (s : Fin 13 → Nat)
-    (hb : ∀ r c, CardBound (g r c)) (r : Fin 4) (c : Fin 13) :
-    CardBound (colRotate g s r c) := by
-  unfold colRotate ofList4
-  have hne : (toList4 (fun r' => g r' c)).length ≠ 0 := by simp [length_toList4]
-  have hget := getElem_rotR (toList4 (fun r' => g r' c)) (s c) r.val hne r.isLt
-  rw [hget]
-  have hj : (r.val + (4 - s c % 4)) % 4 < 4 := Nat.mod_lt _ (by decide)
-  have hcell := getElem_toList4 (fun r' => g r' c) ⟨(r.val + (4 - s c % 4)) % 4, hj⟩
-  simpa [length_toList4, hcell] using hb ⟨(r.val + (4 - s c % 4)) % 4, hj⟩ c
+-- `CardBound`, `cardBound_zero`, `rowRotate_bound`, `colRotate_bound` live in SumLink.
 
 theorem sumRanks_bound (g : Grid Nat) (hb : ∀ r c, CardBound (g r c)) :
-    ∀ r c, CardBound (sumRanks cardRank g r c) := by
+    ∀ r c, CardBound (sumRanks cardRank cardColW g r c) := by
   intro r c
   unfold sumRanks applyColRotates applyRowRotates
   exact colRotate_bound _ _ (fun r' c' => rowRotate_bound g _ hb r' c') r c
@@ -174,7 +125,7 @@ theorem encAt_rounds (m : Fin 52 → Nat) (key : List Nat) :
   | n + 1 => by
       simp [encAt, applyFullRounds, encAt_rounds m key n]
 
-theorem stem_refines (m : Fin 52 → Nat) :
+theorem stem_refines (m : Fin 52 → Nat) (hb : ∀ i, CardBound (m i)) :
     (do
       let g ← Doubledeal.lay_cm (embed (toDeck m))
       let g ← Doubledeal.sum_ranks g
@@ -183,7 +134,7 @@ theorem stem_refines (m : Fin 52 → Nat) :
     .ok (embed (toDeck (unkeyedNoMix m))) := by
   rw [lay_cm_refines (toDeck m) (length_toDeck m)]
   simp only [ok_bind, ofDeck_toDeck]
-  rw [sum_ranks_refines]
+  rw [sum_ranks_refines _ (lay_bound m hb)]
   simp only [ok_bind]
   rw [shift_rows_refines]
   simp only [ok_bind]
@@ -198,19 +149,20 @@ theorem compose_toDeck (m : Fin 52 → Nat) (key : List Nat) :
   rw [composeOnce_toList, ofDeck_toDeck]
 
 set_option maxHeartbeats 800000 in
-theorem final_round_refines (m : Fin 52 → Nat) (key : List Nat) (hk : Perm52 key) :
+theorem final_round_refines (m : Fin 52 → Nat) (key : List Nat) (hk : Perm52 key)
+    (hb : ∀ i, CardBound (m i)) :
     Doubledeal.final_round (embed (toDeck m)) (embed key) =
       .ok (embed (toDeck (fullRoundNoMix m (keyPos key)))) := by
   unfold Doubledeal.final_round
   rw [lay_cm_refines (toDeck m) (length_toDeck m)]
   simp only [ok_bind, ofDeck_toDeck]
-  rw [sum_ranks_refines]
+  rw [sum_ranks_refines _ (lay_bound m hb)]
   simp only [ok_bind]
   rw [shift_rows_refines]
   simp only [ok_bind]
   rw [scoop_cm_refines]
   simp only [ok_bind]
-  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank (layColumnMajor m))) = unkeyedNoMix m from rfl]
+  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank cardColW (layColumnMajor m))) = unkeyedNoMix m from rfl]
   rw [compose_refines (toDeck (unkeyedNoMix m)) key (length_toDeck _) hk]
   rw [compose_toDeck, except_bind_pure]
   simp [fullRoundNoMix]
@@ -221,13 +173,13 @@ theorem unkeyed_full_refines (m : Fin 52 → Nat) (hb : ∀ i, CardBound (m i)) 
   unfold Doubledeal.unkeyed_full
   rw [lay_cm_refines (toDeck m) (length_toDeck m)]
   simp only [ok_bind, ofDeck_toDeck]
-  rw [sum_ranks_refines]
+  rw [sum_ranks_refines _ (lay_bound m hb)]
   simp only [ok_bind]
   rw [shift_rows_refines]
   simp only [ok_bind]
   rw [scoop_cm_refines]
   simp only [ok_bind]
-  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank (layColumnMajor m))) = unkeyedNoMix m from rfl]
+  rw [show scoopColumnMajor (shiftRows (sumRanks cardRank cardColW (layColumnMajor m))) = unkeyedNoMix m from rfl]
   rw [mix_columns_refines (unkeyedNoMix m) (unkeyed_bound m hb)]
   rw [except_bind_pure]
   simp [unkeyedWithMix]
@@ -395,7 +347,7 @@ theorem encrypt_refines (message key : List Nat)
       simp only [ok_bind]
       rw [show (5 + 1) - 1 = 5 by decide]
       rw [final_round_refines (encAt m key 5) (passKeyIter 6 key)
-        (passKeyIter_perm52 key hk 6)]
+        (passKeyIter_perm52 key hk 6) (fun i => encAt_bound m key hc 5 i)]
       rw [except_bind_pure, hgoal])
   rw [show (1 : Int) = Int.ofNat 1 from rfl]
   have hf1 : (fun i => embed (toDeck (encAt m key (i - 1)))) 1 =

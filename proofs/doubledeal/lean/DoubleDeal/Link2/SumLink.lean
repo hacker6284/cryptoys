@@ -2,6 +2,9 @@
   LINK 2. Bridge `sum_ranks` to algebraic `sumRanks`.
   The twin follows the emitted loop nesting so it is definitionally the
   generated function; the refinement is proved on that twin.
+  Rows are weighted by `rank_of` (`cardRank`), columns by `column_weight`
+  = rank + suit (`cardColW`). Because suit grows with the card id, the
+  column sums need a card-size bound (`CardBound`) to stay inside i64.
 -/
 import Doubledeal
 import DoubleDeal.Round
@@ -107,7 +110,7 @@ def colRankStep (col : Array Int) (toV : Int) (σ : Int × Int) :
     else
       match ← ((do
         let cell ← SudoRt.atL col i
-        let rk ← Doubledeal.rank_of cell
+        let rk ← Doubledeal.column_weight cell
         let total ← SudoRt.addI total rk
         pure (SudoRt.Flow.cont (ρ := Array (Array Int)) total)
       ) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array Int)))) with
@@ -251,6 +254,64 @@ theorem rankPref_take (xs : List Nat) (n : Nat) (hn : n ≤ xs.length) :
 theorem rankPref_full (xs : List Nat) :
     rankPref xs xs.length = rankSum rank xs := by
   rw [rankPref_take xs xs.length (Nat.le_refl _), List.take_length]
+  rfl
+
+/-- Card values for which the emitted column sums (and `r + suit`) stay in i64. -/
+def CardBound (c : Nat) : Prop := c ≤ i64MaxNat - 4
+
+theorem cardBound_zero : CardBound 0 := by
+  unfold CardBound i64MaxNat
+  decide
+
+/-- Prefix sum of the column weight (rank + suit) over the first `n` cells. -/
+def colPref (xs : List Nat) : Nat → Nat
+  | 0 => 0
+  | n + 1 => colPref xs n + cardColW (xs.getD n 0)
+
+theorem colPref_take (xs : List Nat) (n : Nat) (hn : n ≤ xs.length) :
+    colPref xs n = sumNats ((xs.take n).map cardColW) := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    have hn' : n < xs.length := by omega
+    have hget : xs.getD n 0 = xs[n] := by
+      rw [List.getD, List.get?_eq_get hn']
+      rfl
+    rw [colPref, ih (Nat.le_of_lt hn'), hget, take_succ_append xs n hn',
+      List.map_append, sumNats_append]
+    simp [sumNats]
+
+theorem colPref_full (xs : List Nat) :
+    colPref xs xs.length = rankSum cardColW xs := by
+  rw [colPref_take xs xs.length (Nat.le_refl _), List.take_length]
+  rfl
+
+theorem cardColW_le (c : Nat) (hc : CardBound c) : cardColW c ≤ i64MaxNat / 4 := by
+  unfold CardBound i64MaxNat at hc
+  unfold cardColW rank suit i64MaxNat
+  omega
+
+theorem colPref_le (xs : List Nat) (hb : ∀ k, CardBound (xs.getD k 0)) (n : Nat) :
+    colPref xs n ≤ n * (i64MaxNat / 4) := by
+  induction n with
+  | zero => simp [colPref]
+  | succ n ih =>
+    have := cardColW_le _ (hb n)
+    simp only [colPref, Nat.succ_mul]
+    omega
+
+theorem column_weight_refines (c : Nat) (hc : CardBound c) :
+    Doubledeal.column_weight (Int.ofNat c) = .ok (Int.ofNat (cardColW c)) := by
+  unfold Doubledeal.column_weight
+  rw [rank_of_refines, suit_of_refines]
+  simp only [ok_bind]
+  have hfit : FitsLen (rank c + suit c) := by
+    have := cardColW_le c hc
+    unfold cardColW at this
+    unfold FitsLen
+    unfold i64MaxNat at this ⊢
+    omega
+  rw [addI_ofNat _ _ hfit]
   rfl
 
 theorem rowsSummed_zero (g : Grid Nat) : g = g := rfl
@@ -488,21 +549,21 @@ theorem rowsSummed_base (g : Grid Nat) : rowsSummed g 0 = g := by
 
 /-- Columns `0 .. n-1` already sum-rotated; the rest still original. -/
 def colsSummed (g : Grid Nat) (n : Nat) : Grid Nat :=
-  fun r c => if c.val < n then applyColRotates cardRank g r c else g r c
+  fun r c => if c.val < n then applyColRotates cardColW g r c else g r c
 
 theorem colsSummed_zero (g : Grid Nat) : colsSummed g 0 = g := by
   funext r c
   simp [colsSummed]
 
-theorem colsSummed_all (g : Grid Nat) : colsSummed g 13 = applyColRotates cardRank g := by
+theorem colsSummed_all (g : Grid Nat) : colsSummed g 13 = applyColRotates cardColW g := by
   funext r c
   simp [colsSummed, c.isLt]
 
 /-- Column `j` while its first `n` rows have been written back. -/
 def colsWriting (g : Grid Nat) (j n : Nat) : Grid Nat :=
   fun r c =>
-    if c.val < j then applyColRotates cardRank g r c
-    else if c.val = j ∧ r.val < n then applyColRotates cardRank g r c
+    if c.val < j then applyColRotates cardColW g r c
+    else if c.val = j ∧ r.val < n then applyColRotates cardColW g r c
     else g r c
 
 theorem colsWriting_zero (g : Grid Nat) (j : Nat) :
@@ -522,7 +583,7 @@ theorem colsWriting_four (g : Grid Nat) (j : Nat) :
 
 theorem colsWriting_succ (g : Grid Nat) (j i : Nat) (hj : j < 13) (hi : i < 4) :
     (fun r c =>
-      if r = ⟨i, hi⟩ ∧ c = ⟨j, hj⟩ then applyColRotates cardRank g r c
+      if r = ⟨i, hi⟩ ∧ c = ⟨j, hj⟩ then applyColRotates cardColW g r c
       else colsWriting g j i r c) =
       colsWriting g j (i + 1) := by
   funext r c
@@ -600,14 +661,18 @@ theorem getElem_rotR {α : Type} (xs : List α) (k i : Nat)
     simp [hmod]
 
 theorem colRank_pref (g : Grid Nat) (c : Fin 13) :
-    colRankSum cardRank g c = rankPref (toList4 (fun r => g r c)) 4 := by
-  rw [colRankSum]
-  have hr :
-      rankSum cardRank (toList4 (fun r => g r c)) =
-        rankSum rank (toList4 (fun r => g r c)) := by
-    unfold rankSum cardRank
-    rfl
-  rw [hr, ← rankPref_full, length_toList4]
+    colRankSum cardColW g c = colPref (toList4 (fun r => g r c)) 4 := by
+  rw [colRankSum, ← colPref_full, length_toList4]
+
+theorem toList4_getD_bound (f : Fin 4 → Nat) (hf : ∀ r, CardBound (f r)) :
+    ∀ k, CardBound ((toList4 f).getD k 0) := by
+  intro k
+  match k with
+  | 0 => exact hf 0
+  | 1 => exact hf 1
+  | 2 => exact hf 2
+  | 3 => exact hf 3
+  | k + 4 => simpa [toList4] using cardBound_zero
 
 theorem colCollectStep_hit (grid : Grid Nat) (j : Nat) (hj : j < 13) (i : Nat) (hi : i ≤ 3) :
     colCollectStep (embedGrid grid) (Int.ofNat j) 3
@@ -662,12 +727,12 @@ theorem colCollectStep_hit (grid : Grid Nat) (j : Nat) (hj : j < 13) (i : Nat) (
     simp [ok_bind, heq]
 
 theorem colRankStep_hit (xs : List Nat) (i : Nat) (hi : i ≤ 3) (hlen : xs.length = 4)
-    (hsum : rankPref xs i ≤ 39) :
-    colRankStep (embed xs) 3 (Int.ofNat i, Int.ofNat (rankPref xs i)) =
+    (hb : ∀ k, CardBound (xs.getD k 0)) :
+    colRankStep (embed xs) 3 (Int.ofNat i, Int.ofNat (colPref xs i)) =
       if i = 3 then
-        .ok (SudoRt.Flow.brk (Int.ofNat i, Int.ofNat (rankPref xs (i + 1))))
+        .ok (SudoRt.Flow.brk (Int.ofNat i, Int.ofNat (colPref xs (i + 1))))
       else
-        .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), Int.ofNat (rankPref xs (i + 1)))) := by
+        .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), Int.ofNat (colPref xs (i + 1)))) := by
   unfold colRankStep
   rw [if_neg (show ¬ Int.ofNat i > (3 : Int) from ofNat_not_gt hi)]
   have hat := atL_embed xs i (by omega)
@@ -675,16 +740,17 @@ theorem colRankStep_hit (xs : List Nat) (i : Nat) (hi : i ≤ 3) (hlen : xs.leng
   simp only [ok_bind]
   have hcell : xs[i]'(by omega) = xs.getD i 0 := by simp [List.getD, show i < xs.length by omega]
   rw [show Int.ofNat (xs[i]'(by omega)) = Int.ofNat (xs.getD i 0) from by simp [hcell]]
-  rw [rank_of_refines (xs.getD i 0)]
+  rw [column_weight_refines (xs.getD i 0) (hb i)]
   simp only [ok_bind]
-  have hadd := addI_ofNat (rankPref xs i) (rank (xs.getD i 0))
-    (fits52 (by
-      have hr : rank (xs.getD i 0) ≤ 13 := by
-        simp [rank]
-        omega
-      omega))
+  have hadd := addI_ofNat (colPref xs i) (cardColW (xs.getD i 0)) (by
+    have h1 := colPref_le xs hb i
+    have h2 := cardColW_le _ (hb i)
+    have h3 : i * (i64MaxNat / 4) ≤ 3 * (i64MaxNat / 4) := Nat.mul_le_mul_right _ hi
+    unfold FitsLen
+    unfold i64MaxNat at h1 h2 h3 ⊢
+    omega)
   rw [hadd]
-  simp only [ok_bind, rankPref]
+  simp only [ok_bind, colPref]
   by_cases heq : i = 3
   · subst heq
     simp only [ok_bind]
@@ -705,8 +771,8 @@ theorem rotR_mod (xs : List Nat) (k : Nat) (hne : xs.length ≠ 0) :
   simp [rotR, hne, Nat.mod_mod]
 
 theorem applyCol_get (g : Grid Nat) (r : Fin 4) (c : Fin 13) :
-    applyColRotates cardRank g r c =
-      (rotR (toList4 (fun r' => g r' c)) (colRankSum cardRank g c))[r.val]'
+    applyColRotates cardColW g r c =
+      (rotR (toList4 (fun r' => g r' c)) (colRankSum cardColW g c))[r.val]'
         (by rw [length_rotR, length_toList4]; exact r.isLt) := by
   unfold applyColRotates colRotate ofList4
   rfl
@@ -863,7 +929,7 @@ theorem freshStep_hit (xs : List Nat) (s i : Nat) (hi : i ≤ 3) (hs : s < 4)
 
 theorem writeColStep_hit (g0 : Grid Nat) (j : Nat) (hj : j < 13) (i : Nat) (hi : i ≤ 3)
     (fresh : List Nat) (hf : fresh.length = 4)
-    (hv : fresh[i]'(by rw [hf]; omega) = applyColRotates cardRank g0 ⟨i, by omega⟩ ⟨j, hj⟩) :
+    (hv : fresh[i]'(by rw [hf]; omega) = applyColRotates cardColW g0 ⟨i, by omega⟩ ⟨j, hj⟩) :
     writeColStep (embed fresh) (Int.ofNat j) 3
       (Int.ofNat i, embedGrid (colsWriting g0 j i)) =
       if i = 3 then
@@ -884,24 +950,24 @@ theorem writeColStep_hit (g0 : Grid Nat) (j : Nat) (hj : j < 13) (i : Nat) (hi :
   rw [hatF]
   simp only [ok_bind, hv]
   have hputR := putL_ofNat (embed (toList13 (colsWriting g0 j i ⟨i, hi4⟩))) j
-    (Int.ofNat (applyColRotates cardRank g0 ⟨i, hi4⟩ ⟨j, hj⟩))
+    (Int.ofNat (applyColRotates cardColW g0 ⟨i, hi4⟩ ⟨j, hj⟩))
     (by rw [size_embed, length_toList13]; exact hj)
   rw [hputR]
   simp only [ok_bind]
   have hputG := putL_ofNat (embedGrid (colsWriting g0 j i)) i
     ((embed (toList13 (colsWriting g0 j i ⟨i, hi4⟩))).set
       ⟨j, by rw [size_embed, length_toList13]; exact hj⟩
-      (Int.ofNat (applyColRotates cardRank g0 ⟨i, hi4⟩ ⟨j, hj⟩)))
+      (Int.ofNat (applyColRotates cardColW g0 ⟨i, hi4⟩ ⟨j, hj⟩)))
     (by rw [embedGrid_size]; exact hi4)
   rw [hputG]
   simp only [ok_bind]
   rw [embedGrid_setCell (colsWriting g0 j i) i j hi4 hj _]
   have hswap :
       (fun r c =>
-        if r = ⟨i, hi4⟩ ∧ c = ⟨j, hj⟩ then applyColRotates cardRank g0 ⟨i, hi4⟩ ⟨j, hj⟩
+        if r = ⟨i, hi4⟩ ∧ c = ⟨j, hj⟩ then applyColRotates cardColW g0 ⟨i, hi4⟩ ⟨j, hj⟩
         else colsWriting g0 j i r c) =
         (fun r c =>
-          if r = ⟨i, hi4⟩ ∧ c = ⟨j, hj⟩ then applyColRotates cardRank g0 r c
+          if r = ⟨i, hi4⟩ ∧ c = ⟨j, hj⟩ then applyColRotates cardColW g0 r c
           else colsWriting g0 j i r c) := by
     funext r c
     by_cases hrc : r = ⟨i, hi4⟩ ∧ c = ⟨j, hj⟩ <;> simp [hrc]
@@ -924,7 +990,7 @@ theorem writeColStep_hit (g0 : Grid Nat) (j : Nat) (hj : j < 13) (i : Nat) (hi :
 theorem write_loop (g0 : Grid Nat) (j : Nat) (hj : j < 13) (fresh : List Nat)
     (hf : fresh.length = 4)
     (hv : ∀ i : Nat, (hi : i < 4) →
-      fresh[i]'(by rw [hf]; exact hi) = applyColRotates cardRank g0 ⟨i, hi⟩ ⟨j, hj⟩) :
+      fresh[i]'(by rw [hf]; exact hi) = applyColRotates cardColW g0 ⟨i, hi⟩ ⟨j, hj⟩) :
     SudoRt.runLoopOn ((0 : Int), embedGrid (colsSummed g0 j)) fuel4
       (writeColStep (embed fresh) (Int.ofNat j) 3)
       (fun σ => pure (SudoRt.Flow.cont (ρ := Array (Array Int)) σ.2))
@@ -994,29 +1060,28 @@ theorem fresh_loop {β : Type} (xs : List Nat) (s : Nat) (hs : s < 4) (hlen : xs
   exact hcast.trans hrun
 
 theorem rank_loop {β : Type} (xs : List Nat) (hlen : xs.length = 4)
+    (hb : ∀ k, CardBound (xs.getD k 0))
     (after : Int × Int → Except SudoRt.Trap β)
     (onRet : Array (Array Int) → Except SudoRt.Trap β)
     (goal : Except SudoRt.Trap β)
-    (hafter : after (Int.ofNat 3, Int.ofNat (rankPref xs 4)) = goal) :
+    (hafter : after (Int.ofNat 3, Int.ofNat (colPref xs 4)) = goal) :
     SudoRt.runLoopOn ((0 : Int), (0 : Int)) fuel4
       (colRankStep (embed xs) 3) after onRet = goal := by
   have hstep : ∀ i, 0 ≤ i → i ≤ 3 →
-      colRankStep (embed xs) 3 (Int.ofNat i, Int.ofNat (rankPref xs i)) =
+      colRankStep (embed xs) 3 (Int.ofNat i, Int.ofNat (colPref xs i)) =
         if i = 3 then
-          .ok (SudoRt.Flow.brk (Int.ofNat i, Int.ofNat (rankPref xs (i + 1))))
+          .ok (SudoRt.Flow.brk (Int.ofNat i, Int.ofNat (colPref xs (i + 1))))
         else
-          .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), Int.ofNat (rankPref xs (i + 1)))) :=
-    fun i _ hi => colRankStep_hit xs i hi hlen (by
-      have := rankPref_le xs i
-      omega)
+          .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), Int.ofNat (colPref xs (i + 1)))) :=
+    fun i _ hi => colRankStep_hit xs i hi hlen hb
   have hrun := chain_loop
     (colRankStep (embed xs) 3) after onRet
-    (fun i => Int.ofNat (rankPref xs i)) 0 3 (Nat.zero_le _) hstep goal hafter
-  have h0 : rankPref xs 0 = 0 := rfl
+    (fun i => Int.ofNat (colPref xs i)) 0 3 (Nat.zero_le _) hstep goal hafter
+  have h0 : colPref xs 0 = 0 := rfl
   have hcast :
       SudoRt.runLoopOn ((0 : Int), (0 : Int)) fuel4
         (colRankStep (embed xs) 3) after onRet =
-      SudoRt.runLoopOn (Int.ofNat 0, Int.ofNat (rankPref xs 0))
+      SudoRt.runLoopOn (Int.ofNat 0, Int.ofNat (colPref xs 0))
         (fuelRange (Int.ofNat 0) (Int.ofNat 3))
         (colRankStep (embed xs) 3) after onRet := by
     rw [fuel4_eq, h0]
@@ -1059,7 +1124,7 @@ theorem collect_loop {β : Type} (grid : Grid Nat) (j : Nat) (hj : j < 13)
   exact hcast.trans hrun
 
 /-- One column rotate, from a grid whose earlier columns are already rotated. -/
-theorem sumColStep_hit (g0 : Grid Nat) (j : Nat) (hj : j ≤ 12) :
+theorem sumColStep_hit (g0 : Grid Nat) (hb : ∀ r c, CardBound (g0 r c)) (j : Nat) (hj : j ≤ 12) :
     sumColStep 12 (Int.ofNat j, embedGrid (colsSummed g0 j)) =
       if j = 12 then
         .ok (SudoRt.Flow.brk (Int.ofNat j, embedGrid (colsSummed g0 (j + 1))))
@@ -1077,7 +1142,7 @@ theorem sumColStep_hit (g0 : Grid Nat) (j : Nat) (hj : j ≤ 12) :
   rw [if_neg (show ¬ Int.ofNat j > (12 : Int) from ofNat_not_gt hj)]
   have hwriteDone :
       ∀ (s : Nat) (hs : s < 4),
-        s = rankPref xs 4 % 4 →
+        s = colPref xs 4 % 4 →
         (do
           let _out ← (SudoRt.runLoopOn (ρ := Array (Array Int)) ((0 : Int), (#[] : Array Int)) fuel4
             (freshStep (embed xs) (Int.ofNat s) 3)
@@ -1092,15 +1157,15 @@ theorem sumColStep_hit (g0 : Grid Nat) (j : Nat) (hj : j ≤ 12) :
           pure _out) =
         .ok (SudoRt.Flow.cont (embedGrid (colsSummed g0 (j + 1)))) := by
     intro s hs hsmod
-    have hfresh : rotR xs s = rotR xs (colRankSum cardRank g0 ⟨j, hj13⟩) := by
-      have hsum : rankPref xs 4 = colRankSum cardRank g0 ⟨j, hj13⟩ := by
+    have hfresh : rotR xs s = rotR xs (colRankSum cardColW g0 ⟨j, hj13⟩) := by
+      have hsum : colPref xs 4 = colRankSum cardColW g0 ⟨j, hj13⟩ := by
         simpa [xs] using (colRank_pref g0 ⟨j, hj13⟩).symm
-      have hmod : rankPref xs 4 % 4 = rankPref xs 4 % xs.length := by rw [hlen]
+      have hmod : colPref xs 4 % 4 = colPref xs 4 % xs.length := by rw [hlen]
       rw [hsmod, ← hsum, hmod]
-      exact rotR_mod xs (rankPref xs 4) (by rw [hlen]; decide)
+      exact rotR_mod xs (colPref xs 4) (by rw [hlen]; decide)
     have hv : ∀ i : Nat, (hi : i < 4) →
         (rotR xs s)[i]'(by rw [length_rotR, hlen]; exact hi) =
-          applyColRotates cardRank g0 ⟨i, hi⟩ ⟨j, hj13⟩ := by
+          applyColRotates cardColW g0 ⟨i, hi⟩ ⟨j, hj13⟩ := by
       intro i hi
       simpa [xs, hfresh] using (applyCol_get g0 ⟨i, hi⟩ ⟨j, hj13⟩).symm
     have hwrite := write_loop g0 j hj13 (rotR xs s) (by rw [length_rotR, hlen]) hv
@@ -1145,7 +1210,7 @@ theorem sumColStep_hit (g0 : Grid Nat) (j : Nat) (hj : j ≤ 12) :
     (by
       dsimp only
       rw [hxs, except_bind_pure]
-      exact rank_loop xs hlen
+      exact rank_loop xs hlen (toList4_getD_bound _ (fun r => hb r ⟨j, hj13⟩))
         (fun σ => do
           let total := σ.2
           let s ← SudoRt.modI total (4 : Int)
@@ -1164,9 +1229,9 @@ theorem sumColStep_hit (g0 : Grid Nat) (j : Nat) (hj : j ≤ 12) :
         (.ok (SudoRt.Flow.cont (embedGrid (colsSummed g0 (j + 1)))))
         (by
           dsimp only
-          rw [show (4 : Int) = Int.ofNat 4 from rfl, modI_ofNat (rankPref xs 4) (by decide)]
+          rw [show (4 : Int) = Int.ofNat 4 from rfl, modI_ofNat (colPref xs 4) (by decide)]
           simp only [ok_bind]
-          exact hwriteDone (rankPref xs 4 % 4) (Nat.mod_lt _ (by decide)) rfl))
+          exact hwriteDone (colPref xs 4 % 4) (Nat.mod_lt _ (by decide)) rfl))
   rw [hbody]
   simp only [except_bind_pure, ok_bind, Pure.pure, Except.pure]
   by_cases heq : j = 12
@@ -1211,11 +1276,11 @@ theorem row_loop {β : Type} (g : Grid Nat)
     rfl
   exact hcast.trans hrun
 
-theorem col_loop {β : Type} (g0 : Grid Nat)
+theorem col_loop {β : Type} (g0 : Grid Nat) (hb : ∀ r c, CardBound (g0 r c))
     (after : Int × Array (Array Int) → Except SudoRt.Trap β)
     (onRet : Array (Array Int) → Except SudoRt.Trap β)
     (goal : Except SudoRt.Trap β)
-    (hafter : after (Int.ofNat 12, embedGrid (applyColRotates cardRank g0)) = goal) :
+    (hafter : after (Int.ofNat 12, embedGrid (applyColRotates cardColW g0)) = goal) :
     SudoRt.runLoopOn ((0 : Int), embedGrid g0) fuel13
       (sumColStep 12) after onRet = goal := by
   have hstep : ∀ j, 0 ≤ j → j ≤ 12 →
@@ -1224,7 +1289,7 @@ theorem col_loop {β : Type} (g0 : Grid Nat)
           .ok (SudoRt.Flow.brk (Int.ofNat j, embedGrid (colsSummed g0 (j + 1))))
         else
           .ok (SudoRt.Flow.cont (Int.ofNat (j + 1), embedGrid (colsSummed g0 (j + 1)))) :=
-    fun j _ hj => sumColStep_hit g0 j hj
+    fun j _ hj => sumColStep_hit g0 hb j hj
   have hrun := chain_loop (sumColStep 12) after onRet
     (fun j => embedGrid (colsSummed g0 j)) 0 12 (Nat.zero_le _) hstep goal
     (by simpa [colsSummed_all] using hafter)
@@ -1236,8 +1301,56 @@ theorem col_loop {β : Type} (g0 : Grid Nat)
     rfl
   exact hcast.trans hrun
 
-theorem sum_ranks_refines (g : Grid Nat) :
-    Doubledeal.sum_ranks (embedGrid g) = .ok (embedGrid (sumRanks cardRank g)) := by
+theorem rotL_get_eq {α : Type} (xs : List α) (k i : Nat)
+    (hne : xs.length ≠ 0) (hi : i < xs.length) :
+    (rotL xs k)[i]'(by rw [length_rotL]; exact hi) =
+      xs[(i + k % xs.length) % xs.length]'(Nat.mod_lt _ (Nat.pos_of_ne_zero hne)) := by
+  unfold rotL
+  simp only [hne, ↓reduceIte]
+  have hk : k % xs.length < xs.length := Nat.mod_lt _ (Nat.pos_of_ne_zero hne)
+  have hdrop : (xs.drop (k % xs.length)).length = xs.length - k % xs.length := by
+    rw [List.length_drop]
+  by_cases hi' : i < xs.length - k % xs.length
+  · have hidx : i < (xs.drop (k % xs.length)).length := by rw [hdrop]; exact hi'
+    rw [List.getElem_append_left hidx, List.getElem_drop]
+    have hlt : i + k % xs.length < xs.length := by omega
+    simp [Nat.mod_eq_of_lt hlt, Nat.add_comm]
+  · have hge : (xs.drop (k % xs.length)).length ≤ i := by rw [hdrop]; omega
+    rw [List.getElem_append_right hge]
+    simp only [hdrop]
+    rw [List.getElem_take]
+    have hmod : (i + k % xs.length) % xs.length = i - (xs.length - k % xs.length) := by
+      have : i + k % xs.length = xs.length + (i - (xs.length - k % xs.length)) := by omega
+      rw [this, Nat.add_mod_left]
+      exact Nat.mod_eq_of_lt (by omega)
+    simp [hmod]
+
+theorem rowRotate_bound (g : Grid Nat) (t : Fin 4 → Nat)
+    (hb : ∀ r c, CardBound (g r c)) (r : Fin 4) (c : Fin 13) :
+    CardBound (rowRotate g t r c) := by
+  unfold rowRotate ofList13
+  have hne : (toList13 (g r)).length ≠ 0 := by simp [length_toList13]
+  have hget := rotL_get_eq (toList13 (g r)) (t r) c.val hne c.isLt
+  rw [hget]
+  simp only [length_toList13]
+  have hj : (c.val + t r % 13) % 13 < 13 := Nat.mod_lt _ (by decide)
+  rw [getElem_toList13 (g r) ⟨(c.val + t r % 13) % 13, hj⟩]
+  exact hb r ⟨(c.val + t r % 13) % 13, hj⟩
+
+theorem colRotate_bound (g : Grid Nat) (s : Fin 13 → Nat)
+    (hb : ∀ r c, CardBound (g r c)) (r : Fin 4) (c : Fin 13) :
+    CardBound (colRotate g s r c) := by
+  unfold colRotate ofList4
+  have hne : (toList4 (fun r' => g r' c)).length ≠ 0 := by simp [length_toList4]
+  have hget := getElem_rotR (toList4 (fun r' => g r' c)) (s c) r.val hne r.isLt
+  rw [hget]
+  have hj : (r.val + (4 - s c % 4)) % 4 < 4 := Nat.mod_lt _ (by decide)
+  have hcell := getElem_toList4 (fun r' => g r' c) ⟨(r.val + (4 - s c % 4)) % 4, hj⟩
+  simpa [length_toList4, hcell] using hb ⟨(r.val + (4 - s c % 4)) % 4, hj⟩ c
+
+/-- `sum_ranks` refines `sumRanks cardRank cardColW` on grids of i64-safe cards. -/
+theorem sum_ranks_refines (g : Grid Nat) (hb : ∀ r c, CardBound (g r c)) :
+    Doubledeal.sum_ranks (embedGrid g) = .ok (embedGrid (sumRanks cardRank cardColW g)) := by
   rw [sum_ranks_as_loop]
   dsimp only
   rw [show (if (0 : Int) > (3 : Int) then 1 else ((3 : Int) - 0).natAbs + 1) = fuel4 from rfl,
@@ -1254,15 +1367,16 @@ theorem sum_ranks_refines (g : Grid Nat) :
         (fun r => pure r))
       pure _out)
     (fun r => pure r)
-    (.ok (embedGrid (sumRanks cardRank g)))
+    (.ok (embedGrid (sumRanks cardRank cardColW g)))
     (by
       dsimp only
       rw [show (if (0 : Int) > (12 : Int) then 1 else ((12 : Int) - 0).natAbs + 1) = fuel13 from rfl,
         except_bind_pure]
       exact col_loop (applyRowRotates cardRank g)
+        (fun r c => by unfold applyRowRotates; exact rowRotate_bound g _ hb r c)
         (fun σ => pure σ.2)
         (fun r => pure r)
-        (.ok (embedGrid (sumRanks cardRank g)))
+        (.ok (embedGrid (sumRanks cardRank cardColW g)))
         (by simp [sumRanks, Pure.pure, Except.pure]))
 
 end DoubleDeal.Link2

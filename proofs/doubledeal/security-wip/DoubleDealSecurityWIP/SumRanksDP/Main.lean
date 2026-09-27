@@ -602,6 +602,74 @@ theorem factorial_split (n : ℕ) (hn : n ≤ 52) (X : ℚ) :
   field_simp
   ring
 
+/-! ### Helpers for (A3) -/
+
+theorem cmFlat_injective (r : Fin 4) : Function.Injective (cmFlat r) := by
+  intro i j h
+  have := congrArg Fin.val h
+  simp only [cmFlat] at this
+  apply Fin.ext; omega
+
+theorem rowOf_injective (π : Equiv.Perm (Fin 52)) (r : Fin 4) :
+    Function.Injective (rowOf π r) :=
+  π.injective.comp (cmFlat_injective r)
+
+/-- With `n* ≤ 12` no row is `δ`-constant (a constant row is 13 cards of one class). -/
+theorem row_nonconst (τ : Relabel) (h : nStar τ ≤ 12) (π : Equiv.Perm (Fin 52)) (r : Fin 4)
+    (i : Fin 13) : ∃ k, delta τ (rowOf π r k) ≠ delta τ (rowOf π r i) := by
+  classical
+  by_contra hc
+  push_neg at hc
+  have hsub : univ.image (rowOf π r) ⊆ cls τ (delta τ (rowOf π r i)) := by
+    intro c hc'
+    obtain ⟨k, -, rfl⟩ := mem_image.1 hc'
+    simp [cls, hc k]
+  have h1 := card_le_card hsub
+  rw [card_image_of_injective _ (rowOf_injective π r), card_univ, Fintype.card_fin] at h1
+  have h2 : (cls τ (delta τ (rowOf π r i))).card ≤ nStar τ :=
+    le_sup (f := fun v => (cls τ v).card) (mem_univ _)
+  omega
+
+/-- Row `r` of `π` has pairwise distinct `δ`-values (the predicate of `distinct_row_count`). -/
+def rowDistinct (τ : Relabel) (π : Equiv.Perm (Fin 52)) (r : Fin 4) : Prop :=
+  ∀ p q : Fin 52, p.val % 4 = r.val → q.val % 4 = r.val → p ≠ q → delta τ (π p) ≠ delta τ (π q)
+
+instance (τ : Relabel) (π : Equiv.Perm (Fin 52)) (r : Fin 4) : Decidable (rowDistinct τ π r) :=
+  inferInstanceAs (Decidable (∀ p q : Fin 52, p.val % 4 = r.val → q.val % 4 = r.val → p ≠ q →
+    delta τ (π p) ≠ delta τ (π q)))
+
+theorem rho_prod_le_A3 (τ : Relabel) (h : nStar τ ≤ 12) (π : Equiv.Perm (Fin 52)) :
+    ∏ r, rho τ (rowOf π r) ≤ 1 / 81 + ∑ r, (if rowDistinct τ π r then (1 : ℚ) else 0) := by
+  by_cases hd : ∃ r, rowDistinct τ π r
+  · obtain ⟨r0, hr0⟩ := hd
+    have hp : ∏ r, rho τ (rowOf π r) ≤ 1 :=
+      prod_le_one (fun r _ => rho_nonneg τ _) (fun r _ => rho_le_one τ _)
+    have hs : (1 : ℚ) ≤ ∑ r, (if rowDistinct τ π r then (1 : ℚ) else 0) := by
+      have := single_le_sum (f := fun r => if rowDistinct τ π r then (1 : ℚ) else 0)
+        (fun r _ => by dsimp only; split_ifs <;> norm_num) (mem_univ r0)
+      simpa [hr0] using this
+    linarith
+  · push_neg at hd
+    have h3 : ∀ r, rho τ (rowOf π r) ≤ 1 / 3 := by
+      intro r
+      have := hd r
+      unfold rowDistinct at this
+      push_neg at this
+      obtain ⟨p, q, hp, hq, hpq, he⟩ := this
+      have ep : rowOf π r (cmCol p) = π p := by simp only [rowOf]; rw [cmFlat_row_col p r hp]
+      have eq' : rowOf π r (cmCol q) = π q := by simp only [rowOf]; rw [cmFlat_row_col q r hq]
+      have hne : cmCol p ≠ cmCol q := by
+        intro e; apply hpq
+        rw [← cmFlat_row_col p r hp, ← cmFlat_row_col q r hq, e]
+      exact rho_le_third τ _ _ _ hne (by rw [ep, eq']; exact he) (row_nonconst τ h π r _)
+    have hp : ∏ r, rho τ (rowOf π r) ≤ ∏ _r : Fin 4, (1 / 3 : ℚ) :=
+      prod_le_prod (fun r _ => rho_nonneg τ _) (fun r _ => h3 r)
+    rw [prod_const, card_univ, Fintype.card_fin] at hp
+    have hs : (0 : ℚ) ≤ ∑ r, (if rowDistinct τ π r then (1 : ℚ) else 0) :=
+      sum_nonneg fun r _ => by split_ifs <;> norm_num
+    have : ((1 : ℚ) / 3) ^ 4 = 1 / 81 := by norm_num
+    linarith
+
 /-- **(A1)** (PROOF.md §3): `n* = 50` gives `Σ ≤ 52!/221` (the two off cards
     are `v* ± u`; same row: `ρ = 0` by `rho_eq_zero_of_cancel`; different rows:
     `1/13` each; probability of different rows `39/51`). -/
@@ -638,7 +706,25 @@ theorem caseA2 (τ : Relabel) (h1 : 13 ≤ nStar τ) (h2 : nStar τ ≤ 49) :
     for the rest). -/
 theorem caseA3 (τ : Relabel) (h : nStar τ ≤ 12) :
     rhoSum τ ≤ (Nat.factorial 52 : ℕ) * ((1 / 81 : ℚ) + 4 * 4 ^ 13 / (Nat.choose 52 13 : ℕ)) := by
-  sorry
+  unfold rhoSum
+  refine (sum_le_sum fun π _ => rho_prod_le_A3 τ h π).trans ?_
+  rw [sum_add_distrib, sum_const, card_univ, Fintype.card_perm, Fintype.card_fin, sum_comm]
+  simp only [sum_boole]
+  have hc : (0 : ℚ) < (Nat.choose 52 13 : ℕ) := by exact_mod_cast Nat.choose_pos (by norm_num)
+  have hr : ∀ r : Fin 4, ((univ.filter fun π => rowDistinct τ π r).card : ℚ) ≤
+      4 ^ 13 * (Nat.factorial 52 : ℕ) / (Nat.choose 52 13 : ℕ) := by
+    intro r
+    rw [le_div_iff₀ hc]
+    exact_mod_cast distinct_row_count (delta τ) r
+  have hsum := sum_le_sum fun r (_ : r ∈ (univ : Finset (Fin 4))) => hr r
+  rw [sum_const, card_univ, Fintype.card_fin] at hsum
+  simp only [nsmul_eq_mul] at hsum ⊢
+  have e : ((Nat.factorial 52 : ℕ) : ℚ) * (4 * 4 ^ 13 / (Nat.choose 52 13 : ℕ)) =
+      (4 : ℕ) * (4 ^ 13 * (Nat.factorial 52 : ℕ) / (Nat.choose 52 13 : ℕ)) := by
+    push_cast; ring
+  rw [mul_add, e]
+  push_cast at hsum ⊢
+  linarith
 
 /-- **Case A** (PROOF.md §3): `δ` not constant ⇒ at most `52!/64` survivors. -/
 theorem caseA_bound (τ : Relabel) (h : ∃ c, delta τ c ≠ delta τ 0) :

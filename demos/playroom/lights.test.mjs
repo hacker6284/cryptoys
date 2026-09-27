@@ -84,7 +84,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     scene.add(stray);
     assert.throws(() => lights.seal(), /light "rim" not visible at seal/);
     oldRoot.visible = true;
-    assert.throws(() => lights.seal(), /unregistered light visible at seal/);
+    assert.throws(() => lights.seal(), /unregistered PointLight visible at seal/);
     scene.remove(stray);
     lights.seal();
 }

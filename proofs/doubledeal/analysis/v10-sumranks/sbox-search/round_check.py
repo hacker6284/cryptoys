@@ -6,11 +6,10 @@ import sys, numpy as np
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent)); sys.dont_write_bytecode = True
 import cport, sb
-from sb import card as C, cyc
+from sb import card as C, cyc, LAB, SOL
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 1_000_000
 W5c = 131072
 def vmap(f): return [13 * f(s, r)[0] + f(s, r)[1] for s in range(4) for r in range(13)]
-LAB = [0, 2, 3, 1]; SOL = [0, 3, 1, 2]
 cases = [
  ("rank+1 on every card (v10Sym)", vmap(lambda s, r: (s, (r + 1) % 13))),
  ("label^1 on every card (v10Sym)", vmap(lambda s, r: (SOL[LAB[s] ^ 1], r))),

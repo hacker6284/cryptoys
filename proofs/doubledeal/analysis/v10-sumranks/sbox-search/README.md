@@ -17,7 +17,7 @@ on `ddport`. `logs/verify.log` also records `../check_cand.py` (W5c 6/6).
   20M/20M decks confirm it. Leave them out and **nothing reaches 1/64**. The worst difference is a **3-cycle of three
   cards of the same suit, at exactly 9/1105 ≈ 1/123**. That is 1.9× below 1/64.
 * **Does anything beat the old 1/221?** **Yes: every same-suit 3-cycle (1/123, about 1.8× worse than 1/221).**
-  Nothing else does. 4-cycles, double swaps, same-rank moves, suit maps on subsets, rotations, block moves and every
+  Nothing else measured does. 4-cycles, double swaps, same-rank moves, suit maps on subsets, rotations, block moves and every
   position difference all come in at or below 1/221. The same-suit swap is still exactly 1/221.
 * For every value difference with measurable survival, **the most common output difference was the input
   difference itself**, so the differential-probability estimate (b) equals same-difference survival (a). For the rest,
@@ -43,7 +43,7 @@ on `ddport`. `logs/verify.log` also records `../check_cand.py` (W5c 6/6).
 |---|---|---|---|---|---|---|---|
 | 1 | rank+1 on every card (any of the 51 v10Sym elements) | exact symmetry (proved) | 20,000,000 (= 1) | 1 | 1 (= input) | above | above |
 | 2 | **3-cycle of three same-suit cards**, e.g. A♣→2♣→3♣ | same-suit 3-cycle | 162,525 = 1/123 [0.00809, 0.00817] | **9/1105 = 1/122.8** | same (= input) | below (1.9×) | **above (1.8×)** |
-| 3 | same-suit swap, e.g. 2♣↔7♣ (old worst) | swap | 90,072 = 1/222 [0.00447, 0.00453] | 1/221 | same | below | equal |
+| 3 | same-suit swap, e.g. 2♣↔7♣ (old worst) | swap | 90,072 = 1/222 [0.00447, 0.00453] | 1/221 | same | below | equal (exact); sample 0.004504 is just below, CI covers 1/221 |
 | 4 | same-suit 4-cycle A♣→2♣→3♣→4♣ | 4-cycle | 55,888 = 1/358 | 761/270725 = 1/356 | same | below | below |
 | 5 | two swaps of same-suit pairs, unequal rank gaps, e.g. (A♣ 2♣)(A♥ 3♥) | double swap | 51,205 = 1/391 | 691/270725 = 1/392 | same | below | below |
 | 6 | two swaps with *equal* gaps (the "cancelling" design), e.g. (A♣ 2♣)(5♣ 6♣) | double swap | (2M run: 4,624 / 2M) | 621/270725 = 1/436 | same | below | below |
@@ -142,9 +142,32 @@ The unkeyed round is SumRanks, then ShiftRows, then GridCycle. Relabellings comm
 
 ## Files
 
-`sbox.c` / `sb.py` (C S-box, survey, ctypes wrapper). `verify.py` (model checks). `battery.py` (analytic
-candidates). `scan.py` (exhaustive scans). `hillclimb.py`. `exact.py`, `exact_ds.py` (exact probabilities).
-`final.py` (the 20M table). `linear.py`. `round_check.py` (uses `../cport.py` / `../cand.c`). `repro.py`. `logs/`
-(all outputs). Needs numpy and gcc. `sb.py` compiles `build/libsbox.so` (gitignored) on first import. Every
-run uses fixed seeds, so rerunning reproduces the logs. Run times on 8 cores: `battery.py` ~2 min, `final.py`
-~3 min, `scan.py ds` ~5 min. Run with `PYTHONDONTWRITEBYTECODE=1` to keep `__pycache__` out of the tree.
+Scripts: `sbox.c` / `sb.py` (C S-box, survey, card and GF(4) tables, ctypes wrapper), `verify.py` (model checks),
+`battery.py` (analytic candidates), `scan.py` (exhaustive scans), `hillclimb.py`, `exact.py` and `exact_ds.py`
+(exact probabilities), `final.py` (the 20M table), `linear.py`, `round_check.py` (uses `../cport.py` /
+`../cand.c`), `repro.py`.
+
+Each log and the exact command that produced it, run from this folder with `PYTHONDONTWRITEBYTECODE=1`. Where a log
+has a header, the arguments match it. Logs without a header are deterministic outputs of the command shown.
+
+| Log | Command | Header / check |
+|---|---|---|
+| `logs/verify.log` | `(python3 verify.py; cd .. && echo "repo check_cand.py:" && python3 check_cand.py) > logs/verify.log 2>&1` | no header (two result lines) |
+| `logs/battery_2M.log` | `python3 battery.py 2000000` (2000000 is also the default) | `N = 2000000 random decks per difference` |
+| `logs/scan_c3.log` | `python3 scan.py c3 200000` | `c3: 2550 differences, N = 200000` |
+| `logs/scan_ds.log` | `python3 scan.py ds 20000` | `ds: 62475 differences, N = 20000` |
+| `logs/scan_pt.log` | `python3 scan.py pt 200000` | `pt: 1326 differences, N = 200000` |
+| `logs/scan_pc3.log` | `python3 scan.py pc3 10000` | `pc3: 44200 differences, N = 10000` |
+| `logs/hill_V.log` | `python3 hillclimb.py V 64 1000 20000 8` | `mode V: 64 climbs x 1000 steps, 20000 decks per score, support <= 8` |
+| `logs/hill_P.log` | `python3 hillclimb.py P 32 400 10000 6` | `mode P: 32 climbs x 400 steps, 10000 decks per score, support <= 6` |
+| `logs/exact.log` | `python3 exact.py` | no header (5 exact values) |
+| `logs/exact4.log` | `python3 exact.py 4` (any argument adds the 4-card cases) | no header (10 exact values) |
+| `logs/exact_ds.log` | `python3 exact_ds.py` | no header (21 gap classes) |
+| `logs/final_table.md` | `python3 final.py 20000000` (the default) | no header line; N = 20000000 appears in every row |
+| `logs/linear.log` | `python3 linear.py 1000000` (the default) | `N = 1000000` |
+| `logs/round_check.log` | `python3 round_check.py 1000000` (the default) | `N = 1000000 random decks` |
+| `logs/repro.log` | `python3 repro.py` | no header (runs on `ddport`) |
+
+The scripts need numpy and gcc. `sb.py` compiles `build/libsbox.so` (gitignored) on first import. Every run uses
+fixed seeds, so rerunning reproduces the logs byte for byte. Run times on 8 cores: `battery.py` ~2 min,
+`final.py` ~3 min, `scan.py ds` ~5 min, `hillclimb.py V` ~1.5 min.

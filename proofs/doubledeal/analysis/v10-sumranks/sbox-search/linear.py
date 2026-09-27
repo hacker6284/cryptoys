@@ -30,7 +30,7 @@ A = np.abs(Cm); np.fill_diagonal(A, 0); idx = np.dstack(np.unravel_index(np.args
 print("largest cross-feature correlations (in feature -> different out feature):")
 for i, j in idx: print(f"  {names[i]:30s} -> {names[j]:30s} corr {Cm[i, j]:+.4f}")
 # single-card position bias: how often does a card stay in the same cell / same row / same column
-same_cell = (X == Y).mean(); 
+same_cell = (X == Y).mean()
 pos = lambda G: np.argsort(G, axis=1)
 PX, PY = pos(X), pos(Y)
 print(f"a given card ends in the same cell: {same_cell:.4f} (uniform 1/52 = {1/52:.4f}); same row: {((PX//13)==(PY//13)).mean():.4f} (uniform 0.25); same column: {((PX%13)==(PY%13)).mean():.4f} (uniform {1/13:.4f})")

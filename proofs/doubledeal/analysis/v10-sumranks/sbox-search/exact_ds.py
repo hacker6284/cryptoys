@@ -1,8 +1,8 @@
 """Exact survival of every class of double swap of same-suit pairs (a a+d1)(b b+d2): for suit-preserving
 differences only the rank gaps matter (see exact.py). d1, d2 in 1..6 (a gap d and 13-d are the same swap)."""
 from multiprocessing import Pool
-from exact import exact, cyc
-from sb import card as C
+from exact import exact
+from sb import card as C, cyc
 def job(dd):
     d1, d2 = dd
     return d1, d2, exact(cyc([C('C', 0), C('C', d1)], [C('H', 0), C('H', d2)]))

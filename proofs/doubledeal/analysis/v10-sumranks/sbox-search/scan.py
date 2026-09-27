@@ -1,6 +1,6 @@
-"""Exhaustive low-weight scans. Survival is invariant under composing with, or conjugating by, the 52 exact
-symmetries (v10Sym: rank shift + GF(4) label translation), which act transitively on cards, so every value
-difference can be conjugated to move AC. Scans (value differences unless noted):
+"""Exhaustive low-weight scans. Survival is invariant under composing with, or conjugating by, the
+51 non-identity exact symmetries (v10Sym: rank shift + GF(4) label translation), which act transitively
+on cards, so every value difference can be conjugated to move AC. Scans (value differences unless noted):
   c3  : all 3-cycles AC->b->c                         (2550)
   ds  : all double swaps (AC b)(c d)                   (62475)
   pt  : all position transpositions                    (1326)   [position mode, best output diff]

@@ -8,13 +8,13 @@ in uniformly random distinct cells and survival = fraction of placements where e
                         XOR (XOR of label changes in col j) = 0, for all 13 columns cyclically."""
 import itertools, sys
 from fractions import Fraction
-from sb import card as C, name
-LAB = [0, 2, 3, 1]; TW = [0, 2, 3, 1]
+from sb import card as C, cyc, LAB, TW
 def wmul(x, r):  # multiply label x by w^r for row weights 0,1,w,w^2 (row 0 weight 0)
     if r == 0: return 0
     for _ in range(r - 1): x = TW[x]
     return x
-def exact(moves):  # moves: dict card -> image card
+def exact(perm):  # perm: permutation of 0..51 (card -> image card), as built by sb.cyc
+    moves = {c: perm[c] for c in range(52) if perm[c] != c}
     cards = list(moves)
     suit_pres = all(c // 13 == moves[c] // 13 for c in cards)
     rank_pres = all(c % 13 == moves[c] % 13 for c in cards)
@@ -33,11 +33,6 @@ def exact(moves):  # moves: dict card -> image card
             for (cl, d) in zip(cells, dl): r, c = divmod(cl, 13); S[c] ^= d; Vv[c] ^= wmul(d, r)
             good += all((Vv[(j - 1) % 13] ^ S[j]) == 0 for j in range(13))
     return Fraction(good, tot)
-def cyc(*cs): 
-    m = {}
-    for c in cs:
-        for i, x in enumerate(c): m[x] = c[(i + 1) % len(c)]
-    return m
 CASES = [
  ("swap 2C<->7C", cyc([C('C','2'), C('C','7')])),
  ("3-cycle AC->2C->3C", cyc([C('C','A'), C('C','2'), C('C','3')])),

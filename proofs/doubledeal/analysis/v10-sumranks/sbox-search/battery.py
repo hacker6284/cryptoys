@@ -3,7 +3,7 @@ g' = tau o g, the kind that passes Compose unchanged), mode P = position differe
 For each: (a) same-difference survival P[out diff == in diff], (b) best output difference = count of the most
 common output difference over N random decks (a DP estimate). Usage: python3 battery.py [N]"""
 import sys, sb
-from sb import card as C, cyc, name
+from sb import card as C, cyc, LAB, TW, SOL
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 2_000_000
 def cell(r, c): return 13 * r + c
 def ident(): return list(range(52))
@@ -13,10 +13,8 @@ def vmap(f):  # value map from a function on (suit, rank) -> (suit, rank)
         for r in range(13):
             s2, r2 = f(s, r); p[13*s + r] = 13*s2 + r2
     assert sorted(p) == ident(); return p
-LAB = [0, 2, 3, 1]; SUIT_OF_LAB = [0, 3, 1, 2]
 def labmap(x, ranks=range(13), mul=False):  # label -> label ^ x (or w*label if mul) on the given ranks
-    TW = [0, 2, 3, 1]
-    return vmap(lambda s, r: (SUIT_OF_LAB[(TW[LAB[s]] if mul else LAB[s] ^ x)] if r in ranks else s, r))
+    return vmap(lambda s, r: (SOL[(TW[LAB[s]] if mul else LAB[s] ^ x)] if r in ranks else s, r))
 def rankmap(f, suits=range(4)): return vmap(lambda s, r: (s, f(r) % 13 if s in suits else r))
 def pmap(f):  # position map from function on (r, c) -> source (r, c)
     p = [0]*52
@@ -25,14 +23,13 @@ def pmap(f):  # position map from function on (r, c) -> source (r, c)
             r2, c2 = f(r, c); p[cell(r, c)] = cell(r2 % 4, c2 % 13)
     assert sorted(p) == ident(); return p
 def pcyc(*cells_cycles): return cyc(*[[cell(*x) for x in cy] for cy in cells_cycles])
-A, T = "A", "T"
 V = [  # (description, class, permutation)
  ("swap 2C<->7C", "swap, same suit (earlier worst class)", cyc([C('C','2'), C('C','7')])),
  ("swap 2C<->7H", "swap, different suit+rank", cyc([C('C','2'), C('H','7')])),
  ("swap 2C<->2H", "swap, same rank", cyc([C('C','2'), C('H','2')])),
  ("rank+1 on every card", "v10Sym (proved symmetry)", rankmap(lambda r: r + 1)),
  ("label^1 on every card (C<->D, H<->S)", "v10Sym (proved symmetry)", labmap(1)),
- ("rank+5 and label^2 on every card", "v10Sym (proved symmetry)", vmap(lambda s, r: (SUIT_OF_LAB[LAB[s] ^ 2], (r + 5) % 13))),
+ ("rank+5 and label^2 on every card", "v10Sym (proved symmetry)", vmap(lambda s, r: (SOL[LAB[s] ^ 2], (r + 5) % 13))),
  ("3-cycle AC->2C->3C", "3-cycle, same suit, ranks in AP", cyc([C('C','A'), C('C','2'), C('C','3')])),
  ("3-cycle AC->5C->9C", "3-cycle, same suit, ranks in AP", cyc([C('C','A'), C('C','5'), C('C','9')])),
  ("3-cycle AC->2C->5C", "3-cycle, same suit", cyc([C('C','A'), C('C','2'), C('C','5')])),

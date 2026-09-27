@@ -5,7 +5,6 @@ from sb import card as C, cyc
 from fractions import Fraction as F
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 20_000_000
 def cell(r, c): return 13 * r + c
-LAB = [0, 2, 3, 1]; SOL = [0, 3, 1, 2]
 rank1 = [13 * s + (r + 1) % 13 for s in range(4) for r in range(13)]
 rows = [
  ("V", "rank+1 on every card (any of the 51 v10Sym elements)", "exact symmetry (proved, SumRanksV10Iff)", rank1, F(1)),
@@ -19,7 +18,7 @@ rows = [
  ("P", "position swap cells (0,0)<->(1,0) (weight-0 column)", "position swap", cyc([cell(0, 0), cell(1, 0)]), None),
  ("P", "rotate every row left by 1", "all-rows rotation", [cell(r, (c + 1) % 13) for r in range(4) for c in range(13)], None),
 ]
-print(f"| # | kind | difference | class | (a) same-diff survival: hits/N, rate, 95% CI | exact | (b) best output diff: hits, rate | vs 1/64 | vs 1/221 |")
+print("| # | kind | difference | class | (a) same-diff survival: hits/N, rate, 95% CI | exact | (b) best output diff: hits, rate | vs 1/64 | vs 1/221 |")
 print("|---|---|---|---|---|---|---|---|---|")
 for i, (m, d, cls, p, ex) in enumerate(rows):
     r = sb.survey(0 if m == "V" else 1, p, N, seed=77 + i)

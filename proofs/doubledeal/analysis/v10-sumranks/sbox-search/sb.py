@@ -20,6 +20,9 @@ def survey(mode, diff, n, seed=1):
     return dict(same=int(res[0]), top=int(res[1]), top_is_same=bool(res[2]), distinct=int(res[3]), top_diff=top.tolist(), n=n)
 def same_only(tau, n, seed=1): return L.same_only(u8(tau), n, seed)
 # card helpers: card = 13*suit + rank ; suits 0 C, 1 H, 2 S, 3 D ; GF(4) label C0 H2 S3 D1
+LAB = [0, 2, 3, 1]   # GF(4) label of each suit index
+TW = [0, 2, 3, 1]    # label x -> w*x
+SOL = [0, 3, 1, 2]   # suit index of each label (inverse of LAB)
 SUITS = "CHSD"; RANKS = "A23456789TJQK"
 def card(s, r): return 13 * SUITS.index(s) + RANKS.index(r) if isinstance(r, str) else 13 * SUITS.index(s) + r
 def name(c): return RANKS[c % 13] + SUITS[c // 13]

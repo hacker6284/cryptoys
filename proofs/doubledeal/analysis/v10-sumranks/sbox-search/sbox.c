@@ -19,7 +19,8 @@ void sr_amt(const u8 *in, u8 *out, u8 *amt) {
     static const int RO[4] = {1, 2, 3, 0};
     for (int a = 0; a < 4; a++) { int i = RO[a]; int t = row_turn(g, (i + 3) % 4); if (amt) amt[a] = t; rotl13(g + 13*i, t); }
     for (int a = 0; a < 13; a++) { int j = (a + 1) % 13; int s = col_value(g, (j + 12) % 13) ^ col_suits(g, j);
-        if (amt) amt[4 + a] = s; u8 c[4]; for (int i = 0; i < 4; i++) c[i] = g[13*i+j];
+        if (amt) amt[4 + a] = s;
+        u8 c[4]; for (int i = 0; i < 4; i++) c[i] = g[13*i+j];
         for (int i = 0; i < 4; i++) g[13*i+j] = c[(i - s + 4) % 4]; }
     memcpy(out, g, 52);
 }
@@ -40,31 +41,27 @@ static int cmpu(const void *a, const void *b) { uint64_t x = *(const uint64_t *)
    res[0] = #decks with output diff == input diff (same-difference survival)
    res[1] = count of the most common output difference; res[2] = 1 if that most common one is the input diff
    res[3] = number of distinct output differences; top (52 bytes) = the most common output difference */
+/* one random deck: draw g, apply the difference d (mode 0 value, mode 1 position), run SumRanks on both and
+   write the output difference to od */
+static void one_diff(int mode, const u8 *d, u8 *od) {
+    u8 g[52], g2[52], y[52], y2[52], pos[52];
+    shuffle(g);
+    if (mode == 0) for (int c = 0; c < 52; c++) g2[c] = d[g[c]]; else for (int c = 0; c < 52; c++) g2[c] = g[d[c]];
+    sr(g, y); sr(g2, y2);
+    if (mode == 0) for (int c = 0; c < 52; c++) od[y[c]] = y2[c];
+    else { for (int c = 0; c < 52; c++) pos[y[c]] = c; for (int c = 0; c < 52; c++) od[c] = pos[y2[c]]; }
+}
 void survey(int mode, const u8 *d, int n, uint64_t sd, long *res, u8 *top) {
-    seed(sd); uint64_t *H = malloc(sizeof(uint64_t) * n); u8 g[52], g2[52], y[52], y2[52], od[52], pos[52];
+    seed(sd); uint64_t *H = malloc(sizeof(uint64_t) * n); u8 od[52];
     uint64_t hin = h52(d); long same = 0;
-    for (int t = 0; t < n; t++) {
-        shuffle(g);
-        if (mode == 0) for (int c = 0; c < 52; c++) g2[c] = d[g[c]]; else for (int c = 0; c < 52; c++) g2[c] = g[d[c]];
-        sr(g, y); sr(g2, y2);
-        if (mode == 0) for (int c = 0; c < 52; c++) od[y[c]] = y2[c];
-        else { for (int c = 0; c < 52; c++) pos[y[c]] = c; for (int c = 0; c < 52; c++) od[c] = pos[y2[c]]; }
-        H[t] = h52(od); if (H[t] == hin) same++;
-    }
+    for (int t = 0; t < n; t++) { one_diff(mode, d, od); H[t] = h52(od); if (H[t] == hin) same++; }
     qsort(H, n, sizeof(uint64_t), cmpu);
     long best = 0, run = 0, distinct = 0; uint64_t bh = 0;
     for (int t = 0; t < n; t++) { if (t == 0 || H[t] != H[t-1]) { run = 0; distinct++; } run++; if (run > best) { best = run; bh = H[t]; } }
     res[0] = same; res[1] = best; res[2] = (bh == hin); res[3] = distinct;
-    /* second pass to recover the top output difference */
+    /* second pass over the same decks to recover the top output difference */
     seed(sd); memset(top, 255, 52);
-    for (int t = 0; t < n; t++) {
-        shuffle(g);
-        if (mode == 0) for (int c = 0; c < 52; c++) g2[c] = d[g[c]]; else for (int c = 0; c < 52; c++) g2[c] = g[d[c]];
-        sr(g, y); sr(g2, y2);
-        if (mode == 0) for (int c = 0; c < 52; c++) od[y[c]] = y2[c];
-        else { for (int c = 0; c < 52; c++) pos[y[c]] = c; for (int c = 0; c < 52; c++) od[c] = pos[y2[c]]; }
-        if (h52(od) == bh) { memcpy(top, od, 52); break; }
-    }
+    for (int t = 0; t < n; t++) { one_diff(mode, d, od); if (h52(od) == bh) { memcpy(top, od, 52); break; } }
     free(H);
 }
 /* fast same-difference survival only (value diff): counts decks where SR(tau o g) == tau o SR(g) */

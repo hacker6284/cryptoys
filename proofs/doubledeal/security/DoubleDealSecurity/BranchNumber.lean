@@ -1,7 +1,7 @@
 /-
   Branch-number floor for DoubleDeal decks, and tightness for GridCycle.
 
-  Distinct decks differ in at least two seats (`two_le_diffWeight`). Any map
+  Distinct decks differ in at least two seats (`two_le_hammingDist`). Any map
   that sends decks to decks and separates them therefore has branch number at
   least 4 (`four_le_branch`): two seats in, two seats out. That floor is
   attained by GridCycle. Swapping walk cards 50 and 51 leaves the seat walk
@@ -18,16 +18,13 @@
   SumRanks or keyed rounds.
 -/
 import Mathlib.Data.Finset.Card
+import Mathlib.InformationTheory.Hamming
 import Mathlib.Logic.Function.Basic
 import DoubleDealSecurity.GridCycle
 
 namespace DoubleDeal.Security
 
 open DoubleDeal
-
-/-- Number of seats at which two packets differ. -/
-def diffWeight (a b : Fin 52 → Nat) : Nat :=
-  (Finset.univ.filter fun i => a i ≠ b i).card
 
 /-- Exchange the cards at seats `i` and `j`. -/
 def swapAt (m : Fin 52 → Nat) (i j : Fin 52) : Fin 52 → Nat :=
@@ -59,14 +56,6 @@ theorem swapAt_ne_iff {m : Fin 52 → Nat} (hm : Function.Injective m) {i j : Fi
     · rw [swapAt_right]
       exact fun h => hij (hm h.symm)
 
-theorem isDeck_swapAt {m : Fin 52 → Nat} (hm : IsDeck m) (i j : Fin 52) :
-    IsDeck (swapAt m i j) := by
-  constructor
-  · intro k
-    exact hm.1 (Equiv.swap i j k)
-  · intro a b h
-    exact (Equiv.swap i j).injective (hm.2 h)
-
 /-- A deck uses every card value. -/
 theorem isDeck_surj {m : Fin 52 → Nat} (hm : IsDeck m) {c : Nat} (hc : c < 52) :
     ∃ i, m i = c := by
@@ -78,46 +67,21 @@ theorem isDeck_surj {m : Fin 52 → Nat} (hm : IsDeck m) {c : Nat} (hc : c < 52)
 /-- (T0, PROVED) Distinct decks differ in at least two seats. One differing
     seat would leave the other 51 cards fixed, so the missing value at that
     seat could not occur anywhere else. -/
-theorem two_le_diffWeight {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b) (h : a ≠ b) :
-    2 ≤ diffWeight a b := by
-  classical
-  obtain ⟨i, hi⟩ := not_forall.mp (mt funext h)
+theorem two_le_hammingDist {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b) (h : a ≠ b) :
+    2 ≤ hammingDist a b := by
+  have hpos := hammingDist_pos.2 h
   by_contra hlt
-  have hle : diffWeight a b ≤ 1 := by omega
-  have hmem : i ∈ Finset.univ.filter (fun j => a j ≠ b j) := by simp [hi]
-  have hone : diffWeight a b = 1 := by
-    have hpos : 0 < diffWeight a b := Finset.card_pos.2 ⟨i, hmem⟩
-    omega
-  obtain ⟨k, hk⟩ := Finset.card_eq_one.mp hone
-  have hik : i = k := by
-    have : i ∈ ({k} : Finset (Fin 52)) := by simpa [hk] using hmem
-    simpa using this
-  have agree : ∀ j, j ≠ k → a j = b j := by
-    intro j hj
-    have hnot : ¬ a j ≠ b j := by
-      intro hne
-      have : j ∈ Finset.univ.filter (fun t => a t ≠ b t) := by simp [hne]
-      rw [hk] at this
-      simp at this
-      exact hj this
-    by_contra hne
-    exact hnot hne
-  have hdiff : a k ≠ b k := by
-    have : k ∈ Finset.univ.filter (fun j => a j ≠ b j) := by rw [hk]; simp
-    simpa using this
+  obtain ⟨k, hk⟩ := Finset.card_eq_one.mp (show hammingDist a b = 1 by omega)
+  have mem : ∀ j, a j ≠ b j ↔ j = k := fun j => by
+    simpa using congrArg (j ∈ ·) hk
   obtain ⟨j, hj⟩ := isDeck_surj ha (hb.1 k)
-  have hjk : j ≠ k := by
-    intro heq
-    apply hdiff
-    rw [heq] at hj
-    exact hj
-  have hbjj : b j = b k := by rw [← agree j hjk]; exact hj
-  exact hjk (hb.2 hbjj)
+  have hjk : j ≠ k := fun e => (mem k).2 rfl (e ▸ hj)
+  exact hjk (hb.2 (hj ▸ (not_not.1 (mt (mem j).1 hjk)).symm))
 
 /-- Swapping two distinct seats of an injective packet changes exactly those
     two seats. -/
-theorem diffWeight_swapAt {m : Fin 52 → Nat} (hm : Function.Injective m) {i j : Fin 52}
-    (hij : i ≠ j) : diffWeight m (swapAt m i j) = 2 := by
+theorem hammingDist_swapAt {m : Fin 52 → Nat} (hm : Function.Injective m) {i j : Fin 52}
+    (hij : i ≠ j) : hammingDist m (swapAt m i j) = 2 := by
   classical
   have hset :
       (Finset.univ.filter fun k => m k ≠ swapAt m i j k) = {i, j} := by
@@ -125,7 +89,7 @@ theorem diffWeight_swapAt {m : Fin 52 → Nat} (hm : Function.Injective m) {i j 
     simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_insert,
       Finset.mem_singleton]
     exact swapAt_ne_iff hm hij k
-  rw [diffWeight, hset]
+  rw [hammingDist, hset]
   exact Finset.card_pair hij
 
 /-- (PROVED) Trivial branch-number floor: a map that preserves decks and
@@ -135,9 +99,9 @@ theorem four_le_branch {F : (Fin 52 → Nat) → (Fin 52 → Nat)}
     (hdeck : ∀ m, IsDeck m → IsDeck (F m))
     (hsep : ∀ {a b : Fin 52 → Nat}, IsDeck a → IsDeck b → a ≠ b → F a ≠ F b)
     {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b) (h : a ≠ b) :
-    4 ≤ diffWeight a b + diffWeight (F a) (F b) := by
-  have h1 := two_le_diffWeight ha hb h
-  have h2 := two_le_diffWeight (hdeck a ha) (hdeck b hb) (hsep ha hb h)
+    4 ≤ hammingDist a b + hammingDist (F a) (F b) := by
+  have h1 := two_le_hammingDist ha hb h
+  have h2 := two_le_hammingDist (hdeck a ha) (hdeck b hb) (hsep ha hb h)
   omega
 
 /-! ## GridCycle tail
@@ -208,18 +172,9 @@ theorem seatW_swap_tail (ch : Chooser) (hch : FreeChooser ch)
     rw [seatW_swapAt_of_le ch m (i := 50) (j := 51) (n := k.val) (by omega) (by omega)]
     exact (seatW_ne ch hch m hk (by decide)).symm
 
-theorem scoop_eq_hand_at (ch : Chooser) (hch : FreeChooser ch)
-    (hand : Fin 52 → Nat) (t n : Fin 52)
-    (hn : seatW ch hand n.val = (rmRow t, rmCol t)) :
-    scoopRowMajor (gridW ch hand) t = hand n := by
-  have hg := gridW_at_seat ch hch hand n
-  have h1 : (seatW ch hand n.val).1 = rmRow t := congrArg Prod.fst hn
-  have h2 : (seatW ch hand n.val).2 = rmCol t := congrArg Prod.snd hn
-  simpa [scoopRowMajor, h1, h2] using hg
-
-theorem diffWeight_gridW_swap_tail (ch : Chooser) (hch : FreeChooser ch)
+theorem hammingDist_gridW_swap_tail (ch : Chooser) (hch : FreeChooser ch)
     {m : Fin 52 → Nat} (hm : IsDeck m) :
-    diffWeight (scoopRowMajor (gridW ch m))
+    hammingDist (scoopRowMajor (gridW ch m))
       (scoopRowMajor (gridW ch (swapAt m 50 51))) = 2 := by
   classical
   let m' := swapAt m (50 : Fin 52) (51 : Fin 52)
@@ -291,33 +246,8 @@ theorem diffWeight_gridW_swap_tail (ch : Chooser) (hch : FreeChooser ch)
     simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_insert,
       Finset.mem_singleton]
     exact hchar t
-  rw [diffWeight, hset]
+  rw [hammingDist, hset]
   exact Finset.card_pair htne
-
-theorem isDeck_scoop_gridW (ch : Chooser) (hch : FreeChooser ch)
-    {m : Fin 52 → Nat} (hm : IsDeck m) :
-    IsDeck (scoopRowMajor (gridW ch m)) := by
-  constructor
-  · intro t
-    obtain ⟨n, hn⟩ := seatW_surj ch hch m (rmRow t, rmCol t)
-    rw [scoop_eq_hand_at ch hch m t n hn]
-    exact hm.1 n
-  · intro t1 t2 h
-    obtain ⟨n1, hn1⟩ := seatW_surj ch hch m (rmRow t1, rmCol t1)
-    obtain ⟨n2, hn2⟩ := seatW_surj ch hch m (rmRow t2, rmCol t2)
-    have h1 := scoop_eq_hand_at ch hch m t1 n1 hn1
-    have h2 := scoop_eq_hand_at ch hch m t2 n2 hn2
-    have hcards : m n1 = m n2 := by rw [← h1, ← h2]; exact h
-    have hn : n1 = n2 := hm.2 hcards
-    have hseats : (rmRow t1, rmCol t1) = (rmRow t2, rmCol t2) := by
-      rw [← hn1, ← hn2, hn]
-    calc
-      t1 = rmFlat (rmRow t1) (rmCol t1) := (rmFlat_rm t1).symm
-      _ = rmFlat (rmRow t2) (rmCol t2) := by
-          congr 1
-          · exact congrArg Prod.fst hseats
-          · exact congrArg Prod.snd hseats
-      _ = t2 := rmFlat_rm t2
 
 /-- The placed grid determines the hand: card `n` is what the final grid
     stores at seat `n`, and seat `n` is fixed by the prefix. -/
@@ -358,48 +288,43 @@ theorem scoop_gridW_inj (ch : Chooser) (hch : FreeChooser ch) {a b : Fin 52 → 
 /-- (T1, PROVED) For every deck, swapping walk cards 50 and 51 changes
     exactly two output seats of GridCycle. -/
 theorem mixColumns_swap_tail (m : Fin 52 → Nat) (hm : IsDeck m) :
-    diffWeight (mixColumns m) (mixColumns (swapAt m 50 51)) = 2 := by
+    hammingDist (mixColumns m) (mixColumns (swapAt m 50 51)) = 2 := by
   simpa only [mixColumns_eq] using
-    diffWeight_gridW_swap_tail chooseSeat! freeChooser_v9 hm
+    hammingDist_gridW_swap_tail chooseSeat! freeChooser_v9 hm
+
+/-- (PROVED) Generic seat 26: if the walk places card 0 at `(2, 0)`, the
+    row-major scoop returns it at output seat 26. -/
+theorem scoop_gridW_seat26 (ch : Chooser) (hch : FreeChooser ch) (m : Fin 52 → Nat)
+    (h0 : seatW ch m 0 = asStart) : scoopRowMajor (gridW ch m) 26 = m 0 := by
+  have hidx : rmRow (26 : Fin 52) = asStart.1 ∧ rmCol (26 : Fin 52) = asStart.2 := by
+    decide
+  rw [scoopRowMajor, hidx.1, hidx.2, ← h0]
+  exact gridW_at_seat ch hch m (0 : Fin 52)
 
 /-- (PROVED) Walk card 0 is placed at `(2, 0)` and scooped to output seat 26. -/
 theorem mixColumns_seat26 (m : Fin 52 → Nat) : mixColumns m 26 = m 0 := by
-  rw [mixColumns_eq, scoopRowMajor]
-  have hseat : seatW chooseSeat! m 0 = asStart := by
-    simpa [walkSeat_eq] using walkSeat_zero m
-  have hraw := gridW_at_seat chooseSeat! freeChooser_v9 m (0 : Fin 52)
-  have hfst : (seatW chooseSeat! m (0 : Fin 52).val).1 = asStart.1 := by
-    simp [hseat, congrArg Prod.fst hseat]
-  have hsnd : (seatW chooseSeat! m (0 : Fin 52).val).2 = asStart.2 := by
-    simp [hseat, congrArg Prod.snd hseat]
-  have hidx : rmRow (26 : Fin 52) = asStart.1 ∧ rmCol (26 : Fin 52) = asStart.2 := by
-    decide
-  rw [hidx.1, hidx.2, ← hfst, ← hsnd]
-  exact hraw
-
-/-- (PROVED) GridCycle sends decks to decks. -/
-theorem isDeck_mixColumns {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck (mixColumns m) := by
-  simpa only [mixColumns_eq] using isDeck_scoop_gridW chooseSeat! freeChooser_v9 hm
+  rw [mixColumns_eq]
+  exact scoop_gridW_seat26 chooseSeat! freeChooser_v9 m (by simpa [walkSeat_eq] using walkSeat_zero m)
 
 /-- (PROVED) `invMixColumns ∘ mixColumns = id`, so GridCycle separates decks. -/
-theorem mixColumns_separates {a b : Fin 52 → Nat} (h : mixColumns a = mixColumns b) : a = b := by
-  have := congrArg invMixColumns h
-  simpa only [invMixColumns_mixColumns] using this
+theorem mixColumns_separates {a b : Fin 52 → Nat} (h : mixColumns a = mixColumns b) : a = b :=
+  Function.LeftInverse.injective invMixColumns_mixColumns h
 
 /-- (PROVED) Branch number of v9 GridCycle, on decks, is at least 4. -/
 theorem four_le_mixColumns_branch {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b)
     (h : a ≠ b) :
-    4 ≤ diffWeight a b + diffWeight (mixColumns a) (mixColumns b) := by
-  exact four_le_branch (F := mixColumns) (fun m hm => isDeck_mixColumns hm)
+    4 ≤ hammingDist a b + hammingDist (mixColumns a) (mixColumns b) := by
+  exact four_le_branch (F := mixColumns)
+    (fun m hm => by simpa only [mixColumns_eq] using isDeck_scoop_gridW chooseSeat! freeChooser_v9 hm)
     (fun _ _ hab heq => hab (mixColumns_separates heq)) ha hb h
 
 /-- (PROVED) The walk-card tail swap attains the floor: input weight 2 and
     output weight 2. -/
 theorem mixColumns_tail_branch (m : Fin 52 → Nat) (hm : IsDeck m) :
-    diffWeight m (swapAt m 50 51) +
-      diffWeight (mixColumns m) (mixColumns (swapAt m 50 51)) = 4 := by
+    hammingDist m (swapAt m 50 51) +
+      hammingDist (mixColumns m) (mixColumns (swapAt m 50 51)) = 4 := by
   have hne : (50 : Fin 52) ≠ 51 := by decide
-  rw [diffWeight_swapAt hm.2 hne, mixColumns_swap_tail m hm]
+  rw [hammingDist_swapAt hm.2 hne, mixColumns_swap_tail m hm]
 
 /-! ## Frozen v8 GridCycle
 
@@ -410,45 +335,36 @@ theorem V8.seatW_zero (hand : Fin 52 → Nat) : seatW V8.chooseSeat! hand 0 = as
 
 /-- (PROVED) v8 GridCycle, same tail swap: output weight exactly 2. -/
 theorem v8_mixColumns_swap_tail (m : Fin 52 → Nat) (hm : IsDeck m) :
-    diffWeight (V8.mixColumns m) (V8.mixColumns (swapAt m 50 51)) = 2 := by
-  simpa only [V8.mixColumns] using
-    diffWeight_gridW_swap_tail V8.chooseSeat! V8.freeChooser hm
+    hammingDist (V8.mixColumns m) (V8.mixColumns (swapAt m 50 51)) = 2 := by
+  simpa only [V8.mixColumns_eq] using
+    hammingDist_gridW_swap_tail V8.chooseSeat! V8.freeChooser hm
 
 /-- (PROVED) v8 walk card 0 is also scooped to output seat 26. -/
 theorem v8_mixColumns_seat26 (m : Fin 52 → Nat) : V8.mixColumns m 26 = m 0 := by
-  rw [V8.mixColumns, scoopRowMajor]
-  have hseat := V8.seatW_zero m
-  have hraw := gridW_at_seat V8.chooseSeat! V8.freeChooser m (0 : Fin 52)
-  have hfst : (seatW V8.chooseSeat! m (0 : Fin 52).val).1 = asStart.1 := by
-    simp [hseat, congrArg Prod.fst hseat]
-  have hsnd : (seatW V8.chooseSeat! m (0 : Fin 52).val).2 = asStart.2 := by
-    simp [hseat, congrArg Prod.snd hseat]
-  have hidx : rmRow (26 : Fin 52) = asStart.1 ∧ rmCol (26 : Fin 52) = asStart.2 := by
-    decide
-  rw [hidx.1, hidx.2, ← hfst, ← hsnd]
-  exact hraw
+  rw [V8.mixColumns_eq]
+  exact scoop_gridW_seat26 V8.chooseSeat! V8.freeChooser m (V8.seatW_zero m)
 
 theorem isDeck_v8_mixColumns {m : Fin 52 → Nat} (hm : IsDeck m) :
     IsDeck (V8.mixColumns m) := by
-  simpa only [V8.mixColumns] using isDeck_scoop_gridW V8.chooseSeat! V8.freeChooser hm
+  simpa only [V8.mixColumns_eq] using isDeck_scoop_gridW V8.chooseSeat! V8.freeChooser hm
 
 theorem v8_mixColumns_separates {a b : Fin 52 → Nat}
     (h : V8.mixColumns a = V8.mixColumns b) : a = b := by
   apply scoop_gridW_inj V8.chooseSeat! V8.freeChooser
-  simpa only [V8.mixColumns] using h
+  simpa only [V8.mixColumns_eq] using h
 
 /-- (PROVED) Branch number of the frozen v8 GridCycle, on decks, is at least 4. -/
 theorem four_le_v8_mixColumns_branch {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b)
     (h : a ≠ b) :
-    4 ≤ diffWeight a b + diffWeight (V8.mixColumns a) (V8.mixColumns b) := by
+    4 ≤ hammingDist a b + hammingDist (V8.mixColumns a) (V8.mixColumns b) := by
   exact four_le_branch (F := V8.mixColumns) (fun m hm => isDeck_v8_mixColumns hm)
     (fun _ _ hab heq => hab (v8_mixColumns_separates heq)) ha hb h
 
 /-- (PROVED) The same tail swap attains the floor for v8 GridCycle. -/
 theorem v8_mixColumns_tail_branch (m : Fin 52 → Nat) (hm : IsDeck m) :
-    diffWeight m (swapAt m 50 51) +
-      diffWeight (V8.mixColumns m) (V8.mixColumns (swapAt m 50 51)) = 4 := by
+    hammingDist m (swapAt m 50 51) +
+      hammingDist (V8.mixColumns m) (V8.mixColumns (swapAt m 50 51)) = 4 := by
   have hne : (50 : Fin 52) ≠ 51 := by decide
-  rw [diffWeight_swapAt hm.2 hne, v8_mixColumns_swap_tail m hm]
+  rw [hammingDist_swapAt hm.2 hne, v8_mixColumns_swap_tail m hm]
 
 end DoubleDeal.Security

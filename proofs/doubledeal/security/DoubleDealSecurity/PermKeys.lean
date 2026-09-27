@@ -65,29 +65,7 @@ theorem isDeck_unkeyedNoMix {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck (unkey
 
 /-- (PROVED) GridCycle maps decks to decks. -/
 theorem isDeck_mixColumns {h : Fin 52 → Nat} (hh : IsDeck h) : IsDeck (mixColumns h) := by
-  have cell : ∀ r c, ∃ k, gridW chooseSeat! h r c = h k ∧ seatW chooseSeat! h k.val = (r, c) := by
-    intro r c
-    obtain ⟨k, hk⟩ := seatW_surj _ freeChooser_v9 h (r, c)
-    refine ⟨k, ?_, hk⟩
-    have := gridW_at_seat _ freeChooser_v9 h k
-    rw [hk] at this; exact this
-  rw [mixColumns_eq]
-  refine ⟨fun i => ?_, fun i j hij => ?_⟩
-  · obtain ⟨k, hk, _⟩ := cell (rmRow i) (rmCol i)
-    show gridW chooseSeat! h (rmRow i) (rmCol i) < 52
-    rw [hk]; exact hh.1 k
-  · obtain ⟨k, hk, hs⟩ := cell (rmRow i) (rmCol i)
-    obtain ⟨k', hk', hs'⟩ := cell (rmRow j) (rmCol j)
-    have hij' : gridW chooseSeat! h (rmRow i) (rmCol i) =
-        gridW chooseSeat! h (rmRow j) (rmCol j) := hij
-    rw [hk, hk'] at hij'
-    have hkk := hh.2 hij'
-    subst hkk
-    rw [hs] at hs'
-    have e1 := congrArg Prod.fst hs'
-    have e2 := congrArg Prod.snd hs'
-    simp only at e1 e2
-    rw [← rmFlat_rm i, ← rmFlat_rm j, e1, e2]
+  simpa only [mixColumns_eq] using isDeck_scoop_gridW chooseSeat! freeChooser_v9 hh
 
 theorem isDeck_unkeyedWithMix {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck (unkeyedWithMix m) :=
   isDeck_mixColumns (isDeck_unkeyedNoMix hm)

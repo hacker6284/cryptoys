@@ -73,7 +73,7 @@ func scoop_rm(g: List<List<int>>) -> List<int>
             out.append(g[r][c])
     return out
 
-// v9 (A2): a column's turn reads rank + suit; rows still read rank only.
+// A column's turn reads rank + suit; a row's turn reads rank only.
 func column_weight(c: int) -> int
     return rank_of(c) + suit_of(c)
 
@@ -135,8 +135,8 @@ func inv_shift_rows(g: List<List<int>>) -> List<List<int>>
         g[i] = left_rotate(g[i], 0 - i)
     return g
 
-// v9 (B3): scan one marker row for its first free seat (0 in occ), starting at
-// column `start` and wrapping from column 12 back to column 0. -1 if the row is full.
+// Scan one marker row for its first free seat (0 in occ), starting at column
+// `start` (the blocked seat's column) and wrapping from 12 back to 0. -1 if full.
 func scan_row(occ: List<List<int>>, row: int, start: int) -> int
     found = -1
     for k = 0 to 12
@@ -834,7 +834,7 @@ test "sum ranks columns read suit"
         assert g[1][j] == 39 + j
         assert g[2][j] == j
         assert g[3][j] == 13 + j
-    assert column_weight(51) == 16
+    assert column_weight(51) == rank_of(51) + suit_of(51)
     assert inv_sum_ranks(g) == lay_rm(deck)
 
 test "overflow scan starts at the blocked column"
@@ -925,13 +925,15 @@ test "one key deck is passed between the rounds that use it"
     assert i == traced.length
 
 test "decrypt trace un-passes from K6"
-    cipher = [25, 31, 24, 6, 36, 26, 40, 9, 44, 10, 28, 23, 50, 7, 22, 45, 11, 46, 39, 27, 43, 29, 5, 48, 3, 42, 17, 37, 35, 49, 15, 2, 34, 51, 20, 8, 41, 14, 32, 16, 47, 19, 33, 21, 0, 38, 30, 12, 4, 1, 18, 13]
+    message = [0, 32, 38, 42, 13, 19, 17, 5, 41, 25, 48, 6, 31, 44, 3, 16, 7, 4, 34, 40, 18, 49, 14, 51, 20, 46, 28, 11, 10, 15, 45, 43, 2, 26, 22, 8, 37, 33, 12, 35, 24, 50, 39, 30, 21, 1, 27, 47, 36, 23, 29, 9]
     key = [48, 42, 25, 26, 3, 37, 39, 50, 11, 2, 43, 8, 10, 7, 40, 38, 34, 0, 49, 51, 22, 27, 23, 9, 12, 15, 44, 41, 21, 28, 20, 13, 19, 14, 45, 31, 35, 18, 17, 30, 6, 36, 47, 16, 1, 33, 29, 5, 46, 32, 24, 4]
+    cipher = encrypt(message, key)
     traced = trace_decrypt(cipher, key)
     last = traced[traced.length - 1]
     assert last.kind == "uncompose"
     assert last.key == key
     assert last.hand == decrypt(cipher, key)
+    assert last.hand == message
     i = 0
     passes = 0
     unpasses = 0

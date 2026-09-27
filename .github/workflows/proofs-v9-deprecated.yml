@@ -49,5 +49,7 @@ jobs:
         uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/deprecated/doubledeal-v9/lean
+          # No .lake cache: re-run the kernel checks every time instead of replaying oleans.
+          use-github-cache: false
       - name: Axiom audit (witness theorems use only propext, Classical.choice, Quot.sound)
         run: python3 proofs/doubledeal/check_axioms.py v9-deprecated

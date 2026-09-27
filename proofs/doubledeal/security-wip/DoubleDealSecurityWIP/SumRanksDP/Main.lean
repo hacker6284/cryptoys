@@ -550,6 +550,58 @@ theorem survivors_le_rhoSum (τ : Relabel) : ((survivors τ).card : ℚ) ≤ rho
     exact rowEq_of_rowCondsTraj τ π
       (traj_of_survives τ _ (isDeck_deckGrid π) hπ).1
 
+/-! ### Helpers: block counts and factorials -/
+
+theorem cmFlat_row_col (p : Fin 52) (r : Fin 4) (h : p.val % 4 = r.val) : cmFlat r (cmCol p) = p := by
+  apply Fin.ext; simp only [cmFlat, cmCol]; omega
+
+theorem cmFlat_col_row (p : Fin 52) (j : Fin 13) (h : p.val / 4 = j.val) : cmFlat (cmRow p) j = p := by
+  apply Fin.ext; simp only [cmFlat, cmRow]; omega
+
+theorem card_row_eq_zRow (W : Finset (Fin 52)) (π : Equiv.Perm (Fin 52)) (r : Fin 4)
+    (P : Fin 52 → Prop) [DecidablePred P] (hP : ∀ c, P c ↔ c ∈ W) :
+    (univ.filter fun j : Fin 13 => P (π (cmFlat r j))).card = zRow W π r := by
+  unfold zRow
+  apply card_nbij' (fun j => cmFlat r j) (fun p => cmCol p)
+  · intro j hj
+    simp only [mem_filter, mem_univ, true_and] at hj ⊢
+    refine ⟨by simp only [cmFlat]; omega, (hP _).1 hj⟩
+  · intro p hp
+    simp only [mem_filter, mem_univ, true_and] at hp ⊢
+    rw [cmFlat_row_col p r hp.1]; exact (hP _).2 hp.2
+  · intro j _
+    apply Fin.ext; simp only [cmFlat, cmCol]; omega
+  · intro p hp
+    simp only [mem_filter, mem_univ, true_and] at hp
+    exact cmFlat_row_col p r hp.1
+
+theorem card_col_eq_yCol (W : Finset (Fin 52)) (π : Equiv.Perm (Fin 52)) (j : Fin 13)
+    (P : Fin 52 → Prop) [DecidablePred P] (hP : ∀ c, P c ↔ c ∈ W) :
+    (univ.filter fun r : Fin 4 => P (π (cmFlat r j))).card = yCol W π j := by
+  unfold yCol
+  apply card_nbij' (fun r => cmFlat r j) (fun p => cmRow p)
+  · intro r hr
+    simp only [mem_filter, mem_univ, true_and] at hr ⊢
+    refine ⟨by simp only [cmFlat]; omega, (hP _).1 hr⟩
+  · intro p hp
+    simp only [mem_filter, mem_univ, true_and] at hp ⊢
+    rw [cmFlat_col_row p j hp.1]; exact (hP _).2 hp.2
+  · intro r _
+    apply Fin.ext; simp only [cmFlat, cmRow]; omega
+  · intro p hp
+    simp only [mem_filter, mem_univ, true_and] at hp
+    exact cmFlat_col_row p j hp.1
+
+theorem factorial_split (n : ℕ) (hn : n ≤ 52) (X : ℚ) :
+    ((n.factorial * (52 - n).factorial : ℕ) : ℚ) * X =
+      (Nat.factorial 52 : ℕ) * (X / (Nat.choose 52 n : ℕ)) := by
+  have h := Nat.choose_mul_factorial_mul_factorial hn
+  have hc : (0 : ℚ) < (Nat.choose 52 n : ℕ) := by exact_mod_cast Nat.choose_pos hn
+  rw [← h]
+  push_cast
+  field_simp
+  ring
+
 /-- **(A1)** (PROOF.md §3): `n* = 50` gives `Σ ≤ 52!/221` (the two off cards
     are `v* ± u`; same row: `ρ = 0` by `rho_eq_zero_of_cancel`; different rows:
     `1/13` each; probability of different rows `39/51`). -/
@@ -561,7 +613,25 @@ theorem caseA1 (τ : Relabel) (h : nStar τ = 50) : 221 * rhoSum τ ≤ (Nat.fac
     row-`r` count of `W` is `zRow W π r`). -/
 theorem caseA2 (τ : Relabel) (h1 : 13 ≤ nStar τ) (h2 : nStar τ ≤ 49) :
     rhoSum τ ≤ (Nat.factorial 52 : ℕ) * EA (nStar τ) := by
-  sorry
+  classical
+  obtain ⟨v, hv⟩ := exists_vStar τ
+  set W := cls τ v
+  have hW : ∀ c, delta τ c = v ↔ c ∈ W := fun c => by simp [W, cls]
+  have hpt : ∀ π, ∏ r, rho τ (rowOf π r) ≤ ∏ r, hA (zRow W π r) := by
+    intro π
+    apply prod_le_prod (fun r _ => rho_nonneg τ _)
+    intro r _
+    have := rho_le_hA τ (rowOf π r) v
+    rwa [show (univ.filter fun j => delta τ (rowOf π r j) = v).card = zRow W π r from
+      card_row_eq_zRow W π r _ hW] at this
+  refine (sum_le_sum fun π _ => hpt π).trans (le_of_eq ?_)
+  rw [hyper_rows W (fun z => ∏ r, hA (z r)), ← hv]
+  have hn : W.card ≤ 52 := (card_le_univ _).trans (by simp)
+  unfold EA
+  rw [← factorial_split _ hn, mul_sum]
+  refine sum_congr rfl fun z _ => ?_
+  rw [prod_mul_distrib]
+  ring
 
 /-- **(A3)** (PROOF.md §3): `n* ≤ 12` gives `Σ ≤ 52! · (1/81 + 4·4¹³/C(52,13))`
     (no constant row; a row with a repeat has `ρ ≤ 1/3`; `distinct_row_count`
@@ -994,7 +1064,42 @@ theorem mStar_bounds (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) : 2 ≤ m
 theorem caseB_sum (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) :
     ∑ π : Equiv.Perm (Fin 52), ∏ j, phi τ (colOf π (prevCol j)) (colOf π j) ≤
       (Nat.factorial 52 : ℕ) * EB (mStar τ) := by
-  sorry
+  classical
+  set S := univ.sup fun x => (ecls τ x).card with hS
+  obtain ⟨xs, -, hxs⟩ := Finset.exists_mem_eq_sup (univ : Finset (Fin 4)) univ_nonempty
+    (fun x => (ecls τ x).card)
+  rw [← hS] at hxs
+  set W := univ.filter fun c => eps τ c ≠ xs
+  have hW : ∀ c, eps τ c ≠ xs ↔ c ∈ W := fun c => by simp [W]
+  have hWcard : W.card = mStar τ := by
+    have := filter_card_add_filter_neg_card_eq_card (s := (univ : Finset (Fin 52)))
+      (fun c => eps τ c = xs)
+    have e1 : (univ.filter fun c => eps τ c = xs).card = S := by rw [hxs]; rfl
+    rw [e1, card_univ, Fintype.card_fin] at this
+    have e2 : W.card = (univ.filter fun c => ¬ eps τ c = xs).card := rfl
+    have e3 : mStar τ = 52 - S := by unfold mStar; rw [← hS]
+    rw [e2, e3]; omega
+  have hoff : ∀ π j, offCount (fun r => eps τ (colOf π j r)) xs = yCol W π j := fun π j =>
+    card_col_eq_yCol W π j _ hW
+  have hpt : ∀ π, ∏ j, phi τ (colOf π (prevCol j)) (colOf π j) ≤
+      ∏ j : Fin 13, fB (yCol W π (j - 1)) (yCol W π j) := by
+    intro π
+    apply prod_le_prod (fun j _ => phi_nonneg τ _ _)
+    intro j _
+    have h4 := lemma4_count_le (fun r => eps τ (colOf π (prevCol j) r)) xs
+      (sLab fun r => eps τ (colOf π j r)) (offCount (fun r => eps τ (colOf π j r)) xs)
+      (fun h0 => sLab_of_offCount_zero _ xs h0) (fun h1 => sLab_of_offCount_one _ xs h1)
+    rw [hoff, hoff, prevCol_eq_sub_one] at h4
+    rw [prevCol_eq_sub_one]
+    exact h4
+  refine (sum_le_sum fun π _ => hpt π).trans (le_of_eq ?_)
+  rw [hyper_cols W (fun y => ∏ j : Fin 13, fB (y (j - 1)) (y j)), hWcard]
+  have hn : mStar τ ≤ 52 := by rw [← hWcard]; exact (card_le_univ _).trans (by simp)
+  unfold EB
+  rw [← factorial_split _ hn, mul_sum]
+  refine sum_congr rfl fun y _ => ?_
+  rw [prod_mul_distrib]
+  ring
 
 /-- **Case B** (PROOF.md §4, Lean target `1/64`; the paper proves `1/425`):
     `ε` not constant ⇒ at most `52!/64` survivors. Uses only the column

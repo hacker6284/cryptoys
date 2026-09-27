@@ -8,7 +8,7 @@ path dependency.
     lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
     lake build
     python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
-    python3 checks/scan_sorry.py        # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
+    python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
     python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
 
 ## Layout
@@ -40,7 +40,10 @@ permutation-key `encrypt6_commutes_iff_id` rest on it.
 
 CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 - `checks/scan_sorry.py`: `sorry` only in `roundBody_covariant_iff_id`; no
-  `admit`, `native_decide`, `sorryAx` or `axiom` declarations anywhere.
+  `admit`, `native_decide`, `sorryAx` or `axiom` declarations anywhere. A sorry
+  counts for its top-level declaration (inside `have` too); `let rec` and `where`
+  items count under their own name `top.f`, as Lean and the axiom gate name them.
+  `--selftest` checks these cases.
 - `../check_axioms.py security` runs `Axioms.lean`, whose `#audit_all` reports
   the axioms of every theorem declared in a `DoubleDealSecurity.*` module. Only
   propext, Classical.choice and Quot.sound are allowed, except `sorryAx` for

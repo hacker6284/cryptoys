@@ -189,7 +189,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: No admit / native_decide / sorryAx / axiom; sorry only in the allowlisted conjecture
-        run: python3 proofs/doubledeal/security/checks/scan_sorry.py
+        run: |
+          python3 proofs/doubledeal/security/checks/scan_sorry.py --selftest
+          python3 proofs/doubledeal/security/checks/scan_sorry.py
       - name: V8Vectors.lean matches frozen v8 JSON
         run: python3 proofs/doubledeal/security/checks/gen_v8_vectors.py --check
       - name: Python port + relabelling checks
@@ -197,12 +199,12 @@ jobs:
           python3 proofs/doubledeal/security/checks/selftest.py
           python3 proofs/doubledeal/security/checks/check_relabel.py
           python3 proofs/doubledeal/security/checks/check_covariant.py
-      # One reusable cache entry for the Mathlib download (keyed on manifest +
-      # toolchain only), instead of lean-action's per-SHA .lake cache.
-      - uses: actions/cache@v4
+      # One reusable cache entry for the Mathlib download (keyed on OS, arch,
+      # manifest and toolchain; no SHA), instead of lean-action's per-SHA .lake cache.
+      - uses: actions/cache@v5
         with:
           path: proofs/doubledeal/security/.lake/packages
-          key: lake-packages-${{ runner.os }}-${{ hashFiles('proofs/doubledeal/security/lake-manifest.json', 'proofs/doubledeal/security/lean-toolchain') }}
+          key: lake-packages-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('proofs/doubledeal/security/lake-manifest.json', 'proofs/doubledeal/security/lean-toolchain') }}
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/doubledeal/security

@@ -35,6 +35,12 @@ Generic list/rotation lemmas live in the Mathlib-free core package
 
 ## Status and gates
 
+`BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
+any map that sends decks to decks and separates them has branch number at
+least 4. v9 GridCycle and the frozen v8 model attain 4: swapping walk cards
+50 and 51 changes exactly two output seats. That is the trivial floor, not a
+bound above 4, and not a statement about SumRanks or keyed rounds.
+
 T1 is a draft. The only open statement is the covariant round conjecture
 `roundBody_covariant_iff_id` (marked `DRAFT-SORRY`, checked numerically by
 `checks/check_covariant.py`); `fullRound_commutes_iff_id` and the

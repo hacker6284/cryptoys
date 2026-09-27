@@ -297,7 +297,7 @@ export function createScrambleSession({
                 kicker: pos,
                 title: "Solved start",
                 math: "White up, green front, red right.",
-                why: "Step through walks the padded tape one turn at a time.",
+                why: "Step walks the padded tape one turn at a time.",
                 spec: version === 2 ? "scramble_v2" : "scramble_v1",
             };
         }
@@ -439,7 +439,7 @@ export function createScrambleSession({
     }
 
     function refreshDigest() {
-        // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / teach.
+        // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / Skip to end.
         job += 1;
         markPlay(false);
         solving = false;
@@ -524,6 +524,14 @@ export function createScrambleSession({
         markPlay(false);
     }
 
+    function seek(index) {
+        job += 1;
+        busy = false;
+        markPlay(false);
+        cursor = index;
+        showPaused();
+    }
+
     async function jumpTo(index, animate) {
         if (trace.length === 0 || busy) return;
         const next = Math.max(-1, Math.min(trace.length - 1, index));
@@ -535,10 +543,7 @@ export function createScrambleSession({
             busy = false;
             return;
         }
-        job += 1;
-        markPlay(false);
-        cursor = next;
-        showPaused();
+        seek(next);
     }
 
     async function stepBy(dir) {
@@ -554,6 +559,16 @@ export function createScrambleSession({
         cursor = -1;
         markPlay(false);
         showPaused();
+    }
+
+    function skipToEnd() {
+        if (solving) return;
+        if (!trace.length) refreshDigest();
+        if (!trace.length) return;
+        ensureTimeline();
+        setTeaching(false);
+        seek(trace.length - 1);
+        settleView();
     }
 
     async function ensureSolver() {
@@ -773,7 +788,7 @@ export function createScrambleSession({
     });
 
     $("#play")?.addEventListener("click", () => void play(), listen);
-    $("#step-through")?.addEventListener("click", () => enterTeach(), listen);
+    $("#skip-end")?.addEventListener("click", () => skipToEnd(), listen);
     $("#step")?.addEventListener("click", () => {
         if (!teaching) enterTeach();
         else void stepBy(1);

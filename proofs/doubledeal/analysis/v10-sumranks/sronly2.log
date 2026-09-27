@@ -1,0 +1,5 @@
+# SumRanks-only swap survival; stage 1: 1326 pairs x 200000 decks (sd at 1/64: 2.8e-04); stage 2: top 5 at 4000000 decks, fresh seeds. Benchmark 1/64 = 0.0156. Same decks for every variant.
+variant  pairs>0  pairs>1/64  stage-1 max (pair)        worst re-measured (95%)          top-5 re-measured
+v9           390         390  0.2385 (5♣↔2♦)     0.2361 ± 0.0004 = 1/4.2 (5♣↔2♦)   5♣↔2♦ 0.2361, 5♣↔J♠ 0.2349, 7♣↔8♦ 0.2353, 4♣↔T♠ 0.2352, 2♣↔T♣ 0.2354
+SR3          390           0  0.0155 (5♦↔9♦)     0.0148 ± 0.0001 = 1/67.7 (5♦↔9♦)   5♦↔9♦ 0.0148, 2♠↔T♠ 0.0147, 7♣↔5♠ 0.0147, A♥↔Q♠ 0.0147, 5♠↔9♠ 0.0148
+PW2         1326          78  0.0597 (Q♠↔J♦)     0.0589 ± 0.0002 = 1/17.0 (5♠↔4♦)   Q♠↔J♦ 0.0588, 3♣↔K♦ 0.0589, J♥↔9♦ 0.0587, 5♠↔4♦ 0.0589, 9♠↔8♦ 0.0587

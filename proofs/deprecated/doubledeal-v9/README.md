@@ -1,6 +1,6 @@
-# DoubleDeal v9: vulnerability proof (DEPRECATED algorithm, draft)
+# DoubleDeal v9: vulnerability proof (DEPRECATED algorithm)
 
-**Kind:** vulnerability proof (see the [`proofs/README.md`](../../README.md) taxonomy). **Status: draft, awaiting Zachary's decision.** This folder freezes DoubleDeal v9 at [`primitives/cipher/doubledeal/v9/`](../../../primitives/cipher/doubledeal/v9/) following the v8 precedent. **No successor has been chosen.** Until one is chosen, the live [`SPEC.md`](../../../primitives/cipher/doubledeal/SPEC.md) and `doubledeal.sudo` still describe v9 byte for byte, and so do `proofs/doubledeal/`, the demo and the CBC-HMAC composition. Candidate fixes are measured in [`candidates/CANDIDATES.md`](candidates/CANDIDATES.md) as analysis only. Nothing here is a security claim, and nothing here changes the spec.
+**Kind:** vulnerability proof (see the [`proofs/README.md`](../../README.md) taxonomy). This folder freezes DoubleDeal v9 at [`primitives/cipher/doubledeal/v9/`](../../../primitives/cipher/doubledeal/v9/) following the v8 precedent. **The successor is v10** (candidate W5c, position-aware SumRanks): the live [`SPEC.md`](../../../primitives/cipher/doubledeal/SPEC.md), `doubledeal.sudo`, `proofs/doubledeal/`, the demo and the CBC-HMAC composition now describe v10. Candidate fixes were measured in [`candidates/CANDIDATES.md`](candidates/CANDIDATES.md) (analysis only); the W family that led to v10 is in [`../../doubledeal/analysis/v10-sumranks/`](../../doubledeal/analysis/v10-sumranks/). Nothing here is a security claim.
 
 ## What is proved, and what is only measured
 

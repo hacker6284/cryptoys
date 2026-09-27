@@ -134,8 +134,7 @@ jobs:
         run: lake exe doubledeal_v8_witness
 
   doubledeal-v9-deprecated:
-    # Frozen, deprecated DoubleDeal v9 (draft, awaiting a decision; no successor
-    # yet): emitted TAP, witness data and vectors. The ~9 min kernel witness
+    # Frozen, deprecated DoubleDeal v9 (superseded by v10): emitted TAP, witness data and vectors. The ~9 min kernel witness
     # build and its axiom audit run in proofs-v9-deprecated.yml
     # (see proofs/deprecated/doubledeal-v9/README.md).
     runs-on: ubuntu-latest

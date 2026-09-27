@@ -781,12 +781,185 @@ def EB (m : ℕ) : ℚ :=
   (∑ y ∈ comps13 m, ∏ j : Fin 13, ((Nat.choose 4 (y j) : ℕ) : ℚ) * fB (y (j - 1)) (y j)) /
     (Nat.choose 52 m : ℕ)
 
+/-! ### Table B by kernel check
+
+`E_B(m)` has a cyclic dependence between neighbouring columns, so its
+numerator is the coefficient of `Xᵐ` in `tr(M(X)¹³)` with the 5×5 transfer
+matrix `M(X)_{u,v} = 12·C(4,v)·f(u,v)·Xᵛ`. Instead of polynomials we evaluate
+at `X = B = 10³⁰` in `ℕ` (every coefficient is below `tr(M(1)¹³) < B`) and read
+the coefficients off as base-`B` digits. -/
+/-- The path through `s`, the interior vertices `y`, and `t`. -/
+def pathZ {q k : ℕ} (s : Fin q) (y : Fin k → Fin q) (t : Fin q) : Fin (k + 2) → Fin q :=
+  Fin.cons s (Fin.snoc y t)
+
+/-- Entries of a matrix power as sums over paths. -/
+theorem pow_apply_paths {q : ℕ} (A : Matrix (Fin q) (Fin q) ℕ) (k : ℕ) (s t : Fin q) :
+    (A ^ (k + 1)) s t = ∑ y : Fin k → Fin q,
+      ∏ i : Fin (k + 1), A (pathZ s y t i.castSucc) (pathZ s y t i.succ) := by
+  induction k generalizing s with
+  | zero =>
+    simp [pathZ, Fin.snoc]
+  | succ k ih =>
+    rw [pow_succ', Matrix.mul_apply]
+    simp only [ih, mul_sum]
+    rw [← Fintype.sum_equiv (Fin.consEquiv fun _ => Fin q) _ _ (fun _ => rfl),
+      Fintype.sum_prod_type]
+    apply sum_congr rfl; intro u _
+    apply sum_congr rfl; intro y _
+    have hz : pathZ s (Fin.consEquiv (fun _ => Fin q) (u, y)) t =
+        Fin.cons s (pathZ u y t) := by
+      simp only [pathZ, Fin.consEquiv, Equiv.coe_fn_mk, Fin.cons_snoc_eq_snoc_cons]
+    rw [hz]
+    symm
+    rw [Fin.prod_univ_succ]
+    congr 1
+
+/-- `tr(A¹³)` is the sum over cyclic 13-sequences of the edge products. -/
+theorem trace_pow13 {q : ℕ} (A : Matrix (Fin q) (Fin q) ℕ) :
+    Matrix.trace (A ^ 13) = ∑ x : Fin 13 → Fin q, ∏ j : Fin 13, A (x (j - 1)) (x j) := by
+  rw [Matrix.trace]
+  simp only [Matrix.diag, pow_apply_paths A 12]
+  rw [← Fintype.sum_equiv (Fin.consEquiv fun _ => Fin q) _ _ (fun _ => rfl),
+    Fintype.sum_prod_type]
+  apply sum_congr rfl; intro s _
+  apply sum_congr rfl; intro y _
+  set x := Fin.consEquiv (fun _ => Fin q) (s, y)
+  have hx0 : x 0 = s := rfl
+  have hz : pathZ s y s = Fin.snoc x (x 0) := by
+    simp only [pathZ, hx0, x, Fin.consEquiv, Equiv.coe_fn_mk, Fin.cons_snoc_eq_snoc_cons,
+      Fin.cons_zero]
+  rw [hz]
+  have hs : ∀ i : Fin 13, Fin.snoc (α := fun _ => Fin q) x (x 0) i.succ = x (i + 1) := by
+    intro i
+    refine Fin.lastCases ?_ (fun i' => ?_) i
+    · rw [Fin.succ_last, Fin.snoc_last]; rfl
+    · rw [Fin.succ_castSucc, Fin.snoc_castSucc, Fin.coeSucc_eq_succ]
+  simp only [Fin.snoc_castSucc, hs]
+  exact Fintype.prod_equiv (Equiv.addRight 1) _ _ (fun i => by simp)
+
+/-- Digit extraction: if every `S k < B`, the base-`B` digits of `Σ S k Bᵏ` are the `S k`. -/
+theorem sum_lt_pow (S : ℕ → ℕ) (B : ℕ) (hS : ∀ k, S k < B) (m : ℕ) :
+    ∑ k ∈ range m, S k * B ^ k < B ^ m := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+    rw [sum_range_succ, pow_succ]
+    have := hS m
+    nlinarith [Nat.pos_pow_of_pos m (show 0 < B by omega)]
+
+theorem digit_sum (S : ℕ → ℕ) (B : ℕ) (hS : ∀ k, S k < B) (m r : ℕ) :
+    (∑ k ∈ range (m + 1 + r), S k * B ^ k) / B ^ m % B = S m := by
+  have hB : 0 < B := lt_of_le_of_lt (Nat.zero_le _) (hS 0)
+  rw [show m + 1 + r = m + (1 + r) by ring, sum_range_add]
+  have e : ∑ k ∈ range r, S (m + 1 + k) * B ^ (m + 1 + k) =
+      B ^ m * (B * ∑ k ∈ range r, S (m + 1 + k) * B ^ k) := by
+    rw [mul_sum, mul_sum]; apply sum_congr rfl; intro k _; ring
+  have e2 : ∑ k ∈ range (1 + r), S (m + k) * B ^ (m + k) =
+      B ^ m * (S m + B * ∑ k ∈ range r, S (m + 1 + k) * B ^ k) := by
+    rw [add_comm 1 r, sum_range_succ']
+    simp only [add_zero]
+    rw [show ∑ k ∈ range r, S (m + (k + 1)) * B ^ (m + (k + 1)) =
+      ∑ k ∈ range r, S (m + 1 + k) * B ^ (m + 1 + k) from
+        sum_congr rfl fun k _ => by rw [show m + (k + 1) = m + 1 + k by ring], e]
+    ring
+  rw [e2, Nat.add_mul_div_left _ _ (Nat.pos_pow_of_pos m hB),
+    Nat.div_eq_of_lt (sum_lt_pow S B hS m), zero_add, Nat.add_mul_mod_self_left]
+  exact Nat.mod_eq_of_lt (hS m)
+
+/-- `12 · C(4,v) · f(u,v)` (all integers). -/
+def aN : Fin 5 → Fin 5 → ℕ := ![![12, 0, 72, 48, 12], ![3, 12, 18, 12, 3], ![3, 16, 24, 16, 4], ![6, 24, 36, 24, 6], ![12, 48, 72, 48, 12]]
+
+theorem aN_spec : ∀ u v : Fin 5,
+    ((aN u v : ℕ) : ℚ) = 12 * (((Nat.choose 4 v.val : ℕ) : ℚ) * fB u.val v.val) := by
+  intro u v
+  fin_cases u <;> fin_cases v <;> simp [aN, fB, Nat.choose] <;> norm_num
+
+/-- Size `Σ_j x_j` of a column-count vector with entries in `Fin 5`. -/
+def sz (x : Fin 13 → Fin 5) : ℕ := ∑ j, (x j).val
+
+theorem sz_le (x : Fin 13 → Fin 5) : sz x ≤ 52 := by
+  have : sz x ≤ ∑ _j : Fin 13, 4 := sum_le_sum fun j _ => Nat.lt_succ_iff.1 (x j).isLt
+  simpa using this
+
+/-- Scaled numerator of `E_B(m)`. -/
+def SB (m : ℕ) : ℕ :=
+  ∑ x ∈ univ.filter (fun x : Fin 13 → Fin 5 => sz x = m), ∏ j : Fin 13, aN (x (j - 1)) (x j)
+
+/-- The transfer-matrix trace with the size tracked in base `B`. -/
+def TB (B : ℕ) : ℕ := Matrix.trace (Matrix.of (fun u v : Fin 5 => aN u v * B ^ v.val) ^ 13)
+
+theorem TB_eq (B : ℕ) : TB B = ∑ m ∈ range 53, SB m * B ^ m := by
+  rw [TB, trace_pow13]
+  simp only [Matrix.of_apply, prod_mul_distrib, prod_pow_eq_pow_sum]
+  rw [← sum_fiberwise_of_maps_to (g := sz) (t := range 53)
+    (fun x _ => mem_range.2 (Nat.lt_succ_of_le (sz_le x)))]
+  apply sum_congr rfl; intro m _
+  rw [SB, sum_mul]
+  apply sum_congr rfl; intro x hx
+  rw [(mem_filter.1 hx).2.symm]; rfl
+
+theorem SB_le (m : ℕ) : SB m ≤ TB 1 := by
+  rw [TB, trace_pow13]
+  simp only [Matrix.of_apply, one_pow, mul_one]
+  exact sum_le_sum_of_subset (subset_univ _)
+
+theorem TB1_lt : TB 1 < 10 ^ 30 := by decide!
+
+theorem tableB_nat : ∀ m < 40, 2 ≤ m → 64 * (TB (10 ^ 30) / (10 ^ 30) ^ m % 10 ^ 30) *
+    (Nat.factorial m * Nat.factorial (52 - m)) ≤ 12 ^ 13 * Nat.factorial 52 := by decide!
+
+theorem SB_digit (m : ℕ) (hm : m < 53) : TB (10 ^ 30) / (10 ^ 30) ^ m % 10 ^ 30 = SB m := by
+  obtain ⟨r, hr⟩ : ∃ r, 53 = m + 1 + r := ⟨52 - m, by omega⟩
+  rw [TB_eq, hr]
+  exact digit_sum SB _ (fun k => (SB_le k).trans_lt TB1_lt) m r
+
+theorem EB_numer (m : ℕ) :
+    (∑ y ∈ comps13 m, ∏ j : Fin 13, ((Nat.choose 4 (y j) : ℕ) : ℚ) * fB (y (j - 1)) (y j)) =
+      (SB m : ℚ) / 12 ^ 13 := by
+  rw [SB, Nat.cast_sum, sum_div]
+  symm
+  apply sum_nbij' (fun x j => (x j).val) (fun y j => (⟨y j % 5, Nat.mod_lt _ (by norm_num)⟩ : Fin 5))
+  · intro x hx
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq, comps13,
+      Fintype.mem_piFinset, mem_range, mem_coe] at hx ⊢
+    exact ⟨fun j => (x j).isLt, hx⟩
+  · intro y hy
+    simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq, comps13,
+      Fintype.mem_piFinset, mem_range, mem_coe] at hy ⊢
+    rw [sz]; simp only
+    rw [← hy.2]; apply sum_congr rfl; intro j _; exact Nat.mod_eq_of_lt (hy.1 j)
+  · intro x _; funext j; apply Fin.ext; simp only; exact Nat.mod_eq_of_lt (x j).isLt
+  · intro y hy
+    simp only [coe_filter, mem_filter, comps13, Fintype.mem_piFinset, mem_range, mem_coe] at hy
+    funext j; exact Nat.mod_eq_of_lt (hy.1 j)
+  · intro x _
+    push_cast
+    simp only [aN_spec, prod_mul_distrib, prod_const, card_univ, Fintype.card_fin]
+    field_simp
+
 /-- **Table B** (PROOF.md §4 Theorem B): `E_B(m) ≤ 1/64` for `2 ≤ m ≤ 39`. The
     paper's sharper value is `1/425` for `m ≥ 3` (transfer matrix); `E_B(2) = 1/68`
     with the `f(2,0)` refinement. Needs a transfer-matrix reformulation: the sum
     has `5¹³` terms. -/
 theorem EB_le (m : ℕ) (h1 : 2 ≤ m) (h2 : m ≤ 39) : EB m ≤ 1 / 64 := by
-  sorry
+  have hn := tableB_nat m (by omega) h1
+  rw [SB_digit m (by omega)] at hn
+  have hc := Nat.choose_mul_factorial_mul_factorial (n := 52) (k := m) (by omega)
+  have hpos : 0 < Nat.factorial m * Nat.factorial (52 - m) := by positivity
+  have key : 64 * SB m ≤ 12 ^ 13 * Nat.choose 52 m := by
+    rw [← hc] at hn
+    have : 64 * SB m * (Nat.factorial m * Nat.factorial (52 - m)) ≤
+        12 ^ 13 * Nat.choose 52 m * (Nat.factorial m * Nat.factorial (52 - m)) := by
+      calc _ ≤ _ := hn
+        _ = _ := by ring
+    exact Nat.le_of_mul_le_mul_right this hpos
+  unfold EB
+  rw [EB_numer]
+  have hC : (0 : ℚ) < (Nat.choose 52 m : ℕ) := by exact_mod_cast Nat.choose_pos (by omega)
+  rw [div_div, div_le_div_iff₀ (by positivity) (by norm_num)]
+  have : ((64 * SB m : ℕ) : ℚ) ≤ ((12 ^ 13 * Nat.choose 52 m : ℕ) : ℚ) := by exact_mod_cast key
+  push_cast at this
+  linarith
 
 /-! ## §4 One column: GF(4) labels (Lemma 4)
 

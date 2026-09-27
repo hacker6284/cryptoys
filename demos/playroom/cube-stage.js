@@ -70,11 +70,12 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
     async function moveY(toY, { snap = false } = {}) {
         const toy = rig.group;
         const fromY = toy.position.y;
+        const my = ++token;
         if (Math.abs(fromY - toY) < 1e-4) {
             toy.position.y = toY;
+            rig.group.userData.easeBusy = false;
             return true;
         }
-        const my = ++token;
         rig.group.userData.easeBusy = true;
         await tween(TURN_LIFT_MS, (t) => {
             if (my !== token) return;

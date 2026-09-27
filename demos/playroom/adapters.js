@@ -574,7 +574,6 @@ function createDoubleDealAdapter() {
     function restowUnbox() {
         restowOne(unbox);
         restowOne(unbox2);
-        if (keyLight) keyLight.intensity = 0;
     }
 
     async function adoptRig(name, rig, prev) {

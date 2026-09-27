@@ -47,9 +47,13 @@ assert.doesNotMatch(digestFn[0], /mapTraceToAlg/, "leave-trace mapping waits for
 
 assert.match(scramble, /function play\(\) \{[\s\S]*?ensureTimeline\(\)/, "Play binds the timeline");
 assert.match(scramble, /function enterTeach\(\) \{[\s\S]*?ensureTimeline\(\)/, "Step / teach binds the timeline");
+assert.match(scramble, /function skipToEnd\(\) \{[\s\S]*?ensureTimeline\(\)/, "Skip to end binds the timeline");
+assert.doesNotMatch(scramble, /step-through/, "Scramble no longer has step through");
 assert.match(scramble, /async function solve\(\) \{[\s\S]*?ensureTimeline\(\)/, "Solve binds the current Message first");
 
 const doubledeal = readFileSync(new URL("../doubledeal/session.js", import.meta.url), "utf8");
+assert.doesNotMatch(doubledeal, /step-through/, "DoubleDeal no longer has step through");
+assert.match(doubledeal, /function skipToEnd\(\) \{[\s\S]*?showDecks\(laidEnd\.blocks\[0\], laidEnd\.key\)/, "Skip to end lays the same decks play finishes on");
 assert.match(doubledeal, /function preview\(\)/, "DoubleDeal keeps a Digest-friendly input path");
 assert.match(doubledeal, /function computeTrace\(\)/, "teach / play trace stays on Play / Step");
 const previewFn = doubledeal.match(/function preview\(\) \{[\s\S]*?\n    \}/);

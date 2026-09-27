@@ -48,10 +48,17 @@ function orientMatrix(up, front) {
     return m;
 }
 
+let cubeMotion = 0;
+
 function tween(ms, step) {
+    const gen = cubeMotion;
     return new Promise((resolve) => {
         const start = performance.now();
         function tick(now) {
+            if (gen !== cubeMotion) {
+                resolve();
+                return;
+            }
             const t = Math.min(1, (now - start) / ms);
             const eased = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
             step(eased);
@@ -99,7 +106,9 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
         }
     }
 
-    function paint(facelets) {
+    let shown = null;
+
+    function paintNow(facelets) {
         group.quaternion.identity();
         for (const mesh of meshes.values()) {
             mesh.position.copy(mesh.userData.home);
@@ -114,6 +123,12 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
             mat.color.setHex(COLOR[facelets[i]]);
             mat.needsUpdate = true;
         });
+    }
+
+    function paint(facelets) {
+        cubeMotion += 1;
+        shown = facelets;
+        paintNow(facelets);
     }
 
     function clearHighlights() {
@@ -172,6 +187,7 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
     }
 
     async function animateMove(move, ms) {
+        const gen = cubeMotion;
         const { face, turns } = parseMove(move);
         const spin = quarterSpin(face);
         const angle = spin.sign * (Math.PI / 2) * turns;
@@ -183,9 +199,11 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
         await tween(ms, (t) => pivot.setRotationFromAxisAngle(axis, angle * t));
         for (const mesh of chosen) group.attach(mesh);
         group.remove(pivot);
+        if (gen !== cubeMotion && shown) paintNow(shown);
     }
 
     async function animateReorient(from, up, front, ms) {
+        const gen = cubeMotion;
         const matrix = orientMatrix(centerOf(from, up), centerOf(from, front));
         if (!matrix) return;
         const quat = new THREE.Quaternion().setFromRotationMatrix(matrix);
@@ -193,6 +211,7 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
             group.quaternion.identity();
             group.quaternion.slerp(quat, t);
         });
+        if (gen !== cubeMotion && shown) paintNow(shown);
     }
 
     function dispose() {

@@ -153,7 +153,7 @@ function mountDock() {
           <p id="error" class="error"></p>
           <button id="digest-btn" type="button" hidden>Digest</button>
         </div>
-        <p class="playroom-info-hint" id="teach-hint">Step through to see each turn.</p>
+        <p class="playroom-info-hint" id="teach-hint">Step to see each turn.</p>
         <div id="teach" class="playroom-note" hidden>
           <div id="tape" class="tape" aria-label="Message tape"></div>
           <article id="teach-card" class="playroom-note-body"></article>
@@ -176,7 +176,7 @@ function mountDock() {
               <span class="icon-play">${lucideSvg("play")}</span>
               <span class="icon-pause">${lucideSvg("pause")}</span>
             </button>
-            <button id="step-through" class="icon-btn" type="button" aria-label="Step through" title="Step through">${lucideSvg("skip-forward")}</button>
+            <button id="skip-end" class="icon-btn" type="button" aria-label="Skip to end" title="Skip to end">${lucideSvg("skip-forward")}</button>
             <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
             <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
           </div>
@@ -399,7 +399,7 @@ function createScrambleAdapter() {
                     swapPuzzle: applyPuzzle,
                 });
                 rig.rememberSeated?.();
-                // Stay in use mode. Session enterTeach() is for Step through.
+                // Stay in use mode. Step enters teach.
                 root.hidden = false;
                 root.classList.add("on");
                 return session;
@@ -479,7 +479,7 @@ function mountDoubleDealDock() {
           <p id="error" class="error"></p>
           <button id="digest-btn" type="button" hidden>Copy</button>
         </div>
-        <p class="playroom-info-hint" id="teach-hint">Step through to see each table beat.</p>
+        <p class="playroom-info-hint" id="teach-hint">Step to see each table beat.</p>
         <div id="teach" class="playroom-note" hidden>
           <article id="teach-card" class="playroom-note-body"></article>
           <div class="transport" id="transport">
@@ -501,7 +501,7 @@ function mountDoubleDealDock() {
               <span class="icon-play">${lucideSvg("play")}</span>
               <span class="icon-pause">${lucideSvg("pause")}</span>
             </button>
-            <button id="step-through" class="icon-btn" type="button" aria-label="Step through" title="Step through">${lucideSvg("skip-forward")}</button>
+            <button id="skip-end" class="icon-btn" type="button" aria-label="Skip to end" title="Skip to end">${lucideSvg("skip-forward")}</button>
             <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
             <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
           </div>

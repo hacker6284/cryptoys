@@ -277,6 +277,7 @@ await import("../shared/grow-field.test.mjs");
 await import("../shared/input-cap.test.mjs");
 await import("../shared/live-digest.test.mjs");
 await import("../scramble/session.test.mjs");
+await import("../doubledeal/session.test.mjs");
 await import("./beat-clock.test.mjs");
 await import("./motion.test.mjs");
 await import("./capture-strip.test.mjs");

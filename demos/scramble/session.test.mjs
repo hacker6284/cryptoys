@@ -95,7 +95,7 @@ const nodes = {
     outline: el("div", { id: "outline" }),
     "io-note": el("p", { id: "io-note" }),
     play: el("button", { id: "play" }),
-    "step-through": el("button", { id: "step-through" }),
+    "skip-end": el("button", { id: "skip-end" }),
     step: el("button", { id: "step" }),
     reset: el("button", { id: "reset" }),
     "digest-btn": el("button", { id: "digest-btn" }),
@@ -140,10 +140,11 @@ const root = {
 };
 
 const algs = [];
+const jumps = [];
 const view = {
     setAlg(alg) { algs.push(String(alg || "")); },
     async playLeaves() { return { index: 0, total: 1 }; },
-    async jumpToLeaf() {},
+    async jumpToLeaf(index) { jumps.push(index); },
     setTempo() {},
     pauseTimeline() {},
     resetTimeline() {},
@@ -181,6 +182,21 @@ session.recompute();
 assert.equal(algs.length, 1, "typing after teach updates Digest only");
 session.enterTeach();
 assert.equal(algs.length, 2, "Play / Step after a new Message calls setAlg");
+
+function click(id) {
+    for (const fn of nodes[id].listeners.click || []) fn();
+}
+
+click("skip-end");
+assert.equal(algs.length, 2, "skip to end does not rebuild a current timeline");
+assert.equal(nodes.teach.hidden, true, "skip finishes in the played state, not the teach walk");
+assert.match(nodes.status.textContent, /Seat white up/, "skip shows the seated digest pose");
+assert.ok(jumps.at(-1) >= 0, "skip seeks the final leaf");
+assert.notEqual(jumps.at(-1), -1, "skip does not rewind to the solved start");
+const endLeaf = jumps.at(-1);
+click("skip-end");
+assert.equal(jumps.at(-1), endLeaf, "a second skip stays on the final leaf");
+assert.equal(nodes.play.classList.contains("is-playing"), false, "skip leaves play idle");
 
 session.dispose();
 console.log("scramble session digest/timeline tests ok");

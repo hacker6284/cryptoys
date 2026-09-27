@@ -297,7 +297,7 @@ export function createScrambleSession({
                 kicker: pos,
                 title: "Solved start",
                 math: "White up, green front, red right.",
-                why: "Step through walks the padded tape one turn at a time.",
+                why: "Step walks the padded tape one turn at a time.",
                 spec: version === 2 ? "scramble_v2" : "scramble_v1",
             };
         }
@@ -439,7 +439,7 @@ export function createScrambleSession({
     }
 
     function refreshDigest() {
-        // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / teach.
+        // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / Skip to end.
         job += 1;
         markPlay(false);
         solving = false;
@@ -554,6 +554,20 @@ export function createScrambleSession({
         cursor = -1;
         markPlay(false);
         showPaused();
+    }
+
+    function skipToEnd() {
+        if (solving) return;
+        if (!trace.length) refreshDigest();
+        if (!trace.length) return;
+        job += 1;
+        busy = false;
+        markPlay(false);
+        ensureTimeline();
+        setTeaching(false);
+        cursor = trace.length - 1;
+        showPaused();
+        settleView();
     }
 
     async function ensureSolver() {
@@ -773,7 +787,7 @@ export function createScrambleSession({
     });
 
     $("#play")?.addEventListener("click", () => void play(), listen);
-    $("#step-through")?.addEventListener("click", () => enterTeach(), listen);
+    $("#skip-end")?.addEventListener("click", () => skipToEnd(), listen);
     $("#step")?.addEventListener("click", () => {
         if (!teaching) enterTeach();
         else void stepBy(1);

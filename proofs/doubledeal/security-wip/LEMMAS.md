@@ -1,4 +1,4 @@
-# Open lemmas of `sumRanksV10_survival_le` (21 `sorry`s)
+# Open lemmas of `sumRanksV10_survival_le` (10 `sorry`s, all in `Standalone.lean`)
 
 **Main theorem** (proved, modulo the lemmas below), `Main.lean`:
 
@@ -54,6 +54,33 @@ theorem sumRanksV10_survival_le (τ : Relabel) (h : ¬ ∃ a x, τ = v10Sym a x)
 * `phi_nonneg`.
 * `caseB_bound`: the assembly.
 * `sumRanksV10_survival_le`, `sumRanksV10_survival_le'`.
+* The 11 formerly open repo-dependent lemmas (#11–#21 below): `traj_of_survives`,
+  `rowEq_of_rowCondsTraj`, `thetaG_prefix`, `rowChain_le`, `caseA1`, `caseA2`,
+  `caseA3`, `colConds_H_card`, `colChain_le`, `mStar_bounds`, `caseB_sum`, with
+  their helpers (index facts `rowStepOf_le`, `prevRow_succ`, `colStep_read_iff`,
+  `prevCol_eq_sub_one`, … by small `decide`; `rowAmt_congr`, `colAmt_congr`;
+  `relG_colRotate`; the GF(4)-as-`ZMod 2 × ZMod 2` encoding `toZ`, `toZ_inj`,
+  `sum_toZ_eps`; `gridPerm`, `deckGrid_gridPerm`, `card_filter_equiv`;
+  `card_row_eq_zRow`, `card_col_eq_yCol`, `factorial_split`; `row_nonconst`,
+  `rowDistinct`, `rho_prod_le_A3`; `pairCount_eq`, `card_seat_pairs`,
+  `card_diffRow_pairs`, `card_ne_pairs`, `rho_of_single`, `rho_prod_le_A1`).
+
+**Decomp.lean** (the shared decomposition, imports `SumRanksV10Iff` and `Standalone`):
+* `nested_count`: if `Q r σ` depends only on `σ 0, …, σ r` and each level has
+  at most `N r` extensions, then `#{σ : Fin n → α | ∀ r, Q r σ} ≤ ∏ r, N r`.
+* `cmEquiv : Fin 52 ≃ Fin 4 × Fin 13`; `rowShuf σ` / `colShuf σ` (reorder each
+  row / column by its own permutation) with `rowShuf_cmFlat`, `colShuf_cmFlat`.
+* `sum_mul_card_shuf`: `#S · Σ_π f π = Σ_π Σ_{s ∈ S} f (π * ψ s)` (the
+  "deck = block sets + per-block arrangements" fibre identity, used by both
+  chain lemmas).
+
+Remaining `sorry` dependencies of the 11 (all are swarm lemmas):
+`rowChain_le` ← `lemma2a`; `caseA2` ← `hyper_rows`, `lemma2b`; `caseA3` ←
+`distinct_row_count`, `lemma2b`; `mStar_bounds` ← `exists_class_ge_13`;
+`caseB_sum` ← `hyper_cols`, `lemma4_count_le`. `traj_of_survives`,
+`rowEq_of_rowCondsTraj`, `thetaG_prefix`, `caseA1`, `colConds_H_card` and
+`colChain_le` are fully `sorry`-free (`#print axioms`: `propext`,
+`Classical.choice`, `Quot.sound` only).
 
 ## Open: Standalone.lean (hand these to the swarm first)
 
@@ -109,7 +136,9 @@ Notes for the swarm:
   constraints. Or give `Equiv.Perm (Fin 4)` an explicit 24-element list and
   `decide`. Possibly heavy.
 
-## Open: Main.lean (repo-dependent)
+## Main.lean (repo-dependent): all proved
+
+Kept for reference; every row below is now proved (see above).
 
 Definitions (in `Main.lean`, namespace `DoubleDeal.Security.SumRanksDP`):
 * `deckGrid π`.
@@ -139,10 +168,9 @@ Definitions (in `Main.lean`, namespace `DoubleDeal.Security.SumRanksDP`):
 
 1. The swarm, in parallel: #3, #4, #1, #10, #2, then #5/#6, #7, and #8/#9
    (numeric engineering).
-2. Repo side: #13, #12, #11, then #18, #20, then #16, #17, #21, then #15,
-   and finally #14/#19, the two chain lemmas and the real design work. A shared
-   "split a deck into block sets plus per-block arrangements" equivalence serves
-   #5, #6, #14 and #19. Build it once.
+2. Repo side: done (#11–#21 all proved; `Decomp.lean` holds the shared
+   decomposition used by #14 and #19). #5/#6 (`hyper_rows`/`hyper_cols`) remain
+   with the swarm; `Decomp.lean`'s `cmEquiv` may help there.
 
 ## Honesty notes
 

@@ -1,0 +1,53 @@
+name: proofs-v9-deprecated
+
+# Kernel-checked K♣↔Q♥ witness for the frozen, deprecated DoubleDeal v9
+# (proofs/deprecated/doubledeal-v9/lean, `decide!` stage by stage, ~9 min on a
+# hosted runner) and its axiom audit. Kept out of proofs.yml so the normal jobs
+# stay fast; proofs.yml still runs the v9 TAP, witness-data and vector checks.
+# Runs on PRs and main pushes that touch what the proof depends on, weekly and
+# by hand.
+on:
+  pull_request:
+    paths:
+      - "proofs/deprecated/doubledeal-v9/**"
+      - "primitives/cipher/doubledeal/v9/**"   # the frozen sudo Generated/ is emitted from
+      - "proofs/doubledeal/check_axioms.py"
+      - ".github/workflows/proofs-v9-deprecated.yml"
+  push:
+    branches: [main]
+    paths:
+      - "proofs/deprecated/doubledeal-v9/**"
+      - "primitives/cipher/doubledeal/v9/**"
+      - "proofs/doubledeal/check_axioms.py"
+      - ".github/workflows/proofs-v9-deprecated.yml"
+  schedule:
+    - cron: "43 4 * * 1"  # Mondays 04:43 UTC
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  doubledeal-v9-witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - name: No native_decide / sorry / admit / initialize in the v9 witness package
+        run: |
+          ! grep -rnE '\b(native_decide|sorry|admit|initialize)\b' --include='*.lean' \
+              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9 \
+              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9.lean \
+              proofs/deprecated/doubledeal-v9/lean/Axioms.lean
+      - name: Witness Lean data matches witness_v9.json
+        run: python3 proofs/deprecated/doubledeal-v9/lean/witness_to_lean.py --check
+      - name: Kernel witness build (decide! per stage)
+        uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v9/lean
+      - name: Axiom audit (witness theorems use only propext, Classical.choice, Quot.sound)
+        run: python3 proofs/doubledeal/check_axioms.py v9-deprecated

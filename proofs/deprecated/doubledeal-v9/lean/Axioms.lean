@@ -2,8 +2,8 @@
   Axiom audit for the frozen v9 vulnerability-proof package.
   `python3 proofs/doubledeal/check_axioms.py v9-deprecated` runs this file and
   fails if a theorem below depends on an axiom other than propext,
-  Classical.choice and Quot.sound (for example `Lean.ofReduceBool`, which
-  `native_decide` would add). CI runs it in the doubledeal-v9-deprecated job.
+  Classical.choice and Quot.sound (for example `Lean.ofReduceBool`, which a
+  native decision procedure would add). CI runs it in proofs-v9-deprecated.yml.
 -/
 import DoubleDealV9
 

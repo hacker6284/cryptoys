@@ -135,16 +135,18 @@ jobs:
 
   doubledeal-v9-deprecated:
     # Frozen, deprecated DoubleDeal v9 (draft, awaiting a decision; no successor
-    # yet): emitted TAP + kernel-checked K♣↔Q♥ witness
+    # yet): emitted TAP, witness data and vectors. The ~9 min kernel witness
+    # build and its axiom audit run in proofs-v9-deprecated.yml
     # (see proofs/deprecated/doubledeal-v9/README.md).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: No native_decide / sorry / admit in the v9 witness package
+      - name: No native_decide / sorry / admit / initialize in the v9 witness package
         run: |
-          ! grep -rnE '\b(native_decide|sorry|admit)\b' --include='*.lean' \
+          ! grep -rnE '\b(native_decide|sorry|admit|initialize)\b' --include='*.lean' \
               proofs/deprecated/doubledeal-v9/lean/DoubleDealV9 \
-              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9.lean
+              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9.lean \
+              proofs/deprecated/doubledeal-v9/lean/Axioms.lean
       - name: Witness Lean data matches witness_v9.json
         run: python3 proofs/deprecated/doubledeal-v9/lean/witness_to_lean.py --check
       - name: Frozen v9 vectors (sha + Python port) and recorded witnesses
@@ -157,12 +159,6 @@ jobs:
       - name: Generated v9 TAP (frozen sudo tests)
         working-directory: proofs/deprecated/doubledeal-v9/lean/Generated
         run: ./.lake/build/bin/doubledeal_v9_test
-      - name: Kernel witness build (decide! per stage; ~11 min, ~11 GB peak)
-        uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: proofs/deprecated/doubledeal-v9/lean
-      - name: Axiom audit (witness theorems use only propext, Classical.choice, Quot.sound)
-        run: python3 proofs/doubledeal/check_axioms.py v9-deprecated
 
   doubledeal-lean:
     runs-on: ubuntu-latest

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { createLights } from "../shared/lights.js";
 import { SPOTS, parseMove, quarterSpin } from "./cube.js";
 
 const COLOR = {
@@ -248,13 +249,11 @@ export function mountCube(canvas) {
     controls.minDistance = 4;
     controls.maxDistance = 20;
     controls.update();
-    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-    const key = new THREE.DirectionalLight(0xffffff, 1.4);
-    key.position.set(4, 8, 5);
-    scene.add(key);
-    const fill = new THREE.DirectionalLight(0x9bb7ff, 0.35);
-    fill.position.set(-5, 2, -3);
-    scene.add(fill);
+    const lights = createLights(scene);
+    lights.add("ambient", new THREE.AmbientLight(0xffffff, 0.72));
+    lights.add("key", new THREE.DirectionalLight(0xffffff, 1.4)).position.set(4, 8, 5);
+    lights.add("fill", new THREE.DirectionalLight(0x9bb7ff, 0.35)).position.set(-5, 2, -3);
+    lights.seal();
 
     const rig = createCubeRig();
     scene.add(rig.group);

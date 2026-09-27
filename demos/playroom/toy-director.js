@@ -111,13 +111,8 @@ export function createToyDirector(world) {
         highlightId = null;
     }
 
-    function setTravelLight(toy, on) {
-        let light = toy.userData.travelLight;
-        if (!light) {
-            light = world.createTravelLight?.(toy);
-            if (!light) return;
-        }
-        light.intensity = on ? 4.2 : 0;
+    function setTravelLight(name, on) {
+        world.lights.get(`travel:${name}`).intensity = on ? 4.2 : 0;
     }
 
     function applyFlight(item, t) {
@@ -145,7 +140,7 @@ export function createToyDirector(world) {
             delete item.toy.userData.pendingDest;
         }
         applyFlight(item, 1);
-        setTravelLight(item.toy, false);
+        setTravelLight(item.name, false);
         item.toy.userData.flightBusy = false;
         item.toy.userData.seatedY = item.toy.position.y;
         flights = flights.filter((entry) => entry !== item);
@@ -178,6 +173,7 @@ export function createToyDirector(world) {
         return new Promise((resolve) => {
             toy.userData.flightBusy = true;
             const item = {
+                name,
                 toy,
                 from,
                 lift,
@@ -190,7 +186,7 @@ export function createToyDirector(world) {
                 onDone: resolve,
             };
             flights.push(item);
-            setTravelLight(toy, true);
+            setTravelLight(name, true);
             applyFlight(item, 0);
         });
     }
@@ -266,7 +262,7 @@ export function createToyDirector(world) {
             done?.();
         }
         for (const item of [...flights]) {
-            setTravelLight(item.toy, false);
+            setTravelLight(item.name, false);
             item.toy.userData.flightBusy = false;
             item.onDone?.();
         }

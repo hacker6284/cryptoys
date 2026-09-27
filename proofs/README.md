@@ -51,6 +51,7 @@ proofs/
   scm/                      # placeholder; SCM/SMAC stay later (CBC-HMAC is the AEAD)
   deprecated/               # vulnerability proofs for deprecated, frozen algorithms
     doubledeal-v8/          # DoubleDeal v8 relabelling distinguisher + witness
+    doubledeal-v9/          # DoubleDeal v9 K♣↔Q♥ swap distinguisher + kernel-checked witness (draft)
 ```
 
 Deprecated algorithms get a directory under `proofs/deprecated/` for vulnerability proofs, next to their frozen artifact. The first is DoubleDeal v8 (`proofs/deprecated/doubledeal-v8/`): a same-rank relabelling distinguisher with a checkable witness evaluated on the emitted frozen v8 `encrypt` (compiled check; kernel `decide` was too heavy). See [`deprecated/README.md`](deprecated/README.md).
@@ -65,5 +66,6 @@ Deprecated algorithms get a directory under `proofs/deprecated/` for vulnerabili
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | **Generated** Lean under `doubledeal-cbc-hmac/lean/Generated/` (from `doubledeal_cbc_hmac.sudo` + imported MegaDreifach; TAP 11/11). HMAC / KDF / pad / MAC-input evidence. No Link 2. No AEAD security theorem. Not SCM. |
 | DoubleDeal-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. Stays later. |
 | DoubleDeal v8 (deprecated) | `primitives/cipher/doubledeal/v8/` (frozen) | **Vulnerability proof** under `deprecated/doubledeal-v8/`: witness (compiled check of emitted v8 `encrypt`; JSON) that v8 commutes with K♣↔K♦ on one (key, message); measured rate ≈1e-3 per pair is evidence. Distinguisher, not key recovery. |
+| DoubleDeal v9 (deprecated, draft) | `primitives/cipher/doubledeal/v9/` (frozen; still the current text until a successor lands) | **Vulnerability proof** under `deprecated/doubledeal-v9/`: kernel theorem (`decide!` per stage, chained) that the emitted frozen v9 `encrypt` satisfies E_K(σM) = σE_K(M) for σ = K♣↔Q♥ on one (key, message); measured rate ≈3.5e-8 per pair is evidence. Distinguisher, not key recovery. |
 
 See `doubledeal/README.md` for DoubleDeal proved-versus-open, and `doubledeal/STONES.md` for the SPEC §6 checklist. See `megadreifach/README.md` and `megadreifach/STONES.md` for MegaDreifach.

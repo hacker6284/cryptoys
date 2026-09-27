@@ -1,0 +1,8 @@
+{
+  "sudo_file": "primitives/cipher/doubledeal/v9/doubledeal_v9.sudo",
+  "sudo_sha256": "7614987ea6517eeb45edb12dec434a4700bf52ba4f40221cb22267d70c06ae3c",
+  "sudocode_lean_commit": "ff63b629406bd5d3ab9e9434ea2d4695a2921d8a",
+  "sudocode_lean_ref": "main",
+  "terminates_gate": true,
+  "with_tests": true
+}

@@ -136,10 +136,6 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
     let pace = 1;
     let generation = 0;
 
-    function sameGen(gen) {
-        return gen === generation;
-    }
-
     function faceUp(mesh) { mesh.rotation.set(0, 0, 0); }
     function faceDown(mesh) { mesh.rotation.set(Math.PI, 0, 0); }
 
@@ -189,11 +185,8 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             const col = major === "row" ? index % 13 : Math.floor(index / 4);
             grid[row][col] = mesh;
             setTimeout(() => {
-                if (!sameGen(gen)) {
-                    resolve();
-                    return;
-                }
-                moveTo(mesh, gridPos(row, col, MESSAGE_X), 260, true).then(resolve);
+                if (gen !== generation) resolve();
+                else moveTo(mesh, gridPos(row, col, MESSAGE_X), 260, true).then(resolve);
             }, index * (36 / pace));
         })));
     }
@@ -280,7 +273,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         marker.material.opacity = 0.85;
         marker.material.color.setHex(0xf2d48a);
         for (let c = 0; c < 13; c++) {
-            if (!sameGen(gen)) return;
+            if (gen !== generation) return;
             await tween(8, (t) => {
                 marker.position.copy(gridPos(row, c, MESSAGE_X));
                 marker.position.y = 0.02;
@@ -301,15 +294,13 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             jobs.push(moveTo(message[id], rowPos("message", index), ms, false));
         });
         await Promise.all(jobs);
-        if (!sameGen(gen)) return;
         for (let j = 0; j < 52; j++) {
-            if (!sameGen(gen)) return;
+            if (gen !== generation) return;
             const seat = step.key.indexOf(j);
             const card = step.message[j];
             key[j].position.y = 0.45;
             message[card].position.y = 0.45;
             await moveTo(message[card], rowPos("out", seat), ms * 0.45, true);
-            if (!sameGen(gen)) return;
             key[j].position.y = 0.04;
         }
     }
@@ -342,15 +333,13 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             jobs.push(moveTo(message[id], rowPos("message", index), ms, false));
         });
         await Promise.all(jobs);
-        if (!sameGen(gen)) return;
         for (let j = 0; j < 52; j++) {
-            if (!sameGen(gen)) return;
+            if (gen !== generation) return;
             const seat = step.key.indexOf(j);
             const card = step.message[seat];
             key[j].position.y = 0.45;
             message[card].position.y = 0.45;
             await moveTo(message[card], rowPos("out", j), ms * 0.45, true);
-            if (!sameGen(gen)) return;
             key[j].position.y = 0.04;
         }
     }
@@ -360,16 +349,15 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         const controller = key[step.card];
         faceUp(controller);
         await moveTo(controller, new THREE.Vector3(0, 1.1, 0), ms, false);
-        if (!sameGen(gen)) return;
+        if (gen !== generation) return;
         const handIds = step.hand.slice();
         const keyIds = step.key.slice();
         if (step.amount > 0) {
             const spinning = handIds.slice(0, step.amount);
             await Promise.all(spinning.map((id) => moveTo(key[id], new THREE.Vector3(PASS_HAND_X, 0.9, PASS_Z), ms * 0.6, false)));
-            if (!sameGen(gen)) return;
+            if (gen !== generation) return;
         }
         if (step.flag === 2) marker.material.color.setHex(0xe7b15a);
-        if (!sameGen(gen)) return;
         await Promise.all([
             ...handIds.map((id, index) => {
                 faceDown(key[id]);
@@ -380,7 +368,6 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
                 return moveTo(key[id], passPile("key", index, keyIds.length), ms, id === step.card);
             }),
         ]);
-        if (!sameGen(gen)) return;
         faceUp(controller);
         marker.material.opacity = 0;
     }
@@ -392,7 +379,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         const controller = key[step.card];
         faceUp(controller);
         await moveTo(controller, new THREE.Vector3(0, 1.1, 0), ms, false);
-        if (!sameGen(gen)) return;
+        if (gen !== generation) return;
         const handIds = step.hand.slice();
         const keyIds = step.key.slice();
         await Promise.all([
@@ -405,7 +392,6 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
                 return moveTo(key[id], passPile("key", index, keyIds.length), ms, false);
             }),
         ]);
-        if (!sameGen(gen)) return;
         faceUp(controller);
         marker.material.opacity = 0;
     }
@@ -781,7 +767,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         if (step.kind === "counter") {
             const gen = generation;
             await seatPacket(step.message, message);
-            if (!sameGen(gen)) return;
+            if (gen !== generation) return;
             await Promise.all(step.message.slice(39).map((id) => {
                 const mesh = message[id];
                 const lifted = mesh.position.clone();

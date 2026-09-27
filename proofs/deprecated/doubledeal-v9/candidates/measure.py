@@ -41,8 +41,8 @@ def main():
     t0 = time.time(); S = SCALE; out = {}
     pairs = [(x, y) for x in range(52) for y in range(x + 1, 52)]
     with Pool(8) as pool:
-        for name, var in VARIANTS.items():
-            print(f"\n=== {name} ===", flush=True)
+        for i, (name, var) in enumerate(VARIANTS.items()):
+            print(("\n" if i else "") + f"=== {name} ===", flush=True)
             # (1a) round-level scan of all transpositions
             n1 = int(20000 * S)
             res = pool.map(layers, [(var, transposition(x, y), n1, SEED * 7919 + 52 * x + y) for x, y in pairs], chunksize=8)

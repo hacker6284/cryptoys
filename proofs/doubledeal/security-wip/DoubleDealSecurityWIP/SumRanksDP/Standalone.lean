@@ -654,11 +654,107 @@ def hA (z : ℕ) : ℚ := if z = 13 then 1 else 1 / (z + 1)
 def EA (n : ℕ) : ℚ :=
   (∑ z ∈ comps4 n, ∏ r, ((Nat.choose 13 (z r) : ℕ) : ℚ) * hA (z r)) / (Nat.choose 52 n : ℕ)
 
+
+/-! ### Table A by kernel check
+
+`f k = C(13,k)·h(k)` scaled by `D = 360360 = lcm(1,…,14)` is the integer `GA k`.
+The 4-block sum is the coefficient of `Xⁿ` in `(Σ f k Xᵏ)⁴`, computed as a
+convolution square of the 27-entry table `LA2` (checked against `GA`). -/
+
+/-- Generating-function form of a 4-block sum: the coefficient of `Xⁿ` in
+    `(Σ_{j<14} f j Xʲ)⁴`. -/
+theorem sum_comps4_eq_coeff (f : ℕ → ℚ) (n : ℕ) :
+    ∑ z ∈ comps4 n, ∏ r, f (z r) =
+      ((∑ j ∈ range 14, Polynomial.C (f j) * Polynomial.X ^ j) ^ 4).coeff n := by
+  rw [← Fin.prod_const, prod_univ_sum]
+  simp only [prod_mul_distrib, prod_pow_eq_pow_sum, ← map_prod]
+  rw [Polynomial.finset_sum_coeff]
+  simp only [Polynomial.coeff_C_mul_X_pow]
+  rw [comps4, sum_filter]
+  apply sum_congr rfl; intro z _
+  split_ifs with h1 h2 h2 <;> first | rfl | (exfalso; omega)
+
+/-- `360360 · C(13,k) · h(k)`. -/
+def GA (k : ℕ) : ℕ := [360360, 2342340, 9369360, 25765740, 51531480, 77297220, 88339680, 77297220, 51531480, 25765740, 9369360, 2342340, 360360, 360360].getD k 0
+
+/-- The convolution square of `GA` (entries `0 … 26`). -/
+def LA2 : List ℕ := [129859329600, 1688171284800, 12239241814800, 62462337537600, 245628921938400, 779935133577600, 2055288247412400, 4573497177849600, 8693358614740800, 14227184086315200, 20155740179374800, 24807194695483200, 26579155725064800, 24807454414142400, 20157428350659600, 14233936771454400, 8711928498873600, 4610636946115200, 2110997899810800, 843603307747200, 301338574336800, 99602105803200, 30809125947600, 8440856424000, 1818030614400, 259718659200, 129859329600]
+
+theorem GA_eq_zero (k : ℕ) (hk : 14 ≤ k) : GA k = 0 :=
+  List.getD_eq_default _ _ (by simp; omega)
+
+theorem GA_spec (k : ℕ) :
+    (if k ∈ range 14 then ((Nat.choose 13 k : ℕ) : ℚ) * hA k else 0) = (GA k : ℚ) / 360360 := by
+  by_cases hk : k < 14
+  · rw [if_pos (mem_range.2 hk)]
+    interval_cases k <;> simp [GA, hA, Nat.choose] <;> norm_num
+  · rw [if_neg (by simpa using hk), GA_eq_zero k (by omega)]; simp
+
+theorem LA2_spec : ∀ n < 27, ∑ x ∈ antidiagonal n, GA x.1 * GA x.2 = LA2.getD n 0 := by
+  decide!
+
+theorem LA2_spec' (n : ℕ) : ∑ x ∈ antidiagonal n, GA x.1 * GA x.2 = LA2.getD n 0 := by
+  by_cases hn : n < 27
+  · exact LA2_spec n hn
+  · rw [List.getD_eq_default _ _ (by simp [LA2]; omega)]
+    apply sum_eq_zero
+    intro x hx
+    rw [mem_antidiagonal] at hx
+    by_cases h1 : 14 ≤ x.1
+    · rw [GA_eq_zero _ h1, zero_mul]
+    · rw [GA_eq_zero x.2 (by omega), mul_zero]
+
+theorem tableA_nat : ∀ n < 50, 13 ≤ n →
+    100 * (∑ x ∈ antidiagonal n, LA2.getD x.1 0 * LA2.getD x.2 0) *
+      (Nat.factorial n * Nat.factorial (52 - n)) ≤ 360360 ^ 4 * Nat.factorial 52 := by
+  decide!
+
+theorem EA_numer (n : ℕ) :
+    (∑ z ∈ comps4 n, ∏ r, ((Nat.choose 13 (z r) : ℕ) : ℚ) * hA (z r)) =
+      ((∑ x ∈ antidiagonal n, LA2.getD x.1 0 * LA2.getD x.2 0 : ℕ) : ℚ) / 360360 ^ 4 := by
+  rw [sum_comps4_eq_coeff (fun k => ((Nat.choose 13 k : ℕ) : ℚ) * hA k)]
+  set p := ∑ j ∈ range 14, Polynomial.C (((Nat.choose 13 j : ℕ) : ℚ) * hA j) * Polynomial.X ^ j
+  have hp : ∀ k, p.coeff k = (GA k : ℚ) / 360360 := by
+    intro k
+    rw [Polynomial.finset_sum_coeff]
+    simp only [Polynomial.coeff_C_mul_X_pow]
+    rw [sum_ite_eq]
+    exact GA_spec k
+  have hp2 : ∀ k, (p ^ 2).coeff k = (LA2.getD k 0 : ℚ) / 360360 ^ 2 := by
+    intro k
+    rw [pow_two, Polynomial.coeff_mul, ← LA2_spec' k]
+    push_cast
+    rw [sum_div]
+    apply sum_congr rfl; intro x _
+    rw [hp, hp]; ring
+  rw [show p ^ 4 = p ^ 2 * p ^ 2 by ring, Polynomial.coeff_mul]
+  push_cast
+  rw [sum_div]
+  apply sum_congr rfl; intro x _
+  rw [hp2, hp2]; ring
+
 /-- **Table A** (PROOF.md §3 (A2)): `E_A(n) ≤ 1/100` for `13 ≤ n ≤ 49`
     (exact values: `0.003975` at `n = 13`, decreasing then increasing, maximum
     `0.008416` at `n = 49`). -/
 theorem EA_le (n : ℕ) (h1 : 13 ≤ n) (h2 : n ≤ 49) : EA n ≤ 1 / 100 := by
-  sorry
+  have hn := tableA_nat n (by omega) h1
+  have hc := Nat.choose_mul_factorial_mul_factorial (n := 52) (k := n) (by omega)
+  have hpos : 0 < Nat.factorial n * Nat.factorial (52 - n) := by positivity
+  set B := ∑ x ∈ antidiagonal n, LA2.getD x.1 0 * LA2.getD x.2 0
+  have key : 100 * B ≤ 360360 ^ 4 * Nat.choose 52 n := by
+    rw [← hc] at hn
+    have : 100 * B * (Nat.factorial n * Nat.factorial (52 - n)) ≤
+        360360 ^ 4 * Nat.choose 52 n * (Nat.factorial n * Nat.factorial (52 - n)) := by
+      calc _ ≤ _ := hn
+        _ = _ := by ring
+    exact Nat.le_of_mul_le_mul_right this hpos
+  unfold EA
+  rw [EA_numer]
+  have hC : (0 : ℚ) < (Nat.choose 52 n : ℕ) := by exact_mod_cast Nat.choose_pos (by omega)
+  rw [div_div, div_le_div_iff₀ (by positivity) (by norm_num)]
+  have : ((100 * B : ℕ) : ℚ) ≤ ((360360 ^ 4 * Nat.choose 52 n : ℕ) : ℚ) := by exact_mod_cast key
+  push_cast at this
+  linarith
 
 /-- (A3) constant: `1/81 + 4 · 4¹³ / C(52,13) ≤ 1/64` (value `0.012768`). -/
 theorem A3_const : (1 / 81 : ℚ) + 4 * 4 ^ 13 / (Nat.choose 52 13 : ℕ) ≤ 1 / 64 := by

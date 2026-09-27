@@ -70,8 +70,6 @@ export function stageCardTable(world, textures, { poses, visible = true } = {}) 
         highlightSeat: table.highlightSeat,
         highlightCard: table.highlightCard,
         clearHighlights: table.clearHighlights,
-        rowRanks: table.rowRanks,
-        colTerms: table.colTerms,
         frameTeach,
         frameTable,
         rememberSeated() {},

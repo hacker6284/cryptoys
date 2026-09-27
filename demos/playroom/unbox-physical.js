@@ -13,13 +13,6 @@ export function createDealerKey(world) {
     return keyLight;
 }
 
-export function disposeDealerKey(world, keyLight) {
-    if (!keyLight) return;
-    world?.scene?.remove(keyLight);
-    if (keyLight.target) world?.scene?.remove(keyLight.target);
-    keyLight.dispose?.();
-}
-
 function feltY(world) {
     return world.table.feltTopY + CARD_T * 0.55;
 }

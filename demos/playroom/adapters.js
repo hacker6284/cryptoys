@@ -10,7 +10,7 @@ import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";
 import { formSessionTable, gatherSessionTable } from "./table-form.js";
 import { pickHandTextures, pickMsgTextures } from "./unbox-hand.js";
-import { createDealerKey, disposeDealerKey, playDualUnbox, playRestow, restBoxes } from "./unbox-physical.js";
+import { createDealerKey, playDualUnbox, playRestow, restBoxes } from "./unbox-physical.js";
 import { createUnboxRig } from "./unbox-rig.js";
 
 /**
@@ -641,6 +641,9 @@ function createDoubleDealAdapter() {
         install(nextWorld, { poses: nextPoses } = {}) {
             world = nextWorld;
             poses = nextPoses;
+            // Add the dark dealer key at boot: adding a light mid-scene
+            // recompiles every lit shader, which froze the unbox.
+            keyLight ??= createDealerKey(world);
             return world.toys.deck;
         },
         preload,
@@ -665,7 +668,6 @@ function createDoubleDealAdapter() {
                 root = mountDoubleDealDock();
                 const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
                 poses?.lockOrbit?.();
-                if (!keyLight && world) keyLight = createDealerKey(world);
                 clock = createBeatClock({ reduced });
                 enterGen = clock.begin();
                 const enterTrack = trackActive(world, ["deck", "deck2"], [
@@ -805,8 +807,7 @@ function createDoubleDealAdapter() {
                 restowUnbox();
             }
             if (world?.toys.deck2) world.toys.deck2.visible = true;
-            disposeDealerKey(world, keyLight);
-            keyLight = null;
+            keyLight.intensity = 0;
             clock = null;
             poses?.unlockOrbit?.();
         },

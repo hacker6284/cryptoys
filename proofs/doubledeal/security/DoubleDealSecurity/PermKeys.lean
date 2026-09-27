@@ -33,17 +33,17 @@ def encrypt6P (m : Fin 52 → Nat) (k0 : Key) (kMix : Nat → Key) (kF : Key) : 
 
 noncomputable def deckPerm (d : Fin 52 → Nat) (hd : IsDeck d) : Equiv.Perm (Fin 52) :=
   Equiv.ofBijective (fun i => ⟨d i, hd.1 i⟩)
-    (Finite.injective_iff_bijective.1 (fun i j h => hd.2 i j (congrArg Fin.val h)))
+    (Finite.injective_iff_bijective.1 (fun _ _ h => hd.2 (congrArg Fin.val h)))
 
 @[simp] theorem deckPerm_val (d : Fin 52 → Nat) (hd : IsDeck d) (i : Fin 52) :
     (deckPerm d hd i).val = d i := rfl
 
 theorem isDeck_rel (σ : Relabel) {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck (rel σ m) :=
-  ⟨fun i => σ.app_lt (hm.1 i), fun i j h => hm.2 i j (σ.app_inj h)⟩
+  ⟨fun i => σ.app_lt (hm.1 i), fun _ _ h => hm.2 (σ.app_inj h)⟩
 
 theorem isDeck_compose {m : Fin 52 → Nat} (hm : IsDeck m) (p : Key) :
     IsDeck (composeVec 52 Nat m p) :=
-  ⟨fun _ => hm.1 _, fun _ _ h => p.injective (hm.2 _ _ h)⟩
+  ⟨fun _ => hm.1 _, fun _ _ h => p.injective (hm.2 h)⟩
 
 theorem invUnkeyedNoMix_cells (x : Fin 52 → Nat) (i : Fin 52) :
     ∃ k, invUnkeyedNoMix x i = x k := by
@@ -59,20 +59,9 @@ theorem invUnkeyedNoMix_cells (x : Fin 52 → Nat) (i : Fin 52) :
 
 /-- (PROVED) The stem maps decks to decks. -/
 theorem isDeck_unkeyedNoMix {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck (unkeyedNoMix m) := by
-  classical
-  set x := unkeyedNoMix m
-  have hinv : invUnkeyedNoMix x = m := invUnkeyedNoMix_unkeyedNoMix m
-  choose ρ hρ using invUnkeyedNoMix_cells x
-  have hρ' : ∀ i, m i = x (ρ i) := fun i => hinv ▸ hρ i
-  have hinj : Function.Injective ρ := fun i i' h => hm.2 _ _ (by rw [hρ' i, hρ' i', h])
-  have hsurj := Finite.injective_iff_surjective.1 hinj
-  refine ⟨fun k => ?_, fun k k' h => ?_⟩
-  · obtain ⟨i, rfl⟩ := hsurj k
-    rw [← hρ' i]; exact hm.1 i
-  · obtain ⟨i, rfl⟩ := hsurj k
-    obtain ⟨i', rfl⟩ := hsurj k'
-    rw [← hρ' i, ← hρ' i'] at h
-    rw [hm.2 _ _ h]
+  refine isDeck_of_cells hm (fun i => ?_)
+  obtain ⟨k, hk⟩ := invUnkeyedNoMix_cells (unkeyedNoMix m) i
+  exact ⟨k, by rw [← hk, invUnkeyedNoMix_unkeyedNoMix]⟩
 
 /-- (PROVED) GridCycle maps decks to decks. -/
 theorem isDeck_mixColumns {h : Fin 52 → Nat} (hh : IsDeck h) : IsDeck (mixColumns h) := by
@@ -92,7 +81,7 @@ theorem isDeck_mixColumns {h : Fin 52 → Nat} (hh : IsDeck h) : IsDeck (mixColu
     have hij' : gridW chooseSeat! h (rmRow i) (rmCol i) =
         gridW chooseSeat! h (rmRow j) (rmCol j) := hij
     rw [hk, hk'] at hij'
-    have hkk := hh.2 _ _ hij'
+    have hkk := hh.2 hij'
     subst hkk
     rw [hs] at hs'
     have e1 := congrArg Prod.fst hs'
@@ -209,17 +198,15 @@ theorem round_covariant_of_encrypt6 (σ : Relabel)
 /-- (PROVED modulo the covariant round conjecture) No nontrivial σ gives
     `E_K(σM) = σ E_K(M)` for all permutation round keys and decks. -/
 theorem encrypt6_commutes_iff_id (σ : Relabel) :
-    (∀ k0 kMix kF, CommutesOnDecks σ (fun m => encrypt6P m k0 kMix kF)) ↔ σ.IsId := by
+    (∀ k0 kMix kF, CommutesOnDecks σ (fun m => encrypt6P m k0 kMix kF)) ↔ σ = 1 := by
   constructor
   · intro h; exact (roundBody_covariant_iff_id σ).1 (round_covariant_of_encrypt6 σ h)
-  · intro hid _ _ _ m _
-    unfold IsId at hid; subst hid
-    simp only [rel_one]
+  · rintro rfl _ _ _; exact commutesOnDecks_one _
 
 /-- (PROVED, no conjecture) No nontrivial σ that commutes with the v9 stem
     (i.e. no nontrivial `v9Sym a b`) gives `E_K(σM) = σ E_K(M)` for all
     permutation round keys. -/
-theorem encrypt6_not_commutes_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
+theorem encrypt6_not_commutes_of_stem (σ : Relabel) (hid : σ ≠ 1)
     (hs : CommutesG σ sumRanksV9) :
     ¬ ∀ k0 kMix kF, CommutesOnDecks σ (fun m => encrypt6P m k0 kMix kF) :=
   fun h => roundBody_not_covariant_of_stem σ hid hs (round_covariant_of_encrypt6 σ h)
@@ -232,8 +219,7 @@ theorem encrypt6_not_commutes_v9Sym (a : Fin 13) (b : Fin 4) (hab : (a, b) ≠ (
   obtain ⟨hr, hc⟩ := (v9_shift_iff (v9Sym a b)).2 ⟨a, b, fun _ => rfl⟩
   refine encrypt6_not_commutes_of_stem _ ?_ (sumRanks_commutes_of_shift _ _ _ hr hc)
   intro hid
-  rw [isId_iff] at hid
-  obtain ⟨rfl, rfl⟩ := v9SymFn_fixed a b ⟨0, by decide⟩ (hid _)
+  obtain ⟨rfl, rfl⟩ := v9SymFn_fixed a b ⟨0, by decide⟩ (Equiv.congr_fun hid _)
   exact hab rfl
 
 end DoubleDeal.Security

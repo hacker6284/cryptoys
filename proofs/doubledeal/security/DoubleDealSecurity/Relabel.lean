@@ -16,6 +16,7 @@
 -/
 import Mathlib.GroupTheory.Perm.Basic
 import Mathlib.Logic.Equiv.Fin
+import Mathlib.Data.Fintype.Card
 import DoubleDeal.Round
 import DoubleDealSecurity.Decks
 
@@ -34,13 +35,6 @@ namespace Relabel
     else is fixed. -/
 def app (σ : Relabel) (n : Nat) : Nat :=
   if h : n < 52 then (σ ⟨n, h⟩).val else n
-
-def IsId (σ : Relabel) : Prop := σ = 1
-
-theorem isId_iff (σ : Relabel) : σ.IsId ↔ ∀ c, σ c = c := by
-  unfold IsId; constructor
-  · rintro rfl c; rfl
-  · intro h; ext c; simp [h c]
 
 /-- The transposition of two card values (Mathlib `Equiv.swap`). -/
 abbrev swap (a b : Fin 52) : Relabel := Equiv.swap a b
@@ -69,6 +63,8 @@ open Relabel
 /-- Relabel every card of a deck. -/
 def rel (σ : Relabel) (m : Fin 52 → Nat) : Fin 52 → Nat := fun i => σ.app (m i)
 
+theorem rel_one (x : Fin 52 → Nat) : rel 1 x = x := funext fun _ => app_one _
+
 /-- Relabel every card of a grid. -/
 def relG (σ : Relabel) (g : Grid Nat) : Grid Nat := fun r c => σ.app (g r c)
 
@@ -77,7 +73,7 @@ def Cards (m : Fin 52 → Nat) : Prop := ∀ i, m i < 52
 def CardsG (g : Grid Nat) : Prop := ∀ r c, g r c < 52
 
 /-- A well-formed deck: 52 distinct card values. -/
-def IsDeck (m : Fin 52 → Nat) : Prop := Cards m ∧ ∀ i j, m i = m j → i = j
+def IsDeck (m : Fin 52 → Nat) : Prop := Cards m ∧ Function.Injective m
 
 /-- `σ` commutes with a deck map on every card-valued deck. -/
 def Commutes (σ : Relabel) (F : (Fin 52 → Nat) → (Fin 52 → Nat)) : Prop :=
@@ -93,6 +89,26 @@ def CommutesG (σ : Relabel) (F : Grid Nat → Grid Nat) : Prop :=
 /-- Grid version on well-formed decks (read column-major). -/
 def CommutesOnDecksG (σ : Relabel) (F : Grid Nat → Grid Nat) : Prop :=
   ∀ g, IsDeck (scoopColumnMajor g) → F (relG σ g) = relG σ (F g)
+
+/-- The identity relabelling commutes with every deck map. -/
+theorem commutesOnDecks_one (F : (Fin 52 → Nat) → (Fin 52 → Nat)) : CommutesOnDecks 1 F :=
+  fun m _ => by rw [rel_one, rel_one]
+
+/-- (PROVED) If every cell of the deck `x` occurs in `y`, then `y` is a deck
+    too (52 distinct values fill all 52 cells). -/
+theorem isDeck_of_cells {x y : Fin 52 → Nat} (hx : IsDeck x) (h : ∀ k, ∃ i, x k = y i) :
+    IsDeck y := by
+  classical
+  choose ρ hρ using h
+  have hinj : Function.Injective ρ := fun k k' e => hx.2 (by rw [hρ k, hρ k', e])
+  have hsurj := Finite.injective_iff_surjective.1 hinj
+  refine ⟨fun i => ?_, fun i j e => ?_⟩
+  · obtain ⟨k, rfl⟩ := hsurj i
+    rw [← hρ k]; exact hx.1 k
+  · obtain ⟨k, rfl⟩ := hsurj i
+    obtain ⟨k', rfl⟩ := hsurj j
+    rw [← hρ k, ← hρ k'] at e
+    rw [hx.2 e]
 
 theorem Commutes.onDecks {σ F} (h : Commutes σ F) : CommutesOnDecks σ F :=
   fun m hm => h m hm.1

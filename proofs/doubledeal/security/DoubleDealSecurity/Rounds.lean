@@ -116,28 +116,15 @@ theorem unkeyedNoMix_invUnkeyedNoMix (x : Fin 52 → Nat) :
     positions, so `m` is a deck too. -/
 theorem unkeyedNoMix_onto_decks (x : Fin 52 → Nat) (hx : IsDeck x) :
     ∃ m, IsDeck m ∧ unkeyedNoMix m = x := by
-  classical
-  set m := invUnkeyedNoMix x
-  have hmx : unkeyedNoMix m = x := unkeyedNoMix_invUnkeyedNoMix x
-  choose ρ hρ using unkeyedNoMix_cells m
-  have hρ' : ∀ k, x k = m (ρ k) := fun k => hmx ▸ hρ k
-  have hinj : Function.Injective ρ := by
-    intro k k' h
-    exact hx.2 _ _ (by rw [hρ' k, hρ' k', h])
-  have hsurj := Finite.injective_iff_surjective.1 hinj
-  refine ⟨m, ⟨fun i => ?_, fun i j h => ?_⟩, hmx⟩
-  · obtain ⟨k, rfl⟩ := hsurj i
-    rw [← hρ' k]; exact hx.1 k
-  · obtain ⟨k, rfl⟩ := hsurj i
-    obtain ⟨k', rfl⟩ := hsurj j
-    rw [← hρ' k, ← hρ' k'] at h
-    rw [hx.2 _ _ h]
+  refine ⟨invUnkeyedNoMix x, isDeck_of_cells hx (fun k => ?_), unkeyedNoMix_invUnkeyedNoMix x⟩
+  obtain ⟨i, hi⟩ := unkeyedNoMix_cells (invUnkeyedNoMix x) k
+  exact ⟨i, by rw [← hi, unkeyedNoMix_invUnkeyedNoMix]⟩
 
 /-- (PROVED from the lemmas above) If σ ≠ id commutes with the v9 stem
     (i.e. σ is one of the 51 nontrivial `v9Sym a b`), then no full round
     commutes with σ: the stem is onto decks, so the round commuting would make
     GridCycle commute, forcing σ = id. -/
-theorem fullRound_not_commutes_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
+theorem fullRound_not_commutes_of_stem (σ : Relabel) (hid : σ ≠ 1)
     (hs : CommutesG σ sumRanksV9) (pos invPos : Fin 52 → Fin 52)
     (hR : ∀ i, pos (invPos i) = i) :
     ¬ CommutesOnDecks σ (fun m => fullRound m pos) := by
@@ -188,19 +175,15 @@ form is the case τ = σ. -/
 def Covariant (σ : Relabel) (F : (Fin 52 → Nat) → (Fin 52 → Nat)) : Prop :=
   ∃ τ : Relabel, ∀ m, IsDeck m → F (rel σ m) = rel τ (F m)
 
-theorem rel_one (x : Fin 52 → Nat) : rel 1 x = x := funext fun _ => app_one _
-
 /-- GridCycle writes the first card at `AS` = (2,0), row-major index 26. -/
 theorem mixColumns_at_AS (h : Fin 52 → Nat) :
-    mixColumns h ⟨26, by decide⟩ = h ⟨0, by decide⟩ := by
-  rw [mixColumns_eq]
-  have := gridW_at_seat _ freeChooser_v9 h ⟨0, by decide⟩
-  exact this
+    mixColumns h ⟨26, by decide⟩ = h ⟨0, by decide⟩ :=
+  placed_at_seat h 0 (by decide)
 
 /-- (PROVED) If σ ≠ id commutes with the v9 stem (σ is a nontrivial `v9Sym`),
     the round body is not σ-covariant for any τ: the first card sits at `AS`,
     which forces τ = σ, and then GridCycle would commute with σ. -/
-theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
+theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
     (hs : CommutesG σ sumRanksV9) : ¬ Covariant σ unkeyedWithMix := by
   rintro ⟨τ, hτ⟩
   apply hid
@@ -237,24 +220,21 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
     remaining cells interleave two different walks. Effort: uncertain,
     ~1–2 weeks. Not attempted further. -/
 theorem roundBody_covariant_iff_id (σ : Relabel) :
-    Covariant σ unkeyedWithMix ↔ σ.IsId := by
+    Covariant σ unkeyedWithMix ↔ σ = 1 := by
   constructor
   · intro h
     sorry -- DRAFT-SORRY (conjecture)
-  · intro hid
-    unfold IsId at hid; subst hid
+  · rintro rfl
     exact ⟨1, fun m _ => by rw [rel_one, rel_one]⟩
 
 /-- (PROVED from the covariant conjecture) No nontrivial σ commutes with the
     full round for all keys (the case τ = σ, key = id). -/
 theorem fullRound_commutes_iff_id (σ : Relabel) :
-    (∀ pos, CommutesOnDecks σ (fun m => fullRound m pos)) ↔ σ.IsId := by
+    (∀ pos, CommutesOnDecks σ (fun m => fullRound m pos)) ↔ σ = 1 := by
   constructor
   · intro h
     exact (roundBody_covariant_iff_id σ).1 ⟨σ, fun m hm => h id m hm⟩
-  · intro hid _ m _
-    unfold IsId at hid; subst hid
-    simp only [rel_one]
+  · rintro rfl _; exact commutesOnDecks_one _
 
 /-! ### 4c. Degenerate model keys (constant, non-permutation)
 

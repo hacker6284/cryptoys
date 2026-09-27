@@ -59,7 +59,7 @@ theorem walkW_rel_iff (ch : Chooser) (hch : FreeChooser ch) (σ : Relabel)
     rw [hg, ← hk] at h1
     have h2 := gridW_at_seat ch hch m k
     simp only [relG, h2, rel] at h1
-    have hkn := hm.2 _ _ (σ.app_inj h1)
+    have hkn := hm.2 (σ.app_inj h1)
     rw [← hk, hkn]
   · intro h
     suffices hg : gridW ch (rel σ m) = relG σ (gridW ch m) by rw [hg]
@@ -124,7 +124,7 @@ theorem walkW_only_id (ch : Chooser) (hch : FreeChooser ch)
       rel (swap KC KS) (scoopRowMajor (gridW ch (firstDeck 12))))
     (σ : Relabel)
     (h : ∀ m, IsDeck m → scoopRowMajor (gridW ch (rel σ m)) = rel σ (scoopRowMajor (gridW ch m))) :
-    σ.IsId := by
+    σ = 1 := by
   have key : ∀ c : Fin 52, σ c = c ∨ (σ c = KC ∧ c = KS) ∨ (σ c = KS ∧ c = KC) := by
     intro c
     have hw := (walkW_rel_iff ch hch σ _ (firstDeck_isDeck c)).1
@@ -135,7 +135,7 @@ theorem walkW_only_id (ch : Chooser) (hch : FreeChooser ch)
       e1, firstDeck_zero] at hw
     exact seat2_inj _ _ hw
   have hne : KC ≠ KS := by decide
-  rw [isId_iff]
+  rw [Equiv.Perm.ext_iff]
   by_cases hKC : σ KC = KC
   · have hKS' : σ KS = KS := by
       rcases key KS with h1 | ⟨h1, _⟩ | ⟨_, h2⟩
@@ -174,21 +174,19 @@ theorem walkW_only_id (ch : Chooser) (hch : FreeChooser ch)
     (`walkSeat_one`, `seat2_inj`) unless σ swaps K♣,K♠ and fixes all else,
     which `mixColumns_KC_KS_fails` excludes. -/
 theorem mixColumns_commutes_iff_id (σ : Relabel) :
-    CommutesOnDecks σ mixColumns ↔ σ.IsId := by
+    CommutesOnDecks σ mixColumns ↔ σ = 1 := by
   constructor
   · intro h
     refine walkW_only_id chooseSeat! freeChooser_v9
       (fun hand _ => by rw [← walkSeat_eq]; rfl) ?_ σ ?_
     · simpa only [mixColumns_eq] using mixColumns_KC_KS_fails
     · intro m hm; simpa only [mixColumns_eq] using h m hm
-  · intro hid m _
-    unfold IsId at hid; subst hid
-    have e : ∀ x, rel 1 x = x := fun x => funext fun i => app_one _
-    rw [e, e]
+  · rintro rfl; exact commutesOnDecks_one _
 
 /-! ### 3a. Frozen v8 GridCycle model (overflow scan starts at column 0)
 
-Proof-only copy of the v9 walk with the v8 scan start, for the v8 statements.
+Proof-only v8 seat chooser (overflow scan from column 0) plugged into the generic
+walk of `Walk.lean`, for the v8 statements.
 Checked against the frozen v8 known-answer vectors in `V8Vectors.lean`. -/
 
 namespace V8
@@ -206,17 +204,8 @@ def chooseSeat! (st : WalkState) : (Fin 4 × Fin 13) × Nat :=
   | some x => x
   | none => ((⟨0, by decide⟩, ⟨0, by decide⟩), st.t)
 
-def placeN (hand : Fin 52 → Nat) : Nat → NatGrid × WalkState
-  | 0 => ((fun _ _ => (0 : Nat)), initWalk)
-  | n + 1 =>
-      let (g, st) := placeN hand n
-      if h : n < 52 then
-        let (pos, t') := chooseSeat! st
-        let card := hand ⟨n, h⟩
-        (setGrid g pos card, advance st card pos t')
-      else (g, st)
-
-def mixColumns (hand : Fin 52 → Nat) : Fin 52 → Nat := scoopRowMajor (placeN hand 52).1
+/-- v8 GridCycle: the generic walk (`Walk.lean`) with the v8 chooser. -/
+def mixColumns (hand : Fin 52 → Nat) : Fin 52 → Nat := scoopRowMajor (gridW chooseSeat! hand)
 
 def unkeyedNoMix (m : Fin 52 → Nat) : Fin 52 → Nat :=
   scoopColumnMajor (shiftRows (sumRanksV8 (layColumnMajor m)))
@@ -245,12 +234,6 @@ theorem v8_mixColumns_KC_KS_fails :
   revert this
   decide!
 
-theorem V8.placeN_eq_placeW (hand : Fin 52 → Nat) :
-    ∀ n, V8.placeN hand n = placeW V8.chooseSeat! hand n
-  | 0 => rfl
-  | n + 1 => by
-      simp only [V8.placeN, placeW, V8.placeN_eq_placeW hand n]
-
 theorem V8.freeChooser : FreeChooser V8.chooseSeat! := by
   intro st hct hprev
   match hprev_eq : st.prev with
@@ -276,13 +259,12 @@ theorem V8.seat2_eq : ∀ c : Fin 52,
   decide!
 
 theorem V8.mixColumns_eq (hand : Fin 52 → Nat) :
-    V8.mixColumns hand = scoopRowMajor (gridW V8.chooseSeat! hand) := by
-  simp only [V8.mixColumns, gridW, V8.placeN_eq_placeW]
+    V8.mixColumns hand = scoopRowMajor (gridW V8.chooseSeat! hand) := rfl
 
 /-- (PROVED) v8 GridCycle commutes with σ on all decks iff σ = id (same
     argument; v8 and v9 agree on the second seat, `V8.seat2_eq`). -/
 theorem v8_mixColumns_commutes_iff_id (σ : Relabel) :
-    CommutesOnDecks σ V8.mixColumns ↔ σ.IsId := by
+    CommutesOnDecks σ V8.mixColumns ↔ σ = 1 := by
   constructor
   · intro h
     refine walkW_only_id V8.chooseSeat! V8.freeChooser
@@ -291,9 +273,6 @@ theorem v8_mixColumns_commutes_iff_id (σ : Relabel) :
         exact V8.seat2_eq ⟨_, h0⟩) ?_ σ ?_
     · simpa only [V8.mixColumns_eq] using v8_mixColumns_KC_KS_fails
     · intro m hm; simpa only [V8.mixColumns_eq] using h m hm
-  · intro hid m _
-    unfold IsId at hid; subst hid
-    have e : ∀ x, rel 1 x = x := fun x => funext fun i => app_one _
-    rw [e, e]
+  · rintro rfl; exact commutesOnDecks_one _
 
 end DoubleDeal.Security

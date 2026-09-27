@@ -162,7 +162,7 @@ theorem isDeckG_iff (g : Grid Nat) :
     · have h' : scoopColumnMajor g (cmFlat r c) = scoopColumnMajor g (cmFlat r' c') := by
         simpa [scoopColumnMajor, (cm_cmFlat r c).1, (cm_cmFlat r c).2,
           (cm_cmFlat r' c').1, (cm_cmFlat r' c').2] using h
-      have hf := hi _ _ h'
+      have hf := hi h'
       have e1 := cm_cmFlat r c
       have e2 := cm_cmFlat r' c'
       rw [hf] at e1

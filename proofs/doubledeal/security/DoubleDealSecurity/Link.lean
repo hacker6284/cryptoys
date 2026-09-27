@@ -15,7 +15,7 @@ open DoubleDeal
 
 /-! ## Relabelling the key moves positions -/
 
-theorem indexOf_map_inj (f : Nat → Nat) (hf : ∀ a b, f a = f b → a = b)
+theorem indexOf_map_inj (f : Nat → Nat) (hf : Function.Injective f)
     (xs : List Nat) (x : Nat) : indexOf (xs.map f) (f x) = indexOf xs x := by
   induction xs with
   | nil => rfl
@@ -23,14 +23,14 @@ theorem indexOf_map_inj (f : Nat → Nat) (hf : ∀ a b, f a = f b → a = b)
     simp only [List.map, indexOf]
     by_cases h : y = x
     · simp [h]
-    · have h' : f y ≠ f x := fun e => h (hf _ _ e)
+    · have h' : f y ≠ f x := fun e => h (hf e)
       simp [h, h', ih]
 
 /-- (PROVED) Relabelling the key by an injective card map `f` moves positions:
     `keyPos (f·K) (f x) = keyPos K x`, i.e. seat `j` of `Compose(M, σK)` holds
     what seat `σ⁻¹ j` of `Compose(M, K)` held. The output is permuted
     positionally, not relabelled. -/
-theorem keyPos_map_key (f : Nat → Nat) (hf : ∀ a b, f a = f b → a = b)
+theorem keyPos_map_key (f : Nat → Nat) (hf : Function.Injective f)
     (key : List Nat) (x : Nat) (hx : x < 52) (hfx : f x < 52) :
     keyPos (key.map f) ⟨f x, hfx⟩ = keyPos key ⟨x, hx⟩ := by
   unfold keyPos
@@ -54,13 +54,8 @@ theorem toDeck_map (f : Nat → Nat) (g : Fin 52 → Nat) :
   · intro i h1 h2
     simp [toDeck, Array.getElem_toList, Array.getElem_ofFn]
 
-theorem map_ofNat_inj : ∀ {xs ys : List Nat}, xs.map Int.ofNat = ys.map Int.ofNat → xs = ys
-  | [], [], _ => rfl
-  | x :: xs, y :: ys, h => by
-    simp only [List.map_cons, List.cons.injEq] at h
-    rw [Int.ofNat.inj h.1, map_ofNat_inj h.2]
-  | [], _ :: _, h => by simp at h
-  | _ :: _, [], h => by simp at h
+theorem map_ofNat_inj : ∀ {xs ys : List Nat}, xs.map Int.ofNat = ys.map Int.ofNat → xs = ys :=
+  fun h => List.map_injective_iff.2 (fun _ _ e => Int.ofNat.inj e) h
 
 theorem embed_inj {xs ys : List Nat} (h : Link2.embed xs = Link2.embed ys) : xs = ys := by
   have := congrArg Array.toList h

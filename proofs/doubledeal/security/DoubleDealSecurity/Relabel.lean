@@ -84,6 +84,14 @@ def CardsG (g : Grid Nat) : Prop := ∀ r c, g r c < 52
 /-- A well-formed deck: 52 distinct card values. -/
 def IsDeck (m : Fin 52 → Nat) : Prop := Cards m ∧ Function.Injective m
 
+/-- A deck as a permutation of `Fin 52`. -/
+noncomputable def deckPerm (d : Fin 52 → Nat) (hd : IsDeck d) : Equiv.Perm (Fin 52) :=
+  Equiv.ofBijective (fun i => ⟨d i, hd.1 i⟩)
+    (Finite.injective_iff_bijective.1 (fun _ _ h => hd.2 (congrArg Fin.val h)))
+
+@[simp] theorem deckPerm_val (d : Fin 52 → Nat) (hd : IsDeck d) (i : Fin 52) :
+    (deckPerm d hd i).val = d i := rfl
+
 /-- `σ` commutes with a deck map on every card-valued deck. -/
 def Commutes (σ : Relabel) (F : (Fin 52 → Nat) → (Fin 52 → Nat)) : Prop :=
   ∀ m, Cards m → F (rel σ m) = rel σ (F m)

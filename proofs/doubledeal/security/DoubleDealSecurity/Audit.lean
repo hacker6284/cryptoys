@@ -4,7 +4,9 @@
   (Root = DoubleDealSecurity) and `AxiomsHeavy.lean` (Root = DoubleDealSecurityHeavy);
   then an ERROR for every `.lean` file under `Root/` that this environment did not
   load (so an unimported module cannot escape the audit; errors cannot be spoofed
-  by printed output). Must run from the package directory. Parsed by `../check_axioms.py`.
+  by printed output), and an ERROR `DUP n` for every name declared under `Root` that
+  more than one module declares (see below). Must run from the package directory.
+  Parsed by `../check_axioms.py`.
 -/
 import Lean
 
@@ -38,3 +40,23 @@ elab "#audit_all " root:ident : command => do
     let m := comps.foldl (fun acc c => Name.str acc c) Name.anonymous
     unless loaded.contains m do
       logError m!"module {m} is not imported by {root}.lean (the audit never loaded it)"
+  -- every name declared under `<root>` must have exactly one declaring module.
+  -- Lean 4.14 silently merges an identical theorem imported from two modules, so the
+  -- constant table cannot show this; each module's `constNames` still lists it. The
+  -- other owner may be outside the roots (an identical redeclaration of a Mathlib or
+  -- core name). Skipped: private names (module-local, cannot collide) and reserved
+  -- (auto-generated) names, which several modules may generate on demand for the same
+  -- definition.
+  let mods := env.header.moduleNames.zip env.header.moduleData
+  let mut mine : NameSet := {}
+  for (mod, d) in mods do
+    if mod.getRoot == root then
+      for n in d.constNames do
+        unless isPrivateName n || isReservedName env n do mine := mine.insert n
+  let mut owners : NameMap (Array Name) := {}
+  for (mod, d) in mods do
+    for n in d.constNames do
+      if mine.contains n then owners := owners.insert n ((owners.findD n #[]).push mod)
+  for (n, ms) in owners do
+    if ms.size > 1 then
+      logError m!"DUP {n}: declared in more than one module: {", ".intercalate ((ms.qsort Name.lt).toList.map toString)}"

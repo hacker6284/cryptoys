@@ -670,11 +670,225 @@ theorem rho_prod_le_A3 (τ : Relabel) (h : nStar τ ≤ 12) (π : Equiv.Perm (Fi
     have : ((1 : ℚ) / 3) ^ 4 = 1 / 81 := by norm_num
     linarith
 
+/-! ### Helpers for (A1): two-card position counts -/
+
+/-- All ordered pairs of distinct seats carry the same number of decks with
+    `a` at the first seat and `b` at the second (right-multiply by a seat perm). -/
+theorem pairCount_eq (a b p q p' q' : Fin 52) (hpq : p ≠ q) (hpq' : p' ≠ q') :
+    (univ.filter fun π : Equiv.Perm (Fin 52) => π p = a ∧ π q = b).card =
+      (univ.filter fun π : Equiv.Perm (Fin 52) => π p' = a ∧ π q' = b).card := by
+  obtain ⟨σ, hσ1, hσ2⟩ := exists_perm_two p' q' p q hpq' hpq
+  have hi1 : σ⁻¹ p = p' := Equiv.Perm.inv_eq_iff_eq.2 hσ1.symm
+  have hi2 : σ⁻¹ q = q' := Equiv.Perm.inv_eq_iff_eq.2 hσ2.symm
+  apply card_nbij' (fun π => π * σ) (fun π => π * σ⁻¹)
+  · intro π hπ
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and,
+      Equiv.Perm.mul_apply] at hπ ⊢
+    rw [hσ1, hσ2]; exact hπ
+  · intro π hπ
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and,
+      Equiv.Perm.mul_apply] at hπ ⊢
+    rw [hi1, hi2]; exact hπ
+  · intro π _; simp [mul_assoc]
+  · intro π _; simp [mul_assoc]
+
+/-- Fibre count over the seats of two distinct cards `a ≠ b`. -/
+theorem card_seat_pairs (a b : Fin 52) (hab : a ≠ b) (R : Fin 52 → Fin 52 → Prop)
+    [∀ p q, Decidable (R p q)] (hR : ∀ p q, R p q → p ≠ q) :
+    (univ.filter fun π : Equiv.Perm (Fin 52) => R (π⁻¹ a) (π⁻¹ b)).card =
+      (univ.filter fun x : Fin 52 × Fin 52 => R x.1 x.2).card *
+        (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = a ∧ π 1 = b).card := by
+  rw [card_eq_sum_card_fiberwise (f := fun π : Equiv.Perm (Fin 52) => (π⁻¹ a, π⁻¹ b))
+    (t := univ.filter fun x : Fin 52 × Fin 52 => R x.1 x.2)]
+  · rw [← smul_eq_mul, ← sum_const]
+    apply sum_congr rfl
+    intro x hx
+    simp only [mem_filter, mem_univ, true_and] at hx
+    rw [← pairCount_eq a b x.1 x.2 0 1 (hR _ _ hx) (by decide)]
+    apply congrArg card
+    ext π
+    simp only [mem_filter, mem_univ, true_and, Prod.ext_iff]
+    constructor
+    · rintro ⟨-, h1, h2⟩
+      exact ⟨(Equiv.Perm.inv_eq_iff_eq.1 h1).symm, (Equiv.Perm.inv_eq_iff_eq.1 h2).symm⟩
+    · rintro ⟨h1, h2⟩
+      have e1 : π⁻¹ a = x.1 := Equiv.Perm.inv_eq_iff_eq.2 h1.symm
+      have e2 : π⁻¹ b = x.2 := Equiv.Perm.inv_eq_iff_eq.2 h2.symm
+      exact ⟨by rw [e1, e2]; exact hx, e1, e2⟩
+  · intro π hπ
+    simpa only [mem_filter, mem_univ, true_and] using hπ
+
+theorem card_filter_prod (R : Fin 52 → Fin 52 → Prop) [∀ p q, Decidable (R p q)] :
+    (univ.filter fun x : Fin 52 × Fin 52 => R x.1 x.2).card =
+      ∑ p, (univ.filter fun q => R p q).card := by
+  simp only [card_eq_sum_ones, sum_filter]
+  exact Fintype.sum_prod_type _
+
+theorem card_other_rows : ∀ r : Fin 4,
+    (univ.filter fun q : Fin 52 => ¬ r.val = q.val % 4).card = 39 := by decide
+
+theorem card_diffRow_pairs :
+    (univ.filter fun x : Fin 52 × Fin 52 => ¬ x.1.val % 4 = x.2.val % 4).card = 2028 := by
+  refine (card_filter_prod (fun p q : Fin 52 => ¬ p.val % 4 = q.val % 4)).trans ?_
+  have : ∀ p : Fin 52, (univ.filter fun q : Fin 52 => ¬ p.val % 4 = q.val % 4).card = 39 :=
+    fun p => card_other_rows (cmRow p)
+  simp only [this, sum_const, card_univ, Fintype.card_fin, smul_eq_mul]
+
+theorem card_ne_pairs :
+    (univ.filter fun x : Fin 52 × Fin 52 => x.1 ≠ x.2).card = 2652 := by
+  refine (card_filter_prod (fun p q : Fin 52 => p ≠ q)).trans ?_
+  have : ∀ p : Fin 52, (univ.filter fun q : Fin 52 => p ≠ q).card = 51 := by
+    intro p
+    rw [filter_ne, card_erase_of_mem (mem_univ _), card_univ, Fintype.card_fin]
+  simp only [this, sum_const, card_univ, Fintype.card_fin, smul_eq_mul]
+
+/-- A row whose cards all have `δ = v` except one has `D ≠ 0`, hence `ρ = 1/13`. -/
+theorem rho_of_single (τ : Relabel) (x : Fin 13 → Fin 52) (v : ZMod 13) (i₁ : Fin 13)
+    (h : ∀ j, j ≠ i₁ → delta τ (x j) = v) (hne : delta τ (x i₁) ≠ v) : rho τ x = 1 / 13 := by
+  have hD : rowD τ x ≠ 0 := by
+    have e : ∑ j, (delta τ (x j) - v) = delta τ (x i₁) - v :=
+      Fintype.sum_eq_single i₁ fun j hj => by rw [h j hj, sub_self]
+    rw [sum_sub_distrib, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul] at e
+    have h13 : ((13 : ℕ) : ZMod 13) = 0 := by decide
+    rw [h13, zero_mul, sub_zero] at e
+    unfold rowD; rw [e]; exact sub_ne_zero.2 hne
+  unfold rho; rw [if_pos hD]
+
+theorem rowOf_ne_of_row (π : Equiv.Perm (Fin 52)) (r : Fin 4) (j : Fin 13) (p : Fin 52)
+    (hr : r.val ≠ p.val % 4) : rowOf π r j ≠ π p := by
+  intro e
+  simp only [rowOf] at e
+  have := congrArg Fin.val (π.injective e)
+  simp only [cmFlat] at this
+  have := r.isLt
+  omega
+
+/-- Pointwise (A1) bound: `0` if the two off cards share a row, else `1/169`. -/
+theorem rho_prod_le_A1 (τ : Relabel) (v u : ZMod 13) (hu : u ≠ 0) (c₁ c₂ : Fin 52)
+    (h12 : c₁ ≠ c₂) (h1 : delta τ c₁ = v + u) (h2 : delta τ c₂ = v - u)
+    (hoff : ∀ c, c ≠ c₁ → c ≠ c₂ → delta τ c = v) (π : Equiv.Perm (Fin 52)) :
+    ∏ r, rho τ (rowOf π r) ≤
+      if (π⁻¹ c₁).val % 4 = (π⁻¹ c₂).val % 4 then 0 else 1 / 169 := by
+  classical
+  have e₁ : π (π⁻¹ c₁) = c₁ := by simp
+  have e₂ : π (π⁻¹ c₂) = c₂ := by simp
+  have hu1 : v + u ≠ v := fun e => hu (by linear_combination e)
+  have hu2 : v - u ≠ v := fun e => hu (by linear_combination -e)
+  split_ifs with hs
+  · set r := cmRow (π⁻¹ c₁)
+    have hr1 : (π⁻¹ c₁).val % 4 = r.val := rfl
+    have hr2 : (π⁻¹ c₂).val % 4 = r.val := by rw [← hs]; rfl
+    apply le_of_eq
+    apply prod_eq_zero (mem_univ r)
+    have x1 : rowOf π r (cmCol (π⁻¹ c₁)) = c₁ := by
+      simp only [rowOf]; rw [cmFlat_row_col _ r hr1, e₁]
+    have x2 : rowOf π r (cmCol (π⁻¹ c₂)) = c₂ := by
+      simp only [rowOf]; rw [cmFlat_row_col _ r hr2, e₂]
+    have hne : cmCol (π⁻¹ c₁) ≠ cmCol (π⁻¹ c₂) := fun e => h12 (by rw [← x1, ← x2, e])
+    refine rho_eq_zero_of_cancel τ _ v u hu _ _ hne (by rw [x1, h1]) (by rw [x2, h2]) ?_
+    intro i hi1 hi2
+    apply hoff
+    · rw [← x1]; exact fun e => hi1 (rowOf_injective π r e)
+    · rw [← x2]; exact fun e => hi2 (rowOf_injective π r e)
+  · set r₁ := cmRow (π⁻¹ c₁)
+    set r₂ := cmRow (π⁻¹ c₂)
+    have hr1 : (π⁻¹ c₁).val % 4 = r₁.val := rfl
+    have hr2 : (π⁻¹ c₂).val % 4 = r₂.val := rfl
+    have hr12 : r₁ ≠ r₂ := fun e => hs (by rw [hr1, hr2, e])
+    have x1 : rowOf π r₁ (cmCol (π⁻¹ c₁)) = c₁ := by
+      simp only [rowOf]; rw [cmFlat_row_col _ r₁ hr1, e₁]
+    have x2 : rowOf π r₂ (cmCol (π⁻¹ c₂)) = c₂ := by
+      simp only [rowOf]; rw [cmFlat_row_col _ r₂ hr2, e₂]
+    have hb : ∀ r, rho τ (rowOf π r) ≤
+        (if r = r₁ then 1 / 13 else 1) * (if r = r₂ then 1 / 13 else 1) := by
+      intro r
+      by_cases h1r : r = r₁
+      · subst h1r
+        rw [if_pos rfl, if_neg hr12, mul_one]
+        apply le_of_eq
+        refine rho_of_single τ _ v (cmCol (π⁻¹ c₁)) ?_ (by rw [x1, h1]; exact hu1)
+        intro j hj
+        apply hoff
+        · rw [← x1]; exact fun e => hj (rowOf_injective π _ e)
+        · rw [← e₂]
+          exact rowOf_ne_of_row π _ j _ (by rw [← hr1]; exact hs)
+      · by_cases h2r : r = r₂
+        · subst h2r
+          rw [if_neg h1r, if_pos rfl, one_mul]
+          apply le_of_eq
+          refine rho_of_single τ _ v (cmCol (π⁻¹ c₂)) ?_ (by rw [x2, h2]; exact hu2)
+          intro j hj
+          apply hoff
+          · rw [← e₁]
+            exact rowOf_ne_of_row π _ j _ (by rw [← hr2]; exact fun e => hs e.symm)
+          · rw [← x2]; exact fun e => hj (rowOf_injective π _ e)
+        · rw [if_neg h1r, if_neg h2r, mul_one]; exact rho_le_one τ _
+    calc ∏ r, rho τ (rowOf π r)
+        ≤ ∏ r, (if r = r₁ then (1 : ℚ) / 13 else 1) * (if r = r₂ then 1 / 13 else 1) :=
+          prod_le_prod (fun r _ => rho_nonneg τ _) (fun r _ => hb r)
+      _ = 1 / 169 := by
+          rw [prod_mul_distrib, prod_ite_eq' univ r₁ (fun _ => (1 : ℚ) / 13),
+            prod_ite_eq' univ r₂ (fun _ => (1 : ℚ) / 13), if_pos (mem_univ _),
+            if_pos (mem_univ _)]
+          norm_num
+
 /-- **(A1)** (PROOF.md §3): `n* = 50` gives `Σ ≤ 52!/221` (the two off cards
     are `v* ± u`; same row: `ρ = 0` by `rho_eq_zero_of_cancel`; different rows:
     `1/13` each; probability of different rows `39/51`). -/
 theorem caseA1 (τ : Relabel) (h : nStar τ = 50) : 221 * rhoSum τ ≤ (Nat.factorial 52 : ℕ) := by
-  sorry
+  classical
+  obtain ⟨v, hv⟩ := exists_vStar τ
+  rw [h] at hv
+  have hO : (univ.filter fun c => ¬ delta τ c = v).card = 2 := by
+    have := filter_card_add_filter_neg_card_eq_card (s := (univ : Finset (Fin 52)))
+      (fun c => delta τ c = v)
+    have e : (univ.filter fun c => delta τ c = v).card = 50 := hv
+    rw [e, card_univ, Fintype.card_fin] at this
+    omega
+  obtain ⟨c₁, c₂, h12, hc⟩ := card_eq_two.1 hO
+  have hmem : ∀ c, c ∈ univ.filter (fun c => ¬ delta τ c = v) ↔ c ∈ ({c₁, c₂} : Finset _) :=
+    fun c => by rw [hc]
+  simp only [mem_filter, mem_univ, true_and, mem_insert, mem_singleton] at hmem
+  have hoff : ∀ c, c ≠ c₁ → c ≠ c₂ → delta τ c = v := by
+    intro c h1 h2
+    by_contra hne
+    rcases (hmem c).1 hne with e | e
+    · exact h1 e
+    · exact h2 e
+  have hd1 : delta τ c₁ ≠ v := (hmem c₁).2 (Or.inl rfl)
+  have hs : ∑ c, (delta τ c - v) = (delta τ c₁ - v) + (delta τ c₂ - v) :=
+    Fintype.sum_eq_add c₁ c₂ h12 fun c hc => by rw [hoff c hc.1 hc.2, sub_self]
+  rw [sum_sub_distrib, sum_delta, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul] at hs
+  have h52 : ((52 : ℕ) : ZMod 13) = 0 := by decide
+  rw [h52, zero_mul, sub_zero] at hs
+  obtain ⟨u, hu_def⟩ : ∃ u, u = delta τ c₁ - v := ⟨_, rfl⟩
+  have hu : u ≠ 0 := by rw [hu_def]; exact sub_ne_zero.2 hd1
+  have e1 : delta τ c₁ = v + u := by linear_combination (-1 : ZMod 13) * hu_def
+  have e2 : delta τ c₂ = v - u := by linear_combination (-1 : ZMod 13) * hs + hu_def
+  have hpt := rho_prod_le_A1 τ v u hu c₁ c₂ h12 e1 e2 hoff
+  unfold rhoSum
+  have hsum := sum_le_sum fun π (_ : π ∈ (univ : Finset (Equiv.Perm (Fin 52)))) => hpt π
+  have hite : ∀ π : Equiv.Perm (Fin 52),
+      (if (π⁻¹ c₁).val % 4 = (π⁻¹ c₂).val % 4 then (0 : ℚ) else 1 / 169) =
+        1 / 169 * (if ¬ (π⁻¹ c₁).val % 4 = (π⁻¹ c₂).val % 4 then 1 else 0) := by
+    intro π; split_ifs <;> simp
+  rw [sum_congr rfl fun π _ => hite π, ← mul_sum, sum_boole] at hsum
+  -- seat-pair counts
+  set K := (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c₁ ∧ π 1 = c₂).card
+  have hdiff := card_seat_pairs c₁ c₂ h12 (fun p q => ¬ p.val % 4 = q.val % 4)
+    (fun p q h e => h (by rw [e]))
+  rw [card_diffRow_pairs] at hdiff
+  have htot := card_seat_pairs c₁ c₂ h12 (fun p q => p ≠ q) (fun _ _ h => h)
+  beta_reduce at htot hdiff
+  have hall : (univ.filter fun π : Equiv.Perm (Fin 52) => π⁻¹ c₁ ≠ π⁻¹ c₂) = univ :=
+    eq_univ_iff_forall.2 fun π => mem_filter.2 ⟨mem_univ _, fun e => h12 (π⁻¹.injective e)⟩
+  rw [card_ne_pairs, hall, card_univ, Fintype.card_perm, Fintype.card_fin] at htot
+  have hdq : ((univ.filter fun π : Equiv.Perm (Fin 52) =>
+      ¬ (π⁻¹ c₁).val % 4 = (π⁻¹ c₂).val % 4).card : ℚ) = 2028 * K := by exact_mod_cast hdiff
+  have htq : ((Nat.factorial 52 : ℕ) : ℚ) = 2652 * K := by exact_mod_cast htot
+  rw [hdq] at hsum
+  rw [htq]
+  linarith
 
 /-- **(A2)** (PROOF.md §3): `13 ≤ n* ≤ 49` gives `Σ ≤ 52! · E_A(n*)`
     (`rho_le_hA` with `v = v*` and `W = cls τ v*`, then `hyper_rows`, since the

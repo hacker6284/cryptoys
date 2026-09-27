@@ -1,0 +1,24 @@
+name = "DoubleDealSecurity"
+version = "0.1.0"
+defaultTargets = ["DoubleDealSecurity", "DoubleDealSecurityLink"]
+
+# Security theorems (T1+). The refinement package (../lean) and its Generated/
+# dependency stay dependency-free; they are only imported here.
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.14.0"
+
+[[require]]
+name = "DoubleDeal"
+path = "../lean"
+
+# Mathlib side: Equiv.Perm relabellings vs the algebraic layers.
+[[lean_lib]]
+name = "DoubleDealSecurity"
+
+# Mathlib-free side: Link 2 transfer (imports DoubleDeal.Concrete / Link2,
+# whose PassKey shims clash with Mathlib's Function.LeftInverse).
+[[lean_lib]]
+name = "DoubleDealSecurityLink"

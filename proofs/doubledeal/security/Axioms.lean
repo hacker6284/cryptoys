@@ -1,0 +1,42 @@
+/-
+  Axiom audit, Mathlib side (`DoubleDealSecurity`). Run by check_axioms.py.
+  While T1 is a draft, the DRAFT-SORRY theorems report `sorryAx` and the gate
+  fails on purpose.
+-/
+import DoubleDealSecurity
+import DoubleDealSecurity.V8Vectors
+
+-- Proved
+#print axioms DoubleDeal.Security.compose_commutes
+#print axioms DoubleDeal.Security.shiftRows_commutes
+#print axioms DoubleDeal.Security.sumRanks_commutes_of_shift
+#print axioms DoubleDeal.Security.v8_shift_iff_rank_preserving
+#print axioms DoubleDeal.Security.v8_sumRanks_commutes_of_rank_preserving
+#print axioms DoubleDeal.Security.v9_shift_iff
+#print axioms DoubleDeal.Security.seat2_inj
+#print axioms DoubleDeal.Security.mixColumns_KC_KD_fails
+#print axioms DoubleDeal.Security.mixColumns_KC_KS_fails
+#print axioms DoubleDeal.Security.v8_mixColumns_KC_KD_fails
+#print axioms DoubleDeal.Security.fullRound_commutes
+#print axioms DoubleDeal.Security.encryptN_commutes
+#print axioms DoubleDeal.Security.v8_rank_preserving_commutes_except_gridCycle
+#print axioms DoubleDeal.Security.v8_same_rank_swap_commutes_except_gridCycle
+#print axioms DoubleDeal.Security.swap_KC_KD_app
+#print axioms DoubleDeal.Security.V8Vectors.mix_columns_identity
+#print axioms DoubleDeal.Security.V8Vectors.mix_columns_reverse
+#print axioms DoubleDeal.Security.V8Vectors.mix_columns_mul17
+#print axioms DoubleDeal.Security.V8Vectors.sum_ranks_mul17
+#print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_identity
+#print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_reverse
+#print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_mul17
+
+-- Draft (rest on DRAFT-SORRY lemmas)
+#print axioms DoubleDeal.Security.sumRanks_commutes_iff
+#print axioms DoubleDeal.Security.v9_sumRanks_commutes_iff
+#print axioms DoubleDeal.Security.v9_no_swap_commutes_sumRanks
+#print axioms DoubleDeal.Security.mixColumns_rel_iff_walk
+#print axioms DoubleDeal.Security.mixColumns_commutes_iff_id
+#print axioms DoubleDeal.Security.v8_mixColumns_commutes_iff_id
+#print axioms DoubleDeal.Security.fullRound_not_commutes_of_stem
+#print axioms DoubleDeal.Security.fullRound_commutes_iff_id
+#print axioms DoubleDeal.Security.encrypt6_commutes_iff_id

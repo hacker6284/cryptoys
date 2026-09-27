@@ -188,7 +188,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: No admit / native_decide; sorry only in the allowlisted conjecture
+      - name: No admit / native_decide / sorryAx / axiom; sorry only in the allowlisted conjecture
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py
       - name: V8Vectors.lean matches frozen v8 JSON
         run: python3 proofs/doubledeal/security/checks/gen_v8_vectors.py --check
@@ -197,24 +197,13 @@ jobs:
           python3 proofs/doubledeal/security/checks/selftest.py
           python3 proofs/doubledeal/security/checks/check_relabel.py
           python3 proofs/doubledeal/security/checks/check_covariant.py
-      - name: Install elan
-        run: |
-          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
-          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
-      - name: Cache Lake packages (Mathlib and friends)
-        uses: actions/cache@v4
+      - uses: leanprover/lean-action@v1
         with:
-          path: proofs/doubledeal/security/.lake/packages
-          key: dd-security-${{ runner.os }}-${{ hashFiles('proofs/doubledeal/security/lake-manifest.json', 'proofs/doubledeal/security/lean-toolchain') }}
-      - name: Fetch prebuilt Mathlib (never build it from source)
+          lake-package-directory: proofs/doubledeal/security
+          use-mathlib-cache: true  # prebuilt Mathlib; never build it from source
+      - name: Axiom audit of every DoubleDealSecurity theorem (KNOWN_SORRY allowlist by name)
         working-directory: proofs/doubledeal/security
-        run: lake exe cache get
-      - name: Build (also builds ../lean and Generated as path deps)
-        working-directory: proofs/doubledeal/security
-        run: lake build
-      - name: Axiom audit (standard axioms only; KNOWN_SORRY allowlist by name)
-        working-directory: proofs/doubledeal/security
-        run: python3 check_axioms.py
+        run: python3 ../check_axioms.py security
 
   megadreifach-lean:
     runs-on: ubuntu-latest

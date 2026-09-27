@@ -1,68 +1,29 @@
 /-
-  Axiom audit, Mathlib side (`DoubleDealSecurity`). Run by check_axioms.py.
-  The three theorems under "Draft" are the open conjecture
-  `fullRound_covariant_iff_id` and the two theorems that rest on it; they report
-  `sorryAx`, which check_axioms.py allows for exactly these names (KNOWN_SORRY)
-  and nothing else.
+  Axiom audit, Mathlib side. Run by `python3 ../check_axioms.py security`.
+
+  Prints the axioms of EVERY theorem declared in a `DoubleDealSecurity.*`
+  module (no hand-written list). The checker allows only propext,
+  Classical.choice and Quot.sound, except that the theorems named in its
+  KNOWN_SORRY set (the open conjecture `roundBody_covariant_iff_id` and the two
+  theorems that rest on it) may also use `sorryAx`. Any other axiom, any other
+  theorem using `sorryAx`, an `axiom` declared in the package (used or not), or
+  a stale KNOWN_SORRY entry fails.
 -/
 import DoubleDealSecurity
 
--- Proved
-#print axioms DoubleDeal.Security.compose_commutes
-#print axioms DoubleDeal.Security.shiftRows_commutes
-#print axioms DoubleDeal.Security.sumRanks_commutes_of_shift
-#print axioms DoubleDeal.Security.v8_shift_iff_rank_preserving
-#print axioms DoubleDeal.Security.v8_sumRanks_commutes_of_rank_preserving
-#print axioms DoubleDeal.Security.v9_shift_iff
-#print axioms DoubleDeal.Security.seat2_inj
-#print axioms DoubleDeal.Security.mixColumns_KC_KD_fails
-#print axioms DoubleDeal.Security.mixColumns_KC_KS_fails
-#print axioms DoubleDeal.Security.v8_mixColumns_KC_KD_fails
-#print axioms DoubleDeal.Security.fullRound_commutes
-#print axioms DoubleDeal.Security.encryptN_commutes
-#print axioms DoubleDeal.Security.v8_rank_preserving_commutes_except_gridCycle
-#print axioms DoubleDeal.Security.v8_same_rank_swap_commutes_except_gridCycle
-#print axioms DoubleDeal.Security.swap_KC_KD_app
-#print axioms DoubleDeal.Security.V8Vectors.mix_columns_identity
-#print axioms DoubleDeal.Security.V8Vectors.mix_columns_reverse
-#print axioms DoubleDeal.Security.V8Vectors.mix_columns_mul17
-#print axioms DoubleDeal.Security.V8Vectors.sum_ranks_mul17
-#print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_identity
-#print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_reverse
-#print axioms DoubleDeal.Security.V8Vectors.unkeyed_full_mul17
-#print axioms DoubleDeal.Security.sumRanks_commutes_iff
-#print axioms DoubleDeal.Security.v9_sumRanks_commutes_iff
-#print axioms DoubleDeal.Security.v9_no_swap_commutes_sumRanks
-#print axioms DoubleDeal.Security.sumRanks_shift_of_commutes
-#print axioms DoubleDeal.Security.mixColumns_rel_iff_walk
-#print axioms DoubleDeal.Security.mixColumns_commutes_iff_id
-#print axioms DoubleDeal.Security.v8_mixColumns_commutes_iff_id
-#print axioms DoubleDeal.Security.walkW_rel_iff
-#print axioms DoubleDeal.Security.walkW_only_id
-#print axioms DoubleDeal.Security.seatW_surj
-#print axioms DoubleDeal.Security.V8.seat2_eq
-#print axioms DoubleDeal.Security.v8_mixColumns_KC_KS_fails
-#print axioms DoubleDeal.Security.firstDeck_isDeck
-#print axioms DoubleDeal.Security.fullRound_not_commutes_of_stem
-#print axioms DoubleDeal.Security.unkeyedNoMix_onto_decks
-#print axioms DoubleDeal.Security.unkeyedNoMix_invUnkeyedNoMix
-#print axioms DoubleDeal.Security.encrypt6_constKey
-#print axioms DoubleDeal.Security.round_of_encrypt6_constKey
-#print axioms DoubleDeal.Security.fullRound_not_covariant_of_stem
-#print axioms DoubleDeal.Security.isDeck_unkeyedNoMix
-#print axioms DoubleDeal.Security.isDeck_mixColumns
-#print axioms DoubleDeal.Security.tail_injective
-#print axioms DoubleDeal.Security.round_covariant_of_encrypt6
-#print axioms DoubleDeal.Security.encrypt6_not_commutes_of_stem
-#print axioms DoubleDeal.Security.encrypt6_not_commutes_v9Sym
+open Lean Elab Command in
+elab "#audit_all" : command => do
+  let env ← getEnv
+  for (n, ci) in env.constants.toList do
+    let some i := env.getModuleIdxFor? n | continue
+    unless (env.header.moduleNames[i.toNat]!).getRoot == `DoubleDealSecurity do continue
+    -- compiler auxiliaries (`_elambda`, `_spec`, ...) are internal names
+    if n.isInternal then continue
+    if ci matches .axiomInfo _ then
+      logInfo m!"'{n}' is an axiom declared in the package"
+      continue
+    unless ci matches .thmInfo _ do continue
+    let axs ← collectAxioms n
+    logInfo m!"'{n}' depends on axioms: {axs.toList}"
 
--- Link 2 transfer (emitted encrypt)
-#print axioms DoubleDeal.Security.keyPos_relabel_key
-#print axioms DoubleDeal.Security.generated_encrypt_relabel_iff
-#print axioms DoubleDeal.Security.encryptDeck_KC_KD_not_equivariant
-#print axioms DoubleDeal.Security.generated_encrypt_not_relabel_equivariant
-
--- Draft (rest on DRAFT-SORRY lemmas)
-#print axioms DoubleDeal.Security.fullRound_covariant_iff_id
-#print axioms DoubleDeal.Security.fullRound_commutes_iff_id
-#print axioms DoubleDeal.Security.encrypt6_commutes_iff_id
+#audit_all

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""CI gate for the security package: no admit / native_decide anywhere, and
+"""CI gate for the security package: no admit / native_decide / sorryAx / axiom
+declarations anywhere, and
 `sorry` only inside the listed known conjectures (by declaration name).
 
 The allowlist must match exactly: a new sorry fails, and so does a listed
 conjecture that no longer contains one (then remove it here and from
-KNOWN_SORRY in check_axioms.py).
+KNOWN_SORRY in ../check_axioms.py).
 """
 import re
 import sys
@@ -12,7 +13,7 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent
 # Known open conjectures (DRAFT-SORRY). Each must contain exactly one sorry.
-ALLOWED_SORRY = {"fullRound_covariant_iff_id"}
+ALLOWED_SORRY = {"roundBody_covariant_iff_id"}
 
 DECL = re.compile(
     r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable|partial)\s+)*"
@@ -37,8 +38,10 @@ def main() -> int:
             m = DECL.match(code)
             if m:
                 decl = (m.group(1) or "<anonymous>").split(".")[-1]
-            if re.search(r"\b(admit|native_decide)\b", code):
-                bad.append(f"{path}:{i}: admit/native_decide: {line.strip()}")
+            if re.search(r"\b(admit|native_decide|sorryAx)\b", code):
+                bad.append(f"{path}:{i}: admit/native_decide/sorryAx: {line.strip()}")
+            if re.match(r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable)\s+)*axiom\b", code):
+                bad.append(f"{path}:{i}: axiom declaration: {line.strip()}")
             for _ in re.finditer(r"\bsorry\b", code):
                 if decl in ALLOWED_SORRY:
                     found[decl] = found.get(decl, 0) + 1
@@ -48,7 +51,7 @@ def main() -> int:
         n = found.get(name, 0)
         if n != 1:
             bad.append(f"allowlisted conjecture {name}: expected exactly 1 sorry, found {n} "
-                       "(if proved, remove it from ALLOWED_SORRY and KNOWN_SORRY)")
+                       "(if proved, remove it from ALLOWED_SORRY and from KNOWN_SORRY in ../check_axioms.py)")
     if bad:
         print(*bad, sep="\n", file=sys.stderr)
         return 1

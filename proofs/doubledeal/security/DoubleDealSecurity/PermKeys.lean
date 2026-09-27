@@ -9,7 +9,7 @@
   shows: if σ commutes with `encrypt6` for all permutation keys, then the
   unkeyed round body is σ-covariant (`F(σ·m) = τ·F(m)` for one fixed τ). The
   output relabelling τ need not equal σ, which is why the open conjecture is
-  stated in covariant form (`fullRound_covariant_iff_id`).
+  stated in covariant form (`roundBody_covariant_iff_id`).
 
   Scope: keys are independent `Equiv.Perm (Fin 52)` per round. That is a
   superset of the round keys a real key schedule (`expand_keys` of one master
@@ -237,7 +237,7 @@ theorem round_covariant_of_encrypt6 (σ : Relabel)
 theorem encrypt6_commutes_iff_id (σ : Relabel) :
     (∀ k0 kMix kF, CommutesOnDecks σ (fun m => encrypt6P m k0 kMix kF)) ↔ σ.IsId := by
   constructor
-  · intro h; exact (fullRound_covariant_iff_id σ).1 (round_covariant_of_encrypt6 σ h)
+  · intro h; exact (roundBody_covariant_iff_id σ).1 (round_covariant_of_encrypt6 σ h)
   · intro hid _ _ _ m _
     unfold IsId at hid; subst hid
     simp only [rel_one]
@@ -248,7 +248,7 @@ theorem encrypt6_commutes_iff_id (σ : Relabel) :
 theorem encrypt6_not_commutes_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
     (hs : CommutesG σ sumRanksV9) :
     ¬ ∀ k0 kMix kF, CommutesOnDecks σ (fun m => encrypt6P m k0 kMix kF) :=
-  fun h => fullRound_not_covariant_of_stem σ hid hs (round_covariant_of_encrypt6 σ h)
+  fun h => roundBody_not_covariant_of_stem σ hid hs (round_covariant_of_encrypt6 σ h)
 
 /-- (PROVED) The 51 nontrivial `v9Sym a b` (e.g. the suit rotation `v9Sym 0 1`):
     for each there are permutation round keys and a deck with

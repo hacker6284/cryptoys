@@ -1144,7 +1144,7 @@ theorem mixColumns_at_AS (h : Fin 52 → Nat) :
 /-- (PROVED) If σ ≠ id commutes with the v9 stem (σ is a nontrivial `v9Sym`),
     the round body is not σ-covariant for any τ: the first card sits at `AS`,
     which forces τ = σ, and then GridCycle would commute with σ. -/
-theorem fullRound_not_covariant_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
+theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
     (hs : CommutesG σ sumRanksV9) : ¬ Covariant σ unkeyedWithMix := by
   rintro ⟨τ, hτ⟩
   apply hid
@@ -1168,7 +1168,7 @@ theorem fullRound_not_covariant_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
     Checked (`checks/check_covariant.py`, log committed): all 1,326
     transpositions, all 51 nontrivial `v9Sym` and 200 random σ are
     non-covariant, for v8 and v9. The `v9Sym` cases are proved
-    (`fullRound_not_covariant_of_stem`).
+    (`roundBody_not_covariant_of_stem`).
 
     Assessment: the other σ already fail at SumRanks, but a failing layer
     inside a composite does not by itself make the composite fail. Covariance
@@ -1180,7 +1180,7 @@ theorem fullRound_not_covariant_of_stem (σ : Relabel) (hid : ¬ σ.IsId)
     but with one cell and the column sum depending on the row rotations; the
     remaining cells interleave two different walks. Effort: uncertain,
     ~1–2 weeks. Not attempted further. -/
-theorem fullRound_covariant_iff_id (σ : Relabel) :
+theorem roundBody_covariant_iff_id (σ : Relabel) :
     Covariant σ unkeyedWithMix ↔ σ.IsId := by
   constructor
   · intro h
@@ -1195,7 +1195,7 @@ theorem fullRound_commutes_iff_id (σ : Relabel) :
     (∀ pos, CommutesOnDecks σ (fun m => fullRound m pos)) ↔ σ.IsId := by
   constructor
   · intro h
-    exact (fullRound_covariant_iff_id σ).1 ⟨σ, fun m hm => h id m hm⟩
+    exact (roundBody_covariant_iff_id σ).1 ⟨σ, fun m hm => h id m hm⟩
   · intro hid _ m _
     unfold IsId at hid; subst hid
     simp only [rel_one]

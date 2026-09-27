@@ -13,8 +13,9 @@ path dependency.
 
 ## Layout
 
-One library, `DoubleDealSecurity`, about relabellings `σ : Equiv.Perm (Fin 52)`
-of card values:
+One library, `DoubleDealSecurity`. Most of it is about relabellings
+`σ : Equiv.Perm (Fin 52)` of card values. `BranchNumber` is separate: the
+trivial branch-number floor on decks, and the GridCycle tail swap that attains it.
 
 | Module | Content |
 |---|---|
@@ -23,6 +24,7 @@ of card values:
 | `SumRanks` | SumRanks commutes iff σ is a constant weight shift; v8 rank-preserving; the 52-element v9 group `v9Sym` |
 | `Walk` | the GridCycle seat walk, generic in the seat chooser |
 | `GridCycle` | GridCycle commutes only with σ = 1 (v9 and the frozen v8 model) |
+| `BranchNumber` | trivial branch-number floor (`≥ 4` for any deck bijection); GridCycle attains it by swapping walk cards 50 and 51 (v9 and the frozen v8 model). Not a wide-trail bound |
 | `Rounds` | lifting to rounds/encrypt; stem onto decks; the conjecture; degenerate-key side lemma |
 | `PermKeys` | encrypt with permutation round keys reduces to the conjecture |
 | `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt`, K♣↔K♦ witness |

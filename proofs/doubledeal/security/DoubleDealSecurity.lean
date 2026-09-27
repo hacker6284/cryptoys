@@ -6,6 +6,7 @@ import DoubleDealSecurity.Relabel
 import DoubleDealSecurity.SumRanks
 import DoubleDealSecurity.Walk
 import DoubleDealSecurity.GridCycle
+import DoubleDealSecurity.BranchNumber
 import DoubleDealSecurity.Rounds
 import DoubleDealSecurity.PermKeys
 import DoubleDealSecurity.Link

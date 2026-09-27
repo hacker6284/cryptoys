@@ -15,7 +15,8 @@
   3. Two decks that differ only in the last card of row 0 give a constant rank
      shift mod 13; two decks that differ only in the top card of column 1 give a
      constant GF(4) suit-label shift. Rank and label determine the card.
-  No `decide!` beyond small finite facts; no `sorry`.
+  No `decide!`; three small `decide`s over Fin 4 (plus trivial numeric side
+  goals); no `sorry`.
 -/
 import DoubleDealSecurity.SumRanksV10
 
@@ -319,10 +320,14 @@ theorem gfAdd_pair_core (V V' R R' la lb la' lb' : Nat) (hV : V < 4) (hV' : V' <
     (E1 : gfAdd V' (gfAdd la' R') = gfAdd V (gfAdd la R))
     (E2 : gfAdd V' (gfAdd lb' R') = gfAdd V (gfAdd lb R)) :
     gfAdd la' la = gfAdd lb' lb := by
-  have F1 := gfAdd_shift_fin ⟨V, hV⟩ ⟨V', hV'⟩ ⟨_, gfAdd_lt la' R'⟩ ⟨_, gfAdd_lt la R⟩ E1
-  have F2 := gfAdd_shift_fin ⟨V, hV⟩ ⟨V', hV'⟩ ⟨_, gfAdd_lt lb' R'⟩ ⟨_, gfAdd_lt lb R⟩ E2
-  have G1 := gfAdd_peel_fin ⟨la', ha'⟩ ⟨R', hR'⟩ ⟨_, gfAdd_lt V V'⟩ ⟨la, ha⟩ ⟨R, hR⟩ F1
-  have G2 := gfAdd_peel_fin ⟨lb', hb'⟩ ⟨R', hR'⟩ ⟨_, gfAdd_lt V V'⟩ ⟨lb, hb⟩ ⟨R, hR⟩ F2
+  have F1 := gfAdd_shift_fin ⟨V, hV⟩ ⟨V', hV'⟩
+    ⟨_, gfAdd_lt la' R'⟩ ⟨_, gfAdd_lt la R⟩ E1
+  have F2 := gfAdd_shift_fin ⟨V, hV⟩ ⟨V', hV'⟩
+    ⟨_, gfAdd_lt lb' R'⟩ ⟨_, gfAdd_lt lb R⟩ E2
+  have G1 := gfAdd_peel_fin ⟨la', ha'⟩ ⟨R', hR'⟩ ⟨_, gfAdd_lt V V'⟩
+    ⟨la, ha⟩ ⟨R, hR⟩ F1
+  have G2 := gfAdd_peel_fin ⟨lb', hb'⟩ ⟨R', hR'⟩ ⟨_, gfAdd_lt V V'⟩
+    ⟨lb, hb⟩ ⟨R, hR⟩ F2
   exact G1.trans G2.symm
 
 theorem colSuits_split (y : Fin 4 → Nat) :

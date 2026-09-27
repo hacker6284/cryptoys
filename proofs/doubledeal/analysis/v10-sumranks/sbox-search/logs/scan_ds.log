@@ -1,0 +1,28 @@
+ds: 62475 differences, N = 20000 decks each (seed 7). Top 25:
+  (AC 7C)(2S KS)                           same      77/20000 = 0.00385
+  (AC 3C)(6C JC)                           same      76/20000 = 0.0038
+  (AC 7C)(7S QS)                           same      74/20000 = 0.0037
+  (AC 6C)(3H 6H)                           same      74/20000 = 0.0037
+  (AC 5C)(AD 7D)                           same      74/20000 = 0.0037
+  (AC 4C)(6H KH)                           same      73/20000 = 0.00365
+  (AC 2C)(6D KD)                           same      73/20000 = 0.00365
+  (AC TC)(6C KC)                           same      72/20000 = 0.0036
+  (AC KC)(2C 8C)                           same      72/20000 = 0.0036
+  (AC 7C)(4H 5H)                           same      72/20000 = 0.0036
+  (AC 3C)(AH JH)                           same      71/20000 = 0.00355
+  (AC 2C)(5S 6S)                           same      71/20000 = 0.00355
+  (AC 2C)(4C KC)                           same      71/20000 = 0.00355
+  (AC QC)(TD JD)                           same      70/20000 = 0.0035
+  (AC KC)(6S 9S)                           same      70/20000 = 0.0035
+  (AC 6C)(AH TH)                           same      70/20000 = 0.0035
+  (AC 3C)(7C KC)                           same      70/20000 = 0.0035
+  (AC TC)(5D 7D)                           same      69/20000 = 0.00345
+  (AC QC)(6C 7C)                           same      69/20000 = 0.00345
+  (AC 8C)(2H TH)                           same      69/20000 = 0.00345
+  (AC 4C)(AS 9S)                           same      69/20000 = 0.00345
+  (AC 3C)(6D QD)                           same      69/20000 = 0.00345
+  (AC QC)(5D JD)                           same      68/20000 = 0.0034
+  (AC 9C)(AH TH)                           same      68/20000 = 0.0034
+  (AC 5C)(4D 5D)                           same      68/20000 = 0.0034
+  histogram of score in units of 1/64 (bucket: count): {0: 62475}
+  number above 1/221: 0  above 1/64: 0

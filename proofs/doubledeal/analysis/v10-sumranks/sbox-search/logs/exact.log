@@ -1,0 +1,5 @@
+  swap 2C<->7C                             exact 1/221 = 0.00452489 = 1/221.0
+  3-cycle AC->2C->3C                       exact 9/1105 = 0.0081448 = 1/122.8
+  3-cycle AC->8C->JC                       exact 9/1105 = 0.0081448 = 1/122.8
+  3-cycle 2C->2H->2S (same rank)           exact 1/850 = 0.00117647 = 1/850.0
+  swap 2C<->2H (same rank)                 exact 0 = 0 = 1/inf

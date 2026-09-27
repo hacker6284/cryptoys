@@ -713,29 +713,6 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         seatHilite.material.opacity = 0.45;
     }
 
-    function rowRanks(row) {
-        const ranks = [];
-        for (let c = 0; c < 13; c++) {
-            const mesh = grid[row][c];
-            if (!mesh) continue;
-            ranks.push((message.indexOf(mesh) % 13) + 1);
-        }
-        return ranks;
-    }
-
-    // A SumRanks column turns by the sum of its cards' rank + suit (♣0 ♥1 ♠2 ♦3).
-    // One {rank, suit} per seated card, top to bottom.
-    function colTerms(col) {
-        const terms = [];
-        for (let r = 0; r < 4; r++) {
-            const mesh = grid[r][col];
-            if (!mesh) continue;
-            const id = message.indexOf(mesh);
-            terms.push({ rank: (id % 13) + 1, suit: Math.floor(id / 13) });
-        }
-        return terms;
-    }
-
     function measure() {
         const messageBoxes = message.map(meshBox);
         const keyBoxes = key.map(meshBox);
@@ -902,8 +879,6 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         highlightSeat,
         highlightCard,
         clearHighlights,
-        rowRanks,
-        colTerms,
         tablePoints,
         teachPoints,
         dispose,

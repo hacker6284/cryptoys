@@ -1,5 +1,5 @@
-// DoubleDeal v9. The rules are primitives/cipher/doubledeal/SPEC.md.
-// v8 is deprecated and frozen under primitives/cipher/doubledeal/v8/.
+// DoubleDeal v10. The rules are primitives/cipher/doubledeal/SPEC.md.
+// v9 and v8 are deprecated and frozen under primitives/cipher/doubledeal/v9/ and v8/.
 // A toy block cipher on a 52-card deck. Not for real use.
 
 func suit_of(c: int) -> int
@@ -73,57 +73,107 @@ func scoop_rm(g: List<List<int>>) -> List<int>
             out.append(g[r][c])
     return out
 
-// A column's turn reads rank + suit; a row's turn reads rank only.
-func column_weight(c: int) -> int
-    return rank_of(c) + suit_of(c)
+// SumRanks reads each card twice: its rank for the rows, its suit for the columns.
+// Rows: a row turns by the index-weighted rank total of the row above it.
+// Columns: suits are the four elements of GF(4), labelled clubs 0, diamonds 1,
+// hearts w = 2, spades w^2 = 3 (two bits each; w^2 = w + 1).
+
+// Weighted rank total of one row: 13 x the first card's rank, 12 x the second,
+// ..., 1 x the last. By hand: two running totals, t += rank, then u += t.
+func row_total(row: List<int>) -> int
+    total = 0
+    for j = 0 to 12
+        total = total + (13 - j) * rank_of(row[j])
+    return total
+
+func row_turn(row: List<int>) -> int
+    return row_total(row) mod 13
+
+// Rows turn in the order 1, 2, 3, 0. Row i turns left by the turn of row
+// i - 1 (row 0 reads row 3) as that row is at the moment.
+func sum_rows(g: List<List<int>>) -> List<List<int>>
+    for a = 1 to 4
+        i = a mod 4
+        g[i] = left_rotate(g[i], row_turn(g[(i + 3) mod 4]))
+    return g
+
+func inv_sum_rows(g: List<List<int>>) -> List<List<int>>
+    for a = 0 to 3
+        i = (4 - a) mod 4
+        g[i] = left_rotate(g[i], 0 - row_turn(g[(i + 3) mod 4]))
+    return g
+
+// Suit label in GF(4): clubs 0, hearts w (2), spades w^2 (3), diamonds 1.
+func suit_label(c: int) -> int
+    s = suit_of(c)
+    if s == 0
+        return 0
+    return (s mod 3) + 1
+
+// GF(4) addition (XOR of the two bits): a pair cancels, clubs change nothing,
+// two different non-club suits make the third.
+func gf_add(a: int, b: int) -> int
+    low = ((a mod 2) + (b mod 2)) mod 2
+    high = ((a / 2) + (b / 2)) mod 2
+    return low + 2 * high
+
+// GF(4) multiplication by w: diamonds -> hearts -> spades -> diamonds; clubs stay.
+func gf_times_w(x: int) -> int
+    if x == 0
+        return 0
+    return (x mod 3) + 1
+
+// Weighted suit value of column p: 0 s0 + 1 s1 + w s2 + w^2 s3 in GF(4)
+// (s_i = label of the card in row i). The four weights are distinct.
+func column_value(g: List<List<int>>, p: int) -> int
+    v = suit_label(g[1][p])
+    v = gf_add(v, gf_times_w(suit_label(g[2][p])))
+    return gf_add(v, gf_times_w(gf_times_w(suit_label(g[3][p]))))
+
+// GF(4) sum of the four suit labels of column j. Turning the column does not change it.
+func column_suits(g: List<List<int>>, j: int) -> int
+    v = gf_add(suit_label(g[0][j]), suit_label(g[1][j]))
+    v = gf_add(v, suit_label(g[2][j]))
+    return gf_add(v, suit_label(g[3][j]))
+
+// Column j's turn: the weighted value of column j - 1 (column 0 reads column 12)
+// plus column j's own suit sum.
+func column_turn(g: List<List<int>>, j: int) -> int
+    return gf_add(column_value(g, (j + 12) mod 13), column_suits(g, j))
+
+// Cycle column j top to bottom by s (s may be negative).
+func turn_column(g: List<List<int>>, j: int, s: int) -> List<List<int>>
+    col: List<int> = []
+    for i = 0 to 3
+        col.append(g[i][j])
+    fresh: List<int> = []
+    for i = 0 to 3
+        fresh.append(col[(i - s) mod 4])
+    for i = 0 to 3
+        row = g[i]
+        row[j] = fresh[i]
+        g[i] = row
+    return g
+
+// Columns turn in the order 1, 2, ..., 12, 0, each reading its left neighbour
+// as that column is at the moment.
+func sum_columns(g: List<List<int>>) -> List<List<int>>
+    for a = 1 to 13
+        j = a mod 13
+        g = turn_column(g, j, column_turn(g, j))
+    return g
+
+func inv_sum_columns(g: List<List<int>>) -> List<List<int>>
+    for a = 0 to 12
+        j = (13 - a) mod 13
+        g = turn_column(g, j, 0 - column_turn(g, j))
+    return g
 
 func sum_ranks(g: List<List<int>>) -> List<List<int>>
-    for i = 0 to 3
-        row = g[i]
-        total = 0
-        for j = 0 to 12
-            total = total + rank_of(row[j])
-        g[i] = left_rotate(row, total mod 13)
-    for j = 0 to 12
-        col: List<int> = []
-        for i = 0 to 3
-            col.append(g[i][j])
-        total = 0
-        for i = 0 to 3
-            total = total + column_weight(col[i])
-        s = total mod 4
-        fresh: List<int> = []
-        for i = 0 to 3
-            fresh.append(col[(i - s) mod 4])
-        for i = 0 to 3
-            row = g[i]
-            row[j] = fresh[i]
-            g[i] = row
-    return g
+    return sum_columns(sum_rows(g))
 
 func inv_sum_ranks(g: List<List<int>>) -> List<List<int>>
-    for j = 0 to 12
-        col: List<int> = []
-        for i = 0 to 3
-            col.append(g[i][j])
-        total = 0
-        for i = 0 to 3
-            total = total + column_weight(col[i])
-        s = total mod 4
-        fresh: List<int> = []
-        for i = 0 to 3
-            fresh.append(col[(i + s) mod 4])
-        for i = 0 to 3
-            row = g[i]
-            row[j] = fresh[i]
-            g[i] = row
-    for i = 0 to 3
-        row = g[i]
-        total = 0
-        for j = 0 to 12
-            total = total + rank_of(row[j])
-        g[i] = left_rotate(row, 0 - (total mod 13))
-    return g
+    return inv_sum_rows(inv_sum_columns(g))
 
 func shift_rows(g: List<List<int>>) -> List<List<int>>
     for i = 0 to 3
@@ -400,31 +450,22 @@ func trace_unpass(deck: List<int>, steps: List<Step>, label: text) -> (List<int>
         steps = add_step(steps, "unpass", label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on)
     return (hand, steps)
 
+// Steps: "sumrow" (row, amount = turn, total = weighted total of the row read,
+// flag = that row); "sumcol" (col, amount = turn, total = weighted value of the
+// column read, flag = own suit sum). Inverse steps carry a negative amount.
 func trace_sum(g: List<List<int>>, steps: List<Step>, label: text) -> (List<List<int>>, List<Step>)
-    for i = 0 to 3
-        row = g[i]
-        total = 0
-        for j = 0 to 12
-            total = total + rank_of(row[j])
+    for a = 1 to 4
+        i = a mod 4
+        above = (i + 3) mod 4
+        total = row_total(g[above])
         amount = total mod 13
-        g[i] = left_rotate(row, amount)
-        steps = add_step(steps, "sumrow", label, no_cards(), no_cards(), no_cards(), i, -1, amount, total, -1, 0)
-    for j = 0 to 12
-        col: List<int> = []
-        for i = 0 to 3
-            col.append(g[i][j])
-        total = 0
-        for i = 0 to 3
-            total = total + column_weight(col[i])
-        amount = total mod 4
-        fresh: List<int> = []
-        for i = 0 to 3
-            fresh.append(col[(i - amount) mod 4])
-        for i = 0 to 3
-            row = g[i]
-            row[j] = fresh[i]
-            g[i] = row
-        steps = add_step(steps, "sumcol", label, no_cards(), no_cards(), no_cards(), -1, j, amount, total, -1, 0)
+        g[i] = left_rotate(g[i], amount)
+        steps = add_step(steps, "sumrow", label, no_cards(), no_cards(), no_cards(), i, -1, amount, total, -1, above)
+    for a = 1 to 13
+        j = a mod 13
+        amount = column_turn(g, j)
+        g = turn_column(g, j, amount)
+        steps = add_step(steps, "sumcol", label, no_cards(), no_cards(), no_cards(), -1, j, amount, column_value(g, (j + 12) mod 13), -1, column_suits(g, j))
     return (g, steps)
 
 func trace_shift(g: List<List<int>>, steps: List<Step>, label: text) -> (List<List<int>>, List<Step>)
@@ -540,30 +581,18 @@ func trace_inv_shift(g: List<List<int>>, steps: List<Step>, label: text) -> (Lis
     return (g, steps)
 
 func trace_inv_sum(g: List<List<int>>, steps: List<Step>, label: text) -> (List<List<int>>, List<Step>)
-    for j = 0 to 12
-        col: List<int> = []
-        for i = 0 to 3
-            col.append(g[i][j])
-        total = 0
-        for i = 0 to 3
-            total = total + column_weight(col[i])
-        s = total mod 4
-        fresh: List<int> = []
-        for i = 0 to 3
-            fresh.append(col[(i + s) mod 4])
-        for i = 0 to 3
-            row = g[i]
-            row[j] = fresh[i]
-            g[i] = row
-        steps = add_step(steps, "sumcol", label, no_cards(), no_cards(), no_cards(), -1, j, 0 - s, total, -1, 0)
-    for i = 0 to 3
-        row = g[i]
-        total = 0
-        for j = 0 to 12
-            total = total + rank_of(row[j])
+    for a = 0 to 12
+        j = (13 - a) mod 13
+        amount = column_turn(g, j)
+        g = turn_column(g, j, 0 - amount)
+        steps = add_step(steps, "sumcol", label, no_cards(), no_cards(), no_cards(), -1, j, 0 - amount, column_value(g, (j + 12) mod 13), -1, column_suits(g, j))
+    for a = 0 to 3
+        i = (4 - a) mod 4
+        above = (i + 3) mod 4
+        total = row_total(g[above])
         amount = total mod 13
-        g[i] = left_rotate(row, 0 - amount)
-        steps = add_step(steps, "sumrow", label, no_cards(), no_cards(), no_cards(), i, -1, 0 - amount, total, -1, 0)
+        g[i] = left_rotate(g[i], 0 - amount)
+        steps = add_step(steps, "sumrow", label, no_cards(), no_cards(), no_cards(), i, -1, 0 - amount, total, -1, above)
     return (g, steps)
 
 func trace_inv_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, List<Step>)
@@ -763,6 +792,13 @@ func sorted_copy(xs: List<int>) -> List<int>
                 out[j + 1] = a
     return out
 
+func swap_card(c: int, x: int, y: int) -> int
+    if c == x
+        return y
+    if c == y
+        return x
+    return c
+
 func same_cards(a: List<int>, b: List<int>) -> bool
     return sorted_copy(a) == sorted_copy(b)
 
@@ -820,22 +856,63 @@ test "passkey inverse is a two-sided inverse"
         built = passkey_inv(built)
     assert built == key
 
-test "sum ranks columns read suit"
+test "suit labels add and multiply in GF(4)"
+    // Aces of clubs, hearts, spades, diamonds: labels 0, w, w^2, 1.
+    assert suit_label(0) == 0
+    assert suit_label(13) == 2
+    assert suit_label(26) == 3
+    assert suit_label(51) == 1
+    for x = 0 to 3
+        assert gf_add(x, x) == 0
+        assert gf_add(0, x) == x
+        assert gf_times_w(gf_times_w(gf_times_w(x))) == x
+    assert gf_add(1, 2) == 3
+    assert gf_add(2, 3) == 1
+    assert gf_add(3, 1) == 2
+    assert gf_times_w(0) == 0
+    assert gf_times_w(1) == 2
+    assert gf_times_w(2) == 3
+    assert gf_times_w(3) == 1
+
+test "row total is the two running totals"
+    row = [5, 30, 12, 44, 0, 19, 38, 7, 25, 51, 13, 2, 33]
+    t = 0
+    u = 0
+    for j = 0 to 12
+        t = t + rank_of(row[j])
+        u = u + t
+    assert row_total(row) == u
+    assert row_turn(row) == u mod 13
+
+test "sum ranks leaves whole-suit rows alone"
     deck: List<int> = []
     for i = 0 to 51
         deck.append(i)
-    g = sum_ranks(lay_rm(deck))
-    // Each row is one whole suit (rank total 91, a multiple of 13: no row turn).
-    // Each column holds four cards of one rank, so a rank-only column total (v8)
-    // is a multiple of 4 and would leave the grid alone. v9 adds the suits,
-    // 0 + 1 + 2 + 3 = 6, so every column turns down by 2.
-    for j = 0 to 12
-        assert g[0][j] == 26 + j
-        assert g[1][j] == 39 + j
-        assert g[2][j] == j
-        assert g[3][j] == 13 + j
-    assert column_weight(51) == rank_of(51) + suit_of(51)
-    assert inv_sum_ranks(g) == lay_rm(deck)
+    g = lay_rm(deck)
+    // Each row is one suit, ranks 1..13 in order: weighted total 455 = 35 x 13,
+    // so no row turns. Every column reads clubs, hearts, spades, diamonds top to
+    // bottom: weighted value 1 w + w w^2 + w^2 1 = w + 1 + w^2 = 0, own sum
+    // 0 + w + w^2 + 1 = 0, so no column turns either (v9 turned each by 2).
+    assert row_total(g[0]) == 455
+    assert column_value(g, 12) == 0
+    assert column_suits(g, 0) == 0
+    assert sum_ranks(g) == g
+    assert inv_sum_ranks(g) == g
+
+test "sum ranks sees a K♣↔Q♥ swap that v9 missed"
+    // K♣ (12) and Q♥ (24) share a row here. v9 SumRanks commuted with swapping
+    // them on this deck (equal rank + suit mod 4); v10 does not.
+    deck = [16, 10, 36, 14, 8, 41, 0, 45, 51, 7, 28, 26, 24, 11, 3, 39, 12, 35, 43, 1, 50, 15, 30, 22, 38, 4, 31, 44, 25, 33, 48, 20, 19, 42, 34, 17, 40, 9, 46, 32, 21, 13, 5, 27, 2, 18, 23, 47, 37, 6, 29, 49]
+    swapped: List<int> = []
+    for k = 0 to 51
+        swapped.append(swap_card(deck[k], 12, 24))
+    out = scoop_cm(sum_ranks(lay_cm(deck)))
+    out_swapped = scoop_cm(sum_ranks(lay_cm(swapped)))
+    relabelled: List<int> = []
+    for k = 0 to 51
+        relabelled.append(swap_card(out[k], 12, 24))
+    assert out_swapped != relabelled
+    assert scoop_cm(inv_sum_ranks(lay_cm(out_swapped))) == swapped
 
 test "overflow scan starts at the blocked column"
     occ: List<List<int>> = []
@@ -864,7 +941,7 @@ test "overflow scan starts at the blocked column"
 test "decrypt undoes encrypt"
     message = [0, 32, 38, 42, 13, 19, 17, 5, 41, 25, 48, 6, 31, 44, 3, 16, 7, 4, 34, 40, 18, 49, 14, 51, 20, 46, 28, 11, 10, 15, 45, 43, 2, 26, 22, 8, 37, 33, 12, 35, 24, 50, 39, 30, 21, 1, 27, 47, 36, 23, 29, 9]
     key = [48, 42, 25, 26, 3, 37, 39, 50, 11, 2, 43, 8, 10, 7, 40, 38, 34, 0, 49, 51, 22, 27, 23, 9, 12, 15, 44, 41, 21, 28, 20, 13, 19, 14, 45, 31, 35, 18, 17, 30, 6, 36, 47, 16, 1, 33, 29, 5, 46, 32, 24, 4]
-    cipher = [25, 31, 24, 6, 36, 26, 40, 9, 44, 10, 28, 23, 50, 7, 22, 45, 11, 46, 39, 27, 43, 29, 5, 48, 3, 42, 17, 37, 35, 49, 15, 2, 34, 51, 20, 8, 41, 14, 32, 16, 47, 19, 33, 21, 0, 38, 30, 12, 4, 1, 18, 13]
+    cipher = [37, 19, 15, 33, 31, 13, 46, 4, 48, 8, 24, 43, 45, 0, 3, 18, 7, 44, 32, 10, 35, 51, 42, 41, 29, 40, 20, 23, 12, 26, 36, 27, 34, 1, 9, 6, 49, 39, 50, 11, 28, 47, 21, 2, 38, 5, 25, 22, 16, 14, 30, 17]
     assert encrypt(message, key) == cipher
     assert decrypt(cipher, key) == message
 

@@ -5,6 +5,7 @@
   degenerate constant keys. Permutation round keys: `PermKeys.lean`.
 -/
 import DoubleDealSecurity.GridCycle
+import DoubleDealSecurity.SumRanksV10
 
 namespace DoubleDeal.Security
 
@@ -20,7 +21,7 @@ theorem cardsG_lay {m : Fin 52 → Nat} (hm : Cards m) : CardsG (layColumnMajor 
 
 theorem cards_unkeyedNoMix {m : Fin 52 → Nat} (hm : Cards m) : Cards (unkeyedNoMix m) := by
   intro i
-  exact sumRanks_bound (· < 52) cardRank cardColumnWeight _ (cardsG_lay hm) _ _
+  exact sumRanksV10_bound (· < 52) _ (cardsG_lay hm) _ _
 
 theorem placeN_cards (hand : Fin 52 → Nat) (hb : Cards hand) :
     ∀ n, ∀ r c, (placeN hand n).1 r c < 52
@@ -42,16 +43,15 @@ theorem cards_compose {m : Fin 52 → Nat} (hm : Cards m) (pos : Fin 52 → Fin 
     Cards (composeVec 52 Nat m pos) := fun _ => hm _
 
 /-- (PROVED) The unkeyed stem commutes with σ whenever SumRanks does. -/
-theorem unkeyedNoMix_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV9) :
+theorem unkeyedNoMix_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV10) :
     Commutes σ unkeyedNoMix := by
   intro m hm
   simp only [unkeyedNoMix]
-  rw [layColumnMajor_rel, show sumRanks cardRank cardColumnWeight = sumRanksV9 from rfl,
-    hs _ (cardsG_lay hm)]
+  rw [layColumnMajor_rel, hs _ (cardsG_lay hm)]
   rfl
 
 /-- (PROVED) Layer-wise commutation lifts to the full round, for every key. -/
-theorem fullRound_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV9)
+theorem fullRound_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV10)
     (hmix : Commutes σ mixColumns) (pos : Fin 52 → Fin 52) :
     Commutes σ (fun m => fullRound m pos) := by
   intro m hm
@@ -59,7 +59,7 @@ theorem fullRound_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV9)
   rw [unkeyedNoMix_commutes σ hs m hm, hmix _ (cards_unkeyedNoMix hm)]
   rfl
 
-theorem fullRoundNoMix_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV9)
+theorem fullRoundNoMix_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV10)
     (pos : Fin 52 → Fin 52) : Commutes σ (fun m => fullRoundNoMix m pos) := by
   intro m hm
   simp only [fullRoundNoMix]
@@ -77,7 +77,7 @@ theorem cards_applyFullRounds (pos : Nat → Fin 52 → Fin 52) :
 
 /-- (PROVED) Layer-wise commutation lifts to encrypt with arbitrary round keys:
     `E_K(σM) = σ E_K(M)` (key not relabelled). -/
-theorem encryptN_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV9)
+theorem encryptN_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV10)
     (hmix : Commutes σ mixColumns) (nMix : Nat) (pos0 : Fin 52 → Fin 52)
     (posMix : Nat → Fin 52 → Fin 52) (posFinal : Fin 52 → Fin 52) :
     Commutes σ (fun m => encryptN nMix m pos0 posMix posFinal) := by
@@ -99,7 +99,7 @@ theorem encryptN_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV9)
 
 /-- (PROVED) The stem only moves cells: every output cell is an input cell. -/
 theorem unkeyedNoMix_cells (m : Fin 52 → Nat) (k : Fin 52) : ∃ i, unkeyedNoMix m k = m i := by
-  have hs := sumRanks_bound (fun v => ∃ i, v = m i) cardRank cardColumnWeight
+  have hs := sumRanksV10_bound (fun v => ∃ i, v = m i)
     (layColumnMajor m) (fun r c => ⟨_, rfl⟩)
   obtain ⟨i, hi⟩ := hs (cmRow k) ⟨((cmCol k).val + (cmRow k).val) % 13, Nat.mod_lt _ (by decide)⟩
   exact ⟨i, hi⟩
@@ -107,7 +107,7 @@ theorem unkeyedNoMix_cells (m : Fin 52 → Nat) (k : Fin 52) : ∃ i, unkeyedNoM
 theorem unkeyedNoMix_invUnkeyedNoMix (x : Fin 52 → Nat) :
     unkeyedNoMix (invUnkeyedNoMix x) = x := by
   simp only [invUnkeyedNoMix, unkeyedNoMix]
-  rw [lay_scoop_columnMajor, sumRanks_invSumRanks, shiftRows_invShiftRows,
+  rw [lay_scoop_columnMajor, sumRanksV10_invSumRanksV10, shiftRows_invShiftRows,
     scoop_lay_columnMajor]
 
 /-- (PROVED) The stem maps well-formed decks onto well-formed decks. The
@@ -120,12 +120,12 @@ theorem unkeyedNoMix_onto_decks (x : Fin 52 → Nat) (hx : IsDeck x) :
   obtain ⟨i, hi⟩ := unkeyedNoMix_cells (invUnkeyedNoMix x) k
   exact ⟨i, by rw [← hi, unkeyedNoMix_invUnkeyedNoMix]⟩
 
-/-- (PROVED from the lemmas above) If σ ≠ id commutes with the v9 stem
-    (i.e. σ is one of the 51 nontrivial `v9Sym a b`), then no full round
+/-- (PROVED from the lemmas above) If σ ≠ id commutes with v10 SumRanks
+    (e.g. one of the 51 nontrivial `v10Sym a x`), then no full round
     commutes with σ: the stem is onto decks, so the round commuting would make
     GridCycle commute, forcing σ = id. -/
 theorem fullRound_not_commutes_of_stem (σ : Relabel) (hid : σ ≠ 1)
-    (hs : CommutesG σ sumRanksV9) (pos invPos : Fin 52 → Fin 52)
+    (hs : CommutesG σ sumRanksV10) (pos invPos : Fin 52 → Fin 52)
     (hR : ∀ i, pos (invPos i) = i) :
     ¬ CommutesOnDecks σ (fun m => fullRound m pos) := by
   intro hround
@@ -180,11 +180,11 @@ theorem mixColumns_at_AS (h : Fin 52 → Nat) :
     mixColumns h ⟨26, by decide⟩ = h ⟨0, by decide⟩ :=
   placed_at_seat h 0 (by decide)
 
-/-- (PROVED) If σ ≠ id commutes with the v9 stem (σ is a nontrivial `v9Sym`),
+/-- (PROVED) If σ ≠ id commutes with v10 SumRanks (e.g. a nontrivial `v10Sym`),
     the round body is not σ-covariant for any τ: the first card sits at `AS`,
     which forces τ = σ, and then GridCycle would commute with σ. -/
 theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
-    (hs : CommutesG σ sumRanksV9) : ¬ Covariant σ unkeyedWithMix := by
+    (hs : CommutesG σ sumRanksV10) : ¬ Covariant σ unkeyedWithMix := by
   rintro ⟨τ, hτ⟩
   apply hid
   have hmix : ∀ x, IsDeck x → mixColumns (rel σ x) = rel τ (mixColumns x) := by
@@ -201,13 +201,15 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
   subst hστ
   exact (mixColumns_commutes_iff_id τ).1 hmix
 
-/-- (DRAFT-SORRY, CONJECTURE — checked, not proved) v9: no nontrivial σ makes
+/-- (DRAFT-SORRY, CONJECTURE — checked, not proved) v10: no nontrivial σ makes
     the unkeyed round body covariant, i.e. there is no pair (σ, τ) with σ ≠ id
     and `F(σ·m) = τ·F(m)` on every deck, `F = GridCycle ∘ stem`.
     Checked (`checks/check_covariant.py`, log committed): all 1,326
-    transpositions, all 51 nontrivial `v9Sym` and 200 random σ are
-    non-covariant, for v8 and v9. The `v9Sym` cases are proved
-    (`roundBody_not_covariant_of_stem`).
+    transpositions, all 51 nontrivial `v10Sym` (and `v9Sym`) and 200 random σ
+    are non-covariant, for v8, v9 and v10. The `v10Sym` cases are proved
+    (`roundBody_not_covariant_of_stem` with `sumRanksV10_commutes_v10Sym`).
+    The assessment below was written for v9; v10 rows and columns are
+    chained, which makes the single-cell argument harder, not easier.
 
     Assessment: the other σ already fail at SumRanks, but a failing layer
     inside a composite does not by itself make the composite fail. Covariance
@@ -248,7 +250,7 @@ def constDeck (c : Nat) : Fin 52 → Nat := fun _ => c
 
 theorem unkeyedNoMix_const (c : Nat) : unkeyedNoMix (constDeck c) = constDeck c := by
   funext k
-  exact sumRanks_bound (· = c) cardRank cardColumnWeight (layColumnMajor (constDeck c))
+  exact sumRanksV10_bound (· = c) (layColumnMajor (constDeck c))
     (fun _ _ => rfl) _ _
 
 theorem mixColumns_const (c : Nat) : mixColumns (constDeck c) = constDeck c := by

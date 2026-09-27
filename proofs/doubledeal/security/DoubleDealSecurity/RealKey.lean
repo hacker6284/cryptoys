@@ -1,6 +1,6 @@
 /-
   Real key schedule: the light half of
-  `generated_encrypt_realKey_not_v9Sym_equivariant`
+  `generated_encrypt_realKey_not_v10Sym_equivariant`
   (the heavy kernel witnesses live in `DoubleDealSecurityHeavy.RealKey`).
 
   `realE m = encryptDeckFn m (List.range 52)` is the model encrypt under ONE
@@ -9,9 +9,10 @@
 
   - The relabellings that commute with a fixed deck map on all decks are closed
     under composition, so under powers (`commutesOnDecks_pow`).
-  - v9Sym is cyclic of order 52. Every nontrivial element has a power equal to
-    `v9Sym 0 2` (the unique involution) or `v9Sym 1 0` (order 13)
-    (`v9Sym_iter_hits`, kernel `decide!`, cheap). So two witnesses cover all 51.
+  - v10Sym is `ℤ/13 × (ℤ/2)²` (not cyclic; v9Sym was `ℤ/52`). Every nontrivial
+    element has a power equal to `v10Sym 1 0` (order 13) or one of the three
+    involutions `v10Sym 0 x` (`v10Sym_iter_hits`, kernel `decide!`, cheap). So
+    four witnesses cover all 51 (v9 needed two).
   - `commutesOnDecks_realE_of_generated` pulls commutation back from the
     emitted `Doubledeal.encrypt` to the model (`generated_encrypt_relabel_iff`).
 -/
@@ -36,33 +37,39 @@ theorem commutesOnDecks_pow {σ : Relabel} {F : (Fin 52 → Nat) → (Fin 52 →
   | 0 => by rw [pow_zero]; exact commutesOnDecks_one F
   | n + 1 => by rw [pow_succ']; exact commutesOnDecks_mul h (commutesOnDecks_pow h n)
 
-/-! ## Every nontrivial v9Sym has a power in {v9Sym 0 2, v9Sym 1 0} -/
+/-! ## Every nontrivial v10Sym has a power in {v10Sym 1 0, v10Sym 0 x}
 
-/-- Exponent for `v9Sym a b`, at index `4 a + b` (from `checks/realkeys/v9sym_subgroup.py`). -/
-def v9SymWitnessExp : List Nat :=
-  [0, 2, 1, 2, 1, 26, 13, 26, 7, 20, 13, 20, 9, 26, 13, 26, 10, 26, 10, 26, 8, 8, 8, 8,
-   11, 24, 13, 24, 2, 26, 2, 26, 5, 26, 13, 26, 3, 16, 13, 16, 4, 4, 4, 4, 6, 26, 6, 26,
-   12, 12, 12, 12]
+`v10Sym` is `ℤ/13 × (ℤ/2)²`: for `x ≠ 0` the 13th power of `v10Sym a x` is the
+involution `v10Sym 0 x`; for `x = 0` a power of `v10Sym a 0` is `v10Sym 1 0`.
+So four witnesses cover all 51 (`checks/realkeys/v10sym_subgroup.py`). -/
+
+/-- Inverse of `a` mod 13 (`0 ↦ 0`), as a table. -/
+def inv13 : List Nat := [0, 1, 7, 9, 10, 8, 11, 2, 5, 3, 4, 6, 12]
+
+/-- Exponent taking `v10Sym a x` to its witness. -/
+def v10SymWitnessExp (a : Fin 13) (x : Fin 4) : Nat :=
+  if x.val = 0 then inv13.getD a.val 0 else 13
+
+/-- The witness reached: `v10Sym 1 0` if `x = 0`, else `v10Sym 0 x`. -/
+def v10SymWitness (x : Fin 4) : Fin 13 × Fin 4 :=
+  if x.val = 0 then (1, 0) else (0, x)
 
 /-- (PROVED, kernel `decide!`) -/
-theorem v9Sym_iter_hits : ∀ (a : Fin 13) (b : Fin 4), (a, b) ≠ (0, 0) →
-    (∀ c, (v9SymFn a b)^[v9SymWitnessExp.getD (4 * a.val + b.val) 0] c = v9SymFn 0 2 c) ∨
-    (∀ c, (v9SymFn a b)^[v9SymWitnessExp.getD (4 * a.val + b.val) 0] c = v9SymFn 1 0 c) := by
+theorem v10Sym_iter_hits : ∀ (a : Fin 13) (x : Fin 4), (a, x) ≠ (0, 0) →
+    ∀ c, (v10SymFn a x)^[v10SymWitnessExp a x] c =
+      v10SymFn (v10SymWitness x).1 (v10SymWitness x).2 c := by
   decide!
 
-/-- (PROVED) If a nontrivial `v9Sym a b` commutes with a deck map on all decks,
-    then so does `v9Sym 0 2` or `v9Sym 1 0`. -/
-theorem commutesOnDecks_v9Sym_reduce {F : (Fin 52 → Nat) → (Fin 52 → Nat)}
-    (a : Fin 13) (b : Fin 4) (hab : (a, b) ≠ (0, 0)) (h : CommutesOnDecks (v9Sym a b) F) :
-    CommutesOnDecks (v9Sym 0 2) F ∨ CommutesOnDecks (v9Sym 1 0) F := by
-  have hn := commutesOnDecks_pow h (v9SymWitnessExp.getD (4 * a.val + b.val) 0)
-  have key : ∀ τ : Relabel, (∀ c, (v9SymFn a b)^[v9SymWitnessExp.getD (4 * a.val + b.val) 0] c = τ c) →
-      CommutesOnDecks τ F := by
-    intro τ hw
-    have e : v9Sym a b ^ v9SymWitnessExp.getD (4 * a.val + b.val) 0 = τ :=
-      Equiv.ext fun c => by rw [Equiv.Perm.coe_pow]; exact hw c
-    exact e ▸ hn
-  exact (v9Sym_iter_hits a b hab).imp (key _) (key _)
+/-- (PROVED) If a nontrivial `v10Sym a x` commutes with a deck map on all decks,
+    then so does its witness (`v10Sym 1 0` or `v10Sym 0 x`). -/
+theorem commutesOnDecks_v10Sym_reduce {F : (Fin 52 → Nat) → (Fin 52 → Nat)}
+    (a : Fin 13) (x : Fin 4) (hax : (a, x) ≠ (0, 0)) (h : CommutesOnDecks (v10Sym a x) F) :
+    CommutesOnDecks (v10Sym (v10SymWitness x).1 (v10SymWitness x).2) F := by
+  have hn := commutesOnDecks_pow h (v10SymWitnessExp a x)
+  have e : v10Sym a x ^ v10SymWitnessExp a x =
+      v10Sym (v10SymWitness x).1 (v10SymWitness x).2 :=
+    Equiv.ext fun c => by rw [Equiv.Perm.coe_pow]; exact v10Sym_iter_hits a x hax c
+  exact e ▸ hn
 
 /-! ## The real schedule under the identity master key -/
 

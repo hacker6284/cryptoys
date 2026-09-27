@@ -1,8 +1,8 @@
 # DoubleDeal
 
-> **v9 is deprecated (draft, awaiting Zachary's decision).** A related-plaintext distinguisher breaks the full 6-round v9: swapping K♣ and Q♥ in the plaintext swaps them in the ciphertext with probability about \(3.5\times10^{-8}\) per pair (about \(1/52!\) for an ideal cipher). v9 is frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo`; the vulnerability proof is in `proofs/deprecated/doubledeal-v9/`. **No successor has been chosen yet**, so this file and `doubledeal.sudo` still describe v9 and stay byte-for-byte the v9 algorithm until a successor is chosen. Candidate patches (analysis only) are in `proofs/deprecated/doubledeal-v9/candidates/CANDIDATES.md` (log: `proofs/deprecated/doubledeal-v9/candidates/measure.log`).
+**This is DoubleDeal v10.** One change from v9: SumRanks (§3.3). Rows now turn by an index-weighted rank total of the row above, and columns by a GF(4) suit value of the column to the left plus the column's own suit sum. Both are chained, Feistel-style. GridCycle, ShiftRows, Compose, PassKey, the round count and the modes are unchanged. v9 is deprecated and frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo`. A related-plaintext distinguisher breaks the full 6-round v9: swapping K♣ and Q♥ in the plaintext swaps them in the ciphertext at about \(3.5\times10^{-8}\) per pair. Its vulnerability proof is in `proofs/deprecated/doubledeal-v9/`. v8 is deprecated too, frozen at `v8/SPEC.md`, with its vulnerability proof in `proofs/deprecated/doubledeal-v8/`. Formerly TwoDeck (TDSPN elegant-v8).
 
-Formerly TwoDeck (TDSPN elegant-v8). **This is DoubleDeal v9.** Two changes from v8: SumRanks columns read suit as well as rank (§3.3), and the GridCycle overflow scan starts at the blocked seat's column (§3.5). v8 is deprecated and frozen at `v8/SPEC.md`; its vulnerability proof is in `proofs/deprecated/doubledeal-v8/`. This document is the normative specification. `doubledeal.sudo` is the conformance implementation. A mismatch is a bug in the implementation. DoubleDeal is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim. It is not for protecting anything.
+This document is the normative specification. `doubledeal.sudo` is the conformance implementation, and a mismatch is a bug in the implementation. DoubleDeal is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim and is not for protecting anything. The v10 SumRanks was chosen from the candidate measurements in `proofs/doubledeal/analysis/v10-sumranks/` (toy evidence, not a proof).
 
 The demo at `demos/doubledeal/` plays `trace_encrypt` and `trace_decrypt`. It does not contain a second copy of the rounds. `decrypt` may keep the round-key list from `expand_keys`. The decrypt trace does not: it passes the master key forward 6 times to \(K_6\), then un-passes once per remaining round back to \(K_0\). Ciphertext is the same either way; only the key-derivation choreography differs.
 
@@ -19,7 +19,7 @@ The demo at `demos/doubledeal/` plays `trace_encrypt` and `trace_decrypt`. It do
 
   | Layer | AES role | What it does |
   | --- | --- | --- |
-  | SumRanks | SubBytes | The data-dependent, nonlinear step; the only layer that sums every card's value (rows: rank; columns: rank + suit, so no two cards look alike to it). |
+  | SumRanks | SubBytes | The data-dependent, nonlinear step. Rows read ranks with position weights; columns read suits as GF(4) elements with position weights. Each step is chained to its neighbour. |
   | ShiftRows | ShiftRows | Fixed row rotations 0, 1, 2, 3. |
   | GridCycle | MixColumns | Diffusion: each card's suit and rank steer where the next card lands. |
   | Compose | AddRoundKey | Moves seats by the round key. |
@@ -143,36 +143,48 @@ Used for GridCycle **output** scoop and GridCycle **inverse** lay.
 
 ## 3.3 SumRanks and inverse
 
-Operate on a filled \(4\times13\) grid \(G\). Rows read ranks; columns read rank **and** suit. The pair \((\mathrm{rank}(c) \bmod 13,\ (\mathrm{rank}(c)+\mathrm{suit}(c)) \bmod 4)\) determines \(c\) (since \(13 \equiv 1 \pmod 4\), \(\mathrm{rank}+\mathrm{suit} \equiv c+1\)), so no two cards are interchangeable to SumRanks.
+Operate on a filled \(4\times13\) grid \(G\). SumRanks reads each card twice: its rank (rows) and its suit (columns). Both stages are **chained**. Each row or column turns by an amount read from a *neighbouring* row or column, as that neighbour is at the moment. So every turn can be undone as long as the neighbour is put back first.
 
-**Row stage (forward).** For each row \(i=0..3\):
-
-\[
-t_i = \Bigl(\sum_{j=0}^{12} \mathrm{rank}(G[i,j])\Bigr) \bmod 13,
-\qquad
-G'[i] = G[i][t_i{:}] + G[i][{:}t_i]
-\quad\text{(left rotate by \(t_i\))}.
-\]
-
-**Column stage (forward).** For each column \(j=0..12\), let \(\mathrm{col} = (G'[0,j],\ldots,G'[3,j])\):
+**Row weight.** For a row \(x = (x_0,\ldots,x_{12})\),
 
 \[
-s_j = \Bigl(\sum_{i=0}^{3} \bigl(\mathrm{rank}(\mathrm{col}[i]) + \mathrm{suit}(\mathrm{col}[i])\bigr)\Bigr) \bmod 4,
+U(x) = \sum_{j=0}^{12} (13-j)\,\mathrm{rank}(x_j),
 \qquad
-\mathrm{new}[i] = \mathrm{col}[(i - s_j)\bmod 4]
-\quad\text{(top→bottom by \(s_j\))}.
+\mathrm{turn}(x) = U(x) \bmod 13 .
 \]
 
-Write \(\mathrm{new}\) back into column \(j\). Then \(\mathrm{SumRanks}(G)\) is the resulting grid.
+The leftmost card has weight \(13 \equiv 0\) and the rightmost has weight 1. By hand, keep two running totals left to right: \(T \mathrel{+}= \mathrm{rank}(x_j)\), then \(U \mathrel{+}= T\) (§4.2).
 
-**Order:** row-then-column (locked hand-feel revision: separates SumRanks row rotate from ShiftRows).
+**Row stage (forward).** For \(i = 1, 2, 3, 0\) in that order, left rotate row \(i\) by \(\mathrm{turn}(G[i-1 \bmod 4])\), reading row \(i-1\) as it is at that moment. Row 0 therefore reads row 3 after row 3 has turned.
 
-**Inverse.** Row rank-sums and column rank-plus-suit sums are invariant under their own rotates, so the same \(t_i,s_j\) can be recomputed after the forward move.
+**Suits as GF(4).** Label ♣ = 0, ♦ = 1, ♥ = \(w\), ♠ = \(w^2\), written as the two-bit numbers 0, 1, 2, 3, with \(w^2 = w + 1\). Addition \(\oplus\) is XOR of the two bits: a pair cancels, ♣ changes nothing, and two different non-club suits make the third. Multiplying by \(w\) maps ♦ → ♥ → ♠ → ♦ and fixes ♣. Write \(\ell(c)\) for the label of card \(c\)'s suit.
 
-1. Undo columns: \(\mathrm{new}[i] = \mathrm{col}[(i + s_j)\bmod 4]\).
-2. Undo rows: right rotate by \(t_i\): \(G[i] = G[i][-t_i{:}] + G[i][{:}-t_i]\).
+**Column stage (forward).** For a column \(y = (y_0, y_1, y_2, y_3)\), top to bottom:
 
-**Claim:** \(\mathrm{invSumRanks} \circ \mathrm{SumRanks} = \mathrm{id}\) on filled grids. Not an involution — order matters.
+\[
+V(y) = 0\cdot\ell(y_0) \oplus 1\cdot\ell(y_1) \oplus w\,\ell(y_2) \oplus w^2\,\ell(y_3),
+\qquad
+S(y) = \ell(y_0) \oplus \ell(y_1) \oplus \ell(y_2) \oplus \ell(y_3).
+\]
+
+For \(j = 1, 2, \ldots, 12, 0\) in that order, rotate column \(j\) top→bottom (\(\mathrm{new}[i] = \mathrm{col}[(i-s_j) \bmod 4]\)) by
+
+\[
+s_j = V\bigl(G[\cdot, j-1 \bmod 13]\bigr) \oplus S\bigl(G[\cdot, j]\bigr) \in \{0,1,2,3\},
+\]
+
+reading column \(j-1\) as it is at that moment (column 0 reads column 12 after it has turned). The four weights \(0, 1, w, w^2\) are distinct, so swapping two different suits inside a column always changes \(V\). \(S\) gives the top card, which has weight 0 in \(V\), a say. \(S\) does not change when column \(j\) itself rotates.
+
+Then \(\mathrm{SumRanks}(G)\) is the resulting grid. **Order:** all rows, then all columns.
+
+**Inverse.** Undo the stages in reverse, each in reverse order:
+
+1. For \(j = 0, 12, 11, \ldots, 1\): recompute \(s_j\) from column \(j-1\) (still as the forward pass left it) and column \(j\)'s own \(S\) (unchanged by its rotation). Rotate column \(j\) bottom→top by \(s_j\): \(\mathrm{new}[i] = \mathrm{col}[(i+s_j) \bmod 4]\).
+2. For \(i = 0, 3, 2, 1\): recompute \(\mathrm{turn}(G[i-1 \bmod 4])\) and right rotate row \(i\) by it.
+
+This works because when a row or column is undone, the neighbour it reads is exactly as it was when that row or column turned forward: later in the forward order means earlier in the inverse order.
+
+**Claim:** \(\mathrm{invSumRanks} \circ \mathrm{SumRanks} = \mathrm{id}\) on filled grids. Not an involution; order matters.
 
 ## 3.4 ShiftRows and inverse
 
@@ -417,7 +429,7 @@ Parallel to §3. Conventions match `PLAYER_SHEET_ELEGANT_V8.md`.
 
 **Decks:** \(M\) = 52. \(K\) = 52 (no jokers). Top = face you deal first.  
 **Ranks:** A=1 … 10=10, J=11, Q=12, K=13.  
-**Suits (GridCycle / Compose / PassKey):** ♣=0 ♥=1 ♠=2 ♦=3.
+**Suits (GridCycle / Compose / PassKey):** ♣=0 ♥=1 ♠=2 ♦=3. SumRanks columns use the GF(4) labels of §4.2 instead (♣=0 ♦=1 ♥=\(w\) ♠=\(w^2\)).
 
 ## 4.1 Deal / scoop conventions
 
@@ -430,14 +442,19 @@ Do **not** use the same cascade motion for col-major and row-major; the majors a
 
 ## 4.2 SumRanks (SubBytes)
 
-On the column-major table:
+On the column-major table. Rows first, then columns.
 
-1. For each **row** of 13: sum the thirteen ranks; rotate that row **left** by (sum mod 13) — move that many cards from the left end to the right end.
-2. For each **column** of 4: sum the four ranks **plus the four suit numbers** (♣=0 ♥=1 ♠=2 ♦=3); rotate that column **top→bottom** (sum mod 4) times. Shortcut: only the total mod 4 matters, so you may count each card as (rank + suit) mod 4, i.e. a number 0–3, and add four small numbers.
+1. **Rows, in the order 1, 2, 3, 0** (top row is row 0). For row \(i\), read the row **above** it (row 0 reads row 3, which has already turned) left to right, keeping two running totals: add the card's rank to \(T\), then add \(T\) to \(U\). After 13 cards, rotate row \(i\) **left** by \(U \bmod 13\). You may reduce \(T\) and \(U\) mod 13 as you go. The first card read contributes \(13 \equiv 0\), so you can skip adding \(T\) to \(U\) on the first card.
+2. **Columns, in the order 1, 2, …, 12, 0.** Suit labels: ♣ = 0, ♦ = 1, ♥ = \(w\), ♠ = \(w^2\). Card table:
+   - Adding two labels: a **pair cancels** (♥ + ♥ = ♣), **♣ does nothing**, and **two different non-club suits make the third** (♦ + ♥ = ♠, ♥ + ♠ = ♦, ♠ + ♦ = ♥).
+   - Multiplying by \(w\): **♦ → ♥ → ♠ → ♦**, and ♣ stays ♣. Multiplying by \(w^2\) is doing that twice.
 
-Rows first, then columns (separates the row stage from ShiftRows).
+   For column \(j\):
+   - From the column to its **left** (column 0 reads column 12, which has already turned), take the row-1 suit as it is, the row-2 suit shifted once, and the row-3 suit shifted twice. Ignore the row-0 suit. Add the three.
+   - Add the four suits of column \(j\) itself.
+   - The result is ♣, ♦, ♥ or ♠. Rotate column \(j\) **top→bottom** by 0, 1, 2 or 3 respectively.
 
-**Inverse:** row rank sums and column rank-plus-suit sums are unchanged under rotate. Undo columns first (rotate the other way by sum mod 4), then undo rows (rotate the other way by sum mod 13). Enter/exit with the same column-major deal/scoop.
+**Inverse:** columns first, in the order 0, 12, 11, …, 1. Each column reads the same neighbour and its own suits (unchanged by its own rotation) and rotates **bottom→top**. Then rows, in the order 0, 3, 2, 1, each reading the row above and rotating **right**. Enter and exit with the same column-major deal and scoop.
 
 ## 4.3 ShiftRows
 
@@ -693,11 +710,11 @@ Cards fly from packet to grid seats in **column order** (col 0 top→bottom, the
 
 ### SumRanks — row rotate
 
-Entire row slides as a **rigid ribbon** on a slight arc (felt friction, not ice). A temporary **numeral** (the rank-sum, then sum mod 13) appears above the row and dissolves. Mod-13 amount shown as **tick marks** along the row edge before/during the slide.
+Entire row slides as a **rigid ribbon** on a slight arc (felt friction, not ice). Highlight the row **above** (the one being read) while the two running totals count up across it. The weighted total, then total mod 13, appears above the moving row and dissolves. Show the mod-13 amount as **tick marks** along the row edge before and during the slide. Rows move in the order 1, 2, 3, 0.
 
 ### SumRanks — column rotate
 
-Column **lifts slightly** (hover) then cycles **top→bottom like a belt**. (Rank + suit) sum mod 4 shown as **four dots** with the active count filled; flash each card's suit pip as it is counted. Settle with a soft drop shadow pulse.
+Column **lifts slightly** (hover), then cycles **top→bottom like a belt**. Flash the suit pips of the column to the left (rows 1–3, the row-2 and row-3 pips shifted once and twice), then the column's own four pips. Show the resulting suit (0–3) as **four dots** with the active count filled. Settle with a soft drop-shadow pulse. Columns move in the order 1 … 12, 0.
 
 ### ShiftRows
 
@@ -753,7 +770,8 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 | Version | Status | Change |
 | --- | --- | --- |
 | v8 (TDSPN elegant-v8) | **Deprecated**, frozen at `v8/SPEC.md` + `v8/doubledeal_v8.sudo` | SumRanks read ranks only, and the GridCycle overflow scanned each marker row from column 0. Same-rank relabellings (e.g. K♣↔K♦) commuted with every layer except GridCycle, giving a chosen-plaintext distinguisher (~\(10^{-3}\) per pair). Vulnerability proof: `proofs/deprecated/doubledeal-v8/`. |
-| v9 | **Deprecated** (draft), frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo`; still the text of this file until a successor is chosen | SumRanks columns sum \((\mathrm{rank}+\mathrm{suit}) \bmod 4\); GridCycle overflow scans from the blocked column. Toy evidence only: the same relation family measured at 0 hits in \(2\times10^6\) full-cipher pairs for the worst transposition found by a one-round screen (95% upper bound \(1.5\times10^{-6}\)). That is not a security claim. Superseded: a transposition the one-round screen did not rank first, K♣↔Q♥, commutes with the full cipher at about \(3.5\times10^{-8}\) per pair (14 hits in \(4\times10^8\) pairs, below what \(2\times10^6\) pairs can see). Vulnerability proof: `proofs/deprecated/doubledeal-v9/`. |
+| v9 | **Deprecated**, frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo` | SumRanks columns sum \((\mathrm{rank}+\mathrm{suit}) \bmod 4\); GridCycle overflow scans from the blocked column. Toy evidence only: the same relation family measured at 0 hits in \(2\times10^6\) full-cipher pairs for the worst transposition found by a one-round screen (95% upper bound \(1.5\times10^{-6}\)). That is not a security claim. Superseded: a transposition the one-round screen did not rank first, K♣↔Q♥, commutes with the full cipher at about \(3.5\times10^{-8}\) per pair (14 hits in \(4\times10^8\) pairs, below what \(2\times10^6\) pairs can see). Vulnerability proof: `proofs/deprecated/doubledeal-v9/`. |
+| v10 | **Current** (this file) | SumRanks rows turn by the index-weighted rank total \(\sum (13-j)\,\mathrm{rank} \bmod 13\) of the row above; columns turn by the GF(4) suit value \(0 s_0 + s_1 + w s_2 + w^2 s_3\) of the column to the left plus the column's own suit sum; both chained in a fixed order (§3.3). Everything else as v9. Toy evidence only (`proofs/doubledeal/analysis/v10-sumranks/`): SumRanks alone lets a card swap through unchanged with measured worst probability ≈ 1/221 over all 1326 swaps (v9: 1/4.2), and the product-formula 6-round estimate for the worst swap is about \(2\times10^{-17}\) (v9: \(3.6\times10^{-8}\)). These are measurements and extrapolations, not a security claim. The remaining survivors are same-suit swaps. |
 
 ---
 
@@ -761,13 +779,14 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 
 | Artifact | Path | Role |
 | --- | --- | --- |
-| This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules (v9) |
+| This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules (v10) |
 | Deprecated v8 | `primitives/cipher/doubledeal/v8/` | Frozen v8 SPEC and sudo; vulnerability proof in `proofs/deprecated/doubledeal-v8/` |
 | Deprecated v9 | `primitives/cipher/doubledeal/v9/` | Frozen v9 SPEC and sudo; vulnerability proof in `proofs/deprecated/doubledeal-v9/` |
 | Conformance implementation | `primitives/cipher/doubledeal/doubledeal.sudo` | The only copy of the rounds |
 | Byte encoding | `demos/doubledeal/cards.js` | §5.3, outside `encrypt` / `decrypt`. A demo box is the text you type, as UTF-8, then this encoding. A leading `0x` means the rest of the box is hex bytes. Ciphertext is written with that prefix. The key box is one deck: those bytes are a single 28-byte block, filled with the §5.3 pad when shorter than 28 bytes, used as-is when exactly 28, and rejected when longer. The nonce box is not §5.3. §5.2's nonce is a 39-card order; the page unranks up to 19 bytes into cards \(0..38\) and rejects an integer \(\ge 39!\). |
 | Demo | `demos/doubledeal/` | Three.js table. Plays `trace_encrypt` and `trace_decrypt` from the sudo module |
 | Correctness proofs | `proofs/doubledeal/` | Lean 4 algebraic stones (bijections, round-trip, content-preservation). Not bit-security. |
+| v10 SumRanks analysis | `proofs/doubledeal/analysis/v10-sumranks/` | Candidate measurements that led to v10 (empirical; not proofs) |
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | CBC + HMAC-MegaDreifach AEAD. Not SCM. |
 
 ---

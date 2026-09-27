@@ -1,6 +1,6 @@
 # Candidate fixes for the v9 swap distinguisher (analysis only)
 
-**Status: analysis, not a proposal.** Nothing here changes `SPEC.md` or any `.sudo`, and there is no v10. Choosing a successor, or none, is Zachary's decision. All numbers are measured, and none is a security claim. Numbers are from `measure.log` except the F6 extrap. column (extrapolated by `extrap.py`; output in `extrap.log`) and v9's measured F6 (`../attack/NOTES.md:22`).
+**Status: analysis, not a proposal.** Nothing here changes `SPEC.md` or any `.sudo`. (Later note: v10 was chosen from a follow-up family, W5c; see [`../../../doubledeal/analysis/v10-sumranks/`](../../../doubledeal/analysis/v10-sumranks/). None of the variants below is v10.) All numbers are measured, and none is a security claim. Numbers are from `measure.log` except the F6 extrap. column (extrapolated by `extrap.py`; output in `extrap.log`) and v9's measured F6 (`../attack/NOTES.md:22`).
 
 The variants are in `candidates.py` (Python) and `cand.c` (fast C mirror). `check_cand.py` checks four things:
 1. the Python `v9` variant matches the 6 frozen encrypt vectors;

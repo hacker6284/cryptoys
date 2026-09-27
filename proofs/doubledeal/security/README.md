@@ -8,7 +8,7 @@ path dependency.
     lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
     lake build
     python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
-    lake build DoubleDealSecurityHeavy DoubleDealSecurity.Audit   # heavy witnesses, ~2–3 min
+    lake build DoubleDealSecurityHeavy DoubleDealSecurity.Audit   # heavy witnesses, ~6 min (five decide! encryptions)
     python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
     python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
     python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
@@ -25,34 +25,37 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 |---|---|
 | `Decks` | named cards, witness decks, the cell-map interface |
 | `Relabel` | relabellings, decks, commuting/covariance notions |
-| `SumRanks` | SumRanks commutes iff σ is a constant weight shift; v8 rank-preserving; the 52-element v9 group `v9Sym` |
+| `SumRanks` | **deprecated v8/v9 models.** Two-weight SumRanks commutes iff σ is a constant weight shift; v8 rank-preserving; the 52-element v9 group `v9Sym` |
+| `SumRanksV10` | v10 SumRanks commutes with every `v10Sym a x` (rank + a mod 13, GF(4) suit label ⊕ x; 52 elements, ℤ/13 × (ℤ/2)², not cyclic): `sumRanksV10_commutes_v10Sym` ("if", on every card-valued grid) |
+| `SumRanksV10Iff` | the converse and the full characterisation `sumRanksV10_commutes_iff`: σ commutes with v10 SumRanks on every deck iff σ = `v10Sym a x` for some a, x. Proof: the chained steps are one row rotation then one column rotation (`sumRanksChain_eq`); commuting on a deck forces equal amounts; two decks differing in the last card of row 0 force a constant rank shift mod 13, and two differing in the top card of column 1 force a constant suit-label shift. Like v9's `sumRanks_commutes_iff` |
 | `Walk` | the GridCycle seat walk, generic in the seat chooser |
-| `GridCycle` | GridCycle commutes only with σ = 1 (v9 and the frozen v8 model) |
-| `BranchNumber` | trivial branch-number floor (`≥ 4` for any deck bijection); GridCycle attains it by swapping walk cards 50 and 51 (v9 and the frozen v8 model). Not a wide-trail bound |
-| `Rounds` | lifting to rounds/encrypt; stem onto decks; the conjecture; degenerate-key side lemma |
-| `PermKeys` | encrypt with permutation round keys reduces to the conjecture |
-| `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt`, K♣↔K♦ witness |
+| `GridCycle` | GridCycle commutes only with σ = 1 (v9/v10, unchanged in v10, and the frozen v8 model) |
+| `BranchNumber` | trivial branch-number floor (`≥ 4` for any deck bijection); GridCycle attains it by swapping walk cards 50 and 51 (v9/v10 GridCycle and the frozen v8 model). Not a wide-trail bound |
+| `Rounds` | lifting to rounds/encrypt (hypotheses now `CommutesG σ sumRanksV10`); stem onto decks; the conjecture; degenerate-key side lemma |
+| `PermKeys` | encrypt with permutation round keys reduces to the conjecture; `encrypt6_not_commutes_v10Sym` (was `…_v9Sym`) |
+| `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt` (v10), K♣↔K♦ witness (re-checked on v10) |
 | `V8Vectors` | frozen v8 vectors checked against the v8 model (generated, `--check`) |
-| `RealKey` | commuting relabellings closed under powers; every nontrivial `v9Sym` has a power `v9Sym 0 2` or `v9Sym 1 0`; pull-back from the emitted `encrypt` |
-| `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`) |
+| `RealKey` | commuting relabellings closed under powers; every nontrivial `v10Sym a x` has a power equal to one of four witnesses `v10Sym 1 0`, `v10Sym 0 1`, `v10Sym 0 2`, `v10Sym 0 3` (v9 needed two; `v10Sym` is not cyclic); pull-back from the emitted `encrypt` |
+| `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`). **Deprecated-v9 model**; kept as the proof of the v9 mechanism, not a statement about v10 |
 | `Audit` | the `#audit_all Root` command used by `Axioms.lean` / `AxiomsHeavy.lean` |
-| `DoubleDealSecurityHeavy.RealKey` | three `decide!` encryptions under the identity master key; `generated_encrypt_realKey_not_v9Sym_equivariant` |
+| `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v10 `encrypt` under the identity master key (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
 
 Generic list/rotation lemmas live in the Mathlib-free core package
-(`../lean/DoubleDeal/SumRanks.lean`, `Rotate.lean`).
+(`../lean/DoubleDeal/SumRanks.lean`, `SumRanksV10.lean`, `Rotate.lean`).
 
 ## Status and gates
 
-`generated_encrypt_realKey_not_v9Sym_equivariant` (heavy library): under ONE
-master key, the identity deck expanded by the real PassKey chain, no nontrivial
-`v9Sym` commutes with the emitted `encrypt`. Read it narrowly: one atypical key;
-the breaking message is shown to exist, not named; the key is never relabelled;
-it excludes exact symmetry only, not near-symmetries or statistical
-distinguishers (v8 fell to one); it is not the open per-key statement.
+`generated_encrypt_realKey_not_v10Sym_equivariant` (heavy library; v9 had
+`…_not_v9Sym_equivariant`): under ONE master key, the identity deck expanded
+by the real PassKey chain, no nontrivial `v10Sym` commutes with the emitted
+`encrypt`. Read it narrowly: one atypical key; the breaking message is shown
+to exist, not named; the key is never relabelled; it excludes exact symmetry
+only, not near-symmetries or statistical distinguishers (v8 and v9 each fell
+to one); it is not the open per-key statement.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at
-least 4. v9 GridCycle and the frozen v8 model attain 4: swapping walk cards
+least 4. v9/v10 GridCycle and the frozen v8 model attain 4: swapping walk cards
 50 and 51 changes exactly two output seats. That is the trivial floor, not a
 bound above 4, and not a statement about SumRanks or keyed rounds.
 
@@ -110,7 +113,9 @@ Link 1 (sudo = Generated) remains open.
   `check_relabel.log` and `check_covariant.log` (seconds to rerun; CI reruns
   both scripts, and `check_covariant.py` exits non-zero if any sampled σ is
   covariant) and
-  `measure_v9sym.log` (minutes; measurement only).
+  `measure_v9sym.log` (minutes; measurement only; v9).
+- `checks/realkeys/v10sym_subgroup.py` re-checks the v10 witness reduction, SumRanks v10
+  commutation on random decks and the heavy witness outputs (Python, seconds).
 - `checks/branchnum/` holds the branch-number measurements (analysis only; see its
   `NOTES.md`). Runtimes on 8 cores: `measure.py` about 3-5 min, `structural.py` about
   2.5 min, the time-budgeted searches (`search.py`, `trail_search.py`) about 1 h wall

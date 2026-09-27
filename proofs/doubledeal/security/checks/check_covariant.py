@@ -20,6 +20,10 @@ def sig9(a, b):  # same table as check_relabel.py
         s[c] = card(r2, (su + b - (r2 - r)) % 4)
     return s
 assert sorted(sig9(0, 1)) == list(range(52))
+LABEL = P.LABEL; SUIT_OF_LABEL = [LABEL.index(l) for l in range(4)]
+def sig10(a, x):  # v10Sym: rank + a (mod 13), GF(4) suit label XOR x
+    return [13 * SUIT_OF_LABEL[LABEL[c // 13] ^ x] + (c % 13 + a) % 13 for c in range(52)]
+assert sorted(sig10(1, 1)) == list(range(52))
 
 rng = random.Random(20260927)
 def rdeck(): d = list(range(52)); rng.shuffle(d); return d
@@ -36,14 +40,15 @@ def covariant(s, v, decks=4):
     return True
 
 ID = list(range(52))
-for v in (8, 9):
+for v in (8, 9, 10):
     tr = [transp(a, b) for a in range(52) for b in range(a+1, 52)]
-    g = [sig9(a, b) for a in range(13) for b in range(4) if (a, b) != (0, 0)]
+    sig, gname = (sig10, "nontrivial v10Sym") if v == 10 else (sig9, "nontrivial v9Sym")
+    g = [sig(a, b) for a in range(13) for b in range(4) if (a, b) != (0, 0)]
     rs = []
     for _ in range(200):
         s = ID[:]; rng.shuffle(s); rs.append(s)
     res = {name: sum(covariant(s, v) for s in fam) for name, fam in
-           (("transpositions", tr), ("nontrivial v9Sym", g), ("random", rs))}
+           (("transpositions", tr), (gname, g), ("random", rs))}
     assert covariant(ID, v)
     print(f"v{v}: covariant (some tau) for "
           + ", ".join(f"{name} {k}/{len(fam)}" for (name, k), fam in zip(res.items(), (tr, g, rs))))

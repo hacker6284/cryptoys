@@ -4,6 +4,7 @@ import DoubleDeal.Rotate
 import DoubleDeal.Grid
 import DoubleDeal.ShiftRows
 import DoubleDeal.SumRanks
+import DoubleDeal.SumRanksV10
 import DoubleDeal.PassKey
 import DoubleDeal.Factoradic
 import DoubleDeal.GridCycle

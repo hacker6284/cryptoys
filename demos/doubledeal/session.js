@@ -103,8 +103,8 @@ export function createDoubleDealSession({
     function caption(step) {
         if (step.kind === "sumrow" && step.amount < 0) return `${step.label} · inverse SumRanks row ${step.row + 1} · back ${-step.amount}`;
         if (step.kind === "sumcol" && step.amount < 0) return `${step.label} · inverse SumRanks column ${step.col + 1} · back ${-step.amount}`;
-        if (step.kind === "sumrow") return `${step.label} · SumRanks row ${step.row + 1} · sum ${step.total} → ${step.amount}`;
-        if (step.kind === "sumcol") return `${step.label} · SumRanks column ${step.col + 1} · sum ${step.total} → ${step.amount}`;
+        if (step.kind === "sumrow") return `${step.label} · SumRanks row ${step.row + 1} · reads row ${step.flag + 1} · total ${step.total} → ${step.amount}`;
+        if (step.kind === "sumcol") return `${step.label} · SumRanks column ${step.col + 1} · V ${step.total} ⊕ S ${step.flag} → ${step.amount}`;
         if (step.kind === "shift" && step.amount === 0) return `${step.label} · ShiftRows · row 1 stays`;
         if (step.kind === "shift" && step.amount < 0) return `${step.label} · inverse ShiftRows · row ${step.row + 1} slides back ${-step.amount}`;
         if (step.kind === "shift") return `${step.label} · ShiftRows · row ${step.row + 1} slides ${step.amount}`;
@@ -223,34 +223,33 @@ export function createDoubleDealSession({
             return { kicker, title: "Ready", math: "Plaintext on the left. Key on the right.", why: "Step parks at the first operation without autoplay.", spec: "3.9 Rounds, encrypt, decrypt" };
         }
         if (step.kind === "sumrow") {
-            const ranks = view.rowRanks(step.row);
-            const listed = ranks.length ? ranks.join(" + ") + ` = ${step.total}` : `sum ${step.total}`;
             const inverse = step.amount < 0;
+            const turn = Math.abs(step.amount);
             return {
                 kicker,
                 title: analogue(step),
                 math: inverse
-                    ? `Row ${step.row + 1} ranks ${listed}. Rotate the other way by ${-step.amount}.`
-                    : `Row ${step.row + 1} ranks ${listed}. ${step.total} mod 13 = ${step.amount}. Rotate left by ${step.amount}.`,
-                why: inverse ? "Inverse SumRanks undoes the row rotate. The sum is unchanged." : "Each row rotates left by the sum of its ranks, modulo 13.",
+                    ? `Row ${step.row + 1} reads row ${step.flag + 1}: weighted rank total ${step.total}, mod 13 = ${turn}. Rotate row ${step.row + 1} right by ${turn}.`
+                    : `Row ${step.row + 1} reads row ${step.flag + 1}: weighted rank total ${step.total}, mod 13 = ${turn}. Rotate row ${step.row + 1} left by ${turn}.`,
+                why: inverse
+                    ? "Inverse SumRanks undoes columns first, then rows in the order 0, 3, 2, 1. The row read is already back in place, so its total is the same."
+                    : "Rows turn in the order 1, 2, 3, 0. Each turns left by the weighted rank total of the row before it (row 0 reads row 3), mod 13. Weights run 13, 12, …, 1 left to right; by hand, keep two running totals: T += rank, then U += T.",
                 spec: specFor(step),
             };
         }
         if (step.kind === "sumcol") {
-            const terms = view.colTerms(step.col);
-            const listed = terms.length
-                ? terms.map((t) => `(${t.rank}+${t.suit})`).join(" + ") + ` = ${step.total}`
-                : `sum ${step.total}`;
             const inverse = step.amount < 0;
+            const turn = Math.abs(step.amount);
+            const prev = (step.col + 12) % 13;
             return {
                 kicker,
                 title: analogue(step),
                 math: inverse
-                    ? `Column ${step.col + 1} rank + suit ${listed}. Rotate the other way by ${-step.amount}.`
-                    : `Column ${step.col + 1} rank + suit ${listed}. ${step.total} mod 4 = ${step.amount}. Cycle top→bottom ${step.amount}.`,
+                    ? `Column ${step.col + 1}: V(column ${prev + 1}) = ${step.total}, own suits S = ${step.flag}, V ⊕ S = ${turn}. Cycle bottom→top ${turn}.`
+                    : `Column ${step.col + 1}: V(column ${prev + 1}) = ${step.total}, own suits S = ${step.flag}, V ⊕ S = ${turn}. Cycle top→bottom ${turn}.`,
                 why: inverse
-                    ? "Inverse SumRanks undoes columns first, then rows. The column's rank + suit sum is unchanged by its rotate."
-                    : "After the rows, each column cycles by the sum of its cards' rank + suit (♣0 ♥1 ♠2 ♦3), modulo 4. Shortcut: count each card as (rank + suit) mod 4, a number 0–3, and add the four.",
+                    ? "Inverse SumRanks undoes columns in the order 0, 12, 11, …, 1. The column read is already back in place, and S does not change when a column turns."
+                    : "Suits are GF(4) labels: ♣ 0, ♦ 1, ♥ w = 2, ♠ w² = 3. Adding: a pair cancels, clubs do nothing, two different non-club suits make the third. Times w: ♦→♥→♠→♦, clubs stay. V = 0·top ⊕ 1·second ⊕ w·third ⊕ w²·bottom of the column to the left; S = all four suits of this column added. Columns go 1, 2, …, 12, 0.",
                 spec: specFor(step),
             };
         }

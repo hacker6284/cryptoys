@@ -64,10 +64,10 @@ Link 2 only — not bit-security, not emitter soundness.
 | Twin inverse `runLoopOn` inducts to `passKeyInvGoN` | Landed (`passkey_inv_loop_refines`, `passkey_inv_twin_refines`) |
 | Residual stepper of `Doubledeal.passkey_inv` = `passkeyInvStepGen` | **CLOSED** (`passkey_inv_step_eq`, `passkey_inv_eq_twin_loop`; nested undo-cut / do-elaboration, not a second algorithm) |
 | `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` on every well-formed list | **CLOSED** (`passkey_inv_refines`) |
-| `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | **CLOSED for v9** (`encrypt_refines`; `CardBound` message, `Perm52` key, length 52). Re-proved in stage 2; see "v9 changes" in `doubledeal/README.md` |
-| `sum_ranks` ≃ `sumRanks cardRank cardColumnWeight` | **CLOSED for v9** (`sum_ranks_refines`). Rows weigh rank, columns rank + suit (`column_weight_refines`). Domain: `CardBound` cells, so the column sums stay inside i64 |
-| `mix_columns` ≃ `mixColumns` | **CLOSED for v9** (`mix_columns_refines`; the overflow scan is the emitted `scan_row`, `scan_row_refines`, starting at the blocked target's column) |
-| `full_round` / `final_round` ≃ `fullRound` / `fullRoundNoMix` | **CLOSED for v9** (`full_round_refines`, `final_round_refines`) |
+| `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | **CLOSED for v10** (`encrypt_refines`; `CardBound` message, `Perm52` key, length 52). Re-proved for v9 in stage 2 and for v10 with the new SumRanks; see "v10 changes" in `doubledeal/README.md` |
+| `sum_ranks` ≃ `sumRanksV10` | **CLOSED for v10** (`sum_ranks_refines`). Every emitted helper has its own refinement lemma (`row_total`, `row_turn`, `sum_rows`, `suit_label`, `gf_add`, `gf_times_w`, `column_value`, `column_suits`, `column_turn`, `turn_column`, `sum_columns`). Domain: every grid (v9 needed `CardBound` cells; v10 turn amounts stay small) |
+| `mix_columns` ≃ `mixColumns` | **CLOSED for v9 and v10** (`mix_columns_refines`; the overflow scan is the emitted `scan_row`, `scan_row_refines`, starting at the blocked target's column) |
+| `full_round` / `final_round` ≃ `fullRound` / `fullRoundNoMix` | **CLOSED for v10** (`full_round_refines`, `final_round_refines`) |
 | S3/S4 transfer onto `Except Trap` (multiset, inverse, injectivity) | **CLOSED** (`passkey_perm`, `passkey_inv_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, `passkey_inv_injective`, and the `WellFormed` Array forms in `Link2/PassKeyTransfer.lean`) |
 | MegaDreifach `pad_message` ≃ algebraic `pad` | **CLOSED** (`pad_message_refines`, `pad_message_refines_array`, `pad_z_refines`). Domain `PadWf`: bytes `≤ 255` and `8 * length` fits in an i64. Not `v_Hash`. |
 | MegaDreifach `compose` ≃ algebraic `compose` | **CLOSED** (`compose_refines`, `compose_refines_array`). Domain `PosWf`: lengths 20/20/30/30, nonnegative in-range indices, orientations `< 3` / `< 2` (trap-free, i64-safe). Not `v_Hash`. |

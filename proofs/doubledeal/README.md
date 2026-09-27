@@ -2,9 +2,9 @@
 
 Normative definition: [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/cipher/doubledeal/SPEC.md). Stones live in SPEC §6. This directory is the correctness ledger for those stones, not a second specification.
 
-DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v9** (deprecated, draft; no successor yet — see [`../deprecated/doubledeal-v9/`](../deprecated/doubledeal-v9/)). v8 is deprecated; its vulnerability proof is in [`../deprecated/doubledeal-v8/`](../deprecated/doubledeal-v8/).
+DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v10.** v9 is deprecated; its vulnerability proof (K♣↔Q♥ swap distinguisher) is in [`../deprecated/doubledeal-v9/`](../deprecated/doubledeal-v9/). v8 is deprecated; its vulnerability proof is in [`../deprecated/doubledeal-v8/`](../deprecated/doubledeal-v8/).
 
-> **Status: v9.** Generated Lean, TAP, vectors, the algebraic model and Link 2 all describe v9 (see "v9 changes" below). `lake build` is green with no `sorry` and no `native_decide`, `lake exe doubledeal` passes every known-answer vector, and `check_axioms.py` (run in CI) confirms the top theorems in [`lean/Axioms.lean`](lean/Axioms.lean) use only propext, Classical.choice and Quot.sound. The Lean package proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
+> **Status: v10.** Generated Lean, TAP, vectors, the algebraic model and Link 2 all describe v10 (see "v10 changes" below). `lake build` is green with no `sorry` and no `native_decide`, `lake exe doubledeal` passes every known-answer vector, and `check_axioms.py` (run in CI) confirms the top theorems in [`lean/Axioms.lean`](lean/Axioms.lean) use only propext, Classical.choice and Quot.sound. The Lean package proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
 
 ## Layers (be honest)
 
@@ -92,7 +92,19 @@ python3 proofs/doubledeal/vectors/json_to_lean.py --check  # CI: stale Lean fail
 
 Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
 
-## v9 changes
+## v10 changes
+
+v10 changes one layer: SumRanks (SPEC §3.3, §7a; candidate W5c). Rows are chained in order 1, 2, 3, 0 and each row turns left by the index-weighted rank sum of the row before it (weights 1..13, mod 13). Columns are chained in order 1..12, 0 and column j turns down by the GF(4) suit value of column j−1 (`0·s0 ⊕ 1·s1 ⊕ w·s2 ⊕ w²·s3`) XOR the XOR of column j's own four suit labels. The model is `lean/DoubleDeal/SumRanksV10.lean`:
+
+- **Round trip.** `invSumRanksV10_sumRanksV10` and `sumRanksV10_invSumRanksV10` (both directions, all grids). They rest on a generic chain lemma (`sumRanksChain` / `invSumRanksChain`): each step turns one line by an amount read from a line that is already final, and for columns also from a quantity the turn does not change (`OwnInvariant`: the XOR of a column's own suit labels is rotation invariant, `colTurnV10_ownInvariant`). Both theorems are in `Axioms.lean` and checked by `check_axioms.py`.
+- **Round.** `unkeyedNoMix` / `invUnkeyedNoMix` now use `sumRanksV10`; `encrypt6_rt`, `encryptDeckFn_rt` and every downstream round-trip theorem are unchanged in statement. The old two-weight `sumRanks` (v8/v9) stays in `SumRanks.lean` for the frozen models; `cardColumnWeight` is kept and documented as the deprecated v9 weight.
+- **Link 2.** `Link2/SumLink.lean` was rewritten: every emitted v10 helper (`row_total`, `row_turn`, `sum_rows`, `suit_label`, `gf_add`, `gf_times_w`, `column_value`, `column_suits`, `column_turn`, `turn_column`, `sum_columns`) has a refinement lemma, and `sum_ranks_refines` now says `sum_ranks (embedGrid g) = .ok (embedGrid (sumRanksV10 g))` for every grid (the v9 version needed `CardBound` cells). `encrypt_refines` is unchanged in statement.
+- **Compiled evaluation.** The chained model, read naively as nested closures, is exponential when compiled (each step re-reads earlier steps). `SumRanksV10.lean` therefore carries a list implementation with `@[csimp]` lemmas (`sumRanksV10_eq_LL`, `invSumRanksV10_eq_LL`) proved equal to the model; `lake exe doubledeal` uses it. Kernel proofs never see the list version.
+- **Relabelling symmetry (security package).** `sumRanksV10_commutes_iff`: a relabelling σ commutes with v10 SumRanks on every deck iff σ is one of the 52 `v10Sym a x` (rank + a mod 13, GF(4) suit label ⊕ x), the v10 analogue of v9's `sumRanks_commutes_iff`. This is about exact symmetry only.
+- **Not claimed.** Nothing here is a security claim. The empirical W5c measurements (swap survival, hand cost) are in [`analysis/v10-sumranks/`](analysis/v10-sumranks/) and are measurements, not proofs.
+
+## v9 changes (historical)
+
 
 v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). **A2:** SumRanks takes separate weights, rank for rows and `cardColumnWeight` = rank + suit for columns (`sumRanks cardRank cardColumnWeight`; the round-trip theorems hold for any pair of weights). In Link 2, `sum_ranks_refines` follows the emitted `column_weight`; because suit grows with the card id it needs `CardBound` cells, the same bound `encrypt_refines` already puts on messages. **B3:** the GridCycle overflow scan starts at the blocked target's column (`rotCol`, `scanRow occ row start`, `overflowSeat occ t start`). `invMixColumns_mixColumns` needed no change, because the forward and inverse walks share `chooseSeat!`. In Link 2, `scan_row_refines` covers the emitted `scan_row` helper, and `overflow_seat_refines` / `mix_columns_refines` sit on top of it. The emitted asserts in `index_of` and `overflow_seat` are matched as `∃ ln` (witness by `rfl`), so sudo edits that move a line no longer reach into Link 2.
 

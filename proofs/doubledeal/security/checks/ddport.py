@@ -1,4 +1,5 @@
-"""v8/v9 DoubleDeal port for T1 relabelling checks. v8 = frozen dd_v8.py; v9 adds A2 + B3."""
+"""v8/v9/v10 DoubleDeal port for T1 relabelling checks. v8 = frozen dd_v8.py; v9 adds A2 + B3;
+v10 replaces SumRanks by the chained index-weighted rows and GF(4) suit columns (SPEC 3.3)."""
 import sys
 from pathlib import Path
 REPO = Path(__file__).resolve().parents[4]
@@ -8,7 +9,32 @@ from dd_v8 import suit, rank, rotl, lay_cm, scoop_cm, scoop_rm, shift_rows, comp
 
 def colw(v, x): return rank(x) if v == 8 else rank(x) + suit(x)
 
+# v10 SumRanks (SPEC 3.3). GF(4) labels: clubs 0, diamonds 1, hearts w = 2, spades w^2 = 3.
+LABEL = [0, 2, 3, 1]                      # by suit index: clubs, hearts, spades, diamonds
+TIMES_W = [0, 2, 3, 1]                    # x -> w x on labels
+def label(x): return LABEL[suit(x)]
+def row_turn(row): return sum((13 - j) * rank(x) for j, x in enumerate(row)) % 13
+def column_value(g, p): return label(g[1][p]) ^ TIMES_W[label(g[2][p])] ^ TIMES_W[TIMES_W[label(g[3][p])]]
+def column_suits(g, j): return label(g[0][j]) ^ label(g[1][j]) ^ label(g[2][j]) ^ label(g[3][j])
+def column_turn(g, j): return column_value(g, (j + 12) % 13) ^ column_suits(g, j)
+def turn_column(g, j, s):
+    col = [g[i][j] for i in range(4)]
+    for i in range(4): g[i][j] = col[(i - s) % 4]
+
+def sum_ranks_v10(g):
+    g = [row[:] for row in g]
+    for i in (1, 2, 3, 0): g[i] = rotl(g[i], row_turn(g[(i + 3) % 4]))
+    for j in list(range(1, 13)) + [0]: turn_column(g, j, column_turn(g, j))
+    return g
+
+def inv_sum_ranks_v10(g):
+    g = [row[:] for row in g]
+    for j in [0] + list(range(12, 0, -1)): turn_column(g, j, -column_turn(g, j))
+    for i in (0, 3, 2, 1): g[i] = rotl(g[i], -row_turn(g[(i + 3) % 4]))
+    return g
+
 def sum_ranks(g, v):
+    if v == 10: return sum_ranks_v10(g)
     g = [row[:] for row in g]
     for i in range(4):
         g[i] = rotl(g[i], sum(rank(x) for x in g[i]) % 13)
@@ -38,7 +64,7 @@ def walk(d, v):
             pc = d[i-1]; pr, pcc = seats[-1]
             tr, tc = (pr + suit(pc)) % 4, (pcc + rank(pc)) % 13
             if not occ[tr][tc]: r, c = tr, tc
-            else: r, c, t = overflow_seat(occ, t, tc if v == 9 else 0)
+            else: r, c, t = overflow_seat(occ, t, tc if v >= 9 else 0)
         occ[r][c] = True; seats.append((r, c))
     return seats
 

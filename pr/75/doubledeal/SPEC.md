@@ -13,7 +13,15 @@ The demo at `demos/doubledeal/` plays `trace_encrypt` and `trace_decrypt`. It do
 - A single-block SPN on permutations of a 52-card CHaSeD deck.
 - Unkeyed layers: **SumRanks** (SubBytes stand-in), **ShiftRows**, **GridCycle** (MixColumns stand-in).
 - Keyed layer: **Compose** (AddRoundKey stand-in), using a 52-card round key as core.
-- **AES role map.** SumRanks is the SubBytes stand-in: the data-dependent, nonlinear step. It is the only layer that looks at every card's value in a sum. In v9 it reads **suit and rank**, so no two cards look alike to it. ShiftRows is ShiftRows (fixed row rotations). GridCycle is the MixColumns stand-in (diffusion: each card's suit and rank steer where the next card lands). Compose is AddRoundKey. No layer here changes a card's face; every layer only moves cards between seats, so "nonlinear" means "the move depends on the cards", not an S-box table.
+- **AES role map.** No layer changes a card's face; every layer only moves cards between seats, so "nonlinear" means "the move depends on the cards", not an S-box table.
+
+  | Layer | AES role | What it does |
+  | --- | --- | --- |
+  | SumRanks | SubBytes | The data-dependent, nonlinear step; the only layer that sums every card's value (rows: rank; columns: rank + suit, so no two cards look alike to it). |
+  | ShiftRows | ShiftRows | Fixed row rotations 0, 1, 2, 3. |
+  | GridCycle | MixColumns | Diffusion: each card's suit and rank steer where the next card lands. |
+  | Compose | AddRoundKey | Moves seats by the round key. |
+
 - Key schedule: **PassKey** — forward iteration \(K_r = F(K_{r-1})\) with \(F =\) `pass_to_key_cut_fallback`.
 - Round count \(N_r = 6\): whitening with \(K_0\), five full rounds with \(K_1,\ldots,K_5\), final round with \(K_6\) (no MixColumns).
 - Modes: **ECB**, **CTR**, and **CBC**. CTR counter encoding is pinned: Diamonds in seats 39–51 via factoradic; Clubs+Hearts+Spades in seats 0–38 as nonce. CBC is byte-domain on the §5.3 28-byte encoding (§5.4).
@@ -133,7 +141,7 @@ Used for GridCycle **output** scoop and GridCycle **inverse** lay.
 
 ## 3.3 SumRanks and inverse
 
-Operate on a filled \(4\times13\) grid \(G\). Rows read ranks; columns read rank **and** suit. The pair \((\mathrm{rank}(c) \bmod 13,\ (\mathrm{rank}(c)+\mathrm{suit}(c)) \bmod 4)\) determines \(c\) (since \(13 \equiv 1 \pmod 4\), \(\mathrm{rank}+\mathrm{suit} \equiv c+1\)), so no two cards are interchangeable to SumRanks. v8 read ranks only; that made the unkeyed stem commute with every rank-preserving relabelling of the cards (see `proofs/deprecated/doubledeal-v8/`).
+Operate on a filled \(4\times13\) grid \(G\). Rows read ranks; columns read rank **and** suit. The pair \((\mathrm{rank}(c) \bmod 13,\ (\mathrm{rank}(c)+\mathrm{suit}(c)) \bmod 4)\) determines \(c\) (since \(13 \equiv 1 \pmod 4\), \(\mathrm{rank}+\mathrm{suit} \equiv c+1\)), so no two cards are interchangeable to SumRanks.
 
 **Row stage (forward).** For each row \(i=0..3\):
 
@@ -189,7 +197,7 @@ Maps a **packet** (deck) to a packet. Walk places cards onto an empty \(4\times1
 (c + \mathrm{rank}(x))\bmod 13\bigr).
 \]
 
-**Overflow machine.** State \(t \in \{0,1,2,3\}\), initially \(0\). On overflow at blocked target \((r^\ast, c^\ast)\), seek the next free seat, scanning each marker row **from column \(c^\ast\)** rightward with wrap (v9; v8 scanned from column 0):
+**Overflow machine.** State \(t \in \{0,1,2,3\}\), initially \(0\). On overflow at blocked target \((r^\ast, c^\ast)\), seek the next free seat, scanning each marker row **from column \(c^\ast\)** rightward with wrap:
 
 ```
 overflow_seat(occupied, t, start):   # start = c* = column of the blocked target
@@ -427,8 +435,6 @@ On the column-major table:
 
 Rows first, then columns (separates the row stage from ShiftRows).
 
-**At the table (v9).** Rows are exactly as before. Columns add one small number per card: its suit (♣ 0, ♥ 1, ♠ 2, ♦ 3). Easiest by hand: for each card say (rank + suit) mod 4 — a number 0–3 — and add the four. About 52 extra tiny additions per SumRanks; no new moves.
-
 **Inverse:** row rank sums and column rank-plus-suit sums are unchanged under rotate. Undo columns first (rotate the other way by sum mod 4), then undo rows (rotate the other way by sum mod 13). Enter/exit with the same column-major deal/scoop.
 
 ## 4.3 ShiftRows
@@ -447,7 +453,7 @@ Then **scoop column-major** into a packet (full round continues to GridCycle; fi
 3. For each next hand card: from the seat you just filled, using the card you just placed, step  
    `new_row = (row + suit) mod 4`, `new_col = (col + rank) mod 13`.  
    - If that seat is **empty**, place there.  
-   - If **full** (overflow): keep your finger on the **column** of the blocked seat. In the row named by the overflow marker’s suit, start at that column and scan right (wrapping from column 13 back to column 1) for the first empty seat; place there; advance the marker one suit. If that whole row is full, advance the marker and scan the next suit’s row the same way, again starting at the blocked column.
+   - If **full** (overflow): keep your finger on the **column** of the blocked seat. In the row named by the overflow marker’s suit, start at that column and scan right (wrapping from column 12 back to column 0) for the first empty seat; place there; advance the marker one suit. If that whole row is full, advance the marker and scan the next suit’s row the same way, again starting at the blocked column.
 4. Scoop **row-major** → packet.
 
 **Inverse:** lay the packet **row-major**. Use visited markers. Start seat’s card was first in the hand. Walk with the same step; if the stepped seat is already visited, use the same CHaSeD overflow on **unvisited** seats, starting the scan at the blocked seat's column. Each chosen seat’s card is the next hand card.
@@ -744,7 +750,7 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 
 | Version | Status | Change |
 | --- | --- | --- |
-| v8 (TDSPN elegant-v8) | **Deprecated**, frozen at `v8/SPEC.md` + `v8/doubledeal_v8.sudo` | SumRanks read ranks only. Same-rank relabellings (e.g. K♣↔K♦) commuted with every layer except GridCycle, giving a chosen-plaintext distinguisher (~\(10^{-3}\) per pair). Vulnerability proof: `proofs/deprecated/doubledeal-v8/`. |
+| v8 (TDSPN elegant-v8) | **Deprecated**, frozen at `v8/SPEC.md` + `v8/doubledeal_v8.sudo` | SumRanks read ranks only, and the GridCycle overflow scanned each marker row from column 0. Same-rank relabellings (e.g. K♣↔K♦) commuted with every layer except GridCycle, giving a chosen-plaintext distinguisher (~\(10^{-3}\) per pair). Vulnerability proof: `proofs/deprecated/doubledeal-v8/`. |
 | v9 | **Current** | SumRanks columns sum \((\mathrm{rank}+\mathrm{suit}) \bmod 4\); GridCycle overflow scans from the blocked column. Toy evidence only: the same relation family measured at 0 hits in \(2\times10^6\) full-cipher pairs for the worst transposition found by a one-round screen (95% upper bound \(1.5\times10^{-6}\)). That is not a security claim. |
 
 ---

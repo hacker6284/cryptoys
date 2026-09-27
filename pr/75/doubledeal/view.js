@@ -140,6 +140,7 @@ export async function mountTable(canvas, messageOrder, keyOrder) {
         clearHighlights: table.clearHighlights,
         rowRanks: table.rowRanks,
         colRanks: table.colRanks,
+        colTerms: table.colTerms,
         dispose,
     };
 }

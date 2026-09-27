@@ -205,6 +205,7 @@ export async function createUnboxRig({
     sleeve.add(flapPivot);
 
     innerGlow.position.set(0, 0.01, 0.002);
+    // Leaves the scene until adoptRig; safe only with no await between.
     sleeve.add(innerGlow);
 
     group.add(sleeve);

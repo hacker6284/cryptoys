@@ -11,7 +11,7 @@ export function createLights(scene) {
         scene.traverseVisible((o) => {
             if (!o.isLight) return;
             counts[o.type] = (counts[o.type] || 0) + 1;
-            if (o.castShadow) counts.castShadow = (counts.castShadow || 0) + 1;
+            if (o.castShadow) counts[`${o.type}:shadow`] = (counts[`${o.type}:shadow`] || 0) + 1;
         });
         return JSON.stringify(counts, Object.keys(counts).sort());
     }
@@ -31,6 +31,11 @@ export function createLights(scene) {
             return light;
         },
         seal() {
+            let visible = 0;
+            scene.traverseVisible((o) => { if (o.isLight) visible++; });
+            if (visible !== byKey.size) {
+                throw new Error(`${byKey.size} lights registered, ${visible} visible at seal`);
+            }
             sealed = signature();
         },
         check() {

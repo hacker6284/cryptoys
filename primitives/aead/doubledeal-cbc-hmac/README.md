@@ -11,6 +11,8 @@ Not for real use. No AES-class claim. MegaDreifach is a toy hash, so the MAC inh
 | `aead.mjs` | Byte-domain seal / open over §5.3 ranks |
 | `aead.test.mjs` | Round-trips and tag-tamper KATs |
 | `kats/doubledeal_cbc_hmac_kats.json` | Published vectors |
+| `kats/aead_harness.mjs` | Shared aead.mjs wiring for the test and the regenerator (`AEAD_OUT`, `DD_MJS`) |
+| `kats/regen.mjs` | Rewrites the KAT blobs after a DoubleDeal change; `aead.test.mjs` checks them |
 
 ```sh
 sudoc emit-ir --require terminates -I primitives/hash/megadreifach \

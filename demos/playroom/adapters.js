@@ -643,7 +643,7 @@ function createDoubleDealAdapter() {
             poses = nextPoses;
             // Add the dark dealer key at boot: adding a light mid-scene
             // recompiles every lit shader, which froze the unbox.
-            keyLight ??= createDealerKey(world);
+            keyLight = createDealerKey(world);
             return world.toys.deck;
         },
         preload,

@@ -89,7 +89,7 @@ export async function playUnbox({
 
     markBeat(name === "deck2" ? "msg-unbox-hold" : "unbox-hold");
     await clock.tween(320, (t) => {
-        if (keyLight) keyLight.intensity = lerp(keyLight.intensity || 0.2, 2.15, t);
+        if (keyLight && !clock.dead(gen)) keyLight.intensity = lerp(keyLight.intensity || 0.2, 2.15, t);
         if (rig.innerGlow) rig.innerGlow.intensity = lerp(0, 0.55, t);
     }, { ease: easeOutCubic, generation: gen });
     if (clock.dead(gen)) {
@@ -101,7 +101,7 @@ export async function playUnbox({
     rig.packet.visible = true;
     await clock.tween(680, (t) => {
         rig.setFlap(t);
-        if (keyLight) keyLight.intensity = lerp(2.15, 2.55, t);
+        if (keyLight && !clock.dead(gen)) keyLight.intensity = lerp(2.15, 2.55, t);
     }, { ease: easeOutCubic, generation: gen });
     await clock.wait(120, gen);
     if (clock.dead(gen)) {
@@ -173,7 +173,7 @@ export async function playUnbox({
 
     if (keyLight) {
         await clock.tween(280, (t) => {
-            keyLight.intensity = lerp(keyLight.intensity, 0.45, t);
+            if (!clock.dead(gen)) keyLight.intensity = lerp(keyLight.intensity, 0.45, t);
         }, { generation: gen });
     }
     markBeat(name === "deck2" ? "msg-dealt" : "dealt");

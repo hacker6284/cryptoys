@@ -6,6 +6,7 @@
 -/
 import Mathlib.Data.Fintype.Prod
 import DoubleDeal.Round
+import DoubleDealSecurity.Relabel
 
 namespace DoubleDeal.Security
 
@@ -158,5 +159,42 @@ theorem gridW_at_seat (hand : Fin 52 → Nat) (n : Fin 52) :
   placeW_write_stable ch hch hand n.val n.isLt 52 n.isLt (le_refl _)
 
 end
+
+/-- The card scooped from row-major seat `t` is the walk card placed there. -/
+theorem scoop_eq_hand_at (ch : Chooser) (hch : FreeChooser ch)
+    (hand : Fin 52 → Nat) (t n : Fin 52)
+    (hn : seatW ch hand n.val = (rmRow t, rmCol t)) :
+    scoopRowMajor (gridW ch hand) t = hand n := by
+  have hg := gridW_at_seat ch hch hand n
+  have h1 : (seatW ch hand n.val).1 = rmRow t := congrArg Prod.fst hn
+  have h2 : (seatW ch hand n.val).2 = rmCol t := congrArg Prod.snd hn
+  simpa [scoopRowMajor, h1, h2] using hg
+
+/-- (PROVED) Any free-seat walk followed by the row-major scoop sends decks to
+    decks (v9 `mixColumns`, the frozen v8 model). -/
+theorem isDeck_scoop_gridW (ch : Chooser) (hch : FreeChooser ch)
+    {m : Fin 52 → Nat} (hm : IsDeck m) :
+    IsDeck (scoopRowMajor (gridW ch m)) := by
+  constructor
+  · intro t
+    obtain ⟨n, hn⟩ := seatW_surj ch hch m (rmRow t, rmCol t)
+    rw [scoop_eq_hand_at ch hch m t n hn]
+    exact hm.1 n
+  · intro t1 t2 h
+    obtain ⟨n1, hn1⟩ := seatW_surj ch hch m (rmRow t1, rmCol t1)
+    obtain ⟨n2, hn2⟩ := seatW_surj ch hch m (rmRow t2, rmCol t2)
+    have h1 := scoop_eq_hand_at ch hch m t1 n1 hn1
+    have h2 := scoop_eq_hand_at ch hch m t2 n2 hn2
+    have hcards : m n1 = m n2 := by rw [← h1, ← h2]; exact h
+    have hn : n1 = n2 := hm.2 hcards
+    have hseats : (rmRow t1, rmCol t1) = (rmRow t2, rmCol t2) := by
+      rw [← hn1, ← hn2, hn]
+    calc
+      t1 = rmFlat (rmRow t1) (rmCol t1) := (rmFlat_rm t1).symm
+      _ = rmFlat (rmRow t2) (rmCol t2) := by
+          congr 1
+          · exact congrArg Prod.fst hseats
+          · exact congrArg Prod.snd hseats
+      _ = t2 := rmFlat_rm t2
 
 end DoubleDeal.Security

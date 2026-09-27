@@ -15,10 +15,11 @@ path dependency.
 
 ## Layout
 
-Two libraries about relabellings `σ : Equiv.Perm (Fin 52)` of card values:
-`DoubleDealSecurity` (the default target) and `DoubleDealSecurityHeavy`
-(kernel witnesses taking minutes; not a default target, so a plain `lake build`
-skips it).
+Two libraries: `DoubleDealSecurity` (the default target) and
+`DoubleDealSecurityHeavy` (kernel witnesses taking minutes; not a default target,
+so a plain `lake build` skips it). Most of the code is about relabellings
+`σ : Equiv.Perm (Fin 52)` of card values. `BranchNumber` is separate: the
+trivial branch-number floor on decks, and the GridCycle tail swap that attains it.
 
 | Module | Content |
 |---|---|
@@ -27,6 +28,7 @@ skips it).
 | `SumRanks` | SumRanks commutes iff σ is a constant weight shift; v8 rank-preserving; the 52-element v9 group `v9Sym` |
 | `Walk` | the GridCycle seat walk, generic in the seat chooser |
 | `GridCycle` | GridCycle commutes only with σ = 1 (v9 and the frozen v8 model) |
+| `BranchNumber` | trivial branch-number floor (`≥ 4` for any deck bijection); GridCycle attains it by swapping walk cards 50 and 51 (v9 and the frozen v8 model). Not a wide-trail bound |
 | `Rounds` | lifting to rounds/encrypt; stem onto decks; the conjecture; degenerate-key side lemma |
 | `PermKeys` | encrypt with permutation round keys reduces to the conjecture |
 | `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt`, K♣↔K♦ witness |
@@ -46,6 +48,12 @@ master key, the identity deck expanded by the real PassKey chain, no nontrivial
 the breaking message is shown to exist, not named; the key is never relabelled;
 it excludes exact symmetry only, not near-symmetries or statistical
 distinguishers (v8 fell to one); it is not the open per-key statement.
+
+`BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
+any map that sends decks to decks and separates them has branch number at
+least 4. v9 GridCycle and the frozen v8 model attain 4: swapping walk cards
+50 and 51 changes exactly two output seats. That is the trivial floor, not a
+bound above 4, and not a statement about SumRanks or keyed rounds.
 
 T1 is a draft. The only open statement is the covariant round conjecture
 `roundBody_covariant_iff_id` (marked `DRAFT-SORRY`, checked numerically by

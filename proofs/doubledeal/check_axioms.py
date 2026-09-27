@@ -12,7 +12,8 @@ axiom) fails, as does a Lean error.
 - core: audits the theorems listed with `#print axioms` in lean/Axioms.lean;
   each listed theorem must be reported.
 - security: security/Axioms.lean audits EVERY theorem declared in a
-  `DoubleDealSecurity.*` module (`#audit_all`). Exception, by exact name: the
+  `DoubleDealSecurity.*` module, private ones included (`#audit_all`), and the
+  parsed report count must equal the `audited N` line Lean prints. Exception, by exact name: the
   theorems in KNOWN_SORRY may also use `sorryAx`. A KNOWN_SORRY entry that is
   not reported, or no longer uses sorryAx, fails (stale allowlist); so does any
   `axiom` declared in the package, used or not.
@@ -60,6 +61,16 @@ def main(argv) -> int:
         seen[name] = {a.strip() for a in axs.split(",") if a.strip()}
     for name in re.findall(r"'(\S+?)' does not depend on any axioms", out):
         seen[name] = set()
+    if cfg["mode"] == "all":
+        m = re.findall(r"\baudited (\d+)\b", out)
+        if len(m) != 1:
+            print(out, file=sys.stderr)
+            print("check_axioms: missing or repeated 'audited N' line", file=sys.stderr)
+            return 1
+        if int(m[0]) != len(seen):
+            print(f"check_axioms: Lean audited {m[0]} theorems but {len(seen)} reports were parsed",
+                  file=sys.stderr)
+            return 1
     if cfg["mode"] == "list":
         src = (cfg["dir"] / "Axioms.lean").read_text()
         expected = re.findall(r"^#print axioms\s+(\S+)", src, flags=re.M)

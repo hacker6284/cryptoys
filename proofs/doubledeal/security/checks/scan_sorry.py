@@ -20,6 +20,12 @@ DECL = re.compile(
     r"(?:theorem|lemma|def|abbrev|instance|example|structure)\s+([^\s(:{\[]+)?")
 
 
+# `let rec f ...` / `have f ... :=` helpers inside a declaration
+HELPER = re.compile(r"^\s+(?:let\s+rec|have)\s+([A-Za-z_][\w'.]*)\b")
+# an item of a `where` block: `  f (x : α) : β := ...`
+WHERE_ITEM = re.compile(r"^\s+([A-Za-z_][\w'.]*)\b[^:=|]*(?::[^=]|:=)")
+
+
 def strip_block_comments(text: str) -> str:
     # keep line numbers: replace comment bodies but keep newlines
     return re.sub(r"/-.*?-/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
@@ -31,13 +37,36 @@ def main() -> int:
     for path in sorted(PKG.rglob("*.lean")):
         if ".lake" in path.parts:
             continue
-        decl = None
+        decl = None      # current top-level declaration
+        top = None
+        in_where = False
+        helper_indent = None
         text = strip_block_comments(path.read_text())
         for i, line in enumerate(text.splitlines(), 1):
             code = re.sub(r"--.*", "", line)
             m = DECL.match(code)
             if m:
-                decl = (m.group(1) or "<anonymous>").split(".")[-1]
+                top = decl = (m.group(1) or "<anonymous>").split(".")[-1]
+                in_where = False
+                helper_indent = None
+            elif top is not None:
+                # helpers get their own name, so a sorry in a helper is neither
+                # attributed to nor counted for the allowlisted parent
+                indent = len(code) - len(code.lstrip())
+                if helper_indent is not None and code.strip() and indent <= helper_indent:
+                    decl, helper_indent = top, None   # left the `have`/`let rec` body
+                h = HELPER.match(code)
+                if h:
+                    decl, helper_indent = f"{top}.{h.group(1)}", indent
+                elif in_where:
+                    w = WHERE_ITEM.match(code)
+                    if w:
+                        decl = f"{top}.{w.group(1)}"
+            if re.search(r"\bwhere\b", code) and top is not None:
+                in_where = True
+                w = re.search(r"\bwhere\s+([A-Za-z_][\w'.]*)", code)
+                if w:
+                    decl = f"{top}.{w.group(1)}"
             if re.search(r"\b(admit|native_decide|sorryAx)\b", code):
                 bad.append(f"{path}:{i}: admit/native_decide/sorryAx: {line.strip()}")
             if re.match(r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable)\s+)*axiom\b", code):
@@ -55,7 +84,8 @@ def main() -> int:
     if bad:
         print(*bad, sep="\n", file=sys.stderr)
         return 1
-    print(f"security package: no admit/native_decide; sorry only in {sorted(ALLOWED_SORRY)}")
+    print("security package: no admit, native_decide, sorryAx or axiom declarations; "
+          f"sorry only in {sorted(ALLOWED_SORRY)} (exactly once each)")
     return 0
 
 

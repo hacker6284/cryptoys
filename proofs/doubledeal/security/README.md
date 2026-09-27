@@ -8,7 +8,7 @@ path dependency.
     lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
     lake build
     python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
-    lake build DoubleDealSecurityHeavy DoubleDealSecurity.Audit   # heavy witnesses, ~2–3 min
+    lake build DoubleDealSecurityHeavy DoubleDealSecurity.Audit   # heavy witnesses, ~6 min (five decide! encryptions)
     python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
     python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
     python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py

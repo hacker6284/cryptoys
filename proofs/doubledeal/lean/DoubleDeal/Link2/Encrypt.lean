@@ -126,14 +126,13 @@ theorem compose_toDeck (m : Fin 52 → Nat) (key : List Nat) :
   rw [composeOnce_toList, ofDeck_toDeck]
 
 set_option maxHeartbeats 800000 in
-theorem final_round_refines (m : Fin 52 → Nat) (key : List Nat) (hk : Perm52 key)
-    (hb : ∀ i, CardBound (m i)) :
+theorem final_round_refines (m : Fin 52 → Nat) (key : List Nat) (hk : Perm52 key) :
     Doubledeal.final_round (embed (toDeck m)) (embed key) =
       .ok (embed (toDeck (fullRoundNoMix m (keyPos key)))) := by
   unfold Doubledeal.final_round
   rw [lay_cm_refines (toDeck m) (length_toDeck m)]
   simp only [ok_bind, ofDeck_toDeck]
-  rw [sum_ranks_refines _ (lay_bound m hb)]
+  rw [sum_ranks_refines]
   simp only [ok_bind]
   rw [shift_rows_refines]
   simp only [ok_bind]
@@ -150,7 +149,7 @@ theorem unkeyed_full_refines (m : Fin 52 → Nat) (hb : ∀ i, CardBound (m i)) 
   unfold Doubledeal.unkeyed_full
   rw [lay_cm_refines (toDeck m) (length_toDeck m)]
   simp only [ok_bind, ofDeck_toDeck]
-  rw [sum_ranks_refines _ (lay_bound m hb)]
+  rw [sum_ranks_refines]
   simp only [ok_bind]
   rw [shift_rows_refines]
   simp only [ok_bind]
@@ -324,7 +323,7 @@ theorem encrypt_refines (message key : List Nat)
       simp only [ok_bind]
       rw [show (5 + 1) - 1 = 5 by decide]
       rw [final_round_refines (encAt m key 5) (passKeyIter 6 key)
-        (passKeyIter_perm52 key hk 6) (fun i => encAt_bound m key hc 5 i)]
+        (passKeyIter_perm52 key hk 6)]
       rw [except_bind_pure, hgoal])
   rw [show (1 : Int) = Int.ofNat 1 from rfl]
   have hf1 : (fun i => embed (toDeck (encAt m key (i - 1)))) 1 =

@@ -67,7 +67,8 @@ theorem turnCol_other (g : Grid α) (j : Fin 13) (k : Nat) (r : Fin 4) {c : Fin 
   unfold turnCol colRotate
   simp only [if_neg h, rotR_zero, ofList4_toList4]
 
-theorem turnColBack_other (g : Grid α) (j : Fin 13) (k : Nat) (r : Fin 4) {c : Fin 13} (h : c ≠ j) :
+theorem turnColBack_other (g : Grid α) (j : Fin 13) (k : Nat) (r : Fin 4) {c : Fin 13}
+    (h : c ≠ j) :
     turnColBack g j k r c = g r c := by
   unfold turnColBack colRotateInv
   simp only [if_neg h, rotL_zero, ofList4_toList4]
@@ -351,10 +352,14 @@ theorem gfTimesW_lt (x : Nat) : gfTimesW x < 4 := by
 theorem colTurnV10_lt (p y : Fin 4 → Nat) : colTurnV10 p y < 4 := gfAdd_lt _ _
 
 theorem rotDown_cases (y : Fin 4 → α) (k : Nat) :
-    (rotDown y k 0 = y 0 ∧ rotDown y k 1 = y 1 ∧ rotDown y k 2 = y 2 ∧ rotDown y k 3 = y 3) ∨
-    (rotDown y k 0 = y 3 ∧ rotDown y k 1 = y 0 ∧ rotDown y k 2 = y 1 ∧ rotDown y k 3 = y 2) ∨
-    (rotDown y k 0 = y 2 ∧ rotDown y k 1 = y 3 ∧ rotDown y k 2 = y 0 ∧ rotDown y k 3 = y 1) ∨
-    (rotDown y k 0 = y 1 ∧ rotDown y k 1 = y 2 ∧ rotDown y k 2 = y 3 ∧ rotDown y k 3 = y 0) := by
+    (rotDown y k 0 = y 0 ∧ rotDown y k 1 = y 1 ∧
+      rotDown y k 2 = y 2 ∧ rotDown y k 3 = y 3) ∨
+    (rotDown y k 0 = y 3 ∧ rotDown y k 1 = y 0 ∧
+      rotDown y k 2 = y 1 ∧ rotDown y k 3 = y 2) ∨
+    (rotDown y k 0 = y 2 ∧ rotDown y k 1 = y 3 ∧
+      rotDown y k 2 = y 0 ∧ rotDown y k 3 = y 1) ∨
+    (rotDown y k 0 = y 1 ∧ rotDown y k 1 = y 2 ∧
+      rotDown y k 2 = y 3 ∧ rotDown y k 3 = y 0) := by
   have hk : k % 4 < 4 := Nat.mod_lt _ (by decide)
   have hr : rotDown y k = rotDown y (k % 4) := by
     unfold rotDown
@@ -388,12 +393,14 @@ theorem rotUp_cases (y : Fin 4 → α) (k : Nat) :
 
 theorem colSuits_rotDown (y : Fin 4 → Nat) (k : Nat) : colSuits (rotDown y k) = colSuits y := by
   unfold colSuits
-  rcases rotDown_cases y k with ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ <;>
+  rcases rotDown_cases y k with
+    ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ <;>
     rw [h0, h1, h2, h3] <;> ac_rfl
 
 theorem colSuits_rotUp (y : Fin 4 → Nat) (k : Nat) : colSuits (rotUp y k) = colSuits y := by
   unfold colSuits
-  rcases rotUp_cases y k with ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ <;>
+  rcases rotUp_cases y k with
+    ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ | ⟨h0, h1, h2, h3⟩ <;>
     rw [h0, h1, h2, h3] <;> ac_rfl
 
 theorem colTurnV10_ownInvariant : OwnInvariant colTurnV10 := fun p y k =>
@@ -413,10 +420,6 @@ theorem invSumRanksV10_bound (P : Nat → Prop) (g : Grid Nat) (hb : ∀ r c, P 
     ∀ r c, P (invSumRanksV10 g r c) :=
   invSumRanksChain_bound rowTurnV10 colTurnV10 P g hb
 
-end DoubleDeal
-
-namespace DoubleDeal
-
 /-! ## Compiled evaluation (`@[csimp]`)
 
 The chained definitions above build each grid as a closure over the previous
@@ -426,69 +429,77 @@ lemmas below make compiled code materialise the grid as lists after every step.
 They are proved equal, so proofs and the kernel are unaffected. -/
 
 /-- A grid as its four rows. -/
-def toLL (g : Grid Nat) : List (List Nat) :=
+def toRows (g : Grid Nat) : List (List Nat) :=
   [toList13 (g 0), toList13 (g 1), toList13 (g 2), toList13 (g 3)]
 
 /-- Rows back to a grid (`0` pads out-of-range reads). -/
-def ofLL (L : List (List Nat)) : Grid Nat := fun r c => (L.getD r.val []).getD c.val 0
+def ofRows (L : List (List Nat)) : Grid Nat := fun r c => (L.getD r.val []).getD c.val 0
 
 theorem getD_toList13_fin (f : Fin 13 → Nat) (c : Fin 13) : (toList13 f).getD c.val 0 = f c := by
   match c with
-  | ⟨0, _⟩ => rfl | ⟨1, _⟩ => rfl | ⟨2, _⟩ => rfl | ⟨3, _⟩ => rfl | ⟨4, _⟩ => rfl
-  | ⟨5, _⟩ => rfl | ⟨6, _⟩ => rfl | ⟨7, _⟩ => rfl | ⟨8, _⟩ => rfl | ⟨9, _⟩ => rfl
+  | ⟨0, _⟩ => rfl | ⟨1, _⟩ => rfl | ⟨2, _⟩ => rfl | ⟨3, _⟩ => rfl
+  | ⟨4, _⟩ => rfl | ⟨5, _⟩ => rfl | ⟨6, _⟩ => rfl | ⟨7, _⟩ => rfl
+  | ⟨8, _⟩ => rfl | ⟨9, _⟩ => rfl
   | ⟨10, _⟩ => rfl | ⟨11, _⟩ => rfl | ⟨12, _⟩ => rfl
 
-theorem getD_toLL (g : Grid Nat) (r : Fin 4) : (toLL g).getD r.val [] = toList13 (g r) := by
+theorem getD_toRows (g : Grid Nat) (r : Fin 4) : (toRows g).getD r.val [] = toList13 (g r) := by
   match r with
   | ⟨0, _⟩ => rfl | ⟨1, _⟩ => rfl | ⟨2, _⟩ => rfl | ⟨3, _⟩ => rfl
 
-theorem ofLL_toLL (g : Grid Nat) : ofLL (toLL g) = g := by
+theorem ofRows_toRows (g : Grid Nat) : ofRows (toRows g) = g := by
   funext r c
-  simp only [ofLL, getD_toLL, getD_toList13_fin]
+  simp only [ofRows, getD_toRows, getD_toList13_fin]
 
 section LL
 variable (rt : (Fin 13 → Nat) → Nat) (ct : (Fin 4 → Nat) → (Fin 4 → Nat) → Nat)
 
 def rowsDoneLL (L : List (List Nat)) : Nat → List (List Nat)
   | 0 => L
-  | n + 1 => toLL (rowStep rt (ofLL (rowsDoneLL L n)) ⟨(n + 1) % 4, Nat.mod_lt _ (by decide)⟩)
+  | n + 1 =>
+    toRows (rowStep rt (ofRows (rowsDoneLL L n)) ⟨(n + 1) % 4, Nat.mod_lt _ (by decide)⟩)
 
 def rowsUndoLL (L : List (List Nat)) : Nat → List (List Nat)
   | 0 => L
-  | n + 1 => toLL (rowStepBack rt (ofLL (rowsUndoLL L n)) ⟨(4 - n) % 4, Nat.mod_lt _ (by decide)⟩)
+  | n + 1 =>
+    toRows (rowStepBack rt (ofRows (rowsUndoLL L n)) ⟨(4 - n) % 4, Nat.mod_lt _ (by decide)⟩)
 
 def colsDoneLL (L : List (List Nat)) : Nat → List (List Nat)
   | 0 => L
-  | n + 1 => toLL (colStep ct (ofLL (colsDoneLL L n)) ⟨(n + 1) % 13, Nat.mod_lt _ (by decide)⟩)
+  | n + 1 =>
+    toRows (colStep ct (ofRows (colsDoneLL L n)) ⟨(n + 1) % 13, Nat.mod_lt _ (by decide)⟩)
 
 def colsUndoLL (L : List (List Nat)) : Nat → List (List Nat)
   | 0 => L
-  | n + 1 => toLL (colStepBack ct (ofLL (colsUndoLL L n)) ⟨(13 - n) % 13, Nat.mod_lt _ (by decide)⟩)
+  | n + 1 =>
+    toRows (colStepBack ct (ofRows (colsUndoLL L n))
+      ⟨(13 - n) % 13, Nat.mod_lt _ (by decide)⟩)
 
-theorem rowsDone_LL (g : Grid Nat) : ∀ n, rowsDone rt g n = ofLL (rowsDoneLL rt (toLL g) n)
-  | 0 => (ofLL_toLL g).symm
-  | n + 1 => by rw [rowsDone, rowsDone_LL g n, rowsDoneLL, ofLL_toLL]
+theorem rowsDone_LL (g : Grid Nat) : ∀ n, rowsDone rt g n = ofRows (rowsDoneLL rt (toRows g) n)
+  | 0 => (ofRows_toRows g).symm
+  | n + 1 => by rw [rowsDone, rowsDone_LL g n, rowsDoneLL, ofRows_toRows]
 
-theorem rowsUndo_LL (g : Grid Nat) : ∀ n, rowsUndo rt g n = ofLL (rowsUndoLL rt (toLL g) n)
-  | 0 => (ofLL_toLL g).symm
-  | n + 1 => by rw [rowsUndo, rowsUndo_LL g n, rowsUndoLL, ofLL_toLL]
+theorem rowsUndo_LL (g : Grid Nat) : ∀ n, rowsUndo rt g n = ofRows (rowsUndoLL rt (toRows g) n)
+  | 0 => (ofRows_toRows g).symm
+  | n + 1 => by rw [rowsUndo, rowsUndo_LL g n, rowsUndoLL, ofRows_toRows]
 
-theorem colsDone_LL (g : Grid Nat) : ∀ n, colsDone ct g n = ofLL (colsDoneLL ct (toLL g) n)
-  | 0 => (ofLL_toLL g).symm
-  | n + 1 => by rw [colsDone, colsDone_LL g n, colsDoneLL, ofLL_toLL]
+theorem colsDone_LL (g : Grid Nat) : ∀ n, colsDone ct g n = ofRows (colsDoneLL ct (toRows g) n)
+  | 0 => (ofRows_toRows g).symm
+  | n + 1 => by rw [colsDone, colsDone_LL g n, colsDoneLL, ofRows_toRows]
 
-theorem colsUndo_LL (g : Grid Nat) : ∀ n, colsUndo ct g n = ofLL (colsUndoLL ct (toLL g) n)
-  | 0 => (ofLL_toLL g).symm
-  | n + 1 => by rw [colsUndo, colsUndo_LL g n, colsUndoLL, ofLL_toLL]
+theorem colsUndo_LL (g : Grid Nat) : ∀ n, colsUndo ct g n = ofRows (colsUndoLL ct (toRows g) n)
+  | 0 => (ofRows_toRows g).symm
+  | n + 1 => by rw [colsUndo, colsUndo_LL g n, colsUndoLL, ofRows_toRows]
 
 end LL
 
 /-- `sumRanksV10` with list snapshots (compiled implementation). -/
 def sumRanksV10LL (g : Grid Nat) : Grid Nat :=
-  ofLL (colsDoneLL colTurnV10 (toLL (ofLL (rowsDoneLL rowTurnV10 (toLL g) 4))) 13)
+  -- `toRows (ofRows …)` pads the row lists to a full 4×13 grid.
+  ofRows (colsDoneLL colTurnV10 (toRows (ofRows (rowsDoneLL rowTurnV10 (toRows g) 4))) 13)
 
 def invSumRanksV10LL (g : Grid Nat) : Grid Nat :=
-  ofLL (rowsUndoLL rowTurnV10 (toLL (ofLL (colsUndoLL colTurnV10 (toLL g) 13))) 4)
+  -- `toRows (ofRows …)` pads the row lists to a full 4×13 grid.
+  ofRows (rowsUndoLL rowTurnV10 (toRows (ofRows (colsUndoLL colTurnV10 (toRows g) 13))) 4)
 
 @[csimp] theorem sumRanksV10_eq_LL : @sumRanksV10 = @sumRanksV10LL := by
   funext g

@@ -177,7 +177,8 @@ theorem colCollectStep_hit (grid : Grid Nat) (j : Nat) (hj : j < 13) (i : Nat) (
   have hpush :
       (embed ((toList4 (fun r => grid r ⟨j, hj⟩)).take i)).push
           (Int.ofNat (grid ⟨i, hi4⟩ ⟨j, hj⟩)) =
-        embed ((toList4 (fun r => grid r ⟨j, hj⟩)).take i ++ [grid ⟨i, hi4⟩ ⟨j, hj⟩]) := by
+        embed ((toList4 (fun r => grid r ⟨j, hj⟩)).take i ++
+          [grid ⟨i, hi4⟩ ⟨j, hj⟩]) := by
     simp [embed, Array.push]
   simp only [ok_bind, hget, appendL_spec, hpush]
   have hidx : (toList4 (fun r => grid r ⟨j, hj⟩))[i]'(by rw [length_toList4]; exact hi4) =
@@ -430,7 +431,8 @@ theorem writeColStep_hit (g0 : Grid Nat) (j : Nat) (hj : j < 13) (s : Nat) (i : 
   rw [embedGrid_setCell (colWriting g0 j hj s i) i j hi4 hj _]
   have hswap :
       (fun r c =>
-        if r = ⟨i, hi4⟩ ∧ c = ⟨j, hj⟩ then turnCol g0 ⟨j, hj⟩ s ⟨i, hi4⟩ ⟨j, hj⟩
+        if r = ⟨i, hi4⟩ ∧ c = ⟨j, hj⟩ then
+          turnCol g0 ⟨j, hj⟩ s ⟨i, hi4⟩ ⟨j, hj⟩
         else colWriting g0 j hj s i r c) =
         (fun r c =>
           if r = ⟨i, hi4⟩ ∧ c = ⟨j, hj⟩ then turnCol g0 ⟨j, hj⟩ s r c
@@ -797,7 +799,8 @@ theorem sum_rows_refines (G : Grid Nat) :
         if a = 4 then
           .ok (SudoRt.Flow.brk (Int.ofNat a, embedGrid (rowsDone rowTurnV10 G (a + 1 - 1))))
         else
-          .ok (SudoRt.Flow.cont (Int.ofNat (a + 1), embedGrid (rowsDone rowTurnV10 G (a + 1 - 1)))) := by
+          .ok (SudoRt.Flow.cont
+            (Int.ofNat (a + 1), embedGrid (rowsDone rowTurnV10 G (a + 1 - 1)))) := by
     intro a h1 h4
     obtain ⟨m, rfl⟩ : ∃ m, a = m + 1 := ⟨a - 1, by omega⟩
     simp only [Nat.add_sub_cancel]
@@ -954,7 +957,8 @@ theorem column_turn_refines (G : Grid Nat) (j : Nat) (hj : j < 13) :
   simp only [ok_bind]
   rw [column_suits_refines G j hj]
   simp only [ok_bind]
-  rw [gf_add_refines _ _ (show colValue _ < 4 from gfAdd_lt _ _) (show colSuits _ < 4 from gfAdd_lt _ _)]
+  rw [gf_add_refines _ _ (show colValue _ < 4 from gfAdd_lt _ _)
+    (show colSuits _ < 4 from gfAdd_lt _ _)]
   rfl
 
 theorem turn_column_as_loop (g : Array (Array Int)) (j s : Int) :
@@ -964,7 +968,8 @@ theorem turn_column_as_loop (g : Array (Array Int)) (j s : Int) :
           (colCollectStep g j 3)
           (fun σ => do
             let col := σ.2
-            let _out ← SudoRt.runLoopOn (ρ := Array (Array Int)) ((0 : Int), (#[] : Array Int)) fuel4
+            let _out ← SudoRt.runLoopOn (ρ := Array (Array Int))
+              ((0 : Int), (#[] : Array Int)) fuel4
               (freshStep col s 3)
               (fun σ => do
                 let fresh := σ.2
@@ -985,7 +990,8 @@ theorem turn_column_refines (G : Grid Nat) (j : Nat) (hj : j < 13) (s : Nat) (hs
   let xs := toList4 (fun r => G r ⟨j, hj⟩)
   have hlen : xs.length = 4 := length_toList4 _
   have hv : ∀ i : Nat, (hi : i < 4) →
-      (rotR xs s)[i]'(by rw [length_rotR, hlen]; exact hi) = turnCol G ⟨j, hj⟩ s ⟨i, hi⟩ ⟨j, hj⟩ := by
+      (rotR xs s)[i]'(by rw [length_rotR, hlen]; exact hi) =
+        turnCol G ⟨j, hj⟩ s ⟨i, hi⟩ ⟨j, hj⟩ := by
     intro i hi
     simp [turnCol, colRotate, ofList4, xs]
   exact collect_loop G j hj _ _ _ (by
@@ -1098,9 +1104,9 @@ theorem sum_columns_refines (G : Grid Nat) :
     rfl
   exact hcast.trans hrun
 
-/-- `sum_ranks` refines the v10 `sumRanksV10`. The card bound is not needed for
-v10 (turn amounts are small) but is kept so callers are unchanged. -/
-theorem sum_ranks_refines (g : Grid Nat) (_hb : ∀ r c, CardBound (g r c)) :
+/-- `sum_ranks` refines the v10 `sumRanksV10` on every grid (no card bound:
+v10 turn amounts stay small). -/
+theorem sum_ranks_refines (g : Grid Nat) :
     Doubledeal.sum_ranks (embedGrid g) = .ok (embedGrid (sumRanksV10 g)) := by
   unfold Doubledeal.sum_ranks
   rw [sum_rows_refines]

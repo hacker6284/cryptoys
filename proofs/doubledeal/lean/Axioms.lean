@@ -20,5 +20,8 @@ import DoubleDeal
 -- Algebraic model: layer bijections and round trip.
 #print axioms DoubleDeal.invSumRanksV10_sumRanksV10
 #print axioms DoubleDeal.sumRanksV10_invSumRanksV10
+-- The @[csimp] lemmas used by compiled evaluation (lake exe doubledeal).
+#print axioms DoubleDeal.sumRanksV10_eq_LL
+#print axioms DoubleDeal.invSumRanksV10_eq_LL
 #print axioms DoubleDeal.invMixColumns_mixColumns
 #print axioms DoubleDeal.encrypt6_rt

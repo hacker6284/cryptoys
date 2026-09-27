@@ -124,11 +124,45 @@ theorem sum_of_cancel (w : Fin 13 → ZMod 13) (v u : ZMod 13) (i₁ i₂ : Fin 
     `0` has at most 50 elements (PROOF.md §3: `n* = 51` contradicts `Σ δ = 0`). -/
 theorem maxClass_le_50 (f : Fin 52 → ZMod 13) (hs : ∑ c, f c = 0) (hnc : ∃ c, f c ≠ f 0)
     (v : ZMod 13) : (univ.filter fun c => f c = v).card ≤ 50 := by
-  sorry
+  by_contra hlt
+  push_neg at hlt
+  set S := univ.filter fun c => f c = v with hS
+  have hSc : Sᶜ.card ≤ 1 := by
+    have := card_compl S; simp only [Fintype.card_fin] at this; omega
+  -- every element outside S is the unique one
+  obtain ⟨c, hc⟩ := hnc
+  have hsplit : ∑ x, f x = ∑ x ∈ S, f x + ∑ x ∈ Sᶜ, f x := (sum_add_sum_compl S f).symm
+  have hSv : ∑ x ∈ S, f x = S.card • v := by
+    rw [← sum_const]; exact sum_congr rfl fun x hx => (mem_filter.mp hx).2
+  rcases Nat.lt_or_ge Sᶜ.card 1 with h0 | h1
+  · have hSe : Sᶜ = ∅ := card_eq_zero.mp (by omega)
+    have hall : ∀ x, f x = v := fun x => by
+      have : x ∉ Sᶜ := by simp [hSe]
+      simpa [hS] using this
+    exact hc (by rw [hall c, hall 0])
+  · have hc1 : Sᶜ.card = 1 := by omega
+    obtain ⟨d, hd⟩ := card_eq_one.mp hc1
+    have hScard : S.card = 51 := by have := card_compl S; simp only [Fintype.card_fin] at this; omega
+    rw [hsplit, hSv, hd, sum_singleton, hScard] at hs
+    have hdv : f d ≠ v := by
+      have : d ∈ Sᶜ := by rw [hd]; exact mem_singleton_self d
+      simpa [hS] using this
+    apply hdv
+    have h51 : (51 : ℕ) • v = -v := by
+      rw [nsmul_eq_mul]; have : ((51 : ℕ) : ZMod 13) = -1 := by decide
+      rw [this]; ring
+    rw [h51] at hs
+    linear_combination hs
 
 /-- Pigeonhole (PROOF.md §4): some label class has at least 13 of the 52 cards. -/
 theorem exists_class_ge_13 (f : Fin 52 → Fin 4) : ∃ x, 13 ≤ (univ.filter fun c => f c = x).card := by
-  sorry
+  by_contra h
+  push_neg at h
+  have hsum := Finset.card_eq_sum_card_fiberwise (s := (univ : Finset (Fin 52))) (t := (univ : Finset (Fin 4))) (f := f) (fun _ _ => mem_univ _)
+  have hle : ∑ x : Fin 4, (univ.filter fun c => f c = x).card ≤ ∑ _x : Fin 4, 12 :=
+    Finset.sum_le_sum fun x _ => Nat.lt_succ_iff.mp (h x)
+  simp only [card_univ, Fintype.card_fin, sum_const, smul_eq_mul] at hsum hle
+  omega
 
 /-! ## Generic fibre bound (PROOF.md §2 Lemma 3 and §4 Lemma 5: "nest the sums") -/
 

@@ -2,10 +2,12 @@
   Every relabelling outside `v10Sym` commutes with v10
   SumRanks on at most `52!/64` decks (`sumRanksV10_survival_le`).
 
-  Skeleton of the counting proof in PROOF.md (paper proof of the bound
-  `0.012768 · 52!`; Lean target `52!/64`). Each lemma carries the PROOF.md
-  section it formalises. Everything is proved (no `sorry`); see `../../SUMRANKS_DP.md`.
-  The self-contained combinatorics and numerics are in `Standalone.lean`.
+  Formalises the counting proof of
+  `proofs/doubledeal/security/sumranks-dp-paper/PROOF.md` (cited below as
+  `PROOF.md §n`). The paper proves the bound `0.012768 · 52!` (§3 (A3), §5);
+  Lean proves `52!/64`. Each lemma names the section it formalises; the lemma
+  map is `../../SUMRANKS_DP.md`. The self-contained combinatorics and numerics
+  are in `Standalone.lean`.
 
   Decks are counted as position permutations `π : Equiv.Perm (Fin 52)` laid
   column-major (`deckGrid π = layColumnMajor (permDeck π)`), which is a
@@ -106,21 +108,25 @@ theorem sum_delta (τ : Relabel) : ∑ c, delta τ c = 0 := by
 /-! ## §0 Row functionals -/
 
 /-- `S(x) = Σ_j j·δ(x_j)` (PROOF.md §0). -/
-def rowS (τ : Relabel) (x : Fin 13 → Fin 52) : ZMod 13 := ∑ j : Fin 13, (j.val : ZMod 13) * delta τ (x j)
+def rowS (τ : Relabel) (x : Fin 13 → Fin 52) : ZMod 13 :=
+  ∑ j : Fin 13, (j.val : ZMod 13) * delta τ (x j)
 
 /-- `D(x) = Σ_j δ(x_j)` (PROOF.md §0). -/
 def rowD (τ : Relabel) (x : Fin 13 → Fin 52) : ZMod 13 := ∑ j : Fin 13, delta τ (x j)
 
-theorem rowS_comp (τ : Relabel) (x : Fin 13 → Fin 52) (σ : Equiv.Perm (Fin 13)) :
-    rowS τ (x ∘ σ) = wS (fun j => delta τ (x j)) σ := rfl
-
 theorem rowTotal_cast (x : Fin 13 → ℕ) :
-    ((rowTotal x : ℕ) : ZMod 13) = -∑ j : Fin 13, (j.val : ZMod 13) * (rank (x j) : ZMod 13) := by
+    ((rowTotal x : ℕ) : ZMod 13) =
+      -∑ j : Fin 13, (j.val : ZMod 13) * (rank (x j) : ZMod 13) := by
   simp only [rowTotal, rowPref, toList13, List.getD_cons_succ, List.getD_cons_zero]
   rw [Finset.sum_fin_eq_sum_range]
   simp [Finset.sum_range_succ]
   have h13 : (13 : ZMod 13) = 0 := rfl
-  linear_combination ((rank (x 0) : ZMod 13) + (rank (x 1) : ZMod 13) + (rank (x 2) : ZMod 13) + (rank (x 3) : ZMod 13) + (rank (x 4) : ZMod 13) + (rank (x 5) : ZMod 13) + (rank (x 6) : ZMod 13) + (rank (x 7) : ZMod 13) + (rank (x 8) : ZMod 13) + (rank (x 9) : ZMod 13) + (rank (x 10) : ZMod 13) + (rank (x 11) : ZMod 13) + (rank (x 12) : ZMod 13)) * h13
+  linear_combination
+    ((rank (x 0) : ZMod 13) + (rank (x 1) : ZMod 13) + (rank (x 2) : ZMod 13) +
+      (rank (x 3) : ZMod 13) + (rank (x 4) : ZMod 13) + (rank (x 5) : ZMod 13) +
+      (rank (x 6) : ZMod 13) + (rank (x 7) : ZMod 13) + (rank (x 8) : ZMod 13) +
+      (rank (x 9) : ZMod 13) + (rank (x 10) : ZMod 13) + (rank (x 11) : ZMod 13) +
+      (rank (x 12) : ZMod 13)) * h13
 
 /-- (0.2) (PROOF.md §0): the row turn is unchanged by `τ` iff `S = 0`. -/
 theorem rowTurn_rel_iff (τ : Relabel) (x : Fin 13 → Fin 52) :
@@ -192,7 +198,8 @@ theorem traj_of_survives (τ : Relabel) (g : Grid Nat) (hg : IsDeck (scoopColumn
     (h : sumRanksV10 (relG τ g) = relG τ (sumRanksV10 g)) :
     RowCondsTraj τ g ∧ ColCondsTraj τ (rowsDone rowTurnV10 g 4) := by
   obtain ⟨hr, hc⟩ := (survives_iff_amounts τ g hg).1 h
-  have hrows : ∀ n, n ≤ 4 → rowsDone rowTurnV10 (relG τ g) n = relG τ (rowsDone rowTurnV10 g n) := by
+  have hrows : ∀ n, n ≤ 4 →
+      rowsDone rowTurnV10 (relG τ g) n = relG τ (rowsDone rowTurnV10 g n) := by
     intro n hn
     rw [rowsDone_eq_partial _ _ _ hn, rowsDone_eq_partial _ _ _ hn, relG_rowRotate]
     apply rowRotate_congr
@@ -231,7 +238,8 @@ def colOf (π : Equiv.Perm (Fin 52)) (j : Fin 13) : Fin 4 → Fin 52 := fun r =>
 
 theorem rowStepOf_le : ∀ r : Fin 4, rowStepOf r ≤ 4 := by decide
 theorem prevRow_succ : ∀ p : Fin 4, prevRow (p + 1) = p := by decide
-theorem rowStep_read_iff : ∀ p : Fin 4, rowStepOf p ≤ rowStepOf (p + 1) - 1 ↔ p ≠ 0 := by decide
+theorem rowStep_read_iff : ∀ p : Fin 4, rowStepOf p ≤ rowStepOf (p + 1) - 1 ↔ p ≠ 0 := by
+  decide
 theorem rowStepOf_of_ne : ∀ r : Fin 4, r ≠ 0 → rowStepOf r = r.val := by decide
 theorem prevRow_val_of_ne : ∀ r : Fin 4, r ≠ 0 → (prevRow r).val = r.val - 1 := by decide
 
@@ -337,11 +345,13 @@ def rho (τ : Relabel) (x : Fin 13 → Fin 52) : ℚ :=
 theorem rho_nonneg (τ : Relabel) (x : Fin 13 → Fin 52) : 0 ≤ rho τ x := by
   unfold rho; split_ifs <;> positivity
 
-theorem rowOf_mul_rowShuf (π : Equiv.Perm (Fin 52)) (σ : Fin 4 → Equiv.Perm (Fin 13)) (r : Fin 4) :
+theorem rowOf_mul_rowShuf (π : Equiv.Perm (Fin 52)) (σ : Fin 4 → Equiv.Perm (Fin 13))
+    (r : Fin 4) :
     rowOf (π * rowShuf σ) r = rowOf π r ∘ σ r := by
   funext j; simp [rowOf, Equiv.Perm.mul_apply, rowShuf_cmFlat]
 
-theorem colOf_mul_colShuf (π : Equiv.Perm (Fin 52)) (σ : Fin 13 → Equiv.Perm (Fin 4)) (j : Fin 13) :
+theorem colOf_mul_colShuf (π : Equiv.Perm (Fin 52)) (σ : Fin 13 → Equiv.Perm (Fin 4))
+    (j : Fin 13) :
     colOf (π * colShuf σ) j = colOf π j ∘ σ j := by
   funext r; simp [colOf, Equiv.Perm.mul_apply, colShuf_cmFlat]
 
@@ -352,9 +362,9 @@ theorem rowD_comp (τ : Relabel) (x : Fin 13 → Fin 52) (a : Equiv.Perm (Fin 13
 /-- **Lemma 3 (row chain)** (PROOF.md §2): with the targets `θ π r` depending
     only on earlier rows, the decks satisfying all four row equations number at
     most `Σ_π Π_r ρ(row r)` (the paper proves equality). Proof: split `π` into
-    its row sets and four arrangements (`Equiv.Perm` of each row), then
-    `card_filter_product_le` four times with Lemma 2(a) / the definition of `ρ`
-    in the innermost row. -/
+    its row sets and four arrangements (`sum_mul_card_shuf`), then
+    `nested_count` over the four rows with Lemma 2(a) / the definition of `ρ`
+    for each row. -/
 theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 13)
     (hθ : ∀ π π' r, (∀ r' < r, rowOf π r' = rowOf π' r') → θ π r = θ π' r) :
     ((univ.filter fun π : Equiv.Perm (Fin 52) =>
@@ -371,8 +381,10 @@ theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 
     split_ifs
     · rw [Nat.factorial_succ 12]; push_cast; ring
     · field_simp
-  let Q : Equiv.Perm (Fin 52) → Fin 4 → (Fin 4 → Equiv.Perm (Fin 13)) → Prop := fun π r σ =>
-    rowS τ (rowOf (π * rowShuf σ) r) = θ (π * rowShuf σ) r * rowD τ (rowOf (π * rowShuf σ) r)
+  let Q : Equiv.Perm (Fin 52) → Fin 4 → (Fin 4 → Equiv.Perm (Fin 13)) → Prop :=
+    fun π r σ =>
+      rowS τ (rowOf (π * rowShuf σ) r) =
+        θ (π * rowShuf σ) r * rowD τ (rowOf (π * rowShuf σ) r)
   have hrows : ∀ π σ σ' (r : Fin 4), σ r = σ' r →
       rowOf (π * rowShuf σ) r = rowOf (π * rowShuf σ') r := by
     intro π σ σ' r h
@@ -410,13 +422,16 @@ theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 
         simp only [hD, mul_zero, le_refl]
   -- average over row orders
   have havg := sum_mul_card_shuf rowShuf
-    (fun π => if ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r) then (1 : ℚ) else 0)
-  have hcardS : (Fintype.card (Fin 4 → Equiv.Perm (Fin 13)) : ℚ) = ((Nat.factorial 13 : ℕ) : ℚ) ^ 4 := by
+    (fun π =>
+      if ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r) then (1 : ℚ) else 0)
+  have hcardS : (Fintype.card (Fin 4 → Equiv.Perm (Fin 13)) : ℚ) =
+      ((Nat.factorial 13 : ℕ) : ℚ) ^ 4 := by
     rw [Fintype.card_fun, Fintype.card_perm, Fintype.card_fin, Fintype.card_fin]; push_cast; ring
   rw [hcardS] at havg
   have hlhs : ((univ.filter fun π : Equiv.Perm (Fin 52) =>
       ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r)).card : ℚ) =
-      ∑ π, if ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r) then (1 : ℚ) else 0 := by
+      ∑ π, if ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r) then (1 : ℚ)
+        else 0 := by
     rw [← sum_boole]
   have hrhs : ∀ π, (∑ σ : Fin 4 → Equiv.Perm (Fin 13),
       if ∀ r, rowS τ (rowOf (π * rowShuf σ) r) = θ (π * rowShuf σ) r *
@@ -425,7 +440,8 @@ theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 
     intro π
     rw [sum_boole]
     have := hper π
-    have hq : ((univ.filter fun σ : Fin 4 → Equiv.Perm (Fin 13) => ∀ r, Q π r σ).card : ℚ) ≤
+    have hq :
+        ((univ.filter fun σ : Fin 4 → Equiv.Perm (Fin 13) => ∀ r, Q π r σ).card : ℚ) ≤
         ∏ r, (Nr π r : ℚ) := by exact_mod_cast this
     simp only [hNr, prod_mul_distrib, prod_const, card_univ, Fintype.card_fin] at hq
     exact hq
@@ -509,7 +525,8 @@ theorem rho_le_third (τ : Relabel) (x : Fin 13 → Fin 52) (i j : Fin 13) (hij 
 
 /-- (A1) (PROOF.md §3, Lemma 2(c)): a cancelling pair in one row gives `ρ = 0`. -/
 theorem rho_eq_zero_of_cancel (τ : Relabel) (x : Fin 13 → Fin 52) (v u : ZMod 13) (hu : u ≠ 0)
-    (i₁ i₂ : Fin 13) (h12 : i₁ ≠ i₂) (h₁ : delta τ (x i₁) = v + u) (h₂ : delta τ (x i₂) = v - u)
+    (i₁ i₂ : Fin 13) (h12 : i₁ ≠ i₂) (h₁ : delta τ (x i₁) = v + u)
+    (h₂ : delta τ (x i₂) = v - u)
     (h : ∀ i, i ≠ i₁ → i ≠ i₂ → delta τ (x i) = v) : rho τ x = 0 := by
   have hD : rowD τ x = 0 := sum_of_cancel (fun j => delta τ (x j)) v u i₁ i₂ h12 h₁ h₂ h
   unfold rho
@@ -552,10 +569,12 @@ theorem survivors_le_rhoSum (τ : Relabel) : ((survivors τ).card : ℚ) ≤ rho
 
 /-! ### Helpers: block counts and factorials -/
 
-theorem cmFlat_row_col (p : Fin 52) (r : Fin 4) (h : p.val % 4 = r.val) : cmFlat r (cmCol p) = p := by
+theorem cmFlat_row_col (p : Fin 52) (r : Fin 4) (h : p.val % 4 = r.val) :
+    cmFlat r (cmCol p) = p := by
   apply Fin.ext; simp only [cmFlat, cmCol]; omega
 
-theorem cmFlat_col_row (p : Fin 52) (j : Fin 13) (h : p.val / 4 = j.val) : cmFlat (cmRow p) j = p := by
+theorem cmFlat_col_row (p : Fin 52) (j : Fin 13) (h : p.val / 4 = j.val) :
+    cmFlat (cmRow p) j = p := by
   apply Fin.ext; simp only [cmFlat, cmRow]; omega
 
 theorem card_row_eq_zRow (W : Finset (Fin 52)) (π : Equiv.Perm (Fin 52)) (r : Fin 4)
@@ -632,14 +651,16 @@ theorem row_nonconst (τ : Relabel) (h : nStar τ ≤ 12) (π : Equiv.Perm (Fin 
 
 /-- Row `r` of `π` has pairwise distinct `δ`-values (the predicate of `distinct_row_count`). -/
 def rowDistinct (τ : Relabel) (π : Equiv.Perm (Fin 52)) (r : Fin 4) : Prop :=
-  ∀ p q : Fin 52, p.val % 4 = r.val → q.val % 4 = r.val → p ≠ q → delta τ (π p) ≠ delta τ (π q)
+  ∀ p q : Fin 52, p.val % 4 = r.val → q.val % 4 = r.val → p ≠ q →
+    delta τ (π p) ≠ delta τ (π q)
 
 instance (τ : Relabel) (π : Equiv.Perm (Fin 52)) (r : Fin 4) : Decidable (rowDistinct τ π r) :=
-  inferInstanceAs (Decidable (∀ p q : Fin 52, p.val % 4 = r.val → q.val % 4 = r.val → p ≠ q →
-    delta τ (π p) ≠ delta τ (π q)))
+  inferInstanceAs (Decidable (∀ p q : Fin 52, p.val % 4 = r.val → q.val % 4 = r.val →
+    p ≠ q → delta τ (π p) ≠ delta τ (π q)))
 
 theorem rho_prod_le_A3 (τ : Relabel) (h : nStar τ ≤ 12) (π : Equiv.Perm (Fin 52)) :
-    ∏ r, rho τ (rowOf π r) ≤ 1 / 81 + ∑ r, (if rowDistinct τ π r then (1 : ℚ) else 0) := by
+    ∏ r, rho τ (rowOf π r) ≤
+      1 / 81 + ∑ r, (if rowDistinct τ π r then (1 : ℚ) else 0) := by
   by_cases hd : ∃ r, rowDistinct τ π r
   · obtain ⟨r0, hr0⟩ := hd
     have hp : ∏ r, rho τ (rowOf π r) ≤ 1 :=
@@ -693,7 +714,7 @@ theorem pairCount_eq (a b p q p' q' : Fin 52) (hpq : p ≠ q) (hpq' : p' ≠ q')
   · intro π _; simp [mul_assoc]
 
 /-- Fibre count over the seats of two distinct cards `a ≠ b`. -/
-theorem card_seat_pairs (a b : Fin 52) (hab : a ≠ b) (R : Fin 52 → Fin 52 → Prop)
+theorem card_seat_pairs (a b : Fin 52) (R : Fin 52 → Fin 52 → Prop)
     [∀ p q, Decidable (R p q)] (hR : ∀ p q, R p q → p ≠ q) :
     (univ.filter fun π : Equiv.Perm (Fin 52) => R (π⁻¹ a) (π⁻¹ b)).card =
       (univ.filter fun x : Fin 52 × Fin 52 => R x.1 x.2).card *
@@ -744,7 +765,8 @@ theorem card_ne_pairs :
 
 /-- A row whose cards all have `δ = v` except one has `D ≠ 0`, hence `ρ = 1/13`. -/
 theorem rho_of_single (τ : Relabel) (x : Fin 13 → Fin 52) (v : ZMod 13) (i₁ : Fin 13)
-    (h : ∀ j, j ≠ i₁ → delta τ (x j) = v) (hne : delta τ (x i₁) ≠ v) : rho τ x = 1 / 13 := by
+    (h : ∀ j, j ≠ i₁ → delta τ (x j) = v) (hne : delta τ (x i₁) ≠ v) :
+    rho τ x = 1 / 13 := by
   have hD : rowD τ x ≠ 0 := by
     have e : ∑ j, (delta τ (x j) - v) = delta τ (x i₁) - v :=
       Fintype.sum_eq_single i₁ fun j hj => by rw [h j hj, sub_self]
@@ -784,7 +806,8 @@ theorem rho_prod_le_A1 (τ : Relabel) (v u : ZMod 13) (hu : u ≠ 0) (c₁ c₂ 
       simp only [rowOf]; rw [cmFlat_row_col _ r hr1, e₁]
     have x2 : rowOf π r (cmCol (π⁻¹ c₂)) = c₂ := by
       simp only [rowOf]; rw [cmFlat_row_col _ r hr2, e₂]
-    have hne : cmCol (π⁻¹ c₁) ≠ cmCol (π⁻¹ c₂) := fun e => h12 (by rw [← x1, ← x2, e])
+    have hne : cmCol (π⁻¹ c₁) ≠ cmCol (π⁻¹ c₂) := fun e =>
+      h12 (by rw [← x1, ← x2, e])
     refine rho_eq_zero_of_cancel τ _ v u hu _ _ hne (by rw [x1, h1]) (by rw [x2, h2]) ?_
     intro i hi1 hi2
     apply hoff
@@ -835,7 +858,8 @@ theorem rho_prod_le_A1 (τ : Relabel) (v u : ZMod 13) (hu : u ≠ 0) (c₁ c₂ 
 /-- **(A1)** (PROOF.md §3): `n* = 50` gives `Σ ≤ 52!/221` (the two off cards
     are `v* ± u`; same row: `ρ = 0` by `rho_eq_zero_of_cancel`; different rows:
     `1/13` each; probability of different rows `39/51`). -/
-theorem caseA1 (τ : Relabel) (h : nStar τ = 50) : 221 * rhoSum τ ≤ (Nat.factorial 52 : ℕ) := by
+theorem caseA1 (τ : Relabel) (h : nStar τ = 50) :
+    221 * rhoSum τ ≤ (Nat.factorial 52 : ℕ) := by
   classical
   obtain ⟨v, hv⟩ := exists_vStar τ
   rw [h] at hv
@@ -846,7 +870,8 @@ theorem caseA1 (τ : Relabel) (h : nStar τ = 50) : 221 * rhoSum τ ≤ (Nat.fac
     rw [e, card_univ, Fintype.card_fin] at this
     omega
   obtain ⟨c₁, c₂, h12, hc⟩ := card_eq_two.1 hO
-  have hmem : ∀ c, c ∈ univ.filter (fun c => ¬ delta τ c = v) ↔ c ∈ ({c₁, c₂} : Finset _) :=
+  have hmem : ∀ c,
+      c ∈ univ.filter (fun c => ¬ delta τ c = v) ↔ c ∈ ({c₁, c₂} : Finset _) :=
     fun c => by rw [hc]
   simp only [mem_filter, mem_univ, true_and, mem_insert, mem_singleton] at hmem
   have hoff : ∀ c, c ≠ c₁ → c ≠ c₂ → delta τ c = v := by
@@ -875,25 +900,26 @@ theorem caseA1 (τ : Relabel) (h : nStar τ = 50) : 221 * rhoSum τ ≤ (Nat.fac
   rw [sum_congr rfl fun π _ => hite π, ← mul_sum, sum_boole] at hsum
   -- seat-pair counts
   set K := (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c₁ ∧ π 1 = c₂).card
-  have hdiff := card_seat_pairs c₁ c₂ h12 (fun p q => ¬ p.val % 4 = q.val % 4)
+  have hdiff := card_seat_pairs c₁ c₂ (fun p q => ¬ p.val % 4 = q.val % 4)
     (fun p q h e => h (by rw [e]))
   rw [card_diffRow_pairs] at hdiff
-  have htot := card_seat_pairs c₁ c₂ h12 (fun p q => p ≠ q) (fun _ _ h => h)
+  have htot := card_seat_pairs c₁ c₂ (fun p q => p ≠ q) (fun _ _ h => h)
   beta_reduce at htot hdiff
   have hall : (univ.filter fun π : Equiv.Perm (Fin 52) => π⁻¹ c₁ ≠ π⁻¹ c₂) = univ :=
     eq_univ_iff_forall.2 fun π => mem_filter.2 ⟨mem_univ _, fun e => h12 (π⁻¹.injective e)⟩
   rw [card_ne_pairs, hall, card_univ, Fintype.card_perm, Fintype.card_fin] at htot
   have hdq : ((univ.filter fun π : Equiv.Perm (Fin 52) =>
-      ¬ (π⁻¹ c₁).val % 4 = (π⁻¹ c₂).val % 4).card : ℚ) = 2028 * K := by exact_mod_cast hdiff
+      ¬ (π⁻¹ c₁).val % 4 = (π⁻¹ c₂).val % 4).card : ℚ) = 2028 * K := by
+    exact_mod_cast hdiff
   have htq : ((Nat.factorial 52 : ℕ) : ℚ) = 2652 * K := by exact_mod_cast htot
   rw [hdq] at hsum
   rw [htq]
   linarith
 
-/-- **(A2)** (PROOF.md §3): `13 ≤ n* ≤ 49` gives `Σ ≤ 52! · E_A(n*)`
-    (`rho_le_hA` with `v = v*` and `W = cls τ v*`, then `hyper_rows`, since the
+/-- **(A2)** (PROOF.md §3): `Σ ≤ 52! · E_A(n*)` for every `τ`, used for
+    `13 ≤ n* ≤ 49` (`rho_le_hA` with `v = v*` and `W = cls τ v*`, then `hyper_rows`, since the
     row-`r` count of `W` is `zRow W π r`). -/
-theorem caseA2 (τ : Relabel) (h1 : 13 ≤ nStar τ) (h2 : nStar τ ≤ 49) :
+theorem caseA2 (τ : Relabel) :
     rhoSum τ ≤ (Nat.factorial 52 : ℕ) * EA (nStar τ) := by
   classical
   obtain ⟨v, hv⟩ := exists_vStar τ
@@ -919,7 +945,8 @@ theorem caseA2 (τ : Relabel) (h1 : 13 ≤ nStar τ) (h2 : nStar τ ≤ 49) :
     (no constant row; a row with a repeat has `ρ ≤ 1/3`; `distinct_row_count`
     for the rest). -/
 theorem caseA3 (τ : Relabel) (h : nStar τ ≤ 12) :
-    rhoSum τ ≤ (Nat.factorial 52 : ℕ) * ((1 / 81 : ℚ) + 4 * 4 ^ 13 / (Nat.choose 52 13 : ℕ)) := by
+    rhoSum τ ≤
+      (Nat.factorial 52 : ℕ) * ((1 / 81 : ℚ) + 4 * 4 ^ 13 / (Nat.choose 52 13 : ℕ)) := by
   unfold rhoSum
   refine (sum_le_sum fun π _ => rho_prod_le_A3 τ h π).trans ?_
   rw [sum_add_distrib, sum_const, card_univ, Fintype.card_perm, Fintype.card_fin, sum_comm]
@@ -952,7 +979,7 @@ theorem caseA_bound (τ : Relabel) (h : ∃ c, delta τ c ≠ delta τ 0) :
       have hc := A3_const
       nlinarith
     · rcases Nat.lt_or_ge (nStar τ) 50 with hhi | hhi
-      · have := caseA2 τ hlo (by omega)
+      · have := caseA2 τ
         have he := EA_le (nStar τ) hlo (by omega)
         nlinarith
       · have := caseA1 τ (by omega)
@@ -1017,7 +1044,8 @@ theorem isDeckG_rowsDone4 (π : Equiv.Perm (Fin 52)) :
   rw [rowsDone_eq]; exact isDeckG_rowRotate _ _ (isDeck_deckGrid π)
 
 /-- The deck permutation of a deck grid. -/
-noncomputable def gridPerm (G : Grid Nat) (hG : IsDeck (scoopColumnMajor G)) : Equiv.Perm (Fin 52) :=
+noncomputable def gridPerm (G : Grid Nat) (hG : IsDeck (scoopColumnMajor G)) :
+    Equiv.Perm (Fin 52) :=
   deckPerm (scoopColumnMajor G) hG
 
 theorem deckGrid_gridPerm (G : Grid Nat) (hG : IsDeck (scoopColumnMajor G)) :
@@ -1025,7 +1053,8 @@ theorem deckGrid_gridPerm (G : Grid Nat) (hG : IsDeck (scoopColumnMajor G)) :
   have : permDeck (gridPerm G hG) = scoopColumnMajor G := funext fun k => rfl
   unfold deckGrid; rw [this, lay_scoop_columnMajor]
 
-theorem gridPerm_deckGrid (π : Equiv.Perm (Fin 52)) : gridPerm (deckGrid π) (isDeck_deckGrid π) = π := by
+theorem gridPerm_deckGrid (π : Equiv.Perm (Fin 52)) :
+    gridPerm (deckGrid π) (isDeck_deckGrid π) = π := by
   apply Equiv.ext; intro k; apply Fin.ext
   show scoopColumnMajor (layColumnMajor (permDeck π)) k = (π k).val
   rw [scoop_lay_columnMajor]; rfl
@@ -1066,7 +1095,8 @@ theorem colConds_H_card (τ : Relabel) :
   apply filter_congr
   intro π _
   show ColCondsTraj τ (rowsDone rowTurnV10 (deckGrid π) 4) ↔
-    ColCondsTraj τ (deckGrid (gridPerm (rowsDone rowTurnV10 (deckGrid π) 4) (isDeckG_rowsDone4 π)))
+    ColCondsTraj τ
+      (deckGrid (gridPerm (rowsDone rowTurnV10 (deckGrid π) 4) (isDeckG_rowsDone4 π)))
   rw [deckGrid_gridPerm]
 
 /-! ### Helpers for the column chain -/
@@ -1076,7 +1106,6 @@ def toZ (a : Fin 4) : ZMod 2 × ZMod 2 := ((a.val % 2 : ℕ), (a.val / 2 : ℕ))
 
 theorem toZ_x4 : ∀ a b : Fin 4, toZ (x4 a b) = toZ a + toZ b := by decide
 theorem toZ_inj : ∀ a b : Fin 4, toZ a = toZ b → a = b := by decide
-theorem toZ_zero : toZ 0 = 0 := by decide
 
 theorem toZ_sLab (e : Fin 4 → Fin 4) : toZ (sLab e) = ∑ i, toZ (e i) := by
   simp only [sLab, toZ_x4, Fin.sum_univ_four]
@@ -1099,7 +1128,8 @@ theorem colStepOf_of_ne : ∀ k : Fin 13, k ≠ 0 → colStepOf k = k.val := by 
 theorem prevCol_val_of_ne : ∀ k : Fin 13, k ≠ 0 → (prevCol k).val = k.val - 1 := by decide
 theorem prevCol_succ : ∀ k : Fin 13, prevCol (k + 1) = k := by decide
 theorem prevCol_eq_sub_one : ∀ j : Fin 13, prevCol j = j - 1 := by decide
-theorem colStep_read_iff : ∀ k : Fin 13, colStepOf k ≤ colStepOf (k + 1) - 1 ↔ k ≠ 0 := by decide
+theorem colStep_read_iff : ∀ k : Fin 13, colStepOf k ≤ colStepOf (k + 1) - 1 ↔ k ≠ 0 := by
+  decide
 theorem colStepOf_le : ∀ c : Fin 13, colStepOf c ≤ 13 := by decide
 theorem colStep_self : ∀ c : Fin 13, ¬ colStepOf c ≤ colStepOf c - 1 := by decide
 
@@ -1180,7 +1210,8 @@ theorem column_colRotate_deck (π : Equiv.Perm (Fin 52)) (A : Fin 13 → ℕ) (k
 theorem card_filter_mul_right (P : Equiv.Perm (Fin 4) → Prop) [DecidablePred P]
     (ρ : Equiv.Perm (Fin 4)) :
     (univ.filter fun a => P (a * ρ)).card = (univ.filter P).card := by
-  have : (univ.filter fun a => P (a * ρ)) = (univ.filter P).map (Equiv.mulRight ρ⁻¹).toEmbedding := by
+  have : (univ.filter fun a => P (a * ρ)) =
+      (univ.filter P).map (Equiv.mulRight ρ⁻¹).toEmbedding := by
     ext a
     simp [Finset.mem_map_equiv]
   rw [this, card_map]
@@ -1194,11 +1225,12 @@ theorem colChain_le (τ : Relabel) :
     ((univ.filter fun π : Equiv.Perm (Fin 52) => ColCondsTraj τ (deckGrid π)).card : ℚ) ≤
       ∑ π : Equiv.Perm (Fin 52), ∏ j, phi τ (colOf π (prevCol j)) (colOf π j) := by
   classical
-  let sAmt : Equiv.Perm (Fin 52) → (Fin 13 → Equiv.Perm (Fin 4)) → Fin 13 → ℕ := fun π σ k =>
-    if k = 0 then 0 else colAmt colTurnV10 (deckGrid (π * colShuf σ)) k
-  let Q : Equiv.Perm (Fin 52) → Fin 13 → (Fin 13 → Equiv.Perm (Fin 4)) → Prop := fun π k σ =>
-    vLab (fun r => eps τ (colRot (colOf π k ∘ σ k) (sAmt π σ k) r)) =
-      sLab (fun r => eps τ (colOf π (k + 1) r))
+  let sAmt : Equiv.Perm (Fin 52) → (Fin 13 → Equiv.Perm (Fin 4)) → Fin 13 → ℕ :=
+    fun π σ k => if k = 0 then 0 else colAmt colTurnV10 (deckGrid (π * colShuf σ)) k
+  let Q : Equiv.Perm (Fin 52) → Fin 13 → (Fin 13 → Equiv.Perm (Fin 4)) → Prop :=
+    fun π k σ =>
+      vLab (fun r => eps τ (colRot (colOf π k ∘ σ k) (sAmt π σ k) r)) =
+        sLab (fun r => eps τ (colOf π (k + 1) r))
   let Nc : Equiv.Perm (Fin 52) → Fin 13 → ℕ := fun π k =>
     (univ.filter fun a : Equiv.Perm (Fin 4) =>
       vLab (fun r => eps τ (colOf π k (a r))) = sLab (fun r => eps τ (colOf π (k + 1) r))).card
@@ -1248,7 +1280,8 @@ theorem colChain_le (τ : Relabel) :
     intro π σ h k
     have hc := h (k + 1)
     rw [prevCol_succ, colsDone_eq_partial _ _ _ (by have := colStepOf_le (k + 1); omega)] at hc
-    have hrel : ∀ (G : Grid Nat) (j : Fin 13), column (relG τ G) j = fun r => τ.app (column G j r) :=
+    have hrel : ∀ (G : Grid Nat) (j : Fin 13),
+        column (relG τ G) j = fun r => τ.app (column G j r) :=
       fun _ _ => rfl
     simp only [hrel, column_colRotate_deck] at hc
     have hc' := (colTurn_rel_iff τ _ _).1 hc
@@ -1312,7 +1345,8 @@ theorem sum_toZ_eps (τ : Relabel) : ∑ c, toZ (eps τ c) = 0 := by
 
 /-- `2 ≤ m' ≤ 39` when `ε` is not constant (PROOF.md §4: `m' ≠ 1` by
     `Σ ε = 0`, and the largest class has at least 13 cards). -/
-theorem mStar_bounds (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) : 2 ≤ mStar τ ∧ mStar τ ≤ 39 := by
+theorem mStar_bounds (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) :
+    2 ≤ mStar τ ∧ mStar τ ≤ 39 := by
   classical
   set S := univ.sup fun x => (ecls τ x).card with hS
   obtain ⟨xs, -, hxs⟩ := Finset.exists_mem_eq_sup (univ : Finset (Fin 4)) univ_nonempty
@@ -1349,7 +1383,8 @@ theorem mStar_bounds (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) : 2 ≤ m
       omega
     obtain ⟨c₀, hc₀⟩ := card_eq_one.1 hcard
     have hc₀' : ¬ eps τ c₀ = xs := by
-      have : c₀ ∈ univ.filter fun c => ¬ eps τ c = xs := by rw [hc₀]; exact mem_singleton_self _
+      have : c₀ ∈ univ.filter fun c => ¬ eps τ c = xs := by
+        rw [hc₀]; exact mem_singleton_self _
       exact (mem_filter.1 this).2
     rw [hA, hc₀, sum_singleton] at hsum
     exact hc₀' (toZ_inj _ _ (add_eq_zero_imp _ _ hsum).symm)
@@ -1361,7 +1396,7 @@ theorem mStar_bounds (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) : 2 ≤ m
 /-- **Theorem B, Lean form** (PROOF.md §4): `Σ_π Π_j φ ≤ 52! · E_B(m')`
     (`lemma4_count_le` pointwise with `xs` a most common `ε`-value, then
     `hyper_cols` with `W` the off cards). -/
-theorem caseB_sum (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) :
+theorem caseB_sum (τ : Relabel) :
     ∑ π : Equiv.Perm (Fin 52), ∏ j, phi τ (colOf π (prevCol j)) (colOf π j) ≤
       (Nat.factorial 52 : ℕ) * EB (mStar τ) := by
   classical
@@ -1414,7 +1449,7 @@ theorem caseB_bound (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) :
       exact (traj_of_survives τ _ (isDeck_deckGrid π) hπ).2
   rw [colConds_H_card] at h1
   have h2 := colChain_le τ
-  have h3 := caseB_sum τ h
+  have h3 := caseB_sum τ
   obtain ⟨hm1, hm2⟩ := mStar_bounds τ h
   have h4 := EB_le (mStar τ) hm1 hm2
   have hf : (0 : ℚ) ≤ (Nat.factorial 52 : ℕ) := by positivity
@@ -1427,8 +1462,9 @@ theorem caseB_bound (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) :
 
 /-! ## §5 Main theorem -/
 
-/-- **v10 SumRanks survival bound** (PROOF.md §5; paper constant `0.012768`,
-    Lean target `1/64`): a relabelling outside `v10Sym` commutes with v10
+/-- **v10 SumRanks survival bound** (PROOF.md §5, where the paper proves the
+    sharper constant `0.012768 = 1/81 + 4·4¹³/C(52,13)` of §3 (A3); Lean proves
+    `1/64`): a relabelling outside `v10Sym` commutes with v10
     SumRanks on at most `52!/64` of the `52!` decks. -/
 theorem sumRanksV10_survival_le (τ : Relabel) (h : ¬ ∃ a x, τ = v10Sym a x) :
     64 * (survivors τ).card ≤ Fintype.card (Equiv.Perm (Fin 52)) := by

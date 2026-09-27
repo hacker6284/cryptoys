@@ -1,6 +1,7 @@
 /-
   Shared decomposition lemmas for the row and column
-  chains (PROOF.md §2 Lemma 3, §4 Lemma 5).
+  chains (PROOF.md §2 Lemma 3, §4 Lemma 5). `PROOF.md §n` refers to
+  `proofs/doubledeal/security/sumranks-dp-paper/PROOF.md`.
 
   * `nested_count`: counting tuples `σ : Fin n → α` subject to conditions
     `Q r σ` that depend only on `σ 0, …, σ r`, with at most `N r` good choices
@@ -19,7 +20,8 @@ open DoubleDeal Finset
 /-! ## Nested counting -/
 
 theorem nested_count {α : Type*} [Fintype α] [DecidableEq α] :
-    ∀ (n : ℕ) (Q : Fin n → (Fin n → α) → Prop) [∀ r, DecidablePred (Q r)] (N : Fin n → ℕ),
+    ∀ (n : ℕ) (Q : Fin n → (Fin n → α) → Prop) [∀ r, DecidablePred (Q r)]
+      (N : Fin n → ℕ),
     (∀ r σ σ', (∀ i, i ≤ r → σ i = σ' i) → (Q r σ ↔ Q r σ')) →
     (∀ r σ, (univ.filter fun a => Q r (Function.update σ r a)).card ≤ N r) →
     (univ.filter fun σ : Fin n → α => ∀ r, Q r σ).card ≤ ∏ r, N r
@@ -37,7 +39,8 @@ theorem nested_count {α : Type*} [Fintype α] [DecidableEq α] :
       hpre 0 _ _ fun i hi => by rw [Fin.le_zero_iff.1 hi]
     let M : ℕ := ∏ r : Fin n, N r.succ
     have hinner : ∀ a : α,
-        (univ.filter fun τ : Fin n → α => ∀ r : Fin n, Q r.succ (Fin.cons a τ)).card ≤ M := by
+        (univ.filter fun τ : Fin n → α =>
+          ∀ r : Fin n, Q r.succ (Fin.cons a τ)).card ≤ M := by
       intro a
       refine nested_count n (fun r τ => Q r.succ (Fin.cons a τ)) (fun r => N r.succ) ?_ ?_
       · intro r τ τ' h
@@ -58,7 +61,8 @@ theorem nested_count {α : Type*} [Fintype α] [DecidableEq α] :
       simp
     have hsplit : (univ.filter fun σ : Fin (n + 1) → α => ∀ r, Q r σ).card =
         ∑ a : α, if Q 0 (fun _ => a) then
-          (univ.filter fun τ : Fin n → α => ∀ r : Fin n, Q r.succ (Fin.cons a τ)).card else 0 := by
+          (univ.filter fun τ : Fin n → α =>
+            ∀ r : Fin n, Q r.succ (Fin.cons a τ)).card else 0 := by
       rw [card_eq_sum_ones, sum_filter]
       rw [← (Fin.consEquiv fun _ => α).sum_comp, Fintype.sum_prod_type]
       refine sum_congr rfl fun a _ => ?_
@@ -74,7 +78,8 @@ theorem nested_count {α : Type*} [Fintype α] [DecidableEq α] :
         simp only [e, Fin.forall_fin_succ, hq0, hq, false_and, if_false]
     rw [hsplit, Fin.prod_univ_succ]
     calc (∑ a : α, if Q 0 (fun _ => a) then
-          (univ.filter fun τ : Fin n → α => ∀ r : Fin n, Q r.succ (Fin.cons a τ)).card else 0)
+          (univ.filter fun τ : Fin n → α =>
+            ∀ r : Fin n, Q r.succ (Fin.cons a τ)).card else 0)
         ≤ ∑ a : α, if Q 0 (fun _ => a) then M else 0 :=
           sum_le_sum fun a _ => by split_ifs; exacts [hinner a, le_rfl]
       _ = (univ.filter fun a : α => Q 0 (fun _ => a)).card * M := by

@@ -3,12 +3,11 @@
 
   Mathlib-only lemmas with no repository definitions: the one-row lemma
   (Lemma 2), the GF(4) column table (Lemma 4), a generic fibre bound, the two
-  hypergeometric counting identities, and the numeric tables. Section numbers
-  refer to PROOF.md of the paper proof (`docs/sumranks-dp/PROOF.md` once it is
-  copied into the repo; currently in the working notes).
+  hypergeometric counting identities, and the numeric tables. It imports only
+  Mathlib and uses only the definitions in this file.
 
-  Every lemma here is stated so that it can be proved in isolation: it only
-  needs `import Mathlib` and the definitions in this file.
+  `PROOF.md §n` refers to the paper proof
+  `proofs/doubledeal/security/sumranks-dp-paper/PROOF.md`.
 -/
 import Mathlib
 
@@ -111,7 +110,8 @@ theorem wS_swap (w : Fin 13 → ZMod 13) (v : ZMod 13) (i₀ k : Fin 13) (hk : k
   simp only [Equiv.swap_apply_self]
   have hd : ∑ i, ((σ⁻¹ i).val : ZMod 13) * w (Equiv.swap i₀ k i) -
       ∑ i, ((σ⁻¹ i).val : ZMod 13) * w i =
-      ((σ⁻¹ i₀).val : ZMod 13) * (w k - w i₀) + ((σ⁻¹ k).val : ZMod 13) * (w i₀ - w k) := by
+      ((σ⁻¹ i₀).val : ZMod 13) * (w k - w i₀) +
+        ((σ⁻¹ k).val : ZMod 13) * (w i₀ - w k) := by
     rw [← sum_sub_distrib, Fintype.sum_eq_add i₀ k hk.symm]
     · simp only [Equiv.swap_apply_left, Equiv.swap_apply_right]; ring
     · intro i hi
@@ -135,15 +135,18 @@ theorem lemma2b (w : Fin 13 → ZMod 13) (v : ZMod 13) (hnc : ∃ i, w i ≠ v) 
   set G := univ.filter fun σ : Equiv.Perm (Fin 13) => wS w σ = c with hG
   set B := univ.filter fun σ : Equiv.Perm (Fin 13) => ¬ wS w σ = c with hB
   have hd : w i₀ - v ≠ 0 := sub_ne_zero.2 hi₀
-  have hcast : ∀ a b : Fin 13, ((a.val : ℕ) : ZMod 13) = (b.val : ZMod 13) → a = b := by decide
+  have hcast : ∀ a b : Fin 13, ((a.val : ℕ) : ZMod 13) = (b.val : ZMod 13) → a = b := by
+    decide
   have hVw : ∀ k ∈ V, w k = v := fun k hk => (mem_filter.1 hk).2
   have hVne : ∀ k ∈ V, k ≠ i₀ := fun k hk e => hi₀ (by rw [← e]; exact hVw k hk)
   have huniq : ∀ (σ' : Equiv.Perm (Fin 13)) k₁ k₂, k₁ ∈ V → k₂ ∈ V →
-      wS w (Equiv.swap i₀ k₁ * σ') = c → wS w (Equiv.swap i₀ k₂ * σ') = c → k₁ = k₂ := by
+      wS w (Equiv.swap i₀ k₁ * σ') = c → wS w (Equiv.swap i₀ k₂ * σ') = c →
+        k₁ = k₂ := by
     intro σ' k₁ k₂ h1 h2 e1 e2
     rw [wS_swap w v i₀ k₁ (hVne k₁ h1) (hVw k₁ h1)] at e1
     rw [wS_swap w v i₀ k₂ (hVne k₂ h2) (hVw k₂ h2)] at e2
-    have : (w i₀ - v) * ((σ'⁻¹ k₁).val : ZMod 13) = (w i₀ - v) * ((σ'⁻¹ k₂).val : ZMod 13) := by
+    have : (w i₀ - v) * ((σ'⁻¹ k₁).val : ZMod 13) =
+        (w i₀ - v) * ((σ'⁻¹ k₂).val : ZMod 13) := by
       linear_combination e1 - e2
     exact σ'⁻¹.injective (hcast _ _ (mul_left_cancel₀ hd this))
   have hinj : (G ×ˢ V).card ≤ B.card := by
@@ -153,7 +156,8 @@ theorem lemma2b (w : Fin 13 → ZMod 13) (v : ZMod 13) (hnc : ∃ i, w i ≠ v) 
         mem_product, mem_filter, mem_univ, true_and] at hx ⊢
       rw [wS_swap w v i₀ x.2 (hVne x.2 (by simp [hV, hx.2])) hx.2, hx.1]
       intro e
-      have h0 : (w i₀ - v) * (((x.1⁻¹ x.2).val : ZMod 13) - ((x.1⁻¹ i₀).val : ZMod 13)) = 0 := by
+      have h0 : (w i₀ - v) *
+          (((x.1⁻¹ x.2).val : ZMod 13) - ((x.1⁻¹ i₀).val : ZMod 13)) = 0 := by
         linear_combination e
       rcases mul_eq_zero.1 h0 with h | h
       · exact hd h
@@ -185,7 +189,8 @@ theorem sum_seat_weights : ∑ j : Fin 13, (j.val : ZMod 13) = 0 := by
     `u ≠ 0` never give `S = 0` (`S = 78v + u(j₁ − j₂)`, and `78 ≡ 0`). -/
 theorem lemma2c (w : Fin 13 → ZMod 13) (v u : ZMod 13) (hu : u ≠ 0) (i₁ i₂ : Fin 13)
     (h12 : i₁ ≠ i₂) (hw₁ : w i₁ = v + u) (hw₂ : w i₂ = v - u)
-    (hw : ∀ i, i ≠ i₁ → i ≠ i₂ → w i = v) (σ : Equiv.Perm (Fin 13)) : wS w σ ≠ 0 := by
+    (hw : ∀ i, i ≠ i₁ → i ≠ i₂ → w i = v) (σ : Equiv.Perm (Fin 13)) :
+    wS w σ ≠ 0 := by
   have hwi : ∀ i, w i = v + (if i = i₁ then u else 0) - (if i = i₂ then u else 0) := by
     intro i
     by_cases h1 : i = i₁
@@ -248,7 +253,8 @@ theorem maxClass_le_50 (f : Fin 52 → ZMod 13) (hs : ∑ c, f c = 0) (hnc : ∃
     exact hc (by rw [hall c, hall 0])
   · have hc1 : Sᶜ.card = 1 := by omega
     obtain ⟨d, hd⟩ := card_eq_one.mp hc1
-    have hScard : S.card = 51 := by have := card_compl S; simp only [Fintype.card_fin] at this; omega
+    have hScard : S.card = 51 := by
+      have := card_compl S; simp only [Fintype.card_fin] at this; omega
     rw [hsplit, hSv, hd, sum_singleton, hScard] at hs
     have hdv : f d ≠ v := by
       have : d ∈ Sᶜ := by rw [hd]; exact mem_singleton_self d
@@ -261,48 +267,16 @@ theorem maxClass_le_50 (f : Fin 52 → ZMod 13) (hs : ∑ c, f c = 0) (hnc : ∃
     linear_combination hs
 
 /-- Pigeonhole (PROOF.md §4): some label class has at least 13 of the 52 cards. -/
-theorem exists_class_ge_13 (f : Fin 52 → Fin 4) : ∃ x, 13 ≤ (univ.filter fun c => f c = x).card := by
+theorem exists_class_ge_13 (f : Fin 52 → Fin 4) :
+    ∃ x, 13 ≤ (univ.filter fun c => f c = x).card := by
   by_contra h
   push_neg at h
-  have hsum := Finset.card_eq_sum_card_fiberwise (s := (univ : Finset (Fin 52))) (t := (univ : Finset (Fin 4))) (f := f) (fun _ _ => mem_univ _)
+  have hsum := Finset.card_eq_sum_card_fiberwise (s := (univ : Finset (Fin 52)))
+    (t := (univ : Finset (Fin 4))) (f := f) (fun _ _ => mem_univ _)
   have hle : ∑ x : Fin 4, (univ.filter fun c => f c = x).card ≤ ∑ _x : Fin 4, 12 :=
     Finset.sum_le_sum fun x _ => Nat.lt_succ_iff.mp (h x)
   simp only [card_univ, Fintype.card_fin, sum_const, smul_eq_mul] at hsum hle
   omega
-
-/-! ## Generic fibre bound (PROOF.md §2 Lemma 3 and §4 Lemma 5: "nest the sums") -/
-
-/-- Two-level fibre bound: if at most `m` first coordinates pass `P`, and for
-    each of them at most `n` second coordinates pass `Q a`, then at most `m * n`
-    pairs pass. Iterating it gives the row chain (4 levels) and the column chain
-    (13 levels). -/
-theorem card_filter_product_le {α β : Type*} [DecidableEq α] [DecidableEq β]
-    (s : Finset α) (t : Finset β) (P : α → Prop) [DecidablePred P]
-    (Q : α → β → Prop) [∀ a, DecidablePred (Q a)] (m n : ℕ)
-    (hP : (s.filter P).card ≤ m) (hQ : ∀ a ∈ s, P a → (t.filter (Q a)).card ≤ n) :
-    ((s ×ˢ t).filter fun p => P p.1 ∧ Q p.1 p.2).card ≤ m * n := by
-  have h1 := card_le_mul_card_image_of_maps_to (s := (s ×ˢ t).filter fun p => P p.1 ∧ Q p.1 p.2)
-    (t := s.filter P) (f := Prod.fst) (by
-      intro p hp
-      simp only [mem_filter, mem_product] at hp ⊢
-      exact ⟨hp.1.1, hp.2.1⟩) n (by
-      intro a ha
-      simp only [mem_filter] at ha
-      calc (((s ×ˢ t).filter fun p => P p.1 ∧ Q p.1 p.2).filter fun p => p.1 = a).card
-          ≤ (t.filter (Q a)).card := by
-            apply card_le_card_of_injOn Prod.snd
-            · intro p hp
-              simp only [coe_filter, mem_filter, mem_product, Set.mem_setOf_eq] at hp
-              simp only [coe_filter, Set.mem_setOf_eq, mem_filter]
-              obtain ⟨⟨⟨_, ht⟩, _, hq⟩, rfl⟩ := hp
-              exact ⟨ht, hq⟩
-            · intro p hp q hq e
-              simp only [coe_filter, mem_filter, Set.mem_setOf_eq] at hp hq
-              exact Prod.ext (hp.2.trans hq.2.symm) e
-        _ ≤ n := hQ a ha.1 ha.2)
-  calc _ ≤ n * (s.filter P).card := h1
-    _ ≤ n * m := Nat.mul_le_mul_left _ hP
-    _ = m * n := Nat.mul_comm _ _
 
 /-! ## Hypergeometric counting (PROOF.md §3 (A2) and §4 Theorem B)
 
@@ -391,6 +365,7 @@ variable {ι κ : Type} [Fintype ι] [DecidableEq ι] [Fintype κ] [DecidableEq 
 def bvec (e : Fin 52 ≃ ι × κ) (A : Finset (Fin 52)) (i : ι) : ℕ :=
   (univ.filter fun p => (e p).1 = i ∧ p ∈ A).card
 
+omit [Fintype ι] [DecidableEq κ] in
 theorem card_block (e : Fin 52 ≃ ι × κ) (i : ι) (P : Fin 52 → Prop) [DecidablePred P] :
     (univ.filter fun p => (e p).1 = i ∧ P p).card =
       (univ.filter fun k => P (e.symm (i, k))).card := by
@@ -410,6 +385,7 @@ theorem card_block (e : Fin 52 ≃ ι × κ) (i : ι) (P : Fin 52 → Prop) [Dec
 def bcomps (n : ℕ) : Finset (ι → ℕ) :=
   (Fintype.piFinset fun _ => range (Fintype.card κ + 1)).filter fun z => ∑ i, z i = n
 
+omit [Fintype κ] [DecidableEq κ] in
 theorem sum_bvec (e : Fin 52 ≃ ι × κ) (A : Finset (Fin 52)) : ∑ i, bvec e A i = A.card := by
   have := card_eq_sum_card_fiberwise (s := A) (t := (univ : Finset ι)) (f := fun p => (e p).1)
     (fun _ _ => mem_univ _)
@@ -417,6 +393,7 @@ theorem sum_bvec (e : Fin 52 ≃ ι × κ) (A : Finset (Fin 52)) : ∑ i, bvec e
   apply sum_congr rfl; intro i _
   unfold bvec; congr 1; ext p; simp [and_comm]
 
+omit [DecidableEq κ] in
 theorem bvec_mem (e : Fin 52 ≃ ι × κ) (A : Finset (Fin 52)) :
     bvec e A ∈ bcomps (κ := κ) A.card := by
   simp only [bcomps, mem_filter, Fintype.mem_piFinset, mem_range]
@@ -425,7 +402,8 @@ theorem bvec_mem (e : Fin 52 ≃ ι × κ) (A : Finset (Fin 52)) :
   exact Nat.lt_succ_of_le (card_le_univ _)
 
 /-- Number of seat sets with block counts `z`. -/
-theorem card_sets_bvec (e : Fin 52 ≃ ι × κ) (n : ℕ) (z : ι → ℕ) (hz : z ∈ bcomps (κ := κ) n) :
+theorem card_sets_bvec (e : Fin 52 ≃ ι × κ) (n : ℕ) (z : ι → ℕ)
+    (hz : z ∈ bcomps (κ := κ) n) :
     ((powersetCard n univ).filter fun A => bvec e A = z).card =
       ∏ i, Nat.choose (Fintype.card κ) (z i) := by
   have hzs : ∑ i, z i = n := (mem_filter.1 hz).2
@@ -453,8 +431,9 @@ theorem card_sets_bvec (e : Fin 52 ≃ ι × κ) (n : ℕ) (z : ι → ℕ) (hz 
 
 theorem hyper_gen (e : Fin 52 ≃ ι × κ) (W : Finset (Fin 52)) (F : (ι → ℕ) → ℚ) :
     ∑ π : Equiv.Perm (Fin 52), F (bvec e (preW W π)) =
-      ∑ z ∈ bcomps (κ := κ) W.card, (∏ i, ((Nat.choose (Fintype.card κ) (z i) : ℕ) : ℚ)) *
-        (W.card.factorial * (52 - W.card).factorial : ℕ) * F z := by
+      ∑ z ∈ bcomps (κ := κ) W.card,
+        (∏ i, ((Nat.choose (Fintype.card κ) (z i) : ℕ) : ℚ)) *
+          (W.card.factorial * (52 - W.card).factorial : ℕ) * F z := by
   rw [← sum_fiberwise_of_maps_to (fun π (_ : π ∈ (univ : Finset (Equiv.Perm (Fin 52)))) =>
     mem_powersetCard.2 ⟨subset_univ (preW W π), card_preW W π⟩)]
   have h1 : ∀ A ∈ powersetCard W.card (univ : Finset (Fin 52)),
@@ -464,13 +443,15 @@ theorem hyper_gen (e : Fin 52 ≃ ι × κ) (W : Finset (Fin 52)) (F : (ι → �
     rw [sum_congr rfl fun π hπ => congrArg (fun B => F (bvec e B)) (mem_filter.1 hπ).2,
       sum_const, card_fibre_preW W A (mem_powersetCard.1 hA).2, nsmul_eq_mul]
   rw [sum_congr rfl h1]
-  rw [← sum_fiberwise_of_maps_to (fun A (hA : A ∈ powersetCard W.card (univ : Finset (Fin 52))) =>
+  rw [← sum_fiberwise_of_maps_to
+    (fun A (hA : A ∈ powersetCard W.card (univ : Finset (Fin 52))) =>
     (show bvec e A ∈ bcomps (κ := κ) W.card by
       have := bvec_mem e A; rwa [(mem_powersetCard.1 hA).2] at this))]
   apply sum_congr rfl
   intro z hz
-  rw [sum_congr rfl fun A hA => congrArg (fun y => ((W.card.factorial * (52 - W.card).factorial : ℕ) : ℚ) * F y)
-      (mem_filter.1 hA).2, sum_const, card_sets_bvec e _ z hz, nsmul_eq_mul]
+  rw [sum_congr rfl fun A hA =>
+      congrArg (fun y => ((W.card.factorial * (52 - W.card).factorial : ℕ) : ℚ) * F y)
+        (mem_filter.1 hA).2, sum_const, card_sets_bvec e _ z hz, nsmul_eq_mul]
   push_cast; ring
 
 
@@ -640,11 +621,10 @@ theorem distinct_row_count (val : Fin 52 → ZMod 13) (r : Fin 4) :
 
 `EA n` and `EB m` are the exact expectations of the pointwise bounds under the
 hypergeometric law. The paper evaluates them in rational arithmetic
-(`alt_analytic_bigm_output.txt`, `caseB_analytic_output.txt`). In Lean they
-should be proved by kernel `decide` on a Nat-scaled convolution / transfer
-matrix that is first shown equal to these sums; if that takes more than a few
-seconds it belongs in the heavy target (`DoubleDealSecurityHeavy`), never in the
-default build. -/
+(`sumranks-dp-paper/alt_analytic_bigm_output.txt` and
+`sumranks-dp-paper/caseB_analytic_output.txt`). Here each is shown equal to a
+Nat-scaled convolution (Table A) or transfer matrix (Table B), and the resulting
+inequalities are checked by kernel `decide!` (the largest takes about 1.5 s). -/
 
 /-- Pointwise row bound `h(z)` (PROOF.md §3 (A2)): `1/(z+1)`, and `1` for a
     full row (`z = 13`). -/
@@ -652,7 +632,8 @@ def hA (z : ℕ) : ℚ := if z = 13 then 1 else 1 / (z + 1)
 
 /-- `E_A(n)` (PROOF.md §3 (A2)). -/
 def EA (n : ℕ) : ℚ :=
-  (∑ z ∈ comps4 n, ∏ r, ((Nat.choose 13 (z r) : ℕ) : ℚ) * hA (z r)) / (Nat.choose 52 n : ℕ)
+  (∑ z ∈ comps4 n, ∏ r, ((Nat.choose 13 (z r) : ℕ) : ℚ) * hA (z r)) /
+    (Nat.choose 52 n : ℕ)
 
 
 /-! ### Table A by kernel check
@@ -675,16 +656,24 @@ theorem sum_comps4_eq_coeff (f : ℕ → ℚ) (n : ℕ) :
   split_ifs with h1 h2 h2 <;> first | rfl | (exfalso; omega)
 
 /-- `360360 · C(13,k) · h(k)`. -/
-def GA (k : ℕ) : ℕ := [360360, 2342340, 9369360, 25765740, 51531480, 77297220, 88339680, 77297220, 51531480, 25765740, 9369360, 2342340, 360360, 360360].getD k 0
+def GA (k : ℕ) : ℕ :=
+  [360360, 2342340, 9369360, 25765740, 51531480, 77297220, 88339680, 77297220, 51531480,
+    25765740, 9369360, 2342340, 360360, 360360].getD k 0
 
 /-- The convolution square of `GA` (entries `0 … 26`). -/
-def LA2 : List ℕ := [129859329600, 1688171284800, 12239241814800, 62462337537600, 245628921938400, 779935133577600, 2055288247412400, 4573497177849600, 8693358614740800, 14227184086315200, 20155740179374800, 24807194695483200, 26579155725064800, 24807454414142400, 20157428350659600, 14233936771454400, 8711928498873600, 4610636946115200, 2110997899810800, 843603307747200, 301338574336800, 99602105803200, 30809125947600, 8440856424000, 1818030614400, 259718659200, 129859329600]
+def LA2 : List ℕ :=
+  [129859329600, 1688171284800, 12239241814800, 62462337537600, 245628921938400, 779935133577600,
+    2055288247412400, 4573497177849600, 8693358614740800, 14227184086315200, 20155740179374800,
+    24807194695483200, 26579155725064800, 24807454414142400, 20157428350659600, 14233936771454400,
+    8711928498873600, 4610636946115200, 2110997899810800, 843603307747200, 301338574336800,
+    99602105803200, 30809125947600, 8440856424000, 1818030614400, 259718659200, 129859329600]
 
 theorem GA_eq_zero (k : ℕ) (hk : 14 ≤ k) : GA k = 0 :=
   List.getD_eq_default _ _ (by simp; omega)
 
 theorem GA_spec (k : ℕ) :
-    (if k ∈ range 14 then ((Nat.choose 13 k : ℕ) : ℚ) * hA k else 0) = (GA k : ℚ) / 360360 := by
+    (if k ∈ range 14 then ((Nat.choose 13 k : ℕ) : ℚ) * hA k else 0) =
+      (GA k : ℚ) / 360360 := by
   by_cases hk : k < 14
   · rw [if_pos (mem_range.2 hk)]
     interval_cases k <;> simp [GA, hA, Nat.choose] <;> norm_num
@@ -713,7 +702,8 @@ theorem EA_numer (n : ℕ) :
     (∑ z ∈ comps4 n, ∏ r, ((Nat.choose 13 (z r) : ℕ) : ℚ) * hA (z r)) =
       ((∑ x ∈ antidiagonal n, LA2.getD x.1 0 * LA2.getD x.2 0 : ℕ) : ℚ) / 360360 ^ 4 := by
   rw [sum_comps4_eq_coeff (fun k => ((Nat.choose 13 k : ℕ) : ℚ) * hA k)]
-  set p := ∑ j ∈ range 14, Polynomial.C (((Nat.choose 13 j : ℕ) : ℚ) * hA j) * Polynomial.X ^ j
+  set p :=
+    ∑ j ∈ range 14, Polynomial.C (((Nat.choose 13 j : ℕ) : ℚ) * hA j) * Polynomial.X ^ j
   have hp : ∀ k, p.coeff k = (GA k : ℚ) / 360360 := by
     intro k
     rw [Polynomial.finset_sum_coeff]
@@ -752,7 +742,8 @@ theorem EA_le (n : ℕ) (h1 : 13 ≤ n) (h2 : n ≤ 49) : EA n ≤ 1 / 100 := by
   rw [EA_numer]
   have hC : (0 : ℚ) < (Nat.choose 52 n : ℕ) := by exact_mod_cast Nat.choose_pos (by omega)
   rw [div_div, div_le_div_iff₀ (by positivity) (by norm_num)]
-  have : ((100 * B : ℕ) : ℚ) ≤ ((360360 ^ 4 * Nat.choose 52 n : ℕ) : ℚ) := by exact_mod_cast key
+  have : ((100 * B : ℕ) : ℚ) ≤ ((360360 ^ 4 * Nat.choose 52 n : ℕ) : ℚ) := by
+    exact_mod_cast key
   push_cast at this
   linarith
 
@@ -867,7 +858,9 @@ theorem digit_sum (S : ℕ → ℕ) (B : ℕ) (hS : ∀ k, S k < B) (m r : ℕ) 
   exact Nat.mod_eq_of_lt (hS m)
 
 /-- `12 · C(4,v) · f(u,v)` (all integers). -/
-def aN : Fin 5 → Fin 5 → ℕ := ![![12, 0, 72, 48, 12], ![3, 12, 18, 12, 3], ![3, 16, 24, 16, 4], ![6, 24, 36, 24, 6], ![12, 48, 72, 48, 12]]
+def aN : Fin 5 → Fin 5 → ℕ :=
+  ![![12, 0, 72, 48, 12], ![3, 12, 18, 12, 3], ![3, 16, 24, 16, 4], ![6, 24, 36, 24, 6],
+    ![12, 48, 72, 48, 12]]
 
 theorem aN_spec : ∀ u v : Fin 5,
     ((aN u v : ℕ) : ℚ) = 12 * (((Nat.choose 4 v.val : ℕ) : ℚ) * fB u.val v.val) := by
@@ -914,11 +907,13 @@ theorem SB_digit (m : ℕ) (hm : m < 53) : TB (10 ^ 30) / (10 ^ 30) ^ m % 10 ^ 3
   exact digit_sum SB _ (fun k => (SB_le k).trans_lt TB1_lt) m r
 
 theorem EB_numer (m : ℕ) :
-    (∑ y ∈ comps13 m, ∏ j : Fin 13, ((Nat.choose 4 (y j) : ℕ) : ℚ) * fB (y (j - 1)) (y j)) =
+    (∑ y ∈ comps13 m, ∏ j : Fin 13,
+        ((Nat.choose 4 (y j) : ℕ) : ℚ) * fB (y (j - 1)) (y j)) =
       (SB m : ℚ) / 12 ^ 13 := by
   rw [SB, Nat.cast_sum, sum_div]
   symm
-  apply sum_nbij' (fun x j => (x j).val) (fun y j => (⟨y j % 5, Nat.mod_lt _ (by norm_num)⟩ : Fin 5))
+  apply sum_nbij' (fun x j => (x j).val)
+    (fun y j => (⟨y j % 5, Nat.mod_lt _ (by norm_num)⟩ : Fin 5))
   · intro x hx
     simp only [coe_filter, mem_filter, mem_univ, true_and, Set.mem_setOf_eq, comps13,
       Fintype.mem_piFinset, mem_range, mem_coe] at hx ⊢
@@ -957,7 +952,8 @@ theorem EB_le (m : ℕ) (h1 : 2 ≤ m) (h2 : m ≤ 39) : EB m ≤ 1 / 64 := by
   rw [EB_numer]
   have hC : (0 : ℚ) < (Nat.choose 52 m : ℕ) := by exact_mod_cast Nat.choose_pos (by omega)
   rw [div_div, div_le_div_iff₀ (by positivity) (by norm_num)]
-  have : ((64 * SB m : ℕ) : ℚ) ≤ ((12 ^ 13 * Nat.choose 52 m : ℕ) : ℚ) := by exact_mod_cast key
+  have : ((64 * SB m : ℕ) : ℚ) ≤ ((12 ^ 13 * Nat.choose 52 m : ℕ) : ℚ) := by
+    exact_mod_cast key
   push_cast at this
   linarith
 
@@ -996,10 +992,12 @@ theorem perms4_eq : (univ : Finset (Equiv.Perm (Fin 4))).map
 theorem perms4_nodup : perms4.Nodup := by decide
 
 theorem card_perm4_filter (P : (Fin 4 → Fin 4) → Prop) [DecidablePred P] :
-    (univ.filter fun σ : Equiv.Perm (Fin 4) => P σ).card = (perms4.filter fun f => P f).length := by
+    (univ.filter fun σ : Equiv.Perm (Fin 4) => P σ).card =
+      (perms4.filter fun f => P f).length := by
   have h1 : (univ.filter fun σ : Equiv.Perm (Fin 4) => P σ).card =
       (((univ : Finset (Equiv.Perm (Fin 4))).map
-        ⟨fun σ : Equiv.Perm (Fin 4) => (σ : Fin 4 → Fin 4), DFunLike.coe_injective⟩).filter P).card := by
+        ⟨fun σ : Equiv.Perm (Fin 4) => (σ : Fin 4 → Fin 4),
+          DFunLike.coe_injective⟩).filter P).card := by
     rw [filter_map, card_map]; rfl
   rw [h1, perms4_eq, ← List.toFinset_card_of_nodup (perms4_nodup.filter _)]
   congr 1; ext f; simp
@@ -1050,11 +1048,16 @@ theorem offCount_shift (e : Fin 4 → Fin 4) (x : Fin 4) :
 
 /-- The finite check behind Lemma 4, on sorted shifted columns (35 · 4 cases). -/
 theorem lemma4_core : ∀ a b c d t : Fin 4, a ≤ b → b ≤ c → c ≤ d →
-    (offCount ![a, b, c, d] 0 = 0 → t ≠ 0 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length = 0) ∧
-    (offCount ![a, b, c, d] 0 = 1 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 6) ∧
-    (offCount ![a, b, c, d] 0 = 2 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 8) ∧
-    (offCount ![a, b, c, d] 0 = 2 → t = 0 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 6) ∧
-    (offCount ![a, b, c, d] 0 = 3 → (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 12) := by
+    (offCount ![a, b, c, d] 0 = 0 → t ≠ 0 →
+      (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length = 0) ∧
+    (offCount ![a, b, c, d] 0 = 1 →
+      (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 6) ∧
+    (offCount ![a, b, c, d] 0 = 2 →
+      (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 8) ∧
+    (offCount ![a, b, c, d] 0 = 2 → t = 0 →
+      (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 6) ∧
+    (offCount ![a, b, c, d] 0 = 3 →
+      (perms4.filter fun f => vLab (![a, b, c, d] ∘ f) = t).length ≤ 12) := by
   decide!
 
 /-- **Lemma 4 as used** (PROOF.md §4): the probability over the 24 orders that

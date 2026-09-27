@@ -626,6 +626,51 @@ def phi (τ : Relabel) (p y : Fin 4 → Fin 52) : ℚ :=
 theorem phi_nonneg (τ : Relabel) (p y : Fin 4 → Fin 52) : 0 ≤ phi τ p y := by
   unfold phi; positivity
 
+/-! ### Helpers: decks from grids -/
+
+theorem isDeckG_rowRotate (G : Grid Nat) (t : Fin 4 → Nat) (hG : IsDeck (scoopColumnMajor G)) :
+    IsDeck (scoopColumnMajor (rowRotate G t)) := by
+  obtain ⟨hc, hi⟩ := (isDeckG_iff G).1 hG
+  refine (isDeckG_iff _).2 ⟨fun r c => ?_, fun r c r' c' h => ?_⟩
+  · rw [rowRotate_apply]; exact hc _ _
+  · rw [rowRotate_apply, rowRotate_apply] at h
+    obtain ⟨hr, hcol⟩ := hi _ _ _ _ h
+    subst hr
+    refine ⟨rfl, Fin.ext ?_⟩
+    have := congrArg Fin.val hcol
+    simp only at this
+    have := c.isLt; have := c'.isLt
+    omega
+
+theorem isDeckG_rowsDone4 (π : Equiv.Perm (Fin 52)) :
+    IsDeck (scoopColumnMajor (rowsDone rowTurnV10 (deckGrid π) 4)) := by
+  rw [rowsDone_eq]; exact isDeckG_rowRotate _ _ (isDeck_deckGrid π)
+
+/-- The deck permutation of a deck grid. -/
+noncomputable def gridPerm (G : Grid Nat) (hG : IsDeck (scoopColumnMajor G)) : Equiv.Perm (Fin 52) :=
+  deckPerm (scoopColumnMajor G) hG
+
+theorem deckGrid_gridPerm (G : Grid Nat) (hG : IsDeck (scoopColumnMajor G)) :
+    deckGrid (gridPerm G hG) = G := by
+  have : permDeck (gridPerm G hG) = scoopColumnMajor G := funext fun k => rfl
+  unfold deckGrid; rw [this, lay_scoop_columnMajor]
+
+theorem gridPerm_deckGrid (π : Equiv.Perm (Fin 52)) : gridPerm (deckGrid π) (isDeck_deckGrid π) = π := by
+  apply Equiv.ext; intro k; apply Fin.ext
+  show scoopColumnMajor (layColumnMajor (permDeck π)) k = (π k).val
+  rw [scoop_lay_columnMajor]; rfl
+
+theorem gridPerm_congr (G G' : Grid Nat) (hG : IsDeck (scoopColumnMajor G))
+    (hG' : IsDeck (scoopColumnMajor G')) (h : G = G') : gridPerm G hG = gridPerm G' hG' := by
+  subst h; rfl
+
+theorem card_filter_equiv (e : Equiv.Perm (Fin 52) ≃ Equiv.Perm (Fin 52))
+    (P : Equiv.Perm (Fin 52) → Prop) [DecidablePred P] :
+    (univ.filter fun a => P (e a)).card = (univ.filter P).card := by
+  have : (univ.filter fun a => P (e a)).map e.toEmbedding = univ.filter P := by
+    ext a; simp [Finset.mem_map_equiv]
+  rw [← this, card_map]
+
 /-- **`H` is uniform** (PROOF.md §4): `π ↦` (post-row grid) is a bijection of
     decks (`rowsUndo_rowsDone`, `rowsDone_rowsUndo`, `isDeckG_rowsUndo`), so
     counting the column conditions on `H` is counting them on `G`. -/
@@ -633,7 +678,26 @@ theorem colConds_H_card (τ : Relabel) :
     (univ.filter fun π : Equiv.Perm (Fin 52) =>
         ColCondsTraj τ (rowsDone rowTurnV10 (deckGrid π) 4)).card =
       (univ.filter fun π : Equiv.Perm (Fin 52) => ColCondsTraj τ (deckGrid π)).card := by
-  sorry
+  let Φ : Equiv.Perm (Fin 52) ≃ Equiv.Perm (Fin 52) :=
+    { toFun := fun π => gridPerm (rowsDone rowTurnV10 (deckGrid π) 4) (isDeckG_rowsDone4 π)
+      invFun := fun π => gridPerm (rowsUndo rowTurnV10 (deckGrid π) 4)
+        (isDeckG_rowsUndo _ (isDeck_deckGrid π) 4)
+      left_inv := fun π => by
+        simp only
+        rw [gridPerm_congr _ _ _ _ (by rw [deckGrid_gridPerm, rowsUndo_rowsDone _ _ 4 le_rfl])]
+        exact gridPerm_deckGrid π
+      right_inv := fun π => by
+        simp only
+        rw [gridPerm_congr _ _ _ _ (by rw [deckGrid_gridPerm, rowsDone_rowsUndo _ _ 4 le_rfl])]
+        exact gridPerm_deckGrid π }
+  have h := card_filter_equiv Φ (fun π => ColCondsTraj τ (deckGrid π))
+  rw [← h]
+  apply congrArg Finset.card
+  apply filter_congr
+  intro π _
+  show ColCondsTraj τ (rowsDone rowTurnV10 (deckGrid π) 4) ↔
+    ColCondsTraj τ (deckGrid (gridPerm (rowsDone rowTurnV10 (deckGrid π) 4) (isDeckG_rowsDone4 π)))
+  rw [deckGrid_gridPerm]
 
 /-! ### Helpers for the column chain -/
 

@@ -931,10 +931,62 @@ def ecls (τ : Relabel) (x : Fin 4) : Finset (Fin 52) := univ.filter fun c => ep
 /-- `m'`: the number of cards off the most common `ε`-value (PROOF.md §4). -/
 def mStar (τ : Relabel) : ℕ := 52 - univ.sup fun x => (ecls τ x).card
 
+theorem add_self_Z : ∀ x : ZMod 2 × ZMod 2, x + x = 0 := by decide
+theorem nsmul51 : ∀ x : ZMod 2 × ZMod 2, (51 : ℕ) • x = x := by decide
+theorem add_eq_zero_imp : ∀ a b : ZMod 2 × ZMod 2, a + b = 0 → a = b := by decide
+
+/-- `Σ_c ε(c) = 0` in GF(4) (PROOF.md §0): `τ` is a bijection. -/
+theorem sum_toZ_eps (τ : Relabel) : ∑ c, toZ (eps τ c) = 0 := by
+  simp only [eps, toZ_x4, sum_add_distrib]
+  rw [Equiv.sum_comp τ (fun c => toZ (lab c)), add_self_Z]
+
 /-- `2 ≤ m' ≤ 39` when `ε` is not constant (PROOF.md §4: `m' ≠ 1` by
     `Σ ε = 0`, and the largest class has at least 13 cards). -/
 theorem mStar_bounds (τ : Relabel) (h : ∃ c, eps τ c ≠ eps τ 0) : 2 ≤ mStar τ ∧ mStar τ ≤ 39 := by
-  sorry
+  classical
+  set S := univ.sup fun x => (ecls τ x).card with hS
+  obtain ⟨xs, -, hxs⟩ := Finset.exists_mem_eq_sup (univ : Finset (Fin 4)) univ_nonempty
+    (fun x => (ecls τ x).card)
+  rw [← hS] at hxs
+  have hle52 : S ≤ 52 := by
+    rw [hxs]; exact (card_le_univ _).trans (by simp)
+  have h13 : 13 ≤ S := by
+    obtain ⟨x, hx⟩ := exists_class_ge_13 (eps τ)
+    exact hx.trans (le_sup (f := fun x => (ecls τ x).card) (mem_univ x))
+  have hne52 : S ≠ 52 := by
+    intro e
+    obtain ⟨c, hc⟩ := h
+    have hall : ecls τ xs = univ := eq_univ_of_card _ (by rw [← hxs, e]; simp)
+    have h1 : c ∈ ecls τ xs := by rw [hall]; exact mem_univ c
+    have h2 : (0 : Fin 52) ∈ ecls τ xs := by rw [hall]; exact mem_univ _
+    simp only [ecls, mem_filter, mem_univ, true_and] at h1 h2
+    exact hc (h1.trans h2.symm)
+  have hne51 : S ≠ 51 := by
+    intro e
+    have hsum := sum_toZ_eps τ
+    rw [← sum_filter_add_sum_filter_not univ (fun c => eps τ c = xs)] at hsum
+    have hA : ∑ c ∈ univ.filter (fun c => eps τ c = xs), toZ (eps τ c) = toZ xs := by
+      rw [sum_congr rfl fun c hc => by rw [(mem_filter.1 hc).2], sum_const]
+      have hc : (univ.filter fun c => eps τ c = xs).card = 51 := by
+        rw [← e, hxs]; rfl
+      rw [hc]; exact nsmul51 _
+    have hcard : (univ.filter fun c => ¬ eps τ c = xs).card = 1 := by
+      have := filter_card_add_filter_neg_card_eq_card (s := (univ : Finset (Fin 52)))
+        (fun c => eps τ c = xs)
+      have hc : (univ.filter fun c => eps τ c = xs).card = 51 := by
+        rw [← e, hxs]; rfl
+      rw [hc, card_univ, Fintype.card_fin] at this
+      omega
+    obtain ⟨c₀, hc₀⟩ := card_eq_one.1 hcard
+    have hc₀' : ¬ eps τ c₀ = xs := by
+      have : c₀ ∈ univ.filter fun c => ¬ eps τ c = xs := by rw [hc₀]; exact mem_singleton_self _
+      exact (mem_filter.1 this).2
+    rw [hA, hc₀, sum_singleton] at hsum
+    exact hc₀' (toZ_inj _ _ (add_eq_zero_imp _ _ hsum).symm)
+  have hle50 : S ≤ 50 := by omega
+  unfold mStar
+  rw [← hS]
+  omega
 
 /-- **Theorem B, Lean form** (PROOF.md §4): `Σ_π Π_j φ ≤ 52! · E_B(m')`
     (`lemma4_count_le` pointwise with `xs` a most common `ε`-value, then

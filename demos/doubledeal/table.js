@@ -723,8 +723,9 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         return ranks;
     }
 
-    // A SumRanks column turns by the sum of its cards' rank + suit (♣0 ♥1 ♠2 ♦3).
-    // One {rank, suit} per seated card, top to bottom.
+    // One {rank, suit} per seated card, top to bottom (suit index ♣0 ♥1 ♠2 ♦3).
+    // v10 SumRanks no longer sums these (it reads GF(4) suit labels; see the
+    // step's V and S); kept for callers that list a column's cards.
     function colTerms(col) {
         const terms = [];
         for (let r = 0; r < 4; r++) {

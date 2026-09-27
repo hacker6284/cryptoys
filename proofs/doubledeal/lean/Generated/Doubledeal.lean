@@ -440,6 +440,13 @@ def scoop_rm (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Int)) :=
       pure out) (fun r => pure r))
     pure _out
 
+def column_weight (c : Int) : Except SudoRt.Trap (Int) :=
+  do
+    let _t89 ← rank_of c
+    let _t90 ← suit_of c
+    let _t91 ← SudoRt.addI _t89 _t90
+    pure _t91
+
 def sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (Int))) :=
   do
     let _fromV := (0 : Int)
@@ -454,14 +461,14 @@ def sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (Int)
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, g))
       else
         match ← ((do
-  let _t92 ← SudoRt.atL g i
-  let row := _t92
+  let _t95 ← SudoRt.atL g i
+  let row := _t95
   let total := (0 : Int)
   let _fromV := (0 : Int)
   let _toV := (12 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init101 := (_fromV, total)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init101 fuel (fun σ =>
+  let _init104 := (_fromV, total)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init104 fuel (fun σ =>
     let j := σ.1
     let total := σ.2
     do
@@ -469,10 +476,10 @@ def sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (Int)
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (j, total))
       else
         match ← ((do
-  let _t94 ← SudoRt.atL row j
-  let _t95 ← rank_of _t94
-  let _t96 ← SudoRt.addI total _t95
-  let total := _t96
+  let _t97 ← SudoRt.atL row j
+  let _t98 ← rank_of _t97
+  let _t99 ← SudoRt.addI total _t98
+  let total := _t99
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) total)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (j, _fs))
@@ -484,11 +491,11 @@ def sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (Int)
               pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) (i', _fs))) (fun σ =>
     let total := σ.2
     do
-      let _ix97 := i
-      let _t98 ← SudoRt.modI total (13 : Int)
-      let _t99 ← left_rotate row _t98
-      let _t100 ← SudoRt.putL g _ix97 _t99
-      let g := _t100
+      let _ix100 := i
+      let _t101 ← SudoRt.modI total (13 : Int)
+      let _t102 ← left_rotate row _t101
+      let _t103 ← SudoRt.putL g _ix100 _t102
+      let g := _t103
       pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) g)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
@@ -526,13 +533,13 @@ def sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (Int)
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, col))
       else
         match ← ((do
-  let _t104 ← SudoRt.atL g i
-  let _t105 ← SudoRt.atL _t104 j
-  let _mb106 := SudoRt.appendL col _t105
-  let ⟨_nr107, _⟩ := _mb106
-  let col := _nr107
-  let _hm89 := ()
-  let _u108 := _hm89
+  let _t107 ← SudoRt.atL g i
+  let _t108 ← SudoRt.atL _t107 j
+  let _mb109 := SudoRt.appendL col _t108
+  let ⟨_nr110, _⟩ := _mb109
+  let col := _nr110
+  let _hm92 := ()
+  let _u111 := _hm92
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) col)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -557,12 +564,9 @@ def sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (Int)
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, total))
       else
         match ← ((do
-  let _t110 ← SudoRt.atL col i
-  let _t111 ← rank_of _t110
-  let _t112 ← SudoRt.addI total _t111
   let _t113 ← SudoRt.atL col i
-  let _t114 ← suit_of _t113
-  let _t115 ← SudoRt.addI _t112 _t114
+  let _t114 ← column_weight _t113
+  let _t115 ← SudoRt.addI total _t114
   let total := _t115
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) total)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
@@ -596,8 +600,8 @@ def sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (Int)
   let _mb121 := SudoRt.appendL fresh _t120
   let ⟨_nr122, _⟩ := _mb121
   let fresh := _nr122
-  let _hm90 := ()
-  let _u123 := _hm90
+  let _hm93 := ()
+  let _u123 := _hm93
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) fresh)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -665,8 +669,8 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
     let _fromV := (0 : Int)
     let _toV := (12 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init185 := (_fromV, g)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init185 fuel (fun σ =>
+    let _init182 := (_fromV, g)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init182 fuel (fun σ =>
     let j := σ.1
     let g := σ.2
     do
@@ -678,8 +682,8 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
   let _fromV := (0 : Int)
   let _toV := (3 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init171 := (_fromV, col)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init171 fuel (fun σ =>
+  let _init168 := (_fromV, col)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init168 fuel (fun σ =>
     let i := σ.1
     let col := σ.2
     do
@@ -709,8 +713,8 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init170 := (_fromV, total)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init170 fuel (fun σ =>
+      let _init167 := (_fromV, total)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init167 fuel (fun σ =>
     let i := σ.1
     let total := σ.2
     do
@@ -719,12 +723,9 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
       else
         match ← ((do
   let _t147 ← SudoRt.atL col i
-  let _t148 ← rank_of _t147
+  let _t148 ← column_weight _t147
   let _t149 ← SudoRt.addI total _t148
-  let _t150 ← SudoRt.atL col i
-  let _t151 ← suit_of _t150
-  let _t152 ← SudoRt.addI _t149 _t151
-  let total := _t152
+  let total := _t149
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) total)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -736,14 +737,14 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
               pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) (i', _fs))) (fun σ =>
     let total := σ.2
     do
-      let _t153 ← SudoRt.modI total (4 : Int)
-      let s := _t153
+      let _t150 ← SudoRt.modI total (4 : Int)
+      let s := _t150
       let fresh := (#[] : Array (Int))
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init169 := (_fromV, fresh)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init169 fuel (fun σ =>
+      let _init166 := (_fromV, fresh)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init166 fuel (fun σ =>
     let i := σ.1
     let fresh := σ.2
     do
@@ -751,14 +752,14 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, fresh))
       else
         match ← ((do
-  let _t155 ← SudoRt.addI i s
-  let _t156 ← SudoRt.modI _t155 (4 : Int)
-  let _t157 ← SudoRt.atL col _t156
-  let _mb158 := SudoRt.appendL fresh _t157
-  let ⟨_nr159, _⟩ := _mb158
-  let fresh := _nr159
+  let _t152 ← SudoRt.addI i s
+  let _t153 ← SudoRt.modI _t152 (4 : Int)
+  let _t154 ← SudoRt.atL col _t153
+  let _mb155 := SudoRt.appendL fresh _t154
+  let ⟨_nr156, _⟩ := _mb155
+  let fresh := _nr156
   let _hm138 := ()
-  let _u160 := _hm138
+  let _u157 := _hm138
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) fresh)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -773,8 +774,8 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init168 := (_fromV, g)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init168 fuel (fun σ =>
+      let _init165 := (_fromV, g)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init165 fuel (fun σ =>
     let i := σ.1
     let g := σ.2
     do
@@ -782,15 +783,15 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, g))
       else
         match ← ((do
-  let _t162 ← SudoRt.atL g i
+  let _t159 ← SudoRt.atL g i
+  let row := _t159
+  let _ix160 := j
+  let _t161 ← SudoRt.atL fresh i
+  let _t162 ← SudoRt.putL row _ix160 _t161
   let row := _t162
-  let _ix163 := j
-  let _t164 ← SudoRt.atL fresh i
-  let _t165 ← SudoRt.putL row _ix163 _t164
-  let row := _t165
-  let _ix166 := i
-  let _t167 ← SudoRt.putL g _ix166 row
-  let g := _t167
+  let _ix163 := i
+  let _t164 ← SudoRt.putL g _ix163 row
+  let g := _t164
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) g)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -820,8 +821,8 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init184 := (_fromV, g)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init184 fuel (fun σ =>
+      let _init181 := (_fromV, g)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init181 fuel (fun σ =>
     let i := σ.1
     let g := σ.2
     do
@@ -829,14 +830,14 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, g))
       else
         match ← ((do
-  let _t173 ← SudoRt.atL g i
-  let row := _t173
+  let _t170 ← SudoRt.atL g i
+  let row := _t170
   let total := (0 : Int)
   let _fromV := (0 : Int)
   let _toV := (12 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init183 := (_fromV, total)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init183 fuel (fun σ =>
+  let _init180 := (_fromV, total)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init180 fuel (fun σ =>
     let j := σ.1
     let total := σ.2
     do
@@ -844,10 +845,10 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (j, total))
       else
         match ← ((do
-  let _t175 ← SudoRt.atL row j
-  let _t176 ← rank_of _t175
-  let _t177 ← SudoRt.addI total _t176
-  let total := _t177
+  let _t172 ← SudoRt.atL row j
+  let _t173 ← rank_of _t172
+  let _t174 ← SudoRt.addI total _t173
+  let total := _t174
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) total)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (j, _fs))
@@ -859,12 +860,12 @@ def inv_sum_ranks (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (
               pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) (i', _fs))) (fun σ =>
     let total := σ.2
     do
-      let _ix178 := i
-      let _t179 ← SudoRt.modI total (13 : Int)
-      let _t180 ← SudoRt.subI (0 : Int) _t179
-      let _t181 ← left_rotate row _t180
-      let _t182 ← SudoRt.putL g _ix178 _t181
-      let g := _t182
+      let _ix175 := i
+      let _t176 ← SudoRt.modI total (13 : Int)
+      let _t177 ← SudoRt.subI (0 : Int) _t176
+      let _t178 ← left_rotate row _t177
+      let _t179 ← SudoRt.putL g _ix175 _t178
+      let g := _t179
       pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) g)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
@@ -886,8 +887,8 @@ def shift_rows (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (Int
     let _fromV := (0 : Int)
     let _toV := (3 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init191 := (_fromV, g)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init191 fuel (fun σ =>
+    let _init188 := (_fromV, g)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init188 fuel (fun σ =>
     let i := σ.1
     let g := σ.2
     do
@@ -895,11 +896,11 @@ def shift_rows (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array (Int
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, g))
       else
         match ← ((do
-  let _ix187 := i
-  let _t188 ← SudoRt.atL g i
-  let _t189 ← left_rotate _t188 i
-  let _t190 ← SudoRt.putL g _ix187 _t189
-  let g := _t190
+  let _ix184 := i
+  let _t185 ← SudoRt.atL g i
+  let _t186 ← left_rotate _t185 i
+  let _t187 ← SudoRt.putL g _ix184 _t186
+  let g := _t187
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) g)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -919,8 +920,8 @@ def inv_shift_rows (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array 
     let _fromV := (0 : Int)
     let _toV := (3 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init198 := (_fromV, g)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init198 fuel (fun σ =>
+    let _init195 := (_fromV, g)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init195 fuel (fun σ =>
     let i := σ.1
     let g := σ.2
     do
@@ -928,12 +929,12 @@ def inv_shift_rows (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array 
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, g))
       else
         match ← ((do
-  let _ix193 := i
-  let _t194 ← SudoRt.atL g i
-  let _t195 ← SudoRt.subI (0 : Int) i
-  let _t196 ← left_rotate _t194 _t195
-  let _t197 ← SudoRt.putL g _ix193 _t196
-  let g := _t197
+  let _ix190 := i
+  let _t191 ← SudoRt.atL g i
+  let _t192 ← SudoRt.subI (0 : Int) i
+  let _t193 ← left_rotate _t191 _t192
+  let _t194 ← SudoRt.putL g _ix190 _t193
+  let g := _t194
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) g)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -948,13 +949,56 @@ def inv_shift_rows (g : Array (Array (Int))) : Except SudoRt.Trap (Array (Array 
       pure g) (fun r => pure r))
     pure _out
 
+def scan_row (occ : Array (Array (Int))) (row : Int) (start : Int) : Except SudoRt.Trap (Int) :=
+  do
+    let _t196 ← SudoRt.negI (1 : Int)
+    let found := _t196
+    let _fromV := (0 : Int)
+    let _toV := (12 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init205 := (_fromV, found)
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init205 fuel (fun σ =>
+    let k := σ.1
+    let found := σ.2
+    do
+      if k > _toV then
+        pure (SudoRt.Flow.brk (ρ := Int) (k, found))
+      else
+        match ← ((do
+  let _t198 ← SudoRt.addI start k
+  let _t199 ← SudoRt.modI _t198 (13 : Int)
+  let col := _t199
+  let _t201 ← (if (decide (found < (0 : Int))) then (do
+  let _t202 ← SudoRt.atL occ row
+  let _t203 ← SudoRt.atL _t202 col
+  pure (SudoRt.SEq.beq _t203 (0 : Int))) else pure false)
+  if _t201 then
+    do
+      let found := col
+      pure (SudoRt.Flow.cont (ρ := Int) found)
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Int) found)) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) (k, _fs))
+        | .cont _fs => do
+            if k == _toV then
+              pure (SudoRt.Flow.brk (ρ := Int) (k, _fs))
+            else do
+              let i' ← SudoRt.addI k (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Int) (i', _fs))) (fun σ =>
+    let found := σ.2
+    do
+      pure found) (fun r => pure r))
+    pure _out
+
 def overflow_seat (occ : Array (Array (Int))) (t : Int) (start : Int) : Except SudoRt.Trap ((Int) × (Int) × (Int)) :=
   do
     let _fromV := (0 : Int)
     let _toV := (3 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init216 := (_fromV, t)
-    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Int) × (Int)) _init216 fuel (fun σ =>
+    let _init214 := (_fromV, t)
+    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Int) × (Int)) _init214 fuel (fun σ =>
     let attempt := σ.1
     let t := σ.2
     do
@@ -963,56 +1007,19 @@ def overflow_seat (occ : Array (Array (Int))) (t : Int) (start : Int) : Except S
       else
         match ← ((do
   let row := t
-  let _t200 ← SudoRt.negI (1 : Int)
-  let found := _t200
-  let _fromV := (0 : Int)
-  let _toV := (12 : Int)
-  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init214 := (_fromV, found)
-  let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Int) × (Int)) _init214 fuel (fun σ =>
-    let k := σ.1
-    let found := σ.2
+  let _t207 ← scan_row occ row start
+  let found := _t207
+  if (decide (found ≥ (0 : Int))) then
     do
-      if k > _toV then
-        pure (SudoRt.Flow.brk (ρ := (Int) × (Int) × (Int)) (k, found))
-      else
-        match ← ((do
-  let _t202 ← SudoRt.addI start k
-  let _t203 ← SudoRt.modI _t202 (13 : Int)
-  let col := _t203
-  let _t205 ← (if (decide (found < (0 : Int))) then (do
-  let _t206 ← SudoRt.atL occ row
-  let _t207 ← SudoRt.atL _t206 col
-  pure (SudoRt.SEq.beq _t207 (0 : Int))) else pure false)
-  if _t205 then
-    do
-      let found := col
-      pure (SudoRt.Flow.cont (ρ := (Int) × (Int) × (Int)) found)
+      let _t209 ← SudoRt.addI t (1 : Int)
+      let _t210 ← SudoRt.modI _t209 (4 : Int)
+      pure (SudoRt.Flow.ret (ρ := (Int) × (Int) × (Int)) (row, found, _t210))
   else
     do
-      pure (SudoRt.Flow.cont (ρ := (Int) × (Int) × (Int)) found)) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Int) × (Int)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Int) × (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Int) × (Int)) (k, _fs))
-        | .cont _fs => do
-            if k == _toV then
-              pure (SudoRt.Flow.brk (ρ := (Int) × (Int) × (Int)) (k, _fs))
-            else do
-              let i' ← SudoRt.addI k (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (Int) × (Int) × (Int)) (i', _fs))) (fun σ =>
-    let found := σ.2
-    do
-      if (decide (found ≥ (0 : Int))) then
-        do
-          let _t210 ← SudoRt.addI t (1 : Int)
-          let _t211 ← SudoRt.modI _t210 (4 : Int)
-          pure (SudoRt.Flow.ret (ρ := (Int) × (Int) × (Int)) (row, found, _t211))
-      else
-        do
-          let _t212 ← SudoRt.addI t (1 : Int)
-          let _t213 ← SudoRt.modI _t212 (4 : Int)
-          let t := _t213
-          pure (SudoRt.Flow.cont (ρ := (Int) × (Int) × (Int)) t)) (fun r => pure (SudoRt.Flow.ret (ρ := (Int) × (Int) × (Int)) r)))
-  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Int) × (Int)))) with
+      let _t211 ← SudoRt.addI t (1 : Int)
+      let _t212 ← SudoRt.modI _t211 (4 : Int)
+      let t := _t212
+      pure (SudoRt.Flow.cont (ρ := (Int) × (Int) × (Int)) t)) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Int) × (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Int) × (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Int) × (Int)) (attempt, _fs))
         | .cont _fs => do
@@ -1023,24 +1030,24 @@ def overflow_seat (occ : Array (Array (Int))) (t : Int) (start : Int) : Except S
               pure (SudoRt.Flow.cont (ρ := (Int) × (Int) × (Int)) (i', _fs))) (fun σ =>
     let t := σ.2
     do
-      let _as215 ← SudoRt.sudoAssert false 145
+      let _as213 ← SudoRt.sudoAssert false 155
       pure ((0 : Int), (0 : Int), (0 : Int))) (fun r => pure r))
     pure _out
 
 def step_seat (card : Int) (r : Int) (c : Int) : Except SudoRt.Trap ((Int) × (Int)) :=
   do
-    let _t217 ← suit_of card
-    let _t218 ← SudoRt.addI r _t217
-    let _t219 ← SudoRt.modI _t218 (4 : Int)
-    let _t220 ← rank_of card
-    let _t221 ← SudoRt.addI c _t220
-    let _t222 ← SudoRt.modI _t221 (13 : Int)
-    pure (_t219, _t222)
+    let _t215 ← suit_of card
+    let _t216 ← SudoRt.addI r _t215
+    let _t217 ← SudoRt.modI _t216 (4 : Int)
+    let _t218 ← rank_of card
+    let _t219 ← SudoRt.addI c _t218
+    let _t220 ← SudoRt.modI _t219 (13 : Int)
+    pure (_t217, _t220)
 
 def mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t226 ← empty_rows
-    let grid := _t226
+    let _t224 ← empty_rows
+    let grid := _t224
     let t := (0 : Int)
     let prev_card := (0 : Int)
     let prev_r := (0 : Int)
@@ -1048,45 +1055,45 @@ def mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init275 := (_fromV, (t, grid, prev_card, prev_r, prev_c))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init275 fuel (fun σ =>
+    let _init273 := (_fromV, (t, grid, prev_card, prev_r, prev_c))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init273 fuel (fun σ =>
     let i := σ.1
     let t := σ.2.1
-    let _sp267 := σ.2.2
-    let grid := _sp267.1
+    let _sp265 := σ.2.2
+    let grid := _sp265.1
+    let _sp266 := _sp265.2
+    let prev_card := _sp266.1
+    let _sp267 := _sp266.2
+    let prev_r := _sp267.1
     let _sp268 := _sp267.2
-    let prev_card := _sp268.1
-    let _sp269 := _sp268.2
-    let prev_r := _sp269.1
-    let _sp270 := _sp269.2
-    let prev_c := _sp270
+    let prev_c := _sp268
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (t, grid, prev_card, prev_r, prev_c)))
       else
         match ← ((do
-  let _t228 ← SudoRt.atL d i
-  let card := _t228
+  let _t226 ← SudoRt.atL d i
+  let card := _t226
   let r := (2 : Int)
   let c := (0 : Int)
   if (decide (i > (0 : Int))) then
     do
-      let _t230 ← step_seat prev_card prev_r prev_c
-      let ⟨tr, tc⟩ := _t230
-      let _t231 ← SudoRt.atL grid tr
-      let _t232 ← SudoRt.atL _t231 tc
-      if (decide (_t232 < (0 : Int))) then
+      let _t228 ← step_seat prev_card prev_r prev_c
+      let ⟨tr, tc⟩ := _t228
+      let _t229 ← SudoRt.atL grid tr
+      let _t230 ← SudoRt.atL _t229 tc
+      if (decide (_t230 < (0 : Int))) then
         do
           let r := tr
           let c := tc
-          let _t234 ← SudoRt.atL grid r
+          let _t232 ← SudoRt.atL grid r
+          let row := _t232
+          let _ix233 := c
+          let _t234 ← SudoRt.putL row _ix233 card
           let row := _t234
-          let _ix235 := c
-          let _t236 ← SudoRt.putL row _ix235 card
-          let row := _t236
-          let _ix237 := r
-          let _t238 ← SudoRt.putL grid _ix237 row
-          let grid := _t238
+          let _ix235 := r
+          let _t236 ← SudoRt.putL grid _ix235 row
+          let grid := _t236
           let prev_card := card
           let prev_r := r
           let prev_c := c
@@ -1097,8 +1104,8 @@ def mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
           let _fromV := (0 : Int)
           let _toV := (3 : Int)
           let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-          let _init260 := (_fromV, occ)
-          let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init260 fuel (fun σ =>
+          let _init258 := (_fromV, occ)
+          let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init258 fuel (fun σ =>
     let rr := σ.1
     let occ := σ.2
     do
@@ -1110,8 +1117,8 @@ def mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   let _fromV := (0 : Int)
   let _toV := (12 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init253 := (_fromV, marks)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init253 fuel (fun σ =>
+  let _init251 := (_fromV, marks)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init251 fuel (fun σ =>
     let cc := σ.1
     let marks := σ.2
     do
@@ -1119,23 +1126,23 @@ def mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (cc, marks))
       else
         match ← ((do
-  let _t241 ← SudoRt.atL grid rr
-  let _t242 ← SudoRt.atL _t241 cc
-  if (decide (_t242 < (0 : Int))) then
+  let _t239 ← SudoRt.atL grid rr
+  let _t240 ← SudoRt.atL _t239 cc
+  if (decide (_t240 < (0 : Int))) then
     do
-      let _mb244 := SudoRt.appendL marks (0 : Int)
-      let ⟨_nr245, _⟩ := _mb244
-      let marks := _nr245
-      let _hm223 := ()
-      let _u246 := _hm223
+      let _mb242 := SudoRt.appendL marks (0 : Int)
+      let ⟨_nr243, _⟩ := _mb242
+      let marks := _nr243
+      let _hm221 := ()
+      let _u244 := _hm221
       pure (SudoRt.Flow.cont (ρ := Array (Int)) marks)
   else
     do
-      let _mb247 := SudoRt.appendL marks (1 : Int)
-      let ⟨_nr248, _⟩ := _mb247
-      let marks := _nr248
-      let _hm224 := ()
-      let _u249 := _hm224
+      let _mb245 := SudoRt.appendL marks (1 : Int)
+      let ⟨_nr246, _⟩ := _mb245
+      let marks := _nr246
+      let _hm222 := ()
+      let _u247 := _hm222
       pure (SudoRt.Flow.cont (ρ := Array (Int)) marks)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (cc, _fs))
@@ -1147,11 +1154,11 @@ def mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let marks := σ.2
     do
-      let _mb250 := SudoRt.appendL occ marks
-      let ⟨_nr251, _⟩ := _mb250
-      let occ := _nr251
-      let _hm225 := ()
-      let _u252 := _hm225
+      let _mb248 := SudoRt.appendL occ marks
+      let ⟨_nr249, _⟩ := _mb248
+      let occ := _nr249
+      let _hm223 := ()
+      let _u250 := _hm223
       pure (SudoRt.Flow.cont (ρ := Array (Int)) occ)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
@@ -1164,16 +1171,16 @@ def mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let occ := σ.2
     do
-      let _t254 ← overflow_seat occ t tc
-      let ⟨r, c, t⟩ := _t254
-      let _t255 ← SudoRt.atL grid r
+      let _t252 ← overflow_seat occ t tc
+      let ⟨r, c, t⟩ := _t252
+      let _t253 ← SudoRt.atL grid r
+      let row := _t253
+      let _ix254 := c
+      let _t255 ← SudoRt.putL row _ix254 card
       let row := _t255
-      let _ix256 := c
-      let _t257 ← SudoRt.putL row _ix256 card
-      let row := _t257
-      let _ix258 := r
-      let _t259 ← SudoRt.putL grid _ix258 row
-      let grid := _t259
+      let _ix256 := r
+      let _t257 ← SudoRt.putL grid _ix256 row
+      let grid := _t257
       let prev_card := card
       let prev_r := r
       let prev_c := c
@@ -1181,14 +1188,14 @@ def mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
           pure _out
   else
     do
-      let _t261 ← SudoRt.atL grid r
+      let _t259 ← SudoRt.atL grid r
+      let row := _t259
+      let _ix260 := c
+      let _t261 ← SudoRt.putL row _ix260 card
       let row := _t261
-      let _ix262 := c
-      let _t263 ← SudoRt.putL row _ix262 card
-      let row := _t263
-      let _ix264 := r
-      let _t265 ← SudoRt.putL grid _ix264 row
-      let grid := _t265
+      let _ix262 := r
+      let _t263 ← SudoRt.putL grid _ix262 row
+      let grid := _t263
       let prev_card := card
       let prev_r := r
       let prev_c := c
@@ -1202,30 +1209,30 @@ def mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let t := σ.2.1
-    let _sp271 := σ.2.2
-    let grid := _sp271.1
+    let _sp269 := σ.2.2
+    let grid := _sp269.1
+    let _sp270 := _sp269.2
+    let prev_card := _sp270.1
+    let _sp271 := _sp270.2
+    let prev_r := _sp271.1
     let _sp272 := _sp271.2
-    let prev_card := _sp272.1
-    let _sp273 := _sp272.2
-    let prev_r := _sp273.1
-    let _sp274 := _sp273.2
-    let prev_c := _sp274
+    let prev_c := _sp272
     do
-      let _t266 ← scoop_rm grid
-      pure _t266) (fun r => pure r))
+      let _t264 ← scoop_rm grid
+      pure _t264) (fun r => pure r))
     pure _out
 
 def inv_mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t277 ← lay_rm d
-    let grid := _t277
-    let _t278 ← empty_rows
-    let visited := _t278
+    let _t275 ← lay_rm d
+    let grid := _t275
+    let _t276 ← empty_rows
+    let visited := _t276
     let _fromV := (0 : Int)
     let _toV := (3 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init344 := (_fromV, visited)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init344 fuel (fun σ =>
+    let _init342 := (_fromV, visited)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init342 fuel (fun σ =>
     let r := σ.1
     let visited := σ.2
     do
@@ -1233,13 +1240,13 @@ def inv_mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (r, visited))
       else
         match ← ((do
-  let _t280 ← SudoRt.atL visited r
-  let row := _t280
+  let _t278 ← SudoRt.atL visited r
+  let row := _t278
   let _fromV := (0 : Int)
   let _toV := (12 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init286 := (_fromV, row)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init286 fuel (fun σ =>
+  let _init284 := (_fromV, row)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init284 fuel (fun σ =>
     let c := σ.1
     let row := σ.2
     do
@@ -1247,9 +1254,9 @@ def inv_mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (c, row))
       else
         match ← ((do
-  let _ix282 := c
-  let _t283 ← SudoRt.putL row _ix282 (0 : Int)
-  let row := _t283
+  let _ix280 := c
+  let _t281 ← SudoRt.putL row _ix280 (0 : Int)
+  let row := _t281
   pure (SudoRt.Flow.cont (ρ := Array (Int)) row)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (c, _fs))
@@ -1261,9 +1268,9 @@ def inv_mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let row := σ.2
     do
-      let _ix284 := r
-      let _t285 ← SudoRt.putL visited _ix284 row
-      let visited := _t285
+      let _ix282 := r
+      let _t283 ← SudoRt.putL visited _ix282 row
+      let visited := _t283
       pure (SudoRt.Flow.cont (ρ := Array (Int)) visited)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
@@ -1284,20 +1291,20 @@ def inv_mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
       let _fromV := (0 : Int)
       let _toV := (51 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init343 := (_fromV, (t, hand, visited, prev_card, prev_r, prev_c))
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init343 fuel (fun σ =>
+      let _init341 := (_fromV, (t, hand, visited, prev_card, prev_r, prev_c))
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init341 fuel (fun σ =>
     let i := σ.1
     let t := σ.2.1
-    let _sp333 := σ.2.2
-    let hand := _sp333.1
+    let _sp331 := σ.2.2
+    let hand := _sp331.1
+    let _sp332 := _sp331.2
+    let visited := _sp332.1
+    let _sp333 := _sp332.2
+    let prev_card := _sp333.1
     let _sp334 := _sp333.2
-    let visited := _sp334.1
+    let prev_r := _sp334.1
     let _sp335 := _sp334.2
-    let prev_card := _sp335.1
-    let _sp336 := _sp335.2
-    let prev_r := _sp336.1
-    let _sp337 := _sp336.2
-    let prev_c := _sp337
+    let prev_c := _sp335
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (t, hand, visited, prev_card, prev_r, prev_c)))
@@ -1307,80 +1314,80 @@ def inv_mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   let c := (0 : Int)
   if (decide (i > (0 : Int))) then
     do
-      let _t289 ← step_seat prev_card prev_r prev_c
-      let ⟨tr, tc⟩ := _t289
-      let _t290 ← SudoRt.atL visited tr
-      let _t291 ← SudoRt.atL _t290 tc
-      if (SudoRt.SEq.beq _t291 (0 : Int)) then
+      let _t287 ← step_seat prev_card prev_r prev_c
+      let ⟨tr, tc⟩ := _t287
+      let _t288 ← SudoRt.atL visited tr
+      let _t289 ← SudoRt.atL _t288 tc
+      if (SudoRt.SEq.beq _t289 (0 : Int)) then
         do
           let r := tr
           let c := tc
-          let _t293 ← SudoRt.atL grid r
-          let _t294 ← SudoRt.atL _t293 c
-          let _mb295 := SudoRt.appendL hand _t294
-          let ⟨_nr296, _⟩ := _mb295
-          let hand := _nr296
-          let _hm276 := ()
-          let _u297 := _hm276
-          let _t298 ← SudoRt.atL visited r
+          let _t291 ← SudoRt.atL grid r
+          let _t292 ← SudoRt.atL _t291 c
+          let _mb293 := SudoRt.appendL hand _t292
+          let ⟨_nr294, _⟩ := _mb293
+          let hand := _nr294
+          let _hm274 := ()
+          let _u295 := _hm274
+          let _t296 ← SudoRt.atL visited r
+          let row := _t296
+          let _ix297 := c
+          let _t298 ← SudoRt.putL row _ix297 (1 : Int)
           let row := _t298
-          let _ix299 := c
-          let _t300 ← SudoRt.putL row _ix299 (1 : Int)
-          let row := _t300
-          let _ix301 := r
-          let _t302 ← SudoRt.putL visited _ix301 row
-          let visited := _t302
-          let _t304 ← SudoRt.subI (SudoRt.listLen hand) (1 : Int)
-          let _t305 ← SudoRt.atL hand _t304
-          let prev_card := _t305
+          let _ix299 := r
+          let _t300 ← SudoRt.putL visited _ix299 row
+          let visited := _t300
+          let _t302 ← SudoRt.subI (SudoRt.listLen hand) (1 : Int)
+          let _t303 ← SudoRt.atL hand _t302
+          let prev_card := _t303
           let prev_r := r
           let prev_c := c
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (t, hand, visited, prev_card, prev_r, prev_c))
       else
         do
-          let _t306 ← overflow_seat visited t tc
-          let ⟨r, c, t⟩ := _t306
-          let _t307 ← SudoRt.atL grid r
-          let _t308 ← SudoRt.atL _t307 c
-          let _mb309 := SudoRt.appendL hand _t308
-          let ⟨_nr310, _⟩ := _mb309
-          let hand := _nr310
-          let _hm276 := ()
-          let _u311 := _hm276
-          let _t312 ← SudoRt.atL visited r
+          let _t304 ← overflow_seat visited t tc
+          let ⟨r, c, t⟩ := _t304
+          let _t305 ← SudoRt.atL grid r
+          let _t306 ← SudoRt.atL _t305 c
+          let _mb307 := SudoRt.appendL hand _t306
+          let ⟨_nr308, _⟩ := _mb307
+          let hand := _nr308
+          let _hm274 := ()
+          let _u309 := _hm274
+          let _t310 ← SudoRt.atL visited r
+          let row := _t310
+          let _ix311 := c
+          let _t312 ← SudoRt.putL row _ix311 (1 : Int)
           let row := _t312
-          let _ix313 := c
-          let _t314 ← SudoRt.putL row _ix313 (1 : Int)
-          let row := _t314
-          let _ix315 := r
-          let _t316 ← SudoRt.putL visited _ix315 row
-          let visited := _t316
-          let _t318 ← SudoRt.subI (SudoRt.listLen hand) (1 : Int)
-          let _t319 ← SudoRt.atL hand _t318
-          let prev_card := _t319
+          let _ix313 := r
+          let _t314 ← SudoRt.putL visited _ix313 row
+          let visited := _t314
+          let _t316 ← SudoRt.subI (SudoRt.listLen hand) (1 : Int)
+          let _t317 ← SudoRt.atL hand _t316
+          let prev_card := _t317
           let prev_r := r
           let prev_c := c
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (t, hand, visited, prev_card, prev_r, prev_c))
   else
     do
-      let _t320 ← SudoRt.atL grid r
-      let _t321 ← SudoRt.atL _t320 c
-      let _mb322 := SudoRt.appendL hand _t321
-      let ⟨_nr323, _⟩ := _mb322
-      let hand := _nr323
-      let _hm276 := ()
-      let _u324 := _hm276
-      let _t325 ← SudoRt.atL visited r
+      let _t318 ← SudoRt.atL grid r
+      let _t319 ← SudoRt.atL _t318 c
+      let _mb320 := SudoRt.appendL hand _t319
+      let ⟨_nr321, _⟩ := _mb320
+      let hand := _nr321
+      let _hm274 := ()
+      let _u322 := _hm274
+      let _t323 ← SudoRt.atL visited r
+      let row := _t323
+      let _ix324 := c
+      let _t325 ← SudoRt.putL row _ix324 (1 : Int)
       let row := _t325
-      let _ix326 := c
-      let _t327 ← SudoRt.putL row _ix326 (1 : Int)
-      let row := _t327
-      let _ix328 := r
-      let _t329 ← SudoRt.putL visited _ix328 row
-      let visited := _t329
-      let _t331 ← SudoRt.subI (SudoRt.listLen hand) (1 : Int)
-      let _t332 ← SudoRt.atL hand _t331
-      let prev_card := _t332
+      let _ix326 := r
+      let _t327 ← SudoRt.putL visited _ix326 row
+      let visited := _t327
+      let _t329 ← SudoRt.subI (SudoRt.listLen hand) (1 : Int)
+      let _t330 ← SudoRt.atL hand _t329
+      let prev_card := _t330
       let prev_r := r
       let prev_c := c
       pure (SudoRt.Flow.cont (ρ := Array (Int)) (t, hand, visited, prev_card, prev_r, prev_c))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
@@ -1393,16 +1400,16 @@ def inv_mix_columns (d : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let t := σ.2.1
-    let _sp338 := σ.2.2
-    let hand := _sp338.1
+    let _sp336 := σ.2.2
+    let hand := _sp336.1
+    let _sp337 := _sp336.2
+    let visited := _sp337.1
+    let _sp338 := _sp337.2
+    let prev_card := _sp338.1
     let _sp339 := _sp338.2
-    let visited := _sp339.1
+    let prev_r := _sp339.1
     let _sp340 := _sp339.2
-    let prev_card := _sp340.1
-    let _sp341 := _sp340.2
-    let prev_r := _sp341.1
-    let _sp342 := _sp341.2
-    let prev_c := _sp342
+    let prev_c := _sp340
     do
       pure hand) (fun r => pure r))
       pure _out) (fun r => pure r))
@@ -1413,16 +1420,16 @@ def index_of (deck : Array (Int)) (card : Int) : Except SudoRt.Trap (Int) :=
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init349 := _fromV
-    let _out ← (SudoRt.runLoopOn (ρ := Int) _init349 fuel (fun σ =>
+    let _init347 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init347 fuel (fun σ =>
     let i := σ
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) i)
       else
         match ← ((do
-  let _t346 ← SudoRt.atL deck i
-  if (SudoRt.SEq.beq _t346 card) then
+  let _t344 ← SudoRt.atL deck i
+  if (SudoRt.SEq.beq _t344 card) then
     do
       pure (SudoRt.Flow.ret (ρ := Int) i)
   else
@@ -1437,7 +1444,7 @@ def index_of (deck : Array (Int)) (card : Int) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as348 ← SudoRt.sudoAssert false 221
+      let _as346 ← SudoRt.sudoAssert false 231
       pure (0 : Int)) (fun r => pure r))
     pure _out
 
@@ -1447,8 +1454,8 @@ def compose (m : Array (Int)) (k : Array (Int)) : Except SudoRt.Trap (Array (Int
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init357 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init357 fuel (fun σ =>
+    let _init355 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init355 fuel (fun σ =>
     let j := σ.1
     let out := σ.2
     do
@@ -1456,13 +1463,13 @@ def compose (m : Array (Int)) (k : Array (Int)) : Except SudoRt.Trap (Array (Int
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, out))
       else
         match ← ((do
-  let _t352 ← index_of k j
-  let _t353 ← SudoRt.atL m _t352
-  let _mb354 := SudoRt.appendL out _t353
-  let ⟨_nr355, _⟩ := _mb354
-  let out := _nr355
-  let _hm350 := ()
-  let _u356 := _hm350
+  let _t350 ← index_of k j
+  let _t351 ← SudoRt.atL m _t350
+  let _mb352 := SudoRt.appendL out _t351
+  let ⟨_nr353, _⟩ := _mb352
+  let out := _nr353
+  let _hm348 := ()
+  let _u354 := _hm348
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, _fs))
@@ -1479,13 +1486,13 @@ def compose (m : Array (Int)) (k : Array (Int)) : Except SudoRt.Trap (Array (Int
 
 def inverse_compose (c : Array (Int)) (k : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t358 ← SudoRt.filledL (52 : Int) (0 : Int)
-    let out := _t358
+    let _t356 ← SudoRt.filledL (52 : Int) (0 : Int)
+    let out := _t356
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init364 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init364 fuel (fun σ =>
+    let _init362 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init362 fuel (fun σ =>
     let j := σ.1
     let out := σ.2
     do
@@ -1493,11 +1500,11 @@ def inverse_compose (c : Array (Int)) (k : Array (Int)) : Except SudoRt.Trap (Ar
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, out))
       else
         match ← ((do
-  let _t360 ← index_of k j
-  let _ix361 := _t360
-  let _t362 ← SudoRt.atL c j
-  let _t363 ← SudoRt.putL out _ix361 _t362
-  let out := _t363
+  let _t358 ← index_of k j
+  let _ix359 := _t358
+  let _t360 ← SudoRt.atL c j
+  let _t361 ← SudoRt.putL out _ix359 _t360
+  let out := _t361
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, _fs))
@@ -1515,17 +1522,17 @@ def inverse_compose (c : Array (Int)) (k : Array (Int)) : Except SudoRt.Trap (Ar
 def push_front (xs : Array (Int)) (c : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
     let out := (#[] : Array (Int))
-    let _mb367 := SudoRt.appendL out c
-    let ⟨_nr368, _⟩ := _mb367
-    let out := _nr368
-    let _hm365 := ()
-    let _u369 := _hm365
-    let _t376 ← SudoRt.subI (SudoRt.listLen xs) (1 : Int)
+    let _mb365 := SudoRt.appendL out c
+    let ⟨_nr366, _⟩ := _mb365
+    let out := _nr366
+    let _hm363 := ()
+    let _u367 := _hm363
+    let _t374 ← SudoRt.subI (SudoRt.listLen xs) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t376
+    let _toV := _t374
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init377 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init377 fuel (fun σ =>
+    let _init375 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init375 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -1533,12 +1540,12 @@ def push_front (xs : Array (Int)) (c : Int) : Except SudoRt.Trap (Array (Int)) :
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
       else
         match ← ((do
-  let _t371 ← SudoRt.atL xs i
-  let _mb372 := SudoRt.appendL out _t371
-  let ⟨_nr373, _⟩ := _mb372
-  let out := _nr373
-  let _hm366 := ()
-  let _u374 := _hm366
+  let _t369 ← SudoRt.atL xs i
+  let _mb370 := SudoRt.appendL out _t369
+  let ⟨_nr371, _⟩ := _mb370
+  let out := _nr371
+  let _hm364 := ()
+  let _u372 := _hm364
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1555,15 +1562,15 @@ def push_front (xs : Array (Int)) (c : Int) : Except SudoRt.Trap (Array (Int)) :
 
 def drop_front (xs : Array (Int)) : Except SudoRt.Trap ((Int) × (Array (Int))) :=
   do
-    let _t379 ← SudoRt.atL xs (0 : Int)
-    let c := _t379
+    let _t377 ← SudoRt.atL xs (0 : Int)
+    let c := _t377
     let rest := (#[] : Array (Int))
-    let _t386 ← SudoRt.subI (SudoRt.listLen xs) (1 : Int)
+    let _t384 ← SudoRt.subI (SudoRt.listLen xs) (1 : Int)
     let _fromV := (1 : Int)
-    let _toV := _t386
+    let _toV := _t384
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init387 := (_fromV, rest)
-    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Array (Int))) _init387 fuel (fun σ =>
+    let _init385 := (_fromV, rest)
+    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Array (Int))) _init385 fuel (fun σ =>
     let i := σ.1
     let rest := σ.2
     do
@@ -1571,12 +1578,12 @@ def drop_front (xs : Array (Int)) : Except SudoRt.Trap ((Int) × (Array (Int))) 
         pure (SudoRt.Flow.brk (ρ := (Int) × (Array (Int))) (i, rest))
       else
         match ← ((do
-  let _t381 ← SudoRt.atL xs i
-  let _mb382 := SudoRt.appendL rest _t381
-  let ⟨_nr383, _⟩ := _mb382
-  let rest := _nr383
-  let _hm378 := ()
-  let _u384 := _hm378
+  let _t379 ← SudoRt.atL xs i
+  let _mb380 := SudoRt.appendL rest _t379
+  let ⟨_nr381, _⟩ := _mb380
+  let rest := _nr381
+  let _hm376 := ()
+  let _u382 := _hm376
   pure (SudoRt.Flow.cont (ρ := (Int) × (Array (Int))) rest)) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Array (Int))) (i, _fs))
@@ -1599,118 +1606,118 @@ def passkey (deck : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
     let _fromV := (1 : Int)
     let _toV := n
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init457 := (_fromV, (hand, key))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init457 fuel (fun σ =>
+    let _init455 := (_fromV, (hand, key))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init455 fuel (fun σ =>
     let i := σ.1
     let hand := σ.2.1
-    let _sp455 := σ.2.2
-    let key := _sp455
+    let _sp453 := σ.2.2
+    let key := _sp453
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (hand, key)))
       else
         match ← ((do
-  let _t390 ← drop_front hand
-  let ⟨c, hand⟩ := _t390
+  let _t388 ← drop_front hand
+  let ⟨c, hand⟩ := _t388
   if (decide ((SudoRt.listLen hand) > (0 : Int))) then
     do
-      let _t393 ← suit_of c
-      let _t395 ← SudoRt.modI _t393 (SudoRt.listLen hand)
-      let k := _t395
+      let _t391 ← suit_of c
+      let _t393 ← SudoRt.modI _t391 (SudoRt.listLen hand)
+      let k := _t393
       if (decide (k > (0 : Int))) then
         do
-          let _t397 ← left_rotate hand k
-          let hand := _t397
-          let _t400 ← (if (decide ((SudoRt.listLen hand) > (0 : Int))) then (do
-  let _t401 ← rank_of c
-  pure (decide (_t401 < (SudoRt.listLen hand)))) else pure false)
-          let _t409 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
-  let _t410 ← rank_of c
-  pure (decide (_t410 < (SudoRt.listLen key)))) else pure false)
-          if _t400 then
+          let _t395 ← left_rotate hand k
+          let hand := _t395
+          let _t398 ← (if (decide ((SudoRt.listLen hand) > (0 : Int))) then (do
+  let _t399 ← rank_of c
+  pure (decide (_t399 < (SudoRt.listLen hand)))) else pure false)
+          let _t407 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
+  let _t408 ← rank_of c
+  pure (decide (_t408 < (SudoRt.listLen key)))) else pure false)
+          if _t398 then
             do
-              let _t404 ← rank_of c
-              let _t405 ← left_rotate hand _t404
-              let hand := _t405
-              let _t406 ← push_front key c
-              let key := _t406
+              let _t402 ← rank_of c
+              let _t403 ← left_rotate hand _t402
+              let hand := _t403
+              let _t404 ← push_front key c
+              let key := _t404
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (hand, key))
           else
             do
-              if _t409 then
+              if _t407 then
                 do
-                  let _t413 ← rank_of c
-                  let _t414 ← left_rotate key _t413
-                  let key := _t414
-                  let _t415 ← push_front key c
-                  let key := _t415
+                  let _t411 ← rank_of c
+                  let _t412 ← left_rotate key _t411
+                  let key := _t412
+                  let _t413 ← push_front key c
+                  let key := _t413
                   pure (SudoRt.Flow.cont (ρ := Array (Int)) (hand, key))
               else
                 do
-                  let _t416 ← push_front key c
-                  let key := _t416
+                  let _t414 ← push_front key c
+                  let key := _t414
                   pure (SudoRt.Flow.cont (ρ := Array (Int)) (hand, key))
       else
         do
-          let _t419 ← (if (decide ((SudoRt.listLen hand) > (0 : Int))) then (do
-  let _t420 ← rank_of c
-  pure (decide (_t420 < (SudoRt.listLen hand)))) else pure false)
-          let _t428 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
-  let _t429 ← rank_of c
-  pure (decide (_t429 < (SudoRt.listLen key)))) else pure false)
-          if _t419 then
+          let _t417 ← (if (decide ((SudoRt.listLen hand) > (0 : Int))) then (do
+  let _t418 ← rank_of c
+  pure (decide (_t418 < (SudoRt.listLen hand)))) else pure false)
+          let _t426 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
+  let _t427 ← rank_of c
+  pure (decide (_t427 < (SudoRt.listLen key)))) else pure false)
+          if _t417 then
             do
-              let _t423 ← rank_of c
-              let _t424 ← left_rotate hand _t423
-              let hand := _t424
-              let _t425 ← push_front key c
-              let key := _t425
+              let _t421 ← rank_of c
+              let _t422 ← left_rotate hand _t421
+              let hand := _t422
+              let _t423 ← push_front key c
+              let key := _t423
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (hand, key))
           else
             do
-              if _t428 then
+              if _t426 then
                 do
-                  let _t432 ← rank_of c
-                  let _t433 ← left_rotate key _t432
-                  let key := _t433
-                  let _t434 ← push_front key c
-                  let key := _t434
+                  let _t430 ← rank_of c
+                  let _t431 ← left_rotate key _t430
+                  let key := _t431
+                  let _t432 ← push_front key c
+                  let key := _t432
                   pure (SudoRt.Flow.cont (ρ := Array (Int)) (hand, key))
               else
                 do
-                  let _t435 ← push_front key c
-                  let key := _t435
+                  let _t433 ← push_front key c
+                  let key := _t433
                   pure (SudoRt.Flow.cont (ρ := Array (Int)) (hand, key))
   else
     do
-      let _t438 ← (if (decide ((SudoRt.listLen hand) > (0 : Int))) then (do
-  let _t439 ← rank_of c
-  pure (decide (_t439 < (SudoRt.listLen hand)))) else pure false)
-      let _t447 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
-  let _t448 ← rank_of c
-  pure (decide (_t448 < (SudoRt.listLen key)))) else pure false)
-      if _t438 then
+      let _t436 ← (if (decide ((SudoRt.listLen hand) > (0 : Int))) then (do
+  let _t437 ← rank_of c
+  pure (decide (_t437 < (SudoRt.listLen hand)))) else pure false)
+      let _t445 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
+  let _t446 ← rank_of c
+  pure (decide (_t446 < (SudoRt.listLen key)))) else pure false)
+      if _t436 then
         do
-          let _t442 ← rank_of c
-          let _t443 ← left_rotate hand _t442
-          let hand := _t443
-          let _t444 ← push_front key c
-          let key := _t444
+          let _t440 ← rank_of c
+          let _t441 ← left_rotate hand _t440
+          let hand := _t441
+          let _t442 ← push_front key c
+          let key := _t442
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (hand, key))
       else
         do
-          if _t447 then
+          if _t445 then
             do
-              let _t451 ← rank_of c
-              let _t452 ← left_rotate key _t451
-              let key := _t452
-              let _t453 ← push_front key c
-              let key := _t453
+              let _t449 ← rank_of c
+              let _t450 ← left_rotate key _t449
+              let key := _t450
+              let _t451 ← push_front key c
+              let key := _t451
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (hand, key))
           else
             do
-              let _t454 ← push_front key c
-              let key := _t454
+              let _t452 ← push_front key c
+              let key := _t452
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (hand, key))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1721,8 +1728,8 @@ def passkey (deck : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let hand := σ.2.1
-    let _sp456 := σ.2.2
-    let key := _sp456
+    let _sp454 := σ.2.2
+    let key := _sp454
     do
       pure key) (fun r => pure r))
     pure _out
@@ -1735,105 +1742,105 @@ def passkey_inv (deck : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
     let _fromV := (1 : Int)
     let _toV := n_deck
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init502 := (_fromV, (key, hand))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init502 fuel (fun σ =>
+    let _init500 := (_fromV, (key, hand))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init500 fuel (fun σ =>
     let i := σ.1
     let key := σ.2.1
-    let _sp500 := σ.2.2
-    let hand := _sp500
+    let _sp498 := σ.2.2
+    let hand := _sp498
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (key, hand)))
       else
         match ← ((do
-  let _t460 ← drop_front key
-  let ⟨c, key⟩ := _t460
+  let _t458 ← drop_front key
+  let ⟨c, key⟩ := _t458
   let n := (SudoRt.listLen hand)
-  let _t463 ← (if (decide (n > (0 : Int))) then (do
-  let _t464 ← rank_of c
-  pure (decide (_t464 < n))) else pure false)
-  let _t478 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
-  let _t479 ← rank_of c
-  pure (decide (_t479 < (SudoRt.listLen key)))) else pure false)
-  if _t463 then
+  let _t461 ← (if (decide (n > (0 : Int))) then (do
+  let _t462 ← rank_of c
+  pure (decide (_t462 < n))) else pure false)
+  let _t476 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
+  let _t477 ← rank_of c
+  pure (decide (_t477 < (SudoRt.listLen key)))) else pure false)
+  if _t461 then
     do
-      let _t466 ← rank_of c
-      let _t467 ← right_rotate hand _t466
-      let hand := _t467
+      let _t464 ← rank_of c
+      let _t465 ← right_rotate hand _t464
+      let hand := _t465
       if (decide (n > (0 : Int))) then
         do
-          let _t469 ← suit_of c
-          let _t470 ← SudoRt.modI _t469 n
-          let k := _t470
+          let _t467 ← suit_of c
+          let _t468 ← SudoRt.modI _t467 n
+          let k := _t468
           if (decide (k > (0 : Int))) then
             do
-              let _t472 ← right_rotate hand k
-              let hand := _t472
-              let _t473 ← push_front hand c
-              let hand := _t473
+              let _t470 ← right_rotate hand k
+              let hand := _t470
+              let _t471 ← push_front hand c
+              let hand := _t471
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (key, hand))
           else
             do
-              let _t474 ← push_front hand c
-              let hand := _t474
+              let _t472 ← push_front hand c
+              let hand := _t472
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (key, hand))
       else
         do
-          let _t475 ← push_front hand c
-          let hand := _t475
+          let _t473 ← push_front hand c
+          let hand := _t473
           pure (SudoRt.Flow.cont (ρ := Array (Int)) (key, hand))
   else
     do
-      if _t478 then
+      if _t476 then
         do
-          let _t482 ← rank_of c
-          let _t483 ← right_rotate key _t482
-          let key := _t483
+          let _t480 ← rank_of c
+          let _t481 ← right_rotate key _t480
+          let key := _t481
           if (decide (n > (0 : Int))) then
             do
-              let _t485 ← suit_of c
-              let _t486 ← SudoRt.modI _t485 n
-              let k := _t486
+              let _t483 ← suit_of c
+              let _t484 ← SudoRt.modI _t483 n
+              let k := _t484
               if (decide (k > (0 : Int))) then
                 do
-                  let _t488 ← right_rotate hand k
-                  let hand := _t488
-                  let _t489 ← push_front hand c
-                  let hand := _t489
+                  let _t486 ← right_rotate hand k
+                  let hand := _t486
+                  let _t487 ← push_front hand c
+                  let hand := _t487
                   pure (SudoRt.Flow.cont (ρ := Array (Int)) (key, hand))
               else
                 do
-                  let _t490 ← push_front hand c
-                  let hand := _t490
+                  let _t488 ← push_front hand c
+                  let hand := _t488
                   pure (SudoRt.Flow.cont (ρ := Array (Int)) (key, hand))
           else
             do
-              let _t491 ← push_front hand c
-              let hand := _t491
+              let _t489 ← push_front hand c
+              let hand := _t489
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (key, hand))
       else
         do
           if (decide (n > (0 : Int))) then
             do
-              let _t493 ← suit_of c
-              let _t494 ← SudoRt.modI _t493 n
-              let k := _t494
+              let _t491 ← suit_of c
+              let _t492 ← SudoRt.modI _t491 n
+              let k := _t492
               if (decide (k > (0 : Int))) then
                 do
-                  let _t496 ← right_rotate hand k
-                  let hand := _t496
-                  let _t497 ← push_front hand c
-                  let hand := _t497
+                  let _t494 ← right_rotate hand k
+                  let hand := _t494
+                  let _t495 ← push_front hand c
+                  let hand := _t495
                   pure (SudoRt.Flow.cont (ρ := Array (Int)) (key, hand))
               else
                 do
-                  let _t498 ← push_front hand c
-                  let hand := _t498
+                  let _t496 ← push_front hand c
+                  let hand := _t496
                   pure (SudoRt.Flow.cont (ρ := Array (Int)) (key, hand))
           else
             do
-              let _t499 ← push_front hand c
-              let hand := _t499
+              let _t497 ← push_front hand c
+              let hand := _t497
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (key, hand))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1844,8 +1851,8 @@ def passkey_inv (deck : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let key := σ.2.1
-    let _sp501 := σ.2.2
-    let hand := _sp501
+    let _sp499 := σ.2.2
+    let hand := _sp499
     do
       pure hand) (fun r => pure r))
     pure _out
@@ -1853,16 +1860,16 @@ def passkey_inv (deck : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
 def expand_keys (k0 : Array (Int)) : Except SudoRt.Trap (Array (Array (Int))) :=
   do
     let keys := (#[] : Array (Array (Int)))
-    let _mb505 := SudoRt.appendL keys k0
-    let ⟨_nr506, _⟩ := _mb505
-    let keys := _nr506
-    let _hm503 := ()
-    let _u507 := _hm503
+    let _mb503 := SudoRt.appendL keys k0
+    let ⟨_nr504, _⟩ := _mb503
+    let keys := _nr504
+    let _hm501 := ()
+    let _u505 := _hm501
     let _fromV := (1 : Int)
     let _toV := (6 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init515 := (_fromV, keys)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init515 fuel (fun σ =>
+    let _init513 := (_fromV, keys)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init513 fuel (fun σ =>
     let r := σ.1
     let keys := σ.2
     do
@@ -1870,14 +1877,14 @@ def expand_keys (k0 : Array (Int)) : Except SudoRt.Trap (Array (Array (Int))) :=
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (r, keys))
       else
         match ← ((do
-  let _t509 ← SudoRt.subI r (1 : Int)
-  let _t510 ← SudoRt.atL keys _t509
-  let _t511 ← passkey _t510
-  let _mb512 := SudoRt.appendL keys _t511
-  let ⟨_nr513, _⟩ := _mb512
-  let keys := _nr513
-  let _hm504 := ()
-  let _u514 := _hm504
+  let _t507 ← SudoRt.subI r (1 : Int)
+  let _t508 ← SudoRt.atL keys _t507
+  let _t509 ← passkey _t508
+  let _mb510 := SudoRt.appendL keys _t509
+  let ⟨_nr511, _⟩ := _mb510
+  let keys := _nr511
+  let _hm502 := ()
+  let _u512 := _hm502
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) keys)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (r, _fs))
@@ -1894,52 +1901,52 @@ def expand_keys (k0 : Array (Int)) : Except SudoRt.Trap (Array (Array (Int))) :=
 
 def unkeyed_full (m : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t516 ← lay_cm m
-    let _t517 ← sum_ranks _t516
-    let _t518 ← shift_rows _t517
-    let g := _t518
-    let _t519 ← scoop_cm g
-    let _t520 ← mix_columns _t519
-    pure _t520
+    let _t514 ← lay_cm m
+    let _t515 ← sum_ranks _t514
+    let _t516 ← shift_rows _t515
+    let g := _t516
+    let _t517 ← scoop_cm g
+    let _t518 ← mix_columns _t517
+    pure _t518
 
 def full_round (m : Array (Int)) (kr : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t521 ← unkeyed_full m
-    let _t522 ← compose _t521 kr
-    pure _t522
+    let _t519 ← unkeyed_full m
+    let _t520 ← compose _t519 kr
+    pure _t520
 
 def inv_full_round (c : Array (Int)) (kr : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t523 ← inverse_compose c kr
-    let _t524 ← inv_mix_columns _t523
-    let m := _t524
-    let _t525 ← lay_cm m
-    let _t526 ← inv_shift_rows _t525
-    let _t527 ← inv_sum_ranks _t526
-    let g := _t527
-    let _t528 ← scoop_cm g
-    pure _t528
+    let _t521 ← inverse_compose c kr
+    let _t522 ← inv_mix_columns _t521
+    let m := _t522
+    let _t523 ← lay_cm m
+    let _t524 ← inv_shift_rows _t523
+    let _t525 ← inv_sum_ranks _t524
+    let g := _t525
+    let _t526 ← scoop_cm g
+    pure _t526
 
 def final_round (m : Array (Int)) (kr : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t529 ← lay_cm m
-    let _t530 ← sum_ranks _t529
-    let _t531 ← shift_rows _t530
-    let g := _t531
-    let _t532 ← scoop_cm g
-    let _t533 ← compose _t532 kr
-    pure _t533
+    let _t527 ← lay_cm m
+    let _t528 ← sum_ranks _t527
+    let _t529 ← shift_rows _t528
+    let g := _t529
+    let _t530 ← scoop_cm g
+    let _t531 ← compose _t530 kr
+    pure _t531
 
 def inv_final_round (c : Array (Int)) (kr : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t534 ← inverse_compose c kr
-    let m := _t534
-    let _t535 ← lay_cm m
-    let _t536 ← inv_shift_rows _t535
-    let _t537 ← inv_sum_ranks _t536
-    let g := _t537
-    let _t538 ← scoop_cm g
-    pure _t538
+    let _t532 ← inverse_compose c kr
+    let m := _t532
+    let _t533 ← lay_cm m
+    let _t534 ← inv_shift_rows _t533
+    let _t535 ← inv_sum_ranks _t534
+    let g := _t535
+    let _t536 ← scoop_cm g
+    pure _t536
 
 def no_cards : Except SudoRt.Trap (Array (Int)) :=
   do
@@ -1948,23 +1955,23 @@ def no_cards : Except SudoRt.Trap (Array (Int)) :=
 
 def add_step (steps : Array (Step)) (kind : Array (Int)) (label : Array (Int)) (message : Array (Int)) (key : Array (Int)) (hand : Array (Int)) (row : Int) (col : Int) (amount : Int) (total : Int) (card : Int) (flag : Int) : Except SudoRt.Trap (Array (Step)) :=
   do
-    let _mb540 := SudoRt.appendL steps ({ sudo_4Step_4kind := kind, sudo_4Step_5label := label, sudo_4Step_7message := message, sudo_4Step_3key := key, sudo_4Step_4hand := hand, sudo_4Step_3row := row, sudo_4Step_3col := col, sudo_4Step_6amount := amount, sudo_4Step_5total := total, sudo_4Step_4card := card, sudo_4Step_4flag := flag } : Step)
-    let ⟨_nr541, _⟩ := _mb540
-    let steps := _nr541
-    let _hm539 := ()
-    let _u542 := _hm539
+    let _mb538 := SudoRt.appendL steps ({ sudo_4Step_4kind := kind, sudo_4Step_5label := label, sudo_4Step_7message := message, sudo_4Step_3key := key, sudo_4Step_4hand := hand, sudo_4Step_3row := row, sudo_4Step_3col := col, sudo_4Step_6amount := amount, sudo_4Step_5total := total, sudo_4Step_4card := card, sudo_4Step_4flag := flag } : Step)
+    let ⟨_nr539, _⟩ := _mb538
+    let steps := _nr539
+    let _hm537 := ()
+    let _u540 := _hm537
     pure steps
 
 def round_label («prefix» : Array (Int)) (r : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
     let digits := (#[48, 49, 50, 51, 52, 53, 54, 55, 56, 57] : Array Int)
     let out := «prefix»
-    let _t544 ← SudoRt.atL digits r
-    let _mb545 := SudoRt.appendL out _t544
-    let ⟨_nr546, _⟩ := _mb545
-    let out := _nr546
-    let _hm543 := ()
-    let _u547 := _hm543
+    let _t542 ← SudoRt.atL digits r
+    let _mb543 := SudoRt.appendL out _t542
+    let ⟨_nr544, _⟩ := _mb543
+    let out := _nr544
+    let _hm541 := ()
+    let _u545 := _hm541
     pure out
 
 def trace_pass (deck : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : Except SudoRt.Trap ((Array (Int)) × (Array (Step))) :=
@@ -1975,193 +1982,193 @@ def trace_pass (deck : Array (Int)) (steps : Array (Step)) (label : Array (Int))
     let _fromV := (1 : Int)
     let _toV := n
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init655 := (_fromV, (key, hand, steps))
-    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init655 fuel (fun σ =>
+    let _init653 := (_fromV, (key, hand, steps))
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init653 fuel (fun σ =>
     let i := σ.1
     let key := σ.2.1
-    let _sp651 := σ.2.2
-    let hand := _sp651.1
-    let _sp652 := _sp651.2
-    let steps := _sp652
+    let _sp649 := σ.2.2
+    let hand := _sp649.1
+    let _sp650 := _sp649.2
+    let steps := _sp650
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (i, (key, hand, steps)))
       else
         match ← ((do
-  let _t550 ← drop_front hand
-  let ⟨c, next_hand⟩ := _t550
+  let _t548 ← drop_front hand
+  let ⟨c, next_hand⟩ := _t548
   let suit_cut := (0 : Int)
   if (decide ((SudoRt.listLen next_hand) > (0 : Int))) then
     do
-      let _t553 ← suit_of c
-      let _t555 ← SudoRt.modI _t553 (SudoRt.listLen next_hand)
-      let suit_cut := _t555
+      let _t551 ← suit_of c
+      let _t553 ← SudoRt.modI _t551 (SudoRt.listLen next_hand)
+      let suit_cut := _t553
       if (decide (suit_cut > (0 : Int))) then
         do
-          let _t557 ← left_rotate next_hand suit_cut
-          let next_hand := _t557
+          let _t555 ← left_rotate next_hand suit_cut
+          let next_hand := _t555
           let rank_cut := (0 : Int)
           let cut_on := (0 : Int)
-          let _t560 ← (if (decide ((SudoRt.listLen next_hand) > (0 : Int))) then (do
-  let _t561 ← rank_of c
-  pure (decide (_t561 < (SudoRt.listLen next_hand)))) else pure false)
-          let _t573 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
-  let _t574 ← rank_of c
-  pure (decide (_t574 < (SudoRt.listLen key)))) else pure false)
-          if _t560 then
+          let _t558 ← (if (decide ((SudoRt.listLen next_hand) > (0 : Int))) then (do
+  let _t559 ← rank_of c
+  pure (decide (_t559 < (SudoRt.listLen next_hand)))) else pure false)
+          let _t571 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
+  let _t572 ← rank_of c
+  pure (decide (_t572 < (SudoRt.listLen key)))) else pure false)
+          if _t558 then
             do
-              let _t564 ← rank_of c
-              let rank_cut := _t564
+              let _t562 ← rank_of c
+              let rank_cut := _t562
               let cut_on := (1 : Int)
-              let _t565 ← left_rotate next_hand rank_cut
-              let next_hand := _t565
-              let _t566 ← push_front key c
-              let key := _t566
+              let _t563 ← left_rotate next_hand rank_cut
+              let next_hand := _t563
+              let _t564 ← push_front key c
+              let key := _t564
               let hand := next_hand
-              let _t567 ← no_cards
-              let _t568 ← suit_of c
-              let _t569 ← rank_of c
-              let _t570 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t567 key hand _t568 _t569 suit_cut rank_cut c cut_on
-              let steps := _t570
+              let _t565 ← no_cards
+              let _t566 ← suit_of c
+              let _t567 ← rank_of c
+              let _t568 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t565 key hand _t566 _t567 suit_cut rank_cut c cut_on
+              let steps := _t568
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (key, hand, steps))
           else
             do
-              if _t573 then
+              if _t571 then
                 do
-                  let _t577 ← rank_of c
-                  let rank_cut := _t577
+                  let _t575 ← rank_of c
+                  let rank_cut := _t575
                   let cut_on := (2 : Int)
-                  let _t578 ← left_rotate key rank_cut
-                  let key := _t578
-                  let _t579 ← push_front key c
-                  let key := _t579
+                  let _t576 ← left_rotate key rank_cut
+                  let key := _t576
+                  let _t577 ← push_front key c
+                  let key := _t577
                   let hand := next_hand
-                  let _t580 ← no_cards
-                  let _t581 ← suit_of c
-                  let _t582 ← rank_of c
-                  let _t583 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t580 key hand _t581 _t582 suit_cut rank_cut c cut_on
-                  let steps := _t583
+                  let _t578 ← no_cards
+                  let _t579 ← suit_of c
+                  let _t580 ← rank_of c
+                  let _t581 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t578 key hand _t579 _t580 suit_cut rank_cut c cut_on
+                  let steps := _t581
                   pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (key, hand, steps))
               else
                 do
-                  let _t584 ← push_front key c
-                  let key := _t584
+                  let _t582 ← push_front key c
+                  let key := _t582
                   let hand := next_hand
-                  let _t585 ← no_cards
-                  let _t586 ← suit_of c
-                  let _t587 ← rank_of c
-                  let _t588 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t585 key hand _t586 _t587 suit_cut rank_cut c cut_on
-                  let steps := _t588
+                  let _t583 ← no_cards
+                  let _t584 ← suit_of c
+                  let _t585 ← rank_of c
+                  let _t586 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t583 key hand _t584 _t585 suit_cut rank_cut c cut_on
+                  let steps := _t586
                   pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (key, hand, steps))
       else
         do
           let rank_cut := (0 : Int)
           let cut_on := (0 : Int)
-          let _t591 ← (if (decide ((SudoRt.listLen next_hand) > (0 : Int))) then (do
-  let _t592 ← rank_of c
-  pure (decide (_t592 < (SudoRt.listLen next_hand)))) else pure false)
-          let _t604 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
-  let _t605 ← rank_of c
-  pure (decide (_t605 < (SudoRt.listLen key)))) else pure false)
-          if _t591 then
+          let _t589 ← (if (decide ((SudoRt.listLen next_hand) > (0 : Int))) then (do
+  let _t590 ← rank_of c
+  pure (decide (_t590 < (SudoRt.listLen next_hand)))) else pure false)
+          let _t602 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
+  let _t603 ← rank_of c
+  pure (decide (_t603 < (SudoRt.listLen key)))) else pure false)
+          if _t589 then
             do
-              let _t595 ← rank_of c
-              let rank_cut := _t595
+              let _t593 ← rank_of c
+              let rank_cut := _t593
               let cut_on := (1 : Int)
-              let _t596 ← left_rotate next_hand rank_cut
-              let next_hand := _t596
-              let _t597 ← push_front key c
-              let key := _t597
+              let _t594 ← left_rotate next_hand rank_cut
+              let next_hand := _t594
+              let _t595 ← push_front key c
+              let key := _t595
               let hand := next_hand
-              let _t598 ← no_cards
-              let _t599 ← suit_of c
-              let _t600 ← rank_of c
-              let _t601 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t598 key hand _t599 _t600 suit_cut rank_cut c cut_on
-              let steps := _t601
+              let _t596 ← no_cards
+              let _t597 ← suit_of c
+              let _t598 ← rank_of c
+              let _t599 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t596 key hand _t597 _t598 suit_cut rank_cut c cut_on
+              let steps := _t599
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (key, hand, steps))
           else
             do
-              if _t604 then
+              if _t602 then
                 do
-                  let _t608 ← rank_of c
-                  let rank_cut := _t608
+                  let _t606 ← rank_of c
+                  let rank_cut := _t606
                   let cut_on := (2 : Int)
-                  let _t609 ← left_rotate key rank_cut
-                  let key := _t609
-                  let _t610 ← push_front key c
-                  let key := _t610
+                  let _t607 ← left_rotate key rank_cut
+                  let key := _t607
+                  let _t608 ← push_front key c
+                  let key := _t608
                   let hand := next_hand
-                  let _t611 ← no_cards
-                  let _t612 ← suit_of c
-                  let _t613 ← rank_of c
-                  let _t614 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t611 key hand _t612 _t613 suit_cut rank_cut c cut_on
-                  let steps := _t614
+                  let _t609 ← no_cards
+                  let _t610 ← suit_of c
+                  let _t611 ← rank_of c
+                  let _t612 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t609 key hand _t610 _t611 suit_cut rank_cut c cut_on
+                  let steps := _t612
                   pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (key, hand, steps))
               else
                 do
-                  let _t615 ← push_front key c
-                  let key := _t615
+                  let _t613 ← push_front key c
+                  let key := _t613
                   let hand := next_hand
-                  let _t616 ← no_cards
-                  let _t617 ← suit_of c
-                  let _t618 ← rank_of c
-                  let _t619 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t616 key hand _t617 _t618 suit_cut rank_cut c cut_on
-                  let steps := _t619
+                  let _t614 ← no_cards
+                  let _t615 ← suit_of c
+                  let _t616 ← rank_of c
+                  let _t617 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t614 key hand _t615 _t616 suit_cut rank_cut c cut_on
+                  let steps := _t617
                   pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (key, hand, steps))
   else
     do
       let rank_cut := (0 : Int)
       let cut_on := (0 : Int)
-      let _t622 ← (if (decide ((SudoRt.listLen next_hand) > (0 : Int))) then (do
-  let _t623 ← rank_of c
-  pure (decide (_t623 < (SudoRt.listLen next_hand)))) else pure false)
-      let _t635 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
-  let _t636 ← rank_of c
-  pure (decide (_t636 < (SudoRt.listLen key)))) else pure false)
-      if _t622 then
+      let _t620 ← (if (decide ((SudoRt.listLen next_hand) > (0 : Int))) then (do
+  let _t621 ← rank_of c
+  pure (decide (_t621 < (SudoRt.listLen next_hand)))) else pure false)
+      let _t633 ← (if (decide ((SudoRt.listLen key) > (0 : Int))) then (do
+  let _t634 ← rank_of c
+  pure (decide (_t634 < (SudoRt.listLen key)))) else pure false)
+      if _t620 then
         do
-          let _t626 ← rank_of c
-          let rank_cut := _t626
+          let _t624 ← rank_of c
+          let rank_cut := _t624
           let cut_on := (1 : Int)
-          let _t627 ← left_rotate next_hand rank_cut
-          let next_hand := _t627
-          let _t628 ← push_front key c
-          let key := _t628
+          let _t625 ← left_rotate next_hand rank_cut
+          let next_hand := _t625
+          let _t626 ← push_front key c
+          let key := _t626
           let hand := next_hand
-          let _t629 ← no_cards
-          let _t630 ← suit_of c
-          let _t631 ← rank_of c
-          let _t632 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t629 key hand _t630 _t631 suit_cut rank_cut c cut_on
-          let steps := _t632
+          let _t627 ← no_cards
+          let _t628 ← suit_of c
+          let _t629 ← rank_of c
+          let _t630 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t627 key hand _t628 _t629 suit_cut rank_cut c cut_on
+          let steps := _t630
           pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (key, hand, steps))
       else
         do
-          if _t635 then
+          if _t633 then
             do
-              let _t639 ← rank_of c
-              let rank_cut := _t639
+              let _t637 ← rank_of c
+              let rank_cut := _t637
               let cut_on := (2 : Int)
-              let _t640 ← left_rotate key rank_cut
-              let key := _t640
-              let _t641 ← push_front key c
-              let key := _t641
+              let _t638 ← left_rotate key rank_cut
+              let key := _t638
+              let _t639 ← push_front key c
+              let key := _t639
               let hand := next_hand
-              let _t642 ← no_cards
-              let _t643 ← suit_of c
-              let _t644 ← rank_of c
-              let _t645 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t642 key hand _t643 _t644 suit_cut rank_cut c cut_on
-              let steps := _t645
+              let _t640 ← no_cards
+              let _t641 ← suit_of c
+              let _t642 ← rank_of c
+              let _t643 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t640 key hand _t641 _t642 suit_cut rank_cut c cut_on
+              let steps := _t643
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (key, hand, steps))
           else
             do
-              let _t646 ← push_front key c
-              let key := _t646
+              let _t644 ← push_front key c
+              let key := _t644
               let hand := next_hand
-              let _t647 ← no_cards
-              let _t648 ← suit_of c
-              let _t649 ← rank_of c
-              let _t650 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t647 key hand _t648 _t649 suit_cut rank_cut c cut_on
-              let steps := _t650
+              let _t645 ← no_cards
+              let _t646 ← suit_of c
+              let _t647 ← rank_of c
+              let _t648 ← add_step steps (#[112, 97, 115, 115] : Array Int) label _t645 key hand _t646 _t647 suit_cut rank_cut c cut_on
+              let steps := _t648
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (key, hand, steps))) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (i, _fs))
@@ -2172,10 +2179,10 @@ def trace_pass (deck : Array (Int)) (steps : Array (Step)) (label : Array (Int))
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
     let key := σ.2.1
-    let _sp653 := σ.2.2
-    let hand := _sp653.1
-    let _sp654 := _sp653.2
-    let steps := _sp654
+    let _sp651 := σ.2.2
+    let hand := _sp651.1
+    let _sp652 := _sp651.2
+    let steps := _sp652
     do
       pure (key, steps)) (fun r => pure r))
     pure _out
@@ -2188,170 +2195,170 @@ def trace_unpass (deck : Array (Int)) (steps : Array (Step)) (label : Array (Int
     let _fromV := (1 : Int)
     let _toV := n_deck
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init738 := (_fromV, (hand, key, steps))
-    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init738 fuel (fun σ =>
+    let _init736 := (_fromV, (hand, key, steps))
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init736 fuel (fun σ =>
     let i := σ.1
     let hand := σ.2.1
-    let _sp734 := σ.2.2
-    let key := _sp734.1
-    let _sp735 := _sp734.2
-    let steps := _sp735
+    let _sp732 := σ.2.2
+    let key := _sp732.1
+    let _sp733 := _sp732.2
+    let steps := _sp733
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (i, (hand, key, steps)))
       else
         match ← ((do
-  let _t658 ← drop_front key
-  let ⟨c, next_key⟩ := _t658
+  let _t656 ← drop_front key
+  let ⟨c, next_key⟩ := _t656
   let n := (SudoRt.listLen hand)
   let rank_cut := (0 : Int)
   let cut_on := (0 : Int)
-  let _t661 ← (if (decide (n > (0 : Int))) then (do
-  let _t662 ← rank_of c
-  pure (decide (_t662 < n))) else pure false)
-  let _t688 ← (if (decide ((SudoRt.listLen next_key) > (0 : Int))) then (do
-  let _t689 ← rank_of c
-  pure (decide (_t689 < (SudoRt.listLen next_key)))) else pure false)
-  if _t661 then
+  let _t659 ← (if (decide (n > (0 : Int))) then (do
+  let _t660 ← rank_of c
+  pure (decide (_t660 < n))) else pure false)
+  let _t686 ← (if (decide ((SudoRt.listLen next_key) > (0 : Int))) then (do
+  let _t687 ← rank_of c
+  pure (decide (_t687 < (SudoRt.listLen next_key)))) else pure false)
+  if _t659 then
     do
-      let _t664 ← rank_of c
-      let rank_cut := _t664
+      let _t662 ← rank_of c
+      let rank_cut := _t662
       let cut_on := (1 : Int)
-      let _t665 ← right_rotate hand rank_cut
-      let hand := _t665
+      let _t663 ← right_rotate hand rank_cut
+      let hand := _t663
       let suit_cut := (0 : Int)
       if (decide (n > (0 : Int))) then
         do
-          let _t667 ← suit_of c
-          let _t668 ← SudoRt.modI _t667 n
-          let suit_cut := _t668
+          let _t665 ← suit_of c
+          let _t666 ← SudoRt.modI _t665 n
+          let suit_cut := _t666
           if (decide (suit_cut > (0 : Int))) then
             do
-              let _t670 ← right_rotate hand suit_cut
-              let hand := _t670
-              let _t671 ← push_front hand c
-              let hand := _t671
+              let _t668 ← right_rotate hand suit_cut
+              let hand := _t668
+              let _t669 ← push_front hand c
+              let hand := _t669
               let key := next_key
-              let _t672 ← no_cards
-              let _t673 ← suit_of c
-              let _t674 ← rank_of c
-              let _t675 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t672 key hand _t673 _t674 suit_cut rank_cut c cut_on
-              let steps := _t675
+              let _t670 ← no_cards
+              let _t671 ← suit_of c
+              let _t672 ← rank_of c
+              let _t673 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t670 key hand _t671 _t672 suit_cut rank_cut c cut_on
+              let steps := _t673
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (hand, key, steps))
           else
             do
-              let _t676 ← push_front hand c
-              let hand := _t676
+              let _t674 ← push_front hand c
+              let hand := _t674
               let key := next_key
-              let _t677 ← no_cards
-              let _t678 ← suit_of c
-              let _t679 ← rank_of c
-              let _t680 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t677 key hand _t678 _t679 suit_cut rank_cut c cut_on
-              let steps := _t680
+              let _t675 ← no_cards
+              let _t676 ← suit_of c
+              let _t677 ← rank_of c
+              let _t678 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t675 key hand _t676 _t677 suit_cut rank_cut c cut_on
+              let steps := _t678
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (hand, key, steps))
       else
         do
-          let _t681 ← push_front hand c
-          let hand := _t681
+          let _t679 ← push_front hand c
+          let hand := _t679
           let key := next_key
-          let _t682 ← no_cards
-          let _t683 ← suit_of c
-          let _t684 ← rank_of c
-          let _t685 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t682 key hand _t683 _t684 suit_cut rank_cut c cut_on
-          let steps := _t685
+          let _t680 ← no_cards
+          let _t681 ← suit_of c
+          let _t682 ← rank_of c
+          let _t683 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t680 key hand _t681 _t682 suit_cut rank_cut c cut_on
+          let steps := _t683
           pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (hand, key, steps))
   else
     do
-      if _t688 then
+      if _t686 then
         do
-          let _t692 ← rank_of c
-          let rank_cut := _t692
+          let _t690 ← rank_of c
+          let rank_cut := _t690
           let cut_on := (2 : Int)
-          let _t693 ← right_rotate next_key rank_cut
-          let next_key := _t693
+          let _t691 ← right_rotate next_key rank_cut
+          let next_key := _t691
           let suit_cut := (0 : Int)
           if (decide (n > (0 : Int))) then
             do
-              let _t695 ← suit_of c
-              let _t696 ← SudoRt.modI _t695 n
-              let suit_cut := _t696
+              let _t693 ← suit_of c
+              let _t694 ← SudoRt.modI _t693 n
+              let suit_cut := _t694
               if (decide (suit_cut > (0 : Int))) then
                 do
-                  let _t698 ← right_rotate hand suit_cut
-                  let hand := _t698
-                  let _t699 ← push_front hand c
-                  let hand := _t699
+                  let _t696 ← right_rotate hand suit_cut
+                  let hand := _t696
+                  let _t697 ← push_front hand c
+                  let hand := _t697
                   let key := next_key
-                  let _t700 ← no_cards
-                  let _t701 ← suit_of c
-                  let _t702 ← rank_of c
-                  let _t703 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t700 key hand _t701 _t702 suit_cut rank_cut c cut_on
-                  let steps := _t703
+                  let _t698 ← no_cards
+                  let _t699 ← suit_of c
+                  let _t700 ← rank_of c
+                  let _t701 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t698 key hand _t699 _t700 suit_cut rank_cut c cut_on
+                  let steps := _t701
                   pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (hand, key, steps))
               else
                 do
-                  let _t704 ← push_front hand c
-                  let hand := _t704
+                  let _t702 ← push_front hand c
+                  let hand := _t702
                   let key := next_key
-                  let _t705 ← no_cards
-                  let _t706 ← suit_of c
-                  let _t707 ← rank_of c
-                  let _t708 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t705 key hand _t706 _t707 suit_cut rank_cut c cut_on
-                  let steps := _t708
+                  let _t703 ← no_cards
+                  let _t704 ← suit_of c
+                  let _t705 ← rank_of c
+                  let _t706 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t703 key hand _t704 _t705 suit_cut rank_cut c cut_on
+                  let steps := _t706
                   pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (hand, key, steps))
           else
             do
-              let _t709 ← push_front hand c
-              let hand := _t709
+              let _t707 ← push_front hand c
+              let hand := _t707
               let key := next_key
-              let _t710 ← no_cards
-              let _t711 ← suit_of c
-              let _t712 ← rank_of c
-              let _t713 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t710 key hand _t711 _t712 suit_cut rank_cut c cut_on
-              let steps := _t713
+              let _t708 ← no_cards
+              let _t709 ← suit_of c
+              let _t710 ← rank_of c
+              let _t711 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t708 key hand _t709 _t710 suit_cut rank_cut c cut_on
+              let steps := _t711
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (hand, key, steps))
       else
         do
           let suit_cut := (0 : Int)
           if (decide (n > (0 : Int))) then
             do
-              let _t715 ← suit_of c
-              let _t716 ← SudoRt.modI _t715 n
-              let suit_cut := _t716
+              let _t713 ← suit_of c
+              let _t714 ← SudoRt.modI _t713 n
+              let suit_cut := _t714
               if (decide (suit_cut > (0 : Int))) then
                 do
-                  let _t718 ← right_rotate hand suit_cut
-                  let hand := _t718
-                  let _t719 ← push_front hand c
-                  let hand := _t719
+                  let _t716 ← right_rotate hand suit_cut
+                  let hand := _t716
+                  let _t717 ← push_front hand c
+                  let hand := _t717
                   let key := next_key
-                  let _t720 ← no_cards
-                  let _t721 ← suit_of c
-                  let _t722 ← rank_of c
-                  let _t723 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t720 key hand _t721 _t722 suit_cut rank_cut c cut_on
-                  let steps := _t723
+                  let _t718 ← no_cards
+                  let _t719 ← suit_of c
+                  let _t720 ← rank_of c
+                  let _t721 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t718 key hand _t719 _t720 suit_cut rank_cut c cut_on
+                  let steps := _t721
                   pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (hand, key, steps))
               else
                 do
-                  let _t724 ← push_front hand c
-                  let hand := _t724
+                  let _t722 ← push_front hand c
+                  let hand := _t722
                   let key := next_key
-                  let _t725 ← no_cards
-                  let _t726 ← suit_of c
-                  let _t727 ← rank_of c
-                  let _t728 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t725 key hand _t726 _t727 suit_cut rank_cut c cut_on
-                  let steps := _t728
+                  let _t723 ← no_cards
+                  let _t724 ← suit_of c
+                  let _t725 ← rank_of c
+                  let _t726 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t723 key hand _t724 _t725 suit_cut rank_cut c cut_on
+                  let steps := _t726
                   pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (hand, key, steps))
           else
             do
-              let _t729 ← push_front hand c
-              let hand := _t729
+              let _t727 ← push_front hand c
+              let hand := _t727
               let key := next_key
-              let _t730 ← no_cards
-              let _t731 ← suit_of c
-              let _t732 ← rank_of c
-              let _t733 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t730 key hand _t731 _t732 suit_cut rank_cut c cut_on
-              let steps := _t733
+              let _t728 ← no_cards
+              let _t729 ← suit_of c
+              let _t730 ← rank_of c
+              let _t731 ← add_step steps (#[117, 110, 112, 97, 115, 115] : Array Int) label _t728 key hand _t729 _t730 suit_cut rank_cut c cut_on
+              let steps := _t731
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (hand, key, steps))) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (i, _fs))
@@ -2362,10 +2369,10 @@ def trace_unpass (deck : Array (Int)) (steps : Array (Step)) (label : Array (Int
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
     let hand := σ.2.1
-    let _sp736 := σ.2.2
-    let key := _sp736.1
-    let _sp737 := _sp736.2
-    let steps := _sp737
+    let _sp734 := σ.2.2
+    let key := _sp734.1
+    let _sp735 := _sp734.2
+    let steps := _sp735
     do
       pure (hand, steps)) (fun r => pure r))
     pure _out
@@ -2375,25 +2382,25 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
     let _fromV := (0 : Int)
     let _toV := (3 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init802 := (_fromV, (g, steps))
-    let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init802 fuel (fun σ =>
+    let _init797 := (_fromV, (g, steps))
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init797 fuel (fun σ =>
     let i := σ.1
     let g := σ.2.1
-    let _sp800 := σ.2.2
-    let steps := _sp800
+    let _sp795 := σ.2.2
+    let steps := _sp795
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, (g, steps)))
       else
         match ← ((do
-  let _t742 ← SudoRt.atL g i
-  let row := _t742
+  let _t740 ← SudoRt.atL g i
+  let row := _t740
   let total := (0 : Int)
   let _fromV := (0 : Int)
   let _toV := (12 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init757 := (_fromV, total)
-  let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init757 fuel (fun σ =>
+  let _init755 := (_fromV, total)
+  let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init755 fuel (fun σ =>
     let j := σ.1
     let total := σ.2
     do
@@ -2401,10 +2408,10 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (j, total))
       else
         match ← ((do
-  let _t744 ← SudoRt.atL row j
-  let _t745 ← rank_of _t744
-  let _t746 ← SudoRt.addI total _t745
-  let total := _t746
+  let _t742 ← SudoRt.atL row j
+  let _t743 ← rank_of _t742
+  let _t744 ← SudoRt.addI total _t743
+  let total := _t744
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) total)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (j, _fs))
@@ -2416,19 +2423,19 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let total := σ.2
     do
-      let _t747 ← SudoRt.modI total (13 : Int)
-      let amount := _t747
-      let _ix748 := i
-      let _t749 ← left_rotate row amount
-      let _t750 ← SudoRt.putL g _ix748 _t749
-      let g := _t750
+      let _t745 ← SudoRt.modI total (13 : Int)
+      let amount := _t745
+      let _ix746 := i
+      let _t747 ← left_rotate row amount
+      let _t748 ← SudoRt.putL g _ix746 _t747
+      let g := _t748
+      let _t749 ← no_cards
+      let _t750 ← no_cards
       let _t751 ← no_cards
-      let _t752 ← no_cards
-      let _t753 ← no_cards
-      let _t754 ← SudoRt.negI (1 : Int)
-      let _t755 ← SudoRt.negI (1 : Int)
-      let _t756 ← add_step steps (#[115, 117, 109, 114, 111, 119] : Array Int) label _t751 _t752 _t753 i _t754 amount total _t755 (0 : Int)
-      let steps := _t756
+      let _t752 ← SudoRt.negI (1 : Int)
+      let _t753 ← SudoRt.negI (1 : Int)
+      let _t754 ← add_step steps (#[115, 117, 109, 114, 111, 119] : Array Int) label _t749 _t750 _t751 i _t752 amount total _t753 (0 : Int)
+      let steps := _t754
       pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (g, steps))) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
@@ -2440,18 +2447,18 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp801 := σ.2.2
-    let steps := _sp801
+    let _sp796 := σ.2.2
+    let steps := _sp796
     do
       let _fromV := (0 : Int)
       let _toV := (12 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init799 := (_fromV, (g, steps))
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init799 fuel (fun σ =>
+      let _init794 := (_fromV, (g, steps))
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init794 fuel (fun σ =>
     let j := σ.1
     let g := σ.2.1
-    let _sp797 := σ.2.2
-    let steps := _sp797
+    let _sp792 := σ.2.2
+    let steps := _sp792
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (j, (g, steps)))
@@ -2461,8 +2468,8 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
   let _fromV := (0 : Int)
   let _toV := (3 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init796 := (_fromV, col)
-  let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init796 fuel (fun σ =>
+  let _init791 := (_fromV, col)
+  let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init791 fuel (fun σ =>
     let i := σ.1
     let col := σ.2
     do
@@ -2470,13 +2477,13 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, col))
       else
         match ← ((do
-  let _t760 ← SudoRt.atL g i
-  let _t761 ← SudoRt.atL _t760 j
-  let _mb762 := SudoRt.appendL col _t761
-  let ⟨_nr763, _⟩ := _mb762
-  let col := _nr763
-  let _hm739 := ()
-  let _u764 := _hm739
+  let _t758 ← SudoRt.atL g i
+  let _t759 ← SudoRt.atL _t758 j
+  let _mb760 := SudoRt.appendL col _t759
+  let ⟨_nr761, _⟩ := _mb760
+  let col := _nr761
+  let _hm737 := ()
+  let _u762 := _hm737
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) col)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -2492,8 +2499,8 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init795 := (_fromV, total)
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init795 fuel (fun σ =>
+      let _init790 := (_fromV, total)
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init790 fuel (fun σ =>
     let i := σ.1
     let total := σ.2
     do
@@ -2501,13 +2508,10 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, total))
       else
         match ← ((do
-  let _t766 ← SudoRt.atL col i
-  let _t767 ← rank_of _t766
-  let _t768 ← SudoRt.addI total _t767
-  let _t769 ← SudoRt.atL col i
-  let _t770 ← suit_of _t769
-  let _t771 ← SudoRt.addI _t768 _t770
-  let total := _t771
+  let _t764 ← SudoRt.atL col i
+  let _t765 ← column_weight _t764
+  let _t766 ← SudoRt.addI total _t765
+  let total := _t766
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) total)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -2519,14 +2523,14 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let total := σ.2
     do
-      let _t772 ← SudoRt.modI total (4 : Int)
-      let amount := _t772
+      let _t767 ← SudoRt.modI total (4 : Int)
+      let amount := _t767
       let fresh := (#[] : Array (Int))
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init794 := (_fromV, fresh)
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init794 fuel (fun σ =>
+      let _init789 := (_fromV, fresh)
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init789 fuel (fun σ =>
     let i := σ.1
     let fresh := σ.2
     do
@@ -2534,14 +2538,14 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, fresh))
       else
         match ← ((do
-  let _t774 ← SudoRt.subI i amount
-  let _t775 ← SudoRt.modI _t774 (4 : Int)
-  let _t776 ← SudoRt.atL col _t775
-  let _mb777 := SudoRt.appendL fresh _t776
-  let ⟨_nr778, _⟩ := _mb777
-  let fresh := _nr778
-  let _hm740 := ()
-  let _u779 := _hm740
+  let _t769 ← SudoRt.subI i amount
+  let _t770 ← SudoRt.modI _t769 (4 : Int)
+  let _t771 ← SudoRt.atL col _t770
+  let _mb772 := SudoRt.appendL fresh _t771
+  let ⟨_nr773, _⟩ := _mb772
+  let fresh := _nr773
+  let _hm738 := ()
+  let _u774 := _hm738
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) fresh)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -2556,8 +2560,8 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init793 := (_fromV, g)
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init793 fuel (fun σ =>
+      let _init788 := (_fromV, g)
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init788 fuel (fun σ =>
     let i := σ.1
     let g := σ.2
     do
@@ -2565,15 +2569,15 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, g))
       else
         match ← ((do
-  let _t781 ← SudoRt.atL g i
-  let row := _t781
-  let _ix782 := j
-  let _t783 ← SudoRt.atL fresh i
-  let _t784 ← SudoRt.putL row _ix782 _t783
-  let row := _t784
-  let _ix785 := i
-  let _t786 ← SudoRt.putL g _ix785 row
-  let g := _t786
+  let _t776 ← SudoRt.atL g i
+  let row := _t776
+  let _ix777 := j
+  let _t778 ← SudoRt.atL fresh i
+  let _t779 ← SudoRt.putL row _ix777 _t778
+  let row := _t779
+  let _ix780 := i
+  let _t781 ← SudoRt.putL g _ix780 row
+  let g := _t781
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) g)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -2585,13 +2589,13 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let g := σ.2
     do
-      let _t787 ← no_cards
-      let _t788 ← no_cards
-      let _t789 ← no_cards
-      let _t790 ← SudoRt.negI (1 : Int)
-      let _t791 ← SudoRt.negI (1 : Int)
-      let _t792 ← add_step steps (#[115, 117, 109, 99, 111, 108] : Array Int) label _t787 _t788 _t789 _t790 j amount total _t791 (0 : Int)
-      let steps := _t792
+      let _t782 ← no_cards
+      let _t783 ← no_cards
+      let _t784 ← no_cards
+      let _t785 ← SudoRt.negI (1 : Int)
+      let _t786 ← SudoRt.negI (1 : Int)
+      let _t787 ← add_step steps (#[115, 117, 109, 99, 111, 108] : Array Int) label _t782 _t783 _t784 _t785 j amount total _t786 (0 : Int)
+      let steps := _t787
       pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (g, steps))) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)))
       pure _out) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)))
       pure _out) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)))
@@ -2606,8 +2610,8 @@ def trace_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (I
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp798 := σ.2.2
-    let steps := _sp798
+    let _sp793 := σ.2.2
+    let steps := _sp793
     do
       pure (g, steps)) (fun r => pure r))
       pure _out) (fun r => pure r))
@@ -2618,29 +2622,29 @@ def trace_shift (g : Array (Array (Int))) (steps : Array (Step)) (label : Array 
     let _fromV := (0 : Int)
     let _toV := (3 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init816 := (_fromV, (g, steps))
-    let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init816 fuel (fun σ =>
+    let _init811 := (_fromV, (g, steps))
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init811 fuel (fun σ =>
     let i := σ.1
     let g := σ.2.1
-    let _sp814 := σ.2.2
-    let steps := _sp814
+    let _sp809 := σ.2.2
+    let steps := _sp809
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, (g, steps)))
       else
         match ← ((do
-  let _ix804 := i
-  let _t805 ← SudoRt.atL g i
-  let _t806 ← left_rotate _t805 i
-  let _t807 ← SudoRt.putL g _ix804 _t806
-  let g := _t807
-  let _t808 ← no_cards
-  let _t809 ← no_cards
-  let _t810 ← no_cards
-  let _t811 ← SudoRt.negI (1 : Int)
-  let _t812 ← SudoRt.negI (1 : Int)
-  let _t813 ← add_step steps (#[115, 104, 105, 102, 116] : Array Int) label _t808 _t809 _t810 i _t811 i (0 : Int) _t812 (0 : Int)
-  let steps := _t813
+  let _ix799 := i
+  let _t800 ← SudoRt.atL g i
+  let _t801 ← left_rotate _t800 i
+  let _t802 ← SudoRt.putL g _ix799 _t801
+  let g := _t802
+  let _t803 ← no_cards
+  let _t804 ← no_cards
+  let _t805 ← no_cards
+  let _t806 ← SudoRt.negI (1 : Int)
+  let _t807 ← SudoRt.negI (1 : Int)
+  let _t808 ← add_step steps (#[115, 104, 105, 102, 116] : Array Int) label _t803 _t804 _t805 i _t806 i (0 : Int) _t807 (0 : Int)
+  let steps := _t808
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (g, steps))) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -2651,16 +2655,16 @@ def trace_shift (g : Array (Array (Int))) (steps : Array (Step)) (label : Array 
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp815 := σ.2.2
-    let steps := _sp815
+    let _sp810 := σ.2.2
+    let steps := _sp810
     do
       pure (g, steps)) (fun r => pure r))
     pure _out
 
 def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : Except SudoRt.Trap ((Array (Int)) × (Array (Step))) :=
   do
-    let _t820 ← empty_rows
-    let grid := _t820
+    let _t815 ← empty_rows
+    let grid := _t815
     let t := (0 : Int)
     let prev_card := (0 : Int)
     let prev_r := (0 : Int)
@@ -2668,77 +2672,77 @@ def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : E
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init919 := (_fromV, (steps, t, grid, prev_card, prev_r, prev_c))
-    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init919 fuel (fun σ =>
+    let _init905 := (_fromV, (steps, t, grid, prev_card, prev_r, prev_c))
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init905 fuel (fun σ =>
     let i := σ.1
     let steps := σ.2.1
-    let _sp909 := σ.2.2
-    let t := _sp909.1
-    let _sp910 := _sp909.2
-    let grid := _sp910.1
-    let _sp911 := _sp910.2
-    let prev_card := _sp911.1
-    let _sp912 := _sp911.2
-    let prev_r := _sp912.1
-    let _sp913 := _sp912.2
-    let prev_c := _sp913
+    let _sp895 := σ.2.2
+    let t := _sp895.1
+    let _sp896 := _sp895.2
+    let grid := _sp896.1
+    let _sp897 := _sp896.2
+    let prev_card := _sp897.1
+    let _sp898 := _sp897.2
+    let prev_r := _sp898.1
+    let _sp899 := _sp898.2
+    let prev_c := _sp899
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (i, (steps, t, grid, prev_card, prev_r, prev_c)))
       else
         match ← ((do
-  let _t822 ← SudoRt.atL d i
-  let card := _t822
+  let _t817 ← SudoRt.atL d i
+  let card := _t817
   let r := (2 : Int)
   let c := (0 : Int)
   let overflowed := (0 : Int)
   if (SudoRt.SEq.beq i (0 : Int)) then
     do
-      let _t824 ← no_cards
-      let _t825 ← no_cards
-      let _t826 ← no_cards
-      let _t827 ← add_step steps (#[109, 97, 114, 107] : Array Int) label _t824 _t825 _t826 (2 : Int) (0 : Int) (0 : Int) (0 : Int) card (0 : Int)
-      let steps := _t827
-      let _t828 ← SudoRt.atL grid r
-      let row := _t828
-      let _ix829 := c
-      let _t830 ← SudoRt.putL row _ix829 card
-      let row := _t830
-      let _ix831 := r
-      let _t832 ← SudoRt.putL grid _ix831 row
-      let grid := _t832
-      let _t833 ← no_cards
-      let _t834 ← no_cards
-      let _t835 ← no_cards
-      let _t836 ← add_step steps (#[112, 108, 97, 99, 101] : Array Int) label _t833 _t834 _t835 r c (0 : Int) (0 : Int) card overflowed
-      let steps := _t836
+      let _t819 ← no_cards
+      let _t820 ← no_cards
+      let _t821 ← no_cards
+      let _t822 ← add_step steps (#[109, 97, 114, 107] : Array Int) label _t819 _t820 _t821 (2 : Int) (0 : Int) (0 : Int) (0 : Int) card (0 : Int)
+      let steps := _t822
+      let _t823 ← SudoRt.atL grid r
+      let row := _t823
+      let _ix824 := c
+      let _t825 ← SudoRt.putL row _ix824 card
+      let row := _t825
+      let _ix826 := r
+      let _t827 ← SudoRt.putL grid _ix826 row
+      let grid := _t827
+      let _t828 ← no_cards
+      let _t829 ← no_cards
+      let _t830 ← no_cards
+      let _t831 ← add_step steps (#[112, 108, 97, 99, 101] : Array Int) label _t828 _t829 _t830 r c (0 : Int) (0 : Int) card overflowed
+      let steps := _t831
       let prev_card := card
       let prev_r := r
       let prev_c := c
       pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (steps, t, grid, prev_card, prev_r, prev_c))
   else
     do
-      let _t837 ← step_seat prev_card prev_r prev_c
-      let ⟨tr, tc⟩ := _t837
-      let _t838 ← SudoRt.atL grid tr
-      let _t839 ← SudoRt.atL _t838 tc
-      if (decide (_t839 < (0 : Int))) then
+      let _t832 ← step_seat prev_card prev_r prev_c
+      let ⟨tr, tc⟩ := _t832
+      let _t833 ← SudoRt.atL grid tr
+      let _t834 ← SudoRt.atL _t833 tc
+      if (decide (_t834 < (0 : Int))) then
         do
           let r := tr
           let c := tc
-          let _t841 ← SudoRt.atL grid r
-          let row := _t841
-          let _ix842 := c
-          let _t843 ← SudoRt.putL row _ix842 card
-          let row := _t843
-          let _ix844 := r
-          let _t845 ← SudoRt.putL grid _ix844 row
-          let grid := _t845
-          let _t846 ← no_cards
-          let _t847 ← no_cards
-          let _t848 ← no_cards
-          let _t849 ← add_step steps (#[112, 108, 97, 99, 101] : Array Int) label _t846 _t847 _t848 r c (0 : Int) (0 : Int) card overflowed
-          let steps := _t849
+          let _t836 ← SudoRt.atL grid r
+          let row := _t836
+          let _ix837 := c
+          let _t838 ← SudoRt.putL row _ix837 card
+          let row := _t838
+          let _ix839 := r
+          let _t840 ← SudoRt.putL grid _ix839 row
+          let grid := _t840
+          let _t841 ← no_cards
+          let _t842 ← no_cards
+          let _t843 ← no_cards
+          let _t844 ← add_step steps (#[112, 108, 97, 99, 101] : Array Int) label _t841 _t842 _t843 r c (0 : Int) (0 : Int) card overflowed
+          let steps := _t844
           let prev_card := card
           let prev_r := r
           let prev_c := c
@@ -2750,8 +2754,8 @@ def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : E
           let _fromV := (0 : Int)
           let _toV := (3 : Int)
           let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-          let _init907 := (_fromV, occ)
-          let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init907 fuel (fun σ =>
+          let _init893 := (_fromV, occ)
+          let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init893 fuel (fun σ =>
     let rr := σ.1
     let occ := σ.2
     do
@@ -2763,8 +2767,8 @@ def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : E
   let _fromV := (0 : Int)
   let _toV := (12 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init864 := (_fromV, marks)
-  let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init864 fuel (fun σ =>
+  let _init859 := (_fromV, marks)
+  let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init859 fuel (fun σ =>
     let cc := σ.1
     let marks := σ.2
     do
@@ -2772,23 +2776,23 @@ def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : E
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (cc, marks))
       else
         match ← ((do
-  let _t852 ← SudoRt.atL grid rr
-  let _t853 ← SudoRt.atL _t852 cc
-  if (decide (_t853 < (0 : Int))) then
+  let _t847 ← SudoRt.atL grid rr
+  let _t848 ← SudoRt.atL _t847 cc
+  if (decide (_t848 < (0 : Int))) then
     do
-      let _mb855 := SudoRt.appendL marks (0 : Int)
-      let ⟨_nr856, _⟩ := _mb855
-      let marks := _nr856
-      let _hm817 := ()
-      let _u857 := _hm817
+      let _mb850 := SudoRt.appendL marks (0 : Int)
+      let ⟨_nr851, _⟩ := _mb850
+      let marks := _nr851
+      let _hm812 := ()
+      let _u852 := _hm812
       pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) marks)
   else
     do
-      let _mb858 := SudoRt.appendL marks (1 : Int)
-      let ⟨_nr859, _⟩ := _mb858
-      let marks := _nr859
-      let _hm818 := ()
-      let _u860 := _hm818
+      let _mb853 := SudoRt.appendL marks (1 : Int)
+      let ⟨_nr854, _⟩ := _mb853
+      let marks := _nr854
+      let _hm813 := ()
+      let _u855 := _hm813
       pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) marks)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (cc, _fs))
@@ -2800,11 +2804,11 @@ def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : E
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
     let marks := σ.2
     do
-      let _mb861 := SudoRt.appendL occ marks
-      let ⟨_nr862, _⟩ := _mb861
-      let occ := _nr862
-      let _hm819 := ()
-      let _u863 := _hm819
+      let _mb856 := SudoRt.appendL occ marks
+      let ⟨_nr857, _⟩ := _mb856
+      let occ := _nr857
+      let _hm814 := ()
+      let _u858 := _hm814
       pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) occ)) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)
@@ -2818,25 +2822,25 @@ def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : E
     let occ := σ.2
     do
       let scan := t
-      let _t865 ← SudoRt.negI (1 : Int)
-      let found := _t865
+      let _t860 ← SudoRt.negI (1 : Int)
+      let found := _t860
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init906 := (_fromV, (steps, found, r, c, t, scan))
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init906 fuel (fun σ =>
+      let _init892 := (_fromV, (steps, found, r, c, t, scan))
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init892 fuel (fun σ =>
     let tries := σ.1
     let steps := σ.2.1
-    let _sp896 := σ.2.2
-    let found := _sp896.1
-    let _sp897 := _sp896.2
-    let r := _sp897.1
-    let _sp898 := _sp897.2
-    let c := _sp898.1
-    let _sp899 := _sp898.2
-    let t := _sp899.1
-    let _sp900 := _sp899.2
-    let scan := _sp900
+    let _sp882 := σ.2.2
+    let found := _sp882.1
+    let _sp883 := _sp882.2
+    let r := _sp883.1
+    let _sp884 := _sp883.2
+    let c := _sp884.1
+    let _sp885 := _sp884.2
+    let t := _sp885.1
+    let _sp886 := _sp885.2
+    let scan := _sp886
     do
       if tries > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (tries, (steps, found, r, c, t, scan)))
@@ -2844,64 +2848,28 @@ def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : E
         match ← ((do
   if (decide (found < (0 : Int))) then
     do
-      let _t868 ← no_cards
-      let _t869 ← no_cards
-      let _t870 ← no_cards
-      let _t871 ← SudoRt.negI (1 : Int)
-      let _t872 ← add_step steps (#[115, 99, 97, 110] : Array Int) label _t868 _t869 _t870 scan _t871 (0 : Int) (0 : Int) card (1 : Int)
-      let steps := _t872
-      let _fromV := (0 : Int)
-      let _toV := (12 : Int)
-      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init886 := (_fromV, found)
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init886 fuel (fun σ =>
-    let k := σ.1
-    let found := σ.2
-    do
-      if k > _toV then
-        pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (k, found))
-      else
-        match ← ((do
-  let _t874 ← SudoRt.addI tc k
-  let _t875 ← SudoRt.modI _t874 (13 : Int)
-  let col := _t875
-  let _t877 ← (if (decide (found < (0 : Int))) then (do
-  let _t878 ← SudoRt.atL occ scan
-  let _t879 ← SudoRt.atL _t878 col
-  pure (SudoRt.SEq.beq _t879 (0 : Int))) else pure false)
-  if _t877 then
-    do
-      let found := col
-      pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) found)
-  else
-    do
-      pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) found)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (k, _fs))
-        | .cont _fs => do
-            if k == _toV then
-              pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (k, _fs))
-            else do
-              let i' ← SudoRt.addI k (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
-    let found := σ.2
-    do
+      let _t863 ← no_cards
+      let _t864 ← no_cards
+      let _t865 ← no_cards
+      let _t866 ← add_step steps (#[115, 99, 97, 110] : Array Int) label _t863 _t864 _t865 scan tc (0 : Int) (0 : Int) card (1 : Int)
+      let steps := _t866
+      let _t867 ← scan_row occ scan tc
+      let found := _t867
       if (decide (found ≥ (0 : Int))) then
         do
           let r := scan
           let c := found
-          let _t882 ← SudoRt.addI scan (1 : Int)
-          let _t883 ← SudoRt.modI _t882 (4 : Int)
-          let t := _t883
+          let _t869 ← SudoRt.addI scan (1 : Int)
+          let _t870 ← SudoRt.modI _t869 (4 : Int)
+          let t := _t870
           pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (steps, found, r, c, t, scan))
       else
         do
-          let _t884 ← SudoRt.addI scan (1 : Int)
-          let _t885 ← SudoRt.modI _t884 (4 : Int)
-          let scan := _t885
+          let _t871 ← SudoRt.addI scan (1 : Int)
+          let _t872 ← SudoRt.modI _t871 (4 : Int)
+          let scan := _t872
           let t := scan
-          pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (steps, found, r, c, t, scan))) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)))
-      pure _out
+          pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (steps, found, r, c, t, scan))
   else
     do
       pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (steps, found, r, c, t, scan))) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
@@ -2914,30 +2882,30 @@ def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : E
               let i' ← SudoRt.addI tries (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
     let steps := σ.2.1
-    let _sp901 := σ.2.2
-    let found := _sp901.1
-    let _sp902 := _sp901.2
-    let r := _sp902.1
-    let _sp903 := _sp902.2
-    let c := _sp903.1
-    let _sp904 := _sp903.2
-    let t := _sp904.1
-    let _sp905 := _sp904.2
-    let scan := _sp905
+    let _sp887 := σ.2.2
+    let found := _sp887.1
+    let _sp888 := _sp887.2
+    let r := _sp888.1
+    let _sp889 := _sp888.2
+    let c := _sp889.1
+    let _sp890 := _sp889.2
+    let t := _sp890.1
+    let _sp891 := _sp890.2
+    let scan := _sp891
     do
-      let _t887 ← SudoRt.atL grid r
-      let row := _t887
-      let _ix888 := c
-      let _t889 ← SudoRt.putL row _ix888 card
-      let row := _t889
-      let _ix890 := r
-      let _t891 ← SudoRt.putL grid _ix890 row
-      let grid := _t891
-      let _t892 ← no_cards
-      let _t893 ← no_cards
-      let _t894 ← no_cards
-      let _t895 ← add_step steps (#[112, 108, 97, 99, 101] : Array Int) label _t892 _t893 _t894 r c (0 : Int) (0 : Int) card overflowed
-      let steps := _t895
+      let _t873 ← SudoRt.atL grid r
+      let row := _t873
+      let _ix874 := c
+      let _t875 ← SudoRt.putL row _ix874 card
+      let row := _t875
+      let _ix876 := r
+      let _t877 ← SudoRt.putL grid _ix876 row
+      let grid := _t877
+      let _t878 ← no_cards
+      let _t879 ← no_cards
+      let _t880 ← no_cards
+      let _t881 ← add_step steps (#[112, 108, 97, 99, 101] : Array Int) label _t878 _t879 _t880 r c (0 : Int) (0 : Int) card overflowed
+      let steps := _t881
       let prev_card := card
       let prev_r := r
       let prev_c := c
@@ -2953,124 +2921,124 @@ def trace_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : E
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
     let steps := σ.2.1
-    let _sp914 := σ.2.2
-    let t := _sp914.1
-    let _sp915 := _sp914.2
-    let grid := _sp915.1
-    let _sp916 := _sp915.2
-    let prev_card := _sp916.1
-    let _sp917 := _sp916.2
-    let prev_r := _sp917.1
-    let _sp918 := _sp917.2
-    let prev_c := _sp918
+    let _sp900 := σ.2.2
+    let t := _sp900.1
+    let _sp901 := _sp900.2
+    let grid := _sp901.1
+    let _sp902 := _sp901.2
+    let prev_card := _sp902.1
+    let _sp903 := _sp902.2
+    let prev_r := _sp903.1
+    let _sp904 := _sp903.2
+    let prev_c := _sp904
     do
-      let _t908 ← scoop_rm grid
-      pure (_t908, steps)) (fun r => pure r))
+      let _t894 ← scoop_rm grid
+      pure (_t894, steps)) (fun r => pure r))
     pure _out
 
 def trace_full_round (m : Array (Int)) (kr : Array (Int)) (steps : Array (Step)) (tag : Array (Int)) : Except SudoRt.Trap ((Array (Int)) × (Array (Step))) :=
   do
-    let _t920 ← no_cards
-    let _t921 ← SudoRt.negI (1 : Int)
+    let _t906 ← no_cards
+    let _t907 ← SudoRt.negI (1 : Int)
+    let _t908 ← SudoRt.negI (1 : Int)
+    let _t909 ← SudoRt.negI (1 : Int)
+    let _t910 ← add_step steps (#[100, 101, 97, 108] : Array Int) tag m kr _t906 _t907 _t908 (0 : Int) (0 : Int) _t909 (0 : Int)
+    let steps := _t910
+    let _t911 ← lay_cm m
+    let _t912 ← trace_sum _t911 steps tag
+    let ⟨g, steps⟩ := _t912
+    let _t913 ← trace_shift g steps tag
+    let ⟨g, steps⟩ := _t913
+    let _t914 ← scoop_cm g
+    let scooped := _t914
+    let _t915 ← no_cards
+    let _t916 ← SudoRt.negI (1 : Int)
+    let _t917 ← SudoRt.negI (1 : Int)
+    let _t918 ← SudoRt.negI (1 : Int)
+    let _t919 ← add_step steps (#[115, 99, 111, 111, 112, 99, 109] : Array Int) tag scooped kr _t915 _t916 _t917 (0 : Int) (0 : Int) _t918 (0 : Int)
+    let steps := _t919
+    let _t920 ← trace_mix scooped steps tag
+    let ⟨mixed, steps⟩ := _t920
+    let _t921 ← no_cards
     let _t922 ← SudoRt.negI (1 : Int)
     let _t923 ← SudoRt.negI (1 : Int)
-    let _t924 ← add_step steps (#[100, 101, 97, 108] : Array Int) tag m kr _t920 _t921 _t922 (0 : Int) (0 : Int) _t923 (0 : Int)
-    let steps := _t924
-    let _t925 ← lay_cm m
-    let _t926 ← trace_sum _t925 steps tag
-    let ⟨g, steps⟩ := _t926
-    let _t927 ← trace_shift g steps tag
-    let ⟨g, steps⟩ := _t927
-    let _t928 ← scoop_cm g
-    let scooped := _t928
-    let _t929 ← no_cards
-    let _t930 ← SudoRt.negI (1 : Int)
-    let _t931 ← SudoRt.negI (1 : Int)
-    let _t932 ← SudoRt.negI (1 : Int)
-    let _t933 ← add_step steps (#[115, 99, 111, 111, 112, 99, 109] : Array Int) tag scooped kr _t929 _t930 _t931 (0 : Int) (0 : Int) _t932 (0 : Int)
-    let steps := _t933
-    let _t934 ← trace_mix scooped steps tag
-    let ⟨mixed, steps⟩ := _t934
-    let _t935 ← no_cards
-    let _t936 ← SudoRt.negI (1 : Int)
-    let _t937 ← SudoRt.negI (1 : Int)
-    let _t938 ← SudoRt.negI (1 : Int)
-    let _t939 ← add_step steps (#[115, 99, 111, 111, 112, 114, 109] : Array Int) tag mixed kr _t935 _t936 _t937 (0 : Int) (0 : Int) _t938 (0 : Int)
-    let steps := _t939
-    let _t940 ← compose mixed kr
-    let out := _t940
-    let _t941 ← SudoRt.negI (1 : Int)
-    let _t942 ← SudoRt.negI (1 : Int)
-    let _t943 ← SudoRt.negI (1 : Int)
-    let _t944 ← add_step steps (#[99, 111, 109, 112, 111, 115, 101] : Array Int) tag mixed kr out _t941 _t942 (0 : Int) (0 : Int) _t943 (0 : Int)
-    let steps := _t944
+    let _t924 ← SudoRt.negI (1 : Int)
+    let _t925 ← add_step steps (#[115, 99, 111, 111, 112, 114, 109] : Array Int) tag mixed kr _t921 _t922 _t923 (0 : Int) (0 : Int) _t924 (0 : Int)
+    let steps := _t925
+    let _t926 ← compose mixed kr
+    let out := _t926
+    let _t927 ← SudoRt.negI (1 : Int)
+    let _t928 ← SudoRt.negI (1 : Int)
+    let _t929 ← SudoRt.negI (1 : Int)
+    let _t930 ← add_step steps (#[99, 111, 109, 112, 111, 115, 101] : Array Int) tag mixed kr out _t927 _t928 (0 : Int) (0 : Int) _t929 (0 : Int)
+    let steps := _t930
     pure (out, steps)
 
 def trace_final_round (m : Array (Int)) (kr : Array (Int)) (steps : Array (Step)) : Except SudoRt.Trap ((Array (Int)) × (Array (Step))) :=
   do
     let tag := (#[70, 105, 110, 97, 108, 32, 114, 111, 117, 110, 100, 32, 183, 32, 110, 111, 32, 71, 114, 105, 100, 67, 121, 99, 108, 101] : Array Int)
-    let _t945 ← no_cards
+    let _t931 ← no_cards
+    let _t932 ← SudoRt.negI (1 : Int)
+    let _t933 ← SudoRt.negI (1 : Int)
+    let _t934 ← SudoRt.negI (1 : Int)
+    let _t935 ← add_step steps (#[100, 101, 97, 108] : Array Int) tag m kr _t931 _t932 _t933 (0 : Int) (0 : Int) _t934 (1 : Int)
+    let steps := _t935
+    let _t936 ← lay_cm m
+    let _t937 ← trace_sum _t936 steps tag
+    let ⟨g, steps⟩ := _t937
+    let _t938 ← trace_shift g steps tag
+    let ⟨g, steps⟩ := _t938
+    let _t939 ← scoop_cm g
+    let scooped := _t939
+    let _t940 ← no_cards
+    let _t941 ← SudoRt.negI (1 : Int)
+    let _t942 ← SudoRt.negI (1 : Int)
+    let _t943 ← SudoRt.negI (1 : Int)
+    let _t944 ← add_step steps (#[115, 99, 111, 111, 112, 99, 109] : Array Int) tag scooped kr _t940 _t941 _t942 (0 : Int) (0 : Int) _t943 (1 : Int)
+    let steps := _t944
+    let _t945 ← compose scooped kr
+    let out := _t945
     let _t946 ← SudoRt.negI (1 : Int)
     let _t947 ← SudoRt.negI (1 : Int)
     let _t948 ← SudoRt.negI (1 : Int)
-    let _t949 ← add_step steps (#[100, 101, 97, 108] : Array Int) tag m kr _t945 _t946 _t947 (0 : Int) (0 : Int) _t948 (1 : Int)
+    let _t949 ← add_step steps (#[99, 111, 109, 112, 111, 115, 101] : Array Int) (#[70, 105, 110, 97, 108, 32, 67, 111, 109, 112, 111, 115, 101, 32, 183, 32, 99, 105, 112, 104, 101, 114, 116, 101, 120, 116] : Array Int) scooped kr out _t946 _t947 (0 : Int) (0 : Int) _t948 (1 : Int)
     let steps := _t949
-    let _t950 ← lay_cm m
-    let _t951 ← trace_sum _t950 steps tag
-    let ⟨g, steps⟩ := _t951
-    let _t952 ← trace_shift g steps tag
-    let ⟨g, steps⟩ := _t952
-    let _t953 ← scoop_cm g
-    let scooped := _t953
-    let _t954 ← no_cards
-    let _t955 ← SudoRt.negI (1 : Int)
-    let _t956 ← SudoRt.negI (1 : Int)
-    let _t957 ← SudoRt.negI (1 : Int)
-    let _t958 ← add_step steps (#[115, 99, 111, 111, 112, 99, 109] : Array Int) tag scooped kr _t954 _t955 _t956 (0 : Int) (0 : Int) _t957 (1 : Int)
-    let steps := _t958
-    let _t959 ← compose scooped kr
-    let out := _t959
-    let _t960 ← SudoRt.negI (1 : Int)
-    let _t961 ← SudoRt.negI (1 : Int)
-    let _t962 ← SudoRt.negI (1 : Int)
-    let _t963 ← add_step steps (#[99, 111, 109, 112, 111, 115, 101] : Array Int) (#[70, 105, 110, 97, 108, 32, 67, 111, 109, 112, 111, 115, 101, 32, 183, 32, 99, 105, 112, 104, 101, 114, 116, 101, 120, 116] : Array Int) scooped kr out _t960 _t961 (0 : Int) (0 : Int) _t962 (1 : Int)
-    let steps := _t963
     pure (out, steps)
 
 def trace_encrypt (message : Array (Int)) (key : Array (Int)) : Except SudoRt.Trap (Array (Step)) :=
   do
     let steps := (#[] : Array (Step))
-    let _t964 ← compose message key
-    let whitened := _t964
-    let _t965 ← SudoRt.negI (1 : Int)
-    let _t966 ← SudoRt.negI (1 : Int)
-    let _t967 ← SudoRt.negI (1 : Int)
-    let _t968 ← add_step steps (#[99, 111, 109, 112, 111, 115, 101] : Array Int) (#[87, 104, 105, 116, 101, 110, 105, 110, 103, 32, 183, 32, 67, 111, 109, 112, 111, 115, 101, 32, 183, 32, 65, 100, 100, 82, 111, 117, 110, 100, 75, 101, 121] : Array Int) message key whitened _t965 _t966 (0 : Int) (0 : Int) _t967 (0 : Int)
-    let steps := _t968
+    let _t950 ← compose message key
+    let whitened := _t950
+    let _t951 ← SudoRt.negI (1 : Int)
+    let _t952 ← SudoRt.negI (1 : Int)
+    let _t953 ← SudoRt.negI (1 : Int)
+    let _t954 ← add_step steps (#[99, 111, 109, 112, 111, 115, 101] : Array Int) (#[87, 104, 105, 116, 101, 110, 105, 110, 103, 32, 183, 32, 67, 111, 109, 112, 111, 115, 101, 32, 183, 32, 65, 100, 100, 82, 111, 117, 110, 100, 75, 101, 121] : Array Int) message key whitened _t951 _t952 (0 : Int) (0 : Int) _t953 (0 : Int)
+    let steps := _t954
     let m := whitened
     let built := key
     let _fromV := (1 : Int)
     let _toV := (5 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init981 := (_fromV, (built, steps, m))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init981 fuel (fun σ =>
+    let _init967 := (_fromV, (built, steps, m))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init967 fuel (fun σ =>
     let r := σ.1
     let built := σ.2.1
-    let _sp977 := σ.2.2
-    let steps := _sp977.1
-    let _sp978 := _sp977.2
-    let m := _sp978
+    let _sp963 := σ.2.2
+    let steps := _sp963.1
+    let _sp964 := _sp963.2
+    let m := _sp964
     do
       if r > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Step)) (r, (built, steps, m)))
       else
         match ← ((do
-  let _t970 ← round_label (#[80, 97, 115, 115, 75, 101, 121, 32, 75] : Array Int) r
-  let _t971 ← trace_pass built steps _t970
-  let ⟨built, steps⟩ := _t971
-  let _t972 ← round_label (#[82, 111, 117, 110, 100, 32] : Array Int) r
-  let _t973 ← trace_full_round m built steps _t972
-  let ⟨m, steps⟩ := _t973
+  let _t956 ← round_label (#[80, 97, 115, 115, 75, 101, 121, 32, 75] : Array Int) r
+  let _t957 ← trace_pass built steps _t956
+  let ⟨built, steps⟩ := _t957
+  let _t958 ← round_label (#[82, 111, 117, 110, 100, 32] : Array Int) r
+  let _t959 ← trace_full_round m built steps _t958
+  let ⟨m, steps⟩ := _t959
   pure (SudoRt.Flow.cont (ρ := Array (Step)) (built, steps, m))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Step)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Step)) (r, _fs))
@@ -3081,28 +3049,28 @@ def trace_encrypt (message : Array (Int)) (key : Array (Int)) : Except SudoRt.Tr
               let i' ← SudoRt.addI r (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Step)) (i', _fs))) (fun σ =>
     let built := σ.2.1
-    let _sp979 := σ.2.2
-    let steps := _sp979.1
-    let _sp980 := _sp979.2
-    let m := _sp980
+    let _sp965 := σ.2.2
+    let steps := _sp965.1
+    let _sp966 := _sp965.2
+    let m := _sp966
     do
-      let _t974 ← round_label (#[80, 97, 115, 115, 75, 101, 121, 32, 75] : Array Int) (6 : Int)
-      let _t975 ← trace_pass built steps _t974
-      let ⟨built, steps⟩ := _t975
-      let _t976 ← trace_final_round m built steps
-      let ⟨m, steps⟩ := _t976
+      let _t960 ← round_label (#[80, 97, 115, 115, 75, 101, 121, 32, 75] : Array Int) (6 : Int)
+      let _t961 ← trace_pass built steps _t960
+      let ⟨built, steps⟩ := _t961
+      let _t962 ← trace_final_round m built steps
+      let ⟨m, steps⟩ := _t962
       pure steps) (fun r => pure r))
     pure _out
 
 def trace_ecb (blocks : Array (Array (Int))) (key : Array (Int)) : Except SudoRt.Trap (Array (Step)) :=
   do
     let steps := (#[] : Array (Step))
-    let _t995 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
+    let _t981 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t995
+    let _toV := _t981
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init996 := (_fromV, steps)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init996 fuel (fun σ =>
+    let _init982 := (_fromV, steps)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init982 fuel (fun σ =>
     let i := σ.1
     let steps := σ.2
     do
@@ -3110,15 +3078,15 @@ def trace_ecb (blocks : Array (Array (Int))) (key : Array (Int)) : Except SudoRt
         pure (SudoRt.Flow.brk (ρ := Array (Step)) (i, steps))
       else
         match ← ((do
-  let _t984 ← SudoRt.atL blocks i
-  let _t985 ← trace_encrypt _t984 key
-  let one := _t985
-  let _t992 ← SudoRt.subI (SudoRt.listLen one) (1 : Int)
+  let _t970 ← SudoRt.atL blocks i
+  let _t971 ← trace_encrypt _t970 key
+  let one := _t971
+  let _t978 ← SudoRt.subI (SudoRt.listLen one) (1 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t992
+  let _toV := _t978
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init993 := (_fromV, steps)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init993 fuel (fun σ =>
+  let _init979 := (_fromV, steps)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init979 fuel (fun σ =>
     let n := σ.1
     let steps := σ.2
     do
@@ -3126,12 +3094,12 @@ def trace_ecb (blocks : Array (Array (Int))) (key : Array (Int)) : Except SudoRt
         pure (SudoRt.Flow.brk (ρ := Array (Step)) (n, steps))
       else
         match ← ((do
-  let _t987 ← SudoRt.atL one n
-  let _mb988 := SudoRt.appendL steps _t987
-  let ⟨_nr989, _⟩ := _mb988
-  let steps := _nr989
-  let _hm982 := ()
-  let _u990 := _hm982
+  let _t973 ← SudoRt.atL one n
+  let _mb974 := SudoRt.appendL steps _t973
+  let ⟨_nr975, _⟩ := _mb974
+  let steps := _nr975
+  let _hm968 := ()
+  let _u976 := _hm968
   pure (SudoRt.Flow.cont (ρ := Array (Step)) steps)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Step)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Step)) (n, _fs))
@@ -3160,13 +3128,13 @@ def trace_ecb (blocks : Array (Array (Int))) (key : Array (Int)) : Except SudoRt
 
 def trace_uncompose (c : Array (Int)) (kr : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : Except SudoRt.Trap ((Array (Int)) × (Array (Step))) :=
   do
-    let _t997 ← inverse_compose c kr
-    let out := _t997
-    let _t998 ← SudoRt.negI (1 : Int)
-    let _t999 ← SudoRt.negI (1 : Int)
-    let _t1000 ← SudoRt.negI (1 : Int)
-    let _t1001 ← add_step steps (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) label c kr out _t998 _t999 (0 : Int) (0 : Int) _t1000 (0 : Int)
-    let steps := _t1001
+    let _t983 ← inverse_compose c kr
+    let out := _t983
+    let _t984 ← SudoRt.negI (1 : Int)
+    let _t985 ← SudoRt.negI (1 : Int)
+    let _t986 ← SudoRt.negI (1 : Int)
+    let _t987 ← add_step steps (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) label c kr out _t984 _t985 (0 : Int) (0 : Int) _t986 (0 : Int)
+    let steps := _t987
     pure (out, steps)
 
 def trace_inv_shift (g : Array (Array (Int))) (steps : Array (Step)) (label : Array (Int)) : Except SudoRt.Trap ((Array (Array (Int))) × (Array (Step))) :=
@@ -3174,31 +3142,31 @@ def trace_inv_shift (g : Array (Array (Int))) (steps : Array (Step)) (label : Ar
     let _fromV := (0 : Int)
     let _toV := (3 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1017 := (_fromV, (g, steps))
-    let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1017 fuel (fun σ =>
+    let _init1003 := (_fromV, (g, steps))
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1003 fuel (fun σ =>
     let i := σ.1
     let g := σ.2.1
-    let _sp1015 := σ.2.2
-    let steps := _sp1015
+    let _sp1001 := σ.2.2
+    let steps := _sp1001
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, (g, steps)))
       else
         match ← ((do
-  let _ix1003 := i
-  let _t1004 ← SudoRt.atL g i
-  let _t1005 ← SudoRt.subI (0 : Int) i
-  let _t1006 ← left_rotate _t1004 _t1005
-  let _t1007 ← SudoRt.putL g _ix1003 _t1006
-  let g := _t1007
-  let _t1008 ← no_cards
-  let _t1009 ← no_cards
-  let _t1010 ← no_cards
-  let _t1011 ← SudoRt.negI (1 : Int)
-  let _t1012 ← SudoRt.subI (0 : Int) i
-  let _t1013 ← SudoRt.negI (1 : Int)
-  let _t1014 ← add_step steps (#[115, 104, 105, 102, 116] : Array Int) label _t1008 _t1009 _t1010 i _t1011 _t1012 (0 : Int) _t1013 (0 : Int)
-  let steps := _t1014
+  let _ix989 := i
+  let _t990 ← SudoRt.atL g i
+  let _t991 ← SudoRt.subI (0 : Int) i
+  let _t992 ← left_rotate _t990 _t991
+  let _t993 ← SudoRt.putL g _ix989 _t992
+  let g := _t993
+  let _t994 ← no_cards
+  let _t995 ← no_cards
+  let _t996 ← no_cards
+  let _t997 ← SudoRt.negI (1 : Int)
+  let _t998 ← SudoRt.subI (0 : Int) i
+  let _t999 ← SudoRt.negI (1 : Int)
+  let _t1000 ← add_step steps (#[115, 104, 105, 102, 116] : Array Int) label _t994 _t995 _t996 i _t997 _t998 (0 : Int) _t999 (0 : Int)
+  let steps := _t1000
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (g, steps))) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -3209,8 +3177,8 @@ def trace_inv_shift (g : Array (Array (Int))) (steps : Array (Step)) (label : Ar
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp1016 := σ.2.2
-    let steps := _sp1016
+    let _sp1002 := σ.2.2
+    let steps := _sp1002
     do
       pure (g, steps)) (fun r => pure r))
     pure _out
@@ -3220,12 +3188,12 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
     let _fromV := (0 : Int)
     let _toV := (12 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1084 := (_fromV, (g, steps))
-    let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1084 fuel (fun σ =>
+    let _init1067 := (_fromV, (g, steps))
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1067 fuel (fun σ =>
     let j := σ.1
     let g := σ.2.1
-    let _sp1082 := σ.2.2
-    let steps := _sp1082
+    let _sp1065 := σ.2.2
+    let steps := _sp1065
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (j, (g, steps)))
@@ -3235,8 +3203,8 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
   let _fromV := (0 : Int)
   let _toV := (3 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1059 := (_fromV, col)
-  let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1059 fuel (fun σ =>
+  let _init1042 := (_fromV, col)
+  let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1042 fuel (fun σ =>
     let i := σ.1
     let col := σ.2
     do
@@ -3244,13 +3212,13 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, col))
       else
         match ← ((do
-  let _t1022 ← SudoRt.atL g i
-  let _t1023 ← SudoRt.atL _t1022 j
-  let _mb1024 := SudoRt.appendL col _t1023
-  let ⟨_nr1025, _⟩ := _mb1024
-  let col := _nr1025
-  let _hm1018 := ()
-  let _u1026 := _hm1018
+  let _t1008 ← SudoRt.atL g i
+  let _t1009 ← SudoRt.atL _t1008 j
+  let _mb1010 := SudoRt.appendL col _t1009
+  let ⟨_nr1011, _⟩ := _mb1010
+  let col := _nr1011
+  let _hm1004 := ()
+  let _u1012 := _hm1004
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) col)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -3266,8 +3234,8 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1058 := (_fromV, total)
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1058 fuel (fun σ =>
+      let _init1041 := (_fromV, total)
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1041 fuel (fun σ =>
     let i := σ.1
     let total := σ.2
     do
@@ -3275,13 +3243,10 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, total))
       else
         match ← ((do
-  let _t1028 ← SudoRt.atL col i
-  let _t1029 ← rank_of _t1028
-  let _t1030 ← SudoRt.addI total _t1029
-  let _t1031 ← SudoRt.atL col i
-  let _t1032 ← suit_of _t1031
-  let _t1033 ← SudoRt.addI _t1030 _t1032
-  let total := _t1033
+  let _t1014 ← SudoRt.atL col i
+  let _t1015 ← column_weight _t1014
+  let _t1016 ← SudoRt.addI total _t1015
+  let total := _t1016
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) total)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -3293,14 +3258,14 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let total := σ.2
     do
-      let _t1034 ← SudoRt.modI total (4 : Int)
-      let s := _t1034
+      let _t1017 ← SudoRt.modI total (4 : Int)
+      let s := _t1017
       let fresh := (#[] : Array (Int))
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1057 := (_fromV, fresh)
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1057 fuel (fun σ =>
+      let _init1040 := (_fromV, fresh)
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1040 fuel (fun σ =>
     let i := σ.1
     let fresh := σ.2
     do
@@ -3308,14 +3273,14 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, fresh))
       else
         match ← ((do
-  let _t1036 ← SudoRt.addI i s
-  let _t1037 ← SudoRt.modI _t1036 (4 : Int)
-  let _t1038 ← SudoRt.atL col _t1037
-  let _mb1039 := SudoRt.appendL fresh _t1038
-  let ⟨_nr1040, _⟩ := _mb1039
-  let fresh := _nr1040
-  let _hm1019 := ()
-  let _u1041 := _hm1019
+  let _t1019 ← SudoRt.addI i s
+  let _t1020 ← SudoRt.modI _t1019 (4 : Int)
+  let _t1021 ← SudoRt.atL col _t1020
+  let _mb1022 := SudoRt.appendL fresh _t1021
+  let ⟨_nr1023, _⟩ := _mb1022
+  let fresh := _nr1023
+  let _hm1005 := ()
+  let _u1024 := _hm1005
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) fresh)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -3330,8 +3295,8 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1056 := (_fromV, g)
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1056 fuel (fun σ =>
+      let _init1039 := (_fromV, g)
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1039 fuel (fun σ =>
     let i := σ.1
     let g := σ.2
     do
@@ -3339,15 +3304,15 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, g))
       else
         match ← ((do
-  let _t1043 ← SudoRt.atL g i
-  let row := _t1043
-  let _ix1044 := j
-  let _t1045 ← SudoRt.atL fresh i
-  let _t1046 ← SudoRt.putL row _ix1044 _t1045
-  let row := _t1046
-  let _ix1047 := i
-  let _t1048 ← SudoRt.putL g _ix1047 row
-  let g := _t1048
+  let _t1026 ← SudoRt.atL g i
+  let row := _t1026
+  let _ix1027 := j
+  let _t1028 ← SudoRt.atL fresh i
+  let _t1029 ← SudoRt.putL row _ix1027 _t1028
+  let row := _t1029
+  let _ix1030 := i
+  let _t1031 ← SudoRt.putL g _ix1030 row
+  let g := _t1031
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) g)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, _fs))
@@ -3359,14 +3324,14 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let g := σ.2
     do
-      let _t1049 ← no_cards
-      let _t1050 ← no_cards
-      let _t1051 ← no_cards
-      let _t1052 ← SudoRt.negI (1 : Int)
-      let _t1053 ← SudoRt.subI (0 : Int) s
-      let _t1054 ← SudoRt.negI (1 : Int)
-      let _t1055 ← add_step steps (#[115, 117, 109, 99, 111, 108] : Array Int) label _t1049 _t1050 _t1051 _t1052 j _t1053 total _t1054 (0 : Int)
-      let steps := _t1055
+      let _t1032 ← no_cards
+      let _t1033 ← no_cards
+      let _t1034 ← no_cards
+      let _t1035 ← SudoRt.negI (1 : Int)
+      let _t1036 ← SudoRt.subI (0 : Int) s
+      let _t1037 ← SudoRt.negI (1 : Int)
+      let _t1038 ← add_step steps (#[115, 117, 109, 99, 111, 108] : Array Int) label _t1032 _t1033 _t1034 _t1035 j _t1036 total _t1037 (0 : Int)
+      let steps := _t1038
       pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (g, steps))) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)))
       pure _out) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)))
       pure _out) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)))
@@ -3381,31 +3346,31 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp1083 := σ.2.2
-    let steps := _sp1083
+    let _sp1066 := σ.2.2
+    let steps := _sp1066
     do
       let _fromV := (0 : Int)
       let _toV := (3 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1081 := (_fromV, (g, steps))
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1081 fuel (fun σ =>
+      let _init1064 := (_fromV, (g, steps))
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1064 fuel (fun σ =>
     let i := σ.1
     let g := σ.2.1
-    let _sp1079 := σ.2.2
-    let steps := _sp1079
+    let _sp1062 := σ.2.2
+    let steps := _sp1062
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (i, (g, steps)))
       else
         match ← ((do
-  let _t1061 ← SudoRt.atL g i
-  let row := _t1061
+  let _t1044 ← SudoRt.atL g i
+  let row := _t1044
   let total := (0 : Int)
   let _fromV := (0 : Int)
   let _toV := (12 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1078 := (_fromV, total)
-  let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1078 fuel (fun σ =>
+  let _init1061 := (_fromV, total)
+  let _out ← (SudoRt.runLoopOn (ρ := (Array (Array (Int))) × (Array (Step))) _init1061 fuel (fun σ =>
     let j := σ.1
     let total := σ.2
     do
@@ -3413,10 +3378,10 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
         pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (j, total))
       else
         match ← ((do
-  let _t1063 ← SudoRt.atL row j
-  let _t1064 ← rank_of _t1063
-  let _t1065 ← SudoRt.addI total _t1064
-  let total := _t1065
+  let _t1046 ← SudoRt.atL row j
+  let _t1047 ← rank_of _t1046
+  let _t1048 ← SudoRt.addI total _t1047
+  let total := _t1048
   pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) total)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Array (Int))) × (Array (Step))) (j, _fs))
@@ -3428,21 +3393,21 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let total := σ.2
     do
-      let _t1066 ← SudoRt.modI total (13 : Int)
-      let amount := _t1066
-      let _ix1067 := i
-      let _t1068 ← SudoRt.subI (0 : Int) amount
-      let _t1069 ← left_rotate row _t1068
-      let _t1070 ← SudoRt.putL g _ix1067 _t1069
-      let g := _t1070
-      let _t1071 ← no_cards
-      let _t1072 ← no_cards
-      let _t1073 ← no_cards
-      let _t1074 ← SudoRt.negI (1 : Int)
-      let _t1075 ← SudoRt.subI (0 : Int) amount
-      let _t1076 ← SudoRt.negI (1 : Int)
-      let _t1077 ← add_step steps (#[115, 117, 109, 114, 111, 119] : Array Int) label _t1071 _t1072 _t1073 i _t1074 _t1075 total _t1076 (0 : Int)
-      let steps := _t1077
+      let _t1049 ← SudoRt.modI total (13 : Int)
+      let amount := _t1049
+      let _ix1050 := i
+      let _t1051 ← SudoRt.subI (0 : Int) amount
+      let _t1052 ← left_rotate row _t1051
+      let _t1053 ← SudoRt.putL g _ix1050 _t1052
+      let g := _t1053
+      let _t1054 ← no_cards
+      let _t1055 ← no_cards
+      let _t1056 ← no_cards
+      let _t1057 ← SudoRt.negI (1 : Int)
+      let _t1058 ← SudoRt.subI (0 : Int) amount
+      let _t1059 ← SudoRt.negI (1 : Int)
+      let _t1060 ← add_step steps (#[115, 117, 109, 114, 111, 119] : Array Int) label _t1054 _t1055 _t1056 i _t1057 _t1058 total _t1059 (0 : Int)
+      let steps := _t1060
       pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (g, steps))) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Array (Int))) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Array (Int))) × (Array (Step))) r)
@@ -3454,8 +3419,8 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Array (Int))) × (Array (Step))) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp1080 := σ.2.2
-    let steps := _sp1080
+    let _sp1063 := σ.2.2
+    let steps := _sp1063
     do
       pure (g, steps)) (fun r => pure r))
       pure _out) (fun r => pure r))
@@ -3463,22 +3428,22 @@ def trace_inv_sum (g : Array (Array (Int))) (steps : Array (Step)) (label : Arra
 
 def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : Except SudoRt.Trap ((Array (Int)) × (Array (Step))) :=
   do
-    let _t1086 ← no_cards
-    let _t1087 ← no_cards
-    let _t1088 ← SudoRt.negI (1 : Int)
-    let _t1089 ← SudoRt.negI (1 : Int)
-    let _t1090 ← SudoRt.negI (1 : Int)
-    let _t1091 ← add_step steps (#[100, 101, 97, 108, 114, 109] : Array Int) label d _t1086 _t1087 _t1088 _t1089 (0 : Int) (0 : Int) _t1090 (0 : Int)
-    let steps := _t1091
-    let _t1092 ← lay_rm d
-    let grid := _t1092
-    let _t1093 ← empty_rows
-    let visited := _t1093
+    let _t1069 ← no_cards
+    let _t1070 ← no_cards
+    let _t1071 ← SudoRt.negI (1 : Int)
+    let _t1072 ← SudoRt.negI (1 : Int)
+    let _t1073 ← SudoRt.negI (1 : Int)
+    let _t1074 ← add_step steps (#[100, 101, 97, 108, 114, 109] : Array Int) label d _t1069 _t1070 _t1071 _t1072 (0 : Int) (0 : Int) _t1073 (0 : Int)
+    let steps := _t1074
+    let _t1075 ← lay_rm d
+    let grid := _t1075
+    let _t1076 ← empty_rows
+    let visited := _t1076
     let _fromV := (0 : Int)
     let _toV := (3 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1197 := (_fromV, visited)
-    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init1197 fuel (fun σ =>
+    let _init1171 := (_fromV, visited)
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init1171 fuel (fun σ =>
     let r := σ.1
     let visited := σ.2
     do
@@ -3486,13 +3451,13 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (r, visited))
       else
         match ← ((do
-  let _t1095 ← SudoRt.atL visited r
-  let row := _t1095
+  let _t1078 ← SudoRt.atL visited r
+  let row := _t1078
   let _fromV := (0 : Int)
   let _toV := (12 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1101 := (_fromV, row)
-  let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init1101 fuel (fun σ =>
+  let _init1084 := (_fromV, row)
+  let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init1084 fuel (fun σ =>
     let c := σ.1
     let row := σ.2
     do
@@ -3500,9 +3465,9 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (c, row))
       else
         match ← ((do
-  let _ix1097 := c
-  let _t1098 ← SudoRt.putL row _ix1097 (0 : Int)
-  let row := _t1098
+  let _ix1080 := c
+  let _t1081 ← SudoRt.putL row _ix1080 (0 : Int)
+  let row := _t1081
   pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) row)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (c, _fs))
@@ -3514,9 +3479,9 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
     let row := σ.2
     do
-      let _ix1099 := r
-      let _t1100 ← SudoRt.putL visited _ix1099 row
-      let visited := _t1100
+      let _ix1082 := r
+      let _t1083 ← SudoRt.putL visited _ix1082 row
+      let visited := _t1083
       pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) visited)) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)
@@ -3537,22 +3502,22 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
       let _fromV := (0 : Int)
       let _toV := (51 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1196 := (_fromV, (steps, t, hand, visited, prev_card, prev_r, prev_c))
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init1196 fuel (fun σ =>
+      let _init1170 := (_fromV, (steps, t, hand, visited, prev_card, prev_r, prev_c))
+      let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init1170 fuel (fun σ =>
     let i := σ.1
     let steps := σ.2.1
-    let _sp1184 := σ.2.2
-    let t := _sp1184.1
-    let _sp1185 := _sp1184.2
-    let hand := _sp1185.1
-    let _sp1186 := _sp1185.2
-    let visited := _sp1186.1
-    let _sp1187 := _sp1186.2
-    let prev_card := _sp1187.1
-    let _sp1188 := _sp1187.2
-    let prev_r := _sp1188.1
-    let _sp1189 := _sp1188.2
-    let prev_c := _sp1189
+    let _sp1158 := σ.2.2
+    let t := _sp1158.1
+    let _sp1159 := _sp1158.2
+    let hand := _sp1159.1
+    let _sp1160 := _sp1159.2
+    let visited := _sp1160.1
+    let _sp1161 := _sp1160.2
+    let prev_card := _sp1161.1
+    let _sp1162 := _sp1161.2
+    let prev_r := _sp1162.1
+    let _sp1163 := _sp1162.2
+    let prev_c := _sp1163
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (i, (steps, t, hand, visited, prev_card, prev_r, prev_c)))
@@ -3562,35 +3527,35 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
   let c := (0 : Int)
   if (decide (i > (0 : Int))) then
     do
-      let _t1104 ← step_seat prev_card prev_r prev_c
-      let ⟨tr, tc⟩ := _t1104
-      let _t1105 ← SudoRt.atL visited tr
-      let _t1106 ← SudoRt.atL _t1105 tc
-      if (SudoRt.SEq.beq _t1106 (0 : Int)) then
+      let _t1087 ← step_seat prev_card prev_r prev_c
+      let ⟨tr, tc⟩ := _t1087
+      let _t1088 ← SudoRt.atL visited tr
+      let _t1089 ← SudoRt.atL _t1088 tc
+      if (SudoRt.SEq.beq _t1089 (0 : Int)) then
         do
           let r := tr
           let c := tc
-          let _t1108 ← SudoRt.atL grid r
-          let _t1109 ← SudoRt.atL _t1108 c
-          let card := _t1109
-          let _t1110 ← no_cards
-          let _t1111 ← no_cards
-          let _t1112 ← no_cards
-          let _t1113 ← add_step steps (#[116, 97, 107, 101] : Array Int) label _t1110 _t1111 _t1112 r c i (0 : Int) card (0 : Int)
-          let steps := _t1113
-          let _mb1114 := SudoRt.appendL hand card
-          let ⟨_nr1115, _⟩ := _mb1114
-          let hand := _nr1115
-          let _hm1085 := ()
-          let _u1116 := _hm1085
-          let _t1117 ← SudoRt.atL visited r
-          let row := _t1117
-          let _ix1118 := c
-          let _t1119 ← SudoRt.putL row _ix1118 (1 : Int)
-          let row := _t1119
-          let _ix1120 := r
-          let _t1121 ← SudoRt.putL visited _ix1120 row
-          let visited := _t1121
+          let _t1091 ← SudoRt.atL grid r
+          let _t1092 ← SudoRt.atL _t1091 c
+          let card := _t1092
+          let _t1093 ← no_cards
+          let _t1094 ← no_cards
+          let _t1095 ← no_cards
+          let _t1096 ← add_step steps (#[116, 97, 107, 101] : Array Int) label _t1093 _t1094 _t1095 r c i (0 : Int) card (0 : Int)
+          let steps := _t1096
+          let _mb1097 := SudoRt.appendL hand card
+          let ⟨_nr1098, _⟩ := _mb1097
+          let hand := _nr1098
+          let _hm1068 := ()
+          let _u1099 := _hm1068
+          let _t1100 ← SudoRt.atL visited r
+          let row := _t1100
+          let _ix1101 := c
+          let _t1102 ← SudoRt.putL row _ix1101 (1 : Int)
+          let row := _t1102
+          let _ix1103 := r
+          let _t1104 ← SudoRt.putL visited _ix1103 row
+          let visited := _t1104
           let prev_card := card
           let prev_r := r
           let prev_c := c
@@ -3598,25 +3563,25 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
       else
         do
           let scan := t
-          let _t1122 ← SudoRt.negI (1 : Int)
-          let found := _t1122
+          let _t1105 ← SudoRt.negI (1 : Int)
+          let found := _t1105
           let _fromV := (0 : Int)
           let _toV := (3 : Int)
           let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-          let _init1169 := (_fromV, (steps, found, r, c, t, scan))
-          let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init1169 fuel (fun σ =>
+          let _init1143 := (_fromV, (steps, found, r, c, t, scan))
+          let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init1143 fuel (fun σ =>
     let tries := σ.1
     let steps := σ.2.1
-    let _sp1159 := σ.2.2
-    let found := _sp1159.1
-    let _sp1160 := _sp1159.2
-    let r := _sp1160.1
-    let _sp1161 := _sp1160.2
-    let c := _sp1161.1
-    let _sp1162 := _sp1161.2
-    let t := _sp1162.1
-    let _sp1163 := _sp1162.2
-    let scan := _sp1163
+    let _sp1133 := σ.2.2
+    let found := _sp1133.1
+    let _sp1134 := _sp1133.2
+    let r := _sp1134.1
+    let _sp1135 := _sp1134.2
+    let c := _sp1135.1
+    let _sp1136 := _sp1135.2
+    let t := _sp1136.1
+    let _sp1137 := _sp1136.2
+    let scan := _sp1137
     do
       if tries > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (tries, (steps, found, r, c, t, scan)))
@@ -3624,65 +3589,29 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
         match ← ((do
   if (decide (found < (0 : Int))) then
     do
-      let _t1125 ← no_cards
-      let _t1126 ← no_cards
-      let _t1127 ← no_cards
-      let _t1128 ← SudoRt.negI (1 : Int)
-      let _t1129 ← SudoRt.negI (1 : Int)
-      let _t1130 ← add_step steps (#[115, 99, 97, 110] : Array Int) label _t1125 _t1126 _t1127 scan _t1128 (0 : Int) (0 : Int) _t1129 (1 : Int)
-      let steps := _t1130
-      let _fromV := (0 : Int)
-      let _toV := (12 : Int)
-      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1144 := (_fromV, found)
-      let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Array (Step))) _init1144 fuel (fun σ =>
-    let k := σ.1
-    let found := σ.2
-    do
-      if k > _toV then
-        pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (k, found))
-      else
-        match ← ((do
-  let _t1132 ← SudoRt.addI tc k
-  let _t1133 ← SudoRt.modI _t1132 (13 : Int)
-  let col := _t1133
-  let _t1135 ← (if (decide (found < (0 : Int))) then (do
-  let _t1136 ← SudoRt.atL visited scan
-  let _t1137 ← SudoRt.atL _t1136 col
-  pure (SudoRt.SEq.beq _t1137 (0 : Int))) else pure false)
-  if _t1135 then
-    do
-      let found := col
-      pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) found)
-  else
-    do
-      pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) found)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (k, _fs))
-        | .cont _fs => do
-            if k == _toV then
-              pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Array (Step))) (k, _fs))
-            else do
-              let i' ← SudoRt.addI k (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
-    let found := σ.2
-    do
+      let _t1108 ← no_cards
+      let _t1109 ← no_cards
+      let _t1110 ← no_cards
+      let _t1111 ← SudoRt.negI (1 : Int)
+      let _t1112 ← add_step steps (#[115, 99, 97, 110] : Array Int) label _t1108 _t1109 _t1110 scan tc (0 : Int) (0 : Int) _t1111 (1 : Int)
+      let steps := _t1112
+      let _t1113 ← scan_row visited scan tc
+      let found := _t1113
       if (decide (found ≥ (0 : Int))) then
         do
           let r := scan
           let c := found
-          let _t1140 ← SudoRt.addI scan (1 : Int)
-          let _t1141 ← SudoRt.modI _t1140 (4 : Int)
-          let t := _t1141
+          let _t1115 ← SudoRt.addI scan (1 : Int)
+          let _t1116 ← SudoRt.modI _t1115 (4 : Int)
+          let t := _t1116
           pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (steps, found, r, c, t, scan))
       else
         do
-          let _t1142 ← SudoRt.addI scan (1 : Int)
-          let _t1143 ← SudoRt.modI _t1142 (4 : Int)
-          let scan := _t1143
+          let _t1117 ← SudoRt.addI scan (1 : Int)
+          let _t1118 ← SudoRt.modI _t1117 (4 : Int)
+          let scan := _t1118
           let t := scan
-          pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (steps, found, r, c, t, scan))) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Array (Step))) r)))
-      pure _out
+          pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (steps, found, r, c, t, scan))
   else
     do
       pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (steps, found, r, c, t, scan))) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Array (Step))))) with
@@ -3695,38 +3624,38 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
               let i' ← SudoRt.addI tries (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
     let steps := σ.2.1
-    let _sp1164 := σ.2.2
-    let found := _sp1164.1
-    let _sp1165 := _sp1164.2
-    let r := _sp1165.1
-    let _sp1166 := _sp1165.2
-    let c := _sp1166.1
-    let _sp1167 := _sp1166.2
-    let t := _sp1167.1
-    let _sp1168 := _sp1167.2
-    let scan := _sp1168
+    let _sp1138 := σ.2.2
+    let found := _sp1138.1
+    let _sp1139 := _sp1138.2
+    let r := _sp1139.1
+    let _sp1140 := _sp1139.2
+    let c := _sp1140.1
+    let _sp1141 := _sp1140.2
+    let t := _sp1141.1
+    let _sp1142 := _sp1141.2
+    let scan := _sp1142
     do
-      let _t1145 ← SudoRt.atL grid r
-      let _t1146 ← SudoRt.atL _t1145 c
-      let card := _t1146
-      let _t1147 ← no_cards
-      let _t1148 ← no_cards
-      let _t1149 ← no_cards
-      let _t1150 ← add_step steps (#[116, 97, 107, 101] : Array Int) label _t1147 _t1148 _t1149 r c i (0 : Int) card (0 : Int)
-      let steps := _t1150
-      let _mb1151 := SudoRt.appendL hand card
-      let ⟨_nr1152, _⟩ := _mb1151
-      let hand := _nr1152
-      let _hm1085 := ()
-      let _u1153 := _hm1085
-      let _t1154 ← SudoRt.atL visited r
-      let row := _t1154
-      let _ix1155 := c
-      let _t1156 ← SudoRt.putL row _ix1155 (1 : Int)
-      let row := _t1156
-      let _ix1157 := r
-      let _t1158 ← SudoRt.putL visited _ix1157 row
-      let visited := _t1158
+      let _t1119 ← SudoRt.atL grid r
+      let _t1120 ← SudoRt.atL _t1119 c
+      let card := _t1120
+      let _t1121 ← no_cards
+      let _t1122 ← no_cards
+      let _t1123 ← no_cards
+      let _t1124 ← add_step steps (#[116, 97, 107, 101] : Array Int) label _t1121 _t1122 _t1123 r c i (0 : Int) card (0 : Int)
+      let steps := _t1124
+      let _mb1125 := SudoRt.appendL hand card
+      let ⟨_nr1126, _⟩ := _mb1125
+      let hand := _nr1126
+      let _hm1068 := ()
+      let _u1127 := _hm1068
+      let _t1128 ← SudoRt.atL visited r
+      let row := _t1128
+      let _ix1129 := c
+      let _t1130 ← SudoRt.putL row _ix1129 (1 : Int)
+      let row := _t1130
+      let _ix1131 := r
+      let _t1132 ← SudoRt.putL visited _ix1131 row
+      let visited := _t1132
       let prev_card := card
       let prev_r := r
       let prev_c := c
@@ -3734,27 +3663,27 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
           pure _out
   else
     do
-      let _t1170 ← SudoRt.atL grid r
-      let _t1171 ← SudoRt.atL _t1170 c
-      let card := _t1171
-      let _t1172 ← no_cards
-      let _t1173 ← no_cards
-      let _t1174 ← no_cards
-      let _t1175 ← add_step steps (#[116, 97, 107, 101] : Array Int) label _t1172 _t1173 _t1174 r c i (0 : Int) card (0 : Int)
-      let steps := _t1175
-      let _mb1176 := SudoRt.appendL hand card
-      let ⟨_nr1177, _⟩ := _mb1176
-      let hand := _nr1177
-      let _hm1085 := ()
-      let _u1178 := _hm1085
-      let _t1179 ← SudoRt.atL visited r
-      let row := _t1179
-      let _ix1180 := c
-      let _t1181 ← SudoRt.putL row _ix1180 (1 : Int)
-      let row := _t1181
-      let _ix1182 := r
-      let _t1183 ← SudoRt.putL visited _ix1182 row
-      let visited := _t1183
+      let _t1144 ← SudoRt.atL grid r
+      let _t1145 ← SudoRt.atL _t1144 c
+      let card := _t1145
+      let _t1146 ← no_cards
+      let _t1147 ← no_cards
+      let _t1148 ← no_cards
+      let _t1149 ← add_step steps (#[116, 97, 107, 101] : Array Int) label _t1146 _t1147 _t1148 r c i (0 : Int) card (0 : Int)
+      let steps := _t1149
+      let _mb1150 := SudoRt.appendL hand card
+      let ⟨_nr1151, _⟩ := _mb1150
+      let hand := _nr1151
+      let _hm1068 := ()
+      let _u1152 := _hm1068
+      let _t1153 ← SudoRt.atL visited r
+      let row := _t1153
+      let _ix1154 := c
+      let _t1155 ← SudoRt.putL row _ix1154 (1 : Int)
+      let row := _t1155
+      let _ix1156 := r
+      let _t1157 ← SudoRt.putL visited _ix1156 row
+      let visited := _t1157
       let prev_card := card
       let prev_r := r
       let prev_c := c
@@ -3768,18 +3697,18 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Array (Step))) (i', _fs))) (fun σ =>
     let steps := σ.2.1
-    let _sp1190 := σ.2.2
-    let t := _sp1190.1
-    let _sp1191 := _sp1190.2
-    let hand := _sp1191.1
-    let _sp1192 := _sp1191.2
-    let visited := _sp1192.1
-    let _sp1193 := _sp1192.2
-    let prev_card := _sp1193.1
-    let _sp1194 := _sp1193.2
-    let prev_r := _sp1194.1
-    let _sp1195 := _sp1194.2
-    let prev_c := _sp1195
+    let _sp1164 := σ.2.2
+    let t := _sp1164.1
+    let _sp1165 := _sp1164.2
+    let hand := _sp1165.1
+    let _sp1166 := _sp1165.2
+    let visited := _sp1166.1
+    let _sp1167 := _sp1166.2
+    let prev_card := _sp1167.1
+    let _sp1168 := _sp1167.2
+    let prev_r := _sp1168.1
+    let _sp1169 := _sp1168.2
+    let prev_c := _sp1169
     do
       pure (hand, steps)) (fun r => pure r))
       pure _out) (fun r => pure r))
@@ -3787,54 +3716,54 @@ def trace_inv_mix (d : Array (Int)) (steps : Array (Step)) (label : Array (Int))
 
 def trace_inv_final (c : Array (Int)) (kr : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : Except SudoRt.Trap ((Array (Int)) × (Array (Step))) :=
   do
-    let _t1198 ← trace_uncompose c kr steps label
-    let ⟨m, steps⟩ := _t1198
-    let _t1199 ← no_cards
-    let _t1200 ← SudoRt.negI (1 : Int)
-    let _t1201 ← SudoRt.negI (1 : Int)
-    let _t1202 ← SudoRt.negI (1 : Int)
-    let _t1203 ← add_step steps (#[100, 101, 97, 108] : Array Int) label m kr _t1199 _t1200 _t1201 (0 : Int) (0 : Int) _t1202 (1 : Int)
-    let steps := _t1203
-    let _t1204 ← lay_cm m
-    let _t1205 ← trace_inv_shift _t1204 steps label
-    let ⟨g, steps⟩ := _t1205
-    let _t1206 ← trace_inv_sum g steps label
-    let ⟨g, steps⟩ := _t1206
-    let _t1207 ← scoop_cm g
-    let scooped := _t1207
-    let _t1208 ← no_cards
-    let _t1209 ← SudoRt.negI (1 : Int)
-    let _t1210 ← SudoRt.negI (1 : Int)
-    let _t1211 ← SudoRt.negI (1 : Int)
-    let _t1212 ← add_step steps (#[115, 99, 111, 111, 112, 99, 109] : Array Int) label scooped kr _t1208 _t1209 _t1210 (0 : Int) (0 : Int) _t1211 (1 : Int)
-    let steps := _t1212
+    let _t1172 ← trace_uncompose c kr steps label
+    let ⟨m, steps⟩ := _t1172
+    let _t1173 ← no_cards
+    let _t1174 ← SudoRt.negI (1 : Int)
+    let _t1175 ← SudoRt.negI (1 : Int)
+    let _t1176 ← SudoRt.negI (1 : Int)
+    let _t1177 ← add_step steps (#[100, 101, 97, 108] : Array Int) label m kr _t1173 _t1174 _t1175 (0 : Int) (0 : Int) _t1176 (1 : Int)
+    let steps := _t1177
+    let _t1178 ← lay_cm m
+    let _t1179 ← trace_inv_shift _t1178 steps label
+    let ⟨g, steps⟩ := _t1179
+    let _t1180 ← trace_inv_sum g steps label
+    let ⟨g, steps⟩ := _t1180
+    let _t1181 ← scoop_cm g
+    let scooped := _t1181
+    let _t1182 ← no_cards
+    let _t1183 ← SudoRt.negI (1 : Int)
+    let _t1184 ← SudoRt.negI (1 : Int)
+    let _t1185 ← SudoRt.negI (1 : Int)
+    let _t1186 ← add_step steps (#[115, 99, 111, 111, 112, 99, 109] : Array Int) label scooped kr _t1182 _t1183 _t1184 (0 : Int) (0 : Int) _t1185 (1 : Int)
+    let steps := _t1186
     pure (scooped, steps)
 
 def trace_inv_full (c : Array (Int)) (kr : Array (Int)) (steps : Array (Step)) (label : Array (Int)) : Except SudoRt.Trap ((Array (Int)) × (Array (Step))) :=
   do
-    let _t1213 ← trace_uncompose c kr steps label
-    let ⟨mixed, steps⟩ := _t1213
-    let _t1214 ← trace_inv_mix mixed steps label
-    let ⟨packet, steps⟩ := _t1214
-    let _t1215 ← no_cards
-    let _t1216 ← SudoRt.negI (1 : Int)
-    let _t1217 ← SudoRt.negI (1 : Int)
-    let _t1218 ← SudoRt.negI (1 : Int)
-    let _t1219 ← add_step steps (#[100, 101, 97, 108] : Array Int) label packet kr _t1215 _t1216 _t1217 (0 : Int) (0 : Int) _t1218 (0 : Int)
-    let steps := _t1219
-    let _t1220 ← lay_cm packet
-    let _t1221 ← trace_inv_shift _t1220 steps label
-    let ⟨g, steps⟩ := _t1221
-    let _t1222 ← trace_inv_sum g steps label
-    let ⟨g, steps⟩ := _t1222
-    let _t1223 ← scoop_cm g
-    let scooped := _t1223
-    let _t1224 ← no_cards
-    let _t1225 ← SudoRt.negI (1 : Int)
-    let _t1226 ← SudoRt.negI (1 : Int)
-    let _t1227 ← SudoRt.negI (1 : Int)
-    let _t1228 ← add_step steps (#[115, 99, 111, 111, 112, 99, 109] : Array Int) label scooped kr _t1224 _t1225 _t1226 (0 : Int) (0 : Int) _t1227 (0 : Int)
-    let steps := _t1228
+    let _t1187 ← trace_uncompose c kr steps label
+    let ⟨mixed, steps⟩ := _t1187
+    let _t1188 ← trace_inv_mix mixed steps label
+    let ⟨packet, steps⟩ := _t1188
+    let _t1189 ← no_cards
+    let _t1190 ← SudoRt.negI (1 : Int)
+    let _t1191 ← SudoRt.negI (1 : Int)
+    let _t1192 ← SudoRt.negI (1 : Int)
+    let _t1193 ← add_step steps (#[100, 101, 97, 108] : Array Int) label packet kr _t1189 _t1190 _t1191 (0 : Int) (0 : Int) _t1192 (0 : Int)
+    let steps := _t1193
+    let _t1194 ← lay_cm packet
+    let _t1195 ← trace_inv_shift _t1194 steps label
+    let ⟨g, steps⟩ := _t1195
+    let _t1196 ← trace_inv_sum g steps label
+    let ⟨g, steps⟩ := _t1196
+    let _t1197 ← scoop_cm g
+    let scooped := _t1197
+    let _t1198 ← no_cards
+    let _t1199 ← SudoRt.negI (1 : Int)
+    let _t1200 ← SudoRt.negI (1 : Int)
+    let _t1201 ← SudoRt.negI (1 : Int)
+    let _t1202 ← add_step steps (#[115, 99, 111, 111, 112, 99, 109] : Array Int) label scooped kr _t1198 _t1199 _t1200 (0 : Int) (0 : Int) _t1201 (0 : Int)
+    let steps := _t1202
     pure (scooped, steps)
 
 def trace_decrypt (cipher : Array (Int)) (key : Array (Int)) : Except SudoRt.Trap (Array (Step)) :=
@@ -3844,20 +3773,20 @@ def trace_decrypt (cipher : Array (Int)) (key : Array (Int)) : Except SudoRt.Tra
     let _fromV := (1 : Int)
     let _toV := (6 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1247 := (_fromV, (built, steps))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1247 fuel (fun σ =>
+    let _init1221 := (_fromV, (built, steps))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1221 fuel (fun σ =>
     let r := σ.1
     let built := σ.2.1
-    let _sp1245 := σ.2.2
-    let steps := _sp1245
+    let _sp1219 := σ.2.2
+    let steps := _sp1219
     do
       if r > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Step)) (r, (built, steps)))
       else
         match ← ((do
-  let _t1230 ← round_label (#[80, 97, 115, 115, 75, 101, 121, 32, 75] : Array Int) r
-  let _t1231 ← trace_pass built steps _t1230
-  let ⟨built, steps⟩ := _t1231
+  let _t1204 ← round_label (#[80, 97, 115, 115, 75, 101, 121, 32, 75] : Array Int) r
+  let _t1205 ← trace_pass built steps _t1204
+  let ⟨built, steps⟩ := _t1205
   pure (SudoRt.Flow.cont (ρ := Array (Step)) (built, steps))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Step)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Step)) (r, _fs))
@@ -3868,33 +3797,33 @@ def trace_decrypt (cipher : Array (Int)) (key : Array (Int)) : Except SudoRt.Tra
               let i' ← SudoRt.addI r (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Step)) (i', _fs))) (fun σ =>
     let built := σ.2.1
-    let _sp1246 := σ.2.2
-    let steps := _sp1246
+    let _sp1220 := σ.2.2
+    let steps := _sp1220
     do
-      let _t1232 ← trace_inv_final cipher built steps (#[73, 110, 118, 101, 114, 115, 101, 32, 102, 105, 110, 97, 108, 32, 114, 111, 117, 110, 100] : Array Int)
-      let ⟨m, steps⟩ := _t1232
+      let _t1206 ← trace_inv_final cipher built steps (#[73, 110, 118, 101, 114, 115, 101, 32, 102, 105, 110, 97, 108, 32, 114, 111, 117, 110, 100] : Array Int)
+      let ⟨m, steps⟩ := _t1206
       let _fromV := (5 : Int)
       let _toV := (1 : Int)
       let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
-      let _init1244 := (_fromV, (built, steps, m))
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1244 fuel (fun σ =>
+      let _init1218 := (_fromV, (built, steps, m))
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1218 fuel (fun σ =>
     let r := σ.1
     let built := σ.2.1
-    let _sp1240 := σ.2.2
-    let steps := _sp1240.1
-    let _sp1241 := _sp1240.2
-    let m := _sp1241
+    let _sp1214 := σ.2.2
+    let steps := _sp1214.1
+    let _sp1215 := _sp1214.2
+    let m := _sp1215
     do
       if r < _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Step)) (r, (built, steps, m)))
       else
         match ← ((do
-  let _t1234 ← round_label (#[85, 110, 45, 112, 97, 115, 115, 32, 75] : Array Int) r
-  let _t1235 ← trace_unpass built steps _t1234
-  let ⟨built, steps⟩ := _t1235
-  let _t1236 ← round_label (#[73, 110, 118, 101, 114, 115, 101, 32, 114, 111, 117, 110, 100, 32] : Array Int) r
-  let _t1237 ← trace_inv_full m built steps _t1236
-  let ⟨m, steps⟩ := _t1237
+  let _t1208 ← round_label (#[85, 110, 45, 112, 97, 115, 115, 32, 75] : Array Int) r
+  let _t1209 ← trace_unpass built steps _t1208
+  let ⟨built, steps⟩ := _t1209
+  let _t1210 ← round_label (#[73, 110, 118, 101, 114, 115, 101, 32, 114, 111, 117, 110, 100, 32] : Array Int) r
+  let _t1211 ← trace_inv_full m built steps _t1210
+  let ⟨m, steps⟩ := _t1211
   pure (SudoRt.Flow.cont (ρ := Array (Step)) (built, steps, m))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Step)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Step)) (r, _fs))
@@ -3905,15 +3834,15 @@ def trace_decrypt (cipher : Array (Int)) (key : Array (Int)) : Except SudoRt.Tra
               let i' ← SudoRt.subI r (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Step)) (i', _fs))) (fun σ =>
     let built := σ.2.1
-    let _sp1242 := σ.2.2
-    let steps := _sp1242.1
-    let _sp1243 := _sp1242.2
-    let m := _sp1243
+    let _sp1216 := σ.2.2
+    let steps := _sp1216.1
+    let _sp1217 := _sp1216.2
+    let m := _sp1217
     do
-      let _t1238 ← trace_unpass built steps (#[85, 110, 45, 112, 97, 115, 115, 32, 75, 48] : Array Int)
-      let ⟨built, steps⟩ := _t1238
-      let _t1239 ← trace_uncompose m built steps (#[73, 110, 118, 101, 114, 115, 101, 67, 111, 109, 112, 111, 115, 101, 32, 183, 32, 75, 48] : Array Int)
-      let ⟨m, steps⟩ := _t1239
+      let _t1212 ← trace_unpass built steps (#[85, 110, 45, 112, 97, 115, 115, 32, 75, 48] : Array Int)
+      let ⟨built, steps⟩ := _t1212
+      let _t1213 ← trace_uncompose m built steps (#[73, 110, 118, 101, 114, 115, 101, 67, 111, 109, 112, 111, 115, 101, 32, 183, 32, 75, 48] : Array Int)
+      let ⟨m, steps⟩ := _t1213
       pure steps) (fun r => pure r))
       pure _out) (fun r => pure r))
     pure _out
@@ -3924,8 +3853,8 @@ def factorial (n : Int) : Except SudoRt.Trap (Int) :=
     let _fromV := (2 : Int)
     let _toV := n
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1250 := (_fromV, r)
-    let _out ← (SudoRt.runLoopOn (ρ := Int) _init1250 fuel (fun σ =>
+    let _init1224 := (_fromV, r)
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init1224 fuel (fun σ =>
     let i := σ.1
     let r := σ.2
     do
@@ -3933,8 +3862,8 @@ def factorial (n : Int) : Except SudoRt.Trap (Int) :=
         pure (SudoRt.Flow.brk (ρ := Int) (i, r))
       else
         match ← ((do
-  let _t1249 ← SudoRt.mulI r i
-  let r := _t1249
+  let _t1223 ← SudoRt.mulI r i
+  let r := _t1223
   pure (SudoRt.Flow.cont (ρ := Int) r)) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) (i, _fs))
@@ -3952,46 +3881,46 @@ def factorial (n : Int) : Except SudoRt.Trap (Int) :=
 def unrank (items : Array (Int)) (rank : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
     let n := (SudoRt.listLen items)
-    let _t1254 ← factorial n
-    let _t1255 ← SudoRt.modI rank _t1254
-    let rank := _t1255
+    let _t1228 ← factorial n
+    let _t1229 ← SudoRt.modI rank _t1228
+    let rank := _t1229
     let out := (#[] : Array (Int))
     let _fromV := n
     let _toV := (1 : Int)
     let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
-    let _init1278 := (_fromV, (rank, out, items))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1278 fuel (fun σ =>
+    let _init1252 := (_fromV, (rank, out, items))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1252 fuel (fun σ =>
     let k := σ.1
     let rank := σ.2.1
-    let _sp1274 := σ.2.2
-    let out := _sp1274.1
-    let _sp1275 := _sp1274.2
-    let items := _sp1275
+    let _sp1248 := σ.2.2
+    let out := _sp1248.1
+    let _sp1249 := _sp1248.2
+    let items := _sp1249
     do
       if k < _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (k, (rank, out, items)))
       else
         match ← ((do
-  let _t1257 ← SudoRt.subI k (1 : Int)
-  let _t1258 ← factorial _t1257
-  let f := _t1258
-  let _t1259 ← SudoRt.divI rank f
-  let idx := _t1259
-  let _t1260 ← SudoRt.modI rank f
-  let rank := _t1260
-  let _t1261 ← SudoRt.atL items idx
-  let _mb1262 := SudoRt.appendL out _t1261
-  let ⟨_nr1263, _⟩ := _mb1262
-  let out := _nr1263
-  let _hm1251 := ()
-  let _u1264 := _hm1251
+  let _t1231 ← SudoRt.subI k (1 : Int)
+  let _t1232 ← factorial _t1231
+  let f := _t1232
+  let _t1233 ← SudoRt.divI rank f
+  let idx := _t1233
+  let _t1234 ← SudoRt.modI rank f
+  let rank := _t1234
+  let _t1235 ← SudoRt.atL items idx
+  let _mb1236 := SudoRt.appendL out _t1235
+  let ⟨_nr1237, _⟩ := _mb1236
+  let out := _nr1237
+  let _hm1225 := ()
+  let _u1238 := _hm1225
   let rest := (#[] : Array (Int))
-  let _t1272 ← SudoRt.subI (SudoRt.listLen items) (1 : Int)
+  let _t1246 ← SudoRt.subI (SudoRt.listLen items) (1 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t1272
+  let _toV := _t1246
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1273 := (_fromV, rest)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1273 fuel (fun σ =>
+  let _init1247 := (_fromV, rest)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1247 fuel (fun σ =>
     let i := σ.1
     let rest := σ.2
     do
@@ -4001,12 +3930,12 @@ def unrank (items : Array (Int)) (rank : Int) : Except SudoRt.Trap (Array (Int))
         match ← ((do
   if (!(SudoRt.SEq.beq i idx)) then
     do
-      let _t1267 ← SudoRt.atL items i
-      let _mb1268 := SudoRt.appendL rest _t1267
-      let ⟨_nr1269, _⟩ := _mb1268
-      let rest := _nr1269
-      let _hm1252 := ()
-      let _u1270 := _hm1252
+      let _t1241 ← SudoRt.atL items i
+      let _mb1242 := SudoRt.appendL rest _t1241
+      let ⟨_nr1243, _⟩ := _mb1242
+      let rest := _nr1243
+      let _hm1226 := ()
+      let _u1244 := _hm1226
       pure (SudoRt.Flow.cont (ρ := Array (Int)) rest)
   else
     do
@@ -4033,10 +3962,10 @@ def unrank (items : Array (Int)) (rank : Int) : Except SudoRt.Trap (Array (Int))
               let i' ← SudoRt.subI k (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let rank := σ.2.1
-    let _sp1276 := σ.2.2
-    let out := _sp1276.1
-    let _sp1277 := _sp1276.2
-    let items := _sp1277
+    let _sp1250 := σ.2.2
+    let out := _sp1250.1
+    let _sp1251 := _sp1250.2
+    let items := _sp1251
     do
       pure out) (fun r => pure r))
     pure _out
@@ -4047,8 +3976,8 @@ def diamond_cards : Except SudoRt.Trap (Array (Int)) :=
     let _fromV := (39 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1284 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1284 fuel (fun σ =>
+    let _init1258 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1258 fuel (fun σ =>
     let c := σ.1
     let out := σ.2
     do
@@ -4056,11 +3985,11 @@ def diamond_cards : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (c, out))
       else
         match ← ((do
-  let _mb1281 := SudoRt.appendL out c
-  let ⟨_nr1282, _⟩ := _mb1281
-  let out := _nr1282
-  let _hm1279 := ()
-  let _u1283 := _hm1279
+  let _mb1255 := SudoRt.appendL out c
+  let ⟨_nr1256, _⟩ := _mb1255
+  let out := _nr1256
+  let _hm1253 := ()
+  let _u1257 := _hm1253
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (c, _fs))
@@ -4077,16 +4006,16 @@ def diamond_cards : Except SudoRt.Trap (Array (Int)) :=
 
 def counter_deck (nonce : Array (Int)) (index : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _as1288 ← SudoRt.sudoAssertEq (SudoRt.listLen nonce) (39 : Int) 717
-    let _t1289 ← diamond_cards
-    let _t1290 ← unrank _t1289 index
-    let diamonds := _t1290
+    let _as1262 ← SudoRt.sudoAssertEq (SudoRt.listLen nonce) (39 : Int) 721
+    let _t1263 ← diamond_cards
+    let _t1264 ← unrank _t1263 index
+    let diamonds := _t1264
     let out := (#[] : Array (Int))
     let _fromV := (0 : Int)
     let _toV := (38 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1302 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1302 fuel (fun σ =>
+    let _init1276 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1276 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -4094,12 +4023,12 @@ def counter_deck (nonce : Array (Int)) (index : Int) : Except SudoRt.Trap (Array
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
       else
         match ← ((do
-  let _t1292 ← SudoRt.atL nonce i
-  let _mb1293 := SudoRt.appendL out _t1292
-  let ⟨_nr1294, _⟩ := _mb1293
-  let out := _nr1294
-  let _hm1285 := ()
-  let _u1295 := _hm1285
+  let _t1266 ← SudoRt.atL nonce i
+  let _mb1267 := SudoRt.appendL out _t1266
+  let ⟨_nr1268, _⟩ := _mb1267
+  let out := _nr1268
+  let _hm1259 := ()
+  let _u1269 := _hm1259
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -4114,8 +4043,8 @@ def counter_deck (nonce : Array (Int)) (index : Int) : Except SudoRt.Trap (Array
       let _fromV := (0 : Int)
       let _toV := (12 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1301 := (_fromV, out)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1301 fuel (fun σ =>
+      let _init1275 := (_fromV, out)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1275 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -4123,12 +4052,12 @@ def counter_deck (nonce : Array (Int)) (index : Int) : Except SudoRt.Trap (Array
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
       else
         match ← ((do
-  let _t1297 ← SudoRt.atL diamonds i
-  let _mb1298 := SudoRt.appendL out _t1297
-  let ⟨_nr1299, _⟩ := _mb1298
-  let out := _nr1299
-  let _hm1286 := ()
-  let _u1300 := _hm1286
+  let _t1271 ← SudoRt.atL diamonds i
+  let _mb1272 := SudoRt.appendL out _t1271
+  let ⟨_nr1273, _⟩ := _mb1272
+  let out := _nr1273
+  let _hm1260 := ()
+  let _u1274 := _hm1260
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -4146,16 +4075,16 @@ def counter_deck (nonce : Array (Int)) (index : Int) : Except SudoRt.Trap (Array
 
 def encrypt (message : Array (Int)) (key : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t1303 ← expand_keys key
-    let keys := _t1303
-    let _t1304 ← SudoRt.atL keys (0 : Int)
-    let _t1305 ← compose message _t1304
-    let m := _t1305
+    let _t1277 ← expand_keys key
+    let keys := _t1277
+    let _t1278 ← SudoRt.atL keys (0 : Int)
+    let _t1279 ← compose message _t1278
+    let m := _t1279
     let _fromV := (1 : Int)
     let _toV := (5 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1311 := (_fromV, m)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1311 fuel (fun σ =>
+    let _init1285 := (_fromV, m)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1285 fuel (fun σ =>
     let r := σ.1
     let m := σ.2
     do
@@ -4163,9 +4092,9 @@ def encrypt (message : Array (Int)) (key : Array (Int)) : Except SudoRt.Trap (Ar
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (r, m))
       else
         match ← ((do
-  let _t1307 ← SudoRt.atL keys r
-  let _t1308 ← full_round m _t1307
-  let m := _t1308
+  let _t1281 ← SudoRt.atL keys r
+  let _t1282 ← full_round m _t1281
+  let m := _t1282
   pure (SudoRt.Flow.cont (ρ := Array (Int)) m)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (r, _fs))
@@ -4177,20 +4106,20 @@ def encrypt (message : Array (Int)) (key : Array (Int)) : Except SudoRt.Trap (Ar
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let m := σ.2
     do
-      let _t1309 ← SudoRt.atL keys (6 : Int)
-      let _t1310 ← final_round m _t1309
-      pure _t1310) (fun r => pure r))
+      let _t1283 ← SudoRt.atL keys (6 : Int)
+      let _t1284 ← final_round m _t1283
+      pure _t1284) (fun r => pure r))
     pure _out
 
 def trace_ctr (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Array (Int)) : Except SudoRt.Trap (Array (Step)) :=
   do
     let steps := (#[] : Array (Step))
-    let _t1338 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
+    let _t1312 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1338
+    let _toV := _t1312
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1339 := (_fromV, steps)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1339 fuel (fun σ =>
+    let _init1313 := (_fromV, steps)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1313 fuel (fun σ =>
     let i := σ.1
     let steps := σ.2
     do
@@ -4198,24 +4127,24 @@ def trace_ctr (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Array 
         pure (SudoRt.Flow.brk (ρ := Array (Step)) (i, steps))
       else
         match ← ((do
-  let _t1314 ← counter_deck nonce i
-  let counter := _t1314
-  let _t1315 ← SudoRt.atL blocks i
-  let _t1316 ← SudoRt.negI (1 : Int)
-  let _t1317 ← SudoRt.negI (1 : Int)
-  let _t1318 ← SudoRt.negI (1 : Int)
-  let _t1319 ← add_step steps (#[99, 111, 117, 110, 116, 101, 114] : Array Int) (#[67, 84, 82, 32, 99, 111, 117, 110, 116, 101, 114] : Array Int) counter key _t1315 _t1316 _t1317 i (0 : Int) _t1318 (0 : Int)
-  let steps := _t1319
-  let _t1320 ← encrypt counter key
-  let stream := _t1320
-  let _t1321 ← trace_encrypt counter key
-  let walked := _t1321
-  let _t1328 ← SudoRt.subI (SudoRt.listLen walked) (1 : Int)
+  let _t1288 ← counter_deck nonce i
+  let counter := _t1288
+  let _t1289 ← SudoRt.atL blocks i
+  let _t1290 ← SudoRt.negI (1 : Int)
+  let _t1291 ← SudoRt.negI (1 : Int)
+  let _t1292 ← SudoRt.negI (1 : Int)
+  let _t1293 ← add_step steps (#[99, 111, 117, 110, 116, 101, 114] : Array Int) (#[67, 84, 82, 32, 99, 111, 117, 110, 116, 101, 114] : Array Int) counter key _t1289 _t1290 _t1291 i (0 : Int) _t1292 (0 : Int)
+  let steps := _t1293
+  let _t1294 ← encrypt counter key
+  let stream := _t1294
+  let _t1295 ← trace_encrypt counter key
+  let walked := _t1295
+  let _t1302 ← SudoRt.subI (SudoRt.listLen walked) (1 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t1328
+  let _toV := _t1302
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1336 := (_fromV, steps)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1336 fuel (fun σ =>
+  let _init1310 := (_fromV, steps)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1310 fuel (fun σ =>
     let n := σ.1
     let steps := σ.2
     do
@@ -4223,12 +4152,12 @@ def trace_ctr (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Array 
         pure (SudoRt.Flow.brk (ρ := Array (Step)) (n, steps))
       else
         match ← ((do
-  let _t1323 ← SudoRt.atL walked n
-  let _mb1324 := SudoRt.appendL steps _t1323
-  let ⟨_nr1325, _⟩ := _mb1324
-  let steps := _nr1325
-  let _hm1312 := ()
-  let _u1326 := _hm1312
+  let _t1297 ← SudoRt.atL walked n
+  let _mb1298 := SudoRt.appendL steps _t1297
+  let ⟨_nr1299, _⟩ := _mb1298
+  let steps := _nr1299
+  let _hm1286 := ()
+  let _u1300 := _hm1286
   pure (SudoRt.Flow.cont (ρ := Array (Step)) steps)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Step)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Step)) (n, _fs))
@@ -4240,15 +4169,15 @@ def trace_ctr (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Array 
               pure (SudoRt.Flow.cont (ρ := Array (Step)) (i', _fs))) (fun σ =>
     let steps := σ.2
     do
-      let _t1329 ← SudoRt.atL blocks i
-      let _t1330 ← compose _t1329 stream
-      let mixed := _t1330
-      let _t1331 ← SudoRt.atL blocks i
-      let _t1332 ← SudoRt.negI (1 : Int)
-      let _t1333 ← SudoRt.negI (1 : Int)
-      let _t1334 ← SudoRt.negI (1 : Int)
-      let _t1335 ← add_step steps (#[99, 111, 109, 112, 111, 115, 101] : Array Int) (#[67, 84, 82, 32, 67, 111, 109, 112, 111, 115, 101, 32, 109, 101, 115, 115, 97, 103, 101, 32, 119, 105, 116, 104, 32, 107, 101, 121, 115, 116, 114, 101, 97, 109] : Array Int) _t1331 stream mixed _t1332 _t1333 i (0 : Int) _t1334 (0 : Int)
-      let steps := _t1335
+      let _t1303 ← SudoRt.atL blocks i
+      let _t1304 ← compose _t1303 stream
+      let mixed := _t1304
+      let _t1305 ← SudoRt.atL blocks i
+      let _t1306 ← SudoRt.negI (1 : Int)
+      let _t1307 ← SudoRt.negI (1 : Int)
+      let _t1308 ← SudoRt.negI (1 : Int)
+      let _t1309 ← add_step steps (#[99, 111, 109, 112, 111, 115, 101] : Array Int) (#[67, 84, 82, 32, 67, 111, 109, 112, 111, 115, 101, 32, 109, 101, 115, 115, 97, 103, 101, 32, 119, 105, 116, 104, 32, 107, 101, 121, 115, 116, 114, 101, 97, 109] : Array Int) _t1305 stream mixed _t1306 _t1307 i (0 : Int) _t1308 (0 : Int)
+      let steps := _t1309
       pure (SudoRt.Flow.cont (ρ := Array (Step)) steps)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Step)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)
@@ -4267,12 +4196,12 @@ def trace_ctr (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Array 
 def trace_ctr_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Array (Int)) : Except SudoRt.Trap (Array (Step)) :=
   do
     let steps := (#[] : Array (Step))
-    let _t1366 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
+    let _t1340 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1366
+    let _toV := _t1340
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1367 := (_fromV, steps)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1367 fuel (fun σ =>
+    let _init1341 := (_fromV, steps)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1341 fuel (fun σ =>
     let i := σ.1
     let steps := σ.2
     do
@@ -4280,24 +4209,24 @@ def trace_ctr_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce 
         pure (SudoRt.Flow.brk (ρ := Array (Step)) (i, steps))
       else
         match ← ((do
-  let _t1342 ← counter_deck nonce i
-  let counter := _t1342
-  let _t1343 ← SudoRt.atL blocks i
-  let _t1344 ← SudoRt.negI (1 : Int)
-  let _t1345 ← SudoRt.negI (1 : Int)
-  let _t1346 ← SudoRt.negI (1 : Int)
-  let _t1347 ← add_step steps (#[99, 111, 117, 110, 116, 101, 114] : Array Int) (#[67, 84, 82, 32, 99, 111, 117, 110, 116, 101, 114] : Array Int) counter key _t1343 _t1344 _t1345 i (0 : Int) _t1346 (0 : Int)
-  let steps := _t1347
-  let _t1348 ← encrypt counter key
-  let stream := _t1348
-  let _t1349 ← trace_encrypt counter key
-  let walked := _t1349
-  let _t1356 ← SudoRt.subI (SudoRt.listLen walked) (1 : Int)
+  let _t1316 ← counter_deck nonce i
+  let counter := _t1316
+  let _t1317 ← SudoRt.atL blocks i
+  let _t1318 ← SudoRt.negI (1 : Int)
+  let _t1319 ← SudoRt.negI (1 : Int)
+  let _t1320 ← SudoRt.negI (1 : Int)
+  let _t1321 ← add_step steps (#[99, 111, 117, 110, 116, 101, 114] : Array Int) (#[67, 84, 82, 32, 99, 111, 117, 110, 116, 101, 114] : Array Int) counter key _t1317 _t1318 _t1319 i (0 : Int) _t1320 (0 : Int)
+  let steps := _t1321
+  let _t1322 ← encrypt counter key
+  let stream := _t1322
+  let _t1323 ← trace_encrypt counter key
+  let walked := _t1323
+  let _t1330 ← SudoRt.subI (SudoRt.listLen walked) (1 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t1356
+  let _toV := _t1330
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1364 := (_fromV, steps)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1364 fuel (fun σ =>
+  let _init1338 := (_fromV, steps)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Step)) _init1338 fuel (fun σ =>
     let n := σ.1
     let steps := σ.2
     do
@@ -4305,12 +4234,12 @@ def trace_ctr_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce 
         pure (SudoRt.Flow.brk (ρ := Array (Step)) (n, steps))
       else
         match ← ((do
-  let _t1351 ← SudoRt.atL walked n
-  let _mb1352 := SudoRt.appendL steps _t1351
-  let ⟨_nr1353, _⟩ := _mb1352
-  let steps := _nr1353
-  let _hm1340 := ()
-  let _u1354 := _hm1340
+  let _t1325 ← SudoRt.atL walked n
+  let _mb1326 := SudoRt.appendL steps _t1325
+  let ⟨_nr1327, _⟩ := _mb1326
+  let steps := _nr1327
+  let _hm1314 := ()
+  let _u1328 := _hm1314
   pure (SudoRt.Flow.cont (ρ := Array (Step)) steps)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Step)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Step)) (n, _fs))
@@ -4322,15 +4251,15 @@ def trace_ctr_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce 
               pure (SudoRt.Flow.cont (ρ := Array (Step)) (i', _fs))) (fun σ =>
     let steps := σ.2
     do
-      let _t1357 ← SudoRt.atL blocks i
-      let _t1358 ← inverse_compose _t1357 stream
-      let plain := _t1358
-      let _t1359 ← SudoRt.atL blocks i
-      let _t1360 ← SudoRt.negI (1 : Int)
-      let _t1361 ← SudoRt.negI (1 : Int)
-      let _t1362 ← SudoRt.negI (1 : Int)
-      let _t1363 ← add_step steps (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) (#[67, 84, 82, 32, 73, 110, 118, 101, 114, 115, 101, 67, 111, 109, 112, 111, 115, 101] : Array Int) _t1359 stream plain _t1360 _t1361 i (0 : Int) _t1362 (0 : Int)
-      let steps := _t1363
+      let _t1331 ← SudoRt.atL blocks i
+      let _t1332 ← inverse_compose _t1331 stream
+      let plain := _t1332
+      let _t1333 ← SudoRt.atL blocks i
+      let _t1334 ← SudoRt.negI (1 : Int)
+      let _t1335 ← SudoRt.negI (1 : Int)
+      let _t1336 ← SudoRt.negI (1 : Int)
+      let _t1337 ← add_step steps (#[117, 110, 99, 111, 109, 112, 111, 115, 101] : Array Int) (#[67, 84, 82, 32, 73, 110, 118, 101, 114, 115, 101, 67, 111, 109, 112, 111, 115, 101] : Array Int) _t1333 stream plain _t1334 _t1335 i (0 : Int) _t1336 (0 : Int)
+      let steps := _t1337
       pure (SudoRt.Flow.cont (ρ := Array (Step)) steps)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Step)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Step)) r)
@@ -4352,8 +4281,8 @@ def decrypt (cipher : Array (Int)) (key : Array (Int)) : Except SudoRt.Trap (Arr
     let _fromV := (1 : Int)
     let _toV := (6 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1379 := (_fromV, built)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1379 fuel (fun σ =>
+    let _init1353 := (_fromV, built)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1353 fuel (fun σ =>
     let r := σ.1
     let built := σ.2
     do
@@ -4361,8 +4290,8 @@ def decrypt (cipher : Array (Int)) (key : Array (Int)) : Except SudoRt.Trap (Arr
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (r, built))
       else
         match ← ((do
-  let _t1369 ← passkey built
-  let built := _t1369
+  let _t1343 ← passkey built
+  let built := _t1343
   pure (SudoRt.Flow.cont (ρ := Array (Int)) built)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (r, _fs))
@@ -4374,26 +4303,26 @@ def decrypt (cipher : Array (Int)) (key : Array (Int)) : Except SudoRt.Trap (Arr
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let built := σ.2
     do
-      let _t1370 ← inv_final_round cipher built
-      let m := _t1370
+      let _t1344 ← inv_final_round cipher built
+      let m := _t1344
       let _fromV := (5 : Int)
       let _toV := (1 : Int)
       let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
-      let _init1378 := (_fromV, (built, m))
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1378 fuel (fun σ =>
+      let _init1352 := (_fromV, (built, m))
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1352 fuel (fun σ =>
     let r := σ.1
     let built := σ.2.1
-    let _sp1376 := σ.2.2
-    let m := _sp1376
+    let _sp1350 := σ.2.2
+    let m := _sp1350
     do
       if r < _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (r, (built, m)))
       else
         match ← ((do
-  let _t1372 ← passkey_inv built
-  let built := _t1372
-  let _t1373 ← inv_full_round m built
-  let m := _t1373
+  let _t1346 ← passkey_inv built
+  let built := _t1346
+  let _t1347 ← inv_full_round m built
+  let m := _t1347
   pure (SudoRt.Flow.cont (ρ := Array (Int)) (built, m))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (r, _fs))
@@ -4404,25 +4333,25 @@ def decrypt (cipher : Array (Int)) (key : Array (Int)) : Except SudoRt.Trap (Arr
               let i' ← SudoRt.subI r (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let built := σ.2.1
-    let _sp1377 := σ.2.2
-    let m := _sp1377
+    let _sp1351 := σ.2.2
+    let m := _sp1351
     do
-      let _t1374 ← passkey_inv built
-      let built := _t1374
-      let _t1375 ← inverse_compose m built
-      pure _t1375) (fun r => pure r))
+      let _t1348 ← passkey_inv built
+      let built := _t1348
+      let _t1349 ← inverse_compose m built
+      pure _t1349) (fun r => pure r))
       pure _out) (fun r => pure r))
     pure _out
 
 def ecb_encrypt (blocks : Array (Array (Int))) (key : Array (Int)) : Except SudoRt.Trap (Array (Array (Int))) :=
   do
     let out := (#[] : Array (Array (Int)))
-    let _t1388 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
+    let _t1362 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1388
+    let _toV := _t1362
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1389 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init1389 fuel (fun σ =>
+    let _init1363 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init1363 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -4430,13 +4359,13 @@ def ecb_encrypt (blocks : Array (Array (Int))) (key : Array (Int)) : Except Sudo
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, out))
       else
         match ← ((do
-  let _t1382 ← SudoRt.atL blocks i
-  let _t1383 ← encrypt _t1382 key
-  let _mb1384 := SudoRt.appendL out _t1383
-  let ⟨_nr1385, _⟩ := _mb1384
-  let out := _nr1385
-  let _hm1380 := ()
-  let _u1386 := _hm1380
+  let _t1356 ← SudoRt.atL blocks i
+  let _t1357 ← encrypt _t1356 key
+  let _mb1358 := SudoRt.appendL out _t1357
+  let ⟨_nr1359, _⟩ := _mb1358
+  let out := _nr1359
+  let _hm1354 := ()
+  let _u1360 := _hm1354
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -4454,12 +4383,12 @@ def ecb_encrypt (blocks : Array (Array (Int))) (key : Array (Int)) : Except Sudo
 def ecb_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) : Except SudoRt.Trap (Array (Array (Int))) :=
   do
     let out := (#[] : Array (Array (Int)))
-    let _t1398 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
+    let _t1372 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1398
+    let _toV := _t1372
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1399 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init1399 fuel (fun σ =>
+    let _init1373 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init1373 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -4467,13 +4396,13 @@ def ecb_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) : Except Sudo
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, out))
       else
         match ← ((do
-  let _t1392 ← SudoRt.atL blocks i
-  let _t1393 ← decrypt _t1392 key
-  let _mb1394 := SudoRt.appendL out _t1393
-  let ⟨_nr1395, _⟩ := _mb1394
-  let out := _nr1395
-  let _hm1390 := ()
-  let _u1396 := _hm1390
+  let _t1366 ← SudoRt.atL blocks i
+  let _t1367 ← decrypt _t1366 key
+  let _mb1368 := SudoRt.appendL out _t1367
+  let ⟨_nr1369, _⟩ := _mb1368
+  let out := _nr1369
+  let _hm1364 := ()
+  let _u1370 := _hm1364
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -4491,12 +4420,12 @@ def ecb_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) : Except Sudo
 def ctr_encrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Array (Int)) : Except SudoRt.Trap (Array (Array (Int))) :=
   do
     let out := (#[] : Array (Array (Int)))
-    let _t1410 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
+    let _t1384 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1410
+    let _toV := _t1384
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1411 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init1411 fuel (fun σ =>
+    let _init1385 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init1385 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -4504,16 +4433,16 @@ def ctr_encrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Arra
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, out))
       else
         match ← ((do
-  let _t1402 ← counter_deck nonce i
-  let _t1403 ← encrypt _t1402 key
-  let stream := _t1403
-  let _t1404 ← SudoRt.atL blocks i
-  let _t1405 ← compose _t1404 stream
-  let _mb1406 := SudoRt.appendL out _t1405
-  let ⟨_nr1407, _⟩ := _mb1406
-  let out := _nr1407
-  let _hm1400 := ()
-  let _u1408 := _hm1400
+  let _t1376 ← counter_deck nonce i
+  let _t1377 ← encrypt _t1376 key
+  let stream := _t1377
+  let _t1378 ← SudoRt.atL blocks i
+  let _t1379 ← compose _t1378 stream
+  let _mb1380 := SudoRt.appendL out _t1379
+  let ⟨_nr1381, _⟩ := _mb1380
+  let out := _nr1381
+  let _hm1374 := ()
+  let _u1382 := _hm1374
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -4531,12 +4460,12 @@ def ctr_encrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Arra
 def ctr_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Array (Int)) : Except SudoRt.Trap (Array (Array (Int))) :=
   do
     let out := (#[] : Array (Array (Int)))
-    let _t1422 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
+    let _t1396 ← SudoRt.subI (SudoRt.listLen blocks) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1422
+    let _toV := _t1396
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1423 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init1423 fuel (fun σ =>
+    let _init1397 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init1397 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -4544,16 +4473,16 @@ def ctr_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Arra
         pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, out))
       else
         match ← ((do
-  let _t1414 ← counter_deck nonce i
-  let _t1415 ← encrypt _t1414 key
-  let stream := _t1415
-  let _t1416 ← SudoRt.atL blocks i
-  let _t1417 ← inverse_compose _t1416 stream
-  let _mb1418 := SudoRt.appendL out _t1417
-  let ⟨_nr1419, _⟩ := _mb1418
-  let out := _nr1419
-  let _hm1412 := ()
-  let _u1420 := _hm1412
+  let _t1388 ← counter_deck nonce i
+  let _t1389 ← encrypt _t1388 key
+  let stream := _t1389
+  let _t1390 ← SudoRt.atL blocks i
+  let _t1391 ← inverse_compose _t1390 stream
+  let _mb1392 := SudoRt.appendL out _t1391
+  let ⟨_nr1393, _⟩ := _mb1392
+  let out := _nr1393
+  let _hm1386 := ()
+  let _u1394 := _hm1386
   pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
@@ -4571,12 +4500,12 @@ def ctr_decrypt (blocks : Array (Array (Int))) (key : Array (Int)) (nonce : Arra
 def sorted_copy (xs : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
     let out := xs
-    let _t1442 ← SudoRt.subI (SudoRt.listLen out) (1 : Int)
+    let _t1416 ← SudoRt.subI (SudoRt.listLen out) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1442
+    let _toV := _t1416
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1443 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1443 fuel (fun σ =>
+    let _init1417 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1417 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -4584,12 +4513,12 @@ def sorted_copy (xs : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
       else
         match ← ((do
-  let _t1439 ← SudoRt.subI (SudoRt.listLen out) (2 : Int)
+  let _t1413 ← SudoRt.subI (SudoRt.listLen out) (2 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t1439
+  let _toV := _t1413
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1440 := (_fromV, out)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1440 fuel (fun σ =>
+  let _init1414 := (_fromV, out)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1414 fuel (fun σ =>
     let j := σ.1
     let out := σ.2
     do
@@ -4597,22 +4526,22 @@ def sorted_copy (xs : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, out))
       else
         match ← ((do
-  let _t1426 ← SudoRt.atL out j
-  let _t1427 ← SudoRt.addI j (1 : Int)
-  let _t1428 ← SudoRt.atL out _t1427
-  if (decide (_t1426 > _t1428)) then
+  let _t1400 ← SudoRt.atL out j
+  let _t1401 ← SudoRt.addI j (1 : Int)
+  let _t1402 ← SudoRt.atL out _t1401
+  if (decide (_t1400 > _t1402)) then
     do
-      let _t1430 ← SudoRt.atL out j
-      let a := _t1430
-      let _ix1431 := j
-      let _t1432 ← SudoRt.addI j (1 : Int)
-      let _t1433 ← SudoRt.atL out _t1432
-      let _t1434 ← SudoRt.putL out _ix1431 _t1433
-      let out := _t1434
-      let _t1435 ← SudoRt.addI j (1 : Int)
-      let _ix1436 := _t1435
-      let _t1437 ← SudoRt.putL out _ix1436 a
-      let out := _t1437
+      let _t1404 ← SudoRt.atL out j
+      let a := _t1404
+      let _ix1405 := j
+      let _t1406 ← SudoRt.addI j (1 : Int)
+      let _t1407 ← SudoRt.atL out _t1406
+      let _t1408 ← SudoRt.putL out _ix1405 _t1407
+      let out := _t1408
+      let _t1409 ← SudoRt.addI j (1 : Int)
+      let _ix1410 := _t1409
+      let _t1411 ← SudoRt.putL out _ix1410 a
+      let out := _t1411
       pure (SudoRt.Flow.cont (ρ := Array (Int)) out)
   else
     do
@@ -4644,8 +4573,8 @@ def sorted_copy (xs : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
 
 def same_cards (a : Array (Int)) (b : Array (Int)) : Except SudoRt.Trap (Bool) :=
   do
-    let _t1444 ← sorted_copy a
-    let _t1445 ← sorted_copy b
-    pure (SudoRt.SEq.beq _t1444 _t1445)
+    let _t1418 ← sorted_copy a
+    let _t1419 ← sorted_copy b
+    pure (SudoRt.SEq.beq _t1418 _t1419)
 
 end Doubledeal

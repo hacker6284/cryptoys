@@ -68,7 +68,7 @@ theorem index_of_as_loop (deck : Array Int) (card : Int) :
         let _out ← (SudoRt.runLoopOn (ρ := Int) _fromV fuel
           (indexOfStep deck card _toV)
           (fun _σ => do
-            let _as ← SudoRt.sudoAssert false 221
+            let _as ← SudoRt.sudoAssert false 231
             pure (0 : Int))
           (fun r => pure r))
         pure _out) := by
@@ -81,7 +81,7 @@ theorem index_of_found (key : List Nat) (hk : Perm52 key) (j : Nat) (hj : j < 52
       (fuelRange (Int.ofNat i) (Int.ofNat 51))
       (indexOfStep (embed key) (Int.ofNat j) 51)
       (fun _σ => do
-        let _as ← SudoRt.sudoAssert false 221
+        let _as ← SudoRt.sudoAssert false 231
         pure (0 : Int))
       (fun r => pure r) =
       .ok (Int.ofNat (indexOf key j)) := by

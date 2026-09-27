@@ -98,14 +98,15 @@ v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). The Generated tr
 
 | File | Theorem / def | Status | Why | Stage-2 work |
 | --- | --- | --- | --- | --- |
-| `Link2/Compose.lean` | `compose_as_loop` (assert line) | fixed (mechanical) | sudo line shift, `sudoAssert false 219` → `221` | done |
-| `Link2/Mix.lean` | `overflowStep` / `overflow_as_loop` assert literal (l. 441, 488) | fixed (mechanical) | was the v8 line `143`; the emitted v9 `overflow_seat` asserts at line `145` | done (the mirror itself is still BROKEN, below) |
-| `Link2/SumLink.lean` | `sum_ranks_as_loop` (l. 324) | **BROKEN** (`rfl`) | the `colRankStep` mirror lacks `+ suit_of` | add the suit term to the mirror |
+| `Link2/Compose.lean` | `compose_as_loop` (assert line) | fixed (mechanical) | sudo line shifts: `sudoAssert false 219` → `221` (v9) → `231` (`column_weight` / `scan_row` helpers) | done |
+| `Link2/Mix.lean` | `overflowStep` / `overflow_as_loop` assert literal (l. 441, 488) | fixed (mechanical) | was the v8 line `143`; the emitted v9 `overflow_seat` asserts at line `145`, and at `155` after the helper extraction | done (the mirror itself is still BROKEN, below) |
+| `Link2/SumLink.lean` | `sum_ranks_as_loop` (l. 324) | **BROKEN** (`rfl`) | the `colRankStep` mirror adds `rank_of`; emitted `sum_ranks` now calls `Doubledeal.column_weight` (rank + suit) | mirror calls `column_weight`; one small `column_weight_refines` lemma (`cardRank + cardSuit`) |
 | `Link2/SumLink.lean` | `colRankStep`, `colRankStep_hit`, `colRank_pref`, `rank_loop`, `colsSummed`, `colsSummed_all`, `sumColStep_hit`, `col_loop`, `sum_ranks_refines` | STALE (only compile because they sit on top of the v8 mirror) | column weight is `cardRank` | re-thread with the column weight `rank + suit` |
-| `Link2/Mix.lean` | `scanColStep`, `scanCol_hit`, `scan_loop`, `scanRowN_spec`, `scanFound_encode`, `attempt_refines` | STALE | the inner scan is now `col = (start + k) mod 13` | rotated-scan versions |
+| `Link2/Mix.lean` | `scanColStep`, `scanCol_hit`, `scan_loop`, `scanRowN_spec`, `scanFound_encode`, `attempt_refines` | STALE | the inner scan is now the emitted helper `Doubledeal.scan_row occ row start` with `col = (start + k) mod 13` | one `scan_row_refines` (rotated scan) replaces the inlined-scan lemmas; `overflow_seat` then only loops over rows |
 | `Link2/Mix.lean` | `overflowStep` / `overflow_as_loop` (l. 396–446) | **BROKEN** | `overflow_seat` takes a third argument, `start` | new mirror plus loop lemma |
 | `Link2/Mix.lean` | `overflowStep_hit`, `overflow_fuel_some`, `overflow_seat_refines` (l. 448–537) | **BROKEN** | follow from the above | redo against the B3 `overflowSeat` |
 | `Link2/Mix.lean` | `mixStep` def, `placeN_step` (l. 843–943) | **BROKEN** (type mismatch) | the `overflow_seat occ t tc` call | new mirror |
+| `trace_*` (sudo) | not in Link 2 | n/a | `trace_mix` / `trace_inv_mix` also call `scan_row`; `scan` steps now carry the start column | none (trace is demo-only) |
 | `Link2/Mix.lean` | `mixStep_hit` (l. 1243), `mix_columns_as_loop` (l. 1391), `mix_columns_refines` | **BROKEN** | downstream | re-glue |
 | `Link2/Encrypt.lean`, `DoubleDeal/Link2.lean` | `full_round_refines`, `final_round_refines`, `encrypt_refines`, `mix_bound` | blocked (these build once SumLink and Mix are stubbed) | imports | re-glue, small |
 | `SumRanks.lean` / `Round.lean` | `sumRanks`, `invSumRanks_sumRanks`, `sumRanks_invSumRanks`; `Round` uses `sumRanks cardRank` | STALE | one weight for rows and columns | split into a row weight (`cardRank`) and a column weight (`cardRank + cardSuit`); the generic RT proofs should carry over |

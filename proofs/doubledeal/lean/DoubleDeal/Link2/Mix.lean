@@ -438,7 +438,7 @@ theorem overflow_as_loop (occ : Array (Array Int)) (t : Int) :
         let _out ← (SudoRt.runLoopOn (ρ := Int × Int × Int) (_fromV, t) fuel
           (overflowStep occ _toV)
           (fun σ => do
-            let _as ← SudoRt.sudoAssert false 145
+            let _as ← SudoRt.sudoAssert false 155
             pure ((0 : Int), (0 : Int), (0 : Int)))
           (fun r => pure r))
         pure _out) := by
@@ -485,7 +485,7 @@ theorem overflow_fuel_some (occ : Occ) (fuel t : Nat) (ht : t < 4) (hf : fuel �
     SudoRt.runLoopOn (Int.ofNat (4 - fuel), Int.ofNat t) fuel
       (overflowStep (embedGrid (occMarks occ)) 3)
       (fun _ => do
-        let _as ← SudoRt.sudoAssert false 145
+        let _as ← SudoRt.sudoAssert false 155
         pure ((0 : Int), (0 : Int), (0 : Int)))
       (fun x => pure x) =
       .ok (Int.ofNat r.val, Int.ofNat c.val, Int.ofNat t') := by

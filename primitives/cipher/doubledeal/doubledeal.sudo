@@ -73,6 +73,10 @@ func scoop_rm(g: List<List<int>>) -> List<int>
             out.append(g[r][c])
     return out
 
+// v9 (A2): a column's turn reads rank + suit; rows still read rank only.
+func column_weight(c: int) -> int
+    return rank_of(c) + suit_of(c)
+
 func sum_ranks(g: List<List<int>>) -> List<List<int>>
     for i = 0 to 3
         row = g[i]
@@ -86,7 +90,7 @@ func sum_ranks(g: List<List<int>>) -> List<List<int>>
             col.append(g[i][j])
         total = 0
         for i = 0 to 3
-            total = total + rank_of(col[i]) + suit_of(col[i])
+            total = total + column_weight(col[i])
         s = total mod 4
         fresh: List<int> = []
         for i = 0 to 3
@@ -104,7 +108,7 @@ func inv_sum_ranks(g: List<List<int>>) -> List<List<int>>
             col.append(g[i][j])
         total = 0
         for i = 0 to 3
-            total = total + rank_of(col[i]) + suit_of(col[i])
+            total = total + column_weight(col[i])
         s = total mod 4
         fresh: List<int> = []
         for i = 0 to 3
@@ -131,14 +135,20 @@ func inv_shift_rows(g: List<List<int>>) -> List<List<int>>
         g[i] = left_rotate(g[i], 0 - i)
     return g
 
+// v9 (B3): scan one marker row for its first free seat (0 in occ), starting at
+// column `start` and wrapping from column 12 back to column 0. -1 if the row is full.
+func scan_row(occ: List<List<int>>, row: int, start: int) -> int
+    found = -1
+    for k = 0 to 12
+        col = (start + k) mod 13
+        if (found < 0) and (occ[row][col] == 0)
+            found = col
+    return found
+
 func overflow_seat(occ: List<List<int>>, t: int, start: int) -> (int, int, int)
     for attempt = 0 to 3
         row = t
-        found = -1
-        for k = 0 to 12
-            col = (start + k) mod 13
-            if (found < 0) and (occ[row][col] == 0)
-                found = col
+        found = scan_row(occ, row, start)
         if found >= 0
             return (row, found, (t + 1) mod 4)
         t = (t + 1) mod 4
@@ -405,7 +415,7 @@ func trace_sum(g: List<List<int>>, steps: List<Step>, label: text) -> (List<List
             col.append(g[i][j])
         total = 0
         for i = 0 to 3
-            total = total + rank_of(col[i]) + suit_of(col[i])
+            total = total + column_weight(col[i])
         amount = total mod 4
         fresh: List<int> = []
         for i = 0 to 3
@@ -456,11 +466,8 @@ func trace_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, List
                 found = -1
                 for tries = 0 to 3
                     if found < 0
-                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, -1, 0, 0, card, 1)
-                        for k = 0 to 12
-                            col = (tc + k) mod 13
-                            if (found < 0) and (occ[scan][col] == 0)
-                                found = col
+                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, tc, 0, 0, card, 1)
+                        found = scan_row(occ, scan, tc)
                         if found >= 0
                             r = scan
                             c = found
@@ -539,7 +546,7 @@ func trace_inv_sum(g: List<List<int>>, steps: List<Step>, label: text) -> (List<
             col.append(g[i][j])
         total = 0
         for i = 0 to 3
-            total = total + rank_of(col[i]) + suit_of(col[i])
+            total = total + column_weight(col[i])
         s = total mod 4
         fresh: List<int> = []
         for i = 0 to 3
@@ -586,11 +593,8 @@ func trace_inv_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, 
                 found = -1
                 for tries = 0 to 3
                     if found < 0
-                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, -1, 0, 0, -1, 1)
-                        for k = 0 to 12
-                            col = (tc + k) mod 13
-                            if (found < 0) and (visited[scan][col] == 0)
-                                found = col
+                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, tc, 0, 0, -1, 1)
+                        found = scan_row(visited, scan, tc)
                         if found >= 0
                             r = scan
                             c = found
@@ -815,6 +819,47 @@ test "passkey inverse is a two-sided inverse"
     for r = 1 to 6
         built = passkey_inv(built)
     assert built == key
+
+test "sum ranks columns read suit"
+    deck: List<int> = []
+    for i = 0 to 51
+        deck.append(i)
+    g = sum_ranks(lay_rm(deck))
+    // Each row is one whole suit (rank total 91, a multiple of 13: no row turn).
+    // Each column holds four cards of one rank, so a rank-only column total (v8)
+    // is a multiple of 4 and would leave the grid alone. v9 adds the suits,
+    // 0 + 1 + 2 + 3 = 6, so every column turns down by 2.
+    for j = 0 to 12
+        assert g[0][j] == 26 + j
+        assert g[1][j] == 39 + j
+        assert g[2][j] == j
+        assert g[3][j] == 13 + j
+    assert column_weight(51) == 16
+    assert inv_sum_ranks(g) == lay_rm(deck)
+
+test "overflow scan starts at the blocked column"
+    occ: List<List<int>> = []
+    for r = 0 to 3
+        marks: List<int> = []
+        for c = 0 to 12
+            if (r == 1) and ((c == 2) or (c == 7))
+                marks.append(0)
+            else
+                marks.append(1)
+        occ.append(marks)
+    // Row 1 is free at columns 2 and 7. Blocked at column 5, v9 scans 5, 6, 7
+    // and takes 7; v8 scanned from column 0 and took 2.
+    assert scan_row(occ, 1, 5) == 7
+    assert scan_row(occ, 1, 8) == 2
+    assert scan_row(occ, 0, 5) == -1
+    r, c, t = overflow_seat(occ, 1, 5)
+    assert r == 1
+    assert c == 7
+    assert t == 2
+    r2, c2, t2 = overflow_seat(occ, 0, 5)
+    assert r2 == 1
+    assert c2 == 7
+    assert t2 == 2
 
 test "decrypt undoes encrypt"
     message = [0, 32, 38, 42, 13, 19, 17, 5, 41, 25, 48, 6, 31, 44, 3, 16, 7, 4, 34, 40, 18, 49, 14, 51, 20, 46, 28, 11, 10, 15, 45, 43, 2, 26, 22, 8, 37, 33, 12, 35, 24, 50, 39, 30, 21, 1, 27, 47, 36, 23, 29, 9]

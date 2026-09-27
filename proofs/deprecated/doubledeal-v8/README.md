@@ -1,6 +1,6 @@
 # DoubleDeal v8 — vulnerability proof (DEPRECATED algorithm)
 
-**Kind:** vulnerability proof (see [`proofs/README.md`](../../README.md) taxonomy). DoubleDeal v8 is deprecated and frozen at [`primitives/cipher/doubledeal/v8/`](../../../primitives/cipher/doubledeal/v8/). v9 is current ([`primitives/cipher/doubledeal/SPEC.md`](../../../primitives/cipher/doubledeal/SPEC.md)). Nothing here is a claim about v9, and nothing here is a security claim.
+**Kind:** vulnerability proof (see [`proofs/README.md`](../../README.md) taxonomy). DoubleDeal v8 is deprecated and frozen at [`primitives/cipher/doubledeal/v8/`](../../../primitives/cipher/doubledeal/v8/). v9 (deprecated, draft; no successor yet) is still the live spec ([`primitives/cipher/doubledeal/SPEC.md`](../../../primitives/cipher/doubledeal/SPEC.md)). Nothing here is a claim about v9, and nothing here is a security claim.
 
 **What is proved, and what is only measured:**
 

@@ -75,7 +75,7 @@ def main():
         x, y = r["swap"]; pS, pG = per[(x, y)]; k = int(r["target"][1:])
         pred = pS ** k * pG ** (k - 1) if r["target"][0] == "F" else (pS * pG) ** k
         rate = r["exact"] / r["n"]
-        print(f"{r['target']:5s}  {nm(x)}↔{nm(y)}  {rate:.3e} ({r['exact']}/{r['n']:.0e})  {pred:.3e}   {rate / pred:.2f}")
+        print(f"{r['target']:5s}  {nm(x)}↔{nm(y)}  {rate:.3e} ({r['exact']}/{r['n']:.2g})  {pred:.3e}   {rate / pred:.2f}")
     # 3. GridCycle detail for K♣↔Q♥
     print("\n## 3. GridCycle detail for K♣↔Q♥ (step after the earlier of the two cards)")
     print("K♣ = (suit 0, rank 13): its step (Δrow 0, Δcol 13≡0) always targets its own seat -> always overflows")

@@ -64,9 +64,11 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
   the three KNOWN_SORRY theorems above. Any axiom declared in the package fails,
   and so does a stale KNOWN_SORRY entry. It does not import the heavy library, but it fails if the `HEAVY_THEOREMS`
   registry and the theorems declared in `DoubleDealSecurityHeavy/` disagree.
-  Both security modes also fail if a module under `DoubleDealSecurity/` (or
-  `DoubleDealSecurityHeavy/`) is not imported by its library root, since neither
-  audit would see it.
+  `#audit_all` also prints every module under its root that Lean actually loaded,
+  and each mode fails if a file under its library directory (`DoubleDealSecurity/`
+  here, `DoubleDealSecurityHeavy/` in the heavy mode) was not loaded, since the
+  audit never saw it. Lean decides what is imported, so commented-out imports
+  cannot fool it. A private and a public theorem with the same user name also fail.
 
 CI (`proofs-heavy.yml`, job `doubledeal-security-heavy`) builds the heavy library
 and runs `../check_axioms.py security-heavy` (same rules, no KNOWN_SORRY; every

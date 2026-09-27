@@ -2,7 +2,8 @@
   `#audit_all Root`: print the axioms of EVERY theorem declared in a module under
   `Root` (private ones included), then `audited N`. Used by `Axioms.lean`
   (Root = DoubleDealSecurity) and `AxiomsHeavy.lean` (Root = DoubleDealSecurityHeavy);
-  parsed by `../check_axioms.py`.
+  then `loaded module M` for every module under `Root` in the environment.
+  Parsed by `../check_axioms.py`.
 -/
 import Lean
 
@@ -25,3 +26,7 @@ elab "#audit_all " root:ident : command => do
     logInfo m!"'{n}' depends on axioms: {axs.toList}"
     count := count + 1
   logInfo m!"audited {count}"
+  -- every module under `root` that this environment actually loaded; check_axioms.py
+  -- compares these with the files on disk (Lean decides what is imported, not a regex)
+  for m in env.header.moduleNames do
+    if m.getRoot == root then logInfo m!"loaded module {m}"

@@ -90,18 +90,15 @@ def heavy_registry_problems():
     if not src:
         bad.append("no theorems found in DoubleDealSecurityHeavy/ (heavy target missing?)")
     return bad
-def unimported_modules():
-    """DoubleDealSecurity.* modules the root does not import: neither audit would see them.
-    Same for DoubleDealSecurityHeavy.* modules and the heavy root."""
+
+
+def unloaded_modules(lib, out):
+    """Module files under security/<lib>/ that the audit's environment did not load."""
     sec = ROOT / "security"
-    bad = []
-    for lib in ("DoubleDealSecurity", "DoubleDealSecurityHeavy"):
-        imported = set(re.findall(r"^import\s+(\S+)", (sec / f"{lib}.lean").read_text(), flags=re.M))
-        mods = {".".join(p.relative_to(sec).with_suffix("").parts)
-                for p in (sec / lib).rglob("*.lean")}
-        bad += [f"module {m} is not imported by {lib}.lean (neither audit sees it)"
-                for m in sorted(mods - imported)]
-    return bad
+    on_disk = {".".join(p.relative_to(sec).with_suffix("").parts) for p in (sec / lib).rglob("*.lean")}
+    loaded = set(re.findall(r"\bloaded module (\S+)", out))
+    return [f"module {m} is not imported by {lib}.lean (the audit never loaded it)"
+            for m in sorted(on_disk - loaded)]
 
 
 REPORT = re.compile(r"'(\S+?)' depends on axioms: \[([^\]]*)\]")
@@ -122,20 +119,26 @@ def main(argv) -> int:
         print(f"check_axioms: {pkg}: {axioms} did not elaborate cleanly", file=sys.stderr)
         return 1
     seen = {}
-    for name, axs in REPORT.findall(out):
-        # audit private theorems under their user-facing name, in every mode
-        name = re.sub(r"^_private\.[\w.']+?\.0\.", "", name)
-        seen[name] = {a.strip() for a in axs.split(",") if a.strip()}
-    for name in re.findall(r"'(\S+?)' does not depend on any axioms", out):
-        seen[name] = set()
+    reports = 0
+    bad = []
+    found = [(n, {a.strip() for a in axs.split(",") if a.strip()}) for n, axs in REPORT.findall(out)]
+    found += [(n, set()) for n in re.findall(r"'(\S+?)' does not depend on any axioms", out)]
+    for name, axs in found:
+        # audit private theorems under their user-facing name, in every mode;
+        # a private and a public theorem with the same user name must not merge
+        user = re.sub(r"^_private\.[\w.']+?\.0\.", "", name)
+        if user in seen:
+            bad.append(f"duplicate audited name {user} (private/public collision)")
+        seen[user] = axs
+        reports += 1
     if cfg["mode"] == "all":
         m = re.findall(r"\baudited (\d+)\b", out)
         if len(m) != 1:
             print(out, file=sys.stderr)
             print("check_axioms: missing or repeated 'audited N' line", file=sys.stderr)
             return 1
-        if int(m[0]) != len(seen):
-            print(f"check_axioms: Lean audited {m[0]} theorems but {len(seen)} reports were parsed",
+        if int(m[0]) != reports:
+            print(f"check_axioms: Lean audited {m[0]} theorems but {reports} reports were parsed",
                   file=sys.stderr)
             return 1
     if cfg["mode"] == "list":
@@ -144,11 +147,11 @@ def main(argv) -> int:
     else:
         expected = sorted(seen)
     known_sorry = cfg["known_sorry"]
-    bad = []
     if len(expected) < cfg["min"]:
         bad.append(f"only {len(expected)} theorems audited (expected at least {cfg['min']})")
     if pkg.startswith("security"):
-        bad += heavy_registry_problems() + unimported_modules()
+        bad += heavy_registry_problems() + unloaded_modules(
+            "DoubleDealSecurityHeavy" if pkg == "security-heavy" else "DoubleDealSecurity", out)
     for name in sorted(cfg.get("required", set()) - set(seen)):
         bad.append(f"required theorem {name} was not reported by the audit")
     for name in sorted(known_sorry - set(seen)):

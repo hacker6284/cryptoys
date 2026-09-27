@@ -45,6 +45,7 @@ import MegaDreifach.Link2.MagSub
 import MegaDreifach.Link2.MagAdd
 import MegaDreifach.Link2.FromBePad
 import MegaDreifach.Link2.Peel51
+import MegaDreifach.Link2.PhiChunk
 
 namespace MegaDreifach.Link2
 
@@ -235,7 +236,13 @@ namespace MegaDreifach.Link2
   below `10^81`. Not a two-limb digit. Not `phi_chunk`. Not `phi_inv`.
   Not `v_Hash`.
 
-  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open.
+  CLOSED: `phi_chunk_refines`, `phi_chunk_refines_array`.
+  Domain `PhiChunkWf` / `WellFormedPhiChunk`: length 28, every byte `≤ 255`.
+  Generated `phi_chunk` equals `phiUnrank (fromBE bs)`, walking the outer
+  `chain_loop` from `0` to `51` at `phiState rank`. The inner erase step is
+  `phiErase_breaks`. Not `phi_inv`. Not `v_Hash`.
+
+  OPEN: full `v_Hash` refinement. `phi_inv` is still open.
   Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
   `range_list_refines` in `EvenRank.lean`.
 -/

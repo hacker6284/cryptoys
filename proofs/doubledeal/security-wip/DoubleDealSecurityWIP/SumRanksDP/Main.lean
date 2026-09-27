@@ -525,6 +525,122 @@ theorem colConds_H_card (τ : Relabel) :
       (univ.filter fun π : Equiv.Perm (Fin 52) => ColCondsTraj τ (deckGrid π)).card := by
   sorry
 
+/-! ### Helpers for the column chain -/
+
+/-- GF(4) labels as the additive group `ZMod 2 × ZMod 2`. -/
+def toZ (a : Fin 4) : ZMod 2 × ZMod 2 := ((a.val % 2 : ℕ), (a.val / 2 : ℕ))
+
+theorem toZ_x4 : ∀ a b : Fin 4, toZ (x4 a b) = toZ a + toZ b := by decide
+theorem toZ_inj : ∀ a b : Fin 4, toZ a = toZ b → a = b := by decide
+theorem toZ_zero : toZ 0 = 0 := by decide
+
+theorem toZ_sLab (e : Fin 4 → Fin 4) : toZ (sLab e) = ∑ i, toZ (e i) := by
+  simp only [sLab, toZ_x4, Fin.sum_univ_four]
+
+/-- `Σ` of a column does not depend on the order. -/
+theorem sLab_comp_perm (e : Fin 4 → Fin 4) (b : Equiv.Perm (Fin 4)) : sLab (e ∘ b) = sLab e :=
+  toZ_inj _ _ (by rw [toZ_sLab, toZ_sLab]; exact Equiv.sum_comp b (fun i => toZ (e i)))
+
+theorem colSuits_val (x : Fin 4 → Fin 52) :
+    colSuits (fun r => (x r).val) = (sLab fun r => lab (x r)).val := by
+  have hlab : ∀ c : Fin 52, suitLabel c.val = (lab c).val := fun _ => rfl
+  simp only [colSuits, hlab, gfAdd_eq_x4, sLab]
+
+theorem colSuits_comp_perm (x : Fin 4 → Fin 52) (b : Equiv.Perm (Fin 4)) :
+    colSuits (fun r => (x (b r)).val) = colSuits (fun r => (x r).val) := by
+  rw [colSuits_val, colSuits_val]
+  exact congrArg Fin.val (sLab_comp_perm (fun r => lab (x r)) b)
+
+theorem colStepOf_of_ne : ∀ k : Fin 13, k ≠ 0 → colStepOf k = k.val := by decide
+theorem prevCol_val_of_ne : ∀ k : Fin 13, k ≠ 0 → (prevCol k).val = k.val - 1 := by decide
+theorem prevCol_succ : ∀ k : Fin 13, prevCol (k + 1) = k := by decide
+theorem prevCol_eq_sub_one : ∀ j : Fin 13, prevCol j = j - 1 := by decide
+theorem colStep_read_iff : ∀ k : Fin 13, colStepOf k ≤ colStepOf (k + 1) - 1 ↔ k ≠ 0 := by decide
+theorem colStepOf_le : ∀ c : Fin 13, colStepOf c ≤ 13 := by decide
+theorem colStep_self : ∀ c : Fin 13, ¬ colStepOf c ≤ colStepOf c - 1 := by decide
+
+theorem column_colRotate_zero (g : Grid Nat) (A : Fin 13 → Nat) (k : Fin 13) (h : A k = 0) :
+    column (colRotate g A) k = column g k := by
+  funext r
+  simp only [column, colRotate_apply, h, Nat.zero_mod, Nat.sub_zero]
+  congr 1; apply Fin.ext; simp only; omega
+
+/-- The amount column `k` (`1 ≤ k`) turns by depends only on the columns
+    `0, …, k-1` and on `Σ` of column `k`. -/
+theorem colAmt_congr (g g' : Grid Nat) : ∀ (m : ℕ) (k : Fin 13), k.val = m → 1 ≤ m →
+    (∀ r (c : Fin 13), c.val < m → g r c = g' r c) →
+    colSuits (column g k) = colSuits (column g' k) →
+    colAmt colTurnV10 g k = colAmt colTurnV10 g' k := by
+  intro m
+  induction m with
+  | zero => intro k _ h; omega
+  | succ m ih =>
+    intro k hk _ hcols hsuits
+    have hk0 : k ≠ 0 := by intro e; rw [e] at hk; simp at hk
+    have hstep := colStepOf_of_ne k hk0
+    have hprev := prevCol_val_of_ne k hk0
+    unfold colAmt
+    rw [colsDone_eq_partial _ g _ (by omega), colsDone_eq_partial _ g' _ (by omega)]
+    have hownA : ∀ G : Grid Nat,
+        column (colRotate G fun c => if colStepOf c ≤ colStepOf k - 1 then colAmt colTurnV10 G c
+          else 0) k = column G k := fun G =>
+      column_colRotate_zero _ _ _ (by rw [if_neg (colStep_self k)])
+    rw [hownA g, hownA g']
+    have hamt : (if colStepOf (prevCol k) ≤ colStepOf k - 1 then colAmt colTurnV10 g (prevCol k)
+        else 0) = (if colStepOf (prevCol k) ≤ colStepOf k - 1 then
+          colAmt colTurnV10 g' (prevCol k) else 0) := by
+      by_cases hp0 : prevCol k = 0
+      · have h13 : ¬ colStepOf (prevCol k) ≤ colStepOf k - 1 := by
+          rw [hp0, hstep]; have := k.isLt; simp only [colStepOf]; simp; omega
+        rw [if_neg h13, if_neg h13]
+      · have hpv : (prevCol k).val ≠ 0 := fun e => hp0 (Fin.ext e)
+        split_ifs
+        · exact ih (prevCol k) (by omega) (by omega)
+            (fun r c hc => hcols r c (by omega))
+            (congrArg colSuits (funext fun r => hcols r _ (by omega)))
+        · rfl
+    have hcol : column (colRotate g fun c => if colStepOf c ≤ colStepOf k - 1 then
+          colAmt colTurnV10 g c else 0) (prevCol k) =
+        column (colRotate g' fun c => if colStepOf c ≤ colStepOf k - 1 then
+          colAmt colTurnV10 g' c else 0) (prevCol k) := by
+      funext r
+      simp only [column, colRotate_apply]
+      rw [hamt]
+      exact hcols _ _ (by omega)
+    simp only [colTurnV10, hsuits, hcol]
+
+/-- Column `k` read with rotation `s` (`colRotate_apply`). -/
+def colRot (y : Fin 4 → Fin 52) (s : ℕ) : Fin 4 → Fin 52 :=
+  fun r => y ⟨(r.val + (4 - s % 4)) % 4, Nat.mod_lt _ (by decide)⟩
+
+/-- The rotation as a permutation of the 4 seats. -/
+def shiftPerm (s : ℕ) : Equiv.Perm (Fin 4) :=
+  Equiv.addRight ⟨(4 - s % 4) % 4, Nat.mod_lt _ (by decide)⟩
+
+theorem colRot_comp (x : Fin 4 → Fin 52) (a : Equiv.Perm (Fin 4)) (s : ℕ) :
+    colRot (x ∘ a) s = x ∘ (a * shiftPerm s) := by
+  funext r
+  simp only [colRot, Function.comp, Equiv.Perm.mul_apply, shiftPerm, Equiv.coe_addRight]
+  congr 2
+  apply Fin.ext
+  simp only [Fin.val_add]
+  omega
+
+theorem colRot_zero (y : Fin 4 → Fin 52) : colRot y 0 = y := by
+  funext r; simp only [colRot]; congr 1; apply Fin.ext; simp only; omega
+
+theorem column_colRotate_deck (π : Equiv.Perm (Fin 52)) (A : Fin 13 → ℕ) (k : Fin 13) :
+    column (colRotate (deckGrid π) A) k = fun r => (colRot (colOf π k) (A k) r).val := by
+  funext r; simp only [column, colRotate_apply, deckGrid_apply, colRot, colOf]
+
+theorem card_filter_mul_right (P : Equiv.Perm (Fin 4) → Prop) [DecidablePred P]
+    (ρ : Equiv.Perm (Fin 4)) :
+    (univ.filter fun a => P (a * ρ)).card = (univ.filter P).card := by
+  have : (univ.filter fun a => P (a * ρ)) = (univ.filter P).map (Equiv.mulRight ρ⁻¹).toEmbedding := by
+    ext a
+    simp [Finset.mem_map_equiv]
+  rw [this, card_map]
+
 /-- **Lemma 5 (column chain)** (PROOF.md §4): the decks satisfying the 13
     column conditions number at most `Σ_π Π_j φ(col j−1, col j)` (the paper
     proves equality). Same nesting as `rowChain_le`, over columns 0, 1, …, 12;
@@ -533,7 +649,107 @@ theorem colConds_H_card (τ : Relabel) :
 theorem colChain_le (τ : Relabel) :
     ((univ.filter fun π : Equiv.Perm (Fin 52) => ColCondsTraj τ (deckGrid π)).card : ℚ) ≤
       ∑ π : Equiv.Perm (Fin 52), ∏ j, phi τ (colOf π (prevCol j)) (colOf π j) := by
-  sorry
+  classical
+  let sAmt : Equiv.Perm (Fin 52) → (Fin 13 → Equiv.Perm (Fin 4)) → Fin 13 → ℕ := fun π σ k =>
+    if k = 0 then 0 else colAmt colTurnV10 (deckGrid (π * colShuf σ)) k
+  let Q : Equiv.Perm (Fin 52) → Fin 13 → (Fin 13 → Equiv.Perm (Fin 4)) → Prop := fun π k σ =>
+    vLab (fun r => eps τ (colRot (colOf π k ∘ σ k) (sAmt π σ k) r)) =
+      sLab (fun r => eps τ (colOf π (k + 1) r))
+  let Nc : Equiv.Perm (Fin 52) → Fin 13 → ℕ := fun π k =>
+    (univ.filter fun a : Equiv.Perm (Fin 4) =>
+      vLab (fun r => eps τ (colOf π k (a r))) = sLab (fun r => eps τ (colOf π (k + 1) r))).card
+  have hNc : ∀ π k, (Nc π k : ℚ) = 24 * phi τ (colOf π k) (colOf π (k + 1)) := by
+    intro π k; simp only [Nc, phi]; field_simp
+  have hcolumn : ∀ π σ (k : Fin 13),
+      column (deckGrid (π * colShuf σ)) k = fun r => (colOf π k (σ k r)).val := by
+    intro π σ k; funext r
+    simp only [column, deckGrid_apply, Equiv.Perm.mul_apply, colShuf_cmFlat, colOf]
+  have hsAmt : ∀ π σ σ' (k : Fin 13), (∀ i : Fin 13, i < k → σ i = σ' i) →
+      sAmt π σ k = sAmt π σ' k := by
+    intro π σ σ' k h
+    simp only [sAmt]
+    split_ifs with hk
+    · rfl
+    · have hk1 : 1 ≤ k.val := by
+        rcases Nat.eq_zero_or_pos k.val with e | e
+        · exact absurd (Fin.ext e) hk
+        · exact e
+      apply colAmt_congr _ _ k.val k rfl hk1
+      · intro r c hc
+        simp only [deckGrid_apply, Equiv.Perm.mul_apply, colShuf_cmFlat, h c (Fin.lt_def.2 hc)]
+      · rw [hcolumn, hcolumn, colSuits_comp_perm (colOf π k) (σ k),
+          colSuits_comp_perm (colOf π k) (σ' k)]
+  have hper : ∀ π, (univ.filter fun σ : Fin 13 → Equiv.Perm (Fin 4) =>
+      ∀ k, Q π k σ).card ≤ ∏ k, Nc π k := by
+    intro π
+    refine nested_count 13 (Q π) (Nc π) ?_ ?_
+    · intro k σ σ' h
+      have h1 : sAmt π σ k = sAmt π σ' k := hsAmt π σ σ' k fun i hi => h i hi.le
+      simp only [Q, h1, h k le_rfl]
+    · intro k σ
+      set s := sAmt π σ k
+      have hs : ∀ a, sAmt π (Function.update σ k a) k = s := fun a =>
+        hsAmt π _ _ k fun i hi => Function.update_noteq (ne_of_lt hi) _ _
+      have hQ : ∀ a, Q π k (Function.update σ k a) ↔
+          (fun b : Equiv.Perm (Fin 4) => vLab (fun r => eps τ (colOf π k (b r))) =
+            sLab (fun r => eps τ (colOf π (k + 1) r))) (a * shiftPerm s) := by
+        intro a
+        simp only [Q, hs a, Function.update_same, colRot_comp]
+        rfl
+      simp only [hQ]
+      exact (card_filter_mul_right (fun b : Equiv.Perm (Fin 4) =>
+        vLab (fun r => eps τ (colOf π k (b r))) = sLab (fun r => eps τ (colOf π (k + 1) r)))
+        (shiftPerm s)).le
+  have hlink : ∀ π σ, ColCondsTraj τ (deckGrid (π * colShuf σ)) → ∀ k, Q π k σ := by
+    intro π σ h k
+    have hc := h (k + 1)
+    rw [prevCol_succ, colsDone_eq_partial _ _ _ (by have := colStepOf_le (k + 1); omega)] at hc
+    have hrel : ∀ (G : Grid Nat) (j : Fin 13), column (relG τ G) j = fun r => τ.app (column G j r) :=
+      fun _ _ => rfl
+    simp only [hrel, column_colRotate_deck] at hc
+    have hc' := (colTurn_rel_iff τ _ _).1 hc
+    simp only [if_neg (colStep_self (k + 1)), colRot_zero, colOf_mul_colShuf] at hc'
+    have hA : (if colStepOf k ≤ colStepOf (k + 1) - 1 then
+        colAmt colTurnV10 (deckGrid (π * colShuf σ)) k else 0) = sAmt π σ k := by
+      simp only [sAmt]
+      by_cases hk : k = 0
+      · rw [if_pos hk, if_neg (by rw [colStep_read_iff]; exact not_not.2 hk)]
+      · rw [if_neg hk, if_pos ((colStep_read_iff k).2 hk)]
+    rw [hA] at hc'
+    have hsl := sLab_comp_perm (fun r => eps τ (colOf π (k + 1) r)) (σ (k + 1))
+    simp only [Q]
+    rw [← hsl]
+    exact hc'
+  -- average over column orders
+  have havg := sum_mul_card_shuf colShuf
+    (fun π => if ColCondsTraj τ (deckGrid π) then (1 : ℚ) else 0)
+  have hcardS : (Fintype.card (Fin 13 → Equiv.Perm (Fin 4)) : ℚ) = (24 : ℚ) ^ 13 := by
+    rw [Fintype.card_fun, Fintype.card_perm, Fintype.card_fin, Fintype.card_fin]; rfl
+  rw [hcardS] at havg
+  have hrhs : ∀ π, (∑ σ : Fin 13 → Equiv.Perm (Fin 4),
+      if ColCondsTraj τ (deckGrid (π * colShuf σ)) then (1 : ℚ) else 0) ≤
+      (24 : ℚ) ^ 13 * ∏ j, phi τ (colOf π (prevCol j)) (colOf π j) := by
+    intro π
+    rw [sum_boole]
+    have h1 : (univ.filter fun σ : Fin 13 → Equiv.Perm (Fin 4) =>
+        ColCondsTraj τ (deckGrid (π * colShuf σ))).card ≤ ∏ k, Nc π k :=
+      (card_le_card fun σ hσ => by
+        simp only [mem_filter, mem_univ, true_and] at hσ ⊢
+        exact hlink π σ hσ).trans (hper π)
+    have hq : ((univ.filter fun σ : Fin 13 → Equiv.Perm (Fin 4) =>
+        ColCondsTraj τ (deckGrid (π * colShuf σ))).card : ℚ) ≤ ∏ k, (Nc π k : ℚ) := by
+      exact_mod_cast h1
+    simp only [hNc, prod_mul_distrib, prod_const, card_univ, Fintype.card_fin] at hq
+    have hre : ∏ k : Fin 13, phi τ (colOf π k) (colOf π (k + 1)) =
+        ∏ j : Fin 13, phi τ (colOf π (prevCol j)) (colOf π j) :=
+      Fintype.prod_equiv (Equiv.addRight 1) _ _ (fun k => by simp [prevCol_succ])
+    rw [hre] at hq
+    exact hq
+  have hf : (0 : ℚ) < (24 : ℚ) ^ 13 := by positivity
+  rw [← sum_boole]
+  refine le_of_mul_le_mul_left ?_ hf
+  rw [havg, mul_sum]
+  exact sum_le_sum fun π _ => hrhs π
 
 /-- The `ε`-class of `x`. -/
 def ecls (τ : Relabel) (x : Fin 4) : Finset (Fin 52) := univ.filter fun c => eps τ c = x

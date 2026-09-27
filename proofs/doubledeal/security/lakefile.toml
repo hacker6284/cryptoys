@@ -21,3 +21,12 @@ name = "DoubleDealSecurity"
 # audited by the separate `doubledeal-security-heavy` job (proofs-heavy.yml).
 [[lean_lib]]
 name = "DoubleDealSecurityHeavy"
+
+# Work in progress (NOT a default target, NOT built by CI): the counting proof
+# that non-symmetry relabellings survive v10 SumRanks on at most 52!/64 decks.
+# Sources live outside this package directory (../security-wip) so that
+# checks/scan_sorry.py and Audit.lean are unaffected. Build explicitly with
+# `lake build DoubleDealSecurityWIP`.
+[[lean_lib]]
+name = "DoubleDealSecurityWIP"
+srcDir = "../security-wip"

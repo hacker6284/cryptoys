@@ -282,13 +282,13 @@ export function createDoubleDealSession({
                 math: step.flag === 1
                     ? `${cardName(step.card)} overflowed into seat (${step.row + 1}, ${step.col + 1}) via the CHaSeD marker scan (not the suit/rank step).`
                     : opening
-                        ? `${cardName(step.card)} is placed on the start seat (2, 0) — no step yet.`
+                        ? `${cardName(step.card)} is placed on the start seat (3, 1) — no step yet.`
                         : `${cardName(step.card)} steps suit ${Math.floor(step.card / 13)} / rank ${(step.card % 13) + 1} to seat (${step.row + 1}, ${step.col + 1}).`,
                 why: step.flag === 1
                     ? OVERFLOW_WHY
                     : opening
-                        ? "The first card uses start seat (2, 0). Suit/rank stepping starts from the second card."
-                        : "GridCycle walks from the Ace-of-Spades home seat (2, 0). Suit is the row step; rank is the column step.",
+                        ? "The first card uses start seat (3, 1). Suit/rank stepping starts from the second card."
+                        : "GridCycle walks from the Ace-of-Spades home seat (3, 1), row 3 being the ♠ row. Suit is the row step; rank is the column step.",
                 spec: specFor(step),
             };
         }
@@ -296,7 +296,7 @@ export function createDoubleDealSession({
             return {
                 kicker,
                 title: analogue(step),
-                math: "Start seat (2, 0) — Ace-of-Spades home, positional.",
+                math: "Start seat (3, 1) — Ace-of-Spades home (row 3 is the ♠ row), positional.",
                 why: "The walk begins at that seat, not by finding the Ace of Spades card.",
                 spec: specFor(step),
             };
@@ -363,7 +363,7 @@ export function createDoubleDealSession({
             return {
                 kicker,
                 title: step.label,
-                math: step.kind === "deal" ? "Deal column-major: down column 0, then 1, …" : "Deal row-major: across row 0, then 1, …",
+                math: step.kind === "deal" ? "Deal column-major: down column 1, then 2, …" : "Deal row-major: across row 1, then 2, …",
                 why: finalNote(step, "Column-major is the SumRanks table. Row-major is GridCycle inverse entry."),
                 spec: specFor(step),
             };

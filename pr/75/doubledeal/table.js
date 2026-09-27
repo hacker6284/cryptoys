@@ -710,17 +710,8 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         return ranks;
     }
 
-    function colRanks(col) {
-        const ranks = [];
-        for (let r = 0; r < 4; r++) {
-            const mesh = grid[r][col];
-            if (!mesh) continue;
-            ranks.push((message.indexOf(mesh) % 13) + 1);
-        }
-        return ranks;
-    }
-
-    // v9 SumRanks columns read rank + suit (♣0 ♥1 ♠2 ♦3). One {rank, suit} per seated card, top to bottom.
+    // A SumRanks column turns by the sum of its cards' rank + suit (♣0 ♥1 ♠2 ♦3).
+    // One {rank, suit} per seated card, top to bottom.
     function colTerms(col) {
         const terms = [];
         for (let r = 0; r < 4; r++) {
@@ -897,7 +888,6 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         highlightCard,
         clearHighlights,
         rowRanks,
-        colRanks,
         colTerms,
         tablePoints,
         teachPoints,

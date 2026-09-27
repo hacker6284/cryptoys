@@ -282,91 +282,100 @@ theorem occCount_set_free (occ : Occ) (p : Fin 4 × Fin 13)
   exact sum_incr_at (countCols occ) p.1 fins4 nodup_fins4 (mem_fins4 p.1)
 
 
-/-! ## Overflow scan -/
+/-! ## Overflow scan
 
-def scanRowN (occ : Occ) (row : Fin 4) : Nat → Nat → Option (Fin 13)
+The scan of a marker row starts at column `start` (the blocked target's
+column) and wraps from 12 back to 0 (SPEC §3.5; sudo `scan_row`).
+-/
+
+def scanRowN (occ : Occ) (row : Fin 4) (start : Nat) : Nat → Nat → Option (Fin 13)
   | 0, _ => none
-  | fuel + 1, col =>
-      if h : col < 13 then
-        let c : Fin 13 := ⟨col, h⟩
-        if occGet occ row c then scanRowN occ row fuel (col + 1) else some c
-      else none
+  | fuel + 1, k =>
+      let c : Fin 13 := ⟨(start + k) % 13, Nat.mod_lt _ (by decide)⟩
+      if occGet occ row c then scanRowN occ row start fuel (k + 1) else some c
 
-def scanRow (occ : Occ) (row : Fin 4) : Option (Fin 13) :=
-  scanRowN occ row 13 0
+def scanRow (occ : Occ) (row : Fin 4) (start : Nat) : Option (Fin 13) :=
+  scanRowN occ row start 13 0
 
-theorem scanRowN_some_free (occ : Occ) (row : Fin 4) :
-    ∀ (fuel col : Nat) (c : Fin 13),
-      scanRowN occ row fuel col = some c → occGet occ row c = false
-  | 0, col, c, h => by cases h
-  | fuel + 1, col, c, h => by
+theorem scanRowN_some_free (occ : Occ) (row : Fin 4) (start : Nat) :
+    ∀ (fuel k : Nat) (c : Fin 13),
+      scanRowN occ row start fuel k = some c → occGet occ row c = false
+  | 0, k, c, h => by cases h
+  | fuel + 1, k, c, h => by
       simp only [scanRowN] at h
       split at h
-      · next hcol =>
-        split at h
-        · next => exact scanRowN_some_free occ row fuel (col + 1) c h
-        · next hne =>
-            injection h with heq; cases heq
-            exact eq_false_of_ne_true hne
-      · next => cases h
+      · next => exact scanRowN_some_free occ row start fuel (k + 1) c h
+      · next hne =>
+          injection h with heq; cases heq
+          exact eq_false_of_ne_true hne
 
-theorem scanRowN_none_occupied (occ : Occ) (row : Fin 4) :
-    ∀ (fuel col : Nat), scanRowN occ row fuel col = none →
-      ∀ c : Fin 13, col ≤ c.val → c.val < col + fuel → occGet occ row c = true
-  | 0, col, _, c, hc1, hc2 => by omega
-  | fuel + 1, col, hnone, c, hc1, hc2 => by
+theorem scanRowN_none_occupied (occ : Occ) (row : Fin 4) (start : Nat) :
+    ∀ (fuel k : Nat), scanRowN occ row start fuel k = none →
+      ∀ j : Nat, k ≤ j → j < k + fuel →
+        occGet occ row ⟨(start + j) % 13, Nat.mod_lt _ (by decide)⟩ = true
+  | 0, k, _, j, hj1, hj2 => by omega
+  | fuel + 1, k, hnone, j, hj1, hj2 => by
       simp only [scanRowN] at hnone
       split at hnone
-      · next hcol =>
-        split at hnone
-        · next hocc =>
-          have ih := scanRowN_none_occupied occ row fuel (col + 1) hnone
-          by_cases heq : c.val = col
-          · have : c = ⟨col, hcol⟩ := Fin.ext heq
-            simpa [this] using hocc
-          · exact ih c (by omega) (by omega)
-        · next => cases hnone
-      · next => omega
+      · next hocc =>
+        have ih := scanRowN_none_occupied occ row start fuel (k + 1) hnone
+        by_cases heq : j = k
+        · subst heq; exact hocc
+        · exact ih j (by omega) (by omega)
+      · next => cases hnone
 
-theorem scanRow_none_full (occ : Occ) (row : Fin 4) (h : scanRow occ row = none) :
+/-- Every column is hit by some offset `k < 13` from `start`. -/
+theorem mod13_cover (start : Nat) (c : Fin 13) :
+    ∃ k, k < 13 ∧ (start + k) % 13 = c.val := by
+  have hc := c.isLt
+  refine ⟨(c.val + 13 - start % 13) % 13, Nat.mod_lt _ (by decide), ?_⟩
+  omega
+
+theorem scanRow_none_full (occ : Occ) (row : Fin 4) (start : Nat)
+    (h : scanRow occ row start = none) :
     ∀ c : Fin 13, occGet occ row c = true := by
   intro c
-  exact scanRowN_none_occupied occ row 13 0 h c (by omega) (by have := c.isLt; omega)
+  obtain ⟨k, hk, hkc⟩ := mod13_cover start c
+  have := scanRowN_none_occupied occ row start 13 0 h k (by omega) (by omega)
+  have hfin : (⟨(start + k) % 13, Nat.mod_lt _ (by decide)⟩ : Fin 13) = c := Fin.ext hkc
+  rwa [hfin] at this
 
-theorem scanRow_some_free (occ : Occ) (row : Fin 4) (c : Fin 13)
-    (h : scanRow occ row = some c) : occGet occ row c = false :=
-  scanRowN_some_free occ row 13 0 c h
+theorem scanRow_some_free (occ : Occ) (row : Fin 4) (start : Nat) (c : Fin 13)
+    (h : scanRow occ row start = some c) : occGet occ row c = false :=
+  scanRowN_some_free occ row start 13 0 c h
 
-def overflowN (occ : Occ) : Nat → Nat → Option ((Fin 4 × Fin 13) × Nat)
+def overflowN (occ : Occ) (start : Nat) : Nat → Nat → Option ((Fin 4 × Fin 13) × Nat)
   | 0, _ => none
   | fuel + 1, t =>
       let row : Fin 4 := ⟨t % 4, Nat.mod_lt _ (by decide)⟩
-      match scanRow occ row with
+      match scanRow occ row start with
       | some c => some ((row, c), (t + 1) % 4)
-      | none => overflowN occ fuel ((t + 1) % 4)
+      | none => overflowN occ start fuel ((t + 1) % 4)
 
-def overflowSeat (occ : Occ) (t : Nat) : Option ((Fin 4 × Fin 13) × Nat) :=
-  overflowN occ 4 t
+/-- Overflow seat: marker rows `t, t+1, …` (mod 4), each scanned from `start`. -/
+def overflowSeat (occ : Occ) (t start : Nat) : Option ((Fin 4 × Fin 13) × Nat) :=
+  overflowN occ start 4 t
 
-theorem overflowN_some_free (occ : Occ) :
+theorem overflowN_some_free (occ : Occ) (start : Nat) :
     ∀ (fuel t : Nat) (p : Fin 4 × Fin 13) (t' : Nat),
-      overflowN occ fuel t = some (p, t') → occAt occ p = false
+      overflowN occ start fuel t = some (p, t') → occAt occ p = false
   | 0, t, p, t', h => by cases h
   | fuel + 1, t, p, t', h => by
-      match hs : scanRow occ ⟨t % 4, Nat.mod_lt _ (by decide)⟩ with
+      match hs : scanRow occ ⟨t % 4, Nat.mod_lt _ (by decide)⟩ start with
       | some c =>
-          have h' : overflowN occ (fuel + 1) t = some ((⟨t % 4, Nat.mod_lt _ (by decide)⟩, c), (t + 1) % 4) := by
+          have h' : overflowN occ start (fuel + 1) t =
+              some ((⟨t % 4, Nat.mod_lt _ (by decide)⟩, c), (t + 1) % 4) := by
             simp only [overflowN, hs]
           rw [h'] at h
           injection h with hp
           injection hp with hp1 _
           cases hp1
-          exact scanRow_some_free occ _ c hs
+          exact scanRow_some_free occ _ start c hs
       | none =>
-          have h' : overflowN occ (fuel + 1) t = overflowN occ fuel ((t + 1) % 4) := by
+          have h' : overflowN occ start (fuel + 1) t = overflowN occ start fuel ((t + 1) % 4) := by
             simp only [overflowN, hs]
           rw [h'] at h
-          exact overflowN_some_free occ fuel ((t + 1) % 4) p t' h
+          exact overflowN_some_free occ start fuel ((t + 1) % 4) p t' h
 
 theorem add_left_mod_mod (a b n : Nat) : (a + b % n) % n = (a + b) % n := by
   calc (a + b % n) % n
@@ -392,26 +401,26 @@ theorem mod4_cover (t : Nat) (r : Fin 4) :
   rw [this, Nat.add_mod_right]
   exact Nat.mod_eq_of_lt hr
 
-theorem overflowN_none_row_full (occ : Occ) :
-    ∀ (fuel t : Nat), overflowN occ fuel t = none →
+theorem overflowN_none_row_full (occ : Occ) (start : Nat) :
+    ∀ (fuel t : Nat), overflowN occ start fuel t = none →
       ∀ i : Nat, i < fuel → ∀ c : Fin 13,
         occGet occ ⟨(t + i) % 4, Nat.mod_lt _ (by decide)⟩ c = true
   | 0, t, _, i, hi, c => by omega
   | fuel + 1, t, hnone, i, hi, c => by
-      match hs : scanRow occ ⟨t % 4, Nat.mod_lt _ (by decide)⟩ with
+      match hs : scanRow occ ⟨t % 4, Nat.mod_lt _ (by decide)⟩ start with
       | some c0 =>
           simp only [overflowN, hs] at hnone
           cases hnone
       | none =>
-          have hrec : overflowN occ (fuel + 1) t = overflowN occ fuel ((t + 1) % 4) := by
+          have hrec : overflowN occ start (fuel + 1) t = overflowN occ start fuel ((t + 1) % 4) := by
             simp only [overflowN, hs]
           rw [hrec] at hnone
           cases i with
           | zero =>
-              exact scanRow_none_full occ ⟨t % 4, Nat.mod_lt _ (by decide)⟩ hs c
+              exact scanRow_none_full occ ⟨t % 4, Nat.mod_lt _ (by decide)⟩ start hs c
           | succ j =>
               have hj : j < fuel := by omega
-              have ih := overflowN_none_row_full occ fuel ((t + 1) % 4) hnone j hj c
+              have ih := overflowN_none_row_full occ start fuel ((t + 1) % 4) hnone j hj c
               have heq : (((t + 1) % 4) + j) % 4 = (t + (j + 1)) % 4 := by
                 rw [Nat.mod_add_mod]; ac_rfl
               have hrow :
@@ -419,23 +428,23 @@ theorem overflowN_none_row_full (occ : Occ) :
                   ⟨(t + (j + 1)) % 4, Nat.mod_lt _ (by decide)⟩ := Fin.ext heq
               rw [← hrow]; exact ih
 
-theorem overflow_none_full (occ : Occ) (t : Nat)
-    (h : overflowSeat occ t = none) :
+theorem overflow_none_full (occ : Occ) (t start : Nat)
+    (h : overflowSeat occ t start = none) :
     ∀ p : Fin 4 × Fin 13, occAt occ p = true := by
   intro ⟨r, c⟩
   obtain ⟨i, hi⟩ := mod4_cover t r
-  have hocc := overflowN_none_row_full occ 4 t h i.val i.isLt c
+  have hocc := overflowN_none_row_full occ start 4 t h i.val i.isLt c
   have hrow : (⟨(t + i.val) % 4, Nat.mod_lt _ (by decide)⟩ : Fin 4) = r := Fin.ext hi
   simpa [occAt, hrow] using hocc
 
-theorem overflow_some_of_count_lt (occ : Occ) (t : Nat) (h : occCount occ < 52) :
-    ∃ p t', overflowSeat occ t = some (p, t') ∧ occAt occ p = false := by
-  cases hs : overflowSeat occ t with
+theorem overflow_some_of_count_lt (occ : Occ) (t start : Nat) (h : occCount occ < 52) :
+    ∃ p t', overflowSeat occ t start = some (p, t') ∧ occAt occ p = false := by
+  cases hs : overflowSeat occ t start with
   | none =>
-      have := occCount_full occ (overflow_none_full occ t hs)
+      have := occCount_full occ (overflow_none_full occ t start hs)
       omega
   | some pair =>
-      refine ⟨pair.1, pair.2, rfl, overflowN_some_free occ 4 t pair.1 pair.2 hs⟩
+      refine ⟨pair.1, pair.2, rfl, overflowN_some_free occ start 4 t pair.1 pair.2 hs⟩
 
 /-! ## Shared walk step -/
 
@@ -457,10 +466,11 @@ def chooseSeat? (st : WalkState) : Option ((Fin 4 × Fin 13) × Nat) :=
   | none => some (asStart, st.t)
   | some (card, pos) =>
       let target := gridStep card pos
-      if occAt st.occ target then overflowSeat st.occ st.t
+      if occAt st.occ target then overflowSeat st.occ st.t target.2.val
       else some (target, st.t)
 
-/-- `chooseSeat?` returns `some` while a free seat exists. Matches sudo
+/-- `chooseSeat?` returns `some` while a free seat exists. When the target is
+    taken, the overflow scan starts at the target's column. Matches sudo
     `overflow_seat`'s `assert false` being unreachable on a 52-card walk. -/
 theorem chooseSeat?_isSome (st : WalkState) (hct : occCount st.occ < 52) :
     (chooseSeat? st).isSome := by
@@ -471,7 +481,7 @@ theorem chooseSeat?_isSome (st : WalkState) (hct : occCount st.occ < 52) :
       simp only [chooseSeat?, hprev_eq, Option.isSome]
       by_cases ht : occAt st.occ (gridStep pair.1 pair.2)
       · simp only [ht, ↓reduceIte]
-        obtain ⟨p, t', hs, _hf⟩ := overflow_some_of_count_lt st.occ st.t hct
+        obtain ⟨p, t', hs, _hf⟩ := overflow_some_of_count_lt st.occ st.t (gridStep pair.1 pair.2).2.val hct
         simp [hs]
       · simp [eq_false_of_ne_true ht]
 
@@ -497,7 +507,7 @@ theorem chooseSeat!_free (st : WalkState) (hct : occCount st.occ < 52)
       simp only [chooseSeat!, chooseSeat?, hprev_eq]
       by_cases ht : occAt st.occ (gridStep pair.1 pair.2)
       · simp only [ht, ↓reduceIte]
-        obtain ⟨p, t', hs, hf⟩ := overflow_some_of_count_lt st.occ st.t hct
+        obtain ⟨p, t', hs, hf⟩ := overflow_some_of_count_lt st.occ st.t (gridStep pair.1 pair.2).2.val hct
         simp only [hs]
         exact hf
       · have hf := eq_false_of_ne_true ht

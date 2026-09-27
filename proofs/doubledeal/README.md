@@ -4,7 +4,7 @@ Normative definition: [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/
 
 DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v9** (current). v8 is deprecated; its vulnerability proof is in [`../deprecated/doubledeal-v8/`](../deprecated/doubledeal-v8/).
 
-> **Stage-2 status (v9 bump, in progress).** Generated Lean, TAP, and vectors are v9. SumRanks is re-stated for v9 (row weight rank, column weight rank + suit) in the algebraic model and in Link 2 (`sum_ranks_refines`). GridCycle (algebraic model and `Link2/Mix.lean`) still describes the v8 overflow scan (from column 0); the affected theorems are listed in the v9 porting table below and stay OPEN until stage 2 finishes. The Lean package below proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
+> **Stage-2 status (v9 bump, in progress).** Generated Lean, TAP, and vectors are v9. The algebraic model is v9: SumRanks (row weight rank, column weight rank + suit) and GridCycle (overflow scan from the blocked target's column), with `invMixColumns_mixColumns` and the round-trip theorems re-proved; `lake exe doubledeal` passes 35/35. In Link 2, `sum_ranks_refines` is v9; `Link2/Mix.lean` still mirrors the v8 overflow scan and does not build, so `encrypt_refines` stays OPEN until stage 2 finishes (see the v9 porting table below). The Lean package below proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
 
 ## Layers (be honest)
 
@@ -94,7 +94,7 @@ Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
 
 ## v9 porting table (stage 1 → stage 2)
 
-v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). The Generated tree, TAP, and vectors are v9. SumRanks (A2) is ported: `SumRanks.lean`, `Round.lean`, `Concrete.lean` and `Link2/SumLink.lean` are v9. `GridCycle.lean` and `Link2/Mix.lean` still describe the **v8** overflow scan (B3). Every Link 2 file whose `lake build` breaks is listed, `Link2/Mix.lean` included. Rows marked **BROKEN** fail `lake build`. Rows marked **STALE** still compile, but they prove v8 facts and must be re-stated for v9. Measured on branch `doubledeal-v9` with Lean 4.14.0.
+v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). The Generated tree, TAP, and vectors are v9. SumRanks (A2) is ported: `SumRanks.lean`, `Round.lean`, `Concrete.lean` and `Link2/SumLink.lean` are v9. The GridCycle model (B3) is ported in `GridCycle.lean`; `Link2/Mix.lean` still mirrors the **v8** overflow scan. Every Link 2 file whose `lake build` breaks is listed, `Link2/Mix.lean` included. Rows marked **BROKEN** fail `lake build`. Rows marked **STALE** still compile, but they prove v8 facts and must be re-stated for v9. Measured on branch `doubledeal-v9` with Lean 4.14.0.
 
 | File | Theorem / def | Status | Why | Stage-2 work |
 | --- | --- | --- | --- | --- |
@@ -110,8 +110,8 @@ v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). The Generated tr
 | `Link2/Mix.lean` | `mixStep_hit` (l. 1243), `mix_columns_as_loop` (l. 1391), `mix_columns_refines` | **BROKEN** | downstream | re-glue |
 | `Link2/Encrypt.lean`, `DoubleDeal/Link2.lean` | `full_round_refines`, `final_round_refines`, `encrypt_refines`, `mix_bound` | blocked on Mix only (builds against a `mix_columns_refines` stub) | imports | SumRanks side re-glued (`stem_refines` / `final_round_refines` take `CardBound`); rest follows Mix |
 | `SumRanks.lean` / `Round.lean` | `sumRanks rowW colW`, `invSumRanks_sumRanks`, `sumRanks_invSumRanks`; `Round` uses `sumRanks cardRank cardColW` | fixed (v9) | rows and columns take separate weights | done; the RT proofs hold for any pair of weights |
-| `GridCycle.lean` | `scanRow`, `overflowSeat`, `chooseSeat`, `invMixColumns_mixColumns`, `inv_place_agree` | STALE | the overflow scan starts at column 0 | scan from the blocked target's column; redo the inverse walk agreement |
-| `Concrete.lean`, `VectorCheck.lean` (`lake exe doubledeal`) | encrypt/decrypt KATs | STALE: **16/35** vector checks pass against the v9 JSON (the SumRanks vectors now pass; every failure is downstream of `mixColumns`) | GridCycle is still v8 | green once B3 lands |
+| `GridCycle.lean` | `scanRow`, `overflowSeat`, `chooseSeat`, `invMixColumns_mixColumns`, `inv_place_agree` | fixed (v9) | the overflow scan starts at column 0 | done: `scanRow occ row start` checks `(start + k) mod 13`, `overflowSeat occ t start`, and `chooseSeat?` passes the target's column. The inverse proofs are unchanged, because `placeN` and `invN` share `chooseSeat!` |
+| `Concrete.lean`, `VectorCheck.lean` (`lake exe doubledeal`) | encrypt/decrypt KATs | fixed: **35/35** vector checks pass against the v9 JSON (measured with Link 2 built against a `mix_columns_refines` stub; the executable itself only needs the model) | the skeleton was v8 | done |
 
 Link 1 (sudo = Generated) stays OPEN, as before. v8's own proofs are not kept alive under `deprecated/`; only its Generated TAP and the witness check are.
 

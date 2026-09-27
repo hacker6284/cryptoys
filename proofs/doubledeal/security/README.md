@@ -8,12 +8,16 @@ path dependency.
     lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
     lake build
     python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
+    lake build DoubleDealSecurityHeavy DoubleDealSecurity.Audit   # heavy witnesses, ~2–3 min
+    python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
     python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
     python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
 
 ## Layout
 
-One library, `DoubleDealSecurity`. Most of it is about relabellings
+Two libraries: `DoubleDealSecurity` (the default target) and
+`DoubleDealSecurityHeavy` (kernel witnesses taking minutes; not a default target,
+so a plain `lake build` skips it). Most of the code is about relabellings
 `σ : Equiv.Perm (Fin 52)` of card values. `BranchNumber` is separate: the
 trivial branch-number floor on decks, and the GridCycle tail swap that attains it.
 
@@ -29,11 +33,21 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `PermKeys` | encrypt with permutation round keys reduces to the conjecture |
 | `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt`, K♣↔K♦ witness |
 | `V8Vectors` | frozen v8 vectors checked against the v8 model (generated, `--check`) |
+| `RealKey` | commuting relabellings closed under powers; every nontrivial `v9Sym` has a power `v9Sym 0 2` or `v9Sym 1 0`; pull-back from the emitted `encrypt` |
+| `Audit` | the `#audit_all Root` command used by `Axioms.lean` / `AxiomsHeavy.lean` |
+| `DoubleDealSecurityHeavy.RealKey` | three `decide!` encryptions under the identity master key; `generated_encrypt_realKey_not_v9Sym_equivariant` |
 
 Generic list/rotation lemmas live in the Mathlib-free core package
 (`../lean/DoubleDeal/SumRanks.lean`, `Rotate.lean`).
 
 ## Status and gates
+
+`generated_encrypt_realKey_not_v9Sym_equivariant` (heavy library): under ONE
+master key, the identity deck expanded by the real PassKey chain, no nontrivial
+`v9Sym` commutes with the emitted `encrypt`. Read it narrowly: one atypical key;
+the breaking message is shown to exist, not named; the key is never relabelled;
+it excludes exact symmetry only, not near-symmetries or statistical
+distinguishers (v8 fell to one); it is not the open per-key statement.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at
@@ -48,7 +62,7 @@ permutation-key `encrypt6_commutes_iff_id` rest on it.
 
 CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 - `checks/scan_sorry.py`: `sorry` only in `roundBody_covariant_iff_id`; no
-  `admit`, `native_decide`, `sorryAx` or `axiom` declarations anywhere. A sorry
+  `admit`, `admitGoal`, `native_decide`, `sorryAx`, `initialize` or `axiom` declarations anywhere. A sorry
   counts for its top-level declaration (inside `have` too); `let rec` and `where`
   items count under their own name `top.f`, as Lean and the axiom gate name them.
   `--selftest` checks these cases.
@@ -56,7 +70,23 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
   the axioms of every theorem declared in a `DoubleDealSecurity.*` module. Only
   propext, Classical.choice and Quot.sound are allowed, except `sorryAx` for
   the three KNOWN_SORRY theorems above. Any axiom declared in the package fails,
-  and so does a stale KNOWN_SORRY entry.
+  and so does a stale KNOWN_SORRY entry. It does not import the heavy library, but it fails if the `HEAVY_THEOREMS`
+  registry and the theorems declared in `DoubleDealSecurityHeavy/` disagree.
+  The audit itself (`#audit_all`, in Lean) raises an error when a `.lean` file
+  under its library directory (`DoubleDealSecurity/` here, `DoubleDealSecurityHeavy/`
+  in the heavy mode) was not loaded by the environment, since the audit never saw
+  it; any Lean error fails `check_axioms.py`. Lean decides what is imported, so
+  commented-out imports cannot fool it. A private and a public theorem with the same user name also fail.
+
+CI (`proofs-heavy.yml`, job `doubledeal-security-heavy`) builds the heavy library
+and runs `../check_axioms.py security-heavy` (same rules, no KNOWN_SORRY; every
+registered theorem must be reported) plus `scan_sorry.py`. It runs on PRs that
+touch the security sources, the core/Generated Lean, `check_axioms.py` or the
+doubledeal sudo spec; on pushes to main; weekly; and on `workflow_dispatch`.
+
+Both jobs (`doubledeal-security` and `doubledeal-security-heavy`) must be green
+before merge (not enforced by branch protection): each audit checks only its own
+library, so a stray module can fail just one of them.
 
 So any new sorry, and any new theorem built on the conjecture, fails CI. A
 green run means the theorems check as stated; it is not a security claim.

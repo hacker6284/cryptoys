@@ -210,7 +210,10 @@ jobs:
           lake-package-directory: proofs/doubledeal/security
           use-github-cache: false
           use-mathlib-cache: true  # lake exe cache get: prebuilt Mathlib; never build it from source
-      - name: Axiom audit of every DoubleDealSecurity theorem (KNOWN_SORRY allowlist by name)
+      # The heavy library DoubleDealSecurityHeavy is not built here; it is built and
+      # audited by proofs-heavy.yml. This audit still fails if its HEAVY_THEOREMS
+      # registry and the heavy sources disagree.
+      - name: Axiom audit of every DoubleDealSecurity theorem (KNOWN_SORRY allowlist by name; heavy library audited separately)
         working-directory: proofs/doubledeal/security
         run: python3 ../check_axioms.py security
 

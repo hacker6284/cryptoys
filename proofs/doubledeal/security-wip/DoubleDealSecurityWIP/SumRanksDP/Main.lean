@@ -13,7 +13,7 @@
   of `CommutesOnDecksG τ sumRanksV10` at that deck holds.
 -/
 import DoubleDealSecurity.SumRanksV10Iff
-import DoubleDealSecurityWIP.SumRanksDP.Standalone
+import DoubleDealSecurityWIP.SumRanksDP.Decomp
 
 namespace DoubleDeal.Security.SumRanksDP
 
@@ -227,6 +227,18 @@ def rho (τ : Relabel) (x : Fin 13 → Fin 52) : ℚ :=
 theorem rho_nonneg (τ : Relabel) (x : Fin 13 → Fin 52) : 0 ≤ rho τ x := by
   unfold rho; split_ifs <;> positivity
 
+theorem rowOf_mul_rowShuf (π : Equiv.Perm (Fin 52)) (σ : Fin 4 → Equiv.Perm (Fin 13)) (r : Fin 4) :
+    rowOf (π * rowShuf σ) r = rowOf π r ∘ σ r := by
+  funext j; simp [rowOf, Equiv.Perm.mul_apply, rowShuf_cmFlat]
+
+theorem colOf_mul_colShuf (π : Equiv.Perm (Fin 52)) (σ : Fin 13 → Equiv.Perm (Fin 4)) (j : Fin 13) :
+    colOf (π * colShuf σ) j = colOf π j ∘ σ j := by
+  funext r; simp [colOf, Equiv.Perm.mul_apply, colShuf_cmFlat]
+
+theorem rowD_comp (τ : Relabel) (x : Fin 13 → Fin 52) (a : Equiv.Perm (Fin 13)) :
+    rowD τ (x ∘ a) = rowD τ x :=
+  Equiv.sum_comp a (fun j => delta τ (x j))
+
 /-- **Lemma 3 (row chain)** (PROOF.md §2): with the targets `θ π r` depending
     only on earlier rows, the decks satisfying all four row equations number at
     most `Σ_π Π_r ρ(row r)` (the paper proves equality). Proof: split `π` into
@@ -238,7 +250,80 @@ theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 
     ((univ.filter fun π : Equiv.Perm (Fin 52) =>
         ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r)).card : ℚ) ≤
       ∑ π : Equiv.Perm (Fin 52), ∏ r, rho τ (rowOf π r) := by
-  sorry
+  classical
+  -- per-deck count of good row orders
+  let Nr : Equiv.Perm (Fin 52) → Fin 4 → ℕ := fun π r =>
+    if rowD τ (rowOf π r) ≠ 0 then Nat.factorial 12
+    else (univ.filter fun σ : Equiv.Perm (Fin 13) => rowS τ (rowOf π r ∘ σ) = 0).card
+  have hNr : ∀ π r, (Nr π r : ℚ) = (Nat.factorial 13 : ℕ) * rho τ (rowOf π r) := by
+    intro π r
+    simp only [Nr, rho]
+    split_ifs
+    · rw [Nat.factorial_succ 12]; push_cast; ring
+    · field_simp
+  let Q : Equiv.Perm (Fin 52) → Fin 4 → (Fin 4 → Equiv.Perm (Fin 13)) → Prop := fun π r σ =>
+    rowS τ (rowOf (π * rowShuf σ) r) = θ (π * rowShuf σ) r * rowD τ (rowOf (π * rowShuf σ) r)
+  have hrows : ∀ π σ σ' (r : Fin 4), σ r = σ' r →
+      rowOf (π * rowShuf σ) r = rowOf (π * rowShuf σ') r := by
+    intro π σ σ' r h
+    rw [rowOf_mul_rowShuf, rowOf_mul_rowShuf, h]
+  have hper : ∀ π, (univ.filter fun σ : Fin 4 → Equiv.Perm (Fin 13) =>
+      ∀ r, Q π r σ).card ≤ ∏ r, Nr π r := by
+    intro π
+    refine nested_count 4 (Q π) (Nr π) ?_ ?_
+    · intro r σ σ' h
+      have hθ' : θ (π * rowShuf σ) r = θ (π * rowShuf σ') r :=
+        hθ _ _ r fun r' hr' => hrows π σ σ' r' (h r' hr'.le)
+      simp only [Q, hθ', hrows π σ σ' r (h r le_rfl)]
+    · intro r σ
+      set x := rowOf π r
+      set t := θ (π * rowShuf σ) r
+      have hQa : ∀ a, Q π r (Function.update σ r a) ↔ rowS τ (x ∘ a) = t * rowD τ x := by
+        intro a
+        have h1 : rowOf (π * rowShuf (Function.update σ r a)) r = x ∘ a := by
+          rw [rowOf_mul_rowShuf, Function.update_same]
+        have h2 : θ (π * rowShuf (Function.update σ r a)) r = t :=
+          hθ _ _ r fun r' hr' => hrows π _ _ r' (Function.update_noteq (ne_of_lt hr') _ _)
+        simp only [Q, h1, h2, rowD_comp]
+      simp only [hQa]
+      simp only [Nr]
+      split_ifs with hD
+      · have h := lemma2a (fun j => delta τ (x j)) hD (t * rowD τ x)
+        rw [Nat.factorial_succ 12] at h
+        have : (univ.filter fun a : Equiv.Perm (Fin 13) => rowS τ (x ∘ a) = t * rowD τ x).card =
+            Nat.factorial 12 := by
+          have h' : 13 * (univ.filter fun a : Equiv.Perm (Fin 13) =>
+              rowS τ (x ∘ a) = t * rowD τ x).card = 13 * Nat.factorial 12 := h
+          omega
+        exact this.le
+      · push_neg at hD
+        simp only [hD, mul_zero, le_refl]
+  -- average over row orders
+  have havg := sum_mul_card_shuf rowShuf
+    (fun π => if ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r) then (1 : ℚ) else 0)
+  have hcardS : (Fintype.card (Fin 4 → Equiv.Perm (Fin 13)) : ℚ) = ((Nat.factorial 13 : ℕ) : ℚ) ^ 4 := by
+    rw [Fintype.card_fun, Fintype.card_perm, Fintype.card_fin, Fintype.card_fin]; push_cast; ring
+  rw [hcardS] at havg
+  have hlhs : ((univ.filter fun π : Equiv.Perm (Fin 52) =>
+      ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r)).card : ℚ) =
+      ∑ π, if ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r) then (1 : ℚ) else 0 := by
+    rw [← sum_boole]
+  have hrhs : ∀ π, (∑ σ : Fin 4 → Equiv.Perm (Fin 13),
+      if ∀ r, rowS τ (rowOf (π * rowShuf σ) r) = θ (π * rowShuf σ) r *
+        rowD τ (rowOf (π * rowShuf σ) r) then (1 : ℚ) else 0) ≤
+      ((Nat.factorial 13 : ℕ) : ℚ) ^ 4 * ∏ r, rho τ (rowOf π r) := by
+    intro π
+    rw [sum_boole]
+    have := hper π
+    have hq : ((univ.filter fun σ : Fin 4 → Equiv.Perm (Fin 13) => ∀ r, Q π r σ).card : ℚ) ≤
+        ∏ r, (Nr π r : ℚ) := by exact_mod_cast this
+    simp only [hNr, prod_mul_distrib, prod_const, card_univ, Fintype.card_fin] at hq
+    exact hq
+  have hf : (0 : ℚ) < ((Nat.factorial 13 : ℕ) : ℚ) ^ 4 := by positivity
+  rw [hlhs]
+  refine le_of_mul_le_mul_left ?_ hf
+  rw [havg, mul_sum]
+  exact sum_le_sum fun π _ => hrhs π
 
 /-- `ρ ≤ 1`. -/
 theorem rho_le_one (τ : Relabel) (x : Fin 13 → Fin 52) : rho τ x ≤ 1 := by

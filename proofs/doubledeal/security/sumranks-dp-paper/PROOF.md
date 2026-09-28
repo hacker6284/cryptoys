@@ -17,7 +17,7 @@ $$
 If $\tau$ changes every rank by the same amount (Case B below), the bound improves to $52!/425$.
 
 For comparison, the worst case measured is the same-suit 3-cycle at $9/1105\approx 1/122.8$
-(`../../analysis/v10-sumranks/README.md`). §5b argues that this is the exact maximum; that corollary is
+(`../../analysis/v10-sumranks/README.md`). That value is proved exactly in Lean for the 3-cycle A♣→2♣→3♣ (§9). §5b argues that it is the exact maximum; that corollary is
 computer-assisted: it relies on the computer-checked Lemma R (§8), and it is not formalised in Lean and not independently reviewed. In Case B the worst case found by the exhaustive scan of §8 is the same-rank 3-cycle at $1/850$.
 
 ---
@@ -221,17 +221,17 @@ $\Pr[\text{survive}]\le\max(0.012768,\,1/425)=0.012768<1/78.3<1/64$. Multiply by
 
 ### 5b. Computer-assisted corollary (not formalised, not independently reviewed): the maximum is 9/1105
 
-**Status.** This corollary is computer-assisted: it relies on the computer-checked Lemma R (§8), and it is not formalised in Lean and not independently reviewed. Lean proves only the $52!/64$ bound of §5. The corollary relies on Lemma R ($p_0\le1/11$ for every nonconstant row with $D=0$), which was checked by exhaustive computer search (`p0scan.c`), not proved by hand; Lemma R is used only in the first regime below. The theorem of §5 does not need it.
+**Status.** This corollary is computer-assisted: it relies on the computer-checked Lemma R (§8), and it is not formalised in Lean and not independently reviewed. Lean proves the $52!/64$ bound of §5 and, for the one same-suit 3-cycle A♣→2♣→3♣, the exact value $9/1105$ (the last sentence of the argument below; §9). That the maximum is $9/1105$ is not formalised. The corollary relies on Lemma R ($p_0\le1/11$ for every nonconstant row with $D=0$), which was checked by exhaustive computer search (`p0scan.c`), not proved by hand; Lemma R is used only in the first regime below. The theorem of §5 does not need it.
 
 **Corollary (computer-assisted).** $\max_{\tau\notin\mathrm{v10Sym}}\Pr[\text{survive}]=9/1105\approx1/122.8$, attained by every same-suit 3-cycle.
 
-*Proof.* Case B gives $\le1/425<9/1105$ (Theorem B). In Case A, split by $n^\ast$:
+*Argument (computer-assisted).* Case B gives $\le1/425<9/1105$ (Theorem B). In Case A, split by $n^\ast$:
 * $n^\ast\le12$: all four rows are nonconstant, so by Lemma 2(a) and Lemma R every $\rho(B_r)\le1/11$, and $\Pr\le11^{-4}$.
 * $13\le n^\ast\le48$: $\Pr\le E_A(n^\ast)\le E_A(13)=0.003975$ (the maximum of the exact values over this range is at $n^\ast=13$; see §7 of the output).
 * $n^\ast=49$: normalise $v^\ast=0$ by composing with a rank-shift symmetry. The three off values $a,b,c$ are nonzero with $a+b+c=0$. Up to scaling by units there are 3 classes, $(1,1,11)$, $(1,2,10)$ and $(1,3,9)$. For each class the exact row-only probability $\mathbb E[\prod_r\rho(B_r)]$ (Lemma 3; exact enumeration over which rows the 3 cards fall in, with $\rho$ computed exactly) is **exactly $9/1105$**. Full survival is at most row-only survival.
 * $n^\ast=50$: exactly $1/221$ (A1).
 
-Every regime except $n^\ast=49$ is strictly below $9/1105$. A same-suit 3-cycle has $\varepsilon\equiv0$, so every column condition holds and full survival equals row-only survival, $9/1105$. $\square$
+Every regime except $n^\ast=49$ is strictly below $9/1105$. A same-suit 3-cycle has $\varepsilon\equiv0$, so every column condition holds and full survival equals row-only survival, $9/1105$.
 
 (Checked: `verify_output.txt` §7.)
 
@@ -283,7 +283,7 @@ Nothing failed. No τ class is left open.
 
 ## 9. Lean formalisation
 
-The $52!/64$ bound (not the constant $0.012768$, and not the corollary $9/1105$ of §5b) is formalised in
+The $52!/64$ bound (not the constant $0.012768$, and not the corollary of §5b that $9/1105$ is the maximum) is formalised in
 `../DoubleDealSecurity/SumRanksDP/` (Lean 4.14 + Mathlib, part of the default `DoubleDealSecurity` build):
 
 ```lean
@@ -301,3 +301,18 @@ The Lean route follows §§0–5 with two changes:
 
 The tables are checked in the kernel with `decide!` (no `native_decide`). The sharper side results of §8
 are not formalised.
+
+**The value $9/1105$ for one 3-cycle** is also formalised (`ThreeCycle.lean`), for the same-suit 3-cycle
+A♣→2♣→3♣ (`threeCycle`, cards $0\to1\to2$):
+
+```lean
+theorem sumRanksV10_survival_threeCycle :
+    1105 * (survivors threeCycle).card = 9 * Fintype.card (Equiv.Perm (Fin 52))
+```
+
+It follows the last sentence of §5b: $\varepsilon\equiv0$, so survival is exactly the four row equations;
+Lemma 3 holds with equality; a row holding $k$ of the three moved cards has
+$\rho=1,\tfrac1{13},\tfrac1{13},\tfrac1{11}$ for $k=0,1,2,3$; and the hypergeometric sum is
+$3!\,49!\cdot180=\tfrac9{1105}\,52!$. The corollary `sumRanksV10_survival_lower` records that some
+non-symmetry exceeds $52!/123$, so the $1/64$ constant is within a factor $2$ of tight. That $9/1105$ is the
+maximum over all non-symmetries (the rest of §5b, which needs Lemma R) is not formalised.

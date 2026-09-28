@@ -70,6 +70,8 @@ PACKAGES = {
         "required": {
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_le",
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_le'",
+            "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_threeCycle",
+            "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_lower",
         },
     },
     "security-heavy": {

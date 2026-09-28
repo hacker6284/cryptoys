@@ -54,11 +54,16 @@ to exist, not named; the key is never relabelled; it excludes exact symmetry
 only, not near-symmetries or statistical distinguishers (v8 and v9 each fell
 to one); it is not the open per-key statement.
 Measured near-symmetries of v10 SumRanks alone (empirical, not proved) are in
-`../analysis/v10-sumranks/sbox-search/`: the worst non-symmetry relabelling is
-a same-suit 3-cycle at exactly 9/1105 ≈ 1/123; the same-suit swap is 1/221.
-Proved (`sumRanksV10_survival_le`, `SumRanksDP/Main.lean`): no non-symmetry
-relabelling survives v10 SumRanks alone on more than 1/64 of the decks. The
-measured worst case 9/1105 is not formalised.
+`../analysis/v10-sumranks/sbox-search/`: the worst measured non-symmetry
+relabelling is a same-suit 3-cycle at exactly 9/1105 ≈ 1/123; the same-suit
+swap is 1/221. Proved (`sumRanksV10_survival_le`, `SumRanksDP/Main.lean`): no
+non-symmetry relabelling survives v10 SumRanks alone on more than 1/64 of the
+decks. Also proved (`sumRanksV10_survival_threeCycle`,
+`SumRanksDP/ThreeCycle.lean`): the one 3-cycle A♣→2♣→3♣ survives on exactly
+9/1105 of the decks, so the 1/64 constant is within a factor 2 of tight
+(`sumRanksV10_survival_lower`). That 9/1105 is the maximum over all
+non-symmetries is computer-assisted (`sumranks-dp-paper/PROOF.md` §5b) and not
+formalised.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at

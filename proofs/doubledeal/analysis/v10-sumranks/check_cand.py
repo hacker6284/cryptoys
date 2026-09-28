@@ -8,8 +8,9 @@ import candidates as C, cport, ddport
 nv = 0
 for v in ddport.vectors(9):
     if v["kind"] == "encrypt":
-        assert C.encrypt(v["message"], v["key"], 0) == v["cipher"]
-        assert cport.enc(np.array([v["message"]]), cport.real_keys(np.array([v["key"]])), "F6", 0)[0].tolist() == v["cipher"]
+        assert C.encrypt(v["message"], v["key"], 0) == v["cipher"], f"candidates.py v9 != {v['name']}"
+        assert cport.enc(np.array([v["message"]]), cport.real_keys(np.array([v["key"]])), "F6", 0)[0].tolist() == v["cipher"], \
+            f"cport v9 != {v['name']}"
         nv += 1
 W5c = C.VARIANTS["W5c"]; nw = nt = 0
 for v in ddport.vectors(10):  # frozen v10 (live vectors are v11)

@@ -62,4 +62,4 @@ for V in (33, 60, 61, 62, 63, 64):
     mism = sum(list(map(int, res[k].split('|')[1].split())) != encrypt(V, d) for k, d in enumerate(decks))
     rt = sum(decrypt(V, encrypt(V, d)) != d for d in decks)
     print(f'variant {V}: {n} decks: output mismatches vs cand.c {mism}; Python round-trip failures {rt}')
-    assert mism == 0 and rt == 0
+    assert mism == 0 and rt == 0, f"variant {V}: {mism} mismatches vs cand.c, {rt} round-trip failures"

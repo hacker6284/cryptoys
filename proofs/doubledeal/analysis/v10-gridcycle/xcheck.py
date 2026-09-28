@@ -21,5 +21,5 @@ inp = '\n'.join(' '.join(map(str, d)) for d in decks) + '\n'
 out = subprocess.run([exe], input=inp, capture_output=True, text=True).stdout.split('\n')
 bad = sum(1 for d, line in zip(decks, out) if list(map(int, line.split())) != ddport.mix_columns(d, 10))
 print('C vs ddport mix_columns on 2000 random decks: mismatches =', bad)
-assert bad == 0
+assert bad == 0, f"gc.h gc_mix disagrees with ddport v10 on {bad} decks"
 import shutil; shutil.rmtree(tmp)

@@ -25,6 +25,6 @@ P.sum_ranks_v10 = orig
 rng = random.Random(5)
 for _ in range(20000):
     m = list(range(52)); rng.shuffle(m); g = lay_cm(m)
-    assert sb.sr(to52(g))[0] == to52(P.sum_ranks_v10(g))
+    assert sb.sr(to52(g))[0] == to52(P.sum_ranks_v10(g)), f"C S-box != ddport.sum_ranks_v10 on deck {m}"
 print(f"C S-box matches {nsr} v10 sum_ranks vectors, {nenc} v10 encrypt vectors (as the SumRanks inside ddport.encrypt), "
       f"and ddport.sum_ranks_v10 on 20000 random grids")

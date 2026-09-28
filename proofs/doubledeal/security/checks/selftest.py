@@ -18,19 +18,21 @@ def check(v):
 check(11)
 check(10)
 check(9)
+rng = random.Random(10)
 for _ in range(50):
-    m = list(range(52)); random.shuffle(m)
+    m = list(range(52)); rng.shuffle(m)
     g = lay_cm(m)
-    assert P.inv_sum_ranks_v10(P.sum_ranks_v10(g)) == g
+    assert P.inv_sum_ranks_v10(P.sum_ranks_v10(g)) == g, f"v10 inv SumRanks fails on deck {m}"
 print('v10 inv SumRanks undoes SumRanks on 50 random decks')
+rng = random.Random(11)
 for _ in range(200):
-    m = list(range(52)); random.shuffle(m)
-    assert P.inv_mix_columns_v11(P.mix_columns(m, 11)) == m
+    m = list(range(52)); rng.shuffle(m)
+    assert P.inv_mix_columns_v11(P.mix_columns(m, 11)) == m, f"v11 inverse GridCycle fails on deck {m}"
 print('v11 inverse GridCycle undoes GridCycle on 200 random decks')
 rng = random.Random(1)
 for _ in range(300):
     m = list(range(52)); rng.shuffle(m); k = list(range(52)); rng.shuffle(k)
-    assert P.encrypt(m, k, 8) == V8.encrypt(m, k)
+    assert P.encrypt(m, k, 8) == V8.encrypt(m, k), f"v8 port != dd_v8.py for m={m}, k={k}"
 print('v8 port == frozen dd_v8.py on 300 random (m,k)')
 # Frozen-v10 analysis checks (need numpy and gcc; ~4 s). They read the frozen v10 vectors, so they
 # break loudly here instead of silently when the live vectors move.

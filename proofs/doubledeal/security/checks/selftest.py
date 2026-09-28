@@ -41,3 +41,14 @@ for script in (AN / 'check_cand.py', AN / 'sbox-search/verify.py'):
     if r.returncode != 0:
         print(r.stdout, r.stderr); print('FAIL', script.relative_to(REPO)); sys.exit(1)
     print(script.relative_to(REPO), 'ok:', r.stdout.strip().splitlines()[-1][:120])
+# GridCycle analysis cross-checks (need cc; ~10 s): the independent Python models against the
+# C tools, byte-compared with their committed logs.
+GC = REPO / 'proofs/doubledeal/analysis/v10-gridcycle'
+r = subprocess.run(['sh', str(GC / 'build.sh')], capture_output=True, text=True)
+if r.returncode != 0:
+    print(r.stdout, r.stderr); print('FAIL', (GC / 'build.sh').relative_to(REPO)); sys.exit(1)
+for script, log in (('candcheck.py', 'candcheck.log'), ('p5check.py', 'p5/check.log'), ('p6check.py', 'p6/check.log')):
+    r = subprocess.run([sys.executable, script], cwd=GC, capture_output=True, text=True)
+    if r.returncode != 0 or r.stdout != (GC / log).read_text():
+        print(r.stdout, r.stderr); print('FAIL', (GC / script).relative_to(REPO), 'vs', log); sys.exit(1)
+    print((GC / script).relative_to(REPO), '==', log)

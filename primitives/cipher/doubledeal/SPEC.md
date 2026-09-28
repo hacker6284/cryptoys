@@ -1,6 +1,6 @@
 # DoubleDeal
 
-**This is DoubleDeal v11.** One change from v10: GridCycle (§3.5, §4.4). The walk's finger is now a *ghost*: each step starts from the previous **target** seat, even when the card had to sit elsewhere. A free target is handled exactly as in v10. A target that is already taken is resolved by the card sitting on it (the *blocker*): scan the row marker + blocker's suit, starting at the target column + blocker's rank, for the first empty seat to the right (dropping to the next row if that row is full); advance the marker one suit; and the next step starts from the target moved by the blocker's step. SumRanks, ShiftRows, Compose, PassKey, the round count and the modes are unchanged. The rule was chosen from the measurements in `proofs/doubledeal/analysis/v10-gridcycle/` on the analysis branch `doubledeal-gridcycle-analysis` (PHASE2 "rule 1" plus PHASE6 "tweak B"; toy evidence, not a proof).
+**This is DoubleDeal v11.** One change from v10: GridCycle (§3.5, §4.4). The walk's finger is now a *ghost*: each step starts from the previous **target** seat, even when the card had to sit elsewhere. A free target is handled exactly as in v10. A target that is already taken is resolved by the card sitting on it (the *blocker*): scan the row marker + blocker's suit, starting at the target column + blocker's rank, for the first empty seat to the right (dropping to the next row if that row is full); advance the marker one suit; and the next step starts from the target moved by the blocker's step. SumRanks, ShiftRows, Compose, PassKey, the round count and the modes are unchanged. The rule was chosen from the measurements in `proofs/doubledeal/analysis/v10-gridcycle/` (PHASE2 "rule 1" plus PHASE6 "tweak B"; toy evidence, not a proof).
 
 v10 is deprecated and frozen at `v10/SPEC.md` + `v10/doubledeal_v10.sudo`. The reason is a per-layer parity shortfall in GridCycle, not a working attack on the full cipher: v10 GridCycle lets its worst swap, K♣↔K♦, through unchanged with probability 0.262 (measured), and 1311 of the 1326 swaps are above the 1/64 bar that SumRanks meets, while the 6-round product-formula estimate for the worst swap trail stays about \(2\times10^{-17}\). Write-up and kernel-checked single-deck witness: `proofs/deprecated/doubledeal-v10/`. v9 is deprecated and frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo`; a related-plaintext distinguisher breaks the full 6-round v9 (K♣↔Q♥ at about \(3.5\times10^{-8}\) per pair; `proofs/deprecated/doubledeal-v9/`). v8 is deprecated too, frozen at `v8/SPEC.md`, with its vulnerability proof in `proofs/deprecated/doubledeal-v8/`. Formerly TwoDeck (TDSPN elegant-v8).
 
@@ -737,7 +737,7 @@ Rows 1–3 slide left-to-right-end with overlapping ease (row 1 starts first, th
 
 - Empty grid; **start seat (2,0)** highlights.
 - Each placement: card arcs from hand to seat along the \((\Delta\mathrm{row}=\mathrm{suit},\,\Delta\mathrm{col}=\mathrm{rank})\) step as a visible **polyline on the grid**, suit **color-coded**.
-- On a **blocked target**: highlight the **blocker**, show the **CHaSeD marker chip** plus the blocker's suit picking the row, and a **scan-line** that starts at the target column + blocker's rank and sweeps right (wrapping) for the empty seat; then show the **finger** hopping from the target by the blocker's step — make overflow **readable, not embarrassing**. No error flash; treat overflow as a first-class rule.
+- On a **blocked target**: highlight the **blocker**, show the **CHaSeD marker chip** plus the blocker's suit picking the row, and a **scan-line** that starts at the target column + blocker's rank and sweeps right (wrapping) for the empty seat. A marker for the finger (target + blocker's step after a block) would help but is optional; the current demo narrates it in the caption and does not animate it — make overflow **readable, not embarrassing**. No error flash; treat overflow as a first-class rule.
 - After 52 placements: scoop **row-major** (see below).
 
 ### Scoop row-major
@@ -798,7 +798,7 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 | Demo | `demos/doubledeal/` | Three.js table. Plays `trace_encrypt` and `trace_decrypt` from the sudo module |
 | Correctness proofs | `proofs/doubledeal/` | Lean 4 algebraic stones (bijections, round-trip, content-preservation). Not bit-security. |
 | v10 SumRanks analysis | `proofs/doubledeal/analysis/v10-sumranks/` | Candidate measurements that led to v10 (empirical; not proofs) |
-| v10 GridCycle analysis | `proofs/doubledeal/analysis/v10-gridcycle/` (branch `doubledeal-gridcycle-analysis`) | Candidate measurements that led to the v11 GridCycle (empirical; not proofs) |
+| v10 GridCycle analysis | `proofs/doubledeal/analysis/v10-gridcycle/` | Candidate measurements that led to the v11 GridCycle (empirical; not proofs) |
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | CBC + HMAC-MegaDreifach AEAD. Not SCM. |
 
 ---

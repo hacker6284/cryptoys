@@ -256,8 +256,8 @@ theorem unkeyedNoMix_const (c : Nat) : unkeyedNoMix (constDeck c) = constDeck c 
 
 theorem mixColumns_const (c : Nat) : mixColumns (constDeck c) = constDeck c := by
   rw [mixColumns_eq]; funext k
-  obtain ⟨j, hj⟩ := seatW_surj _ freeChooser_v9 (constDeck c) (rmRow k, rmCol k)
-  have := gridW_at_seat _ freeChooser_v9 (constDeck c) j
+  obtain ⟨j, hj⟩ := seatW_surj _ freeChooser (constDeck c) (rmRow k, rmCol k)
+  have := gridW_at_seat _ freeChooser (constDeck c) j
   rw [hj] at this
   exact this
 

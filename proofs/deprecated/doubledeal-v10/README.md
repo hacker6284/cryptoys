@@ -1,6 +1,6 @@
 # DoubleDeal v10: GridCycle parity shortfall (DEPRECATED algorithm)
 
-**Kind:** per-layer weakness write-up, filed next to the frozen artifact (see the [`proofs/README.md`](../../README.md) taxonomy). It is **not** a working attack on the full cipher. This folder freezes DoubleDeal v10 at [`primitives/cipher/doubledeal/v10/`](../../../primitives/cipher/doubledeal/v10/), following the v8/v9 precedent. **The successor is v11**: GridCycle rule 1 + tweak B (ghost finger, blocker-directed scan). It is now the live `SPEC.md` / `doubledeal.sudo`. The analysis that found the shortfall and selected the fix is on the branch [`doubledeal-gridcycle-analysis`](https://github.com/hacker6284/cryptoys/tree/doubledeal-gridcycle-analysis/proofs/doubledeal/analysis/v10-gridcycle) (README, PHASE2–PHASE6). Nothing here is a security claim, and there are no bit-security claims in either direction.
+**Kind:** per-layer weakness write-up, filed next to the frozen artifact (see the [`proofs/README.md`](../../README.md) taxonomy). It is **not** a working attack on the full cipher. This folder freezes DoubleDeal v10 at [`primitives/cipher/doubledeal/v10/`](../../../primitives/cipher/doubledeal/v10/), following the v8/v9 precedent. **The successor is v11**: GridCycle rule 1 + tweak B (ghost finger, blocker-directed scan). It is now the live `SPEC.md` / `doubledeal.sudo`. The analysis that found the shortfall and selected the fix is [`proofs/doubledeal/analysis/v10-gridcycle/`](../../doubledeal/analysis/v10-gridcycle/) (README, PHASE2–PHASE6). Nothing here is a security claim, and there are no bit-security claims in either direction.
 
 ## Why deprecate
 
@@ -21,7 +21,7 @@ v10 fixed the v9 SumRanks problem (position-aware SumRanks, W5c). GridCycle, the
 | --- | --- |
 | There is a deck \(d\) with \(\mathrm{GC}(\sigma d) = \sigma\,\mathrm{GC}(d)\) and \(\sigma\,\mathrm{GC}(d) \ne \mathrm{GC}(d)\) for σ = K♣↔K♦ (card ids 12↔51) on the **emitted frozen v10 `mix_columns`** | **Kernel theorem** `DoubleDealV10.Witness.v10_KC_KD_swap_commutes_with_gridcycle` (`lean/DoubleDealV10/Witness.lean`). Both `mix_columns` evaluations are `decide!` (kernel reduction). **No `native_decide`.** `lean/Axioms.lean` together with `check_axioms.py v10-deprecated` shows only `propext` / `Classical.choice` / `Quot.sound`. Clean build about 30 s, so it runs in normal CI. It is **one deck**: an illustration, not a probability bound. |
 | On a deck, GridCycle commutes with σ iff the seat walk is unchanged | Already a theorem for the model (`mixColumns_rel_iff_walk`, `proofs/doubledeal/security/DoubleDealSecurity/GridCycle.lean`). |
-| The survival rates above, the 1311/1326 count, and the full-round figure | **Measured** (`attack/measure/`, copied from the analysis branch). Not theorems. |
+| The survival rates above, the 1311/1326 count, and the full-round figure | **Measured** ([`proofs/doubledeal/analysis/v10-gridcycle/`](../../doubledeal/analysis/v10-gridcycle/): `survival_value.log`, `mechanism.log`, `round.log`). Not theorems. |
 | The ≈2e-17 six-round trail figure | **Estimate** (product formula, v10 SPEC). Not a theorem and not a bound. |
 
 ## Mechanism (K♣↔K♦)
@@ -30,7 +30,7 @@ Card \(c\): suit \(= \lfloor c/13\rfloor\) in GridCycle order ♣0 ♥1 ♠2 ♦
 
 - K♣ = (suit 0, rank 13) steps by (0, 0): the next target after K♣ is the seat K♣ itself is standing on, which is always taken, so **the card after K♣ is always blocked** and overflows. The v10 overflow scans the marker row \(t\) from the blocked column, and **the blocking card plays no part in where the next card lands**. Its landing seat depends only on \((t, \text{column}, \text{occupancy})\).
 - K♦ = (suit 3, rank 13) steps by (3, 0): the next target after K♦ is the seat one row up (mod 4) in K♦'s column. If that seat is taken, the card after K♦ overflows from the same column with the same marker, which is exactly where the card after K♣ would have gone.
-- So whenever the seat above is occupied at the two walk positions that hold K♣/K♦, swapping them leaves the walk unchanged, and the walk being unchanged is exactly the commutation condition. `attack/measure/mechanism.log`: survival 0.2616; this sufficient condition holds 0.2583 of the time and is never true without survival. The residual 0.003 comes from K♣'s overflow landing exactly on K♦'s free target.
+- So whenever the seat above is occupied at the two walk positions that hold K♣/K♦, swapping them leaves the walk unchanged, and the walk being unchanged is exactly the commutation condition. `proofs/doubledeal/analysis/v10-gridcycle/mechanism.log`: survival 0.2616; this sufficient condition holds 0.2583 of the time and is never true without survival. The residual 0.003 comes from K♣'s overflow landing exactly on K♦'s free target.
 - K♣↔K♥ and K♣↔K♠ are the same effect with a different row offset. More generally, a card-blind overflow makes many pairs collide, which is why 1311/1326 pairs are above the bar.
 
 The v11 fix (analysis PHASE2 rule 1 + PHASE6 tweak B) has three parts. (1) Ghost finger: each step starts from the previous target, not from where the card landed. (2) A blocked placement is scanned by the blocker: row = marker + blocker's suit, start column = target column + blocker's rank, first empty seat to the right, dropping a row if the row is full; the marker advances one suit. (3) Tweak B: after a blocked placement the finger moves to target + the blocker's step, and the next step starts there. Unblocked placements are as in v10. Measured worst pair: 0.0049 (≈1/205), with 0 pairs above 1/64.
@@ -52,7 +52,7 @@ T1 (`proofs/doubledeal/security/`) proves `mixColumns_commutes_iff_id`: GridCycl
 | `witness_v10.json` | σ, deck, GC(deck), σ·deck, GC(σ·deck), the walk positions of the swapped cards. Written by `attack/make_witness.py` (seed 10) using the repo Python port (`ddport.mix_columns(d, 10)`); `--check` in CI. |
 | `lean/` | Lake package `DoubleDealV10`. `WitnessData.lean` is generated by `witness_to_lean.py` (CI runs `--check`); `Witness.lean` holds the headline; `Axioms.lean` is the audit. It path-requires `lean/Generated/` (emitted by `proofs/emit_lean.sh doubledeal-v10`; do not edit). |
 | `vectors/` | Frozen v10 vectors. `regen_v10.sh --check` rebuilds them from `v10/doubledeal_v10.sudo` through the sudoc JS target. |
-| `attack/measure/` | `gc.h` (C GridCycle), `survival.c`, `mechanism.c`, `agg.py`, `xcheck.py` (C == `ddport` v10 on 2000 decks) and the logs `survival_value.log` and `mechanism.log`. `run.sh` reproduces them (not in CI; about 10–20 CPU-minutes). |
+| `attack/measure/` | `xcheck.py` (the analysis C model `proofs/doubledeal/analysis/v10-gridcycle/gc.h` == `ddport` v10 on 2000 decks; in CI) and `run.sh`, which reproduces the cited logs in the analysis folder (not in CI; about 10–20 CPU-minutes). The C sources and logs are not duplicated here. |
 
 ## Reproduce
 

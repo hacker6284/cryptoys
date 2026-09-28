@@ -4,8 +4,8 @@
   encryptions evaluated by `decide!`.
   Built and audited by the `doubledeal-security-heavy` CI job
   (`lake build DoubleDealSecurityHeavy`, `check_axioms.py security-heavy`).
-  The expected outputs are from the Python port (`checks/ddport.py`, v11; `checks/realkeys/v10sym_subgroup.py`); the
-  kernel checks them, so a wrong value fails the build.
+  The expected outputs are from the Python port (`checks/ddport.py`, v11;
+  `checks/realkeys/v10sym_subgroup.py`); the kernel checks them, so a wrong value fails the build.
 -/
 import DoubleDealSecurity.RealKey
 

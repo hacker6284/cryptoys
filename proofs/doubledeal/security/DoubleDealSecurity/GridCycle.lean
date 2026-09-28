@@ -19,7 +19,8 @@ target, and the finger moves on by the blocker's step; v9/v10 scanned from the
 blocked target's column). So on one deck, GridCycle commutes with σ exactly when the seat walk of
 `σ·m` equals the walk of `m` (`mixColumns_rel_iff_walk`). Over all decks this
 forces σ = id: the second card's seat is an injective function of the first
-card, except that K♣ (step (0,0), blocks on itself at A♠ and is scanned to (0,0)) and K♠ (step
+card, except that K♣ (step (0,0): the second target is the start seat (2,0), blocked by K♣
+itself, and the scan sends the card to (0,0)) and K♠ (step
 (2,0) from (2,0), lands on (0,0)) collide. -/
 
 /-- Seat of card `n` in the GridCycle walk of `hand`. -/
@@ -89,7 +90,7 @@ theorem mixColumns_rel_iff_walk (σ : Relabel) (m : Fin 52 → Nat) (hm : IsDeck
     mixColumns (rel σ m) = rel σ (mixColumns m) ↔
       ∀ n < 52, walkSeat (rel σ m) n = walkSeat m n := by
   simp only [mixColumns_eq, walkSeat_eq]
-  exact walkW_rel_iff _ freeChooser_v9 σ m hm
+  exact walkW_rel_iff _ freeChooser σ m hm
 
 /-- (PROVED, kernel `decide!`) K♣↔K♦ does not commute with v11 GridCycle:
     on the deck `K♦, A♣, 2♣, …` the second card goes to (1,0) but, after the
@@ -179,7 +180,7 @@ theorem mixColumns_commutes_iff_id (σ : Relabel) :
     CommutesOnDecks σ mixColumns ↔ σ = 1 := by
   constructor
   · intro h
-    refine walkW_only_id chooseSeat! freeChooser_v9
+    refine walkW_only_id chooseSeat! freeChooser
       (fun hand _ => by rw [← walkSeat_eq]; rfl) ?_ σ ?_
     · simpa only [mixColumns_eq] using mixColumns_KC_KS_fails
     · intro m hm; simpa only [mixColumns_eq] using h m hm
@@ -244,7 +245,8 @@ theorem V8.freeChooser : FreeChooser V8.chooseSeat! := by
   intro st hct hprev
   match hprev_eq : st.prev with
   | none =>
-      have : V8.chooseSeat? st = some (asStart, (st.t, asStart)) := by simp [V8.chooseSeat?, hprev_eq]
+      have : V8.chooseSeat? st = some (asStart, (st.t, asStart)) := by
+        simp [V8.chooseSeat?, hprev_eq]
       simp only [V8.chooseSeat!, this]
       cases hprev with
       | inl h => simp [hprev_eq] at h

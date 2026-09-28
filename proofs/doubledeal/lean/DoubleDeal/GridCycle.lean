@@ -572,9 +572,9 @@ def placeN (hand : Fin 52 → Nat) : Nat → NatGrid × WalkState
   | n + 1 =>
       let (g, st) := placeN hand n
       if h : n < 52 then
-        let (pos, t') := chooseSeat! st
+        let (pos, markerFinger) := chooseSeat! st
         let card := hand ⟨n, h⟩
-        (setGrid g pos card, advance st card pos t')
+        (setGrid g pos card, advance st card pos markerFinger)
       else (g, st)
 
 def placedGrid (hand : Fin 52 → Nat) : NatGrid := (placeN hand 52).1
@@ -589,9 +589,9 @@ def invN (g : NatGrid) : Nat → (Fin 52 → Nat) × WalkState
   | n + 1 =>
       let (out, st) := invN g n
       if _h : n < 52 then
-        let (pos, t') := chooseSeat! st
+        let (pos, markerFinger) := chooseSeat! st
         let card := g pos.1 pos.2
-        (fun j => if j.val = n then card else out j, advance st card pos t')
+        (fun j => if j.val = n then card else out j, advance st card pos markerFinger)
       else (out, st)
 
 /-- Inv MixColumns: lay row-major then walk-recover. -/

@@ -9,7 +9,7 @@
 >
 > The cause is that K♣'s step (0, 13 ≡ 0) always lands on its own seat, and a blocked card's overflow scan reads only the blocked column and the marker, never the card itself.
 >
-> This is **not** a demonstrated attack on the full 6-round cipher. The product-formula estimate for the worst swap trail through 6 rounds is about \(2\times10^{-17}\), and no distinguisher on the full cipher is claimed. The write-up and a kernel-checked single-deck witness (the K♣↔K♦ swap commutes with the emitted v10 `mix_columns` on one concrete deck) are in [`proofs/deprecated/doubledeal-v10/`](../../../../proofs/deprecated/doubledeal-v10/). The measurement scripts are in that folder. The full GridCycle analysis (Phases 1–6, including the rule chosen for v11) is `proofs/doubledeal/analysis/v10-gridcycle/` on the `doubledeal-gridcycle-analysis` branch.
+> This is **not** a demonstrated attack on the full 6-round cipher. The product-formula estimate for the worst swap trail through 6 rounds is about \(2\times10^{-17}\), and no distinguisher on the full cipher is claimed. The write-up and a kernel-checked single-deck witness (the K♣↔K♦ swap commutes with the emitted v10 `mix_columns` on one concrete deck) are in [`proofs/deprecated/doubledeal-v10/`](../../../../proofs/deprecated/doubledeal-v10/). The measurement scripts are in that folder. The full GridCycle analysis (Phases 1–6, including the rule chosen for v11) is `proofs/doubledeal/analysis/v10-gridcycle/`.
 >
 > The conformance implementation for this frozen text is `doubledeal_v10.sudo` next to this file. Relative links in the body below point at the v10-era tree.
 

@@ -54,7 +54,7 @@ theorem isDeck_unkeyedNoMix {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck (unkey
 
 /-- (PROVED) GridCycle maps decks to decks. -/
 theorem isDeck_mixColumns {h : Fin 52 → Nat} (hh : IsDeck h) : IsDeck (mixColumns h) := by
-  simpa only [mixColumns_eq] using isDeck_scoop_gridW chooseSeat! freeChooser_v9 hh
+  simpa only [mixColumns_eq] using isDeck_scoop_gridW chooseSeat! freeChooser hh
 
 theorem isDeck_unkeyedWithMix {m : Fin 52 → Nat} (hm : IsDeck m) : IsDeck (unkeyedWithMix m) :=
   isDeck_mixColumns (isDeck_unkeyedNoMix hm)

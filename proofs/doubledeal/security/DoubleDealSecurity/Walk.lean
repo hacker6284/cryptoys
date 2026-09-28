@@ -21,9 +21,9 @@ def placeW (ch : Chooser) (hand : Fin 52 → Nat) : Nat → NatGrid × WalkState
   | n + 1 =>
       let (g, st) := placeW ch hand n
       if h : n < 52 then
-        let (pos, t') := ch st
+        let (pos, markerFinger) := ch st
         let card := hand ⟨n, h⟩
-        (setGrid g pos card, advance st card pos t')
+        (setGrid g pos card, advance st card pos markerFinger)
       else (g, st)
 
 /-- The chooser returns a free seat while one exists (and, at the start, `AS`
@@ -32,8 +32,8 @@ def FreeChooser (ch : Chooser) : Prop :=
   ∀ st : WalkState, occCount st.occ < 52 →
     (st.prev.isSome ∨ occAt st.occ asStart = false) → occAt st.occ (ch st).1 = false
 
-/-- The live chooser (v11 since the GridCycle change; the name predates it). -/
-theorem freeChooser_v9 : FreeChooser chooseSeat! := fun st h1 h2 => chooseSeat!_free st h1 h2
+/-- The live (v11) chooser always picks a free seat. -/
+theorem freeChooser : FreeChooser chooseSeat! := fun st h1 h2 => chooseSeat!_free st h1 h2
 
 theorem placeN_eq_placeW (hand : Fin 52 → Nat) :
     ∀ n, placeN hand n = placeW chooseSeat! hand n

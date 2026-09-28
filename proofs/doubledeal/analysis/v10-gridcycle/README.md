@@ -1,5 +1,8 @@
 # DoubleDeal v10 GridCycle: AES-parity analysis (Phase 1, analysis only)
 
+> **Phase 2** (a cheap overflow rule under the 1/64 bar: ghost finger + "the blocker sends you",
+> worst pair 1/161 at +16% seat checks) is in [PHASE2.md](PHASE2.md).
+
 **Kind:** analysis. Nothing here is a theorem, a spec change or a security claim. No bit-security
 figures. The normative GridCycle is SPEC §3.5 / §4.4 and `mix_columns` in
 `primitives/cipher/doubledeal/doubledeal.sudo`; the Lean model is `mixColumns` in

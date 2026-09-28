@@ -1,0 +1,11 @@
+variant 0: seats inspected per overflow p50 3 p90 15 p99 47; variant 0: overflows/deck 25.65; seats inspected per overflow mean 6.05 max 52; per GridCycle 155; non-bijective 0; inverse failures 0/100000
+variant 7: seats inspected per overflow p50 21 p90 63 p99 63; variant 7: overflows/deck 25.68; seats inspected per overflow mean 47.76 max 676; per GridCycle 1226; non-bijective 0; inverse failures 0/100000
+variant 20: seats inspected per overflow p50 3 p90 15 p99 47; variant 20: overflows/deck 25.52; seats inspected per overflow mean 6.05 max 52; per GridCycle 154; non-bijective 0; inverse failures 0/100000
+variant 22: seats inspected per overflow p50 3 p90 19 p99 45; variant 22: overflows/deck 25.51; seats inspected per overflow mean 7.04 max 52; per GridCycle 180; non-bijective 0; inverse failures 0/100000
+variant 23: seats inspected per overflow p50 3 p90 15 p99 48; variant 23: overflows/deck 25.47; seats inspected per overflow mean 6.82 max 53; per GridCycle 174; non-bijective 0; inverse failures 0/100000
+variant 26: seats inspected per overflow p50 4 p90 20 p99 46; variant 26: overflows/deck 25.47; seats inspected per overflow mean 7.72 max 53; per GridCycle 197; non-bijective 0; inverse failures 0/100000
+variant 28: seats inspected per overflow p50 4 p90 20 p99 46; variant 28: overflows/deck 25.47; seats inspected per overflow mean 7.65 max 53; per GridCycle 195; non-bijective 0; inverse failures 0/100000
+variant 30: seats inspected per overflow p50 3 p90 19 p99 45; variant 30: overflows/deck 25.51; seats inspected per overflow mean 6.98 max 52; per GridCycle 178; non-bijective 0; inverse failures 0/100000
+variant 31: seats inspected per overflow p50 4 p90 20 p99 46; variant 31: overflows/deck 25.48; seats inspected per overflow mean 7.67 max 53; per GridCycle 195; non-bijective 0; inverse failures 0/100000
+variant 33: seats inspected per overflow p50 3 p90 19 p99 45; variant 33: overflows/deck 25.49; seats inspected per overflow mean 7.01 max 52; per GridCycle 179; non-bijective 0; inverse failures 0/100000
+variant 35: seats inspected per overflow p50 3 p90 20 p99 45; variant 35: overflows/deck 25.65; seats inspected per overflow mean 7.08 max 52; per GridCycle 182; non-bijective 0; inverse failures 0/100000

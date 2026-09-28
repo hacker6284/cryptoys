@@ -1,0 +1,9 @@
+variant 0: mean position-pair survival 0.04450; share of survivals with j >= 48: 0.519
+  gap 1: survival 0.1151, share of all survivals 0.099
+  gap 2: survival 0.1060, share of all survivals 0.090
+  gap 3: survival 0.0995, share of all survivals 0.083
+  gap 4: survival 0.0939, share of all survivals 0.076
+  gap 5: survival 0.0865, share of all survivals 0.069
+  gap 6: survival 0.0796, share of all survivals 0.062
+  gap 7: survival 0.0730, share of all survivals 0.056
+  gap 8: survival 0.0699, share of all survivals 0.052

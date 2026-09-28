@@ -192,4 +192,82 @@ the PassMix-F rule from `analysis/gridcycle-bijective/` (branch `doubledeal-grid
 | `colliders.py` | exact step-move enumeration: colliding pairs, e, closed-form lower bounds |
 | `keysched.c` | `pass`: all 1326 swaps through one F; `sched`: τ-relation through the six real passes |
 | `rk.c` | full-cipher related-key tests V1–V3 and per-round state distance |
+| `readings.c`, `readings_exact.py` | §7: alternative readings of the suit step (reversibility, one-pass swaps, six-pass chain; exact move sets) |
 | `run_all.sh` | rebuilds and regenerates every log |
+
+## 7. History of PassKey's F, and the "deal x cards" reading (follow-up)
+
+### 7.1 Timeline (git log -S/-G on SPEC, sudo, Lean, demos, READMEs; `gh pr list/view`)
+
+**Summary:** the suit rotation of the hand has been in F since the first commit of the cipher. No commit or PR
+changed F's forward rule. The phrase "rotate x cards one by one" (or "one at a time", "one-card cut") appears
+nowhere in the repository history (all refs) or in PR bodies. Any change from Zachary's intent therefore happened
+before the cipher entered this repo. The first SPEC says its hand conventions "match `PLAYER_SHEET_ELEGANT_V8.md`"
+and calls the rule `pass_to_key_cut_fallback` (the cipher was then "TDSPN elegant-v8"). That player sheet was never
+committed, so it could not be checked.
+
+| date | commit / PR | author | what happened to PassKey |
+|---|---|---|---|
+| 2026-09-23 | [`a2e9b70`](https://github.com/hacker6284/cryptoys/commit/a2e9b70) "Add TwoDeck, the first cryptoys cipher." (direct push, no PR) | Zach Mills | **Origin.** SPEC §3.7 pseudocode with `k ← suit(C) mod len(hand); hand ← left_rotate(hand, k)`, then the proper rank cut with key-pile fallback. §4.6 prose (quoted below). `twodeck.sudo` `passkey` is the same. The demo labels the step "suit cut, then rank cut on the hand". Injectivity "not claimed". |
+| 2026-09-24 | [#2](https://github.com/hacker6284/cryptoys/pull/2) (`e621596` "Prove PassKey injectivity with a constructive inverse.") | Cursor Agent, merged by hacker6284 | Lean model `passKeyStep` = `maybeRotate` (hand by `suit c % hand.length`) then `maybeCut`. Proves the inverse. No rule change. |
+| 2026-09-24 | [#3](https://github.com/hacker6284/cryptoys/pull/3) "PassKey is a bijection; decrypt un-passes from K6" (`bbb00b1`) | Cursor Agent / hacker6284 | Adds F⁻¹ and "undo the suit rotation" prose; decrypt un-passes. "Ciphertexts do not change". |
+| 2026-09-24 | [#4](https://github.com/hacker6284/cryptoys/pull/4) (`1f1c0ea` "Correct teaching copy…") | Cursor Agent | Demo text "suit cut" → "suit-rotate hand". Wording only. |
+| 2026-09-24 | [#11](https://github.com/hacker6284/cryptoys/pull/11) rename to DoubleDeal; [#13](https://github.com/hacker6284/cryptoys/pull/13) emit Lean from sudo; [#17](https://github.com/hacker6284/cryptoys/pull/17) `while` → bounded `for` | hacker6284 | The only diff to sudo `passkey` since the first commit is `while hand.length > 0` → `for i = 1 to n` (#17). |
+| 2026-09-25 | [#23](https://github.com/hacker6284/cryptoys/pull/23), [#26](https://github.com/hacker6284/cryptoys/pull/26), [#28](https://github.com/hacker6284/cryptoys/pull/28), [#30](https://github.com/hacker6284/cryptoys/pull/30), [#33](https://github.com/hacker6284/cryptoys/pull/33) Link 2 | hacker6284 | Refinement proofs of the existing rule. |
+| 2026-09-25 | [#29](https://github.com/hacker6284/cryptoys/pull/29) playroom | Zach Mills | Demo copy moved. |
+| 2026-09-26 → 28 | [#75](https://github.com/hacker6284/cryptoys/pull/75), [#86](https://github.com/hacker6284/cryptoys/pull/86), [#91](https://github.com/hacker6284/cryptoys/pull/91), [#95](https://github.com/hacker6284/cryptoys/pull/95), [#96](https://github.com/hacker6284/cryptoys/pull/96) | hacker6284 | Version freezes copy §3.7 verbatim ("PassKey … unchanged"). The SPEC F pseudocode on main is byte-identical to `a2e9b70` (`diff` empty). |
+
+**Original prose, verbatim** (`a2e9b70:primitives/cipher/twodeck/SPEC.md`, §4.6):
+
+> 2. For each controller **C** dealt from the hand:
+>    - Deal C (remove from top of hand).
+>    - If cards remain in hand: rotate the hand **left** by C’s **suit** places (♣=0 ♥=1 ♠=2 ♦=3), wrapping; use suit **mod** how many cards are left.
+>    - **Proper cut** only (count **strictly less** than packet size — do **not** wrap with mod):
+>      - If the hand still has cards and C’s **rank** \(<\) hand size: cut the **hand** by that rank.
+>      - Else if the key pile is nonempty and C’s rank \(<\) key-pile size: cut the **key pile** by that rank.
+>      - Else skip the cut.
+>    - Place C **on top** of the key pile.
+
+The original §7 choreography says: "Controller card lifts and flashes **suit** (hand rotate) then **rank**".
+
+**What the original text supports.**
+* It says "rotate the hand left by C's suit places, wrapping". That is x = suit, on the **hand**, moving top
+  cards to the bottom in order. x one-card top-to-bottom moves equal one cut of x, so this is the current rule and
+  the collision is unchanged (reading SAME below is bit-identical to the current F).
+* No written version in the repo describes a deal that reverses the cards, or moving them to the key pile.
+
+### 7.2 Readings measured (`readings.c`, `readings_exact.py`; x = suit; rank cut and fallback unchanged)
+
+Zachary's stated intent is a deal: the x cards move one at a time, so the moved packet ends up reversed. The
+original says "rotate the **hand** … wrapping", so the natural deal version keeps the cards in the hand:
+
+* **DEALB:** deal x cards off the top and put that reversed packet under the hand, then cut by rank.
+* **DEAL:** deal them onto the key pile. Measured as the other pile choice.
+* **REVT:** reverse them in place on top. Shown for completeness.
+* **KEYP:** do the suit move on the key pile. Also for completeness.
+
+One pass, uniform decks, 20k decks per swap for all 1326 swaps. Reversibility is a round trip on 200k decks each
+way. Six passes are 200k keys for the worst pair. The closed-form bounds come from exact move comparison.
+
+| reading | reversible | worst swap (one pass) | 2♥↔A♠ | pairs > 1/64 | worst pair, all six passes τ-related |
+|---|---|---|---|---|---|
+| CUR (SPEC F) | yes (0 fails) | 2♥↔A♠ 0.890 (exact bound 196/221) | 0.890 | 68 | 0.479 |
+| SAME (x one-card top→bottom moves of the hand) | yes | identical to CUR on 200k/200k decks | — | 68 | — |
+| **DEALB** (deal x off the hand, reversed, under the hand) | **yes** (0 fails) | **2♣↔A♥ 0.887** (bound 196/221) | **0.0153 ± 0.0009** | **12** | 0.482 |
+| DEAL (deal x onto the key pile) | **no**: ≥2 preimages for 59% of outputs; dealt cards never act as controllers | 6♥↔6♠ 0.374 | 0.349 | 1326 | — |
+| REVT (reverse the top x in place) | yes | A♣↔A♥ 1.000 | 0.000 | 25 | 1.000 |
+| KEYP (suit moves on the key pile) | yes | K♥↔Q♠ 0.059 | 0.0006 | 35 | 0 of 200k |
+
+What the table shows:
+* **DEALB fixes 56 of the 68 collisions, including 2♥↔A♠, but not all.**
+  * Dealing 0 or 1 card reverses nothing, so a ♣ card (deal 0) and a ♥ card (deal 1) are still plain
+    rotations. The 12 pairs ♣(r+1)↔♥(r) (2♣↔A♥ … K♣↔Q♥) keep exactly the current rates, up to 0.887, and the
+    same ≈0.48 six-pass related-key rate.
+  * 2♥↔A♠ drops to 0.0153, just under 1/64. No step makes the same move for it (e = 0), so this rate comes
+    entirely from paths that diverge and re-merge.
+* **DEAL onto the key pile is not a bijection**, so it cannot be the key schedule's F.
+* **REVT is worse:** ♣ and ♥ cards of the same rank make identical moves at every step.
+* **KEYP** leaves a residue: late in the pass the rank cut also falls on the key pile, where suit and rank add
+  again (King/Queen pairs up to 0.059).
+* **Unmeasured hand-friendly idea for the ♣/♥ residue:** deal x = suit + 2 cards (2–5), so every suit reverses
+  at least two cards. Not tested.

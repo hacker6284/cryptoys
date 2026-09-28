@@ -1,6 +1,6 @@
 /-
   T1: GridCycle (MixColumns) versus relabellings: only the identity commutes,
-  for v9 and for the frozen v8 model (`V8`).
+  for the live v11 walk and for the frozen v8 model (`V8`).
 -/
 import DoubleDealSecurity.SumRanks
 import DoubleDealSecurity.Walk
@@ -13,11 +13,13 @@ open DoubleDeal Relabel
 
 GridCycle is value-dependent in a different way: card `n` is placed at a seat
 computed from card `n−1`'s (suit, rank) step, the current occupancy, and the
-overflow marker `t` (v9 also uses the blocked target's column as the scan
-start). So on one deck, GridCycle commutes with σ exactly when the seat walk of
+overflow marker `t` (v11: the step is taken from the ghost finger, the last
+target; a blocked placement is scanned by the blocker's suit and rank from the
+target, and the finger moves on by the blocker's step; v9/v10 scanned from the
+blocked target's column). So on one deck, GridCycle commutes with σ exactly when the seat walk of
 `σ·m` equals the walk of `m` (`mixColumns_rel_iff_walk`). Over all decks this
 forces σ = id: the second card's seat is an injective function of the first
-card, except that K♣ (step (0,0), always overflows to (0,0)) and K♠ (step
+card, except that K♣ (step (0,0), blocks on itself at A♠ and is scanned to (0,0)) and K♠ (step
 (2,0) from (2,0), lands on (0,0)) collide. -/
 
 /-- Seat of card `n` in the GridCycle walk of `hand`. -/
@@ -25,7 +27,7 @@ def walkSeat (hand : Fin 52 → Nat) (n : Nat) : Fin 4 × Fin 13 :=
   (chooseSeat! (placeN hand n).2).1
 
 /-- Seat of the second card as a function of the first card. -/
-def seat2 (c : Nat) : Fin 4 × Fin 13 := (chooseSeat! (advance initWalk c asStart 0)).1
+def seat2 (c : Nat) : Fin 4 × Fin 13 := (chooseSeat! (advance initWalk c asStart (0, asStart))).1
 
 theorem walkSeat_zero (hand : Fin 52 → Nat) : walkSeat hand 0 = asStart := rfl
 
@@ -89,7 +91,7 @@ theorem mixColumns_rel_iff_walk (σ : Relabel) (m : Fin 52 → Nat) (hm : IsDeck
   simp only [mixColumns_eq, walkSeat_eq]
   exact walkW_rel_iff _ freeChooser_v9 σ m hm
 
-/-- (PROVED, kernel `decide!`) K♣↔K♦ does not commute with v9 GridCycle:
+/-- (PROVED, kernel `decide!`) K♣↔K♦ does not commute with v11 GridCycle:
     on the deck `K♦, A♣, 2♣, …` the second card goes to (1,0) but, after the
     swap, K♣ leads and the second card overflows to (0,0). -/
 theorem mixColumns_KC_KD_fails :
@@ -191,18 +193,22 @@ Checked against the frozen v8 known-answer vectors in `V8Vectors.lean`. -/
 
 namespace V8
 
-def chooseSeat? (st : WalkState) : Option ((Fin 4 × Fin 13) × Nat) :=
+/-- v8 blocked placement: overflow rows from the marker, each scanned from
+    column 0; the next marker is the row after the one used, and the finger is
+    the seat the card landed on (no ghost finger). -/
+def chooseSeat? (st : WalkState) : Option SeatChoice :=
   match st.prev with
-  | none => some (asStart, st.t)
+  | none => some (asStart, (st.t, asStart))
   | some (card, pos) =>
       let target := gridStep card pos
-      if occAt st.occ target then overflowSeat st.occ st.t 0
-      else some (target, st.t)
+      if occAt st.occ target then
+        (overflowSeat st.occ st.t 0).map fun p => (p, ((p.1.val + 1) % 4, p))
+      else some (target, (st.t, target))
 
-def chooseSeat! (st : WalkState) : (Fin 4 × Fin 13) × Nat :=
+def chooseSeat! (st : WalkState) : SeatChoice :=
   match chooseSeat? st with
   | some x => x
-  | none => ((⟨0, by decide⟩, ⟨0, by decide⟩), st.t)
+  | none => ((⟨0, by decide⟩, ⟨0, by decide⟩), (st.t, (⟨0, by decide⟩, ⟨0, by decide⟩)))
 
 /-- v8 GridCycle: the generic walk (`Walk.lean`) with the v8 chooser. -/
 def mixColumns (hand : Fin 52 → Nat) : Fin 52 → Nat := scoopRowMajor (gridW chooseSeat! hand)
@@ -238,7 +244,7 @@ theorem V8.freeChooser : FreeChooser V8.chooseSeat! := by
   intro st hct hprev
   match hprev_eq : st.prev with
   | none =>
-      have : V8.chooseSeat? st = some (asStart, st.t) := by simp [V8.chooseSeat?, hprev_eq]
+      have : V8.chooseSeat? st = some (asStart, (st.t, asStart)) := by simp [V8.chooseSeat?, hprev_eq]
       simp only [V8.chooseSeat!, this]
       cases hprev with
       | inl h => simp [hprev_eq] at h
@@ -247,29 +253,29 @@ theorem V8.freeChooser : FreeChooser V8.chooseSeat! := by
       simp only [V8.chooseSeat!, V8.chooseSeat?, hprev_eq]
       by_cases ht : occAt st.occ (gridStep pair.1 pair.2)
       · simp only [ht, ↓reduceIte]
-        obtain ⟨p, t', hs, hf⟩ := overflow_some_of_count_lt st.occ st.t 0 hct
-        simp only [hs]
+        obtain ⟨p, hs, hf⟩ := overflow_some_of_count_lt st.occ st.t 0 hct
+        simp only [hs, Option.map_some']
         exact hf
       · have hf := eq_false_of_ne_true ht
         simp [hf]
 
-/-- (PROVED, kernel `decide!`) v8 and v9 agree on the second seat. -/
+/-- (PROVED, kernel `decide!`) v8 and v11 agree on the second seat. -/
 theorem V8.seat2_eq : ∀ c : Fin 52,
-    (V8.chooseSeat! (advance initWalk c.val asStart 0)).1 = seat2 c.val := by
+    (V8.chooseSeat! (advance initWalk c.val asStart (0, asStart))).1 = seat2 c.val := by
   decide!
 
 theorem V8.mixColumns_eq (hand : Fin 52 → Nat) :
     V8.mixColumns hand = scoopRowMajor (gridW V8.chooseSeat! hand) := rfl
 
 /-- (PROVED) v8 GridCycle commutes with σ on all decks iff σ = id (same
-    argument; v8 and v9 agree on the second seat, `V8.seat2_eq`). -/
+    argument; v8 and v11 agree on the second seat, `V8.seat2_eq`). -/
 theorem v8_mixColumns_commutes_iff_id (σ : Relabel) :
     CommutesOnDecks σ V8.mixColumns ↔ σ = 1 := by
   constructor
   · intro h
     refine walkW_only_id V8.chooseSeat! V8.freeChooser
       (fun hand h0 => by
-        show (V8.chooseSeat! (advance initWalk (hand ⟨0, by decide⟩) asStart 0)).1 = _
+        show (V8.chooseSeat! (advance initWalk (hand ⟨0, by decide⟩) asStart (0, asStart))).1 = _
         exact V8.seat2_eq ⟨_, h0⟩) ?_ σ ?_
     · simpa only [V8.mixColumns_eq] using v8_mixColumns_KC_KS_fails
     · intro m hm; simpa only [V8.mixColumns_eq] using h m hm

@@ -281,7 +281,7 @@ theorem scoop_gridW_inj (ch : Chooser) (hch : FreeChooser ch) {a b : Fin 52 → 
   have := congrArg layRowMajor h
   rwa [lay_scoop_rowMajor, lay_scoop_rowMajor] at this
 
-/-! ## v9 GridCycle (`mixColumns`) -/
+/-! ## Live (v11) GridCycle (`mixColumns`) -/
 
 /-- (T1, PROVED) For every deck, swapping walk cards 50 and 51 changes
     exactly two output seats of GridCycle. -/
@@ -308,7 +308,7 @@ theorem mixColumns_seat26 (m : Fin 52 → Nat) : mixColumns m 26 = m 0 := by
 theorem mixColumns_separates {a b : Fin 52 → Nat} (h : mixColumns a = mixColumns b) : a = b :=
   Function.LeftInverse.injective invMixColumns_mixColumns h
 
-/-- (PROVED) Branch number of v9 GridCycle, on decks, is at least 4. -/
+/-- (PROVED) Branch number of the live (v11) GridCycle, on decks, is at least 4. -/
 theorem four_le_mixColumns_branch {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b)
     (h : a ≠ b) :
     4 ≤ hammingDist a b + hammingDist (mixColumns a) (mixColumns b) := by

@@ -98,7 +98,7 @@ export function createDoubleDealSession({
     }
 
     const OVERFLOW_WHY =
-        "Step target occupied: in the row named by the CHaSeD overflow marker, start at the blocked seat's column and scan right (wrapping) for the first free seat, place there, then advance the marker ♣→♥→♠→♦. If that row is full, advance and try the next row from the same column.";
+        "Step target occupied: the card already on it (the blocker) sends you. Go to the row named by the CHaSeD marker plus the blocker's suit, start at the target's column plus the blocker's rank, and scan right (wrapping) for the first free seat; place there, then advance the marker ♣→♥→♠→♦ once. If that row is full, drop to the next row and scan it from the same column. The finger does not follow the card: it moves from the target by the blocker's step, and the next step starts there.";
 
     function caption(step) {
         if (step.kind === "sumrow" && step.amount < 0) return `${step.label} · inverse SumRanks row ${step.row + 1} · back ${-step.amount}`;
@@ -111,8 +111,8 @@ export function createDoubleDealSession({
         if (step.kind === "reset" && step.amount > 0) return `${step.label} · ${step.amount} passes from here`;
         if (step.kind === "reset") return step.label;
         if (step.kind === "take") return `${step.label} · inverse GridCycle lifts a card`;
-        if (step.kind === "scan") return `${step.label} · GridCycle overflow · scanning row ${step.row + 1} from column ${step.col + 1}`;
-        if (step.kind === "place" && step.flag === 1) return `${step.label} · GridCycle overflow into (${step.row + 1}, ${step.col + 1})`;
+        if (step.kind === "scan") return `${step.label} · GridCycle blocked by ${cardName(step.total)} · scanning row ${step.row + 1} from column ${step.col + 1}`;
+        if (step.kind === "place" && step.flag === 1) return `${step.label} · GridCycle blocked placement into (${step.row + 1}, ${step.col + 1})`;
         if (step.kind === "pass" && step.flag === 2) return `${step.label} · proper rank cut on the key pile`;
         if (step.kind === "pass" && step.flag === 1) return `${step.label} · suit-rotate hand, then proper rank cut on the hand`;
         if (step.kind === "pass" && step.flag === 0) return `${step.label} · no proper rank cut`;
@@ -268,7 +268,7 @@ export function createDoubleDealSession({
             return {
                 kicker,
                 title: analogue(step),
-                math: `Overflow. CHaSeD marker on row ${step.row + 1} (suit index ${step.row}); the blocked seat is in column ${step.col + 1}, so scan right from column ${step.col + 1}, wrapping from column 13 to column 1, for a free seat. Card ${cardName(step.card)}.`,
+                math: `Blocked target. The blocker ${cardName(step.total)} picks the scan: row ${step.row + 1} (marker + blocker's suit, or the next row down if that one was full), starting at column ${step.col + 1} (target column + blocker's rank), scanning right and wrapping from column 13 to column 1 for a free seat. Card ${cardName(step.card)}.`,
                 why: OVERFLOW_WHY,
                 spec: specFor(step),
             };
@@ -279,7 +279,7 @@ export function createDoubleDealSession({
                 kicker,
                 title: analogue(step),
                 math: step.flag === 1
-                    ? `${cardName(step.card)} overflowed into seat (${step.row + 1}, ${step.col + 1}) via the CHaSeD marker scan (not the suit/rank step).`
+                    ? `${cardName(step.card)} sits on seat (${step.row + 1}, ${step.col + 1}) via the blocker's scan (its step target was taken).`
                     : opening
                         ? `${cardName(step.card)} is placed on the start seat (3, 1) — no step yet.`
                         : `${cardName(step.card)} steps suit ${Math.floor(step.card / 13)} / rank ${(step.card % 13) + 1} to seat (${step.row + 1}, ${step.col + 1}).`,

@@ -1,5 +1,5 @@
 /-
-  The GridCycle seat walk, generic in the seat chooser (v9 `chooseSeat!` or the
+  The GridCycle seat walk, generic in the seat chooser (v11 `chooseSeat!` or the
   frozen v8 chooser). Proof-only: the placement lemmas of `GridCycle.lean`
   restated for an arbitrary chooser that always returns a free seat, plus
   "the 52 seats are distinct, hence cover the grid".
@@ -13,7 +13,7 @@ namespace DoubleDeal.Security
 open DoubleDeal
 
 /-- A seat chooser. -/
-abbrev Chooser := WalkState → (Fin 4 × Fin 13) × Nat
+abbrev Chooser := WalkState → SeatChoice
 
 /-- The walk of `GridCycle.placeN`, with the seat chooser as a parameter. -/
 def placeW (ch : Chooser) (hand : Fin 52 → Nat) : Nat → NatGrid × WalkState
@@ -32,6 +32,7 @@ def FreeChooser (ch : Chooser) : Prop :=
   ∀ st : WalkState, occCount st.occ < 52 →
     (st.prev.isSome ∨ occAt st.occ asStart = false) → occAt st.occ (ch st).1 = false
 
+/-- The live chooser (v11 since the GridCycle change; the name predates it). -/
 theorem freeChooser_v9 : FreeChooser chooseSeat! := fun st h1 h2 => chooseSeat!_free st h1 h2
 
 theorem placeN_eq_placeW (hand : Fin 52 → Nat) :
@@ -171,7 +172,7 @@ theorem scoop_eq_hand_at (ch : Chooser) (hch : FreeChooser ch)
   simpa [scoopRowMajor, h1, h2] using hg
 
 /-- (PROVED) Any free-seat walk followed by the row-major scoop sends decks to
-    decks (v9 `mixColumns`, the frozen v8 model). -/
+    decks (live v11 `mixColumns`, the frozen v8 model). -/
 theorem isDeck_scoop_gridW (ch : Chooser) (hch : FreeChooser ch)
     {m : Fin 52 → Nat} (hm : IsDeck m) :
     IsDeck (scoopRowMajor (gridW ch m)) := by

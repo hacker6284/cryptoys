@@ -7,23 +7,12 @@ by one deck (tau = F(sigma.m1) o F(m1)^-1); covariance fails if another deck
 disagrees. Deterministic seed."""
 import random, sys
 import ddport as P
-from dd_v8 import suit, rank
 
 def app(s, d): return [s[x] for x in d]
 def transp(a, b): s = list(range(52)); s[a], s[b] = b, a; return s
-def card(r, su): return 13 * su + r - 1
-def sig9(a, b):  # same table as check_relabel.py
-    s = [None]*52
-    for c in range(52):
-        r, su = rank(c), suit(c)
-        r2 = (r - 1 + a) % 13 + 1
-        s[c] = card(r2, (su + b - (r2 - r)) % 4)
-    return s
-assert sorted(sig9(0, 1)) == list(range(52))
-LABEL = P.LABEL; SUIT_OF_LABEL = [LABEL.index(l) for l in range(4)]
-def sig10(a, x):  # v10Sym: rank + a (mod 13), GF(4) suit label XOR x
-    return [13 * SUIT_OF_LABEL[LABEL[c // 13] ^ x] + (c % 13 + a) % 13 for c in range(52)]
-assert sorted(sig10(1, 1)) == list(range(52))
+sig9, sig10 = P.v9sym, P.v10sym
+assert sorted(sig9(0, 1)) == list(range(52)), "v9Sym 0 1 is not a permutation"
+assert sorted(sig10(1, 1)) == list(range(52)), "v10Sym 1 1 is not a permutation"
 
 rng = random.Random(20260927)
 def rdeck(): d = list(range(52)); rng.shuffle(d); return d

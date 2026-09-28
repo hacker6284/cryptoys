@@ -1,19 +1,19 @@
 """cand.c == candidates.py for every variant; v9 variant == frozen v9 vectors;
 W5c variant == frozen v10 encrypt vectors; decrypt inverts."""
-import sys, json, random, pathlib, numpy as np
+import sys, random, pathlib, numpy as np
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-import candidates as C, cport
-d = json.loads((HERE.parents[2] / "deprecated/doubledeal-v9/vectors/doubledeal_v9_vectors.json").read_text())
+sys.path.insert(0, str(HERE.parent.parent / "security/checks"))
+import candidates as C, cport, ddport
 nv = 0
-for v in d["vectors"]:
+for v in ddport.vectors(9):
     if v["kind"] == "encrypt":
-        assert C.encrypt(v["message"], v["key"], 0) == v["cipher"]
-        assert cport.enc(np.array([v["message"]]), cport.real_keys(np.array([v["key"]])), "F6", 0)[0].tolist() == v["cipher"]
+        assert C.encrypt(v["message"], v["key"], 0) == v["cipher"], f"candidates.py v9 != {v['name']}"
+        assert cport.enc(np.array([v["message"]]), cport.real_keys(np.array([v["key"]])), "F6", 0)[0].tolist() == v["cipher"], \
+            f"cport v9 != {v['name']}"
         nv += 1
-d10 = json.loads((HERE.parents[2] / "deprecated/doubledeal-v10/vectors/doubledeal_v10_vectors.json").read_text())  # frozen v10 (live vectors are v11)
 W5c = C.VARIANTS["W5c"]; nw = nt = 0
-for v in d10["vectors"]:
+for v in ddport.vectors(10):  # frozen v10 (live vectors are v11)
     if v["kind"] == "encrypt":
         nt += 1
         ok = C.encrypt(v["message"], v["key"], W5c) == v["cipher"]

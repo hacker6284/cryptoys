@@ -16,16 +16,7 @@ SCALE = float(sys.argv[1]) if len(sys.argv) > 1 else 1.0
 def card(r, su): return su * 13 + (r - 1)
 
 
-def sig9(a, b):
-    s = [None] * 52
-    for c in range(52):
-        r, su = rank(c), suit(c)
-        r2 = (r - 1 + a) % 13 + 1
-        s[c] = card(r2, (su + b - (r2 - r)) % 4)
-    return s
-
-
-G = {(a, b): sig9(a, b) for a in range(13) for b in range(4) if (a, b) != (0, 0)}
+G = {(a, b): P.v9sym(a, b) for a in range(13) for b in range(4) if (a, b) != (0, 0)}
 def app(s, d): return [s[x] for x in d]
 def deck(R): d = list(range(52)); R.shuffle(d); return d
 def enc_keys(m, keys):

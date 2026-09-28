@@ -3,7 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 mkdir -p p5
-cc -O2 -Wall -Wextra -o p5sim p5.c
+./build.sh
 python3 p5check.py 20 > p5/check.log
 for v in 0 33 30; do (./p5sim dist $v 20000 11 > p5/dist_$v.log; ./p5sim cyc3 $v 2000000 12 > p5/cyc3_$v.log) & done
 for v in 0 33 30; do for k in 1 3 5 10; do ./p5sim climb $v $k 20000 8 2$k > p5/climb_${v}_k$k.log & done; done

@@ -11,7 +11,9 @@ from collections import Counter
 HERE = Path(__file__).resolve().parent
 os.chdir(HERE)
 sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(HERE.parents[1] / 'analysis' / 'v10-sumranks' / 'sbox-search'))
+sys.path.insert(0, str(HERE.parent / 'checks'))
+import ddport as P
+sys.path.insert(0, str(P.REPO / 'proofs/doubledeal/analysis/v10-sumranks/sbox-search'))
 (HERE / 'build').mkdir(exist_ok=True)
 import sb
 from model import sr_trace, U, V, S, lab, rk, mulw
@@ -33,9 +35,7 @@ def cyc(*cs):
 C = sb.card
 def delta(tau, c): return (rk(tau[c]) - rk(c)) % 13
 def eps(tau, c): return lab(tau[c]) ^ lab(c)
-def v10sym(a, x):
-    inv = {0: 0, 2: 1, 3: 2, 1: 3}   # label -> suit index
-    return [13 * inv[lab(c) ^ x] + (rk(c) + a) % 13 for c in range(52)]
+v10sym = P.v10sym   # same card ids and GF(4) labels as sbox.c / model.py
 def survives(tau, g):
     y, _ = sr_trace(g); y2, _ = sr_trace(apply(tau, g)); return y2 == apply(tau, y)
 def rot_left(row, t): return row[t:] + row[:t]

@@ -50,8 +50,9 @@ the occupancy). The layer is therefore "forward-triangular":
 
 * a difference whose first changed walk index is `p` leaves seats `0..p-1` and their cards alone, so
   the output difference weight is at most `52 − p`;
-* swapping walk cards 50 and 51 **always** moves exactly two output seats (proved:
-  `mixColumns_swap_tail`), because seat 50 is fixed by card 49 and seat 51 is the last free seat.
+* swapping walk cards 50 and 51 **always** moves exactly two output seats (proved for any chooser
+  that always picks a free seat: `hammingDist_gridW_swap_tail`), because seat 50 is fixed by card
+  49 and seat 51 is the last free seat.
 
 The target seat is close to a uniform random seat, so the overflow rate at walk index `i` is about
 `i/52` (measured: 0.02 at i=1, 0.50 at i=26, 0.98 at i=51). **Half of all placements (25.6 of 51)
@@ -287,7 +288,7 @@ after `./build.sh`; `runs/` holds the uncommitted raw tables):
 
 | log | command |
 |---|---|
-| `candcheck.log` | `python3 candcheck.py > candcheck.log` |
+| `candcheck.log` | `./build.sh && python3 candcheck.py > candcheck.log` |
 | `survival_value.log` | `for s in 1 2 3 4; do ./survival value 50000 $s > runs/value_$s.txt; done; python3 agg.py value 10 > survival_value.log` |
 | `survival_pos.log` | `for s in 1 2 3 4; do ./survival pos 50000 $((s+100)) > runs/pos_$s.txt; done; python3 agg.py pos 20 > survival_pos.log` |
 | `structure.log` | `./structure 200000 3 > structure.log` |

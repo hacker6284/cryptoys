@@ -3,8 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 mkdir -p p4
-cc -O2 -Wall -Wextra -o p3small p3small.c
-cc -O2 -Wall -Wextra -o p4sim p4.c
+./build.sh
 for rc in "2 3" "3 2" "2 4" "4 2" "3 3"; do for v in 0 33 50 51 52 53; do ./p3small $rc $v; done; done > p4/small_injectivity.log
 for v in 50 51 52 53; do ./p4sim $v collide 2000 7 > p4/collide_$v.log & done; wait
 python3 p4trace.py > p4/trace.log

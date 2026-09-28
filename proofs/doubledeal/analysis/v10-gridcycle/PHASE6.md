@@ -75,7 +75,7 @@ Merge rates for all gap classes are in `p6/merge_*.log`; per-i and (i, j) bucket
 
 **One-pass ceiling.** A swap at `(i, j)` can change at most `52 − i` outputs, so no rule of this shape can average more than 35.33. The uniform one-pass reference from PHASE5 (everything after step `i` re-seated at random) averages 34.4. A′ and A+B reach 34.11 and B 33.93, so they are close to that reference. None exceeds it, as expected.
 
-**The minimum is still 2, and branch analogue 4, for every variant.** This is the PHASE5 one-pass floor, proven on paper (not formalised; for v10 via `mixColumns_swap_tail`): a swap of the last two positions always gives spread 2, and no tweak of the finger can change that.
+**The minimum is still 2, and branch analogue 4, for every variant.** This is the PHASE5 one-pass floor, proven on paper (the tail swap is also `hammingDist_gridW_swap_tail` in Lean, for any free-seat chooser): a swap of the last two positions always gives spread 2, and no tweak of the finger can change that.
 
 ## Which ones clear the bar
 

@@ -2,11 +2,7 @@ import sys, random
 sys.path.insert(0,str(__import__('pathlib').Path(__file__).resolve().parents[1]))
 import ddport as P
 E=lambda m,k: P.encrypt(m,k,9)
-def v9sym(a,b):
-    def f(c):
-        r0,su=c%13,c//13; wrap=0 if r0+a<13 else 13
-        return 13*((su+b+16-a+wrap)%4)+(r0+a)%13
-    return [f(c) for c in range(52)]
+v9sym = P.v9sym
 SYMS=[((a,b),v9sym(a,b)) for a in range(13) for b in range(4) if (a,b)!=(0,0)]
 assert all(sorted(s)==list(range(52)) for _,s in SYMS)
 def rel(s,m): return [s[x] for x in m]

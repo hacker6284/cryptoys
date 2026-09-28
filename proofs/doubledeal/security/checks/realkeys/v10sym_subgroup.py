@@ -8,10 +8,7 @@ heavy Lean library (identity key, identity message)."""
 import sys, pathlib, random
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import ddport as P
-LABEL = P.LABEL
-SUIT_OF_LABEL = [LABEL.index(l) for l in range(4)]   # [0, 3, 1, 2]
-def v10sym(a, x):
-    return [13 * SUIT_OF_LABEL[LABEL[c // 13] ^ x] + (c % 13 + a) % 13 for c in range(52)]
+v10sym = P.v10sym
 def exp(a, x): return 13 if x else pow(a, -1, 13)
 def target(a, x): return (1, 0) if x == 0 else (0, x)
 G = {(a, x): v10sym(a, x) for a in range(13) for x in range(4)}

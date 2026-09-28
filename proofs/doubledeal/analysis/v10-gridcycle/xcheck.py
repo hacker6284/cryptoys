@@ -13,7 +13,7 @@ gc_mix(d,o);for(int i=0;i<52;i++) printf("%d ",o[i]);printf("\n");fflush(stdout)
 tmp = tempfile.mkdtemp(prefix='gcx')
 csrc, exe = os.path.join(tmp, 'gcx.c'), os.path.join(tmp, 'gcx')
 open(csrc, 'w').write(src)
-subprocess.check_call(['cc', '-O2', '-I', here, csrc, '-o', exe])
+subprocess.check_call([os.environ.get('CC', 'cc'), '-O2', '-I', here, csrc, '-o', exe])
 rng = random.Random(1); decks = []
 for _ in range(2000):
     d = list(range(52)); rng.shuffle(d); decks.append(d)
@@ -21,5 +21,5 @@ inp = '\n'.join(' '.join(map(str, d)) for d in decks) + '\n'
 out = subprocess.run([exe], input=inp, capture_output=True, text=True).stdout.split('\n')
 bad = sum(1 for d, line in zip(decks, out) if list(map(int, line.split())) != ddport.mix_columns(d, 10))
 print('C vs ddport mix_columns on 2000 random decks: mismatches =', bad)
-assert bad == 0
+assert bad == 0, f"gc.h gc_mix disagrees with ddport v10 on {bad} decks"
 import shutil; shutil.rmtree(tmp)

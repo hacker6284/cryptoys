@@ -12,7 +12,14 @@ or a `where` item: Lean compiles those to their own declarations (`top.f`),
 which is also how the axiom gate names them. `have` stays with its parent.
 The axiom gate (../check_axioms.py) is the real enforcer; this scan is a
 cheap source-level check. `--selftest` runs the built-in cases below.
+
+Other Lean packages use the same gate (one line per CI job):
+  scan_sorry.py                                    # this package, ALLOWED_SORRY
+  scan_sorry.py --root DIR_OR_FILE ... [--exclude PART ...] [--allow-sorry NAME ...]
+With --root, the sorry allowlist is exactly the --allow-sorry names (default: none).
+--exclude skips files with that path component (e.g. Generated); .lake is always skipped.
 """
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -37,8 +44,9 @@ def strip_block_comments(text: str) -> str:
     return re.sub(r"/-.*?-/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
 
 
-def scan(sources):
-    """sources: iterable of (label, text). Returns (bad, found)."""
+def scan(sources, allowed):
+    """sources: iterable of (label, text); allowed: declarations that may hold one sorry.
+    Returns (bad, found)."""
     bad = []
     found = {}
     for path, raw in sources:
@@ -77,16 +85,16 @@ def scan(sources):
             if re.match(r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable)\s+)*axiom\b", code):
                 bad.append(f"{path}:{i}: axiom declaration: {line.strip()}")
             for _ in re.finditer(r"\bsorry\b", code):
-                if decl in ALLOWED_SORRY:
+                if decl in allowed:
                     found[decl] = found.get(decl, 0) + 1
                 else:
                     bad.append(f"{path}:{i}: sorry outside the allowlist (in {decl}): {line.strip()}")
     return bad, found
 
 
-def check(sources):
-    bad, found = scan(sources)
-    for name in sorted(ALLOWED_SORRY):
+def check(sources, allowed):
+    bad, found = scan(sources, allowed)
+    for name in sorted(allowed):
         n = found.get(name, 0)
         if n != 1:
             bad.append(f"allowlisted conjecture {name}: expected exactly 1 sorry, found {n} "
@@ -94,14 +102,32 @@ def check(sources):
     return bad
 
 
-def main() -> int:
-    files = [p for p in sorted(PKG.rglob("*.lean")) if ".lake" not in p.parts]
-    bad = check((str(p), p.read_text()) for p in files)
+def lean_files(roots, exclude=()):
+    skip = {".lake", *exclude}
+    files = []
+    for root in roots:
+        root = Path(root)
+        if root.is_file():
+            files.append(root)
+        elif root.is_dir():
+            files += [p for p in sorted(root.rglob("*.lean")) if not skip & set(p.relative_to(root).parts)]
+        else:
+            raise SystemExit(f"scan_sorry: no such file or directory: {root}")
+    return files
+
+
+def main(roots, exclude, allowed, label) -> int:
+    files = lean_files(roots, exclude)
+    if not files:
+        print(f"scan_sorry: no .lean files under {label}", file=sys.stderr)
+        return 1
+    bad = check(((str(p), p.read_text()) for p in files), allowed)
     if bad:
         print(*bad, sep="\n", file=sys.stderr)
         return 1
-    print("security package: no admit, admitGoal, native_decide, sorryAx, initialize or axiom declarations; "
-          f"sorry only in {sorted(ALLOWED_SORRY)} (exactly once each)")
+    what = f"sorry only in {sorted(allowed)} (exactly once each)" if allowed else "no sorry"
+    print(f"{label} ({len(files)} files): no admit, admitGoal, native_decide, sorryAx, initialize or "
+          f"axiom declarations; {what}")
     return 0
 
 
@@ -130,22 +156,97 @@ SELFTEST = [
 ]
 
 
+# --root / --exclude / --allow-sorry, run on a scratch tree:
+# (name, {relpath: source}, argv, expect_pass, substring expected in the failure output)
+FLAG_SELFTEST = [
+    ("root: clean", {"A/X.lean": "theorem t : True := trivial\n"}, ["--root", "A"], True, None),
+    ("root: no default allowlist", {"A/X.lean": f"theorem {C} : P := by\n  sorry\n"},
+     ["--root", "A"], False, f"(in {C})"),
+    ("root: --allow-sorry", {"A/X.lean": f"theorem {C} : P := by\n  sorry\n"},
+     ["--root", "A", "--allow-sorry", C], True, None),
+    ("root: --allow-sorry must be used", {"A/X.lean": "theorem t : True := trivial\n"},
+     ["--root", "A", "--allow-sorry", C], False, "found 0"),
+    ("root: native_decide", {"A/X.lean": "theorem t : True := by native_decide\n"},
+     ["--root", "A", "--allow-sorry", "t"], False, "forbidden native_decide:"),
+    ("root: file root", {"A/X.lean": "theorem t : Q := by admit\n"}, ["--root", "A/X.lean"], False,
+     "forbidden admit:"),
+    ("root: several roots", {"A/X.lean": "", "B/Y.lean": "theorem u : Q := sorry\n"},
+     ["--root", "A", "--root", "B"], False, "(in u)"),
+    ("exclude: skipped part", {"A/X.lean": "", "A/Generated/G.lean": "theorem g : Q := sorry\n"},
+     ["--root", "A", "--exclude", "Generated"], True, None),
+    ("exclude: others still scanned", {"A/Generated/G.lean": "", "A/Y.lean": "theorem u : Q := sorry\n"},
+     ["--root", "A", "--exclude", "Generated"], False, "(in u)"),
+    ("exclude: not excluded by default", {"A/Generated/G.lean": "theorem g : Q := sorry\n"},
+     ["--root", "A"], False, "(in g)"),
+    (".lake always skipped", {"A/X.lean": "", "A/.lake/p/Z.lean": "theorem z : Q := sorry\n"},
+     ["--root", "A"], True, None),
+    ("root: missing path", {}, ["--root", "nope"], False, "no such file"),
+    ("root: no .lean files", {"A/readme.md": "sorry"}, ["--root", "A"], False, "no .lean files"),
+]
+
+
+def parse(argv):
+    ap = argparse.ArgumentParser(description="sorry / native_decide gate for Lean packages")
+    ap.add_argument("--selftest", action="store_true", help="run the built-in cases and exit")
+    ap.add_argument("--root", action="append", help="file or directory to scan (repeatable; "
+                    "default: the security package with ALLOWED_SORRY)")
+    ap.add_argument("--exclude", action="append", default=[], help="skip paths with this component")
+    ap.add_argument("--allow-sorry", action="append", help="declaration allowed exactly one sorry "
+                    "(repeatable; with --root the default is none)")
+    return ap.parse_args(argv)
+
+
+def run(a) -> int:
+    """a: parsed arguments. The one place that picks the roots and the allowlist default:
+    no --root = the security package with ALLOWED_SORRY; with --root, none."""
+    if a.root is None:
+        roots, label, default = [PKG], "security package", ALLOWED_SORRY
+    else:
+        roots, label, default = a.root, ", ".join(a.root), set()
+    allowed = default if a.allow_sorry is None else set(a.allow_sorry)
+    return main(roots, a.exclude, allowed, label)
+
+
 def selftest() -> int:
+    import contextlib, io, os, tempfile
     fails = 0
     for name, src, ok, want in SELFTEST:
-        bad = check([("<selftest>", src)])
+        bad = check([("<selftest>", src)], ALLOWED_SORRY)
         good = (not bad) if ok else (bool(bad) and any(want in b for b in bad))
         if not good:
             fails += 1
             print(f"SELFTEST FAIL {name}: {bad}", file=sys.stderr)
+    for name, tree, argv, ok, want in FLAG_SELFTEST:
+        with tempfile.TemporaryDirectory() as d:
+            for rel, text in tree.items():
+                (Path(d) / rel).parent.mkdir(parents=True, exist_ok=True)
+                (Path(d) / rel).write_text(text)
+            out, cwd = io.StringIO(), os.getcwd()
+            os.chdir(d)
+            try:
+                with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+                    try:
+                        rc = run(parse(argv))
+                    except SystemExit as e:
+                        print(e)
+                        rc = 1
+            finally:
+                os.chdir(cwd)
+        got = out.getvalue()
+        good = rc == 0 if ok else (rc != 0 and want in got)
+        if not good:
+            fails += 1
+            print(f"SELFTEST FAIL {name}: rc={rc} {got!r}", file=sys.stderr)
     if fails:
         return 1
-    print(f"scan_sorry selftest: {len(SELFTEST)} cases pass")
+    print(f"scan_sorry selftest: {len(SELFTEST)} cases + {len(FLAG_SELFTEST)} flag cases pass")
     return 0
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    if args not in ([], ["--selftest"]):
-        sys.exit("usage: scan_sorry.py [--selftest]")
-    sys.exit(selftest() if args else main())
+    args = parse(sys.argv[1:])
+    if args.selftest:
+        if args.root or args.exclude or args.allow_sorry:
+            sys.exit("scan_sorry.py: --selftest takes no other flags")
+        sys.exit(selftest())
+    sys.exit(run(args))

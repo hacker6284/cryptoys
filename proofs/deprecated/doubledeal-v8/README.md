@@ -54,7 +54,7 @@ Other relations tried (`attack/gen_attack.py`, `attack/per_layer.py`, logs along
 | --- | --- |
 | `witness_v8.json` | \(\tau\), key, message, cipher, \(\tau M\), \(\tau C\) |
 | `lean/` | Lake package: `DoubleDealV8/WitnessData.lean` (generated from `witness_v8.json` by `witness_to_lean.py`; do not edit), `DoubleDealV8/Witness.lean` (`enc` = emitted v8 `encrypt`, kernel facts `messageTauJson_eq`, `cipherTauJson_eq`, `cipherTau_ne`), `WitnessMain.lean` (compiled TAP check). Path-requires `lean/Generated/` (emitted, do not edit). |
-| `vectors/doubledeal_v8_vectors.json` | Frozen v8 known-answer vectors (29). `vectors/regen_v8.sh --check` rebuilds them from `v8/doubledeal_v8.sudo` via the sudoc JS target and requires a byte-identical file |
+| `vectors/doubledeal_v8_vectors.json` | Frozen v8 known-answer vectors (29). `proofs/doubledeal/vectors/regen.sh v8 --check` rebuilds them from `v8/doubledeal_v8.sudo` via the sudoc JS target and requires a byte-identical file |
 | `attack/dd_v8.py` | Python port of `v8/doubledeal_v8.sudo` (29/29 on the frozen vectors via `check_vectors.py`, which also checks their `sudo_sha256`) |
 | `attack/find_witness.py` | Search that produced the witness (739 trials) |
 | `attack/check_witness.mjs` | JS target of `doubledeal_v8.sudo` on the witness |
@@ -70,7 +70,7 @@ cd proofs/deprecated/doubledeal-v8/lean/Generated && lake build && ./.lake/build
 cd .. && python3 witness_to_lean.py --check && lake build && lake exe doubledeal_v8_witness
 sudoc build --target js -o /tmp/dd-v8-js primitives/cipher/doubledeal/v8/doubledeal_v8.sudo && node attack/check_witness.mjs /tmp/dd-v8-js
 # Evidence
-vectors/regen_v8.sh --check
+proofs/doubledeal/vectors/regen.sh v8 --check
 python3 attack/check_vectors.py && python3 attack/relabel_attack.py 64000 16 1,2,3,5
 python3 attack/success_rate.py && python3 attack/gen_attack.py && python3 attack/per_layer.py
 ```

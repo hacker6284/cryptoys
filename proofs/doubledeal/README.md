@@ -80,10 +80,11 @@ Shipped theorems contain no `sorry` and no `native_decide`. The proofs CI job (`
 Do not hand-edit `vectors/doubledeal_vectors.json` or `lean/DoubleDeal/Vectors.lean`. From the repo root, with network enough to clone [sudocode](https://github.com/hacker6284/sudocode) (same compiler as `.github/workflows/pages.yml`):
 
 ```sh
-proofs/doubledeal/vectors/regen.sh
+proofs/doubledeal/vectors/regen.sh            # current; also v8 | v9 | v10
+proofs/doubledeal/vectors/regen.sh --check    # CI (generated-fresh): byte-identical or fail
 ```
 
-That checks out a **pinned** sudocode commit (`SUDOCODE_COMMIT` in `regen.sh`), builds `doubledeal.sudo` to JS, evaluates the published sudo tests plus extra KATs, writes the JSON (including `sudo_sha256` of the current `doubledeal.sudo` and that sudocode SHA), then emits `Vectors.lean`. CI fails if `sudo_sha256` no longer matches the file. If the JSON is already current:
+That checks out the **pinned** sudocode commit ([`proofs/SUDOCODE_PIN`](../SUDOCODE_PIN), the same pin as the Lean emitter), builds `doubledeal.sudo` to JS, evaluates the published sudo tests plus extra KATs, writes the JSON (including `sudo_sha256` of the current `doubledeal.sudo` and that sudocode SHA), then emits `Vectors.lean`. CI fails if `sudo_sha256` no longer matches the file. If the JSON is already current:
 
 ```sh
 python3 proofs/doubledeal/vectors/json_to_lean.py          # write Vectors.lean

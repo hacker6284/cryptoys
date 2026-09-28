@@ -1,11 +1,12 @@
 """Chosen relations sigma (card relabellings; a positional swap of two cards is a transposition)."""
+import sys
+from pathlib import Path
 import numpy as np
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / 'doubledeal/security/checks'))
+import ddport as P
 AR = np.arange(52); RANK = AR % 13; SUIT = AR // 13
 
-def v9sym(a, b):
-    r0, su = AR % 13, AR // 13
-    wrap = np.where(r0 + a < 13, 0, 13)
-    return 13 * ((su + b + 16 - a + wrap) % 4) + (r0 + a) % 13
+def v9sym(a, b): return np.array(P.v9sym(a, b))
 
 def transposition(x, y):
     s = AR.copy(); s[x], s[y] = y, x; return s

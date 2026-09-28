@@ -47,4 +47,4 @@ for rule in (0, 33, 30):
                          capture_output=True, text=True, check=True).stdout.split('\n')
     bad = sum(list(map(int, res[k].split())) != spreads(rule, d) for k, d in enumerate(decks))
     print(f'rule {rule}: {n} decks x 1326 swaps, spreads identical to p5sim: {bad == 0} ({bad} decks differ)')
-    assert bad == 0
+    assert bad == 0, f"rule {rule}: {bad} decks differ from p5sim"

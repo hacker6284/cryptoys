@@ -4,6 +4,8 @@
 > worst pair 1/161 at +16% seat checks) is in [PHASE2.md](PHASE2.md).
 > **Phase 3** ("bump the occupant"): every bump variant is non-invertible (explicit colliding decks),
 > see [PHASE3.md](PHASE3.md).
+> **Phase 4** ("C sends itself": the placed card picks its own scan): non-invertible in every variant,
+> see [PHASE4.md](PHASE4.md).
 
 **Kind:** analysis. Nothing here is a theorem, a spec change or a security claim. No bit-security
 figures. The normative GridCycle is SPEC §3.5 / §4.4 and `mix_columns` in

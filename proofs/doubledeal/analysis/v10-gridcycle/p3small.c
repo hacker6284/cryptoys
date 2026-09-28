@@ -14,6 +14,11 @@
         seat driven by it.
     45  tweak: bump (v10 scan for the occupant); next step from the TARGET driven by the OCCUPANT.
     46  tweak: bump (v10 scan); next step from the occupant's new seat driven by the NEW card.
+    50  Phase 4 "C sends itself": no bump; when the target is taken the new card C goes to the first
+        free seat in row marker + suit(C), from column target + rank(C); marker +1; ghost finger
+        (next step from the target by C).   51: same without ghost (next step from where C landed).
+    52  row marker + suit(C), column target + rank(blocker); ghost.
+    53  row marker + suit(blocker), column target + rank(C); ghost.
     47  side pile: a bumped occupant leaves the table onto a pile; the new card takes the target;
         next step from the target by the new card; at the end the pile is dealt into the empty
         seats in reading order, first-bumped card first. 48: same, last-bumped card first.
@@ -34,6 +39,13 @@ static void mix(const int *d, int *out) {
         if (i == 0) { int s = fr*C+fc; occ[s] = 1; g[s] = x; drv = x; continue; }
         int tr = (fr + drv / C) % R, tc = (fc + drv % C + 1) % C, T = tr*C+tc;
         if (!occ[T]) { occ[T] = 1; g[T] = x; fr = tr; fc = tc; drv = x; continue; }
+        if (V >= 50 && V <= 53) {
+            int o = g[T], t0 = t, rs_ = (V == 53) ? o / C : x / C, cs_ = (V == 52) ? o % C : x % C;
+            int s = scan(occ, (t0 + rs_) % R, (tc + cs_ + 1) % C, &t, 0); t = (t0 + 1) % R;
+            occ[s] = 1; g[s] = x;
+            if (V == 51) { fr = s / C; fc = s % C; } else { fr = tr; fc = tc; }
+            drv = x; continue;
+        }
         if (V == 0 || V == 33) {
             int s;
             if (V == 0) s = scan(occ, t, tc, &t, 1);

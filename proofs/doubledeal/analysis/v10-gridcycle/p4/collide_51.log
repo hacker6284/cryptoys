@@ -1,0 +1,6 @@
+collision V51: swap walk positions 50,51 (cards 46,42) deck: 9 3 35 19 29 30 17 28 33 16 11 0 45 8 51 13 39 43 32 18 5 1 36 26 38 50 22 6 24 48 12 15 2 25 23 14 41 37 31 47 20 44 49 10 40 21 4 34 27 7 46 42
+collision V51: swap walk positions 38,49 (cards 13,19) deck: 20 48 12 31 0 35 42 33 6 50 4 14 46 43 21 9 47 41 37 16 24 45 32 39 36 2 8 28 25 38 1 7 22 49 51 17 23 11 13 29 30 26 15 3 18 5 34 44 27 19 10 40
+collision V51: swap walk positions 40,44 (cards 46,35) deck: 11 4 3 34 29 12 48 0 8 31 45 43 38 37 44 17 7 18 27 24 6 16 28 39 51 22 47 40 42 32 19 21 2 23 10 25 33 13 36 9 46 41 26 14 35 5 30 1 20 50 15 49
+collision V51: swap walk positions 41,45 (cards 41,5) deck: 11 4 3 34 29 12 48 0 8 31 45 43 38 37 44 17 7 18 27 24 6 16 28 39 51 22 47 40 42 32 19 21 2 23 10 25 33 13 36 9 46 41 26 14 35 5 30 1 20 50 15 49
+V51: 2000 decks x 1326 swaps: 2395 collisions (1095 adjacent, 100 involve K♣); 1444 decks (72.2%) have a colliding one-swap neighbour
+V51: mid-deck (both swapped walk positions < 48): 655 collisions; 551 decks (27.6%)

@@ -1,0 +1,4 @@
+V50: 100000 decks: unique preimage 408 (0.41%; of these recovered 408), >= 2 preimages 99592 (99.59%), search capped 0; candidates per blocked step on the true path 1.83; DFS nodes per deck 142
+V51: 100000 decks: unique preimage 272 (0.27%; of these recovered 272), >= 2 preimages 99728 (99.73%), search capped 0; candidates per blocked step on the true path 1.83; DFS nodes per deck 149
+V52: 100000 decks: unique preimage 1031 (1.03%; of these recovered 1031), >= 2 preimages 98969 (98.97%), search capped 0; candidates per blocked step on the true path 1.62; DFS nodes per deck 109
+V53: 100000 decks: unique preimage 880 (0.88%; of these recovered 880), >= 2 preimages 99120 (99.12%), search capped 0; candidates per blocked step on the true path 1.69; DFS nodes per deck 121

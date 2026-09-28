@@ -1,5 +1,5 @@
 runs/round_v0.txt: N=400000/pair; SR-stage mean 4.53e-03; round mean 6.78e-04; GC|SR mean 0.150; worst round QC<->KC 560/400000=1.40e-03 CI[1.3e-03,1.5e-03]; next: 8H<->9H 1.4e-03, 8C<->9C 1.3e-03, 4H<->5H 1.2e-03
-runs/round_v11.txt: N=400000/pair; SR-stage mean 4.53e-03; round mean 8.88e-05; GC|SR mean 0.020; worst round 2D<->QD 98/400000=2.45e-04 CI[2.0e-04,3.0e-04]; next: AS<->JS 2.4e-04, 2C<->QC 2.3e-04, 2H<->QH 2.3e-04
+runs/round_v11.txt: N=400000/pair; SR-stage mean 4.53e-03; round mean 6.92e-05; GC|SR mean 0.015; worst round AD<->8D 209/400000=5.22e-04 CI[4.6e-04,6.0e-04]; next: AC<->8C 5.1e-04, 6C<->KC 4.4e-04, AH<->8H 4.2e-04
 runs/round_v2.txt: N=400000/pair; SR-stage mean 4.53e-03; round mean 6.15e-04; GC|SR mean 0.136; worst round QC<->KC 617/400000=1.54e-03 CI[1.4e-03,1.7e-03]; next: JC<->QC 1.2e-03, 8C<->9C 1.2e-03, 9C<->TC 1.2e-03
 runs/round_v5.txt: N=400000/pair; SR-stage mean 4.53e-03; round mean 1.29e-04; GC|SR mean 0.029; worst round AC<->KC 516/400000=1.29e-03 CI[1.2e-03,1.4e-03]; next: AS<->KS 1.1e-03, AD<->KD 1.1e-03, AH<->KH 1.0e-03
 runs/round_v7.txt: N=400000/pair; SR-stage mean 4.53e-03; round mean 6.01e-05; GC|SR mean 0.013; worst round AH<->JH 122/400000=3.05e-04 CI[2.6e-04,3.6e-04]; next: 3C<->KC 3.0e-04, AD<->JD 3.0e-04, 2H<->QH 2.9e-04

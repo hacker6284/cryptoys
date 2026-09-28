@@ -14,3 +14,6 @@ run sched_top.log ./keysched sched 5000000 12 14,26 1,13 27,39 2,14 38,50
 run sched_all68.log ./keysched sched 500000 13 $COLL
 run rk_main.log ./rk 10000000 14 14,26
 run rk_more.log ./rk 2000000 15 1,13 27,39 12,24 38,50 50,51 38,51 0,51
+gcc -O2 -fopenmp -Wall -Wextra -o readings readings.c -lm
+run readings.log ./readings 20000 21
+run readings_exact.log python3 readings_exact.py

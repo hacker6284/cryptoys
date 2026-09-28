@@ -102,7 +102,8 @@ export async function openSpec(root, specUrl, heading, slice = (markdown) => mar
     }
 }
 
-export function renderTeachCard(teachCard, note, showSpec) {
+export function renderTeachStep(root, note, showSpec, viewI, count) {
+    const teachCard = root.querySelector("#teach-card");
     teachCard.replaceChildren();
     const kicker = document.createElement("p");
     kicker.className = "kicker";
@@ -121,6 +122,8 @@ export function renderTeachCard(teachCard, note, showSpec) {
     spec.textContent = `SPEC · ${note.spec}`;
     spec.addEventListener("click", () => showSpec(note.spec));
     teachCard.append(kicker, title, math, why, spec);
+    const pos = root.querySelector("#teach-pos");
+    if (pos) pos.textContent = `${Math.min(viewI + 1, count)} / ${count}`;
 }
 
 export function bindSegmented(root, name, pick, listen) {

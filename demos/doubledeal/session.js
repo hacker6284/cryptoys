@@ -6,7 +6,7 @@ import {
     bindSegmented,
     bindTransport,
     openSpec,
-    renderTeachCard,
+    renderTeachStep,
     sessionScope,
     syncJumpButtons,
 } from "../shared/session.js";
@@ -34,7 +34,6 @@ export function createDoubleDealSession({
     const copyButton = $("#copy") || $("#digest-btn");
     const teachEl = $("#teach");
     const teachCard = $("#teach-card");
-    const teachPos = $("#teach-pos");
     const outlineEl = $("#outline");
     const ioNote = $("#io-note");
     bindGrowFields(root);
@@ -462,12 +461,7 @@ export function createDoubleDealSession({
         const viewI = viewedIndex();
         const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
         const note = annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1));
-        renderTeachCard(teachCard, note, showSpec);
-        if (teachPos) {
-            teachPos.textContent = step
-                ? `${viewI + 1} / ${trace.length}`
-                : (viewI >= trace.length && trace.length ? `${trace.length} / ${trace.length}` : `0 / ${trace.length}`);
-        }
+        renderTeachStep(root, note, showSpec, viewI, trace.length);
         const currentKey = !step
             ? ""
             : `${stageKey(step)}:${(step.kind === "sumrow" || step.kind === "sumcol" || step.kind === "shift") ? viewI : firstIndexOfStage(viewI)}`;

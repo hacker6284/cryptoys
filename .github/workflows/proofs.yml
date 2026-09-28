@@ -26,15 +26,15 @@ env:
 
 jobs:
   # Anti-drift: committed Generated/ Lean must match emit from current .sudo
-  # via the pinned sudocode main commit (PR #8 merge; see SUDOCODE_LEAN_PIN).
+  # via the pinned sudocode main commit (PR #8 merge; see proofs/SUDOCODE_PIN).
   generated-fresh:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Read Lean backend pin
+      - name: Read the sudocode pin
         id: pin
         run: |
-          commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_LEAN_PIN)"
+          commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_PIN)"
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
           test -n "$commit"
       - uses: actions/checkout@v5
@@ -57,18 +57,22 @@ jobs:
           SUDOCODE_DIR: ${{ github.workspace }}/.sudocode-lean
           SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/emit_lean.sh --check
+      - name: Current vectors (JSON + Vectors.lean) rebuild byte-identically from doubledeal.sudo
+        env:
+          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
+        run: proofs/doubledeal/vectors/regen.sh current --check
       - name: Frozen v8 vectors rebuild byte-identically from v8/doubledeal_v8.sudo
         env:
           SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
-        run: proofs/deprecated/doubledeal-v8/vectors/regen_v8.sh --check
+        run: proofs/doubledeal/vectors/regen.sh v8 --check
       - name: Frozen v9 vectors rebuild byte-identically from v9/doubledeal_v9.sudo
         env:
           SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
-        run: proofs/deprecated/doubledeal-v9/vectors/regen_v9.sh --check
+        run: proofs/doubledeal/vectors/regen.sh v9 --check
       - name: Frozen v10 vectors rebuild byte-identically from v10/doubledeal_v10.sudo
         env:
           SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
-        run: proofs/deprecated/doubledeal-v10/vectors/regen_v10.sh --check
+        run: proofs/doubledeal/vectors/regen.sh v10 --check
 
   doubledeal-generated:
     runs-on: ubuntu-latest

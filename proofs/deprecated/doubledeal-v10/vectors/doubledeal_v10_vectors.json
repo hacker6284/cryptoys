@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "generated_by": "proofs/deprecated/doubledeal-v10/vectors/regen_v10.sh",
+  "generated_by": "proofs/doubledeal/vectors/regen.sh v10",
   "source": "primitives/cipher/doubledeal/v10/doubledeal_v10.sudo",
   "sudo_sha256": "c6a846e3b6f76cd2c54f8cbc1356172d9be5dcc69193882dfe8a0b99da3bd3e9",
-  "sudocode_commit": "606f06f4d852aac7f37bccd4823775d00d2ba5a6",
+  "sudocode_commit": "ff63b629406bd5d3ab9e9434ea2d4695a2921d8a",
   "note": "Known-answer vectors from the sudo tests plus extras evaluated by the sudoc JS target. Evidence that the Lean model agrees with doubledeal.sudo on these inputs \u2014 not a proof that the sudo text equals the Lean model.",
   "decks_are": "52-element arrays of CHaSeD card ids (0..51)",
   "vectors": [

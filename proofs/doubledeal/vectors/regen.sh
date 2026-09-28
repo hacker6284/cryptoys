@@ -1,52 +1,75 @@
 #!/usr/bin/env bash
-# Regenerate doubledeal_vectors.json and DoubleDeal/Vectors.lean from doubledeal.sudo
-# via the sudoc JS target. Same compiler path as .github/workflows/pages.yml,
-# but pinned to SUDOCODE_COMMIT (not sudocode tip).
+# Rebuild (or --check) the DoubleDeal known-answer vectors from the .sudo sources
+# via the sudoc JS target at the sudocode pin (proofs/SUDOCODE_PIN, read by
+# proofs/sudocode.sh). The pin is recorded in each JSON as sudocode_commit.
 #
-# Usage (from the repo root or this directory):
-#   proofs/doubledeal/vectors/regen.sh
+# Usage (from anywhere):
+#   proofs/doubledeal/vectors/regen.sh [current|v8|v9|v10] [--check]
+#     current (default)  doubledeal.sudo -> doubledeal_vectors.json and DoubleDeal/Vectors.lean
+#     v8, v9, v10        frozen, deprecated versions -> their doubledeal_vN_vectors.json
+#   --check              build to a temp dir; fail unless byte-identical to the committed files
 #
-# Optional:
-#   SUDOC=/path/to/sudoc SUDOCODE_DIR=/path/to/sudocode proofs/doubledeal/vectors/regen.sh
+# Optional: SUDOC=/path/to/sudoc, SUDOCODE_DIR=/path/to/sudocode (see proofs/sudocode.sh).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-VEC="$ROOT/proofs/doubledeal/vectors"
-SUDO="$ROOT/primitives/cipher/doubledeal/doubledeal.sudo"
+usage() { echo "usage: $0 [current|v8|v9|v10] [--check]" >&2; exit 2; }
 
-# Pin the sudocode tree used to emit JS. Bump this only when you intend to
-# change the compiler, then re-run this script.
-SUDOCODE_COMMIT="${SUDOCODE_COMMIT:-606f06f4d852aac7f37bccd4823775d00d2ba5a6}"
+version=current
+check=0
+for arg in "$@"; do
+  case "$arg" in
+    current|v8|v9|v10) version="$arg" ;;
+    --check) check=1 ;;
+    *) usage ;;
+  esac
+done
 
-SUDOCODE_DIR="${SUDOCODE_DIR:-/tmp/sudocode}"
-if [[ -n "${SUDOC:-}" ]]; then
-  SUDOC_BIN="$SUDOC"
-else
-  SUDOC_BIN="$SUDOCODE_DIR/sudoc/target/release/sudoc"
-fi
+# version | .sudo source | collector | committed JSON
+case "$version" in
+  current) sudo=primitives/cipher/doubledeal/doubledeal.sudo
+           collect=proofs/doubledeal/vectors/collect_vectors.mjs
+           json=proofs/doubledeal/vectors/doubledeal_vectors.json ;;
+  v8)      sudo=primitives/cipher/doubledeal/v8/doubledeal_v8.sudo
+           collect=proofs/deprecated/doubledeal-v8/vectors/collect_vectors_v8.mjs
+           json=proofs/deprecated/doubledeal-v8/vectors/doubledeal_v8_vectors.json ;;
+  v9)      sudo=primitives/cipher/doubledeal/v9/doubledeal_v9.sudo
+           collect=proofs/deprecated/doubledeal-v9/vectors/collect_vectors_v9.mjs
+           json=proofs/deprecated/doubledeal-v9/vectors/doubledeal_v9_vectors.json ;;
+  v10)     sudo=primitives/cipher/doubledeal/v10/doubledeal_v10.sudo
+           collect=proofs/deprecated/doubledeal-v10/vectors/collect_vectors_v10.mjs
+           json=proofs/deprecated/doubledeal-v10/vectors/doubledeal_v10_vectors.json ;;
+esac
+# current only: the Lean mirror of the JSON
+lean=proofs/doubledeal/lean/DoubleDeal/Vectors.lean
 
-if [[ ! -x "$SUDOC_BIN" ]]; then
-  if [[ ! -d "$SUDOCODE_DIR/.git" ]]; then
-    git clone https://github.com/hacker6284/sudocode.git "$SUDOCODE_DIR"
+source "$ROOT/proofs/sudocode.sh"
+
+DOUBLEDEAL_SUDO="$ROOT/$sudo"
+DOUBLEDEAL_SUDO_SHA256="$(sha256sum "$DOUBLEDEAL_SUDO" | awk '{print $1}')"
+export DOUBLEDEAL_SUDO DOUBLEDEAL_SUDO_SHA256
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+"$SUDOC" build --target js --tests -o "$tmp/js" "$DOUBLEDEAL_SUDO" >/dev/null
+node "$ROOT/$collect" "$tmp/js" > "$tmp/vectors.json"
+
+if [[ "$check" -eq 1 ]]; then
+  if ! cmp -s "$tmp/vectors.json" "$ROOT/$json"; then
+    diff -u "$ROOT/$json" "$tmp/vectors.json" | head -40 >&2 || true
+    echo "STALE $json differs from a fresh build of $sudo (fix: $0 $version)" >&2
+    exit 1
   fi
-  git -C "$SUDOCODE_DIR" fetch --depth 1 origin "$SUDOCODE_COMMIT"
-  git -C "$SUDOCODE_DIR" checkout --detach "$SUDOCODE_COMMIT"
-  cargo build --release --manifest-path "$SUDOCODE_DIR/sudoc/Cargo.toml"
-  SUDOC_BIN="$SUDOCODE_DIR/sudoc/target/release/sudoc"
+  echo "OK $json matches $sudo (sudocode $SUDOCODE_COMMIT)"
+  if [[ "$version" == current ]]; then
+    python3 "$ROOT/proofs/doubledeal/vectors/json_to_lean.py" --check \
+      --json "$ROOT/$json" --lean "$ROOT/$lean"
+  fi
+else
+  cp "$tmp/vectors.json" "$ROOT/$json"
+  echo "wrote $json (sudo_sha256=$DOUBLEDEAL_SUDO_SHA256, sudocode_commit=$SUDOCODE_COMMIT)"
+  if [[ "$version" == current ]]; then
+    python3 "$ROOT/proofs/doubledeal/vectors/json_to_lean.py" \
+      --json "$ROOT/$json" --lean "$ROOT/$lean"
+  fi
 fi
-
-DOUBLEDEAL_SUDO_SHA256="$(sha256sum "$SUDO" | awk '{print $1}')"
-DOUBLEDEAL_SUDO="$SUDO"
-export DOUBLEDEAL_SUDO DOUBLEDEAL_SUDO_SHA256 SUDOCODE_COMMIT
-
-OUT="${TMPDIR:-/tmp}/doubledeal-vector-js"
-rm -rf "$OUT"
-mkdir -p "$OUT"
-"$SUDOC_BIN" build --target js --tests -o "$OUT" "$SUDO"
-
-node "$VEC/collect_vectors.mjs" "$OUT" > "$VEC/doubledeal_vectors.json"
-python3 "$VEC/json_to_lean.py" --json "$VEC/doubledeal_vectors.json" --lean "$ROOT/proofs/doubledeal/lean/DoubleDeal/Vectors.lean"
-
-echo "regenerated $VEC/doubledeal_vectors.json and proofs/doubledeal/lean/DoubleDeal/Vectors.lean"
-echo "  sudo_sha256=$DOUBLEDEAL_SUDO_SHA256"
-echo "  sudocode_commit=$SUDOCODE_COMMIT"

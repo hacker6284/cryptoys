@@ -244,7 +244,7 @@ def main() -> int:
     if not emit_py.is_file():
         print(
             f"Lean emitter not found at {emit_py}.\n"
-            "Checkout sudocode at the pin in proofs/SUDOCODE_LEAN_PIN "
+            "Checkout sudocode at the pin in proofs/SUDOCODE_PIN "
             "(see proofs/ANTI_DRIFT.md).",
             file=sys.stderr,
         )

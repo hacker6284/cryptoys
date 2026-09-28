@@ -2,8 +2,7 @@
 # Regenerate (or --check) emitted Lean from normative .sudo files via the
 # sudocode protocol-4 Lean backend.
 #
-# Pin: hacker6284/sudocode main @ SUDOCODE_LEAN_COMMIT
-#   (PR #8 squash merge; Lean is in ALL_BACKENDS).
+# Pin: proofs/SUDOCODE_PIN (hacker6284/sudocode main), read by proofs/sudocode.sh.
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
 # Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10),
@@ -24,26 +23,12 @@
 #
 # Optional:
 #   SUDOC=/path/to/sudoc
-#   SUDOCODE_DIR=/path/to/sudocode   # must contain backends/lean/ at the pin
+#   SUDOCODE_DIR=/path/to/sudocode   # must contain backends/lean/ at the pin (default: proofs/sudocode.sh)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# sudocode main at the PR #8 squash merge (Lean lockstep peer).
-# Bump proofs/SUDOCODE_LEAN_PIN only when you intend to change the emitter.
-SUDOCODE_LEAN_REPO="${SUDOCODE_LEAN_REPO:-https://github.com/hacker6284/sudocode.git}"
-SUDOCODE_LEAN_REF="${SUDOCODE_LEAN_REF:-main}"
-PIN_FILE="$ROOT/proofs/SUDOCODE_LEAN_PIN"
-if [[ -z "${SUDOCODE_LEAN_COMMIT:-}" ]]; then
-  SUDOCODE_LEAN_COMMIT="$(grep -E '^[0-9a-f]{40}$' "$PIN_FILE")"
-fi
-if [[ -z "$SUDOCODE_LEAN_COMMIT" ]]; then
-  echo "could not read a 40-char SHA from $PIN_FILE" >&2
-  exit 1
-fi
-
-SUDOCODE_DIR="${SUDOCODE_DIR:-/tmp/sudocode}"
 CHECK=0
 TARGETS=()
 for arg in "$@"; do
@@ -62,44 +47,8 @@ if [[ ${#TARGETS[@]} -eq 0 ]]; then
   TARGETS=(doubledeal doubledeal-v8 doubledeal-v9 doubledeal-v10 megadreifach scramble cbc-hmac)
 fi
 
-if [[ -n "${SUDOC:-}" ]]; then
-  SUDOC_BIN="$SUDOC"
-else
-  SUDOC_BIN="$SUDOCODE_DIR/sudoc/target/release/sudoc"
-fi
-
-need_fetch=0
-if [[ ! -x "$SUDOC_BIN" ]]; then
-  need_fetch=1
-fi
-if [[ ! -f "$SUDOCODE_DIR/backends/lean/emit.py" ]]; then
-  need_fetch=1
-fi
-if [[ -d "$SUDOCODE_DIR/.git" ]]; then
-  have="$(git -C "$SUDOCODE_DIR" rev-parse HEAD 2>/dev/null || true)"
-  if [[ "$have" != "$SUDOCODE_LEAN_COMMIT" ]]; then
-    need_fetch=1
-  fi
-fi
-
-if [[ "$need_fetch" -eq 1 && -z "${SUDOC:-}" ]]; then
-  if [[ ! -d "$SUDOCODE_DIR/.git" ]]; then
-    git clone --filter=blob:none --branch "$SUDOCODE_LEAN_REF" \
-      "$SUDOCODE_LEAN_REPO" "$SUDOCODE_DIR"
-  fi
-  git -C "$SUDOCODE_DIR" fetch --depth 1 origin "$SUDOCODE_LEAN_COMMIT"
-  git -C "$SUDOCODE_DIR" checkout --detach "$SUDOCODE_LEAN_COMMIT"
-  if [[ ! -f "$SUDOCODE_DIR/backends/lean/emit.py" ]]; then
-    echo "blocker: $SUDOCODE_LEAN_COMMIT has no backends/lean/emit.py" >&2
-    echo "expected sudocode main at/after the PR #8 merge (ff63b629)." >&2
-    exit 1
-  fi
-  cargo build --release --manifest-path "$SUDOCODE_DIR/sudoc/Cargo.toml"
-  SUDOC_BIN="$SUDOCODE_DIR/sudoc/target/release/sudoc"
-fi
-
-export SUDOC="$SUDOC_BIN"
-export SUDOCODE_DIR
+# Pin, SUDOCODE_DIR default and sudoc build: proofs/sudocode.sh (shared with vectors/regen.sh).
+source "$ROOT/proofs/sudocode.sh"
 
 emit_one() {
   local name="$1"
@@ -138,8 +87,8 @@ for inc in includes:
 stamp = {
     "sudo_file": str(sudo.relative_to(root)),
     "sudo_sha256": hashlib.sha256(sudo.read_bytes()).hexdigest(),
-    "sudocode_lean_commit": "$SUDOCODE_LEAN_COMMIT",
-    "sudocode_lean_ref": "$SUDOCODE_LEAN_REF",
+    "sudocode_lean_commit": "$SUDOCODE_COMMIT",
+    "sudocode_lean_ref": "$SUDOCODE_REF",
     "terminates_gate": True,
     "with_tests": True,
 }
@@ -197,7 +146,7 @@ for t in "${TARGETS[@]}"; do
   esac
 done
 
-echo "sudocode_lean_commit=$SUDOCODE_LEAN_COMMIT ref=$SUDOCODE_LEAN_REF"
+echo "sudocode_lean_commit=$SUDOCODE_COMMIT ref=$SUDOCODE_REF"
 if [[ "$CHECK" -eq 1 ]]; then
   echo "Generated Lean matches emit from current .sudo"
 else

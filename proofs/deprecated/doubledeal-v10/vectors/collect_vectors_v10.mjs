@@ -2,7 +2,7 @@
 // sudoc JS build of primitives/cipher/doubledeal/v10/doubledeal_v10.sudo. This is
 // proofs/doubledeal/vectors/collect_vectors.mjs as of the v10 freeze, with the v10
 // module names and v10 provenance fields; the vector list is unchanged. Do not
-// hand-edit the JSON this writes; regenerate with regen_v10.sh.
+// hand-edit the JSON this writes; regenerate with proofs/doubledeal/vectors/regen.sh v10.
 //
 // Usage: node collect_vectors.mjs <sudoc-js-outdir>
 
@@ -260,7 +260,7 @@ if (!sudoSha || !sudocodeCommit) {
 
 const doc = {
   schema: 1,
-  generated_by: "proofs/deprecated/doubledeal-v10/vectors/regen_v10.sh",
+  generated_by: "proofs/doubledeal/vectors/regen.sh v10",
   source: "primitives/cipher/doubledeal/v10/doubledeal_v10.sudo",
   sudo_sha256: sudoSha,
   sudocode_commit: sudocodeCommit,

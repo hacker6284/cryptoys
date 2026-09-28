@@ -65,6 +65,10 @@ jobs:
         env:
           SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/deprecated/doubledeal-v9/vectors/regen_v9.sh --check
+      - name: Frozen v10 vectors rebuild byte-identically from v10/doubledeal_v10.sudo
+        env:
+          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
+        run: proofs/deprecated/doubledeal-v10/vectors/regen_v10.sh --check
 
   doubledeal-generated:
     runs-on: ubuntu-latest
@@ -159,6 +163,38 @@ jobs:
       - name: Generated v9 TAP (frozen sudo tests)
         working-directory: proofs/deprecated/doubledeal-v9/lean/Generated
         run: ./.lake/build/bin/doubledeal_v9_test
+
+  doubledeal-v10-deprecated:
+    # Frozen, deprecated DoubleDeal v10 (GridCycle per-layer parity shortfall):
+    # emitted TAP, the single-deck K♣↔K♦ kernel witness on the emitted v10
+    # mix_columns (cheap, ~30 s) and its axiom audit
+    # (see proofs/deprecated/doubledeal-v10/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No native_decide / sorry / admit / initialize in the v10 witness package
+        run: |
+          ! grep -rnE '\b(native_decide|sorry|admit|initialize)\b' --include='*.lean' \
+              proofs/deprecated/doubledeal-v10/lean/DoubleDealV10 \
+              proofs/deprecated/doubledeal-v10/lean/DoubleDealV10.lean \
+              proofs/deprecated/doubledeal-v10/lean/Axioms.lean
+      - name: Witness JSON matches the Python port; Lean data matches witness_v10.json
+        run: |
+          python3 proofs/deprecated/doubledeal-v10/attack/make_witness.py --check
+          python3 proofs/deprecated/doubledeal-v10/lean/witness_to_lean.py --check
+      - name: C measurement model agrees with the Python port (v10 GridCycle)
+        run: python3 proofs/deprecated/doubledeal-v10/attack/measure/xcheck.py
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v10/lean/Generated
+      - name: Generated v10 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/doubledeal-v10/lean/Generated
+        run: ./.lake/build/bin/doubledeal_v10_test
+      - name: Build the witness package
+        working-directory: proofs/deprecated/doubledeal-v10/lean
+        run: lake build
+      - name: Axiom audit (no sorryAx / ofReduceBool)
+        run: python3 proofs/doubledeal/check_axioms.py v10-deprecated
 
   doubledeal-lean:
     runs-on: ubuntu-latest

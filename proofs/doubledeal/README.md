@@ -2,7 +2,7 @@
 
 Normative definition: [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/cipher/doubledeal/SPEC.md). Stones live in SPEC §6. This directory is the correctness ledger for those stones, not a second specification.
 
-DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v10.** v9 is deprecated; its vulnerability proof (K♣↔Q♥ swap distinguisher) is in [`../deprecated/doubledeal-v9/`](../deprecated/doubledeal-v9/). v8 is deprecated; its vulnerability proof is in [`../deprecated/doubledeal-v8/`](../deprecated/doubledeal-v8/).
+DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v10.** v10 itself is now deprecated for a GridCycle per-layer parity shortfall (not a full-cipher attack); its write-up and single-deck kernel witness are in [`../deprecated/doubledeal-v10/`](../deprecated/doubledeal-v10/), and this ledger moves to v11 when it lands. v9 is deprecated; its vulnerability proof (K♣↔Q♥ swap distinguisher) is in [`../deprecated/doubledeal-v9/`](../deprecated/doubledeal-v9/). v8 is deprecated; its vulnerability proof is in [`../deprecated/doubledeal-v8/`](../deprecated/doubledeal-v8/).
 
 > **Status: v10.** Generated Lean, TAP, vectors, the algebraic model and Link 2 all describe v10 (see "v10 changes" below). `lake build` is green with no `sorry` and no `native_decide`, `lake exe doubledeal` passes every known-answer vector, and `check_axioms.py` (run in CI) confirms the top theorems in [`lean/Axioms.lean`](lean/Axioms.lean) use only propext, Classical.choice and Quot.sound. The Lean package proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
 

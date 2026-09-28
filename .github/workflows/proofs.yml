@@ -120,6 +120,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: No native_decide / sorry / admit / initialize in the v8 witness package
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v8/lean --exclude Generated
       - name: Witness Lean data matches witness_v8.json
         run: python3 proofs/deprecated/doubledeal-v8/lean/witness_to_lean.py --check
       - name: Frozen v8 vectors (sha + Python port)
@@ -146,11 +148,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: No native_decide / sorry / admit / initialize in the v9 witness package
-        run: |
-          ! grep -rnE '\b(native_decide|sorry|admit|initialize)\b' --include='*.lean' \
-              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9 \
-              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9.lean \
-              proofs/deprecated/doubledeal-v9/lean/Axioms.lean
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v9/lean --exclude Generated
       - name: Witness Lean data matches witness_v9.json
         run: python3 proofs/deprecated/doubledeal-v9/lean/witness_to_lean.py --check
       - name: Frozen v9 vectors (sha + Python port) and recorded witnesses
@@ -173,11 +171,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: No native_decide / sorry / admit / initialize in the v10 witness package
-        run: |
-          ! grep -rnE '\b(native_decide|sorry|admit|initialize)\b' --include='*.lean' \
-              proofs/deprecated/doubledeal-v10/lean/DoubleDealV10 \
-              proofs/deprecated/doubledeal-v10/lean/DoubleDealV10.lean \
-              proofs/deprecated/doubledeal-v10/lean/Axioms.lean
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v10/lean --exclude Generated
       - name: Witness JSON matches the Python port; Lean data matches witness_v10.json
         run: |
           python3 proofs/deprecated/doubledeal-v10/attack/make_witness.py --check
@@ -200,41 +194,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: No sorry / unlisted native_decide
-        run: |
-          python3 - <<'PY'
-          import re, sys
-          from pathlib import Path
-          sorry_pat = re.compile(r"\b(sorry|admit)\b")
-          native_pat = re.compile(r"\bnative_decide\b")
-          # Documented TCB sites only. Empty means every native_decide is a CI fail.
-          allowed_native = {
-              # none: GridCycle / diamondCards / unrankPerm_inj_3 are kernel decide.
-          }
-          bad_sorry = []
-          bad_native = []
-          root = Path("proofs/doubledeal/lean")
-          for path in root.rglob("*.lean"):
-              if "Generated" in path.parts:
-                  continue
-              rel = str(path)
-              text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
-              allow = allowed_native.get(rel, set())
-              for i, line in enumerate(text.splitlines(), 1):
-                  code = re.sub(r"--.*", "", line)
-                  if sorry_pat.search(code):
-                      bad_sorry.append(f"{path}:{i}:{line}")
-                  if native_pat.search(code) and i not in allow:
-                      bad_native.append(f"{path}:{i}:{line}")
-          if bad_sorry:
-              print("shipped Lean still contains sorry/admit:", *bad_sorry, sep="\n", file=sys.stderr)
-          if bad_native:
-              print("unlisted native_decide (add to READMEs + allowlist, or replace):",
-                    *bad_native, sep="\n", file=sys.stderr)
-          if bad_sorry or bad_native:
-              sys.exit(1)
-          print("no sorry/admit; no unlisted native_decide")
-          PY
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/doubledeal/lean --exclude Generated
       - name: Vectors.lean matches committed JSON
         run: python3 proofs/doubledeal/vectors/json_to_lean.py --check
       - name: JSON was generated from current doubledeal.sudo
@@ -256,9 +217,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: No admit / native_decide / sorryAx / axiom; sorry only in the allowlisted conjecture
-        run: |
-          python3 proofs/doubledeal/security/checks/scan_sorry.py --selftest
-          python3 proofs/doubledeal/security/checks/scan_sorry.py
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py
+      - name: scan_sorry selftest (including --root / --exclude / --allow-sorry)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --selftest
       - name: V8Vectors.lean matches frozen v8 JSON
         run: python3 proofs/doubledeal/security/checks/gen_v8_vectors.py --check
       - name: numpy for the frozen-v10 analysis checks run by selftest.py
@@ -295,41 +256,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: No sorry / unlisted native_decide
-        run: |
-          python3 - <<'PY'
-          import re, sys
-          from pathlib import Path
-          sorry_pat = re.compile(r"\b(sorry|admit)\b")
-          native_pat = re.compile(r"\bnative_decide\b")
-          # Documented TCB sites only. Empty means every native_decide is a CI fail.
-          allowed_native = {
-              # none: closed numerals use kernel decide (2^224 < 52!, |G| < 256^29, IV lists).
-          }
-          bad_sorry = []
-          bad_native = []
-          root = Path("proofs/megadreifach/lean")
-          for path in root.rglob("*.lean"):
-              if "Generated" in path.parts:
-                  continue
-              rel = str(path)
-              text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
-              allow = allowed_native.get(rel, set())
-              for i, line in enumerate(text.splitlines(), 1):
-                  code = re.sub(r"--.*", "", line)
-                  if sorry_pat.search(code):
-                      bad_sorry.append(f"{path}:{i}:{line}")
-                  if native_pat.search(code) and i not in allow:
-                      bad_native.append(f"{path}:{i}:{line}")
-          if bad_sorry:
-              print("shipped Lean still contains sorry/admit:", *bad_sorry, sep="\n", file=sys.stderr)
-          if bad_native:
-              print("unlisted native_decide (add to READMEs + allowlist, or replace):",
-                    *bad_native, sep="\n", file=sys.stderr)
-          if bad_sorry or bad_native:
-              sys.exit(1)
-          print("no sorry/admit; no unlisted native_decide")
-          PY
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach/lean --exclude Generated
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/megadreifach/lean

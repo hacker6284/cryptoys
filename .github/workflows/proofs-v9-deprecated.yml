@@ -38,11 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: No native_decide / sorry / admit / initialize in the v9 witness package
-        run: |
-          ! grep -rnE '\b(native_decide|sorry|admit|initialize)\b' --include='*.lean' \
-              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9 \
-              proofs/deprecated/doubledeal-v9/lean/DoubleDealV9.lean \
-              proofs/deprecated/doubledeal-v9/lean/Axioms.lean
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v9/lean --exclude Generated
       - name: Witness Lean data matches witness_v9.json
         run: python3 proofs/deprecated/doubledeal-v9/lean/witness_to_lean.py --check
       - name: Kernel witness build (decide! per stage)

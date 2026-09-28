@@ -1,8 +1,10 @@
 # DoubleDeal
 
-**This is DoubleDeal v10.** One change from v9: SumRanks (§3.3). Rows now turn by an index-weighted rank total of the row above, and columns by a GF(4) suit value of the column to the left plus the column's own suit sum. Both are chained, Feistel-style. GridCycle, ShiftRows, Compose, PassKey, the round count and the modes are unchanged. v9 is deprecated and frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo`. A related-plaintext distinguisher breaks the full 6-round v9: swapping K♣ and Q♥ in the plaintext swaps them in the ciphertext at about \(3.5\times10^{-8}\) per pair. Its vulnerability proof is in `proofs/deprecated/doubledeal-v9/`. v8 is deprecated too, frozen at `v8/SPEC.md`, with its vulnerability proof in `proofs/deprecated/doubledeal-v8/`. Formerly TwoDeck (TDSPN elegant-v8).
+**This is DoubleDeal v11.** One change from v10: GridCycle (§3.5, §4.4). The walk's finger is now a *ghost*: each step starts from the previous **target** seat, even when the card had to sit elsewhere. A free target is handled exactly as in v10. A target that is already taken is resolved by the card sitting on it (the *blocker*): scan the row marker + blocker's suit, starting at the target column + blocker's rank, for the first empty seat to the right (dropping to the next row if that row is full); advance the marker one suit; and the next step starts from the target moved by the blocker's step. SumRanks, ShiftRows, Compose, PassKey, the round count and the modes are unchanged. The rule was chosen from the measurements in `proofs/doubledeal/analysis/v10-gridcycle/` (PHASE2 "rule 1" plus PHASE6 "tweak B"; toy evidence, not a proof).
 
-This document is the normative specification. `doubledeal.sudo` is the conformance implementation, and a mismatch is a bug in the implementation. DoubleDeal is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim and is not for protecting anything. The v10 SumRanks was chosen from the candidate measurements in `proofs/doubledeal/analysis/v10-sumranks/` (toy evidence, not a proof).
+v10 is deprecated and frozen at `v10/SPEC.md` + `v10/doubledeal_v10.sudo`. The reason is a per-layer parity shortfall in GridCycle, not a working attack on the full cipher: v10 GridCycle lets its worst swap, K♣↔K♦, through unchanged with probability 0.262 (measured), and 1311 of the 1326 swaps are above the 1/64 bar that SumRanks meets, while the 6-round product-formula estimate for the worst swap trail stays about \(2\times10^{-17}\). Write-up and kernel-checked single-deck witness: `proofs/deprecated/doubledeal-v10/`. v9 is deprecated and frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo`; a related-plaintext distinguisher breaks the full 6-round v9 (K♣↔Q♥ at about \(3.5\times10^{-8}\) per pair; `proofs/deprecated/doubledeal-v9/`). v8 is deprecated too, frozen at `v8/SPEC.md`, with its vulnerability proof in `proofs/deprecated/doubledeal-v8/`. Formerly TwoDeck (TDSPN elegant-v8).
+
+This document is the normative specification. `doubledeal.sudo` is the conformance implementation, and a mismatch is a bug in the implementation. DoubleDeal is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim and is not for protecting anything. The v10 SumRanks (kept in v11) was chosen from the candidate measurements in `proofs/doubledeal/analysis/v10-sumranks/`, and the v11 GridCycle from `proofs/doubledeal/analysis/v10-gridcycle/` (toy evidence, not proofs).
 
 The demo at `demos/doubledeal/` plays `trace_encrypt` and `trace_decrypt`. It does not contain a second copy of the rounds. `decrypt` may keep the round-key list from `expand_keys`. The decrypt trace does not: it passes the master key forward 6 times to \(K_6\), then un-passes once per remaining round back to \(K_0\). Ciphertext is the same either way; only the key-derivation choreography differs.
 
@@ -204,28 +206,29 @@ Inverse: right by \(s_i\).
 
 Maps a **packet** (deck) to a packet. Walk places cards onto an empty \(4\times13\) grid; scoop is **row-major**.
 
-**Step** from seat \((r,c)\) using card \(x\) just placed:
+**Step** from seat \((r,c)\) using card \(x\):
 
 \[
 \mathrm{step}(x,(r,c)) = \bigl((r + \mathrm{suit}(x))\bmod 4,\;
 (c + \mathrm{rank}(x))\bmod 13\bigr).
 \]
 
-**Overflow machine.** State \(t \in \{0,1,2,3\}\), initially \(0\). On overflow at blocked target \((r^\ast, c^\ast)\), seek the next free seat, scanning each marker row **from column \(c^\ast\)** rightward with wrap:
+**Ghost finger (v11).** The walk keeps a *finger* seat \(f\), separate from where cards land. The next target is \(\mathrm{step}(\text{previous card}, f)\). After a free target the finger moves to that target (where the card now sits, as in v10). After a blocked target the finger does **not** follow the card; it moves to the target shifted by the blocker's step (below).
+
+**Blocked placement (v11).** State \(t \in \{0,1,2,3\}\) (the marker), initially \(0\). If the target \(T=(r^\ast, c^\ast)\) is already taken, let \(b\) be the card on \(T\) (the *blocker*). Scan row \((t + \mathrm{suit}(b)) \bmod 4\) from column \((c^\ast + \mathrm{rank}(b)) \bmod 13\) rightward with wrap for the first empty seat; if that whole row is full, drop to the next row (\(+1 \bmod 4\)) and scan it from the same column. Then \(t \leftarrow (t+1) \bmod 4\) (once per blocked placement, however many rows were dropped) and \(f \leftarrow \mathrm{step}(b, T)\).
 
 ```
-overflow_seat(occupied, t, start):   # start = c* = column of the blocked target
+overflow_seat(occupied, row, start):
   repeat up to 4 times:
-    row ← CHASED[t]          # 0,1,2,3 = ♣♥♠♦
     for k in 0..12:
       col ← (start + k) mod 13
       if not occupied(row, col):
-        return (row, col), (t+1) mod 4
-    t ← (t+1) mod 4
+        return (row, col)
+    row ← (row + 1) mod 4
   fail  # unreachable on a 52-seat grid with <52 occupied
 ```
 
-Why: \(c^\ast\) comes from the previous card's rank, so the overflow seat now depends on the cards, not only on which seats are full. The inverse knows \(c^\ast\) (it has the previous card and seat), so it can repeat the scan.
+Why: in v10 the finger followed the card, so a swapped pair of cards often rejoined the same walk (K♣↔K♦ passed unchanged at 0.262 per layer). With the ghost finger the two walks' fingers differ by \(\mathrm{step}(a) - \mathrm{step}(b)\), which is never zero for distinct cards, and the blocker makes the overflow seat depend on card values, not just occupancy. The blocker's nudge of the finger makes the path depend on order. The inverse can repeat all of it: \(T\) is already visited in its table, so it can read the blocker.
 
 **Forward** `mix_columns(D)`:
 
@@ -234,15 +237,19 @@ grid ← empty 4×13
 t ← 0
 for i, card in enumerate(D):
   if i = 0:
-    pos ← AS_START = (2, 0)
+    pos ← AS_START = (2, 0); f ← pos
   else:
-    target ← step(prev_card, prev_pos)
-    if grid[target] is empty:
-      pos ← target
+    T ← step(prev_card, f)
+    if grid[T] is empty:
+      pos ← T; f ← T
     else:
-      pos, t ← overflow_seat(λ(r,c). grid[r,c] occupied, t, target.col)
+      b ← grid[T]
+      pos ← overflow_seat(λ(r,c). grid[r,c] occupied,
+                          (t + suit(b)) mod 4, (T.col + rank(b)) mod 13)
+      t ← (t + 1) mod 4
+      f ← step(b, T)
   place card at pos
-  prev_card, prev_pos ← card, pos
+  prev_card ← card
 return scoop_row_major(grid)
 ```
 
@@ -251,10 +258,10 @@ return scoop_row_major(grid)
 ```
 grid ← lay_row_major(D)      # recover placement
 visited ← all false
-t ← 0; hand ← []
+t ← 0; f ← AS_START; hand ← []
 for i in 0..51:
-  choose pos by the same AS_START / step / overflow rule
-    (scan starts at the blocked target's column), treating “occupied” as “visited”
+  choose pos (and update t, f) by the same AS_START / ghost-finger / blocker rule,
+    treating “occupied” as “visited”; a visited target's blocker is grid[T]
   append grid[pos] to hand; mark visited[pos]
 return hand
 ```
@@ -469,13 +476,15 @@ Then **scoop column-major** into a packet (full round continues to GridCycle; fi
 
 1. Clear the 4×13 table. Keep an **overflow marker** chip that starts on ♣ and rotates ♣→♥→♠→♦→♣… when used.
 2. Place the **first** hand card on the start seat **(row 2, column 0)**.
-3. For each next hand card: from the seat you just filled, using the card you just placed, step  
-   `new_row = (row + suit) mod 4`, `new_col = (col + rank) mod 13`.  
-   - If that seat is **empty**, place there.  
-   - If **full** (overflow): keep your finger on the **column** of the blocked seat. In the row named by the overflow marker’s suit, start at that column and scan right (wrapping from column 12 back to column 0) for the first empty seat; place there; advance the marker one suit. If that whole row is full, advance the marker and scan the next suit’s row the same way, again starting at the blocked column.
+3. Keep a **finger** on the table. It starts on the start seat. For each next hand card, step from the **finger** using the card you just placed:  
+   `new_row = (row + suit) mod 4`, `new_col = (col + rank) mod 13`. Call that seat the **target**.  
+   - If the target is **empty**, place the card there and move the finger to it.  
+   - If the target is **taken**, the card sitting there is the **blocker**. It sends you: go to the row named by the marker's suit plus the blocker's suit (mod 4), start at the target's column plus the blocker's rank (mod 13), and scan right (wrapping from column 12 back to column 0) for the first empty seat; place the card there. If that whole row is full, drop to the next row and scan it from the same column. Advance the marker one suit. The finger does **not** follow the card: move it from the target by the blocker's step (rows + blocker's suit, columns + blocker's rank, which is the column you just started the scan from).
 4. Scoop **row-major** → packet.
 
-**Inverse:** lay the packet **row-major**. Use visited markers. Start seat’s card was first in the hand. Walk with the same step; if the stepped seat is already visited, use the same CHaSeD overflow on **unvisited** seats, starting the scan at the blocked seat's column. Each chosen seat’s card is the next hand card.
+*Example* (from `proofs/doubledeal/analysis/v10-gridcycle/PHASE6.md`; seats are r(row)c(col)). The finger is on r0c4 and you just placed 5♠: the target is r0c4 + 5♠ = r2c9, but J♠ sits there. J♠ sends the next card, 3♦, to row marker ♣ + ♠ = 2, scanning from column 9 + J = 7; r2c7 is empty, so 3♦ sits there. The marker moves ♣ → ♥. The finger moves from the target r2c9 by J♠'s step, rows + 2 (r2 → r0) and columns to 7, so it lands on r0c7, and the next card (Q♥) steps from there: r0c7 + 3♦ → r3c10.
+
+**Inverse:** lay the packet **row-major**. Use visited markers, a finger and the marker chip. The start seat's card was first in the hand; tick it and put the finger there. Step from the finger with the card you just recovered. If the target is **not** ticked, its card is the next hand card; tick it and move the finger there. If the target is **already ticked**, a blocked placement happened here: read the blocker (the card on the target), run the same scan over **unticked** seats (row marker + blocker's suit, from target column + blocker's rank, dropping a row if full), take that seat's card as the next hand card and tick it, advance the marker, and move the finger to target + blocker's step. In the example, the decryptor finds r2c9 already ticked, reads J♠, scans row 2 from column 7 over unticked seats, gets r2c7 = 3♦, and moves the finger to r0c7.
 
 ## 4.5 Compose (AddRoundKey)
 
@@ -728,7 +737,7 @@ Rows 1–3 slide left-to-right-end with overlapping ease (row 1 starts first, th
 
 - Empty grid; **start seat (2,0)** highlights.
 - Each placement: card arcs from hand to seat along the \((\Delta\mathrm{row}=\mathrm{suit},\,\Delta\mathrm{col}=\mathrm{rank})\) step as a visible **polyline on the grid**, suit **color-coded**.
-- On **overflow**: show the **CHaSeD marker chip** walking suits and a **scan-line** that starts under the blocked seat's column and sweeps right (wrapping) for the empty seat in that row — make overflow **readable, not embarrassing**. No error flash; treat overflow as a first-class rule.
+- On a **blocked target**: highlight the **blocker**, show the **CHaSeD marker chip** plus the blocker's suit picking the row, and a **scan-line** that starts at the target column + blocker's rank and sweeps right (wrapping) for the empty seat. A marker for the finger (target + blocker's step after a block) would help but is optional; the current demo narrates it in the caption and does not animate it — make overflow **readable, not embarrassing**. No error flash; treat overflow as a first-class rule.
 - After 52 placements: scoop **row-major** (see below).
 
 ### Scoop row-major
@@ -771,7 +780,8 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 | --- | --- | --- |
 | v8 (TDSPN elegant-v8) | **Deprecated**, frozen at `v8/SPEC.md` + `v8/doubledeal_v8.sudo` | SumRanks read ranks only, and the GridCycle overflow scanned each marker row from column 0. Same-rank relabellings (e.g. K♣↔K♦) commuted with every layer except GridCycle, giving a chosen-plaintext distinguisher (~\(10^{-3}\) per pair). Vulnerability proof: `proofs/deprecated/doubledeal-v8/`. |
 | v9 | **Deprecated**, frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo` | SumRanks columns sum \((\mathrm{rank}+\mathrm{suit}) \bmod 4\); GridCycle overflow scans from the blocked column. Toy evidence only: the same relation family measured at 0 hits in \(2\times10^6\) full-cipher pairs for the worst transposition found by a one-round screen (95% upper bound \(1.5\times10^{-6}\)). That is not a security claim. Superseded: a transposition the one-round screen did not rank first, K♣↔Q♥, commutes with the full cipher at about \(3.5\times10^{-8}\) per pair (14 hits in \(4\times10^8\) pairs, below what \(2\times10^6\) pairs can see). Vulnerability proof: `proofs/deprecated/doubledeal-v9/`. |
-| v10 | **Current** (this file) | SumRanks rows turn by the index-weighted rank total \(\sum (13-j)\,\mathrm{rank} \bmod 13\) of the row above; columns turn by the GF(4) suit value \(0 s_0 + s_1 + w s_2 + w^2 s_3\) of the column to the left plus the column's own suit sum; both chained in a fixed order (§3.3). Everything else as v9. Toy evidence only (`proofs/doubledeal/analysis/v10-sumranks/`): over uniformly random decks, SumRanks alone lets a card swap through unchanged with measured worst probability ≈ 1/221 over all 1326 swaps (measured 1/220.8; exactly 1/221 for a same-suit swap; v9: 1/4.2). Over relabellings more generally (subfolder `sbox-search/`: exhaustive over low-weight relabellings, plus hill-climbs), the worst non-symmetry one measured is a same-suit 3-cycle at exactly 9/1105 ≈ 1/123 (exact by enumeration, agreeing with 20M-deck samples), and none measured exceeds 1/64 except the 51 exact v10Sym symmetries. The 1/64 bound is proved in Lean for every non-symmetry relabelling of SumRanks alone (`sumRanksV10_survival_le`, `proofs/doubledeal/security/SUMRANKS_DP.md`); the value 9/1105 is proved exactly for the one 3-cycle A♣→2♣→3♣ (`sumRanksV10_survival_threeCycle`), but that it is the worst case is computer-assisted and not formalised. The product-formula 6-round estimate for the worst swap is about \(2\times10^{-17}\) (v9: \(3.6\times10^{-8}\)). These are measurements and extrapolations, not a security claim. The remaining survivors are same-suit swaps and cycles. |
+| v10 | **Deprecated**, frozen at `v10/SPEC.md` + `v10/doubledeal_v10.sudo` | SumRanks rows turn by the index-weighted rank total \(\sum (13-j)\,\mathrm{rank} \bmod 13\) of the row above; columns turn by the GF(4) suit value \(0 s_0 + s_1 + w s_2 + w^2 s_3\) of the column to the left plus the column's own suit sum; both chained in a fixed order (§3.3). Everything else as v9. Toy evidence only (`proofs/doubledeal/analysis/v10-sumranks/`): over uniformly random decks, SumRanks alone lets a card swap through unchanged with measured worst probability ≈ 1/221 over all 1326 swaps (measured 1/220.8; exactly 1/221 for a same-suit swap; v9: 1/4.2). Over relabellings more generally (subfolder `sbox-search/`: exhaustive over low-weight relabellings, plus hill-climbs), the worst non-symmetry one measured is a same-suit 3-cycle at exactly 9/1105 ≈ 1/123 (exact by enumeration, agreeing with 20M-deck samples), and none measured exceeds 1/64 except the 51 exact v10Sym symmetries. The 1/64 bound is proved in Lean for every non-symmetry relabelling of SumRanks alone (`sumRanksV10_survival_le`, `proofs/doubledeal/security/SUMRANKS_DP.md`); the value 9/1105 is proved exactly for the one 3-cycle A♣→2♣→3♣ (`sumRanksV10_survival_threeCycle`), but that it is the worst case is computer-assisted and not formalised. The product-formula 6-round estimate for the worst swap is about \(2\times10^{-17}\) (v9: \(3.6\times10^{-8}\)). These are measurements and extrapolations, not a security claim. The remaining survivors are same-suit swaps and cycles. Deprecated for a GridCycle per-layer parity shortfall (not a full-cipher attack): GridCycle, unchanged since v9, lets K♣↔K♦ through unchanged at 0.262 per layer and 1311/1326 swaps exceed 1/64 (write-up: `proofs/deprecated/doubledeal-v10/`). |
+| v11 | **Current** | GridCycle only (§3.5, §4.4): ghost finger (each step starts from the previous target) and blocker-driven blocked placement (row = marker + blocker's suit, start column = target column + blocker's rank, first empty seat to the right, drop a row if full, marker + 1), and after a blocked placement the finger moves to target + blocker's step. Everything else as v10. Toy evidence only (`proofs/doubledeal/analysis/v10-gridcycle/`, PHASE2 + PHASE6 variant B): measured worst single-swap survival through GridCycle alone ≈ 0.0049 (≈ 1/205; v10: 0.262), 0 of 1326 swaps above 1/64 (v10: 1311), worst swap through one full round (v10 SumRanks) ≈ 1.0e-4. These are sampled measurements, not a security claim and not a bound. |
 
 ---
 
@@ -779,14 +789,16 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 
 | Artifact | Path | Role |
 | --- | --- | --- |
-| This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules (v10) |
+| This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules (v11) |
 | Deprecated v8 | `primitives/cipher/doubledeal/v8/` | Frozen v8 SPEC and sudo; vulnerability proof in `proofs/deprecated/doubledeal-v8/` |
 | Deprecated v9 | `primitives/cipher/doubledeal/v9/` | Frozen v9 SPEC and sudo; vulnerability proof in `proofs/deprecated/doubledeal-v9/` |
+| Deprecated v10 | `primitives/cipher/doubledeal/v10/` | Frozen v10 SPEC and sudo; GridCycle parity write-up and single-deck witness in `proofs/deprecated/doubledeal-v10/` |
 | Conformance implementation | `primitives/cipher/doubledeal/doubledeal.sudo` | The only copy of the rounds |
 | Byte encoding | `demos/doubledeal/cards.js` | §5.3, outside `encrypt` / `decrypt`. A demo box is the text you type, as UTF-8, then this encoding. A leading `0x` means the rest of the box is hex bytes. Ciphertext is written with that prefix. The key box is one deck: those bytes are a single 28-byte block, filled with the §5.3 pad when shorter than 28 bytes, used as-is when exactly 28, and rejected when longer. The nonce box is not §5.3. §5.2's nonce is a 39-card order; the page unranks up to 19 bytes into cards \(0..38\) and rejects an integer \(\ge 39!\). |
 | Demo | `demos/doubledeal/` | Three.js table. Plays `trace_encrypt` and `trace_decrypt` from the sudo module |
 | Correctness proofs | `proofs/doubledeal/` | Lean 4 algebraic stones (bijections, round-trip, content-preservation). Not bit-security. |
 | v10 SumRanks analysis | `proofs/doubledeal/analysis/v10-sumranks/` | Candidate measurements that led to v10 (empirical; not proofs) |
+| v10 GridCycle analysis | `proofs/doubledeal/analysis/v10-gridcycle/` | Candidate measurements that led to the v11 GridCycle (empirical; not proofs) |
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | CBC + HMAC-MegaDreifach AEAD. Not SCM. |
 
 ---

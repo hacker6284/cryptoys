@@ -12,6 +12,7 @@ on:
       - "proofs/doubledeal/check_axioms.py"
       - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
       - ".github/workflows/proofs-heavy.yml"
+      - ".github/actions/lean-security/**"
   push:
     branches: [main]
     paths:
@@ -20,6 +21,7 @@ on:
       - "proofs/doubledeal/check_axioms.py"
       - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
       - ".github/workflows/proofs-heavy.yml"
+      - ".github/actions/lean-security/**"
   schedule:
     - cron: "17 4 * * 1"  # Mondays 04:17 UTC
   workflow_dispatch:
@@ -39,16 +41,8 @@ jobs:
       - uses: actions/checkout@v5
       - name: No admit / native_decide / sorryAx / axiom; sorry only in the allowlisted conjecture
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py
-      # Same key as the doubledeal-security job, so the two jobs share one entry.
-      - uses: actions/cache@v5
+      - uses: ./.github/actions/lean-security
         with:
-          path: proofs/doubledeal/security/.lake/packages
-          key: lake-packages-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('proofs/doubledeal/security/lake-manifest.json', 'proofs/doubledeal/security/lean-toolchain') }}
-      - uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: proofs/doubledeal/security
-          use-github-cache: false
-          use-mathlib-cache: true  # lake exe cache get: prebuilt Mathlib; never build it from source
           build-args: "DoubleDealSecurityHeavy DoubleDealSecurity.Audit"
       - name: Axiom audit of every DoubleDealSecurityHeavy theorem (registry must match the source)
         working-directory: proofs/doubledeal/security

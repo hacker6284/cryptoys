@@ -3,7 +3,8 @@ name: proofs-v9-deprecated
 # Kernel-checked K♣↔Q♥ witness for the frozen, deprecated DoubleDeal v9
 # (proofs/deprecated/doubledeal-v9/lean, `decide!` stage by stage, ~9 min on a
 # hosted runner) and its axiom audit. Kept out of proofs.yml so the normal jobs
-# stay fast; proofs.yml still runs the v9 TAP, witness-data and vector checks.
+# stay fast; proofs.yml runs the v9 TAP, witness-data (witness_to_lean --check) and
+# vector checks, so they are not repeated here.
 # Runs on PRs and main pushes that touch what the proof depends on, weekly and
 # by hand.
 on:
@@ -39,8 +40,6 @@ jobs:
       - uses: actions/checkout@v5
       - name: No native_decide / sorry / admit / initialize in the v9 witness package
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v9/lean --exclude Generated
-      - name: Witness Lean data matches witness_v9.json
-        run: python3 proofs/deprecated/doubledeal-v9/lean/witness_to_lean.py --check
       - name: Kernel witness build (decide! per stage)
         uses: leanprover/lean-action@v1
         with:

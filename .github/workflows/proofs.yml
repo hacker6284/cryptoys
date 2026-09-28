@@ -10,6 +10,7 @@ on:
       - "primitives/aead/doubledeal-cbc-hmac/**"
       - "tools/emit_lean.py"
       - ".github/workflows/proofs.yml"
+      - ".github/actions/lean-security/**"
   pull_request:
     paths:
       - "proofs/**"
@@ -19,6 +20,7 @@ on:
       - "primitives/aead/doubledeal-cbc-hmac/**"
       - "tools/emit_lean.py"
       - ".github/workflows/proofs.yml"
+      - ".github/actions/lean-security/**"
   workflow_dispatch:
 
 env:
@@ -29,6 +31,9 @@ jobs:
   # via the pinned sudocode main commit (PR #8 merge; see proofs/SUDOCODE_PIN).
   generated-fresh:
     runs-on: ubuntu-latest
+    env:
+      SUDOCODE_DIR: ${{ github.workspace }}/.sudocode-lean
+      SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
     steps:
       - uses: actions/checkout@v5
       - name: Read the sudocode pin
@@ -53,70 +58,36 @@ jobs:
       - name: Build sudoc
         run: cargo build --release --manifest-path .sudocode-lean/sudoc/Cargo.toml
       - name: Generated Lean matches emit (--require terminates)
-        env:
-          SUDOCODE_DIR: ${{ github.workspace }}/.sudocode-lean
-          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/emit_lean.sh --check
       - name: Current vectors (JSON + Vectors.lean) rebuild byte-identically from doubledeal.sudo
-        env:
-          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/doubledeal/vectors/regen.sh current --check
       - name: Frozen v8 vectors rebuild byte-identically from v8/doubledeal_v8.sudo
-        env:
-          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/doubledeal/vectors/regen.sh v8 --check
       - name: Frozen v9 vectors rebuild byte-identically from v9/doubledeal_v9.sudo
-        env:
-          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/doubledeal/vectors/regen.sh v9 --check
       - name: Frozen v10 vectors rebuild byte-identically from v10/doubledeal_v10.sudo
-        env:
-          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/doubledeal/vectors/regen.sh v10 --check
 
-  doubledeal-generated:
+  generated:
+    # Emitted Lean of each primitive builds and its sudo tests pass (TAP).
+    name: ${{ matrix.name }}-generated
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: doubledeal, dir: proofs/doubledeal/lean/Generated, test: doubledeal_test }
+          - { name: megadreifach, dir: proofs/megadreifach/lean/Generated, test: megadreifach_test }
+          - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
+          - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
     steps:
       - uses: actions/checkout@v5
       - uses: leanprover/lean-action@v1
         with:
-          lake-package-directory: proofs/doubledeal/lean/Generated
+          lake-package-directory: ${{ matrix.dir }}
       - name: Generated TAP (sudo tests)
-        working-directory: proofs/doubledeal/lean/Generated
-        run: ./.lake/build/bin/doubledeal_test
-
-  megadreifach-generated:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: proofs/megadreifach/lean/Generated
-      - name: Generated TAP (sudo tests)
-        working-directory: proofs/megadreifach/lean/Generated
-        run: ./.lake/build/bin/megadreifach_test
-
-  scramble-generated:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: proofs/scramble/lean/Generated
-      - name: Generated TAP (sudo tests)
-        working-directory: proofs/scramble/lean/Generated
-        run: ./.lake/build/bin/scramble_test
-
-  cbc-hmac-generated:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: proofs/doubledeal-cbc-hmac/lean/Generated
-      - name: Generated TAP (sudo tests)
-        working-directory: proofs/doubledeal-cbc-hmac/lean/Generated
-        run: ./.lake/build/bin/doubledeal_cbc_hmac_test
+        working-directory: ${{ matrix.dir }}
+        run: ./.lake/build/bin/${{ matrix.test }}
 
   doubledeal-v8-deprecated:
     # Frozen, deprecated DoubleDeal v8: emitted TAP + vulnerability-proof witness
@@ -235,17 +206,7 @@ jobs:
           python3 proofs/doubledeal/security/checks/check_covariant.py
           python3 proofs/doubledeal/security/checks/branchnum/witnesses.py > /dev/null
           git diff --exit-code proofs/doubledeal/security/checks/branchnum/witnesses.json
-      # One reusable cache entry for the Mathlib download (keyed on OS, arch,
-      # manifest and toolchain; no SHA), instead of lean-action's per-SHA .lake cache.
-      - uses: actions/cache@v5
-        with:
-          path: proofs/doubledeal/security/.lake/packages
-          key: lake-packages-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('proofs/doubledeal/security/lake-manifest.json', 'proofs/doubledeal/security/lean-toolchain') }}
-      - uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: proofs/doubledeal/security
-          use-github-cache: false
-          use-mathlib-cache: true  # lake exe cache get: prebuilt Mathlib; never build it from source
+      - uses: ./.github/actions/lean-security
       # The heavy library DoubleDealSecurityHeavy is not built here; it is built and
       # audited by proofs-heavy.yml. This audit still fails if its HEAVY_THEOREMS
       # registry and the heavy sources disagree.

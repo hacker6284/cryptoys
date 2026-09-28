@@ -1,0 +1,24 @@
+$ DEALK=2 DEALMOD=1 ./rk 3000000 16 15,41 14,26 1,13
+KEY SCHEDULE REPLACED (analysis only): deal suit + 2 (mod hand size), reversed, under the hand; then rank cut
+rk N=3000000 seed=16 (full v11, K and P uniform, K' = tau K); 0 hits in n samples => 95% upper bound 3/n
+swap 3H<->3D (suit+rank 4 vs 6)
+  [all samples] n=3000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9989 +- 0.0011
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 1.0003 +- 0.0011
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0002 +- 0.0011
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 3000000/0/0.000 r1 0/9869/50.385 r2 0/0/50.999 r3 0/0/51.001 r4 0/0/50.999 r5 0/0/50.999 r6 0/0/51.000
+swap 2H<->AS (suit+rank 3 vs 3)
+  [all samples] n=3000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0003 +- 0.0011
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 0.9996 +- 0.0011
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9999 +- 0.0011
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 3000000/0/0.000 r1 0/2514/50.483 r2 0/0/51.000 r3 0/0/50.999 r4 0/0/51.000 r5 0/0/51.000 r6 0/0/51.000
+swap 2C<->AH (suit+rank 2 vs 2)
+  [all samples] n=3000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9996 +- 0.0011
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 1.0000 +- 0.0011
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9997 +- 0.0011
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 3000000/0/0.000 r1 0/5900/50.286 r2 0/0/51.001 r3 0/0/51.000 r4 0/0/51.000 r5 0/0/50.999 r6 0/0/51.000

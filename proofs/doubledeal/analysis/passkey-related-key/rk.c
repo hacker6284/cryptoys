@@ -33,6 +33,8 @@ static void report(const char *tag, const Acc *A) {
 int main(int argc, char **argv) {
     if (argc < 4) { fprintf(stderr, "usage: rk N seed a,b ...\n"); return 1; }
     long N = atol(argv[1]); uint64_t seed = strtoull(argv[2], 0, 10);
+    if (getenv("DEALK")) { DD_DEALK = atoi(getenv("DEALK")); DD_DEALMOD = getenv("DEALMOD") ? atoi(getenv("DEALMOD")) : 0;
+        printf("KEY SCHEDULE REPLACED (analysis only): deal suit + %d (%s), reversed, under the hand; then rank cut\n", DD_DEALK, DD_DEALMOD ? "mod hand size" : "min with hand size"); }
     printf("rk N=%ld seed=%llu (full v11, K and P uniform, K' = tau K); 0 hits in n samples => 95%% upper bound 3/n\n", N, (unsigned long long)seed);
     for (int ai = 3; ai < argc; ai++) { int a, b; if (sscanf(argv[ai], "%d,%d", &a, &b) != 2) return 1;
         Acc all = {0}, kept = {0};

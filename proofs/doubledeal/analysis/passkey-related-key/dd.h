@@ -37,7 +37,22 @@ static inline void passkey_inv(const int *o, int *d) { int hand[52], key[52], hn
         if (n > 0) rotl(hand, hn, -(SUIT(C) % n));
         memmove(hand + 1, hand, hn * sizeof(int)); hand[0] = C; hn++; }
     memcpy(d, hand, 52 * sizeof(int)); }
-static inline void expand_keys(const int *k0, int keys[7][52]) { memcpy(keys[0], k0, 52 * sizeof(int)); for (int r = 1; r <= 6; r++) passkey(keys[r-1], keys[r]); }
+/* Analysis-only alternative (NOT the spec): deal suit + k cards off the top of the hand (reversed) under the hand,
+   count capped at the hand size, then the unchanged rank cut. expand_keys uses it when DD_DEALK >= 0 (rk.c: env DEALK). */
+static int DD_DEALK = -1, DD_DEALMOD = 0;   /* DD_DEALMOD: count = (suit + k) mod hand size instead of min */
+static inline void passkey_dealb(const int *d, int *o, int k) { int hand[52], key[52], hn = 51, kn = 0; memcpy(hand, d + 1, 51 * sizeof(int)); int C = d[0];
+    for (;;) {
+        int m = SUIT(C) + k; if (DD_DEALMOD) m = hn ? m % hn : 0; else if (m > hn) m = hn;
+        for (int i = 0; i < m / 2; i++) { int t = hand[i]; hand[i] = hand[m-1-i]; hand[m-1-i] = t; }
+        rotl(hand, hn, m);
+        if (hn && RANK(C) < hn) rotl(hand, hn, RANK(C));
+        else if (kn && RANK(C) < kn) rotl(key, kn, RANK(C));
+        memmove(key + 1, key, kn * sizeof(int)); key[0] = C; kn++;
+        if (!hn) break;
+        C = hand[0]; memmove(hand, hand + 1, (hn - 1) * sizeof(int)); hn--; }
+    memcpy(o, key, 52 * sizeof(int)); }
+static inline void expand_keys(const int *k0, int keys[7][52]) { memcpy(keys[0], k0, 52 * sizeof(int));
+    for (int r = 1; r <= 6; r++) { if (DD_DEALK >= 0) passkey_dealb(keys[r-1], keys[r], DD_DEALK); else passkey(keys[r-1], keys[r]); } }
 
 /* ---- grid layers ---- */
 static inline void lay_cm(const int *d, int g[4][13]) { for (int k = 0; k < 52; k++) g[k%4][k/4] = d[k]; }

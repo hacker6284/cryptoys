@@ -1,0 +1,19 @@
+$ for k in 0 3 4; do DEALMOD=1 DEALK=$k ONLYV=4 ./readings 20000 31; done
+readings N=20000 seed=31  (x = suit; one pass; swap tau passes if F(tau K) = tau F(K))
+DEALB  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/200000 decks
+      (DEALB with k = 0: deal suit + 0 cards, count mod hand size)
+      worst 2C<->AH 0.8867   2H<->AS 0.0149   pairs > 1/64: 12   mean over 1326: 0.00680
+      top 5: 2C<->AH 0.8867 3C<->2H 0.8486 4C<->3H 0.8146 5C<->4H 0.7756 6C<->5H 0.7481
+      six chained passes, worst pair 2C<->AH: K'_r = tau K_r for all r=1..6 in 96376/200000 keys = 0.48188
+readings N=20000 seed=31  (x = suit; one pass; swap tau passes if F(tau K) = tau F(K))
+DEALB  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/200000 decks
+      (DEALB with k = 3: deal suit + 3 cards, count mod hand size)
+      worst AC<->AS 0.0031   2H<->AS 0.0004   pairs > 1/64: 0   mean over 1326: 0.00011
+      top 5: AC<->AS 0.0031 3C<->3S 0.0031 6H<->6D 0.0031 QH<->QD 0.0029 8C<->8D 0.0029
+      six chained passes, worst pair AC<->AS: K'_r = tau K_r for all r=1..6 in 0/200000 keys = 0.00000
+readings N=20000 seed=31  (x = suit; one pass; swap tau passes if F(tau K) = tau F(K))
+DEALB  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/200000 decks
+      (DEALB with k = 4: deal suit + 4 cards, count mod hand size)
+      worst 4C<->4D 0.0032   2H<->AS 0.0010   pairs > 1/64: 0   mean over 1326: 0.00011
+      top 5: 4C<->4D 0.0032 6C<->6D 0.0031 8C<->8D 0.0031 AH<->AD 0.0029 8H<->8D 0.0028
+      six chained passes, worst pair 4C<->4D: K'_r = tau K_r for all r=1..6 in 0/200000 keys = 0.00000

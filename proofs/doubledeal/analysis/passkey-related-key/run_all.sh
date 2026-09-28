@@ -17,3 +17,9 @@ run rk_more.log ./rk 2000000 15 1,13 27,39 12,24 38,50 50,51 38,51 0,51
 gcc -O2 -fopenmp -Wall -Wextra -o readings readings.c -lm
 run readings.log ./readings 20000 21
 run readings_exact.log python3 readings_exact.py
+gcc -O2 -fopenmp -I. -o dealk_check dealk_check.c -lm
+run dealk_exact.log python3 dealk_exact.py
+run dealk.log bash -c 'for k in 0 1 2 3 4; do DEALK=$k ONLYV=4 ./readings 20000 31; done; for k in 1 2; do DEALMOD=1 DEALK=$k ONLYV=4 ./readings 20000 31; done'
+run dealk_mod.log bash -c 'for k in 0 3 4; do DEALMOD=1 DEALK=$k ONLYV=4 ./readings 20000 31; done'
+run dealk_check.log bash -c './dealk_check; ./dealk_check 1000000 1 0 1,13 14,26; ./dealk_check 1000000 1 1 1,13 14,26; ./dealk_check 1000000 2 0 27,40 30,43; ./dealk_check 1000000 2 1 15,41 13,39 14,26 1,13; ./dealk_check 1000000 3 1 0,26 2,28; ./dealk_check 1000000 4 1 3,42'
+run rk_dealk2mod.log env DEALK=2 DEALMOD=1 ./rk 3000000 16 15,41 14,26 1,13

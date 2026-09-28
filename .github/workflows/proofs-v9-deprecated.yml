@@ -13,6 +13,7 @@ on:
       - "proofs/deprecated/doubledeal-v9/**"
       - "primitives/cipher/doubledeal/v9/**"   # the frozen sudo Generated/ is emitted from
       - "proofs/doubledeal/check_axioms.py"
+      - "proofs/doubledeal/security/checks/scan_sorry.py"   # the gate this workflow runs
       - ".github/workflows/proofs-v9-deprecated.yml"
   push:
     branches: [main]
@@ -20,6 +21,7 @@ on:
       - "proofs/deprecated/doubledeal-v9/**"
       - "primitives/cipher/doubledeal/v9/**"
       - "proofs/doubledeal/check_axioms.py"
+      - "proofs/doubledeal/security/checks/scan_sorry.py"   # the gate this workflow runs
       - ".github/workflows/proofs-v9-deprecated.yml"
   schedule:
     - cron: "43 4 * * 1"  # Mondays 04:43 UTC

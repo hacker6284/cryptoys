@@ -44,9 +44,9 @@ def strip_block_comments(text: str) -> str:
     return re.sub(r"/-.*?-/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
 
 
-def scan(sources, allowed=None):
-    """sources: iterable of (label, text). Returns (bad, found)."""
-    allowed = ALLOWED_SORRY if allowed is None else allowed
+def scan(sources, allowed):
+    """sources: iterable of (label, text); allowed: declarations that may hold one sorry.
+    Returns (bad, found)."""
     bad = []
     found = {}
     for path, raw in sources:
@@ -92,8 +92,7 @@ def scan(sources, allowed=None):
     return bad, found
 
 
-def check(sources, allowed=None):
-    allowed = ALLOWED_SORRY if allowed is None else allowed
+def check(sources, allowed):
     bad, found = scan(sources, allowed)
     for name in sorted(allowed):
         n = found.get(name, 0)
@@ -117,13 +116,7 @@ def lean_files(roots, exclude=()):
     return files
 
 
-def main(roots=None, exclude=(), allowed=None) -> int:
-    label = "security package" if roots is None else ", ".join(map(str, roots))
-    if roots is None:
-        roots = [PKG]
-        allowed = ALLOWED_SORRY if allowed is None else allowed
-    else:
-        allowed = set() if allowed is None else allowed
+def main(roots, exclude, allowed, label) -> int:
     files = lean_files(roots, exclude)
     if not files:
         print(f"scan_sorry: no .lean files under {label}", file=sys.stderr)
@@ -203,17 +196,22 @@ def parse(argv):
     return ap.parse_args(argv)
 
 
-def run(argv) -> int:
-    a = parse(argv)
-    allowed = None if a.allow_sorry is None else set(a.allow_sorry)
-    return main(a.root, a.exclude, allowed)
+def run(a) -> int:
+    """a: parsed arguments. The one place that picks the roots and the allowlist default:
+    no --root = the security package with ALLOWED_SORRY; with --root, none."""
+    if a.root is None:
+        roots, label, default = [PKG], "security package", ALLOWED_SORRY
+    else:
+        roots, label, default = a.root, ", ".join(a.root), set()
+    allowed = default if a.allow_sorry is None else set(a.allow_sorry)
+    return main(roots, a.exclude, allowed, label)
 
 
 def selftest() -> int:
     import contextlib, io, os, tempfile
     fails = 0
     for name, src, ok, want in SELFTEST:
-        bad = check([("<selftest>", src)])
+        bad = check([("<selftest>", src)], ALLOWED_SORRY)
         good = (not bad) if ok else (bool(bad) and any(want in b for b in bad))
         if not good:
             fails += 1
@@ -228,7 +226,7 @@ def selftest() -> int:
             try:
                 with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
                     try:
-                        rc = run(argv)
+                        rc = run(parse(argv))
                     except SystemExit as e:
                         print(e)
                         rc = 1
@@ -251,4 +249,4 @@ if __name__ == "__main__":
         if args.root or args.exclude or args.allow_sorry:
             sys.exit("scan_sorry.py: --selftest takes no other flags")
         sys.exit(selftest())
-    sys.exit(run(sys.argv[1:]))
+    sys.exit(run(args))

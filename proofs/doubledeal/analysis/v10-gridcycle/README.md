@@ -50,8 +50,9 @@ the occupancy). The layer is therefore "forward-triangular":
 
 * a difference whose first changed walk index is `p` leaves seats `0..p-1` and their cards alone, so
   the output difference weight is at most `52 − p`;
-* swapping walk cards 50 and 51 **always** moves exactly two output seats (proved:
-  `mixColumns_swap_tail`), because seat 50 is fixed by card 49 and seat 51 is the last free seat.
+* swapping walk cards 50 and 51 **always** moves exactly two output seats (proved for any chooser
+  that always picks a free seat: `hammingDist_gridW_swap_tail`), because seat 50 is fixed by card
+  49 and seat 51 is the last free seat.
 
 The target seat is close to a uniform random seat, so the overflow rate at walk index `i` is about
 `i/52` (measured: 0.02 at i=1, 0.50 at i=26, 0.98 at i=51). **Half of all placements (25.6 of 51)

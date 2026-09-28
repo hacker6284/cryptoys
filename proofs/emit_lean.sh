@@ -36,9 +36,15 @@ megadreifach    primitives/hash/megadreifach/megadreifach.sudo            proofs
 scramble        primitives/hash/scramble/scramble.sudo                    proofs/scramble/lean/Generated
 cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach
 "
+# Parsed once: the names in order, and each target's .sudo, Generated/ and -I dirs.
 ALL_TARGETS=()
-while read -r name _; do
-  [[ -n "$name" ]] && ALL_TARGETS+=("$name")
+declare -A T_SUDO T_GEN T_INC
+while read -r name sudo_path generated includes; do
+  [[ -n "$name" ]] || continue
+  ALL_TARGETS+=("$name")
+  T_SUDO[$name]="$sudo_path"
+  T_GEN[$name]="$generated"
+  T_INC[$name]="$includes"
 done <<< "$TARGET_TABLE"
 
 usage() {
@@ -55,7 +61,7 @@ for arg in "$@"; do
     --check) CHECK=1 ;;
     doubledeal-cbc-hmac) TARGETS+=(cbc-hmac) ;;
     *)
-      if [[ " ${ALL_TARGETS[*]} " == *" $arg "* ]]; then TARGETS+=("$arg"); else usage; fi ;;
+      if [[ -n "${T_SUDO[$arg]:-}" ]]; then TARGETS+=("$arg"); else usage; fi ;;
   esac
 done
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
@@ -85,12 +91,8 @@ emit_one() {
 }
 
 for t in "${TARGETS[@]}"; do
-  while read -r name sudo_path generated includes; do
-    if [[ "$name" == "$t" ]]; then
-      # shellcheck disable=SC2086  # includes: zero or more space-separated directories
-      emit_one "$name" "$sudo_path" "$generated" $includes
-    fi
-  done <<< "$TARGET_TABLE"
+  # shellcheck disable=SC2086  # T_INC: zero or more space-separated directories
+  emit_one "$t" "${T_SUDO[$t]}" "${T_GEN[$t]}" ${T_INC[$t]}
 done
 
 echo "sudocode_lean_commit=$SUDOCODE_COMMIT ref=$SUDOCODE_REF"

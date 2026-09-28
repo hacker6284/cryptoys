@@ -1,0 +1,4 @@
+collision (V41): swap walk positions 4,5 (cards 12,51) in deck: 34 25 10 45 12 51 30 35 20 17 42 18 27 48 21 49 2 14 28 4 36 40 47 41 43 31 11 33 23 6 24 15 13 19 44 26 32 7 1 50 0 8 39 3 37 5 22 16 29 46 9 38
+collision (V41): swap walk positions 48,49 (cards 12,4) in deck: 39 5 40 10 42 41 36 23 14 11 32 1 43 26 34 27 37 8 33 46 24 3 0 51 6 2 19 16 38 25 20 31 9 15 28 29 35 18 47 30 45 49 44 22 7 21 17 13 12 4 50 48
+collision (V41): swap walk positions 13,14 (cards 51,12) in deck: 6 11 49 28 46 20 17 34 42 14 29 24 30 51 12 21 23 22 36 48 3 0 19 32 35 15 9 31 16 10 18 45 25 5 7 8 13 47 38 37 40 26 4 27 1 39 33 44 2 41 50 43
+V41: 2652000 swaps tried (|i-j|<=51) on 2000 decks: 537 collisions (460 involve K♣, 534 adjacent walk positions); 486 of 2000 decks have one

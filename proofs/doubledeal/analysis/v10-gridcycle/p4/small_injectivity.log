@@ -1,0 +1,30 @@
+R=2 C=3 n=6 variant 0: 720 decks -> 720 distinct outputs (injective)
+R=2 C=3 n=6 variant 33: 720 decks -> 720 distinct outputs (injective)
+R=2 C=3 n=6 variant 50: 720 decks -> 450 distinct outputs (NOT injective); collision: [5 0 1 2 4 3] [5 0 1 2 3 4] -> [0 1 2 5 3 4]
+R=2 C=3 n=6 variant 51: 720 decks -> 452 distinct outputs (NOT injective); collision: [3 1 0 2 5 4] [3 1 0 2 4 5] -> [0 1 2 3 4 5]
+R=2 C=3 n=6 variant 52: 720 decks -> 511 distinct outputs (NOT injective); collision: [5 0 1 4 3 2] [5 0 1 2 4 3] -> [0 1 2 5 4 3]
+R=2 C=3 n=6 variant 53: 720 decks -> 520 distinct outputs (NOT injective); collision: [4 2 1 3 5 0] [4 2 0 5 3 1] -> [0 1 2 4 5 3]
+R=3 C=2 n=6 variant 0: 720 decks -> 720 distinct outputs (injective)
+R=3 C=2 n=6 variant 33: 720 decks -> 720 distinct outputs (injective)
+R=3 C=2 n=6 variant 50: 720 decks -> 465 distinct outputs (NOT injective); collision: [3 0 1 5 2 4] [3 0 1 2 4 5] -> [0 1 2 4 3 5]
+R=3 C=2 n=6 variant 51: 720 decks -> 435 distinct outputs (NOT injective); collision: [4 3 5 2 0 1] [4 3 5 0 1 2] -> [0 1 2 3 4 5]
+R=3 C=2 n=6 variant 52: 720 decks -> 503 distinct outputs (NOT injective); collision: [4 5 1 2 3 0] [4 5 1 0 3 2] -> [0 1 2 5 4 3]
+R=3 C=2 n=6 variant 53: 720 decks -> 574 distinct outputs (NOT injective); collision: [3 0 1 5 4 2] [3 0 1 2 4 5] -> [0 1 2 5 3 4]
+R=2 C=4 n=8 variant 0: 40320 decks -> 40320 distinct outputs (injective)
+R=2 C=4 n=8 variant 33: 40320 decks -> 40320 distinct outputs (injective)
+R=2 C=4 n=8 variant 50: 40320 decks -> 20382 distinct outputs (NOT injective); collision: [5 2 1 3 0 6 4 7] [5 2 1 3 0 4 7 6] -> [0 1 2 3 5 4 7 6]
+R=2 C=4 n=8 variant 51: 40320 decks -> 20525 distinct outputs (NOT injective); collision: [5 2 1 3 0 6 4 7] [5 2 1 3 0 4 7 6] -> [0 1 2 3 5 6 4 7]
+R=2 C=4 n=8 variant 52: 40320 decks -> 26081 distinct outputs (NOT injective); collision: [7 0 1 3 5 4 2 6] [7 0 1 3 2 4 5 6] -> [0 1 2 3 7 4 6 5]
+R=2 C=4 n=8 variant 53: 40320 decks -> 24608 distinct outputs (NOT injective); collision: [4 1 3 2 5 6 7 0] [4 1 3 0 6 5 7 2] -> [0 1 2 3 4 5 7 6]
+R=4 C=2 n=8 variant 0: 40320 decks -> 40320 distinct outputs (injective)
+R=4 C=2 n=8 variant 33: 40320 decks -> 40320 distinct outputs (injective)
+R=4 C=2 n=8 variant 50: 40320 decks -> 21716 distinct outputs (NOT injective); collision: [6 3 4 0 1 7 5 2] [6 3 4 0 1 2 5 7] -> [0 1 2 3 6 4 5 7]
+R=4 C=2 n=8 variant 51: 40320 decks -> 20419 distinct outputs (NOT injective); collision: [4 1 3 6 2 5 7 0] [4 1 0 5 3 6 2 7] -> [0 1 2 3 4 6 7 5]
+R=4 C=2 n=8 variant 52: 40320 decks -> 23605 distinct outputs (NOT injective); collision: [6 3 4 0 1 7 5 2] [6 3 4 0 1 2 7 5] -> [0 1 2 3 6 4 5 7]
+R=4 C=2 n=8 variant 53: 40320 decks -> 30476 distinct outputs (NOT injective); collision: [5 0 1 3 4 6 2 7] [5 0 1 2 4 7 3 6] -> [0 1 2 3 5 4 6 7]
+R=3 C=3 n=9 variant 0: 362880 decks -> 362880 distinct outputs (injective)
+R=3 C=3 n=9 variant 33: 362880 decks -> 362880 distinct outputs (injective)
+R=3 C=3 n=9 variant 50: 362880 decks -> 167985 distinct outputs (NOT injective); collision: [5 0 1 2 7 8 3 6 4] [5 0 1 2 7 8 3 4 6] -> [0 1 2 3 4 7 5 6 8]
+R=3 C=3 n=9 variant 51: 362880 decks -> 167773 distinct outputs (NOT injective); collision: [7 6 0 1 2 5 4 3 8] [7 6 0 1 2 5 3 8 4] -> [0 1 2 3 4 6 7 8 5]
+R=3 C=3 n=9 variant 52: 362880 decks -> 200067 distinct outputs (NOT injective); collision: [7 6 0 1 4 5 8 2 3] [7 6 0 1 2 5 3 4 8] -> [0 1 2 3 4 6 7 5 8]
+R=3 C=3 n=9 variant 53: 362880 decks -> 222418 distinct outputs (NOT injective); collision: [6 4 7 5 1 8 2 3 0] [6 4 7 5 0 3 1 2 8] -> [0 1 2 3 4 5 6 8 7]

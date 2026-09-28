@@ -1,0 +1,11 @@
+variant 33: 44200 3-cycles, screen N=400: mean 0.0002, max screen 0.0075
+(3C 9C 9S) screen 0.0075 refined 15/100000 = 0.0001
+(6C 9D 8D) screen 0.0075 refined 20/100000 = 0.0002
+(9C AS QC) screen 0.0075 refined 16/100000 = 0.0002
+(AC 2C 3H) screen 0.0050 refined 18/100000 = 0.0002
+(AC AH 9H) screen 0.0050 refined 17/100000 = 0.0002
+(AC AH JD) screen 0.0050 refined 18/100000 = 0.0002
+(AC 7S QH) screen 0.0050 refined 19/100000 = 0.0002
+(AC KD JD) screen 0.0050 refined 20/100000 = 0.0002
+(2C 4C 4S) screen 0.0050 refined 19/100000 = 0.0002
+(2C TC 8D) screen 0.0050 refined 12/100000 = 0.0001

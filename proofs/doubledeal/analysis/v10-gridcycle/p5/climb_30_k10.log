@@ -1,0 +1,9 @@
+rule 30 kmax 10 restart 0: min spread 2 (swap 7,8)
+rule 30 kmax 10 restart 1: min spread 2 (swap 8,9)
+rule 30 kmax 10 restart 2: min spread 2 (swap 9,10)
+rule 30 kmax 10 restart 3: min spread 3 (swap 2,3)
+rule 30 kmax 10 restart 4: min spread 2 (swap 8,9)
+rule 30 kmax 10 restart 5: min spread 2 (swap 4,6)
+rule 30 kmax 10 restart 6: min spread 3 (swap 0,1)
+rule 30 kmax 10 restart 7: min spread 3 (swap 0,1)
+RESULT rule 30, swaps with i<10, gap>=1: lowest spread found 2 at swap (7,8) [upper bound on the true minimum]; deck: 26 11 20 30 34 8 10 35 22 16 17 14 43 46 39 42 3 6 15 44 2 38 24 36 12 45 18 51 33 9 41 21 27 31 4 29 13 40 5 37 25 23 7 47 50 28 48 32 0 49 19 1

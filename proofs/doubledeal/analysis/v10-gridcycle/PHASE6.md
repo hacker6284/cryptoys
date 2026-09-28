@@ -75,7 +75,7 @@ Merge rates for all gap classes are in `p6/merge_*.log`; per-i and (i, j) bucket
 
 **One-pass ceiling.** A swap at `(i, j)` can change at most `52 − i` outputs, so no rule of this shape can average more than 35.33. The uniform one-pass reference from PHASE5 (everything after step `i` re-seated at random) averages 34.4. A′ and A+B reach 34.11 and B 33.93, so they are close to that reference. None exceeds it, as expected.
 
-**The minimum is still 2, and branch analogue 4, for every variant.** This is the PHASE5 one-pass floor: a swap of the last two positions always gives spread 2, and no tweak of the finger can change that.
+**The minimum is still 2, and branch analogue 4, for every variant.** This is the PHASE5 one-pass floor, proven on paper (not formalised; for v10 via `mixColumns_swap_tail`): a swap of the last two positions always gives spread 2, and no tweak of the finger can change that.
 
 ## Which ones clear the bar
 
@@ -144,7 +144,7 @@ The decryptor finds r2c9 already ticked, so a blocked placement happened here. I
 - `p6walk.py`: walkthrough with decryption.
 - `run_phase6.sh`: reproduces everything in `p6/`:
   - `small_injectivity.log`, `cost.log`, `check.log`, `candcheck.log`, `walkthrough.log`;
-  - `scr_*.txt`, `full_*_*.txt`, `full_summary.log`;
+  - `full_summary.log` (raw `scr_*.txt`, `full_*_*.txt` regenerated, not committed);
   - `cyc3_*.log`, `cyc3_summary.log`;
-  - `round_*_*.txt`, `round_summary.log`;
+  - `round_summary.log` (raw `round_*_*.txt` regenerated, not committed);
   - `dist_*.log`, `spcyc3_*.log`, `climbfar_*.log`, `climbsummary.log`, `merge_*.log`.

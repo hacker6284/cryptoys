@@ -3,4 +3,4 @@
 set -e
 cd "$(dirname "$0")"
 CC=${CC:-cc}
-for p in survival variants structure cycles3 mechanism round; do $CC -O2 -Wall -o $p $p.c; done
+for p in survival variants structure cycles3 mechanism round; do $CC -O2 -Wall -Wextra -o $p $p.c; done

@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 static int R, C, n, V;
 static int scan(const unsigned char *occ, int row, int c0, int *t, int mark) {
     for (int a = 0; a < R; a++) { int rr = (row + a) % R;
@@ -60,6 +61,7 @@ static void mix(const int *d, int *out) {
             int s;
             if (V == 0) s = scan(occ, t, tc, &t, 1);
             else { int o = g[T], t0 = t; s = scan(occ, (t0 + o / C) % R, (tc + o % C + 1) % C, &t, 0); t = (t0 + 1) % R; }
+            assert(s >= 0);   /* scan finds a free seat: fewer than R*C cards placed */
             occ[s] = 1; g[s] = x;
             if (V == 0) { fr = s / C; fc = s % C; } else { fr = tr; fc = tc; }
             drv = x; continue;
@@ -79,6 +81,7 @@ static unsigned long long code(const int *p) { unsigned long long v = 0; for (in
 typedef struct { unsigned long long key, deck; } E;
 static int cmp(const void *a, const void *b) { unsigned long long x = ((E*)a)->key, y = ((E*)b)->key; return (x > y) - (x < y); }
 int main(int argc, char **argv) {
+    (void)argc;
     R = atoi(argv[1]); C = atoi(argv[2]); V = atoi(argv[3]); n = R * C;
     long long N = 1; for (int i = 2; i <= n; i++) N *= i;
     E *e = malloc(sizeof(E) * N); int p[16], out[16];

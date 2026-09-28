@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "gc.h"
 int main(int argc, char **argv) {
+    (void)argc;
     long N = atol(argv[1]); rs ^= strtoull(argv[2],0,10)*0x9E3779B97F4A7C15ULL;
     int d[52], e[52], s0[52], s1[52]; long surv = 0, pred = 0, agree = 0, predNotSurv = 0;
     for (long n = 0; n < N; n++) {

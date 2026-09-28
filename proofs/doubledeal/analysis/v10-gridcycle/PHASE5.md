@@ -30,7 +30,7 @@ All 1326 swaps of each of 20 000 random decks (26.5 M cases per rule). Minima fr
 
 | | v10 | rule 1 (33) | rule 2 (30) | ideal random layer |
 |---|---|---|---|---|
-| **min spread** (branch analogue 2 + min) | **2** (4), proven, e.g. swap (50,51) | **2** (4), proven | **2** (4), proven | 42 observed in 2 M samples |
+| **min spread** (branch analogue 2 + min) | **2** (4), e.g. swap (50,51); proven on paper, and for v10 in Lean via `mixColumns_swap_tail` | **2** (4), proven on paper (not formalised) | **2** (4), proven on paper (not formalised) | 42 observed in 2 M samples |
 | p1 / p10 / median | 2 / 12 / 35 | 4 / 14 / 32 | 4 / 14 / 32 | 48 / 50 / 51 |
 | mean | **32.76** | 31.33 | 31.12 | 51.00 |
 | P(spread = 2) = survival | 0.0435 | **0.00506** | 0.00538 | ≈ 0 |
@@ -73,12 +73,14 @@ The "ideal one-pass layer" is a reference with the same one-pass structure: step
 
 The full 13×13 table of (i, j) buckets (min / mean) is in `p5/dist_*.log`. For the ghost-finger rules the spread depends mainly on the **gap** `j − i`, not only on `i`. For v10 it depends on `i` and hardly on `j`.
 
-## What can be proven
+## What can be proven on paper
+
+The arguments below are paper proofs; they are not formalised, except that for v10 the (50, 51) tail swap is `mixColumns_swap_tail` in `security/DoubleDealSecurity/BranchNumber.lean`.
 
 1. **All three rules: min spread = 2 exactly, so the branch analogue is exactly 4, and no one-pass walk can do better.**
    - The seat of step `k` is determined by `d[0..k-1]`, so a swap at `(i, j)` leaves steps `0..i` on their seats; only steps `i..51` can change. That caps spread at `52 − i`.
    - For `(i, j) = (50, 51)`, step 50's seat is fixed and step 51 takes the only seat left. The walk is identical, and spread = 2 for **every** deck under every rule of this family (measured: 1.00000 for all three).
-   - So the MixColumns-style minimum can't separate the rules. Only the distribution can. This is the Phase 2 "last positions" floor, now proven rather than measured.
+   - So the MixColumns-style minimum can't separate the rules. Only the distribution can. This is the Phase 2 "last positions" floor, now proven on paper (not formalised; for v10 via `mixColumns_swap_tail`) rather than measured.
 2. **A swap always changes at least the two swapped cards' placements.**
    - Seat `seat[i]` holds `d[i]` in one output and `d[j]` in the other.
    - The card `d[i]` sits somewhere else in the second output, and that position held something else in the first.
@@ -98,7 +100,7 @@ The full 13×13 table of (i, j) buckets (min / mean) is in `p5/dist_*.log`. For 
      - **Weak at close swaps.** An adjacent swap moves only one target, and the walks re-merge half the time. Mean spread at gap ≤ 4 is 21.0 for rule 1 against 27.5 for v10.
      - **Weak early on average.** The mean at i = 10 is 37.4 against v10's 40.0.
      - **Strong at far swaps.** Every target in between is shifted, so spread-2 cases vanish. For i < 20 and gap > 16: sampled min 22 (rule 1) and 18 (rule 2) against 2 for v10; targeted search reached 16 and 12. These are observed floors, **not** proven bounds.
-   - I don't have a proof of any bound above 2 for the far-gap region.
+   - No proof is known of any bound above 2 for the far-gap region.
 
 ## Verdict (proposal only)
 
@@ -123,7 +125,7 @@ The only places rule 1 shows a lower number are noise-level:
 
 The ghost finger's order-invariant targets are the cause of both sides. On a MixColumns-style "worst case" view, the ghost rules are better. On an "average spread" view, v10 is slightly better.
 
-**Branch-number analogue.** It is exactly 4 (2 in + 2 out) for every rule of this one-pass family, provably, and no rule of this shape can separate itself on that minimum. MixColumns reaches 5, the maximum for its 4-byte columns. Nothing here corresponds to an MDS guarantee.
+**Branch-number analogue.** It is exactly 4 (2 in + 2 out) for every rule of this one-pass family, proven on paper (not formalised; for v10 via `mixColumns_swap_tail`), and no rule of this shape can separate itself on that minimum. MixColumns reaches 5, the maximum for its 4-byte columns. Nothing here corresponds to an MDS guarantee.
 
 ## Files
 

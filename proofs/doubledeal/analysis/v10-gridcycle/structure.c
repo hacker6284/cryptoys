@@ -8,6 +8,7 @@
 #include "gc.h"
 static long M[52][52], ovf[52], firstov[53], wsum[52], wcnt[52], wle[52][4];
 int main(int argc, char **argv) {
+    (void)argc;
     long N = atol(argv[1]); rs ^= strtoull(argv[2],0,10)*0x9E3779B97F4A7C15ULL;
     int d[52], e[52], s0[52], o0[52], o1[52];
     for (long n = 0; n < N; n++) {

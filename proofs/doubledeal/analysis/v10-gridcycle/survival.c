@@ -8,6 +8,7 @@
 #include "gc.h"
 static long hits[52][52];
 int main(int argc, char **argv) {
+    (void)argc;
     int mode_pos = argv[1][0] == 'p'; long N = atol(argv[2]); rs ^= strtoull(argv[3],0,10)*0x9E3779B97F4A7C15ULL;
     int d[52], e[52], s0[52], s1[52], where[52], o0[52], o1[52];
     long checked = 0, mism = 0;

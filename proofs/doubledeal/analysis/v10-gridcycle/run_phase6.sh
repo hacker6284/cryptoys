@@ -5,9 +5,9 @@ set -e
 cd "$(dirname "$0")"
 mkdir -p p6
 DDPORT_DIR=${DDPORT_DIR:-../../security/checks} python3 candcheck.py > p6/candcheck.log
-cc -O2 -o cand cand.c
-cc -O2 -o p3small p3small.c
-cc -O2 -o p5sim p5.c
+cc -O2 -Wall -Wextra -o cand cand.c
+cc -O2 -Wall -Wextra -o p3small p3small.c
+cc -O2 -Wall -Wextra -o p5sim p5.c
 # 1. invertibility: small grids (exhaustive), 100k round trip (cand stats), independent Python enc/dec
 for rc in "2 3" "3 2" "2 4" "4 2" "3 3"; do for v in 0 33 60 61 62 63 64; do ./p3small $rc $v; done; done > p6/small_injectivity.log
 for v in 0 30 33 60 61 62 63 64; do ./cand $v stats 100000 7; done > p6/cost.log

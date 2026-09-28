@@ -25,6 +25,7 @@ static void decrypt(int V, const int *G, int *hand) {
     }
 }
 int main(int argc, char **argv) {
+    (void)argc;
     int V = atoi(argv[1]); long N = atol(argv[2]); rs ^= strtoull(argv[3],0,10)*0x9E3779B97F4A7C15ULL;
     int d[52], G[52], h[52]; long ok = 0; long moves0 = 0, scan0 = 0;
     for (long n = 0; n < N; n++) { shuffle(d); bump_mix(V, d, G); moves0 = bump_moves; scan0 = bump_scan;

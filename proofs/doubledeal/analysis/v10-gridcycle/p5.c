@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     }
     if (m == 'm') {   /* merge: after the second swapped position j, how often do the two walks use the same target / seat? */
         V = atoi(argv[2]); long N = atol(argv[3]); rs ^= strtoull(argv[4],0,10)*0x9E3779B97F4A7C15ULL;
-        double sameT[4] = {0}, sameS[4] = {0}, cnt[4] = {0}; int s0[52], s1[52];
+        double sameS[4] = {0}, cnt[4] = {0}; int s0[52], s1[52];
         for (long n = 0; n < N; n++) { shuffle(d); walk(d, s0);
             for (int i = 0; i < 40; i++) for (int j = i + 1; j < 50; j++) { int g = j - i == 1 ? 0 : j - i <= 4 ? 1 : j - i <= 16 ? 2 : 3;
                 memcpy(e, d, sizeof d); e[i] = d[j]; e[j] = d[i]; walk(e, s1);

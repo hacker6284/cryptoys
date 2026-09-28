@@ -28,12 +28,12 @@ v10 fixed the v9 SumRanks problem (position-aware SumRanks, W5c). GridCycle, the
 
 Card \(c\): suit \(= \lfloor c/13\rfloor\) in GridCycle order ♣0 ♥1 ♠2 ♦3, rank \(= c \bmod 13 + 1\). A card steps the finger by (Δrow = suit, Δcol = rank) mod (4, 13).
 
-- K♣ = (suit 0, rank 13) steps by (0, 0): its target is the seat it is standing on, which is always taken, so K♣ **always overflows**. The v10 overflow scans the marker row \(t\) from the blocked column, and **the blocking card plays no part in where it lands**. Its landing seat depends only on \((t, \text{column}, \text{occupancy})\).
-- K♦ = (suit 3, rank 13) steps by (3, 0): its target is the seat one row up in the same column. If that seat is taken, K♦ overflows from the same column with the same marker, which is exactly where K♣ would have gone.
+- K♣ = (suit 0, rank 13) steps by (0, 0): the next target after K♣ is the seat K♣ itself is standing on, which is always taken, so **the card after K♣ is always blocked** and overflows. The v10 overflow scans the marker row \(t\) from the blocked column, and **the blocking card plays no part in where the next card lands**. Its landing seat depends only on \((t, \text{column}, \text{occupancy})\).
+- K♦ = (suit 3, rank 13) steps by (3, 0): the next target after K♦ is the seat one row up (mod 4) in K♦'s column. If that seat is taken, the card after K♦ overflows from the same column with the same marker, which is exactly where the card after K♣ would have gone.
 - So whenever the seat above is occupied at the two walk positions that hold K♣/K♦, swapping them leaves the walk unchanged, and the walk being unchanged is exactly the commutation condition. `attack/measure/mechanism.log`: survival 0.2616; this sufficient condition holds 0.2583 of the time and is never true without survival. The residual 0.003 comes from K♣'s overflow landing exactly on K♦'s free target.
 - K♣↔K♥ and K♣↔K♠ are the same effect with a different row offset. More generally, a card-blind overflow makes many pairs collide, which is why 1311/1326 pairs are above the bar.
 
-The v11 fix (analysis PHASE5/PHASE6) makes the overflow read the blocker (row = marker + blocker suit, start column = target column + blocker rank) and keeps a ghost finger. Measured worst pair: 0.0049 (≈1/205), with 0 pairs above 1/64.
+The v11 fix (analysis PHASE2 rule 1 + PHASE6 tweak B) has three parts. (1) Ghost finger: each step starts from the previous target, not from where the card landed. (2) A blocked placement is scanned by the blocker: row = marker + blocker's suit, start column = target column + blocker's rank, first empty seat to the right, dropping a row if the row is full; the marker advances one suit. (3) Tweak B: after a blocked placement the finger moves to target + the blocker's step, and the next step starts there. Unblocked placements are as in v10. Measured worst pair: 0.0049 (≈1/205), with 0 pairs above 1/64.
 
 ## Reconciling with T1
 
@@ -55,6 +55,9 @@ T1 (`proofs/doubledeal/security/`) proves `mixColumns_commutes_iff_id`: GridCycl
 | `attack/measure/` | `gc.h` (C GridCycle), `survival.c`, `mechanism.c`, `agg.py`, `xcheck.py` (C == `ddport` v10 on 2000 decks) and the logs `survival_value.log` and `mechanism.log`. `run.sh` reproduces them (not in CI; about 10–20 CPU-minutes). |
 
 ## Reproduce
+
+Note: `attack/make_witness.py` and `attack/measure/xcheck.py` import the live repo port `proofs/doubledeal/security/checks/ddport.py` and call it as `mix_columns(d, 10)`, i.e. its frozen v10 code path; they do not carry their own copy of the port.
+
 
 ```sh
 proofs/deprecated/doubledeal-v10/vectors/regen_v10.sh --check

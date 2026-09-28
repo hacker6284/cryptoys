@@ -13,6 +13,7 @@
     v10: per-deck SumRanks commute rate: K♣↔Q♥ 0.0000, K♣↔K♦ 0.0000, A♣↔A♥ 0.0000, A♣↔5♣ 0.0050
 [3] v8: seat2 collisions [(12, 38)]  (K♣=12, K♠=38)
 [3] v9: seat2 collisions [(12, 38)]  (K♣=12, K♠=38)
+[3] v11: seat2 collisions [(12, 38)]  (K♣=12, K♠=38)
     v8: K♣<->K♦ on deck [K♦, 0..]: commutes? False; seats of 2nd card (1, 0) vs (0, 0)
     v8: K♣<->K♠ witness found: True; cfirst(K♣) works: True
     v8: every transposition fails GridCycle on a c-first deck: True
@@ -25,6 +26,13 @@
     v9: every nontrivial G52 element fails GridCycle on some c-first deck: True
     v9: GridCycle commutes with K♣<->K♦ on 5238/20000 random decks
     v9: commute <-> equal walk on 3000/3000
+    v11: K♣<->K♦ on deck [K♦, 0..]: commutes? False; seats of 2nd card (1, 0) vs (0, 0)
+    v11: K♣<->K♠ witness found: True; cfirst(K♣) works: True
+    v11: every transposition fails GridCycle on a c-first deck: True
+    v11: every nontrivial G52 element fails GridCycle on some c-first deck: True
+    v11: GridCycle commutes with K♣<->K♦ on 57/20000 random decks
+    v11: commute <-> equal walk on 3000/3000
 [4] v8: full round fails for every transposition: True; every nontrivial G52: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
 [4] v9: full round fails for every transposition: True; every nontrivial G52: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
 [4] v10: full round fails for every transposition: True; every nontrivial v10Sym: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
+[4] v11: full round fails for every transposition: True; every nontrivial v10Sym: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True

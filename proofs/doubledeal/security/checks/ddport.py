@@ -1,5 +1,7 @@
-"""v8/v9/v10 DoubleDeal port for T1 relabelling checks. v8 = frozen dd_v8.py; v9 adds A2 + B3;
-v10 replaces SumRanks by the chained index-weighted rows and GF(4) suit columns (SPEC 3.3)."""
+"""v8/v9/v10/v11 DoubleDeal port for T1 relabelling checks. v8 = frozen dd_v8.py; v9 adds A2 + B3;
+v10 replaces SumRanks by the chained index-weighted rows and GF(4) suit columns (SPEC 3.3);
+v11 replaces the GridCycle blocked placement (SPEC 3.5: ghost finger, blocker-directed scan).
+Every version stays callable (v = 8, 9, 10, 11)."""
 import sys
 from pathlib import Path
 REPO = Path(__file__).resolve().parents[4]
@@ -34,7 +36,7 @@ def inv_sum_ranks_v10(g):
     return g
 
 def sum_ranks(g, v):
-    if v == 10: return sum_ranks_v10(g)
+    if v >= 10: return sum_ranks_v10(g)
     g = [row[:] for row in g]
     for i in range(4):
         g[i] = rotl(g[i], sum(rank(x) for x in g[i]) % 13)
@@ -56,6 +58,7 @@ def overflow_seat(occ, t, start):
 
 def walk(d, v):
     """Seat sequence of the GridCycle walk."""
+    if v >= 11: return walk_v11(d)
     occ = [[False]*13 for _ in range(4)]
     t = 0; seats = []
     for i in range(52):
@@ -67,6 +70,41 @@ def walk(d, v):
             else: r, c, t = overflow_seat(occ, t, tc if v >= 9 else 0)
         occ[r][c] = True; seats.append((r, c))
     return seats
+
+def overflow_seat_v11(occ, row, start):
+    """v11: first free seat of `row` from column `start` (wrapping); drop a row if full."""
+    for _ in range(4):
+        for k in range(13):
+            col = (start + k) % 13
+            if not occ[row][col]: return row, col
+        row = (row + 1) % 4
+    raise AssertionError
+
+def step(card, r, c): return (r + suit(card)) % 4, (c + rank(card)) % 13
+
+def walk_v11(d, table=None):
+    """v11 seat sequence. Forward (table=None) reads blockers from the cards placed so far;
+    inverse (table = laid row-major grid) reads them from the table. Same bookkeeping."""
+    occ = [[False]*13 for _ in range(4)]
+    grid = [[-1]*13 for _ in range(4)]
+    t = 0; f = (2, 0); seats = []; prev = None
+    for i in range(52):
+        if i == 0: r, c = 2, 0
+        else:
+            tr, tc = step(prev, *f)
+            if not occ[tr][tc]: r, c = tr, tc; f = (tr, tc)
+            else:
+                b = grid[tr][tc] if table is None else table[tr][tc]
+                r, c = overflow_seat_v11(occ, (t + suit(b)) % 4, (tc + rank(b)) % 13)
+                t = (t + 1) % 4; f = step(b, tr, tc)
+        occ[r][c] = True; seats.append((r, c))
+        prev = d[i] if table is None else table[r][c]
+        grid[r][c] = prev
+    return seats
+
+def inv_mix_columns_v11(o):
+    table = [o[13*r:13*r+13] for r in range(4)]
+    return [table[r][c] for r, c in walk_v11(None, table)]
 
 def mix_columns(d, v):
     grid = [[-1]*13 for _ in range(4)]

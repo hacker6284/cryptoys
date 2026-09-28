@@ -201,12 +201,13 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
   subst hστ
   exact (mixColumns_commutes_iff_id τ).1 hmix
 
-/-- (DRAFT-SORRY, CONJECTURE — checked, not proved) v10: no nontrivial σ makes
+/-- (DRAFT-SORRY, CONJECTURE — checked, not proved) v11: no nontrivial σ makes
     the unkeyed round body covariant, i.e. there is no pair (σ, τ) with σ ≠ id
     and `F(σ·m) = τ·F(m)` on every deck, `F = GridCycle ∘ stem`.
     Checked (`checks/check_covariant.py`, log committed): all 1,326
     transpositions, all 51 nontrivial `v10Sym` (and `v9Sym`) and 200 random σ
-    are non-covariant, for v8, v9 and v10. The `v10Sym` cases are proved
+    are non-covariant, for v8, v9, v10 and v11 (v11 keeps v10 SumRanks and
+    changes only GridCycle). The `v10Sym` cases are proved
     (`roundBody_not_covariant_of_stem` with `sumRanksV10_commutes_v10Sym`).
     The assessment below was written for v9; v10 rows and columns are
     chained, which makes the single-cell argument harder, not easier.
@@ -255,8 +256,8 @@ theorem unkeyedNoMix_const (c : Nat) : unkeyedNoMix (constDeck c) = constDeck c 
 
 theorem mixColumns_const (c : Nat) : mixColumns (constDeck c) = constDeck c := by
   rw [mixColumns_eq]; funext k
-  obtain ⟨j, hj⟩ := seatW_surj _ freeChooser_v9 (constDeck c) (rmRow k, rmCol k)
-  have := gridW_at_seat _ freeChooser_v9 (constDeck c) j
+  obtain ⟨j, hj⟩ := seatW_surj _ freeChooser (constDeck c) (rmRow k, rmCol k)
+  have := gridW_at_seat _ freeChooser (constDeck c) j
   rw [hj] at this
   exact this
 

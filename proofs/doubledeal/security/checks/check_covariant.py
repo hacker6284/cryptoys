@@ -40,9 +40,9 @@ def covariant(s, v, decks=4):
     return True
 
 ID = list(range(52))
-for v in (8, 9, 10):
+for v in (8, 9, 10, 11):
     tr = [transp(a, b) for a in range(52) for b in range(a+1, 52)]
-    sig, gname = (sig10, "nontrivial v10Sym") if v == 10 else (sig9, "nontrivial v9Sym")
+    sig, gname = (sig10, "nontrivial v10Sym") if v >= 10 else (sig9, "nontrivial v9Sym")
     g = [sig(a, b) for a in range(13) for b in range(4) if (a, b) != (0, 0)]
     rs = []
     for _ in range(200):

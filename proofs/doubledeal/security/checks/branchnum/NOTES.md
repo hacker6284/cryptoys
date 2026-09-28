@@ -1,5 +1,7 @@
 # DoubleDeal: is there an AES-style branch number? (measurement + proposal, analysis only)
 
+> **v11 note.** v11 changes GridCycle (ghost finger, blocker-directed blocked placement). The proved floor and the cards-50/51 tail swap hold for any walk that always picks a free seat and were re-checked in Lean for v11; every empirical GridCycle number and overflow mechanism below is about v8/v9 GridCycle, not v11.
+>
 > **v10 note.** These measurements were made for v8 and v9 and were **not rerun for v10**. v10 changes only SumRanks, so the GridCycle statements (the proved floor and the cards-50/51 tail swap) carry over unchanged; every SumRanks, round and multi-round number below is about v8/v9 SumRanks, not v10.
 
 Scope. Everything here is an empirical measurement on the Python port or a proof *sketch*, except

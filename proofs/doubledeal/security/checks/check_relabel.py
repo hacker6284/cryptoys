@@ -1,4 +1,4 @@
-"""T1 sanity checks for the relabelling statements (v8, v9 and v10 ports)."""
+"""T1 sanity checks for the relabelling statements (v8, v9, v10 and v11 ports)."""
 import random, itertools, ddport as P
 from dd_v8 import suit, rank, lay_cm, scoop_cm, shift_rows, compose, passkey
 rng = random.Random(2026)
@@ -140,13 +140,13 @@ rng = _rng_main
 
 # 3. GridCycle
 def seat2(c, v): return P.walk([c] + [x for x in range(52) if x != c], v)[1]
-for v in (8, 9):
+for v in (8, 9, 11):
     s2 = {c: seat2(c, v) for c in range(52)}
     coll = [(a, b) for a, b in itertools.combinations(range(52), 2) if s2[a] == s2[b]]
     print(f"[3] v{v}: seat2 collisions {coll}  (K♣={KC}, K♠={KS})")
 def mix_commutes(s, m, v): return P.mix_columns(app(s, m), v) == app(s, P.mix_columns(m, v))
 def cfirst(c): return [c] + [x for x in range(52) if x != c]
-for v in (8, 9):
+for v in (8, 9, 11):
     w = cfirst(KD)
     print(f"    v{v}: K♣<->K♦ on deck [K♦, 0..]: commutes? {mix_commutes(transp(KC, KD), w, v)}; seats of 2nd card {P.walk(w, v)[1]} vs {P.walk(app(transp(KC,KD), w), v)[1]}")
     # K♣<->K♠ special
@@ -170,14 +170,14 @@ for v in (8, 9):
     print(f"    v{v}: commute <-> equal walk on {agree}/3000")
 
 # 4. round / encrypt level
-for v in (8, 9, 10):
+for v in (8, 9, 10, 11):
     def rnd(m, k): return P.full_round(m, k, v)
     allfail = True
     for a, b in itertools.combinations(range(52), 2):
         s = transp(a, b)
         if all(rnd(app(s, m), k) == app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))):
             allfail = False; print("   round commutes?", a, b)
-    gfail = all(any(rnd(app(s, m), k) != app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))) for s in (G10[1:] if v == 10 else G[1:]))
+    gfail = all(any(rnd(app(s, m), k) != app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))) for s in (G10[1:] if v >= 10 else G[1:]))
     rfail = all(any(rnd(app(s, m), k) != app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))) for s in (rdeck() for _ in range(200)))
     efail = all(P.encrypt(app(s, m), k, v) != app(s, P.encrypt(m, k, v)) for s, m, k in ((transp(*rng.sample(range(52), 2)), rdeck(), rdeck()) for _ in range(200)))
-    print(f"[4] v{v}: full round fails for every transposition: {allfail}; every nontrivial {'v10Sym' if v == 10 else 'G52'}: {gfail}; 200 random sigma: {rfail}; encrypt fails 200/200 random transposition trials: {efail}")
+    print(f"[4] v{v}: full round fails for every transposition: {allfail}; every nontrivial {'v10Sym' if v >= 10 else 'G52'}: {gfail}; 200 random sigma: {rfail}; encrypt fails 200/200 random transposition trials: {efail}")

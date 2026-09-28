@@ -281,14 +281,14 @@ theorem scoop_gridW_inj (ch : Chooser) (hch : FreeChooser ch) {a b : Fin 52 → 
   have := congrArg layRowMajor h
   rwa [lay_scoop_rowMajor, lay_scoop_rowMajor] at this
 
-/-! ## v9 GridCycle (`mixColumns`) -/
+/-! ## Live (v11) GridCycle (`mixColumns`) -/
 
 /-- (T1, PROVED) For every deck, swapping walk cards 50 and 51 changes
     exactly two output seats of GridCycle. -/
 theorem mixColumns_swap_tail (m : Fin 52 → Nat) (hm : IsDeck m) :
     hammingDist (mixColumns m) (mixColumns (swapAt m 50 51)) = 2 := by
   simpa only [mixColumns_eq] using
-    hammingDist_gridW_swap_tail chooseSeat! freeChooser_v9 hm
+    hammingDist_gridW_swap_tail chooseSeat! freeChooser hm
 
 /-- (PROVED) Generic seat 26: if the walk places card 0 at `(2, 0)`, the
     row-major scoop returns it at output seat 26. -/
@@ -302,18 +302,18 @@ theorem scoop_gridW_seat26 (ch : Chooser) (hch : FreeChooser ch) (m : Fin 52 →
 /-- (PROVED) Walk card 0 is placed at `(2, 0)` and scooped to output seat 26. -/
 theorem mixColumns_seat26 (m : Fin 52 → Nat) : mixColumns m 26 = m 0 := by
   rw [mixColumns_eq]
-  exact scoop_gridW_seat26 chooseSeat! freeChooser_v9 m (by simpa [walkSeat_eq] using walkSeat_zero m)
+  exact scoop_gridW_seat26 chooseSeat! freeChooser m (by simpa [walkSeat_eq] using walkSeat_zero m)
 
 /-- (PROVED) `invMixColumns ∘ mixColumns = id`, so GridCycle separates decks. -/
 theorem mixColumns_separates {a b : Fin 52 → Nat} (h : mixColumns a = mixColumns b) : a = b :=
   Function.LeftInverse.injective invMixColumns_mixColumns h
 
-/-- (PROVED) Branch number of v9 GridCycle, on decks, is at least 4. -/
+/-- (PROVED) Branch number of the live (v11) GridCycle, on decks, is at least 4. -/
 theorem four_le_mixColumns_branch {a b : Fin 52 → Nat} (ha : IsDeck a) (hb : IsDeck b)
     (h : a ≠ b) :
     4 ≤ hammingDist a b + hammingDist (mixColumns a) (mixColumns b) := by
   exact four_le_branch (F := mixColumns)
-    (fun m hm => by simpa only [mixColumns_eq] using isDeck_scoop_gridW chooseSeat! freeChooser_v9 hm)
+    (fun m hm => by simpa only [mixColumns_eq] using isDeck_scoop_gridW chooseSeat! freeChooser hm)
     (fun _ _ hab heq => hab (mixColumns_separates heq)) ha hb h
 
 /-- (PROVED) The walk-card tail swap attains the floor: input weight 2 and

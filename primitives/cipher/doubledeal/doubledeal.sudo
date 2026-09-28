@@ -1,5 +1,5 @@
-// DoubleDeal v10. The rules are primitives/cipher/doubledeal/SPEC.md.
-// v9 and v8 are deprecated and frozen under primitives/cipher/doubledeal/v9/ and v8/.
+// DoubleDeal v11. The rules are primitives/cipher/doubledeal/SPEC.md.
+// v10, v9 and v8 are deprecated and frozen under primitives/cipher/doubledeal/v10/, v9/ and v8/.
 // A toy block cipher on a 52-card deck. Not for real use.
 
 func suit_of(c: int) -> int
@@ -185,8 +185,8 @@ func inv_shift_rows(g: List<List<int>>) -> List<List<int>>
         g[i] = left_rotate(g[i], 0 - i)
     return g
 
-// Scan one marker row for its first free seat (0 in occ), starting at column
-// `start` (the blocked seat's column) and wrapping from 12 back to 0. -1 if full.
+// Scan one row for its first free seat (0 in occ), starting at column `start`
+// and wrapping from 12 back to 0. -1 if the row is full.
 func scan_row(occ: List<List<int>>, row: int, start: int) -> int
     found = -1
     for k = 0 to 12
@@ -195,35 +195,45 @@ func scan_row(occ: List<List<int>>, row: int, start: int) -> int
             found = col
     return found
 
-func overflow_seat(occ: List<List<int>>, t: int, start: int) -> (int, int, int)
+// v11 blocked placement: scan `row` from column `start`; if that row is full,
+// drop to the next row (mod 4) and scan it from the same column.
+func overflow_seat(occ: List<List<int>>, row: int, start: int) -> (int, int)
     for attempt = 0 to 3
-        row = t
         found = scan_row(occ, row, start)
         if found >= 0
-            return (row, found, (t + 1) mod 4)
-        t = (t + 1) mod 4
+            return (row, found)
+        row = (row + 1) mod 4
     assert false
-    return (0, 0, 0)
+    return (0, 0)
 
 func step_seat(card: int, r: int, c: int) -> (int, int)
     return ((r + suit_of(card)) mod 4, (c + rank_of(card)) mod 13)
 
+// GridCycle (v11: rule 1 + tweak B). The finger is a ghost: each step starts from
+// the previous target, not from where the previous card landed. A free target
+// takes the card (as in v10). A target taken by blocker b sends the card to the
+// first free seat of row (t + suit b) from column (target col + rank b), dropping
+// a row if that row is full; the marker t moves +1; the finger moves to
+// target + step(b).
 func mix_columns(d: List<int>) -> List<int>
     grid = empty_rows()
     t = 0
     prev_card = 0
-    prev_r = 0
-    prev_c = 0
+    fr = 2
+    fc = 0
     for i = 0 to 51
         card = d[i]
         r = 2
         c = 0
         if i > 0
-            tr, tc = step_seat(prev_card, prev_r, prev_c)
+            tr, tc = step_seat(prev_card, fr, fc)
             if grid[tr][tc] < 0
                 r = tr
                 c = tc
+                fr = tr
+                fc = tc
             else
+                b = grid[tr][tc]
                 occ: List<List<int>> = []
                 for rr = 0 to 3
                     marks: List<int> = []
@@ -233,15 +243,17 @@ func mix_columns(d: List<int>) -> List<int>
                         else
                             marks.append(1)
                     occ.append(marks)
-                r, c, t = overflow_seat(occ, t, tc)
+                r, c = overflow_seat(occ, (t + suit_of(b)) mod 4, (tc + rank_of(b)) mod 13)
+                t = (t + 1) mod 4
+                fr, fc = step_seat(b, tr, tc)
         row = grid[r]
         row[c] = card
         grid[r] = row
         prev_card = card
-        prev_r = r
-        prev_c = c
     return scoop_rm(grid)
 
+// Replays the walk on the laid table. A target that is already ticked means the
+// forward walk was blocked there; its blocker is the card on that seat.
 func inv_mix_columns(d: List<int>) -> List<int>
     grid = lay_rm(d)
     visited = empty_rows()
@@ -253,25 +265,28 @@ func inv_mix_columns(d: List<int>) -> List<int>
     t = 0
     hand: List<int> = []
     prev_card = 0
-    prev_r = 0
-    prev_c = 0
+    fr = 2
+    fc = 0
     for i = 0 to 51
         r = 2
         c = 0
         if i > 0
-            tr, tc = step_seat(prev_card, prev_r, prev_c)
+            tr, tc = step_seat(prev_card, fr, fc)
             if visited[tr][tc] == 0
                 r = tr
                 c = tc
+                fr = tr
+                fc = tc
             else
-                r, c, t = overflow_seat(visited, t, tc)
+                b = grid[tr][tc]
+                r, c = overflow_seat(visited, (t + suit_of(b)) mod 4, (tc + rank_of(b)) mod 13)
+                t = (t + 1) mod 4
+                fr, fc = step_seat(b, tr, tc)
         hand.append(grid[r][c])
         row = visited[r]
         row[c] = 1
         visited[r] = row
         prev_card = hand[hand.length - 1]
-        prev_r = r
-        prev_c = c
     return hand
 
 func index_of(deck: List<int>, card: int) -> int
@@ -474,12 +489,15 @@ func trace_shift(g: List<List<int>>, steps: List<Step>, label: text) -> (List<Li
         steps = add_step(steps, "shift", label, no_cards(), no_cards(), no_cards(), i, -1, i, 0, -1, 0)
     return (g, steps)
 
+// Traced GridCycle (same walk as mix_columns). A blocked placement emits one
+// "scan" step per row tried: row, start column, the card being placed, and the
+// blocker in `total`.
 func trace_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, List<Step>)
     grid = empty_rows()
     t = 0
     prev_card = 0
-    prev_r = 0
-    prev_c = 0
+    fr = 2
+    fc = 0
     for i = 0 to 51
         card = d[i]
         r = 2
@@ -488,12 +506,15 @@ func trace_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, List
         if i == 0
             steps = add_step(steps, "mark", label, no_cards(), no_cards(), no_cards(), 2, 0, 0, 0, card, 0)
         else
-            tr, tc = step_seat(prev_card, prev_r, prev_c)
+            tr, tc = step_seat(prev_card, fr, fc)
             if grid[tr][tc] < 0
                 r = tr
                 c = tc
+                fr = tr
+                fc = tc
             else
                 overflowed = 1
+                b = grid[tr][tc]
                 occ: List<List<int>> = []
                 for rr = 0 to 3
                     marks: List<int> = []
@@ -503,26 +524,25 @@ func trace_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, List
                         else
                             marks.append(1)
                     occ.append(marks)
-                scan = t
+                scan = (t + suit_of(b)) mod 4
+                start = (tc + rank_of(b)) mod 13
                 found = -1
                 for tries = 0 to 3
                     if found < 0
-                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, tc, 0, 0, card, 1)
-                        found = scan_row(occ, scan, tc)
+                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, start, 0, b, card, 1)
+                        found = scan_row(occ, scan, start)
                         if found >= 0
                             r = scan
                             c = found
-                            t = (scan + 1) mod 4
                         else
                             scan = (scan + 1) mod 4
-                            t = scan
+                t = (t + 1) mod 4
+                fr, fc = step_seat(b, tr, tc)
         row = grid[r]
         row[c] = card
         grid[r] = row
         steps = add_step(steps, "place", label, no_cards(), no_cards(), no_cards(), r, c, 0, 0, card, overflowed)
         prev_card = card
-        prev_r = r
-        prev_c = c
     return (scoop_rm(grid), steps)
 
 func trace_full_round(m: List<int>, kr: List<int>, steps: List<Step>, tag: text) -> (List<int>, List<Step>)
@@ -607,30 +627,34 @@ func trace_inv_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, 
     t = 0
     hand: List<int> = []
     prev_card = 0
-    prev_r = 0
-    prev_c = 0
+    fr = 2
+    fc = 0
     for i = 0 to 51
         r = 2
         c = 0
         if i > 0
-            tr, tc = step_seat(prev_card, prev_r, prev_c)
+            tr, tc = step_seat(prev_card, fr, fc)
             if visited[tr][tc] == 0
                 r = tr
                 c = tc
+                fr = tr
+                fc = tc
             else
-                scan = t
+                b = grid[tr][tc]
+                scan = (t + suit_of(b)) mod 4
+                start = (tc + rank_of(b)) mod 13
                 found = -1
                 for tries = 0 to 3
                     if found < 0
-                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, tc, 0, 0, -1, 1)
-                        found = scan_row(visited, scan, tc)
+                        steps = add_step(steps, "scan", label, no_cards(), no_cards(), no_cards(), scan, start, 0, b, -1, 1)
+                        found = scan_row(visited, scan, start)
                         if found >= 0
                             r = scan
                             c = found
-                            t = (scan + 1) mod 4
                         else
                             scan = (scan + 1) mod 4
-                            t = scan
+                t = (t + 1) mod 4
+                fr, fc = step_seat(b, tr, tc)
         card = grid[r][c]
         steps = add_step(steps, "take", label, no_cards(), no_cards(), no_cards(), r, c, i, 0, card, 0)
         hand.append(card)
@@ -638,8 +662,6 @@ func trace_inv_mix(d: List<int>, steps: List<Step>, label: text) -> (List<int>, 
         row[c] = 1
         visited[r] = row
         prev_card = card
-        prev_r = r
-        prev_c = c
     return (hand, steps)
 
 func trace_inv_final(c: List<int>, kr: List<int>, steps: List<Step>, label: text) -> (List<int>, List<Step>)
@@ -914,7 +936,7 @@ test "sum ranks sees a K♣↔Q♥ swap that v9 missed"
     assert out_swapped != relabelled
     assert scoop_cm(inv_sum_ranks(lay_cm(out_swapped))) == swapped
 
-test "overflow scan starts at the blocked column"
+test "overflow scan drops a row when the row is full"
     occ: List<List<int>> = []
     for r = 0 to 3
         marks: List<int> = []
@@ -924,24 +946,54 @@ test "overflow scan starts at the blocked column"
             else
                 marks.append(1)
         occ.append(marks)
-    // Row 1 is free at columns 2 and 7. Blocked at column 5, v9 scans 5, 6, 7
-    // and takes 7; v8 scanned from column 0 and took 2.
+    // Row 1 is free at columns 2 and 7. Scanning row 1 from column 5 takes 7;
+    // from column 8 it wraps and takes 2. Rows 3 and 0 are full, so a scan
+    // that starts there drops to row 1 and keeps its start column.
     assert scan_row(occ, 1, 5) == 7
     assert scan_row(occ, 1, 8) == 2
     assert scan_row(occ, 0, 5) == -1
-    r, c, t = overflow_seat(occ, 1, 5)
+    r, c = overflow_seat(occ, 1, 5)
     assert r == 1
     assert c == 7
-    assert t == 2
-    r2, c2, t2 = overflow_seat(occ, 0, 5)
+    r2, c2 = overflow_seat(occ, 3, 8)
     assert r2 == 1
-    assert c2 == 7
-    assert t2 == 2
+    assert c2 == 2
+
+test "the finger stays on the target after a block"
+    // K♣ (12) starts on (2,0) and steps by (0, 13 = 0): its target is its own
+    // seat, blocked by K♣. Row t + suit = 0 + 0, from column 0 + 13 = 0: A♥
+    // sits on (0,0), the marker moves to 1, and the finger moves to the target
+    // plus K♣'s step, (2,0). A♥ steps (1,1) from the finger, not from its
+    // own seat: A♣ (0) sits on (3,1). v10 sent it to (1,1).
+    deck = [12, 13, 0]
+    for k = 1 to 51
+        if (k != 12) and (k != 13)
+            deck.append(k)
+    out = mix_columns(deck)
+    assert out[26] == 12
+    assert out[0] == 13
+    assert out[40] == 0
+    assert inv_mix_columns(out) == deck
+
+test "grid cycle sees the K♣↔K♦ swap that v10 missed"
+    // v10 GridCycle commuted with swapping K♣ (12) and K♦ (51) on this deck
+    // (proofs/deprecated/doubledeal-v10/witness_v10.json); v11 does not.
+    deck = [32, 23, 6, 21, 13, 31, 9, 37, 16, 22, 30, 19, 38, 41, 25, 51, 17, 50, 39, 2, 36, 15, 28, 20, 12, 45, 5, 33, 29, 14, 18, 40, 34, 10, 44, 26, 42, 27, 47, 4, 24, 46, 11, 43, 3, 49, 7, 0, 8, 1, 48, 35]
+    swapped: List<int> = []
+    for k = 0 to 51
+        swapped.append(swap_card(deck[k], 12, 51))
+    out = mix_columns(deck)
+    out_swapped = mix_columns(swapped)
+    relabelled: List<int> = []
+    for k = 0 to 51
+        relabelled.append(swap_card(out[k], 12, 51))
+    assert out_swapped != relabelled
+    assert inv_mix_columns(out_swapped) == swapped
 
 test "decrypt undoes encrypt"
     message = [0, 32, 38, 42, 13, 19, 17, 5, 41, 25, 48, 6, 31, 44, 3, 16, 7, 4, 34, 40, 18, 49, 14, 51, 20, 46, 28, 11, 10, 15, 45, 43, 2, 26, 22, 8, 37, 33, 12, 35, 24, 50, 39, 30, 21, 1, 27, 47, 36, 23, 29, 9]
     key = [48, 42, 25, 26, 3, 37, 39, 50, 11, 2, 43, 8, 10, 7, 40, 38, 34, 0, 49, 51, 22, 27, 23, 9, 12, 15, 44, 41, 21, 28, 20, 13, 19, 14, 45, 31, 35, 18, 17, 30, 6, 36, 47, 16, 1, 33, 29, 5, 46, 32, 24, 4]
-    cipher = [37, 19, 15, 33, 31, 13, 46, 4, 48, 8, 24, 43, 45, 0, 3, 18, 7, 44, 32, 10, 35, 51, 42, 41, 29, 40, 20, 23, 12, 26, 36, 27, 34, 1, 9, 6, 49, 39, 50, 11, 28, 47, 21, 2, 38, 5, 25, 22, 16, 14, 30, 17]
+    cipher = [19, 39, 37, 16, 40, 15, 25, 30, 5, 6, 22, 9, 42, 23, 51, 21, 31, 47, 28, 24, 48, 38, 29, 2, 50, 20, 11, 41, 18, 12, 32, 44, 17, 7, 35, 49, 36, 34, 13, 33, 1, 43, 0, 46, 4, 10, 8, 14, 27, 26, 3, 45]
     assert encrypt(message, key) == cipher
     assert decrypt(cipher, key) == message
 

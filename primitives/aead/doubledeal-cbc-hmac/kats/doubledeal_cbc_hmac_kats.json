@@ -3,37 +3,37 @@
   "version": "v1",
   "master": "0x63727970746f792d6d6173746572",
   "iv": "0x0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c",
-  "notes": "Generated from doubledeal_cbc_hmac.sudo HMAC/KDF plus §5.3 ranks and DoubleDeal v9 encrypt (kats/regen.mjs). Not a security claim.",
+  "notes": "Generated from doubledeal_cbc_hmac.sudo HMAC/KDF plus §5.3 ranks and DoubleDeal v11 encrypt (kats/regen.mjs). Not a security claim.",
   "vectors": [
     {
       "name": "empty",
       "plaintext": "0x",
       "aad": "0x",
-      "blob": "0x0078751e3c813f40846a21a07947ab6ac402ff0fecacb78d35a37574ab00099d4401c0bb47fd044e0f9f5b749352b26e956beb5fc2d8d9931a46"
+      "blob": "0x0036f7ff3e8e43254f55fa8cad0f4ffe52374866170611d4e4bf842700004e056cdd00422021b196b192e822d59b7fea373e120bbbc18e78e71b"
     },
     {
       "name": "abc",
       "plaintext": "0x616263",
       "aad": "0x",
-      "blob": "0x0259bf11646dc2b49bb76419a05181116869f4f204271027164a0554790367d70b8428007bbb01a5c3f238aaab5039a9f5e69143c728b092969c"
+      "blob": "0x01eda3ad8cccec4b09c2d65939d0cda7d9f73980dbb2e4b9ec8b4b6e840115973c5e2db4c4310779d673e36243c73433141185436cd2dbfdfc5e"
     },
     {
       "name": "abc_aad",
       "plaintext": "0x616263",
       "aad": "0x686472",
-      "blob": "0x0259bf11646dc2b49bb76419a05181116869f4f204271027164a05547902632506135785f96711ee1d8a19d3073bf535b2083d135b44a30d7dab"
+      "blob": "0x01eda3ad8cccec4b09c2d65939d0cda7d9f73980dbb2e4b9ec8b4b6e84024b251bb6b3b798e64020986f3257f90de556314a49d1e051d700ba70"
     },
     {
       "name": "exact_28",
       "plaintext": "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b",
       "aad": "0x01",
-      "blob": "0x009bb2d8aa7469089521edee440dda05c07f0bc00d8dc9cfd3c9b9f5f8003ceb94b2f951c957e3d7d27fa11d5ac4b86818af84cf827dfb11cf61021f0b78c2a07f6f34546e927a5dff80ae1aeff31c32ac9a6f21acf748"
+      "blob": "0x02cf2d7fa2a53345c62e790da8e18dad7f6dad1fd02425d1399466116802d553f0ee18c622cc17c8266fd1f96669222882bd84c947b7c05b07960153652738c0189fff35eb4f58801b4aa5c8be4b8204ab4404a3d5bb45"
     },
     {
       "name": "two_blocks",
       "plaintext": "0x63726f7373657320612032382d6279746520626f756e646172792121",
       "aad": "0x090807",
-      "blob": "0x013eaa219b66ae17d03efb57f6bce278d18a65b2d3204c3d52cc935c460219d341ceb031c1ccbb875c2be9798a8ae10fa7b34299c6781d6505f302667f7333f3ba30df93d384eb076b7dd8997248e76bb3df6049147abb"
+      "blob": "0x02aebe31da3bd2297d1a4070055082342e48c122c0536615ffd5bde110011d2156ad9f123212ca173e0e3618f3846b7e13d89136ba9cad447ade0146a54e64c8894963637609e72208ccb2be1ee9881ab192281448487b"
     }
   ]
 }

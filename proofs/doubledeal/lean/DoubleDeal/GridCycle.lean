@@ -1,5 +1,8 @@
 /-
   GridCycle (MixColumns stand-in) — walk placement + row-major scoop/lay.
+  v11 rule (SPEC §3.5): ghost finger; a blocked placement is sent by its
+  blocker (scan row marker + suit(blocker) from column target + rank(blocker),
+  dropping a row if full; marker + 1; finger := target + step(blocker)).
   Proves invMixColumns ∘ mixColumns = id. Correctness, zero sorry. No Mathlib.
 -/
 import DoubleDeal.Basic
@@ -284,8 +287,9 @@ theorem occCount_set_free (occ : Occ) (p : Fin 4 × Fin 13)
 
 /-! ## Overflow scan
 
-The scan of a marker row starts at column `start` (the blocked target's
-column) and wraps from 12 back to 0 (SPEC §3.5; sudo `scan_row`).
+A blocked placement scans one row from column `start` and wraps from 12 back
+to 0 (SPEC §3.5; sudo `scan_row`). In v11 the row is marker + suit(blocker)
+and `start` is target column + rank(blocker); a full row drops to the next.
 -/
 
 /-- Column visited at offset `k` of a scan from `start`. -/
@@ -346,38 +350,38 @@ theorem scanRow_some_free (occ : Occ) (row : Fin 4) (start : Nat) (c : Fin 13)
     (h : scanRow occ row start = some c) : occGet occ row c = false :=
   scanRowN_some_free occ row start 13 0 c h
 
-def overflowN (occ : Occ) (start : Nat) : Nat → Nat → Option ((Fin 4 × Fin 13) × Nat)
+def overflowN (occ : Occ) (start : Nat) : Nat → Nat → Option (Fin 4 × Fin 13)
   | 0, _ => none
   | fuel + 1, t =>
       let row : Fin 4 := ⟨t % 4, Nat.mod_lt _ (by decide)⟩
       match scanRow occ row start with
-      | some c => some ((row, c), (t + 1) % 4)
+      | some c => some (row, c)
       | none => overflowN occ start fuel ((t + 1) % 4)
 
-/-- Overflow seat: marker rows `t, t+1, …` (mod 4), each scanned from `start`. -/
-def overflowSeat (occ : Occ) (t start : Nat) : Option ((Fin 4 × Fin 13) × Nat) :=
-  overflowN occ start 4 t
+/-- Blocked-placement seat: rows `row, row+1, …` (mod 4), each scanned from
+    `start` (sudo `overflow_seat`). -/
+def overflowSeat (occ : Occ) (row start : Nat) : Option (Fin 4 × Fin 13) :=
+  overflowN occ start 4 row
 
 theorem overflowN_some_free (occ : Occ) (start : Nat) :
-    ∀ (fuel t : Nat) (p : Fin 4 × Fin 13) (t' : Nat),
-      overflowN occ start fuel t = some (p, t') → occAt occ p = false
-  | 0, t, p, t', h => by cases h
-  | fuel + 1, t, p, t', h => by
+    ∀ (fuel t : Nat) (p : Fin 4 × Fin 13),
+      overflowN occ start fuel t = some p → occAt occ p = false
+  | 0, t, p, h => by cases h
+  | fuel + 1, t, p, h => by
       match hs : scanRow occ ⟨t % 4, Nat.mod_lt _ (by decide)⟩ start with
       | some c =>
           have h' : overflowN occ start (fuel + 1) t =
-              some ((⟨t % 4, Nat.mod_lt _ (by decide)⟩, c), (t + 1) % 4) := by
+              some (⟨t % 4, Nat.mod_lt _ (by decide)⟩, c) := by
             simp only [overflowN, hs]
           rw [h'] at h
           injection h with hp
-          injection hp with hp1 _
-          cases hp1
+          cases hp
           exact scanRow_some_free occ _ start c hs
       | none =>
           have h' : overflowN occ start (fuel + 1) t = overflowN occ start fuel ((t + 1) % 4) := by
             simp only [overflowN, hs]
           rw [h'] at h
-          exact overflowN_some_free occ start fuel ((t + 1) % 4) p t' h
+          exact overflowN_some_free occ start fuel ((t + 1) % 4) p h
 
 theorem add_left_mod_mod (a b n : Nat) : (a + b % n) % n = (a + b) % n := by
   calc (a + b % n) % n
@@ -440,82 +444,15 @@ theorem overflow_none_full (occ : Occ) (t start : Nat)
   simpa [occAt, hrow] using hocc
 
 theorem overflow_some_of_count_lt (occ : Occ) (t start : Nat) (h : occCount occ < 52) :
-    ∃ p t', overflowSeat occ t start = some (p, t') ∧ occAt occ p = false := by
+    ∃ p, overflowSeat occ t start = some p ∧ occAt occ p = false := by
   cases hs : overflowSeat occ t start with
   | none =>
       have := occCount_full occ (overflow_none_full occ t start hs)
       omega
-  | some pair =>
-      refine ⟨pair.1, pair.2, rfl, overflowN_some_free occ start 4 t pair.1 pair.2 hs⟩
+  | some p =>
+      refine ⟨p, rfl, overflowN_some_free occ start 4 t p hs⟩
 
-/-! ## Shared walk step -/
-
-structure WalkState where
-  occ : Occ
-  t : Nat
-  prev : Option (Nat × (Fin 4 × Fin 13))
-
-def initWalk : WalkState :=
-  { occ := emptyOcc, t := 0, prev := none }
-
-def advance (st : WalkState) (card : Nat) (pos : Fin 4 × Fin 13) (t' : Nat) : WalkState where
-  occ := setOcc st.occ pos
-  t := t'
-  prev := some (card, pos)
-
-def chooseSeat? (st : WalkState) : Option ((Fin 4 × Fin 13) × Nat) :=
-  match st.prev with
-  | none => some (asStart, st.t)
-  | some (card, pos) =>
-      let target := gridStep card pos
-      if occAt st.occ target then overflowSeat st.occ st.t target.2.val
-      else some (target, st.t)
-
-/-- `chooseSeat?` returns `some` while a free seat exists. When the target is
-    taken, the overflow scan starts at the target's column. Matches sudo
-    `overflow_seat`'s `assert false` being unreachable on a 52-card walk. -/
-theorem chooseSeat?_isSome (st : WalkState) (hct : occCount st.occ < 52) :
-    (chooseSeat? st).isSome := by
-  match hprev_eq : st.prev with
-  | none =>
-      simp [chooseSeat?, hprev_eq, Option.isSome]
-  | some pair =>
-      simp only [chooseSeat?, hprev_eq, Option.isSome]
-      by_cases ht : occAt st.occ (gridStep pair.1 pair.2)
-      · simp only [ht, ↓reduceIte]
-        obtain ⟨p, t', hs, _hf⟩ := overflow_some_of_count_lt st.occ st.t (gridStep pair.1 pair.2).2.val hct
-        simp [hs]
-      · simp [eq_false_of_ne_true ht]
-
-/-- Total choose. The `none` branch is unreachable under `chooseSeat?_isSome`
-    (occCount < 52). Fail like doubledeal.sudo `assert false`, not a silent AS. -/
-def chooseSeat! (st : WalkState) : (Fin 4 × Fin 13) × Nat :=
-  match chooseSeat? st with
-  | some x => x
-  | none =>
-      panic! "DoubleDeal.chooseSeat!: overflow scan returned none (grid full?)"
-
-theorem chooseSeat!_free (st : WalkState) (hct : occCount st.occ < 52)
-    (hprev : st.prev.isSome ∨ occAt st.occ asStart = false) :
-    occAt st.occ (chooseSeat! st).1 = false := by
-  match hprev_eq : st.prev with
-  | none =>
-      have : chooseSeat? st = some (asStart, st.t) := by simp [chooseSeat?, hprev_eq]
-      simp only [chooseSeat!, this]
-      cases hprev with
-      | inl h => simp [hprev_eq] at h
-      | inr h => exact h
-  | some pair =>
-      simp only [chooseSeat!, chooseSeat?, hprev_eq]
-      by_cases ht : occAt st.occ (gridStep pair.1 pair.2)
-      · simp only [ht, ↓reduceIte]
-        obtain ⟨p, t', hs, hf⟩ := overflow_some_of_count_lt st.occ st.t (gridStep pair.1 pair.2).2.val hct
-        simp only [hs]
-        exact hf
-      · have hf := eq_false_of_ne_true ht
-        simp [hf]
-
-/-! ## Placement and inverse on Fin 52 → Nat -/
+/-! ## Card grid -/
 
 abbrev NatGrid := Grid Nat
 
@@ -533,15 +470,111 @@ theorem get_setGrid_ne (g : NatGrid) {p q : Fin 4 × Fin 13} (card : Nat) (hne :
   · exact False.elim (hne (Prod.ext hq.1 hq.2).symm)
   · simp [decide_eq_false hq]
 
+/-! ## Shared walk step
+
+`prev` holds the last card and the **finger** (v11: the ghost finger, i.e.
+the last target, not necessarily the seat the card landed on). `board` is the
+table so far, so a blocked placement can read its blocker. -/
+
+structure WalkState where
+  occ : Occ
+  t : Nat
+  prev : Option (Nat × (Fin 4 × Fin 13))
+  board : NatGrid
+
+def initWalk : WalkState :=
+  { occ := emptyOcc, t := 0, prev := none, board := fun _ _ => (0 : Nat) }
+
+/-- A chooser's answer: the seat, then the next marker and the next finger. -/
+abbrev SeatChoice := (Fin 4 × Fin 13) × (Nat × (Fin 4 × Fin 13))
+
+def advance (st : WalkState) (card : Nat) (pos : Fin 4 × Fin 13)
+    (tf : Nat × (Fin 4 × Fin 13)) : WalkState where
+  occ := setOcc st.occ pos
+  t := tf.1
+  prev := some (card, tf.2)
+  board := setGrid st.board pos card
+
+/-- v11 blocked placement at `target` with blocker `b`: scan row
+    `(t + suit b) % 4` from column `(target.col + rank b) % 13`, dropping rows;
+    marker `t + 1`; finger `target + step b`. -/
+def blockedChoice (st : WalkState) (target : Fin 4 × Fin 13) : Option SeatChoice :=
+  let b := st.board target.1 target.2
+  (overflowSeat st.occ ((st.t + suit b) % 4) ((target.2.val + rank b) % 13)).map
+    fun p => (p, ((st.t + 1) % 4, gridStep b target))
+
+def chooseSeat? (st : WalkState) : Option SeatChoice :=
+  match st.prev with
+  | none => some (asStart, (st.t, asStart))
+  | some (card, finger) =>
+      let target := gridStep card finger
+      if occAt st.occ target then blockedChoice st target
+      else some (target, (st.t, target))
+
+theorem blockedChoice_some (st : WalkState) (target : Fin 4 × Fin 13)
+    (hct : occCount st.occ < 52) :
+    ∃ p, blockedChoice st target =
+        some (p, ((st.t + 1) % 4, gridStep (st.board target.1 target.2) target)) ∧
+      occAt st.occ p = false := by
+  obtain ⟨p, hs, hf⟩ := overflow_some_of_count_lt st.occ
+    ((st.t + suit (st.board target.1 target.2)) % 4)
+    ((target.2.val + rank (st.board target.1 target.2)) % 13) hct
+  exact ⟨p, by simp [blockedChoice, hs], hf⟩
+
+/-- `chooseSeat?` returns `some` while a free seat exists. Matches sudo
+    `overflow_seat`'s `assert false` being unreachable on a 52-card walk. -/
+theorem chooseSeat?_isSome (st : WalkState) (hct : occCount st.occ < 52) :
+    (chooseSeat? st).isSome := by
+  match hprev_eq : st.prev with
+  | none =>
+      simp [chooseSeat?, hprev_eq, Option.isSome]
+  | some pair =>
+      simp only [chooseSeat?, hprev_eq, Option.isSome]
+      by_cases ht : occAt st.occ (gridStep pair.1 pair.2)
+      · simp only [ht, ↓reduceIte]
+        obtain ⟨p, hs, _hf⟩ := blockedChoice_some st (gridStep pair.1 pair.2) hct
+        simp [hs]
+      · simp [eq_false_of_ne_true ht]
+
+/-- Total choose. The `none` branch is unreachable under `chooseSeat?_isSome`
+    (occCount < 52). Fail like doubledeal.sudo `assert false`, not a silent AS. -/
+def chooseSeat! (st : WalkState) : SeatChoice :=
+  match chooseSeat? st with
+  | some x => x
+  | none =>
+      panic! "DoubleDeal.chooseSeat!: overflow scan returned none (grid full?)"
+
+theorem chooseSeat!_free (st : WalkState) (hct : occCount st.occ < 52)
+    (hprev : st.prev.isSome ∨ occAt st.occ asStart = false) :
+    occAt st.occ (chooseSeat! st).1 = false := by
+  match hprev_eq : st.prev with
+  | none =>
+      have : chooseSeat? st = some (asStart, (st.t, asStart)) := by simp [chooseSeat?, hprev_eq]
+      simp only [chooseSeat!, this]
+      cases hprev with
+      | inl h => simp [hprev_eq] at h
+      | inr h => exact h
+  | some pair =>
+      simp only [chooseSeat!, chooseSeat?, hprev_eq]
+      by_cases ht : occAt st.occ (gridStep pair.1 pair.2)
+      · simp only [ht, ↓reduceIte]
+        obtain ⟨p, hs, hf⟩ := blockedChoice_some st (gridStep pair.1 pair.2) hct
+        simp only [hs]
+        exact hf
+      · have hf := eq_false_of_ne_true ht
+        simp [hf]
+
+/-! ## Placement and inverse on Fin 52 → Nat -/
+
 /-- Place first `n` cards of `hand` (n ≤ 52). -/
 def placeN (hand : Fin 52 → Nat) : Nat → NatGrid × WalkState
   | 0 => ((fun _ _ => (0 : Nat)), initWalk)
   | n + 1 =>
       let (g, st) := placeN hand n
       if h : n < 52 then
-        let (pos, t') := chooseSeat! st
+        let (pos, markerFinger) := chooseSeat! st
         let card := hand ⟨n, h⟩
-        (setGrid g pos card, advance st card pos t')
+        (setGrid g pos card, advance st card pos markerFinger)
       else (g, st)
 
 def placedGrid (hand : Fin 52 → Nat) : NatGrid := (placeN hand 52).1
@@ -556,9 +589,9 @@ def invN (g : NatGrid) : Nat → (Fin 52 → Nat) × WalkState
   | n + 1 =>
       let (out, st) := invN g n
       if _h : n < 52 then
-        let (pos, t') := chooseSeat! st
+        let (pos, markerFinger) := chooseSeat! st
         let card := g pos.1 pos.2
-        (fun j => if j.val = n then card else out j, advance st card pos t')
+        (fun j => if j.val = n then card else out j, advance st card pos markerFinger)
       else (out, st)
 
 /-- Inv MixColumns: lay row-major then walk-recover. -/

@@ -30,7 +30,7 @@ All 1326 swaps of each of 20 000 random decks (26.5 M cases per rule). Minima fr
 
 | | v10 | rule 1 (33) | rule 2 (30) | ideal random layer |
 |---|---|---|---|---|
-| **min spread** (branch analogue 2 + min) | **2** (4), e.g. swap (50,51); proven on paper, and for v10 in Lean via `mixColumns_swap_tail` | **2** (4), proven on paper (not formalised) | **2** (4), proven on paper (not formalised) | 42 observed in 2 M samples |
+| **min spread** (branch analogue 2 + min) | **2** (4), e.g. swap (50,51); proven on paper; in Lean for any free-seat chooser via `hammingDist_gridW_swap_tail` | **2** (4), proven on paper (not formalised) | **2** (4), proven on paper (not formalised) | 42 observed in 2 M samples |
 | p1 / p10 / median | 2 / 12 / 35 | 4 / 14 / 32 | 4 / 14 / 32 | 48 / 50 / 51 |
 | mean | **32.76** | 31.33 | 31.12 | 51.00 |
 | P(spread = 2) = survival | 0.0435 | **0.00506** | 0.00538 | ≈ 0 |
@@ -75,12 +75,12 @@ The full 13×13 table of (i, j) buckets (min / mean) is in `p5/dist_*.log`. For 
 
 ## What can be proven on paper
 
-The arguments below are paper proofs; they are not formalised, except that for v10 the (50, 51) tail swap is `mixColumns_swap_tail` in `security/DoubleDealSecurity/BranchNumber.lean`.
+The arguments below are paper proofs; they are not formalised, except the (50, 51) tail swap, which is `hammingDist_gridW_swap_tail` in `security/DoubleDealSecurity/BranchNumber.lean` for any chooser that always picks a free seat.
 
 1. **All three rules: min spread = 2 exactly, so the branch analogue is exactly 4, and no one-pass walk can do better.**
    - The seat of step `k` is determined by `d[0..k-1]`, so a swap at `(i, j)` leaves steps `0..i` on their seats; only steps `i..51` can change. That caps spread at `52 − i`.
    - For `(i, j) = (50, 51)`, step 50's seat is fixed and step 51 takes the only seat left. The walk is identical, and spread = 2 for **every** deck under every rule of this family (measured: 1.00000 for all three).
-   - So the MixColumns-style minimum can't separate the rules. Only the distribution can. This is the Phase 2 "last positions" floor, now proven on paper (not formalised; for v10 via `mixColumns_swap_tail`) rather than measured.
+   - So the MixColumns-style minimum can't separate the rules. Only the distribution can. This is the Phase 2 "last positions" floor, now proven on paper (the tail swap is also `hammingDist_gridW_swap_tail` in Lean, for any free-seat chooser) rather than measured.
 2. **A swap always changes at least the two swapped cards' placements.**
    - Seat `seat[i]` holds `d[i]` in one output and `d[j]` in the other.
    - The card `d[i]` sits somewhere else in the second output, and that position held something else in the first.
@@ -125,7 +125,7 @@ The only places rule 1 shows a lower number are noise-level:
 
 The ghost finger's order-invariant targets are the cause of both sides. On a MixColumns-style "worst case" view, the ghost rules are better. On an "average spread" view, v10 is slightly better.
 
-**Branch-number analogue.** It is exactly 4 (2 in + 2 out) for every rule of this one-pass family, proven on paper (not formalised; for v10 via `mixColumns_swap_tail`), and no rule of this shape can separate itself on that minimum. MixColumns reaches 5, the maximum for its 4-byte columns. Nothing here corresponds to an MDS guarantee.
+**Branch-number analogue.** It is exactly 4 (2 in + 2 out) for every rule of this one-pass family, proven on paper (the tail swap is also `hammingDist_gridW_swap_tail` in Lean, for any free-seat chooser), and no rule of this shape can separate itself on that minimum. MixColumns reaches 5, the maximum for its 4-byte columns. Nothing here corresponds to an MDS guarantee.
 
 ## Files
 

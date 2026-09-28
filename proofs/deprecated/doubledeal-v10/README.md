@@ -58,7 +58,6 @@ T1 (`proofs/doubledeal/security/`) proves `mixColumns_commutes_iff_id`: GridCycl
 
 Note: `attack/make_witness.py` and the analysis `xcheck.py` import the live repo port `proofs/doubledeal/security/checks/ddport.py` and call it as `mix_columns(d, 10)`, i.e. its frozen v10 code path; they do not carry their own copy of the port.
 
-
 ```sh
 proofs/doubledeal/vectors/regen.sh v10 --check
 python3 proofs/deprecated/doubledeal-v10/attack/make_witness.py --check

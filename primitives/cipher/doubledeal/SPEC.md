@@ -103,7 +103,7 @@ Notation: decks are 0-indexed lists. Grid cells hold card ids. All modular arith
 | `lay_row_major` / `scoop_row_major` | Yes (inverses) | Claimed; property-tested |
 | SumRanks / inv SumRanks | Yes (on \(4\times13\) filled grids) | Claimed; RT in self_test |
 | ShiftRows / inv ShiftRows | Yes | Claimed |
-| GridCycle / inv GridCycle | Yes (as packet maps) | Claimed; RT in self_test |
+| GridCycle / inv GridCycle | Yes (as packet maps) | Proved in `proofs/doubledeal/` (`invMixColumns_mixColumns` / `mixColumns_invMixColumns`, both on every packet); RT also in self_test |
 | Compose / InverseCompose (fixed \(K\)) | Yes | Claimed |
 | Full / final round (fixed round key) | Yes | Claimed via layer RT |
 | Encrypt / Decrypt (fixed \(K_0\)) | Yes | Claimed; RT in self_test |
@@ -266,7 +266,7 @@ for i in 0..51:
 return hand
 ```
 
-**Claim:** \(\mathrm{invMix} \circ \mathrm{Mix} = \mathrm{id}\) on decks. Not MDS; toy diffusion only.
+**Proved** (Lean, `proofs/doubledeal/`): \(\mathrm{invMix} \circ \mathrm{Mix} = \mathrm{id}\) and \(\mathrm{Mix} \circ \mathrm{invMix} = \mathrm{id}\) on every 52-entry packet (`invMixColumns_mixColumns`, `mixColumns_invMixColumns`), in particular on decks. Not MDS; toy diffusion only.
 
 ## 3.6 Compose / InverseCompose
 

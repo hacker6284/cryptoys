@@ -104,11 +104,8 @@ theorem unkeyedNoMix_cells (m : Fin 52 → Nat) (k : Fin 52) : ∃ i, unkeyedNoM
   obtain ⟨i, hi⟩ := hs (cmRow k) ⟨((cmCol k).val + (cmRow k).val) % 13, Nat.mod_lt _ (by decide)⟩
   exact ⟨i, hi⟩
 
-theorem unkeyedNoMix_invUnkeyedNoMix (x : Fin 52 → Nat) :
-    unkeyedNoMix (invUnkeyedNoMix x) = x := by
-  simp only [invUnkeyedNoMix, unkeyedNoMix]
-  rw [lay_scoop_columnMajor, sumRanksV10_invSumRanksV10, shiftRows_invShiftRows,
-    scoop_lay_columnMajor]
+-- `unkeyedNoMix_invUnkeyedNoMix` (same statement) now lives in the core
+-- package, `DoubleDeal.Round` (next to `encrypt6_decrypt6`).
 
 /-- (PROVED) The stem maps well-formed decks onto well-formed decks. The
     preimage is `invUnkeyedNoMix x`; since `x = unkeyedNoMix m` only moves cells

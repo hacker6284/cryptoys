@@ -223,7 +223,7 @@ theorem encryptN_rt (nMix : Nat) (m : Fin 52 → Nat)
     (pos0 invPos0 : Fin 52 → Fin 52)
     (posMix invPosMix : Nat → Fin 52 → Fin 52)
     (posFinal invPosFinal : Fin 52 → Fin 52)
-    (_h0L : ∀ j, invPos0 (pos0 j) = j) (h0R : ∀ i, pos0 (invPos0 i) = i)
+    (h0R : ∀ i, pos0 (invPos0 i) = i)
     (hMixL : ∀ r j, invPosMix r (posMix r j) = j)
     (hMixR : ∀ r i, posMix r (invPosMix r i) = i)
     (hFL : ∀ j, invPosFinal (posFinal j) = j)
@@ -269,7 +269,7 @@ theorem encrypt6_rt (m : Fin 52 → Nat)
     (pos0 invPos0 : Fin 52 → Fin 52)
     (posMix invPosMix : Nat → Fin 52 → Fin 52)
     (posFinal invPosFinal : Fin 52 → Fin 52)
-    (h0L : ∀ j, invPos0 (pos0 j) = j) (h0R : ∀ i, pos0 (invPos0 i) = i)
+    (h0R : ∀ i, pos0 (invPos0 i) = i)
     (hMixL : ∀ r j, invPosMix r (posMix r j) = j)
     (hMixR : ∀ r i, posMix r (invPosMix r i) = i)
     (hFL : ∀ j, invPosFinal (posFinal j) = j)
@@ -277,6 +277,88 @@ theorem encrypt6_rt (m : Fin 52 → Nat)
     decrypt6 (encrypt6 m pos0 posMix posFinal)
       pos0 invPos0 posMix invPosMix posFinal invPosFinal = m :=
   encryptN_rt 5 m pos0 invPos0 posMix invPosMix posFinal invPosFinal
-    h0L h0R hMixL hMixR hFL hFR
+    h0R hMixL hMixR hFL hFR
+
+
+/-! ## Right inverse (encrypt-after-decrypt) of the algebraic skeleton
+
+Same abstract-Compose skeleton as `encrypt6_rt`; needs only the left-inverse
+key facts `invPos (pos j) = j` (h0L, hMixL, hFL); uses `mixColumns_invMixColumns`, `sumRanksV10_invSumRanksV10`,
+`shiftRows_invShiftRows` and the row/column-major scoop/lay identities. Like
+`encrypt6_rt`, this is about `encrypt6` / `decrypt6` here, not the emitted
+`Generated.encrypt` / `Generated.decrypt`. -/
+
+theorem unkeyedNoMix_invUnkeyedNoMix (c : Fin 52 → Nat) :
+    unkeyedNoMix (invUnkeyedNoMix c) = c := by
+  simp only [invUnkeyedNoMix, unkeyedNoMix]
+  rw [lay_scoop_columnMajor, sumRanksV10_invSumRanksV10, shiftRows_invShiftRows,
+      scoop_lay_columnMajor]
+
+theorem unkeyedWithMix_invUnkeyedWithMix (c : Fin 52 → Nat) :
+    unkeyedWithMix (invUnkeyedWithMix c) = c := by
+  simp only [invUnkeyedWithMix, unkeyedWithMix]
+  rw [unkeyedNoMix_invUnkeyedNoMix, mixColumns_invMixColumns]
+
+theorem fullRound_invFullRound (c : Fin 52 → Nat)
+    (pos invPos : Fin 52 → Fin 52)
+    (hL : ∀ j, invPos (pos j) = j) :
+    fullRound (invFullRound c pos invPos) pos = c := by
+  simp only [fullRound, invFullRound, unkeyedWithMix_invUnkeyedWithMix]
+  funext j
+  simp only [DoubleDeal.composeVec, hL]
+
+theorem fullRoundNoMix_invFullRoundNoMix (c : Fin 52 → Nat)
+    (pos invPos : Fin 52 → Fin 52)
+    (hL : ∀ j, invPos (pos j) = j) :
+    fullRoundNoMix (invFullRoundNoMix c pos invPos) pos = c := by
+  simp only [fullRoundNoMix, invFullRoundNoMix, unkeyedNoMix_invUnkeyedNoMix]
+  funext j
+  simp only [DoubleDeal.composeVec, hL]
+
+theorem applyFullRounds_applyInvFullRounds (n : Nat) (c : Fin 52 → Nat)
+    (pos invPos : Nat → Fin 52 → Fin 52)
+    (hL : ∀ r j, invPos r (pos r j) = j) :
+    applyFullRounds n (applyInvFullRounds n c pos invPos) pos = c := by
+  induction n generalizing c with
+  | zero => rfl
+  | succ n ih =>
+    simp only [applyFullRounds, applyInvFullRounds]
+    rw [ih]
+    exact fullRound_invFullRound c (pos n) (invPos n) (hL n)
+
+theorem encryptN_decryptN (nMix : Nat) (c : Fin 52 → Nat)
+    (pos0 invPos0 : Fin 52 → Fin 52)
+    (posMix invPosMix : Nat → Fin 52 → Fin 52)
+    (posFinal invPosFinal : Fin 52 → Fin 52)
+    (h0L : ∀ j, invPos0 (pos0 j) = j)
+    (hMixL : ∀ r j, invPosMix r (posMix r j) = j)
+    (hFL : ∀ j, invPosFinal (posFinal j) = j) :
+    encryptN nMix (decryptN nMix c pos0 invPos0 posMix invPosMix posFinal invPosFinal)
+      pos0 posMix posFinal = c := by
+  simp only [encryptN, decryptN]
+  have w : DoubleDeal.composeVec 52 Nat
+      (DoubleDeal.composeVec 52 Nat
+        (applyInvFullRounds nMix (invFullRoundNoMix c posFinal invPosFinal) posMix invPosMix)
+        invPos0) pos0 =
+      applyInvFullRounds nMix (invFullRoundNoMix c posFinal invPosFinal) posMix invPosMix := by
+    funext j
+    simp only [DoubleDeal.composeVec, h0L]
+  rw [w, applyFullRounds_applyInvFullRounds nMix _ posMix invPosMix hMixL]
+  exact fullRoundNoMix_invFullRoundNoMix c posFinal invPosFinal hFL
+
+/-- Nr=6 right inverse: `encrypt6 (decrypt6 c) = c` for every `c : Fin 52 → Nat`,
+    assuming only the left-inverse key facts `invPos (pos j) = j` for the
+    whitening, mix and final keys. -/
+theorem encrypt6_decrypt6 (c : Fin 52 → Nat)
+    (pos0 invPos0 : Fin 52 → Fin 52)
+    (posMix invPosMix : Nat → Fin 52 → Fin 52)
+    (posFinal invPosFinal : Fin 52 → Fin 52)
+    (h0L : ∀ j, invPos0 (pos0 j) = j)
+    (hMixL : ∀ r j, invPosMix r (posMix r j) = j)
+    (hFL : ∀ j, invPosFinal (posFinal j) = j) :
+    encrypt6 (decrypt6 c pos0 invPos0 posMix invPosMix posFinal invPosFinal)
+      pos0 posMix posFinal = c :=
+  encryptN_decryptN 5 c pos0 invPos0 posMix invPosMix posFinal invPosFinal
+    h0L hMixL hFL
 
 end DoubleDeal

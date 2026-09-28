@@ -3,14 +3,14 @@ import { decksToHex, decksToText, hexToDecks, randomHex, textToDecks, textToKey,
 import { bindGrowFields, growField } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
 import {
-    bindTeachKeys,
-    cardName,
-    headingId,
-    nextGroup,
-    renderOutline,
-    setDisabled,
-    stampHeadingIds,
-} from "../shared/teach.js";
+    bindSegmented,
+    bindTransport,
+    openSpec,
+    renderTeachCard,
+    sessionScope,
+    syncJumpButtons,
+} from "../shared/session.js";
+import { cardName, renderOutline } from "../shared/teach.js";
 
 export function createDoubleDealSession({
     view,
@@ -20,14 +20,7 @@ export function createDoubleDealSession({
     signal,
     liveDigest = false,
 } = {}) {
-    const abort = new AbortController();
-    if (signal) {
-        if (signal.aborted) abort.abort();
-        else signal.addEventListener("abort", () => abort.abort(), { once: true });
-    }
-    const listen = { signal: abort.signal };
-    const $ = (sel) => root.querySelector(sel);
-    const $$ = (sel) => root.querySelectorAll(sel);
+    const { abort, listen, $, $$ } = sessionScope(root, signal);
 
     const messageEl = $("#message");
     const keyEl = $("#key");
@@ -394,32 +387,6 @@ export function createDoubleDealSession({
         };
     }
 
-    function renderCard(note) {
-        if (!teachCard) return;
-        teachCard.replaceChildren();
-        const kicker = document.createElement("p");
-        kicker.className = "kicker";
-        kicker.textContent = note.kicker;
-        const title = document.createElement("h2");
-        title.textContent = note.title;
-        const math = document.createElement("p");
-        math.className = "math";
-        math.textContent = note.math;
-        const why = document.createElement("p");
-        why.className = "why";
-        why.textContent = note.why;
-        const spec = document.createElement("button");
-        spec.type = "button";
-        spec.className = "inline-link";
-        spec.textContent = `SPEC · ${note.spec}`;
-        spec.addEventListener("click", () => {
-            openSpec(note.spec).catch((err) => {
-                setError(err instanceof Error ? err.message : "Could not open the specification.");
-            });
-        });
-        teachCard.append(kicker, title, math, why, spec);
-    }
-
     function gridFrom(step) {
         const index = trace.indexOf(step);
         if (index <= 0) return { row: 2, col: 0 };
@@ -495,7 +462,8 @@ export function createDoubleDealSession({
         if (!teachCard) return;
         const viewI = viewedIndex();
         const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
-        renderCard(annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1)));
+        const note = annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1));
+        renderTeachCard(teachCard, note, showSpec);
         if (teachPos) {
             teachPos.textContent = step
                 ? `${viewI + 1} / ${trace.length}`
@@ -509,12 +477,7 @@ export function createDoubleDealSession({
                 void jumpTo(index - 1, false);
             });
         }
-        const atStart = cursor < 0;
-        const atEnd = cursor >= trace.length - 1;
-        $$("[data-jump]").forEach((button) => {
-            const jump = button.dataset.jump;
-            setDisabled(button, (jump === "back" || jump === "stage-back" || jump === "round-back") ? atStart : atEnd);
-        });
+        syncJumpButtons(root, cursor, trace.length);
     }
 
     function firstIndexOfStage(index) {
@@ -775,140 +738,32 @@ export function createDoubleDealSession({
         return jumpTo(cursor + 1, true);
     }
 
-    function renderMarkdown(markdown) {
-        const lines = markdown.replace(/\r\n/g, "\n").split("\n");
-        let html = "";
-        let i = 0;
-        const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-        const inline = (s) => esc(s)
-            .replace(/`([^`]+)`/g, "<code>$1</code>")
-            .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-        const hid = (title) => ` id="${headingId(title)}"`;
-        while (i < lines.length) {
-            const line = lines[i];
-            if (line.startsWith("```")) {
-                const buf = [];
-                i += 1;
-                while (i < lines.length && !lines[i].startsWith("```")) {
-                    buf.push(lines[i]);
-                    i += 1;
-                }
-                i += 1;
-                html += `<pre><code>${esc(buf.join("\n"))}</code></pre>`;
-                continue;
-            }
-            if (line.startsWith("|")) {
-                const rows = [];
-                while (i < lines.length && lines[i].startsWith("|")) {
-                    rows.push(lines[i]);
-                    i += 1;
-                }
-                const cells = (row) => row.split("|").slice(1, -1).map((cell) => cell.trim());
-                const head = cells(rows[0]);
-                const body = rows.slice(2).map(cells);
-                html += "<table><thead><tr>" + head.map((cell) => `<th>${inline(cell)}</th>`).join("") + "</tr></thead><tbody>";
-                for (const row of body) html += "<tr>" + row.map((cell) => `<td>${inline(cell)}</td>`).join("") + "</tr>";
-                html += "</tbody></table>";
-                continue;
-            }
-            if (line.startsWith("### ")) {
-                const title = line.slice(4);
-                html += `<h3${hid(title)}>${inline(title)}</h3>`;
-                i += 1;
-                continue;
-            }
-            if (line.startsWith("## ")) {
-                const title = line.slice(3);
-                html += `<h2${hid(title)}>${inline(title)}</h2>`;
-                i += 1;
-                continue;
-            }
-            if (line.startsWith("# ")) {
-                const title = line.slice(2);
-                html += `<h1${hid(title)}>${inline(title)}</h1>`;
-                i += 1;
-                continue;
-            }
-            if (line.startsWith("- ")) {
-                html += "<ul>";
-                while (i < lines.length && lines[i].startsWith("- ")) {
-                    html += `<li>${inline(lines[i].slice(2))}</li>`;
-                    i += 1;
-                }
-                html += "</ul>";
-                continue;
-            }
-            if (line.trim() === "") {
-                i += 1;
-                continue;
-            }
-            html += `<p>${inline(line)}</p>`;
-            i += 1;
-        }
-        return html;
+    function showSpec(heading) {
+        openSpec(root, specUrl, heading).catch((err) => {
+            setError(err instanceof Error ? err.message : "Could not open the specification.");
+        });
     }
 
-    async function openSpec(heading) {
-        const specDialog = $("#spec");
-        const specBody = $("#spec-body");
-        if (!specDialog || !specBody) throw new Error("The specification dialog is missing.");
-        const href = specUrl || "./SPEC.md";
-        const response = await fetch(href);
-        if (!response.ok) throw new Error("The specification file is missing. Run tools/build.sh.");
-        specBody.innerHTML = renderMarkdown(await response.text());
-        stampHeadingIds(specBody);
-        specDialog.showModal();
-        if (heading) {
-            const target = specBody.querySelector("#" + CSS.escape(headingId(heading)));
-            if (target) target.scrollIntoView();
-        }
-    }
-
-    $$("[data-mode]").forEach((button) => {
-        button.addEventListener("click", () => {
-            mode = button.dataset.mode;
-            $$("[data-mode]").forEach((item) => item.classList.toggle("on", item === button));
-            if (nonceField) nonceField.hidden = mode !== "ctr";
-            if (mode === "ctr") growField(nonceEl);
-            preview();
-        }, listen);
-    });
-
-    $$("[data-direction]").forEach((button) => {
-        button.addEventListener("click", () => {
-            const next = button.dataset.direction;
-            if (next === direction) return;
-            stopPlay();
-            const typed = messageEl?.value || "";
-            if (messageEl) messageEl.value = outputValue();
-            setOutput(typed);
-            direction = next;
-            $$("[data-direction]").forEach((item) => item.classList.toggle("on", item === button));
-            applyLabels();
-            preview();
-        }, listen);
-    });
-
-    $("#play")?.addEventListener("click", () => void start(), listen);
-    $("#start")?.addEventListener("click", () => void start(), listen);
-    $("#skip-end")?.addEventListener("click", () => skipToEnd(), listen);
-    $("#stop")?.addEventListener("click", () => stopPlay(), listen);
-    $("#reset")?.addEventListener("click", () => {
-        stopPlay();
-        busy = false;
-        cursor = -1;
-        setTeaching(false);
+    bindSegmented(root, "mode", (value) => {
+        mode = value;
+        if (nonceField) nonceField.hidden = mode !== "ctr";
+        if (mode === "ctr") growField(nonceEl);
         preview();
     }, listen);
-    $("#step")?.addEventListener("click", () => {
-        if (trace.length === 0 || !teaching) {
-            enterTeach();
-            return;
-        }
-        setError("");
-        void stepBy(1);
+
+    bindSegmented(root, "direction", (next) => {
+        if (next === direction) return;
+        stopPlay();
+        const typed = messageEl?.value || "";
+        if (messageEl) messageEl.value = outputValue();
+        setOutput(typed);
+        direction = next;
+        applyLabels();
+        preview();
     }, listen);
+
+    $("#start")?.addEventListener("click", () => void start(), listen);
+    $("#stop")?.addEventListener("click", () => stopPlay(), listen);
     $("#random-key")?.addEventListener("click", () => {
         if (keyEl) keyEl.value = "0x" + randomHex(14);
         preview();
@@ -948,42 +803,37 @@ export function createDoubleDealSession({
         signal: abort.signal,
     });
 
-    $$("[data-jump]").forEach((button) => {
-        button.addEventListener("click", () => {
-            const jump = button.dataset.jump;
-            const viewI = Math.max(0, viewedIndex());
-            if (jump === "back") void stepBy(-1);
-            else if (jump === "fwd") void stepBy(1);
-            else if (jump === "stage-back") void jumpTo(nextGroup(trace, viewI, stageKey, -1) - 1, false);
-            else if (jump === "stage-fwd") void jumpTo(nextGroup(trace, viewI, stageKey, 1) - 1, false);
-            else if (jump === "round-back") void jumpTo(nextGroup(trace, viewI, roundKey, -1) - 1, false);
-            else if (jump === "round-fwd") void jumpTo(nextGroup(trace, viewI, roundKey, 1) - 1, false);
-        }, listen);
-    });
-
-    bindTeachKeys({
-        step: (dir) => { if (teaching) void stepBy(dir); },
-        stage: (dir) => {
-            if (!teaching || !trace.length) return;
-            void jumpTo(nextGroup(trace, Math.max(0, viewedIndex()), stageKey, dir) - 1, false);
+    bindTransport(root, {
+        play: start,
+        step: () => {
+            if (trace.length === 0 || !teaching) {
+                enterTeach();
+                return;
+            }
+            setError("");
+            void stepBy(1);
         },
-        home: () => { if (teaching) void jumpTo(-1, false); },
-        end: () => { if (teaching && trace.length) void jumpTo(trace.length - 1, false); },
+        skipToEnd,
+        reset: () => {
+            stopPlay();
+            busy = false;
+            cursor = -1;
+            setTeaching(false);
+            preview();
+        },
+        showSpec,
+        trace: () => trace,
+        teaching: () => teaching,
+        viewedIndex,
+        stepBy,
+        jumpTo,
+        stageKey,
+        roundKey,
     }, listen);
 
     $$("[data-open-spec]").forEach((el) => {
-        el.addEventListener("click", () => {
-            openSpec().catch((err) => {
-                setError(err instanceof Error ? err.message : "Could not open the specification.");
-            });
-        }, listen);
+        el.addEventListener("click", () => showSpec(), listen);
     });
-    $("#spec-btn")?.addEventListener("click", () => {
-        openSpec().catch((err) => {
-            setError(err instanceof Error ? err.message : "Could not open the specification.");
-        });
-    }, listen);
-    $("#spec-close")?.addEventListener("click", () => $("#spec")?.close(), listen);
 
     applyLabels();
     preview();

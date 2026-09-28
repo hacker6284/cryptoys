@@ -1,0 +1,11 @@
+44200 3-cycles, screen N=400: mean survival 0.0076
+(KC KS KD) screen 0.1075  refined 8614/100000 = 0.0861
+(KC KH KS) screen 0.1050  refined 8198/100000 = 0.0820
+(KC KD QH) screen 0.0925  refined 6607/100000 = 0.0661
+(KC KD KS) screen 0.0900  refined 8576/100000 = 0.0858
+(KC KD KH) screen 0.0875  refined 8358/100000 = 0.0836
+(KC KH KD) screen 0.0850  refined 8292/100000 = 0.0829
+(TC TD TS) screen 0.0775  refined 4918/100000 = 0.0492
+(QC QH KC) screen 0.0750  refined 6552/100000 = 0.0655
+(KC QH KD) screen 0.0750  refined 6593/100000 = 0.0659
+(KC KH AS) screen 0.0750  refined 5064/100000 = 0.0506

@@ -1,0 +1,15 @@
+V0: N=3000/pair  worst KC<->KD 0.2637 (1/4) CI[0.2482,0.2797]  mean 0.0438  min 0.0097  pairs>1/64: 1302  | other 0.0384 same-rank 0.1276 same-suit 0.0390
+V20: N=3000/pair  worst KC<->KH 0.0510 (1/20) CI[0.0437,0.0595]  mean 0.0153  min 0.0050  pairs>1/64: 436  | other 0.0140 same-rank 0.0358 same-suit 0.0142
+V21: N=3000/pair  worst AC<->KC 0.0850 (1/12) CI[0.0755,0.0955]  mean 0.0096  min 0.0003  pairs>1/64: 197  | other 0.0048 same-rank 0.0127 same-suit 0.0232
+V22: N=3000/pair  worst JH<->QH 0.0333 (1/30) CI[0.0275,0.0404]  mean 0.0063  min 0.0003  pairs>1/64: 84  | other 0.0037 same-rank 0.0086 same-suit 0.0133
+V23: N=3000/pair  worst 8H<->9S 0.0193 (1/52) CI[0.0150,0.0249]  mean 0.0117  min 0.0063  pairs>1/64: 51  | other 0.0117 same-rank 0.0119 same-suit 0.0118
+V24: N=3000/pair  worst QC<->KC 0.0697 (1/14) CI[0.0611,0.0793]  mean 0.0366  min 0.0197  pairs>1/64: 1326  | other 0.0362 same-rank 0.0405 same-suit 0.0367
+V25: N=3000/pair  worst 9C<->KC 0.0193 (1/52) CI[0.0150,0.0249]  mean 0.0119  min 0.0050  pairs>1/64: 57  | other 0.0119 same-rank 0.0125 same-suit 0.0119
+V26: N=3000/pair  worst 2C<->KC 0.0177 (1/57) CI[0.0135,0.0230]  mean 0.0055  min 0.0007  pairs>1/64: 9  | other 0.0037 same-rank 0.0039 same-suit 0.0112
+V27: N=3000/pair  worst AC<->KC 0.0230 (1/43) CI[0.0182,0.0290]  mean 0.0063  min 0.0027  pairs>1/64: 1  | other 0.0062 same-rank 0.0063 same-suit 0.0065
+V28: N=3000/pair  worst AC<->KC 0.0093 (1/107) CI[0.0065,0.0135]  mean 0.0049  min 0.0010  pairs>1/64: 0  | other 0.0049 same-rank 0.0051 same-suit 0.0050
+V29: N=3000/pair  worst AC<->KC 0.0160 (1/62) CI[0.0121,0.0211]  mean 0.0062  min 0.0023  pairs>1/64: 1  | other 0.0062 same-rank 0.0064 same-suit 0.0064
+V30: N=3000/pair  worst 6C<->6H 0.0153 (1/65) CI[0.0115,0.0204]  mean 0.0055  min 0.0013  pairs>1/64: 0  | other 0.0051 same-rank 0.0106 same-suit 0.0053
+V31: N=3000/pair  worst KC<->2S 0.0093 (1/107) CI[0.0065,0.0135]  mean 0.0049  min 0.0013  pairs>1/64: 0  | other 0.0048 same-rank 0.0048 same-suit 0.0049
+V33: N=3000/pair  worst KC<->6H 0.0100 (1/100) CI[0.0070,0.0142]  mean 0.0051  min 0.0010  pairs>1/64: 0  | other 0.0050 same-rank 0.0050 same-suit 0.0052
+V35: N=3000/pair  worst AC<->KC 0.0183 (1/55) CI[0.0141,0.0238]  mean 0.0101  min 0.0040  pairs>1/64: 5  | other 0.0099 same-rank 0.0100 same-suit 0.0105

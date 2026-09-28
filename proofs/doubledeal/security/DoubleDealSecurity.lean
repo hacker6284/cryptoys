@@ -15,4 +15,7 @@ import DoubleDealSecurity.Link
 import DoubleDealSecurity.V8Vectors
 import DoubleDealSecurity.RealKey
 import DoubleDealSecurity.SwapMechanism
+import DoubleDealSecurity.SumRanksDP.Standalone
+import DoubleDealSecurity.SumRanksDP.Decomp
+import DoubleDealSecurity.SumRanksDP.Main
 import DoubleDealSecurity.Audit

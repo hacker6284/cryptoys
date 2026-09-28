@@ -35,6 +35,9 @@ low-weight families are exhaustive, and hill-climbs were run on top. Result:
   9/1105 ≈ 1/123.** That is exact by enumeration and agrees with 162,525 hits in 20M decks. This supersedes the
   swap-only "worst ≈ 1/221" as the SumRanks-alone worst case.
 - The same-suit swap is 1/221. Nothing except the 51 exact `v10Sym` symmetries exceeds 1/64.
+- Proved in Lean (`sumRanksV10_survival_le`, `../../security/SUMRANKS_DP.md`): no non-symmetry
+  relabelling survives SumRanks alone on more than 1/64 of the decks. The measured worst case 9/1105 is not formalised.
+- `../../security/sumranks-dp-paper/PROOF.md` §5b argues that 9/1105 is the exact maximum. That is a computer-assisted corollary (it relies on the computer-checked Lemma R), not formalised in Lean and not independently reviewed.
 - Mechanism: SumRanks reads 17 totals. Row totals see only ranks and column totals see only suits, so a
   same-suit cycle is invisible to every column. Each row holding a moved card must keep its weighted rank sum
   mod 13. Three cards in one row balance that sum in 1 of 11 placements; a swap in one row never balances.

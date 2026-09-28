@@ -6,3 +6,6 @@ mechanism
 round
 cand_check
 cand
+p3small
+p3collide
+p3roundtrip

@@ -6,6 +6,7 @@
     python3 proofs/doubledeal/check_axioms.py security-heavy  # heavy library (after
                                           # `lake build DoubleDealSecurityHeavy`)
     python3 proofs/doubledeal/check_axioms.py v9-deprecated  # frozen v9 witness package
+    python3 proofs/doubledeal/check_axioms.py v10-deprecated # frozen v10 GridCycle witness
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -16,6 +17,8 @@ axiom) fails, as does a Lean error.
   each listed theorem must be reported.
 - v9-deprecated: like core, for proofs/deprecated/doubledeal-v9/lean/Axioms.lean
   (the kernel-checked K♣↔Q♥ witness on the emitted frozen v9 encrypt).
+- v10-deprecated: like core, for proofs/deprecated/doubledeal-v10/lean/Axioms.lean
+  (the kernel-checked single-deck K♣↔K♦ witness on the emitted frozen v10 mix_columns).
 - security: security/Axioms.lean audits EVERY theorem declared in a
   `DoubleDealSecurity.*` module, private ones included (`#audit_all`), and the
   parsed report count must equal the `audited N` line Lean prints. Exception, by exact name: the
@@ -55,6 +58,8 @@ PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
     "v9-deprecated": {"dir": ROOT.parent / "deprecated" / "doubledeal-v9" / "lean", "mode": "list",
                       "known_sorry": set(), "min": 1},
+    "v10-deprecated": {"dir": ROOT.parent / "deprecated" / "doubledeal-v10" / "lean", "mode": "list",
+                       "known_sorry": set(), "min": 1},
     "security": {
         "dir": ROOT / "security",
         "mode": "all",

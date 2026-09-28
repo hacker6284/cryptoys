@@ -66,7 +66,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | Link 2 | `peel_leading` ≃ `(n % d!, n / d!)` for `d ≤ 51` and `n / d! < 10^9` | Proved (`peel_leading_51`). One-limb digit. `n < 10^81`. Not a 28-byte `big_from_be`. Not `phi_chunk`. Not `v_Hash`. |
 | Link 2 | `phi_chunk` ≃ `phiUnrank (fromBE bs)` on `PhiChunkWf` (length 28, bytes `≤ 255`) | Proved (`phi_chunk_refines`, `phi_chunk_refines_array`, `phiChunkStep_lt`, `phiChunkStep_51`). Outer `chain_loop` runs `phiState` from `0` to `51`, peeling `(rank % d!, rank / d!)` and erasing the drawn card; the last step breaks at `phiState rank 52` with `out = embed (phiUnrank rank)`. Not `phi_inv`. Not `v_Hash` on its own (see the `v_Hash` row below). |
 | Link 2 | `v_Hash` ≃ algebraic MD hash on `PadWf` (bytes `≤ 255`, `8·len` fits in an i64) | Proved (`v_Hash_refines`, `v_Hash_refines_array`, `v_MegaDreifach_refines`, `v_Hash_eq_hashBlocks`; `Link2/VHash.lean`). The spec `vhashAlg msg` is `positionToBytes` of `foldl (fun h blk => Em.dmStep h (phiUnrank (fromBE blk))) Em.ivCook12` over the 28-byte blocks of `pad msg`. No traps on `PadWf`. Not `v_HashDeck` (`phi_inv`, PR #76). Not collision resistance. Link 1 (sudo = Generated) still trusted. |
-| Link 2 | All 8 hash KATs as theorems about `Generated.v_Hash` | Proved (`MegaDreifachHeavy/Kat.lean`: `kat_empty`, …, `kat_multi_100`). Kernel `decide!` (no `native_decide`) through per-block literal chaining values; `kat_*_hex` ties the bytes to `Vectors.lean`. Non-default lean_lib `MegaDreifachHeavy` (~8 min), CI job `megadreifach-heavy`. |
+| Link 2 | All 8 hash KATs as theorems about `Generated.v_Hash` | Proved (`MegaDreifachHeavy/Kat.lean`: `kat_empty`, …, `kat_multi_100`). Each is stated once, `v_Hash (embed (hexBytes vec_<name>.msgHex)) = .ok (embed (hexBytes vec_<name>.digestHex))`, on the strings of `Vectors.lean`, which `vectors/json_to_lean.py` generates from the published KAT JSON (`--check` in CI, which also checks the statement shape). Kernel `decide!` (no `native_decide`) through per-block literal chaining values. Non-default lean_lib `MegaDreifachHeavy` (~8 min), CI job `megadreifach-heavy`. |
 | Link 2 | `em_block` ≃ algebraic `Em.emBlock` (the whole E_m) for any deal of length `≥ 52` | Proved (`em_block_refines`, `dm_step_refines`, `body_from_refines`; `Link2/EmBlock.lean`). Algebraic E_m in `Em.lean`. Also `face_turn`, `inverse`, `noon_phys`, `spin_about_up`, `abs_reorient`, `corner_slot`, `colour_on`, `colours_at`, `recipe_a`, `g2_step`, `f3_step`, `iv_cook12` (`Link2/{FaceTurn,Inverse,EmHelpers,EmCorner,EmRecipe,EmSpin,EmStep,EmInv,EmIv}.lean`). The `recipe_a` trap branches are unreachable via the `GripOk` invariant. |
 | Link 2 | `position_to_bytes` ≃ `positionToBytes` on every `InjPos` position (injective `cp` / `ep` tables) | Proved (`position_to_bytes_refines_gen`; `Link2/PosBytesGen.lean`). Multi-limb (`< 10^72`) bigint pipeline, `big_to_be_gen`. Supersedes the `PosBytesWf` row. |
 | Link 2 | `even_perm_rank_big` ≃ `evenRank` on every length-20 / length-30 permutation (`PermNWf`) | Proved (`even_perm_rank_big_refines_gen`, `even_perm_rank_big_refines_20`, `_30`; `Link2/EvenRankGen.lean`). Multi-limb ranks via `big_mul_nat_gen`. Supersedes the `Rank20Wf` row. |
@@ -108,13 +108,13 @@ cd proofs/megadreifach/lean
 lake build
 ```
 
-`lake exe megadreifach` prints a one-line summary **and** runs the KAT metadata checks. The library target is `MegaDreifach`. `python3 ../check_axioms.py` audits every theorem of the library (only `propext`, `Classical.choice`, `Quot.sound`).
+`lake exe megadreifach` prints a one-line summary **and** runs the KAT metadata checks. The library target is `MegaDreifach`. `python3 ../../doubledeal/check_axioms.py megadreifach` (the one shared axiom gate; `#audit_all` comes from the core-only package `proofs/audit`) audits every theorem of the library (only `propext`, `Classical.choice`, `Quot.sound`). `python3 ../vectors/json_to_lean.py --check` checks `MegaDreifach/Vectors.lean` against the published KAT JSON.
 
 The 8 KAT theorems (M13) are in the separate, non-default library `MegaDreifachHeavy` (about 8 min of kernel evaluation):
 
 ```sh
 lake build MegaDreifachHeavy
-python3 ../check_axioms.py heavy
+python3 ../../doubledeal/check_axioms.py megadreifach-heavy
 ```
 
 CI builds and audits it in the `megadreifach-heavy` job (`.github/workflows/proofs-heavy.yml`).

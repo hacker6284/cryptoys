@@ -227,6 +227,8 @@ jobs:
       - uses: actions/checkout@v5
       - name: No sorry / admit / native_decide (shared gate)
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach/lean --exclude Generated
+      - name: Vectors.lean matches the published KAT JSON; heavy KAT statements use its msgHex / digestHex
+        run: python3 proofs/megadreifach/vectors/json_to_lean.py --check
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/megadreifach/lean
@@ -235,5 +237,5 @@ jobs:
         run: lake exe megadreifach
       # The heavy library MegaDreifachHeavy (8 KAT kernel witnesses) is not built
       # here; it is built and audited by megadreifach-heavy in proofs-heavy.yml.
-      - name: Axiom audit of every MegaDreifach theorem (only propext, Classical.choice, Quot.sound)
-        run: python3 proofs/megadreifach/check_axioms.py
+      - name: Axiom audit of every MegaDreifach theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py megadreifach

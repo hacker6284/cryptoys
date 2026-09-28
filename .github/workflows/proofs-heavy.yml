@@ -6,32 +6,16 @@ name: proofs-heavy
 #     security package;
 #   - megadreifach-heavy: lean_lib MegaDreifachHeavy (the 8 hash KATs as kernel
 #     `decide!` theorems about Generated.v_Hash, about 8 min of kernel time).
-# Runs on PRs that touch what those proofs depend on, on pushes to main that touch
-# them, weekly and by hand. `on:` path filters are per workflow, so the `changes`
-# job gates each heavy job on its own path set (schedule and workflow_dispatch run
-# both; a change to this workflow file runs both).
+# Triggered on every PR and every push to main, weekly and by hand, but the heavy
+# jobs only run when needed: the path sets live in ONE place, the `changes` job
+# (dorny/paths-filter), which gates each heavy job on its own set. There is no
+# `on: paths:` copy of them (Actions has no YAML anchors, and `on:` path filters are
+# per workflow, not per job), so a PR that touches neither set costs one short
+# `changes` job and two skipped jobs. Schedule and workflow_dispatch run both.
 on:
   pull_request:
-    paths:
-      - "proofs/doubledeal/security/**"
-      - "proofs/doubledeal/lean/**"          # core model + Generated/ (emitted Lean)
-      - "proofs/doubledeal/check_axioms.py"
-      - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
-      - ".github/workflows/proofs-heavy.yml"
-      - ".github/actions/lean-security/**"
-      - "proofs/megadreifach/**"             # MegaDreifach model, Generated/, check_axioms.py
-      - "primitives/hash/megadreifach/**"    # the sudo spec its Generated/ is emitted from
   push:
     branches: [main]
-    paths:
-      - "proofs/doubledeal/security/**"
-      - "proofs/doubledeal/lean/**"          # core model + Generated/ (emitted Lean)
-      - "proofs/doubledeal/check_axioms.py"
-      - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
-      - ".github/workflows/proofs-heavy.yml"
-      - ".github/actions/lean-security/**"
-      - "proofs/megadreifach/**"             # MegaDreifach model, Generated/, check_axioms.py
-      - "primitives/hash/megadreifach/**"    # the sudo spec its Generated/ is emitted from
   schedule:
     - cron: "17 4 * * 1"  # Mondays 04:17 UTC
   workflow_dispatch:
@@ -64,15 +48,19 @@ jobs:
         with:
           filters: |
             doubledeal:
-              - "proofs/doubledeal/security/**"
-              - "proofs/doubledeal/lean/**"
-              - "proofs/doubledeal/check_axioms.py"
-              - "primitives/cipher/doubledeal/**"
+              - "proofs/doubledeal/security/**"      # incl. checks/scan_sorry.py
+              - "proofs/doubledeal/lean/**"          # core model + Generated/ (emitted Lean)
+              - "proofs/doubledeal/check_axioms.py"  # the shared axiom gate
+              - "proofs/audit/**"                    # the shared #audit_all package
+              - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
               - ".github/workflows/proofs-heavy.yml"
               - ".github/actions/lean-security/**"
             megadreifach:
-              - "proofs/megadreifach/**"
-              - "primitives/hash/megadreifach/**"
+              - "proofs/megadreifach/**"             # model, Generated/, MegaDreifachHeavy/
+              - "primitives/hash/megadreifach/**"    # the sudo spec its Generated/ is emitted from
+              - "proofs/doubledeal/check_axioms.py"  # the shared axiom gate
+              - "proofs/audit/**"                    # the shared #audit_all package
+              - "proofs/doubledeal/security/checks/scan_sorry.py"  # the shared sorry gate
               - ".github/workflows/proofs-heavy.yml"
 
   doubledeal-security-heavy:
@@ -88,7 +76,7 @@ jobs:
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py
       - uses: ./.github/actions/lean-security
         with:
-          build-args: "DoubleDealSecurityHeavy DoubleDealSecurity.Audit"
+          build-args: "DoubleDealSecurityHeavy AuditAll"
       - name: Axiom audit of every DoubleDealSecurityHeavy theorem (registry must match the source)
         working-directory: proofs/doubledeal/security
         run: python3 ../check_axioms.py security-heavy
@@ -108,5 +96,5 @@ jobs:
         with:
           lake-package-directory: proofs/megadreifach/lean
           build-args: "MegaDreifachHeavy"
-      - name: Axiom audit of every MegaDreifachHeavy theorem (only propext, Classical.choice, Quot.sound)
-        run: python3 proofs/megadreifach/check_axioms.py heavy
+      - name: Axiom audit of every MegaDreifachHeavy theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py megadreifach-heavy

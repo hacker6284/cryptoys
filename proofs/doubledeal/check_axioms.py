@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Axiom gate for the DoubleDeal Lean packages.
+"""Axiom gate for the Lean proof packages (the single gate: DoubleDeal and MegaDreifach).
 
     python3 proofs/doubledeal/check_axioms.py            # core package (lean/)
     python3 proofs/doubledeal/check_axioms.py security   # Mathlib package (security/)
@@ -7,6 +7,9 @@
                                           # `lake build DoubleDealSecurityHeavy`)
     python3 proofs/doubledeal/check_axioms.py v9-deprecated  # frozen v9 witness package
     python3 proofs/doubledeal/check_axioms.py v10-deprecated # frozen v10 GridCycle witness
+    python3 proofs/doubledeal/check_axioms.py megadreifach   # proofs/megadreifach/lean (default lib)
+    python3 proofs/doubledeal/check_axioms.py megadreifach-heavy  # its heavy library (after
+                                          # `lake build MegaDreifachHeavy`)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -31,6 +34,25 @@ axiom) fails, as does a Lean error.
   security/DoubleDealSecurityHeavy/ must be listed in HEAVY_THEOREMS and vice versa
   (checked in both security modes, so the default job cannot silently drop the
   heavy target), and every listed theorem must be reported by the heavy audit.
+- megadreifach / megadreifach-heavy: like security / security-heavy (mode "all",
+  no KNOWN_SORRY) for proofs/megadreifach/lean, roots `MegaDreifach` and
+  `MegaDreifachHeavy`. Its heavy source must declare the 8 headline `kat_*`
+  theorems (MD_HEAVY_THEOREMS; the `step_*` / `alg_*` helpers need not be listed),
+  checked in both modes.
+
+`#audit_all` is the one command in the core-only package proofs/audit (required by
+path by both the security package and MegaDreifach); in mode "all" this script
+builds it (`lake build AuditAll`) before running the audit file.
+
+Keying. By default reports are keyed by the user-facing name (a `private` theorem
+under the name it is written with), and a private/public collision fails. With
+`"key": "full"` they are keyed by the full constant name instead, so private
+theorems of the same user name in different modules stay distinct constants.
+MegaDreifach needs this: Lean generates private match-equation theorems
+(`<def>.match_1.eq_1`, for Generated definitions) on demand in each module that
+unfolds them, and many modules keep small private helpers of the same name.
+Public names cannot collide either way (Lean rejects them in one environment, and
+`#audit_all` reports an identical re-declaration as `DUP`).
 """
 import re
 import subprocess
@@ -54,6 +76,14 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.v10Sym03_not_commutes_realE",
     "DoubleDeal.Security.generated_encrypt_realKey_not_v10Sym_equivariant",
 }
+# proofs/megadreifach/lean: the 8 hash KATs in MegaDreifachHeavy/Kat.lean (the names
+# match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats.json;
+# vectors/json_to_lean.py --check checks their statements against the JSON).
+MD_LEAN = ROOT.parent / "megadreifach" / "lean"
+MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"
+MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
+                     ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
+                      "multi_56", "multi_100"]}
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
     "v9-deprecated": {"dir": ROOT.parent / "deprecated" / "doubledeal-v9" / "lean", "mode": "list",
@@ -87,13 +117,50 @@ PACKAGES = {
         "min": 1,
         "required": HEAVY_THEOREMS,
     },
+    "megadreifach": {
+        "dir": MD_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": 500,  # sanity: the audit must actually see the library
+        "required": {
+            "MegaDreifach.Link2.v_Hash_refines",
+            "MegaDreifach.Link2.v_Hash_refines_array",
+            "MegaDreifach.Link2.v_MegaDreifach_refines",
+            "MegaDreifach.Link2.v_Hash_eq_hashBlocks",
+            "MegaDreifach.Link2.em_block_refines",
+            "MegaDreifach.Link2.position_to_bytes_refines_gen",
+            "MegaDreifach.Link2.even_perm_rank_big_refines_gen",
+            "MegaDreifach.Link2.big_mul_gen_refines",
+            "MegaDreifach.Link2.phi_chunk_refines",
+            "MegaDreifach.Link2.pad_message_refines",
+        },
+    },
+    "megadreifach-heavy": {
+        "dir": MD_LEAN,
+        "axioms": "AxiomsHeavy.lean",
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": len(MD_HEAVY_THEOREMS),
+        "required": MD_HEAVY_THEOREMS,
+    },
+}
+# Heavy-library registries, checked in both modes of each family (so the default
+# job notices a dropped or renamed heavy target). exact: the source must declare
+# exactly the registered theorems; otherwise it must declare at least them.
+REGISTRIES = {
+    "security": {"dir": HEAVY_DIR, "theorems": HEAVY_THEOREMS, "exact": True,
+                 "what": "HEAVY_THEOREMS"},
+    "megadreifach": {"dir": MD_HEAVY_DIR, "theorems": MD_HEAVY_THEOREMS, "exact": False,
+                     "what": "MD_HEAVY_THEOREMS"},
 }
 
 
-def heavy_source_theorems():
-    """Fully qualified names of the theorems declared in DoubleDealSecurityHeavy/."""
+def heavy_source_theorems(heavy_dir=HEAVY_DIR):
+    """Fully qualified names of the theorems declared in a heavy source dir."""
     names = set()
-    for path in sorted(HEAVY_DIR.rglob("*.lean")):
+    for path in sorted(heavy_dir.rglob("*.lean")):
         text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
         ns = re.findall(r"^namespace\s+(\S+)", text, flags=re.M)
         prefix = (ns[0] + ".") if ns else ""
@@ -103,13 +170,16 @@ def heavy_source_theorems():
     return names
 
 
-def heavy_registry_problems():
-    src = heavy_source_theorems()
-    bad = [f"heavy theorem {n} is not listed in HEAVY_THEOREMS" for n in sorted(src - HEAVY_THEOREMS)]
-    bad += [f"stale HEAVY_THEOREMS entry {n} (not declared in DoubleDealSecurityHeavy/)"
-            for n in sorted(HEAVY_THEOREMS - src)]
+def heavy_registry_problems(reg):
+    src = heavy_source_theorems(reg["dir"])
+    what, names, where = reg["what"], reg["theorems"], reg["dir"].name + "/"
+    bad = []
+    if reg["exact"]:
+        bad += [f"heavy theorem {n} is not listed in {what}" for n in sorted(src - names)]
+    bad += [f"{what} entry {n} is not declared in {where} (dropped or renamed?)"
+            for n in sorted(names - src)]
     if not src:
-        bad.append("no theorems found in DoubleDealSecurityHeavy/ (heavy target missing?)")
+        bad.append(f"no theorems found in {where} (heavy target missing?)")
     return bad
 
 
@@ -123,6 +193,14 @@ def main(argv) -> int:
         return 2
     cfg = PACKAGES[pkg]
     axioms = cfg.get("axioms", "Axioms.lean")
+    if cfg["mode"] == "all":
+        # `#audit_all` lives in the shared core-only package proofs/audit
+        build = subprocess.run(["lake", "build", "AuditAll"], cwd=cfg["dir"],
+                               capture_output=True, text=True)
+        if build.returncode != 0:
+            print(build.stdout + build.stderr, file=sys.stderr)
+            print(f"check_axioms: {pkg}: could not build AuditAll (proofs/audit)", file=sys.stderr)
+            return 1
     proc = subprocess.run(["lake", "env", "lean", axioms], cwd=cfg["dir"],
                           capture_output=True, text=True)
     out = proc.stdout + proc.stderr
@@ -135,12 +213,15 @@ def main(argv) -> int:
     bad = []
     found = [(n, {a.strip() for a in axs.split(",") if a.strip()}) for n, axs in REPORT.findall(out)]
     found += [(n, set()) for n in re.findall(r"'(\S+?)' does not depend on any axioms", out)]
+    full = cfg.get("key", "user") == "full"
     for name, axs in found:
-        # audit private theorems under their user-facing name, in every mode;
-        # a private and a public theorem with the same user name must not merge
-        user = re.sub(r"^_private\.[\w.']+?\.0\.", "", name)
+        # default: audit private theorems under their user-facing name; a private and
+        # a public theorem with the same user name must not merge. key "full": the
+        # constant name (distinct private constants stay distinct).
+        user = name if full else re.sub(r"^_private\.[\w.']+?\.0\.", "", name)
         if user in seen:
-            bad.append(f"duplicate audited name {user} (private/public collision)")
+            bad.append(f"duplicate audited name {user} (private/public collision)"
+                       if not full else f"duplicate axiom report for {user}")
         seen[user] = axs
         reports += 1
     if cfg["mode"] == "all":
@@ -161,8 +242,9 @@ def main(argv) -> int:
     known_sorry = cfg["known_sorry"]
     if len(expected) < cfg["min"]:
         bad.append(f"only {len(expected)} theorems audited (expected at least {cfg['min']})")
-    if pkg.startswith("security"):
-        bad += heavy_registry_problems()
+    for fam, reg in REGISTRIES.items():
+        if pkg == fam or pkg == fam + "-heavy":
+            bad += heavy_registry_problems(reg)
     for name in sorted(cfg.get("required", set()) - set(seen)):
         bad.append(f"required theorem {name} was not reported by the audit")
     for name in sorted(known_sorry - set(seen)):
@@ -195,6 +277,11 @@ def main(argv) -> int:
         print(f"check_axioms: security: the {len(HEAVY_THEOREMS)} theorems of the heavy library "
               "DoubleDealSecurityHeavy are NOT in this audit; they are audited separately by "
               "`check_axioms.py security-heavy` (CI job doubledeal-security-heavy)")
+    if pkg == "megadreifach":
+        print("check_axioms: megadreifach: the heavy library MegaDreifachHeavy (the "
+              f"{len(MD_HEAVY_THEOREMS)} KAT theorems and their step lemmas) is NOT in this "
+              "audit; it is audited by `check_axioms.py megadreifach-heavy` (CI job "
+              "megadreifach-heavy)")
     return 1 if bad else 0
 
 

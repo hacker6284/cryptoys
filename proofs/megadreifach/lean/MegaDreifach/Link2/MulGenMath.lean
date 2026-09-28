@@ -7,6 +7,8 @@ import MegaDreifach.Link2.MulLeft
 
 namespace MegaDreifach.Link2
 
+/-- `getD` at an in-range index. Core Lean v4.14 has no `List.getD_eq_getElem`
+    (only `getD_eq_getElem?_getD`), so it is stated here. -/
 theorem getD_eq_getElem' (l : List Nat) (i : Nat) (h : i < l.length) :
     l.getD i 0 = l[i] := by
   simp [List.getD, List.getElem?_eq_getElem h]

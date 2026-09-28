@@ -11,6 +11,7 @@ import MegaDreifach.Rank
 import MegaDreifach.IV
 import MegaDreifach.Chain
 import MegaDreifach.Vectors
+import MegaDreifach.Hex
 import MegaDreifach.VectorCheck
 import MegaDreifach.Link2
 import MegaDreifach.Em

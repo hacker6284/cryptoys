@@ -3,6 +3,13 @@
  "packages":
  [{"type": "path",
    "scope": "",
+   "name": "audit",
+   "manifestFile": "lake-manifest.json",
+   "inherited": false,
+   "dir": "./../../audit",
+   "configFile": "lakefile.toml"},
+  {"type": "path",
+   "scope": "",
    "name": "DoubleDeal",
    "manifestFile": "lake-manifest.json",
    "inherited": false,

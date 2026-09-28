@@ -12,9 +12,6 @@ import MegaDreifach.Link2.MulWide
 
 namespace MegaDreifach.Link2
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 private theorem fits51 : FitsLen 51 := by
   unfold FitsLen i64MaxNat
   decide

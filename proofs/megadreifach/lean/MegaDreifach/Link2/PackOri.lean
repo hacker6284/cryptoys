@@ -457,9 +457,6 @@ private theorem filledL_two :
 private def rawProd (a b : Nat) : Array Int :=
   embed [a * b % limbBase, a * b / limbBase]
 
-private theorem toPure_eq_ok {α} (a : α) :
-    (Applicative.toPure.1 a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 private theorem match_ok_cont {σ ρ α} (s : σ)
     (onRet : ρ → Except SudoRt.Trap α)
     (onBrk onCont : σ → Except SudoRt.Trap α) :
@@ -489,10 +486,6 @@ private theorem match_pure_brk {σ ρ α} (s : σ)
       | Except.ok (SudoRt.Flow.brk s') => onBrk s'
       | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
   rfl
-
-private theorem bind_pure_flow {σ ρ β} (fl : SudoRt.Flow σ ρ)
-    (f : SudoRt.Flow σ ρ → Except SudoRt.Trap β) :
-    (pure fl >>= f) = f fl := rfl
 
 private theorem flowCont_brk (x : Array Int × Int) :
     (match SudoRt.Flow.cont (σ := Array Int × Int) (ρ := Megadreifach.BigInt) x with

@@ -14,9 +14,6 @@ import MegaDreifach.Link2.FromBe
 
 namespace MegaDreifach.Link2
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 /-- `256^3 = 16_777_216` still fits in one limb. -/
 theorem pow256_three_lt_limb : 256 ^ 3 < limbBase := by
   unfold limbBase

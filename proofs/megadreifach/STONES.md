@@ -27,7 +27,7 @@ A green Lean build is not a security claim.
 | M10 | F3 blank rounds are pure group ops (t=12) — well-defined, deterministic | **Proved** (algebraic) | `IV.lean`: `f3_12`, `f3Iter_deterministic`. Concrete Up+1 face-turn is an argument, not a cubie table. **Open:** instantiating M10 with the real F3 step, which acts on `Position × Grip` (`Em.f3Step` / `Em.f3Iter`), not `Position → Position`. |
 | M11 | IV-COOK12 is a fixed legal position | **Proved** (list predicates) | `IV.lean`: `ivCook12Of_legal`, `ivCook12_lists_legal` (kernel `decide` on the COOK12 arrays). Face-turn generator is hypothesized. `Link2/EmIv.lean`: `ivCook12_isLegal` gives legality of the concrete IV directly (no hypothesized generator), `ivCook12_eq_of` shows it is `ivCook12Of` at the algebraic unit turn, `iv_cook12_refines` links it to Generated. A general `hpres` (face turns preserve `isLegal`) is still open. |
 | M12 | MD chaining: multi-block compose of DM; digest of final `h` | **Proved** (algebraic) **and linked to Generated** | `Chain.lean`: `mdChain`, `hashBlocks_eq_digest_of_final`, `digestOf_length`. `Link2/VHash.lean`: `v_Hash_eq_hashBlocks` instantiates `dm := fun h b => Em.dmStep h (phiUnrank b)`, `rank := rankPosition`, `iv := Em.ivCook12`, blocks = `fromBE` of the 28-byte chunks of `pad msg`. Hypothesis: `PadWf msg`. Trusts Link 1 (sudo → Generated emit). |
-| M13 | Vector agreement: proof-package digests of exported KATs match `kats/megaminx_hash_kats.json` | **Proved** (8/8) | `lean/MegaDreifachHeavy/Kat.lean` (non-default lean_lib `MegaDreifachHeavy`, CI job `megadreifach-heavy`): `kat_empty`, `kat_short_abc`, `kat_short_one`, `kat_edge_27`, `kat_edge_28`, `kat_edge_29`, `kat_multi_56`, `kat_multi_100`, each `Megadreifach.v_Hash (embed msg) = .ok (embed digest)`. Algebraic side by kernel `decide!` (no `native_decide`); `kat_*_hex` checks the bytes against `Vectors.lean`'s hex. About 8 min of kernel time. Algorithm is still `Generated.v_Hash`; no handwritten `Hash`. |
+| M13 | Vector agreement: proof-package digests of exported KATs match `kats/megaminx_hash_kats.json` | **Proved** (8/8) | `lean/MegaDreifachHeavy/Kat.lean` (non-default lean_lib `MegaDreifachHeavy`, CI job `megadreifach-heavy`): `kat_empty`, `kat_short_abc`, `kat_short_one`, `kat_edge_27`, `kat_edge_28`, `kat_edge_29`, `kat_multi_56`, `kat_multi_100`, each stated once as `Megadreifach.v_Hash (embed (hexBytes vec_<name>.msgHex)) = .ok (embed (hexBytes vec_<name>.digestHex))` on the generated `Vectors.lean` (`vectors/json_to_lean.py --check` ties it to `primitives/hash/megadreifach/kats/megaminx_hash_kats.json` and checks this statement shape; CI job `megadreifach-lean`). Algebraic side (`alg_<name>`) by kernel `decide!` (no `native_decide`). About 8 min of kernel time. Algorithm is still `Generated.v_Hash`; no handwritten `Hash`. |
 
 ## Explicitly out of scope (do not claim)
 
@@ -69,10 +69,11 @@ Do **not** claim M9 from the Python scan. Relative recipes are **disproved** (do
 proofs/megadreifach/
   README.md
   STONES.md
-  check_axioms.py       # axiom gate: every theorem of MegaDreifach / MegaDreifachHeavy
   lean/                 # Lake project (toolchain 4.14.0, no Mathlib)
                         #   MegaDreifach (default lib), MegaDreifachHeavy (KATs, non-default)
-  vectors/              # KAT copy for Lean metadata agreement
+  vectors/              # KAT copy; json_to_lean.py generates lean/MegaDreifach/Vectors.lean
+proofs/audit/          # shared `#audit_all` package (core-only)
+proofs/doubledeal/check_axioms.py   # the shared axiom gate (modes megadreifach, megadreifach-heavy)
 primitives/hash/megadreifach/   # published primitive: SPEC + megadreifach.sudo + kats/
 ```
 

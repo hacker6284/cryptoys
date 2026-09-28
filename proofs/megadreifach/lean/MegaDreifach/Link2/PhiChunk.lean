@@ -319,9 +319,6 @@ theorem phiLeftover_full (rank : Nat) (hrank : rank < factorial 52) :
   fresh array, i.e. `List.eraseIdx`. Same shape as `EvenRank.eraseStep`, but
   the emitter's return payload is `Array Int`. -/
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 private theorem beq_ofNat (a b : Nat) :
     SudoRt.SEq.beq (a : Int) (b : Int) = decide (a = b) := by
   rw [sEq_int, decide_eq_decide]

@@ -1,16 +1,16 @@
 /-
   `#audit_all Root`: print the axioms of EVERY theorem declared in a module under
-  `Root` (private ones included), then `audited N`. Used by `Axioms.lean`
-  (Root = MegaDreifach) and `AxiomsHeavy.lean` (Root = MegaDreifachHeavy);
-  then an ERROR for every `.lean` file under `Root/` that this environment did not
-  load (so an unimported module cannot escape the audit; errors cannot be spoofed
-  by printed output), and an ERROR `DUP n` for every name declared under `Root` that
-  more than one module declares. Must run from the package directory.
-  Parsed by `../check_axioms.py`.
+  `Root` (private ones included), then `audited N`; then an ERROR for every `.lean`
+  file under `Root/` that this environment did not load (so an unimported module
+  cannot escape the audit; errors cannot be spoofed by printed output), and an
+  ERROR `DUP n` for every name declared under `Root` that more than one module
+  declares (see below). Must run from the package directory.
 
-  Copy of `proofs/doubledeal/security/DoubleDealSecurity/Audit.lean` (that package
-  depends on Mathlib; this one stays dependency-free, so it cannot import it).
-  Non-default lean_lib `MegaDreifachAudit`; `../check_axioms.py` builds it.
+  The one copy of this command. It lives in its own core-only lake package
+  (`proofs/audit`, no Mathlib) so that every audited package can require it by
+  path: the DoubleDeal security package (Mathlib) and MegaDreifach
+  (dependency-free). Used by their `Axioms.lean` / `AxiomsHeavy.lean`; the output
+  is parsed by the single gate `proofs/doubledeal/check_axioms.py`.
 -/
 import Lean
 

@@ -15,9 +15,6 @@ namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 private theorem sum_limb_fits (x q c : Nat) (hx : x < limbBase) (hq : q < limbBase)
     (hc : c < limbBase) : FitsLen (x * q + c) := by
   have hx' : x ≤ limbBase - 1 := by omega

@@ -57,4 +57,11 @@ theorem ivCook12_isLegal : isLegal Em.ivCook12 := by
   · unfold Injective; decide!
   · unfold Injective; decide!
 
+/-- The concrete IV as `posOfLists` of the M11 reference arrays. -/
+theorem ivCook12_eq_lists :
+    Em.ivCook12 = Em.posOfLists ivCook12Cp ivCook12Co ivCook12Ep ivCook12Eo := by
+  have h := posOfLists_listOf Em.ivCook12
+  rw [ivCook12_lists.1, ivCook12_lists.2.1, ivCook12_lists.2.2.1, ivCook12_lists.2.2.2] at h
+  exact h.symm
+
 end MegaDreifach.Link2

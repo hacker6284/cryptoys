@@ -18,13 +18,6 @@ namespace MegaDreifach.Link2
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 100000
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
-private theorem bind_pure_flow {σ ρ β} (fl : SudoRt.Flow σ ρ)
-    (f : SudoRt.Flow σ ρ → Except SudoRt.Trap β) :
-    (pure fl >>= f) = f fl := rfl
-
 private theorem not_neg (k : Nat) : decide (Int.ofNat k < 0) = false := by
   rw [decide_eq_false_iff_not]
   exact Int.not_lt.mpr (Int.ofNat_zero_le _)

@@ -1,7 +1,10 @@
 /-
-  E_m — algebraic model of the MegaDreifach block map (G2 body + F3 tail).
+  E_m — the MegaDreifach block map (G2 body + F3 tail) over `Position`.
 
-  Mirrors `primitives/hash/megadreifach/megadreifach.sudo` (normative):
+  A typed transliteration of `primitives/hash/megadreifach/megadreifach.sudo`
+  (normative), not an independent specification: same procedures, same control
+  flow, tables copied verbatim. The Link 2 theorems show that the emitted code
+  computes this function; they do not validate the sudo's design. It covers:
   `face_move`, `face_turn`, `inverse`, `noon_phys`, `spin_about_up`,
   `abs_reorient`, `colour_on`, `corner_slot`, `colours_at`, `recipe_a`,
   `g2_step`, `f3_step`, `em_block`, and the Davies–Meyer step

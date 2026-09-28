@@ -14,6 +14,12 @@ rev = "v4.14.0"
 name = "DoubleDeal"
 path = "../lean"
 
+# `#audit_all` for Axioms.lean / AxiomsHeavy.lean: the shared core-only audit
+# package (also required by proofs/megadreifach/lean). Gate: ../check_axioms.py.
+[[require]]
+name = "audit"
+path = "../../audit"
+
 [[lean_lib]]
 name = "DoubleDealSecurity"
 

@@ -160,9 +160,6 @@ theorem evenRank_lt_countN (n : Nat) (perm : List Nat) (h : PermNWf n perm) (hn 
 
 /-! ## Emitted loop -/
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 theorem limbsOfNat_small (a : Nat) (ha : a < limbBase) : limbsOfNat a = natLimbs a := by
   by_cases h0 : a = 0
   · simp [h0, limbsOfNat, natLimbs_zero]

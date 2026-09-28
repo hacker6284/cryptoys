@@ -183,4 +183,39 @@ theorem absReorient?_isSome_iff :
       (absReorient? c1 c2).isSome == decide (c2 ∈ nbrs c1))) = true := by
   decide!
 
+/-! ## List views of positions (used by the heavy KAT witnesses) -/
+
+theorem listOfOri_getD {n m : Nat} (f : Fin n → Fin m) (s : Fin n) :
+    (listOfOri f).getD s.val 0 = (f s).val := by
+  have hs : s.val < (List.range n).length := by rw [List.length_range]; exact s.isLt
+  unfold listOfOri
+  rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_eq_getElem hs]
+  simp [s.isLt]
+
+theorem rd_listOfOri {n m : Nat} (hm : 0 < m) (f : Fin n → Fin m) (s : Fin n) :
+    Em.rd (listOfOri f) m hm s.val = f s := by
+  apply Fin.ext
+  show (listOfOri f).getD s.val 0 % m = (f s).val
+  rw [listOfOri_getD]
+  exact Nat.mod_eq_of_lt (f s).isLt
+
+theorem listOf_eq_listOfOri {n : Nat} (f : Fin n → Fin n) : listOf f = listOfOri f := rfl
+
+theorem posOfLists_listOf (p : Position) :
+    Em.posOfLists (listOf p.cp) (listOfOri p.co) (listOf p.ep) (listOfOri p.eo) = p := by
+  apply Position.ext <;> funext s <;> simp only [Em.posOfLists, listOf_eq_listOfOri] <;>
+    exact rd_listOfOri _ _ s
+
+/-- List view of a position. -/
+def posL (p : Position) : List (List Nat) :=
+  [listOf p.cp, listOfOri p.co, listOf p.ep, listOfOri p.eo]
+
+/-- A kernel check on the list view `posL p` gives a `Position` equation. -/
+theorem eq_posOfLists_of_posL (p : Position) (a b c d : List Nat)
+    (h : posL p = [a, b, c, d]) : p = Em.posOfLists a b c d := by
+  unfold posL at h
+  simp only [List.cons.injEq] at h
+  obtain ⟨ha, hb, hc, hd, -⟩ := h
+  rw [← ha, ← hb, ← hc, ← hd, posOfLists_listOf]
+
 end MegaDreifach.Link2

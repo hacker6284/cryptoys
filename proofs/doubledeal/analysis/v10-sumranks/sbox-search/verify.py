@@ -1,4 +1,4 @@
-"""Verify sbox.c SumRanks against the merged v10 spec: sum_ranks vectors, the 6 v10 encrypt vectors
+"""Verify sbox.c SumRanks against the frozen v10 spec: sum_ranks vectors, the 6 v10 encrypt vectors
 (via ddport.encrypt with SumRanks swapped for the C S-box), and ddport on random grids."""
 import sys, json, random
 from pathlib import Path
@@ -11,7 +11,7 @@ import ddport as P, sb
 from dd_v8 import lay_cm, scoop_cm
 def to52(g): return [g[r][c] for r in range(4) for c in range(13)]
 def from52(x): return [list(x[13*r:13*r+13]) for r in range(4)]
-d = json.load(open(REPO + "/proofs/doubledeal/vectors/doubledeal_vectors.json"))
+d = json.load(open(REPO + "/proofs/deprecated/doubledeal-v10/vectors/doubledeal_v10_vectors.json"))  # frozen v10 (live vectors are v11)
 nsr = 0
 for v in d["vectors"]:
     if v["kind"] == "sum_ranks":

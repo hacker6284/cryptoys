@@ -1,5 +1,5 @@
 """cand.c == candidates.py for every variant; v9 variant == frozen v9 vectors;
-W5c variant == current v10 encrypt vectors; decrypt inverts."""
+W5c variant == frozen v10 encrypt vectors; decrypt inverts."""
 import sys, json, random, pathlib, numpy as np
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -11,7 +11,7 @@ for v in d["vectors"]:
         assert C.encrypt(v["message"], v["key"], 0) == v["cipher"]
         assert cport.enc(np.array([v["message"]]), cport.real_keys(np.array([v["key"]])), "F6", 0)[0].tolist() == v["cipher"]
         nv += 1
-d10 = json.loads((HERE.parents[1] / "vectors/doubledeal_vectors.json").read_text())
+d10 = json.loads((HERE.parents[2] / "deprecated/doubledeal-v10/vectors/doubledeal_v10_vectors.json").read_text())  # frozen v10 (live vectors are v11)
 W5c = C.VARIANTS["W5c"]; nw = nt = 0
 for v in d10["vectors"]:
     if v["kind"] == "encrypt":

@@ -33,3 +33,12 @@ for _ in range(300):
     m = list(range(52)); rng.shuffle(m); k = list(range(52)); rng.shuffle(k)
     assert P.encrypt(m, k, 8) == V8.encrypt(m, k)
 print('v8 port == frozen dd_v8.py on 300 random (m,k)')
+# Frozen-v10 analysis checks (need numpy and gcc; ~4 s). They read the frozen v10 vectors, so they
+# break loudly here instead of silently when the live vectors move.
+import subprocess
+AN = REPO / 'proofs/doubledeal/analysis/v10-sumranks'
+for script in (AN / 'check_cand.py', AN / 'sbox-search/verify.py'):
+    r = subprocess.run([sys.executable, str(script)], cwd=script.parent, capture_output=True, text=True)
+    if r.returncode != 0:
+        print(r.stdout, r.stderr); print('FAIL', script.relative_to(REPO)); sys.exit(1)
+    print(script.relative_to(REPO), 'ok:', r.stdout.strip().splitlines()[-1][:120])

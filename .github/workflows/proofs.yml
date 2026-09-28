@@ -9,6 +9,7 @@ on:
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
       - "tools/emit_lean.py"
+      - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
       - ".github/actions/lean-security/**"
   pull_request:
@@ -19,6 +20,7 @@ on:
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
       - "tools/emit_lean.py"
+      - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
       - ".github/actions/lean-security/**"
   workflow_dispatch:

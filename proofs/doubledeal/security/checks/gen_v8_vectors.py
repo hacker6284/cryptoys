@@ -4,6 +4,9 @@ import json, sys
 from pathlib import Path
 PKG = Path(__file__).resolve().parents[1]
 REPO = PKG.parents[2]
+sys.path.insert(0, str(REPO / 'tools'))
+from gencheck import parser, emit
+args = parser(__doc__).parse_args()
 V = {v['name']: v for v in json.loads((REPO / 'proofs/deprecated/doubledeal-v8/vectors/doubledeal_v8_vectors.json').read_text())['vectors']}
 def L(x): return '[' + ', '.join(map(str, x)) + ']'
 out = ['''/-
@@ -29,7 +32,4 @@ for n in ['unkeyed_full_identity', 'unkeyed_full_reverse', 'unkeyed_full_mul17']
 out.append("end DoubleDeal.Security.V8Vectors\n")
 text = '\n'.join(out)
 dst = PKG / 'DoubleDealSecurity/V8Vectors.lean'
-if '--check' in sys.argv:
-    ok = dst.read_text() == text
-    print('V8Vectors.lean up to date' if ok else 'V8Vectors.lean is stale'); sys.exit(0 if ok else 1)
-dst.write_text(text)
+sys.exit(emit(dst, text, args.check))

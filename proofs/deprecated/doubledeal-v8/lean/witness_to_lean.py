@@ -9,7 +9,6 @@ Usage: python3 witness_to_lean.py [--check]
 """
 from __future__ import annotations
 
-import argparse
 import json
 import sys
 from pathlib import Path
@@ -17,6 +16,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 JSON_PATH = HERE.parent / "witness_v8.json"
 LEAN_PATH = HERE / "DoubleDealV8" / "WitnessData.lean"
+sys.path.insert(0, str(HERE.parents[3] / "tools"))
+from gencheck import parser, emit  # noqa: E402
 
 
 def lean_list(xs: list[int]) -> str:
@@ -33,7 +34,7 @@ def check_doc(doc: dict) -> None:
         raise SystemExit("witness_v8.json: tau must be two distinct card ids")
 
 
-def emit(doc: dict) -> str:
+def emit_text(doc: dict) -> str:
     check_doc(doc)
     x, y = (int(t) for t in doc["tau"])
     return f"""/-
@@ -60,21 +61,8 @@ end DoubleDealV8.Witness
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--check", action="store_true", help="fail if the committed Lean is stale")
-    args = ap.parse_args()
-    text = emit(json.loads(JSON_PATH.read_text()))
-    if args.check:
-        have = LEAN_PATH.read_text() if LEAN_PATH.exists() else ""
-        if have != text:
-            print(f"{LEAN_PATH} is stale relative to {JSON_PATH}; re-run witness_to_lean.py",
-                  file=sys.stderr)
-            return 1
-        print(f"ok {LEAN_PATH.name} matches {JSON_PATH.name}")
-        return 0
-    LEAN_PATH.write_text(text)
-    print(f"wrote {LEAN_PATH}")
-    return 0
+    args = parser(__doc__).parse_args()
+    return emit(LEAN_PATH, emit_text(json.loads(JSON_PATH.read_text())), args.check)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,9 @@ usage: python3 witness_to_lean.py [--check]"""
 import json, sys
 from pathlib import Path
 here = Path(__file__).resolve().parent
+sys.path.insert(0, str(here.parents[3] / 'tools'))
+from gencheck import parser, emit
+args = parser(__doc__).parse_args()
 w = json.loads((here.parent / 'witness_v10.json').read_text())
 L = lambda xs: '[' + ', '.join(map(str, xs)) + ']'
 text = f'''/-
@@ -34,8 +37,4 @@ def mixSigmaJson : List Nat := {L(w["mix_sigma"])}
 end DoubleDealV10.Witness
 '''
 p = here / 'DoubleDealV10' / 'WitnessData.lean'
-if '--check' in sys.argv:
-    assert p.read_text() == text, 'WitnessData.lean is stale; re-run witness_to_lean.py'
-    print('OK WitnessData.lean matches witness_v10.json')
-else:
-    p.parent.mkdir(exist_ok=True); p.write_text(text); print('wrote', p)
+sys.exit(emit(p, text, args.check))

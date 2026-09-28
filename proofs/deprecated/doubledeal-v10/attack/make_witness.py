@@ -10,6 +10,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[2] / 'doubledeal/security/checks'))
 import ddport as P
+sys.path.insert(0, str(P.REPO / 'tools'))
+from gencheck import parser, emit
+args = parser(__doc__).parse_args()
 
 A, B = 12, 51
 sw = lambda xs: [B if x == A else A if x == B else x for x in xs]
@@ -39,8 +42,6 @@ w = {
 }
 text = json.dumps(w, indent=1) + "\n"
 path = HERE.parent / 'witness_v10.json'
-if '--check' in sys.argv:
-    assert path.read_text() == text, 'witness_v10.json is stale'
-    print('OK witness_v10.json reproduces (ddport v10)')
-else:
-    path.write_text(text); print('wrote', path, 'positions', w['walk_positions'], 'tries', tries)
+if not args.check:
+    print('positions', w['walk_positions'], 'tries', tries)
+sys.exit(emit(path, text, args.check))

@@ -1,0 +1,4 @@
+rule 60, 2000000 random (deck, position 3-cycle)
+3-cycle spread all     : cases 2000000  min 2  p1 11  p10 24  median 41  mean 38.72  max 52  | spread=2 0.00006  <=4 0.00061  <=8 0.00434
+3-cycle spread, i<40   : cases 1980255  min 2  p1 14  p10 25  median 41  mean 39.02  max 52  | spread=2 0.00000  <=4 0.00001  <=8 0.00012
+  spread=3 fraction (includes every case where the walk is unchanged): 0.000212

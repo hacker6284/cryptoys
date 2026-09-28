@@ -1,0 +1,9 @@
+rule 62 kmax 20 restart 0: min spread 2 (swap 12,47)
+rule 62 kmax 20 restart 1: min spread 2 (swap 18,38)
+rule 62 kmax 20 restart 2: min spread 2 (swap 16,46)
+rule 62 kmax 20 restart 3: min spread 2 (swap 18,50)
+rule 62 kmax 20 restart 4: min spread 2 (swap 18,51)
+rule 62 kmax 20 restart 5: min spread 2 (swap 17,42)
+rule 62 kmax 20 restart 6: min spread 2 (swap 13,43)
+rule 62 kmax 20 restart 7: min spread 2 (swap 17,51)
+RESULT rule 62, swaps with i<20, gap>=17: lowest spread found 2 at swap (12,47) [upper bound on the true minimum]; deck: 5 3 23 12 50 4 28 36 2 31 13 7 41 6 0 33 1 44 10 45 20 42 21 46 15 27 22 39 38 14 35 43 37 48 49 24 32 9 47 29 11 26 40 34 18 16 8 51 30 19 17 25

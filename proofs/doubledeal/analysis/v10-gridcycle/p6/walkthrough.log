@@ -1,0 +1,41 @@
+deck (first 16): 9C JS TD 5C 4H 8C 6S 3S 5S 3D QH AH 7C 7D 2C 4D
+ENCRYPT  (finger f, marker t; step of a card = +suit rows (C0 H1 S2 D3), +rank columns, mod 4 / mod 13)
+ 0 9C -> r2c0  (start seat)
+ 1 JS: f r2c0  + 9C -> target r2c9  free -> sits there; finger r2c9 
+ 2 TD: f r2c9  + JS -> target r0c7  free -> sits there; finger r0c7 
+ 3 5C: f r0c7  + TD -> target r3c4  free -> sits there; finger r3c4 
+ 4 4H: f r3c4  + 5C -> target r3c9  free -> sits there; finger r3c9 
+ 5 8C: f r3c9  + 4H -> target r0c0  free -> sits there; finger r0c0 
+ 6 6S: f r0c0  + 8C -> target r0c8  free -> sits there; finger r0c8 
+ 7 3S: f r0c8  + 6S -> target r2c1  free -> sits there; finger r2c1 
+ 8 5S: f r2c1  + 3S -> target r0c4  free -> sits there; finger r0c4 
+ 9 3D: f r0c4  + 5S -> target r2c9  TAKEN by JS; scan row t0+S=2 from col 9+11=7 -> r2c7  (1 seat checked); marker 0->1; NUDGE: finger = target + JS = r0c7 
+10 QH: f r0c7  + 3D -> target r3c10 free -> sits there; finger r3c10
+11 AH: f r3c10 + QH -> target r0c9  free -> sits there; finger r0c9 
+12 7C: f r0c9  + AH -> target r1c10 free -> sits there; finger r1c10
+13 7D: f r1c10 + 7C -> target r1c4  free -> sits there; finger r1c4 
+14 2C: f r1c4  + 7D -> target r0c11 free -> sits there; finger r0c11
+15 4D: f r0c11 + 2C -> target r0c0  TAKEN by 8C; scan row t1+C=1 from col 0+8=8 -> r1c8  (1 seat checked); marker 1->2; NUDGE: finger = target + 8C = r0c8 
+table (rows 0..3):
+  r0  8C  5H  JH  KD  5S  2D  KH  TD  6S  AH  AS  2C  8D
+  r1  TS  AC  6D  6H  7D  AD  JC  6C  4D  3H  7C  5D  QC
+  r2  9C  3S  7H  3C  9D  TC  8H  3D  KC  JS  QS  9H  QD
+  r3  9S  7S  TH  4S  5C  JD  2H  4C  KS  4H  QH  8S  2S
+DECRYPT  (reads the table; ticks off seats as it goes; the same finger/marker bookkeeping)
+ 0 start seat r2c0  holds 9C
+ 1 f r2c0  + 9C -> r2c9  not ticked -> card JS; finger r2c9 
+ 2 f r2c9  + JS -> r0c7  not ticked -> card TD; finger r0c7 
+ 3 f r0c7  + TD -> r3c4  not ticked -> card 5C; finger r3c4 
+ 4 f r3c4  + 5C -> r3c9  not ticked -> card 4H; finger r3c9 
+ 5 f r3c9  + 4H -> r0c0  not ticked -> card 8C; finger r0c0 
+ 6 f r0c0  + 8C -> r0c8  not ticked -> card 6S; finger r0c8 
+ 7 f r0c8  + 6S -> r2c1  not ticked -> card 3S; finger r2c1 
+ 8 f r2c1  + 3S -> r0c4  not ticked -> card 5S; finger r0c4 
+ 9 f r0c4  + 5S -> r2c9  already ticked (blocker JS): scan row 2 from col 7 over UNticked seats -> r2c7  = 3D; marker 0->1; finger r0c7 
+10 f r0c7  + 3D -> r3c10 not ticked -> card QH; finger r3c10
+11 f r3c10 + QH -> r0c9  not ticked -> card AH; finger r0c9 
+12 f r0c9  + AH -> r1c10 not ticked -> card 7C; finger r1c10
+13 f r1c10 + 7C -> r1c4  not ticked -> card 7D; finger r1c4 
+14 f r1c4  + 7D -> r0c11 not ticked -> card 2C; finger r0c11
+15 f r0c11 + 2C -> r0c0  already ticked (blocker 8C): scan row 1 from col 8 over UNticked seats -> r1c8  = 4D; marker 1->2; finger r0c8 
+decrypted deck equals the original: True

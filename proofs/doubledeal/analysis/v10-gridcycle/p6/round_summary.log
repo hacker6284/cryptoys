@@ -1,0 +1,5 @@
+V60 round: N=400000/same-suit pair; SR-stage mean 4.51e-03; round mean 6.69e-05; GC|SR 0.015; worst 7C<->TC 45/400000=1.12e-04 CI[8.4e-05,1.5e-04]
+V61 round: N=400000/same-suit pair; SR-stage mean 4.51e-03; round mean 4.92e-05; GC|SR 0.011; worst 6C<->9C 31/400000=7.75e-05 CI[5.5e-05,1.1e-04]
+V62 round: N=400000/same-suit pair; SR-stage mean 4.51e-03; round mean 5.55e-05; GC|SR 0.012; worst 3H<->5H 40/400000=1.00e-04 CI[7.3e-05,1.4e-04]
+V63 round: N=400000/same-suit pair; SR-stage mean 4.51e-03; round mean 6.64e-05; GC|SR 0.015; worst 2S<->KS 45/400000=1.12e-04 CI[8.4e-05,1.5e-04]
+V64 round: N=400000/same-suit pair; SR-stage mean 4.51e-03; round mean 5.41e-05; GC|SR 0.012; worst 6H<->KH 37/400000=9.25e-05 CI[6.7e-05,1.3e-04]

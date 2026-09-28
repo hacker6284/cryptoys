@@ -34,9 +34,23 @@ static int scan_rows(const uint8_t *occ, int row, int c0, int k, int *t, int mar
         }
     }
 }
+/* Phase 6 anti-resync variants (ghost finger + rule-1 scan "blocker sends you" unless noted):
+    60  A : column move = rank(card) + current finger row (mod 13); row move = suit.
+    61  A': column move = rank(card) * (finger row + 1) (mod 13); row move = suit.
+    62  B : blocker nudges the finger: after a blocked placement the next step starts at
+            T + step(blocker) instead of T. Unblocked placements unchanged.
+    63  C : row move = suit(card) + marker (mod 4); the marker advances on each block as in rule 1.
+    64  A+B combined. */
+static inline int target_of(const St *S, int pc) {
+    int s = pc / 13, rk = pc % 13 + 1, tr = (S->fr + s) & 3, tc = (S->fc + rk) % 13;
+    if (V == 60 || V == 64) tc = (S->fc + rk + S->fr) % 13;
+    else if (V == 61) tc = (S->fc + rk * (S->fr + 1)) % 13;
+    else if (V == 63) tr = (S->fr + s + S->t) & 3;
+    return tr*13+tc;
+}
 static int choose(const uint8_t *occ, const int *g, St *S, int pc) {
-    int s = pc / 13, rk = pc % 13 + 1;
-    int tr = (S->fr + s) & 3, tc = (S->fc + rk) % 13, tgt = tr*13+tc, seat, steps = 0;
+    int s = pc / 13, rk = pc % 13 + 1; (void)rk;
+    int tgt = target_of(S, pc), tr = tgt / 13, tc = tgt % 13, seat, steps = 0; int nudge = -1;
     int ghost = V >= 20 && V != 24 && V != 35;
     if (!occ[tgt]) seat = tgt;
     else switch (V) {
@@ -69,6 +83,11 @@ static int choose(const uint8_t *occ, const int *g, St *S, int pc) {
             else if (V == 27 || V == 29) seat = scan_rows(occ, hr, hc, 1, &S->t, 0, &steps);
             else { int t0 = S->t, o = g[hr*13+hc]; seat = scan_rows(occ, (t0 + o / 13) & 3, hc, 1, &S->t, 0, &steps); S->t = (t0 + 1) & 3; }
         } break;
+        case 60: case 61: case 62: case 63: case 64: {
+            int o = g[tgt], hc = (tc + o % 13 + 1) % 13, t0 = S->t;
+            seat = scan_rows(occ, (t0 + o / 13) & 3, hc, 1, &S->t, 0, &steps); S->t = (t0 + 1) & 3;
+            if (V == 62 || V == 64) nudge = ((tr + o / 13) & 3) * 13 + hc;
+        } break;
         case 31: case 33: case 35: {
             /* 31: ghost + hop once; if blocked, scan row marker + suit(occupant of the TARGET)
                    from the hop column; marker +1.
@@ -82,7 +101,8 @@ static int choose(const uint8_t *occ, const int *g, St *S, int pc) {
         default: fprintf(stderr, "unknown variant\n"); exit(1);
     }
     if (steps && counting) { scanHist[steps < 63 ? steps : 63]++; scanN += steps; if (steps > scanMax) scanMax = steps; }
-    if (ghost) { S->fr = tr; S->fc = tc; } else { S->fr = seat / 13; S->fc = seat % 13; }
+    if (nudge >= 0) { S->fr = nudge / 13; S->fc = nudge % 13; }
+    else if (ghost) { S->fr = tr; S->fc = tc; } else { S->fr = seat / 13; S->fc = seat % 13; }
     return seat;
 }
 static int walk(const int *d, int *seat) {
@@ -90,7 +110,7 @@ static int walk(const int *d, int *seat) {
     for (int i = 0; i < 52; i++) {
         int cur;
         if (i == 0) cur = 26;
-        else { int pc = d[i-1]; int tgt = ((S.fr + pc / 13) & 3) * 13 + (S.fc + pc % 13 + 1) % 13;
+        else { int pc = d[i-1]; int tgt = target_of(&S, pc);
                cur = choose(occ, g, &S, pc); nov += cur != tgt; }
         occ[cur] = 1; seat[i] = cur; g[cur] = d[i];
     }

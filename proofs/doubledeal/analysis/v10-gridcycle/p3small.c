@@ -22,6 +22,7 @@
     47  side pile: a bumped occupant leaves the table onto a pile; the new card takes the target;
         next step from the target by the new card; at the end the pile is dealt into the empty
         seats in reading order, first-bumped card first. 48: same, last-bumped card first.
+    60-64 Phase 6 anti-resync variants (A, A', B, C, A+B; definitions in cand.c).
    usage: p3small R C V   -> prints #distinct outputs of n! decks, and one collision if any */
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +38,15 @@ static void mix(const int *d, int *out) {
     for (int i = 0; i < n; i++) {
         int x = d[i];
         if (i == 0) { int s = fr*C+fc; occ[s] = 1; g[s] = x; drv = x; continue; }
+        if (V >= 60) {   /* Phase 6 anti-resync variants, ghost finger + rule-1 scan (see cand.c) */
+            int tr = (fr + drv / C + (V == 63 ? t : 0)) % R, rk = drv % C + 1;
+            int tc = V == 60 || V == 64 ? (fc + rk + fr) % C : V == 61 ? (fc + rk * (fr + 1)) % C : (fc + rk) % C, T = tr*C+tc;
+            if (!occ[T]) { occ[T] = 1; g[T] = x; fr = tr; fc = tc; drv = x; continue; }
+            int o = g[T], t0 = t, s = scan(occ, (t0 + o / C) % R, (tc + o % C + 1) % C, &t, 0); t = (t0 + 1) % R;
+            occ[s] = 1; g[s] = x; drv = x;
+            if (V == 62 || V == 64) { fr = (tr + o / C) % R; fc = (tc + o % C + 1) % C; } else { fr = tr; fc = tc; }
+            continue;
+        }
         int tr = (fr + drv / C) % R, tc = (fc + drv % C + 1) % C, T = tr*C+tc;
         if (!occ[T]) { occ[T] = 1; g[T] = x; fr = tr; fc = tc; drv = x; continue; }
         if (V >= 50 && V <= 53) {

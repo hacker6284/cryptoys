@@ -8,6 +8,8 @@
 > see [PHASE4.md](PHASE4.md).
 > **Phase 5** (diffusion / swap spread, MixColumns-style): branch analogue is exactly 4 for every one-pass rule;
 > rule 1 is at least as good as rule 2 on every spread statistic; see [PHASE5.md](PHASE5.md).
+> **Phase 6** (anti-resync tweaks to rule 1): "blocker nudges the finger" (B) and "row-dependent step" (A) clear
+> the bar (decryptable, worst pair <= 1/64, mean spread above v10); see [PHASE6.md](PHASE6.md).
 
 **Kind:** analysis. Nothing here is a theorem, a spec change or a security claim. No bit-security
 figures. The normative GridCycle is SPEC §3.5 / §4.4 and `mix_columns` in

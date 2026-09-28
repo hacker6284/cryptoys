@@ -1,7 +1,8 @@
 /-
   KAT metadata next to the proof-only package. Hexes refreshed 2026-09-24
   to current megadreifach.sudo (Python and emitted Lean agree).
-  Full digest evaluation in *this* package is still M13 OPEN; algorithm
+  The digests are kernel-checked against Generated.v_Hash (M13) in the
+  heavy library, MegaDreifachHeavy/Kat.lean (`kat_*`, `kat_*_hex`). Algorithm
   Hash is Generated.v_Hash. See proofs/ANTI_DRIFT.md.
 -/
 namespace MegaDreifach.Vectors

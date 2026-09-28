@@ -233,3 +233,7 @@ jobs:
       - name: Known-answer metadata (compiled Lean)
         working-directory: proofs/megadreifach/lean
         run: lake exe megadreifach
+      # The heavy library MegaDreifachHeavy (8 KAT kernel witnesses) is not built
+      # here; it is built and audited by megadreifach-heavy in proofs-heavy.yml.
+      - name: Axiom audit of every MegaDreifach theorem (only propext, Classical.choice, Quot.sound)
+        run: python3 proofs/megadreifach/check_axioms.py

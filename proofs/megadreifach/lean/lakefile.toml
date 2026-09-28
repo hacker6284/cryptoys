@@ -13,3 +13,14 @@ name = "MegaDreifach"
 [[lean_exe]]
 name = "megadreifach"
 root = "Main"
+
+# Heavy kernel witnesses (the 8 hash KATs, ~8 min of `decide!`). Not a default
+# target: built and audited by the separate `megadreifach-heavy` job
+# (proofs-heavy.yml).
+[[lean_lib]]
+name = "MegaDreifachHeavy"
+
+# `#audit_all` command used by Axioms.lean / AxiomsHeavy.lean (../check_axioms.py
+# builds it). Not a default target.
+[[lean_lib]]
+name = "MegaDreifachAudit"

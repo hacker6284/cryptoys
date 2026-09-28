@@ -1,9 +1,15 @@
 name: proofs-heavy
 
-# Heavy kernel witnesses of the DoubleDeal security package (lean_lib
-# DoubleDealSecurityHeavy, not a default build target, so the normal
-# doubledeal-security job in proofs.yml stays fast). Runs on PRs that touch what
-# those proofs depend on, on pushes to main that touch them, weekly and by hand.
+# Heavy kernel witnesses that are not default build targets, so the normal jobs
+# in proofs.yml stay fast:
+#   - doubledeal-security-heavy: lean_lib DoubleDealSecurityHeavy of the DoubleDeal
+#     security package;
+#   - megadreifach-heavy: lean_lib MegaDreifachHeavy (the 8 hash KATs as kernel
+#     `decide!` theorems about Generated.v_Hash, about 8 min of kernel time).
+# Runs on PRs that touch what those proofs depend on, on pushes to main that touch
+# them, weekly and by hand. `on:` path filters are per workflow, so the `changes`
+# job gates each heavy job on its own path set (schedule and workflow_dispatch run
+# both; a change to this workflow file runs both).
 on:
   pull_request:
     paths:
@@ -13,6 +19,8 @@ on:
       - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
       - ".github/workflows/proofs-heavy.yml"
       - ".github/actions/lean-security/**"
+      - "proofs/megadreifach/**"             # MegaDreifach model, Generated/, check_axioms.py
+      - "primitives/hash/megadreifach/**"    # the sudo spec its Generated/ is emitted from
   push:
     branches: [main]
     paths:
@@ -22,6 +30,8 @@ on:
       - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
       - ".github/workflows/proofs-heavy.yml"
       - ".github/actions/lean-security/**"
+      - "proofs/megadreifach/**"             # MegaDreifach model, Generated/, check_axioms.py
+      - "primitives/hash/megadreifach/**"    # the sudo spec its Generated/ is emitted from
   schedule:
     - cron: "17 4 * * 1"  # Mondays 04:17 UTC
   workflow_dispatch:
@@ -34,7 +44,42 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    # Which heavy job this PR / push needs (both on schedule and workflow_dispatch).
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      doubledeal: ${{ steps.filter.outputs.doubledeal }}
+      megadreifach: ${{ steps.filter.outputs.megadreifach }}
+    steps:
+      # Only PR / push events are filtered; on schedule and workflow_dispatch the
+      # filter is skipped (empty outputs) and both heavy jobs run via their `if:`.
+      - uses: actions/checkout@v5
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+      - uses: dorny/paths-filter@v3
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        id: filter
+        with:
+          filters: |
+            doubledeal:
+              - "proofs/doubledeal/security/**"
+              - "proofs/doubledeal/lean/**"
+              - "proofs/doubledeal/check_axioms.py"
+              - "primitives/cipher/doubledeal/**"
+              - ".github/workflows/proofs-heavy.yml"
+              - ".github/actions/lean-security/**"
+            megadreifach:
+              - "proofs/megadreifach/**"
+              - "primitives/hash/megadreifach/**"
+              - ".github/workflows/proofs-heavy.yml"
+
   doubledeal-security-heavy:
+    needs: changes
+    if: >-
+      github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.doubledeal == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -47,3 +92,21 @@ jobs:
       - name: Axiom audit of every DoubleDealSecurityHeavy theorem (registry must match the source)
         working-directory: proofs/doubledeal/security
         run: python3 ../check_axioms.py security-heavy
+
+  megadreifach-heavy:
+    needs: changes
+    if: >-
+      github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.megadreifach == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate; includes MegaDreifachHeavy/)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach/lean --exclude Generated
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/megadreifach/lean
+          build-args: "MegaDreifachHeavy"
+      - name: Axiom audit of every MegaDreifachHeavy theorem (only propext, Classical.choice, Quot.sound)
+        run: python3 proofs/megadreifach/check_axioms.py heavy

@@ -361,14 +361,13 @@ theorem rowD_comp (τ : Relabel) (x : Fin 13 → Fin 52) (a : Equiv.Perm (Fin 13
 
 /-- **Lemma 3 (row chain)** (PROOF.md §2): with the targets `θ π r` depending
     only on earlier rows, the decks satisfying all four row equations number at
-    most `Σ_π Π_r ρ(row r)` (the paper proves equality). Proof: split `π` into
-    its row sets and four arrangements (`sum_mul_card_shuf`), then
-    `nested_count` over the four rows with Lemma 2(a) / the definition of `ρ`
-    for each row. -/
-theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 13)
+    exactly `Σ_π Π_r ρ(row r)`. Proof: split `π` into its row sets and four
+    arrangements (`sum_mul_card_shuf`), then `nested_count_eq` over the four rows
+    with Lemma 2(a) / the definition of `ρ` for each row. -/
+theorem rowChain_eq (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 13)
     (hθ : ∀ π π' r, (∀ r' < r, rowOf π r' = rowOf π' r') → θ π r = θ π' r) :
     ((univ.filter fun π : Equiv.Perm (Fin 52) =>
-        ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r)).card : ℚ) ≤
+        ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r)).card : ℚ) =
       ∑ π : Equiv.Perm (Fin 52), ∏ r, rho τ (rowOf π r) := by
   classical
   -- per-deck count of good row orders
@@ -390,9 +389,9 @@ theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 
     intro π σ σ' r h
     rw [rowOf_mul_rowShuf, rowOf_mul_rowShuf, h]
   have hper : ∀ π, (univ.filter fun σ : Fin 4 → Equiv.Perm (Fin 13) =>
-      ∀ r, Q π r σ).card ≤ ∏ r, Nr π r := by
+      ∀ r, Q π r σ).card = ∏ r, Nr π r := by
     intro π
-    refine nested_count 4 (Q π) (Nr π) ?_ ?_
+    refine nested_count_eq 4 (Q π) (Nr π) ?_ ?_
     · intro r σ σ' h
       have hθ' : θ (π * rowShuf σ) r = θ (π * rowShuf σ') r :=
         hθ _ _ r fun r' hr' => hrows π σ σ' r' (h r' hr'.le)
@@ -417,9 +416,9 @@ theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 
           have h' : 13 * (univ.filter fun a : Equiv.Perm (Fin 13) =>
               rowS τ (x ∘ a) = t * rowD τ x).card = 13 * Nat.factorial 12 := h
           omega
-        exact this.le
+        exact this
       · push_neg at hD
-        simp only [hD, mul_zero, le_refl]
+        simp only [hD, mul_zero]
   -- average over row orders
   have havg := sum_mul_card_shuf rowShuf
     (fun π =>
@@ -435,21 +434,29 @@ theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 
     rw [← sum_boole]
   have hrhs : ∀ π, (∑ σ : Fin 4 → Equiv.Perm (Fin 13),
       if ∀ r, rowS τ (rowOf (π * rowShuf σ) r) = θ (π * rowShuf σ) r *
-        rowD τ (rowOf (π * rowShuf σ) r) then (1 : ℚ) else 0) ≤
+        rowD τ (rowOf (π * rowShuf σ) r) then (1 : ℚ) else 0) =
       ((Nat.factorial 13 : ℕ) : ℚ) ^ 4 * ∏ r, rho τ (rowOf π r) := by
     intro π
     rw [sum_boole]
     have := hper π
     have hq :
-        ((univ.filter fun σ : Fin 4 → Equiv.Perm (Fin 13) => ∀ r, Q π r σ).card : ℚ) ≤
+        ((univ.filter fun σ : Fin 4 → Equiv.Perm (Fin 13) => ∀ r, Q π r σ).card : ℚ) =
         ∏ r, (Nr π r : ℚ) := by exact_mod_cast this
     simp only [hNr, prod_mul_distrib, prod_const, card_univ, Fintype.card_fin] at hq
     exact hq
   have hf : (0 : ℚ) < ((Nat.factorial 13 : ℕ) : ℚ) ^ 4 := by positivity
   rw [hlhs]
-  refine le_of_mul_le_mul_left ?_ hf
+  refine mul_left_cancel₀ hf.ne' ?_
   rw [havg, mul_sum]
-  exact sum_le_sum fun π _ => hrhs π
+  exact sum_congr rfl fun π _ => hrhs π
+
+/-- The upper-bound half of `rowChain_eq` (the form the `≤ 1/64` proof uses). -/
+theorem rowChain_le (τ : Relabel) (θ : Equiv.Perm (Fin 52) → Fin 4 → ZMod 13)
+    (hθ : ∀ π π' r, (∀ r' < r, rowOf π r' = rowOf π' r') → θ π r = θ π' r) :
+    ((univ.filter fun π : Equiv.Perm (Fin 52) =>
+        ∀ r, rowS τ (rowOf π r) = θ π r * rowD τ (rowOf π r)).card : ℚ) ≤
+      ∑ π : Equiv.Perm (Fin 52), ∏ r, rho τ (rowOf π r) :=
+  (rowChain_eq τ θ hθ).le
 
 /-- `ρ ≤ 1`. -/
 theorem rho_le_one (τ : Relabel) (x : Fin 13 → Fin 52) : rho τ x ≤ 1 := by

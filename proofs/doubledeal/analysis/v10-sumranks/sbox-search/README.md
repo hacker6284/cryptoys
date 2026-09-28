@@ -14,8 +14,9 @@ on `ddport`. `logs/verify.log` also records `../check_cand.py` (W5c 6/6).
 
 * **Does anything beat 1/64?** Only the 51 exact symmetries (the v10Sym group: shift every rank by a, and/or
   XOR every suit label by x). They pass SumRanks with probability 1 by construction; the iff theorem says so, and
-  20M/20M decks confirm it. Leave them out and **nothing reaches 1/64**. The worst difference measured is a **3-cycle of three
-  cards of the same suit, at exactly 9/1105 ≈ 1/123**. That is 1.9× below 1/64.
+  20M/20M decks confirm it. Leave them out and **nothing reaches 1/64**. The worst difference measured is a
+  **3-cycle of three cards of the same suit, at exactly 9/1105 ≈ 1/123**. That is 1.9× below 1/64. The value
+  9/1105 for A♣→2♣→3♣ is now proved in Lean (`sumRanksV10_survival_threeCycle`); that it is the maximum is not.
 * **Does anything beat the old 1/221?** **Yes: every same-suit 3-cycle (1/123, about 1.8× worse than 1/221).**
   Nothing else measured does. 4-cycles, double swaps, same-rank moves, suit maps on subsets, rotations, block moves and every
   position difference all come in at or below 1/221. The same-suit swap is still exactly 1/221.
@@ -86,7 +87,7 @@ practice.
    x·(0 ⊕ 1 ⊕ w ⊕ w²) ⊕ (x⊕x⊕x⊕x) = 0. These are the only changes invisible on every deck (proved:
    `sumRanksV10_commutes_iff`). They "beat" 1/64 by design, and SumRanks alone does nothing about them. Through a whole
    round (GridCycle included), 0 of 1M decks survive (`logs/round_check.log`).
-2. **Same-suit 3-cycle (1/123, the real worst).** Suits don't change, so all 13 column totals are blind to it. Only
+2. **Same-suit 3-cycle (1/123, the worst measured).** Suits don't change, so all 13 column totals are blind to it. Only
    the rows can notice. Each row that holds a moved card gives one equation mod 13: sum of (13−k)·(rank change) = 0.
    * A lone moved card in a row passes only if it sits in column 0, where the weight 13 ≡ 0 (1 in 13).
    * A swap in one row can never balance: its two changes are +d and −d at different weights.

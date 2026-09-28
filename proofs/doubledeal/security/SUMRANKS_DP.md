@@ -4,21 +4,29 @@
 outside the 52-element symmetry group `v10Sym`. Then at most `52!/64` of the `52!` decks satisfy
 `sumRanksV10 (τ·g) = τ·(sumRanksV10 g)`. It is not a security statement about the cipher.
 
+**Also proved: one exact value.** For the one same-suit 3-cycle `threeCycle` = A♣→2♣→3♣ (cards `0 → 1 → 2`,
+the permutation of `../analysis/v10-sumranks/sbox-search/`), exactly `(9/1105)·52!` decks survive
+(`sumRanksV10_survival_threeCycle`, `ThreeCycle.lean`). So some non-symmetry survives on more than `52!/123`
+decks (`sumRanksV10_survival_lower`), and the `1/64` constant is within a factor `1105/(9·64) ≈ 1.92` of tight.
+This is the exact count for that one permutation, not a supremum.
+
 Not formalised:
 * the paper's sharper constant `0.012768` (PROOF.md §3 (A3), §5);
 * the paper's Case B bound `1/425`;
-* the measured worst case `9/1105` (same-suit 3-cycle; `../analysis/v10-sumranks/sbox-search/`). PROOF.md §5b
-  argues that it is the exact maximum. That corollary is computer-assisted: it relies on the computer-checked
-  Lemma R, and it is not formalised in Lean and not independently reviewed.
+* that `9/1105` is the maximum over all non-symmetries. PROOF.md §5b argues this; the argument is
+  computer-assisted (it relies on the computer-checked Lemma R), not formalised in Lean and not independently
+  reviewed. Only the value `9/1105` for the one 3-cycle above is proved.
 
 **Where.**
 * Lean sources: `DoubleDealSecurity/SumRanksDP/`. They are part of the default `DoubleDealSecurity`
-  build and the `#audit_all` axiom audit. `check_axioms.py security` requires both main theorems.
+  build and the `#audit_all` axiom audit. `check_axioms.py security` requires both main theorems and the two
+  3-cycle theorems.
   * `Standalone.lean`: Mathlib only.
   * `Decomp.lean`: shared decomposition lemmas.
   * `Main.lean`: the main proof.
+  * `ThreeCycle.lean`: the exact 3-cycle count.
 * Paper proof: `sumranks-dp-paper/PROOF.md`. `PROOF.md §n` below and in the Lean comments refers to it.
-* Axioms of both main theorems: `propext`, `Classical.choice`, `Quot.sound`. There is no `sorry`, no
+* Axioms of all four theorems: `propext`, `Classical.choice`, `Quot.sound`. There is no `sorry`, no
   `native_decide` and no new axiom.
 
 ```lean
@@ -32,10 +40,20 @@ theorem sumRanksV10_survival_le (τ : Relabel) (h : ¬ ∃ a x, τ = v10Sym a x)
 `sumRanksV10_survival_le'` is the same bound, with the filter written out and `Nat.factorial 52` on the
 right.
 
+```lean
+theorem sumRanksV10_survival_threeCycle :
+    1105 * (survivors threeCycle).card = 9 * Fintype.card (Equiv.Perm (Fin 52))
+-- threeCycle = Equiv.swap 0 2 * Equiv.swap 0 1   (0 ↦ 1 ↦ 2 ↦ 0, i.e. A♣ → 2♣ → 3♣)
+
+theorem sumRanksV10_survival_lower :
+    ∃ τ : Relabel, (¬ ∃ a x, τ = v10Sym a x) ∧
+      Fintype.card (Equiv.Perm (Fin 52)) < 123 * (survivors τ).card
+```
+
 ## Lemma map
 
-The **S** file is `Standalone.lean` (namespace `SRDP`), **D** is `Decomp.lean` and **M** is `Main.lean`
-(namespace `DoubleDeal.Security.SumRanksDP`).
+The **S** file is `Standalone.lean` (namespace `SRDP`), **D** is `Decomp.lean`, **M** is `Main.lean` and **T**
+is `ThreeCycle.lean` (namespace `DoubleDeal.Security.SumRanksDP`).
 
 | # | PROOF.md | Lemma | File | Statement (informal) |
 |---|---|---|---|---|
@@ -50,8 +68,8 @@ The **S** file is `Standalone.lean` (namespace `SRDP`), **D** is `Decomp.lean` a
 | 9 | §2 Lemma 2(a) | `lemma2a` | S | if `D ≠ 0`, each value of `S` is taken by exactly `13!/13` arrangements |
 | 10 | §2 Lemma 2(b) | `lemma2b` | S | if value `v` occurs `z` times and the row is not constant, each value of `S` is taken at most `13!/(z+1)` times |
 | 11 | §2 Lemma 2(c) | `lemma2c`, `sum_of_cancel` | S | a cancelling pair `{v¹¹, v+u, v−u}` never gives `S = 0` |
-| 12 | §2 Lemma 3 | `nested_count`, `sum_mul_card_shuf` | D | nested fibre count; averaging over per-row / per-column reorderings |
-| 13 | §2 Lemma 3 | `rowChain_le` | M | decks passing the four row conditions `≤ Σ_π Π_r ρ(row r)` |
+| 12 | §2 Lemma 3 | `nested_count`, `nested_count_eq`, `sum_mul_card_shuf` | D | nested fibre count (`≤` and exact); averaging over per-row / per-column reorderings |
+| 13 | §2 Lemma 3 | `rowChain_eq`, `rowChain_le` | M | decks passing the four row conditions `= Σ_π Π_r ρ(row r)` |
 | 14 | §2 | `rho_le_hA`, `rho_le_third`, `rho_eq_zero_of_cancel`, `rho_of_single` | M | pointwise bounds on `ρ` from Lemma 2 |
 | 15 | §3 | `maxClass_le_50`, `exists_vStar`, `nStar_le_50` | S, M | the largest δ-class has at most 50 cards |
 | 16 | §3 | `survivors_le_rhoSum` | M | survivors `≤ Σ_π Π_r ρ` |
@@ -71,6 +89,11 @@ The **S** file is `Standalone.lean` (namespace `SRDP`), **D** is `Decomp.lean` a
 | 30 | §4 Thm B | `EB_le` | S | `E_B(m) ≤ 1/64` for `2 ≤ m ≤ 39` (table B; the maximum is `E_B(2) = 1/68`) |
 | 31 | §4 | `caseB_bound` | M | ε not constant ⇒ at most `52!/64` survivors |
 | 32 | §5 | `sumRanksV10_survival_le`, `sumRanksV10_survival_le'` | M | the main theorem |
+| 33 | §1 Lemma 1, Cor. 1 | `rowCond_iff`, `rowsDone_rel_of_traj`, `colsDone_threeCycle`, `survives_threeCycle_iff` | T | the 3-cycle keeps suits, so it survives iff the four row equations hold |
+| 34 | §5b | `count_triples`, `count_S3` | T | `σ i₀ + σ i₁ + 11·σ i₂ ≡ 0` on exactly `13!/11` arrangements |
+| 35 | §5b | `rho_threeCycle` | T | `ρ = 1, 1/13, 1/13, 1/11` for a row holding `0, 1, 2, 3` moved cards |
+| 36 | §5b | `rhoSum_threeCycle`, `survivors_threeCycle_card` | T | survivors `= Σ_π Π_r ρ = 1080·49!` |
+| 37 | §5b | `sumRanksV10_survival_threeCycle`, `sumRanksV10_survival_lower` | T | exactly `(9/1105)·52!` survivors; the `1/64` constant is within a factor 2 of tight |
 
 ## Differences from the paper
 
@@ -78,7 +101,8 @@ The **S** file is `Standalone.lean` (namespace `SRDP`), **D** is `Decomp.lean` a
   `E_A ≤ 1/100`) and `n* = 50` ((A1)).
 * **Case B** uses only the column conditions, with the refinement `fB 2 0 = 1/4`. It proves `≤ 1/64`,
   not the paper's `1/425`, and it needs no hypothesis on δ.
-* `rowChain_le` and `colChain_le` are stated as `≤`. The paper proves equality, but only `≤` is needed.
+* The row chain is proved with equality (`rowChain_eq`, used for the exact 3-cycle count); the bound uses
+  its `≤` half `rowChain_le`. `colChain_le` is stated as `≤`: the paper proves equality, but only `≤` is needed.
 
 ## Kernel checks
 
@@ -92,9 +116,12 @@ it adds no axiom. Approximate times:
 | `perms4_eq` | explicit list of the 24 permutations of `Fin 4` | ≈0.5 s |
 | `LA2_spec` | convolution square used by table A | ≈0.3 s |
 | `TB1_lt`, `tableB_nat` | table B | < 0.5 s |
+| `card_good_triples` | 3-cycle: the `156` seat triples in `(Fin 13)³` with `S = 0` (`13³` cases) | ≈2.4 s |
+| `card_distinct_triples` | 3-cycle: the `1716` distinct seat triples (`13³` cases) | ≈1.5 s |
+| `sum_fN_fin` | 3-cycle: the row-vector sum `180` (`4⁴` cases) | ≈0.4 s |
 
-`Standalone.lean` compiles in about 40 s and `Main.lean` in about 30 s. Both are light enough for the
-default build.
+`Standalone.lean` compiles in about 40 s, `Main.lean` in about 30 s and `ThreeCycle.lean` in about 10 s. All
+are light enough for the default build.
 
 ## Manual check (not in CI)
 

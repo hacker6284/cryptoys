@@ -1,11 +1,7 @@
 import { bindTeachKeys, headingId, nextGroup, setDisabled, stampHeadingIds } from "./teach.js";
 
-export function sessionScope(root, signal) {
+export function sessionScope(root) {
     const abort = new AbortController();
-    if (signal) {
-        if (signal.aborted) abort.abort();
-        else signal.addEventListener("abort", () => abort.abort(), { once: true });
-    }
     return {
         abort,
         listen: { signal: abort.signal },
@@ -149,6 +145,12 @@ export function bindTransport(root, session, listen) {
     const { play, step, skipToEnd, reset, showSpec } = session;
     const { trace, teaching, viewedIndex, stepBy, jumpTo, stageKey, roundKey } = session;
     const $ = (sel) => root.querySelector(sel);
+    const jumpGroup = (key, dir) => void jumpTo(nextGroup(trace(), Math.max(0, viewedIndex()), key, dir) - 1, false);
+    const jumps = {
+        back: [-1], fwd: [1],
+        "stage-back": [-1, stageKey], "stage-fwd": [1, stageKey],
+        "round-back": [-1, roundKey], "round-fwd": [1, roundKey],
+    };
     $("#play")?.addEventListener("click", () => void play(), listen);
     $("#skip-end")?.addEventListener("click", () => skipToEnd(), listen);
     $("#step")?.addEventListener("click", () => step(), listen);
@@ -158,19 +160,17 @@ export function bindTransport(root, session, listen) {
 
     root.querySelectorAll("[data-jump]").forEach((button) => {
         button.addEventListener("click", () => {
-            const jump = button.dataset.jump;
-            const dir = jump.endsWith("back") ? -1 : 1;
-            if (jump === "back" || jump === "fwd") return void stepBy(dir);
-            const key = jump.startsWith("stage") ? stageKey : roundKey;
-            void jumpTo(nextGroup(trace(), Math.max(0, viewedIndex()), key, dir) - 1, false);
+            const [dir, key] = jumps[button.dataset.jump] ?? [];
+            if (!dir) return;
+            if (key) jumpGroup(key, dir);
+            else void stepBy(dir);
         }, listen);
     });
 
     bindTeachKeys({
         step: (dir) => { if (teaching()) void stepBy(dir); },
         stage: (dir) => {
-            if (!teaching() || !trace().length) return;
-            void jumpTo(nextGroup(trace(), Math.max(0, viewedIndex()), stageKey, dir) - 1, false);
+            if (teaching() && trace().length) jumpGroup(stageKey, dir);
         },
         home: () => { if (teaching()) void jumpTo(-1, false); },
         end: () => { if (teaching() && trace().length) void jumpTo(trace().length - 1, false); },

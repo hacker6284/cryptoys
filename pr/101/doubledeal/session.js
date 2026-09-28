@@ -17,10 +17,9 @@ export function createDoubleDealSession({
     specUrl,
     root = document,
     exposeTeach = false,
-    signal,
     liveDigest = false,
 } = {}) {
-    const { abort, listen, $, $$ } = sessionScope(root, signal);
+    const { abort, listen, $, $$ } = sessionScope(root);
 
     const messageEl = $("#message");
     const keyEl = $("#key");

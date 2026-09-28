@@ -33,11 +33,10 @@ export function createScrambleSession({
     specUrl,
     root = document,
     exposeTeach = false,
-    signal,
     puzzle = "3x3x3",
     swapPuzzle,
 } = {}) {
-    const { abort, listen, $, $$ } = sessionScope(root, signal);
+    const { abort, listen, $, $$ } = sessionScope(root);
 
     const input = $("#message");
     const status = $("#status");

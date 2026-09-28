@@ -190,8 +190,7 @@ function createDock(algo, parts) {
             root.hidden = false;
             root.classList.add("on");
         },
-        close(session) {
-            session?.dispose();
+        close() {
             if (specObjectUrl) {
                 URL.revokeObjectURL(specObjectUrl);
                 specObjectUrl = null;
@@ -451,8 +450,9 @@ function createScrambleAdapter() {
             }
         },
         leave() {
-            dock.close(session);
+            session?.dispose();
             session = null;
+            dock.close();
             if (rig) {
                 void rig.settle?.({ snap: true });
                 rig.clearHighlights?.();
@@ -746,8 +746,9 @@ function createDoubleDealAdapter() {
             skipEnter();
             poses?.followLive?.(null);
             poses?.releaseFrame?.();
-            dock.close(session);
+            session?.dispose();
             session = null;
+            dock.close();
             const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
             if (table && !reduced) {
                 clock = createBeatClock({ reduced: false });

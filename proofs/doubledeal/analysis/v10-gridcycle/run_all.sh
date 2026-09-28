@@ -4,6 +4,7 @@ set -e
 cd "$(dirname "$0")"
 ./build.sh
 python3 xcheck.py                      # C model == repo Python port (ddport, checked in CI against vectors)
+python3 candcheck.py > candcheck.log   # cand.c stem/GC, variants.c walkv(V=0) (used by round.c) and gc_mix == ddport
 mkdir -p runs
 for s in 1 2 3 4; do ./survival value 50000 $s > runs/value_$s.txt & ./survival pos 50000 $((s+100)) > runs/pos_$s.txt & done; wait
 python3 agg.py value 10 > survival_value.log; python3 agg.py pos 20 > survival_pos.log

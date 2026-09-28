@@ -120,22 +120,7 @@ static void inv_mix(const int *out, int *hand) {
     uint8_t vis[52]; memset(vis, 0, 52); St S = {2, 0, 0, 0};
     for (int i = 0; i < 52; i++) { int cur = i == 0 ? 26 : choose(vis, out, &S, hand[i-1]); vis[cur] = 1; hand[i] = out[cur]; }
 }
-/* ---- v10 stem (lay_cm, SumRanks v10, ShiftRows, scoop_cm), checked against ddport by candcheck.py ---- */
-static const int LABEL[4] = {0, 2, 3, 1}, TW[4] = {0, 2, 3, 1};
-static void stem(const int *m, int *out) {
-    int g[4][13];
-    for (int k = 0; k < 52; k++) g[k % 4][k / 4] = m[k];
-    for (int a = 1; a <= 4; a++) { int i = a % 4, p = (i + 3) % 4, tot = 0, tmp[13];
-        for (int j = 0; j < 13; j++) tot += (13 - j) * (g[p][j] % 13 + 1);
-        int k = tot % 13; for (int j = 0; j < 13; j++) tmp[j] = g[i][(j + k) % 13]; memcpy(g[i], tmp, sizeof tmp); }
-    for (int a = 1; a <= 13; a++) { int j = a % 13, p = (j + 12) % 13;
-        int v = LABEL[g[1][p] / 13] ^ TW[LABEL[g[2][p] / 13]] ^ TW[TW[LABEL[g[3][p] / 13]]];
-        int su = LABEL[g[0][j] / 13] ^ LABEL[g[1][j] / 13] ^ LABEL[g[2][j] / 13] ^ LABEL[g[3][j] / 13];
-        int sh = v ^ su, col[4]; for (int i = 0; i < 4; i++) col[i] = g[i][j];
-        for (int i = 0; i < 4; i++) g[i][j] = col[((i - sh) % 4 + 4) % 4]; }
-    for (int i = 0; i < 4; i++) { int tmp[13]; for (int j = 0; j < 13; j++) tmp[j] = g[i][(j + i) % 13]; memcpy(g[i], tmp, sizeof tmp); }
-    for (int c = 0, k = 0; c < 13; c++) for (int r = 0; r < 4; r++) out[k++] = g[r][c];
-}
+#include "stem.h"   /* v10 stem (lay_cm, SumRanks v10, ShiftRows, scoop_cm), checked against ddport by candcheck.py */
 static void swapv(const int *d, int *e, int a, int b) { for (int i = 0; i < 52; i++) e[i] = d[i] == a ? b : d[i] == b ? a : d[i]; }
 static long cyc_run(int a, int b, int c, long N) {
     int d[52], e[52], s0[52], s1[52]; long h = 0;
@@ -147,6 +132,7 @@ static long cyc_run(int a, int b, int c, long N) {
 typedef struct { int a, b, c; long h; } Cy;
 static int cmpcy(const void *x, const void *y) { long a = ((Cy*)x)->h, b = ((Cy*)y)->h; return (b > a) - (b < a); }
 int main(int argc, char **argv) {
+    (void)argc;
     V = atoi(argv[1]); char mode = argv[2][0]; char mode2 = argv[2][1]; long N = atol(argv[3]);
     rs ^= strtoull(argv[4],0,10)*0x9E3779B97F4A7C15ULL;
     int d[52], e[52], s0[52], s1[52], x[52], y[52];

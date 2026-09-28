@@ -1,0 +1,11 @@
+variant 0: mean overflows 25.65, mean scan steps per overflow 6.05, non-bijective walks 0, inverse failures 0 / 100000
+variant 1: mean overflows 25.63, mean scan steps per overflow 9.14, non-bijective walks 0, inverse failures 0 / 100000
+variant 2: mean overflows 25.65, mean scan steps per overflow 7.02, non-bijective walks 0, inverse failures 0 / 100000
+variant 3: mean overflows 25.66, mean scan steps per overflow 47.32, non-bijective walks 0, inverse failures 0 / 100000
+variant 5: mean overflows 25.66, mean scan steps per overflow 15.05, non-bijective walks 0, inverse failures 0 / 100000
+variant 6: mean overflows 25.66, mean scan steps per overflow 15.16, non-bijective walks 0, inverse failures 0 / 100000
+variant 7: mean overflows 25.68, mean scan steps per overflow 47.76, non-bijective walks 0, inverse failures 0 / 100000
+variant 8: mean overflows 25.66, mean scan steps per overflow 17.71, non-bijective walks 0, inverse failures 0 / 100000
+variant 9: mean overflows 25.72, mean scan steps per overflow 5.59, non-bijective walks 0, inverse failures 0 / 100000
+variant 10: mean overflows 25.67, mean scan steps per overflow 16.35, non-bijective walks 0, inverse failures 0 / 100000
+variant 11: mean overflows 25.65, mean scan steps per overflow 24.69, non-bijective walks 0, inverse failures 0 / 100000

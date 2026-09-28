@@ -19,7 +19,9 @@ This is not a claim of sudo↔Lean semantic equivalence.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -155,6 +157,36 @@ def write_lake_manifest(generated: Path) -> None:
     )
 
 
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def write_emitted_from(generated: Path, sudo: Path, include_paths: list[Path], commit: str,
+                       ref: str, with_tests: bool) -> None:
+    """Provenance sidecar Generated/EMITTED_FROM.json (written on --install)."""
+    imported = []
+    for inc in include_paths:
+        for child in sorted(inc.glob("*.sudo")):
+            imported.append({
+                "sudo_file": str(child.relative_to(ROOT)),
+                "sudo_sha256": hashlib.sha256(child.read_bytes()).hexdigest(),
+            })
+    stamp = {
+        "sudo_file": str(sudo.relative_to(ROOT)),
+        "sudo_sha256": hashlib.sha256(sudo.read_bytes()).hexdigest(),
+        "sudocode_lean_commit": commit,
+        "sudocode_lean_ref": ref,
+        "terminates_gate": True,
+        "with_tests": with_tests,
+    }
+    if include_paths:
+        stamp["include_paths"] = [str(p.relative_to(ROOT)) for p in include_paths]
+    if imported:
+        stamp["imported_sudo"] = imported
+    path = generated / "EMITTED_FROM.json"
+    path.write_text(json.dumps(stamp, indent=2) + "\n")
+    print(f"wrote {path}")
+
+
 # Committed sidecar files that emit.py does not produce.
 IGNORE_NAMES = {
     "README.md",
@@ -217,7 +249,19 @@ def main() -> int:
     ap.add_argument(
         "--sudocode-dir",
         default="",
-        help="sudocode checkout containing backends/lean and stdlib (or SUDOCODE_DIR)",
+        help="sudocode checkout containing backends/lean and stdlib (default: $SUDOCODE_DIR, "
+             "which proofs/sudocode.sh sets)",
+    )
+    ap.add_argument(
+        "--sudocode-commit",
+        default=os.environ.get("SUDOCODE_COMMIT", ""),
+        help="pinned sudocode commit recorded in EMITTED_FROM.json on --install "
+             "(default: $SUDOCODE_COMMIT)",
+    )
+    ap.add_argument(
+        "--sudocode-ref",
+        default=os.environ.get("SUDOCODE_REF", "main"),
+        help="branch of that commit (default: $SUDOCODE_REF or main)",
     )
     ap.add_argument(
         "-I",
@@ -229,11 +273,16 @@ def main() -> int:
     )
     args = ap.parse_args()
 
-    import os
-
-    sudocode_dir = Path(
-        args.sudocode_dir or os.environ.get("SUDOCODE_DIR", "/tmp/sudocode")
-    ).resolve()
+    sudocode_dir = args.sudocode_dir or os.environ.get("SUDOCODE_DIR", "")
+    if not sudocode_dir:
+        print("set SUDOCODE_DIR or --sudocode-dir (proofs/emit_lean.sh does, via proofs/sudocode.sh)",
+              file=sys.stderr)
+        return 1
+    if args.install and not args.sudocode_commit:
+        print("--install needs --sudocode-commit or SUDOCODE_COMMIT (proofs/sudocode.sh sets it)",
+              file=sys.stderr)
+        return 1
+    sudocode_dir = Path(sudocode_dir).resolve()
     sudoc = Path(args.sudoc or os.environ.get("SUDOC", sudocode_dir / "sudoc/target/release/sudoc"))
     emit_py = sudocode_dir / "backends" / "lean" / "emit.py"
     stdlib = sudocode_dir / "stdlib"
@@ -281,6 +330,8 @@ def main() -> int:
     if args.install:
         install_into(files_dir, Path(args.install).resolve())
         print(f"installed → {args.install}")
+        write_emitted_from(Path(args.install).resolve(), src, include_paths, args.sudocode_commit,
+                           args.sudocode_ref, not args.no_tests)
     return 0
 
 

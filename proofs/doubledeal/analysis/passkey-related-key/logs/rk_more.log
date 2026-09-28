@@ -1,0 +1,75 @@
+$ ./rk 2000000 15 1,13 27,39 12,24 38,50 50,51 38,51 0,51
+rk N=2000000 seed=15 (full v11, K and P uniform, K' = tau K); 0 hits in n samples => 95% upper bound 3/n
+swap 2C<->AH (suit+rank 2 vs 2)
+  [all samples] n=2000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0003 +- 0.0014
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 1.0008 +- 0.0014
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0006 +- 0.0014
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 2000000/0/0.000 r1 0/1773544/7.511 r2 0/0/50.763 r3 0/0/51.000 r4 0/0/50.999 r5 0/0/51.000 r6 0/0/50.999
+  [all six round keys kept K'_r = tau K_r] n=961379
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0009 +- 0.0020
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 1.0018 +- 0.0020
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0006 +- 0.0020
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 961379/0/0.000 r1 0/961379/2.000 r2 0/0/50.697 r3 0/0/51.000 r4 0/0/51.000 r5 0/0/50.999 r6 0/0/50.999
+swap 2S<->AD (suit+rank 4 vs 4)
+  [all samples] n=2000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9991 +- 0.0014
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 0.9988 +- 0.0014
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9990 +- 0.0014
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 2000000/0/0.000 r1 0/1774573/7.488 r2 0/0/50.665 r3 0/0/51.000 r4 0/0/51.001 r5 0/0/50.999 r6 0/0/51.001
+  [all six round keys kept K'_r = tau K_r] n=962120
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9990 +- 0.0020
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 0.9968 +- 0.0020
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9995 +- 0.0020
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 962120/0/0.000 r1 0/962120/2.000 r2 0/0/50.571 r3 0/0/50.999 r4 0/0/51.000 r5 0/0/50.999 r6 0/0/51.000
+swap KC<->QH (suit+rank 13 vs 13)
+  [all samples] n=2000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9990 +- 0.0014
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 0.9993 +- 0.0014
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0007 +- 0.0014
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 2000000/0/0.000 r1 0/1058790/23.367 r2 0/0/50.919 r3 0/0/51.000 r4 0/0/51.000 r5 0/0/50.999 r6 0/0/50.999
+  [all six round keys kept K'_r = tau K_r] n=41284
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0041 +- 0.0097
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 1.0000 +- 0.0096
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0027 +- 0.0096
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 41284/0/0.000 r1 0/41284/2.000 r2 0/0/50.728 r3 0/0/50.995 r4 0/0/50.995 r5 0/0/51.011 r6 0/0/50.997
+swap KS<->QD (suit+rank 15 vs 15)
+  [all samples] n=2000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9995 +- 0.0014
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 0.9999 +- 0.0014
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9989 +- 0.0014
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 2000000/0/0.000 r1 0/1059935/23.324 r2 0/0/50.896 r3 0/0/51.000 r4 0/0/51.001 r5 0/0/50.999 r6 0/0/51.001
+  [all six round keys kept K'_r = tau K_r] n=41431
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0025 +- 0.0096
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 0.9983 +- 0.0096
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0035 +- 0.0096
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 41431/0/0.000 r1 0/41431/2.000 r2 0/0/50.649 r3 0/0/51.005 r4 0/0/51.016 r5 0/0/50.997 r6 0/0/50.997
+swap QD<->KD (suit+rank 15 vs 16)
+  [all samples] n=2000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0012 +- 0.0014
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 1.0007 +- 0.0014
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9995 +- 0.0014
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 2000000/0/0.000 r1 0/16/48.339 r2 0/0/51.000 r3 0/0/50.999 r4 0/0/51.000 r5 0/0/51.000 r6 0/0/51.000
+swap KS<->KD (suit+rank 15 vs 16)
+  [all samples] n=2000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9996 +- 0.0014
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 0.9994 +- 0.0014
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0009 +- 0.0014
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 2000000/0/0.000 r1 0/1514/50.283 r2 0/0/51.001 r3 0/0/51.000 r4 0/0/51.000 r5 0/0/51.000 r6 0/0/50.999
+swap AC<->KD (suit+rank 1 vs 16)
+  [all samples] n=2000000
+    V1 E_K'(P) = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 0.9996 +- 0.0014
+    V2 E_K'(tau P) = tau E_K(P): 0   eq seats vs tau E_K(P) 1.0009 +- 0.0014
+    V3 aligned: E_K'(P') = E_K(P): 0   = E_K(P) o sigma: 0   eq seats 1.0006 +- 0.0014
+    V3 internal state after round r (0 = whitening, 6 = ciphertext): #equal / #differ in exactly 2 seats / mean seats differing (unrelated decks: 0 / ~0 / 51)
+      r0 2000000/0/0.000 r1 0/0/50.747 r2 0/0/51.001 r3 0/0/51.001 r4 0/0/51.000 r5 0/0/50.999 r6 0/0/50.999

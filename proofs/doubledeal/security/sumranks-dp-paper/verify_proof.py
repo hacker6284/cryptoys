@@ -479,8 +479,9 @@ ok(F_tm([50, 2, 0, 0]) == 0 and mc_full(cyc([C('C','2'), C('H','2')]), 400000, 5
 ok(mc_full([v10sym(3, 0)[c] for c in cyc([C('C','2'), C('H','2')])], 400000, 8) == 0, "same-rank swap composed with rank+3 symmetry: 0 in 400k")
 
 # ------------------------------------------------------------------------------------------------
-hdr("7. Corollary (PROOF.md section 5b): the exact supremum over non-symmetries is 9/1105, attained by same-suit 3-cycles\n"
-    "   (uses the computer-checked Lemma R only in the regime n* <= 12)")
+hdr("7. Computer-assisted corollary (PROOF.md section 5b; not formalised in Lean, not independently reviewed):\n"
+    "   max over non-symmetries is 9/1105, attained by same-suit 3-cycles\n"
+    "   (relies on the computer-checked Lemma R, used only in the regime n* <= 12)")
 def rowonly_offs(offs):
     """exact E[prod rho] when the majority delta value is 0 (normalised by a symmetry) and the off cards have values offs."""
     m = len(offs); tot = Fr(0)
@@ -518,4 +519,5 @@ for name, tau in cases[:3]:
     worst_seen = max(worst_seen, mc_full(tau, 400000, 3))
 print(f"   max observed survival over tested tau = {worst_seen:.5f}  (1/64 = 0.015625)")
 ok(worst_seen < 1/64, "no tested non-symmetry tau reaches 1/64")
-print(f"\nTOTAL FAILS: {ok.fails}   ({time.time()-T0:.0f}s)")
+print(f"\nTOTAL FAILS: {ok.fails}")
+print(f"elapsed {time.time()-T0:.0f}s", file=sys.stderr)

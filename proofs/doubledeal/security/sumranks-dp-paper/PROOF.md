@@ -16,8 +16,9 @@ $$
 $$
 If $\tau$ changes every rank by the same amount (Case B below), the bound improves to $52!/425$.
 
-For comparison, the true worst case is the same-suit 3-cycle at $9/1105\approx 1/122.8$
-(`../../analysis/v10-sumranks/README.md`; measured, and derived in §5b with a computer-checked lemma). In Case B the true worst is the same-rank 3-cycle at $1/850$.
+For comparison, the worst case measured is the same-suit 3-cycle at $9/1105\approx 1/122.8$
+(`../../analysis/v10-sumranks/README.md`). §5b argues that this is the exact maximum; that corollary is
+computer-assisted: it relies on the computer-checked Lemma R (§8), and it is not formalised in Lean and not independently reviewed. In Case B the worst case found by the exhaustive scan of §8 is the same-rank 3-cycle at $1/850$.
 
 ---
 
@@ -151,7 +152,7 @@ exactly (`alt_analytic_bigm_output.txt`):
 |---|---|---|---|---|---|---|---|---|---|---|
 | $E_A$ | 0.012651 | 0.009204 | 0.005169 | 0.003975 | 0.000899 | 0.000349 | 0.000133 | 0.000558 | 0.003437 | 0.008416 |
 
-The maximum over $9\le n^\ast\le 49$ is $0.012651$, at $n^\ast=9$. (At $n^\ast=49$, which covers the 3-cycles, the value $0.008416$ is close to the true
+The maximum over $9\le n^\ast\le 49$ is $0.012651$, at $n^\ast=9$. (At $n^\ast=49$, which covers the 3-cycles, the value $0.008416$ is close to the same-suit 3-cycle's
 $9/1105=0.008145$.)
 
 **(A3) $4\le n^\ast\le 12$ (high entropy).** No row can be constant. A row with a repeated $\delta$-value has $\rho\le1/3$ by Lemma 2(b) with its most
@@ -218,11 +219,11 @@ into runs that start with a P or F column. That clustering is rare.
 By (0.1), every $\tau\notin\mathrm{v10Sym}$ is in Case A or Case B. So
 $\Pr[\text{survive}]\le\max(0.012768,\,1/425)=0.012768<1/78.3<1/64$. Multiply by $52!$. $\blacksquare$
 
-### 5b. Corollary: the exact supremum is 9/1105
+### 5b. Computer-assisted corollary (not formalised, not independently reviewed): the maximum is 9/1105
 
-**Corollary.** $\max_{\tau\notin\mathrm{v10Sym}}\Pr[\text{survive}]=9/1105\approx1/122.8$. It is attained by every same-suit 3-cycle.
+**Status.** This corollary is computer-assisted: it relies on the computer-checked Lemma R (§8), and it is not formalised in Lean and not independently reviewed. Lean proves only the $52!/64$ bound of §5. The corollary relies on Lemma R ($p_0\le1/11$ for every nonconstant row with $D=0$), which was checked by exhaustive computer search (`p0scan.c`), not proved by hand; Lemma R is used only in the first regime below. The theorem of §5 does not need it.
 
-This uses the computer-checked Lemma R of §8 ($p_0\le1/11$ for every nonconstant row with $D=0$), but only in the first regime below. The theorem above does not need it.
+**Corollary (computer-assisted).** $\max_{\tau\notin\mathrm{v10Sym}}\Pr[\text{survive}]=9/1105\approx1/122.8$, attained by every same-suit 3-cycle.
 
 *Proof.* Case B gives $\le1/425<9/1105$ (Theorem B). In Case A, split by $n^\ast$:
 * $n^\ast\le12$: all four rows are nonconstant, so by Lemma 2(a) and Lemma R every $\rho(B_r)\le1/11$, and $\Pr\le11^{-4}$.
@@ -256,7 +257,7 @@ Every regime except $n^\ast=49$ is strictly below $9/1105$. A same-suit 3-cycle 
 4. Case B: Lemma 4's table (all 35 multisets). The transfer matrix matches the model on six rank-preserving classes and reproduces `sbox-search/exact.py` (**1/850**, **3/20825**, 0). Lemma 5 was tested with fixed column sets. The bound $\varphi\le f$ was checked on all cases.
 5. The one-parameter tables for (A2), (A3) and Theorem B.
 6. The full model on 43 more non-symmetry τ: the maximum observed is 0.0082 < 1/64.
-7. Corollary 5b (§7 of the output): all three $n^\ast=49$ classes give exactly $9/1105$, and $\max_{13\le n^\ast\le48}E_A=E_A(13)$.
+7. Computer-assisted corollary 5b (§7 of the output; relies on Lemma R, not formalised, not independently reviewed): all three $n^\ast=49$ classes give exactly $9/1105$, and $\max_{13\le n^\ast\le48}E_A=E_A(13)$.
 
 The Case B scan's maximum is also reported restricted to count vectors compatible with $\sum\varepsilon=0$ (§8).
 
@@ -273,7 +274,7 @@ Nothing failed. No τ class is left open.
 
 ---
 
-## 8. Sharper, computer-assisted side results (not needed above)
+## 8. Sharper, computer-assisted side results (not needed for §5; Lemma R is used by §5b)
 
 * **Row lemma R.** For every nonconstant 13-multiset of $\mathbb Z_{13}$ with $D=0$, $\Pr[S=0]\le 1/11$. Equality holds for $\{0^{10},a,b,-a-b\}$ and $\{0^9,1,1,-1,-1\}$ types, and every class with majority $\le8$ is $\le 1/12.69$. This was checked exhaustively over all 33,429 affine classes (`p0scan.c`, 6 s). Using it instead of (A2)/(A3) gives the bound $(10q_m+1)/121\le0.01254$ with $q_m=4\binom{13}{m}/\binom{52}{m}$ for $3\le m\le12$, and $\le0.0106$ for $m\ge13$.
 * **Exact Case B.** The exact Case B probability for all 1284 sorted $\varepsilon$-count vectors (the scan also includes vectors that no τ can produce: $\sum\varepsilon=0$ forces the number of odd counts to be 0 or 4. The listed argmax $(49,3,0,0)$ is one of these. This is harmless, since over-covering only weakens a maximum. Restricted to the 374 compatible vectors, the maximum is the same $1/850$, at $(49,1,1,1)$) (`caseB_tm.c`, double precision, all values far from the threshold): the maximum is **exactly 1/850** (the same-rank 3-cycle). It is $\le 2.4\cdot10^{-5}$ once $m'\ge5$ and about $1.49\cdot10^{-8}$ for balanced ε. An independent **computer-free** bound for $m'\ge20$ is $\beta^{m'}\,\mathbb E[\beta^{-4z_4}]$ with $\beta=2^{-1/3}$, where $z_4$ counts constant off-majority columns (§4 of the output).

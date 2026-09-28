@@ -7,7 +7,9 @@ outside the 52-element symmetry group `v10Sym`. Then at most `52!/64` of the `52
 Not formalised:
 * the paper's sharper constant `0.012768` (PROOF.md §3 (A3), §5);
 * the paper's Case B bound `1/425`;
-* the measured worst case `9/1105` (same-suit 3-cycle; `../analysis/v10-sumranks/sbox-search/`, PROOF.md §5b).
+* the measured worst case `9/1105` (same-suit 3-cycle; `../analysis/v10-sumranks/sbox-search/`). PROOF.md §5b
+  argues that it is the exact maximum. That corollary is computer-assisted: it relies on the computer-checked
+  Lemma R, and it is not formalised in Lean and not independently reviewed.
 
 **Where.**
 * Lean sources: `DoubleDealSecurity/SumRanksDP/`. They are part of the default `DoubleDealSecurity`

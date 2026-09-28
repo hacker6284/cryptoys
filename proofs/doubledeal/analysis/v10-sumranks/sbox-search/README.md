@@ -14,7 +14,7 @@ on `ddport`. `logs/verify.log` also records `../check_cand.py` (W5c 6/6).
 
 * **Does anything beat 1/64?** Only the 51 exact symmetries (the v10Sym group: shift every rank by a, and/or
   XOR every suit label by x). They pass SumRanks with probability 1 by construction; the iff theorem says so, and
-  20M/20M decks confirm it. Leave them out and **nothing reaches 1/64**. The worst difference is a **3-cycle of three
+  20M/20M decks confirm it. Leave them out and **nothing reaches 1/64**. The worst difference measured is a **3-cycle of three
   cards of the same suit, at exactly 9/1105 ≈ 1/123**. That is 1.9× below 1/64.
 * **Does anything beat the old 1/221?** **Yes: every same-suit 3-cycle (1/123, about 1.8× worse than 1/221).**
   Nothing else measured does. 4-cycles, double swaps, same-rank moves, suit maps on subsets, rotations, block moves and every

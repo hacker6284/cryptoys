@@ -221,8 +221,9 @@ max by m' = 52 - n0:
   [PASS] same-rank swap composed with rank+3 symmetry: 0 in 400k
 
 ====================================================================================================
-7. Corollary (PROOF.md section 5b): the exact supremum over non-symmetries is 9/1105, attained by same-suit 3-cycles
-   (uses the computer-checked Lemma R only in the regime n* <= 12)
+7. Computer-assisted corollary (PROOF.md section 5b; not formalised in Lean, not independently reviewed):
+   max over non-symmetries is 9/1105, attained by same-suit 3-cycles
+   (relies on the computer-checked Lemma R, used only in the regime n* <= 12)
 ====================================================================================================
    n* = 49 delta-classes (off values up to scaling) and exact row-only survival: {(1, 1, 11): '9/1105', (1, 2, 10): '9/1105', (1, 3, 9): '9/1105'}
   [PASS] n* = 49: EVERY delta-class has row-only survival exactly 9/1105 (so full survival <= 9/1105)
@@ -236,4 +237,4 @@ max by m' = 52 - n0:
    max observed survival over tested tau = 0.00820  (1/64 = 0.015625)
   [PASS] no tested non-symmetry tau reaches 1/64
 
-TOTAL FAILS: 0   (100s)
+TOTAL FAILS: 0

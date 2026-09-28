@@ -3,13 +3,13 @@
 This is the paper proof behind `../DoubleDealSecurity/SumRanksDP/`. The Lean comments there cite it as `PROOF.md §n`.
 
 It proves that every card relabelling outside `v10Sym` commutes with v10 SumRanks (one layer, no key) on at most
-`0.012768 · 52! < 52!/64` decks. Lean formalises only the `52!/64` bound. The corollary that the exact
-supremum is `9/1105` (§5b) uses the computer-checked row lemma of §8. It is not formalised. None of this is a security
-claim about the full cipher.
+`0.012768 · 52! < 52!/64` decks. Lean formalises only the `52!/64` bound. §5b adds a corollary that the maximum is `9/1105`. That corollary is
+computer-assisted: it relies on the computer-checked Lemma R of §8, and it is not formalised in Lean and not
+independently reviewed. None of this is a security claim about the full cipher.
 
 | file | what |
 |---|---|
-| `PROOF.md` | the proof (§§0–5), corollary 9/1105 (§5b), numerical checks (§6), side results (§8), Lean route (§9) |
+| `PROOF.md` | the proof (§§0–5), computer-assisted corollary 9/1105 (§5b; not formalised, not independently reviewed), numerical checks (§6), side results (§8), Lean route (§9) |
 | `verify_proof.py` → `verify_output.txt` | numerical checks of every lemma against the C model in `../../analysis/v10-sumranks/sbox-search/` (about 2 min; needs gcc with OpenMP and numpy; 0 failures) |
 | `model.py` | pure-Python SumRanks v10, checked equal to `sbox.c` by `verify_proof.py` |
 | `rowlemma_exact.py` | exact one-row distributions (Lemma 2) |

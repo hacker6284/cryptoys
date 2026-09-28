@@ -192,7 +192,6 @@ theorem encryptDeckFn_rt (m : Fin 52 → Nat) (key : List Nat) (hk : Perm52 key)
     (fun r => keyInvPos (passKeyIter (r + 1) key))
     (keyPos (passKeyIter 6 key))
     (keyInvPos (passKeyIter 6 key))
-    (fun j => keyInvPos_keyPos key hk j)
     (fun i => keyPos_keyInvPos key hk i)
     (fun r j => keyInvPos_keyPos (passKeyIter (r + 1) key)
       (passKeyIter_perm52 key hk (r + 1)) j)
@@ -212,13 +211,9 @@ theorem encryptDeckFn_decryptDeckFn (c : Fin 52 → Nat) (key : List Nat) (hk : 
     (keyPos (passKeyIter 6 key))
     (keyInvPos (passKeyIter 6 key))
     (fun j => keyInvPos_keyPos key hk j)
-    (fun i => keyPos_keyInvPos key hk i)
     (fun r j => keyInvPos_keyPos (passKeyIter (r + 1) key)
       (passKeyIter_perm52 key hk (r + 1)) j)
-    (fun r i => keyPos_keyInvPos (passKeyIter (r + 1) key)
-      (passKeyIter_perm52 key hk (r + 1)) i)
     (fun j => keyInvPos_keyPos (passKeyIter 6 key) (passKeyIter_perm52 key hk 6) j)
-    (fun i => keyPos_keyInvPos (passKeyIter 6 key) (passKeyIter_perm52 key hk 6) i)
 
 theorem perm52_range : Perm52 (List.range 52) where
   length := List.length_range 52

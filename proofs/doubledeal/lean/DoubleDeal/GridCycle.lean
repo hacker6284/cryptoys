@@ -846,37 +846,18 @@ theorem placeN_occ_chosen (hand : Fin 52 → Nat) :
         obtain ⟨k, hk, hkq⟩ := ih (by omega) q hq
         exact ⟨k, by omega, hkq⟩
 
-theorem filter_length_lt {α : Type _} (f : α → Bool) :
-    ∀ (xs : List α) (x : α), x ∈ xs → f x = false → (xs.filter f).length < xs.length
-  | [], _, hx, _ => by cases hx
-  | y :: ys, x, hx, hf => by
-      have hle := List.length_filter_le f ys
-      rcases List.mem_cons.mp hx with h | h
-      · subst h; simp [List.filter_cons, hf]; omega
-      · have ih := filter_length_lt f ys x h hf
-        by_cases hy : f y = true
-        · simp [List.filter_cons, hy]; omega
-        · simp [List.filter_cons, hy]; omega
-
+/-- A free seat means fewer than 52 seats are occupied. -/
 theorem occCount_lt_of_free (occ : Occ) (q : Fin 4 × Fin 13) (hq : occAt occ q = false) :
     occCount occ < 52 := by
   have hrow : countCols occ q.1 < 13 := by
-    have := filter_length_lt (fun c => occGet occ q.1 c) fins13 q.2 (mem_fins13 q.2) hq
+    have := List.length_filter_lt_length_iff_exists.mpr
+      ⟨q.2, mem_fins13 q.2, by simpa [occAt] using hq⟩
     simpa [countCols, length_fins13] using this
   simp only [occCount, fins4, List.map, List.sum_cons, List.sum_nil, Nat.add_zero]
-  have a0 := countCols_le occ 0
-  have a1 := countCols_le occ 1
-  have a2 := countCols_le occ 2
-  have a3 := countCols_le occ 3
-  have hv : q.1.val < 4 := q.1.isLt
-  have hcases : q.1 = 0 ∨ q.1 = 1 ∨ q.1 = 2 ∨ q.1 = 3 := by
-    rcases (by omega : q.1.val = 0 ∨ q.1.val = 1 ∨ q.1.val = 2 ∨ q.1.val = 3)
-      with h | h | h | h
-    · exact Or.inl (Fin.ext h)
-    · exact Or.inr (Or.inl (Fin.ext h))
-    · exact Or.inr (Or.inr (Or.inl (Fin.ext h)))
-    · exact Or.inr (Or.inr (Or.inr (Fin.ext h)))
-  rcases hcases with h | h | h | h <;> rw [h] at hrow <;> omega
+  have := countCols_le occ 0; have := countCols_le occ 1
+  have := countCols_le occ 2; have := countCols_le occ 3
+  match q.1, hrow with
+  | 0, _ | 1, _ | 2, _ | 3, _ => omega
 
 /-- After 52 placement steps every seat is occupied. -/
 theorem placeN_all_occ (hand : Fin 52 → Nat) (q : Fin 4 × Fin 13) :

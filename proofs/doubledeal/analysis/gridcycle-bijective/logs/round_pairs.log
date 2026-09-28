@@ -1,0 +1,12 @@
+$ ./measure pair 0 2000000 6 26 36 1
+V11 one-round AS<->JS N=2000000 seed=6: 93 hits = 4.65e-05 [3.8e-05, 5.7e-05]
+$ ./measure pair 0 2000000 6 17 25 1
+V11 one-round 5H<->KH N=2000000 seed=6: 118 hits = 5.9e-05 [4.93e-05, 7.06e-05]
+$ ./measure pair 10 2000000 6 26 36 1
+PASSF2 one-round AS<->JS N=2000000 seed=6: 0 hits = 0 [0, 1.92e-06] (0 hits: 95% upper bound ~3/N)
+$ ./measure pair 10 2000000 6 17 25 1
+PASSF2 one-round 5H<->KH N=2000000 seed=6: 0 hits = 0 [0, 1.92e-06] (0 hits: 95% upper bound ~3/N)
+$ ./measure pair 13 2000000 6 26 36 1
+PASSF3 one-round AS<->JS N=2000000 seed=6: 0 hits = 0 [0, 1.92e-06] (0 hits: 95% upper bound ~3/N)
+$ ./measure pair 13 2000000 6 17 25 1
+PASSF3 one-round 5H<->KH N=2000000 seed=6: 0 hits = 0 [0, 1.92e-06] (0 hits: 95% upper bound ~3/N)

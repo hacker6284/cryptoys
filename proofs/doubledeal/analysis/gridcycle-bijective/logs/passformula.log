@@ -1,0 +1,18 @@
+$ python3 passformula.py
+PASSF2 (PassMix-F): worst closed-form survival 30/2652 = 1/88.4 (35 pairs, e.g. KH<->KD, equal-action steps [0, 1, 2, 49, 50, 51]); mean over pairs 0.000455 (1/2198)
+   pairs by e(e-1): 30/2652: 35, 20/2652: 4, 12/2652: 39, 2/2652: 1, 0/2652: 1247
+   same rank: max 30/2652, mean 0.00773
+   same suit: max 0/2652, mean 0
+   other: max 2/2652, mean 8.06e-07
+PASSF3 (PassMix-F + edge rule): worst closed-form survival 2/2652 = 1/1326.0 (7 pairs, e.g. 4C<->KD, equal-action steps [3, 48]); mean over pairs 3.98e-06 (1/251182)
+   pairs by e(e-1): 2/2652: 7, 0/2652: 1319
+   same rank: max 0/2652, mean 0
+   same suit: max 0/2652, mean 0
+   other: max 2/2652, mean 5.64e-06
+PASSM (no fallback): worst closed-form survival 42/2652 = 1/63.1 (4 pairs, e.g. AD<->KD, equal-action steps [39, 45, 47, 48, 49, 50, 51]); mean over pairs 0.000935 (1/1070)
+   pairs by e(e-1): 42/2652: 4, 20/2652: 60, 12/2652: 52, 6/2652: 187, 2/2652: 87, 0/2652: 936
+   same rank: max 6/2652, mean 0.00151
+   same suit: max 42/2652, mean 0.0036
+   other: max 0/2652, mean 0
+PassMix-F + edge rule: 556 cards counted off per pass
+PassMix-F hand cost per pass (T=20000 decks): 433 cards counted off in cuts (8.3 per controller), 8.0 fallback steps, 2.9 cuts per pass that wrap (count round a pile smaller than the amount)

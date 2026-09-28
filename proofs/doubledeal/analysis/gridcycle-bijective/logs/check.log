@@ -1,0 +1,28 @@
+$ ./measure check 0 100000 1
+V11 check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 1 100000 1
+SR check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 2 100000 1
+PIVOT check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 3 100000 1
+TWIN check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 4 100000 1
+SRDUP check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 5 100000 1
+PASSK check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 6 100000 1
+PASSM check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 7 100000 1
+PASSM2 check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 8 100000 1
+PASSMR check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 9 100000 1
+PASSF check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 10 100000 1
+PASSF2 check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 11 100000 1
+TWINGF check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 12 100000 1
+PASSF2x2 check N=100000 seed=1: inverse failures 0, non-permutation outputs 0
+$ ./measure check 13 100000 1
+PASSF3 check N=100000 seed=1: inverse failures 0, non-permutation outputs 0

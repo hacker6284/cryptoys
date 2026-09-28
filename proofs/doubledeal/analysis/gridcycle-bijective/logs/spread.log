@@ -1,0 +1,33 @@
+$ ./measure spread 0 20000 2
+V11 spread N=20000 decks x 1326 swaps seed=2: mean 33.93 median 36 p1 5 min 2; share =2 0.00354 <=4 0.00957 <=8 0.03166 <=16 0.11050
+  mean by first position i: i=0:50.1 i=5:45.5 i=10:40.6 i=15:35.7 i=20:30.7 i=25:25.7 i=30:20.7 i=35:15.7 i=40:10.7 i=45:5.8 i=50:2.0
+$ ./measure spread 1 20000 2
+SR spread N=20000 decks x 1326 swaps seed=2: mean 46.64 median 49 p1 12 min 2; share =2 0.00107 <=4 0.00107 <=8 0.00782 <=16 0.02782
+  mean by first position i: i=0:43.7 i=5:47.1 i=10:45.9 i=15:45.2 i=20:49.1 i=25:47.0 i=30:45.8 i=35:45.2 i=40:49.0 i=45:46.8 i=50:43.7
+$ ./measure spread 2 20000 2
+PIVOT spread N=20000 decks x 1326 swaps seed=2: mean 11.98 median 2 p1 2 min 2; share =2 0.55540 <=4 0.55540 <=8 0.63375 <=16 0.74139
+  mean by first position i: i=0:47.5 i=5:9.4 i=10:9.5 i=15:11.8 i=20:11.7 i=25:11.6 i=30:11.4 i=35:11.1 i=40:10.5 i=45:10.5 i=50:10.2
+$ ./measure spread 3 20000 2
+TWIN spread N=20000 decks x 1326 swaps seed=2: mean 46.95 median 49 p1 12 min 2; share =2 0.00166 <=4 0.00166 <=8 0.00706 <=16 0.02614
+  mean by first position i: i=0:48.5 i=5:49.2 i=10:49.2 i=15:46.8 i=20:46.7 i=25:46.8 i=30:44.1 i=35:43.9 i=40:41.5 i=45:41.3 i=50:39.5
+$ ./measure spread 5 20000 2
+PASSK spread N=20000 decks x 1326 swaps seed=2: mean 48.73 median 51 p1 2 min 2; share =2 0.03555 <=4 0.03649 <=8 0.03832 <=16 0.04216
+  mean by first position i: i=0:48.9 i=5:48.7 i=10:48.7 i=15:48.7 i=20:48.7 i=25:48.7 i=30:48.7 i=35:48.7 i=40:48.8 i=45:48.8 i=50:48.8
+$ ./measure spread 6 20000 2
+PASSM spread N=20000 decks x 1326 swaps seed=2: mean 42.45 median 49 p1 6 min 2; share =2 0.00099 <=4 0.00523 <=8 0.01915 <=16 0.06117
+  mean by first position i: i=0:49.5 i=5:42.4 i=10:42.5 i=15:42.1 i=20:42.2 i=25:42.1 i=30:41.9 i=35:41.8 i=40:41.8 i=45:41.7 i=50:42.1
+$ ./measure spread 9 20000 2
+PASSF spread N=20000 decks x 1326 swaps seed=2: mean 48.78 median 51 p1 7 min 2; share =2 0.00116 <=4 0.00463 <=8 0.01348 <=16 0.02927
+  mean by first position i: i=0:49.6 i=5:48.8 i=10:48.8 i=15:48.7 i=20:48.8 i=25:48.8 i=30:48.7 i=35:48.7 i=40:48.7 i=45:48.7 i=50:48.6
+$ ./measure spread 10 20000 2
+PASSF2 spread N=20000 decks x 1326 swaps seed=2: mean 48.91 median 51 p1 8 min 2; share =2 0.00046 <=4 0.00321 <=8 0.01057 <=16 0.02578
+  mean by first position i: i=0:49.3 i=5:48.9 i=10:48.9 i=15:48.9 i=20:48.9 i=25:48.9 i=30:48.9 i=35:48.9 i=40:48.9 i=45:49.0 i=50:49.0
+$ ./measure spread 11 20000 2
+TWINGF spread N=20000 decks x 1326 swaps seed=2: mean 46.97 median 49 p1 12 min 2; share =2 0.00128 <=4 0.00128 <=8 0.00628 <=16 0.02564
+  mean by first position i: i=0:48.5 i=5:49.2 i=10:49.2 i=15:46.8 i=20:46.8 i=25:46.8 i=30:44.1 i=35:44.0 i=40:41.4 i=45:41.3 i=50:39.5
+$ ./measure spread 12 20000 2
+PASSF2x2 spread N=20000 decks x 1326 swaps seed=2: mean 50.99 median 51 p1 48 min 2; share =2 0.00001 <=4 0.00003 <=8 0.00007 <=16 0.00016
+  mean by first position i: i=0:50.9 i=5:51.0 i=10:51.0 i=15:51.0 i=20:51.0 i=25:51.0 i=30:51.0 i=35:51.0 i=40:51.0 i=45:51.0 i=50:51.0
+$ ./measure spread 13 20000 2
+PASSF3 spread N=20000 decks x 1326 swaps seed=2: mean 49.65 median 51 p1 10 min 2; share =2 0.00000 <=4 0.00221 <=8 0.00770 <=16 0.01829
+  mean by first position i: i=0:51.0 i=5:49.6 i=10:49.6 i=15:49.6 i=20:49.6 i=25:49.6 i=30:49.6 i=35:49.6 i=40:49.6 i=45:49.7 i=50:49.7

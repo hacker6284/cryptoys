@@ -1,0 +1,23 @@
+$ python3 passwalk.py 1
+input (top first): JD TC QS TH 3C KS 7H QC TS 6C 4S KD 5D 3H JH 8D 9D 9H 2D AD KC QD 7S 8H KH AS 9S JC 8S 4C 6H 2H 5H 6D AC 2S 4D 2C 7D 7C AH QH 3D 5S 3S 6S 8C 4H 5C TD JS 9C
+forward (cut = move that many cards from top to bottom; counts wrap round a short pile):
+ 0 JD: rank 11 < hand 51: cut hand 11, key pile 3  -> hand [5D 3H JH 8D 9D 9H ...]  key [JD]
+ 1 5D: rank 5 < hand 50: cut hand 5, key pile 3  -> hand [2D AD KC QD 7S 8H ...]  key [5D JD]
+ 2 2D: rank 2 < hand 49: cut hand 2, key pile 3  -> hand [QD 7S 8H KH AS 9S ...]  key [2D JD 5D]
+ 3 QD: rank 12 < hand 48: cut hand 12, key pile 3  -> hand [AC 2S 4D 2C 7D 7C ...]  key [QD 2D JD 5D]
+ 4 AC: rank 1 < hand 47: cut hand 1, key pile 0  -> hand [4D 2C 7D 7C AH QH ...]  key [AC QD 2D JD 5D]
+   ...
+48 JC: rank 11 >= hand 3: FALLBACK cut key pile 11, hand 0  -> hand [3D 4S AD]  key [JC 2S 9S QC 6C 3C ...]
+49 3D: rank 3 >= hand 2: FALLBACK cut key pile 3, hand 3  -> hand [AD 4S]  key [3D QC 6C 3C AS QS ...]
+50 AD: rank 1 >= hand 1: FALLBACK cut key pile 1, hand 3  -> hand [4S]  key [AD QC 6C 3C AS QS ...]
+51 4S: rank 4 >= hand 0: FALLBACK cut key pile 4, hand 2  -> hand []  key [4S AS QS 5H 8S 6S ...]
+output (top first): 4S AS QS 5H 8S 6S 8C 8H 7C 7H TS QD 2D 7D TC KD JH 6H AH 4H 5C 5S 4D KC JS QH TH 2C 4C 3S 9D JD TD KS 3H 5D 7S KH 2H 8D AC 9C 9H 6D JC 2S 9S 3D AD QC 6C 3C
+decrypt (lift the top card of the key pile; undo its two cuts; put it on top of the hand):
+51 lift 4S: rank 4 >= hand 0: uncut key pile 4, hand 2 (bottom cards back to top) -> hand [4S]
+50 lift AD: rank 1 >= hand 1: uncut key pile 1, hand 3 (bottom cards back to top) -> hand [AD 4S]
+49 lift 3D: rank 3 >= hand 2: uncut key pile 3, hand 3 (bottom cards back to top) -> hand [3D 4S AD]
+   ...
+ 2 lift 2D: rank 2 < hand 49: uncut key pile 3, hand 2 (bottom cards back to top) -> hand [2D AD KC QD 7S 8H ...]
+ 1 lift 5D: rank 5 < hand 50: uncut key pile 3, hand 5 (bottom cards back to top) -> hand [5D 3H JH 8D 9D 9H ...]
+ 0 lift JD: rank 11 < hand 51: uncut key pile 3, hand 11 (bottom cards back to top) -> hand [JD TC QS TH 3C KS ...]
+round trip ok: True

@@ -1,0 +1,8 @@
+$ ./measure pair 0 1000000 7 5 12 0
+V11 layer 6C<->KC N=1000000 seed=7: 4601 hits = 0.0046 [0.00447, 0.00474]
+$ ./measure pair 10 1000000 7 5 44 0
+PASSF2 layer 6C<->6D N=1000000 seed=7: 11290 hits = 0.0113 [0.0111, 0.0115]
+$ ./measure pair 11 1000000 7 31 44 0
+TWINGF layer 6S<->6D N=1000000 seed=7: 9759 hits = 0.00976 [0.00957, 0.00995]
+$ ./measure pair 12 1000000 7 9 35 0
+PASSF2x2 layer TC<->TS N=1000000 seed=7: 335 hits = 0.000335 [0.000301, 0.000373]

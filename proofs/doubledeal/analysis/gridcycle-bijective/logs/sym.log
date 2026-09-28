@@ -1,0 +1,28 @@
+$ ./measure sym 0 20 1
+V11 sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 1 20 1
+SR sym N=20 seed=1: 51 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 51 of 51)
+$ ./measure sym 2 20 1
+PIVOT sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 3 20 1
+TWIN sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 4 20 1
+SRDUP sym N=20 seed=1: 51 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 51 of 51)
+$ ./measure sym 5 20 1
+PASSK sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 6 20 1
+PASSM sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 7 20 1
+PASSM2 sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 8 20 1
+PASSMR sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 9 20 1
+PASSF sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 10 20 1
+PASSF2 sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 11 20 1
+TWINGF sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 12 20 1
+PASSF2x2 sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)
+$ ./measure sym 13 20 1
+PASSF3 sym N=20 seed=1: 0 of 3743 structured relabellings commute on all N decks (v10Sym non-identity: 0 of 51)

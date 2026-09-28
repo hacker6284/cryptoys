@@ -1,0 +1,6 @@
+$ python3 lemmaM_small.py 7 30 1
+N=3: 30 random action tables x 3! decks x all pairs = 540 checks; survivals 238; survive with different actions 0
+N=4: 30 random action tables x 4! decks x all pairs = 4320 checks; survivals 740; survive with different actions 16
+N=5: 30 random action tables x 5! decks x all pairs = 36000 checks; survivals 2936; survive with different actions 68
+N=6: 30 random action tables x 6! decks x all pairs = 324000 checks; survivals 12432; survive with different actions 144
+N=7: 30 random action tables x 7! decks x all pairs = 3175200 checks; survivals 76970; survive with different actions 650

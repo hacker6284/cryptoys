@@ -1,0 +1,15 @@
+$ ./passmech 10 50000 5
+  witness (survive, actions differ): pair 4<->5, first differing step 36, last 46, 4 differing steps; deck 19,33,50,49,16,8,1,4,35,40,10,22,14,32,28,6,21,11,30,38,17,24,37,5,31,18,0,47,15,46,39,13,25,41,48,36,12,42,9,29,23,34,26,51,20,45,3,44,27,43,2,7
+  witness (survive, actions differ): pair 5<->32, first differing step 0, last 49, 4 differing steps; deck 32,0,48,15,28,20,44,3,41,51,35,12,13,46,25,5,33,14,43,50,36,23,18,17,45,19,11,4,40,31,47,34,10,39,37,21,9,22,1,29,2,27,16,24,26,8,38,42,30,6,7,49
+  witness (survive, actions differ): pair 6<->7, first differing step 24, last 51, 4 differing steps; deck 33,48,51,2,32,12,34,21,18,1,44,46,13,49,11,19,36,37,8,7,27,9,23,14,3,6,17,28,43,26,47,29,35,24,30,41,31,40,22,15,25,39,42,5,20,16,4,45,10,0,50,38
+PASSF2 mechanism N=50000/pair seed=5: 30075 survivals in 66300000 pair-decks; survive-but-actions-differ 9; actions-equal-but-no-survival 0
+  closed form e(e-1)/2652: worst pair 2C<->2S = 0.01131 (1/88); measured worst 2H<->2D = 0.01220; max |measured-formula|/sd over pairs 2.88
+$ ./passmech 6 50000 5
+PASSM mechanism N=50000/pair seed=5: 61838 survivals in 66300000 pair-decks; survive-but-actions-differ 0; actions-equal-but-no-survival 0
+  closed form e(e-1)/2652: worst pair AC<->KC = 0.01584 (1/63); measured worst AS<->KS = 0.01702; max |measured-formula|/sd over pairs 3.52
+$ ./passmech 13 50000 5
+  witness (survive, actions differ): pair 10<->11, first differing step 2, last 51, 4 differing steps; deck 43,17,14,49,22,50,5,16,45,38,3,26,36,12,48,20,0,30,9,47,41,7,39,32,44,34,8,11,25,35,23,40,37,29,15,24,18,33,13,2,1,6,27,42,19,31,10,46,4,28,51,21
+  witness (survive, actions differ): pair 11<->12, first differing step 18, last 40, 4 differing steps; deck 41,31,40,19,37,3,20,15,30,6,7,12,21,47,50,0,28,32,51,14,18,5,8,49,23,42,13,46,45,39,25,17,24,29,2,48,33,4,9,44,11,38,22,16,1,36,35,27,26,34,10,43
+  witness (survive, actions differ): pair 19<->20, first differing step 24, last 51, 4 differing steps; deck 27,43,24,32,50,19,23,1,47,29,35,51,49,28,36,15,20,30,0,9,5,11,46,48,38,22,41,31,44,42,17,45,18,8,7,39,3,6,25,33,14,4,12,21,34,26,2,13,16,40,10,37
+PASSF3 mechanism N=50000/pair seed=5: 244 survivals in 66300000 pair-decks; survive-but-actions-differ 8; actions-equal-but-no-survival 0
+  closed form e(e-1)/2652: worst pair AC<->QD = 0.00075 (1/1326); measured worst AC<->KD = 0.00086; max |measured-formula|/sd over pairs 1.91

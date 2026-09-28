@@ -1,0 +1,10 @@
+$ python3 xcheck.py /tmp/v11tree 1000
+layer 0: 1000 decks, C-vs-Python output mismatches 0, Python inverse failures 0
+layer 1: 1000 decks, C-vs-Python output mismatches 0, Python inverse failures 0
+layer 2: 1000 decks, C-vs-Python output mismatches 0, Python inverse failures 0
+layer 3: 1000 decks, C-vs-Python output mismatches 0, Python inverse failures 0
+layer 5: 1000 decks, C-vs-Python output mismatches 0, Python inverse failures 0
+layer 6: 1000 decks, C-vs-Python output mismatches 0, Python inverse failures 0
+layer 8: 1000 decks, C-vs-Python output mismatches 0, Python inverse failures 0
+v10 stem: 1000 decks, C-vs-ddport mismatches 0
+OK

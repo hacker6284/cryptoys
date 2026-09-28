@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Write DoubleDealSecurity/V8Vectors.lean from the frozen v8 vectors (--check: compare)."""
-import json, sys
-from pathlib import Path
-PKG = Path(__file__).resolve().parents[1]
-REPO = PKG.parents[2]
-sys.path.insert(0, str(REPO / 'tools'))
+import sys
+import ddport
+PKG = ddport.REPO / 'proofs/doubledeal/security'
+sys.path.insert(0, str(ddport.REPO / 'tools'))
 from gencheck import parser, emit
 args = parser(__doc__).parse_args()
-V = {v['name']: v for v in json.loads((REPO / 'proofs/deprecated/doubledeal-v8/vectors/doubledeal_v8_vectors.json').read_text())['vectors']}
+V = {v['name']: v for v in ddport.vectors(8)}
 def L(x): return '[' + ', '.join(map(str, x)) + ']'
 out = ['''/-
   Fidelity of the proof-only v8 model (`V8.mixColumns`, `sumRanksV8`,

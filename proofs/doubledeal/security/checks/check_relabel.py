@@ -33,15 +33,7 @@ def commutes_sr(s, v, trials=20, decks=None):
     return True
 colw = {8: rank, 9: lambda x: rank(x) + suit(x)}
 # v9 group: sigma_{a,b}
-def sig9(a, b):
-    s = [None]*52
-    for c in range(52):
-        r, su = rank(c), suit(c)
-        r2 = (r - 1 + a) % 13 + 1
-        d = r2 - r
-        su2 = (su + b - d) % 4
-        s[c] = card(r2, su2)
-    return s
+sig9 = P.v9sym
 G = [sig9(a, b) for a in range(13) for b in range(4)]
 assert all(sorted(s) == ID for s in G) and len({tuple(s) for s in G}) == 52
 assert all(shifts(s, rank, 13) and shifts(s, colw[9], 4) for s in G)
@@ -114,8 +106,7 @@ for v in (8, 9):
 # every other sampled sigma fails on some random deck.
 # [2b] draws from its own RNG (seed 10), so the v8/v9 lines after it keep their pre-v10 values.
 _rng_main = rng; rng = random.Random(10)
-LABEL = P.LABEL; SUIT_OF_LABEL = [LABEL.index(l) for l in range(4)]
-def sig10(a, x): return [13 * SUIT_OF_LABEL[LABEL[c // 13] ^ x] + (c % 13 + a) % 13 for c in range(52)]
+sig10 = P.v10sym
 G10 = [sig10(a, x) for a in range(13) for x in range(4)]
 assert all(sorted(s) == ID for s in G10) and len({tuple(s) for s in G10}) == 52
 assert all(commutes_sr(s, 10) for s in G10)

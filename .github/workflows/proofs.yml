@@ -154,7 +154,7 @@ jobs:
           python3 proofs/deprecated/doubledeal-v10/attack/make_witness.py --check
           python3 proofs/deprecated/doubledeal-v10/lean/witness_to_lean.py --check
       - name: C measurement model agrees with the Python port (v10 GridCycle)
-        run: python3 proofs/deprecated/doubledeal-v10/attack/measure/xcheck.py
+        run: python3 proofs/doubledeal/analysis/v10-gridcycle/xcheck.py
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/deprecated/doubledeal-v10/lean/Generated

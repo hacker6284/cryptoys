@@ -2,9 +2,10 @@
 v10 replaces SumRanks by the chained index-weighted rows and GF(4) suit columns (SPEC 3.3);
 v11 replaces the GridCycle blocked placement (SPEC 3.5: ghost finger, blocker-directed scan).
 Every version stays callable (v = 8, 9, 10, 11)."""
+import json
 import sys
 from pathlib import Path
-REPO = Path(__file__).resolve().parents[4]
+REPO = Path(__file__).resolve().parents[4]   # the repo root; use this instead of parents[n] elsewhere
 sys.path.insert(0, str(REPO / 'proofs/deprecated/doubledeal-v8/attack'))
 import dd_v8 as V8
 from dd_v8 import suit, rank, rotl, lay_cm, scoop_cm, scoop_rm, shift_rows, compose, expand_keys
@@ -119,3 +120,33 @@ def encrypt(m, k0, v):
     m = compose(m, keys[0])
     for r in range(1, 6): m = full_round(m, keys[r], v)
     return final_round(m, keys[6], v)
+
+
+# Known-answer vectors per version (11 = current; 8, 9, 10 frozen).
+VECTOR_JSON = {
+    11: 'proofs/doubledeal/vectors/doubledeal_vectors.json',
+    10: 'proofs/deprecated/doubledeal-v10/vectors/doubledeal_v10_vectors.json',
+    9: 'proofs/deprecated/doubledeal-v9/vectors/doubledeal_v9_vectors.json',
+    8: 'proofs/deprecated/doubledeal-v8/vectors/doubledeal_v8_vectors.json',
+}
+def vectors(v):
+    """The list of vector dicts in version v's committed JSON."""
+    return json.loads((REPO / VECTOR_JSON[v]).read_text())['vectors']
+
+
+# The relabelling groups (card id -> card id, as a list of 52).
+def v9sym(a, b):
+    """v9Sym a b: rank + a (mod 13) and suit + b - (rank carry), the 52 relabellings that
+    commute with v9 SumRanks (weight shifts of rank mod 13 and rank + suit mod 4)."""
+    s = [None] * 52
+    for c in range(52):
+        r, su = rank(c), suit(c)
+        r2 = (r - 1 + a) % 13 + 1
+        s[c] = (su + b - (r2 - r)) % 4 * 13 + (r2 - 1)
+    return s
+
+SUIT_OF_LABEL = [LABEL.index(l) for l in range(4)]   # [0, 3, 1, 2]
+def v10sym(a, x):
+    """v10Sym a x: rank index + a (mod 13), GF(4) suit label XOR x (clubs 0, diamonds 1,
+    hearts 2, spades 3); the 52 relabellings that commute with v10 SumRanks."""
+    return [13 * SUIT_OF_LABEL[LABEL[c // 13] ^ x] + (c % 13 + a) % 13 for c in range(52)]

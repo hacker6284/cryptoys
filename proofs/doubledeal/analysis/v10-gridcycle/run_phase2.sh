@@ -3,7 +3,7 @@
 set -e
 cd "$(dirname "$0")"
 python3 candcheck.py
-cc -O2 -Wall -Wextra -o cand cand.c
+./build.sh
 mkdir -p p2
 for v in 0 20 21 22 23 24 25 26 27 28 29 30 31 33 35; do ./cand $v value 3000 1 > p2/scr_$v.txt & done; wait
 for f in p2/scr_*.txt; do v=${f#p2/scr_}; v=${v%.txt}; python3 aggm.py V$v $f | head -1; done > p2/screen_summary.log

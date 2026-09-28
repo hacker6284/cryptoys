@@ -141,9 +141,7 @@ export function syncJumpButtons(root, cursor, count) {
     const atStart = cursor < 0;
     const atEnd = cursor >= count - 1;
     root.querySelectorAll("[data-jump]").forEach((button) => {
-        const jump = button.dataset.jump;
-        const back = jump === "back" || jump === "stage-back" || jump === "round-back";
-        setDisabled(button, back ? atStart : atEnd);
+        setDisabled(button, button.dataset.jump.endsWith("back") ? atStart : atEnd);
     });
 }
 
@@ -161,13 +159,10 @@ export function bindTransport(root, session, listen) {
     root.querySelectorAll("[data-jump]").forEach((button) => {
         button.addEventListener("click", () => {
             const jump = button.dataset.jump;
-            const viewI = Math.max(0, viewedIndex());
-            if (jump === "back") void stepBy(-1);
-            else if (jump === "fwd") void stepBy(1);
-            else if (jump === "stage-back") void jumpTo(nextGroup(trace(), viewI, stageKey, -1) - 1, false);
-            else if (jump === "stage-fwd") void jumpTo(nextGroup(trace(), viewI, stageKey, 1) - 1, false);
-            else if (jump === "round-back") void jumpTo(nextGroup(trace(), viewI, roundKey, -1) - 1, false);
-            else if (jump === "round-fwd") void jumpTo(nextGroup(trace(), viewI, roundKey, 1) - 1, false);
+            const dir = jump.endsWith("back") ? -1 : 1;
+            if (jump === "back" || jump === "fwd") return void stepBy(dir);
+            const key = jump.startsWith("stage") ? stageKey : roundKey;
+            void jumpTo(nextGroup(trace(), Math.max(0, viewedIndex()), key, dir) - 1, false);
         }, listen);
     });
 

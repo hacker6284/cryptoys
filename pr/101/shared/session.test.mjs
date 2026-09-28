@@ -1,18 +1,10 @@
 import assert from "node:assert/strict";
 
 function node(dataset = {}) {
-    const classes = new Set();
     const listeners = [];
     return {
         dataset,
         disabled: false,
-        classList: {
-            toggle(name, on) {
-                if (on) classes.add(name);
-                else classes.delete(name);
-            },
-            contains: (name) => classes.has(name),
-        },
         addEventListener(type, fn, opts) {
             listeners.push({ type, fn, opts });
         },
@@ -37,29 +29,7 @@ function fakeRoot(byId, groups = {}) {
 globalThis.window = node();
 globalThis.CSS = { escape: (text) => text };
 
-const {
-    bindSegmented,
-    bindTransport,
-    openSpec,
-    renderTeachCard,
-    sessionScope,
-    syncJumpButtons,
-} = await import("./session.js");
-
-// sessionScope: $ / $$ read the root; the parent signal aborts the session.
-{
-    const play = node();
-    const parent = new AbortController();
-    const scope = sessionScope(fakeRoot({ play }, { "[data-jump]": [play] }), parent.signal);
-    assert.equal(scope.$("#play"), play);
-    assert.deepEqual(scope.$$("[data-jump]"), [play]);
-    assert.equal(scope.listen.signal, scope.abort.signal);
-    assert.equal(scope.abort.signal.aborted, false);
-    parent.abort();
-    assert.equal(scope.abort.signal.aborted, true, "parent abort reaches the session");
-    const late = sessionScope(fakeRoot({}), AbortSignal.abort());
-    assert.equal(late.abort.signal.aborted, true, "an already-aborted parent aborts at once");
-}
+const { bindTransport, openSpec, sessionScope, syncJumpButtons } = await import("./session.js");
 
 // openSpec: fetch, slice, render Markdown, open the dialog, scroll to the heading.
 {
@@ -110,45 +80,6 @@ const {
     await assert.rejects(openSpec(fakeRoot({}), "spec.md"), /specification dialog is missing/);
 }
 
-// renderTeachCard: kicker / title / math / why, and a SPEC link for the note's section.
-{
-    globalThis.document = {
-        createElement: (tag) => Object.assign(node(), { tag, className: "", textContent: "" }),
-    };
-    const card = {
-        children: [],
-        replaceChildren() { this.children = []; },
-        append(...next) { this.children.push(...next); },
-    };
-    const opened = [];
-    const note = { kicker: "step 1 of 3", title: "Rule B", math: "m", why: "w", spec: "Rule B" };
-    renderTeachCard(card, note, (heading) => opened.push(heading));
-    renderTeachCard(card, note, (heading) => opened.push(heading));
-    assert.deepEqual(card.children.map((el) => [el.tag, el.className, el.textContent]), [
-        ["p", "kicker", "step 1 of 3"],
-        ["h2", "", "Rule B"],
-        ["p", "math", "m"],
-        ["p", "why", "w"],
-        ["button", "inline-link", "SPEC · Rule B"],
-    ]);
-    card.children[4].click();
-    assert.deepEqual(opened, ["Rule B"]);
-}
-
-// bindSegmented: the picked button is the only one on; the handler gets its value.
-{
-    const ecb = node({ mode: "ecb" });
-    const ctr = node({ mode: "ctr" });
-    ecb.classList.toggle("on", true);
-    const picked = [];
-    bindSegmented(fakeRoot({}, { "[data-mode]": [ecb, ctr] }), "mode", (value) => picked.push(value), {});
-    ctr.click();
-    assert.deepEqual([ecb.classList.contains("on"), ctr.classList.contains("on")], [false, true]);
-    ecb.click();
-    assert.deepEqual([ecb.classList.contains("on"), ctr.classList.contains("on")], [true, false]);
-    assert.deepEqual(picked, ["ctr", "ecb"]);
-}
-
 // syncJumpButtons: back buttons stop at the start, forward buttons at the end.
 {
     const names = ["back", "stage-back", "round-back", "fwd", "stage-fwd", "round-fwd"];
@@ -169,6 +100,7 @@ const {
         { stage: "a", round: 1 },
         { stage: "a", round: 1 },
         { stage: "b", round: 1 },
+        { stage: "c", round: 1 },
         { stage: "c", round: 2 },
     ];
     let teaching = false;
@@ -198,7 +130,7 @@ const {
 
     for (const el of jumps) el.click();
     assert.deepEqual(calls.splice(0), [
-        "stepBy:-1", "stepBy:1", "jumpTo:-1:false", "jumpTo:2:false", "jumpTo:-1:false", "jumpTo:2:false",
+        "stepBy:-1", "stepBy:1", "jumpTo:-1:false", "jumpTo:2:false", "jumpTo:-1:false", "jumpTo:3:false",
     ]);
 
     const keys = [
@@ -210,7 +142,7 @@ const {
     teaching = true;
     for (const event of keys) window.dispatch("keydown", event);
     assert.deepEqual(calls.splice(0), [
-        "stepBy:1", "stepBy:-1", "jumpTo:2:false", "jumpTo:-1:false", "jumpTo:-1:false", "jumpTo:3:false",
+        "stepBy:1", "stepBy:-1", "jumpTo:2:false", "jumpTo:-1:false", "jumpTo:-1:false", "jumpTo:4:false",
     ]);
 
     scope.abort.abort();

@@ -24,4 +24,7 @@ import DoubleDeal
 #print axioms DoubleDeal.sumRanksV10_eq_LL
 #print axioms DoubleDeal.invSumRanksV10_eq_LL
 #print axioms DoubleDeal.invMixColumns_mixColumns
+#print axioms DoubleDeal.mixColumns_invMixColumns
 #print axioms DoubleDeal.encrypt6_rt
+#print axioms DoubleDeal.encrypt6_decrypt6
+#print axioms DoubleDeal.encryptDeckFn_decryptDeckFn

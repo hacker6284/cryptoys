@@ -3,7 +3,8 @@
   v11 rule (SPEC §3.5): ghost finger; a blocked placement is sent by its
   blocker (scan row marker + suit(blocker) from column target + rank(blocker),
   dropping a row if full; marker + 1; finger := target + step(blocker)).
-  Proves invMixColumns ∘ mixColumns = id. Correctness, zero sorry. No Mathlib.
+  Proves invMixColumns ∘ mixColumns = id and mixColumns ∘ invMixColumns = id
+  (both for every packet Fin 52 → Nat). Correctness, zero sorry. No Mathlib.
 -/
 import DoubleDeal.Basic
 import DoubleDeal.Grid
@@ -775,5 +776,137 @@ theorem invMixColumns_mixColumns (hand : Fin 52 → Nat) :
   unfold invMixColumns mixColumns placedGrid
   rw [lay_scoop_rowMajor]
   exact (inv_place_agree hand 52 (by omega)).2 i i.isLt
+
+/-! ## Right inverse: mixColumns ∘ invMixColumns = id
+
+For an arbitrary packet `p : Fin 52 → Nat` (no deck / permutation hypothesis),
+let `g := layRowMajor p` and `h := invMixColumns p`. The decrypt walk `invN g`
+and the encrypt walk `placeN h` pass through identical `WalkState`s (every
+seat decision reads only the state and the card being placed, and the card
+`invN` records at step `n` is exactly the card `placeN` places at step `n`).
+After 52 steps all 52 seats are occupied, so every seat of `g` was written by
+the encrypt walk with the value `invN` read from it: `placedGrid h = g`. -/
+
+/-- Seat chosen at step `n` of the decrypt walk over grid `g`. -/
+def invSeat (g : NatGrid) (n : Nat) : Fin 4 × Fin 13 :=
+  (chooseSeat! (invN g n).2).1
+
+/-- `invN` records, at index `j < n`, the grid value at the seat of step `j`,
+    and later steps never overwrite it. -/
+theorem invN_out (g : NatGrid) :
+    ∀ n, n ≤ 52 → ∀ j : Fin 52, j.val < n →
+      (invN g n).1 j = g (invSeat g j.val).1 (invSeat g j.val).2 := by
+  intro n
+  induction n with
+  | zero => intro _ j hj; omega
+  | succ n ih =>
+      intro hn j hj
+      have hlt : n < 52 := by omega
+      simp only [invN, hlt, ↓reduceDIte]
+      by_cases he : j.val = n
+      · simp only [he, ↓reduceIte, invSeat]
+      · simp only [he, ↓reduceIte]
+        exact ih (by omega) j (by omega)
+
+/-- The encrypt walk on `invMixColumns`'s output shadows the decrypt walk. -/
+theorem placeN_invN_state (g : NatGrid) :
+    ∀ n, n ≤ 52 → (placeN (invN g 52).1 n).2 = (invN g n).2 := by
+  intro n
+  induction n with
+  | zero => intro _; rfl
+  | succ n ih =>
+      intro hn
+      have hlt : n < 52 := by omega
+      have hst := ih (by omega)
+      have hcard : (invN g 52).1 ⟨n, hlt⟩ =
+          g (chooseSeat! (invN g n).2).1.1 (chooseSeat! (invN g n).2).1.2 :=
+        invN_out g 52 (by omega) ⟨n, hlt⟩ hlt
+      generalize (invN g 52).1 = H at hst hcard ⊢
+      simp only [placeN, invN, hlt, ↓reduceDIte]
+      rw [hst, hcard]
+
+/-- Every occupied seat after `n` placement steps was chosen at some step `k < n`. -/
+theorem placeN_occ_chosen (hand : Fin 52 → Nat) :
+    ∀ n, n ≤ 52 → ∀ q : Fin 4 × Fin 13, occAt (placeN hand n).2.occ q = true →
+      ∃ k, k < n ∧ (chooseSeat! (placeN hand k).2).1 = q := by
+  intro n
+  induction n with
+  | zero =>
+      intro _ q hq
+      have : occAt (placeN hand 0).2.occ q = false := by
+        simp [placeN, initWalk, occAt_empty]
+      rw [this] at hq; cases hq
+  | succ n ih =>
+      intro hn q hq
+      have hlt : n < 52 := by omega
+      by_cases he : q = (chooseSeat! (placeN hand n).2).1
+      · exact ⟨n, by omega, he.symm⟩
+      · simp only [placeN, hlt, ↓reduceDIte, advance] at hq
+        rw [setOcc_at_ne (placeN hand n).2.occ (Ne.symm he) (placeN_occ_size hand n)] at hq
+        obtain ⟨k, hk, hkq⟩ := ih (by omega) q hq
+        exact ⟨k, by omega, hkq⟩
+
+theorem filter_length_lt {α : Type _} (f : α → Bool) :
+    ∀ (xs : List α) (x : α), x ∈ xs → f x = false → (xs.filter f).length < xs.length
+  | [], _, hx, _ => by cases hx
+  | y :: ys, x, hx, hf => by
+      have hle := List.length_filter_le f ys
+      rcases List.mem_cons.mp hx with h | h
+      · subst h; simp [List.filter_cons, hf]; omega
+      · have ih := filter_length_lt f ys x h hf
+        by_cases hy : f y = true
+        · simp [List.filter_cons, hy]; omega
+        · simp [List.filter_cons, hy]; omega
+
+theorem occCount_lt_of_free (occ : Occ) (q : Fin 4 × Fin 13) (hq : occAt occ q = false) :
+    occCount occ < 52 := by
+  have hrow : countCols occ q.1 < 13 := by
+    have := filter_length_lt (fun c => occGet occ q.1 c) fins13 q.2 (mem_fins13 q.2) hq
+    simpa [countCols, length_fins13] using this
+  simp only [occCount, fins4, List.map, List.sum_cons, List.sum_nil, Nat.add_zero]
+  have a0 := countCols_le occ 0
+  have a1 := countCols_le occ 1
+  have a2 := countCols_le occ 2
+  have a3 := countCols_le occ 3
+  have hv : q.1.val < 4 := q.1.isLt
+  have hcases : q.1 = 0 ∨ q.1 = 1 ∨ q.1 = 2 ∨ q.1 = 3 := by
+    rcases (by omega : q.1.val = 0 ∨ q.1.val = 1 ∨ q.1.val = 2 ∨ q.1.val = 3)
+      with h | h | h | h
+    · exact Or.inl (Fin.ext h)
+    · exact Or.inr (Or.inl (Fin.ext h))
+    · exact Or.inr (Or.inr (Or.inl (Fin.ext h)))
+    · exact Or.inr (Or.inr (Or.inr (Fin.ext h)))
+  rcases hcases with h | h | h | h <;> rw [h] at hrow <;> omega
+
+/-- After 52 placement steps every seat is occupied. -/
+theorem placeN_all_occ (hand : Fin 52 → Nat) (q : Fin 4 × Fin 13) :
+    occAt (placeN hand 52).2.occ q = true := by
+  cases hq : occAt (placeN hand 52).2.occ q with
+  | true => rfl
+  | false =>
+      have h1 := occCount_lt_of_free _ q hq
+      have h2 := placeN_count hand 52 (by omega)
+      omega
+
+/-- The encrypt walk on `invMixColumns p` rebuilds exactly the laid grid of `p`. -/
+theorem placedGrid_invN (g : NatGrid) : placedGrid (invN g 52).1 = g := by
+  funext r c
+  obtain ⟨k, hk, hkq⟩ :=
+    placeN_occ_chosen (invN g 52).1 52 (by omega) (r, c) (placeN_all_occ _ (r, c))
+  have hseat : placeSeat (invN g 52).1 k hk = invSeat g k := by
+    simp only [placeSeat, invSeat, placeN_invN_state g k (by omega)]
+  have hp := placed_at_seat (invN g 52).1 k hk
+  rw [invN_out g 52 (by omega) ⟨k, hk⟩ hk, hseat] at hp
+  have hrc : invSeat g k = (r, c) := by
+    rw [← hseat]; exact hkq
+  rw [hrc] at hp
+  exact hp
+
+/-- Right inverse (encrypt-after-decrypt) of the v11 GridCycle layer, for every
+    packet `Fin 52 → Nat` (no deck / permutation hypothesis). -/
+theorem mixColumns_invMixColumns (packet : Fin 52 → Nat) :
+    mixColumns (invMixColumns packet) = packet := by
+  unfold mixColumns invMixColumns
+  rw [placedGrid_invN, scoop_lay_rowMajor]
 
 end DoubleDeal

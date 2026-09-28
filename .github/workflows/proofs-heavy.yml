@@ -1,27 +1,21 @@
 name: proofs-heavy
 
-# Heavy kernel witnesses of the DoubleDeal security package (lean_lib
-# DoubleDealSecurityHeavy, not a default build target, so the normal
-# doubledeal-security job in proofs.yml stays fast). Runs on PRs that touch what
-# those proofs depend on, on pushes to main that touch them, weekly and by hand.
+# Heavy kernel witnesses that are not default build targets, so the normal jobs
+# in proofs.yml stay fast:
+#   - doubledeal-security-heavy: lean_lib DoubleDealSecurityHeavy of the DoubleDeal
+#     security package;
+#   - megadreifach-heavy: lean_lib MegaDreifachHeavy (the 8 hash KATs as kernel
+#     `decide!` theorems about Generated.v_Hash, about 8 min of kernel time).
+# Triggered on every PR and every push to main, weekly and by hand, but the heavy
+# jobs only run when needed: the path sets live in ONE place, the `changes` job
+# (dorny/paths-filter), which gates each heavy job on its own set. There is no
+# `on: paths:` copy of them (Actions has no YAML anchors, and `on:` path filters are
+# per workflow, not per job), so a PR that touches neither set costs one short
+# `changes` job and two skipped jobs. Schedule and workflow_dispatch run both.
 on:
   pull_request:
-    paths:
-      - "proofs/doubledeal/security/**"
-      - "proofs/doubledeal/lean/**"          # core model + Generated/ (emitted Lean)
-      - "proofs/doubledeal/check_axioms.py"
-      - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
-      - ".github/workflows/proofs-heavy.yml"
-      - ".github/actions/lean-security/**"
   push:
     branches: [main]
-    paths:
-      - "proofs/doubledeal/security/**"
-      - "proofs/doubledeal/lean/**"          # core model + Generated/ (emitted Lean)
-      - "proofs/doubledeal/check_axioms.py"
-      - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
-      - ".github/workflows/proofs-heavy.yml"
-      - ".github/actions/lean-security/**"
   schedule:
     - cron: "17 4 * * 1"  # Mondays 04:17 UTC
   workflow_dispatch:
@@ -34,7 +28,46 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    # Which heavy job this PR / push needs (both on schedule and workflow_dispatch).
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      doubledeal: ${{ steps.filter.outputs.doubledeal }}
+      megadreifach: ${{ steps.filter.outputs.megadreifach }}
+    steps:
+      # Only PR / push events are filtered; on schedule and workflow_dispatch the
+      # filter is skipped (empty outputs) and both heavy jobs run via their `if:`.
+      - uses: actions/checkout@v5
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+      - uses: dorny/paths-filter@v3
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        id: filter
+        with:
+          filters: |
+            doubledeal:
+              - "proofs/doubledeal/security/**"      # incl. checks/scan_sorry.py
+              - "proofs/doubledeal/lean/**"          # core model + Generated/ (emitted Lean)
+              - "proofs/doubledeal/check_axioms.py"  # the shared axiom gate
+              - "proofs/audit/**"                    # the shared #audit_all package
+              - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
+              - ".github/workflows/proofs-heavy.yml"
+              - ".github/actions/lean-security/**"
+            megadreifach:
+              - "proofs/megadreifach/**"             # model, Generated/, MegaDreifachHeavy/
+              - "primitives/hash/megadreifach/**"    # the sudo spec its Generated/ is emitted from
+              - "proofs/doubledeal/check_axioms.py"  # the shared axiom gate
+              - "proofs/audit/**"                    # the shared #audit_all package
+              - "proofs/doubledeal/security/checks/scan_sorry.py"  # the shared sorry gate
+              - ".github/workflows/proofs-heavy.yml"
+
   doubledeal-security-heavy:
+    needs: changes
+    if: >-
+      github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.doubledeal == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -43,7 +76,25 @@ jobs:
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py
       - uses: ./.github/actions/lean-security
         with:
-          build-args: "DoubleDealSecurityHeavy DoubleDealSecurity.Audit"
+          build-args: "DoubleDealSecurityHeavy AuditAll"
       - name: Axiom audit of every DoubleDealSecurityHeavy theorem (registry must match the source)
         working-directory: proofs/doubledeal/security
         run: python3 ../check_axioms.py security-heavy
+
+  megadreifach-heavy:
+    needs: changes
+    if: >-
+      github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.megadreifach == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate; includes MegaDreifachHeavy/)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach/lean --exclude Generated
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/megadreifach/lean
+          build-args: "MegaDreifachHeavy"
+      - name: Axiom audit of every MegaDreifachHeavy theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py megadreifach-heavy

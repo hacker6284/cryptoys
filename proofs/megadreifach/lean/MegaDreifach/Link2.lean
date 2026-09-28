@@ -242,7 +242,14 @@ namespace MegaDreifach.Link2
   `chain_loop` from `0` to `51` at `phiState rank`. The inner erase step is
   `phiErase_breaks`. Not `phi_inv`. Not `v_Hash`.
 
-  OPEN: full `v_Hash` refinement. `phi_inv` is still open.
+  CLOSED: `v_Hash_refines` (`Link2/VHash.lean`) on `PadWf`: Generated
+  `v_Hash (embed msg) = .ok (embed (vhashAlg msg))`, the MD fold of
+  `Em.dmStep h (phiUnrank (fromBE blk))` from `Em.ivCook12`, digest
+  `positionToBytes`. Also `position_to_bytes_refines_gen` (every `InjPos`)
+  and `even_perm_rank_big_refines_gen` (lengths 20 and 30, multi-limb).
+  CLOSED: all 8 KATs as `v_Hash` theorems (`MegaDreifachHeavy/Kat.lean`, kernel
+  `decide!`; non-default lean_lib `MegaDreifachHeavy`, about 8 min of kernel time).
+  OPEN: `phi_inv` / `v_HashDeck`.
   Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
   `range_list_refines` in `EvenRank.lean`.
 -/

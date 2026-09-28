@@ -1,4 +1,4 @@
-"""Selftest for the duplicate-owner check in `#audit_all` (DoubleDealSecurity/Audit.lean).
+"""Selftest for the duplicate-owner check in `#audit_all` (proofs/audit/AuditAll.lean).
 
 Writes throwaway modules under DoubleDealSecurity/, builds them, runs
 `#audit_all DoubleDealSecurity` in an environment that loads all of them, and requires the
@@ -72,7 +72,7 @@ FIX = [
 ]
 MODS = [f"DoubleDealSecurity.{name}" for name, _ in FIX]
 RUN = ("import DoubleDealSecurity\n" + "".join(f"import {m}\n" for m in MODS)
-       + "import DoubleDealSecurity.Audit\n\n#audit_all DoubleDealSecurity\n")
+       + "import AuditAll\n\n#audit_all DoubleDealSecurity\n")
 PREFIX = "declared in more than one module: "
 WANT = sorted([
     "DUP DoubleDeal.Security.isDeck_mixColumns: " + PREFIX
@@ -91,7 +91,7 @@ def main() -> int:
         for name, src in FIX:
             (LIB / f"{name}.lean").write_text(src)
         RUNNER.write_text(RUN)
-        b = subprocess.run(["lake", "build", "DoubleDealSecurity.Audit", *MODS], cwd=SEC,
+        b = subprocess.run(["lake", "build", "AuditAll", *MODS], cwd=SEC,
                            capture_output=True, text=True)
         if b.returncode != 0:
             print(b.stdout + b.stderr, file=sys.stderr)

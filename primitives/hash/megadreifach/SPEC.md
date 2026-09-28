@@ -131,7 +131,7 @@ A sudocode `int` is 64-bit and overflow traps. `|G|` and `52!` do not fit. `std.
 
 `kats/megaminx_hash_kats.json` is the published KAT file from the soft-lock reference (`hash_ref.py`). A copy lives at `proofs/megadreifach/vectors/` for Lean metadata checks. Sudo tests assert pad lengths, block counts, IV-COOK12 digest, φ on zero, the permutation domain, and that the public Hash API returns 29 bytes.
 
-Full `Hash` digest equality against the research hex strings in that JSON is **evidence to finish**. This sudo is the conformance runner; those hexes are not sudo-asserted until they are re-exported from it.
+Full `Hash` digest equality against the hex strings in that JSON is not asserted by the sudo tests: those digests are not re-exported from this file's test block. It is proved outside the sudo, for the emitted Lean of this file: `proofs/megadreifach/lean/MegaDreifachHeavy/Kat.lean` kernel-checks `v_Hash(msg) = digest` for all 8 vectors (proof package, not part of this normative spec; the sudo → Lean emitter is trusted).
 
 ---
 

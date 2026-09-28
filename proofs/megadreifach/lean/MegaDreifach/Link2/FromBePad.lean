@@ -16,9 +16,6 @@ import MegaDreifach.Link2.MagAdd
 
 namespace MegaDreifach.Link2
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 /-! ## Bounds -/
 
 private theorem pow256_le {a b : Nat} (h : a ≤ b) : 256 ^ a ≤ 256 ^ b :=

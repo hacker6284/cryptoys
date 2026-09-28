@@ -17,9 +17,6 @@ import MegaDreifach.Link2.Loop
 
 namespace MegaDreifach.Link2
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 private theorem addI_zero_nat (n : Nat) (h : FitsLen n) :
     SudoRt.addI (0 : Int) (Int.ofNat n) = .ok (Int.ofNat n) := by
   have h0 : FitsLen (0 + n) := by simpa [Nat.zero_add] using h

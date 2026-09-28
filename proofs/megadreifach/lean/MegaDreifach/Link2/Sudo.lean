@@ -23,6 +23,20 @@ theorem except_bind_pure {ε α} (m : Except ε α) :
 @[simp] theorem map_ok {ε α β} (f : α → β) (a : α) :
     (f <$> (Except.ok a : Except ε α)) = Except.ok (f a) := rfl
 
+/-- `pure` in the emitted `Except SudoRt.Trap` monad is `Except.ok`. Shared by the
+    Link 2 proofs (one public lemma instead of per-file private copies). -/
+theorem pure_eq_ok {α} (a : α) :
+    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
+
+/-- The same, for the `Applicative.toPure` projection some unfoldings expose. -/
+theorem toPure_eq_ok {α} (a : α) :
+    (Applicative.toPure.1 a : Except SudoRt.Trap α) = Except.ok a := rfl
+
+/-- `pure fl >>= f` is `f fl` for an emitted loop flow value. -/
+theorem bind_pure_flow {σ ρ β} (fl : SudoRt.Flow σ ρ)
+    (f : SudoRt.Flow σ ρ → Except SudoRt.Trap β) :
+    (pure fl >>= f) = f fl := rfl
+
 theorem bind_match_flow {σ ρ α}
     (m : Except SudoRt.Trap (SudoRt.Flow σ ρ))
     (onRet : ρ → Except SudoRt.Trap α)

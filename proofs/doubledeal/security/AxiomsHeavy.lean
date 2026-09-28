@@ -5,6 +5,6 @@
   `DoubleDealSecurityHeavy/` to be registered in HEAVY_THEOREMS and reported here.
 -/
 import DoubleDealSecurityHeavy
-import DoubleDealSecurity.Audit
+import AuditAll
 
 #audit_all DoubleDealSecurityHeavy

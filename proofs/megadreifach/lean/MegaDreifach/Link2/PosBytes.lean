@@ -277,9 +277,6 @@ theorem evenRank_edge (ep : List Nat) (h : EdgeZero ep) : evenRank ep = 0 := by
 
 /-! ## `even_perm_rank_big` on that edge prefix -/
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 private theorem zero_lt_limb : (0 : Nat) < limbBase := by decide
 
 private theorem edgeRankStep (ep : List Nat) (h : EdgeZero ep) (i : Nat) (hi : i ≤ 27) :

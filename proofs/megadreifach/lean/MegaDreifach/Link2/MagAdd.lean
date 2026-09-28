@@ -16,9 +16,6 @@ namespace MegaDreifach.Link2
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 100000
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 private theorem ite_false_eq {α} (a b : α) :
     (if false = true then a else b) = b := by
   simp [Bool.false_eq_true]

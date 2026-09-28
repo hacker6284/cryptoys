@@ -15,12 +15,6 @@ import MegaDreifach.Link2.Factorial
 
 namespace MegaDreifach.Link2
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
-private theorem toPure_eq_ok {α} (a : α) :
-    (Applicative.toPure.1 a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 private theorem match_ok_brk {σ ρ α} (s : σ)
     (onRet : ρ → Except SudoRt.Trap α)
     (onBrk onCont : σ → Except SudoRt.Trap α) :
@@ -40,10 +34,6 @@ private theorem match_ok_cont {σ ρ α} (s : σ)
       | Except.ok (SudoRt.Flow.brk s') => onBrk s'
       | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
   rfl
-
-private theorem bind_pure_flow {σ ρ β} (fl : SudoRt.Flow σ ρ)
-    (f : SudoRt.Flow σ ρ → Except SudoRt.Trap β) :
-    (pure fl >>= f) = f fl := rfl
 
 private theorem fits13 : FitsLen 13 := by
   unfold FitsLen i64MaxNat

@@ -18,13 +18,6 @@ namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
-private theorem bind_pure_flow {σ ρ β} (fl : SudoRt.Flow σ ρ)
-    (f : SudoRt.Flow σ ρ → Except SudoRt.Trap β) :
-    (pure fl >>= f) = f fl := rfl
-
 private theorem match_ok_brk {σ ρ α} (s : σ)
     (onRet : ρ → Except SudoRt.Trap α)
     (onBrk onCont : σ → Except SudoRt.Trap α) :

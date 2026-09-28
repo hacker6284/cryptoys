@@ -603,9 +603,6 @@ theorem evenRank_lt_limb3 (perm : List Nat) (h : Perm20Wf perm) :
 
 /-! ## `range_list` -/
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 private theorem push_range (i : Nat) :
     (embed (List.range i)).push (i : Int) = embed (List.range (i + 1)) := by
   rw [← ofNat_eq_natCast i, push_embed, ← List.range_succ]

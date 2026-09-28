@@ -14,6 +14,6 @@
   (`check_axioms.py security-heavy`, CI job `doubledeal-security-heavy`).
 -/
 import DoubleDealSecurity
-import DoubleDealSecurity.Audit
+import AuditAll
 
 #audit_all DoubleDealSecurity

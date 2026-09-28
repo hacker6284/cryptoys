@@ -13,9 +13,6 @@ import MegaDreifach.Link2.MulSmall
 
 namespace MegaDreifach.Link2
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
 theorem replicate_snoc (n a : Nat) :
     List.replicate (n + 1) a = List.replicate n a ++ [a] := by
   induction n with

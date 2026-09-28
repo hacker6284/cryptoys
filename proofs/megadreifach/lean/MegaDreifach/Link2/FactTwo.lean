@@ -115,16 +115,6 @@ private theorem filledL_three :
     SudoRt.filledL (3 : Int) (0 : Int) = .ok (Array.mkArray 3 (0 : Int)) := by
   erw [filledL_ofNat 3 (0 : Int)]
 
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
-private theorem toPure_eq_ok {α} (a : α) :
-    (Applicative.toPure.1 a : Except SudoRt.Trap α) = Except.ok a := rfl
-
-private theorem bind_pure_flow {σ ρ β} (fl : SudoRt.Flow σ ρ)
-    (f : SudoRt.Flow σ ρ → Except SudoRt.Trap β) :
-    (pure fl >>= f) = f fl := rfl
-
 private theorem match_ok_brk {σ ρ α} (s : σ)
     (onRet : ρ → Except SudoRt.Trap α)
     (onBrk onCont : σ → Except SudoRt.Trap α) :

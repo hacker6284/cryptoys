@@ -8,7 +8,7 @@ path dependency.
     lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
     lake build
     python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
-    lake build DoubleDealSecurityHeavy DoubleDealSecurity.Audit   # heavy witnesses, ~6 min (five decide! encryptions)
+    lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses, ~6 min (five decide! encryptions)
     python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
     python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
     python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
@@ -38,7 +38,6 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `RealKey` | commuting relabellings closed under powers; every nontrivial `v10Sym a x` has a power equal to one of four witnesses `v10Sym 1 0`, `v10Sym 0 1`, `v10Sym 0 2`, `v10Sym 0 3` (v9 needed two; `v10Sym` is not cyclic); pull-back from the emitted `encrypt` |
 | `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma map: `SUMRANKS_DP.md`; paper proof: `sumranks-dp-paper/PROOF.md` |
 | `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`). **Deprecated-v9 model**; kept as the proof of the v9 mechanism, not a statement about v10 |
-| `Audit` | the `#audit_all Root` command used by `Axioms.lean` / `AxiomsHeavy.lean` |
 | `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v11 `encrypt` under the identity master key (expected values regenerated for v11) (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
 
 Generic list/rotation lemmas live in the Mathlib-free core package
@@ -82,7 +81,8 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
   counts for its top-level declaration (inside `have` too); `let rec` and `where`
   items count under their own name `top.f`, as Lean and the axiom gate name them.
   `--selftest` checks these cases.
-- `../check_axioms.py security` runs `Axioms.lean`, whose `#audit_all` reports
+- `../check_axioms.py security` runs `Axioms.lean`, whose `#audit_all` (from the shared
+  core-only package `../../audit`, required by path; MegaDreifach uses the same one) reports
   the axioms of every theorem declared in a `DoubleDealSecurity.*` module. Only
   propext, Classical.choice and Quot.sound are allowed, except `sorryAx` for
   the three KNOWN_SORRY theorems above. Any axiom declared in the package fails,
@@ -104,7 +104,7 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 CI (`proofs-heavy.yml`, job `doubledeal-security-heavy`) builds the heavy library
 and runs `../check_axioms.py security-heavy` (same rules, no KNOWN_SORRY; every
 registered theorem must be reported) plus `scan_sorry.py`. It runs on PRs that
-touch the security sources, the core/Generated Lean, `check_axioms.py` or the
+touch the security sources, the core/Generated Lean, `check_axioms.py`, `proofs/audit` or the
 doubledeal sudo spec; on pushes to main; weekly; and on `workflow_dispatch`.
 
 Both jobs (`doubledeal-security` and `doubledeal-security-heavy`) must be green

@@ -132,7 +132,7 @@ total-fragment / terminating-subset emitter.
 | DoubleDeal-CBC-HMAC generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach via emit-ir `-I`. No Link 2. No AEAD security theorem. |
 | sudo↔Lean / algebraic≃Generated for CBC-HMAC (Link 2) | OPEN. Not started. |
 | AEAD security (EtM reduction, HMAC-MD PRF, CBC confidentiality) | OPEN. Not claimed. SCM stays later. |
-| MegaDreifach M13 (proof-package digest = KAT hex) | Still OPEN in the algebraic package (no handwritten `Hash`). Research hexes were refreshed to current sudo; Python and emitted Lean agree. |
+| MegaDreifach M13 (proof-package digest = KAT hex) | DONE for `Generated.v_Hash` (not a handwritten `Hash`): `proofs/megadreifach/lean/MegaDreifachHeavy/Kat.lean`, kernel `decide!` through `v_Hash_refines` (Link 2, `PadWf`). Research hexes were refreshed to current sudo; Python and emitted Lean agree. |
 
 ## Proofs that remain handwritten
 

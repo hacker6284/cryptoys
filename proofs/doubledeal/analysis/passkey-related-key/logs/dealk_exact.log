@@ -1,0 +1,23 @@
+$ python3 dealk_exact.py
+CUR: pairs with bound > 1/64: 68;  pairs with e >= 2: 146;  max bound 0.8869; 2H<->AS e=49;  expected cards dealt per pass 0.00
+    top 5 by bound: 2C<->AH(e=49,196/221=0.8869) 2H<->AS(e=49,196/221=0.8869) 2S<->AD(e=49,196/221=0.8869) 3C<->2H(e=48,188/221=0.8507) 3C<->AS(e=48,188/221=0.8507)
+k=0 min: pairs with bound > 1/64: 12;  pairs with e >= 2: 90;  max bound 0.8869; 2H<->AS e=0;  expected cards dealt per pass 75.50
+    top 5 by bound: 2C<->AH(e=49,196/221=0.8869) 3C<->2H(e=48,188/221=0.8507) 4C<->3H(e=47,1081/1326=0.8152) 5C<->4H(e=46,345/442=0.7805) 6C<->5H(e=45,165/221=0.7466)
+k=1 min: pairs with bound > 1/64: 0;  pairs with e >= 2: 78;  max bound 0.0075; 2H<->AS e=0;  expected cards dealt per pass 125.00
+    top 5 by bound: AS<->AD(e=5,5/663=0.0075) 2S<->2D(e=5,5/663=0.0075) 3S<->3D(e=5,5/663=0.0075) 4S<->4D(e=5,5/663=0.0075) 5S<->5D(e=5,5/663=0.0075)
+k=2 min: pairs with bound > 1/64: 0;  pairs with e >= 2: 78;  max bound 0.0113; 2H<->AS e=0;  expected cards dealt per pass 173.50
+    top 5 by bound: AS<->AD(e=6,5/442=0.0113) 2S<->2D(e=6,5/442=0.0113) 3S<->3D(e=6,5/442=0.0113) 4S<->4D(e=6,5/442=0.0113) 5S<->5D(e=6,5/442=0.0113)
+k=3 min: pairs with bound > 1/64: 13;  pairs with e >= 2: 78;  max bound 0.0158; 2H<->AS e=0;  expected cards dealt per pass 221.00
+    top 5 by bound: AS<->AD(e=7,7/442=0.0158) 2S<->2D(e=7,7/442=0.0158) 3S<->3D(e=7,7/442=0.0158) 4S<->4D(e=7,7/442=0.0158) 5S<->5D(e=7,7/442=0.0158)
+k=4 min: pairs with bound > 1/64: 39;  pairs with e >= 2: 78;  max bound 0.0211; 2H<->AS e=0;  expected cards dealt per pass 267.50
+    top 5 by bound: AS<->AD(e=8,14/663=0.0211) 2S<->2D(e=8,14/663=0.0211) 3S<->3D(e=8,14/663=0.0211) 4S<->4D(e=8,14/663=0.0211) 5S<->5D(e=8,14/663=0.0211)
+k=0 mod: pairs with bound > 1/64: 12;  pairs with e >= 2: 90;  max bound 0.8869; 2H<->AS e=0;  expected cards dealt per pass 73.25
+    top 5 by bound: 2C<->AH(e=49,196/221=0.8869) 3C<->2H(e=48,188/221=0.8507) 4C<->3H(e=47,1081/1326=0.8152) 5C<->4H(e=46,345/442=0.7805) 6C<->5H(e=45,165/221=0.7466)
+k=1 mod: pairs with bound > 1/64: 0;  pairs with e >= 2: 78;  max bound 0.0023; 2H<->AS e=0;  expected cards dealt per pass 120.50
+    top 5 by bound: AC<->AS(e=3,1/442=0.0023) AC<->AD(e=3,1/442=0.0023) 2C<->2S(e=3,1/442=0.0023) 2C<->2D(e=3,1/442=0.0023) 3C<->3S(e=3,1/442=0.0023)
+k=2 mod: pairs with bound > 1/64: 0;  pairs with e >= 2: 78;  max bound 0.0023; 2H<->AS e=1;  expected cards dealt per pass 166.50
+    top 5 by bound: AC<->AS(e=3,1/442=0.0023) AC<->AD(e=3,1/442=0.0023) 2C<->2S(e=3,1/442=0.0023) 2C<->2D(e=3,1/442=0.0023) 3C<->3S(e=3,1/442=0.0023)
+k=3 mod: pairs with bound > 1/64: 0;  pairs with e >= 2: 78;  max bound 0.0023; 2H<->AS e=1;  expected cards dealt per pass 210.25
+    top 5 by bound: AC<->AS(e=3,1/442=0.0023) AC<->AD(e=3,1/442=0.0023) 2C<->2S(e=3,1/442=0.0023) 2C<->2D(e=3,1/442=0.0023) 3C<->3S(e=3,1/442=0.0023)
+k=4 mod: pairs with bound > 1/64: 0;  pairs with e >= 2: 79;  max bound 0.0023; 2H<->AS e=1;  expected cards dealt per pass 253.00
+    top 5 by bound: AC<->AS(e=3,1/442=0.0023) AC<->AD(e=3,1/442=0.0023) 2C<->2S(e=3,1/442=0.0023) 2C<->2D(e=3,1/442=0.0023) 3C<->3S(e=3,1/442=0.0023)

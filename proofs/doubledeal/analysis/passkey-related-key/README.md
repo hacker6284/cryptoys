@@ -193,6 +193,7 @@ the PassMix-F rule from `analysis/gridcycle-bijective/` (branch `doubledeal-grid
 | `keysched.c` | `pass`: all 1326 swaps through one F; `sched`: τ-relation through the six real passes |
 | `rk.c` | full-cipher related-key tests V1–V3 and per-round state distance |
 | `readings.c`, `readings_exact.py` | §7: alternative readings of the suit step (reversibility, one-pass swaps, six-pass chain; exact move sets) |
+| `dealk_exact.py`, `dealk_check.c`, `logs/dealk*.log`, `logs/rk_dealk2mod.log` | §8: deal suit + k (k = 0..4, min vs mod), exact bounds, 1M refinements, full-cipher check (rk.c with env DEALK/DEALMOD) |
 | `run_all.sh` | rebuilds and regenerates every log |
 
 ## 7. History of PassKey's F, and the "deal x cards" reading (follow-up)
@@ -271,3 +272,86 @@ What the table shows:
   again (King/Queen pairs up to 0.059).
 * **Unmeasured hand-friendly idea for the ♣/♥ residue:** deal x = suit + 2 cards (2–5), so every suit reverses
   at least two cards. Not tested.
+
+## 8. "Deal suit + k" for k = 0..4 (follow-up)
+
+**Rule measured (analysis only; not the spec).** Pop the controller C; the hand now has n cards.
+
+1. Deal m cards one at a time off the top of the hand. They land reversed. Put that small packet under the hand.
+2. Do the existing rank cut with key-pile fallback, unchanged.
+3. Put C on top of the key pile.
+
+Here m = suit(C) + k (♣0 ♥1 ♠2 ♦3), reduced as below when the hand is short. The inverse gesture mirrors this:
+lift C, undo the rank cut, then take the bottom m cards as a packet and deal them one at a time onto the top of
+the hand (which reverses them back).
+
+**Short hands: chosen rule `mod`.** If the count is not smaller than the hand, subtract the hand size until it
+is, i.e. m = (suit + k) mod n. This only matters in the last suit + k steps of a pass (n ≤ 6 for k = 2), and it
+is one small subtraction.
+
+The obvious alternative is `min`: when the hand runs out, deal everything. It is also reversible, but late in
+the pass every card with suit + k ≥ n then makes the same move (reverse the whole hand), so the two cards of a
+same-rank pair act identically there. Measured, this makes the worst swap 3.5× worse at k = 2 (≈1/89 against
+≈1/300), and at k = 3 and 4 it puts 5 and 29 pairs above 1/64. Both rules are in the table.
+
+**Why it is reversible (both rules).**
+* The inverse reads C from the top of the key pile. The hand size n at C's step is the inverse's current hand
+  size, because neither the deal nor a hand cut changes it. So m can be recomputed, and so can the rank-cut
+  branch (it depends only on rank(C) and the two pile sizes, exactly as in today's F⁻¹).
+* "Reverse the top m, move them to the bottom" is a fixed permutation of the n hand seats once m is known.
+  Undo it by moving the bottom m back to the top, then reversing them.
+* So each step is a bijection on (hand, key) states of fixed sizes, and the pass is their composition. This is
+  the same argument as `PassKey.lean`.
+* Round trip: 0 failures in 200k decks each way, for every k and both rules (`logs/dealk.log`, `logs/dealk_mod.log`).
+
+**Results.** One pass, all 1326 swaps at 20k decks each (seed 31). Top pairs were re-measured at 1M decks
+(`logs/dealk_check.log`). The exact bound is the largest closed-form lower bound e(e−1)/2652 over all pairs
+(`logs/dealk_exact.log`). The six-pass rate is for the worst pair, over 200k keys. Cards dealt per pass is exact
+(the controller is uniform at each step).
+
+| rule | reversible | worst swap, one pass | 2♥↔A♠ | pairs > 1/64 | exact bound (max) | six passes, worst pair | cards dealt per pass |
+|---|---|---|---|---|---|---|---|
+| current F | yes | 2♥↔A♠ 0.890 | 0.890 | 68 | 196/221 | 0.479 | 0 (one suit cut per step) |
+| k=0 (min or mod) | yes | 2♣↔A♥ 0.887 | 0.0149 | 12 | 196/221 | 0.479 | 75.5 / 73.3 |
+| k=1 min | yes | 2♣↔A♥ 0.0146 (1M) ≈ 1/69 | 0.0020 | 0 | 5/663 | 0 / 200k | 125.0 |
+| k=1 mod | yes | 2♣↔A♥ 0.0146 (1M) ≈ 1/69 | 0.0016 | 0 | 1/442 | 0 / 200k | 120.5 |
+| k=2 min | yes | 2♠↔2♦ 0.0112 (1M) ≈ 1/89 | 0.0006 | 0 | 5/442 | 0 / 200k | 173.5 |
+| **k=2 mod** | **yes** | **A♥↔A♦ 0.0034, 3♥↔3♦ 0.0032 (1M) ≈ 1/300** | **0.0008 (1M)** | **0** | **1/442** | **0 / 200k** | **166.5** |
+| k=3 min | yes | 7♠↔7♦ 0.0175 | 0.0006 | 5 | 7/442 | 0 / 200k | 221.0 |
+| k=3 mod | yes | A♣↔A♠ 0.0032 (1M) ≈ 1/310 | 0.0004 | 0 | 1/442 | 0 / 200k | 210.3 |
+| k=4 min | yes | 6♠↔6♦ 0.0225 | 0.0006 | 29 | 14/663 | 0 / 200k | 267.5 |
+| k=4 mod | yes | 4♣↔4♦ 0.0023 (1M) ≈ 1/430 | 0.0010 | 0 | 1/442 | 0 / 200k | 253.0 |
+
+Top 5 pairs (20k screen):
+
+| rule | top 5 pairs |
+|---|---|
+| k=1 | 2♣↔A♥, 3♣↔2♥, 6♣↔5♥, 5♣↔4♥, 4♣↔3♥ (0.012–0.015) |
+| k=2 mod | 3♥↔3♦, A♥↔A♦, J♣↔J♠, K♣↔K♦, 5♥↔5♦ (0.0029–0.0037) |
+| k=3 mod | A♣↔A♠, 3♣↔3♠, 6♥↔6♦, Q♥↔Q♦, 8♣↔8♦ (≈0.003) |
+| k=4 mod | 4♣↔4♦, 6♣↔6♦, 8♣↔8♦, A♥↔A♦, 8♥↔8♦ (≈0.003) |
+
+Reading the results:
+* **k=1** removes every exact collision, but the ♣↔♥ suit+rank pairs still pass at ≈1/69 through paths that
+  split and rejoin. Dealing 1 card (a ♣) is a plain rotation, and dealing 2 (a ♥) differs from it only by one
+  adjacent swap.
+* **From k=2 up (mod)** every suit reverses at least two cards. The worst swap flattens at about 1/300–1/430,
+  5–7× below the 1/64 bar and around 250× better than today's F. Beyond k=2 it gains nothing
+  measurable, while each extra k costs about 44–48 more card deals per pass.
+
+**Full-cipher sanity check with k=2 mod as the key schedule** (`logs/rk_dealk2mod.log`, 3M (K, P) samples per
+swap, for 3♥↔3♦ (its worst), 2♥↔A♠ and 2♣↔A♥):
+* The relations E_τK(P) = E_K(P), E_τK(P) = E_K(P)∘σ and E_τK(τP) = τE_K(P) had 0 hits (95% upper bound 1e-6).
+* Ciphertext equal seats: 0.9989–1.0003 ± 0.0011, where unrelated decks give 1.
+* No key reached six τ-related round keys, and in the oracle-aligned case the state already differs in
+  50.3–50.5 seats after round 1 (7.5 with today's F). The related-key relation now dies in the first pass.
+
+**Recommendation (proposal only).** If PassKey is changed to match the intended "deal" gesture, use **deal
+suit + 2, reversed, under the hand, count taken mod the hand size, then the unchanged rank cut**.
+* It is reversible by the same per-step argument that `PassKey.lean` already uses.
+* It removes all 68 suit+rank collisions. The worst one-pass swap is ≈1/300, with 0 pairs above 1/64.
+* The cost is about 3.2 cards dealt per controller, 166.5 per pass. That is roughly 1000 extra single-card deals
+  per encryption, since there are six passes.
+* Every round key, every vector and the PassKey Lean/Link 2 files would change. Section 4 found no measured
+  full-cipher need, so this is a fidelity/cleanliness change, not a security fix.
+* k=1 is cheaper (120 cards) but leaves the ♣↔♥ pairs at ≈1/69. k=3 and 4 cost more for no measured gain.

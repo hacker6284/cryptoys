@@ -9,6 +9,7 @@
      4 DEALB deal x cards one at a time off the top of the hand (so they reverse), put that small packet under the
              hand ("rotate the hand by x" with the moved packet reversed); x capped at the hand size.
              Zachary's stated intent (2026-09-28): the x cards change order.
+             DEALK=k (env) deals x = suit + k instead (k = 0..4); the count is capped at the hand size (min), see README 8.
      5 REVT  reverse the top x cards of the hand in place (deal them off and put them back on top), then the rank cut
    usage: readings N seed      (all 1326 swaps, N uniform decks each; round-trip test on 200k decks each way) */
 #include <stdio.h>
@@ -22,14 +23,16 @@ static void push(int *a, int *n, int c) { memmove(a + 1, a, *n * sizeof(int)); a
 static int pop(int *a, int *n) { int c = a[0]; memmove(a, a + 1, (*n - 1) * sizeof(int)); (*n)--; return c; }
 static void rank_cut(int *hand, int hn, int *key, int kn, int r, int dir) {
     if (hn && r < hn) rotl(hand, hn, dir * r); else if (kn && r < kn) rotl(key, kn, dir * r); }
+static int KDEAL = 0;    /* DEALB: deal suit + KDEAL cards (env DEALK) */
+static int DMOD = 0;     /* DEALB: env DEALMOD=1 caps the count as x mod hand size instead of min(x, hand size) */
 static void fwd(int v, const int *d, int *o) {
     if (v == 0) { passkey(d, o); return; }
     int hand[52], key[52], hn = 52, kn = 0; memcpy(hand, d, sizeof hand);
-    while (hn) { int C = pop(hand, &hn), x = SUIT(C);
+    while (hn) { int C = pop(hand, &hn), x = SUIT(C) + (v == 4 ? KDEAL : 0);
         if (v == 1) for (int i = 0; i < x && hn; i++) top_to_bottom(hand, hn);
         if (v == 2) for (int i = 0; i < x && hn; i++) push(key, &kn, pop(hand, &hn));
         if (v == 3) for (int i = 0; i < x && kn; i++) top_to_bottom(key, kn);
-        if (v == 4 || v == 5) { int m = x < hn ? x : hn, t[4]; for (int i = 0; i < m; i++) t[i] = hand[m - 1 - i];
+        if (v == 4 || v == 5) { int m = (v == 4 && DMOD) ? (hn ? x % hn : 0) : (x < hn ? x : hn), t[8]; for (int i = 0; i < m; i++) t[i] = hand[m - 1 - i];
             memcpy(hand, t, m * sizeof(int)); if (v == 4) rotl(hand, hn, m); }
         rank_cut(hand, hn, key, kn, RANK(C), 1);
         push(key, &kn, C); }
@@ -38,7 +41,7 @@ static int MLAST = -1;   /* DEAL only: how many cards the last controller dealt 
 static void inv(int v, const int *o, int *d) {
     if (v == 0) { passkey_inv(o, d); return; }
     int hand[52], key[52], hn = 0, kn = 52; memcpy(key, o, sizeof key);
-    while (kn) { int C = pop(key, &kn), x = SUIT(C);
+    while (kn) { int C = pop(key, &kn), x = SUIT(C) + (v == 4 ? KDEAL : 0);
         rank_cut(hand, hn, key, kn, RANK(C), -1);             /* same pile sizes as at the forward cut */
         if (v == 1) for (int i = 0; i < x && hn; i++) bottom_to_top(hand, hn);
         if (v == 2) { /* a non-last controller always dealt exactly x (cards remained after it); the last one dealt
@@ -46,13 +49,15 @@ static void inv(int v, const int *o, int *d) {
             int m = (hn == 0 && MLAST >= 0) ? MLAST : x; if (m > x) m = x; if (m > kn) m = kn;
             for (int i = 0; i < m; i++) push(hand, &hn, pop(key, &kn)); }
         if (v == 3) for (int i = 0; i < x && kn; i++) bottom_to_top(key, kn);
-        if (v == 4 || v == 5) { int m = x < hn ? x : hn, t[4]; if (v == 4) rotl(hand, hn, -m);
+        if (v == 4 || v == 5) { int m = (v == 4 && DMOD) ? (hn ? x % hn : 0) : (x < hn ? x : hn), t[8]; if (v == 4) rotl(hand, hn, -m);
             for (int i = 0; i < m; i++) t[i] = hand[m - 1 - i];
             memcpy(hand, t, m * sizeof(int)); }
         push(hand, &hn, C); }
     memcpy(d, hand, sizeof hand); }
 static const char *VN[] = {"CUR", "SAME", "DEAL", "KEYP", "DEALB", "REVT"};
 int main(int argc, char **argv) {
+    if (getenv("DEALK")) KDEAL = atoi(getenv("DEALK"));
+    if (getenv("DEALMOD")) DMOD = atoi(getenv("DEALMOD"));
     long N = argc > 1 ? atol(argv[1]) : 50000; uint64_t seed = argc > 2 ? strtoull(argv[2], 0, 10) : 21;
     printf("readings N=%ld seed=%llu  (x = suit; one pass; swap tau passes if F(tau K) = tau F(K))\n", N, (unsigned long long)seed);
     for (int v = (getenv("ONLYV") ? atoi(getenv("ONLYV")) : 0); v < (getenv("ONLYV") ? atoi(getenv("ONLYV")) + 1 : 6); v++) {
@@ -77,6 +82,7 @@ int main(int argc, char **argv) {
         int over = 0, wa = 0, wb = 0; double w = 0, sum = 0;
         for (int a = 0; a < 52; a++) for (int b = a + 1; b < 52; b++) { over += p[a][b] > 1.0 / 64; sum += p[a][b]; if (p[a][b] > w) { w = p[a][b]; wa = a; wb = b; } }
         printf("%-4s  F^-1(F(x)) != x: %ld/200000  F(F^-1(y)) != y: %ld/200000  equals CUR on %ld/200000 decks\n", VN[v], rt1, rt2, eqcur);
+        if (v == 4) printf("      (DEALB with k = %d: deal suit + %d cards, %s)\n", KDEAL, KDEAL, DMOD ? "count mod hand size" : "count capped at the hand size (min)");
         printf("      worst %s<->%s %.4f   2H<->AS %.4f   pairs > 1/64: %d   mean over 1326: %.5f\n", nm(wa), nm(wb), w, p[14][26], over, sum / 1326);
         printf("      top 5:"); for (int t = 0; t < 5; t++) { double m = -1; int ma = 0, mb = 0;
             for (int a = 0; a < 52; a++) for (int b = a + 1; b < 52; b++) if (p[a][b] > m) { m = p[a][b]; ma = a; mb = b; }

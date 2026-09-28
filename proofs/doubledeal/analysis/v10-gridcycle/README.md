@@ -6,6 +6,8 @@
 > see [PHASE3.md](PHASE3.md).
 > **Phase 4** ("C sends itself": the placed card picks its own scan): non-invertible in every variant,
 > see [PHASE4.md](PHASE4.md).
+> **Phase 5** (diffusion / swap spread, MixColumns-style): branch analogue is exactly 4 for every one-pass rule;
+> rule 1 is at least as good as rule 2 on every spread statistic; see [PHASE5.md](PHASE5.md).
 
 **Kind:** analysis. Nothing here is a theorem, a spec change or a security claim. No bit-security
 figures. The normative GridCycle is SPEC §3.5 / §4.4 and `mix_columns` in

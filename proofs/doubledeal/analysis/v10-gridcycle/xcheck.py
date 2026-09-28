@@ -13,7 +13,7 @@ gc_mix(d,o);for(int i=0;i<52;i++) printf("%d ",o[i]);printf("\n");fflush(stdout)
 tmp = tempfile.mkdtemp(prefix='gcx')
 csrc, exe = os.path.join(tmp, 'gcx.c'), os.path.join(tmp, 'gcx')
 open(csrc, 'w').write(src)
-subprocess.check_call(['cc', '-O2', '-I', here, csrc, '-o', exe])
+subprocess.check_call([os.environ.get('CC', 'cc'), '-O2', '-I', here, csrc, '-o', exe])
 rng = random.Random(1); decks = []
 for _ in range(2000):
     d = list(range(52)); rng.shuffle(d); decks.append(d)

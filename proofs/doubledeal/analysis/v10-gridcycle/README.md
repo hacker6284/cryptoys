@@ -287,7 +287,7 @@ after `./build.sh`; `runs/` holds the uncommitted raw tables):
 
 | log | command |
 |---|---|
-| `candcheck.log` | `python3 candcheck.py > candcheck.log` |
+| `candcheck.log` | `./build.sh && python3 candcheck.py > candcheck.log` |
 | `survival_value.log` | `for s in 1 2 3 4; do ./survival value 50000 $s > runs/value_$s.txt; done; python3 agg.py value 10 > survival_value.log` |
 | `survival_pos.log` | `for s in 1 2 3 4; do ./survival pos 50000 $((s+100)) > runs/pos_$s.txt; done; python3 agg.py pos 20 > survival_pos.log` |
 | `structure.log` | `./structure 200000 3 > structure.log` |

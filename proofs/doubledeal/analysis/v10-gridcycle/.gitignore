@@ -4,7 +4,6 @@ structure
 cycles3
 mechanism
 round
-cand_check
 cand
 p3small
 p3collide

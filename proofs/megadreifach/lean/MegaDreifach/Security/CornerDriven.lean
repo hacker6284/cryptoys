@@ -1,7 +1,7 @@
 /-
   SECURITY (structural weakness, proved) — RESULT ABOUT v1 OF THE GRIP RULE.
 
-  Grip-rule status: these theorems are about the current (v1) E_m, whose grip
+  Grip-rule status: these theorems are about the v1 E_m, whose grip
   choice (Recipe A, `Em.recipeA`) reads only corner cubies
   (`recipeA_sameCorners`).  They document why the grip rule is being
   redesigned.  They need not hold for a redesigned rule that reads edges,

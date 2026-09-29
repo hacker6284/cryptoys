@@ -1,6 +1,6 @@
 # MegaDreifach
 
-> **v1 is deprecated (broken)**, frozen at `v1/SPEC.md` + `v1/megadreifach.sudo` (KATs: `kats/megaminx_hash_kats.json`, unchanged). Its grip rule had two separate flaws, both documented in PR #119 (merged; `proofs/megadreifach/security/REPORT.md`): the read came *after* the noon turn, so most re-grips ignored the suit and same-rank swaps two apart give **practical IV-anchored `Hash` collisions at about 2^12–2^13 compressions** (measured; one pair kernel-checked against the generated `v_Hash`) and practical second preimages of long targets (report §3); and the read saw only corners, so `E_m(h) = W·h` with `W` a function of the corners of `h` alone (proved, report §1.3). Its table noon also could not be performed from the puzzle alone (for lower-ring faces it agrees with a visual rule in 48 of 60 grips; for Down in 12 of 60).
+> **v1 is deprecated (broken)**, frozen at `v1/SPEC.md` + `v1/megadreifach.sudo` (KATs: `kats/megaminx_hash_kats_v1.json`, unchanged). Its grip rule had two separate flaws, both documented in PR #119 (merged; `proofs/megadreifach/security/REPORT.md`): the read came *after* the noon turn, so most re-grips ignored the suit and same-rank swaps two apart give **practical IV-anchored `Hash` collisions at about 2^12–2^13 compressions** (measured; one pair kernel-checked against the generated `v_Hash`) and practical second preimages of long targets (report §3); and the read saw only corners, so `E_m(h) = W·h` with `W` a function of the corners of `h` alone (proved, report §1.3). Its table noon also could not be performed from the puzzle alone (for lower-ring faces it agrees with a visual rule in 48 of 60 grips; for Down in 12 of 60).
 
 **This is MegaDreifach v2, the current version.** It is final in the sense that its definition and KATs (`kats/megaminx_hash_kats_v2.json`) are fixed; that is not a security claim (§8). One change from v1: the grip rule inside `E_m` (§5). Three parts:
 
@@ -220,7 +220,7 @@ A sudocode `int` is 64-bit and overflow traps. `|G|` and `52!` do not fit. `std.
 
 The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zero, the permutation domain, the public API, the edge-slot table (§5.6), the visual noon on all 60 grips, and **all eight v2 `Hash` digests plus the `HashDeck` vector** of that file.
 
-`kats/megaminx_hash_kats.json` stays the **v1** KAT file (for the deprecated `v1/megadreifach.sudo`), byte for byte unchanged.
+`kats/megaminx_hash_kats_v1.json` stays the **v1** KAT file (for the deprecated `v1/megadreifach.sudo`), byte for byte unchanged.
 
 **Lean lags: the proofs cover v1, not v2.** The Lean proof package under `proofs/megadreifach/` is explicitly **pinned to v1**: its `Generated/` is emitted from the frozen `v1/megadreifach.sudo` (`proofs/emit_lean.sh` target `megadreifach`), its vectors and `MegaDreifachHeavy/Kat.lean` are the v1 KATs, and its model (`Em.lean`), Link 2 and `Security/` are about v1. No Lean theorem in this repository is about v2 until the package is ported. The only v2 code that reaches Lean is the emitted (not proved) copy of `megadreifach.sudo` inside `proofs/doubledeal-cbc-hmac/lean/Generated/`, which exists because DoubleDeal-CBC-HMAC imports `Hash`; its TAP run executes the DoubleDeal-CBC-HMAC sudo tests and proves nothing about MegaDreifach.
 

@@ -25,7 +25,7 @@
   pad, and the block split are small `decide`s.  The rest is `List.foldl_append`
   and `v_Hash_refines` (Link 2).
 
-  Grip-rule status: v1.  The statement is about the published hash; it uses
+  Grip-rule status: v1.  The statement is about the v1 hash; it uses
   the concrete `Em.g2Step` (the proof evaluates it) and would simply fail for
   a changed E_m.  It does not use `recipeA_sameCorners`.
 

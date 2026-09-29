@@ -14,7 +14,7 @@
   Keeping them here means deleting the v1 files does not take M3 with it.
 
   Grip-rule status: INDEPENDENT of the grip rule (no statement mentions how
-  the grip is chosen).  They unfold the current `Em.g2Step` / `Em.f3Step` /
+  the grip is chosen).  They unfold the (v1) `Em.g2Step` / `Em.f3Step` /
   `Em.emBlock`, so they need re-proof only if those step definitions change
   (they go through again if each step still left-multiplies by face moves).
 

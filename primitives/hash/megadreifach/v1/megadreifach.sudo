@@ -3,7 +3,7 @@
 // Product name MegaDreifach is locked. The puzzle/group is megaminx.
 // A sudocode int is 64-bit and overflow traps; |G| and 52! need pasted bigint.
 // Tests lock pad, φ, IV-COOK12, rank, the group law, and the public API.
-// Research Hash hexes in kats/megaminx_hash_kats.json track current sudo
+// Research Hash hexes in kats/megaminx_hash_kats_v1.json (was kats/megaminx_hash_kats.json) track this sudo
 // (refreshed 2026-09-24; Python and emitted Lean agree). Not asserted here.
 
 pad_block = 28

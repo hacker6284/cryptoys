@@ -1,6 +1,6 @@
 # MegaDreifach v1 (deprecated, broken, frozen)
 
-> **Deprecated and broken.** This is the frozen v1 specification. It is kept verbatim below this banner so the published v1 vectors (`../kats/megaminx_hash_kats.json`) and the write-ups keep a fixed target. Do not change its behavior. The current version is v2 (`../SPEC.md`, `../megadreifach.sudo`, KATs `../kats/megaminx_hash_kats_v2.json`).
+> **Deprecated and broken.** This is the frozen v1 specification. It is kept verbatim below this banner so the published v1 vectors (`../kats/megaminx_hash_kats_v1.json`, formerly `kats/megaminx_hash_kats.json`) and the write-ups keep a fixed target. Do not change its behavior. The current version is v2 (`../SPEC.md`, `../megadreifach.sudo`, KATs `../kats/megaminx_hash_kats_v2.json`).
 >
 > **Why deprecated.** The v1 grip rule (Recipe A: read the clockwise-noon corner *after* the held-face, noon and Front turns, with the table noon; 12 F3 rounds) has two separate flaws, both documented in PR #119 (merged; `proofs/megadreifach/security/REPORT.md`):
 >
@@ -9,7 +9,7 @@
 >
 > In addition, the *table noon* below ("the first neighbour in table order") cannot be performed from the puzzle alone: for lower-ring faces it matches a visual rule in only 48 of the 60 grips, and for Down it can be any of 5 faces. v2 replaces it with a visual noon.
 >
-> The conformance implementation for this frozen text is `megadreifach.sudo` next to this file (`v1/megadreifach.sudo`; it keeps the v1 file name so that the Lean emitted from it is still the module `Megadreifach`). It differs from the last v1 `megadreifach.sudo` on main (bbc26cb) only in its first comment line. Relative links in the body below point at the v1-era tree (`megadreifach.sudo` there means `v1/megadreifach.sudo` here; `kats/megaminx_hash_kats.json` is still the v1 KAT file). The body below is the v1 SPEC as of main bbc26cb (after PR #119), verbatim.
+> The conformance implementation for this frozen text is `megadreifach.sudo` next to this file (`v1/megadreifach.sudo`; it keeps the v1 file name so that the Lean emitted from it is still the module `Megadreifach`). It differs from the last v1 `megadreifach.sudo` on main (bbc26cb) only in comment lines 1 and 6. Relative links in the body below point at the v1-era tree (`megadreifach.sudo` there means `v1/megadreifach.sudo` here; `kats/megaminx_hash_kats.json` there is the v1 KAT file, now renamed `kats/megaminx_hash_kats_v1.json` with identical contents). The body below is the v1 SPEC as of main bbc26cb (after PR #119), verbatim.
 >
 > **Lean.** The Lean proof package `proofs/megadreifach/` is pinned to this v1: its `Generated/` is emitted from `v1/megadreifach.sudo`, and its vectors are the v1 KATs. Its proofs are about v1, not v2.
 >

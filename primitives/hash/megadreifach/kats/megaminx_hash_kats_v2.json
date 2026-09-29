@@ -1,7 +1,7 @@
 {
   "spec": "MegaDreifach",
   "version": "v2",
-  "status": "Current (final; not a security claim). MegaDreifach v2 = grip rule \"C36\" (visual noon; read right after the held-face turn; odd positions corner, even positions edge; 36 F3 rounds). v1 is deprecated (broken, PR #119); its KATs stay unchanged in megaminx_hash_kats.json.",
+  "status": "Current (final; not a security claim). MegaDreifach v2 = grip rule \"C36\" (visual noon; read right after the held-face turn; odd positions corner, even positions edge; 36 F3 rounds). v1 is deprecated (broken, PR #119); its KATs stay unchanged in megaminx_hash_kats_v1.json.",
   "date": "2026-09-29",
   "digest_encoding": "LOCKED position_to_bytes 29-byte BE rank (SPEC \u00a73 / \u00a76)",
   "digest_len": 29,

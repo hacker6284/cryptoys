@@ -167,7 +167,7 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
 }
 # proofs/megadreifach/lean: the 8 hash KATs in MegaDreifachHeavy/Kat.lean (the names
-# match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats.json;
+# match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json;
 # vectors/json_to_lean.py --check checks their statements against the JSON).
 MD_LEAN = ROOT.parent / "megadreifach" / "lean"
 MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"

@@ -22,7 +22,7 @@
   involve E_m at all.  `extract_collision` / `extract_second_preimage` treat
   `dmBlock` as a black box.  If E_m changes, only `injPos_chR_from` (and so `injPos_chR`) needs repair:
   it uses `Link2.injPos_dmStep` (`Link2/InjInv.lean`), which unfolds the
-  current `Em` definitions.  The link to `Generated.v_Hash`
+  (v1) `Em` definitions.  The link to `Generated.v_Hash`
   (`Link2.v_Hash_refines`, `Link2.em_block_refines`) would also have to be
   redone for a new sudo E_m.
 

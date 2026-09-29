@@ -354,6 +354,6 @@ python3 proofs/megadreifach/security/suit_blind_collision.py --check --full   # 
 python3 proofs/megadreifach/security/suit_blind_collision.py --check --variant pre-noon   # §3.5 control (≈ 4 CPU-min)
 ```
 * The scripts need only Python 3 (standard library) and run from any directory.
-* `md.py` reads the published KATs from `primitives/hash/megadreifach/kats/megaminx_hash_kats.json` and exits non-zero on a mismatch; `tables.py` holds the E_m tables copied from `megadreifach.sudo`.
+* `md.py` reads the published KATs from `primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json` and exits non-zero on a mismatch; `tables.py` holds the E_m tables copied from `megadreifach.sudo`.
 * Without `--check`, `logs.py` and `suit_blind_collision.py --log [--full | --variant pre-noon]` rewrite the logs (the `tools/gencheck.py` convention).
 * CI runs `suit_blind_collision.py --check` in `proofs.yml` (megadreifach-lean). It runs `logs.py --check`, `suit_blind_collision.py --check --full` and `suit_blind_collision.py --check --variant pre-noon` in `proofs-heavy.yml` (megadreifach-attack-logs).

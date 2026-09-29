@@ -63,14 +63,11 @@ jobs:
         run: proofs/emit_lean.sh --check
       - name: Current vectors (JSON + Vectors.lean) rebuild byte-identically from doubledeal.sudo
         run: proofs/doubledeal/vectors/regen.sh current --check
-      - name: Frozen v8 vectors rebuild byte-identically from v8/doubledeal_v8.sudo
-        run: proofs/doubledeal/vectors/regen.sh v8 --check
-      - name: Frozen v9 vectors rebuild byte-identically from v9/doubledeal_v9.sudo
-        run: proofs/doubledeal/vectors/regen.sh v9 --check
-      - name: Frozen v10 vectors rebuild byte-identically from v10/doubledeal_v10.sudo
-        run: proofs/doubledeal/vectors/regen.sh v10 --check
-      - name: Frozen v11 vectors rebuild byte-identically from v11/doubledeal_v11.sudo
-        run: proofs/doubledeal/vectors/regen.sh v11 --check
+      - name: Frozen v8-v11 vectors rebuild byte-identically from vN/doubledeal_vN.sudo
+        run: |
+          for v in v8 v9 v10 v11; do
+            proofs/doubledeal/vectors/regen.sh "$v" --check
+          done
 
   generated:
     # Emitted Lean of each primitive builds and its sudo tests pass (TAP).
@@ -84,6 +81,9 @@ jobs:
           - { name: megadreifach, dir: proofs/megadreifach/lean/Generated, test: megadreifach_test }
           - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
           - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
+          # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property; not an
+          # attack, so no witness package): emitted TAP only (proofs/deprecated/doubledeal-v11/).
+          - { name: doubledeal-v11, dir: proofs/deprecated/doubledeal-v11/lean/Generated, test: doubledeal_v11_test }
     steps:
       - uses: actions/checkout@v5
       - uses: leanprover/lean-action@v1
@@ -168,20 +168,6 @@ jobs:
         run: lake build
       - name: Axiom audit (no sorryAx / ofReduceBool)
         run: python3 proofs/doubledeal/check_axioms.py v10-deprecated
-
-  doubledeal-v11-superseded:
-    # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property;
-    # not an attack, so no witness package): emitted TAP only
-    # (see proofs/deprecated/doubledeal-v11/README.md).
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: proofs/deprecated/doubledeal-v11/lean/Generated
-      - name: Generated v11 TAP (frozen sudo tests)
-        working-directory: proofs/deprecated/doubledeal-v11/lean/Generated
-        run: ./.lake/build/bin/doubledeal_v11_test
 
   doubledeal-lean:
     runs-on: ubuntu-latest

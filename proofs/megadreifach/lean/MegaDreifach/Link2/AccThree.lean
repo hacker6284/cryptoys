@@ -30,7 +30,7 @@ private theorem div_le_div_right {a b n : Nat} (hn : 0 < n) (h : a ≤ b) : a / 
 
 private theorem lo_div_lt (lo r : Nat) (hlo : lo < limbBase) (hr : r < limbBase) :
     (lo * r) / limbBase < limbBase := by
-  have hsq := prod_lt_sq hlo hr
+  have hsq := limb_prod_lt_sq hlo hr
   rw [limbBase_pow2] at hsq
   exact div_lt_of_lt_mul limbBase_pos hsq
 
@@ -364,7 +364,7 @@ private theorem mulIStep_i0 (a0 a1 a2 r : Nat) (ha0 : a0 < limbBase) (hr : r < l
         ((0 : Int), Array.mkArray 4 (0 : Int)) =
       .ok (SudoRt.Flow.cont
         ((1 : Int), embed [(a0 * r) % limbBase, (a0 * r) / limbBase, 0, 0])) := by
-  have hfit : FitsLen (a0 * r) := prod_fits ha0 hr
+  have hfit : FitsLen (a0 * r) := limb_prod_fits ha0 hr
   have hlenb : SudoRt.listLen (embed [r]) = (1 : Int) := by rw [listLen_embed]; rfl
   unfold mulIStep
   dsimp [bigOf]
@@ -413,7 +413,7 @@ private theorem mulIStep_i1 (a0 a1 a2 r : Nat)
           embed [(a0 * r) % limbBase,
             ((a0 * r) / limbBase + a1 * r) % limbBase,
             ((a0 * r) / limbBase + a1 * r) / limbBase, 0])) := by
-  have hfitR : FitsLen (a1 * r) := prod_fits ha1 hr
+  have hfitR : FitsLen (a1 * r) := limb_prod_fits ha1 hr
   have hmid := mid_lt_sq a0 a1 r ha0 ha1 hr
   have hfitM : FitsLen ((a0 * r) / limbBase + a1 * r) :=
     Nat.le_trans (Nat.le_of_lt hmid) limb_sq_fits
@@ -477,7 +477,7 @@ private theorem mulIStep_i2 (a0 a1 a2 r : Nat)
           embed [(a0 * r) % limbBase,
             ((a0 * r) / limbBase + a1 * r) % limbBase,
             ((a0 * r) / limbBase + a1 * r) / limbBase + a2 * r, 0])) := by
-  have hfitR : FitsLen (a2 * r) := prod_fits ha2 hr
+  have hfitR : FitsLen (a2 * r) := limb_prod_fits ha2 hr
   have htop := top_lt a0 a1 a2 r hp
   have hfitT : FitsLen (((a0 * r) / limbBase + a1 * r) / limbBase + a2 * r) :=
     fits_of_lt_limb htop

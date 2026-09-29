@@ -26,7 +26,7 @@ theorem pow256_four_ge_limb : limbBase ≤ 256 ^ 4 := by
   decide
 
 private theorem two56_nat : bigNat 256 = bigOf [256] :=
-  bigNat_limb 256 two56_lt_limb (by decide)
+  bigNat_limb 256 twoFiftySix_lt_limb (by decide)
 
 /-- Trap-free domain for a one-limb `big_from_be`.
 
@@ -66,7 +66,7 @@ private theorem ori_short_lt (bs : List Nat) (hb : ∀ b ∈ bs, b < 256)
     (i : Nat) (hi3 : i ≤ 3) (hlen : i ≤ bs.length) :
     oriAcc 256 bs i < limbBase := by
   have h1 := oriAcc_lt (r := 256) bs hb i hlen
-  have h2 : 256 ^ i ≤ 256 ^ 3 := pow256_le hi3
+  have h2 : 256 ^ i ≤ 256 ^ 3 := pow256_mono hi3
   exact Nat.lt_trans (Nat.lt_of_lt_of_le h1 h2) pow256_three_lt_limb
 
 theorem fromBE_short_lt_limb (bs : List Nat) (h : BeShortWf bs) :
@@ -106,7 +106,7 @@ private theorem beShortStep (bs : List Nat) (h : BeShortWf bs) (i : Nat)
   have hmul : oriAcc 256 bs i * 256 < limbBase :=
     Nat.lt_of_le_of_lt (Nat.le_add_right _ (bs[i])) hsum
   rw [← two56_nat]
-  rw [big_mul_acc (oriAcc 256 bs i) 256 (by decide) two56_lt_limb hacc, ok_bind]
+  rw [big_mul_acc (oriAcc 256 bs i) 256 (by decide) twoFiftySix_lt_limb hacc, ok_bind]
   have hat := atL_embed bs i hi
   rw [ofNat_eq_natCast i] at hat
   rw [hat, ok_bind]

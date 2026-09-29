@@ -141,7 +141,7 @@ private theorem prod_div_eq (lo hi r : Nat) :
     ((lo + limbBase * hi) * r) / limbBase =
       (lo * r) / limbBase + hi * r := by
   have hq : (lo * r) % limbBase < limbBase := Nat.mod_lt _ limbBase_pos
-  have hdiv := div_add_mul ((lo * r) % limbBase)
+  have hdiv := limb_div_add_mul ((lo * r) % limbBase)
     ((lo * r) / limbBase + hi * r) hq
   have hrepr := repr_mul lo hi r
   rw [← hrepr] at hdiv
@@ -150,7 +150,7 @@ private theorem prod_div_eq (lo hi r : Nat) :
 private theorem prod_mod_eq (lo hi r : Nat) :
     ((lo + limbBase * hi) * r) % limbBase = (lo * r) % limbBase := by
   have hq : (lo * r) % limbBase < limbBase := Nat.mod_lt _ limbBase_pos
-  have hmod := mod_add_mul ((lo * r) % limbBase)
+  have hmod := limb_mod_add_mul ((lo * r) % limbBase)
     ((lo * r) / limbBase + hi * r) hq
   rw [← repr_mul lo hi r] at hmod
   exact hmod
@@ -164,7 +164,7 @@ private theorem mid_lt_base (lo hi r : Nat)
 
 private theorem lo_div_lt (lo r : Nat) (hlo : lo < limbBase) (hr : r < limbBase) :
     (lo * r) / limbBase < limbBase := by
-  have hsq := prod_lt_sq hlo hr
+  have hsq := limb_prod_lt_sq hlo hr
   rw [limbBase_pow2] at hsq
   exact div_lt_of_lt_mul limbBase_pos hsq
 
@@ -305,7 +305,7 @@ theorem mulIStep_low (lo hi r : Nat) (hlo : lo < limbBase) (hr : r < limbBase) :
         ((0 : Int), Array.mkArray 3 (0 : Int)) =
       .ok (SudoRt.Flow.cont
         ((1 : Int), embed [lo * r % limbBase, lo * r / limbBase, 0])) := by
-  have hfit : FitsLen (lo * r) := prod_fits hlo hr
+  have hfit : FitsLen (lo * r) := limb_prod_fits hlo hr
   have hlenb : SudoRt.listLen (embed [r]) = (1 : Int) := by rw [listLen_embed]; rfl
   unfold mulIStep
   dsimp [bigOf]
@@ -353,7 +353,7 @@ private theorem mulIStep_high (lo hi r : Nat)
         ((1 : Int),
           embed [((lo + limbBase * hi) * r) % limbBase,
             ((lo + limbBase * hi) * r) / limbBase, 0])) := by
-  have hfitR : FitsLen (hi * r) := prod_fits hhi hr
+  have hfitR : FitsLen (hi * r) := limb_prod_fits hhi hr
   have hmid := mid_lt_base lo hi r hp
   have hfitM : FitsLen ((lo * r) / limbBase + hi * r) := fits_of_lt_limb hmid
   have hlenb : SudoRt.listLen (embed [r]) = (1 : Int) := by rw [listLen_embed]; rfl

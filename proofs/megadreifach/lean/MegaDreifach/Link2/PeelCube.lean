@@ -41,7 +41,7 @@ private theorem fits_cur (r x : Nat) (hr : r < limbBase) (hx : x < limbBase) :
   have hswap : r * limbBase + x = x + limbBase * r := by
     rw [Nat.mul_comm r limbBase, Nat.add_comm]
   rw [hswap]
-  exact Nat.le_trans (Nat.le_of_lt (two_lt_sq x r hx hr)) fits_sq
+  exact Nat.le_trans (Nat.le_of_lt (twoLimb_lt_sq x r hx hr)) fits_sq
 
 private theorem cur_lt_dv (r x dv : Nat) (hr : r < dv) (hx : x < limbBase) (hd0 : 0 < dv) :
     r * limbBase + x < dv * limbBase := by

@@ -108,7 +108,7 @@ private theorem magSubZ2_1 (lo hi : Nat) (hhi : hi < limbBase) :
   simp only [List.getElem_cons_succ, List.getElem_cons_zero]
   erw [subI_ofNat hi 0 (fits_of_lt_limb hhi) (Nat.zero_le _)]
   rw [ok_bind, Nat.sub_zero, len_embed_nil]
-  rw [idx_lt_zero 1, not_neg hi]
+  rw [idx_lt_zero 1, decide_ofNat_lt_zero hi]
   simp only [Bool.false_eq_true, ite_false]
   rw [append_dig [lo] hi, bind_pure_flow]
   dsimp
@@ -165,7 +165,7 @@ private theorem magSubZ3_1 (a b c : Nat) (hb : b < limbBase) :
   simp only [List.getElem_cons_succ, List.getElem_cons_zero]
   erw [subI_ofNat b 0 (fits_of_lt_limb hb) (Nat.zero_le _)]
   rw [ok_bind, Nat.sub_zero, len_embed_nil]
-  rw [idx_lt_zero 1, not_neg b]
+  rw [idx_lt_zero 1, decide_ofNat_lt_zero b]
   simp only [Bool.false_eq_true, ite_false]
   rw [append_dig [a] b, bind_pure_flow]
   dsimp
@@ -181,7 +181,7 @@ private theorem magSubZ3_2 (a b c : Nat) (hc : c < limbBase) :
   simp only [List.getElem_cons_succ, List.getElem_cons_zero]
   erw [subI_ofNat c 0 (fits_of_lt_limb hc) (Nat.zero_le _)]
   rw [ok_bind, Nat.sub_zero, len_embed_nil]
-  rw [idx_lt_zero 2, not_neg c]
+  rw [idx_lt_zero 2, decide_ofNat_lt_zero c]
   simp only [Bool.false_eq_true, ite_false]
   rw [append_dig [a, b] c, bind_pure_flow]
   dsimp

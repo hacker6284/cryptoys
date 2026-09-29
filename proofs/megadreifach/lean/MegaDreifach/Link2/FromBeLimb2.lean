@@ -52,7 +52,7 @@ private theorem fits7 : FitsLen 7 := by
   decide
 
 private theorem two56_nat : bigNat 256 = bigOf [256] :=
-  bigNat_limb 256 two56_lt_limb (by decide)
+  bigNat_limb 256 twoFiftySix_lt_limb (by decide)
 
 private theorem byte_lt_base {b : Nat} (hb : b ≤ 255) : b < limbBase := by
   have : (255 : Nat) < limbBase := by unfold limbBase; decide
@@ -350,7 +350,7 @@ private theorem ori_limb2_lt (bs : List Nat) (hb : ∀ b ∈ bs, b < 256)
     (i : Nat) (hi7 : i ≤ 7) (hlen : i ≤ bs.length) :
     oriAcc 256 bs i < limbBase ^ 2 := by
   have h1 := oriAcc_lt (r := 256) bs hb i hlen
-  have h2 : 256 ^ i ≤ 256 ^ 7 := pow256_le hi7
+  have h2 : 256 ^ i ≤ 256 ^ 7 := pow256_mono hi7
   exact Nat.lt_trans (Nat.lt_of_lt_of_le h1 h2) pow256_seven_lt_sq
 
 theorem fromBE_limb2_lt_sq (bs : List Nat) (h : BeLimb2Wf bs) :
@@ -361,8 +361,8 @@ theorem fromBE_limb2_lt_sq (bs : List Nat) (h : BeLimb2Wf bs) :
 private theorem mul_256 (a : Nat) (ha : a < limbBase ^ 2) (hp : a * 256 < limbBase ^ 2) :
     Megadreifach.big_mul (bigNat a) (bigNat 256) = .ok (bigNat (a * 256)) := by
   by_cases hlt : a < limbBase
-  · exact big_mul_acc a 256 (by decide) two56_lt_limb hlt
-  · exact big_mul_two a 256 (by decide) two56_lt_limb (Nat.le_of_not_lt hlt) ha hp
+  · exact big_mul_acc a 256 (by decide) twoFiftySix_lt_limb hlt
+  · exact big_mul_two a 256 (by decide) twoFiftySix_lt_limb (Nat.le_of_not_lt hlt) ha hp
 
 /-- One Horner step `acc * 256 + byte` while the value stays below `10^18`. -/
 private theorem beLimb2Step (bs : List Nat) (h : BeLimb2Wf bs) (i : Nat)

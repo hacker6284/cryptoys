@@ -370,9 +370,9 @@ private theorem embed_set_high (lo hi : Nat) :
   apply Array.ext'
   simp [embed, Array.toList_set, List.set]
 
-theorem prod_fits {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
+theorem limb_prod_fits {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
     FitsLen (a * b) := by
-  have hsq : a * b < limbBase ^ 2 := prod_lt_sq ha hb
+  have hsq : a * b < limbBase ^ 2 := limb_prod_lt_sq ha hb
   exact Nat.le_trans (Nat.le_of_lt hsq) limb_sq_fits
 
 private theorem fuel_point (n : Int) :
@@ -430,8 +430,8 @@ private theorem mulIStep_11 (a b : Nat)
     (ha : a < limbBase) (hb : b < limbBase) :
     mulIStep (bigOf [a]) (bigOf [b]) 0 (0, Array.mkArray 2 (0 : Int)) =
       .ok (SudoRt.Flow.brk (0, rawProd a b)) := by
-  have hfit : FitsLen (a * b) := prod_fits ha hb
-  have hsq : a * b < limbBase ^ 2 := prod_lt_sq ha hb
+  have hfit : FitsLen (a * b) := limb_prod_fits ha hb
+  have hsq : a * b < limbBase ^ 2 := limb_prod_lt_sq ha hb
   have hlenb : SudoRt.listLen (embed [b]) = (1 : Int) := by
     rw [listLen_embed]; rfl
   have hsz0 := zeros2_size0
@@ -506,7 +506,7 @@ private theorem mulIStep_11 (a b : Nat)
 theorem big_mul_limb (a b : Nat) (ha0 : 0 < a) (hb0 : 0 < b)
     (ha : a < limbBase) (hb : b < limbBase) :
     Megadreifach.big_mul (bigOf [a]) (bigOf [b]) = .ok (bigNat (a * b)) := by
-  have hsq : a * b < limbBase ^ 2 := prod_lt_sq ha hb
+  have hsq : a * b < limbBase ^ 2 := limb_prod_lt_sq ha hb
   have hv : 0 < a * b := Nat.mul_pos ha0 hb0
   unfold Megadreifach.big_mul
   dsimp [bigOf]

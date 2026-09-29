@@ -11,18 +11,19 @@ write mode) also fails if
   msg_hex, digest not digest_len bytes, padded_len / n_blocks inconsistent);
 - proofs/megadreifach/vectors/megaminx_hash_kats.json is not a byte-identical copy of the
   published file;
-- MegaDreifachHeavy/Kat.lean does not state, for every vector, exactly
+- MegaDreifachHeavy/Kat.lean does not state, for every vector, (textually)
       theorem kat_<name> : Megadreifach.v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex)) =
           .ok (embed (hexBytes Vectors.vec_<name>.digestHex))
-  (the qualified `Vectors.vec_<name>`; a bare `vec_<name>` is rejected), or states a
-  kat_* theorem for a name that is not in the JSON;
-- any Lean source of the package other than Vectors.lean (Kat.lean, MegaDreifach/,
-  Generated/) declares a name containing `vec_` (def / abbrev / theorem / instance /
-  opaque / axiom / notation / macro ...), which could shadow a generated vector.
+  or states a kat_* theorem for a name that is not in the JSON (an early, readable lint).
+It also writes / checks MegaDreifachHeavy/KatSpec.lean: one `#guard_expr` per vector
+that pins the ELABORATED type of `kat_<name>` to the real constants (`_root_.` on every
+name, syntactic `=ₛ`), so a local shadow of `Vectors.vec_*`, `hexBytes`, `embed` or
+`v_Hash` fails the heavy build; and KatSpecCheck.lean, the same check as a program that
+reads the constants' types without parsing any Kat-side syntax (run with
+`lake env lean --run KatSpecCheck.lean` after the heavy build). Planted negatives:
+vectors/katspec_negatives.py.
 So each KAT input and digest is written once (the JSON), mirrored mechanically into
 Vectors.lean, and the heavy theorems are about those very strings.
-
-    python3 proofs/megadreifach/vectors/json_to_lean.py --selftest  # planted negatives
 """
 
 from __future__ import annotations
@@ -39,6 +40,8 @@ COPY_JSON = HERE / "megaminx_hash_kats.json"
 LEAN_DIR = HERE.parent / "lean"
 DEFAULT_LEAN = LEAN_DIR / "MegaDreifach" / "Vectors.lean"
 KAT_LEAN = LEAN_DIR / "MegaDreifachHeavy" / "Kat.lean"
+SPEC_LEAN = LEAN_DIR / "MegaDreifachHeavy" / "KatSpec.lean"
+CHECK_LEAN = LEAN_DIR / "KatSpecCheck.lean"
 sys.path.insert(0, str(REPO / "tools"))
 import gencheck  # noqa: E402
 
@@ -51,7 +54,7 @@ HEADER = """/-
   the heavy library: `MegaDreifachHeavy/Kat.lean` states, for each vector,
     kat_<name> : v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex))
                    = .ok (embed (hexBytes Vectors.vec_<name>.digestHex))
-  (the script also checks that shape, and that no other source declares a `vec_*`). The compiled metadata checks are in
+  (`MegaDreifachHeavy/KatSpec.lean`, also generated, pins that elaborated type). The compiled metadata checks are in
   VectorCheck.lean (`lake exe megadreifach`). See proofs/ANTI_DRIFT.md.
 -/
 namespace MegaDreifach.Vectors
@@ -102,28 +105,9 @@ def problems(doc: dict) -> list[str]:
     return bad
 
 
-# A declaration whose name contains `vec_` (in any namespace, e.g. `def vec_empty` or
-# `def Vectors.vec_empty`), or a notation / macro mentioning it. Outside Vectors.lean
-# such a name could shadow the generated vector the KAT statements refer to.
-_MODS = r"(?:(?:private|protected|noncomputable|partial|unsafe|nonrec|local|scoped)\s+)*"
-VEC_DECL = re.compile(
-    r"^[ \t]*(?:@\[[^\]]*\]\s*)?(?:set_option\s+\S+\s+\S+\s+in\s+)*" + _MODS +
-    r"(?:(?:def|abbrev|theorem|lemma|instance|opaque|axiom|structure|inductive|class)\s+[^\s:(\[{]*vec_"
-    r"|(?:notation|macro|syntax|macro_rules|infix|infixl|infixr|prefix|postfix)\b[^\n]*vec_)",
-    flags=re.M)
-
-
-def strip_comments(text: str) -> str:
-    return re.sub(r"--[^\n]*", "", re.sub(r"/-.*?-/", "", text, flags=re.S))
-
-
-def vec_decl_problems(text: str, where: str) -> list[str]:
-    return [f"{where} declares {m.group(0).strip()!r}: only Vectors.lean may declare vec_* names"
-            for m in VEC_DECL.finditer(strip_comments(text))]
-
-
 def kat_text_problems(doc: dict, raw: str) -> list[str]:
-    text = strip_comments(raw)
+    """Readable early lint of Kat.lean (the binding check is the generated KatSpec.lean)."""
+    text = re.sub(r"--[^\n]*", "", re.sub(r"/-.*?-/", "", raw, flags=re.S))
     declared = set(re.findall(r"^theorem\s+kat_(\w+)\s", text, flags=re.M))
     bad = []
     for v in doc["vectors"]:
@@ -135,56 +119,115 @@ def kat_text_problems(doc: dict, raw: str) -> list[str]:
                        f"= .ok (embed (hexBytes Vectors.vec_{n}.digestHex))")
     extra = declared - {v["name"] for v in doc["vectors"]}
     bad += [f"Kat.lean declares kat_{n} but the JSON has no vector {n!r}" for n in sorted(extra)]
-    return bad + vec_decl_problems(raw, "Kat.lean")
-
-
-def kat_problems(doc: dict, kat_lean: Path, vectors_lean: Path = DEFAULT_LEAN) -> list[str]:
-    if not kat_lean.exists():
-        return [f"{kat_lean} is missing"]
-    bad = kat_text_problems(doc, kat_lean.read_text())
-    # The rest of the package (what Kat.lean imports, and Generated/) must not declare
-    # vec_* names either (e.g. a `MegaDreifach.Link2.Vectors.vec_empty` would shadow
-    # `Vectors.vec_empty` inside `namespace MegaDreifach.Link2.Kat`).
-    for path in sorted(LEAN_DIR.rglob("*.lean")):
-        if ".lake" in path.parts or path.resolve() in (kat_lean.resolve(), vectors_lean.resolve()):
-            continue
-        bad += vec_decl_problems(path.read_text(), str(path.relative_to(LEAN_DIR)))
     return bad
 
 
-def selftest(doc: dict) -> int:
-    """Planted negatives: each mutation of the committed Kat.lean must be rejected."""
-    real = KAT_LEAN.read_text()
-    n = doc["vectors"][0]["name"]
-    q = f"Vectors.vec_{n}"
-    anchor = "namespace MegaDreifach.Link2.Kat\n"
-    shadow = f"def vec_{n} : Vectors.HashVec := {{ {q} with digestHex := \"00\" }}\n"
-    cases = {
-        "committed Kat.lean": (real, True),
-        "bare vec_<name> in a KAT statement":
-            (real.replace(f"(hexBytes {q}.msgHex)) =", f"(hexBytes vec_{n}.msgHex)) =", 1), False),
-        "local def vec_<name>": (real.replace(anchor, anchor + shadow, 1), False),
-        "local def Vectors.vec_<name>":
-            (real.replace(anchor, anchor + shadow.replace(f"def vec_{n}", f"def {q}"), 1), False),
-        "local abbrev vec_<name>": (real.replace(anchor, anchor + shadow.replace("def ", "abbrev "), 1), False),
-        "private theorem vec_<name>_x":
-            (real.replace(anchor, anchor + f"private theorem vec_{n}_x : True := trivial\n", 1), False),
-        "instance vec_<name>":
-            (real.replace(anchor, anchor + f"instance vec_{n} : Inhabited Nat := ⟨0⟩\n", 1), False),
-        "local notation vec_<name>":
-            (real.replace(anchor, anchor + f"local notation \"vec_{n}\" => {q}\n", 1), False),
-    }
-    failed = 0
-    for what, (text, ok) in cases.items():
-        assert ok or text != real, f"selftest mutation {what!r} did not apply"
-        bad = kat_text_problems(doc, text)
-        if (not bad) != ok:
-            failed += 1
-            print(f"json_to_lean selftest: FAIL {what}: expected {'accept' if ok else 'reject'}, "
-                  f"got {bad or 'accept'}", file=sys.stderr)
-        else:
-            print(f"json_to_lean selftest: ok {what} ({'accepted' if ok else 'rejected: ' + bad[0]})")
-    return 1 if failed else 0
+def kat_problems(doc: dict, kat_lean: Path) -> list[str]:
+    if not kat_lean.exists():
+        return [f"{kat_lean} is missing"]
+    return kat_text_problems(doc, kat_lean.read_text())
+
+
+def spec_guard(n: str) -> str:
+    """The generated `#guard_expr` pinning the elaborated type of `kat_<n>`.
+
+    Every constant is written with `_root_`, so no declaration, `open` or namespace in
+    Kat.lean (or anything it imports) can redirect a name here; `=ₛ` compares the two
+    elaborated `Expr`s syntactically (`==` after stripping metadata), so the KAT must be
+    about exactly these constants."""
+    vec = f"_root_.MegaDreifach.Vectors.vec_{n}"
+    side = lambda field: (f"(_root_.MegaDreifach.Link2.embed (_root_.MegaDreifach.hexBytes "
+                          f"(_root_.MegaDreifach.Vectors.HashVec.{field} {vec})))")
+    return (f"#guard_expr type_of% @_root_.MegaDreifach.Link2.Kat.kat_{n} =ₛ\n"
+            f"  @_root_.Eq (_root_.Except _root_.SudoRt.Trap (_root_.Array _root_.Int))\n"
+            f"    (_root_.Megadreifach.v_Hash {side('msgHex')})\n"
+            f"    (@_root_.Except.ok _root_.SudoRt.Trap (_root_.Array _root_.Int) {side('digestHex')})\n")
+
+
+SPEC_HEADER = """/-
+  Generated by proofs/megadreifach/vectors/json_to_lean.py from
+  primitives/hash/megadreifach/kats/megaminx_hash_kats.json. Do not hand-edit
+  (CI runs the script with --check).
+
+  Pins the statement of every KAT theorem in Kat.lean: for each vector, the
+  elaborated type of `MegaDreifach.Link2.Kat.kat_<name>` must be, syntactically
+  (`=ₛ`), `Megadreifach.v_Hash (embed (hexBytes vec_<name>.msgHex)) =
+  .ok (embed (hexBytes vec_<name>.digestHex))` over the real constants (every name
+  `_root_`-qualified). A local `def Vectors.vec_*`, `hexBytes`, `embed` or
+  `Megadreifach.v_Hash` in Kat.lean (or an imported module) changes the constants
+  in that type and fails the build of this module. Built with the heavy library
+  (`lake build MegaDreifachHeavy`); planted negatives:
+  proofs/megadreifach/vectors/katspec_negatives.py.
+-/
+import MegaDreifachHeavy.Kat
+"""
+
+
+def emit_spec(doc: dict) -> str:
+    return SPEC_HEADER + "".join("\n" + spec_guard(v["name"]) for v in doc["vectors"])
+
+
+CHECK_TEMPLATE = """/-
+  Generated by proofs/megadreifach/vectors/json_to_lean.py from
+  primitives/hash/megadreifach/kats/megaminx_hash_kats.json. Do not hand-edit
+  (CI runs the script with --check).
+
+  Second, syntax-independent copy of the KatSpec.lean check, run as a program after
+  `lake build MegaDreifachHeavy`:
+      lake env lean --run KatSpecCheck.lean
+  It imports only `Lean`, loads MegaDreifachHeavy.Kat with `importModules` and
+  compares the type of each `kat_<name>` constant with an `Expr` built here from
+  constant names, so no syntax, macro or notation declared in Kat.lean (or in
+  anything it imports) takes part: `#guard_expr` in KatSpec.lean is itself
+  syntax that an imported `macro_rules` could rewrite, this is not. Each
+  `kat_<name>` must be a theorem whose type is exactly (`==`)
+    @Eq (Except SudoRt.Trap (Array Int))
+      (Megadreifach.v_Hash (MegaDreifach.Link2.embed (MegaDreifach.hexBytes
+        (MegaDreifach.Vectors.HashVec.msgHex MegaDreifach.Vectors.vec_<name>))))
+      (@Except.ok SudoRt.Trap (Array Int) (MegaDreifach.Link2.embed
+        (MegaDreifach.hexBytes (MegaDreifach.Vectors.HashVec.digestHex
+          MegaDreifach.Vectors.vec_<name>))))
+  Not in any lean_lib (it is a program, not a module of the package).
+-/
+import Lean
+open Lean
+
+def katNames : List String := [NAMES]
+
+def katType (n : String) : Expr :=
+  let vec := mkConst (Name.mkStr `MegaDreifach.Vectors ("vec_" ++ n))
+  let side (field : String) : Expr :=
+    mkApp (mkConst `MegaDreifach.Link2.embed)
+      (mkApp (mkConst `MegaDreifach.hexBytes)
+        (mkApp (mkConst (Name.mkStr `MegaDreifach.Vectors.HashVec field)) vec))
+  let trap := mkConst `SudoRt.Trap
+  let arr := mkApp (mkConst `Array [levelZero]) (mkConst `Int)
+  mkApp3 (mkConst `Eq [levelOne]) (mkApp2 (mkConst `Except [levelZero, levelZero]) trap arr)
+    (mkApp (mkConst `Megadreifach.v_Hash) (side "msgHex"))
+    (mkApp3 (mkConst `Except.ok [levelZero, levelZero]) trap arr (side "digestHex"))
+
+def main : IO UInt32 := do
+  initSearchPath (← findSysroot)
+  let env ← importModules #[{ module := `MegaDreifachHeavy.Kat }] {} 0
+  let mut bad := 0
+  for n in katNames do
+    let c := Name.mkStr `MegaDreifach.Link2.Kat ("kat_" ++ n)
+    match env.find? c with
+    | some (.thmInfo v) =>
+      if v.type.consumeMData == katType n then
+        IO.println s!"KatSpecCheck: ok {c}"
+      else
+        IO.eprintln s!"KatSpecCheck: FAIL {c} has type {v.type}, expected {katType n}"
+        bad := bad + 1
+    | some _ => IO.eprintln s!"KatSpecCheck: FAIL {c} is not a theorem"; bad := bad + 1
+    | none => IO.eprintln s!"KatSpecCheck: FAIL {c} is not declared"; bad := bad + 1
+  IO.println s!"KatSpecCheck: {katNames.length - bad}/{katNames.length} KAT statements match"
+  return if bad == 0 then 0 else 1
+"""
+
+
+def emit_check(doc: dict) -> str:
+    return CHECK_TEMPLATE.replace("NAMES", ", ".join(f'"{v["name"]}"' for v in doc["vectors"]))
 
 
 def emit(doc: dict) -> str:
@@ -215,20 +258,18 @@ def main() -> int:
     p.add_argument("--json", type=Path, default=DEFAULT_JSON)
     p.add_argument("--lean", type=Path, default=DEFAULT_LEAN)
     p.add_argument("--kat-lean", type=Path, default=KAT_LEAN)
-    p.add_argument("--selftest", action="store_true",
-                   help="run the planted-negative tests of the Kat.lean checks and exit")
     args = p.parse_args()
     doc = json.loads(args.json.read_text())
-    if args.selftest:
-        return selftest(doc)
     bad = problems(doc) + kat_problems(doc, args.kat_lean)
     if args.json.resolve() == DEFAULT_JSON and COPY_JSON.read_bytes() != DEFAULT_JSON.read_bytes():
         bad.append(f"{COPY_JSON.relative_to(REPO)} is not a byte-identical copy of "
                    f"{DEFAULT_JSON.relative_to(REPO)}")
     for b in bad:
         print(f"json_to_lean: FAIL {b}", file=sys.stderr)
-    rc = gencheck.emit(args.lean, emit(doc), args.check,
-                       fix="python3 proofs/megadreifach/vectors/json_to_lean.py")
+    fix = "python3 proofs/megadreifach/vectors/json_to_lean.py"
+    rc = gencheck.emit(args.lean, emit(doc), args.check, fix=fix)
+    rc |= gencheck.emit(SPEC_LEAN, emit_spec(doc), args.check, fix=fix)
+    rc |= gencheck.emit(CHECK_LEAN, emit_check(doc), args.check, fix=fix)
     return 1 if bad else rc
 
 

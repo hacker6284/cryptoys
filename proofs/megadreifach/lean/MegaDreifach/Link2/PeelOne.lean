@@ -82,8 +82,8 @@ private theorem limbs_raw2 (v d0 d1 : Nat) (hv : v < limbBase ^ 2)
     (hd0 : d0 < limbBase) (_hd1 : d1 < limbBase)
     (hval : d0 + limbBase * d1 = v) :
     dropTrail [d0, d1] = limbsOfNat v := by
-  have hmod : v % limbBase = d0 := by rw [← hval, mod_add_mul d0 d1 hd0]
-  have hdiv : v / limbBase = d1 := by rw [← hval, div_add_mul d0 d1 hd0]
+  have hmod : v % limbBase = d0 := by rw [← hval, limb_mod_add_mul d0 d1 hd0]
+  have hdiv : v / limbBase = d1 := by rw [← hval, limb_div_add_mul d0 d1 hd0]
   rw [dropTrail_two, ← hmod, ← hdiv]
   unfold limbsOfNat
   by_cases hv0 : v = 0
@@ -104,13 +104,13 @@ private theorem limbs_raw3 (v d0 d1 d2 : Nat) (_hv : v < limbBase ^ 3)
     (hval : d0 + limbBase * (d1 + limbBase * d2) = v) :
     dropTrail [d0, d1, d2] = limbsOfNat v := by
   have hmod : v % limbBase = d0 := by
-    rw [← hval, mod_add_mul d0 (d1 + limbBase * d2) hd0]
+    rw [← hval, limb_mod_add_mul d0 (d1 + limbBase * d2) hd0]
   have hdiv : v / limbBase = d1 + limbBase * d2 := by
-    rw [← hval, div_add_mul d0 (d1 + limbBase * d2) hd0]
+    rw [← hval, limb_div_add_mul d0 (d1 + limbBase * d2) hd0]
   have hmod1 : (v / limbBase) % limbBase = d1 := by
-    rw [hdiv, mod_add_mul d1 d2 hd1]
+    rw [hdiv, limb_mod_add_mul d1 d2 hd1]
   have hdiv1 : (v / limbBase) / limbBase = d2 := by
-    rw [hdiv, div_add_mul d1 d2 hd1]
+    rw [hdiv, limb_div_add_mul d1 d2 hd1]
   have hdrop : dropTrail [d0, d1, d2] =
       dropTrail [v % limbBase, (v / limbBase) % limbBase, (v / limbBase) / limbBase] := by
     rw [hmod, hmod1, hdiv1]
@@ -174,7 +174,7 @@ theorem magSub_at
     simp only [ite_true, ok_bind]
     rw [atL_embed ys i hy, ok_bind, hyi]
     by_cases hle : bi ≤ ai
-    · rw [subI_ofNat ai bi (fits_of_lt_limb hai) hle, ok_bind, not_neg (ai - bi)]
+    · rw [subI_ofNat ai bi (fits_of_lt_limb hai) hle, ok_bind, decide_ofNat_lt_zero (ai - bi)]
       simp only [Bool.false_eq_true, ite_false]
       rw [append_dig out (ai - bi), bind_pure_flow]
       dsimp
@@ -195,7 +195,7 @@ theorem magSub_at
         simp [hle, heq, Nat.zero_add]
     · have hlt : ai < bi := Nat.lt_of_not_le hle
       rw [subI_under ai bi hlt (Nat.le_of_lt hbi), ok_bind,
-        neg_lt_zero (bi - ai) (Nat.sub_pos_of_lt hlt)]
+        decide_neg_lt_zero (bi - ai) (Nat.sub_pos_of_lt hlt)]
       simp only [ite_true]
       have hk : bi - ai ≤ limbBase := Nat.le_trans (Nat.sub_le _ _) (Nat.le_of_lt hbi)
       have hk0 : 0 < bi - ai := Nat.sub_pos_of_lt hlt
@@ -229,7 +229,7 @@ theorem magSub_at
       have hsum : 1 + bi ≤ limbBase := by omega
       erw [subI_neg_ofNat 1 bi hsum]
       rw [ok_bind]
-      erw [neg_lt_zero (1 + bi) (by omega)]
+      erw [decide_neg_lt_zero (1 + bi) (by omega)]
       simp only [ite_true]
       have hk0 : 0 < 1 + bi := by omega
       erw [addI_neg_base (1 + bi) hk0 hsum]
@@ -259,7 +259,7 @@ theorem magSub_at
       have hai' : ai - 1 < limbBase := Nat.lt_of_le_of_lt (Nat.sub_le _ _) hai
       by_cases hle : bi ≤ ai - 1
       · rw [subI_ofNat (ai - 1) bi (fits_of_lt_limb hai') hle, ok_bind,
-          not_neg (ai - 1 - bi)]
+          decide_ofNat_lt_zero (ai - 1 - bi)]
         simp only [Bool.false_eq_true, ite_false]
         have hdig : ai - 1 - bi = ai - (bi + 1) := by omega
         rw [hdig, append_dig out (ai - (bi + 1)), bind_pure_flow]
@@ -282,7 +282,7 @@ theorem magSub_at
           simp [hle', heq]
       · have hlt : ai - 1 < bi := Nat.lt_of_not_le hle
         rw [subI_under (ai - 1) bi hlt (Nat.le_of_lt hbi), ok_bind,
-          neg_lt_zero (bi - (ai - 1)) (Nat.sub_pos_of_lt hlt)]
+          decide_neg_lt_zero (bi - (ai - 1)) (Nat.sub_pos_of_lt hlt)]
         simp only [ite_true]
         have hk0 : 0 < bi - (ai - 1) := Nat.sub_pos_of_lt hlt
         have hk : bi - (ai - 1) ≤ limbBase :=

@@ -131,20 +131,14 @@ theorem length_take_le (xs : List Nat) (k : Nat) (hk : k ≤ xs.length) :
     (xs.take k).length = k := by
   simpa [Nat.min_eq_left hk] using List.length_take k xs
 
-theorem take_all (xs : List Nat) (k : Nat) (hk : xs.length ≤ k) : xs.take k = xs := by
-  have hd : xs.drop k = [] := List.drop_eq_nil_of_le hk
-  have happ := List.take_append_drop k xs
-  rw [hd, List.append_nil] at happ
-  exact happ
-
 theorem limbVal_take_succ_dig (ys : List Nat) (k : Nat) :
     limbVal (ys.take (k + 1)) =
       limbVal (ys.take k) + digAt ys k * limbBase ^ k := by
   by_cases hk : k < ys.length
   · rw [take_succ_get ys k hk, limbVal_snoc,
       length_take_le ys k (Nat.le_of_lt hk), digAt_get ys k hk]
-  · rw [take_all ys k (Nat.le_of_not_lt hk),
-      take_all ys (k + 1) (Nat.le_succ_of_le (Nat.le_of_not_lt hk)),
+  · rw [List.take_of_length_le (Nat.le_of_not_lt hk),
+      List.take_of_length_le (Nat.le_succ_of_le (Nat.le_of_not_lt hk)),
       digAt_ge ys k (Nat.le_of_not_lt hk), Nat.zero_mul, Nat.add_zero]
 
 theorem subScan_inv (xs ys : List Nat)
@@ -261,7 +255,7 @@ theorem subPref_trimmed (xs ys : List Nat)
   obtain ⟨hbr, hlenP, hdig, hbal⟩ :=
     subScan_inv xs ys hxs hys xs.length (Nat.le_refl _)
   have htakeX : xs.take xs.length = xs := List.take_length xs
-  have htakeY : ys.take xs.length = ys := take_all ys xs.length hlen
+  have htakeY : ys.take xs.length = ys := List.take_of_length_le hlen
   have hsum : limbVal xs + brAt xs ys xs.length * limbBase ^ xs.length =
       limbVal (subPref xs ys xs.length) + limbVal ys := by
     simpa [htakeX, htakeY] using hbal

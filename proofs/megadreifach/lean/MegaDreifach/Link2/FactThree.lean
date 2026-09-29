@@ -45,7 +45,7 @@ private theorem prod_div_eq (lo hi r : Nat) :
     ((lo + limbBase * hi) * r) / limbBase =
       (lo * r) / limbBase + hi * r := by
   have hq : (lo * r) % limbBase < limbBase := Nat.mod_lt _ limbBase_pos
-  have hdiv := div_add_mul ((lo * r) % limbBase)
+  have hdiv := limb_div_add_mul ((lo * r) % limbBase)
     ((lo * r) / limbBase + hi * r) hq
   have hrepr := repr_mul lo hi r
   rw [← hrepr] at hdiv
@@ -54,7 +54,7 @@ private theorem prod_div_eq (lo hi r : Nat) :
 private theorem prod_mod_eq (lo hi r : Nat) :
     ((lo + limbBase * hi) * r) % limbBase = (lo * r) % limbBase := by
   have hq : (lo * r) % limbBase < limbBase := Nat.mod_lt _ limbBase_pos
-  have hmod := mod_add_mul ((lo * r) % limbBase)
+  have hmod := limb_mod_add_mul ((lo * r) % limbBase)
     ((lo * r) / limbBase + hi * r) hq
   rw [← repr_mul lo hi r] at hmod
   exact hmod
@@ -165,7 +165,7 @@ private theorem mulIStep_high3 (lo hi r : Nat)
           embed [((lo + limbBase * hi) * r) % limbBase,
             (((lo + limbBase * hi) * r) / limbBase) % limbBase,
             (((lo + limbBase * hi) * r) / limbBase) / limbBase])) := by
-  have hfitR : FitsLen (hi * r) := prod_fits hhi hr
+  have hfitR : FitsLen (hi * r) := limb_prod_fits hhi hr
   have hmid_lt : (lo * r) / limbBase + hi * r < limbBase ^ 2 := by
     rw [← prod_div_eq lo hi r]
     rw [limbBase_pow3] at hpHi

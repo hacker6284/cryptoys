@@ -7,7 +7,7 @@
   the heavy library: `MegaDreifachHeavy/Kat.lean` states, for each vector,
     kat_<name> : v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex))
                    = .ok (embed (hexBytes Vectors.vec_<name>.digestHex))
-  (the script also checks that shape, and that no other source declares a `vec_*`). The compiled metadata checks are in
+  (`MegaDreifachHeavy/KatSpec.lean`, also generated, pins that elaborated type). The compiled metadata checks are in
   VectorCheck.lean (`lake exe megadreifach`). See proofs/ANTI_DRIFT.md.
 -/
 namespace MegaDreifach.Vectors

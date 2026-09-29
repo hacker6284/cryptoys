@@ -97,7 +97,7 @@ private theorem ori_pad_lt (bs : List Nat) (hb : ∀ b ∈ bs, b < 256)
     (i : Nat) (hi28 : i ≤ 28) (hlen : i ≤ bs.length) :
     oriAcc 256 bs i < limbBase ^ 8 := by
   have h1 := oriAcc_lt (r := 256) bs hb i hlen
-  have h2 : 256 ^ i ≤ 256 ^ 28 := pow256_le hi28
+  have h2 : 256 ^ i ≤ 256 ^ 28 := pow256_mono hi28
   exact Nat.lt_trans (Nat.lt_of_lt_of_le h1 h2) pow256_28_lt_limb8
 
 theorem fromBE_pad_lt_limb8 (bs : List Nat) (h : BePadWf bs) :
@@ -148,8 +148,8 @@ private theorem bePadStep (bs : List Nat) (h : BePadWf bs) (i : Nat)
     have hmax := (Nat.max_le).mpr ⟨h1, h2⟩
     exact fits_le9 (Nat.succ_le_succ hmax)
   rw [show bigOf [256] = bigOf (natLimbs 256) from by
-    rw [natLimbs_of_pos_lt 256 (by decide) two56_lt_limb]]
-  rw [big_mul_nat 256 (oriAcc 256 bs i) two56_lt_limb hfitsMul, ok_bind]
+    rw [natLimbs_of_pos_lt 256 (by decide) twoFiftySix_lt_limb]]
+  rw [big_mul_nat 256 (oriAcc 256 bs i) twoFiftySix_lt_limb hfitsMul, ok_bind]
   have hat := atL_embed bs i hi
   rw [ofNat_eq_natCast i] at hat
   rw [hat, ok_bind]

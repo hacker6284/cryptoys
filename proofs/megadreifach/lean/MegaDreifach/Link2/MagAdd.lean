@@ -270,8 +270,8 @@ theorem addResult_natLimbs (xs ys : List Nat)
     addResult xs ys = natLimbs (limbVal xs + limbVal ys) := by
   let k := max xs.length ys.length
   obtain ⟨hc, hlen, hdig, hbal⟩ := addScan_inv xs ys hxs hys k
-  have hx : xs.take k = xs := take_all xs k (Nat.le_max_left _ _)
-  have hy : ys.take k = ys := take_all ys k (Nat.le_max_right _ _)
+  have hx : xs.take k = xs := List.take_of_length_le (Nat.le_max_left _ _)
+  have hy : ys.take k = ys := List.take_of_length_le (Nat.le_max_right _ _)
   have hsum : limbVal xs + limbVal ys =
       limbVal (addPref xs ys k) + carryAt xs ys k * limbBase ^ k := by
     simpa [hx, hy] using hbal

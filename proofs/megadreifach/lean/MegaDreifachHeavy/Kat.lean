@@ -2,15 +2,16 @@
   M13: the eight exported hash KATs as theorems about Generated `v_Hash`.
 
   Each KAT is stated once, on the strings of the generated `Vectors.lean`
-  (`vectors/json_to_lean.py --check` ties those to the published KAT JSON and
-  checks this exact shape):
+  (`vectors/json_to_lean.py --check` ties those to the published KAT JSON):
 
     kat_<name> : Megadreifach.v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex))
                    = .ok (embed (hexBytes Vectors.vec_<name>.digestHex))
 
-  The vectors are named qualified (`Vectors.vec_<name>`, not opened) and this file
-  declares nothing named `vec_*`, so a local definition cannot shadow the
-  generated one (the script checks both).
+  The generated `KatSpec.lean` (built with this library) pins the ELABORATED type
+  of each `kat_<name>` to the real constants (`#guard_expr … =ₛ …`, every name
+  `_root_`-qualified), and `KatSpecCheck.lean` re-checks it as a program that
+  parses no syntax from this file. A local shadow of `Vectors.vec_*`, `hexBytes`,
+  `embed` or `v_Hash` fails them (planted negatives: vectors/katspec_negatives.py).
 
   Proof: `v_Hash_refines` reduces it to `alg_<name> : vhashAlg msg = digest`,
   kernel-checked (`decide!`; no `native_decide`). One-block KATs are evaluated

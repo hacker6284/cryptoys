@@ -377,7 +377,7 @@ private theorem big_mul_q3_limbs (q lo mid hi : Nat)
         have h := hnamed
         rw [hc2, hz] at h
         simpa [Nat.mul_zero, Nat.add_zero] using h
-      have hlt : d0 + limbBase * d1 < limbBase ^ 2 := two_lt_sq d0 d1 hd0 hd1
+      have hlt : d0 + limbBase * d1 < limbBase ^ 2 := twoLimb_lt_sq d0 d1 hd0 hd1
       have hge := hpge
       rw [hpack] at hge
       exact absurd hge (Nat.not_le_of_lt hlt)
@@ -417,14 +417,14 @@ private theorem big_mul_q3_limbs (q lo mid hi : Nat)
     simp only [Nat.mul_zero, Nat.add_zero] at h
     rwa [pack3_re d0 d1 d2] at h
   have hmod : (q * (lo + limbBase * mid + limbBase ^ 2 * hi)) % limbBase = d0 := by
-    rw [hpack, mod_add_mul d0 (d1 + limbBase * d2) hd0]
+    rw [hpack, limb_mod_add_mul d0 (d1 + limbBase * d2) hd0]
   have hdiv1 : (q * (lo + limbBase * mid + limbBase ^ 2 * hi)) / limbBase =
       d1 + limbBase * d2 := by
-    rw [hpack, div_add_mul d0 (d1 + limbBase * d2) hd0]
+    rw [hpack, limb_div_add_mul d0 (d1 + limbBase * d2) hd0]
   have hmod2 : ((q * (lo + limbBase * mid + limbBase ^ 2 * hi)) / limbBase) % limbBase = d1 := by
-    rw [hdiv1, mod_add_mul d1 d2 hd1]
+    rw [hdiv1, limb_mod_add_mul d1 d2 hd1]
   have hdiv2 : ((q * (lo + limbBase * mid + limbBase ^ 2 * hi)) / limbBase) / limbBase = d2 := by
-    rw [hdiv1, div_add_mul d1 d2 hd1]
+    rw [hdiv1, limb_div_add_mul d1 d2 hd1]
   rw [bigNat_three (q * (lo + limbBase * mid + limbBase ^ 2 * hi)) hpge hp, hmod, hmod2, hdiv2]
 
 /--
@@ -635,9 +635,9 @@ private theorem big_mul_q2_limbs (q lo hi : Nat)
     rw [hc1] at h
     simpa [Nat.mul_zero, Nat.add_zero] using h
   have hmod : (q * (lo + limbBase * hi)) % limbBase = d0 := by
-    rw [hpack, mod_add_mul d0 d1 hd0]
+    rw [hpack, limb_mod_add_mul d0 d1 hd0]
   have hdiv : (q * (lo + limbBase * hi)) / limbBase = d1 := by
-    rw [hpack, div_add_mul d0 d1 hd0]
+    rw [hpack, limb_div_add_mul d0 d1 hd0]
   rw [bigNat_two (q * (lo + limbBase * hi)) hpge hp, hmod, hdiv]
 
 /--

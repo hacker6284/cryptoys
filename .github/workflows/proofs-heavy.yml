@@ -96,5 +96,11 @@ jobs:
         with:
           lake-package-directory: proofs/megadreifach/lean
           build-args: "MegaDreifachHeavy"
+      # The build above includes MegaDreifachHeavy/KatSpec.lean (generated #guard_expr per
+      # KAT on the elaborated statement); this re-checks the same types from a program that
+      # parses no Kat-side syntax (see vectors/json_to_lean.py).
+      - name: KAT statements are exactly v_Hash (embed (hexBytes vec.msgHex)) = .ok (embed (hexBytes vec.digestHex))
+        working-directory: proofs/megadreifach/lean
+        run: lake env lean --run KatSpecCheck.lean
       - name: Axiom audit of every MegaDreifachHeavy theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py megadreifach-heavy

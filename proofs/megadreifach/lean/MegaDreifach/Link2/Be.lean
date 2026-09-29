@@ -29,20 +29,17 @@ theorem rem_limb_fits (r : Nat) (hr : r < 256) : FitsLen (r * limbBase) := by
     decide
   exact Nat.le_trans h1 h2
 
-theorem fits_le (n k : Nat) (hk : k ≤ i64MaxNat) (hn : n ≤ k) : FitsLen n :=
-  Nat.le_trans hn hk
-
 theorem fits_le3 {n : Nat} (h : n ≤ 3) : FitsLen n := by
   have : 3 ≤ i64MaxNat := by unfold i64MaxNat; decide
-  exact fits_le n 3 this h
+  exact FitsLen.of_le (n := 3) this h
 
 theorem fits_le9 {n : Nat} (h : n ≤ 9) : FitsLen n := by
   have : 9 ≤ i64MaxNat := by unfold i64MaxNat; decide
-  exact fits_le n 9 this h
+  exact FitsLen.of_le (n := 9) this h
 
 theorem fits_of_lt_limb {a : Nat} (ha : a < limbBase) : FitsLen a := by
   have : limbBase ≤ i64MaxNat := by unfold i64MaxNat limbBase; decide
-  exact fits_le a limbBase this (Nat.le_of_lt ha)
+  exact FitsLen.of_le (n := limbBase) this (Nat.le_of_lt ha)
 
 /-! ## Limb algebra -/
 

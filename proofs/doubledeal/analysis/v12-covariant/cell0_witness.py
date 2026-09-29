@@ -91,8 +91,9 @@ def orbits():
     return sizes
 
 
-def report():
-    c, ncand, tab, used = table()
+def report(t):
+    """Print the result of `table()` (computed once by the caller) and the orbit count."""
+    c, ncand, tab, used = t
     print(f'g(identity deck) = {c}; single position swaps (i, j) keeping g: {ncand} of 1326')
     print(f'witness found for all 51 representatives (0 e); position pairs used: {used}')
     print('covW =', tab)
@@ -161,13 +162,14 @@ end DoubleDeal.Security.CovariantNarrow
 
 def main():
     args = cli.parse_args()
+    t = table()
     if not (args.lean or args.check):
-        report()
+        report(t)
         return 0
-    _, _, tab, used = table()
+    _, _, tab, used = t
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
-        report()
+        report(t)
     rc = 0
     for path, text in ((LISTS_OUT, lists_text(tab, used)), (CHECKS_OUT, checks_text()),
                        (LOG_OUT, buf.getvalue())):

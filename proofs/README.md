@@ -45,7 +45,7 @@ Current algorithms get correctness now, and stronger security proofs (reductions
 proofs/
   README.md                 # this taxonomy
   doubledeal/               # DoubleDeal correctness stones
-  megadreifach/             # MegaDreifach correctness stones
+  megadreifach/             # MegaDreifach correctness stones (+ security/: v1 grip-rule weakness report)
   scramble/                 # Generated Lean + teaching / lineage; no algebraic stones
   doubledeal-cbc-hmac/      # Generated Lean for HMAC / KDF / pad (no algebraic stones)
   scm/                      # placeholder; SCM/SMAC stay later (CBC-HMAC is the AEAD)
@@ -63,7 +63,7 @@ Deprecated algorithms get a directory under `proofs/deprecated/` for vulnerabili
 | Primitive | Current version | This tree |
 | --- | --- | --- |
 | DoubleDeal | `primitives/cipher/doubledeal/` | **Generated** Lean under `doubledeal/lean/Generated/` (from `doubledeal.sudo`; TAP all-pass under the terminates gate). Proof-only stones under `doubledeal/lean/DoubleDeal/`. PassKey injectivity is **proved** on the list model (PR #3) and on emitted `passkey` / `passkey_inv` (`FitsLen`). Link 2: those functions ≃ the list model on every well-formed list, and `Generated.encrypt` ≃ `encryptDeck` on `CardBound` messages. NEXT is MegaDreifach Link 2. |
-| MegaDreifach | `primitives/hash/megadreifach/` (SPEC + `megadreifach.sudo` + KATs) | **Generated** Lean under `megadreifach/lean/Generated/` (TAP 11/11). Proof-only stones under `megadreifach/lean/MegaDreifach/`. M1–M7 packing/algebra **proved** (M3 even-perm glue still open). M8 is a net-distinctness reduction. M9 **OPEN**. Link 2: `Generated.v_Hash` ≃ the algebraic MD fold on `PadWf` (`v_Hash_refines`); M13 (all 8 KATs as `v_Hash` theorems) **proved** in the non-default lib `MegaDreifachHeavy`. `phi_inv` / `v_HashDeck` open. Research Hash hexes refreshed to current sudo. A green Lean build is not a security claim. |
+| MegaDreifach | `primitives/hash/megadreifach/` (SPEC + `megadreifach.sudo` + KATs) | **Generated** Lean under `megadreifach/lean/Generated/` (TAP 11/11). Proof-only stones under `megadreifach/lean/MegaDreifach/`. M1–M7 packing/algebra **proved** (M3 digest injectivity on reachable positions included). M8 is a net-distinctness reduction. M9 **OPEN**. Link 2: `Generated.v_Hash` ≃ the algebraic MD fold on `PadWf` (`v_Hash_refines`); M13 (all 8 KATs as `v_Hash` theorems) **proved** in the non-default lib `MegaDreifachHeavy`. `phi_inv` / `v_HashDeck` open. Research Hash hexes refreshed to current sudo. Security layer: MD reduction proved; the v1 grip rule (corner-only Recipe A) has proved compression pseudo-collisions and estimated (toy-extrapolated) attacks, see `megadreifach/security/REPORT.md`. A green Lean build is not a security claim. |
 | Scramble | `scramble_v2` | **Generated** Lean under `scramble/lean/Generated/` (from `scramble.sudo`; TAP 15/15 under the terminates gate). Teaching hash; single-cube birthday ceiling. No algebraic stones. Not a collision-resistance claim. |
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | **Generated** Lean under `doubledeal-cbc-hmac/lean/Generated/` (from `doubledeal_cbc_hmac.sudo` + imported MegaDreifach; TAP 11/11). HMAC / KDF / pad / MAC-input evidence. No Link 2. No AEAD security theorem. Not SCM. |
 | DoubleDeal-SCM / SMAC | not in `primitives/` | Stub `scm/README.md`. Stays later. |

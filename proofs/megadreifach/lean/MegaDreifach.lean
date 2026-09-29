@@ -31,3 +31,4 @@ import MegaDreifach.Link2.EvenRankGen
 import MegaDreifach.Link2.PosBytesGen
 import MegaDreifach.Link2.InjInv
 import MegaDreifach.Link2.VHash
+import MegaDreifach.Security

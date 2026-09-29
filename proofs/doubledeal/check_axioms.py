@@ -161,6 +161,19 @@ PACKAGES = {
             "MegaDreifach.Link2.big_mul_gen_refines",
             "MegaDreifach.Link2.phi_chunk_refines",
             "MegaDreifach.Link2.pad_message_refines",
+            # MegaDreifach/Security/ (rule-independent reduction and M3 glue)
+            "MegaDreifach.Security.md_collision",
+            "MegaDreifach.Security.pad_suffix_free",
+            "MegaDreifach.Security.extract_collision_comp",
+            "MegaDreifach.Security.v_Hash_collision_comp",
+            "MegaDreifach.Security.evenRank_inj",
+            "MegaDreifach.Security.isLegal_chR",
+            "MegaDreifach.Security.positionToBytes_inj_reachable",
+            "MegaDreifach.Security.dm_forward_bad_count",
+            # MegaDreifach/Security/ (weaknesses of the v1 grip rule)
+            "MegaDreifach.Security.emBlock_word",
+            "MegaDreifach.Security.digest_top_collision",
+            "MegaDreifach.Security.dmStep_pseudo_collision",
         },
     },
     "megadreifach-heavy": {

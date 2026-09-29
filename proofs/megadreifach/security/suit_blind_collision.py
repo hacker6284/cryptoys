@@ -22,8 +22,14 @@ Usage (Python 3 standard library only; runs from any directory):
         in the second block of random 2-block messages (a reachable non-IV h).
   python3 suit_blind_collision.py --second-preimage L --targets T [--gaps 2-3]
         for T random targets of L full blocks, look for a colliding swap in any block
-  python3 suit_blind_collision.py --log  [--full]   # write logs/suit_blind_collision[_full].log
-  python3 suit_blind_collision.py --check [--full]  # fail if the committed log is stale
+  python3 suit_blind_collision.py --variant pre-noon
+        the control experiment for the cause: the SAME rule except that the Recipe A
+        read moves to right after the held-face turn (remember the colours, then do the
+        noon and Front turns, then re-grip).  Runs the suit-blind fraction under both
+        rules and a paired swap search at distances 1-4 (same blocks, same swaps) from the IV.
+        --variant also applies to --search / --second-preimage.
+  python3 suit_blind_collision.py --log  [--full | --variant pre-noon]   # write the log
+  python3 suit_blind_collision.py --check [--full | --variant pre-noon]  # fail if stale
   --workers W parallelises; results do not depend on W (per-block seeds).
 Exit status is non-zero if a KAT fails, if the recorded pair does not collide or the two
 messages are equal, if a reported collision does not re-verify as a Hash collision, or
@@ -37,8 +43,9 @@ from multiprocessing import Pool
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, '..', '..', '..', 'tools'))
-from md import (Hash, KATS_JSON, GROUP_ORDER, ROTS, dm_step, g2_step, iv_cook12,  # noqa: E402
-                phi_chunk, phi_rank, position_to_bytes)
+from md import (Hash, KATS_JSON, GROUP_ORDER, ROTS, F3_T, compose, face_turn,  # noqa: E402
+                f3_step, g2_step, iv_cook12, noon_phys, pad_message, phi_chunk, phi_rank,
+                position_to_bytes, recipe_a, spin_about_up)
 
 # The recorded collision (first hit of the original seed-99 search of the review).
 M1 = 'e132ebb03ed19b3949820c68d22d8b5004867c3c0ea79f44269e19fb'
@@ -47,7 +54,64 @@ DIGEST = '0084d6d1e0a4ddb231deb23ac0f4ead7b497eed17f997bfcefa7c34e82'
 RANKS, SUITS = 'A23456789TJQK', 'cdhs'
 LOG = os.path.join(HERE, 'logs', 'suit_blind_collision.log')
 LOG_FULL = os.path.join(HERE, 'logs', 'suit_blind_collision_full.log')
+LOG_PRE_NOON = os.path.join(HERE, 'logs', 'suit_blind_collision_pre_noon.log')
 IV = iv_cook12()
+
+
+# ---------------------------------------------------------------- grip-rule variants
+#
+# 'recipe-a' is the published rule (md.g2_step: held-face turn, noon turn, Front turn,
+# THEN the Recipe A read).  'pre-noon' is a control that changes ONLY when the read
+# happens: the Recipe A corner (between the held face, its noon and the next
+# neighbour, for the grip in force) is read right after the held-face turn (and the
+# King spin); the noon and Front turns follow with the old grip, and only then is the
+# grip replaced by the remembered reading.  F3 steps and everything else are unchanged.
+# It is NOT a proposed rule; it isolates the effect of the read position.
+
+def g2_step_pre_noon(g, o, card):
+    rank, suit = card // 4, card % 4
+    amt = suit + 1
+    held = rank
+    if rank < 12:
+        g = face_turn(g, o[held], amt)
+    else:
+        held = 0
+        g = face_turn(g, o[held], (5 - amt) % 5)
+        o = spin_about_up(o, amt)
+    new = recipe_a(g, o[held], o)          # read now, before the noon turn
+    noon = noon_phys(o[held], o)
+    if noon != o[held]:
+        g = face_turn(g, noon, 1)
+    g = face_turn(g, o[1], 1)
+    return g, new
+
+
+STEPS = {'recipe-a': g2_step, 'pre-noon': g2_step_pre_noon}
+
+
+def em_block_v(h, deal, step):
+    g = h; o = list(range(12))
+    for c in deal[:52]:
+        g, o = step(g, o, c)
+    for _ in range(F3_T):
+        g, o = f3_step(g, o)
+    return g
+
+
+def dm_step(h, deal, variant):
+    return compose(h, em_block_v(h, deal, STEPS[variant]))
+
+
+def hash_of(variant):
+    """The full hash under a rule (md.Hash itself for the published rule)."""
+    return Hash if variant == 'recipe-a' else (lambda m: hash_v(m, variant))
+
+
+def hash_v(msg, variant):
+    padded, h = pad_message(msg), IV
+    for b in range(0, len(padded), 28):
+        h = dm_step(h, phi_chunk(padded[b:b + 28]), variant)
+    return position_to_bytes(h)
 
 
 def card_name(c):
@@ -98,7 +162,7 @@ def verify_pair():
         i, j = diff
         g1, gr1 = grips(d1, j + 1)
         g2, gr2 = grips(d2, j + 1)
-        same_first = dm_step(IV, d1) == dm_step(IV, d2)
+        same_first = dm_step(IV, d1, 'recipe-a') == dm_step(IV, d2, 'recipe-a')
         print(f"  deals differ by swapping cards {i+1} and {j+1} ({card_name(d1[i])} <-> "
               f"{card_name(d1[j])}); grips (Up, Front) after cards {i+1}..{j+1}: {gr1[i:]} vs "
               f"{gr2[i:]}; state after card {j+1} equal: {g1 == g2}; first-block dm equal: {same_first}")
@@ -129,8 +193,9 @@ def uniform_pos(rng):
     return (cp, co, ep, eo)
 
 
-def suit_blind(trials, seed=3):
+def suit_blind(trials, seed=3, variant='recipe-a'):
     """P(all four suits of a rank give the same grip) from a uniform state and grip."""
+    g2_step = STEPS[variant]
     rng = random.Random(seed)
     blind, tot, nd = [0] * 13, [0] * 13, 0
     for _ in range(trials):
@@ -138,7 +203,8 @@ def suit_blind(trials, seed=3):
         gs = {tuple(g2_step(g, o, 4 * r + s)[1]) for s in range(4)}
         tot[r] += 1; blind[r] += len(gs) == 1; nd += len(gs)
     per = ' '.join(f"{RANKS[r]}:{blind[r] / tot[r]:.2f}" for r in range(13) if tot[r])
-    print(f"suit-blind fraction ({trials} uniform random (state, grip, rank), seed {seed}): "
+    rule = '' if variant == 'recipe-a' else f', rule {variant}'
+    print(f"suit-blind fraction{rule} ({trials} uniform random (state, grip, rank), seed {seed}): "
           f"P(all 4 suits give the same grip) = {sum(blind) / trials:.3f}, mean distinct grips "
           f"over the 4 suits {nd / trials:.2f}\n  per rank {per}")
 
@@ -187,16 +253,16 @@ def swaps(d, gaps):
 
 def search_block(task):
     """One random block: returns (per-gap [tests, hits], compressions, hits)."""
-    seed, idx, gaps, chained = task
+    seed, idx, gaps, chained, variant = task
     rng = random.Random(f"sbc:{seed}:{idx}")
     pre = bytes(rng.randrange(256) for _ in range(28)) if chained else b''
-    h = dm_step(IV, phi_chunk(list(pre))) if chained else IV
+    h = dm_step(IV, phi_chunk(list(pre)), variant) if chained else IV
     msg = bytes(rng.randrange(256) for _ in range(28))
-    d = phi_chunk(list(msg)); base = dm_step(h, d)
+    d = phi_chunk(list(msg)); base = dm_step(h, d, variant)
     per, comps, hits = {g: [0, 0] for g in gaps}, 1, []
     for gap, i, j, d2, n2 in swaps(d, gaps):
         per[gap][0] += 1; comps += 1
-        if dm_step(h, d2) == base:
+        if dm_step(h, d2, variant) == base:
             per[gap][1] += 1
             hits.append((pre + msg, pre + n2.to_bytes(28, 'big'), gap, i, j, d[i], d[j]))
     return per, comps, hits
@@ -209,9 +275,10 @@ def pmap(fn, tasks, workers):
     return [fn(t) for t in tasks]
 
 
-def search(blocks, gaps, seed, chained, workers):
+def search(blocks, gaps, seed, chained, workers, variant='recipe-a'):
     t0 = time.time()
-    res = pmap(search_block, [(seed, k, gaps, chained) for k in range(blocks)], workers)
+    H = hash_of(variant)
+    res = pmap(search_block, [(seed, k, gaps, chained, variant) for k in range(blocks)], workers)
     per = {g: [0, 0] for g in gaps}; comps = 0; hits = []; hit_blocks = 0; bad = 0
     for p, c, hs in res:
         comps += c; hit_blocks += bool(hs)
@@ -219,12 +286,13 @@ def search(blocks, gaps, seed, chained, workers):
             per[g][0] += p[g][0]; per[g][1] += p[g][1]
         for hsx in hs:
             m1, m2 = hsx[0], hsx[1]
-            if m1 == m2 or Hash(m1) != Hash(m2):
+            if m1 == m2 or H(m1) != H(m2):
                 bad += 1
             hits.append(hsx)
     where = ('second block of random 2-block messages (from h = dm(IV, P))' if chained
              else 'random one-block messages (from IV-COOK12)')
-    print(f"swap search: {blocks} {where}, seed {seed}, distances {gaps[0]}..{gaps[-1]}")
+    rule = '' if variant == 'recipe-a' else f'; rule {variant}'
+    print(f"swap search: {blocks} {where}, seed {seed}, distances {gaps[0]}..{gaps[-1]}{rule}")
     for g in gaps:
         t, x = per[g]
         print(f"  distance {g}: {x}/{t} same-rank swaps preserve dm; rate {rate_ci(x, t)}")
@@ -236,7 +304,7 @@ def search(blocks, gaps, seed, chained, workers):
         print(f"  compressions: {comps}, per collision {comps / X:,.0f} = 2^{math.log2(comps / X):.1f}")
     for m1, m2, g, i, j, a, b in hits[:3]:
         print(f"  hit: distance {g}, cards {i+1},{j+1} of the last block ({card_name(a)} <-> "
-              f"{card_name(b)}): M = {m1.hex()}  M' = {m2.hex()}  Hash = {Hash(m1).hex()}")
+              f"{card_name(b)}): M = {m1.hex()}  M' = {m2.hex()}  Hash = {H(m1).hex()}")
     note_time(t0)
     return bad == 0
 
@@ -244,32 +312,34 @@ def search(blocks, gaps, seed, chained, workers):
 # ---------------------------------------------------------------- second preimages
 
 def second_preimage_target(task):
-    seed, t, L, gaps = task
+    seed, t, L, gaps, variant = task
+    H = hash_of(variant)
     rng = random.Random(f"sbc2:{seed}:{t}")
     msg = bytes(rng.randrange(256) for _ in range(28 * L))
     h, comps = IV, 0
     for b in range(L):
         blk = msg[28 * b:28 * b + 28]
-        d = phi_chunk(list(blk)); base = dm_step(h, d); comps += 1
+        d = phi_chunk(list(blk)); base = dm_step(h, d, variant); comps += 1
         for gap, i, j, d2, n2 in swaps(d, gaps):
             comps += 1
-            if dm_step(h, d2) == base:
+            if dm_step(h, d2, variant) == base:
                 m2 = msg[:28 * b] + n2.to_bytes(28, 'big') + msg[28 * b + 28:]
-                ok = m2 != msg and Hash(m2) == Hash(msg)
+                ok = m2 != msg and H(m2) == H(msg)
                 return (b, gap, comps, ok)
         h = base
     return (None, None, comps, True)
 
 
-def second_preimages(L, targets, gaps, seed, workers):
+def second_preimages(L, targets, gaps, seed, workers, variant='recipe-a'):
     t0 = time.time()
-    res = pmap(second_preimage_target, [(seed, t, L, gaps) for t in range(targets)], workers)
+    res = pmap(second_preimage_target, [(seed, t, L, gaps, variant) for t in range(targets)], workers)
     found = [r for r in res if r[0] is not None]
     bad = sum(not r[3] for r in res)
     comps = sum(r[2] for r in res)
     print(f"second preimages: {targets} random targets of {L} full 28-byte blocks ({28 * L} bytes), "
           f"seed {seed}; each block tested for a same-rank swap at distances {gaps[0]}..{gaps[-1]} "
-          f"that preserves dm from its own chaining value")
+          f"that preserves dm from its own chaining value"
+          + ('' if variant == 'recipe-a' else f"; rule {variant}"))
     print(f"  second preimage found for {len(found)}/{targets} targets (each re-verified as a "
           f"distinct message with equal Hash: {'yes' if not bad else f'NO, {bad} failed'})")
     if found:
@@ -304,12 +374,36 @@ FULL = [('search', 40000, '1-6', 99, False),
         ('second', 3000, 30, '2-3', 99)]
 
 
+# The cause control (REPORT §3.4): the same 12,000 IV blocks (the first 12,000 of the
+# full run's seed-99 search) and the same distance-1..4
+# same-rank swaps under both rules.
+PRE_NOON = [('pair-variant', 'pre-noon'),
+            ('blind', 'pre-noon'),
+            ('search-v', 12000, '1-4', 99, 'recipe-a'),
+            ('search-v', 12000, '1-4', 99, 'pre-noon')]
+
+
+def pair_under(variant):
+    m1, m2 = bytes.fromhex(M1), bytes.fromhex(M2)
+    H = hash_of(variant)
+    same = H(m1) == H(m2)
+    print(f"recorded pair under rule {variant}: Hash(M) {'==' if same else '!='} Hash(M')"
+          f" ({H(m1).hex()} vs {H(m2).hex()})")
+
+
 def run_config(config, workers):
     ok = check_kats()
     ok &= verify_pair()
-    suit_blind(3000)
+    suit_blind(3000, variant='recipe-a')
     for c in config:
-        if c[0] == 'search':
+        if c[0] == 'pair-variant':
+            pair_under(c[1])
+        elif c[0] == 'blind':
+            suit_blind(3000, variant=c[1])
+        elif c[0] == 'search-v':
+            _, n, g, s, v = c
+            ok &= search(n, parse_gaps(g), s, False, workers, variant=v)
+        elif c[0] == 'search':
             _, n, g, s, ch = c
             ok &= search(n, parse_gaps(g), s, ch, workers)
         else:
@@ -331,28 +425,34 @@ def main():
     ap.add_argument('--log', action='store_true', help='write the committed log')
     ap.add_argument('--check', action='store_true', help='fail if the committed log is stale')
     ap.add_argument('--full', action='store_true', help='with --log/--check: the report-size runs')
+    ap.add_argument('--variant', choices=sorted(STEPS), default='recipe-a',
+                    help='grip rule (default: the published Recipe A rule)')
     a = ap.parse_args()
+    pre = a.variant == 'pre-noon' and not (a.search or a.second_preimage)
+    if a.full and a.variant != 'recipe-a':
+        ap.error('--full is for the published rule; use --variant pre-noon alone')
     if a.log or a.check:
         from gencheck import emit
         QUIET[0] = True
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            ok = run_config(FULL if a.full else QUICK, a.workers)
-        path = LOG_FULL if a.full else LOG
+            ok = run_config(PRE_NOON if pre else FULL if a.full else QUICK, a.workers)
+        path = LOG_PRE_NOON if pre else LOG_FULL if a.full else LOG
         rc = emit(path, buf.getvalue(), a.check,
                   fix='python3 proofs/megadreifach/security/suit_blind_collision.py --log'
-                      + (' --full' if a.full else ''))
+                      + (' --variant pre-noon' if pre else ' --full' if a.full else ''))
         if not ok:
             print('FAIL: a verification in the run failed', file=sys.stderr)
         raise SystemExit(rc or (0 if ok else 1))
     if not (a.search or a.second_preimage):
-        raise SystemExit(0 if run_config(QUICK, a.workers) else 1)
+        raise SystemExit(0 if run_config(PRE_NOON if pre else QUICK, a.workers) else 1)
     ok = check_kats() & verify_pair()
     if a.search:
-        ok &= search(a.search, parse_gaps(a.gaps or '1-3'), a.seed, a.chained, a.workers)
+        ok &= search(a.search, parse_gaps(a.gaps or '1-3'), a.seed, a.chained, a.workers,
+                     a.variant)
     if a.second_preimage:
         ok &= second_preimages(a.second_preimage, a.targets, parse_gaps(a.gaps or '2-3'),
-                               a.seed, a.workers)
+                               a.seed, a.workers, a.variant)
     raise SystemExit(0 if ok else 1)
 
 

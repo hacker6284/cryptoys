@@ -55,7 +55,7 @@ Cards appear after φ, or as a deal body for `HashDeckBody`. There is no arbitra
 | Chaining | Final position `g` only. Discard grip `o` after each block |
 | IV | **IV-COOK12**: from solved, faces `0..11` each +1 CW |
 | DM | `h' = compose(h, E_m(h))` (3-solve hand) |
-| Digest | `position_to_bytes(g)` → **29 bytes**, bijective on legal G ↔ `[0, \|G\|)` |
+| Digest | `position_to_bytes(g)` → **29 bytes**. Intended as a bijection legal G ↔ `[0, \|G\|)`; only injectivity is proved (M3); surjectivity / unrank is OPEN |
 
 `z = (28 − ( |M| + 1 + 8 ) mod 28) mod 28`. Bit length is `8 · |M|`.
 

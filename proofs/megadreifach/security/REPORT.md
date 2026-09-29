@@ -9,7 +9,7 @@ Lean package: `proofs/megadreifach/lean`, Lean v4.14.0. The Lean files are in `p
 * **Measured** means a seeded script run on the real hash (via the KAT-checked `md.py`), with the output committed under `logs/` and re-checked by `--check`. The swap attack F5 (§3) is measured: it gives concrete IV-anchored `Hash` collisions at about 2^12–2^13 compressions, and second preimages of long random targets. One collision is also kernel-checked in Lean (`SwapCollision.v_Hash_swap_collision`).
 * **Estimated** means a paper attack extrapolated from toy-scale runs (§4) under stated assumptions. This applies to F3 and F4 (§2). They were not run at full size. No preimage of `Hash` has been found.
 * **The ideal-cipher bound does not apply.** §2 records the Black–Rogaway–Shrimpton ideal-cipher bounds only as the design target. E_m is not an ideal cipher: `emBlock_word` gives a 2-query distinguisher, and F5 a practical related-key one. So those bounds say nothing about MegaDreifach v1.
-* **Two separate causes.** The v1 weaknesses have two different causes (§0, "Causes"): the corner-only read (F1–F4) and the read timing after the noon turn (F5). A redesign has to address both. The MD reduction, the pad suffix-freeness, digest-encoding injectivity (`evenRank_inj` plus the parity invariant), the step lemmas and the ideal-model counting lemmas are independent of the grip rule (§1.5).
+* **Two separate causes.** The v1 weaknesses have two different causes (§0, "Causes"): the corner-only read (F1–F4) and the read timing after the noon turn (F5). In-tree, a control run (§3.5) keeps Recipe A's corner-only read and moves only the read to before the noon turn: the swap collisions disappear (distance 2 from the IV: 15/35,175 → 0/35,175). That an edge-reading rule which still reads after the noon turn keeps them is out-of-tree evidence only. So a redesign should address both; fixing A alone is not expected to remove F5, but that half is not shown here. The MD reduction, the pad suffix-freeness, digest-encoding injectivity (`evenRank_inj` plus the parity invariant), the step lemmas and the ideal-model counting lemmas are independent of the grip rule (§1.5).
 
 ## 0. Summary
 
@@ -44,9 +44,13 @@ The F4 figures are paper attacks. Only their toy-scale versions were run end to 
 | cause | findings | what is shown | what is not known |
 |---|---|---|---|
 | **A. The read sees only corners** (Recipe A reads a corner cubie; `recipeA_sameCorners`) | F1, F2, and the paper attacks F3 / F4 built on F1; top-90-bit structure (`digest_top_collision`) | F1 and the F2 reduction are proved in Lean; F2 is demonstrated on the real hash | whether a rule that also reads edges has other free-start weaknesses (an out-of-tree prototype found free-start pseudo-collisions via never-read pieces); F3 / F4 costs at full size |
-| **B. The read comes after the noon turn** (so it usually ignores k) | F5: suit-blind re-grips, same-rank swap collisions, long-target second preimages, the related-key distinguisher | the suit-blind fraction, the swap collision rates per distance, and the second-preimage rates are measured; for the recorded pair the grips and positions are shown equal after card 7 (script and Lean) | an exact characterisation of which swaps rejoin (the rates are measured, not derived) |
+| **B. The read comes after the noon turn** (so it usually ignores k) | F5: suit-blind re-grips, same-rank swap collisions, long-target second preimages, the related-key distinguisher | the suit-blind fraction, the swap collision rates per distance, and the second-preimage rates are measured; for the recorded pair the grips and positions are shown equal after card 7 (script and Lean). In-tree control (§3.5): with the read moved before the noon turn, and nothing else changed, no swap at distance 1–4 collides in 139,490 tries (Recipe A: 17) | an exact characterisation of which swaps rejoin (the rates are measured, not derived) |
 
-Evidence that B, not A, causes F5 comes from an out-of-tree review, not from this repository. There, a candidate rule that alternates corner and edge reads but still reads after the noon turn had the same collisions: 36 in 264,115 swaps, against 41 for v1. A variant that reads right after the held-face turn, before the noon and Front turns, had 0 in 314,154. **A redesign that only makes the read see edges removes F1 but not F5.** Whether a rule fixing both causes is secure is unknown.
+Evidence that B, not A, causes F5:
+* **In-tree (§3.5, `suit_blind_collision.py --variant pre-noon`).** Keep Recipe A (corner-only) and move only the read to right after the held-face turn. The suit-blind fraction drops from 0.715 to 0.000, and same-rank swaps at distances 1–4 from the IV go from 17/139,490 colliding (distance 2: 15/35,175) to 0/139,490 on the same blocks. So, under Recipe A, the read after the noon turn is what makes the swaps collide. This shows that B is sufficient for F5 (given A); it does not show what an edge-reading rule does.
+* **Out-of-tree only (not reproducible from this repository).** A candidate rule that alternates corner and edge reads but still reads after the noon turn had the same collisions: 36 in 264,115 swaps, against 41 for v1. The reviewer of this PR independently saw the pre-noon drop (distance 2: 19/35,588 → 0/35,588).
+
+So a redesign that only makes the read see edges is expected to remove F1 but not F5; the second half of that sentence rests on the out-of-tree run. Whether a rule fixing both causes is secure is unknown.
 
 ## 1. What is proved in Lean
 
@@ -177,7 +181,7 @@ Assumption: the corner chain behaves like a random 90.2-bit compression function
 
 ## 3. F5: suit-blind re-grips give practical IV-anchored collisions (measured)
 
-Script: `suit_blind_collision.py`, on the repo's `md.py` (it re-runs the 8 KAT checks first). Recorded outputs: `logs/suit_blind_collision.log` (quick run, checked in CI with `--check`) and `logs/suit_blind_collision_full.log` (the report-size runs below, `--check --full`). The script is derived from the scripts of an out-of-tree review of candidate grip rules, keeping only v1. F5 does not use F1 (cause A); it comes from *when* the grip is read (cause B).
+Script: `suit_blind_collision.py`, on the repo's `md.py` (it re-runs the 8 KAT checks first). Recorded outputs: `logs/suit_blind_collision.log` (quick run, checked in CI with `--check`), `logs/suit_blind_collision_full.log` (the report-size runs below, `--check --full`) and `logs/suit_blind_collision_pre_noon.log` (the control of §3.5, `--check --variant pre-noon`). The script is derived from the scripts of an out-of-tree review of candidate grip rules, keeping only v1. F5 does not use F1 (cause A); it comes from *when* the grip is read (cause B).
 
 ### 3.1 Mechanism: the read ignores the suit
 
@@ -271,7 +275,22 @@ Hash(M) = Hash(M') = 0084d6d1e0a4ddb231deb23ac0f4ead7b497eed17f997bfcefa7c34e82
 * **Preimages.** Not affected, as far as this analysis shows. F5 needs a known message whose block admits a colliding swap, and returns a *different* message with the *same* digest; it gives no way to reach a prescribed digest. The F4 estimate stands as an estimate.
 * **Related-key distinguisher of E_m.** Take keys (blocks) m and m′ that differ by a same-rank two-apart swap. Then `E_m(h) = E_m′(h)` with probability ≈ 1/2,800 over random blocks, from the IV and from non-IV h; since `dm = h·E_m(h)`, equal `dm` means equal E_m. For an ideal cipher the probability is ≈ 2^−226. About 2^12 query pairs distinguish.
 * **Pseudo-collisions (F2)** are unchanged.
-* **Grip-rule redesign.** Cause B has to be fixed on its own: every re-grip must depend on the suit, e.g. by reading right after the held-face turn, before the noon and Front turns. Reading edges as well as corners fixes cause A but not B (see "Causes" in §0).
+* **Grip-rule redesign.** Cause B needs its own fix: every re-grip should depend on the suit. Under Recipe A, reading right after the held-face turn, before the noon and Front turns, removes the swap collisions (§3.5, in-tree). Reading edges as well as corners addresses cause A; that it leaves B in place is out-of-tree evidence (see "Causes" in §0).
+
+### 3.5 Control: the same rule with the read before the noon turn (in-tree)
+
+`suit_blind_collision.py --variant pre-noon` (log `logs/suit_blind_collision_pre_noon.log`, `--check --variant pre-noon`; ≈ 1 min on 8 cores). The variant changes one thing in the G2 step: the Recipe A corner (between the held face, its noon and the next neighbour, for the grip in force) is read right after the held-face turn (and the King spin); the noon and Front turns follow with the old grip, and then the grip becomes the remembered reading. F3 steps and everything else are unchanged. It is a control, not a proposed rule. Both rules are run on the same 12,000 random one-block messages from the IV (the first 12,000 blocks of the §3.3 search, seed 99) and the same same-rank swaps.
+
+| | Recipe A (published) | pre-noon read |
+|---|---|---|
+| suit-blind fraction (3,000 trials) | 0.715 | **0.000** (all 4 suits give 4 distinct grips) |
+| distance 1 | 0/35,820 | 0/35,820 |
+| distance 2 | **15/35,175** (1/2,345) | **0/35,175** (95% CI 0 to 1/9,535) |
+| distance 3 | 1/34,597 | 0/34,597 |
+| distance 4 | 1/33,898 | 0/33,898 |
+| recorded pair (`e132…19fb`) | collides | does not collide |
+
+What this shows: under Recipe A, the read position after the noon turn is what makes same-rank swaps collide; without it the grip always depends on the suit and no swap collided. What it does not show: rates below ≈ 1/9,500 per swap, chained (non-IV) blocks, or anything about other grip rules; the pre-noon variant is not claimed to be secure.
 
 ## 4. Attack results (reproducible scripts in this directory)
 
@@ -283,7 +302,7 @@ Only `md.py`, `exp_corner_driven.py`, `pseudo_collision.py`, `exp_related_blocks
 | `exp_corner_driven.py` | F1: change only the edges of h | 200/200 identical face-turn words and corner outputs |
 | `pseudo_collision.py` | F2 on the **real** compression function | **50/50** random (corner, block) pairs give distinct *legal* `h ≠ h'` with `dm(h,m) = dm(h',m)`. Example printed (block `ed69…440b`) |
 | `exp_local_collisions.py`, `exp_corner_local.py` | small probe for 3-card local collisions (full state, resp. corners + grip): all 6 orderings of 3 *random* cards from 2,000 random mid-block states | 0 in 12,000 orderings each. **Too small to see the 3-card collisions of §3**: random cards rarely put a same-rank pair two apart, and such a pair collides only ≈ 1/2,800 |
-| `suit_blind_collision.py` | F5 on the **real** hash (§3) | KATs 8/8; the recorded pair collides; suit-blind fraction 0.715; per-distance rates, second preimages (§3.3, §3.4) |
+| `suit_blind_collision.py` | F5 on the **real** hash (§3) | KATs 8/8; the recorded pair collides; suit-blind fraction 0.715; per-distance rates, second preimages (§3.3, §3.4). `--variant pre-noon`: the control of §3.5 (0.000; 0/139,490 swaps collide) |
 | `exp_edge_tree.py`, `exp_edge_first_merge.py` | Joux edge tree vs ideal (scaled edge groups H_n) | first merge after 2^6.4 / 2^7.7 / 2^9.3 / 2^11.0 / 2^12.7 states for n = 6..10, vs ideal 2^8.0 … 2^16.2. The gain grows like √c(n), 2^1.6 → 2^3.5 |
 | `exp_square_classes.py` | exact c(n) | c = 2, 7, 10, 21, 30, 54 for n = 3..8; c/p2(n) ≈ 0.3, giving c(30) ≈ 2^17.4 |
 | `exp_square_fraction.py` | fraction of squares in H_n | 0.35 / 0.50 / 0.30 / 0.40 / 0.24 for n = 4..8. B_n criterion ≈ 0.126 at n = 30 |
@@ -306,7 +325,7 @@ Notes on `exp_related_blocks.py`:
 * **Preimage (estimate):** about 2^93–2^96, against a design target of ~2^226 (F4, extrapolated from toy runs; not run at full size). F5 does not change this.
 * **Causes:** two separate flaws of v1 of the grip rule (see "Causes" in §0).
   * The grip is chosen from corner pieces only, while edges are only ever multiplied by corner-determined words (F1–F4).
-  * The grip is read after the noon turn, so for most cards it ignores the suit (F5).
+  * The grip is read after the noon turn, so for most cards it ignores the suit (F5). Moving the read before the noon turn removes the swap collisions under Recipe A (§3.5, in-tree); that an edge-reading rule still has them is out-of-tree evidence.
 
 ## 6. Recommended next steps
 
@@ -330,8 +349,9 @@ python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifa
 python3 proofs/megadreifach/security/logs.py --check                          # all other attack scripts vs logs/ (≈ 2.5 min)
 python3 proofs/megadreifach/security/suit_blind_collision.py --check          # F5 quick run (≈ 10 s)
 python3 proofs/megadreifach/security/suit_blind_collision.py --check --full   # F5 report-size runs (≈ 20 CPU-min; uses all cores)
+python3 proofs/megadreifach/security/suit_blind_collision.py --check --variant pre-noon   # §3.5 control (≈ 4 CPU-min)
 ```
 * The scripts need only Python 3 (standard library) and run from any directory.
 * `md.py` reads the published KATs from `primitives/hash/megadreifach/kats/megaminx_hash_kats.json` and exits non-zero on a mismatch; `tables.py` holds the E_m tables copied from `megadreifach.sudo`.
-* Without `--check`, `logs.py` and `suit_blind_collision.py --log [--full]` rewrite the logs (the `tools/gencheck.py` convention).
-* CI runs `suit_blind_collision.py --check` in `proofs.yml` (megadreifach-lean). It runs `logs.py --check` and `suit_blind_collision.py --check --full` in `proofs-heavy.yml` (megadreifach-attack-logs).
+* Without `--check`, `logs.py` and `suit_blind_collision.py --log [--full | --variant pre-noon]` rewrite the logs (the `tools/gencheck.py` convention).
+* CI runs `suit_blind_collision.py --check` in `proofs.yml` (megadreifach-lean). It runs `logs.py --check`, `suit_blind_collision.py --check --full` and `suit_blind_collision.py --check --variant pre-noon` in `proofs-heavy.yml` (megadreifach-attack-logs).

@@ -37,6 +37,11 @@ theorem FitsLen.succ_of_succ {n : Nat} (h : FitsLen (n + 1)) : FitsLen n :=
 theorem FitsLen.of_le {m n : Nat} (hm : FitsLen n) (hle : m ≤ n) : FitsLen m :=
   Nat.le_trans hle hm
 
+/-- Card values that fit in a sudo i64 (v12: the deal count `suit c + 2` is an
+    i64 add). The same bound as `FitsLen`; the separate name says it bounds a
+    value, not a length. Reducible, so the two are interchangeable in proofs. -/
+abbrev FitsI64 (n : Nat) : Prop := FitsLen n
+
 theorem ofNat_le_i64Max {n : Nat} (h : FitsLen n) : Int.ofNat n ≤ SudoRt.i64Max := by
   rw [← i64MaxNat_spec]
   exact Int.ofNat_le.mpr h
@@ -55,7 +60,7 @@ def Nonneg (a : Array Int) : Prop :=
 structure WellFormed (a : Array Int) : Prop where
   fits : FitsLen a.size
   nonneg : Nonneg a
-  cards : ∀ c ∈ decode a, FitsLen c
+  cards : ∀ c ∈ decode a, FitsI64 c
 
 theorem toList_embed (xs : List Nat) : (embed xs).toList = xs.map Int.ofNat := rfl
 

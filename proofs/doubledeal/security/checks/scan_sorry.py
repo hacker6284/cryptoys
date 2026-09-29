@@ -18,6 +18,10 @@ Other Lean packages use the same gate (one line per CI job):
   scan_sorry.py --root DIR_OR_FILE ... [--exclude PART ...] [--allow-sorry NAME ...]
 With --root, the sorry allowlist is exactly the --allow-sorry names (default: none).
 --exclude skips files with that path component (e.g. Generated); .lake is always skipped.
+
+Without --root it also checks the narrow-import modules (NARROW_IMPORT): each must exist
+and must not contain a bare `import Mathlib`, which would put all of Mathlib into the
+import closure of every module that uses them (e.g. SumRanks.lean).
 """
 import argparse
 import re
@@ -27,6 +31,9 @@ from pathlib import Path
 PKG = Path(__file__).resolve().parent.parent
 # Known open conjectures (DRAFT-SORRY). Each must contain exactly one sorry.
 ALLOWED_SORRY = {"roundBody_covariant_iff_id"}
+# Modules that must import only the Mathlib modules they need (paths relative to PKG):
+# PermWitness.lean is imported by SumRanks.lean, whose closure should stay small.
+NARROW_IMPORT = ["DoubleDealSecurity/PermWitness.lean"]
 
 DECL = re.compile(
     r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable|partial)\s+)*"
@@ -116,6 +123,31 @@ def scan(sources, allowed):
     return bad, found
 
 
+def bare_mathlib_imports(path, raw):
+    """Failures for every bare `import Mathlib` in `raw` (comments ignored; an import
+    line may name several modules)."""
+    bad = []
+    text = strip_block_comments(raw)
+    for i, line in enumerate(text.splitlines(), 1):
+        words = re.sub(r"--.*", "", line).split()
+        if words[:1] == ["import"] and "Mathlib" in words[1:]:
+            bad.append(f"{path}:{i}: bare `import Mathlib` in a narrow-import module "
+                       f"(import only the Mathlib modules it needs): {line.strip()}")
+    return bad
+
+
+def check_narrow(pkg, rels):
+    """The NARROW_IMPORT gate: every listed module exists and has no bare `import Mathlib`."""
+    bad = []
+    for rel in rels:
+        f = Path(pkg) / rel
+        if not f.is_file():
+            bad.append(f"narrow-import module {rel} not found (update NARROW_IMPORT)")
+        else:
+            bad += bare_mathlib_imports(rel, f.read_text())
+    return bad
+
+
 def check(sources, allowed):
     bad, found = scan(sources, allowed)
     for name in sorted(allowed):
@@ -140,18 +172,21 @@ def lean_files(roots, exclude=()):
     return files
 
 
-def main(roots, exclude, allowed, label) -> int:
+def main(roots, exclude, allowed, label, narrow=()) -> int:
     files = lean_files(roots, exclude)
     if not files:
         print(f"scan_sorry: no .lean files under {label}", file=sys.stderr)
         return 1
     bad = check(((str(p), p.read_text()) for p in files), allowed)
+    bad += check_narrow(roots[0], narrow) if narrow else []
     if bad:
         print(*bad, sep="\n", file=sys.stderr)
         return 1
     what = f"sorry only in {sorted(allowed)} (exactly once each)" if allowed else "no sorry"
     print(f"{label} ({len(files)} files): no admit, admitGoal, native_decide, sorryAx, initialize, [init] or "
           f"axiom declarations; {what}")
+    if narrow:
+        print(f"{label}: no bare `import Mathlib` in the narrow-import modules {list(narrow)}")
     return 0
 
 
@@ -216,6 +251,21 @@ FLAG_SELFTEST = [
 ]
 
 
+# The NARROW_IMPORT gate on one module source:
+# (name, source, expect_pass, substring expected in the failure output)
+NARROW_SELFTEST = [
+    ("narrow: submodules only", "import Mathlib.GroupTheory.Perm.Basic\nimport Mathlib.Tactic\n",
+     True, None),
+    ("narrow: bare import Mathlib", "import Mathlib.GroupTheory.Perm.Basic\nimport Mathlib\n",
+     False, "X.lean:2: bare `import Mathlib`"),
+    ("narrow: with a comment", "import Mathlib -- everything\n", False, "bare `import Mathlib`"),
+    ("narrow: several modules", "import Foo Mathlib\n", False, "bare `import Mathlib`"),
+    ("narrow: comments ignored", "-- import Mathlib\n/- import Mathlib\n-/\nimport Foo\n",
+     True, None),
+    ("narrow: missing module", None, False, "not found (update NARROW_IMPORT)"),
+]
+
+
 def parse(argv):
     ap = argparse.ArgumentParser(description="sorry / native_decide gate for Lean packages")
     ap.add_argument("--selftest", action="store_true", help="run the built-in cases and exit")
@@ -231,11 +281,11 @@ def run(a) -> int:
     """a: parsed arguments. The one place that picks the roots and the allowlist default:
     no --root = the security package with ALLOWED_SORRY; with --root, none."""
     if a.root is None:
-        roots, label, default = [PKG], "security package", ALLOWED_SORRY
+        roots, label, default, narrow = [PKG], "security package", ALLOWED_SORRY, NARROW_IMPORT
     else:
-        roots, label, default = a.root, ", ".join(a.root), set()
+        roots, label, default, narrow = a.root, ", ".join(a.root), set(), []
     allowed = default if a.allow_sorry is None else set(a.allow_sorry)
-    return main(roots, a.exclude, allowed, label)
+    return main(roots, a.exclude, allowed, label, narrow)
 
 
 def selftest() -> int:
@@ -243,6 +293,15 @@ def selftest() -> int:
     fails = 0
     for name, src, ok, want in SELFTEST:
         bad = check([("<selftest>", src)], ALLOWED_SORRY)
+        good = (not bad) if ok else (bool(bad) and any(want in b for b in bad))
+        if not good:
+            fails += 1
+            print(f"SELFTEST FAIL {name}: {bad}", file=sys.stderr)
+    for name, src, ok, want in NARROW_SELFTEST:
+        with tempfile.TemporaryDirectory() as d:
+            if src is not None:
+                (Path(d) / "X.lean").write_text(src)
+            bad = check_narrow(d, ["X.lean"])
         good = (not bad) if ok else (bool(bad) and any(want in b for b in bad))
         if not good:
             fails += 1
@@ -270,7 +329,8 @@ def selftest() -> int:
             print(f"SELFTEST FAIL {name}: rc={rc} {got!r}", file=sys.stderr)
     if fails:
         return 1
-    print(f"scan_sorry selftest: {len(SELFTEST)} cases + {len(FLAG_SELFTEST)} flag cases pass")
+    print(f"scan_sorry selftest: {len(SELFTEST)} cases + {len(NARROW_SELFTEST)} narrow-import "
+          f"cases + {len(FLAG_SELFTEST)} flag cases pass")
     return 0
 
 

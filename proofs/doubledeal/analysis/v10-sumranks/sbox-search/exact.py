@@ -10,7 +10,7 @@ Usage: python3 exact.py                    # the 5 cases (logs/exact.log)
        python3 exact.py 4                  # any other argument: also the 4-card cases
                                            # (logs/exact4.log)
        python3 exact.py --same-suit-swaps  # all 312 same-suit and 78 same-rank swaps, one line
-                                           # (logs/exact_swaps.log)"""
+                                           # (logs/exact_swaps.log); takes no other argument"""
 import itertools, sys
 from fractions import Fraction
 from sb import card as C, cyc, LAB, TW
@@ -62,7 +62,11 @@ def same_suit_swaps():
     def fmt(c): return ", ".join(f"{n} give exactly {v}" for v, n in sorted(c.items()))
     print(f"same-suit swaps ({sum(ss.values())}): {fmt(ss)}; "
           f"same-rank swaps ({sum(sr.values())}): {fmt(sr)}")
-if __name__ == "__main__" and SAME_SUIT_SWAPS:
+if __name__ == "__main__" and SAME_SUIT_SWAPS and len(sys.argv) > 2:
+  # the 4-card cases are not part of this mode: refuse instead of ignoring the other arguments
+  sys.exit(f"exact.py: --same-suit-swaps takes no other arguments (got {' '.join(sys.argv[1:])}); "
+           "run `python3 exact.py 4` separately for the 4-card cases")
+elif __name__ == "__main__" and SAME_SUIT_SWAPS:
   same_suit_swaps()
 elif __name__ == "__main__":
   for d, m in CASES:

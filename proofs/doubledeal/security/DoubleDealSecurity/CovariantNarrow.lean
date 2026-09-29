@@ -51,6 +51,10 @@ namespace DoubleDeal.Security.CovNarrow
 
 open DoubleDeal Relabel Finset
 open DoubleDeal.Security (isDeck_rel isDeck_unkeyedNoMix isDeck_unkeyedWithMix)
+/- The one name used from `GridCycleSurvival.lean`. Its namespace is renamed
+   (`GCSurvival` → `GridCycleSurvival`) by an open PR, so the dependency is kept to
+   this single `open` line. -/
+open DoubleDeal.Security.GCSurvival (gcSurvivors)
 
 /-! ## A. Algebra of covariance -/
 
@@ -210,17 +214,17 @@ theorem commutes_sr_iff_gc {σ : Relabel} (hc : CommutesOnDecks σ unkeyedWithMi
     exact mixColumns_separates (e.trans h.symm)
 
 /-- (PROVED) Under the same hypothesis the SumRanks survivors (`SumRanksDP.survivors`)
-    and the GridCycle survivors (`GCSurvival.gcSurvivors`) of σ are equinumerous:
+    and the GridCycle survivors (`gcSurvivors`, GridCycleSurvival.lean) of σ are equinumerous:
     the stem maps one set onto the other. -/
 theorem commutes_card_survivors_eq {σ : Relabel} (hc : CommutesOnDecks σ unkeyedWithMix) :
-    (SumRanksDP.survivors σ).card = (GCSurvival.gcSurvivors σ).card := by
+    (SumRanksDP.survivors σ).card = (gcSurvivors σ).card := by
   let f : Equiv.Perm (Fin 52) → Equiv.Perm (Fin 52) := fun π =>
     deckPerm (unkeyedNoMix (permDeck π)) (isDeck_unkeyedNoMix (isDeck_permDeck π))
   have hf : ∀ π, permDeck (f π) = unkeyedNoMix (permDeck π) :=
     fun π => funext fun i => deckPerm_val _ _ i
   apply card_bij (fun π _ => f π)
   · intro π hπ
-    simp only [SumRanksDP.survivors, GCSurvival.gcSurvivors, mem_filter, mem_univ,
+    simp only [SumRanksDP.survivors, gcSurvivors, mem_filter, mem_univ,
       true_and] at hπ ⊢
     show mixColumns (rel σ (permDeck (f π))) = rel σ (mixColumns (permDeck (f π)))
     rw [hf]
@@ -235,7 +239,7 @@ theorem commutes_card_survivors_eq {σ : Relabel} (hc : CommutesOnDecks σ unkey
     obtain ⟨m, hm, hmx⟩ := unkeyedNoMix_onto_decks (permDeck x) (isDeck_permDeck x)
     refine ⟨deckPerm m hm, ?_, ?_⟩
     · have hpm : permDeck (deckPerm m hm) = m := funext fun i => deckPerm_val m hm i
-      simp only [SumRanksDP.survivors, GCSurvival.gcSurvivors, mem_filter, mem_univ,
+      simp only [SumRanksDP.survivors, gcSurvivors, mem_filter, mem_univ,
         true_and] at hx ⊢
       show sumRanksV10 (relG σ (layColumnMajor (permDeck (deckPerm m hm)))) =
         relG σ (sumRanksV10 (layColumnMajor (permDeck (deckPerm m hm))))
@@ -255,7 +259,7 @@ theorem commutes_card_survivors_eq {σ : Relabel} (hc : CommutesOnDecks σ unkey
     on at most `52!/64` decks. (A consequence, not a contradiction.) -/
 theorem commutes_gc_le_of_not_v10Sym {σ : Relabel} (hc : CommutesOnDecks σ unkeyedWithMix)
     (h : ¬ ∃ a x, σ = v10Sym a x) :
-    64 * (GCSurvival.gcSurvivors σ).card ≤ Nat.factorial 52 := by
+    64 * (gcSurvivors σ).card ≤ Nat.factorial 52 := by
   have hs := SumRanksDP.sumRanksV10_survival_le σ h
   rw [Fintype.card_perm, Fintype.card_fin, commutes_card_survivors_eq hc] at hs
   exact hs

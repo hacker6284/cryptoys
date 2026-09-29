@@ -1,3 +1,4 @@
+<!-- Owns: what this Generated/ package is and that its emitted files are not hand-edited (this README is hand-written; tools/emit_lean.py keeps it). Maintenance rules: ../../../../DOCS.md. -->
 # Generated DoubleDeal-CBC-HMAC Lean
 
 **Do not edit these files by hand.** They are produced from

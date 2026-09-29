@@ -1,10 +1,10 @@
 # DoubleDeal v9 (DEPRECATED, frozen)
 
-> **Deprecated.** This is the frozen v9 specification, kept verbatim below this banner so the published vectors and the vulnerability proof keep a fixed target. Do not change its behavior. The successor is v10 (position-aware SumRanks), the live spec: [`../SPEC.md`](../SPEC.md).
+> **Deprecated.** This is the frozen v9 specification, kept verbatim below this banner so the published vectors and the vulnerability proof keep a fixed target. Do not change its behavior. The successor is v10 (position-aware SumRanks). The live spec is [`../SPEC.md`](../SPEC.md).
 >
 > **Why deprecated.** v9 SumRanks rotates each row by a sum of ranks and each column by a sum of (rank + suit) mod 4. A sum does not change when two cards in the same row trade places, so a swap of two cards with different ranks and equal (rank + suit) mod 4 commutes with SumRanks whenever the two cards share a row (probability 12/51 for a random state). Compose, ShiftRows and PassKey never stand in the way. GridCycle survives such a swap when both cards' next steps are blocked and the overflow scans meet. For K♣↔Q♥ this is about 0.18, because K♣'s step always lands on its own seat. That gives a related-plaintext distinguisher on the full cipher: \(\Pr[E_K(\sigma M) = \sigma E_K(M)] \approx 3.5\times10^{-8}\) per pair for \(\sigma\) = K♣↔Q♥ (14 hits in \(4\times10^8\) pairs), against about \(1/52!\) for a random permutation. It is a distinguisher, not key recovery. Write-up, kernel-checked witness and scripts: [`proofs/deprecated/doubledeal-v9/`](../../../../proofs/deprecated/doubledeal-v9/).
 >
-> The conformance implementation for this frozen text is `doubledeal_v9.sudo` next to this file. Relative links in the body below point at the v9-era tree; the current proofs describe v10.
+> The conformance implementation for this frozen text is `doubledeal_v9.sudo` next to this file. Relative links in the body below point at the v9-era tree.
 
 ---
 

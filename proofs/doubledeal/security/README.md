@@ -1,3 +1,4 @@
+<!-- Owns: the DoubleDeal security package: its modules, the AES-style roadmap and status, and the CI gates on it. Maintenance rules: ../../../DOCS.md. -->
 # DoubleDeal security theorems (draft)
 
 Separate Lake package so the refinement package (`../lean`) and `Generated/`
@@ -5,13 +6,15 @@ stay dependency-free. Requires Mathlib `v4.14.0` (rev `4bbdccd9`, pinned in
 `lake-manifest.json`, matching `leanprover/lean4:v4.14.0`) and `../lean` as a
 path dependency.
 
-    lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
-    lake build
-    python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
-    lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses (five decide! encryptions, GridCycle survival checks, covariant-case checks); whole `doubledeal-security-heavy` CI job: 13m29s, measured once at 8d46927 (#113); a measurement, not a bound
-    python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
-    python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
-    python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
+```sh
+lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
+lake build
+python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
+lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses (five decide! encryptions, GridCycle survival checks, covariant-case checks); whole `doubledeal-security-heavy` CI job: 13m29s, measured once at 8d46927 (#113); a measurement, not a bound
+python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
+python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
+python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
+```
 
 ## Layout
 
@@ -36,12 +39,12 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt` (v12), K♣↔K♦ witness (re-checked on v10, v11 and v12) |
 | `V8Vectors` | frozen v8 vectors checked against the v8 model (generated, `--check`) |
 | `RealKey` | commuting relabellings closed under powers; every nontrivial `v10Sym a x` has a power equal to one of four witnesses `v10Sym 1 0`, `v10Sym 0 1`, `v10Sym 0 2`, `v10Sym 0 3` (v9 needed two; `v10Sym` is not cyclic); pull-back from the emitted `encrypt` |
-| `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma map: `SUMRANKS_DP.md`; paper proof: `sumranks-dp-paper/PROOF.md` |
+| `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma map: [`SUMRANKS_DP.md`](SUMRANKS_DP.md); paper proof: [`sumranks-dp-paper/PROOF.md`](sumranks-dp-paper/PROOF.md) |
 | `PermCount` | generic counting of permutations of any finite type by a statistic (equal fibres under left multiplication, count through equal fibres, ordered distinct triples); no cipher content. Used by `SumRanksDP.ThreeCycle` and `GridCycleSurvival`; its `exists_perm_two` also gives the pair-swap witness decks of `SumRanks`, `SumRanksV10Iff` and `SumRanksDP.Main` |
-| `GridCycleSurvival` | **GridCycle relabelling survival** (roadmap milestone M1, see [Roadmap](#roadmap); `../analysis/v12-diffusion/NOTES.md`): τ survives GridCycle at deck π iff `mixColumns (τ·π) = τ·mixColumns π`. Proved for every τ: `52 · #survivors ≤ #gcExc τ · 52!` (first-card argument; `gcExc` = fixed points plus K♣/K♠); fixed-point-free τ ≤ `52!/26`; 50 of the 51 nontrivial `v10Sym` survive on no deck; `v10Sym 0 3` ≤ `52!/26`, and ≤ `52!/4420` **given** the two finite checks `Check3 KC LKC`, `Check3 KS LKS` as hypotheses (`…_of_check`). GridCycle alone, one layer; not a trail bound for τ outside `v10Sym`, and not a statement about the cipher |
-| `TrailBound` | **multi-round characteristic bound under INDEPENDENT UNIFORM round keys** (roadmap milestone M2; `../analysis/v12-trail/NOTES.md`). `Trail σ R y K`: in every one of R rounds (Compose with `K i`, then the unkeyed round), SumRanks and GridCycle both commute with σ. Counting over all `(52!)^R` key tuples, from every deck y: `trail_card_le_26` (σ ≠ 1, unconditional) `26^R · # ≤ (52!)^R`; `trail_card_le_64_of_not_v10Sym` `64^R`; `trail_card_le_64_of_check` (σ ≠ 1, given the GridCycle checks) `64^R`. One characteristic, not a differential. Says nothing about the real PassKey schedule. No final no-mix round; not linked to `encryptN` |
-| `RealSchedule` | **the REAL PassKey schedule** (roadmap milestone M5, see [Roadmap](#roadmap); `../analysis/v12-keysched/NOTES.md`). Master key: a uniform `π : Perm (Fin 52)`, injected into key decks by `masterList` (`masterList_injective`; its image is exactly the 52-card key decks, `masterList_surjective`). Round key `i` is `roundKey i π = keyPos (F^i K0)`, the keys of `encryptDeckFn` (`encryptDeckFn_masterList`). Proved: each single round key is uniform (`card_roundKey`); for any two rounds r ≠ s, the pair `(K_r, K_s)` takes exactly 52! of the (52!)^2 values, so the keys are not independent (`card_image_roundKey_pair`, `_lt`; stated for all r, s, trivial for r = s); no master key gives `K_{r+1}[0] = K_r[0]` (`card_roundKey_top_eq`, from `passKey_head_ne`). Characteristic: for every R ≥ 1, σ ≠ 1 and deck y, `26 · #{π \| Trail σ R y (roundKeys R π)} ≤ 52!` (`realTrail_card_le_26`, unconditional), `64 ·` for σ ∉ `v10Sym` (`realTrail_card_le_64_of_not_v10Sym`) and for every σ ≠ 1 given the GridCycle checks (`realTrail_card_le_64_of_check`). **The proved bound gains nothing beyond round 1**: it is 1/64 for every R, weaker than M2's (1/64)^R, because from round 1 on the round key is not uniform given the state; a limit of the proof, not a measured weakness. One characteristic, not the differential. No final no-mix round; `rounds` not linked to `encryptN` (only the keys are); R ≤ 5 is the cipher's range (for R ≥ 6 the model uses K_5, K_6, … as keys before a mix, which the cipher never does) |
-| `CovariantNarrow`, `CovariantNarrowLists` (generated) | **narrowing of the open conjecture** `roundBody_covariant_iff_id` (roadmap milestone M4, see [Roadmap](#roadmap); the conjecture itself is unchanged and still open; `../analysis/v12-covariant/NOTES.md`). Proved: the output relabelling is unique; covariant σ form a subgroup; the conjecture follows from its prime-order case (`roundBody_covariant_iff_id_of_prime`), and `prime_case_iff` shows that case is equivalent to the conjecture; in the commuting case SumRanks and GridCycle survivor counts agree. Given the finite checks `Cov0Checks` as a hypothesis: no transposition is covariant, for any τ (`not_covariant_swap_of_check`), and the conjecture is equivalent to `PrimeNonSwapCase` (prime-order σ that are neither a transposition nor a `v10Sym`; `…_of_prime_nonswap_of_check`, `prime_nonswap_case_iff_of_check`). Also `…_of_cell0` and `…_of_cell0_prime`: the conjecture follows from single-cell SumRanks statements that are sufficient conditions, not known to be true or necessary. `CovariantNarrowLists` (`goodPairs`, `covW`) is generated by `../analysis/v12-covariant/cell0_witness.py --lean` |
+| `GridCycleSurvival` | **GridCycle relabelling survival** (roadmap milestone M1, see [Roadmap](#roadmap); [`../analysis/v12-diffusion/NOTES.md`](../analysis/v12-diffusion/NOTES.md)): τ survives GridCycle at deck π iff `mixColumns (τ·π) = τ·mixColumns π`. Proved for every τ: `52 · #survivors ≤ #gcExc τ · 52!` (first-card argument; `gcExc` = fixed points plus K♣/K♠); fixed-point-free τ ≤ `52!/26`; 50 of the 51 nontrivial `v10Sym` survive on no deck; `v10Sym 0 3` ≤ `52!/26`, and ≤ `52!/4420` **given** the two finite checks `Check3 KC LKC`, `Check3 KS LKS` as hypotheses (`…_of_check`). GridCycle alone, one layer; not a trail bound for τ outside `v10Sym`, and not a statement about the cipher |
+| `TrailBound` | **multi-round characteristic bound under INDEPENDENT UNIFORM round keys** (roadmap milestone M2; [`../analysis/v12-trail/NOTES.md`](../analysis/v12-trail/NOTES.md)). `Trail σ R y K`: in every one of R rounds (Compose with `K i`, then the unkeyed round), SumRanks and GridCycle both commute with σ. Counting over all `(52!)^R` key tuples, from every deck y: `trail_card_le_26` (σ ≠ 1, unconditional) `26^R · # ≤ (52!)^R`; `trail_card_le_64_of_not_v10Sym` `64^R`; `trail_card_le_64_of_check` (σ ≠ 1, given the GridCycle checks) `64^R`. One characteristic, not a differential. Says nothing about the real PassKey schedule. No final no-mix round; not linked to `encryptN` |
+| `RealSchedule` | **the REAL PassKey schedule** (roadmap milestone M5, see [Roadmap](#roadmap); [`../analysis/v12-keysched/NOTES.md`](../analysis/v12-keysched/NOTES.md)). Master key: a uniform `π : Perm (Fin 52)`, injected into key decks by `masterList` (`masterList_injective`; its image is exactly the 52-card key decks, `masterList_surjective`). Round key `i` is `roundKey i π = keyPos (F^i K0)`, the keys of `encryptDeckFn` (`encryptDeckFn_masterList`). Proved: each single round key is uniform (`card_roundKey`); for any two rounds r ≠ s, the pair `(K_r, K_s)` takes exactly 52! of the (52!)^2 values, so the keys are not independent (`card_image_roundKey_pair`, `_lt`; stated for all r, s, trivial for r = s); no master key gives `K_{r+1}[0] = K_r[0]` (`card_roundKey_top_eq`, from `passKey_head_ne`). Characteristic: for every R ≥ 1, σ ≠ 1 and deck y, `26 · #{π \| Trail σ R y (roundKeys R π)} ≤ 52!` (`realTrail_card_le_26`, unconditional), `64 ·` for σ ∉ `v10Sym` (`realTrail_card_le_64_of_not_v10Sym`) and for every σ ≠ 1 given the GridCycle checks (`realTrail_card_le_64_of_check`). **The proved bound gains nothing beyond round 1**: it is 1/64 for every R, weaker than M2's (1/64)^R, because from round 1 on the round key is not uniform given the state; a limit of the proof, not a measured weakness. One characteristic, not the differential. No final no-mix round; `rounds` not linked to `encryptN` (only the keys are); R ≤ 5 is the cipher's range (for R ≥ 6 the model uses K_5, K_6, … as keys before a mix, which the cipher never does) |
+| `CovariantNarrow`, `CovariantNarrowLists` (generated) | **narrowing of the open conjecture** `roundBody_covariant_iff_id` (roadmap milestone M4, see [Roadmap](#roadmap); the conjecture itself is unchanged and still open; [`../analysis/v12-covariant/NOTES.md`](../analysis/v12-covariant/NOTES.md)). Proved: the output relabelling is unique; covariant σ form a subgroup; the conjecture follows from its prime-order case (`roundBody_covariant_iff_id_of_prime`), and `prime_case_iff` shows that case is equivalent to the conjecture; in the commuting case SumRanks and GridCycle survivor counts agree. Given the finite checks `Cov0Checks` as a hypothesis: no transposition is covariant, for any τ (`not_covariant_swap_of_check`), and the conjecture is equivalent to `PrimeNonSwapCase` (prime-order σ that are neither a transposition nor a `v10Sym`; `…_of_prime_nonswap_of_check`, `prime_nonswap_case_iff_of_check`). Also `…_of_cell0` and `…_of_cell0_prime`: the conjecture follows from single-cell SumRanks statements that are sufficient conditions, not known to be true or necessary. `CovariantNarrowLists` (`goodPairs`, `covW`) is generated by [`../analysis/v12-covariant/cell0_witness.py`](../analysis/v12-covariant/cell0_witness.py) `--lean` |
 | `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`). **Deprecated-v9 model**; kept as the proof of the v9 mechanism, not a statement about v10 |
 | `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v12 `encrypt` under the identity master key (expected values regenerated for v12, whose key schedule changed) (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
 | `DoubleDealSecurityHeavy.GridCycleSurvival` | kernel `decide!` of `Check3 KC LKC` / `Check3 KS LKS` (8 chunks of 13 × 52 first-three-seat evaluations, ~30 s each), hence unconditional `gc_survival_v10Sym03_le` / `gc_survival_v10Sym_le`: every nontrivial `v10Sym a x` survives GridCycle on at most `52!/4420` decks |
@@ -59,11 +62,11 @@ theorem in this package, audited as above; no item is a security claim.
 
 | Milestone | Status | Where |
 |---|---|---|
-| M1. GridCycle relabelling survival (the diffusion notion) | **Done.** Proved: 50 of the 51 nontrivial `v10Sym` survive GridCycle on no deck; `v10Sym 0 3` on ≤ 1/26 (default library) and ≤ 1/4420 (heavy library; default library given the two finite checks). The Hamming branch number is the trivial floor 4 | `GridCycleSurvival`, `DoubleDealSecurityHeavy.GridCycleSurvival`, `../analysis/v12-diffusion/NOTES.md` |
-| M2. Multi-round trail bound | **Done, in the independent-uniform-round-key model only.** The constant-σ characteristic through R mix rounds has probability ≤ (1/64)^R for every σ ≠ 1 (heavy library; default library (1/26)^R, and (1/64)^R given the two finite checks). One characteristic, not a differential; no final no-mix round; not linked to `encryptN` | `TrailBound`, `DoubleDealSecurityHeavy.TrailBound`, `../analysis/v12-trail/NOTES.md` |
-| M3. Linear-analogue note | **Note only, no Lean.** No linear analogue is defined; the note argues that no direct analogue exists for permutation-valued state and proposes Fourier analysis on `S_52`; one sampled single-card position statistic, at the noise level of its control | `../analysis/v12-linear/NOTES.md` |
-| M4. Covariant round conjecture `roundBody_covariant_iff_id` | **Narrowed, still open** (`DRAFT-SORRY`; statement unchanged). Proved: it holds for every transposition (heavy library; default library given the finite checks) and for every nontrivial `v10Sym`, for every τ. It is equivalent to `PrimeNonSwapCase`, its case of σ of prime order p ≤ 52 that are neither a transposition nor a `v10Sym` (heavy library: `roundBody_covariant_iff_id_of_prime_nonswap`, `prime_nonswap_case_iff`). Open: exactly `PrimeNonSwapCase`. Sufficient single-cell conditions (`…_of_cell0`, `…_of_cell0_prime`) are not known to be true or necessary. Checked numerically by `checks/check_covariant.py` | `Rounds`, `CovariantNarrow`, `DoubleDealSecurityHeavy.CovariantNarrow`, `../analysis/v12-covariant/NOTES.md` |
-| M5. Real PassKey schedule (dependent round keys) | **One round's bound only (multi-round open).** Master key uniform. Proved: each single round key is uniform; the round keys are not independent (for any two rounds r ≠ s the pair takes 52! of (52!)^2 values; `K_{r+1}[0] ≠ K_r[0]` always). The constant-σ characteristic through R ≥ 1 rounds of the real schedule has probability ≤ 1/64 for every σ ≠ 1 (heavy library; default library 1/26, and 1/64 given the two finite checks). **The proved bound gains nothing beyond round 1**: it is 1/64 for every R, weaker than M2's (1/64)^R, because from round 1 on the round key is not uniform given the state. This is a limit of the proof, not a measured weakness; for R ≥ 2 nothing rules out the real schedule being more likely than (1/64)^R. One characteristic, not the differential; no final no-mix round; not linked to `encryptN`; R ≤ 5 is the cipher's range. The two-round values and key statistics in the note are empirical only | `RealSchedule`, `DoubleDealSecurityHeavy.RealSchedule`, `../analysis/v12-keysched/NOTES.md` |
+| M1. GridCycle relabelling survival (the diffusion notion) | **Done.** Proved: 50 of the 51 nontrivial `v10Sym` survive GridCycle on no deck; `v10Sym 0 3` on ≤ 1/26 (default library) and ≤ 1/4420 (heavy library; default library given the two finite checks). The Hamming branch number is the trivial floor 4 | `GridCycleSurvival`, `DoubleDealSecurityHeavy.GridCycleSurvival`, [`../analysis/v12-diffusion/NOTES.md`](../analysis/v12-diffusion/NOTES.md) |
+| M2. Multi-round trail bound | **Done, in the independent-uniform-round-key model only.** The constant-σ characteristic through R mix rounds has probability ≤ (1/64)^R for every σ ≠ 1 (heavy library; default library (1/26)^R, and (1/64)^R given the two finite checks). One characteristic, not a differential; no final no-mix round; not linked to `encryptN` | `TrailBound`, `DoubleDealSecurityHeavy.TrailBound`, [`../analysis/v12-trail/NOTES.md`](../analysis/v12-trail/NOTES.md) |
+| M3. Linear-analogue note | **Note only, no Lean.** No linear analogue is defined; the note argues that no direct analogue exists for permutation-valued state and proposes Fourier analysis on `S_52`; one sampled single-card position statistic, at the noise level of its control | [`../analysis/v12-linear/NOTES.md`](../analysis/v12-linear/NOTES.md) |
+| M4. Covariant round conjecture `roundBody_covariant_iff_id` | **Narrowed, still open** (`DRAFT-SORRY`; statement unchanged). Proved: it holds for every transposition (heavy library; default library given the finite checks) and for every nontrivial `v10Sym`, for every τ. It is equivalent to `PrimeNonSwapCase`, its case of σ of prime order p ≤ 52 that are neither a transposition nor a `v10Sym` (heavy library: `roundBody_covariant_iff_id_of_prime_nonswap`, `prime_nonswap_case_iff`). Open: exactly `PrimeNonSwapCase`. Sufficient single-cell conditions (`…_of_cell0`, `…_of_cell0_prime`) are not known to be true or necessary. Checked numerically by `checks/check_covariant.py` | `Rounds`, `CovariantNarrow`, `DoubleDealSecurityHeavy.CovariantNarrow`, [`../analysis/v12-covariant/NOTES.md`](../analysis/v12-covariant/NOTES.md) |
+| M5. Real PassKey schedule (dependent round keys) | **One round's bound only (multi-round open).** Master key uniform. Proved: each single round key is uniform; the round keys are not independent (for any two rounds r ≠ s the pair takes 52! of (52!)^2 values; `K_{r+1}[0] ≠ K_r[0]` always). The constant-σ characteristic through R ≥ 1 rounds of the real schedule has probability ≤ 1/64 for every σ ≠ 1 (heavy library; default library 1/26, and 1/64 given the two finite checks). **The proved bound gains nothing beyond round 1**: it is 1/64 for every R, weaker than M2's (1/64)^R, because from round 1 on the round key is not uniform given the state. This is a limit of the proof, not a measured weakness; for R ≥ 2 nothing rules out the real schedule being more likely than (1/64)^R. One characteristic, not the differential; no final no-mix round; not linked to `encryptN`; R ≤ 5 is the cipher's range. The two-round values and key statistics in the note are empirical only | `RealSchedule`, `DoubleDealSecurityHeavy.RealSchedule`, [`../analysis/v12-keysched/NOTES.md`](../analysis/v12-keysched/NOTES.md) |
 
 Open, with no milestone yet:
 - any multi-round gain under the real PassKey schedule (M5 proves only one round's bound, 1/64 for every R; for R ≥ 2 nothing rules out a probability above (1/64)^R);
@@ -92,72 +95,19 @@ decks. Also proved (`sumRanksV10_survival_threeCycle`,
 non-symmetries is computer-assisted (`sumranks-dp-paper/PROOF.md` §5b) and not
 formalised.
 
-Branch number and GridCycle survival (roadmap milestone M1, v12;
-`../analysis/v12-diffusion/NOTES.md`). The Hamming branch number of GridCycle is
-exactly the trivial floor 4 (proved, below), so no wide-trail bound comes from
-it. The notion used instead is relabelling survival. Proved: the 50 nontrivial
-`v10Sym` other than `v10Sym 0 3` never survive GridCycle, and `v10Sym 0 3`
-survives on at most 1/4420 of the decks (heavy library; the default library
-states it conditional on the finite check). Only measured: full GridCycle survival
-(0 in 60000 sampled decks for `v10Sym 0 3` given its prefix; mean ≈ 0.0035 over
-swaps). For relabellings outside `v10Sym`, the only proved GridCycle bound is the
-first-card one, which is weak (≈ 1) for small-support relabellings.
-
-Multi-round (roadmap milestone M2, `TrailBound`, `../analysis/v12-trail/NOTES.md`).
-**Conditional on the model**: independent uniform round keys (built into the
-counting over all key tuples), one constant-σ characteristic, and no final no-mix
-round. In that model the characteristic has probability ≤ (1/64)^R for every
-σ ≠ 1 (heavy library; the default library proves (1/26)^R unconditionally and
-(1/64)^R given the finite check). Not proved: the differential (sum over
-characteristics), and σ → β for β ≠ σ.
-
-Real PassKey schedule (roadmap milestone M5, `RealSchedule`,
-`../analysis/v12-keysched/NOTES.md`). The master key is a uniform π : Perm (Fin 52),
-injected into key decks by `masterList` (onto the 52-card key decks); the round keys are
-the keys of `encryptDeckFn`. Each single round key is uniform, and for any two rounds
-r ≠ s the round keys are not independent (proved). The same characteristic through R ≥ 1 rounds has probability
-≤ 1/64 for every σ ≠ 1 (heavy library; default library 1/26, and 1/64 given the finite
-check). **The proved bound gains nothing beyond round 1**: it is 1/64 for every R,
-weaker than M2's (1/64)^R, because from round 1 on the round key is not uniform given
-the state (both are functions of the master key). This is a limit of the proof, not a
-measured weakness. For R ≥ 2 nothing proved or measured rules out the real schedule
-following the characteristic with probability above (1/64)^R. One characteristic, not
-the differential; no final no-mix round; `rounds` not linked to `encryptN`; R ≤ 5 is the
-cipher's range (for R ≥ 6 the model uses K_5, K_6, … as keys before a mix, which the
-cipher never does; harmless, but not the cipher). Measured only, not used by any
-theorem: no sign of correlation between rounds 0 and 1, at a resolution of only about
-2–3× (9, 7 and 8 samples followed rounds 0 and 1, against 6.4, 6.4 and 5.8 expected for
-independent round-1 behaviour; ≈1.8·10^9 samples per case), from only two same-suit
-swaps and two starting decks.
-
-Linear analogue (roadmap milestone M3): none is defined. Permutation-valued state
-has no masks, and the note `../analysis/v12-linear/NOTES.md` argues why and
-proposes Fourier analysis on `S_52` (the standard representation first). There are
-no Lean statements for it.
+Milestones M1–M5 (statements, caveats, measured values): [Roadmap](#roadmap) and the analysis notes it links.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at
-least 4. The live v11 GridCycle (as v9/v10 before it) and the frozen v8 model attain 4: swapping walk cards
+least 4. The v11 GridCycle (kept in v12; as v9/v10 before it) and the frozen v8 model attain 4: swapping walk cards
 50 and 51 changes exactly two output seats. That is the trivial floor, not a
 bound above 4, and not a statement about SumRanks or keyed rounds.
 
 T1 is a draft. The only open statement is the covariant round conjecture
 `roundBody_covariant_iff_id` (marked `DRAFT-SORRY`, checked numerically by
 `checks/check_covariant.py`); `fullRound_commutes_iff_id` and the
-permutation-key `encrypt6_commutes_iff_id` rest on it. Narrowed in v12
-(`CovariantNarrow`, separate theorems; the conjecture's statement is unchanged).
-Proved non-covariant, for every τ: every transposition (heavy library) and every
-nontrivial `v10Sym` (`roundBody_not_covariant_of_stem`). Proved equivalent to the
-conjecture: its prime-order case (`prime_case_iff`), and `PrimeNonSwapCase`, the
-prime-order σ that are neither a transposition nor a `v10Sym` (heavy library,
-`prime_nonswap_case_iff`). Open: exactly `PrimeNonSwapCase`. Also proved: the
-conjecture follows from single-cell SumRanks statements (`…_of_cell0`,
-`…_of_cell0_prime`) that are sufficient conditions, not known to be true or
-necessary, because the seat-26 condition is weaker than covariance. Measured only:
-a seat-26 witness pair (which rules out that condition, and hence covariance, for
-that σ) was found for each of the 1600 sampled prime-order σ
-(`../analysis/v12-covariant/cell0_sample.log`). That is evidence for the
-prime-restricted single-cell hypothesis on the sampled σ only.
+permutation-key `encrypt6_commutes_iff_id` rest on it. How far it is narrowed:
+roadmap milestone M4 above.
 
 CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 - `checks/scan_sorry.py`: `sorry` only in `roundBody_covariant_iff_id`; no
@@ -185,11 +135,9 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
   a user-declared `zfxH.eq_1`) and none for the on-demand reserved `zfxF.eq_unfold` /
   `zfxF.induct`.
 
-CI (`proofs-heavy.yml`, job `doubledeal-security-heavy`) builds the heavy library
+CI ([`proofs-heavy.yml`](../../../.github/workflows/proofs-heavy.yml), job `doubledeal-security-heavy`) builds the heavy library
 and runs `../check_axioms.py security-heavy` (same rules, no KNOWN_SORRY; every
-registered theorem must be reported) plus `scan_sorry.py`. It runs on PRs that
-touch the security sources, the core/Generated Lean, `check_axioms.py`, `proofs/audit` or the
-doubledeal sudo spec; on pushes to main; weekly; and on `workflow_dispatch`.
+registered theorem must be reported) plus `scan_sorry.py`. When it runs: see that workflow.
 
 Both jobs (`doubledeal-security` and `doubledeal-security-heavy`) must be green
 before merge (not enforced by branch protection): each audit checks only its own

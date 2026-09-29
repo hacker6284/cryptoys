@@ -1,3 +1,4 @@
+<!-- Owns: the v10 SumRanks S-box difference search and its measurements. Maintenance rules: ../../../../../DOCS.md. -->
 # v10 SumRanks alone as an S-box: difference search (empirical, not a proof)
 
 **Kind:** analysis. Monte Carlo measurements plus exact enumerations under a stated uniformity argument. Nothing here

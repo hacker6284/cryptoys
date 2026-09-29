@@ -1,3 +1,4 @@
+<!-- Owns: the empirical notes behind the v10 SumRanks choice (candidate W5c). Maintenance rules: ../../../../DOCS.md. -->
 # DoubleDeal v10 SumRanks: empirical notes (not a proof)
 
 **Kind:** analysis. Nothing in this folder is a theorem, a spec or a security claim. The normative v10 SumRanks is SPEC §3.3 in [`primitives/cipher/doubledeal/SPEC.md`](../../../../primitives/cipher/doubledeal/SPEC.md) and `doubledeal.sudo`; the Lean model is [`../../lean/DoubleDeal/SumRanksV10.lean`](../../lean/DoubleDeal/SumRanksV10.lean).

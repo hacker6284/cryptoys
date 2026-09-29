@@ -1,3 +1,4 @@
+<!-- Owns: the v10 GridCycle parity analysis (phases 1-6) and the measurements behind the v11 GridCycle rule. Maintenance rules: ../../../../DOCS.md. -->
 # GridCycle analysis (phases 1-6)
 
 DoubleDeal v10 GridCycle: AES-parity analysis (analysis only). Sections 1–6 below are Phase 1.

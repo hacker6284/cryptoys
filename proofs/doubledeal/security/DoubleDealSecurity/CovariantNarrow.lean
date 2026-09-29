@@ -51,10 +51,8 @@ namespace DoubleDeal.Security.CovNarrow
 
 open DoubleDeal Relabel Finset
 open DoubleDeal.Security (isDeck_rel isDeck_unkeyedNoMix isDeck_unkeyedWithMix)
-/- The one name used from `GridCycleSurvival.lean`. Its namespace is renamed
-   (`GCSurvival` → `GridCycleSurvival`) by an open PR, so the dependency is kept to
-   this single `open` line. -/
-open DoubleDeal.Security.GCSurvival (gcSurvivors)
+/- The one name used from `GridCycleSurvival.lean`, kept to this single `open` line. -/
+open DoubleDeal.Security.GridCycleSurvival (gcSurvivors)
 
 /-! ## A. Algebra of covariance -/
 

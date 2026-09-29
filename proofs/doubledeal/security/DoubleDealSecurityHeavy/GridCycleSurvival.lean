@@ -14,7 +14,7 @@
 -/
 import DoubleDealSecurity.GridCycleSurvival
 
-namespace DoubleDeal.Security.GCSurvival
+namespace DoubleDeal.Security.GridCycleSurvival
 
 open DoubleDeal Finset
 
@@ -70,4 +70,4 @@ theorem gc_survival_v10Sym_le (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 
     4420 * (gcSurvivors (v10Sym a x)).card ≤ Nat.factorial 52 :=
   gc_survival_v10Sym_le_of_check check3_KC check3_KS a x hne
 
-end DoubleDeal.Security.GCSurvival
+end DoubleDeal.Security.GridCycleSurvival

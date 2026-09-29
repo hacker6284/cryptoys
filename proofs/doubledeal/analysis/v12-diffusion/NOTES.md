@@ -22,11 +22,11 @@ wt(d, d') + wt(F d, F d')`. Two distinct decks differ in at least 2 seats, so
   v11 and so for v12): the floor, and GridCycle attains it. Swapping walk cards 50
   and 51 changes exactly two output seats (`mixColumns_tail_branch`). So
   **B(GridCycle) = 4 exactly.**
-* This is the "weak minimum" case of the roadmap. It is **not** a break. Every layer
-  of DoubleDeal only moves cards, so weight 1 cannot occur and the AES scale does not
-  transfer. Earlier measurements (`../../security/checks/branchnum/NOTES.md`, for
+* This is the "weak minimum" case: the branch number is the trivial floor. It is
+  **not** a break. Every layer of DoubleDeal only moves cards, so weight 1 cannot
+  occur and the AES scale does not transfer. Earlier measurements (`../../security/checks/branchnum/NOTES.md`, for
   v8/v9) found weight-2 → weight-2 pairs for every layer and for one keyed round.
-  Per the roadmap, this line stops here: no Lean bound above 4 exists to prove.
+  So this line stops here: no Lean bound above 4 exists to prove.
 
 ### 1b. Relabelling (value-difference) survival. This is the notion the trail argument needs.
 
@@ -68,7 +68,7 @@ the τ that SumRanks' 1/64 already covers.
 
 ## 3. What was proved (PROVED) — `security/DoubleDealSecurity/GridCycleSurvival.lean`
 
-Namespace `DoubleDeal.Security.GCSurvival`. `GCSurvives τ π :=
+Namespace `DoubleDeal.Security.GridCycleSurvival`. `GCSurvives τ π :=
 mixColumns (rel τ (permDeck π)) = rel τ (mixColumns (permDeck π))`, and
 `gcSurvivors τ` is the set of such π in `Equiv.Perm (Fin 52)`.
 

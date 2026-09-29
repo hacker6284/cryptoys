@@ -1,0 +1,13 @@
+$ DEALK=2 ONLYV=6 ./readings 20000 31; DEALMOD=1 DEALK=2 ONLYV=4 ./readings 20000 41
+readings N=20000 seed=31  (x = suit; one pass; swap tau passes if F(tau K) = tau F(K))
+DEALKF  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/200000 decks
+      (DEALKF with k = 2: deal suit + 2 under the hand if it is smaller than the hand, else under the key pile)
+      worst 4C<->3H 0.0022   2H<->AS 0.0004   pairs > 1/64: 0   mean over 1326: 0.00003
+      top 5: 4C<->3H 0.0022 5C<->4H 0.0019 6C<->5H 0.0018 7C<->6H 0.0018 2C<->AH 0.0017
+      six chained passes, worst pair 4C<->3H: K'_r = tau K_r for all r=1..6 in 0/200000 keys = 0.00000
+readings N=20000 seed=41  (x = suit; one pass; swap tau passes if F(tau K) = tau F(K))
+DEALB  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/200000 decks
+      (DEALB with k = 2: deal suit + 2 cards, count mod hand size)
+      worst 5H<->5D 0.0032   2H<->AS 0.0011   pairs > 1/64: 0   mean over 1326: 0.00013
+      top 5: 5H<->5D 0.0032 AC<->AD 0.0031 3H<->3D 0.0031 KH<->KD 0.0030 AC<->AS 0.0029
+      six chained passes, worst pair 5H<->5D: K'_r = tau K_r for all r=1..6 in 0/200000 keys = 0.00000

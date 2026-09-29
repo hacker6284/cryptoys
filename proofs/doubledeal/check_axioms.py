@@ -80,6 +80,20 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.v10Sym02_not_commutes_realE",
     "DoubleDeal.Security.v10Sym03_not_commutes_realE",
     "DoubleDeal.Security.generated_encrypt_realKey_not_v10Sym_equivariant",
+    # DoubleDealSecurityHeavy/GridCycleSurvival.lean (GridCycle survival of v10Sym 0 3)
+    "DoubleDeal.Security.GCSurvival.of_chunks",
+    "DoubleDeal.Security.GCSurvival.chunk_KC_0",
+    "DoubleDeal.Security.GCSurvival.chunk_KC_1",
+    "DoubleDeal.Security.GCSurvival.chunk_KC_2",
+    "DoubleDeal.Security.GCSurvival.chunk_KC_3",
+    "DoubleDeal.Security.GCSurvival.chunk_KS_0",
+    "DoubleDeal.Security.GCSurvival.chunk_KS_1",
+    "DoubleDeal.Security.GCSurvival.chunk_KS_2",
+    "DoubleDeal.Security.GCSurvival.chunk_KS_3",
+    "DoubleDeal.Security.GCSurvival.check3_KC",
+    "DoubleDeal.Security.GCSurvival.check3_KS",
+    "DoubleDeal.Security.GCSurvival.gc_survival_v10Sym03_le",
+    "DoubleDeal.Security.GCSurvival.gc_survival_v10Sym_le",
 }
 # proofs/megadreifach/lean: the 8 hash KATs in MegaDreifachHeavy/Kat.lean (the names
 # match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats.json;

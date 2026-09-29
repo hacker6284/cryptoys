@@ -84,7 +84,8 @@ proofs/megadreifach/
   security/             # REPORT.md + attack scripts (v1 grip rule; Python 3, stdlib only; suit_blind_collision.py = practical collisions)
 proofs/audit/          # shared `#audit_all` package (core-only)
 proofs/doubledeal/check_axioms.py   # the shared axiom gate (modes megadreifach, megadreifach-heavy)
-primitives/hash/megadreifach/   # published primitive: SPEC + megadreifach.sudo + kats/
+primitives/hash/megadreifach/   # the primitive: v2 SPEC + megadreifach.sudo + kats/ (v1 and v2 KAT files)
+primitives/hash/megadreifach/v1/  # frozen, deprecated v1: SPEC.md + megadreifach.sudo (what this package models)
 ```
 
-Hand-written Lean is not a proof that `megadreifach.sudo` equals this model. Link 2 (`Generated.v_Hash` = the algebraic fold on `PadWf`) is proved; Link 1 (sudo text = emitted Lean) is trusted, not proved. M8 nets and M9 stay OPEN.
+Hand-written Lean is not a proof that `v1/megadreifach.sudo` equals this model. Link 2 (`Generated.v_Hash` = the algebraic fold on `PadWf`) is proved; Link 1 (sudo text = emitted Lean) is trusted, not proved. M8 nets and M9 stay OPEN.

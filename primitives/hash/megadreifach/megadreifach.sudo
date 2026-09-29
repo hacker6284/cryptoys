@@ -660,7 +660,10 @@ func colours_at(g: Position, a: int, b: int, c: int) -> (int, int)
 
 held_down = 11
 lower_ring_first = 6
+// Down's noon: Down points at the rank-7 face, which sits at hold position 6.
+down_noon_hold = 6
 
+// The hold position of physical face phys in grip o (used by the tests only).
 func hold_of(phys: int, o: List<int>) -> int
     found = -1
     for h = 0 to 11
@@ -669,19 +672,19 @@ func hold_of(phys: int, o: List<int>) -> int
     assert found >= 0
     return found
 
-// Visual noon (v2): the neighbour the held face points to, from the grip alone.
-// Up -> Front. Upper ring (hold 1..5) -> Up. Lower ring (hold 6..10) -> its
-// upper-left neighbour, which is the upper-ring face at hold p - 5. Down -> the
-// rank-7 face (hold 6, below and to the right of Front).
-func visual_noon(phys: int, o: List<int>) -> int
-    p = hold_of(phys, o)
+// Visual noon (v2) of the face at hold position p of grip o (SPEC §5.5): the
+// neighbour it points to, from the grip alone. Up -> Front. Upper ring (hold
+// 1..5) -> Up. Lower ring (hold 6..10) -> its upper-left neighbour, which is the
+// upper-ring face at hold p - 5. Down -> the rank-7 face (hold 6, below and to
+// the right of Front).
+func visual_noon(p: int, o: List<int>) -> int
     if p == held_up
         return o[held_front]
     if p < lower_ring_first
         return o[held_up]
     if p < held_down
         return o[p - 5]
-    return o[lower_ring_first]
+    return o[down_noon_hold]
 
 // Edge slot s lies between faces edge_faces_flat[2s] and edge_faces_flat[2s+1].
 // The first is the slot's reference face: eo[s] = 0 iff the piece's reference
@@ -737,11 +740,13 @@ func corner_after_noon(phys: int, noon: int) -> int
 // Odd 1-based position: the clockwise-noon corner. Even: the noon edge.
 // c1 is the colour on the face just turned, c2 the colour on its noon face.
 func read_grip(g: Position, phys: int, noon: int, pos: int) -> List<int>
+    c1 = 0
+    c2 = 0
     if pos mod 2 == 1
         c1, c2 = colours_at(g, phys, noon, corner_after_noon(phys, noon))
-        return abs_reorient(c1, c2)
-    e1, e2 = edge_colours_at(g, phys, noon)
-    return abs_reorient(e1, e2)
+    else
+        c1, c2 = edge_colours_at(g, phys, noon)
+    return abs_reorient(c1, c2)
 
 // One card at 1-based deal position pos. The read comes right after the
 // held-face turn (King: after the Up counter-turn and the grip spin), with the
@@ -759,7 +764,7 @@ func g2_step(g: Position, o: List<int>, card: int, pos: int) -> (Position, List<
         g = face_turn(g, o_work[held], (5 - amt) mod 5)
         o_work = spin_about_up(o_work, amt)
     phys = o_work[held]
-    noon = visual_noon(phys, o_work)
+    noon = visual_noon(held, o_work)
     new_o = read_grip(g, phys, noon, pos)
     g = face_turn(g, noon, 1)
     g = face_turn(g, o_work[held_front], 1)
@@ -771,7 +776,7 @@ func g2_step(g: Position, o: List<int>, card: int, pos: int) -> (Position, List<
 func f3_step(g: Position, o: List<int>, rnd: int) -> (Position, List<int>)
     phys = o[held_up]
     g = face_turn(g, phys, 1)
-    return (g, read_grip(g, phys, visual_noon(phys, o), rnd))
+    return (g, read_grip(g, phys, visual_noon(held_up, o), rnd))
 
 func em_block(h: Position, deal: List<int>) -> Position
     g = h
@@ -830,41 +835,41 @@ func hex_iv() -> List<int>
     return [0, 0, 2, 26, 235, 135, 110, 183, 109, 216, 191, 131, 52, 87, 162, 192, 38, 19, 229, 86, 86, 150, 62, 2, 216, 223, 237, 181, 170]
 
 // v2 digests of kats/megaminx_hash_kats_v2.json (same inputs as the v1 file).
-func kat_v2_digest(name: int) -> List<int>
-    if name == 0
+func kat_v2_digest(index: int) -> List<int>
+    if index == 0
         return [0, 23, 127, 180, 240, 12, 96, 6, 7, 174, 11, 174, 55, 236, 234, 217, 119, 48, 45, 64, 212, 96, 55, 182, 127, 8, 96, 21, 95]
-    else if name == 1
+    else if index == 1
         return [2, 18, 126, 226, 166, 64, 253, 215, 242, 80, 32, 92, 135, 126, 12, 25, 200, 167, 137, 158, 47, 201, 181, 52, 205, 29, 76, 112, 82]
-    else if name == 2
+    else if index == 2
         return [2, 167, 38, 118, 15, 210, 37, 80, 150, 237, 62, 156, 105, 35, 154, 61, 240, 4, 85, 89, 5, 205, 144, 24, 32, 129, 234, 44, 26]
-    else if name == 3
+    else if index == 3
         return [2, 127, 188, 241, 150, 205, 56, 179, 147, 216, 151, 132, 244, 72, 162, 216, 24, 196, 21, 219, 180, 83, 122, 9, 244, 200, 25, 185, 33]
-    else if name == 4
+    else if index == 4
         return [1, 245, 222, 126, 47, 142, 153, 74, 214, 0, 67, 54, 63, 226, 56, 216, 142, 38, 31, 79, 71, 205, 224, 31, 68, 96, 8, 173, 207]
-    else if name == 5
+    else if index == 5
         return [0, 239, 235, 243, 169, 136, 15, 64, 253, 217, 167, 40, 193, 59, 108, 8, 83, 43, 93, 46, 187, 162, 148, 79, 42, 218, 233, 108, 77]
-    else if name == 6
+    else if index == 6
         return [1, 147, 70, 149, 74, 125, 162, 116, 74, 93, 82, 176, 216, 211, 195, 60, 220, 185, 40, 50, 218, 20, 15, 141, 141, 104, 177, 138, 33]
-    else if name == 7
+    else if index == 7
         return [2, 121, 163, 208, 174, 104, 254, 10, 35, 186, 156, 249, 2, 27, 228, 169, 87, 255, 0, 31, 41, 148, 178, 3, 196, 57, 95, 189, 230]
     return [0, 113, 190, 191, 176, 98, 181, 204, 16, 153, 233, 3, 89, 73, 163, 215, 213, 32, 16, 191, 41, 41, 33, 80, 168, 243, 241, 91, 27]
 
 // The KAT messages, in the file's order: empty, abc, 00, 0..26, 0..27, 0..28, 56 x 'm', and multi_100.
-func kat_msg(name: int) -> List<int>
+func kat_msg(index: int) -> List<int>
     out: List<int> = []
-    if name == 1
+    if index == 1
         return [97, 98, 99]
-    if name == 2
+    if index == 2
         return [0]
-    if (name >= 3) and (name <= 5)
-        for i = 0 to 23 + name
+    if (index >= 3) and (index <= 5)
+        for i = 0 to 23 + index
             out.append(i)
         return out
-    if name == 6
+    if index == 6
         for i = 1 to 56
             out.append(109)
         return out
-    if name == 7
+    if index == 7
         return [0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255, 16, 33, 50, 67, 84, 101, 118, 135, 152, 169, 186, 203, 220, 237, 254, 15, 32, 49, 66, 83, 100, 117, 134, 151, 168, 185, 202, 219, 236, 253, 14, 31, 48, 65, 82, 99, 116, 133, 150, 167, 184, 201, 218, 235, 252, 13, 30, 47, 64, 81, 98, 115, 132, 149, 166, 183, 200, 217, 234, 251, 12, 29, 46, 63, 80, 97, 114, 131, 148, 165, 182, 199, 216, 233, 250, 11, 28, 45, 62, 79, 96, 113, 130, 147]
     return out
 
@@ -1015,11 +1020,11 @@ test "edge read: solved shows own colours, a turn keeps its colour on its edges"
 test "visual noon is a neighbour of the held face in all 60 grips"
     for r = 0 to 59
         o = rot_at(r)
-        assert visual_noon(o[held_up], o) == o[held_front]
-        assert visual_noon(o[held_front], o) == o[held_up]
-        assert visual_noon(o[held_down], o) == o[lower_ring_first]
+        assert visual_noon(held_up, o) == o[held_front]
+        assert visual_noon(held_front, o) == o[held_up]
+        assert visual_noon(held_down, o) == o[down_noon_hold]
         for h = 0 to 11
-            n = visual_noon(o[h], o)
+            n = visual_noon(h, o)
             nb = face_nbrs(o[h])
             hit = 0
             for i = 0 to 4
@@ -1031,7 +1036,7 @@ test "lower-ring noon is the upper-left of the two upper-ring neighbours"
     for r = 0 to 59
         o = rot_at(r)
         for h = 6 to 10
-            n = visual_noon(o[h], o)
+            n = visual_noon(h, o)
             assert hold_of(n, o) == h - 5
             right = corner_after_noon(o[h], n)
             assert hold_of(right, o) >= 1

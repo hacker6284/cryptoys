@@ -1,6 +1,6 @@
 # MegaDreifach
 
-> **v1 is deprecated (broken)**, frozen at `v1/SPEC.md` + `v1/megadreifach.sudo` (KATs: `kats/megaminx_hash_kats_v1.json`, unchanged). Its grip rule had two separate flaws, both documented in PR #119 (merged; `proofs/megadreifach/security/REPORT.md`): the read came *after* the noon turn, so most re-grips ignored the suit and same-rank swaps two apart give **practical IV-anchored `Hash` collisions at about 2^12–2^13 compressions** (measured; one pair kernel-checked against the generated `v_Hash`) and practical second preimages of long targets (report §3); and the read saw only corners, so `E_m(h) = W·h` with `W` a function of the corners of `h` alone (proved, report §1.3). Its table noon also could not be performed from the puzzle alone (for lower-ring faces it agrees with a visual rule in 48 of 60 grips; for Down in 12 of 60).
+> **v1 is deprecated (broken)** and frozen at [`v1/`](v1/SPEC.md) (KATs: [`kats/megaminx_hash_kats_v1.json`](kats/megaminx_hash_kats_v1.json)). Why, with the #119 evidence: the banner of [`v1/SPEC.md`](v1/SPEC.md).
 
 **This is MegaDreifach v2, the current version.** It is final in the sense that its definition and KATs (`kats/megaminx_hash_kats_v2.json`) are fixed; that is not a security claim (§8). One change from v1: the grip rule inside `E_m` (§5). Three parts:
 
@@ -10,13 +10,13 @@
 
 Pad, φ, card ids, the face-turn tables, chaining, Davies–Meyer, IV-COOK12 and the digest encoding are v1's, unchanged. All digests change (`kats/megaminx_hash_kats_v2.json`).
 
-Naming. v2 is the grip rule called **C36** in the out-of-tree grip-rule review (visual-noon single read "A_vn" plus 36 F3 rounds). It is *not* the review's earlier rule also called "v2" (alternating, but read after all turns, with the table noon; review `megadreifach-v2/`), which is broken the same way as v1 (IV-anchored collisions at about 2^12.5–2^13), nor its "v2e" (this rule with the table noon; a real IV-anchored collision was found). The evidence behind the choice (§8) is out of tree (it is not filed in this repository) and has not been independently reproduced.
+Naming. v2 is the grip rule called **C36** in the out-of-tree grip-rule review: the **v2 card rule** (visual noon, one piece read right after the held-face turn, corner/edge alternating; §5.2–§5.3) plus 36 F3 rounds. The review calls the v2 card rule with v1's 12 F3 rounds "A_vn"; this SPEC says "the v2 card rule with 12 F3 rounds" instead. Neither is v1's Recipe A (which reads a corner after all three turns, with the table noon). It is *not* the review's earlier rule also called "v2" (alternating, but read after all turns, with the table noon; review `megadreifach-v2/`), which is broken the same way as v1 (IV-anchored collisions at about 2^12.5–2^13), nor its "v2e" (this rule with the table noon; a real IV-anchored collision was found). The evidence behind the choice (§8) is out of tree (it is not filed in this repository) and has not been independently reproduced.
 
 This document is the normative specification. `megadreifach.sudo` is the conformance implementation. A mismatch is a bug in the implementation. MegaDreifach is a toy three-megaminx Merkle–Damgård hash. It makes no cryptographic security claim. It is not for protecting anything.
 
 The product name **MegaDreifach** is locked. The puzzle, group, and library stay called **megaminx**.
 
-Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. **HMAC-MegaDreifach** is that construction: standard HMAC with this `Hash`, block size \(B=28\), tag = the 29-byte digest. It lives in `primitives/aead/doubledeal-cbc-hmac/` as part of DoubleDeal-CBC-HMAC (not a second hash). Under v2 every HMAC-MegaDreifach tag and every DoubleDeal-CBC-HMAC vector changed; that package's HMAC test tag and KAT blobs were regenerated in the same change that made v2 current. A green Lean build is not a security claim, and **the Lean proof package `proofs/megadreifach/` covers v1, not v2** (§7). Hand-written Lean is not a proof that the sudo text equals the Lean model.
+Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. **HMAC-MegaDreifach** is that construction: standard HMAC with this `Hash`, block size \(B=28\), tag = the 29-byte digest. It lives in `primitives/aead/doubledeal-cbc-hmac/` as part of DoubleDeal-CBC-HMAC (not a second hash). Under v2 every HMAC-MegaDreifach tag and every DoubleDeal-CBC-HMAC vector changed; that package's HMAC test tag and KAT blobs were regenerated in the same change that made v2 current. A green Lean build is not a security claim. What the Lean covers: §7. Hand-written Lean is not a proof that the sudo text equals the Lean model.
 
 ---
 
@@ -220,7 +220,7 @@ A sudocode `int` is 64-bit and overflow traps. `|G|` and `52!` do not fit. `std.
 
 The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zero, the permutation domain, the public API, the edge-slot table (§5.6), the visual noon on all 60 grips, and **all eight v2 `Hash` digests plus the `HashDeck` vector** of that file.
 
-`kats/megaminx_hash_kats_v1.json` stays the **v1** KAT file (for the deprecated `v1/megadreifach.sudo`), byte for byte unchanged.
+`kats/megaminx_hash_kats_v1.json` is the **v1** KAT file (for the deprecated `v1/megadreifach.sudo`), renamed from `kats/megaminx_hash_kats.json` with identical contents.
 
 **Lean lags: the proofs cover v1, not v2.** The Lean proof package under `proofs/megadreifach/` is explicitly **pinned to v1**: its `Generated/` is emitted from the frozen `v1/megadreifach.sudo` (`proofs/emit_lean.sh` target `megadreifach`), its vectors and `MegaDreifachHeavy/Kat.lean` are the v1 KATs, and its model (`Em.lean`), Link 2 and `Security/` are about v1. No Lean theorem in this repository is about v2 until the package is ported. The only v2 code that reaches Lean is the emitted (not proved) copy of `megadreifach.sudo` inside `proofs/doubledeal-cbc-hmac/lean/Generated/`, which exists because DoubleDeal-CBC-HMAC imports `Hash`; its TAP run executes the DoubleDeal-CBC-HMAC sudo tests and proves nothing about MegaDreifach.
 
@@ -247,7 +247,7 @@ Nothing here is a security claim. "Tested" means a structured search found nothi
 | window reorderings (k = 2, 3, 4) in IV blocks | 240k each | 0 | 1/80k |
 | 32-bit truncated birthday (200k messages) | — | 6 | expected 4.7 (Poisson range 0–9) |
 
-Card-phase tests run on the A_vn rule, whose 52 card steps are identical to v2's (v2 only adds F3 rounds after them, and a card-phase collision survives any F3 tail): telescoping card pairs (A♠K♥, A♥K♠, A♠7♠) 0/2.0M (1/668k); a T card next to a same-rank swap 0/1.0M (1/334k); exact count (review `t4c`, all grips and cards) of pairs of different grips that make identical turns and read the same slot, 0. (The review's rule A, the same cards but with the table noon, has 192 such cases, all rank T, and a targeted search found real IV-anchored `Hash` collisions at 1 in 333,000 ≈ 2^18.3 compressions; visual noon removes that mechanism.) Suit dependence: another suit of the same card never gives the same grip (review T3: exactly 0, since the read piece fixes the grip one-to-one and a different suit brings a different piece to the read slot).
+Card-phase tests run on the v2 card rule with 12 F3 rounds, whose 52 card steps are identical to v2's (v2 only adds F3 rounds after them, and a card-phase collision survives any F3 tail): telescoping card pairs (A♠K♥, A♥K♠, A♠7♠) 0/2.0M (1/668k); a T card next to a same-rank swap 0/1.0M (1/334k); exact count (review `t4c`, all grips and cards) of pairs of different grips that make identical turns and read the same slot, 0. (The review's table-noon variant of the same card rule, which it calls "A" or "v2e", has 192 such cases, all rank T, and a targeted search found real IV-anchored `Hash` collisions at 1 in 333,000 ≈ 2^18.3 compressions; visual noon removes that mechanism.) Suit dependence: another suit of the same card never gives the same grip (review T3: exactly 0, since the read piece fixes the grip one-to-one and a different suit brings a different piece to the read slot).
 
 What these do **not** cover: no second-preimage or preimage search was run on the real v2 at all (only toy models, which were generic); no swap search from non-IV chaining values; no multi-block, longer telescoping-word (3+ cards), King-spin or puzzle-automorphism attacks; no rates below the thresholds above (about 2^16–2^21 structured trials). There are no human trials of error rates. The evidence is out of tree (grip-rule review, 2026-09-29) and has not been independently reproduced.
 
@@ -262,4 +262,4 @@ What these do **not** cover: no second-preimage or preimage search was run on th
 - Absence of local collisions (v1: L3 collisions exist and occur at a practical rate in real blocks; v2: not claimed, and free-start pseudo-collisions are easy, §8)
 - Birthday ≈ 2^113 as a theorem
 - PRESSURE.md tables as theorems
-- Lean model = this sudo text, or any Lean result about v2 (the Lean package is pinned to v1, §7)
+- Lean model = this sudo text, or any Lean result about v2 (§7)

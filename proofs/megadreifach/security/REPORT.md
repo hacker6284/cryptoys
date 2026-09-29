@@ -1,8 +1,8 @@
 # MegaDreifach hash: security review (reductions, proofs and cryptanalysis)
 
-> **Status update.** Everything in this report is about **MegaDreifach v1**, which is now **deprecated** and frozen at `primitives/hash/megadreifach/v1/` (SPEC + `megadreifach.sudo`). "As published" and "current" below mean v1 as it was when this report was written. The current version is v2 (`primitives/hash/megadreifach/SPEC.md`), which this report does not analyse. `md.py` and `tables.py` model v1 and read the v1 KAT file, which is unchanged.
+> **Status update.** Everything in this report is about **MegaDreifach v1**, which is now **deprecated** and frozen at `primitives/hash/megadreifach/v1/` (SPEC + `megadreifach.sudo`). "As published" and "current" below mean v1 as it was when this report was written. The current version is v2 (`primitives/hash/megadreifach/SPEC.md`), which this report does not analyse. `md.py` and `tables.py` model v1; `md.py` reads the v1 KAT file `kats/megaminx_hash_kats_v1.json` (renamed from `kats/megaminx_hash_kats.json`, contents unchanged). Card names use CHaSeD suit order (id % 4: 0 ♣, 1 ♥, 2 ♠, 3 ♦).
 
-Subject: MegaDreifach as published (`primitives/hash/megadreifach/`). Its block map E_m uses the **current Recipe A grip rule**, called "v1 of the grip rule" (or just "v1") below. Recipe A re-grips by reading one corner cubie, after the card's held-face, noon and Front turns. ("v1" here names the grip rule only; it is unrelated to the SPEC's "v1 Body" API name.)
+Subject: MegaDreifach v1 (`primitives/hash/megadreifach/v1/`, deprecated). Its block map E_m uses the **v1 Recipe A grip rule**, called "v1 of the grip rule" (or just "v1") below. Recipe A re-grips by reading one corner cubie, after the card's held-face, noon and Front turns. ("v1" here names the grip rule only; it is unrelated to the v1 SPEC's "Public v1 Body" API name.)
 Lean package: `proofs/megadreifach/lean`, Lean v4.14.0. The Lean files are in `proofs/megadreifach/lean/MegaDreifach/Security/`; the scripts are in this directory (`proofs/megadreifach/security/`), and their recorded outputs are in `logs/` (§7).
 **Note: this package has no Mathlib. It is core Lean plus the repo's `audit` package.** Every proof below uses core Lean only.
 
@@ -101,7 +101,7 @@ The theorems of `CornerDriven` and `FreeStart` rest on cause A: Recipe A reads o
 
 The invariant `WordInv` carries `Word W` (the shared word is a product of face moves), so `emBlock_word` and `emBlock_word_legal` come from the same induction (`emBlock_wordInv`).
 
-**A concrete IV-anchored collision, kernel-checked (`SwapCollision.lean`; cause B, §3).** It is about the published hash and does not use `recipeA_sameCorners`.
+**A concrete IV-anchored collision, kernel-checked (`SwapCollision.lean`; cause B, §3).** It is about the v1 hash and does not use `recipeA_sameCorners`.
 
 | theorem | content | axioms |
 |---|---|---|
@@ -131,13 +131,13 @@ A transitive scan of constant dependencies over every theorem in `MegaDreifach.S
 |---|---|---|
 | `MDGeneric.lean` | independent | nothing (generic in `dm`, `iv`) |
 | `MDReduction.lean` | independent | `injPos_chR_from` / `injPos_chR` (via `Link2.injPos_dmStep`, which unfolds `Em`). The pad lemmas (`pad_suffix_free`, `blocks_suffix_free`) and `extract_*` need nothing. The Link 2 refinement of the new sudo E_m is separate work |
-| `StepWord.lean` | independent | `g2Step_fst`, `f3Step_fst`, `word_g2Step`, `word_f3Iter`, `word_foldl_g2`, `word_emBlock`, which unfold the current `Em` steps. They go through again if each step still left-multiplies by face moves |
+| `StepWord.lean` | independent | `g2Step_fst`, `f3Step_fst`, `word_g2Step`, `word_f3Iter`, `word_foldl_g2`, `word_emBlock`, which unfold the (v1) `Em` steps. They go through again if each step still left-multiplies by face moves |
 | `Parity.lean` | independent | only through `StepWord`; `swC` / `swE` only if the face-move tables change |
 | `DigestInj.lean` | independent | `evenRank_inj`, `positionToBytes_inj_legal`: nothing. `positionToBytes_inj_reachable`, `extract_*_comp`, `v_Hash_collision_comp`, `v_Hash_second_preimage_comp`: only through `isLegal_chR` and `injPos_chR` |
 | `IdealCount.lean` | independent | counting lemmas: nothing. `reachable_rank_lt_group`: through `injPos_chR` |
 | `CornerDriven.lean` | **v1** (cause A) | the weakness theorems are expected to fail for an edge-reading rule; delete or restate. The digest arithmetic (`rankPosition_split`, `edgeRank_lt`, `rankPosition_div`, `cornerRank_sameCorners`) does not depend on the rule |
 | `FreeStart.lean` | **v1** (cause A) | `emBlock_word_legal`, `dmStep_pseudo_collision`: delete or restate. `dmStep_collision_of_sq` is plain group algebra (it assumes a shared word) |
-| `SwapCollision.lean` | **v1** (cause B; published hash) | A concrete instance proved by evaluating the current `Em.g2Step`. It fails as soon as E_m changes; delete it then (or replace it with a pair for the new rule, if one exists) |
+| `SwapCollision.lean` | **v1** (cause B; v1 hash) | A concrete instance proved by evaluating the (v1) `Em.g2Step`. It fails as soon as E_m changes; delete it then (or replace it with a pair for the new rule, if one exists) |
 
 ## 2. Argued on paper (with assumptions)
 
@@ -283,7 +283,7 @@ Hash(M) = Hash(M') = 0084d6d1e0a4ddb231deb23ac0f4ead7b497eed17f997bfcefa7c34e82
 
 `suit_blind_collision.py --variant pre-noon` (log `logs/suit_blind_collision_pre_noon.log`, `--check --variant pre-noon`; ≈ 1 min on 8 cores). The variant changes one thing in the G2 step: the Recipe A corner (between the held face, its noon and the next neighbour, for the grip in force) is read right after the held-face turn (and the King spin); the noon and Front turns follow with the old grip, and then the grip becomes the remembered reading. F3 steps and everything else are unchanged. It is a control, not a proposed rule. Both rules are run on the same 12,000 random one-block messages from the IV (the first 12,000 blocks of the §3.3 search, seed 99) and the same same-rank swaps.
 
-| | Recipe A (published) | pre-noon read |
+| | Recipe A (v1) | pre-noon read |
 |---|---|---|
 | suit-blind fraction (3,000 trials) | 0.715 | **0.000** (all 4 suits give 4 distinct grips) |
 | distance 1 | 0/35,820 | 0/35,820 |
@@ -296,7 +296,7 @@ What this shows: under Recipe A, the read position after the noon turn is what m
 
 ## 4. Attack results (reproducible scripts in this directory)
 
-Only `md.py`, `exp_corner_driven.py`, `pseudo_collision.py`, `exp_related_blocks.py`, `exp_local_collisions.py`, `exp_corner_local.py` and `suit_blind_collision.py` run the real MegaDreifach functions (via `md.py`, checked against the published KATs). The other scripts use scaled edge groups H_n or a toy hash with the proved v1 structure; their results are the basis of the extrapolated estimates in §2. Every row is a committed log (`logs/<name>.log`, §7).
+Only `md.py`, `exp_corner_driven.py`, `pseudo_collision.py`, `exp_related_blocks.py`, `exp_local_collisions.py`, `exp_corner_local.py` and `suit_blind_collision.py` run the real MegaDreifach functions (via `md.py`, checked against the v1 KATs). The other scripts use scaled edge groups H_n or a toy hash with the proved v1 structure; their results are the basis of the extrapolated estimates in §2. Every row is a committed log (`logs/<name>.log`, §7).
 
 | script | what it checks | result |
 |---|---|---|
@@ -354,6 +354,6 @@ python3 proofs/megadreifach/security/suit_blind_collision.py --check --full   # 
 python3 proofs/megadreifach/security/suit_blind_collision.py --check --variant pre-noon   # §3.5 control (≈ 4 CPU-min)
 ```
 * The scripts need only Python 3 (standard library) and run from any directory.
-* `md.py` reads the published KATs from `primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json` and exits non-zero on a mismatch; `tables.py` holds the E_m tables copied from `megadreifach.sudo`.
+* `md.py` reads the v1 KATs from `primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json` and exits non-zero on a mismatch; `tables.py` holds the E_m tables copied from `megadreifach.sudo`.
 * Without `--check`, `logs.py` and `suit_blind_collision.py --log [--full | --variant pre-noon]` rewrite the logs (the `tools/gencheck.py` convention).
 * CI runs `suit_blind_collision.py --check` in `proofs.yml` (megadreifach-lean). It runs `logs.py --check`, `suit_blind_collision.py --check --full` and `suit_blind_collision.py --check --variant pre-noon` in `proofs-heavy.yml` (megadreifach-attack-logs).

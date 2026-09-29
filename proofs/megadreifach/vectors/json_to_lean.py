@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Emit proofs/megadreifach/lean/MegaDreifach/Vectors.lean from the published KAT file
+"""Emit proofs/megadreifach/lean/MegaDreifach/Vectors.lean from the v1 KAT file
 primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json.
 
     python3 proofs/megadreifach/vectors/json_to_lean.py           # regenerate Vectors.lean
@@ -10,7 +10,7 @@ write mode) also fails if
 - a vector is malformed (name not an identifier, hex not lower-case, msg_len != bytes of
   msg_hex, digest not digest_len bytes, padded_len / n_blocks inconsistent);
 - proofs/megadreifach/vectors/megaminx_hash_kats_v1.json is not a byte-identical copy of the
-  published file;
+  primitive's v1 KAT file;
 - MegaDreifachHeavy/Kat.lean does not state, for every vector, (textually)
       theorem kat_<name> : Megadreifach.v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex)) =
           .ok (embed (hexBytes Vectors.vec_<name>.digestHex))

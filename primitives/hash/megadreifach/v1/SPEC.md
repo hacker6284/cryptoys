@@ -2,7 +2,7 @@
 
 > **Deprecated and broken.** This is the frozen v1 specification. It is kept verbatim below this banner so the published v1 vectors (`../kats/megaminx_hash_kats_v1.json`, formerly `kats/megaminx_hash_kats.json`) and the write-ups keep a fixed target. Do not change its behavior. The current version is v2 (`../SPEC.md`, `../megadreifach.sudo`, KATs `../kats/megaminx_hash_kats_v2.json`).
 >
-> **Why deprecated.** The v1 grip rule (Recipe A: read the clockwise-noon corner *after* the held-face, noon and Front turns, with the table noon; 12 F3 rounds) has two separate flaws, both documented in PR #119 (merged; `proofs/megadreifach/security/REPORT.md`):
+> **Why deprecated.** The v1 grip rule (Recipe A: read the clockwise-noon corner *after* the held-face, noon and Front turns, with the table noon; 12 F3 rounds) has two separate flaws, both documented in PR #119 ([`proofs/megadreifach/security/REPORT.md`](../../../../proofs/megadreifach/security/REPORT.md)):
 >
 > * **The read comes after the noon turn** (cause B). For about 71.5% of cards the new grip ignores the suit, so swapping two same-rank cards two apart is a 3-card local collision about once in 2,800 tries. That gives **practical IV-anchored `Hash` collisions at about 2^12–2^13 compressions** (measured; one pair is kernel-checked against the generated `v_Hash`, `SwapCollision.v_Hash_swap_collision`) and practical second preimages of long targets (65/100 random 1,000-block targets). Report §3.
 > * **The read sees only corners** (cause A). `E_m(h) = W·h` with `W` a function of the corner part of `h` alone (`emBlock_word`, proved), so the top ≈90.2 digest bits depend only on a corner chain, and the compression function has pseudo-collisions for every block (reduction proved, pairs demonstrated). Preimage and short-target second preimage are estimated at ≈2^93–2^96 (paper, toy-scale runs). Report §1.3, §2.
@@ -11,7 +11,7 @@
 >
 > The conformance implementation for this frozen text is `megadreifach.sudo` next to this file (`v1/megadreifach.sudo`; it keeps the v1 file name so that the Lean emitted from it is still the module `Megadreifach`). It differs from the last v1 `megadreifach.sudo` on main (bbc26cb) only in comment lines 1 and 6. Relative links in the body below point at the v1-era tree (`megadreifach.sudo` there means `v1/megadreifach.sudo` here; `kats/megaminx_hash_kats.json` there is the v1 KAT file, now renamed `kats/megaminx_hash_kats_v1.json` with identical contents). The body below is the v1 SPEC as of main bbc26cb (after PR #119), verbatim.
 >
-> **Lean.** The Lean proof package `proofs/megadreifach/` is pinned to this v1: its `Generated/` is emitted from `v1/megadreifach.sudo`, and its vectors are the v1 KATs. Its proofs are about v1, not v2.
+> **Lean.** The Lean proof package models this v1 (not v2): see [`proofs/megadreifach/README.md`](../../../../proofs/megadreifach/README.md).
 >
 > **Suit names.** The v1 text numbers suits (`suit = id % 4`) but never names them. The repository now names them in **CHaSeD** order for both versions: 0 = Clubs ♣, 1 = Hearts ♥, 2 = Spades ♠, 3 = Diamonds ♦ (turn amounts 1, 2, 3, 4). This is a naming only; no v1 digest or behaviour depends on it.
 

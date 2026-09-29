@@ -46,6 +46,7 @@ import MegaDreifach.Link2.MagAdd
 import MegaDreifach.Link2.FromBePad
 import MegaDreifach.Link2.Peel51
 import MegaDreifach.Link2.PhiChunk
+import MegaDreifach.Link2.PhiInv
 
 namespace MegaDreifach.Link2
 
@@ -242,6 +243,16 @@ namespace MegaDreifach.Link2
   `chain_loop` from `0` to `51` at `phiState rank`. The inner erase step is
   `phiErase_breaks`. Not `phi_inv`. Not `v_Hash`.
 
+  CLOSED: `phi_inv_refines`, `phi_inv_refines_array`.
+  Domain `PhiInvWf` / `WellFormedPhiInv`: length 52, a permutation of `0..51`
+  (`Nodup`, ids `< 52`), and `lehmerRank deal < 2^224` (`phiMax`). Generated
+  `phi_inv` walks the outer `chain_loop` from `0` to `51`, folding the Lehmer
+  digits `n := n * (52 - i) + idx` (`big_from_int` / `big_mul` / `big_add`),
+  erases `idx`, asserts `n < 2^224` (`mag_cmp` on canonical limbs), and emits
+  `big_to_be n 28`. The result is `embed (toBE 28 (lehmerRank deal))`. The
+  multi-limb `big_to_be` ≃ `toBE` bridge is `ToBePad.big_to_be_pad`.
+  Not `v_HashDeck`.
+
   CLOSED: `v_Hash_refines` (`Link2/VHash.lean`) on `PadWf`: Generated
   `v_Hash (embed msg) = .ok (embed (vhashAlg msg))`, the MD fold of
   `Em.dmStep h (phiUnrank (fromBE blk))` from `Em.ivCook12`, digest
@@ -249,7 +260,8 @@ namespace MegaDreifach.Link2
   and `even_perm_rank_big_refines_gen` (lengths 20 and 30, multi-limb).
   CLOSED: all 8 KATs as `v_Hash` theorems (`MegaDreifachHeavy/Kat.lean`, kernel
   `decide!`; non-default lean_lib `MegaDreifachHeavy`, about 8 min of kernel time).
-  OPEN: `phi_inv` / `v_HashDeck`.
+  `v_Hash` never calls `phi_inv`.
+  OPEN: `v_HashDeck`.
   Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
   `range_list_refines` in `EvenRank.lean`.
 -/

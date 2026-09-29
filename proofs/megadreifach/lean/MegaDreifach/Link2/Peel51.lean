@@ -12,41 +12,19 @@
 import MegaDreifach.Link2.MagSub
 import MegaDreifach.Link2.Fact51
 import MegaDreifach.Link2.MulLeft
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
 
-private theorem fits51 : FitsLen 51 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem fiftyOne_lt_limb : 51 < limbBase := by
+private theorem c51_lt_limb : 51 < limbBase := by
   unfold limbBase
   decide
 
 private theorem factorial_51_lt : factorial 51 < limbBase ^ 8 := by
   unfold factorial limbBase
   decide
-
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
 
 private theorem factorial_lt_pow8 (n : Nat) (hn : n ≤ 51) :
     factorial n < limbBase ^ 8 :=
@@ -92,13 +70,6 @@ private theorem fits_fact_mul (d : Nat) (hd : d ≤ 51) :
   have hlen := natLimbs_length_le (factorial d) 8 (factorial_lt_pow8 d hd)
   exact fits_le9 (by omega)
 
-private theorem limbsOfNat_small (a : Nat) (ha : a < limbBase) :
-    limbsOfNat a = natLimbs a := by
-  by_cases h0 : a = 0
-  · simp [h0, limbsOfNat, natLimbs_zero]
-  · rw [natLimbs_of_pos_lt a (Nat.pos_of_ne_zero h0) ha]
-    simp [limbsOfNat, h0, Nat.div_eq_of_lt ha, Nat.mod_eq_of_lt ha]
-
 private theorem bigNat_small (a : Nat) (ha : a < limbBase) :
     bigNat a = bigOf (natLimbs a) := by
   rw [show bigNat a = bigOf (limbsOfNat a) from rfl, limbsOfNat_small a ha]
@@ -115,14 +86,6 @@ private theorem mod_eq_sub_mul (n d : Nat) (_hd : 0 < d) :
   have hcancel : (n / d) * d + n % d = (n / d) * d + (n - (n / d) * d) := by
     rw [hsum, Nat.add_sub_of_le hle]
   exact Nat.add_left_cancel hcancel
-
-private theorem div_fact_step (n f : Nat) (hf : 0 < f) :
-    (n / factorial (f - 1)) / f = n / factorial f := by
-  rw [Nat.div_div_eq_div_mul]
-  cases f with
-  | zero => cases hf
-  | succ k =>
-    rw [show (k + 1) - 1 = k from by omega, factorial_succ, Nat.mul_comm]
 
 private theorem peelDiv_gt (toV f : Int) (q : Megadreifach.BigInt) (h : f > toV) :
     peelDivStep toV (f, q) = .ok (SudoRt.Flow.brk (f, q)) := by
@@ -144,7 +107,7 @@ private theorem peelDiv_hit (n d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d) (hd : 
   rw [if_neg hngt]
   have hf0 : 0 < f := by omega
   have hflt : f < limbBase :=
-    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) fiftyOne_lt_limb
+    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) c51_lt_limb
   have hq : n / factorial (f - 1) < limbBase ^ 9 :=
     Nat.lt_of_le_of_lt (Nat.div_le_self _ _) hn
   rw [show (f : Int) = Int.ofNat f from rfl,

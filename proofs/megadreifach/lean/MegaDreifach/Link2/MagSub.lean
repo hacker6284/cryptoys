@@ -12,59 +12,12 @@
 -/
 import MegaDreifach.Link2.PeelOne
 import MegaDreifach.Link2.DivInd
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 100000
-
-private theorem not_neg (k : Nat) : decide (Int.ofNat k < 0) = false := by
-  rw [decide_eq_false_iff_not]
-  exact Int.not_lt.mpr (Int.ofNat_zero_le _)
-
-private theorem neg_lt_zero (k : Nat) (hk : 0 < k) :
-    decide (-(k : Int) < 0) = true := by
-  rw [decide_eq_true_iff]
-  have : (0 : Int) < (k : Int) := (ofNat_pos_iff k).mpr hk
-  omega
-
-private theorem append_dig (out : List Nat) (k : Nat) :
-    (SudoRt.appendL (embed out) (Int.ofNat k)).1 = embed (out ++ [k]) := by
-  rw [appendL_spec]
-  exact push_embed out k
-
-private theorem narrowI_neg (k : Nat) (hk : k ≤ limbBase) :
-    SudoRt.narrowI (-(k : Int)) = .ok (-(k : Int)) := by
-  unfold SudoRt.narrowI
-  have hB : SudoRt.i64Min ≤ -(limbBase : Int) := by
-    unfold SudoRt.i64Min limbBase
-    decide
-  have hlo : SudoRt.i64Min ≤ -(k : Int) := by
-    have hkI : (k : Int) ≤ (limbBase : Int) := Int.ofNat_le.mpr hk
-    exact Int.le_trans hB (Int.neg_le_neg hkI)
-  have hhi : -(k : Int) ≤ SudoRt.i64Max := by
-    have h0 : -(k : Int) ≤ 0 := Int.neg_nonpos_of_nonneg (Int.ofNat_nonneg k)
-    have hmax : (0 : Int) ≤ SudoRt.i64Max := by decide
-    exact Int.le_trans h0 hmax
-  split
-  · next ht =>
-    simp only [Bool.or_eq_true, decide_eq_true_iff] at ht
-    cases ht with
-    | inl h => exact absurd h (Int.not_lt.mpr hlo)
-    | inr h => exact absurd h (Int.not_lt.mpr hhi)
-  · rfl
-
-private theorem addI_neg_base (k : Nat) (hk0 : 0 < k) (hk : k ≤ limbBase) :
-    SudoRt.addI (-(k : Int)) Megadreifach.limb_base =
-      .ok (Int.ofNat (limbBase - k)) := by
-  unfold SudoRt.addI
-  rw [limb_base_eq]
-  have hsum : -(k : Int) + (limbBase : Int) = Int.ofNat (limbBase - k) := by
-    have : (limbBase : Int) - (k : Int) = Int.ofNat (limbBase - k) :=
-      (Int.ofNat_sub hk).symm
-    omega
-  rw [hsum]
-  exact narrowI_ofNat (limbBase - k) (fits_of_lt_limb (Nat.sub_lt limbBase_pos hk0))
 
 private theorem decide_ge (i len : Nat) (h : len ≤ i) :
     decide (Int.ofNat i < Int.ofNat len) = false := by
@@ -126,26 +79,6 @@ theorem digAt_bound (xs : List Nat) (i : Nat) (h : ∀ d ∈ xs, d < limbBase) :
   · rw [digAt_ge xs i (Nat.le_of_not_lt hi)]
     exact limbBase_pos
 
-theorem subDigit_spec (a b br : Nat)
-    (ha : a < limbBase) (hb : b < limbBase) (hbr : br ≤ 1) :
-    (subDigit a b br).1 < limbBase ∧ (subDigit a b br).2 ≤ 1 ∧
-      a + (subDigit a b br).2 * limbBase =
-        (subDigit a b br).1 + b + br := by
-  unfold subDigit
-  by_cases hle : b + br ≤ a
-  · simp only [hle, ↓reduceIte, Nat.zero_mul, Nat.zero_add]
-    refine ⟨Nat.lt_of_le_of_lt (Nat.sub_le _ _) ha, Nat.zero_le _, ?_⟩
-    have : a - (b + br) + (b + br) = a := Nat.sub_add_cancel hle
-    omega
-  · simp only [hle, ↓reduceIte]
-    have hlt : a < b + br := Nat.lt_of_not_le hle
-    have hsum : b + br ≤ a + limbBase := by omega
-    have hd : a + limbBase - (b + br) < limbBase := by omega
-    refine ⟨hd, Nat.le_refl _, ?_⟩
-    have : a + limbBase - (b + br) + (b + br) = a + limbBase :=
-      Nat.sub_add_cancel hsum
-    omega
-
 /-- Borrow entering limb `i`. -/
 def brAt (xs ys : List Nat) : Nat → Nat
   | 0 => 0
@@ -198,20 +131,14 @@ theorem length_take_le (xs : List Nat) (k : Nat) (hk : k ≤ xs.length) :
     (xs.take k).length = k := by
   simpa [Nat.min_eq_left hk] using List.length_take k xs
 
-theorem take_all (xs : List Nat) (k : Nat) (hk : xs.length ≤ k) : xs.take k = xs := by
-  have hd : xs.drop k = [] := List.drop_eq_nil_of_le hk
-  have happ := List.take_append_drop k xs
-  rw [hd, List.append_nil] at happ
-  exact happ
-
 theorem limbVal_take_succ_dig (ys : List Nat) (k : Nat) :
     limbVal (ys.take (k + 1)) =
       limbVal (ys.take k) + digAt ys k * limbBase ^ k := by
   by_cases hk : k < ys.length
   · rw [take_succ_get ys k hk, limbVal_snoc,
       length_take_le ys k (Nat.le_of_lt hk), digAt_get ys k hk]
-  · rw [take_all ys k (Nat.le_of_not_lt hk),
-      take_all ys (k + 1) (Nat.le_succ_of_le (Nat.le_of_not_lt hk)),
+  · rw [List.take_of_length_le (Nat.le_of_not_lt hk),
+      List.take_of_length_le (Nat.le_succ_of_le (Nat.le_of_not_lt hk)),
       digAt_ge ys k (Nat.le_of_not_lt hk), Nat.zero_mul, Nat.add_zero]
 
 theorem subScan_inv (xs ys : List Nat)
@@ -328,7 +255,7 @@ theorem subPref_trimmed (xs ys : List Nat)
   obtain ⟨hbr, hlenP, hdig, hbal⟩ :=
     subScan_inv xs ys hxs hys xs.length (Nat.le_refl _)
   have htakeX : xs.take xs.length = xs := List.take_length xs
-  have htakeY : ys.take xs.length = ys := take_all ys xs.length hlen
+  have htakeY : ys.take xs.length = ys := List.take_of_length_le hlen
   have hsum : limbVal xs + brAt xs ys xs.length * limbBase ^ xs.length =
       limbVal (subPref xs ys xs.length) + limbVal ys := by
     simpa [htakeX, htakeY] using hbal

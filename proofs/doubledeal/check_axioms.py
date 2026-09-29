@@ -50,9 +50,14 @@ under the name it is written with), and a private/public collision fails. With
 theorems of the same user name in different modules stay distinct constants.
 MegaDreifach needs this: Lean generates private match-equation theorems
 (`<def>.match_1.eq_1`, for Generated definitions) on demand in each module that
-unfolds them, and many modules keep small private helpers of the same name.
-Public names cannot collide either way (Lean rejects them in one environment, and
-`#audit_all` reports an identical re-declaration as `DUP`).
+unfolds them, and a few modules keep small private helpers of the same name.
+A public theorem whose name is also the user name of a private one fails in BOTH
+keyings (a private copy of a public lemma, or two different lemmas under one
+name); only private/private collisions are tolerated under `"key": "full"`.
+Public names cannot collide with each other either way (Lean rejects them in one
+environment, and `#audit_all` reports an identical re-declaration as `DUP`).
+
+    python3 proofs/doubledeal/check_axioms.py --selftest   # keying rules on synthetic reports
 """
 import re
 import subprocess
@@ -184,10 +189,60 @@ def heavy_registry_problems(reg):
 
 
 REPORT = re.compile(r"'(\S+?)' depends on axioms: \[([^\]]*)\]")
+PRIVATE = re.compile(r"^_private\.[\w.']+?\.0\.")
+
+
+def key_reports(found, full):
+    """Key the (name, axioms) reports; return (seen, problems).
+
+    default: private theorems under their user-facing name, so any two reports with
+    the same user name (private/public or private/private) fail. full: keyed by the
+    constant name (distinct private constants stay distinct), but a public theorem
+    that shares its user name with a private one still fails."""
+    seen, bad = {}, []
+    for name, axs in found:
+        key = name if full else PRIVATE.sub("", name)
+        if key in seen:
+            bad.append(f"duplicate audited name {key} (private/public collision)"
+                       if not full else f"duplicate axiom report for {key}")
+        seen[key] = axs
+    if full:
+        public = {n for n, _ in found if not PRIVATE.match(n)}
+        for name, _ in found:
+            user = PRIVATE.sub("", name)
+            if user != name and user in public:
+                bad.append(f"private theorem {name} has the user name of public theorem {user} "
+                           "(private/public collision; keep one public lemma or rename)")
+    return seen, bad
+
+
+def selftest():
+    """The keying rules on synthetic reports (no Lean needed)."""
+    pa = "_private.MegaDreifach.Link2.A.0.MegaDreifach.Link2.h"
+    pb = "_private.MegaDreifach.Link2.B.0.MegaDreifach.Link2.h"
+    pub = "MegaDreifach.Link2.h"
+    cases = [  # (reports, full, expected number of problems)
+        ([pa, "X.y"], True, 0),
+        ([pa, pb], True, 0),      # private/private: tolerated under key "full"
+        ([pa, pb], False, 1),     # ... but not under user-name keying
+        ([pa, pub], True, 1),     # private/public: fails under key "full"
+        ([pub, pa, pb], True, 2),
+        ([pa, pub], False, 1),    # ... and under user-name keying
+    ]
+    failed = 0
+    for names, full, want in cases:
+        _, bad = key_reports([(n, set()) for n in names], full)
+        ok = len(bad) == want
+        failed += not ok
+        print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} key={'full' if full else 'user'} "
+              f"{names}: {len(bad)} problem(s), expected {want}")
+    return 1 if failed else 0
 
 
 def main(argv) -> int:
     pkg = argv[1] if len(argv) > 1 else "lean"
+    if pkg == "--selftest":
+        return selftest()
     if pkg not in PACKAGES:
         print(f"usage: check_axioms.py [{'|'.join(PACKAGES)}]", file=sys.stderr)
         return 2
@@ -208,22 +263,10 @@ def main(argv) -> int:
         print(out, file=sys.stderr)
         print(f"check_axioms: {pkg}: {axioms} did not elaborate cleanly", file=sys.stderr)
         return 1
-    seen = {}
-    reports = 0
-    bad = []
     found = [(n, {a.strip() for a in axs.split(",") if a.strip()}) for n, axs in REPORT.findall(out)]
     found += [(n, set()) for n in re.findall(r"'(\S+?)' does not depend on any axioms", out)]
-    full = cfg.get("key", "user") == "full"
-    for name, axs in found:
-        # default: audit private theorems under their user-facing name; a private and
-        # a public theorem with the same user name must not merge. key "full": the
-        # constant name (distinct private constants stay distinct).
-        user = name if full else re.sub(r"^_private\.[\w.']+?\.0\.", "", name)
-        if user in seen:
-            bad.append(f"duplicate audited name {user} (private/public collision)"
-                       if not full else f"duplicate axiom report for {user}")
-        seen[user] = axs
-        reports += 1
+    seen, bad = key_reports(found, cfg.get("key", "user") == "full")
+    reports = len(found)
     if cfg["mode"] == "all":
         m = re.findall(r"\baudited (\d+)\b", out)
         if len(m) != 1:

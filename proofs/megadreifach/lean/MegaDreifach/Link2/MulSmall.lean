@@ -198,7 +198,7 @@ theorem big_mul_zero_right (xs : List Nat) :
       if_pos rfl, big_zero_spec, except_bind_pure]
     rfl
 
-private theorem sum_limb_fits (x q c : Nat) (hx : x < limbBase) (hq : q < limbBase)
+theorem sum_limb_fits (x q c : Nat) (hx : x < limbBase) (hq : q < limbBase)
     (hc : c < limbBase) : FitsLen (x * q + c) := by
   have hx' : x ≤ limbBase - 1 := by omega
   have hq' : q ≤ limbBase - 1 := by omega

@@ -10,40 +10,11 @@
   Not `v_Hash`. Not emitter soundness.
 -/
 import MegaDreifach.Link2.MulWide
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
-
-private theorem sum_limb_fits (x q c : Nat) (hx : x < limbBase) (hq : q < limbBase)
-    (hc : c < limbBase) : FitsLen (x * q + c) := by
-  have hx' : x ≤ limbBase - 1 := by omega
-  have hq' : q ≤ limbBase - 1 := by omega
-  have hc' : c ≤ limbBase - 1 := by omega
-  have hmul : x * q ≤ (limbBase - 1) * (limbBase - 1) := Nat.mul_le_mul hx' hq'
-  have hpair : (limbBase - 1) * (limbBase - 1) + (limbBase - 1) = (limbBase - 1) * limbBase := by
-    calc
-      (limbBase - 1) * (limbBase - 1) + (limbBase - 1)
-        = (limbBase - 1) * (limbBase - 1) + (limbBase - 1) * 1 := by rw [Nat.mul_one]
-      _ = (limbBase - 1) * ((limbBase - 1) + 1) := by rw [← Nat.mul_add]
-      _ = (limbBase - 1) * limbBase := by
-          have : (limbBase - 1) + 1 = limbBase := by omega
-          rw [this]
-  have hle : x * q + c ≤ (limbBase - 1) * limbBase := by omega
-  have hlt : (limbBase - 1) * limbBase < limbBase ^ 2 := by
-    rw [limbBase_pow2]
-    exact Nat.mul_lt_mul_of_pos_right (by omega : limbBase - 1 < limbBase) limbBase_pos
-  exact Nat.le_trans (Nat.le_of_lt (Nat.lt_of_le_of_lt hle hlt)) limb_sq_fits
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
 
 private theorem take_succ_limb (xs : List Nat) (j : Nat) (hj : j < xs.length) :
     xs.take (j + 1) = xs.take j ++ [xs[j]] := by

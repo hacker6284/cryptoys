@@ -1,6 +1,8 @@
 """Selftest for the duplicate-owner check in `#audit_all` (proofs/audit/AuditAll.lean).
 
-Writes throwaway modules under DoubleDealSecurity/, builds them, runs
+Copies the security package (with its built .lake; .lake/packages, i.e. Mathlib, is
+symlinked, not copied), ../lean (DoubleDeal) and proofs/audit to a temporary directory,
+writes throwaway modules under DoubleDealSecurity/ THERE, builds them, runs
 `#audit_all DoubleDealSecurity` in an environment that loads all of them, and requires the
 DUP errors to be exactly WANT (Lean 4.14 merges identical imported theorems silently, so the
 constant table alone cannot show these duplicates):
@@ -11,16 +13,17 @@ constant table alone cannot show these duplicates):
 - ZfxUseA, ZfxUseB: each uses `zfxF.eq_unfold` and `induction ... using zfxF.induct` of the
   structurally recursive `zfxF` (ZfxBase), so both modules generate those reserved names on
   demand. Must NOT be reported (no DUP line for `zfxF.`).
-All fixture sources and their build outputs are removed again.
+The source tree is never written; the temporary copy is deleted afterwards.
 usage (from proofs/doubledeal/security): python3 checks/audit_dup_selftest.py
 """
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
-SEC = Path(__file__).resolve().parents[1]
-LIB = SEC / "DoubleDealSecurity"
-RUNNER = SEC / "AuditDupSelftest.lean"
+SRC_SEC = Path(__file__).resolve().parents[1]          # proofs/doubledeal/security
+PROOFS = SRC_SEC.parents[1]                            # proofs/
 
 DUP_ISDECK = """import DoubleDealSecurity.GridCycle
 
@@ -81,23 +84,38 @@ WANT = sorted([
 ])
 
 
+def copy_packages(tmp: Path) -> Path:
+    """Copy security (minus .lake/packages, which is symlinked), ../lean and proofs/audit
+    into `tmp`, keeping their relative layout (the lakefiles require them by path)."""
+    sec = tmp / "doubledeal" / "security"
+    shutil.copytree(SRC_SEC, sec, symlinks=True,
+                    ignore=lambda d, names: ["packages"] if Path(d) == SRC_SEC / ".lake" else [])
+    pkgs = SRC_SEC / ".lake" / "packages"
+    if pkgs.exists():
+        (sec / ".lake" / "packages").symlink_to(pkgs, target_is_directory=True)
+    shutil.copytree(PROOFS / "doubledeal" / "lean", tmp / "doubledeal" / "lean", symlinks=True)
+    shutil.copytree(PROOFS / "audit", tmp / "audit", symlinks=True)
+    return sec
+
+
 def main() -> int:
-    paths = [LIB / f"{name}.lean" for name, _ in FIX] + [RUNNER]
-    if any(p.exists() for p in paths):
-        print("audit_dup_selftest: a fixture file already exists; refusing to overwrite",
-              file=sys.stderr)
-        return 2
-    try:
+    with tempfile.TemporaryDirectory(prefix="audit-dup-") as tmp:
+        sec = copy_packages(Path(tmp))
+        lib, runner = sec / "DoubleDealSecurity", sec / "AuditDupSelftest.lean"
+        if any((lib / f"{name}.lean").exists() for name, _ in FIX) or runner.exists():
+            print("audit_dup_selftest: a fixture name is already a module of the package",
+                  file=sys.stderr)
+            return 2
         for name, src in FIX:
-            (LIB / f"{name}.lean").write_text(src)
-        RUNNER.write_text(RUN)
-        b = subprocess.run(["lake", "build", "AuditAll", *MODS], cwd=SEC,
+            (lib / f"{name}.lean").write_text(src)
+        runner.write_text(RUN)
+        b = subprocess.run(["lake", "build", "AuditAll", *MODS], cwd=sec,
                            capture_output=True, text=True)
         if b.returncode != 0:
             print(b.stdout + b.stderr, file=sys.stderr)
             print("audit_dup_selftest: fixtures did not build", file=sys.stderr)
             return 1
-        r = subprocess.run(["lake", "env", "lean", RUNNER.name], cwd=SEC,
+        r = subprocess.run(["lake", "env", "lean", runner.name], cwd=sec,
                            capture_output=True, text=True)
         out = r.stdout + r.stderr
         dups = sorted(l.split("error: ", 1)[-1] for l in out.splitlines() if "DUP " in l)
@@ -115,13 +133,6 @@ def main() -> int:
             print(f"audit_dup_selftest: reported: {d}")
         print("audit_dup_selftest: no DUP for the on-demand zfxF.eq_unfold / zfxF.induct")
         return 0
-    finally:
-        for p in paths:
-            p.unlink(missing_ok=True)
-        stems = tuple(name for name, _ in FIX)
-        for p in (SEC / ".lake" / "build").rglob("*"):
-            if p.is_file() and p.name.split(".")[0] in stems:
-                p.unlink()
 
 
 if __name__ == "__main__":

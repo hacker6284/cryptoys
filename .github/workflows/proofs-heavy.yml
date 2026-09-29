@@ -92,9 +92,37 @@ jobs:
       - uses: actions/checkout@v5
       - name: No sorry / admit / native_decide (shared gate; includes MegaDreifachHeavy/)
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach/lean --exclude Generated
+      # lean-action only installs elan here: no build (it runs below) and no GitHub cache.
+      # With `build: false` the action would save the just-restored cache before the build
+      # (and win the save race for this commit's key); the job builds from scratch anyway.
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/megadreifach/lean
-          build-args: "MegaDreifachHeavy"
+          build: "false"
+          use-github-cache: "false"
+      # No stale output of anything KatSpecCheck loads may survive into the build: an
+      # imported `[init]` hook that exits 0 while Kat.lean is compiled would otherwise let
+      # `lake build` report success and keep a stale Kat.olean. With the outputs deleted,
+      # such a build leaves no .olean and fails. Only this package's own outputs
+      # (MegaDreifach*) live in .lake/build. The path dependencies build in their own
+      # directories, Generated/.lake/build (the Generated `sudo` package: Megadreifach,
+      # SudoRt) and ../../audit/.lake/build, which are outside the lean-action cache path
+      # and so always fresh on a CI checkout. With the cache off this step is a no-op on a
+      # clean checkout; it stays as a guard.
+      - name: Delete stale build outputs of the MegaDreifach package (KatSpecCheck's whole import closure)
+        working-directory: proofs/megadreifach/lean
+        run: |
+          rm -rf .lake/build/lib/MegaDreifach* .lake/build/ir/MegaDreifach* \
+                 ../../audit/.lake/build
+      # Both roots: KatSpecCheck imports MegaDreifach (the default lib root) as well.
+      - name: Build MegaDreifach and MegaDreifachHeavy (the 8 KAT kernel witnesses)
+        working-directory: proofs/megadreifach/lean
+        run: |
+          lake build MegaDreifach MegaDreifachHeavy
+          test -f .lake/build/lib/MegaDreifach.olean
+          test -f .lake/build/lib/MegaDreifachHeavy/Kat.olean
+      - name: KatSpecCheck (no [init] / [builtin_init] in the package; KAT statements are exactly v_Hash (embed (hexBytes vec.msgHex)) = .ok (embed (hexBytes vec.digestHex)))
+        working-directory: proofs/megadreifach/lean
+        run: lake env lean --run KatSpecCheck.lean
       - name: Axiom audit of every MegaDreifachHeavy theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py megadreifach-heavy

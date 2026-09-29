@@ -13,76 +13,11 @@
 -/
 import MegaDreifach.Link2.PeelCube
 import MegaDreifach.Link2.PeelBelow
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
-
-private theorem subI_two_one : SudoRt.subI (2 : Int) (1 : Int) = .ok (1 : Int) := by
-  have h : FitsLen 2 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 2 1 h (by decide)]
-  rfl
-
-private theorem subI_three_one : SudoRt.subI (3 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen 3 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 3 1 h (by decide)]
-  rfl
-
-private theorem not_neg (k : Nat) : decide (Int.ofNat k < 0) = false := by
-  rw [decide_eq_false_iff_not]
-  exact Int.not_lt.mpr (Int.ofNat_zero_le _)
-
-private theorem neg_lt_zero (k : Nat) (hk : 0 < k) :
-    decide (-(k : Int) < 0) = true := by
-  rw [decide_eq_true_iff]
-  have : (0 : Int) < (k : Int) := (ofNat_pos_iff k).mpr hk
-  omega
-
-private theorem append_dig (out : List Nat) (k : Nat) :
-    (SudoRt.appendL (embed out) (Int.ofNat k)).1 = embed (out ++ [k]) := by
-  rw [appendL_spec]
-  exact push_embed out k
-
-private theorem narrowI_neg (k : Nat) (hk : k ≤ limbBase) :
-    SudoRt.narrowI (-(k : Int)) = .ok (-(k : Int)) := by
-  unfold SudoRt.narrowI
-  have hB : SudoRt.i64Min ≤ -(limbBase : Int) := by
-    unfold SudoRt.i64Min limbBase
-    decide
-  have hlo : SudoRt.i64Min ≤ -(k : Int) := by
-    have hkI : (k : Int) ≤ (limbBase : Int) := Int.ofNat_le.mpr hk
-    exact Int.le_trans hB (Int.neg_le_neg hkI)
-  have hhi : -(k : Int) ≤ SudoRt.i64Max := by
-    have h0 : -(k : Int) ≤ 0 := Int.neg_nonpos_of_nonneg (Int.ofNat_nonneg k)
-    have hmax : (0 : Int) ≤ SudoRt.i64Max := by decide
-    exact Int.le_trans h0 hmax
-  split
-  · next ht =>
-    simp only [Bool.or_eq_true, decide_eq_true_iff] at ht
-    cases ht with
-    | inl h => exact absurd h (Int.not_lt.mpr hlo)
-    | inr h => exact absurd h (Int.not_lt.mpr hhi)
-  · rfl
 
 private theorem subI_under (a b : Nat) (hlt : a < b) (hb : b ≤ limbBase) :
     SudoRt.subI (Int.ofNat a) (Int.ofNat b) = .ok (-((b - a : Nat) : Int)) := by
@@ -105,7 +40,7 @@ private theorem subI_neg_ofNat (k b : Nat) (hsum : k + b ≤ limbBase) :
   rw [hsub]
   exact narrowI_neg (k + b) hsum
 
-private theorem addI_neg_base (k : Nat) (hk0 : 0 < k) (hk : k ≤ limbBase) :
+theorem addI_neg_base (k : Nat) (hk0 : 0 < k) (hk : k ≤ limbBase) :
     SudoRt.addI (-(k : Int)) Megadreifach.limb_base =
       .ok (Int.ofNat (limbBase - k)) := by
   unfold SudoRt.addI
@@ -124,7 +59,7 @@ private theorem addI_neg_base (k : Nat) (hk0 : 0 < k) (hk : k ≤ limbBase) :
 def subDigit (a b br : Nat) : Nat × Nat :=
   if b + br ≤ a then (a - (b + br), 0) else (a + limbBase - (b + br), 1)
 
-private theorem subDigit_spec (a b br : Nat)
+theorem subDigit_spec (a b br : Nat)
     (ha : a < limbBase) (hb : b < limbBase) (hbr : br ≤ 1) :
     (subDigit a b br).1 < limbBase ∧ (subDigit a b br).2 ≤ 1 ∧
       a + (subDigit a b br).2 * limbBase = (subDigit a b br).1 + b + br := by
@@ -143,21 +78,12 @@ private theorem subDigit_spec (a b br : Nat)
     have : a + limbBase - (b + br) + (b + br) = a + limbBase := Nat.sub_add_cancel hsum
     omega
 
-private theorem mod_add_mul (d q : Nat) (hd : d < limbBase) :
-    (d + limbBase * q) % limbBase = d := by
-  have hmul : (limbBase * q) % limbBase = 0 := Nat.mul_mod_right limbBase q
-  rw [Nat.add_mod, hmul, Nat.add_zero, Nat.mod_mod, Nat.mod_eq_of_lt hd]
-
-private theorem div_add_mul (d q : Nat) (hd : d < limbBase) :
-    (d + limbBase * q) / limbBase = q := by
-  rw [Nat.add_comm, Nat.mul_add_div limbBase_pos q d, Nat.div_eq_of_lt hd, Nat.add_zero]
-
 private theorem limbs_raw2 (v d0 d1 : Nat) (hv : v < limbBase ^ 2)
     (hd0 : d0 < limbBase) (_hd1 : d1 < limbBase)
     (hval : d0 + limbBase * d1 = v) :
     dropTrail [d0, d1] = limbsOfNat v := by
-  have hmod : v % limbBase = d0 := by rw [← hval, mod_add_mul d0 d1 hd0]
-  have hdiv : v / limbBase = d1 := by rw [← hval, div_add_mul d0 d1 hd0]
+  have hmod : v % limbBase = d0 := by rw [← hval, limb_mod_add_mul d0 d1 hd0]
+  have hdiv : v / limbBase = d1 := by rw [← hval, limb_div_add_mul d0 d1 hd0]
   rw [dropTrail_two, ← hmod, ← hdiv]
   unfold limbsOfNat
   by_cases hv0 : v = 0
@@ -178,13 +104,13 @@ private theorem limbs_raw3 (v d0 d1 d2 : Nat) (_hv : v < limbBase ^ 3)
     (hval : d0 + limbBase * (d1 + limbBase * d2) = v) :
     dropTrail [d0, d1, d2] = limbsOfNat v := by
   have hmod : v % limbBase = d0 := by
-    rw [← hval, mod_add_mul d0 (d1 + limbBase * d2) hd0]
+    rw [← hval, limb_mod_add_mul d0 (d1 + limbBase * d2) hd0]
   have hdiv : v / limbBase = d1 + limbBase * d2 := by
-    rw [← hval, div_add_mul d0 (d1 + limbBase * d2) hd0]
+    rw [← hval, limb_div_add_mul d0 (d1 + limbBase * d2) hd0]
   have hmod1 : (v / limbBase) % limbBase = d1 := by
-    rw [hdiv, mod_add_mul d1 d2 hd1]
+    rw [hdiv, limb_mod_add_mul d1 d2 hd1]
   have hdiv1 : (v / limbBase) / limbBase = d2 := by
-    rw [hdiv, div_add_mul d1 d2 hd1]
+    rw [hdiv, limb_div_add_mul d1 d2 hd1]
   have hdrop : dropTrail [d0, d1, d2] =
       dropTrail [v % limbBase, (v / limbBase) % limbBase, (v / limbBase) / limbBase] := by
     rw [hmod, hmod1, hdiv1]
@@ -248,7 +174,7 @@ theorem magSub_at
     simp only [ite_true, ok_bind]
     rw [atL_embed ys i hy, ok_bind, hyi]
     by_cases hle : bi ≤ ai
-    · rw [subI_ofNat ai bi (fits_of_lt_limb hai) hle, ok_bind, not_neg (ai - bi)]
+    · rw [subI_ofNat ai bi (fits_of_lt_limb hai) hle, ok_bind, decide_ofNat_lt_zero (ai - bi)]
       simp only [Bool.false_eq_true, ite_false]
       rw [append_dig out (ai - bi), bind_pure_flow]
       dsimp
@@ -269,7 +195,7 @@ theorem magSub_at
         simp [hle, heq, Nat.zero_add]
     · have hlt : ai < bi := Nat.lt_of_not_le hle
       rw [subI_under ai bi hlt (Nat.le_of_lt hbi), ok_bind,
-        neg_lt_zero (bi - ai) (Nat.sub_pos_of_lt hlt)]
+        decide_neg_lt_zero (bi - ai) (Nat.sub_pos_of_lt hlt)]
       simp only [ite_true]
       have hk : bi - ai ≤ limbBase := Nat.le_trans (Nat.sub_le _ _) (Nat.le_of_lt hbi)
       have hk0 : 0 < bi - ai := Nat.sub_pos_of_lt hlt
@@ -303,7 +229,7 @@ theorem magSub_at
       have hsum : 1 + bi ≤ limbBase := by omega
       erw [subI_neg_ofNat 1 bi hsum]
       rw [ok_bind]
-      erw [neg_lt_zero (1 + bi) (by omega)]
+      erw [decide_neg_lt_zero (1 + bi) (by omega)]
       simp only [ite_true]
       have hk0 : 0 < 1 + bi := by omega
       erw [addI_neg_base (1 + bi) hk0 hsum]
@@ -333,7 +259,7 @@ theorem magSub_at
       have hai' : ai - 1 < limbBase := Nat.lt_of_le_of_lt (Nat.sub_le _ _) hai
       by_cases hle : bi ≤ ai - 1
       · rw [subI_ofNat (ai - 1) bi (fits_of_lt_limb hai') hle, ok_bind,
-          not_neg (ai - 1 - bi)]
+          decide_ofNat_lt_zero (ai - 1 - bi)]
         simp only [Bool.false_eq_true, ite_false]
         have hdig : ai - 1 - bi = ai - (bi + 1) := by omega
         rw [hdig, append_dig out (ai - (bi + 1)), bind_pure_flow]
@@ -356,7 +282,7 @@ theorem magSub_at
           simp [hle', heq]
       · have hlt : ai - 1 < bi := Nat.lt_of_not_le hle
         rw [subI_under (ai - 1) bi hlt (Nat.le_of_lt hbi), ok_bind,
-          neg_lt_zero (bi - (ai - 1)) (Nat.sub_pos_of_lt hlt)]
+          decide_neg_lt_zero (bi - (ai - 1)) (Nat.sub_pos_of_lt hlt)]
         simp only [ite_true]
         have hk0 : 0 < bi - (ai - 1) := Nat.sub_pos_of_lt hlt
         have hk : bi - (ai - 1) ≤ limbBase :=
@@ -467,14 +393,6 @@ private theorem sub2_val (n0 n1 m0 m1 : Nat)
 
 private theorem fits1 : FitsLen 1 := FitsLen.one
 
-private theorem fits2 : FitsLen 2 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem fits3 : FitsLen 3 := by
-  unfold FitsLen i64MaxNat
-  decide
-
 private theorem mag_sub_limbs2 (n0 n1 m0 m1 : Nat)
     (hn0 : n0 < limbBase) (hn1 : n1 < limbBase)
     (hm0 : m0 < limbBase) (hm1 : m1 < limbBase)
@@ -570,14 +488,6 @@ theorem mag_sub_two_le (n m : Nat)
 
 /-! ## `peel_leading` on `[d!, 2·d!)` -/
 
-private theorem fits27 : FitsLen 27 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem twentySix_lt_limb : 26 < limbBase := by
-  unfold limbBase
-  decide
-
 private theorem fact12_lt_limb : factorial 12 < limbBase := by
   unfold factorial limbBase
   decide
@@ -597,36 +507,6 @@ private theorem fact19_lt_sq : factorial 19 < limbBase ^ 2 := by
 private theorem two_fact19_lt_sq : 2 * factorial 19 < limbBase ^ 2 := by
   unfold factorial limbBase
   decide
-
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
-
-private theorem factorial_pred_mul (i : Nat) (hi : 0 < i) :
-    factorial (i - 1) * i = factorial i := by
-  cases i with
-  | zero => cases hi
-  | succ k =>
-    rw [show (k + 1) - 1 = k from by omega, factorial_succ, Nat.mul_comm]
-
-private theorem div_fact_step (n f : Nat) (hf0 : 0 < f) :
-    (n / factorial (f - 1)) / f = n / factorial f := by
-  rw [Nat.div_div_eq_div_mul, factorial_pred_mul f hf0]
 
 private theorem div_one_of_half (n d : Nat) (hpos : 0 < d)
     (hlo : d ≤ n) (hhi : n < 2 * d) : n / d = 1 := by
@@ -675,7 +555,7 @@ private theorem peelDivStep_one (n d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d)
   rw [if_neg hngt]
   have hf0 : 0 < f := by omega
   have hflt : f < limbBase :=
-    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) twentySix_lt_limb
+    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) c26_lt_limb
   have hq : n / factorial (f - 1) < limbBase ^ 3 :=
     Nat.lt_of_le_of_lt (Nat.div_le_self _ _) hn
   rw [show (f : Int) = Int.ofNat f from rfl,

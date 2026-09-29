@@ -14,56 +14,15 @@
 -/
 import MegaDreifach.Link2.DivInd
 import MegaDreifach.Link2.Loop
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
-
-private theorem addI_zero_nat (n : Nat) (h : FitsLen n) :
-    SudoRt.addI (0 : Int) (Int.ofNat n) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (0 + n) := by simpa [Nat.zero_add] using h
-  erw [addI_ofNat 0 n h0]
-  simp [Nat.zero_add]
-
-private theorem addI_nat_zero (n : Nat) (h : FitsLen n) :
-    SudoRt.addI (Int.ofNat n) (0 : Int) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (n + 0) := by simpa [Nat.add_zero] using h
-  erw [addI_ofNat n 0 h0]
-  simp [Nat.add_zero]
 
 private theorem addI_nat_one (n : Nat) (h : FitsLen (n + 1)) :
     SudoRt.addI (Int.ofNat n) (1 : Int) = .ok (Int.ofNat (n + 1)) := by
   have hone : (1 : Int) = Int.ofNat 1 := rfl
   rw [hone]
   exact addI_ofNat n 1 h
-
-private theorem modI_nat_base (n : Nat) :
-    SudoRt.modI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n % limbBase)) := by
-  erw [limb_base_eq, modI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem divI_nat_base (n : Nat) :
-    SudoRt.divI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n / limbBase)) := by
-  erw [limb_base_eq, divI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem sum_limb_fits (x q c : Nat) (hx : x < limbBase) (hq : q < limbBase)
-    (hc : c < limbBase) : FitsLen (x * q + c) := by
-  have hx' : x ≤ limbBase - 1 := by omega
-  have hq' : q ≤ limbBase - 1 := by omega
-  have hc' : c ≤ limbBase - 1 := by omega
-  have hmul : x * q ≤ (limbBase - 1) * (limbBase - 1) := Nat.mul_le_mul hx' hq'
-  have hpair : (limbBase - 1) * (limbBase - 1) + (limbBase - 1) = (limbBase - 1) * limbBase := by
-    calc
-      (limbBase - 1) * (limbBase - 1) + (limbBase - 1)
-        = (limbBase - 1) * (limbBase - 1) + (limbBase - 1) * 1 := by rw [Nat.mul_one]
-      _ = (limbBase - 1) * ((limbBase - 1) + 1) := by rw [← Nat.mul_add]
-      _ = (limbBase - 1) * limbBase := by
-          have : (limbBase - 1) + 1 = limbBase := by omega
-          rw [this]
-  have hle : x * q + c ≤ (limbBase - 1) * limbBase := by omega
-  have hlt : (limbBase - 1) * limbBase < limbBase ^ 2 := by
-    rw [limbBase_pow2]
-    exact Nat.mul_lt_mul_of_pos_right (by omega : limbBase - 1 < limbBase) limbBase_pos
-  exact Nat.le_trans (Nat.le_of_lt (Nat.lt_of_le_of_lt hle hlt)) limb_sq_fits
 
 /-- Accumulator after absorbing the first `i` limbs of `xs`, times `q`. -/
 def mulAcc (q : Nat) (xs : List Nat) (i : Nat) : List Nat :=
@@ -272,10 +231,6 @@ theorem kLoop_write (out : List Nat) (k0 toK c : Nat) (hle : k0 ≤ toK)
       omega
     rw [hnext]
     exact kLoop_idle (out.set k0 c) (k0 + 1) toK (by omega) hfit
-
-private theorem subI_one_one : SudoRt.subI (1 : Int) (1 : Int) = .ok (0 : Int) := by
-  erw [subI_ofNat_one 1 (by decide) FitsLen.one]
-  rfl
 
 /-- Expose the outer schoolbook loop of `big_mul` for a one-limb right factor. -/
 theorem big_mul_wide_open (q : Nat) (xs : List Nat) (_hq0 : 0 < q) (hne : xs ≠ [])

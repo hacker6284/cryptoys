@@ -5,9 +5,9 @@
 
   Every digest is kernel-checked against Generated.v_Hash on its own message in
   the heavy library: `MegaDreifachHeavy/Kat.lean` states, for each vector,
-    kat_<name> : v_Hash (embed (hexBytes vec_<name>.msgHex))
-                   = .ok (embed (hexBytes vec_<name>.digestHex))
-  (the script also checks that shape). The compiled metadata checks are in
+    kat_<name> : v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex))
+                   = .ok (embed (hexBytes Vectors.vec_<name>.digestHex))
+  (`KatSpecCheck.lean`, also generated, pins that elaborated type). The compiled metadata checks are in
   VectorCheck.lean (`lake exe megadreifach`). See proofs/ANTI_DRIFT.md.
 -/
 namespace MegaDreifach.Vectors

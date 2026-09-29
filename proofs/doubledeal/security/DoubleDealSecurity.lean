@@ -20,5 +20,5 @@ import DoubleDealSecurity.SumRanksDP.Decomp
 import DoubleDealSecurity.SumRanksDP.Main
 import DoubleDealSecurity.SumRanksDP.ThreeCycle
 import DoubleDealSecurity.GridCycleSurvival
-import DoubleDealSecurity.Trail
+import DoubleDealSecurity.TrailBound
 import DoubleDealSecurity.CovariantNarrow

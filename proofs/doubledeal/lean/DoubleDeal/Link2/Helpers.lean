@@ -40,6 +40,16 @@ theorem rank_of_refines_natCast (c : Nat) :
   rw [← ofNat_eq_natCast c]
   exact rank_of_refines c
 
+/-- Rewrite a generated loop's step and continuation pointwise. -/
+theorem runLoopOn_congr {σ ρ α} (s0 : σ) (fuel : Nat)
+    (step step' : σ → Except SudoRt.Trap (SudoRt.Flow σ ρ))
+    (h : ∀ s, step s = step' s)
+    (after after' : σ → Except SudoRt.Trap α) (ha : ∀ s, after s = after' s)
+    (onRet : ρ → Except SudoRt.Trap α) :
+    SudoRt.runLoopOn (ρ := ρ) s0 fuel step after onRet =
+      SudoRt.runLoopOn (ρ := ρ) s0 fuel step' after' onRet := by
+  rw [show step = step' from funext h, show after = after' from funext ha]
+
 /-- Generated cut-predicate: nonempty pile and `rank c < length`. -/
 theorem rank_lt_flag (c : Nat) (xs : List Nat) :
     (if decide (SudoRt.listLen (embed xs) > (0 : Int)) then

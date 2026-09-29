@@ -4,5 +4,5 @@
 -/
 import DoubleDealSecurityHeavy.RealKey
 import DoubleDealSecurityHeavy.GridCycleSurvival
-import DoubleDealSecurityHeavy.Trail
+import DoubleDealSecurityHeavy.TrailBound
 import DoubleDealSecurityHeavy.CovariantNarrow

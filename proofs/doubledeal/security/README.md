@@ -37,17 +37,35 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `V8Vectors` | frozen v8 vectors checked against the v8 model (generated, `--check`) |
 | `RealKey` | commuting relabellings closed under powers; every nontrivial `v10Sym a x` has a power equal to one of four witnesses `v10Sym 1 0`, `v10Sym 0 1`, `v10Sym 0 2`, `v10Sym 0 3` (v9 needed two; `v10Sym` is not cyclic); pull-back from the emitted `encrypt` |
 | `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma map: `SUMRANKS_DP.md`; paper proof: `sumranks-dp-paper/PROOF.md` |
-| `GridCycleSurvival` | **GridCycle relabelling survival** (milestone 1 of the AES-style roadmap; `../analysis/v12-diffusion/NOTES.md`): τ survives GridCycle at deck π iff `mixColumns (τ·π) = τ·mixColumns π`. Proved for every τ: `52 · #survivors ≤ #gcExc τ · 52!` (first-card argument; `gcExc` = fixed points plus K♣/K♠); fixed-point-free τ ≤ `52!/26`; 50 of the 51 nontrivial `v10Sym` survive on no deck; `v10Sym 0 3` ≤ `52!/26`, and ≤ `52!/4420` **given** the two finite checks `Check3 KC LKC`, `Check3 KS LKS` as hypotheses (`…_of_check`). GridCycle alone, one layer; not a trail bound for τ outside `v10Sym`, and not a statement about the cipher |
-| `Trail` | **multi-round characteristic bound under INDEPENDENT UNIFORM round keys** (milestone 2; `../analysis/v12-trail/NOTES.md`). `Trail σ R y K`: in every one of R rounds (Compose with `K i`, then the unkeyed round), SumRanks and GridCycle both commute with σ. Counting over all `(52!)^R` key tuples, from every deck y: `trail_card_le_26` (σ ≠ 1, unconditional) `26^R · # ≤ (52!)^R`; `trail_card_le_64_of_not_v10Sym` `64^R`; `trail_card_le_64_of_check` (σ ≠ 1, given the GridCycle checks) `64^R`. One characteristic, not a differential. Says nothing about the real PassKey schedule. No final no-mix round |
-| `CovariantNarrow` | **narrowing of the open conjecture** `roundBody_covariant_iff_id` (milestone 4; the conjecture itself is unchanged and still open; `../analysis/v12-covariant/NOTES.md`). Proved: the output relabelling is unique; covariant σ form a subgroup; the conjecture follows from its prime-order case (`roundBody_covariant_iff_id_of_prime`, hypothesis) and from a single-cell SumRanks statement (`roundBody_covariant_iff_id_of_cell0`, hypothesis); in the commuting case SumRanks and GridCycle survivor counts agree. Given the finite checks `SwapChecks` / `Cov0Checks` as hypotheses: no transposition commutes with, or is covariant for, the round body |
+| `GridCycleSurvival` | **GridCycle relabelling survival** (roadmap milestone M1, see [Roadmap](#roadmap); `../analysis/v12-diffusion/NOTES.md`): τ survives GridCycle at deck π iff `mixColumns (τ·π) = τ·mixColumns π`. Proved for every τ: `52 · #survivors ≤ #gcExc τ · 52!` (first-card argument; `gcExc` = fixed points plus K♣/K♠); fixed-point-free τ ≤ `52!/26`; 50 of the 51 nontrivial `v10Sym` survive on no deck; `v10Sym 0 3` ≤ `52!/26`, and ≤ `52!/4420` **given** the two finite checks `Check3 KC LKC`, `Check3 KS LKS` as hypotheses (`…_of_check`). GridCycle alone, one layer; not a trail bound for τ outside `v10Sym`, and not a statement about the cipher |
+| `TrailBound` | **multi-round characteristic bound under INDEPENDENT UNIFORM round keys** (roadmap milestone M2; `../analysis/v12-trail/NOTES.md`). `Trail σ R y K`: in every one of R rounds (Compose with `K i`, then the unkeyed round), SumRanks and GridCycle both commute with σ. Counting over all `(52!)^R` key tuples, from every deck y: `trail_card_le_26` (σ ≠ 1, unconditional) `26^R · # ≤ (52!)^R`; `trail_card_le_64_of_not_v10Sym` `64^R`; `trail_card_le_64_of_check` (σ ≠ 1, given the GridCycle checks) `64^R`. One characteristic, not a differential. Says nothing about the real PassKey schedule. No final no-mix round |
+| `CovariantNarrow` | **narrowing of the open conjecture** `roundBody_covariant_iff_id` (roadmap milestone M4, see [Roadmap](#roadmap); the conjecture itself is unchanged and still open; `../analysis/v12-covariant/NOTES.md`). Proved: the output relabelling is unique; covariant σ form a subgroup; the conjecture follows from its prime-order case (`roundBody_covariant_iff_id_of_prime`, hypothesis) and from a single-cell SumRanks statement (`roundBody_covariant_iff_id_of_cell0`, hypothesis); in the commuting case SumRanks and GridCycle survivor counts agree. Given the finite checks `SwapChecks` / `Cov0Checks` as hypotheses: no transposition commutes with, or is covariant for, the round body |
 | `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`). **Deprecated-v9 model**; kept as the proof of the v9 mechanism, not a statement about v10 |
 | `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v12 `encrypt` under the identity master key (expected values regenerated for v12, whose key schedule changed) (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
 | `DoubleDealSecurityHeavy.GridCycleSurvival` | kernel `decide!` of `Check3 KC LKC` / `Check3 KS LKS` (8 chunks of 13 × 52 first-three-seat evaluations, ~30 s each), hence unconditional `gc_survival_v10Sym03_le` / `gc_survival_v10Sym_le`: every nontrivial `v10Sym a x` survives GridCycle on at most `52!/4420` decks |
-| `DoubleDealSecurityHeavy.Trail` | unconditional `trail_card_le_64` (every σ ≠ 1) and `trail_card_le_4420_v10Sym`, from the kernel-checked GridCycle checks; same model and caveats as `Trail` |
+| `DoubleDealSecurityHeavy.TrailBound` | unconditional `trail_card_le_64` (every σ ≠ 1) and `trail_card_le_4420_v10Sym`, from the kernel-checked GridCycle checks; same model and caveats as `TrailBound` |
 | `DoubleDealSecurityHeavy.CovariantNarrow` | kernel `decide!` of `SwapChecks` and `Cov0Checks` (one theorem per representative `e`, ~7 min in total), hence unconditional `roundBody_not_commutes_swap` and `roundBody_not_covariant_swap`: the covariant round conjecture holds for every transposition |
 
 Generic list/rotation lemmas live in the Mathlib-free core package
 (`../lean/DoubleDeal/SumRanks.lean`, `SumRanksV10.lean`, `Rotate.lean`).
+
+## Roadmap
+
+The AES-style argument (SPEC.md §6, row S15), as milestones. "Proved" means a Lean
+theorem in this package, audited as above; no item is a security claim.
+
+| Milestone | Status | Where |
+|---|---|---|
+| M1. GridCycle relabelling survival (the diffusion notion) | **Done.** Proved: 50 of the 51 nontrivial `v10Sym` survive GridCycle on no deck; `v10Sym 0 3` on ≤ 1/26 (default library) and ≤ 1/4420 (heavy library; default library given the two finite checks). The Hamming branch number is the trivial floor 4 | `GridCycleSurvival`, `DoubleDealSecurityHeavy.GridCycleSurvival`, `../analysis/v12-diffusion/NOTES.md` |
+| M2. Multi-round trail bound | **Done, in the independent-uniform-round-key model only.** The constant-σ characteristic through R mix rounds has probability ≤ (1/64)^R for every σ ≠ 1 (heavy library; default library (1/26)^R, and (1/64)^R given the two finite checks). One characteristic, not a differential; no final no-mix round; not linked to `encryptN` | `TrailBound`, `DoubleDealSecurityHeavy.TrailBound`, `../analysis/v12-trail/NOTES.md` |
+| M3. Linear-analogue note | **Note only, no Lean.** In review as PR #111 (not on main yet) | `../analysis/v12-linear/NOTES.md` (added by #111) |
+| M4. Covariant round conjecture `roundBody_covariant_iff_id` | **Narrowed, still open** (`DRAFT-SORRY`; statement unchanged). Proved: it holds for every transposition (heavy library; default library given the finite checks) and for every nontrivial `v10Sym`; it follows from its prime-order case and from a single-cell SumRanks statement (reduction theorems whose hypotheses are not proved). Open: σ of prime order that is neither a transposition nor in `v10Sym`. Checked numerically by `checks/check_covariant.py` | `Rounds`, `CovariantNarrow`, `DoubleDealSecurityHeavy.CovariantNarrow`, `../analysis/v12-covariant/NOTES.md` |
+
+Open, with no milestone yet:
+- the real PassKey schedule (dependent round keys): nothing is proved about it;
+- the full differential (the sum over characteristics, including σ → β for β ≠ σ);
+- a whole-walk GridCycle bound for small-support relabellings (the proved first-card bound is ≈ 1 for them);
+- the link from `rounds` to `encryptN`, and the final no-mix round.
 
 ## Status and gates
 
@@ -70,7 +88,7 @@ decks. Also proved (`sumRanksV10_survival_threeCycle`,
 non-symmetries is computer-assisted (`sumranks-dp-paper/PROOF.md` §5b) and not
 formalised.
 
-Branch number and GridCycle survival (roadmap milestone 1, v12;
+Branch number and GridCycle survival (roadmap milestone M1, v12;
 `../analysis/v12-diffusion/NOTES.md`). The Hamming branch number of GridCycle is
 exactly the trivial floor 4 (proved, below), so no wide-trail bound comes from
 it. The notion used instead is relabelling survival. Proved: the 50 nontrivial
@@ -81,7 +99,7 @@ states it conditional on the finite check). Only measured: full GridCycle surviv
 swaps). For relabellings outside `v10Sym`, the only proved GridCycle bound is the
 first-card one, which is weak (≈ 1) for small-support relabellings.
 
-Multi-round (roadmap milestone 2, `Trail`, `../analysis/v12-trail/NOTES.md`).
+Multi-round (roadmap milestone M2, `TrailBound`, `../analysis/v12-trail/NOTES.md`).
 **Conditional on the model**: independent uniform round keys (built into the
 counting over all key tuples), one constant-σ characteristic, and no final no-mix
 round. In that model the characteristic has probability ≤ (1/64)^R for every
@@ -104,8 +122,9 @@ proved for every transposition (heavy library) and, before that, for every
 nontrivial `v10Sym`; it reduces to σ of prime order p ≤ 52, and to a single-cell
 SumRanks statement (both are hypotheses of the reduction theorems, not proved).
 Open: every σ of prime order that is neither a transposition nor in `v10Sym`.
-Measured only: the seat-26 argument refuted covariance for all 1600 sampled
-prime-order σ (`../analysis/v12-covariant/cell0_sample.log`).
+Measured only: a seat-26 witness pair (which rules out covariance for that σ)
+was found for each of the 1600 sampled prime-order σ
+(`../analysis/v12-covariant/cell0_sample.log`); that says nothing about unsampled σ.
 
 CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 - `checks/scan_sorry.py`: `sorry` only in `roundBody_covariant_iff_id`; no

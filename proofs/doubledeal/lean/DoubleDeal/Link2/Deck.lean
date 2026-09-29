@@ -44,14 +44,6 @@ theorem mulI_ofNat (a b : Nat) (h : FitsLen (a * b)) :
   rw [this]
   exact narrowI_ofNat _ h
 
-theorem addI_ofNat (a b : Nat) (h : FitsLen (a + b)) :
-    SudoRt.addI (Int.ofNat a) (Int.ofNat b) = .ok (Int.ofNat (a + b)) := by
-  unfold SudoRt.addI
-  have : Int.ofNat a + Int.ofNat b = Int.ofNat (a + b) := by
-    simp [ofNat_eq_natCast]
-  rw [this]
-  exact narrowI_ofNat _ h
-
 theorem ofNat_not_gt {a b : Nat} (h : a ≤ b) : ¬ (Int.ofNat a > Int.ofNat b) :=
   Int.not_lt.mpr (Int.ofNat_le.mpr h)
 

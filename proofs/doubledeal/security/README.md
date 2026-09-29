@@ -38,9 +38,11 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `RealKey` | commuting relabellings closed under powers; every nontrivial `v10Sym a x` has a power equal to one of four witnesses `v10Sym 1 0`, `v10Sym 0 1`, `v10Sym 0 2`, `v10Sym 0 3` (v9 needed two; `v10Sym` is not cyclic); pull-back from the emitted `encrypt` |
 | `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma map: `SUMRANKS_DP.md`; paper proof: `sumranks-dp-paper/PROOF.md` |
 | `GridCycleSurvival` | **GridCycle relabelling survival** (milestone 1 of the AES-style roadmap; `../analysis/v12-diffusion/NOTES.md`): τ survives GridCycle at deck π iff `mixColumns (τ·π) = τ·mixColumns π`. Proved for every τ: `52 · #survivors ≤ #gcExc τ · 52!` (first-card argument; `gcExc` = fixed points plus K♣/K♠); fixed-point-free τ ≤ `52!/26`; 50 of the 51 nontrivial `v10Sym` survive on no deck; `v10Sym 0 3` ≤ `52!/26`, and ≤ `52!/4420` **given** the two finite checks `Check3 KC LKC`, `Check3 KS LKS` as hypotheses (`…_of_check`). GridCycle alone, one layer; not a trail bound for τ outside `v10Sym`, and not a statement about the cipher |
+| `Trail` | **multi-round characteristic bound under INDEPENDENT UNIFORM round keys** (milestone 2; `../analysis/v12-trail/NOTES.md`). `Trail σ R y K`: in every one of R rounds (Compose with `K i`, then the unkeyed round), SumRanks and GridCycle both commute with σ. Counting over all `(52!)^R` key tuples, from every deck y: `trail_card_le_26` (σ ≠ 1, unconditional) `26^R · # ≤ (52!)^R`; `trail_card_le_64_of_not_v10Sym` `64^R`; `trail_card_le_64_of_check` (σ ≠ 1, given the GridCycle checks) `64^R`. One characteristic, not a differential. Says nothing about the real PassKey schedule. No final no-mix round |
 | `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`). **Deprecated-v9 model**; kept as the proof of the v9 mechanism, not a statement about v10 |
 | `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v12 `encrypt` under the identity master key (expected values regenerated for v12, whose key schedule changed) (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
 | `DoubleDealSecurityHeavy.GridCycleSurvival` | kernel `decide!` of `Check3 KC LKC` / `Check3 KS LKS` (8 chunks of 13 × 52 first-three-seat evaluations, ~30 s each), hence unconditional `gc_survival_v10Sym03_le` / `gc_survival_v10Sym_le`: every nontrivial `v10Sym a x` survives GridCycle on at most `52!/4420` decks |
+| `DoubleDealSecurityHeavy.Trail` | unconditional `trail_card_le_64` (every σ ≠ 1) and `trail_card_le_4420_v10Sym`, from the kernel-checked GridCycle checks; same model and caveats as `Trail` |
 
 Generic list/rotation lemmas live in the Mathlib-free core package
 (`../lean/DoubleDeal/SumRanks.lean`, `SumRanksV10.lean`, `Rotate.lean`).
@@ -76,6 +78,14 @@ states it conditional on the finite check). Only measured: full GridCycle surviv
 (0 in 60000 sampled decks for `v10Sym 0 3` given its prefix; mean ≈ 0.0035 over
 swaps). For relabellings outside `v10Sym`, the only proved GridCycle bound is the
 first-card one, which is weak (≈ 1) for small-support relabellings.
+
+Multi-round (roadmap milestone 2, `Trail`, `../analysis/v12-trail/NOTES.md`).
+**Conditional on the model**: independent uniform round keys (built into the
+counting over all key tuples), one constant-σ characteristic, and no final no-mix
+round. In that model the characteristic has probability ≤ (1/64)^R for every
+σ ≠ 1 (heavy library; the default library proves (1/26)^R unconditionally and
+(1/64)^R given the finite check). Not proved: anything about the real PassKey
+schedule, the differential (sum over characteristics), and σ → β for β ≠ σ.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at

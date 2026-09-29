@@ -94,6 +94,9 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.GCSurvival.check3_KS",
     "DoubleDeal.Security.GCSurvival.gc_survival_v10Sym03_le",
     "DoubleDeal.Security.GCSurvival.gc_survival_v10Sym_le",
+    # DoubleDealSecurityHeavy/Trail.lean (unconditional multi-round characteristic bounds)
+    "DoubleDeal.Security.TrailBound.trail_card_le_64",
+    "DoubleDeal.Security.TrailBound.trail_card_le_4420_v10Sym",
 }
 # proofs/megadreifach/lean: the 8 hash KATs in MegaDreifachHeavy/Kat.lean (the names
 # match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats.json;

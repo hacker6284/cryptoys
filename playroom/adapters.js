@@ -60,13 +60,13 @@ function disposeObject(object) {
  * Solve/Spec). Portrait: stage on top (transport over the 3D),
  * input card in the dark band. Teach is opt-in via Step / (i).
  */
-function specUrlCandidates(algo = "scramble") {
+function specUrlCandidates(algo) {
     const fromModule = new URL(`../${algo}/SPEC.md`, import.meta.url).href;
     const fromPage = new URL(`${algo}/SPEC.md`, document.baseURI).href;
     return [...new Set([fromModule, fromPage])];
 }
 
-async function resolveSpecUrl(algo = "scramble") {
+async function resolveSpecUrl(algo) {
     for (const href of specUrlCandidates(algo)) {
         try {
             const response = await fetch(href);
@@ -104,67 +104,39 @@ function bindInstrumentChrome(root) {
     bindGrowFields(root);
 }
 
-function mountDock() {
-    let root = document.querySelector("#scramble-dock");
+function jumpButton(jump, label, icon) {
+    return `<button type="button" class="icon-btn" data-jump="${jump}" aria-label="${label}" title="${label}">`
+        + `${lucideSvg(icon, 18)}</button>`;
+}
+
+/** Shared dock markup; each demo passes its controls, fields and labels.
+ * Markup chunks start with a newline so the rendered dock stays byte-identical to the old per-demo docks. */
+function mountDock(algo, { controls, fields, digestButton, hint, tape = "", roundName, speed, digin }) {
+    let root = document.querySelector(`#${algo}-dock`);
     if (root) return root;
     root = document.createElement("div");
-    root.id = "scramble-dock";
+    root.id = `${algo}-dock`;
     root.className = "playroom-dock";
     root.hidden = true;
     root.innerHTML = `
       <div class="playroom-io">
         <div class="playroom-card playroom-card--io">
-          <div class="playroom-io-grid">
-            <div class="playroom-ctl playroom-ctl--puzzle" data-puzzle-ctl hidden>
-              <span class="playroom-label" id="puzzle-legend">Puzzle</span>
-              <div class="playroom-seg" role="group" aria-labelledby="puzzle-legend">
-                <button type="button" class="seg-btn on" data-puzzle="3x3x3" aria-label="3×3">3×3</button>
-                <button type="button" class="seg-btn" data-puzzle="megaminx" aria-label="Megaminx">Mega</button>
-                <button type="button" class="seg-btn" data-puzzle="pyraminx" aria-label="Pyraminx">Pyra</button>
-              </div>
-            </div>
-            <div class="playroom-ctl">
-              <span class="playroom-label" id="gen-legend">Gen</span>
-              <span id="gen-label" hidden>Gen 2</span>
-              <div class="playroom-seg" role="group" aria-labelledby="gen-legend">
-                <button type="button" class="seg-btn" data-version="1">1</button>
-                <button type="button" class="seg-btn on" data-version="2">2</button>
-              </div>
-            </div>
-            <div class="playroom-ctl">
-              <span class="playroom-label" id="enc-legend">Encoding</span>
-              <div class="playroom-seg" role="group" aria-labelledby="enc-legend">
-                <button type="button" class="seg-btn on" data-encoding="text">Text</button>
-                <button type="button" class="seg-btn" data-encoding="hex">Hex</button>
-              </div>
-            </div>
-          </div>
-          <label class="playroom-ctl playroom-ctl--field" for="message">
-            <span class="playroom-label">Message</span>
-            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
-          </label>
-          <p id="io-note" class="io-note" hidden></p>
-          <label class="playroom-ctl playroom-ctl--field" for="digest">
-            <span class="playroom-label">Digest</span>
-            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
-          </label>
-          <p id="puzzle-note" class="playroom-puzzle-note" hidden>Digest is 3×3 Scramble. This puzzle is visual.</p>
-          <p id="status" class="status playroom-status">Solved start · white up, green front, red right</p>
+          <div class="playroom-io-grid">${controls}
+          </div>${fields}
           <p id="error" class="error"></p>
-          <button id="digest-btn" type="button" hidden>Digest</button>
+          <button id="digest-btn" type="button" hidden>${digestButton}</button>
         </div>
-        <p class="playroom-info-hint" id="teach-hint">Step to see each turn.</p>
-        <div id="teach" class="playroom-note" hidden>
-          <div id="tape" class="tape" aria-label="Message tape"></div>
+        <p class="playroom-info-hint" id="teach-hint">${hint}</p>
+        <div id="teach" class="playroom-note" hidden>${tape}
           <article id="teach-card" class="playroom-note-body"></article>
           <div class="transport" id="transport">
-          <button type="button" class="icon-btn" data-jump="round-back" aria-label="Previous symbol" title="Previous symbol">${lucideSvg("chevrons-left", 18)}</button>
-          <button type="button" class="icon-btn" data-jump="stage-back" aria-label="Previous stage" title="Previous stage">${lucideSvg("chevron-left", 18)}</button>
-          <button type="button" class="icon-btn" data-jump="back" aria-label="Prev" title="Prev">${lucideSvg("chevron-left", 18)}</button>
+          ${jumpButton("round-back", `Previous ${roundName}`, "chevrons-left")}
+          ${jumpButton("stage-back", "Previous stage", "chevron-left")}
+          ${jumpButton("back", "Prev", "chevron-left")}
           <span class="pos" id="teach-pos">—</span>
-          <button type="button" class="icon-btn" data-jump="fwd" aria-label="Next" title="Next">${lucideSvg("chevron-right", 18)}</button>
-          <button type="button" class="icon-btn" data-jump="stage-fwd" aria-label="Next stage" title="Next stage">${lucideSvg("chevron-right", 18)}</button>
-          <button type="button" class="icon-btn" data-jump="round-fwd" aria-label="Next symbol" title="Next symbol">${lucideSvg("chevrons-right", 18)}</button>
+          ${jumpButton("fwd", "Next", "chevron-right")}
+          ${jumpButton("stage-fwd", "Next stage", "chevron-right")}
+          ${jumpButton("round-fwd", `Next ${roundName}`, "chevrons-right")}
           </div>
         </div>
         <div id="outline" class="outline" hidden></div>
@@ -180,11 +152,11 @@ function mountDock() {
             <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
             <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
           </div>
-          <label class="slider">Speed <input id="speed" type="range" min="0.5" max="4" step="0.1" value="1.4"></label>
+          <label class="slider">Speed <input id="speed" type="range" min="${speed.min}" max="${speed.max}" step="0.1" value="${speed.value}"></label>
         </div>
       </div>
       <div class="playroom-digins">
-        <button id="solve" class="playroom-digin" type="button">Solve</button>
+        ${digin}
         <button id="spec-btn" class="playroom-digin" type="button">Spec</button>
         <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">${lucideSvg("info", 18)}</button>
       </div>
@@ -199,6 +171,37 @@ function mountDock() {
     bindInstrumentChrome(root);
     document.body.append(root);
     return root;
+}
+
+/** Dock lifecycle shared by the demo adapters: mount, spec URL, show, close. */
+function createDock(algo, parts) {
+    let root = null;
+    let specObjectUrl = null;
+    return {
+        mount() {
+            root = mountDock(algo, parts);
+            return root;
+        },
+        async specUrl() {
+            const url = await resolveSpecUrl(algo);
+            if (url.startsWith("blob:")) specObjectUrl = url;
+            return url;
+        },
+        show() {
+            root.hidden = false;
+            root.classList.add("on");
+        },
+        close() {
+            if (specObjectUrl) {
+                URL.revokeObjectURL(specObjectUrl);
+                specObjectUrl = null;
+            }
+            if (root) {
+                root.classList.remove("on");
+                root.hidden = true;
+            }
+        },
+    };
 }
 
 function pendingTwistyRig(seat, puzzleId = "3x3x3") {
@@ -221,16 +224,59 @@ function pendingTwistyRig(seat, puzzleId = "3x3x3") {
 }
 
 function createScrambleAdapter() {
+    const dock = createDock("scramble", {
+        controls: `
+            <div class="playroom-ctl playroom-ctl--puzzle" data-puzzle-ctl hidden>
+              <span class="playroom-label" id="puzzle-legend">Puzzle</span>
+              <div class="playroom-seg" role="group" aria-labelledby="puzzle-legend">
+                <button type="button" class="seg-btn on" data-puzzle="3x3x3" aria-label="3×3">3×3</button>
+                <button type="button" class="seg-btn" data-puzzle="megaminx" aria-label="Megaminx">Mega</button>
+                <button type="button" class="seg-btn" data-puzzle="pyraminx" aria-label="Pyraminx">Pyra</button>
+              </div>
+            </div>
+            <div class="playroom-ctl">
+              <span class="playroom-label" id="gen-legend">Gen</span>
+              <span id="gen-label" hidden>Gen 2</span>
+              <div class="playroom-seg" role="group" aria-labelledby="gen-legend">
+                <button type="button" class="seg-btn" data-version="1">1</button>
+                <button type="button" class="seg-btn on" data-version="2">2</button>
+              </div>
+            </div>
+            <div class="playroom-ctl">
+              <span class="playroom-label" id="enc-legend">Encoding</span>
+              <div class="playroom-seg" role="group" aria-labelledby="enc-legend">
+                <button type="button" class="seg-btn on" data-encoding="text">Text</button>
+                <button type="button" class="seg-btn" data-encoding="hex">Hex</button>
+              </div>
+            </div>`,
+        fields: `
+          <label class="playroom-ctl playroom-ctl--field" for="message">
+            <span class="playroom-label">Message</span>
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+          </label>
+          <p id="io-note" class="io-note" hidden></p>
+          <label class="playroom-ctl playroom-ctl--field" for="digest">
+            <span class="playroom-label">Digest</span>
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
+          </label>
+          <p id="puzzle-note" class="playroom-puzzle-note" hidden>Digest is 3×3 Scramble. This puzzle is visual.</p>
+          <p id="status" class="status playroom-status">Solved start · white up, green front, red right</p>`,
+        digestButton: "Digest",
+        hint: "Step to see each turn.",
+        tape: `
+          <div id="tape" class="tape" aria-label="Message tape"></div>`,
+        roundName: "symbol",
+        speed: { min: 0.5, max: 4, value: 1.4 },
+        digin: '<button id="solve" class="playroom-digin" type="button">Solve</button>',
+    });
     let rig = null;
     let session = null;
-    let root = null;
     let world = null;
     let installOpts = null;
     let puzzleId = "3x3x3";
     let entering = false;
     let sessionMod = null;
     let preloadPromise = null;
-    let specObjectUrl = null;
     let adoptPromise = null;
 
     async function applyPuzzle(nextRaw) {
@@ -381,10 +427,9 @@ function createScrambleAdapter() {
             if (session || entering) return session;
             entering = true;
             try {
-                root = mountDock();
+                const root = dock.mount();
                 const { createScrambleSession } = await preload();
-                const specUrl = await resolveSpecUrl();
-                if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
+                const specUrl = await dock.specUrl();
                 const puzzleCtl = root.querySelector("[data-puzzle-ctl]");
                 if (puzzleCtl) {
                     puzzleCtl.hidden = !playroomDebugEnabled() || typeof rig?.swapPuzzle !== "function";
@@ -399,8 +444,7 @@ function createScrambleAdapter() {
                 });
                 rig.rememberSeated?.();
                 // Stay in use mode. Step enters teach.
-                root.hidden = false;
-                root.classList.add("on");
+                dock.show();
                 return session;
             } finally {
                 entering = false;
@@ -409,14 +453,7 @@ function createScrambleAdapter() {
         leave() {
             session?.dispose();
             session = null;
-            if (specObjectUrl) {
-                URL.revokeObjectURL(specObjectUrl);
-                specObjectUrl = null;
-            }
-            if (root) {
-                root.classList.remove("on");
-                root.hidden = true;
-            }
+            dock.close();
             if (rig) {
                 void rig.settle?.({ snap: true });
                 rig.clearHighlights?.();
@@ -429,17 +466,9 @@ function createScrambleAdapter() {
     };
 }
 
-function mountDoubleDealDock() {
-    let root = document.querySelector("#doubledeal-dock");
-    if (root) return root;
-    root = document.createElement("div");
-    root.id = "doubledeal-dock";
-    root.className = "playroom-dock";
-    root.hidden = true;
-    root.innerHTML = `
-      <div class="playroom-io">
-        <div class="playroom-card playroom-card--io">
-          <div class="playroom-io-grid">
+function createDoubleDealAdapter() {
+    const dock = createDock("doubledeal", {
+        controls: `
             <div class="playroom-ctl">
               <span class="playroom-label" id="mode-legend">Mode</span>
               <div class="playroom-seg" role="group" aria-labelledby="mode-legend">
@@ -453,8 +482,8 @@ function mountDoubleDealDock() {
                 <button type="button" class="seg-btn on" data-direction="encrypt">Enc</button>
                 <button type="button" class="seg-btn" data-direction="decrypt">Dec</button>
               </div>
-            </div>
-          </div>
+            </div>`,
+        fields: `
           <label class="playroom-ctl playroom-ctl--field" for="message">
             <span class="playroom-label" id="input-label">Message</span>
             <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
@@ -474,68 +503,21 @@ function mountDoubleDealDock() {
             <span class="playroom-label" id="output-label">Digest</span>
             <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
           </label>
-          <p id="status" class="status playroom-status">Plaintext on the left. Key on the right.</p>
-          <p id="error" class="error"></p>
-          <button id="digest-btn" type="button" hidden>Copy</button>
-        </div>
-        <p class="playroom-info-hint" id="teach-hint">Step to see each table beat.</p>
-        <div id="teach" class="playroom-note" hidden>
-          <article id="teach-card" class="playroom-note-body"></article>
-          <div class="transport" id="transport">
-          <button type="button" class="icon-btn" data-jump="round-back" aria-label="Previous round" title="Previous round">${lucideSvg("chevrons-left", 18)}</button>
-          <button type="button" class="icon-btn" data-jump="stage-back" aria-label="Previous stage" title="Previous stage">${lucideSvg("chevron-left", 18)}</button>
-          <button type="button" class="icon-btn" data-jump="back" aria-label="Prev" title="Prev">${lucideSvg("chevron-left", 18)}</button>
-          <span class="pos" id="teach-pos">—</span>
-          <button type="button" class="icon-btn" data-jump="fwd" aria-label="Next" title="Next">${lucideSvg("chevron-right", 18)}</button>
-          <button type="button" class="icon-btn" data-jump="stage-fwd" aria-label="Next stage" title="Next stage">${lucideSvg("chevron-right", 18)}</button>
-          <button type="button" class="icon-btn" data-jump="round-fwd" aria-label="Next round" title="Next round">${lucideSvg("chevrons-right", 18)}</button>
-          </div>
-        </div>
-        <div id="outline" class="outline" hidden></div>
-      </div>
-      <div class="playroom-anim">
-        <div class="playroom-card playroom-card--transport">
-          <div class="row playroom-actions">
-            <button id="play" class="icon-btn icon-primary" type="button" aria-label="Play" title="Play">
-              <span class="icon-play">${lucideSvg("play")}</span>
-              <span class="icon-pause">${lucideSvg("pause")}</span>
-            </button>
-            <button id="skip-end" class="icon-btn" type="button" aria-label="Skip to end" title="Skip to end">${lucideSvg("skip-forward")}</button>
-            <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
-            <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
-          </div>
-          <label class="slider">Speed <input id="speed" type="range" min="0.6" max="8" step="0.1" value="1.8"></label>
-        </div>
-      </div>
-      <div class="playroom-digins">
-        <button id="random-key" class="playroom-digin" type="button">Random key</button>
-        <button id="spec-btn" class="playroom-digin" type="button">Spec</button>
-        <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">${lucideSvg("info", 18)}</button>
-      </div>
-      <dialog id="spec">
-        <div class="spec-bar">
-          <strong>Specification</strong>
-          <button id="spec-close" type="button">Close</button>
-        </div>
-        <article id="spec-body"></article>
-      </dialog>
-    `;
-    bindInstrumentChrome(root);
-    document.body.append(root);
-    return root;
-}
-
-function createDoubleDealAdapter() {
+          <p id="status" class="status playroom-status">Plaintext on the left. Key on the right.</p>`,
+        digestButton: "Copy",
+        hint: "Step to see each table beat.",
+        roundName: "round",
+        speed: { min: 0.6, max: 8, value: 1.8 },
+        digin: '<button id="random-key" class="playroom-digin" type="button">Random key</button>',
+    });
     let world = null;
     let table = null;
     let session = null;
-    let root = null;
     let poses = null;
     let entering = false;
     let sessionMod = null;
     let textures = null;
     let preloadPromise = null;
-    let specObjectUrl = null;
     let unbox = null;
     let unbox2 = null;
     let clock = null;
@@ -631,12 +613,6 @@ function createDoubleDealAdapter() {
         clock?.skip();
     }
 
-    function showDock() {
-        if (!root) return;
-        root.hidden = false;
-        root.classList.add("on");
-    }
-
     return {
         id: "doubledeal",
         install(nextWorld, { poses: nextPoses } = {}) {
@@ -668,7 +644,7 @@ function createDoubleDealAdapter() {
             cancelEnter = false;
             try {
                 if (!unbox) await prepareEnter();
-                root = mountDoubleDealDock();
+                const root = dock.mount();
                 const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
                 poses?.lockOrbit?.();
                 clock = createBeatClock({ reduced });
@@ -709,8 +685,7 @@ function createDoubleDealAdapter() {
                     } else {
                         table.show();
                     }
-                    const specUrl = await resolveSpecUrl("doubledeal");
-                    if (specUrl.startsWith("blob:")) specObjectUrl = specUrl;
+                    const specUrl = await dock.specUrl();
                     const view = {
                         ...table,
                         showDecks(message, key) {
@@ -759,7 +734,7 @@ function createDoubleDealAdapter() {
                 if (layout) table.showDecks(layout.message, layout.key);
                 await seated;
                 if (cancelEnter) return session;
-                showDock();
+                dock.show();
                 return session;
             } finally {
                 entering = false;
@@ -774,14 +749,7 @@ function createDoubleDealAdapter() {
             poses?.releaseFrame?.();
             session?.dispose();
             session = null;
-            if (specObjectUrl) {
-                URL.revokeObjectURL(specObjectUrl);
-                specObjectUrl = null;
-            }
-            if (root) {
-                root.classList.remove("on");
-                root.hidden = true;
-            }
+            dock.close();
             const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
             if (table && !reduced) {
                 clock = createBeatClock({ reduced: false });

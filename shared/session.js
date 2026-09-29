@@ -102,6 +102,8 @@ export async function openSpec(root, specUrl, heading, slice = (markdown) => mar
     }
 }
 
+export const teachPosition = (viewI, count) => `${Math.min(viewI + 1, count)} / ${count}`;
+
 export function renderTeachCard(teachCard, note, showSpec) {
     teachCard.replaceChildren();
     const kicker = document.createElement("p");

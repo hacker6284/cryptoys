@@ -99,13 +99,14 @@ theorem vhashAlg_collision : vhashAlg msgA = vhashAlg msgB := by
     dmBlock_iv_collision]
 
 /-- **IV-anchored collision of MegaDreifach v1 (generated `v_Hash`).** Two
-distinct well-formed 28-byte messages with the same digest. -/
+distinct well-formed 28-byte messages on which the generated `v_Hash` succeeds
+(`.ok`, no error branch) with the same digest `d`. -/
 theorem v_Hash_swap_collision :
     embed msgA ≠ embed msgB ∧
-      Megadreifach.v_Hash (embed msgA) = Megadreifach.v_Hash (embed msgB) := by
-  refine ⟨by decide, ?_⟩
-  rw [v_Hash_refines _ ⟨by unfold Byte; decide, by unfold FitsBitlen i64MaxNat; decide⟩,
-    v_Hash_refines _ ⟨by unfold Byte; decide, by unfold FitsBitlen i64MaxNat; decide⟩,
-    vhashAlg_collision]
+      ∃ d, Megadreifach.v_Hash (embed msgA) = .ok d ∧
+        Megadreifach.v_Hash (embed msgB) = .ok d := by
+  have wfA : PadWf msgA := ⟨by unfold Byte; decide, by unfold FitsBitlen i64MaxNat; decide⟩
+  have wfB : PadWf msgB := ⟨by unfold Byte; decide, by unfold FitsBitlen i64MaxNat; decide⟩
+  exact ⟨by decide, _, v_Hash_refines _ wfA, by rw [v_Hash_refines _ wfB, vhashAlg_collision]⟩
 
 end MegaDreifach.Security.SwapCollision

@@ -103,7 +103,7 @@ The invariant `WordInv` carries `Word W` (the shared word is a product of face m
 
 | theorem | content | axioms |
 |---|---|---|
-| **`SwapCollision.v_Hash_swap_collision`** | `embed M ≠ embed M' ∧ Megadreifach.v_Hash (embed M) = Megadreifach.v_Hash (embed M')` for the 28-byte pair of §3.3, about the **generated** `v_Hash` (via `v_Hash_refines`) | all three |
+| **`SwapCollision.v_Hash_swap_collision`** | `embed M ≠ embed M' ∧ ∃ d, Megadreifach.v_Hash (embed M) = .ok d ∧ Megadreifach.v_Hash (embed M') = .ok d` (both runs succeed, same digest) for the 28-byte pair of §3.3, about the **generated** `v_Hash` (via `v_Hash_refines`) | all three |
 | `SwapCollision.vhashAlg_collision` | The same for the algebraic hash `vhashAlg` | propext, Quot.sound |
 | `SwapCollision.dmBlock_iv_collision` | `dmBlock IV M = dmBlock IV M'`: the first compressions agree | propext, Quot.sound |
 | `SwapCollision.prefixA` / `prefixB` | Both 7-card prefixes of the deals lead from (IV-COOK12, identity grip) to the same position and grip | propext, Quot.sound |
@@ -123,7 +123,7 @@ These are the counting cores of the Black–Rogaway–Shrimpton Davies–Meyer b
 
 ### 1.5 Which results depend on the grip rule
 
-A transitive scan of constant dependencies over every theorem in `MegaDreifach.Security` (128 declared in the source; 159 theorem constants including the ones Lean generates, all of which the axiom audit covers) finds 15 that use `recipeA_sameCorners` (the corner-only read). All are in `CornerDriven.lean` and `FreeStart.lean`: `recipeA_sameCorners` itself, `wordInv_g2Step`, `wordInv_f3Step`, `wordInv_f3Iter`, `wordInv_foldl`, `emBlock_wordInv`, `emBlock_word`, `emBlock_is_leftMul`, `dmStep_word`, `dmStep_sameCorners`, `foldl_dmBlock_sameCorners`, `corner_collision_extends`, `digest_top_collision`, `emBlock_word_legal`, `dmStep_pseudo_collision`. `SwapCollision.lean` does not use it (it evaluates `Em` directly).
+A transitive scan of constant dependencies over every theorem in `MegaDreifach.Security` (128 declared in the source; the axiom audit reports 165 theorem constants declared in the Security modules, counting the equation and match lemmas Lean generates) finds 15 that use `recipeA_sameCorners` (the corner-only read). All are in `CornerDriven.lean` and `FreeStart.lean`: `recipeA_sameCorners` itself, `wordInv_g2Step`, `wordInv_f3Step`, `wordInv_f3Iter`, `wordInv_foldl`, `emBlock_wordInv`, `emBlock_word`, `emBlock_is_leftMul`, `dmStep_word`, `dmStep_sameCorners`, `foldl_dmBlock_sameCorners`, `corner_collision_extends`, `digest_top_collision`, `emBlock_word_legal`, `dmStep_pseudo_collision`. `SwapCollision.lean` does not use it (it evaluates `Em` directly).
 
 | file | grip rule | what needs repair if E_m changes |
 |---|---|---|

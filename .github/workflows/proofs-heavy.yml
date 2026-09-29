@@ -39,6 +39,7 @@ jobs:
     outputs:
       doubledeal: ${{ steps.filter.outputs.doubledeal }}
       megadreifach: ${{ steps.filter.outputs.megadreifach }}
+      megadreifach_attack: ${{ steps.filter.outputs.megadreifach_attack }}
     steps:
       # Only PR / push events are filtered; on schedule and workflow_dispatch the
       # filter is skipped (empty outputs) and all heavy jobs run via their `if:`.
@@ -64,6 +65,14 @@ jobs:
               - "proofs/audit/**"                    # the shared #audit_all package
               - "proofs/doubledeal/security/checks/scan_sorry.py"  # the shared sorry gate
               - ".github/workflows/proofs-heavy.yml"
+            # megadreifach-attack-logs is Python only: its scripts, logs and md.py, the
+            # KAT JSON md.py checks against, and the shared log writer/checker. The
+            # Lean package and the axiom / audit / sorry gates are not inputs to it.
+            megadreifach_attack:
+              - "proofs/megadreifach/security/**"    # scripts, md.py, tables.py, logs/
+              - "primitives/hash/megadreifach/**"    # the KAT JSON md.py checks against
+              - "tools/gencheck.py"                  # --log / --check convention
+              - ".github/workflows/proofs-heavy.yml"
 
   doubledeal-security-heavy:
     needs: changes
@@ -86,11 +95,11 @@ jobs:
   megadreifach-attack-logs:
     # Python only (no Lean): the MegaDreifach attack scripts against their committed
     # logs (proofs/megadreifach/security/logs/), so the numbers in security/REPORT.md
-    # are reproducible and a mismatch fails. Same path gate as megadreifach-heavy.
+    # are reproducible and a mismatch fails. Own path set (megadreifach_attack).
     needs: changes
     if: >-
       github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
-      needs.changes.outputs.megadreifach == 'true'
+      needs.changes.outputs.megadreifach_attack == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -99,6 +108,8 @@ jobs:
         run: python3 proofs/megadreifach/security/logs.py --check
       - name: Swap-collision report-size runs match logs/suit_blind_collision_full.log (all cores; ~20 CPU-min)
         run: python3 proofs/megadreifach/security/suit_blind_collision.py --check --full
+      - name: Cause control, read before the noon turn (REPORT §3.5; ~4 CPU-min)
+        run: python3 proofs/megadreifach/security/suit_blind_collision.py --check --variant pre-noon
 
   megadreifach-heavy:
     needs: changes

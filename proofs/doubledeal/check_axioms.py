@@ -171,9 +171,11 @@ MD_LEAN = ROOT.parent / "megadreifach" / "lean"
 MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"
 
 # Every theorem that proofs/megadreifach/README.md cites by name (backticked), resolved
-# against the built library (projection names like `cp` / `ep` excluded). Rule: a README
-# citation must stay present and pass the axiom audit, so renaming or deleting a cited
-# theorem fails the default gate. Regenerate this list when the README changes.
+# against the default library's sources (structure fields like `cp` / `ep` are not
+# theorem declarations, so they drop out). Rule: a README citation must stay present and
+# pass the axiom audit, so renaming or deleting a cited theorem fails the default gate.
+# `check_axioms.py --selftest` re-derives the list (md_readme_cited) and fails if it
+# differs from this set; update both together when the README changes.
 MD_README_THEOREMS = {
     "MegaDreifach.Link2.big_add_byte",
     "MegaDreifach.Link2.big_add_nat",
@@ -334,34 +336,9 @@ PACKAGES = {
         "key": "full",
         "known_sorry": set(),
         "min": 500,  # sanity: the audit must actually see the library
-        # Required: every theorem the MegaDreifach README cites (MD_README_THEOREMS),
-        # plus the Link 2 and Security headlines below (some are also cited).
-        "required": MD_README_THEOREMS | {
-            "MegaDreifach.Link2.v_Hash_refines",
-            "MegaDreifach.Link2.v_Hash_refines_array",
-            "MegaDreifach.Link2.v_MegaDreifach_refines",
-            "MegaDreifach.Link2.v_Hash_eq_hashBlocks",
-            "MegaDreifach.Link2.em_block_refines",
-            "MegaDreifach.Link2.position_to_bytes_refines_gen",
-            "MegaDreifach.Link2.even_perm_rank_big_refines_gen",
-            "MegaDreifach.Link2.big_mul_gen_refines",
-            "MegaDreifach.Link2.phi_chunk_refines",
-            "MegaDreifach.Link2.pad_message_refines",
-            # MegaDreifach/Security/ (rule-independent reduction and M3 glue)
-            "MegaDreifach.Security.md_collision",
-            "MegaDreifach.Security.pad_suffix_free",
-            "MegaDreifach.Security.extract_collision_comp",
-            "MegaDreifach.Security.v_Hash_collision_comp",
-            "MegaDreifach.Security.evenRank_inj",
-            "MegaDreifach.Security.isLegal_chR",
-            "MegaDreifach.Security.positionToBytes_inj_reachable",
-            "MegaDreifach.Security.dm_forward_bad_count",
-            # MegaDreifach/Security/ (weaknesses of the v1 grip rule, Recipe A)
-            "MegaDreifach.Security.emBlock_word",
-            "MegaDreifach.Security.digest_top_collision",
-            "MegaDreifach.Security.dmStep_pseudo_collision",
-            "MegaDreifach.Security.SwapCollision.v_Hash_swap_collision",
-        },
+        # Required: every theorem the MegaDreifach README cites (MD_README_THEOREMS; the
+        # selftest re-derives that list from the README and the Lean sources).
+        "required": MD_README_THEOREMS,
     },
     "megadreifach-heavy": {
         "dir": MD_LEAN,
@@ -408,6 +385,53 @@ def heavy_registry_problems(reg):
     if not src:
         bad.append(f"no theorems found in {where} (heavy target missing?)")
     return bad
+
+
+MD_README = MD_LEAN.parent / "README.md"
+_DECL = re.compile(r"^\s*(?:@\[[^\]]*\]\s*)?((?:(?:private|protected|noncomputable)\s+)*)"
+                   r"(?:theorem|lemma)\s+([^\s(:{\[]+)")
+_SCOPE = re.compile(r"^\s*(namespace|section|mutual|end)\b\s*([\w.']*)")
+
+
+def lean_source_theorems(root, skip=("Generated", "MegaDreifachHeavy", ".lake")):
+    """Public theorem names declared under `root`, fully qualified by tracking the
+    namespace / section / mutual / end scopes (comments stripped). No Lean needed."""
+    names = set()
+    for path in sorted(root.rglob("*.lean")):
+        if any(part in skip for part in path.relative_to(root).parts):
+            continue
+        text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
+        stack = []  # entries: list of namespace components ([] for section / mutual)
+        for line in text.splitlines():
+            line = line.split("--", 1)[0]
+            m = _SCOPE.match(line)
+            if m:
+                kind, arg = m.groups()
+                if kind == "namespace":
+                    stack.append(arg.split("."))
+                elif kind in ("section", "mutual"):
+                    stack.append([])
+                elif stack:
+                    stack.pop()
+                continue
+            d = _DECL.match(line)
+            if d and "private" not in d.group(1):
+                names.add(".".join([c for e in stack for c in e] + [d.group(2)]))
+    return names
+
+
+def md_readme_cited(readme=MD_README, root=MD_LEAN):
+    """The README's backticked identifiers that name a theorem of the default library
+    (the token equals the name or a dotted suffix of it; must be unambiguous)."""
+    tokens = set(re.findall(r"`([A-Za-z_][\w.']*)`", readme.read_text()))
+    decls = lean_source_theorems(root)
+    cited, bad = set(), []
+    for t in sorted(tokens):
+        hits = {n for n in decls if n == t or n.endswith("." + t)}
+        if len(hits) > 1:
+            bad.append(f"README token `{t}` is ambiguous: {sorted(hits)}")
+        cited |= hits
+    return cited, bad
 
 
 REPORT = re.compile(r"'(\S+?)' depends on axioms: \[([^\]]*)\]")
@@ -458,6 +482,17 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} key={'full' if full else 'user'} "
               f"{names}: {len(bad)} problem(s), expected {want}")
+    # MD_README_THEOREMS must be exactly the theorems the MegaDreifach README cites.
+    cited, bad = md_readme_cited()
+    for b in bad:
+        print(f"check_axioms selftest: FAIL {b}")
+    missing, extra = sorted(cited - MD_README_THEOREMS), sorted(MD_README_THEOREMS - cited)
+    ok = not bad and not missing and not extra
+    failed += not ok
+    print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} MD_README_THEOREMS matches the "
+          f"{len(cited)} theorems cited in {MD_README.relative_to(ROOT.parent.parent)}"
+          + (f"; cited but not listed: {missing}" if missing else "")
+          + (f"; listed but not cited: {extra}" if extra else ""))
     return 1 if failed else 0
 
 

@@ -97,7 +97,7 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
   more than one module declares, including an identical redeclaration of a Mathlib or
   core name (Lean 4.14 merges identical imported theorems silently). Reserved
   (auto-generated) names are skipped. `checks/audit_dup_selftest.py` (CI) builds
-  throwaway modules and requires exactly two DUPs (an identical `isDeck_mixColumns`, and
+  throwaway modules (in a temporary copy of the packages, not the source tree) and requires exactly two DUPs (an identical `isDeck_mixColumns`, and
   a user-declared `zfxH.eq_1`) and none for the on-demand reserved `zfxF.eq_unfold` /
   `zfxF.induct`.
 

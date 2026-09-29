@@ -272,6 +272,21 @@ theorem round_le_of_v10Sym (p : ℕ) (hp : p ≤ 64)
     exact hsym a x (ne_zero_of_ne_one h1 rfl)
   · exact (Nat.mul_le_mul_right _ hp).trans (round_le_64_of_not_v10Sym σ hs)
 
+/-- (PROVED, unconditional) One round, every `σ ≠ 1`: the characteristic count is at
+    most `52!/26`. -/
+theorem round_le_26 (σ : Relabel) (h1 : σ ≠ 1) :
+    26 * roundCharCount σ ≤ Nat.factorial 52 :=
+  round_le_of_v10Sym 26 (by norm_num) round_le_26_v10Sym σ h1
+
+/-- (PROVED, given the two finite GridCycle checks as hypotheses) One round, every
+    `σ ≠ 1`: the characteristic count is at most `52!/64`. -/
+theorem round_le_64_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
+    (σ : Relabel) (h1 : σ ≠ 1) :
+    64 * roundCharCount σ ≤ Nat.factorial 52 :=
+  round_le_of_v10Sym 64 le_rfl (fun a x hne =>
+    (Nat.mul_le_mul_right _ (by norm_num : (64 : ℕ) ≤ 4420)).trans
+      (round_le_4420_v10Sym_of_check hKC hKS a x hne)) σ h1
+
 /-! ## R-round statements -/
 
 /-- (PROVED, unconditional) Every `σ ≠ 1`, independent uniform round keys: from every
@@ -281,8 +296,7 @@ theorem trail_card_le_26 (σ : Relabel) (h1 : σ ≠ 1) (R : ℕ) (y : Fin 52 �
     (hy : IsDeck y) :
     26 ^ R * (univ.filter fun K : Fin R → Key => Trail σ R y K).card ≤
       Nat.factorial 52 ^ R :=
-  trail_card_le_of_round σ 26
-    (round_le_of_v10Sym 26 (by norm_num) round_le_26_v10Sym σ h1) R y hy
+  trail_card_le_of_round σ 26 (round_le_26 σ h1) R y hy
 
 /-- (PROVED, unconditional) `σ ∉ v10Sym`: probability at most `(1/64)^R`. -/
 theorem trail_card_le_64_of_not_v10Sym (σ : Relabel) (h : ¬ ∃ a x, σ = v10Sym a x)
@@ -306,9 +320,6 @@ theorem trail_card_le_64_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (σ : Relabel) (h1 : σ ≠ 1) (R : ℕ) (y : Fin 52 → Nat) (hy : IsDeck y) :
     64 ^ R * (univ.filter fun K : Fin R → Key => Trail σ R y K).card ≤
       Nat.factorial 52 ^ R :=
-  trail_card_le_of_round σ 64
-    (round_le_of_v10Sym 64 le_rfl (fun a x hne =>
-      (Nat.mul_le_mul_right _ (by norm_num : (64 : ℕ) ≤ 4420)).trans
-        (round_le_4420_v10Sym_of_check hKC hKS a x hne)) σ h1) R y hy
+  trail_card_le_of_round σ 64 (round_le_64_of_check hKC hKS σ h1) R y hy
 
 end DoubleDeal.Security.TrailBound

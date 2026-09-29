@@ -102,6 +102,8 @@ HEAVY_THEOREMS = {
     # DoubleDealSecurityHeavy/TrailBound.lean (unconditional multi-round characteristic bounds)
     "DoubleDeal.Security.TrailBound.trail_card_le_64",
     "DoubleDeal.Security.TrailBound.trail_card_le_4420_v10Sym",
+    # DoubleDealSecurityHeavy/RealSchedule.lean (real PassKey schedule; one round's bound)
+    "DoubleDeal.Security.RealSchedule.realTrail_card_le_64",
     # DoubleDealSecurityHeavy/CovariantNarrow.lean and the generated CovariantNarrowChecks.lean
     # (check_e*, checks_all: cell0_witness.py --lean): the covariant round conjecture for
     # every transposition, and the reduction to the remaining prime-order case
@@ -320,6 +322,17 @@ PACKAGES = {
             "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime",
             "DoubleDeal.Security.CovariantNarrow.not_covariant_swap_of_check",
             "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff_of_check",
+            # RealSchedule (roadmap M5): real PassKey schedule
+            "DoubleDeal.Security.RealSchedule.masterList_injective",
+            "DoubleDeal.Security.RealSchedule.masterList_surjective",
+            "DoubleDeal.Security.RealSchedule.encryptDeckFn_masterList",
+            "DoubleDeal.Security.RealSchedule.card_roundKey",
+            "DoubleDeal.Security.RealSchedule.card_image_roundKey_pair",
+            "DoubleDeal.Security.RealSchedule.card_image_roundKey_pair_lt",
+            "DoubleDeal.Security.RealSchedule.card_roundKey_top_eq",
+            "DoubleDeal.Security.RealSchedule.realTrail_card_le_26",
+            "DoubleDeal.Security.RealSchedule.realTrail_card_le_64_of_not_v10Sym",
+            "DoubleDeal.Security.RealSchedule.realTrail_card_le_64_of_check",
         },
     },
     "security-heavy": {

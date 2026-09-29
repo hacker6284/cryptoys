@@ -66,6 +66,12 @@ theorem onPile_perm (f : List α → List α) (hf : ∀ xs, List.Perm (f xs) xs)
   by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;>
     simp [onPile, hH, hK, hf, List.Perm.append_left, List.Perm.append_right]
 
+/-- The hand alone: `onPile` leaves the first pile a permutation of the hand (it applies
+    `f` to it, or leaves it alone). -/
+theorem onPile_fst_perm (f : List α → List α) (hf : ∀ xs, List.Perm (f xs) xs)
+    (hand key : List α) : List.Perm (onPile fits f hand key).1 hand := by
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;> simp [onPile, hH, hK, hf]
+
 theorem length_onPile_fst (f : List α → List α) (hf : ∀ xs, (f xs).length = xs.length)
     (hand key : List α) : (onPile fits f hand key).1.length = hand.length := by
   by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;> simp [onPile, hH, hK, hf]
@@ -153,6 +159,14 @@ theorem passKeyStep_perm (hand key : List Nat) (c : Nat) :
   refine (hc.cons c).trans ?_
   refine (hr.cons c).trans ?_
   simp [List.cons_append]
+
+/-- The hand alone: one PassKey step leaves the hand a permutation of itself (the deal
+    and the cut only reorder a pile; the controller goes on the key pile). -/
+theorem passKeyStep_fst_perm (hand key : List Nat) (c : Nat) :
+    List.Perm (passKeyStep hand key c).1 hand :=
+  (onPile_fst_perm _ (cutProper · (rank c)) (cutProper_perm · _)
+      (maybeDeal hand key c).1 (maybeDeal hand key c).2).trans
+    (onPile_fst_perm _ (dealUnder · (dealCount c)) (dealUnder_perm · _) hand key)
 
 /-- Fuel-indexed PassKey recursion (avoids structural-recursion friction). -/
 def passKeyGoN : Nat → List Nat → List Nat → List Nat

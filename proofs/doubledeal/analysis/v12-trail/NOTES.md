@@ -91,7 +91,7 @@ Reproduce: `python3 round_char.py > round_char.log` (about 4 min on one core).
 
 ## Open
 
-* The real PassKey schedule (dependent keys): nothing proved.
+* The real PassKey schedule (dependent keys): only one round's bound is proved (M5, `../v12-keysched/NOTES.md`, `RealSchedule.lean`): ≤ 1/64 for every R. The proved bound gains nothing beyond round 1 (weaker than (1/64)^R, because from round 1 on the round key is not uniform given the state); a limit of the proof, not a measured weakness. For R ≥ 2 nothing rules out a probability above (1/64)^R.
 * The differential (sum over characteristics), including changing differences.
 * A whole-walk GridCycle bound for small-support τ.
 * The final no-mix round, and the link of `rounds` to `encryptN`.

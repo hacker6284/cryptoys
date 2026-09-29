@@ -1,0 +1,6 @@
+s=1 mean adjacent 1.0930 (fwd 0.5453, bwd 0.5477); most common offset +4 with P=0.0190 (uniform over the 102 nonzero offsets would be ~0.0192 at small |d|)
+s=2 mean adjacent 1.9862 (fwd 0.9925, bwd 0.9937); most common offset -1 with P=0.0195 (uniform over the 102 nonzero offsets would be ~0.0192 at small |d|)
+s=3 mean adjacent 1.9619 (fwd 0.9815, bwd 0.9804); most common offset +1 with P=0.0192 (uniform over the 102 nonzero offsets would be ~0.0192 at small |d|)
+s=4 mean adjacent 1.9616 (fwd 0.9807, bwd 0.9810); most common offset -1 with P=0.0192 (uniform over the 102 nonzero offsets would be ~0.0192 at small |d|)
+s=5 mean adjacent 1.9607 (fwd 0.9797, bwd 0.9810); most common offset -1 with P=0.0192 (uniform over the 102 nonzero offsets would be ~0.0192 at small |d|)
+s=6 mean adjacent 1.9613 (fwd 0.9802, bwd 0.9811); most common offset -1 with P=0.0192 (uniform over the 102 nonzero offsets would be ~0.0192 at small |d|)

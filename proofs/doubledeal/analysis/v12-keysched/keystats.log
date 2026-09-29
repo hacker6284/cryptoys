@@ -1,0 +1,6 @@
+N = 20000004 uniform K0
+s=1: seat-transition chi2 = 827333 (df 2601; 99.9% point of chi2_2601 ~ 2840); max cell/uniform = 1.213 at seat 0->12, min = 0.000 at 0->0; pooled MI = 8.37e-04 bits (sampling bias ~ 1.8e-06); mean fixed seats 0.9825 (random perm: 1); mean cycles of relative perm 4.5065 (random: 4.5380)
+s=2: seat-transition chi2 = 3124 (df 2601; 99.9% point of chi2_2601 ~ 2840); max cell/uniform = 1.027 at seat 0->0, min = 0.994 at 0->11; pooled MI = 2.17e-06 bits (sampling bias ~ 1.8e-06); mean fixed seats 1.0007 (random perm: 1); mean cycles of relative perm 4.5391 (random: 4.5380)
+s=3: seat-transition chi2 = 2532 (df 2601; 99.9% point of chi2_2601 ~ 2840); max cell/uniform = 1.005 at seat 19->37, min = 0.994 at 28->17; pooled MI = 1.76e-06 bits (sampling bias ~ 1.8e-06); mean fixed seats 1.0004 (random perm: 1); mean cycles of relative perm 4.5378 (random: 4.5380)
+per-card seat-transition chi2 (s=1, df ~2601 each; uniform-joint null): min 17942 (8S) median 18560 max 20935 (KD)
+repeated relative permutations among the first 200000 samples per seed and s (6 seeds): 0 of 3600000 lines

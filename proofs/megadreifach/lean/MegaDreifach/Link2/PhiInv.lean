@@ -857,7 +857,7 @@ def magCmpStep (a b : Array Int) (σ : Int) : Except SudoRt.Trap (SudoRt.Flow In
           Except SudoRt.Trap (SudoRt.Flow Unit Int)) with
       | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
       | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) i)
-      | .cont fs => do
+      | .cont _fs => do
           if i == (0 : Int) then
             pure (SudoRt.Flow.brk (ρ := Int) i)
           else do

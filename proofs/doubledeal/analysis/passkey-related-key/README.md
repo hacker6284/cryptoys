@@ -6,7 +6,7 @@
 
 Analysis only. Nothing here changes the SPEC, the sudo, or the Lean. No bit-security claims. DoubleDeal makes no
 cryptographic security claim. Every number below comes from a log in `logs/`. Each log starts with its producing
-command, and `run_all.sh` regenerates all of them (~25 min on 8 cores; seeds fixed).
+command, and `run_all.sh` regenerates all of them (~30 min on 8 cores; seeds fixed).
 
 ## Summary
 
@@ -96,6 +96,11 @@ for all 1326 swaps; every measured value is within about 0.005 of its lower boun
 | 11 | 40 | 10/17 = 0.5882 | |
 | 12 | 39 | 19/34 = 0.5588 | |
 | 13 | 38 | 703/1326 = 0.5302 | K♣↔Q♥ 0.5338, K♠↔Q♦ 0.5324, … |
+
+The bound is tight for the worst pairs. At N = 50k keys per swap, σ = √(p(1 − p)/N) ≈ 0.00142, and the
+measured 2♣↔A♥ 0.8857, 2♥↔A♠ 0.8856 and 2♠↔A♦ 0.8846 sit 0.8–1.6σ below 196/221 = 0.8869. `colliders.py`
+finds no colliding steps beyond E ("extra 0"). SPEC.md, `proofs/README.md` and `proofs/deprecated/README.md`
+link here rather than repeat these figures.
 
 The classes are v = 2 (2♣ A♥), v = 3 (3♣ 2♥ A♠), v = 4..13 (four cards each, e.g. v = 13: K♣ Q♥ J♠ T♦), v = 14
 (K♥ Q♠ J♦) and v = 15 (K♠ Q♦). That is 1 + 3 + 10·6 + 3 + 1 = 68 pairs. The non-colliding swaps have e ≤ 3 (their

@@ -62,7 +62,8 @@ private theorem fromBE_lt_pow_len (bs : List Nat) (hb : ∀ b ∈ bs, b < 256) :
   rw [fromBE_eq_oriAcc]
   exact oriAcc_lt (r := 256) bs hb bs.length (Nat.le_refl _)
 
-private theorem pow256_28_eq_phiMax : (256 : Nat) ^ 28 = phiMax := by
+/-- `256^28 = 2^224 = phiMax`. Shared with `PhiInv`. -/
+theorem pow256_28_eq_phiMax : (256 : Nat) ^ 28 = phiMax := by
   have h256 : (256 : Nat) = 2 ^ 8 := by decide
   unfold phiMax
   rw [h256, ← Nat.pow_mul]

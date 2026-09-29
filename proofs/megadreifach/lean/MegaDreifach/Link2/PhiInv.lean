@@ -484,11 +484,6 @@ private theorem phiInvFinish51
 
 /-! ## Numeric bounds for the step -/
 
-theorem pow256_28_eq_phiMax : (256 : Nat) ^ 28 = phiMax := by
-  have h256 : (256 : Nat) = 2 ^ 8 := by decide
-  unfold phiMax
-  rw [h256, ← Nat.pow_mul]
-
 theorem phiMax_lt_limb8 : phiMax < limbBase ^ 8 := by
   rw [← pow256_28_eq_phiMax]
   exact pow256_28_lt_limb8

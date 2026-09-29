@@ -104,6 +104,9 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.TrailBound.trail_card_le_4420_v10Sym",
     # DoubleDealSecurityHeavy/RealSchedule.lean (real PassKey schedule; one round's bound)
     "DoubleDeal.Security.RealSchedule.realTrail_card_le_64",
+    # DoubleDealSecurityHeavy/Differential.lean (paths inside v10Sym only; not the differential)
+    "DoubleDeal.Security.Differential.staysInV10_card_le_4420",
+    "DoubleDeal.Security.Differential.realStaysInV10_card_le_4420",
     # DoubleDealSecurityHeavy/CovariantNarrow.lean and the generated CovariantNarrowChecks.lean
     # (check_e*, checks_all: cell0_witness.py --lean): the covariant round conjecture for
     # every transposition, and the reduction to the remaining prime-order case
@@ -324,7 +327,7 @@ PACKAGES = {
             "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff_of_check",
             # RealSchedule (roadmap M5): real PassKey schedule
             "DoubleDeal.Security.RealSchedule.masterList_injective",
-            "DoubleDeal.Security.RealSchedule.masterList_surjective",
+            "DoubleDeal.Security.RealSchedule.exists_masterList_eq",
             "DoubleDeal.Security.RealSchedule.encryptDeckFn_masterList",
             "DoubleDeal.Security.RealSchedule.card_roundKey",
             "DoubleDeal.Security.RealSchedule.card_image_roundKey_pair",
@@ -333,6 +336,34 @@ PACKAGES = {
             "DoubleDeal.Security.RealSchedule.realTrail_card_le_26",
             "DoubleDeal.Security.RealSchedule.realTrail_card_le_64_of_not_v10Sym",
             "DoubleDeal.Security.RealSchedule.realTrail_card_le_64_of_check",
+            # TrailBound (roadmap M2): multi-round characteristic, independent keys
+            "DoubleDeal.Security.TrailBound.trail_rounds_rel",
+            "DoubleDeal.Security.TrailBound.trail_card_le_of_round",
+            "DoubleDeal.Security.TrailBound.round_le_26",
+            "DoubleDeal.Security.TrailBound.round_le_64_of_check",
+            "DoubleDeal.Security.TrailBound.trail_card_le_26",
+            "DoubleDeal.Security.TrailBound.trail_card_le_64_of_not_v10Sym",
+            "DoubleDeal.Security.TrailBound.trail_card_le_64_of_check",
+            "DoubleDeal.Security.TrailBound.trail_card_le_4420_v10Sym_of_check",
+            # Differential (roadmap M6): structure only; no numeric bound on the differential
+            "DoubleDeal.Security.Differential.diff_of_trail",
+            "DoubleDeal.Security.Differential.card_trail_le_diffCount",
+            "DoubleDeal.Security.Differential.diffCount_eq_of_isDeck",
+            "DoubleDeal.Security.Differential.diffCount_succ",
+            "DoubleDeal.Security.Differential.diffCount_one",
+            "DoubleDeal.Security.Differential.sum_dp1Count",
+            "DoubleDeal.Security.Differential.sum_diffCount",
+            "DoubleDeal.Security.Differential.diffCount_one_left",
+            "DoubleDeal.Security.Differential.diffCount_to_one",
+            "DoubleDeal.Security.Differential.diffCount_le_of_dp1Count",  # HOLLOW CONDITIONAL
+            "DoubleDeal.Security.Differential.dp1Count_v10Sym_le_agree",
+            "DoubleDeal.Security.Differential.dp1Count_v10Sym_v10Sym_eq_zero",
+            "DoubleDeal.Security.Differential.staysInV10_iff_trail",
+            "DoubleDeal.Security.Differential.staysInV10_card_le_26",
+            "DoubleDeal.Security.Differential.staysInV10_card_le_4420_of_check",
+            "DoubleDeal.Security.Differential.realStaysInV10_card_le_26",
+            "DoubleDeal.Security.Differential.realStaysInV10_card_le_4420_of_check",
+            "DoubleDeal.Security.Differential.realDiffCount_one",
         },
     },
     "security-heavy": {

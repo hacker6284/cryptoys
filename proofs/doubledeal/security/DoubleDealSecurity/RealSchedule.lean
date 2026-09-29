@@ -4,7 +4,7 @@
 
   Model. The master key is a uniform `π : Equiv.Perm (Fin 52)`, injected into key decks
   by `masterList` (seat `i` holds card `π i`; `masterList_injective`). Its image is
-  exactly the 52-card key decks (`masterList_surjective`), so counting over `π` is
+  exactly the 52-card key decks (`exists_masterList_eq`), so counting over `π` is
   counting over key decks. Round key `i` is `roundKey i π`, the position map
   `keyPos (F^i K0)` of the `i`-th PassKey iterate `F^i K0 = passKeyIter i (masterList π)`.
   These are exactly the keys `encryptDeckFn` uses (`encryptDeckFn_masterList`): `K_0`
@@ -103,7 +103,7 @@ theorem masterList_injective : Function.Injective masterList := fun _ _ h =>
 
 /-- `masterList` is onto the 52-card key decks: every `Perm52` list is `masterList π`
     for some `π`. With `masterList_injective`, a uniform `π` is a uniform key deck. -/
-theorem masterList_surjective {L : List Nat} (hL : Perm52 L) : ∃ π, masterList π = L := by
+theorem exists_masterList_eq {L : List Nat} (hL : Perm52 L) : ∃ π, masterList π = L := by
   have hd : IsDeck (ofDeck L hL.length) := by
     refine ⟨fun i => hL.bounded _ (List.getElem_mem _), fun i j h => ?_⟩
     exact Fin.ext ((List.Nodup.getElem_inj_iff hL.nodup).1 h)
@@ -217,7 +217,7 @@ theorem roundKey_symm_zero (i : ℕ) (π : Equiv.Perm (Fin 52)) :
     some ((roundKey i π).symm 0).val = (passKeyIter i (masterList π)).head? := by
   have hk := passKeyIter_perm52 _ (perm52_masterList π) i
   show some (keyInvPos (passKeyIter i (masterList π)) 0).val = _
-  match hL : passKeyIter i (masterList π), hk with
+  match passKeyIter i (masterList π), hk with
   | [], hk => exact absurd hk.length (by simp)
   | c :: _, hk =>
     have hc : c < 52 := hk.bounded c (List.mem_cons_self _ _)

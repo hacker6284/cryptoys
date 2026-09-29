@@ -11,7 +11,7 @@ only; no theorem uses these numbers). Nothing here is a security or bit-security
 
 * Master key: a uniform π : Perm (Fin 52), injected into key decks by `masterList`
   (`masterList_injective`; its image is exactly the 52-card key decks,
-  `masterList_surjective`).
+  `exists_masterList_eq`).
 * `encryptDeckFn_masterList`: the real round keys `roundKey i π` are the keys of `encryptDeckFn`.
 * `card_roundKey`: each single round key is uniform (uniform master key).
 * `card_image_roundKey_pair` / `_lt`: for any two rounds r ≠ s, the pair (K_r, K_s) takes

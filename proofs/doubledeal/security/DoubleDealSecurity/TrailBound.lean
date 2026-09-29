@@ -32,6 +32,9 @@
     `52!/p` decks, then for EVERY deck `y`, `p^R · #{K | Trail σ R y K} ≤ (52!)^R`.
   * `round_le_of_v10Sym`: the one-round `σ ≠ 1` case split, for any `p ≤ 64`
     (SumRanks outside `v10Sym`, a supplied bound on the nontrivial `v10Sym`).
+  * `round_le_26`: one round, every `σ ≠ 1` (unconditional), `26 · roundCharCount σ ≤ 52!`.
+  * `round_le_64_of_check`: one round, every `σ ≠ 1`, `64 · roundCharCount σ ≤ 52!`, GIVEN
+    the two finite GridCycle checks as hypotheses.
   * `trail_card_le_26`: for every `σ ≠ 1` (unconditional), `26^R · # ≤ (52!)^R`.
   * `trail_card_le_64_of_not_v10Sym`: `σ ∉ v10Sym`, `64^R · # ≤ (52!)^R`.
   * `trail_card_le_64_of_check`: every `σ ≠ 1`, `64^R · # ≤ (52!)^R`, GIVEN the two

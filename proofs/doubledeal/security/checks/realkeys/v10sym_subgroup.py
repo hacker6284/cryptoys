@@ -7,6 +7,7 @@ SumRanks on random grids (the proved "if" direction), and a witness table for th
 heavy Lean library (identity key, identity message); realkey_to_lean.py writes that
 table into DoubleDealSecurityHeavy/RealKey.lean."""
 import sys, pathlib, random
+from typing import NamedTuple
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import ddport as P
 v10sym = P.v10sym
@@ -19,15 +20,20 @@ def power(s, n):
     for _ in range(n): r = comp(s, r)
     return r
 WITNESS_AX = [(1, 0), (0, 1), (0, 2), (0, 3)]
+class Witness(NamedTuple):
+    """One identity-key encryption for the heavy Lean witness table."""
+    name: str          # Lean theorem name
+    doc: str           # docstring stem ("<doc>, identity master key.")
+    message: str       # Lean term for the message deck
+    cipher: list       # v12 encrypt of that message under the identity key
 def witnesses():
-    """(Lean theorem name, doc, Lean message, v12 encrypt under the identity key) for the
-    identity message and the four v10Sym witnesses. realkey_to_lean.py writes these into
-    DoubleDealSecurityHeavy/RealKey.lean."""
+    """The identity message and the four v10Sym witnesses, as Witness tuples.
+    realkey_to_lean.py writes these into DoubleDealSecurityHeavy/RealKey.lean."""
     idK = list(range(52))
-    out = [('realKey_enc_id', 'Identity message', 'idDeck', P.encrypt(list(range(52)), idK, 12))]
+    out = [Witness('realKey_enc_id', 'Identity message', 'idDeck', P.encrypt(list(range(52)), idK, 12))]
     for a, x in WITNESS_AX:
-        out.append((f'realKey_enc_v10Sym{a}{x}', f'Message `v10Sym {a} {x} · id`',
-                    f'(rel (v10Sym {a} {x}) idDeck)', P.encrypt(G[(a, x)], idK, 12)))
+        out.append(Witness(f'realKey_enc_v10Sym{a}{x}', f'Message `v10Sym {a} {x} · id`',
+                           f'(rel (v10Sym {a} {x}) idDeck)', P.encrypt(G[(a, x)], idK, 12)))
     return out
 if __name__ == '__main__':
     assert all(sorted(s) == list(range(52)) for s in G.values())
@@ -44,8 +50,9 @@ if __name__ == '__main__':
             assert P.sum_ranks_v10([[s[c] for c in row] for row in g]) == \
                 [[s[c] for c in row] for row in P.sum_ranks_v10(g)]
     print("ok: every v10Sym commutes with v10 SumRanks on 300 random decks")
-    (_, _, _, base), *rest = witnesses()
+    ident, *rest = witnesses()
+    base = ident.cipher
     print("enc id:", base)
-    for ax, (_, _, _, c) in zip(WITNESS_AX, rest):
+    for ax, w in zip(WITNESS_AX, rest):
         s = G[ax]
-        print(f"enc v10Sym {ax[0]} {ax[1]}:", c, "breaks:", c != [s[y] for y in base])
+        print(f"enc v10Sym {ax[0]} {ax[1]}:", w.cipher, "breaks:", w.cipher != [s[y] for y in base])

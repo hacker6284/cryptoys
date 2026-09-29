@@ -271,8 +271,9 @@ theorem card_T03_le : T03.card ≤ 30 :=
   (List.toFinset_card_le _).trans (by simp [LKC, LKS])
 
 /-- A start card `c0` and a list `L` of pairs give triples of distinct cards. Checked
-    through `List.all`: kernel `decide!` of the `∀ p ∈ L` form takes ~8 s with Mathlib's
-    instances, `decide` of the `List.all` form is immediate. -/
+    through `List.all`: with Mathlib imported, kernel `decide!` of the `∀ p ∈ L` form takes
+    7.9 s for each of `LKC` and `LKS`, `decide` of the `List.all` form about 5 ms (profiler
+    type-checking times, Lean 4.14). -/
 theorem distinct_of_all (c0 : Fin 52) (L : List (Fin 52 × Fin 52))
     (h : (L.all fun p => decide (c0 ≠ p.1 ∧ c0 ≠ p.2 ∧ p.1 ≠ p.2)) = true) :
     ∀ p ∈ L, c0 ≠ p.1 ∧ c0 ≠ p.2 ∧ p.1 ≠ p.2 :=
@@ -314,17 +315,12 @@ theorem gcSurvives_v03_T03 (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
 
 /-! ### Counting decks by their first three cards
 
-Instances of the shared counting lemmas (`PermCount.fibre3_card_eq`,
-`PermCount.count_triples_of`, `PermCount.card_distinct_triples_eq`). -/
+Instances of the shared counting lemmas (`PermCount.count_triples_of`,
+`PermCount.card_distinct_triples_eq`). -/
 
-/-- Decks with first cards `(0, 1, 2)`; every distinct triple has as many. -/
+/-- Decks with first cards `(0, 1, 2)`; every distinct triple has as many
+    (`PermCount.fibre3_card_eq`). -/
 @[irreducible] def F3 : ℕ := (univ.filter fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2) = ((0 : Fin 52), (1 : Fin 52), (2 : Fin 52))).card
-
-theorem fibre3_card (t : Fin 52 × Fin 52 × Fin 52)
-    (ht : t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2) :
-    (univ.filter fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2) = t).card = F3 := by
-  unfold F3
-  exact PermCount.fibre3_card_eq 0 1 2 (0, 1, 2) t (by decide) ht
 
 /-- The ordered triples of distinct cards. -/
 def Distinct3 : Finset (Fin 52 × Fin 52 × Fin 52) :=

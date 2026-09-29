@@ -116,7 +116,6 @@ theorem maybeCutInv_refines (c : Nat) (hand key : List Nat)
       rw [if_neg hH, if_neg hK]
       rfl
 
-
 /-- One generated inverse body refines `invPassKeyStep`. Piles are
     `(key, hand)` matching emitted state, opposite the algebraic pair. -/
 theorem invPassKeyStep_refines (c : Nat) (rest hand : List Nat) (hc : FitsLen c)

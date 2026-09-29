@@ -273,7 +273,7 @@ theorem fits_dealCount (c : Nat) (hc : FitsLen c) : FitsLen (dealCount c) := by
 
 /-- Generated `deal_amount`: `+dealCount c` (deal under the hand), else
     `-dealCount c` (deal under the key pile), else `0`. -/
-theorem deal_amount_refines (c h k : Nat) (hc : FitsLen c) :
+theorem deal_amount_refines (c h k : Nat) (hc : FitsI64 c) :
     Doubledeal.deal_amount (Int.ofNat c) (Int.ofNat h) (Int.ofNat k) =
       .ok (if dealCount c < h then Int.ofNat (dealCount c)
            else if dealCount c < k then -Int.ofNat (dealCount c) else 0) := by
@@ -296,29 +296,40 @@ theorem deal_amount_refines (c h k : Nat) (hc : FitsLen c) :
       simp only [hH, hK, Bool.false_eq_true, ↓reduceIte]
       rfl
 
-/-- `deal_step` and `undeal_step` have one shape: `deal_amount`, then `op` on
-    the hand (`a > 0`), on the key pile (`a < 0`, count `0 - a`), or nothing.
-    If `op` refines `f` below the pile length, the step refines
+/-- Proof-side name for the one shape of the emitted `deal_step` and
+    `undeal_step`: `deal_amount`, then `op` on the hand (`a > 0`), on the key
+    pile (`a < 0`, count `0 - a`), or nothing. Both equal it by `rfl`
+    (`deal_step_eq`, `undeal_step_eq`). Not a second algorithm. -/
+def amountStepGen (op : Array Int → Int → Except SudoRt.Trap (Array Int))
+    (c : Int) (hand key : Array Int) : Except SudoRt.Trap (Array Int × Array Int) := do
+  let a ← Doubledeal.deal_amount c (SudoRt.listLen hand) (SudoRt.listLen key)
+  if decide (a > (0 : Int)) then do
+    let h ← op hand a
+    pure (h, key)
+  else if decide (a < (0 : Int)) then do
+    let m ← SudoRt.subI (0 : Int) a
+    let k ← op key m
+    pure (hand, k)
+  else pure (hand, key)
+
+theorem deal_step_eq (c : Int) (hand key : Array Int) :
+    Doubledeal.deal_step c hand key = amountStepGen Doubledeal.deal_under c hand key := rfl
+
+theorem undeal_step_eq (c : Int) (hand key : Array Int) :
+    Doubledeal.undeal_step c hand key = amountStepGen Doubledeal.undeal_under c hand key := rfl
+
+/-- If `op` refines `f` below the pile length, `amountStepGen op` refines
     `onPile (dealCount c < ·) (f · (dealCount c))`. -/
 theorem amount_step_refines (op : Array Int → Int → Except SudoRt.Trap (Array Int))
     (f : List Nat → Nat → List Nat)
     (hop : ∀ xs m, m < xs.length → FitsLen xs.length →
       op (embed xs) (Int.ofNat m) = .ok (embed (f xs m)))
-    (c : Nat) (hand key : List Nat) (hc : FitsLen c)
+    (c : Nat) (hand key : List Nat) (hc : FitsI64 c)
     (hh : FitsLen hand.length) (hk : FitsLen key.length) :
-    (do
-      let a ← Doubledeal.deal_amount (Int.ofNat c) (SudoRt.listLen (embed hand))
-        (SudoRt.listLen (embed key))
-      if decide (a > (0 : Int)) then do
-        let h ← op (embed hand) a
-        pure (h, embed key)
-      else if decide (a < (0 : Int)) then do
-        let m ← SudoRt.subI (0 : Int) a
-        let k ← op (embed key) m
-        pure (embed hand, k)
-      else pure (embed hand, embed key)) =
+    amountStepGen op (Int.ofNat c) (embed hand) (embed key) =
       .ok (embed (onPile (dealCount c < ·) (f · (dealCount c)) hand key).1,
            embed (onPile (dealCount c < ·) (f · (dealCount c)) hand key).2) := by
+  unfold amountStepGen
   rw [listLen_embed, listLen_embed, deal_amount_refines c _ _ hc]
   simp only [ok_bind]
   have hpos : (0 : Int) < Int.ofNat (dealCount c) := by
@@ -346,13 +357,15 @@ theorem deal_step_refines (c : Nat) (hand key : List Nat) (hc : FitsLen c)
     (hh : FitsLen hand.length) (hk : FitsLen key.length) :
     Doubledeal.deal_step (Int.ofNat c) (embed hand) (embed key) =
       .ok (embed (maybeDeal hand key c).1, embed (maybeDeal hand key c).2) :=
-  amount_step_refines Doubledeal.deal_under dealUnder deal_under_refines c hand key hc hh hk
+  (deal_step_eq _ _ _).trans
+    (amount_step_refines Doubledeal.deal_under dealUnder deal_under_refines c hand key hc hh hk)
 
 /-- Generated `undeal_step` is `maybeDealInv` on well-formed piles (card fits i64). -/
 theorem undeal_step_refines (c : Nat) (hand key : List Nat) (hc : FitsLen c)
     (hh : FitsLen hand.length) (hk : FitsLen key.length) :
     Doubledeal.undeal_step (Int.ofNat c) (embed hand) (embed key) =
       .ok (embed (maybeDealInv hand key c).1, embed (maybeDealInv hand key c).2) :=
-  amount_step_refines Doubledeal.undeal_under undealUnder undeal_under_refines c hand key hc hh hk
+  (undeal_step_eq _ _ _).trans
+    (amount_step_refines Doubledeal.undeal_under undealUnder undeal_under_refines c hand key hc hh hk)
 
 end DoubleDeal.Link2

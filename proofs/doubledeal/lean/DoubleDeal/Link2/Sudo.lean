@@ -106,7 +106,7 @@ theorem addI_ofNat (a b : Nat) (h : FitsLen (a + b)) :
   exact narrowI_ofNat _ h
 
 /-- `0 - d` for a nonnegative `d` that fits (the sudo `0 - d` in `deal_amount`). -/
-theorem subI_zero_ofNat (d : Nat) (h : FitsLen d) :
+theorem subI_zero_ofNat (d : Nat) (h : FitsI64 d) :
     SudoRt.subI 0 (Int.ofNat d) = .ok (-Int.ofNat d) := by
   have hle := ofNat_le_i64Max h
   have h0 : (0 : Int) ≤ Int.ofNat d := Int.ofNat_zero_le d
@@ -118,7 +118,7 @@ theorem subI_zero_ofNat (d : Nat) (h : FitsLen d) :
   simp
 
 /-- `0 - (-d)` for a nonnegative `d` that fits (the sudo `0 - a` in `deal_step`). -/
-theorem subI_zero_neg_ofNat (d : Nat) (h : FitsLen d) :
+theorem subI_zero_neg_ofNat (d : Nat) (h : FitsI64 d) :
     SudoRt.subI 0 (-Int.ofNat d) = .ok (Int.ofNat d) := by
   unfold SudoRt.subI
   rw [show (0 : Int) - -Int.ofNat d = Int.ofNat d by omega]

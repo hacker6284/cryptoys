@@ -63,28 +63,16 @@ variable (fits : Nat → Prop) [DecidablePred fits]
 theorem onPile_perm (f : List α → List α) (hf : ∀ xs, List.Perm (f xs) xs)
     (hand key : List α) :
     List.Perm ((onPile fits f hand key).1 ++ (onPile fits f hand key).2) (hand ++ key) := by
-  unfold onPile
-  split
-  · exact (hf hand).append (.refl key)
-  · split
-    · exact (List.Perm.refl hand).append (hf key)
-    · exact .refl _
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;>
+    simp [onPile, hH, hK, hf, List.Perm.append_left, List.Perm.append_right]
 
 theorem length_onPile_fst (f : List α → List α) (hf : ∀ xs, (f xs).length = xs.length)
     (hand key : List α) : (onPile fits f hand key).1.length = hand.length := by
-  unfold onPile
-  split
-  · exact hf hand
-  · split <;> rfl
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;> simp [onPile, hH, hK, hf]
 
 theorem length_onPile_snd (f : List α → List α) (hf : ∀ xs, (f xs).length = xs.length)
     (hand key : List α) : (onPile fits f hand key).2.length = key.length := by
-  unfold onPile
-  split
-  · rfl
-  · split
-    · exact hf key
-    · rfl
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;> simp [onPile, hH, hK, hf]
 
 /-- The one inverse lemma: if `f` keeps lengths (so the same branch fires
     again) and `g` undoes `f` whenever `fits` holds, then `onPile fits g` undoes
@@ -92,24 +80,8 @@ theorem length_onPile_snd (f : List α → List α) (hf : ∀ xs, (f xs).length 
 theorem onPile_inv (f g : List α → List α) (hlen : ∀ xs, (f xs).length = xs.length)
     (hgf : ∀ xs, fits xs.length → g (f xs) = xs) (hand key : List α) :
     onPile fits g (onPile fits f hand key).1 (onPile fits f hand key).2 = (hand, key) := by
-  by_cases hH : fits hand.length
-  · have h1 : onPile fits f hand key = (f hand, key) := if_pos hH
-    rw [h1]
-    have h2 : fits (f hand).length := by rw [hlen]; exact hH
-    show (if fits (f hand).length then _ else _) = _
-    rw [if_pos h2, hgf hand hH]
-  · by_cases hK : fits key.length
-    · have h1 : onPile fits f hand key = (hand, f key) := by
-        unfold onPile; rw [if_neg hH, if_pos hK]
-      rw [h1]
-      have h2 : fits (f key).length := by rw [hlen]; exact hK
-      show (if fits hand.length then _ else if fits (f key).length then _ else _) = _
-      rw [if_neg hH, if_pos h2, hgf key hK]
-    · have h1 : onPile fits f hand key = (hand, key) := by
-        unfold onPile; rw [if_neg hH, if_neg hK]
-      rw [h1]
-      show (if fits hand.length then _ else if fits key.length then _ else _) = _
-      rw [if_neg hH, if_neg hK]
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;>
+    simp [onPile, hH, hK, hlen, hgf]
 
 end onPile
 

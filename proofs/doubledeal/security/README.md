@@ -56,7 +56,7 @@ theorem in this package, audited as above; no item is a security claim.
 |---|---|---|
 | M1. GridCycle relabelling survival (the diffusion notion) | **Done.** Proved: 50 of the 51 nontrivial `v10Sym` survive GridCycle on no deck; `v10Sym 0 3` on ≤ 1/26 (default library) and ≤ 1/4420 (heavy library; default library given the two finite checks). The Hamming branch number is the trivial floor 4 | `GridCycleSurvival`, `DoubleDealSecurityHeavy.GridCycleSurvival`, `../analysis/v12-diffusion/NOTES.md` |
 | M2. Multi-round trail bound | **Done, in the independent-uniform-round-key model only.** The constant-σ characteristic through R mix rounds has probability ≤ (1/64)^R for every σ ≠ 1 (heavy library; default library (1/26)^R, and (1/64)^R given the two finite checks). One characteristic, not a differential; no final no-mix round; not linked to `encryptN` | `TrailBound`, `DoubleDealSecurityHeavy.TrailBound`, `../analysis/v12-trail/NOTES.md` |
-| M3. Linear-analogue note | **Note only, no Lean.** In review as PR #111 (not on main yet) | `../analysis/v12-linear/NOTES.md` (added by #111) |
+| M3. Linear-analogue note | **Note only, no Lean.** No linear analogue is defined; the note argues that no direct analogue exists for permutation-valued state and proposes Fourier analysis on `S_52`; one sampled single-card position statistic, at the noise level of its control | `../analysis/v12-linear/NOTES.md` |
 | M4. Covariant round conjecture `roundBody_covariant_iff_id` | **In progress.** Open (`DRAFT-SORRY`); checked numerically by `checks/check_covariant.py` | `Rounds` |
 
 Open, with no milestone yet:
@@ -104,6 +104,11 @@ round. In that model the characteristic has probability ≤ (1/64)^R for every
 σ ≠ 1 (heavy library; the default library proves (1/26)^R unconditionally and
 (1/64)^R given the finite check). Not proved: anything about the real PassKey
 schedule, the differential (sum over characteristics), and σ → β for β ≠ σ.
+
+Linear analogue (roadmap milestone M3): none is defined. Permutation-valued state
+has no masks, and the note `../analysis/v12-linear/NOTES.md` explains why and
+proposes Fourier analysis on `S_52` (the standard representation first). There are
+no Lean statements for it.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at

@@ -5,8 +5,10 @@
   Split out of `PermCount.lean` so that the pair-swap witness decks of `SumRanks.lean`,
   `SumRanksV10Iff.lean` and `SumRanksDP/Main.lean` add only this module to the import
   closure of `SumRanks.lean`: it imports only `Mathlib.GroupTheory.Perm.Basic`, which
-  `Relabel.lean` already imports. `checks/scan_sorry.py` fails if it imports all of
-  Mathlib (`NARROW_IMPORT`).
+  `Relabel.lean` already imports. `checks/scan_sorry.py` pins the exact import sets of this
+  file, `SumRanks.lean`, `Relabel.lean` and `Decks.lean` (`PINNED_IMPORTS`).
+  The `PermCount` namespace is deliberate: a companion file split out for import size keeps
+  the family namespace (the same pattern as `GridCycleSurvivalLists` in `GridCycleSurvival`).
 -/
 import Mathlib.GroupTheory.Perm.Basic
 

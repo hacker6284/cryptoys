@@ -1,0 +1,7 @@
+one unkeyed v12 round: top singular values of M - J/52: [0.0014, 0.0013, 0.0013]; largest |entry deviation| +0.0003 at seat 35 -> 40 (1/52 = 0.0192)
+control: uniform random seat permutations: top singular values of M - J/52: [0.0014, 0.0013, 0.0012]; largest |entry deviation| -0.0003 at seat 29 -> 8 (1/52 = 0.0192)
+decks: 2000000, seed 20260929, port version 12. MEASURED; the control shows the noise level.
+
+real	2m51.075s
+user	2m51.058s
+sys	0m0.008s

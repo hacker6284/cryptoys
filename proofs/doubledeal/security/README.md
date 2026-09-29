@@ -87,6 +87,11 @@ round. In that model the characteristic has probability ≤ (1/64)^R for every
 (1/64)^R given the finite check). Not proved: anything about the real PassKey
 schedule, the differential (sum over characteristics), and σ → β for β ≠ σ.
 
+Linear analogue (roadmap milestone 3): none is defined. Permutation-valued state
+has no masks, and the note `../analysis/v12-linear/NOTES.md` explains why and
+proposes Fourier analysis on `S_52` (the standard representation first). There are
+no Lean statements for it.
+
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at
 least 4. The live v11 GridCycle (as v9/v10 before it) and the frozen v8 model attain 4: swapping walk cards

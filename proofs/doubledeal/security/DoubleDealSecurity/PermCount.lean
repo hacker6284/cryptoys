@@ -3,7 +3,7 @@
 
   The whole counting argument used by `SumRanksDP/ThreeCycle.lean` (arrangements of
   `Fin 13`) and `GridCycleSurvival.lean` (decks, `Fin 52`, one and three positions):
-  * `exists_perm_two'`, `exists_perm_three`: a permutation with prescribed images of
+  * `exists_perm_two`, `exists_perm_three`: a permutation with prescribed images of
     two / three distinct points;
   * `card_fibre_eq_of_mul`: left multiplication by `ρ` moves one fibre of a statistic
     onto another, so the two are equinumerous;
@@ -13,14 +13,21 @@
   * `fibre3_card_eq`: the fibres of `σ ↦ (σ i₀, σ i₁, σ i₂)` over distinct triples are
     equinumerous;
   * `count_triples_of`: counting by the images of three distinct points.
+  `exists_perm_two` also gives the witness decks of the pair-swap arguments in `SumRanks.lean`,
+  `SumRanksV10Iff.lean` and `SumRanksDP/Main.lean`, so this file imports only the Mathlib
+  modules it needs: `SumRanks.lean` does not import all of Mathlib.
 -/
-import Mathlib
+import Mathlib.Algebra.BigOperators.Group.Finset
+import Mathlib.Data.Fin.VecNotation
+import Mathlib.Data.Fintype.CardEmbedding
+import Mathlib.Data.Fintype.Perm
+import Mathlib.Tactic.FinCases
 
 namespace DoubleDeal.Security.PermCount
 
 open Finset
 
-theorem exists_perm_two' {α : Type*} [DecidableEq α] (i j a b : α) (hij : i ≠ j) (hab : a ≠ b) :
+theorem exists_perm_two {α : Type*} [DecidableEq α] (i j a b : α) (hij : i ≠ j) (hab : a ≠ b) :
     ∃ π : Equiv.Perm α, π i = a ∧ π j = b := by
   let π1 : Equiv.Perm α := Equiv.swap i a
   let b1 := π1.symm b
@@ -38,7 +45,7 @@ theorem exists_perm_two' {α : Type*} [DecidableEq α] (i j a b : α) (hij : i �
 theorem exists_perm_three {α : Type*} [DecidableEq α] (i j k a b c : α) (hij : i ≠ j)
     (hik : i ≠ k) (hjk : j ≠ k) (hab : a ≠ b) (hac : a ≠ c) (hbc : b ≠ c) :
     ∃ π : Equiv.Perm α, π i = a ∧ π j = b ∧ π k = c := by
-  obtain ⟨π2, h1, h2⟩ := exists_perm_two' i j a b hij hab
+  obtain ⟨π2, h1, h2⟩ := exists_perm_two i j a b hij hab
   let c1 := π2.symm c
   have hc1 : π2 c1 = c := π2.apply_symm_apply c
   have hic : i ≠ c1 := fun e => hac (by rw [← h1, e, hc1])

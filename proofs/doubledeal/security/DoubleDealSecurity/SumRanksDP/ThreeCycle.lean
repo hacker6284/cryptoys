@@ -176,9 +176,12 @@ theorem card_good_triples : (univ.filter fun t : Fin 13 × Fin 13 × Fin 13 =>
       (t.1.val : ZMod 13) + t.2.1.val + 11 * t.2.2.val = 0).card = 156 := by
   decide!
 
+/-- `13 · 12 · 11`: an instance of `PermCount.card_distinct_triples_eq` (no kernel check). -/
 theorem card_distinct_triples : (univ.filter fun t : Fin 13 × Fin 13 × Fin 13 =>
     t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2 ∧ True).card = 1716 := by
-  decide!
+  simp only [and_true]
+  rw [PermCount.card_distinct_triples_eq, Fintype.card_fin]
+  rfl
 
 /-- `σ i₀ + σ i₁ + 11·σ i₂ ≡ 0 (mod 13)` for exactly `1/11` of the arrangements. -/
 theorem count_S3 (i0 i1 i2 : Fin 13) (h01 : i0 ≠ i1) (h02 : i0 ≠ i2) (h12 : i1 ≠ i2) :

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Import-closure gate for SumRanks.lean (cheap: about 2 s, no heavy build).
+"""Import-closure gate for SumRanks.lean (cheap: about 2 s when up to date (rebuilds
+SumRanks/PermWitness if stale); no heavy build).
 
 The point of the PermWitness split (#116) is the import cost of SumRanks.lean. This gate
 checks that cost directly, on the real transitive closure, computed by Lean rather than
@@ -51,6 +52,7 @@ PKG = Path(__file__).resolve().parent.parent
 # package, not a new heavy import.
 SUMRANKS_CLOSURE_MODULES = 1579   # every module, SumRanks itself included
 SUMRANKS_MATHLIB_MODULES = 338    # of which named Mathlib / Mathlib.*
+PINS = (SUMRANKS_CLOSURE_MODULES, SUMRANKS_MATHLIB_MODULES)   # (total, Mathlib), as counts()
 
 SUMRANKS = "DoubleDealSecurity.SumRanks"
 PERMWITNESS = "DoubleDealSecurity.PermWitness"
@@ -61,7 +63,7 @@ QUERY = """open Lean in
   let h := (← getEnv).header
   IO.println s!"SIZES {h.moduleNames.size} {h.moduleData.size}"
   for i in [0:h.moduleNames.size] do
-    let imps := (h.moduleData.get? i).map (·.imports.toList.map (·.module.toString))
+    let imps := h.moduleData[i]?.map (·.imports.toList.map (·.module.toString))
     IO.println s!"MODULE {h.moduleNames[i]!} {" ".intercalate (imps.getD ["<no-moduleData>"])}"
 """
 
@@ -89,15 +91,19 @@ def parse_graph(out):
     """The graph from the scratch file's output; fails on any inconsistency."""
     sizes = [l.split()[1:] for l in out.splitlines() if l.startswith("SIZES ")]
     mods = [l.split()[1:] for l in out.splitlines() if l.startswith("MODULE ")]
-    if len(sizes) != 1 or len(sizes[0]) != 2:
-        fail(f"no SIZES line in the Lean output:\n{out}")
+    if len(sizes) != 1:
+        fail(f"expected exactly one SIZES line (got {len(sizes)}) in the Lean output:\n{out}")
+    if len(sizes[0]) != 2 or not all(x.isdigit() for x in sizes[0]):
+        fail(f"malformed SIZES line (expected two counts): SIZES {' '.join(sizes[0])}")
     names, data = map(int, sizes[0])
     if not (names == data == len(mods)):
         fail(f"moduleNames has {names} entries, moduleData {data}, {len(mods)} module lines")
     graph = {}
     for name, *deps in mods:
-        if "<no-moduleData>" in deps or name in graph:
-            fail(f"bad or duplicate header entry for {name}")
+        if "<no-moduleData>" in deps:
+            fail(f"no moduleData entry for {name} (moduleData shorter than moduleNames)")
+        if name in graph:
+            fail(f"duplicate header entry for {name}")
         graph[name] = deps
     return graph
 
@@ -119,18 +125,20 @@ def is_mathlib(m):
     return m == "Mathlib" or m.startswith("Mathlib.")
 
 
-PINS = (SUMRANKS_CLOSURE_MODULES, SUMRANKS_MATHLIB_MODULES)
+def counts(graph, roots):
+    """(total, Mathlib) module counts of the import closure of `roots`."""
+    c = closure(graph, roots)
+    return len(c), sum(map(is_mathlib, c))
 
 
 def check(graph, sumranks_roots=(SUMRANKS,), pins=PINS):
     """(failures, (total, mathlib)) for checks 1 and 2 on `graph`; `sumranks_roots` is
     what counts as SumRanks (the selftest adds a heavy import next to it)."""
-    c = closure(graph, sumranks_roots)
-    counts = (len(c), sum(map(is_mathlib, c)))
+    got = counts(graph, sumranks_roots)
     bad = []
     for what, n, pin, const in (
-            ("modules", counts[0], pins[0], "SUMRANKS_CLOSURE_MODULES"),
-            ("Mathlib modules", counts[1], pins[1], "SUMRANKS_MATHLIB_MODULES")):
+            ("modules", got[0], pins[0], "SUMRANKS_CLOSURE_MODULES"),
+            ("Mathlib modules", got[1], pins[1], "SUMRANKS_MATHLIB_MODULES")):
         if n != pin:
             bad.append(f"{' + '.join(sumranks_roots)}: {n} {what} in the import closure, pinned "
                        f"{const} = {pin} (a new import, or a Mathlib/toolchain bump: see the "
@@ -139,13 +147,14 @@ def check(graph, sumranks_roots=(SUMRANKS,), pins=PINS):
     if extra:
         bad.append(f"{PERMWITNESS} adds {len(extra)} module(s) beyond the closure of {PERM_BASIC}: "
                    f"{', '.join(sorted(extra)[:10])}{' ...' if len(extra) > 10 else ''}")
-    return bad, counts
+    return bad, got
 
 
 def summary(graph):
-    total, ml = check(graph)[1]
+    total, ml = counts(graph, [SUMRANKS])
     return (f"{SUMRANKS}: {total} modules in the import closure "
-            f"(pinned {SUMRANKS_CLOSURE_MODULES}), {ml} Mathlib (pinned {SUMRANKS_MATHLIB_MODULES}); {PERMWITNESS}: "
+            f"(pinned {SUMRANKS_CLOSURE_MODULES}), {ml} Mathlib "
+            f"(pinned {SUMRANKS_MATHLIB_MODULES}); {PERMWITNESS}: "
             f"{len(closure(graph, [PERMWITNESS]))} = {PERM_BASIC} "
             f"({len(closure(graph, [PERM_BASIC]))}) + itself")
 
@@ -173,14 +182,19 @@ SELFTEST = [
     ("imported module without an entry", {k: v for k, v in G_OK.items() if k != "Core"},
      (6, 2), False, "Core (imported by R) has no entry"),
 ]
-# Lean output: (name, text, substring expected in the failure)
+# Lean output: (name, text, substring expected in the failure; "passed" = must parse)
 PARSE_SELFTEST = [
+    ("well-formed", "SIZES 2 2\nMODULE A\nMODULE B A\n", "passed"),
     ("length mismatch", "SIZES 2 1\nMODULE A\nMODULE B A\n",
      "moduleNames has 2 entries, moduleData 1"),
     ("missing module line", "SIZES 2 2\nMODULE A\n", "2 entries, moduleData 2, 1 module lines"),
     ("missing moduleData", "SIZES 1 1\nMODULE A <no-moduleData>\n",
-     "bad or duplicate header entry for A"),
-    ("no SIZES line", "MODULE A\n", "no SIZES line"),
+     "no moduleData entry for A (moduleData shorter than moduleNames)"),
+    ("duplicate entry", "SIZES 2 2\nMODULE A\nMODULE A\n", "duplicate header entry for A"),
+    ("no SIZES line", "MODULE A\n", "expected exactly one SIZES line (got 0)"),
+    ("two SIZES lines", "SIZES 1 1\nSIZES 1 1\nMODULE A\n",
+     "expected exactly one SIZES line (got 2)"),
+    ("malformed SIZES line", "SIZES 1\nMODULE A\n", "malformed SIZES line"),
 ]
 
 

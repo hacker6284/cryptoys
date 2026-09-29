@@ -1,12 +1,14 @@
 # DoubleDeal
 
-> **v11 is superseded** and frozen at `v11/SPEC.md` + `v11/doubledeal_v11.sudo`. It is **not attacked**. The finding is a related-key property of the PassKey \(F\) (§3.7): its suit cut and rank cut add, so the 68 swaps of two cards with equal suit + rank commute with one pass of \(F\) at up to 196/221 ≈ 0.887 (closed form), and about 48% of keys \(K\) give six round keys related to those of \(\tau K\) by exactly \(\tau\) (2♥↔A♠, measured). On the full 6-round cipher, 10M related-key samples showed no effect (0 hits). It is not a single-key or related-plaintext attack. Write-up: `proofs/deprecated/doubledeal-v11/`; analysis: `proofs/doubledeal/analysis/passkey-related-key/`. Until the successor (v12) lands, this file and `doubledeal.sudo` still describe v11 unchanged.
+> **v11 is superseded** and frozen at `v11/SPEC.md` + `v11/doubledeal_v11.sudo`. It is **not attacked**. The finding is a related-key property of the PassKey \(F\) (§3.7): its suit cut and rank cut add, so the 68 swaps of two cards with equal suit + rank commute with one pass of \(F\) at up to 196/221 ≈ 0.887 (closed form), and about 48% of keys \(K\) give six round keys related to those of \(\tau K\) by exactly \(\tau\) (2♥↔A♠, measured). On the full 6-round cipher, 10M related-key samples showed no effect (0 hits). It is not a single-key or related-plaintext attack. Write-up: `proofs/deprecated/doubledeal-v11/`; analysis: `proofs/doubledeal/analysis/passkey-related-key/`. v12 (below) replaces the part of \(F\) that caused it.
 
-**This is DoubleDeal v11.** One change from v10: GridCycle (§3.5, §4.4). The walk's finger is now a *ghost*: each step starts from the previous **target** seat, even when the card had to sit elsewhere. A free target is handled exactly as in v10. A target that is already taken is resolved by the card sitting on it (the *blocker*): scan the row marker + blocker's suit, starting at the target column + blocker's rank, for the first empty seat to the right (dropping to the next row if that row is full); advance the marker one suit; and the next step starts from the target moved by the blocker's step. SumRanks, ShiftRows, Compose, PassKey, the round count and the modes are unchanged. The rule was chosen from the measurements in `proofs/doubledeal/analysis/v10-gridcycle/` (PHASE2 "rule 1" plus PHASE6 "tweak B"; toy evidence, not a proof).
+**This is DoubleDeal v12.** One change from v11: the PassKey step \(F\) (§3.7, §4.6). The suit rotation of the hand is replaced by a **deal**: after the controller \(C\) is popped, deal \(\mathrm{suit}(C)+2\) cards one at a time off the top of the hand (so they come out reversed) and put that packet under the hand, if \(\mathrm{suit}(C)+2\) is less than the hand size; otherwise do the same on the key pile, if \(\mathrm{suit}(C)+2\) is less than the key-pile size; otherwise skip. The rank cut with key-pile fallback and "controller on top of the key pile" are unchanged. The suit step and the rank step no longer add, so the v11 suit + rank collision is gone: no two cards ever make the same move at the same step. Toy evidence only (`proofs/doubledeal/analysis/passkey-related-key/` §9): measured worst single-swap pass-through of one \(F\) ≈ 0.00198 ≈ 1/506 (2♣↔A♥; v11: up to 196/221 ≈ 0.887, closed form), no swap above 1/64, and 0 of 200k keys with six related round keys for the worst pair. GridCycle, SumRanks, ShiftRows, Compose, the round count and the modes are unchanged from v11. These are measurements, not a security claim.
+
+v11 (superseded, frozen) made one change from v10, kept in v12: GridCycle (§3.5, §4.4). The walk's finger is now a *ghost*: each step starts from the previous **target** seat, even when the card had to sit elsewhere. A free target is handled exactly as in v10. A target that is already taken is resolved by the card sitting on it (the *blocker*): scan the row marker + blocker's suit, starting at the target column + blocker's rank, for the first empty seat to the right (dropping to the next row if that row is full); advance the marker one suit; and the next step starts from the target moved by the blocker's step. SumRanks, ShiftRows, Compose, PassKey, the round count and the modes were unchanged in v11. The rule was chosen from the measurements in `proofs/doubledeal/analysis/v10-gridcycle/` (PHASE2 "rule 1" plus PHASE6 "tweak B"; toy evidence, not a proof).
 
 v10 is deprecated and frozen at `v10/SPEC.md` + `v10/doubledeal_v10.sudo`. The reason is a per-layer parity shortfall in GridCycle, not a working attack on the full cipher: v10 GridCycle lets its worst swap, K♣↔K♦, through unchanged with probability 0.262 (measured), and 1311 of the 1326 swaps are above the 1/64 bar that SumRanks meets, while the 6-round product-formula estimate for the worst swap trail stays about \(2\times10^{-17}\). Write-up and kernel-checked single-deck witness: `proofs/deprecated/doubledeal-v10/`. v9 is deprecated and frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo`; a related-plaintext distinguisher breaks the full 6-round v9 (K♣↔Q♥ at about \(3.5\times10^{-8}\) per pair; `proofs/deprecated/doubledeal-v9/`). v8 is deprecated too, frozen at `v8/SPEC.md`, with its vulnerability proof in `proofs/deprecated/doubledeal-v8/`. Formerly TwoDeck (TDSPN elegant-v8).
 
-This document is the normative specification. `doubledeal.sudo` is the conformance implementation, and a mismatch is a bug in the implementation. DoubleDeal is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim and is not for protecting anything. The v10 SumRanks (kept in v11) was chosen from the candidate measurements in `proofs/doubledeal/analysis/v10-sumranks/`, and the v11 GridCycle from `proofs/doubledeal/analysis/v10-gridcycle/` (toy evidence, not proofs).
+This document is the normative specification. `doubledeal.sudo` is the conformance implementation, and a mismatch is a bug in the implementation. DoubleDeal is a toy block cipher on a 52-card deck, AES in spirit and not in security. It makes no cryptographic security claim and is not for protecting anything. The v10 SumRanks (kept in v11 and v12) was chosen from the candidate measurements in `proofs/doubledeal/analysis/v10-sumranks/`, the v11 GridCycle (kept in v12) from `proofs/doubledeal/analysis/v10-gridcycle/`, and the v12 PassKey deal from `proofs/doubledeal/analysis/passkey-related-key/` (toy evidence, not proofs).
 
 The demo at `demos/doubledeal/` plays `trace_encrypt` and `trace_decrypt`. It does not contain a second copy of the rounds. `decrypt` may keep the round-key list from `expand_keys`. The decrypt trace does not: it passes the master key forward 6 times to \(K_6\), then un-passes once per remaining round back to \(K_0\). Ciphertext is the same either way; only the key-derivation choreography differs.
 
@@ -296,9 +298,14 @@ F(deck):
   hand ← copy(deck); key ← []
   while hand nonempty:
     C ← pop front of hand
-    if hand nonempty:
-      k ← suit(C) mod len(hand)
-      if k > 0: hand ← left_rotate(hand, k)
+    d ← suit(C) + 2                         # 2..5
+    # deal only if d < len(packet); NO mod wrap
+    if d < len(hand):
+      hand ← deal_under(hand, d)            # deal hand
+    else if d < len(key):
+      key ← deal_under(key, d)              # deal key pile
+    else:
+      skip deal
     # proper cut only if rank < len(packet); NO mod wrap
     if hand nonempty and rank(C) < len(hand):
       hand ← left_rotate(hand, rank(C))     # cut hand
@@ -309,6 +316,8 @@ F(deck):
     insert C at front of key                # key[0] ← C
   return key                                # key[0] = last controller dealt
 ```
+
+**Deal under / undeal.** `deal_under(xs, d)` deals the top \(d\) cards one at a time onto a new packet, so the packet is those cards reversed, and puts the packet under the rest: \(\mathrm{deal\_under}(xs,d) = xs[d{:}] \mathbin{+\!\!+} \mathrm{reverse}(xs[{:}d])\). `undeal_under(xs, d)` takes the bottom \(d\) cards and deals them back onto the top one at a time: \(\mathrm{reverse}(xs[n-d{:}]) \mathbin{+\!\!+} xs[{:}n-d]\) with \(n = \mathrm{len}(xs)\). They are inverses for \(d \le n\). In a 52-card pass the "skip deal" branch never happens (\(d \ge\) hand size means hand \(\le 4\), so the key pile has \(\ge 47 > 5\) cards); it is written so the rule is total on any pile sizes. At the last step (empty hand) the controller deals from the key pile.
 
 **Left rotate / right rotate.** Top = index \(0\). Left rotate by \(k\) moves the top \(k\) cards to the bottom. Right rotate by \(k\) moves the bottom \(k\) cards to the top. They are inverses (empty list and \(k=0\) are fixed).
 
@@ -324,16 +333,20 @@ F^{-1}(deck):
       key ← right_rotate(key, rank(C))
     else:
       skip cut
-    if n > 0:
-      k ← suit(C) mod n
-      if k > 0: hand ← right_rotate(hand, k)
+    d ← suit(C) + 2
+    if d < n:
+      hand ← undeal_under(hand, d)
+    else if d < len(key):
+      key ← undeal_under(key, d)
+    else:
+      skip deal
     insert C at front of hand
   return hand
 ```
 
 **Claim:** \(F\) is a bijection on \(S_{52}\). \(F^{-1}\circ F=\mathrm{id}\) and \(F\circ F^{-1}=\mathrm{id}\). Deterministic; preserves the card multiset.
 
-**Why:** at step \(i\) the controller \(C\) is on top of the key pile, so the inverse can read it. Every branch depends only on \(C\) and the pile sizes (hand \(=51-i\) after the pop, key \(=i\)), never on hidden card identities. Each step is a bijection on \((\mathrm{hand},\mathrm{key})\) states of those sizes, and \(F\) is their composition. Lean: `proofs/doubledeal/lean/DoubleDeal/PassKey.lean`, theorems `passKey_leftInverse` and `passKey_rightInverse` (on `main` via PR #2). Cycle structure / orbit lengths of \(F\) on \(S_{52}\) are not claimed.
+**Why:** at step \(i\) the controller \(C\) is on top of the key pile, so the inverse can read it. Every branch (deal: hand / key pile / skip; cut: hand / key pile / skip) depends only on \(C\) and the pile sizes (hand \(=51-i\) after the pop, key \(=i\)), never on hidden card identities, and neither the deal nor the cut changes a pile's size. The inverse undoes the cut first, then the deal. Each step is a bijection on \((\mathrm{hand},\mathrm{key})\) states of those sizes, and \(F\) is their composition. Lean: `proofs/doubledeal/lean/DoubleDeal/PassKey.lean`, theorems `passKey_leftInverse` and `passKey_rightInverse` (on `main` via PR #2). Cycle structure / orbit lengths of \(F\) on \(S_{52}\) are not claimed.
 
 ## 3.8 expand_keys
 
@@ -501,7 +514,10 @@ No jokers. No round number. One full pass turns this round’s \(K\) into the ne
 1. Hold \(K\) as a **hand** (top = face you deal first). Start an empty **key pile**.
 2. For each controller **C** dealt from the hand:
    - Deal C (remove from top of hand).
-   - If cards remain in hand: rotate the hand **left** by C’s **suit** places (♣=0 ♥=1 ♠=2 ♦=3), wrapping; use suit **mod** how many cards are left.
+   - **Deal** C’s **suit + 2** cards (♣=2 ♥=3 ♠=4 ♦=5), only if that count is **strictly less** than the packet size (do **not** wrap with mod):
+     - If the count \(<\) hand size: deal that many cards one at a time off the top of the **hand** onto the table (so they reverse), then put that little packet **under** the hand.
+     - Else if the count \(<\) key-pile size: do the same with the **key pile** (deal off its top, packet under it).
+     - Else skip the deal (this cannot happen with 52 cards).
    - **Proper cut** only (count **strictly less** than packet size — do **not** wrap with mod):
      - If the hand still has cards and C’s **rank** \(<\) hand size: cut the **hand** by that rank.
      - Else if the key pile is nonempty and C’s rank \(<\) key-pile size: cut the **key pile** by that rank.
@@ -515,12 +531,12 @@ On encrypt, do this once per step \(K_0 \to K_1 \to \cdots \to K_6\), on the sam
 
 1. Lift the top card **C** off the key pile.
 2. Undo the cut: if the hand has cards and C’s rank \(<\) hand size, move that many cards from the **bottom** of the hand to the top; else if the key pile is nonempty and C’s rank \(<\) key-pile size, do the same on the key pile; else nothing.
-3. Undo the suit rotation: if the hand has cards, move \((\mathrm{suit}(C)\bmod\text{hand size})\) cards from the bottom of the hand to the top.
+3. Undo the deal: let \(d = \mathrm{suit}(C)+2\). If \(d <\) hand size, take the bottom \(d\) cards of the **hand** and deal them one at a time back onto its top (so they reverse again); else if \(d <\) key-pile size, do the same on the key pile; else nothing.
 4. Put C on top of the hand.
 
-When the key pile is empty, the hand is the previous round key. Forward “rotate left by \(k\)” moves the top \(k\) cards to the bottom, so this undo moves the bottom \(k\) to the top. Decrypt uses un-pass (§4.8).
+When the key pile is empty, the hand is the previous round key. Forward “deal \(d\) under” moves the top \(d\) cards, reversed, to the bottom, so this undo deals the bottom \(d\) back onto the top. Decrypt uses un-pass (§4.8).
 
-Near the end of a (forward) pass, emphasize **key-pile** cuts — that fallback is intentional so short hands do not force silent no-ops.
+Near the end of a (forward) pass, emphasize **key-pile** deals and cuts — that fallback is intentional so short hands do not force silent no-ops.
 
 ## 4.7 Full encrypt walkthrough
 
@@ -752,9 +768,9 @@ Prefer **permutation arcs in 3D**: each card in \(M\) arcs from its old seat to 
 
 ### PassKey
 
-One key deck. Whitening uses it as dealt. Each later encrypt round is preceded by one pass of that same deck; the pile at the end of the pass is the round key about to be used. Do not deal \(K_1,\ldots,K_6\) out before whitening. Decrypt passes that deck forward six times to \(K_6\), then un-passes once per remaining round back to \(K_0\). Do not re-deal the master key for each round key. Un-pass: controller lifts off the key pile; cut undo (bottom packet to top on hand or key pile); suit undo on the hand; controller settles on the hand.
+One key deck. Whitening uses it as dealt. Each later encrypt round is preceded by one pass of that same deck; the pile at the end of the pass is the round key about to be used. Do not deal \(K_1,\ldots,K_6\) out before whitening. Decrypt passes that deck forward six times to \(K_6\), then un-passes once per remaining round back to \(K_0\). Do not re-deal the master key for each round key. Un-pass: controller lifts off the key pile; cut undo (bottom packet to top on hand or key pile); deal undo (bottom suit + 2 cards dealt back onto the top of the hand or key pile); controller settles on the hand.
 
-**Split view** — hand left, key pile right. Forward: controller lifts from the hand, flashes **suit** (hand rotate) then **rank** (cut target glow on hand **or** key pile). Cut = clean packet lift-and-rejoin. Controller settles on the **key pile** with a soft thud. Un-pass: controller lifts from the key pile; cut undo (bottom packet to top on hand or key pile); suit undo on the hand; controller settles on the **hand**. **Near end of pass:** key-pile cuts use a **different accent color** so the fallback rule is teachable (not a failure state).
+**Split view** — hand left, key pile right. Forward: controller lifts from the hand, flashes **suit** (deal suit + 2 cards one at a time off the top of the hand **or** key pile, packet under that pile) then **rank** (cut target glow on hand **or** key pile). Cut = clean packet lift-and-rejoin. Controller settles on the **key pile** with a soft thud. Un-pass: controller lifts from the key pile; cut undo (bottom packet to top on hand or key pile); deal undo (bottom suit + 2 cards dealt back onto the top of that pile); controller settles on the **hand**. **Near end of pass:** key-pile deals and cuts use a **different accent color** so the fallback rule is teachable (not a failure state).
 
 ### CTR diamond counter
 
@@ -783,7 +799,8 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 | v8 (TDSPN elegant-v8) | **Deprecated**, frozen at `v8/SPEC.md` + `v8/doubledeal_v8.sudo` | SumRanks read ranks only, and the GridCycle overflow scanned each marker row from column 0. Same-rank relabellings (e.g. K♣↔K♦) commuted with every layer except GridCycle, giving a chosen-plaintext distinguisher (~\(10^{-3}\) per pair). Vulnerability proof: `proofs/deprecated/doubledeal-v8/`. |
 | v9 | **Deprecated**, frozen at `v9/SPEC.md` + `v9/doubledeal_v9.sudo` | SumRanks columns sum \((\mathrm{rank}+\mathrm{suit}) \bmod 4\); GridCycle overflow scans from the blocked column. Toy evidence only: the same relation family measured at 0 hits in \(2\times10^6\) full-cipher pairs for the worst transposition found by a one-round screen (95% upper bound \(1.5\times10^{-6}\)). That is not a security claim. Superseded: a transposition the one-round screen did not rank first, K♣↔Q♥, commutes with the full cipher at about \(3.5\times10^{-8}\) per pair (14 hits in \(4\times10^8\) pairs, below what \(2\times10^6\) pairs can see). Vulnerability proof: `proofs/deprecated/doubledeal-v9/`. |
 | v10 | **Deprecated**, frozen at `v10/SPEC.md` + `v10/doubledeal_v10.sudo` | SumRanks rows turn by the index-weighted rank total \(\sum (13-j)\,\mathrm{rank} \bmod 13\) of the row above; columns turn by the GF(4) suit value \(0 s_0 + s_1 + w s_2 + w^2 s_3\) of the column to the left plus the column's own suit sum; both chained in a fixed order (§3.3). Everything else as v9. Toy evidence only (`proofs/doubledeal/analysis/v10-sumranks/`): over uniformly random decks, SumRanks alone lets a card swap through unchanged with measured worst probability ≈ 1/221 over all 1326 swaps (measured 1/220.8; exactly 1/221 for a same-suit swap; v9: 1/4.2). Over relabellings more generally (subfolder `sbox-search/`: exhaustive over low-weight relabellings, plus hill-climbs), the worst non-symmetry one measured is a same-suit 3-cycle at exactly 9/1105 ≈ 1/123 (exact by enumeration, agreeing with 20M-deck samples), and none measured exceeds 1/64 except the 51 exact v10Sym symmetries. The 1/64 bound is proved in Lean for every non-symmetry relabelling of SumRanks alone (`sumRanksV10_survival_le`, `proofs/doubledeal/security/SUMRANKS_DP.md`); the value 9/1105 is proved exactly for the one 3-cycle A♣→2♣→3♣ (`sumRanksV10_survival_threeCycle`), but that it is the worst case is computer-assisted and not formalised. The product-formula 6-round estimate for the worst swap is about \(2\times10^{-17}\) (v9: \(3.6\times10^{-8}\)). These are measurements and extrapolations, not a security claim. The remaining survivors are same-suit swaps and cycles. Deprecated for a GridCycle per-layer parity shortfall (not a full-cipher attack): GridCycle, unchanged since v9, lets K♣↔K♦ through unchanged at 0.262 per layer and 1311/1326 swaps exceed 1/64 (write-up: `proofs/deprecated/doubledeal-v10/`). |
-| v11 | **Superseded** (not attacked), frozen at `v11/SPEC.md` + `v11/doubledeal_v11.sudo` (still the live text until v12 lands) | GridCycle only (§3.5, §4.4): ghost finger (each step starts from the previous target) and blocker-driven blocked placement (row = marker + blocker's suit, start column = target column + blocker's rank, first empty seat to the right, drop a row if full, marker + 1), and after a blocked placement the finger moves to target + blocker's step. Everything else as v10. Toy evidence only (`proofs/doubledeal/analysis/v10-gridcycle/`, PHASE2 + PHASE6 variant B): measured worst single-swap survival through GridCycle alone ≈ 0.0049 (≈ 1/205; v10: 0.262), 0 of 1326 swaps above 1/64 (v10: 1311), worst swap through one full round (v10 SumRanks) ≈ 1.0e-4. These are sampled measurements, not a security claim and not a bound. Superseded for a related-key property of PassKey (suit + rank collisions; 0 hits on the full cipher in 10M related-key samples), not for an attack (write-up: `proofs/deprecated/doubledeal-v11/`). |
+| v11 | **Superseded** (not attacked), frozen at `v11/SPEC.md` + `v11/doubledeal_v11.sudo` | GridCycle only (§3.5, §4.4): ghost finger (each step starts from the previous target) and blocker-driven blocked placement (row = marker + blocker's suit, start column = target column + blocker's rank, first empty seat to the right, drop a row if full, marker + 1), and after a blocked placement the finger moves to target + blocker's step. Everything else as v10. Toy evidence only (`proofs/doubledeal/analysis/v10-gridcycle/`, PHASE2 + PHASE6 variant B): measured worst single-swap survival through GridCycle alone ≈ 0.0049 (≈ 1/205; v10: 0.262), 0 of 1326 swaps above 1/64 (v10: 1311), worst swap through one full round (v10 SumRanks) ≈ 1.0e-4. These are sampled measurements, not a security claim and not a bound. Superseded for a related-key property of PassKey (suit + rank collisions; 0 hits on the full cipher in 10M related-key samples), not for an attack (write-up: `proofs/deprecated/doubledeal-v11/`). |
+| v12 | **Current** | PassKey \(F\) only (§3.7, §4.6): the suit rotation of the hand (\(\mathrm{suit} \bmod\) hand size) is replaced by dealing \(\mathrm{suit}+2\) cards one at a time under the hand, else under the key pile, else skip, before the unchanged rank cut with key-pile fallback. Everything else as v11. Toy evidence only (`proofs/doubledeal/analysis/passkey-related-key/` §9): no exact per-step collision (v11: 68 suit + rank swaps, worst 196/221), measured worst single-swap pass-through of one \(F\) ≈ 1/506 (2♣↔A♥), mean over the 1326 swaps 0.00003, 0 of 200k keys with six related round keys for the worst pair. Measurements, not a security claim. \(F\) stays a proved bijection (`passKey_leftInverse` / `passKey_rightInverse`). |
 
 ---
 
@@ -791,7 +808,7 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 
 | Artifact | Path | Role |
 | --- | --- | --- |
-| This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules (v11) |
+| This specification | `primitives/cipher/doubledeal/SPEC.md` | Normative rules (v12) |
 | Deprecated v8 | `primitives/cipher/doubledeal/v8/` | Frozen v8 SPEC and sudo; vulnerability proof in `proofs/deprecated/doubledeal-v8/` |
 | Deprecated v9 | `primitives/cipher/doubledeal/v9/` | Frozen v9 SPEC and sudo; vulnerability proof in `proofs/deprecated/doubledeal-v9/` |
 | Deprecated v10 | `primitives/cipher/doubledeal/v10/` | Frozen v10 SPEC and sudo; GridCycle parity write-up and single-deck witness in `proofs/deprecated/doubledeal-v10/` |
@@ -802,7 +819,7 @@ Seats **39–51** glow as a **counter rail**. Diamonds snap into the rail in fac
 | Correctness proofs | `proofs/doubledeal/` | Lean 4 algebraic stones (bijections, round-trip, content-preservation). Not bit-security. |
 | v10 SumRanks analysis | `proofs/doubledeal/analysis/v10-sumranks/` | Candidate measurements that led to v10 (empirical; not proofs) |
 | v10 GridCycle analysis | `proofs/doubledeal/analysis/v10-gridcycle/` | Candidate measurements that led to the v11 GridCycle (empirical; not proofs) |
-| PassKey related-key analysis | `proofs/doubledeal/analysis/passkey-related-key/` | The v11 PassKey suit + rank collision, its key-schedule and full-cipher measurements, and the candidate rules for v12 (empirical and closed-form; not Lean proofs) |
+| PassKey related-key analysis | `proofs/doubledeal/analysis/passkey-related-key/` | The v11 PassKey suit + rank collision, its key-schedule and full-cipher measurements, and the candidate rules measured for v12, including the chosen key-pile fallback (§9) (empirical and closed-form; not Lean proofs) |
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | CBC + HMAC-MegaDreifach AEAD. Not SCM. |
 
 ---

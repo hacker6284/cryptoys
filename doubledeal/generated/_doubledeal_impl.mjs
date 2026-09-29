@@ -352,7 +352,7 @@ export function overflow_seat(occ, row, start) {
             row = _rt.mod_i64(_rt.chk(row + 1n), 4n);
         }
     }
-    _rt.sudo_assert(false, 206);
+    _rt.sudo_assert(false, 207);
     return [0n, 0n];
 }
 
@@ -483,7 +483,7 @@ export function index_of(deck, card) {
             }
         }
     }
-    _rt.sudo_assert(false, 296);
+    _rt.sudo_assert(false, 297);
     return 0n;
 }
 
@@ -537,6 +537,67 @@ export function drop_front(xs) {
     return [c, _rt.dup(rest)];
 }
 
+export function deal_under(xs, m) {
+    let out = _rt.lst([]);
+    {
+        const _sudo_from_i = m;
+        const _sudo_to_i = _rt.chk(globalThis.BigInt(xs.length) - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            out.push(_rt.at(xs, i));
+        }
+    }
+    {
+        const _sudo_from_i = 1n;
+        const _sudo_to_i = m;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            out.push(_rt.at(xs, _rt.chk(m - i)));
+        }
+    }
+    return _rt.dup(out);
+}
+
+export function undeal_under(xs, m) {
+    let n = globalThis.BigInt(xs.length);
+    let out = _rt.lst([]);
+    {
+        const _sudo_from_i = 1n;
+        const _sudo_to_i = m;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            out.push(_rt.at(xs, _rt.chk(n - i)));
+        }
+    }
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(_rt.chk(n - m) - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            out.push(_rt.at(xs, i));
+        }
+    }
+    return _rt.dup(out);
+}
+
+export function deal_step(c, hand, key) {
+    let d = _rt.chk(suit_of(c) + 2n);
+    if (d < globalThis.BigInt(hand.length)) {
+        return [deal_under(hand, d), _rt.dup(key)];
+    }
+    if (d < globalThis.BigInt(key.length)) {
+        return [_rt.dup(hand), deal_under(key, d)];
+    }
+    return [_rt.dup(hand), _rt.dup(key)];
+}
+
+export function undeal_step(c, hand, key) {
+    let d = _rt.chk(suit_of(c) + 2n);
+    if (d < globalThis.BigInt(hand.length)) {
+        return [undeal_under(hand, d), _rt.dup(key)];
+    }
+    if (d < globalThis.BigInt(key.length)) {
+        return [_rt.dup(hand), undeal_under(key, d)];
+    }
+    return [_rt.dup(hand), _rt.dup(key)];
+}
+
 export function passkey(deck) {
     let hand = _rt.dup(deck);
     let key = _rt.lst([]);
@@ -547,12 +608,7 @@ export function passkey(deck) {
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
             let c;
             [c, hand] = drop_front(hand);
-            if (globalThis.BigInt(hand.length) > 0n) {
-                let k = _rt.mod_i64(suit_of(c), globalThis.BigInt(hand.length));
-                if (k > 0n) {
-                    hand = left_rotate(hand, k);
-                }
-            }
+            [hand, key] = deal_step(c, hand, key);
             if (globalThis.BigInt(hand.length) > 0n && rank_of(c) < globalThis.BigInt(hand.length)) {
                 hand = left_rotate(hand, rank_of(c));
             } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
@@ -580,12 +636,7 @@ export function passkey_inv(deck) {
             } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
                 key = right_rotate(key, rank_of(c));
             }
-            if (n > 0n) {
-                let k = _rt.mod_i64(suit_of(c), n);
-                if (k > 0n) {
-                    hand = right_rotate(hand, k);
-                }
-            }
+            [hand, key] = undeal_step(c, hand, key);
             hand = push_front(hand, c);
         }
     }
@@ -661,13 +712,13 @@ export function trace_pass(deck, steps, label) {
             let c;
             let next_hand;
             [c, next_hand] = drop_front(hand);
-            let suit_cut = 0n;
-            if (globalThis.BigInt(next_hand.length) > 0n) {
-                suit_cut = _rt.mod_i64(suit_of(c), globalThis.BigInt(next_hand.length));
-                if (suit_cut > 0n) {
-                    next_hand = left_rotate(next_hand, suit_cut);
-                }
+            let dealt = 0n;
+            if (_rt.chk(suit_of(c) + 2n) < globalThis.BigInt(next_hand.length)) {
+                dealt = _rt.chk(suit_of(c) + 2n);
+            } else if (_rt.chk(suit_of(c) + 2n) < globalThis.BigInt(key.length)) {
+                dealt = _rt.chk(0n - _rt.chk(suit_of(c) + 2n));
             }
+            [next_hand, key] = deal_step(c, next_hand, key);
             let rank_cut = 0n;
             let cut_on = 0n;
             if (globalThis.BigInt(next_hand.length) > 0n && rank_of(c) < globalThis.BigInt(next_hand.length)) {
@@ -681,7 +732,7 @@ export function trace_pass(deck, steps, label) {
             }
             key = push_front(key, c);
             hand = _rt.dup(next_hand);
-            steps = add_step(steps, _rt.txt("pass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on);
+            steps = add_step(steps, _rt.txt("pass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), dealt, rank_cut, c, cut_on);
         }
     }
     return [_rt.dup(key), _rt.dup(steps)];
@@ -711,16 +762,16 @@ export function trace_unpass(deck, steps, label) {
                 cut_on = 2n;
                 next_key = right_rotate(next_key, rank_cut);
             }
-            let suit_cut = 0n;
-            if (n > 0n) {
-                suit_cut = _rt.mod_i64(suit_of(c), n);
-                if (suit_cut > 0n) {
-                    hand = right_rotate(hand, suit_cut);
-                }
+            let dealt = 0n;
+            if (_rt.chk(suit_of(c) + 2n) < n) {
+                dealt = _rt.chk(suit_of(c) + 2n);
+            } else if (_rt.chk(suit_of(c) + 2n) < globalThis.BigInt(next_key.length)) {
+                dealt = _rt.chk(0n - _rt.chk(suit_of(c) + 2n));
             }
+            [hand, next_key] = undeal_step(c, hand, next_key);
             hand = push_front(hand, c);
             key = _rt.dup(next_key);
-            steps = add_step(steps, _rt.txt("unpass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on);
+            steps = add_step(steps, _rt.txt("unpass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), dealt, rank_cut, c, cut_on);
         }
     }
     return [_rt.dup(hand), _rt.dup(steps)];
@@ -1234,7 +1285,7 @@ export function diamond_cards() {
 }
 
 export function counter_deck(nonce, index) {
-    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 772);
+    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 812);
     let diamonds = unrank(diamond_cards(), index);
     let out = _rt.lst([]);
     {

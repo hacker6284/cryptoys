@@ -1,4 +1,4 @@
-<!-- Owns: the index of frozen DoubleDeal versions and their write-ups (historical record). Maintenance rules: ../../DOCS.md. -->
+<!-- Owns: the index of frozen DoubleDeal versions and their write-ups (live index; the write-ups it links are historical records). Maintenance rules: ../../DOCS.md. -->
 # Deprecated algorithms
 
 Vulnerability proofs live here, next to the frozen artifact they attack (see [`../README.md`](../README.md) taxonomy). An algorithm is deprecated first; only then does it collect a vulnerability proof. A version that is superseded without being attacked (DoubleDeal v11) is frozen here too, with a write-up of the finding instead of a vulnerability proof.

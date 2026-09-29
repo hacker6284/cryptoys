@@ -14,7 +14,7 @@ Toy Encrypt-then-MAC: DoubleDeal in **CBC** on the 28-byte [§5.3](../../cipher/
 | [`kats/regen.mjs`](kats/regen.mjs) | Rewrites the KAT blobs after a DoubleDeal change; `--check` (run by `tools/generate-demos.sh`) fails if a fresh run would change the JSON; `aead.test.mjs` also checks them |
 | [`kats/check.py`](kats/check.py) | Structural KAT checks (does not reimplement Hash); run by `tools/generate-demos.sh` |
 
-From the repo root. The sudo conformance tests (`-I` makes `Hash` the MegaDreifach module):
+Run from the repo root. The sudo conformance tests (`-I` makes `Hash` the MegaDreifach module):
 
 ```sh
 sudoc emit-ir --require terminates -I primitives/hash/megadreifach \

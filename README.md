@@ -1,7 +1,7 @@
 <!-- Owns: the repository map (one-line purpose per primitive, where each area is documented) and the sudo conformance test commands. Maintenance rules: DOCS.md. -->
 # cryptoys
 
-Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys.
+Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys. Not for real use; a green Lean build is not a security claim (see [proofs/README.md](proofs/README.md)).
 
 Each primitive is a directory holding a normative specification and one [sudocode](https://github.com/hacker6284/sudocode) implementation. Demos are rendered with Three.js, and published from this repository with GitHub Pages and on Render as [cryptoygraphy.com](https://cryptoygraphy.com/).
 

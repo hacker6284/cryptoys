@@ -63,10 +63,10 @@ cd proofs/doubledeal-cbc-hmac/lean/Generated && lake build && ./.lake/build/bin/
 ```
 
 Expected TAP: DoubleDeal **all pass** (every sudo `test` except the two
-test-only kind-scan `while`s, which the terminates gate strips; JS runs them all),
-MegaDreifach **11/11**, Scramble **15/15**, DoubleDeal-CBC-HMAC
-**11/11** (HMAC / KDF / pad / MAC-input tests; byte-domain CBC
-that ranks a deck stays in JS because `52!` is not a sudo `int`).
+test-only kind-scan `while`s, which the terminates gate strips; JS runs them all).
+The other counts: [MegaDreifach](megadreifach/README.md#three-layers-be-honest),
+[Scramble](scramble/README.md#generated-lean),
+[DoubleDeal-CBC-HMAC](doubledeal-cbc-hmac/README.md#generated-lean).
 
 ## Pin (sudocode main)
 

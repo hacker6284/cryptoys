@@ -5,7 +5,7 @@
 # Pin: proofs/SUDOCODE_PIN (hacker6284/sudocode main), read by proofs/sudocode.sh.
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
-# Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10),
+# Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10, v11),
 # MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. DoubleDeal's test-only
 # kind-scan whiles are stripped under the gate. CBC-HMAC imports
 # MegaDreifach via an extra -I.
@@ -26,12 +26,13 @@ cd "$ROOT"
 
 # The targets, spelled once: name | .sudo | Generated/ | extra -I directories.
 # doubledeal-v8, -v9, -v10 are frozen, deprecated (vulnerability-proof / write-up
-# targets): do not change their .sudo.
+# targets); doubledeal-v11 is frozen, superseded (not attacked). Do not change their .sudo.
 TARGET_TABLE="
 doubledeal      primitives/cipher/doubledeal/doubledeal.sudo              proofs/doubledeal/lean/Generated
 doubledeal-v8   primitives/cipher/doubledeal/v8/doubledeal_v8.sudo        proofs/deprecated/doubledeal-v8/lean/Generated
 doubledeal-v9   primitives/cipher/doubledeal/v9/doubledeal_v9.sudo        proofs/deprecated/doubledeal-v9/lean/Generated
 doubledeal-v10  primitives/cipher/doubledeal/v10/doubledeal_v10.sudo      proofs/deprecated/doubledeal-v10/lean/Generated
+doubledeal-v11  primitives/cipher/doubledeal/v11/doubledeal_v11.sudo      proofs/deprecated/doubledeal-v11/lean/Generated
 megadreifach    primitives/hash/megadreifach/megadreifach.sudo            proofs/megadreifach/lean/Generated
 scramble        primitives/hash/scramble/scramble.sudo                    proofs/scramble/lean/Generated
 cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach

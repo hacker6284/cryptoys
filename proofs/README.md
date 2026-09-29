@@ -53,6 +53,7 @@ proofs/
     doubledeal-v8/          # DoubleDeal v8 relabelling distinguisher + witness
     doubledeal-v9/          # DoubleDeal v9 K♣↔Q♥ swap distinguisher + kernel-checked witness (draft)
     doubledeal-v10/         # DoubleDeal v10 GridCycle per-layer parity shortfall + single-deck kernel witness
+    doubledeal-v11/         # DoubleDeal v11, superseded (PassKey related-key property; not an attack): frozen vectors + emitted TAP
 ```
 
 Deprecated algorithms get a directory under `proofs/deprecated/` for vulnerability proofs, next to their frozen artifact. The first is DoubleDeal v8 (`proofs/deprecated/doubledeal-v8/`): a same-rank relabelling distinguisher with a checkable witness evaluated on the emitted frozen v8 `encrypt` (compiled check; kernel `decide` was too heavy). See [`deprecated/README.md`](deprecated/README.md).
@@ -69,5 +70,6 @@ Deprecated algorithms get a directory under `proofs/deprecated/` for vulnerabili
 | DoubleDeal v8 (deprecated) | `primitives/cipher/doubledeal/v8/` (frozen) | **Vulnerability proof** under `deprecated/doubledeal-v8/`: witness (compiled check of emitted v8 `encrypt`; JSON) that v8 commutes with K♣↔K♦ on one (key, message); measured rate ≈1e-3 per pair is evidence. Distinguisher, not key recovery. |
 | DoubleDeal v9 (deprecated) | `primitives/cipher/doubledeal/v9/` (frozen; superseded by v10) | **Vulnerability proof** under `deprecated/doubledeal-v9/`: kernel theorem (`decide!` per stage, chained) that the emitted frozen v9 `encrypt` satisfies E_K(σM) = σE_K(M) for σ = K♣↔Q♥ on one (key, message); measured rate ≈3.5e-8 per pair is evidence. Distinguisher, not key recovery. |
 | DoubleDeal v10 (deprecated) | `primitives/cipher/doubledeal/v10/` (frozen; superseded by v11) | **Per-layer weakness write-up** under `deprecated/doubledeal-v10/`, **not** a full-cipher attack: GridCycle lets K♣↔K♦ through unchanged at 0.262 per layer (measured; 1311/1326 swaps above 1/64). Kernel theorem (`decide!`) that K♣↔K♦ commutes with the emitted frozen v10 `mix_columns` on one deck. The worst 6-round trail estimate stays ≈2e-17; no distinguisher on the full cipher is claimed. |
+| DoubleDeal v11 (superseded) | `primitives/cipher/doubledeal/v11/` (frozen) | **Superseded, not attacked.** Write-up under `deprecated/doubledeal-v11/`: PassKey's suit and rank cuts add, so 68 equal-suit+rank swaps commute with one pass of F at up to 196/221 (closed form) and give τ-related round keys for ≈48% of keys (measured). A related-key property only: 0 hits on the full 6-round cipher in 10M related-key samples. Frozen vectors and emitted TAP; no witness package. |
 
 See `doubledeal/README.md` for DoubleDeal proved-versus-open, and `doubledeal/STONES.md` for the SPEC §6 checklist. See `megadreifach/README.md` and `megadreifach/STONES.md` for MegaDreifach.

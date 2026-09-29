@@ -122,9 +122,9 @@ def encrypt(m, k0, v):
     return final_round(m, keys[6], v)
 
 
-# Known-answer vectors per version (11 = current; 8, 9, 10 frozen).
+# Known-answer vectors per version (8, 9, 10, 11 frozen; 11 is identical to the live JSON until v12 lands).
 VECTOR_JSON = {
-    11: 'proofs/doubledeal/vectors/doubledeal_vectors.json',
+    11: 'proofs/deprecated/doubledeal-v11/vectors/doubledeal_v11_vectors.json',
     10: 'proofs/deprecated/doubledeal-v10/vectors/doubledeal_v10_vectors.json',
     9: 'proofs/deprecated/doubledeal-v9/vectors/doubledeal_v9_vectors.json',
     8: 'proofs/deprecated/doubledeal-v8/vectors/doubledeal_v8_vectors.json',

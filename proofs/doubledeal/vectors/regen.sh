@@ -4,22 +4,22 @@
 # proofs/sudocode.sh). The pin is recorded in each JSON as sudocode_commit.
 #
 # Usage (from anywhere):
-#   proofs/doubledeal/vectors/regen.sh [current|v8|v9|v10] [--check]
+#   proofs/doubledeal/vectors/regen.sh [current|v8|v9|v10|v11] [--check]
 #     current (default)  doubledeal.sudo -> doubledeal_vectors.json and DoubleDeal/Vectors.lean
-#     v8, v9, v10        frozen, deprecated versions -> their doubledeal_vN_vectors.json
+#     v8, v9, v10, v11   frozen, deprecated/superseded versions -> their doubledeal_vN_vectors.json
 #   --check              build to a temp dir; fail unless byte-identical to the committed files
 #
 # Optional: SUDOC=/path/to/sudoc, SUDOCODE_DIR=/path/to/sudocode (see proofs/sudocode.sh).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-usage() { echo "usage: $0 [current|v8|v9|v10] [--check]" >&2; exit 2; }
+usage() { echo "usage: $0 [current|v8|v9|v10|v11] [--check]" >&2; exit 2; }
 
 version=current
 check=0
 for arg in "$@"; do
   case "$arg" in
-    current|v8|v9|v10) version="$arg" ;;
+    current|v8|v9|v10|v11) version="$arg" ;;
     --check) check=1 ;;
     *) usage ;;
   esac
@@ -39,6 +39,9 @@ case "$version" in
   v10)     sudo=primitives/cipher/doubledeal/v10/doubledeal_v10.sudo
            collect=proofs/deprecated/doubledeal-v10/vectors/collect_vectors_v10.mjs
            json=proofs/deprecated/doubledeal-v10/vectors/doubledeal_v10_vectors.json ;;
+  v11)     sudo=primitives/cipher/doubledeal/v11/doubledeal_v11.sudo
+           collect=proofs/deprecated/doubledeal-v11/vectors/collect_vectors_v11.mjs
+           json=proofs/deprecated/doubledeal-v11/vectors/doubledeal_v11_vectors.json ;;
 esac
 # current only: the Lean mirror of the JSON
 lean=proofs/doubledeal/lean/DoubleDeal/Vectors.lean

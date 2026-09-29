@@ -1,0 +1,25 @@
+$ ./readings 20000 21
+readings N=20000 seed=21  (x = suit; one pass; swap tau passes if F(tau K) = tau F(K))
+CUR   F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 200000/200000 decks
+      worst 2H<->AS 0.8899   2H<->AS 0.8899   pairs > 1/64: 68   mean over 1326: 0.03555
+      top 5: 2H<->AS 0.8899 2S<->AD 0.8881 2C<->AH 0.8848 3H<->2S 0.8538 3C<->2H 0.8532
+      six chained passes, worst pair 2H<->AS: K'_r = tau K_r for all r=1..6 in 95881/200000 keys = 0.47941
+SAME  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 200000/200000 decks
+      worst 2H<->AS 0.8899   2H<->AS 0.8899   pairs > 1/64: 68   mean over 1326: 0.03555
+      top 5: 2H<->AS 0.8899 2S<->AD 0.8881 2C<->AH 0.8848 3H<->2S 0.8538 3C<->2H 0.8532
+DEAL  preimages found per output (200000 random decks, trying every last-deal count): 1:81213 2:77712 3:34574 4:6501  -> not injective if any >1
+DEAL  F^-1(F(x)) != x: 120397/200000  F(F^-1(y)) != y: 120117/200000  equals CUR on 0/200000 decks
+      worst 6H<->6S 0.3736   2H<->AS 0.3494   pairs > 1/64: 1326   mean over 1326: 0.34976
+      top 5: 6H<->6S 0.3736 TH<->TD 0.3733 3S<->3D 0.3731 9S<->9D 0.3729 QS<->QD 0.3725
+KEYP  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/200000 decks
+      worst KH<->QS 0.0590   2H<->AS 0.0006   pairs > 1/64: 35   mean over 1326: 0.00116
+      top 5: KH<->QS 0.0590 KC<->QH 0.0571 KS<->QD 0.0553 KH<->JD 0.0513 KC<->JS 0.0491
+      six chained passes, worst pair KH<->QS: K'_r = tau K_r for all r=1..6 in 0/200000 keys = 0.00000
+DEALB  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/200000 decks
+      worst 2C<->AH 0.8865   2H<->AS 0.0153   pairs > 1/64: 12   mean over 1326: 0.00682
+      top 5: 2C<->AH 0.8865 3C<->2H 0.8472 4C<->3H 0.8162 5C<->4H 0.7835 6C<->5H 0.7470
+      six chained passes, worst pair 2C<->AH: K'_r = tau K_r for all r=1..6 in 96392/200000 keys = 0.48196
+REVT  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/200000 decks
+      worst AC<->AH 1.0000   2H<->AS 0.0000   pairs > 1/64: 25   mean over 1326: 0.01034
+      top 5: AC<->AH 1.0000 2C<->2H 1.0000 3C<->3H 1.0000 4C<->4H 1.0000 5C<->5H 1.0000
+      six chained passes, worst pair AC<->AH: K'_r = tau K_r for all r=1..6 in 200000/200000 keys = 1.00000

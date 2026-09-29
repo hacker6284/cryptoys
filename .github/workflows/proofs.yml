@@ -69,6 +69,8 @@ jobs:
         run: proofs/doubledeal/vectors/regen.sh v9 --check
       - name: Frozen v10 vectors rebuild byte-identically from v10/doubledeal_v10.sudo
         run: proofs/doubledeal/vectors/regen.sh v10 --check
+      - name: Frozen v11 vectors rebuild byte-identically from v11/doubledeal_v11.sudo
+        run: proofs/doubledeal/vectors/regen.sh v11 --check
 
   generated:
     # Emitted Lean of each primitive builds and its sudo tests pass (TAP).
@@ -166,6 +168,20 @@ jobs:
         run: lake build
       - name: Axiom audit (no sorryAx / ofReduceBool)
         run: python3 proofs/doubledeal/check_axioms.py v10-deprecated
+
+  doubledeal-v11-superseded:
+    # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property;
+    # not an attack, so no witness package): emitted TAP only
+    # (see proofs/deprecated/doubledeal-v11/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v11/lean/Generated
+      - name: Generated v11 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/doubledeal-v11/lean/Generated
+        run: ./.lake/build/bin/doubledeal_v11_test
 
   doubledeal-lean:
     runs-on: ubuntu-latest

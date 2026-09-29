@@ -19,4 +19,5 @@ import DoubleDealSecurity.SumRanksDP.Standalone
 import DoubleDealSecurity.SumRanksDP.Decomp
 import DoubleDealSecurity.SumRanksDP.Main
 import DoubleDealSecurity.SumRanksDP.ThreeCycle
+import DoubleDealSecurity.GridCycleSurvivalLists
 import DoubleDealSecurity.GridCycleSurvival

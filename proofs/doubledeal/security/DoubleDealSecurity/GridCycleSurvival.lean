@@ -38,6 +38,7 @@ import DoubleDealSecurity.GridCycle
 import DoubleDealSecurity.SumRanksV10
 import DoubleDealSecurity.SumRanksDP.ThreeCycle
 import DoubleDealSecurity.BranchNumber
+import DoubleDealSecurity.GridCycleSurvivalLists
 import Mathlib
 
 namespace DoubleDeal.Security.GCSurvival
@@ -74,56 +75,42 @@ theorem gcSurvives_first (τ : Relabel) (π : Equiv.Perm (Fin 52)) (h : GCSurviv
   · exact Or.inr (Or.inr ⟨h2, h2 ▸ h1⟩)
   · exact Or.inr (Or.inl ⟨h2, h2 ▸ h1⟩)
 
-/-! ## Counting decks by their first card -/
+/-! ## Counting decks by their first card
+
+The counting argument is stated once, for every finite type, in
+`SumRanksDP/ThreeCycle.lean` (`card_fibre_eq_of_mul`: left multiplication moves one
+fibre onto another; `card_filter_comp_eq`: count through equal fibres); the deck
+counts here (one position, and three positions below) are instances. -/
 
 theorem card_first_eq (c c' : Fin 52) :
     (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c).card =
-      (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c').card := by
-  apply card_nbij' (fun π => Equiv.swap c c' * π) (fun π => Equiv.swap c c' * π)
-  · intro π hπ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and,
-      Equiv.Perm.mul_apply] at hπ ⊢
-    rw [hπ, Equiv.swap_apply_left]
-  · intro π hπ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and,
-      Equiv.Perm.mul_apply] at hπ ⊢
-    rw [hπ, Equiv.swap_apply_right]
-  · intro π _; simp [← mul_assoc]
-  · intro π _; simp [← mul_assoc]
+      (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c').card :=
+  SumRanksDP.card_fibre_eq_of_mul (fun π : Equiv.Perm (Fin 52) => π 0) (Equiv.swap c c') c' c
+    fun π => by
+      simp only [Equiv.Perm.mul_apply]
+      rw [Equiv.apply_eq_iff_eq_symm_apply, Equiv.symm_swap, Equiv.swap_apply_left]
+
+/-- Decks whose first card satisfies `P`: `#{c | P c} · (decks starting with card 0)`. -/
+theorem card_first_comp (P : Fin 52 → Prop) [DecidablePred P] :
+    (univ.filter fun π : Equiv.Perm (Fin 52) => P (π 0)).card =
+      (univ.filter P).card * (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = 0).card :=
+  SumRanksDP.card_filter_comp_eq (fun π : Equiv.Perm (Fin 52) => π 0) univ
+    (fun _ => mem_univ _) _ (fun c _ => card_first_eq c 0) P
 
 /-- Exactly `52!/52` decks start with a given card. -/
 theorem card_first (c : Fin 52) :
     52 * (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c).card = Nat.factorial 52 := by
-  have hsum := card_eq_sum_card_fiberwise (s := (univ : Finset (Equiv.Perm (Fin 52))))
-    (t := (univ : Finset (Fin 52))) (f := fun π : Equiv.Perm (Fin 52) => π (0 : Fin 52)) (fun _ _ => mem_univ _)
-  have hc : ∀ c' ∈ (univ : Finset (Fin 52)),
-      ((univ : Finset (Equiv.Perm (Fin 52))).filter fun π => π 0 = c').card =
-        (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c).card :=
-    fun c' _ => card_first_eq c' c
-  rw [sum_congr rfl hc, sum_const, Finset.card_fin, smul_eq_mul] at hsum
-  have h52 : (univ : Finset (Equiv.Perm (Fin 52))).card = Nat.factorial 52 := by
-    rw [card_univ, Fintype.card_perm, Fintype.card_fin]
-  omega
+  have h := card_first_comp fun _ => True
+  rw [filter_True, filter_True, card_univ, Fintype.card_perm, Fintype.card_fin,
+    card_univ, Fintype.card_fin] at h
+  rw [h, card_first_eq c 0]
 
 /-- Decks whose first card lies in `E`: exactly `#E · 52!/52`. -/
 theorem card_first_mem (E : Finset (Fin 52)) :
     52 * (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 ∈ E).card =
       E.card * Nat.factorial 52 := by
-  have hsum := card_eq_sum_card_fiberwise
-    (s := univ.filter fun π : Equiv.Perm (Fin 52) => π 0 ∈ E) (t := E) (f := fun π : Equiv.Perm (Fin 52) => π (0 : Fin 52))
-    (fun π hπ => by simpa using hπ)
-  have hc : ∀ c ∈ E, ((univ.filter fun π : Equiv.Perm (Fin 52) => π 0 ∈ E).filter
-      fun π => π 0 = c).card = (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c).card := by
-    intro c hc
-    rw [filter_filter]
-    congr 1
-    apply filter_congr
-    intro π _
-    constructor
-    · exact fun h => h.2
-    · intro h; exact ⟨h ▸ hc, h⟩
-  rw [hsum, sum_congr rfl hc, Finset.mul_sum, sum_congr rfl (fun c _ => card_first c),
-    sum_const, smul_eq_mul]
+  rw [card_first_comp (· ∈ E), ← card_first 0, filter_mem_eq_inter, univ_inter]
+  ring
 
 /-! ## The survival bounds -/
 
@@ -249,71 +236,63 @@ theorem gcSurvives_seats3 (τ : Relabel) (π : Equiv.Perm (Fin 52)) (h : GCSurvi
   simp only [seats3]
   rw [hn 1 (by omega) (by omega), hn 2 (by omega) (by omega), hn 3 (by omega) (by omega)]
 
-/-- Second and third cards keeping seats 1..3 unchanged under `v10Sym 0 3`, first card K♣. -/
-def LKC : List (Nat × Nat) := [(0, 38), (1, 38), (2, 38), (3, 38), (4, 38), (5, 38), (6, 38), (7, 38), (8, 38), (9, 38), (10, 38), (11, 38), (13, 24), (50, 13), (51, 25)]
-
-/-- The same with first card K♠. -/
-def LKS : List (Nat × Nat) := [(24, 39), (25, 51), (26, 12), (27, 12), (28, 12), (29, 12), (30, 12), (31, 12), (32, 12), (33, 12), (34, 12), (35, 12), (36, 12), (37, 12), (39, 50)]
+/- The lists `LKC` (first card K♣) and `LKS` (first card K♠) of second and third cards
+   keeping seats 1..3 unchanged under `v10Sym 0 3` are generated into
+   `GridCycleSurvivalLists.lean` by `analysis/v12-diffusion/prefix_survival.py --lean`
+   (CI: `--check`); the kernel checks them (`Check3`, heavy library). -/
 
 /-- The finite check behind the three-step bound for first card `c0`: every
     `(c1, c2)` that keeps seats 1..3 unchanged under `v10Sym 0 3` (with `c0, c1, c2`
     distinct) is listed in `L`. Evaluated by kernel `decide!` in the heavy library
-    (`DoubleDealSecurityHeavy/GridCycleSurvival.lean`, about 3-4 min), not here. -/
-def check3 (c0 : Fin 52) (L : List (Nat × Nat)) (c1 c2 : Fin 52) : Bool :=
+    (`DoubleDealSecurityHeavy/GridCycleSurvival.lean`: eight `decide!` chunks, about
+    4 min for the module in CI, about 2 min per check), not here. -/
+def check3 (c0 : Fin 52) (L : List (Fin 52 × Fin 52)) (c1 c2 : Fin 52) : Bool :=
   !(decide (seats3 (v10SymFn 0 3 c0).val (v10SymFn 0 3 c1).val (v10SymFn 0 3 c2).val =
       seats3 c0.val c1.val c2.val)) || decide (c1 = c0) || decide (c2 = c0) || decide (c1 = c2) ||
-    decide ((c1.val, c2.val) ∈ L)
+    decide ((c1, c2) ∈ L)
 
 /-- `check3` holds for every pair. -/
-def Check3 (c0 : Fin 52) (L : List (Nat × Nat)) : Prop := ∀ c1 c2 : Fin 52, check3 c0 L c1 c2 = true
+def Check3 (c0 : Fin 52) (L : List (Fin 52 × Fin 52)) : Prop := ∀ c1 c2 : Fin 52, check3 c0 L c1 c2 = true
 
-theorem of_check3 {c0 : Fin 52} {L : List (Nat × Nat)} (h : Check3 c0 L) (c1 c2 : Fin 52)
+theorem of_check3 {c0 : Fin 52} {L : List (Fin 52 × Fin 52)} (h : Check3 c0 L) (c1 c2 : Fin 52)
     (hs : seats3 (v10SymFn 0 3 c0).val (v10SymFn 0 3 c1).val (v10SymFn 0 3 c2).val =
       seats3 c0.val c1.val c2.val) (h1 : c1 ≠ c0) (h2 : c2 ≠ c0) (h12 : c1 ≠ c2) :
-    (c1.val, c2.val) ∈ L := by
+    (c1, c2) ∈ L := by
   have := h c1 c2
   simpa [check3, hs, h1, h2, h12] using this
 
-/-- `n` as a card (`n % 52`). -/
-def finOf (n : Nat) : Fin 52 := ⟨n % 52, Nat.mod_lt _ (by decide)⟩
-
-theorem finOf_val (c : Fin 52) : finOf c.val = c := Fin.ext (Nat.mod_eq_of_lt c.isLt)
-
-/-- The 30 first-card triples (card ids) that keep seats 1..3 unchanged under
-    `v10Sym 0 3`: `LKC` and `LKS` with the first card (K♣ = 12, K♠ = 38) prepended. -/
-def T03N : List (Nat × Nat × Nat) :=
-  [(12, 0, 38), (12, 1, 38), (12, 2, 38), (12, 3, 38), (12, 4, 38), (12, 5, 38), (12, 6, 38), (12, 7, 38), (12, 8, 38), (12, 9, 38), (12, 10, 38), (12, 11, 38), (12, 13, 24), (12, 50, 13), (12, 51, 25), (38, 24, 39), (38, 25, 51), (38, 26, 12), (38, 27, 12), (38, 28, 12), (38, 29, 12), (38, 30, 12), (38, 31, 12), (38, 32, 12), (38, 33, 12), (38, 34, 12), (38, 35, 12), (38, 36, 12), (38, 37, 12), (38, 39, 50)]
-
-def toFin3 (t : Nat × Nat × Nat) : Fin 52 × Fin 52 × Fin 52 := (finOf t.1, finOf t.2.1, finOf t.2.2)
-
-def T03 : Finset (Fin 52 × Fin 52 × Fin 52) := (T03N.map toFin3).toFinset
+/-- The 30 first-card triples that keep seats 1..3 unchanged under `v10Sym 0 3`:
+    `LKC` and `LKS` with their first card (K♣, K♠) prepended. -/
+def T03 : Finset (Fin 52 × Fin 52 × Fin 52) :=
+  ((LKC.map fun p => (KC, p.1, p.2)) ++ LKS.map fun p => (KS, p.1, p.2)).toFinset
 
 theorem card_T03_le : T03.card ≤ 30 :=
-  (List.toFinset_card_le _).trans (by simp [T03N])
+  (List.toFinset_card_le _).trans (by simp [LKC, LKS])
 
-theorem T03N_ok : ∀ t ∈ T03N, t.1 < 52 ∧ t.2.1 < 52 ∧ t.2.2 < 52 ∧
-    t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2 := by decide
+theorem LKC_ok : ∀ p ∈ LKC, KC ≠ p.1 ∧ KC ≠ p.2 ∧ p.1 ≠ p.2 := by
+  -- `List.all` form: kernel `decide!` of the `∀ p ∈ _` form takes ~8 s (Mathlib instances).
+  have h : (LKC.all fun p => decide (KC ≠ p.1 ∧ KC ≠ p.2 ∧ p.1 ≠ p.2)) = true := by decide
+  exact fun p hp => of_decide_eq_true (List.all_eq_true.1 h p hp)
+
+theorem LKS_ok : ∀ p ∈ LKS, KS ≠ p.1 ∧ KS ≠ p.2 ∧ p.1 ≠ p.2 := by
+  -- `List.all` form: kernel `decide!` of the `∀ p ∈ _` form takes ~8 s (Mathlib instances).
+  have h : (LKS.all fun p => decide (KS ≠ p.1 ∧ KS ≠ p.2 ∧ p.1 ≠ p.2)) = true := by decide
+  exact fun p hp => of_decide_eq_true (List.all_eq_true.1 h p hp)
 
 theorem T03_distinct : ∀ t ∈ T03, t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2 := by
   intro t ht
-  simp only [T03, List.mem_toFinset, List.mem_map] at ht
-  obtain ⟨n, hn, rfl⟩ := ht
-  obtain ⟨h0, h1, h2, d01, d02, d12⟩ := T03N_ok n hn
-  simp only [toFin3, finOf, ne_eq, Fin.mk.injEq, Nat.mod_eq_of_lt h0, Nat.mod_eq_of_lt h1,
-    Nat.mod_eq_of_lt h2]
-  exact ⟨d01, d02, d12⟩
-
-theorem LKC_sub : ∀ p ∈ LKC, (12, p.1, p.2) ∈ T03N := by decide
-
-theorem LKS_sub : ∀ p ∈ LKS, (38, p.1, p.2) ∈ T03N := by decide
+  simp only [T03, List.mem_toFinset, List.mem_append, List.mem_map] at ht
+  rcases ht with ⟨p, hp, rfl⟩ | ⟨p, hp, rfl⟩
+  · exact LKC_ok p hp
+  · exact LKS_ok p hp
 
 theorem mem_T03_of_lists (c0 c1 c2 : Fin 52)
-    (h : (c0 = KC ∧ (c1.val, c2.val) ∈ LKC) ∨ (c0 = KS ∧ (c1.val, c2.val) ∈ LKS)) :
+    (h : (c0 = KC ∧ (c1, c2) ∈ LKC) ∨ (c0 = KS ∧ (c1, c2) ∈ LKS)) :
     (c0, c1, c2) ∈ T03 := by
-  simp only [T03, List.mem_toFinset, List.mem_map]
+  simp only [T03, List.mem_toFinset, List.mem_append, List.mem_map]
   rcases h with ⟨rfl, h⟩ | ⟨rfl, h⟩
-  · exact ⟨(12, c1.val, c2.val), LKC_sub _ h, by simp [toFin3, finOf_val]; rfl⟩
-  · exact ⟨(38, c1.val, c2.val), LKS_sub _ h, by simp [toFin3, finOf_val]; rfl⟩
+  · exact Or.inl ⟨(c1, c2), h, rfl⟩
+  · exact Or.inr ⟨(c1, c2), h, rfl⟩
 
 /-- (PROVED) A deck on which `v10Sym 0 3` survives GridCycle starts with a triple of `T03`. -/
 theorem gcSurvives_v03_T03 (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
@@ -334,7 +313,10 @@ theorem gcSurvives_v03_T03 (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
   · rw [h0] at h3 d01 d02
     exact Or.inr ⟨h0, of_check3 hKS (π 1) (π 2) h3 d01 d02 d12⟩
 
-/-! ### Counting decks by their first three cards -/
+/-! ### Counting decks by their first three cards
+
+Instances of the shared counting lemmas (`SumRanksDP.fibre3_card_eq`,
+`SumRanksDP.card_filter_comp_eq`, `SumRanksDP.card_distinct_triples_eq`). -/
 
 /-- Decks with first cards `(0, 1, 2)`; every distinct triple has as many. -/
 @[irreducible] def F3 : ℕ := (univ.filter fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2) = ((0 : Fin 52), (1 : Fin 52), (2 : Fin 52))).card
@@ -342,123 +324,41 @@ theorem gcSurvives_v03_T03 (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
 theorem fibre3_card (t : Fin 52 × Fin 52 × Fin 52)
     (ht : t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2) :
     (univ.filter fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2) = t).card = F3 := by
-  obtain ⟨t0, t1, t2⟩ := t
-  dsimp only at ht
-  obtain ⟨ρ, h0, h1, h2⟩ := SumRanksDP.exists_perm_three (0 : Fin 52) 1 2 t0 t1 t2
-    (by decide) (by decide) (by decide) ht.1 ht.2.1 ht.2.2
   unfold F3
-  apply card_nbij' (fun π => ρ⁻¹ * π) (fun π => ρ * π)
-  · intro π hπ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, Prod.mk.injEq,
-      Equiv.Perm.mul_apply, mem_coe] at hπ ⊢
-    obtain ⟨a, b, c⟩ := hπ
-    rw [a, b, c, Equiv.Perm.inv_eq_iff_eq, Equiv.Perm.inv_eq_iff_eq, Equiv.Perm.inv_eq_iff_eq]
-    exact ⟨h0.symm, h1.symm, h2.symm⟩
-  · intro π hπ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, Prod.mk.injEq,
-      Equiv.Perm.mul_apply, mem_coe] at hπ ⊢
-    obtain ⟨a, b, c⟩ := hπ
-    rw [a, b, c]
-    exact ⟨h0, h1, h2⟩
-  · intro π _; simp only [mul_inv_cancel_left]
-  · intro π _; simp only [inv_mul_cancel_left]
+  exact SumRanksDP.fibre3_card_eq 0 1 2 (0, 1, 2) t (by decide) ht
 
-/-- Decks with first cards `(0, 1)`. -/
-@[irreducible] def F2 : ℕ := (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = 0 ∧ π 1 = 1).card
+/-- The ordered triples of distinct cards. -/
+def Distinct3 : Finset (Fin 52 × Fin 52 × Fin 52) :=
+  univ.filter fun t => t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2
 
-theorem card_first2_eq (b : Fin 52) (hb : b ≠ 0) :
-    (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = 0 ∧ π 1 = b).card = F2 := by
-  unfold F2
-  have hs0 : Equiv.swap (1 : Fin 52) b 0 = 0 :=
-    Equiv.swap_apply_of_ne_of_ne (by decide) (Ne.symm hb)
-  apply card_nbij' (fun π => Equiv.swap 1 b * π) (fun π => Equiv.swap 1 b * π)
-  · intro π hπ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and,
-      Equiv.Perm.mul_apply, mem_coe] at hπ ⊢
-    rw [hπ.1, hπ.2, hs0, Equiv.swap_apply_right]; exact ⟨rfl, rfl⟩
-  · intro π hπ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and,
-      Equiv.Perm.mul_apply, mem_coe] at hπ ⊢
-    rw [hπ.1, hπ.2, hs0, Equiv.swap_apply_left]; exact ⟨rfl, rfl⟩
-  · intro π _; simp [← mul_assoc]
-  · intro π _; simp [← mul_assoc]
-
-theorem card_pos2 : (univ.filter fun b : Fin 52 => b ≠ 0).card = 51 := by decide
-
-theorem card_pos3 : (univ.filter fun c : Fin 52 => c ≠ 0 ∧ c ≠ 1).card = 50 := by decide
-
-/-- `51 · F2` decks start with card 0. -/
-theorem F1_eq : (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = 0).card = 51 * F2 := by
-  have hsum := card_eq_sum_card_fiberwise
-    (s := univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = 0)
-    (t := univ.filter fun b : Fin 52 => b ≠ 0)
-    (f := fun π : Equiv.Perm (Fin 52) => π (1 : Fin 52))
-    (fun π hπ => by
-      simp only [mem_filter, mem_univ, true_and] at hπ ⊢
-      intro e; rw [← hπ] at e; exact absurd (π.injective e) (by decide))
-  rw [hsum]
-  have hc : ∀ b ∈ (univ.filter fun b : Fin 52 => b ≠ 0),
-      ((univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = 0).filter
-        fun π => π 1 = b).card = F2 := by
-    intro b hb
-    simp only [mem_filter, mem_univ, true_and] at hb
-    rw [filter_filter]
-    exact card_first2_eq b hb
-  rw [sum_const_nat hc, card_pos2]
-
-theorem card_first3_eq (c : Fin 52) (hc : c ≠ 0 ∧ c ≠ 1) :
-    (univ.filter fun π : Equiv.Perm (Fin 52) => (π 0 = 0 ∧ π 1 = 1) ∧ π 2 = c).card = F3 := by
-  refine Eq.trans ?_ (fibre3_card ((0 : Fin 52), (1 : Fin 52), c)
-    ⟨(by decide : (0 : Fin 52) ≠ 1), Ne.symm hc.1, Ne.symm hc.2⟩)
-  exact congrArg Finset.card (filter_congr (fun π _ => by simp only [Prod.mk.injEq, and_assoc]))
-
-/-- `50 · F3 = F2`. -/
-theorem F2_eq : F2 = 50 * F3 := by
-  have hsum := card_eq_sum_card_fiberwise
-    (s := univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = 0 ∧ π 1 = 1)
-    (t := univ.filter fun c : Fin 52 => c ≠ 0 ∧ c ≠ 1)
-    (f := fun π : Equiv.Perm (Fin 52) => π (2 : Fin 52))
-    (fun π hπ => by
-      simp only [mem_filter, mem_univ, true_and] at hπ ⊢
-      constructor
-      · intro e; rw [← hπ.1] at e; exact absurd (π.injective e) (by decide)
-      · intro e; rw [← hπ.2] at e; exact absurd (π.injective e) (by decide))
-  unfold F2
-  rw [hsum]
-  have hc : ∀ c ∈ (univ.filter fun c : Fin 52 => c ≠ 0 ∧ c ≠ 1),
-      ((univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = 0 ∧ π 1 = 1).filter
-        fun π => π 2 = c).card = F3 := by
-    intro c hc
-    simp only [mem_filter, mem_univ, true_and] at hc
-    rw [filter_filter]
-    exact card_first3_eq c hc
-  rw [sum_const_nat hc, card_pos3]
+/-- Decks whose first three cards satisfy `P`: `#{distinct t | P t} · F3`. -/
+theorem card_first3_comp (P : Fin 52 × Fin 52 × Fin 52 → Prop) [DecidablePred P] :
+    (univ.filter fun π : Equiv.Perm (Fin 52) => P (π 0, π 1, π 2)).card =
+      (Distinct3.filter P).card * F3 :=
+  SumRanksDP.card_filter_comp_eq (fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2)) Distinct3
+    (fun π => by
+      simp only [Distinct3, mem_filter, mem_univ, true_and]
+      exact ⟨fun e => absurd (π.injective e) (by decide),
+        fun e => absurd (π.injective e) (by decide), fun e => absurd (π.injective e) (by decide)⟩)
+    F3 (fun t ht => fibre3_card t (by rw [Distinct3, mem_filter] at ht; exact ht.2)) P
 
 /-- `52 · 51 · 50 · F3 = 52!`. -/
 theorem F3_eq : 132600 * F3 = Nat.factorial 52 := by
-  have h1 := card_first 0
-  rw [F1_eq, F2_eq] at h1
-  have e : (132600 : ℕ) = 52 * 51 * 50 := by norm_num
-  rw [e, Nat.mul_assoc, Nat.mul_assoc]
-  exact h1
+  have h := card_first3_comp fun _ => True
+  rw [filter_True, filter_True, card_univ, Fintype.card_perm, Fintype.card_fin, Distinct3,
+    SumRanksDP.card_distinct_triples_eq, Fintype.card_fin] at h
+  rw [h, show Nat.descFactorial 52 3 = 132600 by decide]
 
 /-- Decks whose first three cards lie in a set `T` of distinct triples: `#T · F3`. -/
 theorem card_first3_mem (T : Finset (Fin 52 × Fin 52 × Fin 52))
     (hT : ∀ t ∈ T, t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2) :
     (univ.filter fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2) ∈ T).card = T.card * F3 := by
-  have hsum := card_eq_sum_card_fiberwise
-    (s := univ.filter fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2) ∈ T) (t := T)
-    (f := fun π : Equiv.Perm (Fin 52) => (π (0 : Fin 52), π (1 : Fin 52), π (2 : Fin 52)))
-    (fun π hπ => by simpa using hπ)
-  rw [hsum]
-  have hc : ∀ t ∈ T, ((univ.filter fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2) ∈ T).filter
-      fun π => (π 0, π 1, π 2) = t).card = F3 := by
-    intro t ht
-    rw [filter_filter]
-    refine Eq.trans ?_ (fibre3_card t (hT t ht))
-    exact congrArg Finset.card (filter_congr (fun π _ =>
-      ⟨fun h => h.2, fun h => ⟨h ▸ ht, h⟩⟩))
-  rw [sum_congr rfl hc, sum_const, smul_eq_mul]
+  have hD : Distinct3.filter (· ∈ T) = T := by
+    ext t
+    rw [mem_filter, Distinct3, mem_filter]
+    simp only [mem_univ, true_and]
+    exact ⟨fun h => h.2, fun h => ⟨hT t h, h⟩⟩
+  rw [card_first3_comp (· ∈ T), hD]
 
 /-- (PROVED, given the two finite checks) `v10Sym 0 3` (♣↔♠, ♥↔♦, same rank)
     survives GridCycle on at most `52!/4420` of the `52!` decks (30 surviving

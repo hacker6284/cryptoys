@@ -180,30 +180,117 @@ theorem exists_perm_three {α : Type*} [DecidableEq α] (i j k a b c : α) (hij 
   · rw [Equiv.Perm.mul_apply, Equiv.swap_apply_of_ne_of_ne hjk hjc, h2]
   · rw [Equiv.Perm.mul_apply, Equiv.swap_apply_left, hc1]
 
+/-! ### Counting arrangements by a statistic (stated once, for every finite type)
+
+These three lemmas are the whole counting argument; `fibre_card` and `count_triples`
+below (arrangements of `Fin 13`) and the deck counts of
+`DoubleDealSecurity/GridCycleSurvival.lean` (`Fin 52`, one and three positions) are
+instances of them. -/
+
+/-- Left multiplication by `ρ` is a bijection from the fibre of `f` over `s` onto the
+    fibre over `t` when `f (ρ * π) = t ↔ f π = s`; so the two fibres are equinumerous. -/
+theorem card_fibre_eq_of_mul {α β : Type*} [Fintype α] [DecidableEq α] [DecidableEq β]
+    (f : Equiv.Perm α → β) (ρ : Equiv.Perm α) (s t : β) (h : ∀ π, f (ρ * π) = t ↔ f π = s) :
+    (univ.filter fun π => f π = t).card = (univ.filter fun π => f π = s).card := by
+  apply card_nbij' (fun π => ρ⁻¹ * π) (fun π => ρ * π)
+  · intro π hπ
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, mem_coe] at hπ ⊢
+    rw [← h, mul_inv_cancel_left]
+    exact hπ
+  · intro π hπ
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, mem_coe] at hπ ⊢
+    exact (h π).2 hπ
+  · intro π _; simp only [mul_inv_cancel_left]
+  · intro π _; simp only [inv_mul_cancel_left]
+
+/-- The counting argument: if the statistic `f` takes values in `S` and every fibre
+    over `S` has `F` elements, then `#{π | P (f π)} = #{t ∈ S | P t} · F`. -/
+theorem card_filter_comp_eq {α β : Type*} [Fintype α] [DecidableEq α] [DecidableEq β]
+    (f : Equiv.Perm α → β) (S : Finset β) (hS : ∀ π, f π ∈ S) (F : ℕ)
+    (hF : ∀ t ∈ S, (univ.filter fun π => f π = t).card = F)
+    (P : β → Prop) [DecidablePred P] :
+    (univ.filter fun π => P (f π)).card = (S.filter P).card * F := by
+  rw [card_eq_sum_card_fiberwise (f := f) (t := S.filter P)
+    (fun π hπ => by
+      simp only [mem_filter, mem_univ, true_and] at hπ ⊢
+      exact ⟨hS π, hπ⟩)]
+  rw [← smul_eq_mul, ← sum_const]
+  apply sum_congr rfl
+  intro t ht
+  simp only [mem_filter] at ht
+  rw [filter_filter, ← hF t ht.1]
+  congr 1
+  apply filter_congr
+  intro π _
+  constructor
+  · exact fun h => h.2
+  · intro h; exact ⟨by rw [h]; exact ht.2, h⟩
+
+/-- `(Fintype.card α)·(… - 1)·(… - 2)` ordered triples of distinct elements. -/
+theorem card_distinct_triples_eq (α : Type*) [Fintype α] [DecidableEq α] :
+    (univ.filter fun t : α × α × α => t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2).card =
+      (Fintype.card α).descFactorial 3 := by
+  have he := Fintype.card_embedding_eq (α := Fin 3) (β := α)
+  rw [Fintype.card_fin] at he
+  rw [← he, ← Fintype.card_subtype]
+  refine Fintype.card_congr
+    { toFun := fun t => ⟨![t.1.1, t.1.2.1, t.1.2.2], ?_⟩
+      invFun := fun e => ⟨(e 0, e 1, e 2), e.injective.ne (by decide),
+        e.injective.ne (by decide), e.injective.ne (by decide)⟩
+      left_inv := fun t => rfl
+      right_inv := fun e => by
+        ext i
+        fin_cases i <;> rfl }
+  obtain ⟨⟨a, b, c⟩, hab, hac, hbc⟩ := t
+  intro i j hij
+  fin_cases i <;> fin_cases j <;>
+    simp_all [eq_comm, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons,
+      Matrix.cons_val_two, Matrix.tail_cons]
+
+/-- The fibres of `σ ↦ (σ i₀, σ i₁, σ i₂)` over any two distinct triples have the same
+    size (every finite type; the positions need not be distinct). -/
+theorem fibre3_card_eq {α : Type*} [Fintype α] [DecidableEq α] (i0 i1 i2 : α)
+    (s t : α × α × α) (hs : s.1 ≠ s.2.1 ∧ s.1 ≠ s.2.2 ∧ s.2.1 ≠ s.2.2)
+    (ht : t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2) :
+    (univ.filter fun σ : Equiv.Perm α => (σ i0, σ i1, σ i2) = t).card =
+      (univ.filter fun σ : Equiv.Perm α => (σ i0, σ i1, σ i2) = s).card := by
+  obtain ⟨s0, s1, s2⟩ := s
+  obtain ⟨t0, t1, t2⟩ := t
+  dsimp only at hs ht
+  obtain ⟨ρ, h0, h1, h2⟩ :=
+    exists_perm_three s0 s1 s2 t0 t1 t2 hs.1 hs.2.1 hs.2.2 ht.1 ht.2.1 ht.2.2
+  apply card_fibre_eq_of_mul (fun σ : Equiv.Perm α => (σ i0, σ i1, σ i2)) ρ
+  intro π
+  simp only [Equiv.Perm.mul_apply, Prod.mk.injEq]
+  rw [← h0, ← h1, ← h2, ρ.injective.eq_iff, ρ.injective.eq_iff, ρ.injective.eq_iff]
+
+/-- Counting arrangements of any finite type by the images of three distinct points:
+    `#{σ | P (σ i₀, σ i₁, σ i₂)} = #{distinct t | P t} · #(fibre over s)`. -/
+theorem count_triples_of {α : Type*} [Fintype α] [DecidableEq α] (i0 i1 i2 : α)
+    (h01 : i0 ≠ i1) (h02 : i0 ≠ i2) (h12 : i1 ≠ i2) (s : α × α × α)
+    (hs : s.1 ≠ s.2.1 ∧ s.1 ≠ s.2.2 ∧ s.2.1 ≠ s.2.2)
+    (P : α × α × α → Prop) [DecidablePred P] :
+    (univ.filter fun σ : Equiv.Perm α => P (σ i0, σ i1, σ i2)).card =
+      (univ.filter fun t : α × α × α =>
+          t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2 ∧ P t).card *
+        (univ.filter fun σ : Equiv.Perm α => (σ i0, σ i1, σ i2) = s).card := by
+  rw [card_filter_comp_eq (fun σ : Equiv.Perm α => (σ i0, σ i1, σ i2))
+    (univ.filter fun t : α × α × α => t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2)
+    (fun σ => by
+      simp only [mem_filter, mem_univ, true_and]
+      exact ⟨fun e => h01 (σ.injective e), fun e => h02 (σ.injective e),
+        fun e => h12 (σ.injective e)⟩)
+    _ (fun t ht => fibre3_card_eq i0 i1 i2 s t hs (by simpa using ht)) P, filter_filter]
+  congr 2
+  ext t
+  simp only [and_assoc]
+
 /-- All fibres of `σ ↦ (σ i₀, σ i₁, σ i₂)` over distinct triples have the same size. -/
 theorem fibre_card (i0 i1 i2 : Fin 13) (t : Fin 13 × Fin 13 × Fin 13)
     (ht : t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2) :
     (univ.filter fun σ : Equiv.Perm (Fin 13) => (σ i0, σ i1, σ i2) = t).card =
-      (univ.filter fun σ : Equiv.Perm (Fin 13) => (σ i0, σ i1, σ i2) = (0, 1, 2)).card := by
-  obtain ⟨t0, t1, t2⟩ := t
-  dsimp only at ht
-  obtain ⟨ρ, h0, h1, h2⟩ := exists_perm_three (0 : Fin 13) 1 2 t0 t1 t2
-    (by decide) (by decide) (by decide) ht.1 ht.2.1 ht.2.2
-  apply card_nbij' (fun σ => ρ⁻¹ * σ) (fun σ => ρ * σ)
-  · intro σ hσ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, Prod.mk.injEq,
-      Equiv.Perm.mul_apply, mem_coe] at hσ ⊢
-    obtain ⟨a, b, c⟩ := hσ
-    rw [a, b, c, Equiv.Perm.inv_eq_iff_eq, Equiv.Perm.inv_eq_iff_eq, Equiv.Perm.inv_eq_iff_eq]
-    exact ⟨h0.symm, h1.symm, h2.symm⟩
-  · intro σ hσ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, Prod.mk.injEq,
-      Equiv.Perm.mul_apply, mem_coe] at hσ ⊢
-    obtain ⟨a, b, c⟩ := hσ
-    rw [a, b, c]
-    exact ⟨h0, h1, h2⟩
-  · intro σ _; simp only [mul_inv_cancel_left]
-  · intro σ _; simp only [inv_mul_cancel_left]
+      (univ.filter fun σ : Equiv.Perm (Fin 13) => (σ i0, σ i1, σ i2) = (0, 1, 2)).card :=
+  fibre3_card_eq i0 i1 i2 (0, 1, 2) t (by decide) ht
 
 /-- Counting arrangements by the seats of three fixed cards. -/
 theorem count_triples (i0 i1 i2 : Fin 13) (h01 : i0 ≠ i1) (h02 : i0 ≠ i2) (h12 : i1 ≠ i2)
@@ -211,25 +298,8 @@ theorem count_triples (i0 i1 i2 : Fin 13) (h01 : i0 ≠ i1) (h02 : i0 ≠ i2) (h
     (univ.filter fun σ : Equiv.Perm (Fin 13) => P (σ i0, σ i1, σ i2)).card =
       (univ.filter fun t : Fin 13 × Fin 13 × Fin 13 =>
           t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2 ∧ P t).card *
-        (univ.filter fun σ : Equiv.Perm (Fin 13) => (σ i0, σ i1, σ i2) = (0, 1, 2)).card := by
-  rw [card_eq_sum_card_fiberwise (f := fun σ : Equiv.Perm (Fin 13) => (σ i0, σ i1, σ i2))
-    (t := univ.filter fun t : Fin 13 × Fin 13 × Fin 13 =>
-      t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2 ∧ P t)]
-  · rw [← smul_eq_mul, ← sum_const]
-    apply sum_congr rfl
-    intro t ht
-    simp only [mem_filter, mem_univ, true_and] at ht
-    rw [filter_filter, ← fibre_card i0 i1 i2 t ⟨ht.1, ht.2.1, ht.2.2.1⟩]
-    congr 1
-    apply filter_congr
-    intro σ _
-    constructor
-    · exact fun h => h.2
-    · intro h; exact ⟨by rw [h]; exact ht.2.2.2, h⟩
-  · intro σ hσ
-    simp only [mem_filter, mem_univ, true_and] at hσ ⊢
-    exact ⟨fun e => h01 (σ.injective e), fun e => h02 (σ.injective e),
-      fun e => h12 (σ.injective e), hσ⟩
+        (univ.filter fun σ : Equiv.Perm (Fin 13) => (σ i0, σ i1, σ i2) = (0, 1, 2)).card :=
+  count_triples_of i0 i1 i2 h01 h02 h12 (0, 1, 2) (by decide) P
 
 theorem card_good_triples : (univ.filter fun t : Fin 13 × Fin 13 × Fin 13 =>
     t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2 ∧

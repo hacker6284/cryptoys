@@ -1,7 +1,7 @@
-"""Practical IV-anchored collisions of MegaDreifach (current Recipe A grip rule, "v1")
+"""Practical IV-anchored collisions of MegaDreifach v1 (the v1 Recipe A grip rule; v1 is deprecated)
 via suit-blind re-grips.  MEASUREMENT on the real hash (repo `md.py`, KAT-checked).
 
-Mechanism (`megadreifach.sudo` `g2_step`): a non-King card turns its held face F by +k
+Mechanism (v1 `megadreifach.sudo` `g2_step`): a non-King card turns its held face F by +k
 (k = suit + 1), then the noon face by +1, then Front by +1, and only THEN reads the
 Recipe A corner (between F, noon and the next neighbour of F).  The noon turn brings
 into the read slot a corner from the noon face that was (usually) not on F, so k cannot
@@ -51,7 +51,7 @@ from md import (Hash, KATS_JSON, GROUP_ORDER, ROTS, F3_T, compose, face_turn,  #
 M1 = 'e132ebb03ed19b3949820c68d22d8b5004867c3c0ea79f44269e19fb'
 M2 = 'e132ebd9724a3c582fca2e7f51a1a34dd82b8afcfcf71344269e19fb'
 DIGEST = '0084d6d1e0a4ddb231deb23ac0f4ead7b497eed17f997bfcefa7c34e82'
-RANKS, SUITS = 'A23456789TJQK', 'cdhs'
+RANKS, SUITS = 'A23456789TJQK', 'chsd'   # suit = id % 4 in CHaSeD order: clubs, hearts, spades, diamonds
 LOG = os.path.join(HERE, 'logs', 'suit_blind_collision.log')
 LOG_FULL = os.path.join(HERE, 'logs', 'suit_blind_collision_full.log')
 LOG_PRE_NOON = os.path.join(HERE, 'logs', 'suit_blind_collision_pre_noon.log')
@@ -60,7 +60,7 @@ IV = iv_cook12()
 
 # ---------------------------------------------------------------- grip-rule variants
 #
-# 'recipe-a' is the published rule (md.g2_step: held-face turn, noon turn, Front turn,
+# 'recipe-a' is the v1 rule (md.g2_step: held-face turn, noon turn, Front turn,
 # THEN the Recipe A read).  'pre-noon' is a control that changes ONLY when the read
 # happens: the Recipe A corner (between the held face, its noon and the next
 # neighbour, for the grip in force) is read right after the held-face turn (and the
@@ -103,7 +103,7 @@ def dm_step(h, deal, variant):
 
 
 def hash_of(variant):
-    """The full hash under a rule (md.Hash itself for the published rule)."""
+    """The full hash under a rule (md.Hash itself for the v1 rule)."""
     return Hash if variant == 'recipe-a' else (lambda m: hash_v(m, variant))
 
 
@@ -125,7 +125,7 @@ def check_kats():
     ok &= hex(GROUP_ORDER) == kats['group_order_hex']
     n = sum(Hash(bytes.fromhex(v['msg_hex'])).hex() == v['digest_hex'] for v in kats['vectors'])
     ok &= n == len(kats['vectors'])
-    print(f"md.py vs published KATs: {n}/{len(kats['vectors'])} digests, IV digest and |G| "
+    print(f"md.py vs v1 KATs: {n}/{len(kats['vectors'])} digests, IV digest and |G| "
           f"{'OK' if ok else 'FAIL'}")
     return ok
 
@@ -426,11 +426,11 @@ def main():
     ap.add_argument('--check', action='store_true', help='fail if the committed log is stale')
     ap.add_argument('--full', action='store_true', help='with --log/--check: the report-size runs')
     ap.add_argument('--variant', choices=sorted(STEPS), default='recipe-a',
-                    help='grip rule (default: the published Recipe A rule)')
+                    help='grip rule (default: the v1 Recipe A rule)')
     a = ap.parse_args()
     pre = a.variant == 'pre-noon' and not (a.search or a.second_preimage)
     if a.full and a.variant != 'recipe-a':
-        ap.error('--full is for the published rule; use --variant pre-noon alone')
+        ap.error('--full is for the v1 rule; use --variant pre-noon alone')
     if a.log or a.check:
         from gencheck import emit
         QUIET[0] = True

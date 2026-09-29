@@ -169,14 +169,14 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime_nonswap",
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
 }
-# proofs/megadreifach/lean: the 8 hash KATs in MegaDreifachHeavy/Kat.lean (the names
-# match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats.json;
+# proofs/megadreifach/lean (pinned to MegaDreifach v1): the 8 v1 hash KATs in
+# MegaDreifachHeavy/Kat.lean (the names match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json;
 # vectors/json_to_lean.py --check checks their statements against the JSON).
 MD_LEAN = ROOT.parent / "megadreifach" / "lean"
 MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"
 
 # Every theorem that proofs/megadreifach/README.md cites by name (backticked), resolved
-# against the default library's sources (structure fields like `cp` / `ep` are not
+# against the default library's sources (all about MegaDreifach v1) (structure fields like `cp` / `ep` are not
 # theorem declarations, so they drop out). Rule: a README citation must stay present and
 # pass the axiom audit, so renaming or deleting a cited theorem fails the default gate.
 # `check_axioms.py --selftest` re-derives the list (md_readme_cited) and fails if it
@@ -227,8 +227,10 @@ MD_README_THEOREMS = {
     "MegaDreifach.Link2.even_perm_rank_big_refines_array",
     "MegaDreifach.Link2.even_perm_rank_big_refines_gen",
     "MegaDreifach.Link2.fromBE_pad_lt_limb8",
+    "MegaDreifach.Link2.magCmp_lt_natLimbs",
     "MegaDreifach.Link2.mag_add_limbs",
     "MegaDreifach.Link2.mag_add_nat",
+    "MegaDreifach.Link2.mag_cmp_eq",
     "MegaDreifach.Link2.mag_sub_nat",
     "MegaDreifach.Link2.mag_sub_three_le",
     "MegaDreifach.Link2.pack_ori2_refines",
@@ -257,8 +259,13 @@ MD_README_THEOREMS = {
     "MegaDreifach.Link2.peel_leading_zero_digit_three",
     "MegaDreifach.Link2.peel_leading_zero_three",
     "MegaDreifach.Link2.peel_leading_zero_two",
+    "MegaDreifach.Link2.phiInvFind_breaks",
+    "MegaDreifach.Link2.phiInvStep_51",
+    "MegaDreifach.Link2.phiInvStep_lt",
     "MegaDreifach.Link2.phiChunkStep_51",
     "MegaDreifach.Link2.phiChunkStep_lt",
+    "MegaDreifach.Link2.phi_inv_refines",
+    "MegaDreifach.Link2.phi_inv_refines_array",
     "MegaDreifach.Link2.phi_chunk_refines",
     "MegaDreifach.Link2.phi_chunk_refines_array",
     "MegaDreifach.Link2.position_to_bytes_refines",

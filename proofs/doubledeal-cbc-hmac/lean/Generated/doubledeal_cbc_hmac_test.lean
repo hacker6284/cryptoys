@@ -232,7 +232,7 @@ def test_hmac_aliases_agree_and_returns_29_bytes : Except SudoRt.Trap Unit :=
     let _as86 ← SudoRt.sudoAssertEq (SudoRt.listLen tag) (29 : Int) 234
     let _t87 ← v_HMAC_MegaDreifach (#[(99 : Int), (114 : Int), (121 : Int), (112 : Int), (116 : Int), (111 : Int), (121 : Int)] : Array (Int)) (#[(97 : Int), (98 : Int), (99 : Int)] : Array (Int))
     let _as88 ← SudoRt.sudoAssertEq _t87 tag 235
-    let published := (#[(1 : Int), (105 : Int), (39 : Int), (111 : Int), (136 : Int), (146 : Int), (139 : Int), (218 : Int), (84 : Int), (110 : Int), (16 : Int), (142 : Int), (181 : Int), (159 : Int), (241 : Int), (182 : Int), (136 : Int), (174 : Int), (139 : Int), (125 : Int), (230 : Int), (82 : Int), (40 : Int), (242 : Int), (28 : Int), (47 : Int), (4 : Int), (157 : Int), (114 : Int)] : Array (Int))
+    let published := (#[(2 : Int), (123 : Int), (176 : Int), (214 : Int), (68 : Int), (51 : Int), (210 : Int), (64 : Int), (132 : Int), (130 : Int), (26 : Int), (240 : Int), (133 : Int), (106 : Int), (92 : Int), (50 : Int), (135 : Int), (250 : Int), (41 : Int), (73 : Int), (93 : Int), (142 : Int), (109 : Int), (228 : Int), (165 : Int), (184 : Int), (115 : Int), (159 : Int), (118 : Int)] : Array (Int))
     let _as89 ← SudoRt.sudoAssertEq tag published 237
     pure ()
 

@@ -233,7 +233,7 @@ test "HMAC aliases agree and returns 29 bytes"
     tag = HMAC([99, 114, 121, 112, 116, 111, 121], [97, 98, 99])
     assert tag.length == 29
     assert HMAC_MegaDreifach([99, 114, 121, 112, 116, 111, 121], [97, 98, 99]) == tag
-    published = [1, 105, 39, 111, 136, 146, 139, 218, 84, 110, 16, 142, 181, 159, 241, 182, 136, 174, 139, 125, 230, 82, 40, 242, 28, 47, 4, 157, 114]
+    published = [2, 123, 176, 214, 68, 51, 210, 64, 132, 130, 26, 240, 133, 106, 92, 50, 135, 250, 41, 73, 93, 142, 109, 228, 165, 184, 115, 159, 118]
     assert tag == published
 
 test "HMAC depends on the key and the message"

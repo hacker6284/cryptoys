@@ -1,9 +1,10 @@
-"""Faithful Python transliteration of megadreifach.sudo (MegaDreifach Hash).
+"""Faithful Python transliteration of the frozen v1 megadreifach.sudo (MegaDreifach v1 Hash;
+primitives/hash/megadreifach/v1/megadreifach.sudo, deprecated).
 
 Positions are tuples (cp, co, ep, eo) of lists.  compose(g, h) applies h first,
 then g, exactly as in the sudo: cp[s] = h.cp[g.cp[s]], co[s] = h.co[g.cp[s]] + g.co[s].
-Verified against the published KATs
-(primitives/hash/megadreifach/kats/megaminx_hash_kats.json) by `python3 md.py`.
+Verified against the v1 KATs
+(primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json) by `python3 md.py`.
 """
 import os
 from math import factorial
@@ -187,11 +188,11 @@ def Hash(msg):
 
 GROUP_ORDER = (factorial(20)//2) * 3**19 * (factorial(30)//2) * 2**29
 
-# The published KATs (no copy here; the path is relative to this file, so the
+# The v1 KATs (no copy here; the path is relative to this file, so the
 # script runs from any working directory).
 KATS_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..',
                          'primitives', 'hash', 'megadreifach', 'kats',
-                         'megaminx_hash_kats.json')
+                         'megaminx_hash_kats_v1.json')
 
 if __name__ == '__main__':
     import json

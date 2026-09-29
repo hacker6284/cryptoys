@@ -225,6 +225,8 @@ A failed tag, a 29-byte integer \(\ge 52!\), a decrypted deck with rank \(\ge 2^
 
 `kats/doubledeal_cbc_hmac_kats.json` is generated from the conformance sudo plus the §5.3 encoding. JS tests assert round-trips and negative tag / AAD / IV / ciphertext tampers.
 
+**Hash version.** The vectors and the published HMAC test tag in `doubledeal_cbc_hmac.sudo` use the current MegaDreifach, **v2**. They were regenerated when MegaDreifach v1 was deprecated; every tag and blob changed, and vectors made with MegaDreifach v1 no longer verify. Nothing else in this construction changed, and the version label stays `DoubleDeal-CBC-HMAC/v1`.
+
 ---
 
 # 9. How to run tests

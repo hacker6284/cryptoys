@@ -14,7 +14,7 @@
   any block map that left-multiplies the position by face moves, whichever
   faces the grips pick; no proof uses the corner-only read.  If E_m changes,
   repair the step lemmas of `StepWord.lean` (`g2Step_fst`, `word_g2Step`,
-  `word_f3Iter`, `word_foldl_g2`, `word_emBlock`), which unfold the current
+  `word_f3Iter`, `word_foldl_g2`, `word_emBlock`), which unfold the (v1)
   `Em.g2Step` / `Em.f3Step` / `Em.emBlock`.  `word_dmStep` needs the DM feed-forward
   `dmStep h d = compose h (emBlock h d)`.  The swap tables `swC` / `swE` and
   `faceMove_*` need repair only if the face-move tables change.

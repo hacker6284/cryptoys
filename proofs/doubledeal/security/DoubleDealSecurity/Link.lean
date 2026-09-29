@@ -93,7 +93,8 @@ theorem generated_encrypt_map_iff (f : Nat → Nat) (hf : CardMap f) (message ke
 
 /-- (PROVED, kernel `decide!`, ~80 s) Model-level K♣↔K♦ counterexample for the
     full live encrypt (message `K♦, A♣, 2♣, …`, identity key). Rechecked for
-    v10 and again for v11: the same message and key still break K♣↔K♦. -/
+    v10, again for v11, and for v12 (new key schedule): the same message and key
+    still break K♣↔K♦. -/
 theorem encryptDeck_KC_KD_not_equivariant :
     encryptDeck (toDeck (fun i => swapNat 12 51 (firstDeck 51 i))) (List.range 52) ≠
       (encryptDeck (toDeck (firstDeck 51)) (List.range 52)).map (swapNat 12 51) := by

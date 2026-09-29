@@ -33,8 +33,8 @@ if __name__ == '__main__':
                 [[s[c] for c in row] for row in P.sum_ranks_v10(g)]
     print("ok: every v10Sym commutes with v10 SumRanks on 300 random decks")
     idK = list(range(52))
-    base = P.encrypt(list(range(52)), idK, 11)
+    base = P.encrypt(list(range(52)), idK, 12)
     print("enc id:", base)
     for ax in [(1, 0), (0, 1), (0, 2), (0, 3)]:
-        s = G[ax]; c = P.encrypt(s, idK, 11)
+        s = G[ax]; c = P.encrypt(s, idK, 12)
         print(f"enc v10Sym {ax[0]} {ax[1]}:", c, "breaks:", c != [s[y] for y in base])

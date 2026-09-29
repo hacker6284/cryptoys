@@ -1,5 +1,5 @@
-"""Check the v8/v9/v10/v11 Python port: v11 against the current vectors, v10 and v9 against
-their frozen vectors, v8 against frozen dd_v8.py."""
+"""Check the v8/v9/v10/v11/v12 Python port: v12 against the current vectors, v11, v10 and v9
+against their frozen vectors, v8 against frozen dd_v8.py."""
 import random, sys, ddport as P, dd_v8 as V8
 from ddport import REPO
 from dd_v8 import lay_cm, scoop_cm
@@ -11,10 +11,13 @@ def check(v):
         elif k == 'mix_columns': got, exp = P.mix_columns(vec['input'], v), vec['output']
         elif k == 'sum_ranks': got, exp = scoop_cm(P.sum_ranks(lay_cm(vec['input']), v)), vec['output']
         elif k == 'unkeyed_full': got, exp = P.mix_columns(P.stem(vec['input'], v), v), vec['output']
+        elif k == 'passkey' and v >= 12: got, exp = P.passkey_v12(vec['input']), vec['output']
+        elif k == 'expand_keys' and v >= 12: got, exp = P.expand_keys_v(vec['k0'], v), vec['keys']
         else: continue
         if got != exp: print(f'MISMATCH v{v}', vec['name']); sys.exit(1)
         n += 1
     print(f'v{v} port matches', n, 'vectors')
+check(12)
 check(11)
 check(10)
 check(9)
@@ -29,6 +32,12 @@ for _ in range(200):
     m = list(range(52)); rng.shuffle(m)
     assert P.inv_mix_columns_v11(P.mix_columns(m, 11)) == m, f"v11 inverse GridCycle fails on deck {m}"
 print('v11 inverse GridCycle undoes GridCycle on 200 random decks')
+rng = random.Random(12)
+for _ in range(300):
+    m = list(range(52)); rng.shuffle(m)
+    assert P.passkey_inv_v12(P.passkey_v12(m)) == m and P.passkey_v12(P.passkey_inv_v12(m)) == m, \
+        f"v12 PassKey inverse fails on deck {m}"
+print('v12 PassKey inverse is two-sided on 300 random decks')
 rng = random.Random(1)
 for _ in range(300):
     m = list(range(52)); rng.shuffle(m); k = list(range(52)); rng.shuffle(k)

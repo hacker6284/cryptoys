@@ -1,7 +1,9 @@
-"""v8/v9/v10/v11 DoubleDeal port for T1 relabelling checks. v8 = frozen dd_v8.py; v9 adds A2 + B3;
+"""v8/v9/v10/v11/v12 DoubleDeal port for T1 relabelling checks. v8 = frozen dd_v8.py; v9 adds A2 + B3;
 v10 replaces SumRanks by the chained index-weighted rows and GF(4) suit columns (SPEC 3.3);
-v11 replaces the GridCycle blocked placement (SPEC 3.5: ghost finger, blocker-directed scan).
-Every version stays callable (v = 8, 9, 10, 11)."""
+v11 replaces the GridCycle blocked placement (SPEC 3.5: ghost finger, blocker-directed scan);
+v12 replaces the PassKey suit rotation by the suit+2 deal with key-pile fallback (SPEC 3.7).
+The round function of v12 is v11's; only the key schedule differs.
+Every version stays callable (v = 8, 9, 10, 11, 12)."""
 import json
 import sys
 from pathlib import Path
@@ -115,15 +117,53 @@ def mix_columns(d, v):
 def stem(m, v): return scoop_cm(shift_rows(sum_ranks(lay_cm(m), v)))
 def full_round(m, k, v): return compose(mix_columns(stem(m, v), v), k)
 def final_round(m, k, v): return compose(stem(m, v), k)
+def deal_under(xs, m):
+    """Deal m cards one at a time off the top (so they come out reversed) and put them under."""
+    return xs[m:] + xs[:m][::-1]
+def undeal_under(xs, m):
+    n = len(xs)
+    return xs[n - m:][::-1] + xs[:n - m]
+def passkey_v12(deck):
+    """v12 F (SPEC 3.7): deal suit+2 under the hand, else under the key pile, else skip;
+    then the unchanged rank cut with key-pile fallback; then the controller on top of the key pile."""
+    hand, key = list(deck), []
+    for _ in range(len(deck)):
+        c = hand.pop(0)
+        d = suit(c) + 2
+        if d < len(hand): hand = deal_under(hand, d)
+        elif d < len(key): key = deal_under(key, d)
+        if hand and rank(c) < len(hand): hand = rotl(hand, rank(c))
+        elif key and rank(c) < len(key): key = rotl(key, rank(c))
+        key = [c] + key
+    return key
+def passkey_inv_v12(deck):
+    key, hand = list(deck), []
+    for _ in range(len(deck)):
+        c = key.pop(0)
+        r = rank(c)
+        if hand and r < len(hand): hand = hand[len(hand) - r:] + hand[:len(hand) - r]
+        elif key and r < len(key): key = key[len(key) - r:] + key[:len(key) - r]
+        d = suit(c) + 2
+        if d < len(hand): hand = undeal_under(hand, d)
+        elif d < len(key): key = undeal_under(key, d)
+        hand = [c] + hand
+    return hand
+def expand_keys_v(k0, v, nr=6):
+    """K0..K6. v8-v11 share the suit-rotate PassKey (dd_v8.expand_keys); v12 uses passkey_v12."""
+    if v < 12: return expand_keys(k0, nr)
+    keys = [list(k0)]
+    for _ in range(nr): keys.append(passkey_v12(keys[-1]))
+    return keys
 def encrypt(m, k0, v):
-    keys = expand_keys(k0)
+    keys = expand_keys_v(k0, v)
     m = compose(m, keys[0])
     for r in range(1, 6): m = full_round(m, keys[r], v)
     return final_round(m, keys[6], v)
 
 
-# Known-answer vectors per version (8, 9, 10, 11 frozen; 11 is identical to the live JSON until v12 lands).
+# Known-answer vectors per version (8, 9, 10, 11 frozen; 12 is the live JSON).
 VECTOR_JSON = {
+    12: 'proofs/doubledeal/vectors/doubledeal_vectors.json',
     11: 'proofs/deprecated/doubledeal-v11/vectors/doubledeal_v11_vectors.json',
     10: 'proofs/deprecated/doubledeal-v10/vectors/doubledeal_v10_vectors.json',
     9: 'proofs/deprecated/doubledeal-v9/vectors/doubledeal_v9_vectors.json',

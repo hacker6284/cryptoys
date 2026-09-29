@@ -3,35 +3,17 @@
 **EMPIRICAL ONLY.** Everything in this note is sampled. No theorem uses it, and no
 number here is proved. **No numeric bound on the full differential is proved** anywhere
 (`security/DoubleDealSecurity/Differential.lean`, security README "Roadmap", M6).
-Not a bit-security claim. No weakness was found.
+Not a bit-security claim. These measurements found no weakness.
 
-## 0. What is proved (summary; statements in `Differential.lean`)
+## 0. What is proved (pointer)
 
-Model: the rounds of `TrailBound` (Compose with a key, then the unkeyed round with
-GridCycle), `R` of them, INDEPENDENT UNIFORM round keys (count over all `(52!)^R` key
-tuples). The pair `(y, α·y)` has input difference `α`; `Diff α β R y K` says the output
-pair has difference `β`, the difference being free to change in between.
-
-* Structure: the count does not depend on the starting deck (`diffCount_eq_of_isDeck`);
-  the Markov recursion `diffCount α β (R+1) y = ∑ γ, dp1Count α γ * diffCount γ β R z`
-  (`diffCount_succ`); rows sum to `52!` / `(52!)^R`; `1` stays `1` and `α ≠ 1` never
-  becomes `1`. The constant-σ characteristic (`Trail`) is one path of the differential,
-  so M2's `Trail` counts are LOWER bounds for `diffCount σ σ`, not upper bounds.
-* `diffCount_le_of_dp1Count` is a **HOLLOW CONDITIONAL**, stated but never
-  instantiated: IF every `γ ≠ 1` has `p · dp1Count γ β ≤ 52!`, THEN
-  `p · diffCount α β R y ≤ (52!)^R` for every `R ≥ 1`. Its hypothesis is proved for no
-  `β` and no `p > 1`. **There is no product decay**: the bound is the same for every
-  `R`, because the differential sums over all middle differences.
-* `v10Sym` inputs (first-card argument): one round never moves `v10Sym a x` to a
-  different `v10Sym a' x'`, so a path whose difference is a `v10Sym` after every round
-  is exactly the characteristic, with probability `≤ (1/26)^R` (default library) and
-  `≤ (1/4420)^R` (heavy library; default library given the two finite GridCycle checks).
-  **This covers only paths that stay inside `v10Sym`.** A path that leaves `v10Sym` and
-  comes back is not bounded.
-* Real PassKey schedule: only `R = 1` (one round equals the independent-key count) and
-  the one-round bound on the `v10Sym` cluster (`≤ 1/26`, heavy `≤ 1/4420`, for every
-  `R ≥ 1`; not a power of `R`). Nothing else for `R ≥ 2`.
-* **The final no-mix round and `encryptN` are not covered.**
+The statements are in the header of `security/DoubleDealSecurity/Differential.lean`
+(status: security README, "Roadmap", M6). Scope, for reading the numbers below:
+independent uniform round keys; no numeric bound on the full differential; no product
+decay; the `v10Sym` bounds hold only for `(a, x) ≠ (0, 0)` and cover only paths whose
+difference stays inside `v10Sym`; the real PassKey schedule gets only `R = 1` and the
+one-round `v10Sym`-cluster bound; the final no-mix round and `encryptN` are not
+covered.
 
 ## 1. Method
 
@@ -60,7 +42,9 @@ reference by `../v12-keysched/xcheck12.py`), plus an inverse unkeyed round in `d
   (`../v12-keysched/NOTES.md`) covers the dominant path only.
 
 Cards are `13·suit + rank` with suits ♣ ♥ ♠ ♦ (A♣ = 0, 2♣ = 1, 5♦ = 43, 8♦ = 46,
-K♣ = 12, K♦ = 51, A♣↔2♥ = (0, 14)). 95% intervals are exact Poisson.
+K♣ = 12, K♦ = 51, A♣↔2♥ = (0, 14)). The 95% intervals in §2 (and the upper bounds
+for zero counts) are exact Poisson intervals on the count; the §3 intervals are a
+log-normal approximation for a product of two Poisson counts (see §3).
 `sh run.sh [selftest|toy|one|back|scan|mitm|all]` rebuilds everything into `$BUILD`
 (default `/tmp/v12-differential`); the sample files (`*.bin`, 80 MB each) stay there
 and are not in the repository. Not run by CI.
@@ -79,7 +63,7 @@ and are not in the repository. Not run by CI.
 
 Every sampled `α → α` hit also followed the characteristic (SumRanks and GridCycle
 both commuted): 584/584, 539/539, 55/55, 6/6. The `v10Sym` rows agree with the proved
-statement that one round never moves `v10Sym a x` to a `v10Sym` (they are not a test
+statement that one round never moves `v10Sym a x` to a *different* `v10Sym` (they are not a test
 of it: `β = α` is the only `v10Sym` with a nonzero proved bound, and it was not seen).
 
 All 312 same-suit swaps, 10^6 decks each (`logs/scan1.log`, `scan1.c`): mean DP(α → α)
@@ -111,22 +95,29 @@ is ≥ 43 after GridCycle alone and ≥ 42 after the full round.
 | A♣↔2♣ → 2♣↔3♣ | 7.5e-13 | 0 | 7.5e-13 |
 | A♣↔2♣ → A♥↔2♥ | 0 (no equal pairs) | | |
 | A♣↔2♣ → double swap | 4e-14 | 0 | 4e-14 |
+| A♣↔2♣ → 3-cycle A♣→2♣→3♣ | 2.06e-11 | 1.75e-11 | 3.05e-12 via γ = β; 7e-14 other |
 | 3-cycle → 3-cycle | 3.4e-11 | 3.4e-11 | 8.9e-13 |
 | 3-cycle → A♣↔2♣ | 4.1e-11 | 5.5e-12 | 3.5e-11 via γ = β |
 
-The intervals are for the γ = α term only, from the Poisson errors of its forward and
-backward counts (that term is their product: 584 · 588 / 10^14 for A♣↔2♣); the smaller
-entries rest on a handful of matching keys and are order-of-magnitude values. For
-same-suit swaps the constant path carries ≈ 99.9% of the estimated `DP₂(α → α)`. For the 3-cycle into a
+The intervals are for the γ = α term only. That term is the product of the forward and
+backward one-round counts (584 · 588 / 10^14 for A♣↔2♣, 539 · 569 / 10^14 for 5♦↔8♦);
+the interval is the log-normal approximation `exp(ln est ± 1.96 √(1/n_F + 1/n_B))`, not
+an exact interval. The smaller entries rest on a handful of matching keys and are
+order-of-magnitude values. For the two same-suit swaps measured here (A♣↔2♣ and 5♦↔8♦;
+no other swap was run for two rounds) the constant path carries ≈ 99.9% of the
+estimated `DP₂(α → α)`. For the 3-cycle into a
 swap a path whose difference changes wins (ordinary clustering). For comparison only:
 M2's proved bound on the CHARACTERISTIC is `(1/64)² ≈ 2.4e-4`; nothing numeric is
 proved for the DIFFERENTIAL.
 
 ## 4. Open
 
-* Any numeric bound on the full differential (one-round column bounds
-  `max_{γ ≠ 1} dp1Count γ β` are not proved for any `β`; even with one, the proved
-  conditional gives no decay with `R`).
+* Any numeric bound on the full differential. Pushing a one-round column bound
+  (`p · dp1Count γ β ≤ 52!` for every `γ ≠ 1`) through the Markov recursion gives the
+  same bound for `R` rounds by convexity, with no decay; for `β ≠ 1` and `p ≥ 2` its
+  hypothesis would already imply the `τ = β` case of the open covariant conjecture
+  `roundBody_covariant_iff_id` (and, for every `β ≠ 1`, the whole conjecture), so it is
+  neither proved nor claimed.
 * Paths through differences outside `v10Sym` (the only proved multi-round bound covers
   paths that stay inside `v10Sym`).
 * The real schedule at `R ≥ 2` beyond the one-round bounds; the final no-mix round;

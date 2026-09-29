@@ -20,34 +20,29 @@
   (`realStaysInV10_card_le_26`); nothing for the real schedule at `R ≥ 2` beyond that.
 
   Proved:
-  * D0 `diff_of_trail`, `card_trail_le_diffCount`: the characteristic is one path of the
-    differential (so `Trail` counts are LOWER bounds for `diffCount σ σ`, not upper bounds).
-  * D1 `diffCount_eq_of_isDeck`: `diffCount α β R y` does not depend on the deck `y`
-    (Compose with a uniform key makes every deck look alike).
+  * D0 `card_trail_le_diffCount` (from `trail_rounds_rel`): the characteristic is one path
+    of the differential, so `Trail` counts are LOWER bounds for `diffCount σ σ`, not upper
+    bounds.
+  * D1 `diffCount_eq_of_isDeck`: `diffCount α β R y` does not depend on the deck `y`.
   * D2 `diffCount_succ`: the Markov recursion
     `diffCount α β (R+1) y = ∑ γ, dp1Count α γ * diffCount γ β R z` (any decks `y`, `z`).
   * D3 `sum_dp1Count`, `sum_diffCount` (rows sum to `52!`, `(52!)^R`), `dp1Count_one_left`,
     `diffCount_one_left` (difference `1` stays `1`), `dp1Count_to_one`,
     `diffCount_to_one` (a difference `α ≠ 1` never becomes `1`), `diffCount_zero`,
     `diffCount_one`.
-  * D4 `diffCount_le_of_dp1Count` — A HOLLOW CONDITIONAL. It says: IF every `γ ≠ 1` has
-    one-round count `dp1Count γ β ≤ 52!/p`, THEN `diffCount α β R y ≤ (52!)^R/p` for all
-    `R ≥ 1`. The bound does NOT decay with `R` (no product; the differential mixes over
-    all middle differences). NO `β` AND NO `p > 1` SATISFYING THE HYPOTHESIS IS PROVED
-    ANYWHERE; the theorem is never instantiated. It only records how a one-round
-    column bound would carry over.
   * D5 `dp1Count_v10Sym_le_agree`: for input `v10Sym a x`, the one-round count to `β` is at
     most `52!/52` times the number of cards on which `v10Sym a x` and `β` agree (the first
     card placed by GridCycle is not moved). Corollaries `dp1Count_v10Sym_eq_zero`,
     `dp1Count_v10Sym_v10Sym_eq_zero`: `v10Sym a x → v10Sym a' x'` with
     `(a', x') ≠ (a, x)` has one-round count `0`.
   * D6 `staysInV10_iff_trail`: a path whose difference stays a `v10Sym a' x'` after every
-    round (`StaysInV10`) is exactly the constant characteristic. Hence
-    `staysInV10_card_le_26` (`26^R · # ≤ (52!)^R`, unconditional),
-    `staysInV10_card_le_4420_of_check` (given the two finite GridCycle checks;
-    unconditional in the heavy library, `staysInV10_card_le_4420`), and for the real
+    round (`StaysInV10`) is exactly the constant characteristic. Hence, for
+    `(a, x) ≠ (0, 0)` only: `staysInV10_card_le_26` (`26^R · # ≤ (52!)^R`, no further
+    hypothesis), `staysInV10_card_le_4420_of_check` (given the two finite GridCycle
+    checks; without them in the heavy library, `staysInV10_card_le_4420`), and for the real
     schedule the ONE-ROUND bounds `realStaysInV10_card_le_26`,
     `realStaysInV10_card_le_4420_of_check` (heavy: `realStaysInV10_card_le_4420`).
+    (For `(a, x) = (0, 0)`, `v10Sym 0 0 = 1` and these bounds are false.)
     These cover ONLY paths that stay inside `v10Sym`; a path that leaves `v10Sym` and
     comes back is not bounded.
   * D7 `realDiffCount_one`: under the real schedule, one round is the same count as with
@@ -64,23 +59,12 @@ namespace DoubleDeal.Security.Differential
 open DoubleDeal Relabel Finset
 open DoubleDeal.Security (Key isDeck_compose isDeck_rel isDeck_unkeyedWithMix
   isDeck_unkeyedNoMix cardsG_lay)
-open DoubleDeal.Security.TrailBound (rounds Trail RoundChar roundCharCount compose_permDeck
-  trail_rounds_rel)
+open DoubleDeal.Security.TrailBound (rounds Trail RoundChar trail_rounds_rel isDeck_rounds
+  card_keys_compose card_filter_succ)
 open DoubleDeal.Security.GridCycleSurvival (Check3 LKC LKS card_first_mem)
 open DoubleDeal.Security.RealSchedule (roundKey roundKeys card_roundKey)
 
 /-! ## The difference of two decks -/
-
-/-- (PROVED) On a deck `x`, a relabelling is determined by its action: `α·x = β·x`
-    iff `α = β` (the deck holds every card). -/
-theorem rel_left_inj {x : Fin 52 → Nat} (hx : IsDeck x) {α β : Relabel} :
-    rel α x = rel β x ↔ α = β := by
-  refine ⟨fun h => Equiv.ext fun c => ?_, fun h => h ▸ rfl⟩
-  have hi : x ((deckPerm x hx).symm c) = c.val := by
-    rw [← deckPerm_val x hx, Equiv.apply_symm_apply]
-  have e := congrFun h ((deckPerm x hx).symm c)
-  simp only [rel, hi, app_fin] at e
-  exact Fin.ext e
 
 open Classical in
 /-- The relabelling taking deck `x` to deck `x'` (`1` if either is not a deck). -/
@@ -131,17 +115,7 @@ theorem stepDiff_eq_iff (α γ : Relabel) {x : Fin 52 → Nat} (hx : IsDeck x) :
     rw [stepDiff_spec α hx] at h
     exact (rel_left_inj (isDeck_unkeyedWithMix hx)).1 h
 
-theorem isDeck_rounds : ∀ (R : ℕ) (y : Fin 52 → Nat) (K : Fin R → Key), IsDeck y →
-    IsDeck (rounds R y K)
-  | 0, _, _, hy => hy
-  | R + 1, _, K, hy => isDeck_rounds R _ (Fin.tail K) (isDeck_unkeyedWithMix (isDeck_compose hy (K 0)))
-
 /-! ## D0: the characteristic is one path of the differential -/
-
-/-- (PROVED) The constant-σ characteristic implies the differential `σ → σ`. -/
-theorem diff_of_trail {σ : Relabel} {R : ℕ} {y : Fin 52 → Nat} {K : Fin R → Key}
-    (h : Trail σ R y K) : Diff σ σ R y K :=
-  trail_rounds_rel σ R y K h
 
 /-- (PROVED) Trail counts are LOWER bounds for the differential count `σ → σ`. -/
 theorem card_trail_le_diffCount (σ : Relabel) (R : ℕ) (y : Fin 52 → Nat) :
@@ -149,27 +123,9 @@ theorem card_trail_le_diffCount (σ : Relabel) (R : ℕ) (y : Fin 52 → Nat) :
   apply card_le_card
   intro K hK
   simp only [mem_filter, mem_univ, true_and] at hK ⊢
-  exact diff_of_trail hK
+  exact trail_rounds_rel σ R y K hK
 
 /-! ## One round, counting over the key -/
-
-/-- (PROVED) Compose with a uniform key makes any deck uniform. -/
-theorem card_keys_compose (P : (Fin 52 → Nat) → Prop) [DecidablePred P]
-    {y : Fin 52 → Nat} (hy : IsDeck y) :
-    (univ.filter fun k : Key => P (composeVec 52 Nat y k)).card =
-      (univ.filter fun π : Equiv.Perm (Fin 52) => P (permDeck π)).card := by
-  set ρ := deckPerm y hy
-  have hyρ : y = permDeck ρ := funext fun i => (deckPerm_val y hy i).symm
-  rw [hyρ]
-  apply card_nbij' (fun k => ρ * k) (fun π => ρ⁻¹ * π)
-  · intro k hk
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hk ⊢
-    rwa [compose_permDeck] at hk
-  · intro π hπ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hπ ⊢
-    rwa [compose_permDeck, mul_inv_cancel_left]
-  · intro k _; simp only [inv_mul_cancel_left]
-  · intro π _; simp only [mul_inv_cancel_left]
 
 theorem card_keys_stepDiff (α γ : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) :
     (univ.filter fun k : Key => stepDiff α (composeVec 52 Nat y k) = γ).card =
@@ -177,7 +133,8 @@ theorem card_keys_stepDiff (α γ : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y
   rw [filter_congr (fun k _ => stepDiff_eq_iff α γ (isDeck_compose hy k))]
   exact card_keys_compose (fun x => unkeyedWithMix (rel α x) = rel γ (unkeyedWithMix x)) hy
 
-theorem sum_keys_stepDiff (α : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) (f : Relabel → ℕ) :
+theorem sum_keys_stepDiff (α : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y)
+    (f : Relabel → ℕ) :
     ∑ k : Key, f (stepDiff α (composeVec 52 Nat y k)) = ∑ γ, dp1Count α γ * f γ := by
   rw [← Finset.sum_fiberwise' univ (fun k : Key => stepDiff α (composeVec 52 Nat y k)) f]
   refine sum_congr rfl fun γ _ => ?_
@@ -211,53 +168,38 @@ theorem diffCount_succ_sum_keys (α β : Relabel) (R : ℕ) {y : Fin 52 → Nat}
       ∑ k : Key, diffCount (stepDiff α (composeVec 52 Nat y k)) β R
         (unkeyedWithMix (composeVec 52 Nat y k)) := by
   unfold diffCount
-  rw [card_eq_sum_card_fiberwise (f := fun K : Fin (R + 1) → Key => K 0) (t := univ)
-    (fun _ _ => mem_univ _)]
-  apply sum_congr rfl
-  intro k _
-  apply card_nbij' (fun K => Fin.tail K) (fun K => Fin.cons k K)
-  · intro K hK
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK ⊢
-    obtain ⟨h1, h0⟩ := hK
-    rw [diff_succ_iff α β R hy, h0] at h1
-    exact h1
-  · intro K hK
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK ⊢
-    refine ⟨?_, Fin.cons_zero _ _⟩
-    rw [diff_succ_iff α β R hy, Fin.cons_zero, Fin.tail_cons]
-    exact hK
-  · intro K hK
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK
-    rw [← hK.2]
-    exact Fin.cons_self_tail K
-  · intro K _; exact Fin.tail_cons _ _
+  rw [card_filter_succ]
+  refine sum_congr rfl fun k _ => congrArg card (filter_congr fun K _ => ?_)
+  rw [diff_succ_iff α β R hy, Fin.cons_zero, Fin.tail_cons]
+
+/-- The `R + 1`-round recursion, given that the `R`-round counts into `β` do not depend
+    on the deck (the induction step shared by D1 and D2). -/
+theorem diffCount_succ_of_indep (α β : Relabel) (R : ℕ) {y z : Fin 52 → Nat}
+    (hy : IsDeck y)
+    (ih : ∀ (γ : Relabel) {w : Fin 52 → Nat}, IsDeck w →
+      diffCount γ β R w = diffCount γ β R z) :
+    diffCount α β (R + 1) y = ∑ γ, dp1Count α γ * diffCount γ β R z := by
+  rw [diffCount_succ_sum_keys α β R hy,
+    sum_congr rfl fun (k : Key) _ => ih _ (isDeck_unkeyedWithMix (isDeck_compose hy k))]
+  exact sum_keys_stepDiff α hy (fun γ => diffCount γ β R z)
 
 /-- (PROVED) D1: under independent uniform round keys the differential count does not
     depend on the starting deck. -/
 theorem diffCount_eq_of_isDeck : ∀ (R : ℕ) (α β : Relabel) {y z : Fin 52 → Nat},
     IsDeck y → IsDeck z → diffCount α β R y = diffCount α β R z
   | 0, α, β, _, _, hy, hz => by rw [diffCount_zero α β hy, diffCount_zero α β hz]
-  | R + 1, α, β, y, z, hy, hz => by
-      have key : ∀ {w : Fin 52 → Nat}, IsDeck w →
-          diffCount α β (R + 1) w = ∑ γ, dp1Count α γ * diffCount γ β R z := by
-        intro w hw
-        rw [diffCount_succ_sum_keys α β R hw]
-        rw [sum_congr rfl fun (k : Key) _ => diffCount_eq_of_isDeck R
-          (stepDiff α (composeVec 52 Nat w k)) β
-          (isDeck_unkeyedWithMix (isDeck_compose hw k)) hz]
-        exact sum_keys_stepDiff α hw (fun γ => diffCount γ β R z)
-      rw [key hy, key hz]
+  | R + 1, α, β, _, z, hy, hz => by
+      have ih : ∀ (γ : Relabel) {w : Fin 52 → Nat}, IsDeck w →
+          diffCount γ β R w = diffCount γ β R z :=
+        fun γ _ hw => diffCount_eq_of_isDeck R γ β hw hz
+      rw [diffCount_succ_of_indep α β R hy ih, diffCount_succ_of_indep α β R hz ih]
 
 /-- (PROVED) D2: the Markov recursion. For any decks `y`, `z`,
     `diffCount α β (R+1) y = ∑ γ, dp1Count α γ * diffCount γ β R z`. -/
 theorem diffCount_succ (α β : Relabel) (R : ℕ) {y z : Fin 52 → Nat} (hy : IsDeck y)
     (hz : IsDeck z) :
-    diffCount α β (R + 1) y = ∑ γ, dp1Count α γ * diffCount γ β R z := by
-  rw [diffCount_succ_sum_keys α β R hy]
-  rw [sum_congr rfl fun (k : Key) _ => diffCount_eq_of_isDeck R
-    (stepDiff α (composeVec 52 Nat y k)) β
-    (isDeck_unkeyedWithMix (isDeck_compose hy k)) hz]
-  exact sum_keys_stepDiff α hy (fun γ => diffCount γ β R z)
+    diffCount α β (R + 1) y = ∑ γ, dp1Count α γ * diffCount γ β R z :=
+  diffCount_succ_of_indep α β R hy fun γ _ hw => diffCount_eq_of_isDeck R γ β hw hz
 
 /-- (PROVED) One round, independent key: the count is `dp1Count`. -/
 theorem diffCount_one (α β : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) :
@@ -335,49 +277,11 @@ theorem diffCount_to_one {α : Relabel} (hα : α ≠ 1) : ∀ (R : ℕ) {y : Fi
       · rw [hγ, dp1Count_to_one hα, Nat.zero_mul]
       · rw [diffCount_to_one hγ R hy, Nat.mul_zero]
 
-/-! ## D4: HOLLOW CONDITIONAL (stated, never instantiated) -/
-
-/-- (PROVED, but HOLLOW: the hypothesis is not established for any `β` and any `p > 1`
-    anywhere in this library, and the theorem is never instantiated.)
-    IF every nontrivial one-round count into `β ≠ 1` is at most `52!/p`, THEN for every
-    `R ≥ 1`, every `α` and every deck `y`, `p · diffCount α β R y ≤ (52!)^R`. The bound is
-    the SAME for every `R`: there is NO product decay (the differential sums over all
-    middle differences). -/
-theorem diffCount_le_of_dp1Count (β : Relabel) (hβ : β ≠ 1) (p : ℕ)
-    (hp : ∀ γ : Relabel, γ ≠ 1 → p * dp1Count γ β ≤ Nat.factorial 52) :
-    ∀ (R : ℕ), 0 < R → ∀ (α : Relabel) {y : Fin 52 → Nat}, IsDeck y →
-      p * diffCount α β R y ≤ Nat.factorial 52 ^ R
-  | 0, h0, _, _, _ => absurd h0 (Nat.lt_irrefl 0)
-  | 1, _, α, y, hy => by
-      rw [diffCount_one α β hy, pow_one]
-      by_cases hα : α = 1
-      · rw [hα, dp1Count_one_left, if_neg hβ, Nat.mul_zero]; exact Nat.zero_le _
-      · exact hp α hα
-  | R + 2, _, α, y, hy => by
-      rw [diffCount_succ α β (R + 1) hy hy, mul_sum]
-      calc ∑ γ, p * (dp1Count α γ * diffCount γ β (R + 1) y)
-          ≤ ∑ γ, dp1Count α γ * Nat.factorial 52 ^ (R + 1) := by
-            refine sum_le_sum fun γ _ => ?_
-            rw [Nat.mul_left_comm]
-            exact Nat.mul_le_mul_left _
-              (diffCount_le_of_dp1Count β hβ p hp (R + 1) (Nat.succ_pos R) γ hy)
-        _ = Nat.factorial 52 ^ (R + 2) := by
-            rw [← sum_mul, sum_dp1Count, pow_succ _ (R + 1), Nat.mul_comm]
-
 /-! ## D5: out of `v10Sym`, one round (first-card argument) -/
 
 theorem unkeyedNoMix_rel_v10Sym (a : Fin 13) (x : Fin 4) {m : Fin 52 → Nat} (hm : Cards m) :
-    unkeyedNoMix (rel (v10Sym a x) m) = rel (v10Sym a x) (unkeyedNoMix m) := by
-  simp only [unkeyedNoMix]
-  rw [layColumnMajor_rel, sumRanksV10_commutes_v10Sym a x _ (cardsG_lay hm)]
-  rfl
-
-/-- GridCycle places the first card of its input at row-major seat 26 (`asStart`). -/
-theorem mixColumns_seat26 (h : Fin 52 → Nat) :
-    mixColumns h ⟨26, by decide⟩ = h ⟨0, by decide⟩ := by
-  rw [mixColumns_eq]
-  exact scoop_eq_hand_at _ freeChooser h ⟨26, by decide⟩ ⟨0, by decide⟩
-    (by rw [← walkSeat_eq, walkSeat_zero]; rfl)
+    unkeyedNoMix (rel (v10Sym a x) m) = rel (v10Sym a x) (unkeyedNoMix m) :=
+  unkeyedNoMix_commutes _ (sumRanksV10_commutes_v10Sym a x) m hm
 
 /-- (PROVED) If one round sends `(x₀, v10Sym a x · x₀)` to difference `β`, then
     `v10Sym a x` and `β` agree on the first card `c` of the stem output. -/
@@ -390,14 +294,20 @@ theorem v10Sym_step_agree (a : Fin 13) (x : Fin 4) (β : Relabel) {x₀ : Fin 52
   rw [unkeyedNoMix_rel_v10Sym a x hx₀.1] at h
   have e := congrFun h ⟨26, by decide⟩
   simp only [rel] at e
-  rw [mixColumns_seat26, mixColumns_seat26] at e
+  rw [mixColumns_at_AS, mixColumns_at_AS] at e
   simp only [rel] at e
   apply Fin.ext
   rw [← app_fin, ← app_fin]
   exact e
 
+/-- GF(4) addition by a fixed `l` is injective on `Fin 4`. -/
+theorem gfAdd_cancel (l : Nat) {x x' : Fin 4} (h : gfAdd l x.val = gfAdd l x'.val) :
+    x = x' := by
+  unfold gfAdd at h
+  omega
+
 /-- (PROVED) Two different `v10Sym` agree on no card. -/
-theorem v10Sym_eq_at {a a' : Fin 13} {x x' : Fin 4} (c : Fin 52)
+theorem eq_of_v10Sym_apply_eq {a a' : Fin 13} {x x' : Fin 4} (c : Fin 52)
     (h : v10Sym a x c = v10Sym a' x' c) : a = a' ∧ x = x' := by
   have hr := v10SymFn_rank a x c
   have hr' := v10SymFn_rank a' x' c
@@ -405,12 +315,9 @@ theorem v10Sym_eq_at {a a' : Fin 13} {x x' : Fin 4} (c : Fin 52)
   have hl' := v10SymFn_label a' x' c
   change v10SymFn a x c = v10SymFn a' x' c at h
   rw [h] at hr hl
-  refine ⟨Fin.ext ?_, gfAdd_cancel c x x' (hl.symm.trans hl')⟩
+  refine ⟨Fin.ext ?_, gfAdd_cancel _ (hl.symm.trans hl')⟩
   have := hr.symm.trans hr'
   omega
-where
-  gfAdd_cancel : ∀ (c : Fin 52) (x x' : Fin 4),
-      gfAdd (suitLabel c.val) x.val = gfAdd (suitLabel c.val) x'.val → x = x' := by decide!
 
 /-- (PROVED) D5. Input difference `v10Sym a x`: the one-round count to `β` is at most
     `52!/52` times the number of cards on which `v10Sym a x` and `β` agree. -/
@@ -428,7 +335,8 @@ theorem dp1Count_v10Sym_le_agree (a : Fin 13) (x : Fin 4) (β : Relabel) :
     simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, mem_coe] at hπ ⊢
     have e := v10Sym_step_agree a x β (isDeck_permDeck π) hπ
     have e0 : f π ⟨0, by decide⟩ =
-        ⟨unkeyedNoMix (permDeck π) ⟨0, by decide⟩, (isDeck_unkeyedNoMix (isDeck_permDeck π)).1 _⟩ :=
+        ⟨unkeyedNoMix (permDeck π) ⟨0, by decide⟩,
+          (isDeck_unkeyedNoMix (isDeck_permDeck π)).1 _⟩ :=
       Fin.ext (deckPerm_val _ _ _)
     rw [show (0 : Fin 52) = ⟨0, by decide⟩ from rfl, e0]
     exact e
@@ -448,8 +356,8 @@ theorem dp1Count_v10Sym_eq_zero (a : Fin 13) (x : Fin 4) (β : Relabel)
 
 /-- (PROVED) One round never takes `v10Sym a x` to a DIFFERENT `v10Sym a' x'`. -/
 theorem dp1Count_v10Sym_v10Sym_eq_zero {a a' : Fin 13} {x x' : Fin 4}
-    (hne : ¬ (a = a' ∧ x = x')) : dp1Count (v10Sym a x) (v10Sym a' x') = 0 :=
-  dp1Count_v10Sym_eq_zero a x _ fun c hc => hne (v10Sym_eq_at c hc)
+    (hdiff : ¬ (a = a' ∧ x = x')) : dp1Count (v10Sym a x) (v10Sym a' x') = 0 :=
+  dp1Count_v10Sym_eq_zero a x _ fun c hc => hdiff (eq_of_v10Sym_apply_eq c hc)
 
 /-! ## D6: paths that stay inside `v10Sym` -/
 
@@ -465,7 +373,8 @@ def StaysInV10 : (R : ℕ) → Relabel → (Fin 52 → Nat) → (Fin R → Key) 
 
 /-- (PROVED) For a `v10Sym` difference the round characteristic is exactly
     "the round maps the difference to itself" (SumRanks always commutes). -/
-theorem roundChar_v10Sym_iff (a : Fin 13) (x : Fin 4) {x₀ : Fin 52 → Nat} (hx₀ : IsDeck x₀) :
+theorem roundChar_v10Sym_iff (a : Fin 13) (x : Fin 4) {x₀ : Fin 52 → Nat}
+    (hx₀ : IsDeck x₀) :
     RoundChar (v10Sym a x) x₀ ↔
       unkeyedWithMix (rel (v10Sym a x) x₀) = rel (v10Sym a x) (unkeyedWithMix x₀) := by
   have hs := unkeyedNoMix_rel_v10Sym a x hx₀.1
@@ -487,31 +396,30 @@ theorem staysInV10_iff_trail (a : Fin 13) (x : Fin 4) : ∀ (R : ℕ) (y : Fin 5
       simp only [StaysInV10, Trail]
       constructor
       · rintro ⟨a', x', h1, h2⟩
-        obtain ⟨rfl, rfl⟩ := v10Sym_eq_at _ (v10Sym_step_agree a x _ hx₀ h1)
+        obtain ⟨rfl, rfl⟩ := eq_of_v10Sym_apply_eq _ (v10Sym_step_agree a x _ hx₀ h1)
         exact ⟨(roundChar_v10Sym_iff a x hx₀).2 h1, ih.1 h2⟩
       · rintro ⟨h1, h2⟩
         exact ⟨a, x, (roundChar_v10Sym_iff a x hx₀).1 h1, ih.2 h2⟩
 
 open Classical in
+/-- For any family of key tuples `f i`, counting the `i` whose path stays inside `v10Sym`
+    is counting the `i` that follow the characteristic (`staysInV10_iff_trail`). -/
 theorem card_staysInV10_eq (a : Fin 13) (x : Fin 4) (R : ℕ) {y : Fin 52 → Nat}
-    (hy : IsDeck y) :
-    (univ.filter fun K : Fin R → Key => StaysInV10 R (v10Sym a x) y K).card =
-      (univ.filter fun K : Fin R → Key => Trail (v10Sym a x) R y K).card := by
-  congr 1
-  ext K
-  simp only [mem_filter, mem_univ, true_and]
-  exact staysInV10_iff_trail a x R y K hy
+    (hy : IsDeck y) {ι : Type} [Fintype ι] (f : ι → Fin R → Key) :
+    (univ.filter fun i : ι => StaysInV10 R (v10Sym a x) y (f i)).card =
+      (univ.filter fun i : ι => Trail (v10Sym a x) R y (f i)).card :=
+  congrArg card (filter_congr fun i _ => staysInV10_iff_trail a x R y (f i) hy)
 
 open Classical in
-/-- (PROVED, unconditional) Nontrivial `v10Sym a x`, independent uniform round keys: at
-    most `(52!)^R / 26^R` key tuples keep the difference inside `v10Sym` for `R` rounds.
-    Only paths inside `v10Sym`; NOT a bound on the differential. -/
+/-- (PROVED; no hypothesis beyond `(a, x) ≠ (0, 0)`) Nontrivial `v10Sym a x`, independent uniform
+    round keys: at most `(52!)^R / 26^R` key tuples keep the difference inside `v10Sym` for `R`
+    rounds. Only paths inside `v10Sym`; NOT a bound on the differential. -/
 theorem staysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
     (R : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 ^ R * (univ.filter fun K : Fin R → Key => StaysInV10 R (v10Sym a x) y K).card ≤
       Nat.factorial 52 ^ R := by
-  rw [card_staysInV10_eq a x R hy]
-  exact TrailBound.trail_card_le_of_round _ 26 (TrailBound.round_le_26_v10Sym a x hne) R y hy
+  exact (congrArg (26 ^ R * ·) (card_staysInV10_eq a x R hy fun K : Fin R → Key => K)).trans_le
+    (TrailBound.trail_card_le_of_round _ 26 (TrailBound.round_le_26_v10Sym a x hne) R y hy)
 
 open Classical in
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) As
@@ -522,31 +430,21 @@ theorem staysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS 
     (hy : IsDeck y) :
     4420 ^ R * (univ.filter fun K : Fin R → Key => StaysInV10 R (v10Sym a x) y K).card ≤
       Nat.factorial 52 ^ R := by
-  rw [card_staysInV10_eq a x R hy]
-  exact TrailBound.trail_card_le_4420_v10Sym_of_check hKC hKS a x hne R y hy
+  exact (congrArg (4420 ^ R * ·) (card_staysInV10_eq a x R hy fun K : Fin R → Key => K)).trans_le
+    (TrailBound.trail_card_le_4420_v10Sym_of_check hKC hKS a x hne R y hy)
 
 /-! ## D6 and D7 under the real PassKey schedule (one round only) -/
 
 open Classical in
-theorem card_realStaysInV10_eq (a : Fin 13) (x : Fin 4) (R : ℕ) {y : Fin 52 → Nat}
-    (hy : IsDeck y) :
-    (univ.filter fun π : Equiv.Perm (Fin 52) => StaysInV10 R (v10Sym a x) y (roundKeys R π)).card =
-      (univ.filter fun π : Equiv.Perm (Fin 52) => Trail (v10Sym a x) R y (roundKeys R π)).card := by
-  congr 1
-  ext π
-  simp only [mem_filter, mem_univ, true_and]
-  exact staysInV10_iff_trail a x R y _ hy
-
-open Classical in
-/-- (PROVED, unconditional) Real PassKey schedule, uniform master key, nontrivial
-    `v10Sym a x`, every `R ≥ 1`, every deck `y`: at most `52!/26` master keys keep the
-    difference inside `v10Sym` for `R` rounds. ONE round's bound (not `(1/26)^R`); only
-    paths inside `v10Sym`. -/
+/-- (PROVED; no hypothesis beyond `(a, x) ≠ (0, 0)`) Real PassKey schedule, uniform master key,
+    nontrivial `v10Sym a x`, every `R ≥ 1`, every deck `y`: at most `52!/26` master keys keep the
+    difference inside `v10Sym` for `R` rounds. ONE round's bound (not `(1/26)^R`); only paths inside
+    `v10Sym`. -/
 theorem realStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
     (R : ℕ) (hR : 0 < R) {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 * (univ.filter fun π : Equiv.Perm (Fin 52) =>
       StaysInV10 R (v10Sym a x) y (roundKeys R π)).card ≤ Nat.factorial 52 := by
-  rw [card_realStaysInV10_eq a x R hy]
+  rw [card_staysInV10_eq a x R hy (roundKeys R)]
   exact RealSchedule.realTrail_card_le_of_round _ 26 (TrailBound.round_le_26_v10Sym a x hne)
     R hR y hy
 
@@ -559,7 +457,7 @@ theorem realStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3
     {y : Fin 52 → Nat} (hy : IsDeck y) :
     4420 * (univ.filter fun π : Equiv.Perm (Fin 52) =>
       StaysInV10 R (v10Sym a x) y (roundKeys R π)).card ≤ Nat.factorial 52 := by
-  rw [card_realStaysInV10_eq a x R hy]
+  rw [card_staysInV10_eq a x R hy (roundKeys R)]
   exact RealSchedule.realTrail_card_le_of_round _ 4420
     (TrailBound.round_le_4420_v10Sym_of_check hKC hKS a x hne) R hR y hy
 

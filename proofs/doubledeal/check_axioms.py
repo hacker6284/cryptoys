@@ -345,18 +345,20 @@ PACKAGES = {
             "DoubleDeal.Security.TrailBound.trail_card_le_64_of_not_v10Sym",
             "DoubleDeal.Security.TrailBound.trail_card_le_64_of_check",
             "DoubleDeal.Security.TrailBound.trail_card_le_4420_v10Sym_of_check",
-            # Differential (roadmap M6): structure only; no numeric bound on the differential
-            "DoubleDeal.Security.Differential.diff_of_trail",
+            # Differential (roadmap M6): structure only; no numeric bound on the full differential
             "DoubleDeal.Security.Differential.card_trail_le_diffCount",
+            "DoubleDeal.Security.Differential.diffCount_zero",
             "DoubleDeal.Security.Differential.diffCount_eq_of_isDeck",
             "DoubleDeal.Security.Differential.diffCount_succ",
             "DoubleDeal.Security.Differential.diffCount_one",
             "DoubleDeal.Security.Differential.sum_dp1Count",
             "DoubleDeal.Security.Differential.sum_diffCount",
+            "DoubleDeal.Security.Differential.dp1Count_one_left",
             "DoubleDeal.Security.Differential.diffCount_one_left",
+            "DoubleDeal.Security.Differential.dp1Count_to_one",
             "DoubleDeal.Security.Differential.diffCount_to_one",
-            "DoubleDeal.Security.Differential.diffCount_le_of_dp1Count",  # HOLLOW CONDITIONAL
             "DoubleDeal.Security.Differential.dp1Count_v10Sym_le_agree",
+            "DoubleDeal.Security.Differential.dp1Count_v10Sym_eq_zero",
             "DoubleDeal.Security.Differential.dp1Count_v10Sym_v10Sym_eq_zero",
             "DoubleDeal.Security.Differential.staysInV10_iff_trail",
             "DoubleDeal.Security.Differential.staysInV10_card_le_26",

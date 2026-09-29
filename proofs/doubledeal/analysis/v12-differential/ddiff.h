@@ -34,4 +34,4 @@ static inline void parse_rel(const char *sp, int *s) { for (int i = 0; i < 52; i
     else if (sscanf(sp, "%d,%d;%d,%d", &a, &b, &c, &d) == 4) { s[a] = b; s[b] = a; s[c] = d; s[d] = c; }
     else if (sscanf(sp, "%d,%d,%d", &a, &b, &c) == 3) { s[a] = b; s[b] = c; s[c] = a; }
     else { sscanf(sp, "%d,%d", &a, &b); s[a] = b; s[b] = a; } }
-static int cmpu(const void *x, const void *y) { uint64_t a = *(const uint64_t *)x, b = *(const uint64_t *)y; return a < b ? -1 : a > b; }
+static inline int cmpu(const void *x, const void *y) { uint64_t a = *(const uint64_t *)x, b = *(const uint64_t *)y; return a < b ? -1 : a > b; }

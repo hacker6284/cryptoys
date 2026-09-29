@@ -103,6 +103,13 @@ theorem trail_rounds_rel (σ : Relabel) :
       rw [compose_rel, roundChar_unkeyedWithMix h.1]
       exact trail_rounds_rel σ R _ _ h.2
 
+/-- `rounds` maps decks to decks. -/
+theorem isDeck_rounds : ∀ (R : ℕ) (y : Fin 52 → Nat) (K : Fin R → Key), IsDeck y →
+    IsDeck (rounds R y K)
+  | 0, _, _, hy => hy
+  | R + 1, _, K, hy =>
+      isDeck_rounds R _ (Fin.tail K) (isDeck_unkeyedWithMix (isDeck_compose hy (K 0)))
+
 /-! ## One round: counting over the key -/
 
 /-- Decks (as permutations) on which one round's characteristic holds. -/
@@ -112,13 +119,14 @@ def roundCharCount (σ : Relabel) : ℕ :=
 theorem compose_permDeck (ρ k : Equiv.Perm (Fin 52)) :
     composeVec 52 Nat (permDeck ρ) k = permDeck (ρ * k) := rfl
 
-/-- (PROVED) For a fixed deck `y`, the round keys that make the characteristic hold
-    number exactly `roundCharCount σ` (Compose with a uniform key is a uniform deck). -/
-theorem card_keys_roundChar (σ : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) :
-    (univ.filter fun k : Key => RoundChar σ (composeVec 52 Nat y k)).card = roundCharCount σ := by
+/-- (PROVED) Compose with a uniform key makes any fixed deck uniform: for a deck `y`, the
+    keys `k` with `P (y ∘ k)` number exactly the decks (as permutations) with `P`. -/
+theorem card_keys_compose (P : (Fin 52 → Nat) → Prop) [DecidablePred P]
+    {y : Fin 52 → Nat} (hy : IsDeck y) :
+    (univ.filter fun k : Key => P (composeVec 52 Nat y k)).card =
+      (univ.filter fun π : Equiv.Perm (Fin 52) => P (permDeck π)).card := by
   set ρ := deckPerm y hy
   have hyρ : y = permDeck ρ := funext fun i => (deckPerm_val y hy i).symm
-  unfold roundCharCount
   rw [hyρ]
   apply card_nbij' (fun k => ρ * k) (fun π => ρ⁻¹ * π)
   · intro k hk
@@ -130,6 +138,12 @@ theorem card_keys_roundChar (σ : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) 
   · intro k _; simp only [inv_mul_cancel_left]
   · intro π _; simp only [mul_inv_cancel_left]
 
+/-- (PROVED) For a fixed deck `y`, the round keys that make the characteristic hold
+    number exactly `roundCharCount σ` (Compose with a uniform key is a uniform deck). -/
+theorem card_keys_roundChar (σ : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) :
+    (univ.filter fun k : Key => RoundChar σ (composeVec 52 Nat y k)).card = roundCharCount σ :=
+  card_keys_compose (RoundChar σ) hy
+
 /-! ## R rounds -/
 
 theorem card_trail_zero (σ : Relabel) (y : Fin 52 → Nat) :
@@ -138,35 +152,46 @@ theorem card_trail_zero (σ : Relabel) (y : Fin 52 → Nat) :
     filter_true_of_mem (fun _ _ => trivial)
   rw [this, card_univ, Fintype.card_unique]
 
+/-- (PROVED) Counting `R + 1` key tuples by their first key:
+    `#{K | P K} = ∑ k, #{K' | P (Fin.cons k K')}`. -/
+theorem card_filter_succ {R : ℕ} (P : (Fin (R + 1) → Key) → Prop) [DecidablePred P] :
+    (univ.filter P).card =
+      ∑ k : Key, (univ.filter fun K : Fin R → Key => P (Fin.cons k K)).card := by
+  rw [card_eq_sum_card_fiberwise (f := fun K : Fin (R + 1) → Key => K 0) (t := univ)
+    (fun _ _ => mem_univ _)]
+  refine sum_congr rfl fun k _ => ?_
+  apply card_nbij' (fun K => Fin.tail K) (fun K => Fin.cons k K)
+  · intro K hK
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK ⊢
+    obtain ⟨h1, h0⟩ := hK
+    rw [← h0, Fin.cons_self_tail]
+    exact h1
+  · intro K hK
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK ⊢
+    exact ⟨hK, Fin.cons_zero _ _⟩
+  · intro K hK
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK
+    rw [← hK.2]
+    exact Fin.cons_self_tail K
+  · intro K _; exact Fin.tail_cons _ _
+
 /-- The `R + 1`-round count splits over the first key. -/
 theorem card_trail_succ (σ : Relabel) (R : ℕ) (y : Fin 52 → Nat) :
     (univ.filter fun K : Fin (R + 1) → Key => Trail σ (R + 1) y K).card =
       ∑ k ∈ univ.filter (fun k : Key => RoundChar σ (composeVec 52 Nat y k)),
         (univ.filter fun K : Fin R → Key =>
           Trail σ R (unkeyedWithMix (composeVec 52 Nat y k)) K).card := by
-  rw [card_eq_sum_card_fiberwise (f := fun K : Fin (R + 1) → Key => K 0)
-    (t := univ.filter (fun k : Key => RoundChar σ (composeVec 52 Nat y k)))
-    (fun K hK => by
-      simp only [mem_filter, mem_univ, true_and] at hK ⊢
-      exact hK.1)]
-  apply sum_congr rfl
-  intro k hk
-  simp only [mem_filter, mem_univ, true_and] at hk
-  apply card_nbij' (fun K => Fin.tail K) (fun K => Fin.cons k K)
-  · intro K hK
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, Trail] at hK ⊢
-    obtain ⟨⟨_, h2⟩, h0⟩ := hK
-    rw [h0] at h2
-    exact h2
-  · intro K hK
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, Trail,
-      Fin.cons_zero, Fin.tail_cons] at hK ⊢
-    exact ⟨⟨hk, hK⟩, trivial⟩
-  · intro K hK
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK
-    rw [← hK.2]
-    exact Fin.cons_self_tail K
-  · intro K _; exact Fin.tail_cons _ _
+  rw [card_filter_succ, sum_filter]
+  refine sum_congr rfl fun k _ => ?_
+  have e : ∀ K : Fin R → Key, Trail σ (R + 1) y (Fin.cons k K) ↔
+      RoundChar σ (composeVec 52 Nat y k) ∧
+        Trail σ R (unkeyedWithMix (composeVec 52 Nat y k)) K := fun K => by
+    simp only [Trail, Fin.cons_zero, Fin.tail_cons]
+  rw [filter_congr (fun K _ => e K)]
+  split_ifs with hk
+  · exact congrArg card (filter_congr fun K _ => and_iff_right hk)
+  · rw [card_eq_zero, filter_eq_empty_iff]
+    exact fun K _ h => hk h.1
 
 /-- (PROVED) The general induction: if one round's characteristic holds on at most
     `52!/p` decks, then from every starting deck `y` at most `(52!/p)^R` of the

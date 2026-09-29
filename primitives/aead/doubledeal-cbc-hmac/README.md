@@ -12,7 +12,7 @@ Not for real use. No AES-class claim. MegaDreifach is a toy hash, so the MAC inh
 | `aead.test.mjs` | Round-trips and tag-tamper KATs |
 | `kats/doubledeal_cbc_hmac_kats.json` | Published vectors |
 | `aead_harness.mjs` | Shared aead.mjs wiring for the test and the regenerator (`AEAD_OUT`, `DD_MJS`) |
-| `kats/regen.mjs` | Rewrites the KAT blobs after a DoubleDeal change; `aead.test.mjs` checks them |
+| `kats/regen.mjs` | Rewrites the KAT blobs after a DoubleDeal change; `--check` (run by `tools/generate-demos.sh`) fails if a fresh run would change the JSON; `aead.test.mjs` also checks them |
 
 ```sh
 sudoc emit-ir --require terminates -I primitives/hash/megadreifach \

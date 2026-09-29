@@ -152,15 +152,6 @@ theorem range'_map_getD_rev (l : List Nat) (b m : Nat) (hm : m ≤ b) (hb : b �
     have h1m : 1 + m = m + 1 := Nat.add_comm 1 m
     simp [h1m, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hidx]
 
-theorem runLoopOn_congr {σ ρ α} (s0 : σ) (fuel : Nat)
-    (step step' : σ → Except SudoRt.Trap (SudoRt.Flow σ ρ))
-    (h : ∀ s, step s = step' s)
-    (after after' : σ → Except SudoRt.Trap α) (ha : ∀ s, after s = after' s)
-    (onRet : ρ → Except SudoRt.Trap α) :
-    SudoRt.runLoopOn (ρ := ρ) s0 fuel step after onRet =
-      SudoRt.runLoopOn (ρ := ρ) s0 fuel step' after' onRet := by
-  rw [show step = step' from funext h, show after = after' from funext ha]
-
 /-- Generated `deal_under` is `dealUnder` on a well-formed list (`m < length`). -/
 theorem deal_under_refines (xs : List Nat) (m : Nat) (hm : m < xs.length) (hfits : FitsLen xs.length) :
     Doubledeal.deal_under (embed xs) (Int.ofNat m) = .ok (embed (dealUnder xs m)) := by
@@ -275,69 +266,93 @@ theorem undeal_under_refines (xs : List Nat) (m : Nat) (hm : m < xs.length) (hfi
   unfold undealUnder embed
   simp [List.map_append]
 
-theorem addI_ofNat_two (n : Nat) (h : FitsLen (n + 2)) :
-    SudoRt.addI (Int.ofNat n) 2 = .ok (Int.ofNat (n + 2)) :=
-  narrowI_ofNat (n + 2) h
-
 theorem fits_dealCount (c : Nat) (hc : FitsLen c) : FitsLen (dealCount c) := by
   unfold dealCount suit
   unfold FitsLen i64MaxNat at *
   omega
 
+/-- Generated `deal_amount`: `+dealCount c` (deal under the hand), else
+    `-dealCount c` (deal under the key pile), else `0`. -/
+theorem deal_amount_refines (c h k : Nat) (hc : FitsLen c) :
+    Doubledeal.deal_amount (Int.ofNat c) (Int.ofNat h) (Int.ofNat k) =
+      .ok (if dealCount c < h then Int.ofNat (dealCount c)
+           else if dealCount c < k then -Int.ofNat (dealCount c) else 0) := by
+  unfold Doubledeal.deal_amount
+  rw [suit_of_refines]
+  simp only [ok_bind]
+  have h2 : SudoRt.addI (Int.ofNat (suit c)) 2 = .ok (Int.ofNat (dealCount c)) :=
+    addI_ofNat (suit c) 2 (fits_dealCount c hc)
+  rw [h2]
+  simp only [ok_bind, decide_ofNat_lt]
+  by_cases hH : dealCount c < h
+  · rw [decide_eq_true hH]
+    simp only [hH, ↓reduceIte]
+    rfl
+  · by_cases hK : dealCount c < k
+    · rw [decide_eq_false hH, decide_eq_true hK]
+      simp only [hH, hK, Bool.false_eq_true, ↓reduceIte, except_bind_pure]
+      exact subI_zero_ofNat _ (fits_dealCount c hc)
+    · rw [decide_eq_false hH, decide_eq_false hK]
+      simp only [hH, hK, Bool.false_eq_true, ↓reduceIte]
+      rfl
+
+/-- `deal_step` and `undeal_step` have one shape: `deal_amount`, then `op` on
+    the hand (`a > 0`), on the key pile (`a < 0`, count `0 - a`), or nothing.
+    If `op` refines `f` below the pile length, the step refines
+    `onPile (dealCount c < ·) (f · (dealCount c))`. -/
+theorem amount_step_refines (op : Array Int → Int → Except SudoRt.Trap (Array Int))
+    (f : List Nat → Nat → List Nat)
+    (hop : ∀ xs m, m < xs.length → FitsLen xs.length →
+      op (embed xs) (Int.ofNat m) = .ok (embed (f xs m)))
+    (c : Nat) (hand key : List Nat) (hc : FitsLen c)
+    (hh : FitsLen hand.length) (hk : FitsLen key.length) :
+    (do
+      let a ← Doubledeal.deal_amount (Int.ofNat c) (SudoRt.listLen (embed hand))
+        (SudoRt.listLen (embed key))
+      if decide (a > (0 : Int)) then do
+        let h ← op (embed hand) a
+        pure (h, embed key)
+      else if decide (a < (0 : Int)) then do
+        let m ← SudoRt.subI (0 : Int) a
+        let k ← op (embed key) m
+        pure (embed hand, k)
+      else pure (embed hand, embed key)) =
+      .ok (embed (onPile (dealCount c < ·) (f · (dealCount c)) hand key).1,
+           embed (onPile (dealCount c < ·) (f · (dealCount c)) hand key).2) := by
+  rw [listLen_embed, listLen_embed, deal_amount_refines c _ _ hc]
+  simp only [ok_bind]
+  have hpos : (0 : Int) < Int.ofNat (dealCount c) := by
+    show (0 : Int) < ((suit c + 2 : Nat) : Int)
+    omega
+  unfold onPile
+  by_cases hH : dealCount c < hand.length
+  · simp only [hH, ↓reduceIte, decide_eq_true hpos]
+    rw [hop hand _ hH hh]
+    rfl
+  · have hn1 : ¬ (-Int.ofNat (dealCount c) > 0) := by omega
+    have hn2 : -Int.ofNat (dealCount c) < 0 := by omega
+    by_cases hK : dealCount c < key.length
+    · simp only [hH, hK, ↓reduceIte, decide_eq_false hn1, decide_eq_true hn2,
+        Bool.false_eq_true]
+      rw [subI_zero_neg_ofNat _ (fits_dealCount c hc)]
+      simp only [ok_bind]
+      rw [hop key _ hK hk]
+      rfl
+    · simp only [hH, hK, ↓reduceIte]
+      rfl
+
 /-- Generated `deal_step` is `maybeDeal` on well-formed piles (card fits i64). -/
 theorem deal_step_refines (c : Nat) (hand key : List Nat) (hc : FitsLen c)
     (hh : FitsLen hand.length) (hk : FitsLen key.length) :
     Doubledeal.deal_step (Int.ofNat c) (embed hand) (embed key) =
-      .ok (embed (maybeDeal hand key c).1, embed (maybeDeal hand key c).2) := by
-  unfold Doubledeal.deal_step
-  rw [suit_of_refines]
-  simp only [ok_bind]
-  rw [addI_ofNat_two (suit c) (fits_dealCount c hc)]
-  simp only [ok_bind, listLen_embed, decide_ofNat_lt]
-  have hd : suit c + 2 = dealCount c := rfl
-  rw [hd]
-  unfold maybeDeal
-  by_cases hH : dealCount c < hand.length
-  · rw [decide_eq_true hH, dif_pos hH]
-    simp only [↓reduceIte]
-    rw [deal_under_refines hand (dealCount c) hH hh]
-    rfl
-  · rw [decide_eq_false hH, dif_neg hH]
-    simp only [Bool.false_eq_true, ↓reduceIte]
-    by_cases hK : dealCount c < key.length
-    · rw [decide_eq_true hK, dif_pos hK]
-      simp only [↓reduceIte]
-      rw [deal_under_refines key (dealCount c) hK hk]
-      rfl
-    · rw [decide_eq_false hK, dif_neg hK]
-      rfl
+      .ok (embed (maybeDeal hand key c).1, embed (maybeDeal hand key c).2) :=
+  amount_step_refines Doubledeal.deal_under dealUnder deal_under_refines c hand key hc hh hk
 
 /-- Generated `undeal_step` is `maybeDealInv` on well-formed piles (card fits i64). -/
 theorem undeal_step_refines (c : Nat) (hand key : List Nat) (hc : FitsLen c)
     (hh : FitsLen hand.length) (hk : FitsLen key.length) :
     Doubledeal.undeal_step (Int.ofNat c) (embed hand) (embed key) =
-      .ok (embed (maybeDealInv hand key c).1, embed (maybeDealInv hand key c).2) := by
-  unfold Doubledeal.undeal_step
-  rw [suit_of_refines]
-  simp only [ok_bind]
-  rw [addI_ofNat_two (suit c) (fits_dealCount c hc)]
-  simp only [ok_bind, listLen_embed, decide_ofNat_lt]
-  have hd : suit c + 2 = dealCount c := rfl
-  rw [hd]
-  unfold maybeDealInv
-  by_cases hH : dealCount c < hand.length
-  · rw [decide_eq_true hH, dif_pos hH]
-    simp only [↓reduceIte]
-    rw [undeal_under_refines hand (dealCount c) hH hh]
-    rfl
-  · rw [decide_eq_false hH, dif_neg hH]
-    simp only [Bool.false_eq_true, ↓reduceIte]
-    by_cases hK : dealCount c < key.length
-    · rw [decide_eq_true hK, dif_pos hK]
-      simp only [↓reduceIte]
-      rw [undeal_under_refines key (dealCount c) hK hk]
-      rfl
-    · rw [decide_eq_false hK, dif_neg hK]
-      rfl
+      .ok (embed (maybeDealInv hand key c).1, embed (maybeDealInv hand key c).2) :=
+  amount_step_refines Doubledeal.undeal_under undealUnder undeal_under_refines c hand key hc hh hk
 
 end DoubleDeal.Link2

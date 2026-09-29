@@ -34,7 +34,7 @@ Then comes the unchanged rank cut with key-pile fallback, then C on top of the k
 | Path | What |
 | --- | --- |
 | `vectors/` | Frozen v11 vectors. `proofs/doubledeal/vectors/regen.sh v11 --check` rebuilds them from `v11/doubledeal_v11.sudo` through the sudoc JS target (CI: `generated-fresh`). They are the v11 vectors that were live before v12, unchanged. |
-| `lean/Generated/` | Emitted Lean of the frozen v11 sudo (`proofs/emit_lean.sh doubledeal-v11`; do not edit) and its TAP test of the sudo tests (CI job `doubledeal-v11-superseded`). There is no witness package, because there is no attack to witness. |
+| `lean/Generated/` | Emitted Lean of the frozen v11 sudo (`proofs/emit_lean.sh doubledeal-v11`; do not edit) and its TAP test of the sudo tests (CI: the `doubledeal-v11-generated` entry of the `generated` matrix in `proofs.yml`). There is no witness package, because there is no attack to witness. |
 
 The v11 Lean proofs (PassKey inverse, Link 2 refinement, GridCycle, security package) are not copied here. They stay in git history at the v11 heads (#96, #99 and the latest main before v12).
 
@@ -44,5 +44,5 @@ The v11 Lean proofs (PassKey inverse, Link 2 refinement, GridCycle, security pac
 proofs/doubledeal/vectors/regen.sh v11 --check
 proofs/emit_lean.sh --check doubledeal-v11
 (cd proofs/deprecated/doubledeal-v11/lean/Generated && lake build && ./.lake/build/bin/doubledeal_v11_test)
-proofs/doubledeal/analysis/passkey-related-key/run_all.sh   # slow (~25 min on 8 cores), optional
+proofs/doubledeal/analysis/passkey-related-key/run_all.sh   # slow (~30 min on 8 cores), optional
 ```

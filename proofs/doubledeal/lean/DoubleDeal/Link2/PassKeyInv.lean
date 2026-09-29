@@ -87,12 +87,12 @@ theorem maybeCutInv_refines (c : Nat) (hand key : List Nat)
     rw [rank_of_refines_natCast]
     simp only [ok_bind, map_ok]
     rw [right_rotate_refines hand (rank c) hh]
-    unfold maybeCutInv
-    rw [dif_pos hH]
+    unfold maybeCutInv onPile
+    rw [if_pos hH]
     have hcut : cutProperInv hand (rank c) = rotR hand (rank c) := by
       unfold cutProperInv
       simp [hH.2]
-    rw [hcut]
+    simp only [hcut]
     rfl
   · have hnotH : ¬ (decide (0 < hand.length ∧ rank c < hand.length) = true) := by
       rw [decide_eq_false hH]; decide
@@ -102,18 +102,18 @@ theorem maybeCutInv_refines (c : Nat) (hand key : List Nat)
       rw [rank_of_refines_natCast]
       simp only [ok_bind, map_ok]
       rw [right_rotate_refines key (rank c) hk]
-      unfold maybeCutInv
-      rw [dif_neg hH, dif_pos hK]
+      unfold maybeCutInv onPile
+      rw [if_neg hH, if_pos hK]
       have hcut : cutProperInv key (rank c) = rotR key (rank c) := by
         unfold cutProperInv
         simp [hK.2]
-      rw [hcut]
+      simp only [hcut]
       rfl
     · have hnotK : ¬ (decide (0 < key.length ∧ rank c < key.length) = true) := by
         rw [decide_eq_false hK]; decide
       rw [if_neg hnotK]
-      unfold maybeCutInv
-      rw [dif_neg hH, dif_neg hK]
+      unfold maybeCutInv onPile
+      rw [if_neg hH, if_neg hK]
       rfl
 
 

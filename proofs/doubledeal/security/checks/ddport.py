@@ -10,7 +10,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[4]   # the repo root; use this instead of parents[n] elsewhere
 sys.path.insert(0, str(REPO / 'proofs/deprecated/doubledeal-v8/attack'))
 import dd_v8 as V8
-from dd_v8 import suit, rank, rotl, lay_cm, scoop_cm, scoop_rm, shift_rows, compose, expand_keys
+from dd_v8 import suit, rank, rotl, rotr, lay_cm, scoop_cm, scoop_rm, shift_rows, compose, expand_keys
 
 def colw(v, x): return rank(x) if v == 8 else rank(x) + suit(x)
 
@@ -123,36 +123,40 @@ def deal_under(xs, m):
 def undeal_under(xs, m):
     n = len(xs)
     return xs[n - m:][::-1] + xs[:n - m]
-def passkey_v12(deck):
-    """v12 F (SPEC 3.7): deal suit+2 under the hand, else under the key pile, else skip;
+def passkey(deck, v):
+    """PassKey F for version v. v8-v11 share the suit rotation of dd_v8.passkey.
+    v12 (SPEC 3.7): deal suit+2 under the hand, else under the key pile, else skip;
     then the unchanged rank cut with key-pile fallback; then the controller on top of the key pile."""
+    if v < 12: return V8.passkey(deck)
     hand, key = list(deck), []
     for _ in range(len(deck)):
         c = hand.pop(0)
         d = suit(c) + 2
         if d < len(hand): hand = deal_under(hand, d)
         elif d < len(key): key = deal_under(key, d)
-        if hand and rank(c) < len(hand): hand = rotl(hand, rank(c))
-        elif key and rank(c) < len(key): key = rotl(key, rank(c))
+        r = rank(c)
+        if hand and r < len(hand): hand = rotl(hand, r)
+        elif key and r < len(key): key = rotl(key, r)
         key = [c] + key
     return key
-def passkey_inv_v12(deck):
+def passkey_inv(deck, v):
+    """Inverse of passkey(., v): pop the controller, undo the cut, undo the deal."""
+    if v < 12: return V8.passkey_inv(deck)
     key, hand = list(deck), []
     for _ in range(len(deck)):
         c = key.pop(0)
         r = rank(c)
-        if hand and r < len(hand): hand = hand[len(hand) - r:] + hand[:len(hand) - r]
-        elif key and r < len(key): key = key[len(key) - r:] + key[:len(key) - r]
+        if hand and r < len(hand): hand = rotr(hand, r)
+        elif key and r < len(key): key = rotr(key, r)
         d = suit(c) + 2
         if d < len(hand): hand = undeal_under(hand, d)
         elif d < len(key): key = undeal_under(key, d)
         hand = [c] + hand
     return hand
 def expand_keys_v(k0, v, nr=6):
-    """K0..K6. v8-v11 share the suit-rotate PassKey (dd_v8.expand_keys); v12 uses passkey_v12."""
-    if v < 12: return expand_keys(k0, nr)
+    """K0..K6: K_{i+1} = passkey(K_i, v)."""
     keys = [list(k0)]
-    for _ in range(nr): keys.append(passkey_v12(keys[-1]))
+    for _ in range(nr): keys.append(passkey(keys[-1], v))
     return keys
 def encrypt(m, k0, v):
     keys = expand_keys_v(k0, v)

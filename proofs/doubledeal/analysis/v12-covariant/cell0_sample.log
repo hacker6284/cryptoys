@@ -1,4 +1,4 @@
-invocation: python3 cell0_sample.py --samples 100 (default 100); 4000 random decks per sigma; seed 20260929; MEASURED
+invocation: python3 cell0_sample.py --log (100 samples per cycle type, default 100); 4000 random decks per sigma; seed 20260929; MEASURED
   1 disjoint 2-cycles: seat-26 witness found for 100/100
   2 disjoint 2-cycles: seat-26 witness found for 100/100
   3 disjoint 2-cycles: seat-26 witness found for 100/100

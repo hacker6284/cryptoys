@@ -148,6 +148,9 @@ Scripts: `sbox.c` / `sb.py` (C S-box, survey, card and GF(4) tables, ctypes wrap
 (exact probabilities), `final.py` (the 20M table), `linear.py`, `round_check.py` (uses `../cport.py` /
 `../cand.c`), `repro.py`.
 
+Usage of `exact.py`: `python3 exact.py [4 | --same-suit-swaps]` (the rows below); `-h` / `--help` prints
+the usage and exits 0; any other argument or combination is an error (exit 1).
+
 Each log and the exact command that produced it, run from this folder with `PYTHONDONTWRITEBYTECODE=1`. Where a log
 has a header, the arguments match it. Logs without a header are deterministic outputs of the command shown.
 
@@ -162,7 +165,7 @@ has a header, the arguments match it. Logs without a header are deterministic ou
 | `logs/hill_V.log` | `python3 hillclimb.py V 64 1000 20000 8` | `mode V: 64 climbs x 1000 steps, 20000 decks per score, support <= 8` |
 | `logs/hill_P.log` | `python3 hillclimb.py P 32 400 10000 6` | `mode P: 32 climbs x 400 steps, 10000 decks per score, support <= 6` |
 | `logs/exact.log` | `python3 exact.py` | no header (5 exact values) |
-| `logs/exact4.log` | `python3 exact.py 4` (adds the 4-card cases; `-h`/`--help` prints the usage; any other argument is an error) | no header (10 exact values) |
+| `logs/exact4.log` | `python3 exact.py 4` (adds the 4-card cases) | no header (10 exact values) |
 | `logs/exact_swaps.log` | `python3 exact.py --same-suit-swaps` | one line (312 same-suit swaps: 1/221 each; 78 same-rank swaps: 0 each) |
 | `logs/exact_ds.log` | `python3 exact_ds.py` | no header (21 gap classes) |
 | `logs/final_table.md` | `python3 final.py 20000000` (the default) | no header line; N = 20000000 appears in every row |

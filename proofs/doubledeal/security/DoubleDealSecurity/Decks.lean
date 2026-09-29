@@ -14,6 +14,10 @@ def KS : Fin 52 := ⟨38, by decide⟩   -- K♠
 def KD : Fin 52 := ⟨51, by decide⟩   -- K♦
 def QH : Fin 52 := ⟨24, by decide⟩   -- Q♥
 
+/-- The identity deck `A♣, 2♣, …, K♦` (`i ↦ i`); `isDeck_idDeck` is in `Relabel.lean`,
+    next to `IsDeck`. -/
+def idDeck : Fin 52 → Nat := fun i => i.val
+
 /-- The deck `c, 0, 1, …` (card `c` first, then the rest in order). -/
 def firstDeck (c : Nat) : Fin 52 → Nat := fun i =>
   if i.val = 0 then c else if i.val ≤ c then i.val - 1 else i.val

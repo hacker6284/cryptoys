@@ -108,10 +108,7 @@ theorem commutesOnDecks_realE_of_generated (σ : Relabel)
 
 /-! ## Witness plumbing (the heavy library supplies the kernel evaluations) -/
 
-/-- The identity deck `A♣, 2♣, …, K♦`. -/
-def idDeck : Fin 52 → Nat := fun i => i.val
-
-theorem isDeck_idDeck : IsDeck idDeck := ⟨fun i => i.isLt, fun _ _ h => Fin.ext h⟩
+-- `idDeck` is in `Decks.lean`, `isDeck_idDeck` in `Relabel.lean`.
 
 theorem realE_toDeck (m : Fin 52 → Nat) :
     toDeck (realE m) = encryptDeck (toDeck m) (List.range 52) := by

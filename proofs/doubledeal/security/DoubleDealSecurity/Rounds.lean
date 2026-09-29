@@ -218,7 +218,18 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
     "σ ∈ v9Sym" needs a swap-pair argument like `sumRanks_shift_of_commutes`,
     but with one cell and the column sum depending on the row rotations; the
     remaining cells interleave two different walks. Effort: uncertain,
-    ~1–2 weeks. Not attempted further. -/
+    ~1–2 weeks. Not attempted further.
+
+    Narrowed in v12 (separate theorems; this statement is unchanged and still
+    open), `CovariantNarrow.lean`: it holds for every transposition
+    (`CovariantNarrow.roundBody_not_covariant_swap`, heavy library). It is
+    equivalent to its prime-order case (`CovariantNarrow.prime_case_iff`), and to
+    its case of prime-order σ that are neither a transposition nor a `v10Sym`
+    (`CovariantNarrow.prime_nonswap_case_iff`, heavy library).
+    It also follows from single-cell SumRanks statements
+    (`CovariantNarrow.roundBody_covariant_iff_id_of_cell0`, `…_of_cell0_prime`) that
+    are sufficient conditions, not known to be true or necessary. The reduced cases
+    are hypotheses there, not proved. Write-up: `../analysis/v12-covariant/NOTES.md`. -/
 theorem roundBody_covariant_iff_id (σ : Relabel) :
     Covariant σ unkeyedWithMix ↔ σ = 1 := by
   constructor

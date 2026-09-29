@@ -84,6 +84,9 @@ def CardsG (g : Grid Nat) : Prop := ∀ r c, g r c < 52
 /-- A well-formed deck: 52 distinct card values. -/
 def IsDeck (m : Fin 52 → Nat) : Prop := Cards m ∧ Function.Injective m
 
+/-- The identity deck (`Decks.lean`) is a deck. -/
+theorem isDeck_idDeck : IsDeck idDeck := ⟨fun i => i.isLt, fun _ _ h => Fin.ext h⟩
+
 /-- A deck as a permutation of `Fin 52`. -/
 noncomputable def deckPerm (d : Fin 52 → Nat) (hd : IsDeck d) : Equiv.Perm (Fin 52) :=
   Equiv.ofBijective (fun i => ⟨d i, hd.1 i⟩)

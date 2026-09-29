@@ -97,6 +97,24 @@ The Lean bounds match the EXACT values A_2 = 0, A_2 = 1/26 and A_4 = 1/4420 abov
 They are upper bounds from a prefix of the walk. The true full survival is smaller
 (next section).
 
+### Timing of `distinct_of_all` (MEASURED, local)
+
+`distinct_of_all` checks that `LKC` / `LKS` give distinct triples through `List.all`
+because the direct form is slow. Kernel `decide!` of the `∀ p ∈ L` form took 7.9–8.2 s
+for each of `LKC` and `LKS`; `decide` of the `List.all` form took 4.9–5.4 ms (two runs).
+Setup: Lean 4.14.0 and the package's Mathlib pin, on an 8-core Intel Xeon Linux box
+(not CI, other builds running). The time is the `type checking` line printed by
+`set_option profiler true` for one theorem per scratch file, run with `lake env lean`
+from `proofs/doubledeal/security`:
+
+    import DoubleDealSecurity.GridCycleSurvival
+    open DoubleDeal DoubleDeal.Security DoubleDeal.Security.GridCycleSurvival
+    set_option profiler true
+    theorem m1 : ∀ p ∈ LKC, KC ≠ p.1 ∧ KC ≠ p.2 ∧ p.1 ≠ p.2 := by decide!
+    -- m2: the same for KS / LKS
+    -- m3: (LKC.all fun p => decide (KC ≠ p.1 ∧ KC ≠ p.2 ∧ p.1 ≠ p.2)) = true := by decide
+    -- m4: the same for KS / LKS
+
 ## 4. Sampled full survival (MEASURED)
 
 * `conditional_survival.py` → `conditional_survival.log`: for `v10Sym 0 3`, 2000

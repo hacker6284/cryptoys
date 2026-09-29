@@ -36,6 +36,7 @@ SAMPLES = 100   # default samples per cycle type (the committed log uses the def
 TRIES = 4000    # random decks per sampled relabelling
 SEED = 20260929
 LOG_OUT = HERE / 'cell0_sample.log'
+LOG_CMD = 'python3 cell0_sample.py --log'   # the command that writes LOG_OUT (run from HERE)
 
 V = 12
 
@@ -68,13 +69,14 @@ def witness(s, rng, tries=TRIES):
     return False
 
 
-def report(n):
+def report(n, invocation):
+    """Print the measurement; `invocation` is the command that produces this output."""
     rng = random.Random(SEED)
     types = [(2, k) for k in (1, 2, 3, 6, 13, 26)] + [(3, 1), (3, 5), (3, 17), (5, 1), (5, 10),
                                                         (7, 7), (13, 1), (13, 4), (17, 3),
                                                         (47, 1)]
-    print(f'invocation: python3 cell0_sample.py --samples {n} '
-          f'(default {SAMPLES}); {TRIES} random decks per sigma; seed {SEED}; MEASURED')
+    print(f'invocation: {invocation} ({n} samples per cycle type, default {SAMPLES}); '
+          f'{TRIES} random decks per sigma; seed {SEED}; MEASURED')
     total = found_all = 0
     for p, k in types:
         found = sum(witness(perm_of_type(rng, p, k), rng) for _ in range(n))
@@ -93,10 +95,10 @@ def main():
             raise SystemExit('--log / --check use the defaults only')
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            report(SAMPLES)
+            report(SAMPLES, LOG_CMD)   # the log records the command that writes it
         return emit(LOG_OUT, buf.getvalue(), args.check,
                     fix='python3 proofs/doubledeal/analysis/v12-covariant/cell0_sample.py --log')
-    report(args.samples)
+    report(args.samples, ' '.join(['python3 cell0_sample.py', *sys.argv[1:]]))
     return 0
 
 

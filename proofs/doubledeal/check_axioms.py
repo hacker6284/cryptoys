@@ -198,6 +198,8 @@ PACKAGES = {
             # CovariantNarrow (roadmap M4): reductions of the open conjecture
             "DoubleDeal.Security.CovariantNarrow.prime_case_iff",
             "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime",
+            "DoubleDeal.Security.CovariantNarrow.not_covariant_swap_of_check",
+            "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff_of_check",
         },
     },
     "security-heavy": {

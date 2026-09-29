@@ -1,4 +1,6 @@
-# DoubleDeal v12: multi-round characteristic bound (milestone 2 of the AES-style roadmap)
+# DoubleDeal v12: multi-round characteristic bound (roadmap milestone M2)
+
+Roadmap: [`security/README.md`, section "Roadmap"](../../security/README.md#roadmap).
 
 Labels: **PROVED** = Lean, audited; **CONDITIONAL** = proved with a hypothesis
 stated in the theorem; **MEASURED** = random sampling with a fixed seed. Nothing
@@ -31,25 +33,28 @@ here is a security or bit-security claim, and a green build is not one either.
 4. **Starting pair.** The statements hold for **every** starting deck `y`, and the
    pair is `(y, σ·y)`. They are not averaged over messages.
 
-## Proved (`security/DoubleDealSecurity/Trail.lean`, namespace `DoubleDeal.Security.TrailBound`)
+## Proved (`security/DoubleDealSecurity/TrailBound.lean`, namespace `DoubleDeal.Security.TrailBound`)
 
 `#T(σ,R,y)` below is `(univ.filter fun K : Fin R → Key => Trail σ R y K).card`.
 
 * `trail_rounds_rel σ R y K : Trail σ R y K → rounds R (rel σ y) K = rel σ (rounds R y K)`.
-* `card_keys_roundChar σ (hy : IsDeck y) : #{k | RoundChar σ (compose y k)} = roundCount σ`.
+* `card_keys_roundChar σ (hy : IsDeck y) : #{k | RoundChar σ (compose y k)} = roundCharCount σ`.
   This is Compose with a uniform key giving a uniform deck.
-* `trail_card_le_of_round σ p (hround : p * roundCount σ ≤ 52!) R y (hy : IsDeck y) :
+* `trail_card_le_of_round σ p (hround : p * roundCharCount σ ≤ 52!) R y (hy : IsDeck y) :
   p^R * #T(σ,R,y) ≤ (52!)^R`. This is the generic induction.
-* `roundCount_le_sumRanks σ : roundCount σ ≤ #(SumRanksDP.survivors σ)` and
-  `roundCount_le_gridCycle σ : roundCount σ ≤ #(gcSurvivors σ)`.
-* `round_le_64_of_not_v10Sym σ (h : ¬∃ a x, σ = v10Sym a x) : 64 * roundCount σ ≤ 52!`.
-* `round_le_26_v10Sym a x (hne : ¬(a = 0 ∧ x = 0)) : 26 * roundCount (v10Sym a x) ≤ 52!`.
+* `roundCharCount_le_sumRanks σ : roundCharCount σ ≤ #(SumRanksDP.survivors σ)` and
+  `roundCharCount_le_gridCycle σ : roundCharCount σ ≤ #(gcSurvivors σ)`.
+* `round_le_64_of_not_v10Sym σ (h : ¬∃ a x, σ = v10Sym a x) : 64 * roundCharCount σ ≤ 52!`.
+* `round_le_26_v10Sym a x (hne : ¬(a = 0 ∧ x = 0)) : 26 * roundCharCount (v10Sym a x) ≤ 52!`.
+* `round_le_of_v10Sym p (hp : p ≤ 64) hsym σ (h1 : σ ≠ 1) : p * roundCharCount σ ≤ 52!`,
+  given `hsym`: the same bound for every nontrivial `v10Sym a x`. This is the one
+  case split (SumRanks outside `v10Sym`) used by both `σ ≠ 1` statements below.
 * **Unconditional:** `trail_card_le_26 σ (h1 : σ ≠ 1) R y hy : 26^R * #T ≤ (52!)^R`.
 * **Unconditional:** `trail_card_le_64_of_not_v10Sym σ h R y hy : 64^R * #T ≤ (52!)^R`.
 * **CONDITIONAL on `hKC : Check3 KC LKC`, `hKS : Check3 KS LKS`:**
   `trail_card_le_64_of_check … σ h1 R y hy : 64^R * #T ≤ (52!)^R` and
   `trail_card_le_4420_v10Sym_of_check … a x hne R y hy : 4420^R * #T(v10Sym a x) ≤ (52!)^R`.
-* Heavy library (`DoubleDealSecurityHeavy/Trail.lean`), with the checks discharged by
+* Heavy library (`DoubleDealSecurityHeavy/TrailBound.lean`), with the checks discharged by
   kernel `decide!`: `trail_card_le_64 σ (h1 : σ ≠ 1) R y hy` and
   `trail_card_le_4420_v10Sym a x hne R y hy`, both unconditional.
 
@@ -64,16 +69,18 @@ One-round characteristic probability over a uniform post-Compose deck:
 
 | τ | stem commutes | RoundChar |
 |---|---|---|
-| A♣↔2♣ (same suit) | 4.466e-3 (exact SumRanks value 1/221 ≈ 4.52e-3) | 5.8e-5 |
+| A♣↔2♣ (same suit) | 4.466e-3 (SumRanks alone: 1/221 ≈ 4.52e-3, ENUMERATED exactly by `../v10-sumranks/sbox-search/exact.py`; not a Lean theorem, the Lean bound used here is ≤ 1/64) | 5.8e-5 |
 | 5♦↔8♦ | 4.593e-3 | 6.5e-5 |
 | K♣↔K♦ | 0 | 0 (95% bound 3e-6) |
 | v10Sym 0 3 | 1 | 0 (95% bound 3e-6) |
 
 So the measured one-round values are far below the proved 1/64 per round. The gap
-is GridCycle for small-support τ, which is not formalised (see milestone 1 NOTES,
-"Honest gap"). These values are not used by any theorem. They are not extrapolated
+is GridCycle for small-support τ, which is not formalised (see
+`../v12-diffusion/NOTES.md` §5 Findings, the "Gap (honest)" item). These values are not used by any theorem. They are not extrapolated
 to R rounds here, because that would need the independence assumption this note
 warns about.
+
+Reproduce: `python3 round_char.py > round_char.log` (about 4 min on one core).
 
 ## Open
 

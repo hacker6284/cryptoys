@@ -446,8 +446,12 @@ theorem g0_eq (m : Fin 52 → Nat) : g0 m = unkeyedNoMix m 0 := by
   unfold g0 unkeyedNoMixOnce
   rw [arrAt_snap, arrFn_snap]
 
+/-- `n mod 52` as a seat (local helper, so this file does not depend on the
+    GridCycle-survival list helpers). -/
+def seat52 (n : Nat) : Fin 52 := ⟨n % 52, Nat.mod_lt _ (by decide)⟩
+
 /-- The identity deck with seats `i` and `j` exchanged. -/
-def posSwapDeck (i j : Nat) : Fin 52 → Nat := permDeck (Equiv.swap (GCSurvival.finOf i) (GCSurvival.finOf j))
+def posSwapDeck (i j : Nat) : Fin 52 → Nat := permDeck (Equiv.swap (seat52 i) (seat52 j))
 
 /-- The four position pairs used (from `analysis/v12-covariant/cell0_witness.py`). -/
 def goodPairs : List (Nat × Nat) := [(1, 2), (1, 3), (1, 5), (1, 34)]

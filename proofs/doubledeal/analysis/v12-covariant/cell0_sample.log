@@ -1,0 +1,22 @@
+samples per cycle type: 100; seed 20260929; MEASURED
+  1 disjoint 2-cycles: seat-26 witness found for 100/100
+  2 disjoint 2-cycles: seat-26 witness found for 100/100
+  3 disjoint 2-cycles: seat-26 witness found for 100/100
+  6 disjoint 2-cycles: seat-26 witness found for 100/100
+  13 disjoint 2-cycles: seat-26 witness found for 100/100
+  26 disjoint 2-cycles: seat-26 witness found for 100/100
+  1 disjoint 3-cycles: seat-26 witness found for 100/100
+  5 disjoint 3-cycles: seat-26 witness found for 100/100
+  17 disjoint 3-cycles: seat-26 witness found for 100/100
+  1 disjoint 5-cycles: seat-26 witness found for 100/100
+  10 disjoint 5-cycles: seat-26 witness found for 100/100
+  7 disjoint 7-cycles: seat-26 witness found for 100/100
+  1 disjoint 13-cycles: seat-26 witness found for 100/100
+  4 disjoint 13-cycles: seat-26 witness found for 100/100
+  3 disjoint 17-cycles: seat-26 witness found for 100/100
+  1 disjoint 47-cycles: seat-26 witness found for 100/100
+  control, the 51 nontrivial v10Sym (g commutes with them, so no witness can exist): 0/51
+
+real	0m10.599s
+user	0m10.585s
+sys	0m0.004s

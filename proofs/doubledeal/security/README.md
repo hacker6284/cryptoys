@@ -8,7 +8,7 @@ path dependency.
     lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
     lake build
     python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
-    lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses, ~10 min (five decide! encryptions + GridCycle survival checks)
+    lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses, ~17 min (five decide! encryptions + GridCycle survival checks + covariant-case checks)
     python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
     python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
     python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
@@ -39,10 +39,12 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma map: `SUMRANKS_DP.md`; paper proof: `sumranks-dp-paper/PROOF.md` |
 | `GridCycleSurvival` | **GridCycle relabelling survival** (milestone 1 of the AES-style roadmap; `../analysis/v12-diffusion/NOTES.md`): τ survives GridCycle at deck π iff `mixColumns (τ·π) = τ·mixColumns π`. Proved for every τ: `52 · #survivors ≤ #gcExc τ · 52!` (first-card argument; `gcExc` = fixed points plus K♣/K♠); fixed-point-free τ ≤ `52!/26`; 50 of the 51 nontrivial `v10Sym` survive on no deck; `v10Sym 0 3` ≤ `52!/26`, and ≤ `52!/4420` **given** the two finite checks `Check3 KC LKC`, `Check3 KS LKS` as hypotheses (`…_of_check`). GridCycle alone, one layer; not a trail bound for τ outside `v10Sym`, and not a statement about the cipher |
 | `Trail` | **multi-round characteristic bound under INDEPENDENT UNIFORM round keys** (milestone 2; `../analysis/v12-trail/NOTES.md`). `Trail σ R y K`: in every one of R rounds (Compose with `K i`, then the unkeyed round), SumRanks and GridCycle both commute with σ. Counting over all `(52!)^R` key tuples, from every deck y: `trail_card_le_26` (σ ≠ 1, unconditional) `26^R · # ≤ (52!)^R`; `trail_card_le_64_of_not_v10Sym` `64^R`; `trail_card_le_64_of_check` (σ ≠ 1, given the GridCycle checks) `64^R`. One characteristic, not a differential. Says nothing about the real PassKey schedule. No final no-mix round |
+| `CovariantNarrow` | **narrowing of the open conjecture** `roundBody_covariant_iff_id` (milestone 4; the conjecture itself is unchanged and still open; `../analysis/v12-covariant/NOTES.md`). Proved: the output relabelling is unique; covariant σ form a subgroup; the conjecture follows from its prime-order case (`roundBody_covariant_iff_id_of_prime`, hypothesis) and from a single-cell SumRanks statement (`roundBody_covariant_iff_id_of_cell0`, hypothesis); in the commuting case SumRanks and GridCycle survivor counts agree. Given the finite checks `SwapChecks` / `Cov0Checks` as hypotheses: no transposition commutes with, or is covariant for, the round body |
 | `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`). **Deprecated-v9 model**; kept as the proof of the v9 mechanism, not a statement about v10 |
 | `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v12 `encrypt` under the identity master key (expected values regenerated for v12, whose key schedule changed) (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
 | `DoubleDealSecurityHeavy.GridCycleSurvival` | kernel `decide!` of `Check3 KC LKC` / `Check3 KS LKS` (8 chunks of 13 × 52 first-three-seat evaluations, ~30 s each), hence unconditional `gc_survival_v10Sym03_le` / `gc_survival_v10Sym_le`: every nontrivial `v10Sym a x` survives GridCycle on at most `52!/4420` decks |
 | `DoubleDealSecurityHeavy.Trail` | unconditional `trail_card_le_64` (every σ ≠ 1) and `trail_card_le_4420_v10Sym`, from the kernel-checked GridCycle checks; same model and caveats as `Trail` |
+| `DoubleDealSecurityHeavy.CovariantNarrow` | kernel `decide!` of `SwapChecks` and `Cov0Checks` (one theorem per representative `e`, ~7 min in total), hence unconditional `roundBody_not_commutes_swap` and `roundBody_not_covariant_swap`: the covariant round conjecture holds for every transposition |
 
 Generic list/rotation lemmas live in the Mathlib-free core package
 (`../lean/DoubleDeal/SumRanks.lean`, `SumRanksV10.lean`, `Rotate.lean`).
@@ -96,7 +98,14 @@ bound above 4, and not a statement about SumRanks or keyed rounds.
 T1 is a draft. The only open statement is the covariant round conjecture
 `roundBody_covariant_iff_id` (marked `DRAFT-SORRY`, checked numerically by
 `checks/check_covariant.py`); `fullRound_commutes_iff_id` and the
-permutation-key `encrypt6_commutes_iff_id` rest on it.
+permutation-key `encrypt6_commutes_iff_id` rest on it. Narrowed in v12
+(`CovariantNarrow`, separate theorems; the conjecture's statement is unchanged):
+proved for every transposition (heavy library) and, before that, for every
+nontrivial `v10Sym`; it reduces to σ of prime order p ≤ 52, and to a single-cell
+SumRanks statement (both are hypotheses of the reduction theorems, not proved).
+Open: every σ of prime order that is neither a transposition nor in `v10Sym`.
+Measured only: the seat-26 argument refuted covariance for all 1600 sampled
+prime-order σ (`../analysis/v12-covariant/cell0_sample.log`).
 
 CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 - `checks/scan_sorry.py`: `sorry` only in `roundBody_covariant_iff_id`; no

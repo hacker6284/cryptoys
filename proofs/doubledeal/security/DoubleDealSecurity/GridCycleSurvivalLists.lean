@@ -16,7 +16,7 @@
   `DoubleDealSecurityHeavy/GridCycleSurvival.lean`), so a wrong list fails the heavy
   build. Card ids are `13 · suit + rank` (suits ♣ ♥ ♠ ♦, ranks A..K).
 -/
-namespace DoubleDeal.Security.GCSurvival
+namespace DoubleDeal.Security.GridCycleSurvival
 
 /-- Second and third cards keeping seats 1..3 unchanged under `v10Sym 0 3`, first card K♣ (card 12). -/
 def LKC : List (Fin 52 × Fin 52) :=
@@ -28,4 +28,4 @@ def LKS : List (Fin 52 × Fin 52) :=
   [(24, 39), (25, 51), (26, 12), (27, 12), (28, 12), (29, 12), (30, 12), (31, 12),
     (32, 12), (33, 12), (34, 12), (35, 12), (36, 12), (37, 12), (39, 50)]
 
-end DoubleDeal.Security.GCSurvival
+end DoubleDeal.Security.GridCycleSurvival

@@ -164,11 +164,11 @@ def lean_text():
   `DoubleDealSecurityHeavy/GridCycleSurvival.lean`), so a wrong list fails the heavy
   build. Card ids are `13 · suit + rank` (suits ♣ ♥ ♠ ♦, ranks A..K).
 -/
-namespace DoubleDeal.Security.GCSurvival
+namespace DoubleDeal.Security.GridCycleSurvival
 
 {lst('LKC', KC, lkc, 'K♣')}
 {lst('LKS', KS, lks, 'K♠')}
-end DoubleDeal.Security.GCSurvival
+end DoubleDeal.Security.GridCycleSurvival
 '''
 
 

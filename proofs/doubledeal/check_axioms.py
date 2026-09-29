@@ -69,7 +69,7 @@ ROOT = Path(__file__).resolve().parent
 # Every theorem declared in security/DoubleDealSecurityHeavy/ (checked against the
 # source in both security modes; audited by `security-heavy`).
 # The heavy audit reports ONE MORE theorem than this registry lists:
-# `DoubleDeal.Security.GCSurvival.chunkOK.eq_1`, the equation lemma that Lean
+# `DoubleDeal.Security.GridCycleSurvival.chunkOK.eq_1`, the equation lemma that Lean
 # generates on demand when `of_chunks` unfolds `chunkOK` (`simp only [chunkOK, ...]`).
 # It is not declared in the source, so it is not registered here; like every audited
 # theorem it must still use only the allowed axioms.
@@ -86,19 +86,19 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.v10Sym03_not_commutes_realE",
     "DoubleDeal.Security.generated_encrypt_realKey_not_v10Sym_equivariant",
     # DoubleDealSecurityHeavy/GridCycleSurvival.lean (GridCycle survival of v10Sym 0 3)
-    "DoubleDeal.Security.GCSurvival.of_chunks",
-    "DoubleDeal.Security.GCSurvival.chunk_KC_0",
-    "DoubleDeal.Security.GCSurvival.chunk_KC_1",
-    "DoubleDeal.Security.GCSurvival.chunk_KC_2",
-    "DoubleDeal.Security.GCSurvival.chunk_KC_3",
-    "DoubleDeal.Security.GCSurvival.chunk_KS_0",
-    "DoubleDeal.Security.GCSurvival.chunk_KS_1",
-    "DoubleDeal.Security.GCSurvival.chunk_KS_2",
-    "DoubleDeal.Security.GCSurvival.chunk_KS_3",
-    "DoubleDeal.Security.GCSurvival.check3_KC",
-    "DoubleDeal.Security.GCSurvival.check3_KS",
-    "DoubleDeal.Security.GCSurvival.gc_survival_v10Sym03_le",
-    "DoubleDeal.Security.GCSurvival.gc_survival_v10Sym_le",
+    "DoubleDeal.Security.GridCycleSurvival.of_chunks",
+    "DoubleDeal.Security.GridCycleSurvival.chunk_KC_0",
+    "DoubleDeal.Security.GridCycleSurvival.chunk_KC_1",
+    "DoubleDeal.Security.GridCycleSurvival.chunk_KC_2",
+    "DoubleDeal.Security.GridCycleSurvival.chunk_KC_3",
+    "DoubleDeal.Security.GridCycleSurvival.chunk_KS_0",
+    "DoubleDeal.Security.GridCycleSurvival.chunk_KS_1",
+    "DoubleDeal.Security.GridCycleSurvival.chunk_KS_2",
+    "DoubleDeal.Security.GridCycleSurvival.chunk_KS_3",
+    "DoubleDeal.Security.GridCycleSurvival.check3_KC",
+    "DoubleDeal.Security.GridCycleSurvival.check3_KS",
+    "DoubleDeal.Security.GridCycleSurvival.gc_survival_v10Sym03_le",
+    "DoubleDeal.Security.GridCycleSurvival.gc_survival_v10Sym_le",
     # DoubleDealSecurityHeavy/TrailBound.lean (unconditional multi-round characteristic bounds)
     "DoubleDeal.Security.TrailBound.trail_card_le_64",
     "DoubleDeal.Security.TrailBound.trail_card_le_4420_v10Sym",

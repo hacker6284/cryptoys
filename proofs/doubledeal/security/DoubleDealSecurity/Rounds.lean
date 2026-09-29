@@ -222,10 +222,14 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
 
     Narrowed in v12 (separate theorems; this statement is unchanged and still
     open), `CovariantNarrow.lean`: it holds for every transposition
-    (`CovNarrow.roundBody_not_covariant_swap`, heavy library); it follows from its
-    prime-order case (`CovNarrow.roundBody_covariant_iff_id_of_prime`) and from a
-    single-cell SumRanks statement (`CovNarrow.roundBody_covariant_iff_id_of_cell0`),
-    both taken as hypotheses there. Write-up: `../analysis/v12-covariant/NOTES.md`. -/
+    (`CovariantNarrow.roundBody_not_covariant_swap`, heavy library). It is
+    equivalent to its prime-order case (`CovariantNarrow.prime_case_iff`), and to
+    its case of prime-order σ that are neither a transposition nor a `v10Sym`
+    (`CovariantNarrow.roundBody_covariant_iff_id_of_prime_nonswap`, heavy library).
+    It also follows from single-cell SumRanks statements
+    (`CovariantNarrow.roundBody_covariant_iff_id_of_cell0`, `…_of_cell0_prime`) that
+    are sufficient conditions, not known to be true or necessary. The reduced cases
+    are hypotheses there, not proved. Write-up: `../analysis/v12-covariant/NOTES.md`. -/
 theorem roundBody_covariant_iff_id (σ : Relabel) :
     Covariant σ unkeyedWithMix ↔ σ = 1 := by
   constructor

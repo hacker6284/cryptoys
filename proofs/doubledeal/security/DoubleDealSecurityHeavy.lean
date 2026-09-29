@@ -5,4 +5,5 @@
 import DoubleDealSecurityHeavy.RealKey
 import DoubleDealSecurityHeavy.GridCycleSurvival
 import DoubleDealSecurityHeavy.TrailBound
+import DoubleDealSecurityHeavy.CovariantNarrowChecks
 import DoubleDealSecurityHeavy.CovariantNarrow

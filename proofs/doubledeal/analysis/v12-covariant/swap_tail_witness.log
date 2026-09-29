@@ -1,2 +1,0 @@
-selfcheck: inv_stem is the inverse of stem; swapping walk cards 50/51 keeps the walk: ok (200 decks)
-representatives e = 1..51: stem((0 e).m_e) != (0 e).x_e for 51 of 51; failing: []

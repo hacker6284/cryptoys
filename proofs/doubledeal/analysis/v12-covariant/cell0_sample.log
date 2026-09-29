@@ -1,4 +1,4 @@
-samples per cycle type: 100; seed 20260929; MEASURED
+invocation: python3 cell0_sample.py --samples 100 (default 100); 4000 random decks per sigma; seed 20260929; MEASURED
   1 disjoint 2-cycles: seat-26 witness found for 100/100
   2 disjoint 2-cycles: seat-26 witness found for 100/100
   3 disjoint 2-cycles: seat-26 witness found for 100/100
@@ -15,8 +15,5 @@ samples per cycle type: 100; seed 20260929; MEASURED
   4 disjoint 13-cycles: seat-26 witness found for 100/100
   3 disjoint 17-cycles: seat-26 witness found for 100/100
   1 disjoint 47-cycles: seat-26 witness found for 100/100
+  all sampled prime-order sigma: 1600/1600
   control, the 51 nontrivial v10Sym (g commutes with them, so no witness can exist): 0/51
-
-real	0m10.599s
-user	0m10.585s
-sys	0m0.004s

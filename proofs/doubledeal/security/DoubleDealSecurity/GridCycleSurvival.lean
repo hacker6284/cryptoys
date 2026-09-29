@@ -271,9 +271,14 @@ theorem card_T03_le : T03.card ≤ 30 :=
   (List.toFinset_card_le _).trans (by simp [LKC, LKS])
 
 /-- A start card `c0` and a list `L` of pairs give triples of distinct cards. Checked
-    through `List.all`: with Mathlib imported, kernel `decide!` of the `∀ p ∈ L` form takes
-    7.9 s for each of `LKC` and `LKS`, `decide` of the `List.all` form about 5 ms (profiler
-    type-checking times, Lean 4.14). -/
+    through `List.all`: kernel `decide!` of the `∀ p ∈ L` form takes about 8 s for each of
+    `LKC` and `LKS`, `decide` of the `List.all` form about 5 ms.
+
+    Measured (two runs: 7.9–8.2 s and 4.9–5.4 ms) with Lean 4.14.0 and this package's
+    Mathlib pin, on an 8-core Intel Xeon Linux box (not CI), as the `type checking` time of
+    `set_option profiler true` in a scratch file importing this module, e.g.
+    `theorem m : ∀ p ∈ LKC, KC ≠ p.1 ∧ KC ≠ p.2 ∧ p.1 ≠ p.2 := by decide!`, run with
+    `lake env lean` from `proofs/doubledeal/security`. -/
 theorem distinct_of_all (c0 : Fin 52) (L : List (Fin 52 × Fin 52))
     (h : (L.all fun p => decide (c0 ≠ p.1 ∧ c0 ≠ p.2 ∧ p.1 ≠ p.2)) = true) :
     ∀ p ∈ L, c0 ≠ p.1 ∧ c0 ≠ p.2 ∧ p.1 ≠ p.2 :=

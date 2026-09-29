@@ -1,5 +1,9 @@
 # PassKey F: the suit+rank collision and what it does to v11 (related keys)
 
+> **Status update.** Zachary chose the §9 key-pile fallback for v12. v11 is frozen as **superseded, not attacked**
+> (`primitives/cipher/doubledeal/v11/`, write-up `proofs/deprecated/doubledeal-v11/`). The text below is unchanged:
+> it describes v11, and "nothing is deprecated here" was true when it was written.
+
 Analysis only. Nothing here changes the SPEC, the sudo, or the Lean. No bit-security claims. DoubleDeal makes no
 cryptographic security claim. Every number below comes from a log in `logs/`. Each log starts with its producing
 command, and `run_all.sh` regenerates all of them (~25 min on 8 cores; seeds fixed).

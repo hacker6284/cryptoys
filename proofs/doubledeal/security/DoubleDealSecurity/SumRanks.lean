@@ -11,7 +11,7 @@
   and as the generic rotation lemmas `SumRanksV10.lean` reuses.
 -/
 import DoubleDealSecurity.Relabel
-import DoubleDealSecurity.PermCount
+import DoubleDealSecurity.PermWitness
 
 namespace DoubleDeal.Security
 

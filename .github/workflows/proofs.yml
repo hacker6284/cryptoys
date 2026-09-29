@@ -205,6 +205,10 @@ jobs:
         run: python3 proofs/doubledeal/security/checks/realkeys/realkey_to_lean.py --check
       - name: GridCycleSurvivalLists.lean (LKC / LKS) matches the v12-diffusion enumeration
         run: python3 proofs/doubledeal/analysis/v12-diffusion/prefix_survival.py --check
+      - name: CovariantNarrowLists.lean / CovariantNarrowChecks.lean and cell0_witness.log match cell0_witness.py
+        run: python3 proofs/doubledeal/analysis/v12-covariant/cell0_witness.py --check
+      - name: cell0_sample.log matches a fresh seeded run (measurement log, ~10 s)
+        run: python3 proofs/doubledeal/analysis/v12-covariant/cell0_sample.py --check
       - name: cc and numpy for the analysis checks run by selftest.py
         run: |
           cc --version | head -1
@@ -226,6 +230,11 @@ jobs:
       - name: Duplicate-owner audit fires on an identical duplicate theorem (fixture)
         working-directory: proofs/doubledeal/security
         run: python3 checks/audit_dup_selftest.py
+      - name: SumRanks import closure from Lean (pinned Mathlib count; PermWitness adds only itself)
+        working-directory: proofs/doubledeal/security
+        run: |
+          python3 checks/check_closure.py --selftest
+          python3 checks/check_closure.py
 
   megadreifach-lean:
     runs-on: ubuntu-latest

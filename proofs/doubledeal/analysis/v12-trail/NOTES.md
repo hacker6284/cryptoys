@@ -46,6 +46,8 @@ here is a security or bit-security claim, and a green build is not one either.
   `roundCharCount_le_gridCycle σ : roundCharCount σ ≤ #(gcSurvivors σ)`.
 * `round_le_64_of_not_v10Sym σ (h : ¬∃ a x, σ = v10Sym a x) : 64 * roundCharCount σ ≤ 52!`.
 * `round_le_26_v10Sym a x (hne : ¬(a = 0 ∧ x = 0)) : 26 * roundCharCount (v10Sym a x) ≤ 52!`.
+  Here and below `hne` says `(a, x) ≠ (0, 0)`; it excludes `v10Sym 0 0 = 1`, for which
+  every deck follows the characteristic and the bound is false.
 * `round_le_of_v10Sym p (hp : p ≤ 64) hsym σ (h1 : σ ≠ 1) : p * roundCharCount σ ≤ 52!`,
   given `hsym`: the same bound for every nontrivial `v10Sym a x`. This is the one
   case split (SumRanks outside `v10Sym`) used by both `σ ≠ 1` statements below.
@@ -56,7 +58,8 @@ here is a security or bit-security claim, and a green build is not one either.
   `trail_card_le_4420_v10Sym_of_check … a x hne R y hy : 4420^R * #T(v10Sym a x) ≤ (52!)^R`.
 * Heavy library (`DoubleDealSecurityHeavy/TrailBound.lean`), with the checks discharged by
   kernel `decide!`: `trail_card_le_64 σ (h1 : σ ≠ 1) R y hy` and
-  `trail_card_le_4420_v10Sym a x hne R y hy`, both unconditional.
+  `trail_card_le_4420_v10Sym a x hne R y hy` (`hne`: `(a, x) ≠ (0, 0)`), both without the
+  check hypotheses.
 
 In words: under independent uniform round keys, for every nontrivial relabelling σ
 and every starting deck, the constant-σ characteristic through R rounds has
@@ -92,6 +95,6 @@ Reproduce: `python3 round_char.py > round_char.log` (about 4 min on one core).
 ## Open
 
 * The real PassKey schedule (dependent keys): only one round's bound is proved (M5, `../v12-keysched/NOTES.md`, `RealSchedule.lean`): ≤ 1/64 for every R. The proved bound gains nothing beyond round 1 (weaker than (1/64)^R, because from round 1 on the round key is not uniform given the state); a limit of the proof, not a measured weakness. For R ≥ 2 nothing rules out a probability above (1/64)^R.
-* The differential (sum over characteristics), including changing differences.
+* A numeric bound on the differential (sum over characteristics), including changing differences. M6 (`../v12-differential/NOTES.md`, `Differential.lean`) proves only its structure (Markov recursion, row sums; this characteristic is one path, a lower bound) and, for `(a, x) ≠ (0, 0)`, the bound for paths that stay inside `v10Sym` (exactly this characteristic). No numeric bound on the full differential.
 * A whole-walk GridCycle bound for small-support τ.
 * The final no-mix round, and the link of `rounds` to `encryptN`.

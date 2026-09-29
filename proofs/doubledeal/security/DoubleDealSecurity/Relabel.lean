@@ -95,6 +95,17 @@ noncomputable def deckPerm (d : Fin 52 → Nat) (hd : IsDeck d) : Equiv.Perm (Fi
 @[simp] theorem deckPerm_val (d : Fin 52 → Nat) (hd : IsDeck d) (i : Fin 52) :
     (deckPerm d hd i).val = d i := rfl
 
+/-- On a deck `x`, a relabelling is determined by its action: `α·x = β·x` iff `α = β`
+    (the deck holds every card). -/
+theorem rel_left_inj {x : Fin 52 → Nat} (hx : IsDeck x) {α β : Relabel} :
+    rel α x = rel β x ↔ α = β := by
+  refine ⟨fun h => Equiv.ext fun c => ?_, fun h => h ▸ rfl⟩
+  have hi : x ((deckPerm x hx).symm c) = c.val := by
+    rw [← deckPerm_val x hx, Equiv.apply_symm_apply]
+  have e := congrFun h ((deckPerm x hx).symm c)
+  simp only [rel, hi, app_fin] at e
+  exact Fin.ext e
+
 /-- `σ` commutes with a deck map on every card-valued deck. -/
 def Commutes (σ : Relabel) (F : (Fin 52 → Nat) → (Fin 52 → Nat)) : Prop :=
   ∀ m, Cards m → F (rel σ m) = rel σ (F m)

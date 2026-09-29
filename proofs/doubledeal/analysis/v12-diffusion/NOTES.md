@@ -83,10 +83,12 @@ mixColumns (rel τ (permDeck π)) = rel τ (mixColumns (permDeck π))`, and
   4420 * (gcSurvivors (v10Sym 0 3)).card ≤ 52!`, and `gc_survival_v10Sym_le_of_check`
   (same bound for every nontrivial `v10Sym a x`).
 * Heavy library (`DoubleDealSecurityHeavy/GridCycleSurvival.lean`, kernel `decide!`
-  in 8 chunks): `check3_KC`, `check3_KS`, and so, **unconditionally**,
+  in 8 chunks of ~30 s, ~2 min per check, ~4 min for the module in CI): `check3_KC`, `check3_KS`, and so, **unconditionally**,
   `gc_survival_v10Sym03_le : 4420 * (gcSurvivors (v10Sym 0 3)).card ≤ 52!` and
   `gc_survival_v10Sym_le a x hne : 4420 * (gcSurvivors (v10Sym a x)).card ≤ 52!`.
-  The lists `LKC`/`LKS` (the 30 triples) come from this enumeration. The kernel
+  The lists `LKC`/`LKS` (the 30 triples; `T03` is built from them) are generated
+  from this enumeration into `DoubleDealSecurity/GridCycleSurvivalLists.lean` by
+  `prefix_survival.py --lean`, and CI runs `prefix_survival.py --check`. The kernel
   re-checks them, so a wrong list fails the heavy build.
 
 The Lean bounds match the EXACT values A_2 = 0, A_2 = 1/26 and A_4 = 1/4420 above.
@@ -127,6 +129,7 @@ They are upper bounds from a prefix of the walk. The true full survival is small
 ## Reproduce
 
     python3 prefix_survival.py            # ~1 min; --quick for A_2 only
+    python3 prefix_survival.py --lean     # regenerate GridCycleSurvivalLists.lean (--check: compare, CI)
     python3 conditional_survival.py       # ~8 s
     python3 transposition_survival.py     # ~80 s
-    cd ../../security && lake build DoubleDealSecurityHeavy.GridCycleSurvival   # ~4 min of decide!
+    cd ../../security && lake build DoubleDealSecurityHeavy.GridCycleSurvival   # decide!: ~2 min per check, ~4 min in CI

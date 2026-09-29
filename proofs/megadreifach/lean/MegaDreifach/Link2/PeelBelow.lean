@@ -14,53 +14,11 @@
 -/
 import MegaDreifach.Link2.PeelCube
 import MegaDreifach.Link2.PeelZeroThree
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
-
-private theorem addI_zero_one : SudoRt.addI (0 : Int) (1 : Int) = .ok (1 : Int) := by
-  erw [addI_ofNat 0 1 FitsLen.one]
-  simp [Nat.zero_add]
-
-private theorem addI_one_one : SudoRt.addI (1 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen (1 + 1) := by unfold FitsLen i64MaxNat; decide
-  erw [addI_ofNat 1 1 h]
-  rfl
-
-private theorem subI_one_one : SudoRt.subI (1 : Int) (1 : Int) = .ok (0 : Int) := by
-  erw [subI_ofNat_one 1 (by decide) FitsLen.one]
-  rfl
-
-private theorem subI_two_one : SudoRt.subI (2 : Int) (1 : Int) = .ok (1 : Int) := by
-  have h : FitsLen 2 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 2 1 h (by decide)]
-  rfl
-
-private theorem subI_three_one : SudoRt.subI (3 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen 3 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 3 1 h (by decide)]
-  rfl
 
 private theorem len_embed_nil :
     SudoRt.listLen (embed ([] : List Nat)) = (0 : Int) := by
@@ -78,17 +36,8 @@ private theorem len_embed_three (x y z : Nat) :
     SudoRt.listLen (embed [x, y, z]) = (3 : Int) := by
   rw [listLen_embed]; rfl
 
-private theorem append_dig (out : List Nat) (k : Nat) :
-    (SudoRt.appendL (embed out) (Int.ofNat k)).1 = embed (out ++ [k]) := by
-  rw [appendL_spec]
-  exact push_embed out k
-
 private theorem not_neg_ofNat (k : Nat) :
     decide (Int.ofNat k < Int.ofNat 0) = false := by
-  rw [decide_eq_false_iff_not]
-  exact Int.not_lt.mpr (Int.ofNat_zero_le _)
-
-private theorem not_neg (k : Nat) : decide (Int.ofNat k < 0) = false := by
   rw [decide_eq_false_iff_not]
   exact Int.not_lt.mpr (Int.ofNat_zero_le _)
 
@@ -340,63 +289,11 @@ theorem mag_sub_zero_right (n : Nat) (hn : n < limbBase ^ 3) :
 
 /-! ## Division loop for `n < d!` -/
 
-private theorem fits27 : FitsLen 27 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem twentySix_lt_limb : 26 < limbBase := by
-  unfold limbBase
-  decide
-
-private theorem factorial_12_lt_limb : factorial 12 < limbBase := by
-  unfold factorial limbBase
-  decide
-
-private theorem factorial_26_lt_cube : factorial 26 < limbBase ^ 3 := by
-  unfold factorial limbBase
-  decide
-
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
-
 private theorem factorial_lt_limb12 (n : Nat) (hn : n ≤ 12) : factorial n < limbBase :=
   Nat.lt_of_le_of_lt (factorial_mono n 12 hn) factorial_12_lt_limb
 
 private theorem factorial_lt_cube26 (n : Nat) (hn : n ≤ 26) : factorial n < limbBase ^ 3 :=
   Nat.lt_of_le_of_lt (factorial_mono n 26 hn) factorial_26_lt_cube
-
-private theorem factorial_pred_mul (i : Nat) (hi : 0 < i) :
-    factorial (i - 1) * i = factorial i := by
-  cases i with
-  | zero => cases hi
-  | succ k =>
-    rw [show (k + 1) - 1 = k from by omega, factorial_succ, Nat.mul_comm]
-
-private theorem div_fact_step (n f : Nat) (hf0 : 0 < f) :
-    (n / factorial (f - 1)) / f = n / factorial f := by
-  rw [Nat.div_div_eq_div_mul, factorial_pred_mul f hf0]
-
-private theorem peelDivStep_gt (toV f : Int) (q : Megadreifach.BigInt) (h : f > toV) :
-    peelDivStep toV (f, q) = .ok (SudoRt.Flow.brk (f, q)) := by
-  unfold peelDivStep
-  rw [if_pos h]
-  rfl
 
 private theorem peelDivStep_below (n d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d)
     (hd : d ≤ 26) (hn : n < limbBase ^ 3) :

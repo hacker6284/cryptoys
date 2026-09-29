@@ -9,12 +9,9 @@
   Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`. Not emitter soundness.
 -/
 import MegaDreifach.Link2.MulWide
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
-
-private theorem fits51 : FitsLen 51 := by
-  unfold FitsLen i64MaxNat
-  decide
 
 private theorem fiftyOne_lt_limb : 51 < limbBase := by
   unfold limbBase
@@ -23,25 +20,6 @@ private theorem fiftyOne_lt_limb : 51 < limbBase := by
 private theorem factorial_51_lt : factorial 51 < limbBase ^ 8 := by
   unfold factorial limbBase
   decide
-
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
 
 private theorem factorial_lt_pow8 (n : Nat) (hn : n ≤ 51) :
     factorial n < limbBase ^ 8 :=
@@ -56,13 +34,6 @@ private theorem fits_fact_limbs (n : Nat) (hn : n ≤ 51) :
   fits_le9 (by
     have h := factorial_limbs_le n hn
     omega)
-
-private theorem factorial_pred_mul (i : Nat) (hi : 0 < i) :
-    factorial (i - 1) * i = factorial i := by
-  cases i with
-  | zero => cases hi
-  | succ k =>
-    rw [show (k + 1) - 1 = k from by omega, factorial_succ, Nat.mul_comm]
 
 private theorem natLimbs_one : natLimbs 1 = [1] := by
   have hlt : 1 < limbBase := by unfold limbBase; decide

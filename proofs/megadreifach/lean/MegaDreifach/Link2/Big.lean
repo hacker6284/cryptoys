@@ -6,6 +6,7 @@
 import Megadreifach
 import MegaDreifach.Link2.Bytes
 import MegaDreifach.Link2.Loop
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -17,13 +18,6 @@ theorem big_zero_spec :
     Megadreifach.big_zero = .ok (bigOf []) := by
   unfold Megadreifach.big_zero bigOf
   rfl
-
-theorem push_embed (xs : List Nat) (b : Nat) :
-    (embed xs).push (Int.ofNat b) = embed (xs ++ [b]) := by
-  apply Array.ext'
-  simp [embed, toList_push]
-
-theorem limb_base_eq : Megadreifach.limb_base = (limbBase : Int) := rfl
 
 /-- One peel of `big_from_int`'s `for peel = 1 to 3` body. -/
 def fromIntStep (toV : Int) (σ : Int × (Array Int × Int)) :

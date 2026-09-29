@@ -10,6 +10,7 @@
   two limbs. Not `phi_chunk`. Not `v_Hash`. Not emitter soundness.
 -/
 import MegaDreifach.Link2.MagSub
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -19,21 +20,6 @@ set_option maxRecDepth 100000
 private theorem ite_false_eq {α} (a b : α) :
     (if false = true then a else b) = b := by
   simp [Bool.false_eq_true]
-
-private theorem append_dig (out : List Nat) (k : Nat) :
-    (SudoRt.appendL (embed out) (Int.ofNat k)).1 = embed (out ++ [k]) := by
-  rw [appendL_spec]
-  exact push_embed out k
-
-private theorem modI_nat_base (n : Nat) :
-    SudoRt.modI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n % limbBase)) := by
-  erw [limb_base_eq, modI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem divI_nat_base (n : Nat) :
-    SudoRt.divI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n / limbBase)) := by
-  erw [limb_base_eq, divI_ofNat n (Nat.ne_of_gt limbBase_pos)]
 
 private theorem two_le_base : 2 ≤ limbBase := by
   unfold limbBase

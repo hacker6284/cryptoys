@@ -12,76 +12,11 @@
   Not `51!`. Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
 -/
 import MegaDreifach.Link2.PeelOne
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
-
-private theorem subI_two_one : SudoRt.subI (2 : Int) (1 : Int) = .ok (1 : Int) := by
-  have h : FitsLen 2 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 2 1 h (by decide)]
-  rfl
-
-private theorem subI_three_one : SudoRt.subI (3 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen 3 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 3 1 h (by decide)]
-  rfl
-
-private theorem not_neg (k : Nat) : decide (Int.ofNat k < 0) = false := by
-  rw [decide_eq_false_iff_not]
-  exact Int.not_lt.mpr (Int.ofNat_zero_le _)
-
-private theorem neg_lt_zero (k : Nat) (hk : 0 < k) :
-    decide (-(k : Int) < 0) = true := by
-  rw [decide_eq_true_iff]
-  have : (0 : Int) < (k : Int) := (ofNat_pos_iff k).mpr hk
-  omega
-
-private theorem append_dig (out : List Nat) (k : Nat) :
-    (SudoRt.appendL (embed out) (Int.ofNat k)).1 = embed (out ++ [k]) := by
-  rw [appendL_spec]
-  exact push_embed out k
-
-private theorem narrowI_neg (k : Nat) (hk : k ≤ limbBase) :
-    SudoRt.narrowI (-(k : Int)) = .ok (-(k : Int)) := by
-  unfold SudoRt.narrowI
-  have hB : SudoRt.i64Min ≤ -(limbBase : Int) := by
-    unfold SudoRt.i64Min limbBase
-    decide
-  have hlo : SudoRt.i64Min ≤ -(k : Int) := by
-    have hkI : (k : Int) ≤ (limbBase : Int) := Int.ofNat_le.mpr hk
-    exact Int.le_trans hB (Int.neg_le_neg hkI)
-  have hhi : -(k : Int) ≤ SudoRt.i64Max := by
-    have h0 : -(k : Int) ≤ 0 := Int.neg_nonpos_of_nonneg (Int.ofNat_nonneg k)
-    have hmax : (0 : Int) ≤ SudoRt.i64Max := by decide
-    exact Int.le_trans h0 hmax
-  split
-  · next ht =>
-    simp only [Bool.or_eq_true, decide_eq_true_iff] at ht
-    cases ht with
-    | inl h => exact absurd h (Int.not_lt.mpr hlo)
-    | inr h => exact absurd h (Int.not_lt.mpr hhi)
-  · rfl
 
 private theorem subI_under (a b : Nat) (hlt : a < b) (hb : b ≤ limbBase) :
     SudoRt.subI (Int.ofNat a) (Int.ofNat b) = .ok (-((b - a : Nat) : Int)) := by
@@ -103,18 +38,6 @@ private theorem subI_neg_ofNat (k b : Nat) (hsum : k + b ≤ limbBase) :
     omega
   rw [hsub]
   exact narrowI_neg (k + b) hsum
-
-private theorem addI_neg_base (k : Nat) (hk0 : 0 < k) (hk : k ≤ limbBase) :
-    SudoRt.addI (-(k : Int)) Megadreifach.limb_base =
-      .ok (Int.ofNat (limbBase - k)) := by
-  unfold SudoRt.addI
-  rw [limb_base_eq]
-  have hsum : -(k : Int) + (limbBase : Int) = Int.ofNat (limbBase - k) := by
-    have : (limbBase : Int) - (k : Int) = Int.ofNat (limbBase - k) :=
-      (Int.ofNat_sub hk).symm
-    omega
-  rw [hsum]
-  exact narrowI_ofNat (limbBase - k) (fits_of_lt_limb (Nat.sub_lt limbBase_pos hk0))
 
 /-! ## One schoolbook limb -/
 
@@ -291,15 +214,6 @@ private theorem magSub_at3
           unfold subDigit
           have hlt' : ¬ bi + 1 ≤ ai := by omega
           simp [hlt', heq]
-
-private theorem mod_add_mul (d q : Nat) (hd : d < limbBase) :
-    (d + limbBase * q) % limbBase = d := by
-  have hmul : (limbBase * q) % limbBase = 0 := Nat.mul_mod_right limbBase q
-  rw [Nat.add_mod, hmul, Nat.add_zero, Nat.mod_mod, Nat.mod_eq_of_lt hd]
-
-private theorem div_add_mul (d q : Nat) (hd : d < limbBase) :
-    (d + limbBase * q) / limbBase = q := by
-  rw [Nat.add_comm, Nat.mul_add_div limbBase_pos q d, Nat.div_eq_of_lt hd, Nat.add_zero]
 
 private theorem limbs_raw2 (v d0 d1 : Nat) (hv : v < limbBase ^ 2)
     (hd0 : d0 < limbBase) (_hd1 : d1 < limbBase)
@@ -680,14 +594,6 @@ private theorem sub3_val (n0 n1 n2 m0 m1 m2 : Nat)
 
 private theorem fits1 : FitsLen 1 := FitsLen.one
 
-private theorem fits2 : FitsLen 2 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem fits3 : FitsLen 3 := by
-  unfold FitsLen i64MaxNat
-  decide
-
 private theorem mag_sub_limbs3 (n0 n1 n2 m0 m1 m2 : Nat)
     (hn0 : n0 < limbBase) (hn1 : n1 < limbBase) (hn2 : n2 < limbBase)
     (hm0 : m0 < limbBase) (hm1 : m1 < limbBase) (hm2 : m2 < limbBase)
@@ -811,19 +717,7 @@ theorem mag_sub_three_le (n m : Nat)
 
 /-! ## `peel_leading` on `[d!, 2·d!)` through three limbs -/
 
-private theorem fits27 : FitsLen 27 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem twentySix_lt_limb : 26 < limbBase := by
-  unfold limbBase
-  decide
-
 private theorem factorial_20_ge : limbBase ^ 2 ≤ factorial 20 := by
-  unfold factorial limbBase
-  decide
-
-private theorem factorial_26_lt_cube : factorial 26 < limbBase ^ 3 := by
   unfold factorial limbBase
   decide
 
@@ -831,45 +725,12 @@ private theorem two_fact26_lt_cube : 2 * factorial 26 < limbBase ^ 3 := by
   unfold factorial limbBase
   decide
 
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
-
-private theorem factorial_lt_cube (n : Nat) (hn : n ≤ 26) : factorial n < limbBase ^ 3 :=
-  Nat.lt_of_le_of_lt (factorial_mono n 26 hn) factorial_26_lt_cube
-
 private theorem factorial_ge_pow2 (n : Nat) (hn : 20 ≤ n) : limbBase ^ 2 ≤ factorial n :=
   Nat.le_trans factorial_20_ge (factorial_mono 20 n hn)
 
 private theorem two_fact_lt_cube (n : Nat) (hn : n ≤ 26) :
     2 * factorial n < limbBase ^ 3 :=
   Nat.lt_of_le_of_lt (Nat.mul_le_mul_left 2 (factorial_mono n 26 hn)) two_fact26_lt_cube
-
-private theorem factorial_pred_mul (i : Nat) (hi : 0 < i) :
-    factorial (i - 1) * i = factorial i := by
-  cases i with
-  | zero => cases hi
-  | succ k =>
-    rw [show (k + 1) - 1 = k from by omega, factorial_succ, Nat.mul_comm]
-
-private theorem div_fact_step (n f : Nat) (hf0 : 0 < f) :
-    (n / factorial (f - 1)) / f = n / factorial f := by
-  rw [Nat.div_div_eq_div_mul, factorial_pred_mul f hf0]
 
 private theorem div_one_of_half (n d : Nat) (hpos : 0 < d)
     (hlo : d ≤ n) (hhi : n < 2 * d) : n / d = 1 := by

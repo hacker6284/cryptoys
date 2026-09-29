@@ -358,4 +358,12 @@ theorem divLE_quot (d : Nat) (hd : 0 < d) (xs : List Nat) :
   have h := mul_add_div_mod d _ _ _ hd hr hsum
   exact ⟨h.1.symm, h.2.symm⟩
 
+/-- One-limb values: `limbsOfNat a = natLimbs a` for `a < limbBase`. Shared by
+    `EvenRankGen` and `Peel51` (was a public copy plus a private copy). -/
+theorem limbsOfNat_small (a : Nat) (ha : a < limbBase) : limbsOfNat a = natLimbs a := by
+  by_cases h0 : a = 0
+  · simp [h0, limbsOfNat, natLimbs_zero]
+  · rw [natLimbs_of_pos_lt a (Nat.pos_of_ne_zero h0) ha]
+    simp [limbsOfNat, h0, Nat.div_eq_of_lt ha, Nat.mod_eq_of_lt ha]
+
 end MegaDreifach.Link2

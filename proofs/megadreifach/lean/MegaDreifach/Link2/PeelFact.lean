@@ -12,81 +12,14 @@
 -/
 import MegaDreifach.Link2.PeelLimb
 import MegaDreifach.Link2.FactTwo
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
-
-private theorem addI_zero_zero : SudoRt.addI (0 : Int) (0 : Int) = .ok (0 : Int) := by
-  erw [addI_ofNat 0 0 FitsLen.zero]
-  simp
-
-private theorem addI_zero_one : SudoRt.addI (0 : Int) (1 : Int) = .ok (1 : Int) := by
-  erw [addI_ofNat 0 1 FitsLen.one]
-  simp [Nat.zero_add]
 
 private theorem addI_one_two : SudoRt.addI (1 : Int) (2 : Int) = .ok (3 : Int) := by
   have h : FitsLen (1 + 2) := by unfold FitsLen i64MaxNat; decide
   erw [addI_ofNat 1 2 h]
   rfl
-
-private theorem addI_nat_zero (n : Nat) (h : FitsLen n) :
-    SudoRt.addI (Int.ofNat n) (0 : Int) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (n + 0) := by simpa [Nat.add_zero] using h
-  erw [addI_ofNat n 0 h0]
-  simp [Nat.add_zero]
-
-private theorem addI_zero_nat (n : Nat) (h : FitsLen n) :
-    SudoRt.addI (0 : Int) (Int.ofNat n) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (0 + n) := by simpa [Nat.zero_add] using h
-  erw [addI_ofNat 0 n h0]
-  simp [Nat.zero_add]
-
-private theorem subI_one_one : SudoRt.subI (1 : Int) (1 : Int) = .ok (0 : Int) := by
-  erw [subI_ofNat_one 1 (by decide) FitsLen.one]
-  rfl
-
-private theorem subI_two_one : SudoRt.subI (2 : Int) (1 : Int) = .ok (1 : Int) := by
-  have h : FitsLen 2 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 2 1 h (by decide)]
-  rfl
-
-private theorem subI_three_one : SudoRt.subI (3 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen 3 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 3 1 h (by decide)]
-  rfl
-
-private theorem filledL_three :
-    SudoRt.filledL (3 : Int) (0 : Int) = .ok (Array.mkArray 3 (0 : Int)) := by
-  erw [filledL_ofNat 3 (0 : Int)]
-
-private theorem modI_nat_base (n : Nat) :
-    SudoRt.modI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n % limbBase)) := by
-  erw [limb_base_eq, modI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem divI_nat_base (n : Nat) :
-    SudoRt.divI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n / limbBase)) := by
-  erw [limb_base_eq, divI_ofNat n (Nat.ne_of_gt limbBase_pos)]
 
 private theorem fits_sq : FitsLen (limbBase ^ 2) := limb_sq_fits
 
@@ -95,14 +28,6 @@ private theorem fits_scale (r : Nat) (hr : r < limbBase) : FitsLen (r * limbBase
     rw [limbBase_pow2]
     exact Nat.mul_lt_mul_of_pos_right hr limbBase_pos
   exact Nat.le_trans (Nat.le_of_lt h) limb_sq_fits
-
-private theorem two_lt_sq (lo hi : Nat) (hlo : lo < limbBase) (hhi : hi < limbBase) :
-    lo + limbBase * hi < limbBase ^ 2 := by
-  rw [limbBase_pow2]
-  calc
-    lo + limbBase * hi < limbBase + limbBase * hi := Nat.add_lt_add_right hlo _
-    _ = limbBase * (hi + 1) := by rw [Nat.mul_succ, Nat.add_comm]
-    _ ≤ limbBase * limbBase := Nat.mul_le_mul_left _ (Nat.succ_le_of_lt hhi)
 
 private theorem fits_cur (r x : Nat) (hr : r < limbBase) (hx : x < limbBase) :
     FitsLen (r * limbBase + x) := by
@@ -262,19 +187,6 @@ private theorem rem_q_dv (lo hi dv : Nat) :
       ((((hi % dv) * limbBase + lo) % dv : Nat) : Int) := by
   simp [← Int.ofNat_emod, ← Int.natCast_mul, ← Int.natCast_add, Nat.zero_mul]
 
-private theorem runLoopOn_one {σ ρ α} (s0 : σ)
-    (step : σ → Except SudoRt.Trap (SudoRt.Flow σ ρ))
-    (after : σ → Except SudoRt.Trap α)
-    (onRet : ρ → Except SudoRt.Trap α) :
-    SudoRt.runLoopOn s0 1 step after onRet =
-      match step s0 with
-      | .error e => .error e
-      | .ok (.ret r) => onRet r
-      | .ok (.brk s) => after s
-      | .ok (.cont s) => SudoRt.runLoopOn s 0 step after onRet := by
-  rw [show (1 : Nat) = 0 + 1 from rfl]
-  exact runLoopOn_succ s0 0 step after onRet
-
 /-- Divide two little-endian limbs by a positive one-limb divisor. -/
 private theorem divmod_pair (lo hi dv : Nat)
     (hlo : lo < limbBase) (hhi : hi < limbBase) (hd0 : 0 < dv) (hd : dv < limbBase) :
@@ -369,26 +281,11 @@ theorem divmod_sq (a dv : Nat) (ha : a < limbBase ^ 2) (hd0 : 0 < dv) (hd : dv <
 
 /-! ## Multiply the one-limb digit `1` by a two-limb value -/
 
-private theorem zeros3_size0 : 0 < (Array.mkArray 3 (0 : Int)).size := by
-  simp [Array.size_mkArray]
-
-private theorem zeros3_set0 (x : Nat) :
-    (Array.mkArray 3 (0 : Int)).set ⟨0, zeros3_size0⟩ (Int.ofNat x) =
-      embed [x, 0, 0] := by
-  apply Array.ext'
-  simp [embed, Array.toList_set, Array.toList_mkArray, List.replicate, List.set_cons_zero]
-
-private theorem embed3_set1 (x y z v : Nat) :
-    (embed [x, y, z]).set ⟨1, by simp [size_embed]⟩ (Int.ofNat v) =
-      embed [x, v, z] := by
-  apply Array.ext'
-  simp [embed, Array.toList_set, List.set]
-
 private theorem dropTrail_pad0 (a b : Nat) (hb : b ≠ 0) :
     dropTrail [a, b, 0] = [a, b] := by
   simp [dropTrail, hb]
 
-private theorem mulK_idle (out : Array Int) (k : Nat) :
+theorem mulK_idle (out : Array Int) (k : Nat) :
     mulKStep (Int.ofNat k) (Int.ofNat k, out, (0 : Int)) =
       .ok (SudoRt.Flow.brk (Int.ofNat k, out, (0 : Int))) := by
   unfold mulKStep
@@ -610,10 +507,6 @@ private theorem mag_sub_same (a : Nat) (hge : limbBase ≤ a) (hlt : a < limbBas
 
 /-! ## `peel_leading (d!) = (0, 1)` -/
 
-private theorem factorial_19_lt_sq : factorial 19 < limbBase ^ 2 := by
-  unfold factorial limbBase
-  decide
-
 private theorem factorial_13_ge : limbBase ≤ factorial 13 := by
   unfold factorial limbBase
   decide
@@ -626,37 +519,8 @@ private theorem fits19 : FitsLen 19 := by
   unfold FitsLen i64MaxNat
   decide
 
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
-
-private theorem factorial_lt_sq (n : Nat) (hn : n ≤ 19) : factorial n < limbBase ^ 2 :=
-  Nat.lt_of_le_of_lt (factorial_mono n 19 hn) factorial_19_lt_sq
-
 private theorem factorial_ge_limb (n : Nat) (hn : 13 ≤ n) : limbBase ≤ factorial n :=
   Nat.le_trans factorial_13_ge (factorial_mono 13 n hn)
-
-private theorem factorial_pred_mul (i : Nat) (hi : 0 < i) :
-    factorial (i - 1) * i = factorial i := by
-  cases i with
-  | zero => cases hi
-  | succ k =>
-    rw [show (k + 1) - 1 = k from by omega, factorial_succ, Nat.mul_comm]
 
 private theorem div_fact_quot (d f : Nat) (hf0 : 0 < f) :
     (factorial d / factorial (f - 1)) / f = factorial d / factorial f := by

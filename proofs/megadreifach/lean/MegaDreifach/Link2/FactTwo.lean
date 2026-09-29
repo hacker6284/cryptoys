@@ -12,6 +12,7 @@
   Not `20!`. Not `51!`. Not a positive two-limb peel. Not `phi_chunk`. Not `v_Hash`.
 -/
 import MegaDreifach.Link2.Factorial
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -101,40 +102,6 @@ def mulIStep (a b : Megadreifach.BigInt) (toV : Int) (σ : Int × Array Int) :
         let i' ← SudoRt.addI σ.fst 1
         pure (SudoRt.Flow.cont (i', fs))
 
-private theorem addI_two_one : SudoRt.addI (2 : Int) (1 : Int) = .ok (3 : Int) := by
-  have h : FitsLen (2 + 1) := by unfold FitsLen i64MaxNat; decide
-  erw [addI_ofNat 2 1 h]
-  rfl
-
-private theorem subI_two_one : SudoRt.subI (2 : Int) (1 : Int) = .ok (1 : Int) := by
-  have h : FitsLen 2 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 2 1 h (by decide)]
-  rfl
-
-private theorem filledL_three :
-    SudoRt.filledL (3 : Int) (0 : Int) = .ok (Array.mkArray 3 (0 : Int)) := by
-  erw [filledL_ofNat 3 (0 : Int)]
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
-
 private theorem flowCont_brk (x : Array Int × Int) :
     (match SudoRt.Flow.cont (σ := Array Int × Int) (ρ := Megadreifach.BigInt) x with
       | SudoRt.Flow.ret r =>
@@ -149,84 +116,6 @@ private theorem flowCont_brk (x : Array Int × Int) :
           ((0 : Int), x)) :
         Except SudoRt.Trap (SudoRt.Flow (Int × (Array Int × Int)) Megadreifach.BigInt)) := by
   rfl
-
-private theorem subI_one_one : SudoRt.subI (1 : Int) (1 : Int) = .ok (0 : Int) := by
-  erw [subI_ofNat_one 1 (by decide) FitsLen.one]
-  rfl
-
-private theorem subI_three_one : SudoRt.subI (3 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen 3 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 3 1 h (by decide)]
-  rfl
-
-private theorem addI_zero_zero : SudoRt.addI (0 : Int) (0 : Int) = .ok (0 : Int) := by
-  erw [addI_ofNat 0 0 FitsLen.zero]
-  simp
-
-private theorem addI_zero_one : SudoRt.addI (0 : Int) (1 : Int) = .ok (1 : Int) := by
-  erw [addI_ofNat 0 1 FitsLen.one]
-  simp [Nat.zero_add]
-
-private theorem addI_one_one : SudoRt.addI (1 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen (1 + 1) := by unfold FitsLen i64MaxNat; decide
-  erw [addI_ofNat 1 1 h]
-  rfl
-
-private theorem addI_zero_nat (n : Nat) (h : FitsLen n) :
-    SudoRt.addI (0 : Int) (Int.ofNat n) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (0 + n) := by simpa [Nat.zero_add] using h
-  erw [addI_ofNat 0 n h0]
-  simp [Nat.zero_add]
-
-private theorem addI_nat_zero (n : Nat) (h : FitsLen n) :
-    SudoRt.addI (Int.ofNat n) (0 : Int) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (n + 0) := by simpa [Nat.add_zero] using h
-  erw [addI_ofNat n 0 h0]
-  simp [Nat.add_zero]
-
-private theorem modI_nat_base (n : Nat) :
-    SudoRt.modI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n % limbBase)) := by
-  erw [limb_base_eq, modI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem divI_nat_base (n : Nat) :
-    SudoRt.divI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n / limbBase)) := by
-  erw [limb_base_eq, divI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem zeros3_size0 : 0 < (Array.mkArray 3 (0 : Int)).size := by
-  simp [Array.size_mkArray]
-
-private theorem zeros3_set0 (x : Nat) :
-    (Array.mkArray 3 (0 : Int)).set ⟨0, zeros3_size0⟩ (Int.ofNat x) =
-      embed [x, 0, 0] := by
-  apply Array.ext'
-  simp [embed, Array.toList_set, Array.toList_mkArray, List.replicate, List.set_cons_zero]
-
-private theorem embed3_set1 (x y z v : Nat) :
-    (embed [x, y, z]).set ⟨1, by simp [size_embed]⟩ (Int.ofNat v) =
-      embed [x, v, z] := by
-  apply Array.ext'
-  simp [embed, Array.toList_set, List.set]
-
-private theorem prod_lt_sq {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
-    a * b < limbBase ^ 2 := by
-  have ha' : a ≤ limbBase - 1 := by
-    have : 0 < limbBase := limbBase_pos
-    omega
-  have hb' : b ≤ limbBase - 1 := by
-    have : 0 < limbBase := limbBase_pos
-    omega
-  have hmul : a * b ≤ (limbBase - 1) * (limbBase - 1) := Nat.mul_le_mul ha' hb'
-  have hconst : (limbBase - 1) * (limbBase - 1) < limbBase ^ 2 := by
-    unfold limbBase
-    decide
-  exact Nat.lt_of_le_of_lt hmul hconst
-
-private theorem prod_fits {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
-    FitsLen (a * b) := by
-  have hsq : a * b < limbBase ^ 2 := prod_lt_sq ha hb
-  exact Nat.le_trans (Nat.le_of_lt hsq) limb_sq_fits
 
 private theorem repr_mul (lo hi r : Nat) :
     (lo + limbBase * hi) * r =
@@ -247,16 +136,6 @@ private theorem repr_mul (lo hi r : Nat) :
     rw [← Nat.mul_add]
   rw [Nat.add_mul, Nat.mul_assoc]
   exact (hL.trans hA).trans hM
-
-private theorem div_add_mul (q d : Nat) (hq : q < limbBase) :
-    (q + limbBase * d) / limbBase = d := by
-  have h := Nat.add_mul_div_right q d limbBase_pos
-  rw [Nat.mul_comm d limbBase] at h
-  rw [h, Nat.div_eq_of_lt hq, Nat.zero_add]
-
-private theorem mod_add_mul (q d : Nat) (hq : q < limbBase) :
-    (q + limbBase * d) % limbBase = q := by
-  rw [Nat.add_comm q (limbBase * d), Nat.mul_add_mod, Nat.mod_eq_of_lt hq]
 
 private theorem prod_div_eq (lo hi r : Nat) :
     ((lo + limbBase * hi) * r) / limbBase =
@@ -360,10 +239,6 @@ private theorem mulKStep_place (d0 c : Nat) (hc0 : 0 < c) (hc : c < limbBase) :
   erw [divI_nat_base c]
   rw [ok_bind, hdiv, embed3_set1 d0 0 0 c, addI_one_one]
   simp [pure_eq_ok]
-
-private theorem fits2 : FitsLen 2 := by
-  unfold FitsLen i64MaxNat
-  decide
 
 /-- Carry propagation across the two high scratch slots. `c` is one limb. -/
 private theorem kLoop_low (d0 c : Nat) (hc : c < limbBase) :
@@ -584,40 +459,6 @@ private theorem fits19 : FitsLen 19 := by
   unfold FitsLen i64MaxNat
   decide
 
-private theorem factorial_19_lt_sq : factorial 19 < limbBase ^ 2 := by
-  unfold factorial limbBase
-  decide
-
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
-
-private theorem factorial_lt_sq (n : Nat) (hn : n ≤ 19) : factorial n < limbBase ^ 2 :=
-  Nat.lt_of_le_of_lt (factorial_mono n 19 hn) factorial_19_lt_sq
-
-private theorem factorial_pred_mul (i : Nat) (hi : 0 < i) :
-    factorial (i - 1) * i = factorial i := by
-  cases i with
-  | zero => cases hi
-  | succ k =>
-    have : (k + 1) - 1 = k := by omega
-    rw [this, factorial_succ, Nat.mul_comm]
-
 private theorem factStep_wide (n i : Nat) (hlo : 2 ≤ i) (hhi : i ≤ n) (hn : n ≤ 19) :
     factStep (Int.ofNat n) (Int.ofNat i, bigNat (factorial (i - 1))) =
       if i = n then
@@ -749,12 +590,6 @@ private theorem peelDivStep_wide (d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d) (hd
     rw [ofNat_eq_natCast f] at hadd
     rw [if_neg hneB, hadd, ok_bind, pure_eq_ok, if_neg heq]
     rfl
-
-private theorem peelDivStep_gt (toV f : Int) (q : Megadreifach.BigInt) (h : f > toV) :
-    peelDivStep toV (f, q) = .ok (SudoRt.Flow.brk (f, q)) := by
-  unfold peelDivStep
-  rw [if_pos h]
-  rfl
 
 private theorem peel_after_wide (d : Nat) (hd : d ≤ 19) :
     (do

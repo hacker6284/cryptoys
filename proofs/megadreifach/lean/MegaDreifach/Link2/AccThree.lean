@@ -9,144 +9,20 @@
   Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
 -/
 import MegaDreifach.Link2.FactThree
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
 
 private theorem addI_three_one : SudoRt.addI (3 : Int) (1 : Int) = .ok (4 : Int) := by
   have h : FitsLen (3 + 1) := by unfold FitsLen i64MaxNat; decide
   erw [addI_ofNat 3 1 h]
   rfl
 
-private theorem addI_two_one : SudoRt.addI (2 : Int) (1 : Int) = .ok (3 : Int) := by
-  have h : FitsLen (2 + 1) := by unfold FitsLen i64MaxNat; decide
-  erw [addI_ofNat 2 1 h]
-  rfl
-
-private theorem addI_one_one : SudoRt.addI (1 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen (1 + 1) := by unfold FitsLen i64MaxNat; decide
-  erw [addI_ofNat 1 1 h]
-  rfl
-
-private theorem addI_zero_one : SudoRt.addI (0 : Int) (1 : Int) = .ok (1 : Int) := by
-  erw [addI_ofNat 0 1 FitsLen.one]
-  simp [Nat.zero_add]
-
-private theorem addI_zero_zero : SudoRt.addI (0 : Int) (0 : Int) = .ok (0 : Int) := by
-  erw [addI_ofNat 0 0 FitsLen.zero]
-  simp
-
-private theorem addI_nat_zero (n : Nat) (h : FitsLen n) :
-    SudoRt.addI (Int.ofNat n) (0 : Int) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (n + 0) := by simpa [Nat.add_zero] using h
-  erw [addI_ofNat n 0 h0]
-  simp [Nat.add_zero]
-
-private theorem addI_zero_nat (n : Nat) (h : FitsLen n) :
-    SudoRt.addI (0 : Int) (Int.ofNat n) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (0 + n) := by simpa [Nat.zero_add] using h
-  erw [addI_ofNat 0 n h0]
-  simp [Nat.zero_add]
-
-private theorem subI_one_one : SudoRt.subI (1 : Int) (1 : Int) = .ok (0 : Int) := by
-  erw [subI_ofNat_one 1 (by decide) FitsLen.one]
-  rfl
-
-private theorem subI_three_one : SudoRt.subI (3 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen 3 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 3 1 h (by decide)]
-  rfl
-
-private theorem subI_four_one : SudoRt.subI (4 : Int) (1 : Int) = .ok (3 : Int) := by
-  have h : FitsLen 4 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 4 1 h (by decide)]
-  rfl
-
-private theorem filledL_four :
-    SudoRt.filledL (4 : Int) (0 : Int) = .ok (Array.mkArray 4 (0 : Int)) := by
-  erw [filledL_ofNat 4 (0 : Int)]
-
-private theorem modI_nat_base (n : Nat) :
-    SudoRt.modI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n % limbBase)) := by
-  erw [limb_base_eq, modI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem divI_nat_base (n : Nat) :
-    SudoRt.divI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n / limbBase)) := by
-  erw [limb_base_eq, divI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem fits2 : FitsLen 2 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem fits3 : FitsLen 3 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem fits4 : FitsLen 4 := by
-  unfold FitsLen i64MaxNat
-  decide
-
 private theorem fits26 : FitsLen 26 := by
   unfold FitsLen i64MaxNat
   decide
-
-private theorem zeros4_size0 : 0 < (Array.mkArray 4 (0 : Int)).size := by
-  simp [Array.size_mkArray]
-
-private theorem zeros4_set0 (x : Nat) :
-    (Array.mkArray 4 (0 : Int)).set ⟨0, zeros4_size0⟩ (Int.ofNat x) =
-      embed [x, 0, 0, 0] := by
-  apply Array.ext'
-  simp [embed, Array.toList_set, Array.toList_mkArray, List.replicate, List.set_cons_zero]
-
-private theorem embed4_set1 (w x y z v : Nat) :
-    (embed [w, x, y, z]).set ⟨1, by simp [size_embed]⟩ (Int.ofNat v) =
-      embed [w, v, y, z] := by
-  apply Array.ext'
-  simp [embed, Array.toList_set, List.set]
-
-private theorem embed4_set2 (w x y z v : Nat) :
-    (embed [w, x, y, z]).set ⟨2, by simp [size_embed]⟩ (Int.ofNat v) =
-      embed [w, x, v, z] := by
-  apply Array.ext'
-  simp [embed, Array.toList_set, List.set]
-
-private theorem prod_lt_sq {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
-    a * b < limbBase ^ 2 := by
-  have ha' : a ≤ limbBase - 1 := by omega
-  have hb' : b ≤ limbBase - 1 := by omega
-  have hmul : a * b ≤ (limbBase - 1) * (limbBase - 1) := Nat.mul_le_mul ha' hb'
-  have hconst : (limbBase - 1) * (limbBase - 1) < limbBase ^ 2 := by
-    unfold limbBase
-    decide
-  exact Nat.lt_of_le_of_lt hmul hconst
-
-private theorem prod_fits {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
-    FitsLen (a * b) :=
-  Nat.le_trans (Nat.le_of_lt (prod_lt_sq ha hb)) limb_sq_fits
 
 private theorem div_le_div_right {a b n : Nat} (hn : 0 < n) (h : a ≤ b) : a / n ≤ b / n := by
   rw [Nat.le_div_iff_mul_le hn]
@@ -753,61 +629,13 @@ private theorem twenty_lt_limb : 20 < limbBase := by
   unfold limbBase
   decide
 
-private theorem twentySix_lt_limb : 26 < limbBase := by
-  unfold limbBase
-  decide
-
-private theorem factorial_19_lt_sq : factorial 19 < limbBase ^ 2 := by
-  unfold factorial limbBase
-  decide
-
 private theorem factorial_19_ge : limbBase ≤ factorial 19 := by
-  unfold factorial limbBase
-  decide
-
-private theorem factorial_20_ge_sq : limbBase ^ 2 ≤ factorial 20 := by
   unfold factorial limbBase
   decide
 
 private theorem factorial_20_lt_cube : factorial 20 < limbBase ^ 3 := by
   unfold factorial limbBase
   decide
-
-private theorem factorial_26_lt_cube : factorial 26 < limbBase ^ 3 := by
-  unfold factorial limbBase
-  decide
-
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
-
-private theorem factorial_lt_sq (n : Nat) (hn : n ≤ 19) : factorial n < limbBase ^ 2 :=
-  Nat.lt_of_le_of_lt (factorial_mono n 19 hn) factorial_19_lt_sq
-
-private theorem factorial_lt_cube (n : Nat) (hn : n ≤ 26) : factorial n < limbBase ^ 3 :=
-  Nat.lt_of_le_of_lt (factorial_mono n 26 hn) factorial_26_lt_cube
-
-private theorem factorial_pred_mul (i : Nat) (hi : 0 < i) :
-    factorial (i - 1) * i = factorial i := by
-  cases i with
-  | zero => cases hi
-  | succ k =>
-    rw [show (k + 1) - 1 = k from by omega, factorial_succ, Nat.mul_comm]
 
 private theorem twenty_mul_ge : limbBase ^ 2 ≤ factorial 19 * 20 := by
   rw [factorial_pred_mul 20 (by decide)]

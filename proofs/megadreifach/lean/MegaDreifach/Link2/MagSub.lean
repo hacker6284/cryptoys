@@ -12,59 +12,12 @@
 -/
 import MegaDreifach.Link2.PeelOne
 import MegaDreifach.Link2.DivInd
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 100000
-
-private theorem not_neg (k : Nat) : decide (Int.ofNat k < 0) = false := by
-  rw [decide_eq_false_iff_not]
-  exact Int.not_lt.mpr (Int.ofNat_zero_le _)
-
-private theorem neg_lt_zero (k : Nat) (hk : 0 < k) :
-    decide (-(k : Int) < 0) = true := by
-  rw [decide_eq_true_iff]
-  have : (0 : Int) < (k : Int) := (ofNat_pos_iff k).mpr hk
-  omega
-
-private theorem append_dig (out : List Nat) (k : Nat) :
-    (SudoRt.appendL (embed out) (Int.ofNat k)).1 = embed (out ++ [k]) := by
-  rw [appendL_spec]
-  exact push_embed out k
-
-private theorem narrowI_neg (k : Nat) (hk : k ≤ limbBase) :
-    SudoRt.narrowI (-(k : Int)) = .ok (-(k : Int)) := by
-  unfold SudoRt.narrowI
-  have hB : SudoRt.i64Min ≤ -(limbBase : Int) := by
-    unfold SudoRt.i64Min limbBase
-    decide
-  have hlo : SudoRt.i64Min ≤ -(k : Int) := by
-    have hkI : (k : Int) ≤ (limbBase : Int) := Int.ofNat_le.mpr hk
-    exact Int.le_trans hB (Int.neg_le_neg hkI)
-  have hhi : -(k : Int) ≤ SudoRt.i64Max := by
-    have h0 : -(k : Int) ≤ 0 := Int.neg_nonpos_of_nonneg (Int.ofNat_nonneg k)
-    have hmax : (0 : Int) ≤ SudoRt.i64Max := by decide
-    exact Int.le_trans h0 hmax
-  split
-  · next ht =>
-    simp only [Bool.or_eq_true, decide_eq_true_iff] at ht
-    cases ht with
-    | inl h => exact absurd h (Int.not_lt.mpr hlo)
-    | inr h => exact absurd h (Int.not_lt.mpr hhi)
-  · rfl
-
-private theorem addI_neg_base (k : Nat) (hk0 : 0 < k) (hk : k ≤ limbBase) :
-    SudoRt.addI (-(k : Int)) Megadreifach.limb_base =
-      .ok (Int.ofNat (limbBase - k)) := by
-  unfold SudoRt.addI
-  rw [limb_base_eq]
-  have hsum : -(k : Int) + (limbBase : Int) = Int.ofNat (limbBase - k) := by
-    have : (limbBase : Int) - (k : Int) = Int.ofNat (limbBase - k) :=
-      (Int.ofNat_sub hk).symm
-    omega
-  rw [hsum]
-  exact narrowI_ofNat (limbBase - k) (fits_of_lt_limb (Nat.sub_lt limbBase_pos hk0))
 
 private theorem decide_ge (i len : Nat) (h : len ≤ i) :
     decide (Int.ofNat i < Int.ofNat len) = false := by
@@ -125,26 +78,6 @@ theorem digAt_bound (xs : List Nat) (i : Nat) (h : ∀ d ∈ xs, d < limbBase) :
     exact h _ (List.getElem_mem hi)
   · rw [digAt_ge xs i (Nat.le_of_not_lt hi)]
     exact limbBase_pos
-
-theorem subDigit_spec (a b br : Nat)
-    (ha : a < limbBase) (hb : b < limbBase) (hbr : br ≤ 1) :
-    (subDigit a b br).1 < limbBase ∧ (subDigit a b br).2 ≤ 1 ∧
-      a + (subDigit a b br).2 * limbBase =
-        (subDigit a b br).1 + b + br := by
-  unfold subDigit
-  by_cases hle : b + br ≤ a
-  · simp only [hle, ↓reduceIte, Nat.zero_mul, Nat.zero_add]
-    refine ⟨Nat.lt_of_le_of_lt (Nat.sub_le _ _) ha, Nat.zero_le _, ?_⟩
-    have : a - (b + br) + (b + br) = a := Nat.sub_add_cancel hle
-    omega
-  · simp only [hle, ↓reduceIte]
-    have hlt : a < b + br := Nat.lt_of_not_le hle
-    have hsum : b + br ≤ a + limbBase := by omega
-    have hd : a + limbBase - (b + br) < limbBase := by omega
-    refine ⟨hd, Nat.le_refl _, ?_⟩
-    have : a + limbBase - (b + br) + (b + br) = a + limbBase :=
-      Nat.sub_add_cancel hsum
-    omega
 
 /-- Borrow entering limb `i`. -/
 def brAt (xs ys : List Nat) : Nat → Nat

@@ -11,6 +11,7 @@
   `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
 -/
 import MegaDreifach.Link2.FromBe
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -21,24 +22,6 @@ theorem pow256_three_lt_limb : 256 ^ 3 < limbBase := by
 
 /-- `256^4` does not. Length 4 is outside this slice. -/
 theorem pow256_four_ge_limb : limbBase ≤ 256 ^ 4 := by
-  unfold limbBase
-  decide
-
-private theorem pow256_le {a b : Nat} (h : a ≤ b) : 256 ^ a ≤ 256 ^ b :=
-  Nat.pow_le_pow_of_le_right (by decide : 256 > 0) h
-
-private theorem fits3 : FitsLen 3 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem fits255 : FitsLen 255 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem fits_byte {b : Nat} (hb : b ≤ 255) : FitsLen b :=
-  FitsLen.of_le fits255 hb
-
-private theorem two56_lt_limb : 256 < limbBase := by
   unfold limbBase
   decide
 
@@ -72,10 +55,7 @@ private theorem byte_lt (bs : List Nat) (h : BeShortWf bs) :
   intro b hb
   exact Nat.lt_of_le_of_lt (h.byte b hb) (by decide : 255 < 256)
 
-private theorem fromBE_nil : fromBE [] = 0 := by
-  simp [fromBE, mixEncode]
-
-private theorem fromBE_eq_acc (bs : List Nat) :
+theorem fromBE_eq_acc (bs : List Nat) :
     fromBE bs = oriAcc 256 bs bs.length := by
   rw [oriAcc, List.take_length]
   unfold fromBE
@@ -93,13 +73,6 @@ theorem fromBE_short_lt_limb (bs : List Nat) (h : BeShortWf bs) :
     fromBE bs < limbBase := by
   rw [fromBE_eq_acc]
   exact ori_short_lt bs (byte_lt bs h) bs.length h.len (Nat.le_refl _)
-
-private theorem beFromStep_gt (bs : Array Int) (two56 : Megadreifach.BigInt)
-    (toV i : Int) (n : Megadreifach.BigInt) (h : i > toV) :
-    beFromStep bs two56 toV (i, n) = .ok (SudoRt.Flow.brk (i, n)) := by
-  unfold beFromStep
-  rw [if_pos h]
-  rfl
 
 /-- One Horner step `acc * 256 + byte` on a short string. -/
 private theorem beShortStep (bs : List Nat) (h : BeShortWf bs) (i : Nat)

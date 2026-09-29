@@ -5,6 +5,7 @@
 import Megadreifach
 import MegaDreifach.Link2.Big
 import MegaDreifach.Link2.Loop
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -845,19 +846,6 @@ theorem divmodStep_at (xs : List Nat) (qArr : Array Int) (i r : Nat)
     rw [ite_int_beq, if_neg hneI, hsub, ok_bind, if_neg hi0]
     rfl
 
-private theorem runLoopOn_one {σ ρ α} (s0 : σ)
-    (step : σ → Except SudoRt.Trap (SudoRt.Flow σ ρ))
-    (after : σ → Except SudoRt.Trap α)
-    (onRet : ρ → Except SudoRt.Trap α) :
-    SudoRt.runLoopOn s0 1 step after onRet =
-      match step s0 with
-      | .error e => .error e
-      | .ok (.ret r) => onRet r
-      | .ok (.brk s) => after s
-      | .ok (.cont s) => SudoRt.runLoopOn s 0 step after onRet := by
-  rw [show (1 : Nat) = 0 + 1 from rfl]
-  exact runLoopOn_succ s0 0 step after onRet
-
 private theorem len2 (a b : Nat) : 1 < ([a, b] : List Nat).length := by
   have : ([a, b] : List Nat).length = 2 := by simp
   rw [this]
@@ -969,19 +957,6 @@ private theorem runLoopOn_three {σ ρ α} (s0 : σ)
       | .ok (.cont s) => SudoRt.runLoopOn s 2 step after onRet := by
   rw [show (3 : Nat) = 2 + 1 from rfl]
   exact runLoopOn_succ s0 2 step after onRet
-
-private theorem runLoopOn_two {σ ρ α} (s0 : σ)
-    (step : σ → Except SudoRt.Trap (SudoRt.Flow σ ρ))
-    (after : σ → Except SudoRt.Trap α)
-    (onRet : ρ → Except SudoRt.Trap α) :
-    SudoRt.runLoopOn s0 2 step after onRet =
-      match step s0 with
-      | .error e => .error e
-      | .ok (.ret r) => onRet r
-      | .ok (.brk s) => after s
-      | .ok (.cont s) => SudoRt.runLoopOn s 1 step after onRet := by
-  rw [show (2 : Nat) = 1 + 1 from rfl]
-  exact runLoopOn_succ s0 1 step after onRet
 
 private theorem len3 (a b c : Nat) : 2 < ([a, b, c] : List Nat).length := by
   have : ([a, b, c] : List Nat).length = 3 := by simp

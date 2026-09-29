@@ -12,16 +12,9 @@
   Not `51!`. Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
 -/
 import MegaDreifach.Link2.AccThree
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
-
-private theorem fits27 : FitsLen 27 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem twentySix_lt_limb : 26 < limbBase := by
-  unfold limbBase
-  decide
 
 /-- One divisor step on the empty limb list. The quotient stays empty. -/
 private theorem peelDivStep_wide (d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d) (hd : d ≤ 26) :
@@ -53,12 +46,6 @@ private theorem peelDivStep_wide (d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d) (hd
     rw [ofNat_eq_natCast f] at hadd
     rw [if_neg hneB, hadd, ok_bind, pure_eq_ok, if_neg heq]
     rfl
-
-private theorem peelDivStep_gt (toV f : Int) (q : Megadreifach.BigInt) (h : f > toV) :
-    peelDivStep toV (f, q) = .ok (SudoRt.Flow.brk (f, q)) := by
-  unfold peelDivStep
-  rw [if_pos h]
-  rfl
 
 /-- Finish of `peel_leading` once the quotient is still zero. -/
 private theorem peel_after_three (d : Nat) (hd : d ≤ 26) :

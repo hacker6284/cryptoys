@@ -13,13 +13,11 @@
 import MegaDreifach.Link2.FromBeLimb2
 import MegaDreifach.Link2.MulWide
 import MegaDreifach.Link2.MagAdd
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
 /-! ## Bounds -/
-
-private theorem pow256_le {a b : Nat} (h : a ≤ b) : 256 ^ a ≤ 256 ^ b :=
-  Nat.pow_le_pow_of_le_right (by decide : 256 > 0) h
 
 /-- `256^28 = 2^224 < 10^72 = limbBase^8`, so a 28-byte Horner stays in eight limbs. -/
 theorem pow256_28_lt_limb8 : 256 ^ 28 < limbBase ^ 8 := by
@@ -80,19 +78,8 @@ private theorem lt_limb8_of_lt_limb {x : Nat} (hx : x < limbBase) : x < limbBase
   rw [Nat.pow_one] at hle
   exact Nat.lt_of_lt_of_le hx hle
 
-private theorem fits255 : FitsLen 255 := by
-  unfold FitsLen i64MaxNat
-  decide
-
 private theorem fits28 : FitsLen 28 := by
   unfold FitsLen i64MaxNat
-  decide
-
-private theorem fits_byte {b : Nat} (hb : b ≤ 255) : FitsLen b :=
-  FitsLen.of_le fits255 hb
-
-private theorem two56_lt_limb : 256 < limbBase := by
-  unfold limbBase
   decide
 
 /-- Below the limb base `limbsOfNat` and `natLimbs` agree: `[]` or `[b]`. -/
@@ -105,15 +92,6 @@ private theorem limbsOfNat_eq_natLimbs {b : Nat} (hb : b < limbBase) :
   · simp only [h0, ↓reduceIte]
     rw [Nat.div_eq_of_lt hb, Nat.mod_eq_of_lt hb]
     simp
-
-private theorem fromBE_nil : fromBE [] = 0 := by
-  simp [fromBE, mixEncode]
-
-private theorem fromBE_eq_acc (bs : List Nat) :
-    fromBE bs = oriAcc 256 bs bs.length := by
-  rw [oriAcc, List.take_length]
-  unfold fromBE
-  exact (hornerAcc_mix 256 bs).symm
 
 private theorem ori_pad_lt (bs : List Nat) (hb : ∀ b ∈ bs, b < 256)
     (i : Nat) (hi28 : i ≤ 28) (hlen : i ≤ bs.length) :
@@ -128,13 +106,6 @@ theorem fromBE_pad_lt_limb8 (bs : List Nat) (h : BePadWf bs) :
   exact ori_pad_lt bs (byte_lt bs h) bs.length h.len (Nat.le_refl _)
 
 /-! ## Horner step -/
-
-private theorem beFromStep_gt (bs : Array Int) (two56 : Megadreifach.BigInt)
-    (toV i : Int) (n : Megadreifach.BigInt) (h : i > toV) :
-    beFromStep bs two56 toV (i, n) = .ok (SudoRt.Flow.brk (i, n)) := by
-  unfold beFromStep
-  rw [if_pos h]
-  rfl
 
 /-- One Horner step `acc * 256 + byte` while the value stays below `10^72`. -/
 private theorem bePadStep (bs : List Nat) (h : BePadWf bs) (i : Nat)

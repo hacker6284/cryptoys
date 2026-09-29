@@ -1,4 +1,6 @@
-# DoubleDeal v12: GridCycle diffusion (milestone 1 of the AES-style roadmap)
+# DoubleDeal v12: GridCycle diffusion (roadmap milestone M1)
+
+Roadmap: [`security/README.md`, section "Roadmap"](../../security/README.md#roadmap).
 
 Scope. GridCycle (`mix_columns`, the v11 walk, unchanged in v12) **alone**, one layer.
 Labels used below: **PROVED** = Lean, audited by `check_axioms.py`; **EXACT

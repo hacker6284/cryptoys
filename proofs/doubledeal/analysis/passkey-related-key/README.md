@@ -1,7 +1,8 @@
+<!-- Owns: the PassKey suit+rank collision analysis (v11) and the measurements behind the v12 PassKey rule. Maintenance rules: ../../../../DOCS.md. -->
 # PassKey F: the suit+rank collision and what it does to v11 (related keys)
 
 > **Status update.** Zachary chose the §9 key-pile fallback for v12. v11 is frozen as **superseded, not attacked**
-> (`primitives/cipher/doubledeal/v11/`, write-up `proofs/deprecated/doubledeal-v11/`). The text below is unchanged:
+> ([`primitives/cipher/doubledeal/v11/`](../../../../primitives/cipher/doubledeal/v11/SPEC.md), write-up [`proofs/deprecated/doubledeal-v11/`](../../../deprecated/doubledeal-v11/README.md)). The text below is unchanged:
 > it describes v11, and "nothing is deprecated here" was true when it was written.
 
 Analysis only. Nothing here changes the SPEC, the sudo, or the Lean. No bit-security claims. DoubleDeal makes no

@@ -1,9 +1,10 @@
 <!-- Owns: what this Generated/ package is and that its emitted files are not hand-edited (this README is hand-written; tools/emit_lean.py keeps it). Maintenance rules: ../../../../DOCS.md. -->
 # Generated MegaDreifach Lean
 
-**Do not edit these files by hand.** They are produced from
-[`primitives/hash/megadreifach/megadreifach.sudo`](../../../../primitives/hash/megadreifach/megadreifach.sudo)
-by `proofs/emit_lean.sh`.
+**Do not edit these files by hand.** They are produced from the frozen, deprecated **v1**
+[`primitives/hash/megadreifach/v1/megadreifach.sudo`](../../../../primitives/hash/megadreifach/v1/megadreifach.sudo)
+by `proofs/emit_lean.sh` (target `megadreifach`). The proof package is pinned to v1; the
+current v2 `megadreifach.sudo` is not emitted here.
 
 This directory is a standalone Lake package (its own `lakefile.lean`).
 It is **not** imported by the proof-only `MegaDreifach` library next door.

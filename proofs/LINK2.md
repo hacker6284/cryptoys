@@ -49,6 +49,8 @@ identity, and both are injective. The proofs are the two passkey glues
 plus the list algebra. They do not re-induct on `runLoopOn`. Algebraic
 Link 2 only — not bit-security, not emitter soundness.
 
+MegaDreifach rows: v1 (Generated from [`v1/megadreifach.sudo`](../primitives/hash/megadreifach/v1/megadreifach.sudo)); see [`megadreifach/README.md`](megadreifach/README.md).
+
 | Item | Status |
 | --- | --- |
 | Scaffolding + well-formedness + embed/decode | Landed (`DoubleDeal/Link2/Embed.lean`) |

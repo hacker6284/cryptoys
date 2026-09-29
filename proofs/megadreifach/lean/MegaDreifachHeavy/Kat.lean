@@ -2,7 +2,7 @@
   M13: the eight exported hash KATs as theorems about Generated `v_Hash`.
 
   Each KAT is stated once, on the strings of the generated `Vectors.lean`
-  (`vectors/json_to_lean.py --check` ties those to the published KAT JSON):
+  (`vectors/json_to_lean.py --check` ties those to the v1 KAT JSON):
 
     kat_<name> : Megadreifach.v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex))
                    = .ok (embed (hexBytes Vectors.vec_<name>.digestHex))

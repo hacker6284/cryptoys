@@ -166,14 +166,14 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime_nonswap",
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
 }
-# proofs/megadreifach/lean: the 8 hash KATs in MegaDreifachHeavy/Kat.lean (the names
-# match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats.json;
+# proofs/megadreifach/lean (pinned to MegaDreifach v1): the 8 v1 hash KATs in
+# MegaDreifachHeavy/Kat.lean (the names match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json;
 # vectors/json_to_lean.py --check checks their statements against the JSON).
 MD_LEAN = ROOT.parent / "megadreifach" / "lean"
 MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"
 
 # Every theorem that proofs/megadreifach/README.md cites by name (backticked), resolved
-# against the default library's sources (structure fields like `cp` / `ep` are not
+# against the default library's sources (all about MegaDreifach v1) (structure fields like `cp` / `ep` are not
 # theorem declarations, so they drop out). Rule: a README citation must stay present and
 # pass the axiom audit, so renaming or deleting a cited theorem fails the default gate.
 # `check_axioms.py --selftest` re-derives the list (md_readme_cited) and fails if it

@@ -36,12 +36,12 @@
 -/
 import DoubleDealSecurity.GridCycle
 import DoubleDealSecurity.SumRanksV10
-import DoubleDealSecurity.SumRanksDP.ThreeCycle
+import DoubleDealSecurity.PermCount
 import DoubleDealSecurity.BranchNumber
 import DoubleDealSecurity.GridCycleSurvivalLists
 import Mathlib
 
-namespace DoubleDeal.Security.GCSurvival
+namespace DoubleDeal.Security.GridCycleSurvival
 
 open DoubleDeal Relabel Finset
 
@@ -78,14 +78,15 @@ theorem gcSurvives_first (τ : Relabel) (π : Equiv.Perm (Fin 52)) (h : GCSurviv
 /-! ## Counting decks by their first card
 
 The counting argument is stated once, for every finite type, in
-`SumRanksDP/ThreeCycle.lean` (`card_fibre_eq_of_mul`: left multiplication moves one
-fibre onto another; `card_filter_comp_eq`: count through equal fibres); the deck
-counts here (one position, and three positions below) are instances. -/
+`DoubleDealSecurity/PermCount.lean` (`card_fibre_eq_of_mul`: left multiplication moves
+one fibre onto another; `card_filter_comp_eq`: count through equal fibres;
+`count_triples_of`: three positions); the deck counts here (one position, and three
+positions below) are instances. -/
 
 theorem card_first_eq (c c' : Fin 52) :
     (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c).card =
       (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = c').card :=
-  SumRanksDP.card_fibre_eq_of_mul (fun π : Equiv.Perm (Fin 52) => π 0) (Equiv.swap c c') c' c
+  PermCount.card_fibre_eq_of_mul (fun π : Equiv.Perm (Fin 52) => π 0) (Equiv.swap c c') c' c
     fun π => by
       simp only [Equiv.Perm.mul_apply]
       rw [Equiv.apply_eq_iff_eq_symm_apply, Equiv.symm_swap, Equiv.swap_apply_left]
@@ -94,7 +95,7 @@ theorem card_first_eq (c c' : Fin 52) :
 theorem card_first_comp (P : Fin 52 → Prop) [DecidablePred P] :
     (univ.filter fun π : Equiv.Perm (Fin 52) => P (π 0)).card =
       (univ.filter P).card * (univ.filter fun π : Equiv.Perm (Fin 52) => π 0 = 0).card :=
-  SumRanksDP.card_filter_comp_eq (fun π : Equiv.Perm (Fin 52) => π 0) univ
+  PermCount.card_filter_comp_eq (fun π : Equiv.Perm (Fin 52) => π 0) univ
     (fun _ => mem_univ _) _ (fun c _ => card_first_eq c 0) P
 
 /-- Exactly `52!/52` decks start with a given card. -/
@@ -269,22 +270,20 @@ def T03 : Finset (Fin 52 × Fin 52 × Fin 52) :=
 theorem card_T03_le : T03.card ≤ 30 :=
   (List.toFinset_card_le _).trans (by simp [LKC, LKS])
 
-theorem LKC_ok : ∀ p ∈ LKC, KC ≠ p.1 ∧ KC ≠ p.2 ∧ p.1 ≠ p.2 := by
-  -- `List.all` form: kernel `decide!` of the `∀ p ∈ _` form takes ~8 s (Mathlib instances).
-  have h : (LKC.all fun p => decide (KC ≠ p.1 ∧ KC ≠ p.2 ∧ p.1 ≠ p.2)) = true := by decide
-  exact fun p hp => of_decide_eq_true (List.all_eq_true.1 h p hp)
-
-theorem LKS_ok : ∀ p ∈ LKS, KS ≠ p.1 ∧ KS ≠ p.2 ∧ p.1 ≠ p.2 := by
-  -- `List.all` form: kernel `decide!` of the `∀ p ∈ _` form takes ~8 s (Mathlib instances).
-  have h : (LKS.all fun p => decide (KS ≠ p.1 ∧ KS ≠ p.2 ∧ p.1 ≠ p.2)) = true := by decide
-  exact fun p hp => of_decide_eq_true (List.all_eq_true.1 h p hp)
+/-- A start card `c0` and a list `L` of pairs give triples of distinct cards. Checked
+    through `List.all`: kernel `decide!` of the `∀ p ∈ L` form takes ~8 s with Mathlib's
+    instances, `decide` of the `List.all` form is immediate. -/
+theorem distinct_of_all (c0 : Fin 52) (L : List (Fin 52 × Fin 52))
+    (h : (L.all fun p => decide (c0 ≠ p.1 ∧ c0 ≠ p.2 ∧ p.1 ≠ p.2)) = true) :
+    ∀ p ∈ L, c0 ≠ p.1 ∧ c0 ≠ p.2 ∧ p.1 ≠ p.2 :=
+  fun p hp => of_decide_eq_true (List.all_eq_true.1 h p hp)
 
 theorem T03_distinct : ∀ t ∈ T03, t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2 := by
   intro t ht
   simp only [T03, List.mem_toFinset, List.mem_append, List.mem_map] at ht
   rcases ht with ⟨p, hp, rfl⟩ | ⟨p, hp, rfl⟩
-  · exact LKC_ok p hp
-  · exact LKS_ok p hp
+  · exact distinct_of_all KC LKC (by decide) p hp
+  · exact distinct_of_all KS LKS (by decide) p hp
 
 theorem mem_T03_of_lists (c0 c1 c2 : Fin 52)
     (h : (c0 = KC ∧ (c1, c2) ∈ LKC) ∨ (c0 = KS ∧ (c1, c2) ∈ LKS)) :
@@ -315,8 +314,8 @@ theorem gcSurvives_v03_T03 (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
 
 /-! ### Counting decks by their first three cards
 
-Instances of the shared counting lemmas (`SumRanksDP.fibre3_card_eq`,
-`SumRanksDP.card_filter_comp_eq`, `SumRanksDP.card_distinct_triples_eq`). -/
+Instances of the shared counting lemmas (`PermCount.fibre3_card_eq`,
+`PermCount.count_triples_of`, `PermCount.card_distinct_triples_eq`). -/
 
 /-- Decks with first cards `(0, 1, 2)`; every distinct triple has as many. -/
 @[irreducible] def F3 : ℕ := (univ.filter fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2) = ((0 : Fin 52), (1 : Fin 52), (2 : Fin 52))).card
@@ -325,7 +324,7 @@ theorem fibre3_card (t : Fin 52 × Fin 52 × Fin 52)
     (ht : t.1 ≠ t.2.1 ∧ t.1 ≠ t.2.2 ∧ t.2.1 ≠ t.2.2) :
     (univ.filter fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2) = t).card = F3 := by
   unfold F3
-  exact SumRanksDP.fibre3_card_eq 0 1 2 (0, 1, 2) t (by decide) ht
+  exact PermCount.fibre3_card_eq 0 1 2 (0, 1, 2) t (by decide) ht
 
 /-- The ordered triples of distinct cards. -/
 def Distinct3 : Finset (Fin 52 × Fin 52 × Fin 52) :=
@@ -334,19 +333,17 @@ def Distinct3 : Finset (Fin 52 × Fin 52 × Fin 52) :=
 /-- Decks whose first three cards satisfy `P`: `#{distinct t | P t} · F3`. -/
 theorem card_first3_comp (P : Fin 52 × Fin 52 × Fin 52 → Prop) [DecidablePred P] :
     (univ.filter fun π : Equiv.Perm (Fin 52) => P (π 0, π 1, π 2)).card =
-      (Distinct3.filter P).card * F3 :=
-  SumRanksDP.card_filter_comp_eq (fun π : Equiv.Perm (Fin 52) => (π 0, π 1, π 2)) Distinct3
-    (fun π => by
-      simp only [Distinct3, mem_filter, mem_univ, true_and]
-      exact ⟨fun e => absurd (π.injective e) (by decide),
-        fun e => absurd (π.injective e) (by decide), fun e => absurd (π.injective e) (by decide)⟩)
-    F3 (fun t ht => fibre3_card t (by rw [Distinct3, mem_filter] at ht; exact ht.2)) P
+      (Distinct3.filter P).card * F3 := by
+  rw [PermCount.count_triples_of (0 : Fin 52) 1 2 (by decide) (by decide) (by decide) (0, 1, 2)
+    (by decide) P, Distinct3, filter_filter]
+  unfold F3
+  simp only [and_assoc]
 
 /-- `52 · 51 · 50 · F3 = 52!`. -/
 theorem F3_eq : 132600 * F3 = Nat.factorial 52 := by
   have h := card_first3_comp fun _ => True
   rw [filter_True, filter_True, card_univ, Fintype.card_perm, Fintype.card_fin, Distinct3,
-    SumRanksDP.card_distinct_triples_eq, Fintype.card_fin] at h
+    PermCount.card_distinct_triples_eq, Fintype.card_fin] at h
   rw [h, show Nat.descFactorial 52 3 = 132600 by decide]
 
 /-- Decks whose first three cards lie in a set `T` of distinct triples: `#T · F3`. -/
@@ -393,4 +390,4 @@ theorem gc_survival_v10Sym_le_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LK
   · rw [gcSurvivors_v10Sym_eq_empty a x hne h03, card_empty, Nat.mul_zero]
     exact Nat.zero_le _
 
-end DoubleDeal.Security.GCSurvival
+end DoubleDeal.Security.GridCycleSurvival

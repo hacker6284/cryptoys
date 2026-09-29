@@ -69,10 +69,17 @@ One-round characteristic probability over a uniform post-Compose deck:
 
 | τ | stem commutes | RoundChar |
 |---|---|---|
-| A♣↔2♣ (same suit) | 4.466e-3 (SumRanks alone: 1/221 ≈ 4.52e-3, ENUMERATED exactly by `../v10-sumranks/sbox-search/exact.py`; not a Lean theorem, the Lean bound used here is ≤ 1/64) | 5.8e-5 |
+| A♣↔2♣ (same suit) | 4.466e-3 (SumRanks alone: 1/221 ≈ 4.52e-3, see below) | 5.8e-5 |
 | 5♦↔8♦ | 4.593e-3 | 6.5e-5 |
 | K♣↔K♦ | 0 | 0 (95% bound 3e-6) |
 | v10Sym 0 3 | 1 | 0 (95% bound 3e-6) |
+
+SumRanks alone: every same-suit swap commutes with v10 SumRanks on exactly 1/221 of
+the decks. This is ENUMERATED exactly (not sampled) by `exact()` in
+`../v10-sumranks/sbox-search/exact.py`, not proved in Lean; the Lean bound used
+here is ≤ 1/64. Its log (`logs/exact.log`) records the swap 2♣↔7♣; running
+`exact()` on all 312 same-suit swaps (A♣↔2♣, A♣↔K♣, 5♣↔8♣, … included) gives
+1/221 for each.
 
 So the measured one-round values are far below the proved 1/64 per round. The gap
 is GridCycle for small-support τ, which is not formalised (see

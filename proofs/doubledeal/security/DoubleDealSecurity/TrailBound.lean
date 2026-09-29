@@ -50,7 +50,7 @@ namespace DoubleDeal.Security.TrailBound
 
 open DoubleDeal Relabel Finset
 open DoubleDeal.Security (Key isDeck_compose isDeck_unkeyedWithMix isDeck_unkeyedNoMix)
-open DoubleDeal.Security.GCSurvival (GCSurvives gcSurvivors Check3 LKC LKS)
+open DoubleDeal.Security.GridCycleSurvival (GCSurvives gcSurvivors Check3 LKC LKS)
 
 /-- One round's characteristic at the post-Compose state `x`: SumRanks and
     GridCycle both commute with `σ` there. -/
@@ -240,8 +240,8 @@ theorem round_le_26_v10Sym (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
   refine (Nat.mul_le_mul_left 26 (roundCharCount_le_gridCycle _)).trans ?_
   by_cases h03 : a = 0 ∧ x = 3
   · obtain ⟨rfl, rfl⟩ := h03
-    exact GCSurvival.gc_survival_v10Sym03
-  · rw [GCSurvival.gcSurvivors_v10Sym_eq_empty a x hne h03, card_empty, Nat.mul_zero]
+    exact GridCycleSurvival.gc_survival_v10Sym03
+  · rw [GridCycleSurvival.gcSurvivors_v10Sym_eq_empty a x hne h03, card_empty, Nat.mul_zero]
     exact Nat.zero_le _
 
 /-- (PROVED, given the two finite GridCycle checks) Nontrivial `v10Sym`: one round's
@@ -250,7 +250,7 @@ theorem round_le_4420_v10Sym_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS
     (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) :
     4420 * roundCharCount (v10Sym a x) ≤ Nat.factorial 52 :=
   (Nat.mul_le_mul_left 4420 (roundCharCount_le_gridCycle _)).trans
-    (GCSurvival.gc_survival_v10Sym_le_of_check hKC hKS a x hne)
+    (GridCycleSurvival.gc_survival_v10Sym_le_of_check hKC hKS a x hne)
 
 /-- `σ ≠ 1` and `σ = v10Sym a x` force `(a, x) ≠ (0, 0)`. -/
 theorem ne_zero_of_ne_one {σ : Relabel} (h1 : σ ≠ 1) {a : Fin 13} {x : Fin 4}

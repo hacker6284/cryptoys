@@ -1,6 +1,6 @@
 # DoubleDeal: is there an AES-style branch number? (measurement + proposal, analysis only)
 
-> **v12 note.** v12 changes only PassKey. GridCycle is the v11 walk, so the v11 note below applies unchanged. The branch number of GridCycle is still exactly the trivial floor 4. The relabelling-survival notion that the roadmap's trail argument uses is in `../../../analysis/v12-diffusion/NOTES.md` and `DoubleDealSecurity/GridCycleSurvival.lean`.
+> **v12 note.** v12 changes only PassKey. GridCycle is the v11 walk, so the v11 note below applies unchanged. The branch number of GridCycle is still exactly the trivial floor 4. The relabelling-survival notion that [the roadmap's trail argument](../../README.md#roadmap) uses is in `../../../analysis/v12-diffusion/NOTES.md` and `DoubleDealSecurity/GridCycleSurvival.lean`.
 >
 > **v11 note.** v11 changes GridCycle (ghost finger, blocker-directed blocked placement). The proved floor and the cards-50/51 tail swap hold for any walk that always picks a free seat and were re-checked in Lean for v11; every empirical GridCycle number and overflow mechanism below is about v8/v9 GridCycle, not v11.
 >

@@ -22,10 +22,11 @@ wt(d, d') + wt(F d, F d')`. Two distinct decks differ in at least 2 seats, so
   v11 and so for v12): the floor, and GridCycle attains it. Swapping walk cards 50
   and 51 changes exactly two output seats (`mixColumns_tail_branch`). So
   **B(GridCycle) = 4 exactly.**
-* This is the "weak minimum" case: the branch number is the trivial floor. It is
+* This is the weak minimum case: the branch number is the trivial floor. It is
   **not** a break. Every layer of DoubleDeal only moves cards, so weight 1 cannot
-  occur and the AES scale does not transfer. Earlier measurements (`../../security/checks/branchnum/NOTES.md`, for
-  v8/v9) found weight-2 → weight-2 pairs for every layer and for one keyed round.
+  occur and the AES scale does not transfer. Earlier measurements
+  (`../../security/checks/branchnum/NOTES.md`, for v8/v9) found weight-2 → weight-2
+  pairs for every layer and for one keyed round.
   So this line stops here: no Lean bound above 4 exists to prove.
 
 ### 1b. Relabelling (value-difference) survival. This is the notion the trail argument needs.

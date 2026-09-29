@@ -39,7 +39,9 @@ List Nat  <--decode--  Array Int     (on success, no Trap)
 
 Builds on #26/#28/#30 (`passkey_refines`, `passkey_inv_refines`, twin
 `runLoopOn`) and #32 (`encrypt_refines`). On the well-formed domain —
-`FitsLen` lists, and `WellFormed` for emitted `Array Int` — algebraic
+`FitsLen` lists whose cards are also `FitsLen` (v12: the deal count
+`suit + 2` is an i64 addition), and `WellFormed` for emitted `Array Int`
+(which now carries the same card bound) — algebraic
 S3/S4 hold for `Doubledeal.passkey` and `Doubledeal.passkey_inv`
 (`Except SudoRt.Trap`): card multiset (`List.Perm`), `passkey_inv`
 after `passkey` is the identity, `passkey` after `passkey_inv` is the
@@ -55,19 +57,20 @@ Link 2 only — not bit-security, not emitter soundness.
 | `Generated.push_front` ≃ algebraic `cons` (`FitsLen`) | Landed |
 | `Generated.left_rotate` ≃ algebraic `rotL` (`FitsLen`) | Landed (`Link2/Rotate.lean`) |
 | `Generated.right_rotate` ≃ algebraic `rotR` (`FitsLen`) | Landed (`right_rotate_refines`; via `left_rotate` + `rotR_eq_rotL`) |
-| One generated PassKey body ≃ `passKeyStep` (rotate / cut / push) | Landed (`maybeRotate_refines`, `maybeCut_push_refines`, `passKeyStep_refines`) |
+| `Generated.deal_under` / `undeal_under` / `deal_step` / `undeal_step` ≃ `dealUnder` / `undealUnder` / `maybeDeal` / `maybeDealInv` (v12) | Landed (`Link2/Deal.lean`: `deal_under_refines`, `undeal_under_refines`, `deal_step_refines`, `undeal_step_refines`; `FitsLen` card and piles) |
+| One generated PassKey body ≃ `passKeyStep` (deal / cut / push) | Landed (`deal_step_refines`, `maybeCut_push_refines`, `passKeyStep_refines`) |
 | Twin `runLoopOn` inducts to `passKeyGoN` on every well-formed list | Landed (`passkey_loop_refines`, `passkey_twin_refines`) |
-| `Generated.passkey` ≃ `passToKeyCutFallback` on length ≤ 1 | Landed (`passkey_nil`, `passkey_singleton`) |
-| Residual stepper of `Doubledeal.passkey` = `passkeyStepGen` | **CLOSED** (`passkey_step_eq`, `passkey_inlined_cut_eq`; nested suit-rotate / do-elaboration, not a second algorithm) |
+| `Generated.passkey` ≃ `passToKeyCutFallback` on length ≤ 1 | Landed (`passkey_nil`, `passkey_singleton`; the singleton needs its card `FitsLen` since v12) |
+| Residual stepper of `Doubledeal.passkey` = `passkeyStepGen` | **CLOSED** (inside `passkey_eq_twin_loop`; do-elaboration only, not a second algorithm. v12 re-proof: `deal_step` then the cut / push body) |
 | `Generated.passkey` ≃ `passToKeyCutFallback` on every well-formed list | **CLOSED** (`passkey_eq_twin_loop`, `passkey_refines`) |
-| One generated inverse body ≃ `invPassKeyStep` | Landed (`maybeCutInv_refines`, `maybeRotateInv_refines`, `invPassKeyStep_refines`) |
+| One generated inverse body ≃ `invPassKeyStep` | Landed (`maybeCutInv_refines`, `undeal_step_refines`, `invPassKeyStep_refines`) |
 | Twin inverse `runLoopOn` inducts to `passKeyInvGoN` | Landed (`passkey_inv_loop_refines`, `passkey_inv_twin_refines`) |
-| Residual stepper of `Doubledeal.passkey_inv` = `passkeyInvStepGen` | **CLOSED** (`passkey_inv_step_eq`, `passkey_inv_eq_twin_loop`; nested undo-cut / do-elaboration, not a second algorithm) |
-| `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` on every well-formed list | **CLOSED** (`passkey_inv_refines`) |
-| `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | **CLOSED for v11** (`encrypt_refines`; `CardBound` message, `Perm52` key, length 52). Re-proved for v9 in stage 2, for v10 with the new SumRanks, and for v11 with the new GridCycle; see "v11 changes" and "v10 changes" in `doubledeal/README.md` |
-| `sum_ranks` ≃ `sumRanksV10` | **CLOSED for v10 and v11** (`sum_ranks_refines`; v11 keeps v10 SumRanks). Every emitted helper has its own refinement lemma (`row_total`, `row_turn`, `sum_rows`, `suit_label`, `gf_add`, `gf_times_w`, `column_value`, `column_suits`, `column_turn`, `turn_column`, `sum_columns`). Domain: every grid (v9 needed `CardBound` cells; v10 turn amounts stay small) |
-| `mix_columns` ≃ `mixColumns` | **CLOSED for v11** (`mix_columns_refines`, `CardBound` hand; re-proved for the ghost finger and blocker-directed scan: the emitted loop state carries the finger `fr`/`fc`, the blocker is read from the emitted grid, and the emitted `overflow_seat` refines `overflowSeat` via `scan_row_refines`). Previously closed for v9 and v10 |
-| `full_round` / `final_round` ≃ `fullRound` / `fullRoundNoMix` | **CLOSED for v11** (`full_round_refines`, `final_round_refines`; unchanged in statement) |
+| Residual stepper of `Doubledeal.passkey_inv` = `passkeyInvStepGen` | **CLOSED** (inside `passkey_inv_eq_twin_loop`; undo-cut then `undeal_step`, do-elaboration only, not a second algorithm) |
+| `Generated.passkey_inv` ≃ `passToKeyCutFallbackInv` on every well-formed list | **CLOSED** (`passkey_inv_refines`). v12: both refinements also assume every card `FitsLen` (v11 did not need it) |
+| `Generated.encrypt` ≃ `encryptDeck` / `encrypt6` | **CLOSED for v12** (`encrypt_refines`, unchanged in statement; `CardBound` message, `Perm52` key, length 52; the new card bound for PassKey comes from `Perm52`). Re-proved for v9 in stage 2, for v10 with the new SumRanks, for v11 with the new GridCycle, and for v12 with the new PassKey deal; see "v12 changes", "v11 changes" and "v10 changes" in `doubledeal/README.md` |
+| `sum_ranks` ≃ `sumRanksV10` | **CLOSED for v10, v11 and v12** (`sum_ranks_refines`; v11 and v12 keep v10 SumRanks). Every emitted helper has its own refinement lemma (`row_total`, `row_turn`, `sum_rows`, `suit_label`, `gf_add`, `gf_times_w`, `column_value`, `column_suits`, `column_turn`, `turn_column`, `sum_columns`). Domain: every grid (v9 needed `CardBound` cells; v10 turn amounts stay small) |
+| `mix_columns` ≃ `mixColumns` | **CLOSED for v11 and v12** (v12 keeps the v11 GridCycle; `mix_columns_refines`, `CardBound` hand; re-proved for the ghost finger and blocker-directed scan: the emitted loop state carries the finger `fr`/`fc`, the blocker is read from the emitted grid, and the emitted `overflow_seat` refines `overflowSeat` via `scan_row_refines`). Previously closed for v9 and v10 |
+| `full_round` / `final_round` ≃ `fullRound` / `fullRoundNoMix` | **CLOSED for v11 and v12** (`full_round_refines`, `final_round_refines`; unchanged in statement) |
 | S3/S4 transfer onto `Except Trap` (multiset, inverse, injectivity) | **CLOSED** (`passkey_perm`, `passkey_inv_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, `passkey_inv_injective`, and the `WellFormed` Array forms in `Link2/PassKeyTransfer.lean`) |
 | MegaDreifach `pad_message` ≃ algebraic `pad` | **CLOSED** (`pad_message_refines`, `pad_message_refines_array`, `pad_z_refines`). Domain `PadWf`: bytes `≤ 255` and `8 * length` fits in an i64. Not `v_Hash`. |
 | MegaDreifach `compose` ≃ algebraic `compose` | **CLOSED** (`compose_refines`, `compose_refines_array`). Domain `PosWf`: lengths 20/20/30/30, nonnegative in-range indices, orientations `< 3` / `< 2` (trap-free, i64-safe). Not `v_Hash`. |

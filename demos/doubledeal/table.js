@@ -344,6 +344,21 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         }
     }
 
+    // The cards a pass step dealt (v12: suit + 2 cards off the top of the hand, amount > 0,
+    // or of the key pile, amount < 0), in deal order, found in the post-step piles. The
+    // packet went under that pile, then a rank cut on the same pile moved it by `total`.
+    function dealtIds(step) {
+        const d = Math.abs(step.amount);
+        if (!d) return [];
+        const onHand = step.amount > 0;
+        const pile = onHand ? step.hand : step.key.slice(1);
+        const len = pile.length;
+        const r = (onHand ? step.flag === 1 : step.flag === 2) ? step.total : 0;
+        const out = [];
+        for (let j = len - 1; j >= len - d; j--) out.push(pile[((j - r) % len + len) % len]);
+        return out;
+    }
+
     async function pass(step, ms) {
         const gen = generation;
         const controller = key[step.card];
@@ -352,10 +367,15 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         if (gen !== generation) return;
         const handIds = step.hand.slice();
         const keyIds = step.key.slice();
-        if (step.amount > 0) {
-            const spinning = handIds.slice(0, step.amount);
-            await Promise.all(spinning.map((id) => moveTo(key[id], new THREE.Vector3(PASS_HAND_X, 0.9, PASS_Z), ms * 0.6, false)));
-            if (gen !== generation) return;
+        const dealt = dealtIds(step);
+        if (dealt.length > 0) {
+            // Deal the packet one card at a time over the pile it came from (hand or key pile).
+            const x = step.amount > 0 ? PASS_HAND_X : PASS_KEY_X;
+            const each = (ms * 0.6) / dealt.length;
+            for (let j = 0; j < dealt.length; j++) {
+                await moveTo(key[dealt[j]], new THREE.Vector3(x, 0.9 + j * 0.01, PASS_Z), each, false);
+                if (gen !== generation) return;
+            }
         }
         if (step.flag === 2) marker.material.color.setHex(0xe7b15a);
         await Promise.all([
@@ -373,7 +393,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
     }
 
     // Inverse settle: lift C off the key pile and return it to the hand.
-    // Cut/rotate undo is still posed from the post-step piles, not a reverse of pass().
+    // Cut/deal undo is still posed from the post-step piles, not a reverse of pass().
     async function unpass(step, ms) {
         const gen = generation;
         const controller = key[step.card];

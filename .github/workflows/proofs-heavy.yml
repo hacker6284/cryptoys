@@ -5,13 +5,15 @@ name: proofs-heavy
 #   - doubledeal-security-heavy: lean_lib DoubleDealSecurityHeavy of the DoubleDeal
 #     security package;
 #   - megadreifach-heavy: lean_lib MegaDreifachHeavy (the 8 hash KATs as kernel
-#     `decide!` theorems about Generated.v_Hash, about 8 min of kernel time).
+#     `decide!` theorems about Generated.v_Hash, about 8 min of kernel time);
+#   - megadreifach-attack-logs: the MegaDreifach attack scripts (Python) against their
+#     committed logs, including the report-size swap-collision runs.
 # Triggered on every PR and every push to main, weekly and by hand, but the heavy
 # jobs only run when needed: the path sets live in ONE place, the `changes` job
 # (dorny/paths-filter), which gates each heavy job on its own set. There is no
 # `on: paths:` copy of them (Actions has no YAML anchors, and `on:` path filters are
 # per workflow, not per job), so a PR that touches neither set costs one short
-# `changes` job and two skipped jobs. Schedule and workflow_dispatch run both.
+# `changes` job and the skipped jobs. Schedule and workflow_dispatch run all of them.
 on:
   pull_request:
   push:
@@ -37,9 +39,10 @@ jobs:
     outputs:
       doubledeal: ${{ steps.filter.outputs.doubledeal }}
       megadreifach: ${{ steps.filter.outputs.megadreifach }}
+      megadreifach_attack: ${{ steps.filter.outputs.megadreifach_attack }}
     steps:
       # Only PR / push events are filtered; on schedule and workflow_dispatch the
-      # filter is skipped (empty outputs) and both heavy jobs run via their `if:`.
+      # filter is skipped (empty outputs) and all heavy jobs run via their `if:`.
       - uses: actions/checkout@v5
         if: github.event_name == 'pull_request' || github.event_name == 'push'
       - uses: dorny/paths-filter@v3
@@ -62,6 +65,14 @@ jobs:
               - "proofs/audit/**"                    # the shared #audit_all package
               - "proofs/doubledeal/security/checks/scan_sorry.py"  # the shared sorry gate
               - ".github/workflows/proofs-heavy.yml"
+            # megadreifach-attack-logs is Python only: its scripts, logs and md.py, the
+            # KAT JSON md.py checks against, and the shared log writer/checker. The
+            # Lean package and the axiom / audit / sorry gates are not inputs to it.
+            megadreifach_attack:
+              - "proofs/megadreifach/security/**"    # scripts, md.py, tables.py, logs/
+              - "primitives/hash/megadreifach/**"    # the KAT JSON md.py checks against
+              - "tools/gencheck.py"                  # --log / --check convention
+              - ".github/workflows/proofs-heavy.yml"
 
   doubledeal-security-heavy:
     needs: changes
@@ -80,6 +91,25 @@ jobs:
       - name: Axiom audit of every DoubleDealSecurityHeavy theorem (registry must match the source)
         working-directory: proofs/doubledeal/security
         run: python3 ../check_axioms.py security-heavy
+
+  megadreifach-attack-logs:
+    # Python only (no Lean): the MegaDreifach attack scripts against their committed
+    # logs (proofs/megadreifach/security/logs/), so the numbers in security/REPORT.md
+    # are reproducible and a mismatch fails. Own path set (megadreifach_attack).
+    needs: changes
+    if: >-
+      github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.megadreifach_attack == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - name: Attack scripts match their logs (md.py KATs, F1, F2, local probes, edge-group and toy attacks; ~2.5 min)
+        run: python3 proofs/megadreifach/security/logs.py --check
+      - name: Swap-collision report-size runs match logs/suit_blind_collision_full.log (all cores; ~20 CPU-min)
+        run: python3 proofs/megadreifach/security/suit_blind_collision.py --check --full
+      - name: Cause control, read before the noon turn (REPORT §3.5; ~4 CPU-min)
+        run: python3 proofs/megadreifach/security/suit_blind_collision.py --check --variant pre-noon
 
   megadreifach-heavy:
     needs: changes

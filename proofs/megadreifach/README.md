@@ -4,7 +4,7 @@ Normative product name: **MegaDreifach**. The puzzle/group library stays **megam
 
 The published definition is [`primitives/hash/megadreifach/SPEC.md`](../../primitives/hash/megadreifach/SPEC.md) plus [`megadreifach.sudo`](../../primitives/hash/megadreifach/megadreifach.sudo). Sudo is normative. Emitted Lean under `lean/Generated/` is the algorithm (`v_Hash`). `lean/MegaDreifach/` is the obligation ledger for algebraic stones sudo does not express. It is not a second `Hash`. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). This does **not** claim sudo↔Lean semantic-equivalence theorems. The emit terminates gate is on. MegaDreifach sudo is terminates-ready: bigint trim/peel/carry, φ / even-perm search, and the Hash MD walk are bounded `for`.
 
-MegaDreifach is a toy Merkle–Damgård hash on the megaminx group. The Lean package below proves **correctness / algebraic** facts (position legality, group law, encodings, pad injectivity, DM algebra). It does **not** prove collision resistance, ideal-cipher-on-G, or AES-class security. A green `lake build` is not a security claim.
+MegaDreifach is a toy Merkle–Damgård hash on the megaminx group. The Lean package below proves **correctness / algebraic** facts (position legality, group law, encodings, pad injectivity, DM algebra). It does **not** prove collision resistance, ideal-cipher-on-G, or AES-class security. A green `lake build` is not a security claim. The `MegaDreifach.Security` modules add an MD reduction and proved *weaknesses* of the current grip rule, including a kernel-checked IV-anchored `Hash` collision; see [Security status](#security-status).
 
 Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Do not read the pad theorems as “LE is gone.”
 
@@ -25,7 +25,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | --- | --- | --- |
 | M1 | Position model + legality predicates | Proved |
 | M2 | Compose associative; inverse round-trip (hypothesized perm inverses) | Proved |
-| M3 | Digest rank packing: mixed-radix components, even last-pair, 29-byte inj, `listOf` inj | Proved at the packing layer; even-perm Lehmer-prefix glue still open |
+| M3 | Digest rank packing: mixed-radix components, even last-pair, 29-byte inj, `listOf` inj; digest encoding injective on legal and on reachable positions | Injectivity proved; surjectivity / unrank open (see below). Packing layer in `Rank.lean`. The glue is done: `evenRank_inj` (even permutations), `positionToBytes_inj_legal`, `positionToBytes_inj_reachable` (`Security/DigestInj.lean`), with the DM parity invariant `isLegal_chR` / `isLegal_chainMsg` (`Security/Parity.lean`) |
 | M4 | Factoradic φ injective for `n < 2^{224}` | Proved |
 | M5 | Pad B=28 injective; length field recovers bit length | Proved |
 | M6 | DM `h' = compose h e`; 3-solve restores `(h', h'⁻¹, id)` | Proved |
@@ -79,16 +79,37 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 
 | Stone | Claim | Status |
 | --- | --- | --- |
-| M3 (glue) | Single `rankPosition` inverse on `isLegal` (even-perm Lehmer prefix + unrank); full digest injectivity | Open. Ingredients are in `Rank.lean`; `positionToBytes_components_eq` (equal digests ⇒ equal component ranks on `InjPos`) and `rankPosition_lt_group` are proved. Missing: `evenRank` injectivity on even S_n and a parity invariant for DM outputs (compose preserves `isLegal`). |
+| M3 (unrank) | Surjectivity of the digest encoding onto `[0, \|G\|)`; a computable `rankPosition` inverse (unrank) | **OPEN.** Injectivity is proved (see M3 above: `evenRank_inj`, `positionToBytes_inj_legal`, `positionToBytes_inj_reachable`, `isLegal_chR`); surjectivity and unrank are not. |
 | M8 (nets) | Pairwise distinctness of the 60×52 concrete face-turn nets | OPEN. Too large for kernel `decide`. Not a blocker. |
 | M9 | Abs-G2 L2 mid-block: no 2-card local collision | OPEN (sketch in STONES.md). Informal proof in research `G2_PROOF.md`. Not a blocker. |
 | — | sudo text equals generated Lean (Link 1) | OPEN; the emitter is trusted. The algebraic fold = `Generated.v_Hash` half is proved on `PadWf` (`v_Hash_eq_hashBlocks`). See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). |
 | — | `Generated.v_HashDeck` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, `require_permutation`, `pack_ori2`, `pack_ori3`, length-20 `even_perm_rank_big` (`Rank20Wf`), zero-rank `position_to_bytes` (`PosBytesWf`), zero-byte `big_from_be`, short, two-limb, and 28-byte `big_from_be` (`BePadWf`, length `≤ 28`), `big_factorial` (`n ≤ 51`), `peel_leading` below `limbCap d` for `d ≤ 26`, `peel_leading` for `d ≤ 51` when `n / d! < 10^9` (`peel_leading_51`), arbitrary-width `mag_sub` (`mag_sub_nat`), arbitrary-width `mag_add` / `big_add` (`mag_add_limbs`, `mag_add_nat`, `big_add_nat`), arbitrary-width `big_divmod_small`, wide-by-small `big_mul`, one-limb-times-wide `big_mul` (`big_mul_left_nat`), and 28-byte `phi_chunk` (`PhiChunkWf`, length `≤ 28`) are closed, and so is full `v_Hash` on `PadWf` (`v_Hash_refines`). Still open: `phi_inv` and hence `v_HashDeck` (PR #76 has a `phi_inv` refinement in review). Not collision resistance. |
-| — | Collision resistance of Hash; IV-anchored collision | Not claimed. Free-start `HashDeckBody` is broken; L3 collisions **exist** |
-| — | Ideal-cipher-on-G / PRF of `E_m` | Not claimed |
+| — | Collision resistance of Hash; IV-anchored collision resistance | Not claimed, and **false for v1**: IV-anchored `Hash` collisions are practical (3-card local collisions from swapping two same-rank cards two apart, ≈2^12–2^13 compressions; a concrete pair is kernel-checked, `SwapCollision.v_Hash_swap_collision`, and measured by `security/suit_blind_collision.py`). Free-start `HashDeckBody` is broken; L3 collisions **exist**, and occur at a practical rate in real blocks. Under the v1 grip rule the compression function also has pseudo-collisions (reduction to a squaring collision proved, `dmStep_pseudo_collision`; pairs demonstrated on the real function); see [Security status](#security-status) |
+| — | Ideal-cipher-on-G / PRF of `E_m` | Not claimed. Under the v1 grip rule `E_m` is not an ideal cipher (`emBlock_word`, a 2-query distinguisher) |
 | — | Birthday ≈ 2^113 as a theorem | SPEC honesty only |
 | — | Relative reorient L2-safety | Disproved in research; abs only. Not a Lean target |
 | — | PRESSURE.md attack tables | Evidence / research. Never theorems |
+
+## Security status
+
+Scope: the published MegaDreifach. Its E_m uses the current **Recipe A grip rule**, called "v1 of the grip rule" here (unrelated to the SPEC's "v1 Body" API name). Recipe A re-grips by reading one corner cubie, after the card's held-face, noon and Front turns. Lean files: `lean/MegaDreifach/Security/`. Report, scripts and recorded logs: [`security/REPORT.md`](security/REPORT.md). None of this is a security claim.
+
+| Result | Status | Grip rule |
+| --- | --- | --- |
+| MD reduction: a `v_Hash` collision or second preimage on `PadWf` messages yields a compression (`dmBlock`) collision; the pad is suffix-free (MD strengthening) | Proved (`md_collision`, `pad_suffix_free`, `blocks_suffix_free`, `extract_collision_comp`, `extract_second_preimage_comp`, `v_Hash_collision_comp`, `v_Hash_second_preimage_comp`) | Independent |
+| Digest encoding injective on reachable chaining values (M3 glue) | Proved (`evenRank_inj`, `isLegal_chR`, `isLegal_chainMsg`, `positionToBytes_inj_legal`, `positionToBytes_inj_reachable`). Surjectivity / unrank is open | Independent |
+| Ideal-cipher counting cores (BRS Davies–Meyer) | Proved (`dm_forward_bad_count`, `dm_inverse_bad_count`). The probabilistic bound is on paper only, and it does **not** apply to v1 (E_m is not an ideal cipher) | Independent |
+| E_m is corner-driven: same corners ⇒ same left-multiplying word; the corner chain is its own ≈90.2-bit MD hash and fixes the top ≈90.2 digest bits | Proved (`emBlock_word`, `dmStep_word`, `foldl_dmBlock_sameCorners`, `digest_top_collision`) | **v1 only** (corner-only read) |
+| Pseudo-collisions of the compression function for every block and corner part | Reduction proved: same corners and `(hW)² = (h'W)²` ⇒ equal `dm` outputs (`dmStep_collision_of_sq`, `dmStep_pseudo_collision`). That such pairs exist for every block and corner part is argued on paper (two edge involutions) and demonstrated on the real function (`security/pseudo_collision.py`, 50/50); it is not a Lean theorem | **v1 only** (corner-only read) |
+| **Practical IV-anchored `Hash` collisions.** The Recipe A read comes after the noon turn, so for ≈71.5% of cards the new grip ignores the suit. Swapping two same-rank cards two apart is then a 3-card local collision about once in 2,800 tries (three apart ≈1/16,000; adjacent 0/224,315, so M9 stays open). That is ≈2^12–2^13 compressions per collision | **Measured on the real hash** (`security/suit_blind_collision.py`, per-distance rates with 95% intervals, committed logs; the pre-noon control removes them, see below). One 28-byte pair (digest `0084d6d1…c34e82`) is kernel-checked for the generated `v_Hash` (`SwapCollision.v_Hash_swap_collision`; only 7-card prefixes are evaluated, so it is in the default library) | **v1 only** (read after the noon turn) |
+| **Practical second preimages of long targets**, by the same swaps: found for 65/100 random 1,000-block (28 KB) targets and 30/30 3,000-block targets, ≈2^12–2^12.6 compressions per target; ≈1 vulnerable block in 900. Also a related-key distinguisher of E_m (≈1/2,800 vs ≈2^−226) | **Measured** (same script and logs) | **v1 only** (read after the noon turn) |
+| Preimage, and second preimage of short targets: ≈2^93–2^96 | **Estimate** extrapolated from toy-scale runs (F4); not run at full size | **v1 only** (corner-only read) |
+
+The v1 results come from two separate causes, and a new grip rule should fix both:
+* **the corner-only read** (`CornerDriven.lean`, `FreeStart.lean`; the F4 estimate): the grip must also depend on edges;
+* **the read after the noon turn** (`SwapCollision.lean`, the measured collisions and second preimages): every re-grip must depend on the suit, e.g. by reading right after the held-face turn.
+
+In-tree control (`security/suit_blind_collision.py --variant pre-noon`, log `security/logs/suit_blind_collision_pre_noon.log`; REPORT §3.5): keeping Recipe A and moving only the read to right after the held-face turn removes the swap collisions. On the same 12,000 IV blocks, distance 2 goes from 15/35,175 to 0/35,175 (distances 1–4: 17/139,490 → 0/139,490), and the suit-blind fraction from 0.715 to 0. That an edge-reading rule which still reads after the noon turn keeps the collisions is out-of-tree evidence only (see the report), so "fixing A alone does not fix F5" is expected but not shown here. The rule-independent files, including `StepWord.lean`, which holds the `Em` step lemmas, still need the local repairs listed in the report (§1.5) if E_m changes, mainly `StepWord` and `MDReduction.injPos_chR_from`.
 
 ## Lean packages
 
@@ -124,4 +145,4 @@ Shipped theorems contain no `sorry` and no `native_decide`. Kernel `decide` / `d
 
 ## Reading order
 
-M1 → M2 → M4 → M5 → M7 → M3 (packing) → M6 → M10/M11/M12 → M8 reduction → Link 2 (`Link2.lean`, then `Link2/VHash.lean`). Leave M8 nets and M9 OPEN. `hashBlocks` equals `Generated.v_Hash` only on `PadWf` and only through `v_Hash_eq_hashBlocks`; the sudo → Generated emit is still trusted. Do not promote pressure tables or L3-absence slogans.
+M1 → M2 → M4 → M5 → M7 → M3 (packing) → M6 → M10/M11/M12 → M8 reduction → Link 2 (`Link2.lean`, then `Link2/VHash.lean`) → Security (`Security.lean`; imports follow use: MDGeneric → MDReduction; StepWord (the `Em` step lemmas); MDReduction + StepWord → Parity → DigestInj; MDReduction → IdealCount; the v1 weaknesses MDReduction + StepWord → CornerDriven, CornerDriven + Parity → FreeStart, and SwapCollision on Link 2 alone). Leave M8 nets and M9 OPEN. `hashBlocks` equals `Generated.v_Hash` only on `PadWf` and only through `v_Hash_eq_hashBlocks`; the sudo → Generated emit is still trusted. Do not promote pressure tables or L3-absence slogans.

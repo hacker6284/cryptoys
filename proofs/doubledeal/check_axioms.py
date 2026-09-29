@@ -169,6 +169,126 @@ HEAVY_THEOREMS = {
 # vectors/json_to_lean.py --check checks their statements against the JSON).
 MD_LEAN = ROOT.parent / "megadreifach" / "lean"
 MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"
+
+# Every theorem that proofs/megadreifach/README.md cites by name (backticked), resolved
+# against the default library's sources (structure fields like `cp` / `ep` are not
+# theorem declarations, so they drop out). Rule: a README citation must stay present and
+# pass the axiom audit, so renaming or deleting a cited theorem fails the default gate.
+# `check_axioms.py --selftest` re-derives the list (md_readme_cited) and fails if it
+# differs from this set; update both together when the README changes.
+MD_README_THEOREMS = {
+    "MegaDreifach.Link2.big_add_byte",
+    "MegaDreifach.Link2.big_add_nat",
+    "MegaDreifach.Link2.big_divmod_nat",
+    "MegaDreifach.Link2.big_divmod_small_refines",
+    "MegaDreifach.Link2.big_factorial_51",
+    "MegaDreifach.Link2.big_factorial_acc3",
+    "MegaDreifach.Link2.big_factorial_refines",
+    "MegaDreifach.Link2.big_factorial_three",
+    "MegaDreifach.Link2.big_factorial_two",
+    "MegaDreifach.Link2.big_from_be_byte",
+    "MegaDreifach.Link2.big_from_be_limb2",
+    "MegaDreifach.Link2.big_from_be_limb2_array",
+    "MegaDreifach.Link2.big_from_be_pad",
+    "MegaDreifach.Link2.big_from_be_pad_array",
+    "MegaDreifach.Link2.big_from_be_short",
+    "MegaDreifach.Link2.big_from_be_short_array",
+    "MegaDreifach.Link2.big_from_be_zero_pad",
+    "MegaDreifach.Link2.big_from_be_zeros",
+    "MegaDreifach.Link2.big_from_be_zeros_fromBE",
+    "MegaDreifach.Link2.big_mul_acc3",
+    "MegaDreifach.Link2.big_mul_gen_refines",
+    "MegaDreifach.Link2.big_mul_left_nat",
+    "MegaDreifach.Link2.big_mul_left_refines",
+    "MegaDreifach.Link2.big_mul_nat",
+    "MegaDreifach.Link2.big_mul_nat_gen",
+    "MegaDreifach.Link2.big_mul_one",
+    "MegaDreifach.Link2.big_mul_one_three",
+    "MegaDreifach.Link2.big_mul_three",
+    "MegaDreifach.Link2.big_mul_two",
+    "MegaDreifach.Link2.big_mul_wide_refines",
+    "MegaDreifach.Link2.big_to_be_gen",
+    "MegaDreifach.Link2.body_from_refines",
+    "MegaDreifach.Link2.body_from_refines_full",
+    "MegaDreifach.Link2.chain_loop",
+    "MegaDreifach.Link2.compose_refines",
+    "MegaDreifach.Link2.compose_refines_array",
+    "MegaDreifach.Link2.divmod_cube",
+    "MegaDreifach.Link2.divmod_sq",
+    "MegaDreifach.Link2.dm_step_refines",
+    "MegaDreifach.Link2.em_block_refines",
+    "MegaDreifach.Link2.even_perm_rank_big_refines",
+    "MegaDreifach.Link2.even_perm_rank_big_refines_20",
+    "MegaDreifach.Link2.even_perm_rank_big_refines_array",
+    "MegaDreifach.Link2.even_perm_rank_big_refines_gen",
+    "MegaDreifach.Link2.fromBE_pad_lt_limb8",
+    "MegaDreifach.Link2.mag_add_limbs",
+    "MegaDreifach.Link2.mag_add_nat",
+    "MegaDreifach.Link2.mag_sub_nat",
+    "MegaDreifach.Link2.mag_sub_three_le",
+    "MegaDreifach.Link2.pack_ori2_refines",
+    "MegaDreifach.Link2.pack_ori2_refines_array",
+    "MegaDreifach.Link2.pack_ori3_refines",
+    "MegaDreifach.Link2.pack_ori3_refines_array",
+    "MegaDreifach.Link2.pad_message_refines",
+    "MegaDreifach.Link2.pad_message_refines_array",
+    "MegaDreifach.Link2.pad_z_refines",
+    "MegaDreifach.Link2.peel_leading_51",
+    "MegaDreifach.Link2.peel_leading_below",
+    "MegaDreifach.Link2.peel_leading_below_digit",
+    "MegaDreifach.Link2.peel_leading_cap",
+    "MegaDreifach.Link2.peel_leading_cube",
+    "MegaDreifach.Link2.peel_leading_factorial",
+    "MegaDreifach.Link2.peel_leading_factorial_three",
+    "MegaDreifach.Link2.peel_leading_factorial_two",
+    "MegaDreifach.Link2.peel_leading_limb",
+    "MegaDreifach.Link2.peel_leading_one",
+    "MegaDreifach.Link2.peel_leading_one_digit",
+    "MegaDreifach.Link2.peel_leading_one_three",
+    "MegaDreifach.Link2.peel_leading_one_three_digit",
+    "MegaDreifach.Link2.peel_leading_sq",
+    "MegaDreifach.Link2.peel_leading_zero",
+    "MegaDreifach.Link2.peel_leading_zero_digit",
+    "MegaDreifach.Link2.peel_leading_zero_digit_three",
+    "MegaDreifach.Link2.peel_leading_zero_three",
+    "MegaDreifach.Link2.peel_leading_zero_two",
+    "MegaDreifach.Link2.phiChunkStep_51",
+    "MegaDreifach.Link2.phiChunkStep_lt",
+    "MegaDreifach.Link2.phi_chunk_refines",
+    "MegaDreifach.Link2.phi_chunk_refines_array",
+    "MegaDreifach.Link2.position_to_bytes_refines",
+    "MegaDreifach.Link2.position_to_bytes_refines_array",
+    "MegaDreifach.Link2.position_to_bytes_refines_gen",
+    "MegaDreifach.Link2.require_permutation_refines",
+    "MegaDreifach.Link2.require_permutation_refines_array",
+    "MegaDreifach.Link2.v_HashDeckBody_refines",
+    "MegaDreifach.Link2.v_Hash_eq_hashBlocks",
+    "MegaDreifach.Link2.v_Hash_refines",
+    "MegaDreifach.Link2.v_Hash_refines_array",
+    "MegaDreifach.Link2.v_MegaDreifach_refines",
+    "MegaDreifach.Security.SwapCollision.v_Hash_swap_collision",
+    "MegaDreifach.Security.blocks_suffix_free",
+    "MegaDreifach.Security.digest_top_collision",
+    "MegaDreifach.Security.dmStep_collision_of_sq",
+    "MegaDreifach.Security.dmStep_pseudo_collision",
+    "MegaDreifach.Security.dmStep_word",
+    "MegaDreifach.Security.dm_forward_bad_count",
+    "MegaDreifach.Security.dm_inverse_bad_count",
+    "MegaDreifach.Security.emBlock_word",
+    "MegaDreifach.Security.evenRank_inj",
+    "MegaDreifach.Security.extract_collision_comp",
+    "MegaDreifach.Security.extract_second_preimage_comp",
+    "MegaDreifach.Security.foldl_dmBlock_sameCorners",
+    "MegaDreifach.Security.isLegal_chR",
+    "MegaDreifach.Security.isLegal_chainMsg",
+    "MegaDreifach.Security.md_collision",
+    "MegaDreifach.Security.pad_suffix_free",
+    "MegaDreifach.Security.positionToBytes_inj_legal",
+    "MegaDreifach.Security.positionToBytes_inj_reachable",
+    "MegaDreifach.Security.v_Hash_collision_comp",
+    "MegaDreifach.Security.v_Hash_second_preimage_comp",
+}
+
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
                       "multi_56", "multi_100"]}
@@ -216,18 +336,9 @@ PACKAGES = {
         "key": "full",
         "known_sorry": set(),
         "min": 500,  # sanity: the audit must actually see the library
-        "required": {
-            "MegaDreifach.Link2.v_Hash_refines",
-            "MegaDreifach.Link2.v_Hash_refines_array",
-            "MegaDreifach.Link2.v_MegaDreifach_refines",
-            "MegaDreifach.Link2.v_Hash_eq_hashBlocks",
-            "MegaDreifach.Link2.em_block_refines",
-            "MegaDreifach.Link2.position_to_bytes_refines_gen",
-            "MegaDreifach.Link2.even_perm_rank_big_refines_gen",
-            "MegaDreifach.Link2.big_mul_gen_refines",
-            "MegaDreifach.Link2.phi_chunk_refines",
-            "MegaDreifach.Link2.pad_message_refines",
-        },
+        # Required: every theorem the MegaDreifach README cites (MD_README_THEOREMS; the
+        # selftest re-derives that list from the README and the Lean sources).
+        "required": MD_README_THEOREMS,
     },
     "megadreifach-heavy": {
         "dir": MD_LEAN,
@@ -274,6 +385,53 @@ def heavy_registry_problems(reg):
     if not src:
         bad.append(f"no theorems found in {where} (heavy target missing?)")
     return bad
+
+
+MD_README = MD_LEAN.parent / "README.md"
+_DECL = re.compile(r"^\s*(?:@\[[^\]]*\]\s*)?((?:(?:private|protected|noncomputable)\s+)*)"
+                   r"(?:theorem|lemma)\s+([^\s(:{\[]+)")
+_SCOPE = re.compile(r"^\s*(namespace|section|mutual|end)\b\s*([\w.']*)")
+
+
+def lean_source_theorems(root, skip=("Generated", "MegaDreifachHeavy", ".lake")):
+    """Public theorem names declared under `root`, fully qualified by tracking the
+    namespace / section / mutual / end scopes (comments stripped). No Lean needed."""
+    names = set()
+    for path in sorted(root.rglob("*.lean")):
+        if any(part in skip for part in path.relative_to(root).parts):
+            continue
+        text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
+        stack = []  # entries: list of namespace components ([] for section / mutual)
+        for line in text.splitlines():
+            line = line.split("--", 1)[0]
+            m = _SCOPE.match(line)
+            if m:
+                kind, arg = m.groups()
+                if kind == "namespace":
+                    stack.append(arg.split("."))
+                elif kind in ("section", "mutual"):
+                    stack.append([])
+                elif stack:
+                    stack.pop()
+                continue
+            d = _DECL.match(line)
+            if d and "private" not in d.group(1):
+                names.add(".".join([c for e in stack for c in e] + [d.group(2)]))
+    return names
+
+
+def md_readme_cited(readme=MD_README, root=MD_LEAN):
+    """The README's backticked identifiers that name a theorem of the default library
+    (the token equals the name or a dotted suffix of it; must be unambiguous)."""
+    tokens = set(re.findall(r"`([A-Za-z_][\w.']*)`", readme.read_text()))
+    decls = lean_source_theorems(root)
+    cited, bad = set(), []
+    for t in sorted(tokens):
+        hits = {n for n in decls if n == t or n.endswith("." + t)}
+        if len(hits) > 1:
+            bad.append(f"README token `{t}` is ambiguous: {sorted(hits)}")
+        cited |= hits
+    return cited, bad
 
 
 REPORT = re.compile(r"'(\S+?)' depends on axioms: \[([^\]]*)\]")
@@ -324,6 +482,17 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} key={'full' if full else 'user'} "
               f"{names}: {len(bad)} problem(s), expected {want}")
+    # MD_README_THEOREMS must be exactly the theorems the MegaDreifach README cites.
+    cited, bad = md_readme_cited()
+    for b in bad:
+        print(f"check_axioms selftest: FAIL {b}")
+    missing, extra = sorted(cited - MD_README_THEOREMS), sorted(MD_README_THEOREMS - cited)
+    ok = not bad and not missing and not extra
+    failed += not ok
+    print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} MD_README_THEOREMS matches the "
+          f"{len(cited)} theorems cited in {MD_README.relative_to(ROOT.parent.parent)}"
+          + (f"; cited but not listed: {missing}" if missing else "")
+          + (f"; listed but not cited: {extra}" if extra else ""))
     return 1 if failed else 0
 
 

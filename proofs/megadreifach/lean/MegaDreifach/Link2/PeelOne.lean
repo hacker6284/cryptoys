@@ -555,7 +555,7 @@ private theorem peelDivStep_one (n d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d)
   rw [if_neg hngt]
   have hf0 : 0 < f := by omega
   have hflt : f < limbBase :=
-    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) twentySix_lt_limb
+    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) c26_lt_limb
   have hq : n / factorial (f - 1) < limbBase ^ 3 :=
     Nat.lt_of_le_of_lt (Nat.div_le_self _ _) hn
   rw [show (f : Int) = Int.ofNat f from rfl,

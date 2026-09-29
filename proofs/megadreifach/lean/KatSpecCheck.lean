@@ -3,22 +3,32 @@
   primitives/hash/megadreifach/kats/megaminx_hash_kats.json. Do not hand-edit
   (CI runs the script with --check).
 
-  Second, syntax-independent copy of the KatSpec.lean check, run as a program after
-  `lake build MegaDreifachHeavy`:
+  The binding check of the heavy KAT statements, run as a program after
+  `lake build MegaDreifachHeavy` (CI job megadreifach-heavy):
       lake env lean --run KatSpecCheck.lean
-  It imports only `Lean`, loads MegaDreifachHeavy.Kat with `importModules` and
-  compares the type of each `kat_<name>` constant with an `Expr` built here from
-  constant names, so no syntax, macro or notation declared in Kat.lean (or in
-  anything it imports) takes part: `#guard_expr` in KatSpec.lean is itself
-  syntax that an imported `macro_rules` could rewrite, this is not. Each
-  `kat_<name>` must be a theorem whose type is exactly (`==`)
-    @Eq (Except SudoRt.Trap (Array Int))
-      (Megadreifach.v_Hash (MegaDreifach.Link2.embed (MegaDreifach.hexBytes
-        (MegaDreifach.Vectors.HashVec.msgHex MegaDreifach.Vectors.vec_<name>))))
-      (@Except.ok SudoRt.Trap (Array Int) (MegaDreifach.Link2.embed
-        (MegaDreifach.hexBytes (MegaDreifach.Vectors.HashVec.digestHex
-          MegaDreifach.Vectors.vec_<name>))))
-  Not in any lean_lib (it is a program, not a module of the package).
+  It imports only `Lean` in its header. At run time it loads both roots of the
+  package, `MegaDreifach` and `MegaDreifachHeavy`, with `importModules`. That runs no
+  `[init]` code of the loaded modules: the frontend clears the "execute
+  initializers" flag once this file's own header is imported (`withImporting`).
+  It fails unless
+  1. INIT SCAN: no package module (every loaded module whose .olean is not under
+     the toolchain's lib/lean, i.e. MegaDreifach*, the Generated `sudo` package and
+     `audit`) has a constant carrying an `[init]` or `[builtin_init]` attribute
+     (both the attributes' per-module entries and, per constant, `hasInitAttr` /
+     `isIOUnitInitFn`). Such code would run inside `lean` while later modules
+     (Kat.lean) are compiled and could, e.g., exit 0 early; and
+  2. STATEMENTS: each `kat_<name>` is a theorem whose type is exactly (`==` after
+     stripping metadata) the `Expr` built here from constant names
+       @Eq (Except SudoRt.Trap (Array Int))
+         (Megadreifach.v_Hash (MegaDreifach.Link2.embed (MegaDreifach.hexBytes
+           (MegaDreifach.Vectors.HashVec.msgHex MegaDreifach.Vectors.vec_<name>))))
+         (@Except.ok SudoRt.Trap (Array Int) (MegaDreifach.Link2.embed
+           (MegaDreifach.hexBytes (MegaDreifach.Vectors.HashVec.digestHex
+             MegaDreifach.Vectors.vec_<name>))))
+     so no syntax, shadow, macro or notation declared in Kat.lean (or anything it
+     imports) takes part.
+  Not in any lean_lib (it is a program, not a module of the package). Planted
+  negatives: proofs/megadreifach/vectors/katspec_negatives.py.
 -/
 import Lean
 open Lean
@@ -37,10 +47,52 @@ def katType (n : String) : Expr :=
     (mkApp (mkConst `Megadreifach.v_Hash) (side "msgHex"))
     (mkApp3 (mkConst `Except.ok [levelZero, levelZero]) trap arr (side "digestHex"))
 
+/-- Indices of the loaded modules that are not part of the toolchain (Init / Std / Lean / Lake):
+their .olean is not under `<sysroot>/lib/lean`. -/
+def packageModules (env : Environment) : IO (Array Nat) := do
+  let core ← IO.FS.realPath ((← findSysroot) / "lib" / "lean")
+  let mut out := #[]
+  for i in [0:env.header.moduleNames.size] do
+    let olean ← IO.FS.realPath (← findOLean env.header.moduleNames[i]!)
+    unless olean.toString.startsWith (core.toString ++ "/") do
+      out := out.push i
+  return out
+
+/-- Every constant of a package module that carries `[init]` / `[builtin_init]`. -/
+def initDecls (env : Environment) (mods : Array Nat) : Array String := Id.run do
+  let mut out : Array String := #[]
+  for i in mods do
+    let m := env.header.moduleNames[i]!
+    let mut seen : NameSet := {}
+    for (label, attr) in [("init", regularInitAttr), ("builtin_init", builtinInitAttr)] do
+      for (d, f) in attr.ext.getModuleEntries env i do
+        seen := seen.insert d
+        let arg := if f.isAnonymous then "" else s!" {f}"
+        out := out.push s!"{m}: {d} carries @[{label}{arg}]"
+    for c in env.header.moduleData[i]!.constNames do
+      if !seen.contains c && (hasInitAttr env c || isIOUnitInitFn env c) then
+        out := out.push s!"{m}: {c} carries an init attribute"
+  return out
+
 def main : IO UInt32 := do
   initSearchPath (← findSysroot)
-  let env ← importModules #[{ module := `MegaDreifachHeavy.Kat }] {} 0
+  let env ← importModules #[{ module := `MegaDreifach }, { module := `MegaDreifachHeavy }] {} 0
   let mut bad := 0
+  -- 1. init scan
+  let mods ← packageModules env
+  let names := mods.map (env.header.moduleNames[·]!)
+  for need in [`MegaDreifachHeavy.Kat, `MegaDreifach.Vectors, `MegaDreifach.Hex, `Megadreifach] do
+    unless names.contains need do
+      IO.eprintln s!"KatSpecCheck: FAIL {need} is not among the scanned package modules"
+      bad := bad + 1
+  let nconst := mods.foldl (fun n i => n + env.header.moduleData[i]!.constNames.size) 0
+  let inits := initDecls env mods
+  for s in inits do
+    IO.eprintln s!"KatSpecCheck: FAIL init attribute: {s}"
+  bad := bad + inits.size
+  IO.println s!"KatSpecCheck: init scan: {mods.size} package modules, {nconst} constants, {inits.size} with [init]/[builtin_init]"
+  -- 2. statements
+  let mut stmtBad := 0
   for n in katNames do
     let c := Name.mkStr `MegaDreifach.Link2.Kat ("kat_" ++ n)
     match env.find? c with
@@ -49,8 +101,8 @@ def main : IO UInt32 := do
         IO.println s!"KatSpecCheck: ok {c}"
       else
         IO.eprintln s!"KatSpecCheck: FAIL {c} has type {v.type}, expected {katType n}"
-        bad := bad + 1
-    | some _ => IO.eprintln s!"KatSpecCheck: FAIL {c} is not a theorem"; bad := bad + 1
-    | none => IO.eprintln s!"KatSpecCheck: FAIL {c} is not declared"; bad := bad + 1
-  IO.println s!"KatSpecCheck: {katNames.length - bad}/{katNames.length} KAT statements match"
-  return if bad == 0 then 0 else 1
+        stmtBad := stmtBad + 1
+    | some _ => IO.eprintln s!"KatSpecCheck: FAIL {c} is not a theorem"; stmtBad := stmtBad + 1
+    | none => IO.eprintln s!"KatSpecCheck: FAIL {c} is not declared"; stmtBad := stmtBad + 1
+  IO.println s!"KatSpecCheck: {katNames.length - stmtBad}/{katNames.length} KAT statements match"
+  return if bad + stmtBad == 0 then 0 else 1

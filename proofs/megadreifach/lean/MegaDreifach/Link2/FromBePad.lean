@@ -148,8 +148,8 @@ private theorem bePadStep (bs : List Nat) (h : BePadWf bs) (i : Nat)
     have hmax := (Nat.max_le).mpr ⟨h1, h2⟩
     exact fits_le9 (Nat.succ_le_succ hmax)
   rw [show bigOf [256] = bigOf (natLimbs 256) from by
-    rw [natLimbs_of_pos_lt 256 (by decide) twoFiftySix_lt_limb]]
-  rw [big_mul_nat 256 (oriAcc 256 bs i) twoFiftySix_lt_limb hfitsMul, ok_bind]
+    rw [natLimbs_of_pos_lt 256 (by decide) c256_lt_limb]]
+  rw [big_mul_nat 256 (oriAcc 256 bs i) c256_lt_limb hfitsMul, ok_bind]
   have hat := atL_embed bs i hi
   rw [ofNat_eq_natCast i] at hat
   rw [hat, ok_bind]

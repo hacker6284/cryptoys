@@ -18,7 +18,7 @@ namespace MegaDreifach.Link2
 
 set_option maxHeartbeats 8000000
 
-private theorem fiftyOne_lt_limb : 51 < limbBase := by
+private theorem c51_lt_limb : 51 < limbBase := by
   unfold limbBase
   decide
 
@@ -107,7 +107,7 @@ private theorem peelDiv_hit (n d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d) (hd : 
   rw [if_neg hngt]
   have hf0 : 0 < f := by omega
   have hflt : f < limbBase :=
-    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) fiftyOne_lt_limb
+    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) c51_lt_limb
   have hq : n / factorial (f - 1) < limbBase ^ 9 :=
     Nat.lt_of_le_of_lt (Nat.div_le_self _ _) hn
   rw [show (f : Int) = Int.ofNat f from rfl,

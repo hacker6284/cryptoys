@@ -34,7 +34,7 @@ private theorem fits_cur (r x : Nat) (hr : r < limbBase) (hx : x < limbBase) :
   have hswap : r * limbBase + x = x + limbBase * r := by
     rw [Nat.mul_comm r limbBase, Nat.add_comm]
   rw [hswap]
-  exact Nat.le_trans (Nat.le_of_lt (twoLimb_lt_sq x r hx hr)) fits_sq
+  exact Nat.le_trans (Nat.le_of_lt (limbs2_lt_sq x r hx hr)) fits_sq
 
 private theorem cur_lt_dv (r x dv : Nat) (hr : r < dv) (hx : x < limbBase) (hd0 : 0 < dv) :
     r * limbBase + x < dv * limbBase := by
@@ -103,7 +103,7 @@ private theorem pair_mod (lo hi dv : Nat) (hd0 : 0 < dv) :
 
 private theorem canon_two (qlo qhi : Nat) (hlo : qlo < limbBase) (hhi : qhi < limbBase) :
     dropTrail [qlo, qhi] = limbsOfNat (qlo + limbBase * qhi) := by
-  have hlt := twoLimb_lt_sq qlo qhi hlo hhi
+  have hlt := limbs2_lt_sq qlo qhi hlo hhi
   by_cases h0 : qlo + limbBase * qhi = 0
   · have hqlo : qlo = 0 := (Nat.add_eq_zero_iff.mp h0).1
     have hmul0 : limbBase * qhi = 0 := (Nat.add_eq_zero_iff.mp h0).2

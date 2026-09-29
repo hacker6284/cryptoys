@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""CI gate for the security package: no admit / admitGoal / native_decide / sorryAx / initialize / axiom
-declarations anywhere, and
+"""CI gate for the security package: no admit / admitGoal / native_decide / sorryAx / initialize /
+`[init]` / `[builtin_init]` attributes / axiom declarations anywhere, and
 `sorry` only inside the listed known conjectures (by declaration name).
 
 The allowlist must match exactly: a new sorry fails, and so does a listed
@@ -44,6 +44,25 @@ def strip_block_comments(text: str) -> str:
     return re.sub(r"/-.*?-/", lambda m: "\n" * m.group(0).count("\n"), text, flags=re.S)
 
 
+# `@[init f]` / `@[builtin_init]` / `attribute [init] x` (also inside a list such as
+# `@[simp, init]`, with `local` / `scoped` / `-`): code run when the module is imported,
+# e.g. inside `lean` while a later module is compiled. Same hazard as `initialize`.
+ATTR_BLOCK = re.compile(r"(?:@\[|\battribute\s*\[)([^\]]*)\]")
+INIT_ATTRS = {"init", "builtin_init", "«init»", "«builtin_init»"}
+
+
+def init_attrs(code: str):
+    """(offset, name) of init attributes in the `@[...]` / `attribute [...]` blocks of
+    `code` (comments already removed; a block may span lines)."""
+    for m in ATTR_BLOCK.finditer(code):
+        for item in m.group(1).split(","):
+            words = item.strip().lstrip("-").split()
+            while words and words[0] in ("local", "scoped"):
+                words = words[1:]
+            if words and words[0].lstrip("-") in INIT_ATTRS:
+                yield m.start(), words[0].lstrip("-")
+
+
 def scan(sources, allowed):
     """sources: iterable of (label, text); allowed: declarations that may hold one sorry.
     Returns (bad, found)."""
@@ -55,6 +74,11 @@ def scan(sources, allowed):
         in_where = False
         let_rec_indent = None
         text = strip_block_comments(raw)
+        code_all = "\n".join(re.sub(r"--.*", "", l) for l in text.splitlines())
+        lines = raw.splitlines()
+        for off, name in init_attrs(code_all):
+            i = code_all.count("\n", 0, off) + 1
+            bad.append(f"{path}:{i}: forbidden [{name}] attribute: {lines[i - 1].strip() if i <= len(lines) else ''}")
         for i, line in enumerate(text.splitlines(), 1):
             code = re.sub(r"--.*", "", line)
             m = DECL.match(code)
@@ -126,7 +150,7 @@ def main(roots, exclude, allowed, label) -> int:
         print(*bad, sep="\n", file=sys.stderr)
         return 1
     what = f"sorry only in {sorted(allowed)} (exactly once each)" if allowed else "no sorry"
-    print(f"{label} ({len(files)} files): no admit, admitGoal, native_decide, sorryAx, initialize or "
+    print(f"{label} ({len(files)} files): no admit, admitGoal, native_decide, sorryAx, initialize, [init] or "
           f"axiom declarations; {what}")
     return 0
 
@@ -153,6 +177,13 @@ SELFTEST = [
     ("initialize", f"theorem {C} : P := by\n  sorry\ninitialize IO.println \"loaded module X\"\n", False, "forbidden initialize:"),
     ("builtin_initialize", f"theorem {C} : P := by\n  sorry\nbuiltin_initialize IO.println \"loaded module X\"\n", False, "forbidden builtin_initialize:"),
     ("axiom declaration", f"theorem {C} : P := by\n  sorry\naxiom ax : False\n", False, "axiom declaration"),
+    ("@[init] exit", f"theorem {C} : P := by\n  sorry\n@[init] def evil : IO Unit := IO.Process.exit 0\n", False, "forbidden [init] attribute:"),
+    ("@[init f] ref", f"theorem {C} : P := by\n  sorry\n@[init mkR] opaque r : Nat\n", False, "forbidden [init] attribute:"),
+    ("@[builtin_init]", f"theorem {C} : P := by\n  sorry\n@[builtin_init] def evil : IO Unit := pure ()\n", False, "forbidden [builtin_init] attribute:"),
+    ("init in a list, over two lines", f"theorem {C} : P := by\n  sorry\n@[simp,\n  init] def evil : IO Unit := pure ()\n", False, "forbidden [init] attribute:"),
+    ("attribute [init]", f"theorem {C} : P := by\n  sorry\ndef evil : IO Unit := pure ()\nattribute [init] evil\n", False, "forbidden [init] attribute:"),
+    ("attribute [local init]", f"theorem {C} : P := by\n  sorry\nattribute [local init] evil\n", False, "forbidden [init] attribute:"),
+    ("init-like names are fine", f"theorem {C} : P := by\n  sorry\n@[simp] theorem init_eq : xs.init = ys := rfl\n-- @[init] in a comment\n", True, None),
 ]
 
 

@@ -7,11 +7,11 @@
     kat_<name> : Megadreifach.v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex))
                    = .ok (embed (hexBytes Vectors.vec_<name>.digestHex))
 
-  The generated `KatSpec.lean` (built with this library) pins the ELABORATED type
-  of each `kat_<name>` to the real constants (`#guard_expr … =ₛ …`, every name
-  `_root_`-qualified), and `KatSpecCheck.lean` re-checks it as a program that
-  parses no syntax from this file. A local shadow of `Vectors.vec_*`, `hexBytes`,
-  `embed` or `v_Hash` fails them (planted negatives: vectors/katspec_negatives.py).
+  The generated `KatSpecCheck.lean` (a program run after the heavy build) pins
+  the type of each `kat_<name>` to an `Expr` over the real constants, reading no
+  syntax from this file, and rejects any `[init]` / `[builtin_init]` in the
+  package. A local shadow of `Vectors.vec_*`, `hexBytes`, `embed` or `v_Hash`, or
+  an import-time hook, fails it (planted negatives: vectors/katspec_negatives.py).
 
   Proof: `v_Hash_refines` reduces it to `alg_<name> : vhashAlg msg = digest`,
   kernel-checked (`decide!`; no `native_decide`). One-block KATs are evaluated

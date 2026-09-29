@@ -137,16 +137,13 @@ theorem fits51 : FitsLen 51 := by
 theorem fits_byte {b : Nat} (hb : b ≤ 255) : FitsLen b :=
   FitsLen.of_le fits255 hb
 
-/-! ### `limbBase` arithmetic (limb bounds, base-`10^9` digits, `256 ^ _`, `fromBE`) -/
+/-! ### `limbBase` arithmetic (limb bounds, base-`10^9` digits, `256 ^ _`) -/
 
 theorem limb_div_add_mul (q d : Nat) (hq : q < limbBase) :
     (q + limbBase * d) / limbBase = d := by
   have h := Nat.add_mul_div_right q d limbBase_pos
   rw [Nat.mul_comm d limbBase] at h
   rw [h, Nat.div_eq_of_lt hq, Nat.zero_add]
-
-theorem fromBE_nil : fromBE [] = 0 := by
-  simp [fromBE, mixEncode]
 
 theorem limb_mod_add_mul (q d : Nat) (hq : q < limbBase) :
     (q + limbBase * d) % limbBase = q := by
@@ -169,15 +166,24 @@ theorem limb_prod_lt_sq {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
     decide
   exact Nat.lt_of_le_of_lt hmul hconst
 
-theorem twentySix_lt_limb : 26 < limbBase := by
+theorem limb_sq_fits : limbBase ^ 2 ≤ i64MaxNat := by
+  unfold i64MaxNat limbBase
+  decide
+
+theorem limb_prod_fits {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
+    FitsLen (a * b) := by
+  have hsq : a * b < limbBase ^ 2 := limb_prod_lt_sq ha hb
+  exact Nat.le_trans (Nat.le_of_lt hsq) limb_sq_fits
+
+theorem c26_lt_limb : 26 < limbBase := by
   unfold limbBase
   decide
 
-theorem twoFiftySix_lt_limb : 256 < limbBase := by
+theorem c256_lt_limb : 256 < limbBase := by
   unfold limbBase
   decide
 
-theorem twoLimb_lt_sq (lo hi : Nat) (hlo : lo < limbBase) (hhi : hi < limbBase) :
+theorem limbs2_lt_sq (lo hi : Nat) (hlo : lo < limbBase) (hhi : hi < limbBase) :
     lo + limbBase * hi < limbBase ^ 2 := by
   rw [limbBase_pow2]
   calc
@@ -290,7 +296,10 @@ theorem runLoopOn_two {σ ρ α} (s0 : σ)
   rw [show (2 : Nat) = 1 + 1 from rfl]
   exact runLoopOn_succ s0 1 step after onRet
 
-/-! ### Arrays and lists (`embed`, zero-filled arrays, `push` / `appendL`, `take`) -/
+/-! ### Arrays and lists (`fromBE`, `embed`, zero-filled arrays, `push` / `appendL`, `take`) -/
+
+theorem fromBE_nil : fromBE [] = 0 := by
+  simp [fromBE, mixEncode]
 
 theorem push_embed (xs : List Nat) (b : Nat) :
     (embed xs).push (Int.ofNat b) = embed (xs ++ [b]) := by

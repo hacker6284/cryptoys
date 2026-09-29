@@ -649,7 +649,7 @@ private theorem factMul_le26 (i : Nat) (hlo : 2 ≤ i) (hhi : i ≤ 26) :
     Megadreifach.big_mul (bigNat (factorial (i - 1))) (bigNat i) =
       .ok (bigNat (factorial i)) := by
   have hiPos : 0 < i := by omega
-  have hilt : i < limbBase := Nat.lt_of_le_of_lt hhi twentySix_lt_limb
+  have hilt : i < limbBase := Nat.lt_of_le_of_lt hhi c26_lt_limb
   by_cases h20 : i ≤ 20
   · by_cases heq : i = 20
     · subst heq
@@ -692,7 +692,7 @@ private theorem factStep_le26 (n i : Nat) (hlo : 2 ≤ i) (hhi : i ≤ n) (hn : 
   have hngt : ¬ (i : Int) > (n : Int) := ofNat_not_gt hhi
   rw [if_neg hngt]
   have hi0 : i ≠ 0 := by omega
-  have hilt : i < limbBase := Nat.lt_of_le_of_lt (Nat.le_trans hhi hn) twentySix_lt_limb
+  have hilt : i < limbBase := Nat.lt_of_le_of_lt (Nat.le_trans hhi hn) c26_lt_limb
   have hfits : FitsLen i := FitsLen.of_le fits26 (Nat.le_trans hhi hn)
   rw [show (i : Int) = Int.ofNat i from rfl, big_from_int_refines i hfits, ok_bind]
   have hlimbs : limbsOfNat i = [i] := by

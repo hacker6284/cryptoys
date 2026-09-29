@@ -206,10 +206,6 @@ theorem three_pow19_fits : FitsLen (3 ^ 19) := by
   unfold FitsLen i64MaxNat
   decide
 
-theorem limb_sq_fits : limbBase ^ 2 ≤ i64MaxNat := by
-  unfold i64MaxNat limbBase
-  decide
-
 theorem fits_lt_pow2_29 {n : Nat} (h : n ≤ 2 ^ 29) : FitsLen n :=
   FitsLen.of_le two_pow29_fits h
 
@@ -369,11 +365,6 @@ private theorem embed_set_high (lo hi : Nat) :
     (embed [lo, 0]).set ⟨1, by simp [size_embed]⟩ (Int.ofNat hi) = embed [lo, hi] := by
   apply Array.ext'
   simp [embed, Array.toList_set, List.set]
-
-theorem limb_prod_fits {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
-    FitsLen (a * b) := by
-  have hsq : a * b < limbBase ^ 2 := limb_prod_lt_sq ha hb
-  exact Nat.le_trans (Nat.le_of_lt hsq) limb_sq_fits
 
 private theorem fuel_point (n : Int) :
     (if n > n then (1 : Nat) else (n - n).natAbs + 1) = 1 := by

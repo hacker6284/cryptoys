@@ -227,7 +227,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: No sorry / admit / native_decide (shared gate)
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach/lean --exclude Generated
-      - name: Vectors.lean and MegaDreifachHeavy/KatSpec.lean match the published KAT JSON; Kat.lean statement lint
+      - name: Vectors.lean and KatSpecCheck.lean match the published KAT JSON; Kat.lean statement lint
         run: python3 proofs/megadreifach/vectors/json_to_lean.py --check
       - name: Axiom gate keying rules (private/public collisions fail under key "full")
         run: python3 proofs/doubledeal/check_axioms.py --selftest
@@ -237,9 +237,10 @@ jobs:
       - name: Known-answer metadata (compiled Lean)
         working-directory: proofs/megadreifach/lean
         run: lake exe megadreifach
-      # KatSpec.lean (generated) pins the elaborated type of every heavy kat_<name>. Its
-      # planted negatives run on a stubbed copy of Kat.lean (no KAT kernel evaluation):
-      - name: KatSpec guard catches planted shadows (vec_*, hexBytes, v_Hash; Kat.lean / Hex.lean)
+      # KatSpecCheck.lean (generated) pins the type of every heavy kat_<name> and rejects
+      # [init] hooks. Its planted negatives run on a stubbed copy of Kat.lean (no KAT
+      # kernel evaluation):
+      - name: KatSpecCheck catches planted shadows and [init] hooks (vec_*, hexBytes, v_Hash, macro_rules, @[init] exit 0)
         run: python3 proofs/megadreifach/vectors/katspec_negatives.py
       # The heavy library MegaDreifachHeavy (8 KAT kernel witnesses) is not built
       # here; it is built and audited by megadreifach-heavy in proofs-heavy.yml.

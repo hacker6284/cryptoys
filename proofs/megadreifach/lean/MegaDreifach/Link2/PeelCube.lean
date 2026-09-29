@@ -41,7 +41,7 @@ private theorem fits_cur (r x : Nat) (hr : r < limbBase) (hx : x < limbBase) :
   have hswap : r * limbBase + x = x + limbBase * r := by
     rw [Nat.mul_comm r limbBase, Nat.add_comm]
   rw [hswap]
-  exact Nat.le_trans (Nat.le_of_lt (twoLimb_lt_sq x r hx hr)) fits_sq
+  exact Nat.le_trans (Nat.le_of_lt (limbs2_lt_sq x r hx hr)) fits_sq
 
 private theorem cur_lt_dv (r x dv : Nat) (hr : r < dv) (hx : x < limbBase) (hd0 : 0 < dv) :
     r * limbBase + x < dv * limbBase := by
@@ -716,10 +716,6 @@ private theorem factorial_20_ge : limbBase ^ 2 ≤ factorial 20 := by
   unfold factorial limbBase
   decide
 
-private theorem twenty_six_lt_limb : 26 < limbBase := by
-  unfold limbBase
-  decide
-
 private theorem factorial_ge_pow2 (n : Nat) (hn : 20 ≤ n) : limbBase ^ 2 ≤ factorial n :=
   Nat.le_trans factorial_20_ge (factorial_mono 20 n hn)
 
@@ -741,7 +737,7 @@ private theorem peelDivStep_fact3 (d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d)
   rw [if_neg hngt]
   have hf0 : 0 < f := by omega
   have hflt : f < limbBase :=
-    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) twenty_six_lt_limb
+    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) c26_lt_limb
   have hq : factorial d / factorial (f - 1) < limbBase ^ 3 :=
     Nat.lt_of_le_of_lt (Nat.div_le_self _ _) (factorial_lt_cube d hd)
   rw [show (f : Int) = Int.ofNat f from rfl,

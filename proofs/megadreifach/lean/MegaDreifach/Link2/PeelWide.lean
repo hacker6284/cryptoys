@@ -377,7 +377,7 @@ private theorem big_mul_q3_limbs (q lo mid hi : Nat)
         have h := hnamed
         rw [hc2, hz] at h
         simpa [Nat.mul_zero, Nat.add_zero] using h
-      have hlt : d0 + limbBase * d1 < limbBase ^ 2 := twoLimb_lt_sq d0 d1 hd0 hd1
+      have hlt : d0 + limbBase * d1 < limbBase ^ 2 := limbs2_lt_sq d0 d1 hd0 hd1
       have hge := hpge
       rw [hpack] at hge
       exact absurd hge (Nat.not_le_of_lt hlt)
@@ -724,7 +724,7 @@ private theorem peelDivStep_cube (n d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d)
   rw [if_neg hngt]
   have hf0 : 0 < f := by omega
   have hflt : f < limbBase :=
-    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) twentySix_lt_limb
+    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) c26_lt_limb
   have hq : n / factorial (f - 1) < limbBase ^ 3 :=
     Nat.lt_of_le_of_lt (Nat.div_le_self _ _) hn
   rw [show (f : Int) = Int.ofNat f from rfl,
@@ -764,7 +764,7 @@ private theorem peelDivStep_sq (n d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d)
   have hflt : f < limbBase :=
     Nat.lt_of_le_of_lt
       (Nat.le_trans hhi (Nat.le_trans hd (by decide : (19 : Nat) ≤ 26)))
-      twentySix_lt_limb
+      c26_lt_limb
   have hq : n / factorial (f - 1) < limbBase ^ 2 :=
     Nat.lt_of_le_of_lt (Nat.div_le_self _ _) hn
   rw [show (f : Int) = Int.ofNat f from rfl,

@@ -13,7 +13,7 @@ import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
-private theorem fiftyOne_lt_limb : 51 < limbBase := by
+private theorem c51_lt_limb : 51 < limbBase := by
   unfold limbBase
   decide
 
@@ -72,7 +72,7 @@ private theorem factMul51 (i : Nat) (hlo : 2 ≤ i) (hhi : i ≤ 51) :
         (bigOf (natLimbs i)) =
       .ok (bigOf (natLimbs (factorial i))) := by
   have hi0 : 0 < i := by omega
-  have hilt : i < limbBase := Nat.lt_of_le_of_lt hhi fiftyOne_lt_limb
+  have hilt : i < limbBase := Nat.lt_of_le_of_lt hhi c51_lt_limb
   have hpred : i - 1 ≤ 51 := by omega
   have hmul := big_mul_nat i (factorial (i - 1)) hilt (fits_fact_limbs (i - 1) hpred)
   rw [Nat.mul_comm, factorial_pred_mul i hi0] at hmul
@@ -91,7 +91,7 @@ private theorem factStep51_hit (n i : Nat) (hlo : 2 ≤ i) (hhi : i ≤ n) (hn :
   have hi0 : i ≠ 0 := by omega
   have hiPos : 0 < i := by omega
   have hilt : i < limbBase :=
-    Nat.lt_of_le_of_lt (Nat.le_trans hhi hn) fiftyOne_lt_limb
+    Nat.lt_of_le_of_lt (Nat.le_trans hhi hn) c51_lt_limb
   have hfits : FitsLen i := FitsLen.of_le fits51 (Nat.le_trans hhi hn)
   rw [show (i : Int) = Int.ofNat i from rfl, big_from_int_refines i hfits, ok_bind]
   have hlimbs : limbsOfNat i = natLimbs i := by

@@ -1,5 +1,7 @@
 # MegaDreifach hash: security review (reductions, proofs and cryptanalysis)
 
+> **Status update.** Everything in this report is about **MegaDreifach v1**, which is now **deprecated** and frozen at `primitives/hash/megadreifach/v1/` (SPEC + `megadreifach.sudo`). "As published" and "current" below mean v1 as it was when this report was written. The current version is v2 (`primitives/hash/megadreifach/SPEC.md`), which this report does not analyse. `md.py` and `tables.py` model v1 and read the v1 KAT file, which is unchanged.
+
 Subject: MegaDreifach as published (`primitives/hash/megadreifach/`). Its block map E_m uses the **current Recipe A grip rule**, called "v1 of the grip rule" (or just "v1") below. Recipe A re-grips by reading one corner cubie, after the card's held-face, noon and Front turns. ("v1" here names the grip rule only; it is unrelated to the SPEC's "v1 Body" API name.)
 Lean package: `proofs/megadreifach/lean`, Lean v4.14.0. The Lean files are in `proofs/megadreifach/lean/MegaDreifach/Security/`; the scripts are in this directory (`proofs/megadreifach/security/`), and their recorded outputs are in `logs/` (§7).
 **Note: this package has no Mathlib. It is core Lean plus the repo's `audit` package.** Every proof below uses core Lean only.
@@ -247,7 +249,7 @@ In that run too, all hits are real blocks, and several are at the IV.
 * So ≈ 2^12–2^13 compressions, a few seconds of single-core Python per collision.
 * Blocks with at least one colliding swap (distances 1–6): 57/40,000 = 1/702.
 
-**The verified pair.** It is the first hit of the review's original seed-99 search. Its deals differ by swapping cards 5 and 7 (Q♥ and Q♠, whose held face is Down):
+**The verified pair.** It is the first hit of the review's original seed-99 search. Its deals differ by swapping cards 5 and 7 (ids 46 and 47: Q♠ and Q♦ with suits named in CHaSeD order, id % 4 = 0 ♣, 1 ♥, 2 ♠, 3 ♦; their held face is Down):
 ```
 M  = e132ebb03ed19b3949820c68d22d8b5004867c3c0ea79f44269e19fb
 M' = e132ebd9724a3c582fca2e7f51a1a34dd82b8afcfcf71344269e19fb

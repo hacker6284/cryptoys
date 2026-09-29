@@ -12,7 +12,7 @@
   evaluated here, only the equality).
 
   Mechanism (`security/suit_blind_collision.py`, REPORT §3): φ maps M and M'
-  to deals that differ only by swapping cards 5 and 7, Q♥ and Q♠ (same rank,
+  to deals that differ only by swapping cards 5 and 7, Q♠ and Q♦ (same rank,
   so the same held face).  In v1 the Recipe A read comes after the noon turn,
   so here the grips after cards 5, 6, 7 do not depend on which queen comes
   first, and the held-face turns commute with card 6's turns: after card 7 the
@@ -43,7 +43,7 @@ open MegaDreifach MegaDreifach.Link2
 def msgA : List Nat := hexBytes "e132ebb03ed19b3949820c68d22d8b5004867c3c0ea79f44269e19fb"
 def msgB : List Nat := hexBytes "e132ebd9724a3c582fca2e7f51a1a34dd82b8afcfcf71344269e19fb"
 
-/-- First 7 cards of the two deals (cards 5 and 7 swapped: 46 = Q♥, 47 = Q♠). -/
+/-- First 7 cards of the two deals (cards 5 and 7 swapped: 46 = Q♠, 47 = Q♦). -/
 def preA : List Nat := [15, 14, 40, 44, 46, 3, 47]
 def preB : List Nat := [15, 14, 40, 44, 47, 3, 46]
 /-- The common last 45 cards. -/

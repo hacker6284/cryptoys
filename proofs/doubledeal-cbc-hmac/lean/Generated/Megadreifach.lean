@@ -54,7 +54,7 @@ def digest_len : Int := (29 : Int)
 
 def body_len : Int := (52 : Int)
 
-def f3_t : Int := (12 : Int)
+def f3_t : Int := (36 : Int)
 
 def held_up : Int := (0 : Int)
 
@@ -189,6 +189,12 @@ def ft_ep_11 : Array (Int) := (#[(0 : Int), (1 : Int), (2 : Int), (3 : Int), (4 
 def ft_eo_11 : Array (Int) := (#[(0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int), (0 : Int)] : Array (Int))
 
 def rots_flat : Array (Int) := (#[(0 : Int), (1 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int), (9 : Int), (10 : Int), (11 : Int), (0 : Int), (2 : Int), (3 : Int), (4 : Int), (5 : Int), (1 : Int), (7 : Int), (8 : Int), (9 : Int), (10 : Int), (6 : Int), (11 : Int), (0 : Int), (3 : Int), (4 : Int), (5 : Int), (1 : Int), (2 : Int), (8 : Int), (9 : Int), (10 : Int), (6 : Int), (7 : Int), (11 : Int), (0 : Int), (4 : Int), (5 : Int), (1 : Int), (2 : Int), (3 : Int), (9 : Int), (10 : Int), (6 : Int), (7 : Int), (8 : Int), (11 : Int), (0 : Int), (5 : Int), (1 : Int), (2 : Int), (3 : Int), (4 : Int), (10 : Int), (6 : Int), (7 : Int), (8 : Int), (9 : Int), (11 : Int), (1 : Int), (0 : Int), (5 : Int), (6 : Int), (7 : Int), (2 : Int), (3 : Int), (4 : Int), (10 : Int), (11 : Int), (8 : Int), (9 : Int), (1 : Int), (5 : Int), (6 : Int), (7 : Int), (2 : Int), (0 : Int), (4 : Int), (10 : Int), (11 : Int), (8 : Int), (3 : Int), (9 : Int), (1 : Int), (6 : Int), (7 : Int), (2 : Int), (0 : Int), (5 : Int), (10 : Int), (11 : Int), (8 : Int), (3 : Int), (4 : Int), (9 : Int), (1 : Int), (7 : Int), (2 : Int), (0 : Int), (5 : Int), (6 : Int), (11 : Int), (8 : Int), (3 : Int), (4 : Int), (10 : Int), (9 : Int), (1 : Int), (2 : Int), (0 : Int), (5 : Int), (6 : Int), (7 : Int), (8 : Int), (3 : Int), (4 : Int), (10 : Int), (11 : Int), (9 : Int), (2 : Int), (0 : Int), (1 : Int), (7 : Int), (8 : Int), (3 : Int), (4 : Int), (5 : Int), (6 : Int), (11 : Int), (9 : Int), (10 : Int), (2 : Int), (1 : Int), (7 : Int), (8 : Int), (3 : Int), (0 : Int), (5 : Int), (6 : Int), (11 : Int), (9 : Int), (4 : Int), (10 : Int), (2 : Int), (7 : Int), (8 : Int), (3 : Int), (0 : Int), (1 : Int), (6 : Int), (11 : Int), (9 : Int), (4 : Int), (5 : Int), (10 : Int), (2 : Int), (8 : Int), (3 : Int), (0 : Int), (1 : Int), (7 : Int), (11 : Int), (9 : Int), (4 : Int), (5 : Int), (6 : Int), (10 : Int), (2 : Int), (3 : Int), (0 : Int), (1 : Int), (7 : Int), (8 : Int), (9 : Int), (4 : Int), (5 : Int), (6 : Int), (11 : Int), (10 : Int), (3 : Int), (0 : Int), (2 : Int), (8 : Int), (9 : Int), (4 : Int), (5 : Int), (1 : Int), (7 : Int), (11 : Int), (10 : Int), (6 : Int), (3 : Int), (2 : Int), (8 : Int), (9 : Int), (4 : Int), (0 : Int), (1 : Int), (7 : Int), (11 : Int), (10 : Int), (5 : Int), (6 : Int), (3 : Int), (8 : Int), (9 : Int), (4 : Int), (0 : Int), (2 : Int), (7 : Int), (11 : Int), (10 : Int), (5 : Int), (1 : Int), (6 : Int), (3 : Int), (9 : Int), (4 : Int), (0 : Int), (2 : Int), (8 : Int), (11 : Int), (10 : Int), (5 : Int), (1 : Int), (7 : Int), (6 : Int), (3 : Int), (4 : Int), (0 : Int), (2 : Int), (8 : Int), (9 : Int), (10 : Int), (5 : Int), (1 : Int), (7 : Int), (11 : Int), (6 : Int), (4 : Int), (0 : Int), (3 : Int), (9 : Int), (10 : Int), (5 : Int), (1 : Int), (2 : Int), (8 : Int), (11 : Int), (6 : Int), (7 : Int), (4 : Int), (3 : Int), (9 : Int), (10 : Int), (5 : Int), (0 : Int), (2 : Int), (8 : Int), (11 : Int), (6 : Int), (1 : Int), (7 : Int), (4 : Int), (9 : Int), (10 : Int), (5 : Int), (0 : Int), (3 : Int), (8 : Int), (11 : Int), (6 : Int), (1 : Int), (2 : Int), (7 : Int), (4 : Int), (10 : Int), (5 : Int), (0 : Int), (3 : Int), (9 : Int), (11 : Int), (6 : Int), (1 : Int), (2 : Int), (8 : Int), (7 : Int), (4 : Int), (5 : Int), (0 : Int), (3 : Int), (9 : Int), (10 : Int), (6 : Int), (1 : Int), (2 : Int), (8 : Int), (11 : Int), (7 : Int), (5 : Int), (0 : Int), (4 : Int), (10 : Int), (6 : Int), (1 : Int), (2 : Int), (3 : Int), (9 : Int), (11 : Int), (7 : Int), (8 : Int), (5 : Int), (4 : Int), (10 : Int), (6 : Int), (1 : Int), (0 : Int), (3 : Int), (9 : Int), (11 : Int), (7 : Int), (2 : Int), (8 : Int), (5 : Int), (10 : Int), (6 : Int), (1 : Int), (0 : Int), (4 : Int), (9 : Int), (11 : Int), (7 : Int), (2 : Int), (3 : Int), (8 : Int), (5 : Int), (6 : Int), (1 : Int), (0 : Int), (4 : Int), (10 : Int), (11 : Int), (7 : Int), (2 : Int), (3 : Int), (9 : Int), (8 : Int), (5 : Int), (1 : Int), (0 : Int), (4 : Int), (10 : Int), (6 : Int), (7 : Int), (2 : Int), (3 : Int), (9 : Int), (11 : Int), (8 : Int), (6 : Int), (1 : Int), (5 : Int), (10 : Int), (11 : Int), (7 : Int), (2 : Int), (0 : Int), (4 : Int), (9 : Int), (8 : Int), (3 : Int), (6 : Int), (5 : Int), (10 : Int), (11 : Int), (7 : Int), (1 : Int), (0 : Int), (4 : Int), (9 : Int), (8 : Int), (2 : Int), (3 : Int), (6 : Int), (10 : Int), (11 : Int), (7 : Int), (1 : Int), (5 : Int), (4 : Int), (9 : Int), (8 : Int), (2 : Int), (0 : Int), (3 : Int), (6 : Int), (11 : Int), (7 : Int), (1 : Int), (5 : Int), (10 : Int), (9 : Int), (8 : Int), (2 : Int), (0 : Int), (4 : Int), (3 : Int), (6 : Int), (7 : Int), (1 : Int), (5 : Int), (10 : Int), (11 : Int), (8 : Int), (2 : Int), (0 : Int), (4 : Int), (9 : Int), (3 : Int), (7 : Int), (1 : Int), (6 : Int), (11 : Int), (8 : Int), (2 : Int), (0 : Int), (5 : Int), (10 : Int), (9 : Int), (3 : Int), (4 : Int), (7 : Int), (6 : Int), (11 : Int), (8 : Int), (2 : Int), (1 : Int), (5 : Int), (10 : Int), (9 : Int), (3 : Int), (0 : Int), (4 : Int), (7 : Int), (11 : Int), (8 : Int), (2 : Int), (1 : Int), (6 : Int), (10 : Int), (9 : Int), (3 : Int), (0 : Int), (5 : Int), (4 : Int), (7 : Int), (8 : Int), (2 : Int), (1 : Int), (6 : Int), (11 : Int), (9 : Int), (3 : Int), (0 : Int), (5 : Int), (10 : Int), (4 : Int), (7 : Int), (2 : Int), (1 : Int), (6 : Int), (11 : Int), (8 : Int), (3 : Int), (0 : Int), (5 : Int), (10 : Int), (9 : Int), (4 : Int), (8 : Int), (2 : Int), (7 : Int), (11 : Int), (9 : Int), (3 : Int), (0 : Int), (1 : Int), (6 : Int), (10 : Int), (4 : Int), (5 : Int), (8 : Int), (7 : Int), (11 : Int), (9 : Int), (3 : Int), (2 : Int), (1 : Int), (6 : Int), (10 : Int), (4 : Int), (0 : Int), (5 : Int), (8 : Int), (11 : Int), (9 : Int), (3 : Int), (2 : Int), (7 : Int), (6 : Int), (10 : Int), (4 : Int), (0 : Int), (1 : Int), (5 : Int), (8 : Int), (9 : Int), (3 : Int), (2 : Int), (7 : Int), (11 : Int), (10 : Int), (4 : Int), (0 : Int), (1 : Int), (6 : Int), (5 : Int), (8 : Int), (3 : Int), (2 : Int), (7 : Int), (11 : Int), (9 : Int), (4 : Int), (0 : Int), (1 : Int), (6 : Int), (10 : Int), (5 : Int), (9 : Int), (3 : Int), (8 : Int), (11 : Int), (10 : Int), (4 : Int), (0 : Int), (2 : Int), (7 : Int), (6 : Int), (5 : Int), (1 : Int), (9 : Int), (8 : Int), (11 : Int), (10 : Int), (4 : Int), (3 : Int), (2 : Int), (7 : Int), (6 : Int), (5 : Int), (0 : Int), (1 : Int), (9 : Int), (11 : Int), (10 : Int), (4 : Int), (3 : Int), (8 : Int), (7 : Int), (6 : Int), (5 : Int), (0 : Int), (2 : Int), (1 : Int), (9 : Int), (10 : Int), (4 : Int), (3 : Int), (8 : Int), (11 : Int), (6 : Int), (5 : Int), (0 : Int), (2 : Int), (7 : Int), (1 : Int), (9 : Int), (4 : Int), (3 : Int), (8 : Int), (11 : Int), (10 : Int), (5 : Int), (0 : Int), (2 : Int), (7 : Int), (6 : Int), (1 : Int), (10 : Int), (4 : Int), (9 : Int), (11 : Int), (6 : Int), (5 : Int), (0 : Int), (3 : Int), (8 : Int), (7 : Int), (1 : Int), (2 : Int), (10 : Int), (9 : Int), (11 : Int), (6 : Int), (5 : Int), (4 : Int), (3 : Int), (8 : Int), (7 : Int), (1 : Int), (0 : Int), (2 : Int), (10 : Int), (11 : Int), (6 : Int), (5 : Int), (4 : Int), (9 : Int), (8 : Int), (7 : Int), (1 : Int), (0 : Int), (3 : Int), (2 : Int), (10 : Int), (6 : Int), (5 : Int), (4 : Int), (9 : Int), (11 : Int), (7 : Int), (1 : Int), (0 : Int), (3 : Int), (8 : Int), (2 : Int), (10 : Int), (5 : Int), (4 : Int), (9 : Int), (11 : Int), (6 : Int), (1 : Int), (0 : Int), (3 : Int), (8 : Int), (7 : Int), (2 : Int), (11 : Int), (6 : Int), (10 : Int), (9 : Int), (8 : Int), (7 : Int), (1 : Int), (5 : Int), (4 : Int), (3 : Int), (2 : Int), (0 : Int), (11 : Int), (10 : Int), (9 : Int), (8 : Int), (7 : Int), (6 : Int), (5 : Int), (4 : Int), (3 : Int), (2 : Int), (1 : Int), (0 : Int), (11 : Int), (9 : Int), (8 : Int), (7 : Int), (6 : Int), (10 : Int), (4 : Int), (3 : Int), (2 : Int), (1 : Int), (5 : Int), (0 : Int), (11 : Int), (8 : Int), (7 : Int), (6 : Int), (10 : Int), (9 : Int), (3 : Int), (2 : Int), (1 : Int), (5 : Int), (4 : Int), (0 : Int), (11 : Int), (7 : Int), (6 : Int), (10 : Int), (9 : Int), (8 : Int), (2 : Int), (1 : Int), (5 : Int), (4 : Int), (3 : Int), (0 : Int)] : Array (Int))
+
+def held_down : Int := (11 : Int)
+
+def lower_ring_first : Int := (6 : Int)
+
+def edge_faces_flat : Array (Int) := (#[(0 : Int), (1 : Int), (0 : Int), (2 : Int), (0 : Int), (3 : Int), (0 : Int), (4 : Int), (0 : Int), (5 : Int), (1 : Int), (5 : Int), (1 : Int), (6 : Int), (1 : Int), (7 : Int), (1 : Int), (2 : Int), (2 : Int), (7 : Int), (2 : Int), (8 : Int), (2 : Int), (3 : Int), (3 : Int), (8 : Int), (3 : Int), (9 : Int), (3 : Int), (4 : Int), (4 : Int), (9 : Int), (4 : Int), (10 : Int), (4 : Int), (5 : Int), (5 : Int), (10 : Int), (5 : Int), (6 : Int), (6 : Int), (10 : Int), (6 : Int), (11 : Int), (6 : Int), (7 : Int), (7 : Int), (11 : Int), (7 : Int), (8 : Int), (8 : Int), (11 : Int), (8 : Int), (9 : Int), (9 : Int), (11 : Int), (9 : Int), (10 : Int), (10 : Int), (11 : Int)] : Array (Int))
 
 def face_nbrs (f : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
@@ -2379,128 +2385,30 @@ def position_to_bytes (p : Position) : Except SudoRt.Trap (Array (Int)) :=
     let _t650 ← big_to_be n digest_len
     pure _t650
 
-def noon_phys (phys : Int) (o : Array (Int)) : Except SudoRt.Trap (Int) :=
-  do
-    let _t651 ← SudoRt.atL o held_up
-    let up := _t651
-    let _t652 ← SudoRt.atL o held_front
-    let front := _t652
-    if (SudoRt.SEq.beq phys up) then
-      do
-        pure front
-    else
-      do
-        let _t654 ← face_nbrs phys
-        let nbrs := _t654
-        let _fromV := (0 : Int)
-        let _toV := (4 : Int)
-        let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init668 := _fromV
-        let _out ← (SudoRt.runLoopOn (ρ := Int) _init668 fuel (fun σ =>
-    let i := σ
-    do
-      if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := Int) i)
-      else
-        match ← ((do
-  let _t656 ← SudoRt.atL nbrs i
-  if (SudoRt.SEq.beq _t656 up) then
-    do
-      pure (SudoRt.Flow.ret (ρ := Int) up)
-  else
-    do
-      pure (SudoRt.Flow.cont (ρ := Int) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) i)
-        | .cont _fs => do
-            if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := Int) i)
-            else do
-              let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
-    do
-      let _t658 ← face_nbrs up
-      let upn := _t658
-      let _fromV := (0 : Int)
-      let _toV := (4 : Int)
-      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init667 := _fromV
-      let _out ← (SudoRt.runLoopOn (ρ := Int) _init667 fuel (fun σ =>
-    let i := σ
-    do
-      if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := Int) i)
-      else
-        match ← ((do
-  let _fromV := (0 : Int)
-  let _toV := (4 : Int)
-  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init665 := _fromV
-  let _out ← (SudoRt.runLoopOn (ρ := Int) _init665 fuel (fun σ =>
-    let j := σ
-    do
-      if j > _toV then
-        pure (SudoRt.Flow.brk (ρ := Int) j)
-      else
-        match ← ((do
-  let _t661 ← SudoRt.atL nbrs i
-  let _t662 ← SudoRt.atL upn j
-  if (SudoRt.SEq.beq _t661 _t662) then
-    do
-      let _t664 ← SudoRt.atL nbrs i
-      pure (SudoRt.Flow.ret (ρ := Int) _t664)
-  else
-    do
-      pure (SudoRt.Flow.cont (ρ := Int) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) j)
-        | .cont _fs => do
-            if j == _toV then
-              pure (SudoRt.Flow.brk (ρ := Int) j)
-            else do
-              let i' ← SudoRt.addI j (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
-    do
-      pure (SudoRt.Flow.cont (ρ := Int) ())) (fun r => pure (SudoRt.Flow.ret (ρ := Int) r)))
-  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) i)
-        | .cont _fs => do
-            if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := Int) i)
-            else do
-              let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
-    do
-      let _t666 ← SudoRt.atL nbrs (0 : Int)
-      pure _t666) (fun r => pure r))
-      pure _out) (fun r => pure r))
-        pure _out
-
 def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t670 ← SudoRt.modI k (5 : Int)
-    let k := _t670
+    let _t652 ← SudoRt.modI k (5 : Int)
+    let k := _t652
     if (SudoRt.SEq.beq k (0 : Int)) then
       do
         pure o
     else
       do
-        let _t672 ← SudoRt.atL o held_up
-        let up := _t672
-        let _t673 ← SudoRt.atL opposites up
-        let down := _t673
-        let _t674 ← face_nbrs up
-        let nbrs := _t674
-        let _t675 ← face_nbrs down
-        let dnbrs := _t675
-        let _t676 ← range_list (12 : Int)
-        let phys := _t676
+        let _t654 ← SudoRt.atL o held_up
+        let up := _t654
+        let _t655 ← SudoRt.atL opposites up
+        let down := _t655
+        let _t656 ← face_nbrs up
+        let nbrs := _t656
+        let _t657 ← face_nbrs down
+        let dnbrs := _t657
+        let _t658 ← range_list (12 : Int)
+        let phys := _t658
         let _fromV := (0 : Int)
         let _toV := (4 : Int)
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init704 := (_fromV, phys)
-        let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init704 fuel (fun σ =>
+        let _init686 := (_fromV, phys)
+        let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init686 fuel (fun σ =>
     let i := σ.1
     let phys := σ.2
     do
@@ -2508,13 +2416,13 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, phys))
       else
         match ← ((do
-  let _t678 ← SudoRt.atL nbrs i
-  let _ix679 := _t678
-  let _t680 ← SudoRt.addI i k
-  let _t681 ← SudoRt.modI _t680 (5 : Int)
-  let _t682 ← SudoRt.atL nbrs _t681
-  let _t683 ← SudoRt.putL phys _ix679 _t682
-  let phys := _t683
+  let _t660 ← SudoRt.atL nbrs i
+  let _ix661 := _t660
+  let _t662 ← SudoRt.addI i k
+  let _t663 ← SudoRt.modI _t662 (5 : Int)
+  let _t664 ← SudoRt.atL nbrs _t663
+  let _t665 ← SudoRt.putL phys _ix661 _t664
+  let phys := _t665
   pure (SudoRt.Flow.cont (ρ := Array (Int)) phys)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -2529,8 +2437,8 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
       let _fromV := (0 : Int)
       let _toV := (4 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init703 := (_fromV, phys)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init703 fuel (fun σ =>
+      let _init685 := (_fromV, phys)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init685 fuel (fun σ =>
     let i := σ.1
     let phys := σ.2
     do
@@ -2538,14 +2446,14 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, phys))
       else
         match ← ((do
-  let _t685 ← SudoRt.atL dnbrs i
-  let _ix686 := _t685
-  let _t687 ← SudoRt.subI i k
-  let _t688 ← SudoRt.addI _t687 (5 : Int)
-  let _t689 ← SudoRt.modI _t688 (5 : Int)
-  let _t690 ← SudoRt.atL dnbrs _t689
-  let _t691 ← SudoRt.putL phys _ix686 _t690
-  let phys := _t691
+  let _t667 ← SudoRt.atL dnbrs i
+  let _ix668 := _t667
+  let _t669 ← SudoRt.subI i k
+  let _t670 ← SudoRt.addI _t669 (5 : Int)
+  let _t671 ← SudoRt.modI _t670 (5 : Int)
+  let _t672 ← SudoRt.atL dnbrs _t671
+  let _t673 ← SudoRt.putL phys _ix668 _t672
+  let phys := _t673
   pure (SudoRt.Flow.cont (ρ := Array (Int)) phys)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -2557,18 +2465,18 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let phys := σ.2
     do
-      let _ix692 := up
-      let _t693 ← SudoRt.putL phys _ix692 up
-      let phys := _t693
-      let _ix694 := down
-      let _t695 ← SudoRt.putL phys _ix694 down
-      let phys := _t695
+      let _ix674 := up
+      let _t675 ← SudoRt.putL phys _ix674 up
+      let phys := _t675
+      let _ix676 := down
+      let _t677 ← SudoRt.putL phys _ix676 down
+      let phys := _t677
       let out := (#[] : Array (Int))
       let _fromV := (0 : Int)
       let _toV := (11 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init702 := (_fromV, out)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init702 fuel (fun σ =>
+      let _init684 := (_fromV, out)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init684 fuel (fun σ =>
     let h := σ.1
     let out := σ.2
     do
@@ -2576,13 +2484,13 @@ def spin_about_up (o : Array (Int)) (k : Int) : Except SudoRt.Trap (Array (Int))
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (h, out))
       else
         match ← ((do
-  let _t697 ← SudoRt.atL o h
-  let _t698 ← SudoRt.atL phys _t697
-  let _mb699 := SudoRt.appendL out _t698
-  let ⟨_nr700, _⟩ := _mb699
-  let out := _nr700
-  let _hm669 := ()
-  let _u701 := _hm669
+  let _t679 ← SudoRt.atL o h
+  let _t680 ← SudoRt.atL phys _t679
+  let _mb681 := SudoRt.appendL out _t680
+  let ⟨_nr682, _⟩ := _mb681
+  let out := _nr682
+  let _hm651 := ()
+  let _u683 := _hm651
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (h, _fs))
@@ -2604,21 +2512,21 @@ def abs_reorient (c1 : Int) (c2 : Int) : Except SudoRt.Trap (Array (Int)) :=
     let _fromV := (0 : Int)
     let _toV := (59 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init714 := _fromV
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init714 fuel (fun σ =>
+    let _init696 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init696 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) s)
       else
         match ← ((do
-  let _t706 ← rot_at s
-  let r := _t706
-  let _t707 ← SudoRt.atL r (0 : Int)
-  let _t709 ← (if (SudoRt.SEq.beq _t707 c1) then (do
-  let _t710 ← SudoRt.atL r (1 : Int)
-  pure (SudoRt.SEq.beq _t710 c2)) else pure false)
-  if _t709 then
+  let _t688 ← rot_at s
+  let r := _t688
+  let _t689 ← SudoRt.atL r (0 : Int)
+  let _t691 ← (if (SudoRt.SEq.beq _t689 c1) then (do
+  let _t692 ← SudoRt.atL r (1 : Int)
+  pure (SudoRt.SEq.beq _t692 c2)) else pure false)
+  if _t691 then
     do
       pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
   else
@@ -2633,9 +2541,9 @@ def abs_reorient (c1 : Int) (c2 : Int) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) i')) (fun σ =>
     do
-      let _as712 ← SudoRt.sudoAssert false 630
-      let _t713 ← range_list (12 : Int)
-      pure _t713) (fun r => pure r))
+      let _as694 ← SudoRt.sudoAssert false 614
+      let _t695 ← range_list (12 : Int)
+      pure _t695) (fun r => pure r))
     pure _out
 
 def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int) (c2 : Int) (ori : Int) : Except SudoRt.Trap (Int) :=
@@ -2647,10 +2555,10 @@ def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int
         if (SudoRt.SEq.beq face f2) then
           do
             let loc := (2 : Int)
-            let _t717 ← SudoRt.subI loc ori
-            let _t718 ← SudoRt.addI _t717 (3 : Int)
-            let _t719 ← SudoRt.modI _t718 (3 : Int)
-            let k := _t719
+            let _t699 ← SudoRt.subI loc ori
+            let _t700 ← SudoRt.addI _t699 (3 : Int)
+            let _t701 ← SudoRt.modI _t700 (3 : Int)
+            let k := _t701
             if (SudoRt.SEq.beq k (0 : Int)) then
               do
                 pure c0
@@ -2664,10 +2572,10 @@ def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int
                     pure c2
         else
           do
-            let _t722 ← SudoRt.subI loc ori
-            let _t723 ← SudoRt.addI _t722 (3 : Int)
-            let _t724 ← SudoRt.modI _t723 (3 : Int)
-            let k := _t724
+            let _t704 ← SudoRt.subI loc ori
+            let _t705 ← SudoRt.addI _t704 (3 : Int)
+            let _t706 ← SudoRt.modI _t705 (3 : Int)
+            let k := _t706
             if (SudoRt.SEq.beq k (0 : Int)) then
               do
                 pure c0
@@ -2684,10 +2592,10 @@ def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int
         if (SudoRt.SEq.beq face f2) then
           do
             let loc := (2 : Int)
-            let _t728 ← SudoRt.subI loc ori
-            let _t729 ← SudoRt.addI _t728 (3 : Int)
-            let _t730 ← SudoRt.modI _t729 (3 : Int)
-            let k := _t730
+            let _t710 ← SudoRt.subI loc ori
+            let _t711 ← SudoRt.addI _t710 (3 : Int)
+            let _t712 ← SudoRt.modI _t711 (3 : Int)
+            let k := _t712
             if (SudoRt.SEq.beq k (0 : Int)) then
               do
                 pure c0
@@ -2701,10 +2609,10 @@ def colour_on (face : Int) (f0 : Int) (f1 : Int) (f2 : Int) (c0 : Int) (c1 : Int
                     pure c2
         else
           do
-            let _t733 ← SudoRt.subI loc ori
-            let _t734 ← SudoRt.addI _t733 (3 : Int)
-            let _t735 ← SudoRt.modI _t734 (3 : Int)
-            let k := _t735
+            let _t715 ← SudoRt.subI loc ori
+            let _t716 ← SudoRt.addI _t715 (3 : Int)
+            let _t717 ← SudoRt.modI _t716 (3 : Int)
+            let k := _t717
             if (SudoRt.SEq.beq k (0 : Int)) then
               do
                 pure c0
@@ -2722,16 +2630,16 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
     let x := a
     let y := b
     let z := c
-    let _t739 ← (if (decide (b < a)) then (do
+    let _t721 ← (if (decide (b < a)) then (do
   pure (decide (b < c))) else pure false)
-    if _t739 then
+    if _t721 then
       do
         let x := b
         let y := c
         let z := a
-        let _t742 ← (if (decide (c < a)) then (do
+        let _t724 ← (if (decide (c < a)) then (do
   pure (decide (c < b))) else pure false)
-        if _t742 then
+        if _t724 then
           do
             let x := c
             let y := a
@@ -2739,21 +2647,21 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
             let _fromV := (0 : Int)
             let _toV := (19 : Int)
             let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-            let _init752 := _fromV
-            let _out ← (SudoRt.runLoopOn (ρ := Int) _init752 fuel (fun σ =>
+            let _init734 := _fromV
+            let _out ← (SudoRt.runLoopOn (ρ := Int) _init734 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) s)
       else
         match ← ((do
-  let _t745 ← corner_faces s
-  let ⟨f0, f1, f2⟩ := _t745
-  let _t747 ← (if (SudoRt.SEq.beq f0 x) then (do
+  let _t727 ← corner_faces s
+  let ⟨f0, f1, f2⟩ := _t727
+  let _t729 ← (if (SudoRt.SEq.beq f0 x) then (do
   pure (SudoRt.SEq.beq f1 y)) else pure false)
-  let _t749 ← (if _t747 then (do
+  let _t731 ← (if _t729 then (do
   pure (SudoRt.SEq.beq f2 z)) else pure false)
-  if _t749 then
+  if _t731 then
     do
       pure (SudoRt.Flow.ret (ρ := Int) s)
   else
@@ -2768,7 +2676,7 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as751 ← SudoRt.sudoAssert false 662
+      let _as733 ← SudoRt.sudoAssert false 646
       pure (0 : Int)) (fun r => pure r))
             pure _out
         else
@@ -2776,21 +2684,21 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
             let _fromV := (0 : Int)
             let _toV := (19 : Int)
             let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-            let _init761 := _fromV
-            let _out ← (SudoRt.runLoopOn (ρ := Int) _init761 fuel (fun σ =>
+            let _init743 := _fromV
+            let _out ← (SudoRt.runLoopOn (ρ := Int) _init743 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) s)
       else
         match ← ((do
-  let _t754 ← corner_faces s
-  let ⟨f0, f1, f2⟩ := _t754
-  let _t756 ← (if (SudoRt.SEq.beq f0 x) then (do
+  let _t736 ← corner_faces s
+  let ⟨f0, f1, f2⟩ := _t736
+  let _t738 ← (if (SudoRt.SEq.beq f0 x) then (do
   pure (SudoRt.SEq.beq f1 y)) else pure false)
-  let _t758 ← (if _t756 then (do
+  let _t740 ← (if _t738 then (do
   pure (SudoRt.SEq.beq f2 z)) else pure false)
-  if _t758 then
+  if _t740 then
     do
       pure (SudoRt.Flow.ret (ρ := Int) s)
   else
@@ -2805,14 +2713,14 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as760 ← SudoRt.sudoAssert false 662
+      let _as742 ← SudoRt.sudoAssert false 646
       pure (0 : Int)) (fun r => pure r))
             pure _out
     else
       do
-        let _t763 ← (if (decide (c < a)) then (do
+        let _t745 ← (if (decide (c < a)) then (do
   pure (decide (c < b))) else pure false)
-        if _t763 then
+        if _t745 then
           do
             let x := c
             let y := a
@@ -2820,21 +2728,21 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
             let _fromV := (0 : Int)
             let _toV := (19 : Int)
             let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-            let _init773 := _fromV
-            let _out ← (SudoRt.runLoopOn (ρ := Int) _init773 fuel (fun σ =>
+            let _init755 := _fromV
+            let _out ← (SudoRt.runLoopOn (ρ := Int) _init755 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) s)
       else
         match ← ((do
-  let _t766 ← corner_faces s
-  let ⟨f0, f1, f2⟩ := _t766
-  let _t768 ← (if (SudoRt.SEq.beq f0 x) then (do
+  let _t748 ← corner_faces s
+  let ⟨f0, f1, f2⟩ := _t748
+  let _t750 ← (if (SudoRt.SEq.beq f0 x) then (do
   pure (SudoRt.SEq.beq f1 y)) else pure false)
-  let _t770 ← (if _t768 then (do
+  let _t752 ← (if _t750 then (do
   pure (SudoRt.SEq.beq f2 z)) else pure false)
-  if _t770 then
+  if _t752 then
     do
       pure (SudoRt.Flow.ret (ρ := Int) s)
   else
@@ -2849,7 +2757,7 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as772 ← SudoRt.sudoAssert false 662
+      let _as754 ← SudoRt.sudoAssert false 646
       pure (0 : Int)) (fun r => pure r))
             pure _out
         else
@@ -2857,21 +2765,21 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
             let _fromV := (0 : Int)
             let _toV := (19 : Int)
             let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-            let _init782 := _fromV
-            let _out ← (SudoRt.runLoopOn (ρ := Int) _init782 fuel (fun σ =>
+            let _init764 := _fromV
+            let _out ← (SudoRt.runLoopOn (ρ := Int) _init764 fuel (fun σ =>
     let s := σ
     do
       if s > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) s)
       else
         match ← ((do
-  let _t775 ← corner_faces s
-  let ⟨f0, f1, f2⟩ := _t775
-  let _t777 ← (if (SudoRt.SEq.beq f0 x) then (do
+  let _t757 ← corner_faces s
+  let ⟨f0, f1, f2⟩ := _t757
+  let _t759 ← (if (SudoRt.SEq.beq f0 x) then (do
   pure (SudoRt.SEq.beq f1 y)) else pure false)
-  let _t779 ← (if _t777 then (do
+  let _t761 ← (if _t759 then (do
   pure (SudoRt.SEq.beq f2 z)) else pure false)
-  if _t779 then
+  if _t761 then
     do
       pure (SudoRt.Flow.ret (ρ := Int) s)
   else
@@ -2886,176 +2794,323 @@ def corner_slot (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
               let i' ← SudoRt.addI s (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as781 ← SudoRt.sudoAssert false 662
+      let _as763 ← SudoRt.sudoAssert false 646
       pure (0 : Int)) (fun r => pure r))
             pure _out
 
 def colours_at (g : Position) (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap ((Int) × (Int)) :=
   do
-    let _t783 ← corner_slot a b c
-    let slot := _t783
-    let _t784 ← corner_faces slot
-    let ⟨f0, f1, f2⟩ := _t784
-    let _t785 ← SudoRt.atL (g).sudo_8Position_2cp slot
-    let cubie := _t785
-    let _t786 ← SudoRt.atL (g).sudo_8Position_2co slot
-    let ori := _t786
-    let _t787 ← corner_faces cubie
-    let ⟨c0, c1, c2⟩ := _t787
-    let _t788 ← colour_on a f0 f1 f2 c0 c1 c2 ori
-    let cf0 := _t788
-    let _t789 ← colour_on b f0 f1 f2 c0 c1 c2 ori
-    let cf1 := _t789
+    let _t765 ← corner_slot a b c
+    let slot := _t765
+    let _t766 ← corner_faces slot
+    let ⟨f0, f1, f2⟩ := _t766
+    let _t767 ← SudoRt.atL (g).sudo_8Position_2cp slot
+    let cubie := _t767
+    let _t768 ← SudoRt.atL (g).sudo_8Position_2co slot
+    let ori := _t768
+    let _t769 ← corner_faces cubie
+    let ⟨c0, c1, c2⟩ := _t769
+    let _t770 ← colour_on a f0 f1 f2 c0 c1 c2 ori
+    let cf0 := _t770
+    let _t771 ← colour_on b f0 f1 f2 c0 c1 c2 ori
+    let cf1 := _t771
     pure (cf0, cf1)
 
-def recipe_a (g : Position) (phys : Int) (o : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
+def hold_of (phys : Int) (o : Array (Int)) : Except SudoRt.Trap (Int) :=
   do
-    let _t790 ← noon_phys phys o
-    let noon := _t790
-    let _t791 ← face_nbrs phys
-    let nbrs := _t791
-    let ni := (0 : Int)
+    let _t772 ← SudoRt.negI (1 : Int)
+    let found := _t772
+    let _fromV := (0 : Int)
+    let _toV := (11 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init780 := (_fromV, found)
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init780 fuel (fun σ =>
+    let h := σ.1
+    let found := σ.2
+    do
+      if h > _toV then
+        pure (SudoRt.Flow.brk (ρ := Int) (h, found))
+      else
+        match ← ((do
+  let _t775 ← (if (decide (found < (0 : Int))) then (do
+  let _t776 ← SudoRt.atL o h
+  pure (SudoRt.SEq.beq _t776 phys)) else pure false)
+  if _t775 then
+    do
+      let found := h
+      pure (SudoRt.Flow.cont (ρ := Int) found)
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Int) found)) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) (h, _fs))
+        | .cont _fs => do
+            if h == _toV then
+              pure (SudoRt.Flow.brk (ρ := Int) (h, _fs))
+            else do
+              let i' ← SudoRt.addI h (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Int) (i', _fs))) (fun σ =>
+    let found := σ.2
+    do
+      let _as779 ← SudoRt.sudoAssert (decide (found ≥ (0 : Int))) 669
+      pure found) (fun r => pure r))
+    pure _out
+
+def visual_noon (phys : Int) (o : Array (Int)) : Except SudoRt.Trap (Int) :=
+  do
+    let _t781 ← hold_of phys o
+    let p := _t781
+    if (SudoRt.SEq.beq p held_up) then
+      do
+        let _t783 ← SudoRt.atL o held_front
+        pure _t783
+    else
+      do
+        if (decide (p < lower_ring_first)) then
+          do
+            let _t785 ← SudoRt.atL o held_up
+            pure _t785
+        else
+          do
+            if (decide (p < held_down)) then
+              do
+                let _t787 ← SudoRt.subI p (5 : Int)
+                let _t788 ← SudoRt.atL o _t787
+                pure _t788
+            else
+              do
+                let _t789 ← SudoRt.atL o lower_ring_first
+                pure _t789
+
+def edge_faces (slot : Int) : Except SudoRt.Trap ((Int) × (Int)) :=
+  do
+    let _t790 ← SudoRt.mulI (2 : Int) slot
+    let _t791 ← SudoRt.atL edge_faces_flat _t790
+    let _t792 ← SudoRt.mulI (2 : Int) slot
+    let _t793 ← SudoRt.addI _t792 (1 : Int)
+    let _t794 ← SudoRt.atL edge_faces_flat _t793
+    pure (_t791, _t794)
+
+def edge_slot (a : Int) (b : Int) : Except SudoRt.Trap (Int) :=
+  do
+    let _fromV := (0 : Int)
+    let _toV := (29 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init805 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init805 fuel (fun σ =>
+    let s := σ
+    do
+      if s > _toV then
+        pure (SudoRt.Flow.brk (ρ := Int) s)
+      else
+        match ← ((do
+  let _t796 ← edge_faces s
+  let ⟨x, y⟩ := _t796
+  let _t798 ← (if (SudoRt.SEq.beq x a) then (do
+  pure (SudoRt.SEq.beq y b)) else pure false)
+  let _t800 ← (if _t798 then pure true else (do
+  let _t802 ← (if (SudoRt.SEq.beq x b) then (do
+  pure (SudoRt.SEq.beq y a)) else pure false)
+  pure _t802))
+  if _t800 then
+    do
+      pure (SudoRt.Flow.ret (ρ := Int) s)
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Int) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) s)
+        | .cont _fs => do
+            if s == _toV then
+              pure (SudoRt.Flow.brk (ρ := Int) s)
+            else do
+              let i' ← SudoRt.addI s (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
+    do
+      let _as804 ← SudoRt.sudoAssert false 708
+      pure (0 : Int)) (fun r => pure r))
+    pure _out
+
+def edge_colours_at (g : Position) (a : Int) (b : Int) : Except SudoRt.Trap ((Int) × (Int)) :=
+  do
+    let _t806 ← edge_slot a b
+    let slot := _t806
+    let _t807 ← SudoRt.atL (g).sudo_8Position_2ep slot
+    let piece := _t807
+    let _t808 ← SudoRt.atL (g).sudo_8Position_2eo slot
+    let ori := _t808
+    let loc_a := (0 : Int)
+    let _t809 ← edge_faces slot
+    let ⟨ref, other⟩ := _t809
+    if (!(SudoRt.SEq.beq a ref)) then
+      do
+        let loc_a := (1 : Int)
+        let _t811 ← edge_faces piece
+        let ⟨p0, p1⟩ := _t811
+        let _t812 ← SudoRt.addI loc_a ori
+        let _t813 ← SudoRt.modI _t812 (2 : Int)
+        if (SudoRt.SEq.beq _t813 (0 : Int)) then
+          do
+            pure (p0, p1)
+        else
+          do
+            pure (p1, p0)
+    else
+      do
+        let _t815 ← edge_faces piece
+        let ⟨p0, p1⟩ := _t815
+        let _t816 ← SudoRt.addI loc_a ori
+        let _t817 ← SudoRt.modI _t816 (2 : Int)
+        if (SudoRt.SEq.beq _t817 (0 : Int)) then
+          do
+            pure (p0, p1)
+        else
+          do
+            pure (p1, p0)
+
+def corner_after_noon (phys : Int) (noon : Int) : Except SudoRt.Trap (Int) :=
+  do
+    let _t819 ← face_nbrs phys
+    let nbrs := _t819
+    let _t820 ← SudoRt.negI (1 : Int)
+    let ni := _t820
     let _fromV := (0 : Int)
     let _toV := (4 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init800 := (_fromV, ni)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init800 fuel (fun σ =>
+    let _init829 := (_fromV, ni)
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init829 fuel (fun σ =>
     let i := σ.1
     let ni := σ.2
     do
       if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, ni))
+        pure (SudoRt.Flow.brk (ρ := Int) (i, ni))
       else
         match ← ((do
-  let _t793 ← SudoRt.atL nbrs i
-  if (SudoRt.SEq.beq _t793 noon) then
+  let _t822 ← SudoRt.atL nbrs i
+  if (SudoRt.SEq.beq _t822 noon) then
     do
       let ni := i
-      pure (SudoRt.Flow.cont (ρ := Array (Int)) ni)
+      pure (SudoRt.Flow.cont (ρ := Int) ni)
   else
     do
-      pure (SudoRt.Flow.cont (ρ := Array (Int)) ni)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+      pure (SudoRt.Flow.cont (ρ := Int) ni)) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) (i, _fs))
         | .cont _fs => do
             if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+              pure (SudoRt.Flow.brk (ρ := Int) (i, _fs))
             else do
               let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+              pure (SudoRt.Flow.cont (ρ := Int) (i', _fs))) (fun σ =>
     let ni := σ.2
     do
-      let _t795 ← SudoRt.addI ni (1 : Int)
-      let _t796 ← SudoRt.modI _t795 (5 : Int)
-      let _t797 ← SudoRt.atL nbrs _t796
-      let next_cw := _t797
-      let _t798 ← colours_at g phys noon next_cw
-      let ⟨c1, c2⟩ := _t798
-      let _t799 ← abs_reorient c1 c2
-      pure _t799) (fun r => pure r))
+      let _as825 ← SudoRt.sudoAssert (decide (ni ≥ (0 : Int))) 733
+      let _t826 ← SudoRt.addI ni (1 : Int)
+      let _t827 ← SudoRt.modI _t826 (5 : Int)
+      let _t828 ← SudoRt.atL nbrs _t827
+      pure _t828) (fun r => pure r))
     pure _out
 
-def g2_step (g : Position) (o : Array (Int)) (card : Int) : Except SudoRt.Trap ((Position) × (Array (Int))) :=
+def read_grip (g : Position) (phys : Int) (noon : Int) (pos : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t801 ← SudoRt.divI card (4 : Int)
-    let rank := _t801
-    let _t802 ← SudoRt.modI card (4 : Int)
-    let suit := _t802
-    let _t803 ← SudoRt.addI suit (1 : Int)
-    let amt := _t803
+    let _t830 ← SudoRt.modI pos (2 : Int)
+    if (SudoRt.SEq.beq _t830 (1 : Int)) then
+      do
+        let _t832 ← corner_after_noon phys noon
+        let _t833 ← colours_at g phys noon _t832
+        let ⟨c1, c2⟩ := _t833
+        let _t834 ← abs_reorient c1 c2
+        pure _t834
+    else
+      do
+        let _t835 ← edge_colours_at g phys noon
+        let ⟨e1, e2⟩ := _t835
+        let _t836 ← abs_reorient e1 e2
+        pure _t836
+
+def g2_step (g : Position) (o : Array (Int)) (card : Int) (pos : Int) : Except SudoRt.Trap ((Position) × (Array (Int))) :=
+  do
+    let _t837 ← SudoRt.divI card (4 : Int)
+    let rank := _t837
+    let _t838 ← SudoRt.modI card (4 : Int)
+    let suit := _t838
+    let _t839 ← SudoRt.addI suit (1 : Int)
+    let amt := _t839
     let o_work := o
     let held := rank
     if (decide (rank < (12 : Int))) then
       do
-        let _t805 ← SudoRt.atL o_work held
-        let _t806 ← face_turn g _t805 amt
-        let g := _t806
-        let _t807 ← SudoRt.atL o_work held
-        let _t808 ← noon_phys _t807 o_work
-        let noon := _t808
-        let _t809 ← SudoRt.atL o_work held
-        if (!(SudoRt.SEq.beq noon _t809)) then
-          do
-            let _t811 ← face_turn g noon (1 : Int)
-            let g := _t811
-            let _t812 ← SudoRt.atL o_work held_front
-            let _t813 ← face_turn g _t812 (1 : Int)
-            let g := _t813
-            let _t814 ← SudoRt.atL o_work held
-            let _t815 ← recipe_a g _t814 o_work
-            pure (g, _t815)
-        else
-          do
-            let _t816 ← SudoRt.atL o_work held_front
-            let _t817 ← face_turn g _t816 (1 : Int)
-            let g := _t817
-            let _t818 ← SudoRt.atL o_work held
-            let _t819 ← recipe_a g _t818 o_work
-            pure (g, _t819)
+        let _t841 ← SudoRt.atL o_work held
+        let _t842 ← face_turn g _t841 amt
+        let g := _t842
+        let _t843 ← SudoRt.atL o_work held
+        let phys := _t843
+        let _t844 ← visual_noon phys o_work
+        let noon := _t844
+        let _t845 ← read_grip g phys noon pos
+        let new_o := _t845
+        let _t846 ← face_turn g noon (1 : Int)
+        let g := _t846
+        let _t847 ← SudoRt.atL o_work held_front
+        let _t848 ← face_turn g _t847 (1 : Int)
+        let g := _t848
+        pure (g, new_o)
     else
       do
         let held := held_up
-        let _t820 ← SudoRt.atL o_work held
-        let _t821 ← SudoRt.subI (5 : Int) amt
-        let _t822 ← SudoRt.modI _t821 (5 : Int)
-        let _t823 ← face_turn g _t820 _t822
-        let g := _t823
-        let _t824 ← spin_about_up o_work amt
-        let o_work := _t824
-        let _t825 ← SudoRt.atL o_work held
-        let _t826 ← noon_phys _t825 o_work
-        let noon := _t826
-        let _t827 ← SudoRt.atL o_work held
-        if (!(SudoRt.SEq.beq noon _t827)) then
-          do
-            let _t829 ← face_turn g noon (1 : Int)
-            let g := _t829
-            let _t830 ← SudoRt.atL o_work held_front
-            let _t831 ← face_turn g _t830 (1 : Int)
-            let g := _t831
-            let _t832 ← SudoRt.atL o_work held
-            let _t833 ← recipe_a g _t832 o_work
-            pure (g, _t833)
-        else
-          do
-            let _t834 ← SudoRt.atL o_work held_front
-            let _t835 ← face_turn g _t834 (1 : Int)
-            let g := _t835
-            let _t836 ← SudoRt.atL o_work held
-            let _t837 ← recipe_a g _t836 o_work
-            pure (g, _t837)
+        let _t849 ← SudoRt.atL o_work held
+        let _t850 ← SudoRt.subI (5 : Int) amt
+        let _t851 ← SudoRt.modI _t850 (5 : Int)
+        let _t852 ← face_turn g _t849 _t851
+        let g := _t852
+        let _t853 ← spin_about_up o_work amt
+        let o_work := _t853
+        let _t854 ← SudoRt.atL o_work held
+        let phys := _t854
+        let _t855 ← visual_noon phys o_work
+        let noon := _t855
+        let _t856 ← read_grip g phys noon pos
+        let new_o := _t856
+        let _t857 ← face_turn g noon (1 : Int)
+        let g := _t857
+        let _t858 ← SudoRt.atL o_work held_front
+        let _t859 ← face_turn g _t858 (1 : Int)
+        let g := _t859
+        pure (g, new_o)
 
-def f3_step (g : Position) (o : Array (Int)) : Except SudoRt.Trap ((Position) × (Array (Int))) :=
+def f3_step (g : Position) (o : Array (Int)) (rnd : Int) : Except SudoRt.Trap ((Position) × (Array (Int))) :=
   do
-    let _t838 ← SudoRt.atL o held_up
-    let _t839 ← face_turn g _t838 (1 : Int)
-    let g := _t839
-    let _t840 ← SudoRt.atL o held_up
-    let _t841 ← recipe_a g _t840 o
-    pure (g, _t841)
+    let _t860 ← SudoRt.atL o held_up
+    let phys := _t860
+    let _t861 ← face_turn g phys (1 : Int)
+    let g := _t861
+    let _t862 ← visual_noon phys o
+    let _t863 ← read_grip g phys _t862 rnd
+    pure (g, _t863)
 
 def em_block (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position) :=
   do
     let g := h
-    let _t842 ← range_list (12 : Int)
-    let o := _t842
+    let _t864 ← range_list (12 : Int)
+    let o := _t864
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init853 := (_fromV, (g, o))
-    let _out ← (SudoRt.runLoopOn (ρ := Position) _init853 fuel (fun σ =>
+    let _init876 := (_fromV, (g, o))
+    let _out ← (SudoRt.runLoopOn (ρ := Position) _init876 fuel (fun σ =>
     let i := σ.1
     let g := σ.2.1
-    let _sp851 := σ.2.2
-    let o := _sp851
+    let _sp874 := σ.2.2
+    let o := _sp874
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Position) (i, (g, o)))
       else
         match ← ((do
-  let _t844 ← SudoRt.atL deal i
-  let _t845 ← g2_step g o _t844
-  let ⟨g, o⟩ := _t845
+  let _t866 ← SudoRt.atL deal i
+  let _t867 ← SudoRt.addI i (1 : Int)
+  let _t868 ← g2_step g o _t866 _t867
+  let ⟨g, o⟩ := _t868
   pure (SudoRt.Flow.cont (ρ := Position) (g, o))) : Except SudoRt.Trap (SudoRt.Flow _ (Position))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Position) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Position) (i, _fs))
@@ -3066,25 +3121,25 @@ def em_block (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position)
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Position) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp852 := σ.2.2
-    let o := _sp852
+    let _sp875 := σ.2.2
+    let o := _sp875
     do
       let _fromV := (1 : Int)
       let _toV := f3_t
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init850 := (_fromV, (g, o))
-      let _out ← (SudoRt.runLoopOn (ρ := Position) _init850 fuel (fun σ =>
+      let _init873 := (_fromV, (g, o))
+      let _out ← (SudoRt.runLoopOn (ρ := Position) _init873 fuel (fun σ =>
     let t := σ.1
     let g := σ.2.1
-    let _sp848 := σ.2.2
-    let o := _sp848
+    let _sp871 := σ.2.2
+    let o := _sp871
     do
       if t > _toV then
         pure (SudoRt.Flow.brk (ρ := Position) (t, (g, o)))
       else
         match ← ((do
-  let _t847 ← f3_step g o
-  let ⟨g, o⟩ := _t847
+  let _t870 ← f3_step g o t
+  let ⟨g, o⟩ := _t870
   pure (SudoRt.Flow.cont (ρ := Position) (g, o))) : Except SudoRt.Trap (SudoRt.Flow _ (Position))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Position) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Position) (t, _fs))
@@ -3095,8 +3150,8 @@ def em_block (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position)
               let i' ← SudoRt.addI t (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Position) (i', _fs))) (fun σ =>
     let g := σ.2.1
-    let _sp849 := σ.2.2
-    let o := _sp849
+    let _sp872 := σ.2.2
+    let o := _sp872
     do
       pure g) (fun r => pure r))
       pure _out) (fun r => pure r))
@@ -3104,21 +3159,21 @@ def em_block (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position)
 
 def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t855 ← pad_message msg
-    let padded := _t855
-    let _as858 ← SudoRt.sudoAssert (decide ((SudoRt.listLen padded) > (0 : Int))) 719
-    let _t860 ← SudoRt.modI (SudoRt.listLen padded) pad_block
-    let _as861 ← SudoRt.sudoAssertEq _t860 (0 : Int) 720
-    let _t862 ← iv_cook12
-    let h := _t862
-    let _t864 ← SudoRt.divI (SudoRt.listLen padded) pad_block
-    let nblocks := _t864
-    let _t877 ← SudoRt.subI nblocks (1 : Int)
+    let _t878 ← pad_message msg
+    let padded := _t878
+    let _as881 ← SudoRt.sudoAssert (decide ((SudoRt.listLen padded) > (0 : Int))) 787
+    let _t883 ← SudoRt.modI (SudoRt.listLen padded) pad_block
+    let _as884 ← SudoRt.sudoAssertEq _t883 (0 : Int) 788
+    let _t885 ← iv_cook12
+    let h := _t885
+    let _t887 ← SudoRt.divI (SudoRt.listLen padded) pad_block
+    let nblocks := _t887
+    let _t900 ← SudoRt.subI nblocks (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t877
+    let _toV := _t900
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init879 := (_fromV, h)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init879 fuel (fun σ =>
+    let _init902 := (_fromV, h)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init902 fuel (fun σ =>
     let b := σ.1
     let h := σ.2
     do
@@ -3126,14 +3181,14 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (b, h))
       else
         match ← ((do
-  let _t866 ← SudoRt.mulI b pad_block
-  let i := _t866
+  let _t889 ← SudoRt.mulI b pad_block
+  let i := _t889
   let chunk := (#[] : Array (Int))
   let _fromV := (0 : Int)
   let _toV := (27 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init876 := (_fromV, chunk)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init876 fuel (fun σ =>
+  let _init899 := (_fromV, chunk)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init899 fuel (fun σ =>
     let j := σ.1
     let chunk := σ.2
     do
@@ -3141,13 +3196,13 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, chunk))
       else
         match ← ((do
-  let _t868 ← SudoRt.addI i j
-  let _t869 ← SudoRt.atL padded _t868
-  let _mb870 := SudoRt.appendL chunk _t869
-  let ⟨_nr871, _⟩ := _mb870
-  let chunk := _nr871
-  let _hm854 := ()
-  let _u872 := _hm854
+  let _t891 ← SudoRt.addI i j
+  let _t892 ← SudoRt.atL padded _t891
+  let _mb893 := SudoRt.appendL chunk _t892
+  let ⟨_nr894, _⟩ := _mb893
+  let chunk := _nr894
+  let _hm877 := ()
+  let _u895 := _hm877
   pure (SudoRt.Flow.cont (ρ := Array (Int)) chunk)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, _fs))
@@ -3159,12 +3214,12 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let chunk := σ.2
     do
-      let _t873 ← phi_chunk chunk
-      let deal := _t873
-      let _t874 ← em_block h deal
-      let e := _t874
-      let _t875 ← compose h e
-      let h := _t875
+      let _t896 ← phi_chunk chunk
+      let deal := _t896
+      let _t897 ← em_block h deal
+      let e := _t897
+      let _t898 ← compose h e
+      let h := _t898
       pure (SudoRt.Flow.cont (ρ := Array (Int)) h)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
@@ -3177,62 +3232,197 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let h := σ.2
     do
-      let _t878 ← position_to_bytes h
-      pure _t878) (fun r => pure r))
+      let _t901 ← position_to_bytes h
+      pure _t901) (fun r => pure r))
     pure _out
 
 def v_MegaDreifach (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t880 ← v_Hash msg
-    pure _t880
+    let _t903 ← v_Hash msg
+    pure _t903
 
 def v_HashDeck (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t881 ← require_permutation deal
-    let deal := _t881
-    let _t882 ← phi_inv deal
-    let «raw» := _t882
-    let _t883 ← v_Hash «raw»
-    pure _t883
+    let _t904 ← require_permutation deal
+    let deal := _t904
+    let _t905 ← phi_inv deal
+    let «raw» := _t905
+    let _t906 ← v_Hash «raw»
+    pure _t906
 
 def v_MegaDreifachDeck (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t884 ← v_HashDeck deal
-    pure _t884
+    let _t907 ← v_HashDeck deal
+    pure _t907
 
 def body_from (deal : Array (Int)) (h : Position) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t885 ← require_permutation deal
-    let deal := _t885
-    let _t886 ← em_block h deal
-    let e := _t886
-    let _t887 ← compose h e
-    let _t888 ← position_to_bytes _t887
-    pure _t888
+    let _t908 ← require_permutation deal
+    let deal := _t908
+    let _t909 ← em_block h deal
+    let e := _t909
+    let _t910 ← compose h e
+    let _t911 ← position_to_bytes _t910
+    pure _t911
 
 def v_HashDeckBody (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t889 ← iv_cook12
-    let _t890 ← body_from deal _t889
-    pure _t890
+    let _t912 ← iv_cook12
+    let _t913 ← body_from deal _t912
+    pure _t913
 
 def v_MegaDreifachBody (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t891 ← v_HashDeckBody deal
-    pure _t891
+    let _t914 ← v_HashDeckBody deal
+    pure _t914
 
 def v_HashDeckBodyFrom (deal : Array (Int)) (h : Position) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t892 ← body_from deal h
-    pure _t892
+    let _t915 ← body_from deal h
+    pure _t915
 
 def v_MegaDreifachBodyFrom (deal : Array (Int)) (h : Position) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t893 ← v_HashDeckBodyFrom deal h
-    pure _t893
+    let _t916 ← v_HashDeckBodyFrom deal h
+    pure _t916
 
 def hex_iv : Except SudoRt.Trap (Array (Int)) :=
   do
     pure (#[(0 : Int), (0 : Int), (2 : Int), (26 : Int), (235 : Int), (135 : Int), (110 : Int), (183 : Int), (109 : Int), (216 : Int), (191 : Int), (131 : Int), (52 : Int), (87 : Int), (162 : Int), (192 : Int), (38 : Int), (19 : Int), (229 : Int), (86 : Int), (86 : Int), (150 : Int), (62 : Int), (2 : Int), (216 : Int), (223 : Int), (237 : Int), (181 : Int), (170 : Int)] : Array (Int))
+
+def kat_v2_digest (name : Int) : Except SudoRt.Trap (Array (Int)) :=
+  do
+    if (SudoRt.SEq.beq name (0 : Int)) then
+      do
+        pure (#[(0 : Int), (23 : Int), (127 : Int), (180 : Int), (240 : Int), (12 : Int), (96 : Int), (6 : Int), (7 : Int), (174 : Int), (11 : Int), (174 : Int), (55 : Int), (236 : Int), (234 : Int), (217 : Int), (119 : Int), (48 : Int), (45 : Int), (64 : Int), (212 : Int), (96 : Int), (55 : Int), (182 : Int), (127 : Int), (8 : Int), (96 : Int), (21 : Int), (95 : Int)] : Array (Int))
+    else
+      do
+        if (SudoRt.SEq.beq name (1 : Int)) then
+          do
+            pure (#[(2 : Int), (18 : Int), (126 : Int), (226 : Int), (166 : Int), (64 : Int), (253 : Int), (215 : Int), (242 : Int), (80 : Int), (32 : Int), (92 : Int), (135 : Int), (126 : Int), (12 : Int), (25 : Int), (200 : Int), (167 : Int), (137 : Int), (158 : Int), (47 : Int), (201 : Int), (181 : Int), (52 : Int), (205 : Int), (29 : Int), (76 : Int), (112 : Int), (82 : Int)] : Array (Int))
+        else
+          do
+            if (SudoRt.SEq.beq name (2 : Int)) then
+              do
+                pure (#[(2 : Int), (167 : Int), (38 : Int), (118 : Int), (15 : Int), (210 : Int), (37 : Int), (80 : Int), (150 : Int), (237 : Int), (62 : Int), (156 : Int), (105 : Int), (35 : Int), (154 : Int), (61 : Int), (240 : Int), (4 : Int), (85 : Int), (89 : Int), (5 : Int), (205 : Int), (144 : Int), (24 : Int), (32 : Int), (129 : Int), (234 : Int), (44 : Int), (26 : Int)] : Array (Int))
+            else
+              do
+                if (SudoRt.SEq.beq name (3 : Int)) then
+                  do
+                    pure (#[(2 : Int), (127 : Int), (188 : Int), (241 : Int), (150 : Int), (205 : Int), (56 : Int), (179 : Int), (147 : Int), (216 : Int), (151 : Int), (132 : Int), (244 : Int), (72 : Int), (162 : Int), (216 : Int), (24 : Int), (196 : Int), (21 : Int), (219 : Int), (180 : Int), (83 : Int), (122 : Int), (9 : Int), (244 : Int), (200 : Int), (25 : Int), (185 : Int), (33 : Int)] : Array (Int))
+                else
+                  do
+                    if (SudoRt.SEq.beq name (4 : Int)) then
+                      do
+                        pure (#[(1 : Int), (245 : Int), (222 : Int), (126 : Int), (47 : Int), (142 : Int), (153 : Int), (74 : Int), (214 : Int), (0 : Int), (67 : Int), (54 : Int), (63 : Int), (226 : Int), (56 : Int), (216 : Int), (142 : Int), (38 : Int), (31 : Int), (79 : Int), (71 : Int), (205 : Int), (224 : Int), (31 : Int), (68 : Int), (96 : Int), (8 : Int), (173 : Int), (207 : Int)] : Array (Int))
+                    else
+                      do
+                        if (SudoRt.SEq.beq name (5 : Int)) then
+                          do
+                            pure (#[(0 : Int), (239 : Int), (235 : Int), (243 : Int), (169 : Int), (136 : Int), (15 : Int), (64 : Int), (253 : Int), (217 : Int), (167 : Int), (40 : Int), (193 : Int), (59 : Int), (108 : Int), (8 : Int), (83 : Int), (43 : Int), (93 : Int), (46 : Int), (187 : Int), (162 : Int), (148 : Int), (79 : Int), (42 : Int), (218 : Int), (233 : Int), (108 : Int), (77 : Int)] : Array (Int))
+                        else
+                          do
+                            if (SudoRt.SEq.beq name (6 : Int)) then
+                              do
+                                pure (#[(1 : Int), (147 : Int), (70 : Int), (149 : Int), (74 : Int), (125 : Int), (162 : Int), (116 : Int), (74 : Int), (93 : Int), (82 : Int), (176 : Int), (216 : Int), (211 : Int), (195 : Int), (60 : Int), (220 : Int), (185 : Int), (40 : Int), (50 : Int), (218 : Int), (20 : Int), (15 : Int), (141 : Int), (141 : Int), (104 : Int), (177 : Int), (138 : Int), (33 : Int)] : Array (Int))
+                            else
+                              do
+                                if (SudoRt.SEq.beq name (7 : Int)) then
+                                  do
+                                    pure (#[(2 : Int), (121 : Int), (163 : Int), (208 : Int), (174 : Int), (104 : Int), (254 : Int), (10 : Int), (35 : Int), (186 : Int), (156 : Int), (249 : Int), (2 : Int), (27 : Int), (228 : Int), (169 : Int), (87 : Int), (255 : Int), (0 : Int), (31 : Int), (41 : Int), (148 : Int), (178 : Int), (3 : Int), (196 : Int), (57 : Int), (95 : Int), (189 : Int), (230 : Int)] : Array (Int))
+                                else
+                                  do
+                                    pure (#[(0 : Int), (113 : Int), (190 : Int), (191 : Int), (176 : Int), (98 : Int), (181 : Int), (204 : Int), (16 : Int), (153 : Int), (233 : Int), (3 : Int), (89 : Int), (73 : Int), (163 : Int), (215 : Int), (213 : Int), (32 : Int), (16 : Int), (191 : Int), (41 : Int), (41 : Int), (33 : Int), (80 : Int), (168 : Int), (243 : Int), (241 : Int), (91 : Int), (27 : Int)] : Array (Int))
+
+def kat_msg (name : Int) : Except SudoRt.Trap (Array (Int)) :=
+  do
+    let out := (#[] : Array (Int))
+    if (SudoRt.SEq.beq name (1 : Int)) then
+      do
+        pure (#[(97 : Int), (98 : Int), (99 : Int)] : Array (Int))
+    else
+      do
+        if (SudoRt.SEq.beq name (2 : Int)) then
+          do
+            pure (#[(0 : Int)] : Array (Int))
+        else
+          do
+            let _t930 ← (if (decide (name ≥ (3 : Int))) then (do
+  pure (decide (name ≤ (5 : Int)))) else pure false)
+            if _t930 then
+              do
+                let _t936 ← SudoRt.addI (23 : Int) name
+                let _fromV := (0 : Int)
+                let _toV := _t936
+                let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+                let _init937 := (_fromV, out)
+                let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init937 fuel (fun σ =>
+    let i := σ.1
+    let out := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
+      else
+        match ← ((do
+  let _mb933 := SudoRt.appendL out i
+  let ⟨_nr934, _⟩ := _mb933
+  let out := _nr934
+  let _hm925 := ()
+  let _u935 := _hm925
+  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let out := σ.2
+    do
+      pure out) (fun r => pure r))
+                pure _out
+            else
+              do
+                if (SudoRt.SEq.beq name (6 : Int)) then
+                  do
+                    let _fromV := (1 : Int)
+                    let _toV := (56 : Int)
+                    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+                    let _init943 := (_fromV, out)
+                    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init943 fuel (fun σ =>
+    let i := σ.1
+    let out := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
+      else
+        match ← ((do
+  let _mb940 := SudoRt.appendL out (109 : Int)
+  let ⟨_nr941, _⟩ := _mb940
+  let out := _nr941
+  let _hm926 := ()
+  let _u942 := _hm926
+  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let out := σ.2
+    do
+      pure out) (fun r => pure r))
+                    pure _out
+                else
+                  do
+                    if (SudoRt.SEq.beq name (7 : Int)) then
+                      do
+                        pure (#[(0 : Int), (17 : Int), (34 : Int), (51 : Int), (68 : Int), (85 : Int), (102 : Int), (119 : Int), (136 : Int), (153 : Int), (170 : Int), (187 : Int), (204 : Int), (221 : Int), (238 : Int), (255 : Int), (16 : Int), (33 : Int), (50 : Int), (67 : Int), (84 : Int), (101 : Int), (118 : Int), (135 : Int), (152 : Int), (169 : Int), (186 : Int), (203 : Int), (220 : Int), (237 : Int), (254 : Int), (15 : Int), (32 : Int), (49 : Int), (66 : Int), (83 : Int), (100 : Int), (117 : Int), (134 : Int), (151 : Int), (168 : Int), (185 : Int), (202 : Int), (219 : Int), (236 : Int), (253 : Int), (14 : Int), (31 : Int), (48 : Int), (65 : Int), (82 : Int), (99 : Int), (116 : Int), (133 : Int), (150 : Int), (167 : Int), (184 : Int), (201 : Int), (218 : Int), (235 : Int), (252 : Int), (13 : Int), (30 : Int), (47 : Int), (64 : Int), (81 : Int), (98 : Int), (115 : Int), (132 : Int), (149 : Int), (166 : Int), (183 : Int), (200 : Int), (217 : Int), (234 : Int), (251 : Int), (12 : Int), (29 : Int), (46 : Int), (63 : Int), (80 : Int), (97 : Int), (114 : Int), (131 : Int), (148 : Int), (165 : Int), (182 : Int), (199 : Int), (216 : Int), (233 : Int), (250 : Int), (11 : Int), (28 : Int), (45 : Int), (62 : Int), (79 : Int), (96 : Int), (113 : Int), (130 : Int), (147 : Int)] : Array (Int))
+                    else
+                      do
+                        pure out
 
 end Megadreifach

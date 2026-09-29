@@ -31,7 +31,7 @@ a security claim. See `proofs/ANTI_DRIFT.md`.
 
 ## MegaDreifach
 
-MegaDreifach is a toy three-megaminx Merkle–Damgård hash. The product name is locked; the puzzle/group library stays megaminx. Digest is 29 bytes. Length extension on bare Hash is accepted by design. The published definition is `primitives/hash/megadreifach/SPEC.md` plus `megadreifach.sudo`. Lean *algorithm* defs under `proofs/megadreifach/lean/Generated/` are emitted from that sudo. Proof-only stones sit next door. This is not a sudo↔Lean equivalence theorem. A green Lean build is not a security claim. See `proofs/ANTI_DRIFT.md`.
+MegaDreifach is a toy three-megaminx Merkle–Damgård hash. The product name is locked; the puzzle/group library stays megaminx. Digest is 29 bytes. Length extension on bare Hash is accepted by design. **The current version is v2**: `primitives/hash/megadreifach/SPEC.md` plus `megadreifach.sudo` (KATs `kats/megaminx_hash_kats_v2.json`). **v1 is deprecated** (broken: practical IV-anchored collisions, PR #119), frozen at `primitives/hash/megadreifach/v1/`. **The Lean lags: it is pinned to v1.** Lean *algorithm* defs under `proofs/megadreifach/lean/Generated/` are emitted from the frozen `v1/megadreifach.sudo`, and the proof-only stones next door are about v1; no Lean proof covers v2 yet. This is not a sudo↔Lean equivalence theorem. A green Lean build is not a security claim. See `proofs/ANTI_DRIFT.md`.
 
 ## DoubleDeal
 

@@ -6,6 +6,8 @@ Length extension on bare Hash is **accepted by design** (SHA-2-shaped) — do no
 
 A green Lean build is not a security claim.
 
+**Every stone below is about MegaDreifach v1** (deprecated, frozen at `primitives/hash/megadreifach/v1/`). The Lean package is pinned to v1: `Generated/` is emitted from `v1/megadreifach.sudo` and the KAT stones use the v1 KAT file. None of these stones covers the current v2 until the package is ported. Where a stone says SPEC.md or sudo, read `v1/SPEC.md` / `v1/megadreifach.sudo`.
+
 ## Must-ship
 
 | ID | Claim | Status | Lean coverage |

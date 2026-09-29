@@ -53,6 +53,10 @@ theorem v10SymFn_fixed : ∀ (a : Fin 13) (x : Fin 4) (c : Fin 52),
 theorem v10SymFn_zero (c : Fin 52) : v10SymFn 0 0 c = c := by
   revert c; decide!
 
+/-- `v10Sym 0 0` is the identity relabelling. -/
+theorem v10Sym_zero_zero : v10Sym 0 0 = 1 :=
+  Equiv.ext fun c => v10SymFn_zero c
+
 theorem v10Sym_app_rank (a : Fin 13) (x : Fin 4) {n : Nat} (h : n < 52) :
     rank ((v10Sym a x).app n) % 13 = (rank n + a.val) % 13 := by
   have := v10SymFn_rank a x ⟨n, h⟩

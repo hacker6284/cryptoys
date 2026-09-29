@@ -1,65 +1,32 @@
+<!-- Owns: the repository map (one-line purpose per primitive, where each area is documented) and the sudo conformance test commands. Maintenance rules: DOCS.md. -->
 # cryptoys
 
-Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys.
+Toy cryptography, in both senses. The algorithms are experiments, and they are built out of actual toys. Not for real use; a green Lean build is not a security claim (see [proofs/README.md](proofs/README.md)).
 
-Each primitive is a directory holding a normative specification and one [sudocode](https://github.com/hacker6284/sudocode) implementation. Demos are rendered with Three.js, and published from this repository with GitHub Pages. [cryptoygraphy.com](https://cryptoygraphy.com/) is the same generate-then-publish-`demos/` path on Render (`tools/render-build.sh` — see `.github/RENDER.md`). Demos-touching PRs also get a playroom preview at `https://hacker6284.github.io/cryptoys/pr/<N>/` — see `demos/README.md`.
+Each primitive is a directory holding a normative specification and one [sudocode](https://github.com/hacker6284/sudocode) implementation. Demos are rendered with Three.js, and published from this repository with GitHub Pages and on Render as [cryptoygraphy.com](https://cryptoygraphy.com/).
 
-```text
-primitives/hash/scramble/SPEC.md
-primitives/hash/scramble/scramble.sudo
-demos/                    # GitHub Pages root — playroom hub
-demos/playroom/           # mounted three.js room, poses, overlays
-demos/scramble/
-primitives/hash/megadreifach/SPEC.md
-primitives/hash/megadreifach/megadreifach.sudo
-primitives/cipher/doubledeal/SPEC.md
-primitives/cipher/doubledeal/doubledeal.sudo
-primitives/aead/doubledeal-cbc-hmac/SPEC.md
-primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
-demos/doubledeal/
-proofs/
-```
+## Primitives
 
-## Scramble
+| Primitive | Purpose | Specification | Proofs |
+| --- | --- | --- | --- |
+| Scramble | Toy hash. A message walks a solved cube; the digest is the seated pose. | [SPEC.md](primitives/hash/scramble/SPEC.md) | [proofs/scramble/](proofs/scramble/) |
+| MegaDreifach | Toy three-megaminx Merkle–Damgård hash. | [SPEC.md](primitives/hash/megadreifach/SPEC.md), [README](primitives/hash/megadreifach/README.md) | [proofs/megadreifach/](proofs/megadreifach/) |
+| DoubleDeal | Toy block cipher on a 52-card deck. | [SPEC.md](primitives/cipher/doubledeal/SPEC.md) (version history: [§7a](primitives/cipher/doubledeal/SPEC.md#7a-version-history)) | [proofs/doubledeal/](proofs/doubledeal/); frozen versions: [proofs/deprecated/](proofs/deprecated/README.md) |
+| DoubleDeal-CBC-HMAC | Toy Encrypt-then-MAC: DoubleDeal in CBC, then HMAC with MegaDreifach as the hash. Not DoubleDeal-SCM. | [SPEC.md](primitives/aead/doubledeal-cbc-hmac/SPEC.md), [README](primitives/aead/doubledeal-cbc-hmac/README.md) | [proofs/doubledeal-cbc-hmac/](proofs/doubledeal-cbc-hmac/) |
 
-Scramble is a hash. A message walks a solved cube. The digest is the seated pose, encoded as the cube-group index in 9 bytes. `scramble_v1` is superseded. `scramble_v2` is current.
+## Layout
 
-The specification is `primitives/hash/scramble/SPEC.md`. Emitted Lean
-for `update` / `evaluate` lives under `proofs/scramble/lean/Generated/`.
-This is not a sudo↔Lean equivalence theorem. A green Lean build is not
-a security claim. See `proofs/ANTI_DRIFT.md`.
+| Path | Contents |
+| --- | --- |
+| [primitives/](primitives/) | Specifications and `.sudo` implementations, by kind (`hash/`, `cipher/`, `aead/`) |
+| [demos/](demos/README.md) | Playroom hub and the Scramble and DoubleDeal demos (GitHub Pages root) |
+| [proofs/](proofs/README.md) | Proof ledger: what is machine-checked, what is evidence, what is not claimed |
+| [tools/](tools/) | Demo generation (`build.sh`, `generate-demos.sh`, `render-build.sh`) and the Lean emit and generation-check helpers (`emit_lean.py`, `gencheck.py`) |
+| [.github/](.github/) | CI workflows and actions, and the Render deploy notes ([RENDER.md](.github/RENDER.md)) |
 
-## MegaDreifach
+Maintenance rules for these READMEs: [DOCS.md](DOCS.md).
 
-MegaDreifach is a toy three-megaminx Merkle–Damgård hash. The product name is locked; the puzzle/group library stays megaminx. Digest is 29 bytes. Length extension on bare Hash is accepted by design. The published definition is `primitives/hash/megadreifach/SPEC.md` plus `megadreifach.sudo`. Lean *algorithm* defs under `proofs/megadreifach/lean/Generated/` are emitted from that sudo. Proof-only stones sit next door. This is not a sudo↔Lean equivalence theorem. A green Lean build is not a security claim. See `proofs/ANTI_DRIFT.md`.
-
-## DoubleDeal
-
-DoubleDeal (formerly TwoDeck) is a toy block cipher on a 52-card deck. **v8 is deprecated** (frozen at `primitives/cipher/doubledeal/v8/`, with a relabelling distinguisher filed in `proofs/deprecated/doubledeal-v8/`). **v9 is deprecated too** (frozen at `primitives/cipher/doubledeal/v9/`, with a K♣↔Q♥ swap distinguisher filed in `proofs/deprecated/doubledeal-v9/`). **v10 is deprecated** as well (frozen at `primitives/cipher/doubledeal/v10/`): its GridCycle layer falls short of the per-layer parity bar (a write-up, not a full-cipher attack, is in `proofs/deprecated/doubledeal-v10/`). **v11 is superseded** (frozen at `primitives/cipher/doubledeal/v11/`), not attacked: its key schedule has a related-key property with no measured effect on the full cipher (`proofs/deprecated/doubledeal-v11/`). **The live version is v12**, which changes only the key schedule: each PassKey step deals suit + 2 cards one at a time under the hand (or under the key pile when they do not fit) instead of rotating the hand by the suit, so the suit step and the rank cut no longer add. GridCycle is v11's: the walk's finger stays on the target (a "ghost finger"), and a blocked placement is steered by the card already on the target (the blocker picks the scan row and start column, and nudges the finger by its step). SumRanks is v10's: rows and columns are chained, and each turn depends on where the cards sit (index-weighted row sums; GF(4) suit values for columns). A block is one deck. ECB encrypts each block on its own. CTR encrypts a counter deck and composes that keystream with the message. Diamonds carry the counter. The other three suits are the nonce. SumRanks, ShiftRows, and GridCycle are the unkeyed layers. Compose is the keyed layer. PassKey expands the master deck into the round keys. Section 5.3 encodes a byte string as decks, outside `encrypt` and `decrypt`: 28-byte blocks unrank into decks, and ciphertext is 29 bytes per deck because 52! does not fit in 28 bytes. A demo box is that text as UTF-8, unless it starts with `0x`, in which case the rest is hex.
-
-The specification is `primitives/cipher/doubledeal/SPEC.md` (v12). Emitted Lean for `encrypt` lives under `proofs/doubledeal/lean/Generated/`. PassKey stones are proof-only. See `proofs/ANTI_DRIFT.md`.
-
-## DoubleDeal-CBC-HMAC
-
-DoubleDeal-CBC-HMAC is Encrypt-then-MAC: DoubleDeal in **CBC** on the 28-byte §5.3 encoding, then **HMAC** with MegaDreifach as the hash. It is not DoubleDeal-SCM. The specification is `primitives/aead/doubledeal-cbc-hmac/SPEC.md`. No AES-class claim. SCM / SMAC stay later.
-
-```sh
-sudoc emit-ir --require terminates -I primitives/hash/megadreifach \
-    primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo > /dev/null
-sudoc build --target js --tests -o /tmp/ddch \
-    -I primitives/hash/megadreifach \
-    primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
-node /tmp/ddch/_doubledeal_cbc_hmac_impl.mjs
-```
-
-Build the demo's JavaScript with a local `sudoc`:
-
-```sh
-export SUDOC=/path/to/sudoc
-sh tools/build.sh
-```
-
-`tools/build.sh` looks for `sudoc` at `~/Documents/Projects/sudocode/sudoc/target/debug/sudoc` when `SUDOC` is unset. Then serve `demos/` for the playroom hub. Scramble and DoubleDeal both run in the room (`?algo=scramble`, `?algo=doubledeal`).
+## Build and test
 
 The conformance tests are inside each `.sudo` file. With `sudoc` on the path:
 
@@ -70,13 +37,10 @@ sudoc build --target js --tests -o /tmp/megadreifach primitives/hash/megadreifac
 node /tmp/megadreifach/_megadreifach_impl.mjs
 sudoc build --target js --tests -o /tmp/doubledeal primitives/cipher/doubledeal/doubledeal.sudo
 node /tmp/doubledeal/_doubledeal_impl.mjs
-sudoc build --target js --tests -o /tmp/ddch -I primitives/hash/megadreifach \
-    primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
-node /tmp/ddch/_doubledeal_cbc_hmac_impl.mjs
 ```
 
-GitHub Actions builds `sudoc` from [hacker6284/sudocode](https://github.com/hacker6284/sudocode), runs those tests, and publishes `demos/`.
+DoubleDeal-CBC-HMAC needs `-I primitives/hash/megadreifach` and a JavaScript step; its commands are in [its README](primitives/aead/doubledeal-cbc-hmac/README.md). Building and serving the demos: [demos/README.md](demos/README.md#local).
 
-## Proofs
+`tools/generate-demos.sh` runs all of the above, the extra JavaScript and KAT checks, and `tools/build.sh`. It is what CI runs after building `sudoc` ([`.github/actions/generate-demos/`](.github/actions/generate-demos/action.yml)). It uses `SUDOC`, or `.sudocode/sudoc/target/release/sudoc` when `SUDOC` is unset.
 
-What this library will and will not claim is in `proofs/README.md`. Anti-drift (sudo normative, Lean algorithms generated) is `proofs/ANTI_DRIFT.md`. DoubleDeal stones are under `proofs/doubledeal/`. MegaDreifach stones are under `proofs/megadreifach/`. Scramble Generated Lean is under `proofs/scramble/`.
+Lean: [proofs/README.md](proofs/README.md) and [proofs/ANTI_DRIFT.md](proofs/ANTI_DRIFT.md).

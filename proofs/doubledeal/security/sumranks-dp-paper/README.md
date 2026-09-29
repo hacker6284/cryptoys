@@ -1,6 +1,7 @@
+<!-- Owns: the file map of the SumRanks v10 survival paper proof and its manual checks. Maintenance rules: ../../../../DOCS.md. -->
 # SumRanks v10 survival bound: paper proof
 
-This is the paper proof behind `../DoubleDealSecurity/SumRanksDP/`. The Lean comments there cite it as `PROOF.md §n`.
+This is the paper proof behind [`../DoubleDealSecurity/SumRanksDP/`](../DoubleDealSecurity/SumRanksDP/). The Lean comments there cite it as `PROOF.md §n`.
 
 It proves that every card relabelling outside `v10Sym` commutes with v10 SumRanks (one layer, no key) on at most
 `0.012768 · 52! < 52!/64` decks. Lean formalises the `52!/64` bound. §5b adds a corollary that the maximum is `9/1105`. That corollary is
@@ -10,7 +11,7 @@ exactly `(9/1105) · 52!` decks (`sumRanksV10_survival_threeCycle`, §9). None o
 
 | file | what |
 |---|---|
-| `PROOF.md` | the proof (§§0–5), computer-assisted corollary that 9/1105 is the maximum (§5b; not formalised, not independently reviewed; the value for A♣→2♣→3♣ is formalised), numerical checks (§6), side results (§8), Lean route (§9) |
+| [`PROOF.md`](PROOF.md) | the proof (§§0–5), computer-assisted corollary that 9/1105 is the maximum (§5b; not formalised, not independently reviewed; the value for A♣→2♣→3♣ is formalised), numerical checks (§6), side results (§8), Lean route (§9) |
 | `verify_proof.py` → `verify_output.txt` | numerical checks of every lemma against the C model in `../../analysis/v10-sumranks/sbox-search/` (about 2 min; needs gcc with OpenMP and numpy; 0 failures) |
 | `model.py` | pure-Python SumRanks v10, checked equal to `sbox.c` by `verify_proof.py` |
 | `rowlemma_exact.py` | exact one-row distributions (Lemma 2) |

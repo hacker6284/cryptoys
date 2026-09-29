@@ -1,3 +1,4 @@
+<!-- Owns: the DoubleDeal v10 write-up (historical record). Maintenance rules: ../../../DOCS.md. -->
 # DoubleDeal v10: GridCycle parity shortfall (DEPRECATED algorithm)
 
 **Kind:** per-layer weakness write-up, filed next to the frozen artifact (see the [`proofs/README.md`](../../README.md) taxonomy). It is **not** a working attack on the full cipher. This folder freezes DoubleDeal v10 at [`primitives/cipher/doubledeal/v10/`](../../../primitives/cipher/doubledeal/v10/), following the v8/v9 precedent. **The successor is v11**: GridCycle rule 1 + tweak B (ghost finger, blocker-directed scan). It is now the live `SPEC.md` / `doubledeal.sudo`. The analysis that found the shortfall and selected the fix is [`proofs/doubledeal/analysis/v10-gridcycle/`](../../doubledeal/analysis/v10-gridcycle/) (README, PHASE2–PHASE6). Nothing here is a security claim, and there are no bit-security claims in either direction.

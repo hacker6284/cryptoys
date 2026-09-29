@@ -1,6 +1,7 @@
+<!-- Owns: what this tree claims and does not claim for Scramble, and how to rebuild its Generated Lean. Maintenance rules: ../../DOCS.md. -->
 # Scramble proofs
 
-Scramble stays a **teaching / lineage** hash. `scramble_v2` is current (`primitives/hash/scramble/`). This directory does not claim collision resistance, preimage resistance, or any other hash-security property.
+Scramble stays a **teaching / lineage** hash. `scramble_v2` is current ([`primitives/hash/scramble/`](../../primitives/hash/scramble/SPEC.md)). This directory does not claim collision resistance, preimage resistance, or any other hash-security property.
 
 Sudo is normative. Emitted Lean under `lean/Generated/` is the
 algorithm. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). This does
@@ -9,7 +10,7 @@ terminates gate is on. Production loops are bounded `for`.
 
 ## Birthday ceiling
 
-The digest is a seated cube pose: about 65.2 bits, the order of the cube group. A single cube has a birthday collision ceiling around \(2^{32.6}\). The v2 SPEC also records a meet-in-the-middle second-preimage cost around \(2^{33}\). Those figures are honesty about the group size, not theorems in this tree, and not a reason to treat Scramble as a hash with a security level.
+The digest size and attack figures are in the SPEC's [`scramble_v2`](../../primitives/hash/scramble/SPEC.md#scramble_v2) section. They are honesty about the group size, not theorems in this tree, and not a reason to treat Scramble as a hash with a security level.
 
 ## Generated Lean
 

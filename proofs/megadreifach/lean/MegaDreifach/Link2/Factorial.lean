@@ -15,18 +15,9 @@
   Not a positive rank. Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
 -/
 import MegaDreifach.Link2.PackOri
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
 
 private theorem fits13 : FitsLen 13 := by
   unfold FitsLen i64MaxNat
@@ -36,40 +27,8 @@ private theorem thirteen_lt_limb : 13 < limbBase := by
   unfold limbBase
   decide
 
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
-
-/-- `12!` fits in one limb. `13!` does not (`6_227_020_800 > 10^9`). -/
-private theorem factorial_12_lt_limb : factorial 12 < limbBase := by
-  unfold factorial limbBase
-  decide
-
 private theorem factorial_one_limb (n : Nat) (hn : n ≤ 12) : factorial n < limbBase :=
   Nat.lt_of_le_of_lt (factorial_mono n 12 hn) factorial_12_lt_limb
-
-private theorem factorial_pred_mul (i : Nat) (hi : 0 < i) :
-    factorial (i - 1) * i = factorial i := by
-  cases i with
-  | zero => cases hi
-  | succ k =>
-    have : (k + 1) - 1 = k := by omega
-    rw [this, factorial_succ, Nat.mul_comm]
 
 /-! ## `big_factorial` -/
 
@@ -269,7 +228,7 @@ def peelDivStep (toV : Int) (σ : Int × Megadreifach.BigInt) :
             let i' ← SudoRt.addI f (1 : Int)
             pure (SudoRt.Flow.cont (ρ := Megadreifach.BigInt × Int) (i', fs))
 
-private theorem peelDivStep_gt (toV f : Int) (q : Megadreifach.BigInt) (h : f > toV) :
+theorem peelDivStep_gt (toV f : Int) (q : Megadreifach.BigInt) (h : f > toV) :
     peelDivStep toV (f, q) = .ok (SudoRt.Flow.brk (f, q)) := by
   unfold peelDivStep
   rw [if_pos h]

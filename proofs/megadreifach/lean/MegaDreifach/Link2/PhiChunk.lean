@@ -16,6 +16,7 @@ import MegaDreifach.Link2.FromBePad
 import MegaDreifach.Link2.Peel51
 import MegaDreifach.Link2.EvenRank
 import MegaDreifach.Factoradic
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -541,8 +542,6 @@ abbrev PhiSt := Int × (Array Int × (Megadreifach.BigInt × Array Int))
 private theorem fits52 : FitsLen 52 := by
   unfold FitsLen i64MaxNat
   decide
-
-private theorem fits51 : FitsLen 51 := FitsLen.of_le fits52 (by decide)
 
 private theorem sudoAssertEq_ofNat (n : Nat) (line : Nat) :
     SudoRt.sudoAssertEq (Int.ofNat n) (Int.ofNat n) line = .ok () := by

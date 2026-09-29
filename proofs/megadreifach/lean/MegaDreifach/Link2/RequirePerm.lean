@@ -13,6 +13,7 @@
 import Megadreifach
 import MegaDreifach.Domain
 import MegaDreifach.Link2.Loop
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -76,26 +77,6 @@ private theorem seenArr_zero (deal : List Nat) :
     have hj : j < 52 := by rw [seenArr_size] at hj₁; exact hj₁
     rw [Array.getElem_mkArray, seen_get deal 0 j hj]
     simp [seenBit, List.take_zero]
-
-/-- `deal[i]` is not among the earlier cards. -/
-private theorem not_mem_take_self (deal : List Nat) (hnd : deal.Nodup)
-    {i : Nat} (hi : i < deal.length) : deal[i] ∉ deal.take i := by
-  induction deal generalizing i with
-  | nil => cases hi
-  | cons a as ih =>
-    cases i with
-    | zero =>
-      simp [List.take_zero]
-    | succ i =>
-      rw [List.nodup_cons] at hnd
-      have hi' : i < as.length := Nat.lt_of_succ_lt_succ hi
-      intro hmem
-      rw [List.take_succ_cons, List.mem_cons] at hmem
-      cases hmem with
-      | inl heq =>
-        exact hnd.1 (heq ▸ List.getElem_mem hi')
-      | inr hm =>
-        exact ih hnd.2 hi' hm
 
 private theorem get_mem_take_succ (deal : List Nat) (i : Nat) (hi : i < deal.length) :
     deal[i] ∈ deal.take (i + 1) := by

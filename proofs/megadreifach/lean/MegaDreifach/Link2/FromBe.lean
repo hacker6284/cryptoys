@@ -12,18 +12,9 @@
 import MegaDreifach.Pad
 import Megadreifach
 import MegaDreifach.Link2.PackOri
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
 
 private theorem big_add_zeros :
     Megadreifach.big_add (bigOf []) (bigOf []) = .ok (bigOf []) := by
@@ -91,7 +82,7 @@ def beFromStep (bs : Array Int) (two56 : Megadreifach.BigInt) (toV : Int)
             let i' ← SudoRt.addI i (1 : Int)
             pure (SudoRt.Flow.cont (ρ := Megadreifach.BigInt) (i', fs))
 
-private theorem beFromStep_gt (bs : Array Int) (two56 : Megadreifach.BigInt)
+theorem beFromStep_gt (bs : Array Int) (two56 : Megadreifach.BigInt)
     (toV i : Int) (n : Megadreifach.BigInt) (h : i > toV) :
     beFromStep bs two56 toV (i, n) = .ok (SudoRt.Flow.brk (i, n)) := by
   unfold beFromStep

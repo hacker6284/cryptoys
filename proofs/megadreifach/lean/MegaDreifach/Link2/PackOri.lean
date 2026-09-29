@@ -21,6 +21,7 @@
 import Megadreifach
 import MegaDreifach.Rank
 import MegaDreifach.Link2.Be
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -205,10 +206,6 @@ theorem three_pow19_fits : FitsLen (3 ^ 19) := by
   unfold FitsLen i64MaxNat
   decide
 
-theorem limb_sq_fits : limbBase ^ 2 ≤ i64MaxNat := by
-  unfold i64MaxNat limbBase
-  decide
-
 theorem fits_lt_pow2_29 {n : Nat} (h : n ≤ 2 ^ 29) : FitsLen n :=
   FitsLen.of_le two_pow29_fits h
 
@@ -369,72 +366,9 @@ private theorem embed_set_high (lo hi : Nat) :
   apply Array.ext'
   simp [embed, Array.toList_set, List.set]
 
-private theorem prod_lt_sq {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
-    a * b < limbBase ^ 2 := by
-  have ha' : a ≤ limbBase - 1 := by
-    have : 0 < limbBase := limbBase_pos
-    omega
-  have hb' : b ≤ limbBase - 1 := by
-    have : 0 < limbBase := limbBase_pos
-    omega
-  have hmul : a * b ≤ (limbBase - 1) * (limbBase - 1) := Nat.mul_le_mul ha' hb'
-  have hconst : (limbBase - 1) * (limbBase - 1) < limbBase ^ 2 := by
-    unfold limbBase
-    decide
-  exact Nat.lt_of_le_of_lt hmul hconst
-
-private theorem prod_fits {a b : Nat} (ha : a < limbBase) (hb : b < limbBase) :
-    FitsLen (a * b) := by
-  have hsq : a * b < limbBase ^ 2 := prod_lt_sq ha hb
-  exact Nat.le_trans (Nat.le_of_lt hsq) limb_sq_fits
-
 private theorem fuel_point (n : Int) :
     (if n > n then (1 : Nat) else (n - n).natAbs + 1) = 1 := by
   simp [Int.lt_irrefl, Int.sub_self]
-
-private theorem subI_one_one : SudoRt.subI (1 : Int) (1 : Int) = .ok (0 : Int) := by
-  erw [subI_ofNat_one 1 (by decide) FitsLen.one]
-  rfl
-
-private theorem subI_two_one : SudoRt.subI (2 : Int) (1 : Int) = .ok (1 : Int) := by
-  have h : FitsLen 2 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 2 1 h (by decide)]
-  simp
-
-private theorem addI_one_one : SudoRt.addI (1 : Int) (1 : Int) = .ok (2 : Int) := by
-  have h : FitsLen (1 + 1) := by unfold FitsLen i64MaxNat; decide
-  erw [addI_ofNat 1 1 h]
-  rfl
-
-private theorem addI_zero_one : SudoRt.addI (0 : Int) (1 : Int) = .ok (1 : Int) := by
-  erw [addI_ofNat 0 1 FitsLen.one]
-  simp [Nat.zero_add]
-
-private theorem addI_zero_zero : SudoRt.addI (0 : Int) (0 : Int) = .ok (0 : Int) := by
-  erw [addI_ofNat 0 0 FitsLen.zero]
-  simp
-
-private theorem addI_zero_nat (n : Nat) (_h : FitsLen n) :
-    SudoRt.addI (0 : Int) (Int.ofNat n) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (0 + n) := by simpa [Nat.zero_add] using _h
-  erw [addI_ofNat 0 n h0]
-  simp [Nat.zero_add]
-
-private theorem addI_nat_zero (n : Nat) (_h : FitsLen n) :
-    SudoRt.addI (Int.ofNat n) (0 : Int) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (n + 0) := by simpa [Nat.add_zero] using _h
-  erw [addI_ofNat n 0 h0]
-  simp [Nat.add_zero]
-
-private theorem modI_nat_base (n : Nat) :
-    SudoRt.modI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n % limbBase)) := by
-  erw [limb_base_eq, modI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem divI_nat_base (n : Nat) :
-    SudoRt.divI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n / limbBase)) := by
-  erw [limb_base_eq, divI_ofNat n (Nat.ne_of_gt limbBase_pos)]
 
 private theorem putL_at0 (a : Array Int) (v : Int) (h : 0 < a.size) :
     SudoRt.putL a (0 : Int) v = .ok (a.set ⟨0, h⟩ v) := by
@@ -456,26 +390,6 @@ private theorem filledL_two :
 
 private def rawProd (a b : Nat) : Array Int :=
   embed [a * b % limbBase, a * b / limbBase]
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
 
 private theorem match_pure_brk {σ ρ α} (s : σ)
     (onRet : ρ → Except SudoRt.Trap α)
@@ -507,8 +421,8 @@ private theorem mulIStep_11 (a b : Nat)
     (ha : a < limbBase) (hb : b < limbBase) :
     mulIStep (bigOf [a]) (bigOf [b]) 0 (0, Array.mkArray 2 (0 : Int)) =
       .ok (SudoRt.Flow.brk (0, rawProd a b)) := by
-  have hfit : FitsLen (a * b) := prod_fits ha hb
-  have hsq : a * b < limbBase ^ 2 := prod_lt_sq ha hb
+  have hfit : FitsLen (a * b) := limb_prod_fits ha hb
+  have hsq : a * b < limbBase ^ 2 := limb_prod_lt_sq ha hb
   have hlenb : SudoRt.listLen (embed [b]) = (1 : Int) := by
     rw [listLen_embed]; rfl
   have hsz0 := zeros2_size0
@@ -583,7 +497,7 @@ private theorem mulIStep_11 (a b : Nat)
 theorem big_mul_limb (a b : Nat) (ha0 : 0 < a) (hb0 : 0 < b)
     (ha : a < limbBase) (hb : b < limbBase) :
     Megadreifach.big_mul (bigOf [a]) (bigOf [b]) = .ok (bigNat (a * b)) := by
-  have hsq : a * b < limbBase ^ 2 := prod_lt_sq ha hb
+  have hsq : a * b < limbBase ^ 2 := limb_prod_lt_sq ha hb
   have hv : 0 < a * b := Nat.mul_pos ha0 hb0
   unfold Megadreifach.big_mul
   dsimp [bigOf]

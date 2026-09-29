@@ -15,43 +15,9 @@
 -/
 import MegaDreifach.Link2.FromBeShort
 import MegaDreifach.Link2.FactTwo
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
-
-private theorem subI_two_one : SudoRt.subI (2 : Int) (1 : Int) = .ok (1 : Int) := by
-  have h : FitsLen 2 := by unfold FitsLen i64MaxNat; decide
-  erw [subI_ofNat 2 1 h (by decide)]
-  rfl
-
-private theorem addI_zero_one : SudoRt.addI (0 : Int) (1 : Int) = .ok (1 : Int) := by
-  erw [addI_ofNat 0 1 FitsLen.one]
-  simp [Nat.zero_add]
-
-private theorem addI_zero_nat (n : Nat) (h : FitsLen n) :
-    SudoRt.addI (0 : Int) (Int.ofNat n) = .ok (Int.ofNat n) := by
-  have h0 : FitsLen (0 + n) := by simpa [Nat.zero_add] using h
-  erw [addI_ofNat 0 n h0]
-  simp [Nat.zero_add]
-
-private theorem modI_nat_base (n : Nat) :
-    SudoRt.modI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n % limbBase)) := by
-  erw [limb_base_eq, modI_ofNat n (Nat.ne_of_gt limbBase_pos)]
-
-private theorem divI_nat_base (n : Nat) :
-    SudoRt.divI (Int.ofNat n) Megadreifach.limb_base =
-      .ok (Int.ofNat (n / limbBase)) := by
-  erw [limb_base_eq, divI_ofNat n (Nat.ne_of_gt limbBase_pos)]
 
 private theorem atL_head (xs : List Nat) (h : 0 < xs.length) :
     SudoRt.atL (embed xs) (0 : Int) = .ok (Int.ofNat xs[0]) := by
@@ -81,26 +47,12 @@ theorem pow256_eight_ge_sq : limbBase ^ 2 ≤ 256 ^ 8 := by
   unfold limbBase
   decide
 
-private theorem pow256_le {a b : Nat} (h : a ≤ b) : 256 ^ a ≤ 256 ^ b :=
-  Nat.pow_le_pow_of_le_right (by decide : 256 > 0) h
-
 private theorem fits7 : FitsLen 7 := by
   unfold FitsLen i64MaxNat
   decide
 
-private theorem fits255 : FitsLen 255 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem fits_byte {b : Nat} (hb : b ≤ 255) : FitsLen b :=
-  FitsLen.of_le fits255 hb
-
-private theorem two56_lt_limb : 256 < limbBase := by
-  unfold limbBase
-  decide
-
-private theorem two56_nat : bigNat 256 = bigOf [256] :=
-  bigNat_limb 256 two56_lt_limb (by decide)
+private theorem c256_nat : bigNat 256 = bigOf [256] :=
+  bigNat_limb 256 c256_lt_limb (by decide)
 
 private theorem byte_lt_base {b : Nat} (hb : b ≤ 255) : b < limbBase := by
   have : (255 : Nat) < limbBase := by unfold limbBase; decide
@@ -394,20 +346,11 @@ private theorem byte_lt (bs : List Nat) (h : BeLimb2Wf bs) :
   intro b hb
   exact Nat.lt_of_le_of_lt (h.byte b hb) (by decide : 255 < 256)
 
-private theorem fromBE_nil : fromBE [] = 0 := by
-  simp [fromBE, mixEncode]
-
-private theorem fromBE_eq_acc (bs : List Nat) :
-    fromBE bs = oriAcc 256 bs bs.length := by
-  rw [oriAcc, List.take_length]
-  unfold fromBE
-  exact (hornerAcc_mix 256 bs).symm
-
 private theorem ori_limb2_lt (bs : List Nat) (hb : ∀ b ∈ bs, b < 256)
     (i : Nat) (hi7 : i ≤ 7) (hlen : i ≤ bs.length) :
     oriAcc 256 bs i < limbBase ^ 2 := by
   have h1 := oriAcc_lt (r := 256) bs hb i hlen
-  have h2 : 256 ^ i ≤ 256 ^ 7 := pow256_le hi7
+  have h2 : 256 ^ i ≤ 256 ^ 7 := pow256_mono hi7
   exact Nat.lt_trans (Nat.lt_of_lt_of_le h1 h2) pow256_seven_lt_sq
 
 theorem fromBE_limb2_lt_sq (bs : List Nat) (h : BeLimb2Wf bs) :
@@ -415,18 +358,11 @@ theorem fromBE_limb2_lt_sq (bs : List Nat) (h : BeLimb2Wf bs) :
   rw [fromBE_eq_acc]
   exact ori_limb2_lt bs (byte_lt bs h) bs.length h.len (Nat.le_refl _)
 
-private theorem beFromStep_gt (bs : Array Int) (two56 : Megadreifach.BigInt)
-    (toV i : Int) (n : Megadreifach.BigInt) (h : i > toV) :
-    beFromStep bs two56 toV (i, n) = .ok (SudoRt.Flow.brk (i, n)) := by
-  unfold beFromStep
-  rw [if_pos h]
-  rfl
-
 private theorem mul_256 (a : Nat) (ha : a < limbBase ^ 2) (hp : a * 256 < limbBase ^ 2) :
     Megadreifach.big_mul (bigNat a) (bigNat 256) = .ok (bigNat (a * 256)) := by
   by_cases hlt : a < limbBase
-  · exact big_mul_acc a 256 (by decide) two56_lt_limb hlt
-  · exact big_mul_two a 256 (by decide) two56_lt_limb (Nat.le_of_not_lt hlt) ha hp
+  · exact big_mul_acc a 256 (by decide) c256_lt_limb hlt
+  · exact big_mul_two a 256 (by decide) c256_lt_limb (Nat.le_of_not_lt hlt) ha hp
 
 /-- One Horner step `acc * 256 + byte` while the value stays below `10^18`. -/
 private theorem beLimb2Step (bs : List Nat) (h : BeLimb2Wf bs) (i : Nat)
@@ -462,7 +398,7 @@ private theorem beLimb2Step (bs : List Nat) (h : BeLimb2Wf bs) (i : Nat)
     exact Nat.lt_of_le_of_lt hleP hnext
   have hsum : oriAcc 256 bs i * 256 + bs[i] < limbBase ^ 2 := by
     rw [hsum_eq]; exact hnext
-  rw [show bigOf [256] = bigNat 256 from two56_nat.symm]
+  rw [show bigOf [256] = bigNat 256 from c256_nat.symm]
   rw [mul_256 (oriAcc 256 bs i) hacc hprod, ok_bind]
   have hat := atL_embed bs i hi
   rw [ofNat_eq_natCast i] at hat

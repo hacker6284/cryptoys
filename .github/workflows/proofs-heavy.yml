@@ -92,9 +92,32 @@ jobs:
       - uses: actions/checkout@v5
       - name: No sorry / admit / native_decide (shared gate; includes MegaDreifachHeavy/)
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach/lean --exclude Generated
+      # lean-action installs elan and restores the .lake cache; the build is run below,
+      # after deleting cached outputs.
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/megadreifach/lean
-          build-args: "MegaDreifachHeavy"
+          build: "false"
+      # No cached output of anything KatSpecCheck loads may survive into the build: an
+      # imported `[init]` hook that exits 0 while Kat.lean is compiled would otherwise let
+      # `lake build` report success and keep a stale Kat.olean. With the outputs deleted,
+      # such a build leaves no .olean and fails. (MegaDreifach*, the Generated package's
+      # Megadreifach / SudoRt modules, and the audit package, whose outputs are not cached.)
+      - name: Delete cached build outputs of the MegaDreifach package (KatSpecCheck's whole import closure)
+        working-directory: proofs/megadreifach/lean
+        run: |
+          rm -rf .lake/build/lib/MegaDreifach* .lake/build/lib/Megadreifach* .lake/build/lib/SudoRt* \
+                 .lake/build/ir/MegaDreifach* .lake/build/ir/Megadreifach* .lake/build/ir/SudoRt* \
+                 ../../audit/.lake/build
+      # Both roots: KatSpecCheck imports MegaDreifach (the default lib root) as well.
+      - name: Build MegaDreifach and MegaDreifachHeavy (the 8 KAT kernel witnesses)
+        working-directory: proofs/megadreifach/lean
+        run: |
+          lake build MegaDreifach MegaDreifachHeavy
+          test -f .lake/build/lib/MegaDreifach.olean
+          test -f .lake/build/lib/MegaDreifachHeavy/Kat.olean
+      - name: KatSpecCheck (no [init] / [builtin_init] in the package; KAT statements are exactly v_Hash (embed (hexBytes vec.msgHex)) = .ok (embed (hexBytes vec.digestHex)))
+        working-directory: proofs/megadreifach/lean
+        run: lake env lean --run KatSpecCheck.lean
       - name: Axiom audit of every MegaDreifachHeavy theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py megadreifach-heavy

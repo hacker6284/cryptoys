@@ -19,6 +19,7 @@
 import Megadreifach
 import MegaDreifach.Rank
 import MegaDreifach.Link2.PackOri
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -254,24 +255,6 @@ theorem perm20_decode (a : Array Int) (h : WellFormedPerm20 a) :
   len := by simp [decode, h.len]
   nodup := h.nodup
   bound := h.bound
-
-theorem not_mem_take_self (perm : List Nat) (hnd : perm.Nodup) {i : Nat}
-    (hi : i < perm.length) : perm[i] ∉ perm.take i := by
-  induction perm generalizing i with
-  | nil => cases hi
-  | cons a as ih =>
-    cases i with
-    | zero => simp [List.take_zero]
-    | succ i =>
-      rw [List.nodup_cons] at hnd
-      have hi' : i < as.length := Nat.lt_of_succ_lt_succ hi
-      intro hmem
-      rw [List.take_succ_cons, List.mem_cons] at hmem
-      cases hmem with
-      | inl heq =>
-        exact hnd.1 (heq ▸ List.getElem_mem hi')
-      | inr hm =>
-        exact ih hnd.2 hi' hm
 
 theorem nodup_getElem_ne (xs : List Nat) (h : xs.Nodup) {i j : Nat}
     (hi : i < xs.length) (hj : j < xs.length) (hij : i ≠ j) : xs[i] ≠ xs[j] := by

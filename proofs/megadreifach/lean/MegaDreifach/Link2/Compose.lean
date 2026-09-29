@@ -12,6 +12,7 @@
 import Megadreifach
 import MegaDreifach.Group
 import MegaDreifach.Link2.Loop
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
 
@@ -29,41 +30,21 @@ private theorem natMap_succ (f : Nat → Nat) (k : Nat) :
     natMap f (k + 1) = natMap f k ++ [f k] := by
   simp [natMap, List.range_succ, List.map_append, List.map_singleton]
 
-private theorem push_embed (xs : List Nat) (b : Nat) :
-    (embed xs).push (Int.ofNat b) = embed (xs ++ [b]) := by
-  apply Array.ext'
-  simp [embed, toList_push]
-
 private theorem embed_take_push (f : Nat → Nat) (n i : Nat) (hi : i < n) :
     (embed ((natMap f n).take i)).push (Int.ofNat (f i)) =
       embed ((natMap f n).take (i + 1)) := by
   rw [push_embed, natMap_take f i n (Nat.le_of_lt hi),
     natMap_take f (i + 1) n (Nat.succ_le_of_lt hi), natMap_succ]
 
-private theorem take_all {α : Type _} (xs : List α) {n : Nat} (h : xs.length = n) :
-    xs.take n = xs := by
-  rw [← h, List.take_length]
-
-private theorem fits_le (n k : Nat) (hk : k ≤ n) (hn : FitsLen n) : FitsLen k :=
-  FitsLen.of_le hn hk
-
-private theorem fits4 : FitsLen 4 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem fits2 : FitsLen 2 := by
-  unfold FitsLen i64MaxNat
-  decide
-
 private theorem fits_sum3 (a b : Fin 3) : FitsLen (a.val + b.val) := by
   have ha := a.isLt
   have hb := b.isLt
-  exact fits_le 4 (a.val + b.val) (by omega) fits4
+  exact FitsLen.of_le fits4 (by omega)
 
 private theorem fits_sum2 (a b : Fin 2) : FitsLen (a.val + b.val) := by
   have ha := a.isLt
   have hb := b.isLt
-  exact fits_le 2 (a.val + b.val) (by omega) fits2
+  exact FitsLen.of_le fits2 (by omega)
 
 private theorem fuel_0_19 : fuelRange (0 : Int) (19 : Int) = 20 := by
   unfold fuelRange
@@ -163,8 +144,8 @@ theorem PosWf.lengths_fit (p : Megadreifach.Position) (h : PosWf p) :
     FitsLen p.sudo_8Position_2ep.size ∧ FitsLen p.sudo_8Position_2eo.size := by
   have h30 : FitsLen 30 := by unfold FitsLen i64MaxNat; decide
   refine ⟨?_, ?_, ?_, ?_⟩
-  · exact fits_le 30 _ (by rw [h.cpLen]; decide) h30
-  · exact fits_le 30 _ (by rw [h.coLen]; decide) h30
+  · exact FitsLen.of_le h30 (by rw [h.cpLen]; decide)
+  · exact FitsLen.of_le h30 (by rw [h.coLen]; decide)
   · rw [h.epLen]; exact h30
   · rw [h.eoLen]; exact h30
 
@@ -272,14 +253,14 @@ private theorem cornerAcc_done (g h : Position) :
   have hcp : (cpOut g h).length = 20 := by simp [cpOut, listOf_length]
   have hco : (coOut g h).length = 20 := by simp [coOut, listOfOri_length]
   unfold cornerAcc
-  rw [take_all (cpOut g h) hcp, take_all (coOut g h) hco]
+  rw [List.take_of_length_le (Nat.le_of_eq hcp), List.take_of_length_le (Nat.le_of_eq hco)]
 
 private theorem edgeAcc_done (g h : Position) :
     edgeAcc g h 30 = (embed (epOut g h), embed (eoOut g h)) := by
   have hep : (epOut g h).length = 30 := by simp [epOut, listOf_length]
   have heo : (eoOut g h).length = 30 := by simp [eoOut, listOfOri_length]
   unfold edgeAcc
-  rw [take_all (epOut g h) hep, take_all (eoOut g h) heo]
+  rw [List.take_of_length_le (Nat.le_of_eq hep), List.take_of_length_le (Nat.le_of_eq heo)]
 
 private theorem cp_push (g h : Position) (i : Nat) (hi : i < 20) :
     (embed ((cpOut g h).take i)).push (h.cp (g.cp ⟨i, hi⟩) : Int) =
@@ -402,7 +383,7 @@ private theorem cornerStep_hit (g h : Position) (i : Nat) (hi : i ≤ 19) :
     rfl
   · have hneI : ¬ (i : Int) = (19 : Int) := fun h => heq (Int.ofNat.inj h)
     have hfits : FitsLen (i + 1) :=
-      fits_le 20 (i + 1) (by omega) (by unfold FitsLen i64MaxNat; decide)
+      FitsLen.of_le (n := 20) (by unfold FitsLen i64MaxNat; decide) (by omega)
     have hadd := addI_ofNat_one i hfits
     rw [ofNat_eq_natCast i] at hadd
     rw [ite_int_beq, if_neg hneI, hadd, ok_bind, if_neg heq, coe_int (i + 1)]
@@ -488,7 +469,7 @@ private theorem edgeStep_hit (g h : Position) (i : Nat) (hi : i ≤ 29) :
     rfl
   · have hneI : ¬ (i : Int) = (29 : Int) := fun h => heq (Int.ofNat.inj h)
     have hfits : FitsLen (i + 1) :=
-      fits_le 30 (i + 1) (by omega) (by unfold FitsLen i64MaxNat; decide)
+      FitsLen.of_le (n := 30) (by unfold FitsLen i64MaxNat; decide) (by omega)
     have hadd := addI_ofNat_one i hfits
     rw [ofNat_eq_natCast i] at hadd
     rw [ite_int_beq, if_neg hneI, hadd, ok_bind, if_neg heq, coe_int (i + 1)]

@@ -160,12 +160,6 @@ theorem evenRank_lt_countN (n : Nat) (perm : List Nat) (h : PermNWf n perm) (hn 
 
 /-! ## Emitted loop -/
 
-theorem limbsOfNat_small (a : Nat) (ha : a < limbBase) : limbsOfNat a = natLimbs a := by
-  by_cases h0 : a = 0
-  · simp [h0, limbsOfNat, natLimbs_zero]
-  · rw [natLimbs_of_pos_lt a (Nat.pos_of_ne_zero h0) ha]
-    simp [limbsOfNat, h0, Nat.div_eq_of_lt ha, Nat.mod_eq_of_lt ha]
-
 theorem big_from_int_small (v : Nat) (hv : v < limbBase) :
     Megadreifach.big_from_int (Int.ofNat v) = .ok (bigOf (natLimbs v)) := by
   rw [big_from_int_refines v (fits_of_lt_limb hv), limbsOfNat_small v hv]

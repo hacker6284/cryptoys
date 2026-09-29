@@ -9,17 +9,27 @@ only; no theorem uses these numbers). Nothing here is a security or bit-security
 
 ## 0. What is proved (summary; statements in RealSchedule.lean)
 
-* `encryptDeckFn_masterList`: the real round keys `realKey i π` are the keys of `encryptDeckFn`.
-* `card_realKey`: each single round key is uniform (uniform master key).
-* `card_image_realKey_pair` / `_lt`: any pair (K_r, K_s) takes exactly 52! of the (52!)^2
-  values, so the round keys are not independent.
-* `passKey_head_ne` / `card_realKey_top_eq`: K_{r+1}[0] ≠ K_r[0] for every master key.
+* Master key: a uniform π : Perm (Fin 52), injected into key decks by `masterList`
+  (`masterList_injective`; its image is exactly the 52-card key decks,
+  `masterList_surjective`).
+* `encryptDeckFn_masterList`: the real round keys `roundKey i π` are the keys of `encryptDeckFn`.
+* `card_roundKey`: each single round key is uniform (uniform master key).
+* `card_image_roundKey_pair` / `_lt`: for any two rounds r ≠ s, the pair (K_r, K_s) takes
+  exactly 52! of the (52!)^2 values, so the round keys are not independent (the theorems
+  are stated for all r, s; for r = s they are trivial).
+* `passKey_head_ne` / `card_roundKey_top_eq`: K_{r+1}[0] ≠ K_r[0] for every master key.
 * `realTrail_card_le_64` (heavy) and `realTrail_card_le_26`, `_64_of_not_v10Sym`,
   `_64_of_check` (default): for every R ≥ 1, σ ≠ 1 and starting deck y, the constant-σ
   characteristic through R rounds of the REAL schedule has probability ≤ 1/64 over the
-  master key. **No gain beyond round 1**: 1/64 for every R, against (1/64)^R for independent
-  uniform round keys (M2). One characteristic, not the differential. The final no-mix round
-  is not covered, and `rounds` is not linked to `encryptN` (only the keys are).
+  master key. **The proved bound gains nothing beyond round 1**: it is 1/64 for every R,
+  weaker than M2's (1/64)^R, because from round 1 on the round key is not uniform given the
+  state (§4). This is a limit of the proof, not a measured weakness; for R ≥ 2 nothing
+  rules out the real schedule being more likely than (1/64)^R. One characteristic, not the
+  differential. The final no-mix round is not covered, and `rounds` is not linked to
+  `encryptN` (only the keys are). R ≤ 5 is the cipher's range: `Trail` round i is "Compose
+  with K_i, then the round with mix", and the cipher has five such steps (K_0 … K_4); for
+  R ≥ 6 the model uses K_5, K_6, … as keys before a mix, which the cipher never does
+  (harmless, but not the cipher).
 
 ## 1. How the round keys depend on each other (PROVED where marked; the rest is a short argument)
 
@@ -28,14 +38,14 @@ only; no theorem uses these numbers). Nothing here is a security or bit-security
   `keyPos (F^r K0)`. F reads only the key deck (its controllers), never the message.
 * F is a bijection on 52-card decks (`passKey_leftInverse` / `passKey_rightInverse`,
   content-preserving by `passToKeyCutFallback_perm`). Hence, for K0 uniform on the 52!
-  decks: **each K_r alone is exactly uniform** (PROVED: `card_realKey`), and the tuple
+  decks: **each K_r alone is exactly uniform** (PROVED: `card_roundKey`), and the tuple
   (K_0, …, K_R) is uniform on the 52!-point set {(k, F k, …, F^R k)}, a vanishing fraction
-  of the (52!)^(R+1) tuples. **No two round keys are independent**: K_s = F^(s-r)(K_r), so
+  of the (52!)^(R+1) tuples. **No two round keys r ≠ s are independent**: K_s = F^(s-r)(K_r), so
   P[K_r = a, K_s = b] = [b = F^(s-r) a]/52!, never 1/(52!)^2 (argument; PROVED in the form
-  "the pair takes exactly 52! values": `card_image_realKey_pair`, `_lt`).
+  "the pair takes exactly 52! values": `card_image_roundKey_pair`, `_lt`).
 * One exact card-level consequence: the top card of F(K) is the last controller and
   the top card of K the first, so **P[K_{r+1}[0] = K_r[0]] = 0** (PROVED:
-  `card_realKey_top_eq`). For independent uniform keys it would be 1/52 (not a theorem).
+  `card_roundKey_top_eq`). For independent uniform keys it would be 1/52 (not a theorem).
 
 ## 2. Measured statistics of consecutive keys (MEASURED, `keystats.c`, `adjstats.c`)
 
@@ -72,7 +82,10 @@ Conditioned runs: 6 × 3·10^8 = 1.8·10^9 uniform x_0 per row.
 
 Poisson 95% interval for 9 hits: [4.1, 17.1], so P[RC_1 | RC_0] ∈ [3.8e-5, 1.6e-4] for the
 first row, against 5.95e-5 unconditionally: **no sign of positive (or negative) correlation
-between consecutive rounds' events, at a resolution of about a factor 2–3.** The measured
+between consecutive rounds' events, at a resolution of only about a factor 2–3** (9, 7 and
+8 hits), from only two same-suit swaps and two starting decks. This does not bound R ≥ 2:
+for R ≥ 2 nothing proved or measured here rules out the real schedule following the
+characteristic with probability above (1/64)^R. The measured
 two-round real-schedule probability is 9/1.8·10^9 = 5.0e-9 (95% upper bound 9.5e-9), far
 below (1/64)^2 = 2.4e-4 and near the independent-model product (5.95e-5)^2 = 3.5e-9.
 Three rounds: no hits, and no resolution (would need ~10^14 samples).
@@ -85,7 +98,9 @@ statistic. (Not a proof that it is uniform; that is not known.)
 Both σ are same-suit swaps (SumRanks alone: exactly 1/221 each, `../v10-sumranks/`).
 The measured one-round value, ~1/17 000 for these two swaps, is far below the proved 1/64,
 so a real-schedule probability above (1/64)^R would need consecutive rounds to be
-correlated by a factor of order 10^2–10^3 per round. Nothing like that is seen at R = 2.
+correlated by a factor of order 10^2–10^3 per round. Nothing like that is seen at R = 2
+for these two swaps and two starting decks (resolution about 2–3×); other σ, other decks
+and R ≥ 3 are not measured at any useful resolution.
 An exact two-round value is out of reach (a count over 52! master keys).
 
 ## 4. Where M2's proof uses independence and uniformity
@@ -111,7 +126,8 @@ No attack and no weakness beyond what is already documented was found.
 Structural remarks, none measured as exploitable:
 * One pass leaves strong seat-level structure between K_r and K_{r+1} (§2). The schedule
   is public, so this matters only through what it does to the cipher. The trail
-  measurement (§3) shows no carry-over into the characteristic at R = 2.
+  measurement (§3) shows no carry-over into the characteristic at R = 2, at a resolution
+  of about 2–3×, for two same-suit swaps and two starting decks only.
 * Slide / related-key structure: E_{F(K)} uses round keys K_1..K_7 where E_K uses
   K_0..K_6, so the mix rounds of the two encryptions line up shifted by one. The whitening
   and the no-mix final round break exact self-similarity. This is a related-key property

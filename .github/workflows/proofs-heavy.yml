@@ -109,10 +109,12 @@ jobs:
           rm -rf .lake/build/lib/MegaDreifach* .lake/build/lib/Megadreifach* .lake/build/lib/SudoRt* \
                  .lake/build/ir/MegaDreifach* .lake/build/ir/Megadreifach* .lake/build/ir/SudoRt* \
                  ../../audit/.lake/build
-      - name: Build MegaDreifachHeavy (the 8 KAT kernel witnesses)
+      # Both roots: KatSpecCheck imports MegaDreifach (the default lib root) as well.
+      - name: Build MegaDreifach and MegaDreifachHeavy (the 8 KAT kernel witnesses)
         working-directory: proofs/megadreifach/lean
         run: |
-          lake build MegaDreifachHeavy
+          lake build MegaDreifach MegaDreifachHeavy
+          test -f .lake/build/lib/MegaDreifach.olean
           test -f .lake/build/lib/MegaDreifachHeavy/Kat.olean
       - name: KatSpecCheck (no [init] / [builtin_init] in the package; KAT statements are exactly v_Hash (embed (hexBytes vec.msgHex)) = .ok (embed (hexBytes vec.digestHex)))
         working-directory: proofs/megadreifach/lean

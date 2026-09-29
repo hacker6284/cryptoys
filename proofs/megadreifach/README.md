@@ -113,7 +113,8 @@ lake build
 The 8 KAT theorems (M13) are in the separate, non-default library `MegaDreifachHeavy` (about 8 min of kernel evaluation):
 
 ```sh
-lake build MegaDreifachHeavy
+lake build MegaDreifach MegaDreifachHeavy
+lake env lean --run KatSpecCheck.lean   # no [init] hooks; KAT statements exact
 python3 ../../doubledeal/check_axioms.py megadreifach-heavy
 ```
 

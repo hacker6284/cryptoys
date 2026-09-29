@@ -89,8 +89,8 @@ every output relabelling τ. `roundBody_not_commutes_swap` is its τ = σ coroll
 * `roundBody_covariant_iff_id_of_cell0_prime`: the same, with `hcell` only for σ of
   prime order p ≤ 52.
 * Both `hcell` are **sufficient conditions, not known to be true or necessary**.
-  `Cell0Cov` is weaker than covariance, so each `hcell` is strictly stronger than the
-  conjecture and might be false even if the conjecture is true.
+  Each `hcell` implies the conjecture; the converse is not known (`Cell0Cov` is weaker
+  than covariance, so each `hcell` might be false even if the conjecture is true).
 * Each is a statement about SumRanks' output cell (0,0) alone: ShiftRows fixes row 0,
   and scoop_cm reads (0,0) first.
 

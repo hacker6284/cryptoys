@@ -225,7 +225,7 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
     (`CovariantNarrow.roundBody_not_covariant_swap`, heavy library). It is
     equivalent to its prime-order case (`CovariantNarrow.prime_case_iff`), and to
     its case of prime-order σ that are neither a transposition nor a `v10Sym`
-    (`CovariantNarrow.roundBody_covariant_iff_id_of_prime_nonswap`, heavy library).
+    (`CovariantNarrow.prime_nonswap_case_iff`, heavy library).
     It also follows from single-cell SumRanks statements
     (`CovariantNarrow.roundBody_covariant_iff_id_of_cell0`, `…_of_cell0_prime`) that
     are sufficient conditions, not known to be true or necessary. The reduced cases

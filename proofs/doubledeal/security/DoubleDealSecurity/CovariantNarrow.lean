@@ -33,8 +33,8 @@
   D. `roundBody_covariant_iff_id_of_cell0` and `…_of_cell0_prime`: the conjecture
      follows from a single-cell SumRanks statement `hcell` (all σ, resp. σ of prime
      order p ≤ 52). `hcell` is a SUFFICIENT condition, not known to be true or
-     necessary: `Cell0Cov` is weaker than covariance, so `hcell` is strictly stronger
-     than the conjecture and might be false even if the conjecture is true.
+     necessary: `hcell` implies the conjecture; the converse is not known (`Cell0Cov`
+     is weaker than covariance, so `hcell` might be false even if the conjecture is true).
 
   Open after this file: the conjecture for σ of prime order p ≤ 52 that are neither
   a transposition nor a `v10Sym` (exactly the hypothesis of
@@ -434,9 +434,9 @@ theorem prime_nonswap_case_iff_of_check (hchk : Cov0Checks) :
 /-- (PROVED, a reduction) The conjecture follows from the single-cell statement
     `hcell`: every σ satisfying the seat-26 condition `Cell0Cov σ τ` for some τ is a
     `v10Sym`. `hcell` is a HYPOTHESIS and is NOT proved. It is a SUFFICIENT
-    condition, not known to be true or necessary: `Cell0Cov` is weaker than
-    covariance, so `hcell` is strictly stronger than the conjecture and might be
-    false even if the conjecture is true. -/
+    condition, not known to be true or necessary: `hcell` implies the conjecture;
+    the converse is not known (`Cell0Cov` is weaker than covariance, so `hcell`
+    might be false even if the conjecture is true). -/
 theorem roundBody_covariant_iff_id_of_cell0
     (hcell : ∀ σ τ : Relabel, Cell0Cov σ τ → ∃ a x, σ = v10Sym a x)
     (σ : Relabel) : Covariant σ unkeyedWithMix ↔ σ = 1 := by

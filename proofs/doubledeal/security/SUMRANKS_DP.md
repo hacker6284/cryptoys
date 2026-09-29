@@ -117,11 +117,14 @@ it adds no axiom. Approximate times:
 | `LA2_spec` | convolution square used by table A | ≈0.3 s |
 | `TB1_lt`, `tableB_nat` | table B | < 0.5 s |
 | `card_good_triples` | 3-cycle: the `156` seat triples in `(Fin 13)³` with `S = 0` (`13³` cases) | ≈2.4 s |
-| `card_distinct_triples` | 3-cycle: the `1716` distinct seat triples (`13³` cases) | ≈1.5 s |
 | `sum_fN_fin` | 3-cycle: the row-vector sum `180` (`4⁴` cases) | ≈0.4 s |
 
-`Standalone.lean` compiles in about 40 s, `Main.lean` in about 30 s and `ThreeCycle.lean` in about 10 s. All
-are light enough for the default build.
+The `1716` distinct seat triples (`card_distinct_triples`) are not a kernel check: they are
+`PermCount.card_distinct_triples_eq` at `Fin 13` (under 0.1 s).
+
+`Standalone.lean` compiles in about 40 s, `Main.lean` in about 30 s and `ThreeCycle.lean` in about
+11 s (10.7 s measured, 12.1 s before `card_distinct_triples` was derived). All are light enough
+for the default build.
 
 ## Manual check (not in CI)
 

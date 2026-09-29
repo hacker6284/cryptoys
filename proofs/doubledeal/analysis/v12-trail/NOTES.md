@@ -77,9 +77,9 @@ One-round characteristic probability over a uniform post-Compose deck:
 SumRanks alone: every same-suit swap commutes with v10 SumRanks on exactly 1/221 of
 the decks. This is ENUMERATED exactly (not sampled) by `exact()` in
 `../v10-sumranks/sbox-search/exact.py`, not proved in Lean; the Lean bound used
-here is ≤ 1/64. Its log (`logs/exact.log`) records the swap 2♣↔7♣; running
-`exact()` on all 312 same-suit swaps (A♣↔2♣, A♣↔K♣, 5♣↔8♣, … included) gives
-1/221 for each.
+here is ≤ 1/64. `python3 exact.py --same-suit-swaps` runs `exact()` on all 312
+same-suit swaps (A♣↔2♣, A♣↔K♣, 5♣↔8♣, … included) and gives exactly 1/221 for each,
+and exactly 0 for each of the 78 same-rank swaps (`logs/exact_swaps.log`).
 
 So the measured one-round values are far below the proved 1/64 per round. The gap
 is GridCycle for small-support τ, which is not formalised (see

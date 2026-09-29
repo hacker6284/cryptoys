@@ -705,7 +705,7 @@ theorem rho_prod_le_A3 (τ : Relabel) (h : nStar τ ≤ 12) (π : Equiv.Perm (Fi
 theorem pairCount_eq (a b p q p' q' : Fin 52) (hpq : p ≠ q) (hpq' : p' ≠ q') :
     (univ.filter fun π : Equiv.Perm (Fin 52) => π p = a ∧ π q = b).card =
       (univ.filter fun π : Equiv.Perm (Fin 52) => π p' = a ∧ π q' = b).card := by
-  obtain ⟨σ, hσ1, hσ2⟩ := exists_perm_two p' q' p q hpq' hpq
+  obtain ⟨σ, hσ1, hσ2⟩ := PermCount.exists_perm_two p' q' p q hpq' hpq
   have hi1 : σ⁻¹ p = p' := Equiv.Perm.inv_eq_iff_eq.2 hσ1.symm
   have hi2 : σ⁻¹ q = q' := Equiv.Perm.inv_eq_iff_eq.2 hσ2.symm
   apply card_nbij' (fun π => π * σ) (fun π => π * σ⁻¹)

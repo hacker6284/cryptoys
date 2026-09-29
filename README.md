@@ -21,7 +21,7 @@ Each primitive is a directory holding a normative specification and one [sudocod
 | [primitives/](primitives/) | Specifications and `.sudo` implementations, by kind (`hash/`, `cipher/`, `aead/`) |
 | [demos/](demos/README.md) | Playroom hub and the Scramble and DoubleDeal demos (GitHub Pages root) |
 | [proofs/](proofs/README.md) | Proof ledger: what is machine-checked, what is evidence, what is not claimed |
-| [tools/](tools/) | Demo generation (`build.sh`, `generate-demos.sh`, `render-build.sh`) and helpers used by `proofs/` (`emit_lean.py`, `gencheck.py`) |
+| [tools/](tools/) | Demo generation (`build.sh`, `generate-demos.sh`, `render-build.sh`) and the Lean emit and generation-check helpers (`emit_lean.py`, `gencheck.py`) |
 | [.github/](.github/) | CI workflows and actions, and the Render deploy notes ([RENDER.md](.github/RENDER.md)) |
 
 Maintenance rules for these READMEs: [DOCS.md](DOCS.md).

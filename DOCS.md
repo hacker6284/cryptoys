@@ -22,7 +22,7 @@ Do not use YAML frontmatter; GitHub renders it as a visible table.
 
 ## Special cases
 
-- `proofs/*/lean/Generated/README.md` files are hand-written. `tools/emit_lean.py` keeps them when it reinstalls a `Generated/` tree and skips them in `--check`. Every other file in `Generated/` is emitted; do not edit those.
+- `proofs/*/lean/Generated/README.md` files are hand-written. `tools/emit_lean.py` keeps them, `.gitignore` and `lake-manifest.json` when it reinstalls a `Generated/` tree, and skips them in `--check`. It emits the rest of `Generated/` (including `EMITTED_FROM.json`); do not edit those files.
 - READMEs under `proofs/deprecated/` get the header comment and nothing else beyond rule 4.
 - [`proofs/megadreifach/README.md`](proofs/megadreifach/README.md) is checked: `proofs/doubledeal/check_axioms.py --selftest` requires its backticked theorem names to equal `MD_README_THEOREMS`. Change both together.
 - Some README headings are cited from code comments (for example "Roadmap" in [`proofs/doubledeal/security/README.md`](proofs/doubledeal/security/README.md), and numbered sections of the analysis READMEs). Keep them, or update the citing files.

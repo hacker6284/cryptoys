@@ -57,8 +57,8 @@ assert.equal(
 );
 
 const adapters = readFileSync(new URL("./adapters.js", import.meta.url), "utf8");
-const scrambleDockAt = adapters.indexOf('root.id = "scramble-dock"');
-const doubleDealDockAt = adapters.indexOf('root.id = "doubledeal-dock"');
+const scrambleDockAt = adapters.indexOf('createDock("scramble"');
+const doubleDealDockAt = adapters.indexOf('createDock("doubledeal"');
 assert.ok(scrambleDockAt >= 0 && doubleDealDockAt > scrambleDockAt);
 assert.match(adapters.slice(scrambleDockAt, doubleDealDockAt), /data-puzzle-ctl hidden/);
 assert.match(adapters.slice(scrambleDockAt, doubleDealDockAt), /data-puzzle="megaminx"/);

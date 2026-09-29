@@ -18,6 +18,7 @@ import {
     renderTeachCard,
     sessionScope,
     syncJumpButtons,
+    teachPosition,
 } from "../shared/session.js";
 import { colorName, renderOutline } from "../shared/teach.js";
 
@@ -45,8 +46,6 @@ export function createScrambleSession({
     const speed = $("#speed");
     const teachEl = $("#teach");
     const tapeEl = $("#tape");
-    const teachCard = $("#teach-card");
-    const teachPos = $("#teach-pos");
     const outlineEl = $("#outline");
     const ioNote = $("#io-note");
     bindGrowFields(root);
@@ -358,10 +357,8 @@ export function createScrambleSession({
         const activeBlock = step && (step.kind === "move" || step.kind === "ruleB") ? step.block : -1;
         renderTape(activeBlock);
         const note = annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1));
-        renderTeachCard(teachCard, note, showSpec);
-        teachPos.textContent = step
-            ? `${viewI + 1} / ${trace.length}`
-            : (viewI >= trace.length && trace.length ? `${trace.length} / ${trace.length}` : `0 / ${trace.length}`);
+        renderTeachCard($("#teach-card"), note, showSpec);
+        $("#teach-pos").textContent = teachPosition(viewI, trace.length);
         renderOutline(outlineEl, outlineSections(), step ? String(viewI) : "", (index) => {
             void jumpTo(index - 1, false);
         });

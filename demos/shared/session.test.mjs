@@ -29,7 +29,7 @@ function fakeRoot(byId, groups = {}) {
 globalThis.window = node();
 globalThis.CSS = { escape: (text) => text };
 
-const { bindTransport, openSpec, sessionScope, syncJumpButtons } = await import("./session.js");
+const { bindTransport, openSpec, sessionScope, syncJumpButtons, teachPosition } = await import("./session.js");
 
 // openSpec: fetch, slice, render Markdown, open the dialog, scroll to the heading.
 {
@@ -92,6 +92,12 @@ const { bindTransport, openSpec, sessionScope, syncJumpButtons } = await import(
     syncJumpButtons(root, 0, 3);
     assert.deepEqual(jumps.map((el) => el.disabled), [false, false, false, false, false, false]);
 }
+
+// teachPosition: reads 0 before the first step and stops at the last.
+assert.deepEqual(
+    [teachPosition(-1, 3), teachPosition(1, 3), teachPosition(3, 3), teachPosition(0, 0)],
+    ["0 / 3", "2 / 3", "3 / 3", "0 / 0"],
+);
 
 // bindTransport: buttons, [data-jump] and teach keys reach the session; abort unbinds them.
 {

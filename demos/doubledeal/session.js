@@ -9,6 +9,7 @@ import {
     renderTeachCard,
     sessionScope,
     syncJumpButtons,
+    teachPosition,
 } from "../shared/session.js";
 import { cardName, renderOutline } from "../shared/teach.js";
 
@@ -33,8 +34,6 @@ export function createDoubleDealSession({
     const outputLabel = $("#output-label");
     const copyButton = $("#copy") || $("#digest-btn");
     const teachEl = $("#teach");
-    const teachCard = $("#teach-card");
-    const teachPos = $("#teach-pos");
     const outlineEl = $("#outline");
     const ioNote = $("#io-note");
     bindGrowFields(root);
@@ -458,16 +457,11 @@ export function createDoubleDealSession({
     }
 
     function refreshTeach() {
-        if (!teachCard) return;
         const viewI = viewedIndex();
         const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
         const note = annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1));
-        renderTeachCard(teachCard, note, showSpec);
-        if (teachPos) {
-            teachPos.textContent = step
-                ? `${viewI + 1} / ${trace.length}`
-                : (viewI >= trace.length && trace.length ? `${trace.length} / ${trace.length}` : `0 / ${trace.length}`);
-        }
+        renderTeachCard($("#teach-card"), note, showSpec);
+        $("#teach-pos").textContent = teachPosition(viewI, trace.length);
         const currentKey = !step
             ? ""
             : `${stageKey(step)}:${(step.kind === "sumrow" || step.kind === "sumcol" || step.kind === "shift") ? viewI : firstIndexOfStage(viewI)}`;

@@ -4,26 +4,34 @@
 
   Two kinds of module:
 
-  * Results about v1 of the grip rule (Recipe A reads only corner cubies):
-    `CornerDriven`, `FreeStart`.  They document why the rule is being
+  * Independent of the grip rule: `MDGeneric`, `MDReduction`, `StepWord`,
+    `Parity`, `DigestInj`, `IdealCount`.  No statement mentions how the grip
+    is chosen and no proof uses `recipeA_sameCorners`.  Each module docstring
+    says which lemmas unfold the current `Em` definitions and would need
+    repair if E_m changes.
+  * Results about the current grip rule ("v1": Recipe A, which reads only
+    corner cubies, after the noon and Front turns): `CornerDriven`,
+    `FreeStart`, `SwapCollision`.  They document why the rule is being
     redesigned.  Every theorem that uses the corner-only read
-    (`recipeA_sameCorners`) is in one of these two files.
-  * Independent of the grip rule: `MDGeneric`, `MDReduction`, `Parity`,
-    `DigestInj`, `IdealCount`.  No statement mentions the grip rule and no
-    proof uses `recipeA_sameCorners`.  Each module docstring says which
-    lemmas unfold the current `Em` definitions and would need repair if E_m
-    changes.
+    (`recipeA_sameCorners`) is in `CornerDriven` or `FreeStart`.
+    `SwapCollision` kernel-checks one concrete IV-anchored `v_Hash` collision
+    of the published hash by evaluating the concrete `Em.g2Step`; it does not
+    use `recipeA_sameCorners`.
 
-  The import chain is linear: MDGeneric → MDReduction → CornerDriven → Parity
-  → DigestInj → IdealCount → FreeStart.  `Parity` uses only `g2Step_fst` from
-  `CornerDriven` (a G2 step left-multiplies by a word that depends on the grip
-  and the card, whatever the grip rule is); it does not use the corner-only
-  read.
+  Imports follow use:
+    MDGeneric → MDReduction;  StepWord (Em step lemmas, `Word`);
+    MDReduction, StepWord → Parity → DigestInj;  MDReduction → IdealCount;
+    MDReduction, StepWord → CornerDriven;  CornerDriven, Parity → FreeStart;
+    SwapCollision needs only Link 2 (`VHash`, `EmIv`) and `Hex`.
+  Deleting the v1 files (`CornerDriven`, `FreeStart`, `SwapCollision`) leaves
+  the rule-independent ones (M3 glue, `v_Hash_collision_comp`) intact.
 -/
 import MegaDreifach.Security.MDGeneric
 import MegaDreifach.Security.MDReduction
-import MegaDreifach.Security.CornerDriven
+import MegaDreifach.Security.StepWord
 import MegaDreifach.Security.Parity
 import MegaDreifach.Security.DigestInj
 import MegaDreifach.Security.IdealCount
+import MegaDreifach.Security.CornerDriven
 import MegaDreifach.Security.FreeStart
+import MegaDreifach.Security.SwapCollision

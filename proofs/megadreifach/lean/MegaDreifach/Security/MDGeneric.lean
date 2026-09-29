@@ -165,4 +165,16 @@ theorem md_collision (dm : α → β → α) (iv : α) (xs ys : List β)
 
 end Find
 
+theorem mem_pairsR {α β : Type} (dm : α → β → α) (iv : α) :
+    ∀ (r : List β) (h : α) (b : β), (h, b) ∈ pairsR dm iv r →
+      b ∈ r ∧ ∃ s, h = chR dm iv s ∧ s <:+ r
+  | [], _, _, hm => by simp [pairsR] at hm
+  | c :: r, h, b, hm => by
+      simp only [pairsR, List.mem_cons, Prod.mk.injEq] at hm
+      rcases hm with ⟨h1, h2⟩ | hm
+      · rw [h1, h2]
+        exact ⟨List.mem_cons_self _ _, r, rfl, List.suffix_cons _ _⟩
+      · obtain ⟨hb, s, hs, hsuf⟩ := mem_pairsR dm iv r h b hm
+        exact ⟨List.mem_cons_of_mem _ hb, s, hs, List.IsSuffix.trans hsuf (List.suffix_cons _ _)⟩
+
 end MegaDreifach.Security

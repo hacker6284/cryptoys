@@ -1,0 +1,9 @@
+$ python3 md.py
+empty OK
+short_abc OK
+short_one OK
+edge_27 OK
+edge_28 OK
+edge_29 OK
+multi_56 OK
+multi_100 OK

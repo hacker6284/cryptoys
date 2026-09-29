@@ -19,8 +19,9 @@
   (3 in `proofs/megadreifach/security/pseudo_collision.py`).  Under v1 the
   compression function is therefore not collision resistant, and the MD
   reduction of `DigestInj.lean` can never be instantiated with a
-  collision-resistant compression function: Hash security rests entirely on
-  IV-anchoring.
+  collision-resistant compression function: it yields no collision
+  resistance for Hash.  (IV-anchored Hash collisions of v1 are in fact
+  practical, by a different mechanism: see `SwapCollision.lean`.)
 
   What Lean proves is the reduction (`dmStep_collision_of_sq`,
   `dmStep_pseudo_collision`: same corners and a squaring collision give a
@@ -30,7 +31,8 @@
 
   Zero sorry.  No native_decide.
 -/
-import MegaDreifach.Security.IdealCount
+import MegaDreifach.Security.CornerDriven
+import MegaDreifach.Security.Parity
 
 namespace MegaDreifach.Security
 
@@ -49,63 +51,12 @@ theorem dmStep_collision_of_sq (h h' : Position) (deal : List Nat)
   have e2 : compose (compose h' W) (compose h' W) = compose (compose h' (compose W h')) W := by
     simp only [compose_assoc]
   rw [e1, e2] at hsq
-  exact compose_right_cancel _ _ W hWinj hsq
+  exact leftMul_cancel _ _ W hWinj.1 hWinj.2 hsq
 
 /-- The shared word is a product of face moves (so it is injective/legal). -/
 theorem emBlock_word_legal (h h' : Position) (hc : SameCorners h h') (deal : List Nat) :
-    ∃ W, Word W ∧ Em.emBlock h deal = compose W h ∧ Em.emBlock h' deal = compose W h' := by
-  -- strengthen the invariant with `Word W`
-  have key : ∀ (cards : List Nat) (st st' : Position × Em.Grip),
-      (st.2 = st'.2 ∧ ∃ W, Word W ∧ st.1 = compose W h ∧ st'.1 = compose W h') →
-      ((cards.foldl Em.g2Step st).2 = (cards.foldl Em.g2Step st').2 ∧
-        ∃ W, Word W ∧ (cards.foldl Em.g2Step st).1 = compose W h ∧
-          (cards.foldl Em.g2Step st').1 = compose W h') := by
-    intro cards
-    induction cards with
-    | nil => intro st st' hi; exact hi
-    | cons c cs ih =>
-        intro st st' ⟨ho, W, hWw, e1, e2⟩
-        apply ih
-        obtain ⟨st1, st2⟩ := st
-        obtain ⟨st1', st2'⟩ := st'
-        dsimp only at ho e1 e2
-        subst ho; subst e1; subst e2
-        have f1 := g2Step_fst (compose W h) st2 c
-        have f2 := g2Step_fst (compose W h') st2 c
-        rw [← compose_assoc] at f1 f2
-        refine ⟨?_, _, ?_, f1, f2⟩
-        · rw [g2Step_snd, g2Step_snd, f1, f2]
-          exact recipeA_sameCorners _ _ (sameCorners_compose_left _ _ _ hc) _ _
-        · exact word_compose (by
-            have := word_g2Step (identity, st2) c Word.id
-            exact this) hWw
-  have key3 : ∀ (n : Nat) (st st' : Position × Em.Grip),
-      (st.2 = st'.2 ∧ ∃ W, Word W ∧ st.1 = compose W h ∧ st'.1 = compose W h') →
-      ((Em.f3Iter n st).2 = (Em.f3Iter n st').2 ∧
-        ∃ W, Word W ∧ (Em.f3Iter n st).1 = compose W h ∧ (Em.f3Iter n st').1 = compose W h') := by
-    intro n
-    induction n with
-    | zero => intro st st' hi; exact hi
-    | succ n ih =>
-        intro st st' ⟨ho, W, hWw, e1, e2⟩
-        apply ih
-        obtain ⟨st1, st2⟩ := st
-        obtain ⟨st1', st2'⟩ := st'
-        dsimp only at ho e1 e2
-        subst ho; subst e1; subst e2
-        have f1 := f3Step_fst (compose W h) st2
-        have f2 := f3Step_fst (compose W h') st2
-        rw [← compose_assoc] at f1 f2
-        refine ⟨?_, _, word_compose (word_faceTurn _ _ _ Word.id) hWw, f1, f2⟩
-        show Em.recipeA (Em.f3Step (compose W h, st2)).1 (st2 0) st2 =
-          Em.recipeA (Em.f3Step (compose W h', st2)).1 (st2 0) st2
-        rw [f1, f2]
-        exact recipeA_sameCorners _ _ (sameCorners_compose_left _ _ _ hc) _ _
-  have hstart : (h, Em.gripId).2 = (h', Em.gripId).2 ∧
-      ∃ W, Word W ∧ (h, Em.gripId).1 = compose W h ∧ (h', Em.gripId).1 = compose W h' :=
-    ⟨rfl, identity, Word.id, (compose_id_left h).symm, (compose_id_left h').symm⟩
-  obtain ⟨_, W, hWw, e1, e2⟩ := key3 f3T _ _ (key (deal.take 52) _ _ hstart)
-  exact ⟨W, hWw, e1, e2⟩
+    ∃ W, Word W ∧ Em.emBlock h deal = compose W h ∧ Em.emBlock h' deal = compose W h' :=
+  emBlock_wordInv h h' hc deal
 
 /-- **Pseudo-collision criterion.**  Same corners and a squaring collision
     `(hW)² = (h'W)²` of the shared word give equal compression outputs. -/

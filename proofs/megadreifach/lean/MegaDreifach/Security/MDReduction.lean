@@ -20,7 +20,7 @@
   Grip-rule status: INDEPENDENT of the grip rule.  The pad lemmas
   (`pad_suffix_free`, `blocks_suffix_free`) and the fromBE lemmas do not
   involve E_m at all.  `extract_collision` / `extract_second_preimage` treat
-  `dmBlock` as a black box.  If E_m changes, only `injPos_chR` needs repair:
+  `dmBlock` as a black box.  If E_m changes, only `injPos_chR_from` (and so `injPos_chR`) needs repair:
   it uses `Link2.injPos_dmStep` (`Link2/InjInv.lean`), which unfolds the
   current `Em` definitions.  The link to `Generated.v_Hash`
   (`Link2.v_Hash_refines`, `Link2.em_block_refines`) would also have to be
@@ -134,25 +134,17 @@ theorem blocks_suffix_free (m1 m2 : List Nat) (hp1 : PadWf m1) (hp2 : PadWf m2)
 
 /-! ## Reachable chaining values -/
 
-theorem injPos_chR (r : List (List Nat)) : InjPos (chR dmBlock Em.ivCook12 r) := by
-  induction r with
-  | nil => simp only [chR]; exact injPos_ivCook12
-  | cons b r ih =>
-      simp only [chR]
-      unfold dmBlock
-      exact injPos_dmStep (chR dmBlock Em.ivCook12 r) _ ih
+/-- Chaining from any injective position stays injective. -/
+theorem injPos_chR_from (h : Position) (hh : InjPos h) :
+    ∀ r : List (List Nat), InjPos (chR dmBlock h r)
+  | [] => hh
+  | _ :: r => by
+      simp only [chR]; unfold dmBlock
+      exact injPos_dmStep _ _ (injPos_chR_from h hh r)
 
-theorem mem_pairsR {α β : Type} (dm : α → β → α) (iv : α) :
-    ∀ (r : List β) (h : α) (b : β), (h, b) ∈ pairsR dm iv r →
-      b ∈ r ∧ ∃ s, h = chR dm iv s ∧ s <:+ r
-  | [], _, _, hm => by simp [pairsR] at hm
-  | c :: r, h, b, hm => by
-      simp only [pairsR, List.mem_cons, Prod.mk.injEq] at hm
-      rcases hm with ⟨h1, h2⟩ | hm
-      · rw [h1, h2]
-        exact ⟨List.mem_cons_self _ _, r, rfl, List.suffix_cons _ _⟩
-      · obtain ⟨hb, s, hs, hsuf⟩ := mem_pairsR dm iv r h b hm
-        exact ⟨List.mem_cons_of_mem _ hb, s, hs, List.IsSuffix.trans hsuf (List.suffix_cons _ _)⟩
+/-- Reachable chaining values are injective (the IV case of `injPos_chR_from`). -/
+theorem injPos_chR (r : List (List Nat)) : InjPos (chR dmBlock Em.ivCook12 r) :=
+  injPos_chR_from _ injPos_ivCook12 r
 
 /-! ## The extractor -/
 

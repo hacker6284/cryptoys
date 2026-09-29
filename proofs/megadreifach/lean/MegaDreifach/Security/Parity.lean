@@ -13,15 +13,16 @@
   Grip-rule status: INDEPENDENT of the grip rule.  The statement holds for
   any block map that left-multiplies the position by face moves, whichever
   faces the grips pick; no proof uses the corner-only read.  If E_m changes,
-  repair `word_g2Step`, `word_f3Iter`, `word_foldl_g2`, `word_emBlock` (and
-  `CornerDriven.g2Step_fst`), which unfold the current `Em.g2Step` /
-  `Em.f3Step` / `Em.emBlock`.  `word_dmStep` needs the DM feed-forward
+  repair the step lemmas of `StepWord.lean` (`g2Step_fst`, `word_g2Step`,
+  `word_f3Iter`, `word_foldl_g2`, `word_emBlock`), which unfold the current
+  `Em.g2Step` / `Em.f3Step` / `Em.emBlock`.  `word_dmStep` needs the DM feed-forward
   `dmStep h d = compose h (emBlock h d)`.  The swap tables `swC` / `swE` and
   `faceMove_*` need repair only if the face-move tables change.
 
   Zero sorry.  No native_decide.
 -/
-import MegaDreifach.Security.CornerDriven
+import MegaDreifach.Security.MDReduction
+import MegaDreifach.Security.StepWord
 
 namespace MegaDreifach.Security
 
@@ -84,11 +85,6 @@ theorem countP_swapAdj {α : Type} (p : α → Bool) :
 theorem filter_length_swapAdj (p : Nat → Bool) (l : List Nat) (i : Nat) :
     ((swapAdj l i).filter p).length = (l.filter p).length := by
   rw [← List.countP_eq_length_filter, ← List.countP_eq_length_filter, countP_swapAdj]
-
-theorem sumNats_cons (x : Nat) (xs : List Nat) : sumNats (x :: xs) = x + sumNats xs := by
-  have := sumNats_append [x] xs
-  simp only [List.singleton_append] at this
-  rw [this]; rfl
 
 theorem sumNats_swapAdj : ∀ (l : List Nat) (i : Nat), sumNats (swapAdj l i) = sumNats l
   | [], _ => rfl
@@ -287,64 +283,12 @@ theorem isLegal_faceMove_compose (f : Fin 12) (g : Position) (hg : isLegal g) :
       have := faceMove_eo_sum f; omega
     · simp [listOfOri, listOf]
 
-/-! ## Words in face moves -/
-
-/-- Positions that are products of face moves. -/
-inductive Word : Position → Prop
-  | id : Word identity
-  | step (f : Fin 12) (g : Position) : Word g → Word (compose (Em.faceMove f) g)
+/-! ## Legality of words (the parity invariant) -/
 
 theorem word_isLegal {p : Position} (h : Word p) : isLegal p := by
   induction h with
   | id => exact identity_isLegal
   | step f g _ ih => exact isLegal_faceMove_compose f g ih
-
-theorem word_compose {a b : Position} (ha : Word a) (hb : Word b) : Word (compose a b) := by
-  induction ha with
-  | id => rw [compose_id_left]; exact hb
-  | step f g _ ih => rw [compose_assoc]; exact Word.step f _ ih
-
-theorem word_leftIter (f : Fin 12) : ∀ (n : Nat) (g : Position), Word g →
-    Word (Em.leftIter (Em.faceMove f) n g)
-  | 0, _, h => h
-  | n + 1, g, h => Word.step f _ (word_leftIter f n g h)
-
-theorem word_faceTurn (g : Position) (f : Fin 12) (a : Nat) (h : Word g) :
-    Word (Em.faceTurn g f a) := word_leftIter f _ _ h
-
-theorem word_g2Step (st : Position × Em.Grip) (card : Nat) (h : Word st.1) :
-    Word (Em.g2Step st card).1 := by
-  obtain ⟨g, o⟩ := st
-  rw [g2Step_fst]
-  refine word_compose ?_ h
-  unfold Em.g2Step
-  dsimp only
-  by_cases hr : card / 4 < 12
-  · simp only [hr, dite_true]
-    apply word_faceTurn
-    split
-    · exact word_faceTurn _ _ _ (word_faceTurn _ _ _ Word.id)
-    · exact word_faceTurn _ _ _ Word.id
-  · simp only [hr, dite_false]
-    apply word_faceTurn
-    split
-    · exact word_faceTurn _ _ _ (word_faceTurn _ _ _ Word.id)
-    · exact word_faceTurn _ _ _ Word.id
-
-theorem word_f3Iter : ∀ (n : Nat) (st : Position × Em.Grip), Word st.1 → Word (Em.f3Iter n st).1
-  | 0, _, h => h
-  | n + 1, _, h => word_f3Iter n _ (word_faceTurn _ _ _ h)
-
-theorem word_foldl_g2 : ∀ (cards : List Nat) (st : Position × Em.Grip), Word st.1 →
-    Word (cards.foldl Em.g2Step st).1
-  | [], _, h => h
-  | c :: cs, st, h => word_foldl_g2 cs _ (word_g2Step st c h)
-
-theorem word_emBlock (h : Position) (deal : List Nat) (hh : Word h) : Word (Em.emBlock h deal) :=
-  word_f3Iter _ _ (word_foldl_g2 _ (h, Em.gripId) hh)
-
-theorem word_dmStep (h : Position) (deal : List Nat) (hh : Word h) : Word (Em.dmStep h deal) :=
-  word_compose hh (word_emBlock h deal hh)
 
 theorem word_ivCook12 : Word Em.ivCook12 := by
   unfold Em.ivCook12

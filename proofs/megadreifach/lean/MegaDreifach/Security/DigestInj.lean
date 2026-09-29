@@ -14,7 +14,7 @@
   Grip-rule status: INDEPENDENT of the grip rule.  `evenRank_inj` and
   `positionToBytes_inj_legal` are about the digest encoding only and need no
   repair if E_m changes.  `positionToBytes_inj_reachable` and the
-  `extract_*_comp` / `v_Hash_collision_comp` corollaries use
+  `extract_*_comp` / `v_Hash_collision_comp` / `v_Hash_second_preimage_comp` corollaries use
   `Parity.isLegal_chR` and `MDReduction.injPos_chR`; they need repair only
   through those (see the grip-rule notes in `Parity.lean` and
   `MDReduction.lean`).
@@ -283,16 +283,28 @@ theorem extract_second_preimage_comp (m m' : List Nat) (hp : PadWf m) (hp' : Pad
   cases hw
   exact ⟨c, hc, hv, hi c rfl⟩
 
-/-- The same statements about the generated code `Generated.v_Hash`. -/
-theorem v_Hash_collision_comp (m1 m2 : List Nat) (hp1 : PadWf m1) (hp2 : PadWf m2)
-    (hne : m1 ≠ m2) (hd : Megadreifach.v_Hash (embed m1) = Megadreifach.v_Hash (embed m2)) :
-    ∃ c, extract m1 m2 = some (Break.comp c) ∧ (Break.comp c).Valid m1 m2 := by
+/-- Equal generated digests are equal algebraic digests (Link 2). -/
+theorem vhashAlg_eq_of_v_Hash (m1 m2 : List Nat) (hp1 : PadWf m1) (hp2 : PadWf m2)
+    (hd : Megadreifach.v_Hash (embed m1) = Megadreifach.v_Hash (embed m2)) :
+    vhashAlg m1 = vhashAlg m2 := by
   rw [v_Hash_refines m1 hp1, v_Hash_refines m2 hp2] at hd
   have hd' : embed (vhashAlg m1) = embed (vhashAlg m2) := Except.ok.inj hd
-  have : vhashAlg m1 = vhashAlg m2 := by
-    have l1 := decode_embed (vhashAlg m1)
-    have l2 := decode_embed (vhashAlg m2)
-    rw [← l1, ← l2, hd']
-  exact extract_collision_comp m1 m2 hp1 hp2 hne this
+  have l1 := decode_embed (vhashAlg m1)
+  have l2 := decode_embed (vhashAlg m2)
+  rw [← l1, ← l2, hd']
+
+/-- `extract_collision_comp` for the generated code `Generated.v_Hash`. -/
+theorem v_Hash_collision_comp (m1 m2 : List Nat) (hp1 : PadWf m1) (hp2 : PadWf m2)
+    (hne : m1 ≠ m2) (hd : Megadreifach.v_Hash (embed m1) = Megadreifach.v_Hash (embed m2)) :
+    ∃ c, extract m1 m2 = some (Break.comp c) ∧ (Break.comp c).Valid m1 m2 :=
+  extract_collision_comp m1 m2 hp1 hp2 hne (vhashAlg_eq_of_v_Hash m1 m2 hp1 hp2 hd)
+
+/-- `extract_second_preimage_comp` for the generated code `Generated.v_Hash`. -/
+theorem v_Hash_second_preimage_comp (m m' : List Nat) (hp : PadWf m) (hp' : PadWf m')
+    (hne : m' ≠ m) (hd : Megadreifach.v_Hash (embed m') = Megadreifach.v_Hash (embed m)) :
+    ∃ c, extract m m' = some (Break.comp c) ∧ (Break.comp c).Valid m m' ∧
+      ∃ i, i < (blocksMsg m).length ∧
+        c.h1 = chainPre (pad m) i ∧ c.b1 = blockAt (pad m) i :=
+  extract_second_preimage_comp m m' hp hp' hne (vhashAlg_eq_of_v_Hash m' m hp' hp hd)
 
 end MegaDreifach.Security

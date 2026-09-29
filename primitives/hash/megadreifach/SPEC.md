@@ -139,7 +139,7 @@ Full `Hash` digest equality against the hex strings in that JSON is not asserted
 
 - Ideal-cipher-on-G / PRF of `E_m`
 - Collision resistance of `Hash`
-- IV-anchored collision (empirically open)
+- IV-anchored collision resistance. Answered (negatively) for the current Recipe A grip rule of this specification: collisions from the standard IV are practical via same-rank card swaps. See `proofs/megadreifach/security/suit_blind_collision.py` (and §3 of `REPORT.md` there).
 - L3 absence (L3 collisions exist)
 - Birthday ≈ 2^113 as a theorem
 - PRESSURE.md tables as theorems

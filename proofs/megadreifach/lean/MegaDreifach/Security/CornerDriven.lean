@@ -5,13 +5,12 @@
   choice (Recipe A, `Em.recipeA`) reads only corner cubies
   (`recipeA_sameCorners`).  They document why the grip rule is being
   redesigned.  They need not hold for a redesigned rule that reads edges,
-  and must then be deleted or restated.  Exceptions, which do not use the
+  and must then be deleted or restated.  Exception, which does not use the
   corner-only read: the digest arithmetic at the end of the file
   (`cornerRank`, `edgeRank`, `rankPosition_split`, `edgeRank_lt`,
-  `rankPosition_div`, `cornerRank_sameCorners`), and the step-unfolding
-  lemmas `leftIter_compose`, `faceTurn_compose`, `faceTurn_eq`, `g2Step_fst`,
-  `f3Step_fst` (they unfold the current `Em.g2Step` / `Em.f3Step` and need
-  re-proof only if those definitions change).
+  `rankPosition_div`, `cornerRank_sameCorners`).  The rule-independent step
+  lemmas (`g2Step_fst`, `f3Step_fst`, `faceTurn_*`, `Word`) live in
+  `StepWord.lean`, so deleting this file does not affect `Parity` / M3.
 
   Under v1 the MegaDreifach compression is *corner-driven*:
 
@@ -34,6 +33,7 @@
   Zero sorry.  No native_decide.
 -/
 import MegaDreifach.Security.MDReduction
+import MegaDreifach.Security.StepWord
 
 namespace MegaDreifach.Security
 
@@ -64,52 +64,20 @@ theorem recipeA_sameCorners (g g' : Position) (hc : SameCorners g g') (phys : Fi
   unfold Em.recipeA Em.coloursAt
   rw [hc.1, hc.2]
 
-theorem leftIter_compose (T : Position) : ∀ (n : Nat) (W h : Position),
-    Em.leftIter T n (compose W h) = compose (Em.leftIter T n W) h
-  | 0, _, _ => rfl
-  | n + 1, W, h => by
-      simp only [Em.leftIter]
-      rw [leftIter_compose T n W h, compose_assoc]
-
-theorem faceTurn_compose (W h : Position) (f : Fin 12) (a : Nat) :
-    Em.faceTurn (compose W h) f a = compose (Em.faceTurn W f a) h :=
-  leftIter_compose _ _ _ _
-
-theorem faceTurn_eq (g : Position) (f : Fin 12) (a : Nat) :
-    Em.faceTurn g f a = compose (Em.faceTurn identity f a) g := by
-  rw [← faceTurn_compose, compose_id_left]
-
 /-- The block-map invariant: both runs are `(compose W h, o)`, `(compose W h', o)`. -/
 def WordInv (h h' : Position) (st st' : Position × Em.Grip) : Prop :=
-  st.2 = st'.2 ∧ ∃ W, st.1 = compose W h ∧ st'.1 = compose W h'
-
-/-- The position part of a G2 step is a left multiplication whose word depends
-    only on the grip and the card. -/
-theorem g2Step_fst (g : Position) (o : Em.Grip) (card : Nat) :
-    (Em.g2Step (g, o) card).1 = compose (Em.g2Step (identity, o) card).1 g := by
-  unfold Em.g2Step
-  dsimp only
-  by_cases hr : card / 4 < 12
-  · simp only [hr, dite_true]
-    split
-    · rw [← faceTurn_compose, ← faceTurn_compose, ← faceTurn_compose, compose_id_left]
-    · rw [← faceTurn_compose, ← faceTurn_compose, compose_id_left]
-  · simp only [hr, dite_false]
-    split
-    · rw [← faceTurn_compose, ← faceTurn_compose, ← faceTurn_compose, compose_id_left]
-    · rw [← faceTurn_compose, ← faceTurn_compose, compose_id_left]
+  st.2 = st'.2 ∧ ∃ W, Word W ∧ st.1 = compose W h ∧ st'.1 = compose W h'
 
 /-- Held physical face and working grip of a G2 step (grip and card only). -/
 def g2Held (o : Em.Grip) (card : Nat) : Fin 12 × Em.Grip :=
   if h : card / 4 < 12 then (o ⟨card / 4, h⟩, o)
-  else (spinAboutUp' o (card % 4 + 1) 0, spinAboutUp' o (card % 4 + 1))
-where spinAboutUp' := Em.spinAboutUp
+  else (Em.spinAboutUp o (card % 4 + 1) 0, Em.spinAboutUp o (card % 4 + 1))
 
 /-- The new grip of a G2 step is the Recipe A read of the new position. -/
 theorem g2Step_snd (g : Position) (o : Em.Grip) (card : Nat) :
     (Em.g2Step (g, o) card).2 =
       Em.recipeA (Em.g2Step (g, o) card).1 (g2Held o card).1 (g2Held o card).2 := by
-  unfold Em.g2Step g2Held g2Held.spinAboutUp'
+  unfold Em.g2Step g2Held
   dsimp only
   by_cases hr : card / 4 < 12
   · simp only [hr, dite_true]
@@ -120,30 +88,27 @@ theorem wordInv_g2Step (h h' : Position) (hc : SameCorners h h') (st st' : Posit
     WordInv h h' (Em.g2Step st card) (Em.g2Step st' card) := by
   obtain ⟨st1, st2⟩ := st
   obtain ⟨st1', st2'⟩ := st'
-  obtain ⟨ho, W, e1, e2⟩ := hi
+  obtain ⟨ho, W, hW, e1, e2⟩ := hi
   dsimp only at ho e1 e2
   subst ho; subst e1; subst e2
   have f1 := g2Step_fst (compose W h) st2 card
   have f2 := g2Step_fst (compose W h') st2 card
   rw [← compose_assoc] at f1 f2
-  refine ⟨?_, _, f1, f2⟩
+  refine ⟨?_, _, word_compose (word_g2Step (identity, st2) card Word.id) hW, f1, f2⟩
   rw [g2Step_snd, g2Step_snd, f1, f2]
   exact recipeA_sameCorners _ _ (sameCorners_compose_left _ _ _ hc) _ _
-
-theorem f3Step_fst (g : Position) (o : Em.Grip) :
-    (Em.f3Step (g, o)).1 = compose (Em.faceTurn identity (o 0) 1) g := faceTurn_eq _ _ _
 
 theorem wordInv_f3Step (h h' : Position) (hc : SameCorners h h') (st st' : Position × Em.Grip)
     (hi : WordInv h h' st st') : WordInv h h' (Em.f3Step st) (Em.f3Step st') := by
   obtain ⟨st1, st2⟩ := st
   obtain ⟨st1', st2'⟩ := st'
-  obtain ⟨ho, W, e1, e2⟩ := hi
+  obtain ⟨ho, W, hW, e1, e2⟩ := hi
   dsimp only at ho e1 e2
   subst ho; subst e1; subst e2
   have f1 := f3Step_fst (compose W h) st2
   have f2 := f3Step_fst (compose W h') st2
   rw [← compose_assoc] at f1 f2
-  refine ⟨?_, _, f1, f2⟩
+  refine ⟨?_, _, word_compose (word_faceTurn _ _ _ Word.id) hW, f1, f2⟩
   show Em.recipeA (Em.f3Step (compose W h, st2)).1 (st2 0) st2 =
     Em.recipeA (Em.f3Step (compose W h', st2)).1 (st2 0) st2
   rw [f1, f2]
@@ -163,13 +128,20 @@ theorem wordInv_foldl (h h' : Position) (hc : SameCorners h h') :
   | c :: cs, st, st', hi =>
       wordInv_foldl h h' hc cs _ _ (wordInv_g2Step h h' hc st st' hi c)
 
+/-- The invariant at the end of a block: same grip, and a shared word that is a
+    product of face moves. -/
+theorem emBlock_wordInv (h h' : Position) (hc : SameCorners h h') (deal : List Nat) :
+    ∃ W, Word W ∧ Em.emBlock h deal = compose W h ∧ Em.emBlock h' deal = compose W h' := by
+  have h0 : WordInv h h' (h, Em.gripId) (h', Em.gripId) :=
+    ⟨rfl, identity, Word.id, (compose_id_left h).symm, (compose_id_left h').symm⟩
+  obtain ⟨_, W, hW, e1, e2⟩ :=
+    wordInv_f3Iter h h' hc f3T _ _ (wordInv_foldl h h' hc (deal.take 52) _ _ h0)
+  exact ⟨W, hW, e1, e2⟩
+
 /-- **Corner-driven block map.**  Same corners ⇒ same face-turn word. -/
 theorem emBlock_word (h h' : Position) (hc : SameCorners h h') (deal : List Nat) :
     ∃ W, Em.emBlock h deal = compose W h ∧ Em.emBlock h' deal = compose W h' := by
-  have h0 : WordInv h h' (h, Em.gripId) (h', Em.gripId) :=
-    ⟨rfl, identity, (compose_id_left h).symm, (compose_id_left h').symm⟩
-  obtain ⟨_, W, e1, e2⟩ :=
-    wordInv_f3Iter h h' hc f3T _ _ (wordInv_foldl h h' hc (deal.take 52) _ _ h0)
+  obtain ⟨W, _, e1, e2⟩ := emBlock_wordInv h h' hc deal
   exact ⟨W, e1, e2⟩
 
 /-- Every block map is a left multiplication: `E_m(h) = W ∘ h`. -/
@@ -260,12 +232,5 @@ theorem digest_top_collision (h h' : Position) (hh : InjPos h) (hh' : InjPos h')
     exact injPos_chR_from h' hh' _
   rw [rankPosition_div _ i1, rankPosition_div _ i2]
   exact cornerRank_sameCorners _ _ (foldl_dmBlock_sameCorners suffix h h' hc)
-where
-  injPos_chR_from (h : Position) (hh : InjPos h) :
-      ∀ r : List (List Nat), InjPos (chR dmBlock h r)
-    | [] => hh
-    | _ :: r => by
-        simp only [chR]; unfold dmBlock
-        exact injPos_dmStep _ _ (injPos_chR_from h hh r)
 
 end MegaDreifach.Security

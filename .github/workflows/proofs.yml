@@ -246,6 +246,8 @@ jobs:
         run: python3 proofs/megadreifach/vectors/json_to_lean.py --check
       - name: Axiom gate keying rules (private/public collisions fail under key "full")
         run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - name: Swap-collision measurement log matches a fresh seeded run (quick; the report-size runs are in proofs-heavy.yml)
+        run: python3 proofs/megadreifach/security/suit_blind_collision.py --check
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/megadreifach/lean

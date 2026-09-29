@@ -1,0 +1,6 @@
+$ python3 toy_attacks.py coll
+== collision attack (toy): generic birthday = 2^((k+logH)/2) compressions
+k=20 n=6 log|state|=33.5: attack avg 2^12.9 compressions + 2^6.5 edge ops (5/5 verified) vs generic 2^16.7
+k=24 n=7 log|state|=41.3: attack avg 2^15.0 compressions + 2^7.5 edge ops (5/5 verified) vs generic 2^20.6
+k=28 n=8 log|state|=49.3: attack avg 2^17.5 compressions + 2^9.4 edge ops (5/5 verified) vs generic 2^24.6
+k=32 n=8 log|state|=53.3: attack avg 2^19.3 compressions + 2^9.7 edge ops (5/5 verified) vs generic 2^26.6

@@ -1,3 +1,4 @@
+<!-- Owns: the DoubleDeal security package: its modules, the AES-style roadmap and status, and the CI gates on it. Maintenance rules: ../../../DOCS.md. -->
 # DoubleDeal security theorems (draft)
 
 Separate Lake package so the refinement package (`../lean`) and `Generated/`
@@ -5,13 +6,15 @@ stay dependency-free. Requires Mathlib `v4.14.0` (rev `4bbdccd9`, pinned in
 `lake-manifest.json`, matching `leanprover/lean4:v4.14.0`) and `../lean` as a
 path dependency.
 
-    lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
-    lake build
-    python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
-    lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses (five decide! encryptions, GridCycle survival checks, covariant-case checks); whole `doubledeal-security-heavy` CI job: 13m29s, measured once at 8d46927 (#113); a measurement, not a bound
-    python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
-    python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
-    python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
+```sh
+lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
+lake build
+python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
+lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses (five decide! encryptions, GridCycle survival checks, covariant-case checks); whole `doubledeal-security-heavy` CI job: 13m29s, measured once at 8d46927 (#113); a measurement, not a bound
+python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
+python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
+python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
+```
 
 ## Layout
 
@@ -92,72 +95,19 @@ decks. Also proved (`sumRanksV10_survival_threeCycle`,
 non-symmetries is computer-assisted (`sumranks-dp-paper/PROOF.md` §5b) and not
 formalised.
 
-Branch number and GridCycle survival (roadmap milestone M1, v12;
-`../analysis/v12-diffusion/NOTES.md`). The Hamming branch number of GridCycle is
-exactly the trivial floor 4 (proved, below), so no wide-trail bound comes from
-it. The notion used instead is relabelling survival. Proved: the 50 nontrivial
-`v10Sym` other than `v10Sym 0 3` never survive GridCycle, and `v10Sym 0 3`
-survives on at most 1/4420 of the decks (heavy library; the default library
-states it conditional on the finite check). Only measured: full GridCycle survival
-(0 in 60000 sampled decks for `v10Sym 0 3` given its prefix; mean ≈ 0.0035 over
-swaps). For relabellings outside `v10Sym`, the only proved GridCycle bound is the
-first-card one, which is weak (≈ 1) for small-support relabellings.
-
-Multi-round (roadmap milestone M2, `TrailBound`, `../analysis/v12-trail/NOTES.md`).
-**Conditional on the model**: independent uniform round keys (built into the
-counting over all key tuples), one constant-σ characteristic, and no final no-mix
-round. In that model the characteristic has probability ≤ (1/64)^R for every
-σ ≠ 1 (heavy library; the default library proves (1/26)^R unconditionally and
-(1/64)^R given the finite check). Not proved: the differential (sum over
-characteristics), and σ → β for β ≠ σ.
-
-Real PassKey schedule (roadmap milestone M5, `RealSchedule`,
-`../analysis/v12-keysched/NOTES.md`). The master key is a uniform π : Perm (Fin 52),
-injected into key decks by `masterList` (onto the 52-card key decks); the round keys are
-the keys of `encryptDeckFn`. Each single round key is uniform, and for any two rounds
-r ≠ s the round keys are not independent (proved). The same characteristic through R ≥ 1 rounds has probability
-≤ 1/64 for every σ ≠ 1 (heavy library; default library 1/26, and 1/64 given the finite
-check). **The proved bound gains nothing beyond round 1**: it is 1/64 for every R,
-weaker than M2's (1/64)^R, because from round 1 on the round key is not uniform given
-the state (both are functions of the master key). This is a limit of the proof, not a
-measured weakness. For R ≥ 2 nothing proved or measured rules out the real schedule
-following the characteristic with probability above (1/64)^R. One characteristic, not
-the differential; no final no-mix round; `rounds` not linked to `encryptN`; R ≤ 5 is the
-cipher's range (for R ≥ 6 the model uses K_5, K_6, … as keys before a mix, which the
-cipher never does; harmless, but not the cipher). Measured only, not used by any
-theorem: no sign of correlation between rounds 0 and 1, at a resolution of only about
-2–3× (9, 7 and 8 samples followed rounds 0 and 1, against 6.4, 6.4 and 5.8 expected for
-independent round-1 behaviour; ≈1.8·10^9 samples per case), from only two same-suit
-swaps and two starting decks.
-
-Linear analogue (roadmap milestone M3): none is defined. Permutation-valued state
-has no masks, and the note `../analysis/v12-linear/NOTES.md` argues why and
-proposes Fourier analysis on `S_52` (the standard representation first). There are
-no Lean statements for it.
+Milestones M1–M5 (statements, caveats, measured values): [Roadmap](#roadmap) and the analysis notes it links.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at
-least 4. The live v11 GridCycle (as v9/v10 before it) and the frozen v8 model attain 4: swapping walk cards
+least 4. The v11 GridCycle (kept in v12; as v9/v10 before it) and the frozen v8 model attain 4: swapping walk cards
 50 and 51 changes exactly two output seats. That is the trivial floor, not a
 bound above 4, and not a statement about SumRanks or keyed rounds.
 
 T1 is a draft. The only open statement is the covariant round conjecture
 `roundBody_covariant_iff_id` (marked `DRAFT-SORRY`, checked numerically by
 `checks/check_covariant.py`); `fullRound_commutes_iff_id` and the
-permutation-key `encrypt6_commutes_iff_id` rest on it. Narrowed in v12
-(`CovariantNarrow`, separate theorems; the conjecture's statement is unchanged).
-Proved non-covariant, for every τ: every transposition (heavy library) and every
-nontrivial `v10Sym` (`roundBody_not_covariant_of_stem`). Proved equivalent to the
-conjecture: its prime-order case (`prime_case_iff`), and `PrimeNonSwapCase`, the
-prime-order σ that are neither a transposition nor a `v10Sym` (heavy library,
-`prime_nonswap_case_iff`). Open: exactly `PrimeNonSwapCase`. Also proved: the
-conjecture follows from single-cell SumRanks statements (`…_of_cell0`,
-`…_of_cell0_prime`) that are sufficient conditions, not known to be true or
-necessary, because the seat-26 condition is weaker than covariance. Measured only:
-a seat-26 witness pair (which rules out that condition, and hence covariance, for
-that σ) was found for each of the 1600 sampled prime-order σ
-(`../analysis/v12-covariant/cell0_sample.log`). That is evidence for the
-prime-restricted single-cell hypothesis on the sampled σ only.
+permutation-key `encrypt6_commutes_iff_id` rest on it. How far it is narrowed:
+roadmap milestone M4 above.
 
 CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 - `checks/scan_sorry.py`: `sorry` only in `roundBody_covariant_iff_id`; no

@@ -1,8 +1,9 @@
+<!-- Owns: the DoubleDeal proof ledger (what is proved, what is open, how to build and check it) and the per-version record of what changed in the proofs. Maintenance rules: ../../DOCS.md. -->
 # DoubleDeal proofs
 
 Normative definition: [`primitives/cipher/doubledeal/SPEC.md`](../../primitives/cipher/doubledeal/SPEC.md). Stones live in SPEC §6. This directory is the correctness ledger for those stones, not a second specification.
 
-DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v12.** v12 changes only the PassKey step \(F\) (deal suit + 2 cards under the hand, else under the key pile, instead of the suit rotation; SPEC §3.7, §4.6, and "v12 changes" below). v11 is superseded, not attacked (a related-key property of its PassKey; [`../deprecated/doubledeal-v11/`](../deprecated/doubledeal-v11/)); its GridCycle (ghost finger plus blocker-directed blocked placement; "v11 changes" below) is kept in v12. v10 is deprecated for a GridCycle per-layer parity shortfall (not a full-cipher attack); its write-up and single-deck kernel witness are in [`../deprecated/doubledeal-v10/`](../deprecated/doubledeal-v10/). v9 is deprecated; its vulnerability proof (K♣↔Q♥ swap distinguisher) is in [`../deprecated/doubledeal-v9/`](../deprecated/doubledeal-v9/). v8 is deprecated; its vulnerability proof is in [`../deprecated/doubledeal-v8/`](../deprecated/doubledeal-v8/).
+DoubleDeal is a toy block cipher. It has no cryptographic security claim. **This ledger tracks v12.** Version history: [SPEC §7a](../../primitives/cipher/doubledeal/SPEC.md#7a-version-history). Frozen versions and their write-ups: [`../deprecated/`](../deprecated/README.md). What changed in these proofs per version: [v12](#v12-changes), [v11](#v11-changes), [v10](#v10-changes), [v9](#v9-changes-historical).
 
 > **Status: v12.** Generated Lean, TAP, vectors, the algebraic model and Link 2 all describe v12 (see "v12 changes" below; GridCycle is still v11's, see "v11 changes"; SumRanks is still v10's, see "v10 changes"). `lake build` is green with no `sorry` and no `native_decide`, `lake exe doubledeal` passes every known-answer vector, and `check_axioms.py` (run in CI) confirms the top theorems in [`lean/Axioms.lean`](lean/Axioms.lean) use only propext, Classical.choice and Quot.sound. The Lean package proves **correctness / algebraic** facts (bijections, round-trip, content-preservation). It does **not** prove bit-security, MDS diffusion, or a strong key schedule.
 
@@ -33,7 +34,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | S1 | Lay/scoop, SumRanks, ShiftRows, GridCycle, Compose are invertible as stated | Proved (GridCycle: `invMix ∘ Mix = id` and `Mix ∘ invMix = id`, every packet `Fin 52 → Nat`) |
 | S2 | Full / final round and Nr=6 encrypt/decrypt round-trip | Proved under abstract Compose-key bijections, both directions (`encrypt6_rt`, `encrypt6_decrypt6`); concrete PassKey schedule inherits both (`encryptDeckFn_rt`, `encryptDeckFn_decryptDeckFn`) |
 | S3 | PassKey is deterministic and content-preserving | Proved (`List.Perm`), including emitted `passkey` / `passkey_inv` on `FitsLen` |
-| S4 | PassKey is injective (constructive inverse) | Proved on the list model and on emitted `passkey` / `passkey_inv` (`FitsLen` length and cards / `WellFormed`). Cycle structure is not. |
+| S4 | PassKey is injective (constructive inverse) | Proved on the list model (PR #3) and on emitted `passkey` / `passkey_inv` (`FitsLen` length and cards / `WellFormed`). Cycle structure is not. |
 | S5 | Factoradic `unrankPerm` returns a permutation of its items | Proved; injectivity only for `3!` in Lean |
 | S6 | CTR `counter_deck` length and nonce-prefix stability | Proved |
 | S11 | Compose known-plaintext uniqueness; CTR nonce prefix | Proved at the Compose algebra layer |
@@ -47,7 +48,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | S5 (full) | `unrankPerm` injective for `13!` / `52!` | Partial; `3!` is kernel `decide` |
 | S7 | Hand sheet refines §3 math | Open |
 | S8–S10 | Differentials, slide, randomness stats | Evidence only; never "security results" |
-| S13 | §5.3 bytes ↔ deck | Evidence in `encoding.test.mjs` / `demos/doubledeal/cards.js` |
+| S13 | §5.3 bytes ↔ deck | Evidence in [`encoding.test.mjs`](../../primitives/cipher/doubledeal/encoding.test.mjs) / [`demos/doubledeal/cards.js`](../../demos/doubledeal/cards.js) |
 | — | sudo text equals generated Lean | OPEN (Link 1). Link 2 closes `Generated.encrypt` ≃ `encryptDeck` on `CardBound` messages and PassKey S3/S4 on `Except Trap`. Not emitter soundness. Not bit-security. |
 
 ## Lean packages
@@ -72,14 +73,14 @@ lake build
 
 `lake exe doubledeal` prints a one-line summary **and** runs the skeleton-vs-JSON checks. The library target is `DoubleDeal`. Namespaces are `DoubleDeal`. Link 2 lives in `lean/DoubleDeal/Link2/` and path-requires `Generated/` (do not edit Generated).
 
-Shipped theorems contain no `sorry` and no `native_decide`. The proofs CI job (`proofs.yml`) also emits Lean from `doubledeal.sudo` against the pin, builds `Generated/`, and runs TAP. Path filters: `proofs/**`, `primitives/cipher/doubledeal/**`, `primitives/hash/megadreifach/**`, `primitives/hash/scramble/**`, `tools/emit_lean.py`, and the workflow file.
+Shipped theorems contain no `sorry` and no `native_decide`. The proofs CI workflow ([`proofs.yml`](../../.github/workflows/proofs.yml)) also emits Lean from `doubledeal.sudo` against the pin, builds `Generated/`, and runs TAP.
 
 ### Regenerating vectors
 
-Do not hand-edit `vectors/doubledeal_vectors.json` or `lean/DoubleDeal/Vectors.lean`. From the repo root, with network enough to clone [sudocode](https://github.com/hacker6284/sudocode) (same compiler as `.github/workflows/pages.yml`):
+Do not hand-edit `vectors/doubledeal_vectors.json` or `lean/DoubleDeal/Vectors.lean`. From the repo root, with network enough to clone [sudocode](https://github.com/hacker6284/sudocode):
 
 ```sh
-proofs/doubledeal/vectors/regen.sh            # current; also v8 | v9 | v10
+proofs/doubledeal/vectors/regen.sh            # current; also v8 | v9 | v10 | v11
 proofs/doubledeal/vectors/regen.sh --check    # CI (generated-fresh): byte-identical or fail
 ```
 
@@ -94,7 +95,7 @@ Optional env: `SUDOC=/path/to/sudoc` or `SUDOCODE_DIR=/path/to/sudocode`.
 
 ## v12 changes
 
-v12 changes the key schedule only: the PassKey step \(F\) (SPEC §3.7, §4.6, §7a; analysis [`analysis/passkey-related-key/`](analysis/passkey-related-key/) §9, the key-pile fallback). After the controller C is popped, deal d = suit(C) + 2 cards one at a time off the top of the hand and put the packet under the hand if d < hand size; else do the same on the key pile if d < key-pile size; else skip. Then the unchanged rank cut with key-pile fallback, then C on top of the key pile. The inverse undoes the cut first, then the deal. What changed in the proofs:
+v12 changes the key schedule only: the PassKey step \(F\) (SPEC §3.7, §4.6, §7a; analysis [`analysis/passkey-related-key/`](analysis/passkey-related-key/) §9, the key-pile fallback). What changed in the proofs:
 
 - **Model (`lean/DoubleDeal/PassKey.lean`).** `dealUnder xs m = xs.drop m ++ (xs.take m).reverse` and `undealUnder` (the sudo `deal_under` / `undeal_under`), `dealCount c = suit c + 2`, and `maybeDeal` / `maybeDealInv` (hand / key pile / skip, the same `dif` shape as `maybeCut`) replace the suit rotation. `passKeyStep` is `maybeDeal`, then `maybeCut`, then the controller on the key pile; `invPassKeyStep` is `maybeCutInv`, then `maybeDealInv`. **`passKey_leftInverse`, `passKey_rightInverse`, `passKey_injective`, `passToKeyCutFallback_perm` and the per-step inverse lemmas are unchanged in statement** and re-proved. New: `undealUnder_perm`, `maybeDealInv_perm`, `maybeCutInv_perm`, `invPassKeyStep_perm`.
 - **Link 2 (`Link2/Deal.lean`, `Link2/PassKey.lean`, `Link2/PassKeyInv.lean`).** `deal_under_refines` / `undeal_under_refines` / `deal_step_refines` / `undeal_step_refines` cover the new emitted helpers; both twin-loop refinements are redone on top of them. **Statement change:** `passkey_refines` and `passkey_inv_refines` now also assume `∀ c ∈ deck, FitsLen c`. The emitted `suit_of(c) + 2` is an i64 addition, so a card above `i64Max − 2` makes the emitted code trap; v11 only compared and rotated, so it was total on every `Nat` card. The same hypothesis is threaded through `passkey_singleton`, `passkey_refines_nil_and_singleton` and the S3/S4 transfers (`passkey_perm`, `passkey_inv_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, `passkey_inv_injective`); `WellFormed` gains a matching `cards` field, so the `_wf` forms keep their statements and `wellFormed_embed` takes the card bound. **`encrypt_refines` is unchanged in statement**: `Link2/Expand.lean` gets the card bound from `Perm52` (cards < 52).
@@ -104,7 +105,7 @@ v12 changes the key schedule only: the PassKey step \(F\) (SPEC §3.7, §4.6, §
 
 ## v11 changes
 
-v11 changes one layer: GridCycle (SPEC §3.5, §4.4, §7a; analysis rule 1 + tweak B, [`analysis/v10-gridcycle/`](analysis/v10-gridcycle/) PHASE2 and PHASE6). The finger is a ghost (each step starts from the previous target); a blocked target is resolved by its blocker (row = marker + blocker's suit, start column = target column + blocker's rank, first free seat to the right, drop a row if the row is full, marker + 1), and after a blocked placement the finger moves to target + blocker's step. Free targets are handled as in v10. What changed in the proofs:
+v11 changes one layer: GridCycle (SPEC §3.5, §4.4, §7a; analysis rule 1 + tweak B, [`analysis/v10-gridcycle/`](analysis/v10-gridcycle/) PHASE2 and PHASE6). What changed in the proofs:
 
 - **Model (`lean/DoubleDeal/GridCycle.lean`).** `WalkState` now carries the finger (in `prev`, next to the last card) and the table so far (`board`, so a blocked placement can read its blocker). `overflowSeat occ row start` drops rows and no longer returns a marker; the new `blockedChoice` does the v11 blocked step; `chooseSeat?` / `chooseSeat!` return a `SeatChoice` (seat, next marker, next finger). `chooseSeat?_isSome`, `chooseSeat!_free`, `placeN_count`, `inv_place_agree` and **`invMixColumns_mixColumns` are unchanged in statement** and re-proved. In the inverse, `board` is the part of the laid table already visited, which is exactly what a decryptor reads the blocker from.
 - **Link 2 (`Link2/Mix.lean`).** **`mix_columns_refines` is unchanged in statement** (`CardBound` hand) and re-proved against the new emitted loop: its state is (finger row, finger column, marker, grid, previous card); new lemmas cover the blocked branch (`chooseSeat!_blocked`, `blocked_after`, `placeN_board`, …) and the emitted `overflow_seat`. `encrypt_refines`, `full_round_refines`, `final_round_refines` and every downstream theorem are unchanged in statement and still build.
@@ -116,7 +117,7 @@ v11 changes one layer: GridCycle (SPEC §3.5, §4.4, §7a; analysis rule 1 + twe
 
 ## v10 changes
 
-v10 changes one layer: SumRanks (SPEC §3.3, §7a; candidate W5c). Rows are chained in order 1, 2, 3, 0 and each row turns left by the index-weighted rank sum of the row before it (weights 1..13, mod 13). Columns are chained in order 1..12, 0 and column j turns down by the GF(4) suit value of column j−1 (`0·s0 ⊕ 1·s1 ⊕ w·s2 ⊕ w²·s3`) XOR the XOR of column j's own four suit labels. The model is `lean/DoubleDeal/SumRanksV10.lean`:
+v10 changes one layer: SumRanks (SPEC §3.3, §7a; candidate W5c). The model is [`lean/DoubleDeal/SumRanksV10.lean`](lean/DoubleDeal/SumRanksV10.lean):
 
 - **Round trip.** `invSumRanksV10_sumRanksV10` and `sumRanksV10_invSumRanksV10` (both directions, all grids). They rest on a generic chain lemma (`sumRanksChain` / `invSumRanksChain`): each step turns one line by an amount read from a line that is already final, and for columns also from a quantity the turn does not change (`OwnInvariant`: the XOR of a column's own suit labels is rotation invariant, `colTurnV10_ownInvariant`). Both theorems are in `Axioms.lean` and checked by `check_axioms.py`.
 - **Round.** `unkeyedNoMix` / `invUnkeyedNoMix` now use `sumRanksV10`; `encrypt6_rt`, `encryptDeckFn_rt` and every downstream round-trip theorem are unchanged in statement. The old two-weight `sumRanks` (v8/v9) stays in `SumRanks.lean` for the frozen models; `cardColumnWeight` is kept and documented as the deprecated v9 weight.
@@ -127,15 +128,14 @@ v10 changes one layer: SumRanks (SPEC §3.3, §7a; candidate W5c). Rows are chai
 
 ## v9 changes (historical)
 
-
 v9 changes two layers (SPEC §3.3 A2, §3.5 B3; see SPEC §7a). **A2:** SumRanks takes separate weights, rank for rows and `cardColumnWeight` = rank + suit for columns (`sumRanks cardRank cardColumnWeight`; the round-trip theorems hold for any pair of weights). In Link 2, `sum_ranks_refines` follows the emitted `column_weight`; because suit grows with the card id it needs `CardBound` cells, the same bound `encrypt_refines` already puts on messages. **B3:** the GridCycle overflow scan starts at the blocked target's column (`rotCol`, `scanRow occ row start`, `overflowSeat occ t start`). `invMixColumns_mixColumns` needed no change, because the forward and inverse walks share `chooseSeat!`. In Link 2, `scan_row_refines` covers the emitted `scan_row` helper, and `overflow_seat_refines` / `mix_columns_refines` sit on top of it. The emitted asserts in `index_of` and `overflow_seat` are matched as `∃ ln` (witness by `rfl`), so sudo edits that move a line no longer reach into Link 2.
 
 Link 1 (sudo = Generated) stays OPEN, as before. v8's own proofs are not kept alive under `deprecated/`; only its Generated TAP and the witness check are.
 
 ## Reading order
 
-SPEC §6 suggested order: **S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7**, S13 as an encoding property test, and S8–S10 as living evidence. PassKey injectivity and content-preservation are proved on the list model and, on `FitsLen` (length and cards) / `WellFormed`, for emitted `Doubledeal.passkey` / `passkey_inv` (`Link2/PassKeyTransfer.lean`). `Generated.encrypt` ≃ `encryptDeck` on `CardBound` messages. NEXT is MegaDreifach Link 2 (see [`../LINK2.md`](../LINK2.md)). sudo already tests `passkey_inv` on several decks in Generated TAP. Not bit-security.
+SPEC §6 suggested order: **S1 → S2 → S12 → S3 → S4 → S5 → S6 → S11 → S7**, S13 as an encoding property test, and S8–S10 as living evidence. PassKey injectivity and content-preservation are proved on the list model and, on `FitsLen` (length and cards) / `WellFormed`, for emitted `Doubledeal.passkey` / `passkey_inv` (`Link2/PassKeyTransfer.lean`). `Generated.encrypt` ≃ `encryptDeck` on `CardBound` messages (see [`../LINK2.md`](../LINK2.md)). sudo already tests `passkey_inv` on several decks in Generated TAP. Not bit-security.
 
 ### Why PassKey is invertible
 
-At step \(i\) the controller \(C\) is placed on top of the key pile, so the inverse can read it. Every branch (v12: deal suit + 2 under the hand, the key, or neither; then proper-cut the hand, the key, or neither) depends only on \(C\) and the two pile lengths — hand \(= 51-i\) after the pop, key \(= i\) — never on hidden card identities. So each step is a bijection on \((\mathrm{hand},\mathrm{key})\) states of those sizes, and \(F\) is their composition. `invPassKeyStep` undoes one step; `passToKeyCutFallbackInv` walks the composition backwards.
+See SPEC [§3.7](../../primitives/cipher/doubledeal/SPEC.md#37-passkey-f) ("Why"). In Lean, `invPassKeyStep` undoes one step; `passToKeyCutFallbackInv` walks the composition backwards.

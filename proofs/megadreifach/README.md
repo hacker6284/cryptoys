@@ -1,3 +1,4 @@
+<!-- Owns: the MegaDreifach proof ledger (what is proved, what is open, the security status of the v1 grip rule, how to build and check it). Maintenance rules: ../../DOCS.md. This file is checked by check_axioms.py --selftest, see DOCS.md. -->
 # MegaDreifach proofs
 
 Normative product name: **MegaDreifach**. The puzzle/group library stays **megaminx**.
@@ -81,7 +82,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 | --- | --- | --- |
 | M3 (unrank) | Surjectivity of the digest encoding onto `[0, \|G\|)`; a computable `rankPosition` inverse (unrank) | **OPEN.** Injectivity is proved (see M3 above: `evenRank_inj`, `positionToBytes_inj_legal`, `positionToBytes_inj_reachable`, `isLegal_chR`); surjectivity and unrank are not. |
 | M8 (nets) | Pairwise distinctness of the 60×52 concrete face-turn nets | OPEN. Too large for kernel `decide`. Not a blocker. |
-| M9 | Abs-G2 L2 mid-block: no 2-card local collision | OPEN (sketch in STONES.md). Informal proof in research `G2_PROOF.md`. Not a blocker. |
+| M9 | Abs-G2 L2 mid-block: no 2-card local collision | OPEN (sketch in [STONES.md](STONES.md)). Informal proof in research `G2_PROOF.md`. Not a blocker. |
 | — | sudo text equals generated Lean (Link 1) | OPEN; the emitter is trusted. The algebraic fold = `Generated.v_Hash` half is proved on `PadWf` (`v_Hash_eq_hashBlocks`). See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). |
 | — | `Generated.v_HashDeck` refinement; Scramble algebraic ≃ Generated | OPEN. Pad, `compose`, `require_permutation`, `pack_ori2`, `pack_ori3`, length-20 `even_perm_rank_big` (`Rank20Wf`), zero-rank `position_to_bytes` (`PosBytesWf`), zero-byte `big_from_be`, short, two-limb, and 28-byte `big_from_be` (`BePadWf`, length `≤ 28`), `big_factorial` (`n ≤ 51`), `peel_leading` below `limbCap d` for `d ≤ 26`, `peel_leading` for `d ≤ 51` when `n / d! < 10^9` (`peel_leading_51`), arbitrary-width `mag_sub` (`mag_sub_nat`), arbitrary-width `mag_add` / `big_add` (`mag_add_limbs`, `mag_add_nat`, `big_add_nat`), arbitrary-width `big_divmod_small`, wide-by-small `big_mul`, one-limb-times-wide `big_mul` (`big_mul_left_nat`), and 28-byte `phi_chunk` (`PhiChunkWf`, length `≤ 28`) are closed, and so is full `v_Hash` on `PadWf` (`v_Hash_refines`). Still open: `phi_inv` and hence `v_HashDeck` (PR #76 has a `phi_inv` refinement in review). Not collision resistance. |
 | — | Collision resistance of Hash; IV-anchored collision resistance | Not claimed, and **false for v1**: IV-anchored `Hash` collisions are practical (3-card local collisions from swapping two same-rank cards two apart, ≈2^12–2^13 compressions; a concrete pair is kernel-checked, `SwapCollision.v_Hash_swap_collision`, and measured by `security/suit_blind_collision.py`). Free-start `HashDeckBody` is broken; L3 collisions **exist**, and occur at a practical rate in real blocks. Under the v1 grip rule the compression function also has pseudo-collisions (reduction to a squaring collision proved, `dmStep_pseudo_collision`; pairs demonstrated on the real function); see [Security status](#security-status) |
@@ -129,7 +130,7 @@ cd proofs/megadreifach/lean
 lake build
 ```
 
-`lake exe megadreifach` prints a one-line summary **and** runs the KAT metadata checks. The library target is `MegaDreifach`. `python3 ../../doubledeal/check_axioms.py megadreifach` (the one shared axiom gate; `#audit_all` comes from the core-only package `proofs/audit`) audits every theorem of the library (only `propext`, `Classical.choice`, `Quot.sound`). `python3 ../vectors/json_to_lean.py --check` checks `MegaDreifach/Vectors.lean` against the published KAT JSON.
+`lake exe megadreifach` prints a one-line summary **and** runs the KAT metadata checks. The library target is `MegaDreifach`. `python3 ../../doubledeal/check_axioms.py megadreifach` (the one shared axiom gate; `#audit_all` comes from the core-only package [`proofs/audit`](../audit/README.md)) audits every theorem of the library (only `propext`, `Classical.choice`, `Quot.sound`). `python3 ../vectors/json_to_lean.py --check` checks `MegaDreifach/Vectors.lean` against the published KAT JSON.
 
 The 8 KAT theorems (M13) are in the separate, non-default library `MegaDreifachHeavy` (about 8 min of kernel evaluation):
 
@@ -139,7 +140,7 @@ lake env lean --run KatSpecCheck.lean   # no [init] hooks; KAT statements exact
 python3 ../../doubledeal/check_axioms.py megadreifach-heavy
 ```
 
-CI builds and audits it in the `megadreifach-heavy` job (`.github/workflows/proofs-heavy.yml`).
+CI builds and audits it in the `megadreifach-heavy` job ([`.github/workflows/proofs-heavy.yml`](../../.github/workflows/proofs-heavy.yml)).
 
 Shipped theorems contain no `sorry` and no `native_decide`. Kernel `decide` / `decide!` is used on closed numerals and finite tables (`2^224 < 52!`, `|G| < 256^29`, IV-COOK12 list predicates, the E_m SPEC tables, the KAT evaluations). CI also emits Lean from `megadreifach.sudo` and runs Generated TAP.
 

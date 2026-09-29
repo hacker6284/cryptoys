@@ -1,4 +1,6 @@
 $ python3 dealk_exact.py
+k=2 key-pile fallback: pairs with bound > 1/64: 0;  pairs with e >= 2: 0;  max bound 0.0000; 2H<->AS e=0;  expected cards dealt per pass 182.00
+    top 5 by bound: AC<->2C(e=0,0/1=0.0000) AC<->3C(e=0,0/1=0.0000) AC<->4C(e=0,0/1=0.0000) AC<->5C(e=0,0/1=0.0000) AC<->6C(e=0,0/1=0.0000)
 CUR: pairs with bound > 1/64: 68;  pairs with e >= 2: 146;  max bound 0.8869; 2H<->AS e=49;  expected cards dealt per pass 0.00
     top 5 by bound: 2C<->AH(e=49,196/221=0.8869) 2H<->AS(e=49,196/221=0.8869) 2S<->AD(e=49,196/221=0.8869) 3C<->2H(e=48,188/221=0.8507) 3C<->AS(e=48,188/221=0.8507)
 k=0 min: pairs with bound > 1/64: 12;  pairs with e >= 2: 90;  max bound 0.8869; 2H<->AS e=0;  expected cards dealt per pass 75.50

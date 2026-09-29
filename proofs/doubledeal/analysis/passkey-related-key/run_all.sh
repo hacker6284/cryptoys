@@ -23,3 +23,5 @@ run dealk.log bash -c 'for k in 0 1 2 3 4; do DEALK=$k ONLYV=4 ./readings 20000 
 run dealk_mod.log bash -c 'for k in 0 3 4; do DEALMOD=1 DEALK=$k ONLYV=4 ./readings 20000 31; done'
 run dealk_check.log bash -c './dealk_check; ./dealk_check 1000000 1 0 1,13 14,26; ./dealk_check 1000000 1 1 1,13 14,26; ./dealk_check 1000000 2 0 27,40 30,43; ./dealk_check 1000000 2 1 15,41 13,39 14,26 1,13; ./dealk_check 1000000 3 1 0,26 2,28; ./dealk_check 1000000 4 1 3,42'
 run rk_dealk2mod.log env DEALK=2 DEALMOD=1 ./rk 3000000 16 15,41 14,26 1,13
+run fallback.log bash -c 'DEALK=2 ONLYV=6 ./readings 20000 31; DEALMOD=1 DEALK=2 ONLYV=4 ./readings 20000 41'
+run fallback_check.log bash -c './dealk_check 1000000 2 2 3,15 4,16 5,17 1,13 14,26; ./dealk_check 1000000 2 1 17,43 0,39 15,41 13,39'

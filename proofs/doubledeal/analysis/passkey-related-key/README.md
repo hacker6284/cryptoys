@@ -194,6 +194,7 @@ the PassMix-F rule from `analysis/gridcycle-bijective/` (branch `doubledeal-grid
 | `rk.c` | full-cipher related-key tests V1–V3 and per-round state distance |
 | `readings.c`, `readings_exact.py` | §7: alternative readings of the suit step (reversibility, one-pass swaps, six-pass chain; exact move sets) |
 | `dealk_exact.py`, `dealk_check.c`, `logs/dealk*.log`, `logs/rk_dealk2mod.log` | §8: deal suit + k (k = 0..4, min vs mod), exact bounds, 1M refinements, full-cipher check (rk.c with env DEALK/DEALMOD) |
+| `logs/fallback*.log` | §9: suit + 2 with `mod` vs key-pile fallback (readings.c reading 6, dealk_check mode 2) |
 | `run_all.sh` | rebuilds and regenerates every log |
 
 ## 7. History of PassKey's F, and the "deal x cards" reading (follow-up)
@@ -355,3 +356,61 @@ suit + 2, reversed, under the hand, count taken mod the hand size, then the unch
 * Every round key, every vector and the PassKey Lean/Link 2 files would change. Section 4 found no measured
   full-cipher need, so this is a fidelity/cleanliness change, not a security fix.
 * k=1 is cheaper (120 cards) but leaves the ♣↔♥ pairs at ≈1/69. k=3 and 4 cost more for no measured gain.
+
+## 9. Suit + 2 on short hands: `mod` vs a key-pile fallback (follow-up, part A)
+
+Both rules deal x = suit(C) + 2 cards one at a time off the top of a pile (so they reverse), put the packet under
+the same pile, then do the unchanged rank cut with key-pile fallback, then put C on top of the key pile. The hand
+has n cards after C is popped and the key pile has i = 51 − n.
+
+* **mod** (§8): if x < n, deal x under the hand; otherwise deal x mod n under the hand. When n divides x this
+  deals nothing.
+* **key-pile fallback**, mirroring the rank cut: if x < n, deal x under the hand; else if x < i, deal x under the
+  **key pile**; else skip.
+  * The "else" branch cannot happen in a 52-card pass: x ≥ n means n ≤ 5, so i ≥ 46 > 5 ≥ x. The sub-options
+    (skip, or mod on the key pile) therefore give identical results. "Skip" is written only so the rule is total
+    on arbitrary pile sizes, e.g. in a Lean model.
+  * At the last step (n = 0) the controller deals from the key pile.
+
+**Reversibility of the fallback (argument).** At step i the inverse lifts C off the key pile. The hand then has n
+cards and the key pile i cards, the same sizes as at C's forward step, because neither the deal nor a cut changes
+a pile's size.
+* The deal branch (hand / key pile / skip) depends only on x = suit(C) + 2, n and i.
+* The rank-cut branch depends only on rank(C), n and i, exactly as in today's F⁻¹.
+* The inverse undoes the rank cut first, then the deal: it takes the bottom x cards of the pile that was dealt
+  and deals them back onto its top, which reverses them.
+* Each forward sub-step is a fixed permutation of one pile once its branch is known, so each step is a bijection
+  on (hand, key) states of fixed sizes, and the pass is their composition. This is the `PassKey.lean` argument
+  with one more branch.
+* Round trips: 0 failures in 200k decks each way (`logs/fallback.log`).
+
+**Numbers** (one pass, all 1326 swaps at 20k decks each, top pairs re-measured at 1M; six passes on 200k keys;
+exact bounds from `dealk_exact.py`):
+
+| suit + 2, short-hand rule | reversible | worst swap (1M) | 2♥↔A♠ (1M) | mean over 1326 | pairs > 1/64 | exact per-step collisions | six passes, worst pair | cards dealt per pass |
+|---|---|---|---|---|---|---|---|---|
+| mod | yes | A♥↔A♦ 0.00336 ≈ 1/297 | 0.00082 | 0.00013 | 0 | 78 pairs with e = 3, bound 1/442 | 0 / 200k | 166.5 |
+| **key-pile fallback** | **yes** | **2♣↔A♥ 0.00198 ≈ 1/506** | 0.00082 | **0.00003** | 0 | **none** (no two cards ever make the same move at the same step; bound 0) | 0 / 200k | 182.0 |
+
+Top 5 pairs (20k screen):
+
+| rule | top 5 pairs |
+|---|---|
+| fallback | 4♣↔3♥, 5♣↔4♥, 6♣↔5♥, 7♣↔6♥, 2♣↔A♥ (0.0017–0.0022; at 1M 0.0017–0.0020) |
+| mod | 5♥↔5♦, A♣↔A♦, 3♥↔3♦, K♥↔K♦, A♣↔A♠ (≈0.003) |
+
+What the numbers show:
+* With the fallback, what remains is only the ♣↔♥ suit+rank pairs, through paths that split and later rejoin.
+  They have the same values as under `mod` (same seeds, early-pass behaviour identical).
+* The `mod` rule adds tail collisions for same-rank pairs whose counts agree modulo the small hand.
+
+**Verdict.** The key-pile fallback is reversible and better on every swap metric:
+* worst swap ≈1/506 against ≈1/297 (1.7×);
+* mean pass-through 4× lower;
+* no exact per-step collision at all;
+* same six-pass result.
+
+It costs 15.5 more cards dealt per pass (+9%). It is arguably the more consistent hand rule, since it says "if it
+does not fit in the hand, use the key pile", just like the rank cut. Both rules are far below 1/64, so this is a
+choice between two good options, not a fix. Per the instruction, the fallback needs Zachary's choice before v12
+goes in, so v12 was not implemented yet.

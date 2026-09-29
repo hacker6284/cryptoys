@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Reproduces every log in logs/ (each log starts with its producing command). ~20 min on 8 cores.
+# Reproduces every log in logs/ (each log starts with its producing command). ~30 min on 8 cores (about 3.7 CPU-hours; measured 2026-09-29).
 set -euo pipefail
 cd "$(dirname "$0")"
 gcc -O2 -Wall -Wextra -o vec vec.c

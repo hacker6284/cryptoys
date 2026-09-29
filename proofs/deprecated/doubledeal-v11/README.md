@@ -44,5 +44,5 @@ The v11 Lean proofs (PassKey inverse, Link 2 refinement, GridCycle, security pac
 proofs/doubledeal/vectors/regen.sh v11 --check
 proofs/emit_lean.sh --check doubledeal-v11
 (cd proofs/deprecated/doubledeal-v11/lean/Generated && lake build && ./.lake/build/bin/doubledeal_v11_test)
-proofs/doubledeal/analysis/passkey-related-key/run_all.sh   # slow (~25 min on 8 cores), optional
+proofs/doubledeal/analysis/passkey-related-key/run_all.sh   # slow (~30 min on 8 cores), optional
 ```

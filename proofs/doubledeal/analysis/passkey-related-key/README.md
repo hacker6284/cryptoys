@@ -6,7 +6,7 @@
 
 Analysis only. Nothing here changes the SPEC, the sudo, or the Lean. No bit-security claims. DoubleDeal makes no
 cryptographic security claim. Every number below comes from a log in `logs/`. Each log starts with its producing
-command, and `run_all.sh` regenerates all of them (~25 min on 8 cores; seeds fixed).
+command, and `run_all.sh` regenerates all of them (~30 min on 8 cores; seeds fixed).
 
 ## Summary
 

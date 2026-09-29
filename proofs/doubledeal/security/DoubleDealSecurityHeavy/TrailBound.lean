@@ -1,13 +1,13 @@
 /-
   HEAVY (not in the default build target): the unconditional forms of the
-  multi-round characteristic bounds of `DoubleDealSecurity/Trail.lean`, obtained by
+  multi-round characteristic bounds of `DoubleDealSecurity/TrailBound.lean`, obtained by
   plugging in the kernel-checked GridCycle checks `check3_KC` / `check3_KS`
   (`DoubleDealSecurityHeavy/GridCycleSurvival.lean`). No new `decide!` here.
-  Same model and caveats as `Trail.lean`: INDEPENDENT UNIFORM round keys (not the
+  Same model and caveats as `DoubleDealSecurity/TrailBound.lean`: INDEPENDENT UNIFORM round keys (not the
   PassKey schedule), one constant-σ characteristic (not a differential), no
   final no-mix round. Not a bit-security claim.
 -/
-import DoubleDealSecurity.Trail
+import DoubleDealSecurity.TrailBound
 import DoubleDealSecurityHeavy.GridCycleSurvival
 
 namespace DoubleDeal.Security.TrailBound

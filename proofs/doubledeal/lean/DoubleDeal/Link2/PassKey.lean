@@ -67,12 +67,12 @@ theorem maybeCut_push_refines (c : Nat) (hand key : List Nat)
     rw [← ofNat_eq_natCast c]
     rw [push_front_refines c key hk]
     simp only [ok_bind]
-    unfold maybeCut
-    rw [dif_pos hH]
+    unfold maybeCut onPile
+    rw [if_pos hH]
     have hcut : cutProper hand (rank c) = rotL hand (rank c) := by
       unfold cutProper
       simp [hH.2]
-    rw [hcut]
+    simp only [hcut]
     rfl
   · have hnotH : ¬ (decide (0 < hand.length ∧ rank c < hand.length) = true) := by
       rw [decide_eq_false hH]; decide
@@ -87,19 +87,19 @@ theorem maybeCut_push_refines (c : Nat) (hand key : List Nat)
         rw [length_rotL]; exact hk
       rw [← ofNat_eq_natCast c]
       rw [push_front_refines c (rotL key (rank c)) hk']
-      unfold maybeCut
-      rw [dif_neg hH, dif_pos hK]
+      unfold maybeCut onPile
+      rw [if_neg hH, if_pos hK]
       have hcut : cutProper key (rank c) = rotL key (rank c) := by
         unfold cutProper
         simp [hK.2]
-      rw [hcut]
+      simp only [hcut]
       rfl
     · have hnotK : ¬ (decide (0 < key.length ∧ rank c < key.length) = true) := by
         rw [decide_eq_false hK]; decide
       rw [if_neg hnotK]
       rw [push_front_refines c key hk]
-      unfold maybeCut
-      rw [dif_neg hH, dif_neg hK]
+      unfold maybeCut onPile
+      rw [if_neg hH, if_neg hK]
       rfl
 
 /-- Residual cut-predicate on one pile (unfolded `if decide (listLen > 0)`). -/
@@ -130,94 +130,6 @@ def passkeyCutPush (c : Int) (hand key : Array Int) :
     else do
       let key ← Doubledeal.push_front key c
       pure (hand, key)
-
-/-- Nested residual cut / push wraps each leaf as `Flow.cont`. -/
-def passkeyCutPushCont (c : Int) (hand key : Array Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Array Int × Array Int) (Array Int)) :=
-  do
-    let cutH ← passkeyCutFlag c hand
-    let cutK ← passkeyCutFlag c key
-    if cutH = true then do
-      let r ← Doubledeal.rank_of c
-      let hand ← Doubledeal.left_rotate hand r
-      let key ← Doubledeal.push_front key c
-      pure (SudoRt.Flow.cont (hand, key))
-    else if cutK = true then do
-      let r ← Doubledeal.rank_of c
-      let key ← Doubledeal.left_rotate key r
-      let key ← Doubledeal.push_front key c
-      pure (SudoRt.Flow.cont (hand, key))
-    else do
-      let key ← Doubledeal.push_front key c
-      pure (SudoRt.Flow.cont (hand, key))
-
-/-- Residual nested cut / push is sequential `passkeyCutPush` then `Flow.cont`. -/
-theorem passkeyCutPushCont_eq (c : Int) (hand key : Array Int) :
-    passkeyCutPushCont c hand key =
-      (do
-        let piles ← passkeyCutPush c hand key
-        pure (SudoRt.Flow.cont (ρ := Array Int) piles)) := by
-  unfold passkeyCutPushCont passkeyCutPush
-  cases hH : passkeyCutFlag c hand with
-  | error e => simp [hH]; try rfl
-  | ok cutH =>
-    simp only [hH, ok_bind]
-    cases hK : passkeyCutFlag c key with
-    | error e => simp [hK]; try rfl
-    | ok cutK =>
-      simp only [hK, ok_bind]
-      cases cutH with
-      | false =>
-        cases cutK with
-        | false =>
-          cases hP : Doubledeal.push_front key c with
-          | error e => simp [hP]; try rfl
-          | ok key' => simp [hP]
-        | true =>
-          cases hR : Doubledeal.rank_of c with
-          | error e => simp [hR]; try rfl
-          | ok r =>
-            simp only [hR, ok_bind]
-            cases hL : Doubledeal.left_rotate key r with
-            | error e => simp [hL]; try rfl
-            | ok key' =>
-              simp only [hL, ok_bind]
-              cases hP : Doubledeal.push_front key' c with
-              | error e => simp [hP]; try rfl
-              | ok key'' => simp [hP]
-      | true =>
-        cases hR : Doubledeal.rank_of c with
-        | error e => simp [hR]; try rfl
-        | ok r =>
-          simp only [hR, ok_bind]
-          cases hL : Doubledeal.left_rotate hand r with
-          | error e => simp [hL]; try rfl
-          | ok hand' =>
-            simp only [hL, ok_bind]
-            cases hP : Doubledeal.push_front key c with
-            | error e => simp [hP]; try rfl
-            | ok key' => simp [hP]
-
-/-- `passkeyCutPushCont` always yields `.cont`; matching it is `passkeyCutPush`. -/
-theorem passkeyCutPushCont_match (c : Int) (hand key : Array Int)
-    {α : Type}
-    (onRet : Array Int → Except SudoRt.Trap α)
-    (onBrk : Array Int × Array Int → Except SudoRt.Trap α)
-    (onCont : Array Int × Array Int → Except SudoRt.Trap α) :
-    (do
-      let y ← passkeyCutPushCont c hand key
-      match y with
-      | .ret r => onRet r
-      | .brk fs => onBrk fs
-      | .cont fs => onCont fs) =
-      (do
-        let piles ← passkeyCutPush c hand key
-        onCont piles) := by
-  rw [passkeyCutPushCont_eq]
-  cases hp : passkeyCutPush c hand key with
-  | error e => simp [hp]
-  | ok piles => simp [hp]
-
 
 /-- Sequential form of `passkeyCutPush` on embedded piles: `maybeCut`, then the
     controller on top of the key pile. -/
@@ -418,63 +330,6 @@ theorem passkey_twin_refines (deck : List Nat) (hfits : FitsLen deck.length)
   simpa [passToKeyCutFallback] using
     passkey_loop_refines deck [] 1 deck.length (by omega) (by simpa using hfits) hfits
       (by simpa using hcards)
-
-/-- Residual cut / push after `dsimp` (`<$>` flags) equals `passkeyCutPushCont`. -/
-theorem passkey_inlined_cut_eq (c : Int) (hand key : Array Int) :
-    (do
-      let x ←
-        if 0 < SudoRt.listLen hand then
-          (fun a => decide (a < SudoRt.listLen hand)) <$> Doubledeal.rank_of c
-        else pure false
-      let x_1 ←
-        if 0 < SudoRt.listLen key then
-          (fun a => decide (a < SudoRt.listLen key)) <$> Doubledeal.rank_of c
-        else pure false
-      if x then do
-        let r ← Doubledeal.rank_of c
-        let hand ← Doubledeal.left_rotate hand r
-        (fun a => SudoRt.Flow.cont (hand, a)) <$> Doubledeal.push_front key c
-      else if x_1 then do
-        let r ← Doubledeal.rank_of c
-        let key ← Doubledeal.left_rotate key r
-        (fun a => SudoRt.Flow.cont (hand, a)) <$> Doubledeal.push_front key c
-      else
-        (fun a => SudoRt.Flow.cont (hand, a)) <$> Doubledeal.push_front key c) =
-      passkeyCutPushCont c hand key := by
-  unfold passkeyCutPushCont passkeyCutFlag
-  by_cases hp : 0 < SudoRt.listLen hand
-  · simp [hp]
-    first | done | {
-      by_cases hk : 0 < SudoRt.listLen key
-      · simp [hk]
-        first | done | {
-          cases hR : Doubledeal.rank_of c with
-          | error e => simp [hR]
-          | ok r => simp [hR]
-        }
-      · simp [hk]
-        first | done | {
-          cases hR : Doubledeal.rank_of c with
-          | error e => simp [hR]
-          | ok r => simp [hR]
-        }
-    }
-  · simp [hp]
-    first | done | {
-      by_cases hk : 0 < SudoRt.listLen key
-      · simp [hk]
-        first | done | {
-          cases hR : Doubledeal.rank_of c with
-          | error e => simp [hR]
-          | ok r => simp [hR]
-        }
-      · simp [hk]
-        first | done | {
-          cases hP : Doubledeal.push_front key c with
-          | error e => simp [hP]
-          | ok key' => simp [hP]
-        }
-    }
 
 /-- A `Flow.cont`-mapped result matched against the loop tail is the plain
     result fed to the `.cont` branch. -/

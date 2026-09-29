@@ -344,23 +344,34 @@ func undeal_under(xs: List<int>, m: int) -> List<int>
         out.append(xs[i])
     return out
 
-// The PassKey deal (SPEC 3.7 step 2): d = suit + 2 cards under the hand if they
-// fit, else under the key pile if they fit, else nothing.
-func deal_step(c: int, hand: List<int>, key: List<int>) -> (List<int>, List<int>)
+// The PassKey deal count (SPEC 3.7 step 2): d = suit + 2 cards. Positive d means
+// under the hand (d fits the hand), negative under the key pile (d fits the key
+// pile instead), 0 means no deal. Only the pile sizes are read, so the forward
+// step and its undo pick the same pile.
+func deal_amount(c: int, hand_len: int, key_len: int) -> int
     d = suit_of(c) + 2
-    if d < hand.length
-        return (deal_under(hand, d), key)
-    if d < key.length
-        return (hand, deal_under(key, d))
+    if d < hand_len
+        return d
+    if d < key_len
+        return 0 - d
+    return 0
+
+// The PassKey deal: deal_amount cards under the hand, or under the key pile.
+func deal_step(c: int, hand: List<int>, key: List<int>) -> (List<int>, List<int>)
+    a = deal_amount(c, hand.length, key.length)
+    if a > 0
+        return (deal_under(hand, a), key)
+    if a < 0
+        return (hand, deal_under(key, 0 - a))
     return (hand, key)
 
 // Undo deal_step. The same size tests pick the same pile.
 func undeal_step(c: int, hand: List<int>, key: List<int>) -> (List<int>, List<int>)
-    d = suit_of(c) + 2
-    if d < hand.length
-        return (undeal_under(hand, d), key)
-    if d < key.length
-        return (hand, undeal_under(key, d))
+    a = deal_amount(c, hand.length, key.length)
+    if a > 0
+        return (undeal_under(hand, a), key)
+    if a < 0
+        return (hand, undeal_under(key, 0 - a))
     return (hand, key)
 
 func passkey(deck: List<int>) -> List<int>
@@ -456,11 +467,7 @@ func trace_pass(deck: List<int>, steps: List<Step>, label: text) -> (List<int>, 
     n = deck.length
     for i = 1 to n
         c, next_hand = drop_front(hand)
-        dealt = 0
-        if suit_of(c) + 2 < next_hand.length
-            dealt = suit_of(c) + 2
-        else if suit_of(c) + 2 < key.length
-            dealt = 0 - (suit_of(c) + 2)
+        dealt = deal_amount(c, next_hand.length, key.length)
         next_hand, key = deal_step(c, next_hand, key)
         rank_cut = 0
         cut_on = 0
@@ -494,11 +501,7 @@ func trace_unpass(deck: List<int>, steps: List<Step>, label: text) -> (List<int>
             rank_cut = rank_of(c)
             cut_on = 2
             next_key = right_rotate(next_key, rank_cut)
-        dealt = 0
-        if suit_of(c) + 2 < n
-            dealt = suit_of(c) + 2
-        else if suit_of(c) + 2 < next_key.length
-            dealt = 0 - (suit_of(c) + 2)
+        dealt = deal_amount(c, n, next_key.length)
         hand, next_key = undeal_step(c, hand, next_key)
         hand = push_front(hand, c)
         key = next_key
@@ -944,15 +947,36 @@ test "one pass step by hand: 2 of hearts deals 3 then cuts 2"
     assert back_k == [20, 21, 22, 23, 24, 25]
 
 test "2 of hearts and ace of spades no longer make the same move"
-    // In v11 both cut the hand by suit + rank = 3 in total. In v12 they deal 3 and 4.
-    hand: List<int> = []
+    // In v11 both cut the hand by suit + rank = 3 in total. In v12 2 of hearts
+    // deals 3 then cuts 2, and ace of spades deals 4 then cuts 1, so the hands
+    // differ (2nd to 5th cards from the bottom) whatever the cards. Checked on
+    // eleven hands of 6 to 46 cards, each with the rest as the key pile.
+    base: List<int> = []
     for i = 0 to 51
         if (i != 14) and (i != 26)
-            hand.append(i)
-    empty: List<int> = []
-    a, ka = deal_step(14, hand, empty)
-    b, kb = deal_step(26, hand, empty)
-    assert left_rotate(a, rank_of(14)) != left_rotate(b, rank_of(26))
+            base.append(i)
+    for k = 0 to 10
+        order = left_rotate(base, k * 4)
+        size = 6 + 4 * k
+        hand: List<int> = []
+        key: List<int> = []
+        for i = 0 to 49
+            if i < size
+                hand.append(order[i])
+            else
+                key.append(order[i])
+        a, ka = deal_step(14, hand, key)
+        b, kb = deal_step(26, hand, key)
+        assert ka == kb
+        assert left_rotate(a, rank_of(14)) != left_rotate(b, rank_of(26))
+    // A 3-card hand: both deal from the key pile (3 and 4 cards), then cut the hand.
+    small = [0, 1, 2]
+    rest: List<int> = []
+    for i = 3 to 49
+        rest.append(base[i])
+    a, ka = deal_step(14, small, rest)
+    b, kb = deal_step(26, small, rest)
+    assert ka != kb
 
 test "suit labels add and multiply in GF(4)"
     // Aces of clubs, hearts, spades, diamonds: labels 0, w, w^2, 1.

@@ -11,7 +11,7 @@ def check(v):
         elif k == 'mix_columns': got, exp = P.mix_columns(vec['input'], v), vec['output']
         elif k == 'sum_ranks': got, exp = scoop_cm(P.sum_ranks(lay_cm(vec['input']), v)), vec['output']
         elif k == 'unkeyed_full': got, exp = P.mix_columns(P.stem(vec['input'], v), v), vec['output']
-        elif k == 'passkey' and v >= 12: got, exp = P.passkey_v12(vec['input']), vec['output']
+        elif k == 'passkey' and v >= 12: got, exp = P.passkey(vec['input'], v), vec['output']
         elif k == 'expand_keys' and v >= 12: got, exp = P.expand_keys_v(vec['k0'], v), vec['keys']
         else: continue
         if got != exp: print(f'MISMATCH v{v}', vec['name']); sys.exit(1)
@@ -35,7 +35,7 @@ print('v11 inverse GridCycle undoes GridCycle on 200 random decks')
 rng = random.Random(12)
 for _ in range(300):
     m = list(range(52)); rng.shuffle(m)
-    assert P.passkey_inv_v12(P.passkey_v12(m)) == m and P.passkey_v12(P.passkey_inv_v12(m)) == m, \
+    assert P.passkey_inv(P.passkey(m, 12), 12) == m and P.passkey(P.passkey_inv(m, 12), 12) == m, \
         f"v12 PassKey inverse fails on deck {m}"
 print('v12 PassKey inverse is two-sided on 300 random decks')
 rng = random.Random(1)

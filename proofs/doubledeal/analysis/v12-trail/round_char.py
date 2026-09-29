@@ -2,7 +2,7 @@
 relabellings tau, over uniform decks x (= the state after Compose with a uniform key).
 
 MEASUREMENT (random sampling, fixed seed), not a proof. RoundChar (Lean,
-DoubleDealSecurity/Trail.lean): the stem (lay_cm, SumRanks, ShiftRows, scoop_cm)
+DoubleDealSecurity/TrailBound.lean): the stem (lay_cm, SumRanks, ShiftRows, scoop_cm)
 commutes with tau at x, AND GridCycle commutes with tau at stem(x). The proved
 per-round bounds are 1/64 (tau outside v10Sym) and 1/4420 (nontrivial v10Sym; heavy).
 Here "stem commutes" is tested directly on the port as stem(tau.x) == tau.stem(x),

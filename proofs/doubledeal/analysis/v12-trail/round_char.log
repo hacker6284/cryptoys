@@ -3,7 +3,3 @@ AC<->2C (same-suit swap; SumRanks-alone exact 1/221): stem commutes 4466/1000000
 KC<->KD: stem commutes 0/1000000 = 0.000e+00; RoundChar 0/1000000 = 0.000e+00  (0 observed; rule-of-three 95% bound 3.0e-06)
 5D<->8D: stem commutes 4593/1000000 = 4.593e-03; RoundChar 65/1000000 = 6.500e-05
 v10Sym 0 3: stem commutes 1000000/1000000 = 1.000e+00; RoundChar 0/1000000 = 0.000e+00  (0 observed; rule-of-three 95% bound 3.0e-06)
-
-real	4m14.943s
-user	4m14.929s
-sys	0m0.012s

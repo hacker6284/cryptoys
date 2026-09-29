@@ -94,7 +94,7 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.GCSurvival.check3_KS",
     "DoubleDeal.Security.GCSurvival.gc_survival_v10Sym03_le",
     "DoubleDeal.Security.GCSurvival.gc_survival_v10Sym_le",
-    # DoubleDealSecurityHeavy/Trail.lean (unconditional multi-round characteristic bounds)
+    # DoubleDealSecurityHeavy/TrailBound.lean (unconditional multi-round characteristic bounds)
     "DoubleDeal.Security.TrailBound.trail_card_le_64",
     "DoubleDeal.Security.TrailBound.trail_card_le_4420_v10Sym",
 }

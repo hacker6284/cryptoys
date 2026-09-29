@@ -97,6 +97,33 @@ theorem addI_ofNat_one (n : Nat) (h : FitsLen (n + 1)) :
     SudoRt.addI (Int.ofNat n) 1 = .ok (Int.ofNat (n + 1)) :=
   narrowI_ofNat (n + 1) h
 
+theorem addI_ofNat (a b : Nat) (h : FitsLen (a + b)) :
+    SudoRt.addI (Int.ofNat a) (Int.ofNat b) = .ok (Int.ofNat (a + b)) := by
+  unfold SudoRt.addI
+  have : Int.ofNat a + Int.ofNat b = Int.ofNat (a + b) := by
+    simp [ofNat_eq_natCast]
+  rw [this]
+  exact narrowI_ofNat _ h
+
+/-- `0 - d` for a nonnegative `d` that fits (the sudo `0 - d` in `deal_amount`). -/
+theorem subI_zero_ofNat (d : Nat) (h : FitsI64 d) :
+    SudoRt.subI 0 (Int.ofNat d) = .ok (-Int.ofNat d) := by
+  have hle := ofNat_le_i64Max h
+  have h0 : (0 : Int) ≤ Int.ofNat d := Int.ofNat_zero_le d
+  unfold SudoRt.subI SudoRt.narrowI
+  have hn : ¬ ((0 - Int.ofNat d < SudoRt.i64Min || 0 - Int.ofNat d > SudoRt.i64Max) = true) := by
+    unfold SudoRt.i64Min; unfold SudoRt.i64Max at hle ⊢
+    simp only [Bool.or_eq_true, decide_eq_true_eq, not_or]; omega
+  rw [if_neg hn]
+  simp
+
+/-- `0 - (-d)` for a nonnegative `d` that fits (the sudo `0 - a` in `deal_step`). -/
+theorem subI_zero_neg_ofNat (d : Nat) (h : FitsI64 d) :
+    SudoRt.subI 0 (-Int.ofNat d) = .ok (Int.ofNat d) := by
+  unfold SudoRt.subI
+  rw [show (0 : Int) - -Int.ofNat d = Int.ofNat d by omega]
+  exact narrowI_ofNat d h
+
 theorem subI_ofNat (a b : Nat) (hfits : FitsLen a) (hle : b ≤ a) :
     SudoRt.subI (Int.ofNat a) (Int.ofNat b) = .ok (Int.ofNat (a - b)) := by
   unfold SudoRt.subI

@@ -175,5 +175,5 @@ for v in (8, 9, 10, 11, 12):
     print(f"[4] v{v}: full round fails for every transposition: {allfail}; every nontrivial {'v10Sym' if v >= 10 else 'G52'}: {gfail}; 200 random sigma: {rfail}; encrypt fails 200/200 random transposition trials: {efail}")
 
 # 5. v12 PassKey is value-dependent too (run last so the seeded draws above are unchanged)
-passfail12 = sum(P.passkey_v12(app(s, k)) != app(s, P.passkey_v12(k)) for s, k in ((rdeck(), rdeck()) for _ in range(200)))
+passfail12 = sum(P.passkey(app(s, k), 12) != app(s, P.passkey(k, 12)) for s, k in ((rdeck(), rdeck()) for _ in range(200)))
 print(f"[5] v12: PassKey(sK) != s PassKey(K) in {passfail12}/200 (schedule is value-dependent)")

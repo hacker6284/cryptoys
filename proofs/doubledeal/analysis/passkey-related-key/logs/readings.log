@@ -16,6 +16,7 @@ KEYP  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/2000
       top 5: KH<->QS 0.0590 KC<->QH 0.0571 KS<->QD 0.0553 KH<->JD 0.0513 KC<->JS 0.0491
       six chained passes, worst pair KH<->QS: K'_r = tau K_r for all r=1..6 in 0/200000 keys = 0.00000
 DEALB  F^-1(F(x)) != x: 0/200000  F(F^-1(y)) != y: 0/200000  equals CUR on 0/200000 decks
+      (DEALB with k = 0: deal suit + 0 cards, count capped at the hand size (min))
       worst 2C<->AH 0.8865   2H<->AS 0.0153   pairs > 1/64: 12   mean over 1326: 0.00682
       top 5: 2C<->AH 0.8865 3C<->2H 0.8472 4C<->3H 0.8162 5C<->4H 0.7835 6C<->5H 0.7470
       six chained passes, worst pair 2C<->AH: K'_r = tau K_r for all r=1..6 in 96392/200000 keys = 0.48196

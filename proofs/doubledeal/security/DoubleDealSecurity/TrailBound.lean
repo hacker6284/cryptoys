@@ -103,7 +103,7 @@ theorem trail_rounds_rel (σ : Relabel) :
       rw [compose_rel, roundChar_unkeyedWithMix h.1]
       exact trail_rounds_rel σ R _ _ h.2
 
-/-- `rounds` maps decks to decks. -/
+/-- (PROVED) `rounds` maps decks to decks. -/
 theorem isDeck_rounds : ∀ (R : ℕ) (y : Fin 52 → Nat) (K : Fin R → Key), IsDeck y →
     IsDeck (rounds R y K)
   | 0, _, _, hy => hy

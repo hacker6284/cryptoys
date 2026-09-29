@@ -105,10 +105,9 @@ the interval is the log-normal approximation `exp(ln est ± 1.96 √(1/n_F + 1/n
 an exact interval. The smaller entries rest on a handful of matching keys and are
 order-of-magnitude values. For the two same-suit swaps measured here (A♣↔2♣ and 5♦↔8♦;
 no other swap was run for two rounds) the constant path carries ≈ 99.9% of the
-estimated `DP₂(α → α)`. For the 3-cycle into a
-swap a path whose difference changes wins (ordinary clustering). For comparison only:
-M2's proved bound on the CHARACTERISTIC is `(1/64)² ≈ 2.4e-4`; nothing numeric is
-proved for the DIFFERENTIAL.
+estimated `DP₂(α → α)`. For the 3-cycle into a swap a path whose difference changes
+wins (ordinary clustering). For comparison only: M2's proved bound on the
+CHARACTERISTIC is `(1/64)² ≈ 2.4e-4`; nothing numeric is proved for the DIFFERENTIAL.
 
 ## 4. Open
 

@@ -46,6 +46,8 @@ here is a security or bit-security claim, and a green build is not one either.
   `roundCharCount_le_gridCycle σ : roundCharCount σ ≤ #(gcSurvivors σ)`.
 * `round_le_64_of_not_v10Sym σ (h : ¬∃ a x, σ = v10Sym a x) : 64 * roundCharCount σ ≤ 52!`.
 * `round_le_26_v10Sym a x (hne : ¬(a = 0 ∧ x = 0)) : 26 * roundCharCount (v10Sym a x) ≤ 52!`.
+  Here and below `hne` says `(a, x) ≠ (0, 0)`; it excludes `v10Sym 0 0 = 1`, for which
+  every deck follows the characteristic and the bound is false.
 * `round_le_of_v10Sym p (hp : p ≤ 64) hsym σ (h1 : σ ≠ 1) : p * roundCharCount σ ≤ 52!`,
   given `hsym`: the same bound for every nontrivial `v10Sym a x`. This is the one
   case split (SumRanks outside `v10Sym`) used by both `σ ≠ 1` statements below.

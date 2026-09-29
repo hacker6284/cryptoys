@@ -5,7 +5,9 @@
 #include "ddiff.h"
 static uint64_t *load(const char *p, long *n) { FILE *f = fopen(p, "rb"); fseek(f, 0, SEEK_END); *n = ftell(f) / 8; rewind(f);
   uint64_t *k = malloc(*n * 8); if (fread(k, 8, *n, f) != (size_t)*n) exit(1); fclose(f); qsort(k, *n, 8, cmpu); return k; }
-int main(int argc, char **argv) { long nf, nb; uint64_t *F = load(argv[1], &nf), *B = load(argv[2], &nb);
+int main(int argc, char **argv) {
+  if (argc < 5) { fprintf(stderr, "usage: mitm F B KEYA KEYB\n"); return 2; }
+  long nf, nb; uint64_t *F = load(argv[1], &nf), *B = load(argv[2], &nb);
   uint64_t ka = strtoull(argv[3], 0, 16), kb = strtoull(argv[4], 0, 16);
   double tot = 0, ta = 0, tb = 0; long ncommon = 0, pairs_other = 0; long hsupp[53] = {0};
   long i = 0, j = 0;

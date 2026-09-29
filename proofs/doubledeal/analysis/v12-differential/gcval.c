@@ -1,7 +1,9 @@
 /* Validation of the MITM estimator on a toy with large DP: GridCycle alone, uniform key, GridCycle alone.
    usage: gcval f|b|d SPEC_A SPEC_B N SEED OUT  (f: forward keys from A; b: backward keys to B; d: direct count A->B) */
 #include "ddiff.h"
-int main(int argc, char **argv) { int A[52], Bt[52]; parse_rel(argv[2], A); parse_rel(argv[3], Bt); long n = atol(argv[4]);
+int main(int argc, char **argv) {
+  if (argc < 6 || (argv[1][0] != 'd' && argc < 7)) { fprintf(stderr, "usage: gcval f|b|d SPEC_A SPEC_B N SEED OUT  (OUT not used for d)\n"); return 2; }
+  int A[52], Bt[52]; parse_rel(argv[2], A); parse_rel(argv[3], Bt); long n = atol(argv[4]);
   uint64_t st = seed_for(atol(argv[5]), 5, 9); char m = argv[1][0]; uint64_t *k = m == 'd' ? 0 : malloc(n * 8); long hit = 0;
   int x[52], xs[52], u[52], v[52], d[52], kk[52], p[52], q[52];
   for (long t = 0; t < n; t++) { shuffle_(x, &st);

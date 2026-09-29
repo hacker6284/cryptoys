@@ -17,7 +17,8 @@
   NOT covered: the final no-mix round, and any link from `rounds` to `encryptN` (as in
   `TrailBound`). The real PassKey schedule gets only the `R = 1` identity
   (`realDiffCount_one`) and the one-round bound on paths inside the `v10Sym` cluster
-  (`realStaysInV10_card_le_26`); nothing for the real schedule at `R ≥ 2` beyond that.
+  (`realStaysInV10_card_le_26`, for `(a, x) ≠ (0, 0)` only); nothing for the real schedule
+  at `R ≥ 2` beyond that.
 
   Proved:
   * D0 `card_trail_le_diffCount` (from `trail_rounds_rel`): the characteristic is one path
@@ -30,12 +31,12 @@
     `diffCount_one_left` (difference `1` stays `1`), `dp1Count_to_one`,
     `diffCount_to_one` (a difference `α ≠ 1` never becomes `1`), `diffCount_zero`,
     `diffCount_one`.
-  * D5 `dp1Count_v10Sym_le_agree`: for input `v10Sym a x`, the one-round count to `β` is at
+  * D4 `dp1Count_v10Sym_le_agree`: for input `v10Sym a x`, the one-round count to `β` is at
     most `52!/52` times the number of cards on which `v10Sym a x` and `β` agree (the first
     card placed by GridCycle is not moved). Corollaries `dp1Count_v10Sym_eq_zero`,
     `dp1Count_v10Sym_v10Sym_eq_zero`: `v10Sym a x → v10Sym a' x'` with
     `(a', x') ≠ (a, x)` has one-round count `0`.
-  * D6 `staysInV10_iff_trail`: a path whose difference stays a `v10Sym a' x'` after every
+  * D5 `staysInV10_iff_trail`: a path whose difference stays a `v10Sym a' x'` after every
     round (`StaysInV10`) is exactly the constant characteristic. Hence, for
     `(a, x) ≠ (0, 0)` only: `staysInV10_card_le_26` (`26^R · # ≤ (52!)^R`, no further
     hypothesis), `staysInV10_card_le_4420_of_check` (given the two finite GridCycle
@@ -45,7 +46,7 @@
     (For `(a, x) = (0, 0)`, `v10Sym 0 0 = 1` and these bounds are false.)
     These cover ONLY paths that stay inside `v10Sym`; a path that leaves `v10Sym` and
     comes back is not bounded.
-  * D7 `realDiffCount_one`: under the real schedule, one round is the same count as with
+  * D6 `realDiffCount_one`: under the real schedule, one round is the same count as with
     an independent key. Nothing for `R ≥ 2`.
 
   The measured one- and two-round values in the notes are EMPIRICAL (sampled), not
@@ -277,7 +278,7 @@ theorem diffCount_to_one {α : Relabel} (hα : α ≠ 1) : ∀ (R : ℕ) {y : Fi
       · rw [hγ, dp1Count_to_one hα, Nat.zero_mul]
       · rw [diffCount_to_one hγ R hy, Nat.mul_zero]
 
-/-! ## D5: out of `v10Sym`, one round (first-card argument) -/
+/-! ## D4: out of `v10Sym`, one round (first-card argument) -/
 
 theorem unkeyedNoMix_rel_v10Sym (a : Fin 13) (x : Fin 4) {m : Fin 52 → Nat} (hm : Cards m) :
     unkeyedNoMix (rel (v10Sym a x) m) = rel (v10Sym a x) (unkeyedNoMix m) :=
@@ -319,7 +320,7 @@ theorem eq_of_v10Sym_apply_eq {a a' : Fin 13} {x x' : Fin 4} (c : Fin 52)
   have := hr.symm.trans hr'
   omega
 
-/-- (PROVED) D5. Input difference `v10Sym a x`: the one-round count to `β` is at most
+/-- (PROVED) D4. Input difference `v10Sym a x`: the one-round count to `β` is at most
     `52!/52` times the number of cards on which `v10Sym a x` and `β` agree. -/
 theorem dp1Count_v10Sym_le_agree (a : Fin 13) (x : Fin 4) (β : Relabel) :
     52 * dp1Count (v10Sym a x) β ≤
@@ -359,11 +360,11 @@ theorem dp1Count_v10Sym_v10Sym_eq_zero {a a' : Fin 13} {x x' : Fin 4}
     (hdiff : ¬ (a = a' ∧ x = x')) : dp1Count (v10Sym a x) (v10Sym a' x') = 0 :=
   dp1Count_v10Sym_eq_zero a x _ fun c hc => hdiff (eq_of_v10Sym_apply_eq c hc)
 
-/-! ## D6: paths that stay inside `v10Sym` -/
+/-! ## D5: paths that stay inside `v10Sym` -/
 
 /-- The pair `(y, α·y)` follows a path whose difference after EVERY round is some
     `v10Sym a' x'` (possibly different each round). Only these paths are covered by the
-    D6 bounds; a path leaving `v10Sym` is not. -/
+    D5 bounds; a path leaving `v10Sym` is not. -/
 def StaysInV10 : (R : ℕ) → Relabel → (Fin 52 → Nat) → (Fin R → Key) → Prop
   | 0, _, _, _ => True
   | R + 1, α, y, K => ∃ (a' : Fin 13) (x' : Fin 4),
@@ -385,7 +386,7 @@ theorem roundChar_v10Sym_iff (a : Fin 13) (x : Fin 4) {x₀ : Fin 52 → Nat}
     simp only [unkeyedWithMix] at h
     rwa [hs] at h
 
-/-- (PROVED) D6. Paths inside `v10Sym` are exactly the constant characteristic: the
+/-- (PROVED) D5. Paths inside `v10Sym` are exactly the constant characteristic: the
     difference cannot move to a different `v10Sym` (`v10Sym_step_agree`). -/
 theorem staysInV10_iff_trail (a : Fin 13) (x : Fin 4) : ∀ (R : ℕ) (y : Fin 52 → Nat)
     (K : Fin R → Key), IsDeck y → (StaysInV10 R (v10Sym a x) y K ↔ Trail (v10Sym a x) R y K)
@@ -418,22 +419,22 @@ theorem staysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 
     (R : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 ^ R * (univ.filter fun K : Fin R → Key => StaysInV10 R (v10Sym a x) y K).card ≤
       Nat.factorial 52 ^ R := by
-  exact (congrArg (26 ^ R * ·) (card_staysInV10_eq a x R hy fun K : Fin R → Key => K)).trans_le
-    (TrailBound.trail_card_le_of_round _ 26 (TrailBound.round_le_26_v10Sym a x hne) R y hy)
+  rw [card_staysInV10_eq a x R hy fun K : Fin R → Key => K]
+  exact TrailBound.trail_card_le_of_round _ 26 (TrailBound.round_le_26_v10Sym a x hne) R y hy
 
 open Classical in
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) As
-    `staysInV10_card_le_26` with `4420^R`. Unconditional in the heavy library
+    `staysInV10_card_le_26` with `4420^R`. Without the check hypotheses in the heavy library
     (`staysInV10_card_le_4420`). Only paths inside `v10Sym`. -/
 theorem staysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) (R : ℕ) {y : Fin 52 → Nat}
     (hy : IsDeck y) :
     4420 ^ R * (univ.filter fun K : Fin R → Key => StaysInV10 R (v10Sym a x) y K).card ≤
       Nat.factorial 52 ^ R := by
-  exact (congrArg (4420 ^ R * ·) (card_staysInV10_eq a x R hy fun K : Fin R → Key => K)).trans_le
-    (TrailBound.trail_card_le_4420_v10Sym_of_check hKC hKS a x hne R y hy)
+  rw [card_staysInV10_eq a x R hy fun K : Fin R → Key => K]
+  exact TrailBound.trail_card_le_4420_v10Sym_of_check hKC hKS a x hne R y hy
 
-/-! ## D6 and D7 under the real PassKey schedule (one round only) -/
+/-! ## D5 and D6 under the real PassKey schedule (one round only) -/
 
 open Classical in
 /-- (PROVED; no hypothesis beyond `(a, x) ≠ (0, 0)`) Real PassKey schedule, uniform master key,
@@ -450,8 +451,8 @@ theorem realStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ 
 
 open Classical in
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) As
-    `realStaysInV10_card_le_26` with `52!/4420`. ONE round's bound. Unconditional in the
-    heavy library (`realStaysInV10_card_le_4420`). -/
+    `realStaysInV10_card_le_26` with `52!/4420`. ONE round's bound. Without the check
+    hypotheses in the heavy library (`realStaysInV10_card_le_4420`). -/
 theorem realStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) (R : ℕ) (hR : 0 < R)
     {y : Fin 52 → Nat} (hy : IsDeck y) :
@@ -461,7 +462,7 @@ theorem realStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3
   exact RealSchedule.realTrail_card_le_of_round _ 4420
     (TrailBound.round_le_4420_v10Sym_of_check hKC hKS a x hne) R hR y hy
 
-/-- (PROVED) D7. Real PassKey schedule, ONE round: the count over master keys equals the
+/-- (PROVED) D6. Real PassKey schedule, ONE round: the count over master keys equals the
     independent-key count `dp1Count α β` (round key `K_0` alone is uniform). Nothing is
     proved for the real schedule at `R ≥ 2`. -/
 theorem realDiffCount_one (α β : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) :

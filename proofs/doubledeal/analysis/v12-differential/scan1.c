@@ -1,7 +1,9 @@
 /* One-round DP(alpha -> alpha) for the 312 same-suit swaps (MEASUREMENT, empirical only).
    usage: scan1 PART NPARTS N SEED ; prints: a b N count(dU = alpha) count(RoundChar) */
 #include "ddiff.h"
-int main(int argc, char **argv) { int part = atoi(argv[1]), np = atoi(argv[2]); long n = atol(argv[3]); int idx = 0;
+int main(int argc, char **argv) {
+  if (argc < 5) { fprintf(stderr, "usage: scan1 PART NPARTS N SEED\n"); return 2; }
+  int part = atoi(argv[1]), np = atoi(argv[2]); long n = atol(argv[3]); int idx = 0;
   for (int su = 0; su < 4; su++) for (int r1 = 0; r1 < 13; r1++) for (int r2 = r1 + 1; r2 < 13; r2++, idx++) {
     if (idx % np != part) continue;
     int a = 13 * su + r1, b = 13 * su + r2, s[52];

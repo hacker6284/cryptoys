@@ -16,7 +16,9 @@ static void top(uint64_t *k, long n, const char *name, uint64_t selfkey) {
   printf("%s: distinct %ld of %ld; count(beta = input) %ld; top counts:", name, distinct, n, selfc);
   for (int t = 0; t < 8 && best[t]; t++) printf(" %ld(supp %d%s)", best[t], (int)(bk[t] & 63), bk[t] == selfkey ? ",=input" : "");
   printf("\n"); }
-int main(int argc, char **argv) { int s[52]; parse_rel(argv[1], s); long n = atol(argv[2]);
+int main(int argc, char **argv) {
+  if (argc < 5) { fprintf(stderr, "usage: diff1 SPEC N SEED OUTFILE|-  [b]\n"); return 2; }
+  int s[52]; parse_rel(argv[1], s); long n = atol(argv[2]);
   uint64_t st = seed_for(atol(argv[3]), 7, 11); int back = argc > 5 && argv[5][0] == 'b';
   uint64_t selfkey = (hsh(s) & ~63ull) | support(s);
   uint64_t *kU = malloc(n * 8), *kS = back ? 0 : malloc(n * 8), *kM = back ? 0 : malloc(n * 8);

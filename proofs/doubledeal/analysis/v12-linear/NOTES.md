@@ -1,4 +1,6 @@
-# DoubleDeal v12: is there a linear-cryptanalysis analogue? (milestone 3, note only)
+# DoubleDeal v12: is there a linear-cryptanalysis analogue? (roadmap milestone M3, note only)
+
+Roadmap: [`security/README.md`, section "Roadmap"](../../security/README.md#roadmap).
 
 Status: **a note, not a theorem.** Nothing in this directory is proved. The one
 number here is a MEASUREMENT (sampled, fixed seed) with a noise control. It is not
@@ -69,4 +71,4 @@ this unkeyed statistic does not measure.
   is where a SumRanks/GridCycle interaction could show up if it exists.
 * Define a key-averaged second moment (the ELP analogue) for the standard
   representation, and see whether a trail-style product bound over rounds can be
-  proved in the independent-key model, like milestone 2.
+  proved in the independent-key model, like milestone M2.

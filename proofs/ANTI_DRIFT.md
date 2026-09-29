@@ -123,11 +123,11 @@ total-fragment / terminating-subset emitter.
 | Item | Status |
 | --- | --- |
 | sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
-| Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 **CLOSED** on every well-formed list (`passkey_refines`, `passkey_eq_twin_loop`, `passkey_step_eq`). See [`LINK2.md`](LINK2.md). |
-| Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | Link 2 **CLOSED** on every well-formed list (`passkey_inv_refines`, `passkey_inv_eq_twin_loop`, `passkey_inv_step_eq`). Algebraic correctness only — not bit-security. |
+| Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 **CLOSED** on every well-formed list (`passkey_refines`, `passkey_eq_twin_loop`; v12: every card `FitsLen` too). See [`LINK2.md`](LINK2.md). |
+| Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | Link 2 **CLOSED** on every well-formed list (`passkey_inv_refines`, `passkey_inv_eq_twin_loop`; v12: every card `FitsLen` too). Algebraic correctness only — not bit-security. |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | Link 2 **CLOSED** on `CardBound` messages (`encrypt_refines`). Not bit-security. |
 | `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All four publics ready (bounded `for`). |
-| PassKey S3/S4 *about* `Except Trap` emitted defs | Link 2 **CLOSED** on `FitsLen` / `WellFormed` (`passkey_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, and the inverse / `WellFormed` forms). Other stones about emitted defs stay open. Not bit-security. |
+| PassKey S3/S4 *about* `Except Trap` emitted defs | Link 2 **CLOSED** on `FitsLen` (length and cards) / `WellFormed` (`passkey_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, and the inverse / `WellFormed` forms). Other stones about emitted defs stay open. Not bit-security. |
 | Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |
 | DoubleDeal-CBC-HMAC generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach via emit-ir `-I`. No Link 2. No AEAD security theorem. |
 | sudo↔Lean / algebraic≃Generated for CBC-HMAC (Link 2) | OPEN. Not started. |

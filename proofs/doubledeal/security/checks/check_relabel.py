@@ -1,4 +1,5 @@
-"""T1 sanity checks for the relabelling statements (v8, v9, v10 and v11 ports)."""
+"""T1 sanity checks for the relabelling statements (v8, v9, v10, v11 and v12 ports).
+v12 differs from v11 only in the key schedule, so it is checked at the encrypt level ([4], [5])."""
 import random, itertools, ddport as P
 from dd_v8 import suit, rank, lay_cm, scoop_cm, shift_rows, compose, passkey
 rng = random.Random(2026)
@@ -161,7 +162,7 @@ for v in (8, 9, 11):
     print(f"    v{v}: commute <-> equal walk on {agree}/3000")
 
 # 4. round / encrypt level
-for v in (8, 9, 10, 11):
+for v in (8, 9, 10, 11, 12):
     def rnd(m, k): return P.full_round(m, k, v)
     allfail = True
     for a, b in itertools.combinations(range(52), 2):
@@ -172,3 +173,7 @@ for v in (8, 9, 10, 11):
     rfail = all(any(rnd(app(s, m), k) != app(s, rnd(m, k)) for m, k in ((rdeck(), rdeck()) for _ in range(3))) for s in (rdeck() for _ in range(200)))
     efail = all(P.encrypt(app(s, m), k, v) != app(s, P.encrypt(m, k, v)) for s, m, k in ((transp(*rng.sample(range(52), 2)), rdeck(), rdeck()) for _ in range(200)))
     print(f"[4] v{v}: full round fails for every transposition: {allfail}; every nontrivial {'v10Sym' if v >= 10 else 'G52'}: {gfail}; 200 random sigma: {rfail}; encrypt fails 200/200 random transposition trials: {efail}")
+
+# 5. v12 PassKey is value-dependent too (run last so the seeded draws above are unchanged)
+passfail12 = sum(P.passkey_v12(app(s, k)) != app(s, P.passkey_v12(k)) for s, k in ((rdeck(), rdeck()) for _ in range(200)))
+print(f"[5] v12: PassKey(sK) != s PassKey(K) in {passfail12}/200 (schedule is value-dependent)")

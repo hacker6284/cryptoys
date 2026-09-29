@@ -29,16 +29,16 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `SumRanksV10` | v10 SumRanks commutes with every `v10Sym a x` (rank + a mod 13, GF(4) suit label ⊕ x; 52 elements, ℤ/13 × (ℤ/2)², not cyclic): `sumRanksV10_commutes_v10Sym` ("if", on every card-valued grid) |
 | `SumRanksV10Iff` | the converse and the full characterisation `sumRanksV10_commutes_iff`: σ commutes with v10 SumRanks on every deck iff σ = `v10Sym a x` for some a, x. Proof: the chained steps are one row rotation then one column rotation (`sumRanksChain_eq`); commuting on a deck forces equal amounts; two decks differing in the last card of row 0 force a constant rank shift mod 13, and two differing in the top card of column 1 force a constant suit-label shift. Like v9's `sumRanks_commutes_iff` |
 | `Walk` | the GridCycle seat walk, generic in the seat chooser |
-| `GridCycle` | GridCycle commutes only with σ = 1 (live v11 walk, re-checked after the v11 GridCycle change; earlier proved for v9/v10 and still for the frozen v8 model) |
+| `GridCycle` | GridCycle commutes only with σ = 1 (live v11 walk, kept in v12, re-checked after the v11 GridCycle change; earlier proved for v9/v10 and still for the frozen v8 model) |
 | `BranchNumber` | trivial branch-number floor (`≥ 4` for any deck bijection); GridCycle attains it by swapping walk cards 50 and 51 (live v11 GridCycle and the frozen v8 model; the tail argument uses only that the chooser picks a free seat). Not a wide-trail bound |
 | `Rounds` | lifting to rounds/encrypt (hypotheses now `CommutesG σ sumRanksV10`); stem onto decks; the conjecture; degenerate-key side lemma |
 | `PermKeys` | encrypt with permutation round keys reduces to the conjecture; `encrypt6_not_commutes_v10Sym` (was `…_v9Sym`) |
-| `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt` (v11), K♣↔K♦ witness (re-checked on v10 and v11) |
+| `Link` | Link 2 transfer to the emitted `Doubledeal.encrypt` (v12), K♣↔K♦ witness (re-checked on v10, v11 and v12) |
 | `V8Vectors` | frozen v8 vectors checked against the v8 model (generated, `--check`) |
 | `RealKey` | commuting relabellings closed under powers; every nontrivial `v10Sym a x` has a power equal to one of four witnesses `v10Sym 1 0`, `v10Sym 0 1`, `v10Sym 0 2`, `v10Sym 0 3` (v9 needed two; `v10Sym` is not cyclic); pull-back from the emitted `encrypt` |
 | `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma map: `SUMRANKS_DP.md`; paper proof: `sumranks-dp-paper/PROOF.md` |
 | `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`). **Deprecated-v9 model**; kept as the proof of the v9 mechanism, not a statement about v10 |
-| `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v11 `encrypt` under the identity master key (expected values regenerated for v11) (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
+| `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v12 `encrypt` under the identity master key (expected values regenerated for v12, whose key schedule changed) (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
 
 Generic list/rotation lemmas live in the Mathlib-free core package
 (`../lean/DoubleDeal/SumRanks.lean`, `SumRanksV10.lean`, `Rotate.lean`).

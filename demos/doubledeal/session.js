@@ -105,7 +105,7 @@ export function createDoubleDealSession({
         if (step.kind === "scan") return `${step.label} · GridCycle blocked by ${cardName(step.total)} · scanning row ${step.row + 1} from column ${step.col + 1}`;
         if (step.kind === "place" && step.flag === 1) return `${step.label} · GridCycle blocked placement into (${step.row + 1}, ${step.col + 1})`;
         if (step.kind === "pass" && step.flag === 2) return `${step.label} · proper rank cut on the key pile`;
-        if (step.kind === "pass" && step.flag === 1) return `${step.label} · suit-rotate hand, then proper rank cut on the hand`;
+        if (step.kind === "pass" && step.flag === 1) return `${step.label} · deal suit + 2, then proper rank cut on the hand`;
         if (step.kind === "pass" && step.flag === 0) return `${step.label} · no proper rank cut`;
         if (step.kind === "unpass" && step.flag === 2) return `${step.label} · undo rank cut on the key pile`;
         if (step.kind === "unpass" && step.flag === 1) return `${step.label} · undo rank cut on the hand`;
@@ -166,21 +166,33 @@ export function createDoubleDealSession({
 
     function passMath(step) {
         if (step.flag === 2) {
-            return `Controller ${cardName(step.card)}. Suit-rotate the hand (if any), then proper rank cut on the key pile by ${step.total} (fallback). Controller on top of the key pile.`;
+            return `Controller ${cardName(step.card)}. ${dealText(step)} Proper rank cut on the key pile by ${step.total} (fallback). Controller on top of the key pile.`;
         }
-        let math = `Controller ${cardName(step.card)} (suit ${step.row}, rank ${step.col}).`;
-        if (step.amount > 0) math += ` Suit-rotate hand left by ${step.amount}.`;
+        let math = `Controller ${cardName(step.card)} (suit ${step.row}, rank ${step.col}). ${dealText(step)}`;
         if (step.flag === 1) math += ` Proper rank cut on the hand by ${step.total}.`;
         if (step.flag === 0) math += ` No proper rank cut (hand empty or rank ≥ packet size).`;
         math += " Controller goes on top of the key pile.";
         return math;
     }
 
+    // amount = cards dealt: positive under the hand, negative under the key pile, 0 none.
+    function dealText(step) {
+        if (step.amount > 0) return `Deal ${step.amount} (suit + 2) off the top of the hand, one at a time, and put them under the hand.`;
+        if (step.amount < 0) return `Deal ${-step.amount} (suit + 2) off the top of the key pile, one at a time, and put them under it (fallback: the hand is too short).`;
+        return "No deal (suit + 2 does not fit either pile).";
+    }
+
+    function undealText(step) {
+        if (step.amount > 0) return `deal the bottom ${step.amount} cards of the hand back onto its top`;
+        if (step.amount < 0) return `deal the bottom ${-step.amount} cards of the key pile back onto its top`;
+        return "no deal to undo";
+    }
+
     function unpassMath(step) {
         const who = `Controller ${cardName(step.card)}.`;
-        if (step.flag === 1) return `${who} Undo proper rank cut on the hand (bottom→top by rank), then undo suit-rotate on the hand; controller returns to the hand.`;
-        if (step.flag === 2) return `${who} Undo proper rank cut on the key pile (bottom→top), then undo suit-rotate on the hand; controller returns to the hand.`;
-        return `${who} No cut to undo; undo suit-rotate on the hand if needed; controller returns to the hand.`;
+        if (step.flag === 1) return `${who} Undo proper rank cut on the hand (bottom→top by rank), then ${undealText(step)}; controller returns to the hand.`;
+        if (step.flag === 2) return `${who} Undo proper rank cut on the key pile (bottom→top), then ${undealText(step)}; controller returns to the hand.`;
+        return `${who} No cut to undo; ${undealText(step)}; controller returns to the hand.`;
     }
 
     function analogue(step) {
@@ -297,7 +309,7 @@ export function createDoubleDealSession({
                 title: analogue(step),
                 math: passMath(step),
                 why: (step.flag === 2 ? "If the hand cannot take a proper rank cut, PassKey cuts the key pile instead. Not an error. " : "")
-                    + "Deal controller C. Suit-rotate the remaining hand left by suit(C) mod hand size. Proper-cut only if rank(C) < packet size (hand, else key pile, else skip). Put C on top of the key pile.",
+                    + "Deal controller C. Deal suit(C) + 2 cards one at a time under the hand if that is less than the hand size, else under the key pile if that fits, else skip. Proper-cut only if rank(C) < packet size (hand, else key pile, else skip). Put C on top of the key pile.",
                 spec: specFor(step),
             };
         }
@@ -306,7 +318,7 @@ export function createDoubleDealSession({
                 kicker,
                 title: analogue(step),
                 math: unpassMath(step),
-                why: "F⁻¹. Lift C off the key pile; undo cut; undo suit rotate; put C on the hand. Decrypt: six forward passes to K6, then one un-pass per remaining round to K0.",
+                why: "F⁻¹. Lift C off the key pile; undo cut; undo the suit + 2 deal; put C on the hand. Decrypt: six forward passes to K6, then one un-pass per remaining round to K0.",
                 spec: specFor(step),
             };
         }

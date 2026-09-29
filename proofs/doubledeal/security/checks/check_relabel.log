@@ -36,3 +36,5 @@
 [4] v9: full round fails for every transposition: True; every nontrivial G52: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
 [4] v10: full round fails for every transposition: True; every nontrivial v10Sym: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
 [4] v11: full round fails for every transposition: True; every nontrivial v10Sym: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
+[4] v12: full round fails for every transposition: True; every nontrivial v10Sym: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
+[5] v12: PassKey(sK) != s PassKey(K) in 200/200 (schedule is value-dependent)

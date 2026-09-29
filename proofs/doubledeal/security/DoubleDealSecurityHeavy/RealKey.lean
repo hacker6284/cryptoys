@@ -4,7 +4,7 @@
   encryptions evaluated by `decide!`.
   Built and audited by the `doubledeal-security-heavy` CI job
   (`lake build DoubleDealSecurityHeavy`, `check_axioms.py security-heavy`).
-  The expected outputs are from the Python port (`checks/ddport.py`, v11;
+  The expected outputs are from the Python port (`checks/ddport.py`, v12;
   `checks/realkeys/v10sym_subgroup.py`); the kernel checks them, so a wrong value fails the build.
 -/
 import DoubleDealSecurity.RealKey
@@ -15,27 +15,27 @@ open DoubleDeal Relabel
 
 /-- (PROVED, kernel `decide!`) Identity message, identity master key. -/
 theorem realKey_enc_id :
-    encryptDeck (toDeck idDeck) (List.range 52) = [49, 27, 15, 34, 40, 11, 1, 47, 26, 43, 50, 9, 7, 29, 36, 21, 25, 30, 24, 42, 35, 8, 51, 16, 41, 10, 17, 48, 5, 12, 14, 32, 3, 45, 0, 18, 44, 6, 39, 46, 23, 13, 31, 28, 22, 37, 19, 20, 4, 33, 38, 2] := by
+    encryptDeck (toDeck idDeck) (List.range 52) = [31, 20, 3, 25, 49, 48, 43, 9, 17, 11, 23, 38, 47, 21, 14, 15, 5, 19, 0, 2, 16, 27, 46, 6, 39, 12, 10, 42, 13, 8, 4, 44, 32, 36, 7, 40, 45, 33, 35, 28, 37, 34, 29, 24, 26, 30, 1, 50, 51, 18, 22, 41] := by
   decide!
 
 /-- (PROVED, kernel `decide!`) Message `v10Sym 1 0 · id`, identity master key. -/
 theorem realKey_enc_v10Sym10 :
-    encryptDeck (toDeck (rel (v10Sym 1 0) idDeck)) (List.range 52) = [38, 46, 3, 25, 40, 30, 41, 24, 50, 26, 2, 27, 7, 13, 1, 9, 31, 44, 43, 23, 12, 49, 45, 0, 47, 28, 10, 51, 29, 42, 18, 32, 37, 21, 48, 8, 6, 4, 15, 35, 5, 17, 16, 11, 39, 36, 34, 20, 14, 19, 22, 33] := by
+    encryptDeck (toDeck (rel (v10Sym 1 0) idDeck)) (List.range 52) = [47, 9, 19, 5, 26, 29, 38, 20, 0, 18, 4, 24, 25, 7, 17, 32, 41, 50, 34, 10, 40, 28, 37, 22, 43, 16, 21, 51, 46, 11, 12, 23, 3, 36, 48, 44, 30, 14, 33, 35, 15, 2, 49, 8, 27, 31, 1, 39, 6, 45, 13, 42] := by
   decide!
 
 /-- (PROVED, kernel `decide!`) Message `v10Sym 0 1 · id`, identity master key. -/
 theorem realKey_enc_v10Sym01 :
-    encryptDeck (toDeck (rel (v10Sym 0 1) idDeck)) (List.range 52) = [42, 29, 15, 47, 6, 43, 12, 23, 16, 40, 24, 14, 10, 25, 39, 33, 13, 46, 26, 28, 49, 27, 34, 35, 20, 30, 3, 41, 36, 45, 48, 31, 11, 7, 38, 4, 8, 0, 44, 17, 51, 9, 18, 22, 19, 37, 1, 5, 21, 2, 50, 32] := by
+    encryptDeck (toDeck (rel (v10Sym 0 1) idDeck)) (List.range 52) = [23, 8, 51, 3, 20, 32, 19, 11, 33, 16, 31, 6, 17, 9, 14, 12, 46, 2, 4, 0, 34, 39, 22, 15, 48, 29, 45, 28, 44, 36, 43, 21, 38, 1, 27, 10, 42, 26, 13, 40, 47, 5, 35, 24, 7, 30, 50, 18, 37, 49, 25, 41] := by
   decide!
 
 /-- (PROVED, kernel `decide!`) Message `v10Sym 0 2 · id`, identity master key. -/
 theorem realKey_enc_v10Sym02 :
-    encryptDeck (toDeck (rel (v10Sym 0 2) idDeck)) (List.range 52) = [12, 8, 49, 15, 9, 22, 0, 30, 6, 36, 14, 32, 31, 18, 45, 38, 39, 3, 47, 25, 40, 35, 16, 26, 19, 24, 33, 7, 46, 4, 44, 23, 20, 41, 37, 29, 10, 51, 28, 27, 17, 5, 42, 13, 1, 21, 34, 43, 11, 2, 48, 50] := by
+    encryptDeck (toDeck (rel (v10Sym 0 2) idDeck)) (List.range 52) = [39, 37, 23, 15, 7, 9, 3, 29, 4, 42, 34, 22, 47, 18, 40, 38, 17, 5, 31, 45, 27, 50, 14, 44, 10, 43, 16, 12, 49, 41, 51, 46, 6, 33, 36, 0, 19, 32, 8, 11, 26, 2, 20, 25, 28, 1, 30, 13, 35, 24, 21, 48] := by
   decide!
 
 /-- (PROVED, kernel `decide!`) Message `v10Sym 0 3 · id`, identity master key. -/
 theorem realKey_enc_v10Sym03 :
-    encryptDeck (toDeck (rel (v10Sym 0 3) idDeck)) (List.range 52) = [37, 47, 15, 23, 41, 35, 43, 50, 16, 18, 39, 24, 51, 21, 38, 11, 14, 19, 9, 44, 25, 7, 45, 12, 33, 20, 10, 8, 31, 49, 22, 4, 40, 36, 26, 30, 48, 28, 6, 3, 32, 5, 34, 17, 1, 0, 29, 2, 46, 27, 42, 13] := by
+    encryptDeck (toDeck (rel (v10Sym 0 3) idDeck)) (List.range 52) = [30, 6, 42, 1, 38, 46, 26, 31, 14, 17, 27, 12, 29, 5, 7, 28, 16, 50, 20, 45, 47, 10, 22, 15, 25, 4, 24, 37, 19, 13, 33, 34, 35, 41, 51, 23, 0, 43, 49, 36, 39, 9, 11, 21, 32, 18, 40, 3, 2, 8, 48, 44] := by
   decide!
 
 /-- (PROVED) `v10Sym 1 0` does not commute with the identity-key encrypt. -/

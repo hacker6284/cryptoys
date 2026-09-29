@@ -7,10 +7,10 @@ in uniformly random distinct cells and survival = fraction of placements where e
   rank-preserving tau: condition per column j: (GF(4) label change of col j-1, weighted by row 0,1,w,w^2)
                         XOR (XOR of label changes in col j) = 0, for all 13 columns cyclically.
 Usage: python3 exact.py                    # the 5 cases (logs/exact.log)
-       python3 exact.py 4                  # any other argument: also the 4-card cases
-                                           # (logs/exact4.log)
+       python3 exact.py 4                  # also the 4-card cases (logs/exact4.log)
        python3 exact.py --same-suit-swaps  # all 312 same-suit and 78 same-rank swaps, one line
-                                           # (logs/exact_swaps.log); takes no other argument"""
+                                           # (logs/exact_swaps.log)
+Any other argument or combination is an error (exit 1)."""
 import itertools, sys
 from fractions import Fraction
 from sb import card as C, cyc, LAB, TW
@@ -45,13 +45,14 @@ CASES = [
  ("3-cycle 2C->2H->2S (same rank)", cyc([C('C','2'), C('H','2'), C('S','2')])),
  ("swap 2C<->2H (same rank)", cyc([C('C','2'), C('H','2')])),
 ]
-SAME_SUIT_SWAPS = "--same-suit-swaps" in sys.argv[1:]
-if len(sys.argv) > 1 and not SAME_SUIT_SWAPS:  # any other argument: also the 4-card ones (slower)
-    CASES += [("(AC 2C)(5C 6C)", cyc([C('C','A'), C('C','2')], [C('C','5'), C('C','6')])),
-              ("(AC 2C)(AH 2H)", cyc([C('C','A'), C('C','2')], [C('H','A'), C('H','2')])),
-              ("4-cycle AC->2C->3C->4C", cyc([C('C', r) for r in range(4)])),
-              ("4-cycle AC->2C->4C->3C", cyc([C('C','A'), C('C','2'), C('C','4'), C('C','3')])),
-              ("label^1 on rank 2 (2C<->2D)(2H<->2S)", cyc([C('C','2'), C('D','2')], [C('H','2'), C('S','2')]))]
+CASES4 = [  # `exact.py 4`: also the 4-card ones (slower)
+ ("(AC 2C)(5C 6C)", cyc([C('C','A'), C('C','2')], [C('C','5'), C('C','6')])),
+ ("(AC 2C)(AH 2H)", cyc([C('C','A'), C('C','2')], [C('H','A'), C('H','2')])),
+ ("4-cycle AC->2C->3C->4C", cyc([C('C', r) for r in range(4)])),
+ ("4-cycle AC->2C->4C->3C", cyc([C('C','A'), C('C','2'), C('C','4'), C('C','3')])),
+ ("label^1 on rank 2 (2C<->2D)(2H<->2S)", cyc([C('C','2'), C('D','2')], [C('H','2'), C('S','2')])),
+]
+USAGE = "usage: python3 exact.py [4 | --same-suit-swaps]"
 def same_suit_swaps():
     """--same-suit-swaps: exact survival of EVERY value swap within one suit (4 * C(13,2) = 312)
     and, for contrast, within one rank (13 * C(4,2) = 78). One line of output."""
@@ -62,12 +63,16 @@ def same_suit_swaps():
     def fmt(c): return ", ".join(f"{n} give exactly {v}" for v, n in sorted(c.items()))
     print(f"same-suit swaps ({sum(ss.values())}): {fmt(ss)}; "
           f"same-rank swaps ({sum(sr.values())}): {fmt(sr)}")
-if __name__ == "__main__" and SAME_SUIT_SWAPS and len(sys.argv) > 2:
-  # the 4-card cases are not part of this mode: refuse instead of ignoring the other arguments
-  sys.exit(f"exact.py: --same-suit-swaps takes no other arguments (got {' '.join(sys.argv[1:])}); "
-           "run `python3 exact.py 4` separately for the 4-card cases")
-elif __name__ == "__main__" and SAME_SUIT_SWAPS:
-  same_suit_swaps()
-elif __name__ == "__main__":
-  for d, m in CASES:
-    p = exact(m); print(f"  {d:40s} exact {p} = {float(p):.6g} = 1/{1/float(p) if p else float('inf'):.1f}", flush=True)
+if __name__ == "__main__":
+  args = sys.argv[1:]
+  if args == ["--same-suit-swaps"]:
+    same_suit_swaps()
+  elif args in ([], ["4"]):
+    for d, m in CASES + (CASES4 if args else []):
+      p = exact(m); print(f"  {d:40s} exact {p} = {float(p):.6g} = 1/{1/float(p) if p else float('inf'):.1f}", flush=True)
+  elif "--same-suit-swaps" in args:
+    # the 4-card cases are not part of this mode: refuse instead of ignoring the other arguments
+    sys.exit(f"exact.py: --same-suit-swaps takes no other arguments (got {' '.join(args)}); "
+             f"run `python3 exact.py 4` separately for the 4-card cases\n{USAGE}")
+  else:
+    sys.exit(f"exact.py: unknown argument(s): {' '.join(args)}\n{USAGE}")

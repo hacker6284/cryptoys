@@ -109,7 +109,8 @@ function jumpButton(jump, label, icon) {
         + `${lucideSvg(icon, 18)}</button>`;
 }
 
-/** Shared dock markup; each demo passes its controls, fields and labels. */
+/** Shared dock markup; each demo passes its controls, fields and labels.
+ * Markup chunks start with a newline so the rendered dock stays byte-identical to the old per-demo docks. */
 function mountDock(algo, { controls, fields, digestButton, hint, tape = "", roundName, speed, digin }) {
     let root = document.querySelector(`#${algo}-dock`);
     if (root) return root;
@@ -151,7 +152,7 @@ function mountDock(algo, { controls, fields, digestButton, hint, tape = "", roun
             <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
             <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
           </div>
-          <label class="slider">Speed <input id="speed" type="range" ${speed}></label>
+          <label class="slider">Speed <input id="speed" type="range" min="${speed.min}" max="${speed.max}" step="0.1" value="${speed.value}"></label>
         </div>
       </div>
       <div class="playroom-digins">
@@ -265,7 +266,7 @@ function createScrambleAdapter() {
         tape: `
           <div id="tape" class="tape" aria-label="Message tape"></div>`,
         roundName: "symbol",
-        speed: 'min="0.5" max="4" step="0.1" value="1.4"',
+        speed: { min: 0.5, max: 4, value: 1.4 },
         digin: '<button id="solve" class="playroom-digin" type="button">Solve</button>',
     });
     let rig = null;
@@ -506,7 +507,7 @@ function createDoubleDealAdapter() {
         digestButton: "Copy",
         hint: "Step to see each table beat.",
         roundName: "round",
-        speed: 'min="0.6" max="8" step="0.1" value="1.8"',
+        speed: { min: 0.6, max: 8, value: 1.8 },
         digin: '<button id="random-key" class="playroom-digin" type="button">Random key</button>',
     });
     let world = null;

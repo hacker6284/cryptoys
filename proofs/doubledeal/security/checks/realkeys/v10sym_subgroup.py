@@ -4,7 +4,8 @@ nontrivial element has a power equal to v10Sym 1 0 (order 13) or to one of the t
 involutions v10Sym 0 x: exponent 13 if x != 0, else the inverse of a mod 13.
 So four real-key witnesses cover all 51. Also: every v10Sym commutes with v10
 SumRanks on random grids (the proved "if" direction), and a witness table for the
-heavy Lean library (identity key, identity message)."""
+heavy Lean library (identity key, identity message); realkey_to_lean.py writes that
+table into DoubleDealSecurityHeavy/RealKey.lean."""
 import sys, pathlib, random
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 import ddport as P
@@ -17,6 +18,17 @@ def power(s, n):
     r = list(range(52))
     for _ in range(n): r = comp(s, r)
     return r
+WITNESS_AX = [(1, 0), (0, 1), (0, 2), (0, 3)]
+def witnesses():
+    """(Lean theorem name, doc, Lean message, v12 encrypt under the identity key) for the
+    identity message and the four v10Sym witnesses. realkey_to_lean.py writes these into
+    DoubleDealSecurityHeavy/RealKey.lean."""
+    idK = list(range(52))
+    out = [('realKey_enc_id', 'Identity message', 'idDeck', P.encrypt(list(range(52)), idK, 12))]
+    for a, x in WITNESS_AX:
+        out.append((f'realKey_enc_v10Sym{a}{x}', f'Message `v10Sym {a} {x} · id`',
+                    f'(rel (v10Sym {a} {x}) idDeck)', P.encrypt(G[(a, x)], idK, 12)))
+    return out
 if __name__ == '__main__':
     assert all(sorted(s) == list(range(52)) for s in G.values())
     assert all(comp(s, t) in G.values() for s in G.values() for t in G.values())
@@ -32,9 +44,8 @@ if __name__ == '__main__':
             assert P.sum_ranks_v10([[s[c] for c in row] for row in g]) == \
                 [[s[c] for c in row] for row in P.sum_ranks_v10(g)]
     print("ok: every v10Sym commutes with v10 SumRanks on 300 random decks")
-    idK = list(range(52))
-    base = P.encrypt(list(range(52)), idK, 12)
+    (_, _, _, base), *rest = witnesses()
     print("enc id:", base)
-    for ax in [(1, 0), (0, 1), (0, 2), (0, 3)]:
-        s = G[ax]; c = P.encrypt(s, idK, 12)
+    for ax, (_, _, _, c) in zip(WITNESS_AX, rest):
+        s = G[ax]
         print(f"enc v10Sym {ax[0]} {ax[1]}:", c, "breaks:", c != [s[y] for y in base])

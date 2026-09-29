@@ -201,6 +201,8 @@ jobs:
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --selftest
       - name: V8Vectors.lean matches frozen v8 JSON
         run: python3 proofs/doubledeal/security/checks/gen_v8_vectors.py --check
+      - name: Heavy RealKey.lean expected ciphertexts match the v12 Python port
+        run: python3 proofs/doubledeal/security/checks/realkeys/realkey_to_lean.py --check
       - name: cc and numpy for the analysis checks run by selftest.py
         run: |
           cc --version | head -1

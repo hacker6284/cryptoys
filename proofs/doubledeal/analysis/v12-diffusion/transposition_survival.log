@@ -1,0 +1,9 @@
+decks: 2000 (same decks for every transposition), transpositions: 1326
+MEASURED mean full survival over transpositions: 0.0035
+MEASURED max: 0.0085 (5D 8D); min: 0.0000
+top 10: [('5D', '8D', 0.0085), ('4H', '6H', 0.008), ('4C', 'TD', 0.008), ('TS', '7D', 0.0075), ('8H', '5S', 0.0075), ('3C', '7C', 0.0075), ('TD', 'QD', 0.007), ('AD', 'QD', 0.007), ('JS', 'TD', 0.007), ('9S', 'KD', 0.007)]
+histogram of survival (deciles): {'0.0-0.1': 1326}
+
+real	1m19.632s
+user	1m19.619s
+sys	0m0.012s

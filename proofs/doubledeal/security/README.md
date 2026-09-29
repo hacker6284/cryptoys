@@ -8,7 +8,7 @@ path dependency.
     lake exe cache get                  # prebuilt Mathlib; never build Mathlib from source
     lake build
     python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
-    lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses, ~6 min (five decide! encryptions)
+    lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses, ~10 min (five decide! encryptions + GridCycle survival checks)
     python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
     python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
     python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py
@@ -37,8 +37,10 @@ trivial branch-number floor on decks, and the GridCycle tail swap that attains i
 | `V8Vectors` | frozen v8 vectors checked against the v8 model (generated, `--check`) |
 | `RealKey` | commuting relabellings closed under powers; every nontrivial `v10Sym a x` has a power equal to one of four witnesses `v10Sym 1 0`, `v10Sym 0 1`, `v10Sym 0 2`, `v10Sym 0 3` (v9 needed two; `v10Sym` is not cyclic); pull-back from the emitted `encrypt` |
 | `SumRanksDP.Standalone`, `SumRanksDP.Decomp`, `SumRanksDP.Main` | **v10 SumRanks survival bound** `sumRanksV10_survival_le` (and `…'`): every relabelling outside `v10Sym` commutes with v10 SumRanks on at most `52!/64` of the `52!` decks. SumRanks alone, one layer; not a statement about keyed rounds or the cipher. Counting proof (row/column chains, Cases A and B, hypergeometric counts, tables A and B by kernel `decide!`, each ≤ ~1.5 s). Lemma map: `SUMRANKS_DP.md`; paper proof: `sumranks-dp-paper/PROOF.md` |
+| `GridCycleSurvival` | **GridCycle relabelling survival** (milestone 1 of the AES-style roadmap; `../analysis/v12-diffusion/NOTES.md`): τ survives GridCycle at deck π iff `mixColumns (τ·π) = τ·mixColumns π`. Proved for every τ: `52 · #survivors ≤ #gcExc τ · 52!` (first-card argument; `gcExc` = fixed points plus K♣/K♠); fixed-point-free τ ≤ `52!/26`; 50 of the 51 nontrivial `v10Sym` survive on no deck; `v10Sym 0 3` ≤ `52!/26`, and ≤ `52!/4420` **given** the two finite checks `Check3 KC LKC`, `Check3 KS LKS` as hypotheses (`…_of_check`). GridCycle alone, one layer; not a trail bound for τ outside `v10Sym`, and not a statement about the cipher |
 | `SwapMechanism` | deck-by-deck SumRanks commutation; a swap of two cards with equal (rank + suit) mod 4 commutes with v9 SumRanks on every deck where they share a row (the mechanism of the K♣↔Q♥ distinguisher, `proofs/deprecated/doubledeal-v9/`). **Deprecated-v9 model**; kept as the proof of the v9 mechanism, not a statement about v10 |
 | `DoubleDealSecurityHeavy.RealKey` | five `decide!` encryptions of the emitted v12 `encrypt` under the identity master key (expected values regenerated for v12, whose key schedule changed) (the message and its images under the four witnesses); `generated_encrypt_realKey_not_v10Sym_equivariant` |
+| `DoubleDealSecurityHeavy.GridCycleSurvival` | kernel `decide!` of `Check3 KC LKC` / `Check3 KS LKS` (8 chunks of 13 × 52 first-three-seat evaluations, ~30 s each), hence unconditional `gc_survival_v10Sym03_le` / `gc_survival_v10Sym_le`: every nontrivial `v10Sym a x` survives GridCycle on at most `52!/4420` decks |
 
 Generic list/rotation lemmas live in the Mathlib-free core package
 (`../lean/DoubleDeal/SumRanks.lean`, `SumRanksV10.lean`, `Rotate.lean`).
@@ -63,6 +65,17 @@ decks. Also proved (`sumRanksV10_survival_threeCycle`,
 (`sumRanksV10_survival_lower`). That 9/1105 is the maximum over all
 non-symmetries is computer-assisted (`sumranks-dp-paper/PROOF.md` §5b) and not
 formalised.
+
+Branch number and GridCycle survival (roadmap milestone 1, v12;
+`../analysis/v12-diffusion/NOTES.md`). The Hamming branch number of GridCycle is
+exactly the trivial floor 4 (proved, below), so no wide-trail bound comes from
+it. The notion used instead is relabelling survival. Proved: the 50 nontrivial
+`v10Sym` other than `v10Sym 0 3` never survive GridCycle, and `v10Sym 0 3`
+survives on at most 1/4420 of the decks (heavy library; the default library
+states it conditional on the finite check). Only measured: full GridCycle survival
+(0 in 60000 sampled decks for `v10Sym 0 3` given its prefix; mean ≈ 0.0035 over
+swaps). For relabellings outside `v10Sym`, the only proved GridCycle bound is the
+first-card one, which is weak (≈ 1) for small-support relabellings.
 
 `BranchNumber` has no `sorry`. Distinct decks differ in at least two seats, so
 any map that sends decks to decks and separates them has branch number at

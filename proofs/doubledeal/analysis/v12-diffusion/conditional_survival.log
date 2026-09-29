@@ -3,7 +3,3 @@ samples: 60000 (2000 per triple), full survivals: 0
 MEASURED P[full survival | prefix in T03] ~ 0.000e+00
   (0 observed; ~95% upper bound by rule of three: 5.000e-05)
 per-triple survivals (nonzero only): []
-
-real	0m7.950s
-user	0m7.934s
-sys	0m0.012s

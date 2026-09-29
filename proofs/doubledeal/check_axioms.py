@@ -68,6 +68,11 @@ ALLOWED = {"propext", "Classical.choice", "Quot.sound"}
 ROOT = Path(__file__).resolve().parent
 # Every theorem declared in security/DoubleDealSecurityHeavy/ (checked against the
 # source in both security modes; audited by `security-heavy`).
+# The heavy audit reports ONE MORE theorem than this registry lists:
+# `DoubleDeal.Security.GCSurvival.chunkOK.eq_1`, the equation lemma that Lean
+# generates on demand when `of_chunks` unfolds `chunkOK` (`simp only [chunkOK, ...]`).
+# It is not declared in the source, so it is not registered here; like every audited
+# theorem it must still use only the allowed axioms.
 HEAVY_DIR = ROOT / "security" / "DoubleDealSecurityHeavy"
 HEAVY_THEOREMS = {
     "DoubleDeal.Security.realKey_enc_id",

@@ -331,7 +331,6 @@ theorem passkey_twin_refines (deck : List Nat) (hfits : FitsLen deck.length)
     passkey_loop_refines deck [] 1 deck.length (by omega) (by simpa using hfits) hfits
       (by simpa using hcards)
 
-
 /-- A `Flow.cont`-mapped result matched against the loop tail is the plain
     result fed to the `.cont` branch. -/
 theorem map_cont_bind {α β γ ρ : Type} (m : Except SudoRt.Trap α) (g : α → β)

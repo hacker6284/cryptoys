@@ -10,6 +10,7 @@ Usage: python3 exact.py                    # the 5 cases (logs/exact.log)
        python3 exact.py 4                  # also the 4-card cases (logs/exact4.log)
        python3 exact.py --same-suit-swaps  # all 312 same-suit and 78 same-rank swaps, one line
                                            # (logs/exact_swaps.log)
+       python3 exact.py -h | --help        # this usage, exit 0
 Any other argument or combination is an error (exit 1)."""
 import itertools, sys
 from fractions import Fraction
@@ -52,7 +53,7 @@ CASES4 = [  # `exact.py 4`: also the 4-card ones (slower)
  ("4-cycle AC->2C->4C->3C", cyc([C('C','A'), C('C','2'), C('C','4'), C('C','3')])),
  ("label^1 on rank 2 (2C<->2D)(2H<->2S)", cyc([C('C','2'), C('D','2')], [C('H','2'), C('S','2')])),
 ]
-USAGE = "usage: python3 exact.py [4 | --same-suit-swaps]"
+USAGE = "usage: python3 exact.py [4 | --same-suit-swaps | -h | --help]"
 def same_suit_swaps():
     """--same-suit-swaps: exact survival of EVERY value swap within one suit (4 * C(13,2) = 312)
     and, for contrast, within one rank (13 * C(4,2) = 78). One line of output."""
@@ -65,7 +66,9 @@ def same_suit_swaps():
           f"same-rank swaps ({sum(sr.values())}): {fmt(sr)}")
 if __name__ == "__main__":
   args = sys.argv[1:]
-  if args == ["--same-suit-swaps"]:
+  if args in (["-h"], ["--help"]):
+    print("Usage: " + __doc__.split("Usage: ")[1])
+  elif args == ["--same-suit-swaps"]:
     same_suit_swaps()
   elif args in ([], ["4"]):
     for d, m in CASES + (CASES4 if args else []):

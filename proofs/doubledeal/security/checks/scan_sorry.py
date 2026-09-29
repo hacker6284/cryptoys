@@ -18,10 +18,8 @@ Other Lean packages use the same gate (one line per CI job):
   scan_sorry.py --root DIR_OR_FILE ... [--exclude PART ...] [--allow-sorry NAME ...]
 With --root, the sorry allowlist is exactly the --allow-sorry names (default: none).
 --exclude skips files with that path component (e.g. Generated); .lake is always skipped.
-
-Without --root it also checks PINNED_IMPORTS: each listed file must exist and its header
-must import exactly the listed modules (an extra or a missing import fails). See the
-comment at PINNED_IMPORTS for what this does and does not bound.
+This is a source-level scan and parses no imports; the import-closure bound for
+SumRanks.lean is checks/check_closure.py (run after `lake build`).
 """
 import argparse
 import re
@@ -31,29 +29,6 @@ from pathlib import Path
 PKG = Path(__file__).resolve().parent.parent
 # Known open conjectures (DRAFT-SORRY). Each must contain exactly one sorry.
 ALLOWED_SORRY = {"roundBody_covariant_iff_id"}
-# Exact direct-import sets (paths relative to PKG). What is checked: each file exists and
-# the modules named by the `import` lines of its header are exactly this set; nothing
-# else (in particular not the transitive closure).
-# Why: keep the import closure of SumRanks.lean small (it was 1579 modules, 338 of them
-# Mathlib, when measured in #116). Pinning direct imports bounds a closure only if every
-# pinned import is itself pinned or known narrow, so the chain is pinned down to modules
-# outside this package:
-#   SumRanks -> Relabel, PermWitness;  Relabel -> Decks, DoubleDeal.Round, 3 Mathlib
-#   modules;  Decks -> DoubleDeal.Basic;  PermWitness -> Mathlib.GroupTheory.Perm.Basic.
-# What is left unpinned and trusted as narrow: the three named Mathlib modules (their
-# closures are fixed by the Mathlib pin in lake-manifest.json) and the core `DoubleDeal`
-# package (DoubleDeal.Round, DoubleDeal.Basic, ...), which is Mathlib-free because its
-# own package (../lean) does not require Mathlib and CI builds it standalone (job
-# doubledeal-lean), where a Mathlib import could not resolve.
-PINNED_IMPORTS = {
-    "DoubleDealSecurity/SumRanks.lean": {"DoubleDealSecurity.Relabel",
-                                         "DoubleDealSecurity.PermWitness"},
-    "DoubleDealSecurity/PermWitness.lean": {"Mathlib.GroupTheory.Perm.Basic"},
-    "DoubleDealSecurity/Relabel.lean": {"Mathlib.GroupTheory.Perm.Basic", "Mathlib.Logic.Equiv.Fin",
-                                        "Mathlib.Data.Fintype.Card", "DoubleDeal.Round",
-                                        "DoubleDealSecurity.Decks"},
-    "DoubleDealSecurity/Decks.lean": {"DoubleDeal.Basic"},
-}
 
 DECL = re.compile(
     r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable|partial)\s+)*"
@@ -143,39 +118,6 @@ def scan(sources, allowed):
     return bad, found
 
 
-def header_imports(raw):
-    """The modules named by the `import` lines of a Lean header (comments ignored; the
-    header ends at the first line that is not blank, `prelude` or an `import`)."""
-    mods = []
-    for line in strip_block_comments(raw).splitlines():
-        words = re.sub(r"--.*", "", line).split()
-        if not words or words == ["prelude"]:
-            continue
-        if words[0] != "import":
-            break
-        mods += [w for w in words[1:] if w != "runtime"]
-    return mods
-
-
-def check_pinned(pkg, pins):
-    """The PINNED_IMPORTS gate: every listed file exists and imports exactly its set."""
-    bad = []
-    for rel, want in pins.items():
-        f = Path(pkg) / rel
-        if not f.is_file():
-            bad.append(f"pinned-import file {rel} not found (update PINNED_IMPORTS)")
-            continue
-        got = header_imports(f.read_text())
-        extra, missing = sorted(set(got) - set(want)), sorted(set(want) - set(got))
-        if extra:
-            bad.append(f"{rel}: import(s) not in PINNED_IMPORTS: {', '.join(extra)} (every "
-                       "import widens the closure; if intended, update the pin and its comment)")
-        if missing:
-            bad.append(f"{rel}: pinned import(s) missing: {', '.join(missing)} "
-                       "(update PINNED_IMPORTS)")
-    return bad
-
-
 def check(sources, allowed):
     bad, found = scan(sources, allowed)
     for name in sorted(allowed):
@@ -200,21 +142,18 @@ def lean_files(roots, exclude=()):
     return files
 
 
-def main(roots, exclude, allowed, label, pins=None) -> int:
+def main(roots, exclude, allowed, label) -> int:
     files = lean_files(roots, exclude)
     if not files:
         print(f"scan_sorry: no .lean files under {label}", file=sys.stderr)
         return 1
     bad = check(((str(p), p.read_text()) for p in files), allowed)
-    bad += check_pinned(roots[0], pins) if pins else []
     if bad:
         print(*bad, sep="\n", file=sys.stderr)
         return 1
     what = f"sorry only in {sorted(allowed)} (exactly once each)" if allowed else "no sorry"
     print(f"{label} ({len(files)} files): no admit, admitGoal, native_decide, sorryAx, initialize, [init] or "
           f"axiom declarations; {what}")
-    if pins:
-        print(f"{label}: imports exactly as pinned in {sorted(pins)}")
     return 0
 
 
@@ -279,27 +218,6 @@ FLAG_SELFTEST = [
 ]
 
 
-# The PINNED_IMPORTS gate on one file X.lean pinned to {A, B}:
-# (name, source or None for a missing file, expect_pass, substring expected in the failure output)
-PIN = {"A", "B"}
-PINNED_SELFTEST = [
-    ("pinned: exact set", "/- header -/\nimport A\nimport B\n\nnamespace N\n", True, None),
-    ("pinned: comments, prelude, one line", "-- import Mathlib\n/- import Mathlib\n-/\nprelude\n"
-     "import A B -- import C\n", True, None),
-    ("pinned: body after the header ignored", "import A\nimport B\ndef x := 0\nimport C\n",
-     True, None),
-    ("pinned: extra bare Mathlib", "import A\nimport B\nimport Mathlib\n", False,
-     "X.lean: import(s) not in PINNED_IMPORTS: Mathlib"),
-    ("pinned: extra Mathlib submodule", "import A\nimport B\nimport Mathlib.Tactic\n", False,
-     "not in PINNED_IMPORTS: Mathlib.Tactic"),
-    ("pinned: transitive-heavy import", "import A\nimport B\n"
-     "import DoubleDealSecurity.SumRanksDP.Standalone\n", False,
-     "not in PINNED_IMPORTS: DoubleDealSecurity.SumRanksDP.Standalone"),
-    ("pinned: missing import", "import A\n", False, "X.lean: pinned import(s) missing: B"),
-    ("pinned: missing file", None, False, "pinned-import file X.lean not found"),
-]
-
-
 def parse(argv):
     ap = argparse.ArgumentParser(description="sorry / native_decide gate for Lean packages")
     ap.add_argument("--selftest", action="store_true", help="run the built-in cases and exit")
@@ -315,11 +233,11 @@ def run(a) -> int:
     """a: parsed arguments. The one place that picks the roots and the allowlist default:
     no --root = the security package with ALLOWED_SORRY; with --root, none."""
     if a.root is None:
-        roots, label, default, pins = [PKG], "security package", ALLOWED_SORRY, PINNED_IMPORTS
+        roots, label, default = [PKG], "security package", ALLOWED_SORRY
     else:
-        roots, label, default, pins = a.root, ", ".join(a.root), set(), None
+        roots, label, default = a.root, ", ".join(a.root), set()
     allowed = default if a.allow_sorry is None else set(a.allow_sorry)
-    return main(roots, a.exclude, allowed, label, pins)
+    return main(roots, a.exclude, allowed, label)
 
 
 def selftest() -> int:
@@ -327,15 +245,6 @@ def selftest() -> int:
     fails = 0
     for name, src, ok, want in SELFTEST:
         bad = check([("<selftest>", src)], ALLOWED_SORRY)
-        good = (not bad) if ok else (bool(bad) and any(want in b for b in bad))
-        if not good:
-            fails += 1
-            print(f"SELFTEST FAIL {name}: {bad}", file=sys.stderr)
-    for name, src, ok, want in PINNED_SELFTEST:
-        with tempfile.TemporaryDirectory() as d:
-            if src is not None:
-                (Path(d) / "X.lean").write_text(src)
-            bad = check_pinned(d, {"X.lean": PIN})
         good = (not bad) if ok else (bool(bad) and any(want in b for b in bad))
         if not good:
             fails += 1
@@ -363,8 +272,7 @@ def selftest() -> int:
             print(f"SELFTEST FAIL {name}: rc={rc} {got!r}", file=sys.stderr)
     if fails:
         return 1
-    print(f"scan_sorry selftest: {len(SELFTEST)} cases + {len(PINNED_SELFTEST)} pinned-import "
-          f"cases + {len(FLAG_SELFTEST)} flag cases pass")
+    print(f"scan_sorry selftest: {len(SELFTEST)} cases + {len(FLAG_SELFTEST)} flag cases pass")
     return 0
 
 

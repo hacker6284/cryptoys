@@ -11,6 +11,7 @@
   and as the generic rotation lemmas `SumRanksV10.lean` reuses.
 -/
 import DoubleDealSecurity.Relabel
+import DoubleDealSecurity.PermCount
 
 namespace DoubleDeal.Security
 
@@ -226,21 +227,6 @@ theorem commute_rotations (σ : Relabel) (rowW colW : Nat → Nat) (g : Grid Nat
 
 /-! ### Witness decks for the pair-swap argument -/
 
-theorem exists_perm_two (i j a b : Fin 52) (hij : i ≠ j) (hab : a ≠ b) :
-    ∃ π : Equiv.Perm (Fin 52), π i = a ∧ π j = b := by
-  let π1 : Equiv.Perm (Fin 52) := Equiv.swap i a
-  let b1 := π1.symm b
-  have hπ1 : π1 i = a := Equiv.swap_apply_left i a
-  have hib1 : i ≠ b1 := by
-    intro e
-    have : π1 b1 = b := Equiv.apply_symm_apply π1 b
-    rw [← e, hπ1] at this
-    exact hab this
-  refine ⟨π1 * Equiv.swap j b1, ?_, ?_⟩
-  · rw [Equiv.Perm.mul_apply, Equiv.swap_apply_of_ne_of_ne hij hib1, hπ1]
-  · rw [Equiv.Perm.mul_apply, Equiv.swap_apply_left]
-    exact Equiv.apply_symm_apply π1 b
-
 /-- The deck read off a permutation of positions. -/
 def permDeck (π : Equiv.Perm (Fin 52)) : Fin 52 → Nat := fun k => (π k).val
 
@@ -274,7 +260,7 @@ theorem row_pair (σ : Relabel) (rowW colW : Nat → Nat)
     (rowW (σ a).val + rowW b.val) % 13 = (rowW (σ b).val + rowW a.val) % 13 := by
   by_cases hab : a = b
   · subst hab; rfl
-  obtain ⟨π, hπa, hπb⟩ := exists_perm_two 0 1 a b (by decide) hab
+  obtain ⟨π, hπa, hπb⟩ := PermCount.exists_perm_two 0 1 a b (by decide) hab
   let g1 := layColumnMajor (permDeck π)
   let g2 := layColumnMajor (permDeck (π * Equiv.swap 0 1))
   have hd1 : IsDeck (scoopColumnMajor g1) := isDeck_lay_permDeck π
@@ -322,7 +308,7 @@ theorem col_pair (σ : Relabel) (rowW colW : Nat → Nat)
     (colW (σ a).val + colW b.val) % 4 = (colW (σ b).val + colW a.val) % 4 := by
   by_cases hab : a = b
   · subst hab; rfl
-  obtain ⟨π, hπa, hπb⟩ := exists_perm_two 0 4 a b (by decide) hab
+  obtain ⟨π, hπa, hπb⟩ := PermCount.exists_perm_two 0 4 a b (by decide) hab
   let H1 := layColumnMajor (permDeck π)
   let H2 := layColumnMajor (permDeck (π * Equiv.swap 0 4))
   -- post-row grids H_i, pre-images g_i under the row stage

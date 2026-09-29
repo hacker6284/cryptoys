@@ -255,7 +255,7 @@ theorem v10_row_pair (σ : Relabel) (h : CommutesOnDecksG σ sumRanksV10) (a b :
     (cardRank (σ a).val + cardRank b.val) % 13 = (cardRank (σ b).val + cardRank a.val) % 13 := by
   by_cases hab : a = b
   · subst hab; rfl
-  obtain ⟨π, hπa, hπb⟩ := exists_perm_two 48 1 a b (by decide) hab
+  obtain ⟨π, hπa, hπb⟩ := PermCount.exists_perm_two 48 1 a b (by decide) hab
   let g1 := layColumnMajor (permDeck π)
   let g2 := layColumnMajor (permDeck (π * Equiv.swap 48 1))
   have hd1 : IsDeck (scoopColumnMajor g1) := isDeck_lay_permDeck π
@@ -342,7 +342,7 @@ theorem v10_col_pair (σ : Relabel) (h : CommutesOnDecksG σ sumRanksV10) (a b :
       gfAdd (suitLabel (σ b).val) (suitLabel b.val) := by
   by_cases hab : a = b
   · subst hab; rfl
-  obtain ⟨π, hπa, hπb⟩ := exists_perm_two 4 8 a b (by decide) hab
+  obtain ⟨π, hπa, hπb⟩ := PermCount.exists_perm_two 4 8 a b (by decide) hab
   let H1 := layColumnMajor (permDeck π)
   let H2 := layColumnMajor (permDeck (π * Equiv.swap 4 8))
   have A1 := v10_col_turn σ h H1 (isDeck_lay_permDeck π)

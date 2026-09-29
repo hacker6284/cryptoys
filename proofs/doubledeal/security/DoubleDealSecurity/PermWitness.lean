@@ -6,9 +6,10 @@
   `SumRanksV10Iff.lean` and `SumRanksDP/Main.lean` add only this module to the import
   closure of `SumRanks.lean`: it imports only `Mathlib.GroupTheory.Perm.Basic`, which
   `Relabel.lean` already imports. `checks/check_closure.py` checks this on the real import
-  closure, computed by Lean: `SumRanks.lean`'s closure has exactly
-  `SUMRANKS_MATHLIB_MODULES` Mathlib modules, and this file adds nothing beyond the
-  closure of `Mathlib.GroupTheory.Perm.Basic` (the counts hold for the current Mathlib pin).
+  closure, computed by Lean after rebuilding: `SumRanks.lean`'s closure has exactly
+  `SUMRANKS_CLOSURE_MODULES` modules, `SUMRANKS_MATHLIB_MODULES` of them Mathlib, and this
+  file adds nothing beyond the closure of `Mathlib.GroupTheory.Perm.Basic` (the counts
+  hold for the current Mathlib pin and toolchain).
   The `PermCount` namespace is deliberate: a companion file split out for import size keeps
   the family namespace (the same pattern as `GridCycleSurvivalLists` in `GridCycleSurvival`).
 -/

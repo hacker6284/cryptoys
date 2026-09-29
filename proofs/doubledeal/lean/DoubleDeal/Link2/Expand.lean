@@ -128,7 +128,8 @@ theorem expandKeysStep_hit (key : List Nat) (hk : Perm52 key) (r : Nat)
     keyPrefix_get key r (r - 1) (by omega)
   rw [hprev]
   have hlen := length_passKeyIter key hk (r - 1)
-  rw [passkey_refines (passKeyIter (r - 1) key) (by rw [hlen]; exact fits_52)]
+  rw [passkey_refines (passKeyIter (r - 1) key) (by rw [hlen]; exact fits_52)
+    (fun c hc => fits52 (Nat.le_of_lt ((passKeyIter_perm52 key hk (r - 1)).bounded c hc)))]
   simp only [ok_bind, appendL_spec]
   have happ := embedDecks_append (keyPrefix key r) (passToKeyCutFallback (passKeyIter (r - 1) key))
   have hnext : keyPrefix key r ++ [passToKeyCutFallback (passKeyIter (r - 1) key)] =

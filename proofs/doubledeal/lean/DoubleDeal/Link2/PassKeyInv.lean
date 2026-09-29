@@ -1,10 +1,12 @@
 /-
   LINK 2. Generated `passkey_inv` refines algebraic `passToKeyCutFallbackInv`
-  on the well-formed domain. Proof-only. Not emitter soundness.
+  on the well-formed domain (length fits i64, every card fits i64).
+  Proof-only. Not emitter soundness.
 
-  Reuses #26/#28 twin-loop / `runLoopOn` infrastructure and
-  `right_rotate_refines`. Does not re-prove `left_rotate` ≃ `rotL`,
-  one forward PassKey body, or `passkey_refines`.
+  v12: each inverse iteration is `drop_front` on the key pile, undo the rank
+  cut (`right_rotate`), then `undeal_step` (Link2/Deal.lean), then the
+  controller back on top of the hand. Reuses the #26/#28 twin-loop /
+  `runLoopOn` infrastructure and `right_rotate_refines`.
 -/
 import Doubledeal
 import DoubleDeal.PassKey
@@ -13,13 +15,15 @@ import DoubleDeal.Link2.Sudo
 import DoubleDeal.Link2.Append
 import DoubleDeal.Link2.Helpers
 import DoubleDeal.Link2.Rotate
+import DoubleDeal.Link2.Deal
 import DoubleDeal.Link2.PassKey
 
 set_option maxHeartbeats 800000
 
 namespace DoubleDeal.Link2
 
-/-- Sequential undo of the cut (same residual as emitted `passkey_inv`). -/
+/-- Sequential undo of the cut (same residual as emitted `passkey_inv`).
+    Returns `(key, hand)`. -/
 def passkeyInvCut (c : Int) (hand key : Array Int) :
     Except SudoRt.Trap (Array Int × Array Int) :=
   do
@@ -36,29 +40,15 @@ def passkeyInvCut (c : Int) (hand key : Array Int) :
     else
       pure (key, hand)
 
-/-- Undo suit-rotate, using the captured pre-cut hand length `n`. -/
-def passkeyInvRotateIf (c : Int) (n : Int) (hand : Array Int) :
-    Except SudoRt.Trap (Array Int) :=
-  if decide (n > (0 : Int)) then do
-    let s ← Doubledeal.suit_of c
-    let k ← SudoRt.modI s n
-    if decide (k > (0 : Int)) then
-      Doubledeal.right_rotate hand k
-    else
-      pure hand
-  else
-    pure hand
-
-/-- Sequential inverse body after `drop_front`: undo cut, undo suit-rotate,
-    push the controller onto the hand. Not a second algorithm. -/
+/-- Sequential inverse body after `drop_front`: undo cut, undo deal, push the
+    controller onto the hand. Returns `(key, hand)`. Not a second algorithm. -/
 def passkeyInvPiles (c : Int) (hand key : Array Int) :
     Except SudoRt.Trap (Array Int × Array Int) :=
   do
-    let n := SudoRt.listLen hand
     let piles ← passkeyInvCut c hand key
-    let hand ← passkeyInvRotateIf c n piles.2
-    let hand ← Doubledeal.push_front hand c
-    pure (piles.1, hand)
+    let p ← Doubledeal.undeal_step c piles.2 piles.1
+    let hand ← Doubledeal.push_front p.1 c
+    pure (p.2, hand)
 
 /-- Proof-side twin of one generated inverse iteration. State is
     `(i, (key, hand))` matching emitted `passkey_inv`. -/
@@ -126,86 +116,26 @@ theorem maybeCutInv_refines (c : Nat) (hand key : List Nat)
       rw [dif_neg hH, dif_neg hK]
       rfl
 
-theorem maybeRotateInv_refines (c : Nat) (hand : List Nat)
-    (hfits : FitsLen hand.length) :
-    passkeyInvRotateIf (Int.ofNat c) (SudoRt.listLen (embed hand)) (embed hand) =
-      .ok (embed (maybeRotateInv hand c)) := by
-  unfold passkeyInvRotateIf
-  rw [listLen_embed]
-  by_cases hpos : 0 < hand.length
-  · have hdec : decide (Int.ofNat hand.length > (0 : Int)) = true := by
-      rw [decide_ofNat_pos]
-      exact decide_eq_true hpos
-    rw [if_pos hdec]
-    rw [suit_of_refines]
-    simp only [ok_bind]
-    have hne : hand.length ≠ 0 := Nat.pos_iff_ne_zero.mp hpos
-    have hmod : SudoRt.modI (Int.ofNat (suit c)) (Int.ofNat hand.length) =
-        .ok (Int.ofNat (suit c % hand.length)) :=
-      modI_ofNat (suit c) hne
-    rw [hmod]
-    simp only [ok_bind]
-    by_cases hk0 : suit c % hand.length = 0
-    · have hdec0 : decide (Int.ofNat (suit c % hand.length) > (0 : Int)) = false := by
-        rw [hk0, decide_ofNat_pos]
-        decide
-      have hneB : ¬ (decide (Int.ofNat (suit c % hand.length) > (0 : Int)) = true) := by
-        rw [hdec0]; decide
-      rw [if_neg hneB]
-      apply congrArg Except.ok
-      apply congrArg embed
-      unfold maybeRotateInv
-      rw [if_neg hne, hk0]
-      exact (rotR_mod_zero hand 0 hne (Nat.zero_mod _)).symm
-    · have hdec0 : decide (Int.ofNat (suit c % hand.length) > (0 : Int)) = true := by
-        rw [decide_ofNat_pos]
-        exact decide_eq_true (Nat.pos_of_ne_zero hk0)
-      rw [if_pos hdec0]
-      rw [right_rotate_refines hand (suit c % hand.length) hfits]
-      apply congrArg Except.ok
-      apply congrArg embed
-      unfold maybeRotateInv
-      rw [if_neg hne]
-  · have hneg : ¬ (decide (Int.ofNat hand.length > (0 : Int)) = true) := by
-      rw [decide_ofNat_pos, decide_eq_false hpos]; decide
-    rw [if_neg hneg]
-    apply congrArg Except.ok
-    apply congrArg embed
-    unfold maybeRotateInv
-    have : hand.length = 0 :=
-      Nat.le_antisymm (Nat.not_lt.mp hpos) (Nat.zero_le _)
-    rw [if_pos this]
-
-theorem maybeRotateInv_refines_len (c : Nat) (hand : List Nat) (n : Nat)
-    (hfits : FitsLen hand.length) (hn : n = hand.length) :
-    passkeyInvRotateIf (Int.ofNat c) (Int.ofNat n) (embed hand) =
-      .ok (embed (maybeRotateInv hand c)) := by
-  subst hn
-  simpa [listLen_embed] using maybeRotateInv_refines c hand hfits
 
 /-- One generated inverse body refines `invPassKeyStep`. Piles are
     `(key, hand)` matching emitted state, opposite the algebraic pair. -/
-theorem invPassKeyStep_refines (c : Nat) (rest hand : List Nat)
+theorem invPassKeyStep_refines (c : Nat) (rest hand : List Nat) (hc : FitsLen c)
     (hh : FitsLen hand.length) (hk : FitsLen rest.length) :
     passkeyInvPiles (Int.ofNat c) (embed hand) (embed rest) =
       .ok (embed (invPassKeyStep hand (c :: rest)).2,
            embed (invPassKeyStep hand (c :: rest)).1) := by
   unfold passkeyInvPiles
-  have hc := maybeCutInv_refines c hand rest hh hk
-  rw [hc]
+  rw [maybeCutInv_refines c hand rest hh hk]
   simp only [ok_bind]
-  have hlen1 := length_maybeCutInv_fst hand rest c
   have hh' : FitsLen (maybeCutInv hand rest c).1.length := by
-    rw [hlen1]; exact hh
-  rw [listLen_embed]
-  have hr := maybeRotateInv_refines_len c (maybeCutInv hand rest c).1
-    hand.length hh' (by rw [hlen1])
-  rw [hr]
+    rw [length_maybeCutInv_fst]; exact hh
+  have hk' : FitsLen (maybeCutInv hand rest c).2.length := by
+    rw [length_maybeCutInv_snd]; exact hk
+  rw [undeal_step_refines c _ _ hc hh' hk']
   simp only [ok_bind]
-  have hrotlen : (maybeRotateInv (maybeCutInv hand rest c).1 c).length = hand.length := by
-    rw [length_maybeRotateInv, hlen1]
-  have hh'' : FitsLen (maybeRotateInv (maybeCutInv hand rest c).1 c).length := by
-    rw [hrotlen]; exact hh
+  have hh'' : FitsLen (maybeDealInv (maybeCutInv hand rest c).1
+      (maybeCutInv hand rest c).2 c).1.length := by
+    rw [length_maybeDealInv_fst, length_maybeCutInv_fst]; exact hh
   rw [push_front_refines c _ hh'']
   simp [invPassKeyStep]
 
@@ -216,7 +146,7 @@ theorem passkeyInvStepGen_gt (toV i : Int) (key hand : Array Int) (h : i > toV) 
   rfl
 
 theorem passkeyInvStepGen_hit (c : Nat) (rest hand : List Nat) (fromN toN : Nat)
-    (hfrom : fromN ≤ toN) (hfitsK : FitsLen (rest.length + 1))
+    (hfrom : fromN ≤ toN) (hc : FitsLen c) (hfitsK : FitsLen (rest.length + 1))
     (hfitsH : FitsLen hand.length)
     (hfitsI : fromN = toN ∨ FitsLen (fromN + 1)) :
     passkeyInvStepGen (Int.ofNat toN)
@@ -235,7 +165,7 @@ theorem passkeyInvStepGen_hit (c : Nat) (rest hand : List Nat) (fromN toN : Nat)
   rw [if_neg hngt]
   rw [drop_front_refines c rest hfitsK]
   simp only [ok_bind]
-  have hbody := invPassKeyStep_refines c rest hand hfitsH
+  have hbody := invPassKeyStep_refines c rest hand hc hfitsH
     (FitsLen.of_le hfitsK (Nat.le_succ _))
   rw [hbody]
   simp only [ok_bind]
@@ -270,11 +200,13 @@ theorem passkey_inv_loop_gt (fromV toV : Int) (key hand : Array Int)
   rw [passkeyInvStepGen_gt toV fromV key hand hgt]
 
 /-- Inclusive inverse loop on embed-image piles refines `passKeyInvGoN`.
-    Remaining seats equal remaining key cards (`toN + 1 - fromN`). -/
+    Remaining seats equal remaining key cards (`toN + 1 - fromN`). Every card
+    in either pile fits i64 (the deal count `suit + 2` is an i64 addition). -/
 theorem passkey_inv_loop_refines (key hand : List Nat) (fromN toN : Nat)
     (hcard : toN + 1 - fromN = key.length)
     (hsum : FitsLen (key.length + hand.length))
-    (hto : FitsLen toN) :
+    (hto : FitsLen toN)
+    (hcards : ∀ x ∈ hand ++ key, FitsLen x) :
     SudoRt.runLoopOn (ρ := Array Int)
         (Int.ofNat fromN, (embed key, embed hand))
         (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
@@ -313,8 +245,9 @@ theorem passkey_inv_loop_refines (key hand : List Nat) (fromN toN : Nat)
         · exact Or.inl heq
         · have : fromN < toN := Nat.lt_of_le_of_ne hle heq
           exact Or.inr (FitsLen.of_le hto (Nat.succ_le_of_lt this))
+      have hc : FitsLen c := hcards c (by simp)
       rw [fuelRange_le hle, runLoopOn_succ]
-      rw [passkeyInvStepGen_hit c rest hand fromN toN hle hfitsK hfitsH hfitsI]
+      rw [passkeyInvStepGen_hit c rest hand fromN toN hle hc hfitsK hfitsH hfitsI]
       by_cases heq : fromN = toN
       · rw [if_pos heq]
         have hrem0 : rem = 0 := by omega
@@ -332,6 +265,7 @@ theorem passkey_inv_loop_refines (key hand : List Nat) (fromN toN : Nat)
         simp only [passKeyInvGoN]
         have hlen1 := length_invPassKeyStep_fst hand c rest
         have hlen2 := length_invPassKeyStep_snd hand c rest
+        have hperm := invPassKeyStep_perm hand c rest
         have ih' := ih
             (invPassKeyStep hand (c :: rest)).2
             (invPassKeyStep hand (c :: rest)).1 (fromN + 1)
@@ -341,12 +275,14 @@ theorem passkey_inv_loop_refines (key hand : List Nat) (fromN toN : Nat)
               have : FitsLen (rest.length + 1 + hand.length) := by
                 simpa [List.length_cons] using hsum
               exact (Eq.mp (congrArg FitsLen (by omega)) this))
+            (fun x hx => hcards x (hperm.mem_iff.mp hx))
             (by omega)
         rw [hlen2] at ih'
         exact ih'
 
 /-- Twin loop at the generated `fromV = 1`, `toV = n`, empty hand pile. -/
-theorem passkey_inv_twin_refines (deck : List Nat) (hfits : FitsLen deck.length) :
+theorem passkey_inv_twin_refines (deck : List Nat) (hfits : FitsLen deck.length)
+    (hcards : ∀ x ∈ deck, FitsLen x) :
     SudoRt.runLoopOn (ρ := Array Int)
         (Int.ofNat 1, (embed deck, embed []))
         (fuelRange (Int.ofNat 1) (Int.ofNat deck.length))
@@ -355,440 +291,7 @@ theorem passkey_inv_twin_refines (deck : List Nat) (hfits : FitsLen deck.length)
       .ok (embed (passToKeyCutFallbackInv deck)) := by
   simpa [passToKeyCutFallbackInv] using
     passkey_inv_loop_refines deck [] 1 deck.length (by omega) (by simpa using hfits) hfits
-
-/-- Residual rotate+push suffix of emitted `passkey_inv` (nested `decide`). -/
-def passkeyInvRotatePushCont (c n : Int) (key hand : Array Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Array Int × Array Int) (Array Int)) :=
-  if decide (n > (0 : Int)) = true then do
-    let s ← Doubledeal.suit_of c
-    let k ← SudoRt.modI s n
-    if decide (k > (0 : Int)) = true then do
-      let hand ← Doubledeal.right_rotate hand k
-      let hand ← Doubledeal.push_front hand c
-      pure (SudoRt.Flow.cont (ρ := Array Int) (key, hand))
-    else do
-      let hand ← Doubledeal.push_front hand c
-      pure (SudoRt.Flow.cont (ρ := Array Int) (key, hand))
-  else do
-    let hand ← Doubledeal.push_front hand c
-    pure (SudoRt.Flow.cont (ρ := Array Int) (key, hand))
-
-/-- Nested rotate+push is sequential `passkeyInvRotateIf` then `push_front`. -/
-theorem passkeyInvRotatePushCont_seq (c n : Int) (key hand : Array Int) :
-    passkeyInvRotatePushCont c n key hand =
-      (do
-        let hand ← passkeyInvRotateIf c n hand
-        let hand ← Doubledeal.push_front hand c
-        pure (SudoRt.Flow.cont (ρ := Array Int) (key, hand))) := by
-  unfold passkeyInvRotatePushCont passkeyInvRotateIf
-  by_cases hn : 0 < n
-  · simp [hn]
-    cases hs : Doubledeal.suit_of c with
-    | error e => simp [hs]
-    | ok s =>
-      simp [hs]
-      cases hk : SudoRt.modI s n with
-      | error e => simp [hk]
-      | ok k =>
-        simp [hk]
-        by_cases hkpos : 0 < k <;> simp [hkpos]
-  · simp [hn]
-
-theorem passkeyCutFlag_eq (c : Int) (xs : Array Int) :
-    (if 0 < SudoRt.listLen xs then do
-      let r ← Doubledeal.rank_of c
-      pure (decide (r < SudoRt.listLen xs))
-     else (pure false : Except SudoRt.Trap Bool)) =
-    passkeyCutFlag c xs := by
-  unfold passkeyCutFlag
-  by_cases hp : 0 < SudoRt.listLen xs <;> simp [hp]
-
-theorem passkeyCutFlag_eq_decide (c : Int) (xs : Array Int) :
-    (if decide (SudoRt.listLen xs > (0 : Int)) = true then do
-      let r ← Doubledeal.rank_of c
-      pure (decide (r < SudoRt.listLen xs))
-     else pure false) = passkeyCutFlag c xs := by
-  unfold passkeyCutFlag
-  rfl
-
-/-- Residual cut flags plus rotate+push equal sequential `passkeyInvPiles`
-    wrapped as `Flow.cont`. Uses the pre-cut hand length as `n`. -/
-theorem passkey_inv_nested_as_piles (c : Int) (hand key : Array Int) :
-    (do
-      let cutH ←
-        if decide (SudoRt.listLen hand > (0 : Int)) = true then do
-          let r ← Doubledeal.rank_of c
-          pure (decide (r < SudoRt.listLen hand))
-        else pure false
-      let cutK ←
-        if decide (SudoRt.listLen key > (0 : Int)) = true then do
-          let r ← Doubledeal.rank_of c
-          pure (decide (r < SudoRt.listLen key))
-        else pure false
-      if cutH = true then do
-        let r ← Doubledeal.rank_of c
-        let hand' ← Doubledeal.right_rotate hand r
-        passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand'
-      else if cutK = true then do
-        let r ← Doubledeal.rank_of c
-        let key' ← Doubledeal.right_rotate key r
-        passkeyInvRotatePushCont c (SudoRt.listLen hand) key' hand
-      else
-        passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand) =
-      (do
-        let piles ← passkeyInvPiles c hand key
-        pure (SudoRt.Flow.cont (ρ := Array Int) piles)) := by
-  unfold passkeyInvPiles passkeyInvCut passkeyCutFlag
-  by_cases hHpos : 0 < SudoRt.listLen hand
-  · simp [hHpos]
-    cases hR : Doubledeal.rank_of c with
-    | error e => simp [hR]
-    | ok r =>
-      simp [hR]
-      by_cases hKpos : 0 < SudoRt.listLen key
-      · simp [hKpos]
-        by_cases hHcut : r < SudoRt.listLen hand
-        · simp [hHcut]
-          cases hRot : Doubledeal.right_rotate hand r with
-          | error e => simp [hRot]
-          | ok hand' =>
-            simp [hRot]
-            rw [passkeyInvRotatePushCont_seq]
-            rfl
-        · simp [hHcut]
-          by_cases hKcut : r < SudoRt.listLen key
-          · simp [hKcut]
-            cases hRot : Doubledeal.right_rotate key r with
-            | error e => simp [hRot]
-            | ok key' =>
-              simp [hRot]
-              rw [passkeyInvRotatePushCont_seq]
-              rfl
-          · simp [hKcut]
-            rw [passkeyInvRotatePushCont_seq]
-            rfl
-      · simp [hKpos]
-        by_cases hHcut : r < SudoRt.listLen hand
-        · simp [hHcut]
-          cases hRot : Doubledeal.right_rotate hand r with
-          | error e => simp [hRot]
-          | ok hand' =>
-            simp [hRot]
-            rw [passkeyInvRotatePushCont_seq]
-            rfl
-        · simp [hHcut]
-          rw [passkeyInvRotatePushCont_seq]
-          rfl
-  · simp [hHpos]
-    by_cases hKpos : 0 < SudoRt.listLen key
-    · simp [hKpos]
-      cases hR : Doubledeal.rank_of c with
-      | error e => simp [hR]
-      | ok r =>
-        simp [hR]
-        by_cases hKcut : r < SudoRt.listLen key
-        · simp [hKcut]
-          cases hRot : Doubledeal.right_rotate key r with
-          | error e => simp [hRot]
-          | ok key' =>
-            simp [hRot]
-            rw [passkeyInvRotatePushCont_seq]
-            rfl
-        · simp [hKcut]
-          rw [passkeyInvRotatePushCont_seq]
-          rfl
-    · simp [hKpos]
-      rw [passkeyInvRotatePushCont_seq]
-      rfl
-
-theorem passkey_inv_flag_map (c n : Int) :
-    (if 0 < n then (fun a => decide (a < n)) <$> Doubledeal.rank_of c
-     else (pure false : Except SudoRt.Trap Bool)) =
-    (if 0 < n then do
-      let r ← Doubledeal.rank_of c
-      pure (decide (r < n))
-     else pure false) := by
-  by_cases hp : 0 < n <;> simp [hp]
-
-theorem passkeyInvRotatePushCont_map (c n : Int) (key hand : Array Int) :
-    (if 0 < n then do
-      let s ← Doubledeal.suit_of c
-      let k ← SudoRt.modI s n
-      if 0 < k then do
-        let hand ← Doubledeal.right_rotate hand k
-        (fun a => SudoRt.Flow.cont (ρ := Array Int) (key, a)) <$>
-          Doubledeal.push_front hand c
-      else
-        (fun a => SudoRt.Flow.cont (ρ := Array Int) (key, a)) <$>
-          Doubledeal.push_front hand c
-     else
-      (fun a => SudoRt.Flow.cont (ρ := Array Int) (key, a)) <$>
-        Doubledeal.push_front hand c) =
-    passkeyInvRotatePushCont c n key hand := by
-  unfold passkeyInvRotatePushCont
-  by_cases hn : 0 < n <;> simp [hn]
-
-/-- Do-elaboration flattens bound cut flags into nested `if 0 < listLen`. -/
-theorem passkey_inv_flags_flatten (c : Int) (hand key : Array Int) :
-    (do
-      let x ←
-        if 0 < SudoRt.listLen hand then do
-          let r ← Doubledeal.rank_of c
-          pure (decide (r < SudoRt.listLen hand))
-        else pure false
-      let x_1 ←
-        if 0 < SudoRt.listLen key then do
-          let r ← Doubledeal.rank_of c
-          pure (decide (r < SudoRt.listLen key))
-        else pure false
-      if x = true then do
-        let r ← Doubledeal.rank_of c
-        let hand' ← Doubledeal.right_rotate hand r
-        passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand'
-      else if x_1 = true then do
-        let r ← Doubledeal.rank_of c
-        let key' ← Doubledeal.right_rotate key r
-        passkeyInvRotatePushCont c (SudoRt.listLen hand) key' hand
-      else
-        passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand) =
-    (if 0 < SudoRt.listLen hand then do
-      let r ← Doubledeal.rank_of c
-      if 0 < SudoRt.listLen key then do
-        let r_1 ← Doubledeal.rank_of c
-        if r < SudoRt.listLen hand then do
-          let r ← Doubledeal.rank_of c
-          let hand' ← Doubledeal.right_rotate hand r
-          passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand'
-        else if r_1 < SudoRt.listLen key then do
-          let r ← Doubledeal.rank_of c
-          let key' ← Doubledeal.right_rotate key r
-          passkeyInvRotatePushCont c (SudoRt.listLen hand) key' hand
-        else
-          passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand
-      else
-        if r < SudoRt.listLen hand then do
-          let r ← Doubledeal.rank_of c
-          let hand' ← Doubledeal.right_rotate hand r
-          passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand'
-        else
-          passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand
-     else
-      if 0 < SudoRt.listLen key then do
-        let r ← Doubledeal.rank_of c
-        if r < SudoRt.listLen key then do
-          let r ← Doubledeal.rank_of c
-          let key' ← Doubledeal.right_rotate key r
-          passkeyInvRotatePushCont c (SudoRt.listLen hand) key' hand
-        else
-          passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand
-      else
-        passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand) := by
-  by_cases hHpos : 0 < SudoRt.listLen hand <;> simp [hHpos]
-
-theorem map_addI_cont (i : Int) (fs : Array Int × Array Int) :
-    ((fun a =>
-        SudoRt.Flow.cont (ρ := Array Int) (σ := Int × Array Int × Array Int)
-          (a, fs)) <$>
-      SudoRt.addI i (1 : Int)) =
-      (do
-        let i' ← SudoRt.addI i (1 : Int)
-        pure (SudoRt.Flow.cont (ρ := Array Int) (σ := Int × Array Int × Array Int)
-          (i', fs))) := by
-  cases h : SudoRt.addI i (1 : Int) with
-  | error e => simp [h]
-  | ok i' => simp [h]
-
-/-- Matching a `Flow.cont` piles update is sequential `passkeyInvPiles`
-    then the loop tail. -/
-theorem passkey_inv_nested_match (c : Int) (hand key : Array Int) (i toV : Int) :
-    (do
-      let y ←
-        (do
-          let cutH ←
-            if decide (SudoRt.listLen hand > (0 : Int)) = true then do
-              let r ← Doubledeal.rank_of c
-              pure (decide (r < SudoRt.listLen hand))
-            else pure false
-          let cutK ←
-            if decide (SudoRt.listLen key > (0 : Int)) = true then do
-              let r ← Doubledeal.rank_of c
-              pure (decide (r < SudoRt.listLen key))
-            else pure false
-          if cutH = true then do
-            let r ← Doubledeal.rank_of c
-            let hand' ← Doubledeal.right_rotate hand r
-            passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand'
-          else if cutK = true then do
-            let r ← Doubledeal.rank_of c
-            let key' ← Doubledeal.right_rotate key r
-            passkeyInvRotatePushCont c (SudoRt.listLen hand) key' hand
-          else
-            passkeyInvRotatePushCont c (SudoRt.listLen hand) key hand)
-      match y with
-      | .ret r => pure (SudoRt.Flow.ret (ρ := Array Int) r)
-      | .brk fs => pure (SudoRt.Flow.brk (i, fs))
-      | .cont fs =>
-        if (i == toV) = true then
-          pure (SudoRt.Flow.brk (i, fs))
-        else do
-          let i' ← SudoRt.addI i (1 : Int)
-          pure (SudoRt.Flow.cont (i', fs))) =
-      (do
-        let piles ← passkeyInvPiles c hand key
-        if (i == toV) = true then
-          pure (SudoRt.Flow.brk (i, piles))
-        else do
-          let i' ← SudoRt.addI i (1 : Int)
-          pure (SudoRt.Flow.cont (i', piles))) := by
-  rw [passkey_inv_nested_as_piles]
-  cases hp : passkeyInvPiles c hand key with
-  | error e => simp [hp]
-  | ok piles => simp [hp]
-
-/-- Residual stepper after unfold / `dsimp` equals `passkeyInvStepGen`.
-    Nested cut / suit-rotate is the emitted shape; the sequential twin is
-    not a second algorithm. -/
-theorem passkey_inv_step_eq (toV : Int) (σ : Int × Array Int × Array Int) :
-    (if σ.fst > toV then
-       (pure (SudoRt.Flow.brk (σ.fst, σ.snd.fst, σ.snd.snd)) :
-          Except SudoRt.Trap (SudoRt.Flow (Int × Array Int × Array Int) (Array Int)))
-     else do
-       let t ← Doubledeal.drop_front σ.snd.fst
-       let y ←
-         (do
-           let cutH ←
-             if decide (SudoRt.listLen σ.snd.snd > (0 : Int)) = true then do
-               let r ← Doubledeal.rank_of t.fst
-               pure (decide (r < SudoRt.listLen σ.snd.snd))
-             else pure false
-           let cutK ←
-             if decide (SudoRt.listLen t.snd > (0 : Int)) = true then do
-               let r ← Doubledeal.rank_of t.fst
-               pure (decide (r < SudoRt.listLen t.snd))
-             else pure false
-           if cutH = true then do
-             let r ← Doubledeal.rank_of t.fst
-             let hand' ← Doubledeal.right_rotate σ.snd.snd r
-             passkeyInvRotatePushCont t.fst (SudoRt.listLen σ.snd.snd) t.snd hand'
-           else if cutK = true then do
-             let r ← Doubledeal.rank_of t.fst
-             let key' ← Doubledeal.right_rotate t.snd r
-             passkeyInvRotatePushCont t.fst (SudoRt.listLen σ.snd.snd) key' σ.snd.snd
-           else
-             passkeyInvRotatePushCont t.fst (SudoRt.listLen σ.snd.snd) t.snd σ.snd.snd)
-       match y with
-       | .ret r => pure (SudoRt.Flow.ret r)
-       | .brk fs => pure (SudoRt.Flow.brk (σ.fst, fs))
-       | .cont fs =>
-         if (σ.fst == toV) = true then
-           pure (SudoRt.Flow.brk (σ.fst, fs))
-         else do
-           let i' ← SudoRt.addI σ.fst (1 : Int)
-           pure (SudoRt.Flow.cont (i', fs))) =
-      passkeyInvStepGen toV σ := by
-  unfold passkeyInvStepGen
-  dsimp
-  by_cases hgt : σ.fst > toV
-  · simp [hgt]
-  · simp [hgt]
-    cases hd : Doubledeal.drop_front σ.snd.fst with
-    | error e => simp [hd]
-    | ok t =>
-      simp only [hd, ok_bind]
-      simpa using passkey_inv_nested_match t.fst σ.snd.snd t.snd σ.fst toV
-
-/-- Loop tail after a `Flow.cont` piles update. Explicit so residual
-    `__do_lift` binds match this, not a do-elaborated join-point. -/
-def passkeyInvLoopTail (i toV : Int) :
-    SudoRt.Flow (Array Int × Array Int) (Array Int) →
-      Except SudoRt.Trap (SudoRt.Flow (Int × Array Int × Array Int) (Array Int)) :=
-  fun y =>
-    match y with
-    | .ret r => pure (SudoRt.Flow.ret r)
-    | .brk fs => pure (SudoRt.Flow.brk (i, fs))
-    | .cont fs =>
-      if i = toV then
-        pure (SudoRt.Flow.brk (i, fs))
-      else
-        (fun a => SudoRt.Flow.cont (a, fs)) <$> SudoRt.addI i (1 : Int)
-
-/-- Inlined residual suit-rotate+push+tail equals `Cont` then match. -/
-theorem passkey_inv_rotate_inlined_eq_cont (c n : Int) (key hand : Array Int)
-    (i toV : Int) (hn : 0 < n) :
-    (do
-      let x ← Doubledeal.suit_of c
-      let x ← SudoRt.modI x n
-      if 0 < x then do
-        let x ← Doubledeal.right_rotate hand x
-        let a ← Doubledeal.push_front x c
-        if i = toV then
-          pure (SudoRt.Flow.brk (i, key, a))
-        else
-          (fun a_1 => SudoRt.Flow.cont (a_1, key, a)) <$> SudoRt.addI i (1 : Int)
-      else do
-        let a ← Doubledeal.push_front hand c
-        if i = toV then
-          pure (SudoRt.Flow.brk (i, key, a))
-        else
-          (fun a_1 => SudoRt.Flow.cont (a_1, key, a)) <$> SudoRt.addI i (1 : Int)) =
-    (do
-      let y ← passkeyInvRotatePushCont c n key hand
-      match y with
-      | .ret r => pure (SudoRt.Flow.ret r)
-      | .brk fs => pure (SudoRt.Flow.brk (i, fs))
-      | .cont fs =>
-        if i = toV then
-          pure (SudoRt.Flow.brk (i, fs))
-        else
-          (fun a => SudoRt.Flow.cont (a, fs)) <$> SudoRt.addI i (1 : Int)) := by
-  unfold passkeyInvRotatePushCont
-  simp [hn]
-  cases hs : Doubledeal.suit_of c with
-  | error e => simp [hs]
-  | ok s =>
-    simp [hs]
-    cases hk : SudoRt.modI s n with
-    | error e => simp [hk]
-    | ok k =>
-      simp [hk]
-      by_cases hkpos : 0 < k
-      · simp [hkpos]
-        first | done | {
-          cases hr : Doubledeal.right_rotate hand k with
-          | error e => simp [hr]
-          | ok hand' =>
-            simp [hr]
-            first | done | {
-              cases hp : Doubledeal.push_front hand' c with
-              | error e => simp [hp]
-              | ok hand'' => simp [hp]
-            }
-        }
-      · simp [hkpos]
-        first | done | {
-          cases hp : Doubledeal.push_front hand c with
-          | error e => simp [hp]
-          | ok hand' => simp [hp]
-        }
-
-/-- Empty-hand residual (push then loop tail) equals `Cont >>= tail`. -/
-theorem passkey_inv_empty_bind_eq_cont (c n : Int) (key hand : Array Int)
-    (i toV : Int) (hn : ¬ 0 < n) :
-    (Doubledeal.push_front hand c >>= fun a =>
-      if i = toV then
-        (pure (SudoRt.Flow.brk (i, key, a)) :
-          Except SudoRt.Trap (SudoRt.Flow (Int × Array Int × Array Int) (Array Int)))
-      else
-        (fun a_1 => SudoRt.Flow.cont (a_1, key, a)) <$>
-          SudoRt.addI i (1 : Int)) =
-      (passkeyInvRotatePushCont c n key hand >>= passkeyInvLoopTail i toV) := by
-  unfold passkeyInvRotatePushCont passkeyInvLoopTail
-  simp [hn]
-  first | done | {
-    cases hp : Doubledeal.push_front hand c with
-    | error e => simp [hp]
-    | ok a => simp [hp]
-  }
+      (by simpa using hcards)
 
 /-- Unfolded `Doubledeal.passkey_inv` is the twin `runLoopOn` at `fromV = 1`. -/
 theorem passkey_inv_eq_twin_loop (deck : Array Int) :
@@ -812,90 +315,34 @@ theorem passkey_inv_eq_twin_loop (deck : Array Int) :
   rw [hafter, hon]
   apply runLoopOn_step_pointwise (step' := passkeyInvStepGen (SudoRt.listLen deck))
   intro σ
-  refine Eq.trans ?_ (passkey_inv_step_eq (SudoRt.listLen deck) σ)
+  unfold passkeyInvStepGen passkeyInvPiles passkeyInvCut passkeyCutFlag
   by_cases hgt : σ.fst > SudoRt.listLen deck
   · simp [hgt]
   · simp [hgt]
     cases hd : Doubledeal.drop_front σ.snd.fst with
     | error e => simp [hd]
     | ok t =>
-      simp only [hd, ok_bind]
-      rw [passkey_inv_flag_map, passkey_inv_flag_map]
-      by_cases hHpos : 0 < SudoRt.listLen σ.snd.snd
-      · simp [hHpos, except_ite_bind]
-        cases hR : Doubledeal.rank_of t.fst with
-        | error e => simp [hR]
-        | ok r =>
-          simp [hR, except_ite_bind]
-          by_cases hKpos : 0 < SudoRt.listLen t.snd
-          · simp [hKpos, except_ite_bind]
-            by_cases hHcut : r < SudoRt.listLen σ.snd.snd
-            · simp [hHcut, except_ite_bind]
-              cases hRot : Doubledeal.right_rotate σ.snd.snd r with
-              | error e => simp [hRot]
-              | ok hand' =>
-                simp [hRot]
-                exact passkey_inv_rotate_inlined_eq_cont t.fst
-                  (SudoRt.listLen σ.snd.snd) t.snd hand'
-                  σ.fst (SudoRt.listLen deck) hHpos
-            · simp [hHcut, except_ite_bind]
-              by_cases hKcut : r < SudoRt.listLen t.snd
-              · simp [hKcut, except_ite_bind]
-                cases hRot : Doubledeal.right_rotate t.snd r with
-                | error e => simp [hRot]
-                | ok key' =>
-                  simp [hRot]
-                  exact passkey_inv_rotate_inlined_eq_cont t.fst
-                    (SudoRt.listLen σ.snd.snd) key' σ.snd.snd
-                    σ.fst (SudoRt.listLen deck) hHpos
-              · simp [hKcut, except_ite_bind]
-                exact passkey_inv_rotate_inlined_eq_cont t.fst
-                  (SudoRt.listLen σ.snd.snd) t.snd σ.snd.snd
-                  σ.fst (SudoRt.listLen deck) hHpos
-          · simp [hKpos, except_ite_bind]
-            by_cases hHcut : r < SudoRt.listLen σ.snd.snd
-            · simp [hHcut, except_ite_bind]
-              cases hRot : Doubledeal.right_rotate σ.snd.snd r with
-              | error e => simp [hRot]
-              | ok hand' =>
-                simp [hRot]
-                exact passkey_inv_rotate_inlined_eq_cont t.fst
-                  (SudoRt.listLen σ.snd.snd) t.snd hand'
-                  σ.fst (SudoRt.listLen deck) hHpos
-            · simp [hHcut, except_ite_bind]
-              exact passkey_inv_rotate_inlined_eq_cont t.fst
-                (SudoRt.listLen σ.snd.snd) t.snd σ.snd.snd
-                σ.fst (SudoRt.listLen deck) hHpos
-      · simp [hHpos, except_ite_bind]
-        by_cases hKpos : 0 < SudoRt.listLen t.snd
-        · simp [hKpos, except_ite_bind]
-          cases hR : Doubledeal.rank_of t.fst with
-          | error e => simp [hR]
-          | ok r =>
-            simp [hR, except_ite_bind]
-            by_cases hKcut : r < SudoRt.listLen t.snd
-            · simp [hKcut, except_ite_bind]
-              cases hRot : Doubledeal.right_rotate t.snd r with
-              | error e => simp [hRot]
-              | ok key' =>
-                simp [hRot]
-                exact passkey_inv_empty_bind_eq_cont t.fst
-                  (SudoRt.listLen σ.snd.snd) key' σ.snd.snd
-                  σ.fst (SudoRt.listLen deck) hHpos
-            · simp [hKcut, except_ite_bind]
-              exact passkey_inv_empty_bind_eq_cont t.fst
-                (SudoRt.listLen σ.snd.snd) t.snd σ.snd.snd
-                σ.fst (SudoRt.listLen deck) hHpos
-        · simp [hKpos, except_ite_bind]
-          exact passkey_inv_empty_bind_eq_cont t.fst
-            (SudoRt.listLen σ.snd.snd) t.snd σ.snd.snd
-            σ.fst (SudoRt.listLen deck) hHpos
+      simp [hd]
+      cases t with
+      | mk c key =>
+        simp
+        by_cases hH : 0 < SudoRt.listLen σ.snd.snd <;>
+          by_cases hK : 0 < SudoRt.listLen key <;>
+          simp [hH, hK] <;>
+          cases hR : Doubledeal.rank_of c <;> simp [hR]
+        all_goals
+          rename_i r
+          by_cases h1 : r < SudoRt.listLen σ.snd.snd <;>
+            by_cases h2 : r < SudoRt.listLen key <;>
+            simp only [h1, h2, ↓reduceIte, bind_assoc, map_eq_pure_bind, pure_bind]
 
-/-- On every well-formed list, emitted `passkey_inv` equals the algebraic ledger. -/
-theorem passkey_inv_refines (deck : List Nat) (hfits : FitsLen deck.length) :
+/-- On every well-formed list whose cards fit i64, emitted `passkey_inv`
+    equals the algebraic ledger. -/
+theorem passkey_inv_refines (deck : List Nat) (hfits : FitsLen deck.length)
+    (hcards : ∀ c ∈ deck, FitsLen c) :
     Doubledeal.passkey_inv (embed deck) =
       .ok (embed (passToKeyCutFallbackInv deck)) := by
   rw [passkey_inv_eq_twin_loop, listLen_embed]
-  simpa [embed_nil] using passkey_inv_twin_refines deck hfits
+  simpa [embed_nil] using passkey_inv_twin_refines deck hfits hcards
 
 end DoubleDeal.Link2

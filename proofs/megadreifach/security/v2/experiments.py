@@ -109,6 +109,8 @@ def x_cost(workers):
             E.em(IV_ST, d, trace=tr, rec=rec, grips=grips)
             counts.add((len(tr), sum(a % 5 for f, a in tr), len(rec), len(grips)))
         rows.append((rule, E.t, counts))
+    # log text kept: "v1 reads = 52 + 12" in this header is a fixed string (asserted, not
+    # measured); the measured v1 reads (md.colours_at calls) are printed on the v1 row
     print('100 random one-block deals from IV-COOK12 (seed 8); every count is the same for all 100 '
           '(each deal holds every card once).  v1 turns from ../md.py (v1 sudo), '
           'v1 reads = 52 + 12.')

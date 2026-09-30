@@ -122,6 +122,10 @@ theorem fits27 : FitsLen 27 := by
   unfold FitsLen i64MaxNat
   decide
 
+theorem fits28 : FitsLen 28 := by
+  unfold FitsLen i64MaxNat
+  decide
+
 theorem fits3 : FitsLen 3 := by
   unfold FitsLen i64MaxNat
   decide

@@ -306,7 +306,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: No sorry / admit / native_decide (shared gate)
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/doubledeal-cbc-hmac/lean --exclude Generated
-      - name: Axiom gate keying rules; CBC_HMAC_LINK2 equals the README-cited theorems
+      - name: Axiom gate keying rules; CBC_HMAC_LINK2 equals the README-cited theorems; every sudo export is in the README's Emitted function column (with planted negatives)
         run: python3 proofs/doubledeal/check_axioms.py --selftest
       - uses: leanprover/lean-action@v1
         with:

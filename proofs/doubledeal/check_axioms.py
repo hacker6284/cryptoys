@@ -36,6 +36,11 @@ axiom) fails, as does a Lean error.
   security/DoubleDealSecurityHeavy/ must be listed in HEAVY_THEOREMS and vice versa
   (checked in both security modes, so the default job cannot silently drop the
   heavy target), and every listed theorem must be reported by the heavy audit.
+  The heavy audit also checks the Lean-generated theorems (e.g. equation lemmas) of
+  those modules, which have no source declaration and are pinned in HEAVY_GENERATED:
+  every audited theorem not in HEAVY_THEOREMS must be in HEAVY_GENERATED, and every
+  HEAVY_GENERATED entry must be audited (so a theorem the source scan misses fails
+  instead of passing as generated).
 - megadreifach / megadreifach-heavy: like security / security-heavy (mode "all",
   no KNOWN_SORRY) for proofs/megadreifach/lean, roots `MegaDreifach` and
   `MegaDreifachHeavy`. Its heavy source must declare the 8 headline `kat_*`
@@ -74,13 +79,16 @@ from pathlib import Path
 
 ALLOWED = {"propext", "Classical.choice", "Quot.sound"}
 ROOT = Path(__file__).resolve().parent
-# Every theorem declared in security/DoubleDealSecurityHeavy/ (checked against the
-# source in both security modes; audited by `security-heavy`).
-# The heavy audit reports ONE MORE theorem than this registry lists:
-# `DoubleDeal.Security.GridCycleSurvival.chunkOK.eq_1`, the equation lemma that Lean
-# generates on demand when `of_chunks` unfolds `chunkOK` (`simp only [chunkOK, ...]`).
-# It is not declared in the source, so it is not registered here; like every audited
-# theorem it must still use only the allowed axioms.
+# Every theorem/lemma the source scan (`heavy_source_theorems`) finds in
+# security/DoubleDealSecurityHeavy/ (checked against the source in both security modes;
+# audited by `security-heavy`).
+# The heavy audit (`#audit_all`: every theorem constant of a DoubleDealSecurityHeavy.*
+# module) also reports theorems with no source declaration: Lean-generated ones (e.g.
+# equation lemmas), which Lean creates on demand when a proof unfolds a definition
+# (`simp only [f, ...]` creates `f.eq_1`) and stores in that proof's module. They are
+# pinned in HEAVY_GENERATED (after this set); `security-heavy` fails on an audited
+# theorem in neither set and on a HEAVY_GENERATED entry it does not audit. Like every
+# audited theorem they must still use only the allowed axioms.
 HEAVY_DIR = ROOT / "security" / "DoubleDealSecurityHeavy"
 HEAVY_THEOREMS = {
     "DoubleDeal.Security.realKey_enc_id",
@@ -182,6 +190,11 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime_nonswap",
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
 }
+# Lean-generated theorems of the heavy modules (no source declaration; see the comment
+# above HEAVY_THEOREMS). chunkOK.eq_1: `of_chunks` unfolds `chunkOK` with `simp only`.
+HEAVY_GENERATED = {
+    "DoubleDeal.Security.GridCycleSurvival.chunkOK.eq_1",
+}
 # proofs/megadreifach/lean (MegaDreifach v2): the 8 v2 hash KATs in
 # MegaDreifachHeavy/Kat.lean. The names match the vectors of
 # primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json, and
@@ -197,6 +210,13 @@ MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"
 # `check_axioms.py --selftest` re-derives the list (md_readme_cited) and fails if it
 # differs from this set; update both together when the README changes.
 MD_README_THEOREMS = {
+    "MegaDreifach.G2Nets.g2Step_fst_ne",
+    "MegaDreifach.G2Nets.g2Step_ne",
+    "MegaDreifach.G2Nets.net2_ne",
+    "MegaDreifach.G2Nets.nets_nodup",
+    "MegaDreifach.G2Nets.phiCard_net2_ne",
+    "MegaDreifach.G2Nets.twoCard_collision_nets",
+    "MegaDreifach.G2Nets.twoCard_same_first_ne",
     "MegaDreifach.Link2.abs_reorient_refines",
     "MegaDreifach.Link2.big_add_byte",
     "MegaDreifach.Link2.big_add_nat",
@@ -257,6 +277,7 @@ MD_README_THEOREMS = {
     "MegaDreifach.Link2.gripOk_g2Step",
     "MegaDreifach.Link2.inverse_refines",
     "MegaDreifach.Link2.iv_cook12_refines",
+    "MegaDreifach.Link2.lehmerUnrank_lehmerRank",
     "MegaDreifach.Link2.magCmp_lt_natLimbs",
     "MegaDreifach.Link2.mag_add_limbs",
     "MegaDreifach.Link2.mag_add_nat",
@@ -294,6 +315,7 @@ MD_README_THEOREMS = {
     "MegaDreifach.Link2.phiInvFind_breaks",
     "MegaDreifach.Link2.phiInvStep_51",
     "MegaDreifach.Link2.phiInvStep_lt",
+    "MegaDreifach.Link2.phiUnrank_lehmerRank",
     "MegaDreifach.Link2.phi_chunk_refines",
     "MegaDreifach.Link2.phi_chunk_refines_array",
     "MegaDreifach.Link2.phi_inv_refines",
@@ -306,9 +328,14 @@ MD_README_THEOREMS = {
     "MegaDreifach.Link2.require_permutation_refines_array",
     "MegaDreifach.Link2.spin_about_up_refines",
     "MegaDreifach.Link2.v_HashDeckBody_refines",
+    "MegaDreifach.Link2.v_HashDeck_eq_v_Hash",
+    "MegaDreifach.Link2.v_HashDeck_refines",
+    "MegaDreifach.Link2.v_HashDeck_refines_array",
+    "MegaDreifach.Link2.v_HashDeck_two_blocks",
     "MegaDreifach.Link2.v_Hash_eq_hashBlocks",
     "MegaDreifach.Link2.v_Hash_refines",
     "MegaDreifach.Link2.v_Hash_refines_array",
+    "MegaDreifach.Link2.v_MegaDreifachDeck_refines",
     "MegaDreifach.Link2.v_MegaDreifach_refines",
     "MegaDreifach.Link2.visual_noon_refines",
     "MegaDreifach.Security.blocks_suffix_free",
@@ -519,6 +546,20 @@ def heavy_source_theorems(heavy_dir=HEAVY_DIR):
     return lean_source_theorems(heavy_dir, private=True)
 
 
+def heavy_generated_problems(audited, listed, generated):
+    """security-heavy: `listed` (HEAVY_THEOREMS) and `generated` (HEAVY_GENERATED) are
+    disjoint, every audited theorem not in `listed` is in `generated`, and every
+    `generated` entry is audited."""
+    both = listed & generated
+    extra = set(audited) - listed
+    return ([f"{n} is in both HEAVY_THEOREMS and HEAVY_GENERATED" for n in sorted(both)]
+            + [f"audited {n} is in neither HEAVY_THEOREMS nor HEAVY_GENERATED (source scan "
+               "missed a declaration, or a new generated lemma?)"
+               for n in sorted(extra - generated)]
+            + [f"HEAVY_GENERATED entry {n} was not audited; remove it"
+               for n in sorted(generated - both - set(audited))])
+
+
 def heavy_registry_problems(reg):
     src = heavy_source_theorems(reg["dir"])
     what, names, where = reg["what"], reg["theorems"], reg["dir"].name + "/"
@@ -719,6 +760,23 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} key={'full' if full else 'user'} "
               f"{names}: {len(bad)} problem(s), expected {want}")
+    # security-heavy: audited = HEAVY_THEOREMS + HEAVY_GENERATED, exactly.
+    lst, gen = {"A.t"}, {"A.f.eq_1"}
+    for what, audited, listed, want in [
+            ("exact", {"A.t", "A.f.eq_1"}, lst, []),
+            ("unlisted, not generated", {"A.t", "A.f.eq_1", "A.b"}, lst,
+             ["audited A.b is in neither"]),
+            ("stale generated", {"A.t"}, lst,
+             ["HEAVY_GENERATED entry A.f.eq_1 was not audited"]),
+            ("unlisted and stale", {"A.t", "A.c"}, lst,
+             ["audited A.c is in neither", "HEAVY_GENERATED entry A.f.eq_1 was not audited"]),
+            ("in both sets", {"A.t", "A.f.eq_1"}, lst | gen,
+             ["A.f.eq_1 is in both HEAVY_THEOREMS and HEAVY_GENERATED"])]:
+        bad = heavy_generated_problems(audited, listed, gen)
+        ok = len(bad) == len(want) and all(w in b for w, b in zip(want, bad))
+        failed += not ok
+        print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} HEAVY_GENERATED {what}: "
+              f"{len(bad)} problem(s), expected {len(want)}")
     # MD_README_THEOREMS / MD_V1_README_THEOREMS must be exactly the theorems the
     # MegaDreifach README / the frozen v1 package's README cites.
     for what, listed, readme, root in [
@@ -812,6 +870,8 @@ def main(argv) -> int:
     for fam, reg in REGISTRIES.items():
         if pkg == fam or pkg == fam + "-heavy":
             bad += heavy_registry_problems(reg)
+    if pkg == "security-heavy":
+        bad += heavy_generated_problems(seen, HEAVY_THEOREMS, HEAVY_GENERATED)
     for name in sorted(cfg.get("required", set()) - set(seen)):
         bad.append(f"required theorem {name} was not reported by the audit")
     for name in sorted(known_sorry - set(seen)):
@@ -841,9 +901,13 @@ def main(argv) -> int:
     print(f"check_axioms: {pkg}: {len(expected)} theorems audited, {ok} use only "
           f"{sorted(ALLOWED)}, {known} known-sorry (allowlisted), {len(bad)} failures")
     if pkg == "security":
-        print(f"check_axioms: security: the {len(HEAVY_THEOREMS)} theorems of the heavy library "
-              "DoubleDealSecurityHeavy are NOT in this audit; they are audited separately by "
-              "`check_axioms.py security-heavy` (CI job doubledeal-security-heavy)")
+        print("check_axioms: security: DoubleDealSecurityHeavy is not in this audit; "
+              "security-heavy (CI job doubledeal-security-heavy) audits its "
+              f"{len(HEAVY_THEOREMS)} HEAVY_THEOREMS plus the theorems Lean generates there")
+    if pkg == "security-heavy" and not bad:
+        print(f"check_axioms: security-heavy: {len(expected)} audited = {len(HEAVY_THEOREMS)} "
+              f"HEAVY_THEOREMS + {len(HEAVY_GENERATED)} HEAVY_GENERATED "
+              f"({', '.join(sorted(HEAVY_GENERATED))})")
     if pkg == "megadreifach":
         print("check_axioms: megadreifach: the heavy library MegaDreifachHeavy (the "
               f"{len(MD_HEAVY_THEOREMS)} KAT theorems and their step lemmas) is NOT in this "

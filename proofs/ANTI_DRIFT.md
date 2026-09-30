@@ -122,7 +122,7 @@ total-fragment / terminating-subset emitter.
 
 | Item | Status |
 | --- | --- |
-| sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
+| sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. Feasibility and plan: [`LINK1.md`](LINK1.md). |
 | Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 **CLOSED** on every well-formed list (`passkey_refines`, `passkey_eq_twin_loop`; v12: every card `FitsLen` too). See [`LINK2.md`](LINK2.md). |
 | Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | Link 2 **CLOSED** on every well-formed list (`passkey_inv_refines`, `passkey_inv_eq_twin_loop`; v12: every card `FitsLen` too). Algebraic correctness only — not bit-security. |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | Link 2 **CLOSED** on `CardBound` messages (`encrypt_refines`). Not bit-security. |
@@ -141,7 +141,10 @@ Sudo does not emit theorems. These stay as **proof infrastructure**:
 - DoubleDeal S1 layer bijections, S2 abstract / PassKey-schedule
   round-trip on the Fin skeleton, S3/S4 PassKey inverse, S5/S6
   factoradic / CTR prefix, S11 Compose KP, S12 peel.
-- MegaDreifach M1–M8/M10–M12 packing, group law, pad, DM algebra.
+- MegaDreifach M1–M8/M10–M12 packing, group law, pad, DM algebra;
+  the v2 one-card nets (M8) and the M9 same-first-card lemma in
+  `G2Nets.lean`; the M4 φ round trip in `Link2/VHashDeck.lean` (that
+  file also holds the Link 2 `v_HashDeck` refinement).
 
 They are tagged in each file: **proof-only, not the algorithm**.
 Edit `.sudo` and regenerate `Generated/` to change `encrypt` or `Hash`.

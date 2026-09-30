@@ -366,7 +366,6 @@ export function createScrambleAdapter() {
     }
 
     return {
-        id: "scramble",
         install(nextWorld, opts = {}) {
             if (rig) return rig;
             world = nextWorld;
@@ -614,7 +613,6 @@ export function createDoubleDealAdapter() {
     }
 
     return {
-        id: "doubledeal",
         install(nextWorld, { poses: nextPoses } = {}) {
             world = nextWorld;
             poses = nextPoses;

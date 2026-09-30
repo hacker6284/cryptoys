@@ -118,7 +118,7 @@ try {
             // Full set from the first frame — trackActive would jump
             // the look to KEY alone the moment it lifts, then whip to
             // MSG. Leave already frames the whole set this way.
-            const chestExtra = meta.extras.includes("chest") && world.chest?.group
+            const chestExtra = meta.chest && world.chest?.group
                 ? [world.chest.group]
                 : [];
             const enterTrack = trackToys(world, meta.toys, chestExtra);
@@ -245,9 +245,9 @@ try {
         capture.tick(now, world.camera, poses.lookTarget);
         requestAnimationFrame(tick);
     }
-    // The rAF clock must run before any non-snap enter. Deep-link
-    // DoubleDeal awaits the physical unbox; fly / flap need director
-    // + pose updates on this loop (hub clicks already have it).
+    // The rAF clock must run before any non-snap enter. A playing deep
+    // link awaits the full enter; its flights and choreography need
+    // director + pose updates on this loop (hub clicks already have it).
     requestAnimationFrame(tick);
 
     menuEl.addEventListener("pointerenter", (event) => {

@@ -21,14 +21,32 @@ sh tools/build.sh
 
 ## Adding a demo
 
-A playroom demo supplies:
+A demo supplies:
 
-- `<id>/session.js`, the session its dock drives, and `<id>/view.js`, the standalone page's view.
-- An adapter in [`playroom/adapters.js`](playroom/adapters.js): `install()` adds every light it will use, at intensity 0 (lights seal after boot: [`shared/lights.js`](shared/lights.js)); `view()` hands the session its playroom view; `enter()` / `leave()` are its choreography.
+- `<id>/index.html` and `<id>/app.js`: the standalone page the noscript link opens, with `<id>/session.js` (the session both pages drive) and `<id>/view.js` (the standalone view).
 - A camera pose in [`playroom/poses.js`](playroom/poses.js), unless it reuses one.
-- One entry in [`playroom/demos.js`](playroom/demos.js), the registry the playroom iterates.
+- An adapter in [`playroom/adapters.js`](playroom/adapters.js). Required:
+  - `install(world, opts)`, at boot: registers every light the demo will use before `world.lights.seal()`; each must be visible at seal and dark until needed ([`shared/lights.js`](shared/lights.js)).
+  - `preload()`: loads the session module and assets; called at boot and again on enter.
+  - `view()`: its playroom view; once the toys land, the playroom calls the view's optional `rememberSeated()`.
+  - `enter({ snap })`: its enter choreography; mounts the dock, creates the session with its view, shows the dock.
+  - `leave({ snap })`: disposes the session, closes the dock, resets its props.
+- Optional adapter hooks:
+  - `ready()`: boot waits for it before the hub is ready.
+  - `prepareEnter()`: runs while the camera leaves the hub; the toys fly once it resolves.
+  - `skipEnter()`: click / Escape during enter.
+  - `busy`: true while enter choreography runs, so click / Escape can skip it.
+  - `leaveMs({ snap })`: length of `leave()`'s own beats; the camera's shot home spans them plus the flight home.
+  - `revealShelf()`: after the toys are home (or a failed enter), shows its shelf props again.
+- One entry in [`playroom/demos.js`](playroom/demos.js) (fields described there). Every name in `toys` must already be in `world.toys`. A new toy means [`playroom/world.js`](playroom/world.js) work (the toy with its `rim:<name>` light, its shelf pose for `shelfHome`), a `SLOTS` entry in [`playroom/constants.js`](playroom/constants.js), and maybe a fly beat.
 
-Still manual: the hub button and noscript link in [`index.html`](index.html) (`playroom/room.test.mjs` checks them against the registry), and the `build_one` line in [`tools/build.sh`](../tools/build.sh) with its `test -f` lines in [`tools/generate-demos.sh`](../tools/generate-demos.sh), and the primitive's path in the `paths` filter of [`preview.yml`](../.github/workflows/preview.yml).
+Still manual:
+
+- [`index.html`](index.html): hub button with the title as its label, and the noscript link (`playroom/room.test.mjs` checks both against the registry). The load-error text in [`playroom/app.js`](playroom/app.js) names the demos too.
+- The `build_one` line in [`tools/build.sh`](../tools/build.sh) and the `test -f` lines in [`tools/generate-demos.sh`](../tools/generate-demos.sh).
+- The primitive's path in the `paths` filter of [`preview.yml`](../.github/workflows/preview.yml). Its PR comment links only Scramble's generated module.
+- The required generated files in [`.github/RENDER.md`](../.github/RENDER.md).
+- Demo-named branches: `writeQuery` in `playroom/app.js` keeps `?puzzle=` only for `scramble`; [`playroom/toy-director.js`](playroom/toy-director.js) names the `cube-fly` / `key-fly` and `msg-out` beats (`capture-strip.test.mjs` reads `cube-fly`).
 
 ## Production
 

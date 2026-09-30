@@ -5,11 +5,12 @@ import { markBeat } from "./motion.js";
 /**
  * Toy director.
  *
- * Shelf holds one of each kind. Scramble borrows the cube. DoubleDeal
- * borrows two decks: KEY lifts from the shelf slot, MSG lifts from the
- * toy chest (lid hinges open, deck leaves, lid closes). Camera follow
- * is the pose controller's job. Click skips; reduced-motion snaps.
- * DoubleDeal unbox lives in the adapter.
+ * Shelf holds one of each kind; each demo borrows its registry toys.
+ * For example, Scramble borrows the cube and DoubleDeal borrows two
+ * decks: KEY lifts from the shelf slot, MSG lifts from the toy chest
+ * (lid hinges open, deck leaves, lid closes). Camera follow is the
+ * pose controller's job. Click skips; reduced-motion snaps. Unbox
+ * choreography lives in the adapter.
  */
 
 function prefersReducedMotion() {
@@ -56,12 +57,12 @@ function samplePath(from, lift, mid, to, t, { ease = easeOutCubic, duration = FL
     };
 }
 
-export function recipeMotionMs(recipe) {
-    if (!recipe?.extras?.includes("chest")) return FLY_MS;
+export function recipeMotionMs(demo) {
+    if (!demo?.chest) return FLY_MS;
     return LID_OPEN_MS + FLY_MS + LID_CLOSE_MS;
 }
 
-// demos: the DEMOS registry (demos.js); each entry's toys and extras.
+// demos: the DEMOS registry (demos.js); the director reads toys and chest.
 export function createToyDirector(world, demos) {
     let highlightId = null;
     let flights = [];
@@ -71,7 +72,7 @@ export function createToyDirector(world, demos) {
     let skipGen = 0;
     let homing = false;
 
-    function recipeOf(id) {
+    function demoOf(id) {
         return demos[id] || null;
     }
 
@@ -88,20 +89,20 @@ export function createToyDirector(world, demos) {
 
     function highlight(algorithmId) {
         if (occupied) return;
-        const recipe = recipeOf(algorithmId);
-        if (!recipe) return;
+        const demo = demoOf(algorithmId);
+        if (!demo) return;
         if (highlightId && highlightId !== algorithmId) clearHighlight();
         highlightId = algorithmId;
-        world.setHighlight(recipe.toys, true);
-        if (recipe.extras.length) world.setHighlight(recipe.extras, true);
+        world.setHighlight(demo.toys, true);
+        if (demo.chest) world.setHighlight(["chest"], true);
     }
 
     function clearHighlight() {
         if (!highlightId) return;
-        const recipe = recipeOf(highlightId);
-        if (recipe) {
-            world.setHighlight(recipe.toys, false);
-            if (recipe.extras.length) world.setHighlight(recipe.extras, false);
+        const demo = demoOf(highlightId);
+        if (demo) {
+            world.setHighlight(demo.toys, false);
+            if (demo.chest) world.setHighlight(["chest"], false);
         }
         highlightId = null;
     }
@@ -206,18 +207,18 @@ export function createToyDirector(world, demos) {
     }
 
     async function borrow(algorithmId, { snap = false } = {}) {
-        const recipe = recipeOf(algorithmId);
-        if (!recipe) throw new Error(`unknown algorithm: ${algorithmId}`);
-        if (occupied === algorithmId && !flights.length && !lidAnim) return recipe;
+        const demo = demoOf(algorithmId);
+        if (!demo) throw new Error(`unknown algorithm: ${algorithmId}`);
+        if (occupied === algorithmId && !flights.length && !lidAnim) return demo;
         if (flights.length || lidAnim) skip();
         occupied = algorithmId;
         const token = ++borrowGen;
-        const primary = recipe.toys[0];
+        const primary = demo.toys[0];
         world.setSlotEmpty(primary, true);
-        const extras = recipe.toys.slice(1);
+        const extras = demo.toys.slice(1);
         const startedSkip = skipGen;
         let extraJob = null;
-        if (recipe.extras.includes("chest") && extras.length) {
+        if (demo.chest && extras.length) {
             extraJob = (async () => {
                 markBeat("lid-open");
                 await animateLid(1, { snap, duration: LID_OPEN_MS });
@@ -241,7 +242,7 @@ export function createToyDirector(world, demos) {
         const toy = world.toys[primary];
         if (toy) toy.userData.seatedY = toy.position.y;
         clearHighlight();
-        return recipe;
+        return demo;
     }
 
     function prepareHome() {
@@ -271,9 +272,9 @@ export function createToyDirector(world, demos) {
         try {
             // Keep live poses — do not finish-to-table or teleport extras.
             abandonFlights();
-            const recipe = recipeOf(occupied);
-            const names = recipe.toys.filter((name) => world.toys[name]);
-            if (recipe.extras.includes("chest")) {
+            const demo = demoOf(occupied);
+            const names = demo.toys.filter((name) => world.toys[name]);
+            if (demo.chest) {
                 markBeat("lid-receive");
                 await animateLid(1, { snap, duration: LID_OPEN_MS });
             }
@@ -287,7 +288,7 @@ export function createToyDirector(world, demos) {
                 });
             }));
             for (const name of names) world.setSlotEmpty(name, false);
-            if (recipe.extras.includes("chest")) {
+            if (demo.chest) {
                 markBeat("lid-shut");
                 await animateLid(0, { snap, duration: LID_CLOSE_MS });
             }
@@ -308,10 +309,10 @@ export function createToyDirector(world, demos) {
         }
         for (const item of [...flights]) finishFlight(item);
         if (!occupied) return;
-        const recipe = recipeOf(occupied);
-        if (!recipe) return;
+        const demo = demoOf(occupied);
+        if (!demo) return;
         if (homing) {
-            for (const name of recipe.toys) {
+            for (const name of demo.toys) {
                 const toy = world.toys[name];
                 const pose = world.getShelfPose?.(name);
                 if (!toy || !pose) continue;
@@ -320,10 +321,10 @@ export function createToyDirector(world, demos) {
                 toy.updateMatrixWorld?.(true);
                 world.setSlotEmpty(name, false);
             }
-            if (recipe.extras.includes("chest")) world.setChestLid?.(0);
+            if (demo.chest) world.setChestLid?.(0);
             return;
         }
-        for (const name of recipe.toys.slice(1)) {
+        for (const name of demo.toys.slice(1)) {
             const toy = world.toys[name];
             const pose = world.getTablePose?.(name);
             if (!toy || !pose) continue;
@@ -332,7 +333,7 @@ export function createToyDirector(world, demos) {
             world.applyPose(toy, pose);
             toy.updateMatrixWorld?.(true);
         }
-        if (recipe.extras.includes("chest")) world.setChestLid?.(0);
+        if (demo.chest) world.setChestLid?.(0);
     }
 
     function update() {
@@ -369,12 +370,11 @@ export function createToyDirector(world, demos) {
         prepareHome,
         skip,
         update,
-        recipeOf,
         borrowMs(id) {
-            return recipeMotionMs(recipeOf(id));
+            return recipeMotionMs(demoOf(id));
         },
         homeMs(id) {
-            return recipeMotionMs(recipeOf(id) || recipeOf(occupied));
+            return recipeMotionMs(demoOf(id) || demoOf(occupied));
         },
         prefersReducedMotion,
         get busy() {

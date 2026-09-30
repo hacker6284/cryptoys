@@ -131,7 +131,7 @@ assert.match(app, /FOLLOW_HOLD_MS/);
         "hub camera starts before prepareEnter finishes",
     );
     assert.match(startAlgo, /trackToys\(/, "enter frames the full toy set, not busy-only");
-    assert.match(startAlgo, /extras\.includes\("chest"\)/, "Scramble enter does not track the chest");
+    assert.match(startAlgo, /meta\.chest && world\.chest/, "Scramble enter does not track the chest");
 }
 assert.equal(app.includes("doubledeal.prepareEnter"), false, "do not hide-build DD on the hub");
 assert.match(app, /playroomTray/);

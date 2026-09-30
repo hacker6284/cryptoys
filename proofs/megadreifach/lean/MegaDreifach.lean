@@ -35,3 +35,15 @@ import MegaDreifach.Link2.VHash
 import MegaDreifach.Link2.VHashDeck
 import MegaDreifach.Security
 import MegaDreifach.G2Nets
+import MegaDreifach.G2Cov
+import MegaDreifach.G2CovRead
+import MegaDreifach.M9Cert
+import MegaDreifach.M9Canon
+import MegaDreifach.M9Read
+import MegaDreifach.M9Dec0
+import MegaDreifach.M9Dec1
+import MegaDreifach.M9Dec2
+import MegaDreifach.M9Dec3
+import MegaDreifach.M9Dec4
+import MegaDreifach.M9Dec5
+import MegaDreifach.M9

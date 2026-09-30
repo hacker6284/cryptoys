@@ -20,7 +20,7 @@ A green Lean build is not a security claim.
 | M6 | Davies–Meyer algebra: software `h' = compose(h, E_m(h))`; hand 3-solve restores `(A,B,C)=(h', h'⁻¹, id)` | **Proved** | `DaviesMeyer.lean`: `daviesMeyer`, `threeSolve_restores`, `startTriple_invariant` |
 | M7 | `HashDeckBody` domain: reject non-permutations (`require_permutation`) | **Proved** | `Domain.lean`: `requirePermutation_iff`, `requirePermutation_reject`, `requirePermutation_isSome_iff` |
 | M8 | One-card G2: **card ↦ φ_card(g,o)** injective for fixed `(g,o)` (G2_PROOF Theorem A) (g injective, o `GripOk`, cards `< 52`) | **Proved for the v2 nets** | `G2.lean`: `phiCard_inj_of_distinct_nets`, `kingUpAmount_ne_ace`, `two_card_net_eq_of_state_eq`, `no_same_first_two_card_of_nets` (reductions). `G2Nets.lean`: `nets_nodup` (60 kernel `decide!` checks, one per grip), `net2_ne`, `g2Step_fst_ne`, `g2Step_ne`, `phiCard_net2_ne`. See below. |
-| M9 | Abs-G2 **L2 mid-block**: no 2-card local collision under the v2 grip rule (2-card window, `InjPos` W) | **PARTIAL** | `G2Nets.lean`: `twoCard_same_first_ne` (same first card; `InjPos`, `GripOk`, cards `< 52`), `twoCard_collision_nets` (reduction to net products). Different first cards: exhaustive Python search, computational evidence, not a proof ([`m9/README.md`](m9/README.md)). |
+| M9 | Abs-G2 **L2 mid-block**: no 2-card local collision under the v2 grip rule (2-card windows at the same deal positions, `InjPos` W) | **CLOSED for 2-card windows** | `M9.lean`: `twoCard_ne` (`InjPos`, `GripOk`, cards `< 52`, same deal positions), `twoCard_diff_first_ne`, `m9_canon`, `dec_all`, `amb_table`. `G2Nets.lean`: `twoCard_same_first_ne`, `twoCard_collision_nets`. `G2Cov.lean` / `G2CovRead.lean`: `g2Step_cov`, `net2_cov`. `M9Read.lean`: `corner_read_piece`, `edge_read_piece`, `readColours_of_readGrip`. `M9Canon.lean` + `M9Dec0`–`M9Dec5`: the decoder checks. See below and [`m9/README.md`](m9/README.md). Not block-level. |
 
 ## Strongly want
 
@@ -36,7 +36,7 @@ A green Lean build is not a security claim.
 `lean/MegaDreifach/Security/` (imported by `MegaDreifach.lean`, audited by the default gate) proves reductions and grip-rule-independent lemmas, never security. Report and scripts: `security/REPORT.md`. Summary in the README, section "Security status".
 
 - Independent of the grip rule (all of it): MD reduction (`extract_collision_comp`, `v_Hash_collision_comp`), pad suffix-freeness (`pad_suffix_free`), steps as left multiplications by face-move words (`StepWord.lean`), digest injectivity (M3 glue above), ideal-cipher counting cores (`dm_forward_bad_count`, `dm_inverse_bad_count`).
-- No Lean result about the v2 grip rule's strength or weakness, beyond the local one-card injectivity lemmas and the same-first-card two-card lemma in `G2Nets.lean` (M8, M9 same-first-card half). The v1 weaknesses (`CornerDriven`, `FreeStart`, `SwapCollision`) are proofs about v1 only and live, frozen, in `proofs/deprecated/megadreifach-v1/`.
+- No Lean result about the v2 grip rule's strength or weakness, beyond the local one-card injectivity lemmas (M8, `G2Nets.lean`) and the 2-card window theorem (M9, `M9.lean`). The v1 weaknesses (`CornerDriven`, `FreeStart`, `SwapCollision`) are proofs about v1 only and live, frozen, in `proofs/deprecated/megadreifach-v1/`.
 
 ## Explicitly out of scope (do not claim)
 
@@ -60,11 +60,16 @@ G2_PROOF Theorem A: for every fixed `(g,o)`, `card ↦ φ_card(g,o)` is injectiv
 4. Same-first-card 2-card states differ once the second-card nets differ (`no_same_first_two_card_of_nets`) — G2_PROOF §3 corollary as a reduction.
 5. **v2 nets (`G2Nets.lean`).** `net2 o card` is the G2 step from the identity; every card step is `compose (net2 o card) g` (`g2Step_fst_net`). For each grip `rotAt s` (`s < 60`), `nets_nodup_<s>` checks by kernel `decide!` that the 52 corner permutations `listOf (net2 (rotAt s) c).cp` are pairwise distinct. The checks are split per grip: one check over all 60 grips at once runs out of memory. `nets_nodup` collects them, and `net2_ne` gives distinct nets on every `GripOk` grip. With `leftMul_cancel` this makes one card step injective in the card from any position with injective `cp` / `ep` (`g2Step_fst_ne`, `g2Step_ne`; every `InjPos` chaining value qualifies). Scope: one card, fixed grip. The v1 nets are not covered.
 
-## M9 — two-card windows (PARTIAL)
+## M9 — two-card windows (CLOSED for 2-card windows)
 
-Shipped in `G2Nets.lean`: the same-first-card half (`twoCard_same_first_ne`, M8 at the intermediate grip) and the reduction of a different-first-card position collision to an equality of net products (`twoCard_collision_nets`). The different-first-card half is exhaustive computational evidence (`m9/m9_search.py`), not a proof. Its numbers, the argument, the obstacle to a kernel proof and the limits (2-card window only, not block-level) are in [`m9/README.md`](m9/README.md). M9 stays PARTIAL.
+Shipped: `twoCard_ne` (`M9.lean`). From an `InjPos` position `W` on a `GripOk` grip, two different 2-card windows `(a, b) ≠ (c, d)` of card ids `< 52`, dealt at the same deal positions `pos1`, `pos2` (any values, so both read parities), never reach the same state. It joins two halves:
 
-Do **not** claim M9 from the Python scan. Relative recipes are **disproved** (do not “prove” their L2-safety). L3 abs collisions **exist** (do not prove L3 absence).
+1. Same first card: `twoCard_same_first_ne` (`G2Nets.lean`), M8 at the intermediate grip.
+2. Different first cards: `twoCard_diff_first_ne`. Rotation covariance of the card step (`g2Step_cov`, `G2Cov.lean` / `G2CovRead.lean`) reduces the grip to `gripId` (`twoCard_cov`). There, equal states give equal net products (`twoCard_collision_nets`). A decoder certificate, generated by `m9/m9_cert.py` and kernel-checked per intermediate grip (`M9Dec0`–`M9Dec5`, collected in `dec_all`), sends every product to its first card or to one of the listed ambiguity groups. Inside a group, windows with different first cards read different slots of `W` (`amb_table`). The read model (`M9Read.lean`) turns equal final grips into equal read pieces, so `W`'s injectivity gives the contradiction (`m9_canon`).
+
+`m9/m9_search.py` stays as an independent Python cross-check (all 60 grips, no covariance). Numbers, costs and limits are in [`m9/README.md`](m9/README.md).
+
+Do **not** extend M9 beyond 2-card windows: it says nothing about block-level collisions or longer windows. Relative recipes are **disproved** (do not “prove” their L2-safety). L3 abs collisions **exist** (do not prove L3 absence).
 
 ## Layout
 
@@ -75,7 +80,7 @@ proofs/megadreifach/
   lean/                 # Lake project (toolchain 4.14.0, no Mathlib)
                         #   MegaDreifach (default lib), MegaDreifachHeavy (KATs, non-default)
   vectors/              # KAT copy; json_to_lean.py generates lean/MegaDreifach/Vectors.lean
-  m9/                   # M9 two-card window search (v2; Python 3, stdlib only) + write-up
+  m9/                   # M9 (v2): certificate generator m9_cert.py, cross-check m9_search.py (Python 3, stdlib only) + write-up
   security/             # REPORT.md + attack scripts (v1 grip rule; Python 3, stdlib only; suit_blind_collision.py = practical v1 collisions)
 proofs/audit/          # shared `#audit_all` package (core-only)
 proofs/doubledeal/check_axioms.py   # the shared axiom gate (modes megadreifach, megadreifach-heavy, megadreifach-v1-deprecated)
@@ -84,4 +89,4 @@ primitives/hash/megadreifach/v1/  # frozen, deprecated v1: SPEC.md + megadreifac
 proofs/deprecated/megadreifach-v1/ # frozen v1 Lean: the v1 weakness proofs + their closure (MegaDreifachV1)
 ```
 
-Hand-written Lean is not a proof that `megadreifach.sudo` equals this model. Link 2 (`Generated.v_Hash` = the algebraic fold on `PadWf`) is proved; Link 1 (sudo text = emitted Lean) is trusted, not proved ([`../LINK1.md`](../LINK1.md)). M9 is PARTIAL.
+Hand-written Lean is not a proof that `megadreifach.sudo` equals this model. Link 2 (`Generated.v_Hash` = the algebraic fold on `PadWf`) is proved; Link 1 (sudo text = emitted Lean) is trusted, not proved ([`../LINK1.md`](../LINK1.md)). M9 covers 2-card windows only.

@@ -2,8 +2,11 @@
 
 Stdlib only.  Reuses the tables of ../lean/MegaDreifach/Em.lean and reproduces the
 8 v2 KATs before searching (evidence, not identity, that this Python matches Em).
-The search is computational evidence, not a proof: see README.md in this directory
-for what the numbers mean and what they do not.  Asserts the counts it reports.
+The search is computational evidence, not a proof.  The Lean proof of M9 for 2-card
+windows (`twoCard_ne`, ../lean/MegaDreifach/M9.lean) does not use it; it is kept as an
+independent cross-check (all 60 grips, no covariance).  See README.md in this
+directory for what the numbers mean and what they do not.  Asserts the counts it
+reports.
 
     python3 m9_search.py          # about 20 s in CI, under 100 MB
 """
@@ -294,7 +297,7 @@ def main():
     print("candidate x read parity with the same second-read W-slot:", sig_eq, "of", 2 * general)
     assert (general, swaps, sig_eq) == (24300, 420, 0), (general, swaps, sig_eq)
     print("=> no different-first-card 2-card window collision from any position with "
-          "injective cp/ep (computational evidence, not a proof)")
+          "injective cp/ep (computational cross-check; the proof is M9.twoCard_ne)")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ the grip-rule review whose scripts these are ported from; see README.md).  The e
 self-check (engine.selfcheck: 8 v2 KATs, HashDeck, fast == slow reference) runs first, and
 nothing runs if it fails.  Results are empirical evidence, not proofs of security.
 
-    python3 experiments.py --check              # quick set (CI proofs.yml; about 1 min)
+    python3 experiments.py --check              # quick set (CI proofs.yml; about 1 s in CI)
     python3 experiments.py --check --set heavy  # report-size runs (CI proofs-heavy.yml)
     python3 experiments.py [--set quick|heavy|all] [--only NAME ...]   # (re)write logs/
     python3 experiments.py --list
@@ -119,9 +119,11 @@ def x_grip_merge(workers):
 def x_suit_exact(workers):
     """Suit dependence, exact: for every grip, read parity and rank, the four suits bring
     pieces from four DIFFERENT slots of the pre-card state into the read slot.  Since a
-    position is a permutation, that is four different pieces for every state, and one
-    colour pair never comes from two different pieces (m9_search step 2, re-asserted
-    here), so the four new grips always differ."""
+    position is a permutation, that is four different pieces for every state.  Two
+    m9_search step-2 facts are re-asserted here: one colour pair never comes from two
+    different pieces, and abs_reorient(*pair)[:2] == pair for every pair read, so the new
+    grip determines the colour pair (Lean: M9.readGrip_colours, M9.corner_read_piece,
+    M9.edge_read_piece).  Hence the four new grips always differ."""
     E = engine('C36'); bad = 0; cases = 0
     for par in (0, 1):
         for gi in range(60):
@@ -144,6 +146,10 @@ def x_suit_exact(workers):
                     for x in range(3 if kind == 'c' else 2):
                         rr = eng.ref.read_colours_piece(k, s, q, x, phys, noon)
                         ok &= seen.setdefault(rr, q) == q
+        # the grip determines the colour pair: abs_reorient returns a rotation with that pair
+        ok_reo = all(eng.ref.abs_reorient(*rr)[:2] == rr for rr in seen)
+        if not ok_reo:
+            fail(f'abs_reorient(*pair)[:2] != pair for some {kind} pair')
     print(f"C36 card steps (identical for A_vn and C76): (grip, parity, rank) cases where the 4 suits "
           f"read pieces from 4 different pre-card slots: {cases - bad}/{cases}")
     print(f"read colour pair -> piece injective across all read configurations: {ok}")
@@ -477,8 +483,8 @@ def _coverage_work(args):
         h2 = (cp, co, ep, eo)
         if legal(h2):
             s2 = to_st(h2); t1, t2 = [], []; E.em(h, d, trace=t1); E.em(s2, d, trace=t2); sameW += t1 == t2
-        else:
-            sameW += 1
+        # an illegal re-randomised h is not counted as same W, so the sameW == n check
+        # in x_coverage (parent process) fails the run; it never fires (sameW = n in the log)
     inv = {'flip2': 0, 'twist2': 0, 'ecyc3': 0}
     for _ in range(NB):
         h = uniform_st(rng); d = rand_deal(rng); t0 = []; E.em(h, d, trace=t0)
@@ -521,7 +527,7 @@ def x_coverage(workers, rules=(('C36', 3), ('C76', 4)), NB=3000, NA=1500):
               f"{f' (~{na / hitE:.0f} (h,m) draws per hit)' if hitE else ''}; same edges {hitC}/{na} = {hitC / na:.3f} "
               f"[{loC:.3f},{hiC:.3f}]{f' (~{na / hitC:.0f} draws per hit)' if hitC else ''}")
         if sameW != n:
-            fail(f'{rule}: re-randomising unread pieces changed W')
+            fail(f'{rule}: re-randomising unread pieces changed W or gave an illegal h')
 
 
 def x_coverage_chunks(workers, rules=('C36', 'C76'), counts=(1, 2, 3, 4, 5, 6, 8, 10, 12), NB=3000, NA=1500):

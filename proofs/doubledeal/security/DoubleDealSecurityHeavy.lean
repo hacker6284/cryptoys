@@ -7,5 +7,6 @@ import DoubleDealSecurityHeavy.GridCycleSurvival
 import DoubleDealSecurityHeavy.TrailBound
 import DoubleDealSecurityHeavy.RealSchedule
 import DoubleDealSecurityHeavy.Differential
+import DoubleDealSecurityHeavy.FullCipher
 import DoubleDealSecurityHeavy.CovariantNarrowChecks
 import DoubleDealSecurityHeavy.CovariantNarrow

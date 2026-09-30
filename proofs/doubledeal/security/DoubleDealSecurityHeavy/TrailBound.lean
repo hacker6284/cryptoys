@@ -5,8 +5,8 @@
   (`DoubleDealSecurityHeavy/GridCycleSurvival.lean`). No new `decide!` here.
   Same model and caveats as `DoubleDealSecurity/TrailBound.lean`: INDEPENDENT UNIFORM
   round keys (not the PassKey schedule), one constant-σ characteristic (not a
-  differential), no final no-mix round, not linked to `encryptN`. Not a bit-security
-  claim.
+  differential), no final no-mix round, not linked to `encryptN` (both in `FullCipher`,
+  M7). Not a bit-security claim.
 -/
 import DoubleDealSecurity.TrailBound
 import DoubleDealSecurityHeavy.GridCycleSurvival

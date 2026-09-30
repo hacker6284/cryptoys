@@ -12,63 +12,78 @@
   `L : Fin (n + 2) → Key` (`L 0 = pos0`, `L (r+1) = posMix r`, `L (n+1) = posFinal`;
   `encryptN_eq_encryptL`: every `encryptN` call with permutation keys is one). Counting over
   all `(52!)^(n+2)` tuples `L` is INDEPENDENT UNIFORM keys, whitening and final key included.
-  The cipher is `n = 5`. `finalRound k kF z` is Compose `k`, the stem, Compose `kF`.
-  The relabelling difference passes Compose (any key), lay, ShiftRows and scoop unchanged;
-  only SumRanks depends on the deck. The final Compose key (`K_6` of the cipher) never changes
-  the difference.
+  Grouping (`encryptL_eq`): `n` rounds of `TrailBound.rounds` (round `i`: Compose `L i`, then
+  the unkeyed round with GridCycle), then `finalRound` (Compose `L n`, the stem, Compose
+  `L (n+1)`). The cipher is `n = 5` with `L = realKeys π = (K_0, …, K_6)`
+  (`encryptDeckFn_masterList_eq`): mix rounds 0–4 with keys `K_0 … K_4`, then the final round
+  with keys `K_5` and `K_6`. The relabelling difference passes Compose (any key), lay,
+  ShiftRows and scoop unchanged; only SumRanks depends on the deck. The final Compose key
+  (`K_6` of the cipher) never changes a relabelling difference.
 
   Proved:
   * A (link). `encryptN_eq_rounds`, `encryptL_eq`: `encryptN` is `TrailBound.rounds n` then
     `finalRound`. `encryptDeckFn_masterList_eq`: the model cipher under master key `π` is
-    `encryptL 5` on the real keys `realKeys π = (K_0, …, K_6)`. `generated_encrypt_rel_iff`:
-    the emitted `Doubledeal.encrypt` maps `α·M` to `γ·C` exactly when `encryptDeckFn` does.
-  * B (final round, one step). `dpFCount β γ` counts decks with `U(β·w) = γ·U(w)`
-    (`U = unkeyedNoMix`). `dpFCount_self_eq_survivors`: `dpFCount σ σ` is the SumRanks
-    survivor count; `dpFCount_self_le_64`: `≤ 52!/64` for `σ` outside `v10Sym`.
-    `dpFCount_v10Sym`, `dpFCount_to_v10Sym`: `v10Sym a x` goes to itself on every deck and
-    nothing else enters it. `sum_dpFCount`, `sum_dpFCount_left`: rows and columns sum to `52!`.
+    `encryptL 5` on `realKeys π`. `generated_encrypt_rel_iff` (`Link.lean`): the emitted
+    `Doubledeal.encrypt` maps `α·M` to `γ·C` exactly when `encryptDeckFn` does.
+  * B (final round, one step). `dpFCount β γ = Differential.dpCount unkeyedNoMix β γ` counts
+    decks with `U(β·w) = γ·U(w)` (`U = unkeyedNoMix`). `dpFCount_self_eq_survivors`:
+    `dpFCount σ σ` is the SumRanks survivor count; `dpFCount_self_le_64`: `≤ 52!/64` for `σ`
+    outside `v10Sym`. `dpFCount_v10Sym`, `dpFCount_to_v10Sym`: `v10Sym a x` goes to itself on
+    every deck and nothing else enters it. `sum_dpFCount`, `sum_dpFCount_left`: rows and
+    columns sum to `52!`.
   * C (characteristic, independent keys). `FullTrail σ n y L`: the `TrailBound`
-    characteristic through the `n` mix rounds and SumRanks commuting in the final round; it
-    gives `encryptL n (σ·y) L = σ · encryptL n y L` (`fullTrail_encryptL`).
-    `card_fullTrail`: `# = 52! · #Trail · #survivors` (exact). `card_fullTrail_le`: `≤ (52!)^2 ·
-    #Trail` (the final round never increases the characteristic count).
-    `card_fullTrail_v10Sym`: for `v10Sym`, `# = (52!)^2 · #Trail`, NO extra factor.
-    Bounds, `# ≤ (52!)^(n+2) / p`: `fullTrail_card_le_26` (`p = 26^n`, `σ ≠ 1`),
-    `fullTrail_card_le_64_of_not_v10Sym` (`p = 64^(n+1)`, `σ` outside `v10Sym`, no hypothesis),
-    `fullTrail_card_le_4420_v10Sym_of_check` (`p = 4420^n`, `(a, x) ≠ (0, 0)`),
-    `fullTrail_card_le_64_of_check` (`p = 64^(n+1)`, `σ ≠ 1`, `n ≥ 1`); the `_of_check` forms
-    are given the two finite GridCycle checks and hold without them in the heavy library
-    (`fullTrail_card_le_4420_v10Sym`, `fullTrail_card_le_64`).
+    characteristic through the `n` mix rounds and `TrailBound.SumRanksChar` (SumRanks
+    commutes with `σ`) in the final round; it gives `encryptL n (σ·y) L = σ · encryptL n y L`
+    (`fullTrail_encryptL`). `card_fullTrail`: `# = 52! · #Trail · #survivors` (exact).
+    `card_fullTrail_le`: `# ≤ (52!)^2 · #Trail`, i.e. the final round never increases the
+    characteristic's probability. `card_fullTrail_v10Sym`: for `v10Sym`,
+    `# = (52!)^2 · #Trail`, NO extra factor. Bounds `p · # ≤ (52!)^(n+2)`:
+    - `fullTrail_card_le_26`: `p = 26^n`, every `σ ≠ 1`;
+    - `fullTrail_card_le_64_of_not_v10Sym`: `p = 64^(n+1)`, `σ` outside `v10Sym`, no
+      hypothesis;
+    - `fullTrail_card_le_4420_v10Sym_of_check`: `p = 4420^n`, `v10Sym a x` with
+      `(a, x) ≠ (0, 0)`;
+    - `fullTrail_card_le_64_of_check`: `p = 64^(n+1)`, every `σ ≠ 1`, `n ≥ 1`.
+    The `_of_check` forms are given the two finite GridCycle checks and hold without them in
+    the heavy library (`fullTrail_card_le_4420_v10Sym`, `fullTrail_card_le_64`).
   * D (differential, independent keys; STRUCTURE ONLY). `fullDiffCount α γ n y` counts the
     tuples `L` with `encryptL n (α·y) L = γ · encryptL n y L`. `fullDiffCount_eq`: the exact
     Markov step `fullDiffCount α γ n y = 52! · ∑ β, diffCount α β n y · dpFCount β γ`.
     `fullDiffCount_le_sup` (max monotonicity): `≤ (52!)^2 · max_β diffCount α β n y`. This
-    gives NO number (no numeric bound on `diffCount` is proved), and SINGLE ENTRIES CAN RISE
-    (as fractions of `(52!)^(n+2)` against `(52!)^n`): at `n = 0`, `fullDiffCount_zero` gives
-    `52! · dpFCount α γ` while `diffCount_zero` is `0` for `γ ≠ α`, and for `α` outside
-    `v10Sym` some `γ ≠ α` has `dpFCount α γ > 0` (from `sum_dpFCount`, `dpFCount_self_le_64`).
-    No theorem here states such a rise as one statement. `fullDiffCount_v10Sym`: into `v10Sym a x` the count is exactly `(52!)^2 · diffCount`
-    (transparent column; no extra factor). `FullStaysInV10` (difference some `v10Sym` after
-    every mix round and after the final round) is `StaysInV10` (`fullStaysInV10_iff`), with
-    `card_fullStaysInV10` (`= (52!)^2 · #StaysInV10`), `fullStaysInV10_card_le_26`,
-    `fullStaysInV10_card_le_4420_of_check` (heavy: `fullStaysInV10_card_le_4420`), all for
-    `(a, x) ≠ (0, 0)` where a bound is stated: the same `26^n`, `4420^n` as for `n` rounds.
-  * E (real PassKey schedule, uniform master key; ROUND 0 ONLY). `realFullTrail_card_le_26`,
-    `realFullTrail_card_le_64_of_not_v10Sym`, `realFullTrail_card_le_64_of_check` (heavy:
-    `realFullTrail_card_le_64`): at most `52!/26`, `52!/64` master keys make the pair follow the
-    characteristic through the whole cipher. `realFullStaysInV10_card_le_26`,
-    `realFullStaysInV10_card_le_4420_of_check` (heavy: `realFullStaysInV10_card_le_4420`),
-    `(a, x) ≠ (0, 0)`: the `v10Sym` cluster, `52!/26`, `52!/4420`. These are M5/M6's ONE-round
-    bounds: rounds 1-5 and the final round add NOTHING under the real schedule, because from
-    round 1 on the round key is not uniform given the state. `generated_encrypt_of_realFullTrail`,
+    gives NO number (no numeric bound on `diffCount` is proved). Single entries can rise
+    (at `n = 0`): `exists_fullDiffCount_zero_gt` gives, for `α` outside `v10Sym`, some
+    `γ ≠ α` with `(52!)^2 · diffCount α γ 0 y < fullDiffCount α γ 0 y`. For `n ≥ 1` nothing is
+    proved or measured about single entries. `fullDiffCount_v10Sym`: into `v10Sym a x` the
+    count is exactly `(52!)^2 · diffCount` (transparent column; no extra factor).
+    `FullStaysInV10` (difference some `v10Sym` after every mix round and after the final
+    round) is `StaysInV10` (`fullStaysInV10_iff`), with `card_fullStaysInV10`
+    (`= (52!)^2 · #StaysInV10`), `fullStaysInV10_card_le_26` and
+    `fullStaysInV10_card_le_4420_of_check` (heavy: `fullStaysInV10_card_le_4420`), for
+    `(a, x) ≠ (0, 0)`: the same `26^n`, `4420^n` as for `n` rounds.
+  * E (real PassKey schedule, uniform master key, the whole cipher `n = 5`). Bounds
+    `p · # ≤ 52!` on the master keys:
+    - `realFullTrail_card_le_26`: `p = 26`, every `σ ≠ 1`;
+    - `realFullTrail_card_le_64_of_not_v10Sym`: `p = 64`, `σ` outside `v10Sym`, no
+      hypothesis;
+    - `realFullTrail_card_le_64_of_check` (heavy: `realFullTrail_card_le_64`): `p = 64`,
+      every `σ ≠ 1`;
+    - `realFullStaysInV10_card_le_26`, `realFullStaysInV10_card_le_4420_of_check` (heavy:
+      `realFullStaysInV10_card_le_4420`): the `v10Sym` cluster, `p = 26`, `p = 4420`, for
+      `(a, x) ≠ (0, 0)`.
+    These are M5/M6's bounds for the first mix round (round 0, key `K_0`) alone. The proof
+    gains NOTHING beyond the first mix round: mix rounds 1–4 (keys `K_1 … K_4`) and the final
+    round (keys `K_5`, `K_6`) add no factor. This is a limit of the proof, not a measured
+    weakness: from round 1 on the round key is not uniform given the state, so the
+    independent-key counting does not apply. `generated_encrypt_of_realFullTrail`,
     `generated_encrypt_of_realFullStaysInV10`: under these events the emitted
     `Doubledeal.encrypt` maps the relabelled message to the relabelled ciphertext.
 
-  NOT proved, read before citing:
+  NOT proved, and limits; read before citing:
   * Any numeric bound on the full-cipher differential (independent or real keys). The
     real-schedule differential `P[E(α·M) = γ·E(M)]` gets NO bound at all.
-  * For `v10Sym` the final round gives NO extra factor, and `K_6` is irrelevant to every
-    relabelling difference. Every `v10Sym` bound needs `(a, x) ≠ (0, 0)` (`v10Sym 0 0 = 1`).
+  * Anything under the real schedule beyond the first mix round (round 0, key `K_0`).
+  * For `v10Sym` the final round gives NO extra factor, and `K_6` never changes a relabelling
+    difference. Every `v10Sym` bound needs `(a, x) ≠ (0, 0)` (`v10Sym 0 0 = 1`).
   * The measured values in the notes are EMPIRICAL (sampled), not proved; no theorem uses them.
   Not a bit-security claim.
 -/
@@ -77,14 +92,12 @@ import DoubleDealSecurity.Differential
 namespace DoubleDeal.Security.FullCipher
 
 open DoubleDeal Relabel Finset
-open DoubleDeal.Security (Key isDeck_compose isDeck_rel isDeck_unkeyedNoMix isDeck_of_cells
-  invUnkeyedNoMix_cells unkeyedNoMix_cells rel_left_inj cardsG_lay cardBound_of_lt ofDeck_map
-  toDeck_map toDeck_inj
-  embed_inj)
-open DoubleDeal.Security.TrailBound (rounds Trail trail_rounds_rel isDeck_rounds
-  card_keys_compose ne_zero_of_ne_one)
-open DoubleDeal.Security.Differential (Diff diffCount relDiff rel_relDiff StaysInV10
-  staysInV10_iff_trail unkeyedNoMix_rel_v10Sym)
+open DoubleDeal.Security (Key isDeck_compose isDeck_rel isDeck_unkeyedNoMix rel_left_inj
+  cardsG_lay composeVec_inj isDeck_invUnkeyedNoMix generated_encrypt_rel_iff)
+open DoubleDeal.Security.TrailBound (rounds Trail SumRanksChar unkeyedNoMix_rel_iff
+  trail_rounds_rel isDeck_rounds card_keys_compose card_filter_snoc ne_zero_of_ne_one)
+open DoubleDeal.Security.Differential (Diff diffCount relDiff rel_relDiff relDiff_eq_iff
+  dpCount sum_dpCount sum_dpCount_left StaysInV10 staysInV10_iff_trail unkeyedNoMix_rel_v10Sym)
 open DoubleDeal.Security.GridCycleSurvival (Check3 LKC LKS)
 open DoubleDeal.Security.RealSchedule (roundKey roundKeys masterList perm52_masterList
   encryptDeckFn_masterList)
@@ -121,8 +134,7 @@ theorem init_mixKeys (n : ℕ) (k0 : Key) (kMix : ℕ → Key) :
 
 theorem mixKeys_last (n : ℕ) (k0 : Key) (kMix : ℕ → Key) :
     mixKeys (n + 1) k0 kMix (Fin.last (n + 1)) = kMix n := by
-  simp [mixKeys, Fin.last]
-  rfl
+  simp only [mixKeys, ← Fin.succ_last, Fin.cons_succ, Fin.val_last]
 
 theorem applyFullRounds_eq_rounds (k0 : Key) (kMix : ℕ → Key) (m : Fin 52 → Nat) :
     ∀ n, applyFullRounds n (composeVec 52 Nat m k0) (fun r => kMix r) =
@@ -147,8 +159,9 @@ theorem encryptN_eq_rounds (n : ℕ) (m : Fin 52 → Nat) (k0 : Key) (kMix : ℕ
 /-! ### `encryptN` with its own `n + 2` Compose keys as one tuple -/
 
 /-- `encryptN n m` with its `n + 2` Compose keys as one tuple `L`: `L 0 = pos0`,
-    `L (r + 1) = posMix r` for `r < n`, `L (n + 1) = posFinal`. (`encryptN n` never reads
-    `posMix r` for `r ≥ n`; those are set to `1`.) -/
+    `L (r + 1) = posMix r` for `r < n`, `L (n + 1) = posFinal`. The entries `posMix r` for
+    `r ≥ n` are set to `1`; they are never read: the right-hand side of `encryptN_eq_rounds`
+    uses `kMix i` only for `i < n`. -/
 def encryptL (n : ℕ) (m : Fin 52 → Nat) (L : Fin (n + 2) → Key) : Fin 52 → Nat :=
   encryptN n m (L 0) (fun r => ⇑(if h : r < n then L ⟨r + 1, by omega⟩ else (1 : Key)))
     (L (Fin.last (n + 1)))
@@ -173,8 +186,7 @@ theorem encryptL_eq (n : ℕ) (m : Fin 52 → Nat) (L : Fin (n + 2) → Key) :
     refine Fin.cases rfl (fun j => ?_) i
     simp only [mixKeys, Fin.cons_succ, Fin.init, dif_pos j.isLt]
     rfl
-  rw [hk] at h
-  exact h
+  rwa [hk] at h
 
 /-- The key tuple of an `encryptN` call: `k0, kMix 0, …, kMix (n-1), kF`. -/
 def keyTuple (n : ℕ) (k0 : Key) (kMix : ℕ → Key) (kF : Key) : Fin (n + 2) → Key :=
@@ -193,30 +205,6 @@ theorem encryptN_eq_encryptL (n : ℕ) (m : Fin 52 → Nat) (k0 : Key) (kMix : �
   have h3 : finalKeyOf (keyTuple n k0 kMix kF) = kF := by
     simp only [finalKeyOf, keyTuple, Fin.snoc_last]
   rw [encryptN_eq_rounds, encryptL_eq, h1, h2, h3]
-
-/-- (PROVED) Counting `R + 1` key tuples by their LAST key:
-    `#{K | P K} = ∑ k, #{K' | P (Fin.snoc K' k)}`. -/
-theorem card_filter_snoc {R : ℕ} (P : (Fin (R + 1) → Key) → Prop) [DecidablePred P] :
-    (univ.filter P).card =
-      ∑ k : Key, (univ.filter fun K : Fin R → Key => P (Fin.snoc K k)).card := by
-  rw [card_eq_sum_card_fiberwise (f := fun K : Fin (R + 1) → Key => K (Fin.last R)) (t := univ)
-    (fun _ _ => mem_univ _)]
-  refine sum_congr rfl fun k _ => ?_
-  apply card_nbij' (fun K => Fin.init K) (fun K => Fin.snoc K k)
-  · intro K hK
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK ⊢
-    obtain ⟨h1, h0⟩ := hK
-    rw [← h0, Fin.snoc_init_self]
-    exact h1
-  · intro K hK
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK ⊢
-    exact ⟨hK, Fin.snoc_last _ _⟩
-  · intro K hK
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK
-    rw [← hK.2]
-    exact Fin.snoc_init_self K
-  · intro K _
-    exact Fin.init_snoc _ _
 
 /-- (PROVED) Counting the `n + 2` keys of `encryptL` as (mix-round keys, `lastKeyOf`,
     `finalKeyOf`). -/
@@ -252,63 +240,7 @@ theorem encryptDeckFn_masterList_eq (m : Fin 52 → Nat) (π : Equiv.Perm (Fin 5
     (fun r => roundKey (r + 1) π) (roundKey 6 π)]
   congr 1
 
-/-- (PROVED) The emitted `Doubledeal.encrypt` maps the message relabelled by `α` to its
-    ciphertext relabelled by `γ` exactly when the model `encryptDeckFn` does (52-card message
-    of card values, `Perm52` key; `Link2.encrypt_refines`). -/
-theorem generated_encrypt_rel_iff (α γ : Relabel) (message key : List Nat)
-    (hm : message.length = 52) (hk : Perm52 key) (hc : ∀ x ∈ message, x < 52) :
-    Doubledeal.encrypt (Link2.embed (message.map α.app)) (Link2.embed key) =
-        .ok (Link2.embed ((encryptDeck message key).map γ.app)) ↔
-      encryptDeckFn (rel α (ofDeck message hm)) key =
-        rel γ (encryptDeckFn (ofDeck message hm) key) := by
-  have hm' : (message.map α.app).length = 52 := by simp [hm]
-  have hcα : ∀ i : Fin 52, Link2.CardBound ((ofDeck (message.map α.app) hm') i) := by
-    intro i
-    apply cardBound_of_lt
-    simp only [ofDeck, List.getElem_map]
-    exact α.app_lt (hc _ (List.getElem_mem _))
-  rw [Link2.encrypt_refines _ key hm' hk hcα]
-  rw [encryptDeck_eq_encryptDeckFn _ key hm', encryptDeck_eq_encryptDeckFn _ key hm,
-    ofDeck_map α.app message hm hm', ← toDeck_map]
-  constructor
-  · intro h
-    exact toDeck_inj (embed_inj (Except.ok.inj h))
-  · intro h
-    rw [show (fun i => α.app (ofDeck message hm i)) = rel α (ofDeck message hm) from rfl, h]
-    rfl
-
 /-! ## B. The final round, one step -/
-
-/-- The final round's characteristic at the state `w` before its stem: SumRanks commutes
-    with `σ` there. (The other layers of the final round commute with every relabelling.) -/
-def FinalChar (σ : Relabel) (w : Fin 52 → Nat) : Prop :=
-  sumRanksV10 (relG σ (layColumnMajor w)) = relG σ (sumRanksV10 (layColumnMajor w))
-
-instance (σ : Relabel) : DecidablePred (FinalChar σ) :=
-  fun _ => inferInstanceAs (Decidable (_ = _))
-
-/-- (PROVED) The stem without GridCycle maps `(w, σ·w)` to a pair with difference `σ`
-    exactly when SumRanks commutes with `σ` at `w`. -/
-theorem unkeyedNoMix_rel_iff (σ : Relabel) (w : Fin 52 → Nat) :
-    unkeyedNoMix (rel σ w) = rel σ (unkeyedNoMix w) ↔ FinalChar σ w := by
-  constructor
-  · intro h
-    have h2 := congrArg (fun c => invShiftRows (layColumnMajor c)) h
-    simp only [unkeyedNoMix] at h2
-    rw [lay_scoop_columnMajor, invShiftRows_shiftRows, ← scoopColumnMajor_rel,
-      lay_scoop_columnMajor, ← shiftRows_rel, invShiftRows_shiftRows] at h2
-    exact h2
-  · intro h
-    simp only [unkeyedNoMix]
-    rw [layColumnMajor_rel, h]
-    rfl
-
-/-- (PROVED) Compose with a permutation key is injective. -/
-theorem composeVec_inj (k : Key) {x x' : Fin 52 → Nat} :
-    composeVec 52 Nat x k = composeVec 52 Nat x' k ↔ x = x' := by
-  refine ⟨fun h => funext fun i => ?_, fun h => h ▸ rfl⟩
-  have := congrFun h (k.symm i)
-  simpa [composeVec] using this
 
 /-- (PROVED) Through the final round, the output difference is `γ` exactly when it is `γ`
     after the stem: the final Compose (key `kF`) never changes it. -/
@@ -318,28 +250,20 @@ theorem finalRound_rel_iff (γ : Relabel) (k kF : Key) (z z' : Fin 52 → Nat) :
   simp only [finalRound]
   rw [← compose_rel, composeVec_inj]
 
-/-- (PROVED) The final round keeps the difference `σ` exactly under `FinalChar`. -/
+/-- (PROVED) The final round keeps the difference `σ` exactly under `SumRanksChar`. -/
 theorem finalRound_rel_self_iff (σ : Relabel) (k kF : Key) (z : Fin 52 → Nat) :
     finalRound k kF (rel σ z) = rel σ (finalRound k kF z) ↔
-      FinalChar σ (composeVec 52 Nat z k) := by
+      SumRanksChar σ (composeVec 52 Nat z k) := by
   rw [finalRound_rel_iff, compose_rel, unkeyedNoMix_rel_iff]
 
-/-- The final round's one-step count: decks `w` (as permutations) with `U(β·w) = γ·U(w)`,
-    `U = unkeyedNoMix`. -/
-def dpFCount (β γ : Relabel) : ℕ :=
-  (univ.filter fun π : Equiv.Perm (Fin 52) =>
-    unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))).card
-
-/-- (PROVED) `relDiff x x'` is the unique relabelling taking the deck `x` to the deck `x'`. -/
-theorem relDiff_eq_iff {x x' : Fin 52 → Nat} (hx : IsDeck x) (hx' : IsDeck x') (γ : Relabel) :
-    relDiff x x' = γ ↔ rel γ x = x' :=
-  ⟨fun h => h ▸ rel_relDiff hx hx',
-    fun h => (rel_left_inj hx).1 ((rel_relDiff hx hx').trans h.symm)⟩
+/-- The final round's one-step count (`Differential.dpCount` of the stem): decks `w` (as
+    permutations) with `U(β·w) = γ·U(w)`, `U = unkeyedNoMix`. -/
+def dpFCount (β γ : Relabel) : ℕ := dpCount unkeyedNoMix β γ
 
 /-- (PROVED) `dpFCount σ σ` is the SumRanks survivor count (`SumRanksDP.survivors`). -/
 theorem dpFCount_self_eq_survivors (σ : Relabel) :
     dpFCount σ σ = (SumRanksDP.survivors σ).card := by
-  unfold dpFCount SumRanksDP.survivors
+  unfold dpFCount dpCount SumRanksDP.survivors
   congr 1
   exact filter_congr fun π _ => unkeyedNoMix_rel_iff σ (permDeck π)
 
@@ -352,16 +276,16 @@ theorem dpFCount_self_le_64 (σ : Relabel) (h : ¬ ∃ a x, σ = v10Sym a x) :
   rw [dpFCount_self_eq_survivors]
   exact this
 
-/-- (PROVED) `FinalChar` always holds for `v10Sym` (an exact SumRanks symmetry). -/
-theorem finalChar_v10Sym (a : Fin 13) (x : Fin 4) {w : Fin 52 → Nat} (hw : Cards w) :
-    FinalChar (v10Sym a x) w :=
+/-- (PROVED) `SumRanksChar` always holds for `v10Sym` (an exact SumRanks symmetry). -/
+theorem sumRanksChar_v10Sym (a : Fin 13) (x : Fin 4) {w : Fin 52 → Nat} (hw : Cards w) :
+    SumRanksChar (v10Sym a x) w :=
   sumRanksV10_commutes_v10Sym a x _ (cardsG_lay hw)
 
 /-- (PROVED) The final round is transparent to `v10Sym` differences: `v10Sym a x` goes to
     itself on every deck, and to nothing else. -/
 theorem dpFCount_v10Sym (a : Fin 13) (x : Fin 4) (γ : Relabel) :
     dpFCount (v10Sym a x) γ = if γ = v10Sym a x then Nat.factorial 52 else 0 := by
-  unfold dpFCount
+  unfold dpFCount dpCount
   have e : ∀ π : Equiv.Perm (Fin 52),
       (unkeyedNoMix (rel (v10Sym a x) (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))) ↔
         γ = v10Sym a x := fun π => by
@@ -375,7 +299,7 @@ theorem dpFCount_v10Sym (a : Fin 13) (x : Fin 4) (γ : Relabel) :
 /-- (PROVED) Nothing enters `v10Sym a x` in the final round from a different difference. -/
 theorem dpFCount_to_v10Sym (a : Fin 13) (x : Fin 4) {β : Relabel} (hβ : β ≠ v10Sym a x) :
     dpFCount β (v10Sym a x) = 0 := by
-  unfold dpFCount
+  unfold dpFCount dpCount
   rw [card_eq_zero, filter_eq_empty_iff]
   intro π _ h
   have hd := isDeck_permDeck π
@@ -384,48 +308,15 @@ theorem dpFCount_to_v10Sym (a : Fin 13) (x : Fin 4) {β : Relabel} (hβ : β ≠
   rw [invUnkeyedNoMix_unkeyedNoMix, invUnkeyedNoMix_unkeyedNoMix] at h2
   exact hβ ((rel_left_inj hd).1 h2)
 
-/-- (PROVED) `invUnkeyedNoMix` maps decks to decks. -/
-theorem isDeck_invUnkeyedNoMix {v : Fin 52 → Nat} (hv : IsDeck v) : IsDeck (invUnkeyedNoMix v) :=
-  isDeck_of_cells hv fun k => by
-    obtain ⟨i, hi⟩ := unkeyedNoMix_cells (invUnkeyedNoMix v) k
-    rw [unkeyedNoMix_invUnkeyedNoMix] at hi
-    exact ⟨i, hi⟩
-
 /-- (PROVED) Row sums: from each `β`, the final-round counts add up to `52!`. -/
-theorem sum_dpFCount (β : Relabel) : ∑ γ, dpFCount β γ = Nat.factorial 52 := by
-  have e : ∀ γ, dpFCount β γ = (univ.filter fun π : Equiv.Perm (Fin 52) =>
-      relDiff (unkeyedNoMix (permDeck π)) (unkeyedNoMix (rel β (permDeck π))) = γ).card :=
-    fun γ => by
-      unfold dpFCount
-      congr 1
-      refine filter_congr fun π _ => ?_
-      have hd := isDeck_permDeck π
-      rw [relDiff_eq_iff (isDeck_unkeyedNoMix hd) (isDeck_unkeyedNoMix (isDeck_rel β hd)),
-        eq_comm]
-  simp only [e]
-  rw [← card_eq_sum_card_fiberwise (fun _ _ => mem_univ _), card_univ, Fintype.card_perm,
-    Fintype.card_fin]
+theorem sum_dpFCount (β : Relabel) : ∑ γ, dpFCount β γ = Nat.factorial 52 :=
+  sum_dpCount unkeyedNoMix isDeck_unkeyedNoMix β
 
 /-- (PROVED) Column sums: into each `γ`, the final-round counts add up to `52!` (so the
     one-step matrix `dpFCount / 52!` is doubly stochastic). -/
-theorem sum_dpFCount_left (γ : Relabel) : ∑ β, dpFCount β γ = Nat.factorial 52 := by
-  have e : ∀ β, dpFCount β γ = (univ.filter fun π : Equiv.Perm (Fin 52) =>
-      relDiff (permDeck π) (invUnkeyedNoMix (rel γ (unkeyedNoMix (permDeck π)))) = β).card :=
-    fun β => by
-      unfold dpFCount
-      congr 1
-      refine filter_congr fun π _ => ?_
-      have hd := isDeck_permDeck π
-      have hv := isDeck_invUnkeyedNoMix (isDeck_rel γ (isDeck_unkeyedNoMix hd))
-      rw [relDiff_eq_iff hd hv]
-      constructor
-      · intro h
-        rw [← h, invUnkeyedNoMix_unkeyedNoMix]
-      · intro h
-        rw [h, unkeyedNoMix_invUnkeyedNoMix]
-  simp only [e]
-  rw [← card_eq_sum_card_fiberwise (fun _ _ => mem_univ _), card_univ, Fintype.card_perm,
-    Fintype.card_fin]
+theorem sum_dpFCount_left (γ : Relabel) : ∑ β, dpFCount β γ = Nat.factorial 52 :=
+  sum_dpCount_left unkeyedNoMix invUnkeyedNoMix isDeck_unkeyedNoMix isDeck_invUnkeyedNoMix
+    invUnkeyedNoMix_unkeyedNoMix unkeyedNoMix_invUnkeyedNoMix γ
 
 /-! ## Counting helpers -/
 
@@ -438,6 +329,23 @@ theorem sum_card_filter_and {ι : Type} [Fintype ι] (A : ι → Prop) [Decidabl
   rw [sum_comm, sum_filter]
   refine sum_congr rfl fun i _ => ?_
   by_cases hA : A i <;> simp [hA]
+
+/-- (PROVED) `∑ k, #{i | B i k} = ∑ i, #{k | B i k}`. -/
+theorem sum_card_filter_comm {ι : Type} [Fintype ι] (B : ι → Key → Prop)
+    [∀ i k, Decidable (B i k)] :
+    ∑ k : Key, (univ.filter fun i => B i k).card =
+      ∑ i, (univ.filter fun k => B i k).card := by
+  simp only [card_filter]
+  exact sum_comm
+
+/-- (PROVED) Arithmetic for the whole-cipher bounds: if `c ≤ (52!)^2 · d` and
+    `p^n · d ≤ (52!)^n`, then `p^n · c ≤ (52!)^(n+2)`. -/
+theorem pow_mul_le_of_le_sq_mul {p n c d : ℕ} (hc : c ≤ Nat.factorial 52 ^ 2 * d)
+    (hd : p ^ n * d ≤ Nat.factorial 52 ^ n) : p ^ n * c ≤ Nat.factorial 52 ^ (n + 2) :=
+  calc p ^ n * c ≤ p ^ n * (Nat.factorial 52 ^ 2 * d) := Nat.mul_le_mul_left _ hc
+    _ = Nat.factorial 52 ^ 2 * (p ^ n * d) := by ring
+    _ ≤ Nat.factorial 52 ^ 2 * Nat.factorial 52 ^ n := Nat.mul_le_mul_left _ hd
+    _ = Nat.factorial 52 ^ (n + 2) := by ring
 
 /-- (PROVED) Summing a function of `g K` over all `K` by the fibres of `g`. -/
 theorem sum_comp_fiber {ι : Type} [Fintype ι] (g : ι → Relabel) (f : Relabel → ℕ) :
@@ -453,7 +361,7 @@ theorem sum_comp_fiber {ι : Type} [Fintype ι] (g : ι → Relabel) (f : Relabe
     round. -/
 def FullTrail (σ : Relabel) (n : ℕ) (y : Fin 52 → Nat) (L : Fin (n + 2) → Key) : Prop :=
   Trail σ n y (roundKeysOf L) ∧
-    FinalChar σ (composeVec 52 Nat (rounds n y (roundKeysOf L)) (lastKeyOf L))
+    SumRanksChar σ (composeVec 52 Nat (rounds n y (roundKeysOf L)) (lastKeyOf L))
 
 instance (σ : Relabel) (n : ℕ) (y : Fin 52 → Nat) : DecidablePred (FullTrail σ n y) :=
   fun _ => inferInstanceAs (Decidable (_ ∧ _))
@@ -473,15 +381,15 @@ theorem card_fullTrail (σ : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDec
       Nat.factorial 52 * ((univ.filter fun K : Fin n → Key => Trail σ n y K).card *
         (SumRanksDP.survivors σ).card) := by
   have h := card_filter_keys (n := n) (fun K k _ => Trail σ n y K ∧
-    FinalChar σ (composeVec 52 Nat (rounds n y K) k))
+    SumRanksChar σ (composeVec 52 Nat (rounds n y K) k))
   simp only at h
   rw [show (univ.filter fun L : Fin (n + 2) → Key => FullTrail σ n y L) =
     univ.filter fun L : Fin (n + 2) → Key => Trail σ n y (roundKeysOf L) ∧
-      FinalChar σ (composeVec 52 Nat (rounds n y (roundKeysOf L)) (lastKeyOf L)) from rfl, h,
+      SumRanksChar σ (composeVec 52 Nat (rounds n y (roundKeysOf L)) (lastKeyOf L)) from rfl, h,
     sum_const, card_univ, Fintype.card_perm, Fintype.card_fin, smul_eq_mul,
     sum_card_filter_and]
   congr 1
-  rw [sum_congr rfl (fun K _ => (card_keys_compose (FinalChar σ) (isDeck_rounds n y K hy)).trans
+  rw [sum_congr rfl (fun K _ => (card_keys_compose (SumRanksChar σ) (isDeck_rounds n y K hy)).trans
     (congrArg card (filter_congr fun π _ => Iff.rfl))), sum_const, smul_eq_mul]
   rfl
 
@@ -507,7 +415,7 @@ theorem card_fullTrail_v10Sym (a : Fin 13) (x : Fin 4) (n : ℕ) {y : Fin 52 →
   rw [card_fullTrail _ n hy]
   have hs : (SumRanksDP.survivors (v10Sym a x)).card = Nat.factorial 52 := by
     have : SumRanksDP.survivors (v10Sym a x) = univ :=
-      filter_true_of_mem fun π _ => finalChar_v10Sym a x (isDeck_permDeck π).1
+      filter_true_of_mem fun π _ => sumRanksChar_v10Sym a x (isDeck_permDeck π).1
     rw [this, card_univ, Fintype.card_perm, Fintype.card_fin]
   rw [hs]
   ring
@@ -516,15 +424,8 @@ theorem card_fullTrail_v10Sym (a : Fin 13) (x : Fin 4) (n : ℕ) {y : Fin 52 →
 theorem fullTrail_card_le_of_trail (σ : Relabel) (p n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y)
     (hT : p ^ n * (univ.filter fun K : Fin n → Key => Trail σ n y K).card ≤ Nat.factorial 52 ^ n) :
     p ^ n * (univ.filter fun L : Fin (n + 2) → Key => FullTrail σ n y L).card ≤
-      Nat.factorial 52 ^ (n + 2) := by
-  calc p ^ n * (univ.filter fun L : Fin (n + 2) → Key => FullTrail σ n y L).card
-      ≤ p ^ n * (Nat.factorial 52 ^ 2 * (univ.filter fun K : Fin n → Key => Trail σ n y K).card) :=
-        Nat.mul_le_mul_left _ (card_fullTrail_le σ n hy)
-    _ = Nat.factorial 52 ^ 2 *
-          (p ^ n * (univ.filter fun K : Fin n → Key => Trail σ n y K).card) := by
-        ring
-    _ ≤ Nat.factorial 52 ^ 2 * Nat.factorial 52 ^ n := Nat.mul_le_mul_left _ hT
-    _ = Nat.factorial 52 ^ (n + 2) := by ring
+      Nat.factorial 52 ^ (n + 2) :=
+  pow_mul_le_of_le_sq_mul (card_fullTrail_le σ n hy) hT
 
 /-- (PROVED, unconditional) Whole cipher, every `σ ≠ 1`: `26^n · # ≤ (52!)^(n+2)`. The final
     round adds no factor here (it adds none for `v10Sym`). -/
@@ -564,8 +465,10 @@ theorem fullTrail_card_le_4420_v10Sym_of_check (hKC : Check3 KC LKC) (hKS : Chec
     (TrailBound.trail_card_le_4420_v10Sym_of_check hKC hKS a x hne n y hy)
 
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) Whole cipher with at least
-    one mix round, every `σ ≠ 1`: `64^(n+1) · # ≤ (52!)^(n+2)` (for `v10Sym` from `4420^n`,
-    since `64^2 ≤ 4420`). -/
+    one mix round, every `σ ≠ 1`: `64^(n+1) · # ≤ (52!)^(n+2)`. Why `n ≥ 1`: for `v10Sym` the
+    final round adds no factor, so at `n = 0` `card_fullTrail_v10Sym` gives `# = (52!)^2` and
+    `64 · # > (52!)^2`; for `n ≥ 1` the `v10Sym` case follows from `4420^n`, since
+    `64^(n+1) ≤ 4420^n` (from `64^2 ≤ 4420`). -/
 theorem fullTrail_card_le_64_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (σ : Relabel) (h1 : σ ≠ 1) (n : ℕ) (hn : 0 < n) {y : Fin 52 → Nat} (hy : IsDeck y) :
     64 ^ (n + 1) * (univ.filter fun L : Fin (n + 2) → Key => FullTrail σ n y L).card ≤
@@ -616,11 +519,9 @@ theorem fullDiffCount_eq (α γ : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : 
   have hz' : ∀ K, IsDeck (rounds n (rel α y) K) := fun K => isDeck_rounds n _ K (isDeck_rel α hy)
   have hg : ∀ K, rounds n (rel α y) K = rel (g K) (z K) :=
     fun K => (rel_relDiff (hz K) (hz' K)).symm
-  have hsum := sum_card_filter_and (ι := Fin n → Key) (fun _ => True) (fun K k =>
+  rw [sum_card_filter_comm (ι := Fin n → Key) (fun K k =>
     unkeyedNoMix (composeVec 52 Nat (rounds n (rel α y) K) k) =
-      rel γ (unkeyedNoMix (composeVec 52 Nat (rounds n y K) k)))
-  simp only [true_and, filter_True] at hsum
-  rw [hsum]
+      rel γ (unkeyedNoMix (composeVec 52 Nat (rounds n y K) k)))]
   have hK : ∀ K, (univ.filter fun k : Key =>
       unkeyedNoMix (composeVec 52 Nat (rounds n (rel α y) K) k) =
         rel γ (unkeyedNoMix (composeVec 52 Nat (rounds n y K) k))).card = dpFCount (g K) γ := by
@@ -643,9 +544,8 @@ theorem fullDiffCount_eq (α γ : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : 
   rw [e]
   rfl
 
-/-- (PROVED) Zero mix rounds (whitening, final round): `fullDiffCount α γ 0 y = 52! · dpFCount α γ`.
-    For `γ ≠ α` the `0`-round count is `0`, so a single entry CAN rise through the final
-    round (whenever `dpFCount α γ > 0`). -/
+/-- (PROVED) Zero mix rounds (whitening, final round):
+    `fullDiffCount α γ 0 y = 52! · dpFCount α γ`. -/
 theorem fullDiffCount_zero (α γ : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) :
     fullDiffCount α γ 0 y = Nat.factorial 52 * dpFCount α γ := by
   rw [fullDiffCount_eq α γ 0 hy]
@@ -653,11 +553,31 @@ theorem fullDiffCount_zero (α γ : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y
   simp only [Differential.diffCount_zero _ _ hy, ite_mul, one_mul, zero_mul, sum_ite_eq,
     mem_univ, if_true]
 
+/-- (PROVED) Single entries CAN rise through the final round (at `n = 0`; nothing is proved
+    or measured for `n ≥ 1`): for `α` outside `v10Sym` some `γ ≠ α` has a larger full-cipher
+    count than `(52!)^2` times its `0`-round count (which is `0`). Proof: the row of
+    `dpFCount α` sums to `52!` but its diagonal is at most `52!/64`. -/
+theorem exists_fullDiffCount_zero_gt (α : Relabel) (h : ¬ ∃ a x, α = v10Sym a x)
+    {y : Fin 52 → Nat} (hy : IsDeck y) :
+    ∃ γ, γ ≠ α ∧ Nat.factorial 52 ^ 2 * diffCount α γ 0 y < fullDiffCount α γ 0 y := by
+  by_contra hne
+  push_neg at hne
+  have h0 : ∀ γ ∈ univ, γ ≠ α → dpFCount α γ = 0 := fun γ _ hγ => by
+    have hle := hne γ hγ
+    rw [fullDiffCount_zero α γ hy, Differential.diffCount_zero α γ hy, if_neg (Ne.symm hγ),
+      mul_zero, Nat.le_zero, Nat.mul_eq_zero] at hle
+    exact hle.resolve_left (Nat.factorial_ne_zero 52)
+  have hs := sum_dpFCount α
+  rw [sum_eq_single α h0 (fun h => absurd (mem_univ α) h)] at hs
+  have h64 := dpFCount_self_le_64 α h
+  have hpos := Nat.factorial_pos 52
+  omega
+
 /-- (PROVED) Max monotonicity: the final round never raises the LARGEST differential count,
     `fullDiffCount α γ n y ≤ (52!)^2 · max_β diffCount α β n y` (the one-step matrix is doubly
     stochastic, `sum_dpFCount_left`). This gives NO number (no numeric bound on
     `diffCount` is proved), and it does NOT say `fullDiffCount α γ ≤ (52!)^2 · diffCount α γ`:
-    single entries can rise (`fullDiffCount_zero`). -/
+    single entries can rise (at `n = 0`, `exists_fullDiffCount_zero_gt`). -/
 theorem fullDiffCount_le_sup (α γ : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
     fullDiffCount α γ n y ≤
       Nat.factorial 52 ^ 2 * univ.sup (fun β => diffCount α β n y) := by
@@ -672,7 +592,7 @@ theorem fullDiffCount_le_sup (α γ : Relabel) (n : ℕ) {y : Fin 52 → Nat} (h
 
 /-- (PROVED) The `v10Sym a x` output column is transparent: the full-cipher count into
     `v10Sym a x` is exactly `(52!)^2` times the `n`-round count (the final round gives no
-    extra factor, and `K_6` is irrelevant). -/
+    extra factor, and `K_6` never changes a relabelling difference). -/
 theorem fullDiffCount_v10Sym (α : Relabel) (a : Fin 13) (x : Fin 4) (n : ℕ) {y : Fin 52 → Nat}
     (hy : IsDeck y) :
     fullDiffCount α (v10Sym a x) n y = Nat.factorial 52 ^ 2 * diffCount α (v10Sym a x) n y := by
@@ -698,7 +618,7 @@ theorem fullStaysInV10_iff (a : Fin 13) (x : Fin 4) (n : ℕ) {y : Fin 52 → Na
   unfold FullDiff
   rw [encryptL_eq, encryptL_eq, trail_rounds_rel _ n y _ ht]
   exact (finalRound_rel_self_iff _ _ _ _).2
-    (finalChar_v10Sym a x (isDeck_compose (isDeck_rounds n y _ hy) _).1)
+    (sumRanksChar_v10Sym a x (isDeck_compose (isDeck_rounds n y _ hy) _).1)
 
 open Classical in
 /-- (PROVED) The full-cipher cluster count is exactly `(52!)^2` times the `n`-round one: the
@@ -719,16 +639,9 @@ open Classical in
 theorem fullStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) (n : ℕ)
     {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 ^ n * (univ.filter fun L : Fin (n + 2) → Key => FullStaysInV10 a x n y L).card ≤
-      Nat.factorial 52 ^ (n + 2) := by
-  rw [card_fullStaysInV10 a x n hy]
-  calc 26 ^ n * (Nat.factorial 52 ^ 2 *
-        (univ.filter fun K : Fin n → Key => StaysInV10 n (v10Sym a x) y K).card)
-      = Nat.factorial 52 ^ 2 *
-          (26 ^ n * (univ.filter fun K : Fin n → Key => StaysInV10 n (v10Sym a x) y K).card) := by
-        ring
-    _ ≤ Nat.factorial 52 ^ 2 * Nat.factorial 52 ^ n :=
-        Nat.mul_le_mul_left _ (Differential.staysInV10_card_le_26 a x hne n hy)
-    _ = Nat.factorial 52 ^ (n + 2) := by ring
+      Nat.factorial 52 ^ (n + 2) :=
+  pow_mul_le_of_le_sq_mul (card_fullStaysInV10 a x n hy).le
+    (Differential.staysInV10_card_le_26 a x hne n hy)
 
 open Classical in
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) As
@@ -737,50 +650,52 @@ theorem fullStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3
     (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) (n : ℕ) {y : Fin 52 → Nat}
     (hy : IsDeck y) :
     4420 ^ n * (univ.filter fun L : Fin (n + 2) → Key => FullStaysInV10 a x n y L).card ≤
-      Nat.factorial 52 ^ (n + 2) := by
-  rw [card_fullStaysInV10 a x n hy]
-  calc 4420 ^ n * (Nat.factorial 52 ^ 2 *
-        (univ.filter fun K : Fin n → Key => StaysInV10 n (v10Sym a x) y K).card)
-      = Nat.factorial 52 ^ 2 *
-          (4420 ^ n * (univ.filter fun K : Fin n → Key => StaysInV10 n (v10Sym a x) y K).card) := by
-        ring
-    _ ≤ Nat.factorial 52 ^ 2 * Nat.factorial 52 ^ n :=
-        Nat.mul_le_mul_left _ (Differential.staysInV10_card_le_4420_of_check hKC hKS a x hne n hy)
-    _ = Nat.factorial 52 ^ (n + 2) := by ring
+      Nat.factorial 52 ^ (n + 2) :=
+  pow_mul_le_of_le_sq_mul (card_fullStaysInV10 a x n hy).le
+    (Differential.staysInV10_card_le_4420_of_check hKC hKS a x hne n hy)
 
-/-! ## E. The real PassKey schedule: round 0 only -/
+/-! ## E. The real PassKey schedule: the first mix round (round 0, key `K_0`) only -/
 
-/-- (PROVED, unconditional) Real schedule, uniform master key, every `σ ≠ 1`, every deck `y`: at
-    most `52!/26` master keys make `(y, σ·y)` follow the characteristic through the WHOLE
-    cipher. This is M5's ONE-round bound; the rounds after round 0 and the final round add
-    nothing. -/
+/-- (PROVED) Real schedule: following the characteristic through the whole cipher is a
+    sub-event of following it through the 5 mix rounds (`RealSchedule`'s event). -/
+theorem card_realFullTrail_le (σ : Relabel) (y : Fin 52 → Nat) :
+    (univ.filter fun π : Equiv.Perm (Fin 52) => FullTrail σ 5 y (realKeys π)).card ≤
+      (univ.filter fun π : Equiv.Perm (Fin 52) => Trail σ 5 y (roundKeys 5 π)).card :=
+  card_le_card (monotone_filter_right _ fun _ h => h.1)
+
+/-- (PROVED, unconditional) Real schedule, uniform master key, every `σ ≠ 1`, every deck `y`:
+    at most `52!/26` master keys make `(y, σ·y)` follow the characteristic through the WHOLE
+    cipher. This is M5's bound for the first mix round (round 0, key `K_0`) alone; mix rounds
+    1–4 and the final round add no factor (a limit of the proof, not a measured weakness). -/
 theorem realFullTrail_card_le_26 (σ : Relabel) (h1 : σ ≠ 1) {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullTrail σ 5 y (realKeys π)).card ≤
       Nat.factorial 52 :=
-  (Nat.mul_le_mul_left _ (card_le_card (monotone_filter_right _ fun _ h => h.1))).trans
+  (Nat.mul_le_mul_left _ (card_realFullTrail_le σ y)).trans
     (RealSchedule.realTrail_card_le_26 σ h1 5 (by norm_num) y hy)
 
-/-- (PROVED, unconditional) As `realFullTrail_card_le_26` with `52!/64` for `σ` outside
-    `v10Sym`. ONE round's bound. -/
+/-- (PROVED, unconditional) As `realFullTrail_card_le_26` with `52!/64`, for `σ` outside
+    `v10Sym`. The first mix round's bound. -/
 theorem realFullTrail_card_le_64_of_not_v10Sym (σ : Relabel) (h : ¬ ∃ a x, σ = v10Sym a x)
     {y : Fin 52 → Nat} (hy : IsDeck y) :
     64 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullTrail σ 5 y (realKeys π)).card ≤
       Nat.factorial 52 :=
-  (Nat.mul_le_mul_left _ (card_le_card (monotone_filter_right _ fun _ h => h.1))).trans
+  (Nat.mul_le_mul_left _ (card_realFullTrail_le σ y)).trans
     (RealSchedule.realTrail_card_le_64_of_not_v10Sym σ h 5 (by norm_num) y hy)
 
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) As
-    `realFullTrail_card_le_26` with `52!/64` for every `σ ≠ 1`. ONE round's bound. -/
+    `realFullTrail_card_le_26` with `52!/64`, for every `σ ≠ 1`. The first mix round's
+    bound. -/
 theorem realFullTrail_card_le_64_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (σ : Relabel) (h1 : σ ≠ 1) {y : Fin 52 → Nat} (hy : IsDeck y) :
     64 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullTrail σ 5 y (realKeys π)).card ≤
       Nat.factorial 52 :=
-  (Nat.mul_le_mul_left _ (card_le_card (monotone_filter_right _ fun _ h => h.1))).trans
+  (Nat.mul_le_mul_left _ (card_realFullTrail_le σ y)).trans
     (RealSchedule.realTrail_card_le_64_of_check hKC hKS σ h1 5 (by norm_num) y hy)
 
 open Classical in
 /-- (PROVED; no hypothesis beyond `(a, x) ≠ (0, 0)`) Real schedule, whole cipher, `v10Sym`
-    cluster: at most `52!/26` master keys. ONE round's bound; only paths inside `v10Sym`. -/
+    cluster: at most `52!/26` master keys. The first mix round's bound; only paths inside
+    `v10Sym`. -/
 theorem realFullStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
     {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullStaysInV10 a x 5 y (realKeys π)).card ≤
@@ -790,7 +705,8 @@ theorem realFullStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 
 
 open Classical in
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) As
-    `realFullStaysInV10_card_le_26` with `52!/4420` (`(a, x) ≠ (0, 0)`). ONE round's bound. -/
+    `realFullStaysInV10_card_le_26` with `52!/4420` (`(a, x) ≠ (0, 0)`). The first mix
+    round's bound. -/
 theorem realFullStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) {y : Fin 52 → Nat} (hy : IsDeck y) :
     4420 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullStaysInV10 a x 5 y (realKeys π)).card ≤

@@ -6,7 +6,9 @@
   Same model and caveats as `DoubleDealSecurity/FullCipher.lean`: the characteristic and the
   `v10Sym` cluster only (every `v10Sym` bound for `(a, x) ≠ (0, 0)`), NOT the full-cipher
   differential, for which no numeric bound is proved anywhere. The real-schedule statements
-  are ONE round's bound. Not a bit-security claim.
+  are the bound of the first mix round (round 0, key `K_0`) alone; mix rounds 1–4 and the
+  final round add no factor (a limit of the proof, not a measured weakness). Not a
+  bit-security claim.
 -/
 import DoubleDealSecurity.FullCipher
 import DoubleDealSecurityHeavy.GridCycleSurvival
@@ -26,7 +28,8 @@ theorem fullTrail_card_le_4420_v10Sym (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 
   fullTrail_card_le_4420_v10Sym_of_check check3_KC check3_KS a x hne n hy
 
 /-- (PROVED) Whole cipher, independent uniform keys, at least one mix round, every `σ ≠ 1`:
-    `64^(n+1) · # ≤ (52!)^(n+2)`. The characteristic only. -/
+    `64^(n+1) · # ≤ (52!)^(n+2)`. The characteristic only. `n ≥ 1` is needed: see
+    `fullTrail_card_le_64_of_check`. -/
 theorem fullTrail_card_le_64 (σ : Relabel) (h1 : σ ≠ 1) (n : ℕ) (hn : 0 < n)
     {y : Fin 52 → Nat} (hy : IsDeck y) :
     64 ^ (n + 1) * (univ.filter fun L : Fin (n + 2) → Key => FullTrail σ n y L).card ≤
@@ -43,7 +46,7 @@ theorem fullStaysInV10_card_le_4420 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 �
   fullStaysInV10_card_le_4420_of_check check3_KC check3_KS a x hne n hy
 
 /-- (PROVED) Real schedule, whole cipher, every `σ ≠ 1`: at most `52!/64` master keys follow the
-    characteristic. ONE round's bound. -/
+    characteristic. The first mix round's bound (round 0, key `K_0`). -/
 theorem realFullTrail_card_le_64 (σ : Relabel) (h1 : σ ≠ 1) {y : Fin 52 → Nat} (hy : IsDeck y) :
     64 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullTrail σ 5 y (realKeys π)).card ≤
       Nat.factorial 52 :=
@@ -51,7 +54,7 @@ theorem realFullTrail_card_le_64 (σ : Relabel) (h1 : σ ≠ 1) {y : Fin 52 → 
 
 open Classical in
 /-- (PROVED) Real schedule, whole cipher, `v10Sym` cluster, `(a, x) ≠ (0, 0)`: at most
-    `52!/4420` master keys. ONE round's bound. -/
+    `52!/4420` master keys. The first mix round's bound (round 0, key `K_0`). -/
 theorem realFullStaysInV10_card_le_4420 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
     {y : Fin 52 → Nat} (hy : IsDeck y) :
     4420 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullStaysInV10 a x 5 y (realKeys π)).card ≤

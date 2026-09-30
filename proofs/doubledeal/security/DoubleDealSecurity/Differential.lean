@@ -17,8 +17,8 @@
   NOT covered here: the final no-mix round, and any link from `rounds` to `encryptN` (as in
   `TrailBound`); both are in `FullCipher` (roadmap M7), which adds one exact Markov step
   for the final round and still no numeric bound. The real PassKey schedule gets only the
-  `R = 1` identity (`realDiffCount_one`) and the one-round bound on paths inside the
-  `v10Sym` cluster (`realStaysInV10_card_le_26`, for `(a, x) ≠ (0, 0)` only); nothing for
+  `R = 1` identity (`realDiffCount_one`) and the bound of the first mix round (round 0,
+  key `K_0`) on paths inside the `v10Sym` cluster (`realStaysInV10_card_le_26`, for `(a, x) ≠ (0, 0)` only); nothing for
   the real schedule at `R ≥ 2` beyond that.
 
   Proved:
@@ -42,13 +42,19 @@
     `(a, x) ≠ (0, 0)` only: `staysInV10_card_le_26` (`26^R · # ≤ (52!)^R`, no further
     hypothesis), `staysInV10_card_le_4420_of_check` (given the two finite GridCycle
     checks; without them in the heavy library, `staysInV10_card_le_4420`), and for the real
-    schedule the ONE-ROUND bounds `realStaysInV10_card_le_26`,
+    schedule the bounds of the first mix round (round 0) alone `realStaysInV10_card_le_26`,
     `realStaysInV10_card_le_4420_of_check` (heavy: `realStaysInV10_card_le_4420`).
     (For `(a, x) = (0, 0)`, `v10Sym 0 0 = 1` and these bounds are false.)
     These cover ONLY paths that stay inside `v10Sym`; a path that leaves `v10Sym` and
     comes back is not bounded.
   * D6 `realDiffCount_one`: under the real schedule, one round is the same count as with
     an independent key. Nothing for `R ≥ 2`.
+  * Generic one-step counts: `dpCount U α β` (decks `x` with `U (α·x) = β · U x`, for any
+    round map `U`; `dp1Count` is `dpCount unkeyedWithMix`, and `FullCipher.dpFCount` is
+    `dpCount unkeyedNoMix`), with `sum_dpCount` (rows sum to `52!` when `U` maps decks to
+    decks) and `sum_dpCount_left` (columns sum to `52!` when `U` has a two-sided inverse
+    `V` and both map decks to decks).
+    `relDiff_eq_iff`: for decks `x`, `x'`, `relDiff x x' = γ ↔ rel γ x = x'`.
 
   The measured one- and two-round values in the notes are EMPIRICAL (sampled), not
   proved, and no theorem uses them. Not a bit-security claim.
@@ -81,6 +87,12 @@ theorem rel_relDiff {x x' : Fin 52 → Nat} (hx : IsDeck x) (hx' : IsDeck x') :
   show app (deckPerm x' hx' * (deckPerm x hx)⁻¹) (deckPerm x hx i).val = x' i
   rw [app_fin, Equiv.Perm.mul_apply, Equiv.Perm.inv_apply_self, deckPerm_val]
 
+/-- (PROVED) `relDiff x x'` is the unique relabelling taking the deck `x` to the deck `x'`. -/
+theorem relDiff_eq_iff {x x' : Fin 52 → Nat} (hx : IsDeck x) (hx' : IsDeck x') (γ : Relabel) :
+    relDiff x x' = γ ↔ rel γ x = x' :=
+  ⟨fun h => h ▸ rel_relDiff hx hx',
+    fun h => (rel_left_inj hx).1 ((rel_relDiff hx hx').trans h.symm)⟩
+
 /-! ## The events and counts -/
 
 /-- After `R` rounds with keys `K`, the pair `(y, α·y)` has output difference `β`. The
@@ -96,10 +108,15 @@ instance (α β : Relabel) (R : ℕ) (y : Fin 52 → Nat) : DecidablePred (Diff 
 def diffCount (α β : Relabel) (R : ℕ) (y : Fin 52 → Nat) : ℕ :=
   (univ.filter fun K : Fin R → Key => Diff α β R y K).card
 
-/-- One unkeyed round: decks `x` (as permutations) with `U(α·x) = β·U(x)`. -/
-def dp1Count (α β : Relabel) : ℕ :=
+/-- One step of a deck map `U` (a round without its key): decks `x` (as permutations) with
+    `U(α·x) = β·U(x)`. -/
+def dpCount (U : (Fin 52 → Nat) → Fin 52 → Nat) (α β : Relabel) : ℕ :=
   (univ.filter fun π : Equiv.Perm (Fin 52) =>
-    unkeyedWithMix (rel α (permDeck π)) = rel β (unkeyedWithMix (permDeck π))).card
+    U (rel α (permDeck π)) = rel β (U (permDeck π))).card
+
+/-- One unkeyed round (`U = unkeyedWithMix`): decks `x` (as permutations) with
+    `U(α·x) = β·U(x)`. -/
+def dp1Count (α β : Relabel) : ℕ := dpCount unkeyedWithMix α β
 
 /-- The output difference of one unkeyed round at the deck `x`, input difference `α`. -/
 noncomputable def stepDiff (α : Relabel) (x : Fin 52 → Nat) : Relabel :=
@@ -110,12 +127,9 @@ theorem stepDiff_spec (α : Relabel) {x : Fin 52 → Nat} (hx : IsDeck x) :
   (rel_relDiff (isDeck_unkeyedWithMix hx) (isDeck_unkeyedWithMix (isDeck_rel α hx))).symm
 
 theorem stepDiff_eq_iff (α γ : Relabel) {x : Fin 52 → Nat} (hx : IsDeck x) :
-    stepDiff α x = γ ↔ unkeyedWithMix (rel α x) = rel γ (unkeyedWithMix x) := by
-  constructor
-  · rintro rfl; exact stepDiff_spec α hx
-  · intro h
-    rw [stepDiff_spec α hx] at h
-    exact (rel_left_inj (isDeck_unkeyedWithMix hx)).1 h
+    stepDiff α x = γ ↔ unkeyedWithMix (rel α x) = rel γ (unkeyedWithMix x) :=
+  (relDiff_eq_iff (isDeck_unkeyedWithMix hx) (isDeck_unkeyedWithMix (isDeck_rel α hx)) γ).trans
+    eq_comm
 
 /-! ## D0: the characteristic is one path of the differential -/
 
@@ -211,15 +225,46 @@ theorem diffCount_one (α β : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) :
 
 /-! ## D3: row sums and the trivial difference -/
 
-/-- (PROVED) One round: the counts `α → β` over all `β` add up to `52!`. -/
-theorem sum_dp1Count (α : Relabel) : ∑ β, dp1Count α β = Nat.factorial 52 := by
-  have e : ∀ β, dp1Count α β = (univ.filter fun π : Equiv.Perm (Fin 52) =>
-      stepDiff α (permDeck π) = β).card := fun β => by
-    unfold dp1Count
-    rw [filter_congr (fun π _ => stepDiff_eq_iff α β (isDeck_permDeck π))]
+/-- (PROVED) Row sums for any deck map `U` that maps decks to decks: from each `α`, the
+    counts `dpCount U α β` over all `β` add up to `52!`. -/
+theorem sum_dpCount (U : (Fin 52 → Nat) → Fin 52 → Nat)
+    (hU : ∀ {x : Fin 52 → Nat}, IsDeck x → IsDeck (U x)) (α : Relabel) :
+    ∑ β, dpCount U α β = Nat.factorial 52 := by
+  have e : ∀ β, dpCount U α β = (univ.filter fun π : Equiv.Perm (Fin 52) =>
+      relDiff (U (permDeck π)) (U (rel α (permDeck π))) = β).card := fun β => by
+    unfold dpCount
+    refine congrArg card (filter_congr fun π _ => ?_)
+    have hd := isDeck_permDeck π
+    rw [relDiff_eq_iff (hU hd) (hU (isDeck_rel α hd)), eq_comm]
   simp only [e]
   rw [← card_eq_sum_card_fiberwise (fun _ _ => mem_univ _), card_univ, Fintype.card_perm,
     Fintype.card_fin]
+
+/-- (PROVED) Column sums for a deck map `U` with a two-sided inverse `V`, both mapping decks
+    to decks: into each `β`, the counts `dpCount U α β` over all `α` add up to `52!`. -/
+theorem sum_dpCount_left (U V : (Fin 52 → Nat) → Fin 52 → Nat)
+    (hU : ∀ {x : Fin 52 → Nat}, IsDeck x → IsDeck (U x))
+    (hV : ∀ {x : Fin 52 → Nat}, IsDeck x → IsDeck (V x))
+    (hVU : ∀ x, V (U x) = x) (hUV : ∀ x, U (V x) = x) (β : Relabel) :
+    ∑ α, dpCount U α β = Nat.factorial 52 := by
+  have e : ∀ α, dpCount U α β = (univ.filter fun π : Equiv.Perm (Fin 52) =>
+      relDiff (permDeck π) (V (rel β (U (permDeck π)))) = α).card := fun α => by
+    unfold dpCount
+    refine congrArg card (filter_congr fun π _ => ?_)
+    have hd := isDeck_permDeck π
+    rw [relDiff_eq_iff hd (hV (isDeck_rel β (hU hd)))]
+    constructor
+    · intro h
+      rw [← h, hVU]
+    · intro h
+      rw [h, hUV]
+  simp only [e]
+  rw [← card_eq_sum_card_fiberwise (fun _ _ => mem_univ _), card_univ, Fintype.card_perm,
+    Fintype.card_fin]
+
+/-- (PROVED) One round: the counts `α → β` over all `β` add up to `52!`. -/
+theorem sum_dp1Count (α : Relabel) : ∑ β, dp1Count α β = Nat.factorial 52 :=
+  sum_dpCount unkeyedWithMix isDeck_unkeyedWithMix α
 
 /-- (PROVED) `R` rounds: the counts `α → β` over all `β` add up to `(52!)^R`. -/
 theorem sum_diffCount (α : Relabel) : ∀ (R : ℕ) {y : Fin 52 → Nat}, IsDeck y →
@@ -234,7 +279,7 @@ theorem sum_diffCount (α : Relabel) : ∀ (R : ℕ) {y : Fin 52 → Nat}, IsDec
 /-- (PROVED) The trivial difference stays trivial in one round. -/
 theorem dp1Count_one_left (β : Relabel) :
     dp1Count 1 β = if β = 1 then Nat.factorial 52 else 0 := by
-  unfold dp1Count
+  unfold dp1Count dpCount
   split_ifs with h
   · subst h
     rw [filter_true_of_mem (fun π _ => by simp only [rel_one]), card_univ, Fintype.card_perm,
@@ -260,7 +305,7 @@ theorem diffCount_one_left (β : Relabel) (R : ℕ) {y : Fin 52 → Nat} (hy : I
 
 /-- (PROVED) A nontrivial difference never becomes trivial in one round. -/
 theorem dp1Count_to_one {α : Relabel} (hα : α ≠ 1) : dp1Count α 1 = 0 := by
-  unfold dp1Count
+  unfold dp1Count dpCount
   rw [card_eq_zero, filter_eq_empty_iff]
   intro π _ hπ
   rw [rel_one] at hπ
@@ -440,8 +485,8 @@ theorem staysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS 
 open Classical in
 /-- (PROVED; no hypothesis beyond `(a, x) ≠ (0, 0)`) Real PassKey schedule, uniform master key,
     nontrivial `v10Sym a x`, every `R ≥ 1`, every deck `y`: at most `52!/26` master keys keep the
-    difference inside `v10Sym` for `R` rounds. ONE round's bound (not `(1/26)^R`); only paths inside
-    `v10Sym`. -/
+    difference inside `v10Sym` for `R` rounds. The first mix round's bound (round 0, key `K_0`;
+    not `(1/26)^R`); only paths inside `v10Sym`. -/
 theorem realStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
     (R : ℕ) (hR : 0 < R) {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 * (univ.filter fun π : Equiv.Perm (Fin 52) =>
@@ -452,7 +497,7 @@ theorem realStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ 
 
 open Classical in
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) As
-    `realStaysInV10_card_le_26` with `52!/4420`. ONE round's bound. Without the check
+    `realStaysInV10_card_le_26` with `52!/4420`. The first mix round's bound. Without the check
     hypotheses in the heavy library (`realStaysInV10_card_le_4420`). -/
 theorem realStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) (R : ℕ) (hR : 0 < R)
@@ -463,9 +508,9 @@ theorem realStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3
   exact RealSchedule.realTrail_card_le_of_round _ 4420
     (TrailBound.round_le_4420_v10Sym_of_check hKC hKS a x hne) R hR y hy
 
-/-- (PROVED) D6. Real PassKey schedule, ONE round: the count over master keys equals the
-    independent-key count `dp1Count α β` (round key `K_0` alone is uniform). Nothing is
-    proved for the real schedule at `R ≥ 2`. -/
+/-- (PROVED) D6. Real PassKey schedule, first mix round (round 0) only: the count over
+    master keys equals the independent-key count `dp1Count α β` (round key `K_0` alone is
+    uniform). Nothing is proved for the real schedule at `R ≥ 2`. -/
 theorem realDiffCount_one (α β : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) :
     (univ.filter fun π : Equiv.Perm (Fin 52) => Diff α β 1 y (roundKeys 1 π)).card =
       dp1Count α β := by

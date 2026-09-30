@@ -107,15 +107,27 @@ theorem unkeyedNoMix_cells (m : Fin 52 → Nat) (k : Fin 52) : ∃ i, unkeyedNoM
 -- `unkeyedNoMix_invUnkeyedNoMix` (same statement) now lives in the core
 -- package, `DoubleDeal.Round` (next to `encrypt6_decrypt6`).
 
+/-- (PROVED) `invUnkeyedNoMix` maps decks to decks (`unkeyedNoMix` only moves cells). -/
+theorem isDeck_invUnkeyedNoMix {v : Fin 52 → Nat} (hv : IsDeck v) : IsDeck (invUnkeyedNoMix v) :=
+  isDeck_of_cells hv fun k => by
+    obtain ⟨i, hi⟩ := unkeyedNoMix_cells (invUnkeyedNoMix v) k
+    rw [unkeyedNoMix_invUnkeyedNoMix] at hi
+    exact ⟨i, hi⟩
+
+/-- (PROVED) Compose with a permutation key is injective. -/
+theorem composeVec_inj (k : Equiv.Perm (Fin 52)) {x x' : Fin 52 → Nat} :
+    composeVec 52 Nat x k = composeVec 52 Nat x' k ↔ x = x' := by
+  refine ⟨fun h => funext fun i => ?_, fun h => h ▸ rfl⟩
+  have := congrFun h (k.symm i)
+  simpa [composeVec] using this
+
 /-- (PROVED) The stem maps well-formed decks onto well-formed decks. The
     preimage is `invUnkeyedNoMix x`; since `x = unkeyedNoMix m` only moves cells
     of `m` and `x` has 52 distinct cells, the cell map is a bijection of
     positions, so `m` is a deck too. -/
 theorem unkeyedNoMix_onto_decks (x : Fin 52 → Nat) (hx : IsDeck x) :
-    ∃ m, IsDeck m ∧ unkeyedNoMix m = x := by
-  refine ⟨invUnkeyedNoMix x, isDeck_of_cells hx (fun k => ?_), unkeyedNoMix_invUnkeyedNoMix x⟩
-  obtain ⟨i, hi⟩ := unkeyedNoMix_cells (invUnkeyedNoMix x) k
-  exact ⟨i, by rw [← hi, unkeyedNoMix_invUnkeyedNoMix]⟩
+    ∃ m, IsDeck m ∧ unkeyedNoMix m = x :=
+  ⟨invUnkeyedNoMix x, isDeck_invUnkeyedNoMix hx, unkeyedNoMix_invUnkeyedNoMix x⟩
 
 /-- (PROVED from the lemmas above) If σ ≠ id commutes with v10 SumRanks
     (e.g. one of the 51 nontrivial `v10Sym a x`), then no full round

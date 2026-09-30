@@ -32,8 +32,9 @@
     schedule.
 
   What this does NOT give, read before citing it:
-  * THE PROVED BOUND GAINS NOTHING BEYOND ROUND 1. It is 1/64 for every `R ≥ 1`, weaker
-    than M2's `(1/64)^R` for independent uniform round keys (`TrailBound`), because from
+  * THE PROVED BOUND GAINS NOTHING BEYOND THE FIRST MIX ROUND (round 0, key `K_0`). It is
+    1/64 for every `R ≥ 1`, weaker than M2's `(1/64)^R` for independent uniform round keys
+    (`TrailBound`), because from
     round 1 on the round key is not uniform given the state (both are functions of the
     master key), so the M2 product argument does not apply. This is a limit of the proof,
     not a measured weakness. For `R ≥ 2` nothing proved here rules out the real schedule
@@ -44,7 +45,8 @@
   * NOT THE FINAL NO-MIX ROUND here, and `rounds` is not linked to `encryptN`/`encryptDeckFn`
     in this file (only the KEYS are linked, by `encryptDeckFn_masterList`). Both are in
     `FullCipher` (roadmap M7), where the whole cipher under the real schedule gets the same
-    ONE-round bound (`realFullTrail_card_le_26`, …) and nothing more.
+    bound, from the first mix round (round 0, key `K_0`) alone (`realFullTrail_card_le_26`,
+    …), and nothing more.
   * `R ≤ 5` is the cipher's range. `Trail σ R y (roundKeys R π)` is `R` steps "Compose
     with `K_i`, then the unkeyed round with mix", `i = 0 … R-1`. The cipher runs exactly
     five such steps (`K_0 … K_4`, each followed by the next full round's mix), then
@@ -265,7 +267,7 @@ theorem realTrail_card_le_of_round (σ : Relabel) (p : ℕ)
 
 /-- (PROVED, unconditional) Every `σ ≠ 1`, real schedule, every `R ≥ 1`, every deck `y`:
     at most `52!/26` master keys follow the constant-σ characteristic through `R` rounds.
-    ONE round's bound, not `(1/26)^R`. -/
+    The first mix round's bound (round 0, key `K_0`), not `(1/26)^R`. -/
 theorem realTrail_card_le_26 (σ : Relabel) (h1 : σ ≠ 1) (R : ℕ) (hR : 0 < R)
     (y : Fin 52 → Nat) (hy : IsDeck y) :
     26 * (univ.filter fun π : Equiv.Perm (Fin 52) => Trail σ R y (roundKeys R π)).card ≤

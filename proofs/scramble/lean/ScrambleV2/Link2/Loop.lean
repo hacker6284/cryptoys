@@ -6,8 +6,10 @@
   Temporary duplicates: `asc_tail` and `asc_tail_idx` also live in
   `DoubleDealCbcHmac.Link2.Loop`, which this package cannot import (that module imports
   `MegaDreifach.Link2.Helpers`, which needs the emitted Megadreifach module Scramble's
-  Generated/ lacks). A separate MegaDreifach / CBC-HMAC plumbing PR moves them to one
-  home in `MegaDreifach.Link2.Loop`, next to `chain_loop`; these copies go then.
+  Generated/ lacks). Draft PR #144 moves them to one home in `MegaDreifach.Link2.Loop`,
+  next to `chain_loop`. #144 is not on `main` yet, so these copies stay; the next merge
+  of `main` after #144 lands deletes them and uses `MegaDreifach.Link2`'s (otherwise the
+  names are ambiguous under `open MegaDreifach.Link2`).
 -/
 import ScrambleV2.Link2.Embed
 

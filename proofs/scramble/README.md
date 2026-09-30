@@ -64,9 +64,13 @@ fits `i64`.
 
 - `turn_cubie_refines`, `quarter_refines`, `apply_turns_refines`: the emitted face turn
   equals the model's `moveCubie` / `quarter`.
-- `cross_refines`, `mul_vec_refines`, `apply_matrix_refines`: the emitted cross product,
-  matrix-vector product and whole-cube rotation equal the model's, for a matrix in `rots`.
-  These target the matrix shape of the Generated code on `main` today (`List<List<int>>`).
+- `cross_refines`, `dot_refines`, `mul_vec_refines`, `apply_matrix_refines`: the emitted
+  cross product, row dot product, matrix-vector product and whole-cube rotation equal the
+  model's, for a matrix in `rots`. Rows are the triple of `(Int × Int × Int)` from the
+  streaming-state regeneration (not `List<List<int>>`). Positions in `{-1, 0, 1}`, and a
+  list length that fits `i64`.
+- `reorient_refines`: on a reachable cube, with two colors on perpendicular faces, the
+  emitted `reorient` is the model's `rotateTo` (Rule B's matrix, or the seat).
 
 **Lookups and piece readers** (`ScrambleV2/Link2/Lookup.lean`, `Pieces.lean`).
 
@@ -104,18 +108,18 @@ fits `i64`.
 - `letter_refines`, `hex_digit_refines`, `move_name_refines`: the trace's name helpers on
   every color, digit `0 … 15`, face and turn count.
 
-**Not proved yet** (the plan): the emitted `reorient`, `do_rule`, the tape and state
-functions (`fresh` / `scramble_v2`, `do_move`, `apply_v2_symbol`, `push_step`, padding,
-`apply_ready`, `update`, `evaluate`, `finish`), and the headline: for a byte message, the
-emitted `scramble_v2`, `update`, `evaluate` return `.ok` with `digest = embed (digestV2 msg)`
-(digest only; the trace is excluded). These read the `Scramble` state record or Rule B's
-matrix rows, both of which the pending streaming-state regeneration of
-`Generated/Scramble.lean` rewrites; they are proved against the regenerated code.
+**Not proved yet** (the plan): `do_rule`, the tape and state functions
+(`fresh` / `scramble_v2` / `scramble_v2_digest`, `do_move`, `apply_v2_symbol`, `push_step`,
+`pad`, `apply_ready`, `update`, `evaluate`, `finish`), and the headline: for a byte
+message, the emitted digest-only walk (`scramble_v2_digest`, or `scramble_v2` for the
+digest field only) then `update` then `evaluate` returns `.ok` with
+`digest = embed (digestV2 msg)`. The trace text is not part of the claim.
 
 **Temporary duplicates.** `asc_tail` and `asc_tail_idx` (`ScrambleV2/Link2/Loop.lean`) are
 copies of the same lemmas in `DoubleDealCbcHmac.Link2.Loop`, which this package cannot
-import. A separate MegaDreifach / CBC-HMAC plumbing PR moves them to one home in
-`MegaDreifach.Link2.Loop`; this package drops its copies then.
+import. Draft #144 moves them to one home in `MegaDreifach.Link2.Loop`. #144 is not on
+`main`, so these copies stay until that merge; deleting them earlier would make the names
+ambiguous under `open MegaDreifach.Link2`.
 
 None of this is a hash-security claim.
 

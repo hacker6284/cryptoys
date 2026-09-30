@@ -6,7 +6,7 @@
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
 # Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10, v11),
-# MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. DoubleDeal's test-only
+# MegaDreifach (current v2 and frozen v1), Scramble, and DoubleDeal-CBC-HMAC. DoubleDeal's test-only
 # kind-scan whiles are stripped under the gate. CBC-HMAC imports
 # MegaDreifach via an extra -I.
 #
@@ -27,18 +27,19 @@ cd "$ROOT"
 # The targets, spelled once: name | .sudo | Generated/ | extra -I directories.
 # doubledeal-v8, -v9, -v10 are frozen, deprecated (vulnerability-proof / write-up
 # targets); doubledeal-v11 is frozen, superseded (not attacked). Do not change their .sudo.
-# megadreifach is PINNED TO THE FROZEN, DEPRECATED v1 (v1/megadreifach.sudo): the Lean proof
-# package proofs/megadreifach/ models v1 and has not been ported to v2, so its Generated/ is
-# emitted from v1. The file keeps the name megadreifach.sudo so the emitted module stays
-# `Megadreifach` (the entry is the file stem). The current v2 sudo is not emitted to Lean
-# on its own; it only reaches Lean through cbc-hmac's -I import (emitted code, no proofs).
+# megadreifach is the current v2 (megadreifach.sudo): the proof package proofs/megadreifach/.
+# megadreifach-v1 is frozen, deprecated v1 (v1/megadreifach.sudo): the v1 weakness-proof
+# package proofs/deprecated/megadreifach-v1/. Do not change the v1 .sudo. Both files are
+# named megadreifach.sudo, so both emitted modules are `Megadreifach` (the entry is the
+# file stem), each in its own Generated/ package.
 TARGET_TABLE="
 doubledeal      primitives/cipher/doubledeal/doubledeal.sudo              proofs/doubledeal/lean/Generated
 doubledeal-v8   primitives/cipher/doubledeal/v8/doubledeal_v8.sudo        proofs/deprecated/doubledeal-v8/lean/Generated
 doubledeal-v9   primitives/cipher/doubledeal/v9/doubledeal_v9.sudo        proofs/deprecated/doubledeal-v9/lean/Generated
 doubledeal-v10  primitives/cipher/doubledeal/v10/doubledeal_v10.sudo      proofs/deprecated/doubledeal-v10/lean/Generated
 doubledeal-v11  primitives/cipher/doubledeal/v11/doubledeal_v11.sudo      proofs/deprecated/doubledeal-v11/lean/Generated
-megadreifach    primitives/hash/megadreifach/v1/megadreifach.sudo         proofs/megadreifach/lean/Generated
+megadreifach    primitives/hash/megadreifach/megadreifach.sudo            proofs/megadreifach/lean/Generated
+megadreifach-v1 primitives/hash/megadreifach/v1/megadreifach.sudo         proofs/deprecated/megadreifach-v1/lean/Generated
 scramble        primitives/hash/scramble/scramble.sudo                    proofs/scramble/lean/Generated
 cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach
 "

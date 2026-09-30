@@ -32,12 +32,12 @@
 
   Zero sorry.  No native_decide.
 -/
-import MegaDreifach.Security.MDReduction
-import MegaDreifach.Security.StepWord
+import MegaDreifachV1.Security.MDReduction
+import MegaDreifachV1.Security.StepWord
 
-namespace MegaDreifach.Security
+namespace MegaDreifachV1.Security
 
-open MegaDreifach MegaDreifach.Link2
+open MegaDreifachV1 MegaDreifachV1.Link2
 
 /-- Same corner part (corner permutation and corner orientation). -/
 def SameCorners (p q : Position) : Prop := p.cp = q.cp ∧ p.co = q.co
@@ -233,4 +233,4 @@ theorem digest_top_collision (h h' : Position) (hh : InjPos h) (hh' : InjPos h')
   rw [rankPosition_div _ i1, rankPosition_div _ i2]
   exact cornerRank_sameCorners _ _ (foldl_dmBlock_sameCorners suffix h h' hc)
 
-end MegaDreifach.Security
+end MegaDreifachV1.Security

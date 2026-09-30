@@ -31,13 +31,13 @@
 
   Zero sorry.  No native_decide.
 -/
-import MegaDreifach.Link2.VHash
-import MegaDreifach.Link2.EmIv
-import MegaDreifach.Hex
+import MegaDreifachV1.Link2.VHash
+import MegaDreifachV1.Link2.EmIv
+import MegaDreifachV1.Hex
 
-namespace MegaDreifach.Security.SwapCollision
+namespace MegaDreifachV1.Security.SwapCollision
 
-open MegaDreifach MegaDreifach.Link2
+open MegaDreifachV1 MegaDreifachV1.Link2
 
 /-- The two colliding messages. -/
 def msgA : List Nat := hexBytes "e132ebb03ed19b3949820c68d22d8b5004867c3c0ea79f44269e19fb"
@@ -109,4 +109,4 @@ theorem v_Hash_swap_collision :
   have wfB : PadWf msgB := ⟨by unfold Byte; decide, by unfold FitsBitlen i64MaxNat; decide⟩
   exact ⟨by decide, _, v_Hash_refines _ wfA, by rw [v_Hash_refines _ wfB, vhashAlg_collision]⟩
 
-end MegaDreifach.Security.SwapCollision
+end MegaDreifachV1.Security.SwapCollision

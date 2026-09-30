@@ -1,13 +1,12 @@
 /-
   LINK 2. Table-driven E_m helpers refine their algebraic models.
 
-  * `noon_phys_refines`: `Generated.noon_phys` ≃ `Em.noonPhys` on every
-    grip `o : Fin 12 → Fin 12` and face `phys : Fin 12`.
-
-  Method. `noon_phys` reads only `o[held_up]` and `o[held_front]`
-  (`noon_phys_two`), so it is a function of three face ids. The remaining
-  finite table (`12^3` cases) is closed by kernel reduction (`decide!`,
-  no `native_decide`, no extra axioms).
+  * `visual_noon_refines`: `Generated.visual_noon` ≃ `Em.visualNoon` on every
+    hold position `p : Fin 12` and every grip `o : Fin 12 → Fin 12` (symbolic;
+    no table).
+  * `face_nbrs_refines`, `corner_faces_refines`: finite tables (kernel `decide!`).
+  * `abs_reorient_refines` / `abs_reorient_traps`: exact on all `12^2` colour
+    pairs (kernel `decide!`).
 
   Algebraic Link 2 only. Not `em_block`. Not `v_Hash`.
 -/
@@ -41,36 +40,54 @@ theorem allFin12_spec {P : Fin 12 → Bool} (h : allFin12 P = true) (i : Fin 12)
   have := h i.val (List.mem_range.mpr i.isLt)
   simpa [i.isLt] using this
 
-/-! ## `noon_phys` -/
-
-/-- `noon_phys` reads the grip only at `held_up = 0` and `held_front = 1`. -/
-theorem noon_phys_two (phys : Int) (o : Array Int) (u f : Int)
-    (h0 : SudoRt.atL o 0 = .ok u) (h1 : SudoRt.atL o 1 = .ok f) :
-    Megadreifach.noon_phys phys o = Megadreifach.noon_phys phys #[u, f] := by
-  unfold Megadreifach.noon_phys
-  rw [show Megadreifach.held_up = 0 from rfl, show Megadreifach.held_front = 1 from rfl, h0, h1]
-  rfl
-
-/-- The finite `noon_phys` table on three face ids (kernel-checked). -/
-theorem noon_phys_table :
-    allFin12 (fun p => allFin12 (fun u => allFin12 (fun f =>
-      isOkEq (Megadreifach.noon_phys (Int.ofNat p.val) #[Int.ofNat u.val, Int.ofNat f.val])
-        (Int.ofNat (noonCore p u f).val)))) = true := by
-  decide!
-
 private theorem atL_listOf12 (o : Grip) (i : Nat) (hi : i < 12) :
     SudoRt.atL (embed (listOf o)) (Int.ofNat i) = .ok (Int.ofNat (o ⟨i, hi⟩).val) := by
   have hlen : i < (listOf o).length := by rw [listOf_length]; exact hi
   rw [atL_embed (listOf o) i hlen]
   simp [listOf, List.getElem_map, List.getElem_range, hi]
 
-/-- `Generated.noon_phys` refines `Em.noonPhys` for every grip and face. -/
-theorem noon_phys_refines (phys : Fin 12) (o : Grip) :
-    Megadreifach.noon_phys (Int.ofNat phys.val) (embed (listOf o)) =
-      .ok (Int.ofNat (noonPhys phys o).val) := by
-  rw [noon_phys_two _ _ _ _ (atL_listOf12 o 0 (by decide)) (atL_listOf12 o 1 (by decide))]
-  exact isOkEq_spec (allFin12_spec (allFin12_spec (allFin12_spec noon_phys_table phys) _) _)
+/-! ## `visual_noon` -/
 
+/-- `Generated.visual_noon` refines `Em.visualNoon` for every hold position and grip. -/
+theorem visual_noon_refines (p : Fin 12) (o : Grip) :
+    Megadreifach.visual_noon (Int.ofNat p.val) (embed (listOf o)) =
+      .ok (Int.ofNat (visualNoon p o).val) := by
+  obtain ⟨p, hp⟩ := p
+  unfold Megadreifach.visual_noon visualNoon
+  rw [show Megadreifach.held_up = Int.ofNat 0 from rfl,
+    show Megadreifach.held_front = Int.ofNat 1 from rfl,
+    show Megadreifach.lower_ring_first = Int.ofNat 6 from rfl,
+    show Megadreifach.held_down = Int.ofNat 11 from rfl,
+    show Megadreifach.down_noon_hold = Int.ofNat 6 from rfl]
+  dsimp only
+  by_cases h0 : p = 0
+  · subst h0
+    rw [atL_listOf12 o 1 (by decide)]
+    rfl
+  · have hb : SudoRt.SEq.beq (Int.ofNat p) (Int.ofNat 0) = false := by
+      show decide (Int.ofNat p = Int.ofNat 0) = false
+      simp only [decide_eq_false_iff_not]; intro hc; exact h0 (Int.ofNat.inj hc)
+    rw [hb, if_neg h0]
+    simp only [Bool.false_eq_true, ite_false]
+    split
+    · rename_i hc
+      have h6 : p < 6 := Int.ofNat_lt.mp (of_decide_eq_true hc)
+      rw [if_pos h6, atL_listOf12 o 0 (by decide)]
+      rfl
+    · rename_i hc
+      have h6 : ¬ p < 6 := fun h => hc (decide_eq_true (Int.ofNat_lt.mpr h))
+      rw [if_neg h6]
+      split
+      · rename_i hc'
+        have h11 : p < 11 := Int.ofNat_lt.mp (of_decide_eq_true hc')
+        rw [dif_pos h11, show (5 : Int) = Int.ofNat 5 from rfl,
+          subI_ofNat p 5 (FitsLen.of_le (by unfold FitsLen i64MaxNat; decide : FitsLen 12)
+            (by omega)) (by omega), ok_bind, atL_listOf12 o (p - 5) (by omega)]
+        rfl
+      · rename_i hc'
+        have h11 : ¬ p < 11 := fun h => hc' (decide_eq_true (Int.ofNat_lt.mpr h))
+        rw [dif_neg h11, atL_listOf12 o 6 (by decide)]
+        rfl
 
 /-! ## Finite tables: `face_nbrs`, `corner_faces`, `rot_at` -/
 

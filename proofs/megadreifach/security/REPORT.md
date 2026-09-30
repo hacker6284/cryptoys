@@ -1,14 +1,14 @@
 # MegaDreifach hash: security review (reductions, proofs and cryptanalysis)
 
-> **Status update.** Everything in this report is about **MegaDreifach v1**, which is now **deprecated** and frozen at `primitives/hash/megadreifach/v1/` (SPEC + `megadreifach.sudo`). "As published" and "current" below mean v1 as it was when this report was written. The current version is v2 (`primitives/hash/megadreifach/SPEC.md`), which this report does not analyse. `md.py` and `tables.py` model v1; `md.py` reads the v1 KAT file `kats/megaminx_hash_kats_v1.json` (renamed from `kats/megaminx_hash_kats.json`, contents unchanged). Card names use CHaSeD suit order (id % 4: 0 ♣, 1 ♥, 2 ♠, 3 ♦).
+> **Status update.** Everything in this report is about **MegaDreifach v1**, which is now **deprecated** and frozen at `primitives/hash/megadreifach/v1/` (SPEC + `megadreifach.sudo`). "As published" and "current" below mean v1 as it was when this report was written. The current version is v2 (`primitives/hash/megadreifach/SPEC.md`), which this report does not analyse. `md.py` and `tables.py` model v1; `md.py` reads the v1 KAT file `kats/megaminx_hash_kats_v1.json` (renamed from `kats/megaminx_hash_kats.json`, contents unchanged). Card names use CHaSeD suit order (id % 4: 0 ♣, 1 ♥, 2 ♠, 3 ♦). The file count in §1 ("Files are in `proofs/megadreifach/lean/MegaDreifach/Security/`: 9 modules") and its audit count ("2,371 theorems audited") are v1-era snapshots.
 
 Subject: MegaDreifach v1 (`primitives/hash/megadreifach/v1/`, deprecated). Its block map E_m uses the **v1 Recipe A grip rule**, called "v1 of the grip rule" (or just "v1") below. Recipe A re-grips by reading one corner cubie, after the card's held-face, noon and Front turns. ("v1" here names the grip rule only; it is unrelated to the v1 SPEC's "Public v1 Body" API name.)
-Lean package: `proofs/megadreifach/lean`, Lean v4.14.0. The Lean files are in `proofs/megadreifach/lean/MegaDreifach/Security/`; the scripts are in this directory (`proofs/megadreifach/security/`), and their recorded outputs are in `logs/` (§7).
+Lean: the v1 results below are in the frozen package `proofs/deprecated/megadreifach-v1/lean` (Lean v4.14.0, namespace `MegaDreifachV1`, files in `MegaDreifachV1/Security/`); the rule-independent files of §1.5 were ported to v2 in the main package `proofs/megadreifach/lean`; the scripts are in this directory (`proofs/megadreifach/security/`), with their recorded outputs in `logs/` (§7).
 **Note: this package has no Mathlib. It is core Lean plus the repo's `audit` package.** Every proof below uses core Lean only.
 
 **How to read this report.**
-* **Proved** means a kernel-checked Lean theorem in the default library `MegaDreifach`, audited by `check_axioms.py megadreifach`.
-* **Measured** means a seeded script run on the real hash (via the KAT-checked `md.py`), with the output committed under `logs/` and re-checked by `--check`. The swap attack F5 (§3) is measured: it gives concrete IV-anchored `Hash` collisions at about 2^12–2^13 compressions, and second preimages of long random targets. One collision is also kernel-checked in Lean (`SwapCollision.v_Hash_swap_collision`).
+* **Proved** means a kernel-checked Lean theorem: the v1 results (§1.3) are in `MegaDreifachV1` (`proofs/deprecated/megadreifach-v1/lean`), audited by `check_axioms.py megadreifach-v1-deprecated`; the rule-independent results are proved for v2 in the default library `MegaDreifach`, audited by `check_axioms.py megadreifach`; only `MDGeneric`, `MDReduction`, `StepWord` and `Parity` are also in `MegaDreifachV1` (`DigestInj` and `IdealCount` were not kept, so e.g. `v_Hash_collision_comp` is no longer proved for the v1 `v_Hash`).
+* **Measured** means a seeded script run on the real hash (via the KAT-checked `md.py`), with the output committed under `logs/` and re-checked by `--check`. The swap attack F5 (§3) is measured: it gives concrete IV-anchored `Hash` collisions at about 2^12–2^13 compressions, and second preimages of long random targets. One collision is also kernel-checked in Lean (`MegaDreifachV1.Security.SwapCollision.v_Hash_swap_collision`).
 * **Estimated** means a paper attack extrapolated from toy-scale runs (§4) under stated assumptions. This applies to F3 and F4 (§2). They were not run at full size. No preimage of `Hash` has been found.
 * **The ideal-cipher bound does not apply.** §2 records the Black–Rogaway–Shrimpton ideal-cipher bounds only as the design target. E_m is not an ideal cipher: `emBlock_word` gives a 2-query distinguisher, and F5 a practical related-key one. So those bounds say nothing about MegaDreifach v1.
 * **Two separate causes.** The v1 weaknesses have two different causes (§0, "Causes"): the corner-only read (F1–F4) and the read timing after the noon turn (F5). In-tree, a control run (§3.5) keeps Recipe A's corner-only read and moves only the read to before the noon turn: the swap collisions disappear (distance 2 from the IV: 15/35,175 → 0/35,175). That an edge-reading rule which still reads after the noon turn keeps them is out-of-tree evidence only. So a redesign should address both; fixing A alone is not expected to remove F5, but that half is not shown here. The MD reduction, the pad suffix-freeness, digest-encoding injectivity (`evenRank_inj` plus the parity invariant), the step lemmas and the ideal-model counting lemmas are independent of the grip rule (§1.5).
@@ -105,7 +105,7 @@ The invariant `WordInv` carries `Word W` (the shared word is a product of face m
 
 | theorem | content | axioms |
 |---|---|---|
-| **`SwapCollision.v_Hash_swap_collision`** | `embed M ≠ embed M' ∧ ∃ d, Megadreifach.v_Hash (embed M) = .ok d ∧ Megadreifach.v_Hash (embed M') = .ok d` (both runs succeed, same digest) for the 28-byte pair of §3.3, about the **generated** `v_Hash` (via `v_Hash_refines`) | all three |
+| **`MegaDreifachV1.Security.SwapCollision.v_Hash_swap_collision`** | `embed M ≠ embed M' ∧ ∃ d, Megadreifach.v_Hash (embed M) = .ok d ∧ Megadreifach.v_Hash (embed M') = .ok d` (both runs succeed, same digest) for the 28-byte pair of §3.3, about the **generated** `v_Hash` (via `v_Hash_refines`) | all three |
 | `SwapCollision.vhashAlg_collision` | The same for the algebraic hash `vhashAlg` | propext, Quot.sound |
 | `SwapCollision.dmBlock_iv_collision` | `dmBlock IV M = dmBlock IV M'`: the first compressions agree | propext, Quot.sound |
 | `SwapCollision.prefixA` / `prefixB` | Both 7-card prefixes of the deals lead from (IV-COOK12, identity grip) to the same position and grip | propext, Quot.sound |
@@ -257,7 +257,7 @@ Hash(M) = Hash(M') = 0084d6d1e0a4ddb231deb23ac0f4ead7b497eed17f997bfcefa7c34e82
 ```
 * The grips after cards 5, 6 and 7 are (Up, Front) = (1, 0), (3, 9), (4, 3) in both orders, and the positions after card 7 are equal.
 * `python3 suit_blind_collision.py` checks the pair. It exits non-zero if the digests differ, if the messages are equal, or if a KAT fails.
-* `SwapCollision.v_Hash_swap_collision` (§1.3) kernel-checks the same collision for the generated `v_Hash`.
+* `MegaDreifachV1.Security.SwapCollision.v_Hash_swap_collision` (§1.3) kernel-checks the same collision for the generated `v_Hash`.
 
 ### 3.4 What F5 changes, and what it does not
 

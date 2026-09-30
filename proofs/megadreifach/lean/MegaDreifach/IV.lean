@@ -12,7 +12,7 @@ namespace MegaDreifach
 def f3Round (step : Position → Position) (g : Position) : Position :=
   step g
 
-/-- F3 tail: iterate `step` exactly `t` times. Soft-lock `t = 12`. -/
+/-- F3 tail: iterate `step` exactly `t` times. Locked `t = f3T = 36` (v2). -/
 def f3Iter (step : Position → Position) : Nat → Position → Position
   | 0, g => g
   | t + 1, g => f3Iter step t (step g)
@@ -23,12 +23,12 @@ def f3Iter (step : Position → Position) : Nat → Position → Position
 theorem f3Iter_succ (step : Position → Position) (t : Nat) (g : Position) :
     f3Iter step (t + 1) g = f3Iter step t (step g) := rfl
 
-/-- M10: F3 with the locked `t = 12` is a well-defined 12-fold iterate. -/
-def f3_12 (step : Position → Position) (g : Position) : Position :=
+/-- M10: F3 with the locked `t = f3T = 36` (v2) is a well-defined 36-fold iterate. -/
+def f3Tail (step : Position → Position) (g : Position) : Position :=
   f3Iter step f3T g
 
-theorem f3_12_eq_iterate (step : Position → Position) (g : Position) :
-    f3_12 step g = f3Iter step 12 g := rfl
+theorem f3Tail_eq_iterate (step : Position → Position) (g : Position) :
+    f3Tail step g = f3Iter step 36 g := rfl
 
 theorem f3Iter_deterministic (step : Position → Position) (t : Nat) (g : Position) :
     f3Iter step t g = f3Iter step t g := rfl

@@ -169,6 +169,28 @@ jobs:
       - name: Axiom audit (no sorryAx / ofReduceBool)
         run: python3 proofs/doubledeal/check_axioms.py v10-deprecated
 
+  megadreifach-v1-deprecated:
+    # Frozen, deprecated MegaDreifach v1 (superseded by v2): emitted v1 TAP and the
+    # v1 weakness proofs (CornerDriven, FreeStart, SwapCollision) with their import
+    # closure, built against the v1 emit, plus their axiom audit
+    # (see proofs/deprecated/megadreifach-v1/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide / initialize in the frozen v1 package
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/megadreifach-v1/lean --exclude Generated
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/megadreifach-v1/lean/Generated
+      - name: Generated v1 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/megadreifach-v1/lean/Generated
+        run: ./.lake/build/bin/megadreifach_test
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/megadreifach-v1/lean
+      - name: Axiom audit of every MegaDreifachV1 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py megadreifach-v1-deprecated
+
   doubledeal-lean:
     runs-on: ubuntu-latest
     steps:

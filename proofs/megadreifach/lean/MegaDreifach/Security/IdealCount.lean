@@ -16,9 +16,12 @@
   give the paper bounds Adv^coll ≤ q(q+1)/(|G| − q), Adv^pre ≤ q/(|G| − q)
   (≈ q²/|G| and q/|G| for q ≪ |G|; the same form is used in the report)
   (probability arithmetic on paper; see
-  `proofs/megadreifach/security/REPORT.md`).  These bounds do NOT apply to
-  MegaDreifach v1: its block map is not an ideal cipher
-  (`CornerDriven.emBlock_word` gives a 2-query distinguisher).
+  `proofs/megadreifach/security/REPORT.md`).  These bounds assume an ideal
+  cipher, which MegaDreifach is not claimed to be (SPEC §9).  They do NOT apply
+  to v1, whose block map has a proved 2-query distinguisher
+  (`MegaDreifachV1.Security.emBlock_word`, `proofs/deprecated/megadreifach-v1/`),
+  and nothing here says they apply to v2 (free-start pseudo-collisions of v2 are
+  easy, SPEC §8).
 
   Grip-rule status: INDEPENDENT of the grip rule.  The cancellation and
   counting lemmas are group facts about `compose` and need no repair if E_m

@@ -28,7 +28,7 @@ A playroom demo supplies:
 - A camera pose in [`playroom/poses.js`](playroom/poses.js), unless it reuses one.
 - One entry in [`playroom/demos.js`](playroom/demos.js), the registry the playroom iterates.
 
-Still manual: the hub button and noscript link in [`index.html`](index.html) (`playroom/room.test.mjs` checks them against the registry), and the `build_one` line in [`tools/build.sh`](../tools/build.sh) with its `test -f` lines in [`tools/generate-demos.sh`](../tools/generate-demos.sh).
+Still manual: the hub button and noscript link in [`index.html`](index.html) (`playroom/room.test.mjs` checks them against the registry), and the `build_one` line in [`tools/build.sh`](../tools/build.sh) with its `test -f` lines in [`tools/generate-demos.sh`](../tools/generate-demos.sh), and the primitive's path in the `paths` filter of [`preview.yml`](../.github/workflows/preview.yml).
 
 ## Production
 

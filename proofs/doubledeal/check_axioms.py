@@ -36,6 +36,11 @@ axiom) fails, as does a Lean error.
   security/DoubleDealSecurityHeavy/ must be listed in HEAVY_THEOREMS and vice versa
   (checked in both security modes, so the default job cannot silently drop the
   heavy target), and every listed theorem must be reported by the heavy audit.
+  The heavy audit also checks the Lean-generated theorems (e.g. equation lemmas) of
+  those modules, which have no source declaration and are pinned in HEAVY_GENERATED:
+  every audited theorem not in HEAVY_THEOREMS must be in HEAVY_GENERATED, and every
+  HEAVY_GENERATED entry must be audited (so a theorem the source scan misses fails
+  instead of passing as generated).
 - megadreifach / megadreifach-heavy: like security / security-heavy (mode "all",
   no KNOWN_SORRY) for proofs/megadreifach/lean, roots `MegaDreifach` and
   `MegaDreifachHeavy`. Its heavy source must declare the 8 headline `kat_*`
@@ -63,21 +68,27 @@ Public names cannot collide with each other either way (Lean rejects them in one
 environment, and `#audit_all` reports an identical re-declaration as `DUP`).
 
     python3 proofs/doubledeal/check_axioms.py --selftest   # keying rules on synthetic reports
+    python3 proofs/doubledeal/check_axioms.py --selftest-lean  # Lean elaborates the source-scan
+                          # fixture; its theorem names must equal the scanner's (needs `lean`)
 """
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ALLOWED = {"propext", "Classical.choice", "Quot.sound"}
 ROOT = Path(__file__).resolve().parent
-# Every theorem declared in security/DoubleDealSecurityHeavy/ (checked against the
-# source in both security modes; audited by `security-heavy`).
-# The heavy audit reports ONE MORE theorem than this registry lists:
-# `DoubleDeal.Security.GridCycleSurvival.chunkOK.eq_1`, the equation lemma that Lean
-# generates on demand when `of_chunks` unfolds `chunkOK` (`simp only [chunkOK, ...]`).
-# It is not declared in the source, so it is not registered here; like every audited
-# theorem it must still use only the allowed axioms.
+# Every theorem/lemma the source scan (`heavy_source_theorems`) finds in
+# security/DoubleDealSecurityHeavy/ (checked against the source in both security modes;
+# audited by `security-heavy`).
+# The heavy audit (`#audit_all`: every theorem constant of a DoubleDealSecurityHeavy.*
+# module) also reports theorems with no source declaration: Lean-generated ones (e.g.
+# equation lemmas), which Lean creates on demand when a proof unfolds a definition
+# (`simp only [f, ...]` creates `f.eq_1`) and stores in that proof's module. They are
+# pinned in HEAVY_GENERATED (after this set); `security-heavy` fails on an audited
+# theorem in neither set and on a HEAVY_GENERATED entry it does not audit. Like every
+# audited theorem they must still use only the allowed axioms.
 HEAVY_DIR = ROOT / "security" / "DoubleDealSecurityHeavy"
 HEAVY_THEOREMS = {
     "DoubleDeal.Security.realKey_enc_id",
@@ -178,6 +189,11 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantNarrow.roundBody_not_commutes_swap",
     "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime_nonswap",
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
+}
+# Lean-generated theorems of the heavy modules (no source declaration; see the comment
+# above HEAVY_THEOREMS). chunkOK.eq_1: `of_chunks` unfolds `chunkOK` with `simp only`.
+HEAVY_GENERATED = {
+    "DoubleDeal.Security.GridCycleSurvival.chunkOK.eq_1",
 }
 # proofs/megadreifach/lean (MegaDreifach v2): the 8 v2 hash KATs in
 # MegaDreifachHeavy/Kat.lean. The names match the vectors of
@@ -527,16 +543,24 @@ REGISTRIES = {
 
 
 def heavy_source_theorems(heavy_dir=HEAVY_DIR):
-    """Fully qualified names of the theorems declared in a heavy source dir."""
-    names = set()
-    for path in sorted(heavy_dir.rglob("*.lean")):
-        text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
-        ns = re.findall(r"^namespace\s+(\S+)", text, flags=re.M)
-        prefix = (ns[0] + ".") if ns else ""
-        for n in re.findall(r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected)\s+)*(?:theorem|lemma)\s+([^\s(:{\[]+)",
-                            text, flags=re.M):
-            names.add(prefix + n)
-    return names
+    """Fully qualified names of the theorems declared in a heavy source dir, private
+    ones included (the audit reports them under their user-facing name). Same scope
+    tracking as `lean_source_theorems`."""
+    return lean_source_theorems(heavy_dir, private=True)
+
+
+def heavy_generated_problems(audited, listed, generated):
+    """security-heavy: `listed` (HEAVY_THEOREMS) and `generated` (HEAVY_GENERATED) are
+    disjoint, every audited theorem not in `listed` is in `generated`, and every
+    `generated` entry is audited."""
+    both = listed & generated
+    extra = set(audited) - listed
+    return ([f"{n} is in both HEAVY_THEOREMS and HEAVY_GENERATED" for n in sorted(both)]
+            + [f"audited {n} is in neither HEAVY_THEOREMS nor HEAVY_GENERATED (source scan "
+               "missed a declaration, or a new generated lemma?)"
+               for n in sorted(extra - generated)]
+            + [f"HEAVY_GENERATED entry {n} was not audited; remove it"
+               for n in sorted(generated - both - set(audited))])
 
 
 def heavy_registry_problems(reg):
@@ -553,35 +577,59 @@ def heavy_registry_problems(reg):
 
 
 MD_README = MD_LEAN.parent / "README.md"
-_DECL = re.compile(r"^\s*(?:@\[[^\]]*\]\s*)?((?:(?:private|protected|noncomputable)\s+)*)"
+# A theorem/lemma declaration line: optional `open … in` / `set_option … in` prefixes
+# (any number, on the same line), an optional attribute, modifiers, then the name.
+_DECL = re.compile(r"^\s*(?:(?:open|set_option)\s[^\n]*?\sin\s+)*"
+                   r"(?:@\[[^\]]*\]\s*)?((?:(?:private|protected|noncomputable)\s+)*)"
                    r"(?:theorem|lemma)\s+([^\s(:{\[]+)")
-_SCOPE = re.compile(r"^\s*(namespace|section|mutual|end)\b\s*([\w.']*)")
+_SCOPE = re.compile(r"^\s*(?:noncomputable\s+)?(namespace|section|mutual|end)\b\s*([\w.']*)")
 
 
-def lean_source_theorems(root, skip=("Generated", "MegaDreifachHeavy", ".lake")):
-    """Public theorem names declared under `root`, fully qualified by tracking the
-    namespace / section / mutual / end scopes (comments stripped). No Lean needed."""
+def lean_text_theorems(text, private=False):
+    """Theorem names declared in one Lean file's text, fully qualified by tracking the
+    namespace / section / mutual / end scopes (comments stripped; `namespace A.B` opens
+    two scopes, closed by `end A.B` or by `end B` then `end A`; `_root_.` names are not
+    qualified). Private ones only if `private`. No Lean needed.
+
+    Line-based, not a Lean parser: nested block comments, /- inside a line comment,
+    nonrec, attributes containing ], «…» names and declarations split across lines are
+    not handled; the heavy gate fails loudly on any miss."""
+    names = set()
+    text = re.sub(r"/-.*?-/", "", text, flags=re.S)
+    stack = []  # one entry per open scope: a namespace component, or None (section / mutual)
+    for line in text.splitlines():
+        line = line.split("--", 1)[0]
+        m = _SCOPE.match(line)
+        if m:
+            kind, arg = m.groups()
+            parts = arg.split(".") if arg else []
+            n = max(len(parts), 1)
+            if kind == "namespace":
+                stack += parts
+            elif kind == "end":
+                del stack[-n:]
+            else:  # section (one scope per name component) / mutual
+                stack += [None] * n
+            continue
+        d = _DECL.match(line)
+        if d and (private or "private" not in d.group(1)):
+            n = d.group(2)
+            names.add(n.removeprefix("_root_.") if n.startswith("_root_.")
+                      else ".".join([c for c in stack if c] + [n]))
+    return names
+
+
+MD_SCAN_SKIP = ("Generated", "MegaDreifachHeavy", ".lake")  # MegaDreifach default library
+
+
+def lean_source_theorems(root, skip=(".lake",), private=False):
+    """Theorem names declared under `root` (public only unless `private`), fully
+    qualified; see `lean_text_theorems`. No Lean needed."""
     names = set()
     for path in sorted(root.rglob("*.lean")):
         if any(part in skip for part in path.relative_to(root).parts):
             continue
-        text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
-        stack = []  # entries: list of namespace components ([] for section / mutual)
-        for line in text.splitlines():
-            line = line.split("--", 1)[0]
-            m = _SCOPE.match(line)
-            if m:
-                kind, arg = m.groups()
-                if kind == "namespace":
-                    stack.append(arg.split("."))
-                elif kind in ("section", "mutual"):
-                    stack.append([])
-                elif stack:
-                    stack.pop()
-                continue
-            d = _DECL.match(line)
-            if d and "private" not in d.group(1):
-                names.add(".".join([c for e in stack for c in e] + [d.group(2)]))
+        names |= lean_text_theorems(path.read_text(), private)
     return names
 
 
@@ -589,7 +637,7 @@ def md_readme_cited(readme=MD_README, root=MD_LEAN):
     """The README's backticked identifiers that name a theorem of the default library
     (the token equals the name or a dotted suffix of it; must be unambiguous)."""
     tokens = set(re.findall(r"`([A-Za-z_][\w.']*)`", readme.read_text()))
-    decls = lean_source_theorems(root)
+    decls = lean_source_theorems(root, skip=MD_SCAN_SKIP)
     cited, bad = set(), []
     for t in sorted(tokens):
         hits = {n for n in decls if n == t or n.endswith("." + t)}
@@ -627,6 +675,74 @@ def key_reports(found, full):
     return seen, bad
 
 
+# Source-scan fixture: one-line `open … in` / `set_option … in` declarations and
+# several namespaces per file (both missed by the earlier first-namespace regex scan),
+# dotted namespaces and ends, sections, `noncomputable section`, `mutual`, `_root_`,
+# comments. Valid core Lean 4.14 (no Mathlib `lemma`): `--selftest-lean` (CI job
+# doubledeal-security) elaborates it and requires Lean's theorem names to be exactly
+# HEAVY_SCAN_EXPECTED; `--selftest` checks the scanner against the same set.
+HEAVY_SCAN_FIXTURE = """namespace A
+theorem a : True := trivial
+open Nat in theorem b : True := trivial
+set_option maxHeartbeats 400000 in theorem c : True := trivial
+open Nat in set_option maxHeartbeats 400000 in @[simp] private theorem c2 : True := trivial
+end A
+namespace B.C
+protected theorem d : True := trivial
+end C
+theorem e : True := trivial
+end B
+noncomputable section
+theorem f : True := trivial
+end
+namespace D
+section S.T
+/-- doc -/ theorem g : True := trivial
+end S.T
+theorem _root_.Z.h : True := trivial
+/- theorem hidden : True := trivial -/
+-- theorem hidden2 : True := trivial
+mutual
+theorem i : True := trivial
+end
+end D
+theorem j : True := trivial
+"""
+HEAVY_SCAN_EXPECTED = {"A.a", "A.b", "A.c", "A.c2", "B.C.d", "B.e", "f", "D.g", "Z.h", "D.i",
+                       "j"}
+# Scanner-only (NOT elaborated: `lemma` is Mathlib/Batteries syntax, not core Lean).
+SCAN_LEMMA_SNIPPET = "namespace L\nlemma m : True := trivial\nend L\n"
+# Appended to the fixture by `--selftest-lean`: print every non-internal theorem the file
+# declares, under its user-facing name.
+_LIST_THEOREMS = """
+open Lean Elab Command in
+elab "#list_file_theorems" : command => do
+  for (n, ci) in (← getEnv).constants.map₂.toList do
+    let u := (privateToUserName? n).getD n
+    if ci matches .thmInfo _ then
+      unless u.isInternal do logInfo m!"THM {u}"
+#list_file_theorems
+"""
+
+
+def selftest_lean():
+    """Elaborate HEAVY_SCAN_FIXTURE with `lean` (core only; run from a directory whose
+    lean-toolchain is the audited one) and require its theorems to be exactly
+    HEAVY_SCAN_EXPECTED, i.e. what the scanner finds."""
+    with tempfile.TemporaryDirectory() as d:
+        f = Path(d) / "ScanFixture.lean"
+        f.write_text("import Lean\n" + HEAVY_SCAN_FIXTURE + _LIST_THEOREMS)
+        r = subprocess.run(["lean", str(f)], capture_output=True, text=True)
+    out = r.stdout + r.stderr
+    got = set(re.findall(r"THM (\S+)", out))
+    ok = r.returncode == 0 and not re.search(r"\berror\b", out) and got == HEAVY_SCAN_EXPECTED
+    print(f"check_axioms selftest-lean: {'ok' if ok else 'FAIL'} Lean elaborates the scan "
+          f"fixture and declares {len(got)} theorems"
+          + ("" if ok else f"; missing {sorted(HEAVY_SCAN_EXPECTED - got)}, extra "
+             f"{sorted(got - HEAVY_SCAN_EXPECTED)}; lean exit {r.returncode}:\n{out}"))
+    return 0 if ok else 1
+
+
 def selftest():
     """The keying rules on synthetic reports (no Lean needed)."""
     pa = "_private.MegaDreifach.Link2.A.0.MegaDreifach.Link2.h"
@@ -647,6 +763,23 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} key={'full' if full else 'user'} "
               f"{names}: {len(bad)} problem(s), expected {want}")
+    # security-heavy: audited = HEAVY_THEOREMS + HEAVY_GENERATED, exactly.
+    lst, gen = {"A.t"}, {"A.f.eq_1"}
+    for what, audited, listed, want in [
+            ("exact", {"A.t", "A.f.eq_1"}, lst, []),
+            ("unlisted, not generated", {"A.t", "A.f.eq_1", "A.b"}, lst,
+             ["audited A.b is in neither"]),
+            ("stale generated", {"A.t"}, lst,
+             ["HEAVY_GENERATED entry A.f.eq_1 was not audited"]),
+            ("unlisted and stale", {"A.t", "A.c"}, lst,
+             ["audited A.c is in neither", "HEAVY_GENERATED entry A.f.eq_1 was not audited"]),
+            ("in both sets", {"A.t", "A.f.eq_1"}, lst | gen,
+             ["A.f.eq_1 is in both HEAVY_THEOREMS and HEAVY_GENERATED"])]:
+        bad = heavy_generated_problems(audited, listed, gen)
+        ok = len(bad) == len(want) and all(w in b for w, b in zip(want, bad))
+        failed += not ok
+        print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} HEAVY_GENERATED {what}: "
+              f"{len(bad)} problem(s), expected {len(want)}")
     # MD_README_THEOREMS / MD_V1_README_THEOREMS must be exactly the theorems the
     # MegaDreifach README / the frozen v1 package's README cites.
     for what, listed, readme, root in [
@@ -662,6 +795,30 @@ def selftest():
               f"{len(cited)} theorems cited in {readme.relative_to(ROOT.parent.parent)}"
               + (f"; cited but not listed: {missing}" if missing else "")
               + (f"; listed but not cited: {extra}" if extra else ""))
+    # The source scan on HEAVY_SCAN_FIXTURE (see there), on the scanner-only `lemma`
+    # snippet, and per file: a namespace left open at the end of one file must not
+    # qualify the next file's names.
+    with tempfile.TemporaryDirectory() as d:
+        (Path(d) / "F.lean").write_text(HEAVY_SCAN_FIXTURE)
+        (Path(d) / "U.lean").write_text("namespace U\ntheorem u : True := trivial\n")
+        (Path(d) / "V.lean").write_text("theorem v : True := trivial\n")
+        in_dir = heavy_source_theorems(Path(d))
+    for what, names, want in [
+            ("lean_text_theorems (private included)",
+             lean_text_theorems(HEAVY_SCAN_FIXTURE, private=True), HEAVY_SCAN_EXPECTED),
+            ("lean_text_theorems (public)", lean_text_theorems(HEAVY_SCAN_FIXTURE),
+             HEAVY_SCAN_EXPECTED - {"A.c2"}),
+            ("lean_text_theorems (scanner-only lemma snippet)",
+             lean_text_theorems(SCAN_LEMMA_SNIPPET), {"L.m"}),
+            ("lean_text_theorems (unclosed namespace, then a new file)",
+             lean_text_theorems("namespace U\ntheorem u : True := trivial\n")
+             | lean_text_theorems("theorem v : True := trivial\n"), {"U.u", "v"}),
+            ("heavy_source_theorems (the fixture plus the two files above)", in_dir,
+             HEAVY_SCAN_EXPECTED | {"U.u", "v"})]:
+        ok = names == want
+        failed += not ok
+        print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} {what}: {len(names)} names"
+              + ("" if ok else f"; missing {sorted(want - names)}, extra {sorted(names - want)}"))
     return 1 if failed else 0
 
 
@@ -669,6 +826,8 @@ def main(argv) -> int:
     pkg = argv[1] if len(argv) > 1 else "lean"
     if pkg == "--selftest":
         return selftest()
+    if pkg == "--selftest-lean":
+        return selftest_lean()
     if pkg not in PACKAGES:
         print(f"usage: check_axioms.py [{'|'.join(PACKAGES)}]", file=sys.stderr)
         return 2
@@ -714,6 +873,8 @@ def main(argv) -> int:
     for fam, reg in REGISTRIES.items():
         if pkg == fam or pkg == fam + "-heavy":
             bad += heavy_registry_problems(reg)
+    if pkg == "security-heavy":
+        bad += heavy_generated_problems(seen, HEAVY_THEOREMS, HEAVY_GENERATED)
     for name in sorted(cfg.get("required", set()) - set(seen)):
         bad.append(f"required theorem {name} was not reported by the audit")
     for name in sorted(known_sorry - set(seen)):
@@ -743,9 +904,13 @@ def main(argv) -> int:
     print(f"check_axioms: {pkg}: {len(expected)} theorems audited, {ok} use only "
           f"{sorted(ALLOWED)}, {known} known-sorry (allowlisted), {len(bad)} failures")
     if pkg == "security":
-        print(f"check_axioms: security: the {len(HEAVY_THEOREMS)} theorems of the heavy library "
-              "DoubleDealSecurityHeavy are NOT in this audit; they are audited separately by "
-              "`check_axioms.py security-heavy` (CI job doubledeal-security-heavy)")
+        print("check_axioms: security: DoubleDealSecurityHeavy is not in this audit; "
+              "security-heavy (CI job doubledeal-security-heavy) audits its "
+              f"{len(HEAVY_THEOREMS)} HEAVY_THEOREMS plus the theorems Lean generates there")
+    if pkg == "security-heavy" and not bad:
+        print(f"check_axioms: security-heavy: {len(expected)} audited = {len(HEAVY_THEOREMS)} "
+              f"HEAVY_THEOREMS + {len(HEAVY_GENERATED)} HEAVY_GENERATED "
+              f"({', '.join(sorted(HEAVY_GENERATED))})")
     if pkg == "megadreifach":
         print("check_axioms: megadreifach: the heavy library MegaDreifachHeavy (the "
               f"{len(MD_HEAVY_THEOREMS)} KAT theorems and their step lemmas) is NOT in this "

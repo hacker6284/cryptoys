@@ -270,8 +270,10 @@ jobs:
         run: python3 proofs/doubledeal/check_axioms.py --selftest
       - name: Swap-collision measurement log matches a fresh seeded run (quick; the report-size runs are in proofs-heavy.yml)
         run: python3 proofs/megadreifach/security/suit_blind_collision.py --check
-      - name: M9 two-card window search (Python evidence, not a theorem; self-checks the 8 v2 KATs; asserts its counts; about 20 s in CI)
+      - name: M9 two-card window search (Python cross-check of the Lean M9 proof, not part of it; self-checks the 8 v2 KATs; asserts its counts; about 20 s in CI)
         run: python3 proofs/megadreifach/m9/m9_search.py
+      - name: M9 decoder certificate M9Cert.lean matches a fresh generation (untrusted data, re-checked by the kernel; about 10 s)
+        run: python3 proofs/megadreifach/m9/m9_cert.py --check
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/megadreifach/lean

@@ -18,8 +18,8 @@
 
   The file also holds the M9 same-first-card half (`twoCard_same_first_ne`) and the
   net-product reduction for different first cards (`twoCard_collision_nets`).  The
-  different-first-card half of M9 is not in Lean (Python evidence only, `../../m9/`).
-  Not collision resistance.  Zero sorry.  No native_decide.
+  different-first-card half and the full 2-card M9 statement (`twoCard_ne`) are in
+  `M9.lean`.  Not collision resistance.  Zero sorry.  No native_decide.
 -/
 import MegaDreifach.G2
 import MegaDreifach.Link2.EmInv

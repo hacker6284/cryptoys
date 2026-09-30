@@ -128,34 +128,46 @@ def read_slot(phys, noon, pos):
     return "e", edge_slot(phys, noon)
 
 
-def held_turn(g, o, card):
-    """First half of a card step: the held-face turn, and the read's (phys, noon)."""
+def held_turn(g, o, card, noon_of=None):
+    """First half of a card step: the held-face turn, and the read's (phys, noon).
+    noon_of(phys, o) overrides the visual noon (None: SPEC §5.5 visual noon, vnoon)."""
     rank, amt = card // 4, card % 4 + 1
     if rank < 12:
-        return face_turn(g, o[rank], amt), o, o[rank], vnoon(rank, o)
-    ow = spin(o, amt)
-    return face_turn(g, o[0], (5 - amt) % 5), ow, ow[0], vnoon(0, ow)
+        g1, ow, held = face_turn(g, o[rank], amt), o, rank
+    else:
+        ow = spin(o, amt)
+        g1, held = face_turn(g, o[0], (5 - amt) % 5), 0
+    phys = ow[held]
+    return g1, ow, phys, vnoon(held, ow) if noon_of is None else noon_of(phys, ow)
 
 
-def g2_step(st, card, pos):
+def g2_step(st, card, pos, noon_of=None):
     g, o = st
-    g1, ow, phys, noon = held_turn(g, o, card)
+    g1, ow, phys, noon = held_turn(g, o, card, noon_of)
     kind, s = read_slot(phys, noon, pos)
     piece, ori = (g1[0][s], g1[1][s]) if kind == "c" else (g1[2][s], g1[3][s])
     new_o = abs_reorient(*read_colours_piece(kind, s, piece, ori, phys, noon))
     return face_turn(face_turn(g1, noon, 1), ow[1], 1), new_o
 
 
-def em_block(h, deal):
+def em_block(h, deal, noon_of=None, t=36, grips=None):
+    """E_m (v2: visual noon, t = 36 F3 rounds).  noon_of(phys, o) and t select the
+    comparison rules of ../security/v2/engine.py; grips, if a list, collects the grip
+    after every re-grip (52 card steps, then t F3 rounds)."""
     st = (h, ROTS[0])
     for i, c in enumerate(deal[:52]):
-        st = g2_step(st, c, i + 1)
-    for rnd in range(1, 37):
+        st = g2_step(st, c, i + 1, noon_of)
+        if grips is not None:
+            grips.append(st[1])
+    for rnd in range(1, t + 1):
         g = face_turn(st[0], st[1][0], 1)
-        phys, noon = st[1][0], vnoon(0, st[1])
+        phys = st[1][0]
+        noon = vnoon(0, st[1]) if noon_of is None else noon_of(phys, st[1])
         kind, s = read_slot(phys, noon, rnd)
         piece, ori = (g[0][s], g[1][s]) if kind == "c" else (g[2][s], g[3][s])
         st = (g, abs_reorient(*read_colours_piece(kind, s, piece, ori, phys, noon)))
+        if grips is not None:
+            grips.append(st[1])
     return st[0]
 
 
@@ -227,20 +239,15 @@ def right_map(p):
     return m
 
 
-def main():
-    print("KATs reproduced by the Python E_m (tables from Em.lean):", kat_check())
-    # Nets: g2Step((W, o), card, pos).1 = compose(net(o, card), W)  (`g2Step_fst_net`).
-    nets = [[g2_step((ID, o), c, 1)[0] for c in range(52)] for o in ROTS]
-    codes = [[bytes(code(n)) for n in row] for row in nets]
-    ok = all(len(set(row)) == 52 for row in codes)
-    print("M8 (60x52 nets pairwise distinct per grip):", ok)
-    assert ok
-
-    # Read injectivity ACROSS all read configurations: for each kind (corner / edge),
-    # over every (phys, noon) that a read can use, every piece and every orientation,
-    # one ordered colour pair never comes from two different pieces.  So two windows
-    # whose second reads see different pieces of W get different colour pairs, even
-    # when their read configurations differ (different intermediate grips / cards).
+def read_injectivity():
+    """Read injectivity ACROSS all read configurations: for each kind (corner / edge),
+    over every (phys, noon) that a read can use, every piece and every orientation,
+    one ordered colour pair never comes from two different pieces.  So two windows
+    whose second reads see different pieces of W get different colour pairs, even
+    when their read configurations differ (different intermediate grips / cards).
+    Also used by ../security/v2/experiments.py (suit_exact).  Raises AssertionError
+    on a failure; returns {kind: {colour pair: piece}}."""
+    out = {}
     for kind in ("c", "e"):
         pos = 1 if kind == "c" else 2
         seen = {}
@@ -257,6 +264,20 @@ def main():
         # and the rotation returned has that pair, so abs_reorient is injective on them.
         for r in seen:
             assert abs_reorient(*r)[:2] == r
+        out[kind] = seen
+    return out
+
+
+def main():
+    print("KATs reproduced by the Python E_m (tables from Em.lean):", kat_check())
+    # Nets: g2Step((W, o), card, pos).1 = compose(net(o, card), W)  (`g2Step_fst_net`).
+    nets = [[g2_step((ID, o), c, 1)[0] for c in range(52)] for o in ROTS]
+    codes = [[bytes(code(n)) for n in row] for row in nets]
+    ok = all(len(set(row)) == 52 for row in codes)
+    print("M8 (60x52 nets pairwise distinct per grip):", ok)
+    assert ok
+
+    read_injectivity()
     print("read -> grip injective on pieces, across all read configurations: True")
 
     # Stage 1: two-card position products compose(net(o1, b), net(o, a)), grouped by o.

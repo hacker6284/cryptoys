@@ -108,12 +108,26 @@ fits `i64`.
 - `letter_refines`, `hex_digit_refines`, `move_name_refines`: the trace's name helpers on
   every color, digit `0 … 15`, face and turn count.
 
-**Not proved yet** (the plan): `do_rule`, the tape and state functions
-(`fresh` / `scramble_v2` / `scramble_v2_digest`, `do_move`, `apply_v2_symbol`, `push_step`,
-`pad`, `apply_ready`, `update`, `evaluate`, `finish`), and the headline: for a byte
-message, the emitted digest-only walk (`scramble_v2_digest`, or `scramble_v2` for the
-digest field only) then `update` then `evaluate` returns `.ok` with
-`digest = embed (digestV2 msg)`. The trace text is not part of the claim.
+**State, digest path** (`ScrambleV2/Link2/State.lean`). Trace text is not modelled.
+A digest-only state has `traced = false`, so `push_step` does not call `facelets_of`.
+
+- `fresh_refines`, `scramble_v2_refines`, `scramble_v2_digest_refines`: `fresh(version, traced)`,
+  and the two v2 constructors (`scramble_v2` traces, `scramble_v2_digest` does not).
+- `push_step_digest`: on `traced = false`, `push_step` is the identity.
+- `push_step_traced`: on a reachable cube with `traced = true`, `push_step` returns `.ok`
+  and keeps the cube (the step list is the only field that grows).
+- `do_move_refines`: `apply_turns` then `push_step`. For a turn count in `{1, 2, 3}` and a
+  nybble below 16, the cube is `n` quarter turns. When not tracing, every other field stays.
+- `do_rule_digest`: on a digest-only reachable state, `do_rule` is the model's Rule B
+  rotation.
+- `apply_v2_symbol_digest`: on a digest-only reachable state, one nybble below 16 is one
+  v2 symbol (two quarter turns, then Rule B).
+
+**Not proved yet:** `pad`, `apply_ready`, `update`, `evaluate`, `finish`, and the headline
+(a byte message through `scramble_v2_digest`, `update`, `evaluate` returns `.ok` with
+`digest = embed (digestV2 msg)`; the trace is not part of the claim). `scramble_v2` is the
+traced constructor; the digest theorem is stated for the digest-only constructor, which is
+the same cube walk.
 
 **Temporary duplicates.** `asc_tail` and `asc_tail_idx` (`ScrambleV2/Link2/Loop.lean`) are
 copies of the same lemmas in `DoubleDealCbcHmac.Link2.Loop`, which this package cannot

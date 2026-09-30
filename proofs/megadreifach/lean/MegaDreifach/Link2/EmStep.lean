@@ -1,8 +1,9 @@
 /-
-  LINK 2. One E_m round: `Generated.f3_step` refines `Em.f3Step` and
-  `Generated.g2_step` refines `Em.g2Step`, each under the `RecipeOk`
-  side condition of the final `recipe_a` call (the corner lookup and the
-  re-orientation both succeed).
+  LINK 2. One E_m round (v2): `Generated.f3_step` refines `Em.f3Step` and
+  `Generated.g2_step` refines `Em.g2Step`, for every round / deal position
+  number, each under the `ReadOk` side condition of its `read_grip` call (the
+  noon is a neighbour, the corner / edge lookups succeed, and the read colours
+  admit a re-orientation).
 
   Algebraic Link 2 only. Not `em_block`. Not `v_Hash`.
 -/
@@ -13,18 +14,13 @@ namespace MegaDreifach.Link2
 
 open MegaDreifach.Em
 
-private theorem sEq_ofNat4 (a b : Nat) :
-    SudoRt.SEq.beq (Int.ofNat a) (Int.ofNat b) = decide (a = b) := by
-  rw [sEq_int]
-  by_cases h : a = b
-  · subst h; simp
-  · have : ¬ (Int.ofNat a = Int.ofNat b) := fun e => h (Int.ofNat.inj e)
-    simp [h]
-    exact this
+theorem visual_noon_refines' (p : Fin 12) (o : Grip) :
+    Megadreifach.visual_noon (Int.ofNat p.val) (embedGrip o) =
+      .ok (Int.ofNat (visualNoon p o).val) := visual_noon_refines p o
 
-theorem noon_phys_refines' (phys : Fin 12) (o : Grip) :
-    Megadreifach.noon_phys (Int.ofNat phys.val) (embedGrip o) =
-      .ok (Int.ofNat (noonPhys phys o).val) := noon_phys_refines phys o
+theorem visual_noon_refines_nat (p : Nat) (hp : p < 12) (o : Grip) :
+    Megadreifach.visual_noon (Int.ofNat p) (embedGrip o) =
+      .ok (Int.ofNat (visualNoon ⟨p, hp⟩ o).val) := visual_noon_refines ⟨p, hp⟩ o
 
 theorem atL_grip1 (o : Grip) :
     SudoRt.atL (embedGrip o) (Int.ofNat 1) = .ok (Int.ofNat (o 1).val) :=
@@ -32,59 +28,63 @@ theorem atL_grip1 (o : Grip) :
 
 /-! ## F3 -/
 
-/-- `Generated.f3_step` refines `Em.f3Step` when the closing `recipe_a` succeeds. -/
-theorem f3_step_refines (g : Position) (o : Grip)
-    (h : RecipeOk (faceTurn g (o 0) 1) (o 0) o) :
-    Megadreifach.f3_step (embedPos g) (embedGrip o) =
-      .ok (embedPos (f3Step (g, o)).1, embedGrip (f3Step (g, o)).2) := by
+/-- Side condition for `f3_step`: its `read_grip` succeeds. -/
+def F3Ok (st : Position × Grip) (rnd : Nat) : Prop :=
+  ReadOk (faceTurn st.1 (st.2 0) 1) (st.2 0) (visualNoon 0 st.2) rnd
+
+/-- `Generated.f3_step` refines `Em.f3Step` (round `rnd`) when its read succeeds. -/
+theorem f3_step_refines (g : Position) (o : Grip) (rnd : Nat) (h : F3Ok (g, o) rnd) :
+    Megadreifach.f3_step (embedPos g) (embedGrip o) (Int.ofNat rnd) =
+      .ok (embedPos (f3Step (g, o) rnd).1, embedGrip (f3Step (g, o) rnd).2) := by
   unfold Megadreifach.f3_step
-  rw [show Megadreifach.held_up = Int.ofNat 0 from rfl, atL_grip0, ok_bind,
-    show (1 : Int) = Int.ofNat 1 from rfl, face_turn_refines, ok_bind]
+  rw [show Megadreifach.held_up = Int.ofNat 0 from rfl, atL_grip0, ok_bind]
   try dsimp only
-  rw [ok_bind, recipe_a_refines _ _ _ h, ok_bind]
+  rw [show (1 : Int) = Int.ofNat 1 from rfl, face_turn_refines, ok_bind]
+  try dsimp only
+  rw [visual_noon_refines_nat 0 (by decide) o, ok_bind,
+    read_grip_refines _ _ (visualNoon ⟨0, by decide⟩ o) _ h, ok_bind]
   rfl
 
 /-! ## G2 -/
 
-/-- The part of `g2Step` before the closing `recipeA`: `(g3, oW, held)`. -/
+/-- The part of `g2Step` before the read: `(g1, oW, held)` after the held-face
+    turn (King: after the Up counter-turn and the grip spin). -/
 def g2Mid (st : Position × Grip) (card : Nat) : Position × Grip × Fin 12 :=
   let g := st.1
   let o := st.2
   let rank := card / 4
   let amt := card % 4 + 1
-  let (g1, oW, held) :=
-    if h : rank < 12 then (faceTurn g (o ⟨rank, h⟩) amt, o, (⟨rank, h⟩ : Fin 12))
-    else (faceTurn g (o 0) ((5 - amt) % 5), spinAboutUp o amt, (0 : Fin 12))
-  let noon := noonPhys (oW held) oW
-  let g2 := if noon ≠ oW held then faceTurn g1 noon 1 else g1
-  let g3 := faceTurn g2 (oW 1) 1
-  (g3, oW, held)
+  if h : rank < 12 then (faceTurn g (o ⟨rank, h⟩) amt, o, (⟨rank, h⟩ : Fin 12))
+  else (faceTurn g (o 0) ((5 - amt) % 5), spinAboutUp o amt, (0 : Fin 12))
 
-theorem g2Step_eq (st : Position × Grip) (card : Nat) :
-    g2Step st card =
-      ((g2Mid st card).1,
-        recipeA (g2Mid st card).1 ((g2Mid st card).2.1 (g2Mid st card).2.2)
-          (g2Mid st card).2.1) := by
+theorem g2Step_eq (st : Position × Grip) (card pos : Nat) :
+    g2Step st card pos =
+      (faceTurn (faceTurn (g2Mid st card).1 (visualNoon (g2Mid st card).2.2 (g2Mid st card).2.1) 1)
+          ((g2Mid st card).2.1 1) 1,
+        readGrip (g2Mid st card).1 ((g2Mid st card).2.1 (g2Mid st card).2.2)
+          (visualNoon (g2Mid st card).2.2 (g2Mid st card).2.1) pos) := by
   unfold g2Step g2Mid
   by_cases h : card / 4 < 12
   · simp only [dif_pos h]
   · simp only [dif_neg h]
 
-/-- Side condition for `g2_step`: the closing `recipe_a` succeeds. -/
-def G2Ok (st : Position × Grip) (card : Nat) : Prop :=
-  RecipeOk (g2Mid st card).1 ((g2Mid st card).2.1 (g2Mid st card).2.2) (g2Mid st card).2.1
+/-- Side condition for `g2_step`: its `read_grip` succeeds. -/
+def G2Ok (st : Position × Grip) (card pos : Nat) : Prop :=
+  ReadOk (g2Mid st card).1 ((g2Mid st card).2.1 (g2Mid st card).2.2)
+    (visualNoon (g2Mid st card).2.2 (g2Mid st card).2.1) pos
 
 private theorem fits8 (k : Nat) (hk : k ≤ 8) : FitsLen k :=
   FitsLen.of_le (by unfold FitsLen i64MaxNat; decide : FitsLen 8) hk
 
-/-- `Generated.g2_step` refines `Em.g2Step` for every card value, under `G2Ok`. -/
-theorem g2_step_refines (g : Position) (o : Grip) (card : Nat) (hok : G2Ok (g, o) card) :
-    Megadreifach.g2_step (embedPos g) (embedGrip o) (Int.ofNat card) =
-      .ok (embedPos (g2Step (g, o) card).1, embedGrip (g2Step (g, o) card).2) := by
+/-- `Generated.g2_step` refines `Em.g2Step` for every card value and deal position,
+    under `G2Ok`. -/
+theorem g2_step_refines (g : Position) (o : Grip) (card pos : Nat) (hok : G2Ok (g, o) card pos) :
+    Megadreifach.g2_step (embedPos g) (embedGrip o) (Int.ofNat card) (Int.ofNat pos) =
+      .ok (embedPos (g2Step (g, o) card pos).1, embedGrip (g2Step (g, o) card pos).2) := by
   rw [g2Step_eq]
   unfold G2Ok at hok
   generalize hm : g2Mid (g, o) card = m at hok ⊢
-  obtain ⟨g3, oW, held⟩ := m
+  obtain ⟨g1, oW, held⟩ := m
   dsimp only at hok ⊢
   have hamt4 : card % 4 + 1 ≤ 4 := by have := Nat.mod_lt card (by decide : 4 > 0); omega
   unfold Megadreifach.g2_step
@@ -98,41 +98,26 @@ theorem g2_step_refines (g : Position) (o : Grip) (card : Nat) (hok : G2Ok (g, o
       simp only [decide_eq_true_eq]; exact Int.ofNat_lt.mpr hr
     rw [hdec, if_pos rfl]
     simp only [dif_pos hr] at hm
+    simp only [Prod.mk.injEq] at hm
+    obtain ⟨rfl, rfl, rfl⟩ := hm
     rw [atL_grip o _ hr, ok_bind, face_turn_refines, ok_bind]
     try dsimp only
-    rw [ok_bind, noon_phys_refines', ok_bind, ok_bind, sEq_ofNat4]
-    by_cases hn : noonPhys (o ⟨card / 4, hr⟩) o = o ⟨card / 4, hr⟩
-    · have hd : decide ((noonPhys (o ⟨card / 4, hr⟩) o).val = (o ⟨card / 4, hr⟩).val) = true := by
-        simp [hn]
-      rw [hd]
-      simp only [Bool.not_true, Bool.false_eq_true, ite_false]
-      simp only [hn, ne_eq, not_true_eq_false, ite_false] at hm
-      rw [show Megadreifach.held_front = Int.ofNat 1 from rfl, atL_grip1, ok_bind,
-        show (1 : Int) = Int.ofNat 1 from rfl, face_turn_refines, ok_bind]
-      try dsimp only
-      simp only [Prod.mk.injEq] at hm
-      obtain ⟨rfl, rfl, rfl⟩ := hm
-      rw [ok_bind, recipe_a_refines _ _ _ hok, ok_bind]
-      rfl
-    · have hd : decide ((noonPhys (o ⟨card / 4, hr⟩) o).val = (o ⟨card / 4, hr⟩).val) = false := by
-        simp [Fin.val_inj, hn]
-      rw [hd]
-      simp only [Bool.not_false, ite_true]
-      simp only [hn, ne_eq, not_false_eq_true, ite_true] at hm
-      rw [show (1 : Int) = Int.ofNat 1 from rfl, face_turn_refines, ok_bind]
-      try dsimp only
-      rw [show Megadreifach.held_front = Int.ofNat 1 from rfl, atL_grip1, ok_bind,
-        face_turn_refines, ok_bind]
-      try dsimp only
-      simp only [Prod.mk.injEq] at hm
-      obtain ⟨rfl, rfl, rfl⟩ := hm
-      rw [ok_bind, recipe_a_refines _ _ _ hok, ok_bind]
-      rfl
+    rw [visual_noon_refines_nat (card / 4) hr o]
+    simp only [ok_bind]
+    rw [read_grip_refines _ _ _ _ hok]
+    simp only [ok_bind]
+    try dsimp only
+    rw [show (1 : Int) = Int.ofNat 1 from rfl, face_turn_refines, ok_bind,
+      show Megadreifach.held_front = Int.ofNat 1 from rfl, atL_grip1, ok_bind,
+      face_turn_refines, ok_bind]
+    rfl
   · have hdec : decide (Int.ofNat (card / 4) < (12 : Int)) = false := by
       simp only [decide_eq_false_iff_not]; intro hc; exact hr (Int.ofNat_lt.mp hc)
     rw [hdec]
     simp only [Bool.false_eq_true, ite_false]
     simp only [dif_neg hr] at hm
+    simp only [Prod.mk.injEq] at hm
+    obtain ⟨rfl, rfl, rfl⟩ := hm
     rw [show Megadreifach.held_up = Int.ofNat 0 from rfl, atL_grip0, ok_bind,
       show (5 : Int) = Int.ofNat 5 from rfl,
       subI_ofNat 5 (card % 4 + 1) (fits8 5 (by decide)) (by omega), ok_bind,
@@ -140,33 +125,14 @@ theorem g2_step_refines (g : Position) (o : Grip) (card : Nat) (hok : G2Ok (g, o
     try dsimp only
     rw [spin_about_up_refines, ok_bind]
     try dsimp only
-    generalize hO : spinAboutUp o (card % 4 + 1) = O at hm ⊢
-    rw [atL_grip0, ok_bind, noon_phys_refines', ok_bind, ok_bind, sEq_ofNat4]
-    by_cases hn : noonPhys (O 0) O = O 0
-    · have hd : decide ((noonPhys (O 0) O).val = (O 0).val) = true := by simp [hn]
-      rw [hd]
-      simp only [Bool.not_true, Bool.false_eq_true, ite_false]
-      simp only [hn, ne_eq, not_true_eq_false, ite_false] at hm
-      rw [show Megadreifach.held_front = Int.ofNat 1 from rfl, atL_grip1, ok_bind,
-        show (1 : Int) = Int.ofNat 1 from rfl, face_turn_refines, ok_bind]
-      try dsimp only
-      simp only [Prod.mk.injEq] at hm
-      obtain ⟨rfl, rfl, rfl⟩ := hm
-      rw [ok_bind, recipe_a_refines _ _ _ hok, ok_bind]
-      rfl
-    · have hd : decide ((noonPhys (O 0) O).val = (O 0).val) = false := by
-        simp [Fin.val_inj, hn]
-      rw [hd]
-      simp only [Bool.not_false, ite_true]
-      simp only [hn, ne_eq, not_false_eq_true, ite_true] at hm
-      rw [show (1 : Int) = Int.ofNat 1 from rfl, face_turn_refines, ok_bind]
-      try dsimp only
-      rw [show Megadreifach.held_front = Int.ofNat 1 from rfl, atL_grip1, ok_bind,
-        face_turn_refines, ok_bind]
-      try dsimp only
-      simp only [Prod.mk.injEq] at hm
-      obtain ⟨rfl, rfl, rfl⟩ := hm
-      rw [ok_bind, recipe_a_refines _ _ _ hok, ok_bind]
-      rfl
+    rw [atL_grip0, visual_noon_refines_nat 0 (by decide) _]
+    simp only [ok_bind]
+    rw [read_grip_refines _ _ (visualNoon ⟨0, by decide⟩ _) _ hok]
+    simp only [ok_bind]
+    try dsimp only
+    rw [show (1 : Int) = Int.ofNat 1 from rfl, face_turn_refines, ok_bind,
+      show Megadreifach.held_front = Int.ofNat 1 from rfl, atL_grip1, ok_bind,
+      face_turn_refines, ok_bind]
+    rfl
 
 end MegaDreifach.Link2

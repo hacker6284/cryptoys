@@ -222,7 +222,7 @@ The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zer
 
 `kats/megaminx_hash_kats_v1.json` is the **v1** KAT file (for the deprecated `v1/megadreifach.sudo`), renamed from `kats/megaminx_hash_kats.json` with identical contents.
 
-**Lean lags: the proofs cover v1, not v2.** The Lean proof package under `proofs/megadreifach/` is explicitly **pinned to v1**: its `Generated/` is emitted from the frozen `v1/megadreifach.sudo` (`proofs/emit_lean.sh` target `megadreifach`), its vectors and `MegaDreifachHeavy/Kat.lean` are the v1 KATs, and its model (`Em.lean`), Link 2 and `Security/` are about v1. No Lean theorem in this repository is about v2 until the package is ported. The only v2 code that reaches Lean is the emitted (not proved) copy of `megadreifach.sudo` inside `proofs/doubledeal-cbc-hmac/lean/Generated/`, which exists because DoubleDeal-CBC-HMAC imports `Hash`; its TAP run executes the DoubleDeal-CBC-HMAC sudo tests and proves nothing about MegaDreifach.
+**Lean coverage.** The Lean proof package [`proofs/megadreifach/`](../../../proofs/megadreifach/README.md) models **v2**: its `Generated/` is emitted from this `megadreifach.sudo` (`proofs/emit_lean.sh` target `megadreifach`), and its model (`Em.lean`), Link 2 and `Security/` are about v2. Proved there, sorry-free and axiom-audited: the emitted `Hash` equals the algebraic Merkle–Damgård fold of the typed E_m transliteration on well-formed messages (`v_Hash_refines`; this includes visual noon on all 60 grips, the edge and corner reads and 36 F3 rounds), and all eight v2 `Hash` digests of `kats/megaminx_hash_kats_v2.json` as kernel-checked theorems about the emitted `v_Hash`, plus correctness and grip-rule-independent lemmas. **No Lean theorem is a security claim about v2**, and that the sudo text equals the emitted Lean (the emitter) is trusted, not proved; the ledger (what is proved, what is open) is that README. The v1 weakness proofs are kept, frozen and about v1 only, in [`proofs/deprecated/megadreifach-v1/`](../../../proofs/deprecated/megadreifach-v1/README.md).
 
 ---
 
@@ -262,4 +262,4 @@ What these do **not** cover: no second-preimage or preimage search was run on th
 - Absence of local collisions (v1: L3 collisions exist and occur at a practical rate in real blocks; v2: not claimed, and free-start pseudo-collisions are easy, §8)
 - Birthday ≈ 2^113 as a theorem
 - PRESSURE.md tables as theorems
-- Lean model = this sudo text, or any Lean result about v2 (§7)
+- Lean model = this sudo text (the emitter is trusted), or any Lean security result about v2 (§7)

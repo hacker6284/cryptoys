@@ -44,7 +44,7 @@ def digestLen : Nat := 29
 def bodyLen : Nat := 52
 
 /-- Locked F3 blank-round count. -/
-def f3T : Nat := 12
+def f3T : Nat := 36
 
 /-- Image of φ: ranks `< 2^224 < 52!`. -/
 def phiMax : Nat := 2 ^ 224

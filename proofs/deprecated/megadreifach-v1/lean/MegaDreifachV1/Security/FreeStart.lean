@@ -31,12 +31,12 @@
 
   Zero sorry.  No native_decide.
 -/
-import MegaDreifach.Security.CornerDriven
-import MegaDreifach.Security.Parity
+import MegaDreifachV1.Security.CornerDriven
+import MegaDreifachV1.Security.Parity
 
-namespace MegaDreifach.Security
+namespace MegaDreifachV1.Security
 
-open MegaDreifach MegaDreifach.Link2
+open MegaDreifachV1 MegaDreifachV1.Link2
 
 /-- Squaring collision ⇒ compression collision (same block, same corners). -/
 theorem dmStep_collision_of_sq (h h' : Position) (deal : List Nat)
@@ -68,4 +68,4 @@ theorem dmStep_pseudo_collision (h h' : Position) (hc : SameCorners h h') (deal 
   have hinj : InjPos W := injPos_of_isLegal _ (word_isLegal hWw)
   exact ⟨W, hWw, fun hsq => dmStep_collision_of_sq h h' deal W ⟨hW1, hW2⟩ hinj hsq⟩
 
-end MegaDreifach.Security
+end MegaDreifachV1.Security

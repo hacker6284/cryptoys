@@ -39,37 +39,31 @@ theorem injPos_faceTurn (g : Position) (f : Fin 12) (a : Nat) (hg : InjPos g) :
     InjPos (Em.faceTurn g f a) :=
   injPos_leftIter _ (injPos_faceMove f) _ _ hg
 
-theorem injPos_g2Step (st : Position × Em.Grip) (card : Nat) (h : InjPos st.1) :
-    InjPos (Em.g2Step st card).1 := by
+theorem injPos_g2Step (st : Position × Em.Grip) (card pos : Nat) (h : InjPos st.1) :
+    InjPos (Em.g2Step st card pos).1 := by
   unfold Em.g2Step
   by_cases hr : card / 4 < 12
   · simp only [hr, dite_true]
-    apply injPos_faceTurn
-    split
-    · exact injPos_faceTurn _ _ _ (injPos_faceTurn _ _ _ h)
-    · exact injPos_faceTurn _ _ _ h
+    exact injPos_faceTurn _ _ _ (injPos_faceTurn _ _ _ (injPos_faceTurn _ _ _ h))
   · simp only [hr, dite_false]
-    apply injPos_faceTurn
-    split
-    · exact injPos_faceTurn _ _ _ (injPos_faceTurn _ _ _ h)
-    · exact injPos_faceTurn _ _ _ h
+    exact injPos_faceTurn _ _ _ (injPos_faceTurn _ _ _ (injPos_faceTurn _ _ _ h))
 
-theorem injPos_f3Step (st : Position × Em.Grip) (h : InjPos st.1) :
-    InjPos (Em.f3Step st).1 :=
+theorem injPos_f3Step (st : Position × Em.Grip) (rnd : Nat) (h : InjPos st.1) :
+    InjPos (Em.f3Step st rnd).1 :=
   injPos_faceTurn _ _ _ h
 
-theorem injPos_f3Iter : ∀ n (st : Position × Em.Grip), InjPos st.1 → InjPos (Em.f3Iter n st).1
-  | 0, _, h => h
-  | n + 1, st, h => injPos_f3Iter n _ (injPos_f3Step st h)
+theorem injPos_f3Run : ∀ n r (st : Position × Em.Grip), InjPos st.1 → InjPos (Em.f3Run r n st).1
+  | 0, _, _, h => h
+  | n + 1, r, st, h => injPos_f3Run n (r + 1) _ (injPos_f3Step st r h)
 
-theorem injPos_foldl_g2 : ∀ (cards : List Nat) (st : Position × Em.Grip), InjPos st.1 →
-    InjPos (cards.foldl Em.g2Step st).1
-  | [], _, h => h
-  | c :: cs, st, h => injPos_foldl_g2 cs _ (injPos_g2Step st c h)
+theorem injPos_g2Run : ∀ (cards : List Nat) (p : Nat) (st : Position × Em.Grip), InjPos st.1 →
+    InjPos (Em.g2Run p cards st).1
+  | [], _, _, h => h
+  | c :: cs, p, st, h => injPos_g2Run cs (p + 1) _ (injPos_g2Step st c p h)
 
 theorem injPos_emBlock (h : Position) (deal : List Nat) (hh : InjPos h) :
     InjPos (Em.emBlock h deal) :=
-  injPos_f3Iter _ _ (injPos_foldl_g2 _ (h, Em.gripId) hh)
+  injPos_f3Run _ _ _ (injPos_g2Run _ _ (h, Em.gripId) hh)
 
 theorem injPos_dmStep (h : Position) (deal : List Nat) (hh : InjPos h) :
     InjPos (Em.dmStep h deal) :=

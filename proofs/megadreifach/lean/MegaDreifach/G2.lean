@@ -10,7 +10,8 @@
 
   Not shipped (see STONES.md — OPEN, no `sorry` theorems):
     * pairwise distinctness of the 60×52 concrete nets (computer-checked
-      in `g2_proof_core.prove_one_card`; too large for kernel `decide`)
+      in `g2_proof_core.prove_one_card` for the v1 nets only, not rerun for
+      v2; too large for kernel `decide`)
     * abs-G2 L2 mid-block = 0 for distinct first cards (M9)
 
   Zero sorry. No native_decide.

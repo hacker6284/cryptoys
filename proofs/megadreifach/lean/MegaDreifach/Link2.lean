@@ -259,7 +259,7 @@ namespace MegaDreifach.Link2
   `positionToBytes`. Also `position_to_bytes_refines_gen` (every `InjPos`)
   and `even_perm_rank_big_refines_gen` (lengths 20 and 30, multi-limb).
   CLOSED: all 8 KATs as `v_Hash` theorems (`MegaDreifachHeavy/Kat.lean`, kernel
-  `decide!`; non-default lean_lib `MegaDreifachHeavy`, about 8 min of kernel time).
+  `decide!`; non-default lean_lib `MegaDreifachHeavy`, about 12 min of kernel time).
   `v_Hash` never calls `phi_inv`.
   OPEN: `v_HashDeck`.
   Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already

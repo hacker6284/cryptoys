@@ -2020,15 +2020,13 @@ def move_name (face : Int) (turns : Int) : Except SudoRt.Trap (Array (Int)) :=
 
 def push_step (s : Scramble) (kind : Array (Int)) (move : Array (Int)) (nybble : Array (Int)) (block : Int) («at» : Int) (up : Array (Int)) (front : Array (Int)) : Except SudoRt.Trap (Scramble) :=
   do
-    let steps := (s).sudo_8Scramble_5steps
     let _t687 ← facelets_of (s).sudo_8Scramble_4cube
-    let _mb688 := SudoRt.appendL steps ({ sudo_4Step_4kind := kind, sudo_4Step_4move := move, sudo_4Step_6nybble := nybble, sudo_4Step_5block := block, sudo_4Step_5index := «at», sudo_4Step_2up := up, sudo_4Step_5front := front, sudo_4Step_8facelets := _t687 } : Step)
+    let _mb688 := SudoRt.appendL (s).sudo_8Scramble_5steps ({ sudo_4Step_4kind := kind, sudo_4Step_4move := move, sudo_4Step_6nybble := nybble, sudo_4Step_5block := block, sudo_4Step_5index := «at», sudo_4Step_2up := up, sudo_4Step_5front := front, sudo_4Step_8facelets := _t687 } : Step)
     let ⟨_nr689, _⟩ := _mb688
-    let steps := _nr689
+    let _t690 := { s with sudo_8Scramble_5steps := _nr689 }
+    let s := _t690
     let _hm686 := ()
-    let _u690 := _hm686
-    let _t691 := { s with sudo_8Scramble_5steps := steps }
-    let s := _t691
+    let _u691 := _hm686
     pure s
 
 def blank : Except SudoRt.Trap (Array (Int)) :=

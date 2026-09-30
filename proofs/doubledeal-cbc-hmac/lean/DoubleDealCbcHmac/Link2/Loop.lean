@@ -37,19 +37,6 @@ theorem asc_step {S ρ : Type} (toN i : Nat) (hi : i ≤ toN) (hfit : FitsLen (i
     rw [addI_ofNat_one i hfit]
     rfl
 
-/-- The tail of an emitted descending loop `for i = from downto 0`. -/
-theorem desc_tail {S ρ : Type} (i : Nat) (hfit : FitsLen i) (s : S) :
-    (if (Int.ofNat i == Int.ofNat 0) = true then
-        (Except.ok (SudoRt.Flow.brk (Int.ofNat i, s)) : Except SudoRt.Trap (SudoRt.Flow (Int × S) ρ))
-      else SudoRt.subI (Int.ofNat i) 1 >>= fun i' => Except.ok (SudoRt.Flow.cont (i', s))) =
-      if i = 0 then .ok (.brk (Int.ofNat i, s)) else .ok (.cont (Int.ofNat (i - 1), s)) := by
-  by_cases h : i = 0
-  · subst h; simp [beq_int_iff]
-  · have hne : ¬ (Int.ofNat i = Int.ofNat 0) := fun e => h (Int.ofNat.inj e)
-    simp only [beq_int_iff, hne, if_false, h]
-    rw [subI_ofNat_one i (Nat.pos_of_ne_zero h) hfit]
-    rfl
-
 theorem decide_zero_le_ofNat (n : Nat) : decide ((0 : Int) ≤ Int.ofNat n) = true :=
   decide_eq_true (Int.ofNat_zero_le n)
 

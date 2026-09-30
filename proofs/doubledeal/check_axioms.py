@@ -400,9 +400,12 @@ CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
     "tags_equal_refines"]}
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only
-# exports (S6 of the #140 review). MegaDreifach is not listed: its README has no
-# "Emitted function" column (its Link 2 rows are Stone / Claim / Status), and its
-# HashDeck* exports have no Link 2 theorem, so the check does not apply there.
+# exports (S6 of the #140 review). MegaDreifach is not listed yet: its README has no
+# "Emitted function" column (its Link 2 rows are Stone / Claim / Status). 8 of its 11
+# exports have a Link 2 `_refines` theorem (pad_message, require_permutation,
+# position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
+# one-line wrappers MegaDreifachBody, HashDeckBodyFrom and MegaDreifachBodyFrom have
+# none. Registering it (wrapper theorems plus an 11-row table) is a planned follow-up.
 LINK2_EXPORT_TABLES = {
     "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                  / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
@@ -726,9 +729,10 @@ def sudo_exports(text):
 
 
 def readme_emitted(text):
-    """The backticked names in the first column of the README table whose first header
-    cell is "Emitted function", or None if there is no such table."""
-    rows, in_table = None, False
+    """(names, tables): the backticked names in the first column of the README tables
+    whose first header cell is "Emitted function", and how many such tables there are
+    (the caller requires exactly one)."""
+    rows, tables, in_table = set(), 0, False
     for line in text.splitlines():
         cells = [c.strip() for c in line.strip().strip("|").split("|")] \
             if line.lstrip().startswith("|") else None
@@ -737,25 +741,26 @@ def readme_emitted(text):
             continue
         if not in_table:
             if cells[0] == EMITTED_HEADER:
-                if rows is not None:
-                    return None  # two such tables: ambiguous, treat as missing
-                rows, in_table = set(), True
+                tables, in_table = tables + 1, True
             continue
         if set(cells[0]) <= set("-: "):
             continue  # the |---| separator row
         rows |= set(re.findall(r"`([A-Za-z_]\w*)`", cells[0]))
-    return rows
+    return rows, tables
 
 
 def export_table_problems(sudo_text, readme_text):
     """Problems with the README's "Emitted function" column against the sudo exports:
     an export not in the column, a column entry that is not an export, no table, no
     exports."""
-    exports, emitted = sudo_exports(sudo_text), readme_emitted(readme_text)
+    exports, (emitted, tables) = sudo_exports(sudo_text), readme_emitted(readme_text)
     if not exports:
         return ["the sudo has no `export func`"]
-    if emitted is None:
-        return [f'no (single) README table with a "{EMITTED_HEADER}" column']
+    if tables == 0:
+        return [f'no README table with a "{EMITTED_HEADER}" column']
+    if tables > 1:
+        return [f'{tables} README tables have a "{EMITTED_HEADER}" column (duplicate '
+                "table: ambiguous, keep one)"]
     return ([f"export {n} is not in the README's {EMITTED_HEADER} column"
              for n in sorted(exports - emitted)]
             + [f"README {EMITTED_HEADER} {n} is not an export of the sudo"
@@ -915,16 +920,17 @@ def selftest():
               + (f"; listed but not cited: {extra}" if extra else ""))
     # Every sudo export is in the README's "Emitted function" column (and only exports
     # are): the real packages, then planted negatives, including the real cbc-hmac README
-    # with one row dropped, which must be reported as exactly that export missing.
+    # with one row dropped, which must be reported as exactly that export missing. One
+    # line per package; a broken real table is one FAIL line naming every problem.
+    real_bad = {}
     for pkg, (sudo, readme) in sorted(LINK2_EXPORT_TABLES.items()):
-        bad = export_table_problems(sudo.read_text(), readme.read_text())
-        for b in bad:
-            print(f"check_axioms selftest: FAIL {pkg}: {b}")
+        bad = real_bad[pkg] = export_table_problems(sudo.read_text(), readme.read_text())
         failed += bool(bad)
-        print(f"check_axioms selftest: {'ok' if not bad else 'FAIL'} {pkg}: the "
+        print(f"check_axioms selftest: {'ok' if not bad else 'FAIL'} {pkg}: "
               f"{len(sudo_exports(sudo.read_text()))} exports of "
-              f"{sudo.relative_to(ROOT.parent.parent)} are exactly the {EMITTED_HEADER} "
-              f"column of {readme.relative_to(ROOT.parent.parent)}")
+              f"{sudo.relative_to(ROOT.parent.parent)} vs the {EMITTED_HEADER} column of "
+              f"{readme.relative_to(ROOT.parent.parent)}: "
+              + ("; ".join(bad) if bad else "match"))
     sudo_fx = ("// export func commented(x: int) -> int\nexport func a(x: int) -> int\n"
                "    return x\nfunc helper(x: int) -> int\n    return x\n"
                "export func b_c(x: int) -> int // trailing\n    return x\n")
@@ -938,7 +944,10 @@ def selftest():
         ("commented export listed", sudo_fx,
          table + "| `b_c` | x |\n| `commented` | x |\n", ["README Emitted function commented"]),
         ("no table", sudo_fx, "| Function | Theorem |\n| --- | --- |\n| `a` | x |\n",
-         ["no (single) README table"]),
+         ["no README table"]),
+        ("duplicate table", sudo_fx,
+         table + "| `b_c` | x |\n\nText.\n\n" + table + "| `b_c` | x |\n",
+         ["2 README tables have"]),
         ("no exports", "func a(x: int) -> int\n", table, ["the sudo has no"])]
     sudo, readme = LINK2_EXPORT_TABLES["cbc-hmac"]
     real_readme = readme.read_text()
@@ -947,6 +956,10 @@ def selftest():
                   "\n".join(l for l in real_readme.splitlines() if l not in dropped),
                   ["export tags_equal is not"] if len(dropped) == 1 else ["(fixture row absent)"]))
     for what, sudo_text, readme_text, want in cases:
+        if what.startswith("real cbc-hmac") and real_bad["cbc-hmac"]:
+            print(f"check_axioms selftest: skipped export table ({what}): the real table "
+                  "already fails above")
+            continue
         bad = export_table_problems(sudo_text, readme_text)
         ok = len(bad) == len(want) and all(w in b for w, b in zip(want, bad))
         failed += not ok

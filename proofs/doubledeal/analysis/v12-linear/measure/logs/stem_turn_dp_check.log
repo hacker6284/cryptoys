@@ -1,0 +1,17 @@
+SCRIPT-COMPUTED (exact), UNPROVED: P(turn1, turn2) under the stem_sign_dp.py model
+P(turn1=0,turn2=0) = 0.06250
+P(turn1=0,turn2=1) = 0.06250
+P(turn1=0,turn2=2) = 0.06250
+P(turn1=0,turn2=3) = 0.06250
+P(turn1=1,turn2=0) = 0.06250
+P(turn1=1,turn2=1) = 0.06250
+P(turn1=1,turn2=2) = 0.06250
+P(turn1=1,turn2=3) = 0.06250
+P(turn1=2,turn2=0) = 0.06250
+P(turn1=2,turn2=1) = 0.06250
+P(turn1=2,turn2=2) = 0.06250
+P(turn1=2,turn2=3) = 0.06250
+P(turn1=3,turn2=0) = 0.06250
+P(turn1=3,turn2=1) = 0.06250
+P(turn1=3,turn2=2) = 0.06250
+P(turn1=3,turn2=3) = 0.06250

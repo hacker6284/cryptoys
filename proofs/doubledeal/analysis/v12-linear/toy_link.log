@@ -24,7 +24,7 @@ dependent schedule (expected to FAIL, documents the header's limit):
   sum_k corr^2 = 5227, (1/N!) sum A D A = 153913/24, equal: False
   sum_k corr^2 = 6712, (1/N!) sum A D A = 60151/12, equal: False
   sum_k corr^2 = 14522, (1/N!) sum A D A = 352421/24, equal: False
-first-order masks (not formalised):
+first-order masks (normalised; M8b's L6 is the unnormalised form):
   s=0 c=0 -> t=0 c'=0: potential 161/3888 vs 161/3888
   s=1 c=0 -> t=3 c'=0: potential 161/3888 vs 161/3888
   s=2 c=1 -> t=0 c'=3: potential 17/486 vs 17/486

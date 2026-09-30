@@ -1,0 +1,17 @@
+identity failures: 0 of 4000000
+P(turn1=0,turn2=0) = 0.06240
+P(turn1=0,turn2=1) = 0.06258
+P(turn1=0,turn2=2) = 0.06254
+P(turn1=0,turn2=3) = 0.06236
+P(turn1=1,turn2=0) = 0.06256
+P(turn1=1,turn2=1) = 0.06251
+P(turn1=1,turn2=2) = 0.06246
+P(turn1=1,turn2=3) = 0.06257
+P(turn1=2,turn2=0) = 0.06249
+P(turn1=2,turn2=1) = 0.06231
+P(turn1=2,turn2=2) = 0.06258
+P(turn1=2,turn2=3) = 0.06271
+P(turn1=3,turn2=0) = 0.06273
+P(turn1=3,turn2=1) = 0.06254
+P(turn1=3,turn2=2) = 0.06250
+P(turn1=3,turn2=3) = 0.06215

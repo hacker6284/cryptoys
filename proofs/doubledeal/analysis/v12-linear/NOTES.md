@@ -1,4 +1,4 @@
-# DoubleDeal v12: is there a linear-cryptanalysis analogue? (roadmap milestones M3 and M8a)
+# DoubleDeal v12: is there a linear-cryptanalysis analogue? (roadmap milestones M3, M8a, M8b)
 
 Roadmap: [`security/README.md`, section "Roadmap"](../../security/README.md#roadmap).
 
@@ -6,8 +6,11 @@ Status: **a note, not a theorem.** Nothing in this directory is proved. The M3 p
 (the first three sections) is the original note. Its one number is a MEASUREMENT
 (sampled, fixed seed) with a noise control. The M8a section below describes what is now
 proved in Lean (`../../security/DoubleDealSecurity/Linear.lean`) and records an exact
-4-card toy check of it. The toy check is computed, not proved, and it is on S_4, not
-S_52. Nothing here is a security claim.
+4-card toy check of it. The M8b section describes what is proved in
+`../../security/DoubleDealSecurity/LinearMasks.lean`, its toy check, and the M8b
+measurements (`measure/`), which are MEASURED or SCRIPT-COMPUTED, not proved. The toy
+checks are computed, not proved, and they are on S_4, not S_52. Nothing here is a
+security claim.
 
 ## Why AES-style linear cryptanalysis does not transfer directly
 
@@ -135,15 +138,92 @@ Two further outputs are not Lean statements:
   `(f, g)` tried; the right-hand side is not even an integer. This documents the header's
   "a dependent toy schedule shows the same-shape equation can fail". It is a toy, not
   the PassKey schedule.
-* First-order masks `f = 4·[x(s) = c] − 1` (M8b scope; not formalised). The normalised
+* First-order masks `f = 4·[x(s) = c] − 1` (not formalised in M8a; M8b's L6 below is
+  the unnormalised form). The normalised
   potential equals `(N/(N−1)²)(q − 1/N)`, `N = 4`, for the four seat/card choices tried.
   Here `q` is the fraction of (difference fixing `c`, key tuple) pairs whose output
   difference fixes `c'`.
 
+## M8b: single-card masks and the sign mask (PROVED in Lean; identities only)
+
+Lean: `DoubleDealSecurity/LinearMasks.lean`; the exact statements are in its module
+header. Same model as M8a: independent uniform keys only, key-summed and unnormalised,
+nothing proved for the real PassKey schedule, and no numeric bound. The single-card mask is
+`cardMask s c x = 52·[x s = c] − 1` (card `c` at seat `s`, centred), and
+`alignCount c c' n y = ∑_{α c = c} ∑_{β c' = c'} fullDiffCount α β n y`.
+
+* L5 `autoCorr_cardMask`: `autoCorr (cardMask s c) α = 52! · (52·[α c = c] − 1)`.
+* L6 `fullSumSqCorr_cardMask`: `fullSumSqCorr n (cardMask s c) (cardMask t c') =
+  52! · (52² · alignCount c c' n y − (52!)^(n+3))`, for any deck `y`; and
+  `fullSumSqCorr_cardMask_seat`: the seats `s`, `t` do not matter.
+* L7 `alignCount_eq`: `alignCount c c' n y` is the number of pairs (relabelling `α`, key
+  tuple `L`) for which card `c` keeps its seat between `y` and `α·y` and card `c'` keeps
+  its seat between the two ciphertexts: a truncated differential on one card's seat.
+* L9 `autoCorr_cardMask_v10Sym`: for `(a, x) ≠ (0, 0)`,
+  `autoCorr (cardMask s c) (v10Sym a x) = −52!`. The SumRanks symmetries `v10Sym`, which
+  pass the proof's finalRound step on every deck, fix no card (`v10Sym_fixfree`), so they
+  enter L6 only through the constant term, like every relabelling that moves `c`. Their
+  exact propagation does not transfer to single-card masks. This is a statement about the
+  masks and the relabellings, not about the cipher's layers.
+* L10 `corr_keyedLayer_sign`: through ONE keyed layer `x ↦ U(x ∘ k₁) ∘ k₂` (`U` any deck
+  map sending decks to decks), `corr (keyedLayer U k₁ k₂) sgnDeck sgnDeck =
+  sign k₁ · sign k₂ · corr U sgnDeck sgnDeck`: the keys only flip the sign. One layer only;
+  nothing about several rounds, and nothing about the value of `corr U sgnDeck sgnDeck`.
+
+Remark (not a theorem): normalised as in the M8a remark,
+`E_L[ĉ²] = (52/51²)(q − 1/52)` with `q = alignCount / (51! · (52!)^(n+2))`, the fraction
+of (difference fixing `c`, key tuple) pairs whose output difference fixes `c'`. This is the
+formula the M8a toy's last block checked for `N = 4`.
+
+Not in M8b: positivity of the bracket in L6 (the proposal's L8), M8c, and the H1–H4
+statements. No bound on `alignCount` is proved.
+
+### Exact 4-card toy check (COMPUTED): `toy_masks.py`, log `toy_masks.log`
+
+A pure-Python exact computation on S_4, seed 8, about 6 s. CI reruns it
+(`security/checks/selftest.py`) and byte-compares the output with the log. It checks the
+toy, not the Lean. On the toy cipher of `toy_link.py` it checks L5 for every seat, card and
+relabelling; the L9 shape (`−4!` at the 9 fixed-point-free relabellings); row and column
+sums of `fullDiffCount`; L7 and L6 (three card pairs, three seat pairs each, `n = 0, 1`);
+and L10 for `U` and `V` and every key pair. All of these hold.
+
+### M8b measurements (MEASURED or SCRIPT-COMPUTED; NOT proofs): `measure/`
+
+`measure/run.sh` builds and runs everything (about 8 min, one core; not run by CI); logs
+are in `measure/logs/`. The C programs use `../v12-differential/ddiff.h` and the v12
+model `../v12-keysched/dd12.h`. No theorem uses any of these numbers.
+
+* First order, MEASURED (`first_order.c`, `logs/first_order.log`; 5·10^7 uniform decks,
+  seed 1). For the stem, one unkeyed round (GridCycle after the stem) and a control (a
+  fresh uniform deck), the table `P(card c at output seat t | c at input seat s)`. The
+  largest entry deviation from `1/52` is 6.3·10^-4 (stem), 6.5·10^-4 (unkeyed round) and
+  6.4·10^-4 (control). The largest `q_c − 1/52` (with `q_c` the mean over `s` of
+  `∑_t P(t|s)²`) is 5.8·10^-8, 1.0·10^-7 and 5.6·10^-8, and the corresponding
+  `(52/51²)(q − 1/52)` is at most 1.2·10^-9, 2.0·10^-9 and 1.1·10^-9. So **no first-order
+  bias was detected**: the stem and the round are at the noise level of the control, at
+  about 10^-7 resolution in `q`. This does not show there is none.
+* Sign, MEASURED (`sign_layers.c`, `logs/sign_layers.log`; 10^8 uniform decks, seed 2).
+  `E[sgn(x) sgn(U x)]`: stem −0.00010, GridCycle alone −0.00001, unkeyed round +0.00019,
+  control +0.00008, each ±0.00010 (one standard deviation). All are within 2 standard
+  deviations of 0 (the largest is the unkeyed round, 1.9); resolution about 10^-4.
+* The stem's exact sign correlation, SCRIPT-COMPUTED and UNPROVED (`stem_sign_dp.py`,
+  `logs/stem_sign_dp.log`; exact rational arithmetic, about 2.5 min):
+  `E[sgn(x) sgn(stem x)] = 2009561917/267966441044041684179375 ≈ 7.5·10^-15`. This value
+  is not in Lean. It rests on the script's model of the stem's column turns: the sign of
+  `stem(x)` times the sign of `x` is `(−1)^(sum of the 13 column turns)`, and the turns
+  depend only on the suit pattern. That model is checked only as follows.
+  `stem_sign_check.c` (`logs/stem_sign_check.log`; 4·10^6 decks, seed (7,7,7)) samples the
+  identity, with 0 failures, and the joint distribution of the first two column turns.
+  `stem_turn_dp_check.py` (`logs/stem_turn_dp_check.log`) computes that distribution
+  exactly from the model: it is uniform (0.0625 each). The 16 sampled values are within
+  3.5·10^-4 of it (at most 2.9 sampling standard deviations of 1.2·10^-4). The per-deck turn function of the model is NOT compared with the C
+  stem deck by deck. By L10 (one keyed layer), this would be the key-free size of the
+  sign correlation through one keyed stem layer; nothing is claimed for several layers.
+
 ## Suggested next steps (not done)
 
-* M8b: first-order (single-card) masks, whose potential reduces to card-alignment counts
-  (the toy's last block). As with M8a, no numeric bound is expected from the identity alone.
+* Any bound on `alignCount` (M8b reduces the single-card question to it), and the
+  positivity of the L6 bracket (the proposal's L8, not in M8b).
 * Measure the `(50,2)` analogue (the joint seats of two cards) for one round. This
   is where a SumRanks/GridCycle interaction could show up if it exists.
 * A trail-style product bound over rounds for the squared correlations is NOT in

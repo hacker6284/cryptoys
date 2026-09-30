@@ -15,19 +15,18 @@ import {
     DEMO_FILE_BUSY_MS,
     DEMO_FILE_CHUNK_BYTES,
     DEMO_FILE_DETERMINATE_BYTES,
-    DEMO_FILE_HOST_CHUNK_BYTES,
     DEMO_FILE_TEACH_MAX_BYTES,
     DEMO_FILE_WORKER_READY_MS,
     bindMessageFile,
     canWalkFile,
     checkFileSize,
-    createFastHasher,
     formatFileSize,
     hashFile,
     hideFileChip,
     readFileChunks,
     showFileChip,
 } from "../shared/file-hash.js";
+import { createFastHasher } from "./fast-hash.js";
 import {
     bindSegmented,
     bindTransport,
@@ -233,7 +232,6 @@ export function createScrambleSession({
     }
 
     function bindTimeline() {
-        if (!canWalkPayload()) return;
         materializeTrace();
         mappedAlg = mapTraceToAlg(trace);
         projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
@@ -552,7 +550,7 @@ export function createScrambleSession({
         const hasher = createFastHasher();
         hasher.start(version);
         await readFileChunks(file, {
-            chunkBytes: DEMO_FILE_HOST_CHUNK_BYTES,
+            chunkBytes: DEMO_FILE_CHUNK_BYTES,
             signal,
             async onChunk(bytes, progress) {
                 hasher.push(bytes);
@@ -584,7 +582,6 @@ export function createScrambleSession({
             const { digest } = await hashFile(file, {
                 version,
                 workerUrl,
-                chunkBytes: DEMO_FILE_CHUNK_BYTES,
                 readyMs: DEMO_FILE_WORKER_READY_MS,
                 signal: abort.signal,
                 hashInline: hashFileFn,
@@ -620,7 +617,7 @@ export function createScrambleSession({
             return false;
         }
         fileSource = file;
-        showFileChip({ input, fileChip, fileNameEl, file });
+        showFileChip({ fileChip, fileNameEl, file });
         await hashSelectedFile();
         return true;
     }
@@ -630,7 +627,7 @@ export function createScrambleSession({
         fileAbort = null;
         hashing = false;
         fileSource = null;
-        hideFileChip({ input, fileChip, fileNameEl });
+        hideFileChip({ fileChip, fileNameEl });
         clearFileProgress();
         setIoNote("");
         refreshDigest();
@@ -722,10 +719,6 @@ export function createScrambleSession({
 
     function enterTeach() {
         if (hashing) return;
-        if (!canWalkPayload()) {
-            setIoNote(walkNote());
-            return;
-        }
         if (trace.length === 0 && !fileSource) refreshDigest();
         if (!ensureTimeline()) return;
         setTeaching(true);
@@ -735,10 +728,10 @@ export function createScrambleSession({
     }
 
     function skipToEnd() {
-        if (solving) return;
+        if (solving || hashing) return;
         if (!trace.length) refreshDigest();
-        if (!trace.length) return;
-        ensureTimeline();
+        if (!trace.length && !fileSource) return;
+        if (!ensureTimeline() || !trace.length) return;
         setTeaching(false);
         seek(trace.length - 1);
         settleView();

@@ -136,6 +136,11 @@ globalThis.window = window;
 globalThis.HTMLTextAreaElement = function HTMLTextAreaElement() {};
 HTMLTextAreaElement.prototype = { value: "" };
 
+const versionButtons = [
+    el("button", { dataset: { version: "1" } }),
+    el("button", { dataset: { version: "2" } }),
+];
+
 const root = {
     dataset: {},
     querySelector(sel) {
@@ -143,7 +148,8 @@ const root = {
         return null;
     },
     querySelectorAll(sel) {
-        if (sel === "[data-version]" || sel === "[data-encoding]" || sel === "[data-puzzle]" || sel === "[data-jump]") {
+        if (sel === "[data-version]") return versionButtons;
+        if (sel === "[data-encoding]" || sel === "[data-puzzle]" || sel === "[data-jump]") {
             return [];
         }
         if (sel === "textarea.grow-field") return [];
@@ -167,27 +173,18 @@ const view = {
     highlightRuleB() {},
 };
 
-const { createFastHasher, createIncrementalHasher } = await import("../shared/file-hash.js");
+const { createFastHasher } = await import("./fast-hash.js");
 const { DEMO_FILE_MAX_BYTES, DEMO_FILE_TEACH_MAX_BYTES } = await import("../shared/file-hash.js");
+const realGenerated = existsSync(impl);
 
 async function hashInline({ file, version, onProgress }) {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    onProgress?.({ processed: Math.min(1, bytes.length), total: bytes.length || 1 });
-    if (existsSync(impl)) {
-        const hasher = createFastHasher();
-        hasher.start(version);
-        hasher.push(bytes);
-        onProgress?.({ processed: bytes.length, total: bytes.length });
-        assert.equal(nodes["message-file-progress"].hidden, false, "progress is visible while hashing");
-        assert.equal(nodes["message-file-progress"].classList.contains("is-busy"), bytes.length < 1024 * 1024, "small files use the busy pulse");
-        return hasher.finish();
-    }
-    const { scramble_v1, scramble_v2, update, evaluate } = await import("./generated/scramble.mjs");
-    const hasher = createIncrementalHasher({ scramble_v1, scramble_v2, update, evaluate });
-    hasher.start(version);
-    hasher.push(bytes);
     onProgress?.({ processed: bytes.length, total: bytes.length });
     assert.equal(nodes["message-file-progress"].hidden, false, "progress is visible while hashing");
+    assert.equal(nodes["message-file-progress"].classList.contains("is-busy"), bytes.length < 1024 * 1024, "small files use the busy pulse");
+    const hasher = createFastHasher();
+    hasher.start(version);
+    hasher.push(bytes);
     return hasher.finish();
 }
 
@@ -246,18 +243,45 @@ await Promise.resolve();
 assert.equal(jumps.at(-1), finalLeaf, "skip during play keeps the final leaf");
 assert.match(nodes.status.textContent, /Seat white up/, "skip during play keeps the final cursor");
 
+function pickVersion(v) {
+    for (const fn of versionButtons[v - 1].listeners.click || []) fn();
+}
+nodes.message.value = "changed";
+session.recompute();
+const typedChanged = nodes.digest.value;
+nodes.message.value = "hello";
+pickVersion(1);
+const typedHelloV1 = nodes.digest.value;
+pickVersion(2);
+const typedHelloV2 = nodes.digest.value;
+click("skip-end");
+const typedHelloAlg = algs.at(-1);
+
 const algsAfterType = algs.length;
 const modest = new File([new Uint8Array([104, 101, 108, 108, 111])], "hello.bin");
 await session.applyFile(modest);
 assert.ok(nodes.digest.value.startsWith("0x"), "file Digest fills when the hasher finishes");
+if (realGenerated) {
+    assert.equal(nodes.digest.value, typedHelloV2, "file bytes hash like the same typed Message (Gen 2)");
+    pickVersion(1);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    assert.equal(nodes.digest.value, typedHelloV1, "Gen switch rehashes the file (Gen 1)");
+    pickVersion(2);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    assert.equal(nodes.digest.value, typedHelloV2, "Gen switch back rehashes the file (Gen 2)");
+}
 assert.match(nodes["message-file-name"].textContent, /hello\.bin/);
 assert.match(nodes["message-file-name"].textContent, /5 B/);
 assert.equal(nodes.message.hidden, false, "Message textarea stays on the paperclip row");
 assert.equal(nodes["message-file-progress"].hidden, true, "progress clears when Digest lands");
 assert.equal(algs.length, algsAfterType, "setAlg is not called during file hash progress");
 
+click("skip-end");
+assert.equal(algs.length, algsAfterType + 1, "Skip to end after a modest file binds the timeline");
+assert.equal(algs.at(-1), typedHelloAlg, "the file walk is the same walk as the typed Message");
+assert.equal(jumps.at(-1), algs.at(-1).split(/\s+/).filter(Boolean).length - 1, "Skip to end seeks the file's final leaf");
 session.enterTeach();
-assert.equal(algs.length, algsAfterType + 1, "Play / Step after a modest file binds the timeline");
+assert.equal(algs.length, algsAfterType + 1, "Step after Skip reuses the file timeline");
 
 const tooBig = { name: "huge.bin", size: DEMO_FILE_MAX_BYTES + 1 };
 assert.equal(await session.applyFile(tooBig), false, "oversized files are rejected");
@@ -265,9 +289,9 @@ assert.match(nodes["io-note"].textContent, /10 MB/);
 assert.match(nodes["message-file-name"].textContent, /hello\.bin/, "reject keeps the current file");
 assert.equal(algs.length, algsAfterType + 1, "oversized reject does not setAlg");
 
+nodes.message.value = "changed";
 session.clearFile();
-assert.equal(nodes.message.hidden, false, "clear restores the typed Message field");
-assert.ok(nodes.digest.value.startsWith("0x"), "clear rehashes typed Message");
+assert.equal(nodes.digest.value, typedChanged, "clear rehashes typed Message");
 assert.equal(algs.length, algsAfterType + 1, "clearing a file updates Digest only");
 
 const jpeg = new Uint8Array(DEMO_FILE_TEACH_MAX_BYTES + 64);
@@ -284,6 +308,11 @@ assert.match(nodes["io-note"].textContent, /Play \/ Step stay off/);
 const algsAfterLarge = algs.length;
 session.enterTeach();
 assert.equal(algs.length, algsAfterLarge, "large file must not build a leave timeline");
+const jumpsBeforeSkip = jumps.length;
+click("skip-end");
+assert.equal(algs.length, algsAfterLarge, "Skip to end on a large file does not build a timeline");
+assert.equal(jumps.length, jumpsBeforeSkip, "Skip to end on a large file does not seek");
+assert.match(nodes["io-note"].textContent, /Play \/ Step stay off/);
 
 session.dispose();
 

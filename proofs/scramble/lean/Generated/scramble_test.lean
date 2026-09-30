@@ -11,7 +11,7 @@ open Scramble
 def test_solved_facelets_are_the_start_pose : Except SudoRt.Trap Unit :=
   do
     let _t1 ← solved_facelets
-    let _as2 ← SudoRt.sudoAssertEq _t1 (#[87, 87, 87, 87, 87, 87, 87, 87, 87, 82, 82, 82, 82, 82, 82, 82, 82, 82, 71, 71, 71, 71, 71, 71, 71, 71, 71, 89, 89, 89, 89, 89, 89, 89, 89, 89, 79, 79, 79, 79, 79, 79, 79, 79, 79, 66, 66, 66, 66, 66, 66, 66, 66, 66] : Array Int) 600
+    let _as2 ← SudoRt.sudoAssertEq _t1 (#[87, 87, 87, 87, 87, 87, 87, 87, 87, 82, 82, 82, 82, 82, 82, 82, 82, 82, 71, 71, 71, 71, 71, 71, 71, 71, 71, 89, 89, 89, 89, 89, 89, 89, 89, 89, 79, 79, 79, 79, 79, 79, 79, 79, 79, 66, 66, 66, 66, 66, 66, 66, 66, 66] : Array Int) 583
     pure ()
 
 def test_empty_v1 : Except SudoRt.Trap Unit :=
@@ -88,73 +88,175 @@ def test_split_updates_match_one_shot : Except SudoRt.Trap Unit :=
     let ⟨_ret28, _iw029⟩ := _io27
     let s := _iw029
     let part := _ret28
-    let _as30 ← SudoRt.sudoAssertEq (part).sudo_10Evaluation_6digest (whole).sudo_10Evaluation_6digest 638
-    let _as31 ← SudoRt.sudoAssertEq (part).sudo_10Evaluation_5trace (whole).sudo_10Evaluation_5trace 639
+    let _as30 ← SudoRt.sudoAssertEq (part).sudo_10Evaluation_6digest (whole).sudo_10Evaluation_6digest 621
+    let _as31 ← SudoRt.sudoAssertEq (part).sudo_10Evaluation_5trace (whole).sudo_10Evaluation_5trace 622
     let _t32 ← run (1 : Int) (#[(104 : Int), (101 : Int), (108 : Int), (108 : Int), (111 : Int)] : Array (Int))
     let whole1 := _t32
     let _t33 ← scramble_v1
     let s1 := _t33
     let _io34 ← update s1 (#[(104 : Int), (101 : Int), (108 : Int), (108 : Int)] : Array (Int))
     let s1 := _io34
-    let _as36 ← SudoRt.sudoAssertEq (SudoRt.listLen (s1).sudo_8Scramble_5steps) (9 : Int) 643
+    let _as36 ← SudoRt.sudoAssertEq (SudoRt.listLen (s1).sudo_8Scramble_5steps) (9 : Int) 626
     let _io37 ← update s1 (#[(111 : Int)] : Array (Int))
     let s1 := _io37
     let _io38 ← evaluate s1
     let ⟨_ret39, _iw040⟩ := _io38
     let s1 := _iw040
     let part1 := _ret39
-    let _as41 ← SudoRt.sudoAssertEq (part1).sudo_10Evaluation_6digest (whole1).sudo_10Evaluation_6digest 646
-    let _as42 ← SudoRt.sudoAssertEq (part1).sudo_10Evaluation_5trace (whole1).sudo_10Evaluation_5trace 647
+    let _as41 ← SudoRt.sudoAssertEq (part1).sudo_10Evaluation_6digest (whole1).sudo_10Evaluation_6digest 629
+    let _as42 ← SudoRt.sudoAssertEq (part1).sudo_10Evaluation_5trace (whole1).sudo_10Evaluation_5trace 630
     pure ()
+
+def test_update_keeps_only_the_unwalked_nybbles : Except SudoRt.Trap Unit :=
+  do
+    let _t44 ← scramble_v1
+    let s1 := _t44
+    let _t45 ← scramble_v2
+    let s2 := _t45
+    let msg := (#[] : Array (Int))
+    let _fromV := (0 : Int)
+    let _toV := (19 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init84 := (_fromV, (s1, s2, msg))
+    let _out ← (SudoRt.runLoopOn (ρ := Unit) _init84 fuel (fun σ =>
+    let i := σ.1
+    let s1 := σ.2.1
+    let _sp80 := σ.2.2
+    let s2 := _sp80.1
+    let _sp81 := _sp80.2
+    let msg := _sp81
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Unit) (i, (s1, s2, msg)))
+      else
+        match ← ((do
+  let _t47 ← SudoRt.subI (255 : Int) i
+  let _t48 ← SudoRt.mulI (7 : Int) i
+  let chunk := (#[i, _t47, _t48] : Array (Int))
+  let _io49 ← update s1 chunk
+  let s1 := _io49
+  let _io50 ← update s2 chunk
+  let s2 := _io50
+  let _fromV := (0 : Int)
+  let _toV := (2 : Int)
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init63 := (_fromV, msg)
+  let _out ← (SudoRt.runLoopOn (ρ := Unit) _init63 fuel (fun σ =>
+    let j := σ.1
+    let msg := σ.2
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := Unit) (j, msg))
+      else
+        match ← ((do
+  let _t52 ← SudoRt.atL chunk j
+  let _mb53 := SudoRt.appendL msg _t52
+  let ⟨_nr54, _⟩ := _mb53
+  let msg := _nr54
+  let _hm43 := ()
+  let _u55 := _hm43
+  pure (SudoRt.Flow.cont (ρ := Unit) msg)) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := Unit) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
+    let msg := σ.2
+    do
+      let _t57 ← SudoRt.addI i (1 : Int)
+      let _t58 ← SudoRt.mulI (6 : Int) _t57
+      let _t59 ← SudoRt.modI _t58 (8 : Int)
+      let _as60 ← SudoRt.sudoAssertEq (SudoRt.listLen (s1).sudo_8Scramble_7pending) _t59 642
+      let _as62 ← SudoRt.sudoAssertEq (SudoRt.listLen (s2).sudo_8Scramble_7pending) (0 : Int) 643
+      pure (SudoRt.Flow.cont (ρ := Unit) (s1, s2, msg))) (fun r => pure (SudoRt.Flow.ret (ρ := Unit) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Unit) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
+    let s1 := σ.2.1
+    let _sp82 := σ.2.2
+    let s2 := _sp82.1
+    let _sp83 := _sp82.2
+    let msg := _sp83
+    do
+      let _t65 ← (if (SudoRt.SEq.beq (s1).sudo_8Scramble_5total (120 : Int)) then (do
+  pure (SudoRt.SEq.beq (s2).sudo_8Scramble_5total (120 : Int))) else pure false)
+      let _as67 ← SudoRt.sudoAssert _t65 644
+      let _t68 ← run (1 : Int) msg
+      let whole1 := _t68
+      let _io69 ← evaluate s1
+      let ⟨_ret70, _iw071⟩ := _io69
+      let s1 := _iw071
+      let part1 := _ret70
+      let _as72 ← SudoRt.sudoAssertEq (part1).sudo_10Evaluation_6digest (whole1).sudo_10Evaluation_6digest 647
+      let _as73 ← SudoRt.sudoAssertEq (part1).sudo_10Evaluation_5trace (whole1).sudo_10Evaluation_5trace 648
+      let _t74 ← run (2 : Int) msg
+      let whole2 := _t74
+      let _io75 ← evaluate s2
+      let ⟨_ret76, _iw077⟩ := _io75
+      let s2 := _iw077
+      let part2 := _ret76
+      let _as78 ← SudoRt.sudoAssertEq (part2).sudo_10Evaluation_6digest (whole2).sudo_10Evaluation_6digest 651
+      let _as79 ← SudoRt.sudoAssertEq (part2).sudo_10Evaluation_5trace (whole2).sudo_10Evaluation_5trace 652
+      pure ()) (fun r => pure r))
+    pure _out
 
 def test_second_evaluate_traps : Except SudoRt.Trap Unit :=
   do
-    let _t43 ← scramble_v2
-    let s := _t43
-    let _io44 ← evaluate s
-    let ⟨_ret45, _iw046⟩ := _io44
-    let s := _iw046
-    let _ex50 := (do
-  let _io47 ← evaluate s
-  let ⟨_ret48, _iw049⟩ := _io47
-  let s := _iw049
+    let _t85 ← scramble_v2
+    let s := _t85
+    let _io86 ← evaluate s
+    let ⟨_ret87, _iw088⟩ := _io86
+    let s := _iw088
+    let _ex92 := (do
+  let _io89 ← evaluate s
+  let ⟨_ret90, _iw091⟩ := _io89
+  let s := _iw091
   pure ()
   pure ())
-    match _ex50 with
-    | .error t => if t.kind == "AssertFailed" then pure () else SudoRt.fail "AssertFailed" s!"line 652: expected trap AssertFailed, got {t.kind}"
-    | .ok _ => SudoRt.fail "AssertFailed" "line 652: expected trap AssertFailed, but nothing trapped"
+    match _ex92 with
+    | .error t => if t.kind == "AssertFailed" then pure () else SudoRt.fail "AssertFailed" s!"line 657: expected trap AssertFailed, got {t.kind}"
+    | .ok _ => SudoRt.fail "AssertFailed" "line 657: expected trap AssertFailed, but nothing trapped"
     pure ()
 
 def test_update_after_evaluate_traps : Except SudoRt.Trap Unit :=
   do
-    let _t51 ← scramble_v1
-    let s := _t51
-    let _io52 ← evaluate s
-    let ⟨_ret53, _iw054⟩ := _io52
-    let s := _iw054
-    let _ex56 := (do
-  let _io55 ← update s (#[(1 : Int)] : Array (Int))
-  let s := _io55
+    let _t93 ← scramble_v1
+    let s := _t93
+    let _io94 ← evaluate s
+    let ⟨_ret95, _iw096⟩ := _io94
+    let s := _iw096
+    let _ex98 := (do
+  let _io97 ← update s (#[(1 : Int)] : Array (Int))
+  let s := _io97
   pure ()
   pure ())
-    match _ex56 with
-    | .error t => if t.kind == "AssertFailed" then pure () else SudoRt.fail "AssertFailed" s!"line 658: expected trap AssertFailed, got {t.kind}"
-    | .ok _ => SudoRt.fail "AssertFailed" "line 658: expected trap AssertFailed, but nothing trapped"
-    pure ()
-
-def test_a_byte_above_255_traps : Except SudoRt.Trap Unit :=
-  do
-    let _t57 ← scramble_v2
-    let s := _t57
-    let _ex59 := (do
-  let _io58 ← update s (#[(256 : Int)] : Array (Int))
-  let s := _io58
-  pure ()
-  pure ())
-    match _ex59 with
+    match _ex98 with
     | .error t => if t.kind == "AssertFailed" then pure () else SudoRt.fail "AssertFailed" s!"line 663: expected trap AssertFailed, got {t.kind}"
     | .ok _ => SudoRt.fail "AssertFailed" "line 663: expected trap AssertFailed, but nothing trapped"
     pure ()
 
+def test_a_byte_above_255_traps : Except SudoRt.Trap Unit :=
+  do
+    let _t99 ← scramble_v2
+    let s := _t99
+    let _ex101 := (do
+  let _io100 ← update s (#[(256 : Int)] : Array (Int))
+  let s := _io100
+  pure ()
+  pure ())
+    match _ex101 with
+    | .error t => if t.kind == "AssertFailed" then pure () else SudoRt.fail "AssertFailed" s!"line 668: expected trap AssertFailed, got {t.kind}"
+    | .ok _ => SudoRt.fail "AssertFailed" "line 668: expected trap AssertFailed, but nothing trapped"
+    pure ()
+
 def main : IO UInt32 :=
-  SudoRt.runTests [("test_solved_facelets_are_the_start_pose", fun _ => test_solved_facelets_are_the_start_pose), ("test_empty_v1", fun _ => test_empty_v1), ("test_empty_v2", fun _ => test_empty_v2), ("test_byte_a7_v1", fun _ => test_byte_a7_v1), ("test_byte_a7_v2", fun _ => test_byte_a7_v2), ("test_hello_v1", fun _ => test_hello_v1), ("test_hello_v2", fun _ => test_hello_v2), ("test_cube_v1", fun _ => test_cube_v1), ("test_cube_v2", fun _ => test_cube_v2), ("test_letter_a_v1", fun _ => test_letter_a_v1), ("test_letter_a_v2", fun _ => test_letter_a_v2), ("test_split_updates_match_one_shot", fun _ => test_split_updates_match_one_shot), ("test_second_evaluate_traps", fun _ => test_second_evaluate_traps), ("test_update_after_evaluate_traps", fun _ => test_update_after_evaluate_traps), ("test_a_byte_above_255_traps", fun _ => test_a_byte_above_255_traps)]
+  SudoRt.runTests [("test_solved_facelets_are_the_start_pose", fun _ => test_solved_facelets_are_the_start_pose), ("test_empty_v1", fun _ => test_empty_v1), ("test_empty_v2", fun _ => test_empty_v2), ("test_byte_a7_v1", fun _ => test_byte_a7_v1), ("test_byte_a7_v2", fun _ => test_byte_a7_v2), ("test_hello_v1", fun _ => test_hello_v1), ("test_hello_v2", fun _ => test_hello_v2), ("test_cube_v1", fun _ => test_cube_v1), ("test_cube_v2", fun _ => test_cube_v2), ("test_letter_a_v1", fun _ => test_letter_a_v1), ("test_letter_a_v2", fun _ => test_letter_a_v2), ("test_split_updates_match_one_shot", fun _ => test_split_updates_match_one_shot), ("test_update_keeps_only_the_unwalked_nybbles", fun _ => test_update_keeps_only_the_unwalked_nybbles), ("test_second_evaluate_traps", fun _ => test_second_evaluate_traps), ("test_update_after_evaluate_traps", fun _ => test_update_after_evaluate_traps), ("test_a_byte_above_255_traps", fun _ => test_a_byte_above_255_traps)]

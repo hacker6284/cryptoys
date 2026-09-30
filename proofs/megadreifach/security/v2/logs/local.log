@@ -1,0 +1,11 @@
+$ python3 experiments.py --only local
+rule C36 (6 chunks per size)
+C36 (a) k=2 random cards: 600,000 orderings, 300,000 ordering pairs, full collisions 0; per-pair 95% upper bound 1.0e-05 (=1/100,143)
+C36 (a) k=3 random cards: 599,976 orderings, 1,499,940 ordering pairs, full collisions 0; per-pair 95% upper bound 2.0e-06 (=1/500,693)
+C36 (a) k=4 random cards: 599,904 orderings, 6,898,896 ordering pairs, full collisions 0; per-pair 95% upper bound 4.3e-07 (=1/2,302,909)
+C36 (b) k=2 rank-structured: 600,000 orderings, 300,000 ordering pairs, full collisions 0; per-pair 95% upper bound 1.0e-05 (=1/100,143)
+C36 (b) k=3 rank-structured: 599,976 orderings, 1,499,940 ordering pairs, full collisions 0; per-pair 95% upper bound 2.0e-06 (=1/500,693)
+C36 (b) k=4 rank-structured: 599,904 orderings, 6,898,896 ordering pairs, full collisions 0; per-pair 95% upper bound 4.3e-07 (=1/2,302,909)
+C36 (c) k=2 window reorderings in IV blocks: 240,000 tests, dm collisions 0, 95% upper bound 1.2e-05 (=1/80,114)
+C36 (c) k=3 window reorderings in IV blocks: 240,000 tests, dm collisions 0, 95% upper bound 1.2e-05 (=1/80,114)
+C36 (c) k=4 window reorderings in IV blocks: 239,982 tests, dm collisions 0, 95% upper bound 1.2e-05 (=1/80,108)

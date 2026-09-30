@@ -1,0 +1,7 @@
+$ python3 experiments.py --only cost
+100 random one-block deals from IV-COOK12 (seed 8); every count is the same for all 100 (each deal holds every card once).  v1 turns from ../md.py (v1 sudo), v1 reads = 52 + 12.
+v1   : F3 rounds 12; face turns 168 (1.00x v1), clicks 246; pieces read 64 (1.00x v1); whole-puzzle re-grips 64
+A_vn : F3 rounds 12; face turns 168 (1.00x v1), clicks 246; pieces read 64 (1.00x v1); whole-puzzle re-grips 64
+C36  : F3 rounds 36; face turns 192 (1.14x v1), clicks 270; pieces read 88 (1.38x v1); whole-puzzle re-grips 88
+C76  : F3 rounds 76; face turns 232 (1.38x v1), clicks 310; pieces read 128 (2.00x v1); whole-puzzle re-grips 128
+C76 vs C36: face turns 232/192 = 1.21x, pieces read 128/88 = 1.45x

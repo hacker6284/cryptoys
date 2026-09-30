@@ -1,5 +1,5 @@
 /-
-  Axiom audit of the Scramble v2 Link 2 package. Run by the shared gate
+  Axiom audit of the Scramble Link 2 package. Run by the shared gate
   `python3 ../../doubledeal/check_axioms.py scramble` (after `lake build`). Prints the
   axioms of EVERY theorem declared in a `ScrambleV2.*` module, private ones included,
   then `audited N`. The checker allows only propext, Classical.choice and Quot.sound;

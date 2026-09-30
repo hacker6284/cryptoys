@@ -315,9 +315,10 @@ jobs:
         run: python3 proofs/doubledeal/check_axioms.py cbc-hmac
 
   scramble-lean:
-    # Scramble v2 Link 2, in progress (proofs/scramble/lean): the hand-written v2 model,
-    # its SPEC vectors (kernel decide!, a few seconds), the reachability invariant, and the
-    # refinement of the emitted cube moves. Rebuilds the MegaDreifach Link 2 runtime
+    # Scramble Link 2 (proofs/scramble/lean): the hand-written v2 and v1 models, their SPEC
+    # vectors (kernel decide!, a few seconds), the reachability invariant, and the
+    # refinement of the emitted code: the v2 digest path (digest-only and traced, several
+    # updates) and the v1 digest-only path. Rebuilds the MegaDreifach Link 2 runtime
     # lemmas it uses (Embed, Sudo, Loop) against this package's own emitted SudoRt.
     runs-on: ubuntu-latest
     steps:

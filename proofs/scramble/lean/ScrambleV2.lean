@@ -1,13 +1,13 @@
 /-
-  Scramble v2 Link 2 (in progress): the hand-written model of the v2 digest
-  (`ScrambleV2.Spec`), its test vectors (`ScrambleV2.Kat`), the reachability invariant
-  (`ScrambleV2.Link2.Reach`) and the refinement lemmas for the emitted cube moves
-  (`ScrambleV2.Link2.Turn`, `.Matrix`, `.Reorient`, `.State`), lookups (`.Lookup`), piece readers (`.Pieces`),
-  the digest encoding (`.Rank`, `.Digest`, `.Index`), facelets (`.Facelets`), and the
-  digest path end to end with the digest-only headline (`.Evaluate`), the traced path and
-  several updates (`.Traced`), and the v1 model (`ScrambleV2.SpecV1`), its vectors
-  (`ScrambleV2.KatV1`) and the digest-only v1 path (`.V1`). See
-  ../README.md for what is and is not proved.
+  Scramble Link 2 (correctness of the emitted code only; not a security claim): the
+  hand-written model of the v2 digest (`ScrambleV2.Spec`), its test vectors
+  (`ScrambleV2.Kat`), the reachability invariant (`ScrambleV2.Link2.Reach`) and the
+  refinement lemmas for the emitted cube moves (`ScrambleV2.Link2.Turn`, `.Matrix`,
+  `.Reorient`, `.State`), lookups (`.Lookup`), piece readers (`.Pieces`), the digest
+  encoding (`.Rank`, `.Digest`, `.Index`), facelets (`.Facelets`), the digest path end to
+  end with the digest-only headline (`.Evaluate`), the traced path and several updates
+  (`.Traced`), and the v1 model (`ScrambleV2.SpecV1`), its vectors (`ScrambleV2.KatV1`)
+  and the digest-only v1 path (`.V1`). See ../README.md for what is and is not proved.
 -/
 import ScrambleV2.Spec
 import ScrambleV2.Kat

@@ -9,7 +9,7 @@
  * the generated face turns and checks A, B, C against the trace's h, h⁻¹
  * and the solved position after each block.
  */
-import { FACE_NAME, cardLabel, cardRank, suitName, turnMove, turnText } from "./minx.js";
+import { FACE_NAME, cardLabel, cardRank, turnMove, turnText } from "./minx.js";
 
 // Animate at most two blocks (messages of up to 47 bytes). Every block
 // more than doubles the undo-solves: block 1 plays 648 leader turns,
@@ -21,21 +21,6 @@ export const BLOCK_BYTES = 28;
 export const SOLVE_CHUNK = 12;
 export const PUZZLES = ["A", "B", "C"];
 export const HOME = { up: 0, front: 1 };
-
-const HOLD_WORDS = [
-    "Up",
-    "Front",
-    "left of Front",
-    "back-left",
-    "back-right",
-    "right of Front",
-    "below-right of Front",
-    "below-left of Front",
-    "lower back-left",
-    "lower back",
-    "lower back-right",
-    "Down",
-];
 
 export function maxAnimBytes() {
     // SPEC §3 pad: M ‖ 0x80 ‖ zeros ‖ 8-byte length, so n bytes take
@@ -60,66 +45,42 @@ function hex(bytes) {
     return bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function heldRule(rank) {
-    if (rank === 0) return "A holds Up.";
-    if (rank === 1) return "2 holds Front.";
-    if (rank <= 5) return "3–6 walk the upper ring clockwise, from the left of Front.";
-    if (rank <= 10) return "7–J walk the lower ring clockwise, from below-right of Front.";
-    if (rank === 11) return "Q holds Down.";
-    return "K turns Up back k clicks, then spins the puzzle k clicks: left comes to the front.";
+// Teach captions: one action per step, the words a player would say to
+// themselves. The view rings the face being turned and dots the piece
+// being read, so captions never list moves; the status line carries the
+// count ("turns 61–72 of 216").
+const SPEC_CARD = "5.3 Card step (card number i = 1 … 52)";
+const SPEC_F3 = "5.4 F3 blank rounds (t = 36, round r = 1 … 36)";
+const SPEC_HAND = "5.7 By hand: the cook and the 3-solve";
+
+function note(kicker, title, why, spec, short, math = "") {
+    return { kicker, title, math, why, spec, short };
 }
 
-function noonRule(rank) {
-    if (rank === 0 || rank === 12) return "Up points to Front.";
-    if (rank <= 5) return "The upper ring points to Up.";
-    if (rank <= 10) return "The lower ring points to its upper-left neighbour.";
-    return "Down points to the 7 face.";
+function clicks(n) {
+    return `${n > 0 ? "+" : "−"}${Math.abs(n)}`;
 }
 
-function pieceWords(step) {
-    const faces = [step.held, step.noon];
-    if (step.corner) faces.push(step.third);
-    return faces.map((f) => FACE_NAME[f]).join(", ");
-}
-
-function cardCaption(block, step) {
-    const rank = cardRank(step.card);
-    const [held, heldClicks] = step.turns;
-    const hold = rank === 12 ? "Up" : HOLD_WORDS[rank];
-    const kind = step.pos % 2 ? "corner" : "edge";
-    return {
-        kicker: `Block ${block + 1} · card ${step.pos} of 52`,
-        title: `${cardLabel(step.card)}: turn ${turnText(held, heldClicks)}`,
-        math: `${hold} is ${FACE_NAME[held]}. ${suitName(step.card)} = ${Math.abs(heldClicks)}.`
-            + (rank === 12 ? ` Spin ${step.spin}.` : "")
-            + ` Read the noon ${kind} (${pieceWords(step)}): c1 ${FACE_NAME[step.c1]}, c2 ${FACE_NAME[step.c2]}.`
-            + ` Turn ${turnText(step.turns[2], 1)}, ${turnText(step.turns[4], 1)}.`
-            + ` Re-grip ${FACE_NAME[step.c1]} up, ${FACE_NAME[step.c2]} front.`,
-        why: `${heldRule(rank)} CHaSeD: clubs 1, hearts 2, spades 3, diamonds 4. ${noonRule(rank)}`
-            + ` Odd cards read the corner, even cards the edge.`,
-        spec: "5.3 Card step (card number i = 1 … 52)",
-        short: `${cardLabel(step.card)} · ${turnText(held, heldClicks)} · read ${FACE_NAME[step.c1]}/${FACE_NAME[step.c2]}`,
-    };
-}
-
-function f3Caption(block, step) {
-    const round = step.pos - 52;
-    const kind = round % 2 ? "corner" : "edge";
-    return {
-        kicker: `Block ${block + 1} · F3 round ${round} of 36`,
-        title: `Turn ${turnText(step.turns[0], 1)} (Up)`,
-        math: `Read Up's noon ${kind} (${pieceWords(step)}): c1 ${FACE_NAME[step.c1]}, c2 ${FACE_NAME[step.c2]}.`
-            + ` Re-grip ${FACE_NAME[step.c1]} up, ${FACE_NAME[step.c2]} front.`,
-        why: "No card: turn Up +1, read, re-grip. 36 rounds; odd rounds read the corner.",
-        spec: "5.4 F3 blank rounds (t = 36, round r = 1 … 36)",
-        short: `F3 ${round}/36 · ${turnText(step.turns[0], 1)} · read ${FACE_NAME[step.c1]}/${FACE_NAME[step.c2]}`,
-    };
+function gripWords(grip) {
+    return `Hold ${FACE_NAME[grip.up]} up, ${FACE_NAME[grip.front]} front`;
 }
 
 const SOLVE_WORDS = {
-    1: { leader: "B", copies: ["A"], title: "Solve B onto A", rule: "Undo B's turns, last first, and copy each onto A by colour." },
-    2: { leader: "A", copies: ["B", "C"], title: "Solve A onto B and C", rule: "Undo A's turns and copy each onto B and C." },
-    3: { leader: "C", copies: ["A"], title: "Solve C onto A", rule: "Undo C's turns and copy each onto A." },
+    1: {
+        leader: "B", copies: ["A"], name: "Solve B onto A",
+        title: "Undo B, copying each turn onto A",
+        why: "B ends solved; A becomes h′.",
+    },
+    2: {
+        leader: "A", copies: ["B", "C"], name: "Solve A onto B and C",
+        title: "Undo A, copying each turn onto B and C",
+        why: "A ends solved; B and C become h′⁻¹.",
+    },
+    3: {
+        leader: "C", copies: ["A"], name: "Solve C onto A",
+        title: "Undo C, copying each turn onto A",
+        why: "C ends solved; A holds h′ again.",
+    },
 };
 
 /**
@@ -153,14 +114,10 @@ export function buildShow(trace) {
         turn("A", face, clicks);
         beats.push({
             kind: "cook", puzzle: "A", block: -1, stage: "cook-a", ranges: ranges(from),
-            caption: {
-                kicker: `Cook A · ${i + 1} of 12`,
-                title: `Turn ${turnText(face, clicks)}`,
-                math: "From solved, in the home grip (white up, green front): every face +1, in card order A to Q.",
-                why: "A starts as IV-COOK12, the chaining value before the first block.",
-                spec: "5.7 By hand: the cook and the 3-solve",
-                short: `Cook A · ${turnText(face, clicks)}`,
-            },
+            face,
+            caption: note(`Cook A · turn ${i + 1} of 12`, `Turn ${turnText(face, clicks)}`,
+                "Every face once, in card order: A becomes the starting value.", SPEC_HAND,
+                `Cook A · turn ${i + 1} of 12`),
         });
     });
     const back = undo(iv);
@@ -169,14 +126,10 @@ export function buildShow(trace) {
         turn("B", face, clicks);
         beats.push({
             kind: "cook", puzzle: "B", block: -1, stage: "cook-b", ranges: ranges(from),
-            caption: {
-                kicker: `Cook B backwards · ${i + 1} of 12`,
-                title: `Turn ${turnText(face, clicks)}`,
-                math: "The mirror of A's cook: every face −1, in reverse card order Q to A.",
-                why: "B holds the inverse of A. C stays solved.",
-                spec: "5.7 By hand: the cook and the 3-solve",
-                short: `Cook B backwards · ${turnText(face, clicks)}`,
-            },
+            face,
+            caption: note(`Cook B backwards · turn ${i + 1} of 12`, `Turn ${turnText(face, clicks)}`,
+                "A's cook undone, last turn first: B holds A's inverse.", SPEC_HAND,
+                `Cook B backwards · turn ${i + 1} of 12`),
         });
     });
 
@@ -184,50 +137,84 @@ export function buildShow(trace) {
         beats.push({
             kind: "deal", block: b, stage: `deal-${b}`, ranges: {},
             chunk: blk.chunk.slice(), deal: blk.deal.slice(),
-            caption: {
-                kicker: `Block ${b + 1} of ${blocks}`,
-                title: "Deal the 28 bytes as 52 cards",
-                math: `Bytes ${hex(blk.chunk)} → the deal, read left to right, top row first.`,
-                why: "Each block's 28 bytes pick one ordering of the deck (φ). Hold A in the home grip.",
-                spec: "5. Compression",
-                short: `Block ${b + 1}: deal 52 cards`,
-            },
+            caption: note(`Block ${b + 1} of ${blocks}`, "Deal 52 cards face down, in four rows",
+                "The block's 28 bytes pick the order. Work left to right, far row first.", "5. Compression",
+                `Block ${b + 1} · deal`, `Bytes ${hex(blk.chunk)}`),
         });
         let grip = { ...HOME };
         for (const step of blk.steps) {
-            const from = mark();
-            for (const [face, clicks] of pairs(step.turns)) turn("A", face, clicks);
             const isCard = step.card >= 0;
-            const beat = {
-                kind: isCard ? "card" : "f3",
-                block: b,
-                stage: `${isCard ? "cards" : "f3"}-${b}`,
-                ranges: ranges(from),
-                pos: step.pos,
-                card: step.card,
-                turns: pairs(step.turns),
-                grip: { ...grip },
-                spin: step.spin,
-                spunGrip: step.spin ? { up: step.up, front: step.noon } : null,
-                read: { held: step.held, noon: step.noon, third: step.third, corner: step.corner },
-                next: { up: step.c1, front: step.c2 },
-                caption: isCard ? cardCaption(b, step) : f3Caption(b, step),
+            const turns = pairs(step.turns);
+            const where = isCard
+                ? `Block ${b + 1} · card ${step.pos} of 52`
+                : `Block ${b + 1} · blank round ${step.pos - 52} of 36`;
+            const spec = isCard ? SPEC_CARD : SPEC_F3;
+            const tag = isCard ? cardLabel(step.card) : `Round ${step.pos - 52}/36`;
+            const base = {
+                block: b, stage: `${isCard ? "cards" : "f3"}-${b}`, pos: step.pos, card: step.card,
+                step: `${b}:${step.pos}`,
             };
-            // The held-face turn comes first, then the read, then the rest.
-            beat.readAfter = 1;
-            beats.push(beat);
-            grip = { up: step.c1, front: step.c2 };
+            const push = (kind, extra, caption) => {
+                beats.push({ kind, ...base, ranges: {}, grip: { ...grip }, ...extra, caption });
+            };
+            const turnBeat = (kind, [face, n], caption) => {
+                const from = mark();
+                turn("A", face, n);
+                push(kind, { ranges: ranges(from), face, clicks: n }, caption);
+            };
+            // 1. The held face (a card's face and suit clicks; F3: Up +1).
+            const [held, heldClicks] = turns[0];
+            if (isCard) {
+                turnBeat("card", turns[0], note(where, `${tag}: turn ${turnText(held, heldClicks)}`,
+                    cardRank(step.card) === 12
+                        ? "A King turns Up back by its suit, then spins."
+                        : "The number picks the face (ringed); the suit, how far.",
+                    spec, `${tag} · turn ${turnText(held, heldClicks)}`));
+            } else {
+                turnBeat("turn", turns[0], note(where, `Turn Up (${FACE_NAME[held]}) +1`,
+                    "No card: a blank round turns Up.", spec, `${tag} · turn Up +1`));
+            }
+            if (step.spin) {
+                const spun = { up: step.up, front: step.noon };
+                push("spin", { next: spun, spin: step.spin }, note(where,
+                    `Spin ${step.spin} click${step.spin === 1 ? "" : "s"}: the left face comes to the front`,
+                    "Kings then turn the whole puzzle about Up.", spec, `${tag} · spin ${step.spin}`));
+                grip = spun;
+            }
+            // 2. Read the noon piece: its first two colours set the next grip.
+            const piece = step.corner ? "corner" : "edge";
+            push("read", {
+                read: { held: step.held, noon: step.noon, third: step.third, corner: step.corner },
+                c1: step.c1, c2: step.c2,
+            }, note(where, `Read the noon ${piece}: ${FACE_NAME[step.c1]}, ${FACE_NAME[step.c2]}`,
+                `${step.pos % 2 ? "Odd" : "Even"} steps read the ${piece}: first the colour on the face just turned, then its noon.`,
+                spec, `${tag} · read ${FACE_NAME[step.c1]}, ${FACE_NAME[step.c2]}`));
+            // 3–4. The rest of the step's turns, one at a time.
+            const rest = turns.slice(1);
+            rest.forEach(([face, n], i) => {
+                const isFront = i === rest.length - 1;
+                const twice = rest.length === 2 && rest[0][0] === rest[1][0];
+                let title = `Turn the noon face (${FACE_NAME[face]}) ${clicks(n)}`;
+                let why = "The noon face: the neighbour the held face points to.";
+                if (isFront) {
+                    title = `Turn Front (${FACE_NAME[face]}) ${clicks(n)}`;
+                    why = twice ? "Front again: +2 in all." : "Front: the face looking at you.";
+                } else if (twice) {
+                    title = `Turn the noon face, Front (${FACE_NAME[face]}), ${clicks(n)}`;
+                    why = "Here the noon is Front, so Front turns twice.";
+                }
+                turnBeat("turn", [face, n], note(where, title, why, spec, `${tag} · turn ${turnText(face, n)}`));
+            });
+            // 5. Re-grip.
+            const next = { up: step.c1, front: step.c2 };
+            push("grip", { next }, note(where, gripWords(next),
+                "Pick A up and set it down that way.", spec, `${tag} · ${gripWords(next).toLowerCase()}`));
+            grip = next;
         }
         beats.push({
             kind: "home", block: b, stage: `home-${b}`, ranges: {}, grip: { ...grip }, next: { ...HOME },
-            caption: {
-                kicker: `Block ${b + 1} · E_m done`,
-                title: "Put A back in the home grip",
-                math: "White up, green front. A now holds e = E_m(h).",
-                why: "The grip never changes the position: the centres are fixed.",
-                spec: "5.7 By hand: the cook and the 3-solve",
-                short: "A back to white up, green front",
-            },
+            caption: note(`Block ${b + 1} · cards done`, gripWords(HOME),
+                "A now holds e. The home grip starts the 3-solve.", SPEC_HAND, `Block ${b + 1} · home grip`),
         });
         for (const stage of [1, 2, 3]) {
             const words = SOLVE_WORDS[stage];
@@ -241,30 +228,20 @@ export function buildShow(trace) {
                     kind: "solve", block: b, stage: `solve${stage}-${b}`, solve: stage,
                     leader: words.leader, copies: words.copies.slice(), ranges: ranges(from),
                     turns: part,
-                    caption: {
-                        kicker: `Block ${b + 1} · 3-solve ${stage} of 3 · turns ${i + 1}–${i + part.length} of ${word.length}`,
-                        title: words.title,
-                        math: part.map(([f, c]) => turnText(f, c)).join(", "),
-                        why: `${words.rule} Any solve gives the same result; undoing never needs thinking.`,
-                        spec: "5.7 By hand: the cook and the 3-solve",
-                        short: `${words.title} · ${i + part.length}/${word.length}`,
-                    },
+                    caption: note(`Block ${b + 1} · 3-solve ${stage} of 3 · ${words.name}`, words.title,
+                        words.why, SPEC_HAND,
+                        `${words.name} · turns ${i + 1}–${i + part.length} of ${word.length}`),
                 });
             }
             hist[words.leader] = [];
         }
         beats.push({
             kind: "gather", block: b, stage: `gather-${b}`, ranges: {},
-            caption: {
-                kicker: `Block ${b + 1} done`,
-                title: b + 1 < blocks ? "A = h′, B = h′⁻¹, C solved" : "A holds the digest",
-                math: b + 1 < blocks
-                    ? "Gather the cards. The next block starts from A."
-                    : `Digest ${hex(trace.digest)}`,
-                why: "h′ = compose(h, e): the 3-solve feeds h forward without any arithmetic.",
-                spec: "5.7 By hand: the cook and the 3-solve",
-                short: b + 1 < blocks ? `Block ${b + 1} done` : "Done: A holds the digest",
-            },
+            caption: b + 1 < blocks
+                ? note(`Block ${b + 1} done`, "Gather the cards", "A carries h′ into the next block.", SPEC_HAND,
+                    `Block ${b + 1} done`)
+                : note("Done", "A holds the digest", "Read it off A (§6).", SPEC_HAND, "Done: A holds the digest",
+                    hex(trace.digest)),
         });
     });
 

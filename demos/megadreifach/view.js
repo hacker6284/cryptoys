@@ -130,18 +130,14 @@ export function mountTrio(root = document) {
                 faceUp = 0;
             } else if (beat.kind === "card") {
                 faceUp = beat.pos;
-                grip = beat.next;
-            } else if (beat.kind === "f3") grip = beat.next;
-            else if (beat.kind === "home") grip = { ...HOME };
+            } else if (beat.next) grip = beat.next; // spin, grip, home
             else if (beat.kind === "gather") deal = null;
         }
         return { grip, deal, faceUp };
     }
 
     function readText(beat) {
-        const faces = [beat.read.held, beat.read.noon];
-        if (beat.read.corner) faces.push(beat.read.third);
-        return `Read the noon ${beat.read.corner ? "corner" : "edge"}: ${faces.map((f) => FACE_NAME[f]).join(", ")}.`;
+        return `Noon ${beat.read.corner ? "corner" : "edge"}: ${FACE_NAME[beat.c1]}, ${FACE_NAME[beat.c2]}.`;
     }
 
     return {
@@ -182,10 +178,10 @@ export function mountTrio(root = document) {
                 img.classList.add("is-up", "is-live");
                 setTimeout(() => img.classList.remove("is-live"), 600);
             }
-            if (beat.read && readEl) readEl.textContent = readText(beat);
+            if (readEl && beat.kind === "read") readEl.textContent = readText(beat);
+            else if (readEl && beat.kind !== "turn") readEl.textContent = "";
             await Promise.all(PUZZLES.map((p) => (beat.ranges[p] ? playLeaves(p, beat.ranges[p][0], beat.ranges[p][1], mine) : null)));
             if (beat.next) setGrip(beat.next);
-            if (beat.kind === "home") setGrip(HOME);
             if (beat.kind === "gather") layDeal(null, 0);
         },
         async clearShow() {

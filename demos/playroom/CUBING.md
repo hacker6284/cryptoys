@@ -53,8 +53,15 @@ own player and alg (the show's A / B / C move lists, literal turns such
 as `U2'`); grips are a quaternion on `rig.lift`, never on the adopted
 object. Adopting three players costs about three times the 3×3 boot on
 software GL. `playLeaves` takes an optional `onLeaf(index)` callback
-(used only for MegaDreifach's turn sound); without it behaviour is
-unchanged. Rest heights come from `measureLocalBox(seat.fit)`: a
+(used only by MegaDreifach, for its turn sound and to ring the face each
+turn moves); without it behaviour is unchanged. The puzzles always rest
+in their cups: face turns play seated, and a re-grip or King spin lifts
+A by `REGRIP_HOP` (14 mm) while it rotates, then sets it down. A puzzle
+is only ever solved by undoing its turns (SPEC §5.7): on leave each rig
+keeps its turns since it was last solved (its alg becomes that list,
+jumped to the end), and the next enter plays them backwards, fast, in
+the scene (`resetPuzzles`). The list lives in the page, so a reload
+starts solved. Rest heights come from `measureLocalBox(seat.fit)`: a
 world box measured mid-flight left C floating.
 
 ## Host / matrix / three.js

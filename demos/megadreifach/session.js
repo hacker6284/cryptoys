@@ -231,8 +231,10 @@ export function createMegaDreifachSession({
         const note = beat ? beat.caption : {
             kicker: "Start",
             title: "Three solved puzzles and a deck",
-            math: `A carries the hash, B its inverse, C stays solved. ${show ? `${kindCount(show, "deal")} block(s).` : ""}`,
-            why: "Step to cook A, cook B backwards, then deal the first block.",
+            math: "",
+            why: show
+                ? `A will carry the hash, B its inverse; C stays solved. ${kindCount(show, "deal")} block${kindCount(show, "deal") === 1 ? "" : "s"}.`
+                : "A will carry the hash, B its inverse; C stays solved.",
             spec: "5.7 By hand: the cook and the 3-solve",
         };
         renderTeachCard(teachCard, note, (heading) => void showSpec(heading));

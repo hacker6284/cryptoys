@@ -46,17 +46,21 @@ export const POSES = {
     },
     // MegaDreifach: high enough to read the 4×13 deal in front of the
     // tray, close enough that a megaminx face and its read piece read.
-    // Tray at DEN.z − 0.12, deal centred at DEN.z + 0.10, deck box left.
+    // Tray at DEN.z − 0.13, deal centred at DEN.z + 0.08, deck box left.
     drei: {
-        position: [DEN.x + 0.1, 1.23, DEN.z + 0.66],
-        target: [DEN.x + 0.03, 0.79, DEN.z + 0.0],
-        fov: 34,
+        // Square-on to the tidy table (deck | tray B A C over the deal),
+        // ~40° down, aimed right of centre so the set sits in the frame's
+        // left part, clear of the dock on the right.
+        position: [DEN.x + 0.07, 1.315, DEN.z + 0.614],
+        target: [DEN.x + 0.07, 0.78, DEN.z + 0.02],
+        fov: 32,
         overlays: { title: true, menu: false, teach: true },
-        // Phones: higher, wider, aimed past the tray so the tray and the
-        // deal sit above the transport and dock.
+        // Phones: steeper (~55°), centred on the whole set (deck to C),
+        // aimed below it so deck, tray and deal sit above the transport
+        // and dock.
         portrait: {
-            position: [DEN.x + 0.03, 1.63, DEN.z + 0.85],
-            target: [DEN.x + 0.02, 0.76, DEN.z + 0.12],
+            position: [DEN.x - 0.05, 1.825, DEN.z + 0.746],
+            target: [DEN.x - 0.05, 0.76, DEN.z + 0.227],
             fov: 50,
         },
     },

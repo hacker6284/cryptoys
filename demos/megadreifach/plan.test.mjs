@@ -40,6 +40,7 @@ for (const kat of kats) {
     const pos = { A: gen.identity(), B: gen.identity(), C: gen.identity() };
     const done = { A: 0, B: 0, C: 0 };
     let block = 0;
+    const stepTurns = {};
     for (const beat of show.beats) {
         for (const p of PUZZLES) {
             const r = beat.ranges[p];
@@ -58,14 +59,28 @@ for (const kat of kats) {
             assert.ok(samePos(pos.C, gen.identity()));
             assert.deepEqual(beat.deal, blk.deal);
         }
-        if (beat.kind === "card" || beat.kind === "f3") {
+        if (beat.step) {
             const step = blk.steps[beat.pos - 1];
-            // Literal clicks, exactly the trace's turns.
-            assert.deepEqual(beat.turns.flat(), step.turns);
-            if (beat.spin) {
+            const got = (stepTurns[beat.step] ??= []);
+            if (beat.face !== undefined) got.push(beat.face, beat.clicks);
+            if (beat.kind === "spin") {
+                assert.equal(beat.spin, step.spin);
                 assert.ok(close(mulMatrix(spinMatrix(beat.spin), gripMatrix(beat.grip.up, beat.grip.front)),
-                    gripMatrix(beat.spunGrip.up, beat.spunGrip.front)), `${kat.name}: King spin ${beat.pos}`);
+                    gripMatrix(beat.next.up, beat.next.front)), `${kat.name}: King spin ${beat.pos}`);
             }
+            if (beat.kind === "grip") {
+                // Literal clicks, exactly the trace's turns, one action per beat.
+                assert.deepEqual(got, step.turns, `${kat.name}: step ${beat.step} turns`);
+                assert.deepEqual(beat.next, { up: step.c1, front: step.c2 });
+                const kinds = show.beats.filter((x) => x.step === beat.step).map((x) => x.kind);
+                const want = step.card >= 0
+                    ? ["card", ...(step.spin ? ["spin"] : []), "read", "turn", "turn", "grip"]
+                    : ["turn", "read", ...Array(step.turns.length / 2 - 1).fill("turn"), "grip"];
+                assert.deepEqual(kinds, want, `${kat.name}: step ${beat.step} sub-beats`);
+            }
+            // One short action per caption: no move lists.
+            assert.ok(beat.caption.title.length <= 64, beat.caption.title);
+            assert.ok(!beat.caption.math.includes(","), beat.caption.math);
         }
         if (beat.kind === "home") assert.ok(samePos(pos.A, blk.e), `${kat.name}: A = e after E_m`);
         if (beat.kind === "gather") {
@@ -85,4 +100,7 @@ for (const kat of kats) {
     }
 }
 assert.equal(animated, 6);
+const one = buildShow(gen.host.trace_hash([0x61]));
+assert.equal(one.beats.filter((b) => b.kind === "read").length, 88);
+assert.ok(one.beats.filter((b) => b.kind === "solve").every((b) => / · turns \d+–\d+ of \d+$/.test(b.caption.short)));
 console.log("plan.test: ok");

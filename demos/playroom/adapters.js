@@ -985,13 +985,23 @@ export function createMegaDreifachAdapter() {
                 // Beat sheet (full motion): the director has flown the tray
                 // (A in its cup) off the shelf and, out of the toy chest,
                 // B, C and the DEAL deck (260 ms apart) into B's and C's
-                // cups and beside the tray. Wait for B and C to land.
-                // 0 ms: the camera eases onto the drei seat
-                // (1,300 ms) while A, B, C hop in turn (0 / 170 / 340 ms,
-                // 420 ms each). 700 ms: the deck's flap lifts and settles
-                // (2 × 260 ms). Then the dock.
+                // cups and beside the tray; the app's follow shot (wide
+                // enough for the chest) is still under way.
+                // 0 ms: live follow ends (as DoubleDeal's enter does) and
+                // the camera eases from wherever it is onto the drei seat
+                // (1,400 ms, about Scramble's glide). `restart`: the follow shot is flying to this
+                // same pose, and asking for it again used to skip() the
+                // shot, a one-frame cut (3.5 m, 44°, 8° of fov in one frame,
+                // measured frame by frame against Scramble, which glides).
+                // 700 ms: the deck's flap lifts and settles (2 × 260 ms).
+                // Once B and C are in their cups: A, B, C hop in turn
+                // (0 / 170 / 340 ms, 420 ms each). If the puzzles kept turns
+                // from last time, they undo them in place (~1.2 s, A back to
+                // the home grip). Then the dock.
                 markBeat("drei-present");
-                const seated = continueTo(poses, "drei", { duration: reduced ? 480 : 1300 });
+                poses?.followLive?.(null);
+                poses?.releaseFrame?.();
+                const seated = continueTo(poses, "drei", { duration: reduced ? 480 : 1400, restart: true });
                 const flap = (async () => {
                     if (reduced || !deck) return;
                     await clock.wait(700, enterGen);
@@ -1003,6 +1013,10 @@ export function createMegaDreifachAdapter() {
                 // B and C must be in their cups before the roll call.
                 for (const name of ["dreiB", "dreiC"]) await waitToyIdle(world.toys[name], clock, enterGen);
                 if (!reduced) await stage.rollCall(clock, enterGen);
+                if (stage.hasLeftover && !cancelEnter) {
+                    markBeat("drei-reset");
+                    await stage.resetPuzzles({ snap: reduced });
+                }
                 await flap;
                 await seated;
                 if (cancelEnter) return session;

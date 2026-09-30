@@ -14,10 +14,19 @@ export const CUBE = 0.057;
 // Presentation edge (local max extent) of each MegaDreifach megaminx:
 // a real 12-colour megaminx is about 70 mm across.
 export const MINX = 0.072;
-// MegaDreifach tray: A rides it from the shelf; B and C (one megaminx
-// each) come out of the toy chest and land in their cups.
-export const DREI_TRAY = { w: 0.31, h: 0.012, d: 0.175 };
-export const DREI_SEAT_XZ = { A: [0, 0.038], B: [-0.098, -0.036], C: [0.098, -0.036] };
+// MegaDreifach layout (metres, tray-local). One row, symmetric about the
+// table axis: B | A | C, 11.5 cm apart, A (the working puzzle) in the
+// middle next to both solve partners. A tent card sits square in front
+// of each cup. The tray is exactly as wide as the 13-column deal
+// (12 × 25 mm + a 63 mm card = 363 mm), so the deal's side edges line
+// up with the tray's, 22 mm in front of it. The DEAL box stands square
+// on the row's line, one gap left of the tray. A rides the tray from
+// the shelf; B and C (one megaminx each) come out of the toy chest.
+export const DREI_TRAY = { w: 0.363, h: 0.012, d: 0.13 };
+export const DREI_TRAY_Z = -0.13; // tray centre, from DEN.z
+export const DREI_SEAT_XZ = { A: [0, -0.012], B: [-0.115, -0.012], C: [0.115, -0.012] };
+export const DREI_GAP = 0.022;
+export const DREI_DECK_X = -(0.363 / 2 + 0.03 + 0.067 / 2); // from DEN.x
 export const DREI_EXTRA = { dreiB: "B", dreiC: "C" };
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = 0.092;

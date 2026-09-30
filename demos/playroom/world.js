@@ -13,9 +13,11 @@ import {
     CEIL_Y,
     SHADE_Y,
     CHEST,
+    DREI_DECK_X,
     DREI_EXTRA,
     DREI_SEAT_XZ,
     DREI_TRAY,
+    DREI_TRAY_Z,
     SHELF_Y0,
     SHELF_Y1,
     SLOTS,
@@ -630,14 +632,14 @@ export async function mountWorld(canvas) {
         });
     }
 
-    // MegaDreifach's deck stands left of the tray, behind the left end
-    // of the deal (the dock owns the top-right corner), label to camera.
+    // MegaDreifach's deck stands square on the puzzle row's line, one
+    // gap left of the tray (constants.js has the layout).
     function getDreiDeckPose() {
         return seatOn(toys.deck3, {
-            x: DEN.x - 0.29,
+            x: DEN.x + DREI_DECK_X,
             surfaceY: feltTopY() + 0.001,
-            z: DEN.z - 0.10,
-            rotation: { x: 0, y: 0.3, z: 0 },
+            z: DEN.z + DREI_TRAY_Z,
+            rotation: { x: 0, y: 0, z: 0 },
             name: "deck3",
         });
     }
@@ -676,7 +678,7 @@ export async function mountWorld(canvas) {
             return seatOn(toys[name], {
                 x: DEN.x + dx,
                 surfaceY: feltTopY() + 0.001 + DREI_TRAY.h + 0.0015,
-                z: DEN.z - 0.12 + dz,
+                z: DEN.z + DREI_TRAY_Z + dz,
                 rotation: { x: 0, y: 0, z: 0 },
                 name,
             });
@@ -685,7 +687,7 @@ export async function mountWorld(canvas) {
             x: DEN.x,
             surfaceY: feltTopY() + 0.001,
             // The tray sits back so its deal fits in front of it.
-            z: name === "drei" ? DEN.z - 0.12 : DEN.z,
+            z: name === "drei" ? DEN.z + DREI_TRAY_Z : DEN.z,
             rotation: { x: 0, y: 0, z: 0 },
             name,
         });

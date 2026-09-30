@@ -124,3 +124,24 @@ h1 {
   opacity: 0.6;
   text-decoration: line-through;
 }
+
+/* Standalone: the teach card and transport sit in the stage's flow, under
+   the deal and the read line, never over the puzzles or the cards. */
+.stage > .teach {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.stage > .teach[hidden] {
+  display: none;
+}
+
+.stage > .teach .teach-card,
+.stage > .teach .transport {
+  position: static;
+  width: auto;
+  max-width: 720px;
+}

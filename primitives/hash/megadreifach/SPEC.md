@@ -50,6 +50,7 @@ Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a 
 | `HashDeck(deal)` / `MegaDreifachDeck(deal)` | `Hash(φ⁻¹(deal))` when the deal’s factoradic rank is `< 2^{224}`. Often two MD blocks after the outer pad. |
 | `HashDeckBody(deal)` / `MegaDreifachBody(deal)` | Public Body. One DM compression on a **52-card permutation** from **IV-COOK12**. No outer pad, no φ. Non-permutations are rejected. |
 | `HashDeckBodyFrom(deal, h)` / `MegaDreifachBodyFrom(deal, h)` | Free-start analysis surface. Same DM from caller chaining value `h`. **Broken** (pseudo-collisions are easy, §8). Not a security API. |
+| `trace_hash(msg)` | Animation trace for the demo, not a second hash: `Hash(msg)` replayed block by block. Per block: the 28-byte chunk, its deal, `h`, `h⁻¹`, `e = E_m(h)`, `h'`, `h'⁻¹`, and one record per card step and F3 round (the grip in force, the held face, the King spin, the noon piece read with its colours `c1`/`c2`, and every face turn in order with its clicks signed as the hand turns them). Also the IV-COOK12 turns and the digest. `Hash` never builds it; its test replays the recorded turns against `E_m` and `Hash` on every KAT. |
 
 Sudocode has no optional parameters, so the soft-lock prose `HashDeckBody(deal[, h])` splits: omit `h` → `HashDeckBody(deal)` (always IV-COOK12); supply `h` → `HashDeckBodyFrom(deal, h)`. Identically, `HashDeckBody(deal)` is `HashDeckBodyFrom(deal, IV-COOK12)`.
 
@@ -218,7 +219,7 @@ A sudocode `int` is 64-bit and overflow traps. `|G|` and `52!` do not fit. `std.
 
 `kats/megaminx_hash_kats_v2.json` holds the **v2** vectors: the same inputs and layout as the v1 file, with `"version": "v2"` and `f3_t = 36`. The pad lengths, block counts, IV-COOK12 digest and `|G|` are unchanged; every digest differs from v1. They were produced by an independent Python transliteration of the sudo and agree with the sudoc JS build of `megadreifach.sudo` and with the review engine's rule C36 (both Python programs are out of tree). In tree, the engine of [`proofs/megadreifach/security/v2/`](../../../proofs/megadreifach/security/v2/README.md) reproduces all eight digests and the `HashDeck` vector, and `proofs/megadreifach/m9/m9_search.py` the eight digests.
 
-The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zero, the permutation domain, the public API, the edge-slot table (§5.6), the visual noon on all 60 grips, and **all eight v2 `Hash` digests plus the `HashDeck` vector** of that file.
+The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zero, the permutation domain, the public API, the edge-slot table (§5.6), the visual noon on all 60 grips, and **all eight v2 `Hash` digests plus the `HashDeck` vector** of that file. `trace_hash` is checked against `Hash`, `E_m`, IV-COOK12 and the DM step on all eight KAT messages.
 
 `kats/megaminx_hash_kats_v1.json` is the **v1** KAT file (for the deprecated `v1/megadreifach.sudo`), renamed from `kats/megaminx_hash_kats.json` with identical contents.
 

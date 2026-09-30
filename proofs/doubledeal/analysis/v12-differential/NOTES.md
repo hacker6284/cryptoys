@@ -119,8 +119,10 @@ CHARACTERISTIC is `(1/64)² ≈ 2.4e-4`; nothing numeric is proved for the DIFFE
   neither proved nor claimed.
   This applies to a column bound for the MIX round (`dp1Count`). For the whole cipher
   (`encryptL`, which ends with the stem and no GridCycle), a column bound for the final
-  round's stem is enough for outputs outside `v10Sym`, and that is a statement about
-  SumRanks alone which does not imply the conjecture: `FullCipher.fullDiffCount_le_of_col`,
+  round's stem is enough for outputs outside `v10Sym`. That is a statement about SumRanks
+  alone. It is not known to imply `roundBody_covariant_iff_id`; it does imply that no β
+  outside `v10Sym` is exactly stem-covariant into γ ≠ β, which is also unproved
+  (`sumRanksV10_commutes_iff` rules out only γ = β). See `FullCipher.fullDiffCount_le_of_col`,
   `fullDiffCount_le_64_of_offDiag` (PROVED reductions; the off-diagonal stem hypothesis is
   NOT proved). Into `v10Sym` columns this route gives nothing (`not_col_v10Sym`).
 * Paths through differences outside `v10Sym` (the only proved multi-round bound covers

@@ -75,12 +75,14 @@
     Column transfer (a REDUCTION; its hypothesis is proved for no `γ`):
     `fullDiffCount_le_of_col`: if `p · dpFCount β γ ≤ 52!` for every `β ≠ 1` (a column bound
     for the stem alone), then `p · fullDiffCount α γ n y ≤ (52!)^(n+2)` for every `α ≠ 1`,
-    `n`, `y`. `fullDiffCount_le_64_of_offDiag`: for `γ` outside `v10Sym` and `p = 64` the
+    every `n` (no decay) and every deck `y`. `fullDiffCount_le_64_of_offDiag`: for `γ` outside `v10Sym` and `p = 64` the
     hypothesis is needed only for `β` outside `v10Sym` with `β ≠ γ` (the diagonal is
     `dpFCount_self_le_64`). `not_col_v10Sym`: into a nontrivial `v10Sym a x` no `p ≥ 2`
     works. The open off-diagonal hypothesis is about the stem (SumRanks) alone, not about a
-    GridCycle round, so unlike a one-round column bound for the mix round it does not imply
-    the covariant conjecture; it is still unproved.
+    GridCycle round. It is not known to imply `roundBody_covariant_iff_id`; it does imply
+    that no `β` outside `v10Sym` is exactly stem-covariant into `γ ≠ β`
+    (`stem(β·m) = γ·stem(m)` on every deck would give `dpFCount β γ = 52!`), which is also
+    unproved (`sumRanksV10_commutes_iff` rules out only `γ = β`).
     The row and column sums used by `LinearMasks` (for DoubleDeal's `encryptL`) are
     `sum_fullDiffCount` (every row sums to `(52!)^(n+2)`; only decks to decks is used) and
     `sum_fullDiffCount_left` (every column sums to `(52!)^(n+2)`, through `outDiff` and
@@ -737,8 +739,7 @@ theorem not_col_v10Sym (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) {p 
   have h1 := h _ hne1
   rw [dpFCount_v10Sym, if_pos rfl] at h1
   have hpos := Nat.factorial_pos 52
-  have h2 : p * Nat.factorial 52 ≤ 1 * Nat.factorial 52 := by rw [one_mul]; exact h1
-  have := Nat.le_of_mul_le_mul_right h2 hpos
+  have := Nat.le_of_mul_le_mul_right (h1.trans (one_mul _).symm.le) hpos
   omega
 
 /-- (PROVED) Independence of the starting deck (from `Differential.diffCount_eq_of_isDeck`,

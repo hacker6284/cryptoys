@@ -20,11 +20,19 @@ node /tmp/megadreifach-test/_megadreifach_impl.mjs
 "$sudoc" build --target js --tests -o /tmp/doubledeal-test primitives/cipher/doubledeal/doubledeal.sudo
 node /tmp/doubledeal-test/_doubledeal_impl.mjs
 "$sudoc" emit-ir --require terminates -I primitives/hash/megadreifach \
+    -I primitives/cipher/doubledeal \
     primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo > /dev/null
 "$sudoc" build --target js --tests -o /tmp/ddch-test \
-    -I primitives/hash/megadreifach \
+    -I primitives/hash/megadreifach -I primitives/cipher/doubledeal \
     primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
 node /tmp/ddch-test/_doubledeal_cbc_hmac_impl.mjs
+# Frozen DoubleDeal-CBC-HMAC v1 (superseded by v2): conformance tests only.
+"$sudoc" emit-ir --require terminates -I primitives/hash/megadreifach \
+    primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo > /dev/null
+"$sudoc" build --target js --tests -o /tmp/ddch-v1-test \
+    -I primitives/hash/megadreifach \
+    primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo
+node /tmp/ddch-v1-test/_doubledeal_cbc_hmac_impl.mjs
 
 SUDOC="$sudoc" sh tools/build.sh
 node primitives/cipher/doubledeal/encoding.test.mjs

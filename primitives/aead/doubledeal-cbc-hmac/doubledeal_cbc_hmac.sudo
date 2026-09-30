@@ -1,282 +1,628 @@
-// DoubleDeal-CBC-HMAC. The rules are primitives/aead/doubledeal-cbc-hmac/SPEC.md.
-// Toy Encrypt-then-MAC: DoubleDeal CBC, then HMAC-MegaDreifach. Not for real use.
-// Product name DoubleDeal-CBC-HMAC is locked. SCM / SMAC stay later.
+// DoubleDeal-CBC-Sandwich v2 (proposed name; directory and file keep the v1 name
+// doubledeal-cbc-hmac for now). The rules are primitives/aead/doubledeal-cbc-hmac/SPEC.md.
+// Toy Encrypt-then-MAC on decks: deck-CBC (Compose with the previous ciphertext deck),
+// then a Sandwich MAC on one MegaDreifach megaminx. Not for real use. No XOR anywhere.
+// Frozen v1 (DoubleDeal-CBC-HMAC v1): v1/doubledeal_cbc_hmac.sudo.
 // New loops are bounded for. emit-ir --require terminates must pass.
 
 import megadreifach
+import doubledeal
 
-hmac_block = 28
-digest_len = 29
-cipher_block = 29
-ipad_byte = 54
-opad_byte = 92
+msg_block = 28
+wire_block = 29
+tag_len = 29
 
-version_label = "DoubleDeal-CBC-HMAC/v1"
-enc_label = "DoubleDeal-CBC-HMAC/v1/enc"
-mac_label = "DoubleDeal-CBC-HMAC/v1/mac"
+enc_label = "DoubleDeal-CBC-Sandwich/v2/enc"
+mac_label = "DoubleDeal-CBC-Sandwich/v2/mac"
+
+// ---------------------------------------------------------------- checks
 
 func require_bytes(xs: List<int>)
     for i = 0 to xs.length - 1
         assert (xs[i] >= 0) and (xs[i] <= 255)
 
-func xor_byte(a: int, b: int) -> int
-    assert (a >= 0) and (a <= 255)
-    assert (b >= 0) and (b <= 255)
-    out = 0
-    place = 1
-    left = a
-    right = b
-    for bit = 0 to 7
-        la = left mod 2
-        rb = right mod 2
-        if la != rb
-            out = out + place
-        left = left / 2
-        right = right / 2
-        place = place * 2
-    return out
-
-export func xor_bytes(a: List<int>, b: List<int>) -> List<int>
-    assert a.length == b.length
-    require_bytes(a)
-    require_bytes(b)
-    out: List<int> = []
-    for i = 0 to a.length - 1
-        out.append(xor_byte(a[i], b[i]))
-    return out
-
-func u16be(n: int) -> List<int>
-    assert (n >= 0) and (n <= 65535)
-    out: List<int> = []
-    out.append(n / 256)
-    out.append(n mod 256)
-    return out
-
-func u64be(n: int) -> List<int>
-    assert n >= 0
-    parts: List<int> = []
-    rest = n
-    for i = 1 to 8
-        parts.append(rest mod 256)
-        rest = rest / 256
-    assert rest == 0
-    out: List<int> = []
-    for i = 7 downto 0
-        out.append(parts[i])
-    return out
-
-func take_prefix(xs: List<int>, n: int) -> List<int>
-    assert n >= 0
-    assert xs.length >= n
-    out: List<int> = []
-    for i = 0 to n - 1
-        out.append(xs[i])
-    return out
-
-func pad_zeros(xs: List<int>, n: int) -> List<int>
-    assert n >= xs.length
-    out: List<int> = []
-    for i = 0 to n - 1
-        if i < xs.length
-            out.append(xs[i])
+func is_deck(d: List<int>) -> bool
+    if d.length != 52
+        return false
+    seen = filled(52, 0)
+    ok = true
+    for i = 0 to 51
+        c = d[i]
+        if (c < 0) or (c > 51)
+            ok = false
+        else if seen[c] == 1
+            ok = false
         else
-            out.append(0)
-    return out
+            seen[c] = 1
+    return ok
 
-export func hmac_normalize_key(key: List<int>) -> List<int>
-    require_bytes(key)
-    k = key
-    if k.length > hmac_block
-        k = megadreifach.Hash(k)
-    if k.length > hmac_block
-        k = take_prefix(k, hmac_block)
-    return pad_zeros(k, hmac_block)
+func require_deck(d: List<int>)
+    assert is_deck(d)
 
-func xor_pad(key: List<int>, pad: int) -> List<int>
-    assert key.length == hmac_block
+func same_list(a: List<int>, b: List<int>) -> bool
+    if a.length != b.length
+        return false
+    diff = 0
+    for i = 0 to a.length - 1
+        if a[i] != b[i]
+            diff = diff + 1
+    return diff == 0
+
+// ---------------------------------------------------------------- the fixed decks
+
+// New-deck (CHaSeD) order: A of clubs on top, ..., K of diamonds at the bottom.
+func sorted_deck() -> List<int>
     out: List<int> = []
-    for i = 0 to hmac_block - 1
-        out.append(xor_byte(key[i], pad))
+    for i = 0 to 51
+        out.append(i)
     return out
 
-export func HMAC(key: List<int>, msg: List<int>) -> List<int>
-    require_bytes(msg)
-    k = hmac_normalize_key(key)
-    inner = megadreifach.Hash(xor_pad(k, ipad_byte) + msg)
-    tag = megadreifach.Hash(xor_pad(k, opad_byte) + inner)
-    assert tag.length == digest_len
-    return tag
+// A deck turned over: the old bottom card is now on top.
+func turned_over(d: List<int>) -> List<int>
+    out: List<int> = []
+    for i = 0 to d.length - 1
+        out.append(d[d.length - 1 - i])
+    return out
 
-export func HMAC_MegaDreifach(key: List<int>, msg: List<int>) -> List<int>
-    return HMAC(key, msg)
+// v2: a sorted deck with its top two cards swapped (2 of clubs on top, then A of clubs).
+export func version_deck() -> List<int>
+    d = sorted_deck()
+    d[0] = 1
+    d[1] = 0
+    return d
+
+// ---------------------------------------------------------------- Compose (DoubleDeal SPEC 3.6)
+
+func index_of(deck: List<int>, card: int) -> int
+    for i = 0 to 51
+        if deck[i] == card
+            return i
+    assert false
+    return 0
+
+// Compose(M, K)[j] = M[K.index(j)]: PLACE M through K.
+func compose(m: List<int>, k: List<int>) -> List<int>
+    out: List<int> = []
+    for j = 0 to 51
+        out.append(m[index_of(k, j)])
+    return out
+
+// InverseCompose(C, K)[K.index(j)] = C[j]: COLLECT C through K.
+func inverse_compose(c: List<int>, k: List<int>) -> List<int>
+    out = filled(52, 0)
+    for j = 0 to 51
+        out[index_of(k, j)] = c[j]
+    return out
+
+// ---------------------------------------------------------------- software edge: big integers
+// Unsigned integers as fixed-width big-endian byte lists. Only the byte <-> deck edge, the
+// optional key derivation and the wire format use them. No XOR.
+
+func bn_mul_small_add(n: List<int>, m: int, add: int) -> List<int>
+    assert (m >= 0) and (m <= 256) and (add >= 0) and (add <= 256)
+    out = filled(n.length, 0)
+    carry = add
+    for i = n.length - 1 downto 0
+        cur = n[i] * m + carry
+        out[i] = cur mod 256
+        carry = cur / 256
+    assert carry == 0
+    return out
+
+func bn_divmod_small(n: List<int>, d: int) -> (List<int>, int)
+    assert (d > 0) and (d <= 256)
+    q = filled(n.length, 0)
+    rem = 0
+    for i = 0 to n.length - 1
+        cur = rem * 256 + n[i]
+        q[i] = cur / d
+        rem = cur mod d
+    return (q, rem)
+
+func bn_is_zero(n: List<int>) -> bool
+    nonzero = 0
+    for i = 0 to n.length - 1
+        if n[i] != 0
+            nonzero = nonzero + 1
+    return nonzero == 0
+
+func bn_add(a: List<int>, b: List<int>) -> List<int>
+    assert a.length == b.length
+    out = filled(a.length, 0)
+    carry = 0
+    for i = a.length - 1 downto 0
+        cur = a[i] + b[i] + carry
+        out[i] = cur mod 256
+        carry = cur / 256
+    assert carry == 0
+    return out
+
+// Full product, width a.length + b.length.
+func bn_mul(a: List<int>, b: List<int>) -> List<int>
+    out = filled(a.length + b.length, 0)
+    for i = a.length - 1 downto 0
+        carry = 0
+        for j = b.length - 1 downto 0
+            pos = i + j + 1
+            cur = out[pos] + a[i] * b[j] + carry
+            out[pos] = cur mod 256
+            carry = cur / 256
+        out[i] = carry
+    return out
+
+func bn_widen(n: List<int>, width: int) -> List<int>
+    assert width >= n.length
+    out = filled(width - n.length, 0)
+    for i = 0 to n.length - 1
+        out.append(n[i])
+    return out
+
+// |G| = (20!/2)(30!/2) 3^19 2^29, the megaminx group order (MegaDreifach SPEC section 6):
+// every MegaDreifach digest, read big-endian, is below it.
+func group_order() -> List<int>
+    n = filled(wire_block, 0)
+    n[wire_block - 1] = 1
+    for f = 3 to 20
+        n = bn_mul_small_add(n, f, 0)
+    for f = 3 to 30
+        n = bn_mul_small_add(n, f, 0)
+    for i = 1 to 19
+        n = bn_mul_small_add(n, 3, 0)
+    for i = 1 to 29
+        n = bn_mul_small_add(n, 2, 0)
+    return n
+
+// ---------------------------------------------------------------- software edge: bytes <-> decks
+// The factoradic of DoubleDeal SPEC 5.3: deck -> rank = sum of d_k (51 - k)!, where d_k is the
+// position of card k among the cards not yet used, in new-deck order.
+
+func pop_at(items: List<int>, idx: int) -> (int, List<int>)
+    rest: List<int> = []
+    for i = 0 to items.length - 1
+        if i != idx
+            rest.append(items[i])
+    return (items[idx], rest)
+
+// Lehmer digits (d_0 .. d_51) of n mod 52!, least significant first; also the final quotient
+// floor(n / 52!).
+func lehmer_of(n: List<int>) -> (List<int>, List<int>)
+    digits = filled(52, 0)
+    q = n
+    for r = 1 to 52
+        q, d = bn_divmod_small(q, r)
+        digits[52 - r] = d
+    return (digits, q)
+
+func deck_of_digits(digits: List<int>) -> List<int>
+    items = sorted_deck()
+    out: List<int> = []
+    for k = 0 to 51
+        c, rest = pop_at(items, digits[k])
+        out.append(c)
+        items = rest
+    return out
+
+// unrank(n mod 52!) for any big-endian n.
+func unrank_reduce(n: List<int>) -> List<int>
+    digits, q = lehmer_of(n)
+    return deck_of_digits(digits)
+
+// The 29-byte big-endian rank of a deck (always below 52!).
+func rank29(d: List<int>) -> List<int>
+    require_deck(d)
+    items = sorted_deck()
+    n = filled(wire_block, 0)
+    for k = 0 to 51
+        idx = index_of_list(items, d[k])
+        n = bn_mul_small_add(n, 52 - k, idx)
+        c, rest = pop_at(items, idx)
+        items = rest
+    return n
+
+func index_of_list(items: List<int>, card: int) -> int
+    for i = 0 to items.length - 1
+        if items[i] == card
+            return i
+    assert false
+    return 0
+
+// A 29-byte wire number -> (is it below 52!, the deck it names).
+func wire_to_deck(w: List<int>) -> (bool, List<int>)
+    assert w.length == wire_block
+    digits, q = lehmer_of(w)
+    return (bn_is_zero(q), deck_of_digits(digits))
+
+// A 28-byte block -> its deck (every 28-byte value is below 2^224 < 52!).
+func block_to_deck(b: List<int>) -> List<int>
+    assert b.length == msg_block
+    return unrank_reduce(b)
+
+// A deck -> (is its rank below 2^224, the 28 low bytes of the rank).
+func deck_to_block(d: List<int>) -> (bool, List<int>)
+    r = rank29(d)
+    out: List<int> = []
+    for i = 1 to wire_block - 1
+        out.append(r[i])
+    return (r[0] == 0, out)
+
+// ---------------------------------------------------------------- pad (DoubleDeal ECB pad)
 
 export func pad_iso7816(msg: List<int>) -> List<int>
     require_bytes(msg)
     out = msg + [128]
-    nzero = (hmac_block - (out.length mod hmac_block)) mod hmac_block
+    nzero = (msg_block - (out.length mod msg_block)) mod msg_block
     for i = 1 to nzero
         out.append(0)
-    assert out.length mod hmac_block == 0
+    assert out.length mod msg_block == 0
     return out
 
-export func unpad_iso7816(msg: List<int>) -> List<int>
-    assert msg.length > 0
-    assert msg.length mod hmac_block == 0
-    require_bytes(msg)
-    i = msg.length - 1
-    found = 0
-    for n = 1 to msg.length
-        if found == 0
-            if msg[i] == 0
-                i = i - 1
-            else if msg[i] == 128
-                found = 1
-            else
-                assert false
-    assert found == 1
-    assert i >= 0
+// (ok, message): ok only if the stream is non-empty, a multiple of 28 bytes, and ends in
+// 0x80 followed only by 0x00 with the marker in the last block. Never traps.
+func unpad_checked(msg: List<int>) -> (bool, List<int>)
+    empty: List<int> = []
+    if (msg.length == 0) or (msg.length mod msg_block != 0)
+        return (false, empty)
+    marker = 0 - 1
+    for n = 0 to msg.length - 1
+        i = msg.length - 1 - n
+        if (marker < 0) and (msg[i] != 0)
+            marker = i
+    if marker < msg.length - msg_block
+        return (false, empty)
+    if msg[marker] != 128
+        return (false, empty)
     out: List<int> = []
-    for j = 0 to i - 1
+    for j = 0 to marker - 1
         out.append(msg[j])
+    return (true, out)
+
+// ---------------------------------------------------------------- the MAC input (decks)
+
+// AAD is bytes (software-only interface): zero-filled to a multiple of 28, each 28-byte chunk
+// becomes a deck; no decks for empty AAD. The length deck at the end makes it unambiguous.
+func aad_decks(aad: List<int>) -> List<List<int>>
+    require_bytes(aad)
+    out: List<List<int>> = []
+    nblocks = (aad.length + msg_block - 1) / msg_block
+    for b = 0 to nblocks - 1
+        chunk: List<int> = []
+        for j = 0 to msg_block - 1
+            i = b * msg_block + j
+            if i < aad.length
+                chunk.append(aad[i])
+            else
+                chunk.append(0)
+        out.append(block_to_deck(chunk))
     return out
 
-export func mac_input(aad: List<int>, iv: List<int>, ciphertext: List<int>) -> List<int>
-    require_bytes(aad)
-    require_bytes(iv)
-    require_bytes(ciphertext)
-    ver = version_label
-    return u16be(ver.length) + ver + u64be(aad.length) + aad + u64be(iv.length) + iv + u64be(ciphertext.length) + ciphertext
+// unrank(n) for 0 <= n: the AAD length in bytes (a sorted deck when there is no AAD).
+func length_deck(n: int) -> List<int>
+    assert n >= 0
+    w = filled(8, 0)
+    rest = n
+    for i = 7 downto 0
+        w[i] = rest mod 256
+        rest = rest / 256
+    return unrank_reduce(w)
 
-export func derive_keys(master: List<int>) -> (List<int>, List<int>)
+// S = version deck || AAD decks || IV || C_0 .. C_{n-1} || length deck (SPEC section 5.1).
+export func mac_decks(aad: List<int>, iv: List<int>, cdecks: List<List<int>>) -> List<List<int>>
+    require_deck(iv)
+    assert cdecks.length > 0
+    out: List<List<int>> = []
+    out.append(version_deck())
+    extra = aad_decks(aad)
+    for i = 0 to extra.length - 1
+        out.append(extra[i])
+    out.append(iv)
+    for i = 0 to cdecks.length - 1
+        require_deck(cdecks[i])
+        out.append(cdecks[i])
+    out.append(length_deck(aad.length))
+    return out
+
+// ---------------------------------------------------------------- the MAC (one function)
+
+// The same physical cards in MegaDreifach's numbering (4 rank + suit; DoubleDeal is 13 suit + rank).
+func md_ids(d: List<int>) -> List<int>
+    out: List<int> = []
+    for i = 0 to 51
+        out.append(4 * (d[i] mod 13) + d[i] / 13)
+    return out
+
+// Sandwich MAC on one megaminx: from IV-COOK12 absorb the key deck as it lies, then every
+// deck of S, then the key deck turned over. The tag is the finished position (29-byte rank).
+export func mac_tag(k_mac: List<int>, decks: List<List<int>>) -> List<int>
+    require_deck(k_mac)
+    assert decks.length > 0
+    seq: List<List<int>> = []
+    seq.append(md_ids(k_mac))
+    for i = 0 to decks.length - 1
+        require_deck(decks[i])
+        seq.append(md_ids(decks[i]))
+    seq.append(md_ids(turned_over(k_mac)))
+    tag = megadreifach.HashDecksBody(seq)
+    assert tag.length == tag_len
+    return tag
+
+// ---------------------------------------------------------------- optional key derivation
+
+func u16be(n: int) -> List<int>
+    assert (n >= 0) and (n <= 65535)
+    return [n / 256, n mod 256]
+
+func u64be(n: int) -> List<int>
+    assert n >= 0
+    out = filled(8, 0)
+    rest = n
+    for i = 7 downto 0
+        out[i] = rest mod 256
+        rest = rest / 256
+    assert rest == 0
+    return out
+
+func kdf_digest(label: List<int>, j: int, master: List<int>) -> List<int>
+    return megadreifach.Hash(u16be(label.length) + label + [j] + u64be(master.length) + master)
+
+// unrank((d_a |G| + d_b) mod 52!): statistical distance about 2^-228.27 from a uniform deck
+// if the digests are uniform (heuristic).
+func kdf_deck(label: List<int>, j: int, master: List<int>) -> List<int>
+    da = kdf_digest(label, j, master)
+    db = kdf_digest(label, j + 1, master)
+    x = bn_add(bn_mul(da, group_order()), bn_widen(db, 2 * wire_block))
+    return unrank_reduce(x)
+
+// OPTIONAL: derive the two key decks from a byte master secret. Keys are normally user
+// supplied decks (truly shuffled); security assumes uniformly random key decks however made.
+export func derive_key_decks(master: List<int>) -> (List<int>, List<int>)
     require_bytes(master)
     assert master.length > 0
-    enc_digest = megadreifach.Hash(u16be(enc_label.length) + enc_label + u64be(master.length) + master)
-    mac_digest = megadreifach.Hash(u16be(mac_label.length) + mac_label + u64be(master.length) + master)
-    assert enc_digest.length == digest_len
-    assert mac_digest.length == digest_len
-    return (take_prefix(enc_digest, hmac_block), mac_digest)
+    return (kdf_deck(enc_label, 0, master), kdf_deck(mac_label, 2, master))
 
-export func cbc_chain_from_cipher_block(block: List<int>) -> List<int>
-    assert block.length == cipher_block
-    require_bytes(block)
+// ---------------------------------------------------------------- the AEAD
+
+func check_keys(k_enc: List<int>, k_mac: List<int>)
+    require_deck(k_enc)
+    require_deck(k_mac)
+    assert not same_list(k_enc, k_mac)
+
+// Encrypt. iv MUST be a freshly and truly shuffled full deck (the host draws it; sudo has no
+// randomness). Returns rank29(IV) || rank29(C_0) .. rank29(C_{n-1}) || tag.
+export func aead_seal(plaintext: List<int>, k_enc: List<int>, k_mac: List<int>, aad: List<int>, iv: List<int>) -> List<int>
+    require_bytes(plaintext)
+    require_bytes(aad)
+    check_keys(k_enc, k_mac)
+    require_deck(iv)
+    padded = pad_iso7816(plaintext)
+    chain = iv
+    cdecks: List<List<int>> = []
+    for b = 0 to padded.length / msg_block - 1
+        block: List<int> = []
+        for j = 0 to msg_block - 1
+            block.append(padded[b * msg_block + j])
+        chain = doubledeal.encrypt(compose(block_to_deck(block), chain), k_enc)
+        cdecks.append(chain)
+    tag = mac_tag(k_mac, mac_decks(aad, iv, cdecks))
+    out = rank29(iv)
+    for i = 0 to cdecks.length - 1
+        out = out + rank29(cdecks[i])
+    return out + tag
+
+// Decrypt. Returns (true, plaintext) or (false, []) for every failure alike. Order: public
+// parse (no key), then the tag over the decks, and only then DoubleDeal.decrypt.
+export func aead_open(blob: List<int>, k_enc: List<int>, k_mac: List<int>, aad: List<int>) -> (bool, List<int>)
+    require_bytes(blob)
+    require_bytes(aad)
+    check_keys(k_enc, k_mac)
+    empty: List<int> = []
+    if (blob.length < 3 * wire_block) or (blob.length mod wire_block != 0)
+        return (false, empty)
+    nwire = blob.length / wire_block - 1
+    decks: List<List<int>> = []
+    for w = 0 to nwire - 1
+        chunk: List<int> = []
+        for j = 0 to wire_block - 1
+            chunk.append(blob[w * wire_block + j])
+        ok, d = wire_to_deck(chunk)
+        if not ok
+            return (false, empty)
+        decks.append(d)
+    tag: List<int> = []
+    for j = 0 to tag_len - 1
+        tag.append(blob[nwire * wire_block + j])
+    iv = decks[0]
+    cdecks: List<List<int>> = []
+    for i = 1 to nwire - 1
+        cdecks.append(decks[i])
+    if not same_list(tag, mac_tag(k_mac, mac_decks(aad, iv, cdecks)))
+        return (false, empty)
+    chain = iv
+    padded: List<int> = []
+    for i = 0 to cdecks.length - 1
+        ok, block = deck_to_block(inverse_compose(doubledeal.decrypt(cdecks[i], k_enc), chain))
+        if not ok
+            return (false, empty)
+        padded = padded + block
+        chain = cdecks[i]
+    return unpad_checked(padded)
+
+// ---------------------------------------------------------------- tests
+
+func some_deck(step: int) -> List<int>
     out: List<int> = []
-    for i = 1 to hmac_block
-        out.append(block[i])
+    for i = 0 to 51
+        out.append((i * step + 5) mod 52)
     return out
 
-export func tags_equal(a: List<int>, b: List<int>) -> bool
-    if a.length != b.length
-        return false
-    ok = true
-    for i = 0 to a.length - 1
-        if a[i] != b[i]
-            ok = false
-    return ok
+test "PLACE through a sorted deck keeps a deck; through a turned-over deck reverses it"
+    k = some_deck(7)
+    assert compose(k, sorted_deck()) == k
+    assert compose(k, turned_over(sorted_deck())) == turned_over(k)
+    c = some_deck(11)
+    assert inverse_compose(compose(k, c), c) == k
+    assert compose(inverse_compose(k, c), c) == k
 
-test "xor is bitwise and involutive"
-    assert xor_byte(0, 0) == 0
-    assert xor_byte(255, 0) == 255
-    assert xor_byte(54, 54) == 0
-    assert xor_byte(92, 255) == 163
-    a = [1, 2, 3, 4]
-    b = [255, 0, 1, 128]
-    x = xor_bytes(a, b)
-    assert xor_bytes(x, b) == a
-    assert xor_bytes(a, a) == [0, 0, 0, 0]
+test "turning the key over moves every card to a new seat"
+    k = some_deck(7)
+    t = turned_over(k)
+    for i = 0 to 51
+        assert t[i] != k[i]
+    assert turned_over(t) == k
 
-test "iso7816 pad matches DoubleDeal ECB"
-    empty = pad_iso7816([])
-    assert empty.length == 28
-    assert empty[0] == 128
-    for i = 1 to 27
-        assert empty[i] == 0
-    assert unpad_iso7816(empty) == []
-    exact: List<int> = []
+test "wire ranks: sorted is 0, turned-over sorted is 52! - 1, 52! is not a deck"
+    z = rank29(sorted_deck())
+    assert bn_is_zero(z)
+    top = rank29(turned_over(sorted_deck()))
+    ok, d = wire_to_deck(top)
+    assert ok
+    assert d == turned_over(sorted_deck())
+    one = filled(wire_block, 0)
+    one[wire_block - 1] = 1
+    ok2, d2 = wire_to_deck(bn_add(top, one))
+    assert not ok2
+    k = some_deck(7)
+    ok3, d3 = wire_to_deck(rank29(k))
+    assert ok3
+    assert d3 == k
+
+test "28-byte blocks round-trip; a deck of rank at least 2^224 is not a message block"
+    b = filled(msg_block, 255)
+    ok, back = deck_to_block(block_to_deck(b))
+    assert ok
+    assert back == b
+    okr, r = deck_to_block(turned_over(sorted_deck()))
+    assert not okr
+
+test "group order is 29 bytes with top byte 3"
+    g = group_order()
+    assert g.length == wire_block
+    assert g[0] == 3
+
+test "pad and checked unpad"
+    e = pad_iso7816([])
+    assert e.length == 28
+    ok, m = unpad_checked(e)
+    assert ok
+    assert m.length == 0
+    x: List<int> = []
     for i = 0 to 27
-        exact.append(i)
-    twice = pad_iso7816(exact)
-    assert twice.length == 56
-    assert unpad_iso7816(twice) == exact
-    mid = [1, 2, 128]
-    assert unpad_iso7816(pad_iso7816(mid)) == mid
+        x.append(i + 1)
+    ok2, m2 = unpad_checked(pad_iso7816(x))
+    assert ok2
+    assert m2 == x
+    bad = pad_iso7816([1, 2, 3])
+    bad[3] = 0
+    ok3, m3 = unpad_checked(bad)
+    assert not ok3
+    late = [128] + filled(55, 0)
+    ok4, m4 = unpad_checked(late)
+    assert not ok4
 
-test "hmac key shorter than B is zero-padded"
-    k = hmac_normalize_key([1, 2, 3])
-    assert k.length == 28
-    assert k[0] == 1
-    assert k[1] == 2
-    assert k[2] == 3
-    for i = 3 to 27
-        assert k[i] == 0
-    z = hmac_normalize_key([])
-    assert z == filled(28, 0)
+test "the MAC input: version deck first, length deck last, zero-filled AAD kept apart"
+    iv = some_deck(7)
+    c = [some_deck(11)]
+    s0 = mac_decks([], iv, c)
+    assert s0.length == 4
+    assert s0[0] == version_deck()
+    assert s0[0] != sorted_deck()
+    assert s0[1] == iv
+    assert s0[3] == sorted_deck()
+    s1 = mac_decks([0], iv, c)
+    s27 = mac_decks(filled(27, 0), iv, c)
+    s28 = mac_decks(filled(28, 0), iv, c)
+    s29 = mac_decks(filled(29, 0), iv, c)
+    assert s1.length == 5
+    assert s1[1] == s27[1]
+    assert s1[4] != s27[4]
+    assert s27[4] != s28[4]
+    assert s29.length == 6
 
-test "cbc chain drops the most significant rank byte"
-    block: List<int> = []
-    for i = 0 to 28
-        block.append(i)
-    chain = cbc_chain_from_cipher_block(block)
-    assert chain.length == 28
-    for i = 0 to 27
-        assert chain[i] == i + 1
+test "the Sandwich tag is one megaminx through key, message decks, key turned over"
+    k = some_deck(7)
+    s = mac_decks([1, 2], some_deck(11), [some_deck(15)])
+    seq: List<List<int>> = []
+    seq.append(md_ids(k))
+    for i = 0 to s.length - 1
+        seq.append(md_ids(s[i]))
+    seq.append(md_ids(turned_over(k)))
+    assert mac_tag(k, s) == megadreifach.HashDecksBody(seq)
+    assert mac_tag(k, s) != mac_tag(turned_over(k), s)
+    assert mac_tag(k, s).length == tag_len
 
-test "mac input is length delimited"
-    aad = [1, 2]
-    iv = filled(28, 7)
-    c = filled(29, 9)
-    m = mac_input(aad, iv, c)
-    assert m[0] == 0
-    assert m[1] == version_label.length
-    assert take_prefix(m, 2 + version_label.length) == u16be(version_label.length) + version_label
+test "card ids: the same physical card in MegaDreifach numbering"
+    ids = md_ids(sorted_deck())
+    assert ids[0] == 0
+    assert ids[1] == 4
+    assert ids[13] == 1
+    assert ids[51] == 51
 
-test "HMAC aliases agree and returns 29 bytes"
-    tag = HMAC([99, 114, 121, 112, 116, 111, 121], [97, 98, 99])
-    assert tag.length == 29
-    assert HMAC_MegaDreifach([99, 114, 121, 112, 116, 111, 121], [97, 98, 99]) == tag
-    published = [2, 123, 176, 214, 68, 51, 210, 64, 132, 130, 26, 240, 133, 106, 92, 50, 135, 250, 41, 73, 93, 142, 109, 228, 165, 184, 115, 159, 118]
-    assert tag == published
+test "optional key derivation gives two distinct decks"
+    a, b = derive_key_decks([1, 2, 3])
+    assert is_deck(a)
+    assert is_deck(b)
+    assert a != b
+    c, d = derive_key_decks([1, 2, 4])
+    assert c != a
 
-test "HMAC depends on the key and the message"
-    k1 = [1, 2, 3]
-    k2 = [1, 2, 4]
-    m1 = [97]
-    m2 = [98]
-    a = HMAC(k1, m1)
-    assert HMAC(k1, m1) == a
-    assert HMAC(k1, m2) != a
-    assert HMAC(k2, m1) != a
-
-test "a long HMAC key is hashed then truncated to B"
-    long: List<int> = []
-    for i = 0 to 39
-        long.append((i * 17) mod 256)
-    hashed = megadreifach.Hash(long)
-    expected = hmac_normalize_key(take_prefix(hashed, 28))
-    assert hmac_normalize_key(long) == expected
-    assert HMAC(long, [1]) != HMAC(take_prefix(long, 28), [1])
-
-test "derive_keys splits the master secret"
-    master = [1, 2, 3, 4, 5, 6, 7, 8]
-    enc_a, mac_a = derive_keys(master)
-    enc_b, mac_b = derive_keys(master)
-    assert enc_a == enc_b
-    assert mac_a == mac_b
-    assert enc_a.length == 28
-    assert mac_a.length == 29
-    assert enc_a != take_prefix(mac_a, 28)
-    other, other_mac = derive_keys([1, 2, 3, 4, 5, 6, 7, 9])
-    assert other != enc_a
-    assert other_mac != mac_a
-
-test "empty master key is rejected"
+test "optional key derivation rejects an empty master"
     expect_trap AssertFailed
-        enc, mac = derive_keys([])
+        a, b = derive_key_decks([])
 
-test "tag compare is full length"
-    a = filled(29, 1)
-    b = filled(29, 1)
-    c = filled(29, 1)
-    c[28] = 2
-    assert tags_equal(a, b)
-    assert not tags_equal(a, c)
-    assert not tags_equal(a, filled(28, 1))
+test "published mac_version_only (kats/doubledeal_cbc_hmac_kats.json)"
+    k = [7, 3, 21, 17, 28, 36, 23, 15, 44, 49, 33, 10, 19, 8, 51, 4, 27, 39, 18, 30, 12, 47, 2, 14, 6, 20, 24, 43, 29, 0, 1, 46, 32, 13, 9, 50, 48, 25, 35, 37, 45, 42, 22, 41, 16, 31, 5, 26, 38, 34, 40, 11]
+    assert mac_tag(k, [version_deck()]) == [3, 9, 15, 80, 93, 150, 106, 142, 129, 208, 211, 66, 99, 57, 225, 70, 136, 77, 222, 112, 54, 90, 70, 100, 188, 171, 70, 122, 6]
+
+test "aead_seal then aead_open round-trips and every tamper rejects"
+    ke = some_deck(7)
+    km = some_deck(11)
+    iv = some_deck(15)
+    pt = [104, 105]
+    blob = aead_seal(pt, ke, km, [9], iv)
+    assert blob.length == 3 * wire_block
+    ok, back = aead_open(blob, ke, km, [9])
+    assert ok
+    assert back == pt
+    t = blob
+    t[blob.length - 1] = (t[blob.length - 1] + 1) mod 256
+    okt, bt = aead_open(t, ke, km, [9])
+    assert not okt
+    assert bt.length == 0
+    c = blob
+    c[40] = (c[40] + 1) mod 256
+    okc, bc = aead_open(c, ke, km, [9])
+    assert not okc
+    oka, ba = aead_open(blob, ke, km, [8])
+    assert not oka
+    okk, bk = aead_open(blob, km, ke, [9])
+    assert not okk
+    short: List<int> = []
+    for i = 0 to blob.length - wire_block - 1
+        short.append(blob[i])
+    oks, bs = aead_open(short, ke, km, [9])
+    assert not oks
+
+test "a blob number that is not a deck is rejected by the public parse"
+    ke = some_deck(7)
+    km = some_deck(11)
+    blob = aead_seal([], ke, km, [], some_deck(15))
+    for j = 0 to wire_block - 1
+        blob[j] = 255
+    ok, m = aead_open(blob, ke, km, [])
+    assert not ok
+
+test "the two key decks must differ"
+    k = some_deck(7)
+    expect_trap AssertFailed
+        b = aead_seal([1], k, k, [], some_deck(11))
+
+test "longer messages chain through the previous ciphertext deck"
+    ke = some_deck(7)
+    km = some_deck(11)
+    pt: List<int> = []
+    for i = 0 to 59
+        pt.append((i * 37) mod 256)
+    blob = aead_seal(pt, ke, km, [], some_deck(15))
+    assert blob.length == 5 * wire_block
+    ok, back = aead_open(blob, ke, km, [])
+    assert ok
+    assert back == pt

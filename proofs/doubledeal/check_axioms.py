@@ -12,8 +12,9 @@
                                           # `lake build MegaDreifachHeavy`)
     python3 proofs/doubledeal/check_axioms.py megadreifach-v1-deprecated  # frozen v1 package
                                           # (proofs/deprecated/megadreifach-v1/lean)
-    python3 proofs/doubledeal/check_axioms.py cbc-hmac  # proofs/doubledeal-cbc-hmac/lean
-                                          # (DoubleDeal-CBC-HMAC Link 2)
+    python3 proofs/doubledeal/check_axioms.py cbc-hmac-v1-deprecated  # frozen v1 package
+                                          # (proofs/deprecated/doubledeal-cbc-hmac-v1/lean,
+                                          # DoubleDeal-CBC-HMAC v1 Link 2)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -51,9 +52,11 @@ axiom) fails, as does a Lean error.
 - megadreifach-v1-deprecated: like megadreifach (mode "all", key "full") for the
   frozen v1 package proofs/deprecated/megadreifach-v1/lean (root `MegaDreifachV1`);
   required: the theorems its README cites (MD_V1_README_THEOREMS).
-- cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
-  proofs/doubledeal-cbc-hmac/lean (root `DoubleDealCbcHmac`, the Link 2 package);
-  required: the Link 2 theorem of every exported sudo function (CBC_HMAC_LINK2).
+- cbc-hmac-v1-deprecated: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
+  the frozen v1 package proofs/deprecated/doubledeal-cbc-hmac-v1/lean (root
+  `DoubleDealCbcHmac`, the v1 Link 2 package, superseded by DoubleDeal-CBC-Sandwich v2);
+  required: the Link 2 theorem of every exported function of the frozen
+  v1/doubledeal_cbc_hmac.sudo (CBC_HMAC_LINK2).
   `--selftest` also requires every `export func` of the package's sudo to appear in
   its README's "Emitted function" column, and only exports there (LINK2_EXPORT_TABLES).
 
@@ -387,11 +390,13 @@ MD_V1_README_THEOREMS = {
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
                       "multi_56", "multi_100"]}
-# proofs/doubledeal-cbc-hmac/lean: the Link 2 theorems, one per exported function of
-# primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo (the generated code equals
+# proofs/deprecated/doubledeal-cbc-hmac-v1/lean (frozen): the v1 Link 2 theorems, one per
+# exported function of primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo
+# (frozen v1; v2 is DoubleDeal-CBC-Sandwich and has no Link 2 yet) (the generated code equals
 # the hand-written model `DoubleDealCbcHmac.Spec` on byte inputs), plus the empty-master
-# rejection and the full unpad characterization. Cited by proofs/doubledeal-cbc-hmac/README.md.
-CBC_HMAC_LEAN = ROOT.parent / "doubledeal-cbc-hmac" / "lean"
+# rejection and the full unpad characterization. Cited by
+# proofs/deprecated/doubledeal-cbc-hmac-v1/README.md.
+CBC_HMAC_LEAN = ROOT.parent / "deprecated" / "doubledeal-cbc-hmac-v1" / "lean"
 CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
     "xor_bytes_refines", "hmac_normalize_key_refines", "v_HMAC_refines",
     "v_HMAC_MegaDreifach_refines", "pad_iso7816_refines", "unpad_iso7816_char",
@@ -401,14 +406,15 @@ CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only
 # exports (S6 of the #140 review). MegaDreifach is not listed yet: its README has no
-# "Emitted function" column (its Link 2 rows are Stone / Claim / Status). 8 of its 11
+# "Emitted function" column (its Link 2 rows are Stone / Claim / Status). 8 of its 12
 # exports have a Link 2 `_refines` theorem (pad_message, require_permutation,
 # position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
 # one-line wrappers MegaDreifachBody, HashDeckBodyFrom and MegaDreifachBodyFrom have
-# none. Registering it (wrapper theorems plus an 11-row table) is a planned follow-up.
+# none, and neither has HashDecksBody (the deck cascade DoubleDeal-CBC-Sandwich v2 uses).
+# Registering it (wrapper theorems plus a 12-row table) is a planned follow-up.
 LINK2_EXPORT_TABLES = {
-    "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
-                 / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
+    "cbc-hmac-v1-deprecated": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
+                               / "v1" / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
 }
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
@@ -596,7 +602,7 @@ PACKAGES = {
         "min": 500,  # sanity: the audit must actually see the package
         "required": MD_V1_README_THEOREMS,
     },
-    "cbc-hmac": {
+    "cbc-hmac-v1-deprecated": {
         "dir": CBC_HMAC_LEAN,
         "mode": "all",
         "key": "full",
@@ -961,14 +967,14 @@ def selftest():
          table + "| `b_c` | x |\n\nText.\n\n" + table + "| `b_c` | x |\n",
          ["2 README tables have"]),
         ("no exports", "func a(x: int) -> int\n", table, ["the sudo has no"])]
-    sudo, readme = LINK2_EXPORT_TABLES["cbc-hmac"]
+    sudo, readme = LINK2_EXPORT_TABLES["cbc-hmac-v1-deprecated"]
     real_readme = readme.read_text()
     dropped = [l for l in real_readme.splitlines() if l.startswith("| `tags_equal` |")]
     cases.append(("real cbc-hmac README without the tags_equal row", sudo.read_text(),
                   "\n".join(l for l in real_readme.splitlines() if l not in dropped),
                   ["export tags_equal is not"] if len(dropped) == 1 else ["(fixture row absent)"]))
     for what, sudo_text, readme_text, want in cases:
-        if what.startswith("real cbc-hmac") and real_bad["cbc-hmac"]:
+        if what.startswith("real cbc-hmac") and real_bad["cbc-hmac-v1-deprecated"]:
             print(f"check_axioms selftest: skipped export table ({what}): the real table "
                   "already fails above")
             continue

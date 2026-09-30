@@ -16,7 +16,7 @@ This document is the normative specification. `megadreifach.sudo` is the conform
 
 The product name **MegaDreifach** is locked. The puzzle, group, and library stay called **megaminx**.
 
-Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. **HMAC-MegaDreifach** is that construction: standard HMAC with this `Hash`, block size \(B=28\), tag = the 29-byte digest. It lives in `primitives/aead/doubledeal-cbc-hmac/` as part of DoubleDeal-CBC-HMAC (not a second hash). Under v2 every HMAC-MegaDreifach tag and every DoubleDeal-CBC-HMAC vector changed; that package's HMAC test tag and KAT blobs were regenerated in the same change that made v2 current. A green Lean build is not a security claim. What the Lean covers: §7. Hand-written Lean is not a proof that the sudo text equals the Lean model.
+Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. The in-tree keyed use is the **Sandwich MAC** of DoubleDeal-CBC-Sandwich v2 (`primitives/aead/doubledeal-cbc-hmac/`, not a second hash): `HashDecksBody` over the key deck, the message decks and the key deck turned over. Its security argument needs this compression to be a PRF keyed through the data block with the chaining value chosen by the adversary, which the free-start weakness of §8 refutes; see that SPEC's §8. The frozen DoubleDeal-CBC-HMAC v1 (`primitives/aead/doubledeal-cbc-hmac/v1/`) used HMAC-MegaDreifach (standard HMAC with this `Hash`, \(B=28\)); its vectors were regenerated when this v2 became current. A green Lean build is not a security claim. What the Lean covers: §7. Hand-written Lean is not a proof that the sudo text equals the Lean model.
 
 ---
 
@@ -27,6 +27,7 @@ Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a 
 - A general byte hash `Hash` / `MegaDreifach`.
 - `HashDeck` / `MegaDreifachDeck`: `Hash(φ⁻¹(deal))` when the deal is in the image of φ.
 - `HashDeckBody` / `MegaDreifachBody`: one Davies–Meyer compression on a required 52-card permutation, from IV-COOK12.
+- `HashDecksBody`: the Davies–Meyer cascade of that compression over a non-empty list of 52-card permutations, from IV-COOK12 (no pad, no φ).
 - `HashDeckBodyFrom` / `MegaDreifachBodyFrom`: the same compression from a caller chaining value (free-start analysis surface; broken).
 - Pad B=28, factoradic φ, v2 abs-G2 + F3 t=36, IV-COOK12, 29-byte digest rank.
 - A hand procedure that a person can run from the puzzle alone: no sheet, no lookup table, no colour-to-number arithmetic (§5).
@@ -38,7 +39,7 @@ Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a 
 - No proof that mid-block local collisions are absent, beyond one narrow case: 2-card windows at the same deal positions, from an `InjPos` position on a `GripOk` grip (§7, Lean coverage, gives the exact hypotheses). Longer windows and block-level collisions are open. Free-start `HashDeckBodyFrom` is broken (§8).
 - Relative reorient recipes are rejected (research disproof). Absolute re-grip only.
 - No claim that Lean equals this sudo text. That is a future emitter proof.
-- HMAC-MegaDreifach does not make `Hash` collision-resistant. It is a correctly wired HMAC over this toy hash.
+- A keyed use (the Sandwich MAC, or v1's HMAC-MegaDreifach) does not make `Hash` collision-resistant, and inherits this toy compression.
 
 ---
 
@@ -49,11 +50,12 @@ Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a 
 | `Hash(msg)` / `MegaDreifach(msg)` | Byte hash. The only public message domain. |
 | `HashDeck(deal)` / `MegaDreifachDeck(deal)` | `Hash(φ⁻¹(deal))` when the deal’s factoradic rank is `< 2^{224}`. Often two MD blocks after the outer pad. |
 | `HashDeckBody(deal)` / `MegaDreifachBody(deal)` | Public Body. One DM compression on a **52-card permutation** from **IV-COOK12**. No outer pad, no φ. Non-permutations are rejected. |
+| `HashDecksBody(deals)` | The DM cascade of `HashDeckBody`'s compression over a non-empty list of **52-card permutations**, from **IV-COOK12**: `h ← DM(h, deal)` for each deal, then the digest. No outer pad, no φ, no length. Non-permutations and the empty list are rejected. `HashDecksBody([d])` = `HashDeckBody(d)`. The block interface of the Sandwich MAC. |
 | `HashDeckBodyFrom(deal, h)` / `MegaDreifachBodyFrom(deal, h)` | Free-start analysis surface. Same DM from caller chaining value `h`. **Broken** (pseudo-collisions are easy, §8). Not a security API. |
 
 Sudocode has no optional parameters, so the soft-lock prose `HashDeckBody(deal[, h])` splits: omit `h` → `HashDeckBody(deal)` (always IV-COOK12); supply `h` → `HashDeckBodyFrom(deal, h)`. Identically, `HashDeckBody(deal)` is `HashDeckBodyFrom(deal, IV-COOK12)`.
 
-Cards appear after φ, or as a deal body for `HashDeckBody`. There is no arbitrary-card public message API. The API is unchanged from v1 (v1 called the Body "Public v1 Body"; that "v1" named the API, not this version).
+Cards appear after φ, or as deal bodies for `HashDeckBody` / `HashDecksBody`. There is no arbitrary-card public message API. The API is v1's plus `HashDecksBody`, added for the Sandwich MAC of DoubleDeal-CBC-Sandwich v2; it changes no digest (v1 called the Body "Public v1 Body"; that "v1" named the API, not this version).
 
 ---
 

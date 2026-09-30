@@ -9,7 +9,6 @@ package sudo
 
 lean_lib SudoRt
 lean_lib Megadreifach
-lean_lib Doubledeal
 lean_lib Doubledeal_cbc_hmac
 
 @[default_target]

@@ -54,7 +54,11 @@
     round map `U`; `dp1Count` is `dpCount unkeyedWithMix`, and `FullCipher.dpFCount` is
     `dpCount unkeyedNoMix`), with `sum_dpCount` (rows sum to `52!` when `U` maps decks to
     decks) and `sum_dpCount_left` (columns sum to `52!` when `U` has a two-sided inverse
-    `V` and both map decks to decks).
+    `V` and both map decks to decks), `dpCount_one_left` (`1` goes only to `1` when `U` maps
+    decks to decks) and `dpCount_to_one` (nothing else reaches `1` when `U` is injective;
+    the hypothesis is needed). `dp1Count_one_left`, `dp1Count_to_one` and
+    `FullCipher.dpFCount_one_left`, `FullCipher.dpFCount_to_one` are these at DoubleDeal's
+    layers.
     `relDiff_eq_iff`: for decks `x`, `x'`, `relDiff x x' = γ ↔ rel γ x = x'`.
 
   The measured one- and two-round values in the notes are EMPIRICAL (sampled), not
@@ -273,10 +277,13 @@ theorem sum_diffCount (α : Relabel) : ∀ (R : ℕ) {y : Fin 52 → Nat}, IsDec
       simp only [← mul_sum, sum_diffCount _ R hy]
       rw [← sum_mul, sum_dp1Count, pow_succ, Nat.mul_comm]
 
-/-- (PROVED) The trivial difference stays trivial in one round. -/
-theorem dp1Count_one_left (β : Relabel) :
-    dp1Count 1 β = if β = 1 then Nat.factorial 52 else 0 := by
-  unfold dp1Count dpCount
+/-- (PROVED) Generic: for ANY deck map `U` sending decks to decks, the trivial difference
+    goes only to itself, on every deck: `dpCount U 1 β` is `52!` if `β = 1`, else `0`.
+    No injectivity is needed. -/
+theorem dpCount_one_left (U : (Fin 52 → Nat) → Fin 52 → Nat)
+    (hU : ∀ {x : Fin 52 → Nat}, IsDeck x → IsDeck (U x)) (β : Relabel) :
+    dpCount U 1 β = if β = 1 then Nat.factorial 52 else 0 := by
+  unfold dpCount
   split_ifs with h
   · subst h
     rw [filter_true_of_mem (fun π _ => by simp only [rel_one]), card_univ, Fintype.card_perm,
@@ -284,8 +291,24 @@ theorem dp1Count_one_left (β : Relabel) :
   · rw [card_eq_zero, filter_eq_empty_iff]
     intro π _ hπ
     rw [rel_one] at hπ
-    exact h ((rel_left_inj (isDeck_unkeyedWithMix (isDeck_permDeck π))).1
-      (hπ.symm.trans (rel_one _).symm))
+    exact h ((rel_left_inj (hU (isDeck_permDeck π))).1 (hπ.symm.trans (rel_one _).symm))
+
+/-- (PROVED) Generic: for an INJECTIVE deck map `U`, a nontrivial difference never becomes
+    trivial: `dpCount U α 1 = 0` for `α ≠ 1`. The hypothesis `hinj` is needed: for a
+    non-injective `U` (e.g. a constant map) the count can be `52!`. -/
+theorem dpCount_to_one (U : (Fin 52 → Nat) → Fin 52 → Nat) (hinj : Function.Injective U)
+    {α : Relabel} (hα : α ≠ 1) : dpCount U α 1 = 0 := by
+  unfold dpCount
+  rw [card_eq_zero, filter_eq_empty_iff]
+  intro π _ hπ
+  rw [rel_one] at hπ
+  have h2 : rel α (permDeck π) = rel 1 (permDeck π) := by rw [rel_one]; exact hinj hπ
+  exact hα ((rel_left_inj (isDeck_permDeck π)).1 h2)
+
+/-- (PROVED) The trivial difference stays trivial in one round (`dpCount_one_left`). -/
+theorem dp1Count_one_left (β : Relabel) :
+    dp1Count 1 β = if β = 1 then Nat.factorial 52 else 0 :=
+  dpCount_one_left unkeyedWithMix isDeck_unkeyedWithMix β
 
 /-- (PROVED) The trivial difference stays trivial over `R` rounds. -/
 theorem diffCount_one_left (β : Relabel) (R : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
@@ -300,15 +323,14 @@ theorem diffCount_one_left (β : Relabel) (R : ℕ) {y : Fin 52 → Nat} (hy : I
     simp only [Diff, rel_one] at hK
     exact h ((rel_left_inj (isDeck_rounds R y K hy)).1 (hK.symm.trans (rel_one _).symm))
 
-/-- (PROVED) A nontrivial difference never becomes trivial in one round. -/
-theorem dp1Count_to_one {α : Relabel} (hα : α ≠ 1) : dp1Count α 1 = 0 := by
-  unfold dp1Count dpCount
-  rw [card_eq_zero, filter_eq_empty_iff]
-  intro π _ hπ
-  rw [rel_one] at hπ
-  have h2 : rel α (permDeck π) = rel 1 (permDeck π) := by
-    rw [rel_one, ← invUnkeyedWithMix_rt (rel α (permDeck π)), hπ, invUnkeyedWithMix_rt]
-  exact hα ((rel_left_inj (isDeck_permDeck π)).1 h2)
+/-- `unkeyedWithMix` is injective (`invUnkeyedWithMix` is a left inverse). -/
+theorem unkeyedWithMix_injective : Function.Injective unkeyedWithMix :=
+  Function.LeftInverse.injective invUnkeyedWithMix_rt
+
+/-- (PROVED) A nontrivial difference never becomes trivial in one round
+    (`dpCount_to_one`, with `unkeyedWithMix_injective`). -/
+theorem dp1Count_to_one {α : Relabel} (hα : α ≠ 1) : dp1Count α 1 = 0 :=
+  dpCount_to_one unkeyedWithMix unkeyedWithMix_injective hα
 
 /-- (PROVED) A nontrivial difference never becomes trivial over `R` rounds. -/
 theorem diffCount_to_one {α : Relabel} (hα : α ≠ 1) : ∀ (R : ℕ) {y : Fin 52 → Nat},

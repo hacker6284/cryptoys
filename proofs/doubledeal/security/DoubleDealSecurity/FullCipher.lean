@@ -66,6 +66,12 @@
     `γ ≠ α` with `(52!)^2 · diffCount α γ 0 y < fullDiffCount α γ 0 y`. For `n ≥ 1` nothing is
     proved or measured about single entries. `fullDiffCount_v10Sym`: into `v10Sym a x` the
     count is exactly `(52!)^2 · diffCount` (transparent column; no extra factor).
+    `fullDiffCount_eq_of_isDeck` (the count does not depend on the deck),
+    `fullDiffCount_one_left` (`1` goes only to `1`, on every tuple; from
+    `Differential.dpCount_one_left`, which needs only that the layers map decks to decks),
+    `fullDiffCount_to_one` (nothing else reaches `1`; from `Differential.dpCount_to_one`,
+    which needs injective layers) and `fullDiffCount_eq_card_beforeFinal` (the final key gives
+    a factor `52!`; `encryptL_snoc`, `beforeFinal`) are the facts `Linear` uses.
     `FullStaysInV10` (difference some `v10Sym` after every mix round and after the final
     round) is `StaysInV10` (`fullStaysInV10_iff`), with `card_fullStaysInV10`
     (`= (52!)^2 · #StaysInV10`), `fullStaysInV10_card_le_26` and
@@ -200,6 +206,27 @@ theorem encryptL_eq (n : ℕ) (m : Fin 52 → Nat) (L : Fin (n + 2) → Key) :
     rfl
   rwa [hk] at h
 
+/-- The part of `encryptL n _ (Fin.snoc K kF)` before the final Compose `kF`: the `n` mix
+    rounds (keys `Fin.init K`), Compose with `K (Fin.last n)`, and the stem `unkeyedNoMix`. -/
+def beforeFinal {n : ℕ} (K : Fin (n + 1) → Key) (x : Fin 52 → Nat) : Fin 52 → Nat :=
+  unkeyedNoMix (composeVec 52 Nat (rounds n x (Fin.init K)) (K (Fin.last n)))
+
+/-- (PROVED) Splitting off the final key: `encryptL n x (Fin.snoc K kF)` is `beforeFinal K x`
+    followed by Compose with `kF`. -/
+theorem encryptL_snoc {n : ℕ} (K : Fin (n + 1) → Key) (kF : Key) (x : Fin 52 → Nat) :
+    encryptL n x (Fin.snoc K kF) = composeVec 52 Nat (beforeFinal K x) kF := by
+  rw [encryptL_eq]
+  have h1 : roundKeysOf (Fin.snoc K kF : Fin (n + 2) → Key) = Fin.init K := by
+    funext i
+    simp only [roundKeysOf, Fin.snoc_castSucc, Fin.init]
+  simp only [finalRound, h1, lastKeyOf, finalKeyOf, Fin.snoc_castSucc, Fin.snoc_last,
+    beforeFinal]
+
+/-- (PROVED) `beforeFinal K` sends decks to decks. -/
+theorem isDeck_beforeFinal {n : ℕ} (K : Fin (n + 1) → Key) {x : Fin 52 → Nat}
+    (hx : IsDeck x) : IsDeck (beforeFinal K x) :=
+  isDeck_unkeyedNoMix (isDeck_compose (isDeck_rounds n x _ hx) _)
+
 /-- The key tuple of an `encryptN` call: `k0, kMix 0, …, kMix (n-1), kF`. -/
 def keyTuple (n : ℕ) (k0 : Key) (kMix : ℕ → Key) (kF : Key) : Fin (n + 2) → Key :=
   Fin.snoc (mixKeys n k0 kMix) kF
@@ -320,6 +347,21 @@ theorem dpFCount_to_v10Sym (a : Fin 13) (x : Fin 4) {β : Relabel} (hβ : β ≠
   rw [invUnkeyedNoMix_unkeyedNoMix, invUnkeyedNoMix_unkeyedNoMix] at h2
   exact hβ ((rel_left_inj hd).1 h2)
 
+/-- `unkeyedNoMix` is injective (`invUnkeyedNoMix` is a left inverse). -/
+theorem unkeyedNoMix_injective : Function.Injective unkeyedNoMix :=
+  Function.LeftInverse.injective invUnkeyedNoMix_unkeyedNoMix
+
+/-- (PROVED) The trivial difference stays trivial in the final round
+    (`Differential.dpCount_one_left`: decks go to decks). -/
+theorem dpFCount_one_left (β : Relabel) :
+    dpFCount 1 β = if β = 1 then Nat.factorial 52 else 0 :=
+  Differential.dpCount_one_left unkeyedNoMix isDeck_unkeyedNoMix β
+
+/-- (PROVED) A nontrivial difference never becomes trivial in the final round
+    (`Differential.dpCount_to_one`, with `unkeyedNoMix_injective`). -/
+theorem dpFCount_to_one {β : Relabel} (hβ : β ≠ 1) : dpFCount β 1 = 0 :=
+  Differential.dpCount_to_one unkeyedNoMix unkeyedNoMix_injective hβ
+
 /-- (PROVED) Row sums: from each `β`, the final-round counts add up to `52!`. -/
 theorem sum_dpFCount (β : Relabel) : ∑ γ, dpFCount β γ = Nat.factorial 52 :=
   sum_dpCount unkeyedNoMix isDeck_unkeyedNoMix β
@@ -359,12 +401,14 @@ theorem pow_mul_le_of_le_sq_mul {p n c d : ℕ} (hc : c ≤ Nat.factorial 52 ^ 2
     _ ≤ Nat.factorial 52 ^ 2 * Nat.factorial 52 ^ n := Nat.mul_le_mul_left _ hd
     _ = Nat.factorial 52 ^ (n + 2) := by ring
 
-/-- (PROVED) Summing a function of `g K` over all `K` by the fibres of `g`. -/
-theorem sum_comp_fiber {ι : Type} [Fintype ι] (g : ι → Relabel) (f : Relabel → ℕ) :
-    ∑ i, f (g i) = ∑ β, (univ.filter fun i => g i = β).card * f β := by
+/-- (PROVED) Summing a function of `g K` over all `K` by the fibres of `g` (values in any
+    commutative semiring; used with `ℕ` here and with `ℤ` in `Linear`). -/
+theorem sum_comp_fiber {ι R : Type} [Fintype ι] [CommSemiring R] (g : ι → Relabel)
+    (f : Relabel → R) :
+    ∑ i, f (g i) = ∑ β, ((univ.filter fun i => g i = β).card : R) * f β := by
   rw [← sum_fiberwise univ g (fun i => f (g i))]
   refine sum_congr rfl fun β _ => ?_
-  rw [sum_congr rfl (fun i hi => by rw [(mem_filter.1 hi).2]), sum_const, smul_eq_mul]
+  rw [sum_congr rfl (fun i hi => by rw [(mem_filter.1 hi).2]), sum_const, nsmul_eq_mul]
 
 /-! ## C. The constant-σ characteristic through the whole cipher (independent keys) -/
 
@@ -612,6 +656,46 @@ theorem fullDiffCount_v10Sym (α : Relabel) (a : Fin 13) (x : Fin 4) (n : ℕ) {
     (fun β _ hβ => by rw [dpFCount_to_v10Sym a x hβ, mul_zero])
     (fun h => absurd (mem_univ _) h), dpFCount_v10Sym, if_pos rfl]
   ring
+
+/-- (PROVED) Independence of the starting deck (from `Differential.diffCount_eq_of_isDeck`,
+    independent keys): the full-cipher count is the same for any two decks `y`, `z`. -/
+theorem fullDiffCount_eq_of_isDeck (α γ : Relabel) (n : ℕ) {y z : Fin 52 → Nat}
+    (hy : IsDeck y) (hz : IsDeck z) : fullDiffCount α γ n y = fullDiffCount α γ n z := by
+  rw [fullDiffCount_eq α γ n hy, fullDiffCount_eq α γ n hz]
+  exact congrArg (Nat.factorial 52 * ·)
+    (sum_congr rfl fun β _ => by rw [Differential.diffCount_eq_of_isDeck n α β hy hz])
+
+/-- (PROVED) The trivial input difference stays trivial through the whole cipher:
+    `fullDiffCount 1 β n y` is `(52!)^(n+2)` (every key tuple) if `β = 1`, else `0`. Uses only
+    that the layers send decks to decks (`Differential.dpCount_one_left`). -/
+theorem fullDiffCount_one_left (β : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
+    fullDiffCount 1 β n y = if β = 1 then Nat.factorial 52 ^ (n + 2) else 0 := by
+  rw [fullDiffCount_eq 1 β n hy]
+  simp only [Differential.diffCount_one_left _ n hy, ite_mul, zero_mul, sum_ite_eq',
+    mem_univ, if_true, dpFCount_one_left]
+  split_ifs <;> ring
+
+/-- (PROVED) A nontrivial input difference never becomes trivial through the whole cipher.
+    Uses that the layers are injective (`Differential.dpCount_to_one`); it fails for
+    non-injective layers. -/
+theorem fullDiffCount_to_one {α : Relabel} (hα : α ≠ 1) (n : ℕ) {y : Fin 52 → Nat}
+    (hy : IsDeck y) : fullDiffCount α 1 n y = 0 := by
+  rw [fullDiffCount_eq α 1 n hy]
+  refine Nat.mul_eq_zero.2 (Or.inr (sum_eq_zero fun β _ => ?_))
+  by_cases hβ : β = 1
+  · rw [hβ, Differential.diffCount_to_one hα n hy, Nat.zero_mul]
+  · rw [dpFCount_to_one hβ, Nat.mul_zero]
+
+/-- (PROVED) `fullDiffCount` counted by the final key: it is `52!` times the count of the
+    remaining `n + 1` keys. -/
+theorem fullDiffCount_eq_card_beforeFinal (α β : Relabel) (n : ℕ) (x : Fin 52 → Nat) :
+    fullDiffCount α β n x = Nat.factorial 52 *
+      (univ.filter fun K : Fin (n + 1) → Key =>
+        beforeFinal K (rel α x) = rel β (beforeFinal K x)).card := by
+  unfold fullDiffCount FullDiff
+  rw [card_filter_snoc]
+  simp only [encryptL_snoc, ← compose_rel, composeVec_inj]
+  rw [sum_const, card_univ, Fintype.card_perm, Fintype.card_fin, smul_eq_mul]
 
 /-- The `v10Sym` cluster through the whole cipher: the difference is some `v10Sym` after every
     mix round (`StaysInV10`) AND after the final round. -/

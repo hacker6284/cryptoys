@@ -152,24 +152,28 @@ def roundCharCount (σ : Relabel) : ℕ :=
 theorem compose_permDeck (ρ k : Equiv.Perm (Fin 52)) :
     composeVec 52 Nat (permDeck ρ) k = permDeck (ρ * k) := rfl
 
-/-- (PROVED) Compose with a uniform key makes any fixed deck uniform: for a deck `y`, the
-    keys `k` with `P (y ∘ k)` number exactly the decks (as permutations) with `P`. -/
+/-- Relabelling the deck of `π` by `α` is the deck of `α * π`. -/
+theorem rel_permDeck (α π : Equiv.Perm (Fin 52)) : rel α (permDeck π) = permDeck (α * π) :=
+  funext fun i => app_fin α (π i)
+
+/-- (PROVED) Compose with a uniform key makes any fixed deck uniform: for a deck `z`, summing
+    `F (z ∘ k)` over all keys `k` is summing `F` over all decks (as permutations). -/
+theorem sum_keys_compose {M : Type} [AddCommMonoid M] (F : (Fin 52 → Nat) → M)
+    {z : Fin 52 → Nat} (hz : IsDeck z) :
+    ∑ k : Key, F (composeVec 52 Nat z k) = ∑ π : Equiv.Perm (Fin 52), F (permDeck π) := by
+  set ρ := deckPerm z hz
+  have hzρ : z = permDeck ρ := funext fun i => (deckPerm_val z hz i).symm
+  rw [hzρ]
+  exact Fintype.sum_equiv (Equiv.mulLeft ρ) _ _ fun _ => rfl
+
+/-- (PROVED) The counting form of `sum_keys_compose`: for a deck `y`, the keys `k` with
+    `P (y ∘ k)` number exactly the decks (as permutations) with `P`. -/
 theorem card_keys_compose (P : (Fin 52 → Nat) → Prop) [DecidablePred P]
     {y : Fin 52 → Nat} (hy : IsDeck y) :
     (univ.filter fun k : Key => P (composeVec 52 Nat y k)).card =
       (univ.filter fun π : Equiv.Perm (Fin 52) => P (permDeck π)).card := by
-  set ρ := deckPerm y hy
-  have hyρ : y = permDeck ρ := funext fun i => (deckPerm_val y hy i).symm
-  rw [hyρ]
-  apply card_nbij' (fun k => ρ * k) (fun π => ρ⁻¹ * π)
-  · intro k hk
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hk ⊢
-    rwa [compose_permDeck] at hk
-  · intro π hπ
-    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hπ ⊢
-    rwa [compose_permDeck, mul_inv_cancel_left]
-  · intro k _; simp only [inv_mul_cancel_left]
-  · intro π _; simp only [mul_inv_cancel_left]
+  rw [card_filter, card_filter]
+  exact sum_keys_compose (fun w => if P w then 1 else 0) hy
 
 /-- (PROVED) For a fixed deck `y`, the round keys that make the characteristic hold
     number exactly `roundCharCount σ` (Compose with a uniform key is a uniform deck). -/

@@ -26,5 +26,6 @@ import DoubleDealSecurity.GridCycleSurvival
 import DoubleDealSecurity.TrailBound
 import DoubleDealSecurity.RealSchedule
 import DoubleDealSecurity.Differential
+import DoubleDealSecurity.FullCipher
 import DoubleDealSecurity.CovariantNarrowLists
 import DoubleDealSecurity.CovariantNarrow

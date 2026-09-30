@@ -22,7 +22,7 @@ here is a security or bit-security claim, and a green build is not one either.
    relabelling. The final no-mix round does **not**: it contains SumRanks. Extending
    the characteristic through it adds one more SumRanks condition, so the extended
    event is a sub-event and the same upper bound applies to it. That step, and the
-   formal link to `encryptN`, are **not** proved here.
+   formal link to `encryptN`, are proved in M7 (`FullCipher.lean`), not here.
 3. **Event = one characteristic, not a differential.** `Trail σ R y K` means that in
    *every* round SumRanks commutes with σ at the post-Compose state and GridCycle
    commutes with σ at the stem output. `trail_rounds_rel` proves that the event makes
@@ -94,7 +94,8 @@ Reproduce: `python3 round_char.py > round_char.log` (about 4 min on one core).
 
 ## Open
 
-* The real PassKey schedule (dependent keys): only one round's bound is proved (M5, `../v12-keysched/NOTES.md`, `RealSchedule.lean`): ≤ 1/64 for every R. The proved bound gains nothing beyond round 1 (weaker than (1/64)^R, because from round 1 on the round key is not uniform given the state); a limit of the proof, not a measured weakness. For R ≥ 2 nothing rules out a probability above (1/64)^R.
+* The real PassKey schedule (dependent keys): only the bound of the proof's first mix round is proved (M5, `../v12-keysched/NOTES.md`, `RealSchedule.lean`): ≤ 1/64 for every R. The proved bound gains nothing beyond the proof's first mix round (key K_0): it is weaker than (1/64)^R, because from round 1 on the round key is not uniform given the state. This is a limit of the proof, not a measured weakness. For R ≥ 2 nothing rules out a probability above (1/64)^R.
 * A numeric bound on the differential (sum over characteristics), including changing differences. M6 (`../v12-differential/NOTES.md`, `Differential.lean`) proves only its structure (Markov recursion, row sums; this characteristic is one path, a lower bound) and, for `(a, x) ≠ (0, 0)`, the bound for paths that stay inside `v10Sym` (exactly this characteristic). No numeric bound on the full differential.
 * A whole-walk GridCycle bound for small-support τ.
-* The final no-mix round, and the link of `rounds` to `encryptN`.
+* The final no-mix round, and the link of `rounds` to `encryptN`: done in M7
+  (`FullCipher.lean`; security README, "Roadmap").

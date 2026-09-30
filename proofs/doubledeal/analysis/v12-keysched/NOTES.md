@@ -21,15 +21,18 @@ only; no theorem uses these numbers). Nothing here is a security or bit-security
 * `realTrail_card_le_64` (heavy) and `realTrail_card_le_26`, `_64_of_not_v10Sym`,
   `_64_of_check` (default): for every R ≥ 1, σ ≠ 1 and starting deck y, the constant-σ
   characteristic through R rounds of the REAL schedule has probability ≤ 1/64 over the
-  master key. **The proved bound gains nothing beyond round 1**: it is 1/64 for every R,
-  weaker than M2's (1/64)^R, because from round 1 on the round key is not uniform given the
-  state (§4). This is a limit of the proof, not a measured weakness; for R ≥ 2 nothing
-  rules out the real schedule being more likely than (1/64)^R. One characteristic, not the
-  differential. The final no-mix round is not covered, and `rounds` is not linked to
-  `encryptN` (only the keys are). R ≤ 5 is the cipher's range: `Trail` round i is "Compose
-  with K_i, then the round with mix", and the cipher has five such steps (K_0 … K_4); for
-  R ≥ 6 the model uses K_5, K_6, … as keys before a mix, which the cipher never does
-  (harmless, but not the cipher).
+  master key. **The proved bound gains nothing beyond the proof's first mix round (key
+  K_0)**: it is 1/64 for every R, weaker than M2's (1/64)^R, because from round 1 on the
+  round key is not uniform given the state (§4). This is a limit of the proof, not a
+  measured weakness; for R ≥ 2 nothing rules out the real schedule being more likely than
+  (1/64)^R. One characteristic, not the differential. The final no-mix round is not
+  covered, and `rounds` is not linked to `encryptN` (only the keys are); M7
+  (`FullCipher.lean`) adds both and gains nothing beyond the proof's first mix round (key
+  K_0): the proof's later mix rounds (K_1 … K_4) and the proof's finalRound step (K_5, K_6)
+  add no factor (the mapping to SPEC's rounds is in the `FullCipher` header). R ≤ 5 is the
+  cipher's range: `Trail` round i is "Compose with K_i, then the round with mix", and the
+  cipher has five such steps (K_0 … K_4); for R ≥ 6 the model uses K_5, K_6, … as keys
+  before a mix, which the cipher never does (harmless, but not the cipher).
 
 ## 1. How the round keys depend on each other (PROVED where marked; the rest is a short argument)
 

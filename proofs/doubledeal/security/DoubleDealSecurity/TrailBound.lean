@@ -10,8 +10,9 @@
   …, posMix (R-2))` is the first `R` mix rounds WITHOUT the trailing Compose of the
   last one, and WITHOUT the final no-mix round. The dropped Compose commutes
   with every relabelling. The final no-mix round contains SumRanks, so extending
-  the event through it gives a sub-event (the same upper bound applies). Neither
-  that step nor the link to `encryptN` is formalised here.
+  the event through it gives a sub-event (the same upper bound applies). That step
+  and the link to `encryptN` are proved in `FullCipher` (roadmap M7:
+  `encryptN_eq_rounds`, `card_fullTrail_le`), not here.
 
   Event. For a relabelling `σ`, the pair `(y, σ·y)` follows the constant-σ
   characteristic through `R` rounds (`Trail σ R y K`) when in EVERY round, at the
@@ -41,6 +42,12 @@
     finite GridCycle checks as hypotheses (discharged in the heavy library:
     `DoubleDealSecurityHeavy/TrailBound.lean`, `trail_card_le_64`).
   * `trail_card_le_4420_v10Sym_of_check`: nontrivial `v10Sym`, `4420^R · # ≤ (52!)^R`.
+  * Shared with `FullCipher`: `SumRanksChar σ x` (SumRanks commutes with `σ` at the deck
+    `x`; `RoundChar` is `SumRanksChar` plus the GridCycle condition, and
+    `survives_iff_sumRanksChar` bridges to `SumRanksDP.Survives`), `unkeyedNoMix_rel_iff`
+    (`SumRanksChar σ x` iff the no-mix round maps `(x, σ·x)` to `(z, σ·z)`), and
+    `card_filter_snoc` (splitting a count over `Fin (n+1)` tuples by the last entry,
+    next to `card_filter_succ`, which splits by the first).
 
   Not a bit-security claim; not a statement about the real key schedule.
 -/
@@ -55,11 +62,39 @@ open DoubleDeal Relabel Finset
 open DoubleDeal.Security (Key isDeck_compose isDeck_unkeyedWithMix isDeck_unkeyedNoMix)
 open DoubleDeal.Security.GridCycleSurvival (GCSurvives gcSurvivors Check3 LKC LKS)
 
+/-- SumRanks commutes with `σ` at the state `x` (laid column-major). This is the SumRanks
+    half of `RoundChar`, and the whole characteristic of the final no-mix round
+    (`FullCipher`); on decks it is `SumRanksDP.Survives` (`survives_iff_sumRanksChar`). -/
+def SumRanksChar (σ : Relabel) (x : Fin 52 → Nat) : Prop :=
+  sumRanksV10 (relG σ (layColumnMajor x)) = relG σ (sumRanksV10 (layColumnMajor x))
+
+instance (σ : Relabel) : DecidablePred (SumRanksChar σ) :=
+  fun _ => inferInstanceAs (Decidable (_ = _))
+
+/-- (PROVED) `SumRanksDP.Survives` is `SumRanksChar` on the deck of a permutation. -/
+theorem survives_iff_sumRanksChar (σ : Relabel) (π : Equiv.Perm (Fin 52)) :
+    SumRanksDP.Survives σ π ↔ SumRanksChar σ (permDeck π) := Iff.rfl
+
+/-- (PROVED) The stem without GridCycle maps `(x, σ·x)` to a pair with difference `σ`
+    exactly when SumRanks commutes with `σ` at `x`. -/
+theorem unkeyedNoMix_rel_iff (σ : Relabel) (x : Fin 52 → Nat) :
+    unkeyedNoMix (rel σ x) = rel σ (unkeyedNoMix x) ↔ SumRanksChar σ x := by
+  constructor
+  · intro h
+    have h2 := congrArg (fun c => invShiftRows (layColumnMajor c)) h
+    simp only [unkeyedNoMix] at h2
+    rw [lay_scoop_columnMajor, invShiftRows_shiftRows, ← scoopColumnMajor_rel,
+      lay_scoop_columnMajor, ← shiftRows_rel, invShiftRows_shiftRows] at h2
+    exact h2
+  · intro h
+    simp only [unkeyedNoMix]
+    rw [layColumnMajor_rel, h]
+    rfl
+
 /-- One round's characteristic at the post-Compose state `x`: SumRanks and
     GridCycle both commute with `σ` there. -/
 def RoundChar (σ : Relabel) (x : Fin 52 → Nat) : Prop :=
-  sumRanksV10 (relG σ (layColumnMajor x)) = relG σ (sumRanksV10 (layColumnMajor x)) ∧
-    mixColumns (rel σ (unkeyedNoMix x)) = rel σ (mixColumns (unkeyedNoMix x))
+  SumRanksChar σ x ∧ mixColumns (rel σ (unkeyedNoMix x)) = rel σ (mixColumns (unkeyedNoMix x))
 
 instance (σ : Relabel) : DecidablePred (RoundChar σ) :=
   fun _ => inferInstanceAs (Decidable (_ ∧ _))
@@ -68,12 +103,8 @@ instance (σ : Relabel) : DecidablePred (RoundChar σ) :=
     `(x, σ·x)` to a pair with the same difference. -/
 theorem roundChar_unkeyedWithMix {σ : Relabel} {x : Fin 52 → Nat} (h : RoundChar σ x) :
     unkeyedWithMix (rel σ x) = rel σ (unkeyedWithMix x) := by
-  have e1 : unkeyedNoMix (rel σ x) = rel σ (unkeyedNoMix x) := by
-    simp only [unkeyedNoMix]
-    rw [layColumnMajor_rel, h.1]
-    rfl
   simp only [unkeyedWithMix]
-  rw [e1, h.2]
+  rw [(unkeyedNoMix_rel_iff σ x).2 h.1, h.2]
 
 /-- `R` rounds with keys `K 0, …, K (R-1)` (Compose, then the unkeyed round). -/
 def rounds : (R : ℕ) → (Fin 52 → Nat) → (Fin R → Key) → (Fin 52 → Nat)
@@ -175,6 +206,30 @@ theorem card_filter_succ {R : ℕ} (P : (Fin (R + 1) → Key) → Prop) [Decidab
     exact Fin.cons_self_tail K
   · intro K _; exact Fin.tail_cons _ _
 
+/-- (PROVED) Counting `R + 1` key tuples by their LAST key:
+    `#{K | P K} = ∑ k, #{K' | P (Fin.snoc K' k)}`. -/
+theorem card_filter_snoc {R : ℕ} (P : (Fin (R + 1) → Key) → Prop) [DecidablePred P] :
+    (univ.filter P).card =
+      ∑ k : Key, (univ.filter fun K : Fin R → Key => P (Fin.snoc K k)).card := by
+  rw [card_eq_sum_card_fiberwise (f := fun K : Fin (R + 1) → Key => K (Fin.last R)) (t := univ)
+    (fun _ _ => mem_univ _)]
+  refine sum_congr rfl fun k _ => ?_
+  apply card_nbij' (fun K => Fin.init K) (fun K => Fin.snoc K k)
+  · intro K hK
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK ⊢
+    obtain ⟨h1, h0⟩ := hK
+    rw [← h0, Fin.snoc_init_self]
+    exact h1
+  · intro K hK
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK ⊢
+    exact ⟨hK, Fin.snoc_last _ _⟩
+  · intro K hK
+    simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and] at hK
+    rw [← hK.2]
+    exact Fin.snoc_init_self K
+  · intro K _
+    exact Fin.init_snoc _ _
+
 /-- The `R + 1`-round count splits over the first key. -/
 theorem card_trail_succ (σ : Relabel) (R : ℕ) (y : Fin 52 → Nat) :
     (univ.filter fun K : Fin (R + 1) → Key => Trail σ (R + 1) y K).card =
@@ -229,7 +284,7 @@ theorem roundCharCount_le_sumRanks (σ : Relabel) :
   apply card_le_card
   intro π hπ
   simp only [SumRanksDP.survivors, mem_filter, mem_univ, true_and] at hπ ⊢
-  exact hπ.1
+  exact (survives_iff_sumRanksChar σ π).2 hπ.1
 
 /-- (PROVED) The round characteristic needs GridCycle to commute at the stem
     output; the stem is injective on decks, so this is at most the GridCycle

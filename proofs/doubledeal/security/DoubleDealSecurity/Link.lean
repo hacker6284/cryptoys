@@ -1,8 +1,10 @@
 /-
   T1 — Link 2 transfer for relabellings.
 
-  Generic lemmas take a cell map `f : Nat → Nat` (`CardMap f`); the headline
-  statements are about `σ : Equiv.Perm (Fin 52)` acting through `σ.app`.
+  Generic lemmas take a cell map `f : Nat → Nat` (`CardMap f`); the transfer
+  `generated_encrypt_map2_iff` takes a map `f` on the message and a map `g` on the
+  ciphertext, and its map, relabel and `α`/`γ` forms are one-line corollaries. The
+  headline statements are about `σ : Equiv.Perm (Fin 52)` acting through `σ.app`.
   Link 1 (sudo = Generated) stays open: these are facts about the emitted Lean.
 -/
 import DoubleDeal.Concrete
@@ -69,14 +71,16 @@ theorem toDeck_inj {f g : Fin 52 → Nat} (h : toDeck f = toDeck g) : f = g := b
   rw [← Link2.ofDeck_toDeck f, ← Link2.ofDeck_toDeck g]
   exact ofDeck_congr h
 
-/-- (PROVED) The emitted cipher satisfies `E_K(σM) = σ E_K(M)` exactly when the
-    algebraic model does (52-card message of card values, Perm52 key). -/
-theorem generated_encrypt_map_iff (f : Nat → Nat) (hf : CardMap f) (message key : List Nat)
+/-- (PROVED) Two card maps: the emitted cipher maps the message relabelled by `f` to its
+    ciphertext relabelled by `g` exactly when the algebraic model does (52-card message of
+    card values, Perm52 key). Only `f` needs `CardMap` (the relabelled message must stay a
+    valid input); `g` is arbitrary. -/
+theorem generated_encrypt_map2_iff (f g : Nat → Nat) (hf : CardMap f) (message key : List Nat)
     (hm : message.length = 52) (hk : Perm52 key) (hc : ∀ x ∈ message, x < 52) :
     Doubledeal.encrypt (Link2.embed (message.map f)) (Link2.embed key) =
-        .ok (Link2.embed ((encryptDeck message key).map f)) ↔
+        .ok (Link2.embed ((encryptDeck message key).map g)) ↔
       encryptDeckFn (fun i => f (ofDeck message hm i)) key =
-        fun i => f (encryptDeckFn (ofDeck message hm) key i) := by
+        fun i => g (encryptDeckFn (ofDeck message hm) key i) := by
   have hm' : (message.map f).length = 52 := by simp [hm]
   have hcσ : ∀ i : Fin 52, Link2.CardBound ((ofDeck (message.map f) hm') i) := by
     intro i
@@ -90,6 +94,16 @@ theorem generated_encrypt_map_iff (f : Nat → Nat) (hf : CardMap f) (message ke
   · intro h
     exact toDeck_inj (embed_inj (Except.ok.inj h))
   · intro h; rw [h]
+
+/-- (PROVED) The emitted cipher satisfies `E_K(σM) = σ E_K(M)` exactly when the
+    algebraic model does (52-card message of card values, Perm52 key). -/
+theorem generated_encrypt_map_iff (f : Nat → Nat) (hf : CardMap f) (message key : List Nat)
+    (hm : message.length = 52) (hk : Perm52 key) (hc : ∀ x ∈ message, x < 52) :
+    Doubledeal.encrypt (Link2.embed (message.map f)) (Link2.embed key) =
+        .ok (Link2.embed ((encryptDeck message key).map f)) ↔
+      encryptDeckFn (fun i => f (ofDeck message hm i)) key =
+        fun i => f (encryptDeckFn (ofDeck message hm) key i) :=
+  generated_encrypt_map2_iff f f hf message key hm hk hc
 
 /-- (PROVED, kernel `decide!`, ~80 s) Model-level K♣↔K♦ counterexample for the
     full live encrypt (message `K♦, A♣, 2♣, …`, identity key). Rechecked for
@@ -139,6 +153,17 @@ theorem keyPos_relabel_key (σ : Relabel) (key : List Nat) (j : Fin 52) :
   rw [hj] at h
   exact h
 
+/-- (PROVED) For `α γ : Equiv.Perm (Fin 52)`, the emitted `Doubledeal.encrypt` maps the
+    message relabelled by `α` to its ciphertext relabelled by `γ` exactly when the algebraic
+    model does: `E_K(αM) = γ E_K(M)`. -/
+theorem generated_encrypt_rel_iff (α γ : Relabel) (message key : List Nat)
+    (hm : message.length = 52) (hk : Perm52 key) (hc : ∀ x ∈ message, x < 52) :
+    Doubledeal.encrypt (Link2.embed (message.map α.app)) (Link2.embed key) =
+        .ok (Link2.embed ((encryptDeck message key).map γ.app)) ↔
+      encryptDeckFn (rel α (ofDeck message hm)) key =
+        rel γ (encryptDeckFn (ofDeck message hm) key) :=
+  generated_encrypt_map2_iff α.app γ.app (app_cardMap α) message key hm hk hc
+
 /-- (PROVED) For `σ : Equiv.Perm (Fin 52)`, the emitted `Doubledeal.encrypt`
     satisfies `E_K(σM) = σ E_K(M)` exactly when the algebraic model does. -/
 theorem generated_encrypt_relabel_iff (σ : Relabel) (message key : List Nat)
@@ -147,7 +172,7 @@ theorem generated_encrypt_relabel_iff (σ : Relabel) (message key : List Nat)
         .ok (Link2.embed ((encryptDeck message key).map σ.app)) ↔
       encryptDeckFn (rel σ (ofDeck message hm)) key =
         rel σ (encryptDeckFn (ofDeck message hm) key) :=
-  generated_encrypt_map_iff σ.app (app_cardMap σ) message key hm hk hc
+  generated_encrypt_rel_iff σ σ message key hm hk hc
 
 /-- (PROVED) Headline: there is a relabelling `σ : Equiv.Perm (Fin 52)` — the
     transposition K♣↔K♦ — such that the emitted v11 `encrypt` does not commute

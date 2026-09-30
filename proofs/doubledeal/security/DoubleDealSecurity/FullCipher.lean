@@ -72,6 +72,11 @@
     `fullDiffCount_to_one` (nothing else reaches `1`; from `Differential.dpCount_to_one`,
     which needs injective layers) and `fullDiffCount_eq_card_beforeFinal` (the final key gives
     a factor `52!`; `encryptL_snoc`, `beforeFinal`) are the facts `Linear` uses.
+    The row and column sums used by `LinearMasks` (for DoubleDeal's `encryptL`) are
+    `sum_fullDiffCount` (every row sums to `(52!)^(n+2)`; only decks to decks is used) and
+    `sum_fullDiffCount_left` (every column sums to `(52!)^(n+2)`, through `outDiff` and
+    `outDiff_injective`, so the column sums need injective layers through
+    `fullDiffCount_to_one`).
     `FullStaysInV10` (difference some `v10Sym` after every mix round and after the final
     round) is `StaysInV10` (`fullStaysInV10_iff`), with `card_fullStaysInV10`
     (`= (52!)^2 · #StaysInV10`), `fullStaysInV10_card_le_26` and

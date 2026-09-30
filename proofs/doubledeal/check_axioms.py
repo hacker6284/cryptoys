@@ -497,6 +497,9 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.fullDiffCount_one_left",
             "DoubleDeal.Security.FullCipher.fullDiffCount_to_one",
             "DoubleDeal.Security.FullCipher.fullDiffCount_eq_card_beforeFinal",
+            # row/column sums of fullDiffCount (used by LinearMasks, M8b)
+            "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
+            "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",
             # generic one-step facts behind fullDiffCount_one_left / _to_one (M8a review):
             # decks to decks, and (for _to_one) an explicit injectivity hypothesis
             "DoubleDeal.Security.Differential.dpCount_one_left",
@@ -518,9 +521,6 @@ PACKAGES = {
             "DoubleDeal.Security.LinearMasks.fullSumSqCorr_cardMask_seat",
             "DoubleDeal.Security.LinearMasks.alignCount_eq",
             "DoubleDeal.Security.LinearMasks.corr_keyedLayer_sign",
-            # row/column sums of fullDiffCount (M8b support, homed in FullCipher)
-            "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
-            "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",
         },
     },
     "security-heavy": {

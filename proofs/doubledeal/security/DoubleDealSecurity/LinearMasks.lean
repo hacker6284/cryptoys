@@ -70,7 +70,7 @@ import DoubleDealSecurity.Linear
 namespace DoubleDeal.Security.LinearMasks
 
 open DoubleDeal Relabel Finset
-open DoubleDeal.Security (Key isDeck_compose)
+open DoubleDeal.Security (Key)
 open DoubleDeal.Security.TrailBound (compose_permDeck permDeck_apply_eq rel_permDeck_apply_eq)
 open DoubleDeal.Security.PermCount (card_apply_eq)
 open DoubleDeal.Security.FullCipher (encryptL fullDiffCount isDeck_encryptL outDiff

@@ -161,7 +161,7 @@ theorem permDeck_apply_eq (π : Equiv.Perm (Fin 52)) (s c : Fin 52) :
 
 theorem rel_permDeck_apply_eq (α π : Equiv.Perm (Fin 52)) (s c : Fin 52) :
     rel α (permDeck π) s = c.val ↔ α (π s) = c := by
-  rw [TrailBound.rel_permDeck, permDeck_apply_eq, Equiv.Perm.mul_apply]
+  rw [rel_permDeck, permDeck_apply_eq, Equiv.Perm.mul_apply]
 
 /-- (PROVED) Compose with a uniform key makes any fixed deck uniform: for a deck `z`, summing
     `F (z ∘ k)` over all keys `k` is summing `F` over all decks (as permutations). -/

@@ -10,8 +10,9 @@
   schedule. L5 involves no layer. L10 is proved for arbitrary layers that send decks to
   decks. L6, L7 and the row/column sums are stated for DoubleDeal's `encryptL`. L6 (through
   the column sums) uses injective layers; L5, L7, L10 and the row sums use only decks to
-  decks. (The column sums `sum_fullDiffCount_left` use `outDiff_injective`, which uses
-  `FullCipher.fullDiffCount_to_one`; `fullSumSqCorr_cardMask_seat` uses them through L6.)
+  decks. (The column sums `FullCipher.sum_fullDiffCount_left` use
+  `FullCipher.outDiff_injective`, which uses `FullCipher.fullDiffCount_to_one`;
+  `fullSumSqCorr_cardMask_seat` uses them through L6.)
   L9 is about the relabellings `v10Sym` and the mask only.
   Out of scope (not in this module): positivity of the L6 bracket (the proposal's L8), M8c,
   and the H1–H4 statements.
@@ -46,11 +47,12 @@
   * L10 `corr_keyedLayer_sign`: ONE keyed layer `x ↦ U(x ∘ k₁) ∘ k₂`, `U` any deck map
     sending decks to decks: `corr (keyedLayer U k₁ k₂) signMask signMask =
       sign k₁ · sign k₂ · corr U signMask signMask`. The keys only flip the sign.
-  * Supporting: `card_apply_eq_indep_card` (the number of decks putting card `c` at seat `s`
-    does not depend on `c`), `card_apply_eq` (`51!` decks put `c` at `s`),
-    `sum_fullDiffCount` and `sum_fullDiffCount_left` (rows and columns of `fullDiffCount` sum
-    to `(52!)^(n+2)`),
-    `outDiff_injective`, `sameSeat_rel_iff`, `signMask_permDeck`, `signMask_compose`.
+  * Supporting (here): `sameSeat_rel_iff`, `signMask_permDeck`, `signMask_compose`.
+    Used from elsewhere: `PermCount.card_apply_eq_indep_card` (the number of decks putting
+    card `c` at seat `s` does not depend on `c`), `PermCount.card_apply_eq` (`51!` decks put
+    `c` at `s`), `FullCipher.sum_fullDiffCount` and `FullCipher.sum_fullDiffCount_left` (rows
+    and columns of `fullDiffCount` sum to `(52!)^(n+2)`), `FullCipher.outDiff_injective`,
+    `TrailBound.permDeck_apply_eq`, `TrailBound.rel_permDeck_apply_eq`.
 
   NOT proved, and limits; read before citing:
   * Any numeric bound. L6 moves the single-card question to `alignCount`, for which no bound
@@ -68,35 +70,13 @@ import DoubleDealSecurity.Linear
 namespace DoubleDeal.Security.LinearMasks
 
 open DoubleDeal Relabel Finset
-open DoubleDeal.Security (Key isDeck_compose isDeck_rel isDeck_unkeyedNoMix)
-open DoubleDeal.Security.TrailBound (isDeck_rounds compose_permDeck)
-open DoubleDeal.Security.Differential (relDiff rel_relDiff relDiff_eq_iff)
-open DoubleDeal.Security.FullCipher (encryptL encryptL_eq finalRound FullDiff fullDiffCount
-  fullDiffCount_to_one)
+open DoubleDeal.Security (Key)
+open DoubleDeal.Security.TrailBound (compose_permDeck permDeck_apply_eq rel_permDeck_apply_eq)
+open DoubleDeal.Security.PermCount (card_apply_eq)
+open DoubleDeal.Security.FullCipher (encryptL fullDiffCount isDeck_encryptL outDiff
+  encryptL_rel_outDiff fullDiffCount_eq_card_outDiff sum_fullDiffCount sum_fullDiffCount_left)
 open DoubleDeal.Security.Linear (corr autoCorr keyedLayer fullSumSqCorr fullSumSqCorr_eq)
 open DoubleDeal.Security.GridCycleSurvival (v10Sym_fixfree)
-
-/-! ## Counting decks by one seat -/
-
-/-- The number of decks (as permutations) putting card `c` at seat `s` does not depend on the
-    card: as many put `c` there as put `c'`. -/
-theorem card_apply_eq_indep_card (s c c' : Fin 52) :
-    (univ.filter fun π : Equiv.Perm (Fin 52) => π s = c).card =
-      (univ.filter fun π : Equiv.Perm (Fin 52) => π s = c').card :=
-  PermCount.card_fibre_eq_of_mul (fun π : Equiv.Perm (Fin 52) => π s) (Equiv.swap c c') c' c
-    fun π => by
-      simp only [Equiv.Perm.mul_apply]
-      rw [Equiv.apply_eq_iff_eq_symm_apply, Equiv.symm_swap, Equiv.swap_apply_left]
-
-/-- (PROVED) Exactly `51!` decks (as permutations) put card `c` at seat `s`. -/
-theorem card_apply_eq (s c : Fin 52) :
-    (univ.filter fun π : Equiv.Perm (Fin 52) => π s = c).card = Nat.factorial 51 := by
-  have h := PermCount.card_filter_comp_eq (fun π : Equiv.Perm (Fin 52) => π s) univ
-    (fun _ => mem_univ _) _ (fun c' _ => card_apply_eq_indep_card s c' c) (fun _ => True)
-  rw [filter_True, filter_True, card_univ, Fintype.card_perm, Fintype.card_fin,
-    card_univ, Fintype.card_fin] at h
-  have h52 : Nat.factorial 52 = 52 * Nat.factorial 51 := Nat.factorial_succ 51
-  omega
 
 /-! ## Definitions -/
 
@@ -123,13 +103,6 @@ noncomputable def signMask (x : Fin 52 → Nat) : ℤ :=
   if h : IsDeck x then ((Equiv.Perm.sign (deckPerm x h) : ℤˣ) : ℤ) else 0
 
 /-! ## L5: the autocorrelation of a single-card mask -/
-
-theorem permDeck_apply_eq (π : Equiv.Perm (Fin 52)) (s c : Fin 52) :
-    permDeck π s = c.val ↔ π s = c := Fin.val_inj
-
-theorem rel_permDeck_apply_eq (α π : Equiv.Perm (Fin 52)) (s c : Fin 52) :
-    rel α (permDeck π) s = c.val ↔ α (π s) = c := by
-  rw [TrailBound.rel_permDeck, permDeck_apply_eq, Equiv.Perm.mul_apply]
 
 /-- `(52 [P] - 1)(52 [Q] - 1)` expanded, with `[P ∧ Q]` written as `[R]`. -/
 theorem mask_mul (P Q R : Prop) [Decidable P] [Decidable Q] [Decidable R] (hR : R ↔ P ∧ Q) :
@@ -162,76 +135,6 @@ theorem autoCorr_cardMask (s c : Fin 52) (α : Relabel) :
   have h52 : Nat.factorial 52 = 52 * Nat.factorial 51 := Nat.factorial_succ 51
   rw [hQ, hR, card_apply_eq, h52]
   split_ifs <;> push_cast <;> ring
-
-/-! ## Row and column sums of `fullDiffCount` -/
-
-theorem isDeck_encryptL (n : ℕ) (L : Fin (n + 2) → Key) {x : Fin 52 → Nat} (hx : IsDeck x) :
-    IsDeck (encryptL n x L) := by
-  rw [encryptL_eq]
-  exact isDeck_compose (isDeck_unkeyedNoMix (isDeck_compose (isDeck_rounds _ _ _ hx) _)) _
-
-/-- The output difference of the pair `(y, α·y)` under the key tuple `L`. -/
-noncomputable def outDiff (α : Relabel) (n : ℕ) (y : Fin 52 → Nat) (L : Fin (n + 2) → Key) :
-    Relabel :=
-  relDiff (encryptL n y L) (encryptL n (rel α y) L)
-
-theorem encryptL_rel_outDiff (α : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y)
-    (L : Fin (n + 2) → Key) :
-    encryptL n (rel α y) L = rel (outDiff α n y L) (encryptL n y L) :=
-  (rel_relDiff (isDeck_encryptL n L hy) (isDeck_encryptL n L (isDeck_rel α hy))).symm
-
-theorem fullDiff_iff_outDiff (α β : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y)
-    (L : Fin (n + 2) → Key) : FullDiff α β n y L ↔ outDiff α n y L = β :=
-  (relDiff_eq_iff (isDeck_encryptL n L hy) (isDeck_encryptL n L (isDeck_rel α hy)) β).trans
-    eq_comm |>.symm
-
-theorem fullDiffCount_eq_card_outDiff (α β : Relabel) (n : ℕ) {y : Fin 52 → Nat}
-    (hy : IsDeck y) :
-    fullDiffCount α β n y =
-      (univ.filter fun L : Fin (n + 2) → Key => outDiff α n y L = β).card :=
-  congrArg card (filter_congr fun L _ => fullDiff_iff_outDiff α β n hy L)
-
-/-- (PROVED) Row sums: from each `α`, the counts over all `β` add up to all `(52!)^(n+2)`
-    key tuples. -/
-theorem sum_fullDiffCount (α : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
-    ∑ β, fullDiffCount α β n y = Nat.factorial 52 ^ (n + 2) := by
-  simp only [fullDiffCount_eq_card_outDiff α _ n hy]
-  rw [← card_eq_sum_card_fiberwise (fun _ _ => mem_univ _), card_univ, Fintype.card_fun,
-    Fintype.card_perm, Fintype.card_fin, Fintype.card_fin]
-
-/-- (PROVED) For a fixed key tuple, different input differences give different output
-    differences (`fullDiffCount_to_one` at the deck `α'·y`; this uses that DoubleDeal's
-    layers are injective). -/
-theorem outDiff_injective (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) (L : Fin (n + 2) → Key) :
-    Function.Injective fun α => outDiff α n y L := by
-  intro α α' h
-  have he : encryptL n (rel α y) L = encryptL n (rel α' y) L := by
-    rw [encryptL_rel_outDiff α n hy, encryptL_rel_outDiff α' n hy]
-    exact congrArg (fun γ => rel γ (encryptL n y L)) h
-  by_contra hne
-  have hδ : α * α'⁻¹ ≠ 1 := fun h1 => hne (mul_inv_eq_one.1 h1)
-  have hy' := isDeck_rel α' hy
-  have h0 : (univ.filter fun L : Fin (n + 2) → Key => FullDiff (α * α'⁻¹) 1 n (rel α' y) L).card =
-      0 := fullDiffCount_to_one hδ n hy'
-  rw [card_eq_zero, filter_eq_empty_iff] at h0
-  apply h0 (mem_univ L)
-  show encryptL n (rel (α * α'⁻¹) (rel α' y)) L = rel 1 (encryptL n (rel α' y) L)
-  rw [← rel_mul, inv_mul_cancel_right, rel_one, he]
-
-/-- (PROVED) Column sums: into each `β`, the counts over all `α` add up to all `(52!)^(n+2)`
-    key tuples (via `outDiff_injective`). -/
-theorem sum_fullDiffCount_left (β : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
-    ∑ α, fullDiffCount α β n y = Nat.factorial 52 ^ (n + 2) := by
-  simp only [fullDiffCount_eq_card_outDiff _ β n hy, card_filter]
-  rw [sum_comm]
-  have h1 : ∀ L : Fin (n + 2) → Key,
-      (∑ α : Relabel, if outDiff α n y L = β then 1 else 0) = 1 := fun L => by
-    have hb := (Finite.injective_iff_bijective.1 (outDiff_injective n hy L))
-    set e := Equiv.ofBijective _ hb
-    rw [← card_filter, filter_congr fun α _ => (show outDiff α n y L = β ↔ α = e.symm β from
-      Equiv.apply_eq_iff_eq_symm_apply e), filter_eq', if_pos (mem_univ _), card_singleton]
-  rw [sum_congr rfl fun L _ => h1 L, sum_const, card_univ, Fintype.card_fun, Fintype.card_perm,
-    Fintype.card_fin, Fintype.card_fin, smul_eq_mul, mul_one]
 
 /-! ## L7: the truncated-differential reading of `alignCount` -/
 

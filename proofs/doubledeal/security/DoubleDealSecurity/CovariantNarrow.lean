@@ -67,9 +67,6 @@ theorem covariant_iff_exists (σ : Relabel) :
 theorem commutesOnDecks_iff_covPair (σ : Relabel) :
     CommutesOnDecks σ unkeyedWithMix ↔ CovPair σ σ := Iff.rfl
 
-theorem unkeyedWithMix_injective : Function.Injective unkeyedWithMix :=
-  Function.LeftInverse.injective invUnkeyedWithMix_rt
-
 /-- A relabelling that fixes some deck is the identity. -/
 theorem eq_one_of_rel_eq {σ : Relabel} {m : Fin 52 → Nat} (hm : IsDeck m) (h : rel σ m = m) :
     σ = 1 := by

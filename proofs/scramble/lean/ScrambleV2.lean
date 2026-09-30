@@ -18,3 +18,4 @@ import ScrambleV2.Link2.Lookup
 import ScrambleV2.Link2.Pieces
 import ScrambleV2.Link2.Rank
 import ScrambleV2.Link2.Digest
+import ScrambleV2.Link2.Index

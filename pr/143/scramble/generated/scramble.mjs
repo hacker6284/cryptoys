@@ -11,7 +11,7 @@ function _sudo_conv_in_Cubie(_v) {
 
 function _sudo_conv_in_Scramble(_v) {
     if (!(_v && typeof _v === "object")) throw new TypeError("expected a plain object for Scramble");
-    return _rt.rec(new _impl.Scramble(_rt.host_int(_v.version), _rt.host_list(_v.message, (_v) => _rt.host_int(_v)), _rt.host_int(_v.processed), _rt.host_list(_v.cube, (_v) => _sudo_conv_in_Cubie(_v)), _rt.host_list(_v.steps, (_v) => _sudo_conv_in_Step(_v)), _rt.host_bool(_v.done)));
+    return _rt.rec(new _impl.Scramble(_rt.host_int(_v.version), _rt.host_list(_v.pending, (_v) => _rt.host_int(_v)), _rt.host_int(_v.total), _rt.host_int(_v.processed), _rt.host_list(_v.cube, (_v) => _sudo_conv_in_Cubie(_v)), _rt.host_list(_v.steps, (_v) => _sudo_conv_in_Step(_v)), _rt.host_bool(_v.traced), _rt.host_bool(_v.done)));
 }
 
 function _sudo_conv_in_Step(_v) {
@@ -28,7 +28,7 @@ function _sudo_conv_out_Evaluation(_v) {
 }
 
 function _sudo_conv_out_Scramble(_v) {
-    return { version: _rt.int_out(_v.version), message: _v.message.map((_v) => _rt.int_out(_v)), processed: _rt.int_out(_v.processed), cube: _v.cube.map((_v) => _sudo_conv_out_Cubie(_v)), steps: _v.steps.map((_v) => _sudo_conv_out_Step(_v)), done: _v.done };
+    return { version: _rt.int_out(_v.version), pending: _v.pending.map((_v) => _rt.int_out(_v)), total: _rt.int_out(_v.total), processed: _rt.int_out(_v.processed), cube: _v.cube.map((_v) => _sudo_conv_out_Cubie(_v)), steps: _v.steps.map((_v) => _sudo_conv_out_Step(_v)), traced: _v.traced, done: _v.done };
 }
 
 function _sudo_conv_out_Step(_v) {
@@ -42,6 +42,16 @@ export function scramble_v1() {
 
 export function scramble_v2() {
     const _r = _impl.scramble_v2();
+    return _sudo_conv_out_Scramble(_r);
+}
+
+export function scramble_v1_digest() {
+    const _r = _impl.scramble_v1_digest();
+    return _sudo_conv_out_Scramble(_r);
+}
+
+export function scramble_v2_digest() {
+    const _r = _impl.scramble_v2_digest();
     return _sudo_conv_out_Scramble(_r);
 }
 

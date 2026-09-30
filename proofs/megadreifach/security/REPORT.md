@@ -211,7 +211,7 @@ Both messages have the same length, so the padding is the same, and a colliding 
 
 These are local collisions of the kind the SPEC and STONES already record as existing ("L3 collisions exist"). What is new is that they occur at a practical rate in real blocks, from the standard IV and from reachable chaining values. The earlier small probes (§4: `exp_local_collisions.py`, `exp_corner_local.py`, `exp_related_blocks.py` (a)) were too small, or of the wrong shape, to see them: they used random cards, or adjacent swaps only.
 
-Adjacent swaps (2-card, j = i + 1) never collided in any run: 0/119,824 from the IV, 0/59,595 from non-IV chaining values, 0/44,896 in the reviewer's run. This is evidence, not a proof. **M9 (no 2-card local collision) stays OPEN.**
+Adjacent swaps (2-card, j = i + 1) never collided in any run: 0/119,824 from the IV, 0/59,595 from non-IV chaining values, 0/44,896 in the reviewer's run. This is evidence, not a proof. **M9 (no 2-card local collision) stays OPEN** (v1 grip rule; for v2 2-card windows see [proofs/megadreifach/m9/README.md](../m9/README.md)).
 
 ### 3.3 Results
 

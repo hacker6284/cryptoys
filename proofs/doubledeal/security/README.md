@@ -144,7 +144,7 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 CI ([`proofs-heavy.yml`](../../../.github/workflows/proofs-heavy.yml), job `doubledeal-security-heavy`) builds the heavy library
 and runs `../check_axioms.py security-heavy` (same rules, no KNOWN_SORRY; every
 registered theorem must be reported) plus `scan_sorry.py`. It also audits the
-Lean-generated (e.g. equation lemmas) theorems of the heavy modules, pinned in
+Lean-generated theorems (e.g. equation lemmas) of the heavy modules, pinned in
 `HEAVY_GENERATED`; see the comment at `HEAVY_THEOREMS` in `../check_axioms.py`.
 When it runs: see that workflow.
 

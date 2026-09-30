@@ -535,14 +535,18 @@ def heavy_source_theorems(heavy_dir=HEAVY_DIR):
     return names
 
 
-def heavy_generated_problems(audited, listed=HEAVY_THEOREMS, generated=HEAVY_GENERATED):
-    """security-heavy: every audited theorem not in `listed` must be in `generated`, and
-    every `generated` entry must be audited."""
+def heavy_generated_problems(audited, listed, generated):
+    """security-heavy: `listed` (HEAVY_THEOREMS) and `generated` (HEAVY_GENERATED) are
+    disjoint, every audited theorem not in `listed` is in `generated`, and every
+    `generated` entry is audited."""
+    both = listed & generated
     extra = set(audited) - listed
-    return ([f"audited {n} is in neither HEAVY_THEOREMS nor HEAVY_GENERATED (source scan "
-             "missed a declaration, or a new generated lemma?)" for n in sorted(extra - generated)]
+    return ([f"{n} is in both HEAVY_THEOREMS and HEAVY_GENERATED" for n in sorted(both)]
+            + [f"audited {n} is in neither HEAVY_THEOREMS nor HEAVY_GENERATED (source scan "
+               "missed a declaration, or a new generated lemma?)"
+               for n in sorted(extra - generated)]
             + [f"HEAVY_GENERATED entry {n} was not audited; remove it"
-               for n in sorted(generated - extra)])
+               for n in sorted(generated - both - set(audited))])
 
 
 def heavy_registry_problems(reg):
@@ -655,14 +659,17 @@ def selftest():
               f"{names}: {len(bad)} problem(s), expected {want}")
     # security-heavy: audited = HEAVY_THEOREMS + HEAVY_GENERATED, exactly.
     lst, gen = {"A.t"}, {"A.f.eq_1"}
-    for what, audited, want in [
-            ("exact", {"A.t", "A.f.eq_1"}, []),
-            ("unlisted, not generated", {"A.t", "A.f.eq_1", "A.b"},
+    for what, audited, listed, want in [
+            ("exact", {"A.t", "A.f.eq_1"}, lst, []),
+            ("unlisted, not generated", {"A.t", "A.f.eq_1", "A.b"}, lst,
              ["audited A.b is in neither"]),
-            ("stale generated", {"A.t"}, ["HEAVY_GENERATED entry A.f.eq_1 was not audited"]),
-            ("both", {"A.t", "A.c"}, ["audited A.c is in neither",
-                                      "HEAVY_GENERATED entry A.f.eq_1 was not audited"])]:
-        bad = heavy_generated_problems(audited, lst, gen)
+            ("stale generated", {"A.t"}, lst,
+             ["HEAVY_GENERATED entry A.f.eq_1 was not audited"]),
+            ("unlisted and stale", {"A.t", "A.c"}, lst,
+             ["audited A.c is in neither", "HEAVY_GENERATED entry A.f.eq_1 was not audited"]),
+            ("in both sets", {"A.t", "A.f.eq_1"}, lst | gen,
+             ["A.f.eq_1 is in both HEAVY_THEOREMS and HEAVY_GENERATED"])]:
+        bad = heavy_generated_problems(audited, listed, gen)
         ok = len(bad) == len(want) and all(w in b for w, b in zip(want, bad))
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} HEAVY_GENERATED {what}: "

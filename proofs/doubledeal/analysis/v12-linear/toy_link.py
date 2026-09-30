@@ -11,7 +11,8 @@
 # Checked (each for random integer f, g and every deck y where a deck is needed):
 #   L1 sumSqCorrLayer_eq       sum_{k1,k2} corr^2 = sum_{a,b} A_f(a) dpCount_U(a,b) A_g(b)
 #   L2 fullSumSqCorr_eq        N! * sum_L corr^2 = sum_{a,b} A_f(a) fullDiffCount(a,b,n,y) A_g(b)
-#   L3 fullSumSqCorr_eq_final  sum_L corr^2 = sum_{a,b} A_f(a) diffCount(a,b,n,y) sum_c dpF(b,c) A_g(c)
+#   L3 fullSumSqCorr_eq_final  sum_L corr^2 = sum_{a,b} A_f(a) diffCount(a,b,n,y)
+#                                             * sum_c dpF(b,c) A_g(c)
 #   L4 fullSumSqCorr_split     N! * sum_L corr^2 = N!^(n+2) A_f(1) A_g(1) + sum_{a,b != 1} ...
 #   fullDiffCount_eq_of_isDeck, fullDiffCount_one_left, fullDiffCount_to_one
 # Not a Lean statement (documents the header's "a dependent toy schedule shows the

@@ -95,13 +95,14 @@ L4 reads as `1/52!` plus the `α, β ≠ 1` remainder over
 
 What these are, and what they are not:
 
-* **Generality.** L1 and the final-key step are proved for arbitrary layers. L2–L4 are
-  proved for DoubleDeal's encryptL; their proofs use only independent uniform keys, layers
-  sending decks to decks and, for L4, injective layers. In Lean: L1 (`sumSqCorrLayer_eq`)
-  and the final-key step (`sum_sq_corr_finalKey`) take the layer as an argument. The
-  layer facts that L2–L4 use are the generic `Differential.dpCount_one_left` (decks to
-  decks) and `Differential.dpCount_to_one` (explicit `Function.Injective U`), applied to
-  DoubleDeal's layers. For non-injective layers the same-shape L4 can fail.
+* **Generality.** L1 and the final-key step are proved for arbitrary layers that send
+  decks to decks. L2–L4 are proved for DoubleDeal's encryptL; their proofs use only
+  independent uniform keys, layers sending decks to decks and, for L4, injective layers.
+  In Lean: L1 (`sumSqCorrLayer_eq`) and the final-key step (`sum_sq_corr_finalKey`) take
+  the layer as an argument. The layer facts that L2–L4 use are the generic
+  `Differential.dpCount_one_left` (decks to decks) and `Differential.dpCount_to_one`
+  (explicit `Function.Injective U`), applied to DoubleDeal's layers. For non-injective
+  layers the same-shape L4 can fail.
 * **No numeric bound.** They are identities. They move the linear question to the
   differential counts of M6/M7, and no numeric bound is proved for those.
 * **Independent uniform keys only.** The statements are stated only for independent

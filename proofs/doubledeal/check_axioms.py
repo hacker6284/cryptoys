@@ -499,8 +499,8 @@ PACKAGES = {
             "DoubleDeal.Security.Differential.dpCount_one_left",
             "DoubleDeal.Security.Differential.dpCount_to_one",
             # Linear (roadmap M8a): sums of squared correlations as autocorrelations weighted
-            # by differential counts; L1 and the final-key step for arbitrary layers, L2-L4
-            # for DoubleDeal's encryptL; independent full-permutation keys only; no numeric
+            # by differential counts; L1 and the final-key step for arbitrary layers that
+            # send decks to decks, L2-L4 for DoubleDeal's encryptL; independent full-permutation keys only; no numeric
             # bound; nothing proved for the real PassKey schedule
             "DoubleDeal.Security.Linear.sum_sq_corr_finalKey",
             "DoubleDeal.Security.Linear.sumSqCorrLayer_eq",

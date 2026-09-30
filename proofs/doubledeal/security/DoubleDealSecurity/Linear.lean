@@ -5,13 +5,13 @@
 
   NO NUMERIC BOUND IS PROVED HERE. Read this before citing anything below.
 
-  Generality. L1 and the final-key step are proved for arbitrary layers. L2–L4 are proved for
-  DoubleDeal's encryptL; their proofs use only independent uniform keys, layers sending decks
-  to decks and, for L4, injective layers. Formally: L1 (`sumSqCorrLayer_eq`) and the
-  final-key step (`sum_sq_corr_finalKey`) take the layer (family) as an argument, with only
-  the hypothesis that it maps decks to decks. L2–L4 are stated for `FullCipher.encryptL`
-  only; the facts about its layers that they use are the generic
-  `Differential.dpCount_one_left` (decks to decks) and `Differential.dpCount_to_one`
+  Generality. L1 and the final-key step are proved for arbitrary layers that send decks to
+  decks. L2–L4 are proved for DoubleDeal's encryptL; their proofs use only independent
+  uniform keys, layers sending decks to decks and, for L4, injective layers. Formally: L1
+  (`sumSqCorrLayer_eq`) and the final-key step (`sum_sq_corr_finalKey`) take the layer
+  (family) as an argument, with only the hypothesis that it maps decks to decks. L2–L4 are
+  stated for `FullCipher.encryptL` only; the facts about its layers that they use are the
+  generic `Differential.dpCount_one_left` (decks to decks) and `Differential.dpCount_to_one`
   (hypothesis `Function.Injective U`; L4 only), applied to DoubleDeal's layers, together
   with `FullCipher.fullDiffCount_eq_of_isDeck` and
   `FullCipher.fullDiffCount_eq_card_beforeFinal`. L2–L4 are not stated for other ciphers
@@ -34,8 +34,9 @@
   tuples. These are key-SUMMED and UNNORMALISED; the normalised quantity is not defined in
   Lean (all statements are integer identities).
   Remark (not a theorem): the key-averaged normalised squared correlation would be
-  `E_L[ĉ²] = fullSumSqCorr n f g / ((52!)^(n+2) · autoCorr f 1 · autoCorr g 1)`; under it, L4
-  reads as `1/52!` plus the `α, β ≠ 1` remainder over `(52!)^(n+3) · A_f(1) · A_g(1)`.
+  `E_L[ĉ²] = fullSumSqCorr n f g / ((52!)^(n+2) · autoCorr f 1 · autoCorr g 1)`
+  (f, g not identically zero on decks); under it, L4 reads as `1/52!` plus the `α, β ≠ 1`
+  remainder over `(52!)^(n+3) · A_f(1) · A_g(1)`.
 
   Proved (headlines L1–L4):
   * L1 `sumSqCorrLayer_eq`: one keyed layer, any deck map `U` sending decks to decks,
@@ -144,13 +145,13 @@ theorem sum_autoCorr_left (f : (Fin 52 → Nat) → ℤ) (G : Relabel → ℤ) :
   exact sum_congr rfl fun α _ => by rw [autoCorr, sum_mul]
 
 /-- (PROVED) Reordering four finite sums. -/
-theorem sum_comm4 {A B C D : Type} [Fintype A] [Fintype B] [Fintype C] [Fintype D]
-    (T : A → B → C → D → ℤ) :
+theorem sum_comm4 {A B C D M : Type} [Fintype A] [Fintype B] [Fintype C] [Fintype D]
+    [AddCommMonoid M] (T : A → B → C → D → M) :
     ∑ a, ∑ b, ∑ c, ∑ d, T a b c d = ∑ c, ∑ d, ∑ a, ∑ b, T a b c d :=
   (sum_congr rfl fun _ _ => sum_comm.trans (sum_congr rfl fun _ _ => sum_comm)).trans
     (sum_comm.trans (sum_congr rfl fun _ _ => sum_comm))
 
-/-! ## The final-key step (arbitrary layers): a uniform final Compose key -/
+/-! ## The final-key step (arbitrary layers sending decks to decks): a uniform final key -/
 
 /-- (PROVED) For any family `H i` (`i` in a finite type) of deck maps sending decks to decks,
     followed by an independent uniform final Compose key `kF`:
@@ -273,13 +274,15 @@ theorem fullSumSqCorr_split (n : ℕ) (f g : (Fin 52 → Nat) → ℤ) {y : Fin 
   rw [fullSumSqCorr_eq n f g hy, ← add_sum_erase _ _ (mem_univ (1 : Relabel))]
   refine congrArg₂ (· + ·) ?_ ?_
   · rw [sum_eq_single (1 : Relabel) (fun β _ hβ => by
-      rw [fullDiffCount_one_left β n hy, if_neg hβ]; simp) (fun h => absurd (mem_univ _) h),
+        rw [fullDiffCount_one_left β n hy, if_neg hβ]
+        simp only [Nat.cast_zero, mul_zero, zero_mul])
+      (fun h => absurd (mem_univ _) h),
       fullDiffCount_one_left 1 n hy, if_pos rfl]
     push_cast
     ring
   · refine sum_congr rfl fun α hα => ?_
     rw [← add_sum_erase _ _ (mem_univ (1 : Relabel)),
       fullDiffCount_to_one (ne_of_mem_erase hα) n hy]
-    simp
+    simp only [Nat.cast_zero, mul_zero, zero_mul, zero_add]
 
 end DoubleDeal.Security.Linear

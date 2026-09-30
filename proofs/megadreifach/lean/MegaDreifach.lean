@@ -19,6 +19,7 @@ import MegaDreifach.Link2.FaceTurn
 import MegaDreifach.Link2.Inverse
 import MegaDreifach.Link2.EmHelpers
 import MegaDreifach.Link2.EmCorner
+import MegaDreifach.Link2.EmEdge
 import MegaDreifach.Link2.EmRecipe
 import MegaDreifach.Link2.EmSpin
 import MegaDreifach.Link2.EmStep

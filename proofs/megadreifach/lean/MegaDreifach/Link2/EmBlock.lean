@@ -1,8 +1,10 @@
 /-
   LINK 2. `Generated.em_block` refines `Em.emBlock` on every deal array of
   length at least 52 (entries are arbitrary naturals), and every starting
-  position. No other hypothesis: the `recipe_a` side conditions are
-  discharged by the `GripOk` invariant (`EmInv.lean`).
+  position. No other hypothesis: the `read_grip` side conditions are
+  discharged by the `GripOk` invariant (`EmInv.lean`). v2: the G2 loop passes
+  the 1-based deal position `i + 1` and the F3 loop (`f3_t = 36` rounds) the
+  round number `t` to the steps.
 
   Algebraic Link 2 only. Not `v_Hash` (the DM chaining + padding + unranking
   composition is not stated here).
@@ -15,37 +17,50 @@ namespace MegaDreifach.Link2
 
 open MegaDreifach.Em
 
-/-- State after the first `i` G2 steps. -/
+/-- `g2Run` over an appended card. -/
+theorem g2Run_append (x : Nat) : ∀ (xs : List Nat) (p : Nat) (st : Position × Grip),
+    g2Run p (xs ++ [x]) st = g2Step (g2Run p xs st) x (p + xs.length)
+  | [], p, st => rfl
+  | y :: ys, p, st => by
+      show g2Run (p + 1) (ys ++ [x]) (g2Step st y p) =
+        g2Step (g2Run (p + 1) ys (g2Step st y p)) x (p + (ys.length + 1))
+      rw [g2Run_append x ys (p + 1) (g2Step st y p)]
+      congr 1
+      omega
+
+/-- State after the first `i` G2 steps (deal positions `1..i`). -/
 def g2Pre (h : Position) (deal : List Nat) (i : Nat) : Position × Grip :=
-  (deal.take i).foldl g2Step (h, gripId)
+  g2Run 1 (deal.take i) (h, gripId)
 
 theorem g2Pre_succ (h : Position) (deal : List Nat) (i : Nat) (hi : i < deal.length) :
-    g2Pre h deal (i + 1) = g2Step (g2Pre h deal i) deal[i] := by
+    g2Pre h deal (i + 1) = g2Step (g2Pre h deal i) deal[i] (i + 1) := by
   unfold g2Pre
   rw [List.take_succ, List.getElem?_eq_getElem hi]
-  simp [List.foldl_append]
+  simp only [Option.toList]
+  rw [g2Run_append, List.length_take, Nat.min_eq_left (Nat.le_of_lt hi), Nat.add_comm]
+
+theorem gripOk_g2Run : ∀ (xs : List Nat) (p : Nat) (st : Position × Grip), GripOk st.2 →
+    GripOk (g2Run p xs st).2
+  | [], _, _, hs => hs
+  | x :: xs, p, st, hs => gripOk_g2Run xs (p + 1) _ (gripOk_g2Step st x p hs)
 
 theorem gripOk_g2Pre (h : Position) (deal : List Nat) (i : Nat) :
-    GripOk (g2Pre h deal i).2 := by
-  unfold g2Pre
-  generalize deal.take i = xs
-  suffices ∀ st : Position × Grip, GripOk st.2 → GripOk (xs.foldl g2Step st).2 from
-    this _ gripOk_id
-  induction xs with
-  | nil => intro st hs; exact hs
-  | cons x xs ih => intro st hs; exact ih _ (gripOk_g2Step st x hs)
+    GripOk (g2Pre h deal i).2 :=
+  gripOk_g2Run _ _ _ gripOk_id
 
-theorem f3Iter_succ' (n : Nat) (st : Position × Grip) :
-    f3Iter (n + 1) st = f3Step (f3Iter n st) := by
-  induction n generalizing st with
-  | zero => rfl
-  | succ n ih => rw [f3Iter, ih, f3Iter]
+/-- One more F3 round at the end. -/
+theorem f3Run_succ' : ∀ (n r : Nat) (st : Position × Grip),
+    f3Run r (n + 1) st = f3Step (f3Run r n st) (r + n)
+  | 0, r, st => rfl
+  | n + 1, r, st => by
+      rw [f3Run, f3Run_succ' n (r + 1) (f3Step st r), f3Run]
+      congr 1
+      omega
 
-theorem gripOk_f3Iter (n : Nat) (st : Position × Grip) (hs : GripOk st.2) :
-    GripOk (f3Iter n st).2 := by
-  induction n generalizing st with
-  | zero => exact hs
-  | succ n ih => rw [f3Iter]; exact ih _ (gripOk_f3Step st hs)
+theorem gripOk_f3Run : ∀ (n r : Nat) (st : Position × Grip), GripOk st.2 →
+    GripOk (f3Run r n st).2
+  | 0, _, _, hs => hs
+  | n + 1, r, st, hs => gripOk_f3Run n (r + 1) _ (gripOk_f3Step st r hs)
 
 theorem embedGrip_id : embedGrip gripId = embed (List.range 12) := by
   unfold embedGrip; congr 1
@@ -67,6 +82,21 @@ theorem loopTailBig {α ρ : Type} (i toN : Nat) (hi : i ≤ toN) (htoN : toN �
     rw [ite_int_beq, if_neg hneI, addI_ofNat_one i hf, ok_bind, if_neg heq]
     rfl
 
+/-- The loop tail once the index increment `addI i 1` has been evaluated. -/
+theorem loopTailOk {α ρ : Type} (i toN : Nat) (st : α) :
+    (if (Int.ofNat i == Int.ofNat toN) = true then
+        (pure (SudoRt.Flow.brk (ρ := ρ) (Int.ofNat i, st)) : Except SudoRt.Trap _)
+      else do
+        let i' ← (Except.ok (Int.ofNat (i + 1)) : Except SudoRt.Trap Int)
+        pure (SudoRt.Flow.cont (ρ := ρ) (i', st))) =
+      if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, st))
+      else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), st)) := by
+  by_cases heq : i = toN
+  · subst heq; simp [beq_int_iff]; rfl
+  · have hneI : ¬ (Int.ofNat i = Int.ofNat toN) := fun h => heq (Int.ofNat.inj h)
+    rw [ite_int_beq, if_neg hneI, ok_bind, if_neg heq]
+    rfl
+
 /-- `Generated.em_block` refines `Em.emBlock`. -/
 theorem em_block_refines (h : Position) (deal : List Nat) (hlen : 52 ≤ deal.length) :
     Megadreifach.em_block (embedPos h) (embed deal) = .ok (embedPos (emBlock h deal)) := by
@@ -83,24 +113,26 @@ theorem em_block_refines (h : Position) (deal : List Nat) (hlen : 52 ≤ deal.le
     dsimp only
     rw [show (51 : Int) = Int.ofNat 51 from rfl, if_neg (ofNat_not_gt hi),
       atL_embed deal i (by omega), ok_bind,
-      g2_step_refines' _ _ _ (gripOk_g2Pre h deal i), ok_bind]
+      addI_ofNat_one i (FitsLen.of_le (by unfold FitsLen i64MaxNat; decide : FitsLen 52) (by omega)),
+      ok_bind, g2_step_refines' _ _ _ _ (gripOk_g2Pre h deal i), ok_bind]
     dsimp only
     rw [pure_bind, ← g2Pre_succ h deal i (by omega)]
-    exact loopTailBig i 51 hi (by omega) _
+    exact loopTailOk i 51 _
   · dsimp only
-    rw [show Megadreifach.f3_t = Int.ofNat 12 from rfl]
+    rw [show Megadreifach.f3_t = Int.ofNat 36 from rfl]
     rw [except_bind_pure]
     apply chain_loop
-      (f := fun t => (embedPos (f3Iter (t - 1) (g2Pre h deal 52)).1,
-        embedGrip (f3Iter (t - 1) (g2Pre h deal 52)).2))
-      (fromN := 1) (toN := 12) (hle := by decide)
+      (f := fun t => (embedPos (f3Run 1 (t - 1) (g2Pre h deal 52)).1,
+        embedGrip (f3Run 1 (t - 1) (g2Pre h deal 52)).2))
+      (fromN := 1) (toN := 36) (hle := by decide)
     · intro t ht1 ht
       dsimp only
       rw [if_neg (ofNat_not_gt ht),
-        f3_step_refines' _ _ (gripOk_f3Iter _ _ (gripOk_g2Pre h deal 52)), ok_bind]
+        f3_step_refines' _ _ _ (gripOk_f3Run _ _ _ (gripOk_g2Pre h deal 52)), ok_bind]
       dsimp only
-      rw [pure_bind, show t + 1 - 1 = (t - 1) + 1 by omega, f3Iter_succ']
-      exact loopTailBig t 12 ht (by omega) _
+      rw [pure_bind, show t + 1 - 1 = (t - 1) + 1 by omega, f3Run_succ',
+        show 1 + (t - 1) = t by omega]
+      exact loopTailBig t 36 ht (by omega) _
     · dsimp only
       rfl
 

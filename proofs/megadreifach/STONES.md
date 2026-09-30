@@ -82,6 +82,7 @@ proofs/megadreifach/
   vectors/              # KAT copy; json_to_lean.py generates lean/MegaDreifach/Vectors.lean
   m9/                   # M9 (v2): certificate generator m9_cert.py, cross-check m9_search.py (Python 3, stdlib only) + write-up
   security/             # REPORT.md + attack scripts (v1 grip rule; Python 3, stdlib only; suit_blind_collision.py = practical v1 collisions)
+    v2/                 # v2 (C36) evidence behind SPEC §8: engine.py, experiments.py, logs/ (Python 3, stdlib only)
 proofs/audit/          # shared `#audit_all` package (core-only)
 proofs/doubledeal/check_axioms.py   # the shared axiom gate (modes megadreifach, megadreifach-heavy, megadreifach-v1-deprecated)
 primitives/hash/megadreifach/   # the primitive: v2 SPEC + megadreifach.sudo (what this package models) + kats/ (v1 and v2 KAT files)

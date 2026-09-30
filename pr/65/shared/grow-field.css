@@ -124,3 +124,7 @@ textarea.grow-field {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+.file-chip.is-hashing #message-file-name::after {
+  content: " · Hashing…";
+}

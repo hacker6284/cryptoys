@@ -8,6 +8,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const generated = join(here, "generated/scramble.mjs");
 const impl = join(here, "generated/_scramble_impl.mjs");
 
+// Without a local build this mock stands in for the generated module; its
+// digest only encodes version + length. CI builds the real one first.
 if (!existsSync(impl)) {
     mkdirSync(dirname(generated), { recursive: true });
     writeFileSync(generated, `
@@ -239,11 +241,23 @@ function typed(hex) {
 }
 
 const bin = new File([new Uint8Array([0x00, 0xff, 0x10, 0x80, 0x7f, 0x01])], "blob.bin");
+const direct = await import("./generated/scramble.mjs");
+function directHex(version) {
+    const state = version === 2 ? direct.scramble_v2() : direct.scramble_v1();
+    direct.update(state, [0x00, 0xff, 0x10, 0x80, 0x7f, 0x01]);
+    const hex = direct.evaluate(state).digest.map((b) => Number(b).toString(16).padStart(2, "0"));
+    return `0x${hex.join("").toUpperCase().slice(1)}`;
+}
+const pads = () => { session.enterTeach(); return nodes.tape.children.filter((c) => c.classList.contains("pad")).length; };
 pick("[data-encoding]", 1);
 gen(1);
 const hexV1 = typed("00ff10807f01");
+assert.equal(hexV1, directHex(1), "typed hex hashes with the generated module (Gen 1)");
 gen(2);
 const hexV2 = typed("00ff10807f01");
+assert.equal(hexV2, directHex(2), "typed hex hashes with the generated module (Gen 2)");
+const typedPads = pads();
+assert.ok(typedPads < nodes.tape.children.length, "the tape does not pad the message's own nybbles");
 click("skip-end");
 const hexAlg = algs.at(-1);
 const abV2 = typed("ab");
@@ -264,6 +278,7 @@ globalThis.Worker = class {
         setTimeout(() => {
             if ((this.terminated && workerMode !== "late") || workerMode === "hang") return;
             if (workerMode === "fail") return this.onerror(new Event("error"));
+            if (workerMode === "garbage") return this.onmessage({ data: {} });
             self.postMessage = (reply) => {
                 this.replied = true;
                 this.onmessage({ data: structuredClone(reply) });
@@ -280,14 +295,15 @@ click("message-file-btn");
 assert.equal(browsed, 1, "the paperclip opens the file picker");
 chooseFile(bin);
 assert.equal(nodes["message-file-input"].value, "", "the input resets so the same file can be picked again");
-assert.equal(nodes["message-file"].hidden, false, "picking a file shows its chip");
-assert.equal(nodes["message-file-name"].textContent, "blob.bin · 6 B");
 await until(() => nodes.digest.value === hexV2);
 assert.equal(nodes.digest.value, hexV2, "file Digest = same bytes typed as hex (Gen 2)");
+assert.equal(nodes["message-file"].hidden, false, "picking a file shows its chip");
+assert.equal(nodes["message-file-name"].textContent, "blob.bin · 6 B");
+assert.equal(pads(), typedPads, "the teach tape pads after the file's own nybbles");
 assert.match(workers[0].url, /\/hash-worker\.js$/);
 assert.equal(workers[0].opts.type, "module");
 assert.ok(workers[0].replied && workers[0].terminated, "the worker hashed the file and was released");
-assert.equal(nodes["io-note"].hidden, true, "the Hashing… note clears");
+assert.equal(nodes["message-file"].classList.contains("is-hashing"), false, "Hashing… clears");
 
 gen(1);
 await until(() => nodes.digest.value === hexV1);
@@ -314,8 +330,7 @@ await until(() => nodes.digest.value === abV2);
 assert.equal(nodes.digest.value, abV2, "a file at the cap is hashed");
 assert.equal(nodes["message-file-name"].textContent, "edge.bin · 4 KiB");
 chooseFile({ name: "big.bin", size: FILE_MAX_BYTES + 1 });
-assert.equal(nodes["io-note"].textContent, "Files can be up to 4 KiB.", "over-cap files are rejected");
-assert.equal(nodes["io-note"].hidden, false);
+assert.equal(nodes.error.textContent, "Files can be up to 4 KiB.", "over-cap files are rejected");
 assert.equal(nodes["message-file-name"].textContent, "edge.bin · 4 KiB", "reject keeps the current file");
 assert.equal(nodes.digest.value, abV2);
 
@@ -323,7 +338,7 @@ nodes.message.value = "00ff10807f01";
 click("message-file-clear");
 assert.equal(nodes.digest.value, hexV2, "Clear rehashes the typed Message");
 assert.equal(nodes["message-file"].hidden, true);
-assert.equal(nodes["io-note"].hidden, true);
+assert.equal(nodes.error.textContent, "");
 
 assert.equal(typed("ab"), abV2);
 nodes.message.value = "zz";
@@ -336,8 +351,8 @@ workerMode = "hang";
 nodes.message.value = "ab";
 click("message-file-clear");
 chooseFile(bin);
-await until(() => nodes["io-note"].textContent === "Hashing…");
-assert.equal(nodes["io-note"].textContent, "Hashing…");
+await until(() => workers.at(-1).opts && nodes.digest.value === "");
+assert.ok(nodes["message-file"].classList.contains("is-hashing"), "the chip says Hashing…");
 assert.equal(nodes.digest.value, "", "Digest waits for the file");
 const algsWhileHashing = algs.length;
 click("play");
@@ -349,15 +364,59 @@ click("message-file-clear");
 assert.ok(hung.terminated, "Clear stops the running worker");
 assert.equal(nodes.digest.value, abV2, "Clear during a hash shows the typed Message");
 workerMode = "late";
+let made = workers.length;
 chooseFile(bin);
-await until(() => nodes["io-note"].textContent === "Hashing…");
+await until(() => workers.length > made);
 click("message-file-clear");
 await until(() => workers.at(-1).replied);
 assert.ok(workers.at(-1).replied, "the late worker still replied");
 assert.equal(nodes.digest.value, abV2, "a result that lands after Clear is dropped");
-workerMode = "hang";
+// Reads that resolve after Clear, or out of order, must not win.
+function slowFile(name, bytes) {
+    let release;
+    const read = new Promise((ok) => { release = () => ok(new Uint8Array(bytes).buffer); });
+    return { file: { name, size: bytes.length, arrayBuffer: () => read }, release };
+}
+const tick = () => new Promise((resolve) => setTimeout(resolve, 20));
+const lateRead = slowFile("late.bin", [0x00, 0xff, 0x10, 0x80, 0x7f, 0x01]);
+chooseFile(lateRead.file);
+click("message-file-clear");
+lateRead.release();
+await tick();
+assert.equal(nodes["message-file"].hidden, true, "a read that lands after Clear shows no chip");
+assert.equal(typed("00ff10807f01"), hexV2, "typing updates Digest again after Clear");
+nodes.message.value = "ab";
+session.recompute();
+workerMode = "run";
+const first = slowFile("first.bin", [0x00, 0xff, 0x10, 0x80, 0x7f, 0x01]);
+const second = slowFile("second.bin", [0xab]);
+chooseFile(first.file);
+chooseFile(second.file);
+second.release();
+await until(() => nodes.digest.value === abV2 && workers.at(-1).replied);
+first.release();
+await tick();
+assert.equal(nodes["message-file-name"].textContent, "second.bin · 1 B", "the newer pick wins");
+assert.equal(nodes.digest.value, abV2, "an older read that lands last is dropped");
+
+workerMode = "garbage";
 chooseFile(bin);
-await until(() => nodes["io-note"].textContent === "Hashing…");
+await until(() => nodes.error.textContent);
+assert.ok(nodes.error.textContent, "a bad worker reply shows an error");
+assert.equal(nodes["message-file"].classList.contains("is-hashing"), false, "a failed hash settles");
+
+const RealWorker = globalThis.Worker;
+globalThis.Worker = class { constructor() { throw new Error("blocked"); } };
+nodes.digest.value = "";
+chooseFile(bin);
+await until(() => nodes.digest.value === hexV2);
+assert.equal(nodes.digest.value, hexV2, "a Worker constructor that throws falls back to the page");
+globalThis.Worker = RealWorker;
+
+workerMode = "hang";
+made = workers.length;
+chooseFile(bin);
+await until(() => workers.length > made);
 
 session.dispose();
 assert.ok(workers.at(-1).terminated, "dispose stops the running worker");

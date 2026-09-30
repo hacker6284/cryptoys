@@ -153,6 +153,11 @@ theorem mulI_2 (n : Nat) (h : FitsLen (n * 2)) : SudoRt.mulI (Int.ofNat n) (2 : 
 
 theorem fits_small {n : Nat} (h : n ≤ 1000000) : FitsLen n := by unfold FitsLen i64MaxNat; omega
 
+/-- The emitted assert on a zero carry, at any source line (the line number is not
+    pinned, so a regeneration that only moves lines keeps this proof). -/
+theorem sudoAssertEq_zero (line : Nat) : SudoRt.sudoAssertEq (Int.ofNat 0) (0 : Int) line = .ok () := by
+  unfold SudoRt.sudoAssertEq; rfl
+
 theorem chain_eq {α ρ β}
     (step : Int × α → Except SudoRt.Trap (SudoRt.Flow (Int × α) ρ))
     (after : Int × α → Except SudoRt.Trap β)
@@ -267,7 +272,7 @@ theorem digest_bytes_refines (s o : Nat) (hs : s < 2 ^ 61) (ho : o < 2048) :
           rw [hb]
         case a3 =>
           dsimp only
-          rw [dcarry_top _ hx, show SudoRt.sudoAssertEq (Int.ofNat 0) (0 : Int) 514 = .ok () from rfl,
+          rw [dcarry_top _ hx, sudoAssertEq_zero,
             ok_bind, double_pow]
           congr 3
     case a2 =>

@@ -1,0 +1,5 @@
+multisets 2056210
+F1 = 2730 / 34650 = 0.078788 (tau 0)
+argmax multiplicities by residue 0..12: 4 4 4 0 0 0 0 0 0 0 0 0 0
+histogram of max_tau f (bins of 0.005):
+  [0.075,0.080): 2056210

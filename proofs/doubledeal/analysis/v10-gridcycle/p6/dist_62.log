@@ -1,0 +1,76 @@
+rule 62, 20000 decks x 1326 swaps
+spread all swaps      : cases 26520000  min 2  p1 5  p10 16  median 36  mean 33.93  max 52  | spread=2 0.00354  <=4 0.00958  <=8 0.03166
+spread swaps with i<40: cases 25200000  min 2  p1 12  p10 19  median 37  mean 35.32  max 52  | spread=2 0.00011  <=4 0.00065  <=8 0.00250
+spread swaps with i<20: cases 16600000  min 2  p1 26  p10 34  median 42  mean 41.83  max 52  | spread=2 0.00002  <=4 0.00036  <=8 0.00130
+spread i<20, gap j-i>16: cases 10200000  min 2  p1 31  p10 34  median 43  mean 42.84  max 52  | spread=2 0.00003  <=4 0.00004  <=8 0.00010
+spread i<40, gap j-i<=4: cases 3200000  min 2  p1 7  p10 14  median 29  mean 28.92  max 52  | spread=2 0.00007  <=4 0.00390  <=8 0.01452
+excess (vs survival prediction): zero (=survival) 0.00354  mean 32.88
+histogram spread: 2:93974 3:56953 4:103227 5:116320 6:137257 7:156362 8:175546 9:193661 10:213139 11:232283 12:251608 13:270969 14:291020 15:310995 16:329539 17:349953 18:368696 19:388568 20:408292 21:428692 22:447220 23:467333 24:487201 25:507049 26:526370 27:545454 28:565021 29:584172 30:603823 31:625497 32:643491 33:662440 34:682878 35:702055 36:721126 37:740097 38:759973 39:777985 40:796625 41:814804 42:835456 43:851692 44:868547 45:884009 46:898660 47:908338 48:911042 49:896016 50:838825 51:694582 52:395165 
+per i (over all j>i): i  min  mean  frac(spread=2)  ideal-one-pass mean ~ (52-i)-1
+  i= 0  min  3  mean 50.10  spread2 0.00000
+  i= 1  min  2  mean 49.23  spread2 0.00000
+  i= 2  min  2  mean 48.32  spread2 0.00001
+  i= 3  min  2  mean 47.39  spread2 0.00001
+  i= 4  min  2  mean 46.46  spread2 0.00001
+  i= 5  min  2  mean 45.50  spread2 0.00001
+  i= 6  min  2  mean 44.53  spread2 0.00001
+  i= 7  min  2  mean 43.57  spread2 0.00001
+  i= 8  min  2  mean 42.59  spread2 0.00001
+  i= 9  min  2  mean 41.61  spread2 0.00002
+  i=10  min  2  mean 40.63  spread2 0.00001
+  i=11  min  2  mean 39.64  spread2 0.00002
+  i=12  min  2  mean 38.65  spread2 0.00002
+  i=13  min  2  mean 37.66  spread2 0.00003
+  i=14  min  2  mean 36.67  spread2 0.00003
+  i=15  min  2  mean 35.67  spread2 0.00003
+  i=16  min  2  mean 34.68  spread2 0.00003
+  i=17  min  2  mean 33.69  spread2 0.00004
+  i=18  min  2  mean 32.69  spread2 0.00005
+  i=19  min  2  mean 31.69  spread2 0.00006
+  i=20  min  2  mean 30.69  spread2 0.00008
+  i=21  min  2  mean 29.69  spread2 0.00007
+  i=22  min  2  mean 28.70  spread2 0.00008
+  i=23  min  2  mean 27.70  spread2 0.00009
+  i=24  min  2  mean 26.70  spread2 0.00009
+  i=25  min  2  mean 25.70  spread2 0.00010
+  i=26  min  2  mean 24.70  spread2 0.00015
+  i=27  min  2  mean 23.70  spread2 0.00015
+  i=28  min  2  mean 22.69  spread2 0.00022
+  i=29  min  2  mean 21.69  spread2 0.00020
+  i=30  min  2  mean 20.69  spread2 0.00025
+  i=31  min  2  mean 19.69  spread2 0.00033
+  i=32  min  2  mean 18.69  spread2 0.00033
+  i=33  min  2  mean 17.69  spread2 0.00042
+  i=34  min  2  mean 16.69  spread2 0.00049
+  i=35  min  2  mean 15.69  spread2 0.00053
+  i=36  min  2  mean 14.69  spread2 0.00068
+  i=37  min  2  mean 13.70  spread2 0.00074
+  i=38  min  2  mean 12.69  spread2 0.00103
+  i=39  min  2  mean 11.69  spread2 0.00112
+  i=40  min  2  mean 10.70  spread2 0.00145
+  i=41  min  2  mean  9.71  spread2 0.00191
+  i=42  min  2  mean  8.71  spread2 0.00249
+  i=43  min  2  mean  7.72  spread2 0.00468
+  i=44  min  2  mean  6.75  spread2 0.00929
+  i=45  min  2  mean  5.78  spread2 0.02168
+  i=46  min  2  mean  4.82  spread2 0.05798
+  i=47  min  2  mean  3.91  spread2 0.15041
+  i=48  min  2  mean  3.04  spread2 0.34748
+  i=49  min  2  mean  2.33  spread2 0.66980
+  i=50  min  2  mean  2.00  spread2 1.00000
+per (i,j) buckets of 4 positions: min spread / mean spread
+         j 0- 3     j 4- 7     j 8-11     j12-15     j16-19     j20-23     j24-27     j28-31     j32-35     j36-39     j40-43     j44-47     j48-51  
+i 0- 3   3/ 39.1     3/ 45.0     5/ 48.4    25/ 49.2    18/ 49.5     8/ 49.6    10/ 49.6    18/ 49.6     2/ 49.6     3/ 49.6     2/ 49.6     2/ 49.6     2/ 49.6  
+i 4- 7     -        3/ 37.7     3/ 42.8     9/ 45.2    18/ 45.5     6/ 45.6    23/ 45.6     2/ 45.6     2/ 45.6     5/ 45.6     2/ 45.6     4/ 45.6     2/ 45.6  
+i 8-11     -          -        2/ 35.8     3/ 39.9     5/ 41.4     2/ 41.5    12/ 41.5    13/ 41.5    11/ 41.5     4/ 41.5     2/ 41.5     2/ 41.5     2/ 41.5  
+i12-15     -          -          -        2/ 33.5     3/ 36.5     4/ 37.5     2/ 37.5     2/ 37.5     2/ 37.5     2/ 37.5     2/ 37.5     2/ 37.4     2/ 37.5  
+i16-19     -          -          -          -        2/ 30.8     2/ 32.8     2/ 33.4     2/ 33.4     2/ 33.4     2/ 33.4     2/ 33.4     2/ 33.4     2/ 33.4  
+i20-23     -          -          -          -          -        2/ 27.9     2/ 29.0     2/ 29.4     2/ 29.4     2/ 29.4     2/ 29.3     2/ 29.3     2/ 29.3  
+i24-27     -          -          -          -          -          -        2/ 24.6     2/ 25.1     2/ 25.4     2/ 25.3     2/ 25.3     2/ 25.3     2/ 25.3  
+i28-31     -          -          -          -          -          -          -        2/ 21.2     2/ 21.2     2/ 21.3     2/ 21.3     2/ 21.3     2/ 21.3  
+i32-35     -          -          -          -          -          -          -          -        2/ 17.6     2/ 17.2     2/ 17.3     2/ 17.2     2/ 17.2  
+i36-39     -          -          -          -          -          -          -          -          -        2/ 13.8     2/ 13.2     2/ 13.2     2/ 13.2  
+i40-43     -          -          -          -          -          -          -          -          -          -        2/ 10.0     2/  9.2     2/  9.2  
+i44-47     -          -          -          -          -          -          -          -          -          -          -        2/  6.1     2/  5.3  
+i48-51     -          -          -          -          -          -          -          -          -          -          -          -        2/  2.6  
+position pair with i<40 most often at spread 2: (39,50) 0.00375; pair (50,51): 1.00000

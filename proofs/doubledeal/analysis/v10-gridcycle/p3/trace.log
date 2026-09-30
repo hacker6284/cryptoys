@@ -1,0 +1,18 @@
+V40: decks differ at walk positions 21,22 (KC, JS); outputs equal: True
+V41: decks differ at walk positions 14,15 (KC, AH); outputs equal: True
+V42: decks differ at walk positions 3,4 (AH, KH); outputs equal: True
+V43: decks differ at walk positions 10,11 (KH, KD); outputs equal: True
+--- deck A, steps 20..25:
+20 8S -> (3, 1) free
+21 KC -> (1, 9) bumps KS to (2, 9); marker 3
+22 JS -> (1, 9) bumps KC to (3, 10); marker 0
+23 QC -> (3, 7) free
+24 4D -> (3, 6) free
+25 JC -> (2, 10) free
+--- deck B, steps 20..25:
+20 8S -> (3, 1) free
+21 JS -> (1, 9) bumps KS to (2, 9); marker 3
+22 KC -> (3, 7) free
+23 QC -> (3, 7) bumps KC to (3, 10); marker 0
+24 4D -> (3, 6) free
+25 JC -> (2, 10) free

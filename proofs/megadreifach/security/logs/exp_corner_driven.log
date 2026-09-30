@@ -1,0 +1,2 @@
+$ python3 exp_corner_driven.py
+trials=200 identical face-turn words=200 identical corner outputs=200

@@ -1,0 +1,9 @@
+name = "audit"
+version = "0.1.0"
+defaultTargets = ["AuditAll"]
+
+# `#audit_all` (AuditAll.lean). Core Lean only: no Mathlib, no other dependency,
+# so both the Mathlib security package and the dependency-free MegaDreifach
+# package can require it by path. The gate is proofs/doubledeal/check_axioms.py.
+[[lean_lib]]
+name = "AuditAll"

@@ -12,19 +12,9 @@
   Not `51!`. Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
 -/
 import MegaDreifach.Link2.AccThree
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
-
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
-private theorem fits27 : FitsLen 27 := by
-  unfold FitsLen i64MaxNat
-  decide
-
-private theorem twentySix_lt_limb : 26 < limbBase := by
-  unfold limbBase
-  decide
 
 /-- One divisor step on the empty limb list. The quotient stays empty. -/
 private theorem peelDivStep_wide (d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d) (hd : d ≤ 26) :
@@ -39,7 +29,7 @@ private theorem peelDivStep_wide (d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d) (hd
   rw [if_neg hngt]
   have hf0 : 0 < f := by omega
   have hflt : f < limbBase :=
-    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) twentySix_lt_limb
+    Nat.lt_of_le_of_lt (Nat.le_trans hhi hd) c26_lt_limb
   rw [show (f : Int) = Int.ofNat f from rfl, divmod_zero f hf0 hflt, ok_bind]
   rw [show ((bigOf [], (0 : Int)).1) = bigOf [] from rfl, pure_eq_ok, ok_bind]
   dsimp
@@ -56,12 +46,6 @@ private theorem peelDivStep_wide (d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d) (hd
     rw [ofNat_eq_natCast f] at hadd
     rw [if_neg hneB, hadd, ok_bind, pure_eq_ok, if_neg heq]
     rfl
-
-private theorem peelDivStep_gt (toV f : Int) (q : Megadreifach.BigInt) (h : f > toV) :
-    peelDivStep toV (f, q) = .ok (SudoRt.Flow.brk (f, q)) := by
-  unfold peelDivStep
-  rw [if_pos h]
-  rfl
 
 /-- Finish of `peel_leading` once the quotient is still zero. -/
 private theorem peel_after_three (d : Nat) (hd : d ≤ 26) :

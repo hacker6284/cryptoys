@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { createLights } from "../shared/lights.js";
 import { SPOTS, parseMove, quarterSpin } from "./cube.js";
 
 const COLOR = {
@@ -48,10 +49,12 @@ function orientMatrix(up, front) {
     return m;
 }
 
-function tween(ms, step) {
+function tween(ms, step, live) {
+    const gen = live();
     return new Promise((resolve) => {
         const start = performance.now();
         function tick(now) {
+            if (gen !== live()) return resolve();
             const t = Math.min(1, (now - start) / ms);
             const eased = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
             step(eased);
@@ -99,7 +102,10 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
         }
     }
 
-    function paint(facelets) {
+    let cubeMotion = 0;
+    let shown = null;
+
+    function draw(facelets) {
         group.quaternion.identity();
         for (const mesh of meshes.values()) {
             mesh.position.copy(mesh.userData.home);
@@ -114,6 +120,12 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
             mat.color.setHex(COLOR[facelets[i]]);
             mat.needsUpdate = true;
         });
+    }
+
+    function paint(facelets) {
+        cubeMotion += 1;
+        shown = facelets;
+        draw(facelets);
     }
 
     function clearHighlights() {
@@ -172,6 +184,7 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
     }
 
     async function animateMove(move, ms) {
+        const gen = cubeMotion;
         const { face, turns } = parseMove(move);
         const spin = quarterSpin(face);
         const angle = spin.sign * (Math.PI / 2) * turns;
@@ -180,19 +193,22 @@ export function createCubeRig({ edge = ABSTRACT_EDGE, castShadow = false } = {})
         const pivot = new THREE.Group();
         group.add(pivot);
         for (const mesh of chosen) pivot.attach(mesh);
-        await tween(ms, (t) => pivot.setRotationFromAxisAngle(axis, angle * t));
+        await tween(ms, (t) => pivot.setRotationFromAxisAngle(axis, angle * t), () => cubeMotion);
         for (const mesh of chosen) group.attach(mesh);
         group.remove(pivot);
+        if (gen !== cubeMotion) draw(shown);
     }
 
     async function animateReorient(from, up, front, ms) {
+        const gen = cubeMotion;
         const matrix = orientMatrix(centerOf(from, up), centerOf(from, front));
         if (!matrix) return;
         const quat = new THREE.Quaternion().setFromRotationMatrix(matrix);
         await tween(ms, (t) => {
             group.quaternion.identity();
             group.quaternion.slerp(quat, t);
-        });
+        }, () => cubeMotion);
+        if (gen !== cubeMotion) draw(shown);
     }
 
     function dispose() {
@@ -233,13 +249,11 @@ export function mountCube(canvas) {
     controls.minDistance = 4;
     controls.maxDistance = 20;
     controls.update();
-    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-    const key = new THREE.DirectionalLight(0xffffff, 1.4);
-    key.position.set(4, 8, 5);
-    scene.add(key);
-    const fill = new THREE.DirectionalLight(0x9bb7ff, 0.35);
-    fill.position.set(-5, 2, -3);
-    scene.add(fill);
+    const lights = createLights(scene);
+    lights.add("ambient", new THREE.AmbientLight(0xffffff, 0.72));
+    lights.add("key", new THREE.DirectionalLight(0xffffff, 1.4)).position.set(4, 8, 5);
+    lights.add("fill", new THREE.DirectionalLight(0x9bb7ff, 0.35)).position.set(-5, 2, -3);
+    lights.seal();
 
     const rig = createCubeRig();
     scene.add(rig.group);

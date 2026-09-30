@@ -1,0 +1,32 @@
+/-
+  DoubleDeal security theorems (Mathlib). T1: card relabellings.
+-/
+import DoubleDealSecurity.Decks
+import DoubleDealSecurity.Relabel
+import DoubleDealSecurity.SumRanks
+import DoubleDealSecurity.SumRanksV10
+import DoubleDealSecurity.SumRanksV10Iff
+import DoubleDealSecurity.Walk
+import DoubleDealSecurity.GridCycle
+import DoubleDealSecurity.BranchNumber
+import DoubleDealSecurity.Rounds
+import DoubleDealSecurity.PermKeys
+import DoubleDealSecurity.Link
+import DoubleDealSecurity.V8Vectors
+import DoubleDealSecurity.RealKey
+import DoubleDealSecurity.SwapMechanism
+import DoubleDealSecurity.PermWitness
+import DoubleDealSecurity.PermCount
+import DoubleDealSecurity.SumRanksDP.Standalone
+import DoubleDealSecurity.SumRanksDP.Decomp
+import DoubleDealSecurity.SumRanksDP.Main
+import DoubleDealSecurity.SumRanksDP.ThreeCycle
+import DoubleDealSecurity.GridCycleSurvivalLists
+import DoubleDealSecurity.GridCycleSurvival
+import DoubleDealSecurity.TrailBound
+import DoubleDealSecurity.RealSchedule
+import DoubleDealSecurity.Differential
+import DoubleDealSecurity.FullCipher
+import DoubleDealSecurity.Linear
+import DoubleDealSecurity.CovariantNarrowLists
+import DoubleDealSecurity.CovariantNarrow

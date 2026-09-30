@@ -1,0 +1,8 @@
+tau=KC-KD          full_rounds=1 pairs=64000 keys=16 hits=17105 rate=2.67e-01
+tau=KC-KD          full_rounds=2 pairs=64000 keys=16 hits=4640 rate=7.25e-02
+tau=KC-KD          full_rounds=3 pairs=64000 keys=16 hits=1237 rate=1.93e-02
+tau=KC-KD          full_rounds=5 pairs=64000 keys=16 hits=100 rate=1.56e-03
+tau=control-KC-QD  full_rounds=1 pairs=64000 keys=16 hits=0 rate=0.00e+00
+tau=control-KC-QD  full_rounds=2 pairs=64000 keys=16 hits=0 rate=0.00e+00
+tau=control-KC-QD  full_rounds=3 pairs=64000 keys=16 hits=0 rate=0.00e+00
+tau=control-KC-QD  full_rounds=5 pairs=64000 keys=16 hits=0 rate=0.00e+00

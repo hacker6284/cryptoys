@@ -1,0 +1,16 @@
+name = "DoubleDealV8"
+version = "0.1.0"
+defaultTargets = ["DoubleDealV8", "doubledeal_v8_witness"]
+
+# Frozen, deprecated v8. Vulnerability-proof package. Path-requires the
+# emitted v8 Lean (do not edit Generated/).
+[[require]]
+name = "sudo"
+path = "Generated"
+
+[[lean_lib]]
+name = "DoubleDealV8"
+
+[[lean_exe]]
+name = "doubledeal_v8_witness"
+root = "WitnessMain"

@@ -1,0 +1,12 @@
+name = "DoubleDealV10"
+version = "0.1.0"
+defaultTargets = ["DoubleDealV10"]
+
+# Frozen, deprecated v10. GridCycle parity write-up package (a single-deck
+# kernel witness). Path-requires the emitted v10 Lean (do not edit Generated/).
+[[require]]
+name = "sudo"
+path = "Generated"
+
+[[lean_lib]]
+name = "DoubleDealV10"

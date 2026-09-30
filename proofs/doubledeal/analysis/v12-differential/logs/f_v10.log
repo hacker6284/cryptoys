@@ -1,0 +1,8 @@
+spec v10:1,0 N 10000000 seed 8 mode forward
+P[dS = s] 10000000  P[dM = s] (GridCycle alone) 0  P[dU = s] 0  RoundChar 0  dU = s with dS != s 0
+support hist dS: 52:10000000
+support hist dM: 43:8 44:87 45:640 46:4704 47:28448 48:145423 49:591433 50:1805090 51:3675462 52:3748705
+support hist dU: 42:1 43:12 44:73 45:628 46:4669 47:28373 48:144772 49:591793 50:1806487 51:3675760 52:3747432
+dS: distinct 1 of 10000000; count(beta = input) 10000000; top counts: 10000000(supp 52,=input)
+dM: distinct 10000000 of 10000000; count(beta = input) 0; top counts: 1(supp 52) 1(supp 52) 1(supp 48) 1(supp 51) 1(supp 51) 1(supp 51) 1(supp 49) 1(supp 52)
+dU: distinct 10000000 of 10000000; count(beta = input) 0; top counts: 1(supp 52) 1(supp 52) 1(supp 50) 1(supp 52) 1(supp 52) 1(supp 52) 1(supp 52) 1(supp 52)

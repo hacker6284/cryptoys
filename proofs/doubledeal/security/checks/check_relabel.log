@@ -1,0 +1,40 @@
+[1] compose/shift/lay/scoop commute with 200 random sigma; key-relabelled forms fail 200/200 (C(M,sK) vs sC) and 200/200 (C(sM,sK) vs sC)
+    PassKey(sK) != s PassKey(K) in 200/200 (schedule is value-dependent)
+[2] v9: all 52 sigma_{a,b} are bijections, weight-shift, and commute with SumRanks on 20 random decks each
+    e.g. sigma_{0,1}: 0->13 13->26 26->39 39->0 (A♣->A♥->A♠->A♦->A♣)
+    v8: 2078 sigma (1326 transpositions, 52 v9Sym, 500 random, 200 rank-preserving): 282 weight-shift -> commute on 10 random decks; all others fail on the explicit pair-swap witness deck (2078/2078 as predicted)
+    v9: 2078 sigma (1326 transpositions, 52 v9Sym, 500 random, 200 rank-preserving): 52 weight-shift -> commute on 10 random decks; all others fail on the explicit pair-swap witness deck (2078/2078 as predicted)
+    transpositions with the shift property: v8 78 (= the 78 same-rank pairs: True), v9 0
+    v8 shift <-> rank-preserving on pool: True ; v9Sym ∩ rank-preserving = [(0, 0), (0, 1), (0, 2), (0, 3)] (the 4 suit rotations)
+    v8: per-deck SumRanks commute rate: K♣↔K♦ 1.000, A♣↔A♥ 1.000, A♣↔5♣ 0.223
+    v9: per-deck SumRanks commute rate: K♣↔K♦ 0.048, A♣↔A♥ 0.064, A♣↔5♣ 0.232
+[2b] v10: all 52 v10Sym (rank + a, suit label XOR x) are bijections and commute with v10 SumRanks on 20 random decks each
+    v10: SumRanks fails to commute (some deck out of 40) for 1326/1326 transpositions, 500/500 random sigma, 50/50 nontrivial v9Sym outside v10Sym (the other 1, v9Sym 0 2 = v10Sym 0 3, is in v10Sym)
+    v10: per-deck SumRanks commute rate: K♣↔Q♥ 0.0000, K♣↔K♦ 0.0000, A♣↔A♥ 0.0000, A♣↔5♣ 0.0050
+[3] v8: seat2 collisions [(12, 38)]  (K♣=12, K♠=38)
+[3] v9: seat2 collisions [(12, 38)]  (K♣=12, K♠=38)
+[3] v11: seat2 collisions [(12, 38)]  (K♣=12, K♠=38)
+    v8: K♣<->K♦ on deck [K♦, 0..]: commutes? False; seats of 2nd card (1, 0) vs (0, 0)
+    v8: K♣<->K♠ witness found: True; cfirst(K♣) works: True
+    v8: every transposition fails GridCycle on a c-first deck: True
+    v8: every nontrivial G52 element fails GridCycle on some c-first deck: True
+    v8: GridCycle commutes with K♣<->K♦ on 5447/20000 random decks
+    v8: commute <-> equal walk on 3000/3000
+    v9: K♣<->K♦ on deck [K♦, 0..]: commutes? False; seats of 2nd card (1, 0) vs (0, 0)
+    v9: K♣<->K♠ witness found: True; cfirst(K♣) works: True
+    v9: every transposition fails GridCycle on a c-first deck: True
+    v9: every nontrivial G52 element fails GridCycle on some c-first deck: True
+    v9: GridCycle commutes with K♣<->K♦ on 5238/20000 random decks
+    v9: commute <-> equal walk on 3000/3000
+    v11: K♣<->K♦ on deck [K♦, 0..]: commutes? False; seats of 2nd card (1, 0) vs (0, 0)
+    v11: K♣<->K♠ witness found: True; cfirst(K♣) works: True
+    v11: every transposition fails GridCycle on a c-first deck: True
+    v11: every nontrivial G52 element fails GridCycle on some c-first deck: True
+    v11: GridCycle commutes with K♣<->K♦ on 57/20000 random decks
+    v11: commute <-> equal walk on 3000/3000
+[4] v8: full round fails for every transposition: True; every nontrivial G52: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
+[4] v9: full round fails for every transposition: True; every nontrivial G52: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
+[4] v10: full round fails for every transposition: True; every nontrivial v10Sym: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
+[4] v11: full round fails for every transposition: True; every nontrivial v10Sym: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
+[4] v12: full round fails for every transposition: True; every nontrivial v10Sym: True; 200 random sigma: True; encrypt fails 200/200 random transposition trials: True
+[5] v12: PassKey(sK) != s PassKey(K) in 200/200 (schedule is value-dependent)

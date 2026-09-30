@@ -1,0 +1,7 @@
+$ python3 pseudo_collision.py
+example block: ed69579e2bd544370e8ad6165e76f1aeafb1a2f582faa78012fa440b
+h  = 0315b113e69e4ca718c2b32068afd44c69e8664346ebee7ed7b4db8080
+h' = 0315b113e69e4ca718c2b320ac80db247838bb45b7aa74d2a134db8080
+dm(h,m) = dm(h',m) = 005547c0dc811a9a62dd624302ecc39c5dfcb0c808a75cfc3434db8080
+convention: compose(Winv,u)
+50/50 random (corner part, block) pairs gave a verified legal pseudo-collision

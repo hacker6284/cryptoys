@@ -1,0 +1,16 @@
+{"target": "F2", "keys": "real", "swap": [12, 24], "n": 100000, "low(D<=26)": 1063, "exact": 1043, "minD": 2, "secs": 1}
+{"target": "F2", "keys": "real", "swap": [13, 25], "n": 100000, "low(D<=26)": 506, "exact": 483, "minD": 2, "secs": 1}
+{"target": "F2", "keys": "real", "swap": [38, 50], "n": 100000, "low(D<=26)": 398, "exact": 376, "minD": 2, "secs": 1}
+{"target": "E2", "keys": "real", "swap": [12, 24], "n": 400000, "low(D<=26)": 1412, "exact": 691, "minD": 2, "secs": 3}
+{"target": "E2", "keys": "real", "swap": [13, 25], "n": 400000, "low(D<=26)": 682, "exact": 184, "minD": 2, "secs": 3}
+{"target": "E2", "keys": "real", "swap": [38, 50], "n": 400000, "low(D<=26)": 420, "exact": 79, "minD": 2, "secs": 3}
+{"target": "F3", "keys": "real", "swap": [12, 24], "n": 2000000, "low(D<=26)": 884, "exact": 873, "minD": 2, "secs": 15}
+{"target": "F3", "keys": "real", "swap": [13, 25], "n": 2000000, "low(D<=26)": 239, "exact": 223, "minD": 2, "secs": 14}
+{"target": "F3", "keys": "real", "swap": [38, 50], "n": 2000000, "low(D<=26)": 131, "exact": 121, "minD": 2, "secs": 16}
+{"target": "E3", "keys": "real", "swap": [12, 24], "n": 16000000, "low(D<=26)": 2441, "exact": 1243, "minD": 2, "secs": 95}
+{"target": "E3", "keys": "real", "swap": [13, 25], "n": 16000000, "low(D<=26)": 524, "exact": 150, "minD": 2, "secs": 84}
+{"target": "E3", "keys": "real", "swap": [38, 50], "n": 16000000, "low(D<=26)": 269, "exact": 42, "minD": 2, "secs": 84}
+{"target": "F4", "keys": "real", "swap": [12, 24], "n": 16000000, "low(D<=26)": 297, "exact": 290, "minD": 2, "secs": 87}
+{"target": "F4", "keys": "real", "swap": [13, 25], "n": 16000000, "low(D<=26)": 41, "exact": 37, "minD": 2, "secs": 89}
+{"target": "F4", "keys": "real", "swap": [38, 50], "n": 16000000, "low(D<=26)": 7, "exact": 6, "minD": 2, "secs": 166}
+{"target": "F5", "keys": "real", "swap": [12, 24], "n": 160000000, "low(D<=26)": 122, "exact": 119, "minD": 2, "secs": 1956}

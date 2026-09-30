@@ -1,28 +1,7 @@
-import { pathToFileURL } from "node:url";
-import { createAead } from "./aead.mjs";
-import {
-    bytesToDeck,
-    cipherBytesToDeck,
-    deckToCipherBytes,
-    deckToMessageBytes,
-} from "../../../demos/doubledeal/cards.js";
-import { decrypt, encrypt } from "../../../demos/doubledeal/generated/doubledeal.mjs";
-import kats from "./kats/doubledeal_cbc_hmac_kats.json" with { type: "json" };
+import { bytesToHex, hexToBytes, loadAead, readKats } from "./aead_harness.mjs";
 
 function assert(cond, message) {
     if (!cond) throw new Error(message);
-}
-
-function hexToBytes(hex) {
-    const clean = hex.startsWith("0x") ? hex.slice(2) : hex;
-    if (clean.length % 2 !== 0) throw new Error("hex length");
-    const out = [];
-    for (let i = 0; i < clean.length; i += 2) out.push(Number.parseInt(clean.slice(i, i + 2), 16));
-    return out;
-}
-
-function bytesToHex(bytes) {
-    return "0x" + bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 function flip(bytes, index) {
@@ -31,25 +10,9 @@ function flip(bytes, index) {
     return out;
 }
 
-const outDir = process.env.AEAD_OUT || "/tmp/ddch";
-const hmacMod = await import(pathToFileURL(`${outDir}/doubledeal_cbc_hmac.mjs`).href);
-
-const aead = createAead({
-    HMAC: hmacMod.HMAC,
-    derive_keys: hmacMod.derive_keys,
-    pad_iso7816: hmacMod.pad_iso7816,
-    unpad_iso7816: hmacMod.unpad_iso7816,
-    mac_input: hmacMod.mac_input,
-    xor_bytes: hmacMod.xor_bytes,
-    cbc_chain_from_cipher_block: hmacMod.cbc_chain_from_cipher_block,
-    tags_equal: hmacMod.tags_equal,
-    encrypt,
-    decrypt,
-    bytesToDeck,
-    deckToMessageBytes,
-    deckToCipherBytes,
-    cipherBytesToDeck,
-});
+// AEAD_OUT / DD_MJS: see aead_harness.mjs.
+const aead = await loadAead();
+const kats = readKats();
 
 const master = hexToBytes(kats.master);
 const iv = hexToBytes(kats.iv);

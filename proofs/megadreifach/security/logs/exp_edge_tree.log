@@ -1,0 +1,4 @@
+$ python3 exp_edge_tree.py
+n=6 |H|=11520 (2^13.5) t=12 leaves=2^12: distinct(real e X e)=1429  distinct(ideal random map)=3000
+n=7 |H|=161280 (2^17.3) t=13 leaves=2^13: distinct(real e X e)=5458  distinct(ideal random map)=7798
+n=8 |H|=2580480 (2^21.3) t=14 leaves=2^14: distinct(real e X e)=13874  distinct(ideal random map)=16289

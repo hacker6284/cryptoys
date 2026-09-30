@@ -1,0 +1,30 @@
+== 0,1 -> 0,1
+NF 10000000 NB 10000000 common-keys 23 pairs 343710 est 3.437e-09 | gamma=alpha pairs 343392 (3.434e-09) | gamma=beta pairs 0 (0.000e+00) | other pairs 318 (3.180e-12)
+other pairs by support of gamma: 3:307 4:11
+== 0,1 -> 0,2
+NF 10000000 NB 10000000 common-keys 2 pairs 40 est 4.000e-13 | gamma=alpha pairs 0 (0.000e+00) | gamma=beta pairs 0 (0.000e+00) | other pairs 40 (4.000e-13)
+other pairs by support of gamma: 3:40
+== 0,1 -> 1,2
+NF 10000000 NB 10000000 common-keys 2 pairs 75 est 7.500e-13 | gamma=alpha pairs 0 (0.000e+00) | gamma=beta pairs 0 (0.000e+00) | other pairs 75 (7.500e-13)
+other pairs by support of gamma: 3:75
+== 0,1 -> 13,14
+NF 10000000 NB 10000000 common-keys 0 pairs 0 est 0.000e+00 | gamma=alpha pairs 0 (0.000e+00) | gamma=beta pairs 0 (0.000e+00) | other pairs 0 (0.000e+00)
+other pairs by support of gamma:
+== 43,46 -> 43,46
+NF 10000000 NB 10000000 common-keys 22 pairs 306970 est 3.070e-09 | gamma=alpha pairs 306691 (3.067e-09) | gamma=beta pairs 0 (0.000e+00) | other pairs 279 (2.790e-12)
+other pairs by support of gamma: 3:272 4:7
+== 0,1,2 -> 0,1,2
+NF 10000000 NB 10000000 common-keys 4 pairs 3444 est 3.444e-11 | gamma=alpha pairs 3355 (3.355e-11) | gamma=beta pairs 0 (0.000e+00) | other pairs 89 (8.900e-13)
+other pairs by support of gamma: 2:89
+== 0,1,2 -> 0,1
+NF 10000000 NB 10000000 common-keys 3 pairs 4080 est 4.080e-11 | gamma=alpha pairs 550 (5.500e-12) | gamma=beta pairs 3528 (3.528e-11) | other pairs 2 (2.000e-14)
+other pairs by support of gamma: 3:2
+== 0,1 -> 0,1,2
+NF 10000000 NB 10000000 common-keys 3 pairs 2064 est 2.064e-11 | gamma=alpha pairs 1752 (1.752e-11) | gamma=beta pairs 305 (3.050e-12) | other pairs 7 (7.000e-14)
+other pairs by support of gamma: 3:7
+== 0,1;2,3 -> 0,1;2,3
+NF 10000000 NB 10000000 common-keys 1 pairs 12 est 1.200e-13 | gamma=alpha pairs 12 (1.200e-13) | gamma=beta pairs 0 (0.000e+00) | other pairs 0 (0.000e+00)
+other pairs by support of gamma:
+== 0,1 -> 0,1;2,3
+NF 10000000 NB 10000000 common-keys 1 pairs 4 est 4.000e-14 | gamma=alpha pairs 0 (0.000e+00) | gamma=beta pairs 0 (0.000e+00) | other pairs 4 (4.000e-14)
+other pairs by support of gamma: 3:4

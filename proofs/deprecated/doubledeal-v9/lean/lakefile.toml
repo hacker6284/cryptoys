@@ -1,0 +1,12 @@
+name = "DoubleDealV9"
+version = "0.1.0"
+defaultTargets = ["DoubleDealV9"]
+
+# Frozen, deprecated v9. Vulnerability-proof package. Path-requires the
+# emitted v9 Lean (do not edit Generated/).
+[[require]]
+name = "sudo"
+path = "Generated"
+
+[[lean_lib]]
+name = "DoubleDealV9"

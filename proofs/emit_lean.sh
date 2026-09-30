@@ -2,180 +2,107 @@
 # Regenerate (or --check) emitted Lean from normative .sudo files via the
 # sudocode protocol-4 Lean backend.
 #
-# Pin: hacker6284/sudocode main @ SUDOCODE_LEAN_COMMIT
-#   (PR #8 squash merge; Lean is in ALL_BACKENDS).
+# Pin: proofs/SUDOCODE_PIN (hacker6284/sudocode main), read by proofs/sudocode.sh.
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
-# DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC production
-# paths are bounded `for`. DoubleDeal test-only kind-scan whiles are
-# stripped under the gate. CBC-HMAC imports MegaDreifach via extra -I.
+# Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10, v11),
+# MegaDreifach (current v2 and frozen v1), Scramble, and DoubleDeal-CBC-HMAC. DoubleDeal's test-only
+# kind-scan whiles are stripped under the gate. CBC-HMAC imports
+# MegaDreifach via an extra -I.
 #
-# Usage (from repo root):
-#   proofs/emit_lean.sh              # write Generated/ (all four)
-#   proofs/emit_lean.sh --check      # CI: fail if committed Generated/ is stale
-#   proofs/emit_lean.sh doubledeal   # one algorithm
-#   proofs/emit_lean.sh megadreifach
-#   proofs/emit_lean.sh scramble
-#   proofs/emit_lean.sh cbc-hmac     # alias: doubledeal-cbc-hmac
+# Usage (from anywhere):
+#   proofs/emit_lean.sh [--check] [TARGET ...]   # no TARGET: all of them (table below)
+#     --check   CI: fail if committed Generated/ is stale (writes nothing)
+#   Write mode also stamps Generated/EMITTED_FROM.json (tools/emit_lean.py --install).
+#   doubledeal-cbc-hmac is accepted as an alias of cbc-hmac.
 #
 # Optional:
 #   SUDOC=/path/to/sudoc
-#   SUDOCODE_DIR=/path/to/sudocode   # must contain backends/lean/ at the pin
+#   SUDOCODE_DIR=/path/to/sudocode   # must contain backends/lean/ at the pin (default: proofs/sudocode.sh)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# sudocode main at the PR #8 squash merge (Lean lockstep peer).
-# Bump proofs/SUDOCODE_LEAN_PIN only when you intend to change the emitter.
-SUDOCODE_LEAN_REPO="${SUDOCODE_LEAN_REPO:-https://github.com/hacker6284/sudocode.git}"
-SUDOCODE_LEAN_REF="${SUDOCODE_LEAN_REF:-main}"
-PIN_FILE="$ROOT/proofs/SUDOCODE_LEAN_PIN"
-if [[ -z "${SUDOCODE_LEAN_COMMIT:-}" ]]; then
-  SUDOCODE_LEAN_COMMIT="$(grep -E '^[0-9a-f]{40}$' "$PIN_FILE")"
-fi
-if [[ -z "$SUDOCODE_LEAN_COMMIT" ]]; then
-  echo "could not read a 40-char SHA from $PIN_FILE" >&2
-  exit 1
-fi
+# The targets, spelled once: name | .sudo | Generated/ | extra -I directories.
+# doubledeal-v8, -v9, -v10 are frozen, deprecated (vulnerability-proof / write-up
+# targets); doubledeal-v11 is frozen, superseded (not attacked). Do not change their .sudo.
+# megadreifach is the current v2 (megadreifach.sudo): the proof package proofs/megadreifach/.
+# megadreifach-v1 is frozen, deprecated v1 (v1/megadreifach.sudo): the v1 weakness-proof
+# package proofs/deprecated/megadreifach-v1/. Do not change the v1 .sudo. Both files are
+# named megadreifach.sudo, so both emitted modules are `Megadreifach` (the entry is the
+# file stem), each in its own Generated/ package.
+TARGET_TABLE="
+doubledeal      primitives/cipher/doubledeal/doubledeal.sudo              proofs/doubledeal/lean/Generated
+doubledeal-v8   primitives/cipher/doubledeal/v8/doubledeal_v8.sudo        proofs/deprecated/doubledeal-v8/lean/Generated
+doubledeal-v9   primitives/cipher/doubledeal/v9/doubledeal_v9.sudo        proofs/deprecated/doubledeal-v9/lean/Generated
+doubledeal-v10  primitives/cipher/doubledeal/v10/doubledeal_v10.sudo      proofs/deprecated/doubledeal-v10/lean/Generated
+doubledeal-v11  primitives/cipher/doubledeal/v11/doubledeal_v11.sudo      proofs/deprecated/doubledeal-v11/lean/Generated
+megadreifach    primitives/hash/megadreifach/megadreifach.sudo            proofs/megadreifach/lean/Generated
+megadreifach-v1 primitives/hash/megadreifach/v1/megadreifach.sudo         proofs/deprecated/megadreifach-v1/lean/Generated
+scramble        primitives/hash/scramble/scramble.sudo                    proofs/scramble/lean/Generated
+cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach
+"
+# Parsed once: the names in order, and each target's .sudo, Generated/ and -I dirs.
+ALL_TARGETS=()
+declare -A T_SUDO T_GEN T_INC
+while read -r name sudo_path generated includes; do
+  [[ -n "$name" ]] || continue
+  ALL_TARGETS+=("$name")
+  T_SUDO[$name]="$sudo_path"
+  T_GEN[$name]="$generated"
+  T_INC[$name]="$includes"
+done <<< "$TARGET_TABLE"
 
-SUDOCODE_DIR="${SUDOCODE_DIR:-/tmp/sudocode}"
+usage() {
+  local IFS='|'
+  echo "usage: $0 [--check] [${ALL_TARGETS[*]} ...]" >&2
+  echo "  cbc-hmac is also accepted as doubledeal-cbc-hmac" >&2
+  exit 2
+}
+
 CHECK=0
 TARGETS=()
 for arg in "$@"; do
   case "$arg" in
     --check) CHECK=1 ;;
-    doubledeal|megadreifach|scramble|cbc-hmac) TARGETS+=("$arg") ;;
-    doubledeal-cbc-hmac) TARGETS+=("cbc-hmac") ;;
+    doubledeal-cbc-hmac) TARGETS+=(cbc-hmac) ;;
     *)
-      echo "usage: $0 [--check] [doubledeal|megadreifach|scramble|cbc-hmac ...]" >&2
-      echo "  cbc-hmac is also accepted as doubledeal-cbc-hmac" >&2
-      exit 2
-      ;;
+      if [[ -n "${T_SUDO[$arg]:-}" ]]; then TARGETS+=("$arg"); else usage; fi ;;
   esac
 done
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(doubledeal megadreifach scramble cbc-hmac)
+  TARGETS=("${ALL_TARGETS[@]}")
 fi
 
-if [[ -n "${SUDOC:-}" ]]; then
-  SUDOC_BIN="$SUDOC"
-else
-  SUDOC_BIN="$SUDOCODE_DIR/sudoc/target/release/sudoc"
-fi
+# Pin, SUDOCODE_DIR default and sudoc build: proofs/sudocode.sh (shared with vectors/regen.sh).
+source "$ROOT/proofs/sudocode.sh"
 
-need_fetch=0
-if [[ ! -x "$SUDOC_BIN" ]]; then
-  need_fetch=1
-fi
-if [[ ! -f "$SUDOCODE_DIR/backends/lean/emit.py" ]]; then
-  need_fetch=1
-fi
-if [[ -d "$SUDOCODE_DIR/.git" ]]; then
-  have="$(git -C "$SUDOCODE_DIR" rev-parse HEAD 2>/dev/null || true)"
-  if [[ "$have" != "$SUDOCODE_LEAN_COMMIT" ]]; then
-    need_fetch=1
-  fi
-fi
-
-if [[ "$need_fetch" -eq 1 && -z "${SUDOC:-}" ]]; then
-  if [[ ! -d "$SUDOCODE_DIR/.git" ]]; then
-    git clone --filter=blob:none --branch "$SUDOCODE_LEAN_REF" \
-      "$SUDOCODE_LEAN_REPO" "$SUDOCODE_DIR"
-  fi
-  git -C "$SUDOCODE_DIR" fetch --depth 1 origin "$SUDOCODE_LEAN_COMMIT"
-  git -C "$SUDOCODE_DIR" checkout --detach "$SUDOCODE_LEAN_COMMIT"
-  if [[ ! -f "$SUDOCODE_DIR/backends/lean/emit.py" ]]; then
-    echo "blocker: $SUDOCODE_LEAN_COMMIT has no backends/lean/emit.py" >&2
-    echo "expected sudocode main at/after the PR #8 merge (ff63b629)." >&2
-    exit 1
-  fi
-  cargo build --release --manifest-path "$SUDOCODE_DIR/sudoc/Cargo.toml"
-  SUDOC_BIN="$SUDOCODE_DIR/sudoc/target/release/sudoc"
-fi
-
-export SUDOC="$SUDOC_BIN"
-export SUDOCODE_DIR
+SCRATCH="$(mktemp -d)"
+trap 'rm -rf "$SCRATCH"' EXIT
 
 emit_one() {
-  local name="$1"
-  local sudo_path="$2"
-  local generated="$3"
+  local name="$1" sudo_path="$2" generated="$3"
   shift 3
-  local includes=("$@")
-  local scratch="${TMPDIR:-/tmp}/cryptoys-emit-${name}"
-  rm -rf "$scratch"
-  mkdir -p "$scratch"
-  local extra=()
+  local args=("$ROOT/$sudo_path" --out "$SCRATCH/$name")
   if [[ "$CHECK" -eq 1 ]]; then
-    extra+=(--check "$generated")
+    args+=(--check "$ROOT/$generated")
   else
-    extra+=(--install "$generated")
+    args+=(--install "$ROOT/$generated")
   fi
-  local inc_args=()
   local inc
-  for inc in "${includes[@]}"; do
-    inc_args+=(-I "$inc")
+  for inc in "$@"; do
+    args+=(-I "$ROOT/$inc")
   done
-  python3 "$ROOT/tools/emit_lean.py" "$sudo_path" --out "$scratch" "${extra[@]}" "${inc_args[@]}"
-  if [[ "$CHECK" -eq 0 ]]; then
-    python3 - <<PY
-import hashlib, json, pathlib
-root = pathlib.Path("$ROOT")
-sudo = pathlib.Path("$sudo_path")
-includes = [pathlib.Path(p) for p in """$(printf '%s\n' "${includes[@]}")""".splitlines() if p]
-imported = []
-for inc in includes:
-    for child in sorted(inc.glob("*.sudo")):
-        imported.append({
-            "sudo_file": str(child.relative_to(root)),
-            "sudo_sha256": hashlib.sha256(child.read_bytes()).hexdigest(),
-        })
-stamp = {
-    "sudo_file": str(sudo.relative_to(root)),
-    "sudo_sha256": hashlib.sha256(sudo.read_bytes()).hexdigest(),
-    "sudocode_lean_commit": "$SUDOCODE_LEAN_COMMIT",
-    "sudocode_lean_ref": "$SUDOCODE_LEAN_REF",
-    "terminates_gate": True,
-    "with_tests": True,
-}
-if includes:
-    stamp["include_paths"] = [str(p.relative_to(root)) for p in includes]
-if imported:
-    stamp["imported_sudo"] = imported
-pathlib.Path("$generated/EMITTED_FROM.json").write_text(json.dumps(stamp, indent=2) + "\n")
-print("wrote $generated/EMITTED_FROM.json")
-PY
-  fi
+  python3 "$ROOT/tools/emit_lean.py" "${args[@]}"
 }
 
 for t in "${TARGETS[@]}"; do
-  case "$t" in
-    doubledeal)
-      emit_one doubledeal \
-        "$ROOT/primitives/cipher/doubledeal/doubledeal.sudo" \
-        "$ROOT/proofs/doubledeal/lean/Generated"
-      ;;
-    megadreifach)
-      emit_one megadreifach \
-        "$ROOT/primitives/hash/megadreifach/megadreifach.sudo" \
-        "$ROOT/proofs/megadreifach/lean/Generated"
-      ;;
-    scramble)
-      emit_one scramble \
-        "$ROOT/primitives/hash/scramble/scramble.sudo" \
-        "$ROOT/proofs/scramble/lean/Generated"
-      ;;
-    cbc-hmac)
-      emit_one cbc-hmac \
-        "$ROOT/primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo" \
-        "$ROOT/proofs/doubledeal-cbc-hmac/lean/Generated" \
-        "$ROOT/primitives/hash/megadreifach"
-      ;;
-  esac
+  # shellcheck disable=SC2086  # T_INC: zero or more space-separated directories
+  emit_one "$t" "${T_SUDO[$t]}" "${T_GEN[$t]}" ${T_INC[$t]}
 done
 
-echo "sudocode_lean_commit=$SUDOCODE_LEAN_COMMIT ref=$SUDOCODE_LEAN_REF"
+echo "sudocode_lean_commit=$SUDOCODE_COMMIT ref=$SUDOCODE_REF"
 if [[ "$CHECK" -eq 1 ]]; then
   echo "Generated Lean matches emit from current .sudo"
 else

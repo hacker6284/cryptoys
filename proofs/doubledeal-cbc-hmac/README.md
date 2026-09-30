@@ -1,13 +1,14 @@
+<!-- Owns: what this tree claims and does not claim for DoubleDeal-CBC-HMAC, and how to rebuild its Generated Lean. Maintenance rules: ../../DOCS.md. -->
 # DoubleDeal-CBC-HMAC proofs
 
 Sudo is normative. Emitted Lean under `lean/Generated/` is the
 HMAC / KDF / pad / MAC-input algorithm from
-`primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo`.
+[`primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo`](../../primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo).
 See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md).
 
 This does **not** claim sudo↔Lean semantic equivalence (Link 2).
 It is **not** an AEAD security theorem. Byte-domain CBC that ranks
-a deck stays in JS (`aead.mjs`) because `52!` is not a sudo `int`.
+a deck stays in JS ([`aead.mjs`](../../primitives/aead/doubledeal-cbc-hmac/aead.mjs)) because `52!` is not a sudo `int`.
 SCM / SMAC stay later.
 
 The emit terminates gate is on. Production loops are bounded `for`.

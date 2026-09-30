@@ -29,10 +29,11 @@ node /tmp/ddch-test/_doubledeal_cbc_hmac_impl.mjs
 SUDOC="$sudoc" sh tools/build.sh
 node primitives/cipher/doubledeal/encoding.test.mjs
 AEAD_OUT=/tmp/ddch-test node primitives/aead/doubledeal-cbc-hmac/aead.test.mjs
+AEAD_OUT=/tmp/ddch-test node primitives/aead/doubledeal-cbc-hmac/kats/regen.mjs --check
 python3 primitives/aead/doubledeal-cbc-hmac/kats/check.py
 test -f demos/scramble/generated/scramble.mjs
 test -f demos/doubledeal/generated/doubledeal.mjs
 test -f demos/scramble/SPEC.md
 test -f demos/doubledeal/SPEC.md
-node demos/playroom/room.test.mjs
+for t in demos/*/*.test.mjs; do node "$t"; done
 touch demos/.nojekyll

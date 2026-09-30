@@ -9,7 +9,9 @@ on:
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
       - "tools/emit_lean.py"
+      - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
+      - ".github/actions/lean-security/**"
   pull_request:
     paths:
       - "proofs/**"
@@ -18,7 +20,9 @@ on:
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
       - "tools/emit_lean.py"
+      - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
+      - ".github/actions/lean-security/**"
   workflow_dispatch:
 
 env:
@@ -26,15 +30,18 @@ env:
 
 jobs:
   # Anti-drift: committed Generated/ Lean must match emit from current .sudo
-  # via the pinned sudocode main commit (PR #8 merge; see SUDOCODE_LEAN_PIN).
+  # via the pinned sudocode main commit (PR #8 merge; see proofs/SUDOCODE_PIN).
   generated-fresh:
     runs-on: ubuntu-latest
+    env:
+      SUDOCODE_DIR: ${{ github.workspace }}/.sudocode-lean
+      SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
     steps:
       - uses: actions/checkout@v5
-      - name: Read Lean backend pin
+      - name: Read the sudocode pin
         id: pin
         run: |
-          commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_LEAN_PIN)"
+          commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_PIN)"
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
           test -n "$commit"
       - uses: actions/checkout@v5
@@ -53,94 +60,143 @@ jobs:
       - name: Build sudoc
         run: cargo build --release --manifest-path .sudocode-lean/sudoc/Cargo.toml
       - name: Generated Lean matches emit (--require terminates)
-        env:
-          SUDOCODE_DIR: ${{ github.workspace }}/.sudocode-lean
-          SUDOC: ${{ github.workspace }}/.sudocode-lean/sudoc/target/release/sudoc
         run: proofs/emit_lean.sh --check
+      - name: Current vectors (JSON + Vectors.lean) rebuild byte-identically from doubledeal.sudo
+        run: proofs/doubledeal/vectors/regen.sh current --check
+      - name: Frozen v8-v11 vectors rebuild byte-identically from vN/doubledeal_vN.sudo
+        run: |
+          for v in v8 v9 v10 v11; do
+            proofs/doubledeal/vectors/regen.sh "$v" --check
+          done
 
-  doubledeal-generated:
+  generated:
+    # Emitted Lean of each primitive builds and its sudo tests pass (TAP).
+    name: ${{ matrix.name }}-generated
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: doubledeal, dir: proofs/doubledeal/lean/Generated, test: doubledeal_test }
+          - { name: megadreifach, dir: proofs/megadreifach/lean/Generated, test: megadreifach_test }
+          - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
+          - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
+          # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property; not an
+          # attack, so no witness package): emitted TAP only (proofs/deprecated/doubledeal-v11/).
+          - { name: doubledeal-v11, dir: proofs/deprecated/doubledeal-v11/lean/Generated, test: doubledeal_v11_test }
     steps:
       - uses: actions/checkout@v5
       - uses: leanprover/lean-action@v1
         with:
-          lake-package-directory: proofs/doubledeal/lean/Generated
+          lake-package-directory: ${{ matrix.dir }}
       - name: Generated TAP (sudo tests)
-        working-directory: proofs/doubledeal/lean/Generated
-        run: ./.lake/build/bin/doubledeal_test
+        working-directory: ${{ matrix.dir }}
+        run: ./.lake/build/bin/${{ matrix.test }}
 
-  megadreifach-generated:
+  doubledeal-v8-deprecated:
+    # Frozen, deprecated DoubleDeal v8: emitted TAP + vulnerability-proof witness
+    # (see proofs/deprecated/doubledeal-v8/README.md).
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: No native_decide / sorry / admit / initialize in the v8 witness package
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v8/lean --exclude Generated
+      - name: Witness Lean data matches witness_v8.json
+        run: python3 proofs/deprecated/doubledeal-v8/lean/witness_to_lean.py --check
+      - name: Frozen v8 vectors (sha + Python port)
+        run: python3 proofs/deprecated/doubledeal-v8/attack/check_vectors.py
       - uses: leanprover/lean-action@v1
         with:
-          lake-package-directory: proofs/megadreifach/lean/Generated
-      - name: Generated TAP (sudo tests)
-        working-directory: proofs/megadreifach/lean/Generated
+          lake-package-directory: proofs/deprecated/doubledeal-v8/lean/Generated
+      - name: Generated v8 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/doubledeal-v8/lean/Generated
+        run: ./.lake/build/bin/doubledeal_v8_test
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v8/lean
+      - name: v8 relabelling witness (compiled emitted encrypt)
+        working-directory: proofs/deprecated/doubledeal-v8/lean
+        run: lake exe doubledeal_v8_witness
+
+  doubledeal-v9-deprecated:
+    # Frozen, deprecated DoubleDeal v9 (superseded by v10): emitted TAP,
+    # witness data and vectors. The ~9 min kernel witness build and its axiom
+    # audit run in proofs-v9-deprecated.yml
+    # (see proofs/deprecated/doubledeal-v9/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No native_decide / sorry / admit / initialize in the v9 witness package
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v9/lean --exclude Generated
+      - name: Witness Lean data matches witness_v9.json
+        run: python3 proofs/deprecated/doubledeal-v9/lean/witness_to_lean.py --check
+      - name: Frozen v9 vectors (sha + Python port) and recorded witnesses
+        run: |
+          python3 proofs/deprecated/doubledeal-v9/attack/check_vectors.py
+          python3 proofs/deprecated/doubledeal-v9/attack/check_witnesses.py
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v9/lean/Generated
+      - name: Generated v9 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/doubledeal-v9/lean/Generated
+        run: ./.lake/build/bin/doubledeal_v9_test
+
+  doubledeal-v10-deprecated:
+    # Frozen, deprecated DoubleDeal v10 (GridCycle per-layer parity shortfall):
+    # emitted TAP, the single-deck K♣↔K♦ kernel witness on the emitted v10
+    # mix_columns (cheap, ~30 s) and its axiom audit
+    # (see proofs/deprecated/doubledeal-v10/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No native_decide / sorry / admit / initialize in the v10 witness package
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v10/lean --exclude Generated
+      - name: Witness JSON matches the Python port; Lean data matches witness_v10.json
+        run: |
+          python3 proofs/deprecated/doubledeal-v10/attack/make_witness.py --check
+          python3 proofs/deprecated/doubledeal-v10/lean/witness_to_lean.py --check
+      - name: C measurement model agrees with the Python port (v10 GridCycle)
+        run: python3 proofs/doubledeal/analysis/v10-gridcycle/xcheck.py
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/doubledeal-v10/lean/Generated
+      - name: Generated v10 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/doubledeal-v10/lean/Generated
+        run: ./.lake/build/bin/doubledeal_v10_test
+      - name: Build the witness package
+        working-directory: proofs/deprecated/doubledeal-v10/lean
+        run: lake build
+      - name: Axiom audit (no sorryAx / ofReduceBool)
+        run: python3 proofs/doubledeal/check_axioms.py v10-deprecated
+
+  megadreifach-v1-deprecated:
+    # Frozen, deprecated MegaDreifach v1 (superseded by v2): emitted v1 TAP and the
+    # v1 weakness proofs (CornerDriven, FreeStart, SwapCollision) with their import
+    # closure, built against the v1 emit, plus their axiom audit
+    # (see proofs/deprecated/megadreifach-v1/README.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide / initialize in the frozen v1 package
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/megadreifach-v1/lean --exclude Generated
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/deprecated/megadreifach-v1/lean/Generated
+      - name: Generated v1 TAP (frozen sudo tests)
+        working-directory: proofs/deprecated/megadreifach-v1/lean/Generated
         run: ./.lake/build/bin/megadreifach_test
-
-  scramble-generated:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
       - uses: leanprover/lean-action@v1
         with:
-          lake-package-directory: proofs/scramble/lean/Generated
-      - name: Generated TAP (sudo tests)
-        working-directory: proofs/scramble/lean/Generated
-        run: ./.lake/build/bin/scramble_test
-
-  cbc-hmac-generated:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: leanprover/lean-action@v1
-        with:
-          lake-package-directory: proofs/doubledeal-cbc-hmac/lean/Generated
-      - name: Generated TAP (sudo tests)
-        working-directory: proofs/doubledeal-cbc-hmac/lean/Generated
-        run: ./.lake/build/bin/doubledeal_cbc_hmac_test
+          lake-package-directory: proofs/deprecated/megadreifach-v1/lean
+      - name: Axiom audit of every MegaDreifachV1 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py megadreifach-v1-deprecated
 
   doubledeal-lean:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: No sorry / unlisted native_decide
-        run: |
-          python3 - <<'PY'
-          import re, sys
-          from pathlib import Path
-          sorry_pat = re.compile(r"\b(sorry|admit)\b")
-          native_pat = re.compile(r"\bnative_decide\b")
-          # Documented TCB sites only. Empty means every native_decide is a CI fail.
-          allowed_native = {
-              # none: GridCycle / diamondCards / unrankPerm_inj_3 are kernel decide.
-          }
-          bad_sorry = []
-          bad_native = []
-          root = Path("proofs/doubledeal/lean")
-          for path in root.rglob("*.lean"):
-              if "Generated" in path.parts:
-                  continue
-              rel = str(path)
-              text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
-              allow = allowed_native.get(rel, set())
-              for i, line in enumerate(text.splitlines(), 1):
-                  code = re.sub(r"--.*", "", line)
-                  if sorry_pat.search(code):
-                      bad_sorry.append(f"{path}:{i}:{line}")
-                  if native_pat.search(code) and i not in allow:
-                      bad_native.append(f"{path}:{i}:{line}")
-          if bad_sorry:
-              print("shipped Lean still contains sorry/admit:", *bad_sorry, sep="\n", file=sys.stderr)
-          if bad_native:
-              print("unlisted native_decide (add to READMEs + allowlist, or replace):",
-                    *bad_native, sep="\n", file=sys.stderr)
-          if bad_sorry or bad_native:
-              sys.exit(1)
-          print("no sorry/admit; no unlisted native_decide")
-          PY
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/doubledeal/lean --exclude Generated
       - name: Vectors.lean matches committed JSON
         run: python3 proofs/doubledeal/vectors/json_to_lean.py --check
       - name: JSON was generated from current doubledeal.sudo
@@ -151,49 +207,90 @@ jobs:
       - name: Known-answer vectors (compiled Lean)
         working-directory: proofs/doubledeal/lean
         run: lake exe doubledeal
+      - name: Axiom audit (top theorems use only propext, Classical.choice, Quot.sound)
+        working-directory: proofs/doubledeal/lean
+        run: python3 ../check_axioms.py
+
+  doubledeal-security:
+    # Mathlib security package (T1 relabellings). A green run means the listed
+    # theorems check, not that the cipher is secure; see its README.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No admit / native_decide / sorryAx / axiom; sorry only in the allowlisted conjecture
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py
+      - name: scan_sorry selftest (including --root / --exclude / --allow-sorry)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --selftest
+      - name: V8Vectors.lean matches frozen v8 JSON
+        run: python3 proofs/doubledeal/security/checks/gen_v8_vectors.py --check
+      - name: Heavy RealKey.lean expected ciphertexts match the v12 Python port
+        run: python3 proofs/doubledeal/security/checks/realkeys/realkey_to_lean.py --check
+      - name: GridCycleSurvivalLists.lean (LKC / LKS) matches the v12-diffusion enumeration
+        run: python3 proofs/doubledeal/analysis/v12-diffusion/prefix_survival.py --check
+      - name: CovariantNarrowLists.lean / CovariantNarrowChecks.lean and cell0_witness.log match cell0_witness.py
+        run: python3 proofs/doubledeal/analysis/v12-covariant/cell0_witness.py --check
+      - name: cell0_sample.log matches a fresh seeded run (measurement log, ~10 s)
+        run: python3 proofs/doubledeal/analysis/v12-covariant/cell0_sample.py --check
+      - name: cc and numpy for the analysis checks run by selftest.py
+        run: |
+          cc --version | head -1
+          python3 -c "import numpy" || (sudo apt-get update -q && sudo apt-get install -y -q python3-numpy)
+      - name: Python port + relabelling checks
+        run: |
+          python3 proofs/doubledeal/security/checks/selftest.py
+          python3 proofs/doubledeal/security/checks/check_relabel.py
+          python3 proofs/doubledeal/security/checks/check_covariant.py
+          python3 proofs/doubledeal/security/checks/branchnum/witnesses.py > /dev/null
+          git diff --exit-code proofs/doubledeal/security/checks/branchnum/witnesses.json
+      - uses: ./.github/actions/lean-security
+      # The heavy library DoubleDealSecurityHeavy is not built here; it is built and
+      # audited by proofs-heavy.yml. This audit still fails if its HEAVY_THEOREMS
+      # registry and the heavy sources disagree.
+      - name: Axiom audit of every DoubleDealSecurity theorem (KNOWN_SORRY allowlist by name; heavy library audited separately)
+        working-directory: proofs/doubledeal/security
+        run: python3 ../check_axioms.py security
+      # Core Lean only (no Mathlib import; about a second): the registry's source scan must
+      # agree with Lean on its fixture.
+      - name: Heavy-registry source scan agrees with Lean on its fixture (check_axioms.py --selftest-lean)
+        working-directory: proofs/doubledeal/security
+        run: python3 ../check_axioms.py --selftest-lean
+      - name: Duplicate-owner audit fires on an identical duplicate theorem (fixture)
+        working-directory: proofs/doubledeal/security
+        run: python3 checks/audit_dup_selftest.py
+      - name: SumRanks import closure from Lean (rebuilt first; total and Mathlib counts pinned)
+        working-directory: proofs/doubledeal/security
+        run: |
+          python3 checks/check_closure.py --selftest
+          python3 checks/check_closure.py
 
   megadreifach-lean:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: No sorry / unlisted native_decide
-        run: |
-          python3 - <<'PY'
-          import re, sys
-          from pathlib import Path
-          sorry_pat = re.compile(r"\b(sorry|admit)\b")
-          native_pat = re.compile(r"\bnative_decide\b")
-          # Documented TCB sites only. Empty means every native_decide is a CI fail.
-          allowed_native = {
-              # none: closed numerals use kernel decide (2^224 < 52!, |G| < 256^29, IV lists).
-          }
-          bad_sorry = []
-          bad_native = []
-          root = Path("proofs/megadreifach/lean")
-          for path in root.rglob("*.lean"):
-              if "Generated" in path.parts:
-                  continue
-              rel = str(path)
-              text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
-              allow = allowed_native.get(rel, set())
-              for i, line in enumerate(text.splitlines(), 1):
-                  code = re.sub(r"--.*", "", line)
-                  if sorry_pat.search(code):
-                      bad_sorry.append(f"{path}:{i}:{line}")
-                  if native_pat.search(code) and i not in allow:
-                      bad_native.append(f"{path}:{i}:{line}")
-          if bad_sorry:
-              print("shipped Lean still contains sorry/admit:", *bad_sorry, sep="\n", file=sys.stderr)
-          if bad_native:
-              print("unlisted native_decide (add to READMEs + allowlist, or replace):",
-                    *bad_native, sep="\n", file=sys.stderr)
-          if bad_sorry or bad_native:
-              sys.exit(1)
-          print("no sorry/admit; no unlisted native_decide")
-          PY
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach/lean --exclude Generated
+      - name: Vectors.lean and KatSpecCheck.lean match the published KAT JSON; Kat.lean statement lint
+        run: python3 proofs/megadreifach/vectors/json_to_lean.py --check
+      - name: Axiom gate keying rules (private/public collisions fail under key "full"); MD_README_THEOREMS equals the README-cited theorems
+        run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - name: Swap-collision measurement log matches a fresh seeded run (quick; the report-size runs are in proofs-heavy.yml)
+        run: python3 proofs/megadreifach/security/suit_blind_collision.py --check
+      - name: M9 two-card window search (Python cross-check of the Lean M9 proof, not part of it; self-checks the 8 v2 KATs; asserts its counts; about 20 s in CI)
+        run: python3 proofs/megadreifach/m9/m9_search.py
+      - name: M9 decoder certificate M9Cert.lean matches a fresh generation (untrusted data, re-checked by the kernel; about 10 s)
+        run: python3 proofs/megadreifach/m9/m9_cert.py --check
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/megadreifach/lean
       - name: Known-answer metadata (compiled Lean)
         working-directory: proofs/megadreifach/lean
         run: lake exe megadreifach
+      # KatSpecCheck.lean (generated) pins the type of every heavy kat_<name> and rejects
+      # [init] hooks. Its planted negatives run on a stubbed copy of Kat.lean (no KAT
+      # kernel evaluation):
+      - name: KatSpecCheck catches planted shadows and [init] hooks (vec_*, hexBytes, v_Hash, macro_rules, @[init] exit 0)
+        run: python3 proofs/megadreifach/vectors/katspec_negatives.py
+      # The heavy library MegaDreifachHeavy (8 KAT kernel witnesses) is not built
+      # here; it is built and audited by megadreifach-heavy in proofs-heavy.yml.
+      - name: Axiom audit of every MegaDreifach theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py megadreifach

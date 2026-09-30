@@ -1,0 +1,27 @@
+name: Lean security package
+description: >-
+  Restore the shared Mathlib package cache and build proofs/doubledeal/security with
+  lean-action (prebuilt Mathlib via lake exe cache get; never built from source).
+  Used by doubledeal-security (proofs.yml) and doubledeal-security-heavy (proofs-heavy.yml).
+
+inputs:
+  build-args:
+    description: lake build targets (empty = the default targets; the heavy library is not one)
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    # One reusable cache entry for the Mathlib download (keyed on OS, arch, manifest and
+    # toolchain; no SHA), shared by both jobs, instead of lean-action's per-SHA .lake cache.
+    - uses: actions/cache@v5
+      with:
+        path: proofs/doubledeal/security/.lake/packages
+        key: lake-packages-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('proofs/doubledeal/security/lake-manifest.json', 'proofs/doubledeal/security/lean-toolchain') }}
+    - uses: leanprover/lean-action@v1
+      with:
+        lake-package-directory: proofs/doubledeal/security
+        use-github-cache: false
+        use-mathlib-cache: true
+        build-args: ${{ inputs.build-args }}

@@ -44,14 +44,6 @@ theorem mulI_ofNat (a b : Nat) (h : FitsLen (a * b)) :
   rw [this]
   exact narrowI_ofNat _ h
 
-theorem addI_ofNat (a b : Nat) (h : FitsLen (a + b)) :
-    SudoRt.addI (Int.ofNat a) (Int.ofNat b) = .ok (Int.ofNat (a + b)) := by
-  unfold SudoRt.addI
-  have : Int.ofNat a + Int.ofNat b = Int.ofNat (a + b) := by
-    simp [ofNat_eq_natCast]
-  rw [this]
-  exact narrowI_ofNat _ h
-
 theorem ofNat_not_gt {a b : Nat} (h : a ≤ b) : ¬ (Int.ofNat a > Int.ofNat b) :=
   Int.not_lt.mpr (Int.ofNat_le.mpr h)
 
@@ -61,7 +53,7 @@ theorem beq_ofNat_eq_true_iff (a b : Nat) :
   exact Int.ofNat_inj
 
 /-- `Int.fmod (a - b) n` is the nonnegative residue when `a, b < n`. -/
-theorem fmod_sub_small (a b n : Nat) (ha : a < n) (hb : b < n) (hn : 0 < n) :
+theorem fmod_sub_small (a b n : Nat) (ha : a < n) (hb : b < n) (_hn : 0 < n) :
     Int.fmod ((a : Int) - (b : Int)) (n : Int) =
       Int.ofNat ((a + (n - b)) % n) := by
   have hn0 : (0 : Int) ≤ (n : Int) := Int.ofNat_zero_le _

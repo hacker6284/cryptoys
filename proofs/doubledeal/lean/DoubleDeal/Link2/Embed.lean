@@ -7,9 +7,11 @@
   security. Link 1 (sudo → Generated via emit) stays trusted-not-proved.
 
   Well-formedness for PassKey: a list of Nats whose length fits in i64
-  so emitted index arithmetic (`addI` / `subI` on seats) cannot Overflow.
-  Card *values* need not be `< 52` — algebraic PassKey is List Nat, not
-  the Fin packet. Encrypt (NEXT) will add length-52 / Perm52.
+  so emitted index arithmetic (`addI` / `subI` on seats) cannot Overflow,
+  and (since v12) whose card values fit in i64, because the v12 deal count
+  `suit_of(c) + 2` is an i64 addition. Card *values* need not be `< 52` —
+  algebraic PassKey is List Nat, not the Fin packet. Encrypt uses
+  length-52 / Perm52, where both bounds hold.
 -/
 import SudoRt
 
@@ -35,6 +37,11 @@ theorem FitsLen.succ_of_succ {n : Nat} (h : FitsLen (n + 1)) : FitsLen n :=
 theorem FitsLen.of_le {m n : Nat} (hm : FitsLen n) (hle : m ≤ n) : FitsLen m :=
   Nat.le_trans hle hm
 
+/-- Card values that fit in a sudo i64 (v12: the deal count `suit c + 2` is an
+    i64 add). The same bound as `FitsLen`; the separate name says it bounds a
+    value, not a length. Reducible, so the two are interchangeable in proofs. -/
+abbrev FitsI64 (n : Nat) : Prop := FitsLen n
+
 theorem ofNat_le_i64Max {n : Nat} (h : FitsLen n) : Int.ofNat n ≤ SudoRt.i64Max := by
   rw [← i64MaxNat_spec]
   exact Int.ofNat_le.mpr h
@@ -48,10 +55,12 @@ def decode (a : Array Int) : List Nat := a.toList.map Int.toNat
 def Nonneg (a : Array Int) : Prop :=
   ∀ i : Nat, (h : i < a.size) → 0 ≤ a[i]
 
-/-- Well-formed generated deck for PassKey: embed-image, i64-safe length. -/
+/-- Well-formed generated deck for PassKey: embed-image, i64-safe length,
+    i64-safe card values (v12: the deal count `suit + 2` is an i64 add). -/
 structure WellFormed (a : Array Int) : Prop where
   fits : FitsLen a.size
   nonneg : Nonneg a
+  cards : ∀ c ∈ decode a, FitsI64 c
 
 theorem toList_embed (xs : List Nat) : (embed xs).toList = xs.map Int.ofNat := rfl
 
@@ -68,9 +77,6 @@ theorem nonneg_embed (xs : List Nat) : Nonneg (embed xs) := by
   rw [get_embed]
   exact Int.ofNat_zero_le _
 
-theorem wellFormed_embed (xs : List Nat) (h : FitsLen xs.length) : WellFormed (embed xs) :=
-  ⟨by rw [size_embed]; exact h, nonneg_embed xs⟩
-
 private theorem toNat_ofNat_id : ∀ xs : List Nat, (xs.map Int.ofNat).map Int.toNat = xs
   | [] => rfl
   | x :: xs => by
@@ -79,6 +85,10 @@ private theorem toNat_ofNat_id : ∀ xs : List Nat, (xs.map Int.ofNat).map Int.t
 
 theorem decode_embed (xs : List Nat) : decode (embed xs) = xs :=
   toNat_ofNat_id xs
+
+theorem wellFormed_embed (xs : List Nat) (h : FitsLen xs.length)
+    (hc : ∀ c ∈ xs, FitsLen c) : WellFormed (embed xs) :=
+  ⟨by rw [size_embed]; exact h, nonneg_embed xs, by rw [decode_embed]; exact hc⟩
 
 private theorem map_ofNat_toNat_eq :
     ∀ {xs : List Int}, (∀ i : Nat, (hi : i < xs.length) → 0 ≤ xs[i]) →
@@ -107,5 +117,13 @@ theorem toList_embed_cons (c : Nat) (rest : List Nat) :
 theorem embed_inj {xs ys : List Nat} (h : embed xs = embed ys) : xs = ys := by
   have := congrArg decode h
   simpa [decode_embed] using this
+
+/-- Card ids small enough that the emitted SumRanks column sums and the
+GridCycle `r + suit` step stay inside i64. -/
+def CardBound (c : Nat) : Prop := c ≤ i64MaxNat - 4
+
+theorem cardBound_zero : CardBound 0 := by
+  unfold CardBound i64MaxNat
+  decide
 
 end DoubleDeal.Link2

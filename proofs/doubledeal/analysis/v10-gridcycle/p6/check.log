@@ -1,0 +1,6 @@
+variant 33: 2000 decks: output mismatches vs cand.c 0; Python round-trip failures 0
+variant 60: 2000 decks: output mismatches vs cand.c 0; Python round-trip failures 0
+variant 61: 2000 decks: output mismatches vs cand.c 0; Python round-trip failures 0
+variant 62: 2000 decks: output mismatches vs cand.c 0; Python round-trip failures 0
+variant 63: 2000 decks: output mismatches vs cand.c 0; Python round-trip failures 0
+variant 64: 2000 decks: output mismatches vs cand.c 0; Python round-trip failures 0

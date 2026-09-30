@@ -127,9 +127,9 @@ theorem rotate_right_left_cancel (c s n : Nat) (hc : c < n) (hn : 0 < n) :
     _ = (c + n) % n := by rw [show c + (n - s') + s' = c + n from by omega]
     _ = c := add_n_mod c n hc
 
-/-- Rank-sum of a list under `rank`. -/
-def rankSum (rank : α → Nat) (xs : List α) : Nat :=
-  sumNats (xs.map rank)
+/-- Sum of a list under the weight `w` (SumRanks uses rank for rows, rank + suit for columns). -/
+def weightSum (w : α → Nat) (xs : List α) : Nat :=
+  sumNats (xs.map w)
 
 theorem map_rotL (f : α → β) (xs : List α) (n : Nat) :
     (rotL xs n).map f = rotL (xs.map f) n := by
@@ -148,14 +148,14 @@ theorem map_rotR (f : α → β) (xs : List α) (n : Nat) :
   · have hm : (xs.map f).length = xs.length := by simp [List.length_map]
     simp only [h, hm, ↓reduceIte, List.map_append, List.map_drop, List.map_take]
 
-theorem rankSum_rotL (rank : α → Nat) (xs : List α) (n : Nat) :
-    rankSum rank (rotL xs n) = rankSum rank xs := by
-  unfold rankSum
+theorem weightSum_rotL (w : α → Nat) (xs : List α) (n : Nat) :
+    weightSum w (rotL xs n) = weightSum w xs := by
+  unfold weightSum
   rw [map_rotL, sumNats_rotL]
 
-theorem rankSum_rotR (rank : α → Nat) (xs : List α) (n : Nat) :
-    rankSum rank (rotR xs n) = rankSum rank xs := by
-  unfold rankSum
+theorem weightSum_rotR (w : α → Nat) (xs : List α) (n : Nat) :
+    weightSum w (rotR xs n) = weightSum w xs := by
+  unfold weightSum
   rw [map_rotR, sumNats_rotR]
 
 theorem rotL_perm (xs : List α) (n : Nat) : List.Perm (rotL xs n) xs := by
@@ -173,5 +173,65 @@ theorem rotR_perm (xs : List α) (n : Nat) : List.Perm (rotR xs n) xs := by
                        (xs.take (xs.length - n % xs.length) ++ xs.drop (xs.length - n % xs.length)) :=
       List.perm_append_comm
     exact p.trans (List.Perm.of_eq (List.take_append_drop _ _))
+
+
+theorem rotL_get_eq (xs : List α) (k i : Nat)
+    (hne : xs.length ≠ 0) (hi : i < xs.length) :
+    (rotL xs k)[i]'(by rw [length_rotL]; exact hi) =
+      xs[(i + k % xs.length) % xs.length]'(Nat.mod_lt _ (Nat.pos_of_ne_zero hne)) := by
+  unfold rotL
+  simp only [hne, ↓reduceIte]
+  have hk : k % xs.length < xs.length := Nat.mod_lt _ (Nat.pos_of_ne_zero hne)
+  have hdrop : (xs.drop (k % xs.length)).length = xs.length - k % xs.length := by
+    rw [List.length_drop]
+  by_cases hi' : i < xs.length - k % xs.length
+  · have hidx : i < (xs.drop (k % xs.length)).length := by rw [hdrop]; exact hi'
+    rw [List.getElem_append_left hidx, List.getElem_drop]
+    have hlt : i + k % xs.length < xs.length := by omega
+    simp [Nat.mod_eq_of_lt hlt, Nat.add_comm]
+  · have hge : (xs.drop (k % xs.length)).length ≤ i := by rw [hdrop]; omega
+    rw [List.getElem_append_right hge]
+    simp only [hdrop]
+    rw [List.getElem_take]
+    have hmod : (i + k % xs.length) % xs.length = i - (xs.length - k % xs.length) := by
+      have : i + k % xs.length = xs.length + (i - (xs.length - k % xs.length)) := by omega
+      rw [this, Nat.add_mod_left]
+      exact Nat.mod_eq_of_lt (by omega)
+    simp [hmod]
+
+theorem getElem_rotR (xs : List α) (k i : Nat)
+    (hne : xs.length ≠ 0) (hi : i < xs.length) :
+    (rotR xs k)[i]'(by rw [length_rotR]; exact hi) =
+      xs[(i + (xs.length - k % xs.length)) % xs.length]'(Nat.mod_lt _ (Nat.pos_of_ne_zero hne)) := by
+  unfold rotR
+  simp only [hne, ↓reduceIte]
+  have hk : k % xs.length < xs.length := Nat.mod_lt _ (Nat.pos_of_ne_zero hne)
+  have hdrop : (xs.drop (xs.length - k % xs.length)).length = k % xs.length := by
+    rw [List.length_drop]
+    omega
+  by_cases hi' : i < k % xs.length
+  · have hidx : i < (xs.drop (xs.length - k % xs.length)).length := by rw [hdrop]; exact hi'
+    rw [List.getElem_append_left hidx, List.getElem_drop]
+    have hlt : i + (xs.length - k % xs.length) < xs.length := by omega
+    have hadd : xs.length - k % xs.length + i = i + (xs.length - k % xs.length) :=
+      Nat.add_comm _ _
+    simp [Nat.mod_eq_of_lt hlt, hadd]
+  · have hge : (xs.drop (xs.length - k % xs.length)).length ≤ i := by rw [hdrop]; omega
+    rw [List.getElem_append_right hge]
+    simp only [hdrop]
+    rw [List.getElem_take]
+    have hmod : (i + (xs.length - k % xs.length)) % xs.length = i - k % xs.length := by
+      have : i + (xs.length - k % xs.length) = xs.length + (i - k % xs.length) := by omega
+      rw [this, Nat.add_mod_left]
+      exact Nat.mod_eq_of_lt (by omega)
+    simp [hmod]
+
+theorem rotL_congr_mod (xs : List α) {n n' : Nat} (h : n % xs.length = n' % xs.length) :
+    rotL xs n = rotL xs n' := by
+  unfold rotL; rw [h]
+
+theorem rotR_congr_mod (xs : List α) {n n' : Nat} (h : n % xs.length = n' % xs.length) :
+    rotR xs n = rotR xs n' := by
+  unfold rotR; rw [h]
 
 end DoubleDeal

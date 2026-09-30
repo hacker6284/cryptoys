@@ -5,3 +5,6 @@ demos/**/SPEC.md
 
 # Local checkout of hacker6284/sudocode, matching the Pages workflow.
 .sudocode/
+
+# Python bytecode (attack scripts, vector tools)
+__pycache__/

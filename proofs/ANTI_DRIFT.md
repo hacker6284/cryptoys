@@ -43,7 +43,7 @@ well-formed domain. See [`LINK2.md`](LINK2.md). Do not edit
 From the repo root:
 
 ```sh
-proofs/emit_lean.sh              # write all four Generated/ trees
+proofs/emit_lean.sh              # write every Generated/ tree (incl. frozen versions)
 proofs/emit_lean.sh --check      # CI: fail if committed Lean is stale
 proofs/emit_lean.sh scramble     # one algorithm
 proofs/emit_lean.sh cbc-hmac     # alias: doubledeal-cbc-hmac
@@ -62,11 +62,11 @@ cd proofs/scramble/lean/Generated && lake build && ./.lake/build/bin/scramble_te
 cd proofs/doubledeal-cbc-hmac/lean/Generated && lake build && ./.lake/build/bin/doubledeal_cbc_hmac_test
 ```
 
-Expected TAP: DoubleDeal **10/10** (two test-only kind-scan `while`s
-stripped under the terminates gate; JS still runs all twelve),
-MegaDreifach **11/11**, Scramble **15/15**, DoubleDeal-CBC-HMAC
-**11/11** (HMAC / KDF / pad / MAC-input tests; byte-domain CBC
-that ranks a deck stays in JS because `52!` is not a sudo `int`).
+Expected TAP: DoubleDeal **all pass** (every sudo `test` except the two
+test-only kind-scan `while`s, which the terminates gate strips; JS runs them all).
+The other counts: [MegaDreifach](megadreifach/README.md#three-layers-be-honest),
+[Scramble](scramble/README.md#generated-lean),
+[DoubleDeal-CBC-HMAC](doubledeal-cbc-hmac/README.md#generated-lean).
 
 ## Pin (sudocode main)
 
@@ -74,7 +74,7 @@ that ranks a deck stays in JS because `52!` is not a sudo `int`).
 | --- | --- |
 | Repo | [hacker6284/sudocode](https://github.com/hacker6284/sudocode) |
 | Branch | `main` |
-| Commit | `ff63b629406bd5d3ab9e9434ea2d4695a2921d8a` (file: [`SUDOCODE_LEAN_PIN`](SUDOCODE_LEAN_PIN)) — squash merge of [PR #8](https://github.com/hacker6284/sudocode/pull/8) |
+| Commit | `ff63b629406bd5d3ab9e9434ea2d4695a2921d8a` (file: [`SUDOCODE_PIN`](SUDOCODE_PIN), also used for the JS vector builds) — squash merge of [PR #8](https://github.com/hacker6284/sudocode/pull/8) |
 | Prior pin | [PR #5](https://github.com/hacker6284/sudocode/pull/5) `4286093e791e85e2be0b72b524319ba64bda002b` (first `backends/lean/` on main) |
 
 This pin is **durable on sudocode main**. Lean is an `ALL_BACKENDS`
@@ -122,17 +122,17 @@ total-fragment / terminating-subset emitter.
 
 | Item | Status |
 | --- | --- |
-| sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. |
-| Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 **CLOSED** on every well-formed list (`passkey_refines`, `passkey_eq_twin_loop`, `passkey_step_eq`). See [`LINK2.md`](LINK2.md). |
-| Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | Link 2 **CLOSED** on every well-formed list (`passkey_inv_refines`, `passkey_inv_eq_twin_loop`, `passkey_inv_step_eq`). Algebraic correctness only — not bit-security. |
+| sudo text = generated Lean (deep embedding / equivalence) | OPEN. TAP agreement is evidence, not a theorem. Feasibility and plan: [`LINK1.md`](LINK1.md). |
+| Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 **CLOSED** on every well-formed list (`passkey_refines`, `passkey_eq_twin_loop`; v12: every card `FitsLen` too). See [`LINK2.md`](LINK2.md). |
+| Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | Link 2 **CLOSED** on every well-formed list (`passkey_inv_refines`, `passkey_inv_eq_twin_loop`; v12: every card `FitsLen` too). Algebraic correctness only — not bit-security. |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | Link 2 **CLOSED** on `CardBound` messages (`encrypt_refines`). Not bit-security. |
 | `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All four publics ready (bounded `for`). |
-| PassKey S3/S4 *about* `Except Trap` emitted defs | Link 2 **CLOSED** on `FitsLen` / `WellFormed` (`passkey_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, and the inverse / `WellFormed` forms). Other stones about emitted defs stay open. Not bit-security. |
+| PassKey S3/S4 *about* `Except Trap` emitted defs | Link 2 **CLOSED** on `FitsLen` (length and cards) / `WellFormed` (`passkey_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, and the inverse / `WellFormed` forms). Other stones about emitted defs stay open. Not bit-security. |
 | Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |
 | DoubleDeal-CBC-HMAC generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach via emit-ir `-I`. No Link 2. No AEAD security theorem. |
 | sudo↔Lean / algebraic≃Generated for CBC-HMAC (Link 2) | OPEN. Not started. |
 | AEAD security (EtM reduction, HMAC-MD PRF, CBC confidentiality) | OPEN. Not claimed. SCM stays later. |
-| MegaDreifach M13 (proof-package digest = KAT hex) | Still OPEN in the algebraic package (no handwritten `Hash`). Research hexes were refreshed to current sudo; Python and emitted Lean agree. |
+| MegaDreifach M13 (proof-package digest = KAT hex) | DONE for `Generated.v_Hash` (not a handwritten `Hash`): `proofs/megadreifach/lean/MegaDreifachHeavy/Kat.lean`, kernel `decide!` through `v_Hash_refines` (Link 2, `PadWf`). For v2: the 8 hexes of `primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json`, Generated from `primitives/hash/megadreifach/megadreifach.sudo`. The v1 KAT theorems were not kept (the frozen v1 package, `proofs/deprecated/megadreifach-v1/`, has no heavy library); no Lean checks v1's KAT hexes any more (the v1 sudo tests do not assert them; the Python `proofs/megadreifach/security/md.py` does). |
 
 ## Proofs that remain handwritten
 
@@ -141,7 +141,13 @@ Sudo does not emit theorems. These stay as **proof infrastructure**:
 - DoubleDeal S1 layer bijections, S2 abstract / PassKey-schedule
   round-trip on the Fin skeleton, S3/S4 PassKey inverse, S5/S6
   factoradic / CTR prefix, S11 Compose KP, S12 peel.
-- MegaDreifach M1–M8/M10–M12 packing, group law, pad, DM algebra.
+- MegaDreifach M1–M12 packing, group law, pad, DM algebra;
+  the v2 one-card nets (M8) in `G2Nets.lean`; M9 for 2-card windows
+  (`G2Cov.lean`, `G2CovRead.lean`, `M9Read.lean`, `M9Canon.lean`,
+  `M9Dec0`–`M9Dec5`, `M9.lean`; `M9Cert.lean` is untrusted certificate
+  data generated by `proofs/megadreifach/m9/m9_cert.py`, not the
+  algorithm); the M4 φ round trip in `Link2/VHashDeck.lean` (that
+  file also holds the Link 2 `v_HashDeck` refinement).
 
 They are tagged in each file: **proof-only, not the algorithm**.
 Edit `.sudo` and regenerate `Generated/` to change `encrypt` or `Hash`.

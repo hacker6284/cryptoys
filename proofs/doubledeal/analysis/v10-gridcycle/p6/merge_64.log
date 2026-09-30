@@ -1,0 +1,5 @@
+rule 64, 2000 decks, swaps i<40, j<50: fraction of later steps (k>j) placed on the same seat in both walks
+  gap 1     0.0863
+  gap 2-4   0.0543
+  gap 5-16  0.0351
+  gap >16   0.0265

@@ -158,7 +158,8 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         camera.position.lerpVectors(from.position, pose.position, moveU);
         camera.fov = from.fov + (pose.fov - from.fov) * moveU;
         const roomU = easeOutCubic(smoothstep(0, 0.5, t));
-        const lookU = easeInOutCubic(smoothstep(0.16, 0.58, t)) * 0.16;
+        const lookU = easeInOutCubic(smoothstep(0.16, 0.58, t)) * 0.16
+            * (1 - easeInOutCubic(smoothstep(settleAt ?? 0.78, 1, t)));
         if (trackPos) {
             chaseLook.copy(from.target).lerp(pose.target, roomU);
             chaseLook.lerp(trackPos, lookU);

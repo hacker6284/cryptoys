@@ -1,0 +1,29 @@
+md.py vs v1 KATs: 8/8 digests, IV digest and |G| OK
+recorded pair:
+  M  = e132ebb03ed19b3949820c68d22d8b5004867c3c0ea79f44269e19fb
+  M' = e132ebd9724a3c582fca2e7f51a1a34dd82b8afcfcf71344269e19fb
+  Hash(M)  = 0084d6d1e0a4ddb231deb23ac0f4ead7b497eed17f997bfcefa7c34e82
+  Hash(M') = 0084d6d1e0a4ddb231deb23ac0f4ead7b497eed17f997bfcefa7c34e82
+  deals differ by swapping cards 5 and 7 (Qs <-> Qd); grips (Up, Front) after cards 5..7: [(1, 0), (3, 9), (4, 3)] vs [(1, 0), (3, 9), (4, 3)]; state after card 7 equal: True; first-block dm equal: True
+  pair: COLLISION VERIFIED (distinct messages, equal Hash)
+suit-blind fraction (3000 uniform random (state, grip, rank), seed 3): P(all 4 suits give the same grip) = 0.715, mean distinct grips over the 4 suits 1.86
+  per rank A:1.00 2:0.00 3:0.00 4:1.00 5:1.00 6:1.00 7:1.00 8:0.16 9:1.00 T:1.00 J:1.00 Q:1.00 K:0.00
+recorded pair under rule pre-noon: Hash(M) != Hash(M') (02f78481f466952e547138a502dde271acd98b8b605fe85cde96d19af2 vs 02bbf9646a21770ca000185feaf8e22848aaacf24f5a79b00b9b28249d)
+suit-blind fraction, rule pre-noon (3000 uniform random (state, grip, rank), seed 3): P(all 4 suits give the same grip) = 0.000, mean distinct grips over the 4 suits 4.00
+  per rank A:0.00 2:0.00 3:0.00 4:0.00 5:0.00 6:0.00 7:0.00 8:0.00 9:0.00 T:0.00 J:0.00 Q:0.00 K:0.00
+swap search: 12000 random one-block messages (from IV-COOK12), seed 99, distances 1..4
+  distance 1: 0/35820 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/9,710)
+  distance 2: 15/35175 same-rank swaps preserve dm; rate 1/2,345 (95% CI 1/1,422 to 1/4,190)
+  distance 3: 1/34597 same-rank swaps preserve dm; rate 1/34,597 (95% CI 1/6,209 to 1/1,366,509)
+  distance 4: 1/33898 same-rank swaps preserve dm; rate 1/33,898 (95% CI 1/6,084 to 1/1,338,899)
+  total 17/139490 (all hits re-verified as distinct-message Hash collisions: yes); 17/12000 blocks have a hit (per-block rate 1/706 (95% CI 1/441 to 1/1,212))
+  compressions: 151490, per collision 8,911 = 2^13.1
+  hit: distance 2, cards 3,5 of the last block (9s <-> 9d): M = 61ccd86e3b3f143e88d3f79c3f361f3b84ee5d83b72c867b4c5c9a92  M' = 61ce52f71f8760223f8d264f39d28b440165ea113126467b4c5c9a92  Hash = 02b13bbe90f7df81d2f9d5afa7386b67f64b49ddbc28db44532b44c8d2
+  hit: distance 2, cards 49,51 of the last block (7d <-> 7c): M = decc84a505dc160c376902f634918d1fd54d217692a729c42cd8a0f9  M' = decc84a505dc160c376902f634918d1fd54d217692a729c42cd8a0f3  Hash = 02eafe88c053ab4d03e1ef2898faa433b3cfa603b0a6f75ac649e2d333
+  hit: distance 2, cards 3,5 of the last block (Js <-> Jh): M = 48712635369594c97ed4198221d56b56db251ed2547e9dfc1f1b2ffd  M' = 486fabac524d48e5c81aeacf2738ff4e5ead9244da84ddfc1f1b2ffd  Hash = 01bbdc14b5dad77ba8062968236414b05f001fb8c2b839d0418c2db385
+swap search: 12000 random one-block messages (from IV-COOK12), seed 99, distances 1..4; rule pre-noon
+  distance 1: 0/35820 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/9,710)
+  distance 2: 0/35175 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/9,535)
+  distance 3: 0/34597 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/9,379)
+  distance 4: 0/33898 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/9,189)
+  total 0/139490 (all hits re-verified as distinct-message Hash collisions: yes); 0/12000 blocks have a hit (per-block rate 0 (95% CI 0 to 1/3,253))

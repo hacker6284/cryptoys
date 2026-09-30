@@ -1,0 +1,2 @@
+$ python3 exp_local_collisions.py
+k=3 states=2000 orderings=12000 collisions=0 []

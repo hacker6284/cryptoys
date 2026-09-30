@@ -1,0 +1,9 @@
+$ python3 exp_square_fraction.py
+n=4: |H|=96  fraction of squares-in-H_n = 0.3542  (B_n-square criterion: 0.6667); mean #roots on squares = 2.8
+n=5: |H|=960  fraction of squares-in-H_n = 0.5000  (B_n-square criterion: 0.7083); mean #roots on squares = 2.0
+n=6: |H|=11520  fraction of squares-in-H_n = 0.3034  (B_n-square criterion: 0.4319); mean #roots on squares = 3.3
+n=7: |H|=161280  fraction of squares-in-H_n = 0.3986  (B_n-square criterion: 0.5181); mean #roots on squares = 2.5
+n=8: |H|=2580480  fraction of squares-in-H_n = 0.2404  (B_n-square criterion: 0.3672); mean #roots on squares = 4.2
+n=12: Monte-Carlo B_n-square fraction ~ 0.2632 (2^-1.93), N=200000
+n=20: Monte-Carlo B_n-square fraction ~ 0.1747 (2^-2.52), N=200000
+n=30: Monte-Carlo B_n-square fraction ~ 0.1260 (2^-2.99), N=200000

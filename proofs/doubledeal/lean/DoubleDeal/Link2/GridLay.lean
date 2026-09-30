@@ -366,7 +366,7 @@ theorem layCell_succ (d : List Nat) (k : Nat) (hk : k < d.length) (r c : Nat) :
     · have hge : ¬ r + 4 * c < k + 1 := by omega
       simp [heq, hlt, hge]
 
-theorem layPartial_succ (d : List Nat) (k : Nat) (hk : k < d.length) (hk52 : k < 52) :
+theorem layPartial_succ (d : List Nat) (k : Nat) (hk : k < d.length) (_hk52 : k < 52) :
     layPartial d (k + 1) =
       setRowI (layPartial d k) ⟨k % 4, Nat.mod_lt _ (by decide)⟩
         (fun c => if c.val = k / 4 then Int.ofNat (d[k]'hk) else layPartial d k ⟨k % 4, Nat.mod_lt _ (by decide)⟩ c) := by

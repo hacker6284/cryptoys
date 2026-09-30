@@ -1,0 +1,9 @@
+# python3 gen_attack.py  (defaults: 6 keys, 4000 pairs/key; deterministic seeds)
+DoubleDeal v8, keys=6, pairs/key=4000, random-perm baseline mean-agree~1.0, exact~0
+  suit_perm_swap   exact=     0/24000 (0.00e+00)  mean_agree= 1.013/52
+  same_rank_swap   exact=     6/24000 (2.50e-04)  mean_agree= 1.013/52
+  id_plus13        exact=     0/24000 (0.00e+00)  mean_agree= 1.008/52
+  rank_shift       exact=     0/24000 (0.00e+00)  mean_agree= 1.008/52
+  diff_rank_swap   exact=     0/24000 (0.00e+00)  mean_agree= 1.008/52
+  id_plus4         exact=     0/24000 (0.00e+00)  mean_agree= 1.002/52
+  same_suit_swap   exact=     0/24000 (0.00e+00)  mean_agree= 0.995/52

@@ -7,9 +7,22 @@ defaultTargets = ["megadreifach"]
 name = "sudo"
 path = "Generated"
 
+# `#audit_all` for Axioms.lean / AxiomsHeavy.lean: the shared core-only audit
+# package (also required by proofs/doubledeal/security). Gate:
+# proofs/doubledeal/check_axioms.py megadreifach[-heavy].
+[[require]]
+name = "audit"
+path = "../../audit"
+
 [[lean_lib]]
 name = "MegaDreifach"
 
 [[lean_exe]]
 name = "megadreifach"
 root = "Main"
+
+# Heavy kernel witnesses (the 8 hash KATs, ~12 min of `decide!`). Not a default
+# target: built and audited by the separate `megadreifach-heavy` job
+# (proofs-heavy.yml).
+[[lean_lib]]
+name = "MegaDreifachHeavy"

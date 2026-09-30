@@ -107,7 +107,7 @@ const nodes = {
     "message-file-progress": el("div", { id: "message-file-progress" }),
     "message-file-progress-bar": el("div", { id: "message-file-progress-bar" }),
     play: el("button", { id: "play" }),
-    "step-through": el("button", { id: "step-through" }),
+    "skip-end": el("button", { id: "skip-end" }),
     step: el("button", { id: "step" }),
     reset: el("button", { id: "reset" }),
     "digest-btn": el("button", { id: "digest-btn" }),
@@ -152,10 +152,11 @@ const root = {
 };
 
 const algs = [];
+const jumps = [];
 const view = {
     setAlg(alg) { algs.push(String(alg || "")); },
     async playLeaves() { return { index: 0, total: 1 }; },
-    async jumpToLeaf() {},
+    async jumpToLeaf(index) { jumps.push(index); },
     setTempo() {},
     pauseTimeline() {},
     resetTimeline() {},
@@ -218,6 +219,32 @@ session.recompute();
 assert.equal(algs.length, 1, "typing after teach updates Digest only");
 session.enterTeach();
 assert.equal(algs.length, 2, "Play / Step after a new Message calls setAlg");
+
+function click(id) {
+    for (const fn of nodes[id].listeners.click || []) fn();
+}
+
+click("skip-end");
+assert.equal(algs.length, 2, "skip to end does not rebuild a current timeline");
+assert.equal(nodes.teach.hidden, true, "skip finishes in the played state, not the teach walk");
+assert.match(nodes.status.textContent, /Seat white up/, "skip shows the seated digest pose");
+const finalLeaf = algs.at(-1).split(/\s+/).filter(Boolean).length - 1;
+assert.equal(jumps.at(-1), finalLeaf, "skip seeks the final leaf");
+click("skip-end");
+assert.equal(jumps.at(-1), finalLeaf, "a second skip stays on the final leaf");
+assert.equal(nodes.play.classList.contains("is-playing"), false, "skip leaves play idle");
+
+let releasePlay;
+view.playLeaves = () => new Promise((resolve) => {
+    releasePlay = resolve;
+});
+session.reset();
+click("play");
+click("skip-end");
+releasePlay({ index: 0, total: 1 });
+await Promise.resolve();
+assert.equal(jumps.at(-1), finalLeaf, "skip during play keeps the final leaf");
+assert.match(nodes.status.textContent, /Seat white up/, "skip during play keeps the final cursor");
 
 const algsAfterType = algs.length;
 const modest = new File([new Uint8Array([104, 101, 108, 108, 111])], "hello.bin");

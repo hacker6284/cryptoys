@@ -1,0 +1,20 @@
+name = "MegaDreifachV1"
+version = "0.1.0"
+defaultTargets = ["MegaDreifachV1"]
+
+# Frozen, deprecated MegaDreifach v1. The v1 grip-rule weakness proofs
+# (CornerDriven, FreeStart, SwapCollision) and the import closure they need,
+# copied from proofs/megadreifach/lean at 75f4d64 with the namespace renamed
+# MegaDreifach -> MegaDreifachV1. Path-requires the Lean emitted from the frozen
+# v1 sudo (do not edit Generated/). See ../README.md.
+[[require]]
+name = "sudo"
+path = "Generated"
+
+# `#audit_all` for Axioms.lean (gate: proofs/doubledeal/check_axioms.py megadreifach-v1-deprecated).
+[[require]]
+name = "audit"
+path = "../../../audit"
+
+[[lean_lib]]
+name = "MegaDreifachV1"

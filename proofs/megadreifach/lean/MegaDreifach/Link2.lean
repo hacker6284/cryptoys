@@ -32,6 +32,21 @@ import MegaDreifach.Link2.PeelCube
 import MegaDreifach.Link2.PeelZeroThree
 import MegaDreifach.Link2.PeelBelow
 import MegaDreifach.Link2.PeelOne
+import MegaDreifach.Link2.PeelOneThree
+import MegaDreifach.Link2.PeelWide
+import MegaDreifach.Link2.NatLimbs
+import MegaDreifach.Link2.MulSmall
+import MegaDreifach.Link2.DivWide
+import MegaDreifach.Link2.DivInd
+import MegaDreifach.Link2.MulWide
+import MegaDreifach.Link2.MulLeft
+import MegaDreifach.Link2.Fact51
+import MegaDreifach.Link2.MagSub
+import MegaDreifach.Link2.MagAdd
+import MegaDreifach.Link2.FromBePad
+import MegaDreifach.Link2.Peel51
+import MegaDreifach.Link2.PhiChunk
+import MegaDreifach.Link2.PhiInv
 
 namespace MegaDreifach.Link2
 
@@ -167,15 +182,88 @@ namespace MegaDreifach.Link2
   `mag_sub` may borrow. Not `d ≥ 20`. Not a digit `q ≥ 2`. Not `27!`.
   Not `51!`. Not `phi_chunk`. Not `phi_inv`.
 
-  OPEN: full `v_Hash` refinement. `phi_chunk` / `phi_inv` are still open
-  (a positive chunk still peels `d!` up to `51!`, and the pad block is 28
-  bytes; zero peel and the strict-below peel reach `d ≤ 26`, peeling `d!`
-  itself yields digit `1` through `d ≤ 26`, digit `1` on `[d!, 2·d!)` reaches
-  `d ≤ 19`, and `big_factorial` reaches `26!`, not `27!` and not 51;
-  `big_from_be` reaches length `≤ 7`, not the 28-byte pad block). A digit
-  `q ≥ 2` on a multi-limb rank is still open. Positive `range_list`
-  (`0 < n`, `FitsLen`, including 52) is already `range_list_refines` in
-  `EvenRank.lean`. A positive corner or edge rank is outside this limb fragment.
+  CLOSED: `peel_leading_one_three`, `peel_leading_one_three_digit`,
+  `mag_sub_three_le`. Domain `d! ≤ n < 2·d!` and `d ≤ 26`. The factoradic
+  digit is `1` and the remainder is `n - d!`, which may be positive.
+  For `20 ≤ d` the rank and `d!` are three limbs (`2·26! < 10^27`);
+  `mag_sub` may borrow. `d ≤ 19` reuses the two-limb theorem.
+
+  CLOSED: `peel_leading_cap`, `peel_leading_cube`, `peel_leading_sq`,
+  `big_mul_small_three`, `big_mul_small_two`. For `d ≤ 26` and
+  `n < limbCap d` (`10^9` if `d ≤ 12`, `10^18` if `d ≤ 19`, `10^27`
+  otherwise), `peel_leading` returns `(n % d!, n / d!)`. That is every
+  factoradic digit, including `q ≥ 2`. The emitted multiply is the digit
+  times `d!`. Not `d ≥ 27`. Not `27!`. Not `51!`. Not `phi_chunk`.
+  Not `phi_inv`.
+
+  CLOSED: `big_divmod_small_refines`, `big_divmod_nat`.
+  Any canonical limb string, divided by a positive one-limb divisor,
+  yields `(natLimbs (value / d), value % d)`. The countdown is
+  `divGenStep_at` stacked by `chain_down`. `rem * 10^9 + digit` stays
+  below `10^18`. Not `51!`. Not `phi_chunk`. Not `v_Hash`.
+
+  CLOSED: `big_mul_wide_refines`, `big_mul_nat`. A canonical digit string
+  times a one-limb factor is `natLimbs` of the product. The right factor is
+  the small one (`big_factorial`, Horner `* 256`). Each cell
+  `digit * q + carry` stays below `10^18`.
+
+  CLOSED: `big_mul_left_refines`, `big_mul_left_nat`. The opposite
+  orientation: one limb on the left, a canonical digit string on the right
+  (`peel_leading`'s digit times `d!`). The product is `natLimbs (q * value)`.
+  Not `mag_sub`. Not `peel_leading` for `d > 26`. Not `v_Hash`.
+
+  CLOSED: `big_factorial_51`. Domain `n ≤ 51`. `51! < 10^72`, at most eight
+  base-`10^9` limbs. Each step is `big_mul_nat`. Not `phi_chunk`. Not
+  `phi_inv`. Not `v_Hash`.
+
+  CLOSED: `mag_sub_nat`. Canonical limb strings with the subtrahend at most
+  the minuend. The trimmed digits are `natLimbs (n - m)` at any width.
+  The final borrow is `0`. Not `phi_chunk`. Not `v_Hash`.
+
+  CLOSED: `mag_add_nat`, `big_add_nat`. Canonical limb strings at any width.
+  The trimmed digits are `natLimbs (n + m)`; `FitsLen` of the longer string
+  plus one covers the final carry limb. Not `phi_chunk`. Not `v_Hash`.
+
+  CLOSED: `big_from_be_pad`, `big_from_be_pad_array`, `fromBE_pad_lt_limb8`.
+  Domain `BePadWf` / `WellFormedBePad`: length `≤ 28`, every byte `≤ 255`.
+  `256^28 < 10^72 = limbBase^8`, so every Horner prefix is at most eight
+  limbs and the value is `bigOf (natLimbs (fromBE bs))`. Each step
+  `acc * 256 + b` is `big_mul_nat` then `big_add_nat`. This is the 28-byte
+  pad block. Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
+
+  CLOSED: `peel_leading_51`. Domain `d ≤ 51` and `n / d! < 10^9`. The pair
+  is `(n % d!, n / d!)`. The digit is one limb, so `limb_to_small` and
+  `big_mul_left` apply, and `mag_sub_nat` subtracts the product. `n` stays
+  below `10^81`. Not a two-limb digit. Not `phi_chunk`. Not `phi_inv`.
+  Not `v_Hash`.
+
+  CLOSED: `phi_chunk_refines`, `phi_chunk_refines_array`.
+  Domain `PhiChunkWf` / `WellFormedPhiChunk`: length 28, every byte `≤ 255`.
+  Generated `phi_chunk` equals `phiUnrank (fromBE bs)`, walking the outer
+  `chain_loop` from `0` to `51` at `phiState rank`. The inner erase step is
+  `phiErase_breaks`. Not `phi_inv`. Not `v_Hash`.
+
+  CLOSED: `phi_inv_refines`, `phi_inv_refines_array`.
+  Domain `PhiInvWf` / `WellFormedPhiInv`: length 52, a permutation of `0..51`
+  (`Nodup`, ids `< 52`), and `lehmerRank deal < 2^224` (`phiMax`). Generated
+  `phi_inv` walks the outer `chain_loop` from `0` to `51`, folding the Lehmer
+  digits `n := n * (52 - i) + idx` (`big_from_int` / `big_mul` / `big_add`),
+  erases `idx`, asserts `n < 2^224` (`mag_cmp` on canonical limbs), and emits
+  `big_to_be n 28`. The result is `embed (toBE 28 (lehmerRank deal))`. The
+  multi-limb `big_to_be` ≃ `toBE` bridge is `ToBePad.big_to_be_pad`.
+  Not `v_HashDeck`.
+
+  CLOSED: `v_Hash_refines` (`Link2/VHash.lean`) on `PadWf`: Generated
+  `v_Hash (embed msg) = .ok (embed (vhashAlg msg))`, the MD fold of
+  `Em.dmStep h (phiUnrank (fromBE blk))` from `Em.ivCook12`, digest
+  `positionToBytes`. Also `position_to_bytes_refines_gen` (every `InjPos`)
+  and `even_perm_rank_big_refines_gen` (lengths 20 and 30, multi-limb).
+  CLOSED: all 8 KATs as `v_Hash` theorems (`MegaDreifachHeavy/Kat.lean`, kernel
+  `decide!`; non-default lean_lib `MegaDreifachHeavy`, about 12 min of kernel time).
+  `v_Hash` never calls `phi_inv`.
+  OPEN: `v_HashDeck`.
+  Positive `range_list` (`0 < n`, `FitsLen`, including 52) is already
+  `range_list_refines` in `EvenRank.lean`.
 -/
 
 end MegaDreifach.Link2

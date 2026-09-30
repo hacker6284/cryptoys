@@ -12,38 +12,9 @@
   Not `phi_chunk`. Not `phi_inv`. Not `v_Hash`.
 -/
 import MegaDreifach.Link2.Factorial
+import MegaDreifach.Link2.Helpers
 
 namespace MegaDreifach.Link2
-
-private theorem pure_eq_ok {α} (a : α) :
-    (pure a : Except SudoRt.Trap α) = Except.ok a := rfl
-
-private theorem toPure_eq_ok {α} (a : α) :
-    (Applicative.toPure.1 a : Except SudoRt.Trap α) = Except.ok a := rfl
-
-private theorem match_ok_brk {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.brk s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onBrk s := by
-  rfl
-
-private theorem match_ok_cont {σ ρ α} (s : σ)
-    (onRet : ρ → Except SudoRt.Trap α)
-    (onBrk onCont : σ → Except SudoRt.Trap α) :
-    (match Except.ok (SudoRt.Flow.cont s) with
-      | Except.error e => (Except.error e : Except SudoRt.Trap α)
-      | Except.ok (SudoRt.Flow.ret r) => onRet r
-      | Except.ok (SudoRt.Flow.brk s') => onBrk s'
-      | Except.ok (SudoRt.Flow.cont s') => onCont s') = onCont s := by
-  rfl
-
-private theorem bind_pure_flow {σ ρ β} (fl : SudoRt.Flow σ ρ)
-    (f : SudoRt.Flow σ ρ → Except SudoRt.Trap β) :
-    (pure fl >>= f) = f fl := rfl
 
 private theorem fits13 : FitsLen 13 := by
   unfold FitsLen i64MaxNat
@@ -60,44 +31,8 @@ private theorem fits_limbBase : FitsLen limbBase := by
 private theorem div_lt_limb {n k : Nat} (hn : n < limbBase) : n / k < limbBase :=
   Nat.lt_of_le_of_lt (Nat.div_le_self n k) hn
 
-private theorem factorial_le_succ (b : Nat) : factorial b ≤ factorial (b + 1) := by
-  have hmul : factorial b ≤ factorial b * (b + 1) :=
-    Nat.le_mul_of_pos_right (factorial b) (Nat.succ_pos b)
-  rw [factorial_succ, Nat.mul_comm]
-  exact hmul
-
-private theorem factorial_mono (a b : Nat) (h : a ≤ b) : factorial a ≤ factorial b := by
-  induction b generalizing a with
-  | zero =>
-    have : a = 0 := Nat.eq_zero_of_le_zero h
-    subst this
-    exact Nat.le_refl _
-  | succ b ih =>
-    by_cases hle : a ≤ b
-    · exact Nat.le_trans (ih a hle) (factorial_le_succ b)
-    · have heq : a = b + 1 := by omega
-      subst heq
-      exact Nat.le_refl _
-
-private theorem factorial_12_lt_limb : factorial 12 < limbBase := by
-  unfold factorial limbBase
-  decide
-
 private theorem factorial_one_limb (n : Nat) (hn : n ≤ 12) : factorial n < limbBase :=
   Nat.lt_of_le_of_lt (factorial_mono n 12 hn) factorial_12_lt_limb
-
-private theorem factorial_pred_mul (i : Nat) (hi : 0 < i) :
-    factorial (i - 1) * i = factorial i := by
-  cases i with
-  | zero => cases hi
-  | succ k =>
-    have : (k + 1) - 1 = k := by omega
-    rw [this, factorial_succ, Nat.mul_comm]
-
-/-- `(n / (f-1)!) / f = n / f!`. -/
-private theorem div_fact_step (n f : Nat) (hf : 0 < f) :
-    (n / factorial (f - 1)) / f = n / factorial f := by
-  rw [Nat.div_div_eq_div_mul, factorial_pred_mul f hf]
 
 /-- `n - (n / m) * m = n % m`. -/
 private theorem sub_mul_mod (n m : Nat) : n - (n / m) * m = n % m := by
@@ -352,10 +287,6 @@ def magSubStep (a b : Array Int) (toV : Int) (σ : Int × (Int × Array Int)) :
             let i' ← SudoRt.addI i (1 : Int)
             pure (SudoRt.Flow.cont (ρ := Array Int) (i', fs))
 
-private theorem subI_one_one : SudoRt.subI (1 : Int) (1 : Int) = .ok (0 : Int) := by
-  erw [subI_ofNat_one 1 (by decide) FitsLen.one]
-  rfl
-
 private theorem len_embed_one (x : Nat) :
     SudoRt.listLen (embed [x]) = (1 : Int) := by
   rw [listLen_embed]; rfl
@@ -460,12 +391,6 @@ private theorem mag_sub_limb (x y : Nat) (hx : x < limbBase) (hle : y ≤ x) :
       simpa [hdrop] using h
 
 /-! ## `peel_leading` -/
-
-private theorem peelDivStep_gt (toV f : Int) (q : Megadreifach.BigInt) (h : f > toV) :
-    peelDivStep toV (f, q) = .ok (SudoRt.Flow.brk (f, q)) := by
-  unfold peelDivStep
-  rw [if_pos h]
-  rfl
 
 private theorem peelDivStep_limb (n d f : Nat) (hlo : 2 ≤ f) (hhi : f ≤ d)
     (hd : d ≤ 12) (hn : n < limbBase) :

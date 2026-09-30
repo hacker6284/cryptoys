@@ -1,9 +1,11 @@
 /-
-  M3 — Digest rank packing (not a full bijection theorem yet).
+  M3 — Digest rank packing. Digest injectivity is proved; surjectivity / unrank is OPEN.
   Layout matches SPEC §6:
     even cp (20!/2) | co[0..18] (3^19) | even ep (30!/2) | eo[0..28] (2^29).
-  Proved at the packing layer. Open glue: evenRank injectivity on even S_n
-  (Lehmer prefix + even completion). Zero sorry. No native_decide.
+  Proved at the packing layer. The glue (`evenRank_inj` on even S_n plus the DM
+  parity invariant) is in `Security/` (`DigestInj.lean`, `Parity.lean`): digest
+  injectivity on reachable positions. Surjectivity / unrank is OPEN. Zero sorry.
+  No native_decide.
 -/
 import MegaDreifach.Position
 import MegaDreifach.Factoradic
@@ -333,7 +335,8 @@ theorem rankLists_mix_inj (d1 d2 : List Nat)
 
 /-- M3: if two legal-shaped list tuples pack to the same rank and each
     component is in range, the four packed integers agree. Combined with
-    `packOri3_inj` / `evenComplete_unique` this is the digest bijection. -/
+    `packOri3_inj` / `evenComplete_unique` this gives digest
+    injectivity (see `Security/DigestInj.lean`); surjectivity / unrank is OPEN. -/
 theorem rankLists_components_eq (cp1 co1 ep1 eo1 cp2 co2 ep2 eo2 : List Nat)
     (b0 : evenRank cp1 < evenPermCount 20) (b0' : evenRank cp2 < evenPermCount 20)
     (b1 : packOri3 co1 < 3 ^ 19) (b1' : packOri3 co2 < 3 ^ 19)

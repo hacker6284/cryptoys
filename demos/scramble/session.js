@@ -29,14 +29,15 @@ import {
     showFileChip,
 } from "../shared/file-hash.js";
 import {
-    bindTeachKeys,
-    colorName,
-    headingId,
-    nextGroup,
-    renderOutline,
-    setDisabled,
-    stampHeadingIds,
-} from "../shared/teach.js";
+    bindSegmented,
+    bindTransport,
+    openSpec,
+    renderTeachCard,
+    sessionScope,
+    syncJumpButtons,
+    teachPosition,
+} from "../shared/session.js";
+import { colorName, renderOutline } from "../shared/teach.js";
 
 const V2_TURNS = {
     0: "U R", 1: "U F", 2: "U L", 3: "U B",
@@ -50,32 +51,20 @@ export function createScrambleSession({
     specUrl,
     root = document,
     exposeTeach = false,
-    signal,
     puzzle = "3x3x3",
     swapPuzzle,
     hashFile: hashFileFn,
     fileWorkerUrl,
 } = {}) {
-    const abort = new AbortController();
-    if (signal) {
-        if (signal.aborted) abort.abort();
-        else signal.addEventListener("abort", () => abort.abort(), { once: true });
-    }
-    const listen = { signal: abort.signal };
-    const $ = (sel) => root.querySelector(sel);
-    const $$ = (sel) => root.querySelectorAll(sel);
+    const { abort, listen, $, $$ } = sessionScope(root);
 
     const input = $("#message");
     const status = $("#status");
     const digestEl = $("#digest");
     const errorEl = $("#error");
-    const specDialog = $("#spec");
-    const specBody = $("#spec-body");
     const speed = $("#speed");
     const teachEl = $("#teach");
     const tapeEl = $("#tape");
-    const teachCard = $("#teach-card");
-    const teachPos = $("#teach-pos");
     const outlineEl = $("#outline");
     const ioNote = $("#io-note");
     const fileInput = $("#message-file-input");
@@ -358,7 +347,7 @@ export function createScrambleSession({
                 kicker: pos,
                 title: "Solved start",
                 math: "White up, green front, red right.",
-                why: "Step through walks the padded tape one turn at a time.",
+                why: "Step walks the padded tape one turn at a time.",
                 spec: version === 2 ? "scramble_v2" : "scramble_v1",
             };
         }
@@ -412,31 +401,6 @@ export function createScrambleSession({
         };
     }
 
-    function renderCard(note) {
-        teachCard.replaceChildren();
-        const kicker = document.createElement("p");
-        kicker.className = "kicker";
-        kicker.textContent = note.kicker;
-        const title = document.createElement("h2");
-        title.textContent = note.title;
-        const math = document.createElement("p");
-        math.className = "math";
-        math.textContent = note.math;
-        const why = document.createElement("p");
-        why.className = "why";
-        why.textContent = note.why;
-        const spec = document.createElement("button");
-        spec.type = "button";
-        spec.className = "inline-link";
-        spec.textContent = `SPEC · ${note.spec}`;
-        spec.addEventListener("click", () => {
-            openSpec(note.spec).catch((err) => {
-                errorEl.textContent = err.message;
-            });
-        });
-        teachCard.append(kicker, title, math, why, spec);
-    }
-
     function applyHighlight(step) {
         if (!step) {
             view.clearHighlights();
@@ -453,19 +417,13 @@ export function createScrambleSession({
         const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
         const activeBlock = step && (step.kind === "move" || step.kind === "ruleB") ? step.block : -1;
         renderTape(activeBlock);
-        renderCard(annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1)));
-        teachPos.textContent = step
-            ? `${viewI + 1} / ${trace.length}`
-            : (viewI >= trace.length && trace.length ? `${trace.length} / ${trace.length}` : `0 / ${trace.length}`);
+        const note = annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1));
+        renderTeachCard($("#teach-card"), note, showSpec);
+        $("#teach-pos").textContent = teachPosition(viewI, trace.length);
         renderOutline(outlineEl, outlineSections(), step ? String(viewI) : "", (index) => {
             void jumpTo(index - 1, false);
         });
-        const atStart = cursor < 0;
-        const atEnd = cursor >= trace.length - 1;
-        $$("[data-jump]").forEach((button) => {
-            const jump = button.dataset.jump;
-            setDisabled(button, (jump === "back" || jump === "stage-back" || jump === "round-back") ? atStart : atEnd);
-        });
+        syncJumpButtons(root, cursor, trace.length);
     }
 
     function setTeaching(on) {
@@ -504,7 +462,7 @@ export function createScrambleSession({
         // input/recompute — that abort+restart loop leaves Digest empty
         // while the progress bar keeps moving.
         if (fileSource) return;
-        // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / teach.
+        // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / Skip to end.
         job += 1;
         markPlay(false);
         solving = false;
@@ -734,6 +692,14 @@ export function createScrambleSession({
         markPlay(false);
     }
 
+    function seek(index) {
+        job += 1;
+        busy = false;
+        markPlay(false);
+        cursor = index;
+        showPaused();
+    }
+
     async function jumpTo(index, animate) {
         if (trace.length === 0 || busy) return;
         const next = Math.max(-1, Math.min(trace.length - 1, index));
@@ -745,10 +711,7 @@ export function createScrambleSession({
             busy = false;
             return;
         }
-        job += 1;
-        markPlay(false);
-        cursor = next;
-        showPaused();
+        seek(next);
     }
 
     async function stepBy(dir) {
@@ -769,6 +732,16 @@ export function createScrambleSession({
         cursor = -1;
         markPlay(false);
         showPaused();
+    }
+
+    function skipToEnd() {
+        if (solving) return;
+        if (!trace.length) refreshDigest();
+        if (!trace.length) return;
+        ensureTimeline();
+        setTeaching(false);
+        seek(trace.length - 1);
+        settleView();
     }
 
     async function ensureSolver() {
@@ -842,77 +815,6 @@ export function createScrambleSession({
         }
     }
 
-    function renderMarkdown(markdown) {
-        const lines = markdown.replace(/\r\n/g, "\n").split("\n");
-        let html = "";
-        let i = 0;
-        const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-        const inline = (s) => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-        const hid = (title) => ` id="${headingId(title)}"`;
-        while (i < lines.length) {
-            const line = lines[i];
-            if (line.startsWith("```")) {
-                const buf = [];
-                i += 1;
-                while (i < lines.length && !lines[i].startsWith("```")) {
-                    buf.push(lines[i]);
-                    i += 1;
-                }
-                i += 1;
-                html += `<pre><code>${esc(buf.join("\n"))}</code></pre>`;
-                continue;
-            }
-            if (line.startsWith("|")) {
-                const rows = [];
-                while (i < lines.length && lines[i].startsWith("|")) {
-                    rows.push(lines[i]);
-                    i += 1;
-                }
-                const cells = (row) => row.split("|").slice(1, -1).map((c) => c.trim());
-                const head = cells(rows[0]);
-                const body = rows.slice(2).map(cells);
-                html += "<table><thead><tr>" + head.map((c) => `<th>${inline(c)}</th>`).join("") + "</tr></thead><tbody>";
-                for (const row of body) html += "<tr>" + row.map((c) => `<td>${inline(c)}</td>`).join("") + "</tr>";
-                html += "</tbody></table>";
-                continue;
-            }
-            if (line.startsWith("### ")) {
-                const title = line.slice(4);
-                html += `<h3${hid(title)}>${inline(title)}</h3>`;
-                i += 1;
-                continue;
-            }
-            if (line.startsWith("## ")) {
-                const title = line.slice(3);
-                html += `<h2${hid(title)}>${inline(title)}</h2>`;
-                i += 1;
-                continue;
-            }
-            if (line.startsWith("# ")) {
-                const title = line.slice(2);
-                html += `<h1${hid(title)}>${inline(title)}</h1>`;
-                i += 1;
-                continue;
-            }
-            if (line.startsWith("- ")) {
-                html += "<ul>";
-                while (i < lines.length && lines[i].startsWith("- ")) {
-                    html += `<li>${inline(lines[i].slice(2))}</li>`;
-                    i += 1;
-                }
-                html += "</ul>";
-                continue;
-            }
-            if (line.trim() === "") {
-                i += 1;
-                continue;
-            }
-            html += `<p>${inline(line)}</p>`;
-            i += 1;
-        }
-        return html;
-    }
-
     function versionSlice(markdown) {
         const start = markdown.indexOf("## scramble_v1");
         const mid = markdown.indexOf("## scramble_v2");
@@ -921,42 +823,29 @@ export function createScrambleSession({
         return common + section;
     }
 
-    async function openSpec(heading) {
-        const response = await fetch(specUrl);
-        if (!response.ok) throw new Error("The specification file is missing. Run tools/build.sh.");
-        const markdown = await response.text();
-        specBody.innerHTML = renderMarkdown(versionSlice(markdown));
-        stampHeadingIds(specBody);
-        specDialog.showModal();
-        if (heading) {
-            const target = specBody.querySelector("#" + CSS.escape(headingId(heading)));
-            if (target) target.scrollIntoView();
-        }
+    function showSpec(heading) {
+        openSpec(root, specUrl, heading, versionSlice).catch((err) => {
+            errorEl.textContent = err.message;
+        });
     }
 
-    $$("[data-version]").forEach((button) => {
-        button.addEventListener("click", () => {
-            version = Number(button.dataset.version);
-            $$("[data-version]").forEach((item) => item.classList.toggle("on", item === button));
-            const genLabel = $("#gen-label");
-            if (genLabel) genLabel.textContent = `Gen ${version}`;
-            if (fileSource) {
-                void hashSelectedFile();
-                return;
-            }
-            refreshDigest();
-        }, listen);
-    });
+    bindSegmented(root, "version", (value) => {
+        version = Number(value);
+        const genLabel = $("#gen-label");
+        if (genLabel) genLabel.textContent = `Gen ${version}`;
+        if (fileSource) {
+            void hashSelectedFile();
+            return;
+        }
+        refreshDigest();
+    }, listen);
 
-    $$("[data-encoding]").forEach((button) => {
-        button.addEventListener("click", () => {
-            encoding = button.dataset.encoding;
-            $$("[data-encoding]").forEach((item) => item.classList.toggle("on", item === button));
-            input.placeholder = encoding === "hex" ? "a7  or  0xA7" : "hello";
-            if (fileSource) return;
-            refreshDigest();
-        }, listen);
-    });
+    bindSegmented(root, "encoding", (value) => {
+        encoding = value;
+        input.placeholder = encoding === "hex" ? "a7  or  0xA7" : "hello";
+        if (fileSource) return;
+        refreshDigest();
+    }, listen);
 
     async function applyPuzzle(nextRaw) {
         const nextId = resolveProductPuzzleId(nextRaw);
@@ -995,13 +884,7 @@ export function createScrambleSession({
         button.addEventListener("click", () => void applyPuzzle(button.dataset.puzzle), listen);
     });
 
-    $("#play")?.addEventListener("click", () => void play(), listen);
-    $("#step-through")?.addEventListener("click", () => enterTeach(), listen);
-    $("#step")?.addEventListener("click", () => {
-        if (!teaching) enterTeach();
-        else void stepBy(1);
-    }, listen);
-    $("#reset")?.addEventListener("click", () => {
+    function reset() {
         job += 1;
         markPlay(false);
         solving = false;
@@ -1012,7 +895,8 @@ export function createScrambleSession({
         showFace(solved);
         jumpViewToCursor();
         showStatus(caption());
-    }, listen);
+    }
+
     speed?.addEventListener("input", () => {
         view.setTempo?.(Number(speed.value) || 1);
     }, listen);
@@ -1025,10 +909,6 @@ export function createScrambleSession({
         }
     }, listen);
     $("#solve")?.addEventListener("click", () => void solve(), listen);
-    $("#spec-btn")?.addEventListener("click", () => void openSpec().catch((err) => {
-        errorEl.textContent = err.message;
-    }), listen);
-    $("#spec-close")?.addEventListener("click", () => specDialog.close(), listen);
     bindCappedInput(input, {
         noteEl: ioNote,
         onChange: () => refreshDigest(),
@@ -1043,27 +923,22 @@ export function createScrambleSession({
         signal: abort.signal,
     });
 
-    $$("[data-jump]").forEach((button) => {
-        button.addEventListener("click", () => {
-            const jump = button.dataset.jump;
-            const viewI = Math.max(0, viewedIndex());
-            if (jump === "back") void stepBy(-1);
-            else if (jump === "fwd") void stepBy(1);
-            else if (jump === "stage-back") void jumpTo(nextGroup(trace, viewI, stageKey, -1) - 1, false);
-            else if (jump === "stage-fwd") void jumpTo(nextGroup(trace, viewI, stageKey, 1) - 1, false);
-            else if (jump === "round-back") void jumpTo(nextGroup(trace, viewI, roundKey, -1) - 1, false);
-            else if (jump === "round-fwd") void jumpTo(nextGroup(trace, viewI, roundKey, 1) - 1, false);
-        }, listen);
-    });
-
-    bindTeachKeys({
-        step: (dir) => { if (teaching) void stepBy(dir); },
-        stage: (dir) => {
-            if (!teaching || !trace.length) return;
-            void jumpTo(nextGroup(trace, Math.max(0, viewedIndex()), stageKey, dir) - 1, false);
+    bindTransport(root, {
+        play,
+        step: () => {
+            if (!teaching) enterTeach();
+            else void stepBy(1);
         },
-        home: () => { if (teaching) void jumpTo(-1, false); },
-        end: () => { if (teaching && trace.length) void jumpTo(trace.length - 1, false); },
+        skipToEnd,
+        reset,
+        showSpec,
+        trace: () => trace,
+        teaching: () => teaching,
+        viewedIndex,
+        stepBy,
+        jumpTo,
+        stageKey,
+        roundKey,
     }, listen);
 
     showFace(solved);
@@ -1083,18 +958,7 @@ export function createScrambleSession({
         setPuzzle(id) {
             return applyPuzzle(id);
         },
-        reset() {
-            job += 1;
-            markPlay(false);
-            solving = false;
-            busy = false;
-            cursor = -1;
-            setTeaching(false);
-            settleView();
-            showFace(solved);
-            jumpViewToCursor();
-            showStatus(caption());
-        },
+        reset,
         dispose() {
             fileAbort?.abort();
             fileAbort = null;

@@ -1,0 +1,6 @@
+$ python3 exp_edge_first_merge.py
+n= 6 log2|H|= 13.5  states to 1st merge: real=      86 (log2  6.4)  ideal=     258 (log2  8.0)  sqrt(pi|H|/2)=2^ 7.1  gain=2^1.6
+n= 7 log2|H|= 17.3  states to 1st merge: real=     206 (log2  7.7)  ideal=     911 (log2  9.8)  sqrt(pi|H|/2)=2^ 9.0  gain=2^2.1
+n= 8 log2|H|= 21.3  states to 1st merge: real=     610 (log2  9.3)  ideal=    3447 (log2 11.8)  sqrt(pi|H|/2)=2^11.0  gain=2^2.5
+n= 9 log2|H|= 25.5  states to 1st merge: real=    1985 (log2 11.0)  ideal=   16723 (log2 14.0)  sqrt(pi|H|/2)=2^13.1  gain=2^3.1
+n=10 log2|H|= 29.8  states to 1st merge: real=    6591 (log2 12.7)  ideal=   76032 (log2 16.2)  sqrt(pi|H|/2)=2^15.2  gain=2^3.5

@@ -1,0 +1,5 @@
+$ python3 toy_attacks.py pre
+== preimage attack (toy): generic = 2^(k+logH) compressions
+k=16 n=6 log|state|=29.5: 8/8 preimages found+verified, avg 2^18.6 compressions, avg 6.4 corner-matching last blocks (fwd/bwd lists ~2^6.7/2^7.6) vs generic 2^29.5
+k=16 n=7 log|state|=33.3: 8/8 preimages found+verified, avg 2^18.2 compressions, avg 5.8 corner-matching last blocks (fwd/bwd lists ~2^8.9/2^12.8) vs generic 2^33.3
+k=20 n=7 log|state|=37.3: 8/8 preimages found+verified, avg 2^22.7 compressions, avg 7.1 corner-matching last blocks (fwd/bwd lists ~2^8.8/2^10.9) vs generic 2^37.3

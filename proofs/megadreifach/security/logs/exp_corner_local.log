@@ -1,0 +1,2 @@
+$ python3 exp_corner_local.py
+k=3 states=2000 orderings=12000 corner+grip collisions=0 full=0

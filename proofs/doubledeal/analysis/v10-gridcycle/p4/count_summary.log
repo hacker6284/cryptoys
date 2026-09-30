@@ -1,0 +1,4 @@
+V50 decks=10000 min=1 median=37 p90=143 max=2322 geomean=35.3734
+V51 decks=10000 min=1 median=116 p90=1032 max=85817 geomean=119.958
+V52 decks=10000 min=1 median=19 p90=57 max=318 geomean=18.0326
+V53 decks=10000 min=1 median=18 p90=53 max=435 geomean=17.0377

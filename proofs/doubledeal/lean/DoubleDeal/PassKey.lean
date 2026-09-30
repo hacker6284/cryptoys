@@ -11,15 +11,13 @@
 import DoubleDeal.Basic
 import DoubleDeal.Rotate
 
-/- Lean 4.14 prelude has no `Function.LeftInverse` (that lives in Mathlib / later Init). -/
-namespace Function
-def LeftInverse (g : β → α) (f : α → β) : Prop := ∀ x, g (f x) = x
-def RightInverse (g : β → α) (f : α → β) : Prop := LeftInverse f g
-end Function
-
 namespace DoubleDeal
 
-def rotateLeft (xs : List α) (n : Nat) : List α := rotL xs n
+/- Lean 4.14 core has no `Function.LeftInverse` (it lives in Mathlib). These
+   local versions stay in the `DoubleDeal` namespace so the package can be
+   imported next to Mathlib (proofs/doubledeal/security). -/
+def LeftInverse (g : β → α) (f : α → β) : Prop := ∀ x, g (f x) = x
+def RightInverse (g : β → α) (f : α → β) : Prop := LeftInverse f g
 
 def cutProper (xs : List α) (r : Nat) : List α :=
   if r < xs.length then rotL xs r else xs
@@ -32,75 +30,143 @@ theorem length_cutProper (xs : List α) (r : Nat) :
     (cutProper xs r).length = xs.length := by
   unfold cutProper; split <;> first | exact length_rotL xs r | rfl
 
-def maybeRotate (hand : List Nat) (c : Nat) : List Nat :=
-  if hand.length = 0 then hand else rotateLeft hand (suit c % hand.length)
+/-- Deal `m` cards one at a time off the top of `xs` (so they come out
+    reversed) and put that packet under the rest. The sudo `deal_under`. -/
+def dealUnder (xs : List α) (m : Nat) : List α :=
+  xs.drop m ++ (xs.take m).reverse
 
-theorem maybeRotate_perm (hand : List Nat) (c : Nat) :
-    List.Perm (maybeRotate hand c) hand := by
-  unfold maybeRotate; split <;> first | exact .refl _ | exact rotL_perm hand _
+theorem dealUnder_perm (xs : List α) (m : Nat) :
+    List.Perm (dealUnder xs m) xs := by
+  unfold dealUnder
+  have h1 : List.Perm (xs.drop m ++ (xs.take m).reverse) ((xs.take m).reverse ++ xs.drop m) :=
+    List.perm_append_comm
+  have h2 : List.Perm ((xs.take m).reverse ++ xs.drop m) (xs.take m ++ xs.drop m) :=
+    (List.reverse_perm _).append (.refl _)
+  exact (h1.trans h2).trans (by rw [List.take_append_drop])
 
-theorem length_maybeRotate (hand : List Nat) (c : Nat) :
-    (maybeRotate hand c).length = hand.length := by
-  unfold maybeRotate; split <;> first | rfl | exact length_rotL hand _
+theorem length_dealUnder (xs : List α) (m : Nat) :
+    (dealUnder xs m).length = xs.length :=
+  (dealUnder_perm xs m).length_eq
 
-def maybeCut (hand key : List Nat) (c : Nat) : List Nat × List Nat :=
-  if _h : 0 < hand.length ∧ rank c < hand.length then (cutProper hand (rank c), key)
-  else if _h2 : 0 < key.length ∧ rank c < key.length then (hand, cutProper key (rank c))
+/-- The v12 pile rule shared by the deal, the rank cut and both inverses:
+    apply `f` to the hand if `fits hand.length`, else to the key pile if
+    `fits key.length`, else leave both piles alone. -/
+def onPile (fits : Nat → Prop) [DecidablePred fits] (f : List α → List α)
+    (hand key : List α) : List α × List α :=
+  if fits hand.length then (f hand, key)
+  else if fits key.length then (hand, f key)
   else (hand, key)
 
+section onPile
+variable (fits : Nat → Prop) [DecidablePred fits]
+
+theorem onPile_perm (f : List α → List α) (hf : ∀ xs, List.Perm (f xs) xs)
+    (hand key : List α) :
+    List.Perm ((onPile fits f hand key).1 ++ (onPile fits f hand key).2) (hand ++ key) := by
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;>
+    simp [onPile, hH, hK, hf, List.Perm.append_left, List.Perm.append_right]
+
+/-- The hand alone: `onPile` leaves the first pile a permutation of the hand (it applies
+    `f` to it, or leaves it alone). -/
+theorem onPile_fst_perm (f : List α → List α) (hf : ∀ xs, List.Perm (f xs) xs)
+    (hand key : List α) : List.Perm (onPile fits f hand key).1 hand := by
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;> simp [onPile, hH, hK, hf]
+
+theorem length_onPile_fst (f : List α → List α) (hf : ∀ xs, (f xs).length = xs.length)
+    (hand key : List α) : (onPile fits f hand key).1.length = hand.length := by
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;> simp [onPile, hH, hK, hf]
+
+theorem length_onPile_snd (f : List α → List α) (hf : ∀ xs, (f xs).length = xs.length)
+    (hand key : List α) : (onPile fits f hand key).2.length = key.length := by
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;> simp [onPile, hH, hK, hf]
+
+/-- The one inverse lemma: if `f` keeps lengths (so the same branch fires
+    again) and `g` undoes `f` whenever `fits` holds, then `onPile fits g` undoes
+    `onPile fits f`. Used in both directions for the deal and the cut. -/
+theorem onPile_inv (f g : List α → List α) (hlen : ∀ xs, (f xs).length = xs.length)
+    (hgf : ∀ xs, fits xs.length → g (f xs) = xs) (hand key : List α) :
+    onPile fits g (onPile fits f hand key).1 (onPile fits f hand key).2 = (hand, key) := by
+  by_cases hH : fits hand.length <;> by_cases hK : fits key.length <;>
+    simp [onPile, hH, hK, hlen, hgf]
+
+end onPile
+
+/-- PassKey deal count: suit + 2 (♣0 ♥1 ♠2 ♦3). -/
+def dealCount (c : Nat) : Nat := suit c + 2
+
+/-- SPEC §3.7 step 2: deal suit + 2 under the hand if they fit, else under the
+    key pile if they fit, else nothing. -/
+def maybeDeal (hand key : List Nat) (c : Nat) : List Nat × List Nat :=
+  onPile (dealCount c < ·) (dealUnder · (dealCount c)) hand key
+
+theorem maybeDeal_perm (hand key : List Nat) (c : Nat) :
+    List.Perm ((maybeDeal hand key c).1 ++ (maybeDeal hand key c).2) (hand ++ key) :=
+  onPile_perm _ _ (dealUnder_perm · _) hand key
+
+theorem length_maybeDeal_fst (hand key : List Nat) (c : Nat) :
+    (maybeDeal hand key c).1.length = hand.length :=
+  length_onPile_fst _ _ (length_dealUnder · _) hand key
+
+theorem length_maybeDeal_snd (hand key : List Nat) (c : Nat) :
+    (maybeDeal hand key c).2.length = key.length :=
+  length_onPile_snd _ _ (length_dealUnder · _) hand key
+
+/-- SPEC §3.7 step 3: the rank cut on the hand if it fits, else on the key
+    pile if it fits, else nothing. -/
+def maybeCut (hand key : List Nat) (c : Nat) : List Nat × List Nat :=
+  onPile (fun n => 0 < n ∧ rank c < n) (cutProper · (rank c)) hand key
+
 theorem maybeCut_perm (hand key : List Nat) (c : Nat) :
-    List.Perm ((maybeCut hand key c).1 ++ (maybeCut hand key c).2) (hand ++ key) := by
-  unfold maybeCut
-  split
-  · exact (cutProper_perm hand (rank c)).append (.refl key)
-  · split
-    · exact (List.Perm.refl hand).append (cutProper_perm key (rank c))
-    · exact .refl _
+    List.Perm ((maybeCut hand key c).1 ++ (maybeCut hand key c).2) (hand ++ key) :=
+  onPile_perm _ _ (cutProper_perm · _) hand key
 
 theorem length_maybeCut_fst (hand key : List Nat) (c : Nat) :
-    (maybeCut hand key c).1.length = hand.length := by
-  unfold maybeCut
-  split
-  · exact length_cutProper _ _
-  · split <;> rfl
+    (maybeCut hand key c).1.length = hand.length :=
+  length_onPile_fst _ _ (length_cutProper · _) hand key
 
 theorem length_maybeCut_snd (hand key : List Nat) (c : Nat) :
-    (maybeCut hand key c).2.length = key.length := by
-  unfold maybeCut
-  split
-  · rfl
-  · split
-    · exact length_cutProper _ _
-    · rfl
+    (maybeCut hand key c).2.length = key.length :=
+  length_onPile_snd _ _ (length_cutProper · _) hand key
 
+/-- One PassKey step after the controller `c` is popped (v12): deal, then the
+    rank cut with key-pile fallback, then `c` on top of the key pile. -/
 def passKeyStep (hand key : List Nat) (c : Nat) : List Nat × List Nat :=
-  let hand := maybeRotate hand c
-  let p := maybeCut hand key c
+  let d := maybeDeal hand key c
+  let p := maybeCut d.1 d.2 c
   (p.1, c :: p.2)
 
 theorem length_passKeyStep_fst (hand key : List Nat) (c : Nat) :
     (passKeyStep hand key c).1.length = hand.length := by
-  simp only [passKeyStep, length_maybeCut_fst, length_maybeRotate]
+  simp only [passKeyStep, length_maybeCut_fst, length_maybeDeal_fst]
 
 theorem length_passKeyStep_snd (hand key : List Nat) (c : Nat) :
     (passKeyStep hand key c).2.length = key.length + 1 := by
-  simp only [passKeyStep, length_maybeCut_snd, List.length_cons]
+  simp only [passKeyStep, length_maybeCut_snd, length_maybeDeal_snd, List.length_cons]
 
 theorem passKeyStep_perm (hand key : List Nat) (c : Nat) :
     List.Perm ((passKeyStep hand key c).1 ++ (passKeyStep hand key c).2)
               (c :: hand ++ key) := by
   dsimp [passKeyStep]
-  have hr := maybeRotate_perm hand c
-  have hc := maybeCut_perm (maybeRotate hand c) key c
+  have hr := maybeDeal_perm hand key c
+  have hc := maybeCut_perm (maybeDeal hand key c).1 (maybeDeal hand key c).2 c
   have hmid : List.Perm
-      ((maybeCut (maybeRotate hand c) key c).1 ++
-        c :: (maybeCut (maybeRotate hand c) key c).2)
-      (c :: ((maybeCut (maybeRotate hand c) key c).1 ++
-        (maybeCut (maybeRotate hand c) key c).2)) := List.perm_middle
+      ((maybeCut (maybeDeal hand key c).1 (maybeDeal hand key c).2 c).1 ++
+        c :: (maybeCut (maybeDeal hand key c).1 (maybeDeal hand key c).2 c).2)
+      (c :: ((maybeCut (maybeDeal hand key c).1 (maybeDeal hand key c).2 c).1 ++
+        (maybeCut (maybeDeal hand key c).1 (maybeDeal hand key c).2 c).2)) :=
+    List.perm_middle
   refine hmid.trans ?_
   refine (hc.cons c).trans ?_
-  refine ((hr.append (List.Perm.refl key)).cons c).trans ?_
+  refine (hr.cons c).trans ?_
   simp [List.cons_append]
+
+/-- The hand alone: one PassKey step leaves the hand a permutation of itself (the deal
+    and the cut only reorder a pile; the controller goes on the key pile). -/
+theorem passKeyStep_fst_perm (hand key : List Nat) (c : Nat) :
+    List.Perm (passKeyStep hand key c).1 hand :=
+  (onPile_fst_perm _ (cutProper · (rank c)) (cutProper_perm · _)
+      (maybeDeal hand key c).1 (maybeDeal hand key c).2).trans
+    (onPile_fst_perm _ (dealUnder · (dealCount c)) (dealUnder_perm · _) hand key)
 
 /-- Fuel-indexed PassKey recursion (avoids structural-recursion friction). -/
 def passKeyGoN : Nat → List Nat → List Nat → List Nat
@@ -143,7 +209,7 @@ theorem passKeyGoN_length (n : Nat) (hand key : List Nat) (h : hand.length ≤ n
 
 /-! ## S4: constructive inverse
 
-Each forward step is `maybeRotate` then `maybeCut` then "controller on top of key".
+Each forward step is `maybeDeal` then `maybeCut` then "controller on top of key".
 Branching uses only the controller and the two pile lengths, so the same
 predicates invert the step. `F` is the composition of those bijections.
 -/
@@ -179,128 +245,130 @@ theorem cutProper_cutProperInv (xs : List α) (r : Nat) :
     unfold cutProper
     simp only [h, ↓reduceIte]
 
-def maybeRotateInv (hand : List Nat) (c : Nat) : List Nat :=
-  if hand.length = 0 then hand else rotR hand (suit c % hand.length)
+/-- Undo `dealUnder`: take the bottom `m` cards and deal them back onto the top.
+    The sudo `undeal_under`. -/
+def undealUnder (xs : List α) (m : Nat) : List α :=
+  (xs.drop (xs.length - m)).reverse ++ xs.take (xs.length - m)
 
-theorem length_maybeRotateInv (hand : List Nat) (c : Nat) :
-    (maybeRotateInv hand c).length = hand.length := by
-  unfold maybeRotateInv; split <;> first | rfl | exact length_rotR hand _
+theorem length_undealUnder (xs : List α) (m : Nat) :
+    (undealUnder xs m).length = xs.length := by
+  unfold undealUnder
+  simp only [List.length_append, List.length_reverse, List.length_drop, List.length_take]
+  omega
 
-theorem maybeRotateInv_maybeRotate (hand : List Nat) (c : Nat) :
-    maybeRotateInv (maybeRotate hand c) c = hand := by
-  unfold maybeRotate
-  split
-  · next h => simp [maybeRotateInv, h]
-  · next h =>
-    simp only [rotateLeft, maybeRotateInv]
-    have hlen : (rotL hand (suit c % hand.length)).length = hand.length :=
-      length_rotL hand _
-    have hne : ¬ (rotL hand (suit c % hand.length)).length = 0 := by
-      rw [hlen]; exact h
-    simp only [hne, ↓reduceIte, hlen, h]
-    exact rotR_rotL hand (suit c % hand.length)
+theorem undealUnder_dealUnder (xs : List α) (m : Nat) :
+    undealUnder (dealUnder xs m) m = xs := by
+  unfold undealUnder
+  rw [length_dealUnder]
+  unfold dealUnder
+  have hd : (xs.drop m).length = xs.length - m := List.length_drop m xs
+  have hk : xs.length - m = (xs.drop m).length := hd.symm
+  rw [hk, List.drop_left, List.take_left, List.reverse_reverse, List.take_append_drop]
 
-theorem maybeRotate_maybeRotateInv (hand : List Nat) (c : Nat) :
-    maybeRotate (maybeRotateInv hand c) c = hand := by
-  unfold maybeRotateInv
-  split
-  · next h => simp [maybeRotate, h]
-  · next h =>
-    simp only [maybeRotate, rotateLeft]
-    have hlen : (rotR hand (suit c % hand.length)).length = hand.length :=
-      length_rotR hand _
-    have hne : ¬ (rotR hand (suit c % hand.length)).length = 0 := by
-      rw [hlen]; exact h
-    simp only [hne, ↓reduceIte, hlen, h]
-    exact rotL_rotR hand (suit c % hand.length)
+theorem dealUnder_undealUnder (xs : List α) (m : Nat) (h : m ≤ xs.length) :
+    dealUnder (undealUnder xs m) m = xs := by
+  unfold dealUnder undealUnder
+  have hlen : ((xs.drop (xs.length - m)).reverse).length = m := by
+    rw [List.length_reverse, List.length_drop]; omega
+  have hA : List.drop m ((xs.drop (xs.length - m)).reverse ++ xs.take (xs.length - m)) =
+      xs.take (xs.length - m) := by
+    exact List.drop_left' hlen
+  have hB : List.take m ((xs.drop (xs.length - m)).reverse ++ xs.take (xs.length - m)) =
+      (xs.drop (xs.length - m)).reverse := by
+    exact List.take_left' hlen
+  rw [hA, hB, List.reverse_reverse]
+  exact List.take_append_drop _ _
+
+/-- Inverse of `maybeDeal`. Lengths are invariant, so the same predicates fire. -/
+def maybeDealInv (hand key : List Nat) (c : Nat) : List Nat × List Nat :=
+  onPile (dealCount c < ·) (undealUnder · (dealCount c)) hand key
+
+theorem length_maybeDealInv_fst (hand key : List Nat) (c : Nat) :
+    (maybeDealInv hand key c).1.length = hand.length :=
+  length_onPile_fst _ _ (length_undealUnder · _) hand key
+
+theorem length_maybeDealInv_snd (hand key : List Nat) (c : Nat) :
+    (maybeDealInv hand key c).2.length = key.length :=
+  length_onPile_snd _ _ (length_undealUnder · _) hand key
+
+theorem maybeDealInv_maybeDeal (hand key : List Nat) (c : Nat) :
+    maybeDealInv (maybeDeal hand key c).1 (maybeDeal hand key c).2 c = (hand, key) :=
+  onPile_inv _ _ _ (length_dealUnder · _) (fun xs _ => undealUnder_dealUnder xs _) hand key
+
+theorem maybeDeal_maybeDealInv (hand key : List Nat) (c : Nat) :
+    maybeDeal (maybeDealInv hand key c).1 (maybeDealInv hand key c).2 c = (hand, key) :=
+  onPile_inv _ _ _ (length_undealUnder · _)
+    (fun xs h => dealUnder_undealUnder xs _ (Nat.le_of_lt h)) hand key
 
 /-- Inverse of `maybeCut`. Lengths are invariant, so the same predicates fire. -/
 def maybeCutInv (hand key : List Nat) (c : Nat) : List Nat × List Nat :=
-  if _h : 0 < hand.length ∧ rank c < hand.length then (cutProperInv hand (rank c), key)
-  else if _h2 : 0 < key.length ∧ rank c < key.length then (hand, cutProperInv key (rank c))
-  else (hand, key)
+  onPile (fun n => 0 < n ∧ rank c < n) (cutProperInv · (rank c)) hand key
 
 theorem length_maybeCutInv_fst (hand key : List Nat) (c : Nat) :
-    (maybeCutInv hand key c).1.length = hand.length := by
-  unfold maybeCutInv
-  split
-  · exact length_cutProperInv _ _
-  · split <;> rfl
+    (maybeCutInv hand key c).1.length = hand.length :=
+  length_onPile_fst _ _ (length_cutProperInv · _) hand key
 
 theorem length_maybeCutInv_snd (hand key : List Nat) (c : Nat) :
-    (maybeCutInv hand key c).2.length = key.length := by
-  unfold maybeCutInv
-  split
-  · rfl
-  · split
-    · exact length_cutProperInv _ _
-    · rfl
+    (maybeCutInv hand key c).2.length = key.length :=
+  length_onPile_snd _ _ (length_cutProperInv · _) hand key
 
 theorem maybeCutInv_maybeCut (hand key : List Nat) (c : Nat) :
-    maybeCutInv (maybeCut hand key c).1 (maybeCut hand key c).2 c = (hand, key) := by
-  unfold maybeCut
-  split
-  · next h =>
-    have hlen := length_cutProper hand (rank c)
-    unfold maybeCutInv
-    have h' : 0 < (cutProper hand (rank c)).length ∧
-        rank c < (cutProper hand (rank c)).length := by
-      rw [hlen]; exact h
-    rw [dif_pos h', cutProperInv_cutProper]
-  · next hnot =>
-    split
-    · next h2 =>
-      have hlen := length_cutProper key (rank c)
-      unfold maybeCutInv
-      rw [dif_neg hnot]
-      have h2' : 0 < (cutProper key (rank c)).length ∧
-          rank c < (cutProper key (rank c)).length := by
-        rw [hlen]; exact h2
-      rw [dif_pos h2', cutProperInv_cutProper]
-    · next h2not =>
-      unfold maybeCutInv
-      rw [dif_neg hnot, dif_neg h2not]
+    maybeCutInv (maybeCut hand key c).1 (maybeCut hand key c).2 c = (hand, key) :=
+  onPile_inv _ _ _ (length_cutProper · _) (fun xs _ => cutProperInv_cutProper xs _) hand key
 
 theorem maybeCut_maybeCutInv (hand key : List Nat) (c : Nat) :
-    maybeCut (maybeCutInv hand key c).1 (maybeCutInv hand key c).2 c = (hand, key) := by
-  unfold maybeCutInv
-  split
-  · next h =>
-    have hlen := length_cutProperInv hand (rank c)
-    unfold maybeCut
-    have h' : 0 < (cutProperInv hand (rank c)).length ∧
-        rank c < (cutProperInv hand (rank c)).length := by
-      rw [hlen]; exact h
-    rw [dif_pos h', cutProper_cutProperInv]
-  · next hnot =>
-    split
-    · next h2 =>
-      have hlen := length_cutProperInv key (rank c)
-      unfold maybeCut
-      rw [dif_neg hnot]
-      have h2' : 0 < (cutProperInv key (rank c)).length ∧
-          rank c < (cutProperInv key (rank c)).length := by
-        rw [hlen]; exact h2
-      rw [dif_pos h2', cutProper_cutProperInv]
-    · next h2not =>
-      unfold maybeCut
-      rw [dif_neg hnot, dif_neg h2not]
+    maybeCut (maybeCutInv hand key c).1 (maybeCutInv hand key c).2 c = (hand, key) :=
+  onPile_inv _ _ _ (length_cutProperInv · _) (fun xs _ => cutProper_cutProperInv xs _) hand key
 
-/-- Undo one PassKey step: pop the controller off the key, undo cut, undo suit rotate. -/
+/-- Undo one PassKey step: pop the controller off the key, undo the rank cut,
+    undo the deal, put the controller on top of the hand. -/
 def invPassKeyStep (hand key : List Nat) : List Nat × List Nat :=
   match key with
   | [] => (hand, [])
   | c :: rest =>
       let p := maybeCutInv hand rest c
-      (c :: maybeRotateInv p.1 c, p.2)
+      let q := maybeDealInv p.1 p.2 c
+      (c :: q.1, q.2)
 
 theorem length_invPassKeyStep_fst (hand : List Nat) (c : Nat) (rest : List Nat) :
     (invPassKeyStep hand (c :: rest)).1.length = hand.length + 1 := by
-  simp [invPassKeyStep, length_maybeRotateInv, length_maybeCutInv_fst]
+  simp [invPassKeyStep, length_maybeDealInv_fst, length_maybeCutInv_fst]
 
 theorem length_invPassKeyStep_snd (hand : List Nat) (c : Nat) (rest : List Nat) :
     (invPassKeyStep hand (c :: rest)).2.length = rest.length := by
-  simp [invPassKeyStep, length_maybeCutInv_snd]
+  simp [invPassKeyStep, length_maybeDealInv_snd, length_maybeCutInv_snd]
+
+theorem undealUnder_perm (xs : List α) (m : Nat) :
+    List.Perm (undealUnder xs m) xs := by
+  unfold undealUnder
+  have h1 : List.Perm ((xs.drop (xs.length - m)).reverse ++ xs.take (xs.length - m))
+      (xs.drop (xs.length - m) ++ xs.take (xs.length - m)) :=
+    (List.reverse_perm _).append (.refl _)
+  have h2 : List.Perm (xs.drop (xs.length - m) ++ xs.take (xs.length - m))
+      (xs.take (xs.length - m) ++ xs.drop (xs.length - m)) :=
+    List.perm_append_comm
+  exact (h1.trans h2).trans (by rw [List.take_append_drop])
+
+theorem cutProperInv_perm (xs : List α) (r : Nat) :
+    List.Perm (cutProperInv xs r) xs := by
+  unfold cutProperInv; split <;> first | exact rotR_perm xs r | exact .refl _
+
+theorem maybeDealInv_perm (hand key : List Nat) (c : Nat) :
+    List.Perm ((maybeDealInv hand key c).1 ++ (maybeDealInv hand key c).2) (hand ++ key) :=
+  onPile_perm _ _ (undealUnder_perm · _) hand key
+
+theorem maybeCutInv_perm (hand key : List Nat) (c : Nat) :
+    List.Perm ((maybeCutInv hand key c).1 ++ (maybeCutInv hand key c).2) (hand ++ key) :=
+  onPile_perm _ _ (cutProperInv_perm · _) hand key
+
+/-- One inverse step moves cards between piles only. -/
+theorem invPassKeyStep_perm (hand : List Nat) (c : Nat) (rest : List Nat) :
+    List.Perm ((invPassKeyStep hand (c :: rest)).1 ++ (invPassKeyStep hand (c :: rest)).2)
+      (hand ++ c :: rest) := by
+  simp only [invPassKeyStep, List.cons_append]
+  have h := (maybeDealInv_perm (maybeCutInv hand rest c).1 (maybeCutInv hand rest c).2 c).trans
+    (maybeCutInv_perm hand rest c)
+  exact (h.cons c).trans List.perm_middle.symm
 
 /-- Per-step left inverse: invert after `passKeyStep` recovers `(c :: hand, key)`. -/
 theorem invPassKeyStep_passKeyStep (hand key : List Nat) (c : Nat) :
@@ -308,22 +376,24 @@ theorem invPassKeyStep_passKeyStep (hand key : List Nat) (c : Nat) :
       = (c :: hand, key) := by
   simp only [passKeyStep]
   change invPassKeyStep
-      (maybeCut (maybeRotate hand c) key c).1
-      (c :: (maybeCut (maybeRotate hand c) key c).2) = (c :: hand, key)
+      (maybeCut (maybeDeal hand key c).1 (maybeDeal hand key c).2 c).1
+      (c :: (maybeCut (maybeDeal hand key c).1 (maybeDeal hand key c).2 c).2) =
+    (c :: hand, key)
   simp only [invPassKeyStep]
-  have hc := maybeCutInv_maybeCut (maybeRotate hand c) key c
-  simp [hc, maybeRotateInv_maybeRotate]
+  have hc := maybeCutInv_maybeCut (maybeDeal hand key c).1 (maybeDeal hand key c).2 c
+  have hd := maybeDealInv_maybeDeal hand key c
+  simp [hc, hd]
 
 /-- Per-step right inverse on a nonempty key pile `c :: rest`. -/
 theorem passKeyStep_invPassKeyStep (hand : List Nat) (c : Nat) (rest : List Nat) :
-    passKeyStep (maybeRotateInv (maybeCutInv hand rest c).1 c)
-        (maybeCutInv hand rest c).2 c
+    passKeyStep
+        (maybeDealInv (maybeCutInv hand rest c).1 (maybeCutInv hand rest c).2 c).1
+        (maybeDealInv (maybeCutInv hand rest c).1 (maybeCutInv hand rest c).2 c).2 c
       = (hand, c :: rest) := by
   simp only [passKeyStep]
-  have hr := maybeRotate_maybeRotateInv (maybeCutInv hand rest c).1 c
-  simp only [hr]
+  have hd := maybeDeal_maybeDealInv (maybeCutInv hand rest c).1 (maybeCutInv hand rest c).2 c
   have hc := maybeCut_maybeCutInv hand rest c
-  simp [hc]
+  simp [hd, hc]
 
 /-- Fuel-indexed inverse walk (key pile shrinks). -/
 def passKeyInvGoN : Nat → List Nat → List Nat → List Nat
@@ -386,14 +456,14 @@ theorem passKeyInvGoN_passKeyGoN :
         simp [List.length_cons]; omega
       rw [hfuel, ih]
       -- p.2 is `c :: kAfter`; invert that cons
-      let kAfter := (maybeCut (maybeRotate rest c) key c).2
+      let kAfter := (maybeCut (maybeDeal rest key c).1 (maybeDeal rest key c).2 c).2
       have hcons : (passKeyStep rest key c).2 = c :: kAfter := rfl
       rw [hcons, passKeyInvGoN_cons]
       have hinv : invPassKeyStep (passKeyStep rest key c).1 (c :: kAfter) =
           (c :: rest, key) := by
         simpa [hcons] using invPassKeyStep_passKeyStep rest key c
       rw [hinv]
-      simp [kAfter, length_maybeCut_snd]
+      simp [kAfter, length_maybeCut_snd, length_maybeDeal_snd]
 
 /-- Lifting the per-step right inverse. -/
 theorem passKeyGoN_passKeyInvGoN :
@@ -425,17 +495,18 @@ theorem passKeyGoN_passKeyInvGoN :
       -- go one reconstructed controller, then the right-inverse step
       have hstep := passKeyStep_invPassKeyStep hand c rest
       simp only [invPassKeyStep] at hstep ⊢
-      -- (invPassKeyStep hand (c::rest)).1 = c :: maybeRotateInv ...
+      -- (invPassKeyStep hand (c::rest)).1 = c :: (maybeDealInv ...).1
       -- passKeyGoN on that cons unfolds
       change passKeyGoN
-          (c :: maybeRotateInv (maybeCutInv hand rest c).1 c).length
-          (c :: maybeRotateInv (maybeCutInv hand rest c).1 c)
-          (maybeCutInv hand rest c).2 =
+          (c :: (maybeDealInv (maybeCutInv hand rest c).1 (maybeCutInv hand rest c).2 c).1).length
+          (c :: (maybeDealInv (maybeCutInv hand rest c).1 (maybeCutInv hand rest c).2 c).1)
+          (maybeDealInv (maybeCutInv hand rest c).1 (maybeCutInv hand rest c).2 c).2 =
         passKeyGoN hand.length hand (c :: rest)
       simp only [passKeyGoN]
       have hlenh :
-          (maybeRotateInv (maybeCutInv hand rest c).1 c).length = hand.length := by
-        rw [length_maybeRotateInv, length_maybeCutInv_fst]
+          (maybeDealInv (maybeCutInv hand rest c).1 (maybeCutInv hand rest c).2 c).1.length =
+            hand.length := by
+        rw [length_maybeDealInv_fst, length_maybeCutInv_fst]
       rw [hlenh, hstep]
 
 /-- S4: `F_inv ∘ F = id`. -/
@@ -460,11 +531,11 @@ theorem passToKeyCutFallback_rightInverse (d : List Nat) :
   simpa [passKeyGoN] using h
 
 theorem passKey_leftInverse :
-    Function.LeftInverse passToKeyCutFallbackInv passToKeyCutFallback :=
+    LeftInverse passToKeyCutFallbackInv passToKeyCutFallback :=
   passToKeyCutFallback_leftInverse
 
 theorem passKey_rightInverse :
-    Function.RightInverse passToKeyCutFallbackInv passToKeyCutFallback :=
+    RightInverse passToKeyCutFallbackInv passToKeyCutFallback :=
   passToKeyCutFallback_rightInverse
 
 /-- S4: PassKey is injective on lists (hence on \(S_{52}\)). -/

@@ -1,0 +1,32 @@
+{
+ "T1": {
+  "n": 18,
+  "runs": 20,
+  "note": "registers only; add key pegs",
+  "peak_white": 47,
+  "peak_red": 46,
+  "holes_in_use": 90,
+  "peak_red_per_hole": 0.511,
+  "peak_white_per_hole": 0.522
+ },
+ "T2": {
+  "n": 35,
+  "runs": 5,
+  "note": "registers only; add key pegs",
+  "peak_white": 80,
+  "peak_red": 79,
+  "holes_in_use": 175,
+  "peak_red_per_hole": 0.451,
+  "peak_white_per_hole": 0.457
+ },
+ "T6demo": {
+  "n": 100,
+  "runs": 1,
+  "note": "registers only; add key pegs",
+  "peak_white": 217,
+  "peak_red": 236,
+  "holes_in_use": 550,
+  "peak_red_per_hole": 0.429,
+  "peak_white_per_hole": 0.395
+ }
+}

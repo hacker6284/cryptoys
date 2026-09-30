@@ -1,0 +1,21 @@
+T1 0 {'key_cells': [206, 208], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1038.5, 'moves_per_person': 487986.5}
+T1 1 {'key_cells': [208, 217], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1047.5, 'moves_per_person': 495842.5}
+T1 2 {'key_cells': [215, 217], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1071.5, 'moves_per_person': 517615.5}
+T1 3 {'key_cells': [209, 212], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1049.0, 'moves_per_person': 503593.0}
+T1 4 {'key_cells': [211, 214], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1061.5, 'moves_per_person': 492387.5}
+T1 5 {'key_cells': [214, 213], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1060.5, 'moves_per_person': 489564.0}
+T1 6 {'key_cells': [210, 210], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1029.0, 'moves_per_person': 477358.5}
+T1 7 {'key_cells': [209, 211], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1048.5, 'moves_per_person': 485747.0}
+T1 8 {'key_cells': [210, 212], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1058.0, 'moves_per_person': 492942.5}
+T1 9 {'key_cells': [212, 211], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1051.5, 'moves_per_person': 478170.5}
+T1 10 {'key_cells': [211, 214], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1045.5, 'moves_per_person': 480369.5}
+T1 11 {'key_cells': [211, 214], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1058.0, 'moves_per_person': 499994.0}
+T1 12 {'key_cells': [212, 212], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1058.0, 'moves_per_person': 485983.5}
+T1 13 {'key_cells': [213, 211], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1046.0, 'moves_per_person': 468754.5}
+T1 14 {'key_cells': [211, 211], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1046.5, 'moves_per_person': 500068.0}
+T1 15 {'key_cells': [210, 211], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1055.0, 'moves_per_person': 490037.5}
+T1 16 {'key_cells': [213, 209], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1051.5, 'moves_per_person': 474194.5}
+T1 17 {'key_cells': [212, 217], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1068.0, 'moves_per_person': 481929.0}
+T1 18 {'key_cells': [211, 216], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1062.0, 'moves_per_person': 498702.0}
+T1 19 {'key_cells': [215, 212], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1062.0, 'moves_per_person': 479782.0}
+T1 SUMMARY {"tier": "T1", "runs": 20, "all_ok": true, "mean_mults_per_person": 1053.4, "mean_moves_per_person": 489051.1, "mean_moves_per_mult": 464.2596354661097, "mean_key_cells": 211.875, "seconds": 3.0}

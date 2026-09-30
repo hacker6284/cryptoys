@@ -1,0 +1,114 @@
+{
+ "per_grid": {
+  "fleet": {
+   "mults": 548.6792,
+   "H": 147.83415562806238,
+   "H2": 145.49447145221174,
+   "Hmin": 124.78047538803443,
+   "cells": 111.0719,
+   "hit_units": 103.3916,
+   "mults_per_H_bit": 3.7114508326508,
+   "mults_per_Hmin_bit": 4.397155871491531,
+   "public_mults_per_bit": 1.5026554523630797
+  },
+  "pegs": {
+   "mults": 494.5,
+   "H": 158.4962500721156,
+   "mults_per_bit": 3.119947631410857,
+   "public_mults_per_bit": 1.2429316145357714
+  }
+ },
+ "ratio_H": 1.1895875415615427,
+ "ratio_H2": 1.2087171972728579,
+ "ratio_Hmin": 1.4093684865803704,
+ "tiers": [
+  {
+   "tier": "R1024",
+   "security": 80,
+   "pegs_grids": 2,
+   "pegs_mults": 994.5,
+   "pegs_moves": 740902500.0,
+   "fleet_grids_H": 2,
+   "fleet_mults_H": 1096.3584,
+   "fleet_moves_H": 816787008.0,
+   "fleet_grids_Hmin": 2,
+   "fleet_mults_Hmin": 1096.3584,
+   "fleet_moves_Hmin": 816787008.0
+  },
+  {
+   "tier": "R2048",
+   "security": 112,
+   "pegs_grids": 2,
+   "pegs_mults": 994.5,
+   "pegs_moves": 2953665000.0,
+   "fleet_grids_H": 2,
+   "fleet_mults_H": 1096.3584,
+   "fleet_moves_H": 3256184448.0,
+   "fleet_grids_Hmin": 2,
+   "fleet_mults_Hmin": 1096.3584,
+   "fleet_moves_Hmin": 3256184448.0
+  },
+  {
+   "tier": "R3072",
+   "security": 128,
+   "pegs_grids": 2,
+   "pegs_mults": 994.5,
+   "pegs_moves": 6583590000.0,
+   "fleet_grids_H": 2,
+   "fleet_mults_H": 1096.3584,
+   "fleet_moves_H": 7257892608.000001,
+   "fleet_grids_Hmin": 3,
+   "fleet_mults_Hmin": 1644.0376,
+   "fleet_moves_Hmin": 10883528912.0
+  },
+  {
+   "tier": "R7680",
+   "security": 192,
+   "pegs_grids": 3,
+   "pegs_mults": 1494.5,
+   "pegs_moves": 61872300000.0,
+   "fleet_grids_H": 3,
+   "fleet_mults_H": 1644.0376,
+   "fleet_moves_H": 68063156640.00001,
+   "fleet_grids_Hmin": 4,
+   "fleet_mults_Hmin": 2191.7168,
+   "fleet_moves_Hmin": 90737075520.0
+  },
+  {
+   "tier": "R15360",
+   "security": 256,
+   "pegs_grids": 4,
+   "pegs_mults": 1994.5,
+   "pegs_moves": 331087000000.0,
+   "fleet_grids_H": 4,
+   "fleet_mults_H": 2191.7168,
+   "fleet_moves_H": 363824988800.0,
+   "fleet_grids_Hmin": 5,
+   "fleet_mults_Hmin": 2739.396,
+   "fleet_moves_Hmin": 454739736000.00006
+  }
+ ],
+ "build": {
+  "fleet_rolls": 189.8727,
+  "fleet_piece_moves": 110.06,
+  "fleet_miss_pegs": 21.97835,
+  "pegs_rolls": 100,
+  "pegs_pegs_placed": 66.66666666666667
+ },
+ "ecbs": {
+  "fleet_nonzero_cells": 68.78295,
+  "fleet_adds_per_Hbit": 0.4652710309588523,
+  "pegs_adds_per_bit": 0.42061983571430506
+ },
+ "sub_eq_cruiser_variant": {
+  "H": 136.76225562806238,
+  "cells": 100,
+  "mults": 498.83965,
+  "ratio_H": 1.1690885481962514
+ },
+ "uniform_restart": {
+  "x": 0.31291,
+  "log2_acceptance": -17.430568982122253,
+  "x_5_16_log2_acceptance": -17.619726511263764
+ }
+}

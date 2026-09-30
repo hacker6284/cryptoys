@@ -1,0 +1,11 @@
+== sparse (two-peg toll) safe primes p = 3^n - 3^k - 1, n = 16..44 ==
+  n=18: k in [2]
+  n=30: k in [4, 12]
+  n=31: k in [1]
+  n=35: k in [29]
+T1 {"n": 18, "p_bits": 29, "c_trits": 3, "p_prime_mr50": true, "q_prime_mr50": true, "p_prime_bpsw": true, "q_prime_bpsw": true, "g3_order_q": true, "p_mod_12": 11, "p_prime_deterministic": true, "q_prime_deterministic": true, "tier": "T1", "k": 2, "toll": "3^2+1", "c": "10"}
+T2 {"n": 35, "p_bits": 56, "c_trits": 30, "p_prime_mr50": true, "q_prime_mr50": true, "p_prime_bpsw": true, "q_prime_bpsw": true, "g3_order_q": true, "p_mod_12": 11, "p_prime_deterministic": true, "q_prime_deterministic": true, "tier": "T2", "k": 29, "toll": "3^29+1", "c": "68630377364884"}
+T6demo {"n": 100, "p_bits": 159, "c_trits": 50, "p_prime_mr50": true, "q_prime_mr50": true, "p_prime_bpsw": true, "q_prime_bpsw": true, "g3_order_q": true, "p_mod_12": 11, "tier": "T6demo", "toll": "pi-trits(50) + 4383", "toll_trits": 50, "search_offset": 4383, "candidates_tested": 15, "search_seconds": 0.0}
+R1024 {"n": 646, "p_bits": 1024, "c_trits": null, "p_prime_mr50": true, "q_prime_mr50": true, "p_prime_bpsw": true, "q_prime_bpsw": true, "g3_order_q": true, "p_mod_12": 11, "tier": "R1024", "toll": "pi-trits(323) + 1052835", "toll_trits": 323, "search_offset": 1052835, "candidates_tested": 3010, "search_seconds": 1.2}
+R2048 {"n": 1292, "p_bits": 2048, "c_trits": null, "p_prime_mr50": true, "q_prime_mr50": true, "p_prime_bpsw": true, "q_prime_bpsw": true, "g3_order_q": true, "p_mod_12": 11, "tier": "R2048", "toll": "pi-trits(646) + 176296", "toll_trits": 646, "search_offset": 176296, "candidates_tested": 502, "search_seconds": 1.2}
+R3072 {"n": 1938, "p_bits": 3072, "c_trits": null, "p_prime_mr50": true, "q_prime_mr50": true, "p_prime_bpsw": true, "q_prime_bpsw": true, "g3_order_q": true, "p_mod_12": 11, "tier": "R3072", "toll": "pi-trits(969) + 1453486", "toll_trits": 969, "search_offset": 1453486, "candidates_tested": 4113, "search_seconds": 28.4}

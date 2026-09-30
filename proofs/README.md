@@ -46,6 +46,7 @@ proofs/
   scramble/                 # Generated Lean + teaching / lineage; no algebraic stones
   doubledeal-cbc-hmac/      # Generated Lean for HMAC / KDF / pad + Link 2 to a hand-written model
   scm/                      # placeholder; SCM/SMAC stay later (CBC-HMAC is the AEAD)
+  key_exchange/bs/          # BS evidence: reference code, exchanges, key checks (no Lean)
   audit/                    # core-only #audit_all package shared by the axiom audits
   deprecated/               # vulnerability proofs for deprecated, frozen algorithms
     doubledeal-v8/          # DoubleDeal v8 relabelling distinguisher + witness
@@ -62,5 +63,6 @@ proofs/
 | MegaDreifach | `primitives/hash/megadreifach/` (v2; deprecated v1 frozen in `v1/`) | **Generated** Lean under `megadreifach/lean/Generated/` (from the v2 sudo; [TAP](megadreifach/README.md#three-layers-be-honest)). Proof-only stones under `megadreifach/lean/MegaDreifach/`, about v2. Proved versus open: [`megadreifach/README.md`](megadreifach/README.md). The v1 weakness proofs, frozen: [`deprecated/megadreifach-v1/`](deprecated/megadreifach-v1/README.md). |
 | Scramble | `scramble_v2` | **Generated** Lean under `scramble/lean/Generated/` (from `scramble.sudo`; [TAP](scramble/README.md#generated-lean) under the terminates gate). Teaching hash; single-cube birthday ceiling. No algebraic stones. Not a collision-resistance claim. |
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | **Generated** Lean under `doubledeal-cbc-hmac/lean/Generated/` (from `doubledeal_cbc_hmac.sudo` + imported MegaDreifach; [TAP](doubledeal-cbc-hmac/README.md#generated-lean)). HMAC / KDF / pad / MAC-input evidence, plus [Link 2](doubledeal-cbc-hmac/README.md#link-2) of every exported function to a hand-written model on byte inputs. No AEAD security theorem. Not SCM. |
+| BS | `primitives/key_exchange/bs/` | No sudo, no Lean. Evidence only: Python reference, full exchanges and key checks in [`key_exchange/bs/`](key_exchange/bs/README.md). No security theorem. |
 | DoubleDeal-SCM / SMAC | not in `primitives/` | Stub [`scm/README.md`](scm/README.md). Stays later. |
 | DoubleDeal v8–v11 (frozen) | `primitives/cipher/doubledeal/v8/` … `v11/` | Vulnerability proofs (v8, v9), a per-layer write-up (v10) and a superseded-not-attacked write-up (v11) under `deprecated/`; see [`deprecated/README.md`](deprecated/README.md). |

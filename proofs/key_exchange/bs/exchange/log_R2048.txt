@@ -1,0 +1,2 @@
+R2048 0 {'key_cells': [206, 213], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1027.0, 'moves_per_person': 3008732215.0}
+R2048 SUMMARY {"tier": "R2048", "runs": 1, "all_ok": true, "mean_mults_per_person": 1027.0, "mean_moves_per_person": 3008732215.0, "mean_moves_per_mult": 2929632.147030185, "mean_key_cells": 209.5, "seconds": 1262.2}

@@ -1,0 +1,6 @@
+T2 0 {'key_cells': [212, 211], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1050.5, 'moves_per_person': 1691871.5}
+T2 1 {'key_cells': [210, 210], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1042.0, 'moves_per_person': 1639711.5}
+T2 2 {'key_cells': [212, 213], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1054.0, 'moves_per_person': 1632454.0}
+T2 3 {'key_cells': [207, 208], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1022.0, 'moves_per_person': 1650795.5}
+T2 4 {'key_cells': [212, 213], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1071.0, 'moves_per_person': 1697787.0}
+T2 SUMMARY {"tier": "T2", "runs": 5, "all_ok": true, "mean_mults_per_person": 1047.9, "mean_moves_per_person": 1662523.9, "mean_moves_per_mult": 1586.5291535451856, "mean_key_cells": 210.8, "seconds": 2.7}

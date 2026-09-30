@@ -1,0 +1,2 @@
+R3072 0 {'key_cells': [209, 209], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1036.0, 'moves_per_person': 6754925525.0}
+R3072 SUMMARY {"tier": "R3072", "runs": 1, "all_ok": true, "mean_mults_per_person": 1036.0, "mean_moves_per_person": 6754925525.0, "mean_moves_per_mult": 6520198.383204633, "mean_key_cells": 209.0, "seconds": 2954.1}

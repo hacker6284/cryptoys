@@ -13,12 +13,13 @@ Each primitive is a directory holding a normative specification and one [sudocod
 | MegaDreifach | Toy three-megaminx Merkle–Damgård hash. Current: v2; v1 is [deprecated](primitives/hash/megadreifach/v1/SPEC.md). | [SPEC.md](primitives/hash/megadreifach/SPEC.md), [README](primitives/hash/megadreifach/README.md) | [proofs/megadreifach/](proofs/megadreifach/) (v2); frozen v1: [proofs/deprecated/megadreifach-v1/](proofs/deprecated/megadreifach-v1/README.md) |
 | DoubleDeal | Toy block cipher on a 52-card deck. | [SPEC.md](primitives/cipher/doubledeal/SPEC.md) (version history: [§7a](primitives/cipher/doubledeal/SPEC.md#7a-version-history)) | [proofs/doubledeal/](proofs/doubledeal/); frozen versions: [proofs/deprecated/](proofs/deprecated/README.md) |
 | DoubleDeal-CBC-HMAC | Toy Encrypt-then-MAC: DoubleDeal in CBC, then HMAC with MegaDreifach as the hash. Not DoubleDeal-SCM. | [SPEC.md](primitives/aead/doubledeal-cbc-hmac/SPEC.md), [README](primitives/aead/doubledeal-cbc-hmac/README.md) | [proofs/doubledeal-cbc-hmac/](proofs/doubledeal-cbc-hmac/) |
+| BS | Toy finite-field Diffie–Hellman worked by hand on Battleship pegboards; the key is one dice-built ships+pegs grid. No `.sudo` yet; Python reference in its proofs. | [SPEC.md](primitives/key_exchange/bs/SPEC.md) | [proofs/key_exchange/bs/](proofs/key_exchange/bs/README.md) |
 
 ## Layout
 
 | Path | Contents |
 | --- | --- |
-| [primitives/](primitives/) | Specifications and `.sudo` implementations, by kind (`hash/`, `cipher/`, `aead/`) |
+| [primitives/](primitives/) | Specifications and `.sudo` implementations, by kind (`hash/`, `cipher/`, `aead/`, `key_exchange/`) |
 | [demos/](demos/README.md) | Playroom hub and the Scramble and DoubleDeal demos (GitHub Pages root) |
 | [proofs/](proofs/README.md) | Proof ledger: what is machine-checked, what is evidence, what is not claimed |
 | [tools/](tools/) | Demo generation (`build.sh`, `generate-demos.sh`, `render-build.sh`) and the Lean emit and generation-check helpers (`emit_lean.py`, `gencheck.py`) |

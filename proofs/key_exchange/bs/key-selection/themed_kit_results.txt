@@ -1,0 +1,8 @@
+A {'rule': 'd20 last digit: group/place of last digit + teens; 10,20 void', 'faces': 20, 'void': 2, 'outcomes': 18, 'exact_uniform': True, 'void_rate': '1/10', 'bits_per_read': 3.7529325012980808}
+A {'rule': 'd8 top half + odd/even', 'faces': 8, 'void': 0, 'outcomes': 4, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 2.0}
+A {'rule': 'd8 top half + top pair of its half + odd/even', 'faces': 8, 'void': 0, 'outcomes': 8, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 3.0}
+A {'rule': 'd4 top half (3-4) + odd/even', 'faces': 4, 'void': 0, 'outcomes': 4, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 2.0}
+D per_ship {'L5_spec_d10': {'along_die': 'd10', 'reroll_rate': '2/5', 'placements': 120}, 'L5_bestfit': {'along_die': 'd6', 'reroll_rate': '0', 'placements': 120}, 'L4_spec_d10': {'along_die': 'd10', 'reroll_rate': '3/10', 'placements': 140}, 'L4_bestfit': {'along_die': 'd8', 'reroll_rate': '1/8', 'placements': 140}, 'L3_spec_d10': {'along_die': 'd10', 'reroll_rate': '1/5', 'placements': 160}, 'L3_bestfit': {'along_die': 'd8', 'reroll_rate': '0', 'placements': 160}, 'L2_spec_d10': {'along_die': 'd10', 'reroll_rate': '1/10', 'placements': 180}, 'L2_bestfit': {'along_die': 'd10', 'reroll_rate': '1/10', 'placements': 180}}
+D negative controls (must fail) {'L2_d8': {'placements_reached': 160, 'needed': 180, 'check': False}, 'L3_d6': {'placements_reached': 120, 'needed': 160, 'check': False}, 'L5_d4': {'placements_reached': 80, 'needed': 120, 'check': False}}
+D spec {'attempts': 2.57276, 'reads': 52.27403, 'offgrid_rerolls': 3.95292, 'restarts': 1.57276, 'sign_reads': 17.0}
+D bestfit {'attempts': 2.57083, 'reads': 48.80085, 'sign_reads': 17.0, 'offgrid_rerolls': 0.51415, 'restarts': 1.57083}

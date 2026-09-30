@@ -115,7 +115,7 @@ jobs:
         run: python3 proofs/megadreifach/security/suit_blind_collision.py --check --full
       - name: Cause control, read before the noon turn (REPORT §3.5; ~4 CPU-min)
         run: python3 proofs/megadreifach/security/suit_blind_collision.py --check --variant pre-noon
-      - name: v2 (C36) evidence, report-size runs match security/v2/logs/ (SPEC §8; engine self-check first; all cores; ~60 CPU-min)
+      - name: v2 (C36) evidence, report-size runs match security/v2/logs/ (SPEC §8; engine self-check first; all cores; 32–36 min wall in CI)
         run: python3 proofs/megadreifach/security/v2/experiments.py --check --set heavy
 
   megadreifach-heavy:

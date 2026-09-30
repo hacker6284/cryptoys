@@ -8,16 +8,20 @@
   of `encryptL n`, the whitening and the final key included), and every sum of squared
   correlations is key-summed and unnormalised. Nothing is proved for the real PassKey
   schedule. L5 involves no layer. L10 is proved for arbitrary layers that send decks to
-  decks. L6, L7 and the row/column sums are stated for DoubleDeal's `encryptL` (the column
-  sums use `FullCipher.fullDiffCount_to_one`, i.e. injective layers); L9 is about the
-  relabellings `v10Sym` and the mask only.
+  decks. L6, L7 and the row/column sums are stated for DoubleDeal's `encryptL`. L6 (through
+  the column sums) uses injective layers; L5, L7, L10 and the row sums use only decks to
+  decks. (The column sums `sum_fullDiffCount_left` use `outDiff_injective`, which uses
+  `FullCipher.fullDiffCount_to_one`; `fullSumSqCorr_cardMask_seat` uses them through L6.)
+  L9 is about the relabellings `v10Sym` and the mask only.
+  Out of scope (not in this module): positivity of the L6 bracket (the proposal's L8), M8c,
+  and the H1–H4 statements.
 
   Definitions.
   * `cardMask s c x = 52 · [x s = c] - 1`: the single-card mask "card `c` sits at seat `s`",
     centred (it sums to `0` over the `52!` decks).
   * `SameSeat c z z'`: card `c` sits at the same seat in `z` and `z'`.
   * `alignCount c c' n y = ∑_{α c = c} ∑_{β c' = c'} fullDiffCount α β n y`.
-  * `sgnDeck x`: the sign of the deck `x` as a permutation (`0` off decks).
+  * `signMask x`: the sign of the deck `x` as a permutation (`0` off decks).
 
   Proved:
   * L5 `autoCorr_cardMask`: `autoCorr (cardMask s c) α = 52! · (52 · [α c = c] - 1)`, for
@@ -35,20 +39,24 @@
   * L9 `autoCorr_cardMask_v10Sym` (a helper, not a headline): for `(a, x) ≠ (0, 0)`,
     `autoCorr (cardMask s c) (v10Sym a x) = -52!`. An immediate corollary of L5 and
     `GridCycleSurvival.v10Sym_fixfree`; its only content is the negative non-transfer: in L6
-    the nontrivial `v10Sym` enter only through the constant, like every relabelling that
-    moves `c`, never through `alignCount` (they fix no card, so they are in neither filter).
+    the nontrivial `v10Sym` enter as input/output differences only through the constant,
+    like every relabelling that moves `c`, never through `alignCount` (they fix no card, so
+    they are in neither filter). They can still occur as intermediate differences inside
+    the rounds, i.e. inside `fullDiffCount`.
   * L10 `corr_keyedLayer_sign`: ONE keyed layer `x ↦ U(x ∘ k₁) ∘ k₂`, `U` any deck map
-    sending decks to decks: `corr (keyedLayer U k₁ k₂) sgnDeck sgnDeck =
-      sign k₁ · sign k₂ · corr U sgnDeck sgnDeck`. The keys only flip the sign.
-  * Supporting: `card_apply_eq` (`51!` decks put `c` at `s`), `sum_fullDiffCount` and
-    `sum_fullDiffCount_left` (rows and columns of `fullDiffCount` sum to `(52!)^(n+2)`),
-    `outDiff_injective`, `sameSeat_rel_iff`, `sgnDeck_permDeck`, `sgnDeck_compose`.
+    sending decks to decks: `corr (keyedLayer U k₁ k₂) signMask signMask =
+      sign k₁ · sign k₂ · corr U signMask signMask`. The keys only flip the sign.
+  * Supporting: `card_apply_eq_indep_card` (the number of decks putting card `c` at seat `s`
+    does not depend on `c`), `card_apply_eq` (`51!` decks put `c` at `s`),
+    `sum_fullDiffCount` and `sum_fullDiffCount_left` (rows and columns of `fullDiffCount` sum
+    to `(52!)^(n+2)`),
+    `outDiff_injective`, `sameSeat_rel_iff`, `signMask_permDeck`, `signMask_compose`.
 
   NOT proved, and limits; read before citing:
   * Any numeric bound. L6 moves the single-card question to `alignCount`, for which no bound
     is proved (not even positivity of the bracket, the proposal's L8, which is not here).
   * L10 is for one keyed layer only: nothing about several rounds, `encryptL` or
-    `encryptN`, and nothing about the value of `corr U sgnDeck sgnDeck` for any DoubleDeal
+    `encryptN`, and nothing about the value of `corr U signMask signMask` for any DoubleDeal
     layer. The stem's exact sign correlation in the note is SCRIPT-COMPUTED and UNPROVED;
     the other first-order and sign values in the note are MEASURED (sampled), not proved.
   * Anything under the real PassKey schedule, anything per key, and any higher-order mask
@@ -70,8 +78,9 @@ open DoubleDeal.Security.GridCycleSurvival (v10Sym_fixfree)
 
 /-! ## Counting decks by one seat -/
 
-/-- Moving the card: as many decks put `c` at seat `s` as put `c'` there. -/
-theorem card_apply_eq_eq (s c c' : Fin 52) :
+/-- The number of decks (as permutations) putting card `c` at seat `s` does not depend on the
+    card: as many put `c` there as put `c'`. -/
+theorem card_apply_eq_indep_card (s c c' : Fin 52) :
     (univ.filter fun π : Equiv.Perm (Fin 52) => π s = c).card =
       (univ.filter fun π : Equiv.Perm (Fin 52) => π s = c').card :=
   PermCount.card_fibre_eq_of_mul (fun π : Equiv.Perm (Fin 52) => π s) (Equiv.swap c c') c' c
@@ -83,7 +92,7 @@ theorem card_apply_eq_eq (s c c' : Fin 52) :
 theorem card_apply_eq (s c : Fin 52) :
     (univ.filter fun π : Equiv.Perm (Fin 52) => π s = c).card = Nat.factorial 51 := by
   have h := PermCount.card_filter_comp_eq (fun π : Equiv.Perm (Fin 52) => π s) univ
-    (fun _ => mem_univ _) _ (fun c' _ => card_apply_eq_eq s c' c) (fun _ => True)
+    (fun _ => mem_univ _) _ (fun c' _ => card_apply_eq_indep_card s c' c) (fun _ => True)
   rw [filter_True, filter_True, card_univ, Fintype.card_perm, Fintype.card_fin,
     card_univ, Fintype.card_fin] at h
   have h52 : Nat.factorial 52 = 52 * Nat.factorial 51 := Nat.factorial_succ 51
@@ -110,7 +119,7 @@ def alignCount (c c' : Fin 52) (n : ℕ) (y : Fin 52 → Nat) : ℕ :=
 
 open Classical in
 /-- The sign of a deck (`0` off decks). -/
-noncomputable def sgnDeck (x : Fin 52 → Nat) : ℤ :=
+noncomputable def signMask (x : Fin 52 → Nat) : ℤ :=
   if h : IsDeck x then ((Equiv.Perm.sign (deckPerm x h) : ℤˣ) : ℤ) else 0
 
 /-! ## L5: the autocorrelation of a single-card mask -/
@@ -303,9 +312,9 @@ theorem fullSumSqCorr_cardMask (s c t c' : Fin 52) (n : ℕ) {y : Fin 52 → Nat
   have hfix : ∀ d : Fin 52, (∑ α : Relabel, (if α d = d then (1 : ℤ) else 0)) =
       Nat.factorial 51 := fun d => by rw [sum_boole, card_apply_eq]
   have hR : ∀ α, (∑ β, (fullDiffCount α β n y : ℤ)) = (Nat.factorial 52 : ℤ) ^ (n + 2) :=
-    fun α => by rw [← Nat.cast_sum, sum_fullDiffCount α n hy]; push_cast; rfl
+    fun α => by rw [← Nat.cast_sum, sum_fullDiffCount α n hy, Nat.cast_pow]
   have hC : ∀ β, (∑ α, (fullDiffCount α β n y : ℤ)) = (Nat.factorial 52 : ℤ) ^ (n + 2) :=
-    fun β => by rw [← Nat.cast_sum, sum_fullDiffCount_left β n hy]; push_cast; rfl
+    fun β => by rw [← Nat.cast_sum, sum_fullDiffCount_left β n hy, Nat.cast_pow]
   have hA : (alignCount c c' n y : ℤ) = ∑ α, ∑ β, (if α c = c then (1 : ℤ) else 0) *
       (fullDiffCount α β n y : ℤ) * (if β c' = c' then 1 else 0) := by
     unfold alignCount
@@ -349,8 +358,9 @@ theorem fullSumSqCorr_cardMask_seat (s s' c t t' c' : Fin 52) (n : ℕ) :
     `v10Sym_fixfree`: for `(a, x) ≠ (0, 0)`, `autoCorr (cardMask s c) (v10Sym a x) = -52!`.
     Its only content is the negative non-transfer: the SumRanks symmetries `v10Sym` (which
     pass the proof's finalRound step on every deck, `FullCipher.dpFCount_v10Sym`) enter L6
-    only through the same constant as every relabelling that moves `c`, never through
-    `alignCount`. Nothing about the cipher's layers. -/
+    as input/output differences only through the same constant as every relabelling that
+    moves `c`, never through `alignCount`; they can still occur as intermediate differences
+    inside the rounds. Nothing about the cipher's layers. -/
 theorem autoCorr_cardMask_v10Sym (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
     (s c : Fin 52) : autoCorr (cardMask s c) (v10Sym a x) = -(Nat.factorial 52 : ℤ) := by
   rw [autoCorr_cardMask, if_neg (v10Sym_fixfree a x hne c)]
@@ -358,43 +368,38 @@ theorem autoCorr_cardMask_v10Sym (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x
 
 /-! ## L10: the sign mask through one keyed layer -/
 
-theorem sgnDeck_permDeck (ρ : Equiv.Perm (Fin 52)) :
-    sgnDeck (permDeck ρ) = ((Equiv.Perm.sign ρ : ℤˣ) : ℤ) := by
-  unfold sgnDeck
+theorem signMask_permDeck (ρ : Equiv.Perm (Fin 52)) :
+    signMask (permDeck ρ) = ((Equiv.Perm.sign ρ : ℤˣ) : ℤ) := by
+  unfold signMask
   rw [dif_pos (isDeck_permDeck ρ)]
   congr 3
   exact Equiv.ext fun i => Fin.ext (deckPerm_val _ _ i)
 
-theorem sgnDeck_compose {z : Fin 52 → Nat} (hz : IsDeck z) (k : Key) :
-    sgnDeck (composeVec 52 Nat z k) = sgnDeck z * ((Equiv.Perm.sign k : ℤˣ) : ℤ) := by
+theorem signMask_compose {z : Fin 52 → Nat} (hz : IsDeck z) (k : Key) :
+    signMask (composeVec 52 Nat z k) = signMask z * ((Equiv.Perm.sign k : ℤˣ) : ℤ) := by
   have hzρ : z = permDeck (deckPerm z hz) := funext fun i => (deckPerm_val z hz i).symm
-  rw [hzρ, compose_permDeck, sgnDeck_permDeck, sgnDeck_permDeck, Equiv.Perm.sign_mul,
+  rw [hzρ, compose_permDeck, signMask_permDeck, signMask_permDeck, Equiv.Perm.sign_mul,
     Units.val_mul]
 
 /-- (PROVED) L10. The sign mask through ONE keyed layer `x ↦ U(x ∘ k₁) ∘ k₂` (`U` any deck
     map sending decks to decks): the keys only flip the sign of the correlation,
-    `corr (keyedLayer U k₁ k₂) sgnDeck sgnDeck = sign k₁ · sign k₂ · corr U sgnDeck sgnDeck`.
+    `corr (keyedLayer U k₁ k₂) signMask signMask = sign k₁ · sign k₂ · corr U signMask signMask`.
     One layer only; no statement about several rounds or about the value of
-    `corr U sgnDeck sgnDeck`. -/
+    `corr U signMask signMask`. -/
 theorem corr_keyedLayer_sign (U : (Fin 52 → Nat) → Fin 52 → Nat)
     (hU : ∀ {x : Fin 52 → Nat}, IsDeck x → IsDeck (U x)) (k₁ k₂ : Key) :
-    corr (keyedLayer U k₁ k₂) sgnDeck sgnDeck =
+    corr (keyedLayer U k₁ k₂) signMask signMask =
       ((Equiv.Perm.sign k₁ : ℤˣ) : ℤ) * ((Equiv.Perm.sign k₂ : ℤˣ) : ℤ) *
-        corr U sgnDeck sgnDeck := by
+        corr U signMask signMask := by
   unfold corr keyedLayer
-  have hc : ∀ π : Equiv.Perm (Fin 52), sgnDeck (composeVec 52 Nat (U (permDeck π)) k₂) =
-      sgnDeck (U (permDeck π)) * ((Equiv.Perm.sign k₂ : ℤˣ) : ℤ) :=
-    fun π => sgnDeck_compose (hU (isDeck_permDeck π)) k₂
-  simp only [compose_permDeck, hc, sgnDeck_permDeck]
-  rw [show (∑ σ : Equiv.Perm (Fin 52), ((Equiv.Perm.sign σ : ℤˣ) : ℤ) * sgnDeck (U (permDeck σ))) =
-      ∑ π : Equiv.Perm (Fin 52), ((Equiv.Perm.sign (π * k₁) : ℤˣ) : ℤ) *
-        sgnDeck (U (permDeck (π * k₁))) from
-    (Fintype.sum_equiv (Equiv.mulRight k₁) _ _ fun _ => rfl).symm, mul_sum]
-  refine sum_congr rfl fun π _ => ?_
-  rw [Equiv.Perm.sign_mul, Units.val_mul]
-  have h1 : ((Equiv.Perm.sign k₁ : ℤˣ) : ℤ) * ((Equiv.Perm.sign k₁ : ℤˣ) : ℤ) = 1 := by
-    rw [← Units.val_mul, Int.units_mul_self, Units.val_one]
-  linear_combination (-(((Equiv.Perm.sign π : ℤˣ) : ℤ) * sgnDeck (U (permDeck (π * k₁))) *
-    ((Equiv.Perm.sign k₂ : ℤˣ) : ℤ))) * h1
+  have hc : ∀ π : Equiv.Perm (Fin 52), signMask (composeVec 52 Nat (U (permDeck π)) k₂) =
+      signMask (U (permDeck π)) * ((Equiv.Perm.sign k₂ : ℤˣ) : ℤ) :=
+    fun π => signMask_compose (hU (isDeck_permDeck π)) k₂
+  simp only [compose_permDeck, hc, signMask_permDeck]
+  -- reindex the left sum by `π ↦ π * k₁⁻¹`; `sign k₁⁻¹ = sign k₁`
+  conv_lhs => rw [← Equiv.sum_comp (Equiv.mulRight k₁⁻¹)]
+  simp only [Equiv.coe_mulRight, inv_mul_cancel_right, Equiv.Perm.sign_mul,
+    Equiv.Perm.sign_inv, Units.val_mul, mul_sum]
+  exact sum_congr rfl fun σ _ => by ring
 
 end DoubleDeal.Security.LinearMasks

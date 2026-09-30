@@ -13,8 +13,10 @@
 #   rows/columns                   sum_b fullDiffCount(a,b) = sum_a fullDiffCount(a,b) = N!^(n+2)
 #   L7  alignCount_eq              alignCount(c,c') = #{(a, L) | c same seat in (y, a y),
 #                                                    c' same seat in (E y, E (a y))}
-#   L6  fullSumSqCorr_cardMask     sum_L corr^2 = N! (N^2 alignCount - N!^(n+3)), all s,c,t,c'
-#       (so the seats s, t do not matter: fullSumSqCorr_cardMask_seat)
+#   L6  fullSumSqCorr_cardMask     sum_L corr^2 = N! (N^2 alignCount - N!^(n+3))
+#       (and, from it, that the seats s, t do not matter: fullSumSqCorr_cardMask_seat)
+#   L7 and L6 are checked for 3 card pairs (c, c') = (0,0), (1,3), (2,1), and L6 for
+#   3 seat pairs (s, t) = (0,0), (1,2), (3,1) each, with n = 0, 1 (not all s, c, t, c').
 #   L10 corr_keyedLayer_sign       corr(k-layer, sgn, sgn) = sgn k1 sgn k2 corr(U, sgn, sgn),
 #                                  all k1, k2, for U and for V
 import itertools, random

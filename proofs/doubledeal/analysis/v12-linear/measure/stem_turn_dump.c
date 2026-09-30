@@ -9,6 +9,7 @@ int main(int argc, char **argv) { long N = atol(argv[1]); uint64_t st = seed_for
   for (long n = 0; n < N; n++) { shuffle_(x, &st); lay_cm(x, g);
     for (int a = 1; a <= 4; a++) { int i = a % 4; rotl(g[i], 13, sr_row_turn(g[(i + 3) % 4])); }
     for (int r = 0; r < 4; r++) for (int c = 0; c < 13; c++) printf("%d ", SUIT(g[r][c]));
-    for (int a = 1; a <= 13; a++) { int j = a % 13; tr[j] = sr_col_turn(g, j); rot_col_down(g, j, tr[j]); }
+    for (int a = 1; a <= 13; a++) { int j = a % 13; tr[j] = sr_col_turn(g, j);
+      rot_col_down(g, j, tr[j]); }
     for (int j = 0; j < 13; j++) printf(j < 12 ? "%d " : "%d\n", tr[j]); }
   return 0; }

@@ -16,7 +16,8 @@ H = defaultdict(int); tot = 0
 for c0 in cols:
     L0 = lab(c0); v0 = vfun(L0)
     for c1 in cols:
-        L1 = lab(c1); t1 = v0 ^ (L1[0] ^ L1[1] ^ L1[2] ^ L1[3]); R1 = rot_down(L1, t1); v1 = vfun(R1)
+        L1 = lab(c1); t1 = v0 ^ (L1[0] ^ L1[1] ^ L1[2] ^ L1[3])
+        R1 = rot_down(L1, t1); v1 = vfun(R1)
         for c2 in cols:
             n = [0, 0, 0, 0]
             for s in c0 + c1 + c2: n[s] += 1

@@ -1,8 +1,10 @@
 """Check the v8/v9/v10/v11/v12 Python port: v12 against the current vectors, v11, v10 and v9
 against their frozen vectors, v8 against frozen dd_v8.py. Then rerun analysis scripts: the
 frozen-v10 SumRanks checks (exit status only), the GridCycle cross-checks (byte-compared with
-their committed logs), and the v12-linear exact 4-card toy checks (toy_link.py, toy_masks.py,
-byte-compared with their logs; they check the toy, not the Lean)."""
+their committed logs), the v12-linear exact 4-card toy checks (toy_link.py, toy_masks.py,
+byte-compared with their logs; they check the toy, not the Lean), and the small-grid check of
+the M8b stem-sign DP (measure/stem_sign_dp.py --small: DP against brute force for m = 2, 3;
+it checks the DP's bookkeeping, not its model)."""
 import random, sys, ddport as P, dd_v8 as V8
 from ddport import REPO
 from dd_v8 import lay_cm, scoop_cm
@@ -75,3 +77,15 @@ for script, log in (('toy_link.py', 'toy_link.log'), ('toy_masks.py', 'toy_masks
         print(r.stdout, r.stderr)
         print('FAIL', (LIN / script).relative_to(REPO), 'vs', log); sys.exit(1)
     print((LIN / script).relative_to(REPO), '==', log)
+# M8b stem-sign DP (SCRIPT-COMPUTED, UNPROVED): the DP parametrised by m against an exact brute
+# force over all 4 x m suit patterns, m = 2, 3 (~2 s), byte-compared with its committed log.
+# The m = 13 run (~2.5 min) is not rerun here (measure/run.sh).
+MEAS = LIN / 'measure'
+r = subprocess.run([sys.executable, 'stem_sign_dp.py', '--small'], cwd=MEAS, capture_output=True,
+                   text=True)
+if r.returncode != 0 or r.stdout != (MEAS / 'logs/stem_sign_dp_small.log').read_text():
+    print(r.stdout, r.stderr)
+    print('FAIL', (MEAS / 'stem_sign_dp.py').relative_to(REPO),
+          '--small vs logs/stem_sign_dp_small.log')
+    sys.exit(1)
+print((MEAS / 'stem_sign_dp.py').relative_to(REPO), '--small == logs/stem_sign_dp_small.log')

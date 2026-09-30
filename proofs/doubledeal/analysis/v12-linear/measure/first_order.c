@@ -20,9 +20,12 @@ int main(int argc,char**argv){ long N=atol(argv[1]); uint64_t st=seed_for(atol(a
   for(int u=0;u<3;u++){ double maxdev=0, mean_q=0, maxq=-1, minq=1; int argc_=-1;
     for(int c=0;c<52;c++){ double qc=0;
       for(int s=0;s<52;s++){ double n_=0; for(int t=0;t<52;t++) n_+=cnt[u][c][s][t];
-        double ss=0; for(int t=0;t<52;t++){ double k=cnt[u][c][s][t]; ss+=k*(k-1); double d=fabs(k/n_-1.0/52); if(d>maxdev) maxdev=d; }
+        double ss=0;
+        for(int t=0;t<52;t++){ double k=cnt[u][c][s][t]; ss+=k*(k-1);
+          double d=fabs(k/n_-1.0/52); if(d>maxdev) maxdev=d; }
         qc+= ss/(n_*(n_-1)) - 1.0/52; }
       qc/=52; mean_q+=qc/52; if(qc>maxq){maxq=qc;argc_=c;} if(qc<minq)minq=qc; }
-    printf("%s: N=%ld  max|P(t|s)-1/52|=%.2e  (q_cc-1/52): mean %.2e max %.2e (card %d) min %.2e ; ELP=(52/51^2)(q-1/52): max %.2e\n",
+    printf("%s: N=%ld  max|P(t|s)-1/52|=%.2e  (q_cc-1/52): mean %.2e max %.2e (card %d) "
+           "min %.2e ; ELP=(52/51^2)(q-1/52): max %.2e\n",
       nm[u],N,maxdev,mean_q,maxq,argc_,minq,maxq*52.0/(51*51)); }
   return 0; }

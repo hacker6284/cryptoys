@@ -164,20 +164,28 @@ nothing proved for the real PassKey schedule, and no numeric bound. The single-c
   `autoCorr (cardMask s c) (v10Sym a x) = −52!`. This is an immediate corollary of L5 and
   `v10Sym_fixfree` (the nontrivial `v10Sym` fix no card). Its only content is negative,
   a non-transfer: the SumRanks symmetries `v10Sym`, which pass the proof's finalRound step
-  on every deck, enter L6 only through the constant term, like every relabelling that
-  moves `c`. It says nothing about the cipher's layers.
+  on every deck, enter L6 as input/output differences only through the constant term,
+  like every relabelling that moves `c`, never through `alignCount`. They can still occur
+  as intermediate differences inside the rounds (inside `fullDiffCount`). It says nothing
+  about the cipher's layers.
 * L10 `corr_keyedLayer_sign`: through ONE keyed layer `x ↦ U(x ∘ k₁) ∘ k₂` (`U` any deck
-  map sending decks to decks), `corr (keyedLayer U k₁ k₂) sgnDeck sgnDeck =
-  sign k₁ · sign k₂ · corr U sgnDeck sgnDeck`: the keys only flip the sign. One layer only;
-  nothing about several rounds, and nothing about the value of `corr U sgnDeck sgnDeck`.
+  map sending decks to decks), `corr (keyedLayer U k₁ k₂) signMask signMask =
+  sign k₁ · sign k₂ · corr U signMask signMask`: the keys only flip the sign. One layer only;
+  nothing about several rounds, and nothing about the value of `corr U signMask signMask`.
+
+Layer hypotheses: L5 involves no layer. L10 is proved for arbitrary layers that send decks
+to decks. L6 and L7 are stated for DoubleDeal's `encryptL`. L6 (through the column sums)
+uses injective layers; L5, L7, L10 and the row sums use only decks to decks. (The column sums
+`sum_fullDiffCount_left` go through `outDiff_injective`, which uses
+`FullCipher.fullDiffCount_to_one`, i.e. injective layers.)
 
 Remark (not a theorem): normalised as in the M8a remark,
 `E_L[ĉ²] = (52/51²)(q − 1/52)` with `q = alignCount / (51! · (52!)^(n+2))`, the fraction
 of (difference fixing `c`, key tuple) pairs whose output difference fixes `c'`. This is the
 formula the M8a toy's last block checked for `N = 4`.
 
-Not in M8b: positivity of the bracket in L6 (the proposal's L8), M8c, and the H1–H4
-statements. No bound on `alignCount` is proved.
+Not in M8b (out of scope): positivity of the bracket in L6 (the proposal's L8), M8c, and
+the H1–H4 statements. No bound on `alignCount` is proved.
 
 ### Exact 4-card toy check (COMPUTED): `toy_masks.py`, log `toy_masks.log`
 
@@ -190,19 +198,28 @@ and L10 for `U` and `V` and every key pair. All of these hold.
 
 ### M8b measurements (MEASURED or SCRIPT-COMPUTED; NOT proofs): `measure/`
 
-`measure/run.sh` builds and runs everything (about 8 min, one core; not run by CI); logs
-are in `measure/logs/`. The C programs use `../v12-differential/ddiff.h` and the v12
+`measure/run.sh` builds and runs everything (about 12 min, one core; not run by CI, except
+that `security/checks/selftest.py` reruns `stem_sign_dp.py --small`); logs are in
+`measure/logs/`. The C programs use `../v12-differential/ddiff.h` and the v12
 model `../v12-keysched/dd12.h`. No theorem uses any of these numbers.
 
 * First order, MEASURED (`first_order.c`, `logs/first_order.log`; 5·10^7 uniform decks,
-  seed 1). For the stem, one unkeyed round (GridCycle after the stem) and a control (a
-  fresh uniform deck), the table `P(card c at output seat t | c at input seat s)`. The
+  seed 1; reruns with seeds 2 and 3 in `logs/first_order_seed2.log`, `_seed3.log`). For
+  the stem, one unkeyed round (GridCycle after the stem) and a control (a fresh uniform
+  deck), the table `P(card c at output seat t | c at input seat s)`. The
   largest entry deviation from `1/52` is 6.3·10^-4 (stem), 6.5·10^-4 (unkeyed round) and
   6.4·10^-4 (control). The largest `q_c − 1/52` (with `q_c` the mean over `s` of
   `∑_t P(t|s)²`) is 5.8·10^-8, 1.0·10^-7 and 5.6·10^-8, and the corresponding
-  `(52/51²)(q − 1/52)` is at most 1.2·10^-9, 2.0·10^-9 and 1.1·10^-9. So **no first-order
-  bias was detected**: the stem and the round are at the noise level of the control, at
-  about 10^-7 resolution in `q`. This does not show there is none.
+  `(52/51²)(q − 1/52)` is at most 1.2·10^-9, 2.0·10^-9 and 1.1·10^-9. Noise level: `q_c`
+  is an unbiased U-statistic from pair counts, about 9.6·10^5 samples per (card, input
+  seat), and under uniform outputs its standard deviation per card is about 2.8·10^-8
+  (from the multinomial variance of the collision estimate; the 52 input seats use disjoint
+  samples). The seed-1 unkeyed maximum, 1.02·10^-7 (card 3), is 3.6 standard deviations,
+  p ≈ 1% after taking the maximum over 52 cards; it did not recur with seed 3 (maxima:
+  stem 3.6·10^-8, unkeyed 5.4·10^-8, control 8.1·10^-8) or seed 2 (stem 7.4·10^-8,
+  unkeyed 4.7·10^-8, control 4.8·10^-8). So **no first-order bias was detected**: the stem
+  and the round are consistent with noise at ±3·10^-8 per card in `q_c − 1/52`; not
+  resolved below that. This does not show there is none.
 * Sign, MEASURED (`sign_layers.c`, `logs/sign_layers.log`; 10^8 uniform decks, seed 2).
   `E[sgn(x) sgn(U x)]`: stem −0.00010, GridCycle alone −0.00001, unkeyed round +0.00019,
   control +0.00008, each ±0.00010 (one standard deviation). All are within 2 standard
@@ -210,7 +227,8 @@ model `../v12-keysched/dd12.h`. No theorem uses any of these numbers.
 * The stem's exact sign correlation, SCRIPT-COMPUTED and UNPROVED (`stem_sign_dp.py`,
   `logs/stem_sign_dp.log`; exact rational arithmetic, about 2.5 min):
   `E[sgn(x) sgn(stem x)] = 2009561917/267966441044041684179375 ≈ 7.5·10^-15`. This value
-  is not in Lean. It rests on the script's model of the stem's column turns: the sign of
+  is not in Lean, and the DP's reduction to a uniform suit pattern is not independently
+  checked (below). It rests on the script's model of the stem's column turns: the sign of
   `stem(x)` times the sign of `x` is `(−1)^(sum of the 13 column turns)`, and the turns
   depend only on the suit pattern (the grid after the row step). That model is checked
   only by sampling, as follows; the checks are not proofs.
@@ -227,8 +245,17 @@ model `../v12-keysched/dd12.h`. No theorem uses any of these numbers.
     model's column rotation reversed or removed, almost every deck mismatches, so the
     check does see the model.) The C stem is `../v12-keysched/dd12.h`, cross-checked
     against the Python port and the vectors there.
-  The rest of the DP (the reduction to a uniform suit pattern and the transfer-matrix
-  count) is not checked beyond its own assertion that it counts all suit patterns.
+  - The transfer-matrix count, parametrised by `m` (a 4 × m grid, m cards of each suit;
+    the stem is m = 13), is compared exactly with a brute force that applies the same
+    model to every suit pattern, for m = 2 and 3 (`stem_sign_dp.py --small`,
+    `logs/stem_sign_dp_small.log`; rerun and byte-compared by `security/checks/selftest.py`):
+    m = 2 gives (2520 patterns, signed sum 88), eps = 11/315; m = 3 gives (369600, 1088),
+    eps = 17/5775; DP and brute force agree. This checks the DP's bookkeeping only, not
+    the model, and for m ≠ 13 it is about the model, not about any cipher. The m = 13
+    run asserts the same check before it prints.
+  The reduction to a uniform suit pattern is argued in the script's header (the stem is a
+  bijection, `ddiff.h` `inv_stem` / `FullCipher.unkeyedNoMix_injective`, so the grid after
+  the row step is uniform; the turns read only suits), but it is not independently checked.
   By L10 (one keyed layer), this value would be the key-free size of the sign correlation
   through one keyed stem layer; nothing is claimed for several layers.
 

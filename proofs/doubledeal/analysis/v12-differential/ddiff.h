@@ -34,4 +34,11 @@ static inline void parse_rel(const char *sp, int *s) { for (int i = 0; i < 52; i
     else if (sscanf(sp, "%d,%d;%d,%d", &a, &b, &c, &d) == 4) { s[a] = b; s[b] = a; s[c] = d; s[d] = c; }
     else if (sscanf(sp, "%d,%d,%d", &a, &b, &c) == 3) { s[a] = b; s[b] = c; s[c] = a; }
     else { sscanf(sp, "%d,%d", &a, &b); s[a] = b; s[b] = a; } }
+/* sign of a permutation p of 0..51 (+1 even, -1 odd), from its cycle lengths
+   (used by the M8b measurements in ../v12-linear/measure/) */
+static inline int sgn(const int *p) { int seen[52] = {0}, s = 1;
+    for (int i = 0; i < 52; i++) if (!seen[i]) { int j = i, l = 0;
+        while (!seen[j]) { seen[j] = 1; j = p[j]; l++; }
+        if (!(l & 1)) s = -s; }
+    return s; }
 static inline int cmpu(const void *x, const void *y) { uint64_t a = *(const uint64_t *)x, b = *(const uint64_t *)y; return a < b ? -1 : a > b; }

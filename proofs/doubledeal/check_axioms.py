@@ -59,8 +59,10 @@ axiom) fails, as does a Lean error.
   `--selftest` also requires every `export func` of the package's sudo to appear in
   its README's "Emitted function" column, and only exports there (LINK2_EXPORT_TABLES).
 - scramble: like cbc-hmac (mode "all", key "full", no KNOWN_SORRY) for
-  proofs/scramble/lean (root `ScrambleV2`, the Scramble v2 Link 2 package, in
-  progress); required: the theorems proofs/scramble/README.md cites (SCRAMBLE_LINK2).
+  proofs/scramble/lean (root `ScrambleV2`, the Scramble v2 Link 2 package; digest-only
+  headline, no trace claim); required: the theorems proofs/scramble/README.md cites
+  (SCRAMBLE_LINK2). `--selftest` checks its "Emitted function" column against
+  primitives/hash/scramble/scramble.sudo too (LINK2_EXPORT_TABLES).
 
 `#audit_all` is the one command in the core-only package proofs/audit (required by
 path by both the security package and MegaDreifach); in mode "all" this script
@@ -403,7 +405,7 @@ CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
     "unpad_iso7816_refines", "unpad_iso7816_rejects", "mac_input_refines",
     "derive_keys_refines", "derive_keys_empty", "cbc_chain_from_cipher_block_refines",
     "tags_equal_refines"]}
-# proofs/scramble/lean (Scramble v2 Link 2, in progress): every theorem
+# proofs/scramble/lean (Scramble v2 Link 2, digest-only headline): every theorem
 # proofs/scramble/README.md cites by name; `--selftest` re-derives the list the same way
 # as MD_README_THEOREMS.
 SCRAMBLE_LEAN = ROOT.parent / "scramble" / "lean"
@@ -459,6 +461,13 @@ SCRAMBLE_LINK2 = {
     "ScrambleV2.Link2.letter_refines",
     "ScrambleV2.Link2.hex_digit_refines",
     "ScrambleV2.Link2.move_name_refines",
+    "ScrambleV2.Link2.pad_v2",
+    "ScrambleV2.Link2.padV2_eq",
+    "ScrambleV2.Link2.apply_ready_v2",
+    "ScrambleV2.Link2.update_v2",
+    "ScrambleV2.Link2.finish_digest",
+    "ScrambleV2.Link2.evaluate_v2",
+    "ScrambleV2.Link2.scramble_v2_digest_refines_digestV2",
 }
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only
@@ -468,9 +477,13 @@ SCRAMBLE_LINK2 = {
 # position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
 # one-line wrappers MegaDreifachBody, HashDeckBodyFrom and MegaDreifachBodyFrom have
 # none. Registering it (wrapper theorems plus an 11-row table) is a planned follow-up.
+# Scramble is listed: its table has a row for each of the 7 exports, and the two v1 rows
+# say v1 is out of scope (no theorem), so the gap is in the table rather than silent.
 LINK2_EXPORT_TABLES = {
     "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                  / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
+    "scramble": (ROOT.parent.parent / "primitives" / "hash" / "scramble" / "scramble.sudo",
+                 SCRAMBLE_LEAN.parent / "README.md"),
 }
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},

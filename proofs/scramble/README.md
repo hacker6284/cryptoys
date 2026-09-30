@@ -23,11 +23,12 @@ cd proofs/scramble/lean/Generated && lake build && ./.lake/build/bin/scramble_te
 
 Expected TAP: **15/15**. Pin and regenerating: [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md).
 
-## Link 2 (in progress): `lean/ScrambleV2`
+## Link 2: `lean/ScrambleV2`
 
 The Lake package `lean/` (library `ScrambleV2`, Lean 4.14, no Mathlib) is the Link 2
 work for `scramble_v2`: a hand-written model of the v2 digest, and theorems that the
-emitted Lean computes it. **The headline is not proved yet.** What is proved, all
+emitted Lean computes it. **The digest-only headline is proved** (see the end of this
+section); the trace is not. What is proved, all
 checked by the axiom gate (`check_axioms.py scramble`: only `propext`,
 `Classical.choice`, `Quot.sound`; no `sorry`, no `native_decide`):
 
@@ -123,11 +124,59 @@ A digest-only state has `traced = false`, so `push_step` does not call `facelets
 - `apply_v2_symbol_digest`: on a digest-only reachable state, one nybble below 16 is one
   v2 symbol (two quarter turns, then Rule B).
 
-**Not proved yet:** `pad`, `apply_ready`, `update`, `evaluate`, `finish`, and the headline
-(a byte message through `scramble_v2_digest`, `update`, `evaluate` returns `.ok` with
-`digest = embed (digestV2 msg)`; the trace is not part of the claim). `scramble_v2` is the
-traced constructor; the digest theorem is stated for the digest-only constructor, which is
-the same cube walk.
+**The digest path end to end** (`ScrambleV2/Link2/Evaluate.lean`). States are written
+field by field, so each statement names every field that changes. All are for the
+digest-only v2 state (`version = 2`, `traced = false`).
+
+- `pad_v2`: with `total = t` (and `t + 1` fitting `i64`), `pad` appends the marker `8`
+  and then the cycle `6 0 7 1` up to 12 nybbles, as the model pads; nothing else changes.
+  `padV2_eq`: the model's padding of a tape is that tape followed by the same suffix,
+  taking `t` as the tape's length.
+- `apply_ready_v2`: on a reachable cube with pending nybbles below 16, `apply_ready`
+  applies every pending nybble as one v2 symbol (the model's walk over them), empties
+  `pending`, and advances `processed` by their count (the sum fitting `i64`).
+- `update_v2`: on a state that is not done, with a byte message (every element at most
+  255), `update` appends the message's nybbles (high first), then does the above;
+  `total` grows by twice the message length.
+- `finish_digest`: `finish` is the model's closer and seat (`F2`, `B2`, Rule B with
+  `up = W`, `front = G`) and sets `done`.
+- `evaluate_v2`: on a state that is not done with `total = t`, `evaluate` (`pad`,
+  `apply_ready`, `finish`, `index_bytes`) returns `.ok`, and the digest is the model's
+  digest of the cube reached by walking pending plus the padding and seating.
+
+**Headline (digest only):** `scramble_v2_digest_refines_digestV2`. For `msg : List Nat`
+with every element at most 255 and `2 · msg.length + 12` fitting `i64`:
+
+```lean
+∃ s0 s1 ev s2, Scramble.scramble_v2_digest = .ok s0 ∧
+  Scramble.update s0 (embed msg) = .ok s1 ∧
+  Scramble.evaluate s1 = .ok (ev, s2) ∧
+  ev.sudo_10Evaluation_6digest = embed (digestV2 msg)
+```
+
+So one `update` with the whole message on a fresh digest-only state, then `evaluate`,
+never traps and yields the model's digest. The model is pinned to the SPEC vectors by the
+five KATs above.
+
+**Not claimed:** the trace (the `trace` field of the evaluation, `push_step` text,
+`facelets_of` output beyond never trapping), and so the traced constructor `scramble_v2`
+(the headline is stated for `scramble_v2_digest`; that the traced state gives the same
+digest is not proved here); several `update` calls in a row (each call's theorem is
+general, but no chained statement is given); an `update` or `evaluate` after `done`
+(the sudo asserts); non-byte input (the sudo asserts, and nothing is claimed about it);
+v1 (`scramble_v1`, `scramble_v1_digest`).
+
+| Emitted function | Theorem | Domain |
+| --- | --- | --- |
+| `scramble_v2_digest` | `scramble_v2_digest_refines`, `fresh_refines` | none |
+| `scramble_v2` | `scramble_v2_refines`, `fresh_refines` | none (constructor only; the traced digest is not claimed) |
+| `update` | `update_v2` | digest-only v2 state, not done, pending nybbles below 16, reachable cube; byte message; counts fit i64 |
+| `evaluate` | `evaluate_v2`, `scramble_v2_digest_refines_digestV2` | as `update`; digest only |
+| `solved_facelets` | `solved_facelets_ok` | none (returns 54 color letters) |
+| `scramble_v1`, `scramble_v1_digest` | none: v1 is out of scope for this package | |
+
+`check_axioms.py --selftest` parses `scramble.sudo` and fails unless every `export func`
+appears in the Emitted function column above, and only exports appear there.
 
 None of this is a hash-security claim.
 

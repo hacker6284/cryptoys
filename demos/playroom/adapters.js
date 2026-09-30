@@ -8,13 +8,14 @@ import { stageCubeView } from "./cube-stage.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";
+import { createDreiToy, stageDrei } from "./drei-stage.js";
 import { formSessionTable, gatherSessionTable } from "./table-form.js";
 import { pickHandTextures, pickMsgTextures } from "./unbox-hand.js";
 import { createDealerKey, playDualUnbox, playRestow, restBoxes } from "./unbox-physical.js";
 import { createInnerGlow, createUnboxRig } from "./unbox-rig.js";
 
 /**
- * Demo adapters — Scramble and DoubleDeal share the playroom shell.
+ * Demo adapters — Scramble, DoubleDeal and MegaDreifach share the playroom shell.
  *
  * Thin shells that place toys on the felt and drive step state.
  * Crypto stays in `demos/scramble/` and `demos/doubledeal/`.
@@ -793,6 +794,265 @@ export function createDoubleDealAdapter() {
             if (unbox2) unbox2.restow();
             if (world?.toys.deck) world.toys.deck.visible = true;
             if (world?.toys.deck2) world.toys.deck2.visible = true;
+        },
+    };
+}
+
+/**
+ * MegaDreifach: three megaminxes on a tray (A carries h, B its inverse,
+ * C stays solved) and a real deck for each block's deal. The tray (with
+ * A, the shelf's only megaminx) flies off the shelf; B, C and the boxed
+ * deck come out of the toy chest; enter lands both on the felt,
+ * then the three puzzles hop in turn (A, B, C) and the deck's flap
+ * lifts while the camera settles on the `drei` seat. Hashing and tracing
+ * run in a worker on the generated module (demos/megadreifach/).
+ */
+export function createMegaDreifachAdapter() {
+    const dock = createDock("megadreifach", {
+        controls: `
+            <div class="playroom-ctl">
+              <span class="playroom-label" id="enc-legend">Encoding</span>
+              <div class="playroom-seg" role="group" aria-labelledby="enc-legend">
+                <button type="button" class="seg-btn on" data-encoding="text">Text</button>
+                <button type="button" class="seg-btn" data-encoding="hex">Hex</button>
+              </div>
+            </div>`,
+        fields: `
+          <label class="playroom-ctl playroom-ctl--field" for="message">
+            <span class="playroom-label">Message</span>
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="Type a message to hash"></textarea>
+          </label>
+          <p id="io-note" class="io-note" hidden></p>
+          <div id="kat-menu" class="drei-kat-menu" role="group" aria-label="Known-answer tests" hidden></div>
+          <label class="playroom-ctl playroom-ctl--field" for="digest">
+            <span class="playroom-label">Digest</span>
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off" placeholder="No message yet"></textarea>
+          </label>
+          <p id="anim-note" class="drei-anim-note" role="status" hidden></p>
+          <p id="status" class="status drei-status" aria-live="polite">Type a message, or pick a known answer.</p>`,
+        digestButton: "Copy",
+        hint: "Step to see each turn.",
+        roundName: "block",
+        speed: { min: 0.5, max: 12, value: 2 },
+        digin: '<button id="kat" class="playroom-digin" type="button" aria-controls="kat-menu">KAT</button>'
+            + '<button id="recentre" class="playroom-digin" type="button" title="Back to the table view">Recentre</button>'
+            + '<button id="sound" class="playroom-digin drei-sound" type="button" aria-pressed="true" title="Sound is on: mute">Sound</button>',
+    });
+    let world = null;
+    let poses = null;
+    let drei = null;
+    let stage = null;
+    let deck = null;
+    let session = null;
+    let sessionMod = null;
+    let textures = null;
+    let preloadPromise = null;
+    let entering = false;
+    let clock = null;
+    let enterGen = 0;
+    let cancelEnter = false;
+    let recentreBound = null;
+    let sound = null;
+
+    async function preload() {
+        if (sessionMod && textures) return { sessionMod, textures };
+        if (!preloadPromise) {
+            preloadPromise = (async () => {
+                const [{ loadCardTextures }, mod] = await Promise.all([
+                    import("../doubledeal/table.js"),
+                    import("../megadreifach/session.js"),
+                ]);
+                sessionMod = mod;
+                textures = await loadCardTextures(4);
+                return { sessionMod, textures };
+            })().catch((err) => {
+                preloadPromise = null;
+                throw err;
+            });
+        }
+        return preloadPromise;
+    }
+
+    async function waitAdopted() {
+        try {
+            await stage?.adopt();
+        } catch (err) {
+            console.warn("cubing.js megaminx adopt failed", err);
+            throw err;
+        }
+        // Seat heights move once the real puzzles are measured.
+        for (const name of ["drei", "dreiB", "dreiC"]) {
+            const toy = world?.toys?.[name];
+            if (toy && !toy.userData.flightBusy && toy.userData.seatSurface !== "table") world.shelfHome(name);
+        }
+        return stage;
+    }
+
+    async function prepareEnter() {
+        if (!world) return null;
+        await waitAdopted();
+        if (deck) return deck;
+        const loaded = await preload();
+        const anisotropy = Math.min(8, world.renderer?.capabilities?.getMaxAnisotropy?.() || 4);
+        // The deck's cards in card-id order (rank × 4 + suit), backs navy.
+        const faces = [];
+        for (let card = 0; card < 52; card++) faces.push(loaded.textures.faces[(card % 4) * 13 + Math.floor(card / 4)]);
+        deck = await createUnboxRig({
+            anisotropy,
+            textures: { faces, back: loaded.textures.navy },
+            sharedMaps: true,
+            label: "DEAL",
+            bodyHex: "#3a2140",
+            innerGlow: world.lights.get("glow:deck3"),
+        });
+        const prev = world.toys.deck3;
+        if (prev) {
+            deck.group.position.copy(prev.position);
+            deck.group.quaternion.copy(prev.quaternion);
+            deck.group.rotation.copy(prev.rotation);
+        }
+        world.replaceToy("deck3", deck.group);
+        disposeObject(prev);
+        deck.restow();
+        stage.setDeck(deck);
+        if (!deck.group.userData.flightBusy) world.shelfHome("deck3");
+        await yieldFrame();
+        return deck;
+    }
+
+    function recentre() {
+        continueTo(poses, "drei", { duration: 900 });
+    }
+
+    return {
+        install(nextWorld, { poses: nextPoses, prefersReducedMotion } = {}) {
+            world = nextWorld;
+            poses = nextPoses;
+            // The deck's sleeve glow, registered dark before the seal.
+            world.lights.add("glow:deck3", createInnerGlow());
+            drei = createDreiToy();
+            const prev = world.toys.drei;
+            world.replaceToy("drei", drei.group);
+            if (prev) disposeObject(prev);
+            world.shelfHome("drei");
+            // B and C wait in the toy chest.
+            for (const [name, toy] of Object.entries(drei.extras)) {
+                const old = world.toys[name];
+                world.replaceToy(name, toy);
+                if (old) disposeObject(old);
+                world.shelfHome(name);
+            }
+            stage = stageDrei(world, drei, { prefersReducedMotion });
+            return drei.group;
+        },
+        async ready() {
+            try {
+                await waitAdopted();
+            } catch {
+                // enter reports it; the hub still loads.
+            }
+            return stage;
+        },
+        preload,
+        prepareEnter,
+        skipEnter() {
+            clock?.skip();
+        },
+        get busy() {
+            return Boolean(entering && clock && !clock.dead(enterGen));
+        },
+        leaveMs({ snap = false } = {}) {
+            if (snap || Boolean(poses?.prefersReducedMotion?.())) return 0;
+            return stage?.dealt ? GATHER_MS : 0;
+        },
+        view() {
+            return stage;
+        },
+        async enter({ snap = false } = {}) {
+            if (session || entering) return session;
+            entering = true;
+            cancelEnter = false;
+            try {
+                if (!deck) await prepareEnter();
+                const root = dock.mount();
+                const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
+                poses?.lockOrbit?.();
+                clock = createBeatClock({ reduced });
+                enterGen = clock.begin();
+                const { sessionMod: mod } = await preload();
+                const specUrl = await dock.specUrl();
+                if (cancelEnter) return session;
+                // Beat sheet (full motion): the director has flown the tray
+                // (A in its cup) off the shelf and, out of the toy chest,
+                // B, C and the DEAL deck (260 ms apart) into B's and C's
+                // cups and beside the tray. Wait for B and C to land.
+                // 0 ms: the camera eases onto the drei seat
+                // (1,300 ms) while A, B, C hop in turn (0 / 170 / 340 ms,
+                // 420 ms each). 700 ms: the deck's flap lifts and settles
+                // (2 × 260 ms). Then the dock.
+                markBeat("drei-present");
+                const seated = continueTo(poses, "drei", { duration: reduced ? 480 : 1300 });
+                const flap = (async () => {
+                    if (reduced || !deck) return;
+                    await clock.wait(700, enterGen);
+                    markBeat("deck-flap");
+                    await clock.tween(260, (t) => deck.setFlap(t * 0.8), { generation: enterGen });
+                    await clock.tween(260, (t) => deck.setFlap(0.8 * (1 - t)), { generation: enterGen });
+                    deck.setFlap(0);
+                })();
+                // B and C must be in their cups before the roll call.
+                for (const name of ["dreiB", "dreiC"]) await waitToyIdle(world.toys[name], clock, enterGen);
+                if (!reduced) await stage.rollCall(clock, enterGen);
+                await flap;
+                await seated;
+                if (cancelEnter) return session;
+                // Sound (new): Web Audio, unlocked by the next gesture.
+                if (!sound) {
+                    const { createSound } = await import("../megadreifach/sound.js");
+                    sound = createSound();
+                }
+                stage.setSound(sound);
+                session = mod.createMegaDreifachSession({
+                    view: stage,
+                    specUrl,
+                    root,
+                    exposeTeach: true,
+                    sound,
+                });
+                stage.rememberSeated();
+                const button = root.querySelector("#recentre");
+                if (button && recentreBound !== button) {
+                    button.addEventListener("click", recentre);
+                    recentreBound = button;
+                }
+                dock.show();
+                return session;
+            } finally {
+                entering = false;
+                clock = null;
+                poses?.unlockOrbit?.();
+            }
+        },
+        async leave({ snap = false } = {}) {
+            cancelEnter = true;
+            clock?.skip();
+            const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
+            session?.dispose();
+            session = null;
+            dock.close();
+            if (stage?.dealt && !reduced) {
+                markBeat("leave-gather");
+                await stage.gather();
+            }
+            stage?.settle();
+            stage?.setSound(null);
+            await stage?.clearShow();
+            deck?.restow();
+        },
+        revealShelf() {
+            deck?.restow();
+            if (world?.toys.drei) world.toys.drei.visible = true;
+            if (world?.toys.deck3) world.toys.deck3.visible = true;
         },
     };
 }

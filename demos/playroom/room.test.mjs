@@ -19,7 +19,7 @@ import {
 import { POSES, resolvePoseName } from "./poses.js";
 import { seatOnSurface } from "./motion.js";
 import { stubThree } from "./three-stub.mjs";
-import { createToyDirector, recipeMotionMs } from "./toy-director.js";
+import { createToyDirector, EXTRA_STAGGER_MS, recipeMotionMs } from "./toy-director.js";
 
 // The registry holds the adapters; they touch three only once installed.
 stubThree();
@@ -81,6 +81,11 @@ assert.equal(DEMOS.doubledeal.pose, "doubledeal");
 assert.equal(DEMOS.scramble.toys[0], "cube");
 assert.equal(recipeMotionMs(DEMOS.scramble), FLY_MS);
 assert.equal(recipeMotionMs(DEMOS.doubledeal), LID_OPEN_MS + FLY_MS + LID_CLOSE_MS);
+// MegaDreifach: one megaminx (A, on the tray) from the shelf; B, C and the
+// DEAL deck come out of the chest, 2 staggers after the first extra.
+assert.deepEqual(DEMOS.megadreifach.toys, ["drei", "dreiB", "dreiC", "deck3"]);
+assert.equal(DEMOS.megadreifach.chest, true);
+assert.equal(recipeMotionMs(DEMOS.megadreifach), LID_OPEN_MS + FLY_MS + LID_CLOSE_MS + 2 * EXTRA_STAGGER_MS);
 const idleDirector = createToyDirector({}, DEMOS);
 assert.equal(idleDirector.borrowMs("doubledeal"), idleDirector.homeMs("doubledeal"));
 assert.equal(CLOCK_STEP_MS, 50);

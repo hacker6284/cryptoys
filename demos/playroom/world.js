@@ -13,6 +13,9 @@ import {
     CEIL_Y,
     SHADE_Y,
     CHEST,
+    DREI_EXTRA,
+    DREI_SEAT_XZ,
+    DREI_TRAY,
     SHELF_Y0,
     SHELF_Y1,
     SLOTS,
@@ -114,11 +117,12 @@ function makeDeckBox(bodyColor, labelText) {
     canvas.width = 128;
     canvas.height = 180;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = bodyColor === 0x6b1e1e ? "#6b1e1e" : "#1a2a44";
+    const fill = `#${bodyColor.toString(16).padStart(6, "0")}`;
+    ctx.fillStyle = fill;
     ctx.fillRect(0, 0, 128, 180);
     ctx.fillStyle = "#e8dcc8";
     ctx.fillRect(10, 18, 108, 28);
-    ctx.fillStyle = bodyColor === 0x6b1e1e ? "#6b1e1e" : "#1a2a44";
+    ctx.fillStyle = fill;
     ctx.font = "bold 16px Georgia,serif";
     ctx.textAlign = "center";
     ctx.fillText(labelText || "DECK", 64, 38);
@@ -537,6 +541,7 @@ export async function mountWorld(canvas) {
     const slots = {
         deck: { ...SLOTS.deck, slot: makeSlot(SLOTS.deck.x) },
         cube: { ...SLOTS.cube, slot: makeSlot(SLOTS.cube.x) },
+        drei: { ...SLOTS.drei, slot: makeSlot(SLOTS.drei.x) },
     };
 
     const chestGroup = new THREE.Group();
@@ -569,6 +574,14 @@ export async function mountWorld(canvas) {
         deck: makeDeckBox(0x6b1e1e, "KEY"),
         deck2: makeDeckBox(0x1a2a44, "MSG"),
         cube: makeCubeSlot(),
+        // MegaDreifach: the megaminx tray (adapter swaps in the real one)
+        // and its deck, which waits in the chest beside MSG.
+        drei: makeCubeSlot(),
+        // B and C: extra megaminxes, kept in the chest (adapter swaps in
+        // the real ones). The shelf holds only A, on the tray.
+        dreiB: makeCubeSlot(),
+        dreiC: makeCubeSlot(),
+        deck3: makeDeckBox(0x3a2140, "DEAL"),
     };
     for (const [name, toy] of Object.entries(toys)) {
         scene.add(toy);
@@ -595,14 +608,18 @@ export async function mountWorld(canvas) {
         });
     }
 
+    // Along the chest floor: MSG in the middle, DEAL beside it, then the
+    // two spare megaminxes on the other side.
+    const CHEST_DZ = { deck3: 0.11, dreiB: -0.11, dreiC: -0.2 };
+
     function getChestPose(name) {
         const box = new THREE.Box3().setFromObject(chestGroup);
         const x = Number.isFinite(box.min.x)
             ? box.min.x * 0.42 + box.max.x * 0.58
             : CHEST.x + 0.12;
-        const z = Number.isFinite(box.min.z)
+        const z = (Number.isFinite(box.min.z)
             ? box.min.z * 0.52 + box.max.z * 0.48
-            : CHEST.z;
+            : CHEST.z) + (CHEST_DZ[name] ?? 0);
         const surfaceY = Number.isFinite(box.min.y) ? box.min.y + 0.055 : 0.08;
         return seatOn(toys[name], {
             x,
@@ -613,7 +630,20 @@ export async function mountWorld(canvas) {
         });
     }
 
+    // MegaDreifach's deck stands left of the tray, behind the left end
+    // of the deal (the dock owns the top-right corner), label to camera.
+    function getDreiDeckPose() {
+        return seatOn(toys.deck3, {
+            x: DEN.x - 0.29,
+            surfaceY: feltTopY() + 0.001,
+            z: DEN.z - 0.10,
+            rotation: { x: 0, y: 0.3, z: 0 },
+            name: "deck3",
+        });
+    }
+
     function getBoxRestPose(name) {
+        if (name === "deck3") return getDreiDeckPose();
         const side = name === "deck2" ? -1 : 1;
         return seatOn(toys[name], {
             x: DEN.x + side * 0.78,
@@ -625,7 +655,7 @@ export async function mountWorld(canvas) {
     }
 
     function getShelfPose(name) {
-        if (name === "deck2") return getChestPose(name);
+        if (name === "deck2" || name === "deck3" || DREI_EXTRA[name]) return getChestPose(name);
         const slot = slots[name];
         if (!slot) return null;
         return seatOn(toys[name], {
@@ -633,17 +663,29 @@ export async function mountWorld(canvas) {
             surfaceY: SHELF_TOP + 0.001,
             z: SHELF_Z,
             // Yaw only — pitch was driving corners through the board.
-            rotation: { x: 0, y: name === "cube" ? 0.45 : 0.15, z: 0 },
+            rotation: { x: 0, y: name === "cube" ? 0.45 : name === "drei" ? 0.12 : 0.15, z: 0 },
             name,
         });
     }
 
     function getTablePose(name) {
-        if (name === "deck2") return getBoxRestPose(name);
+        if (name === "deck2" || name === "deck3") return getBoxRestPose(name);
+        if (DREI_EXTRA[name]) {
+            // Into its cup on the tray (tray table pose, no yaw).
+            const [dx, dz] = DREI_SEAT_XZ[DREI_EXTRA[name]];
+            return seatOn(toys[name], {
+                x: DEN.x + dx,
+                surfaceY: feltTopY() + 0.001 + DREI_TRAY.h + 0.0015,
+                z: DEN.z - 0.12 + dz,
+                rotation: { x: 0, y: 0, z: 0 },
+                name,
+            });
+        }
         return seatOn(toys[name], {
             x: DEN.x,
             surfaceY: feltTopY() + 0.001,
-            z: DEN.z,
+            // The tray sits back so its deal fits in front of it.
+            z: name === "drei" ? DEN.z - 0.12 : DEN.z,
             rotation: { x: 0, y: 0, z: 0 },
             name,
         });
@@ -709,6 +751,10 @@ export async function mountWorld(canvas) {
     shelfHome("deck");
     shelfHome("cube");
     shelfHome("deck2");
+    shelfHome("drei");
+    shelfHome("dreiB");
+    shelfHome("dreiC");
+    shelfHome("deck3");
 
     placePlant(scene, plantAGltf, 0.35, SHELF_Y1, SHELF_Z, 0.22, 0.2);
     placePlant(scene, plantBGltf, 1.05, SHELF_Y1, SHELF_Z, 0.18, -0.35);
@@ -747,8 +793,9 @@ export async function mountWorld(canvas) {
 
     function render() {
         // Re-apply Twisty fit after cubing.js's own rAF so a late
-        // matrix/scale write cannot stick as the drawn size.
-        toys.cube?.userData?.keepFitted?.();
+        // matrix/scale write cannot stick as the drawn size (the cube,
+        // and the three megaminxes on the MegaDreifach tray).
+        for (const toy of Object.values(toys)) toy?.userData?.keepFitted?.();
         renderer.render(scene, camera);
     }
 

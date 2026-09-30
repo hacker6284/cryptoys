@@ -45,6 +45,18 @@ it contains `x`/`y`/`z` on those puzzles, so Rule B / seat rotations are
 dropped — Play/Step still advance; those leaves are empty. Solve is 3×3
 only. MegaDreifach is a different product; this UI does not run it.
 
+MegaDreifach ([`drei-stage.js`](drei-stage.js)) seats **three** megaminx
+rigs (`createTwistySeat`, edge `MINX` 72 mm): A on the tray (the shelf
+toy `drei`), B and C as their own toys (`dreiB`, `dreiC`) that fly from
+the toy chest into the tray's cups. Each gets its
+own player and alg (the show's A / B / C move lists, literal turns such
+as `U2'`); grips are a quaternion on `rig.lift`, never on the adopted
+object. Adopting three players costs about three times the 3×3 boot on
+software GL. `playLeaves` takes an optional `onLeaf(index)` callback
+(used only for MegaDreifach's turn sound); without it behaviour is
+unchanged. Rest heights come from `measureLocalBox(seat.fit)`: a
+world box measured mid-flight left C floating.
+
 ## Host / matrix / three.js
 
 - Host stays a tiny in-viewport canvas (`80×56`, opacity `0.02`).

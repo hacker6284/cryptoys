@@ -67,3 +67,12 @@ Loaded at runtime from `https://cdn.cubing.net/v0/js/cubing/twisty`. Not vendore
 | Source | License | Notes |
 |--------|---------|-------|
 | [cubing/cubing.js](https://github.com/cubing/cubing.js) (js.cubing.net team) | **MPL-2.0 OR GPL-3.0-or-later** | Library use. Do not patch in-tree without publishing those modifications. See `demos/playroom/CUBING.md`. |
+
+## Paper textures (MegaDreifach tent cards)
+
+Loaded by `demos/playroom/drei-stage.js` for the A / B / C tent cards on the megaminx tray: `textures/paper001/Color.jpg` and `NormalGL.jpg` (white face, grain), `textures/paper005/Color.jpg` (kraft inside of the fold). Downscaled from the 1K-JPG set to 256² (the cards are 3 cm wide); Roughness maps not shipped. Rows verbatim from the MegaDreifach asset scrounge manifest (2026-09-30):
+
+| File | Source | Author (as shown) | License (as shown) | Verified | Size | Description |
+|---|---|---|---|---|---|---|
+| `models/textures/paper001/{Color,NormalGL,Roughness}.jpg` | [ambientCG Paper001](https://ambientcg.com/view?id=Paper001) (1K-JPG) | ambientCG | CC0 1.0 Universal ("Creative Commons CC0", page + https://docs.ambientcg.com/license/) | 2026-09-30 | 392 K / 1.2 M / 428 K | White paper grain at 1024². Use NormalGL + Roughness on the existing procedural box and tint the albedo (DECK/KEY maroon, MSG navy), like `fabric/` on the felt. Also works on A/B/C tent cards. |
+| `models/textures/paper005/{Color,NormalGL,Roughness}.jpg` | [ambientCG Paper005](https://ambientcg.com/view?id=Paper005) (1K-JPG) | ambientCG | CC0 1.0 Universal (as above) | 2026-09-30 | 940 K / 1.1 M / 304 K | Smooth brown kraft/packaging board. Good for an unprinted cardboard look. |

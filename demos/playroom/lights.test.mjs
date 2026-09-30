@@ -86,7 +86,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const scene = new THREE.Scene();
 const lights = createLights(scene);
 const toys = {};
-for (const name of ["deck", "deck2", "cube"]) {
+for (const name of ["deck", "deck2", "cube", "drei", "dreiB", "dreiC", "deck3"]) {
     toys[name] = new THREE.Group();
     scene.add(toys[name]);
     lights.add(`rim:${name}`, new THREE.PointLight(0xffc078, 0), toys[name]);

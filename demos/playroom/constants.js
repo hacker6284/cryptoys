@@ -11,11 +11,22 @@ export const CARD_D = 0.088;
 // is real-life 3×3 scale (120 mm was ~2× life size); seatOnSurface
 // plants the live post-scale AABB.
 export const CUBE = 0.057;
+// Presentation edge (local max extent) of each MegaDreifach megaminx:
+// a real 12-colour megaminx is about 70 mm across.
+export const MINX = 0.072;
+// MegaDreifach tray: A rides it from the shelf; B and C (one megaminx
+// each) come out of the toy chest and land in their cups.
+export const DREI_TRAY = { w: 0.31, h: 0.012, d: 0.175 };
+export const DREI_SEAT_XZ = { A: [0, 0.038], B: [-0.098, -0.036], C: [0.098, -0.036] };
+export const DREI_EXTRA = { dreiB: "B", dreiC: "C" };
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = 0.092;
 
 export function toyHalfHeight(name) {
-    return name === "deck" || name === "deck2" ? DECK_H / 2 : CUBE / 2;
+    if (name === "deck" || name === "deck2" || name === "deck3") return DECK_H / 2;
+    if (name === "drei") return MINX / 2 + 0.012;
+    if (name === "dreiB" || name === "dreiC") return MINX / 2;
+    return CUBE / 2;
 }
 
 export const DEN = { x: -0.35, z: 0.15 };
@@ -36,6 +47,8 @@ export const SHELF_TOP = SHELF_Y1 + SHELF_THICK / 2;
 export const SLOTS = {
     deck: { x: -1.35, y: SHELF_Y1 },
     cube: { x: -0.55, y: SHELF_Y1 },
+    // MegaDreifach's tray of three megaminxes; its deck waits in the chest.
+    drei: { x: -0.04, y: SHELF_Y1 },
 };
 
 // Shared rAF step cap. 60fps is unchanged (~16ms). Software-GL and

@@ -21,6 +21,7 @@ on:
       - "demos/**"
       - "primitives/hash/scramble/**"
       - "primitives/cipher/doubledeal/**"
+      - "primitives/hash/megadreifach/**"
       - "tools/build.sh"
       - "tools/generate-demos.sh"
       - "tools/render-build.sh"

@@ -46,12 +46,12 @@ The experiments are the v2-relevant scripts of the grip-rule review (2026-09-29,
 
 ```sh
 python3 experiments.py --check              # quick set: about 1 s, local and CI (CI: proofs.yml, megadreifach-lean)
-python3 experiments.py --check --set heavy  # 13–15 min wall local (4 workers), 32–36 min in CI (CI: proofs-heavy.yml, megadreifach-v2-evidence, 3 parts)
+python3 experiments.py --check --set heavy  # 13–15 min wall local (4 workers); CI: proofs-heavy.yml, megadreifach-v2-evidence (3 parallel parts)
 python3 experiments.py --only swaps         # rewrite one log
 python3 experiments.py --list
 ```
 
-Every experiment is seeded. The work is split into a fixed number of chunks with per-chunk seeds, so no result depends on `--workers`. Exit status is non-zero if the self-check fails, if an experiment's own re-verification fails, or (with `--check`) if a committed log differs from a fresh run. Measured wall times for the heavy set: local with 4 workers, 13 min in one run (`swaps` 433 s, `targeted_T` 172 s, `telescoping` 84 s, `local` 39 s, `truncated` 26 s, `coverage_chunks` 26 s, `same_blocks` 14 s, the rest under 3 s each) and 15.2 min in the reviewer's run; CI (`megadreifach-attack-logs` step, 4 workers), 31.7 and 36.0 min (`swaps` 1020 s, `targeted_T` 442 s, `telescoping` 218 s in the first). The quick set takes about 1 s, local and CI.
+Every experiment is seeded. The work is split into a fixed number of chunks with per-chunk seeds, so no result depends on `--workers`. Exit status is non-zero if the self-check fails, if an experiment's own re-verification fails, or (with `--check`) if a committed log differs from a fresh run. Measured wall times for the heavy set: local with 4 workers, 13 min in one run (`swaps` 433 s, `targeted_T` 172 s, `telescoping` 84 s, `local` 39 s, `truncated` 26 s, `coverage_chunks` 26 s, `same_blocks` 14 s, the rest under 3 s each) and 15.2 min in the reviewer's run; CI (4 workers), in the three parallel parts of `megadreifach-v2-evidence` (PR #137): `swaps` 17.6 min (1054 s); `targeted_T telescoping` 11.7 min (473 s + 230 s); the rest 2.9 min (`local` 64 s, `coverage_chunks` 39 s, `truncated` 32 s, `same_blocks` 29 s, the others under 5 s each). As one sequential step (#135) the heavy set took 31.7–36.0 min in CI. The quick set takes about 1 s, local and CI.
 
 ## Evidence for each SPEC statement
 

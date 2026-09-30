@@ -146,16 +146,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # ci: measured step wall time on the ubuntu-latest runner (4 workers), PR #137
           - part: swaps
             only: swaps
+            ci: 17.6 min in CI
           - part: targeted_T telescoping
             only: targeted_T telescoping
+            ci: 11.7 min in CI
           - part: rest
             only: ""
+            ci: 2.9 min in CI
     name: megadreifach-v2-evidence (${{ matrix.part }})
     steps:
       - uses: actions/checkout@v5
-      - name: v2 (C36) evidence, report-size runs match security/v2/logs/ (${{ matrix.part }}; all cores)
+      - name: v2 (C36) evidence, report-size runs match security/v2/logs/ (${{ matrix.part }}; all cores; ${{ matrix.ci }})
         env:
           ONLY: ${{ matrix.only }}
         run: |

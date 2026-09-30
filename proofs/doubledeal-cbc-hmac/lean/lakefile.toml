@@ -13,8 +13,12 @@ path = "../../audit"
 [[lean_lib]]
 name = "DoubleDealCbcHmac"
 
+# The MegaDreifach Link 2 sources (v_Hash_refines and its lemmas), elaborated here
+# against this package's own emitted Generated/Megadreifach.lean. Not a build target:
+# `globs` only lets `import MegaDreifach.…` resolve to srcDir; lake builds exactly the
+# modules DoubleDealCbcHmac imports.
 [[lean_lib]]
 name = "MegaDreifachLink"
 srcDir = "../../megadreifach/lean"
-roots = ["MegaDreifach.Link2.VHash"]
+roots = []
 globs = ["MegaDreifach.+"]

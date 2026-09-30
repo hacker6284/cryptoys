@@ -4,6 +4,7 @@
   lemmas (`MegaDreifach.Link2.Sudo`, `chain_loop`). Not emitter soundness.
 -/
 import MegaDreifach.Link2.Loop
+import MegaDreifach.Link2.Helpers
 
 namespace DoubleDealCbcHmac.Link2
 open MegaDreifach.Link2
@@ -82,11 +83,6 @@ theorem decide_zero_le_ofNat (n : Nat) : decide ((0 : Int) ≤ Int.ofNat n) = tr
 theorem decide_ofNat_le_of {a b : Nat} (h : a ≤ b) :
     decide (Int.ofNat a ≤ Int.ofNat b) = true :=
   decide_eq_true (Int.ofNat_le.mpr h)
-
-/-- `(embed l).push x` is `embed (l ++ [x])`. -/
-theorem push_embed' (l : List Nat) (x : Nat) :
-    (embed l).push (Int.ofNat x) = embed (l ++ [x]) := by
-  simp [embed, List.map_append, Array.push]
 
 /-- An emitted ascending loop `for i = fromN to toN` whose body appends `g i` to the
     accumulator: it ends with `pre ++ [g fromN, …, g toN]`. -/

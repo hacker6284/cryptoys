@@ -8,20 +8,22 @@
 import DoubleDealCbcHmac.Spec
 import DoubleDealCbcHmac.Link2.Loop
 import MegaDreifach.Link2.Bytes
+import MegaDreifach.Link2.MulGenMath
 import Doubledeal_cbc_hmac
 
 namespace DoubleDealCbcHmac.Link2
 open MegaDreifach.Link2
 
-/-- Every cell is a byte (the sudo `require_bytes` range). -/
-def Bytes (xs : List Nat) : Prop := ∀ b ∈ xs, b ≤ 255
+/-- Every cell is a byte (the sudo `require_bytes` range): MegaDreifach's `Byte` on
+    each cell, i.e. `PadWf.bytes` without the length bound. -/
+def Bytes (xs : List Nat) : Prop := ∀ b ∈ xs, Byte b
+
+/-- The CBC message block and the HMAC block are both 28 bytes (SPEC §2); the sudo uses
+    `hmac_block` for the pad. The one bridge between the two model parameters. -/
+theorem msgBlock_eq_hmacBlock : msgBlock = hmacBlock := rfl
 
 theorem Bytes.get {xs : List Nat} (h : Bytes xs) (i : Nat) (hi : i < xs.length) :
     xs[i] ≤ 255 := h _ (List.getElem_mem hi)
-
-theorem getD_eq_get (xs : List Nat) (i : Nat) (hi : i < xs.length) :
-    xs.getD i 0 = xs[i] := by
-  simp [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hi]
 
 /-! ## require_bytes -/
 
@@ -121,8 +123,8 @@ theorem xorBytes_prefix (a b : List Nat) (n : Nat) (hn : n ≤ a.length) (hab : 
     rw [List.range'_1_concat, List.map_append, ih (by omega)]
     simp only [xorBytes, Nat.zero_add, List.map_cons, List.map_nil]
     rw [List.take_succ, List.take_succ, List.getElem?_eq_getElem (by omega : n < a.length),
-      List.getElem?_eq_getElem (by omega : n < b.length), getD_eq_get a n (by omega),
-      getD_eq_get b n (by omega)]
+      List.getElem?_eq_getElem (by omega : n < b.length), getD_eq_getElem' a n (by omega),
+      getD_eq_getElem' b n (by omega)]
     simp [List.zipWith_append, List.length_take, Nat.min_eq_left (by omega : n ≤ a.length),
       Nat.min_eq_left (by omega : n ≤ b.length)]
 
@@ -150,8 +152,8 @@ theorem xor_bytes_refines (a b : List Nat) (hab : a.length = b.length) (ha : Byt
       dsimp only
       rw [if_neg (ofNat_not_gt hi), atL_embed a i hia, ok_bind, atL_embed b i hib, ok_bind,
         xor_byte_refines _ _ (ha.get i hia) (hb.get i hib), ok_bind]
-      simp only [SudoRt.appendL, ok_bind, push_embed']
-      rw [asc_tail _ i (FitsLen.succ_le hia hfit), getD_eq_get a i hia, getD_eq_get b i hib]
+      simp only [SudoRt.appendL, ok_bind, push_embed]
+      rw [asc_tail _ i (FitsLen.succ_le hia hfit), getD_eq_getElem' a i hia, getD_eq_getElem' b i hib]
     · simp only [List.nil_append, Nat.sub_zero, Nat.sub_add_cancel hpos]
       rw [xorBytes_prefix a b _ (by omega) hab, ← hab, List.take_length, hab, List.take_length]
 
@@ -173,8 +175,8 @@ theorem take_prefix_refines (xs : List Nat) (n : Nat) (hn : n ≤ xs.length)
     · intro i l _ hi
       have hix : i < xs.length := by omega
       rw [if_neg (ofNat_not_gt hi), atL_embed xs i hix, ok_bind]
-      simp only [SudoRt.appendL, ok_bind, push_embed']
-      rw [asc_tail (n - 1) i (FitsLen.of_le hfit (by omega)), getD_eq_get xs i hix]
+      simp only [SudoRt.appendL, ok_bind, push_embed]
+      rw [asc_tail (n - 1) i (FitsLen.of_le hfit (by omega)), getD_eq_getElem' xs i hix]
     · simp only [List.nil_append, Nat.sub_zero, Nat.sub_add_cancel hpos]
       rw [range'_map_getD xs 0 n (by omega), List.drop_zero]
 
@@ -187,7 +189,7 @@ theorem range'_map_pad (xs : List Nat) (n : Nat) (hn : xs.length ≤ n) :
     simp only [List.length_map, List.length_range'] at h1
     rw [List.getElem_map, List.getElem_range', Nat.zero_add, Nat.one_mul]
     by_cases hi : i < xs.length
-    · rw [if_pos hi, List.getElem_append_left hi, getD_eq_get xs i hi]
+    · rw [if_pos hi, List.getElem_append_left hi, getD_eq_getElem' xs i hi]
     · rw [if_neg hi, List.getElem_append_right (by omega)]
       simp
 
@@ -212,13 +214,13 @@ theorem pad_zeros_refines (xs : List Nat) (n : Nat) (hn : xs.length ≤ n) (hfit
       · have hd : decide (Int.ofNat i < Int.ofNat xs.length) = true :=
           decide_eq_true (Int.ofNat_lt.mpr hix)
         rw [if_neg (ofNat_not_gt hi)]
-        simp only [hd, if_true, atL_embed xs i hix, ok_bind, SudoRt.appendL, push_embed']
-        rw [asc_tail (n - 1) i hfi, if_pos hix, getD_eq_get xs i hix]
+        simp only [hd, if_true, atL_embed xs i hix, ok_bind, SudoRt.appendL, push_embed]
+        rw [asc_tail (n - 1) i hfi, if_pos hix, getD_eq_getElem' xs i hix]
       · have hd : decide (Int.ofNat i < Int.ofNat xs.length) = false :=
           decide_eq_false (fun h => hix (Int.ofNat_lt.mp h))
         rw [if_neg (ofNat_not_gt hi)]
         simp only [hd, Bool.false_eq_true, if_false, ok_bind, SudoRt.appendL,
-          show (0 : Int) = Int.ofNat 0 from rfl, push_embed']
+          show (0 : Int) = Int.ofNat 0 from rfl, push_embed]
         rw [asc_tail (n - 1) i hfi, if_neg hix]
     · simp only [List.nil_append, Nat.sub_zero, Nat.sub_add_cancel hpos]
       rw [range'_map_pad xs n hn]
@@ -234,7 +236,7 @@ theorem range'_map_xor_rep (k : List Nat) (p : Nat) :
     simp only [List.length_map, List.length_range'] at h1
     unfold xorBytes
     rw [List.getElem_map, List.getElem_range', Nat.zero_add, Nat.one_mul,
-      List.getElem_zipWith, getD_eq_get k i h1, List.getElem_replicate]
+      List.getElem_zipWith, getD_eq_getElem' k i h1, List.getElem_replicate]
 
 theorem xor_pad_refines (k : List Nat) (p : Nat) (hk : k.length = hmacBlock) (hb : Bytes k)
     (hp : p ≤ 255) :
@@ -251,8 +253,8 @@ theorem xor_pad_refines (k : List Nat) (p : Nat) (hk : k.length = hmacBlock) (hb
     have hik : i < k.length := by rw [hk]; unfold hmacBlock; omega
     rw [if_neg (ofNat_not_gt hi), atL_embed k i hik, ok_bind,
       xor_byte_refines _ _ (hb.get i hik) hp, ok_bind]
-    simp only [SudoRt.appendL, ok_bind, push_embed']
-    rw [asc_tail _ i (by unfold FitsLen i64MaxNat; omega), getD_eq_get k i hik]
+    simp only [SudoRt.appendL, ok_bind, push_embed]
+    rw [asc_tail _ i (by unfold FitsLen i64MaxNat; omega), getD_eq_getElem' k i hik]
   · simp only [List.nil_append]
     rw [show (28 - 1 + 1 - 0) = k.length by rw [hk]; rfl, range'_map_xor_rep, hk]
     rfl
@@ -276,8 +278,8 @@ theorem cbc_chain_from_cipher_block_refines (block : List Nat) (hlen : block.len
   · intro i l h1 hi
     have hib : i < block.length := by rw [hlen]; unfold cipherBlock; omega
     rw [if_neg (ofNat_not_gt hi), atL_embed block i hib, ok_bind]
-    simp only [SudoRt.appendL, ok_bind, push_embed']
-    rw [asc_tail _ i (by unfold FitsLen i64MaxNat; omega), getD_eq_get block i hib]
+    simp only [SudoRt.appendL, ok_bind, push_embed]
+    rw [asc_tail _ i (by unfold FitsLen i64MaxNat; omega), getD_eq_getElem' block i hib]
   · simp only [List.nil_append]
     rw [range'_map_getD block 1 28 (by rw [hlen]; decide), cbcChain,
       List.take_of_length_le (by rw [List.length_drop, hlen]; decide)]
@@ -312,7 +314,7 @@ theorem u64be_refines (n : Nat) (hn : FitsLen n) :
     rw [show (8 : Int) = Int.ofNat 8 from rfl, show (256 : Int) = Int.ofNat 256 from rfl,
       if_neg (ofNat_not_gt hi), modI_ofNat _ (by decide), ok_bind, divI_ofNat _ (by decide),
       ok_bind]
-    simp only [SudoRt.appendL, ok_bind, push_embed']
+    simp only [SudoRt.appendL, ok_bind, push_embed]
     rw [asc_tail 8 i (by unfold FitsLen i64MaxNat; omega)]
     have hr : (List.range' 1 (i - 1)).map g ++ [n / 256 ^ (i - 1) % 256] =
         (List.range' 1 (i + 1 - 1)).map g := by
@@ -339,7 +341,7 @@ theorem u64be_refines (n : Nat) (hn : FitsLen n) :
       dsimp only
       rw [if_neg (show ¬ (Int.ofNat i < 0) from Int.not_lt.mpr (Int.ofNat_zero_le i)), atL_ofNat _ i (by rw [size_embed]; exact hlen),
         get_embed, ok_bind]
-      simp only [SudoRt.appendL, ok_bind, push_embed']
+      simp only [SudoRt.appendL, ok_bind, push_embed]
       rw [show (0 : Int) = Int.ofNat 0 from rfl, desc_tail i (by unfold FitsLen i64MaxNat; omega)]
       have hg : (List.map g (List.range' 1 (8 + 1 - 1)))[i] = p i := by
         have := hP i (by omega)
@@ -363,8 +365,8 @@ theorem allEq_succ (a b : List Nat) (i : Nat) (hia : i < a.length) (hib : i < b.
     allEq a b (i + 1) = if a[i] = b[i] then allEq a b i else false := by
   unfold allEq
   rw [List.range_succ, List.all_append]
-  simp only [List.all_cons, List.all_nil, Bool.and_true, getD_eq_get a i hia,
-    getD_eq_get b i hib]
+  simp only [List.all_cons, List.all_nil, Bool.and_true, getD_eq_getElem' a i hia,
+    getD_eq_getElem' b i hib]
   by_cases h : a[i] = b[i] <;> simp [h]
 
 theorem allEq_iff (a b : List Nat) (hab : a.length = b.length) :
@@ -380,7 +382,7 @@ theorem allEq_iff (a b : List Nat) (hab : a.length = b.length) :
     intro j h1 h2
     have := (List.all_eq_true.mp H) j (List.mem_range.mpr h1)
     simp only [beq_iff_eq] at this
-    rwa [getD_eq_get a j h1, getD_eq_get b j h2] at this
+    rwa [getD_eq_getElem' a j h1, getD_eq_getElem' b j h2] at this
 
 theorem tags_equal_refines (a b : List Nat) (hfa : FitsLen a.length) :
     Doubledeal_cbc_hmac.tags_equal (embed a) (embed b) = .ok (tagsEqual a b) := by

@@ -8,6 +8,9 @@ import MegaDreifach.Link2.PosBytesGen
   `H := vhashAlg`, the model MegaDreifach's `v_Hash_refines` proves the emitted
   `Megadreifach.v_Hash` equal to. Refinement holds on byte lists whose lengths fit the
   i64 bounds the emitted runtime checks (`FitsLen` / `FitsBitlen`). Not emitter soundness.
+  `vhashAlg` is a transliteration of the MegaDreifach sudo, not an independent spec:
+  these theorems prove the HMAC / KDF wiring around the hash; the hash itself is only
+  as independent as `vhashAlg`.
 -/
 
 namespace DoubleDealCbcHmac.Link2
@@ -28,7 +31,7 @@ theorem vhashAlg_bytes (msg : List Nat) : Bytes (vhashAlg msg) := by
   intro b hb
   unfold vhashAlg MegaDreifach.positionToBytes at hb
   have := toBE_mem_lt _ _ (rankPosition_lt_digest _ (injPos_chainPre _ _)) b hb
-  omega
+  unfold Byte; omega
 
 theorem hmacBlock_int : Doubledeal_cbc_hmac.hmac_block = Int.ofNat hmacBlock := rfl
 
@@ -67,7 +70,7 @@ theorem normalizeKey_bytes (key : List Nat) (hb : Bytes key) : Bytes (normalizeK
     intro b hb'
     rcases List.mem_append.mp hb' with h1 | h1
     · exact hb b h1
-    · rw [List.eq_of_mem_replicate h1]; decide
+    · rw [List.eq_of_mem_replicate h1]; unfold Byte; decide
 
 theorem hmac_normalize_key_refines (key : List Nat) (hb : Bytes key)
     (hfit : FitsBitlen key.length) :
@@ -159,21 +162,21 @@ theorem u16be_bytes (n : Nat) : Bytes (u16be n) := by
   simp only [u16be, beBytes, List.mem_map] at hb
   obtain ⟨i, _, rfl⟩ := hb
   have := Nat.mod_lt (n / 256 ^ i) (by decide : 0 < 256)
-  omega
+  unfold Byte; omega
 
 theorem u64be_bytes (n : Nat) : Bytes (u64be n) := by
   intro b hb
   simp only [u64be, beBytes, List.mem_map] at hb
   obtain ⟨i, _, rfl⟩ := hb
   have := Nat.mod_lt (n / 256 ^ i) (by decide : 0 < 256)
-  omega
+  unfold Byte; omega
 
 theorem u16be_length (n : Nat) : (u16be n).length = 2 := by simp [u16be, beBytes]
 theorem u64be_length (n : Nat) : (u64be n).length = 8 := by simp [u64be, beBytes]
 
-theorem label_bytes_enc : Bytes encLabel := by unfold Bytes; decide
-theorem label_bytes_mac : Bytes macLabel := by unfold Bytes; decide
-theorem label_bytes_version : Bytes versionLabel := by unfold Bytes; decide
+theorem label_bytes_enc : Bytes encLabel := by unfold Bytes Byte; decide
+theorem label_bytes_mac : Bytes macLabel := by unfold Bytes Byte; decide
+theorem label_bytes_version : Bytes versionLabel := by unfold Bytes Byte; decide
 
 /-- SPEC §5 key schedule: on a nonempty byte master secret whose hash inputs fit the
     pad's i64 bit length. -/
@@ -204,6 +207,8 @@ theorem derive_keys_refines (mk : List Nat) (hb : Bytes mk) (hne : mk ≠ [])
     hmacBlock_int]
   rw [take_prefix_refines _ _ (by rw [vhashAlg_length]; decide)
     (by rw [vhashAlg_length]; unfold FitsLen i64MaxNat; decide), ok_bind]
+  -- the model takes `msgBlock` bytes of the enc hash; the sudo takes `hmac_block`
+  rw [deriveKeys, msgBlock_eq_hmacBlock]
   rfl
 
 /-- The empty master secret is rejected (SPEC §5), by the assert on line 152. -/

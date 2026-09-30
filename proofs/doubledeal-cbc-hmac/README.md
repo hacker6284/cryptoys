@@ -39,7 +39,10 @@ Package `lean/` (root `DoubleDealCbcHmac`, core Lean only).
   the emitted function returns `.ok (embed model)`. `H` is instantiated with
   MegaDreifach's algebraic hash `vhashAlg`, which `v_Hash_refines`
   (`proofs/megadreifach/lean/MegaDreifach/Link2/VHash.lean`) proves equal to the
-  emitted `Megadreifach.v_Hash`.
+  emitted `Megadreifach.v_Hash`. `vhashAlg` is a transliteration of the MegaDreifach
+  sudo, not an independent specification of the hash. So for HMAC and the key
+  schedule the theorems prove the HMAC / KDF wiring around the hash; the hash itself
+  is only as independent as `vhashAlg`.
 
 | Emitted function | Theorem | Domain |
 | --- | --- | --- |
@@ -53,14 +56,18 @@ Package `lean/` (root `DoubleDealCbcHmac`, core Lean only).
 | `cbc_chain_from_cipher_block` | `cbc_chain_from_cipher_block_refines` | 29 bytes |
 | `tags_equal` | `tags_equal_refines` | length of the first fits i64 |
 
-Hypotheses are domain conditions only: every input element is a byte and the
-lengths fit the i64 bounds the emitted runtime checks. Outside them nothing is
-claimed (the emitted code traps or overflows there; the model has no traps).
+Hypotheses are domain conditions only: every input element is a byte, the lengths
+fit the i64 bounds the emitted runtime checks, plus the sudo's own asserts (equal
+lengths for `xor_bytes`, a 29-byte block for `cbc_chain_from_cipher_block`, a
+non-empty master for `derive_keys`). Outside them nothing is claimed (the emitted
+code traps or overflows there; the model has no traps).
 
-`unpad` follows SPEC §3.1 literally: the stream is nonempty and a multiple of 28
-bytes, and ends in `0x80` followed only by `0x00`. It does not bound the number of
-trailing zeros, so a `0x80` followed by a whole block of zeros or more is accepted
-(neither the sudo nor SPEC rejects it); `pad` never produces such a stream.
+`unpad` follows SPEC §3.1: the stream ends in `0x80` followed only by `0x00`.
+"Non-empty, length a multiple of 28" is an interpretation of SPEC's earlier "a
+recovered 28-byte stream", matching the sudo asserts (lines 123–124); SPEC §3.1 now
+says so. It does not bound the number of trailing zeros, so a `0x80` followed by a
+whole block of zeros or more is accepted (neither the sudo nor SPEC rejects it);
+`pad` never produces such a stream.
 
 The package re-elaborates the MegaDreifach Link 2 sources (lake library
 `MegaDreifachLink`, `srcDir = "../../megadreifach/lean"`) against this package's

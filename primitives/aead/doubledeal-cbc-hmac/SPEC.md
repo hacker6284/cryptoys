@@ -24,7 +24,7 @@ DoubleDeal-CBC-HMAC is a toy Encrypt-then-MAC construction. It makes no cryptogr
 - No DoubleDeal-SCM / SMAC. Those names stay reserved for a later construction.
 - No CFB / OFB.
 - No constant-time claim. Tag compare is a full-length equality; this is a toy.
-- AEAD security theorems are out of scope here. Generated Lean for HMAC / KDF / pad is under `proofs/doubledeal-cbc-hmac/`, with Link-2 refinement proofs of those functions to a hand-written model of this SPEC; they are not security theorems.
+- AEAD security theorems are out of scope here. Generated Lean for HMAC / KDF / pad is under `proofs/doubledeal-cbc-hmac/`, with Link-2 refinement proofs of those functions to a hand-written model of this SPEC; they are not security theorems. For HMAC and the KDF they prove the wiring around the hash; the hash itself is only as independent as the MegaDreifach model `vhashAlg`, a transliteration of the MegaDreifach sudo.
 
 ---
 
@@ -57,7 +57,7 @@ Identical to DoubleDeal SPEC §5.3 ECB byte streams:
 1. Append `0x80`.
 2. Append `0x00` until the length is a multiple of 28.
 
-A plaintext whose length is already a multiple of 28 gains a whole extra block. The empty plaintext becomes one block (`0x80` and 27 zero bytes). Unpad requires a recovered 28-byte stream that ends in `0x80` followed only by `0x00`, and strips that suffix. Any other ending is rejected.
+A plaintext whose length is already a multiple of 28 gains a whole extra block. The empty plaintext becomes one block (`0x80` and 27 zero bytes). Unpad requires a recovered non-empty stream whose length is a multiple of 28 that ends in `0x80` followed only by `0x00`, and strips that suffix. Any other ending is rejected.
 
 ## 3.2 IV
 
@@ -259,7 +259,7 @@ AEAD_OUT=/tmp/ddch node primitives/aead/doubledeal-cbc-hmac/aead.test.mjs
 | This specification | `primitives/aead/doubledeal-cbc-hmac/SPEC.md` | Normative AEAD rules |
 | Conformance sudo | `primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo` | HMAC, KDF, pad, MAC input, CBC byte helpers |
 | Generated Lean | `proofs/doubledeal-cbc-hmac/lean/Generated/` | Emitted HMAC / KDF / pad + TAP. Not AEAD security. |
-| Link 2 | `proofs/doubledeal-cbc-hmac/lean/DoubleDealCbcHmac/` | Emitted functions = hand-written model, byte inputs. Not AEAD security. |
+| Link 2 | `proofs/doubledeal-cbc-hmac/lean/DoubleDealCbcHmac/` | Emitted functions = hand-written model, byte inputs. HMAC / KDF: the wiring around the hash; the hash is only as independent as `vhashAlg` (a transliteration of the sudo). Not AEAD security. |
 | Byte-domain AEAD | `primitives/aead/doubledeal-cbc-hmac/aead.mjs` | CBC over §5.3 + sudo HMAC |
 | KATs | `primitives/aead/doubledeal-cbc-hmac/kats/doubledeal_cbc_hmac_kats.json` | Published vectors |
 | DoubleDeal rounds | `primitives/cipher/doubledeal/doubledeal.sudo` | `encrypt` / `decrypt` |

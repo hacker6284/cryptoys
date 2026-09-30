@@ -55,6 +55,7 @@ theorem unpad_eq (m : List Nat) (h0 : m.length ≠ 0) (hmod : m.length % hmacBlo
           some (m.take (m.length - 1 - tz m)) else none)
       else none := by
   unfold unpad
+  rw [msgBlock_eq_hmacBlock]
   have hc : ¬ (m.length = 0 ∨ m.length % hmacBlock ≠ 0) := by omega
   rw [if_neg hc, dropWhile_eq_drop_tz]
   by_cases h : tz m < m.length
@@ -213,7 +214,7 @@ theorem unpad_iso7816_aligned (msg : List Nat) (hb : Bytes msg) (hfit : FitsLen 
       have hne' : decide (Int.ofNat msg[msg.length - 1 - tz msg] = 0) = false :=
         decide_eq_false (fun h => hne (Int.ofNat.inj h))
       rw [uState_scan (by omega), uState_found (by omega), hi, atL_embed msg _ hlt,
-        getD_eq_get msg _ hlt]
+        getD_eq_getElem' msg _ hlt]
       simp only [show SudoRt.SEq.beq (0 : Int) 0 = true from rfl, if_true, ok_bind,
         hne', decide_False, Bool.false_eq_true, if_false, sEq_int,
         show (128 : Int) = Int.ofNat 128 from rfl, Int.ofNat.injEq]
@@ -232,7 +233,7 @@ theorem unpad_iso7816_aligned (msg : List Nat) (hb : Bytes msg) (hfit : FitsLen 
       rw [asc_tail_le msg.length n h2 hfit]
   · by_cases hzl : tz msg < msg.length
     · have hlt : msg.length - 1 - tz msg < msg.length := by omega
-      rw [getD_eq_get msg _ hlt, dif_pos hzl]
+      rw [getD_eq_getElem' msg _ hlt, dif_pos hzl]
       by_cases h128 : msg[msg.length - 1 - tz msg] = 128
       · simp only [h128, ne_eq, not_true_eq_false, and_false, if_false, if_true]
         rw [uState_found (by omega), idx_pos (by omega),
@@ -252,8 +253,8 @@ theorem unpad_iso7816_aligned (msg : List Nat) (hb : Bytes msg) (hfit : FitsLen 
           · intro j l _ hj
             have hjl : j < msg.length := by omega
             rw [if_neg (ofNat_not_gt hj)]
-            simp only [atL_embed msg j hjl, ok_bind, SudoRt.appendL, push_embed']
-            rw [asc_tail (c - 1) j (FitsLen.of_le hfit (by omega)), getD_eq_get msg j hjl]
+            simp only [atL_embed msg j hjl, ok_bind, SudoRt.appendL, push_embed]
+            rw [asc_tail (c - 1) j (FitsLen.of_le hfit (by omega)), getD_eq_getElem' msg j hjl]
           · rw [List.nil_append, Nat.sub_zero, Nat.sub_add_cancel hcpos,
               range'_map_getD msg 0 c (by omega), List.drop_zero]
       · simp only [h128, ne_eq, not_false_eq_true, and_self, if_true, if_false, hzl]
@@ -280,7 +281,7 @@ theorem unpad_iso7816_char (msg : List Nat) (hb : Bytes msg) (hfit : FitsLen msg
       · rw [if_neg h128, if_neg h128]; rfl
     · rw [dif_neg hz, dif_neg hz]; rfl
   · have hne : unpad msg = none := by
-      unfold unpad; rw [if_pos (Or.inr hmod)]
+      unfold unpad; rw [msgBlock_eq_hmacBlock, if_pos (Or.inr hmod)]
     have hpos : 0 < msg.length := Nat.pos_of_ne_zero h0
     rw [hne]
     unfold Doubledeal_cbc_hmac.unpad_iso7816

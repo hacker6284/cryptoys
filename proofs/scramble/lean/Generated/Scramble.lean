@@ -2307,18 +2307,13 @@ def «do_move» (s : Scramble) (face : Int) (turns : Int) (nybble : Int) (block 
     let _t785 ← «apply_turns» (s).sudo_8Scramble_4cube face turns
     let _t786 := { s with sudo_8Scramble_4cube := _t785 }
     let s := _t786
-    if (s).sudo_8Scramble_6traced then
-      do
-        let _t787 ← move_name face turns
-        let _t788 ← hex_digit nybble
-        let _t789 ← blank
-        let _t790 ← blank
-        let _io791 ← push_step s (#[109, 111, 118, 101] : Array Int) _t787 _t788 block «at» _t789 _t790
-        let s := _io791
-        pure s
-    else
-      do
-        pure s
+    let _t787 ← move_name face turns
+    let _t788 ← hex_digit nybble
+    let _t789 ← blank
+    let _t790 ← blank
+    let _io791 ← push_step s (#[109, 111, 118, 101] : Array Int) _t787 _t788 block «at» _t789 _t790
+    let s := _io791
+    pure s
 
 def «do_rule» (s : Scramble) (block : Int) : Except SudoRt.Trap (Scramble) :=
   do
@@ -2330,18 +2325,13 @@ def «do_rule» (s : Scramble) (block : Int) : Except SudoRt.Trap (Scramble) :=
     let _t794 ← reorient (s).sudo_8Scramble_4cube up front
     let _t795 := { s with sudo_8Scramble_4cube := _t794 }
     let s := _t795
-    if (s).sudo_8Scramble_6traced then
-      do
-        let _t796 ← blank
-        let _t797 ← blank
-        let _t798 ← letter up
-        let _t799 ← letter front
-        let _io800 ← push_step s (#[114, 117, 108, 101, 66] : Array Int) _t796 _t797 block (0 : Int) _t798 _t799
-        let s := _io800
-        pure s
-    else
-      do
-        pure s
+    let _t796 ← blank
+    let _t797 ← blank
+    let _t798 ← letter up
+    let _t799 ← letter front
+    let _io800 ← push_step s (#[114, 117, 108, 101, 66] : Array Int) _t796 _t797 block (0 : Int) _t798 _t799
+    let s := _io800
+    pure s
 
 def «apply_v1_block» (s : Scramble) (ny : Array (Int)) (base : Int) (block : Int) : Except SudoRt.Trap (Scramble) :=
   do
@@ -2439,9 +2429,8 @@ def pad (s : Scramble) : Except SudoRt.Trap (Scramble) :=
               pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
     let s := σ.2
     do
-      let _t834 ← SudoRt.addI n k
-      let n := _t834
-      let _t842 ← SudoRt.subI (24 : Int) n
+      let _t841 ← SudoRt.addI n k
+      let _t842 ← SudoRt.subI (24 : Int) _t841
       let _t843 ← SudoRt.subI _t842 (1 : Int)
       let _fromV := (0 : Int)
       let _toV := _t843
@@ -2455,14 +2444,14 @@ def pad (s : Scramble) : Except SudoRt.Trap (Scramble) :=
         pure (SudoRt.Flow.brk (ρ := Scramble) (i, s))
       else
         match ← ((do
-  let _t836 ← SudoRt.modI i (8 : Int)
-  let _t837 ← SudoRt.atL tape_f _t836
-  let _mb838 := SudoRt.appendL (s).sudo_8Scramble_7pending _t837
-  let ⟨_nr839, _⟩ := _mb838
-  let _t840 := { s with sudo_8Scramble_7pending := _nr839 }
-  let s := _t840
+  let _t835 ← SudoRt.modI i (8 : Int)
+  let _t836 ← SudoRt.atL tape_f _t835
+  let _mb837 := SudoRt.appendL (s).sudo_8Scramble_7pending _t836
+  let ⟨_nr838, _⟩ := _mb837
+  let _t839 := { s with sudo_8Scramble_7pending := _nr838 }
+  let s := _t839
   let _hm816 := ()
-  let _u841 := _hm816
+  let _u840 := _hm816
   pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
@@ -2486,14 +2475,14 @@ def pad (s : Scramble) : Except SudoRt.Trap (Scramble) :=
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
         let _init855 := (_fromV, s)
         let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init855 fuel (fun σ =>
-    let k := σ.1
+    let i := σ.1
     let s := σ.2
     do
-      if k > _toV then
-        pure (SudoRt.Flow.brk (ρ := Scramble) (k, s))
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Scramble) (i, s))
       else
         match ← ((do
-  let _t847 ← SudoRt.modI k (4 : Int)
+  let _t847 ← SudoRt.modI i (4 : Int)
   let _t848 ← SudoRt.atL tape_i _t847
   let _mb849 := SudoRt.appendL (s).sudo_8Scramble_7pending _t848
   let ⟨_nr850, _⟩ := _mb849
@@ -2503,12 +2492,12 @@ def pad (s : Scramble) : Except SudoRt.Trap (Scramble) :=
   let _u852 := _hm817
   pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (k, _fs))
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
         | .cont _fs => do
-            if k == _toV then
-              pure (SudoRt.Flow.brk (ρ := Scramble) (k, _fs))
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
             else do
-              let i' ← SudoRt.addI k (1 : Int)
+              let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
     let s := σ.2
     do
@@ -2629,7 +2618,7 @@ def «apply_ready» (s : Scramble) : Except SudoRt.Trap (Scramble) :=
 
 def update (s : Scramble) (message : Array (Int)) : Except SudoRt.Trap (Scramble) :=
   do
-    let _as889 ← SudoRt.sudoAssert (!( (s).sudo_8Scramble_4done )) 415
+    let _as889 ← SudoRt.sudoAssert (!( (s).sudo_8Scramble_4done )) 412
     let _t897 ← SudoRt.subI (SudoRt.listLen message) (1 : Int)
     let _fromV := (0 : Int)
     let _toV := _t897
@@ -2646,7 +2635,7 @@ def update (s : Scramble) (message : Array (Int)) : Except SudoRt.Trap (Scramble
   let b := _t891
   let _t893 ← (if (decide (b ≥ (0 : Int))) then (do
   pure (decide (b ≤ (255 : Int)))) else pure false)
-  let _as895 ← SudoRt.sudoAssert _t893 418
+  let _as895 ← SudoRt.sudoAssert _t893 415
   pure (SudoRt.Flow.cont (ρ := Scramble) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) i)
@@ -2904,7 +2893,7 @@ def corner_piece (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
                                     pure (7 : Int)
                                 else
                                   do
-                                    let _as969 ← SudoRt.sudoAssert false 467
+                                    let _as969 ← SudoRt.sudoAssert false 464
                                     pure (0 : Int)
 
 def edge_piece (a : Int) (b : Int) : Except SudoRt.Trap (Int) :=
@@ -3041,7 +3030,7 @@ def edge_piece (a : Int) (b : Int) : Except SudoRt.Trap (Int) :=
                                                     pure (11 : Int)
                                                 else
                                                   do
-                                                    let _as1054 ← SudoRt.sudoAssert false 495
+                                                    let _as1054 ← SudoRt.sudoAssert false 492
                                                     pure (0 : Int)
 
 def is_ud (color : Int) : Except SudoRt.Trap (Bool) :=
@@ -3154,7 +3143,7 @@ def digest_bytes (s3 : Int) (ori : Int) : Except SudoRt.Trap (Array (Int)) :=
     let _sp1083 := σ.2.2
     let carry := _sp1083
     do
-      let _as1081 ← SudoRt.sudoAssertEq carry (0 : Int) 520
+      let _as1081 ← SudoRt.sudoAssertEq carry (0 : Int) 517
       pure (SudoRt.Flow.cont (ρ := Array (Int)) buf)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
@@ -3214,7 +3203,7 @@ def digest_bytes (s3 : Int) (ori : Int) : Except SudoRt.Trap (Array (Int)) :=
       let _t1100 ← (if _t1097 then (do
   let _t1101 ← SudoRt.atL buf (11 : Int)
   pure (SudoRt.SEq.beq _t1101 (0 : Int))) else pure false)
-      let _as1103 ← SudoRt.sudoAssert _t1100 526
+      let _as1103 ← SudoRt.sudoAssert _t1100 523
       let out := (#[] : Array (Int))
       let _fromV := (8 : Int)
       let _toV := (0 : Int)
@@ -3488,7 +3477,7 @@ def finish (s : Scramble) : Except SudoRt.Trap (Scramble) :=
 
 def evaluate (s : Scramble) : Except SudoRt.Trap ((Evaluation) × (Scramble)) :=
   do
-    let _as1219 ← SudoRt.sudoAssert (!( (s).sudo_8Scramble_4done )) 575
+    let _as1219 ← SudoRt.sudoAssert (!( (s).sudo_8Scramble_4done )) 572
     let _io1220 ← pad s
     let s := _io1220
     let _io1221 ← «apply_ready» s
@@ -3514,16 +3503,16 @@ def check (version : Int) (message : Array (Int)) (digest : Array (Int)) (faces 
   do
     let _t1229 ← run version message
     let got := _t1229
-    let _as1230 ← SudoRt.sudoAssertEq (got).sudo_10Evaluation_6digest digest 588
-    let _as1232 ← SudoRt.sudoAssertEq (SudoRt.listLen (got).sudo_10Evaluation_5trace) nsteps 589
+    let _as1230 ← SudoRt.sudoAssertEq (got).sudo_10Evaluation_6digest digest 585
+    let _as1232 ← SudoRt.sudoAssertEq (SudoRt.listLen (got).sudo_10Evaluation_5trace) nsteps 586
     let _t1233 ← SudoRt.subI nsteps (1 : Int)
     let _t1234 ← SudoRt.atL (got).sudo_10Evaluation_5trace _t1233
-    let _as1235 ← SudoRt.sudoAssertEq (_t1234).sudo_4Step_8facelets faces 590
+    let _as1235 ← SudoRt.sudoAssertEq (_t1234).sudo_4Step_8facelets faces 587
     let _t1236 ← SudoRt.atL (got).sudo_10Evaluation_5trace (0 : Int)
-    let _as1237 ← SudoRt.sudoAssertEq (_t1236).sudo_4Step_4kind (#[109, 111, 118, 101] : Array Int) 591
+    let _as1237 ← SudoRt.sudoAssertEq (_t1236).sudo_4Step_4kind (#[109, 111, 118, 101] : Array Int) 588
     let _t1238 ← SudoRt.subI nsteps (1 : Int)
     let _t1239 ← SudoRt.atL (got).sudo_10Evaluation_5trace _t1238
-    let _as1240 ← SudoRt.sudoAssertEq (_t1239).sudo_4Step_4kind (#[99, 97, 110, 111, 110, 105, 99, 97, 108, 105, 122, 101] : Array Int) 592
+    let _as1240 ← SudoRt.sudoAssertEq (_t1239).sudo_4Step_4kind (#[99, 97, 110, 111, 110, 105, 99, 97, 108, 105, 122, 101] : Array Int) 589
     let _t1241 ← fresh version false
     let q := _t1241
     let _io1242 ← update q message
@@ -3532,8 +3521,8 @@ def check (version : Int) (message : Array (Int)) (digest : Array (Int)) (faces 
     let ⟨_ret1244, _iw01245⟩ := _io1243
     let q := _iw01245
     let quick := _ret1244
-    let _as1246 ← SudoRt.sudoAssertEq (quick).sudo_10Evaluation_6digest digest 596
-    let _as1248 ← SudoRt.sudoAssertEq (SudoRt.listLen (quick).sudo_10Evaluation_5trace) (0 : Int) 597
+    let _as1246 ← SudoRt.sudoAssertEq (quick).sudo_10Evaluation_6digest digest 593
+    let _as1248 ← SudoRt.sudoAssertEq (SudoRt.listLen (quick).sudo_10Evaluation_5trace) (0 : Int) 594
     pure ()
 
 end Scramble

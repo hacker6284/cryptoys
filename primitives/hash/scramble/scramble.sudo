@@ -30,7 +30,7 @@ record Evaluation
     digest: List<int>
     trace: List<Step>
 
-// The state keeps only the nybbles not yet walked (under 8 for v1, none for
+// Between calls, the state keeps only the nybbles not yet walked (under 8 for v1, none for
 // v2) and the count of message nybbles, which is all the padding needs, so
 // `update` never re-reads the message. `traced` is false for the digest-only
 // constructors, which walk the same steps but keep no trace.
@@ -359,16 +359,14 @@ func reorient(cube: List<Cubie>, up_color: int, front_color: int) -> List<Cubie>
 
 func do_move(s: inout Scramble, face: int, turns: int, nybble: int, block: int, at: int)
     s.cube = apply_turns(s.cube, face, turns)
-    if s.traced
-        push_step(s, "move", move_name(face, turns), hex_digit(nybble), block, at, blank(), blank())
+    push_step(s, "move", move_name(face, turns), hex_digit(nybble), block, at, blank(), blank())
 
 func do_rule(s: inout Scramble, block: int)
     c = s.cube[cubie_at(s.cube, 1, 1, 1)]
     up = c.yp
     front = c.zp
     s.cube = reorient(s.cube, up, front)
-    if s.traced
-        push_step(s, "ruleB", blank(), blank(), block, 0, letter(up), letter(front))
+    push_step(s, "ruleB", blank(), blank(), block, 0, letter(up), letter(front))
 
 func apply_v1_block(s: inout Scramble, ny: List<int>, base: int, block: int)
     for k = 0 to 7
@@ -388,16 +386,15 @@ func pad(s: inout Scramble)
         k = (8 - (n mod 8)) mod 8
         for i = 0 to k - 1
             s.pending.append(tape_f[i])
-        n = n + k
-        for i = 0 to 24 - n - 1
+        for i = 0 to 24 - (n + k) - 1
             s.pending.append(tape_f[i mod 8])
     else
-        for k = 0 to 12 - n - 1
-            s.pending.append(tape_i[k mod 4])
+        for i = 0 to 12 - n - 1
+            s.pending.append(tape_i[i mod 4])
 
 func apply_ready(s: inout Scramble)
     ny = s.pending
-    rest: List<int> = []
+    rest: List<int> = []  // v2 walks every nybble, so this stays empty
     if s.version == 1
         nready = ny.length / 8
         for b = 0 to nready - 1

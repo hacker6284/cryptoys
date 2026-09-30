@@ -54,6 +54,8 @@ axiom) fails, as does a Lean error.
 - cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
   proofs/doubledeal-cbc-hmac/lean (root `DoubleDealCbcHmac`, the Link 2 package);
   required: the Link 2 theorem of every exported sudo function (CBC_HMAC_LINK2).
+  `--selftest` also requires every `export func` of the package's sudo to appear in
+  its README's "Emitted function" column, and only exports there (LINK2_EXPORT_TABLES).
 
 `#audit_all` is the one command in the core-only package proofs/audit (required by
 path by both the security package and MegaDreifach); in mode "all" this script
@@ -396,6 +398,18 @@ CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
     "unpad_iso7816_refines", "unpad_iso7816_rejects", "mac_input_refines",
     "derive_keys_refines", "derive_keys_empty", "cbc_chain_from_cipher_block_refines",
     "tags_equal_refines"]}
+# Link 2 packages whose README has an "Emitted function" table: every `export func` of
+# the sudo must appear (backticked) in that column, and the column must name only
+# exports (S6 of the #140 review). MegaDreifach is not listed yet: its README has no
+# "Emitted function" column (its Link 2 rows are Stone / Claim / Status). 8 of its 11
+# exports have a Link 2 `_refines` theorem (pad_message, require_permutation,
+# position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
+# one-line wrappers MegaDreifachBody, HashDeckBodyFrom and MegaDreifachBodyFrom have
+# none. Registering it (wrapper theorems plus an 11-row table) is a planned follow-up.
+LINK2_EXPORT_TABLES = {
+    "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
+                 / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
+}
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
     "v9-deprecated": {"dir": ROOT.parent / "deprecated" / "doubledeal-v9" / "lean", "mode": "list",
@@ -704,6 +718,55 @@ def md_readme_cited(readme=MD_README, root=MD_LEAN):
     return cited, bad
 
 
+SUDO_EXPORT = re.compile(r"^\s*export\s+func\s+([A-Za-z_]\w*)", re.M)
+EMITTED_HEADER = "Emitted function"
+
+
+def sudo_exports(text):
+    """The `export func` names of a sudo source (`//` comments stripped)."""
+    code = "\n".join(line.split("//", 1)[0] for line in text.splitlines())
+    return set(SUDO_EXPORT.findall(code))
+
+
+def readme_emitted(text):
+    """(names, tables): the backticked names in the first column of the README tables
+    whose first header cell is "Emitted function", and how many such tables there are
+    (the caller requires exactly one)."""
+    rows, tables, in_table = set(), 0, False
+    for line in text.splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")] \
+            if line.lstrip().startswith("|") else None
+        if cells is None:
+            in_table = False
+            continue
+        if not in_table:
+            if cells[0] == EMITTED_HEADER:
+                tables, in_table = tables + 1, True
+            continue
+        if set(cells[0]) <= set("-: "):
+            continue  # the |---| separator row
+        rows |= set(re.findall(r"`([A-Za-z_]\w*)`", cells[0]))
+    return rows, tables
+
+
+def export_table_problems(sudo_text, readme_text):
+    """Problems with the README's "Emitted function" column against the sudo exports:
+    an export not in the column, a column entry that is not an export, no table, no
+    exports."""
+    exports, (emitted, tables) = sudo_exports(sudo_text), readme_emitted(readme_text)
+    if not exports:
+        return ["the sudo has no `export func`"]
+    if tables == 0:
+        return [f'no README table with a "{EMITTED_HEADER}" column']
+    if tables > 1:
+        return [f'{tables} README tables have a "{EMITTED_HEADER}" column (duplicate '
+                "table: ambiguous, keep one)"]
+    return ([f"export {n} is not in the README's {EMITTED_HEADER} column"
+             for n in sorted(exports - emitted)]
+            + [f"README {EMITTED_HEADER} {n} is not an export of the sudo"
+               for n in sorted(emitted - exports)])
+
+
 REPORT = re.compile(r"'(\S+?)' depends on axioms: \[([^\]]*)\]")
 PRIVATE = re.compile(r"^_private\.[\w.']+?\.0\.")
 
@@ -855,6 +918,53 @@ def selftest():
               f"{len(cited)} theorems cited in {readme.relative_to(ROOT.parent.parent)}"
               + (f"; cited but not listed: {missing}" if missing else "")
               + (f"; listed but not cited: {extra}" if extra else ""))
+    # Every sudo export is in the README's "Emitted function" column (and only exports
+    # are): the real packages, then planted negatives, including the real cbc-hmac README
+    # with one row dropped, which must be reported as exactly that export missing. One
+    # line per package; a broken real table is one FAIL line naming every problem.
+    real_bad = {}
+    for pkg, (sudo, readme) in sorted(LINK2_EXPORT_TABLES.items()):
+        bad = real_bad[pkg] = export_table_problems(sudo.read_text(), readme.read_text())
+        failed += bool(bad)
+        print(f"check_axioms selftest: {'ok' if not bad else 'FAIL'} {pkg}: "
+              f"{len(sudo_exports(sudo.read_text()))} exports of "
+              f"{sudo.relative_to(ROOT.parent.parent)} vs the {EMITTED_HEADER} column of "
+              f"{readme.relative_to(ROOT.parent.parent)}: "
+              + ("; ".join(bad) if bad else "match"))
+    sudo_fx = ("// export func commented(x: int) -> int\nexport func a(x: int) -> int\n"
+               "    return x\nfunc helper(x: int) -> int\n    return x\n"
+               "export func b_c(x: int) -> int // trailing\n    return x\n")
+    table = "| Emitted function | Theorem |\n| --- | --- |\n| `a` | `a_refines` |\n"
+    cases = [
+        ("complete", sudo_fx, table + "| `b_c` | `b_c_refines` |\n", []),
+        ("two exports in one cell", sudo_fx, table.replace("`a` |", "`a` / `b_c` |"), []),
+        ("missing export", sudo_fx, table, ["export b_c is not"]),
+        ("entry not exported", sudo_fx,
+         table + "| `b_c` | `b_c_refines` |\n| `helper` | `h` |\n", ["README Emitted function helper"]),
+        ("commented export listed", sudo_fx,
+         table + "| `b_c` | x |\n| `commented` | x |\n", ["README Emitted function commented"]),
+        ("no table", sudo_fx, "| Function | Theorem |\n| --- | --- |\n| `a` | x |\n",
+         ["no README table"]),
+        ("duplicate table", sudo_fx,
+         table + "| `b_c` | x |\n\nText.\n\n" + table + "| `b_c` | x |\n",
+         ["2 README tables have"]),
+        ("no exports", "func a(x: int) -> int\n", table, ["the sudo has no"])]
+    sudo, readme = LINK2_EXPORT_TABLES["cbc-hmac"]
+    real_readme = readme.read_text()
+    dropped = [l for l in real_readme.splitlines() if l.startswith("| `tags_equal` |")]
+    cases.append(("real cbc-hmac README without the tags_equal row", sudo.read_text(),
+                  "\n".join(l for l in real_readme.splitlines() if l not in dropped),
+                  ["export tags_equal is not"] if len(dropped) == 1 else ["(fixture row absent)"]))
+    for what, sudo_text, readme_text, want in cases:
+        if what.startswith("real cbc-hmac") and real_bad["cbc-hmac"]:
+            print(f"check_axioms selftest: skipped export table ({what}): the real table "
+                  "already fails above")
+            continue
+        bad = export_table_problems(sudo_text, readme_text)
+        ok = len(bad) == len(want) and all(w in b for w, b in zip(want, bad))
+        failed += not ok
+        print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} export table ({what}): "
+              f"{len(bad)} problem(s), expected {len(want)}" + ("" if ok else f": {bad}"))
     # The source scan on HEAVY_SCAN_FIXTURE (see there), on the scanner-only `lemma`
     # snippet, and per file: a namespace left open at the end of one file must not
     # qualify the next file's names.

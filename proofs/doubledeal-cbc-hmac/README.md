@@ -56,6 +56,9 @@ Package `lean/` (root `DoubleDealCbcHmac`, core Lean only).
 | `cbc_chain_from_cipher_block` | `cbc_chain_from_cipher_block_refines` | 29 bytes |
 | `tags_equal` | `tags_equal_refines` | length of the first fits i64 |
 
+`check_axioms.py --selftest` parses the sudo and fails unless every `export func`
+appears in the Emitted function column above, and only exports appear there.
+
 Hypotheses are domain conditions only: every input element is a byte, the lengths
 fit the i64 bounds the emitted runtime checks, plus the sudo's own asserts (equal
 lengths for `xor_bytes`, a 29-byte block for `cbc_chain_from_cipher_block`, a

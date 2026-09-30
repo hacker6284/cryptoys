@@ -259,7 +259,9 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         const pose = readPose(resolved, camera.aspect);
         if (!pose) return current;
         if (resolved === current && !tween && !opts.track) return current;
-        if (tween && tween.to.name === resolved && !opts.track) {
+        // Asking again for the pose already being flown to skips (snaps)
+        // there, unless `restart`: a fresh ease from the live camera.
+        if (tween && tween.to.name === resolved && !opts.track && !opts.restart) {
             skip();
             return current;
         }

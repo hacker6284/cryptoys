@@ -31,7 +31,7 @@ globalThis.requestAnimationFrame ??= (fn) => setTimeout(() => fn(performance.now
 
 const THREE = await import("three");
 const { createLights } = await import("../shared/lights.js");
-const { adapters } = await import("./adapters.js");
+const { DEMOS } = await import("./demos.js");
 const { createToyDirector } = await import("./toy-director.js");
 const { createBeatClock } = await import("./beat-clock.js");
 const { playUnbox } = await import("./unbox-physical.js");
@@ -115,7 +115,7 @@ const world = {
 };
 
 // DoubleDeal install registers the dealer key and both sleeve glows dark.
-const dd = adapters.doubledeal;
+const dd = DEMOS.doubledeal.adapter;
 dd.install(world, { poses: null });
 lights.seal();
 lights.check();
@@ -124,7 +124,7 @@ const glow = lights.get("glow:deck");
 for (const light of [keyLight, glow, lights.get("glow:deck2")]) assert.equal(light.intensity, 0, "dark at boot");
 
 // Flights light the travel glow by intensity only.
-const director = createToyDirector(world);
+const director = createToyDirector(world, DEMOS);
 for (const id of ["scramble", "doubledeal"]) {
     const job = director.borrow(id);
     const primary = id === "scramble" ? "cube" : "deck";

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { register } from "node:module";
 import { tableSpan } from "../doubledeal/layout.js";
 import {
     CLOCK_STEP_MS,
@@ -20,6 +21,12 @@ import { POSES, resolvePoseName } from "./poses.js";
 import { seatOnSurface } from "./motion.js";
 import { createToyDirector, recipeMotionMs } from "./toy-director.js";
 
+// The registry holds the adapters; they touch three only once installed.
+register("data:text/javascript," + encodeURIComponent(`export async function resolve(spec, ctx, next) {
+    return spec === "three" || spec.startsWith("three/") ? { url: "data:text/javascript,", shortCircuit: true } : next(spec, ctx);
+}`));
+const { DEMOS } = await import("./demos.js");
+
 const span = tableSpan();
 const feltDiameter = 2 * (TABLE_R - 0.08);
 const scaledWidth = span.width * DEAL_SCALE;
@@ -29,6 +36,11 @@ assert.ok(span.width > 0, "standalone table has a width");
 assert.ok(scaledWidth < feltDiameter, `scaled decks ${scaledWidth.toFixed(3)}m must sit on the ${feltDiameter.toFixed(3)}m felt`);
 assert.ok(scaledDepth < feltDiameter, `scaled depth ${scaledDepth.toFixed(3)}m must sit on the felt`);
 
+const hub = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const hubIds = (pattern) => [...hub.matchAll(pattern)].map((m) => m[1]).sort();
+assert.deepEqual(hubIds(/data-algo="(\w+)"/g), Object.keys(DEMOS).sort(), "one hub button per demo");
+assert.deepEqual(hubIds(/href="\.\/(\w+)\/"/g), Object.keys(DEMOS).sort(), "one noscript link per demo");
+for (const [id, { pose }] of Object.entries(DEMOS)) assert.ok(POSES[pose], `${id} seats at a poses.js pose`);
 assert.ok(POSES.doubledeal, "doubledeal pose exists");
 assert.equal(resolvePoseName("doubledeal"), "doubledeal");
 assert.equal(resolvePoseName("lean_deck"), "doubledeal");
@@ -60,7 +72,7 @@ assert.equal(toyHalfHeight("deck"), 0.046);
 assert.equal(toyHalfHeight("deck2"), 0.046);
 assert.notEqual(toyHalfHeight("deck"), CUBE / 2, "deck seatOn fallback is not the cube half-height");
 
-const recipeDirector = createToyDirector({});
+const recipeDirector = createToyDirector({}, DEMOS);
 const recipe = recipeDirector.recipeOf("doubledeal");
 assert.deepEqual(recipe.toys, ["deck", "deck2"]);
 assert.deepEqual(recipe.extras, ["chest"]);
@@ -237,7 +249,7 @@ const shortSeat = seatOn(shortCube, {
 assert.equal(shortSeat.position.y, 1.01, "shorter mesh seats lower from AABB");
 
 const world = makeMockWorld();
-const director = createToyDirector(world);
+const director = createToyDirector(world, DEMOS);
 const shelfY = world.getShelfPose("deck").position.y;
 const tableY = world.getTablePose("deck").position.y;
 assert.equal(world.toys.deck.position.x, SLOTS.deck.x);
@@ -263,7 +275,7 @@ assert.ok(world.toys.deck2.position.x < -1.5, "MSG deck homes to the chest");
 assert.deepEqual(world.lids, [1, 0, 1, 0], "toybox opens to receive MSG and closes after");
 
 const cubeWorld = makeMockWorld();
-const cubeDirector = createToyDirector(cubeWorld);
+const cubeDirector = createToyDirector(cubeWorld, DEMOS);
 await cubeDirector.borrow("scramble", { snap: true });
 assert.equal(cubeWorld.toys.cube.position.x, DEN.x);
 assert.equal(cubeWorld.toys.cube.position.y, cubeWorld.getTablePose("cube").position.y);

@@ -131,7 +131,7 @@ assert.match(app, /FOLLOW_HOLD_MS/);
         "hub camera starts before prepareEnter finishes",
     );
     assert.match(startAlgo, /trackToys\(/, "enter frames the full toy set, not busy-only");
-    assert.match(startAlgo, /extras\?\.includes\("chest"\)/, "Scramble enter does not track the chest");
+    assert.match(startAlgo, /extras\.includes\("chest"\)/, "Scramble enter does not track the chest");
 }
 assert.equal(app.includes("doubledeal.prepareEnter"), false, "do not hide-build DD on the hub");
 assert.match(app, /playroomTray/);
@@ -169,7 +169,7 @@ assert.equal(
 assert.equal(app.includes("via: \"shelf\""), false, "leave does not ease home via shelf");
 assert.equal(app.includes("trackToy("), false, "leave tracks the full toy set, not one named toy");
 const tickAt = app.indexOf("requestAnimationFrame(tick)");
-const deepLinkAt = app.indexOf("void startAlgo(initialAlgo)");
+const deepLinkAt = app.indexOf("void startAlgo(initialAlgo");
 assert.ok(tickAt >= 0 && deepLinkAt > tickAt, "rAF tick starts before deep-link DoubleDeal enter");
 assert.ok(app.indexOf("addEventListener(\"pointerdown\"") < deepLinkAt, "skip is bound before deep-link enter");
 assert.equal(app.includes("poses.snap(\"doubledeal\")"), false, "skip does not snap the seated shot");

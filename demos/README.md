@@ -19,6 +19,17 @@ sh tools/build.sh
 
 [`tools/build.sh`](../tools/build.sh) writes `generated/` and a SPEC copy next to each demo. Those paths are gitignored; CI generates them before publish. `tools/build.sh` looks for `sudoc` at `~/Documents/Projects/sudocode/sudoc/target/debug/sudoc` when `SUDOC` is unset.
 
+## Adding a demo
+
+A playroom demo supplies:
+
+- `<id>/session.js`, the session its dock drives, and `<id>/view.js`, the standalone page's view.
+- An adapter in [`playroom/adapters.js`](playroom/adapters.js): `install()` adds every light it will use, at intensity 0 (lights seal after boot: [`shared/lights.js`](shared/lights.js)); `view()` hands the session its playroom view; `enter()` / `leave()` are its choreography.
+- A camera pose in [`playroom/poses.js`](playroom/poses.js), unless it reuses one.
+- One entry in [`playroom/demos.js`](playroom/demos.js), the registry the playroom iterates.
+
+Still manual: the hub button and noscript link in [`index.html`](index.html) (`playroom/room.test.mjs` checks them against the registry), and the `build_one` line in [`tools/build.sh`](../tools/build.sh) with its `test -f` lines in [`tools/generate-demos.sh`](../tools/generate-demos.sh).
+
 ## Production
 
 https://hacker6284.github.io/cryptoys/ and https://cryptoygraphy.com/ (`cryptoys.onrender.com`).

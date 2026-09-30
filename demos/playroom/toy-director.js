@@ -12,12 +12,6 @@ import { markBeat } from "./motion.js";
  * DoubleDeal unbox lives in the adapter.
  */
 
-const RECIPES = {
-    scramble: { toys: ["cube"], extras: [], pose: "scramble" },
-    doubledeal: { toys: ["deck", "deck2"], extras: ["chest"], pose: "doubledeal" },
-    twodeck: { toys: ["deck", "deck2"], extras: ["chest"], pose: "doubledeal" },
-};
-
 function prefersReducedMotion() {
     return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
 }
@@ -67,7 +61,8 @@ export function recipeMotionMs(recipe) {
     return LID_OPEN_MS + FLY_MS + LID_CLOSE_MS;
 }
 
-export function createToyDirector(world) {
+// demos: the DEMOS registry (demos.js); each entry's toys and extras.
+export function createToyDirector(world, demos) {
     let highlightId = null;
     let flights = [];
     let lidAnim = null;
@@ -77,7 +72,7 @@ export function createToyDirector(world) {
     let homing = false;
 
     function recipeOf(id) {
-        return RECIPES[id] || null;
+        return demos[id] || null;
     }
 
     function writeFlightDebug(u, toy) {

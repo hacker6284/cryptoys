@@ -35,7 +35,7 @@ Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a 
 
 - No collision resistance, preimage resistance, or ideal-cipher-on-G claim.
 - No AES-class numbers. Birthday ≈ 2^113 is honesty about `|G| ≈ 2^{225.9}`, not a theorem.
-- No proof that mid-block local collisions are absent. Free-start `HashDeckBodyFrom` is broken (§8).
+- No proof that mid-block local collisions are absent, beyond one narrow case: 2-card windows that share the first card (§7, Lean coverage). The rest is open, with Python evidence only. Free-start `HashDeckBodyFrom` is broken (§8).
 - Relative reorient recipes are rejected (research disproof). Absolute re-grip only.
 - No claim that Lean equals this sudo text. That is a future emitter proof.
 - HMAC-MegaDreifach does not make `Hash` collision-resistant. It is a correctly wired HMAC over this toy hash.
@@ -222,7 +222,7 @@ The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zer
 
 `kats/megaminx_hash_kats_v1.json` is the **v1** KAT file (for the deprecated `v1/megadreifach.sudo`), renamed from `kats/megaminx_hash_kats.json` with identical contents.
 
-**Lean coverage.** The Lean proof package [`proofs/megadreifach/`](../../../proofs/megadreifach/README.md) models **v2**: its `Generated/` is emitted from this `megadreifach.sudo` (`proofs/emit_lean.sh` target `megadreifach`), and its model (`Em.lean`), Link 2 and `Security/` are about v2. Proved there, sorry-free and axiom-audited: the emitted `Hash` equals the algebraic Merkle–Damgård fold of the typed E_m transliteration on well-formed messages (`v_Hash_refines`; this includes visual noon on all 60 grips, the edge and corner reads and 36 F3 rounds), and all eight v2 `Hash` digests of `kats/megaminx_hash_kats_v2.json` as kernel-checked theorems about the emitted `v_Hash`, plus correctness and grip-rule-independent lemmas. **No Lean theorem is a security claim about v2**, and that the sudo text equals the emitted Lean (the emitter) is trusted, not proved; the ledger (what is proved, what is open) is that README. The v1 weakness proofs are kept, frozen and about v1 only, in [`proofs/deprecated/megadreifach-v1/`](../../../proofs/deprecated/megadreifach-v1/README.md).
+**Lean coverage.** The Lean proof package [`proofs/megadreifach/`](../../../proofs/megadreifach/README.md) models **v2**: its `Generated/` is emitted from this `megadreifach.sudo` (`proofs/emit_lean.sh` target `megadreifach`), and its model (`Em.lean`), Link 2 and `Security/` are about v2. Proved there, sorry-free and axiom-audited: the emitted `Hash` equals the algebraic Merkle–Damgård fold of the typed E_m transliteration on well-formed messages (`v_Hash_refines`; this includes visual noon on all 60 grips, the edge and corner reads and 36 F3 rounds), and all eight v2 `Hash` digests of `kats/megaminx_hash_kats_v2.json` as kernel-checked theorems about the emitted `v_Hash`. Also proved there: the emitted `HashDeck` equals `Hash` of the deal's 28-byte Lehmer rank on permutations (`v_HashDeck_refines`); the 60×52 v2 one-card nets are pairwise distinct per grip, so one card step is injective in the card from any injective position (M8, `nets_nodup`, `net2_ne`); two 2-card windows with the same first card never collide (the M9 same-first-card half, `twoCard_same_first_ne`). The different-first-card half of M9 is open, with Python evidence only. The package also has correctness and grip-rule-independent lemmas. **No Lean theorem is a security claim about v2**, and that the sudo text equals the emitted Lean (the emitter) is trusted, not proved; the ledger (what is proved, what is open) is that README. The v1 weakness proofs are kept, frozen and about v1 only, in [`proofs/deprecated/megadreifach-v1/`](../../../proofs/deprecated/megadreifach-v1/README.md).
 
 ---
 
@@ -259,7 +259,7 @@ What these do **not** cover: no second-preimage or preimage search was run on th
 - Collision resistance of `Hash`
 - IV-anchored collision resistance (for v2: empirically untested beyond §8; for v1: false, collisions from the standard IV are practical via same-rank card swaps, see `proofs/megadreifach/security/suit_blind_collision.py` and §3 of `REPORT.md` there)
 - Second-preimage or preimage resistance (for v2: untested)
-- Absence of local collisions (v1: L3 collisions exist and occur at a practical rate in real blocks; v2: not claimed, and free-start pseudo-collisions are easy, §8)
+- Absence of local collisions (v1: L3 collisions exist and occur at a practical rate in real blocks; v2: not claimed beyond the same-first-card 2-card case in §7, and free-start pseudo-collisions are easy, §8)
 - Birthday ≈ 2^113 as a theorem
 - PRESSURE.md tables as theorems
 - Lean model = this sudo text (the emitter is trusted), or any Lean security result about v2 (§7)

@@ -45,131 +45,35 @@ theorem g2Step_fst_net (g : Position) (o : Grip) (card pos : Nat) :
 def netCps (s : Nat) : List (List Nat) :=
   (List.range 52).map (fun c => listOf (net2 (rotAt s) c).cp)
 
-/-! ## Kernel checks, one per grip -/
+/-! ## Kernel checks, one per grip
 
-theorem nets_nodup_0 : (netCps 0).Nodup := by decide!
-theorem nets_nodup_1 : (netCps 1).Nodup := by decide!
-theorem nets_nodup_2 : (netCps 2).Nodup := by decide!
-theorem nets_nodup_3 : (netCps 3).Nodup := by decide!
-theorem nets_nodup_4 : (netCps 4).Nodup := by decide!
-theorem nets_nodup_5 : (netCps 5).Nodup := by decide!
-theorem nets_nodup_6 : (netCps 6).Nodup := by decide!
-theorem nets_nodup_7 : (netCps 7).Nodup := by decide!
-theorem nets_nodup_8 : (netCps 8).Nodup := by decide!
-theorem nets_nodup_9 : (netCps 9).Nodup := by decide!
-theorem nets_nodup_10 : (netCps 10).Nodup := by decide!
-theorem nets_nodup_11 : (netCps 11).Nodup := by decide!
-theorem nets_nodup_12 : (netCps 12).Nodup := by decide!
-theorem nets_nodup_13 : (netCps 13).Nodup := by decide!
-theorem nets_nodup_14 : (netCps 14).Nodup := by decide!
-theorem nets_nodup_15 : (netCps 15).Nodup := by decide!
-theorem nets_nodup_16 : (netCps 16).Nodup := by decide!
-theorem nets_nodup_17 : (netCps 17).Nodup := by decide!
-theorem nets_nodup_18 : (netCps 18).Nodup := by decide!
-theorem nets_nodup_19 : (netCps 19).Nodup := by decide!
-theorem nets_nodup_20 : (netCps 20).Nodup := by decide!
-theorem nets_nodup_21 : (netCps 21).Nodup := by decide!
-theorem nets_nodup_22 : (netCps 22).Nodup := by decide!
-theorem nets_nodup_23 : (netCps 23).Nodup := by decide!
-theorem nets_nodup_24 : (netCps 24).Nodup := by decide!
-theorem nets_nodup_25 : (netCps 25).Nodup := by decide!
-theorem nets_nodup_26 : (netCps 26).Nodup := by decide!
-theorem nets_nodup_27 : (netCps 27).Nodup := by decide!
-theorem nets_nodup_28 : (netCps 28).Nodup := by decide!
-theorem nets_nodup_29 : (netCps 29).Nodup := by decide!
-theorem nets_nodup_30 : (netCps 30).Nodup := by decide!
-theorem nets_nodup_31 : (netCps 31).Nodup := by decide!
-theorem nets_nodup_32 : (netCps 32).Nodup := by decide!
-theorem nets_nodup_33 : (netCps 33).Nodup := by decide!
-theorem nets_nodup_34 : (netCps 34).Nodup := by decide!
-theorem nets_nodup_35 : (netCps 35).Nodup := by decide!
-theorem nets_nodup_36 : (netCps 36).Nodup := by decide!
-theorem nets_nodup_37 : (netCps 37).Nodup := by decide!
-theorem nets_nodup_38 : (netCps 38).Nodup := by decide!
-theorem nets_nodup_39 : (netCps 39).Nodup := by decide!
-theorem nets_nodup_40 : (netCps 40).Nodup := by decide!
-theorem nets_nodup_41 : (netCps 41).Nodup := by decide!
-theorem nets_nodup_42 : (netCps 42).Nodup := by decide!
-theorem nets_nodup_43 : (netCps 43).Nodup := by decide!
-theorem nets_nodup_44 : (netCps 44).Nodup := by decide!
-theorem nets_nodup_45 : (netCps 45).Nodup := by decide!
-theorem nets_nodup_46 : (netCps 46).Nodup := by decide!
-theorem nets_nodup_47 : (netCps 47).Nodup := by decide!
-theorem nets_nodup_48 : (netCps 48).Nodup := by decide!
-theorem nets_nodup_49 : (netCps 49).Nodup := by decide!
-theorem nets_nodup_50 : (netCps 50).Nodup := by decide!
-theorem nets_nodup_51 : (netCps 51).Nodup := by decide!
-theorem nets_nodup_52 : (netCps 52).Nodup := by decide!
-theorem nets_nodup_53 : (netCps 53).Nodup := by decide!
-theorem nets_nodup_54 : (netCps 54).Nodup := by decide!
-theorem nets_nodup_55 : (netCps 55).Nodup := by decide!
-theorem nets_nodup_56 : (netCps 56).Nodup := by decide!
-theorem nets_nodup_57 : (netCps 57).Nodup := by decide!
-theorem nets_nodup_58 : (netCps 58).Nodup := by decide!
-theorem nets_nodup_59 : (netCps 59).Nodup := by decide!
+`gen_nets_nodup` emits 60 separate theorems `nets_nodup_0` … `nets_nodup_59`, each
+`(netCps s).Nodup := by decide!`. They stay separate declarations on purpose: one
+`decide!` over all 60 grips at once runs out of memory. `nets_nodup` collects them;
+its proof term (`nets_nodup_cases%`) is a 60-way case split on `s`. Both generators
+are core `macro`s (no `import Lean`). -/
 
-theorem nets_nodup : ∀ s, s < 60 → (netCps s).Nodup
-  | 0, _ => nets_nodup_0
-  | 1, _ => nets_nodup_1
-  | 2, _ => nets_nodup_2
-  | 3, _ => nets_nodup_3
-  | 4, _ => nets_nodup_4
-  | 5, _ => nets_nodup_5
-  | 6, _ => nets_nodup_6
-  | 7, _ => nets_nodup_7
-  | 8, _ => nets_nodup_8
-  | 9, _ => nets_nodup_9
-  | 10, _ => nets_nodup_10
-  | 11, _ => nets_nodup_11
-  | 12, _ => nets_nodup_12
-  | 13, _ => nets_nodup_13
-  | 14, _ => nets_nodup_14
-  | 15, _ => nets_nodup_15
-  | 16, _ => nets_nodup_16
-  | 17, _ => nets_nodup_17
-  | 18, _ => nets_nodup_18
-  | 19, _ => nets_nodup_19
-  | 20, _ => nets_nodup_20
-  | 21, _ => nets_nodup_21
-  | 22, _ => nets_nodup_22
-  | 23, _ => nets_nodup_23
-  | 24, _ => nets_nodup_24
-  | 25, _ => nets_nodup_25
-  | 26, _ => nets_nodup_26
-  | 27, _ => nets_nodup_27
-  | 28, _ => nets_nodup_28
-  | 29, _ => nets_nodup_29
-  | 30, _ => nets_nodup_30
-  | 31, _ => nets_nodup_31
-  | 32, _ => nets_nodup_32
-  | 33, _ => nets_nodup_33
-  | 34, _ => nets_nodup_34
-  | 35, _ => nets_nodup_35
-  | 36, _ => nets_nodup_36
-  | 37, _ => nets_nodup_37
-  | 38, _ => nets_nodup_38
-  | 39, _ => nets_nodup_39
-  | 40, _ => nets_nodup_40
-  | 41, _ => nets_nodup_41
-  | 42, _ => nets_nodup_42
-  | 43, _ => nets_nodup_43
-  | 44, _ => nets_nodup_44
-  | 45, _ => nets_nodup_45
-  | 46, _ => nets_nodup_46
-  | 47, _ => nets_nodup_47
-  | 48, _ => nets_nodup_48
-  | 49, _ => nets_nodup_49
-  | 50, _ => nets_nodup_50
-  | 51, _ => nets_nodup_51
-  | 52, _ => nets_nodup_52
-  | 53, _ => nets_nodup_53
-  | 54, _ => nets_nodup_54
-  | 55, _ => nets_nodup_55
-  | 56, _ => nets_nodup_56
-  | 57, _ => nets_nodup_57
-  | 58, _ => nets_nodup_58
-  | 59, _ => nets_nodup_59
-  | _ + 60, h => absurd h (by omega)
+/-- Emit the 60 per-grip kernel checks `nets_nodup_<s>`. -/
+macro "gen_nets_nodup" : command => do
+  let mut cmds : Array (Lean.TSyntax `command) := #[]
+  for s in List.range 60 do
+    let id := Lean.mkIdent (Lean.Name.mkSimple s!"nets_nodup_{s}")
+    let n := Lean.Syntax.mkNumLit (toString s)
+    cmds := cmds.push (← `(command| theorem $id : (netCps $n).Nodup := by decide!))
+  return ⟨Lean.mkNullNode cmds⟩
+
+/-- `fun s hs => if h : s = 0 then … nets_nodup_0 else … absurd hs (by omega)`. -/
+macro "nets_nodup_cases%" : term => do
+  let mut body ← `(absurd hs (by omega))
+  for s in (List.range 60).reverse do
+    let id := Lean.mkIdent (Lean.Name.mkSimple s!"nets_nodup_{s}")
+    let n := Lean.Syntax.mkNumLit (toString s)
+    body ← `(if h : s = $n then by subst h; exact $id else $body)
+  `(fun s hs => $body)
+
+gen_nets_nodup
+
+theorem nets_nodup : ∀ s, s < 60 → (netCps s).Nodup := nets_nodup_cases%
 
 /-! ## Consequences -/
 
@@ -178,7 +82,8 @@ theorem eq_of_nodup_map {α β : Type} (f : α → β) : ∀ (l : List α), (l.m
   | [], _, x, hx, _, _, _ => absurd hx (List.not_mem_nil x)
   | a :: l, hnd, x, hx, y, hy, hxy => by
       rw [List.map_cons, List.nodup_cons] at hnd
-      have hnot : ∀ z ∈ l, f z ≠ f a := fun z hz he => hnd.1 (List.mem_map.mpr ⟨z, hz, he⟩)
+      have hnot : ∀ z ∈ l, f z ≠ f a :=
+        fun z hz he => hnd.1 (List.mem_map.mpr ⟨z, hz, he⟩)
       rcases List.mem_cons.mp hx with rfl | hx' <;> rcases List.mem_cons.mp hy with rfl | hy'
       · rfl
       · exact absurd hxy.symm (hnot y hy')

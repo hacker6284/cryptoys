@@ -1,11 +1,11 @@
 """M9 (MegaDreifach v2): exhaustive search of the 2-card window of E_m.
 
-Stdlib only.  Reads the SPEC tables from ../lean/MegaDreifach/Em.lean (the typed
-transliteration that `em_block_refines` ties to the generated `em_block`) and
-self-validates against the 8 v2 KATs before searching.  Evidence, not a proof:
-see README.md in this directory for what the numbers mean and what they do not.
+Stdlib only.  Reuses the tables of ../lean/MegaDreifach/Em.lean and reproduces the
+8 v2 KATs before searching (evidence, not identity, that this Python matches Em).
+The search is computational evidence, not a proof: see README.md in this directory
+for what the numbers mean and what they do not.  Asserts the counts it reports.
 
-    python3 m9_search.py          # about 10 s, under 100 MB
+    python3 m9_search.py          # about 10-20 s, under 100 MB
 """
 import itertools
 import json
@@ -17,7 +17,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 EM_LEAN = HERE.parent / "lean" / "MegaDreifach" / "Em.lean"
-KATS = HERE.parents[2] / "primitives" / "hash" / "megadreifach" / "kats" / "megaminx_hash_kats_v2.json"
+KATS = (HERE.parents[2] / "primitives" / "hash" / "megadreifach" / "kats"
+        / "megaminx_hash_kats_v2.json")
 
 SRC = EM_LEAN.read_text()
 
@@ -25,14 +26,16 @@ SRC = EM_LEAN.read_text()
 def nat_table(name):
     m = re.search(r"def " + name + r" : List \(List Nat\) := \[(.*?)\]\]", SRC, re.S)
     body = "[" + m.group(1) + "]]"
-    return [[int(x) for x in re.findall(r"\d+", row)] for row in re.findall(r"\[([^\[\]]*)\]", body)]
+    rows = re.findall(r"\[([^\[\]]*)\]", body)
+    return [[int(x) for x in re.findall(r"\d+", row)] for row in rows]
 
 
 FT_CP, FT_CO, FT_EP, FT_EO, ROTS, NBRS, CORNER_FACES = (
     nat_table(n) for n in ["ftCp", "ftCo", "ftEp", "ftEo", "rots", "nbrsTab", "cornerFacesTab"])
 EDGE_FLAT = [int(x) for x in re.findall(
     r"\d+", re.search(r"def edgeFacesFlat : List Nat := \[(.*?)\]", SRC, re.S).group(1))]
-OPP = [int(x) for x in re.findall(r"\d+", re.search(r"def oppTab : List Nat := \[(.*?)\]", SRC, re.S).group(1))]
+OPP = [int(x) for x in re.findall(
+    r"\d+", re.search(r"def oppTab : List Nat := \[(.*?)\]", SRC, re.S).group(1))]
 ROTS = [tuple(r) for r in ROTS]
 assert len(ROTS) == 60 and len(FT_CP) == 12 and len(CORNER_FACES) == 20 and len(EDGE_FLAT) == 60
 
@@ -43,8 +46,10 @@ ID = (tuple(range(20)), (0,) * 20, tuple(range(30)), (0,) * 30)
 def compose(g, h):  # h first, then g (the sudo / Lean convention)
     gcp, gco, gep, geo = g
     hcp, hco, hep, heo = h
-    return (tuple(hcp[gcp[s]] for s in range(20)), tuple((hco[gcp[s]] + gco[s]) % 3 for s in range(20)),
-            tuple(hep[gep[s]] for s in range(30)), tuple((heo[gep[s]] + geo[s]) % 2 for s in range(30)))
+    return (tuple(hcp[gcp[s]] for s in range(20)),
+            tuple((hco[gcp[s]] + gco[s]) % 3 for s in range(20)),
+            tuple(hep[gep[s]] for s in range(30)),
+            tuple((heo[gep[s]] + geo[s]) % 2 for s in range(30)))
 
 
 FM = [(tuple(FT_CP[f]), tuple(FT_CO[f]), tuple(FT_EP[f]), tuple(FT_EO[f])) for f in range(12)]
@@ -203,7 +208,8 @@ def kat_check():
 # ---- the search -----------------------------------------------------------------------
 def code(p):
     """Position as 50 combined codes: corner slot s -> 3*piece+ori, edge 60+2*piece+ori."""
-    return tuple(3 * p[0][s] + p[1][s] for s in range(20)) + tuple(60 + 2 * p[2][s] + p[3][s] for s in range(30))
+    return (tuple(3 * p[0][s] + p[1][s] for s in range(20))
+            + tuple(60 + 2 * p[2][s] + p[3][s] for s in range(30)))
 
 
 def right_map(p):
@@ -227,25 +233,32 @@ def main():
     print("M8 (60x52 nets pairwise distinct per grip):", ok)
     assert ok
 
-    # Read injectivity: over every read configuration (phys, noon, parity) that occurs,
-    # distinct pieces (any orientations) give distinct read colour pairs, hence distinct
-    # grips (abs_reorient is a lookup on the pair).
-    for phys in range(12):
-        for noon in NBRS[phys]:
-            for kind in ("c", "e"):
-                pos = 1 if kind == "c" else 2
-                seen = {}
+    # Read injectivity ACROSS all read configurations: for each kind (corner / edge),
+    # over every (phys, noon) that a read can use, every piece and every orientation,
+    # one ordered colour pair never comes from two different pieces.  So two windows
+    # whose second reads see different pieces of W get different colour pairs, even
+    # when their read configurations differ (different intermediate grips / cards).
+    for kind in ("c", "e"):
+        pos = 1 if kind == "c" else 2
+        seen = {}
+        for phys in range(12):
+            for noon in NBRS[phys]:
+                k, s = read_slot(phys, noon, pos)
                 for q in range(20 if kind == "c" else 30):
                     for x in range(3 if kind == "c" else 2):
-                        k, s = read_slot(phys, noon, pos)
                         r = read_colours_piece(k, s, q, x, phys, noon)
-                        assert seen.setdefault(r, q) == q, (phys, noon, kind)
-    print("read -> grip injective on pieces: True")
+                        assert seen.setdefault(r, q) == q, (phys, noon, kind, r)
+        # 20 corners x 3 cyclic ordered pairs; 30 edges x 2 ordered pairs.
+        assert len(seen) == 60, (kind, len(seen))
+        # abs_reorient: every read pair is some rotation's (up, front) pair (no trap),
+        # and the rotation returned has that pair, so abs_reorient is injective on them.
+        for r in seen:
+            assert abs_reorient(*r)[:2] == r
+    print("read -> grip injective on pieces, across all read configurations: True")
 
     # Stage 1: two-card position products compose(net(o1, b), net(o, a)), grouped by o.
     swaps = general = 0
     sig_eq = 0
-    held_nets = {}
 
     def sigma(o, a, o1, b, p):
         """W-slot whose piece the second card's read sees (first card a at grip o)."""
@@ -279,9 +292,9 @@ def main():
     print("2-card position-equality candidates (o, a, o1, b) ~ (o, c, o2, d), a < c:", general)
     print("  of which adjacent swaps (c, d) = (b, a):", swaps)
     print("candidate x read parity with the same second-read W-slot:", sig_eq, "of", 2 * general)
-    assert sig_eq == 0
-    print("=> no 2-card window collision from any position with injective cp/ep "
-          "(different first cards; same first card: `twoCard_same_first_ne`)")
+    assert (general, swaps, sig_eq) == (24300, 420, 0), (general, swaps, sig_eq)
+    print("=> no different-first-card 2-card window collision from any position with "
+          "injective cp/ep (computational evidence, not a proof)")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,32 @@
+L1 sumSqCorrU_eq (U): 149734 == 149734
+L1 sumSqCorrU_eq (U): 222994 == 222994
+L1 sumSqCorrU_eq (V): 113922 == 113922
+L1 sumSqCorrU_eq (V): 530918 == 530918
+fullDiffCount_eq_of_isDeck n=0: rows of 6 differences agree on 3 more decks: True
+fullDiffCount_one_left n=0: [576, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] == [576, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+fullDiffCount_to_one n=0: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+L2 sumSqCorr_eq n=0: 5496144 == 5496144
+L3 sumSqCorr_eq_final n=0: 229006 == 229006
+L4 sumSqCorr_split n=0: 5496144 == 5496144
+L2 sumSqCorr_eq n=0: 6439968 == 6439968
+L3 sumSqCorr_eq_final n=0: 268332 == 268332
+L4 sumSqCorr_split n=0: 6439968 == 6439968
+fullDiffCount_eq_of_isDeck n=1: rows of 6 differences agree on 3 more decks: True
+fullDiffCount_one_left n=1: [13824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] == [13824, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+fullDiffCount_to_one n=1: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+L2 sumSqCorr_eq n=1: 146828784 == 146828784
+L3 sumSqCorr_eq_final n=1: 6117866 == 6117866
+L4 sumSqCorr_split n=1: 146828784 == 146828784
+L2 sumSqCorr_eq n=1: 125108448 == 125108448
+L3 sumSqCorr_eq_final n=1: 5212852 == 5212852
+L4 sumSqCorr_split n=1: 125108448 == 125108448
+dependent schedule (expected to FAIL, documents the header's limit):
+  sum_k corr^2 = 5227, (1/N!) sum A D A = 153913/24, equal: False
+  sum_k corr^2 = 6712, (1/N!) sum A D A = 60151/12, equal: False
+  sum_k corr^2 = 14522, (1/N!) sum A D A = 352421/24, equal: False
+first-order masks (not formalised):
+  s=0 c=0 -> t=0 c'=0: potential 161/3888 vs 161/3888
+  s=1 c=0 -> t=3 c'=0: potential 161/3888 vs 161/3888
+  s=2 c=1 -> t=0 c'=3: potential 17/486 vs 17/486
+  s=3 c=2 -> t=1 c'=1: potential 161/3888 vs 161/3888
+ALL M8a IDENTITIES HOLD

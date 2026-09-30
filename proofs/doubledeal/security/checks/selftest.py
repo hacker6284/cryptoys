@@ -63,3 +63,11 @@ for script, log in (('candcheck.py', 'candcheck.log'), ('p5check.py', 'p5/check.
     if r.returncode != 0 or r.stdout != (GC / log).read_text():
         print(r.stdout, r.stderr); print('FAIL', (GC / script).relative_to(REPO), 'vs', log); sys.exit(1)
     print((GC / script).relative_to(REPO), '==', log)
+# M8a exact 4-card toy check of the Linear identities (pure Python; ~6 s), byte-compared with
+# its committed log.
+LIN = REPO / 'proofs/doubledeal/analysis/v12-linear'
+r = subprocess.run([sys.executable, 'toy_link.py'], cwd=LIN, capture_output=True, text=True)
+if r.returncode != 0 or r.stdout != (LIN / 'toy_link.log').read_text():
+    print(r.stdout, r.stderr)
+    print('FAIL', (LIN / 'toy_link.py').relative_to(REPO), 'vs toy_link.log'); sys.exit(1)
+print((LIN / 'toy_link.py').relative_to(REPO), '== toy_link.log')

@@ -460,6 +460,17 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.realFullStaysInV10_card_le_4420_of_check",
             "DoubleDeal.Security.FullCipher.generated_encrypt_of_realFullTrail",
             "DoubleDeal.Security.FullCipher.generated_encrypt_of_realFullStaysInV10",
+            "DoubleDeal.Security.FullCipher.fullDiffCount_eq_of_isDeck",
+            "DoubleDeal.Security.FullCipher.fullDiffCount_one_left",
+            "DoubleDeal.Security.FullCipher.fullDiffCount_to_one",
+            # Linear (roadmap M8a): sums of squared correlations as autocorrelations weighted
+            # by differential counts; generic, independent full-permutation keys only; no
+            # numeric bound; not the real PassKey schedule
+            "DoubleDeal.Security.Linear.sum_sq_corrOf_finalKey",
+            "DoubleDeal.Security.Linear.sumSqCorrU_eq",
+            "DoubleDeal.Security.Linear.sumSqCorr_eq",
+            "DoubleDeal.Security.Linear.sumSqCorr_eq_final",
+            "DoubleDeal.Security.Linear.sumSqCorr_split",
         },
     },
     "security-heavy": {

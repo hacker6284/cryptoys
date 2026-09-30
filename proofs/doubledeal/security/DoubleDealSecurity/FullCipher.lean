@@ -66,6 +66,9 @@
     `γ ≠ α` with `(52!)^2 · diffCount α γ 0 y < fullDiffCount α γ 0 y`. For `n ≥ 1` nothing is
     proved or measured about single entries. `fullDiffCount_v10Sym`: into `v10Sym a x` the
     count is exactly `(52!)^2 · diffCount` (transparent column; no extra factor).
+    `fullDiffCount_eq_of_isDeck` (the count does not depend on the deck),
+    `fullDiffCount_one_left` (`1` goes only to `1`, on every tuple) and `fullDiffCount_to_one`
+    (nothing else reaches `1`) are the facts `Linear` uses.
     `FullStaysInV10` (difference some `v10Sym` after every mix round and after the final
     round) is `StaysInV10` (`fullStaysInV10_iff`), with `card_fullStaysInV10`
     (`= (52!)^2 · #StaysInV10`), `fullStaysInV10_card_le_26` and
@@ -612,6 +615,36 @@ theorem fullDiffCount_v10Sym (α : Relabel) (a : Fin 13) (x : Fin 4) (n : ℕ) {
     (fun β _ hβ => by rw [dpFCount_to_v10Sym a x hβ, mul_zero])
     (fun h => absurd (mem_univ _) h), dpFCount_v10Sym, if_pos rfl]
   ring
+
+/-- (PROVED) Independence of the starting deck (from `Differential.diffCount_eq_of_isDeck`,
+    independent keys): the full-cipher count is the same for any two decks `y`, `z`. -/
+theorem fullDiffCount_eq_of_isDeck (α γ : Relabel) (n : ℕ) {y z : Fin 52 → Nat}
+    (hy : IsDeck y) (hz : IsDeck z) : fullDiffCount α γ n y = fullDiffCount α γ n z := by
+  rw [fullDiffCount_eq α γ n hy, fullDiffCount_eq α γ n hz]
+  exact congrArg (Nat.factorial 52 * ·)
+    (sum_congr rfl fun β _ => by rw [Differential.diffCount_eq_of_isDeck n α β hy hz])
+
+/-- (PROVED) The trivial input difference stays trivial through the whole cipher:
+    `fullDiffCount 1 β n y` is `(52!)^(n+2)` (every key tuple) if `β = 1`, else `0`. -/
+theorem fullDiffCount_one_left (β : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
+    fullDiffCount 1 β n y = if β = 1 then Nat.factorial 52 ^ (n + 2) else 0 := by
+  have h1 := dpFCount_v10Sym 0 0 β
+  rw [v10Sym_zero_zero] at h1
+  rw [fullDiffCount_eq 1 β n hy]
+  simp only [Differential.diffCount_one_left _ n hy, ite_mul, zero_mul, sum_ite_eq',
+    mem_univ, if_true, h1]
+  split_ifs <;> ring
+
+/-- (PROVED) A nontrivial input difference never becomes trivial through the whole cipher. -/
+theorem fullDiffCount_to_one {α : Relabel} (hα : α ≠ 1) (n : ℕ) {y : Fin 52 → Nat}
+    (hy : IsDeck y) : fullDiffCount α 1 n y = 0 := by
+  rw [fullDiffCount_eq α 1 n hy]
+  refine Nat.mul_eq_zero.2 (Or.inr (sum_eq_zero fun β _ => ?_))
+  by_cases hβ : β = 1
+  · rw [hβ, Differential.diffCount_to_one hα n hy, Nat.zero_mul]
+  · have h0 := dpFCount_to_v10Sym 0 0 (β := β) (by rwa [v10Sym_zero_zero])
+    rw [v10Sym_zero_zero] at h0
+    rw [h0, Nat.mul_zero]
 
 /-- The `v10Sym` cluster through the whole cipher: the difference is some `v10Sym` after every
     mix round (`StaysInV10`) AND after the final round. -/

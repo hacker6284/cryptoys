@@ -477,14 +477,20 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.fullDiffCount_eq_of_isDeck",
             "DoubleDeal.Security.FullCipher.fullDiffCount_one_left",
             "DoubleDeal.Security.FullCipher.fullDiffCount_to_one",
+            "DoubleDeal.Security.FullCipher.fullDiffCount_eq_card_beforeFinal",
+            # generic one-step facts behind fullDiffCount_one_left / _to_one (M8a review):
+            # decks to decks, and (for _to_one) an explicit injectivity hypothesis
+            "DoubleDeal.Security.Differential.dpCount_one_left",
+            "DoubleDeal.Security.Differential.dpCount_to_one",
             # Linear (roadmap M8a): sums of squared correlations as autocorrelations weighted
-            # by differential counts; generic, independent full-permutation keys only; no
-            # numeric bound; not the real PassKey schedule
-            "DoubleDeal.Security.Linear.sum_sq_corrOf_finalKey",
-            "DoubleDeal.Security.Linear.sumSqCorrU_eq",
-            "DoubleDeal.Security.Linear.sumSqCorr_eq",
-            "DoubleDeal.Security.Linear.sumSqCorr_eq_final",
-            "DoubleDeal.Security.Linear.sumSqCorr_split",
+            # by differential counts; L1 and the final-key step for arbitrary layers, L2-L4
+            # for DoubleDeal's encryptL; independent full-permutation keys only; no numeric
+            # bound; nothing proved for the real PassKey schedule
+            "DoubleDeal.Security.Linear.sum_sq_corr_finalKey",
+            "DoubleDeal.Security.Linear.sumSqCorrLayer_eq",
+            "DoubleDeal.Security.Linear.fullSumSqCorr_eq",
+            "DoubleDeal.Security.Linear.fullSumSqCorr_eq_final",
+            "DoubleDeal.Security.Linear.fullSumSqCorr_split",
         },
     },
     "security-heavy": {

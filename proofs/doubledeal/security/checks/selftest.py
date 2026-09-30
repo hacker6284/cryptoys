@@ -1,5 +1,8 @@
 """Check the v8/v9/v10/v11/v12 Python port: v12 against the current vectors, v11, v10 and v9
-against their frozen vectors, v8 against frozen dd_v8.py."""
+against their frozen vectors, v8 against frozen dd_v8.py. Then rerun analysis scripts: the
+frozen-v10 SumRanks checks (exit status only), the GridCycle cross-checks (byte-compared with
+their committed logs), and the v12-linear exact 4-card toy check (toy_link.py, byte-compared
+with toy_link.log; it checks the toy, not the Lean)."""
 import random, sys, ddport as P, dd_v8 as V8
 from ddport import REPO
 from dd_v8 import lay_cm, scoop_cm

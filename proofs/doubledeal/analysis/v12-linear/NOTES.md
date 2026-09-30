@@ -72,32 +72,43 @@ this unkeyed statistic does not measure.
 
 Lean: `DoubleDealSecurity/Linear.lean`; the exact statements are in its module header.
 For integer functions `f`, `g` on decks and a deck map `E`, the unnormalised correlation is
-`corrOf E f g = ∑_x f(x) g(E x)` over all 52! decks. The autocorrelation is
-`autoCorr f α = ∑_x f(x) f(α·x)`. The Lean statements are:
+`corr E f g = ∑_x f(x) g(E x)` over all 52! decks. The autocorrelation is
+`autoCorr f α = ∑_x f(x) f(α·x)`. Through `encryptL n _ L` the correlation is
+`fullCorr n f g L`. Both sums of squares below are key-summed and unnormalised. The Lean
+statements are:
 
-* L1 `sumSqCorrU_eq`: one keyed layer `x ↦ U(x ∘ k₁) ∘ k₂`, summed over all key pairs:
+* L1 `sumSqCorrLayer_eq`: one keyed layer `x ↦ U(x ∘ k₁) ∘ k₂`, summed over all key pairs:
   `∑_{k₁,k₂} corr² = ∑_{α,β} autoCorr f α · dpCount U α β · autoCorr g β`.
-* L2 `sumSqCorr_eq`: `encryptL n`, summed over all (52!)^(n+2) key tuples, for any deck y:
-  `52! · ∑_L corr² = ∑_{α,β} autoCorr f α · fullDiffCount α β n y · autoCorr g β`.
-* L3 `sumSqCorr_eq_final`: the same with `fullDiffCount` split through the proof's
-  finalRound step: `∑_L corr² = ∑_{α,β} autoCorr f α · diffCount α β n y ·
+* L2 `fullSumSqCorr_eq`: `encryptL n`, summed over all (52!)^(n+2) key tuples, for any
+  deck y: `52! · ∑_L fullCorr² = ∑_{α,β} autoCorr f α · fullDiffCount α β n y ·
+  autoCorr g β`.
+* L3 `fullSumSqCorr_eq_final`: the same with `fullDiffCount` split through the proof's
+  finalRound step: `∑_L fullCorr² = ∑_{α,β} autoCorr f α · diffCount α β n y ·
   ∑_γ dpFCount β γ · autoCorr g γ`.
-* L4 `sumSqCorr_split`: `52! · ∑_L corr² = (52!)^(n+2) · autoCorr f 1 · autoCorr g 1 +
-  ∑_{α,β ≠ 1} autoCorr f α · fullDiffCount α β n y · autoCorr g β`.
+* L4 `fullSumSqCorr_split`: `52! · ∑_L fullCorr² = (52!)^(n+2) · autoCorr f 1 ·
+  autoCorr g 1 + ∑_{α,β ≠ 1} autoCorr f α · fullDiffCount α β n y · autoCorr g β`.
+
+Remark (not a theorem): the key-averaged normalised squared correlation would be
+`E_L[ĉ²] = fullSumSqCorr n f g / ((52!)^(n+2) · autoCorr f 1 · autoCorr g 1)`. Under it,
+L4 reads as `1/52!` plus the `α, β ≠ 1` remainder over
+`(52!)^(n+3) · autoCorr f 1 · autoCorr g 1`.
 
 What these are, and what they are not:
 
-* **Generic.** They hold for every key-alternating cipher on the 52! decks whose Compose
-  keys are independent uniform permutations, the whitening and final keys included, and
-  whose unkeyed layers map decks to decks. No DoubleDeal layer is used. The cipher enters
-  only through the differential counts.
+* **Generality.** L1 and the final-key step are proved for arbitrary layers. L2–L4 are
+  proved for DoubleDeal's encryptL; their proofs use only independent uniform keys, layers
+  sending decks to decks and, for L4, injective layers. In Lean: L1 (`sumSqCorrLayer_eq`)
+  and the final-key step (`sum_sq_corr_finalKey`) take the layer as an argument. The
+  layer facts that L2–L4 use are the generic `Differential.dpCount_one_left` (decks to
+  decks) and `Differential.dpCount_to_one` (explicit `Function.Injective U`), applied to
+  DoubleDeal's layers. For non-injective layers the same-shape L4 can fail.
 * **No numeric bound.** They are identities. They move the linear question to the
   differential counts of M6/M7, and no numeric bound is proved for those.
-* **Not the real PassKey schedule.** The proof averages over the final key (giving the
-  autocorrelation of `g`) and uses that the counts do not depend on the deck, which
-  needs every key uniform and independent of the others. Under the real schedule all
-  keys are functions of one master key. The toy check below gives a dependent toy
-  schedule for which the equation of the same shape fails.
+* **Independent uniform keys only.** The statements are stated only for independent
+  uniform keys; nothing is proved for the real PassKey schedule, and a dependent toy
+  schedule shows the same-shape equation can fail (toy check below). The proof averages
+  over the final key (giving the autocorrelation of `g`) and uses that the counts do not
+  depend on the deck, which needs every key uniform and independent of the others.
 
 This is the representation-theoretic picture of the M3 section, restricted to what
 needs no representation theory. The second moment (sum of squares) is used because the
@@ -108,6 +119,8 @@ sign, as it does for XOR keys.
 
 This is a pure-Python exact computation on S_4 (24 decks), seed 7, taking about 6 s.
 CI reruns it (`security/checks/selftest.py`) and byte-compares the output with the log.
+It checks the toy, not the Lean: it recomputes the same-shape identities on a 4-card
+toy cipher, and it is not a check of the Lean statements or proofs.
 The toy cipher has the shape of `encryptL n`: `n` rounds of (Compose, `U`), then (Compose,
 `V`, Compose). `U` and `V` are random bijections of the 24 decks, and `n` is 0 or 1. The
 check uses Lean's conventions (Compose is `x ∘ k`; relabellings act on card values). For
@@ -120,11 +133,12 @@ Two further outputs are not Lean statements:
 * A dependent toy schedule `L = (k, F k, F(F k))` for `n = 1`, one master key `k`. Here
   `∑_k corr²` differs from `(1/4!) ∑ autoCorr · count · autoCorr` for all three random
   `(f, g)` tried; the right-hand side is not even an integer. This documents the header's
-  "does not apply to the real schedule". It is a toy, not the PassKey schedule.
+  "a dependent toy schedule shows the same-shape equation can fail". It is a toy, not
+  the PassKey schedule.
 * First-order masks `f = 4·[x(s) = c] − 1` (M8b scope; not formalised). The normalised
-  potential equals `(N/(N−1)²)(q − 1/N)`, `N = 4`, for the four seat/card choices tried. Here `q` is
-  the fraction of (difference fixing `c`, key tuple) pairs whose output difference fixes
-  `c'`.
+  potential equals `(N/(N−1)²)(q − 1/N)`, `N = 4`, for the four seat/card choices tried.
+  Here `q` is the fraction of (difference fixing `c`, key tuple) pairs whose output
+  difference fixes `c'`.
 
 ## Suggested next steps (not done)
 

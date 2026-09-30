@@ -3,17 +3,19 @@
 #
 # The toy cipher has the shape of FullCipher.encryptL n: n mix rounds (Compose L_i, then an
 # unkeyed layer U), then the finalRound step (Compose L_n, an unkeyed layer V, Compose L_{n+1}).
-# U and V are arbitrary (random) bijections of the 4! decks: the identities are generic.
+# U and V are arbitrary (random) bijections of the 4! decks. This checks the TOY, not the Lean:
+# the same-shape identities on S_4, not the Lean statements or proofs.
 # Conventions as in Lean: Compose is x∘k (composeVec: (x∘k)[j] = x[k[j]]); a relabelling α
 # acts on card values ((α·x)[i] = α[x[i]]).
 #
 # Checked (each for random integer f, g and every deck y where a deck is needed):
-#   L1 sumSqCorrU_eq       sum_{k1,k2} corr^2 = sum_{a,b} A_f(a) dpCount_U(a,b) A_g(b)
-#   L2 sumSqCorr_eq        N! * sum_L corr^2 = sum_{a,b} A_f(a) fullDiffCount(a,b,n,y) A_g(b)
-#   L3 sumSqCorr_eq_final  sum_L corr^2 = sum_{a,b} A_f(a) diffCount(a,b,n,y) sum_c dpF(b,c) A_g(c)
-#   L4 sumSqCorr_split     N! * sum_L corr^2 = N!^(n+2) A_f(1) A_g(1) + sum_{a,b != 1} ...
+#   L1 sumSqCorrLayer_eq       sum_{k1,k2} corr^2 = sum_{a,b} A_f(a) dpCount_U(a,b) A_g(b)
+#   L2 fullSumSqCorr_eq        N! * sum_L corr^2 = sum_{a,b} A_f(a) fullDiffCount(a,b,n,y) A_g(b)
+#   L3 fullSumSqCorr_eq_final  sum_L corr^2 = sum_{a,b} A_f(a) diffCount(a,b,n,y) sum_c dpF(b,c) A_g(c)
+#   L4 fullSumSqCorr_split     N! * sum_L corr^2 = N!^(n+2) A_f(1) A_g(1) + sum_{a,b != 1} ...
 #   fullDiffCount_eq_of_isDeck, fullDiffCount_one_left, fullDiffCount_to_one
-# Not a Lean statement (documents the header's "does not apply to the real schedule"):
+# Not a Lean statement (documents the header's "a dependent toy schedule shows the
+# same-shape equation can fail"):
 #   with a DEPENDENT toy schedule L = (k, F k, F(F k)) the L2-shaped equation fails.
 # Not formalised (M8b scope, recorded here only): first-order masks f = N[x(s)=c] - 1.
 import itertools, random
@@ -84,7 +86,7 @@ for W, nm in ((U, "U"), (V, "V")):
         f, g = rnd(), rnd()
         lhs = sum(corr(lambda x: comp(W[comp(x, k1)], k2), f, g) ** 2 for k1 in P for k2 in P)
         rhs = sum(A(f, a) * dp[(a, b)] * A(g, b) for a in P for b in P)
-        check(f"L1 sumSqCorrU_eq ({nm})", lhs, rhs)
+        check(f"L1 sumSqCorrLayer_eq ({nm})", lhs, rhs)
 
 dpF = {(a, b): dpCount(V, a, b) for a in P for b in P}
 for n in (0, 1):
@@ -93,12 +95,15 @@ for n in (0, 1):
     D = {a: fullDiff_row(a, n, y0, keys) for a in P}
     Dc = lambda a, b: D[a].get(b, 0)
     # deck independence, one-left, to-one
+    agree = True
     for y in (P[0], P[17], P[23]):
         for a in P[:6]:
             row = fullDiff_row(a, n, y, keys)
             if any(row.get(b, 0) != Dc(a, b) for b in P):
-                ok = False; print("fullDiffCount_eq_of_isDeck FAILED", n, y, a)
-    print(f"fullDiffCount_eq_of_isDeck n={n}: rows of 6 differences agree on 3 more decks:", ok)
+                agree = False; print("fullDiffCount_eq_of_isDeck FAILED", n, y, a)
+    ok &= agree
+    print(f"fullDiffCount_eq_of_isDeck n={n}: rows of 6 differences agree on 3 more decks:",
+          agree)
     check(f"fullDiffCount_one_left n={n}", [Dc(ONE, b) for b in P],
           [M ** (n + 2) if b == ONE else 0 for b in P])
     check(f"fullDiffCount_to_one n={n}", [Dc(a, ONE) for a in P if a != ONE],
@@ -107,12 +112,12 @@ for n in (0, 1):
     for _ in range(2):
         f, g = rnd(), rnd()
         S = sum(corr(lambda x: enc(n, x, L), f, g) ** 2 for L in keys)
-        check(f"L2 sumSqCorr_eq n={n}", M * S,
+        check(f"L2 fullSumSqCorr_eq n={n}", M * S,
               sum(A(f, a) * Dc(a, b) * A(g, b) for a in P for b in P))
-        check(f"L3 sumSqCorr_eq_final n={n}", S,
+        check(f"L3 fullSumSqCorr_eq_final n={n}", S,
               sum(A(f, a) * dc[(a, b)] * sum(dpF[(b, c)] * A(g, c) for c in P)
                   for a in P for b in P))
-        check(f"L4 sumSqCorr_split n={n}", M * S,
+        check(f"L4 fullSumSqCorr_split n={n}", M * S,
               M ** (n + 2) * A(f, ONE) * A(g, ONE) +
               sum(A(f, a) * Dc(a, b) * A(g, b) for a in P if a != ONE for b in P if b != ONE))
 

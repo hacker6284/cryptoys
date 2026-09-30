@@ -175,15 +175,17 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
 }
 # proofs/megadreifach/lean (MegaDreifach v2): the 8 v2 hash KATs in
-# MegaDreifachHeavy/Kat.lean (the names match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json;
-# vectors/json_to_lean.py --check checks their statements against the JSON).
+# MegaDreifachHeavy/Kat.lean. The names match the vectors of
+# primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json, and
+# vectors/json_to_lean.py --check checks their statements against the JSON.
 MD_LEAN = ROOT.parent / "megadreifach" / "lean"
 MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"
 
 # Every theorem that proofs/megadreifach/README.md cites by name (backticked), resolved
-# against the default library's sources (MegaDreifach v2) (structure fields like `cp` / `ep` are not
-# theorem declarations, so they drop out). Rule: a README citation must stay present and
-# pass the axiom audit, so renaming or deleting a cited theorem fails the default gate.
+# against the sources of the default library (MegaDreifach v2). Structure fields like
+# `cp` / `ep` are not theorem declarations, so they drop out. Rule: a README citation
+# must stay present and pass the axiom audit, so renaming or deleting a cited theorem
+# fails the default gate.
 # `check_axioms.py --selftest` re-derives the list (md_readme_cited) and fails if it
 # differs from this set; update both together when the README changes.
 MD_README_THEOREMS = {

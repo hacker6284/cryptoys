@@ -252,7 +252,11 @@ model `../v12-keysched/dd12.h`. No theorem uses any of these numbers.
     m = 2 gives (2520 patterns, signed sum 88), eps = 11/315; m = 3 gives (369600, 1088),
     eps = 17/5775; DP and brute force agree. This checks the DP's bookkeeping only, not
     the model, and for m ≠ 13 it is about the model, not about any cipher. The m = 13
-    run asserts the same check before it prints.
+    run asserts the same check before it prints. The check is honest but weak: in review
+    (DHH), of five one-line mutations of the DP only dropping column 0's parity was
+    caught; the other four leave the m = 13 signed count (402298219288064) unchanged, so
+    eps does not depend on those details, and it is the deck-by-deck check above that pins
+    down the model.
   The reduction to a uniform suit pattern is argued in the script's header (the stem is a
   bijection, `ddiff.h` `inv_stem` / `FullCipher.unkeyedNoMix_injective`, so the grid after
   the row step is uniform; the turns read only suits), but it is not independently checked.

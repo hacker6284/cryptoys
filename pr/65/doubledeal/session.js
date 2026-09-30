@@ -3,31 +3,24 @@ import { decksToHex, decksToText, hexToDecks, randomHex, textToDecks, textToKey,
 import { bindGrowFields, growField } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
 import {
-    bindTeachKeys,
-    cardName,
-    headingId,
-    nextGroup,
-    renderOutline,
-    setDisabled,
-    stampHeadingIds,
-} from "../shared/teach.js";
+    bindSegmented,
+    bindTransport,
+    openSpec,
+    renderTeachCard,
+    sessionScope,
+    syncJumpButtons,
+    teachPosition,
+} from "../shared/session.js";
+import { cardName, renderOutline } from "../shared/teach.js";
 
 export function createDoubleDealSession({
     view,
     specUrl,
     root = document,
     exposeTeach = false,
-    signal,
     liveDigest = false,
 } = {}) {
-    const abort = new AbortController();
-    if (signal) {
-        if (signal.aborted) abort.abort();
-        else signal.addEventListener("abort", () => abort.abort(), { once: true });
-    }
-    const listen = { signal: abort.signal };
-    const $ = (sel) => root.querySelector(sel);
-    const $$ = (sel) => root.querySelectorAll(sel);
+    const { abort, listen, $, $$ } = sessionScope(root);
 
     const messageEl = $("#message");
     const keyEl = $("#key");
@@ -41,8 +34,6 @@ export function createDoubleDealSession({
     const outputLabel = $("#output-label");
     const copyButton = $("#copy") || $("#digest-btn");
     const teachEl = $("#teach");
-    const teachCard = $("#teach-card");
-    const teachPos = $("#teach-pos");
     const outlineEl = $("#outline");
     const ioNote = $("#io-note");
     bindGrowFields(root);
@@ -97,21 +88,24 @@ export function createDoubleDealSession({
         return textToNonce(nonceEl?.value || "");
     }
 
+    const OVERFLOW_WHY =
+        "Step target occupied: the card already on it (the blocker) sends you. Go to the row named by the CHaSeD marker plus the blocker's suit, start at the target's column plus the blocker's rank, and scan right (wrapping) for the first free seat; place there, then advance the marker ♣→♥→♠→♦ once. If that row is full, drop to the next row and scan it from the same column. The finger does not follow the card: it moves from the target by the blocker's step, and the next step starts there.";
+
     function caption(step) {
         if (step.kind === "sumrow" && step.amount < 0) return `${step.label} · inverse SumRanks row ${step.row + 1} · back ${-step.amount}`;
         if (step.kind === "sumcol" && step.amount < 0) return `${step.label} · inverse SumRanks column ${step.col + 1} · back ${-step.amount}`;
-        if (step.kind === "sumrow") return `${step.label} · SumRanks row ${step.row + 1} · sum ${step.total} → ${step.amount}`;
-        if (step.kind === "sumcol") return `${step.label} · SumRanks column ${step.col + 1} · sum ${step.total} → ${step.amount}`;
+        if (step.kind === "sumrow") return `${step.label} · SumRanks row ${step.row + 1} · reads row ${step.flag + 1} · total ${step.total} → ${step.amount}`;
+        if (step.kind === "sumcol") return `${step.label} · SumRanks column ${step.col + 1} · V ${step.total} ⊕ S ${step.flag} → ${step.amount}`;
         if (step.kind === "shift" && step.amount === 0) return `${step.label} · ShiftRows · row 1 stays`;
         if (step.kind === "shift" && step.amount < 0) return `${step.label} · inverse ShiftRows · row ${step.row + 1} slides back ${-step.amount}`;
         if (step.kind === "shift") return `${step.label} · ShiftRows · row ${step.row + 1} slides ${step.amount}`;
         if (step.kind === "reset" && step.amount > 0) return `${step.label} · ${step.amount} passes from here`;
         if (step.kind === "reset") return step.label;
         if (step.kind === "take") return `${step.label} · inverse GridCycle lifts a card`;
-        if (step.kind === "scan") return `${step.label} · GridCycle overflow · scanning row ${step.row + 1}`;
-        if (step.kind === "place" && step.flag === 1) return `${step.label} · GridCycle overflow into (${step.row + 1}, ${step.col + 1})`;
+        if (step.kind === "scan") return `${step.label} · GridCycle blocked by ${cardName(step.total)} · scanning row ${step.row + 1} from column ${step.col + 1}`;
+        if (step.kind === "place" && step.flag === 1) return `${step.label} · GridCycle blocked placement into (${step.row + 1}, ${step.col + 1})`;
         if (step.kind === "pass" && step.flag === 2) return `${step.label} · proper rank cut on the key pile`;
-        if (step.kind === "pass" && step.flag === 1) return `${step.label} · suit-rotate hand, then proper rank cut on the hand`;
+        if (step.kind === "pass" && step.flag === 1) return `${step.label} · deal suit + 2, then proper rank cut on the hand`;
         if (step.kind === "pass" && step.flag === 0) return `${step.label} · no proper rank cut`;
         if (step.kind === "unpass" && step.flag === 2) return `${step.label} · undo rank cut on the key pile`;
         if (step.kind === "unpass" && step.flag === 1) return `${step.label} · undo rank cut on the hand`;
@@ -172,21 +166,33 @@ export function createDoubleDealSession({
 
     function passMath(step) {
         if (step.flag === 2) {
-            return `Controller ${cardName(step.card)}. Suit-rotate the hand (if any), then proper rank cut on the key pile by ${step.total} (fallback). Controller on top of the key pile.`;
+            return `Controller ${cardName(step.card)}. ${dealText(step)} Proper rank cut on the key pile by ${step.total} (fallback). Controller on top of the key pile.`;
         }
-        let math = `Controller ${cardName(step.card)} (suit ${step.row}, rank ${step.col}).`;
-        if (step.amount > 0) math += ` Suit-rotate hand left by ${step.amount}.`;
+        let math = `Controller ${cardName(step.card)} (suit ${step.row}, rank ${step.col}). ${dealText(step)}`;
         if (step.flag === 1) math += ` Proper rank cut on the hand by ${step.total}.`;
         if (step.flag === 0) math += ` No proper rank cut (hand empty or rank ≥ packet size).`;
         math += " Controller goes on top of the key pile.";
         return math;
     }
 
+    // amount = cards dealt: positive under the hand, negative under the key pile, 0 none.
+    function dealText(step) {
+        if (step.amount > 0) return `Deal ${step.amount} (suit + 2) off the top of the hand, one at a time, and put them under the hand.`;
+        if (step.amount < 0) return `Deal ${-step.amount} (suit + 2) off the top of the key pile, one at a time, and put them under it (fallback: the hand is too short).`;
+        return "No deal (suit + 2 does not fit either pile).";
+    }
+
+    function undealText(step) {
+        if (step.amount > 0) return `deal the bottom ${step.amount} cards of the hand back onto its top`;
+        if (step.amount < 0) return `deal the bottom ${-step.amount} cards of the key pile back onto its top`;
+        return "no deal to undo";
+    }
+
     function unpassMath(step) {
         const who = `Controller ${cardName(step.card)}.`;
-        if (step.flag === 1) return `${who} Undo proper rank cut on the hand (bottom→top by rank), then undo suit-rotate on the hand; controller returns to the hand.`;
-        if (step.flag === 2) return `${who} Undo proper rank cut on the key pile (bottom→top), then undo suit-rotate on the hand; controller returns to the hand.`;
-        return `${who} No cut to undo; undo suit-rotate on the hand if needed; controller returns to the hand.`;
+        if (step.flag === 1) return `${who} Undo proper rank cut on the hand (bottom→top by rank), then ${undealText(step)}; controller returns to the hand.`;
+        if (step.flag === 2) return `${who} Undo proper rank cut on the key pile (bottom→top), then ${undealText(step)}; controller returns to the hand.`;
+        return `${who} No cut to undo; ${undealText(step)}; controller returns to the hand.`;
     }
 
     function analogue(step) {
@@ -217,33 +223,36 @@ export function createDoubleDealSession({
         }
         const kicker = !step || index < 0 ? `start · ${n} steps` : `step ${index + 1} of ${n} · ${step.label}`;
         if (!step || index < 0) {
-            return { kicker, title: "Ready", math: "Plaintext on the left. Key on the right.", why: "Step through parks at the first operation without autoplay.", spec: "3.9 Rounds, encrypt, decrypt" };
+            return { kicker, title: "Ready", math: "Plaintext on the left. Key on the right.", why: "Step parks at the first operation without autoplay.", spec: "3.9 Rounds, encrypt, decrypt" };
         }
         if (step.kind === "sumrow") {
-            const ranks = view.rowRanks(step.row);
-            const listed = ranks.length ? ranks.join(" + ") + ` = ${step.total}` : `sum ${step.total}`;
             const inverse = step.amount < 0;
+            const turn = Math.abs(step.amount);
             return {
                 kicker,
                 title: analogue(step),
                 math: inverse
-                    ? `Row ${step.row + 1} ranks ${listed}. Rotate the other way by ${-step.amount}.`
-                    : `Row ${step.row + 1} ranks ${listed}. ${step.total} mod 13 = ${step.amount}. Rotate left by ${step.amount}.`,
-                why: inverse ? "Inverse SumRanks undoes the row rotate. The sum is unchanged." : "Each row rotates left by the sum of its ranks, modulo 13.",
+                    ? `Row ${step.row + 1} reads row ${step.flag + 1}: weighted rank total ${step.total}, mod 13 = ${turn}. Rotate row ${step.row + 1} right by ${turn}.`
+                    : `Row ${step.row + 1} reads row ${step.flag + 1}: weighted rank total ${step.total}, mod 13 = ${turn}. Rotate row ${step.row + 1} left by ${turn}.`,
+                why: inverse
+                    ? "Inverse SumRanks undoes columns first, then rows in the order 0, 3, 2, 1. The row read is already back in place, so its total is the same."
+                    : "Rows turn in the order 1, 2, 3, 0. Each turns left by the weighted rank total of the row before it (row 0 reads row 3), mod 13. Weights run 13, 12, …, 1 left to right; by hand, keep two running totals: T += rank, then U += T.",
                 spec: specFor(step),
             };
         }
         if (step.kind === "sumcol") {
-            const ranks = view.colRanks(step.col);
-            const listed = ranks.length ? ranks.join(" + ") + ` = ${step.total}` : `sum ${step.total}`;
             const inverse = step.amount < 0;
+            const turn = Math.abs(step.amount);
+            const prev = (step.col + 12) % 13;
             return {
                 kicker,
                 title: analogue(step),
                 math: inverse
-                    ? `Column ${step.col + 1} ranks ${listed}. Rotate the other way by ${-step.amount}.`
-                    : `Column ${step.col + 1} ranks ${listed}. ${step.total} mod 4 = ${step.amount}. Cycle top→bottom ${step.amount}.`,
-                why: inverse ? "Inverse SumRanks undoes columns first, then rows." : "After the rows, each column cycles by the sum of its ranks, modulo 4.",
+                    ? `Column ${step.col + 1}: V(column ${prev + 1}) = ${step.total}, own suits S = ${step.flag}, V ⊕ S = ${turn}. Cycle bottom→top ${turn}.`
+                    : `Column ${step.col + 1}: V(column ${prev + 1}) = ${step.total}, own suits S = ${step.flag}, V ⊕ S = ${turn}. Cycle top→bottom ${turn}.`,
+                why: inverse
+                    ? "Inverse SumRanks undoes columns in the order 0, 12, 11, …, 1. The column read is already back in place, and S does not change when a column turns."
+                    : "Suits are GF(4) labels: ♣ 0, ♦ 1, ♥ w = 2, ♠ w² = 3. Adding: a pair cancels, clubs do nothing, two different non-club suits make the third. Times w: ♦→♥→♠→♦, clubs stay. V = 0·top ⊕ 1·second ⊕ w·third ⊕ w²·bottom of the column to the left; S = all four suits of this column added. Columns go 1, 2, …, 12, 0.",
                 spec: specFor(step),
             };
         }
@@ -262,8 +271,8 @@ export function createDoubleDealSession({
             return {
                 kicker,
                 title: analogue(step),
-                math: `Overflow. CHaSeD marker on row ${step.row + 1} (suit index ${step.row}); scan left→right for a free seat. Card ${cardName(step.card)}.`,
-                why: "Step target occupied: scan the row named by the CHaSeD overflow marker left→right for the first free seat, place there, then advance the marker ♣→♥→♠→♦. If that row is full, advance and try the next.",
+                math: `Blocked target. The blocker ${cardName(step.total)} picks the scan: row ${step.row + 1} (marker + blocker's suit, or the next row down if that one was full), starting at column ${step.col + 1} (target column + blocker's rank), scanning right and wrapping from column 13 to column 1 for a free seat. Card ${cardName(step.card)}.`,
+                why: OVERFLOW_WHY,
                 spec: specFor(step),
             };
         }
@@ -273,15 +282,15 @@ export function createDoubleDealSession({
                 kicker,
                 title: analogue(step),
                 math: step.flag === 1
-                    ? `${cardName(step.card)} overflowed into seat (${step.row + 1}, ${step.col + 1}) via the CHaSeD marker scan (not the suit/rank step).`
+                    ? `${cardName(step.card)} sits on seat (${step.row + 1}, ${step.col + 1}) via the blocker's scan (its step target was taken).`
                     : opening
-                        ? `${cardName(step.card)} is placed on the start seat (2, 0) — no step yet.`
+                        ? `${cardName(step.card)} is placed on the start seat (3, 1) — no step yet.`
                         : `${cardName(step.card)} steps suit ${Math.floor(step.card / 13)} / rank ${(step.card % 13) + 1} to seat (${step.row + 1}, ${step.col + 1}).`,
                 why: step.flag === 1
-                    ? "Step target occupied: scan the row named by the CHaSeD overflow marker left→right for the first free seat, place there, then advance the marker ♣→♥→♠→♦. If that row is full, advance and try the next."
+                    ? OVERFLOW_WHY
                     : opening
-                        ? "The first card uses start seat (2, 0). Suit/rank stepping starts from the second card."
-                        : "GridCycle walks from the Ace-of-Spades home seat (2, 0). Suit is the row step; rank is the column step.",
+                        ? "The first card uses start seat (3, 1). Suit/rank stepping starts from the second card."
+                        : "GridCycle walks from the Ace-of-Spades home seat (3, 1), row 3 being the ♠ row. Suit is the row step; rank is the column step.",
                 spec: specFor(step),
             };
         }
@@ -289,7 +298,7 @@ export function createDoubleDealSession({
             return {
                 kicker,
                 title: analogue(step),
-                math: "Start seat (2, 0) — Ace-of-Spades home, positional.",
+                math: "Start seat (3, 1) — Ace-of-Spades home (row 3 is the ♠ row), positional.",
                 why: "The walk begins at that seat, not by finding the Ace of Spades card.",
                 spec: specFor(step),
             };
@@ -300,7 +309,7 @@ export function createDoubleDealSession({
                 title: analogue(step),
                 math: passMath(step),
                 why: (step.flag === 2 ? "If the hand cannot take a proper rank cut, PassKey cuts the key pile instead. Not an error. " : "")
-                    + "Deal controller C. Suit-rotate the remaining hand left by suit(C) mod hand size. Proper-cut only if rank(C) < packet size (hand, else key pile, else skip). Put C on top of the key pile.",
+                    + "Deal controller C. Deal suit(C) + 2 cards one at a time under the hand if that is less than the hand size, else under the key pile if that fits, else skip. Proper-cut only if rank(C) < packet size (hand, else key pile, else skip). Put C on top of the key pile.",
                 spec: specFor(step),
             };
         }
@@ -309,7 +318,7 @@ export function createDoubleDealSession({
                 kicker,
                 title: analogue(step),
                 math: unpassMath(step),
-                why: "F⁻¹. Lift C off the key pile; undo cut; undo suit rotate; put C on the hand. Decrypt: six forward passes to K6, then one un-pass per remaining round to K0.",
+                why: "F⁻¹. Lift C off the key pile; undo cut; undo the suit + 2 deal; put C on the hand. Decrypt: six forward passes to K6, then one un-pass per remaining round to K0.",
                 spec: specFor(step),
             };
         }
@@ -356,7 +365,7 @@ export function createDoubleDealSession({
             return {
                 kicker,
                 title: step.label,
-                math: step.kind === "deal" ? "Deal column-major: down column 0, then 1, …" : "Deal row-major: across row 0, then 1, …",
+                math: step.kind === "deal" ? "Deal column-major: down column 1, then 2, …" : "Deal row-major: across row 1, then 2, …",
                 why: finalNote(step, "Column-major is the SumRanks table. Row-major is GridCycle inverse entry."),
                 spec: specFor(step),
             };
@@ -386,32 +395,6 @@ export function createDoubleDealSession({
             why: "A table beat in the current round.",
             spec: specFor(step),
         };
-    }
-
-    function renderCard(note) {
-        if (!teachCard) return;
-        teachCard.replaceChildren();
-        const kicker = document.createElement("p");
-        kicker.className = "kicker";
-        kicker.textContent = note.kicker;
-        const title = document.createElement("h2");
-        title.textContent = note.title;
-        const math = document.createElement("p");
-        math.className = "math";
-        math.textContent = note.math;
-        const why = document.createElement("p");
-        why.className = "why";
-        why.textContent = note.why;
-        const spec = document.createElement("button");
-        spec.type = "button";
-        spec.className = "inline-link";
-        spec.textContent = `SPEC · ${note.spec}`;
-        spec.addEventListener("click", () => {
-            openSpec(note.spec).catch((err) => {
-                setError(err instanceof Error ? err.message : "Could not open the specification.");
-            });
-        });
-        teachCard.append(kicker, title, math, why, spec);
     }
 
     function gridFrom(step) {
@@ -486,15 +469,11 @@ export function createDoubleDealSession({
     }
 
     function refreshTeach() {
-        if (!teachCard) return;
         const viewI = viewedIndex();
         const step = viewI >= 0 && viewI < trace.length ? trace[viewI] : null;
-        renderCard(annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1)));
-        if (teachPos) {
-            teachPos.textContent = step
-                ? `${viewI + 1} / ${trace.length}`
-                : (viewI >= trace.length && trace.length ? `${trace.length} / ${trace.length}` : `0 / ${trace.length}`);
-        }
+        const note = annotate(step, step ? viewI : (viewI >= trace.length && trace.length ? viewI : -1));
+        renderTeachCard($("#teach-card"), note, showSpec);
+        $("#teach-pos").textContent = teachPosition(viewI, trace.length);
         const currentKey = !step
             ? ""
             : `${stageKey(step)}:${(step.kind === "sumrow" || step.kind === "sumcol" || step.kind === "shift") ? viewI : firstIndexOfStage(viewI)}`;
@@ -503,12 +482,7 @@ export function createDoubleDealSession({
                 void jumpTo(index - 1, false);
             });
         }
-        const atStart = cursor < 0;
-        const atEnd = cursor >= trace.length - 1;
-        $$("[data-jump]").forEach((button) => {
-            const jump = button.dataset.jump;
-            setDisabled(button, (jump === "back" || jump === "stage-back" || jump === "round-back") ? atStart : atEnd);
-        });
+        syncJumpButtons(root, cursor, trace.length);
     }
 
     function firstIndexOfStage(index) {
@@ -672,11 +646,13 @@ export function createDoubleDealSession({
             await view.play(trace[i], Number(speedEl?.value || 1));
         }
         markPlay(false);
-        if (token === job && laidEnd) {
-            view.showDecks(laidEnd.blocks[0], laidEnd.key);
-            showCaption(laidEnd.caption);
-            snaps = null;
-        }
+        if (token === job && laidEnd) showEnd();
+    }
+
+    function showEnd() {
+        view.showDecks(laidEnd.blocks[0], laidEnd.key);
+        showCaption(laidEnd.caption);
+        snaps = null;
     }
 
     async function start() {
@@ -723,6 +699,21 @@ export function createDoubleDealSession({
         }
     }
 
+    function skipToEnd() {
+        setError("");
+        stopPlay();
+        busy = false;
+        try {
+            if (!trace.length || !laidEnd) computeTrace();
+            if (!trace.length || !laidEnd) return;
+            cursor = trace.length - 1;
+            if (teaching) setTeaching(false);
+            showEnd();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "That input could not be read.");
+        }
+    }
+
     async function jumpTo(index, animate) {
         if (trace.length === 0 || busy) return;
         const next = Math.max(-1, Math.min(trace.length - 1, index));
@@ -752,140 +743,32 @@ export function createDoubleDealSession({
         return jumpTo(cursor + 1, true);
     }
 
-    function renderMarkdown(markdown) {
-        const lines = markdown.replace(/\r\n/g, "\n").split("\n");
-        let html = "";
-        let i = 0;
-        const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-        const inline = (s) => esc(s)
-            .replace(/`([^`]+)`/g, "<code>$1</code>")
-            .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-        const hid = (title) => ` id="${headingId(title)}"`;
-        while (i < lines.length) {
-            const line = lines[i];
-            if (line.startsWith("```")) {
-                const buf = [];
-                i += 1;
-                while (i < lines.length && !lines[i].startsWith("```")) {
-                    buf.push(lines[i]);
-                    i += 1;
-                }
-                i += 1;
-                html += `<pre><code>${esc(buf.join("\n"))}</code></pre>`;
-                continue;
-            }
-            if (line.startsWith("|")) {
-                const rows = [];
-                while (i < lines.length && lines[i].startsWith("|")) {
-                    rows.push(lines[i]);
-                    i += 1;
-                }
-                const cells = (row) => row.split("|").slice(1, -1).map((cell) => cell.trim());
-                const head = cells(rows[0]);
-                const body = rows.slice(2).map(cells);
-                html += "<table><thead><tr>" + head.map((cell) => `<th>${inline(cell)}</th>`).join("") + "</tr></thead><tbody>";
-                for (const row of body) html += "<tr>" + row.map((cell) => `<td>${inline(cell)}</td>`).join("") + "</tr>";
-                html += "</tbody></table>";
-                continue;
-            }
-            if (line.startsWith("### ")) {
-                const title = line.slice(4);
-                html += `<h3${hid(title)}>${inline(title)}</h3>`;
-                i += 1;
-                continue;
-            }
-            if (line.startsWith("## ")) {
-                const title = line.slice(3);
-                html += `<h2${hid(title)}>${inline(title)}</h2>`;
-                i += 1;
-                continue;
-            }
-            if (line.startsWith("# ")) {
-                const title = line.slice(2);
-                html += `<h1${hid(title)}>${inline(title)}</h1>`;
-                i += 1;
-                continue;
-            }
-            if (line.startsWith("- ")) {
-                html += "<ul>";
-                while (i < lines.length && lines[i].startsWith("- ")) {
-                    html += `<li>${inline(lines[i].slice(2))}</li>`;
-                    i += 1;
-                }
-                html += "</ul>";
-                continue;
-            }
-            if (line.trim() === "") {
-                i += 1;
-                continue;
-            }
-            html += `<p>${inline(line)}</p>`;
-            i += 1;
-        }
-        return html;
+    function showSpec(heading) {
+        openSpec(root, specUrl, heading).catch((err) => {
+            setError(err instanceof Error ? err.message : "Could not open the specification.");
+        });
     }
 
-    async function openSpec(heading) {
-        const specDialog = $("#spec");
-        const specBody = $("#spec-body");
-        if (!specDialog || !specBody) throw new Error("The specification dialog is missing.");
-        const href = specUrl || "./SPEC.md";
-        const response = await fetch(href);
-        if (!response.ok) throw new Error("The specification file is missing. Run tools/build.sh.");
-        specBody.innerHTML = renderMarkdown(await response.text());
-        stampHeadingIds(specBody);
-        specDialog.showModal();
-        if (heading) {
-            const target = specBody.querySelector("#" + CSS.escape(headingId(heading)));
-            if (target) target.scrollIntoView();
-        }
-    }
-
-    $$("[data-mode]").forEach((button) => {
-        button.addEventListener("click", () => {
-            mode = button.dataset.mode;
-            $$("[data-mode]").forEach((item) => item.classList.toggle("on", item === button));
-            if (nonceField) nonceField.hidden = mode !== "ctr";
-            if (mode === "ctr") growField(nonceEl);
-            preview();
-        }, listen);
-    });
-
-    $$("[data-direction]").forEach((button) => {
-        button.addEventListener("click", () => {
-            const next = button.dataset.direction;
-            if (next === direction) return;
-            stopPlay();
-            const typed = messageEl?.value || "";
-            if (messageEl) messageEl.value = outputValue();
-            setOutput(typed);
-            direction = next;
-            $$("[data-direction]").forEach((item) => item.classList.toggle("on", item === button));
-            applyLabels();
-            preview();
-        }, listen);
-    });
-
-    $("#play")?.addEventListener("click", () => void start(), listen);
-    $("#start")?.addEventListener("click", () => void start(), listen);
-    $("#step-through")?.addEventListener("click", () => enterTeach(), listen);
-    $("#stop")?.addEventListener("click", () => stopPlay(), listen);
-    $("#reset")?.addEventListener("click", () => {
-        stopPlay();
-        busy = false;
-        cursor = -1;
-        setTeaching(false);
+    bindSegmented(root, "mode", (value) => {
+        mode = value;
+        if (nonceField) nonceField.hidden = mode !== "ctr";
+        if (mode === "ctr") growField(nonceEl);
         preview();
     }, listen);
-    $("#step")?.addEventListener("click", () => {
-        if (trace.length === 0 || !teaching) {
-            enterTeach();
-            return;
-        }
-        setError("");
-        void stepBy(1);
+
+    bindSegmented(root, "direction", (next) => {
+        if (next === direction) return;
+        stopPlay();
+        const typed = messageEl?.value || "";
+        if (messageEl) messageEl.value = outputValue();
+        setOutput(typed);
+        direction = next;
+        applyLabels();
+        preview();
     }, listen);
+
+    $("#start")?.addEventListener("click", () => void start(), listen);
+    $("#stop")?.addEventListener("click", () => stopPlay(), listen);
     $("#random-key")?.addEventListener("click", () => {
         if (keyEl) keyEl.value = "0x" + randomHex(14);
         preview();
@@ -925,42 +808,37 @@ export function createDoubleDealSession({
         signal: abort.signal,
     });
 
-    $$("[data-jump]").forEach((button) => {
-        button.addEventListener("click", () => {
-            const jump = button.dataset.jump;
-            const viewI = Math.max(0, viewedIndex());
-            if (jump === "back") void stepBy(-1);
-            else if (jump === "fwd") void stepBy(1);
-            else if (jump === "stage-back") void jumpTo(nextGroup(trace, viewI, stageKey, -1) - 1, false);
-            else if (jump === "stage-fwd") void jumpTo(nextGroup(trace, viewI, stageKey, 1) - 1, false);
-            else if (jump === "round-back") void jumpTo(nextGroup(trace, viewI, roundKey, -1) - 1, false);
-            else if (jump === "round-fwd") void jumpTo(nextGroup(trace, viewI, roundKey, 1) - 1, false);
-        }, listen);
-    });
-
-    bindTeachKeys({
-        step: (dir) => { if (teaching) void stepBy(dir); },
-        stage: (dir) => {
-            if (!teaching || !trace.length) return;
-            void jumpTo(nextGroup(trace, Math.max(0, viewedIndex()), stageKey, dir) - 1, false);
+    bindTransport(root, {
+        play: start,
+        step: () => {
+            if (trace.length === 0 || !teaching) {
+                enterTeach();
+                return;
+            }
+            setError("");
+            void stepBy(1);
         },
-        home: () => { if (teaching) void jumpTo(-1, false); },
-        end: () => { if (teaching && trace.length) void jumpTo(trace.length - 1, false); },
+        skipToEnd,
+        reset: () => {
+            stopPlay();
+            busy = false;
+            cursor = -1;
+            setTeaching(false);
+            preview();
+        },
+        showSpec,
+        trace: () => trace,
+        teaching: () => teaching,
+        viewedIndex,
+        stepBy,
+        jumpTo,
+        stageKey,
+        roundKey,
     }, listen);
 
     $$("[data-open-spec]").forEach((el) => {
-        el.addEventListener("click", () => {
-            openSpec().catch((err) => {
-                setError(err instanceof Error ? err.message : "Could not open the specification.");
-            });
-        }, listen);
+        el.addEventListener("click", () => showSpec(), listen);
     });
-    $("#spec-btn")?.addEventListener("click", () => {
-        openSpec().catch((err) => {
-            setError(err instanceof Error ? err.message : "Could not open the specification.");
-        });
-    }, listen);
-    $("#spec-close")?.addEventListener("click", () => $("#spec")?.close(), listen);
 
     applyLabels();
     preview();

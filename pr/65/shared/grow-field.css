@@ -56,14 +56,6 @@ textarea.grow-field {
   display: none;
 }
 
-.playroom-field-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  width: 100%;
-  gap: 8px;
-}
-
 [data-message-field] {
   display: flex;
   flex-direction: column;
@@ -88,11 +80,6 @@ textarea.grow-field {
 
 .playroom-message-row > .file-btn {
   margin-left: auto;
-}
-
-.playroom-message-row > .file-chip,
-[data-message-field] .playroom-message-row .file-chip {
-  display: none !important;
 }
 
 .message-file-stack {
@@ -217,8 +204,4 @@ textarea.grow-field {
 
 .file-chip .file-action {
   flex-shrink: 0;
-}
-
-textarea.grow-field[hidden] {
-  display: none !important;
 }

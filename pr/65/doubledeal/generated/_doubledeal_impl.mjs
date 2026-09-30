@@ -158,107 +158,101 @@ export function scoop_rm(g) {
     return _rt.dup(out);
 }
 
-export function sum_ranks(g) {
-    g = _rt.dup(g);
-    {
-        const _sudo_from_i = 0n;
-        const _sudo_to_i = 3n;
-        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let row = _rt.dup(_rt.at(g, i));
-            let total = 0n;
-            {
-                const _sudo_from_j = 0n;
-                const _sudo_to_j = 12n;
-                for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(row, j)));
-                }
-            }
-            _rt.put(g, i, left_rotate(row, _rt.mod_i64(total, 13n)));
-        }
-    }
+export function row_total(row) {
+    let total = 0n;
     {
         const _sudo_from_j = 0n;
         const _sudo_to_j = 12n;
         for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-            let col = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    col.push(_rt.at(_rt.at(g, i), j));
-                }
-            }
-            let total = 0n;
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(col, i)));
-                }
-            }
-            let s = _rt.mod_i64(total, 4n);
-            let fresh = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i - s), 4n)));
-                }
-            }
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    let row = _rt.dup(_rt.at(g, i));
-                    _rt.put(row, j, _rt.at(fresh, i));
-                    _rt.put(g, i, _rt.dup(row));
-                }
-            }
+            total = _rt.chk(total + _rt.chk(_rt.chk(13n - j) * rank_of(_rt.at(row, j))));
+        }
+    }
+    return total;
+}
+
+export function row_turn(row) {
+    return _rt.mod_i64(row_total(row), 13n);
+}
+
+export function sum_rows(g) {
+    g = _rt.dup(g);
+    {
+        const _sudo_from_a = 1n;
+        const _sudo_to_a = 4n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let i = _rt.mod_i64(a, 4n);
+            _rt.put(g, i, left_rotate(_rt.at(g, i), row_turn(_rt.at(g, _rt.mod_i64(_rt.chk(i + 3n), 4n)))));
         }
     }
     return _rt.dup(g);
 }
 
-export function inv_sum_ranks(g) {
+export function inv_sum_rows(g) {
     g = _rt.dup(g);
     {
-        const _sudo_from_j = 0n;
-        const _sudo_to_j = 12n;
-        for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-            let col = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    col.push(_rt.at(_rt.at(g, i), j));
-                }
-            }
-            let total = 0n;
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(col, i)));
-                }
-            }
-            let s = _rt.mod_i64(total, 4n);
-            let fresh = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i + s), 4n)));
-                }
-            }
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    let row = _rt.dup(_rt.at(g, i));
-                    _rt.put(row, j, _rt.at(fresh, i));
-                    _rt.put(g, i, _rt.dup(row));
-                }
-            }
+        const _sudo_from_a = 0n;
+        const _sudo_to_a = 3n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let i = _rt.mod_i64(_rt.chk(4n - a), 4n);
+            _rt.put(g, i, left_rotate(_rt.at(g, i), _rt.chk(0n - row_turn(_rt.at(g, _rt.mod_i64(_rt.chk(i + 3n), 4n))))));
+        }
+    }
+    return _rt.dup(g);
+}
+
+export function suit_label(c) {
+    let s = suit_of(c);
+    if (s === 0n) {
+        return 0n;
+    }
+    return _rt.chk(_rt.mod_i64(s, 3n) + 1n);
+}
+
+export function gf_add(a, b) {
+    let low = _rt.mod_i64(_rt.chk(_rt.mod_i64(a, 2n) + _rt.mod_i64(b, 2n)), 2n);
+    let high = _rt.mod_i64(_rt.chk(_rt.div(a, 2n) + _rt.div(b, 2n)), 2n);
+    return _rt.chk(low + _rt.chk(2n * high));
+}
+
+export function gf_times_w(x) {
+    if (x === 0n) {
+        return 0n;
+    }
+    return _rt.chk(_rt.mod_i64(x, 3n) + 1n);
+}
+
+export function column_value(g, p) {
+    let v = suit_label(_rt.at(_rt.at(g, 1n), p));
+    v = gf_add(v, gf_times_w(suit_label(_rt.at(_rt.at(g, 2n), p))));
+    return gf_add(v, gf_times_w(gf_times_w(suit_label(_rt.at(_rt.at(g, 3n), p)))));
+}
+
+export function column_suits(g, j) {
+    let v = gf_add(suit_label(_rt.at(_rt.at(g, 0n), j)), suit_label(_rt.at(_rt.at(g, 1n), j)));
+    v = gf_add(v, suit_label(_rt.at(_rt.at(g, 2n), j)));
+    return gf_add(v, suit_label(_rt.at(_rt.at(g, 3n), j)));
+}
+
+export function column_turn(g, j) {
+    return gf_add(column_value(g, _rt.mod_i64(_rt.chk(j + 12n), 13n)), column_suits(g, j));
+}
+
+export function turn_column(g, j, s) {
+    g = _rt.dup(g);
+    let col = _rt.lst([]);
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = 3n;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            col.push(_rt.at(_rt.at(g, i), j));
+        }
+    }
+    let fresh = _rt.lst([]);
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = 3n;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i - s), 4n)));
         }
     }
     {
@@ -266,18 +260,45 @@ export function inv_sum_ranks(g) {
         const _sudo_to_i = 3n;
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
             let row = _rt.dup(_rt.at(g, i));
-            let total = 0n;
-            {
-                const _sudo_from_j = 0n;
-                const _sudo_to_j = 12n;
-                for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(row, j)));
-                }
-            }
-            _rt.put(g, i, left_rotate(row, _rt.chk(0n - _rt.mod_i64(total, 13n))));
+            _rt.put(row, j, _rt.at(fresh, i));
+            _rt.put(g, i, _rt.dup(row));
         }
     }
     return _rt.dup(g);
+}
+
+export function sum_columns(g) {
+    g = _rt.dup(g);
+    {
+        const _sudo_from_a = 1n;
+        const _sudo_to_a = 13n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let j = _rt.mod_i64(a, 13n);
+            g = turn_column(g, j, column_turn(g, j));
+        }
+    }
+    return _rt.dup(g);
+}
+
+export function inv_sum_columns(g) {
+    g = _rt.dup(g);
+    {
+        const _sudo_from_a = 0n;
+        const _sudo_to_a = 12n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let j = _rt.mod_i64(_rt.chk(13n - a), 13n);
+            g = turn_column(g, j, _rt.chk(0n - column_turn(g, j)));
+        }
+    }
+    return _rt.dup(g);
+}
+
+export function sum_ranks(g) {
+    return sum_columns(sum_rows(g));
+}
+
+export function inv_sum_ranks(g) {
+    return inv_sum_rows(inv_sum_columns(g));
 }
 
 export function shift_rows(g) {
@@ -304,30 +325,35 @@ export function inv_shift_rows(g) {
     return _rt.dup(g);
 }
 
-export function overflow_seat(occ, t) {
+export function scan_row(occ, row, start) {
+    let found = _rt.neg(1n);
+    {
+        const _sudo_from_k = 0n;
+        const _sudo_to_k = 12n;
+        for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
+            let col = _rt.mod_i64(_rt.chk(start + k), 13n);
+            if (found < 0n && _rt.at(_rt.at(occ, row), col) === 0n) {
+                found = col;
+            }
+        }
+    }
+    return found;
+}
+
+export function overflow_seat(occ, row, start) {
     {
         const _sudo_from_attempt = 0n;
         const _sudo_to_attempt = 3n;
         for (let attempt = _sudo_from_attempt; attempt <= _sudo_to_attempt; attempt += 1n) {
-            let row = t;
-            let found = _rt.neg(1n);
-            {
-                const _sudo_from_col = 0n;
-                const _sudo_to_col = 12n;
-                for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
-                    if (found < 0n && _rt.at(_rt.at(occ, row), col) === 0n) {
-                        found = col;
-                    }
-                }
-            }
+            let found = scan_row(occ, row, start);
             if (found >= 0n) {
-                return [row, found, _rt.mod_i64(_rt.chk(t + 1n), 4n)];
+                return [row, found];
             }
-            t = _rt.mod_i64(_rt.chk(t + 1n), 4n);
+            row = _rt.mod_i64(_rt.chk(row + 1n), 4n);
         }
     }
-    _rt.sudo_assert(false, 143);
-    return [0n, 0n, 0n];
+    _rt.sudo_assert(false, 207);
+    return [0n, 0n];
 }
 
 export function step_seat(card, r, c) {
@@ -338,8 +364,8 @@ export function mix_columns(d) {
     let grid = empty_rows();
     let t = 0n;
     let prev_card = 0n;
-    let prev_r = 0n;
-    let prev_c = 0n;
+    let fr = 2n;
+    let fc = 0n;
     {
         const _sudo_from_i = 0n;
         const _sudo_to_i = 51n;
@@ -350,11 +376,14 @@ export function mix_columns(d) {
             if (i > 0n) {
                 let tr;
                 let tc;
-                [tr, tc] = step_seat(prev_card, prev_r, prev_c);
+                [tr, tc] = step_seat(prev_card, fr, fc);
                 if (_rt.at(_rt.at(grid, tr), tc) < 0n) {
                     r = tr;
                     c = tc;
+                    fr = tr;
+                    fc = tc;
                 } else {
+                    let b = _rt.at(_rt.at(grid, tr), tc);
                     let occ = _rt.lst([]);
                     {
                         const _sudo_from_rr = 0n;
@@ -375,15 +404,15 @@ export function mix_columns(d) {
                             occ.push(_rt.dup(marks));
                         }
                     }
-                    [r, c, t] = overflow_seat(occ, t);
+                    [r, c] = overflow_seat(occ, _rt.mod_i64(_rt.chk(t + suit_of(b)), 4n), _rt.mod_i64(_rt.chk(tc + rank_of(b)), 13n));
+                    t = _rt.mod_i64(_rt.chk(t + 1n), 4n);
+                    [fr, fc] = step_seat(b, tr, tc);
                 }
             }
             let row = _rt.dup(_rt.at(grid, r));
             _rt.put(row, c, card);
             _rt.put(grid, r, _rt.dup(row));
             prev_card = card;
-            prev_r = r;
-            prev_c = c;
         }
     }
     return scoop_rm(grid);
@@ -410,8 +439,8 @@ export function inv_mix_columns(d) {
     let t = 0n;
     let hand = _rt.lst([]);
     let prev_card = 0n;
-    let prev_r = 0n;
-    let prev_c = 0n;
+    let fr = 2n;
+    let fc = 0n;
     {
         const _sudo_from_i = 0n;
         const _sudo_to_i = 51n;
@@ -421,12 +450,17 @@ export function inv_mix_columns(d) {
             if (i > 0n) {
                 let tr;
                 let tc;
-                [tr, tc] = step_seat(prev_card, prev_r, prev_c);
+                [tr, tc] = step_seat(prev_card, fr, fc);
                 if (_rt.at(_rt.at(visited, tr), tc) === 0n) {
                     r = tr;
                     c = tc;
+                    fr = tr;
+                    fc = tc;
                 } else {
-                    [r, c, t] = overflow_seat(visited, t);
+                    let b = _rt.at(_rt.at(grid, tr), tc);
+                    [r, c] = overflow_seat(visited, _rt.mod_i64(_rt.chk(t + suit_of(b)), 4n), _rt.mod_i64(_rt.chk(tc + rank_of(b)), 13n));
+                    t = _rt.mod_i64(_rt.chk(t + 1n), 4n);
+                    [fr, fc] = step_seat(b, tr, tc);
                 }
             }
             hand.push(_rt.at(_rt.at(grid, r), c));
@@ -434,8 +468,6 @@ export function inv_mix_columns(d) {
             _rt.put(row, c, 1n);
             _rt.put(visited, r, _rt.dup(row));
             prev_card = _rt.at(hand, _rt.chk(globalThis.BigInt(hand.length) - 1n));
-            prev_r = r;
-            prev_c = c;
         }
     }
     return _rt.dup(hand);
@@ -451,7 +483,7 @@ export function index_of(deck, card) {
             }
         }
     }
-    _rt.sudo_assert(false, 219);
+    _rt.sudo_assert(false, 297);
     return 0n;
 }
 
@@ -505,6 +537,78 @@ export function drop_front(xs) {
     return [c, _rt.dup(rest)];
 }
 
+export function deal_under(xs, m) {
+    let out = _rt.lst([]);
+    {
+        const _sudo_from_i = m;
+        const _sudo_to_i = _rt.chk(globalThis.BigInt(xs.length) - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            out.push(_rt.at(xs, i));
+        }
+    }
+    {
+        const _sudo_from_i = 1n;
+        const _sudo_to_i = m;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            out.push(_rt.at(xs, _rt.chk(m - i)));
+        }
+    }
+    return _rt.dup(out);
+}
+
+export function undeal_under(xs, m) {
+    let n = globalThis.BigInt(xs.length);
+    let out = _rt.lst([]);
+    {
+        const _sudo_from_i = 1n;
+        const _sudo_to_i = m;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            out.push(_rt.at(xs, _rt.chk(n - i)));
+        }
+    }
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(_rt.chk(n - m) - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            out.push(_rt.at(xs, i));
+        }
+    }
+    return _rt.dup(out);
+}
+
+export function deal_amount(c, hand_len, key_len) {
+    let d = _rt.chk(suit_of(c) + 2n);
+    if (d < hand_len) {
+        return d;
+    }
+    if (d < key_len) {
+        return _rt.chk(0n - d);
+    }
+    return 0n;
+}
+
+export function deal_step(c, hand, key) {
+    let a = deal_amount(c, globalThis.BigInt(hand.length), globalThis.BigInt(key.length));
+    if (a > 0n) {
+        return [deal_under(hand, a), _rt.dup(key)];
+    }
+    if (a < 0n) {
+        return [_rt.dup(hand), deal_under(key, _rt.chk(0n - a))];
+    }
+    return [_rt.dup(hand), _rt.dup(key)];
+}
+
+export function undeal_step(c, hand, key) {
+    let a = deal_amount(c, globalThis.BigInt(hand.length), globalThis.BigInt(key.length));
+    if (a > 0n) {
+        return [undeal_under(hand, a), _rt.dup(key)];
+    }
+    if (a < 0n) {
+        return [_rt.dup(hand), undeal_under(key, _rt.chk(0n - a))];
+    }
+    return [_rt.dup(hand), _rt.dup(key)];
+}
+
 export function passkey(deck) {
     let hand = _rt.dup(deck);
     let key = _rt.lst([]);
@@ -515,12 +619,7 @@ export function passkey(deck) {
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
             let c;
             [c, hand] = drop_front(hand);
-            if (globalThis.BigInt(hand.length) > 0n) {
-                let k = _rt.mod_i64(suit_of(c), globalThis.BigInt(hand.length));
-                if (k > 0n) {
-                    hand = left_rotate(hand, k);
-                }
-            }
+            [hand, key] = deal_step(c, hand, key);
             if (globalThis.BigInt(hand.length) > 0n && rank_of(c) < globalThis.BigInt(hand.length)) {
                 hand = left_rotate(hand, rank_of(c));
             } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
@@ -548,12 +647,7 @@ export function passkey_inv(deck) {
             } else if (globalThis.BigInt(key.length) > 0n && rank_of(c) < globalThis.BigInt(key.length)) {
                 key = right_rotate(key, rank_of(c));
             }
-            if (n > 0n) {
-                let k = _rt.mod_i64(suit_of(c), n);
-                if (k > 0n) {
-                    hand = right_rotate(hand, k);
-                }
-            }
+            [hand, key] = undeal_step(c, hand, key);
             hand = push_front(hand, c);
         }
     }
@@ -629,13 +723,8 @@ export function trace_pass(deck, steps, label) {
             let c;
             let next_hand;
             [c, next_hand] = drop_front(hand);
-            let suit_cut = 0n;
-            if (globalThis.BigInt(next_hand.length) > 0n) {
-                suit_cut = _rt.mod_i64(suit_of(c), globalThis.BigInt(next_hand.length));
-                if (suit_cut > 0n) {
-                    next_hand = left_rotate(next_hand, suit_cut);
-                }
-            }
+            let dealt = deal_amount(c, globalThis.BigInt(next_hand.length), globalThis.BigInt(key.length));
+            [next_hand, key] = deal_step(c, next_hand, key);
             let rank_cut = 0n;
             let cut_on = 0n;
             if (globalThis.BigInt(next_hand.length) > 0n && rank_of(c) < globalThis.BigInt(next_hand.length)) {
@@ -649,7 +738,7 @@ export function trace_pass(deck, steps, label) {
             }
             key = push_front(key, c);
             hand = _rt.dup(next_hand);
-            steps = add_step(steps, _rt.txt("pass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on);
+            steps = add_step(steps, _rt.txt("pass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), dealt, rank_cut, c, cut_on);
         }
     }
     return [_rt.dup(key), _rt.dup(steps)];
@@ -679,16 +768,11 @@ export function trace_unpass(deck, steps, label) {
                 cut_on = 2n;
                 next_key = right_rotate(next_key, rank_cut);
             }
-            let suit_cut = 0n;
-            if (n > 0n) {
-                suit_cut = _rt.mod_i64(suit_of(c), n);
-                if (suit_cut > 0n) {
-                    hand = right_rotate(hand, suit_cut);
-                }
-            }
+            let dealt = deal_amount(c, n, globalThis.BigInt(next_key.length));
+            [hand, next_key] = undeal_step(c, hand, next_key);
             hand = push_front(hand, c);
             key = _rt.dup(next_key);
-            steps = add_step(steps, _rt.txt("unpass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), suit_cut, rank_cut, c, cut_on);
+            steps = add_step(steps, _rt.txt("unpass"), label, no_cards(), key, hand, suit_of(c), rank_of(c), dealt, rank_cut, c, cut_on);
         }
     }
     return [_rt.dup(hand), _rt.dup(steps)];
@@ -698,62 +782,25 @@ export function trace_sum(g, steps, label) {
     g = _rt.dup(g);
     steps = _rt.dup(steps);
     {
-        const _sudo_from_i = 0n;
-        const _sudo_to_i = 3n;
-        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let row = _rt.dup(_rt.at(g, i));
-            let total = 0n;
-            {
-                const _sudo_from_j = 0n;
-                const _sudo_to_j = 12n;
-                for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(row, j)));
-                }
-            }
+        const _sudo_from_a = 1n;
+        const _sudo_to_a = 4n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let i = _rt.mod_i64(a, 4n);
+            let above = _rt.mod_i64(_rt.chk(i + 3n), 4n);
+            let total = row_total(_rt.at(g, above));
             let amount = _rt.mod_i64(total, 13n);
-            _rt.put(g, i, left_rotate(row, amount));
-            steps = add_step(steps, _rt.txt("sumrow"), label, no_cards(), no_cards(), no_cards(), i, _rt.neg(1n), amount, total, _rt.neg(1n), 0n);
+            _rt.put(g, i, left_rotate(_rt.at(g, i), amount));
+            steps = add_step(steps, _rt.txt("sumrow"), label, no_cards(), no_cards(), no_cards(), i, _rt.neg(1n), amount, total, _rt.neg(1n), above);
         }
     }
     {
-        const _sudo_from_j = 0n;
-        const _sudo_to_j = 12n;
-        for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-            let col = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    col.push(_rt.at(_rt.at(g, i), j));
-                }
-            }
-            let total = 0n;
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(col, i)));
-                }
-            }
-            let amount = _rt.mod_i64(total, 4n);
-            let fresh = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i - amount), 4n)));
-                }
-            }
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    let row = _rt.dup(_rt.at(g, i));
-                    _rt.put(row, j, _rt.at(fresh, i));
-                    _rt.put(g, i, _rt.dup(row));
-                }
-            }
-            steps = add_step(steps, _rt.txt("sumcol"), label, no_cards(), no_cards(), no_cards(), _rt.neg(1n), j, amount, total, _rt.neg(1n), 0n);
+        const _sudo_from_a = 1n;
+        const _sudo_to_a = 13n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let j = _rt.mod_i64(a, 13n);
+            let amount = column_turn(g, j);
+            g = turn_column(g, j, amount);
+            steps = add_step(steps, _rt.txt("sumcol"), label, no_cards(), no_cards(), no_cards(), _rt.neg(1n), j, amount, column_value(g, _rt.mod_i64(_rt.chk(j + 12n), 13n)), _rt.neg(1n), column_suits(g, j));
         }
     }
     return [_rt.dup(g), _rt.dup(steps)];
@@ -778,8 +825,8 @@ export function trace_mix(d, steps, label) {
     let grid = empty_rows();
     let t = 0n;
     let prev_card = 0n;
-    let prev_r = 0n;
-    let prev_c = 0n;
+    let fr = 2n;
+    let fc = 0n;
     {
         const _sudo_from_i = 0n;
         const _sudo_to_i = 51n;
@@ -793,12 +840,15 @@ export function trace_mix(d, steps, label) {
             } else {
                 let tr;
                 let tc;
-                [tr, tc] = step_seat(prev_card, prev_r, prev_c);
+                [tr, tc] = step_seat(prev_card, fr, fc);
                 if (_rt.at(_rt.at(grid, tr), tc) < 0n) {
                     r = tr;
                     c = tc;
+                    fr = tr;
+                    fc = tc;
                 } else {
                     overflowed = 1n;
+                    let b = _rt.at(_rt.at(grid, tr), tc);
                     let occ = _rt.lst([]);
                     {
                         const _sudo_from_rr = 0n;
@@ -819,34 +869,27 @@ export function trace_mix(d, steps, label) {
                             occ.push(_rt.dup(marks));
                         }
                     }
-                    let scan = t;
+                    let scan = _rt.mod_i64(_rt.chk(t + suit_of(b)), 4n);
+                    let start = _rt.mod_i64(_rt.chk(tc + rank_of(b)), 13n);
                     let found = _rt.neg(1n);
                     {
                         const _sudo_from_tries = 0n;
                         const _sudo_to_tries = 3n;
                         for (let tries = _sudo_from_tries; tries <= _sudo_to_tries; tries += 1n) {
                             if (found < 0n) {
-                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, _rt.neg(1n), 0n, 0n, card, 1n);
-                                {
-                                    const _sudo_from_col = 0n;
-                                    const _sudo_to_col = 12n;
-                                    for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
-                                        if (found < 0n && _rt.at(_rt.at(occ, scan), col) === 0n) {
-                                            found = col;
-                                        }
-                                    }
-                                }
+                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, start, 0n, b, card, 1n);
+                                found = scan_row(occ, scan, start);
                                 if (found >= 0n) {
                                     r = scan;
                                     c = found;
-                                    t = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
                                 } else {
                                     scan = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
-                                    t = scan;
                                 }
                             }
                         }
                     }
+                    t = _rt.mod_i64(_rt.chk(t + 1n), 4n);
+                    [fr, fc] = step_seat(b, tr, tc);
                 }
             }
             let row = _rt.dup(_rt.at(grid, r));
@@ -854,8 +897,6 @@ export function trace_mix(d, steps, label) {
             _rt.put(grid, r, _rt.dup(row));
             steps = add_step(steps, _rt.txt("place"), label, no_cards(), no_cards(), no_cards(), r, c, 0n, 0n, card, overflowed);
             prev_card = card;
-            prev_r = r;
-            prev_c = c;
         }
     }
     return [scoop_rm(grid), _rt.dup(steps)];
@@ -954,62 +995,25 @@ export function trace_inv_sum(g, steps, label) {
     g = _rt.dup(g);
     steps = _rt.dup(steps);
     {
-        const _sudo_from_j = 0n;
-        const _sudo_to_j = 12n;
-        for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-            let col = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    col.push(_rt.at(_rt.at(g, i), j));
-                }
-            }
-            let total = 0n;
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(col, i)));
-                }
-            }
-            let s = _rt.mod_i64(total, 4n);
-            let fresh = _rt.lst([]);
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    fresh.push(_rt.at(col, _rt.mod_i64(_rt.chk(i + s), 4n)));
-                }
-            }
-            {
-                const _sudo_from_i = 0n;
-                const _sudo_to_i = 3n;
-                for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                    let row = _rt.dup(_rt.at(g, i));
-                    _rt.put(row, j, _rt.at(fresh, i));
-                    _rt.put(g, i, _rt.dup(row));
-                }
-            }
-            steps = add_step(steps, _rt.txt("sumcol"), label, no_cards(), no_cards(), no_cards(), _rt.neg(1n), j, _rt.chk(0n - s), total, _rt.neg(1n), 0n);
+        const _sudo_from_a = 0n;
+        const _sudo_to_a = 12n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let j = _rt.mod_i64(_rt.chk(13n - a), 13n);
+            let amount = column_turn(g, j);
+            g = turn_column(g, j, _rt.chk(0n - amount));
+            steps = add_step(steps, _rt.txt("sumcol"), label, no_cards(), no_cards(), no_cards(), _rt.neg(1n), j, _rt.chk(0n - amount), column_value(g, _rt.mod_i64(_rt.chk(j + 12n), 13n)), _rt.neg(1n), column_suits(g, j));
         }
     }
     {
-        const _sudo_from_i = 0n;
-        const _sudo_to_i = 3n;
-        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let row = _rt.dup(_rt.at(g, i));
-            let total = 0n;
-            {
-                const _sudo_from_j = 0n;
-                const _sudo_to_j = 12n;
-                for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
-                    total = _rt.chk(total + rank_of(_rt.at(row, j)));
-                }
-            }
+        const _sudo_from_a = 0n;
+        const _sudo_to_a = 3n;
+        for (let a = _sudo_from_a; a <= _sudo_to_a; a += 1n) {
+            let i = _rt.mod_i64(_rt.chk(4n - a), 4n);
+            let above = _rt.mod_i64(_rt.chk(i + 3n), 4n);
+            let total = row_total(_rt.at(g, above));
             let amount = _rt.mod_i64(total, 13n);
-            _rt.put(g, i, left_rotate(row, _rt.chk(0n - amount)));
-            steps = add_step(steps, _rt.txt("sumrow"), label, no_cards(), no_cards(), no_cards(), i, _rt.neg(1n), _rt.chk(0n - amount), total, _rt.neg(1n), 0n);
+            _rt.put(g, i, left_rotate(_rt.at(g, i), _rt.chk(0n - amount)));
+            steps = add_step(steps, _rt.txt("sumrow"), label, no_cards(), no_cards(), no_cards(), i, _rt.neg(1n), _rt.chk(0n - amount), total, _rt.neg(1n), above);
         }
     }
     return [_rt.dup(g), _rt.dup(steps)];
@@ -1038,8 +1042,8 @@ export function trace_inv_mix(d, steps, label) {
     let t = 0n;
     let hand = _rt.lst([]);
     let prev_card = 0n;
-    let prev_r = 0n;
-    let prev_c = 0n;
+    let fr = 2n;
+    let fc = 0n;
     {
         const _sudo_from_i = 0n;
         const _sudo_to_i = 51n;
@@ -1049,39 +1053,35 @@ export function trace_inv_mix(d, steps, label) {
             if (i > 0n) {
                 let tr;
                 let tc;
-                [tr, tc] = step_seat(prev_card, prev_r, prev_c);
+                [tr, tc] = step_seat(prev_card, fr, fc);
                 if (_rt.at(_rt.at(visited, tr), tc) === 0n) {
                     r = tr;
                     c = tc;
+                    fr = tr;
+                    fc = tc;
                 } else {
-                    let scan = t;
+                    let b = _rt.at(_rt.at(grid, tr), tc);
+                    let scan = _rt.mod_i64(_rt.chk(t + suit_of(b)), 4n);
+                    let start = _rt.mod_i64(_rt.chk(tc + rank_of(b)), 13n);
                     let found = _rt.neg(1n);
                     {
                         const _sudo_from_tries = 0n;
                         const _sudo_to_tries = 3n;
                         for (let tries = _sudo_from_tries; tries <= _sudo_to_tries; tries += 1n) {
                             if (found < 0n) {
-                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, _rt.neg(1n), 0n, 0n, _rt.neg(1n), 1n);
-                                {
-                                    const _sudo_from_col = 0n;
-                                    const _sudo_to_col = 12n;
-                                    for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
-                                        if (found < 0n && _rt.at(_rt.at(visited, scan), col) === 0n) {
-                                            found = col;
-                                        }
-                                    }
-                                }
+                                steps = add_step(steps, _rt.txt("scan"), label, no_cards(), no_cards(), no_cards(), scan, start, 0n, b, _rt.neg(1n), 1n);
+                                found = scan_row(visited, scan, start);
                                 if (found >= 0n) {
                                     r = scan;
                                     c = found;
-                                    t = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
                                 } else {
                                     scan = _rt.mod_i64(_rt.chk(scan + 1n), 4n);
-                                    t = scan;
                                 }
                             }
                         }
                     }
+                    t = _rt.mod_i64(_rt.chk(t + 1n), 4n);
+                    [fr, fc] = step_seat(b, tr, tc);
                 }
             }
             let card = _rt.at(_rt.at(grid, r), c);
@@ -1091,8 +1091,6 @@ export function trace_inv_mix(d, steps, label) {
             _rt.put(row, c, 1n);
             _rt.put(visited, r, _rt.dup(row));
             prev_card = card;
-            prev_r = r;
-            prev_c = c;
         }
     }
     return [_rt.dup(hand), _rt.dup(steps)];
@@ -1288,7 +1286,7 @@ export function diamond_cards() {
 }
 
 export function counter_deck(nonce, index) {
-    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 713);
+    _rt.sudo_assert_eq(globalThis.BigInt(nonce.length), 39n, 815);
     let diamonds = unrank(diamond_cards(), index);
     let out = _rt.lst([]);
     {
@@ -1378,6 +1376,16 @@ export function sorted_copy(xs) {
         }
     }
     return _rt.dup(out);
+}
+
+export function swap_card(c, x, y) {
+    if (c === x) {
+        return y;
+    }
+    if (c === y) {
+        return x;
+    }
+    return c;
 }
 
 export function same_cards(a, b) {

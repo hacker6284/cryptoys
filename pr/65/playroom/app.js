@@ -1,6 +1,6 @@
-import { adapters } from "./adapters.js";
 import { FOLLOW_HOLD_MS, LIFT_MS } from "./constants.js";
 import { installCapture } from "./capture-strip.js";
+import { DEMOS } from "./demos.js";
 import { continueTo, followEnter, followLeave, markBeat, trackToys } from "./motion.js";
 import { createPoseController } from "./pose-controller.js";
 import { resolvePoseName } from "./poses.js";
@@ -15,11 +15,6 @@ const sitBtn = document.querySelector("#sit");
 const backBtn = document.querySelector("#back");
 const errorEl = document.querySelector("#load-error");
 
-const ALGOS = {
-    scramble: { title: "Scramble", pose: "scramble", toy: "cube" },
-    doubledeal: { title: "DoubleDeal", pose: "doubledeal", toy: "deck" },
-};
-
 let activeAlgo = null;
 let leaving = false;
 let starting = false;
@@ -28,7 +23,7 @@ let ignoreSkipUntil = 0;
 
 function seatedQueryPose(pose) {
     if (!pose) return pose;
-    if (pose === "scramble" || pose === "doubledeal") return "seated";
+    if (Object.values(DEMOS).some((demo) => demo.pose === pose)) return "seated";
     if (String(pose).startsWith("unbox")) return "seated";
     return pose;
 }
@@ -46,7 +41,7 @@ function writeQuery({ pose, algo }) {
 
 function syncOverlays({ name, overlays, tweening }) {
     const showMenu = Boolean(overlays?.menu) && !tweening && !activeAlgo;
-    const algoName = ALGOS[activeAlgo]?.title || "cryptoys";
+    const algoName = DEMOS[activeAlgo]?.title || "cryptoys";
     titleEl.textContent = algoName;
     if (activeAlgo) document.title = algoName;
     else document.title = "cryptoys";
@@ -92,17 +87,18 @@ try {
     if (typeof window !== "undefined" && (params.get("debug") === "1" || params.get("debugCapture") === "1")) {
         window.__playroomWorld = world;
     }
-    adapters.scramble.install(world, installOpts);
-    adapters.doubledeal.install(world, installOpts);
-    void adapters.scramble.preload();
-    void adapters.doubledeal.preload();
-    await adapters.scramble.ready?.();
-    const director = createToyDirector(world);
+    const adapters = Object.values(DEMOS).map((demo) => demo.adapter);
+    for (const adapter of adapters) adapter.install(world, installOpts);
+    world.lights.seal();
+    let checkLights = params.get("debug") === "1";
+    for (const adapter of adapters) void adapter.preload();
+    await Promise.all(adapters.map((adapter) => adapter.ready?.()));
+    const director = createToyDirector(world, DEMOS);
 
     async function startAlgo(id, { snap = false } = {}) {
-        const meta = ALGOS[id];
-        const adapter = adapters[id];
-        if (!meta || !adapter) return;
+        const meta = DEMOS[id];
+        if (!meta) return;
+        const { adapter } = meta;
         if (activeAlgo === id || starting || leaving) return;
         starting = true;
         skippedStart = false;
@@ -119,15 +115,13 @@ try {
             ignoreSkipUntil = performance.now() + LIFT_MS;
             const warm = adapter.preload();
             const prep = adapter.prepareEnter?.() ?? Promise.resolve();
-            const recipe = director.recipeOf(id);
-            const flyToys = recipe?.toys || [meta.toy];
             // Full set from the first frame — trackActive would jump
             // the look to KEY alone the moment it lifts, then whip to
             // MSG. Leave already frames the whole set this way.
-            const chestExtra = recipe?.extras?.includes("chest") && world.chest?.group
+            const chestExtra = meta.chest && world.chest?.group
                 ? [world.chest.group]
                 : [];
-            const enterTrack = trackToys(world, flyToys, chestExtra);
+            const enterTrack = trackToys(world, meta.toys, chestExtra);
             if (reduced) {
                 poses.snap(meta.pose);
             } else {
@@ -188,11 +182,9 @@ try {
         const id = activeAlgo;
         capture.begin(`${id}-leave`);
         markBeat("leave-start");
-        const meta = ALGOS[id];
+        const { adapter, toys } = DEMOS[id];
         const reduced = poses.prefersReducedMotion();
-        const recipe = director.recipeOf(id);
-        const flyToys = recipe?.toys || [meta.toy];
-        const prepMs = adapters[id]?.leaveMs?.({ snap: reduced }) ?? 0;
+        const prepMs = adapter.leaveMs?.({ snap: reduced }) ?? 0;
         const homeMs = director.homeMs(id);
         ignoreSkipUntil = performance.now() + LIFT_MS;
         director.prepareHome?.();
@@ -205,18 +197,18 @@ try {
                 to: "landing",
                 track: trackToys(
                     world,
-                    flyToys,
+                    toys,
                     world.chest?.group ? [world.chest.group] : [],
                 ),
                 holdMs: 0,
                 duration: prepMs + homeMs,
             });
         }
-        await adapters[id]?.leave?.({ snap: reduced });
+        await adapter.leave({ snap: reduced });
         markBeat("leave-home");
         await director.home({ snap: reduced });
         poses.followLive?.(null);
-        adapters[id]?.revealShelf?.();
+        adapter.revealShelf?.();
         markBeat("hub-settle");
         activeAlgo = null;
         leaving = false;
@@ -229,31 +221,33 @@ try {
         });
     }
 
-    if (ALGOS[initialAlgo]) {
-        if (initialAlgo === "doubledeal" && !poses.prefersReducedMotion()) {
-            poses.snap("landing");
-        } else {
-            poses.snap(ALGOS[initialAlgo].pose);
-        }
-    } else {
-        poses.snap(initialPose);
-    }
+    const deepLink = DEMOS[initialAlgo];
+    const playDeepLink = deepLink?.deepLinkPlays && !poses.prefersReducedMotion();
+    poses.snap(playDeepLink ? "landing" : deepLink?.pose ?? initialPose);
 
     document.body.classList.add("is-ready");
     document.documentElement.dataset.playroomReady = "1";
     document.documentElement.dataset.motion = poses.prefersReducedMotion() ? "reduce" : "full";
-    if (!ALGOS[initialAlgo]) markBeat("hub-rest");
+    if (!deepLink) markBeat("hub-rest");
 
     function tick(now) {
         director.update(now);
         poses.update(performance.now());
         world.render();
+        if (checkLights) {
+            try {
+                world.lights.check();
+            } catch (err) {
+                checkLights = false;
+                console.error(err);
+            }
+        }
         capture.tick(now, world.camera, poses.lookTarget);
         requestAnimationFrame(tick);
     }
-    // The rAF clock must run before any non-snap enter. Deep-link
-    // DoubleDeal awaits the physical unbox; fly / flap need director
-    // + pose updates on this loop (hub clicks already have it).
+    // The rAF clock must run before any non-snap enter. A playing deep
+    // link awaits the full enter; its flights and choreography need
+    // director + pose updates on this loop (hub clicks already have it).
     requestAnimationFrame(tick);
 
     menuEl.addEventListener("pointerenter", (event) => {
@@ -282,17 +276,17 @@ try {
     backBtn.addEventListener("click", () => void leaveAlgo());
 
     function enterBusy() {
-        return Boolean(adapters[activeAlgo]?.busy);
+        return Boolean(DEMOS[activeAlgo]?.adapter.busy);
     }
 
     function skipMotion() {
         if (performance.now() < ignoreSkipUntil) return;
         skippedStart = true;
         director.skip();
-        adapters[activeAlgo]?.skipEnter?.();
+        DEMOS[activeAlgo]?.adapter.skipEnter?.();
         if (activeAlgo && (starting || enterBusy())) {
             // Continue from the live shot — do not snap to a named seat.
-            continueTo(poses, ALGOS[activeAlgo].pose, { duration: 720 });
+            continueTo(poses, DEMOS[activeAlgo].pose, { duration: 720 });
         } else {
             poses.skip();
         }
@@ -321,13 +315,7 @@ try {
 
     window.addEventListener("resize", () => world.resize());
 
-    if (ALGOS[initialAlgo]) {
-        if (initialAlgo === "doubledeal" && !poses.prefersReducedMotion()) {
-            void startAlgo(initialAlgo);
-        } else {
-            void startAlgo(initialAlgo, { snap: true });
-        }
-    }
+    if (deepLink) void startAlgo(initialAlgo, { snap: !playDeepLink });
 } catch (err) {
     console.error(err);
     document.body.classList.add("is-error");

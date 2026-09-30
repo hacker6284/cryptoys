@@ -18,7 +18,12 @@ import {
 } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
 import { seatOnSurface } from "./motion.js";
+import { stubThree } from "./three-stub.mjs";
 import { createToyDirector, recipeMotionMs } from "./toy-director.js";
+
+// The registry holds the adapters; they touch three only once installed.
+stubThree();
+const { DEMOS } = await import("./demos.js");
 
 const span = tableSpan();
 const feltDiameter = 2 * (TABLE_R - 0.08);
@@ -29,6 +34,16 @@ assert.ok(span.width > 0, "standalone table has a width");
 assert.ok(scaledWidth < feltDiameter, `scaled decks ${scaledWidth.toFixed(3)}m must sit on the ${feltDiameter.toFixed(3)}m felt`);
 assert.ok(scaledDepth < feltDiameter, `scaled depth ${scaledDepth.toFixed(3)}m must sit on the felt`);
 
+const hub = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const noscript = hub.slice(hub.indexOf("<noscript>"), hub.indexOf("</noscript>"));
+const ids = Object.keys(DEMOS).sort();
+const buttons = [...hub.matchAll(/<button[^>]*data-algo="([^"]+)"[^>]*>([^<]*)</g)];
+assert.deepEqual(buttons.map((m) => m[1]).sort(), ids, "one hub button per demo");
+for (const [, id, label] of buttons) assert.equal(label, DEMOS[id].title, `${id} hub button reads its title`);
+const links = [...noscript.matchAll(/href="\.\/([^"]+)\/"/g)].map((m) => m[1]);
+assert.deepEqual(links.sort(), ids, "one noscript link per demo");
+for (const key of ["constructor", "__proto__", "toString"]) assert.equal(DEMOS[key], undefined, `?algo=${key}`);
+for (const [id, { pose }] of Object.entries(DEMOS)) assert.ok(POSES[pose], `${id} seats at a poses.js pose`);
 assert.ok(POSES.doubledeal, "doubledeal pose exists");
 assert.equal(resolvePoseName("doubledeal"), "doubledeal");
 assert.equal(resolvePoseName("lean_deck"), "doubledeal");
@@ -60,18 +75,14 @@ assert.equal(toyHalfHeight("deck"), 0.046);
 assert.equal(toyHalfHeight("deck2"), 0.046);
 assert.notEqual(toyHalfHeight("deck"), CUBE / 2, "deck seatOn fallback is not the cube half-height");
 
-const recipeDirector = createToyDirector({});
-const recipe = recipeDirector.recipeOf("doubledeal");
-assert.deepEqual(recipe.toys, ["deck", "deck2"]);
-assert.deepEqual(recipe.extras, ["chest"]);
-assert.equal(recipe.pose, "doubledeal");
-assert.equal(recipeDirector.recipeOf("scramble").toys[0], "cube");
-assert.equal(recipeMotionMs(recipeDirector.recipeOf("scramble")), FLY_MS);
-assert.equal(
-    recipeMotionMs(recipeDirector.recipeOf("doubledeal")),
-    LID_OPEN_MS + FLY_MS + LID_CLOSE_MS,
-);
-assert.equal(recipeDirector.borrowMs("doubledeal"), recipeDirector.homeMs("doubledeal"));
+assert.deepEqual(DEMOS.doubledeal.toys, ["deck", "deck2"]);
+assert.equal(DEMOS.doubledeal.chest, true);
+assert.equal(DEMOS.doubledeal.pose, "doubledeal");
+assert.equal(DEMOS.scramble.toys[0], "cube");
+assert.equal(recipeMotionMs(DEMOS.scramble), FLY_MS);
+assert.equal(recipeMotionMs(DEMOS.doubledeal), LID_OPEN_MS + FLY_MS + LID_CLOSE_MS);
+const idleDirector = createToyDirector({}, DEMOS);
+assert.equal(idleDirector.borrowMs("doubledeal"), idleDirector.homeMs("doubledeal"));
 assert.equal(CLOCK_STEP_MS, 50);
 
 function vec3(x = 0, y = 0, z = 0) {
@@ -237,7 +248,7 @@ const shortSeat = seatOn(shortCube, {
 assert.equal(shortSeat.position.y, 1.01, "shorter mesh seats lower from AABB");
 
 const world = makeMockWorld();
-const director = createToyDirector(world);
+const director = createToyDirector(world, DEMOS);
 const shelfY = world.getShelfPose("deck").position.y;
 const tableY = world.getTablePose("deck").position.y;
 assert.equal(world.toys.deck.position.x, SLOTS.deck.x);
@@ -263,7 +274,7 @@ assert.ok(world.toys.deck2.position.x < -1.5, "MSG deck homes to the chest");
 assert.deepEqual(world.lids, [1, 0, 1, 0], "toybox opens to receive MSG and closes after");
 
 const cubeWorld = makeMockWorld();
-const cubeDirector = createToyDirector(cubeWorld);
+const cubeDirector = createToyDirector(cubeWorld, DEMOS);
 await cubeDirector.borrow("scramble", { snap: true });
 assert.equal(cubeWorld.toys.cube.position.x, DEN.x);
 assert.equal(cubeWorld.toys.cube.position.y, cubeWorld.getTablePose("cube").position.y);

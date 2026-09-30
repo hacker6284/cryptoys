@@ -52,3 +52,79 @@ textarea.grow-field {
 .io-note[hidden] {
   display: none;
 }
+
+.playroom-message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.playroom-message-row > .grow-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.file-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--grow-field-min);
+  height: var(--grow-field-min);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--grow-field-radius);
+  background: var(--bg);
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+}
+
+.file-btn:hover,
+.file-btn:focus-visible {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--fg) 28%, transparent);
+}
+
+.file-action {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--fg) 46%, transparent);
+}
+
+.file-action:hover,
+.file-action:focus-visible {
+  color: var(--fg);
+  background: none;
+}
+
+.file-chip {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--grow-field-min);
+  padding: 0.55rem 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--grow-field-radius);
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.file-chip[hidden] {
+  display: none;
+}
+
+#message-file-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.file-chip.is-hashing #message-file-name::after {
+  content: " · Hashing…";
+}

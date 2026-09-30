@@ -1,4 +1,5 @@
-import { scramble_v1, scramble_v2, update, evaluate, solved_facelets } from "./generated/scramble.mjs";
+import { solved_facelets } from "./generated/scramble.mjs";
+import { hashMessage } from "./hash.js";
 import { SOLVED_FACELETS, applyMove, isSolved, shortSolve, toCubejs, flipU, parseMove } from "./cube.js";
 import { mapTraceToAlg, prefixAlg, projectAlgForPuzzle } from "../playroom/scramble-alg.js";
 import {
@@ -21,6 +22,16 @@ import {
     teachPosition,
 } from "../shared/session.js";
 import { colorName, renderOutline } from "../shared/teach.js";
+
+// Bounded by generated-module speed (Gen 2 ≈ 5 s at 4 KiB);
+// rises as the spec/sudoc speedups land.
+export const FILE_MAX_BYTES = 4 * 1024;
+// A file's Digest and walk while it hashes: none yet.
+const HASHING = { digest: [], trace: [] };
+
+function formatSize(bytes) {
+    return bytes < 1024 ? `${bytes} B` : `${+(bytes / 1024).toFixed(1)} KiB`;
+}
 
 const V2_TURNS = {
     0: "U R", 1: "U F", 2: "U L", 3: "U B",
@@ -48,6 +59,8 @@ export function createScrambleSession({
     const tapeEl = $("#tape");
     const outlineEl = $("#outline");
     const ioNote = $("#io-note");
+    const fileInput = $("#message-file-input");
+    const fileChip = $("#message-file");
     bindGrowFields(root);
 
     const solved = solved_facelets();
@@ -70,6 +83,8 @@ export function createScrambleSession({
     let job = 0;
     let solverReady = false;
     let messageBytes = [];
+    let fileBytes = null;
+    let fileAbort = null;
     const live = createLiveDigest();
 
     function bytesOf(text) {
@@ -396,23 +411,15 @@ export function createScrambleSession({
         jumpViewToCursor();
     }
 
-    function refreshDigest() {
-        // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / Skip to end.
+    // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / Skip to end.
+    function showResult(bytes, result) {
         job += 1;
         markPlay(false);
         solving = false;
         busy = false;
         settleView();
         errorEl.textContent = "";
-        try {
-            messageBytes = bytesOf(input.value);
-        } catch (err) {
-            errorEl.textContent = err.message;
-            return;
-        }
-        const state = version === 2 ? scramble_v2() : scramble_v1();
-        update(state, messageBytes);
-        const result = evaluate(state);
+        messageBytes = bytes;
         trace = result.trace;
         mappedAlg = { alg: "", units: [], ranges: [] };
         projectedAlg = { alg: "", units: [], ranges: [], hash: hashesThisPuzzle(), dropped: 0 };
@@ -424,6 +431,77 @@ export function createScrambleSession({
         view.resetTimeline?.();
         showFace(solved);
         showStatus(caption());
+    }
+
+    // Typed Message only; a picked file's Digest comes from hashFile.
+    function refreshDigest() {
+        if (fileBytes) return;
+        let bytes;
+        try {
+            bytes = bytesOf(input.value);
+        } catch (err) {
+            errorEl.textContent = err.message;
+            return;
+        }
+        showResult(bytes, hashMessage(version, bytes));
+    }
+
+    // Aborts the previous file read / hash; the new one stops once its signal aborts.
+    function nextFileJob() {
+        fileAbort?.abort();
+        fileAbort = new AbortController();
+        return fileAbort.signal;
+    }
+
+    // One update + evaluate on the generated module, in a Worker. If the Worker fails,
+    // the page runs it and blocks (up to ~5 s at the cap in Gen 2).
+    async function hashFile(signal) {
+        const bytes = fileBytes;
+        showResult(bytes, HASHING);
+        fileChip.classList.add("is-hashing");
+        let worker;
+        try {
+            const result = await new Promise((resolve) => {
+                const fallback = () => resolve(new Promise((ok) => ok(hashMessage(version, bytes))));
+                try {
+                    const url = new URL("./hash-worker.js", import.meta.url);
+                    worker = new Worker(url, { type: "module" });
+                } catch {
+                    return fallback();
+                }
+                signal.addEventListener("abort", () => worker.terminate());
+                worker.onmessage = (event) => resolve(event.data);
+                worker.onerror = fallback;
+                worker.postMessage({ version, bytes });
+            });
+            if (!signal.aborted) showResult(bytes, result);
+        } catch (err) {
+            if (!signal.aborted) errorEl.textContent = err.message || "Could not hash this file.";
+        } finally {
+            worker?.terminate();
+            if (!signal.aborted) fileChip.classList.remove("is-hashing");
+        }
+    }
+
+    async function applyFile(file) {
+        if (file.size > FILE_MAX_BYTES) {
+            errorEl.textContent = `Files can be up to ${formatSize(FILE_MAX_BYTES)}.`;
+            return;
+        }
+        const signal = nextFileJob();
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (signal.aborted) return;
+        $("#message-file-name").textContent = `${file.name} · ${formatSize(file.size)}`;
+        fileChip.hidden = false;
+        fileBytes = bytes;
+        await hashFile(signal);
+    }
+
+    function clearFile() {
+        fileAbort?.abort();
+        fileBytes = null;
+        fileChip.hidden = true;
+        refreshDigest();
     }
 
     function duration(kind) {
@@ -467,7 +545,7 @@ export function createScrambleSession({
     }
 
     async function play() {
-        if (solving || busy) return;
+        if (solving || busy || !trace.length) return;
         if (playing) {
             markPlay(false);
             return;
@@ -512,6 +590,7 @@ export function createScrambleSession({
 
     function enterTeach() {
         if (trace.length === 0) refreshDigest();
+        if (!trace.length) return;
         ensureTimeline();
         setTeaching(true);
         cursor = -1;
@@ -615,7 +694,8 @@ export function createScrambleSession({
         version = Number(value);
         const genLabel = $("#gen-label");
         if (genLabel) genLabel.textContent = `Gen ${version}`;
-        refreshDigest();
+        if (fileBytes) void hashFile(nextFileJob());
+        else refreshDigest();
     }, listen);
 
     bindSegmented(root, "encoding", (value) => {
@@ -691,6 +771,13 @@ export function createScrambleSession({
         onChange: () => refreshDigest(),
         signal: abort.signal,
     });
+    $("#message-file-btn").addEventListener("click", () => fileInput.click(), listen);
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        fileInput.value = "";
+        if (file) void applyFile(file);
+    }, listen);
+    $("#message-file-clear").addEventListener("click", clearFile, listen);
 
     bindTransport(root, {
         play,
@@ -727,6 +814,7 @@ export function createScrambleSession({
         },
         reset,
         dispose() {
+            fileAbort?.abort();
             job += 1;
             markPlay(false);
             solving = false;

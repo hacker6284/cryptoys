@@ -43,14 +43,15 @@ export class Evaluation {
 
 export class Scramble {
     static _sudoKind = ["r", "Scramble"];
-    static _sudoFields = ["version", "pending", "total", "processed", "cube", "steps", "done"];
-    constructor(version, pending, total, processed, cube, steps, done) {
+    static _sudoFields = ["version", "pending", "total", "processed", "cube", "steps", "traced", "done"];
+    constructor(version, pending, total, processed, cube, steps, traced, done) {
         this.version = version;
         this.pending = pending;
         this.total = total;
         this.processed = processed;
         this.cube = cube;
         this.steps = steps;
+        this.traced = traced;
         this.done = done;
     }
 }
@@ -125,18 +126,26 @@ export function solved_cube() {
     return _rt.dup(cube);
 }
 
-export function fresh(version) {
+export function fresh(version, traced) {
     let pending = _rt.lst([]);
     let steps = _rt.lst([]);
-    return _rt.rec(new Scramble(version, _rt.dup(pending), 0n, 0n, solved_cube(), _rt.dup(steps), false));
+    return _rt.rec(new Scramble(version, _rt.dup(pending), 0n, 0n, solved_cube(), _rt.dup(steps), traced, false));
 }
 
 export function scramble_v1() {
-    return fresh(1n);
+    return fresh(1n, true);
 }
 
 export function scramble_v2() {
-    return fresh(2n);
+    return fresh(2n, true);
+}
+
+export function scramble_v1_digest() {
+    return fresh(1n, false);
+}
+
+export function scramble_v2_digest() {
+    return fresh(2n, false);
 }
 
 export function rot_xyz(face, x, y, z) {
@@ -289,7 +298,7 @@ export function cubie_at(cube, x, y, z) {
             }
         }
     }
-    _rt.sudo_assert(false, 200);
+    _rt.sudo_assert(false, 209);
     return 0n;
 }
 
@@ -331,7 +340,7 @@ export function color_char(color) {
     if (color === 6n) {
         return 71n;
     }
-    _rt.sudo_assert(false, 229);
+    _rt.sudo_assert(false, 238);
     return 63n;
 }
 
@@ -379,7 +388,9 @@ export function move_name(face, turns) {
 }
 
 export function push_step(s, kind, move, nybble, block, at, up, front) {
-    _rt.field_mut(s, "steps").push(_rt.rec(new Step(_rt.dup(kind), _rt.dup(move), _rt.dup(nybble), block, at, _rt.dup(up), _rt.dup(front), facelets_of(s.cube))));
+    if (s.traced) {
+        _rt.field_mut(s, "steps").push(_rt.rec(new Step(_rt.dup(kind), _rt.dup(move), _rt.dup(nybble), block, at, _rt.dup(up), _rt.dup(front), facelets_of(s.cube))));
+    }
     return s;
 }
 
@@ -431,7 +442,7 @@ export function center_dir(cube, color) {
             }
         }
     }
-    _rt.sudo_assert(false, 299);
+    _rt.sudo_assert(false, 310);
     return [0n, 0n, 0n];
 }
 
@@ -517,7 +528,9 @@ export function reorient(cube, up_color, front_color) {
 
 export function do_move(s, face, turns, nybble, block, at) {
     s.cube = apply_turns(s.cube, face, turns);
-    s = push_step(s, _rt.txt("move"), move_name(face, turns), nybble, block, at, blank(), blank());
+    if (s.traced) {
+        s = push_step(s, _rt.txt("move"), move_name(face, turns), hex_digit(nybble), block, at, blank(), blank());
+    }
     return s;
 }
 
@@ -526,7 +539,9 @@ export function do_rule(s, block) {
     let up = c.yp;
     let front = c.zp;
     s.cube = reorient(s.cube, up, front);
-    s = push_step(s, _rt.txt("ruleB"), blank(), blank(), block, 0n, letter(up), letter(front));
+    if (s.traced) {
+        s = push_step(s, _rt.txt("ruleB"), blank(), blank(), block, 0n, letter(up), letter(front));
+    }
     return s;
 }
 
@@ -536,7 +551,7 @@ export function apply_v1_block(s, ny, base, block) {
         const _sudo_to_k = 7n;
         for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
             let n = _rt.at(ny, _rt.chk(base + k));
-            s = do_move(s, _rt.at(v1_face, n), _rt.at(v1_turns, n), hex_digit(n), block, k);
+            s = do_move(s, _rt.at(v1_face, n), _rt.at(v1_turns, n), n, block, k);
         }
     }
     s = do_rule(s, block);
@@ -544,9 +559,8 @@ export function apply_v1_block(s, ny, base, block) {
 }
 
 export function apply_v2_symbol(s, n, block) {
-    let shown = hex_digit(n);
-    s = do_move(s, _rt.at(v2_a, n), 1n, shown, block, 0n);
-    s = do_move(s, _rt.at(v2_b, n), 1n, shown, block, 1n);
+    s = do_move(s, _rt.at(v2_a, n), 1n, n, block, 0n);
+    s = do_move(s, _rt.at(v2_b, n), 1n, n, block, 1n);
     s = do_rule(s, block);
     return s;
 }
@@ -618,13 +632,13 @@ export function apply_ready(s) {
 }
 
 export function update(s, message) {
-    _rt.sudo_assert(!s.done, 403);
+    _rt.sudo_assert(!s.done, 415);
     {
         const _sudo_from_i = 0n;
         const _sudo_to_i = _rt.chk(globalThis.BigInt(message.length) - 1n);
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
             let b = _rt.at(message, i);
-            _rt.sudo_assert(b >= 0n && b <= 255n, 406);
+            _rt.sudo_assert(b >= 0n && b <= 255n, 418);
         }
     }
     {
@@ -709,7 +723,7 @@ export function corner_piece(a, b, c) {
     if (y && bl && r) {
         return 7n;
     }
-    _rt.sudo_assert(false, 455);
+    _rt.sudo_assert(false, 467);
     return 0n;
 }
 
@@ -750,7 +764,7 @@ export function edge_piece(a, b) {
     if (a === 5n && b === 3n || a === 3n && b === 5n) {
         return 11n;
     }
-    _rt.sudo_assert(false, 483);
+    _rt.sudo_assert(false, 495);
     return 0n;
 }
 
@@ -791,7 +805,7 @@ export function digest_bytes(s3, ori) {
                     carry = _rt.div(cur, 256n);
                 }
             }
-            _rt.sudo_assert_eq(carry, 0n, 508);
+            _rt.sudo_assert_eq(carry, 0n, 520);
         }
     }
     let rest = ori;
@@ -804,7 +818,7 @@ export function digest_bytes(s3, ori) {
             rest = _rt.chk(_rt.div(rest, 256n) + _rt.div(cur, 256n));
         }
     }
-    _rt.sudo_assert(_rt.at(buf, 9n) === 0n && _rt.at(buf, 10n) === 0n && _rt.at(buf, 11n) === 0n, 514);
+    _rt.sudo_assert(_rt.at(buf, 9n) === 0n && _rt.at(buf, 10n) === 0n && _rt.at(buf, 11n) === 0n, 526);
     let out = _rt.lst([]);
     {
         const _sudo_from_j = 8n;
@@ -876,7 +890,7 @@ export function finish(s) {
 }
 
 export function evaluate(s) {
-    _rt.sudo_assert(!s.done, 563);
+    _rt.sudo_assert(!s.done, 575);
     s = pad(s);
     s = apply_ready(s);
     s = finish(s);
@@ -884,7 +898,7 @@ export function evaluate(s) {
 }
 
 export function run(version, message) {
-    let s = fresh(version);
+    let s = fresh(version, true);
     s = update(s, message);
     let _sudo_h0;
     [_sudo_h0, s] = evaluate(s);
@@ -893,10 +907,16 @@ export function run(version, message) {
 
 export function check(version, message, digest, faces, nsteps) {
     let got = run(version, message);
-    _rt.sudo_assert_eq(got.digest, digest, 576);
-    _rt.sudo_assert_eq(globalThis.BigInt(got.trace.length), nsteps, 577);
-    _rt.sudo_assert_eq(_rt.at(got.trace, _rt.chk(nsteps - 1n)).facelets, faces, 578);
-    _rt.sudo_assert_eq(_rt.at(got.trace, 0n).kind, _rt.txt("move"), 579);
-    _rt.sudo_assert_eq(_rt.at(got.trace, _rt.chk(nsteps - 1n)).kind, _rt.txt("canonicalize"), 580);
+    _rt.sudo_assert_eq(got.digest, digest, 588);
+    _rt.sudo_assert_eq(globalThis.BigInt(got.trace.length), nsteps, 589);
+    _rt.sudo_assert_eq(_rt.at(got.trace, _rt.chk(nsteps - 1n)).facelets, faces, 590);
+    _rt.sudo_assert_eq(_rt.at(got.trace, 0n).kind, _rt.txt("move"), 591);
+    _rt.sudo_assert_eq(_rt.at(got.trace, _rt.chk(nsteps - 1n)).kind, _rt.txt("canonicalize"), 592);
+    let q = fresh(version, false);
+    q = update(q, message);
+    let quick;
+    [quick, q] = evaluate(q);
+    _rt.sudo_assert_eq(quick.digest, digest, 596);
+    _rt.sudo_assert_eq(globalThis.BigInt(quick.trace.length), 0n, 597);
 }
 

@@ -67,6 +67,7 @@ environment, and `#audit_all` reports an identical re-declaration as `DUP`).
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ALLOWED = {"propext", "Classical.choice", "Quot.sound"}
@@ -510,16 +511,10 @@ REGISTRIES = {
 
 
 def heavy_source_theorems(heavy_dir=HEAVY_DIR):
-    """Fully qualified names of the theorems declared in a heavy source dir."""
-    names = set()
-    for path in sorted(heavy_dir.rglob("*.lean")):
-        text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
-        ns = re.findall(r"^namespace\s+(\S+)", text, flags=re.M)
-        prefix = (ns[0] + ".") if ns else ""
-        for n in re.findall(r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected)\s+)*(?:theorem|lemma)\s+([^\s(:{\[]+)",
-                            text, flags=re.M):
-            names.add(prefix + n)
-    return names
+    """Fully qualified names of the theorems declared in a heavy source dir, private
+    ones included (the audit reports them under their user-facing name). Same scope
+    tracking as `lean_source_theorems`."""
+    return lean_source_theorems(heavy_dir, skip=(".lake",), private=True)
 
 
 def heavy_registry_problems(reg):
@@ -536,35 +531,53 @@ def heavy_registry_problems(reg):
 
 
 MD_README = MD_LEAN.parent / "README.md"
-_DECL = re.compile(r"^\s*(?:@\[[^\]]*\]\s*)?((?:(?:private|protected|noncomputable)\s+)*)"
+# A theorem/lemma declaration line: optional `open … in` / `set_option … in` prefixes
+# (any number, on the same line), an optional attribute, modifiers, then the name.
+_DECL = re.compile(r"^\s*(?:(?:open|set_option)\s[^\n]*?\sin\s+)*"
+                   r"(?:@\[[^\]]*\]\s*)?((?:(?:private|protected|noncomputable)\s+)*)"
                    r"(?:theorem|lemma)\s+([^\s(:{\[]+)")
-_SCOPE = re.compile(r"^\s*(namespace|section|mutual|end)\b\s*([\w.']*)")
+_SCOPE = re.compile(r"^\s*(?:noncomputable\s+)?(namespace|section|mutual|end)\b\s*([\w.']*)")
 
 
-def lean_source_theorems(root, skip=("Generated", "MegaDreifachHeavy", ".lake")):
-    """Public theorem names declared under `root`, fully qualified by tracking the
-    namespace / section / mutual / end scopes (comments stripped). No Lean needed."""
+def lean_text_theorems(text, private=False):
+    """Theorem names declared in one Lean file's text, fully qualified by tracking the
+    namespace / section / mutual / end scopes (comments stripped; `namespace A.B` opens
+    two scopes, closed by `end A.B` or by `end B` then `end A`; `_root_.` names are not
+    qualified). Private ones only if `private`. No Lean needed."""
+    names = set()
+    text = re.sub(r"/-.*?-/", "", text, flags=re.S)
+    stack = []  # one entry per open scope: a namespace component, or None (section / mutual)
+    for line in text.splitlines():
+        line = line.split("--", 1)[0]
+        m = _SCOPE.match(line)
+        if m:
+            kind, arg = m.groups()
+            parts = arg.split(".") if arg else []
+            if kind == "namespace":
+                stack += parts
+            elif kind == "section":
+                stack += [None] * max(len(parts), 1)
+            elif kind == "mutual":
+                stack.append(None)
+            else:
+                del stack[max(len(stack) - max(len(parts), 1), 0):]
+            continue
+        d = _DECL.match(line)
+        if d and (private or "private" not in d.group(1)):
+            n = d.group(2)
+            names.add(n[len("_root_."):] if n.startswith("_root_.")
+                      else ".".join([c for c in stack if c] + [n]))
+    return names
+
+
+def lean_source_theorems(root, skip=("Generated", "MegaDreifachHeavy", ".lake"), private=False):
+    """Theorem names declared under `root` (public only unless `private`), fully
+    qualified; see `lean_text_theorems`. No Lean needed."""
     names = set()
     for path in sorted(root.rglob("*.lean")):
         if any(part in skip for part in path.relative_to(root).parts):
             continue
-        text = re.sub(r"/-.*?-/", "", path.read_text(), flags=re.S)
-        stack = []  # entries: list of namespace components ([] for section / mutual)
-        for line in text.splitlines():
-            line = line.split("--", 1)[0]
-            m = _SCOPE.match(line)
-            if m:
-                kind, arg = m.groups()
-                if kind == "namespace":
-                    stack.append(arg.split("."))
-                elif kind in ("section", "mutual"):
-                    stack.append([])
-                elif stack:
-                    stack.pop()
-                continue
-            d = _DECL.match(line)
-            if d and "private" not in d.group(1):
-                names.add(".".join([c for e in stack for c in e] + [d.group(2)]))
+        names |= lean_text_theorems(path.read_text(), private)
     return names
 
 
@@ -645,7 +658,55 @@ def selftest():
               f"{len(cited)} theorems cited in {readme.relative_to(ROOT.parent.parent)}"
               + (f"; cited but not listed: {missing}" if missing else "")
               + (f"; listed but not cited: {extra}" if extra else ""))
+    # The source scan (heavy_source_theorems) on a fixture: one-line `open … in` /
+    # `set_option … in` declarations and several namespaces per file (both missed by the
+    # earlier first-namespace regex scan), dotted namespaces and ends, sections,
+    # `noncomputable section`, `mutual`, `_root_`, comments; the scope resets per file.
+    with tempfile.TemporaryDirectory() as d:
+        (Path(d) / "F.lean").write_text(HEAVY_SCAN_FIXTURE)
+        (Path(d) / "G.lean").write_text("theorem k : True := trivial\n")
+        got = heavy_source_theorems(Path(d))
+        public = lean_source_theorems(Path(d), skip=())
+    for what, names, want in [("heavy_source_theorems", got, HEAVY_SCAN_EXPECTED),
+                              ("lean_source_theorems (public)", public,
+                               HEAVY_SCAN_EXPECTED - {"A.c2"})]:
+        ok = names == want
+        failed += not ok
+        print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} {what} on the scan fixture: "
+              f"{len(names)} names" + ("" if ok else f"; missing {sorted(want - names)}, "
+                                       f"extra {sorted(names - want)}"))
     return 1 if failed else 0
+
+
+HEAVY_SCAN_FIXTURE = """namespace A
+theorem a : True := trivial
+open Nat in theorem b : True := trivial
+set_option maxHeartbeats 400000 in theorem c : True := trivial
+open Nat in set_option maxHeartbeats 400000 in @[simp] private theorem c2 : True := trivial
+end A
+namespace B.C
+protected theorem d : True := trivial
+end C
+theorem e : True := trivial
+end B
+noncomputable section
+theorem f : True := trivial
+end
+namespace D
+section S.T
+/-- doc -/ lemma g : True := trivial
+end S.T
+theorem _root_.Z.h : True := trivial
+/- theorem hidden : True := trivial -/
+-- theorem hidden2 : True := trivial
+mutual
+theorem i : True := trivial
+end
+end D
+theorem j : True := trivial
+"""
+HEAVY_SCAN_EXPECTED = {"A.a", "A.b", "A.c", "A.c2", "B.C.d", "B.e", "f", "D.g", "Z.h", "D.i",
+                       "j", "k"}
 
 
 def main(argv) -> int:

@@ -1,0 +1,10 @@
+$ python3 experiments.py --only swaps
+rule C36: 1200000 random one-block messages from IV-COOK12, seed 99 (20 chunks, chunk seed 99*100003+c)
+  sr1 :     0 collisions / 3,598,890 trials  rate          0  95% CI [0.00e+00, 8.32e-07]  (upper bound = 1/1,201,339)
+  sr2 :     0 collisions / 3,525,435 trials  rate          0  95% CI [0.00e+00, 8.50e-07]  (upper bound = 1/1,176,820)
+  sr3 :     0 collisions / 3,456,046 trials  rate          0  95% CI [0.00e+00, 8.67e-07]  (upper bound = 1/1,153,657)
+  sr4 :     0 collisions / 3,384,433 trials  rate          0  95% CI [0.00e+00, 8.85e-07]  (upper bound = 1/1,129,752)
+  srR :     0 collisions / 1,196,683 trials  rate          0  95% CI [0.00e+00, 2.50e-06]  (upper bound = 1/399,463)
+  dr1 :     0 collisions / 1,183,503 trials  rate          0  95% CI [0.00e+00, 2.53e-06]  (upper bound = 1/395,064)
+  dr2 :     0 collisions / 1,182,595 trials  rate          0  95% CI [0.00e+00, 2.53e-06]  (upper bound = 1/394,760)
+  suit:     0 collisions / 1,200,000 trials  rate          0  95% CI [0.00e+00, 2.50e-06]  (upper bound = 1/400,570)

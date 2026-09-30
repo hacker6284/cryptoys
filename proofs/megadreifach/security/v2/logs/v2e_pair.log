@@ -1,0 +1,10 @@
+$ python3 experiments.py --only v2e_pair
+M  = 8ee6a12322bfb0a0e57737e1836a64775e82f44cab1123cc69c92692
+M' = 8ee6a12322bfb0a0e57737e261862948fd7fa0ceef6ecb2769c92692
+  distinct: True, both 28 bytes: True; deals differ at positions [18, 21]
+  rule A (table noon): Hash(M) = 00557835d26c9218a1c74675ec4f89d668e43bdabce47c70e672a1f33d
+                       Hash(M') = 00557835d26c9218a1c74675ec4f89d668e43bdabce47c70e672a1f33d
+  equal (fast engine): True; equal (slow reference): True
+  v2 (C36): Hash(M) = 013c8cc52e4130912dbf42dddba98e41c7f7182dd46ab165867b9ad97b
+            Hash(M') = 038ffcdc07b74007bdd151290ed1c3bea5b5f014d5a3fad23664b19110
+  equal: False

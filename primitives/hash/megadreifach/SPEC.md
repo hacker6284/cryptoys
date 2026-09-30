@@ -10,7 +10,7 @@
 
 Pad, φ, card ids, the face-turn tables, chaining, Davies–Meyer, IV-COOK12 and the digest encoding are v1's, unchanged. All digests change (`kats/megaminx_hash_kats_v2.json`).
 
-Naming. v2 is the grip rule called **C36** in the out-of-tree grip-rule review: the **v2 card rule** (visual noon, one piece read right after the held-face turn, corner/edge alternating; §5.2–§5.3) plus 36 F3 rounds. The review calls the v2 card rule with v1's 12 F3 rounds "A_vn"; this SPEC says "the v2 card rule with 12 F3 rounds" instead. Neither is v1's Recipe A (which reads a corner after all three turns, with the table noon). It is *not* the review's earlier rule also called "v2" (alternating, but read after all turns, with the table noon; review `megadreifach-v2/`), which is broken the same way as v1 (IV-anchored collisions at about 2^12.5–2^13), nor its "v2e" (this rule with the table noon; a real IV-anchored collision was found). The evidence behind the choice (§8) is out of tree (it is not filed in this repository) and has not been independently reproduced.
+Naming. v2 is the grip rule called **C36** in the grip-rule review (2026-09-29, kept out of tree; its v2 scripts are ported into this repository, §8): the **v2 card rule** (visual noon, one piece read right after the held-face turn, corner/edge alternating; §5.2–§5.3) plus 36 F3 rounds. The review calls the v2 card rule with v1's 12 F3 rounds "A_vn"; this SPEC says "the v2 card rule with 12 F3 rounds" instead. Neither is v1's Recipe A (which reads a corner after all three turns, with the table noon). It is *not* the review's earlier rule also called "v2" (alternating, but read after all turns, with the table noon; review `megadreifach-v2/`), which the review found broken the same way as v1 (IV-anchored collisions at about 2^12.5–2^13; *out of tree*, not reproduced in this repository), nor its "v2e" (this rule with the table noon; the review's real IV-anchored `Hash` collision re-verifies in tree, §8). The evidence for v2 behind the choice is in [`proofs/megadreifach/security/v2/`](../../../proofs/megadreifach/security/v2/README.md) (§8).
 
 This document is the normative specification. `megadreifach.sudo` is the conformance implementation. A mismatch is a bug in the implementation. MegaDreifach is a toy three-megaminx Merkle–Damgård hash. It makes no cryptographic security claim. It is not for protecting anything.
 
@@ -198,7 +198,7 @@ Edge slot `s` lies between the two faces `edge_faces(s)` below; the first is its
 
 **3-solve hand (informal).** Between blocks, puzzles `(A,B,C) = (h, h⁻¹, id)`. Run E_m on A; solve B onto A; solve A onto B and C; solve C onto A. Software is `compose(h, e)`.
 
-**Cost per block** (v1 → v2): 168 → 192 face turns (246 → 270 clicks), 64 → 88 pieces read, 64 → 88 whole-puzzle re-grips (review T8).
+**Cost per block** (v1 → v2): 168 → 192 face turns (246 → 270 clicks), 64 → 88 pieces read, 64 → 88 whole-puzzle re-grips. These are exact for every block, since every deal holds each card once ([`cost.log`](../../../proofs/megadreifach/security/v2/logs/cost.log)).
 
 ---
 
@@ -216,7 +216,7 @@ A sudocode `int` is 64-bit and overflow traps. `|G|` and `52!` do not fit. `std.
 
 # 7. Test vectors
 
-`kats/megaminx_hash_kats_v2.json` holds the **v2** vectors: the same inputs and layout as the v1 file, with `"version": "v2"` and `f3_t = 36`. The pad lengths, block counts, IV-COOK12 digest and `|G|` are unchanged; every digest differs from v1. They were produced by an independent Python transliteration of the sudo and agree with the sudoc JS build of `megadreifach.sudo` and with the review engine's rule C36 (both Python programs are out of tree).
+`kats/megaminx_hash_kats_v2.json` holds the **v2** vectors: the same inputs and layout as the v1 file, with `"version": "v2"` and `f3_t = 36`. The pad lengths, block counts, IV-COOK12 digest and `|G|` are unchanged; every digest differs from v1. They were produced by an independent Python transliteration of the sudo and agree with the sudoc JS build of `megadreifach.sudo` and with the review engine's rule C36 (both Python programs are out of tree). In tree, the engine of [`proofs/megadreifach/security/v2/`](../../../proofs/megadreifach/security/v2/README.md) reproduces all eight digests and the `HashDeck` vector, and `proofs/megadreifach/m9/m9_search.py` the eight digests.
 
 The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zero, the permutation domain, the public API, the edge-slot table (§5.6), the visual noon on all 60 grips, and **all eight v2 `Hash` digests plus the `HashDeck` vector** of that file.
 
@@ -228,28 +228,30 @@ The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zer
 
 # 8. Security status
 
-Nothing here is a security claim. "Tested" means a structured search found nothing at the stated detection threshold; it does not mean secure.
+Nothing here is a security claim. "Tested" means a structured search found nothing at the stated detection threshold; it does not mean secure. Evidence: [`proofs/megadreifach/security/v2/`](../../../proofs/megadreifach/security/v2/README.md), the grip-rule review's scripts ported and re-run from its seeds, with logs checked in CI (which log backs each statement: that README). Every v2 number below is re-run there unless it is marked *out of tree*.
 
 **Known to be easy (v2 does not fix this).**
 
-- **Free-start / pseudo-collisions** of the compression function. For a fixed block, `E_m(h) = W·h` where the face-turn word `W` depends only on the pieces the block reads. A C36 block reads 88 pieces and leaves on average 2.1 corners and 6.7 edges unread, and changing unread pieces never changes `W`. A "same read class" recipe (flip two unread edges, arranged so that the flip commutes with `h·W`) gives distinct legal `h ≠ h'` with equal `dm` output about once per 2 `(h, m)` draws (711/1500 in the review; 20 of 40 draws in a re-run, every pair re-verified with an independent reference implementation), and a 2-edge flip of `h` alone leaves `W` unchanged 143/3000 times. `HashDeckBodyFrom` is broken.
-- For comparison, the review's rule C76 reads more (on average 0.75 corners and 3.4 edges unread per block) and has fewer such pseudo-collisions (8.3% against C36's 47% of draws), at 1.38× the face turns and 2× the reads. v2 is C36 by the designer's choice; the figures are out-of-tree review numbers.
+- **Free-start / pseudo-collisions** of the compression function. For a fixed block, `E_m(h) = W·h` where the face-turn word `W` depends only on the pieces the block reads. A C36 block reads 88 pieces and leaves on average 2.1 corners and 6.7 edges unread (2.08 and 6.71 over 3,000 blocks from uniform random `h`), and changing unread pieces never changes `W` (3000/3000 re-randomisations). A "same read class" recipe (flip two unread edges, arranged so that the flip commutes with `h·W`) gives distinct legal `h ≠ h'` with equal `dm` output about once per 2 `(h, m)` draws (711/1500, 95% CI 45–50%; 20 of 40 draws in a second run, every pair re-verified with the slower reference E_m of `proofs/megadreifach/m9/m9_search.py`), and a 2-edge flip of `h` alone leaves `W` unchanged 143/3000 times. `HashDeckBodyFrom` is broken.
+- For comparison, the review's rule C76 (the v2 card rule with 76 F3 rounds) reads more (on average 0.75 corners and 3.40 edges unread per block) and has fewer such pseudo-collisions (125/1500 = 8.3% of draws, 95% CI 7.0–9.8%, against C36's 47%), at 232 face turns and 128 pieces read per block against C36's 192 and 88 (1.21× and 1.45×; against v1's 168 and 64, 1.38× and 2×). v2 is C36 by the designer's choice.
 
-**Untested beyond the grip-rule review.** The status of IV-anchored collisions, second preimages and preimages of v2 is **empirically untested** beyond these structured searches (one block from IV-COOK12, 95% one-sided upper bounds when 0 hits):
+**Untested beyond structured searches.** The status of IV-anchored collisions, second preimages and preimages of v2 is **empirically untested** beyond these structured searches (one block from IV-COOK12 unless stated, 95% one-sided upper bounds when 0 hits):
 
-| Test (from the IV) | Trials | Hits | Rate would have been seen above |
+| Test | Trials | Hits | Rate would have been seen above |
 | --- | --- | --- | --- |
 | same-rank swap at distance 1, 2, 3, 4 (1.2M messages) | 3.60M, 3.53M, 3.46M, 3.38M | 0 | 1/1.20M, 1/1.18M, 1/1.15M, 1/1.13M |
-| same-rank swap at a random distance | 1.20M | 0 | 1/399k |
+| same-rank swap at a random distance ≥ 5 | 1.20M | 0 | 1/399k |
 | different-rank swap at distance 1, 2 | 1.18M each | 0 | 1/395k |
-| suit change alone | 1.20M | 0 | 1/401k |
-| local reorderings of 2, 3, 4 random or rank-structured cards | 0.3M, 1.5M, 6.9M ordering pairs | 0 | 1/100k, 1/501k, 1/2.30M per pair |
+| suit change alone (the changed deal is not a permutation, so this probes `E_m` outside the `Hash` domain) | 1.20M | 0 | 1/401k |
+| local reorderings of 2, 3, 4 random or rank-structured cards, mid-block from a uniform random state and grip (not from the IV) | 0.3M, 1.5M, 6.9M ordering pairs | 0 | 1/100k, 1/501k, 1/2.30M per pair |
 | window reorderings (k = 2, 3, 4) in IV blocks | 240k each | 0 | 1/80k |
 | 32-bit truncated birthday (200k messages) | — | 6 | expected 4.7 (Poisson range 0–9) |
 
-Card-phase tests run on the v2 card rule with 12 F3 rounds, whose 52 card steps are identical to v2's (v2 only adds F3 rounds after them, and a card-phase collision survives any F3 tail): telescoping card pairs (A♠K♥, A♥K♠, A♠7♠) 0/2.0M (1/668k); a T card next to a same-rank swap 0/1.0M (1/334k); exact count (review `t4c`, all grips and cards) of pairs of different grips that make identical turns and read the same slot, 0. (The review's table-noon variant of the same card rule, which it calls "A" or "v2e", has 192 such cases, all rank T, and a targeted search found real IV-anchored `Hash` collisions at 1 in 333,000 ≈ 2^18.3 compressions; visual noon removes that mechanism.) Suit dependence: another suit of the same card never gives the same grip (review T3: exactly 0, since the read piece fixes the grip one-to-one and a different suit brings a different piece to the read slot).
+On the blocks and swaps of the v1 measurement (40,000 IV blocks, every same-rank swap at distance 1–6; v1: 47 of 117,313 swaps collide at distance 2, 57 of 683,288 in all), v2 has 0 hits in all 683,288.
 
-What these do **not** cover: no second-preimage or preimage search was run on the real v2 at all (only toy models, which were generic); no swap search from non-IV chaining values; no multi-block, longer telescoping-word (3+ cards), King-spin or puzzle-automorphism attacks; no rates below the thresholds above (about 2^16–2^21 structured trials). There are no human trials of error rates. The evidence is out of tree (grip-rule review, 2026-09-29) and has not been independently reproduced.
+Card-phase tests run on the v2 card rule with 12 F3 rounds, whose 52 card steps are identical to v2's (v2 only adds F3 rounds after them, and a card-phase collision survives any F3 tail): telescoping card pairs (A♠K♥, A♥K♠, A♠7♠) 0/2.0M (1/668k); a T card next to a same-rank swap at distance 2 or 3, 0/1.0M each (1/334k each); exact count, over all grips, cards and read parities, of pairs of different grips that make identical turns and read the same slot, 0. (The review's table-noon variant of the same card rule, which it calls "A" or "v2e", has 192 such cases, all rank T, and the same targeted search finds real IV-anchored `Hash` collisions: 3 in 999,873 trials at distance 2, about 1 per 333,000 ≈ 2^18.3 trials; the collision the review found first, a same-rank swap at distance 3, also re-verifies. Visual noon removes that mechanism.) Suit dependence: another suit of the same card never gives the same grip, from any state. For every grip, read parity and rank, the four suits bring pieces from four different slots to the read slot, and the read piece fixes the grip one-to-one (exhaustive check; the review's sampled test T3 also gives 0).
+
+What these do **not** cover: no second-preimage or preimage search was run on the real v2 at all (only the review's toy models, which were generic; *out of tree*, not reproduced here); no swap search from non-IV chaining values; no multi-block, longer telescoping-word (3+ cards), King-spin or puzzle-automorphism attacks; no rates below the thresholds above (about 2^16–2^21 structured trials). There are no human trials of error rates. The searches are the review's own, re-run in tree from its seeds: that checks its numbers, it is not an independent choice of tests.
 
 **v1, for comparison** (PR #119): IV-anchored collisions ≈2^12–2^13 (measured), long-target second preimages practical (measured), preimage ≈2^93–2^96 (estimate).
 

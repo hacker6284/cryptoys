@@ -7,7 +7,8 @@ name: proofs-heavy
 #   - megadreifach-heavy: lean_lib MegaDreifachHeavy (the 8 hash KATs as kernel
 #     `decide!` theorems about Generated.v_Hash, about 12 min of kernel time);
 #   - megadreifach-attack-logs: the MegaDreifach attack scripts (Python) against their
-#     committed logs, including the report-size swap-collision runs.
+#     committed logs, including the report-size swap-collision runs (v1) and the
+#     report-size v2 evidence runs (security/v2/, SPEC §8).
 # Triggered on every PR and every push to main, weekly and by hand, but the heavy
 # jobs only run when needed: the path sets live in ONE place, the `changes` job
 # (dorny/paths-filter), which gates each heavy job on its own set. There is no
@@ -66,11 +67,15 @@ jobs:
               - "proofs/doubledeal/security/checks/scan_sorry.py"  # the shared sorry gate
               - ".github/workflows/proofs-heavy.yml"
             # megadreifach-attack-logs is Python only: its scripts, logs and md.py, the
-            # KAT JSON md.py checks against, and the shared log writer/checker. The
-            # Lean package and the axiom / audit / sorry gates are not inputs to it.
+            # KAT JSON md.py checks against, and the shared log writer/checker; for the
+            # v2 evidence (security/v2/) also the two files its engine reads its tables
+            # and slow reference from. The Lean build and the axiom / audit / sorry gates
+            # are not inputs to it.
             megadreifach_attack:
-              - "proofs/megadreifach/security/**"    # scripts, md.py, tables.py, logs/
-              - "primitives/hash/megadreifach/**"    # the KAT JSON md.py checks against
+              - "proofs/megadreifach/security/**"    # scripts, md.py, tables.py, logs/, v2/
+              - "proofs/megadreifach/m9/m9_search.py"            # v2/engine.py: tables, slow reference
+              - "proofs/megadreifach/lean/MegaDreifach/Em.lean"  # the tables m9_search.py parses
+              - "primitives/hash/megadreifach/**"    # the KAT JSONs md.py and v2/engine.py check against
               - "tools/gencheck.py"                  # --log / --check convention
               - ".github/workflows/proofs-heavy.yml"
 
@@ -101,7 +106,7 @@ jobs:
       github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.megadreifach_attack == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v5
       - name: Attack scripts match their logs (md.py KATs, F1, F2, local probes, edge-group and toy attacks; ~2.5 min)
@@ -110,6 +115,8 @@ jobs:
         run: python3 proofs/megadreifach/security/suit_blind_collision.py --check --full
       - name: Cause control, read before the noon turn (REPORT §3.5; ~4 CPU-min)
         run: python3 proofs/megadreifach/security/suit_blind_collision.py --check --variant pre-noon
+      - name: v2 (C36) evidence, report-size runs match security/v2/logs/ (SPEC §8; engine self-check first; all cores; ~60 CPU-min)
+        run: python3 proofs/megadreifach/security/v2/experiments.py --check --set heavy
 
   megadreifach-heavy:
     needs: changes

@@ -27,7 +27,7 @@ All of them are sorry-free, use no `native_decide`, and depend only on `propext`
 
 `python3 m9_cert.py` (stdlib only, about 8 s) writes [`M9Cert.lean`](../lean/MegaDreifach/M9Cert.lean); `python3 m9_cert.py --check` regenerates it in memory and fails if the committed file differs (CI, job `megadreifach-lean`). The certificate is untrusted data: a wrong tree or wrong slots fail the kernel checks, they cannot prove a false statement. It holds the 52 identity-grip nets, the tree (40,886 words of 26 bits in 65 `Nat` literals, greedy splits by weighted label entropy with integer tie-breaks) and 111 ambiguity groups with 384 entries. The file is about 330 KB.
 
-**Kernel cost** (Lean v4.14.0, one core): `m9dec_<s1>` takes about 10 s and 2 GB each, so each `M9Dec<k>.lean` (10 grips) takes about 105 s and 2 GB, about 10.5 min in total; they build in parallel. The covariance tables take about 76 s (`G2Cov.lean`) and 41 s (`G2CovRead.lean`). The rest takes a few seconds.
+**Kernel cost** (Lean v4.14.0, one core): `m9dec_<s1>` takes about 10 s and 2 GB each (local, single process), so each `M9Dec<k>.lean` (10 grips) takes about 105 s and 2 GB, about 10.5 min in total. In CI the six files take about 4.3 min wall together, built 4 in parallel; CI does not measure memory. `lake build` runs the `M9Dec` files concurrently, one `lean` process each (4 at once on the CI runner; Lake v4.14 has no `-j` flag), so memory peaks at about 2 GB per file building at once; on a small machine build them one at a time (`lake build MegaDreifach.M9Dec0`, …). The covariance tables take about 76 s (`G2Cov.lean`) and 41 s (`G2CovRead.lean`). The rest takes a few seconds.
 
 ## Python cross-check (`m9_search.py`)
 
@@ -43,5 +43,5 @@ All of them are sorry-free, use no `native_decide`, and depend only on `propext`
 - It is not block-level. Two windows that end in different states can still reach the same state later in the block. From different grips the next nets differ, so left-cancellation no longer applies. [SPEC §8](../../../primitives/hash/megadreifach/SPEC.md#8-security-status) reports 0 whole-block swap collisions in IV-anchored searches (empirical, about 2^20 trials per test). Nothing here proves that.
 - It says nothing about windows of 3 or more cards.
 - It is not collision resistance of `Hash`. Free-start pseudo-collisions are easy ([SPEC §8](../../../primitives/hash/megadreifach/SPEC.md#8-security-status)).
-- A `W` that is not injective is outside the statement. Such a `W` is never a reachable chaining value, because every `InjPos` position is injective. Card ids `≥ 52` and grips that are not one of the 60 rotations are outside it too.
+- A `W` that is not injective is outside the statement. Reachable chaining values are `InjPos` (`injPos_chR`, [`Security/MDReduction.lean:146`](../lean/MegaDreifach/Security/MDReduction.lean)), so a non-injective `W` is never one. Card ids `≥ 52` and grips that are not one of the 60 rotations are outside it too.
 - Windows at different deal positions are outside it: both windows use the same `pos1` and the same `pos2`.

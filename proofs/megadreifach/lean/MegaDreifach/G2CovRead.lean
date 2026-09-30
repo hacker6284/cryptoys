@@ -79,7 +79,8 @@ theorem cAN_cov_table :
       (Nat.beq (cornerAfterNoon (rotN s p) (rotN s x)).val (rotN s (cornerAfterNoon p x)).val &&
        Nat.beq (cornerSlot (rotN s p) (rotN s x) (rotN s (cornerAfterNoon p x))).val
          ((rhoB s).cp (cornerSlot p x (cornerAfterNoon p x))).val &&
-       Nat.beq (edgeSlot (rotN s p) (rotN s x)).val ((rhoB s).ep (edgeSlot p x)).val)))) = true := by
+       Nat.beq (edgeSlot (rotN s p) (rotN s x)).val
+         ((rhoB s).ep (edgeSlot p x)).val)))) = true := by
   decide!
 
 theorem cf_cov_table :
@@ -153,7 +154,8 @@ theorem cfg_faces (p x : Fin 12) (hx : x ∈ nbrs p) :
      cornerFace t (locOf x (cornerFace t 1) (cornerFace t 2)) = x) ∧
     (edgeFace (edgeSlot p x).val 0 = p ∨ edgeFace (edgeSlot p x).val 1 = p) := by
   have h2 := allF_spec (allF_spec (andB loc_cfg_table).2 p) x
-  simp only [hx, decide_True, Bool.not_true, Bool.false_or, Bool.and_eq_true, Bool.or_eq_true] at h2
+  simp only [hx, decide_True, Bool.not_true, Bool.false_or, Bool.and_eq_true,
+    Bool.or_eq_true] at h2
   refine ⟨⟨Fin.ext (Nat.eq_of_beq_eq_true h2.1.1), Fin.ext (Nat.eq_of_beq_eq_true h2.1.2)⟩, ?_⟩
   rcases h2.2 with h3 | h3
   · exact Or.inl (Fin.ext (Nat.eq_of_beq_eq_true h3))
@@ -166,10 +168,12 @@ theorem locOf_lt (face f1 f2 : Fin 12) : locOf face f1 f2 < 3 := Nat.lt_succ_of_
 theorem coloursAt_eq (g : Position) (a b c : Fin 12) :
     coloursAt g a b c =
       (cornerFace (g.cp (cornerSlot a b c)).val
-          ((locOf a (cornerFace (cornerSlot a b c).val 1) (cornerFace (cornerSlot a b c).val 2) + 3 -
+          ((locOf a (cornerFace (cornerSlot a b c).val 1)
+              (cornerFace (cornerSlot a b c).val 2) + 3 -
             (g.co (cornerSlot a b c)).val) % 3),
        cornerFace (g.cp (cornerSlot a b c)).val
-          ((locOf b (cornerFace (cornerSlot a b c).val 1) (cornerFace (cornerSlot a b c).val 2) + 3 -
+          ((locOf b (cornerFace (cornerSlot a b c).val 1)
+              (cornerFace (cornerSlot a b c).val 2) + 3 -
             (g.co (cornerSlot a b c)).val) % 3)) := by
   unfold coloursAt
   dsimp only
@@ -179,13 +183,15 @@ theorem coloursAt_eq (g : Position) (a b c : Fin 12) :
 theorem corner_colour_cov (s : Nat) (hs : s < 60) (g : Position) (t : Fin 20) (a : Fin 12)
     (ha : cornerFace t.val (locOf a (cornerFace t.val 1) (cornerFace t.val 2)) = a) :
     cornerFace ((conj s g).cp ((rhoB s).cp t)).val
-        ((locOf (rotAt s a) (cornerFace ((rhoB s).cp t).val 1) (cornerFace ((rhoB s).cp t).val 2) + 3 -
+        ((locOf (rotAt s a) (cornerFace ((rhoB s).cp t).val 1)
+            (cornerFace ((rhoB s).cp t).val 2) + 3 -
           ((conj s g).co ((rhoB s).cp t)).val) % 3) =
       rotAt s (cornerFace (g.cp t).val
         ((locOf a (cornerFace t.val 1) (cornerFace t.val 2) + 3 - (g.co t).val) % 3)) := by
   have hL := locOf_lt a (cornerFace t.val 1) (cornerFace t.val 2)
   generalize hLd : locOf a (cornerFace t.val 1) (cornerFace t.val 2) = L at hL ha
-  have hRa : rotAt s a = cornerFace ((rhoB s).cp t).val ((L + (3 - ((rhoB s).co t).val) % 3) % 3) := by
+  have hRa :
+      rotAt s a = cornerFace ((rhoB s).cp t).val ((L + (3 - ((rhoB s).co t).val) % 3) % 3) := by
     rw [cf_cov s hs t L hL, ha]
   rw [hRa, loc_self _ _ (Nat.mod_lt _ (by decide)), conj_cp s hs, conj_co s hs,
     ← cf_cov s hs (g.cp t) _ (Nat.mod_lt _ (by decide))]
@@ -207,7 +213,8 @@ theorem coloursAt_cov (s : Nat) (hs : s < 60) (g : Position) (p x : Fin 12) (hx 
 
 /-! ## The edge read -/
 
-theorem edgeColoursAt_cov (s : Nat) (hs : s < 60) (g : Position) (p x : Fin 12) (hx : x ∈ nbrs p) :
+theorem edgeColoursAt_cov (s : Nat) (hs : s < 60) (g : Position) (p x : Fin 12)
+    (hx : x ∈ nbrs p) :
     edgeColoursAt (conj s g) (rotAt s p) (rotAt s x) =
       (rotAt s (edgeColoursAt g p x).1, rotAt s (edgeColoursAt g p x).2) := by
   obtain ⟨-, -, h3⟩ := cfg_parts s hs p x hx
@@ -334,10 +341,12 @@ theorem unconj_conj (s : Nat) (hs : s < 60) (g : Position) : unconj s (conj s g)
 theorem conj_inj (s : Nat) (hs : s < 60) {g h : Position} (e : conj s g = conj s h) : g = h := by
   rw [← unconj_conj s hs g, e, unconj_conj s hs h]
 
-theorem injective_comp {α β γ : Type} {f : β → γ} {g : α → β} (hf : Injective f) (hg : Injective g) :
+theorem injective_comp {α β γ : Type} {f : β → γ} {g : α → β} (hf : Injective f)
+    (hg : Injective g) :
     Injective (f ∘ g) := fun h => hg (hf h)
 
-theorem injPos_unconj (s : Nat) (hs : s < 60) (g : Position) (hg : InjPos g) : InjPos (unconj s g) := by
+theorem injPos_unconj (s : Nat) (hs : s < 60) (g : Position) (hg : InjPos g) :
+    InjPos (unconj s g) := by
   have hA : Injective (rhoA s).cp := fun {a b} h => by
     have := congrArg (rhoB s).cp h
     have e1 := congrFun (congrArg Position.cp (rhoAB s hs)) a
@@ -356,6 +365,7 @@ theorem injPos_unconj (s : Nat) (hs : s < 60) (g : Position) (hg : InjPos g) : I
   have hBe : Injective (rhoB s).ep := fun {a b} h => by
     have := congrArg (rhoA s).ep h
     rw [rhoA_rhoB_ep s hs, rhoA_rhoB_ep s hs] at this; exact this
-  exact ⟨injective_comp hA (injective_comp hg.1 hB), injective_comp hAe (injective_comp hg.2 hBe)⟩
+  exact ⟨injective_comp hA (injective_comp hg.1 hB),
+    injective_comp hAe (injective_comp hg.2 hBe)⟩
 
 end MegaDreifach.G2Cov

@@ -127,7 +127,8 @@ theorem coloursAt_cyc (G : Position) (p x : Fin 12) (hx : x ∈ nbrs p) :
 theorem corner_read_piece {G G' : Position} {p x p' x' : Fin 12} (hx : x ∈ nbrs p)
     (hx' : x' ∈ nbrs p')
     (h : coloursAt G p x (cornerAfterNoon p x) = coloursAt G' p' x' (cornerAfterNoon p' x')) :
-    G.cp (cornerSlot p x (cornerAfterNoon p x)) = G'.cp (cornerSlot p' x' (cornerAfterNoon p' x')) := by
+    G.cp (cornerSlot p x (cornerAfterNoon p x)) =
+      G'.cp (cornerSlot p' x' (cornerAfterNoon p' x')) := by
   obtain ⟨k, hk, e1⟩ := coloursAt_cyc G p x hx
   obtain ⟨k', hk', e2⟩ := coloursAt_cyc G' p' x' hx'
   rw [e1, e2] at h

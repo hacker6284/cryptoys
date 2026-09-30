@@ -45,32 +45,38 @@ open MegaDreifach MegaDreifach.Em MegaDreifach.Link2 MegaDreifach.G2Cov MegaDrei
 
 /-! ## Ambiguity groups -/
 
-/-- Within a group, entries with different first cards (`e / 10⁸`) read different
-    corner slots (`e / 100 % 100`) and different edge slots (`e % 100`). -/
+/-- Within a group, entries with different first cards (`e / cardB`) read different
+    corner slots (`e / fieldB % fieldB`) and different edge slots (`e % fieldB`); the
+    entry layout is in `M9Canon` (`fieldB`, `slotsB`, `cardB`). -/
 def pairOk (g : List Nat) : Bool :=
   g.all fun e => g.all fun e' =>
-    Nat.beq (e / 100000000) (e' / 100000000) ||
-      (!Nat.beq (e / 100 % 100) (e' / 100 % 100) && !Nat.beq (e % 100) (e' % 100))
+    Nat.beq (e / cardB) (e' / cardB) ||
+      (!Nat.beq (e / fieldB % fieldB) (e' / fieldB % fieldB) &&
+        !Nat.beq (e % fieldB) (e' % fieldB))
 
 theorem amb_table : ambG.all pairOk = true := by decide!
 
-theorem getD_mem_or_nil : ∀ (l : List (List Nat)) (i : Nat), l.getD i [] ∈ l ∨ l.getD i [] = []
+theorem getD_mem_or_nil :
+    ∀ (l : List (List Nat)) (i : Nat), l.getD i [] ∈ l ∨ l.getD i [] = []
   | [], _ => Or.inr rfl
   | x :: l, 0 => Or.inl (List.mem_cons_self x l)
   | x :: l, i + 1 => (getD_mem_or_nil l i).imp (fun h => List.mem_cons_of_mem x h) id
 
-theorem pairOk_spec {g : List Nat} (hg : pairOk g = true) {e e' : Nat} (he : e ∈ g) (he' : e' ∈ g)
-    (hne : e / 100000000 ≠ e' / 100000000) :
-    e / 100 % 100 ≠ e' / 100 % 100 ∧ e % 100 ≠ e' % 100 := by
+theorem pairOk_spec {g : List Nat} (hg : pairOk g = true) {e e' : Nat} (he : e ∈ g)
+    (he' : e' ∈ g) (hne : e / cardB ≠ e' / cardB) :
+    e / fieldB % fieldB ≠ e' / fieldB % fieldB ∧ e % fieldB ≠ e' % fieldB := by
   have h := List.all_eq_true.mp (List.all_eq_true.mp hg e he) e' he'
-  cases h1 : Nat.beq (e / 100000000) (e' / 100000000)
-  · cases h2 : Nat.beq (e / 100 % 100) (e' / 100 % 100) <;>
-      cases h3 : Nat.beq (e % 100) (e' % 100) <;> simp only [h1, h2, h3] at h <;>
-      first | exact absurd h (by decide) | exact ⟨Nat.ne_of_beq_eq_false h2, Nat.ne_of_beq_eq_false h3⟩
+  cases h1 : Nat.beq (e / cardB) (e' / cardB)
+  · cases h2 : Nat.beq (e / fieldB % fieldB) (e' / fieldB % fieldB) <;>
+      cases h3 : Nat.beq (e % fieldB) (e' % fieldB) <;> simp only [h1, h2, h3] at h <;>
+      first
+        | exact absurd h (by decide)
+        | exact ⟨Nat.ne_of_beq_eq_false h2, Nat.ne_of_beq_eq_false h3⟩
   · exact absurd (Nat.eq_of_beq_eq_true h1) hne
 
 theorem inAmb_spec {a s1 b r : Nat} (h : inAmb a s1 b r = true) :
-    ∃ e ∈ ambG.getD (r - 100) [], e / 10000 = a * 10000 + s1 * 100 + b ∧ e % 10000 = wsl a s1 b := by
+    ∃ e ∈ ambG.getD (r - ambBase) [],
+      e / slotsB = a * slotsB + s1 * fieldB + b ∧ e % slotsB = wsl a s1 b := by
   unfold inAmb at h
   obtain ⟨e, he, h⟩ := List.any_eq_true.mp h
   simp only [Bool.and_eq_true, Nat.beq_eq] at h
@@ -78,36 +84,38 @@ theorem inAmb_spec {a s1 b r : Nat} (h : inAmb a s1 b r = true) :
 
 /-- Two items that decode to the same ambiguity group, with different first cards,
     read different `W`-slots (corner and edge). -/
-theorem amb_sep {a s1 b c s2 d r : Nat} (hs1 : s1 < 60) (hb : b < 52) (hs2 : s2 < 60) (hd : d < 52)
-    (hac : a ≠ c) (h1 : inAmb a s1 b r = true) (h2 : inAmb c s2 d r = true) :
-    wsl a s1 b / 100 ≠ wsl c s2 d / 100 ∧ wsl a s1 b % 100 ≠ wsl c s2 d % 100 := by
+theorem amb_sep {a s1 b c s2 d r : Nat} (hs1 : s1 < 60) (hb : b < 52) (hs2 : s2 < 60)
+    (hd : d < 52) (hac : a ≠ c) (h1 : inAmb a s1 b r = true) (h2 : inAmb c s2 d r = true) :
+    wsl a s1 b / fieldB ≠ wsl c s2 d / fieldB ∧ wsl a s1 b % fieldB ≠ wsl c s2 d % fieldB := by
   obtain ⟨e, he, ek, ew⟩ := inAmb_spec h1
   obtain ⟨e', he', ek', ew'⟩ := inAmb_spec h2
-  have hG : pairOk (ambG.getD (r - 100) []) = true := by
-    rcases getD_mem_or_nil ambG (r - 100) with hm | hm
+  have hG : pairOk (ambG.getD (r - ambBase) []) = true := by
+    rcases getD_mem_or_nil ambG (r - ambBase) with hm | hm
     · exact List.all_eq_true.mp amb_table _ hm
     · rw [hm] at he; exact absurd he (List.not_mem_nil e)
-  have hne : e / 100000000 ≠ e' / 100000000 := by omega
+  have hne : e / cardB ≠ e' / cardB := by
+    unfold cardB; unfold slotsB fieldB at ek ek'; omega
   have := pairOk_spec hG he he' hne
+  unfold fieldB at this ⊢; unfold slotsB at ew ew'
   omega
 
 /-! ## Slots -/
 
 theorem wsl_div (a s1 b : Nat) :
-    wsl a s1 b / 100 = ((mid a s1 b).1.cp (cornerSlot ((mid a s1 b).2.1 (mid a s1 b).2.2)
+    wsl a s1 b / fieldB = ((mid a s1 b).1.cp (cornerSlot ((mid a s1 b).2.1 (mid a s1 b).2.2)
       (visualNoon (mid a s1 b).2.2 (mid a s1 b).2.1)
       (cornerAfterNoon ((mid a s1 b).2.1 (mid a s1 b).2.2)
         (visualNoon (mid a s1 b).2.2 (mid a s1 b).2.1)))).val := by
-  unfold wsl
+  unfold wsl fieldB
   have := ((mid a s1 b).1.ep (edgeSlot ((mid a s1 b).2.1 (mid a s1 b).2.2)
     (visualNoon (mid a s1 b).2.2 (mid a s1 b).2.1))).isLt
   dsimp only
   omega
 
 theorem wsl_mod (a s1 b : Nat) :
-    wsl a s1 b % 100 = ((mid a s1 b).1.ep (edgeSlot ((mid a s1 b).2.1 (mid a s1 b).2.2)
+    wsl a s1 b % fieldB = ((mid a s1 b).1.ep (edgeSlot ((mid a s1 b).2.1 (mid a s1 b).2.2)
       (visualNoon (mid a s1 b).2.2 (mid a s1 b).2.1))).val := by
-  unfold wsl
+  unfold wsl fieldB
   have := ((mid a s1 b).1.ep (edgeSlot ((mid a s1 b).2.1 (mid a s1 b).2.2)
     (visualNoon (mid a s1 b).2.2 (mid a s1 b).2.1))).isLt
   dsimp only
@@ -145,7 +153,8 @@ theorem m9_canon_of (hdec : ∀ s, s < 60 → allN 52 (fun b => chkB s b) = true
     (hd : d < 52) (hac : a ≠ c) (pos1 pos2 : Nat) :
     g2Step (g2Step (W, gripId) a pos1) b pos2 ≠ g2Step (g2Step (W, gripId) c pos1) d pos2 := by
   intro heq
-  have hP := G2Nets.twoCard_collision_nets W hW.1 hW.2 gripId a b c d pos1 pos2 (congrArg Prod.fst heq)
+  have hP :=
+    G2Nets.twoCard_collision_nets W hW.1 hW.2 gripId a b c d pos1 pos2 (congrArg Prod.fst heq)
   obtain ⟨s1, hs1, ho1⟩ := gripOk_g2Step (W, gripId) a pos1 gripOk_id
   obtain ⟨s2, hs2, ho2⟩ := gripOk_g2Step (W, gripId) c pos1 gripOk_id
   have hg := congrArg Prod.snd heq
@@ -157,6 +166,7 @@ theorem m9_canon_of (hdec : ∀ s, s < 60 → allN 52 (fun b => chkB s b) = true
   rw [hP] at d1
   generalize walk (codeOf (compose (conj s2 (N0 d)) (N0 c))) 40 0 = r at d1 d2
   have hamb : inAmb a s1 b r = true ∧ inAmb c s2 d r = true := by
+    unfold ambBase at d1 d2
     rcases d1 with h1 | ⟨h1, h1'⟩ <;> rcases d2 with h2 | ⟨h2, h2'⟩
     · exact absurd (h1.symm.trans h2) hac
     · omega
@@ -180,16 +190,9 @@ theorem m9_canon_of (hdec : ∀ s, s < 60 → allN 52 (fun b => chkB s b) = true
 
 /-! ## The decoder checks, collected -/
 
-/-- `fun s hs => if h : s = 0 then … m9dec_0 else … absurd hs (by omega)`. -/
-macro "m9dec_cases%" : term => do
-  let mut body ← `(absurd hs (by omega))
-  for s in (List.range 60).reverse do
-    let id := Lean.mkIdent (Lean.Name.mkSimple s!"m9dec_{s}")
-    let n := Lean.Syntax.mkNumLit (toString s)
-    body ← `(if h : s = $n then by subst h; exact $id else $body)
-  `(fun s hs => $body)
-
-theorem dec_all : ∀ s, s < 60 → allN 52 (fun b => chkB s b) = true := m9dec_cases%
+/-- The 60 per-grip checks `m9dec_0` … `m9dec_59`, collected by the 60-way case split
+    `grip_cases%` (`G2Nets.lean`). -/
+theorem dec_all : ∀ s, s < 60 → allN 52 (fun b => chkB s b) = true := grip_cases% "m9dec"
 
 /-- M9 at the identity grip, different first cards: from an `InjPos` position `W`,
     two 2-card windows with first cards `a ≠ c` (all four cards `< 52`), dealt at the

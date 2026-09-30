@@ -28,10 +28,21 @@ sys.path.insert(0, str(HERE))
 import m9_search as M  # noqa: E402
 
 OUT = HERE.parent / "lean" / "MegaDreifach" / "M9Cert.lean"
-DENSE = 60          # nodes with more kids than this are laid out densely (120 slots)
-WORD = 26           # bits per certificate word
+DENSE = 60          # nodes with more kids than this are laid out densely
+DENSE_SLOTS = 120   # entry slots of a dense node, indexed by slot-code value v < 120
 CHUNK = 630         # words per Nat literal (keeps literals near 16k bits)
 LOGBITS = 16
+
+# Certificate layout.  Each constant has a twin, named in backquotes, in the
+# "Certificate layout" section of `../lean/MegaDreifach/M9Canon.lean`; keep them in step.
+WORD = 26           # bits per tree word (`wordBits`; mask `wordMask` = 2^26 - 1)
+VAL_SHIFT = 19      # entry = v << VAL_SHIFT | leaf << LEAF_BIT | payload (`valShift`)
+LEAF_BIT = 18       # leaf flag bit; payload < 2^LEAF_BIT (`leafBit`, `payMod`)
+DENSE_TAG = 1000    # count word of a dense node (`denseTag`)
+AMB_BASE = 100      # leaf labels >= AMB_BASE name ambiguity group label - AMB_BASE (`ambBase`)
+FIELD = 100         # two-digit decimal fields of ambiguity entries (`fieldB`)
+# Bits per packed identity-grip net entry (`cpBits` … `eoBits`; `G2Cov.posN` widths).
+CP_BITS, CO_BITS, EP_BITS, EO_BITS = 5, 2, 5, 1
 
 
 def ilog2_fix(n):
@@ -79,7 +90,7 @@ def build_tree(byP):
         if len(Ps) == 1:
             (P,) = Ps
             amb.append(sorted(byP[P]))
-            return ("L", 100 + len(amb) - 1)
+            return ("L", AMB_BASE + len(amb) - 1)
         best = None
         for t in range(50):
             parts = defaultdict(lambda: [0, set()])
@@ -109,17 +120,18 @@ def layout(tree):
         t, kids = n[1], n[2]
         dense = len(kids) > DENSE
         words.append(t)
-        words.append(1000 if dense else len(kids))
+        words.append(DENSE_TAG if dense else len(kids))
         base = len(words)
-        words.extend([0] * (120 if dense else len(kids)))
+        words.extend([0] * (DENSE_SLOTS if dense else len(kids)))
         ents = []
         for v, c in kids:
             if c[0] == "L":
-                e = (v << 19) | (1 << 18) | c[1]
+                assert 0 <= c[1] < (1 << LEAF_BIT)
+                e = (v << VAL_SHIFT) | (1 << LEAF_BIT) | c[1]
             else:
                 co = lay(c)
-                assert 0 < co < (1 << 18)
-                e = (v << 19) | co
+                assert 0 < co < (1 << LEAF_BIT)
+                e = (v << VAL_SHIFT) | co
             ents.append((v, e))
         for j, (v, e) in enumerate(ents):
             words[base + (v if dense else j)] = e
@@ -150,10 +162,10 @@ def generate():
            f"({sum(map(len, amb))} entries).\n-/",
            "namespace MegaDreifach.M9Cert"]
     rows = lambda i, bits: pack([v for n in N0 for v in n[i]], bits)
-    out.append(f"def n0CpN : Nat := {rows(0, 5)}")
-    out.append(f"def n0CoN : Nat := {rows(1, 2)}")
-    out.append(f"def n0EpN : Nat := {rows(2, 5)}")
-    out.append(f"def n0EoN : Nat := {rows(3, 1)}")
+    out.append(f"def n0CpN : Nat := {rows(0, CP_BITS)}")
+    out.append(f"def n0CoN : Nat := {rows(1, CO_BITS)}")
+    out.append(f"def n0EpN : Nat := {rows(2, EP_BITS)}")
+    out.append(f"def n0EoN : Nat := {rows(3, EO_BITS)}")
     chunks = [words[i:i + CHUNK] for i in range(0, len(words), CHUNK)]
     for i, ch in enumerate(chunks):
         out.append(f"def m9t{i} : Nat := {pack(ch, WORD)}")
@@ -164,10 +176,13 @@ def generate():
         es = []
         for a, s1, b in g:
             w1, w0 = wslots(nets, a, s1, b)
-            es.append(str(a * 10**8 + s1 * 10**6 + b * 10**4 + w1 * 100 + w0))
+            assert max(a, s1, b, w1, w0) < FIELD
+            es.append(str((((a * FIELD + s1) * FIELD + b) * FIELD + w1) * FIELD + w0))
         ents.append("[" + ", ".join(es) + "]")
-    out.append("/-- Ambiguity groups: entries `a·10⁸ + s1·10⁶ + b·10⁴ + w1·100 + w0`. -/\n"
-               "def ambG : List (List Nat) := [\n  " + ",\n  ".join(ents) + "]")
+    out.append("/-- Ambiguity groups: entries "
+               "`a·10⁸ + s1·10⁶ + b·10⁴ + w1·100 + w0`. -/\n"
+               "def ambG : List (List Nat) := [\n  "
+               + ",\n  ".join(ents) + "]")
     out.append("end MegaDreifach.M9Cert")
     pairs = sum(1 for g in amb for x in g for y in g if x[0] < y[0])
     stats = dict(items=sum(map(len, byP.values())), products=len(byP), words=len(words),

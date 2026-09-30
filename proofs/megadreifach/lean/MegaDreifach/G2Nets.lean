@@ -52,7 +52,7 @@ def netCps (s : Nat) : List (List Nat) :=
 `gen_nets_nodup` emits 60 separate theorems `nets_nodup_0` … `nets_nodup_59`, each
 `(netCps s).Nodup := by decide!`. They stay separate declarations on purpose: one
 `decide!` over all 60 grips at once runs out of memory. `nets_nodup` collects them;
-its proof term (`nets_nodup_cases%`) is a 60-way case split on `s`. Both generators
+its proof term (`grip_cases% "nets_nodup"`) is a 60-way case split on `s`. Both generators
 are core `macro`s (no `import Lean`). -/
 
 /-- Emit the 60 per-grip kernel checks `nets_nodup_<s>`. -/
@@ -64,18 +64,21 @@ macro "gen_nets_nodup" : command => do
     cmds := cmds.push (← `(command| theorem $id : (netCps $n).Nodup := by decide!))
   return ⟨Lean.mkNullNode cmds⟩
 
-/-- `fun s hs => if h : s = 0 then … nets_nodup_0 else … absurd hs (by omega)`. -/
-macro "nets_nodup_cases%" : term => do
+/-- `grip_cases% "p"` is
+    `fun s hs => if h : s = 0 then … p_0 else … if h : s = 59 then … p_59 else absurd hs …`,
+    a 60-way case split collecting per-grip theorems `p_0` … `p_59` (resolved at the use
+    site). Used for `nets_nodup` here and for `M9.dec_all`. -/
+macro "grip_cases%" pfx:str : term => do
   let mut body ← `(absurd hs (by omega))
   for s in (List.range 60).reverse do
-    let id := Lean.mkIdent (Lean.Name.mkSimple s!"nets_nodup_{s}")
+    let id := Lean.mkIdent (Lean.Name.mkSimple s!"{pfx.getString}_{s}")
     let n := Lean.Syntax.mkNumLit (toString s)
     body ← `(if h : s = $n then by subst h; exact $id else $body)
   `(fun s hs => $body)
 
 gen_nets_nodup
 
-theorem nets_nodup : ∀ s, s < 60 → (netCps s).Nodup := nets_nodup_cases%
+theorem nets_nodup : ∀ s, s < 60 → (netCps s).Nodup := grip_cases% "nets_nodup"
 
 /-! ## Consequences -/
 

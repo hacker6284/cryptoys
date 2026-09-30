@@ -33,7 +33,8 @@ def allN : Nat → (Nat → Bool) → Bool
   | 0, _ => true
   | n + 1, p => p n && allN n p
 
-theorem allN_spec : ∀ {n : Nat} {p : Nat → Bool}, allN n p = true → ∀ i, i < n → p i = true
+theorem allN_spec :
+    ∀ {n : Nat} {p : Nat → Bool}, allN n p = true → ∀ i, i < n → p i = true
   | 0, _, _, i, hi => absurd hi (Nat.not_lt_zero i)
   | n + 1, p, h, i, hi => by
       simp only [allN, Bool.and_eq_true] at h
@@ -42,9 +43,11 @@ theorem allN_spec : ∀ {n : Nat} {p : Nat → Bool}, allN n p = true → ∀ i,
       · exact h.1
 
 /-- `∀ i : Fin n, p i` as a Boolean. -/
-def allF (n : Nat) (p : Fin n → Bool) : Bool := allN n (fun i => if h : i < n then p ⟨i, h⟩ else true)
+def allF (n : Nat) (p : Fin n → Bool) : Bool :=
+  allN n (fun i => if h : i < n then p ⟨i, h⟩ else true)
 
-theorem allF_spec {n : Nat} {p : Fin n → Bool} (h : allF n p = true) (i : Fin n) : p i = true := by
+theorem allF_spec {n : Nat} {p : Fin n → Bool} (h : allF n p = true) (i : Fin n) :
+    p i = true := by
   have := allN_spec h i.val i.isLt
   simpa [i.isLt] using this
 
@@ -73,7 +76,8 @@ def rotMulN : Nat := 17487152646378270522463216942917811193547167273986513065861
 def nd (tab w off n : Nat) (hn : 0 < n) (i : Nat) : Fin n :=
   ⟨Nat.land (Nat.shiftRight tab (w * (off + i))) (2 ^ w - 1) % n, Nat.mod_lt _ hn⟩
 
-/-- Row `k` of four packed cubie tables, as a position. -/
+/-- Row `k` of four packed cubie tables, as a position (entry widths 5, 2, 5, 1 bits;
+    `M9Canon.cpBits` … `eoBits` and `m9_cert.py` `CP_BITS` … `EO_BITS` must match). -/
 def posN (cp co ep eo : Nat) (k : Nat) : Position where
   cp := fun s => nd cp 5 (20 * k) 20 (by decide) s.val
   co := fun s => nd co 2 (20 * k) 3 (by decide) s.val
@@ -155,7 +159,8 @@ theorem conj_identity (s : Nat) (hs : s < 60) : conj s identity = identity := by
   unfold conj; rw [compose_id_right, rhoAB s hs]
 
 theorem fm_cov_table :
-    allN 60 (fun s => allF 12 (fun f => posEqN (conj s (fmN f.val)) (fmN (rotN s f).val))) = true := by
+    allN 60 (fun s => allF 12 (fun f =>
+      posEqN (conj s (fmN f.val)) (fmN (rotN s f).val))) = true := by
   decide!
 
 theorem faceMove_cov (s : Nat) (hs : s < 60) (f : Fin 12) :
@@ -215,7 +220,8 @@ theorem lt_of_blt {a b : Nat} (h : Nat.blt a b = true) : a < b := Nat.le_of_ble_
 theorem rotMul_table :
     allN 60 (fun s => allN 60 (fun t =>
       Nat.blt (nd rotMulN 6 (60 * s) 64 (by decide) t).val 60 &&
-      gripEqN (fun h => rotN s (rotN t h)) (rotN (nd rotMulN 6 (60 * s) 64 (by decide) t).val))) = true := by
+      gripEqN (fun h => rotN s (rotN t h))
+        (rotN (nd rotMulN 6 (60 * s) 64 (by decide) t).val))) = true := by
   decide!
 
 theorem rotG_rotAt (s : Nat) (hs : s < 60) (t : Nat) (ht : t < 60) :
@@ -262,7 +268,8 @@ theorem rotG_inj (s : Nat) (hs : s < 60) {o o' : Grip} (h : rotG s o = rotG s o'
 
 theorem absReorient_eq_of (c1 c2 : Fin 12) (u : Nat) (hu : u < 60) (h0 : rotAt u 0 = c1)
     (h1 : rotAt u 1 = c2) : absReorient c1 c2 = rotAt u := by
-  have hsome : ((List.range 60).find? (fun s => decide (rotAt s 0 = c1 ∧ rotAt s 1 = c2))).isSome := by
+  have hsome :
+      ((List.range 60).find? (fun s => decide (rotAt s 0 = c1 ∧ rotAt s 1 = c2))).isSome := by
     rw [List.find?_isSome]
     exact ⟨u, List.mem_range.mpr hu, by simp [h0, h1]⟩
   obtain ⟨t, ht⟩ := Option.isSome_iff_exists.mp hsome

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { register } from "node:module";
+import { stubThree } from "./three-stub.mjs";
 
 // three bakes light counts into every lit shader: a light added, removed,
 // hidden (or under a hidden parent) or shadow-toggled after boot relinks
@@ -18,14 +18,7 @@ export class Group extends Object3D {}
 export class Scene extends Object3D {}
 export class PointLight extends Light { type = "PointLight"; }
 export class SpotLight extends Light { type = "SpotLight"; target = new Object3D(); }`;
-const hooks = `
-const MAP = { "three": "data:text/javascript," + encodeURIComponent(${JSON.stringify(threeStub)}) };
-export async function resolve(spec, ctx, next) {
-    if (MAP[spec]) return { url: MAP[spec], shortCircuit: true };
-    if (spec.startsWith("three/")) return { url: "data:text/javascript,", shortCircuit: true };
-    return next(spec, ctx);
-}`;
-register("data:text/javascript," + encodeURIComponent(hooks));
+stubThree(threeStub);
 globalThis.window ??= {};
 globalThis.requestAnimationFrame ??= (fn) => setTimeout(() => fn(performance.now()), 16);
 
@@ -125,9 +118,9 @@ for (const light of [keyLight, glow, lights.get("glow:deck2")]) assert.equal(lig
 
 // Flights light the travel glow by intensity only.
 const director = createToyDirector(world, DEMOS);
-for (const id of ["scramble", "doubledeal"]) {
+for (const id of Object.keys(DEMOS)) {
     const job = director.borrow(id);
-    const primary = id === "scramble" ? "cube" : "deck";
+    const primary = DEMOS[id].toys[0];
     assert.equal(lights.get(`travel:${primary}`).intensity, 4.2, `${id} flight lights its toy`);
     lights.check();
     director.skip();

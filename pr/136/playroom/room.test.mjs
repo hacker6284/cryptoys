@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { register } from "node:module";
 import { tableSpan } from "../doubledeal/layout.js";
 import {
     CLOCK_STEP_MS,
@@ -19,12 +18,11 @@ import {
 } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
 import { seatOnSurface } from "./motion.js";
+import { stubThree } from "./three-stub.mjs";
 import { createToyDirector, recipeMotionMs } from "./toy-director.js";
 
 // The registry holds the adapters; they touch three only once installed.
-register("data:text/javascript," + encodeURIComponent(`export async function resolve(spec, ctx, next) {
-    return spec === "three" || spec.startsWith("three/") ? { url: "data:text/javascript,", shortCircuit: true } : next(spec, ctx);
-}`));
+stubThree();
 const { DEMOS } = await import("./demos.js");
 
 const span = tableSpan();
@@ -37,9 +35,14 @@ assert.ok(scaledWidth < feltDiameter, `scaled decks ${scaledWidth.toFixed(3)}m m
 assert.ok(scaledDepth < feltDiameter, `scaled depth ${scaledDepth.toFixed(3)}m must sit on the felt`);
 
 const hub = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const hubIds = (pattern) => [...hub.matchAll(pattern)].map((m) => m[1]).sort();
-assert.deepEqual(hubIds(/data-algo="(\w+)"/g), Object.keys(DEMOS).sort(), "one hub button per demo");
-assert.deepEqual(hubIds(/href="\.\/(\w+)\/"/g), Object.keys(DEMOS).sort(), "one noscript link per demo");
+const noscript = hub.slice(hub.indexOf("<noscript>"), hub.indexOf("</noscript>"));
+const ids = Object.keys(DEMOS).sort();
+const buttons = [...hub.matchAll(/<button[^>]*data-algo="([^"]+)"[^>]*>([^<]*)</g)];
+assert.deepEqual(buttons.map((m) => m[1]).sort(), ids, "one hub button per demo");
+for (const [, id, label] of buttons) assert.equal(label, DEMOS[id].title, `${id} hub button reads its title`);
+const links = [...noscript.matchAll(/href="\.\/([^"]+)\/"/g)].map((m) => m[1]);
+assert.deepEqual(links.sort(), ids, "one noscript link per demo");
+for (const key of ["constructor", "__proto__", "toString"]) assert.equal(DEMOS[key], undefined, `?algo=${key}`);
 for (const [id, { pose }] of Object.entries(DEMOS)) assert.ok(POSES[pose], `${id} seats at a poses.js pose`);
 assert.ok(POSES.doubledeal, "doubledeal pose exists");
 assert.equal(resolvePoseName("doubledeal"), "doubledeal");
@@ -72,18 +75,14 @@ assert.equal(toyHalfHeight("deck"), 0.046);
 assert.equal(toyHalfHeight("deck2"), 0.046);
 assert.notEqual(toyHalfHeight("deck"), CUBE / 2, "deck seatOn fallback is not the cube half-height");
 
-const recipeDirector = createToyDirector({}, DEMOS);
-const recipe = recipeDirector.recipeOf("doubledeal");
-assert.deepEqual(recipe.toys, ["deck", "deck2"]);
-assert.deepEqual(recipe.extras, ["chest"]);
-assert.equal(recipe.pose, "doubledeal");
-assert.equal(recipeDirector.recipeOf("scramble").toys[0], "cube");
-assert.equal(recipeMotionMs(recipeDirector.recipeOf("scramble")), FLY_MS);
-assert.equal(
-    recipeMotionMs(recipeDirector.recipeOf("doubledeal")),
-    LID_OPEN_MS + FLY_MS + LID_CLOSE_MS,
-);
-assert.equal(recipeDirector.borrowMs("doubledeal"), recipeDirector.homeMs("doubledeal"));
+assert.deepEqual(DEMOS.doubledeal.toys, ["deck", "deck2"]);
+assert.equal(DEMOS.doubledeal.chest, true);
+assert.equal(DEMOS.doubledeal.pose, "doubledeal");
+assert.equal(DEMOS.scramble.toys[0], "cube");
+assert.equal(recipeMotionMs(DEMOS.scramble), FLY_MS);
+assert.equal(recipeMotionMs(DEMOS.doubledeal), LID_OPEN_MS + FLY_MS + LID_CLOSE_MS);
+const idleDirector = createToyDirector({}, DEMOS);
+assert.equal(idleDirector.borrowMs("doubledeal"), idleDirector.homeMs("doubledeal"));
 assert.equal(CLOCK_STEP_MS, 50);
 
 function vec3(x = 0, y = 0, z = 0) {

@@ -223,7 +223,7 @@ function pendingTwistyRig(seat, puzzleId = "3x3x3") {
     };
 }
 
-function createScrambleAdapter() {
+export function createScrambleAdapter() {
     const dock = createDock("scramble", {
         controls: `
             <div class="playroom-ctl playroom-ctl--puzzle" data-puzzle-ctl hidden>
@@ -250,10 +250,18 @@ function createScrambleAdapter() {
               </div>
             </div>`,
         fields: `
-          <label class="playroom-ctl playroom-ctl--field" for="message">
-            <span class="playroom-label">Message</span>
-            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
-          </label>
+          <div class="playroom-ctl playroom-ctl--field">
+            <label class="playroom-label" for="message">Message</label>
+            <div class="playroom-message-row">
+              <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+              <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file" title="Hash a file">${lucideSvg("paperclip", 16)}</button>
+            </div>
+            <div id="message-file" class="file-chip" hidden>
+              <span id="message-file-name"></span>
+              <button type="button" class="file-action" id="message-file-clear" aria-label="Clear file">Clear</button>
+            </div>
+            <input id="message-file-input" type="file" hidden>
+          </div>
           <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label">Digest</span>
@@ -366,7 +374,6 @@ function createScrambleAdapter() {
     }
 
     return {
-        id: "scramble",
         install(nextWorld, opts = {}) {
             if (rig) return rig;
             world = nextWorld;
@@ -466,7 +473,7 @@ function createScrambleAdapter() {
     };
 }
 
-function createDoubleDealAdapter() {
+export function createDoubleDealAdapter() {
     const dock = createDock("doubledeal", {
         controls: `
             <div class="playroom-ctl">
@@ -614,7 +621,6 @@ function createDoubleDealAdapter() {
     }
 
     return {
-        id: "doubledeal",
         install(nextWorld, { poses: nextPoses } = {}) {
             world = nextWorld;
             poses = nextPoses;
@@ -790,8 +796,3 @@ function createDoubleDealAdapter() {
         },
     };
 }
-
-export const adapters = {
-    doubledeal: createDoubleDealAdapter(),
-    scramble: createScrambleAdapter(),
-};

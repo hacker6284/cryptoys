@@ -43,13 +43,15 @@ export class Evaluation {
 
 export class Scramble {
     static _sudoKind = ["r", "Scramble"];
-    static _sudoFields = ["version", "message", "processed", "cube", "steps", "done"];
-    constructor(version, message, processed, cube, steps, done) {
+    static _sudoFields = ["version", "pending", "total", "processed", "cube", "steps", "traced", "done"];
+    constructor(version, pending, total, processed, cube, steps, traced, done) {
         this.version = version;
-        this.message = message;
+        this.pending = pending;
+        this.total = total;
         this.processed = processed;
         this.cube = cube;
         this.steps = steps;
+        this.traced = traced;
         this.done = done;
     }
 }
@@ -124,18 +126,26 @@ export function solved_cube() {
     return _rt.dup(cube);
 }
 
-export function fresh(version) {
-    let msg = _rt.lst([]);
+export function fresh(version, traced) {
+    let pending = _rt.lst([]);
     let steps = _rt.lst([]);
-    return _rt.rec(new Scramble(version, _rt.dup(msg), 0n, solved_cube(), _rt.dup(steps), false));
+    return _rt.rec(new Scramble(version, _rt.dup(pending), 0n, 0n, solved_cube(), _rt.dup(steps), traced, false));
 }
 
 export function scramble_v1() {
-    return fresh(1n);
+    return fresh(1n, true);
 }
 
 export function scramble_v2() {
-    return fresh(2n);
+    return fresh(2n, true);
+}
+
+export function scramble_v1_digest() {
+    return fresh(1n, false);
+}
+
+export function scramble_v2_digest() {
+    return fresh(2n, false);
 }
 
 export function rot_xyz(face, x, y, z) {
@@ -288,7 +298,7 @@ export function cubie_at(cube, x, y, z) {
             }
         }
     }
-    _rt.sudo_assert(false, 196);
+    _rt.sudo_assert(false, 209);
     return 0n;
 }
 
@@ -330,7 +340,7 @@ export function color_char(color) {
     if (color === 6n) {
         return 71n;
     }
-    _rt.sudo_assert(false, 225);
+    _rt.sudo_assert(false, 238);
     return 63n;
 }
 
@@ -378,9 +388,9 @@ export function move_name(face, turns) {
 }
 
 export function push_step(s, kind, move, nybble, block, at, up, front) {
-    let steps = _rt.dup(s.steps);
-    steps.push(_rt.rec(new Step(_rt.dup(kind), _rt.dup(move), _rt.dup(nybble), block, at, _rt.dup(up), _rt.dup(front), facelets_of(s.cube))));
-    s.steps = _rt.dup(steps);
+    if (s.traced) {
+        _rt.field_mut(s, "steps").push(_rt.rec(new Step(_rt.dup(kind), _rt.dup(move), _rt.dup(nybble), block, at, _rt.dup(up), _rt.dup(front), facelets_of(s.cube))));
+    }
     return s;
 }
 
@@ -432,7 +442,7 @@ export function center_dir(cube, color) {
             }
         }
     }
-    _rt.sudo_assert(false, 295);
+    _rt.sudo_assert(false, 310);
     return [0n, 0n, 0n];
 }
 
@@ -440,11 +450,20 @@ export function cross(ax, ay, az, bx, by, bz) {
     return [_rt.chk(_rt.chk(ay * bz) - _rt.chk(az * by)), _rt.chk(_rt.chk(az * bx) - _rt.chk(ax * bz)), _rt.chk(_rt.chk(ax * by) - _rt.chk(ay * bx))];
 }
 
+export function dot(row, x, y, z) {
+    let a;
+    let b;
+    let c;
+    [a, b, c] = row;
+    return _rt.chk(_rt.chk(_rt.chk(a * x) + _rt.chk(b * y)) + _rt.chk(c * z));
+}
+
 export function mul_vec(m, x, y, z) {
-    let nx = _rt.chk(_rt.chk(_rt.chk(_rt.at(_rt.at(m, 0n), 0n) * x) + _rt.chk(_rt.at(_rt.at(m, 0n), 1n) * y)) + _rt.chk(_rt.at(_rt.at(m, 0n), 2n) * z));
-    let ny = _rt.chk(_rt.chk(_rt.chk(_rt.at(_rt.at(m, 1n), 0n) * x) + _rt.chk(_rt.at(_rt.at(m, 1n), 1n) * y)) + _rt.chk(_rt.at(_rt.at(m, 1n), 2n) * z));
-    let nz = _rt.chk(_rt.chk(_rt.chk(_rt.at(_rt.at(m, 2n), 0n) * x) + _rt.chk(_rt.at(_rt.at(m, 2n), 1n) * y)) + _rt.chk(_rt.at(_rt.at(m, 2n), 2n) * z));
-    return [nx, ny, nz];
+    let r0;
+    let r1;
+    let r2;
+    [r0, r1, r2] = m;
+    return [dot(r0, x, y, z), dot(r1, x, y, z), dot(r2, x, y, z)];
 }
 
 export function paint_cubie(x, y, z, m, xp, xn, yp, yn, zp, zn, ax, ay, az, color) {
@@ -504,16 +523,12 @@ export function reorient(cube, up_color, front_color) {
     let vy;
     let vz;
     [vx, vy, vz] = cross(ux, uy, uz, px, py, pz);
-    let m = _rt.lst([]);
-    m.push(_rt.lst([vx, vy, vz]));
-    m.push(_rt.lst([ux, uy, uz]));
-    m.push(_rt.lst([px, py, pz]));
-    return apply_matrix(cube, m);
+    return apply_matrix(cube, [[vx, vy, vz], [ux, uy, uz], [px, py, pz]]);
 }
 
 export function do_move(s, face, turns, nybble, block, at) {
     s.cube = apply_turns(s.cube, face, turns);
-    s = push_step(s, _rt.txt("move"), move_name(face, turns), nybble, block, at, blank(), blank());
+    s = push_step(s, _rt.txt("move"), move_name(face, turns), hex_digit(nybble), block, at, blank(), blank());
     return s;
 }
 
@@ -526,14 +541,13 @@ export function do_rule(s, block) {
     return s;
 }
 
-export function apply_v1_block(s, ny, block) {
-    let base = _rt.chk(block * 8n);
+export function apply_v1_block(s, ny, base, block) {
     {
         const _sudo_from_k = 0n;
         const _sudo_to_k = 7n;
         for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
             let n = _rt.at(ny, _rt.chk(base + k));
-            s = do_move(s, _rt.at(v1_face, n), _rt.at(v1_turns, n), hex_digit(n), block, k);
+            s = do_move(s, _rt.at(v1_face, n), _rt.at(v1_turns, n), n, block, k);
         }
     }
     s = do_rule(s, block);
@@ -541,110 +555,96 @@ export function apply_v1_block(s, ny, block) {
 }
 
 export function apply_v2_symbol(s, n, block) {
-    let shown = hex_digit(n);
-    s = do_move(s, _rt.at(v2_a, n), 1n, shown, block, 0n);
-    s = do_move(s, _rt.at(v2_b, n), 1n, shown, block, 1n);
+    s = do_move(s, _rt.at(v2_a, n), 1n, n, block, 0n);
+    s = do_move(s, _rt.at(v2_b, n), 1n, n, block, 1n);
     s = do_rule(s, block);
     return s;
 }
 
-export function nybbles_of(message) {
-    let out = _rt.lst([]);
-    {
-        const _sudo_from_i = 0n;
-        const _sudo_to_i = _rt.chk(globalThis.BigInt(message.length) - 1n);
-        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let b = _rt.at(message, i);
-            out.push(_rt.div(b, 16n));
-            out.push(_rt.mod_i64(b, 16n));
-        }
-    }
-    return _rt.dup(out);
-}
-
-export function pad_tape(ny, version) {
-    let out = _rt.lst([]);
-    {
-        const _sudo_from_i = 0n;
-        const _sudo_to_i = _rt.chk(globalThis.BigInt(ny.length) - 1n);
-        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            out.push(_rt.at(ny, i));
-        }
-    }
-    out.push(8n);
-    if (version === 1n) {
-        let n = _rt.mod_i64(_rt.chk(8n - _rt.mod_i64(globalThis.BigInt(out.length), 8n)), 8n);
-        {
-            const _sudo_from_i = 0n;
-            const _sudo_to_i = _rt.chk(n - 1n);
-            for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                out.push(_rt.at(tape_f, i));
-            }
-        }
-        let remaining = _rt.chk(24n - globalThis.BigInt(out.length));
-        {
-            const _sudo_from_i = 0n;
-            const _sudo_to_i = _rt.chk(remaining - 1n);
-            for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-                out.push(_rt.at(tape_f, _rt.mod_i64(i, 8n)));
-            }
-        }
-        return _rt.dup(out);
-    }
-    let remaining = _rt.chk(12n - globalThis.BigInt(out.length));
-    {
-        const _sudo_from_k = 0n;
-        const _sudo_to_k = _rt.chk(remaining - 1n);
-        for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
-            out.push(_rt.at(tape_i, _rt.mod_i64(k, 4n)));
-        }
-    }
-    return _rt.dup(out);
-}
-
-export function apply_ready(s) {
-    let ny = nybbles_of(s.message);
+export function pad(s) {
+    let n = _rt.chk(s.total + 1n);
+    _rt.field_mut(s, "pending").push(8n);
     if (s.version === 1n) {
-        let nready = _rt.div(_rt.chk(globalThis.BigInt(ny.length) - s.processed), 8n);
+        let k = _rt.mod_i64(_rt.chk(8n - _rt.mod_i64(n, 8n)), 8n);
         {
-            const _sudo_from_b = 0n;
-            const _sudo_to_b = _rt.chk(nready - 1n);
-            for (let b = _sudo_from_b; b <= _sudo_to_b; b += 1n) {
-                s = apply_v1_block(s, ny, _rt.div(s.processed, 8n));
-                s.processed = _rt.chk(s.processed + 8n);
+            const _sudo_from_i = 0n;
+            const _sudo_to_i = _rt.chk(k - 1n);
+            for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+                _rt.field_mut(s, "pending").push(_rt.at(tape_f, i));
+            }
+        }
+        {
+            const _sudo_from_i = 0n;
+            const _sudo_to_i = _rt.chk(_rt.chk(24n - _rt.chk(n + k)) - 1n);
+            for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+                _rt.field_mut(s, "pending").push(_rt.at(tape_f, _rt.mod_i64(i, 8n)));
             }
         }
     } else {
-        let nleft = _rt.chk(globalThis.BigInt(ny.length) - s.processed);
         {
-            const _sudo_from_k = 0n;
-            const _sudo_to_k = _rt.chk(nleft - 1n);
-            for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
-                s = apply_v2_symbol(s, _rt.at(ny, s.processed), s.processed);
-                s.processed = _rt.chk(s.processed + 1n);
+            const _sudo_from_i = 0n;
+            const _sudo_to_i = _rt.chk(_rt.chk(12n - n) - 1n);
+            for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+                _rt.field_mut(s, "pending").push(_rt.at(tape_i, _rt.mod_i64(i, 4n)));
             }
         }
     }
     return s;
 }
 
+export function apply_ready(s) {
+    let ny = _rt.dup(s.pending);
+    let rest = _rt.lst([]);
+    if (s.version === 1n) {
+        let nready = _rt.div(globalThis.BigInt(ny.length), 8n);
+        {
+            const _sudo_from_b = 0n;
+            const _sudo_to_b = _rt.chk(nready - 1n);
+            for (let b = _sudo_from_b; b <= _sudo_to_b; b += 1n) {
+                s = apply_v1_block(s, ny, _rt.chk(b * 8n), _rt.div(s.processed, 8n));
+                s.processed = _rt.chk(s.processed + 8n);
+            }
+        }
+        {
+            const _sudo_from_i = _rt.chk(nready * 8n);
+            const _sudo_to_i = _rt.chk(globalThis.BigInt(ny.length) - 1n);
+            for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+                rest.push(_rt.at(ny, i));
+            }
+        }
+    } else {
+        {
+            const _sudo_from_k = 0n;
+            const _sudo_to_k = _rt.chk(globalThis.BigInt(ny.length) - 1n);
+            for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
+                s = apply_v2_symbol(s, _rt.at(ny, k), s.processed);
+                s.processed = _rt.chk(s.processed + 1n);
+            }
+        }
+    }
+    s.pending = _rt.dup(rest);
+    return s;
+}
+
 export function update(s, message) {
-    _rt.sudo_assert(!s.done, 411);
+    _rt.sudo_assert(!s.done, 412);
     {
         const _sudo_from_i = 0n;
         const _sudo_to_i = _rt.chk(globalThis.BigInt(message.length) - 1n);
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
             let b = _rt.at(message, i);
-            _rt.sudo_assert(b >= 0n && b <= 255n, 414);
+            _rt.sudo_assert(b >= 0n && b <= 255n, 415);
         }
     }
     {
         const _sudo_from_i = 0n;
         const _sudo_to_i = _rt.chk(globalThis.BigInt(message.length) - 1n);
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            _rt.field_mut(s, "message").push(_rt.at(message, i));
+            _rt.field_mut(s, "pending").push(_rt.div(_rt.at(message, i), 16n));
+            _rt.field_mut(s, "pending").push(_rt.mod_i64(_rt.at(message, i), 16n));
         }
     }
+    s.total = _rt.chk(s.total + _rt.chk(2n * globalThis.BigInt(message.length)));
     s = apply_ready(s);
     return s;
 }
@@ -718,7 +718,7 @@ export function corner_piece(a, b, c) {
     if (y && bl && r) {
         return 7n;
     }
-    _rt.sudo_assert(false, 461);
+    _rt.sudo_assert(false, 464);
     return 0n;
 }
 
@@ -759,7 +759,7 @@ export function edge_piece(a, b) {
     if (a === 5n && b === 3n || a === 3n && b === 5n) {
         return 11n;
     }
-    _rt.sudo_assert(false, 489);
+    _rt.sudo_assert(false, 492);
     return 0n;
 }
 
@@ -800,7 +800,7 @@ export function digest_bytes(s3, ori) {
                     carry = _rt.div(cur, 256n);
                 }
             }
-            _rt.sudo_assert_eq(carry, 0n, 514);
+            _rt.sudo_assert_eq(carry, 0n, 517);
         }
     }
     let rest = ori;
@@ -813,7 +813,7 @@ export function digest_bytes(s3, ori) {
             rest = _rt.chk(_rt.div(rest, 256n) + _rt.div(cur, 256n));
         }
     }
-    _rt.sudo_assert(_rt.at(buf, 9n) === 0n && _rt.at(buf, 10n) === 0n && _rt.at(buf, 11n) === 0n, 520);
+    _rt.sudo_assert(_rt.at(buf, 9n) === 0n && _rt.at(buf, 10n) === 0n && _rt.at(buf, 11n) === 0n, 523);
     let out = _rt.lst([]);
     {
         const _sudo_from_j = 8n;
@@ -885,37 +885,15 @@ export function finish(s) {
 }
 
 export function evaluate(s) {
-    _rt.sudo_assert(!s.done, 569);
-    let padded = pad_tape(nybbles_of(s.message), s.version);
-    if (s.version === 1n) {
-        let i = s.processed;
-        let nleft = _rt.div(_rt.chk(globalThis.BigInt(padded.length) - i), 8n);
-        {
-            const _sudo_from_b = 0n;
-            const _sudo_to_b = _rt.chk(nleft - 1n);
-            for (let b = _sudo_from_b; b <= _sudo_to_b; b += 1n) {
-                s = apply_v1_block(s, padded, _rt.div(i, 8n));
-                i = _rt.chk(i + 8n);
-            }
-        }
-    } else {
-        let i = s.processed;
-        let nleft = _rt.chk(globalThis.BigInt(padded.length) - i);
-        {
-            const _sudo_from_k = 0n;
-            const _sudo_to_k = _rt.chk(nleft - 1n);
-            for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
-                s = apply_v2_symbol(s, _rt.at(padded, i), i);
-                i = _rt.chk(i + 1n);
-            }
-        }
-    }
+    _rt.sudo_assert(!s.done, 572);
+    s = pad(s);
+    s = apply_ready(s);
     s = finish(s);
     return [_rt.rec(new Evaluation(index_bytes(s.cube), _rt.dup(s.steps))), s];
 }
 
 export function run(version, message) {
-    let s = fresh(version);
+    let s = fresh(version, true);
     s = update(s, message);
     let _sudo_h0;
     [_sudo_h0, s] = evaluate(s);
@@ -924,10 +902,16 @@ export function run(version, message) {
 
 export function check(version, message, digest, faces, nsteps) {
     let got = run(version, message);
-    _rt.sudo_assert_eq(got.digest, digest, 593);
-    _rt.sudo_assert_eq(globalThis.BigInt(got.trace.length), nsteps, 594);
-    _rt.sudo_assert_eq(_rt.at(got.trace, _rt.chk(nsteps - 1n)).facelets, faces, 595);
-    _rt.sudo_assert_eq(_rt.at(got.trace, 0n).kind, _rt.txt("move"), 596);
-    _rt.sudo_assert_eq(_rt.at(got.trace, _rt.chk(nsteps - 1n)).kind, _rt.txt("canonicalize"), 597);
+    _rt.sudo_assert_eq(got.digest, digest, 585);
+    _rt.sudo_assert_eq(globalThis.BigInt(got.trace.length), nsteps, 586);
+    _rt.sudo_assert_eq(_rt.at(got.trace, _rt.chk(nsteps - 1n)).facelets, faces, 587);
+    _rt.sudo_assert_eq(_rt.at(got.trace, 0n).kind, _rt.txt("move"), 588);
+    _rt.sudo_assert_eq(_rt.at(got.trace, _rt.chk(nsteps - 1n)).kind, _rt.txt("canonicalize"), 589);
+    let q = fresh(version, false);
+    q = update(q, message);
+    let quick;
+    [quick, q] = evaluate(q);
+    _rt.sudo_assert_eq(quick.digest, digest, 593);
+    _rt.sudo_assert_eq(globalThis.BigInt(quick.trace.length), 0n, 594);
 }
 

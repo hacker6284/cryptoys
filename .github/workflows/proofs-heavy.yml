@@ -40,9 +40,9 @@ jobs:
       pull-requests: read
     outputs:
       doubledeal: ${{ steps.filter.outputs.doubledeal }}
-      megadreifach: ${{ steps.filter.outputs.megadreifach }}
-      megadreifach_attack: ${{ steps.filter_attack.outputs.megadreifach_attack }}
-      megadreifach_v2: ${{ steps.filter_attack.outputs.megadreifach_v2 }}
+      megadreifach: ${{ steps.filter_nodocs.outputs.megadreifach }}
+      megadreifach_attack: ${{ steps.filter_nodocs.outputs.megadreifach_attack }}
+      megadreifach_v2: ${{ steps.filter_nodocs.outputs.megadreifach_v2 }}
     steps:
       # Only PR / push events are filtered; on schedule and workflow_dispatch the
       # filter is skipped (empty outputs) and all heavy jobs run via their `if:`.
@@ -61,29 +61,32 @@ jobs:
               - "primitives/cipher/doubledeal/**"    # the sudo spec Generated/ is emitted from
               - ".github/workflows/proofs-heavy.yml"
               - ".github/actions/lean-security/**"
-            megadreifach:
-              - "proofs/megadreifach/**"             # model, Generated/, MegaDreifachHeavy/
-              - "primitives/hash/megadreifach/**"    # the sudo spec its Generated/ is emitted from
-              - "proofs/doubledeal/check_axioms.py"  # the shared axiom gate
-              - "proofs/audit/**"                    # the shared #audit_all package
-              - "proofs/doubledeal/security/checks/scan_sorry.py"  # the shared sorry gate
-              - ".github/workflows/proofs-heavy.yml"
-      # The two Python attack-log jobs: their inputs, minus docs.  predicate-quantifier
+      # The MegaDreifach heavy jobs: their inputs, minus docs.  predicate-quantifier
       # `every` makes a file match a filter only if it matches ALL of the filter's patterns,
-      # so each filter is ONE brace pattern (the inputs, any of) plus '!**/*.md' (no
-      # Markdown file triggers a rerun; the logs are .log files, not .md).
+      # so each filter is ONE brace pattern (the inputs, any of) plus negated patterns
+      # ('!**/*.md': no Markdown file triggers a rerun; none of these jobs reads one, and
+      # the logs are .log files).
       - uses: dorny/paths-filter@v3
         if: github.event_name == 'pull_request' || github.event_name == 'push'
-        id: filter_attack
+        id: filter_nodocs
         with:
           predicate-quantifier: every
           filters: |
+            # megadreifach-heavy (Lean): the model, Generated/, MegaDreifachHeavy/; the sudo
+            # spec its Generated/ is emitted from; the shared axiom gate, #audit_all
+            # package and sorry gate; this workflow. (check_axioms.py reads the README
+            # only in --selftest, which runs in proofs.yml, not here.)
+            megadreifach:
+              - "{proofs/megadreifach/**,primitives/hash/megadreifach/**,proofs/doubledeal/check_axioms.py,proofs/audit/**,proofs/doubledeal/security/checks/scan_sorry.py,.github/workflows/proofs-heavy.yml}"
+              - "!**/*.md"
             # megadreifach-attack-logs (v1) is Python only: its scripts, logs and md.py
-            # (security/**), the KAT JSONs md.py checks against, the shared log
-            # writer/checker and this workflow. The Lean package and the axiom / audit /
-            # sorry gates are not inputs to it.
+            # (security/**, but not security/v2/: no v1 script imports or reads it), the
+            # KAT JSONs md.py checks against, the shared log writer/checker and this
+            # workflow. The Lean package and the axiom / audit / sorry gates are not
+            # inputs to it.
             megadreifach_attack:
               - "{proofs/megadreifach/security/**,primitives/hash/megadreifach/**,tools/gencheck.py,.github/workflows/proofs-heavy.yml}"
+              - "!proofs/megadreifach/security/v2/**"
               - "!**/*.md"
             # megadreifach-v2-evidence: security/v2's scripts and logs; md.py and tables.py
             # (pad, phi, digest, v1 tables), suit_blind_collision.py (same_blocks),
@@ -133,43 +136,55 @@ jobs:
   megadreifach-v2-evidence:
     # Python only (no Lean): the report-size v2 (C36) evidence runs of security/v2/
     # (SPEC §8) against their committed logs, split three ways so no part runs long.
-    # Every part runs the engine self-check first. "rest" is every heavy experiment
-    # that is not in the other two parts, so a new one cannot be left out. Nothing is
-    # trimmed: the logs hold the SPEC's numbers. Own path set (megadreifach_v2).
+    # Every part runs the engine self-check first. Nothing is trimmed: the logs hold the
+    # SPEC's numbers. Own path set (megadreifach_v2).
     needs: changes
     if: >-
       github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.megadreifach_v2 == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      # The one home of the split: parts 1 and 2, comma-separated. Part "rest" is every
+      # other heavy experiment of `experiments.py --list`, so a new one cannot be left
+      # out; every part checks that the three parts cover the heavy set exactly once.
+      EXCLUDE: "swaps,targeted_T telescoping"
     strategy:
       fail-fast: false
       matrix:
         include:
-          # ci: measured step wall time on the ubuntu-latest runner (4 workers), PR #137
-          - part: swaps
-            only: swaps
-            ci: 17.6 min in CI
-          - part: targeted_T telescoping
-            only: targeted_T telescoping
-            ci: 11.7 min in CI
+          # ci: step wall time on ubuntu-latest (4 workers), runs on 56d5feb and 9e03c0f
+          - part: "1"
+            ci: about 16–18 min in CI
+          - part: "2"
+            ci: about 12 min in CI
           - part: rest
-            only: ""
-            ci: 2.9 min in CI
+            ci: about 3 min in CI
     name: megadreifach-v2-evidence (${{ matrix.part }})
     steps:
       - uses: actions/checkout@v5
-      - name: v2 (C36) evidence, report-size runs match security/v2/logs/ (${{ matrix.part }}; all cores; ${{ matrix.ci }})
+      - name: v2 (C36) evidence, report-size runs match security/v2/logs/ (part ${{ matrix.part }}; all cores; ${{ matrix.ci }})
         env:
-          ONLY: ${{ matrix.only }}
+          PART: ${{ matrix.part }}
         run: |
-          x=proofs/megadreifach/security/v2/experiments.py
-          if [ -z "$ONLY" ]; then
-            ONLY=$(python3 "$x" --list | awk '$1 == "heavy" && $2 != "swaps" && $2 != "targeted_T" && $2 != "telescoping" { print $2 }')
-          fi
-          test -n "$ONLY"
-          echo "experiments: $ONLY"
-          python3 "$x" --check --only $ONLY
+          python3 - <<'EOF'
+          import os, subprocess, sys
+          x = 'proofs/megadreifach/security/v2/experiments.py'
+          out = subprocess.run([sys.executable, x, '--list'], capture_output=True, text=True,
+                               check=True).stdout
+          heavy = [ln.split()[1] for ln in out.splitlines() if ln.split()[0] == 'heavy']
+          named = [g.split() for g in os.environ['EXCLUDE'].split(',')]
+          rest = [n for n in heavy if all(n not in g for g in named)]
+          parts = named + [rest]
+          flat = [n for p in parts for n in p]
+          assert all(parts), parts
+          assert len(flat) == len(set(flat)) and sorted(flat) == sorted(heavy), (parts, heavy)
+          print(f'{len(heavy)} heavy experiments, each in exactly one part: {parts}')
+          part = os.environ['PART']
+          only = rest if part == 'rest' else named[int(part) - 1]
+          print(f'part {part}: {" ".join(only)}', flush=True)
+          sys.exit(subprocess.run([sys.executable, x, '--check', '--only', *only]).returncode)
+          EOF
 
   megadreifach-heavy:
     needs: changes

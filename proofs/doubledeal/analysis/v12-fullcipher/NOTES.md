@@ -104,6 +104,10 @@ here, and nothing here is proved.
 
 ## 4. Not measured, not proved
 
-* Any numeric bound on the full-cipher differential (independent or real keys); more than
+* Any numeric bound on the full-cipher differential (independent or real keys). Proved
+  reduction only: for outputs γ outside `v10Sym`, 1/64 would follow from
+  `64 · dpFCount β γ ≤ 52!` for every β outside `v10Sym` with β ≠ γ
+  (`fullDiffCount_le_64_of_offDiag`); §2 samples single off-diagonal entries of a few rows
+  at ≤ 3·10^-6, which is not a bound and not a column. More than
   one mix round before the final round; any γ ≠ α after the final round in §3.
 * Anything under the real PassKey schedule beyond what M5/M6 already record.

@@ -1,0 +1,288 @@
+"""M9 (MegaDreifach v2): exhaustive search of the 2-card window of E_m.
+
+Stdlib only.  Reads the SPEC tables from ../lean/MegaDreifach/Em.lean (the typed
+transliteration that `em_block_refines` ties to the generated `em_block`) and
+self-validates against the 8 v2 KATs before searching.  Evidence, not a proof:
+see README.md in this directory for what the numbers mean and what they do not.
+
+    python3 m9_search.py          # about 10 s, under 100 MB
+"""
+import itertools
+import json
+import re
+import sys
+from collections import defaultdict
+from math import factorial
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+EM_LEAN = HERE.parent / "lean" / "MegaDreifach" / "Em.lean"
+KATS = HERE.parents[2] / "primitives" / "hash" / "megadreifach" / "kats" / "megaminx_hash_kats_v2.json"
+
+SRC = EM_LEAN.read_text()
+
+
+def nat_table(name):
+    m = re.search(r"def " + name + r" : List \(List Nat\) := \[(.*?)\]\]", SRC, re.S)
+    body = "[" + m.group(1) + "]]"
+    return [[int(x) for x in re.findall(r"\d+", row)] for row in re.findall(r"\[([^\[\]]*)\]", body)]
+
+
+FT_CP, FT_CO, FT_EP, FT_EO, ROTS, NBRS, CORNER_FACES = (
+    nat_table(n) for n in ["ftCp", "ftCo", "ftEp", "ftEo", "rots", "nbrsTab", "cornerFacesTab"])
+EDGE_FLAT = [int(x) for x in re.findall(
+    r"\d+", re.search(r"def edgeFacesFlat : List Nat := \[(.*?)\]", SRC, re.S).group(1))]
+OPP = [int(x) for x in re.findall(r"\d+", re.search(r"def oppTab : List Nat := \[(.*?)\]", SRC, re.S).group(1))]
+ROTS = [tuple(r) for r in ROTS]
+assert len(ROTS) == 60 and len(FT_CP) == 12 and len(CORNER_FACES) == 20 and len(EDGE_FLAT) == 60
+
+# ---- E_m, transliterated from Em.lean -------------------------------------------------
+ID = (tuple(range(20)), (0,) * 20, tuple(range(30)), (0,) * 30)
+
+
+def compose(g, h):  # h first, then g (the sudo / Lean convention)
+    gcp, gco, gep, geo = g
+    hcp, hco, hep, heo = h
+    return (tuple(hcp[gcp[s]] for s in range(20)), tuple((hco[gcp[s]] + gco[s]) % 3 for s in range(20)),
+            tuple(hep[gep[s]] for s in range(30)), tuple((heo[gep[s]] + geo[s]) % 2 for s in range(30)))
+
+
+FM = [(tuple(FT_CP[f]), tuple(FT_CO[f]), tuple(FT_EP[f]), tuple(FT_EO[f])) for f in range(12)]
+
+
+def face_turn(g, f, a):
+    for _ in range(a % 5):
+        g = compose(FM[f], g)
+    return g
+
+
+def vnoon(p, o):
+    return o[1] if p == 0 else o[0] if p < 6 else o[p - 5] if p < 11 else o[6]
+
+
+def spin_phys(up, k, x):
+    down = OPP[up]
+    if x in (up, down):
+        return x
+    if x in NBRS[up]:
+        return NBRS[up][(NBRS[up].index(x) + k) % 5]
+    if x in NBRS[down]:
+        return NBRS[down][(NBRS[down].index(x) + 5 - k) % 5]
+    return x
+
+
+def spin(o, k):
+    return o if k % 5 == 0 else tuple(spin_phys(o[0], k % 5, o[h]) for h in range(12))
+
+
+def abs_reorient(c1, c2):
+    for r in ROTS:
+        if r[0] == c1 and r[1] == c2:
+            return r
+    raise ValueError("trap: abs_reorient")
+
+
+def colour_on(face, f1, f2, c, ori):
+    loc = 2 if face == f2 else 1 if face == f1 else 0
+    return c[(loc + 3 - ori) % 3]
+
+
+def corner_slot(a, b, c):
+    t = (c, a, b) if c < a and c < b else (b, c, a) if b < a and b < c else (a, b, c)
+    return [tuple(x) for x in CORNER_FACES].index(t)
+
+
+def edge_slot(a, b):
+    for s in range(30):
+        if {EDGE_FLAT[2 * s], EDGE_FLAT[2 * s + 1]} == {a, b}:
+            return s
+    raise ValueError("trap: edge_slot")
+
+
+def corner_after_noon(phys, noon):
+    return NBRS[phys][(NBRS[phys].index(noon) + 1) % 5]
+
+
+def read_colours_piece(kind, slot, piece, ori, phys, noon):
+    """Colours shown on (phys, noon) when `piece` sits at `slot` with `ori`."""
+    if kind == "c":
+        f1, f2 = CORNER_FACES[slot][1], CORNER_FACES[slot][2]
+        c = CORNER_FACES[piece]
+        return (colour_on(phys, f1, f2, c, ori), colour_on(noon, f1, f2, c, ori))
+    loc = 0 if phys == EDGE_FLAT[2 * slot] else 1
+    p0, p1 = EDGE_FLAT[2 * piece], EDGE_FLAT[2 * piece + 1]
+    return (p0, p1) if (loc + ori) % 2 == 0 else (p1, p0)
+
+
+def read_slot(phys, noon, pos):
+    if pos % 2 == 1:
+        return "c", corner_slot(phys, noon, corner_after_noon(phys, noon))
+    return "e", edge_slot(phys, noon)
+
+
+def held_turn(g, o, card):
+    """First half of a card step: the held-face turn, and the read's (phys, noon)."""
+    rank, amt = card // 4, card % 4 + 1
+    if rank < 12:
+        return face_turn(g, o[rank], amt), o, o[rank], vnoon(rank, o)
+    ow = spin(o, amt)
+    return face_turn(g, o[0], (5 - amt) % 5), ow, ow[0], vnoon(0, ow)
+
+
+def g2_step(st, card, pos):
+    g, o = st
+    g1, ow, phys, noon = held_turn(g, o, card)
+    kind, s = read_slot(phys, noon, pos)
+    piece, ori = (g1[0][s], g1[1][s]) if kind == "c" else (g1[2][s], g1[3][s])
+    new_o = abs_reorient(*read_colours_piece(kind, s, piece, ori, phys, noon))
+    return face_turn(face_turn(g1, noon, 1), ow[1], 1), new_o
+
+
+def em_block(h, deal):
+    st = (h, ROTS[0])
+    for i, c in enumerate(deal[:52]):
+        st = g2_step(st, c, i + 1)
+    for rnd in range(1, 37):
+        g = face_turn(st[0], st[1][0], 1)
+        phys, noon = st[1][0], vnoon(0, st[1])
+        kind, s = read_slot(phys, noon, rnd)
+        piece, ori = (g[0][s], g[1][s]) if kind == "c" else (g[2][s], g[3][s])
+        st = (g, abs_reorient(*read_colours_piece(kind, s, piece, ori, phys, noon)))
+    return st[0]
+
+
+# ---- hash wrapper (grip-rule independent), for the KAT self-check --------------------
+def pad(msg):
+    z = (28 - (len(msg) + 9) % 28) % 28
+    return list(msg) + [0x80] + [0] * z + list((8 * len(msg)).to_bytes(8, "big"))
+
+
+def phi_unrank(n):
+    avail, out = list(range(52)), []
+    for i in range(52):
+        idx, n = divmod(n, factorial(51 - i))
+        out.append(avail.pop(idx))
+    return out
+
+
+def even_rank(perm):
+    avail, r = list(range(len(perm))), 0
+    for i in range(len(perm) - 2):
+        idx = avail.index(perm[i])
+        r = r * (len(perm) - i) + idx
+        avail.pop(idx)
+    return r
+
+
+def to_bytes(p):
+    cp, co, ep, eo = p
+    n = even_rank(cp)
+    n = n * 3 ** 19 + int("".join(map(str, co[:19])), 3)
+    n = n * (factorial(30) // 2) + even_rank(ep)
+    n = n * 2 ** 29 + int("".join(map(str, eo[:29])), 2)
+    return n.to_bytes(29, "big")
+
+
+def hash_(msg):
+    h = ID
+    for f in range(12):
+        h = face_turn(h, f, 1)
+    m = pad(msg)
+    for b in range(0, len(m), 28):
+        h = compose(h, em_block(h, phi_unrank(int.from_bytes(bytes(m[b:b + 28]), "big"))))
+    return to_bytes(h)
+
+
+def kat_check():
+    vecs = json.loads(KATS.read_text())["vectors"]
+    for v in vecs:
+        assert hash_(bytes.fromhex(v["msg_hex"])).hex() == v["digest_hex"], v
+    return len(vecs)
+
+
+# ---- the search -----------------------------------------------------------------------
+def code(p):
+    """Position as 50 combined codes: corner slot s -> 3*piece+ori, edge 60+2*piece+ori."""
+    return tuple(3 * p[0][s] + p[1][s] for s in range(20)) + tuple(60 + 2 * p[2][s] + p[3][s] for s in range(30))
+
+
+def right_map(p):
+    """M with code(compose(x, p))[s] = M[code(x)[s]]."""
+    m = [0] * 120
+    for q in range(20):
+        for x in range(3):
+            m[3 * q + x] = 3 * p[0][q] + (p[1][q] + x) % 3
+    for q in range(30):
+        for x in range(2):
+            m[60 + 2 * q + x] = 60 + 2 * p[2][q] + (p[3][q] + x) % 2
+    return m
+
+
+def main():
+    print("KATs reproduced by the Em.lean transliteration:", kat_check())
+    # Nets: g2Step((W, o), card, pos).1 = compose(net(o, card), W)  (`g2Step_fst_net`).
+    nets = [[g2_step((ID, o), c, 1)[0] for c in range(52)] for o in ROTS]
+    codes = [[bytes(code(n)) for n in row] for row in nets]
+    ok = all(len(set(row)) == 52 for row in codes)
+    print("M8 (60x52 nets pairwise distinct per grip):", ok)
+    assert ok
+
+    # Read injectivity: over every read configuration (phys, noon, parity) that occurs,
+    # distinct pieces (any orientations) give distinct read colour pairs, hence distinct
+    # grips (abs_reorient is a lookup on the pair).
+    for phys in range(12):
+        for noon in NBRS[phys]:
+            for kind in ("c", "e"):
+                pos = 1 if kind == "c" else 2
+                seen = {}
+                for q in range(20 if kind == "c" else 30):
+                    for x in range(3 if kind == "c" else 2):
+                        k, s = read_slot(phys, noon, pos)
+                        r = read_colours_piece(k, s, q, x, phys, noon)
+                        assert seen.setdefault(r, q) == q, (phys, noon, kind)
+    print("read -> grip injective on pieces: True")
+
+    # Stage 1: two-card position products compose(net(o1, b), net(o, a)), grouped by o.
+    swaps = general = 0
+    sig_eq = 0
+    held_nets = {}
+
+    def sigma(o, a, o1, b, p):
+        """W-slot whose piece the second card's read sees (first card a at grip o)."""
+        g1, _, phys, noon = held_turn(nets[ROTS.index(o)][a], o1, b)
+        kind, s = read_slot(phys, noon, p + 1)
+        return kind, (g1[0][s] if kind == "c" else g1[2][s])
+
+    for oi, o in enumerate(ROTS):
+        groups = defaultdict(list)
+        for a in range(52):
+            m = right_map(nets[oi][a])
+            mg = m.__getitem__
+            for o1 in range(60):
+                row = codes[o1]
+                for b in range(52):
+                    groups[bytes(map(mg, row[b]))].append((a, o1, b))
+        for v in groups.values():
+            if len({x[0] for x in v}) < 2:
+                continue
+            for (a, o1, b), (c, o2, d) in itertools.combinations(v, 2):
+                if a == c:
+                    continue
+                if a > c:
+                    (a, o1, b), (c, o2, d) = (c, o2, d), (a, o1, b)
+                general += 1
+                if b == c and d == a:
+                    swaps += 1
+                for p in (1, 2):
+                    if sigma(o, a, ROTS[o1], b, p) == sigma(o, c, ROTS[o2], d, p):
+                        sig_eq += 1
+    print("2-card position-equality candidates (o, a, o1, b) ~ (o, c, o2, d), a < c:", general)
+    print("  of which adjacent swaps (c, d) = (b, a):", swaps)
+    print("candidate x read parity with the same second-read W-slot:", sig_eq, "of", 2 * general)
+    assert sig_eq == 0
+    print("=> no 2-card window collision from any position with injective cp/ep "
+          "(different first cards; same first card: `twoCard_same_first_ne`)")
+
+
+if __name__ == "__main__":
+    sys.exit(main())

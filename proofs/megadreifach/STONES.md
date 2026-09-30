@@ -15,12 +15,12 @@ A green Lean build is not a security claim.
 | M1 | Megaminx **position** model + legality predicates (even cp, co parity, even ep, eo parity as in SPEC.md) | **Proved** | `lean/MegaDreifach/Position.lean`: `Position`, `isLegal`, `identity_isLegal`, `legal_*`, `listOf_inj`, `listOfOri_inj` |
 | M2 | Face turns / left-multiply action; **compose** associative; **inverse** round-trip | **Proved** | `Group.lean`: `compose_assoc`, `compose_left_inv`, `compose_right_inv`, `compose_inverse_rt`, `leftMul_cancel`. Inverse takes hypothesized `icp`/`iep` (DoubleDeal-style). **Open:** discharging those hypotheses for the concrete `Em.inverse` / `permInv` (pigeonhole on `Fin n`); `inverse_refines` (Link 2) only relates `permInv` to Generated `inverse`. |
 | M3 | `rank_position` / 29-byte digest encoding of legal G into `[0, \|G\|)` | **Injectivity proved; surjectivity / unrank OPEN** | `Rank.lean`: `evenComplete_even`, `evenComplete_unique`, `packOri3_inj`, `packOri2_inj`, `last_ori3_unique`, `rankLists_components_eq`, `positionToBytes_rank_inj`, `groupOrder_lt_digest`, `packOri*_unpack`. `Position.listOf_inj`. `Link2/VHash.lean`: `positionToBytes_components_eq` (for `InjPos` positions, equal digests give equal component ranks). `Link2/PosBytesGen.lean`: `rankPosition_lt_group` (`InjPos` → rank `< \|G\|`). **Glue done:** `Security/DigestInj.lean`: `evenRank_inj` (`evenRank` injective on even permutations of `0..n-1`: Lehmer prefix + even completion), `positionToBytes_inj_legal` (29-byte digest injective on `isLegal` positions), `positionToBytes_inj_reachable` (on every chaining value reachable from IV-COOK12). `Security/Parity.lean`: the DM parity invariant `isLegal_chR` / `isLegal_chainMsg` (every reachable chaining value is legal). Independent of the grip rule. Surjectivity onto `[0, \|G\|)` and a computable inverse (unrank) are OPEN. |
-| M4 | Factoradic / Lehmer **φ**: injective for `n < 2^224` → 52-card permutations | **Proved** | `Factoradic.lean`: `lehmerUnrank_inj`, `phiUnrank_inj`, `phiUnrank_perm`, `two_pow_224_lt_fact_52` (kernel `decide`) |
+| M4 | Factoradic / Lehmer **φ**: injective for `n < 2^224` → 52-card permutations | **Proved** | `Factoradic.lean`: `lehmerUnrank_inj`, `phiUnrank_inj`, `phiUnrank_perm`, `two_pow_224_lt_fact_52` (kernel `decide`). Round trip φ(φ⁻¹(deal)) = deal on permutations of `0..51`: `Link2/VHashDeck.lean`: `lehmerUnrank_lehmerRank`, `phiUnrank_lehmerRank` |
 | M5 | Pad **B=28** SHA-2-style: injective on messages; length field recovers bit length | **Proved** | `Pad.lean`: `pad_length_mod`, `pad_recovers_bitlen`, `unpad_pad`, `pad_injective` |
 | M6 | Davies–Meyer algebra: software `h' = compose(h, E_m(h))`; hand 3-solve restores `(A,B,C)=(h', h'⁻¹, id)` | **Proved** | `DaviesMeyer.lean`: `daviesMeyer`, `threeSolve_restores`, `startTriple_invariant` |
 | M7 | `HashDeckBody` domain: reject non-permutations (`require_permutation`) | **Proved** | `Domain.lean`: `requirePermutation_iff`, `requirePermutation_reject`, `requirePermutation_isSome_iff` |
-| M8 | One-card G2: **card ↦ φ_card(g,o)** injective for fixed `(g,o)` (G2_PROOF Theorem A) | **Reduction proved; nets OPEN** | `G2.lean`: `phiCard_inj_of_distinct_nets`, `kingUpAmount_ne_ace`, `two_card_net_eq_of_state_eq`, `no_same_first_two_card_of_nets`. Does **not** enumerate the 60×52 concrete nets. |
-| M9 | Abs-G2 **L2 mid-block**: no 2-card local collision under the v2 grip rule | **OPEN** | Structure only. See plan below. Do not ship a `sorry` theorem. |
+| M8 | One-card G2: **card ↦ φ_card(g,o)** injective for fixed `(g,o)` (G2_PROOF Theorem A) | **Proved for the v2 nets** | `G2.lean`: `phiCard_inj_of_distinct_nets`, `kingUpAmount_ne_ace`, `two_card_net_eq_of_state_eq`, `no_same_first_two_card_of_nets` (reductions). `G2Nets.lean`: `nets_nodup` (60 kernel `decide!` checks, one per grip), `net2_ne`, `g2Step_fst_ne`, `g2Step_ne`, `phiCard_net2_ne`. See below. |
+| M9 | Abs-G2 **L2 mid-block**: no 2-card local collision under the v2 grip rule | **PARTIAL** | `G2Nets.lean`: `twoCard_same_first_ne` (same first card), `twoCard_collision_nets` (reduction to net products). Different first cards: exhaustive Python search, not kernel-checked ([`m9/README.md`](m9/README.md)). |
 
 ## Strongly want
 
@@ -58,19 +58,13 @@ G2_PROOF Theorem A: for every fixed `(g,o)`, `card ↦ φ_card(g,o)` is injectiv
 2. Therefore distinct nets ⇒ distinct one-card states (`phiCard_inj_of_distinct_nets`).
 3. King-up amount `−k` differs from Ace `+k` for every legal `k` (`kingUpAmount_ne_ace`) — the soft-lock reason King is not Ace.
 4. Same-first-card 2-card states differ once the second-card nets differ (`no_same_first_two_card_of_nets`) — G2_PROOF §3 corollary as a reduction.
+5. **v2 nets (`G2Nets.lean`).** `net2 o card` is the G2 step from the identity; every card step is `compose (net2 o card) g` (`g2Step_fst_net`). For each grip `rotAt s` (`s < 60`), `nets_nodup_<s>` checks by kernel `decide!` that the 52 corner permutations `listOf (net2 (rotAt s) c).cp` are pairwise distinct. The checks are split per grip: one check over all 60 grips at once runs out of memory. `nets_nodup` collects them, and `net2_ne` gives distinct nets on every `GripOk` grip. With `leftMul_cancel` this makes one card step injective in the card from any position with injective `cp` / `ep` (`g2Step_fst_ne`, `g2Step_ne`; every `InjPos` chaining value qualifies). Scope: one card, fixed grip. The v1 nets are not covered.
 
-**OPEN (no `sorry` theorem):** pairwise distinctness of the 60×52 concrete nets. Research check: `g2_proof_core.prove_one_card` reports 0 collisions for the v1 nets (table noon); it has not been rerun on the repository side for the v2 nets (visual noon). That scan is too large for kernel `decide` and is not `native_decide` (forbidden in this tree). Follow-up options: a structured face/noon/Front case split, or a checked-in finite table with a kernel-small certificate — not this PR.
+## M9 — two-card windows (PARTIAL)
 
-## M9 — abs-G2 L2 plan (OPEN)
+Shipped in `G2Nets.lean`: the same-first-card half (`twoCard_same_first_ne`, M8 at the intermediate grip) and the reduction of a different-first-card position collision to an equality of net products (`twoCard_collision_nets`). The different-first-card half is an exhaustive Python computation, not a theorem. Its numbers, the argument, the obstacle to a kernel proof and the limits (2-card window only, not block-level) are in [`m9/README.md`](m9/README.md).
 
-Informal proof: G2_PROOF.md §3–4. Sketch for a later Lean file, **not** shipped:
-
-1. Same-first-card 2-card collisions reduce to M8 nets (`no_same_first_two_card_of_nets`). Already a reduction here.
-2. Distinct first cards: `g''` collides iff the two-card nets `T(o₁,b)∘T(o,a) = T(o₁',d)∘T(o,c)` *and* final grips match.
-3. (Written for v1's Recipe A; not redone for v2.) Absolute Recipe A: matching final grips forces the same second-read R3 element `r`. Same `r` on different second-card faces needs the same corner cubie in two slots after the net — the research scan reports this obstruction on every same-net / diff-first candidate (`second_cons_ok = 0`). The v2 read (right after the held-face turn, corner or edge by parity) needs its own obstruction.
-4. Lean needs: the grip/read model (v2: `Em.readGrip`), its update, and the matching slot obstruction as a lemma. The 60-grip × 2704-word scan stays a computer-checked certificate unless a uniform slot argument replaces it.
-
-Do **not** claim M9 from the Python scan. Relative recipes are **disproved** (do not “prove” their L2-safety). L3 abs collisions **exist** (do not prove L3 absence).
+Relative recipes are **disproved** (do not “prove” their L2-safety). L3 abs collisions **exist** (do not prove L3 absence).
 
 ## Layout
 
@@ -81,6 +75,7 @@ proofs/megadreifach/
   lean/                 # Lake project (toolchain 4.14.0, no Mathlib)
                         #   MegaDreifach (default lib), MegaDreifachHeavy (KATs, non-default)
   vectors/              # KAT copy; json_to_lean.py generates lean/MegaDreifach/Vectors.lean
+  m9/                   # M9 two-card window search (v2; Python 3, stdlib only) + write-up
   security/             # REPORT.md + attack scripts (v1 grip rule; Python 3, stdlib only; suit_blind_collision.py = practical v1 collisions)
 proofs/audit/          # shared `#audit_all` package (core-only)
 proofs/doubledeal/check_axioms.py   # the shared axiom gate (modes megadreifach, megadreifach-heavy, megadreifach-v1-deprecated)
@@ -89,4 +84,4 @@ primitives/hash/megadreifach/v1/  # frozen, deprecated v1: SPEC.md + megadreifac
 proofs/deprecated/megadreifach-v1/ # frozen v1 Lean: the v1 weakness proofs + their closure (MegaDreifachV1)
 ```
 
-Hand-written Lean is not a proof that `megadreifach.sudo` equals this model. Link 2 (`Generated.v_Hash` = the algebraic fold on `PadWf`) is proved; Link 1 (sudo text = emitted Lean) is trusted, not proved. M8 nets and M9 stay OPEN.
+Hand-written Lean is not a proof that `megadreifach.sudo` equals this model. Link 2 (`Generated.v_Hash` = the algebraic fold on `PadWf`) is proved; Link 1 (sudo text = emitted Lean) is trusted, not proved ([`../LINK1.md`](../LINK1.md)). M9 is PARTIAL.

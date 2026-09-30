@@ -8,10 +8,10 @@
     * same-first-card 2-card states differ once the second-card nets differ
       (G2_PROOF.md §3 corollary, as a reduction)
 
-  Not shipped (see STONES.md — OPEN, no `sorry` theorems):
-    * pairwise distinctness of the 60×52 concrete nets (computer-checked
-      in `g2_proof_core.prove_one_card`; too large for kernel `decide`)
-    * abs-G2 L2 mid-block = 0 for distinct first cards (M9)
+  The v2 instantiation is in `G2Nets.lean`: the 60×52 concrete nets are
+  kernel-checked pairwise distinct per grip (M8), plus the M9 partial lemmas.
+  Not shipped (see STONES.md, no `sorry` theorems): abs-G2 L2 mid-block = 0
+  for distinct first cards as a Lean theorem (M9; Python evidence only).
 
   Zero sorry. No native_decide.
 -/

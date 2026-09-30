@@ -110,10 +110,14 @@ def make_op(G):
     srcs, dsts, tabs = [], [], []
     for s in range(20):
         if G[0][s] != s or G[1][s]:
-            srcs.append(G[0][s]); dsts.append(s); tabs.append(ADDC[G[1][s]])
+            srcs.append(G[0][s])
+            dsts.append(s)
+            tabs.append(ADDC[G[1][s]])
     for s in range(30):
         if G[2][s] != s or G[3][s]:
-            srcs.append(20 + G[2][s]); dsts.append(20 + s); tabs.append(ADDE[G[3][s]])
+            srcs.append(20 + G[2][s])
+            dsts.append(20 + s)
+            tabs.append(ADDE[G[3][s]])
     return (tuple(srcs), tuple(dsts), tuple(tabs))
 
 
@@ -138,7 +142,8 @@ def read_table(phys, noon, parity):
 
 
 class Engine:
-    """steps[parity][gi][card] = (op1, reads, op2, turns); f3[parity][gi] = (op, reads, None, turns).
+    """steps[parity][gi][card] = (op1, reads, op2, turns);
+    f3[parity][gi] = (op, reads, None, turns).
     parity = position & 1 (odd positions read the corner).  reads = ((slot, table),)."""
 
     def __init__(self, name):
@@ -163,13 +168,18 @@ class Engine:
         self.f3 = [[None] * 60 for _ in range(2)]
         for par in (0, 1):
             for gi in range(60):
-                o = GRIPS[gi]; row = []
+                o = GRIPS[gi]
+                row = []
                 for card in range(52):
                     rank, amt = card // 4, card % 4 + 1
                     if rank < 12:
-                        o2 = o; phys = o[rank]; first = [(phys, amt)]
+                        o2 = o
+                        phys = o[rank]
+                        first = [(phys, amt)]
                     else:
-                        first = [(o[0], 5 - amt)]; o2 = ref.spin(o, amt); phys = o2[0]
+                        first = [(o[0], 5 - amt)]
+                        o2 = ref.spin(o, amt)
+                        phys = o2[0]
                     n = nf(phys, o2)
                     assert n != phys
                     rest = [(n, 1), (o2[1], 1)]
@@ -190,7 +200,8 @@ class Engine:
             if rec is not None:
                 rec.append((s, st[s]))
             ng = tab[st[s]]
-            apply(st, op2); gi = ng
+            apply(st, op2)
+            gi = ng
             if grips is not None:
                 grips.append(gi)
             if trace is not None:
@@ -218,7 +229,9 @@ class Engine:
         return tab[st[s]]
 
     def em(self, h_st, deal, **kw):
-        st = list(h_st); self.run(st, deal, **kw); return st
+        st = list(h_st)
+        self.run(st, deal, **kw)
+        return st
 
     def dm(self, h_st, deal):
         return compose_st(h_st, self.em(h_st, deal))
@@ -228,9 +241,13 @@ def compose_st(g, h):
     """compose(g, h) on encoded states (h applied first)."""
     out = [0] * 50
     for s in range(20):
-        x = g[s]; y = h[x // 3]; out[s] = (y // 3) * 3 + (y % 3 + x % 3) % 3
+        x = g[s]
+        y = h[x // 3]
+        out[s] = (y // 3) * 3 + (y % 3 + x % 3) % 3
     for s in range(20, 50):
-        x = g[s]; y = h[20 + x // 2]; out[s] = (y // 2) * 2 + (y % 2 + x % 2) % 2
+        x = g[s]
+        y = h[20 + x // 2]
+        out[s] = (y // 2) * 2 + (y % 2 + x % 2) % 2
     return out
 
 
@@ -247,7 +264,9 @@ IV_ST = to_st(v1.iv_cook12())
 
 
 def Hash(msg, rule='C36'):
-    E = engine(rule); padded = pad_message(msg); h = list(IV_ST)
+    E = engine(rule)
+    padded = pad_message(msg)
+    h = list(IV_ST)
     for b in range(0, len(padded), 28):
         h = E.dm(h, phi_chunk(padded[b:b + 28]))
     return position_to_bytes(from_st(h))
@@ -268,50 +287,28 @@ def HashDeckBodyFrom(deal, h_st, rule='C36'):
 
 # ---------------------------------------------------------------- slow reference
 
-def ref_em(h, deal, rule, grips=None):
-    """E_m from m9_search's Em.lean transliteration, with the rule's noon and F3 count.
-    For C36 this is m9_search.em_block itself (asserted in selfcheck)."""
+def ref_noon_t(rule):
+    """Keyword arguments of m9_search.em_block (the slow reference E_m, transliterated from
+    Em.lean) for a rule: its noon (None = m9_search's own visual noon) and F3 count."""
     noon, t = RULES[rule]
-    nf = NOONS[noon]
-    g, o = h, GRIPS[0]
-    for i, card in enumerate(deal[:52]):
-        rank, amt = card // 4, card % 4 + 1
-        if rank < 12:
-            g1, ow, phys = ref.face_turn(g, o[rank], amt), o, o[rank]
-        else:
-            ow = ref.spin(o, amt); g1 = ref.face_turn(g, o[0], (5 - amt) % 5); phys = ow[0]
-        n = nf(phys, ow)
-        kind, s = ref.read_slot(phys, n, i + 1)
-        piece, ori = (g1[0][s], g1[1][s]) if kind == 'c' else (g1[2][s], g1[3][s])
-        new_o = ref.abs_reorient(*ref.read_colours_piece(kind, s, piece, ori, phys, n))
-        g, o = ref.face_turn(ref.face_turn(g1, n, 1), ow[1], 1), new_o
-        if grips is not None:
-            grips.append(GRIPS.index(tuple(o)))
-    for rnd in range(1, t + 1):
-        g = ref.face_turn(g, o[0], 1)
-        phys, n = o[0], nf(o[0], o)
-        kind, s = ref.read_slot(phys, n, rnd)
-        piece, ori = (g[0][s], g[1][s]) if kind == 'c' else (g[2][s], g[3][s])
-        o = ref.abs_reorient(*ref.read_colours_piece(kind, s, piece, ori, phys, n))
-        if grips is not None:
-            grips.append(GRIPS.index(tuple(o)))
-    return g
+    return {'noon_of': None if noon == 'visual' else NOONS[noon], 't': t}
 
 
 def ref_hash(msg, rule='C36'):
-    """Slow Hash: m9_search's IV, pad and digest code around ref_em."""
+    """Slow Hash: m9_search's IV, pad and digest code around m9_search.em_block."""
     h = ref.ID
     for f in range(12):
         h = ref.face_turn(h, f, 1)
     m = ref.pad(msg)
     for b in range(0, len(m), 28):
-        h = ref.compose(h, ref_em(h, ref.phi_unrank(int.from_bytes(bytes(m[b:b + 28]), 'big')), rule))
+        deal = ref.phi_unrank(int.from_bytes(bytes(m[b:b + 28]), 'big'))
+        h = ref.compose(h, ref.em_block(h, deal, **ref_noon_t(rule)))
     return ref.to_bytes(h)
 
 
 def ref_body_from(deal, h, rule='C36'):
     """Slow HashDeckBodyFrom: position_to_bytes(compose(h, E_m(h)))."""
-    return ref.to_bytes(ref.compose(h, ref_em(h, deal, rule)))
+    return ref.to_bytes(ref.compose(h, ref.em_block(h, deal, **ref_noon_t(rule))))
 
 
 def as_tuple_pos(p):
@@ -321,12 +318,17 @@ def as_tuple_pos(p):
 # ---------------------------------------------------------------- helpers (as md3 / md.py)
 
 def perm_parity(q):
-    n = len(q); seen = [False] * n; par = 0
+    n = len(q)
+    seen = [False] * n
+    par = 0
     for i in range(n):
         if not seen[i]:
-            j = i; L = 0
+            j = i
+            L = 0
             while not seen[j]:
-                seen[j] = True; j = q[j]; L += 1
+                seen[j] = True
+                j = q[j]
+                L += 1
             par ^= (L - 1) & 1
     return par
 
@@ -339,12 +341,18 @@ def legal(p):
 
 def uniform_pos(rng):
     """Exactly uniform legal position (the review's md.uniform_pos, draw for draw)."""
-    cp = list(range(20)); rng.shuffle(cp)
-    if perm_parity(cp): cp[0], cp[1] = cp[1], cp[0]
-    ep = list(range(30)); rng.shuffle(ep)
-    if perm_parity(ep): ep[0], ep[1] = ep[1], ep[0]
-    co = [rng.randrange(3) for _ in range(19)]; co.append((-sum(co)) % 3)
-    eo = [rng.randrange(2) for _ in range(29)]; eo.append(sum(eo) % 2)
+    cp = list(range(20))
+    rng.shuffle(cp)
+    if perm_parity(cp):
+        cp[0], cp[1] = cp[1], cp[0]
+    ep = list(range(30))
+    rng.shuffle(ep)
+    if perm_parity(ep):
+        ep[0], ep[1] = ep[1], ep[0]
+    co = [rng.randrange(3) for _ in range(19)]
+    co.append((-sum(co)) % 3)
+    eo = [rng.randrange(2) for _ in range(29)]
+    eo.append(sum(eo) % 2)
     return (cp, co, ep, eo)
 
 
@@ -359,7 +367,8 @@ def rand_deal(rng):
 def read_hslots(h_st, rec):
     """Map recorded reads (state index, code) back to slots of the INPUT h: each read reveals
     one piece of h, and the piece's slot in h is returned."""
-    posc = {h_st[s] // 3: s for s in range(20)}; pose = {h_st[20 + s] // 2: s for s in range(30)}
+    posc = {h_st[s] // 3: s for s in range(20)}
+    pose = {h_st[20 + s] // 2: s for s in range(30)}
     return [('c', posc[x // 3]) if s < 20 else ('e', pose[x // 2]) for s, x in rec]
 
 
@@ -369,8 +378,11 @@ def ci95(k, n):
         return (0, 1)
     if k == 0:
         return (0.0, 1 - 0.05 ** (1 / n))
-    z = 1.96; p = k / n; den = 1 + z * z / n
-    c = (p + z * z / (2 * n)) / den; w = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / den
+    z = 1.96
+    p = k / n
+    den = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / den
+    w = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / den
     return (max(0, c - w), min(1, c + w))
 
 
@@ -406,27 +418,30 @@ def selfcheck(n_random=40):
     # 3. KATs (slow reference)
     ns = sum(ref.hash_(bytes.fromhex(v['msg_hex'])).hex() == v['digest_hex'] for v in vecs)
     assert ns == 8, f'slow reference: {ns}/8'
-    out.append(f'slow reference (m9_search, Em.lean transliteration) vs v2 KATs: {ns}/8 Hash digests: OK')
+    out.append(f'slow reference (m9_search, Em.lean transliteration) vs v2 KATs: {ns}/8 '
+               'Hash digests: OK')
     # 4. fast == slow on random states, every rule, grips included
     assert ref_hash(b'abc') == ref.hash_(b'abc') == Hash(b'abc')
     rng = random.Random(20260930)
     for rule in RULES:
-        E = engine(rule); same = 0
+        E = engine(rule)
+        same = 0
         for _ in range(n_random):
-            h = uniform_pos(rng); d = rand_deal(rng); hp = as_tuple_pos(h)
+            h = uniform_pos(rng)
+            d = rand_deal(rng)
+            hp = as_tuple_pos(h)
             gf, gs = [], []
             a = from_st(E.em(to_st(h), d, grips=gf))
-            b = ref_em(hp, d, rule, grips=gs)
-            if rule == 'C36':
-                assert b == ref.em_block(hp, d)
-            same += as_tuple_pos(a) == b and gf == gs
+            b = ref.em_block(hp, d, grips=gs, **ref_noon_t(rule))
+            same += as_tuple_pos(a) == b and gf == [GRIPS.index(tuple(o)) for o in gs]
         assert same == n_random, f'{rule}: fast != slow on {n_random - same} blocks'
         out.append(f'fast engine {rule} vs slow reference: {same}/{n_random} random (uniform h, '
                    'random deal) blocks with identical E_m and grip sequence')
     # 5. the review engine's recorded candidate digests (prefixes of 12 bytes)
     for rule, e0, eabc in REVIEW_PREFIXES:
         assert Hash(b'', rule).hex()[:24] == e0 and Hash(b'abc', rule).hex()[:24] == eabc, rule
-    out.append("Hash('') and Hash('abc') prefixes of rules " + ', '.join(r for r, _, _ in REVIEW_PREFIXES)
+    out.append("Hash('') and Hash('abc') prefixes of rules "
+               + ', '.join(r for r, _, _ in REVIEW_PREFIXES)
                + ' == the review engine md3.py (its out/md3_selfcheck.txt): yes')
     return out
 

@@ -203,6 +203,33 @@ theorem idx_break {ρ β} (fromV toV : Int)
     SudoRt.runLoopOn fromV (fuelRange fromV toV) step after onRet = after fromV := by
   rw [fuelRange_gt hgt, show 1 = 0 + 1 from rfl, runLoopOn_succ, hstep]
 
+/-- The emitted loop tail after the body continued with `s`: break on the last index,
+    else step the index (no Overflow for `FitsLen (i + 1)`). -/
+theorem asc_tail {S ρ : Type} (toN i : Nat) (hfit : FitsLen (i + 1)) (s : S) :
+    (if (Int.ofNat i == Int.ofNat toN) = true then
+        (Except.ok (SudoRt.Flow.brk (Int.ofNat i, s)) : Except SudoRt.Trap (SudoRt.Flow (Int × S) ρ))
+      else SudoRt.addI (Int.ofNat i) 1 >>= fun i' => Except.ok (SudoRt.Flow.cont (i', s))) =
+      if i = toN then .ok (.brk (Int.ofNat i, s)) else .ok (.cont (Int.ofNat (i + 1), s)) := by
+  by_cases h : i = toN
+  · subst h; simp [beq_int_iff]
+  · have hne : ¬ (Int.ofNat i = Int.ofNat toN) := fun e => h (Int.ofNat.inj e)
+    simp only [beq_int_iff, hne, if_false, h]
+    rw [addI_ofNat_one i hfit]
+    rfl
+
+/-- The same tail for a loop whose state is the index alone. -/
+theorem asc_tail_idx {ρ : Type} (toN i : Nat) (hfit : FitsLen (i + 1)) :
+    (if (Int.ofNat i == Int.ofNat toN) = true then
+        (Except.ok (SudoRt.Flow.brk (Int.ofNat i)) : Except SudoRt.Trap (SudoRt.Flow Int ρ))
+      else SudoRt.addI (Int.ofNat i) 1 >>= fun i' => Except.ok (SudoRt.Flow.cont i')) =
+      if i = toN then .ok (.brk (Int.ofNat i)) else .ok (.cont (Int.ofNat (i + 1))) := by
+  by_cases h : i = toN
+  · subst h; simp [beq_int_iff]
+  · have hne : ¬ (Int.ofNat i = Int.ofNat toN) := fun e => h (Int.ofNat.inj e)
+    simp only [beq_int_iff, hne, if_false, h]
+    rw [addI_ofNat_one i hfit]
+    rfl
+
 /-- Range-copy stepper in the shape Lean leaves after unfolding emit. -/
 def copyStep (ρ : Type) (xs : Array Int) (toV : Int) (σ : Int × Array Int) :
     Except SudoRt.Trap (SudoRt.Flow (Int × Array Int) ρ) :=

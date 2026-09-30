@@ -38,7 +38,7 @@ The experiments are the v2-relevant scripts of the grip-rule review (2026-09-29,
 
 ### Limits of the self-check
 
-- Fast == slow is not an independent check of the read model. The slow reference and the fast engine's compiled step tables both use m9_search's read primitives (`read_slot`, `read_colours_piece`, `abs_reorient`), so the comparison checks the fast engine's table compilation, not those primitives. Where a log says "re-verified with the slow reference", read it in that sense: different stepping code on the same tables and read primitives.
+- Fast == slow is not an independent check of the read model. The slow reference and the fast engine's compiled step tables both use m9_search's `read_slot` and `read_colours_piece`; the fast engine maps colours to a grip by an (Up, Front) lookup, the slow one by `abs_reorient`. So the comparison checks the fast engine's table compilation, not those shared primitives. Where a log says "re-verified with the slow reference", read it in that sense: different stepping code on the same tables and read primitives.
 - The KATs anchor only C36 (v2 itself) to the sudo. `A_vn`, `A` and C36 also match the review engine's printed digest prefixes (item 5).
 - C76 has no review prefix. It is anchored only by fast == slow and by reproducing every coverage statistic the review printed for it.
 
@@ -51,7 +51,9 @@ python3 experiments.py --only swaps         # rewrite one log
 python3 experiments.py --list
 ```
 
-Every experiment is seeded. The work is split into a fixed number of chunks with per-chunk seeds, so no result depends on `--workers`. Exit status is non-zero if the self-check fails, if an experiment's own re-verification fails, or (with `--check`) if a committed log differs from a fresh run. Measured wall times for the heavy set: local with 4 workers, 13 min in one run (`swaps` 433 s, `targeted_T` 172 s, `telescoping` 84 s, `local` 39 s, `truncated` 26 s, `coverage_chunks` 26 s, `same_blocks` 14 s, the rest under 3 s each) and 15.2 min in the reviewer's run; CI (4 workers), in the three parallel parts of `megadreifach-v2-evidence` (PR #137): `swaps` 17.6 min (1054 s); `targeted_T telescoping` 11.7 min (473 s + 230 s); the rest 2.9 min (`local` 64 s, `coverage_chunks` 39 s, `truncated` 32 s, `same_blocks` 29 s, the others under 5 s each). As one sequential step (#135) the heavy set took 31.7–36.0 min in CI. The quick set takes about 1 s, local and CI.
+Every experiment is seeded. The work is split into a fixed number of chunks with per-chunk seeds, so no result depends on `--workers`. Exit status is non-zero if the self-check fails, if an experiment's own re-verification fails, or (with `--check`) if a committed log differs from a fresh run. Measured wall times for the heavy set: local with 4 workers, 13 min in one run (`swaps` 433 s, `targeted_T` 172 s, `telescoping` 84 s, `local` 39 s, `truncated` 26 s, `coverage_chunks` 26 s, `same_blocks` 14 s, the rest under 3 s each) and 15.2 min in the reviewer's run; CI (4 workers), in the three parallel parts of `megadreifach-v2-evidence` (PR #137, runs on 56d5feb and 9e03c0f): part 1, `swaps`, about 16–18 min (17.6 and 16.4 min; 1054 s in the first); part 2, `targeted_T telescoping`, about 12 min (11.7 and 11.8 min; 473 s + 230 s in the first); `rest` about 3 min (2.9 min both times; `local` 64 s, `coverage_chunks` 39 s, `truncated` 32 s, `same_blocks` 29 s, the others under 5 s each, in the first). As one sequential step (#135) the heavy set took 31.7–36.0 min in CI. The quick set takes about 1 s, local and CI.
+
+The logs use two interval formats: `same_blocks` prints exact Poisson intervals (`rate_ci` of [`../suit_blind_collision.py`](../suit_blind_collision.py)) so that it matches the v1 log it re-runs, while the others print Wilson intervals (for 0 hits, the exact one-sided 95% upper bound).
 
 ## Evidence for each SPEC statement
 

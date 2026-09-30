@@ -519,7 +519,9 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.fullDiffCount_le_64_of_offDiag",
             "DoubleDeal.Security.FullCipher.not_col_v10Sym",
             # StemPosition (research item (b), first slice): the stem as a position map and
-            # the support gap of gamma^-1 * beta; structure only, no count of decks
+            # the support gap of gamma^-1 * beta; structure only, no count of decks, no part
+            # of hoff (helpers srcRow / cmFlat_inj2 are named apart from SumRanksDP.rowOf /
+            # SumRanksDP.cmFlat_injective)
             "DoubleDeal.Security.StemPosition.unkeyedNoMix_eq_comp",
             "DoubleDeal.Security.StemPosition.stemPos_injective",
             "DoubleDeal.Security.StemPosition.conj_of_stem_rel",

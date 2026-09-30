@@ -108,10 +108,12 @@ here, and nothing here is proved.
   reduction only: for outputs γ outside `v10Sym`, 1/64 would follow from
   `64 · dpFCount β γ ≤ 52!` for every β outside `v10Sym` with β ≠ γ
   (`fullDiffCount_le_64_of_offDiag`); §2 samples single off-diagonal entries of a few rows
-  at ≤ 3·10^-6, which is not a bound and not a column. Structure toward the hypothesis
-  (PROVED, `StemPosition`, no count of decks): if the stem sends `(x, β·x)` to a pair with
-  difference γ, then γ⁻¹β is `x`-conjugate to the ratio of the two decks' position maps and
-  moves exactly `52 − zRows · zCols` cards, so 0 or at least 4 (`card_moved_zero_or_ge_four`).
-  More than
-  one mix round before the final round; any γ ≠ α after the final round in §3.
+  at ≤ 3·10^-6, which is not a bound and not a column. `StemPosition` proves no part of
+  that hypothesis: if the stem sends `(x, β·x)`, `x = permDeck π`, to a pair with
+  difference γ (the filter predicate of `dpFCount β γ`), then γ⁻¹β is π-conjugate to the
+  ratio of the two decks' position maps and moves exactly `52 − zRows · zCols` cards
+  (`card_moved_eq`). That would give `dpFCount β γ = 0` only when the support size of γ⁻¹β
+  is not of the form 52 − ab (a ≤ 4, b ≤ 13), e.g. 2 or 3 (not stated), and says nothing
+  for any other β. More than one mix round before the final round; any γ ≠ α after the
+  final round in §3.
 * Anything under the real PassKey schedule beyond what M5/M6 already record.

@@ -11,33 +11,49 @@
 
   Definitions.
   * `seatMap t s`: the seat of the input grid that `colRotate (rowRotate g t) s` shows at a
-    seat (`colRotate_rowRotate_apply`); `rowOf s r c` is its row.
+    seat (`colRotate_rowRotate_apply`); `srcRow s r c` is its row (the source row; not
+    `SumRanksDP.rowOf`, which is a row of a permutation).
   * `rowAmts m`, `colAmts m`: the amounts SumRanks uses on the packet `m` laid column-major.
   * `inSeat k`: the seat of the SumRanks output that the stem sends to output position `k`
     (ShiftRows, then scoop column-major). `stemPos m k = cmFlat (seatMap (rowAmts m)
     (colAmts m) (inSeat k))`, and `stemPerm m` is `stemPos m` as a permutation.
-  * `zRows m m'`, `zCols m m'`: the number of rows whose row amounts agree mod 13, and of
-    columns whose column amounts agree mod 4, between the packets `m` and `m'`.
+  * `zRows m m'`, `zCols m m'` (`z`: the number of agreeing rows / columns): the number of
+    rows whose row amounts agree mod 13, and of columns whose column amounts agree mod 4,
+    between the packets `m` and `m'`.
 
   Proved:
   * `unkeyedNoMix_eq_comp`: `unkeyedNoMix m = m ∘ stemPos m`, for every `m : Fin 52 → Nat`
-    (no deck hypothesis); `stemPos_injective`.
+    (no deck hypothesis); `stemPos_injective`. (`Rounds.unkeyedNoMix_cells`, the existential
+    form, is proved from `unkeyedNoMix_eq_comp`.)
   * `conj_of_stem_rel`: if `unkeyedNoMix (β·x) = γ·unkeyedNoMix x` at the deck
     `x = permDeck π`, then `γ⁻¹ * β = π * q * π⁻¹` with
     `q = stemPerm x * (stemPerm (β·x))⁻¹`, the ratio of the two decks' position maps.
+    The hypothesis is exactly the filter predicate of `FullCipher.dpFCount β γ`
+    (`Differential.dpCount unkeyedNoMix β γ`) at the deck `permDeck π`, the count in the
+    hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag`, and it is the one-deck
+    form of "the stem is exactly covariant from `β` to `γ`". In prose (not a separate
+    theorem): since `stemPos m = cmFlat ∘ S_m ∘ inSeat` with `S_m` the seat map of `m`, the
+    fixed layer `inSeat` cancels in the ratio, and `q = cmFlat ∘ (S_x ∘ S_(β·x)⁻¹) ∘ cmFlat⁻¹`:
+    only `cmFlat` conjugates the ratio of the two seat maps.
   * `seatMap_eq_iff`: the two seat maps agree at `(r, c)` iff the column amounts of `c`
-    agree mod 4 and the row amounts of row `rowOf s r c` agree mod 13. So the agreeing seats
+    agree mod 4 and the row amounts of row `srcRow s r c` agree mod 13. So the agreeing seats
     are, in each agreeing column, the agreeing rows moved by that column's rotation (a
     row-shifted copy of rows × columns, of the same size, not literally that product).
   * `card_fixed_eq`: under the same hypothesis, `γ⁻¹ * β` fixes exactly
     `zRows x (β·x) * zCols x (β·x)` cards; `card_moved_eq`: it moves `52 - zRows · zCols`.
-  * `card_moved_zero_or_ge_four`: so it moves `0` cards or at least `4`; never exactly 1, 2
-    or 3 (`zRows ≤ 4`, `zCols ≤ 13`, and no product of such numbers is 49, 50 or 51).
+  * `card_moved_zero_or_ge_four`: so it moves `0` cards or at least `4`. Never moving
+    exactly 1 card holds for every permutation; the content is "never exactly 2 or 3"
+    (`zRows ≤ 4`, `zCols ≤ 13`, and no product of such numbers is 49 or 50). This is only a
+    slice of `card_moved_eq`: the values `52 - a·b` with `a ≤ 4`, `b ≤ 13` also exclude the
+    moved counts 5, 6, 7, 9, 10, 11, 14, 15, 17, 18, 21, 23, 27, 29, 33 and 35, which is
+    not stated here.
 
   NOT proved, and limits:
   * No count of decks: nothing here bounds `dpFCount β γ` or any differential probability.
-    (That the moved count is never 2 or 3 does give `dpFCount β γ = 0` when `γ⁻¹ * β` is a
-    transposition or a 3-cycle; that corollary is not stated here.)
+    This proves no part of `hoff`. It would give `dpFCount β γ = 0` only when the support
+    size of `γ⁻¹ * β` is not of the form `52 - a·b` (`a ≤ 4`, `b ≤ 13`), e.g. 2 or 3 (a
+    transposition or a 3-cycle); that corollary is not stated or proved here, and nothing
+    here says anything for any other `β`.
   * Which pairs `(zRows, zCols)` actually occur for a given `β` is not studied; the amounts
     of `x` and `β·x` are not related to `β` here.
   * About the stem (the final no-mix round) only, not GridCycle or a mix round.
@@ -58,12 +74,12 @@ open DoubleDeal Relabel Finset
 
 /-- The row of the input grid that the column stage shows at `(r, c)` (column `c` rotated
     top→bottom by `s c`). -/
-def rowOf (s : Fin 13 → Nat) (r : Fin 4) (c : Fin 13) : Fin 4 :=
+def srcRow (s : Fin 13 → Nat) (r : Fin 4) (c : Fin 13) : Fin 4 :=
   ⟨(r.val + (4 - s c % 4)) % 4, Nat.mod_lt _ (by decide)⟩
 
 /-- The seat of the input grid that `colRotate (rowRotate g t) s` shows at `p`. -/
 def seatMap (t : Fin 4 → Nat) (s : Fin 13 → Nat) (p : Fin 4 × Fin 13) : Fin 4 × Fin 13 :=
-  (rowOf s p.1 p.2, ⟨(p.2.val + t (rowOf s p.1 p.2) % 13) % 13, Nat.mod_lt _ (by decide)⟩)
+  (srcRow s p.1 p.2, ⟨(p.2.val + t (srcRow s p.1 p.2) % 13) % 13, Nat.mod_lt _ (by decide)⟩)
 
 /-- (PROVED) Rows by `t`, then columns by `s`, reads the seat `seatMap t s (r, c)`. -/
 theorem colRotate_rowRotate_apply {α : Type} (g : Grid α) (t : Fin 4 → Nat)
@@ -88,7 +104,7 @@ theorem seatMap_injective (t : Fin 4 → Nat) (s : Fin 13 → Nat) :
     omega
   subst hc
   have h1' := congrArg Fin.val h1
-  simp only [rowOf] at h1'
+  simp only [srcRow] at h1'
   have := r1.isLt
   have := r2.isLt
   have hr : r1 = r2 := Fin.ext (by omega)
@@ -96,22 +112,22 @@ theorem seatMap_injective (t : Fin 4 → Nat) (s : Fin 13 → Nat) :
   rfl
 
 /-- (PROVED) Where two seat maps agree: the column amounts of `c` agree mod 4, and the row
-    amounts of the row `rowOf s r c` read there agree mod 13. -/
+    amounts of the row `srcRow s r c` read there agree mod 13. -/
 theorem seatMap_eq_iff (t t' : Fin 4 → Nat) (s s' : Fin 13 → Nat) (r : Fin 4) (c : Fin 13) :
     seatMap t s (r, c) = seatMap t' s' (r, c) ↔
-      s c % 4 = s' c % 4 ∧ t (rowOf s r c) % 13 = t' (rowOf s r c) % 13 := by
-  have hrow : rowOf s r c = rowOf s' r c ↔ s c % 4 = s' c % 4 := by
+      s c % 4 = s' c % 4 ∧ t (srcRow s r c) % 13 = t' (srcRow s r c) % 13 := by
+  have hrow : srcRow s r c = srcRow s' r c ↔ s c % 4 = s' c % 4 := by
     constructor
     · intro h
       have h' := congrArg Fin.val h
-      simp only [rowOf] at h'
+      simp only [srcRow] at h'
       have := r.isLt
       have := Nat.mod_lt (s c) (by decide : 0 < 4)
       have := Nat.mod_lt (s' c) (by decide : 0 < 4)
       omega
     · intro h
       apply Fin.ext
-      simp only [rowOf, h]
+      simp only [srcRow, h]
   simp only [seatMap, Prod.mk.injEq]
   constructor
   · rintro ⟨h1, h2⟩
@@ -121,8 +137,8 @@ theorem seatMap_eq_iff (t t' : Fin 4 → Nat) (s s' : Fin 13 → Nat) (r : Fin 4
     simp only at h2'
     rw [← h1] at h2'
     have := c.isLt
-    have := Nat.mod_lt (t (rowOf s r c)) (by decide : 0 < 13)
-    have := Nat.mod_lt (t' (rowOf s r c)) (by decide : 0 < 13)
+    have := Nat.mod_lt (t (srcRow s r c)) (by decide : 0 < 13)
+    have := Nat.mod_lt (t' (srcRow s r c)) (by decide : 0 < 13)
     omega
   · rintro ⟨hs, ht⟩
     have h1 := hrow.2 hs
@@ -173,7 +189,11 @@ theorem inSeat_bijective : Function.Bijective inSeat := by
   rw [Fintype.bijective_iff_injective_and_card]
   exact ⟨inSeat_injective, by simp⟩
 
-theorem cmFlat_injective {p q : Fin 4 × Fin 13} (h : cmFlat p.1 p.2 = cmFlat q.1 q.2) :
+/-- `cmFlat` is injective on seats, as a function of the pair. (The same fact as
+    `SumRanksDP.cmEquiv.symm.injective`, `SumRanksDP/Decomp.lean`; that module is not imported
+    here. The long-term home for `cmEquiv` and this lemma is the core `Grid.lean`. Not the
+    per-row `SumRanksDP.cmFlat_injective`.) -/
+theorem cmFlat_inj2 {p q : Fin 4 × Fin 13} (h : cmFlat p.1 p.2 = cmFlat q.1 q.2) :
     p = q := by
   have e1 := congrArg cmRow h
   have e2 := congrArg cmCol h
@@ -184,11 +204,11 @@ theorem cmFlat_injective {p q : Fin 4 × Fin 13} (h : cmFlat p.1 p.2 = cmFlat q.
 /-- (PROVED) `stemPosOf t s k = stemPosOf t' s' k` iff the seat maps agree at `inSeat k`. -/
 theorem stemPosOf_eq_iff (t t' : Fin 4 → Nat) (s s' : Fin 13 → Nat) (k : Fin 52) :
     stemPosOf t s k = stemPosOf t' s' k ↔ seatMap t s (inSeat k) = seatMap t' s' (inSeat k) :=
-  ⟨fun h => cmFlat_injective h, fun h => by unfold stemPosOf; rw [h]⟩
+  ⟨fun h => cmFlat_inj2 h, fun h => by unfold stemPosOf; rw [h]⟩
 
 /-- (PROVED) The stem's position map is injective, for every packet. -/
 theorem stemPos_injective (m : Fin 52 → Nat) : Function.Injective (stemPos m) :=
-  fun _ _ h => inSeat_injective (seatMap_injective _ _ (cmFlat_injective h))
+  fun _ _ h => inSeat_injective (seatMap_injective _ _ (cmFlat_inj2 h))
 
 /-- `stemPos m` as a permutation of the positions. -/
 noncomputable def stemPerm (m : Fin 52 → Nat) : Equiv.Perm (Fin 52) :=
@@ -197,9 +217,6 @@ noncomputable def stemPerm (m : Fin 52 → Nat) : Equiv.Perm (Fin 52) :=
 theorem stemPerm_apply (m : Fin 52 → Nat) (k : Fin 52) : stemPerm m k = stemPos m k := rfl
 
 /-! ## A relabelling difference through the stem is a conjugated ratio of position maps -/
-
-theorem rel_permDeck_val (β π : Equiv.Perm (Fin 52)) (k : Fin 52) :
-    rel β (permDeck π) k = (β (π k)).val := app_fin β (π k)
 
 /-- (PROVED) If the stem sends the pair `(x, β·x)`, `x = permDeck π`, to a pair with
     difference `γ`, then `γ⁻¹ * β` is the ratio of the two position maps, conjugated by `π`:
@@ -223,18 +240,20 @@ theorem conj_of_stem_rel {β γ π : Equiv.Perm (Fin 52)}
 
 /-! ## The support gap -/
 
-/-- Rows whose row amounts agree mod 13 between the packets `m` and `m'`. -/
+/-- `z` for rows: the number of agreeing rows, i.e. rows whose row amounts agree mod 13
+    between the packets `m` and `m'`. -/
 def zRows (m m' : Fin 52 → Nat) : ℕ :=
   (univ.filter fun r : Fin 4 => rowAmts m r % 13 = rowAmts m' r % 13).card
 
-/-- Columns whose column amounts agree mod 4 between the packets `m` and `m'`. -/
+/-- `z` for columns: the number of agreeing columns, i.e. columns whose column amounts
+    agree mod 4 between the packets `m` and `m'`. -/
 def zCols (m m' : Fin 52 → Nat) : ℕ :=
   (univ.filter fun c : Fin 13 => colAmts m c % 4 = colAmts m' c % 4).card
 
-theorem rowOf_eq_add (s : Fin 13 → Nat) (r : Fin 4) (c : Fin 13) :
-    rowOf s r c = r + ⟨(4 - s c % 4) % 4, Nat.mod_lt _ (by decide)⟩ := by
+theorem srcRow_eq_add (s : Fin 13 → Nat) (r : Fin 4) (c : Fin 13) :
+    srcRow s r c = r + ⟨(4 - s c % 4) % 4, Nat.mod_lt _ (by decide)⟩ := by
   apply Fin.ext
-  simp only [rowOf, Fin.val_add]
+  simp only [srcRow, Fin.val_add]
   omega
 
 /-- (PROVED) The number of seats where two seat maps agree is (rows whose amounts agree
@@ -244,18 +263,18 @@ theorem card_seatMap_eq (t t' : Fin 4 → Nat) (s s' : Fin 13 → Nat) :
       (univ.filter fun r : Fin 4 => t r % 13 = t' r % 13).card *
         (univ.filter fun c : Fin 13 => s c % 4 = s' c % 4).card := by
   have e : ∀ p : Fin 4 × Fin 13, seatMap t s p = seatMap t' s' p ↔
-      s p.2 % 4 = s' p.2 % 4 ∧ t (rowOf s p.1 p.2) % 13 = t' (rowOf s p.1 p.2) % 13 :=
+      s p.2 % 4 = s' p.2 % 4 ∧ t (srcRow s p.1 p.2) % 13 = t' (srcRow s p.1 p.2) % 13 :=
     fun p => seatMap_eq_iff t t' s s' p.1 p.2
   rw [filter_congr fun p _ => e p, card_filter, Fintype.sum_prod_type, sum_comm]
   have hc : ∀ c : Fin 13, (∑ r : Fin 4, if s c % 4 = s' c % 4 ∧
-      t (rowOf s r c) % 13 = t' (rowOf s r c) % 13 then 1 else 0) =
+      t (srcRow s r c) % 13 = t' (srcRow s r c) % 13 then 1 else 0) =
       (if s c % 4 = s' c % 4 then 1 else 0) *
         (univ.filter fun r : Fin 4 => t r % 13 = t' r % 13).card := by
     intro c
     rw [card_filter]
-    have hr : (∑ r : Fin 4, if t (rowOf s r c) % 13 = t' (rowOf s r c) % 13 then 1 else 0) =
+    have hr : (∑ r : Fin 4, if t (srcRow s r c) % 13 = t' (srcRow s r c) % 13 then 1 else 0) =
         ∑ r : Fin 4, if t r % 13 = t' r % 13 then 1 else 0 := by
-      simp only [rowOf_eq_add]
+      simp only [srcRow_eq_add]
       exact Equiv.sum_comp (Equiv.addRight _) (fun r => if t r % 13 = t' r % 13 then 1 else 0)
     split_ifs with hs
     · simp only [hs, true_and, one_mul]
@@ -312,7 +331,8 @@ theorem card_moved_eq {β γ π : Equiv.Perm (Fin 52)}
   omega
 
 /-- (PROVED) The support gap: under the hypothesis of `conj_of_stem_rel`, `γ⁻¹ * β` moves no
-    card or at least 4 cards; never exactly 1, 2 or 3. -/
+    card or at least 4 cards. (Never exactly 1 holds for every permutation; the content is
+    never exactly 2 or 3. `card_moved_eq` excludes more values; not stated here.) -/
 theorem card_moved_zero_or_ge_four {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))) :
     (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 0 ∨
@@ -322,6 +342,6 @@ theorem card_moved_zero_or_ge_four {β γ π : Equiv.Perm (Fin 52)}
   have h2 := zCols_le (permDeck π) (rel β (permDeck π))
   generalize zRows (permDeck π) (rel β (permDeck π)) = a at h1 ⊢
   generalize zCols (permDeck π) (rel β (permDeck π)) = b at h2 ⊢
-  interval_cases a <;> interval_cases b <;> omega
+  interval_cases a <;> omega
 
 end DoubleDeal.Security.StemPosition

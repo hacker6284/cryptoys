@@ -6,6 +6,7 @@
 -/
 import DoubleDealSecurity.GridCycle
 import DoubleDealSecurity.SumRanksV10
+import DoubleDealSecurity.StemPosition
 
 namespace DoubleDeal.Security
 
@@ -98,11 +99,9 @@ theorem encryptN_commutes (σ : Relabel) (hs : CommutesG σ sumRanksV10)
     (cards_applyFullRounds posMix nMix (cards_compose hm pos0))
 
 /-- (PROVED) The stem only moves cells: every output cell is an input cell. -/
-theorem unkeyedNoMix_cells (m : Fin 52 → Nat) (k : Fin 52) : ∃ i, unkeyedNoMix m k = m i := by
-  have hs := sumRanksV10_bound (fun v => ∃ i, v = m i)
-    (layColumnMajor m) (fun r c => ⟨_, rfl⟩)
-  obtain ⟨i, hi⟩ := hs (cmRow k) ⟨((cmCol k).val + (cmRow k).val) % 13, Nat.mod_lt _ (by decide)⟩
-  exact ⟨i, hi⟩
+theorem unkeyedNoMix_cells (m : Fin 52 → Nat) (k : Fin 52) : ∃ i, unkeyedNoMix m k = m i :=
+  -- the weak form of `StemPosition.unkeyedNoMix_eq_comp`, which names the cell
+  ⟨StemPosition.stemPos m k, congrFun (StemPosition.unkeyedNoMix_eq_comp m) k⟩
 
 -- `unkeyedNoMix_invUnkeyedNoMix` (same statement) now lives in the core
 -- package, `DoubleDeal.Round` (next to `encrypt6_decrypt6`).

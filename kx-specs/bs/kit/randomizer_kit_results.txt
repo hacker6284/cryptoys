@@ -1,0 +1,33 @@
+A {'rule': 'd6 thirds (1-2 low, 3-4 mid, 5-6 high)', 'faces': 6, 'void': 0, 'outcomes': 3, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 1.584962500721156}
+A {'rule': 'd6 thirds + odd/even', 'faces': 6, 'void': 0, 'outcomes': 6, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 2.584962500721156}
+A {'rule': 'd6 halves + odd/even  (EXPECTED NOT uniform)', 'faces': 6, 'void': 0, 'outcomes': 4, 'exact_uniform': False, 'void_rate': '0', 'bits_per_read': None}
+A {'rule': "d6 'a six'", 'faces': 6, 'void': 0, 'outcomes': 2, 'exact_uniform': False, 'void_rate': '0', 'bits_per_read': None, 'note': '1/6 event, not uniform by design'}
+A {'rule': 'd10 group (1-3/4-6/7-9) then place in group; 0 void', 'faces': 10, 'void': 1, 'outcomes': 9, 'exact_uniform': True, 'void_rate': '1/10', 'bits_per_read': 2.852932501298081}
+A {'rule': 'd12 thirds (1-4/5-8/9-12) + odd/even', 'faces': 12, 'void': 0, 'outcomes': 6, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 2.584962500721156}
+A {'rule': 'd12 halves (1-6/7-12) + odd/even', 'faces': 12, 'void': 0, 'outcomes': 4, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 2.0}
+A {'rule': 'd12 thirds + odd/even + low/high pair of its third', 'faces': 12, 'void': 0, 'outcomes': 12, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 3.584962500721156}
+A {'rule': "d12 '11-12' + odd/even", 'faces': 12, 'void': 0, 'outcomes': 4, 'exact_uniform': False, 'void_rate': '0', 'bits_per_read': None, 'note': '1/6 event independent of parity: P(11-12 & odd)=1/12'}
+A {'rule': 'd20 last digit: group/place of last digit + teens; 10,20 void', 'faces': 20, 'void': 2, 'outcomes': 18, 'exact_uniform': True, 'void_rate': '1/10', 'bits_per_read': 3.7529325012980808}
+A {'rule': 'd8 top half + odd/even', 'faces': 8, 'void': 0, 'outcomes': 4, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 2.0}
+A {'rule': 'd8 top half + top pair of its half + odd/even', 'faces': 8, 'void': 0, 'outcomes': 8, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 3.0}
+A {'rule': 'd4 top half (3-4) + odd/even', 'faces': 4, 'void': 0, 'outcomes': 4, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 2.0}
+A {'rule': 'd10 odd/even (0 even; no void)', 'faces': 10, 'void': 0, 'outcomes': 2, 'exact_uniform': True, 'void_rate': '0', 'bits_per_read': 1.0}
+A {'rule': 'percentile d100 read as 2 separate d10 group/place rules (00 or 0 void per die)', 'faces': 100, 'void': 19, 'outcomes': 81, 'exact_uniform': True, 'void_rate': '19/100', 'bits_per_read': 5.135278502336546, 'note': 'same as two d10s thrown separately (void rate per die 1/10 if re-thrown singly)'}
+B d6 local distribution identical to spec for all (r, rl): True
+B d12 local distribution identical to spec for all (r, rl): True
+B global (2, 3) 139 layouts: kit == spec exactly (both hole dice)
+B global (3, 3) 3073 layouts: kit == spec exactly (both hole dice)
+B global (2, 5) 6915 layouts: kit == spec exactly (both hole dice)
+B global (3, 4) 64557 layouts: kit == spec exactly (both hole dice)
+C build spec {"decision_holes": 53.58475, "hole_rerolls": 12.269, "reads": 189.9638, "reads_bow": 31.6286, "reads_grow": 37.4705, "reads_heading": 43.8976, "reads_kind": 11.11335, "reads_sea": 65.85375, "sea": 21.95615, "ships": 31.6286, "queue6_throws": 31.660633333333333}
+C build R {"decision_holes": 53.57665, "no_roll_sea": 1.64405, "reads": 132.13155, "reads_bow": 31.6234, "reads_grow": 37.4984, "reads_hole": 51.9326, "reads_kind": 11.07715, "sea": 21.95325, "ships": 31.6234, "queue6_throws": 22.021925}
+C build C {"decision_holes": 53.6225, "no_roll_sea": 1.66615, "reads": 100.45895, "reads_grow": 37.4429, "reads_hole": 51.95635, "reads_kind": 11.0597, "sea": 22.00985, "ships": 31.61265, "queue6_throws": 16.743158333333334}
+C pegs 100 {'d10_dice_needed': 50.0, 'throws': 14.628, 'reads': 55.5427, 'voids': 5.5427}
+C pegs 200 {'d10_dice_needed': 100.0, 'throws': 29.2656, 'reads': 111.0721, 'voids': 11.0721}
+C pegs 2 {'d10_dice_needed': 1.0, 'throws': 1.1108, 'reads': 1.1108, 'voids': 0.1108}
+C pegs 16 {'d10_dice_needed': 8.0, 'throws': 2.76885, 'reads': 8.8869, 'voids': 0.8869}
+C pegs 51 {'d10_dice_needed': 26.0, 'throws': 8.4314, 'reads': 28.88095, 'voids': 2.88095}
+C pegs 162 {'d10_dice_needed': 81.0, 'throws': 24.55245, 'reads': 90.02555, 'voids': 9.02555}
+D spec {'attempts': 2.56487, 'reads': 52.16989, 'offgrid_rerolls': 3.9485, 'restarts': 1.56487, 'sign_reads': 17.0}
+D bestfit {'attempts': 2.58965, 'reads': 48.99108, 'offgrid_rerolls': 0.51709, 'restarts': 1.58965, 'sign_reads': 17.0}
+saved randomizer_kit_results.json

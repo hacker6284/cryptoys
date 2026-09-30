@@ -129,12 +129,6 @@ A digest-only state has `traced = false`, so `push_step` does not call `facelets
 traced constructor; the digest theorem is stated for the digest-only constructor, which is
 the same cube walk.
 
-**Temporary duplicates.** `asc_tail` and `asc_tail_idx` (`ScrambleV2/Link2/Loop.lean`) are
-copies of the same lemmas in `DoubleDealCbcHmac.Link2.Loop`, which this package cannot
-import. Draft #144 moves them to one home in `MegaDreifach.Link2.Loop`. #144 is not on
-`main`, so these copies stay until that merge; deleting them earlier would make the names
-ambiguous under `open MegaDreifach.Link2`.
-
 None of this is a hash-security claim.
 
 ## Long-term hash story

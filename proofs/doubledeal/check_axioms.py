@@ -459,8 +459,6 @@ SCRAMBLE_LINK2 = {
     "ScrambleV2.Link2.letter_refines",
     "ScrambleV2.Link2.hex_digit_refines",
     "ScrambleV2.Link2.move_name_refines",
-    "ScrambleV2.Link2.asc_tail",
-    "ScrambleV2.Link2.asc_tail_idx",
 }
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only

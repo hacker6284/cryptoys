@@ -2,8 +2,6 @@
   LINK 2. The emitted digest path against the model: `fresh`, the v2 constructors,
   `push_step` (trace text is not modelled; a digest-only state returns unchanged),
   `do_move`, `do_rule`, `apply_v2_symbol`. Proof-only. No algorithm change.
-
-  `asc_tail` copies stay until #144 is on `main`.
 -/
 import ScrambleV2.Link2.Reorient
 import ScrambleV2.Link2.Facelets

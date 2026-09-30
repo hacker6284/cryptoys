@@ -3,13 +3,8 @@
   driver that carries a predicate instead of an exact state (the Scramble state's
   trace is not modelled). Proof-only; builds on `MegaDreifach.Link2.Loop`.
 
-  Temporary duplicates: `asc_tail` and `asc_tail_idx` also live in
-  `DoubleDealCbcHmac.Link2.Loop`, which this package cannot import (that module imports
-  `MegaDreifach.Link2.Helpers`, which needs the emitted Megadreifach module Scramble's
-  Generated/ lacks). Draft PR #144 moves them to one home in `MegaDreifach.Link2.Loop`,
-  next to `chain_loop`. #144 is not on `main` yet, so these copies stay; the next merge
-  of `main` after #144 lands deletes them and uses `MegaDreifach.Link2`'s (otherwise the
-  names are ambiguous under `open MegaDreifach.Link2`).
+  The loop tails `asc_tail`, `asc_tail_idx`, `desc_tail` are `MegaDreifach.Link2`'s
+  (`MegaDreifach.Link2.Loop`, imported through `ScrambleV2.Link2.Embed`).
 -/
 import ScrambleV2.Link2.Embed
 
@@ -21,33 +16,6 @@ theorem bind_ok_right' {ε α} (m : Except ε α) : (m >>= fun r => Except.ok r)
 
 theorem bind_pure_right {α} (m : Except SudoRt.Trap α) : (m >>= fun r => pure r) = m := by
   cases m <;> rfl
-
-/-- The emitted loop tail after the body continued with `s`: break on the last index,
-    else step the index. -/
-theorem asc_tail {S ρ : Type} (toN i : Nat) (hfit : FitsLen (i + 1)) (s : S) :
-    (if (Int.ofNat i == Int.ofNat toN) = true then
-        (Except.ok (SudoRt.Flow.brk (Int.ofNat i, s)) : Except SudoRt.Trap (SudoRt.Flow (Int × S) ρ))
-      else SudoRt.addI (Int.ofNat i) 1 >>= fun i' => Except.ok (SudoRt.Flow.cont (i', s))) =
-      if i = toN then .ok (.brk (Int.ofNat i, s)) else .ok (.cont (Int.ofNat (i + 1), s)) := by
-  by_cases h : i = toN
-  · subst h; simp [beq_int_iff]
-  · have hne : ¬ (Int.ofNat i = Int.ofNat toN) := fun e => h (Int.ofNat.inj e)
-    simp only [beq_int_iff, hne, if_false, h]
-    rw [addI_ofNat_one i hfit]
-    rfl
-
-/-- The same tail for a loop whose state is the index alone. -/
-theorem asc_tail_idx {ρ : Type} (toN i : Nat) (hfit : FitsLen (i + 1)) :
-    (if (Int.ofNat i == Int.ofNat toN) = true then
-        (Except.ok (SudoRt.Flow.brk (Int.ofNat i)) : Except SudoRt.Trap (SudoRt.Flow Int ρ))
-      else SudoRt.addI (Int.ofNat i) 1 >>= fun i' => Except.ok (SudoRt.Flow.cont i')) =
-      if i = toN then .ok (.brk (Int.ofNat i)) else .ok (.cont (Int.ofNat (i + 1))) := by
-  by_cases h : i = toN
-  · subst h; simp [beq_int_iff]
-  · have hne : ¬ (Int.ofNat i = Int.ofNat toN) := fun e => h (Int.ofNat.inj e)
-    simp only [beq_int_iff, hne, if_false, h]
-    rw [addI_ofNat_one i hfit]
-    rfl
 
 private theorem chain_inv_fromEnd {α ρ β : Type}
     (step : Int × α → Except SudoRt.Trap (SudoRt.Flow (Int × α) ρ))

@@ -174,18 +174,6 @@ theorem chain_eq {α ρ β}
       step after onRet = goal := by
   subst h0; exact chain_loop step after onRet f fromN toN hle hstep goal hafter
 
-theorem desc_tail {S ρ : Type} (i : Nat) (hfit : FitsLen i) (s : S) :
-    (if (Int.ofNat i == (0 : Int)) = true then
-        (Except.ok (SudoRt.Flow.brk (Int.ofNat i, s)) : Except SudoRt.Trap (SudoRt.Flow (Int × S) ρ))
-      else SudoRt.subI (Int.ofNat i) 1 >>= fun i' => Except.ok (SudoRt.Flow.cont (i', s))) =
-      if i = 0 then .ok (.brk (Int.ofNat i, s)) else .ok (.cont (Int.ofNat (i - 1), s)) := by
-  by_cases h : i = 0
-  · subst h; rfl
-  · have hne : ¬ (Int.ofNat i = (0 : Int)) := fun e => h (Int.ofNat.inj e)
-    simp only [beq_int_iff, hne, if_false, h]
-    rw [subI_ofNat_one i (Nat.pos_of_ne_zero h) hfit]
-    rfl
-
 theorem take_rev9 : ∀ i, i < 9 →
     (List.range 9).reverse.take (9 - i) = (List.range 9).reverse.take (8 - i) ++ [i] := by
   decide
@@ -331,7 +319,7 @@ theorem digest_bytes_refines (s o : Nat) (hs : s < 2 ^ 61) (ho : o < 2048) :
           rw [if_neg (show ¬ (Int.ofNat i < (0 : Int)) from
             Int.not_lt.mpr (Int.ofNat_zero_le i))]
           simp only [atL_bytesOf _ _ hil, ok_bind, appendL_spec, push_embed', pure_eq_ok]
-          rw [desc_tail i (fits_small (by omega)), take_rev9 i (by omega), List.map_append]
+          rw [show (0 : Int) = Int.ofNat 0 from rfl, desc_tail i (fits_small (by omega)), take_rev9 i (by omega), List.map_append]
           rfl
         case l5 =>
           intro i h1 h2

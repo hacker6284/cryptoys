@@ -78,10 +78,6 @@ private theorem lt_limb8_of_lt_limb {x : Nat} (hx : x < limbBase) : x < limbBase
   rw [Nat.pow_one] at hle
   exact Nat.lt_of_lt_of_le hx hle
 
-private theorem fits28 : FitsLen 28 := by
-  unfold FitsLen i64MaxNat
-  decide
-
 /-- Below the limb base `limbsOfNat` and `natLimbs` agree: `[]` or `[b]`. -/
 private theorem limbsOfNat_eq_natLimbs {b : Nat} (hb : b < limbBase) :
     limbsOfNat b = natLimbs b := by

@@ -35,8 +35,6 @@ theorem vhashAlg_bytes (msg : List Nat) : Bytes (vhashAlg msg) := by
 
 theorem hmacBlock_int : Doubledeal_cbc_hmac.hmac_block = Int.ofNat hmacBlock := rfl
 
-theorem fits28 : FitsLen hmacBlock := by unfold FitsLen i64MaxNat hmacBlock; decide
-
 theorem v_Hash_bytes (m : List Nat) (hb : Bytes m) (hfit : FitsBitlen m.length) :
     Megadreifach.v_Hash (embed m) = .ok (embed (vhashAlg m)) :=
   v_Hash_refines m ⟨hb, hfit⟩
@@ -85,12 +83,12 @@ theorem hmac_normalize_key_refines (key : List Nat) (hb : Bytes key)
       bind_ok_right]
     rw [take_prefix_refines _ _ (by rw [vhashAlg_length]; decide)
       (by rw [vhashAlg_length]; unfold FitsLen i64MaxNat; decide), ok_bind,
-      pad_zeros_refines _ _ (by rw [List.length_take]; omega) fits28, normalizeKey_long key h]
+      pad_zeros_refines _ hmacBlock (by rw [List.length_take]; omega) fits28, normalizeKey_long key h]
     have : ((vhashAlg key).take hmacBlock).length = hmacBlock := by
       rw [List.length_take, vhashAlg_length]; rfl
     rw [this, Nat.sub_self, List.replicate_zero, List.append_nil]
   · simp only [h, decide_False, Bool.false_eq_true, if_false, pure_eq_ok, bind_ok_right]
-    rw [pad_zeros_refines _ _ (by omega) fits28, normalizeKey_short key h]
+    rw [pad_zeros_refines _ hmacBlock (by omega) fits28, normalizeKey_short key h]
 
 theorem xorBytes_length (a b : List Nat) : (xorBytes a b).length = min a.length b.length := by
   simp [xorBytes]

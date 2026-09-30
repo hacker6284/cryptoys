@@ -50,7 +50,7 @@ theorem pad_iso7816_refines (msg : List Nat) (hb : Bytes msg) (hfit : FitsLen ms
   · rw [show ((1 : Int), embed (msg ++ [128])) = (Int.ofNat 1, embed (msg ++ [128])) from rfl]
     refine (push_loop 1 nz hpos (fun _ => 0) (msg ++ [128]) _ _ _ ?_).trans ?_
     · intro i l _ hi
-      have hfi : FitsLen (i + 1) := FitsLen.of_le fits28 (by unfold hmacBlock at hnzlt ⊢; omega)
+      have hfi : FitsLen (i + 1) := FitsLen.of_le fits28 (by unfold hmacBlock at hnzlt; omega)
       rw [if_neg (ofNat_not_gt hi)]
       simp only [ok_bind, SudoRt.appendL, show (0 : Int) = Int.ofNat 0 from rfl, push_embed]
       rw [asc_tail nz i hfi]

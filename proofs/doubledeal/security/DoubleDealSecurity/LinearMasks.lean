@@ -32,11 +32,11 @@
     `alignCount c c' n y` is the number of pairs (relabelling `α`, key tuple `L`) such that
     card `c` sits at the same seat in `y` and `α·y`, and card `c'` sits at the same seat in
     `encryptL n y L` and `encryptL n (α·y) L`.
-  * L9 `autoCorr_cardMask_v10Sym` (the `v10Sym` symmetry does not transfer to single-card
-    masks): for `(a, x) ≠ (0, 0)`, `autoCorr (cardMask s c) (v10Sym a x) = -52!`, the value of
-    every relabelling that moves `c` (from L5 and `GridCycleSurvival.v10Sym_fixfree`). So in
-    L6 these relabellings enter only through the constant, never through `alignCount`
-    (they fix no card, so they are in neither filter).
+  * L9 `autoCorr_cardMask_v10Sym` (a helper, not a headline): for `(a, x) ≠ (0, 0)`,
+    `autoCorr (cardMask s c) (v10Sym a x) = -52!`. An immediate corollary of L5 and
+    `GridCycleSurvival.v10Sym_fixfree`; its only content is the negative non-transfer: in L6
+    the nontrivial `v10Sym` enter only through the constant, like every relabelling that
+    moves `c`, never through `alignCount` (they fix no card, so they are in neither filter).
   * L10 `corr_keyedLayer_sign`: ONE keyed layer `x ↦ U(x ∘ k₁) ∘ k₂`, `U` any deck map
     sending decks to decks: `corr (keyedLayer U k₁ k₂) sgnDeck sgnDeck =
       sign k₁ · sign k₂ · corr U sgnDeck sgnDeck`. The keys only flip the sign.
@@ -345,11 +345,12 @@ theorem fullSumSqCorr_cardMask_seat (s s' c t t' c' : Fin 52) (n : ℕ) :
 
 /-! ## L9: the `v10Sym` symmetries do not show up in single-card masks -/
 
-/-- (PROVED) L9. For `(a, x) ≠ (0, 0)`, `autoCorr (cardMask s c) (v10Sym a x) = -52!`: the
-    SumRanks symmetries (which pass the proof's finalRound step on every deck,
-    `FullCipher.dpFCount_v10Sym`) move every card (`v10Sym_fixfree`), so in L6 they enter
-    only through the same constant as every relabelling that moves `c`, and never through
-    `alignCount`. -/
+/-- (PROVED) L9 (a helper). An immediate corollary of L5 (`autoCorr_cardMask`) and
+    `v10Sym_fixfree`: for `(a, x) ≠ (0, 0)`, `autoCorr (cardMask s c) (v10Sym a x) = -52!`.
+    Its only content is the negative non-transfer: the SumRanks symmetries `v10Sym` (which
+    pass the proof's finalRound step on every deck, `FullCipher.dpFCount_v10Sym`) enter L6
+    only through the same constant as every relabelling that moves `c`, never through
+    `alignCount`. Nothing about the cipher's layers. -/
 theorem autoCorr_cardMask_v10Sym (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
     (s c : Fin 52) : autoCorr (cardMask s c) (v10Sym a x) = -(Nat.factorial 52 : ℤ) := by
   rw [autoCorr_cardMask, if_neg (v10Sym_fixfree a x hne c)]

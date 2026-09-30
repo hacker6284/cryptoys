@@ -514,7 +514,6 @@ PACKAGES = {
             "DoubleDeal.Security.LinearMasks.fullSumSqCorr_cardMask",
             "DoubleDeal.Security.LinearMasks.fullSumSqCorr_cardMask_seat",
             "DoubleDeal.Security.LinearMasks.alignCount_eq",
-            "DoubleDeal.Security.LinearMasks.autoCorr_cardMask_v10Sym",
             "DoubleDeal.Security.LinearMasks.corr_keyedLayer_sign",
             "DoubleDeal.Security.LinearMasks.sum_fullDiffCount",
             "DoubleDeal.Security.LinearMasks.sum_fullDiffCount_left",

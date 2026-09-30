@@ -159,12 +159,12 @@ nothing proved for the real PassKey schedule, and no numeric bound. The single-c
 * L7 `alignCount_eq`: `alignCount c c' n y` is the number of pairs (relabelling `α`, key
   tuple `L`) for which card `c` keeps its seat between `y` and `α·y` and card `c'` keeps
   its seat between the two ciphertexts: a truncated differential on one card's seat.
-* L9 `autoCorr_cardMask_v10Sym`: for `(a, x) ≠ (0, 0)`,
-  `autoCorr (cardMask s c) (v10Sym a x) = −52!`. The SumRanks symmetries `v10Sym`, which
-  pass the proof's finalRound step on every deck, fix no card (`v10Sym_fixfree`), so they
-  enter L6 only through the constant term, like every relabelling that moves `c`. Their
-  exact propagation does not transfer to single-card masks. This is a statement about the
-  masks and the relabellings, not about the cipher's layers.
+* L9 `autoCorr_cardMask_v10Sym` (a helper, not a headline): for `(a, x) ≠ (0, 0)`,
+  `autoCorr (cardMask s c) (v10Sym a x) = −52!`. This is an immediate corollary of L5 and
+  `v10Sym_fixfree` (the nontrivial `v10Sym` fix no card). Its only content is negative,
+  a non-transfer: the SumRanks symmetries `v10Sym`, which pass the proof's finalRound step
+  on every deck, enter L6 only through the constant term, like every relabelling that
+  moves `c`. It says nothing about the cipher's layers.
 * L10 `corr_keyedLayer_sign`: through ONE keyed layer `x ↦ U(x ∘ k₁) ∘ k₂` (`U` any deck
   map sending decks to decks), `corr (keyedLayer U k₁ k₂) sgnDeck sgnDeck =
   sign k₁ · sign k₂ · corr U sgnDeck sgnDeck`: the keys only flip the sign. One layer only;
@@ -211,14 +211,25 @@ model `../v12-keysched/dd12.h`. No theorem uses any of these numbers.
   `E[sgn(x) sgn(stem x)] = 2009561917/267966441044041684179375 ≈ 7.5·10^-15`. This value
   is not in Lean. It rests on the script's model of the stem's column turns: the sign of
   `stem(x)` times the sign of `x` is `(−1)^(sum of the 13 column turns)`, and the turns
-  depend only on the suit pattern. That model is checked only as follows.
-  `stem_sign_check.c` (`logs/stem_sign_check.log`; 4·10^6 decks, seed (7,7,7)) samples the
-  identity, with 0 failures, and the joint distribution of the first two column turns.
-  `stem_turn_dp_check.py` (`logs/stem_turn_dp_check.log`) computes that distribution
-  exactly from the model: it is uniform (0.0625 each). The 16 sampled values are within
-  3.5·10^-4 of it (at most 2.9 sampling standard deviations of 1.2·10^-4). The per-deck turn function of the model is NOT compared with the C
-  stem deck by deck. By L10 (one keyed layer), this would be the key-free size of the
-  sign correlation through one keyed stem layer; nothing is claimed for several layers.
+  depend only on the suit pattern (the grid after the row step). That model is checked
+  only by sampling, as follows; the checks are not proofs.
+  - `stem_sign_check.c` (`logs/stem_sign_check.log`; 4·10^6 decks, seed (7,7,7)) samples
+    the identity, with 0 failures, and the joint distribution of the first two column
+    turns. `stem_turn_dp_check.py` (`logs/stem_turn_dp_check.log`) computes that
+    distribution exactly from the model: it is uniform (0.0625 each). The 16 sampled
+    values are within 3.5·10^-4 of it (at most 2.9 sampling standard deviations of
+    1.2·10^-4).
+  - Deck by deck: `stem_turn_dump.c` prints, for 2·10^5 decks (seed (7,7,8)), the suit
+    grid after the row step and the 13 turns the C stem applies;
+    `stem_turn_model_check.py` (`logs/stem_turn_model_check.log`) recomputes every turn
+    with the model's own functions. 0 of the 2·10^5 decks have any mismatch. (With the
+    model's column rotation reversed or removed, almost every deck mismatches, so the
+    check does see the model.) The C stem is `../v12-keysched/dd12.h`, cross-checked
+    against the Python port and the vectors there.
+  The rest of the DP (the reduction to a uniform suit pattern and the transfer-matrix
+  count) is not checked beyond its own assertion that it counts all suit patterns.
+  By L10 (one keyed layer), this value would be the key-free size of the sign correlation
+  through one keyed stem layer; nothing is claimed for several layers.
 
 ## Suggested next steps (not done)
 

@@ -15,12 +15,6 @@ import ScrambleV2.SpecV1
 namespace ScrambleV2.Link2
 open MegaDreifach.Link2
 
-theorem turnsN_eq_turnsK (f : Face) : ∀ (k : Nat) (cube : Cube), turnsN f k cube = turnsK f k cube
-  | 0, _ => rfl
-  | k + 1, cube => by
-    change quarter f (turnsN f k cube) = quarter f (turnsK f k cube)
-    rw [turnsN_eq_turnsK f k cube]
-
 theorem v1_tables (n : Nat) (hn : n < 16) :
     SudoRt.atL Scramble.v1_face (Int.ofNat n) = .ok (v1Move n).1.code ∧
     SudoRt.atL Scramble.v1_turns (Int.ofNat n) = .ok (Int.ofNat (v1Move n).2) ∧
@@ -62,7 +56,7 @@ theorem apply_v1_block_digest (v : Int) (pend : Array Int) (tot proc : Int) (cub
     · have hkl : k < (ny.drop b).length := by rw [List.length_drop]; omega
       rw [List.take_succ, List.getElem?_eq_getElem hkl, Option.toList_some, List.foldl_append, hc,
         List.getElem_drop]
-      simp [moveV1, turnsN_eq_turnsK]
+      simp [moveV1]
     · dsimp only
       rw [if_neg (ofNat_not_gt hk)]
       simp only [addI_ofNat b k (FitsLen.of_le hfit (by omega)), ok_bind, atL_embed ny _ hbk, hf,
@@ -256,9 +250,6 @@ theorem apply_ready_v1_digest (tot : Int) (st : Array Scramble.Step) (dn : Bool)
           rw [show ny.length - 1 + 1 - ny.length / 8 * 8 = (ny.drop (ny.length / 8 * 8)).length by
             rw [List.length_drop]; omega, List.take_length, Nat.mul_comm]
         · simp [embed]
-
-/-- The first `n` nybbles of the repeated v1 cycle. -/
-def tapeF (n : Nat) : List Nat := (List.range n).map fun i => cycleV1.getD (i % 8) 0
 
 /-- v1 pad count: cycle nybbles appended after the marker to reach a multiple of 8. -/
 def padKV1 (t : Nat) : Nat := (8 - (t + 1) % 8) % 8
@@ -455,7 +446,7 @@ theorem walkV1_append8 (cube : Cube) (xs ys : List Nat) (m : Nat) (hx : xs.lengt
 /-- `update` on a digest-only v1 state (not done) with `processed = 8q`: it appends the
     message's nybbles to `pending`, walks every complete block of `pending` (the model's
     `walkV1`), and keeps the trailing partial block in `pending`. -/
-theorem update_v1 (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t q : Nat) (cube : Cube)
+theorem update_v1_digest (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t q : Nat) (cube : Cube)
     (hR : Reach cube) (st : Array Scramble.Step) (msg : List Nat) (hb : ∀ b ∈ msg, b ≤ 255)
     (hfitP : FitsLen (8 * q + ny.length + 2 * msg.length + 8))
     (hfitT : FitsLen (t + 2 * msg.length)) :
@@ -557,7 +548,7 @@ theorem padTailV1_length (t : Nat) : (padTailV1 t).length ≤ 32 := by
 /-- `evaluate` on a digest-only v1 state (not done) with `total = t` and `processed = 8q`:
     `pad`, `apply_ready`, `finish`, `index_bytes` return `.ok`, and the digest is the model's
     `digestOf` after walking `pending ++ padTailV1 t` and seating. -/
-theorem evaluate_v1 (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t q : Nat) (cube : Cube)
+theorem evaluate_v1_digest (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t q : Nat) (cube : Cube)
     (hR : Reach cube) (st : Array Scramble.Step) (ht : FitsLen (t + 25))
     (hp : FitsLen (8 * q + ny.length + 40)) :
     ∃ ev s' d, Scramble.evaluate
@@ -606,12 +597,12 @@ theorem scramble_v1_digest_refines_digestV1 (msg : List Nat) (hb : ∀ b ∈ msg
       Scramble.evaluate s1 = .ok (ev, s2) ∧
       ev.sudo_10Evaluation_6digest = embed (digestV1 msg) := by
   have hL : (nybbles msg).length = 2 * msg.length := nybbles_length msg
-  obtain ⟨c1, hu, hw1, r1⟩ := update_v1 [] (by simp) 0 0 solvedCube ⟨_, reach_solved⟩ #[] msg
+  obtain ⟨c1, hu, hw1, r1⟩ := update_v1_digest [] (by simp) 0 0 solvedCube ⟨_, reach_solved⟩ #[] msg
     hb (FitsLen.of_le hlen (by simp)) (FitsLen.of_le hlen (by simp))
   simp only [List.nil_append, Nat.zero_add] at hu hw1
   have hRl : ∀ x ∈ (nybbles msg).drop (8 * ((nybbles msg).length / 8)), x < 16 :=
     fun x hx => nybbles_lt msg hb x (List.mem_of_mem_drop hx)
-  obtain ⟨ev, s2, d, he, hd, hdig⟩ := evaluate_v1 _ hRl (2 * msg.length)
+  obtain ⟨ev, s2, d, he, hd, hdig⟩ := evaluate_v1_digest _ hRl (2 * msg.length)
     ((nybbles msg).length / 8) c1 r1 #[] (FitsLen.of_le hlen (by omega))
     (FitsLen.of_le hlen (by rw [List.length_drop, hL]; omega))
   refine ⟨_, _, ev, s2, ?_, hu, he, ?_⟩

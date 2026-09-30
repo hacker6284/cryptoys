@@ -153,11 +153,6 @@ theorem quarter_unit (f : Face) (cube : Cube) (hu : ∀ c ∈ cube, Unit3 c.pos)
 theorem quarter_length (f : Face) (cube : Cube) : (quarter f cube).length = cube.length := by
   simp [quarter]
 
-/-- `n` quarter turns of one face. -/
-def turnsN (f : Face) : Nat → Cube → Cube
-  | 0, cube => cube
-  | n + 1, cube => quarter f (turnsN f n cube)
-
 theorem iterate_quarter_unit (f : Face) (n : Nat) (cube : Cube) (hu : ∀ c ∈ cube, Unit3 c.pos) :
     ∀ c ∈ turnsN f n cube, Unit3 c.pos := by
   induction n generalizing cube with

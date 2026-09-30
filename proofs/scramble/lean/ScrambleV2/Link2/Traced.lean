@@ -194,7 +194,7 @@ theorem tapeTagsV2_take_succ (p : Nat) (ny : List Nat) (i : Nat) (hi : i < ny.le
     List.length_take, Nat.min_eq_left (Nat.le_of_lt hi)]
   simp [tapeTagsV2]
 
-/-- `apply_ready` on a v2 state, traced or not: as `apply_ready_v2`, and the appended trace
+/-- `apply_ready` on a v2 state, traced or not: as `apply_ready_v2_digest`, and the appended trace
     steps are the tape's (`tapeTagsV2`, blocks numbered from `processed`). -/
 theorem apply_ready_v2_gen (tot : Int) (st : Array Scramble.Step) (tr dn : Bool) (cube : Cube)
     (hR : Reach cube) (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (p : Nat)
@@ -250,7 +250,7 @@ theorem apply_ready_v2_gen (tot : Int) (st : Array Scramble.Step) (tr dn : Bool)
       simp only [e]
       rfl
 
-/-- `update` on a v2 state (not done), traced or not, with a byte message: as `update_v2`,
+/-- `update` on a v2 state (not done), traced or not, with a byte message: as `update_v2_digest`,
     and the appended trace steps are those of the walked tape. -/
 theorem update_v2_gen (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t p : Nat) (cube : Cube)
     (hR : Reach cube) (st : Array Scramble.Step) (tr : Bool) (msg : List Nat)
@@ -364,7 +364,7 @@ theorem finish_gen (v : Int) (pend : Array Int) (tot proc : Int) (cube : Cube) (
   simp only [Array.append_assoc, pure_eq_ok]
 
 /-- `evaluate` on a v2 state (not done), traced or not, with `total = t`: as
-    `evaluate_v2`, and the returned trace is the state's steps followed by those of the
+    `evaluate_v2_digest`, and the returned trace is the state's steps followed by those of the
     padding walk and the closer. -/
 theorem evaluate_v2_gen (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t p : Nat) (cube : Cube)
     (hR : Reach cube) (st : Array Scramble.Step) (tr : Bool) (ht : FitsLen (t + 1))
@@ -479,7 +479,7 @@ theorem updates_evaluate_v2 (tr : Bool) (msgs : List (List Nat))
     token, nybble, block and index are the SPEC's (`tapeTagsV2`, `closerTags`), each with a
     facelet string of 54 color letters. The `up` / `front` letters and which letters the
     facelet strings hold are not claimed. -/
-theorem scramble_v2_refines_digestV2_traced (msg : List Nat) (hb : ∀ b ∈ msg, b ≤ 255)
+theorem scramble_v2_refines_digestV2 (msg : List Nat) (hb : ∀ b ∈ msg, b ≤ 255)
     (hlen : FitsLen (2 * msg.length + 12)) :
     ∃ s0 s1 ev s2, Scramble.scramble_v2 = .ok s0 ∧
       Scramble.update s0 (embed msg) = .ok s1 ∧
@@ -502,7 +502,8 @@ theorem scramble_v2_refines_digestV2_traced (msg : List Nat) (hb : ∀ b ∈ msg
 /-- The padded v2 tape has `max (len + 1) 12` nybbles; so a traced message of at most 5
     bytes has `3·12 + 3 = 39` steps, the SPEC table's Steps column. -/
 theorem padV2_length (ny : List Nat) : (padV2 ny).length = max (ny.length + 1) 12 := by
-  simp only [padV2, List.length_append, List.length_map, List.length_range, List.length_singleton]
+  simp only [padV2, tapeI, List.length_append, List.length_map, List.length_range,
+    List.length_singleton]
   omega
 
 end ScrambleV2.Link2

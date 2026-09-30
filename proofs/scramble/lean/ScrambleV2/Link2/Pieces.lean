@@ -19,10 +19,6 @@ theorem sticker_on_refines (c : Cubie) :
   simp only [axisCode, List.mem_cons, List.mem_singleton, List.not_mem_nil, or_false] at hka
   rcases hka with rfl | rfl | rfl | rfl | rfl | rfl <;> rfl
 
-/-- The SPEC's color letters. -/
-def _root_.ScrambleV2.Color.letter : Color → Int
-  | .W => 87 | .Y => 89 | .R => 82 | .O => 79 | .B => 66 | .G => 71
-
 theorem color_char_refines (col : Color) :
     Scramble.color_char col.code = .ok col.letter := by
   cases col <;> rfl

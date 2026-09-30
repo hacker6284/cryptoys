@@ -107,10 +107,6 @@ theorem hex_digit_refines (n : Nat) (h : n < 16) :
     Scramble.hex_digit (Int.ofNat n) = .ok #[hexChar n] :=
   hex_digit_all n (List.mem_range.mpr h)
 
-/-- The face letters `U D R L F B`. -/
-def _root_.ScrambleV2.Face.letter : Face → Int
-  | .U => 85 | .D => 68 | .R => 82 | .L => 76 | .F => 70 | .B => 66
-
 /-- Move name: the face letter, then `2` for a half turn or `'` for three quarters. -/
 def moveName (f : Face) (t : Int) : Array Int :=
   #[f.letter] ++ (if t = 2 then #[50] else if t = 3 then #[39] else #[])

@@ -21,6 +21,14 @@ def Color.code : Color → Int
 def Face.code : Face → Int
   | .U => 0 | .D => 1 | .R => 2 | .L => 3 | .F => 4 | .B => 5
 
+/-- The SPEC's color letters. -/
+def Color.letter : Color → Int
+  | .W => 87 | .Y => 89 | .R => 82 | .O => 79 | .B => 66 | .G => 71
+
+/-- The face letters `U D R L F B`. -/
+def Face.letter : Face → Int
+  | .U => 85 | .D => 68 | .R => 82 | .L => 76 | .F => 70 | .B => 66
+
 end ScrambleV2
 
 namespace ScrambleV2.Link2

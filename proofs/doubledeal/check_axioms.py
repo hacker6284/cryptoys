@@ -15,7 +15,7 @@
     python3 proofs/doubledeal/check_axioms.py cbc-hmac  # proofs/doubledeal-cbc-hmac/lean
                                           # (DoubleDeal-CBC-HMAC Link 2)
     python3 proofs/doubledeal/check_axioms.py scramble  # proofs/scramble/lean
-                                          # (Scramble v2 Link 2, in progress)
+                                          # (Scramble Link 2: v2 and v1 digest paths)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -59,8 +59,9 @@ axiom) fails, as does a Lean error.
   `--selftest` also requires every `export func` of the package's sudo to appear in
   its README's "Emitted function" column, and only exports there (LINK2_EXPORT_TABLES).
 - scramble: like cbc-hmac (mode "all", key "full", no KNOWN_SORRY) for
-  proofs/scramble/lean (root `ScrambleV2`, the Scramble v2 Link 2 package; digest-only
-  headline, no trace claim); required: the theorems proofs/scramble/README.md cites
+  proofs/scramble/lean (root `ScrambleV2`, the Scramble Link 2 package: v2 digest-only
+  and traced headlines, several updates, v1 digest-only; trace step fields, not letters);
+  required: the theorems proofs/scramble/README.md cites
   (SCRAMBLE_LINK2). `--selftest` checks its "Emitted function" column against
   primitives/hash/scramble/scramble.sudo too (LINK2_EXPORT_TABLES).
 
@@ -405,7 +406,7 @@ CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
     "unpad_iso7816_refines", "unpad_iso7816_rejects", "mac_input_refines",
     "derive_keys_refines", "derive_keys_empty", "cbc_chain_from_cipher_block_refines",
     "tags_equal_refines"]}
-# proofs/scramble/lean (Scramble v2 Link 2, digest-only headline): every theorem
+# proofs/scramble/lean (Scramble Link 2; scope in its README): every theorem
 # proofs/scramble/README.md cites by name; `--selftest` re-derives the list the same way
 # as MD_README_THEOREMS.
 SCRAMBLE_LEAN = ROOT.parent / "scramble" / "lean"
@@ -463,10 +464,10 @@ SCRAMBLE_LINK2 = {
     "ScrambleV2.Link2.move_name_refines",
     "ScrambleV2.Link2.pad_v2",
     "ScrambleV2.Link2.padV2_eq",
-    "ScrambleV2.Link2.apply_ready_v2",
-    "ScrambleV2.Link2.update_v2",
+    "ScrambleV2.Link2.apply_ready_v2_digest",
+    "ScrambleV2.Link2.update_v2_digest",
     "ScrambleV2.Link2.finish_digest",
-    "ScrambleV2.Link2.evaluate_v2",
+    "ScrambleV2.Link2.evaluate_v2_digest",
     "ScrambleV2.Link2.scramble_v2_digest_refines_digestV2",
     "ScrambleV2.Link2.push_step_gen",
     "ScrambleV2.Link2.do_move_gen",
@@ -478,7 +479,7 @@ SCRAMBLE_LINK2 = {
     "ScrambleV2.Link2.evaluate_v2_gen",
     "ScrambleV2.Link2.updates_v2",
     "ScrambleV2.Link2.updates_evaluate_v2",
-    "ScrambleV2.Link2.scramble_v2_refines_digestV2_traced",
+    "ScrambleV2.Link2.scramble_v2_refines_digestV2",
     "ScrambleV2.Link2.padV2_length",
     "ScrambleV2.Kat.kat_v1_empty",
     "ScrambleV2.Kat.kat_v1_a",
@@ -489,8 +490,8 @@ SCRAMBLE_LINK2 = {
     "ScrambleV2.Link2.apply_ready_v1_digest",
     "ScrambleV2.Link2.pad_v1",
     "ScrambleV2.Link2.padV1_eq",
-    "ScrambleV2.Link2.update_v1",
-    "ScrambleV2.Link2.evaluate_v1",
+    "ScrambleV2.Link2.update_v1_digest",
+    "ScrambleV2.Link2.evaluate_v1_digest",
     "ScrambleV2.Link2.walkV1_append8",
     "ScrambleV2.Link2.scramble_v1_digest_refines",
     "ScrambleV2.Link2.scramble_v1_digest_refines_digestV1",
@@ -503,8 +504,9 @@ SCRAMBLE_LINK2 = {
 # position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
 # one-line wrappers MegaDreifachBody, HashDeckBodyFrom and MegaDreifachBodyFrom have
 # none. Registering it (wrapper theorems plus an 11-row table) is a planned follow-up.
-# Scramble is listed: its table has a row for each of the 7 exports, and the two v1 rows
-# say v1 is out of scope (no theorem), so the gap is in the table rather than silent.
+# Scramble is listed: its table has a row for each of the 7 exports. `scramble_v1_digest`
+# has three theorems; the traced `scramble_v1` row says it is not claimed (no theorem), so
+# that gap is in the table rather than silent.
 LINK2_EXPORT_TABLES = {
     "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                  / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),

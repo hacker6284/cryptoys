@@ -8,7 +8,8 @@
   and to every sticker direction; Rule B and the seat apply the matrix with rows
   `n = e × t`, `e`, `t`. The digest reads the seated cube by the SPEC's slot tables.
 
-  v2 only. No trace (the trace text is not modelled; see README). Not a hash-security
+  Written for v2; the v1 model (`SpecV1.lean`) builds on its cube, moves, Rule B, seat
+  and digest. No trace (the trace text is not modelled; see README). Not a hash-security
   claim. Where the SPEC leaves a case undefined (no cubie at a spot, a sticker missing,
   a set of colors that is no piece, a color with no center), the model answers `none`;
   `Link2/Reach.lean` proves that never happens on the walk.
@@ -108,6 +109,11 @@ def moveCubie (g : V3 → V3) (c : Cubie) : Cubie :=
 def quarter (f : Face) (cube : Cube) : Cube :=
   cube.map fun c => if f.onFace c.pos then moveCubie f.map c else c
 
+/-- SPEC "Moves": `n` quarter turns of one face (a half turn is two, a prime is three). -/
+def turnsN (f : Face) : Nat → Cube → Cube
+  | 0, cube => cube
+  | n + 1, cube => quarter f (turnsN f n cube)
+
 /-! ## Rule B, closer and seat -/
 
 /-- The color on `c` facing `d`. -/
@@ -174,11 +180,14 @@ def symbolV2 (cube : Cube) (n : Nat) : Option Cube :=
 def nybbles (msg : List Nat) : List Nat :=
   msg.flatMap fun b => [b / 16, b % 16]
 
+/-- The first `n` nybbles of the repeated v2 pad cycle `6 0 7 1` (the emitted `tape_i`). -/
+def tapeI (n : Nat) : List Nat := (List.range n).map fun k => [6, 0, 7, 1].getD (k % 4) 0
+
 /-- SPEC `scramble_v2` padding: append the marker `8`; while the tape is shorter than
     12 nybbles, append the cycle `6 0 7 1`. -/
 def padV2 (ny : List Nat) : List Nat :=
   let t := ny ++ [8]
-  t ++ (List.range (12 - t.length)).map fun k => [6, 0, 7, 1].getD (k % 4) 0
+  t ++ tapeI (12 - t.length)
 
 def walkV2 (cube : Cube) (tape : List Nat) : Option Cube :=
   tape.foldlM symbolV2 cube

@@ -25,15 +25,22 @@ Expected TAP: **15/15**. Pin and regenerating: [`../ANTI_DRIFT.md`](../ANTI_DRIF
 
 ## Link 2: `lean/ScrambleV2`
 
-The Lake package `lean/` (library `ScrambleV2`, Lean 4.14, no Mathlib) is the Link 2
-work for `scramble_v2`: a hand-written model of the v2 digest, and theorems that the
-emitted Lean computes it. **The digest headline is proved**, for the digest-only and the traced
-constructor and for several updates; the trace's step fields are proved, not its letters
-(see the end of this section). The digest-only v1 path is also proved against a v1 model. What is proved, all
-checked by the axiom gate (`check_axioms.py scramble`: only `propext`,
-`Classical.choice`, `Quot.sound`; no `sorry`, no `native_decide`):
+Correctness of the emitted code only. Scramble v2 is broken; see Security in the SPEC and
+`proofs/scramble/security/` (#150).
 
-**The model** (`ScrambleV2/Spec.lean`), written from the SPEC, v2 only: cubies on integer
+The Lake package `lean/` (library `ScrambleV2`, Lean 4.14, no Mathlib) is the Link 2
+work for `scramble.sudo`: a hand-written model of the v2 digest, and theorems that the
+emitted Lean computes it. Despite its name, the library also holds v1: a v1 model on the
+same cube, and the digest-only v1 path. **The digest headline is proved**, for the
+digest-only and the traced constructor and for several updates; the trace's step fields
+are proved, not its letters (see the end of this section). The digest-only v1 path is
+proved against the v1 model. Theorem names ending in `_digest` hold for `traced = false`,
+names ending in `_gen` for either value (`pad_v1` and `pad_v2` hold for either too).
+What is proved, all checked by the axiom gate (`check_axioms.py scramble`: only
+`propext`, `Classical.choice`, `Quot.sound`; no `sorry`, no `native_decide`):
+
+**The model** (`ScrambleV2/Spec.lean`), written from the SPEC for v2 (the v1 model below
+builds on its cube, moves, Rule B, seat and digest): cubies on integer
 coordinates, each a position plus stickers (a color facing a direction); the SPEC's face
 maps; Rule B's matrix with rows `e × t`, `e`, `t`; the closer and seat; the digest by the
 SPEC's slot tables, with `co` packed little-endian in base 3. `digestV2? msg` is an
@@ -133,15 +140,15 @@ field by field, so each statement names every field that changes. All are for
   and then the cycle `6 0 7 1` up to 12 nybbles, as the model pads; nothing else changes.
   `padV2_eq`: the model's padding of a tape is that tape followed by the same suffix,
   taking `t` as the tape's length.
-- `apply_ready_v2`: on a reachable cube with pending nybbles below 16, `apply_ready`
+- `apply_ready_v2_digest`: on a reachable cube with pending nybbles below 16, `apply_ready`
   applies every pending nybble as one v2 symbol (the model's walk over them), empties
   `pending`, and advances `processed` by their count (the sum fitting `i64`).
-- `update_v2`: on a state that is not done, with a byte message (every element at most
+- `update_v2_digest`: on a state that is not done, with a byte message (every element at most
   255), `update` appends the message's nybbles (high first), then does the above;
   `total` grows by twice the message length.
 - `finish_digest`: `finish` is the model's closer and seat (`F2`, `B2`, Rule B with
   `up = W`, `front = G`) and sets `done`.
-- `evaluate_v2`: on a state that is not done with `total = t`, `evaluate` (`pad`,
+- `evaluate_v2_digest`: on a state that is not done with `total = t`, `evaluate` (`pad`,
   `apply_ready`, `finish`, `index_bytes`) returns `.ok`, and the digest is the model's
   digest of the cube reached by walking pending plus the padding and seating.
 
@@ -174,7 +181,7 @@ which letters a facelet string holds, are not claimed.
   `update(a || b)`). The trace is as above for the padded concatenation plus the closer,
   and on a digest-only state it is empty. Every message must be bytes, with twice the
   total length plus 12 fitting `i64`.
-- `scramble_v2_refines_digestV2_traced`: the traced constructor `scramble_v2`, one
+- `scramble_v2_refines_digestV2`: the traced constructor `scramble_v2`, one
   `update`, `evaluate`. Digest `embed (digestV2 msg)`. The trace's kind / move / nybble /
   block / index fields are the SPEC's steps for the padded tape and the closer; each
   facelet string is 54 color letters; there are `3 · (padded length) + 3` steps.
@@ -197,9 +204,10 @@ cycle `6 0 7 1 8 2 9 3` to a multiple of 8 and to at least 24. The v1 trace is n
   block, and keeps the trailing partial block in `pending`.
 - `pad_v1`, `padV1_eq`: `pad` on a v1 state with `total = t` appends the marker, the cycle
   up to a multiple of 8, then the cycle again up to 24 nybbles, as the model pads.
-- `update_v1`, `evaluate_v1`: as `update_v2` and `evaluate_v2`, for a digest-only v1
-  state with `processed = 8q`. `walkV1_append8`: walking whole blocks then the rest is
-  walking the concatenation, so the partial block left in `pending` meets the padding.
+- `update_v1_digest`, `evaluate_v1_digest`: as `update_v2_digest` and `evaluate_v2_digest`,
+  for a digest-only v1 state with `processed = 8q`. `walkV1_append8`: walking whole
+  blocks then the rest is walking the concatenation, so the partial block left in
+  `pending` meets the padding.
 - `scramble_v1_digest_refines`: `scramble_v1_digest` is `fresh(1, false)`.
 - `scramble_v1_digest_refines_digestV1`: for `msg : List Nat` with every element at most
   255 and `2 · msg.length + 40` fitting `i64`,
@@ -222,9 +230,9 @@ v1 constructor `scramble_v1` and the v1 trace; several v1 updates.
 | Emitted function | Theorem | Domain |
 | --- | --- | --- |
 | `scramble_v2_digest` | `scramble_v2_digest_refines`, `fresh_refines` | none |
-| `scramble_v2` | `scramble_v2_refines`, `fresh_refines`, `scramble_v2_refines_digestV2_traced` | byte message, `2·len + 12` fits i64; trace fields as above |
-| `update` | `update_v2`, `update_v2_gen`, `updates_evaluate_v2`, `update_v1` | v2 state (or digest-only v1 state with `processed = 8q`), not done, pending nybbles below 16, reachable cube; byte messages; counts fit i64 |
-| `evaluate` | `evaluate_v2`, `evaluate_v2_gen`, `scramble_v2_digest_refines_digestV2`, `evaluate_v1`, `scramble_v1_digest_refines_digestV1` | as `update` |
+| `scramble_v2` | `scramble_v2_refines`, `fresh_refines`, `scramble_v2_refines_digestV2` | byte message, `2·len + 12` fits i64; trace fields as above |
+| `update` | `update_v2_digest`, `update_v2_gen`, `updates_evaluate_v2`, `update_v1_digest` | v2 state (or digest-only v1 state with `processed = 8q`), not done, pending nybbles below 16, reachable cube; byte messages; counts fit i64 |
+| `evaluate` | `evaluate_v2_digest`, `evaluate_v2_gen`, `scramble_v2_digest_refines_digestV2`, `evaluate_v1_digest`, `scramble_v1_digest_refines_digestV1` | as `update` |
 | `solved_facelets` | `solved_facelets_ok` | none (returns 54 color letters) |
 | `scramble_v1_digest` | `scramble_v1_digest_refines`, `fresh_refines`, `scramble_v1_digest_refines_digestV1` | byte message, `2·len + 40` fits i64; one `update` |
 | `scramble_v1` | none: the traced v1 constructor is not claimed | |

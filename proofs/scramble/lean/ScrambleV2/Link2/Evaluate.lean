@@ -15,9 +15,6 @@ import ScrambleV2.Link2.Index
 namespace ScrambleV2.Link2
 open MegaDreifach.Link2
 
-/-- The first `n` nybbles of the SPEC's v2 pad cycle `6 0 7 1`. -/
-def tapeI (n : Nat) : List Nat := (List.range n).map fun k => [6, 0, 7, 1].getD (k % 4) 0
-
 /-- What `pad` appends to a v2 tape when `total = t`: the marker `8`, then the cycle up to
     12 nybbles. -/
 def padTailV2 (t : Nat) : List Nat := 8 :: tapeI (12 - (t + 1))
@@ -101,7 +98,7 @@ theorem walkV2_take_succ (cube : Cube) (ny : List Nat) (i : Nat) (hi : i < ny.le
   rw [List.take_succ, List.getElem?_eq_getElem hi, walkV2_append]
   simp [walkV2]
 
-theorem apply_ready_v2 (v tot proc : Int) (st : Array Scramble.Step) (dn : Bool) (cube : Cube)
+theorem apply_ready_v2_digest (v tot proc : Int) (st : Array Scramble.Step) (dn : Bool) (cube : Cube)
     (hR : Reach cube) (hv : v = 2) (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (p : Nat)
     (hp : proc = Int.ofNat p) (hfit : FitsLen (p + ny.length)) :
     ∃ cube', Scramble.apply_ready
@@ -183,7 +180,7 @@ theorem embed_push (l : List Nat) (x : Nat) : (embed l).push (Int.ofNat x) = emb
 /-- `update` on a digest-only v2 state (not done) with a byte message: it appends the
     message's nybbles to `pending` and walks all of `pending` (the model's `walkV2`), leaving
     `pending` empty; `total` and `processed` grow by the nybble count. -/
-theorem update_v2 (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t p : Nat) (cube : Cube)
+theorem update_v2_digest (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t p : Nat) (cube : Cube)
     (hR : Reach cube) (st : Array Scramble.Step) (msg : List Nat) (hb : ∀ b ∈ msg, b ≤ 255)
     (hfitP : FitsLen (p + ny.length + 2 * msg.length)) (hfitT : FitsLen (t + 2 * msg.length)) :
     ∃ cube', Scramble.update
@@ -199,7 +196,7 @@ theorem update_v2 (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t p : Nat) (cube
     · exact nybbles_lt msg hb x h
   have hlen : (ny ++ nybbles msg).length = ny.length + 2 * msg.length := by
     rw [List.length_append, nybbles_length]
-  obtain ⟨c', hc', hw, hr⟩ := apply_ready_v2 2 (Int.ofNat (t + 2 * msg.length)) (Int.ofNat p) st
+  obtain ⟨c', hc', hw, hr⟩ := apply_ready_v2_digest 2 (Int.ofNat (t + 2 * msg.length)) (Int.ofNat p) st
     false cube hR rfl (ny ++ nybbles msg) hny' p rfl (by rw [hlen, ← Nat.add_assoc]; exact hfitP)
   rw [hlen, ← Nat.add_assoc] at hc'
   refine ⟨c', ?_, hw, hr⟩
@@ -309,7 +306,7 @@ theorem padV2_eq (ny : List Nat) : padV2 ny = ny ++ padTailV2 ny.length := by
 /-- `evaluate` on a digest-only v2 state (not done) with `total = t`: `pad`, `apply_ready`,
     `finish`, `index_bytes` return `.ok`, and the digest is the model's `digestOf` after
     walking `pending ++ padTailV2 t` and seating. -/
-theorem evaluate_v2 (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t p : Nat) (cube : Cube)
+theorem evaluate_v2_digest (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t p : Nat) (cube : Cube)
     (hR : Reach cube) (st : Array Scramble.Step) (ht : FitsLen (t + 1))
     (hp : FitsLen (p + ny.length + 12)) :
     ∃ ev s' d, Scramble.evaluate
@@ -324,7 +321,7 @@ theorem evaluate_v2 (ny : List Nat) (hny : ∀ x ∈ ny, x < 16) (t p : Nat) (cu
     · exact padTailV2_lt t x h
   have hfit : FitsLen (p + (ny ++ padTailV2 t).length) :=
     FitsLen.of_le hp (by rw [List.length_append]; have := padTailV2_length t; omega)
-  obtain ⟨c1, h1, hw, r1⟩ := apply_ready_v2 2 (Int.ofNat t) (Int.ofNat p) st false cube hR rfl
+  obtain ⟨c1, h1, hw, r1⟩ := apply_ready_v2_digest 2 (Int.ofNat t) (Int.ofNat p) st false cube hR rfl
     (ny ++ padTailV2 t) hny' p rfl hfit
   obtain ⟨c2, h2, hseat, r2⟩ := finish_digest (Scramble.Scramble.mk 2 #[] (Int.ofNat t)
     (Int.ofNat (p + (ny ++ padTailV2 t).length)) (embedCube c1) st false false) c1 r1 rfl rfl
@@ -350,9 +347,9 @@ theorem scramble_v2_digest_refines_digestV2 (msg : List Nat) (hb : ∀ b ∈ msg
       Scramble.update s0 (embed msg) = .ok s1 ∧
       Scramble.evaluate s1 = .ok (ev, s2) ∧
       ev.sudo_10Evaluation_6digest = embed (digestV2 msg) := by
-  obtain ⟨c1, hu, hw1, r1⟩ := update_v2 [] (by simp) 0 0 solvedCube ⟨_, reach_solved⟩ #[] msg hb
+  obtain ⟨c1, hu, hw1, r1⟩ := update_v2_digest [] (by simp) 0 0 solvedCube ⟨_, reach_solved⟩ #[] msg hb
     (FitsLen.of_le hlen (by simp)) (FitsLen.of_le hlen (by simp))
-  obtain ⟨ev, s2, d, he, hd, hdig⟩ := evaluate_v2 [] (by simp) (0 + 2 * msg.length)
+  obtain ⟨ev, s2, d, he, hd, hdig⟩ := evaluate_v2_digest [] (by simp) (0 + 2 * msg.length)
     (0 + [].length + 2 * msg.length) c1 r1 #[] (FitsLen.of_le hlen (by simp))
     (FitsLen.of_le hlen (by simp))
   refine ⟨_, _, ev, s2, ?_, hu, he, ?_⟩

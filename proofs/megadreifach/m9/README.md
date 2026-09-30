@@ -12,7 +12,7 @@ M9 asks whether two different 2-card windows of E_m can reach the same state. Th
 
 ## Computational evidence, not a proof (`m9_search.py`)
 
-`python3 m9_search.py` runs stdlib-only Python: 10–20 s (16–20 s in CI), under 100 MB. It runs in CI, job `megadreifach-lean`. The script reuses the tables of [`Em.lean`](../lean/MegaDreifach/Em.lean) and first reproduces the 8 v2 KATs. That is evidence that its Python E_m matches `Em`, not proof that they are identical. It asserts every count it reports. The steps:
+`python3 m9_search.py` runs stdlib-only Python: about 20 s in CI, under 100 MB. It runs in CI, job `megadreifach-lean`. The script reuses the tables of [`Em.lean`](../lean/MegaDreifach/Em.lean) and first reproduces the 8 v2 KATs. That is evidence that its Python E_m matches `Em`, not proof that they are identical. It asserts every count it reports. The steps:
 
 1. **Nets.** The 60×52 nets are pairwise distinct per grip. This repeats the Lean check `nets_nodup`.
 2. **Read injectivity across all read configurations.** The script covers every held face, noon and read kind (corner or edge), every piece and every orientation. One ordered colour pair never comes from two different pieces, even across different read configurations: there are 60 corner pairs and 60 edge pairs, with 0 ambiguous. Every read pair is the (up, front) pair of exactly one rotation, and `abs_reorient` returns that rotation (asserted). So distinct pieces give distinct grips, even when the two windows read with different faces or noons (`o1 ≠ o2`, `b ≠ d`).

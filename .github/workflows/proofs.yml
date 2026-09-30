@@ -270,7 +270,7 @@ jobs:
         run: python3 proofs/doubledeal/check_axioms.py --selftest
       - name: Swap-collision measurement log matches a fresh seeded run (quick; the report-size runs are in proofs-heavy.yml)
         run: python3 proofs/megadreifach/security/suit_blind_collision.py --check
-      - name: M9 two-card window search (Python evidence, not a theorem; self-checks the 8 v2 KATs; asserts its counts; 10-20 s)
+      - name: M9 two-card window search (Python evidence, not a theorem; self-checks the 8 v2 KATs; asserts its counts; about 20 s in CI)
         run: python3 proofs/megadreifach/m9/m9_search.py
       - uses: leanprover/lean-action@v1
         with:

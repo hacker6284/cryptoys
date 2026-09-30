@@ -16,8 +16,10 @@
   * `phiCard_net2_ne`: the abstract M8 reduction (`phiCard_inj_of_distinct_nets`)
     instantiated with the v2 nets.
 
-  Scope: one card, fixed grip.  Not M9 (two-card local collisions), not collision
-  resistance.  Zero sorry.  No native_decide.
+  The file also holds the M9 same-first-card half (`twoCard_same_first_ne`) and the
+  net-product reduction for different first cards (`twoCard_collision_nets`).  The
+  different-first-card half of M9 is not in Lean (Python evidence only, `../../m9/`).
+  Not collision resistance.  Zero sorry.  No native_decide.
 -/
 import MegaDreifach.G2
 import MegaDreifach.Link2.EmInv

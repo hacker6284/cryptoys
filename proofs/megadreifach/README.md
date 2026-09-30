@@ -96,7 +96,7 @@ Sorry-free Lean 4.14 theorems. Details and file tags are in [`STONES.md`](STONES
 
 ## Security status
 
-Scope: MegaDreifach v2. Lean files: `lean/MegaDreifach/Security/`. Every result below is **independent of the grip rule** (no statement mentions how the grip is chosen). None of this is a security claim, and no Lean theorem here is about the v2 grip rule's strength or weakness (beyond the local one- and two-card injectivity lemmas in `G2Nets.lean`, M8 and M9 above); the empirical v2 status is [SPEC §8](../../primitives/hash/megadreifach/SPEC.md#8-security-status).
+Scope: MegaDreifach v2. Lean files: `lean/MegaDreifach/Security/`. Every result below is **independent of the grip rule** (no statement mentions how the grip is chosen). None of this is a security claim, and no Lean theorem here is about the v2 grip rule's strength or weakness (beyond the local one-card injectivity lemmas and the same-first-card two-card lemma in `G2Nets.lean`, M8 and M9 above); the empirical v2 status is [SPEC §8](../../primitives/hash/megadreifach/SPEC.md#8-security-status).
 
 | Result | Status |
 | --- | --- |

@@ -5,7 +5,7 @@ Stdlib only.  Reuses the tables of ../lean/MegaDreifach/Em.lean and reproduces t
 The search is computational evidence, not a proof: see README.md in this directory
 for what the numbers mean and what they do not.  Asserts the counts it reports.
 
-    python3 m9_search.py          # about 10-20 s, under 100 MB
+    python3 m9_search.py          # about 20 s in CI, under 100 MB
 """
 import itertools
 import json
@@ -225,7 +225,7 @@ def right_map(p):
 
 
 def main():
-    print("KATs reproduced by the Em.lean transliteration:", kat_check())
+    print("KATs reproduced by the Python E_m (tables from Em.lean):", kat_check())
     # Nets: g2Step((W, o), card, pos).1 = compose(net(o, card), W)  (`g2Step_fst_net`).
     nets = [[g2_step((ID, o), c, 1)[0] for c in range(52)] for o in ROTS]
     codes = [[bytes(code(n)) for n in row] for row in nets]

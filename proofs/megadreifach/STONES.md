@@ -36,7 +36,7 @@ A green Lean build is not a security claim.
 `lean/MegaDreifach/Security/` (imported by `MegaDreifach.lean`, audited by the default gate) proves reductions and grip-rule-independent lemmas, never security. Report and scripts: `security/REPORT.md`. Summary in the README, section "Security status".
 
 - Independent of the grip rule (all of it): MD reduction (`extract_collision_comp`, `v_Hash_collision_comp`), pad suffix-freeness (`pad_suffix_free`), steps as left multiplications by face-move words (`StepWord.lean`), digest injectivity (M3 glue above), ideal-cipher counting cores (`dm_forward_bad_count`, `dm_inverse_bad_count`).
-- No Lean result about the v2 grip rule's strength or weakness, beyond the local one- and two-card injectivity lemmas in `G2Nets.lean` (M8, M9 same-first-card half). The v1 weaknesses (`CornerDriven`, `FreeStart`, `SwapCollision`) are proofs about v1 only and live, frozen, in `proofs/deprecated/megadreifach-v1/`.
+- No Lean result about the v2 grip rule's strength or weakness, beyond the local one-card injectivity lemmas and the same-first-card two-card lemma in `G2Nets.lean` (M8, M9 same-first-card half). The v1 weaknesses (`CornerDriven`, `FreeStart`, `SwapCollision`) are proofs about v1 only and live, frozen, in `proofs/deprecated/megadreifach-v1/`.
 
 ## Explicitly out of scope (do not claim)
 

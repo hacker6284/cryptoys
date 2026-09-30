@@ -567,6 +567,11 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.fullDiffCount_one_left",
             "DoubleDeal.Security.FullCipher.fullDiffCount_to_one",
             "DoubleDeal.Security.FullCipher.fullDiffCount_eq_card_beforeFinal",
+            # column transfer through the final round: REDUCTIONS (hypothesis unproved);
+            # not_col_v10Sym says the route is closed into v10Sym
+            "DoubleDeal.Security.FullCipher.fullDiffCount_le_of_col",
+            "DoubleDeal.Security.FullCipher.fullDiffCount_le_64_of_offDiag",
+            "DoubleDeal.Security.FullCipher.not_col_v10Sym",
             # row/column sums of fullDiffCount (used by LinearMasks, M8b)
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",

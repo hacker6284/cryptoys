@@ -10,6 +10,8 @@
     python3 proofs/doubledeal/check_axioms.py megadreifach   # proofs/megadreifach/lean (default lib)
     python3 proofs/doubledeal/check_axioms.py megadreifach-heavy  # its heavy library (after
                                           # `lake build MegaDreifachHeavy`)
+    python3 proofs/doubledeal/check_axioms.py megadreifach-v1-deprecated  # frozen v1 package
+                                          # (proofs/deprecated/megadreifach-v1/lean)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -39,6 +41,9 @@ axiom) fails, as does a Lean error.
   `MegaDreifachHeavy`. Its heavy source must declare the 8 headline `kat_*`
   theorems (MD_HEAVY_THEOREMS; the `step_*` / `alg_*` helpers need not be listed),
   checked in both modes.
+- megadreifach-v1-deprecated: like megadreifach (mode "all", key "full") for the
+  frozen v1 package proofs/deprecated/megadreifach-v1/lean (root `MegaDreifachV1`);
+  required: the theorems its README cites (MD_V1_README_THEOREMS).
 
 `#audit_all` is the one command in the core-only package proofs/audit (required by
 path by both the security package and MegaDreifach); in mode "all" this script
@@ -169,19 +174,20 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime_nonswap",
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
 }
-# proofs/megadreifach/lean (pinned to MegaDreifach v1): the 8 v1 hash KATs in
-# MegaDreifachHeavy/Kat.lean (the names match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json;
+# proofs/megadreifach/lean (MegaDreifach v2): the 8 v2 hash KATs in
+# MegaDreifachHeavy/Kat.lean (the names match the vectors of primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json;
 # vectors/json_to_lean.py --check checks their statements against the JSON).
 MD_LEAN = ROOT.parent / "megadreifach" / "lean"
 MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"
 
 # Every theorem that proofs/megadreifach/README.md cites by name (backticked), resolved
-# against the default library's sources (all about MegaDreifach v1) (structure fields like `cp` / `ep` are not
+# against the default library's sources (MegaDreifach v2) (structure fields like `cp` / `ep` are not
 # theorem declarations, so they drop out). Rule: a README citation must stay present and
 # pass the axiom audit, so renaming or deleting a cited theorem fails the default gate.
 # `check_axioms.py --selftest` re-derives the list (md_readme_cited) and fails if it
 # differs from this set; update both together when the README changes.
 MD_README_THEOREMS = {
+    "MegaDreifach.Link2.abs_reorient_refines",
     "MegaDreifach.Link2.big_add_byte",
     "MegaDreifach.Link2.big_add_nat",
     "MegaDreifach.Link2.big_divmod_nat",
@@ -216,17 +222,31 @@ MD_README_THEOREMS = {
     "MegaDreifach.Link2.body_from_refines",
     "MegaDreifach.Link2.body_from_refines_full",
     "MegaDreifach.Link2.chain_loop",
+    "MegaDreifach.Link2.colour_on_refines",
+    "MegaDreifach.Link2.colours_at_refines",
     "MegaDreifach.Link2.compose_refines",
     "MegaDreifach.Link2.compose_refines_array",
+    "MegaDreifach.Link2.corner_after_noon_refines",
+    "MegaDreifach.Link2.corner_slot_refines",
     "MegaDreifach.Link2.divmod_cube",
     "MegaDreifach.Link2.divmod_sq",
     "MegaDreifach.Link2.dm_step_refines",
+    "MegaDreifach.Link2.edge_colours_at_refines",
+    "MegaDreifach.Link2.edge_faces_refines",
+    "MegaDreifach.Link2.edge_slot_refines",
     "MegaDreifach.Link2.em_block_refines",
     "MegaDreifach.Link2.even_perm_rank_big_refines",
     "MegaDreifach.Link2.even_perm_rank_big_refines_20",
     "MegaDreifach.Link2.even_perm_rank_big_refines_array",
     "MegaDreifach.Link2.even_perm_rank_big_refines_gen",
+    "MegaDreifach.Link2.f3_step_refines",
+    "MegaDreifach.Link2.face_turn_refines",
     "MegaDreifach.Link2.fromBE_pad_lt_limb8",
+    "MegaDreifach.Link2.g2_step_refines",
+    "MegaDreifach.Link2.gripOk_f3Step",
+    "MegaDreifach.Link2.gripOk_g2Step",
+    "MegaDreifach.Link2.inverse_refines",
+    "MegaDreifach.Link2.iv_cook12_refines",
     "MegaDreifach.Link2.magCmp_lt_natLimbs",
     "MegaDreifach.Link2.mag_add_limbs",
     "MegaDreifach.Link2.mag_add_nat",
@@ -259,38 +279,36 @@ MD_README_THEOREMS = {
     "MegaDreifach.Link2.peel_leading_zero_digit_three",
     "MegaDreifach.Link2.peel_leading_zero_three",
     "MegaDreifach.Link2.peel_leading_zero_two",
+    "MegaDreifach.Link2.phiChunkStep_51",
+    "MegaDreifach.Link2.phiChunkStep_lt",
     "MegaDreifach.Link2.phiInvFind_breaks",
     "MegaDreifach.Link2.phiInvStep_51",
     "MegaDreifach.Link2.phiInvStep_lt",
-    "MegaDreifach.Link2.phiChunkStep_51",
-    "MegaDreifach.Link2.phiChunkStep_lt",
-    "MegaDreifach.Link2.phi_inv_refines",
-    "MegaDreifach.Link2.phi_inv_refines_array",
     "MegaDreifach.Link2.phi_chunk_refines",
     "MegaDreifach.Link2.phi_chunk_refines_array",
+    "MegaDreifach.Link2.phi_inv_refines",
+    "MegaDreifach.Link2.phi_inv_refines_array",
     "MegaDreifach.Link2.position_to_bytes_refines",
     "MegaDreifach.Link2.position_to_bytes_refines_array",
     "MegaDreifach.Link2.position_to_bytes_refines_gen",
+    "MegaDreifach.Link2.read_grip_refines",
     "MegaDreifach.Link2.require_permutation_refines",
     "MegaDreifach.Link2.require_permutation_refines_array",
+    "MegaDreifach.Link2.spin_about_up_refines",
     "MegaDreifach.Link2.v_HashDeckBody_refines",
     "MegaDreifach.Link2.v_Hash_eq_hashBlocks",
     "MegaDreifach.Link2.v_Hash_refines",
     "MegaDreifach.Link2.v_Hash_refines_array",
     "MegaDreifach.Link2.v_MegaDreifach_refines",
-    "MegaDreifach.Security.SwapCollision.v_Hash_swap_collision",
+    "MegaDreifach.Link2.visual_noon_refines",
     "MegaDreifach.Security.blocks_suffix_free",
-    "MegaDreifach.Security.digest_top_collision",
-    "MegaDreifach.Security.dmStep_collision_of_sq",
-    "MegaDreifach.Security.dmStep_pseudo_collision",
-    "MegaDreifach.Security.dmStep_word",
     "MegaDreifach.Security.dm_forward_bad_count",
     "MegaDreifach.Security.dm_inverse_bad_count",
-    "MegaDreifach.Security.emBlock_word",
     "MegaDreifach.Security.evenRank_inj",
     "MegaDreifach.Security.extract_collision_comp",
     "MegaDreifach.Security.extract_second_preimage_comp",
-    "MegaDreifach.Security.foldl_dmBlock_sameCorners",
+    "MegaDreifach.Security.f3Step_fst",
+    "MegaDreifach.Security.g2Step_fst",
     "MegaDreifach.Security.isLegal_chR",
     "MegaDreifach.Security.isLegal_chainMsg",
     "MegaDreifach.Security.md_collision",
@@ -299,6 +317,24 @@ MD_README_THEOREMS = {
     "MegaDreifach.Security.positionToBytes_inj_reachable",
     "MegaDreifach.Security.v_Hash_collision_comp",
     "MegaDreifach.Security.v_Hash_second_preimage_comp",
+    "MegaDreifach.Security.word_dmStep",
+    "MegaDreifach.Security.word_emBlock",
+}
+
+# proofs/deprecated/megadreifach-v1/lean (frozen MegaDreifach v1: the v1 grip-rule weakness
+# modules and their import closure, namespace MegaDreifachV1). Every theorem its README
+# cites by name; `--selftest` re-derives the list the same way as MD_README_THEOREMS.
+MD_V1_LEAN = ROOT.parent / "deprecated" / "megadreifach-v1" / "lean"
+MD_V1_README = MD_V1_LEAN.parent / "README.md"
+MD_V1_README_THEOREMS = {
+    "MegaDreifachV1.Link2.v_Hash_refines",
+    "MegaDreifachV1.Security.SwapCollision.v_Hash_swap_collision",
+    "MegaDreifachV1.Security.digest_top_collision",
+    "MegaDreifachV1.Security.dmStep_collision_of_sq",
+    "MegaDreifachV1.Security.dmStep_pseudo_collision",
+    "MegaDreifachV1.Security.dmStep_word",
+    "MegaDreifachV1.Security.emBlock_word",
+    "MegaDreifachV1.Security.foldl_dmBlock_sameCorners",
 }
 
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
@@ -392,6 +428,14 @@ PACKAGES = {
         # Required: every theorem the MegaDreifach README cites (MD_README_THEOREMS; the
         # selftest re-derives that list from the README and the Lean sources).
         "required": MD_README_THEOREMS,
+    },
+    "megadreifach-v1-deprecated": {
+        "dir": MD_V1_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": 500,  # sanity: the audit must actually see the package
+        "required": MD_V1_README_THEOREMS,
     },
     "megadreifach-heavy": {
         "dir": MD_LEAN,
@@ -535,17 +579,21 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} key={'full' if full else 'user'} "
               f"{names}: {len(bad)} problem(s), expected {want}")
-    # MD_README_THEOREMS must be exactly the theorems the MegaDreifach README cites.
-    cited, bad = md_readme_cited()
-    for b in bad:
-        print(f"check_axioms selftest: FAIL {b}")
-    missing, extra = sorted(cited - MD_README_THEOREMS), sorted(MD_README_THEOREMS - cited)
-    ok = not bad and not missing and not extra
-    failed += not ok
-    print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} MD_README_THEOREMS matches the "
-          f"{len(cited)} theorems cited in {MD_README.relative_to(ROOT.parent.parent)}"
-          + (f"; cited but not listed: {missing}" if missing else "")
-          + (f"; listed but not cited: {extra}" if extra else ""))
+    # MD_README_THEOREMS / MD_V1_README_THEOREMS must be exactly the theorems the
+    # MegaDreifach README / the frozen v1 package's README cites.
+    for what, listed, readme, root in [
+            ("MD_README_THEOREMS", MD_README_THEOREMS, MD_README, MD_LEAN),
+            ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN)]:
+        cited, bad = md_readme_cited(readme=readme, root=root)
+        for b in bad:
+            print(f"check_axioms selftest: FAIL {b}")
+        missing, extra = sorted(cited - listed), sorted(listed - cited)
+        ok = not bad and not missing and not extra
+        failed += not ok
+        print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} {what} matches the "
+              f"{len(cited)} theorems cited in {readme.relative_to(ROOT.parent.parent)}"
+              + (f"; cited but not listed: {missing}" if missing else "")
+              + (f"; listed but not cited: {extra}" if extra else ""))
     return 1 if failed else 0
 
 

@@ -15,7 +15,7 @@ def main : IO UInt32 := do
   IO.println "Security layer (v2; reductions, not a security claim): MD reduction; step-word / parity lemmas."
   IO.println "The v1 weakness proofs (SwapCollision, CornerDriven, FreeStart) are in the frozen"
   IO.println "        package proofs/deprecated/megadreifach-v1 (namespace MegaDreifachV1)."
-  IO.println "Open: concrete 60×52 net distinctness; abs-G2 L2 (M9); phi_inv / v_HashDeck;"
+  IO.println "Open: concrete 60×52 net distinctness; abs-G2 L2 (M9); v_HashDeck (phi_inv is closed);"
   IO.println "        digest unrank (surjectivity)."
   IO.println "These are correctness / algebraic theorems; sudo = Generated is trusted,"
   IO.println "and nothing here is a bit-security claim (see ANTI_DRIFT.md)."

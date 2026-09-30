@@ -132,7 +132,7 @@ total-fragment / terminating-subset emitter.
 | DoubleDeal-CBC-HMAC generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach via emit-ir `-I`. No Link 2. No AEAD security theorem. |
 | sudo↔Lean / algebraic≃Generated for CBC-HMAC (Link 2) | OPEN. Not started. |
 | AEAD security (EtM reduction, HMAC-MD PRF, CBC confidentiality) | OPEN. Not claimed. SCM stays later. |
-| MegaDreifach M13 (proof-package digest = KAT hex) | DONE for `Generated.v_Hash` (not a handwritten `Hash`): `proofs/megadreifach/lean/MegaDreifachHeavy/Kat.lean`, kernel `decide!` through `v_Hash_refines` (Link 2, `PadWf`). The v1 KAT hexes (`primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json`) were refreshed to `primitives/hash/megadreifach/v1/megadreifach.sudo`; Python and emitted Lean agree for v1. |
+| MegaDreifach M13 (proof-package digest = KAT hex) | DONE for `Generated.v_Hash` (not a handwritten `Hash`): `proofs/megadreifach/lean/MegaDreifachHeavy/Kat.lean`, kernel `decide!` through `v_Hash_refines` (Link 2, `PadWf`). For v2: the 8 hexes of `primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json`, Generated from `primitives/hash/megadreifach/megadreifach.sudo`. The v1 KAT theorems were not kept (the frozen v1 package, `proofs/deprecated/megadreifach-v1/`, has no heavy library); no Lean checks v1's KAT hexes any more (the v1 sudo tests do not assert them; the Python `proofs/megadreifach/security/md.py` does). |
 
 ## Proofs that remain handwritten
 

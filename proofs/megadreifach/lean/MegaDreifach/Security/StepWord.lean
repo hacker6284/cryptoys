@@ -5,8 +5,9 @@
   * `leftIter_compose`, `faceTurn_compose`, `faceTurn_eq`: a face turn is a
     left multiplication.
   * `g2Step_fst`, `f3Step_fst`: the position part of a G2 / F3 step is
-    `compose W g` with `W` depending only on the grip, the card and (not at
-    all, in fact) the read position.
+    `compose W g` with `W` the step's word at the identity (so `W` does not
+    depend on `g`; in `Em.g2Step` / `Em.f3Step` the read index `pos` / `rnd`
+    only enters the new grip).
   * `Word`: positions that are products of face moves; `word_g2Step`,
     `word_f3Run`, `word_g2Run`, `word_emBlock`, `word_dmStep`.
 
@@ -44,8 +45,8 @@ theorem faceTurn_eq (g : Position) (f : Fin 12) (a : Nat) :
     Em.faceTurn g f a = compose (Em.faceTurn identity f a) g := by
   rw [← faceTurn_compose, compose_id_left]
 
-/-- The position part of a G2 step is a left multiplication whose word depends
-    only on the grip and the card. -/
+/-- The position part of a G2 step is a left multiplication by the step's word
+    at the identity (independent of `g`). -/
 theorem g2Step_fst (g : Position) (o : Em.Grip) (card pos : Nat) :
     (Em.g2Step (g, o) card pos).1 = compose (Em.g2Step (identity, o) card pos).1 g := by
   unfold Em.g2Step

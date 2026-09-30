@@ -5,7 +5,7 @@ name: proofs-heavy
 #   - doubledeal-security-heavy: lean_lib DoubleDealSecurityHeavy of the DoubleDeal
 #     security package;
 #   - megadreifach-heavy: lean_lib MegaDreifachHeavy (the 8 hash KATs as kernel
-#     `decide!` theorems about Generated.v_Hash, about 8 min of kernel time);
+#     `decide!` theorems about Generated.v_Hash, about 12 min of kernel time);
 #   - megadreifach-attack-logs: the MegaDreifach attack scripts (Python) against their
 #     committed logs, including the report-size swap-collision runs.
 # Triggered on every PR and every push to main, weekly and by hand, but the heavy

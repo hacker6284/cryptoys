@@ -22,7 +22,7 @@
   exhausts memory for 3 or more blocks. The intermediate lists are chaining
   values, not digests; a wrong one fails its `step_*` lemma.
 
-  Cost: roughly 25 s of kernel evaluation per block (16 blocks in total), so
+  Cost: roughly 45 s of kernel evaluation per block (16 blocks in total), so
   this module lives in the non-default lean_lib `MegaDreifachHeavy`: build it
   with `lake build MegaDreifachHeavy` (CI job `megadreifach-heavy`,
   proofs-heavy.yml). `maxHeartbeats 0` / `maxRecDepth` are scoped per theorem.

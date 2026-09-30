@@ -6,7 +6,7 @@ Length extension on bare Hash is **accepted by design** (SHA-2-shaped) — do no
 
 A green Lean build is not a security claim.
 
-**Every stone below is about MegaDreifach v1** (deprecated, frozen at `primitives/hash/megadreifach/v1/`). The Lean package is pinned to v1: `Generated/` is emitted from `v1/megadreifach.sudo` and the KAT stones use the v1 KAT file. None of these stones covers the current v2 until the package is ported. Where a stone says SPEC.md or sudo, read `v1/SPEC.md` / `v1/megadreifach.sudo`.
+**Every stone below is about MegaDreifach v2 (C36)**, the current version (`primitives/hash/megadreifach/SPEC.md`, `megadreifach.sudo`): `Generated/` is emitted from that sudo and the KAT stones use the v2 KAT file. The frozen v1 weakness proofs are in `proofs/deprecated/megadreifach-v1/` (its README).
 
 ## Must-ship
 
@@ -20,29 +20,29 @@ A green Lean build is not a security claim.
 | M6 | Davies–Meyer algebra: software `h' = compose(h, E_m(h))`; hand 3-solve restores `(A,B,C)=(h', h'⁻¹, id)` | **Proved** | `DaviesMeyer.lean`: `daviesMeyer`, `threeSolve_restores`, `startTriple_invariant` |
 | M7 | `HashDeckBody` domain: reject non-permutations (`require_permutation`) | **Proved** | `Domain.lean`: `requirePermutation_iff`, `requirePermutation_reject`, `requirePermutation_isSome_iff` |
 | M8 | One-card G2: **card ↦ φ_card(g,o)** injective for fixed `(g,o)` (G2_PROOF Theorem A) | **Reduction proved; nets OPEN** | `G2.lean`: `phiCard_inj_of_distinct_nets`, `kingUpAmount_ne_ace`, `two_card_net_eq_of_state_eq`, `no_same_first_two_card_of_nets`. Does **not** enumerate the 60×52 concrete nets. |
-| M9 | Abs-G2 **L2 mid-block**: no 2-card local collision under Recipe A | **OPEN** | Structure only. See plan below. Do not ship a `sorry` theorem. |
+| M9 | Abs-G2 **L2 mid-block**: no 2-card local collision under the v2 grip rule | **OPEN** | Structure only. See plan below. Do not ship a `sorry` theorem. |
 
 ## Strongly want
 
 | ID | Claim | Status | Lean coverage |
 |----|--------|--------|---------------|
-| M10 | F3 blank rounds are pure group ops (t=12) — well-defined, deterministic | **Proved** (algebraic) | `IV.lean`: `f3_12`, `f3Iter_deterministic`. Concrete Up+1 face-turn is an argument, not a cubie table. **Open:** instantiating M10 with the real F3 step, which acts on `Position × Grip` (`Em.f3Step` / `Em.f3Iter`), not `Position → Position`. |
+| M10 | F3 blank rounds are pure group ops (t=36) — well-defined, deterministic | **Proved** (algebraic) | `IV.lean`: `f3Tail` (= `f3Iter step 36`, `f3Tail_eq_iterate`), `f3Iter_deterministic`. Concrete Up+1 face-turn is an argument, not a cubie table. **Open:** instantiating M10 with the real F3 step, which acts on `Position × Grip` and the round number (`Em.f3Step` / `Em.f3Run`), not `Position → Position`. |
 | M11 | IV-COOK12 is a fixed legal position | **Proved** (list predicates) | `IV.lean`: `ivCook12Of_legal`, `ivCook12_lists_legal` (kernel `decide` on the COOK12 arrays). Face-turn generator is hypothesized. `Link2/EmIv.lean`: `ivCook12_isLegal` gives legality of the concrete IV directly (no hypothesized generator), `ivCook12_eq_of` shows it is `ivCook12Of` at the algebraic unit turn, `iv_cook12_refines` links it to Generated. A general `hpres` (face turns preserve `isLegal`) is still open. |
 | M12 | MD chaining: multi-block compose of DM; digest of final `h` | **Proved** (algebraic) **and linked to Generated** | `Chain.lean`: `mdChain`, `hashBlocks_eq_digest_of_final`, `digestOf_length`. `Link2/VHash.lean`: `v_Hash_eq_hashBlocks` instantiates `dm := fun h b => Em.dmStep h (phiUnrank b)`, `rank := rankPosition`, `iv := Em.ivCook12`, blocks = `fromBE` of the 28-byte chunks of `pad msg`. Hypothesis: `PadWf msg`. Trusts Link 1 (sudo → Generated emit). |
-| M13 | Vector agreement: proof-package digests of exported KATs match `kats/megaminx_hash_kats_v1.json` | **Proved** (8/8) | `lean/MegaDreifachHeavy/Kat.lean` (non-default lean_lib `MegaDreifachHeavy`, CI job `megadreifach-heavy`): `kat_empty`, `kat_short_abc`, `kat_short_one`, `kat_edge_27`, `kat_edge_28`, `kat_edge_29`, `kat_multi_56`, `kat_multi_100`, each stated once as `Megadreifach.v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex)) = .ok (embed (hexBytes Vectors.vec_<name>.digestHex))` on the generated `Vectors.lean` (`vectors/json_to_lean.py --check` ties it to `primitives/hash/megadreifach/kats/megaminx_hash_kats_v1.json` ; the generated `KatSpecCheck.lean` pins each statement to the real constants and rejects `[init]` hooks, after a heavy build from deleted outputs, CI job `megadreifach-heavy`; planted shadows and hooks: `vectors/katspec_negatives.py`, CI job `megadreifach-lean`). Algebraic side (`alg_<name>`) by kernel `decide!` (no `native_decide`). About 8 min of kernel time. Algorithm is still `Generated.v_Hash`; no handwritten `Hash`. |
+| M13 | Vector agreement: proof-package digests of exported KATs match `kats/megaminx_hash_kats_v2.json` | **Proved** (8/8) | `lean/MegaDreifachHeavy/Kat.lean` (non-default lean_lib `MegaDreifachHeavy`, CI job `megadreifach-heavy`): `kat_empty`, `kat_short_abc`, `kat_short_one`, `kat_edge_27`, `kat_edge_28`, `kat_edge_29`, `kat_multi_56`, `kat_multi_100`, each stated once as `Megadreifach.v_Hash (embed (hexBytes Vectors.vec_<name>.msgHex)) = .ok (embed (hexBytes Vectors.vec_<name>.digestHex))` on the generated `Vectors.lean` (`vectors/json_to_lean.py --check` ties it to `primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json`; the generated `KatSpecCheck.lean` pins each statement to the real constants and rejects `[init]` hooks, after a heavy build from deleted outputs, CI job `megadreifach-heavy`; planted shadows and hooks: `vectors/katspec_negatives.py`, CI job `megadreifach-lean`). Algebraic side (`alg_<name>`) by kernel `decide!` (no `native_decide`). About 12 min of kernel time. Algorithm is still `Generated.v_Hash`; no handwritten `Hash`. |
 
 ## Security layer (not correctness stones)
 
-`lean/MegaDreifach/Security/` (imported by `MegaDreifach.lean`, audited by the default gate) proves reductions and weaknesses, never security. Report and scripts: `security/REPORT.md`. Summary in the README, section "Security status".
+`lean/MegaDreifach/Security/` (imported by `MegaDreifach.lean`, audited by the default gate) proves reductions and grip-rule-independent lemmas, never security. Report and scripts: `security/REPORT.md`. Summary in the README, section "Security status".
 
-- Independent of the grip rule: MD reduction (`extract_collision_comp`, `v_Hash_collision_comp`), pad suffix-freeness (`pad_suffix_free`), digest injectivity (M3 glue above), ideal-cipher counting cores (`dm_forward_bad_count`, `dm_inverse_bad_count`).
-- About **v1 of the grip rule** (Recipe A reads only corner cubies), documenting why it is being redesigned: `CornerDriven.lean` (`emBlock_word`, `dmStep_word`, `digest_top_collision`), `FreeStart.lean` (`dmStep_pseudo_collision`: the reduction of a compression collision to a squaring collision; concrete pairs come from `security/pseudo_collision.py`, not from Lean) and `SwapCollision.lean` (`v_Hash_swap_collision`: a concrete IV-anchored collision of the generated `v_Hash`, kernel-checked). The swap collisions are practical and measured on the real hash (`security/suit_blind_collision.py`, about 2^13 compressions each); the other attack costs in the report (preimage, and the superseded corner-based collision estimate) are estimates extrapolated from toy runs.
+- Independent of the grip rule (all of it): MD reduction (`extract_collision_comp`, `v_Hash_collision_comp`), pad suffix-freeness (`pad_suffix_free`), steps as left multiplications by face-move words (`StepWord.lean`), digest injectivity (M3 glue above), ideal-cipher counting cores (`dm_forward_bad_count`, `dm_inverse_bad_count`).
+- No Lean result about the v2 grip rule's strength or weakness. The v1 weaknesses (`CornerDriven`, `FreeStart`, `SwapCollision`) are proofs about v1 only and live, frozen, in `proofs/deprecated/megadreifach-v1/`.
 
 ## Explicitly out of scope (do not claim)
 
-- Ideal-cipher-on-G / PRF of `E_m` (under v1, `emBlock_word` shows E_m is not an ideal cipher)
-- Collision resistance of full Hash (false for v1: IV-anchored collisions are practical, see the next item; the compression function is not collision resistant either: `dmStep_pseudo_collision` plus the pairs built by `security/pseudo_collision.py`)
-- IV-anchored Hash collision resistance (answered for v1: collisions from the standard IV are practical via same-rank card swaps, `security/suit_blind_collision.py`; one pair is kernel-checked, `SwapCollision.v_Hash_swap_collision`)
+- Ideal-cipher-on-G / PRF of `E_m` (under v1 it is false: `MegaDreifachV1.Security.emBlock_word`)
+- Collision resistance of full Hash (v2: free-start pseudo-collisions are easy, SPEC §8; v1: false, see the frozen v1 package)
+- IV-anchored Hash collision resistance (v2: empirically untested beyond SPEC §8; v1: collisions from the standard IV are practical, one pair kernel-checked in the frozen v1 package)
 - Free-start L3 absence (L3 **exists**; free-start `HashDeckBody` is broken)
 - Birthday ≈ 2^113 as a theorem (SPEC honesty only)
 - Relative reorient recipes (disproved in research; abs only)
@@ -59,7 +59,7 @@ G2_PROOF Theorem A: for every fixed `(g,o)`, `card ↦ φ_card(g,o)` is injectiv
 3. King-up amount `−k` differs from Ace `+k` for every legal `k` (`kingUpAmount_ne_ace`) — the soft-lock reason King is not Ace.
 4. Same-first-card 2-card states differ once the second-card nets differ (`no_same_first_two_card_of_nets`) — G2_PROOF §3 corollary as a reduction.
 
-**OPEN (no `sorry` theorem):** pairwise distinctness of the 60×52 concrete nets. Research check: `g2_proof_core.prove_one_card` reports 0 collisions. That scan is too large for kernel `decide` and is not `native_decide` (forbidden in this tree). Follow-up options: a structured face/noon/Front case split, or a checked-in finite table with a kernel-small certificate — not this PR.
+**OPEN (no `sorry` theorem):** pairwise distinctness of the 60×52 concrete nets. Research check: `g2_proof_core.prove_one_card` reports 0 collisions for the v1 nets (table noon); it has not been rerun on the repository side for the v2 nets (visual noon). That scan is too large for kernel `decide` and is not `native_decide` (forbidden in this tree). Follow-up options: a structured face/noon/Front case split, or a checked-in finite table with a kernel-small certificate — not this PR.
 
 ## M9 — abs-G2 L2 plan (OPEN)
 
@@ -67,8 +67,8 @@ Informal proof: G2_PROOF.md §3–4. Sketch for a later Lean file, **not** shipp
 
 1. Same-first-card 2-card collisions reduce to M8 nets (`no_same_first_two_card_of_nets`). Already a reduction here.
 2. Distinct first cards: `g''` collides iff the two-card nets `T(o₁,b)∘T(o,a) = T(o₁',d)∘T(o,c)` *and* final grips match.
-3. Absolute Recipe A: matching final grips forces the same second-read R3 element `r`. Same `r` on different second-card faces needs the same corner cubie in two slots after the net — the research scan reports this obstruction on every same-net / diff-first candidate (`second_cons_ok = 0`).
-4. Lean needs: a grip/read model, the Recipe A update, and that cubie-slot obstruction as a lemma. The 60-grip × 2704-word scan stays a computer-checked certificate unless a uniform slot argument replaces it.
+3. (Written for v1's Recipe A; not redone for v2.) Absolute Recipe A: matching final grips forces the same second-read R3 element `r`. Same `r` on different second-card faces needs the same corner cubie in two slots after the net — the research scan reports this obstruction on every same-net / diff-first candidate (`second_cons_ok = 0`). The v2 read (right after the held-face turn, corner or edge by parity) needs its own obstruction.
+4. Lean needs: the grip/read model (v2: `Em.readGrip`), its update, and the matching slot obstruction as a lemma. The 60-grip × 2704-word scan stays a computer-checked certificate unless a uniform slot argument replaces it.
 
 Do **not** claim M9 from the Python scan. Relative recipes are **disproved** (do not “prove” their L2-safety). L3 abs collisions **exist** (do not prove L3 absence).
 
@@ -81,11 +81,12 @@ proofs/megadreifach/
   lean/                 # Lake project (toolchain 4.14.0, no Mathlib)
                         #   MegaDreifach (default lib), MegaDreifachHeavy (KATs, non-default)
   vectors/              # KAT copy; json_to_lean.py generates lean/MegaDreifach/Vectors.lean
-  security/             # REPORT.md + attack scripts (v1 grip rule; Python 3, stdlib only; suit_blind_collision.py = practical collisions)
+  security/             # REPORT.md + attack scripts (v1 grip rule; Python 3, stdlib only; suit_blind_collision.py = practical v1 collisions)
 proofs/audit/          # shared `#audit_all` package (core-only)
-proofs/doubledeal/check_axioms.py   # the shared axiom gate (modes megadreifach, megadreifach-heavy)
-primitives/hash/megadreifach/   # the primitive: v2 SPEC + megadreifach.sudo + kats/ (v1 and v2 KAT files)
-primitives/hash/megadreifach/v1/  # frozen, deprecated v1: SPEC.md + megadreifach.sudo (what this package models)
+proofs/doubledeal/check_axioms.py   # the shared axiom gate (modes megadreifach, megadreifach-heavy, megadreifach-v1-deprecated)
+primitives/hash/megadreifach/   # the primitive: v2 SPEC + megadreifach.sudo (what this package models) + kats/ (v1 and v2 KAT files)
+primitives/hash/megadreifach/v1/  # frozen, deprecated v1: SPEC.md + megadreifach.sudo
+proofs/deprecated/megadreifach-v1/ # frozen v1 Lean: the v1 weakness proofs + their closure (MegaDreifachV1)
 ```
 
-Hand-written Lean is not a proof that `v1/megadreifach.sudo` equals this model. Link 2 (`Generated.v_Hash` = the algebraic fold on `PadWf`) is proved; Link 1 (sudo text = emitted Lean) is trusted, not proved. M8 nets and M9 stay OPEN.
+Hand-written Lean is not a proof that `megadreifach.sudo` equals this model. Link 2 (`Generated.v_Hash` = the algebraic fold on `PadWf`) is proved; Link 1 (sudo text = emitted Lean) is trusted, not proved. M8 nets and M9 stay OPEN.

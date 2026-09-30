@@ -9,7 +9,10 @@
   `keyPos (F^i K0)` of the `i`-th PassKey iterate `F^i K0 = passKeyIter i (masterList π)`.
   These are exactly the keys `encryptDeckFn` uses (`encryptDeckFn_masterList`): `K_0`
   (whitening), `K_1 … K_5` (the five full rounds, each Compose after that round's mix)
-  and `K_6` (the final no-mix round).
+  and `K_6` (the final no-mix round), in SPEC's numbering. The proof groups the same steps
+  into its own mix rounds (`Trail` below): the proof's first mix round uses key `K_0`, the
+  proof's later mix rounds use `K_1`, `K_2`, …; the mapping to SPEC's rounds is in the
+  `FullCipher` header (its one home).
   Counting is over all `52!` master keys, i.e. a UNIFORM MASTER KEY; nothing else is
   random.
 
@@ -34,8 +37,9 @@
   What this does NOT give, read before citing it:
   * THE PROVED BOUND GAINS NOTHING BEYOND THE PROOF'S FIRST MIX ROUND (key `K_0`). It is
     1/64 for every `R ≥ 1`, weaker than M2's `(1/64)^R` for independent uniform round keys
-    (`TrailBound`), because from round 1 on the round key is not uniform given the state
-    (both are functions of the master key), so the M2 product argument does not apply.
+    (`TrailBound`), because in the proof's later mix rounds (keys `K_1`, `K_2`, …) the
+    round key is not uniform given the state (both are functions of the master key), so
+    the M2 product argument does not apply.
     This is a limit of the proof, not a measured weakness. For `R ≥ 2` nothing proved here
     rules out the real schedule following the characteristic with probability above
     `(1/64)^R`.
@@ -48,7 +52,8 @@
     bound, from the proof's first mix round (key `K_0`) alone (`realFullTrail_card_le_26`,
     …), and nothing more.
   * `R ≤ 5` is the cipher's range. `Trail σ R y (roundKeys R π)` is `R` steps "Compose
-    with `K_i`, then the unkeyed round with mix", `i = 0 … R-1`. The cipher runs exactly
+    with `K_i`, then the unkeyed round with mix", `i = 0 … R-1` (the proof's mix rounds,
+    not SPEC's rounds; mapping in the `FullCipher` header). The cipher runs exactly
     five such steps (`K_0 … K_4`, each followed by the next full round's mix), then
     Compose `K_5`, the unkeyed round WITHOUT mix, and Compose `K_6`. For `R ≥ 6` the model
     uses `K_5, K_6, …` as keys before a mix, which the cipher never does; the theorems
@@ -241,13 +246,14 @@ theorem card_roundKey_top_eq (r : ℕ) :
   simp only [roundKey_symm_zero] at hv
   exact passKey_head_ne _ hk.nodup (by rw [hk.length]; decide) hv
 
-/-! ## The characteristic under the real schedule: one round's bound -/
+/-! ## Real-schedule characteristic: the bound of the proof's first mix round -/
 
 /-- (PROVED) If one round's characteristic set has at most `52!/p` decks, then for every
     `R ≥ 1` and every starting deck `y`, at most `52!/p` master keys make `(y, σ·y)`
     follow the constant-σ characteristic through `R` rounds of the REAL schedule. The
-    proof uses round 0 only (`K_0` is uniform and `y` is fixed); there is no factor for
-    later rounds. -/
+    proof uses only the proof's first mix round (key `K_0`: uniform, and `y` is fixed);
+    the proof's later mix rounds add no factor (mapping to SPEC's rounds: `FullCipher`
+    header). -/
 theorem realTrail_card_le_of_round (σ : Relabel) (p : ℕ)
     (hround : p * roundCharCount σ ≤ Nat.factorial 52) (R : ℕ) (hR : 0 < R)
     (y : Fin 52 → Nat) (hy : IsDeck y) :
@@ -274,7 +280,8 @@ theorem realTrail_card_le_26 (σ : Relabel) (h1 : σ ≠ 1) (R : ℕ) (hR : 0 < 
       Nat.factorial 52 :=
   realTrail_card_le_of_round σ 26 (TrailBound.round_le_26 σ h1) R hR y hy
 
-/-- (PROVED, unconditional) `σ ∉ v10Sym`: at most `52!/64` master keys. One round's bound. -/
+/-- (PROVED, unconditional) `σ ∉ v10Sym`: at most `52!/64` master keys. The bound of the
+    proof's first mix round (key `K_0`). -/
 theorem realTrail_card_le_64_of_not_v10Sym (σ : Relabel) (h : ¬ ∃ a x, σ = v10Sym a x)
     (R : ℕ) (hR : 0 < R) (y : Fin 52 → Nat) (hy : IsDeck y) :
     64 * (univ.filter fun π : Equiv.Perm (Fin 52) => Trail σ R y (roundKeys R π)).card ≤
@@ -282,8 +289,8 @@ theorem realTrail_card_le_64_of_not_v10Sym (σ : Relabel) (h : ¬ ∃ a x, σ = 
   realTrail_card_le_of_round σ 64 (TrailBound.round_le_64_of_not_v10Sym σ h) R hR y hy
 
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) Every `σ ≠ 1`: at most
-    `52!/64` master keys. One round's bound. Unconditional in the heavy library
-    (`realTrail_card_le_64`). -/
+    `52!/64` master keys. The bound of the proof's first mix round (key `K_0`).
+    Unconditional in the heavy library (`realTrail_card_le_64`). -/
 theorem realTrail_card_le_64_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (σ : Relabel) (h1 : σ ≠ 1) (R : ℕ) (hR : 0 < R) (y : Fin 52 → Nat) (hy : IsDeck y) :
     64 * (univ.filter fun π : Equiv.Perm (Fin 52) => Trail σ R y (roundKeys R π)).card ≤

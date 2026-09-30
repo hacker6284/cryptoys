@@ -22,17 +22,18 @@ only; no theorem uses these numbers). Nothing here is a security or bit-security
   `_64_of_check` (default): for every R ≥ 1, σ ≠ 1 and starting deck y, the constant-σ
   characteristic through R rounds of the REAL schedule has probability ≤ 1/64 over the
   master key. **The proved bound gains nothing beyond the proof's first mix round (key
-  K_0)**: it is 1/64 for every R, weaker than M2's (1/64)^R, because from round 1 on the
-  round key is not uniform given the state (§4). This is a limit of the proof, not a
-  measured weakness; for R ≥ 2 nothing rules out the real schedule being more likely than
-  (1/64)^R. One characteristic, not the differential. The final no-mix round is not
-  covered, and `rounds` is not linked to `encryptN` (only the keys are); M7
-  (`FullCipher.lean`) adds both and gains nothing beyond the proof's first mix round (key
-  K_0): the proof's later mix rounds (K_1 … K_4) and the proof's finalRound step (K_5, K_6)
-  add no factor (the mapping to SPEC's rounds is in the `FullCipher` header). R ≤ 5 is the
-  cipher's range: `Trail` round i is "Compose with K_i, then the round with mix", and the
-  cipher has five such steps (K_0 … K_4); for R ≥ 6 the model uses K_5, K_6, … as keys
-  before a mix, which the cipher never does (harmless, but not the cipher).
+  K_0)**: it is 1/64 for every R, weaker than M2's (1/64)^R, because in the proof's later
+  mix rounds (keys K_1 …) the round key is not uniform given the state (§4). This is a
+  limit of the proof, not a measured weakness; for R ≥ 2 nothing rules out the real
+  schedule being more likely than (1/64)^R. One characteristic, not the differential. The
+  final no-mix round is not covered, and `rounds` is not linked to `encryptN` (only the
+  keys are); M7 (`FullCipher.lean`) adds both and gains nothing beyond the proof's first
+  mix round (key K_0): the proof's later mix rounds (K_1 … K_4) and the proof's finalRound
+  step (K_5, K_6) add no factor (the mapping to SPEC's rounds is in the `FullCipher`
+  header). R ≤ 5 is the cipher's range: `Trail` step i (the proof's mix round i) is
+  "Compose with K_i, then the round with mix", and the cipher has five such steps
+  (K_0 … K_4); for R ≥ 6 the model uses K_5, K_6, … as keys before a mix, which the
+  cipher never does (harmless, but not the cipher).
 
 ## 1. How the round keys depend on each other (PROVED where marked; the rest is a short argument)
 
@@ -70,14 +71,17 @@ this is an attack: the schedule is public and deterministic by design, like AES'
 
 ## 3. The constant-σ characteristic, real schedule vs independent keys (MEASURED, `trail.c`)
 
-Model exactly as TrailBound.lean (`rounds`, `Trail`, `RoundChar`): round i uses
-K_i, x_i = Compose(s_i, K_i), s_0 = y. Real: K_i = F^i(K0). K0 uniform is sampled as
-x_0 uniform (a bijection for fixed y). Control: fresh uniform K_1.
+Model exactly as TrailBound.lean (`rounds`, `Trail`, `RoundChar`): the proof's mix round i
+uses K_i, x_i = Compose(s_i, K_i), s_0 = y, and RC_i is the characteristic's event in it
+(i = 0: the proof's first mix round, key K_0; i ≥ 1: the proof's later mix rounds). These
+are the proof's mix rounds, not SPEC's rounds; the mapping is in the `FullCipher` header.
+Real: K_i = F^i(K0). K0 uniform is sampled as x_0 uniform (a bijection for fixed y).
+Control: fresh uniform K_1.
 Same x_0 streams (seeds 1–6) for every y (common random numbers).
 
 Conditioned runs: 6 × 3·10^8 = 1.8·10^9 uniform x_0 per row.
 
-| σ | y | H0 = #RC_0 | P[RC_0] | H01 real (K_1 = F K0) | H01 control (K_1 fresh) | expected if round 1 behaves like M2 (H0·P[RC_0]) | H012 real |
+| σ | y | H0 = #RC_0 | P[RC_0] | H01 real (K_1 = F K0) | H01 control (K_1 fresh) | expected if the proof's second mix round (K_1) behaves like M2 (H0·P[RC_0]) | H012 real |
 |---|---|---|---|---|---|---|---|
 | A♣↔2♣ | identity | 107 098 | 5.95e-5 | 9 | 5 | 6.4 | 0 of 9 |
 | A♣↔2♣ | random (seed 7) | 107 098 (same x_0) | 5.95e-5 | 7 | 5 (same control) | 6.4 | 0 of 7 |
@@ -93,10 +97,12 @@ two-round real-schedule probability is 9/1.8·10^9 = 5.0e-9 (95% upper bound 9.5
 below (1/64)^2 = 2.4e-4 and near the independent-model product (5.95e-5)^2 = 3.5e-9.
 Three rounds: no hits, and no resolution (would need ~10^14 samples).
 
-Marginal of round 1's event (not conditioned; σ = A♣↔2♣, y = identity, 6 × 10^7 x_0, seeds 101–106):
+Marginal of RC_1, the event of the proof's second mix round (key K_1) (not conditioned;
+σ = A♣↔2♣, y = identity, 6 × 10^7 x_0, seeds 101–106):
 #RC_0 = 3 562 (5.94e-5), #RC_1 real = 3 530 (5.88e-5). Equal within noise (difference
-−32 ± 84), consistent with the round-1 post-Compose state being close to uniform for this
-statistic. (Not a proof that it is uniform; that is not known.)
+−32 ± 84), consistent with the post-Compose state x_1 of the proof's second mix round
+being close to uniform for this statistic. (Not a proof that it is uniform; that is not
+known.)
 
 Both σ are same-suit swaps (SumRanks alone: exactly 1/221 each, `../v10-sumranks/`).
 The measured one-round value, ~1/17 000 for these two swaps, is far below the proved 1/64,
@@ -116,12 +122,14 @@ An exact two-round value is out of reach (a count over 52! master keys).
 * `trail_card_le_of_round`, inductive step: applies the R-round bound at the new state
   `unkeyedWithMix (Compose y k)` with a fresh, full tail. Both uses meet here.
 
-Real schedule: round 0 is fine (x_0 = Compose(y, K0), K0 uniform, y fixed). At round 1
-the entering state s_1 = GridCycle∘stem(Compose(y, K0)) and the key K_1 = F(K0) are both
-functions of K0; given s_1 (and y), K_1 is a single key, not uniform. So the step
-`card_keys_roundChar` at round ≥ 1 and the product split both fail; only round 0's
-factor survives. The injectivity of K0 ↦ (K_0, …, K_{R-1}) only gives
-#real ≤ #independent, i.e. P_real ≤ (52!)^{R-1}·(1/64)^R, vacuous for R ≥ 2.
+Real schedule: the proof's first mix round (key K_0) is fine (x_0 = Compose(y, K0), K0
+uniform, y fixed). In the proof's second mix round the entering state
+s_1 = GridCycle∘stem(Compose(y, K0)) and the key K_1 = F(K0) are both functions of K0;
+given s_1 (and y), K_1 is a single key, not uniform. So the step `card_keys_roundChar` in
+the proof's later mix rounds and the product split both fail; only the factor of the
+proof's first mix round (key K_0) survives. The injectivity of K0 ↦ (K_0, …, K_{R-1})
+only gives #real ≤ #independent, i.e. P_real ≤ (52!)^{R-1}·(1/64)^R, vacuous for
+R ≥ 2.
 
 ## 5. Weakness check
 

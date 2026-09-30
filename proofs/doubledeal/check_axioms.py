@@ -518,6 +518,16 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.fullDiffCount_le_of_col",
             "DoubleDeal.Security.FullCipher.fullDiffCount_le_64_of_offDiag",
             "DoubleDeal.Security.FullCipher.not_col_v10Sym",
+            # StemPosition (research item (b), first slice): the stem as a position map and
+            # the support gap of gamma^-1 * beta; structure only, no count of decks
+            "DoubleDeal.Security.StemPosition.unkeyedNoMix_eq_comp",
+            "DoubleDeal.Security.StemPosition.stemPos_injective",
+            "DoubleDeal.Security.StemPosition.conj_of_stem_rel",
+            "DoubleDeal.Security.StemPosition.seatMap_eq_iff",
+            "DoubleDeal.Security.StemPosition.card_seatMap_eq",
+            "DoubleDeal.Security.StemPosition.card_fixed_eq",
+            "DoubleDeal.Security.StemPosition.card_moved_eq",
+            "DoubleDeal.Security.StemPosition.card_moved_zero_or_ge_four",
             # row/column sums of fullDiffCount (used by LinearMasks, M8b)
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",

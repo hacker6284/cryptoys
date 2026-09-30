@@ -5,11 +5,14 @@
   (`ScrambleV2.Link2.Turn`, `.Matrix`, `.Reorient`, `.State`), lookups (`.Lookup`), piece readers (`.Pieces`),
   the digest encoding (`.Rank`, `.Digest`, `.Index`), facelets (`.Facelets`), and the
   digest path end to end with the digest-only headline (`.Evaluate`), the traced path and
-  several updates (`.Traced`). See
+  several updates (`.Traced`), and the v1 model (`ScrambleV2.SpecV1`), its vectors
+  (`ScrambleV2.KatV1`) and the digest-only v1 path (`.V1`). See
   ../README.md for what is and is not proved.
 -/
 import ScrambleV2.Spec
 import ScrambleV2.Kat
+import ScrambleV2.SpecV1
+import ScrambleV2.KatV1
 import ScrambleV2.Link2.Embed
 import ScrambleV2.Link2.Loop
 import ScrambleV2.Link2.TurnRaw
@@ -28,3 +31,4 @@ import ScrambleV2.Link2.Index
 import ScrambleV2.Link2.Facelets
 import ScrambleV2.Link2.Evaluate
 import ScrambleV2.Link2.Traced
+import ScrambleV2.Link2.V1

@@ -480,6 +480,20 @@ SCRAMBLE_LINK2 = {
     "ScrambleV2.Link2.updates_evaluate_v2",
     "ScrambleV2.Link2.scramble_v2_refines_digestV2_traced",
     "ScrambleV2.Link2.padV2_length",
+    "ScrambleV2.Kat.kat_v1_empty",
+    "ScrambleV2.Kat.kat_v1_a",
+    "ScrambleV2.Kat.kat_v1_A7",
+    "ScrambleV2.Kat.kat_v1_hello",
+    "ScrambleV2.Kat.kat_v1_cube",
+    "ScrambleV2.Link2.apply_v1_block_digest",
+    "ScrambleV2.Link2.apply_ready_v1_digest",
+    "ScrambleV2.Link2.pad_v1",
+    "ScrambleV2.Link2.padV1_eq",
+    "ScrambleV2.Link2.update_v1",
+    "ScrambleV2.Link2.evaluate_v1",
+    "ScrambleV2.Link2.walkV1_append8",
+    "ScrambleV2.Link2.scramble_v1_digest_refines",
+    "ScrambleV2.Link2.scramble_v1_digest_refines_digestV1",
 }
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only

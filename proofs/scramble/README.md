@@ -29,7 +29,7 @@ The Lake package `lean/` (library `ScrambleV2`, Lean 4.14, no Mathlib) is the Li
 work for `scramble_v2`: a hand-written model of the v2 digest, and theorems that the
 emitted Lean computes it. **The digest headline is proved**, for the digest-only and the traced
 constructor and for several updates; the trace's step fields are proved, not its letters
-(see the end of this section). What is proved, all
+(see the end of this section). The digest-only v1 path is also proved against a v1 model. What is proved, all
 checked by the axiom gate (`check_axioms.py scramble`: only `propext`,
 `Classical.choice`, `Quot.sound`; no `sorry`, no `native_decide`):
 
@@ -181,19 +181,53 @@ which letters a facelet string holds, are not claimed.
   `padV2_length`: the padded length is `max (len + 1) 12`, so a message of at most 5 bytes
   has 39 steps, the SPEC table's Steps column.
 
+**v1, digest only** (`ScrambleV2/SpecV1.lean`, `KatV1.lean`, `Link2/V1.lean`). The v1
+model is written from the SPEC's superseded `scramble_v1` section, on the same cube,
+Rule B, closer, seat and digest as v2. A nybble is one move (the SPEC's 16-move table),
+eight moves then Rule B make a block, and the tape is padded with the marker `8` and the
+cycle `6 0 7 1 8 2 9 3` to a multiple of 8 and to at least 24. The v1 trace is not modelled.
+
+- `kat_v1_empty`, `kat_v1_a`, `kat_v1_A7`, `kat_v1_hello`, `kat_v1_cube`: the v1 model
+  gives the five v1 digests of the SPEC table and of `scramble.sudo`'s tests (kernel
+  `decide!`). This pins the model to the vectors, not the emitted code.
+- `apply_v1_block_digest`: on a digest-only reachable state, the emitted `apply_v1_block`
+  on eight pending nybbles below 16 is the model's block (eight moves, then Rule B).
+- `apply_ready_v1_digest`: with `processed = 8q`, `apply_ready` on a v1 state walks every
+  complete block of `pending` (the model's `walkV1`), advances `processed` by 8 per
+  block, and keeps the trailing partial block in `pending`.
+- `pad_v1`, `padV1_eq`: `pad` on a v1 state with `total = t` appends the marker, the cycle
+  up to a multiple of 8, then the cycle again up to 24 nybbles, as the model pads.
+- `update_v1`, `evaluate_v1`: as `update_v2` and `evaluate_v2`, for a digest-only v1
+  state with `processed = 8q`. `walkV1_append8`: walking whole blocks then the rest is
+  walking the concatenation, so the partial block left in `pending` meets the padding.
+- `scramble_v1_digest_refines`: `scramble_v1_digest` is `fresh(1, false)`.
+- `scramble_v1_digest_refines_digestV1`: for `msg : List Nat` with every element at most
+  255 and `2 · msg.length + 40` fitting `i64`,
+
+```lean
+∃ s0 s1 ev s2, Scramble.scramble_v1_digest = .ok s0 ∧
+  Scramble.update s0 (embed msg) = .ok s1 ∧
+  Scramble.evaluate s1 = .ok (ev, s2) ∧
+  ev.sudo_10Evaluation_6digest = embed (digestV1 msg)
+```
+
+  One `update` only. Several v1 updates, the traced v1 constructor `scramble_v1` and the
+  v1 trace are not claimed.
+
 **Not claimed:** the Rule B steps' `up` / `front` letters and the facelet strings' letters
 (the vectors' Final facelets column); an `update` or `evaluate` after `done` (the sudo
-asserts); non-byte input (the sudo asserts, and nothing is claimed about it); v1
-(`scramble_v1`, `scramble_v1_digest`).
+asserts); non-byte input (the sudo asserts, and nothing is claimed about it); the traced
+v1 constructor `scramble_v1` and the v1 trace; several v1 updates.
 
 | Emitted function | Theorem | Domain |
 | --- | --- | --- |
 | `scramble_v2_digest` | `scramble_v2_digest_refines`, `fresh_refines` | none |
 | `scramble_v2` | `scramble_v2_refines`, `fresh_refines`, `scramble_v2_refines_digestV2_traced` | byte message, `2·len + 12` fits i64; trace fields as above |
-| `update` | `update_v2`, `update_v2_gen`, `updates_evaluate_v2` | v2 state, not done, pending nybbles below 16, reachable cube; byte messages; counts fit i64 |
-| `evaluate` | `evaluate_v2`, `evaluate_v2_gen`, `scramble_v2_digest_refines_digestV2` | as `update` |
+| `update` | `update_v2`, `update_v2_gen`, `updates_evaluate_v2`, `update_v1` | v2 state (or digest-only v1 state with `processed = 8q`), not done, pending nybbles below 16, reachable cube; byte messages; counts fit i64 |
+| `evaluate` | `evaluate_v2`, `evaluate_v2_gen`, `scramble_v2_digest_refines_digestV2`, `evaluate_v1`, `scramble_v1_digest_refines_digestV1` | as `update` |
 | `solved_facelets` | `solved_facelets_ok` | none (returns 54 color letters) |
-| `scramble_v1`, `scramble_v1_digest` | none: v1 is out of scope for this package | |
+| `scramble_v1_digest` | `scramble_v1_digest_refines`, `fresh_refines`, `scramble_v1_digest_refines_digestV1` | byte message, `2·len + 40` fits i64; one `update` |
+| `scramble_v1` | none: the traced v1 constructor is not claimed | |
 
 `check_axioms.py --selftest` parses `scramble.sudo` and fails unless every `export func`
 appears in the Emitted function column above, and only exports appear there.

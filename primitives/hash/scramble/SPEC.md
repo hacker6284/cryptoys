@@ -157,7 +157,7 @@ s = s · 2048 + eo          # 2048 = 2^11
 
 ## Trace
 
-`evaluate` returns the digest and the trace. The trace is every step, in order, including steps already taken during `update`. Each step records the facelet string after that step.
+`evaluate` returns the digest and the trace. For a traced state, the trace is every step, in order, including steps already taken during `update`. Each step records the facelet string after that step.
 
 | Kind | When | Fields |
 | --- | --- | --- |

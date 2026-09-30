@@ -64,4 +64,12 @@ const settleSteps = looks.slice(-40, -1).map((l, i, arr) => (i ? step(l, arr[i -
 assert.ok(finalStep < 0.005, `last return frame snaps the look by ${finalStep.toFixed(4)}`);
 assert.ok(finalStep <= Math.max(...settleSteps) + 1e-9, "final frame is not the biggest look step");
 
+// Portrait variants are opt-in: drei swaps on a phone, scramble never does.
+for (const [name, aspect, fov] of [["drei", 0.46, POSES.drei.portrait.fov], ["drei", 1.6, POSES.drei.fov], ["scramble", 0.46, POSES.scramble.fov]]) {
+    const cam = makeCamera();
+    cam.aspect = aspect;
+    createPoseController(cam).snap(name);
+    assert.equal(cam.fov, fov, `${name} at aspect ${aspect}`);
+}
+
 console.log("pose-controller tests ok");

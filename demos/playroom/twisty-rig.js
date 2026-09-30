@@ -281,7 +281,7 @@ export async function adoptTwistyPuzzle(seat, {
         requestTimestamp(indexer.indexToMoveStartTimestamp(leaf) + indexer.moveDuration(leaf));
     }
 
-    async function playLeaves(from, to, { snap = false } = {}) {
+    async function playLeaves(from, to, { snap = false, onLeaf } = {}) {
         if (disposed) return { index: 0, total: 0 };
         const mine = seekGen;
         seat.group.userData.turnBusy = true;
@@ -309,12 +309,26 @@ export async function adoptTwistyPuzzle(seat, {
             for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
             if (disposed || mine !== seekGen) return { index: start, total };
             player.play();
+            // Optional per-move hook (MegaDreifach's turn sound): fires as
+            // each leaf in [start, end) begins.
+            let heard = start - 1;
+            const hear = (index) => {
+                while (onLeaf && heard < Math.min(index, end - 1)) onLeaf(++heard);
+            };
+            hear(start);
             const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
             const deadline = performance.now() + budget;
             while (performance.now() < deadline) {
                 if (disposed || mine !== seekGen) return { index: start, total };
                 try {
                     const info = await player.experimentalModel.detailedTimelineInfo.get();
+                    if (onLeaf) {
+                        try {
+                            hear(indexer.timestampToIndex(info.timestamp));
+                        } catch {
+                            // no index lookup: stay quiet, keep playing
+                        }
+                    }
                     if (info.timestamp >= endTs - 2) break;
                 } catch {
                     break;

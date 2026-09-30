@@ -379,7 +379,7 @@ PACKAGES = {
             "DoubleDeal.Security.Differential.realStaysInV10_card_le_4420_of_check",
             "DoubleDeal.Security.Differential.realDiffCount_one",
             # FullCipher (roadmap M7): whole cipher incl. the final no-mix round; no numeric
-            # bound on the full-cipher differential; real schedule: first mix round only
+            # bound on the full-cipher differential; real schedule: the proof's first mix round only
             "DoubleDeal.Security.FullCipher.encryptN_eq_rounds",
             "DoubleDeal.Security.FullCipher.encryptL_eq",
             "DoubleDeal.Security.FullCipher.encryptN_eq_encryptL",

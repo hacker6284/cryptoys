@@ -12,11 +12,22 @@
   `L : Fin (n + 2) → Key` (`L 0 = pos0`, `L (r+1) = posMix r`, `L (n+1) = posFinal`;
   `encryptN_eq_encryptL`: every `encryptN` call with permutation keys is one). Counting over
   all `(52!)^(n+2)` tuples `L` is INDEPENDENT UNIFORM keys, whitening and final key included.
-  Grouping (`encryptL_eq`): `n` rounds of `TrailBound.rounds` (round `i`: Compose `L i`, then
-  the unkeyed round with GridCycle), then `finalRound` (Compose `L n`, the stem, Compose
-  `L (n+1)`). The cipher is `n = 5` with `L = realKeys π = (K_0, …, K_6)`
-  (`encryptDeckFn_masterList_eq`): mix rounds 0–4 with keys `K_0 … K_4`, then the final round
-  with keys `K_5` and `K_6`. The relabelling difference passes Compose (any key), lay,
+  Grouping (`encryptL_eq`): `n` rounds of `TrailBound.rounds` (the proof's mix round `i`:
+  Compose `L i`, then the unkeyed round with GridCycle), then `finalRound` (Compose `L n`,
+  the stem, Compose `L (n+1)`). The cipher is `n = 5` with `L = realKeys π = (K_0, …, K_6)`
+  (`encryptDeckFn_masterList_eq`).
+
+  Mapping to SPEC's rounds (this header is its one home). SPEC (§4.7) numbers the cipher as
+  whitening (Compose `K_0`), full rounds `r = 1..5` (the unkeyed layers with GridCycle, then
+  Compose `K_r`) and a final round (the stem without GridCycle, then Compose `K_6`). The
+  proof regroups the same steps. The proof's mix round `i` (`i = 0..4`) is Compose `K_i`
+  (the whitening for `i = 0`, the end of SPEC full round `i` otherwise) followed by the
+  unkeyed layers of SPEC full round `i+1`. The proof's `finalRound` step is SPEC full round
+  5's closing Compose `K_5` followed by SPEC's final round (stem, Compose `K_6`). "The
+  proof's mix rounds" and "the proof's finalRound step (`K_5`, `K_6`)", here and in the other
+  docs, mean this grouping; they do not renumber SPEC's rounds.
+
+  The relabelling difference passes Compose (any key), lay,
   ShiftRows and scoop unchanged; only SumRanks depends on the deck. The final Compose key
   (`K_6` of the cipher) never changes a relabelling difference.
 
@@ -70,18 +81,19 @@
     - `realFullStaysInV10_card_le_26`, `realFullStaysInV10_card_le_4420_of_check` (heavy:
       `realFullStaysInV10_card_le_4420`): the `v10Sym` cluster, `p = 26`, `p = 4420`, for
       `(a, x) ≠ (0, 0)`.
-    These are M5/M6's bounds for the first mix round (round 0, key `K_0`) alone. The proof
-    gains NOTHING beyond the first mix round: mix rounds 1–4 (keys `K_1 … K_4`) and the final
-    round (keys `K_5`, `K_6`) add no factor. This is a limit of the proof, not a measured
-    weakness: from round 1 on the round key is not uniform given the state, so the
-    independent-key counting does not apply. `generated_encrypt_of_realFullTrail`,
-    `generated_encrypt_of_realFullStaysInV10`: under these events the emitted
+    These are M5/M6's bounds for the proof's first mix round (key `K_0`) alone. The proof
+    gains NOTHING beyond it: the proof's later mix rounds (keys `K_1 … K_4`) and the proof's
+    finalRound step (`K_5`, `K_6`) add no factor. This is a limit of the proof, not a
+    measured weakness: from the proof's second mix round on, the round key is not uniform
+    given the state, so the independent-key counting does not apply.
+    `generated_encrypt_of_realFullTrail`, `generated_encrypt_of_realFullStaysInV10`: under
+    these events the emitted
     `Doubledeal.encrypt` maps the relabelled message to the relabelled ciphertext.
 
   NOT proved, and limits; read before citing:
   * Any numeric bound on the full-cipher differential (independent or real keys). The
     real-schedule differential `P[E(α·M) = γ·E(M)]` gets NO bound at all.
-  * Anything under the real schedule beyond the first mix round (round 0, key `K_0`).
+  * Anything under the real schedule beyond the proof's first mix round (key `K_0`).
   * For `v10Sym` the final round gives NO extra factor, and `K_6` never changes a relabelling
     difference. Every `v10Sym` bound needs `(a, x) ≠ (0, 0)` (`v10Sym 0 0 = 1`).
   * The measured values in the notes are EMPIRICAL (sampled), not proved; no theorem uses them.
@@ -654,7 +666,7 @@ theorem fullStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3
   pow_mul_le_of_le_sq_mul (card_fullStaysInV10 a x n hy).le
     (Differential.staysInV10_card_le_4420_of_check hKC hKS a x hne n hy)
 
-/-! ## E. The real PassKey schedule: the first mix round (round 0, key `K_0`) only -/
+/-! ## E. The real PassKey schedule: the proof's first mix round (key `K_0`) only -/
 
 /-- (PROVED) Real schedule: following the characteristic through the whole cipher is a
     sub-event of following it through the 5 mix rounds (`RealSchedule`'s event). -/
@@ -665,8 +677,9 @@ theorem card_realFullTrail_le (σ : Relabel) (y : Fin 52 → Nat) :
 
 /-- (PROVED, unconditional) Real schedule, uniform master key, every `σ ≠ 1`, every deck `y`:
     at most `52!/26` master keys make `(y, σ·y)` follow the characteristic through the WHOLE
-    cipher. This is M5's bound for the first mix round (round 0, key `K_0`) alone; mix rounds
-    1–4 and the final round add no factor (a limit of the proof, not a measured weakness). -/
+    cipher. This is M5's bound for the proof's first mix round (key `K_0`) alone; the proof's
+    later mix rounds and its finalRound step add no factor (a limit of the proof, not a
+    measured weakness). -/
 theorem realFullTrail_card_le_26 (σ : Relabel) (h1 : σ ≠ 1) {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullTrail σ 5 y (realKeys π)).card ≤
       Nat.factorial 52 :=
@@ -674,7 +687,7 @@ theorem realFullTrail_card_le_26 (σ : Relabel) (h1 : σ ≠ 1) {y : Fin 52 → 
     (RealSchedule.realTrail_card_le_26 σ h1 5 (by norm_num) y hy)
 
 /-- (PROVED, unconditional) As `realFullTrail_card_le_26` with `52!/64`, for `σ` outside
-    `v10Sym`. The first mix round's bound. -/
+    `v10Sym`. The bound of the proof's first mix round. -/
 theorem realFullTrail_card_le_64_of_not_v10Sym (σ : Relabel) (h : ¬ ∃ a x, σ = v10Sym a x)
     {y : Fin 52 → Nat} (hy : IsDeck y) :
     64 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullTrail σ 5 y (realKeys π)).card ≤
@@ -683,8 +696,8 @@ theorem realFullTrail_card_le_64_of_not_v10Sym (σ : Relabel) (h : ¬ ∃ a x, �
     (RealSchedule.realTrail_card_le_64_of_not_v10Sym σ h 5 (by norm_num) y hy)
 
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) As
-    `realFullTrail_card_le_26` with `52!/64`, for every `σ ≠ 1`. The first mix round's
-    bound. -/
+    `realFullTrail_card_le_26` with `52!/64`, for every `σ ≠ 1`. The bound of the proof's
+    first mix round. -/
 theorem realFullTrail_card_le_64_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (σ : Relabel) (h1 : σ ≠ 1) {y : Fin 52 → Nat} (hy : IsDeck y) :
     64 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullTrail σ 5 y (realKeys π)).card ≤
@@ -694,8 +707,8 @@ theorem realFullTrail_card_le_64_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS
 
 open Classical in
 /-- (PROVED; no hypothesis beyond `(a, x) ≠ (0, 0)`) Real schedule, whole cipher, `v10Sym`
-    cluster: at most `52!/26` master keys. The first mix round's bound; only paths inside
-    `v10Sym`. -/
+    cluster: at most `52!/26` master keys. The bound of the proof's first mix round; only
+    paths inside `v10Sym`. -/
 theorem realFullStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
     {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 * (univ.filter fun π : Equiv.Perm (Fin 52) => FullStaysInV10 a x 5 y (realKeys π)).card ≤

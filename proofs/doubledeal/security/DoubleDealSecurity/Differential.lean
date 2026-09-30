@@ -17,9 +17,9 @@
   NOT covered here: the final no-mix round, and any link from `rounds` to `encryptN` (as in
   `TrailBound`); both are in `FullCipher` (roadmap M7), which adds one exact Markov step
   for the final round and still no numeric bound. The real PassKey schedule gets only the
-  `R = 1` identity (`realDiffCount_one`) and the bound of the first mix round (round 0,
-  key `K_0`) on paths inside the `v10Sym` cluster (`realStaysInV10_card_le_26`, for `(a, x) ≠ (0, 0)` only); nothing for
-  the real schedule at `R ≥ 2` beyond that.
+  `R = 1` identity (`realDiffCount_one`) and the bound of the proof's first mix round (key
+  `K_0`) on paths inside the `v10Sym` cluster (`realStaysInV10_card_le_26`, for
+  `(a, x) ≠ (0, 0)` only); nothing for the real schedule at `R ≥ 2` beyond that.
 
   Proved:
   * D0 `card_trail_le_diffCount` (from `trail_rounds_rel`): the characteristic is one path
@@ -42,8 +42,9 @@
     `(a, x) ≠ (0, 0)` only: `staysInV10_card_le_26` (`26^R · # ≤ (52!)^R`, no further
     hypothesis), `staysInV10_card_le_4420_of_check` (given the two finite GridCycle
     checks; without them in the heavy library, `staysInV10_card_le_4420`), and for the real
-    schedule the bounds of the first mix round (round 0) alone `realStaysInV10_card_le_26`,
-    `realStaysInV10_card_le_4420_of_check` (heavy: `realStaysInV10_card_le_4420`).
+    schedule the bounds of the proof's first mix round (key `K_0`) alone:
+    `realStaysInV10_card_le_26`, `realStaysInV10_card_le_4420_of_check` (heavy:
+    `realStaysInV10_card_le_4420`).
     (For `(a, x) = (0, 0)`, `v10Sym 0 0 = 1` and these bounds are false.)
     These cover ONLY paths that stay inside `v10Sym`; a path that leaves `v10Sym` and
     comes back is not bounded.
@@ -253,11 +254,7 @@ theorem sum_dpCount_left (U V : (Fin 52 → Nat) → Fin 52 → Nat)
     refine congrArg card (filter_congr fun π _ => ?_)
     have hd := isDeck_permDeck π
     rw [relDiff_eq_iff hd (hV (isDeck_rel β (hU hd)))]
-    constructor
-    · intro h
-      rw [← h, hVU]
-    · intro h
-      rw [h, hUV]
+    exact ⟨fun h => by rw [← h, hVU], fun h => by rw [h, hUV]⟩
   simp only [e]
   rw [← card_eq_sum_card_fiberwise (fun _ _ => mem_univ _), card_univ, Fintype.card_perm,
     Fintype.card_fin]
@@ -485,8 +482,8 @@ theorem staysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS 
 open Classical in
 /-- (PROVED; no hypothesis beyond `(a, x) ≠ (0, 0)`) Real PassKey schedule, uniform master key,
     nontrivial `v10Sym a x`, every `R ≥ 1`, every deck `y`: at most `52!/26` master keys keep the
-    difference inside `v10Sym` for `R` rounds. The first mix round's bound (round 0, key `K_0`;
-    not `(1/26)^R`); only paths inside `v10Sym`. -/
+    difference inside `v10Sym` for `R` rounds. The bound of the proof's first mix round (key
+    `K_0`; not `(1/26)^R`); only paths inside `v10Sym`. -/
 theorem realStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0))
     (R : ℕ) (hR : 0 < R) {y : Fin 52 → Nat} (hy : IsDeck y) :
     26 * (univ.filter fun π : Equiv.Perm (Fin 52) =>
@@ -497,8 +494,8 @@ theorem realStaysInV10_card_le_26 (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ 
 
 open Classical in
 /-- (PROVED, given the two finite GridCycle checks as hypotheses) As
-    `realStaysInV10_card_le_26` with `52!/4420`. The first mix round's bound. Without the check
-    hypotheses in the heavy library (`realStaysInV10_card_le_4420`). -/
+    `realStaysInV10_card_le_26` with `52!/4420`. The bound of the proof's first mix round.
+    Without the check hypotheses in the heavy library (`realStaysInV10_card_le_4420`). -/
 theorem realStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3 KS LKS)
     (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) (R : ℕ) (hR : 0 < R)
     {y : Fin 52 → Nat} (hy : IsDeck y) :
@@ -508,7 +505,7 @@ theorem realStaysInV10_card_le_4420_of_check (hKC : Check3 KC LKC) (hKS : Check3
   exact RealSchedule.realTrail_card_le_of_round _ 4420
     (TrailBound.round_le_4420_v10Sym_of_check hKC hKS a x hne) R hR y hy
 
-/-- (PROVED) D6. Real PassKey schedule, first mix round (round 0) only: the count over
+/-- (PROVED) D6. Real PassKey schedule, the proof's first mix round (key `K_0`) only: the count over
     master keys equals the independent-key count `dp1Count α β` (round key `K_0` alone is
     uniform). Nothing is proved for the real schedule at `R ≥ 2`. -/
 theorem realDiffCount_one (α β : Relabel) {y : Fin 52 → Nat} (hy : IsDeck y) :

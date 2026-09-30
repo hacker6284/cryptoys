@@ -23,6 +23,9 @@ binaries go to `$BUILD`, default `/tmp/v12-fullcipher`). Card indices and differ
 a 3-cycle, `a,b;c,d` a double swap, `v10:a,x` the relabelling `v10Sym a x`).
 Output differences are compared by a 64-bit hash (collisions are possible in principle;
 they would merge distinct differences). Intervals are exact Poisson 95% intervals.
+"Mix round" and "final round" here are the proof's grouping (the proof's mix rounds and
+its finalRound step; the mapping to SPEC's rounds is in the `FullCipher.lean` header), not
+SPEC's round numbers.
 
 * `final1.c`: the final no-mix round without its keys (`unkeyedNoMix`: lay, SumRanks,
   ShiftRows, scoop; the Compose keys never change a relabelling difference). `x` uniform;
@@ -36,7 +39,8 @@ they would merge distinct differences). Intervals are exact Poisson 95% interval
   (`logs/mixfinal.log`); 5♦↔8♦ twice, seeds 101–108 (the M7 scoping run,
   `logs/mixfinal_scoping.log`, reproduced line for line by `sh run.sh scoping`) and seeds
   111–118 (`logs/mixfinal.log`). The scoping run of A♣↔2♣ used the same seeds 101–108 and
-  is identical to the committed one, so it is not an independent run.
+  is identical to the committed one, so it is not an independent run. The seed alone fixes
+  the decks, whatever α is (see the seeding caveat in §3).
 
 ## 2. Final round alone: spread of the output difference (`logs/final1.log`)
 
@@ -79,13 +83,22 @@ Every hit came through the constant path β = α; no hit through any β ≠ α w
 Comparison: given the number of samples with β = α, the hits through β = α are
 Binomial(that number, p) with p the survival of α through SumRanks at a uniform deck,
 exactly 1/221 for these same-suit swaps; paths through β ≠ α could only add hits. The
-expected column is (β = α count) / 221, i.e. predicted DP ≈ 2.65e-7 (A♣↔2♣) and
-≈ 2.56e-7 (5♦↔8♦). P(X ≤ hits) is the one-sided Poisson lower tail (the binomial tail
-agrees to 0.001). A♣↔2♣ together with the second 5♦↔8♦ run: 85 hits against 104.6
+expected column is (β = α count) / 221, i.e. predicted DP ≈ 2.65e-7 (A♣↔2♣), ≈ 2.54e-7
+(5♦↔8♦ scoping) and ≈ 2.58e-7 (5♦↔8♦ rerun); ≈ 2.56e-7 is the pooled 5♦↔8♦ figure.
+P(X ≤ hits) is the one-sided Poisson lower tail (the binomial tail agrees to 0.001). A♣↔2♣ together with the second 5♦↔8♦ run: 85 hits against 104.6
 expected, one-sided p ≈ 0.03; all three runs: 136 against 155.4, p ≈ 0.06. So the runs sit
 somewhat low against the exact 1/221. No bug has been found: the final-round test in
 `mixfinal.c` on samples with β = α is the same test as in `final1.c`, whose survivor counts
-match 1/221 (§2), and the scoping run of 5♦↔8♦ sits on the prediction. Two swaps only, one
+match 1/221 (§2), and the scoping run of 5♦↔8♦ sits on the prediction.
+
+Seeding caveat. `mixfinal.c` seeds its generator from the seed number alone (not from α),
+and draws one `x` and one `w` per sample whatever happens. So the A♣↔2♣ run and the
+5♦↔8♦ scoping run, both seeds 101–108, use identical `x` and `w` decks, sample for sample.
+The pool over all three runs (136 against 155.4) is therefore not over independent
+samples. The effect on p is negligible: hits are rare (about 2.5e-7 per sample) and the two
+runs test different α, so a shared deck almost never gives a hit in both. The A♣↔2♣ +
+rerun pool (seeds 101–108 and 111–118) and the 5♦↔8♦ pool do not share seeds. The runs
+were not re-seeded, so the logs stay reproducible as committed. Two swaps only, one
 mix round only, independent uniform keys only; the real PassKey schedule is not measured
 here, and nothing here is proved.
 

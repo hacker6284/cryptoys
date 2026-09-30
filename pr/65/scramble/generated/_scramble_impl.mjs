@@ -378,9 +378,7 @@ export function move_name(face, turns) {
 }
 
 export function push_step(s, kind, move, nybble, block, at, up, front) {
-    let steps = _rt.dup(s.steps);
-    steps.push(_rt.rec(new Step(_rt.dup(kind), _rt.dup(move), _rt.dup(nybble), block, at, _rt.dup(up), _rt.dup(front), facelets_of(s.cube))));
-    s.steps = _rt.dup(steps);
+    _rt.field_mut(s, "steps").push(_rt.rec(new Step(_rt.dup(kind), _rt.dup(move), _rt.dup(nybble), block, at, _rt.dup(up), _rt.dup(front), facelets_of(s.cube))));
     return s;
 }
 

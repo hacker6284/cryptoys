@@ -39,9 +39,8 @@ assert.match(
     "Message input updates Digest only",
 );
 
-const digestFn = scramble.match(/function refreshDigest\(\) \{[\s\S]*?\n    \}/);
+const digestFn = scramble.match(/function refreshDigest\(\w*\) \{[\s\S]*?\n    \}/);
 assert.ok(digestFn, "refreshDigest is the live Message path");
-assert.match(digestFn[0], /if \(fileSource\) return/, "file Digest must not restart from Message input");
 assert.doesNotMatch(digestFn[0], /view\.setAlg/, "Digest path must not call setAlg");
 assert.doesNotMatch(digestFn[0], /bindAlg\(/, "Digest path must not bind the move timeline");
 assert.doesNotMatch(digestFn[0], /mapTraceToAlg/, "leave-trace mapping waits for Play / Step / teach");

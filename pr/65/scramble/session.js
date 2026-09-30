@@ -12,22 +12,6 @@ import { bindGrowFields } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
 import { createLiveDigest } from "../shared/live-digest.js";
 import {
-    DEMO_FILE_BUSY_MS,
-    DEMO_FILE_CHUNK_BYTES,
-    DEMO_FILE_DETERMINATE_BYTES,
-    DEMO_FILE_TEACH_MAX_BYTES,
-    DEMO_FILE_WORKER_READY_MS,
-    bindMessageFile,
-    canWalkFile,
-    checkFileSize,
-    formatFileSize,
-    hashFile,
-    hideFileChip,
-    readFileChunks,
-    showFileChip,
-} from "../shared/file-hash.js";
-import { createFastHasher } from "./fast-hash.js";
-import {
     bindSegmented,
     bindTransport,
     openSpec,
@@ -37,6 +21,13 @@ import {
     teachPosition,
 } from "../shared/session.js";
 import { colorName, renderOutline } from "../shared/teach.js";
+
+// Bounded by generated-module speed (Gen 2 ≈ 5 s at 4 KiB); rises as the spec/sudoc speedups land.
+export const FILE_MAX_BYTES = 4 * 1024;
+
+function formatSize(bytes) {
+    return bytes < 1024 ? `${bytes} B` : `${+(bytes / 1024).toFixed(1)} KiB`;
+}
 
 const V2_TURNS = {
     0: "U R", 1: "U F", 2: "U L", 3: "U B",
@@ -52,8 +43,6 @@ export function createScrambleSession({
     exposeTeach = false,
     puzzle = "3x3x3",
     swapPuzzle,
-    hashFile: hashFileFn,
-    fileWorkerUrl,
 } = {}) {
     const { abort, listen, $, $$ } = sessionScope(root);
 
@@ -67,13 +56,7 @@ export function createScrambleSession({
     const outlineEl = $("#outline");
     const ioNote = $("#io-note");
     const fileInput = $("#message-file-input");
-    const fileBtn = $("#message-file-btn");
     const fileChip = $("#message-file");
-    const fileNameEl = $("#message-file-name");
-    const fileClear = $("#message-file-clear");
-    const fileProgress = $("#message-file-progress");
-    const fileProgressBar = $("#message-file-progress-bar");
-    const workerUrl = String(fileWorkerUrl || new URL("./hash-worker.js", import.meta.url));
     bindGrowFields(root);
 
     const solved = solved_facelets();
@@ -96,8 +79,7 @@ export function createScrambleSession({
     let job = 0;
     let solverReady = false;
     let messageBytes = [];
-    let fileSource = null;
-    let hashing = false;
+    let fileBytes = null;
     let fileAbort = null;
     const live = createLiveDigest();
 
@@ -166,21 +148,6 @@ export function createScrambleSession({
         status.textContent = text;
     }
 
-    function setIoNote(text) {
-        if (!ioNote) return;
-        const next = text || "";
-        ioNote.hidden = !next;
-        ioNote.textContent = next;
-    }
-
-    function walkNote() {
-        return `Digest is the whole file. Play / Step stay off above ${formatFileSize(DEMO_FILE_TEACH_MAX_BYTES)}.`;
-    }
-
-    function canWalkPayload() {
-        return !fileSource || canWalkFile(fileSource);
-    }
-
     function usesTimeline() {
         return typeof view.setAlg === "function" && typeof view.playLeaves === "function";
     }
@@ -222,29 +189,14 @@ export function createScrambleSession({
         void view.jumpToLeaf?.(-1);
     }
 
-    function materializeTrace() {
-        if (trace.length || !messageBytes.length) return;
-        const state = version === 2 ? scramble_v2() : scramble_v1();
-        update(state, messageBytes);
-        const result = evaluate(state);
-        trace = result.trace;
-        setDigest(digestHex(result.digest));
-    }
-
     function bindTimeline() {
-        materializeTrace();
         mappedAlg = mapTraceToAlg(trace);
         projectedAlg = projectAlgForPuzzle(mappedAlg, puzzleId);
         bindAlg();
     }
 
     function ensureTimeline() {
-        if (!canWalkPayload()) {
-            setIoNote(walkNote());
-            return false;
-        }
         live.ensureTimeline(bindTimeline);
-        return true;
     }
 
     function jumpViewToCursor() {
@@ -455,11 +407,15 @@ export function createScrambleSession({
         jumpViewToCursor();
     }
 
-    function refreshDigest() {
-        // Typed Message only. A selected file must not be rehashed from
-        // input/recompute — that abort+restart loop leaves Digest empty
-        // while the progress bar keeps moving.
-        if (fileSource) return;
+    function hashMessage(bytes) {
+        const state = version === 2 ? scramble_v2() : scramble_v1();
+        update(state, bytes);
+        return evaluate(state);
+    }
+
+    // Typed Message, or a picked file's `result` (typing never touches a file's Digest).
+    function refreshDigest(result) {
+        if (fileBytes && !result) return;
         // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / Skip to end.
         job += 1;
         markPlay(false);
@@ -468,14 +424,12 @@ export function createScrambleSession({
         settleView();
         errorEl.textContent = "";
         try {
-            messageBytes = bytesOf(input.value);
+            messageBytes = fileBytes || bytesOf(input.value);
         } catch (err) {
             errorEl.textContent = err.message;
             return;
         }
-        const state = version === 2 ? scramble_v2() : scramble_v1();
-        update(state, messageBytes);
-        const result = evaluate(state);
+        result ||= hashMessage(messageBytes);
         trace = result.trace;
         mappedAlg = { alg: "", units: [], ranges: [] };
         projectedAlg = { alg: "", units: [], ranges: [], hash: hashesThisPuzzle(), dropped: 0 };
@@ -489,146 +443,50 @@ export function createScrambleSession({
         showStatus(caption());
     }
 
-    function beginDigestJob() {
-        job += 1;
-        markPlay(false);
-        solving = false;
-        busy = false;
-        settleView();
-        errorEl.textContent = "";
-        trace = [];
-        mappedAlg = { alg: "", units: [], ranges: [] };
-        projectedAlg = { alg: "", units: [], ranges: [], hash: hashesThisPuzzle(), dropped: 0 };
-        cursor = -1;
-        setTeaching(false);
-        view.pauseTimeline?.();
-        view.resetTimeline?.();
-        showFace(solved);
-        showStatus(caption());
-        return job;
+    function setIoNote(text) {
+        ioNote.hidden = !text;
+        ioNote.textContent = text;
     }
 
-    function applyFileDigest(digest, bytes) {
-        messageBytes = bytes || [];
-        setDigest(digestHex(digest));
-        live.afterDigest();
-        showStatus(caption());
-    }
-
-    function setFileProgress(processed, total) {
-        if (!fileProgress || !fileProgressBar) return;
-        const max = Number(total) || 0;
-        const done = Number(processed) || 0;
-        fileProgress.hidden = false;
-        if (max < DEMO_FILE_DETERMINATE_BYTES) {
-            fileProgress.classList.add("is-busy");
-            fileProgress.removeAttribute("aria-valuenow");
-            fileProgressBar.style.width = "";
-            return;
-        }
-        fileProgress.classList.remove("is-busy");
-        const pct = done <= 0 ? 0 : Math.max(1, Math.min(100, Math.round((done / max) * 100)));
-        fileProgress.setAttribute("aria-valuenow", String(pct));
-        fileProgressBar.style.width = `${pct}%`;
-    }
-
-    function clearFileProgress() {
-        if (fileProgress) {
-            fileProgress.hidden = true;
-            fileProgress.classList.remove("is-busy");
-            fileProgress.setAttribute("aria-valuenow", "0");
-        }
-        if (fileProgressBar) fileProgressBar.style.width = "0%";
-    }
-
-    async function holdFileBusy(started) {
-        const wait = DEMO_FILE_BUSY_MS - (Date.now() - started);
-        if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
-    }
-
-    async function hashSilentOnHost(file, { onProgress, signal } = {}) {
-        const hasher = createFastHasher();
-        hasher.start(version);
-        await readFileChunks(file, {
-            chunkBytes: DEMO_FILE_CHUNK_BYTES,
-            signal,
-            async onChunk(bytes, progress) {
-                hasher.push(bytes);
-                onProgress?.(progress);
-                await new Promise((resolve) => setTimeout(resolve, 0));
-            },
-        });
-        return { digest: hasher.finish().digest };
-    }
-
-    async function hashSelectedFile() {
-        const file = fileSource;
-        if (!file) return;
+    // One update + evaluate on the generated module, in a Worker; on the page if the Worker fails.
+    async function hashFile() {
         fileAbort?.abort();
-        const abort = new AbortController();
-        fileAbort = abort;
-        const token = beginDigestJob();
-        hashing = true;
-        setDigest("");
-        live.afterDigest();
-        const modest = canWalkFile(file);
-        const started = Date.now();
-        setFileProgress(0, file.size || 1);
-        const onProgress = ({ processed, total }) => {
-            if (token !== job) return;
-            setFileProgress(processed, total);
-        };
-        try {
-            const { digest } = await hashFile(file, {
-                version,
-                workerUrl,
-                readyMs: DEMO_FILE_WORKER_READY_MS,
-                signal: abort.signal,
-                hashInline: hashFileFn,
-                onProgress,
-                fallback: (opts) => hashSilentOnHost(opts.file, opts),
-            });
-            if (token !== job || abort.signal.aborted) return;
-            hashing = false;
-            if (!digest?.length) throw new Error("Could not hash this file.");
-            const bytes = modest ? Array.from(new Uint8Array(await file.arrayBuffer())) : [];
-            setIoNote(modest ? "" : walkNote());
-            applyFileDigest(digest, bytes);
-            await holdFileBusy(started);
-            if (token !== job || abort.signal.aborted) return;
-            clearFileProgress();
-        } catch (err) {
-            if (err?.name === "AbortError") return;
-            if (token !== job) return;
-            hashing = false;
-            setDigest("");
-            live.afterDigest();
-            await holdFileBusy(started);
-            if (token !== job) return;
-            clearFileProgress();
-            setIoNote(err?.message || "Could not hash this file.");
-        }
+        const abort = (fileAbort = new AbortController());
+        const bytes = fileBytes;
+        refreshDigest({ digest: [], trace: [] });
+        setIoNote("Hashing…");
+        const result = await new Promise((resolve) => {
+            if (typeof Worker !== "function") return resolve(hashMessage(bytes));
+            const worker = new Worker(new URL("./hash-worker.js", import.meta.url), { type: "module" });
+            const done = (value) => {
+                worker.terminate();
+                resolve(value);
+            };
+            abort.signal.addEventListener("abort", () => worker.terminate());
+            worker.onmessage = (event) => done(event.data);
+            worker.onerror = () => done(hashMessage(bytes));
+            worker.postMessage({ version, bytes });
+        });
+        if (abort.signal.aborted) return;
+        setIoNote("");
+        refreshDigest(result);
     }
 
     async function applyFile(file) {
-        const check = checkFileSize(file);
-        if (!check.ok) {
-            setIoNote(check.message);
-            return false;
+        if (file.size > FILE_MAX_BYTES) {
+            setIoNote(`Files can be up to ${formatSize(FILE_MAX_BYTES)}.`);
+            return;
         }
-        fileSource = file;
-        showFileChip({ fileChip, fileNameEl, file });
-        await hashSelectedFile();
-        return true;
+        $("#message-file-name").textContent = `${file.name} · ${formatSize(file.size)}`;
+        fileChip.hidden = false;
+        fileBytes = new Uint8Array(await file.arrayBuffer());
+        await hashFile();
     }
 
     function clearFile() {
         fileAbort?.abort();
-        fileAbort = null;
-        hashing = false;
-        fileSource = null;
-        hideFileChip({ fileChip, fileNameEl });
-        clearFileProgress();
+        fileBytes = null;
+        fileChip.hidden = true;
         setIoNote("");
         refreshDigest();
     }
@@ -674,12 +532,12 @@ export function createScrambleSession({
     }
 
     async function play() {
-        if (solving || busy || hashing) return;
+        if (solving || busy || !trace.length) return;
         if (playing) {
             markPlay(false);
             return;
         }
-        if (!ensureTimeline()) return;
+        ensureTimeline();
         markPlay(true);
         const token = job;
         while (playing && token === job && cursor < trace.length - 1) {
@@ -718,9 +576,9 @@ export function createScrambleSession({
     }
 
     function enterTeach() {
-        if (hashing) return;
-        if (trace.length === 0 && !fileSource) refreshDigest();
-        if (!ensureTimeline()) return;
+        if (trace.length === 0) refreshDigest();
+        if (!trace.length) return;
+        ensureTimeline();
         setTeaching(true);
         cursor = -1;
         markPlay(false);
@@ -728,10 +586,10 @@ export function createScrambleSession({
     }
 
     function skipToEnd() {
-        if (solving || hashing) return;
+        if (solving) return;
         if (!trace.length) refreshDigest();
-        if (!trace.length && !fileSource) return;
-        if (!ensureTimeline() || !trace.length) return;
+        if (!trace.length) return;
+        ensureTimeline();
         setTeaching(false);
         seek(trace.length - 1);
         settleView();
@@ -752,14 +610,11 @@ export function createScrambleSession({
             errorEl.textContent = "Solve is 3×3 only.";
             return;
         }
-        if (solving || hashing) return;
+        if (solving) return;
         markPlay(false);
         solving = true;
         setTeaching(false);
-        if (!ensureTimeline()) {
-            solving = false;
-            return;
-        }
+        ensureTimeline();
         const token = ++job;
         errorEl.textContent = "";
         try {
@@ -826,17 +681,13 @@ export function createScrambleSession({
         version = Number(value);
         const genLabel = $("#gen-label");
         if (genLabel) genLabel.textContent = `Gen ${version}`;
-        if (fileSource) {
-            void hashSelectedFile();
-            return;
-        }
-        refreshDigest();
+        if (fileBytes) void hashFile();
+        else refreshDigest();
     }, listen);
 
     bindSegmented(root, "encoding", (value) => {
         encoding = value;
         input.placeholder = encoding === "hex" ? "a7  or  0xA7" : "hello";
-        if (fileSource) return;
         refreshDigest();
     }, listen);
 
@@ -907,14 +758,13 @@ export function createScrambleSession({
         onChange: () => refreshDigest(),
         signal: abort.signal,
     });
-    bindMessageFile({
-        fileInput,
-        fileBtn,
-        fileClear,
-        onPick: applyFile,
-        onClear: clearFile,
-        signal: abort.signal,
-    });
+    $("#message-file-btn").addEventListener("click", () => fileInput.click(), listen);
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        fileInput.value = "";
+        if (file) void applyFile(file);
+    }, listen);
+    $("#message-file-clear").addEventListener("click", clearFile, listen);
 
     bindTransport(root, {
         play,
@@ -941,8 +791,6 @@ export function createScrambleSession({
     const api = {
         enterTeach,
         recompute: refreshDigest,
-        applyFile,
-        clearFile,
         setView(next) {
             if (next) view = next;
             live.dropTimeline();
@@ -954,8 +802,6 @@ export function createScrambleSession({
         reset,
         dispose() {
             fileAbort?.abort();
-            fileAbort = null;
-            hashing = false;
             job += 1;
             markPlay(false);
             solving = false;

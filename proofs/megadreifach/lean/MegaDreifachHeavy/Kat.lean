@@ -20,7 +20,13 @@
   L_{k+1}`, and `eq_posOfLists_of_posL` (EmHelpers) turns it back into a
   `Position` equation. Without this, the closure depth of the chained positions
   exhausts memory for 3 or more blocks. The intermediate lists are chaining
-  values, not digests; a wrong one fails its `step_*` lemma.
+  values, not digests. There are 13 of them (one per block of the five
+  multi-block KATs: 2 + 2 + 2 + 3 + 4). They were computed by an out-of-tree
+  Python reference of the v2 sudo, but no trust in it is needed: `step_<name>_0`
+  starts from the IV lists (`ivCook12Cp` ...), each `step_*` `decide!` checks one
+  link of the chain, and the closing `decide!` of `alg_<name>` checks the digest
+  of the last literal. So the kernel checks the whole chain from the IV to the
+  digest, and a wrong literal fails its `step_*` lemma.
 
   Cost: roughly 45 s of kernel evaluation per block (16 blocks in total), so
   this module lives in the non-default lean_lib `MegaDreifachHeavy`: build it

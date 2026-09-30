@@ -11,7 +11,7 @@
 >
 > The conformance implementation for this frozen text is `megadreifach.sudo` next to this file (`v1/megadreifach.sudo`; it keeps the v1 file name so that the Lean emitted from it is still the module `Megadreifach`). It differs from the last v1 `megadreifach.sudo` on main (bbc26cb) only in comment lines 1 and 6. Relative links in the body below point at the v1-era tree (`megadreifach.sudo` there means `v1/megadreifach.sudo` here; `kats/megaminx_hash_kats.json` there is the v1 KAT file, now renamed `kats/megaminx_hash_kats_v1.json` with identical contents). The body below is the v1 SPEC as of main bbc26cb (after PR #119), verbatim.
 >
-> **Lean.** The Lean proof package models this v1 (not v2): see [`proofs/megadreifach/README.md`](../../../../proofs/megadreifach/README.md).
+> **Lean.** The main Lean proof package ([`proofs/megadreifach/`](../../../../proofs/megadreifach/README.md)) now models v2. The Lean about this v1 is the frozen package [`proofs/deprecated/megadreifach-v1/`](../../../../proofs/deprecated/megadreifach-v1/README.md): the v1 weakness proofs and their import closure, built against Lean emitted from `v1/megadreifach.sudo`. Two body lines in §7 below are therefore stale. The copy at `proofs/megadreifach/vectors/` is now the v2 KAT file. `proofs/megadreifach/lean/MegaDreifachHeavy/Kat.lean` no longer kernel-checks the v1 KATs: it checks the v2 ones, and no Lean checks the v1 digests.
 >
 > **Suit names.** The v1 text numbers suits (`suit = id % 4`) but never names them. The repository now names them in **CHaSeD** order for both versions: 0 = Clubs ♣, 1 = Hearts ♥, 2 = Spades ♠, 3 = Diamonds ♦ (turn amounts 1, 2, 3, 4). This is a naming only; no v1 digest or behaviour depends on it.
 

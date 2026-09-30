@@ -68,7 +68,7 @@ Informal proof: G2_PROOF.md §3–4. Sketch for a later Lean file, **not** shipp
 1. Same-first-card 2-card collisions reduce to M8 nets (`no_same_first_two_card_of_nets`). Already a reduction here.
 2. Distinct first cards: `g''` collides iff the two-card nets `T(o₁,b)∘T(o,a) = T(o₁',d)∘T(o,c)` *and* final grips match.
 3. (Written for v1's Recipe A; not redone for v2.) Absolute Recipe A: matching final grips forces the same second-read R3 element `r`. Same `r` on different second-card faces needs the same corner cubie in two slots after the net — the research scan reports this obstruction on every same-net / diff-first candidate (`second_cons_ok = 0`). The v2 read (right after the held-face turn, corner or edge by parity) needs its own obstruction.
-4. Lean needs: the grip/read model (v2: `Em.readGrip`), its update, and the matching slot obstruction as a lemma. The 60-grip × 2704-word scan stays a computer-checked certificate unless a uniform slot argument replaces it.
+4. Lean needs: the grip/read model (v2: `Em.readGrip`), its update, and the matching slot obstruction as a lemma. The 60-grip × 2704-word scan is a v1 scan (Recipe A); it has not been rerun for v2, and it would stay a computer-checked certificate unless a uniform slot argument replaced it.
 
 Do **not** claim M9 from the Python scan. Relative recipes are **disproved** (do not “prove” their L2-safety). L3 abs collisions **exist** (do not prove L3 absence).
 

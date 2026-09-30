@@ -60,7 +60,7 @@ theorem read_grip_refines (g : Position) (phys noon : Fin 12) (pos : Nat)
       .ok (embedGrip (readGrip g phys noon pos)) := by
   obtain ⟨r, hr⟩ := Option.isSome_iff_exists.mp h.rot
   have hrA : readGrip g phys noon pos = r := by
-    unfold readGrip absReorient; rw [hr]; rfl
+    rw [readGrip_eq]; unfold absReorient; rw [hr]; rfl
   rw [hrA]
   unfold Megadreifach.read_grip
   rw [show (2 : Int) = Int.ofNat 2 from rfl, modI_ofNat _ (by decide : (2 : Nat) ≠ 0), ok_bind,

@@ -24,8 +24,11 @@
     corner, even: edge) is an explicit `Nat` argument of `g2Step` / `f3Step`.
 
   Algebraic layer only; Link 2 refinements live in `Link2/FaceTurn.lean`,
-  `Link2/EmHelpers.lean`, `Link2/EmCorner.lean`, `Link2/EmRecipe.lean` and
-  `Link2/EmStep.lean`.  Zero sorry.  No native_decide.
+  `Link2/Inverse.lean`, `Link2/EmHelpers.lean`, `Link2/EmCorner.lean`,
+  `Link2/EmEdge.lean`, `Link2/EmRecipe.lean`, `Link2/EmSpin.lean`,
+  `Link2/EmStep.lean`, `Link2/EmInv.lean` (the `GripOk` invariant),
+  `Link2/EmIv.lean` and `Link2/EmBlock.lean` (the whole block).  Zero sorry.
+  No native_decide.
 -/
 import MegaDreifach.Group
 
@@ -255,15 +258,19 @@ def nbr (f : Fin 12) (i : Nat) : Fin 12 := rd (nbrsTab.getD f.val []) 12 (by dec
 
 def opp (f : Fin 12) : Fin 12 := rd oppTab 12 (by decide) f.val
 
+/-- `down_noon_hold` (sudo): the hold position whose face is Down's visual noon
+    (the rank-7 face). -/
+abbrev downNoonHold : Fin 12 := 6
+
 /-- `visual_noon p o` (v2): the neighbour that the face at hold position `p`
     points to, read from the grip alone.  Up (`p = 0`) → Front (`o 1`); upper ring
     (`1 ≤ p ≤ 5`) → Up (`o 0`); lower ring (`6 ≤ p ≤ 10`) → its upper-left
-    neighbour `o (p - 5)`; Down (`p = 11`) → the rank-7 face `o 6`. -/
+    neighbour `o (p - 5)`; Down (`p = 11`) → the rank-7 face `o downNoonHold`. -/
 def visualNoon (p : Fin 12) (o : Grip) : Fin 12 :=
   if p.val = 0 then o 1
   else if p.val < 6 then o 0
   else if h : p.val < 11 then o ⟨p.val - 5, by omega⟩
-  else o 6
+  else o downNoonHold
 
 /-- Index of `x` in a 5-ring (`5` if absent). -/
 def ringIdx (ring : List (Fin 12)) (x : Fin 12) : Nat := ring.findIdx (· == x)
@@ -373,7 +380,13 @@ def readColours (g : Position) (phys noon : Fin 12) (pos : Nat) : Fin 12 × Fin 
 
 /-- `read_grip g phys noon pos`: the new absolute grip (Up = c1, Front = c2). -/
 def readGrip (g : Position) (phys noon : Fin 12) (pos : Nat) : Grip :=
-  absReorient (readColours g phys noon pos).1 (readColours g phys noon pos).2
+  let (c1, c2) := readColours g phys noon pos
+  absReorient c1 c2
+
+/-- `readGrip` with the colour pair projected (definitional; structure eta). -/
+theorem readGrip_eq (g : Position) (phys noon : Fin 12) (pos : Nat) :
+    readGrip g phys noon pos =
+      absReorient (readColours g phys noon pos).1 (readColours g phys noon pos).2 := rfl
 
 /-! ## Block map -/
 

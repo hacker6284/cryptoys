@@ -268,50 +268,28 @@ def HashDeckBodyFrom(deal, h_st, rule='C36'):
 
 # ---------------------------------------------------------------- slow reference
 
-def ref_em(h, deal, rule, grips=None):
-    """E_m from m9_search's Em.lean transliteration, with the rule's noon and F3 count.
-    For C36 this is m9_search.em_block itself (asserted in selfcheck)."""
+def ref_noon_t(rule):
+    """Keyword arguments of m9_search.em_block (the slow reference E_m, transliterated from
+    Em.lean) for a rule: its noon (None = m9_search's own visual noon) and F3 count."""
     noon, t = RULES[rule]
-    nf = NOONS[noon]
-    g, o = h, GRIPS[0]
-    for i, card in enumerate(deal[:52]):
-        rank, amt = card // 4, card % 4 + 1
-        if rank < 12:
-            g1, ow, phys = ref.face_turn(g, o[rank], amt), o, o[rank]
-        else:
-            ow = ref.spin(o, amt); g1 = ref.face_turn(g, o[0], (5 - amt) % 5); phys = ow[0]
-        n = nf(phys, ow)
-        kind, s = ref.read_slot(phys, n, i + 1)
-        piece, ori = (g1[0][s], g1[1][s]) if kind == 'c' else (g1[2][s], g1[3][s])
-        new_o = ref.abs_reorient(*ref.read_colours_piece(kind, s, piece, ori, phys, n))
-        g, o = ref.face_turn(ref.face_turn(g1, n, 1), ow[1], 1), new_o
-        if grips is not None:
-            grips.append(GRIPS.index(tuple(o)))
-    for rnd in range(1, t + 1):
-        g = ref.face_turn(g, o[0], 1)
-        phys, n = o[0], nf(o[0], o)
-        kind, s = ref.read_slot(phys, n, rnd)
-        piece, ori = (g[0][s], g[1][s]) if kind == 'c' else (g[2][s], g[3][s])
-        o = ref.abs_reorient(*ref.read_colours_piece(kind, s, piece, ori, phys, n))
-        if grips is not None:
-            grips.append(GRIPS.index(tuple(o)))
-    return g
+    return {'noon_of': None if noon == 'visual' else NOONS[noon], 't': t}
 
 
 def ref_hash(msg, rule='C36'):
-    """Slow Hash: m9_search's IV, pad and digest code around ref_em."""
+    """Slow Hash: m9_search's IV, pad and digest code around m9_search.em_block."""
     h = ref.ID
     for f in range(12):
         h = ref.face_turn(h, f, 1)
     m = ref.pad(msg)
     for b in range(0, len(m), 28):
-        h = ref.compose(h, ref_em(h, ref.phi_unrank(int.from_bytes(bytes(m[b:b + 28]), 'big')), rule))
+        deal = ref.phi_unrank(int.from_bytes(bytes(m[b:b + 28]), 'big'))
+        h = ref.compose(h, ref.em_block(h, deal, **ref_noon_t(rule)))
     return ref.to_bytes(h)
 
 
 def ref_body_from(deal, h, rule='C36'):
     """Slow HashDeckBodyFrom: position_to_bytes(compose(h, E_m(h)))."""
-    return ref.to_bytes(ref.compose(h, ref_em(h, deal, rule)))
+    return ref.to_bytes(ref.compose(h, ref.em_block(h, deal, **ref_noon_t(rule))))
 
 
 def as_tuple_pos(p):
@@ -416,10 +394,8 @@ def selfcheck(n_random=40):
             h = uniform_pos(rng); d = rand_deal(rng); hp = as_tuple_pos(h)
             gf, gs = [], []
             a = from_st(E.em(to_st(h), d, grips=gf))
-            b = ref_em(hp, d, rule, grips=gs)
-            if rule == 'C36':
-                assert b == ref.em_block(hp, d)
-            same += as_tuple_pos(a) == b and gf == gs
+            b = ref.em_block(hp, d, grips=gs, **ref_noon_t(rule))
+            same += as_tuple_pos(a) == b and gf == [GRIPS.index(tuple(o)) for o in gs]
         assert same == n_random, f'{rule}: fast != slow on {n_random - same} blocks'
         out.append(f'fast engine {rule} vs slow reference: {same}/{n_random} random (uniform h, '
                    'random deal) blocks with identical E_m and grip sequence')

@@ -53,10 +53,15 @@ def pmap(fn, tasks, workers):
     return [fn(t) for t in tasks]
 
 
-def ub(k, n):
+def rate_text(k, n):
+    """Rate k/n with ci95 (Wilson; for k = 0 the exact one-sided 95% upper bound).  The
+    same_blocks log uses ../suit_blind_collision.py's rate_ci (exact Poisson) instead, so
+    that it reads like the v1 log it re-runs; the two formats are kept because every
+    committed log is byte-for-byte evidence."""
     lo, hi = ci95(k, n)
-    return f"95% upper bound {hi:.1e} (=1/{1 / hi:,.0f})" if k == 0 else \
-        f"= 1/{n / k:,.0f}, 95% CI [{lo:.1e},{hi:.1e}]"
+    if k == 0:
+        return f"95% upper bound {hi:.1e} (=1/{1 / hi:,.0f})"
+    return f"= 1/{n / k:,.0f}, 95% CI [{lo:.1e},{hi:.1e}]"
 
 
 # ================================================================ quick experiments
@@ -66,34 +71,59 @@ def x_selfcheck(workers):
     print('\n'.join(selfcheck()))
 
 
+def _v1_counts(deal):
+    """v1 (../md.py) one block from IV-COOK12: face turns, clicks, pieces read (calls of
+    md.colours_at) and re-grips (calls of md.recipe_a), counted by wrapping the two."""
+    import md as v1
+    calls = Counter()
+    orig = v1.colours_at, v1.recipe_a
+
+    def colours_at(*a):
+        calls['read'] += 1
+        return orig[0](*a)
+
+    def recipe_a(*a):
+        calls['regrip'] += 1
+        return orig[1](*a)
+
+    v1.colours_at, v1.recipe_a = colours_at, recipe_a
+    try:
+        tr = []
+        v1.em_block(v1.iv_cook12(), deal, trace=tr)
+    finally:
+        v1.colours_at, v1.recipe_a = orig
+    return len(tr), sum(a % 5 for f, a in tr), calls['read'], calls['regrip']
+
+
 def x_cost(workers):
     """SPEC §5.7 / §8 cost per block: face turns, clicks, pieces read, re-grips (review T8)."""
-    import md as v1
-    rng = random.Random(8); deals = [rand_deal(rng) for _ in range(100)]
-    rows = []
-    turns, clicks = set(), set()
-    for d in deals:
-        tr = []; v1.em_block(v1.iv_cook12(), d, trace=tr)
-        turns.add(len(tr)); clicks.add(sum(a % 5 for f, a in tr))
-    rows.append(('v1', 12, turns, clicks, {64}))
+    rng = random.Random(8)
+    deals = [rand_deal(rng) for _ in range(100)]
+    rows = [('v1', 12, {_v1_counts(d) for d in deals})]
     for rule in ('A_vn', 'C36', 'C76'):
-        E = engine(rule); turns, clicks, reads = set(), set(), set()
+        E = engine(rule)
+        counts = set()
         for d in deals:
-            tr, rec = [], []; E.em(IV_ST, d, trace=tr, rec=rec)
-            turns.add(len(tr)); clicks.add(sum(a % 5 for f, a in tr)); reads.add(len(rec))
-        rows.append((rule, E.t, turns, clicks, reads))
+            tr, rec, grips = [], [], []
+            E.em(IV_ST, d, trace=tr, rec=rec, grips=grips)
+            counts.add((len(tr), sum(a % 5 for f, a in tr), len(rec), len(grips)))
+        rows.append((rule, E.t, counts))
     print('100 random one-block deals from IV-COOK12 (seed 8); every count is the same for all 100 '
           '(each deal holds every card once).  v1 turns from ../md.py (v1 sudo), v1 reads = 52 + 12.')
     base = None
-    for rule, t, turns, clicks, reads in rows:
-        if not (len(turns) == len(clicks) == len(reads) == 1):
-            fail(f'{rule}: counts vary between deals'); continue
-        (tu,), (cl,), (rd,) = turns, clicks, reads
+    turns_reads = {}
+    for rule, t, counts in rows:
+        if len(counts) != 1:
+            fail(f'{rule}: counts vary between deals')
+            continue
+        ((tu, cl, rd, rg),) = counts
+        if rg != 52 + t:
+            fail(f'{rule}: {rg} re-grips, not 52 + {t}')
         base = base or (tu, rd)
+        turns_reads[rule] = (tu, rd)
         print(f"{rule:5s}: F3 rounds {t:2d}; face turns {tu} ({tu / base[0]:.2f}x v1), clicks {cl}; "
-              f"pieces read {rd} ({rd / base[1]:.2f}x v1); whole-puzzle re-grips {52 + t}")
-    c36 = [r for r in rows if r[0] == 'C36'][0]; c76 = [r for r in rows if r[0] == 'C76'][0]
-    (a,), (b,) = c76[2], c36[2]; (ra,), (rb,) = c76[4], c36[4]
+              f"pieces read {rd} ({rd / base[1]:.2f}x v1); whole-puzzle re-grips {rg}")
+    (a, ra), (b, rb) = turns_reads['C76'], turns_reads['C36']
     print(f"C76 vs C36: face turns {a}/{b} = {a / b:.2f}x, pieces read {ra}/{rb} = {ra / rb:.2f}x")
 
 
@@ -120,9 +150,9 @@ def x_suit_exact(workers):
     """Suit dependence, exact: for every grip, read parity and rank, the four suits bring
     pieces from four DIFFERENT slots of the pre-card state into the read slot.  Since a
     position is a permutation, that is four different pieces for every state.  Two
-    m9_search step-2 facts are re-asserted here: one colour pair never comes from two
-    different pieces, and abs_reorient(*pair)[:2] == pair for every pair read, so the new
-    grip determines the colour pair (Lean: M9.readGrip_colours, M9.corner_read_piece,
+    m9_search step-2 facts are re-asserted here (m9_search.read_injectivity): one colour
+    pair never comes from two different pieces, and abs_reorient(*pair)[:2] == pair for
+    every pair read, so the new grip determines the colour pair (Lean: M9.readGrip_colours, M9.corner_read_piece,
     M9.edge_read_piece).  Hence the four new grips always differ."""
     E = engine('C36'); bad = 0; cases = 0
     for par in (0, 1):
@@ -134,22 +164,14 @@ def x_suit_exact(workers):
                     slot = rd[0][0]; srcs, dsts, _ = op1
                     src.add(srcs[dsts.index(slot)] if slot in dsts else slot)
                 cases += 1; bad += len(src) != 4
-    # read -> grip injective on pieces across all read configurations (m9_search step 2)
-    seen = {}
-    ok = True
-    for kind in ('c', 'e'):
-        seen.clear()
-        for phys in range(12):
-            for noon in eng.ref.NBRS[phys]:
-                k, s = eng.ref.read_slot(phys, noon, 1 if kind == 'c' else 2)
-                for q in range(20 if kind == 'c' else 30):
-                    for x in range(3 if kind == 'c' else 2):
-                        rr = eng.ref.read_colours_piece(k, s, q, x, phys, noon)
-                        ok &= seen.setdefault(rr, q) == q
-        # the grip determines the colour pair: abs_reorient returns a rotation with that pair
-        ok_reo = all(eng.ref.abs_reorient(*rr)[:2] == rr for rr in seen)
-        if not ok_reo:
-            fail(f'abs_reorient(*pair)[:2] != pair for some {kind} pair')
+    # read -> grip injective on pieces across all read configurations, and abs_reorient
+    # keeps the colour pair: m9_search step 2 (m9_search.read_injectivity asserts both)
+    try:
+        eng.ref.read_injectivity()
+        ok = True
+    except AssertionError as e:
+        ok = False
+        fail(f'm9_search.read_injectivity: {e!r}')
     print(f"C36 card steps (identical for A_vn and C76): (grip, parity, rank) cases where the 4 suits "
           f"read pieces from 4 different pre-card slots: {cases - bad}/{cases}")
     print(f"read colour pair -> piece injective across all read configurations: {ok}")
@@ -254,17 +276,27 @@ def x_pseudo_pairs(workers):
 SW_CLASSES = ('sr1', 'sr2', 'sr3', 'sr4', 'srR', 'dr1', 'dr2', 'suit')
 
 
+def prefix_states(E, d):
+    """One block d from IV-COOK12: the (state, grip) before each of its 52 cards, and the
+    final state after the F3 rounds."""
+    st = list(IV_ST)
+    gi = 0
+    cps = []
+    for i in range(52):
+        cps.append((list(st), gi))
+        gi = E.run(st, d, gi=gi, start=i, stop=i + 1, f3=False)
+    E.run(st, d, gi=gi, start=52, stop=52)
+    return cps, st
+
+
 def _swaps_work(args):
     rule, n, seed = args
     E = engine(rule); rng = random.Random(seed)
     cnt = {c: [0, 0] for c in SW_CLASSES}; ex = []
     for _ in range(n):
-        msg = bytes(rng.randrange(256) for _ in range(28)); d = phi_chunk(list(msg))
-        st = list(IV_ST); gi = 0; cps = []
-        for i in range(52):
-            cps.append((list(st), gi)); gi = E.run(st, d, gi=gi, start=i, stop=i + 1, f3=False)
-        E.run(st, d, gi=gi, start=52, stop=52)
-        base = st
+        msg = bytes(rng.randrange(256) for _ in range(28))
+        d = phi_chunk(list(msg))
+        cps, base = prefix_states(E, d)
 
         def test(cls, d2, i, check_rank=True):
             if check_rank and phi_rank(d2) >= LIM:
@@ -323,10 +355,7 @@ def _same_blocks_work(args):
         rng = random.Random(f"sbc:{seed}:{idx}")
         msg = bytes(rng.randrange(256) for _ in range(28))
         d = phi_chunk(list(msg))
-        st = list(IV_ST); gi = 0; cps = []
-        for i in range(52):
-            cps.append((list(st), gi)); gi = E.run(st, d, gi=gi, start=i, stop=i + 1, f3=False)
-        E.run(st, d, gi=gi, start=52, stop=52)
+        cps, st = prefix_states(E, d)
         for gap, i, j, d2, n2 in sbc.swaps(d, gaps):
             s0, g0 = cps[i]; s = list(s0); E.run(s, d2, gi=g0, start=i)
             out[gap][0] += 1
@@ -405,20 +434,20 @@ def _local_c(args):
     return tests, hits, ex
 
 
-def x_local(workers, rule='C36', ch=6):
+def x_local(workers, rule='C36', chunks=6):
     """Review t5: (a) k random cards / (b) rank-structured cards, all k! orderings, from a
     uniform random state and grip at a random mid-block position (NOT from the IV): a hit is
     two orderings reaching the same (state, grip); (c) windows of k consecutive cards in real
     blocks from IV-COOK12, every other ordering run to the end of the block (dm compared)."""
     fact = {2: 2, 3: 6, 4: 24}
-    print(f"rule {rule} ({ch} chunks per size)")
+    print(f"rule {rule} ({chunks} chunks per size)")
     for structured in (False, True):
         for k in (2, 3, 4):
             n_st = 600000 // fact[k]
-            res = pmap(_local_ab, [(rule, k, n_st // ch, structured, 1000 * k + 17 * c + structured)
-                                   for c in range(ch)], workers)
+            res = pmap(_local_ab, [(rule, k, n_st // chunks, structured, 1000 * k + 17 * c + structured)
+                                   for c in range(chunks)], workers)
             orders = sum(r[0] for r in res); full = sum(r[1] for r in res)
-            npairs = (n_st // ch) * ch * fact[k] * (fact[k] - 1) // 2
+            npairs = (n_st // chunks) * chunks * fact[k] * (fact[k] - 1) // 2
             lo, hi = ci95(full, npairs)
             print(f"{rule} ({'b' if structured else 'a'}) k={k} {'rank-structured' if structured else 'random cards'}: "
                   f"{orders:,} orderings, {npairs:,} ordering pairs, full collisions {full}; "
@@ -426,7 +455,7 @@ def x_local(workers, rule='C36', ch=6):
                      else f"per-pair 95% upper bound {hi:.1e} (=1/{1 / hi:,.0f})"))
     for k in (2, 3, 4):
         nw = 240000 // (fact[k] - 1)
-        res = pmap(_local_c, [(rule, k, nw // ch, 5000 * k + c) for c in range(ch)], workers)
+        res = pmap(_local_c, [(rule, k, nw // chunks, 5000 * k + c) for c in range(chunks)], workers)
         tests = sum(r[0] for r in res); hits = sum(r[1] for r in res); exs = [r[2] for r in res if r[2]]
         lo, hi = ci95(hits, tests)
         print(f"{rule} (c) k={k} window reorderings in IV blocks: {tests:,} tests, dm collisions {hits}"
@@ -497,9 +526,10 @@ def _coverage_work(args):
             else:
                 a, b, c = rng.sample(range(30), 3); ep[a], ep[b], ep[c] = ep[b], ep[c], ep[a]
             t1 = []; E.em(to_st((cp, co, ep, eo)), d, trace=t1); inv[kind] += t1 == t0
-    hitE = sum(attack(E, uniform_st(rng), rand_deal(rng), 'edges', rng) is not None for _ in range(NA))
-    hitC = sum(attack(E, uniform_st(rng), rand_deal(rng), 'corners', rng) is not None for _ in range(NA))
-    return uc, ue, bits, sameW, allc, alle, hitE, hitC, nread, inv
+    # read-class recipe: 'edges' = same corners + 2-edge flip, 'corners' = same edges + twist
+    hit_flip = sum(attack(E, uniform_st(rng), rand_deal(rng), 'edges', rng) is not None for _ in range(NA))
+    hit_twist = sum(attack(E, uniform_st(rng), rand_deal(rng), 'corners', rng) is not None for _ in range(NA))
+    return uc, ue, bits, sameW, allc, alle, hit_flip, hit_twist, nread, inv
 
 
 def x_coverage(workers, rules=(('C36', 3), ('C76', 4)), NB=3000, NA=1500):
@@ -507,14 +537,14 @@ def x_coverage(workers, rules=(('C36', 3), ('C76', 4)), NB=3000, NA=1500):
     pieces never change the word W), small changes of h that leave W unchanged, and the
     read-class free-start recipe (every hit is re-checked with the real dm on both sides).
     Chunk counts per rule are the review's (3 for C36, 4 for C76; README.md)."""
-    for rule, ch in rules:
-        res = pmap(_coverage_work, [(rule, NB // ch, NA // ch, 777 + c) for c in range(ch)], workers)
+    for rule, chunks in rules:
+        res = pmap(_coverage_work, [(rule, NB // chunks, NA // chunks, 777 + c) for c in range(chunks)], workers)
         uc = sum((r[0] for r in res), []); ue = sum((r[1] for r in res), []); bits = sorted(sum((r[2] for r in res), []))
-        n = len(uc); na = (NA // ch) * ch
+        n = len(uc); na = (NA // chunks) * chunks
         sameW = sum(r[3] for r in res); allc = sum(r[4] for r in res); alle = sum(r[5] for r in res)
-        hitE = sum(r[6] for r in res); hitC = sum(r[7] for r in res); nr = sum(sum(r[8]) for r in res) / n
-        loE, hiE = ci95(hitE, na); loC, hiC = ci95(hitC, na)
-        print(f"{rule:5s}: {n} blocks from uniform random h ({ch} chunks, seeds 777+c); reads/block {nr:.0f}; "
+        hit_flip = sum(r[6] for r in res); hit_twist = sum(r[7] for r in res); nr = sum(sum(r[8]) for r in res) / n
+        lo_flip, hi_flip = ci95(hit_flip, na); lo_twist, hi_twist = ci95(hit_twist, na)
+        print(f"{rule:5s}: {n} blocks from uniform random h ({chunks} chunks, seeds 777+c); reads/block {nr:.0f}; "
               f"unread corners {sum(uc) / n:.2f}, unread edges {sum(ue) / n:.2f}; "
               f"P(all corners read) {allc / n:.3f}, P(all edges read) {alle / n:.3f}; free bits mean {sum(bits) / n:.1f} "
               f"median {bits[n // 2]:.1f} max {bits[-1]:.1f}; unread re-randomised -> same W {sameW}/{n}")
@@ -523,9 +553,11 @@ def x_coverage(workers, rules=(('C36', 3), ('C76', 4)), NB=3000, NA=1500):
         iv = {k: sum(r[9][k] for r in res) for k in ('flip2', 'twist2', 'ecyc3')}
         print(f"       small change of h leaves W unchanged: flip 2 random edges {iv['flip2']}/{n}, "
               f"twist 2 corners {iv['twist2']}/{n}, 3-cycle of edges {iv['ecyc3']}/{n}")
-        print(f"       pseudo-collision (read-class recipe): same corners {hitE}/{na} = {hitE / na:.3f} [{loE:.3f},{hiE:.3f}]"
-              f"{f' (~{na / hitE:.0f} (h,m) draws per hit)' if hitE else ''}; same edges {hitC}/{na} = {hitC / na:.3f} "
-              f"[{loC:.3f},{hiC:.3f}]{f' (~{na / hitC:.0f} draws per hit)' if hitC else ''}")
+        # hit_flip: recipe 'edges' (h, h' share their corners and differ by a 2-edge flip),
+        # printed as "same corners"; hit_twist: recipe 'corners' (same edges, 2-corner twist)
+        print(f"       pseudo-collision (read-class recipe): same corners {hit_flip}/{na} = {hit_flip / na:.3f} [{lo_flip:.3f},{hi_flip:.3f}]"
+              f"{f' (~{na / hit_flip:.0f} (h,m) draws per hit)' if hit_flip else ''}; same edges {hit_twist}/{na} = {hit_twist / na:.3f} "
+              f"[{lo_twist:.3f},{hi_twist:.3f}]{f' (~{na / hit_twist:.0f} draws per hit)' if hit_twist else ''}")
         if sameW != n:
             fail(f'{rule}: re-randomising unread pieces changed W or gave an illegal h')
 
@@ -536,25 +568,25 @@ def x_coverage_chunks(workers, rules=('C36', 'C76'), counts=(1, 2, 3, 4, 5, 6, 8
     the coverage statistics are sampling noise."""
     print('rule chunks | unread corners, edges | read-class same corners | 2-edge flip keeps W')
     for rule in rules:
-        for ch in counts:
-            res = pmap(_coverage_work, [(rule, NB // ch, NA // ch, 777 + c) for c in range(ch)], workers)
+        for chunks in counts:
+            res = pmap(_coverage_work, [(rule, NB // chunks, NA // chunks, 777 + c) for c in range(chunks)], workers)
             uc = sum((r[0] for r in res), []); ue = sum((r[1] for r in res), []); n = len(uc)
-            na = (NA // ch) * ch; hitE = sum(r[6] for r in res); fl = sum(r[9]['flip2'] for r in res)
-            print(f"{rule:4s} {ch:6d} | {sum(uc) / n:.2f}, {sum(ue) / n:.2f} | {hitE}/{na} = {hitE / na:.3f} | {fl}/{n}")
+            na = (NA // chunks) * chunks; hit_flip = sum(r[6] for r in res); fl = sum(r[9]['flip2'] for r in res)
+            print(f"{rule:4s} {chunks:6d} | {sum(uc) / n:.2f}, {sum(ue) / n:.2f} | {hit_flip}/{na} = {hit_flip / na:.3f} | {fl}/{n}")
 
 
 def x_suit_sampled(workers, rule='C36', N=30000, NB=1000):
     """Review t3 (sampled): the 4 suits of a random rank from a uniform state, grip and
     parity; and in situ at every card of NB real blocks from IV-COOK12."""
     E = engine(rule); rng = random.Random(3)
-    dep = all4 = 0; pr = defaultdict(lambda: [0, 0]); nd = 0
+    dep = all4 = 0; pair_counts = defaultdict(lambda: [0, 0]); n_distinct = 0
     for _ in range(N):
         st0 = uniform_st(rng); gi = rng.randrange(60); r = rng.randrange(13); par = rng.randrange(2)
         gs = [E.step_grip(list(st0), par, gi, 4 * r + s) for s in range(4)]
-        dep += len(set(gs)) > 1; all4 += len(set(gs)) == 4; nd += len(set(gs))
+        dep += len(set(gs)) > 1; all4 += len(set(gs)) == 4; n_distinct += len(set(gs))
         for a, b in itertools.combinations(range(4), 2):
-            pr[r][0] += gs[a] == gs[b]; pr[r][1] += 1
-    pair = sum(v[0] for v in pr.values()) / sum(v[1] for v in pr.values())
+            pair_counts[r][0] += gs[a] == gs[b]; pair_counts[r][1] += 1
+    pair = sum(v[0] for v in pair_counts.values()) / sum(v[1] for v in pair_counts.values())
     same = tot = blindc = 0
     for _ in range(NB):
         d = rand_deal(rng); st = list(IV_ST); gi = 0
@@ -565,46 +597,81 @@ def x_suit_sampled(workers, rule='C36', N=30000, NB=1000):
             same += sum(gs[x] == gs[c] for x in gs if x != c); tot += 3; blindc += len(set(gs.values())) == 1
             gi = E.run(st, d, gi=gi, start=i, stop=i + 1, f3=False)
     print(f"{rule:5s}: {N} uniform (state, grip, rank, parity), seed 3: grip depends on the suit {dep / N:.4f}, "
-          f"all 4 grips distinct {all4 / N:.4f}, mean distinct {nd / N:.2f}, "
+          f"all 4 grips distinct {all4 / N:.4f}, mean distinct {n_distinct / N:.2f}, "
           f"P(two given suits give the same grip) {pair:.4f}")
     print(f"       in situ ({NB} IV blocks x 52 cards): P(another suit gives the same grip) {same / tot:.4f}, "
           f"P(all 4 suits the same) {blindc / (NB * 52):.4f}")
 
 
-def _targeted_work(args):
-    rule, n, seed = args
-    E = engine(rule); rng = random.Random(seed); tests = {2: 0, 3: 0}; hits = {2: 0, 3: 0}; ex = []
+def _place(d, placements):
+    """Move each (position, card) into place by swapping it with the card's current slot."""
+    for pos, card in placements:
+        j = d.index(card)
+        d[pos], d[j] = d[j], d[pos]
+
+
+def _swap_trials(rule, n, seed, draw, keys, max_ex):
+    """Shared loop of the targeted and telescoping searches.  draw(rng) returns (key, i, d,
+    d2) or None (a rejected draw); a trial needs both deals to be messages (rank < 2^224),
+    runs both from the IV-COOK12 state before card i to the end of the block and compares
+    the final states.  Stops after n trials in all."""
+    E = engine(rule)
+    rng = random.Random(seed)
+    tests = dict.fromkeys(keys, 0)
+    hits = dict.fromkeys(keys, 0)
+    ex = []
     while sum(tests.values()) < n:
-        d = rand_deal(rng); g = rng.choice((2, 3)); i = rng.randrange(0, 52 - g)
-        r = rng.randrange(12)
-        if r == 9:
-            r = 12
-        s1, s2 = rng.sample(range(4), 2); t = 36 + rng.randrange(4)
-        for pos, card in ((i, 4 * r + s1), (i + g, 4 * r + s2), (i + 1, t)):
-            j = d.index(card); d[pos], d[j] = d[j], d[pos]
-        if not (d[i] == 4 * r + s1 and d[i + g] == 4 * r + s2 and d[i + 1] == t):
+        drawn = draw(rng)
+        if drawn is None:
             continue
-        d2 = d[:]; d2[i], d2[i + g] = d2[i + g], d2[i]
+        key, i, d, d2 = drawn
         if phi_rank(d) >= LIM or phi_rank(d2) >= LIM:
             continue
-        st = list(IV_ST); gi = E.run(st, d, start=0, stop=i, f3=False)
-        a = list(st); E.run(a, d, gi=gi, start=i); b = list(st); E.run(b, d2, gi=gi, start=i)
-        tests[g] += 1
+        st = list(IV_ST)
+        gi = E.run(st, d, start=0, stop=i, f3=False)
+        a = list(st)
+        E.run(a, d, gi=gi, start=i)
+        b = list(st)
+        E.run(b, d2, gi=gi, start=i)
+        tests[key] += 1
         if a == b:
-            hits[g] += 1
-            if len(ex) < 3:
+            hits[key] += 1
+            if len(ex) < max_ex:
                 ex.append((phi_rank(d).to_bytes(28, 'big').hex(), phi_rank(d2).to_bytes(28, 'big').hex()))
     return tests, hits, ex
 
 
-def x_targeted_T(workers, rules=('A', 'A_vn'), N=2000000, ch=20, seed=4):
+def _draw_targeted(rng):
+    """A same-rank pair at i and i + gap (gap 2 or 3; rank not T) around a T card at i + 1."""
+    d = rand_deal(rng)
+    g = rng.choice((2, 3))
+    i = rng.randrange(0, 52 - g)
+    r = rng.randrange(12)
+    if r == 9:
+        r = 12
+    s1, s2 = rng.sample(range(4), 2)
+    t = 36 + rng.randrange(4)
+    _place(d, ((i, 4 * r + s1), (i + g, 4 * r + s2), (i + 1, t)))
+    if not (d[i] == 4 * r + s1 and d[i + g] == 4 * r + s2 and d[i + 1] == t):
+        return None
+    d2 = d[:]
+    d2[i], d2[i + g] = d2[i + g], d2[i]
+    return g, i, d, d2
+
+
+def _targeted_work(args):
+    rule, n, seed = args
+    return _swap_trials(rule, n, seed, _draw_targeted, (2, 3), 3)
+
+
+def x_targeted_T(workers, rules=('A', 'A_vn'), N=2000000, chunks=20, seed=4):
     """Review t4d: a same-rank swap at distance 2 or 3 around a rank-T card at i+1 (the
     table-noon degeneracy of x_grip_merge), from IV-COOK12; both deals are messages."""
     for rule in rules:
-        res = pmap(_targeted_work, [(rule, N // ch, seed * 7919 + c) for c in range(ch)], workers)
+        res = pmap(_targeted_work, [(rule, N // chunks, seed * 7919 + c) for c in range(chunks)], workers)
         for g in (2, 3):
             t = sum(r[0][g] for r in res); h = sum(r[1][g] for r in res)
-            print(f"{rule}: gap {g} with a T at i+1: {h} collisions / {t:,} trials, {ub(h, t)}")
+            print(f"{rule}: gap {g} with a T at i+1: {h} collisions / {t:,} trials, {rate_text(h, t)}")
         for r in res:
             for e in r[2][:1]:
                 m1, m2 = bytes.fromhex(e[0]), bytes.fromhex(e[1])
@@ -617,37 +684,34 @@ def x_targeted_T(workers, rules=('A', 'A_vn'), N=2000000, ch=20, seed=4):
 TELE_PAIRS = ((2, 49), (1, 50), (2, 26))   # A-spades/K-hearts, A-hearts/K-spades, A-spades/7-spades
 
 
+def _draw_tele(rng):
+    """One of TELE_PAIRS, in either order, at positions i and i + 1; d2 swaps them."""
+    d = rand_deal(rng)
+    i = rng.randrange(0, 51)
+    x, y = rng.choice(TELE_PAIRS)
+    if rng.randrange(2):
+        x, y = y, x
+    _place(d, ((i, x), (i + 1, y)))
+    if d[i] != x or d[i + 1] != y:
+        return None
+    d2 = d[:]
+    d2[i], d2[i + 1] = d2[i + 1], d2[i]
+    return 0, i, d, d2
+
+
 def _tele_work(args):
     rule, n, seed = args
-    E = engine(rule); rng = random.Random(seed); t = h = 0; ex = []
-    while t < n:
-        d = rand_deal(rng); i = rng.randrange(0, 51)
-        x, y = rng.choice(TELE_PAIRS)
-        if rng.randrange(2):
-            x, y = y, x
-        for pos, card in ((i, x), (i + 1, y)):
-            j = d.index(card); d[pos], d[j] = d[j], d[pos]
-        if d[i] != x or d[i + 1] != y:
-            continue
-        d2 = d[:]; d2[i], d2[i + 1] = d2[i + 1], d2[i]
-        if phi_rank(d) >= LIM or phi_rank(d2) >= LIM:
-            continue
-        st = list(IV_ST); gi = E.run(st, d, start=0, stop=i, f3=False)
-        a = list(st); E.run(a, d, gi=gi, start=i); b = list(st); E.run(b, d2, gi=gi, start=i); t += 1
-        if a == b:
-            h += 1
-            if len(ex) < 2:
-                ex.append((phi_rank(d).to_bytes(28, 'big').hex(), phi_rank(d2).to_bytes(28, 'big').hex()))
-    return t, h, ex
+    tests, hits, ex = _swap_trials(rule, n, seed, _draw_tele, (0,), 2)
+    return tests[0], hits[0], ex
 
 
-def x_telescoping(workers, rule='A_vn', N=2000000, ch=24, seed=6):
+def x_telescoping(workers, rule='A_vn', N=2000000, chunks=24, seed=6):
     """Review t4e 'pairs': adjacent swaps of the telescoping card pairs A♠K♥, A♥K♠, A♠7♠
     (ids 2/49, 1/50, 2/26; CHaSeD suit order) at a random position of an IV block."""
-    res = pmap(_tele_work, [(rule, N // ch, seed * 7919 + c) for c in range(ch)], workers)
+    res = pmap(_tele_work, [(rule, N // chunks, seed * 7919 + c) for c in range(chunks)], workers)
     t = sum(r[0] for r in res); h = sum(r[1] for r in res)
-    print(f"{rule}: adjacent telescoping-pair (A♠K♥, A♥K♠, A♠7♠) swaps from IV-COOK12 ({ch} chunks): "
-          f"{h} collisions / {t:,}, {ub(h, t)}")
+    print(f"{rule}: adjacent telescoping-pair (A♠K♥, A♥K♠, A♠7♠) swaps from IV-COOK12 ({chunks} chunks): "
+          f"{h} collisions / {t:,}, {rate_text(h, t)}")
 
 
 # ================================================================ driver

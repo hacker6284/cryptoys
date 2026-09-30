@@ -142,7 +142,9 @@ rank(p) = Σ inv(n) · (len(p) - 1 - n)!
 
 where `inv(n)` counts entries after index `n` that are smaller than `p[n]`.
 
-Let `cp` be the eight corner ids, `co` the first seven corner orientations, `ep` the twelve edge ids, and `eo` the first eleven edge orientation bits packed little-endian (`eo = Σ b[i] · 2^i` for `i` from 0 through 10). Then
+Let `cp` be the eight corner ids, `co` the first seven corner orientations, `ep` the twelve edge ids, and `eo` the first eleven edge orientation bits packed little-endian (`eo = Σ b[i] · 2^i` for `i` from 0 through 10).
+
+`co` packs the first seven corner orientations little-endian in base 3, the same way: `co = Σ o[i] · 3^i` for `i` from 0 through 6, where `o[i]` is the orientation of corner slot `i` (`index_bytes` in `scramble.sudo`: `ori_acc = ori_acc + slot * pow3`). Then
 
 ```text
 s = rank(cp)

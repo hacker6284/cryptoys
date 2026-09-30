@@ -16,3 +16,5 @@ import ScrambleV2.Link2.Reach
 import ScrambleV2.Link2.Find
 import ScrambleV2.Link2.Lookup
 import ScrambleV2.Link2.Pieces
+import ScrambleV2.Link2.Rank
+import ScrambleV2.Link2.Digest

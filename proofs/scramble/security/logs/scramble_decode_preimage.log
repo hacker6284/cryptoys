@@ -1,0 +1,9 @@
+[1] invariants on 2000 random face-turn states: violations 0
+[2] decode round-trip on 2000 random states: 2000/2000
+[3] target digest 132FDCE0BF26E5898 (hex only; no message hashed). decoded pose facelets OGBYWWWYYGBRBRWGRORGRWGOBRWOYORYGRBWGOGROOBBYYOYGBWBYW
+  42 corner-collision stages: blocks tried per stage mean 22554 (2^14.46), min 7569, max 51638; sqrt(pi/2 * 24*8!*3^7) = 57657
+  corner bridge 4+4 nybbles: 63453 distinct forward ends, 2 meets
+  edge MITM: 2097152 forward edge outcomes (2^21.00)
+    found M = 9d298e993e049b5ea70b0234e7e841269085560d2f23e9a113b87954c6c8e9cb7e7b1a3183cf4c93209b1bdfc592bbfb975ace4fba865984d431e841bb747b5fbe8c41ccdf897b7476c69e500d12b1ee007757431bb1bba3f3566962a6337fd48687dc00824a375c3638da518f622a6d0f85fb2bf91e2e0addd670561a43506f29d5e905e6bcac886b87e418d9737c9add988b2a5c3ea7b9ae6e113f895d03c7187ffb17779b13ead9e462a3 (172 bytes)
+    digest(M) = 132FDCE0BF26E5898; PREIMAGE OF 132FDCE0BF26E5898 VERIFIED: True
+    work 8103088 nybble steps = 2^22.95; wall 22 s; peak RSS 291 MB

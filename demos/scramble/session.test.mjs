@@ -18,7 +18,7 @@ export function scramble_v1() { return { v: 1, bytes: [] }; }
 export function scramble_v2() { return { v: 2, bytes: [] }; }
 export function update(state, bytes) { state.bytes = bytes; }
 export function evaluate(state) {
-    const digest = [0x00, 0xab, 0xcd, state.bytes?.length || 0];
+    const digest = [0x00, 0xab, state.v, state.bytes?.length || 0];
     const facelets = ${JSON.stringify(SOLVED)};
     const move = (state.bytes?.length || 0) % 2 === 0 ? "U" : "R";
     return {
@@ -69,11 +69,6 @@ function el(tag = "div", extras = {}) {
         },
         setAttribute(name, value) {
             if (name === "aria-label") this.title = value;
-            this.attrs = this.attrs || {};
-            this.attrs[name] = value;
-        },
-        removeAttribute(name) {
-            if (this.attrs) delete this.attrs[name];
         },
         replaceChildren(...next) {
             this.children = next;
@@ -101,11 +96,9 @@ const nodes = {
     "io-note": el("p", { id: "io-note" }),
     "message-file-btn": el("button", { id: "message-file-btn" }),
     "message-file-input": el("input", { id: "message-file-input" }),
-    "message-file": el("div", { id: "message-file" }),
+    "message-file": Object.assign(el("div", { id: "message-file" }), { hidden: true }),
     "message-file-name": el("span", { id: "message-file-name" }),
     "message-file-clear": el("button", { id: "message-file-clear" }),
-    "message-file-progress": el("div", { id: "message-file-progress" }),
-    "message-file-progress-bar": el("div", { id: "message-file-progress-bar" }),
     play: el("button", { id: "play" }),
     "skip-end": el("button", { id: "skip-end" }),
     step: el("button", { id: "step" }),
@@ -136,10 +129,10 @@ globalThis.window = window;
 globalThis.HTMLTextAreaElement = function HTMLTextAreaElement() {};
 HTMLTextAreaElement.prototype = { value: "" };
 
-const versionButtons = [
-    el("button", { dataset: { version: "1" } }),
-    el("button", { dataset: { version: "2" } }),
-];
+const segments = {
+    "[data-version]": [el("button", { dataset: { version: "1" } }), el("button", { dataset: { version: "2" } })],
+    "[data-encoding]": [el("button", { dataset: { encoding: "text" } }), el("button", { dataset: { encoding: "hex" } })],
+};
 
 const root = {
     dataset: {},
@@ -148,8 +141,8 @@ const root = {
         return null;
     },
     querySelectorAll(sel) {
-        if (sel === "[data-version]") return versionButtons;
-        if (sel === "[data-encoding]" || sel === "[data-puzzle]" || sel === "[data-jump]") {
+        if (segments[sel]) return segments[sel];
+        if (sel === "[data-puzzle]" || sel === "[data-jump]") {
             return [];
         }
         if (sel === "textarea.grow-field") return [];
@@ -173,27 +166,11 @@ const view = {
     highlightRuleB() {},
 };
 
-const { createFastHasher } = await import("./fast-hash.js");
-const { DEMO_FILE_MAX_BYTES, DEMO_FILE_TEACH_MAX_BYTES } = await import("../shared/file-hash.js");
-const realGenerated = existsSync(impl);
-
-async function hashInline({ file, version, onProgress }) {
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    onProgress?.({ processed: bytes.length, total: bytes.length });
-    assert.equal(nodes["message-file-progress"].hidden, false, "progress is visible while hashing");
-    assert.equal(nodes["message-file-progress"].classList.contains("is-busy"), bytes.length < 1024 * 1024, "small files use the busy pulse");
-    const hasher = createFastHasher();
-    hasher.start(version);
-    hasher.push(bytes);
-    return hasher.finish();
-}
-
-const { createScrambleSession } = await import("./session.js");
+const { createScrambleSession, FILE_MAX_BYTES } = await import("./session.js");
 const session = createScrambleSession({
     view,
     specUrl: "about:blank",
     root,
-    hashFile: hashInline,
 });
 
 assert.ok(nodes.digest.value.startsWith("0x"), "initial Digest is live hex");
@@ -243,97 +220,153 @@ await Promise.resolve();
 assert.equal(jumps.at(-1), finalLeaf, "skip during play keeps the final leaf");
 assert.match(nodes.status.textContent, /Seat white up/, "skip during play keeps the final cursor");
 
-function pickVersion(v) {
-    for (const fn of versionButtons[v - 1].listeners.click || []) fn();
+// Files: the worker (real hash-worker.js behind a fake Worker), the
+// page fallback, Gen / Clear / cap, and controls while a file hashes.
+const pick = (sel, i) => { for (const fn of segments[sel][i].listeners.click) fn(); };
+const gen = (v) => pick("[data-version]", v - 1);
+async function until(ok) {
+    for (let i = 0; i < 400 && !ok(); i++) await new Promise((resolve) => setTimeout(resolve, 5));
 }
-nodes.message.value = "changed";
+function chooseFile(file) {
+    nodes["message-file-input"].files = [file];
+    nodes["message-file-input"].value = `C:\\fakepath\\${file.name}`;
+    for (const fn of nodes["message-file-input"].listeners.change) fn();
+}
+function typed(hex) {
+    nodes.message.value = hex;
+    session.recompute();
+    return nodes.digest.value;
+}
+
+const bin = new File([new Uint8Array([0x00, 0xff, 0x10, 0x80, 0x7f, 0x01])], "blob.bin");
+pick("[data-encoding]", 1);
+gen(1);
+const hexV1 = typed("00ff10807f01");
+gen(2);
+const hexV2 = typed("00ff10807f01");
+click("skip-end");
+const hexAlg = algs.at(-1);
+const abV2 = typed("ab");
+assert.notEqual(hexV1, hexV2);
+assert.notEqual(abV2, hexV2);
+
+globalThis.self = {};
+await import("./hash-worker.js");
+const runWorker = self.onmessage;
+const workers = [];
+let workerMode = "run";
+globalThis.Worker = class {
+    constructor(url, opts) {
+        Object.assign(this, { url: String(url), opts, terminated: false, replied: false });
+        workers.push(this);
+    }
+    postMessage(data) {
+        setTimeout(() => {
+            if ((this.terminated && workerMode !== "late") || workerMode === "hang") return;
+            if (workerMode === "fail") return this.onerror(new Event("error"));
+            self.postMessage = (reply) => {
+                this.replied = true;
+                this.onmessage({ data: structuredClone(reply) });
+            };
+            runWorker({ data: structuredClone(data) });
+        }, workerMode === "late" ? 50 : 0);
+    }
+    terminate() { this.terminated = true; }
+};
+
+let browsed = 0;
+nodes["message-file-input"].click = () => { browsed += 1; };
+click("message-file-btn");
+assert.equal(browsed, 1, "the paperclip opens the file picker");
+chooseFile(bin);
+assert.equal(nodes["message-file-input"].value, "", "the input resets so the same file can be picked again");
+assert.equal(nodes["message-file"].hidden, false, "picking a file shows its chip");
+assert.equal(nodes["message-file-name"].textContent, "blob.bin · 6 B");
+await until(() => nodes.digest.value === hexV2);
+assert.equal(nodes.digest.value, hexV2, "file Digest = same bytes typed as hex (Gen 2)");
+assert.match(workers[0].url, /\/hash-worker\.js$/);
+assert.equal(workers[0].opts.type, "module");
+assert.ok(workers[0].replied && workers[0].terminated, "the worker hashed the file and was released");
+assert.equal(nodes["io-note"].hidden, true, "the Hashing… note clears");
+
+gen(1);
+await until(() => nodes.digest.value === hexV1);
+assert.equal(nodes.digest.value, hexV1, "Gen switch rehashes the file (Gen 1)");
+const before = workers.length;
+gen(2);
+gen(1);
+gen(2);
+await until(() => nodes.digest.value === hexV2 && workers.at(-1).replied);
+assert.equal(nodes.digest.value, hexV2, "Gen switch back rehashes the file (Gen 2)");
+assert.ok(workers.slice(before, -1).every((w) => w.terminated && !w.replied), "a newer hash stops the stale worker");
+
+nodes.message.value = "ab";
 session.recompute();
-const typedChanged = nodes.digest.value;
-nodes.message.value = "hello";
-pickVersion(1);
-const typedHelloV1 = nodes.digest.value;
-pickVersion(2);
-const typedHelloV2 = nodes.digest.value;
+pick("[data-encoding]", 0);
+pick("[data-encoding]", 1);
+assert.equal(nodes.digest.value, hexV2, "typing / Encoding do not touch a file's Digest");
 click("skip-end");
-const typedHelloAlg = algs.at(-1);
+assert.equal(algs.at(-1), hexAlg, "Skip to end walks the file like the typed hex");
 
-const algsAfterType = algs.length;
-const modest = new File([new Uint8Array([104, 101, 108, 108, 111])], "hello.bin");
-await session.applyFile(modest);
-assert.ok(nodes.digest.value.startsWith("0x"), "file Digest fills when the hasher finishes");
-if (realGenerated) {
-    assert.equal(nodes.digest.value, typedHelloV2, "file bytes hash like the same typed Message (Gen 2)");
-    pickVersion(1);
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    assert.equal(nodes.digest.value, typedHelloV1, "Gen switch rehashes the file (Gen 1)");
-    pickVersion(2);
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    assert.equal(nodes.digest.value, typedHelloV2, "Gen switch back rehashes the file (Gen 2)");
-}
-assert.match(nodes["message-file-name"].textContent, /hello\.bin/);
-assert.match(nodes["message-file-name"].textContent, /5 B/);
-assert.equal(nodes.message.hidden, false, "Message textarea stays on the paperclip row");
-assert.equal(nodes["message-file-progress"].hidden, true, "progress clears when Digest lands");
-assert.equal(algs.length, algsAfterType, "setAlg is not called during file hash progress");
+const edge = { name: "edge.bin", size: FILE_MAX_BYTES, arrayBuffer: async () => new Uint8Array([0xab]).buffer };
+chooseFile(edge);
+await until(() => nodes.digest.value === abV2);
+assert.equal(nodes.digest.value, abV2, "a file at the cap is hashed");
+assert.equal(nodes["message-file-name"].textContent, "edge.bin · 4 KiB");
+chooseFile({ name: "big.bin", size: FILE_MAX_BYTES + 1 });
+assert.equal(nodes["io-note"].textContent, "Files can be up to 4 KiB.", "over-cap files are rejected");
+assert.equal(nodes["io-note"].hidden, false);
+assert.equal(nodes["message-file-name"].textContent, "edge.bin · 4 KiB", "reject keeps the current file");
+assert.equal(nodes.digest.value, abV2);
 
+nodes.message.value = "00ff10807f01";
+click("message-file-clear");
+assert.equal(nodes.digest.value, hexV2, "Clear rehashes the typed Message");
+assert.equal(nodes["message-file"].hidden, true);
+assert.equal(nodes["io-note"].hidden, true);
+
+assert.equal(typed("ab"), abV2);
+nodes.message.value = "zz";
+workerMode = "fail";
+chooseFile(bin);
+await until(() => nodes.digest.value === hexV2);
+assert.equal(nodes.digest.value, hexV2, "a failed worker falls back to the page; a file ignores bad typed hex");
+
+workerMode = "hang";
+nodes.message.value = "ab";
+click("message-file-clear");
+chooseFile(bin);
+await until(() => nodes["io-note"].textContent === "Hashing…");
+assert.equal(nodes["io-note"].textContent, "Hashing…");
+assert.equal(nodes.digest.value, "", "Digest waits for the file");
+const algsWhileHashing = algs.length;
+click("play");
 click("skip-end");
-assert.equal(algs.length, algsAfterType + 1, "Skip to end after a modest file binds the timeline");
-assert.equal(algs.at(-1), typedHelloAlg, "the file walk is the same walk as the typed Message");
-assert.equal(jumps.at(-1), algs.at(-1).split(/\s+/).filter(Boolean).length - 1, "Skip to end seeks the file's final leaf");
-session.enterTeach();
-assert.equal(algs.length, algsAfterType + 1, "Step after Skip reuses the file timeline");
-
-const tooBig = { name: "huge.bin", size: DEMO_FILE_MAX_BYTES + 1 };
-assert.equal(await session.applyFile(tooBig), false, "oversized files are rejected");
-assert.match(nodes["io-note"].textContent, /10 MB/);
-assert.match(nodes["message-file-name"].textContent, /hello\.bin/, "reject keeps the current file");
-assert.equal(algs.length, algsAfterType + 1, "oversized reject does not setAlg");
-
-nodes.message.value = "changed";
-session.clearFile();
-assert.equal(nodes.digest.value, typedChanged, "clear rehashes typed Message");
-assert.equal(algs.length, algsAfterType + 1, "clearing a file updates Digest only");
-
-const jpeg = new Uint8Array(DEMO_FILE_TEACH_MAX_BYTES + 64);
-jpeg[0] = 0xff;
-jpeg[1] = 0xd8;
-jpeg[2] = 0xff;
-const image = new File([jpeg], "shot.jpg", { type: "image/jpeg" });
-await session.applyFile(image);
-assert.ok(nodes.digest.value.startsWith("0x"), "JPEG pick writes Digest without a second click");
-assert.match(nodes["message-file-name"].textContent, /shot\.jpg/);
-assert.equal(nodes.message.hidden, false, "filename is not wedged into the Message line");
-assert.equal(nodes["message-file-progress"].hidden, true, "progress clears after the JPEG digest");
-assert.match(nodes["io-note"].textContent, /Play \/ Step stay off/);
-const algsAfterLarge = algs.length;
-session.enterTeach();
-assert.equal(algs.length, algsAfterLarge, "large file must not build a leave timeline");
-const jumpsBeforeSkip = jumps.length;
-click("skip-end");
-assert.equal(algs.length, algsAfterLarge, "Skip to end on a large file does not build a timeline");
-assert.equal(jumps.length, jumpsBeforeSkip, "Skip to end on a large file does not seek");
-assert.match(nodes["io-note"].textContent, /Play \/ Step stay off/);
+click("step");
+assert.equal(algs.length, algsWhileHashing, "Play / Skip / Step wait while the file hashes");
+const hung = workers.at(-1);
+click("message-file-clear");
+assert.ok(hung.terminated, "Clear stops the running worker");
+assert.equal(nodes.digest.value, abV2, "Clear during a hash shows the typed Message");
+workerMode = "late";
+chooseFile(bin);
+await until(() => nodes["io-note"].textContent === "Hashing…");
+click("message-file-clear");
+await until(() => workers.at(-1).replied);
+assert.ok(workers.at(-1).replied, "the late worker still replied");
+assert.equal(nodes.digest.value, abV2, "a result that lands after Clear is dropped");
+workerMode = "hang";
+chooseFile(bin);
+await until(() => nodes["io-note"].textContent === "Hashing…");
 
 session.dispose();
+assert.ok(workers.at(-1).terminated, "dispose stops the running worker");
 
-const dockSession = createScrambleSession({
-    view,
-    specUrl: "about:blank",
-    root,
-});
-nodes.message.value = "hello";
-nodes.digest.value = "";
-const dockBytes = new Uint8Array(24 * 1024);
-dockBytes[0] = 0xff;
-dockBytes[1] = 0xd8;
-dockBytes[2] = 0xff;
-await dockSession.applyFile(new File([dockBytes], "dock.jpg", { type: "image/jpeg" }));
-assert.ok(nodes.digest.value.startsWith("0x"), "dock path (no hashFileFn) writes Digest");
-assert.ok(nodes.digest.value.length > 4, "dock Digest is nonempty hex");
-assert.equal(nodes["message-file-progress"].hidden, true, "dock path clears progress after Digest");
-assert.match(nodes["message-file-name"].textContent, /dock\.jpg/);
-const dockHex = nodes.digest.value;
-dockSession.recompute();
-assert.equal(nodes.digest.value, dockHex, "recompute must not restart or clear a file Digest");
-dockSession.dispose();
+delete globalThis.Worker;
+for (const node of [...Object.values(nodes), ...Object.values(segments).flat()]) node.listeners = {};
+const plain = createScrambleSession({ view, specUrl: "about:blank", root });
+chooseFile(bin);
+await until(() => nodes.digest.value === hexV2);
+assert.equal(nodes.digest.value, hexV2, "without Worker the page hashes the file with the generated module");
+plain.dispose();
 console.log("scramble session digest/timeline tests ok");

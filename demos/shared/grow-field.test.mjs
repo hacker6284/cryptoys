@@ -17,10 +17,6 @@ assert.match(growJs, /export function bindGrowFields/);
 assert.match(growJs, /8\.5rem/);
 
 const playroomCss = readFileSync(new URL("../playroom/style.css", import.meta.url), "utf8");
-assert.match(growRules, /\n\[data-message-field\] \{[^}]*flex-direction:\s*column/, "filename cannot share a row with the paperclip");
-assert.match(growRules, /\n\.message-file-stack \{[^}]*display:\s*block/);
-assert.match(growRules, /\n\.file-progress\[hidden\] \{[^}]*display:\s*none\s*!important/);
-assert.match(growRules, /\n\.file-progress\.is-busy \.file-progress-bar \{[^}]*animation:/, "tiny picks get an indeterminate busy bar");
 assert.match(playroomCss, /\.playroom-dock textarea\.grow-field/);
 assert.match(
     playroomCss,

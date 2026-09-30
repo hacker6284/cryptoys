@@ -125,8 +125,8 @@ A digest-only state has `traced = false`, so `push_step` does not call `facelets
   v2 symbol (two quarter turns, then Rule B).
 
 **The digest path end to end** (`ScrambleV2/Link2/Evaluate.lean`). States are written
-field by field, so each statement names every field that changes. All are for the
-digest-only v2 state (`version = 2`, `traced = false`).
+field by field, so each statement names every field that changes. All are for
+`version = 2`; all but `pad_v2` (which holds for either value) also need `traced = false`.
 
 - `pad_v2`: with `total = t` (and `t + 1` fitting `i64`), `pad` appends the marker `8`
   and then the cycle `6 0 7 1` up to 12 nybbles, as the model pads; nothing else changes.

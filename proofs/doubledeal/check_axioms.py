@@ -14,6 +14,8 @@
                                           # (proofs/deprecated/megadreifach-v1/lean)
     python3 proofs/doubledeal/check_axioms.py cbc-hmac  # proofs/doubledeal-cbc-hmac/lean
                                           # (DoubleDeal-CBC-HMAC Link 2)
+    python3 proofs/doubledeal/check_axioms.py scramble  # proofs/scramble/lean
+                                          # (Scramble v2 Link 2, in progress)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -54,6 +56,9 @@ axiom) fails, as does a Lean error.
 - cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
   proofs/doubledeal-cbc-hmac/lean (root `DoubleDealCbcHmac`, the Link 2 package);
   required: the Link 2 theorem of every exported sudo function (CBC_HMAC_LINK2).
+- scramble: like cbc-hmac (mode "all", key "full", no KNOWN_SORRY) for
+  proofs/scramble/lean (root `ScrambleV2`, the Scramble v2 Link 2 package, in
+  progress); required: the theorems proofs/scramble/README.md cites (SCRAMBLE_LINK2).
 
 `#audit_all` is the one command in the core-only package proofs/audit (required by
 path by both the security package and MegaDreifach); in mode "all" this script
@@ -396,6 +401,31 @@ CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
     "unpad_iso7816_refines", "unpad_iso7816_rejects", "mac_input_refines",
     "derive_keys_refines", "derive_keys_empty", "cbc_chain_from_cipher_block_refines",
     "tags_equal_refines"]}
+# proofs/scramble/lean (Scramble v2 Link 2, in progress): every theorem
+# proofs/scramble/README.md cites by name; `--selftest` re-derives the list the same way
+# as MD_README_THEOREMS.
+SCRAMBLE_LEAN = ROOT.parent / "scramble" / "lean"
+SCRAMBLE_LINK2 = {
+    "ScrambleV2.Kat.kat_empty",
+    "ScrambleV2.Kat.kat_a",
+    "ScrambleV2.Kat.kat_A7",
+    "ScrambleV2.Kat.kat_hello",
+    "ScrambleV2.Kat.kat_cube",
+    "ScrambleV2.Link2.digestV2_isSome",
+    "ScrambleV2.Link2.reach_solved",
+    "ScrambleV2.Link2.reach_quarter",
+    "ScrambleV2.Link2.reach_rotate",
+    "ScrambleV2.Link2.centerOf_reach",
+    "ScrambleV2.Link2.cubieAt_reach",
+    "ScrambleV2.Link2.rotateTo_reach",
+    "ScrambleV2.Link2.ruleB_reach",
+    "ScrambleV2.Link2.turn_cubie_refines",
+    "ScrambleV2.Link2.quarter_refines",
+    "ScrambleV2.Link2.apply_turns_refines",
+    "ScrambleV2.Link2.cross_refines",
+    "ScrambleV2.Link2.mul_vec_refines",
+    "ScrambleV2.Link2.apply_matrix_refines",
+}
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
     "v9-deprecated": {"dir": ROOT.parent / "deprecated" / "doubledeal-v9" / "lean", "mode": "list",
@@ -572,6 +602,14 @@ PACKAGES = {
         "known_sorry": set(),
         "min": 50,  # sanity: the audit must actually see the package
         "required": CBC_HMAC_LINK2,
+    },
+    "scramble": {
+        "dir": SCRAMBLE_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": 100,  # sanity: the audit must actually see the package
+        "required": SCRAMBLE_LINK2,
     },
     "megadreifach-heavy": {
         "dir": MD_LEAN,
@@ -832,14 +870,16 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} HEAVY_GENERATED {what}: "
               f"{len(bad)} problem(s), expected {len(want)}")
-    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 must be exactly the
-    # theorems the MegaDreifach README / the frozen v1 package's README / the
-    # DoubleDeal-CBC-HMAC proofs README cites.
+    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 / SCRAMBLE_LINK2 must be
+    # exactly the theorems the MegaDreifach README / the frozen v1 package's README / the
+    # DoubleDeal-CBC-HMAC proofs README / the Scramble proofs README cites.
     for what, listed, readme, root in [
             ("MD_README_THEOREMS", MD_README_THEOREMS, MD_README, MD_LEAN),
             ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN),
             ("CBC_HMAC_LINK2", CBC_HMAC_LINK2, CBC_HMAC_LEAN.parent / "README.md",
-             CBC_HMAC_LEAN)]:
+             CBC_HMAC_LEAN),
+            ("SCRAMBLE_LINK2", SCRAMBLE_LINK2, SCRAMBLE_LEAN.parent / "README.md",
+             SCRAMBLE_LEAN)]:
         cited, bad = md_readme_cited(readme=readme, root=root)
         for b in bad:
             print(f"check_axioms selftest: FAIL {b}")

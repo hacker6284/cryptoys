@@ -437,6 +437,18 @@ SCRAMBLE_LINK2 = {
     "ScrambleV2.Link2.corner_piece_refines",
     "ScrambleV2.Link2.edge_piece_refines",
     "ScrambleV2.Link2.fact_refines",
+    "ScrambleV2.Link2.rank_perm_refines",
+    "ScrambleV2.Link2.digest_bytes_refines",
+    "ScrambleV2.Link2.index_bytes_refines",
+    "ScrambleV2.Link2.Reach.index_bytes",
+    "ScrambleV2.Link2.Reach.facelets_of",
+    "ScrambleV2.Link2.solved_cube_refines",
+    "ScrambleV2.Link2.solved_facelets_ok",
+    "ScrambleV2.Link2.letter_refines",
+    "ScrambleV2.Link2.hex_digit_refines",
+    "ScrambleV2.Link2.move_name_refines",
+    "ScrambleV2.Link2.asc_tail",
+    "ScrambleV2.Link2.asc_tail_idx",
 }
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},

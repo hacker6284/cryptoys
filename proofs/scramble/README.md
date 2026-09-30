@@ -82,12 +82,40 @@ fits `i64`.
 - `fact_refines`: the emitted `fact` on `0 … 11`, the arguments `rank_perm` passes for
   the digest's 8 corners and 12 edges.
 
-**Not proved yet** (the plan): the emitted `reorient`, `do_rule`,
-`facelets_of` (never traps on a reachable cube), the tape and state functions
-(`update`, `apply_ready`, padding, `evaluate`), `rank_perm`, `digest_bytes`,
-`index_bytes`, and the headline: for a byte message, the
+**The digest encoding** (`ScrambleV2/Link2/Rank.lean`, `Digest.lean`, `Index.lean`).
+
+- `rank_perm_refines`: the emitted `rank_perm` on any list of naturals of length at most
+  12 is the model's `rank` (every intermediate stays below `12!`, so nothing leaves `i64`).
+- `digest_bytes_refines`: for `s3 < 2^61` and an 11-bit `eo`, the emitted `digest_bytes`
+  (a 12-byte little-endian buffer, eleven carrying doublings, a carrying add, the
+  three-zero-bytes assert, a big-endian copy-out) is `beBytes 9 (s3 · 2048 + eo)`.
+- `index_bytes_refines`, `Reach.index_bytes`: whenever the model's `digestOf cube` is
+  defined, the emitted `index_bytes` on `embedCube cube` returns exactly those 9 bytes
+  (slot lookups, stickers, piece ids, the W/Y orientation if-chain, the base-3 and
+  base-2 packs, both ranks); on a reachable cube it is always defined.
+
+**Facelets and trace names** (`ScrambleV2/Link2/Facelets.lean`).
+
+- `Reach.facelets_of`: the emitted `facelets_of` never traps on a reachable cube; it
+  returns 54 color letters (every facelet slot holds a sticker on its axis in all 24
+  poses, checked by `decide`).
+- `solved_cube_refines`, `solved_facelets_ok`: the emitted solved cube is the model's,
+  and its facelets are 54 color letters.
+- `letter_refines`, `hex_digit_refines`, `move_name_refines`: the trace's name helpers on
+  every color, digit `0 … 15`, face and turn count.
+
+**Not proved yet** (the plan): the emitted `reorient`, `do_rule`, the tape and state
+functions (`fresh` / `scramble_v2`, `do_move`, `apply_v2_symbol`, `push_step`, padding,
+`apply_ready`, `update`, `evaluate`, `finish`), and the headline: for a byte message, the
 emitted `scramble_v2`, `update`, `evaluate` return `.ok` with `digest = embed (digestV2 msg)`
-(digest only; the trace is excluded).
+(digest only; the trace is excluded). These read the `Scramble` state record or Rule B's
+matrix rows, both of which the pending streaming-state regeneration of
+`Generated/Scramble.lean` rewrites; they are proved against the regenerated code.
+
+**Temporary duplicates.** `asc_tail` and `asc_tail_idx` (`ScrambleV2/Link2/Loop.lean`) are
+copies of the same lemmas in `DoubleDealCbcHmac.Link2.Loop`, which this package cannot
+import. A separate MegaDreifach / CBC-HMAC plumbing PR moves them to one home in
+`MegaDreifach.Link2.Loop`; this package drops its copies then.
 
 None of this is a hash-security claim.
 

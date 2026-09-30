@@ -3,11 +3,11 @@
   driver that carries a predicate instead of an exact state (the Scramble state's
   trace is not modelled). Proof-only; builds on `MegaDreifach.Link2.Loop`.
 
-  Known duplicate (to fold before this package leaves draft): `asc_tail` and
-  `asc_tail_idx` also live in `DoubleDealCbcHmac.Link2.Loop`, which this package cannot
-  import (that module imports `MegaDreifach.Link2.Helpers`, which needs the emitted
-  Megadreifach module Scramble's Generated/ lacks). Their one home should be
-  `MegaDreifach.Link2.Loop`, next to `chain_loop`.
+  Temporary duplicates: `asc_tail` and `asc_tail_idx` also live in
+  `DoubleDealCbcHmac.Link2.Loop`, which this package cannot import (that module imports
+  `MegaDreifach.Link2.Helpers`, which needs the emitted Megadreifach module Scramble's
+  Generated/ lacks). A separate MegaDreifach / CBC-HMAC plumbing PR moves them to one
+  home in `MegaDreifach.Link2.Loop`, next to `chain_loop`; these copies go then.
 -/
 import ScrambleV2.Link2.Embed
 

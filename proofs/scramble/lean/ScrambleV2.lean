@@ -2,7 +2,9 @@
   Scramble v2 Link 2 (in progress): the hand-written model of the v2 digest
   (`ScrambleV2.Spec`), its test vectors (`ScrambleV2.Kat`), the reachability invariant
   (`ScrambleV2.Link2.Reach`) and the refinement lemmas for the emitted cube moves
-  (`ScrambleV2.Link2.Turn`, `.Matrix`), lookups (`.Lookup`) and piece readers (`.Pieces`). See ../README.md for what is and is not proved.
+  (`ScrambleV2.Link2.Turn`, `.Matrix`), lookups (`.Lookup`), piece readers (`.Pieces`),
+  the digest encoding (`.Rank`, `.Digest`, `.Index`) and facelets (`.Facelets`). See
+  ../README.md for what is and is not proved.
 -/
 import ScrambleV2.Spec
 import ScrambleV2.Kat
@@ -19,3 +21,4 @@ import ScrambleV2.Link2.Pieces
 import ScrambleV2.Link2.Rank
 import ScrambleV2.Link2.Digest
 import ScrambleV2.Link2.Index
+import ScrambleV2.Link2.Facelets

@@ -1,0 +1,4 @@
+$ python3 experiments.py --only pseudo_pairs
+C36 read-class pseudo-collisions (same corners, 2-edge flip; seed 7): 20 found in 40 (h, m) draws
+  re-verified with the slow reference HashDeckBodyFrom and the fast one (h != h', both legal, equal output): 20/20
+  example output 0008b323ae7982069fb92438...

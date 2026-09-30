@@ -1,0 +1,9 @@
+$ python3 experiments.py --only coverage
+C36  : 3000 blocks from uniform random h (3 chunks, seeds 777+c); reads/block 88; unread corners 2.08, unread edges 6.71; P(all corners read) 0.083, P(all edges read) 0.000; free bits mean 19.2 median 18.9 max 47.2; unread re-randomised -> same W 3000/3000
+       standard error of the two unread means: corners 0.022, edges 0.032
+       small change of h leaves W unchanged: flip 2 random edges 143/3000, twist 2 corners 23/3000, 3-cycle of edges 42/3000
+       pseudo-collision (read-class recipe): same corners 711/1500 = 0.474 [0.449,0.499] (~2 (h,m) draws per hit); same edges 48/1500 = 0.032 [0.024,0.042] (~31 draws per hit)
+C76  : 3000 blocks from uniform random h (4 chunks, seeds 777+c); reads/block 128; unread corners 0.75, unread edges 3.40; P(all corners read) 0.439, P(all edges read) 0.016; free bits mean 5.6 median 4.8 max 27.1; unread re-randomised -> same W 3000/3000
+       standard error of the two unread means: corners 0.014, edges 0.028
+       small change of h leaves W unchanged: flip 2 random edges 29/3000, twist 2 corners 3/3000, 3-cycle of edges 4/3000
+       pseudo-collision (read-class recipe): same corners 125/1500 = 0.083 [0.070,0.098] (~12 (h,m) draws per hit); same edges 3/1500 = 0.002 [0.001,0.006] (~500 draws per hit)

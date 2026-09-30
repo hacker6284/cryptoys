@@ -4,6 +4,7 @@ import * as _rt from "./_sudo_rt.mjs";
 export class Step {
     static _sudoKind = ["r", "Step"];
     static _sudoFields = ["kind", "label", "message", "key", "hand", "row", "col", "amount", "total", "card", "flag"];
+    static _sudoShared = true;
     constructor(kind, label, message, key, hand, row, col, amount, total, card, flag) {
         this.kind = kind;
         this.label = label;
@@ -700,7 +701,7 @@ export function no_cards() {
 
 export function add_step(steps, kind, label, message, key, hand, row, col, amount, total, card, flag) {
     steps = _rt.dup(steps);
-    steps.push(_rt.rec(new Step(_rt.dup(kind), _rt.dup(label), _rt.dup(message), _rt.dup(key), _rt.dup(hand), row, col, amount, total, card, flag)));
+    steps.push(new Step(_rt.dup(kind), _rt.dup(label), _rt.dup(message), _rt.dup(key), _rt.dup(hand), row, col, amount, total, card, flag));
     return _rt.dup(steps);
 }
 
@@ -962,7 +963,7 @@ export function trace_ecb(blocks, key) {
                 const _sudo_from_n = 0n;
                 const _sudo_to_n = _rt.chk(globalThis.BigInt(one.length) - 1n);
                 for (let n = _sudo_from_n; n <= _sudo_to_n; n += 1n) {
-                    steps.push(_rt.dup(_rt.at(one, n)));
+                    steps.push(_rt.at(one, n));
                 }
             }
         }
@@ -1163,7 +1164,7 @@ export function trace_ctr(blocks, key, nonce) {
                 const _sudo_from_n = 0n;
                 const _sudo_to_n = _rt.chk(globalThis.BigInt(walked.length) - 1n);
                 for (let n = _sudo_from_n; n <= _sudo_to_n; n += 1n) {
-                    steps.push(_rt.dup(_rt.at(walked, n)));
+                    steps.push(_rt.at(walked, n));
                 }
             }
             let mixed = compose(_rt.at(blocks, i), stream);
@@ -1187,7 +1188,7 @@ export function trace_ctr_decrypt(blocks, key, nonce) {
                 const _sudo_from_n = 0n;
                 const _sudo_to_n = _rt.chk(globalThis.BigInt(walked.length) - 1n);
                 for (let n = _sudo_from_n; n <= _sudo_to_n; n += 1n) {
-                    steps.push(_rt.dup(_rt.at(walked, n)));
+                    steps.push(_rt.at(walked, n));
                 }
             }
             let plain = inverse_compose(_rt.at(blocks, i), stream);

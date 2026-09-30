@@ -4,6 +4,7 @@ import * as _rt from "./_sudo_rt.mjs";
 export class Cubie {
     static _sudoKind = ["r", "Cubie"];
     static _sudoFields = ["x", "y", "z", "xp", "xn", "yp", "yn", "zp", "zn"];
+    static _sudoShared = true;
     constructor(x, y, z, xp, xn, yp, yn, zp, zn) {
         this.x = x;
         this.y = y;
@@ -20,6 +21,7 @@ export class Cubie {
 export class Step {
     static _sudoKind = ["r", "Step"];
     static _sudoFields = ["kind", "move", "nybble", "block", "index", "up", "front", "facelets"];
+    static _sudoShared = true;
     constructor(kind, move, nybble, block, index, up, front, facelets) {
         this.kind = kind;
         this.move = move;
@@ -35,6 +37,7 @@ export class Step {
 export class Evaluation {
     static _sudoKind = ["r", "Evaluation"];
     static _sudoFields = ["digest", "trace"];
+    static _sudoShared = true;
     constructor(digest, trace) {
         this.digest = digest;
         this.trace = trace;
@@ -115,7 +118,7 @@ export function solved_cube() {
                                 if (z === _rt.neg(1n)) {
                                     zn = 5n;
                                 }
-                                cube.push(_rt.rec(new Cubie(x, y, z, xp, xn, yp, yn, zp, zn)));
+                                cube.push(new Cubie(x, y, z, xp, xn, yp, yn, zp, zn));
                             }
                         }
                     }
@@ -255,7 +258,7 @@ export function turn_cubie(c, face) {
         [rx, ry, rz] = rot_xyz(face, 0n, 0n, _rt.neg(1n));
         [xp, xn, yp, yn, zp, zn] = write_axis(xp, xn, yp, yn, zp, zn, rx, ry, rz, c.zn);
     }
-    return _rt.rec(new Cubie(nx, ny, nz, xp, xn, yp, yn, zp, zn));
+    return new Cubie(nx, ny, nz, xp, xn, yp, yn, zp, zn);
 }
 
 export function quarter(cube, face) {
@@ -264,11 +267,11 @@ export function quarter(cube, face) {
         const _sudo_from_i = 0n;
         const _sudo_to_i = _rt.chk(globalThis.BigInt(cube.length) - 1n);
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let c = _rt.dup(_rt.at(cube, i));
+            let c = _rt.at(cube, i);
             if (on_face(face, c.x, c.y, c.z)) {
                 out.push(turn_cubie(c, face));
             } else {
-                out.push(_rt.dup(c));
+                out.push(c);
             }
         }
     }
@@ -292,7 +295,7 @@ export function cubie_at(cube, x, y, z) {
         const _sudo_from_i = 0n;
         const _sudo_to_i = _rt.chk(globalThis.BigInt(cube.length) - 1n);
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let c = _rt.dup(_rt.at(cube, i));
+            let c = _rt.at(cube, i);
             if (c.x === x && c.y === y && c.z === z) {
                 return i;
             }
@@ -350,7 +353,7 @@ export function facelets_of(cube) {
         const _sudo_from_i = 0n;
         const _sudo_to_i = 53n;
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let c = _rt.dup(_rt.at(cube, cubie_at(cube, _rt.at(fx, i), _rt.at(fy, i), _rt.at(fz, i))));
+            let c = _rt.at(cube, cubie_at(cube, _rt.at(fx, i), _rt.at(fy, i), _rt.at(fz, i)));
             out.push(color_char(sticker_on(c, _rt.at(fa, i))));
         }
     }
@@ -389,7 +392,7 @@ export function move_name(face, turns) {
 
 export function push_step(s, kind, move, nybble, block, at, up, front) {
     if (s.traced) {
-        _rt.field_mut(s, "steps").push(_rt.rec(new Step(_rt.dup(kind), _rt.dup(move), _rt.dup(nybble), block, at, _rt.dup(up), _rt.dup(front), facelets_of(s.cube))));
+        _rt.field_mut(s, "steps").push(new Step(_rt.dup(kind), _rt.dup(move), _rt.dup(nybble), block, at, _rt.dup(up), _rt.dup(front), facelets_of(s.cube)));
     }
     return s;
 }
@@ -436,7 +439,7 @@ export function center_dir(cube, color) {
         const _sudo_from_i = 0n;
         const _sudo_to_i = _rt.chk(globalThis.BigInt(cube.length) - 1n);
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let c = _rt.dup(_rt.at(cube, i));
+            let c = _rt.at(cube, i);
             if (is_center(c) && has_color(c, color)) {
                 return [c.x, c.y, c.z];
             }
@@ -483,7 +486,7 @@ export function apply_matrix(cube, m) {
         const _sudo_from_i = 0n;
         const _sudo_to_i = _rt.chk(globalThis.BigInt(cube.length) - 1n);
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let c = _rt.dup(_rt.at(cube, i));
+            let c = _rt.at(cube, i);
             let nx;
             let ny;
             let nz;
@@ -500,7 +503,7 @@ export function apply_matrix(cube, m) {
             [xp, xn, yp, yn, zp, zn] = paint_cubie(nx, ny, nz, m, xp, xn, yp, yn, zp, zn, 0n, _rt.neg(1n), 0n, c.yn);
             [xp, xn, yp, yn, zp, zn] = paint_cubie(nx, ny, nz, m, xp, xn, yp, yn, zp, zn, 0n, 0n, 1n, c.zp);
             [xp, xn, yp, yn, zp, zn] = paint_cubie(nx, ny, nz, m, xp, xn, yp, yn, zp, zn, 0n, 0n, _rt.neg(1n), c.zn);
-            out.push(_rt.rec(new Cubie(nx, ny, nz, xp, xn, yp, yn, zp, zn)));
+            out.push(new Cubie(nx, ny, nz, xp, xn, yp, yn, zp, zn));
         }
     }
     return _rt.dup(out);
@@ -533,7 +536,7 @@ export function do_move(s, face, turns, nybble, block, at) {
 }
 
 export function do_rule(s, block) {
-    let c = _rt.dup(_rt.at(s.cube, cubie_at(s.cube, 1n, 1n, 1n)));
+    let c = _rt.at(s.cube, cubie_at(s.cube, 1n, 1n, 1n));
     let up = c.yp;
     let front = c.zp;
     s.cube = reorient(s.cube, up, front);
@@ -833,7 +836,7 @@ export function index_bytes(cube) {
         const _sudo_from_i = 0n;
         const _sudo_to_i = 7n;
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let c = _rt.dup(_rt.at(cube, cubie_at(cube, _rt.at(cx, i), _rt.at(cy, i), _rt.at(cz, i))));
+            let c = _rt.at(cube, cubie_at(cube, _rt.at(cx, i), _rt.at(cy, i), _rt.at(cz, i)));
             let a0 = sticker_on(c, _rt.at(cax, _rt.chk(i * 3n)));
             let a1 = sticker_on(c, _rt.at(cax, _rt.chk(_rt.chk(i * 3n) + 1n)));
             let a2 = sticker_on(c, _rt.at(cax, _rt.chk(_rt.chk(i * 3n) + 2n)));
@@ -859,7 +862,7 @@ export function index_bytes(cube) {
         const _sudo_from_i = 0n;
         const _sudo_to_i = 11n;
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let c = _rt.dup(_rt.at(cube, cubie_at(cube, _rt.at(ex, i), _rt.at(ey, i), _rt.at(ez, i))));
+            let c = _rt.at(cube, cubie_at(cube, _rt.at(ex, i), _rt.at(ey, i), _rt.at(ez, i)));
             let a0 = sticker_on(c, _rt.at(eax, _rt.chk(i * 2n)));
             let a1 = sticker_on(c, _rt.at(eax, _rt.chk(_rt.chk(i * 2n) + 1n)));
             eperm.push(edge_piece(a0, a1));
@@ -889,7 +892,7 @@ export function evaluate(s) {
     s = pad(s);
     s = apply_ready(s);
     s = finish(s);
-    return [_rt.rec(new Evaluation(index_bytes(s.cube), _rt.dup(s.steps))), s];
+    return [new Evaluation(index_bytes(s.cube), _rt.dup(s.steps)), s];
 }
 
 export function run(version, message) {
@@ -897,7 +900,7 @@ export function run(version, message) {
     s = update(s, message);
     let _sudo_h0;
     [_sudo_h0, s] = evaluate(s);
-    return _rt.dup(_sudo_h0);
+    return _sudo_h0;
 }
 
 export function check(version, message, digest, faces, nsteps) {

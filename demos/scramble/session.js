@@ -1,4 +1,5 @@
-import { scramble_v1, scramble_v2, update, evaluate, solved_facelets } from "./generated/scramble.mjs";
+import { solved_facelets } from "./generated/scramble.mjs";
+import { hashMessage } from "./hash.js";
 import { SOLVED_FACELETS, applyMove, isSolved, shortSolve, toCubejs, flipU, parseMove } from "./cube.js";
 import { mapTraceToAlg, prefixAlg, projectAlgForPuzzle } from "../playroom/scramble-alg.js";
 import {
@@ -22,8 +23,11 @@ import {
 } from "../shared/session.js";
 import { colorName, renderOutline } from "../shared/teach.js";
 
-// Bounded by generated-module speed (Gen 2 ≈ 5 s at 4 KiB); rises as the spec/sudoc speedups land.
+// Bounded by generated-module speed (Gen 2 ≈ 5 s at 4 KiB);
+// rises as the spec/sudoc speedups land.
 export const FILE_MAX_BYTES = 4 * 1024;
+// A file's Digest and walk while it hashes: none yet.
+const HASHING = { digest: [], trace: [] };
 
 function formatSize(bytes) {
     return bytes < 1024 ? `${bytes} B` : `${+(bytes / 1024).toFixed(1)} KiB`;
@@ -407,29 +411,15 @@ export function createScrambleSession({
         jumpViewToCursor();
     }
 
-    function hashMessage(bytes) {
-        const state = version === 2 ? scramble_v2() : scramble_v1();
-        update(state, bytes);
-        return evaluate(state);
-    }
-
-    // Typed Message, or a picked file's `result` (typing never touches a file's Digest).
-    function refreshDigest(result) {
-        if (fileBytes && !result) return;
-        // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / Skip to end.
+    // Digest only. cubing.js setAlg / leave-trace wait for Play / Step / Skip to end.
+    function showResult(bytes, result) {
         job += 1;
         markPlay(false);
         solving = false;
         busy = false;
         settleView();
         errorEl.textContent = "";
-        try {
-            messageBytes = fileBytes || bytesOf(input.value);
-        } catch (err) {
-            errorEl.textContent = err.message;
-            return;
-        }
-        result ||= hashMessage(messageBytes);
+        messageBytes = bytes;
         trace = result.trace;
         mappedAlg = { alg: "", units: [], ranges: [] };
         projectedAlg = { alg: "", units: [], ranges: [], hash: hashesThisPuzzle(), dropped: 0 };
@@ -443,51 +433,74 @@ export function createScrambleSession({
         showStatus(caption());
     }
 
-    function setIoNote(text) {
-        ioNote.hidden = !text;
-        ioNote.textContent = text;
+    // Typed Message only; a picked file's Digest comes from hashFile.
+    function refreshDigest() {
+        if (fileBytes) return;
+        let bytes;
+        try {
+            bytes = bytesOf(input.value);
+        } catch (err) {
+            errorEl.textContent = err.message;
+            return;
+        }
+        showResult(bytes, hashMessage(version, bytes));
     }
 
-    // One update + evaluate on the generated module, in a Worker; on the page if the Worker fails.
-    async function hashFile() {
+    // Aborts the previous file read / hash; the new one stops once its signal aborts.
+    function nextFileJob() {
         fileAbort?.abort();
-        const abort = (fileAbort = new AbortController());
+        fileAbort = new AbortController();
+        return fileAbort.signal;
+    }
+
+    // One update + evaluate on the generated module, in a Worker. If the Worker fails,
+    // the page runs it and blocks (up to ~5 s at the cap in Gen 2).
+    async function hashFile(signal) {
         const bytes = fileBytes;
-        refreshDigest({ digest: [], trace: [] });
-        setIoNote("Hashing…");
-        const result = await new Promise((resolve) => {
-            if (typeof Worker !== "function") return resolve(hashMessage(bytes));
-            const worker = new Worker(new URL("./hash-worker.js", import.meta.url), { type: "module" });
-            const done = (value) => {
-                worker.terminate();
-                resolve(value);
-            };
-            abort.signal.addEventListener("abort", () => worker.terminate());
-            worker.onmessage = (event) => done(event.data);
-            worker.onerror = () => done(hashMessage(bytes));
-            worker.postMessage({ version, bytes });
-        });
-        if (abort.signal.aborted) return;
-        setIoNote("");
-        refreshDigest(result);
+        showResult(bytes, HASHING);
+        fileChip.classList.add("is-hashing");
+        let worker;
+        try {
+            const result = await new Promise((resolve) => {
+                const fallback = () => resolve(new Promise((ok) => ok(hashMessage(version, bytes))));
+                try {
+                    const url = new URL("./hash-worker.js", import.meta.url);
+                    worker = new Worker(url, { type: "module" });
+                } catch {
+                    return fallback();
+                }
+                signal.addEventListener("abort", () => worker.terminate());
+                worker.onmessage = (event) => resolve(event.data);
+                worker.onerror = fallback;
+                worker.postMessage({ version, bytes });
+            });
+            if (!signal.aborted) showResult(bytes, result);
+        } catch (err) {
+            if (!signal.aborted) errorEl.textContent = err.message || "Could not hash this file.";
+        } finally {
+            worker?.terminate();
+            if (!signal.aborted) fileChip.classList.remove("is-hashing");
+        }
     }
 
     async function applyFile(file) {
         if (file.size > FILE_MAX_BYTES) {
-            setIoNote(`Files can be up to ${formatSize(FILE_MAX_BYTES)}.`);
+            errorEl.textContent = `Files can be up to ${formatSize(FILE_MAX_BYTES)}.`;
             return;
         }
+        const signal = nextFileJob();
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (signal.aborted) return;
         $("#message-file-name").textContent = `${file.name} · ${formatSize(file.size)}`;
         fileChip.hidden = false;
-        fileBytes = new Uint8Array(await file.arrayBuffer());
-        await hashFile();
+        fileBytes = bytes;
+        await hashFile(signal);
     }
 
     function clearFile() {
         fileAbort?.abort();
         fileBytes = null;
         fileChip.hidden = true;
-        setIoNote("");
         refreshDigest();
     }
 
@@ -681,7 +694,7 @@ export function createScrambleSession({
         version = Number(value);
         const genLabel = $("#gen-label");
         if (genLabel) genLabel.textContent = `Gen ${version}`;
-        if (fileBytes) void hashFile();
+        if (fileBytes) void hashFile(nextFileJob());
         else refreshDigest();
     }, listen);
 

@@ -156,6 +156,13 @@ theorem compose_permDeck (ρ k : Equiv.Perm (Fin 52)) :
 theorem rel_permDeck (α π : Equiv.Perm (Fin 52)) : rel α (permDeck π) = permDeck (α * π) :=
   funext fun i => app_fin α (π i)
 
+theorem permDeck_apply_eq (π : Equiv.Perm (Fin 52)) (s c : Fin 52) :
+    permDeck π s = c.val ↔ π s = c := Fin.val_inj
+
+theorem rel_permDeck_apply_eq (α π : Equiv.Perm (Fin 52)) (s c : Fin 52) :
+    rel α (permDeck π) s = c.val ↔ α (π s) = c := by
+  rw [rel_permDeck, permDeck_apply_eq, Equiv.Perm.mul_apply]
+
 /-- (PROVED) Compose with a uniform key makes any fixed deck uniform: for a deck `z`, summing
     `F (z ∘ k)` over all keys `k` is summing `F` over all decks (as permutations). -/
 theorem sum_keys_compose {M : Type} [AddCommMonoid M] (F : (Fin 52 → Nat) → M)

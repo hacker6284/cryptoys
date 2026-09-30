@@ -11,7 +11,7 @@
 # row rotations and ShiftRows are powers of 13-cycles (even), and a column rotation by s is a
 # 4-cycle to the power s (sign (-1)^s). Reduction to a uniform suit pattern (argued here, not
 # checked independently): the stem is a bijection on decks (ddiff.h inv_stem undoes it; in
-# Lean, FullCipher.unkeyedNoMix_injective), so its first part, lay followed by the row step,
+# Lean, DoubleDeal.unkeyedNoMix_injective), so its first part, lay followed by the row step,
 # is injective, hence a bijection onto the grids; a uniform deck therefore gives a uniform grid
 # after the row step, whose suit pattern is uniform over the 52!/(13!)^4 patterns (13 cards of
 # each suit). The column turns read only the suits (sr_col_turn uses SUIT only; the model

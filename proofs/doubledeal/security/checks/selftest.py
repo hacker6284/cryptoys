@@ -1,5 +1,8 @@
 """Check the v8/v9/v10/v11/v12 Python port: v12 against the current vectors, v11, v10 and v9
-against their frozen vectors, v8 against frozen dd_v8.py."""
+against their frozen vectors, v8 against frozen dd_v8.py. Then rerun analysis scripts: the
+frozen-v10 SumRanks checks (exit status only), the GridCycle cross-checks (byte-compared with
+their committed logs), and the v12-linear exact 4-card toy check (toy_link.py, byte-compared
+with toy_link.log; it checks the toy, not the Lean)."""
 import random, sys, ddport as P, dd_v8 as V8
 from ddport import REPO
 from dd_v8 import lay_cm, scoop_cm
@@ -63,3 +66,11 @@ for script, log in (('candcheck.py', 'candcheck.log'), ('p5check.py', 'p5/check.
     if r.returncode != 0 or r.stdout != (GC / log).read_text():
         print(r.stdout, r.stderr); print('FAIL', (GC / script).relative_to(REPO), 'vs', log); sys.exit(1)
     print((GC / script).relative_to(REPO), '==', log)
+# M8a exact 4-card toy check of the Linear identities (pure Python; ~6 s), byte-compared with
+# its committed log.
+LIN = REPO / 'proofs/doubledeal/analysis/v12-linear'
+r = subprocess.run([sys.executable, 'toy_link.py'], cwd=LIN, capture_output=True, text=True)
+if r.returncode != 0 or r.stdout != (LIN / 'toy_link.log').read_text():
+    print(r.stdout, r.stderr)
+    print('FAIL', (LIN / 'toy_link.py').relative_to(REPO), 'vs toy_link.log'); sys.exit(1)
+print((LIN / 'toy_link.py').relative_to(REPO), '== toy_link.log')

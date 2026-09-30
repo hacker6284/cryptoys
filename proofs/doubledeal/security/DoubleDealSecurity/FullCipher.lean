@@ -347,10 +347,6 @@ theorem dpFCount_to_v10Sym (a : Fin 13) (x : Fin 4) {β : Relabel} (hβ : β ≠
   rw [invUnkeyedNoMix_unkeyedNoMix, invUnkeyedNoMix_unkeyedNoMix] at h2
   exact hβ ((rel_left_inj hd).1 h2)
 
-/-- `unkeyedNoMix` is injective (`invUnkeyedNoMix` is a left inverse). -/
-theorem unkeyedNoMix_injective : Function.Injective unkeyedNoMix :=
-  Function.LeftInverse.injective invUnkeyedNoMix_unkeyedNoMix
-
 /-- (PROVED) The trivial difference stays trivial in the final round
     (`Differential.dpCount_one_left`: decks go to decks). -/
 theorem dpFCount_one_left (β : Relabel) :
@@ -358,7 +354,7 @@ theorem dpFCount_one_left (β : Relabel) :
   Differential.dpCount_one_left unkeyedNoMix isDeck_unkeyedNoMix β
 
 /-- (PROVED) A nontrivial difference never becomes trivial in the final round
-    (`Differential.dpCount_to_one`, with `unkeyedNoMix_injective`). -/
+    (`Differential.dpCount_to_one`, with the core `DoubleDeal.unkeyedNoMix_injective`). -/
 theorem dpFCount_to_one {β : Relabel} (hβ : β ≠ 1) : dpFCount β 1 = 0 :=
   Differential.dpCount_to_one unkeyedNoMix unkeyedNoMix_injective hβ
 
@@ -696,6 +692,77 @@ theorem fullDiffCount_eq_card_beforeFinal (α β : Relabel) (n : ℕ) (x : Fin 5
   rw [card_filter_snoc]
   simp only [encryptL_snoc, ← compose_rel, composeVec_inj]
   rw [sum_const, card_univ, Fintype.card_perm, Fintype.card_fin, smul_eq_mul]
+
+/-! ### Row and column sums of `fullDiffCount` (the analogue of `Differential.sum_dpCount`,
+    `sum_dpCount_left` and `sum_diffCount`) -/
+
+theorem isDeck_encryptL (n : ℕ) (L : Fin (n + 2) → Key) {x : Fin 52 → Nat} (hx : IsDeck x) :
+    IsDeck (encryptL n x L) := by
+  rw [encryptL_eq]
+  exact isDeck_compose (isDeck_unkeyedNoMix (isDeck_compose (isDeck_rounds _ _ _ hx) _)) _
+
+/-- The output difference of the pair `(y, α·y)` under the key tuple `L`. -/
+noncomputable def outDiff (α : Relabel) (n : ℕ) (y : Fin 52 → Nat) (L : Fin (n + 2) → Key) :
+    Relabel :=
+  relDiff (encryptL n y L) (encryptL n (rel α y) L)
+
+theorem encryptL_rel_outDiff (α : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y)
+    (L : Fin (n + 2) → Key) :
+    encryptL n (rel α y) L = rel (outDiff α n y L) (encryptL n y L) :=
+  (rel_relDiff (isDeck_encryptL n L hy) (isDeck_encryptL n L (isDeck_rel α hy))).symm
+
+theorem fullDiff_iff_outDiff (α β : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y)
+    (L : Fin (n + 2) → Key) : FullDiff α β n y L ↔ outDiff α n y L = β :=
+  (relDiff_eq_iff (isDeck_encryptL n L hy) (isDeck_encryptL n L (isDeck_rel α hy)) β).trans
+    eq_comm |>.symm
+
+theorem fullDiffCount_eq_card_outDiff (α β : Relabel) (n : ℕ) {y : Fin 52 → Nat}
+    (hy : IsDeck y) :
+    fullDiffCount α β n y =
+      (univ.filter fun L : Fin (n + 2) → Key => outDiff α n y L = β).card :=
+  congrArg card (filter_congr fun L _ => fullDiff_iff_outDiff α β n hy L)
+
+/-- (PROVED) Row sums: from each `α`, the counts over all `β` add up to all `(52!)^(n+2)`
+    key tuples. -/
+theorem sum_fullDiffCount (α : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
+    ∑ β, fullDiffCount α β n y = Nat.factorial 52 ^ (n + 2) := by
+  simp only [fullDiffCount_eq_card_outDiff α _ n hy]
+  rw [← card_eq_sum_card_fiberwise (fun _ _ => mem_univ _), card_univ, Fintype.card_fun,
+    Fintype.card_perm, Fintype.card_fin, Fintype.card_fin]
+
+/-- (PROVED) For a fixed key tuple, different input differences give different output
+    differences (`fullDiffCount_to_one` at the deck `α'·y`; this uses that DoubleDeal's
+    layers are injective). -/
+theorem outDiff_injective (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) (L : Fin (n + 2) → Key) :
+    Function.Injective fun α => outDiff α n y L := by
+  intro α α' h
+  have he : encryptL n (rel α y) L = encryptL n (rel α' y) L := by
+    rw [encryptL_rel_outDiff α n hy, encryptL_rel_outDiff α' n hy]
+    exact congrArg (fun γ => rel γ (encryptL n y L)) h
+  by_contra hne
+  have hδ : α * α'⁻¹ ≠ 1 := fun h1 => hne (mul_inv_eq_one.1 h1)
+  have hy' := isDeck_rel α' hy
+  have h0 : (univ.filter fun L : Fin (n + 2) → Key => FullDiff (α * α'⁻¹) 1 n (rel α' y) L).card =
+      0 := fullDiffCount_to_one hδ n hy'
+  rw [card_eq_zero, filter_eq_empty_iff] at h0
+  apply h0 (mem_univ L)
+  show encryptL n (rel (α * α'⁻¹) (rel α' y)) L = rel 1 (encryptL n (rel α' y) L)
+  rw [← rel_mul, inv_mul_cancel_right, rel_one, he]
+
+/-- (PROVED) Column sums: into each `β`, the counts over all `α` add up to all `(52!)^(n+2)`
+    key tuples (via `outDiff_injective`). -/
+theorem sum_fullDiffCount_left (β : Relabel) (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
+    ∑ α, fullDiffCount α β n y = Nat.factorial 52 ^ (n + 2) := by
+  simp only [fullDiffCount_eq_card_outDiff _ β n hy, card_filter]
+  rw [sum_comm]
+  have h1 : ∀ L : Fin (n + 2) → Key,
+      (∑ α : Relabel, if outDiff α n y L = β then 1 else 0) = 1 := fun L => by
+    have hb := (Finite.injective_iff_bijective.1 (outDiff_injective n hy L))
+    set e := Equiv.ofBijective _ hb
+    rw [← card_filter, filter_congr fun α _ => (show outDiff α n y L = β ↔ α = e.symm β from
+      Equiv.apply_eq_iff_eq_symm_apply e), filter_eq', if_pos (mem_univ _), card_singleton]
+  rw [sum_congr rfl fun L _ => h1 L, sum_const, card_univ, Fintype.card_fun, Fintype.card_perm,
+    Fintype.card_fin, Fintype.card_fin, smul_eq_mul, mul_one]
 
 /-- The `v10Sym` cluster through the whole cipher: the difference is some `v10Sym` after every
     mix round (`StaysInV10`) AND after the final round. -/

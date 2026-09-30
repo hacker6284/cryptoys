@@ -123,4 +123,26 @@ theorem count_triples_of {α : Type*} [Fintype α] [DecidableEq α] (i0 i1 i2 : 
   ext t
   simp only [and_assoc]
 
+/-! ## Counting decks by one seat -/
+
+/-- The number of decks (as permutations) putting card `c` at seat `s` does not depend on the
+    card: as many put `c` there as put `c'`. -/
+theorem card_apply_eq_indep_card (s c c' : Fin 52) :
+    (univ.filter fun π : Equiv.Perm (Fin 52) => π s = c).card =
+      (univ.filter fun π : Equiv.Perm (Fin 52) => π s = c').card :=
+  PermCount.card_fibre_eq_of_mul (fun π : Equiv.Perm (Fin 52) => π s) (Equiv.swap c c') c' c
+    fun π => by
+      simp only [Equiv.Perm.mul_apply]
+      rw [Equiv.apply_eq_iff_eq_symm_apply, Equiv.symm_swap, Equiv.swap_apply_left]
+
+/-- (PROVED) Exactly `51!` decks (as permutations) put card `c` at seat `s`. -/
+theorem card_apply_eq (s c : Fin 52) :
+    (univ.filter fun π : Equiv.Perm (Fin 52) => π s = c).card = Nat.factorial 51 := by
+  have h := PermCount.card_filter_comp_eq (fun π : Equiv.Perm (Fin 52) => π s) univ
+    (fun _ => mem_univ _) _ (fun c' _ => card_apply_eq_indep_card s c' c) (fun _ => True)
+  rw [filter_True, filter_True, card_univ, Fintype.card_perm, Fintype.card_fin,
+    card_univ, Fintype.card_fin] at h
+  have h52 : Nat.factorial 52 = 52 * Nat.factorial 51 := Nat.factorial_succ 51
+  omega
+
 end DoubleDeal.Security.PermCount

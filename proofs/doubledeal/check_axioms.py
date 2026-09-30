@@ -518,8 +518,9 @@ PACKAGES = {
             "DoubleDeal.Security.LinearMasks.fullSumSqCorr_cardMask_seat",
             "DoubleDeal.Security.LinearMasks.alignCount_eq",
             "DoubleDeal.Security.LinearMasks.corr_keyedLayer_sign",
-            "DoubleDeal.Security.LinearMasks.sum_fullDiffCount",
-            "DoubleDeal.Security.LinearMasks.sum_fullDiffCount_left",
+            # row/column sums of fullDiffCount (M8b support, homed in FullCipher)
+            "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
+            "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",
         },
     },
     "security-heavy": {

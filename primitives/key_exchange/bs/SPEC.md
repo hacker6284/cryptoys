@@ -41,7 +41,7 @@ The small tiers are deliberately weak. The goal is a working, honest DH that sca
 | Implicit: loop counters and positions in your head (which key cell you're on, which hole of B, A and the strip you're laying at) | **Cursor ships** plus a **10-hole control lane** (below). |
 | Implicit: "pair off the whites" parity and the sub-step of the cell in your head | Pegs in the control lane. |
 | §3 B9 and §9: "hash K" and "compare a short hash aloud" | BS now ends with K on the grid; hashing is outside BS. Key confirmation is done physically (§9). |
-| Public values as "W/R/. strings" | The other player copies your published register peg by peg into their Y register (Y is free at that point; own A stays in X until copied). The trits may be read aloud, but they are never stored anywhere except pegs. |
+| Public values as "W/R/. strings" | The other player calls your published register hole by hole and copies it into their own Y register (§3.1). Nothing is stored except pegs. |
 
 Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are part of the recipe (like "drop it n back and n−k back"), not state.
 
@@ -222,7 +222,7 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
   4. Otherwise the square C is your base.
   - Squaring maps anything into the order-q subgroup. 0, 1 and −1 are exactly the inputs that fail.
 * **B9. The exchange.**
-  1. Alice walks her key grid with g = 3 and publishes A (tidy, n trits read as W/R/. from hole 0). Bob does the same and publishes B.
+  1. Alice walks her key grid with g = 3 and publishes A (tidy; the other player copies it by calling the shots, §3.1). Bob does the same and publishes B.
   2. Each checks and squares the other's number (B8).
   3. Each walks their own key grid over the square (B7, shared phase): K = (B²)^a = (A²)^b = 3^(2ab).
   4. BS ends with K on the grid. Any hashing or later use happens outside BS (no-paper rule).
@@ -236,6 +236,19 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
 * It would clash with the exponent digits, where red must mean *two* (multiply by the base twice): a −1 digit would need the base's inverse, which costs a whole extra exponentiation for a received base.
 * It would also make the canonical-form test sign-dependent.
 * Plain ternary keeps ECBS's colour meanings: red is "two clicks".
+
+### 3.1 Sending a public value: call the shots
+
+A public value is the sender's tidy X register (B9 step 1): n holes, hole 0 to hole n − 1. The receiver calls each hole of it aloud, in the order this spec reads a number off the board: **hole 0 first, up to hole n − 1**. On the board, that is grid by grid in the order the register's grids are chained (§6), row A to J, left to right within each row, calling only the register's own holes. In T1 and T2 those are holes 1–9 of the register's rows; hole 10 is the control lane. The sender looks at that hole and answers:
+- a red peg: **"Hit!"**
+- a white peg: **"Miss!"**
+- an empty hole: **"Misfire!"**
+
+The receiver copies each answer into the same hole of their own Y register, exactly as in Battleship: a red peg on a hit, a white peg on a miss, nothing on a misfire. Y is empty at this point, so no extra grid is needed. The sender keeps A in X until the copy is done. When every hole has been called, the receiver's Y is an exact copy of the sender's X. Call every hole of the register; never stop early, even after a long run of misfires. Before letting go, park the cursor ships at the last hole called. Only public values are called; key grids are never shown or called.
+
+*Mnemonic: "Red hits, white misses, empty misfires."*
+
+This call order is least significant digit first, the register's own order (§3). It is the opposite of the key walk's order (§4.4).
 
 ---
 

@@ -143,10 +143,10 @@ CI (`proofs.yml`, job `doubledeal-security`) enforces, by exact name:
 
 CI ([`proofs-heavy.yml`](../../../.github/workflows/proofs-heavy.yml), job `doubledeal-security-heavy`) builds the heavy library
 and runs `../check_axioms.py security-heavy` (same rules, no KNOWN_SORRY; every
-registered theorem must be reported; it also audits the unregistered theorems Lean
-generates in the heavy modules, such as equation lemmas, so its count can exceed the
-`HEAVY_THEOREMS` count: see the comment at `HEAVY_THEOREMS` in `../check_axioms.py`, and
-the job's output, which names them) plus `scan_sorry.py`. When it runs: see that workflow.
+registered theorem must be reported) plus `scan_sorry.py`. It also audits the
+Lean-generated (e.g. equation lemmas) theorems of the heavy modules, pinned in
+`HEAVY_GENERATED`; see the comment at `HEAVY_THEOREMS` in `../check_axioms.py`.
+When it runs: see that workflow.
 
 Both jobs (`doubledeal-security` and `doubledeal-security-heavy`) must be green
 before merge (not enforced by branch protection): each audit checks only its own

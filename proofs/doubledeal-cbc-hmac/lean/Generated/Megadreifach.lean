@@ -46,6 +46,77 @@ instance : SudoRt.SOrd BigInt where
 instance : SudoRt.Canon BigInt where
   canon r := SudoRt.canonRecord "BigInt" [SudoRt.Canon.canon r.sudo_6BigInt_8negative, SudoRt.Canon.canon r.sudo_6BigInt_5limbs]
 
+structure TraceStep where
+  sudo_9TraceStep_3pos : Int
+  sudo_9TraceStep_4card : Int
+  sudo_9TraceStep_2up : Int
+  sudo_9TraceStep_5front : Int
+  sudo_9TraceStep_4held : Int
+  sudo_9TraceStep_4spin : Int
+  sudo_9TraceStep_4noon : Int
+  sudo_9TraceStep_6corner : Bool
+  sudo_9TraceStep_5third : Int
+  sudo_9TraceStep_2c1 : Int
+  sudo_9TraceStep_2c2 : Int
+  sudo_9TraceStep_5turns : Array (Int)
+  deriving BEq, Repr
+
+instance : Inhabited TraceStep where
+  default := { sudo_9TraceStep_3pos := default, sudo_9TraceStep_4card := default, sudo_9TraceStep_2up := default, sudo_9TraceStep_5front := default, sudo_9TraceStep_4held := default, sudo_9TraceStep_4spin := default, sudo_9TraceStep_4noon := default, sudo_9TraceStep_6corner := default, sudo_9TraceStep_5third := default, sudo_9TraceStep_2c1 := default, sudo_9TraceStep_2c2 := default, sudo_9TraceStep_5turns := default }
+
+instance : SudoRt.SEq TraceStep where
+  beq a b := SudoRt.SEq.beq a.sudo_9TraceStep_3pos b.sudo_9TraceStep_3pos && SudoRt.SEq.beq a.sudo_9TraceStep_4card b.sudo_9TraceStep_4card && SudoRt.SEq.beq a.sudo_9TraceStep_2up b.sudo_9TraceStep_2up && SudoRt.SEq.beq a.sudo_9TraceStep_5front b.sudo_9TraceStep_5front && SudoRt.SEq.beq a.sudo_9TraceStep_4held b.sudo_9TraceStep_4held && SudoRt.SEq.beq a.sudo_9TraceStep_4spin b.sudo_9TraceStep_4spin && SudoRt.SEq.beq a.sudo_9TraceStep_4noon b.sudo_9TraceStep_4noon && SudoRt.SEq.beq a.sudo_9TraceStep_6corner b.sudo_9TraceStep_6corner && SudoRt.SEq.beq a.sudo_9TraceStep_5third b.sudo_9TraceStep_5third && SudoRt.SEq.beq a.sudo_9TraceStep_2c1 b.sudo_9TraceStep_2c1 && SudoRt.SEq.beq a.sudo_9TraceStep_2c2 b.sudo_9TraceStep_2c2 && SudoRt.SEq.beq a.sudo_9TraceStep_5turns b.sudo_9TraceStep_5turns
+
+instance : SudoRt.SOrd TraceStep where
+  le a b :=
+    (if !(SudoRt.SEq.beq a.sudo_9TraceStep_3pos b.sudo_9TraceStep_3pos) then SudoRt.SOrd.le a.sudo_9TraceStep_3pos b.sudo_9TraceStep_3pos else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_4card b.sudo_9TraceStep_4card) then SudoRt.SOrd.le a.sudo_9TraceStep_4card b.sudo_9TraceStep_4card else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_2up b.sudo_9TraceStep_2up) then SudoRt.SOrd.le a.sudo_9TraceStep_2up b.sudo_9TraceStep_2up else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_5front b.sudo_9TraceStep_5front) then SudoRt.SOrd.le a.sudo_9TraceStep_5front b.sudo_9TraceStep_5front else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_4held b.sudo_9TraceStep_4held) then SudoRt.SOrd.le a.sudo_9TraceStep_4held b.sudo_9TraceStep_4held else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_4spin b.sudo_9TraceStep_4spin) then SudoRt.SOrd.le a.sudo_9TraceStep_4spin b.sudo_9TraceStep_4spin else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_4noon b.sudo_9TraceStep_4noon) then SudoRt.SOrd.le a.sudo_9TraceStep_4noon b.sudo_9TraceStep_4noon else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_6corner b.sudo_9TraceStep_6corner) then SudoRt.SOrd.le a.sudo_9TraceStep_6corner b.sudo_9TraceStep_6corner else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_5third b.sudo_9TraceStep_5third) then SudoRt.SOrd.le a.sudo_9TraceStep_5third b.sudo_9TraceStep_5third else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_2c1 b.sudo_9TraceStep_2c1) then SudoRt.SOrd.le a.sudo_9TraceStep_2c1 b.sudo_9TraceStep_2c1 else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_2c2 b.sudo_9TraceStep_2c2) then SudoRt.SOrd.le a.sudo_9TraceStep_2c2 b.sudo_9TraceStep_2c2 else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_5turns b.sudo_9TraceStep_5turns) then SudoRt.SOrd.le a.sudo_9TraceStep_5turns b.sudo_9TraceStep_5turns else true))))))))))))
+
+instance : SudoRt.Canon TraceStep where
+  canon r := SudoRt.canonRecord "TraceStep" [SudoRt.Canon.canon r.sudo_9TraceStep_3pos, SudoRt.Canon.canon r.sudo_9TraceStep_4card, SudoRt.Canon.canon r.sudo_9TraceStep_2up, SudoRt.Canon.canon r.sudo_9TraceStep_5front, SudoRt.Canon.canon r.sudo_9TraceStep_4held, SudoRt.Canon.canon r.sudo_9TraceStep_4spin, SudoRt.Canon.canon r.sudo_9TraceStep_4noon, SudoRt.Canon.canon r.sudo_9TraceStep_6corner, SudoRt.Canon.canon r.sudo_9TraceStep_5third, SudoRt.Canon.canon r.sudo_9TraceStep_2c1, SudoRt.Canon.canon r.sudo_9TraceStep_2c2, SudoRt.Canon.canon r.sudo_9TraceStep_5turns]
+
+structure TraceBlock where
+  sudo_10TraceBlock_5chunk : Array (Int)
+  sudo_10TraceBlock_4deal : Array (Int)
+  sudo_10TraceBlock_1h : Position
+  sudo_10TraceBlock_5h_inv : Position
+  sudo_10TraceBlock_1e : Position
+  sudo_10TraceBlock_6h_next : Position
+  sudo_10TraceBlock_10h_next_inv : Position
+  sudo_10TraceBlock_5steps : Array (TraceStep)
+  deriving BEq, Repr
+
+instance : Inhabited TraceBlock where
+  default := { sudo_10TraceBlock_5chunk := default, sudo_10TraceBlock_4deal := default, sudo_10TraceBlock_1h := default, sudo_10TraceBlock_5h_inv := default, sudo_10TraceBlock_1e := default, sudo_10TraceBlock_6h_next := default, sudo_10TraceBlock_10h_next_inv := default, sudo_10TraceBlock_5steps := default }
+
+instance : SudoRt.SEq TraceBlock where
+  beq a b := SudoRt.SEq.beq a.sudo_10TraceBlock_5chunk b.sudo_10TraceBlock_5chunk && SudoRt.SEq.beq a.sudo_10TraceBlock_4deal b.sudo_10TraceBlock_4deal && SudoRt.SEq.beq a.sudo_10TraceBlock_1h b.sudo_10TraceBlock_1h && SudoRt.SEq.beq a.sudo_10TraceBlock_5h_inv b.sudo_10TraceBlock_5h_inv && SudoRt.SEq.beq a.sudo_10TraceBlock_1e b.sudo_10TraceBlock_1e && SudoRt.SEq.beq a.sudo_10TraceBlock_6h_next b.sudo_10TraceBlock_6h_next && SudoRt.SEq.beq a.sudo_10TraceBlock_10h_next_inv b.sudo_10TraceBlock_10h_next_inv && SudoRt.SEq.beq a.sudo_10TraceBlock_5steps b.sudo_10TraceBlock_5steps
+
+instance : SudoRt.SOrd TraceBlock where
+  le a b :=
+    (if !(SudoRt.SEq.beq a.sudo_10TraceBlock_5chunk b.sudo_10TraceBlock_5chunk) then SudoRt.SOrd.le a.sudo_10TraceBlock_5chunk b.sudo_10TraceBlock_5chunk else (if !(SudoRt.SEq.beq a.sudo_10TraceBlock_4deal b.sudo_10TraceBlock_4deal) then SudoRt.SOrd.le a.sudo_10TraceBlock_4deal b.sudo_10TraceBlock_4deal else (if !(SudoRt.SEq.beq a.sudo_10TraceBlock_1h b.sudo_10TraceBlock_1h) then SudoRt.SOrd.le a.sudo_10TraceBlock_1h b.sudo_10TraceBlock_1h else (if !(SudoRt.SEq.beq a.sudo_10TraceBlock_5h_inv b.sudo_10TraceBlock_5h_inv) then SudoRt.SOrd.le a.sudo_10TraceBlock_5h_inv b.sudo_10TraceBlock_5h_inv else (if !(SudoRt.SEq.beq a.sudo_10TraceBlock_1e b.sudo_10TraceBlock_1e) then SudoRt.SOrd.le a.sudo_10TraceBlock_1e b.sudo_10TraceBlock_1e else (if !(SudoRt.SEq.beq a.sudo_10TraceBlock_6h_next b.sudo_10TraceBlock_6h_next) then SudoRt.SOrd.le a.sudo_10TraceBlock_6h_next b.sudo_10TraceBlock_6h_next else (if !(SudoRt.SEq.beq a.sudo_10TraceBlock_10h_next_inv b.sudo_10TraceBlock_10h_next_inv) then SudoRt.SOrd.le a.sudo_10TraceBlock_10h_next_inv b.sudo_10TraceBlock_10h_next_inv else (if !(SudoRt.SEq.beq a.sudo_10TraceBlock_5steps b.sudo_10TraceBlock_5steps) then SudoRt.SOrd.le a.sudo_10TraceBlock_5steps b.sudo_10TraceBlock_5steps else true))))))))
+
+instance : SudoRt.Canon TraceBlock where
+  canon r := SudoRt.canonRecord "TraceBlock" [SudoRt.Canon.canon r.sudo_10TraceBlock_5chunk, SudoRt.Canon.canon r.sudo_10TraceBlock_4deal, SudoRt.Canon.canon r.sudo_10TraceBlock_1h, SudoRt.Canon.canon r.sudo_10TraceBlock_5h_inv, SudoRt.Canon.canon r.sudo_10TraceBlock_1e, SudoRt.Canon.canon r.sudo_10TraceBlock_6h_next, SudoRt.Canon.canon r.sudo_10TraceBlock_10h_next_inv, SudoRt.Canon.canon r.sudo_10TraceBlock_5steps]
+
+structure Trace where
+  sudo_5Trace_8iv_turns : Array (Int)
+  sudo_5Trace_6blocks : Array (TraceBlock)
+  sudo_5Trace_6digest : Array (Int)
+  deriving BEq, Repr
+
+instance : Inhabited Trace where
+  default := { sudo_5Trace_8iv_turns := default, sudo_5Trace_6blocks := default, sudo_5Trace_6digest := default }
+
+instance : SudoRt.SEq Trace where
+  beq a b := SudoRt.SEq.beq a.sudo_5Trace_8iv_turns b.sudo_5Trace_8iv_turns && SudoRt.SEq.beq a.sudo_5Trace_6blocks b.sudo_5Trace_6blocks && SudoRt.SEq.beq a.sudo_5Trace_6digest b.sudo_5Trace_6digest
+
+instance : SudoRt.SOrd Trace where
+  le a b :=
+    (if !(SudoRt.SEq.beq a.sudo_5Trace_8iv_turns b.sudo_5Trace_8iv_turns) then SudoRt.SOrd.le a.sudo_5Trace_8iv_turns b.sudo_5Trace_8iv_turns else (if !(SudoRt.SEq.beq a.sudo_5Trace_6blocks b.sudo_5Trace_6blocks) then SudoRt.SOrd.le a.sudo_5Trace_6blocks b.sudo_5Trace_6blocks else (if !(SudoRt.SEq.beq a.sudo_5Trace_6digest b.sudo_5Trace_6digest) then SudoRt.SOrd.le a.sudo_5Trace_6digest b.sudo_5Trace_6digest else true)))
+
+instance : SudoRt.Canon Trace where
+  canon r := SudoRt.canonRecord "Trace" [SudoRt.Canon.canon r.sudo_5Trace_8iv_turns, SudoRt.Canon.canon r.sudo_5Trace_6blocks, SudoRt.Canon.canon r.sudo_5Trace_6digest]
+
 def pad_block : Int := (28 : Int)
 
 def len_field : Int := (8 : Int)
@@ -3426,5 +3497,437 @@ def kat_msg (index : Int) : Except SudoRt.Trap (Array (Int)) :=
                     else
                       do
                         pure out
+
+def trace_card (o : Array (Int)) (card : Int) (pos : Int) (new_o : Array (Int)) : Except SudoRt.Trap (TraceStep) :=
+  do
+    let _t952 ← SudoRt.divI card (4 : Int)
+    let rank := _t952
+    let _t953 ← SudoRt.modI card (4 : Int)
+    let _t954 ← SudoRt.addI _t953 (1 : Int)
+    let amt := _t954
+    let turns := (#[] : Array (Int))
+    let o_work := o
+    let held_pos := rank
+    let spin := (0 : Int)
+    if (decide (rank < (12 : Int))) then
+      do
+        let _t956 ← SudoRt.atL o_work held_pos
+        let _mb957 := SudoRt.appendL turns _t956
+        let ⟨_nr958, _⟩ := _mb957
+        let turns := _nr958
+        let _hm944 := ()
+        let _u959 := _hm944
+        let _mb960 := SudoRt.appendL turns amt
+        let ⟨_nr961, _⟩ := _mb960
+        let turns := _nr961
+        let _hm945 := ()
+        let _u962 := _hm945
+        let _t963 ← SudoRt.atL o_work held_pos
+        let held := _t963
+        let _t964 ← visual_noon held_pos o_work
+        let noon := _t964
+        let _mb965 := SudoRt.appendL turns noon
+        let ⟨_nr966, _⟩ := _mb965
+        let turns := _nr966
+        let _hm948 := ()
+        let _u967 := _hm948
+        let _mb968 := SudoRt.appendL turns (1 : Int)
+        let ⟨_nr969, _⟩ := _mb968
+        let turns := _nr969
+        let _hm949 := ()
+        let _u970 := _hm949
+        let _t971 ← SudoRt.atL o_work held_front
+        let _mb972 := SudoRt.appendL turns _t971
+        let ⟨_nr973, _⟩ := _mb972
+        let turns := _nr973
+        let _hm950 := ()
+        let _u974 := _hm950
+        let _mb975 := SudoRt.appendL turns (1 : Int)
+        let ⟨_nr976, _⟩ := _mb975
+        let turns := _nr976
+        let _hm951 := ()
+        let _u977 := _hm951
+        let _t978 ← SudoRt.modI pos (2 : Int)
+        let corner := (SudoRt.SEq.beq _t978 (1 : Int))
+        let _t980 ← SudoRt.negI (1 : Int)
+        let third := _t980
+        if corner then
+          do
+            let _t981 ← corner_after_noon held noon
+            let third := _t981
+            let _t982 ← SudoRt.atL o held_up
+            let _t983 ← SudoRt.atL o held_front
+            let _t984 ← SudoRt.atL new_o held_up
+            let _t985 ← SudoRt.atL new_o held_front
+            pure ({ sudo_9TraceStep_3pos := pos, sudo_9TraceStep_4card := card, sudo_9TraceStep_2up := _t982, sudo_9TraceStep_5front := _t983, sudo_9TraceStep_4held := held, sudo_9TraceStep_4spin := spin, sudo_9TraceStep_4noon := noon, sudo_9TraceStep_6corner := corner, sudo_9TraceStep_5third := third, sudo_9TraceStep_2c1 := _t984, sudo_9TraceStep_2c2 := _t985, sudo_9TraceStep_5turns := turns } : TraceStep)
+        else
+          do
+            let _t986 ← SudoRt.atL o held_up
+            let _t987 ← SudoRt.atL o held_front
+            let _t988 ← SudoRt.atL new_o held_up
+            let _t989 ← SudoRt.atL new_o held_front
+            pure ({ sudo_9TraceStep_3pos := pos, sudo_9TraceStep_4card := card, sudo_9TraceStep_2up := _t986, sudo_9TraceStep_5front := _t987, sudo_9TraceStep_4held := held, sudo_9TraceStep_4spin := spin, sudo_9TraceStep_4noon := noon, sudo_9TraceStep_6corner := corner, sudo_9TraceStep_5third := third, sudo_9TraceStep_2c1 := _t988, sudo_9TraceStep_2c2 := _t989, sudo_9TraceStep_5turns := turns } : TraceStep)
+    else
+      do
+        let held_pos := held_up
+        let _t990 ← SudoRt.atL o_work held_pos
+        let _mb991 := SudoRt.appendL turns _t990
+        let ⟨_nr992, _⟩ := _mb991
+        let turns := _nr992
+        let _hm946 := ()
+        let _u993 := _hm946
+        let _t994 ← SudoRt.subI (0 : Int) amt
+        let _mb995 := SudoRt.appendL turns _t994
+        let ⟨_nr996, _⟩ := _mb995
+        let turns := _nr996
+        let _hm947 := ()
+        let _u997 := _hm947
+        let _t998 ← spin_about_up o_work amt
+        let o_work := _t998
+        let spin := amt
+        let _t999 ← SudoRt.atL o_work held_pos
+        let held := _t999
+        let _t1000 ← visual_noon held_pos o_work
+        let noon := _t1000
+        let _mb1001 := SudoRt.appendL turns noon
+        let ⟨_nr1002, _⟩ := _mb1001
+        let turns := _nr1002
+        let _hm948 := ()
+        let _u1003 := _hm948
+        let _mb1004 := SudoRt.appendL turns (1 : Int)
+        let ⟨_nr1005, _⟩ := _mb1004
+        let turns := _nr1005
+        let _hm949 := ()
+        let _u1006 := _hm949
+        let _t1007 ← SudoRt.atL o_work held_front
+        let _mb1008 := SudoRt.appendL turns _t1007
+        let ⟨_nr1009, _⟩ := _mb1008
+        let turns := _nr1009
+        let _hm950 := ()
+        let _u1010 := _hm950
+        let _mb1011 := SudoRt.appendL turns (1 : Int)
+        let ⟨_nr1012, _⟩ := _mb1011
+        let turns := _nr1012
+        let _hm951 := ()
+        let _u1013 := _hm951
+        let _t1014 ← SudoRt.modI pos (2 : Int)
+        let corner := (SudoRt.SEq.beq _t1014 (1 : Int))
+        let _t1016 ← SudoRt.negI (1 : Int)
+        let third := _t1016
+        if corner then
+          do
+            let _t1017 ← corner_after_noon held noon
+            let third := _t1017
+            let _t1018 ← SudoRt.atL o held_up
+            let _t1019 ← SudoRt.atL o held_front
+            let _t1020 ← SudoRt.atL new_o held_up
+            let _t1021 ← SudoRt.atL new_o held_front
+            pure ({ sudo_9TraceStep_3pos := pos, sudo_9TraceStep_4card := card, sudo_9TraceStep_2up := _t1018, sudo_9TraceStep_5front := _t1019, sudo_9TraceStep_4held := held, sudo_9TraceStep_4spin := spin, sudo_9TraceStep_4noon := noon, sudo_9TraceStep_6corner := corner, sudo_9TraceStep_5third := third, sudo_9TraceStep_2c1 := _t1020, sudo_9TraceStep_2c2 := _t1021, sudo_9TraceStep_5turns := turns } : TraceStep)
+        else
+          do
+            let _t1022 ← SudoRt.atL o held_up
+            let _t1023 ← SudoRt.atL o held_front
+            let _t1024 ← SudoRt.atL new_o held_up
+            let _t1025 ← SudoRt.atL new_o held_front
+            pure ({ sudo_9TraceStep_3pos := pos, sudo_9TraceStep_4card := card, sudo_9TraceStep_2up := _t1022, sudo_9TraceStep_5front := _t1023, sudo_9TraceStep_4held := held, sudo_9TraceStep_4spin := spin, sudo_9TraceStep_4noon := noon, sudo_9TraceStep_6corner := corner, sudo_9TraceStep_5third := third, sudo_9TraceStep_2c1 := _t1024, sudo_9TraceStep_2c2 := _t1025, sudo_9TraceStep_5turns := turns } : TraceStep)
+
+def trace_f3 (o : Array (Int)) (rnd : Int) (new_o : Array (Int)) : Except SudoRt.Trap (TraceStep) :=
+  do
+    let _t1028 ← SudoRt.atL o held_up
+    let held := _t1028
+    let _t1029 ← SudoRt.atL o held_front
+    let noon := _t1029
+    let turns := (#[] : Array (Int))
+    let _mb1030 := SudoRt.appendL turns held
+    let ⟨_nr1031, _⟩ := _mb1030
+    let turns := _nr1031
+    let _hm1026 := ()
+    let _u1032 := _hm1026
+    let _mb1033 := SudoRt.appendL turns (1 : Int)
+    let ⟨_nr1034, _⟩ := _mb1033
+    let turns := _nr1034
+    let _hm1027 := ()
+    let _u1035 := _hm1027
+    let _t1036 ← SudoRt.modI rnd (2 : Int)
+    let corner := (SudoRt.SEq.beq _t1036 (1 : Int))
+    let _t1038 ← SudoRt.negI (1 : Int)
+    let third := _t1038
+    if corner then
+      do
+        let _t1039 ← corner_after_noon held noon
+        let third := _t1039
+        let _t1040 ← SudoRt.addI (52 : Int) rnd
+        let _t1041 ← SudoRt.negI (1 : Int)
+        let _t1042 ← SudoRt.atL new_o held_up
+        let _t1043 ← SudoRt.atL new_o held_front
+        pure ({ sudo_9TraceStep_3pos := _t1040, sudo_9TraceStep_4card := _t1041, sudo_9TraceStep_2up := held, sudo_9TraceStep_5front := noon, sudo_9TraceStep_4held := held, sudo_9TraceStep_4spin := (0 : Int), sudo_9TraceStep_4noon := noon, sudo_9TraceStep_6corner := corner, sudo_9TraceStep_5third := third, sudo_9TraceStep_2c1 := _t1042, sudo_9TraceStep_2c2 := _t1043, sudo_9TraceStep_5turns := turns } : TraceStep)
+    else
+      do
+        let _t1044 ← SudoRt.addI (52 : Int) rnd
+        let _t1045 ← SudoRt.negI (1 : Int)
+        let _t1046 ← SudoRt.atL new_o held_up
+        let _t1047 ← SudoRt.atL new_o held_front
+        pure ({ sudo_9TraceStep_3pos := _t1044, sudo_9TraceStep_4card := _t1045, sudo_9TraceStep_2up := held, sudo_9TraceStep_5front := noon, sudo_9TraceStep_4held := held, sudo_9TraceStep_4spin := (0 : Int), sudo_9TraceStep_4noon := noon, sudo_9TraceStep_6corner := corner, sudo_9TraceStep_5third := third, sudo_9TraceStep_2c1 := _t1046, sudo_9TraceStep_2c2 := _t1047, sudo_9TraceStep_5turns := turns } : TraceStep)
+
+def trace_block (h : Position) (deal : Array (Int)) (steps : Array (TraceStep)) : Except SudoRt.Trap ((Position) × (Array (TraceStep))) :=
+  do
+    let g := h
+    let _t1050 ← range_list (12 : Int)
+    let o := _t1050
+    let _fromV := (0 : Int)
+    let _toV := (51 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init1076 := (_fromV, (steps, g, o))
+    let _out ← (SudoRt.runLoopOn (ρ := (Position) × (Array (TraceStep))) _init1076 fuel (fun σ =>
+    let i := σ.1
+    let steps := σ.2.1
+    let _sp1072 := σ.2.2
+    let g := _sp1072.1
+    let _sp1073 := _sp1072.2
+    let o := _sp1073
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Position) × (Array (TraceStep))) (i, (steps, g, o)))
+      else
+        match ← ((do
+  let _t1052 ← SudoRt.atL deal i
+  let _t1053 ← SudoRt.addI i (1 : Int)
+  let _t1054 ← g2_step g o _t1052 _t1053
+  let ⟨g2, o2⟩ := _t1054
+  let _t1055 ← SudoRt.atL deal i
+  let _t1056 ← SudoRt.addI i (1 : Int)
+  let _t1057 ← trace_card o _t1055 _t1056 o2
+  let _mb1058 := SudoRt.appendL steps _t1057
+  let ⟨_nr1059, _⟩ := _mb1058
+  let steps := _nr1059
+  let _hm1048 := ()
+  let _u1060 := _hm1048
+  let g := g2
+  let o := o2
+  pure (SudoRt.Flow.cont (ρ := (Position) × (Array (TraceStep))) (steps, g, o))) : Except SudoRt.Trap (SudoRt.Flow _ ((Position) × (Array (TraceStep))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Position) × (Array (TraceStep))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Position) × (Array (TraceStep))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Position) × (Array (TraceStep))) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Position) × (Array (TraceStep))) (i', _fs))) (fun σ =>
+    let steps := σ.2.1
+    let _sp1074 := σ.2.2
+    let g := _sp1074.1
+    let _sp1075 := _sp1074.2
+    let o := _sp1075
+    do
+      let _fromV := (1 : Int)
+      let _toV := f3_t
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init1071 := (_fromV, (steps, g, o))
+      let _out ← (SudoRt.runLoopOn (ρ := (Position) × (Array (TraceStep))) _init1071 fuel (fun σ =>
+    let t := σ.1
+    let steps := σ.2.1
+    let _sp1067 := σ.2.2
+    let g := _sp1067.1
+    let _sp1068 := _sp1067.2
+    let o := _sp1068
+    do
+      if t > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Position) × (Array (TraceStep))) (t, (steps, g, o)))
+      else
+        match ← ((do
+  let _t1062 ← f3_step g o t
+  let ⟨g2, o2⟩ := _t1062
+  let _t1063 ← trace_f3 o t o2
+  let _mb1064 := SudoRt.appendL steps _t1063
+  let ⟨_nr1065, _⟩ := _mb1064
+  let steps := _nr1065
+  let _hm1049 := ()
+  let _u1066 := _hm1049
+  let g := g2
+  let o := o2
+  pure (SudoRt.Flow.cont (ρ := (Position) × (Array (TraceStep))) (steps, g, o))) : Except SudoRt.Trap (SudoRt.Flow _ ((Position) × (Array (TraceStep))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Position) × (Array (TraceStep))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Position) × (Array (TraceStep))) (t, _fs))
+        | .cont _fs => do
+            if t == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Position) × (Array (TraceStep))) (t, _fs))
+            else do
+              let i' ← SudoRt.addI t (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Position) × (Array (TraceStep))) (i', _fs))) (fun σ =>
+    let steps := σ.2.1
+    let _sp1069 := σ.2.2
+    let g := _sp1069.1
+    let _sp1070 := _sp1069.2
+    let o := _sp1070
+    do
+      pure (g, steps)) (fun r => pure r))
+      pure _out) (fun r => pure r))
+    pure _out
+
+def trace_hash (msg : Array (Int)) : Except SudoRt.Trap (Trace) :=
+  do
+    let _t1081 ← pad_message msg
+    let padded := _t1081
+    let _t1082 ← iv_cook12
+    let h := _t1082
+    let iv_turns := (#[] : Array (Int))
+    let _fromV := (0 : Int)
+    let _toV := (11 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init1116 := (_fromV, iv_turns)
+    let _out ← (SudoRt.runLoopOn (ρ := Trace) _init1116 fuel (fun σ =>
+    let f := σ.1
+    let iv_turns := σ.2
+    do
+      if f > _toV then
+        pure (SudoRt.Flow.brk (ρ := Trace) (f, iv_turns))
+      else
+        match ← ((do
+  let _mb1084 := SudoRt.appendL iv_turns f
+  let ⟨_nr1085, _⟩ := _mb1084
+  let iv_turns := _nr1085
+  let _hm1077 := ()
+  let _u1086 := _hm1077
+  let _mb1087 := SudoRt.appendL iv_turns (1 : Int)
+  let ⟨_nr1088, _⟩ := _mb1087
+  let iv_turns := _nr1088
+  let _hm1078 := ()
+  let _u1089 := _hm1078
+  pure (SudoRt.Flow.cont (ρ := Trace) iv_turns)) : Except SudoRt.Trap (SudoRt.Flow _ (Trace))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Trace) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Trace) (f, _fs))
+        | .cont _fs => do
+            if f == _toV then
+              pure (SudoRt.Flow.brk (ρ := Trace) (f, _fs))
+            else do
+              let i' ← SudoRt.addI f (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Trace) (i', _fs))) (fun σ =>
+    let iv_turns := σ.2
+    do
+      let blocks := (#[] : Array (TraceBlock))
+      let _t1091 ← SudoRt.divI (SudoRt.listLen padded) pad_block
+      let nblocks := _t1091
+      let _t1111 ← SudoRt.subI nblocks (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t1111
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init1115 := (_fromV, (blocks, h))
+      let _out ← (SudoRt.runLoopOn (ρ := Trace) _init1115 fuel (fun σ =>
+    let b := σ.1
+    let blocks := σ.2.1
+    let _sp1113 := σ.2.2
+    let h := _sp1113
+    do
+      if b > _toV then
+        pure (SudoRt.Flow.brk (ρ := Trace) (b, (blocks, h)))
+      else
+        match ← ((do
+  let chunk := (#[] : Array (Int))
+  let _fromV := (0 : Int)
+  let _toV := (27 : Int)
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init1110 := (_fromV, chunk)
+  let _out ← (SudoRt.runLoopOn (ρ := Trace) _init1110 fuel (fun σ =>
+    let j := σ.1
+    let chunk := σ.2
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := Trace) (j, chunk))
+      else
+        match ← ((do
+  let _t1094 ← SudoRt.mulI b pad_block
+  let _t1095 ← SudoRt.addI _t1094 j
+  let _t1096 ← SudoRt.atL padded _t1095
+  let _mb1097 := SudoRt.appendL chunk _t1096
+  let ⟨_nr1098, _⟩ := _mb1097
+  let chunk := _nr1098
+  let _hm1079 := ()
+  let _u1099 := _hm1079
+  pure (SudoRt.Flow.cont (ρ := Trace) chunk)) : Except SudoRt.Trap (SudoRt.Flow _ (Trace))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Trace) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Trace) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := Trace) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Trace) (i', _fs))) (fun σ =>
+    let chunk := σ.2
+    do
+      let _t1100 ← phi_chunk chunk
+      let deal := _t1100
+      let steps := (#[] : Array (TraceStep))
+      let _io1101 ← trace_block h deal steps
+      let ⟨_ret1102, _iw01103⟩ := _io1101
+      let steps := _iw01103
+      let e := _ret1102
+      let _t1104 ← compose h e
+      let h_next := _t1104
+      let _t1105 ← inverse h
+      let _t1106 ← inverse h_next
+      let _mb1107 := SudoRt.appendL blocks ({ sudo_10TraceBlock_5chunk := chunk, sudo_10TraceBlock_4deal := deal, sudo_10TraceBlock_1h := h, sudo_10TraceBlock_5h_inv := _t1105, sudo_10TraceBlock_1e := e, sudo_10TraceBlock_6h_next := h_next, sudo_10TraceBlock_10h_next_inv := _t1106, sudo_10TraceBlock_5steps := steps } : TraceBlock)
+      let ⟨_nr1108, _⟩ := _mb1107
+      let blocks := _nr1108
+      let _hm1080 := ()
+      let _u1109 := _hm1080
+      let h := h_next
+      pure (SudoRt.Flow.cont (ρ := Trace) (blocks, h))) (fun r => pure (SudoRt.Flow.ret (ρ := Trace) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Trace))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Trace) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Trace) (b, _fs))
+        | .cont _fs => do
+            if b == _toV then
+              pure (SudoRt.Flow.brk (ρ := Trace) (b, _fs))
+            else do
+              let i' ← SudoRt.addI b (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Trace) (i', _fs))) (fun σ =>
+    let blocks := σ.2.1
+    let _sp1114 := σ.2.2
+    let h := _sp1114
+    do
+      let _t1112 ← position_to_bytes h
+      pure ({ sudo_5Trace_8iv_turns := iv_turns, sudo_5Trace_6blocks := blocks, sudo_5Trace_6digest := _t1112 } : Trace)) (fun r => pure r))
+      pure _out) (fun r => pure r))
+    pure _out
+
+def replay_turns (g : Position) (turns : Array (Int)) : Except SudoRt.Trap (Position) :=
+  do
+    let out := g
+    let _t1127 ← SudoRt.divI (SudoRt.listLen turns) (2 : Int)
+    let _t1128 ← SudoRt.subI _t1127 (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t1128
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init1129 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Position) _init1129 fuel (fun σ =>
+    let i := σ.1
+    let out := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Position) (i, out))
+      else
+        match ← ((do
+  let _t1118 ← SudoRt.mulI (2 : Int) i
+  let _t1119 ← SudoRt.atL turns _t1118
+  let _t1120 ← SudoRt.mulI (2 : Int) i
+  let _t1121 ← SudoRt.addI _t1120 (1 : Int)
+  let _t1122 ← SudoRt.atL turns _t1121
+  let _t1123 ← SudoRt.addI _t1122 (5 : Int)
+  let _t1124 ← SudoRt.modI _t1123 (5 : Int)
+  let _t1125 ← face_turn out _t1119 _t1124
+  let out := _t1125
+  pure (SudoRt.Flow.cont (ρ := Position) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Position))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Position) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Position) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Position) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Position) (i', _fs))) (fun σ =>
+    let out := σ.2
+    do
+      pure out) (fun r => pure r))
+    pure _out
 
 end Megadreifach

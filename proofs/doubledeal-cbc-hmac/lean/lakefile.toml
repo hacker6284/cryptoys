@@ -1,0 +1,20 @@
+name = "DoubleDealCbcHmac"
+version = "0.1.0"
+defaultTargets = ["DoubleDealCbcHmac"]
+
+[[require]]
+name = "sudo"
+path = "Generated"
+
+[[require]]
+name = "audit"
+path = "../../audit"
+
+[[lean_lib]]
+name = "DoubleDealCbcHmac"
+
+[[lean_lib]]
+name = "MegaDreifachLink"
+srcDir = "../../megadreifach/lean"
+roots = ["MegaDreifach.Link2.VHash"]
+globs = ["MegaDreifach.+"]

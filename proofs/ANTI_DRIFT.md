@@ -130,7 +130,7 @@ total-fragment / terminating-subset emitter.
 | PassKey S3/S4 *about* `Except Trap` emitted defs | Link 2 **CLOSED** on `FitsLen` (length and cards) / `WellFormed` (`passkey_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, and the inverse / `WellFormed` forms). Other stones about emitted defs stay open. Not bit-security. |
 | Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |
 | DoubleDeal-CBC-HMAC generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach via emit-ir `-I`. No Link 2. No AEAD security theorem. |
-| sudo↔Lean / algebraic≃Generated for CBC-HMAC (Link 2) | OPEN. Not started. |
+| algebraic≃Generated for CBC-HMAC (Link 2) | DONE on byte inputs, every exported function: [`doubledeal-cbc-hmac/README.md`](doubledeal-cbc-hmac/README.md#link-2). Link 1 (sudo↔Lean) stays OPEN. |
 | AEAD security (EtM reduction, HMAC-MD PRF, CBC confidentiality) | OPEN. Not claimed. SCM stays later. |
 | MegaDreifach M13 (proof-package digest = KAT hex) | DONE for `Generated.v_Hash` (not a handwritten `Hash`): `proofs/megadreifach/lean/MegaDreifachHeavy/Kat.lean`, kernel `decide!` through `v_Hash_refines` (Link 2, `PadWf`). For v2: the 8 hexes of `primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json`, Generated from `primitives/hash/megadreifach/megadreifach.sudo`. The v1 KAT theorems were not kept (the frozen v1 package, `proofs/deprecated/megadreifach-v1/`, has no heavy library); no Lean checks v1's KAT hexes any more (the v1 sudo tests do not assert them; the Python `proofs/megadreifach/security/md.py` does). |
 

@@ -1199,3 +1199,35 @@ test "trace_hash matches Hash, em_block and IV-COOK12 on every KAT"
             assert compose(blk.h, blk.h_inv) == identity()
             assert compose(blk.h_next, blk.h_next_inv) == identity()
             h = blk.h_next
+
+// §5.7 by hand: B is cooked backwards (Q .. A, each -1); the 3-solve, with each
+// solve done by undoing (the undo of a position is its inverse), leaves
+// (A, B, C) = (h', h'^-1, solved) after E_m on A.
+test "cook B backwards is IV-COOK12 inverse and the 3-solve leaves h', h'^-1, solved"
+    b = identity()
+    for i = 0 to 11
+        b = face_turn(b, 11 - i, 4)
+    assert b == inverse(iv_cook12())
+    for n = 0 to 7
+        tr = trace_hash(kat_msg(n))
+        pa = iv_cook12()
+        pb = b
+        pc = identity()
+        for k = 0 to tr.blocks.length - 1
+            blk = tr.blocks[k]
+            assert pa == blk.h
+            assert compose(pa, pb) == identity()
+            assert pc == identity()
+            pa = blk.e
+            pa = compose(inverse(pb), pa)
+            pb = identity()
+            assert pa == blk.h_next
+            s2 = inverse(pa)
+            pa = identity()
+            pb = compose(s2, pb)
+            pc = compose(s2, pc)
+            pa = compose(inverse(pc), pa)
+            pc = identity()
+            assert pa == blk.h_next
+            assert pb == blk.h_next_inv
+        assert position_to_bytes(pa) == kat_v2_digest(n)

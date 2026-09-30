@@ -193,11 +193,27 @@ Edge slot `s` lies between the two faces `edge_faces(s)` below; the first is its
 | 3 | 0,4 | 8 | 1,2 | 13 | 3,9 | 18 | 5,10 | 23 | 7,11 | 28 | 9,10 |
 | 4 | 0,5 | 9 | 2,7 | 14 | 3,4 | 19 | 5,6 | 24 | 7,8 | 29 | 10,11 |
 
-## 5.7 Hand details unchanged from v1
+## 5.7 By hand: the cook and the 3-solve
 
-**IV-COOK12 by hand.** From solved, in the home grip, turn each face +1 once, in card order A, 2, 3, …, Q (Up, Front, the upper ring, the lower ring, Down). No re-grip.
+**IV-COOK12 by hand.** From solved, in the home grip, turn each face +1 once, in card order A, 2, 3, …, Q (Up, Front, the upper ring, the lower ring, Down). No re-grip. (Unchanged from v1.)
 
-**3-solve hand (informal).** Between blocks, puzzles `(A,B,C) = (h, h⁻¹, id)`. Run E_m on A; solve B onto A; solve A onto B and C; solve C onto A. Software is `compose(h, e)`.
+**Three puzzles.** A carries the chaining value `h`, B carries `h⁻¹`, C stays solved. Between blocks `(A, B, C) = (h, h⁻¹, solved)`.
+
+**Cook B backwards.** Before the first block, cook B as the mirror of A's cook: from solved, in the home grip, turn each face **−1** once (one click counter-clockwise, looking straight at it), in reverse card order Q, J, 10, …, 2, A (Down, the lower ring backwards, the upper ring backwards, Front, Up). B is now IV-COOK12⁻¹.
+
+**Copying a turn.** To copy a turn onto another puzzle, turn the face with the **same centre colour** by the **same clicks** the same way. Go by colour, not by where the face is in your hand; how you hold either puzzle does not matter (the centres are fixed, §4).
+
+**Solving.** Any solve works: whatever turns take a puzzle back to solved, they always add up to the same change. The one that never needs thinking is to **undo**: turn back every turn the puzzle has had since it was last solved, last turn first, each on the same face by the same clicks the other way (+n becomes −n).
+
+**The 3-solve (normative).** After E_m on A (§5, step 2), put A back in the home grip, then:
+
+1. **Solve B onto A.** Solve B, copying every turn onto A. B ends solved; A is now `h' = compose(h, e)`.
+2. **Solve A onto B and C.** Solve A, copying every turn onto both B and C. A ends solved; B and C are now `h'⁻¹`.
+3. **Solve C onto A.** Solve C, copying every turn onto A. C ends solved; A is `h'` again.
+
+Now `(A, B, C) = (h', h'⁻¹, solved)`, ready for the next block; after the last block, A holds the digest (§6). In group terms: step 1 applies B's solve, `h`, to A, giving `h ∘ e`; step 2 applies `h'⁻¹` to B and C; step 3 applies `h'` to A.
+
+Undoing is exact but slow, and A's undo more than doubles every block: it covers the turns that gave A its `h`, then E_m, then B's undo, which repeats the turns that gave `h` (block 1: 12 + 192 + 12 = 216 turns; then 624, 1440, 3072, …). A faster solve gives the same result.
 
 **Cost per block** (v1 → v2): 168 → 192 face turns (246 → 270 clicks), 64 → 88 pieces read, 64 → 88 whole-puzzle re-grips. These are exact for every block, since every deal holds each card once ([`cost.log`](../../../proofs/megadreifach/security/v2/logs/cost.log)).
 
@@ -219,7 +235,7 @@ A sudocode `int` is 64-bit and overflow traps. `|G|` and `52!` do not fit. `std.
 
 `kats/megaminx_hash_kats_v2.json` holds the **v2** vectors: the same inputs and layout as the v1 file, with `"version": "v2"` and `f3_t = 36`. The pad lengths, block counts, IV-COOK12 digest and `|G|` are unchanged; every digest differs from v1. They were produced by an independent Python transliteration of the sudo and agree with the sudoc JS build of `megadreifach.sudo` and with the review engine's rule C36 (both Python programs are out of tree). In tree, the engine of [`proofs/megadreifach/security/v2/`](../../../proofs/megadreifach/security/v2/README.md) reproduces all eight digests and the `HashDeck` vector, and `proofs/megadreifach/m9/m9_search.py` the eight digests.
 
-The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zero, the permutation domain, the public API, the edge-slot table (§5.6), the visual noon on all 60 grips, and **all eight v2 `Hash` digests plus the `HashDeck` vector** of that file. `trace_hash` is checked against `Hash`, `E_m`, IV-COOK12 and the DM step on all eight KAT messages.
+The sudo tests assert pad lengths, block counts, the IV-COOK12 digest, φ on zero, the permutation domain, the public API, the edge-slot table (§5.6), the visual noon on all 60 grips, and **all eight v2 `Hash` digests plus the `HashDeck` vector** of that file. `trace_hash` is checked against `Hash`, `E_m`, IV-COOK12 and the DM step on all eight KAT messages. Cooking B backwards (§5.7) is checked to give IV-COOK12⁻¹, and the 3-solve to leave `(h', h'⁻¹, solved)` on every KAT block.
 
 `kats/megaminx_hash_kats_v1.json` is the **v1** KAT file (for the deprecated `v1/megadreifach.sudo`), renamed from `kats/megaminx_hash_kats.json` with identical contents.
 

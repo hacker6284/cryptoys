@@ -68,10 +68,24 @@ fits `i64`.
   matrix-vector product and whole-cube rotation equal the model's, for a matrix in `rots`.
   These target the matrix shape of the Generated code on `main` today (`List<List<int>>`).
 
-**Not proved yet** (the plan): the emitted `center_dir`, `reorient`, `do_rule`,
+**Lookups and piece readers** (`ScrambleV2/Link2/Lookup.lean`, `Pieces.lean`).
+
+- `cubie_at_refines`: the emitted `cubie_at` returns the first index whose cubie sits at
+  the asked point (so, with `atL`, the model's `cubieAt`).
+- `is_center_refines`, `has_color_refines`, `hasCode_posed`, `center_dir_refines`: the
+  emitted `center_dir` returns the point the model's `centerOf` finds, on a cube whose
+  cubies are rotated solved cubies (which `Reach` gives).
+- `sticker_on_refines`, `color_char_refines`, `is_ud_refines`, `edge_bit_refines`: the
+  emitted readers on every axis code and every color.
+- `corner_piece_refines`, `edge_piece_refines`: on colors that form a piece, the emitted
+  readers return the model's `pieceId` (checked on all 216 color triples and 36 pairs).
+- `fact_refines`: the emitted `fact` on `0 … 11`, the arguments `rank_perm` passes for
+  the digest's 8 corners and 12 edges.
+
+**Not proved yet** (the plan): the emitted `reorient`, `do_rule`,
 `facelets_of` (never traps on a reachable cube), the tape and state functions
-(`update`, `apply_ready`, padding, `evaluate`), `rank_perm`, `corner_piece`,
-`edge_piece`, `digest_bytes`, `index_bytes`, and the headline: for a byte message, the
+(`update`, `apply_ready`, padding, `evaluate`), `rank_perm`, `digest_bytes`,
+`index_bytes`, and the headline: for a byte message, the
 emitted `scramble_v2`, `update`, `evaluate` return `.ok` with `digest = embed (digestV2 msg)`
 (digest only; the trace is excluded).
 

@@ -88,7 +88,7 @@ Write `e` for the up center, `t` for the front center, and `n = e × t`. The rot
 [ t.x  t.y  t.z ]
 ```
 
-Apply it to every cubie position and to every sticker direction. If `e` is already `+Y` and `t` is already `+Z`, the cube does not move. The trace still records the step.
+Apply it to every cubie position and to every sticker direction. If `e` is already `+Y` and `t` is already `+Z`, the cube does not move. A traced state still records the step.
 
 ## Closer and seat
 
@@ -166,15 +166,17 @@ s = s · 2048 + eo          # 2048 = 2^11
 
 `block` and `index` are `0`, and the text fields are empty, when a kind does not use them. Timing, camera, and colors are not part of the trace.
 
+A traced state, from `scramble_v1()` or `scramble_v2()`, records the trace. A digest-only state, from `scramble_v1_digest()` or `scramble_v2_digest()`, walks the same steps, returns the same digest, and has an empty trace. The trace is not an input to the digest. The vectors' Steps and Final facelets columns are for a traced state.
+
 ## API
 
 ```text
-s = scramble_v1()     # or scramble_v2()
+s = scramble_v1()     # or scramble_v2(), scramble_v1_digest(), scramble_v2_digest()
 s.update(bytes)       # any number of times
 result = s.evaluate() # once
 ```
 
-In sudo the state is an explicit parameter: `update(s, bytes)` and `evaluate(s)`. `result.digest` is the 9 bytes. `result.trace` is the step list.
+In sudo the state is an explicit parameter: `update(s, bytes)` and `evaluate(s)`. `result.digest` is the 9 bytes. `result.trace` is the step list. It is empty for a digest-only state.
 
 `update(a)` then `update(b)` is the same message as `update(a || b)`. Each byte is two nybbles, high nybble first. `update` appends those bytes and applies every complete symbol immediately.
 

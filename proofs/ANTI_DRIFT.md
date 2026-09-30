@@ -74,8 +74,8 @@ The other counts: [MegaDreifach](megadreifach/README.md#three-layers-be-honest),
 | --- | --- |
 | Repo | [hacker6284/sudocode](https://github.com/hacker6284/sudocode) |
 | Branch | `main` |
-| Commit | `ff63b629406bd5d3ab9e9434ea2d4695a2921d8a` (file: [`SUDOCODE_PIN`](SUDOCODE_PIN), also used for the JS vector builds) — squash merge of [PR #8](https://github.com/hacker6284/sudocode/pull/8) |
-| Prior pin | [PR #5](https://github.com/hacker6284/sudocode/pull/5) `4286093e791e85e2be0b72b524319ba64bda002b` (first `backends/lean/` on main) |
+| Commit | `16b5a8b182ff80b43436dc997f02790aa79724df` (file: [`SUDOCODE_PIN`](SUDOCODE_PIN), also used for the JS vector builds) — squash merge of [PR #9](https://github.com/hacker6284/sudocode/pull/9) |
+| Prior pin | [PR #8](https://github.com/hacker6284/sudocode/pull/8) `ff63b629406bd5d3ab9e9434ea2d4695a2921d8a` (Lean in `ALL_BACKENDS`) |
 
 This pin is **durable on sudocode main**. Lean is an `ALL_BACKENDS`
 lockstep peer as of #8 (empty predicates, full IR). cryptoys still

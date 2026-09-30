@@ -223,7 +223,7 @@ function pendingTwistyRig(seat, puzzleId = "3x3x3") {
     };
 }
 
-function createScrambleAdapter() {
+export function createScrambleAdapter() {
     const dock = createDock("scramble", {
         controls: `
             <div class="playroom-ctl playroom-ctl--puzzle" data-puzzle-ctl hidden>
@@ -366,7 +366,6 @@ function createScrambleAdapter() {
     }
 
     return {
-        id: "scramble",
         install(nextWorld, opts = {}) {
             if (rig) return rig;
             world = nextWorld;
@@ -466,7 +465,7 @@ function createScrambleAdapter() {
     };
 }
 
-function createDoubleDealAdapter() {
+export function createDoubleDealAdapter() {
     const dock = createDock("doubledeal", {
         controls: `
             <div class="playroom-ctl">
@@ -614,7 +613,6 @@ function createDoubleDealAdapter() {
     }
 
     return {
-        id: "doubledeal",
         install(nextWorld, { poses: nextPoses } = {}) {
             world = nextWorld;
             poses = nextPoses;
@@ -790,8 +788,3 @@ function createDoubleDealAdapter() {
         },
     };
 }
-
-export const adapters = {
-    doubledeal: createDoubleDealAdapter(),
-    scramble: createScrambleAdapter(),
-};

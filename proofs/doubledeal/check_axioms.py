@@ -468,6 +468,18 @@ SCRAMBLE_LINK2 = {
     "ScrambleV2.Link2.finish_digest",
     "ScrambleV2.Link2.evaluate_v2",
     "ScrambleV2.Link2.scramble_v2_digest_refines_digestV2",
+    "ScrambleV2.Link2.push_step_gen",
+    "ScrambleV2.Link2.do_move_gen",
+    "ScrambleV2.Link2.do_rule_gen",
+    "ScrambleV2.Link2.apply_v2_symbol_gen",
+    "ScrambleV2.Link2.apply_ready_v2_gen",
+    "ScrambleV2.Link2.update_v2_gen",
+    "ScrambleV2.Link2.finish_gen",
+    "ScrambleV2.Link2.evaluate_v2_gen",
+    "ScrambleV2.Link2.updates_v2",
+    "ScrambleV2.Link2.updates_evaluate_v2",
+    "ScrambleV2.Link2.scramble_v2_refines_digestV2_traced",
+    "ScrambleV2.Link2.padV2_length",
 }
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only

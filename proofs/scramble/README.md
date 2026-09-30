@@ -27,8 +27,9 @@ Expected TAP: **15/15**. Pin and regenerating: [`../ANTI_DRIFT.md`](../ANTI_DRIF
 
 The Lake package `lean/` (library `ScrambleV2`, Lean 4.14, no Mathlib) is the Link 2
 work for `scramble_v2`: a hand-written model of the v2 digest, and theorems that the
-emitted Lean computes it. **The digest-only headline is proved** (see the end of this
-section); the trace is not. What is proved, all
+emitted Lean computes it. **The digest headline is proved**, for the digest-only and the traced
+constructor and for several updates; the trace's step fields are proved, not its letters
+(see the end of this section). What is proved, all
 checked by the axiom gate (`check_axioms.py scramble`: only `propext`,
 `Classical.choice`, `Quot.sound`; no `sorry`, no `native_decide`):
 
@@ -158,20 +159,39 @@ So one `update` with the whole message on a fresh digest-only state, then `evalu
 never traps and yields the model's digest. The model is pinned to the SPEC vectors by the
 five KATs above.
 
-**Not claimed:** the trace (the `trace` field of the evaluation, `push_step` text,
-`facelets_of` output beyond never trapping), and so the traced constructor `scramble_v2`
-(the headline is stated for `scramble_v2_digest`; that the traced state gives the same
-digest is not proved here); several `update` calls in a row (each call's theorem is
-general, but no chained statement is given); an `update` or `evaluate` after `done`
-(the sudo asserts); non-byte input (the sudo asserts, and nothing is claimed about it);
-v1 (`scramble_v1`, `scramble_v1_digest`).
+**Traced path and several updates** (`ScrambleV2/Link2/Traced.lean`). The same chain
+for `traced` either value: `push_step_gen`, `do_move_gen`, `do_rule_gen`,
+`apply_v2_symbol_gen`, `apply_ready_v2_gen`, `update_v2_gen`, `finish_gen`,
+`evaluate_v2_gen`, each also saying which trace steps the call appends. The trace claim
+is this: on a traced state the appended steps have exactly the SPEC's kind, move token,
+nybble digit, block and index, in order, and each facelet string is 54 color letters. On
+a digest-only state nothing is appended. The Rule B steps' `up` / `front` letters, and
+which letters a facelet string holds, are not claimed.
+
+- `updates_v2`, `updates_evaluate_v2`: from `fresh(2, traced)`, `update` with each
+  message of a list in turn, then `evaluate`, all return `.ok`. The digest is the model's
+  digest of the concatenated message (SPEC "API": `update(a)` then `update(b)` is
+  `update(a || b)`). The trace is as above for the padded concatenation plus the closer,
+  and on a digest-only state it is empty. Every message must be bytes, with twice the
+  total length plus 12 fitting `i64`.
+- `scramble_v2_refines_digestV2_traced`: the traced constructor `scramble_v2`, one
+  `update`, `evaluate`. Digest `embed (digestV2 msg)`. The trace's kind / move / nybble /
+  block / index fields are the SPEC's steps for the padded tape and the closer; each
+  facelet string is 54 color letters; there are `3 · (padded length) + 3` steps.
+  `padV2_length`: the padded length is `max (len + 1) 12`, so a message of at most 5 bytes
+  has 39 steps, the SPEC table's Steps column.
+
+**Not claimed:** the Rule B steps' `up` / `front` letters and the facelet strings' letters
+(the vectors' Final facelets column); an `update` or `evaluate` after `done` (the sudo
+asserts); non-byte input (the sudo asserts, and nothing is claimed about it); v1
+(`scramble_v1`, `scramble_v1_digest`).
 
 | Emitted function | Theorem | Domain |
 | --- | --- | --- |
 | `scramble_v2_digest` | `scramble_v2_digest_refines`, `fresh_refines` | none |
-| `scramble_v2` | `scramble_v2_refines`, `fresh_refines` | none (constructor only; the traced digest is not claimed) |
-| `update` | `update_v2` | digest-only v2 state, not done, pending nybbles below 16, reachable cube; byte message; counts fit i64 |
-| `evaluate` | `evaluate_v2`, `scramble_v2_digest_refines_digestV2` | as `update`; digest only |
+| `scramble_v2` | `scramble_v2_refines`, `fresh_refines`, `scramble_v2_refines_digestV2_traced` | byte message, `2·len + 12` fits i64; trace fields as above |
+| `update` | `update_v2`, `update_v2_gen`, `updates_evaluate_v2` | v2 state, not done, pending nybbles below 16, reachable cube; byte messages; counts fit i64 |
+| `evaluate` | `evaluate_v2`, `evaluate_v2_gen`, `scramble_v2_digest_refines_digestV2` | as `update` |
 | `solved_facelets` | `solved_facelets_ok` | none (returns 54 color letters) |
 | `scramble_v1`, `scramble_v1_digest` | none: v1 is out of scope for this package | |
 

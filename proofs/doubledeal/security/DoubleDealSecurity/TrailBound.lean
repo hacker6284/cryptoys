@@ -12,7 +12,8 @@
   with every relabelling. The final no-mix round contains SumRanks, so extending
   the event through it gives a sub-event (the same upper bound applies). That step
   and the link to `encryptN` are proved in `FullCipher` (roadmap M7:
-  `encryptN_eq_rounds`, `card_fullTrail_le`), not here.
+  `encryptN_eq_rounds`, `card_fullTrail_le`), not here. These are the proof's mix rounds,
+  not SPEC's rounds; the mapping to SPEC's rounds is in the `FullCipher` header.
 
   Event. For a relabelling `σ`, the pair `(y, σ·y)` follows the constant-σ
   characteristic through `R` rounds (`Trail σ R y K`) when in EVERY round, at the
@@ -26,7 +27,8 @@
   Probability. The count is over ALL `(52!)^R` key tuples, i.e. independent
   uniform round keys (the Markov-cipher assumption, built into the counting).
   The real cipher derives its round keys by the PassKey chain; they are NOT
-  independent, and nothing here applies to them.
+  independent, and nothing here applies to them (the real schedule, `RealSchedule`, M5,
+  gets the bound of the proof's first mix round (key `K_0`) only).
 
   Proved:
   * `trail_card_le_of_round`: if one round's characteristic set has at most

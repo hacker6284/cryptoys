@@ -72,6 +72,15 @@
     `fullDiffCount_to_one` (nothing else reaches `1`; from `Differential.dpCount_to_one`,
     which needs injective layers) and `fullDiffCount_eq_card_beforeFinal` (the final key gives
     a factor `52!`; `encryptL_snoc`, `beforeFinal`) are the facts `Linear` uses.
+    Column transfer (a REDUCTION; its hypothesis is proved for no `γ`):
+    `fullDiffCount_le_of_col`: if `p · dpFCount β γ ≤ 52!` for every `β ≠ 1` (a column bound
+    for the stem alone), then `p · fullDiffCount α γ n y ≤ (52!)^(n+2)` for every `α ≠ 1`,
+    `n`, `y`. `fullDiffCount_le_64_of_offDiag`: for `γ` outside `v10Sym` and `p = 64` the
+    hypothesis is needed only for `β` outside `v10Sym` with `β ≠ γ` (the diagonal is
+    `dpFCount_self_le_64`). `not_col_v10Sym`: into a nontrivial `v10Sym a x` no `p ≥ 2`
+    works. The open off-diagonal hypothesis is about the stem (SumRanks) alone, not about a
+    GridCycle round, so unlike a one-round column bound for the mix round it does not imply
+    the covariant conjecture; it is still unproved.
     The row and column sums used by `LinearMasks` (for DoubleDeal's `encryptL`) are
     `sum_fullDiffCount` (every row sums to `(52!)^(n+2)`; only decks to decks is used) and
     `sum_fullDiffCount_left` (every column sums to `(52!)^(n+2)`, through `outDiff` and
@@ -657,6 +666,80 @@ theorem fullDiffCount_v10Sym (α : Relabel) (a : Fin 13) (x : Fin 4) (n : ℕ) {
     (fun β _ hβ => by rw [dpFCount_to_v10Sym a x hβ, mul_zero])
     (fun h => absurd (mem_univ _) h), dpFCount_v10Sym, if_pos rfl]
   ring
+
+/-! ### Column transfer through the final round (a reduction; its hypothesis is NOT proved)
+
+The final round is the stem after a uniform Compose key, so the full-cipher count into `γ` is
+an average of the final round's column `dpFCount · γ` (`fullDiffCount_eq`, rows of
+`diffCount` summing to `(52!)^n`, nothing reaching `1`). A column bound for the stem alone
+therefore bounds the whole cipher into `γ`, for every `n` and every `α ≠ 1`. No such column
+bound is proved here for any `γ`; for `γ` in `v10Sym` none exists (`not_col_v10Sym`). -/
+
+/-- (PROVED; a REDUCTION, the hypothesis `hcol` is not proved for any `γ`) A column bound
+    for the final no-mix round transfers to the whole cipher: if `p · dpFCount β γ ≤ 52!` for
+    every `β ≠ 1`, then `p · fullDiffCount α γ n y ≤ (52!)^(n+2)` for every `α ≠ 1`, every
+    `n` and every deck `y`. Independent uniform keys (`encryptL`); no decay in `n`. -/
+theorem fullDiffCount_le_of_col {α : Relabel} (hα : α ≠ 1) (γ : Relabel) (p : ℕ)
+    (hcol : ∀ β, β ≠ 1 → p * dpFCount β γ ≤ Nat.factorial 52) (n : ℕ) {y : Fin 52 → Nat}
+    (hy : IsDeck y) : p * fullDiffCount α γ n y ≤ Nat.factorial 52 ^ (n + 2) := by
+  rw [fullDiffCount_eq α γ n hy]
+  have key : ∀ β ∈ (univ : Finset Relabel),
+      p * (diffCount α β n y * dpFCount β γ) ≤ diffCount α β n y * Nat.factorial 52 := by
+    intro β _
+    by_cases hβ : β = 1
+    · subst hβ
+      rw [Differential.diffCount_to_one hα n hy]
+      simp
+    · calc p * (diffCount α β n y * dpFCount β γ)
+          = diffCount α β n y * (p * dpFCount β γ) := by ring
+        _ ≤ diffCount α β n y * Nat.factorial 52 := Nat.mul_le_mul_left _ (hcol β hβ)
+  have hs : p * ∑ β, diffCount α β n y * dpFCount β γ ≤
+      Nat.factorial 52 ^ n * Nat.factorial 52 := by
+    rw [mul_sum, ← Differential.sum_diffCount α n hy, sum_mul]
+    exact sum_le_sum key
+  calc p * (Nat.factorial 52 * ∑ β, diffCount α β n y * dpFCount β γ)
+      = Nat.factorial 52 * (p * ∑ β, diffCount α β n y * dpFCount β γ) := by ring
+    _ ≤ Nat.factorial 52 * (Nat.factorial 52 ^ n * Nat.factorial 52) :=
+        Nat.mul_le_mul_left _ hs
+    _ = Nat.factorial 52 ^ (n + 2) := by ring
+
+/-- (PROVED; a REDUCTION, the hypothesis `hoff` is not proved for any `γ`) For an output
+    difference `γ` outside `v10Sym`, the column hypothesis of `fullDiffCount_le_of_col` with
+    `p = 64` is needed only OFF the diagonal and outside `v10Sym`: the diagonal `β = γ` is
+    `dpFCount_self_le_64` (`sumRanksV10_survival_le`), and a nontrivial `v10Sym` input
+    reaches only itself (`dpFCount_v10Sym`). So if every `β` outside `v10Sym` with `β ≠ γ`
+    has `64 · dpFCount β γ ≤ 52!`, then `64 · fullDiffCount α γ n y ≤ (52!)^(n+2)` for every
+    `α ≠ 1`, `n` and deck `y`. Independent uniform keys; no decay in `n`. -/
+theorem fullDiffCount_le_64_of_offDiag {α γ : Relabel} (hα : α ≠ 1)
+    (hγ : ¬ ∃ a x, γ = v10Sym a x)
+    (hoff : ∀ β, β ≠ γ → (¬ ∃ a x, β = v10Sym a x) → 64 * dpFCount β γ ≤ Nat.factorial 52)
+    (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
+    64 * fullDiffCount α γ n y ≤ Nat.factorial 52 ^ (n + 2) := by
+  refine fullDiffCount_le_of_col hα γ 64 (fun β _ => ?_) n hy
+  by_cases hβγ : β = γ
+  · subst hβγ
+    exact dpFCount_self_le_64 β hγ
+  · by_cases hv : ∃ a x, β = v10Sym a x
+    · obtain ⟨a, x, rfl⟩ := hv
+      rw [dpFCount_v10Sym, if_neg (Ne.symm hβγ)]
+      simp
+    · exact hoff β hβγ hv
+
+/-- (PROVED) The column route gives nothing for outputs in `v10Sym`: for `(a, x) ≠ (0, 0)`
+    the final round keeps `v10Sym a x` on every deck (`dpFCount_v10Sym`), so for no `p ≥ 2`
+    does the column hypothesis of `fullDiffCount_le_of_col` hold into `v10Sym a x`. (Those
+    columns are transparent, `fullDiffCount_v10Sym`; bounding them needs the mix rounds.) -/
+theorem not_col_v10Sym (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) {p : ℕ}
+    (hp : 2 ≤ p) : ¬ ∀ β, β ≠ 1 → p * dpFCount β (v10Sym a x) ≤ Nat.factorial 52 := by
+  intro h
+  have hne1 : v10Sym a x ≠ 1 := fun e =>
+    GridCycleSurvival.v10Sym_fixfree a x hne 0 (by rw [e]; rfl)
+  have h1 := h _ hne1
+  rw [dpFCount_v10Sym, if_pos rfl] at h1
+  have hpos := Nat.factorial_pos 52
+  have h2 : p * Nat.factorial 52 ≤ 1 * Nat.factorial 52 := by rw [one_mul]; exact h1
+  have := Nat.le_of_mul_le_mul_right h2 hpos
+  omega
 
 /-- (PROVED) Independence of the starting deck (from `Differential.diffCount_eq_of_isDeck`,
     independent keys): the full-cipher count is the same for any two decks `y`, `z`. -/

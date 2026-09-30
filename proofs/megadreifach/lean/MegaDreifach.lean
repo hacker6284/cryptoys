@@ -32,4 +32,6 @@ import MegaDreifach.Link2.EvenRankGen
 import MegaDreifach.Link2.PosBytesGen
 import MegaDreifach.Link2.InjInv
 import MegaDreifach.Link2.VHash
+import MegaDreifach.Link2.VHashDeck
 import MegaDreifach.Security
+import MegaDreifach.G2Nets

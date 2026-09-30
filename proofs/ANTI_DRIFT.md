@@ -46,7 +46,8 @@ From the repo root:
 proofs/emit_lean.sh              # write every Generated/ tree (incl. frozen versions)
 proofs/emit_lean.sh --check      # CI: fail if committed Lean is stale
 proofs/emit_lean.sh scramble     # one algorithm
-proofs/emit_lean.sh cbc-hmac     # alias: doubledeal-cbc-hmac
+proofs/emit_lean.sh cbc-hmac     # DoubleDeal-CBC-Sandwich v2 (alias: doubledeal-cbc-hmac)
+proofs/emit_lean.sh cbc-hmac-v1  # frozen DoubleDeal-CBC-HMAC v1
 ```
 
 Optional: `SUDOC=/path/to/sudoc` and `SUDOCODE_DIR=/path/to/sudocode`
@@ -60,13 +61,15 @@ cd proofs/doubledeal/lean/Generated && lake build && ./.lake/build/bin/doubledea
 cd proofs/megadreifach/lean/Generated && lake build && ./.lake/build/bin/megadreifach_test
 cd proofs/scramble/lean/Generated && lake build && ./.lake/build/bin/scramble_test
 cd proofs/doubledeal-cbc-hmac/lean/Generated && lake build && ./.lake/build/bin/doubledeal_cbc_hmac_test
+cd proofs/deprecated/doubledeal-cbc-hmac-v1/lean/Generated && lake build && ./.lake/build/bin/doubledeal_cbc_hmac_test
 ```
 
 Expected TAP: DoubleDeal **all pass** (every sudo `test` except the two
 test-only kind-scan `while`s, which the terminates gate strips; JS runs them all).
 The other counts: [MegaDreifach](megadreifach/README.md#three-layers-be-honest),
 [Scramble](scramble/README.md#generated-lean),
-[DoubleDeal-CBC-HMAC](doubledeal-cbc-hmac/README.md#generated-lean).
+[DoubleDeal-CBC-Sandwich v2](doubledeal-cbc-hmac/README.md#generated-lean),
+[frozen DoubleDeal-CBC-HMAC v1](deprecated/doubledeal-cbc-hmac-v1/README.md#generated-lean).
 
 ## Pin (sudocode main)
 
@@ -86,16 +89,19 @@ shadow fix from #5 is included.
 ## Terminates gate is on
 
 `proofs/emit_lean.sh` passes `sudoc emit-ir --require terminates` for
-DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All
-four public `.sudo` files accept that flag on their exports.
-CBC-HMAC emit adds `-I primitives/hash/megadreifach` so the imported
-`Hash` is the MegaDreifach module, not a handwritten second model.
+DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-Sandwich v2
+(and the frozen versions, including DoubleDeal-CBC-HMAC v1). All
+four current public `.sudo` files accept that flag on their exports.
+The CBC-Sandwich emit adds `-I primitives/hash/megadreifach -I primitives/cipher/doubledeal`
+so the imported MegaDreifach and DoubleDeal are those modules, not
+handwritten second models (frozen v1 adds only the MegaDreifach `-I`).
 
 Production loops are bounded `for` (PassKey drain over initial
 `deck.length`; overflow scans `0 to 3`; MD bigint trim/peel/carry,
 φ / even-perm search, Hash MD walk; Scramble pad / apply / evaluate
-remainders and `digest_bytes` over the 12-byte buffer; CBC-HMAC
-`xor_byte` over 8 bits, pad/unpad, and length-delimited MAC input).
+remainders and `digest_bytes` over the 12-byte buffer; CBC-Sandwich
+byte-list bigints, rank / unrank, pad / unpad, the deck chain and the
+MAC input over bounded lists).
 DoubleDeal test-only `while`s that scan traces by `kind` are stripped
 under the gate (JS/Python still run those tests). Generated TAP is
 the remaining tests.
@@ -113,8 +119,8 @@ total-fragment / terminating-subset emitter.
 - Not a claim that `Generated.v_Hash` equals the algebraic
   `hashBlocks` fold in `MegaDreifach/`.
 - Not bit-security, MDS, collision-resistance, or an AEAD security theorem.
-  DoubleDeal-CBC-HMAC Generated Lean is HMAC / KDF / pad evidence, not
-  a reduction or a nonce-misuse theorem.
+  DoubleDeal-CBC-Sandwich Generated Lean is TAP evidence for the whole
+  v2 sudo, not a reduction or a nonce-misuse theorem.
 - Not sudocode lockstep. Lean *is* in sudocode `ALL_BACKENDS`; this
   repo still only consumes the protocol-4 emitter.
 
@@ -126,12 +132,13 @@ total-fragment / terminating-subset emitter.
 | Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 **CLOSED** on every well-formed list (`passkey_refines`, `passkey_eq_twin_loop`; v12: every card `FitsLen` too). See [`LINK2.md`](LINK2.md). |
 | Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | Link 2 **CLOSED** on every well-formed list (`passkey_inv_refines`, `passkey_inv_eq_twin_loop`; v12: every card `FitsLen` too). Algebraic correctness only — not bit-security. |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | Link 2 **CLOSED** on `CardBound` messages (`encrypt_refines`). Not bit-security. |
-| `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All four publics ready (bounded `for`). |
+| `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-Sandwich v2 (and every frozen version). All four current publics ready (bounded `for`). |
 | PassKey S3/S4 *about* `Except Trap` emitted defs | Link 2 **CLOSED** on `FitsLen` (length and cards) / `WellFormed` (`passkey_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, and the inverse / `WellFormed` forms). Other stones about emitted defs stay open. Not bit-security. |
 | Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |
-| DoubleDeal-CBC-HMAC generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach via emit-ir `-I`. Link 2: next row. No AEAD security theorem. |
-| algebraic≃Generated for CBC-HMAC (Link 2) | DONE on byte inputs, every exported function: [`doubledeal-cbc-hmac/README.md`](doubledeal-cbc-hmac/README.md#link-2). For HMAC and the KDF, the theorems prove the HMAC / KDF wiring around the hash; the hash itself is only as independent as `vhashAlg`, which is a transliteration of the MegaDreifach sudo, not an independent specification. Link 1 (sudo↔Lean) stays OPEN. |
-| AEAD security (EtM reduction, HMAC-MD PRF, CBC confidentiality) | OPEN. Not claimed. SCM stays later. |
+| DoubleDeal-CBC-Sandwich v2 generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach and DoubleDeal via emit-ir `-I`. **No Link 2 for v2** (the Lean lags v2). No AEAD security theorem. |
+| algebraic≃Generated for CBC-Sandwich v2 (Link 2) | OPEN. |
+| algebraic≃Generated for frozen CBC-HMAC v1 (Link 2) | DONE on byte inputs, every exported v1 function: [`deprecated/doubledeal-cbc-hmac-v1/README.md`](deprecated/doubledeal-cbc-hmac-v1/README.md#link-2). Frozen; not about v2. For HMAC and the KDF, the theorems prove the HMAC / KDF wiring around the hash; the hash itself is only as independent as `vhashAlg`, which is a transliteration of the MegaDreifach sudo, not an independent specification. Link 1 (sudo↔Lean) stays OPEN. |
+| AEAD security (EtM reduction, Sandwich-MD PRF, deck-CBC confidentiality) | OPEN in Lean. A paper argument relative to heuristic assumptions is in `primitives/aead/doubledeal-cbc-hmac/SPEC.md` §8 (one of its assumptions fails for MegaDreifach v2). SCM stays later. |
 | MegaDreifach M13 (proof-package digest = KAT hex) | DONE for `Generated.v_Hash` (not a handwritten `Hash`): `proofs/megadreifach/lean/MegaDreifachHeavy/Kat.lean`, kernel `decide!` through `v_Hash_refines` (Link 2, `PadWf`). For v2: the 8 hexes of `primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json`, Generated from `primitives/hash/megadreifach/megadreifach.sudo`. The v1 KAT theorems were not kept (the frozen v1 package, `proofs/deprecated/megadreifach-v1/`, has no heavy library); no Lean checks v1's KAT hexes any more (the v1 sudo tests do not assert them; the Python `proofs/megadreifach/security/md.py` does). |
 
 ## Proofs that remain handwritten

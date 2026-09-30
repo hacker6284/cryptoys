@@ -12,7 +12,7 @@ Each primitive is a directory holding a normative specification and one [sudocod
 | Scramble | Toy hash. A message walks a solved cube; the digest is the seated pose. | [SPEC.md](primitives/hash/scramble/SPEC.md) | [proofs/scramble/](proofs/scramble/) |
 | MegaDreifach | Toy three-megaminx Merkle–Damgård hash. Current: v2; v1 is [deprecated](primitives/hash/megadreifach/v1/SPEC.md). | [SPEC.md](primitives/hash/megadreifach/SPEC.md), [README](primitives/hash/megadreifach/README.md) | [proofs/megadreifach/](proofs/megadreifach/) (v2); frozen v1: [proofs/deprecated/megadreifach-v1/](proofs/deprecated/megadreifach-v1/README.md) |
 | DoubleDeal | Toy block cipher on a 52-card deck. | [SPEC.md](primitives/cipher/doubledeal/SPEC.md) (version history: [§7a](primitives/cipher/doubledeal/SPEC.md#7a-version-history)) | [proofs/doubledeal/](proofs/doubledeal/); frozen versions: [proofs/deprecated/](proofs/deprecated/README.md) |
-| DoubleDeal-CBC-HMAC | Toy Encrypt-then-MAC: DoubleDeal in CBC, then HMAC with MegaDreifach as the hash. Not DoubleDeal-SCM. | [SPEC.md](primitives/aead/doubledeal-cbc-hmac/SPEC.md), [README](primitives/aead/doubledeal-cbc-hmac/README.md) | [proofs/doubledeal-cbc-hmac/](proofs/doubledeal-cbc-hmac/) |
+| DoubleDeal-CBC-Sandwich v2 | Toy Encrypt-then-MAC on decks: DoubleDeal in deck-CBC (Compose with the previous ciphertext deck), then a Sandwich MAC on MegaDreifach (key deck, message decks, key deck turned over). Two user-supplied key decks, a fresh shuffled IV deck. Replaces DoubleDeal-CBC-HMAC v1 (frozen). Not DoubleDeal-SCM. | [SPEC.md](primitives/aead/doubledeal-cbc-hmac/SPEC.md), [README](primitives/aead/doubledeal-cbc-hmac/README.md) | [proofs/doubledeal-cbc-hmac/](proofs/doubledeal-cbc-hmac/) |
 
 ## Layout
 
@@ -39,7 +39,7 @@ sudoc build --target js --tests -o /tmp/doubledeal primitives/cipher/doubledeal/
 node /tmp/doubledeal/_doubledeal_impl.mjs
 ```
 
-DoubleDeal-CBC-HMAC needs `-I primitives/hash/megadreifach` and a JavaScript step; its commands are in [its README](primitives/aead/doubledeal-cbc-hmac/README.md). Building and serving the demos: [demos/README.md](demos/README.md#local).
+DoubleDeal-CBC-Sandwich needs `-I primitives/hash/megadreifach -I primitives/cipher/doubledeal` and a JavaScript step; its commands are in [its README](primitives/aead/doubledeal-cbc-hmac/README.md). Building and serving the demos: [demos/README.md](demos/README.md#local).
 
 `tools/generate-demos.sh` runs all of the above, the extra JavaScript and KAT checks, and `tools/build.sh`. It is what CI runs after building `sudoc` ([`.github/actions/generate-demos/`](.github/actions/generate-demos/action.yml)). It uses `SUDOC`, or `.sudocode/sudoc/target/release/sudoc` when `SUDOC` is unset.
 

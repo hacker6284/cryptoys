@@ -1,17 +1,22 @@
 {
   "sudo_file": "primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo",
-  "sudo_sha256": "c5e5987be005ba3bc6502f174cc0e74cee50e7b628b41d192bc34e7dec3dd1fb",
+  "sudo_sha256": "82aaa98dff17417086e12eb50423d1a9c63a14dd277b27f8f5589f0ce87919ed",
   "sudocode_lean_commit": "ff63b629406bd5d3ab9e9434ea2d4695a2921d8a",
   "sudocode_lean_ref": "main",
   "terminates_gate": true,
   "with_tests": true,
   "include_paths": [
-    "primitives/hash/megadreifach"
+    "primitives/hash/megadreifach",
+    "primitives/cipher/doubledeal"
   ],
   "imported_sudo": [
     {
       "sudo_file": "primitives/hash/megadreifach/megadreifach.sudo",
-      "sudo_sha256": "38b5d994eb407121644a151be22da85f980e6ebc9eb91233fad41664dc10b6f1"
+      "sudo_sha256": "2ffddcc9e96cf93088dd68777d0017b3b4d76f5b026f8b26c6805a4c8ac1fb5c"
+    },
+    {
+      "sudo_file": "primitives/cipher/doubledeal/doubledeal.sudo",
+      "sudo_sha256": "df3359f7244b76cbec00d68664efb910b11c824d1d3a6896e0afb0c18bffda08"
     }
   ]
 }

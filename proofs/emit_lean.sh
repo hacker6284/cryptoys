@@ -6,9 +6,10 @@
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
 # Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10, v11),
-# MegaDreifach (current v2 and frozen v1), Scramble, and DoubleDeal-CBC-HMAC. DoubleDeal's test-only
-# kind-scan whiles are stripped under the gate. CBC-HMAC imports
-# MegaDreifach via an extra -I.
+# MegaDreifach (current v2 and frozen v1), Scramble, DoubleDeal-CBC-Sandwich v2 and frozen
+# DoubleDeal-CBC-HMAC v1. DoubleDeal's test-only kind-scan whiles are stripped under the gate
+# (also when DoubleDeal is imported). cbc-hmac (v2, directory name kept) imports MegaDreifach
+# and DoubleDeal via extra -I; cbc-hmac-v1 (frozen) imports MegaDreifach.
 #
 # Usage (from anywhere):
 #   proofs/emit_lean.sh [--check] [TARGET ...]   # no TARGET: all of them (table below)
@@ -32,6 +33,9 @@ cd "$ROOT"
 # package proofs/deprecated/megadreifach-v1/. Do not change the v1 .sudo. Both files are
 # named megadreifach.sudo, so both emitted modules are `Megadreifach` (the entry is the
 # file stem), each in its own Generated/ package.
+# cbc-hmac is DoubleDeal-CBC-Sandwich v2 (the directory keeps its v1 name). cbc-hmac-v1 is
+# frozen DoubleDeal-CBC-HMAC v1 (v1/doubledeal_cbc_hmac.sudo), kept for its Link 2 package
+# proofs/deprecated/doubledeal-cbc-hmac-v1/. Do not change the v1 .sudo.
 TARGET_TABLE="
 doubledeal      primitives/cipher/doubledeal/doubledeal.sudo              proofs/doubledeal/lean/Generated
 doubledeal-v8   primitives/cipher/doubledeal/v8/doubledeal_v8.sudo        proofs/deprecated/doubledeal-v8/lean/Generated
@@ -41,7 +45,8 @@ doubledeal-v11  primitives/cipher/doubledeal/v11/doubledeal_v11.sudo      proofs
 megadreifach    primitives/hash/megadreifach/megadreifach.sudo            proofs/megadreifach/lean/Generated
 megadreifach-v1 primitives/hash/megadreifach/v1/megadreifach.sudo         proofs/deprecated/megadreifach-v1/lean/Generated
 scramble        primitives/hash/scramble/scramble.sudo                    proofs/scramble/lean/Generated
-cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach
+cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach primitives/cipher/doubledeal
+cbc-hmac-v1     primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo proofs/deprecated/doubledeal-cbc-hmac-v1/lean/Generated primitives/hash/megadreifach
 "
 # Parsed once: the names in order, and each target's .sudo, Generated/ and -I dirs.
 ALL_TARGETS=()

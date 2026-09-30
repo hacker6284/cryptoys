@@ -18,7 +18,8 @@
 # Not a Lean statement (documents the header's "a dependent toy schedule shows the
 # same-shape equation can fail"):
 #   with a DEPENDENT toy schedule L = (k, F k, F(F k)) the L2-shaped equation fails.
-# Not formalised (M8b scope, recorded here only): first-order masks f = N[x(s)=c] - 1.
+# Not formalised in M8a (M8b's LinearMasks L6 is the unnormalised form; toy_masks.py):
+# first-order masks f = N[x(s)=c] - 1.
 import itertools, random
 from fractions import Fraction
 from math import factorial
@@ -133,10 +134,11 @@ for _ in range(3):
     R = Fraction(sum(A(f, a) * Dd[a].get(b, 0) * A(g, b) for a in P for b in P), M)
     print(f"  sum_k corr^2 = {S}, (1/N!) sum A D A = {R}, equal: {S == R}")
 
-# First-order masks (M8b scope; not formalised): with f = N[x(s)=c] - 1, g = N[x(t)=c'] - 1,
+# First-order masks (normalised; not in Lean, whose L6 is unnormalised):
+# with f = N[x(s)=c] - 1, g = N[x(t)=c'] - 1,
 # the key-averaged normalised squared correlation equals (N/(N-1)^2)(q - 1/N), where
 # q = sum_{a(c)=c} sum_{b(c')=c'} D(a,b) / (#{a : a(c)=c} * #keys), for every seat s, t.
-print("first-order masks (not formalised):")
+print("first-order masks (normalised; M8b's L6 is the unnormalised form):")
 keys = list(itertools.product(P, repeat=3))
 D1 = {a: fullDiff_row(a, 1, P[5], keys) for a in P}
 for (s, c, t, c2) in [(0, 0, 0, 0), (1, 0, 3, 0), (2, 1, 0, 3), (3, 2, 1, 1)]:

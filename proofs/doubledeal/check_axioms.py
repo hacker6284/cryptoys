@@ -510,6 +510,16 @@ PACKAGES = {
             "DoubleDeal.Security.Linear.fullSumSqCorr_eq",
             "DoubleDeal.Security.Linear.fullSumSqCorr_eq_final",
             "DoubleDeal.Security.Linear.fullSumSqCorr_split",
+            # LinearMasks (roadmap M8b): single-card masks and the sign mask; identities
+            # only, no numeric bound; independent full-permutation keys only; L10 one
+            # keyed layer only
+            "DoubleDeal.Security.LinearMasks.autoCorr_cardMask",
+            "DoubleDeal.Security.LinearMasks.fullSumSqCorr_cardMask",
+            "DoubleDeal.Security.LinearMasks.fullSumSqCorr_cardMask_seat",
+            "DoubleDeal.Security.LinearMasks.alignCount_eq",
+            "DoubleDeal.Security.LinearMasks.corr_keyedLayer_sign",
+            "DoubleDeal.Security.LinearMasks.sum_fullDiffCount",
+            "DoubleDeal.Security.LinearMasks.sum_fullDiffCount_left",
         },
     },
     "security-heavy": {

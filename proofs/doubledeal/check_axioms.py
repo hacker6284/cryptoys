@@ -12,6 +12,8 @@
                                           # `lake build MegaDreifachHeavy`)
     python3 proofs/doubledeal/check_axioms.py megadreifach-v1-deprecated  # frozen v1 package
                                           # (proofs/deprecated/megadreifach-v1/lean)
+    python3 proofs/doubledeal/check_axioms.py cbc-hmac  # proofs/doubledeal-cbc-hmac/lean
+                                          # (DoubleDeal-CBC-HMAC Link 2)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -49,6 +51,9 @@ axiom) fails, as does a Lean error.
 - megadreifach-v1-deprecated: like megadreifach (mode "all", key "full") for the
   frozen v1 package proofs/deprecated/megadreifach-v1/lean (root `MegaDreifachV1`);
   required: the theorems its README cites (MD_V1_README_THEOREMS).
+- cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
+  proofs/doubledeal-cbc-hmac/lean (root `DoubleDealCbcHmac`, the Link 2 package);
+  required: the Link 2 theorem of every exported sudo function (CBC_HMAC_LINK2).
 
 `#audit_all` is the one command in the core-only package proofs/audit (required by
 path by both the security package and MegaDreifach); in mode "all" this script
@@ -380,6 +385,17 @@ MD_V1_README_THEOREMS = {
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
                       "multi_56", "multi_100"]}
+# proofs/doubledeal-cbc-hmac/lean: the Link 2 theorems, one per exported function of
+# primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo (the generated code equals
+# the hand-written model `DoubleDealCbcHmac.Spec` on byte inputs), plus the empty-master
+# rejection and the full unpad characterization. Cited by proofs/doubledeal-cbc-hmac/README.md.
+CBC_HMAC_LEAN = ROOT.parent / "doubledeal-cbc-hmac" / "lean"
+CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
+    "xor_bytes_refines", "hmac_normalize_key_refines", "v_HMAC_refines",
+    "v_HMAC_MegaDreifach_refines", "pad_iso7816_refines", "unpad_iso7816_char",
+    "unpad_iso7816_refines", "unpad_iso7816_rejects", "mac_input_refines",
+    "derive_keys_refines", "derive_keys_empty", "cbc_chain_from_cipher_block_refines",
+    "tags_equal_refines"]}
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
     "v9-deprecated": {"dir": ROOT.parent / "deprecated" / "doubledeal-v9" / "lean", "mode": "list",
@@ -553,6 +569,14 @@ PACKAGES = {
         "known_sorry": set(),
         "min": 500,  # sanity: the audit must actually see the package
         "required": MD_V1_README_THEOREMS,
+    },
+    "cbc-hmac": {
+        "dir": CBC_HMAC_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": 50,  # sanity: the audit must actually see the package
+        "required": CBC_HMAC_LINK2,
     },
     "megadreifach-heavy": {
         "dir": MD_LEAN,
@@ -813,11 +837,14 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} HEAVY_GENERATED {what}: "
               f"{len(bad)} problem(s), expected {len(want)}")
-    # MD_README_THEOREMS / MD_V1_README_THEOREMS must be exactly the theorems the
-    # MegaDreifach README / the frozen v1 package's README cites.
+    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 must be exactly the
+    # theorems the MegaDreifach README / the frozen v1 package's README / the
+    # DoubleDeal-CBC-HMAC proofs README cites.
     for what, listed, readme, root in [
             ("MD_README_THEOREMS", MD_README_THEOREMS, MD_README, MD_LEAN),
-            ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN)]:
+            ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN),
+            ("CBC_HMAC_LINK2", CBC_HMAC_LINK2, CBC_HMAC_LEAN.parent / "README.md",
+             CBC_HMAC_LEAN)]:
         cited, bad = md_readme_cited(readme=readme, root=root)
         for b in bad:
             print(f"check_axioms selftest: FAIL {b}")

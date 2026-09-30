@@ -39,7 +39,10 @@ assert.match(
     "Message input updates Digest only",
 );
 
-const digestFn = scramble.match(/function refreshDigest\(\) \{[\s\S]*?\n    \}/);
+// showResult is refreshDigest's Digest half (typed Message and files); check both bodies.
+const digestFn = scramble.match(
+    /function showResult\([^)]*\) \{[\s\S]*?function refreshDigest\(\) \{[\s\S]*?\n    \}/,
+);
 assert.ok(digestFn, "refreshDigest is the live Message path");
 assert.doesNotMatch(digestFn[0], /view\.setAlg/, "Digest path must not call setAlg");
 assert.doesNotMatch(digestFn[0], /bindAlg\(/, "Digest path must not bind the move timeline");

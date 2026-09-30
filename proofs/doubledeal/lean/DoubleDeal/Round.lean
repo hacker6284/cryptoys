@@ -50,6 +50,18 @@ theorem invUnkeyedWithMix_rt (m : Fin 52 → Nat) :
   simp only [invUnkeyedWithMix, unkeyedWithMix]
   rw [invMixColumns_mixColumns, invUnkeyedNoMix_unkeyedNoMix]
 
+/-- `unkeyedNoMix` is injective (`invUnkeyedNoMix` is a left inverse). Stated without
+    Mathlib; the statement is `Function.Injective unkeyedNoMix` unfolded. -/
+theorem unkeyedNoMix_injective :
+    ∀ ⦃m m' : Fin 52 → Nat⦄, unkeyedNoMix m = unkeyedNoMix m' → m = m' := fun m m' h => by
+  rw [← invUnkeyedNoMix_unkeyedNoMix m, h, invUnkeyedNoMix_unkeyedNoMix]
+
+/-- `unkeyedWithMix` is injective (`invUnkeyedWithMix` is a left inverse). Stated without
+    Mathlib; the statement is `Function.Injective unkeyedWithMix` unfolded. -/
+theorem unkeyedWithMix_injective :
+    ∀ ⦃m m' : Fin 52 → Nat⦄, unkeyedWithMix m = unkeyedWithMix m' → m = m' := fun m m' h => by
+  rw [← invUnkeyedWithMix_rt m, h, invUnkeyedWithMix_rt]
+
 /-- S12 peel (no-mix): fullRoundNoMix = Compose ∘ unkeyedNoMix. -/
 def fullRoundNoMix (m : Fin 52 → Nat) (pos : Fin 52 → Fin 52) : Fin 52 → Nat :=
   DoubleDeal.composeVec 52 Nat (unkeyedNoMix m) pos

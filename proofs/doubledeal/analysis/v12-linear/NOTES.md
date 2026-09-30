@@ -176,7 +176,7 @@ nothing proved for the real PassKey schedule, and no numeric bound. The single-c
 Layer hypotheses: L5 involves no layer. L10 is proved for arbitrary layers that send decks
 to decks. L6 and L7 are stated for DoubleDeal's `encryptL`. L6 (through the column sums)
 uses injective layers; L5, L7, L10 and the row sums use only decks to decks. (The column sums
-`sum_fullDiffCount_left` go through `outDiff_injective`, which uses
+`FullCipher.sum_fullDiffCount_left` go through `FullCipher.outDiff_injective`, which uses
 `FullCipher.fullDiffCount_to_one`, i.e. injective layers.)
 
 Remark (not a theorem): normalised as in the M8a remark,
@@ -258,7 +258,7 @@ model `../v12-keysched/dd12.h`. No theorem uses any of these numbers.
     eps does not depend on those details, and it is the deck-by-deck check above that pins
     down the model.
   The reduction to a uniform suit pattern is argued in the script's header (the stem is a
-  bijection, `ddiff.h` `inv_stem` / `FullCipher.unkeyedNoMix_injective`, so the grid after
+  bijection, `ddiff.h` `inv_stem` / `DoubleDeal.unkeyedNoMix_injective`, so the grid after
   the row step is uniform; the turns read only suits), but it is not independently checked.
   By L10 (one keyed layer), this value would be the key-free size of the sign correlation
   through one keyed stem layer; nothing is claimed for several layers.

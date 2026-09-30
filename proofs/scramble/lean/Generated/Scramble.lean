@@ -77,25 +77,27 @@ instance : SudoRt.Canon Evaluation where
 
 structure Scramble where
   sudo_8Scramble_7version : Int
-  sudo_8Scramble_7message : Array (Int)
+  sudo_8Scramble_7pending : Array (Int)
+  sudo_8Scramble_5total : Int
   sudo_8Scramble_9processed : Int
   sudo_8Scramble_4cube : Array (Cubie)
   sudo_8Scramble_5steps : Array (Step)
+  sudo_8Scramble_6traced : Bool
   sudo_8Scramble_4done : Bool
   deriving BEq, Repr
 
 instance : Inhabited Scramble where
-  default := { sudo_8Scramble_7version := default, sudo_8Scramble_7message := default, sudo_8Scramble_9processed := default, sudo_8Scramble_4cube := default, sudo_8Scramble_5steps := default, sudo_8Scramble_4done := default }
+  default := { sudo_8Scramble_7version := default, sudo_8Scramble_7pending := default, sudo_8Scramble_5total := default, sudo_8Scramble_9processed := default, sudo_8Scramble_4cube := default, sudo_8Scramble_5steps := default, sudo_8Scramble_6traced := default, sudo_8Scramble_4done := default }
 
 instance : SudoRt.SEq Scramble where
-  beq a b := SudoRt.SEq.beq a.sudo_8Scramble_7version b.sudo_8Scramble_7version && SudoRt.SEq.beq a.sudo_8Scramble_7message b.sudo_8Scramble_7message && SudoRt.SEq.beq a.sudo_8Scramble_9processed b.sudo_8Scramble_9processed && SudoRt.SEq.beq a.sudo_8Scramble_4cube b.sudo_8Scramble_4cube && SudoRt.SEq.beq a.sudo_8Scramble_5steps b.sudo_8Scramble_5steps && SudoRt.SEq.beq a.sudo_8Scramble_4done b.sudo_8Scramble_4done
+  beq a b := SudoRt.SEq.beq a.sudo_8Scramble_7version b.sudo_8Scramble_7version && SudoRt.SEq.beq a.sudo_8Scramble_7pending b.sudo_8Scramble_7pending && SudoRt.SEq.beq a.sudo_8Scramble_5total b.sudo_8Scramble_5total && SudoRt.SEq.beq a.sudo_8Scramble_9processed b.sudo_8Scramble_9processed && SudoRt.SEq.beq a.sudo_8Scramble_4cube b.sudo_8Scramble_4cube && SudoRt.SEq.beq a.sudo_8Scramble_5steps b.sudo_8Scramble_5steps && SudoRt.SEq.beq a.sudo_8Scramble_6traced b.sudo_8Scramble_6traced && SudoRt.SEq.beq a.sudo_8Scramble_4done b.sudo_8Scramble_4done
 
 instance : SudoRt.SOrd Scramble where
   le a b :=
-    (if !(SudoRt.SEq.beq a.sudo_8Scramble_7version b.sudo_8Scramble_7version) then SudoRt.SOrd.le a.sudo_8Scramble_7version b.sudo_8Scramble_7version else (if !(SudoRt.SEq.beq a.sudo_8Scramble_7message b.sudo_8Scramble_7message) then SudoRt.SOrd.le a.sudo_8Scramble_7message b.sudo_8Scramble_7message else (if !(SudoRt.SEq.beq a.sudo_8Scramble_9processed b.sudo_8Scramble_9processed) then SudoRt.SOrd.le a.sudo_8Scramble_9processed b.sudo_8Scramble_9processed else (if !(SudoRt.SEq.beq a.sudo_8Scramble_4cube b.sudo_8Scramble_4cube) then SudoRt.SOrd.le a.sudo_8Scramble_4cube b.sudo_8Scramble_4cube else (if !(SudoRt.SEq.beq a.sudo_8Scramble_5steps b.sudo_8Scramble_5steps) then SudoRt.SOrd.le a.sudo_8Scramble_5steps b.sudo_8Scramble_5steps else (if !(SudoRt.SEq.beq a.sudo_8Scramble_4done b.sudo_8Scramble_4done) then SudoRt.SOrd.le a.sudo_8Scramble_4done b.sudo_8Scramble_4done else true))))))
+    (if !(SudoRt.SEq.beq a.sudo_8Scramble_7version b.sudo_8Scramble_7version) then SudoRt.SOrd.le a.sudo_8Scramble_7version b.sudo_8Scramble_7version else (if !(SudoRt.SEq.beq a.sudo_8Scramble_7pending b.sudo_8Scramble_7pending) then SudoRt.SOrd.le a.sudo_8Scramble_7pending b.sudo_8Scramble_7pending else (if !(SudoRt.SEq.beq a.sudo_8Scramble_5total b.sudo_8Scramble_5total) then SudoRt.SOrd.le a.sudo_8Scramble_5total b.sudo_8Scramble_5total else (if !(SudoRt.SEq.beq a.sudo_8Scramble_9processed b.sudo_8Scramble_9processed) then SudoRt.SOrd.le a.sudo_8Scramble_9processed b.sudo_8Scramble_9processed else (if !(SudoRt.SEq.beq a.sudo_8Scramble_4cube b.sudo_8Scramble_4cube) then SudoRt.SOrd.le a.sudo_8Scramble_4cube b.sudo_8Scramble_4cube else (if !(SudoRt.SEq.beq a.sudo_8Scramble_5steps b.sudo_8Scramble_5steps) then SudoRt.SOrd.le a.sudo_8Scramble_5steps b.sudo_8Scramble_5steps else (if !(SudoRt.SEq.beq a.sudo_8Scramble_6traced b.sudo_8Scramble_6traced) then SudoRt.SOrd.le a.sudo_8Scramble_6traced b.sudo_8Scramble_6traced else (if !(SudoRt.SEq.beq a.sudo_8Scramble_4done b.sudo_8Scramble_4done) then SudoRt.SOrd.le a.sudo_8Scramble_4done b.sudo_8Scramble_4done else true))))))))
 
 instance : SudoRt.Canon Scramble where
-  canon r := SudoRt.canonRecord "Scramble" [SudoRt.Canon.canon r.sudo_8Scramble_7version, SudoRt.Canon.canon r.sudo_8Scramble_7message, SudoRt.Canon.canon r.sudo_8Scramble_9processed, SudoRt.Canon.canon r.sudo_8Scramble_4cube, SudoRt.Canon.canon r.sudo_8Scramble_5steps, SudoRt.Canon.canon r.sudo_8Scramble_4done]
+  canon r := SudoRt.canonRecord "Scramble" [SudoRt.Canon.canon r.sudo_8Scramble_7version, SudoRt.Canon.canon r.sudo_8Scramble_7pending, SudoRt.Canon.canon r.sudo_8Scramble_5total, SudoRt.Canon.canon r.sudo_8Scramble_9processed, SudoRt.Canon.canon r.sudo_8Scramble_4cube, SudoRt.Canon.canon r.sudo_8Scramble_5steps, SudoRt.Canon.canon r.sudo_8Scramble_6traced, SudoRt.Canon.canon r.sudo_8Scramble_4done]
 
 def v1_face : Array (Int) := (#[(0 : Int), (0 : Int), (1 : Int), (1 : Int), (3 : Int), (3 : Int), (2 : Int), (2 : Int), (4 : Int), (4 : Int), (5 : Int), (5 : Int), (0 : Int), (1 : Int), (3 : Int), (2 : Int)] : Array (Int))
 
@@ -969,53 +971,63 @@ def solved_cube : Except SudoRt.Trap (Array (Cubie)) :=
       pure cube) (fun r => pure r))
     pure _out
 
-def fresh (version : Int) : Except SudoRt.Trap (Scramble) :=
+def fresh (version : Int) (traced : Bool) : Except SudoRt.Trap (Scramble) :=
   do
-    let msg := (#[] : Array (Int))
+    let pending := (#[] : Array (Int))
     let steps := (#[] : Array (Step))
     let _t313 ← solved_cube
-    pure ({ sudo_8Scramble_7version := version, sudo_8Scramble_7message := msg, sudo_8Scramble_9processed := (0 : Int), sudo_8Scramble_4cube := _t313, sudo_8Scramble_5steps := steps, sudo_8Scramble_4done := false } : Scramble)
+    pure ({ sudo_8Scramble_7version := version, sudo_8Scramble_7pending := pending, sudo_8Scramble_5total := (0 : Int), sudo_8Scramble_9processed := (0 : Int), sudo_8Scramble_4cube := _t313, sudo_8Scramble_5steps := steps, sudo_8Scramble_6traced := traced, sudo_8Scramble_4done := false } : Scramble)
 
 def scramble_v1 : Except SudoRt.Trap (Scramble) :=
   do
-    let _t314 ← fresh (1 : Int)
+    let _t314 ← fresh (1 : Int) true
     pure _t314
 
 def scramble_v2 : Except SudoRt.Trap (Scramble) :=
   do
-    let _t315 ← fresh (2 : Int)
+    let _t315 ← fresh (2 : Int) true
     pure _t315
+
+def scramble_v1_digest : Except SudoRt.Trap (Scramble) :=
+  do
+    let _t316 ← fresh (1 : Int) false
+    pure _t316
+
+def scramble_v2_digest : Except SudoRt.Trap (Scramble) :=
+  do
+    let _t317 ← fresh (2 : Int) false
+    pure _t317
 
 def rot_xyz (face : Int) (x : Int) (y : Int) (z : Int) : Except SudoRt.Trap ((Int) × (Int) × (Int)) :=
   do
-    let _t317 ← (if (SudoRt.SEq.beq face (0 : Int)) then pure true else (do
+    let _t319 ← (if (SudoRt.SEq.beq face (0 : Int)) then pure true else (do
   pure (SudoRt.SEq.beq face (1 : Int))))
-    if _t317 then
+    if _t319 then
       do
-        let _t319 ← SudoRt.subI (0 : Int) x
-        pure (z, y, _t319)
+        let _t321 ← SudoRt.subI (0 : Int) x
+        pure (z, y, _t321)
     else
       do
         if (SudoRt.SEq.beq face (2 : Int)) then
           do
-            let _t321 ← SudoRt.subI (0 : Int) y
-            pure (x, z, _t321)
+            let _t323 ← SudoRt.subI (0 : Int) y
+            pure (x, z, _t323)
         else
           do
             if (SudoRt.SEq.beq face (3 : Int)) then
               do
-                let _t323 ← SudoRt.subI (0 : Int) z
-                pure (x, _t323, y)
+                let _t325 ← SudoRt.subI (0 : Int) z
+                pure (x, _t325, y)
             else
               do
                 if (SudoRt.SEq.beq face (4 : Int)) then
                   do
-                    let _t325 ← SudoRt.subI (0 : Int) x
-                    pure (y, _t325, z)
+                    let _t327 ← SudoRt.subI (0 : Int) x
+                    pure (y, _t327, z)
                 else
                   do
-                    let _t326 ← SudoRt.subI (0 : Int) y
-                    pure (_t326, x, z)
+                    let _t328 ← SudoRt.subI (0 : Int) y
+                    pure (_t328, x, z)
 
 def on_face (face : Int) (x : Int) (y : Int) (z : Int) : Except SudoRt.Trap (Bool) :=
   do
@@ -1026,8 +1038,8 @@ def on_face (face : Int) (x : Int) (y : Int) (z : Int) : Except SudoRt.Trap (Boo
       do
         if (SudoRt.SEq.beq face (1 : Int)) then
           do
-            let _t330 ← SudoRt.negI (1 : Int)
-            pure (SudoRt.SEq.beq y _t330)
+            let _t332 ← SudoRt.negI (1 : Int)
+            pure (SudoRt.SEq.beq y _t332)
         else
           do
             if (SudoRt.SEq.beq face (2 : Int)) then
@@ -1037,8 +1049,8 @@ def on_face (face : Int) (x : Int) (y : Int) (z : Int) : Except SudoRt.Trap (Boo
               do
                 if (SudoRt.SEq.beq face (3 : Int)) then
                   do
-                    let _t335 ← SudoRt.negI (1 : Int)
-                    pure (SudoRt.SEq.beq x _t335)
+                    let _t337 ← SudoRt.negI (1 : Int)
+                    pure (SudoRt.SEq.beq x _t337)
                 else
                   do
                     if (SudoRt.SEq.beq face (4 : Int)) then
@@ -1046,54 +1058,54 @@ def on_face (face : Int) (x : Int) (y : Int) (z : Int) : Except SudoRt.Trap (Boo
                         pure (SudoRt.SEq.beq z (1 : Int))
                     else
                       do
-                        let _t339 ← SudoRt.negI (1 : Int)
-                        pure (SudoRt.SEq.beq z _t339)
+                        let _t341 ← SudoRt.negI (1 : Int)
+                        pure (SudoRt.SEq.beq z _t341)
 
 def write_axis (xp : Int) (xn : Int) (yp : Int) (yn : Int) (zp : Int) (zn : Int) (x : Int) (y : Int) (z : Int) (color : Int) : Except SudoRt.Trap ((Int) × (Int) × (Int) × (Int) × (Int) × (Int)) :=
   do
-    let _t342 ← (if (SudoRt.SEq.beq x (1 : Int)) then (do
+    let _t344 ← (if (SudoRt.SEq.beq x (1 : Int)) then (do
   pure (SudoRt.SEq.beq y (0 : Int))) else pure false)
-    let _t344 ← (if _t342 then (do
+    let _t346 ← (if _t344 then (do
   pure (SudoRt.SEq.beq z (0 : Int))) else pure false)
-    if _t344 then
+    if _t346 then
       do
         pure (color, xn, yp, yn, zp, zn)
     else
       do
-        let _t346 ← SudoRt.negI (1 : Int)
-        let _t348 ← (if (SudoRt.SEq.beq x _t346) then (do
+        let _t348 ← SudoRt.negI (1 : Int)
+        let _t350 ← (if (SudoRt.SEq.beq x _t348) then (do
   pure (SudoRt.SEq.beq y (0 : Int))) else pure false)
-        let _t350 ← (if _t348 then (do
+        let _t352 ← (if _t350 then (do
   pure (SudoRt.SEq.beq z (0 : Int))) else pure false)
-        if _t350 then
+        if _t352 then
           do
             pure (xp, color, yp, yn, zp, zn)
         else
           do
-            let _t353 ← (if (SudoRt.SEq.beq x (0 : Int)) then (do
+            let _t355 ← (if (SudoRt.SEq.beq x (0 : Int)) then (do
   pure (SudoRt.SEq.beq y (1 : Int))) else pure false)
-            let _t355 ← (if _t353 then (do
+            let _t357 ← (if _t355 then (do
   pure (SudoRt.SEq.beq z (0 : Int))) else pure false)
-            if _t355 then
+            if _t357 then
               do
                 pure (xp, xn, color, yn, zp, zn)
             else
               do
-                let _t358 ← (if (SudoRt.SEq.beq x (0 : Int)) then (do
-  let _t359 ← SudoRt.negI (1 : Int)
-  pure (SudoRt.SEq.beq y _t359)) else pure false)
-                let _t361 ← (if _t358 then (do
+                let _t360 ← (if (SudoRt.SEq.beq x (0 : Int)) then (do
+  let _t361 ← SudoRt.negI (1 : Int)
+  pure (SudoRt.SEq.beq y _t361)) else pure false)
+                let _t363 ← (if _t360 then (do
   pure (SudoRt.SEq.beq z (0 : Int))) else pure false)
-                if _t361 then
+                if _t363 then
                   do
                     pure (xp, xn, yp, color, zp, zn)
                 else
                   do
-                    let _t364 ← (if (SudoRt.SEq.beq x (0 : Int)) then (do
+                    let _t366 ← (if (SudoRt.SEq.beq x (0 : Int)) then (do
   pure (SudoRt.SEq.beq y (0 : Int))) else pure false)
-                    let _t366 ← (if _t364 then (do
+                    let _t368 ← (if _t366 then (do
   pure (SudoRt.SEq.beq z (1 : Int))) else pure false)
-                    if _t366 then
+                    if _t368 then
                       do
                         pure (xp, xn, yp, yn, color, zn)
                     else
@@ -1102,8 +1114,8 @@ def write_axis (xp : Int) (xn : Int) (yp : Int) (yn : Int) (zp : Int) (zn : Int)
 
 def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
   do
-    let _t368 ← rot_xyz face (c).sudo_5Cubie_1x (c).sudo_5Cubie_1y (c).sudo_5Cubie_1z
-    let ⟨nx, ny, nz⟩ := _t368
+    let _t370 ← rot_xyz face (c).sudo_5Cubie_1x (c).sudo_5Cubie_1y (c).sudo_5Cubie_1z
+    let ⟨nx, ny, nz⟩ := _t370
     let xp := (0 : Int)
     let xn := (0 : Int)
     let yp := (0 : Int)
@@ -1112,43 +1124,43 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
     let zn := (0 : Int)
     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2xp (0 : Int))) then
       do
-        let _t370 ← rot_xyz face (1 : Int) (0 : Int) (0 : Int)
-        let ⟨rx, ry, rz⟩ := _t370
-        let _t371 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2xp
-        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t371
+        let _t372 ← rot_xyz face (1 : Int) (0 : Int) (0 : Int)
+        let ⟨rx, ry, rz⟩ := _t372
+        let _t373 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2xp
+        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t373
         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2xn (0 : Int))) then
           do
-            let _t373 ← SudoRt.negI (1 : Int)
-            let _t374 ← rot_xyz face _t373 (0 : Int) (0 : Int)
-            let ⟨rx, ry, rz⟩ := _t374
-            let _t375 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2xn
-            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t375
+            let _t375 ← SudoRt.negI (1 : Int)
+            let _t376 ← rot_xyz face _t375 (0 : Int) (0 : Int)
+            let ⟨rx, ry, rz⟩ := _t376
+            let _t377 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2xn
+            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t377
             if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yp (0 : Int))) then
               do
-                let _t377 ← rot_xyz face (0 : Int) (1 : Int) (0 : Int)
-                let ⟨rx, ry, rz⟩ := _t377
-                let _t378 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yp
-                let ⟨xp, xn, yp, yn, zp, zn⟩ := _t378
+                let _t379 ← rot_xyz face (0 : Int) (1 : Int) (0 : Int)
+                let ⟨rx, ry, rz⟩ := _t379
+                let _t380 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yp
+                let ⟨xp, xn, yp, yn, zp, zn⟩ := _t380
                 if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yn (0 : Int))) then
                   do
-                    let _t380 ← SudoRt.negI (1 : Int)
-                    let _t381 ← rot_xyz face (0 : Int) _t380 (0 : Int)
-                    let ⟨rx, ry, rz⟩ := _t381
-                    let _t382 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
-                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t382
+                    let _t382 ← SudoRt.negI (1 : Int)
+                    let _t383 ← rot_xyz face (0 : Int) _t382 (0 : Int)
+                    let ⟨rx, ry, rz⟩ := _t383
+                    let _t384 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
+                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t384
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t384 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t384
-                        let _t385 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t385
+                        let _t386 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t386
+                        let _t387 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t387
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t387 ← SudoRt.negI (1 : Int)
-                            let _t388 ← rot_xyz face (0 : Int) (0 : Int) _t387
-                            let ⟨rx, ry, rz⟩ := _t388
-                            let _t389 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t389
+                            let _t389 ← SudoRt.negI (1 : Int)
+                            let _t390 ← rot_xyz face (0 : Int) (0 : Int) _t389
+                            let ⟨rx, ry, rz⟩ := _t390
+                            let _t391 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t391
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1157,11 +1169,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t391 ← SudoRt.negI (1 : Int)
-                            let _t392 ← rot_xyz face (0 : Int) (0 : Int) _t391
-                            let ⟨rx, ry, rz⟩ := _t392
-                            let _t393 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t393
+                            let _t393 ← SudoRt.negI (1 : Int)
+                            let _t394 ← rot_xyz face (0 : Int) (0 : Int) _t393
+                            let ⟨rx, ry, rz⟩ := _t394
+                            let _t395 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t395
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1170,17 +1182,17 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                   do
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t395 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t395
-                        let _t396 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t396
+                        let _t397 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t397
+                        let _t398 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t398
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t398 ← SudoRt.negI (1 : Int)
-                            let _t399 ← rot_xyz face (0 : Int) (0 : Int) _t398
-                            let ⟨rx, ry, rz⟩ := _t399
-                            let _t400 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t400
+                            let _t400 ← SudoRt.negI (1 : Int)
+                            let _t401 ← rot_xyz face (0 : Int) (0 : Int) _t400
+                            let ⟨rx, ry, rz⟩ := _t401
+                            let _t402 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t402
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1189,11 +1201,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t402 ← SudoRt.negI (1 : Int)
-                            let _t403 ← rot_xyz face (0 : Int) (0 : Int) _t402
-                            let ⟨rx, ry, rz⟩ := _t403
-                            let _t404 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t404
+                            let _t404 ← SudoRt.negI (1 : Int)
+                            let _t405 ← rot_xyz face (0 : Int) (0 : Int) _t404
+                            let ⟨rx, ry, rz⟩ := _t405
+                            let _t406 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t406
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1202,24 +1214,24 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
               do
                 if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yn (0 : Int))) then
                   do
-                    let _t406 ← SudoRt.negI (1 : Int)
-                    let _t407 ← rot_xyz face (0 : Int) _t406 (0 : Int)
-                    let ⟨rx, ry, rz⟩ := _t407
-                    let _t408 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
-                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t408
+                    let _t408 ← SudoRt.negI (1 : Int)
+                    let _t409 ← rot_xyz face (0 : Int) _t408 (0 : Int)
+                    let ⟨rx, ry, rz⟩ := _t409
+                    let _t410 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
+                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t410
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t410 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t410
-                        let _t411 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t411
+                        let _t412 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t412
+                        let _t413 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t413
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t413 ← SudoRt.negI (1 : Int)
-                            let _t414 ← rot_xyz face (0 : Int) (0 : Int) _t413
-                            let ⟨rx, ry, rz⟩ := _t414
-                            let _t415 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t415
+                            let _t415 ← SudoRt.negI (1 : Int)
+                            let _t416 ← rot_xyz face (0 : Int) (0 : Int) _t415
+                            let ⟨rx, ry, rz⟩ := _t416
+                            let _t417 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t417
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1228,11 +1240,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t417 ← SudoRt.negI (1 : Int)
-                            let _t418 ← rot_xyz face (0 : Int) (0 : Int) _t417
-                            let ⟨rx, ry, rz⟩ := _t418
-                            let _t419 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t419
+                            let _t419 ← SudoRt.negI (1 : Int)
+                            let _t420 ← rot_xyz face (0 : Int) (0 : Int) _t419
+                            let ⟨rx, ry, rz⟩ := _t420
+                            let _t421 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t421
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1241,17 +1253,17 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                   do
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t421 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t421
-                        let _t422 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t422
+                        let _t423 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t423
+                        let _t424 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t424
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t424 ← SudoRt.negI (1 : Int)
-                            let _t425 ← rot_xyz face (0 : Int) (0 : Int) _t424
-                            let ⟨rx, ry, rz⟩ := _t425
-                            let _t426 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t426
+                            let _t426 ← SudoRt.negI (1 : Int)
+                            let _t427 ← rot_xyz face (0 : Int) (0 : Int) _t426
+                            let ⟨rx, ry, rz⟩ := _t427
+                            let _t428 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t428
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1260,11 +1272,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t428 ← SudoRt.negI (1 : Int)
-                            let _t429 ← rot_xyz face (0 : Int) (0 : Int) _t428
-                            let ⟨rx, ry, rz⟩ := _t429
-                            let _t430 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t430
+                            let _t430 ← SudoRt.negI (1 : Int)
+                            let _t431 ← rot_xyz face (0 : Int) (0 : Int) _t430
+                            let ⟨rx, ry, rz⟩ := _t431
+                            let _t432 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t432
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1273,30 +1285,30 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
           do
             if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yp (0 : Int))) then
               do
-                let _t432 ← rot_xyz face (0 : Int) (1 : Int) (0 : Int)
-                let ⟨rx, ry, rz⟩ := _t432
-                let _t433 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yp
-                let ⟨xp, xn, yp, yn, zp, zn⟩ := _t433
+                let _t434 ← rot_xyz face (0 : Int) (1 : Int) (0 : Int)
+                let ⟨rx, ry, rz⟩ := _t434
+                let _t435 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yp
+                let ⟨xp, xn, yp, yn, zp, zn⟩ := _t435
                 if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yn (0 : Int))) then
                   do
-                    let _t435 ← SudoRt.negI (1 : Int)
-                    let _t436 ← rot_xyz face (0 : Int) _t435 (0 : Int)
-                    let ⟨rx, ry, rz⟩ := _t436
-                    let _t437 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
-                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t437
+                    let _t437 ← SudoRt.negI (1 : Int)
+                    let _t438 ← rot_xyz face (0 : Int) _t437 (0 : Int)
+                    let ⟨rx, ry, rz⟩ := _t438
+                    let _t439 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
+                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t439
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t439 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t439
-                        let _t440 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t440
+                        let _t441 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t441
+                        let _t442 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t442
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t442 ← SudoRt.negI (1 : Int)
-                            let _t443 ← rot_xyz face (0 : Int) (0 : Int) _t442
-                            let ⟨rx, ry, rz⟩ := _t443
-                            let _t444 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t444
+                            let _t444 ← SudoRt.negI (1 : Int)
+                            let _t445 ← rot_xyz face (0 : Int) (0 : Int) _t444
+                            let ⟨rx, ry, rz⟩ := _t445
+                            let _t446 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t446
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1305,11 +1317,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t446 ← SudoRt.negI (1 : Int)
-                            let _t447 ← rot_xyz face (0 : Int) (0 : Int) _t446
-                            let ⟨rx, ry, rz⟩ := _t447
-                            let _t448 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t448
+                            let _t448 ← SudoRt.negI (1 : Int)
+                            let _t449 ← rot_xyz face (0 : Int) (0 : Int) _t448
+                            let ⟨rx, ry, rz⟩ := _t449
+                            let _t450 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t450
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1318,17 +1330,17 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                   do
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t450 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t450
-                        let _t451 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t451
+                        let _t452 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t452
+                        let _t453 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t453
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t453 ← SudoRt.negI (1 : Int)
-                            let _t454 ← rot_xyz face (0 : Int) (0 : Int) _t453
-                            let ⟨rx, ry, rz⟩ := _t454
-                            let _t455 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t455
+                            let _t455 ← SudoRt.negI (1 : Int)
+                            let _t456 ← rot_xyz face (0 : Int) (0 : Int) _t455
+                            let ⟨rx, ry, rz⟩ := _t456
+                            let _t457 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t457
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1337,11 +1349,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t457 ← SudoRt.negI (1 : Int)
-                            let _t458 ← rot_xyz face (0 : Int) (0 : Int) _t457
-                            let ⟨rx, ry, rz⟩ := _t458
-                            let _t459 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t459
+                            let _t459 ← SudoRt.negI (1 : Int)
+                            let _t460 ← rot_xyz face (0 : Int) (0 : Int) _t459
+                            let ⟨rx, ry, rz⟩ := _t460
+                            let _t461 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t461
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1350,24 +1362,24 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
               do
                 if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yn (0 : Int))) then
                   do
-                    let _t461 ← SudoRt.negI (1 : Int)
-                    let _t462 ← rot_xyz face (0 : Int) _t461 (0 : Int)
-                    let ⟨rx, ry, rz⟩ := _t462
-                    let _t463 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
-                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t463
+                    let _t463 ← SudoRt.negI (1 : Int)
+                    let _t464 ← rot_xyz face (0 : Int) _t463 (0 : Int)
+                    let ⟨rx, ry, rz⟩ := _t464
+                    let _t465 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
+                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t465
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t465 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t465
-                        let _t466 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t466
+                        let _t467 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t467
+                        let _t468 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t468
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t468 ← SudoRt.negI (1 : Int)
-                            let _t469 ← rot_xyz face (0 : Int) (0 : Int) _t468
-                            let ⟨rx, ry, rz⟩ := _t469
-                            let _t470 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t470
+                            let _t470 ← SudoRt.negI (1 : Int)
+                            let _t471 ← rot_xyz face (0 : Int) (0 : Int) _t470
+                            let ⟨rx, ry, rz⟩ := _t471
+                            let _t472 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t472
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1376,11 +1388,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t472 ← SudoRt.negI (1 : Int)
-                            let _t473 ← rot_xyz face (0 : Int) (0 : Int) _t472
-                            let ⟨rx, ry, rz⟩ := _t473
-                            let _t474 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t474
+                            let _t474 ← SudoRt.negI (1 : Int)
+                            let _t475 ← rot_xyz face (0 : Int) (0 : Int) _t474
+                            let ⟨rx, ry, rz⟩ := _t475
+                            let _t476 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t476
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1389,17 +1401,17 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                   do
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t476 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t476
-                        let _t477 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t477
+                        let _t478 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t478
+                        let _t479 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t479
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t479 ← SudoRt.negI (1 : Int)
-                            let _t480 ← rot_xyz face (0 : Int) (0 : Int) _t479
-                            let ⟨rx, ry, rz⟩ := _t480
-                            let _t481 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t481
+                            let _t481 ← SudoRt.negI (1 : Int)
+                            let _t482 ← rot_xyz face (0 : Int) (0 : Int) _t481
+                            let ⟨rx, ry, rz⟩ := _t482
+                            let _t483 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t483
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1408,11 +1420,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t483 ← SudoRt.negI (1 : Int)
-                            let _t484 ← rot_xyz face (0 : Int) (0 : Int) _t483
-                            let ⟨rx, ry, rz⟩ := _t484
-                            let _t485 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t485
+                            let _t485 ← SudoRt.negI (1 : Int)
+                            let _t486 ← rot_xyz face (0 : Int) (0 : Int) _t485
+                            let ⟨rx, ry, rz⟩ := _t486
+                            let _t487 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t487
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1421,37 +1433,37 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
       do
         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2xn (0 : Int))) then
           do
-            let _t487 ← SudoRt.negI (1 : Int)
-            let _t488 ← rot_xyz face _t487 (0 : Int) (0 : Int)
-            let ⟨rx, ry, rz⟩ := _t488
-            let _t489 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2xn
-            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t489
+            let _t489 ← SudoRt.negI (1 : Int)
+            let _t490 ← rot_xyz face _t489 (0 : Int) (0 : Int)
+            let ⟨rx, ry, rz⟩ := _t490
+            let _t491 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2xn
+            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t491
             if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yp (0 : Int))) then
               do
-                let _t491 ← rot_xyz face (0 : Int) (1 : Int) (0 : Int)
-                let ⟨rx, ry, rz⟩ := _t491
-                let _t492 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yp
-                let ⟨xp, xn, yp, yn, zp, zn⟩ := _t492
+                let _t493 ← rot_xyz face (0 : Int) (1 : Int) (0 : Int)
+                let ⟨rx, ry, rz⟩ := _t493
+                let _t494 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yp
+                let ⟨xp, xn, yp, yn, zp, zn⟩ := _t494
                 if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yn (0 : Int))) then
                   do
-                    let _t494 ← SudoRt.negI (1 : Int)
-                    let _t495 ← rot_xyz face (0 : Int) _t494 (0 : Int)
-                    let ⟨rx, ry, rz⟩ := _t495
-                    let _t496 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
-                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t496
+                    let _t496 ← SudoRt.negI (1 : Int)
+                    let _t497 ← rot_xyz face (0 : Int) _t496 (0 : Int)
+                    let ⟨rx, ry, rz⟩ := _t497
+                    let _t498 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
+                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t498
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t498 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t498
-                        let _t499 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t499
+                        let _t500 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t500
+                        let _t501 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t501
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t501 ← SudoRt.negI (1 : Int)
-                            let _t502 ← rot_xyz face (0 : Int) (0 : Int) _t501
-                            let ⟨rx, ry, rz⟩ := _t502
-                            let _t503 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t503
+                            let _t503 ← SudoRt.negI (1 : Int)
+                            let _t504 ← rot_xyz face (0 : Int) (0 : Int) _t503
+                            let ⟨rx, ry, rz⟩ := _t504
+                            let _t505 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t505
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1460,11 +1472,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t505 ← SudoRt.negI (1 : Int)
-                            let _t506 ← rot_xyz face (0 : Int) (0 : Int) _t505
-                            let ⟨rx, ry, rz⟩ := _t506
-                            let _t507 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t507
+                            let _t507 ← SudoRt.negI (1 : Int)
+                            let _t508 ← rot_xyz face (0 : Int) (0 : Int) _t507
+                            let ⟨rx, ry, rz⟩ := _t508
+                            let _t509 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t509
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1473,17 +1485,17 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                   do
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t509 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t509
-                        let _t510 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t510
+                        let _t511 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t511
+                        let _t512 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t512
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t512 ← SudoRt.negI (1 : Int)
-                            let _t513 ← rot_xyz face (0 : Int) (0 : Int) _t512
-                            let ⟨rx, ry, rz⟩ := _t513
-                            let _t514 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t514
+                            let _t514 ← SudoRt.negI (1 : Int)
+                            let _t515 ← rot_xyz face (0 : Int) (0 : Int) _t514
+                            let ⟨rx, ry, rz⟩ := _t515
+                            let _t516 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t516
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1492,11 +1504,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t516 ← SudoRt.negI (1 : Int)
-                            let _t517 ← rot_xyz face (0 : Int) (0 : Int) _t516
-                            let ⟨rx, ry, rz⟩ := _t517
-                            let _t518 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t518
+                            let _t518 ← SudoRt.negI (1 : Int)
+                            let _t519 ← rot_xyz face (0 : Int) (0 : Int) _t518
+                            let ⟨rx, ry, rz⟩ := _t519
+                            let _t520 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t520
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1505,24 +1517,24 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
               do
                 if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yn (0 : Int))) then
                   do
-                    let _t520 ← SudoRt.negI (1 : Int)
-                    let _t521 ← rot_xyz face (0 : Int) _t520 (0 : Int)
-                    let ⟨rx, ry, rz⟩ := _t521
-                    let _t522 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
-                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t522
+                    let _t522 ← SudoRt.negI (1 : Int)
+                    let _t523 ← rot_xyz face (0 : Int) _t522 (0 : Int)
+                    let ⟨rx, ry, rz⟩ := _t523
+                    let _t524 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
+                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t524
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t524 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t524
-                        let _t525 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t525
+                        let _t526 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t526
+                        let _t527 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t527
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t527 ← SudoRt.negI (1 : Int)
-                            let _t528 ← rot_xyz face (0 : Int) (0 : Int) _t527
-                            let ⟨rx, ry, rz⟩ := _t528
-                            let _t529 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t529
+                            let _t529 ← SudoRt.negI (1 : Int)
+                            let _t530 ← rot_xyz face (0 : Int) (0 : Int) _t529
+                            let ⟨rx, ry, rz⟩ := _t530
+                            let _t531 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t531
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1531,11 +1543,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t531 ← SudoRt.negI (1 : Int)
-                            let _t532 ← rot_xyz face (0 : Int) (0 : Int) _t531
-                            let ⟨rx, ry, rz⟩ := _t532
-                            let _t533 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t533
+                            let _t533 ← SudoRt.negI (1 : Int)
+                            let _t534 ← rot_xyz face (0 : Int) (0 : Int) _t533
+                            let ⟨rx, ry, rz⟩ := _t534
+                            let _t535 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t535
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1544,17 +1556,17 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                   do
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t535 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t535
-                        let _t536 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t536
+                        let _t537 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t537
+                        let _t538 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t538
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t538 ← SudoRt.negI (1 : Int)
-                            let _t539 ← rot_xyz face (0 : Int) (0 : Int) _t538
-                            let ⟨rx, ry, rz⟩ := _t539
-                            let _t540 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t540
+                            let _t540 ← SudoRt.negI (1 : Int)
+                            let _t541 ← rot_xyz face (0 : Int) (0 : Int) _t540
+                            let ⟨rx, ry, rz⟩ := _t541
+                            let _t542 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t542
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1563,11 +1575,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t542 ← SudoRt.negI (1 : Int)
-                            let _t543 ← rot_xyz face (0 : Int) (0 : Int) _t542
-                            let ⟨rx, ry, rz⟩ := _t543
-                            let _t544 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t544
+                            let _t544 ← SudoRt.negI (1 : Int)
+                            let _t545 ← rot_xyz face (0 : Int) (0 : Int) _t544
+                            let ⟨rx, ry, rz⟩ := _t545
+                            let _t546 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t546
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1576,30 +1588,30 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
           do
             if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yp (0 : Int))) then
               do
-                let _t546 ← rot_xyz face (0 : Int) (1 : Int) (0 : Int)
-                let ⟨rx, ry, rz⟩ := _t546
-                let _t547 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yp
-                let ⟨xp, xn, yp, yn, zp, zn⟩ := _t547
+                let _t548 ← rot_xyz face (0 : Int) (1 : Int) (0 : Int)
+                let ⟨rx, ry, rz⟩ := _t548
+                let _t549 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yp
+                let ⟨xp, xn, yp, yn, zp, zn⟩ := _t549
                 if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yn (0 : Int))) then
                   do
-                    let _t549 ← SudoRt.negI (1 : Int)
-                    let _t550 ← rot_xyz face (0 : Int) _t549 (0 : Int)
-                    let ⟨rx, ry, rz⟩ := _t550
-                    let _t551 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
-                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t551
+                    let _t551 ← SudoRt.negI (1 : Int)
+                    let _t552 ← rot_xyz face (0 : Int) _t551 (0 : Int)
+                    let ⟨rx, ry, rz⟩ := _t552
+                    let _t553 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
+                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t553
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t553 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t553
-                        let _t554 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t554
+                        let _t555 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t555
+                        let _t556 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t556
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t556 ← SudoRt.negI (1 : Int)
-                            let _t557 ← rot_xyz face (0 : Int) (0 : Int) _t556
-                            let ⟨rx, ry, rz⟩ := _t557
-                            let _t558 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t558
+                            let _t558 ← SudoRt.negI (1 : Int)
+                            let _t559 ← rot_xyz face (0 : Int) (0 : Int) _t558
+                            let ⟨rx, ry, rz⟩ := _t559
+                            let _t560 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t560
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1608,11 +1620,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t560 ← SudoRt.negI (1 : Int)
-                            let _t561 ← rot_xyz face (0 : Int) (0 : Int) _t560
-                            let ⟨rx, ry, rz⟩ := _t561
-                            let _t562 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t562
+                            let _t562 ← SudoRt.negI (1 : Int)
+                            let _t563 ← rot_xyz face (0 : Int) (0 : Int) _t562
+                            let ⟨rx, ry, rz⟩ := _t563
+                            let _t564 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t564
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1621,17 +1633,17 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                   do
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t564 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t564
-                        let _t565 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t565
+                        let _t566 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t566
+                        let _t567 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t567
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t567 ← SudoRt.negI (1 : Int)
-                            let _t568 ← rot_xyz face (0 : Int) (0 : Int) _t567
-                            let ⟨rx, ry, rz⟩ := _t568
-                            let _t569 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t569
+                            let _t569 ← SudoRt.negI (1 : Int)
+                            let _t570 ← rot_xyz face (0 : Int) (0 : Int) _t569
+                            let ⟨rx, ry, rz⟩ := _t570
+                            let _t571 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t571
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1640,11 +1652,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t571 ← SudoRt.negI (1 : Int)
-                            let _t572 ← rot_xyz face (0 : Int) (0 : Int) _t571
-                            let ⟨rx, ry, rz⟩ := _t572
-                            let _t573 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t573
+                            let _t573 ← SudoRt.negI (1 : Int)
+                            let _t574 ← rot_xyz face (0 : Int) (0 : Int) _t573
+                            let ⟨rx, ry, rz⟩ := _t574
+                            let _t575 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t575
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1653,24 +1665,24 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
               do
                 if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2yn (0 : Int))) then
                   do
-                    let _t575 ← SudoRt.negI (1 : Int)
-                    let _t576 ← rot_xyz face (0 : Int) _t575 (0 : Int)
-                    let ⟨rx, ry, rz⟩ := _t576
-                    let _t577 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
-                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t577
+                    let _t577 ← SudoRt.negI (1 : Int)
+                    let _t578 ← rot_xyz face (0 : Int) _t577 (0 : Int)
+                    let ⟨rx, ry, rz⟩ := _t578
+                    let _t579 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2yn
+                    let ⟨xp, xn, yp, yn, zp, zn⟩ := _t579
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t579 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t579
-                        let _t580 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t580
+                        let _t581 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t581
+                        let _t582 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t582
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t582 ← SudoRt.negI (1 : Int)
-                            let _t583 ← rot_xyz face (0 : Int) (0 : Int) _t582
-                            let ⟨rx, ry, rz⟩ := _t583
-                            let _t584 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t584
+                            let _t584 ← SudoRt.negI (1 : Int)
+                            let _t585 ← rot_xyz face (0 : Int) (0 : Int) _t584
+                            let ⟨rx, ry, rz⟩ := _t585
+                            let _t586 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t586
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1679,11 +1691,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t586 ← SudoRt.negI (1 : Int)
-                            let _t587 ← rot_xyz face (0 : Int) (0 : Int) _t586
-                            let ⟨rx, ry, rz⟩ := _t587
-                            let _t588 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t588
+                            let _t588 ← SudoRt.negI (1 : Int)
+                            let _t589 ← rot_xyz face (0 : Int) (0 : Int) _t588
+                            let ⟨rx, ry, rz⟩ := _t589
+                            let _t590 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t590
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1692,17 +1704,17 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                   do
                     if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zp (0 : Int))) then
                       do
-                        let _t590 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
-                        let ⟨rx, ry, rz⟩ := _t590
-                        let _t591 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
-                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t591
+                        let _t592 ← rot_xyz face (0 : Int) (0 : Int) (1 : Int)
+                        let ⟨rx, ry, rz⟩ := _t592
+                        let _t593 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zp
+                        let ⟨xp, xn, yp, yn, zp, zn⟩ := _t593
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t593 ← SudoRt.negI (1 : Int)
-                            let _t594 ← rot_xyz face (0 : Int) (0 : Int) _t593
-                            let ⟨rx, ry, rz⟩ := _t594
-                            let _t595 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t595
+                            let _t595 ← SudoRt.negI (1 : Int)
+                            let _t596 ← rot_xyz face (0 : Int) (0 : Int) _t595
+                            let ⟨rx, ry, rz⟩ := _t596
+                            let _t597 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t597
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1711,11 +1723,11 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
                       do
                         if (!(SudoRt.SEq.beq (c).sudo_5Cubie_2zn (0 : Int))) then
                           do
-                            let _t597 ← SudoRt.negI (1 : Int)
-                            let _t598 ← rot_xyz face (0 : Int) (0 : Int) _t597
-                            let ⟨rx, ry, rz⟩ := _t598
-                            let _t599 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
-                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t599
+                            let _t599 ← SudoRt.negI (1 : Int)
+                            let _t600 ← rot_xyz face (0 : Int) (0 : Int) _t599
+                            let ⟨rx, ry, rz⟩ := _t600
+                            let _t601 ← write_axis xp xn yp yn zp zn rx ry rz (c).sudo_5Cubie_2zn
+                            let ⟨xp, xn, yp, yn, zp, zn⟩ := _t601
                             pure ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
                         else
                           do
@@ -1724,12 +1736,12 @@ def turn_cubie (c : Cubie) (face : Int) : Except SudoRt.Trap (Cubie) :=
 def quarter (cube : Array (Cubie)) (face : Int) : Except SudoRt.Trap (Array (Cubie)) :=
   do
     let out := (#[] : Array (Cubie))
-    let _t613 ← SudoRt.subI (SudoRt.listLen cube) (1 : Int)
+    let _t615 ← SudoRt.subI (SudoRt.listLen cube) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t613
+    let _toV := _t615
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init614 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Cubie)) _init614 fuel (fun σ =>
+    let _init616 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Cubie)) _init616 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -1737,25 +1749,25 @@ def quarter (cube : Array (Cubie)) (face : Int) : Except SudoRt.Trap (Array (Cub
         pure (SudoRt.Flow.brk (ρ := Array (Cubie)) (i, out))
       else
         match ← ((do
-  let _t603 ← SudoRt.atL cube i
-  let c := _t603
-  let _t604 ← on_face face (c).sudo_5Cubie_1x (c).sudo_5Cubie_1y (c).sudo_5Cubie_1z
-  if _t604 then
+  let _t605 ← SudoRt.atL cube i
+  let c := _t605
+  let _t606 ← on_face face (c).sudo_5Cubie_1x (c).sudo_5Cubie_1y (c).sudo_5Cubie_1z
+  if _t606 then
     do
-      let _t605 ← turn_cubie c face
-      let _mb606 := SudoRt.appendL out _t605
-      let ⟨_nr607, _⟩ := _mb606
-      let out := _nr607
-      let _hm600 := ()
-      let _u608 := _hm600
+      let _t607 ← turn_cubie c face
+      let _mb608 := SudoRt.appendL out _t607
+      let ⟨_nr609, _⟩ := _mb608
+      let out := _nr609
+      let _hm602 := ()
+      let _u610 := _hm602
       pure (SudoRt.Flow.cont (ρ := Array (Cubie)) out)
   else
     do
-      let _mb609 := SudoRt.appendL out c
-      let ⟨_nr610, _⟩ := _mb609
-      let out := _nr610
-      let _hm601 := ()
-      let _u611 := _hm601
+      let _mb611 := SudoRt.appendL out c
+      let ⟨_nr612, _⟩ := _mb611
+      let out := _nr612
+      let _hm603 := ()
+      let _u613 := _hm603
       pure (SudoRt.Flow.cont (ρ := Array (Cubie)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Cubie)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Cubie)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Cubie)) (i, _fs))
@@ -1776,8 +1788,8 @@ def «apply_turns» (cube : Array (Cubie)) (face : Int) (turns : Int) : Except S
     let _fromV := (1 : Int)
     let _toV := turns
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init617 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Cubie)) _init617 fuel (fun σ =>
+    let _init619 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Cubie)) _init619 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -1785,8 +1797,8 @@ def «apply_turns» (cube : Array (Cubie)) (face : Int) (turns : Int) : Except S
         pure (SudoRt.Flow.brk (ρ := Array (Cubie)) (i, out))
       else
         match ← ((do
-  let _t616 ← quarter out face
-  let out := _t616
+  let _t618 ← quarter out face
+  let out := _t618
   pure (SudoRt.Flow.cont (ρ := Array (Cubie)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Cubie)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Cubie)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Cubie)) (i, _fs))
@@ -1803,25 +1815,25 @@ def «apply_turns» (cube : Array (Cubie)) (face : Int) (turns : Int) : Except S
 
 def cubie_at (cube : Array (Cubie)) (x : Int) (y : Int) (z : Int) : Except SudoRt.Trap (Int) :=
   do
-    let _t626 ← SudoRt.subI (SudoRt.listLen cube) (1 : Int)
+    let _t628 ← SudoRt.subI (SudoRt.listLen cube) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t626
+    let _toV := _t628
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init628 := _fromV
-    let _out ← (SudoRt.runLoopOn (ρ := Int) _init628 fuel (fun σ =>
+    let _init630 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init630 fuel (fun σ =>
     let i := σ
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Int) i)
       else
         match ← ((do
-  let _t619 ← SudoRt.atL cube i
-  let c := _t619
-  let _t621 ← (if (SudoRt.SEq.beq (c).sudo_5Cubie_1x x) then (do
+  let _t621 ← SudoRt.atL cube i
+  let c := _t621
+  let _t623 ← (if (SudoRt.SEq.beq (c).sudo_5Cubie_1x x) then (do
   pure (SudoRt.SEq.beq (c).sudo_5Cubie_1y y)) else pure false)
-  let _t623 ← (if _t621 then (do
+  let _t625 ← (if _t623 then (do
   pure (SudoRt.SEq.beq (c).sudo_5Cubie_1z z)) else pure false)
-  if _t623 then
+  if _t625 then
     do
       pure (SudoRt.Flow.ret (ρ := Int) i)
   else
@@ -1836,7 +1848,7 @@ def cubie_at (cube : Array (Cubie)) (x : Int) (y : Int) (z : Int) : Except SudoR
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Int) i')) (fun σ =>
     do
-      let _as627 ← SudoRt.sudoAssert false 196
+      let _as629 ← SudoRt.sudoAssert false 209
       pure (0 : Int)) (fun r => pure r))
     pure _out
 
@@ -1901,7 +1913,7 @@ def color_char (color : Int) : Except SudoRt.Trap (Int) :=
                             pure (71 : Int)
                         else
                           do
-                            let _as640 ← SudoRt.sudoAssert false 225
+                            let _as642 ← SudoRt.sudoAssert false 238
                             pure (63 : Int)
 
 def facelets_of (cube : Array (Cubie)) : Except SudoRt.Trap (Array (Int)) :=
@@ -1910,8 +1922,8 @@ def facelets_of (cube : Array (Cubie)) : Except SudoRt.Trap (Array (Int)) :=
     let _fromV := (0 : Int)
     let _toV := (53 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init654 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init654 fuel (fun σ =>
+    let _init656 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init656 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -1919,20 +1931,20 @@ def facelets_of (cube : Array (Cubie)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
       else
         match ← ((do
-  let _t643 ← SudoRt.atL fx i
-  let _t644 ← SudoRt.atL fy i
-  let _t645 ← SudoRt.atL fz i
-  let _t646 ← cubie_at cube _t643 _t644 _t645
-  let _t647 ← SudoRt.atL cube _t646
-  let c := _t647
-  let _t648 ← SudoRt.atL fa i
-  let _t649 ← sticker_on c _t648
-  let _t650 ← color_char _t649
-  let _mb651 := SudoRt.appendL out _t650
-  let ⟨_nr652, _⟩ := _mb651
-  let out := _nr652
-  let _hm641 := ()
-  let _u653 := _hm641
+  let _t645 ← SudoRt.atL fx i
+  let _t646 ← SudoRt.atL fy i
+  let _t647 ← SudoRt.atL fz i
+  let _t648 ← cubie_at cube _t645 _t646 _t647
+  let _t649 ← SudoRt.atL cube _t648
+  let c := _t649
+  let _t650 ← SudoRt.atL fa i
+  let _t651 ← sticker_on c _t650
+  let _t652 ← color_char _t651
+  let _mb653 := SudoRt.appendL out _t652
+  let ⟨_nr654, _⟩ := _mb653
+  let out := _nr654
+  let _hm643 := ()
+  let _u655 := _hm643
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -1949,57 +1961,57 @@ def facelets_of (cube : Array (Cubie)) : Except SudoRt.Trap (Array (Int)) :=
 
 def solved_facelets : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t655 ← solved_cube
-    let _t656 ← facelets_of _t655
-    pure _t656
+    let _t657 ← solved_cube
+    let _t658 ← facelets_of _t657
+    pure _t658
 
 def letter (color : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
     let out := (#[] : Array Int)
-    let _t658 ← color_char color
-    let _mb659 := SudoRt.appendL out _t658
-    let ⟨_nr660, _⟩ := _mb659
-    let out := _nr660
-    let _hm657 := ()
-    let _u661 := _hm657
+    let _t660 ← color_char color
+    let _mb661 := SudoRt.appendL out _t660
+    let ⟨_nr662, _⟩ := _mb661
+    let out := _nr662
+    let _hm659 := ()
+    let _u663 := _hm659
     pure out
 
 def hex_digit (n : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
     let digits := (#[48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70] : Array Int)
     let out := (#[] : Array Int)
-    let _t663 ← SudoRt.atL digits n
-    let _mb664 := SudoRt.appendL out _t663
-    let ⟨_nr665, _⟩ := _mb664
-    let out := _nr665
-    let _hm662 := ()
-    let _u666 := _hm662
+    let _t665 ← SudoRt.atL digits n
+    let _mb666 := SudoRt.appendL out _t665
+    let ⟨_nr667, _⟩ := _mb666
+    let out := _nr667
+    let _hm664 := ()
+    let _u668 := _hm664
     pure out
 
 def move_name (face : Int) (turns : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
     let names := (#[85, 68, 82, 76, 70, 66] : Array Int)
     let out := (#[] : Array Int)
-    let _t670 ← SudoRt.atL names face
-    let _mb671 := SudoRt.appendL out _t670
-    let ⟨_nr672, _⟩ := _mb671
-    let out := _nr672
-    let _hm667 := ()
-    let _u673 := _hm667
+    let _t672 ← SudoRt.atL names face
+    let _mb673 := SudoRt.appendL out _t672
+    let ⟨_nr674, _⟩ := _mb673
+    let out := _nr674
+    let _hm669 := ()
+    let _u675 := _hm669
     if (SudoRt.SEq.beq turns (2 : Int)) then
       do
-        let _mb675 := SudoRt.appendL out (50 : Int)
-        let ⟨_nr676, _⟩ := _mb675
-        let out := _nr676
-        let _hm668 := ()
-        let _u677 := _hm668
+        let _mb677 := SudoRt.appendL out (50 : Int)
+        let ⟨_nr678, _⟩ := _mb677
+        let out := _nr678
+        let _hm670 := ()
+        let _u679 := _hm670
         if (SudoRt.SEq.beq turns (3 : Int)) then
           do
-            let _mb679 := SudoRt.appendL out (39 : Int)
-            let ⟨_nr680, _⟩ := _mb679
-            let out := _nr680
-            let _hm669 := ()
-            let _u681 := _hm669
+            let _mb681 := SudoRt.appendL out (39 : Int)
+            let ⟨_nr682, _⟩ := _mb681
+            let out := _nr682
+            let _hm671 := ()
+            let _u683 := _hm671
             pure out
         else
           do
@@ -2008,11 +2020,11 @@ def move_name (face : Int) (turns : Int) : Except SudoRt.Trap (Array (Int)) :=
       do
         if (SudoRt.SEq.beq turns (3 : Int)) then
           do
-            let _mb683 := SudoRt.appendL out (39 : Int)
-            let ⟨_nr684, _⟩ := _mb683
-            let out := _nr684
-            let _hm669 := ()
-            let _u685 := _hm669
+            let _mb685 := SudoRt.appendL out (39 : Int)
+            let ⟨_nr686, _⟩ := _mb685
+            let out := _nr686
+            let _hm671 := ()
+            let _u687 := _hm671
             pure out
         else
           do
@@ -2020,14 +2032,19 @@ def move_name (face : Int) (turns : Int) : Except SudoRt.Trap (Array (Int)) :=
 
 def push_step (s : Scramble) (kind : Array (Int)) (move : Array (Int)) (nybble : Array (Int)) (block : Int) («at» : Int) (up : Array (Int)) (front : Array (Int)) : Except SudoRt.Trap (Scramble) :=
   do
-    let _t687 ← facelets_of (s).sudo_8Scramble_4cube
-    let _mb688 := SudoRt.appendL (s).sudo_8Scramble_5steps ({ sudo_4Step_4kind := kind, sudo_4Step_4move := move, sudo_4Step_6nybble := nybble, sudo_4Step_5block := block, sudo_4Step_5index := «at», sudo_4Step_2up := up, sudo_4Step_5front := front, sudo_4Step_8facelets := _t687 } : Step)
-    let ⟨_nr689, _⟩ := _mb688
-    let _t690 := { s with sudo_8Scramble_5steps := _nr689 }
-    let s := _t690
-    let _hm686 := ()
-    let _u691 := _hm686
-    pure s
+    if (s).sudo_8Scramble_6traced then
+      do
+        let _t689 ← facelets_of (s).sudo_8Scramble_4cube
+        let _mb690 := SudoRt.appendL (s).sudo_8Scramble_5steps ({ sudo_4Step_4kind := kind, sudo_4Step_4move := move, sudo_4Step_6nybble := nybble, sudo_4Step_5block := block, sudo_4Step_5index := «at», sudo_4Step_2up := up, sudo_4Step_5front := front, sudo_4Step_8facelets := _t689 } : Step)
+        let ⟨_nr691, _⟩ := _mb690
+        let _t692 := { s with sudo_8Scramble_5steps := _nr691 }
+        let s := _t692
+        let _hm688 := ()
+        let _u693 := _hm688
+        pure s
+    else
+      do
+        pure s
 
 def blank : Except SudoRt.Trap (Array (Int)) :=
   do
@@ -2038,16 +2055,16 @@ def is_center (c : Cubie) : Except SudoRt.Trap (Bool) :=
     let zeros := (0 : Int)
     if (SudoRt.SEq.beq (c).sudo_5Cubie_1x (0 : Int)) then
       do
-        let _t693 ← SudoRt.addI zeros (1 : Int)
-        let zeros := _t693
+        let _t695 ← SudoRt.addI zeros (1 : Int)
+        let zeros := _t695
         if (SudoRt.SEq.beq (c).sudo_5Cubie_1y (0 : Int)) then
           do
-            let _t695 ← SudoRt.addI zeros (1 : Int)
-            let zeros := _t695
+            let _t697 ← SudoRt.addI zeros (1 : Int)
+            let zeros := _t697
             if (SudoRt.SEq.beq (c).sudo_5Cubie_1z (0 : Int)) then
               do
-                let _t697 ← SudoRt.addI zeros (1 : Int)
-                let zeros := _t697
+                let _t699 ← SudoRt.addI zeros (1 : Int)
+                let zeros := _t699
                 pure (SudoRt.SEq.beq zeros (2 : Int))
             else
               do
@@ -2056,8 +2073,8 @@ def is_center (c : Cubie) : Except SudoRt.Trap (Bool) :=
           do
             if (SudoRt.SEq.beq (c).sudo_5Cubie_1z (0 : Int)) then
               do
-                let _t701 ← SudoRt.addI zeros (1 : Int)
-                let zeros := _t701
+                let _t703 ← SudoRt.addI zeros (1 : Int)
+                let zeros := _t703
                 pure (SudoRt.SEq.beq zeros (2 : Int))
             else
               do
@@ -2066,12 +2083,12 @@ def is_center (c : Cubie) : Except SudoRt.Trap (Bool) :=
       do
         if (SudoRt.SEq.beq (c).sudo_5Cubie_1y (0 : Int)) then
           do
-            let _t705 ← SudoRt.addI zeros (1 : Int)
-            let zeros := _t705
+            let _t707 ← SudoRt.addI zeros (1 : Int)
+            let zeros := _t707
             if (SudoRt.SEq.beq (c).sudo_5Cubie_1z (0 : Int)) then
               do
-                let _t707 ← SudoRt.addI zeros (1 : Int)
-                let zeros := _t707
+                let _t709 ← SudoRt.addI zeros (1 : Int)
+                let zeros := _t709
                 pure (SudoRt.SEq.beq zeros (2 : Int))
             else
               do
@@ -2080,8 +2097,8 @@ def is_center (c : Cubie) : Except SudoRt.Trap (Bool) :=
           do
             if (SudoRt.SEq.beq (c).sudo_5Cubie_1z (0 : Int)) then
               do
-                let _t711 ← SudoRt.addI zeros (1 : Int)
-                let zeros := _t711
+                let _t713 ← SudoRt.addI zeros (1 : Int)
+                let zeros := _t713
                 pure (SudoRt.SEq.beq zeros (2 : Int))
             else
               do
@@ -2118,25 +2135,25 @@ def has_color (c : Cubie) (color : Int) : Except SudoRt.Trap (Bool) :=
 
 def center_dir (cube : Array (Cubie)) (color : Int) : Except SudoRt.Trap ((Int) × (Int) × (Int)) :=
   do
-    let _t726 ← SudoRt.subI (SudoRt.listLen cube) (1 : Int)
+    let _t728 ← SudoRt.subI (SudoRt.listLen cube) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t726
+    let _toV := _t728
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init728 := _fromV
-    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Int) × (Int)) _init728 fuel (fun σ =>
+    let _init730 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Int) × (Int)) _init730 fuel (fun σ =>
     let i := σ
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := (Int) × (Int) × (Int)) i)
       else
         match ← ((do
-  let _t721 ← SudoRt.atL cube i
-  let c := _t721
-  let _t722 ← is_center c
-  let _t723 ← (if _t722 then (do
-  let _t724 ← has_color c color
-  pure _t724) else pure false)
-  if _t723 then
+  let _t723 ← SudoRt.atL cube i
+  let c := _t723
+  let _t724 ← is_center c
+  let _t725 ← (if _t724 then (do
+  let _t726 ← has_color c color
+  pure _t726) else pure false)
+  if _t725 then
     do
       pure (SudoRt.Flow.ret (ρ := (Int) × (Int) × (Int)) ((c).sudo_5Cubie_1x, (c).sudo_5Cubie_1y, (c).sudo_5Cubie_1z))
   else
@@ -2151,84 +2168,62 @@ def center_dir (cube : Array (Cubie)) (color : Int) : Except SudoRt.Trap ((Int) 
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Int) × (Int) × (Int)) i')) (fun σ =>
     do
-      let _as727 ← SudoRt.sudoAssert false 295
+      let _as729 ← SudoRt.sudoAssert false 310
       pure ((0 : Int), (0 : Int), (0 : Int))) (fun r => pure r))
     pure _out
 
 def cross (ax : Int) (ay : Int) (az : Int) (bx : Int) («by» : Int) (bz : Int) : Except SudoRt.Trap ((Int) × (Int) × (Int)) :=
   do
-    let _t729 ← SudoRt.mulI ay bz
-    let _t730 ← SudoRt.mulI az «by»
-    let _t731 ← SudoRt.subI _t729 _t730
-    let _t732 ← SudoRt.mulI az bx
-    let _t733 ← SudoRt.mulI ax bz
-    let _t734 ← SudoRt.subI _t732 _t733
-    let _t735 ← SudoRt.mulI ax «by»
-    let _t736 ← SudoRt.mulI ay bx
-    let _t737 ← SudoRt.subI _t735 _t736
-    pure (_t731, _t734, _t737)
+    let _t731 ← SudoRt.mulI ay bz
+    let _t732 ← SudoRt.mulI az «by»
+    let _t733 ← SudoRt.subI _t731 _t732
+    let _t734 ← SudoRt.mulI az bx
+    let _t735 ← SudoRt.mulI ax bz
+    let _t736 ← SudoRt.subI _t734 _t735
+    let _t737 ← SudoRt.mulI ax «by»
+    let _t738 ← SudoRt.mulI ay bx
+    let _t739 ← SudoRt.subI _t737 _t738
+    pure (_t733, _t736, _t739)
 
-def mul_vec (m : Array (Array (Int))) (x : Int) (y : Int) (z : Int) : Except SudoRt.Trap ((Int) × (Int) × (Int)) :=
+def dot (row : (Int) × (Int) × (Int)) (x : Int) (y : Int) (z : Int) : Except SudoRt.Trap (Int) :=
   do
-    let _t738 ← SudoRt.atL m (0 : Int)
-    let _t739 ← SudoRt.atL _t738 (0 : Int)
-    let _t740 ← SudoRt.mulI _t739 x
-    let _t741 ← SudoRt.atL m (0 : Int)
-    let _t742 ← SudoRt.atL _t741 (1 : Int)
-    let _t743 ← SudoRt.mulI _t742 y
-    let _t744 ← SudoRt.addI _t740 _t743
-    let _t745 ← SudoRt.atL m (0 : Int)
-    let _t746 ← SudoRt.atL _t745 (2 : Int)
-    let _t747 ← SudoRt.mulI _t746 z
-    let _t748 ← SudoRt.addI _t744 _t747
-    let nx := _t748
-    let _t749 ← SudoRt.atL m (1 : Int)
-    let _t750 ← SudoRt.atL _t749 (0 : Int)
-    let _t751 ← SudoRt.mulI _t750 x
-    let _t752 ← SudoRt.atL m (1 : Int)
-    let _t753 ← SudoRt.atL _t752 (1 : Int)
-    let _t754 ← SudoRt.mulI _t753 y
-    let _t755 ← SudoRt.addI _t751 _t754
-    let _t756 ← SudoRt.atL m (1 : Int)
-    let _t757 ← SudoRt.atL _t756 (2 : Int)
-    let _t758 ← SudoRt.mulI _t757 z
-    let _t759 ← SudoRt.addI _t755 _t758
-    let ny := _t759
-    let _t760 ← SudoRt.atL m (2 : Int)
-    let _t761 ← SudoRt.atL _t760 (0 : Int)
-    let _t762 ← SudoRt.mulI _t761 x
-    let _t763 ← SudoRt.atL m (2 : Int)
-    let _t764 ← SudoRt.atL _t763 (1 : Int)
-    let _t765 ← SudoRt.mulI _t764 y
-    let _t766 ← SudoRt.addI _t762 _t765
-    let _t767 ← SudoRt.atL m (2 : Int)
-    let _t768 ← SudoRt.atL _t767 (2 : Int)
-    let _t769 ← SudoRt.mulI _t768 z
-    let _t770 ← SudoRt.addI _t766 _t769
-    let nz := _t770
-    pure (nx, ny, nz)
+    let ⟨a, b, c⟩ := row
+    let _t740 ← SudoRt.mulI a x
+    let _t741 ← SudoRt.mulI b y
+    let _t742 ← SudoRt.addI _t740 _t741
+    let _t743 ← SudoRt.mulI c z
+    let _t744 ← SudoRt.addI _t742 _t743
+    pure _t744
 
-def paint_cubie (x : Int) (y : Int) (z : Int) (m : Array (Array (Int))) (xp : Int) (xn : Int) (yp : Int) (yn : Int) (zp : Int) (zn : Int) (ax : Int) (ay : Int) (az : Int) (color : Int) : Except SudoRt.Trap ((Int) × (Int) × (Int) × (Int) × (Int) × (Int)) :=
+def mul_vec (m : ((Int) × (Int) × (Int)) × ((Int) × (Int) × (Int)) × ((Int) × (Int) × (Int))) (x : Int) (y : Int) (z : Int) : Except SudoRt.Trap ((Int) × (Int) × (Int)) :=
+  do
+    let ⟨r0, r1, r2⟩ := m
+    let _t745 ← dot r0 x y z
+    let _t746 ← dot r1 x y z
+    let _t747 ← dot r2 x y z
+    pure (_t745, _t746, _t747)
+
+def paint_cubie (x : Int) (y : Int) (z : Int) (m : ((Int) × (Int) × (Int)) × ((Int) × (Int) × (Int)) × ((Int) × (Int) × (Int))) (xp : Int) (xn : Int) (yp : Int) (yn : Int) (zp : Int) (zn : Int) (ax : Int) (ay : Int) (az : Int) (color : Int) : Except SudoRt.Trap ((Int) × (Int) × (Int) × (Int) × (Int) × (Int)) :=
   do
     if (SudoRt.SEq.beq color (0 : Int)) then
       do
         pure (xp, xn, yp, yn, zp, zn)
     else
       do
-        let _t772 ← mul_vec m ax ay az
-        let ⟨rx, ry, rz⟩ := _t772
-        let _t773 ← write_axis xp xn yp yn zp zn rx ry rz color
-        pure _t773
+        let _t749 ← mul_vec m ax ay az
+        let ⟨rx, ry, rz⟩ := _t749
+        let _t750 ← write_axis xp xn yp yn zp zn rx ry rz color
+        pure _t750
 
-def «apply_matrix» (cube : Array (Cubie)) (m : Array (Array (Int))) : Except SudoRt.Trap (Array (Cubie)) :=
+def «apply_matrix» (cube : Array (Cubie)) (m : ((Int) × (Int) × (Int)) × ((Int) × (Int) × (Int)) × ((Int) × (Int) × (Int))) : Except SudoRt.Trap (Array (Cubie)) :=
   do
     let out := (#[] : Array (Cubie))
-    let _t791 ← SudoRt.subI (SudoRt.listLen cube) (1 : Int)
+    let _t768 ← SudoRt.subI (SudoRt.listLen cube) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t791
+    let _toV := _t768
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init792 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Cubie)) _init792 fuel (fun σ =>
+    let _init769 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Cubie)) _init769 fuel (fun σ =>
     let i := σ.1
     let out := σ.2
     do
@@ -2236,36 +2231,36 @@ def «apply_matrix» (cube : Array (Cubie)) (m : Array (Array (Int))) : Except S
         pure (SudoRt.Flow.brk (ρ := Array (Cubie)) (i, out))
       else
         match ← ((do
-  let _t776 ← SudoRt.atL cube i
-  let c := _t776
-  let _t777 ← mul_vec m (c).sudo_5Cubie_1x (c).sudo_5Cubie_1y (c).sudo_5Cubie_1z
-  let ⟨nx, ny, nz⟩ := _t777
+  let _t753 ← SudoRt.atL cube i
+  let c := _t753
+  let _t754 ← mul_vec m (c).sudo_5Cubie_1x (c).sudo_5Cubie_1y (c).sudo_5Cubie_1z
+  let ⟨nx, ny, nz⟩ := _t754
   let xp := (0 : Int)
   let xn := (0 : Int)
   let yp := (0 : Int)
   let yn := (0 : Int)
   let zp := (0 : Int)
   let zn := (0 : Int)
-  let _t778 ← paint_cubie nx ny nz m xp xn yp yn zp zn (1 : Int) (0 : Int) (0 : Int) (c).sudo_5Cubie_2xp
-  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t778
-  let _t779 ← SudoRt.negI (1 : Int)
-  let _t780 ← paint_cubie nx ny nz m xp xn yp yn zp zn _t779 (0 : Int) (0 : Int) (c).sudo_5Cubie_2xn
-  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t780
-  let _t781 ← paint_cubie nx ny nz m xp xn yp yn zp zn (0 : Int) (1 : Int) (0 : Int) (c).sudo_5Cubie_2yp
-  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t781
-  let _t782 ← SudoRt.negI (1 : Int)
-  let _t783 ← paint_cubie nx ny nz m xp xn yp yn zp zn (0 : Int) _t782 (0 : Int) (c).sudo_5Cubie_2yn
-  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t783
-  let _t784 ← paint_cubie nx ny nz m xp xn yp yn zp zn (0 : Int) (0 : Int) (1 : Int) (c).sudo_5Cubie_2zp
-  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t784
-  let _t785 ← SudoRt.negI (1 : Int)
-  let _t786 ← paint_cubie nx ny nz m xp xn yp yn zp zn (0 : Int) (0 : Int) _t785 (c).sudo_5Cubie_2zn
-  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t786
-  let _mb787 := SudoRt.appendL out ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
-  let ⟨_nr788, _⟩ := _mb787
-  let out := _nr788
-  let _hm774 := ()
-  let _u789 := _hm774
+  let _t755 ← paint_cubie nx ny nz m xp xn yp yn zp zn (1 : Int) (0 : Int) (0 : Int) (c).sudo_5Cubie_2xp
+  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t755
+  let _t756 ← SudoRt.negI (1 : Int)
+  let _t757 ← paint_cubie nx ny nz m xp xn yp yn zp zn _t756 (0 : Int) (0 : Int) (c).sudo_5Cubie_2xn
+  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t757
+  let _t758 ← paint_cubie nx ny nz m xp xn yp yn zp zn (0 : Int) (1 : Int) (0 : Int) (c).sudo_5Cubie_2yp
+  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t758
+  let _t759 ← SudoRt.negI (1 : Int)
+  let _t760 ← paint_cubie nx ny nz m xp xn yp yn zp zn (0 : Int) _t759 (0 : Int) (c).sudo_5Cubie_2yn
+  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t760
+  let _t761 ← paint_cubie nx ny nz m xp xn yp yn zp zn (0 : Int) (0 : Int) (1 : Int) (c).sudo_5Cubie_2zp
+  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t761
+  let _t762 ← SudoRt.negI (1 : Int)
+  let _t763 ← paint_cubie nx ny nz m xp xn yp yn zp zn (0 : Int) (0 : Int) _t762 (c).sudo_5Cubie_2zn
+  let ⟨xp, xn, yp, yn, zp, zn⟩ := _t763
+  let _mb764 := SudoRt.appendL out ({ sudo_5Cubie_1x := nx, sudo_5Cubie_1y := ny, sudo_5Cubie_1z := nz, sudo_5Cubie_2xp := xp, sudo_5Cubie_2xn := xn, sudo_5Cubie_2yp := yp, sudo_5Cubie_2yn := yn, sudo_5Cubie_2zp := zp, sudo_5Cubie_2zn := zn } : Cubie)
+  let ⟨_nr765, _⟩ := _mb764
+  let out := _nr765
+  let _hm751 := ()
+  let _u766 := _hm751
   pure (SudoRt.Flow.cont (ρ := Array (Cubie)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Cubie)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Cubie)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Cubie)) (i, _fs))
@@ -2282,86 +2277,69 @@ def «apply_matrix» (cube : Array (Cubie)) (m : Array (Array (Int))) : Except S
 
 def reorient (cube : Array (Cubie)) (up_color : Int) (front_color : Int) : Except SudoRt.Trap (Array (Cubie)) :=
   do
-    let _t796 ← center_dir cube up_color
-    let ⟨ux, uy, uz⟩ := _t796
-    let _t797 ← center_dir cube front_color
-    let ⟨px, py, pz⟩ := _t797
-    let _t799 ← (if (SudoRt.SEq.beq ux (0 : Int)) then (do
+    let _t770 ← center_dir cube up_color
+    let ⟨ux, uy, uz⟩ := _t770
+    let _t771 ← center_dir cube front_color
+    let ⟨px, py, pz⟩ := _t771
+    let _t773 ← (if (SudoRt.SEq.beq ux (0 : Int)) then (do
   pure (SudoRt.SEq.beq uy (1 : Int))) else pure false)
-    let _t801 ← (if _t799 then (do
+    let _t775 ← (if _t773 then (do
   pure (SudoRt.SEq.beq uz (0 : Int))) else pure false)
-    let _t803 ← (if _t801 then (do
+    let _t777 ← (if _t775 then (do
   pure (SudoRt.SEq.beq px (0 : Int))) else pure false)
-    let _t805 ← (if _t803 then (do
+    let _t779 ← (if _t777 then (do
   pure (SudoRt.SEq.beq py (0 : Int))) else pure false)
-    let _t807 ← (if _t805 then (do
+    let _t781 ← (if _t779 then (do
   pure (SudoRt.SEq.beq pz (1 : Int))) else pure false)
-    let seated := _t807
+    let seated := _t781
     if seated then
       do
         pure cube
     else
       do
-        let _t809 ← cross ux uy uz px py pz
-        let ⟨vx, vy, vz⟩ := _t809
-        let m := (#[] : Array (Array (Int)))
-        let _mb810 := SudoRt.appendL m (#[vx, vy, vz] : Array (Int))
-        let ⟨_nr811, _⟩ := _mb810
-        let m := _nr811
-        let _hm793 := ()
-        let _u812 := _hm793
-        let _mb813 := SudoRt.appendL m (#[ux, uy, uz] : Array (Int))
-        let ⟨_nr814, _⟩ := _mb813
-        let m := _nr814
-        let _hm794 := ()
-        let _u815 := _hm794
-        let _mb816 := SudoRt.appendL m (#[px, py, pz] : Array (Int))
-        let ⟨_nr817, _⟩ := _mb816
-        let m := _nr817
-        let _hm795 := ()
-        let _u818 := _hm795
-        let _t819 ← «apply_matrix» cube m
-        pure _t819
+        let _t783 ← cross ux uy uz px py pz
+        let ⟨vx, vy, vz⟩ := _t783
+        let _t784 ← «apply_matrix» cube ((vx, vy, vz), (ux, uy, uz), (px, py, pz))
+        pure _t784
 
-def «do_move» (s : Scramble) (face : Int) (turns : Int) (nybble : Array (Int)) (block : Int) («at» : Int) : Except SudoRt.Trap (Scramble) :=
+def «do_move» (s : Scramble) (face : Int) (turns : Int) (nybble : Int) (block : Int) («at» : Int) : Except SudoRt.Trap (Scramble) :=
   do
-    let _t820 ← «apply_turns» (s).sudo_8Scramble_4cube face turns
-    let _t821 := { s with sudo_8Scramble_4cube := _t820 }
-    let s := _t821
-    let _t822 ← move_name face turns
-    let _t823 ← blank
-    let _t824 ← blank
-    let _io825 ← push_step s (#[109, 111, 118, 101] : Array Int) _t822 nybble block «at» _t823 _t824
-    let s := _io825
+    let _t785 ← «apply_turns» (s).sudo_8Scramble_4cube face turns
+    let _t786 := { s with sudo_8Scramble_4cube := _t785 }
+    let s := _t786
+    let _t787 ← move_name face turns
+    let _t788 ← hex_digit nybble
+    let _t789 ← blank
+    let _t790 ← blank
+    let _io791 ← push_step s (#[109, 111, 118, 101] : Array Int) _t787 _t788 block «at» _t789 _t790
+    let s := _io791
     pure s
 
 def «do_rule» (s : Scramble) (block : Int) : Except SudoRt.Trap (Scramble) :=
   do
-    let _t826 ← cubie_at (s).sudo_8Scramble_4cube (1 : Int) (1 : Int) (1 : Int)
-    let _t827 ← SudoRt.atL (s).sudo_8Scramble_4cube _t826
-    let c := _t827
+    let _t792 ← cubie_at (s).sudo_8Scramble_4cube (1 : Int) (1 : Int) (1 : Int)
+    let _t793 ← SudoRt.atL (s).sudo_8Scramble_4cube _t792
+    let c := _t793
     let up := (c).sudo_5Cubie_2yp
     let front := (c).sudo_5Cubie_2zp
-    let _t828 ← reorient (s).sudo_8Scramble_4cube up front
-    let _t829 := { s with sudo_8Scramble_4cube := _t828 }
-    let s := _t829
-    let _t830 ← blank
-    let _t831 ← blank
-    let _t832 ← letter up
-    let _t833 ← letter front
-    let _io834 ← push_step s (#[114, 117, 108, 101, 66] : Array Int) _t830 _t831 block (0 : Int) _t832 _t833
-    let s := _io834
+    let _t794 ← reorient (s).sudo_8Scramble_4cube up front
+    let _t795 := { s with sudo_8Scramble_4cube := _t794 }
+    let s := _t795
+    let _t796 ← blank
+    let _t797 ← blank
+    let _t798 ← letter up
+    let _t799 ← letter front
+    let _io800 ← push_step s (#[114, 117, 108, 101, 66] : Array Int) _t796 _t797 block (0 : Int) _t798 _t799
+    let s := _io800
     pure s
 
-def «apply_v1_block» (s : Scramble) (ny : Array (Int)) (block : Int) : Except SudoRt.Trap (Scramble) :=
+def «apply_v1_block» (s : Scramble) (ny : Array (Int)) (base : Int) (block : Int) : Except SudoRt.Trap (Scramble) :=
   do
-    let _t835 ← SudoRt.mulI block (8 : Int)
-    let base := _t835
     let _fromV := (0 : Int)
     let _toV := (7 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init844 := (_fromV, s)
-    let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init844 fuel (fun σ =>
+    let _init808 := (_fromV, s)
+    let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init808 fuel (fun σ =>
     let k := σ.1
     let s := σ.2
     do
@@ -2369,14 +2347,13 @@ def «apply_v1_block» (s : Scramble) (ny : Array (Int)) (block : Int) : Except 
         pure (SudoRt.Flow.brk (ρ := Scramble) (k, s))
       else
         match ← ((do
-  let _t837 ← SudoRt.addI base k
-  let _t838 ← SudoRt.atL ny _t837
-  let n := _t838
-  let _t839 ← SudoRt.atL v1_face n
-  let _t840 ← SudoRt.atL v1_turns n
-  let _t841 ← hex_digit n
-  let _io842 ← «do_move» s _t839 _t840 _t841 block k
-  let s := _io842
+  let _t802 ← SudoRt.addI base k
+  let _t803 ← SudoRt.atL ny _t802
+  let n := _t803
+  let _t804 ← SudoRt.atL v1_face n
+  let _t805 ← SudoRt.atL v1_turns n
+  let _io806 ← «do_move» s _t804 _t805 n block k
+  let s := _io806
   pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (k, _fs))
@@ -2388,332 +2365,45 @@ def «apply_v1_block» (s : Scramble) (ny : Array (Int)) (block : Int) : Except 
               pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
     let s := σ.2
     do
-      let _io843 ← «do_rule» s block
-      let s := _io843
+      let _io807 ← «do_rule» s block
+      let s := _io807
       pure s) (fun r => pure r))
     pure _out
 
 def «apply_v2_symbol» (s : Scramble) (n : Int) (block : Int) : Except SudoRt.Trap (Scramble) :=
   do
-    let _t845 ← hex_digit n
-    let shown := _t845
-    let _t846 ← SudoRt.atL v2_a n
-    let _io847 ← «do_move» s _t846 (1 : Int) shown block (0 : Int)
-    let s := _io847
-    let _t848 ← SudoRt.atL v2_b n
-    let _io849 ← «do_move» s _t848 (1 : Int) shown block (1 : Int)
-    let s := _io849
-    let _io850 ← «do_rule» s block
-    let s := _io850
+    let _t809 ← SudoRt.atL v2_a n
+    let _io810 ← «do_move» s _t809 (1 : Int) n block (0 : Int)
+    let s := _io810
+    let _t811 ← SudoRt.atL v2_b n
+    let _io812 ← «do_move» s _t811 (1 : Int) n block (1 : Int)
+    let s := _io812
+    let _io813 ← «do_rule» s block
+    let s := _io813
     pure s
 
-def nybbles_of (message : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
+def pad (s : Scramble) : Except SudoRt.Trap (Scramble) :=
   do
-    let out := (#[] : Array (Int))
-    let _t864 ← SudoRt.subI (SudoRt.listLen message) (1 : Int)
-    let _fromV := (0 : Int)
-    let _toV := _t864
-    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init865 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init865 fuel (fun σ =>
-    let i := σ.1
-    let out := σ.2
-    do
-      if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
-      else
-        match ← ((do
-  let _t854 ← SudoRt.atL message i
-  let b := _t854
-  let _t855 ← SudoRt.divI b (16 : Int)
-  let _mb856 := SudoRt.appendL out _t855
-  let ⟨_nr857, _⟩ := _mb856
-  let out := _nr857
-  let _hm851 := ()
-  let _u858 := _hm851
-  let _t859 ← SudoRt.modI b (16 : Int)
-  let _mb860 := SudoRt.appendL out _t859
-  let ⟨_nr861, _⟩ := _mb860
-  let out := _nr861
-  let _hm852 := ()
-  let _u862 := _hm852
-  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-        | .cont _fs => do
-            if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-            else do
-              let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
-    let out := σ.2
-    do
-      pure out) (fun r => pure r))
-    pure _out
-
-def pad_tape (ny : Array (Int)) (version : Int) : Except SudoRt.Trap (Array (Int)) :=
-  do
-    let out := (#[] : Array (Int))
-    let _t877 ← SudoRt.subI (SudoRt.listLen ny) (1 : Int)
-    let _fromV := (0 : Int)
-    let _toV := _t877
-    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init913 := (_fromV, out)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init913 fuel (fun σ =>
-    let i := σ.1
-    let out := σ.2
-    do
-      if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
-      else
-        match ← ((do
-  let _t872 ← SudoRt.atL ny i
-  let _mb873 := SudoRt.appendL out _t872
-  let ⟨_nr874, _⟩ := _mb873
-  let out := _nr874
-  let _hm866 := ()
-  let _u875 := _hm866
-  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-        | .cont _fs => do
-            if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-            else do
-              let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
-    let out := σ.2
-    do
-      let _mb878 := SudoRt.appendL out (8 : Int)
-      let ⟨_nr879, _⟩ := _mb878
-      let out := _nr879
-      let _hm867 := ()
-      let _u880 := _hm867
-      if (SudoRt.SEq.beq version (1 : Int)) then
-        do
-          let _t883 ← SudoRt.modI (SudoRt.listLen out) (8 : Int)
-          let _t884 ← SudoRt.subI (8 : Int) _t883
-          let _t885 ← SudoRt.modI _t884 (8 : Int)
-          let n := _t885
-          let _t891 ← SudoRt.subI n (1 : Int)
-          let _fromV := (0 : Int)
-          let _toV := _t891
-          let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-          let _init902 := (_fromV, out)
-          let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init902 fuel (fun σ =>
-    let i := σ.1
-    let out := σ.2
-    do
-      if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
-      else
-        match ← ((do
-  let _t887 ← SudoRt.atL tape_f i
-  let _mb888 := SudoRt.appendL out _t887
-  let ⟨_nr889, _⟩ := _mb888
-  let out := _nr889
-  let _hm868 := ()
-  let _u890 := _hm868
-  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-        | .cont _fs => do
-            if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-            else do
-              let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
-    let out := σ.2
-    do
-      let _t893 ← SudoRt.subI (24 : Int) (SudoRt.listLen out)
-      let remaining := _t893
-      let _t900 ← SudoRt.subI remaining (1 : Int)
-      let _fromV := (0 : Int)
-      let _toV := _t900
-      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init901 := (_fromV, out)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init901 fuel (fun σ =>
-    let i := σ.1
-    let out := σ.2
-    do
-      if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
-      else
-        match ← ((do
-  let _t895 ← SudoRt.modI i (8 : Int)
-  let _t896 ← SudoRt.atL tape_f _t895
-  let _mb897 := SudoRt.appendL out _t896
-  let ⟨_nr898, _⟩ := _mb897
-  let out := _nr898
-  let _hm869 := ()
-  let _u899 := _hm869
-  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-        | .cont _fs => do
-            if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
-            else do
-              let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
-    let out := σ.2
-    do
-      pure out) (fun r => pure r))
-      pure _out) (fun r => pure r))
-          pure _out
-      else
-        do
-          let _t904 ← SudoRt.subI (12 : Int) (SudoRt.listLen out)
-          let remaining := _t904
-          let _t911 ← SudoRt.subI remaining (1 : Int)
-          let _fromV := (0 : Int)
-          let _toV := _t911
-          let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-          let _init912 := (_fromV, out)
-          let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init912 fuel (fun σ =>
-    let k := σ.1
-    let out := σ.2
-    do
-      if k > _toV then
-        pure (SudoRt.Flow.brk (ρ := Array (Int)) (k, out))
-      else
-        match ← ((do
-  let _t906 ← SudoRt.modI k (4 : Int)
-  let _t907 ← SudoRt.atL tape_i _t906
-  let _mb908 := SudoRt.appendL out _t907
-  let ⟨_nr909, _⟩ := _mb908
-  let out := _nr909
-  let _hm870 := ()
-  let _u910 := _hm870
-  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (k, _fs))
-        | .cont _fs => do
-            if k == _toV then
-              pure (SudoRt.Flow.brk (ρ := Array (Int)) (k, _fs))
-            else do
-              let i' ← SudoRt.addI k (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
-    let out := σ.2
-    do
-      pure out) (fun r => pure r))
-          pure _out) (fun r => pure r))
-    pure _out
-
-def «apply_ready» (s : Scramble) : Except SudoRt.Trap (Scramble) :=
-  do
-    let _t914 ← nybbles_of (s).sudo_8Scramble_7message
-    let ny := _t914
+    let _t818 ← SudoRt.addI (s).sudo_8Scramble_5total (1 : Int)
+    let n := _t818
+    let _mb819 := SudoRt.appendL (s).sudo_8Scramble_7pending (8 : Int)
+    let ⟨_nr820, _⟩ := _mb819
+    let _t821 := { s with sudo_8Scramble_7pending := _nr820 }
+    let s := _t821
+    let _hm814 := ()
+    let _u822 := _hm814
     if (SudoRt.SEq.beq (s).sudo_8Scramble_7version (1 : Int)) then
       do
-        let _t917 ← SudoRt.subI (SudoRt.listLen ny) (s).sudo_8Scramble_9processed
-        let _t918 ← SudoRt.divI _t917 (8 : Int)
-        let nready := _t918
-        let _t924 ← SudoRt.subI nready (1 : Int)
+        let _t824 ← SudoRt.modI n (8 : Int)
+        let _t825 ← SudoRt.subI (8 : Int) _t824
+        let _t826 ← SudoRt.modI _t825 (8 : Int)
+        let k := _t826
+        let _t833 ← SudoRt.subI k (1 : Int)
         let _fromV := (0 : Int)
-        let _toV := _t924
+        let _toV := _t833
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init925 := (_fromV, s)
-        let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init925 fuel (fun σ =>
-    let b := σ.1
-    let s := σ.2
-    do
-      if b > _toV then
-        pure (SudoRt.Flow.brk (ρ := Scramble) (b, s))
-      else
-        match ← ((do
-  let _t920 ← SudoRt.divI (s).sudo_8Scramble_9processed (8 : Int)
-  let _io921 ← «apply_v1_block» s ny _t920
-  let s := _io921
-  let _t922 ← SudoRt.addI (s).sudo_8Scramble_9processed (8 : Int)
-  let _t923 := { s with sudo_8Scramble_9processed := _t922 }
-  let s := _t923
-  pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (b, _fs))
-        | .cont _fs => do
-            if b == _toV then
-              pure (SudoRt.Flow.brk (ρ := Scramble) (b, _fs))
-            else do
-              let i' ← SudoRt.addI b (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
-    let s := σ.2
-    do
-      pure s) (fun r => pure r))
-        pure _out
-    else
-      do
-        let _t927 ← SudoRt.subI (SudoRt.listLen ny) (s).sudo_8Scramble_9processed
-        let nleft := _t927
-        let _t933 ← SudoRt.subI nleft (1 : Int)
-        let _fromV := (0 : Int)
-        let _toV := _t933
-        let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init934 := (_fromV, s)
-        let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init934 fuel (fun σ =>
-    let k := σ.1
-    let s := σ.2
-    do
-      if k > _toV then
-        pure (SudoRt.Flow.brk (ρ := Scramble) (k, s))
-      else
-        match ← ((do
-  let _t929 ← SudoRt.atL ny (s).sudo_8Scramble_9processed
-  let _io930 ← «apply_v2_symbol» s _t929 (s).sudo_8Scramble_9processed
-  let s := _io930
-  let _t931 ← SudoRt.addI (s).sudo_8Scramble_9processed (1 : Int)
-  let _t932 := { s with sudo_8Scramble_9processed := _t931 }
-  let s := _t932
-  pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (k, _fs))
-        | .cont _fs => do
-            if k == _toV then
-              pure (SudoRt.Flow.brk (ρ := Scramble) (k, _fs))
-            else do
-              let i' ← SudoRt.addI k (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
-    let s := σ.2
-    do
-      pure s) (fun r => pure r))
-        pure _out
-
-def update (s : Scramble) (message : Array (Int)) : Except SudoRt.Trap (Scramble) :=
-  do
-    let _as936 ← SudoRt.sudoAssert (!( (s).sudo_8Scramble_4done )) 411
-    let _t944 ← SudoRt.subI (SudoRt.listLen message) (1 : Int)
-    let _fromV := (0 : Int)
-    let _toV := _t944
-    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init955 := _fromV
-    let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init955 fuel (fun σ =>
-    let i := σ
-    do
-      if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := Scramble) i)
-      else
-        match ← ((do
-  let _t938 ← SudoRt.atL message i
-  let b := _t938
-  let _t940 ← (if (decide (b ≥ (0 : Int))) then (do
-  pure (decide (b ≤ (255 : Int)))) else pure false)
-  let _as942 ← SudoRt.sudoAssert _t940 414
-  pure (SudoRt.Flow.cont (ρ := Scramble) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) i)
-        | .cont _fs => do
-            if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := Scramble) i)
-            else do
-              let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := Scramble) i')) (fun σ =>
-    do
-      let _t952 ← SudoRt.subI (SudoRt.listLen message) (1 : Int)
-      let _fromV := (0 : Int)
-      let _toV := _t952
-      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init954 := (_fromV, s)
-      let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init954 fuel (fun σ =>
+        let _init845 := (_fromV, s)
+        let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init845 fuel (fun σ =>
     let i := σ.1
     let s := σ.2
     do
@@ -2721,13 +2411,13 @@ def update (s : Scramble) (message : Array (Int)) : Except SudoRt.Trap (Scramble
         pure (SudoRt.Flow.brk (ρ := Scramble) (i, s))
       else
         match ← ((do
-  let _t946 ← SudoRt.atL message i
-  let _mb947 := SudoRt.appendL (s).sudo_8Scramble_7message _t946
-  let ⟨_nr948, _⟩ := _mb947
-  let _t949 := { s with sudo_8Scramble_7message := _nr948 }
-  let s := _t949
-  let _hm935 := ()
-  let _u950 := _hm935
+  let _t828 ← SudoRt.atL tape_f i
+  let _mb829 := SudoRt.appendL (s).sudo_8Scramble_7pending _t828
+  let ⟨_nr830, _⟩ := _mb829
+  let _t831 := { s with sudo_8Scramble_7pending := _nr830 }
+  let s := _t831
+  let _hm815 := ()
+  let _u832 := _hm815
   pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
@@ -2739,8 +2429,269 @@ def update (s : Scramble) (message : Array (Int)) : Except SudoRt.Trap (Scramble
               pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
     let s := σ.2
     do
-      let _io953 ← «apply_ready» s
-      let s := _io953
+      let _t841 ← SudoRt.addI n k
+      let _t842 ← SudoRt.subI (24 : Int) _t841
+      let _t843 ← SudoRt.subI _t842 (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t843
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init844 := (_fromV, s)
+      let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init844 fuel (fun σ =>
+    let i := σ.1
+    let s := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Scramble) (i, s))
+      else
+        match ← ((do
+  let _t835 ← SudoRt.modI i (8 : Int)
+  let _t836 ← SudoRt.atL tape_f _t835
+  let _mb837 := SudoRt.appendL (s).sudo_8Scramble_7pending _t836
+  let ⟨_nr838, _⟩ := _mb837
+  let _t839 := { s with sudo_8Scramble_7pending := _nr838 }
+  let s := _t839
+  let _hm816 := ()
+  let _u840 := _hm816
+  pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
+    let s := σ.2
+    do
+      pure s) (fun r => pure r))
+      pure _out) (fun r => pure r))
+        pure _out
+    else
+      do
+        let _t853 ← SudoRt.subI (12 : Int) n
+        let _t854 ← SudoRt.subI _t853 (1 : Int)
+        let _fromV := (0 : Int)
+        let _toV := _t854
+        let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+        let _init855 := (_fromV, s)
+        let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init855 fuel (fun σ =>
+    let i := σ.1
+    let s := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Scramble) (i, s))
+      else
+        match ← ((do
+  let _t847 ← SudoRt.modI i (4 : Int)
+  let _t848 ← SudoRt.atL tape_i _t847
+  let _mb849 := SudoRt.appendL (s).sudo_8Scramble_7pending _t848
+  let ⟨_nr850, _⟩ := _mb849
+  let _t851 := { s with sudo_8Scramble_7pending := _nr850 }
+  let s := _t851
+  let _hm817 := ()
+  let _u852 := _hm817
+  pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
+    let s := σ.2
+    do
+      pure s) (fun r => pure r))
+        pure _out
+
+def «apply_ready» (s : Scramble) : Except SudoRt.Trap (Scramble) :=
+  do
+    let ny := (s).sudo_8Scramble_7pending
+    let rest := (#[] : Array (Int))
+    if (SudoRt.SEq.beq (s).sudo_8Scramble_7version (1 : Int)) then
+      do
+        let _t859 ← SudoRt.divI (SudoRt.listLen ny) (8 : Int)
+        let nready := _t859
+        let _t866 ← SudoRt.subI nready (1 : Int)
+        let _fromV := (0 : Int)
+        let _toV := _t866
+        let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+        let _init877 := (_fromV, s)
+        let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init877 fuel (fun σ =>
+    let b := σ.1
+    let s := σ.2
+    do
+      if b > _toV then
+        pure (SudoRt.Flow.brk (ρ := Scramble) (b, s))
+      else
+        match ← ((do
+  let _t861 ← SudoRt.mulI b (8 : Int)
+  let _t862 ← SudoRt.divI (s).sudo_8Scramble_9processed (8 : Int)
+  let _io863 ← «apply_v1_block» s ny _t861 _t862
+  let s := _io863
+  let _t864 ← SudoRt.addI (s).sudo_8Scramble_9processed (8 : Int)
+  let _t865 := { s with sudo_8Scramble_9processed := _t864 }
+  let s := _t865
+  pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (b, _fs))
+        | .cont _fs => do
+            if b == _toV then
+              pure (SudoRt.Flow.brk (ρ := Scramble) (b, _fs))
+            else do
+              let i' ← SudoRt.addI b (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
+    let s := σ.2
+    do
+      let _t872 ← SudoRt.mulI nready (8 : Int)
+      let _t874 ← SudoRt.subI (SudoRt.listLen ny) (1 : Int)
+      let _fromV := _t872
+      let _toV := _t874
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init876 := (_fromV, rest)
+      let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init876 fuel (fun σ =>
+    let i := σ.1
+    let rest := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Scramble) (i, rest))
+      else
+        match ← ((do
+  let _t868 ← SudoRt.atL ny i
+  let _mb869 := SudoRt.appendL rest _t868
+  let ⟨_nr870, _⟩ := _mb869
+  let rest := _nr870
+  let _hm856 := ()
+  let _u871 := _hm856
+  pure (SudoRt.Flow.cont (ρ := Scramble) rest)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
+    let rest := σ.2
+    do
+      let _t875 := { s with sudo_8Scramble_7pending := rest }
+      let s := _t875
+      pure s) (fun r => pure r))
+      pure _out) (fun r => pure r))
+        pure _out
+    else
+      do
+        let _t884 ← SudoRt.subI (SudoRt.listLen ny) (1 : Int)
+        let _fromV := (0 : Int)
+        let _toV := _t884
+        let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+        let _init886 := (_fromV, s)
+        let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init886 fuel (fun σ =>
+    let k := σ.1
+    let s := σ.2
+    do
+      if k > _toV then
+        pure (SudoRt.Flow.brk (ρ := Scramble) (k, s))
+      else
+        match ← ((do
+  let _t879 ← SudoRt.atL ny k
+  let _io880 ← «apply_v2_symbol» s _t879 (s).sudo_8Scramble_9processed
+  let s := _io880
+  let _t881 ← SudoRt.addI (s).sudo_8Scramble_9processed (1 : Int)
+  let _t882 := { s with sudo_8Scramble_9processed := _t881 }
+  let s := _t882
+  pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (k, _fs))
+        | .cont _fs => do
+            if k == _toV then
+              pure (SudoRt.Flow.brk (ρ := Scramble) (k, _fs))
+            else do
+              let i' ← SudoRt.addI k (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
+    let s := σ.2
+    do
+      let _t885 := { s with sudo_8Scramble_7pending := rest }
+      let s := _t885
+      pure s) (fun r => pure r))
+        pure _out
+
+def update (s : Scramble) (message : Array (Int)) : Except SudoRt.Trap (Scramble) :=
+  do
+    let _as889 ← SudoRt.sudoAssert (!( (s).sudo_8Scramble_4done )) 412
+    let _t897 ← SudoRt.subI (SudoRt.listLen message) (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t897
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init919 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init919 fuel (fun σ =>
+    let i := σ
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Scramble) i)
+      else
+        match ← ((do
+  let _t891 ← SudoRt.atL message i
+  let b := _t891
+  let _t893 ← (if (decide (b ≥ (0 : Int))) then (do
+  pure (decide (b ≤ (255 : Int)))) else pure false)
+  let _as895 ← SudoRt.sudoAssert _t893 415
+  pure (SudoRt.Flow.cont (ρ := Scramble) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) i)
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Scramble) i)
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Scramble) i')) (fun σ =>
+    do
+      let _t912 ← SudoRt.subI (SudoRt.listLen message) (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t912
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init918 := (_fromV, s)
+      let _out ← (SudoRt.runLoopOn (ρ := Scramble) _init918 fuel (fun σ =>
+    let i := σ.1
+    let s := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Scramble) (i, s))
+      else
+        match ← ((do
+  let _t899 ← SudoRt.atL message i
+  let _t900 ← SudoRt.divI _t899 (16 : Int)
+  let _mb901 := SudoRt.appendL (s).sudo_8Scramble_7pending _t900
+  let ⟨_nr902, _⟩ := _mb901
+  let _t903 := { s with sudo_8Scramble_7pending := _nr902 }
+  let s := _t903
+  let _hm887 := ()
+  let _u904 := _hm887
+  let _t905 ← SudoRt.atL message i
+  let _t906 ← SudoRt.modI _t905 (16 : Int)
+  let _mb907 := SudoRt.appendL (s).sudo_8Scramble_7pending _t906
+  let ⟨_nr908, _⟩ := _mb907
+  let _t909 := { s with sudo_8Scramble_7pending := _nr908 }
+  let s := _t909
+  let _hm888 := ()
+  let _u910 := _hm888
+  pure (SudoRt.Flow.cont (ρ := Scramble) s)) : Except SudoRt.Trap (SudoRt.Flow _ (Scramble))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Scramble) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Scramble) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Scramble) (i', _fs))) (fun σ =>
+    let s := σ.2
+    do
+      let _t914 ← SudoRt.mulI (2 : Int) (SudoRt.listLen message)
+      let _t915 ← SudoRt.addI (s).sudo_8Scramble_5total _t914
+      let _t916 := { s with sudo_8Scramble_5total := _t915 }
+      let s := _t916
+      let _io917 ← «apply_ready» s
+      let s := _io917
       pure s) (fun r => pure r))
       pure _out) (fun r => pure r))
     pure _out
@@ -2751,8 +2702,8 @@ def fact (n : Int) : Except SudoRt.Trap (Int) :=
     let _fromV := (2 : Int)
     let _toV := n
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init958 := (_fromV, r)
-    let _out ← (SudoRt.runLoopOn (ρ := Int) _init958 fuel (fun σ =>
+    let _init922 := (_fromV, r)
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init922 fuel (fun σ =>
     let i := σ.1
     let r := σ.2
     do
@@ -2760,8 +2711,8 @@ def fact (n : Int) : Except SudoRt.Trap (Int) :=
         pure (SudoRt.Flow.brk (ρ := Int) (i, r))
       else
         match ← ((do
-  let _t957 ← SudoRt.mulI r i
-  let r := _t957
+  let _t921 ← SudoRt.mulI r i
+  let r := _t921
   pure (SudoRt.Flow.cont (ρ := Int) r)) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Int) (i, _fs))
@@ -2779,12 +2730,12 @@ def fact (n : Int) : Except SudoRt.Trap (Int) :=
 def rank_perm (p : Array (Int)) : Except SudoRt.Trap (Int) :=
   do
     let total := (0 : Int)
-    let _t976 ← SudoRt.subI (SudoRt.listLen p) (1 : Int)
+    let _t940 ← SudoRt.subI (SudoRt.listLen p) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t976
+    let _toV := _t940
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init977 := (_fromV, total)
-    let _out ← (SudoRt.runLoopOn (ρ := Int) _init977 fuel (fun σ =>
+    let _init941 := (_fromV, total)
+    let _out ← (SudoRt.runLoopOn (ρ := Int) _init941 fuel (fun σ =>
     let n := σ.1
     let total := σ.2
     do
@@ -2793,13 +2744,13 @@ def rank_perm (p : Array (Int)) : Except SudoRt.Trap (Int) :=
       else
         match ← ((do
   let inv := (0 : Int)
-  let _t965 ← SudoRt.addI n (1 : Int)
-  let _t967 ← SudoRt.subI (SudoRt.listLen p) (1 : Int)
-  let _fromV := _t965
-  let _toV := _t967
+  let _t929 ← SudoRt.addI n (1 : Int)
+  let _t931 ← SudoRt.subI (SudoRt.listLen p) (1 : Int)
+  let _fromV := _t929
+  let _toV := _t931
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init974 := (_fromV, inv)
-  let _out ← (SudoRt.runLoopOn (ρ := Int) _init974 fuel (fun σ =>
+  let _init938 := (_fromV, inv)
+  let _out ← (SudoRt.runLoopOn (ρ := Int) _init938 fuel (fun σ =>
     let j := σ.1
     let inv := σ.2
     do
@@ -2807,12 +2758,12 @@ def rank_perm (p : Array (Int)) : Except SudoRt.Trap (Int) :=
         pure (SudoRt.Flow.brk (ρ := Int) (j, inv))
       else
         match ← ((do
-  let _t961 ← SudoRt.atL p j
-  let _t962 ← SudoRt.atL p n
-  if (decide (_t961 < _t962)) then
+  let _t925 ← SudoRt.atL p j
+  let _t926 ← SudoRt.atL p n
+  if (decide (_t925 < _t926)) then
     do
-      let _t964 ← SudoRt.addI inv (1 : Int)
-      let inv := _t964
+      let _t928 ← SudoRt.addI inv (1 : Int)
+      let inv := _t928
       pure (SudoRt.Flow.cont (ρ := Int) inv)
   else
     do
@@ -2827,12 +2778,12 @@ def rank_perm (p : Array (Int)) : Except SudoRt.Trap (Int) :=
               pure (SudoRt.Flow.cont (ρ := Int) (i', _fs))) (fun σ =>
     let inv := σ.2
     do
-      let _t969 ← SudoRt.subI (SudoRt.listLen p) (1 : Int)
-      let _t970 ← SudoRt.subI _t969 n
-      let _t971 ← fact _t970
-      let _t972 ← SudoRt.mulI inv _t971
-      let _t973 ← SudoRt.addI total _t972
-      let total := _t973
+      let _t933 ← SudoRt.subI (SudoRt.listLen p) (1 : Int)
+      let _t934 ← SudoRt.subI _t933 n
+      let _t935 ← fact _t934
+      let _t936 ← SudoRt.mulI inv _t935
+      let _t937 ← SudoRt.addI total _t936
+      let total := _t937
       pure (SudoRt.Flow.cont (ρ := Int) total)) (fun r => pure (SudoRt.Flow.ret (ρ := Int) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Int))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Int) r)
@@ -2850,253 +2801,253 @@ def rank_perm (p : Array (Int)) : Except SudoRt.Trap (Int) :=
 
 def has3 (a : Int) (b : Int) (c : Int) (color : Int) : Except SudoRt.Trap (Bool) :=
   do
-    let _t979 ← (if (SudoRt.SEq.beq a color) then pure true else (do
+    let _t943 ← (if (SudoRt.SEq.beq a color) then pure true else (do
   pure (SudoRt.SEq.beq b color)))
-    let _t981 ← (if _t979 then pure true else (do
+    let _t945 ← (if _t943 then pure true else (do
   pure (SudoRt.SEq.beq c color)))
-    pure _t981
+    pure _t945
 
 def corner_piece (a : Int) (b : Int) (c : Int) : Except SudoRt.Trap (Int) :=
   do
-    let _t983 ← has3 a b c (1 : Int)
-    let w := _t983
-    let _t984 ← has3 a b c (2 : Int)
-    let y := _t984
-    let _t985 ← has3 a b c (3 : Int)
-    let r := _t985
-    let _t986 ← has3 a b c (4 : Int)
-    let o := _t986
-    let _t987 ← has3 a b c (5 : Int)
-    let bl := _t987
-    let _t988 ← has3 a b c (6 : Int)
-    let g := _t988
-    let _t989 ← (if w then (do
+    let _t947 ← has3 a b c (1 : Int)
+    let w := _t947
+    let _t948 ← has3 a b c (2 : Int)
+    let y := _t948
+    let _t949 ← has3 a b c (3 : Int)
+    let r := _t949
+    let _t950 ← has3 a b c (4 : Int)
+    let o := _t950
+    let _t951 ← has3 a b c (5 : Int)
+    let bl := _t951
+    let _t952 ← has3 a b c (6 : Int)
+    let g := _t952
+    let _t953 ← (if w then (do
   pure g) else pure false)
-    let _t990 ← (if _t989 then (do
+    let _t954 ← (if _t953 then (do
   pure r) else pure false)
-    if _t990 then
+    if _t954 then
       do
         pure (0 : Int)
     else
       do
-        let _t991 ← (if w then (do
+        let _t955 ← (if w then (do
   pure g) else pure false)
-        let _t992 ← (if _t991 then (do
+        let _t956 ← (if _t955 then (do
   pure o) else pure false)
-        if _t992 then
+        if _t956 then
           do
             pure (1 : Int)
         else
           do
-            let _t993 ← (if w then (do
+            let _t957 ← (if w then (do
   pure bl) else pure false)
-            let _t994 ← (if _t993 then (do
+            let _t958 ← (if _t957 then (do
   pure o) else pure false)
-            if _t994 then
+            if _t958 then
               do
                 pure (2 : Int)
             else
               do
-                let _t995 ← (if w then (do
+                let _t959 ← (if w then (do
   pure bl) else pure false)
-                let _t996 ← (if _t995 then (do
+                let _t960 ← (if _t959 then (do
   pure r) else pure false)
-                if _t996 then
+                if _t960 then
                   do
                     pure (3 : Int)
                 else
                   do
-                    let _t997 ← (if y then (do
+                    let _t961 ← (if y then (do
   pure g) else pure false)
-                    let _t998 ← (if _t997 then (do
+                    let _t962 ← (if _t961 then (do
   pure r) else pure false)
-                    if _t998 then
+                    if _t962 then
                       do
                         pure (4 : Int)
                     else
                       do
-                        let _t999 ← (if y then (do
+                        let _t963 ← (if y then (do
   pure g) else pure false)
-                        let _t1000 ← (if _t999 then (do
+                        let _t964 ← (if _t963 then (do
   pure o) else pure false)
-                        if _t1000 then
+                        if _t964 then
                           do
                             pure (5 : Int)
                         else
                           do
-                            let _t1001 ← (if y then (do
+                            let _t965 ← (if y then (do
   pure bl) else pure false)
-                            let _t1002 ← (if _t1001 then (do
+                            let _t966 ← (if _t965 then (do
   pure o) else pure false)
-                            if _t1002 then
+                            if _t966 then
                               do
                                 pure (6 : Int)
                             else
                               do
-                                let _t1003 ← (if y then (do
+                                let _t967 ← (if y then (do
   pure bl) else pure false)
-                                let _t1004 ← (if _t1003 then (do
+                                let _t968 ← (if _t967 then (do
   pure r) else pure false)
-                                if _t1004 then
+                                if _t968 then
                                   do
                                     pure (7 : Int)
                                 else
                                   do
-                                    let _as1005 ← SudoRt.sudoAssert false 461
+                                    let _as969 ← SudoRt.sudoAssert false 464
                                     pure (0 : Int)
 
 def edge_piece (a : Int) (b : Int) : Except SudoRt.Trap (Int) :=
   do
-    let _t1007 ← (if (SudoRt.SEq.beq a (3 : Int)) then (do
+    let _t971 ← (if (SudoRt.SEq.beq a (3 : Int)) then (do
   pure (SudoRt.SEq.beq b (1 : Int))) else pure false)
-    let _t1009 ← (if _t1007 then pure true else (do
-  let _t1011 ← (if (SudoRt.SEq.beq a (1 : Int)) then (do
+    let _t973 ← (if _t971 then pure true else (do
+  let _t975 ← (if (SudoRt.SEq.beq a (1 : Int)) then (do
   pure (SudoRt.SEq.beq b (3 : Int))) else pure false)
-  pure _t1011))
-    if _t1009 then
+  pure _t975))
+    if _t973 then
       do
         pure (0 : Int)
     else
       do
-        let _t1014 ← (if (SudoRt.SEq.beq a (6 : Int)) then (do
+        let _t978 ← (if (SudoRt.SEq.beq a (6 : Int)) then (do
   pure (SudoRt.SEq.beq b (1 : Int))) else pure false)
-        let _t1016 ← (if _t1014 then pure true else (do
-  let _t1018 ← (if (SudoRt.SEq.beq a (1 : Int)) then (do
+        let _t980 ← (if _t978 then pure true else (do
+  let _t982 ← (if (SudoRt.SEq.beq a (1 : Int)) then (do
   pure (SudoRt.SEq.beq b (6 : Int))) else pure false)
-  pure _t1018))
-        if _t1016 then
+  pure _t982))
+        if _t980 then
           do
             pure (1 : Int)
         else
           do
-            let _t1021 ← (if (SudoRt.SEq.beq a (4 : Int)) then (do
+            let _t985 ← (if (SudoRt.SEq.beq a (4 : Int)) then (do
   pure (SudoRt.SEq.beq b (1 : Int))) else pure false)
-            let _t1023 ← (if _t1021 then pure true else (do
-  let _t1025 ← (if (SudoRt.SEq.beq a (1 : Int)) then (do
+            let _t987 ← (if _t985 then pure true else (do
+  let _t989 ← (if (SudoRt.SEq.beq a (1 : Int)) then (do
   pure (SudoRt.SEq.beq b (4 : Int))) else pure false)
-  pure _t1025))
-            if _t1023 then
+  pure _t989))
+            if _t987 then
               do
                 pure (2 : Int)
             else
               do
-                let _t1028 ← (if (SudoRt.SEq.beq a (5 : Int)) then (do
+                let _t992 ← (if (SudoRt.SEq.beq a (5 : Int)) then (do
   pure (SudoRt.SEq.beq b (1 : Int))) else pure false)
-                let _t1030 ← (if _t1028 then pure true else (do
-  let _t1032 ← (if (SudoRt.SEq.beq a (1 : Int)) then (do
+                let _t994 ← (if _t992 then pure true else (do
+  let _t996 ← (if (SudoRt.SEq.beq a (1 : Int)) then (do
   pure (SudoRt.SEq.beq b (5 : Int))) else pure false)
-  pure _t1032))
-                if _t1030 then
+  pure _t996))
+                if _t994 then
                   do
                     pure (3 : Int)
                 else
                   do
-                    let _t1035 ← (if (SudoRt.SEq.beq a (3 : Int)) then (do
+                    let _t999 ← (if (SudoRt.SEq.beq a (3 : Int)) then (do
   pure (SudoRt.SEq.beq b (2 : Int))) else pure false)
-                    let _t1037 ← (if _t1035 then pure true else (do
-  let _t1039 ← (if (SudoRt.SEq.beq a (2 : Int)) then (do
+                    let _t1001 ← (if _t999 then pure true else (do
+  let _t1003 ← (if (SudoRt.SEq.beq a (2 : Int)) then (do
   pure (SudoRt.SEq.beq b (3 : Int))) else pure false)
-  pure _t1039))
-                    if _t1037 then
+  pure _t1003))
+                    if _t1001 then
                       do
                         pure (4 : Int)
                     else
                       do
-                        let _t1042 ← (if (SudoRt.SEq.beq a (6 : Int)) then (do
+                        let _t1006 ← (if (SudoRt.SEq.beq a (6 : Int)) then (do
   pure (SudoRt.SEq.beq b (2 : Int))) else pure false)
-                        let _t1044 ← (if _t1042 then pure true else (do
-  let _t1046 ← (if (SudoRt.SEq.beq a (2 : Int)) then (do
+                        let _t1008 ← (if _t1006 then pure true else (do
+  let _t1010 ← (if (SudoRt.SEq.beq a (2 : Int)) then (do
   pure (SudoRt.SEq.beq b (6 : Int))) else pure false)
-  pure _t1046))
-                        if _t1044 then
+  pure _t1010))
+                        if _t1008 then
                           do
                             pure (5 : Int)
                         else
                           do
-                            let _t1049 ← (if (SudoRt.SEq.beq a (4 : Int)) then (do
+                            let _t1013 ← (if (SudoRt.SEq.beq a (4 : Int)) then (do
   pure (SudoRt.SEq.beq b (2 : Int))) else pure false)
-                            let _t1051 ← (if _t1049 then pure true else (do
-  let _t1053 ← (if (SudoRt.SEq.beq a (2 : Int)) then (do
+                            let _t1015 ← (if _t1013 then pure true else (do
+  let _t1017 ← (if (SudoRt.SEq.beq a (2 : Int)) then (do
   pure (SudoRt.SEq.beq b (4 : Int))) else pure false)
-  pure _t1053))
-                            if _t1051 then
+  pure _t1017))
+                            if _t1015 then
                               do
                                 pure (6 : Int)
                             else
                               do
-                                let _t1056 ← (if (SudoRt.SEq.beq a (5 : Int)) then (do
+                                let _t1020 ← (if (SudoRt.SEq.beq a (5 : Int)) then (do
   pure (SudoRt.SEq.beq b (2 : Int))) else pure false)
-                                let _t1058 ← (if _t1056 then pure true else (do
-  let _t1060 ← (if (SudoRt.SEq.beq a (2 : Int)) then (do
+                                let _t1022 ← (if _t1020 then pure true else (do
+  let _t1024 ← (if (SudoRt.SEq.beq a (2 : Int)) then (do
   pure (SudoRt.SEq.beq b (5 : Int))) else pure false)
-  pure _t1060))
-                                if _t1058 then
+  pure _t1024))
+                                if _t1022 then
                                   do
                                     pure (7 : Int)
                                 else
                                   do
-                                    let _t1063 ← (if (SudoRt.SEq.beq a (6 : Int)) then (do
+                                    let _t1027 ← (if (SudoRt.SEq.beq a (6 : Int)) then (do
   pure (SudoRt.SEq.beq b (3 : Int))) else pure false)
-                                    let _t1065 ← (if _t1063 then pure true else (do
-  let _t1067 ← (if (SudoRt.SEq.beq a (3 : Int)) then (do
+                                    let _t1029 ← (if _t1027 then pure true else (do
+  let _t1031 ← (if (SudoRt.SEq.beq a (3 : Int)) then (do
   pure (SudoRt.SEq.beq b (6 : Int))) else pure false)
-  pure _t1067))
-                                    if _t1065 then
+  pure _t1031))
+                                    if _t1029 then
                                       do
                                         pure (8 : Int)
                                     else
                                       do
-                                        let _t1070 ← (if (SudoRt.SEq.beq a (6 : Int)) then (do
+                                        let _t1034 ← (if (SudoRt.SEq.beq a (6 : Int)) then (do
   pure (SudoRt.SEq.beq b (4 : Int))) else pure false)
-                                        let _t1072 ← (if _t1070 then pure true else (do
-  let _t1074 ← (if (SudoRt.SEq.beq a (4 : Int)) then (do
+                                        let _t1036 ← (if _t1034 then pure true else (do
+  let _t1038 ← (if (SudoRt.SEq.beq a (4 : Int)) then (do
   pure (SudoRt.SEq.beq b (6 : Int))) else pure false)
-  pure _t1074))
-                                        if _t1072 then
+  pure _t1038))
+                                        if _t1036 then
                                           do
                                             pure (9 : Int)
                                         else
                                           do
-                                            let _t1077 ← (if (SudoRt.SEq.beq a (5 : Int)) then (do
+                                            let _t1041 ← (if (SudoRt.SEq.beq a (5 : Int)) then (do
   pure (SudoRt.SEq.beq b (4 : Int))) else pure false)
-                                            let _t1079 ← (if _t1077 then pure true else (do
-  let _t1081 ← (if (SudoRt.SEq.beq a (4 : Int)) then (do
+                                            let _t1043 ← (if _t1041 then pure true else (do
+  let _t1045 ← (if (SudoRt.SEq.beq a (4 : Int)) then (do
   pure (SudoRt.SEq.beq b (5 : Int))) else pure false)
-  pure _t1081))
-                                            if _t1079 then
+  pure _t1045))
+                                            if _t1043 then
                                               do
                                                 pure (10 : Int)
                                             else
                                               do
-                                                let _t1084 ← (if (SudoRt.SEq.beq a (5 : Int)) then (do
+                                                let _t1048 ← (if (SudoRt.SEq.beq a (5 : Int)) then (do
   pure (SudoRt.SEq.beq b (3 : Int))) else pure false)
-                                                let _t1086 ← (if _t1084 then pure true else (do
-  let _t1088 ← (if (SudoRt.SEq.beq a (3 : Int)) then (do
+                                                let _t1050 ← (if _t1048 then pure true else (do
+  let _t1052 ← (if (SudoRt.SEq.beq a (3 : Int)) then (do
   pure (SudoRt.SEq.beq b (5 : Int))) else pure false)
-  pure _t1088))
-                                                if _t1086 then
+  pure _t1052))
+                                                if _t1050 then
                                                   do
                                                     pure (11 : Int)
                                                 else
                                                   do
-                                                    let _as1090 ← SudoRt.sudoAssert false 489
+                                                    let _as1054 ← SudoRt.sudoAssert false 492
                                                     pure (0 : Int)
 
 def is_ud (color : Int) : Except SudoRt.Trap (Bool) :=
   do
-    let _t1092 ← (if (SudoRt.SEq.beq color (1 : Int)) then pure true else (do
+    let _t1056 ← (if (SudoRt.SEq.beq color (1 : Int)) then pure true else (do
   pure (SudoRt.SEq.beq color (2 : Int))))
-    pure _t1092
+    pure _t1056
 
 def edge_bit (color : Int) : Except SudoRt.Trap (Int) :=
   do
-    let _t1095 ← (if (SudoRt.SEq.beq color (1 : Int)) then pure true else (do
+    let _t1059 ← (if (SudoRt.SEq.beq color (1 : Int)) then pure true else (do
   pure (SudoRt.SEq.beq color (2 : Int))))
-    let _t1097 ← (if _t1095 then pure true else (do
+    let _t1061 ← (if _t1059 then pure true else (do
   pure (SudoRt.SEq.beq color (3 : Int))))
-    let _t1099 ← (if _t1097 then pure true else (do
+    let _t1063 ← (if _t1061 then pure true else (do
   pure (SudoRt.SEq.beq color (4 : Int))))
-    let keep := _t1099
+    let keep := _t1063
     if keep then
       do
         pure (0 : Int)
@@ -3106,29 +3057,29 @@ def edge_bit (color : Int) : Except SudoRt.Trap (Int) :=
 
 def digest_bytes (s3 : Int) (ori : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t1102 ← SudoRt.filledL (12 : Int) (0 : Int)
-    let buf := _t1102
+    let _t1066 ← SudoRt.filledL (12 : Int) (0 : Int)
+    let buf := _t1066
     let v := s3
     let _fromV := (0 : Int)
     let _toV := (11 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1152 := (_fromV, (buf, v))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1152 fuel (fun σ =>
+    let _init1116 := (_fromV, (buf, v))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1116 fuel (fun σ =>
     let i := σ.1
     let buf := σ.2.1
-    let _sp1150 := σ.2.2
-    let v := _sp1150
+    let _sp1114 := σ.2.2
+    let v := _sp1114
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (buf, v)))
       else
         match ← ((do
-  let _ix1104 := i
-  let _t1105 ← SudoRt.modI v (256 : Int)
-  let _t1106 ← SudoRt.putL buf _ix1104 _t1105
-  let buf := _t1106
-  let _t1107 ← SudoRt.divI v (256 : Int)
-  let v := _t1107
+  let _ix1068 := i
+  let _t1069 ← SudoRt.modI v (256 : Int)
+  let _t1070 ← SudoRt.putL buf _ix1068 _t1069
+  let buf := _t1070
+  let _t1071 ← SudoRt.divI v (256 : Int)
+  let v := _t1071
   pure (SudoRt.Flow.cont (ρ := Array (Int)) (buf, v))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
@@ -3139,14 +3090,14 @@ def digest_bytes (s3 : Int) (ori : Int) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let buf := σ.2.1
-    let _sp1151 := σ.2.2
-    let v := _sp1151
+    let _sp1115 := σ.2.2
+    let v := _sp1115
     do
       let _fromV := (1 : Int)
       let _toV := (11 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1149 := (_fromV, buf)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1149 fuel (fun σ =>
+      let _init1113 := (_fromV, buf)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1113 fuel (fun σ =>
     let bit := σ.1
     let buf := σ.2
     do
@@ -3158,27 +3109,27 @@ def digest_bytes (s3 : Int) (ori : Int) : Except SudoRt.Trap (Array (Int)) :=
   let _fromV := (0 : Int)
   let _toV := (11 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1120 := (_fromV, (buf, carry))
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1120 fuel (fun σ =>
+  let _init1084 := (_fromV, (buf, carry))
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1084 fuel (fun σ =>
     let j := σ.1
     let buf := σ.2.1
-    let _sp1118 := σ.2.2
-    let carry := _sp1118
+    let _sp1082 := σ.2.2
+    let carry := _sp1082
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, (buf, carry)))
       else
         match ← ((do
-  let _t1110 ← SudoRt.atL buf j
-  let _t1111 ← SudoRt.mulI _t1110 (2 : Int)
-  let _t1112 ← SudoRt.addI _t1111 carry
-  let cur := _t1112
-  let _ix1113 := j
-  let _t1114 ← SudoRt.modI cur (256 : Int)
-  let _t1115 ← SudoRt.putL buf _ix1113 _t1114
-  let buf := _t1115
-  let _t1116 ← SudoRt.divI cur (256 : Int)
-  let carry := _t1116
+  let _t1074 ← SudoRt.atL buf j
+  let _t1075 ← SudoRt.mulI _t1074 (2 : Int)
+  let _t1076 ← SudoRt.addI _t1075 carry
+  let cur := _t1076
+  let _ix1077 := j
+  let _t1078 ← SudoRt.modI cur (256 : Int)
+  let _t1079 ← SudoRt.putL buf _ix1077 _t1078
+  let buf := _t1079
+  let _t1080 ← SudoRt.divI cur (256 : Int)
+  let carry := _t1080
   pure (SudoRt.Flow.cont (ρ := Array (Int)) (buf, carry))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, _fs))
@@ -3189,10 +3140,10 @@ def digest_bytes (s3 : Int) (ori : Int) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let buf := σ.2.1
-    let _sp1119 := σ.2.2
-    let carry := _sp1119
+    let _sp1083 := σ.2.2
+    let carry := _sp1083
     do
-      let _as1117 ← SudoRt.sudoAssertEq carry (0 : Int) 514
+      let _as1081 ← SudoRt.sudoAssertEq carry (0 : Int) 517
       pure (SudoRt.Flow.cont (ρ := Array (Int)) buf)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
@@ -3209,29 +3160,29 @@ def digest_bytes (s3 : Int) (ori : Int) : Except SudoRt.Trap (Array (Int)) :=
       let _fromV := (0 : Int)
       let _toV := (11 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1148 := (_fromV, (buf, rest))
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1148 fuel (fun σ =>
+      let _init1112 := (_fromV, (buf, rest))
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1112 fuel (fun σ =>
     let j := σ.1
     let buf := σ.2.1
-    let _sp1146 := σ.2.2
-    let rest := _sp1146
+    let _sp1110 := σ.2.2
+    let rest := _sp1110
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, (buf, rest)))
       else
         match ← ((do
-  let _t1122 ← SudoRt.atL buf j
-  let _t1123 ← SudoRt.modI rest (256 : Int)
-  let _t1124 ← SudoRt.addI _t1122 _t1123
-  let cur := _t1124
-  let _ix1125 := j
-  let _t1126 ← SudoRt.modI cur (256 : Int)
-  let _t1127 ← SudoRt.putL buf _ix1125 _t1126
-  let buf := _t1127
-  let _t1128 ← SudoRt.divI rest (256 : Int)
-  let _t1129 ← SudoRt.divI cur (256 : Int)
-  let _t1130 ← SudoRt.addI _t1128 _t1129
-  let rest := _t1130
+  let _t1086 ← SudoRt.atL buf j
+  let _t1087 ← SudoRt.modI rest (256 : Int)
+  let _t1088 ← SudoRt.addI _t1086 _t1087
+  let cur := _t1088
+  let _ix1089 := j
+  let _t1090 ← SudoRt.modI cur (256 : Int)
+  let _t1091 ← SudoRt.putL buf _ix1089 _t1090
+  let buf := _t1091
+  let _t1092 ← SudoRt.divI rest (256 : Int)
+  let _t1093 ← SudoRt.divI cur (256 : Int)
+  let _t1094 ← SudoRt.addI _t1092 _t1093
+  let rest := _t1094
   pure (SudoRt.Flow.cont (ρ := Array (Int)) (buf, rest))) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, _fs))
@@ -3242,23 +3193,23 @@ def digest_bytes (s3 : Int) (ori : Int) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let buf := σ.2.1
-    let _sp1147 := σ.2.2
-    let rest := _sp1147
+    let _sp1111 := σ.2.2
+    let rest := _sp1111
     do
-      let _t1131 ← SudoRt.atL buf (9 : Int)
-      let _t1133 ← (if (SudoRt.SEq.beq _t1131 (0 : Int)) then (do
-  let _t1134 ← SudoRt.atL buf (10 : Int)
-  pure (SudoRt.SEq.beq _t1134 (0 : Int))) else pure false)
-      let _t1136 ← (if _t1133 then (do
-  let _t1137 ← SudoRt.atL buf (11 : Int)
-  pure (SudoRt.SEq.beq _t1137 (0 : Int))) else pure false)
-      let _as1139 ← SudoRt.sudoAssert _t1136 520
+      let _t1095 ← SudoRt.atL buf (9 : Int)
+      let _t1097 ← (if (SudoRt.SEq.beq _t1095 (0 : Int)) then (do
+  let _t1098 ← SudoRt.atL buf (10 : Int)
+  pure (SudoRt.SEq.beq _t1098 (0 : Int))) else pure false)
+      let _t1100 ← (if _t1097 then (do
+  let _t1101 ← SudoRt.atL buf (11 : Int)
+  pure (SudoRt.SEq.beq _t1101 (0 : Int))) else pure false)
+      let _as1103 ← SudoRt.sudoAssert _t1100 523
       let out := (#[] : Array (Int))
       let _fromV := (8 : Int)
       let _toV := (0 : Int)
       let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
-      let _init1145 := (_fromV, out)
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1145 fuel (fun σ =>
+      let _init1109 := (_fromV, out)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1109 fuel (fun σ =>
     let j := σ.1
     let out := σ.2
     do
@@ -3266,12 +3217,12 @@ def digest_bytes (s3 : Int) (ori : Int) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, out))
       else
         match ← ((do
-  let _t1141 ← SudoRt.atL buf j
-  let _mb1142 := SudoRt.appendL out _t1141
-  let ⟨_nr1143, _⟩ := _mb1142
-  let out := _nr1143
-  let _hm1101 := ()
-  let _u1144 := _hm1101
+  let _t1105 ← SudoRt.atL buf j
+  let _mb1106 := SudoRt.appendL out _t1105
+  let ⟨_nr1107, _⟩ := _mb1106
+  let out := _nr1107
+  let _hm1065 := ()
+  let _u1108 := _hm1065
   pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, _fs))
@@ -3297,61 +3248,61 @@ def index_bytes (cube : Array (Cubie)) : Except SudoRt.Trap (Array (Int)) :=
     let _fromV := (0 : Int)
     let _toV := (7 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1234 := (_fromV, (perm, ori_acc, pow3))
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1234 fuel (fun σ =>
+    let _init1198 := (_fromV, (perm, ori_acc, pow3))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1198 fuel (fun σ =>
     let i := σ.1
     let perm := σ.2.1
-    let _sp1230 := σ.2.2
-    let ori_acc := _sp1230.1
-    let _sp1231 := _sp1230.2
-    let pow3 := _sp1231
+    let _sp1194 := σ.2.2
+    let ori_acc := _sp1194.1
+    let _sp1195 := _sp1194.2
+    let pow3 := _sp1195
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (perm, ori_acc, pow3)))
       else
         match ← ((do
-  let _t1156 ← SudoRt.atL cx i
-  let _t1157 ← SudoRt.atL cy i
-  let _t1158 ← SudoRt.atL cz i
-  let _t1159 ← cubie_at cube _t1156 _t1157 _t1158
-  let _t1160 ← SudoRt.atL cube _t1159
-  let c := _t1160
-  let _t1161 ← SudoRt.mulI i (3 : Int)
-  let _t1162 ← SudoRt.atL cax _t1161
-  let _t1163 ← sticker_on c _t1162
-  let a0 := _t1163
-  let _t1164 ← SudoRt.mulI i (3 : Int)
-  let _t1165 ← SudoRt.addI _t1164 (1 : Int)
-  let _t1166 ← SudoRt.atL cax _t1165
-  let _t1167 ← sticker_on c _t1166
-  let a1 := _t1167
-  let _t1168 ← SudoRt.mulI i (3 : Int)
-  let _t1169 ← SudoRt.addI _t1168 (2 : Int)
-  let _t1170 ← SudoRt.atL cax _t1169
-  let _t1171 ← sticker_on c _t1170
-  let a2 := _t1171
-  let _t1172 ← corner_piece a0 a1 a2
-  let _mb1173 := SudoRt.appendL perm _t1172
-  let ⟨_nr1174, _⟩ := _mb1173
-  let perm := _nr1174
-  let _hm1153 := ()
-  let _u1175 := _hm1153
+  let _t1120 ← SudoRt.atL cx i
+  let _t1121 ← SudoRt.atL cy i
+  let _t1122 ← SudoRt.atL cz i
+  let _t1123 ← cubie_at cube _t1120 _t1121 _t1122
+  let _t1124 ← SudoRt.atL cube _t1123
+  let c := _t1124
+  let _t1125 ← SudoRt.mulI i (3 : Int)
+  let _t1126 ← SudoRt.atL cax _t1125
+  let _t1127 ← sticker_on c _t1126
+  let a0 := _t1127
+  let _t1128 ← SudoRt.mulI i (3 : Int)
+  let _t1129 ← SudoRt.addI _t1128 (1 : Int)
+  let _t1130 ← SudoRt.atL cax _t1129
+  let _t1131 ← sticker_on c _t1130
+  let a1 := _t1131
+  let _t1132 ← SudoRt.mulI i (3 : Int)
+  let _t1133 ← SudoRt.addI _t1132 (2 : Int)
+  let _t1134 ← SudoRt.atL cax _t1133
+  let _t1135 ← sticker_on c _t1134
+  let a2 := _t1135
+  let _t1136 ← corner_piece a0 a1 a2
+  let _mb1137 := SudoRt.appendL perm _t1136
+  let ⟨_nr1138, _⟩ := _mb1137
+  let perm := _nr1138
+  let _hm1117 := ()
+  let _u1139 := _hm1117
   let slot := (0 : Int)
-  let _t1176 ← is_ud a1
-  if _t1176 then
+  let _t1140 ← is_ud a1
+  if _t1140 then
     do
       let slot := (1 : Int)
-      let _t1177 ← is_ud a2
-      if _t1177 then
+      let _t1141 ← is_ud a2
+      if _t1141 then
         do
           let slot := (2 : Int)
           if (decide (i < (7 : Int))) then
             do
-              let _t1179 ← SudoRt.mulI slot pow3
-              let _t1180 ← SudoRt.addI ori_acc _t1179
-              let ori_acc := _t1180
-              let _t1181 ← SudoRt.mulI pow3 (3 : Int)
-              let pow3 := _t1181
+              let _t1143 ← SudoRt.mulI slot pow3
+              let _t1144 ← SudoRt.addI ori_acc _t1143
+              let ori_acc := _t1144
+              let _t1145 ← SudoRt.mulI pow3 (3 : Int)
+              let pow3 := _t1145
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (perm, ori_acc, pow3))
           else
             do
@@ -3360,28 +3311,28 @@ def index_bytes (cube : Array (Cubie)) : Except SudoRt.Trap (Array (Int)) :=
         do
           if (decide (i < (7 : Int))) then
             do
-              let _t1183 ← SudoRt.mulI slot pow3
-              let _t1184 ← SudoRt.addI ori_acc _t1183
-              let ori_acc := _t1184
-              let _t1185 ← SudoRt.mulI pow3 (3 : Int)
-              let pow3 := _t1185
+              let _t1147 ← SudoRt.mulI slot pow3
+              let _t1148 ← SudoRt.addI ori_acc _t1147
+              let ori_acc := _t1148
+              let _t1149 ← SudoRt.mulI pow3 (3 : Int)
+              let pow3 := _t1149
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (perm, ori_acc, pow3))
           else
             do
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (perm, ori_acc, pow3))
   else
     do
-      let _t1186 ← is_ud a2
-      if _t1186 then
+      let _t1150 ← is_ud a2
+      if _t1150 then
         do
           let slot := (2 : Int)
           if (decide (i < (7 : Int))) then
             do
-              let _t1188 ← SudoRt.mulI slot pow3
-              let _t1189 ← SudoRt.addI ori_acc _t1188
-              let ori_acc := _t1189
-              let _t1190 ← SudoRt.mulI pow3 (3 : Int)
-              let pow3 := _t1190
+              let _t1152 ← SudoRt.mulI slot pow3
+              let _t1153 ← SudoRt.addI ori_acc _t1152
+              let ori_acc := _t1153
+              let _t1154 ← SudoRt.mulI pow3 (3 : Int)
+              let pow3 := _t1154
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (perm, ori_acc, pow3))
           else
             do
@@ -3390,11 +3341,11 @@ def index_bytes (cube : Array (Cubie)) : Except SudoRt.Trap (Array (Int)) :=
         do
           if (decide (i < (7 : Int))) then
             do
-              let _t1192 ← SudoRt.mulI slot pow3
-              let _t1193 ← SudoRt.addI ori_acc _t1192
-              let ori_acc := _t1193
-              let _t1194 ← SudoRt.mulI pow3 (3 : Int)
-              let pow3 := _t1194
+              let _t1156 ← SudoRt.mulI slot pow3
+              let _t1157 ← SudoRt.addI ori_acc _t1156
+              let ori_acc := _t1157
+              let _t1158 ← SudoRt.mulI pow3 (3 : Int)
+              let pow3 := _t1158
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (perm, ori_acc, pow3))
           else
             do
@@ -3408,63 +3359,63 @@ def index_bytes (cube : Array (Cubie)) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let perm := σ.2.1
-    let _sp1232 := σ.2.2
-    let ori_acc := _sp1232.1
-    let _sp1233 := _sp1232.2
-    let pow3 := _sp1233
+    let _sp1196 := σ.2.2
+    let ori_acc := _sp1196.1
+    let _sp1197 := _sp1196.2
+    let pow3 := _sp1197
     do
-      let _t1195 ← rank_perm perm
-      let _t1196 ← SudoRt.mulI _t1195 (2187 : Int)
-      let _t1197 ← SudoRt.addI _t1196 ori_acc
-      let s3 := _t1197
+      let _t1159 ← rank_perm perm
+      let _t1160 ← SudoRt.mulI _t1159 (2187 : Int)
+      let _t1161 ← SudoRt.addI _t1160 ori_acc
+      let s3 := _t1161
       let eperm := (#[] : Array (Int))
       let eori := (0 : Int)
       let bit := (1 : Int)
       let _fromV := (0 : Int)
       let _toV := (11 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1229 := (_fromV, (eperm, eori, bit))
-      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1229 fuel (fun σ =>
+      let _init1193 := (_fromV, (eperm, eori, bit))
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1193 fuel (fun σ =>
     let i := σ.1
     let eperm := σ.2.1
-    let _sp1225 := σ.2.2
-    let eori := _sp1225.1
-    let _sp1226 := _sp1225.2
-    let bit := _sp1226
+    let _sp1189 := σ.2.2
+    let eori := _sp1189.1
+    let _sp1190 := _sp1189.2
+    let bit := _sp1190
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, (eperm, eori, bit)))
       else
         match ← ((do
-  let _t1199 ← SudoRt.atL ex i
-  let _t1200 ← SudoRt.atL ey i
-  let _t1201 ← SudoRt.atL ez i
-  let _t1202 ← cubie_at cube _t1199 _t1200 _t1201
-  let _t1203 ← SudoRt.atL cube _t1202
-  let c := _t1203
-  let _t1204 ← SudoRt.mulI i (2 : Int)
-  let _t1205 ← SudoRt.atL eax _t1204
-  let _t1206 ← sticker_on c _t1205
-  let a0 := _t1206
-  let _t1207 ← SudoRt.mulI i (2 : Int)
-  let _t1208 ← SudoRt.addI _t1207 (1 : Int)
-  let _t1209 ← SudoRt.atL eax _t1208
-  let _t1210 ← sticker_on c _t1209
-  let a1 := _t1210
-  let _t1211 ← edge_piece a0 a1
-  let _mb1212 := SudoRt.appendL eperm _t1211
-  let ⟨_nr1213, _⟩ := _mb1212
-  let eperm := _nr1213
-  let _hm1154 := ()
-  let _u1214 := _hm1154
+  let _t1163 ← SudoRt.atL ex i
+  let _t1164 ← SudoRt.atL ey i
+  let _t1165 ← SudoRt.atL ez i
+  let _t1166 ← cubie_at cube _t1163 _t1164 _t1165
+  let _t1167 ← SudoRt.atL cube _t1166
+  let c := _t1167
+  let _t1168 ← SudoRt.mulI i (2 : Int)
+  let _t1169 ← SudoRt.atL eax _t1168
+  let _t1170 ← sticker_on c _t1169
+  let a0 := _t1170
+  let _t1171 ← SudoRt.mulI i (2 : Int)
+  let _t1172 ← SudoRt.addI _t1171 (1 : Int)
+  let _t1173 ← SudoRt.atL eax _t1172
+  let _t1174 ← sticker_on c _t1173
+  let a1 := _t1174
+  let _t1175 ← edge_piece a0 a1
+  let _mb1176 := SudoRt.appendL eperm _t1175
+  let ⟨_nr1177, _⟩ := _mb1176
+  let eperm := _nr1177
+  let _hm1118 := ()
+  let _u1178 := _hm1118
   if (decide (i < (11 : Int))) then
     do
-      let _t1216 ← edge_bit a0
-      let _t1217 ← SudoRt.mulI _t1216 bit
-      let _t1218 ← SudoRt.addI eori _t1217
-      let eori := _t1218
-      let _t1219 ← SudoRt.mulI bit (2 : Int)
-      let bit := _t1219
+      let _t1180 ← edge_bit a0
+      let _t1181 ← SudoRt.mulI _t1180 bit
+      let _t1182 ← SudoRt.addI eori _t1181
+      let eori := _t1182
+      let _t1183 ← SudoRt.mulI bit (2 : Int)
+      let bit := _t1183
       pure (SudoRt.Flow.cont (ρ := Array (Int)) (eperm, eori, bit))
   else
     do
@@ -3478,172 +3429,100 @@ def index_bytes (cube : Array (Cubie)) : Except SudoRt.Trap (Array (Int)) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let eperm := σ.2.1
-    let _sp1227 := σ.2.2
-    let eori := _sp1227.1
-    let _sp1228 := _sp1227.2
-    let bit := _sp1228
+    let _sp1191 := σ.2.2
+    let eori := _sp1191.1
+    let _sp1192 := _sp1191.2
+    let bit := _sp1192
     do
-      let _t1220 ← SudoRt.mulI s3 (239500800 : Int)
-      let _t1221 ← rank_perm eperm
-      let _t1222 ← SudoRt.divI _t1221 (2 : Int)
-      let _t1223 ← SudoRt.addI _t1220 _t1222
-      let s3 := _t1223
-      let _t1224 ← digest_bytes s3 eori
-      pure _t1224) (fun r => pure r))
+      let _t1184 ← SudoRt.mulI s3 (239500800 : Int)
+      let _t1185 ← rank_perm eperm
+      let _t1186 ← SudoRt.divI _t1185 (2 : Int)
+      let _t1187 ← SudoRt.addI _t1184 _t1186
+      let s3 := _t1187
+      let _t1188 ← digest_bytes s3 eori
+      pure _t1188) (fun r => pure r))
       pure _out) (fun r => pure r))
     pure _out
 
 def finish (s : Scramble) : Except SudoRt.Trap (Scramble) :=
   do
-    let _t1235 ← «apply_turns» (s).sudo_8Scramble_4cube (4 : Int) (2 : Int)
-    let _t1236 := { s with sudo_8Scramble_4cube := _t1235 }
-    let s := _t1236
-    let _t1237 ← blank
-    let _t1238 ← blank
-    let _t1239 ← blank
-    let _io1240 ← push_step s (#[99, 108, 111, 115, 101, 114] : Array Int) (#[70, 50] : Array Int) _t1237 (0 : Int) (0 : Int) _t1238 _t1239
-    let s := _io1240
-    let _t1241 ← «apply_turns» (s).sudo_8Scramble_4cube (5 : Int) (2 : Int)
-    let _t1242 := { s with sudo_8Scramble_4cube := _t1241 }
-    let s := _t1242
-    let _t1243 ← blank
-    let _t1244 ← blank
-    let _t1245 ← blank
-    let _io1246 ← push_step s (#[99, 108, 111, 115, 101, 114] : Array Int) (#[66, 50] : Array Int) _t1243 (0 : Int) (0 : Int) _t1244 _t1245
-    let s := _io1246
-    let _t1247 ← reorient (s).sudo_8Scramble_4cube (1 : Int) (6 : Int)
-    let _t1248 := { s with sudo_8Scramble_4cube := _t1247 }
-    let s := _t1248
-    let _t1249 ← blank
-    let _t1250 ← blank
-    let _t1251 ← blank
-    let _t1252 ← blank
-    let _io1253 ← push_step s (#[99, 97, 110, 111, 110, 105, 99, 97, 108, 105, 122, 101] : Array Int) _t1249 _t1250 (0 : Int) (0 : Int) _t1251 _t1252
-    let s := _io1253
-    let _t1254 := { s with sudo_8Scramble_4done := true }
-    let s := _t1254
+    let _t1199 ← «apply_turns» (s).sudo_8Scramble_4cube (4 : Int) (2 : Int)
+    let _t1200 := { s with sudo_8Scramble_4cube := _t1199 }
+    let s := _t1200
+    let _t1201 ← blank
+    let _t1202 ← blank
+    let _t1203 ← blank
+    let _io1204 ← push_step s (#[99, 108, 111, 115, 101, 114] : Array Int) (#[70, 50] : Array Int) _t1201 (0 : Int) (0 : Int) _t1202 _t1203
+    let s := _io1204
+    let _t1205 ← «apply_turns» (s).sudo_8Scramble_4cube (5 : Int) (2 : Int)
+    let _t1206 := { s with sudo_8Scramble_4cube := _t1205 }
+    let s := _t1206
+    let _t1207 ← blank
+    let _t1208 ← blank
+    let _t1209 ← blank
+    let _io1210 ← push_step s (#[99, 108, 111, 115, 101, 114] : Array Int) (#[66, 50] : Array Int) _t1207 (0 : Int) (0 : Int) _t1208 _t1209
+    let s := _io1210
+    let _t1211 ← reorient (s).sudo_8Scramble_4cube (1 : Int) (6 : Int)
+    let _t1212 := { s with sudo_8Scramble_4cube := _t1211 }
+    let s := _t1212
+    let _t1213 ← blank
+    let _t1214 ← blank
+    let _t1215 ← blank
+    let _t1216 ← blank
+    let _io1217 ← push_step s (#[99, 97, 110, 111, 110, 105, 99, 97, 108, 105, 122, 101] : Array Int) _t1213 _t1214 (0 : Int) (0 : Int) _t1215 _t1216
+    let s := _io1217
+    let _t1218 := { s with sudo_8Scramble_4done := true }
+    let s := _t1218
     pure s
 
 def evaluate (s : Scramble) : Except SudoRt.Trap ((Evaluation) × (Scramble)) :=
   do
-    let _as1255 ← SudoRt.sudoAssert (!( (s).sudo_8Scramble_4done )) 569
-    let _t1256 ← nybbles_of (s).sudo_8Scramble_7message
-    let _t1257 ← pad_tape _t1256 (s).sudo_8Scramble_7version
-    let padded := _t1257
-    if (SudoRt.SEq.beq (s).sudo_8Scramble_7version (1 : Int)) then
-      do
-        let i := (s).sudo_8Scramble_9processed
-        let _t1260 ← SudoRt.subI (SudoRt.listLen padded) i
-        let _t1261 ← SudoRt.divI _t1260 (8 : Int)
-        let nleft := _t1261
-        let _t1266 ← SudoRt.subI nleft (1 : Int)
-        let _fromV := (0 : Int)
-        let _toV := _t1266
-        let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init1271 := (_fromV, (s, i))
-        let _out ← (SudoRt.runLoopOn (ρ := (Evaluation) × (Scramble)) _init1271 fuel (fun σ =>
-    let b := σ.1
-    let s := σ.2.1
-    let _sp1269 := σ.2.2
-    let i := _sp1269
-    do
-      if b > _toV then
-        pure (SudoRt.Flow.brk (ρ := (Evaluation) × (Scramble)) (b, (s, i)))
-      else
-        match ← ((do
-  let _t1263 ← SudoRt.divI i (8 : Int)
-  let _io1264 ← «apply_v1_block» s padded _t1263
-  let s := _io1264
-  let _t1265 ← SudoRt.addI i (8 : Int)
-  let i := _t1265
-  pure (SudoRt.Flow.cont (ρ := (Evaluation) × (Scramble)) (s, i))) : Except SudoRt.Trap (SudoRt.Flow _ ((Evaluation) × (Scramble)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := (Evaluation) × (Scramble)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Evaluation) × (Scramble)) (b, _fs))
-        | .cont _fs => do
-            if b == _toV then
-              pure (SudoRt.Flow.brk (ρ := (Evaluation) × (Scramble)) (b, _fs))
-            else do
-              let i' ← SudoRt.addI b (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (Evaluation) × (Scramble)) (i', _fs))) (fun σ =>
-    let s := σ.2.1
-    let _sp1270 := σ.2.2
-    let i := _sp1270
-    do
-      let _io1267 ← finish s
-      let s := _io1267
-      let _t1268 ← index_bytes (s).sudo_8Scramble_4cube
-      pure (({ sudo_10Evaluation_6digest := _t1268, sudo_10Evaluation_5trace := (s).sudo_8Scramble_5steps } : Evaluation), s)) (fun r => pure r))
-        pure _out
-    else
-      do
-        let i := (s).sudo_8Scramble_9processed
-        let _t1273 ← SudoRt.subI (SudoRt.listLen padded) i
-        let nleft := _t1273
-        let _t1278 ← SudoRt.subI nleft (1 : Int)
-        let _fromV := (0 : Int)
-        let _toV := _t1278
-        let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init1283 := (_fromV, (s, i))
-        let _out ← (SudoRt.runLoopOn (ρ := (Evaluation) × (Scramble)) _init1283 fuel (fun σ =>
-    let k := σ.1
-    let s := σ.2.1
-    let _sp1281 := σ.2.2
-    let i := _sp1281
-    do
-      if k > _toV then
-        pure (SudoRt.Flow.brk (ρ := (Evaluation) × (Scramble)) (k, (s, i)))
-      else
-        match ← ((do
-  let _t1275 ← SudoRt.atL padded i
-  let _io1276 ← «apply_v2_symbol» s _t1275 i
-  let s := _io1276
-  let _t1277 ← SudoRt.addI i (1 : Int)
-  let i := _t1277
-  pure (SudoRt.Flow.cont (ρ := (Evaluation) × (Scramble)) (s, i))) : Except SudoRt.Trap (SudoRt.Flow _ ((Evaluation) × (Scramble)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := (Evaluation) × (Scramble)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Evaluation) × (Scramble)) (k, _fs))
-        | .cont _fs => do
-            if k == _toV then
-              pure (SudoRt.Flow.brk (ρ := (Evaluation) × (Scramble)) (k, _fs))
-            else do
-              let i' ← SudoRt.addI k (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (Evaluation) × (Scramble)) (i', _fs))) (fun σ =>
-    let s := σ.2.1
-    let _sp1282 := σ.2.2
-    let i := _sp1282
-    do
-      let _io1279 ← finish s
-      let s := _io1279
-      let _t1280 ← index_bytes (s).sudo_8Scramble_4cube
-      pure (({ sudo_10Evaluation_6digest := _t1280, sudo_10Evaluation_5trace := (s).sudo_8Scramble_5steps } : Evaluation), s)) (fun r => pure r))
-        pure _out
+    let _as1219 ← SudoRt.sudoAssert (!( (s).sudo_8Scramble_4done )) 572
+    let _io1220 ← pad s
+    let s := _io1220
+    let _io1221 ← «apply_ready» s
+    let s := _io1221
+    let _io1222 ← finish s
+    let s := _io1222
+    let _t1223 ← index_bytes (s).sudo_8Scramble_4cube
+    pure (({ sudo_10Evaluation_6digest := _t1223, sudo_10Evaluation_5trace := (s).sudo_8Scramble_5steps } : Evaluation), s)
 
 def run (version : Int) (message : Array (Int)) : Except SudoRt.Trap (Evaluation) :=
   do
-    let _t1284 ← fresh version
-    let s := _t1284
-    let _io1285 ← update s message
-    let s := _io1285
-    let _io1286 ← evaluate s
-    let ⟨_ret1287, _iw01288⟩ := _io1286
-    let s := _iw01288
-    let _sudo_h0 := _ret1287
+    let _t1224 ← fresh version true
+    let s := _t1224
+    let _io1225 ← update s message
+    let s := _io1225
+    let _io1226 ← evaluate s
+    let ⟨_ret1227, _iw01228⟩ := _io1226
+    let s := _iw01228
+    let _sudo_h0 := _ret1227
     pure _sudo_h0
 
 def check (version : Int) (message : Array (Int)) (digest : Array (Int)) (faces : Array (Int)) (nsteps : Int) : Except SudoRt.Trap (Unit) :=
   do
-    let _t1289 ← run version message
-    let got := _t1289
-    let _as1290 ← SudoRt.sudoAssertEq (got).sudo_10Evaluation_6digest digest 593
-    let _as1292 ← SudoRt.sudoAssertEq (SudoRt.listLen (got).sudo_10Evaluation_5trace) nsteps 594
-    let _t1293 ← SudoRt.subI nsteps (1 : Int)
-    let _t1294 ← SudoRt.atL (got).sudo_10Evaluation_5trace _t1293
-    let _as1295 ← SudoRt.sudoAssertEq (_t1294).sudo_4Step_8facelets faces 595
-    let _t1296 ← SudoRt.atL (got).sudo_10Evaluation_5trace (0 : Int)
-    let _as1297 ← SudoRt.sudoAssertEq (_t1296).sudo_4Step_4kind (#[109, 111, 118, 101] : Array Int) 596
-    let _t1298 ← SudoRt.subI nsteps (1 : Int)
-    let _t1299 ← SudoRt.atL (got).sudo_10Evaluation_5trace _t1298
-    let _as1300 ← SudoRt.sudoAssertEq (_t1299).sudo_4Step_4kind (#[99, 97, 110, 111, 110, 105, 99, 97, 108, 105, 122, 101] : Array Int) 597
+    let _t1229 ← run version message
+    let got := _t1229
+    let _as1230 ← SudoRt.sudoAssertEq (got).sudo_10Evaluation_6digest digest 585
+    let _as1232 ← SudoRt.sudoAssertEq (SudoRt.listLen (got).sudo_10Evaluation_5trace) nsteps 586
+    let _t1233 ← SudoRt.subI nsteps (1 : Int)
+    let _t1234 ← SudoRt.atL (got).sudo_10Evaluation_5trace _t1233
+    let _as1235 ← SudoRt.sudoAssertEq (_t1234).sudo_4Step_8facelets faces 587
+    let _t1236 ← SudoRt.atL (got).sudo_10Evaluation_5trace (0 : Int)
+    let _as1237 ← SudoRt.sudoAssertEq (_t1236).sudo_4Step_4kind (#[109, 111, 118, 101] : Array Int) 588
+    let _t1238 ← SudoRt.subI nsteps (1 : Int)
+    let _t1239 ← SudoRt.atL (got).sudo_10Evaluation_5trace _t1238
+    let _as1240 ← SudoRt.sudoAssertEq (_t1239).sudo_4Step_4kind (#[99, 97, 110, 111, 110, 105, 99, 97, 108, 105, 122, 101] : Array Int) 589
+    let _t1241 ← fresh version false
+    let q := _t1241
+    let _io1242 ← update q message
+    let q := _io1242
+    let _io1243 ← evaluate q
+    let ⟨_ret1244, _iw01245⟩ := _io1243
+    let q := _iw01245
+    let quick := _ret1244
+    let _as1246 ← SudoRt.sudoAssertEq (quick).sudo_10Evaluation_6digest digest 593
+    let _as1248 ← SudoRt.sudoAssertEq (SudoRt.listLen (quick).sudo_10Evaluation_5trace) (0 : Int) 594
     pure ()
 
 end Scramble

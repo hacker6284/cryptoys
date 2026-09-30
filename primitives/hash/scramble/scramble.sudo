@@ -30,12 +30,18 @@ record Evaluation
     digest: List<int>
     trace: List<Step>
 
+// Between calls, the state keeps only the nybbles not yet walked (under 8 for v1, none for
+// v2) and the count of message nybbles, which is all the padding needs, so
+// `update` never re-reads the message. `traced` is false for the digest-only
+// constructors, which walk the same steps but keep no trace.
 record Scramble
     version: int
-    message: List<int>
+    pending: List<int>
+    total: int
     processed: int
     cube: List<Cubie>
     steps: List<Step>
+    traced: bool
     done: bool
 
 // v1 nybble -> one half-turn-metric move. Turns: 1, 2, or 3 (prime).
@@ -96,16 +102,23 @@ func solved_cube() -> List<Cubie>
                     cube.append(Cubie(x, y, z, xp, xn, yp, yn, zp, zn))
     return cube
 
-func fresh(version: int) -> Scramble
-    msg: List<int> = []
+func fresh(version: int, traced: bool) -> Scramble
+    pending: List<int> = []
     steps: List<Step> = []
-    return Scramble(version, msg, 0, solved_cube(), steps, false)
+    return Scramble(version, pending, 0, 0, solved_cube(), steps, traced, false)
 
 export func scramble_v1() -> Scramble
-    return fresh(1)
+    return fresh(1, true)
 
 export func scramble_v2() -> Scramble
-    return fresh(2)
+    return fresh(2, true)
+
+// Digest only: the same walk and digest, with an empty trace.
+export func scramble_v1_digest() -> Scramble
+    return fresh(1, false)
+
+export func scramble_v2_digest() -> Scramble
+    return fresh(2, false)
 
 func rot_xyz(face: int, x: int, y: int, z: int) -> (int, int, int)
     if (face == 0) or (face == 1)
@@ -258,8 +271,10 @@ func move_name(face: int, turns: int) -> text
 
 func push_step(s: inout Scramble, kind: text, move: text, nybble: text, block: int, at: int, up: text, front: text)
     // Append in place. Copying s.steps out and writing it back forks the
-    // whole trace on every step, which makes a message quadratic.
-    s.steps.append(Step(kind, move, nybble, block, at, up, front, facelets_of(s.cube)))
+    // whole trace on every step, which makes a message quadratic. A
+    // digest-only state records nothing.
+    if s.traced
+        s.steps.append(Step(kind, move, nybble, block, at, up, front, facelets_of(s.cube)))
 
 func blank() -> text
     return ""
@@ -298,19 +313,21 @@ func center_dir(cube: List<Cubie>, color: int) -> (int, int, int)
 func cross(ax: int, ay: int, az: int, bx: int, by: int, bz: int) -> (int, int, int)
     return (ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx)
 
-func mul_vec(m: List<List<int>>, x: int, y: int, z: int) -> (int, int, int)
-    nx = m[0][0] * x + m[0][1] * y + m[0][2] * z
-    ny = m[1][0] * x + m[1][1] * y + m[1][2] * z
-    nz = m[2][0] * x + m[2][1] * y + m[2][2] * z
-    return (nx, ny, nz)
+func dot(row: (int, int, int), x: int, y: int, z: int) -> int
+    a, b, c = row
+    return a * x + b * y + c * z
 
-func paint_cubie(x: int, y: int, z: int, m: List<List<int>>, xp: int, xn: int, yp: int, yn: int, zp: int, zn: int, ax: int, ay: int, az: int, color: int) -> (int, int, int, int, int, int)
+func mul_vec(m: ((int, int, int), (int, int, int), (int, int, int)), x: int, y: int, z: int) -> (int, int, int)
+    r0, r1, r2 = m
+    return (dot(r0, x, y, z), dot(r1, x, y, z), dot(r2, x, y, z))
+
+func paint_cubie(x: int, y: int, z: int, m: ((int, int, int), (int, int, int), (int, int, int)), xp: int, xn: int, yp: int, yn: int, zp: int, zn: int, ax: int, ay: int, az: int, color: int) -> (int, int, int, int, int, int)
     if color == 0
         return (xp, xn, yp, yn, zp, zn)
     rx, ry, rz = mul_vec(m, ax, ay, az)
     return write_axis(xp, xn, yp, yn, zp, zn, rx, ry, rz, color)
 
-func apply_matrix(cube: List<Cubie>, m: List<List<int>>) -> List<Cubie>
+func apply_matrix(cube: List<Cubie>, m: ((int, int, int), (int, int, int), (int, int, int))) -> List<Cubie>
     out: List<Cubie> = []
     for i = 0 to cube.length - 1
         c = cube[i]
@@ -338,15 +355,11 @@ func reorient(cube: List<Cubie>, up_color: int, front_color: int) -> List<Cubie>
     if seated
         return cube
     vx, vy, vz = cross(ux, uy, uz, px, py, pz)
-    m: List<List<int>> = []
-    m.append([vx, vy, vz])
-    m.append([ux, uy, uz])
-    m.append([px, py, pz])
-    return apply_matrix(cube, m)
+    return apply_matrix(cube, ((vx, vy, vz), (ux, uy, uz), (px, py, pz)))
 
-func do_move(s: inout Scramble, face: int, turns: int, nybble: text, block: int, at: int)
+func do_move(s: inout Scramble, face: int, turns: int, nybble: int, block: int, at: int)
     s.cube = apply_turns(s.cube, face, turns)
-    push_step(s, "move", move_name(face, turns), nybble, block, at, blank(), blank())
+    push_step(s, "move", move_name(face, turns), hex_digit(nybble), block, at, blank(), blank())
 
 func do_rule(s: inout Scramble, block: int)
     c = s.cube[cubie_at(s.cube, 1, 1, 1)]
@@ -355,57 +368,45 @@ func do_rule(s: inout Scramble, block: int)
     s.cube = reorient(s.cube, up, front)
     push_step(s, "ruleB", blank(), blank(), block, 0, letter(up), letter(front))
 
-func apply_v1_block(s: inout Scramble, ny: List<int>, block: int)
-    base = block * 8
+func apply_v1_block(s: inout Scramble, ny: List<int>, base: int, block: int)
     for k = 0 to 7
         n = ny[base + k]
-        do_move(s, v1_face[n], v1_turns[n], hex_digit(n), block, k)
+        do_move(s, v1_face[n], v1_turns[n], n, block, k)
     do_rule(s, block)
 
 func apply_v2_symbol(s: inout Scramble, n: int, block: int)
-    shown = hex_digit(n)
-    do_move(s, v2_a[n], 1, shown, block, 0)
-    do_move(s, v2_b[n], 1, shown, block, 1)
+    do_move(s, v2_a[n], 1, n, block, 0)
+    do_move(s, v2_b[n], 1, n, block, 1)
     do_rule(s, block)
 
-func nybbles_of(message: List<int>) -> List<int>
-    out: List<int> = []
-    for i = 0 to message.length - 1
-        b = message[i]
-        out.append(b / 16)
-        out.append(b mod 16)
-    return out
-
-func pad_tape(ny: List<int>, version: int) -> List<int>
-    out: List<int> = []
-    for i = 0 to ny.length - 1
-        out.append(ny[i])
-    out.append(8)
-    if version == 1
-        n = (8 - (out.length mod 8)) mod 8
-        for i = 0 to n - 1
-            out.append(tape_f[i])
-        remaining = 24 - out.length
-        for i = 0 to remaining - 1
-            out.append(tape_f[i mod 8])
-        return out
-    remaining = 12 - out.length
-    for k = 0 to remaining - 1
-        out.append(tape_i[k mod 4])
-    return out
+func pad(s: inout Scramble)
+    n = s.total + 1
+    s.pending.append(8)
+    if s.version == 1
+        k = (8 - (n mod 8)) mod 8
+        for i = 0 to k - 1
+            s.pending.append(tape_f[i])
+        for i = 0 to 24 - (n + k) - 1
+            s.pending.append(tape_f[i mod 8])
+    else
+        for i = 0 to 12 - n - 1
+            s.pending.append(tape_i[i mod 4])
 
 func apply_ready(s: inout Scramble)
-    ny = nybbles_of(s.message)
+    ny = s.pending
+    rest: List<int> = []  // v2 walks every nybble, so this stays empty
     if s.version == 1
-        nready = (ny.length - s.processed) / 8
+        nready = ny.length / 8
         for b = 0 to nready - 1
-            apply_v1_block(s, ny, s.processed / 8)
+            apply_v1_block(s, ny, b * 8, s.processed / 8)
             s.processed = s.processed + 8
+        for i = nready * 8 to ny.length - 1
+            rest.append(ny[i])
     else
-        nleft = ny.length - s.processed
-        for k = 0 to nleft - 1
-            apply_v2_symbol(s, ny[s.processed], s.processed)
+        for k = 0 to ny.length - 1
+            apply_v2_symbol(s, ny[k], s.processed)
             s.processed = s.processed + 1
+    s.pending = rest
 
 export func update(s: inout Scramble, message: List<int>)
     assert not s.done
@@ -413,7 +414,9 @@ export func update(s: inout Scramble, message: List<int>)
         b = message[i]
         assert (b >= 0) and (b <= 255)
     for i = 0 to message.length - 1
-        s.message.append(message[i])
+        s.pending.append(message[i] / 16)
+        s.pending.append(message[i] mod 16)
+    s.total = s.total + 2 * message.length
     apply_ready(s)
 
 func fact(n: int) -> int
@@ -567,24 +570,13 @@ func finish(s: inout Scramble)
 
 export func evaluate(s: inout Scramble) -> Evaluation
     assert not s.done
-    padded = pad_tape(nybbles_of(s.message), s.version)
-    if s.version == 1
-        i = s.processed
-        nleft = (padded.length - i) / 8
-        for b = 0 to nleft - 1
-            apply_v1_block(s, padded, i / 8)
-            i = i + 8
-    else
-        i = s.processed
-        nleft = padded.length - i
-        for k = 0 to nleft - 1
-            apply_v2_symbol(s, padded[i], i)
-            i = i + 1
+    pad(s)
+    apply_ready(s)
     finish(s)
     return Evaluation(index_bytes(s.cube), s.steps)
 
 func run(version: int, message: List<int>) -> Evaluation
-    s = fresh(version)
+    s = fresh(version, true)
     update(s, message)
     return evaluate(s)
 
@@ -595,6 +587,11 @@ func check(version: int, message: List<int>, digest: List<int>, faces: text, nst
     assert got.trace[nsteps - 1].facelets == faces
     assert got.trace[0].kind == "move"
     assert got.trace[nsteps - 1].kind == "canonicalize"
+    q = fresh(version, false)
+    update(q, message)
+    quick = evaluate(q)
+    assert quick.digest == digest
+    assert quick.trace.length == 0
 
 test "solved facelets are the start pose"
     assert solved_facelets() == "WWWWWWWWWRRRRRRRRRGGGGGGGGGYYYYYYYYYOOOOOOOOOBBBBBBBBB"
@@ -645,6 +642,50 @@ test "split updates match one shot"
     part1 = evaluate(s1)
     assert part1.digest == whole1.digest
     assert part1.trace == whole1.trace
+
+test "update keeps only the unwalked nybbles"
+    s1 = scramble_v1()
+    s2 = scramble_v2()
+    msg: List<int> = []
+    for i = 0 to 19
+        chunk = [i, 255 - i, 7 * i]
+        update(s1, chunk)
+        update(s2, chunk)
+        for j = 0 to 2
+            msg.append(chunk[j])
+        assert s1.pending.length == (6 * (i + 1)) mod 8
+        assert s2.pending.length == 0
+    assert (s1.total == 120) and (s2.total == 120)
+    whole1 = run(1, msg)
+    part1 = evaluate(s1)
+    assert part1.digest == whole1.digest
+    assert part1.trace == whole1.trace
+    whole2 = run(2, msg)
+    part2 = evaluate(s2)
+    assert part2.digest == whole2.digest
+    assert part2.trace == whole2.trace
+
+test "digest-only states match traced digests and keep no trace"
+    seed = 7
+    for v = 1 to 2
+        q = scramble_v1_digest()
+        if v == 2
+            q = scramble_v2_digest()
+        msg: List<int> = []
+        for i = 0 to 39
+            chunk: List<int> = []
+            for j = 0 to (seed mod 9) - 1
+                seed = (seed * 1103515245 + 12345) mod 2147483648
+                chunk.append(seed / 8388608)
+            update(q, chunk)
+            for j = 0 to chunk.length - 1
+                msg.append(chunk[j])
+            assert q.steps.length == 0
+            assert q.pending.length < 8
+        whole = run(v, msg)
+        got = evaluate(q)
+        assert got.digest == whole.digest
+        assert got.trace.length == 0
 
 test "second evaluate traps"
     s = scramble_v2()

@@ -178,17 +178,26 @@ def x_suit_exact(workers):
     # read -> grip injective on pieces across all read configurations, and abs_reorient
     # keeps the colour pair: m9_search step 2 (m9_search.read_injectivity asserts both)
     try:
-        eng.ref.read_injectivity()
+        seen = eng.ref.read_injectivity()
         ok = True
     except AssertionError as e:
+        seen = {'c': {}, 'e': {}}
         ok = False
         fail(f'm9_search.read_injectivity: {e!r}')
+    # recount the abs_reorient step here, so the log records that it ran and on how many pairs
+    reo = {k: (sum(eng.ref.abs_reorient(*r)[:2] == r for r in seen[k]), len(seen[k]))
+           for k in ('c', 'e')}
+    reo_ok = all(n == tot == 60 for n, tot in reo.values())
+    if not reo_ok:
+        fail(f'abs_reorient(*pair)[:2] != pair, or not 60 pairs per kind: {reo}')
     print(f"C36 card steps (identical for A_vn and C76): (grip, parity, rank) cases where "
           f"the 4 suits read pieces from 4 different pre-card slots: {cases - bad}/{cases}")
     print(f"read colour pair -> piece injective across all read configurations: {ok}")
+    print(f"abs_reorient(*pair)[:2] == pair (the new grip determines the colour pair): "
+          f"{reo['c'][0]}/{reo['c'][1]} corner pairs, {reo['e'][0]}/{reo['e'][1]} edge pairs")
     print(f"=> another suit of the same card never gives the same new grip, from any state: "
-          f"{bad == 0 and ok}")
-    if bad or not ok:
+          f"{bad == 0 and ok and reo_ok}")
+    if bad or not ok or not reo_ok:
         fail('suit exactness')
 
 

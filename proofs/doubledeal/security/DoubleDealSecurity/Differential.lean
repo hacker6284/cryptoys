@@ -323,10 +323,14 @@ theorem diffCount_one_left (β : Relabel) (R : ℕ) {y : Fin 52 → Nat} (hy : I
     simp only [Diff, rel_one] at hK
     exact h ((rel_left_inj (isDeck_rounds R y K hy)).1 (hK.symm.trans (rel_one _).symm))
 
-/-- (PROVED) A nontrivial difference never becomes trivial in one round (`dpCount_to_one`;
-    `unkeyedWithMix` is injective, `invUnkeyedWithMix` being a left inverse). -/
+/-- `unkeyedWithMix` is injective (`invUnkeyedWithMix` is a left inverse). -/
+theorem unkeyedWithMix_injective : Function.Injective unkeyedWithMix :=
+  Function.LeftInverse.injective invUnkeyedWithMix_rt
+
+/-- (PROVED) A nontrivial difference never becomes trivial in one round
+    (`dpCount_to_one`, with `unkeyedWithMix_injective`). -/
 theorem dp1Count_to_one {α : Relabel} (hα : α ≠ 1) : dp1Count α 1 = 0 :=
-  dpCount_to_one unkeyedWithMix (Function.LeftInverse.injective invUnkeyedWithMix_rt) hα
+  dpCount_to_one unkeyedWithMix unkeyedWithMix_injective hα
 
 /-- (PROVED) A nontrivial difference never becomes trivial over `R` rounds. -/
 theorem diffCount_to_one {α : Relabel} (hα : α ≠ 1) : ∀ (R : ℕ) {y : Fin 52 → Nat},

@@ -210,13 +210,16 @@ MD_HEAVY_DIR = MD_LEAN / "MegaDreifachHeavy"
 # `check_axioms.py --selftest` re-derives the list (md_readme_cited) and fails if it
 # differs from this set; update both together when the README changes.
 MD_README_THEOREMS = {
+    "MegaDreifach.G2Cov.g2Step_cov",
     "MegaDreifach.G2Nets.g2Step_fst_ne",
     "MegaDreifach.G2Nets.g2Step_ne",
     "MegaDreifach.G2Nets.net2_ne",
     "MegaDreifach.G2Nets.nets_nodup",
     "MegaDreifach.G2Nets.phiCard_net2_ne",
-    "MegaDreifach.G2Nets.twoCard_collision_nets",
     "MegaDreifach.G2Nets.twoCard_same_first_ne",
+    "MegaDreifach.M9.m9_canon",
+    "MegaDreifach.M9.twoCard_diff_first_ne",
+    "MegaDreifach.M9.twoCard_ne",
     "MegaDreifach.Link2.abs_reorient_refines",
     "MegaDreifach.Link2.big_add_byte",
     "MegaDreifach.Link2.big_add_nat",
@@ -499,8 +502,8 @@ PACKAGES = {
             "DoubleDeal.Security.Differential.dpCount_one_left",
             "DoubleDeal.Security.Differential.dpCount_to_one",
             # Linear (roadmap M8a): sums of squared correlations as autocorrelations weighted
-            # by differential counts; L1 and the final-key step for arbitrary layers, L2-L4
-            # for DoubleDeal's encryptL; independent full-permutation keys only; no numeric
+            # by differential counts; L1 and the final-key step for arbitrary layers that
+            # send decks to decks, L2-L4 for DoubleDeal's encryptL; independent full-permutation keys only; no numeric
             # bound; nothing proved for the real PassKey schedule
             "DoubleDeal.Security.Linear.sum_sq_corr_finalKey",
             "DoubleDeal.Security.Linear.sumSqCorrLayer_eq",

@@ -7,8 +7,8 @@
   Model. As in `Linear` (M8a): INDEPENDENT UNIFORM full-permutation keys (all `n + 2` keys
   of `encryptL n`, the whitening and the final key included), and every sum of squared
   correlations is key-summed and unnormalised. Nothing is proved for the real PassKey
-  schedule. L5 and L10 are proved for arbitrary layers (L10: any deck map sending decks to
-  decks); L6, L7 and the row/column sums are stated for DoubleDeal's `encryptL` (the column
+  schedule. L5 involves no layer. L10 is proved for arbitrary layers that send decks to
+  decks. L6, L7 and the row/column sums are stated for DoubleDeal's `encryptL` (the column
   sums use `FullCipher.fullDiffCount_to_one`, i.e. injective layers); L9 is about the
   relabellings `v10Sym` and the mask only.
 

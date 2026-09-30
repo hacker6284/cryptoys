@@ -36,7 +36,7 @@ The experiments are the v2-relevant scripts of the grip-rule review (2026-09-29,
 4. Fast and slow E_m agree, grip sequence included, on 40 random (uniform `h`, random deal) blocks for each of the four rules.
 5. `Hash('')` and `Hash('abc')` under `A_vn`, `C36` and `A` start with the prefixes the review engine printed.
 
-Limits of the self-check:
+### Limits of the self-check
 
 - Fast == slow is not an independent check of the read model. The slow reference and the fast engine's compiled step tables both use m9_search's read primitives (`read_slot`, `read_colours_piece`, `abs_reorient`), so the comparison checks the fast engine's table compilation, not those primitives. Where a log says "re-verified with the slow reference", read it in that sense: different stepping code on the same tables and read primitives.
 - The KATs anchor only C36 (v2 itself) to the sudo. `A_vn`, `A` and C36 also match the review engine's printed digest prefixes (item 5).
@@ -46,7 +46,7 @@ Limits of the self-check:
 
 ```sh
 python3 experiments.py --check              # quick set: about 1 s, local and CI (CI: proofs.yml, megadreifach-lean)
-python3 experiments.py --check --set heavy  # 13–15 min wall local (4 workers), 32–36 min in CI (CI: proofs-heavy.yml, megadreifach-attack-logs)
+python3 experiments.py --check --set heavy  # 13–15 min wall local (4 workers), 32–36 min in CI (CI: proofs-heavy.yml, megadreifach-v2-evidence, 3 parts)
 python3 experiments.py --only swaps         # rewrite one log
 python3 experiments.py --list
 ```

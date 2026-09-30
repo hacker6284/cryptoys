@@ -1,0 +1,4 @@
+SCRIPT-COMPUTED, UNPROVED (not in Lean): the DP against a brute force over all suit
+patterns of the 4 x m grid, same column-turn model (checks the DP, not the model)
+m=2: DP (patterns, signed) = (2520, 88), brute force = (2520, 88), equal; eps = 11/315
+m=3: DP (patterns, signed) = (369600, 1088), brute force = (369600, 1088), equal; eps = 17/5775

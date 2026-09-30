@@ -1,0 +1,9 @@
+$ python3 experiments.py --only selfcheck
+tables: Em.lean face turns, 60 rotations, neighbours, opposites and corner faces == ../tables.py (v1 sudo): yes
+fast engine C36 vs v2 KATs: 8/8 Hash digests, HashDeck vector, IV-COOK12 digest and |G|: OK
+slow reference (m9_search, Em.lean transliteration) vs v2 KATs: 8/8 Hash digests: OK
+fast engine C36 vs slow reference: 40/40 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A_vn vs slow reference: 40/40 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine C76 vs slow reference: 40/40 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A vs slow reference: 40/40 random (uniform h, random deal) blocks with identical E_m and grip sequence
+Hash('') and Hash('abc') prefixes of rules A_vn, C36, A == the review engine md3.py (its out/md3_selfcheck.txt): yes

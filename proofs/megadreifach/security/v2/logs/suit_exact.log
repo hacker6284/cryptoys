@@ -1,0 +1,4 @@
+$ python3 experiments.py --only suit_exact
+C36 card steps (identical for A_vn and C76): (grip, parity, rank) cases where the 4 suits read pieces from 4 different pre-card slots: 1560/1560
+read colour pair -> piece injective across all read configurations: True
+=> another suit of the same card never gives the same new grip, from any state: True

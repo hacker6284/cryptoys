@@ -257,9 +257,9 @@ func move_name(face: int, turns: int) -> text
     return out
 
 func push_step(s: inout Scramble, kind: text, move: text, nybble: text, block: int, at: int, up: text, front: text)
-    steps = s.steps
-    steps.append(Step(kind, move, nybble, block, at, up, front, facelets_of(s.cube)))
-    s.steps = steps
+    // Append in place. Copying s.steps out and writing it back forks the
+    // whole trace on every step, which makes a message quadratic.
+    s.steps.append(Step(kind, move, nybble, block, at, up, front, facelets_of(s.cube)))
 
 func blank() -> text
     return ""

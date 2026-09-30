@@ -1,0 +1,2 @@
+$ python3 experiments.py --only truncated
+C36  : N=200000 one-block messages (seed 55): 32-bit collisions low bytes 6, bytes 1..4 6; expected 4.7 (Poisson 95% range ~0-9)

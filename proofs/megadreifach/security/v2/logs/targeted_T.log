@@ -1,0 +1,8 @@
+$ python3 experiments.py --only targeted_T
+A: gap 2 with a T at i+1: 3 collisions / 999,873 trials, = 1/333,291, 95% CI [1.0e-06,8.8e-06]
+A: gap 3 with a T at i+1: 0 collisions / 1,000,127 trials, 95% upper bound 3.0e-06 (=1/333,851)
+  example: 4f63e459390ff3fdb7ee02a84d3ba19308e153f4b235e25a206e4820 / 4f63e459390ff3fdbb80aedc308d6e0962ae8650d22f9ce2206e4820; Hash collision re-verified (fast and slow): True
+  example: ba09bd7ee093a35762211b2cfd853b9dcb211ff38e50bae637f955d5 / ba09bd7ee093a35762388f2e521e4dfcb9bd5c51d0c6b91e37f955d5; Hash collision re-verified (fast and slow): True
+  example: 507de44b26c5b0c10ddcbfa9cd6cfb781b914a8e1adc13abca9baa7d / 507de44b26c5b0c10ddcbfa9cd6cfb781b914acb0980d65fab73aa7d; Hash collision re-verified (fast and slow): True
+A_vn: gap 2 with a T at i+1: 0 collisions / 999,873 trials, 95% upper bound 3.0e-06 (=1/333,766)
+A_vn: gap 3 with a T at i+1: 0 collisions / 1,000,127 trials, 95% upper bound 3.0e-06 (=1/333,851)

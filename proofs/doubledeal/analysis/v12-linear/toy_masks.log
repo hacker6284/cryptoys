@@ -1,0 +1,37 @@
+L5 autoCorr_cardMask, all s, c, a: True
+L9-shape: A(mask, a) = -N! for all 9 fixed-point-free a: True
+rows and columns sum to N!^(n+2), n=0: True
+L7 alignCount_eq n=0 c=0 c'=0: 1296 == 1296: True
+L6 fullSumSqCorr_cardMask n=0 s=0 c=0 t=0 c'=0: 165888: True
+L6 fullSumSqCorr_cardMask n=0 s=1 c=0 t=2 c'=0: 165888: True
+L6 fullSumSqCorr_cardMask n=0 s=3 c=0 t=1 c'=0: 165888: True
+L6 seats do not matter n=0 c=0 c'=0: True
+L7 alignCount_eq n=0 c=1 c'=3: 1056 == 1056: True
+L6 fullSumSqCorr_cardMask n=0 s=0 c=1 t=0 c'=3: 73728: True
+L6 fullSumSqCorr_cardMask n=0 s=1 c=1 t=2 c'=3: 73728: True
+L6 fullSumSqCorr_cardMask n=0 s=3 c=1 t=1 c'=3: 73728: True
+L6 seats do not matter n=0 c=1 c'=3: True
+L7 alignCount_eq n=0 c=2 c'=1: 1152 == 1152: True
+L6 fullSumSqCorr_cardMask n=0 s=0 c=2 t=0 c'=1: 110592: True
+L6 fullSumSqCorr_cardMask n=0 s=1 c=2 t=2 c'=1: 110592: True
+L6 fullSumSqCorr_cardMask n=0 s=3 c=2 t=1 c'=1: 110592: True
+L6 seats do not matter n=0 c=2 c'=1: True
+rows and columns sum to N!^(n+2), n=1: True
+L7 alignCount_eq n=1 c=0 c'=0: 28944 == 28944: True
+L6 fullSumSqCorr_cardMask n=1 s=0 c=0 t=0 c'=0: 3151872: True
+L6 fullSumSqCorr_cardMask n=1 s=1 c=0 t=2 c'=0: 3151872: True
+L6 fullSumSqCorr_cardMask n=1 s=3 c=0 t=1 c'=0: 3151872: True
+L6 seats do not matter n=1 c=0 c'=0: True
+L7 alignCount_eq n=1 c=1 c'=3: 30528 == 30528: True
+L6 fullSumSqCorr_cardMask n=1 s=0 c=1 t=0 c'=3: 3760128: True
+L6 fullSumSqCorr_cardMask n=1 s=1 c=1 t=2 c'=3: 3760128: True
+L6 fullSumSqCorr_cardMask n=1 s=3 c=1 t=1 c'=3: 3760128: True
+L6 seats do not matter n=1 c=1 c'=3: True
+L7 alignCount_eq n=1 c=2 c'=1: 27888 == 27888: True
+L6 fullSumSqCorr_cardMask n=1 s=0 c=2 t=0 c'=1: 2746368: True
+L6 fullSumSqCorr_cardMask n=1 s=1 c=2 t=2 c'=1: 2746368: True
+L6 fullSumSqCorr_cardMask n=1 s=3 c=2 t=1 c'=1: 2746368: True
+L6 seats do not matter n=1 c=2 c'=1: True
+L10 corr_keyedLayer_sign (U), corr(W, sgn, sgn) = 4, all (k1, k2): True
+L10 corr_keyedLayer_sign (V), corr(W, sgn, sgn) = 4, all (k1, k2): True
+ALL M8b TOY IDENTITIES HOLD

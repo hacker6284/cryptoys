@@ -1,0 +1,2 @@
+$ python3 experiments.py --only telescoping
+A_vn: adjacent telescoping-pair (A♠K♥, A♥K♠, A♠7♠) swaps from IV-COOK12 (24 chunks): 0 collisions / 1,999,992, 95% upper bound 1.5e-06 (=1/667,614)

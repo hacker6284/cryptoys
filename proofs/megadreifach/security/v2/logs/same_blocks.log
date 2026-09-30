@@ -1,0 +1,9 @@
+$ python3 experiments.py --only same_blocks
+swap search: 40000 random one-block messages (from IV-COOK12), seed 99, distances 1..6; the blocks and swaps of ../logs/suit_blind_collision_full.log's first run; rule C36 (v2)
+  distance 1: 0/119824 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/32,482)
+  distance 2: 0/117313 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/31,802)
+  distance 3: 0/114778 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/31,115)
+  distance 4: 0/112572 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/30,517)
+  distance 5: 0/110625 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/29,989)
+  distance 6: 0/108176 same-rank swaps preserve dm; rate 0 (95% CI 0 to 1/29,325)
+  total 0/683288

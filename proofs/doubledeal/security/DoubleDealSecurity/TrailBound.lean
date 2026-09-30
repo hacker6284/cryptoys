@@ -10,8 +10,9 @@
   …, posMix (R-2))` is the first `R` mix rounds WITHOUT the trailing Compose of the
   last one, and WITHOUT the final no-mix round. The dropped Compose commutes
   with every relabelling. The final no-mix round contains SumRanks, so extending
-  the event through it gives a sub-event (the same upper bound applies). Neither
-  that step nor the link to `encryptN` is formalised here.
+  the event through it gives a sub-event (the same upper bound applies). That step
+  and the link to `encryptN` are proved in `FullCipher` (roadmap M7:
+  `encryptN_eq_rounds`, `card_fullTrail_le`), not here.
 
   Event. For a relabelling `σ`, the pair `(y, σ·y)` follows the constant-σ
   characteristic through `R` rounds (`Trail σ R y K`) when in EVERY round, at the

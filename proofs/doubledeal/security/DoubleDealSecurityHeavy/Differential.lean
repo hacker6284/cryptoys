@@ -8,7 +8,7 @@
   paths whose difference stays inside `v10Sym` after every round; they are NOT a bound
   on the full differential, and no numeric bound on the full differential is proved
   anywhere. The real-schedule statement is ONE round's bound. No final no-mix round;
-  `rounds` not linked to `encryptN`. Not a bit-security claim.
+  `rounds` not linked to `encryptN` (both in `FullCipher`, M7). Not a bit-security claim.
 -/
 import DoubleDealSecurity.Differential
 import DoubleDealSecurityHeavy.GridCycleSurvival

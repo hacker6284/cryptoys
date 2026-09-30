@@ -41,8 +41,10 @@
   * ONE CHARACTERISTIC, NOT A DIFFERENTIAL. Same event `Trail` as `TrailBound` (the
     difference stays σ after every round). Pairs whose difference changes and comes back,
     and `σ → β` for `β ≠ σ`, are not bounded.
-  * NOT THE FINAL NO-MIX ROUND, and `rounds` is not linked to `encryptN`/`encryptDeckFn`
-    (only the KEYS are linked, by `encryptDeckFn_masterList`).
+  * NOT THE FINAL NO-MIX ROUND here, and `rounds` is not linked to `encryptN`/`encryptDeckFn`
+    in this file (only the KEYS are linked, by `encryptDeckFn_masterList`). Both are in
+    `FullCipher` (roadmap M7), where the whole cipher under the real schedule gets the same
+    ONE-round bound (`realFullTrail_card_le_26`, …) and nothing more.
   * `R ≤ 5` is the cipher's range. `Trail σ R y (roundKeys R π)` is `R` steps "Compose
     with `K_i`, then the unkeyed round with mix", `i = 0 … R-1`. The cipher runs exactly
     five such steps (`K_0 … K_4`, each followed by the next full round's mix), then

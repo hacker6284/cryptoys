@@ -14,11 +14,12 @@
   keys) with `Diff α β R y K`; `dp1Count α β` is the one-round count over decks. The
   differential probability is `diffCount / (52!)^R`.
 
-  NOT covered: the final no-mix round, and any link from `rounds` to `encryptN` (as in
-  `TrailBound`). The real PassKey schedule gets only the `R = 1` identity
-  (`realDiffCount_one`) and the one-round bound on paths inside the `v10Sym` cluster
-  (`realStaysInV10_card_le_26`, for `(a, x) ≠ (0, 0)` only); nothing for the real schedule
-  at `R ≥ 2` beyond that.
+  NOT covered here: the final no-mix round, and any link from `rounds` to `encryptN` (as in
+  `TrailBound`); both are in `FullCipher` (roadmap M7), which adds one exact Markov step
+  for the final round and still no numeric bound. The real PassKey schedule gets only the
+  `R = 1` identity (`realDiffCount_one`) and the one-round bound on paths inside the
+  `v10Sym` cluster (`realStaysInV10_card_le_26`, for `(a, x) ≠ (0, 0)` only); nothing for
+  the real schedule at `R ≥ 2` beyond that.
 
   Proved:
   * D0 `card_trail_le_diffCount` (from `trail_rounds_rel`): the characteristic is one path

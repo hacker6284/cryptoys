@@ -26,7 +26,8 @@ only; no theorem uses these numbers). Nothing here is a security or bit-security
   state (§4). This is a limit of the proof, not a measured weakness; for R ≥ 2 nothing
   rules out the real schedule being more likely than (1/64)^R. One characteristic, not the
   differential. The final no-mix round is not covered, and `rounds` is not linked to
-  `encryptN` (only the keys are). R ≤ 5 is the cipher's range: `Trail` round i is "Compose
+  `encryptN` (only the keys are); M7 (`FullCipher.lean`) adds both and gains nothing
+  beyond round 0. R ≤ 5 is the cipher's range: `Trail` round i is "Compose
   with K_i, then the round with mix", and the cipher has five such steps (K_0 … K_4); for
   R ≥ 6 the model uses K_5, K_6, … as keys before a mix, which the cipher never does
   (harmless, but not the cipher).

@@ -9,7 +9,7 @@
   uniform given the state. This is a limit of the proof, not a measured weakness; for
   `R ≥ 2` nothing here rules out a probability above `(1/64)^R`. One constant-σ
   characteristic, not a differential; no final no-mix round; `rounds` not linked to
-  `encryptN`; `R ≤ 5` is the cipher's range. Not a bit-security claim.
+  `encryptN` (both in `FullCipher`, M7); `R ≤ 5` is the cipher's range. Not a bit-security claim.
 -/
 import DoubleDealSecurity.RealSchedule
 import DoubleDealSecurityHeavy.GridCycleSurvival

@@ -13,7 +13,7 @@ independent uniform round keys; no numeric bound on the full differential; no pr
 decay; the `v10Sym` bounds hold only for `(a, x) ≠ (0, 0)` and cover only paths whose
 difference stays inside `v10Sym`; the real PassKey schedule gets only `R = 1` and the
 one-round `v10Sym`-cluster bound; the final no-mix round and `encryptN` are not
-covered.
+covered here (they are in M7, `FullCipher.lean`).
 
 ## 1. Method
 
@@ -119,5 +119,6 @@ CHARACTERISTIC is `(1/64)² ≈ 2.4e-4`; nothing numeric is proved for the DIFFE
   neither proved nor claimed.
 * Paths through differences outside `v10Sym` (the only proved multi-round bound covers
   paths that stay inside `v10Sym`).
-* The real schedule at `R ≥ 2` beyond the one-round bounds; the final no-mix round;
-  the link from `rounds` to `encryptN`.
+* The real schedule at `R ≥ 2` beyond the one-round bounds. (The final no-mix round
+  and the link from `rounds` to `encryptN`: M7, `FullCipher.lean`; no numeric bound
+  there either.)

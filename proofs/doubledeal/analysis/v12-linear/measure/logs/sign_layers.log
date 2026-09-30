@@ -1,0 +1,4 @@
+stem           E[sgn(in)sgn(out)] = -0.00010  (+-0.00010 1sd)
+GridCycle      E[sgn(in)sgn(out)] = -0.00001  (+-0.00010 1sd)
+unkeyed round  E[sgn(in)sgn(out)] = +0.00019  (+-0.00010 1sd)
+control        E[sgn(in)sgn(out)] = +0.00008  (+-0.00010 1sd)

@@ -28,5 +28,6 @@ import DoubleDealSecurity.RealSchedule
 import DoubleDealSecurity.Differential
 import DoubleDealSecurity.FullCipher
 import DoubleDealSecurity.Linear
+import DoubleDealSecurity.LinearMasks
 import DoubleDealSecurity.CovariantNarrowLists
 import DoubleDealSecurity.CovariantNarrow

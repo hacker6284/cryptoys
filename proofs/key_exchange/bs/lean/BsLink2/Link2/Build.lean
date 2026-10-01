@@ -3682,4 +3682,163 @@ theorem holeStep_inv {d0 : Spec.Dice} {lg : List Spec.LetGo} {row col : Nat} {st
   · intro hodd
     exact f4 (by omega)
 
+/-- §4.2, one hole, as a step of the emitted column loop (`col` from 0 to 9). -/
+theorem hole_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row : Nat) (hr : row < 10)
+    (d0 : Spec.Dice) (hd0 : DiceFit d0) (col : Nat) (hc : col < 10) (st : Spec.BuildSt)
+    (hinv : HoleInv d0 col st) :
+    (holeStepE (embLG lg) (Int.ofNat row) (Int.ofNat 9) (Int.ofNat col, embSt st)).toOption =
+    (Spec.holeStep lg row col st).map (fun s' =>
+      if col + 1 = 10 then .brk (Int.ofNat col, embSt s') else .cont (Int.ofNat (col + 1), embSt s')) := by
+  rw [holeStepE_eq, if_neg (by show ¬ ((9 : Nat) : Int) < ((col : Nat) : Int); omega), toOpt_bind]
+  refine (congrArg (fun o => Option.bind o _) (hole_inner_spec lg hlg row col hr hc st
+    (hd0.of_streams hinv.streams) hinv.tray hinv.trayLen hinv.read hinv.face)).trans ?_
+  cases Spec.holeStep lg row col st with
+  | none => rfl
+  | some s' =>
+    simp only [Option.map_some', Option.some_bind]
+    by_cases h9 : col = 9
+    · subst h9; rfl
+    · have hb : (Int.ofNat col == Int.ofNat 9) = false := by
+        apply beq_false_of_ne; intro e; exact h9 (Int.ofNat.inj e)
+      rw [hb, if_neg (by decide), addI_ofNat_one _ (fits_small (by omega)), ok_bind,
+        if_neg (by omega)]
+      rfl
+
+open Bs in
+/-- The emitted row step of `build` (face 0, then the column loop over `holeStepE`), copied
+    verbatim from the generated `build` with the column loop's step named. -/
+def rowStepE (letgo : Array LetGo) (_toV : Int) :
+    Int × (Dice × Array Int × Int × Array Bool × Array Ship × Array Int) →
+      Except SudoRt.Trap (SudoRt.Flow
+        (Int × (Dice × Array Int × Int × Array Bool × Array Ship × Array Int)) (KeyGrid × Dice)) :=
+  fun σ =>
+    let row := σ.1
+    let d := σ.2.1
+    let _sp922 := σ.2.2
+    let tray := _sp922.1
+    let _sp923 := _sp922.2
+    let read := _sp923.1
+    let _sp924 := _sp923.2
+    let covered := _sp924.1
+    let _sp925 := _sp924.2
+    let ships := _sp925.1
+    let _sp926 := _sp925.2
+    let pegs := _sp926
+    do
+      if row > _toV then
+        pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (row, (d, tray, read, covered, ships, pegs)))
+      else
+        match ← ((do
+  let face := (0 : Int)
+  let _t907 ← SudoRt.subI grid_cols (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t907
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init920 := (_fromV, (d, tray, read, covered, ships, face, pegs))
+  let _out ← (SudoRt.runLoopOn (ρ := (KeyGrid) × (Dice)) _init920 fuel (holeStepE letgo row _toV) (fun σ =>
+    let d := σ.2.1
+    let _sp914 := σ.2.2
+    let tray := _sp914.1
+    let _sp915 := _sp914.2
+    let read := _sp915.1
+    let _sp916 := _sp915.2
+    let covered := _sp916.1
+    let _sp917 := _sp916.2
+    let ships := _sp917.1
+    let _sp918 := _sp917.2
+    let _face := _sp918.1
+    let _sp919 := _sp918.2
+    let pegs := _sp919
+    do
+      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, pegs))) (fun r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((KeyGrid) × (Dice)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (row, _fs))
+        | .cont _fs => do
+            if row == _toV then
+              pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (row, _fs))
+            else do
+              let i' ← SudoRt.addI row (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (i', _fs))
+
+
+open Bs in
+/-- After the column loop: drop the pair face. -/
+def colAfterE : Int × (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int) →
+    Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Array Int)
+      (KeyGrid × Dice)) :=
+  fun σ => pure (SudoRt.Flow.cont (σ.2.1, σ.2.2.1, σ.2.2.2.1, σ.2.2.2.2.1, σ.2.2.2.2.2.1,
+    σ.2.2.2.2.2.2.2))
+
+open Bs in
+theorem rowStepE_eq (letgo : Array LetGo) (toV row : Int)
+    (s : Dice × Array Int × Int × Array Bool × Array Ship × Array Int) :
+    rowStepE letgo toV (row, s) =
+      (if row > toV then pure (SudoRt.Flow.brk (row, s)) else do
+        match ← (do
+            let t ← SudoRt.subI grid_cols (1 : Int)
+            let _out ← SudoRt.runLoopOn (ρ := KeyGrid × Dice)
+              ((0 : Int), (s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, (0 : Int), s.2.2.2.2.2))
+              (fuelRange 0 t) (holeStepE letgo row t) colAfterE (fun r => pure (SudoRt.Flow.ret r))
+            pure _out) with
+        | .ret r => pure (SudoRt.Flow.ret r)
+        | .brk fs => pure (SudoRt.Flow.brk (row, fs))
+        | .cont fs => if row == toV then pure (SudoRt.Flow.brk (row, fs)) else do
+            let i' ← SudoRt.addI row (1 : Int)
+            pure (SudoRt.Flow.cont (i', fs))) := rfl
+
+/-- The emitted row state (no pair face). -/
+def embRowSt (st : Spec.BuildSt) :
+    Bs.Dice × Array Int × Int × Array Bool × Array Bs.Ship × Array Int :=
+  (embDice st.dice, embed st.tray, Int.ofNat st.read, tab st.covered,
+    (st.ships.map embShip).toArray, tab (fun h => Int.ofNat (st.pegs h)))
+
+theorem holeSteps_inv {d0 : Spec.Dice} {lg : List Spec.LetGo} {row : Nat} (hr : row < 10) :
+    ∀ (k a : Nat) (st st' : Spec.BuildSt), a + k ≤ 10 → HoleInv d0 a st →
+      (List.range' a k).foldlM (fun s i => Spec.holeStep lg row i s) st = some st' →
+      HoleInv d0 (a + k) st'
+  | 0, a, st, st', _, h, hs => by cases hs; exact h
+  | k + 1, a, st, st', hk, h, hs => by
+    rw [foldlM_range'_succ] at hs
+    cases h1 : Spec.holeStep lg row a st with
+    | none => rw [h1] at hs; cases hs
+    | some s1 =>
+      rw [h1, Option.some_bind] at hs
+      have := holeSteps_inv hr k (a + 1) s1 st' (by omega) (holeStep_inv hr (by omega) h h1) hs
+      rwa [show a + 1 + k = a + (k + 1) by omega] at this
+
+/-- §4.2, one row, as a step of the emitted row loop (`row` from 0 to 9). -/
+theorem row_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d0 : Spec.Dice)
+    (hd0 : DiceFit d0) (row : Nat) (hr : row < 10) (st : Spec.BuildSt) (hinv : HoleInv d0 0 st) :
+    (rowStepE (embLG lg) (Int.ofNat 9) (Int.ofNat row, embRowSt st)).toOption =
+    (Spec.rowStep lg row st).map (fun s' =>
+      if row + 1 = 10 then .brk (Int.ofNat row, embRowSt s')
+      else .cont (Int.ofNat (row + 1), embRowSt s')) := by
+  rw [rowStepE_eq, if_neg (by show ¬ ((9 : Nat) : Int) < ((row : Nat) : Int); omega)]
+  simp only [Bs.grid_cols]
+  rw [show (10 : Int) = Int.ofNat 10 from rfl, subI_ofNat_one 10 (by decide) (fits_small (by decide)),
+    ok_bind, except_bind_pure, toOpt_bind]
+  have h0 : HoleInv d0 0 { st with face := 0 } :=
+    ⟨hinv.streams, hinv.tray, hinv.trayLen, hinv.read, fun h => by simp at h⟩
+  refine (congrArg (fun o => Option.bind o _)
+    (loop_opt (S := Spec.BuildSt) embSt (holeStepE (embLG lg) (Int.ofNat row) (Int.ofNat 9))
+      colAfterE (fun r => pure (SudoRt.Flow.ret r)) (fun i s => Spec.holeStep lg row i s)
+      (HoleInv d0) (fun s => some (SudoRt.Flow.cont (embRowSt s))) 0 10 (by decide)
+      (fun i s _ hi hP => hole_step_spec lg hlg row hr d0 hd0 i hi s hP)
+      (fun i s s' _ hi hP hs => holeStep_inv hr hi hP hs)
+      (fun _ _ _ => rfl) { st with face := 0 } h0)).trans ?_
+  unfold Spec.rowStep
+  rw [List.range_eq_range']
+  cases (List.range' 0 (10 - 0)).foldlM (fun s i => Spec.holeStep lg row i s) { st with face := 0 } with
+  | none => rfl
+  | some s' =>
+    simp only [Option.some_bind, Option.map_some']
+    by_cases h9 : row = 9
+    · subst h9; rfl
+    · have hb : (Int.ofNat row == Int.ofNat 9) = false := by
+        apply beq_false_of_ne; intro e; exact h9 (Int.ofNat.inj e)
+      rw [hb, if_neg (by decide), addI_ofNat_one _ (fits_small (by omega)), ok_bind,
+        if_neg (by omega)]
+      rfl
+
 end BsLink2.Link2

@@ -100,10 +100,36 @@ function disposeMaterial(mat) {
 }
 
 /**
+ * Step timings (ms at pace 1) and hop heights, read at call time. One
+ * mutable object so the microdemos (demos/micro/doubledeal-*) can tune
+ * it live; tuned values paste straight back here.
+ */
+export const TABLE_TIMING = {
+    stepMs: 280,
+    dealMs: 260,
+    dealStaggerMs: 36,
+    shiftMs: 320,
+    sumrowMs: 380,
+    sumcolMs: 300,
+    scoopColMs: 240,
+    scoopRowMs: 300,
+    placeMs: 240,
+    dropMs: 160,
+    takeMs: 200,
+    counterMs: 180,
+    markMs: 180,
+    scanMs: 8,
+    hop: 0.25,
+    liftHop: 0.9,
+    zeroShiftHop: 0.18,
+    dropY: 1.4,
+};
+
+/**
  * Live 52+52 card table. Positions stay in the standalone DoubleDeal
  * units; the playroom adapter scales the parent group onto the felt.
  */
-export function createCardTable({ parent, faces, navy, red } = {}) {
+export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMING } = {}) {
     if (!parent) throw new Error("createCardTable needs a parent group.");
     if (!faces?.length || !navy || !red) throw new Error("createCardTable needs card textures.");
 
@@ -161,7 +187,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
 
     function moveTo(mesh, pos, ms, lift) {
         const from = mesh.position.clone();
-        const hop = lift ? 0.9 : 0.25;
+        const hop = lift ? timing.liftHop : timing.hop;
         return tween(ms, (t) => {
             mesh.position.lerpVectors(from, pos, t);
             mesh.position.y = pos.y + Math.sin(Math.PI * t) * hop;
@@ -186,8 +212,8 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             grid[row][col] = mesh;
             setTimeout(() => {
                 if (gen !== generation) resolve();
-                else moveTo(mesh, gridPos(row, col, MESSAGE_X), 260, true).then(resolve);
-            }, index * (36 / pace));
+                else moveTo(mesh, gridPos(row, col, MESSAGE_X), timing.dealMs, true).then(resolve);
+            }, index * (timing.dealStaggerMs / pace));
         })));
     }
 
@@ -197,7 +223,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             if (mesh) {
                 const y = mesh.position.y;
                 await tween(ms, (t) => {
-                    mesh.position.y = y + Math.sin(Math.PI * t) * 0.18;
+                    mesh.position.y = y + Math.sin(Math.PI * t) * timing.zeroShiftHop;
                 });
             }
             return;
@@ -247,7 +273,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         sequence.forEach((mesh, index) => {
             if (!mesh) return;
             packet.push(mesh);
-            jobs.push(moveTo(mesh, pilePos("hand", index, 52), major === "col" ? 240 : 300, major !== "col"));
+            jobs.push(moveTo(mesh, pilePos("hand", index, 52), major === "col" ? timing.scoopColMs : timing.scoopRowMs, major !== "col"));
         });
         await Promise.all(jobs);
     }
@@ -258,7 +284,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         const target = gridPos(step.row, step.col, MESSAGE_X);
         if (step.flag === 1) {
             const drop = target.clone();
-            drop.y = 1.4;
+            drop.y = timing.dropY;
             mesh.position.copy(drop);
             await moveTo(mesh, target, ms, false);
         } else {
@@ -274,7 +300,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         marker.material.color.setHex(0xf2d48a);
         for (let c = 0; c < 13; c++) {
             if (gen !== generation) return;
-            await tween(8, (t) => {
+            await tween(timing.scanMs, (t) => {
                 marker.position.copy(gridPos(row, c, MESSAGE_X));
                 marker.position.y = 0.02;
                 marker.material.opacity = 0.35 + 0.5 * (1 - t);
@@ -751,7 +777,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
 
     async function play(step, nextPace) {
         pace = nextPace || 1;
-        const ms = 280;
+        const ms = timing.stepMs;
         if (step.kind === "reset") {
             await resetKey(step, ms);
             return;
@@ -772,7 +798,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
                 const mesh = message[id];
                 const lifted = mesh.position.clone();
                 lifted.y = 0.55;
-                return moveTo(mesh, lifted, 180, false);
+                return moveTo(mesh, lifted, timing.counterMs, false);
             }));
             return;
         }
@@ -785,11 +811,11 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             return;
         }
         if (step.kind === "sumrow" || step.kind === "shift") {
-            await slideRow(step.row, step.amount, step.kind === "shift" ? 320 : 380);
+            await slideRow(step.row, step.amount, step.kind === "shift" ? timing.shiftMs : timing.sumrowMs);
             return;
         }
         if (step.kind === "sumcol") {
-            await beltColumn(step.col, step.amount, 300);
+            await beltColumn(step.col, step.amount, timing.sumcolMs);
             return;
         }
         if (step.kind === "scoopcm") {
@@ -806,7 +832,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             marker.material.color.setHex(0xf2d48a);
             marker.position.copy(gridPos(2, 0, MESSAGE_X));
             marker.position.y = 0.02;
-            await tween(180, () => {});
+            await tween(timing.markMs, () => {});
             return;
         }
         if (step.kind === "scan") {
@@ -814,11 +840,11 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             return;
         }
         if (step.kind === "place") {
-            await placeCard(step, step.flag === 1 ? 160 : 240);
+            await placeCard(step, step.flag === 1 ? timing.dropMs : timing.placeMs);
             return;
         }
         if (step.kind === "take") {
-            await takeCard(step, 200);
+            await takeCard(step, timing.takeMs);
             return;
         }
         if (step.kind === "uncompose") {

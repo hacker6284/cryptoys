@@ -22,11 +22,18 @@ function tween(ms, step, snap) {
 }
 
 /**
+ * Lift/settle timings, read at call time. The microdemo
+ * (demos/micro/scramble-turn) passes its own copy; tuned values paste
+ * back into constants.js.
+ */
+export const CUBE_STAGE_TIMING = { TURN_LIFT, TURN_LIFT_MS, SETTLE_HOLD_MS };
+
+/**
  * Playroom-only cube motion around the live Scramble rig: remember the
  * seated table pose, lift for turn sequences, and ask the pose
  * controller to keep the cube in frame while it is in the air.
  */
-export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
+export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_STAGE_TIMING } = {}) {
     let seatedY = null;
     let lifted = false;
     let token = 0;
@@ -77,7 +84,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
             return true;
         }
         rig.group.userData.easeBusy = true;
-        await tween(TURN_LIFT_MS, (t) => {
+        await tween(timing.TURN_LIFT_MS, (t) => {
             if (my !== token) return;
             toy.position.y = fromY + (toY - fromY) * t;
         }, snap || reduced());
@@ -91,7 +98,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         window.clearTimeout(settleTimer);
         engageFrame();
         if (seatedY == null) rememberSeated();
-        const up = destY() + TURN_LIFT;
+        const up = destY() + timing.TURN_LIFT;
         if (Math.abs(rig.group.position.y - up) < 1e-3) {
             lifted = true;
             return;
@@ -119,7 +126,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         window.clearTimeout(settleTimer);
         settleTimer = window.setTimeout(() => {
             void setDown();
-        }, SETTLE_HOLD_MS);
+        }, timing.SETTLE_HOLD_MS);
     }
 
     // Per-move lift; the settle-hold timer is cleared by the next lift so a
@@ -164,6 +171,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         setAlg: call("setAlg"),
         setSetup: call("setSetup"),
         setTempo: call("setTempo"),
+        status: call("status"),
         resetTimeline: call("reset"),
         pauseTimeline: call("pause"),
         highlightLayer: call("highlightLayer", () => {}),

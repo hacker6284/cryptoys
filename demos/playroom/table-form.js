@@ -121,6 +121,7 @@ export async function gatherSessionTable({
     gen,
     keyBox,
     messageBox,
+    ms = GATHER_MS,
 } = {}) {
     if (!table?.group || !clock) return;
     table.group.updateMatrixWorld?.(true);
@@ -140,7 +141,7 @@ export async function gatherSessionTable({
     pile(table.cardsOf?.("key"), keyAt);
     pile(table.cardsOf?.("message"), msgAt);
     if (movers.length) {
-        await clock.tween(GATHER_MS, (t) => {
+        await clock.tween(ms, (t) => {
             const k = easeInOutCubic(t);
             const lift = Math.sin(Math.PI * t) * 2.6;
             for (const { mesh, from, to } of movers) {

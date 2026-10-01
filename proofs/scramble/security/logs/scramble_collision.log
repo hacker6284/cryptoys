@@ -1,8 +1,8 @@
-[collision] seed 20260930; reference self-check: 10/10 SPEC KATs ok
+[collision] seed 20260930; engine self-check: 10/10 SPEC KATs ok
   22 corner-collision stages: blocks tried per stage mean 21875 (2^14.42), min 6098, max 48411; sqrt(pi/2 * 24*(8!/2)*3^7) = 40769 (2^15.32)
   edge birthday: 1769627 edge outcomes stored before the first match
   m1 = 84725426e936d44d4fe39468866a366150f6d5bedfa585744d848b1de8cd919263dedef5110b5720525d5ecd34d8530fea117c1709f6beacd553ac9f704bd94adf465b4526123600721cb72c0b83afbc0a32717708b18735
   m2 = 847254263af934b04fe39468ea45ec2a66cb6586cee1a2664d848b1de8cd91920d13465a110b5720525d5ecdbb511daaea117c171e345851bf0cba4e9df5c7a5df465b4526123600721cb72c0b83afbcb9f455e407573a06
   distinct: True; len 88 bytes; digests 0AFB0BE3439EF6892 0AFB0BE3439EF6892; COLLISION VERIFIED: True
-  peak RSS 266 MB
-  work: 3850360 nybble steps = 2^21.88 (corner-only steps counted as full); ~2^18.29 twelve-step hash equivalents; plus 3539280 = 2^21.76 edge-only permutation applications (24 entries each; each cheaper than one nybble step); wall 17 s (single Python process)
+  peak RSS 265 MB
+  work: 3850360 nybble steps = 2^21.88 (corner-only steps counted as full); ~2^18.29 twelve-step hash equivalents; plus 3539280 = 2^21.76 edge-only permutation applications (24 entries each; each cheaper than one nybble step); wall 228 s (single Python process)

@@ -30,10 +30,10 @@ the source.
   ([`scramble_sudo_check.mjs`](scramble_sudo_check.mjs) →
   [`logs/scramble_sudo_check.log`](logs/scramble_sudo_check.log)):
 
-  | Attack | Old SPEC figure | Measured | Time (1 Python process) | Log |
+  | Attack | Old SPEC figure | Measured | Wall time (1 Python process, as logged) | Log |
   | --- | --- | --- | --- | --- |
-  | Collision | ≈2^32.6 | **2^21.88 nybble steps** (≈2^18.29 hash-equivalents) + 2^21.76 edge-only permutations | 17 s | [`logs/scramble_collision.log`](logs/scramble_collision.log) |
-  | Second preimage (random 64-byte target) | ≈2^33 | **2^22.94 nybble steps** (≈2^19.35 hash-equivalents) + 2^22.09 edge-only permutations | 37 s | [`logs/scramble_second_preimage.log`](logs/scramble_second_preimage.log) |
+  | Collision | ≈2^32.6 | **2^21.88 nybble steps** (≈2^18.29 hash-equivalents) + 2^21.76 edge-only permutations | 228 s | [`logs/scramble_collision.log`](logs/scramble_collision.log) |
+  | Second preimage (random 64-byte target) | ≈2^33 | **2^22.94 nybble steps** (≈2^19.35 hash-equivalents) + 2^22.09 edge-only permutations | 586 s | [`logs/scramble_second_preimage.log`](logs/scramble_second_preimage.log) |
   | Preimage of a given digest (hex only) | not stated | **2^22.95 nybble steps** | 37 s | [`logs/scramble_decode_preimage.log`](logs/scramble_decode_preimage.log) |
 
   Each row is one seeded run (seed 20260930), and each run succeeded. A success rate over
@@ -57,8 +57,9 @@ the source.
   - There is partial length extension: the digest fixes the internal state up to ≤ 384
     candidates (argued, §4).
 - **Honest claim for Scramble v2: none.** Collisions, second preimages and preimages are
-  practical: the logs record 17 s, 37 s and 37 s of wall time, one Python process each, on
-  the one machine that produced them (S8, §5). Even without F1, any single-cube walk with this
+  practical: the logs record 228 s, 586 s and 37 s of wall time, one Python process each, on
+  the one machine that produced them; the collision and second-preimage runs shared it with
+  other jobs (S8, §5). Even without F1, any single-cube walk with this
   digest encoding is capped by the size of the digest image: generic collisions cost ≈2^30.8
   (birthday on 2^61.64 values; §3.3), below any AES/SHA-level target.
 
@@ -86,11 +87,8 @@ SUDOC=/path/to/sudoc node scramble_sudo_check.mjs   # default: <repo>/.sudocode/
 
 CI (the `generated-fresh` job in `.github/workflows/proofs.yml`, which builds `sudoc` at the
 pin) runs `scramble_sudo_check.mjs` and requires its output to equal its log byte for byte. CI
-does not run the Python scripts (follow-up S7, §5). The logs were regenerated when the printed
-corner-bound estimate was corrected to 24·(8!/2)·3^7; the messages, digests and work counts were
-unchanged, and only that estimate, wall time and memory differ from the first run. The collision
-and second-preimage logs predate the label rename and print "reference self-check" on line 1;
-the scripts now print "engine self-check". A rerun reproduced every count, digest and message.
+does not run the Python scripts (follow-up S7, §5). The logs in `logs/` are the unedited output
+of the current scripts.
 
 ## 2. Structural facts (proved (paper))
 

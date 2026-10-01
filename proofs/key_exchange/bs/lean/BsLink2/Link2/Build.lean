@@ -1096,4 +1096,249 @@ theorem grow_until_it_bumps_spec (d : Spec.Dice) (cov : Nat → Bool) (row col :
       simp only [Option.some_bind]
       cases Spec.pieceOf len dd <;> rfl
 
+/-! ### Facts about the model's dice and tray -/
+
+/-- The three face streams are those of `d0` (only the read counts differ). -/
+def Streams (d0 d : Spec.Dice) : Prop := d.d12 = d0.d12 ∧ d.d6 = d0.d6 ∧ d.d10 = d0.d10
+
+theorem Streams.refl (d : Spec.Dice) : Streams d d := ⟨rfl, rfl, rfl⟩
+
+theorem Streams.trans {a b c : Spec.Dice} (h1 : Streams a b) (h2 : Streams b c) : Streams a c :=
+  ⟨h2.1.trans h1.1, h2.2.1.trans h1.2.1, h2.2.2.trans h1.2.2⟩
+
+theorem d10Scan_face : ∀ (fs : List Int) (t : Nat) {f t' : Nat}, Spec.d10Scan fs t = some (f, t') →
+    1 ≤ f ∧ f ≤ 9
+  | [], _, _, _, h => by cases h
+  | x :: fs, t, f, t', h => by
+    unfold Spec.d10Scan at h
+    by_cases hr : 0 ≤ x ∧ x ≤ 9
+    · rw [if_pos hr] at h
+      by_cases h0 : x = 0
+      · rw [if_pos h0] at h; exact d10Scan_face fs (t + 1) h
+      · rw [if_neg h0] at h
+        cases h; omega
+    · rw [if_neg hr] at h; cases h
+
+theorem throwD10_facts {d d' : Spec.Dice} {f : Nat} (h : Spec.throwD10 d = some (f, d')) :
+    1 ≤ f ∧ f ≤ 9 ∧ Streams d d' := by
+  unfold Spec.throwD10 at h
+  cases hs : Spec.d10Scan (d.d10.drop d.next10) d.next10 with
+  | none => rw [hs] at h; cases h
+  | some p =>
+    rw [hs] at h; cases h
+    exact ⟨(d10Scan_face _ _ hs).1, (d10Scan_face _ _ hs).2, rfl, rfl, rfl⟩
+
+/-- A tray of row-cup faces: every die shows 1–9. -/
+def TrayOk (tray : List Nat) : Prop := ∀ x ∈ tray, 1 ≤ x ∧ x ≤ 9
+
+theorem throwRowCup_facts {d d' : Spec.Dice} {tray : List Nat}
+    (h : Spec.throwRowCup d = some (tray, d')) :
+    tray.length = 5 ∧ TrayOk tray ∧ Streams d d' := by
+  unfold Spec.throwRowCup at h
+  have key : ∀ (k : List Nat) (acc : List Nat × Spec.Dice) (r : List Nat × Spec.Dice),
+      TrayOk acc.1 → k.foldlM (fun (acc : List Nat × Spec.Dice) _ =>
+        (Spec.throwD10 acc.2).map (fun p => (acc.1 ++ [p.1], p.2))) acc = some r →
+      r.1.length = acc.1.length + k.length ∧ TrayOk r.1 ∧ Streams acc.2 r.2 := by
+    intro k
+    induction k with
+    | nil => intro acc r ht h; cases h; exact ⟨rfl, ht, Streams.refl _⟩
+    | cons x k ih =>
+      intro acc r ht h
+      simp only [List.foldlM_cons] at h
+      cases hd : Spec.throwD10 acc.2 with
+      | none => rw [hd] at h; cases h
+      | some p =>
+        obtain ⟨f, d1⟩ := p
+        rw [hd] at h
+        obtain ⟨hf1, hf2, hs⟩ := throwD10_facts hd
+        have := ih (acc.1 ++ [f], d1) r (by
+          intro y hy; rcases List.mem_append.mp hy with hy | hy
+          · exact ht y hy
+          · simp at hy; omega) h
+        refine ⟨by rw [this.1]; simp; omega, this.2.1, hs.trans this.2.2⟩
+  have := key (List.range 5) ([], d) (tray, d') (by intro y hy; cases hy) h
+  exact ⟨by simpa using this.1, this.2.1, this.2.2⟩
+
+theorem rethrowUnread_facts {d d' : Spec.Dice} {tray tray' : List Nat} {read : Nat}
+    (ht : TrayOk tray) (h : Spec.rethrowUnread d tray read = some (d', tray')) :
+    tray'.length = tray.length ∧ TrayOk tray' ∧ Streams d d' := by
+  unfold Spec.rethrowUnread at h
+  have key : ∀ (k : List Nat) (acc : Spec.Dice × List Nat) (r : Spec.Dice × List Nat),
+      TrayOk acc.2 → k.foldlM (fun (acc : Spec.Dice × List Nat) k =>
+        (Spec.throwD10 acc.1).map (fun p => (p.2, acc.2.set k p.1))) acc = some r →
+      r.2.length = acc.2.length ∧ TrayOk r.2 ∧ Streams acc.1 r.1 := by
+    intro k
+    induction k with
+    | nil => intro acc r ht h; cases h; exact ⟨rfl, ht, Streams.refl _⟩
+    | cons x k ih =>
+      intro acc r ht h
+      simp only [List.foldlM_cons] at h
+      cases hd : Spec.throwD10 acc.1 with
+      | none => rw [hd] at h; cases h
+      | some p =>
+        obtain ⟨f, d1⟩ := p
+        rw [hd] at h
+        obtain ⟨hf1, hf2, hs⟩ := throwD10_facts hd
+        have := ih (d1, acc.2.set x f) r (by
+          intro y hy
+          rcases List.mem_or_eq_of_mem_set hy with hy | hy
+          · exact ht y hy
+          · omega) h
+        exact ⟨by rw [this.1]; simp, this.2.1, hs.trans this.2.2⟩
+  have := key _ (d, tray) (d', tray') ht h
+  exact this
+
+theorem rollHole_facts {d d' : Spec.Dice} {f : Nat} (h : Spec.rollHole d = some (f, d')) :
+    Streams d d' := by
+  unfold Spec.rollHole at h
+  split at h
+  · cases h
+  · split at h
+    · cases h; exact Streams.refl _
+    · cases h
+
+theorem rollD6_facts {d d' : Spec.Dice} {f : Nat} (h : Spec.rollD6 d = some (f, d')) :
+    Streams d d' := by
+  unfold Spec.rollD6 at h
+  split at h
+  · cases h
+  · split at h
+    · cases h; exact Streams.refl _
+    · cases h
+
+/-- The extent the heading reaches from the first hole: `len` holes fit on the grid. -/
+def Fits (row col : Nat) (down : Bool) (len : Nat) : Prop :=
+  if down then row + len ≤ 10 else col + len ≤ 10
+
+theorem growLoop_facts (cov : Nat → Bool) (row col : Nat) (down : Bool) :
+    ∀ (fuel : Nat) (d d' : Spec.Dice) (len len' : Nat), Fits row col down len →
+      Spec.growLoop cov row col down fuel d len = some (d', len') →
+      Streams d d' ∧ len ≤ len' ∧ len' ≤ len + fuel ∧ Fits row col down len'
+  | 0, d, d', len, len', hf, h => by
+    cases h; exact ⟨Streams.refl _, Nat.le_refl _, by omega, hf⟩
+  | fuel + 1, d, d', len, len', hf, h => by
+    unfold Spec.growLoop at h
+    by_cases hb : Spec.hasRoom cov (if down then row + len else row)
+        (if down then col else col + len) = true
+    · rw [if_pos hb] at h
+      cases hr : Spec.rollD6 d with
+      | none => rw [hr] at h; cases h
+      | some p =>
+        obtain ⟨f, d1⟩ := p
+        rw [hr] at h
+        have hs := rollD6_facts hr
+        dsimp only at h
+        by_cases hg : (if len = 2 then 4 else 6) ≤ f
+        · rw [if_pos hg] at h
+          have hf' : Fits row col down (len + 1) := by
+            unfold Spec.hasRoom at hb
+            unfold Fits
+            cases down <;> simp at hb ⊢ <;> omega
+          have := growLoop_facts cov row col down fuel d1 d' (len + 1) len' hf' h
+          exact ⟨hs.trans this.1, by omega, by omega, this.2.2.2⟩
+        · rw [if_neg hg] at h
+          cases h
+          exact ⟨hs, Nat.le_refl _, by omega, hf⟩
+    · rw [if_neg hb] at h
+      cases h
+      exact ⟨Streams.refl _, Nat.le_refl _, by omega, hf⟩
+
+theorem pieceOf_facts {len : Nat} {d d' : Spec.Dice} {k : Spec.Kind} (h2 : 2 ≤ len) (h5 : len ≤ 5)
+    (h : Spec.pieceOf len d = some (k, d')) : k.len = len ∧ Streams d d' := by
+  unfold Spec.pieceOf at h
+  by_cases e3 : len = 3
+  · rw [if_pos e3] at h
+    cases hr : Spec.rollD6 d with
+    | none => rw [hr] at h; cases h
+    | some p =>
+      rw [hr] at h
+      obtain ⟨f, d1⟩ := p
+      simp only [Option.map_some', Option.some.injEq, Prod.mk.injEq] at h
+      obtain ⟨hk, hd⟩ := h
+      subst hd
+      refine ⟨?_, rollD6_facts hr⟩
+      rw [← hk]; split <;> simp [Spec.Kind.len, e3]
+  · rw [if_neg e3] at h
+    by_cases e4 : len = 4
+    · rw [if_pos e4] at h; cases h; exact ⟨by simp [Spec.Kind.len, e4], Streams.refl _⟩
+    · rw [if_neg e4] at h
+      by_cases e5 : len = 5
+      · rw [if_pos e5] at h; cases h; exact ⟨by simp [Spec.Kind.len, e5], Streams.refl _⟩
+      · rw [if_neg e5] at h; cases h
+        exact ⟨by simp [Spec.Kind.len]; omega, Streams.refl _⟩
+
+theorem layShip_facts (cov : Nat → Bool) (row col : Nat) (d d' : Spec.Dice) (face : Nat) (down : Bool)
+    (o : Option Spec.Ship) (hr : row < 10) (hc : col < 10) (hf : Fits row col down 2)
+    (h : Spec.layShip cov row col d face down = some (o, d')) :
+    Streams d d' ∧ ∀ s, o = some s → s.OnGrid := by
+  unfold Spec.layShip at h
+  cases hg : Spec.growLoop cov row col down 3 d 2 with
+  | none => rw [hg] at h; cases h
+  | some p =>
+    obtain ⟨d1, len⟩ := p
+    rw [hg] at h
+    obtain ⟨hs1, hl1, hl2, hfit⟩ := growLoop_facts cov row col down 3 d d1 2 len hf hg
+    dsimp only at h
+    cases hp : Spec.pieceOf len d1 with
+    | none => rw [hp] at h; cases h
+    | some q =>
+      obtain ⟨k, d2⟩ := q
+      rw [hp] at h
+      obtain ⟨hk, hs2⟩ := pieceOf_facts (by omega) (by omega) hp
+      simp only [Option.map_some', Option.some.injEq, Prod.mk.injEq] at h
+      obtain ⟨ho, hd⟩ := h
+      subst hd
+      refine ⟨hs1.trans hs2, ?_⟩
+      intro s hs
+      rw [← ho] at hs
+      cases hs
+      unfold Spec.Ship.OnGrid Fits at *
+      cases down <;> simp [hk] at hfit ⊢ <;> omega
+
+theorem growUntilItBumps_facts (d d' : Spec.Dice) (cov : Nat → Bool) (row col : Nat)
+    (o : Option Spec.Ship) (hr : row < 10) (hc : col < 10)
+    (h : Spec.growUntilItBumps d cov row col = some (o, d')) :
+    Streams d d' ∧ ∀ s, o = some s → s.OnGrid := by
+  unfold Spec.growUntilItBumps at h
+  dsimp only at h
+  by_cases hn : (!Spec.hasRoom cov row (col + 1) && !Spec.hasRoom cov (row + 1) col) = true
+  · rw [if_pos hn] at h; cases h
+    exact ⟨Streams.refl _, fun s hs => by cases hs⟩
+  · rw [if_neg hn] at h
+    cases hrh : Spec.rollHole d with
+    | none => rw [hrh] at h; cases h
+    | some p =>
+      obtain ⟨face, d1⟩ := p
+      rw [hrh] at h
+      have hs1 := rollHole_facts hrh
+      dsimp only at h
+      have hA : Spec.hasRoom cov row (col + 1) = true → Fits row col false 2 := by
+        intro ha; unfold Spec.hasRoom at ha; unfold Fits; simp at ha ⊢; omega
+      have hD : Spec.hasRoom cov (row + 1) col = true → Fits row col true 2 := by
+        intro ha; unfold Spec.hasRoom at ha; unfold Fits; simp at ha ⊢; omega
+      split at h
+      · next hab =>
+        simp only [Bool.and_eq_true] at hab
+        split at h
+        · cases h; exact ⟨hs1, fun s hs => by cases hs⟩
+        · have hf : Fits row col (decide (9 ≤ face)) 2 := by
+            cases decide (9 ≤ face)
+            · exact hA hab.1
+            · exact hD hab.2
+          have := layShip_facts cov row col d1 d' face _ o hr hc hf h
+          exact ⟨hs1.trans this.1, this.2⟩
+      · next hab =>
+        split at h
+        · cases h; exact ⟨hs1, fun s hs => by cases hs⟩
+        · have hf : Fits row col (Spec.hasRoom cov (row + 1) col) 2 := by
+            cases hb : Spec.hasRoom cov (row + 1) col
+            · have : Spec.hasRoom cov row (col + 1) = true := by
+                cases ha : Spec.hasRoom cov row (col + 1)
+                · rw [ha, hb] at hn; exact absurd rfl hn
+                · rfl
+              exact hA this
+            · exact hD hb
+          have := layShip_facts cov row col d1 d' face _ o hr hc hf h
+          exact ⟨hs1.trans this.1, this.2⟩
+
 end BsLink2.Link2

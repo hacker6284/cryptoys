@@ -34,27 +34,6 @@ def embKey (pages : List Spec.Grid) : Array Bs.KeyGrid := (pages.map embGrid).to
 theorem ship_length_spec (k : Spec.Kind) : Bs.ship_length (embKind k) = .ok (Int.ofNat k.len) := by
   cases k <;> rfl
 
-theorem _root_.BsLink2.Spec.Kind.two_le_len (k : Spec.Kind) : 2 ≤ k.len := by cases k <;> decide
-
-theorem _root_.BsLink2.Spec.Kind.len_le_five (k : Spec.Kind) : k.len ≤ 5 := by cases k <;> decide
-
-theorem fits_small {n : Nat} (h : n ≤ 1000) : FitsLen n := by
-  unfold FitsLen i64MaxNat; omega
-
-theorem dec_ofNat_ge0 (n : Nat) : decide (Int.ofNat n ≥ 0) = true :=
-  decide_eq_true (Int.ofNat_zero_le n)
-
-theorem dec_ofNat_lt_ten (n : Nat) (h : n < 10) : decide (Int.ofNat n < 10) = true :=
-  decide_eq_true ((ofNat_lt_iff n 10).mpr h)
-
-theorem dec_ofNat_le_ten (n : Nat) (h : n ≤ 10) : decide (Int.ofNat n ≤ 10) = true :=
-  decide_eq_true ((ofNat_le_iff n 10).mpr h)
-
-theorem mulI_ten (a : Nat) (h : a < 100) : SudoRt.mulI (Int.ofNat a) 10 = .ok (Int.ofNat (a * 10)) :=
-  mulI_ofNat a 10 (fits_small (by omega))
-
-theorem mulI_one' (a : Nat) (h : a < 1000) : SudoRt.mulI (Int.ofNat a) 1 = .ok (Int.ofNat (a * 1)) :=
-  mulI_ofNat a 1 (fits_small (by omega))
 
 /-- §4.1. The emitted `ship_holes` of a ship on the grid is the model's list of holes. -/
 theorem ship_holes_spec (s : Spec.Ship) (hs : s.OnGrid) :
@@ -83,7 +62,7 @@ theorem ship_holes_spec (s : Spec.Ship) (hs : s.OnGrid) :
       subst hI
       refine ⟨_, rfl, ?_⟩
       dsimp only
-      rw [if_neg (ofNat_not_gt ht), mulI_one' t (by omega), ok_bind,
+      rw [if_neg (ofNat_not_gt ht), mulI_one t (by omega), ok_bind,
         addI_ofNat (s.row * 10 + s.col) (t * 1) (fits_small (by omega)), ok_bind]
       simp only [pure_eq_ok, ok_bind, appendL_spec]
       rw [show (embed ((List.range t).map (fun t => s.row * 10 + s.col + t * 1))).push
@@ -151,22 +130,18 @@ theorem tab_const {α} (v : α) : Array.mkArray 100 v = tab (fun _ => v) := by
   intro h h1 h2
   rw [tab_get]; simp
 
-/-- The ship (among `P`) covering hole `h`, if any. -/
-def findShip (P : List Spec.Ship) (h : Nat) : Option Spec.Ship :=
-  P.find? (fun s => decide (h ∈ s.holes))
-
 /-- `covered[h]`: some ship of `P` covers `h`. -/
-def covB (P : List Spec.Ship) (h : Nat) : Bool := P.any (fun s => decide (h ∈ s.holes))
+def covered (P : List Spec.Ship) (h : Nat) : Bool := P.any (fun s => decide (h ∈ s.holes))
 
 /-- `first_cell[h]`: the first-hole cell of the ship whose first hole is `h`, else `-1`. -/
-def fcv (P : List Spec.Ship) (h : Nat) : Int :=
-  match findShip P h with
+def firstCell (P : List Spec.Ship) (h : Nat) : Int :=
+  match Spec.shipAt P h with
   | none => -1
   | some s => if h = s.first then (if s.down then 2 else 1) else -1
 
 /-- `last_cell[h]`: the last-hole cell of the ship whose last hole is `h`, else `-1`. -/
-def lcv (P : List Spec.Ship) (h : Nat) : Int :=
-  match findShip P h with
+def lastCell (P : List Spec.Ship) (h : Nat) : Int :=
+  match Spec.shipAt P h with
   | none => -1
   | some s => if h = s.last then (if s.bowLast then 2 else 1) else -1
 
@@ -177,8 +152,8 @@ def extraOf : Spec.Kind → Int
   | _ => -1
 
 /-- `extra_cell[h]`: the extra cell of the 3-holer whose last hole is `h`, else `-1`. -/
-def ecv (P : List Spec.Ship) (h : Nat) : Int :=
-  match findShip P h with
+def extraCell (P : List Spec.Ship) (h : Nat) : Int :=
+  match Spec.shipAt P h with
   | none => -1
   | some s => if h = s.last then extraOf s.kind else -1
 
@@ -237,10 +212,10 @@ theorem holes_get_not_mem_take (s : Spec.Ship) (t : Nat) (ht : t < s.holes.lengt
 
 /-- Placing a ship disjoint from `P`: the ship found at `h` is the new ship on its holes,
     and the old one elsewhere. -/
-theorem findShip_snoc (P : List Spec.Ship) (s : Spec.Ship)
+theorem shipAt_snoc (P : List Spec.Ship) (s : Spec.Ship)
     (hdis : ∀ s' ∈ P, ∀ h ∈ s.holes, h ∉ s'.holes) (h : Nat) :
-    findShip (P ++ [s]) h = if h ∈ s.holes then some s else findShip P h := by
-  unfold findShip
+    Spec.shipAt (P ++ [s]) h = if h ∈ s.holes then some s else Spec.shipAt P h := by
+  unfold Spec.shipAt
   rw [List.find?_append]
   by_cases hm : h ∈ s.holes
   · rw [if_pos hm]
@@ -252,20 +227,20 @@ theorem findShip_snoc (P : List Spec.Ship) (s : Spec.Ship)
   · rw [if_neg hm]
     cases P.find? (fun s => decide (h ∈ s.holes)) <;> simp [hm]
 
-theorem covB_snoc (P : List Spec.Ship) (s : Spec.Ship) (h : Nat) :
-    covB (P ++ [s]) h = (covB P h || decide (h ∈ s.holes)) := by
-  simp [covB, List.any_append]
+theorem covered_snoc (P : List Spec.Ship) (s : Spec.Ship) (h : Nat) :
+    covered (P ++ [s]) h = (covered P h || decide (h ∈ s.holes)) := by
+  simp [covered, List.any_append]
 
-theorem fcv_snoc (P : List Spec.Ship) (s : Spec.Ship)
+theorem firstCell_snoc (P : List Spec.Ship) (s : Spec.Ship)
     (hdis : ∀ s' ∈ P, ∀ h ∈ s.holes, h ∉ s'.holes) (h : Nat) :
-    fcv (P ++ [s]) h = if h = s.first then (if s.down then 2 else 1) else fcv P h := by
-  unfold fcv
-  rw [findShip_snoc P s hdis]
+    firstCell (P ++ [s]) h = if h = s.first then (if s.down then 2 else 1) else firstCell P h := by
+  unfold firstCell
+  rw [shipAt_snoc P s hdis]
   by_cases hm : h ∈ s.holes
   · rw [if_pos hm]
-    have hn : findShip P h = none := by
-      have := findShip_snoc P s hdis h
-      unfold findShip at this ⊢
+    have hn : Spec.shipAt P h = none := by
+      have := shipAt_snoc P s hdis h
+      unfold Spec.shipAt at this ⊢
       rw [List.find?_eq_none]
       intro x hx hp
       exact hdis x hx h hm (of_decide_eq_true hp)
@@ -274,40 +249,40 @@ theorem fcv_snoc (P : List Spec.Ship) (s : Spec.Ship)
     have : h ≠ s.first := fun e => hm (e ▸ first_mem_holes s)
     simp [this]
 
-theorem findShip_none_of_mem (P : List Spec.Ship) (s : Spec.Ship)
+theorem shipAt_none_of_mem (P : List Spec.Ship) (s : Spec.Ship)
     (hdis : ∀ s' ∈ P, ∀ h ∈ s.holes, h ∉ s'.holes) {h : Nat} (hm : h ∈ s.holes) :
-    findShip P h = none := by
-  unfold findShip
+    Spec.shipAt P h = none := by
+  unfold Spec.shipAt
   rw [List.find?_eq_none]
   intro x hx hp
   exact hdis x hx h hm (of_decide_eq_true hp)
 
-theorem lcv_snoc (P : List Spec.Ship) (s : Spec.Ship)
+theorem lastCell_snoc (P : List Spec.Ship) (s : Spec.Ship)
     (hdis : ∀ s' ∈ P, ∀ h ∈ s.holes, h ∉ s'.holes) (h : Nat) :
-    lcv (P ++ [s]) h = if h = s.last then (if s.bowLast then 2 else 1) else lcv P h := by
-  unfold lcv
-  rw [findShip_snoc P s hdis]
+    lastCell (P ++ [s]) h = if h = s.last then (if s.bowLast then 2 else 1) else lastCell P h := by
+  unfold lastCell
+  rw [shipAt_snoc P s hdis]
   by_cases hm : h ∈ s.holes
-  · rw [if_pos hm, findShip_none_of_mem P s hdis hm]
+  · rw [if_pos hm, shipAt_none_of_mem P s hdis hm]
   · rw [if_neg hm]
     have : h ≠ s.last := fun e => hm (e ▸ last_mem_holes s)
     simp [this]
 
-theorem ecv_snoc (P : List Spec.Ship) (s : Spec.Ship)
+theorem extraCell_snoc (P : List Spec.Ship) (s : Spec.Ship)
     (hdis : ∀ s' ∈ P, ∀ h ∈ s.holes, h ∉ s'.holes) (h : Nat) :
-    ecv (P ++ [s]) h = if h = s.last then extraOf s.kind else ecv P h := by
-  unfold ecv
-  rw [findShip_snoc P s hdis]
+    extraCell (P ++ [s]) h = if h = s.last then extraOf s.kind else extraCell P h := by
+  unfold extraCell
+  rw [shipAt_snoc P s hdis]
   by_cases hm : h ∈ s.holes
-  · rw [if_pos hm, findShip_none_of_mem P s hdis hm]
+  · rw [if_pos hm, shipAt_none_of_mem P s hdis hm]
   · rw [if_neg hm]
     have : h ≠ s.last := fun e => hm (e ▸ last_mem_holes s)
     simp [this]
 
-theorem ecv_last_old (P : List Spec.Ship) (s : Spec.Ship)
-    (hdis : ∀ s' ∈ P, ∀ h ∈ s.holes, h ∉ s'.holes) : ecv P s.last = -1 := by
-  unfold ecv
-  rw [findShip_none_of_mem P s hdis (last_mem_holes s)]
+theorem extraCell_last_old (P : List Spec.Ship) (s : Spec.Ship)
+    (hdis : ∀ s' ∈ P, ∀ h ∈ s.holes, h ∉ s'.holes) : extraCell P s.last = -1 := by
+  unfold extraCell
+  rw [shipAt_none_of_mem P s hdis (last_mem_holes s)]
 
 /-- The emitted cell loop's choice at one hole, from the three tables. -/
 def cellsOf (fc lc ec : Int) : List Int :=
@@ -329,10 +304,9 @@ theorem cellsOf_4 {fc lc ec : Int} (h1 : ¬ fc ≥ 0) (h2 : ¬ lc ≥ 0) :
   simp [cellsOf, h1, h2]
 
 theorem cellsOf_eq (P : List Spec.Ship) (h : Nat) :
-    cellsOf (fcv P h) (lcv P h) (ecv P h) = (Spec.holeCells P h).map Int.ofNat := by
-  unfold cellsOf fcv lcv ecv Spec.holeCells
-  rw [show P.find? (fun s => decide (h ∈ s.holes)) = findShip P h from rfl]
-  cases findShip P h with
+    cellsOf (firstCell P h) (lastCell P h) (extraCell P h) = (Spec.holeCells P h).map Int.ofNat := by
+  unfold cellsOf firstCell lastCell extraCell Spec.holeCells
+  cases Spec.shipAt P h with
   | none => simp
   | some s =>
     simp only
@@ -397,7 +371,7 @@ theorem ships_length_le (g : Spec.Grid) (hon : ∀ s ∈ g.ships, s.OnGrid)
 
 /-- The four tables after placing the ships `P`. -/
 def tables (P : List Spec.Ship) : Array Bool × Array Int × Array Int × Array Int :=
-  (tab (covB P), tab (fcv P), tab (lcv P), tab (ecv P))
+  (tab (covered P), tab (firstCell P), tab (lastCell P), tab (extraCell P))
 
 theorem putL_tab {α} (f : Nat → α) {i : Nat} (hi : i < 100) (v : α) :
     SudoRt.putL (tab f) (Int.ofNat i) v = .ok (tab (fun h => if h = i then v else f h)) := by
@@ -411,22 +385,22 @@ theorem atL_tab {α} (f : Nat → α) {i : Nat} (hi : i < 100) :
 theorem tables_snoc (P : List Spec.Ship) (s : Spec.Ship)
     (hdis : ∀ s' ∈ P, ∀ h ∈ s.holes, h ∉ s'.holes) :
     tables (P ++ [s]) =
-      (tab (fun h => covB P h || decide (h ∈ s.holes)),
-       tab (fun h => if h = s.first then (if s.down then 2 else 1) else fcv P h),
-       tab (fun h => if h = s.last then (if s.bowLast then 2 else 1) else lcv P h),
-       tab (fun h => if h = s.last then extraOf s.kind else ecv P h)) := by
+      (tab (fun h => covered P h || decide (h ∈ s.holes)),
+       tab (fun h => if h = s.first then (if s.down then 2 else 1) else firstCell P h),
+       tab (fun h => if h = s.last then (if s.bowLast then 2 else 1) else lastCell P h),
+       tab (fun h => if h = s.last then extraOf s.kind else extraCell P h)) := by
   unfold tables
-  rw [show covB (P ++ [s]) = _ from funext (covB_snoc P s),
-    show fcv (P ++ [s]) = _ from funext (fcv_snoc P s hdis),
-    show lcv (P ++ [s]) = _ from funext (lcv_snoc P s hdis),
-    show ecv (P ++ [s]) = _ from funext (ecv_snoc P s hdis)]
+  rw [show covered (P ++ [s]) = _ from funext (covered_snoc P s),
+    show firstCell (P ++ [s]) = _ from funext (firstCell_snoc P s hdis),
+    show lastCell (P ++ [s]) = _ from funext (lastCell_snoc P s hdis),
+    show extraCell (P ++ [s]) = _ from funext (extraCell_snoc P s hdis)]
 
-theorem tab_ecv_keep (P : List Spec.Ship) (s : Spec.Ship)
+theorem tab_extraCell_keep (P : List Spec.Ship) (s : Spec.Ship)
     (hdis : ∀ s' ∈ P, ∀ h ∈ s.holes, h ∉ s'.holes) :
-    tab (fun h => if h = s.last then (-1 : Int) else ecv P h) = tab (ecv P) := by
+    tab (fun h => if h = s.last then (-1 : Int) else extraCell P h) = tab (extraCell P) := by
   congr 1; funext h
   by_cases e : h = s.last
-  · rw [if_pos e, e, ecv_last_old P s hdis]
+  · rw [if_pos e, e, extraCell_last_old P s hdis]
   · rw [if_neg e]
 
 set_option maxHeartbeats 4000000 in
@@ -438,16 +412,16 @@ theorem ship_pass_spec (g : Spec.Grid) (hon : ∀ s ∈ g.ships, s.OnGrid)
   unfold Bs.ship_pass
   simp only [Bs.grid_rows, Bs.grid_cols]
   rw [show SudoRt.mulI 10 10 = .ok 100 from rfl, ok_bind,
-    show SudoRt.filledL (100 : Int) false = .ok (tab (covB [])) by
+    show SudoRt.filledL (100 : Int) false = .ok (tab (covered [])) by
       rw [show (100 : Int) = Int.ofNat 100 from rfl, filledL_ofNat, tab_const]; rfl,
     ok_bind, show SudoRt.negI 1 = .ok (-1) from rfl, ok_bind,
-    show SudoRt.filledL (100 : Int) (-1 : Int) = .ok (tab (fcv [])) by
+    show SudoRt.filledL (100 : Int) (-1 : Int) = .ok (tab (firstCell [])) by
       rw [show (100 : Int) = Int.ofNat 100 from rfl, filledL_ofNat, tab_const]; rfl,
     ok_bind]
-  rw [ok_bind, show SudoRt.filledL (100 : Int) (-1 : Int) = .ok (tab (lcv [])) by
+  rw [ok_bind, show SudoRt.filledL (100 : Int) (-1 : Int) = .ok (tab (lastCell [])) by
       rw [show (100 : Int) = Int.ofNat 100 from rfl, filledL_ofNat, tab_const]; rfl,
     ok_bind, ok_bind,
-    show SudoRt.filledL (100 : Int) (-1 : Int) = .ok (tab (ecv [])) by
+    show SudoRt.filledL (100 : Int) (-1 : Int) = .ok (tab (extraCell [])) by
       rw [show (100 : Int) = Int.ofNat 100 from rfl, filledL_ofNat, tab_const]; rfl,
     ok_bind]
   have hlen : SudoRt.listLen (embGrid g).sudo_7KeyGrid_5ships = Int.ofNat g.ships.length := by
@@ -487,7 +461,7 @@ theorem ship_pass_spec (g : Spec.Grid) (hon : ∀ s ∈ g.ships, s.OnGrid)
     have hl100 : s.last < 100 := holes_lt s hon' (last_mem_holes s)
     have hfit : FitsLen (i + 1) := fits_small (by have := ships_length_le g hon hdis; omega)
     refine asc_goal_bind (fromN := 0) (toN := s.kind.len - 1)
-      (fun t (cov : Array Bool) => cov = tab (fun h => covB P h || decide (h ∈ s.holes.take t)))
+      (fun t (cov : Array Bool) => cov = tab (fun h => covered P h || decide (h ∈ s.holes.take t)))
       (Nat.zero_le _) (by dsimp only [tables]; congr 1; funext h; simp) ?_ ?_
     · intro t cov _ ht hI
       subst hI
@@ -498,9 +472,9 @@ theorem ship_pass_spec (g : Spec.Grid) (hon : ∀ s ∈ g.ships, s.OnGrid)
       rw [if_neg (show ¬ (Int.ofNat t > Int.ofNat (s.kind.len - 1)) by
           rw [ofNat_eq_natCast, ofNat_eq_natCast]; omega),
         atL_embed _ _ htl, ok_bind, atL_tab _ hh100, ok_bind]
-      have hnc : (covB P s.holes[t] || decide (s.holes[t] ∈ s.holes.take t)) = false := by
-        have h1 : covB P s.holes[t] = false := by
-          unfold covB
+      have hnc : (covered P s.holes[t] || decide (s.holes[t] ∈ s.holes.take t)) = false := by
+        have h1 : covered P s.holes[t] = false := by
+          unfold covered
           rw [List.any_eq_false]
           intro x hx hp
           exact hd' x hx _ (List.getElem_mem htl) (of_decide_eq_true hp)
@@ -509,8 +483,8 @@ theorem ship_pass_spec (g : Spec.Grid) (hon : ∀ s ∈ g.ships, s.OnGrid)
         ok_bind, putL_tab _ hh100, ok_bind]
       dsimp only [pure_eq_ok]
       have hcov : tab (fun h => if h = s.holes[t] then true
-            else (covB P h || decide (h ∈ s.holes.take t))) =
-          tab (fun h => covB P h || decide (h ∈ s.holes.take (t + 1))) := by
+            else (covered P h || decide (h ∈ s.holes.take t))) =
+          tab (fun h => covered P h || decide (h ∈ s.holes.take (t + 1))) := by
         congr 1; funext h
         rw [List.take_succ, List.getElem?_eq_getElem htl]
         by_cases e : h = s.holes[t]
@@ -533,7 +507,7 @@ theorem ship_pass_spec (g : Spec.Grid) (hon : ∀ s ∈ g.ships, s.OnGrid)
         rw [atL_embed s.holes _ (by rw [length_holes]; omega)]
         simp [Spec.Ship.holes, Spec.Ship.last]
       rw [hfa, ok_bind, ok_bind, hla, ok_bind]
-      have hE := tab_ecv_keep P s hd'
+      have hE := tab_extraCell_keep P s hd'
       simp only [embShip]
       cases hd : s.down <;> cases hb : s.bowLast <;> cases hk : s.kind <;>
         simp only [tables, embKind, putL_tab _ hf100, putL_tab _ hl100, ok_bind, pure_eq_ok,
@@ -547,7 +521,7 @@ theorem ship_pass_spec (g : Spec.Grid) (hon : ∀ s ∈ g.ships, s.OnGrid)
     rw [show SudoRt.subI 100 1 = .ok 99 from rfl, ok_bind, except_bind_pure, fuelRange_eq]
     refine asc_goal (fromN := 0) (toN := 99) (fun h (cs : Array Int) =>
         cs = ((List.range h).flatMap (fun h =>
-          cellsOf (fcv g.ships h) (lcv g.ships h) (ecv g.ships h))).toArray)
+          cellsOf (firstCell g.ships h) (lastCell g.ships h) (extraCell g.ships h))).toArray)
       (by decide) rfl ?_ ?_
     · intro h cs _ hh hI
       subst hI
@@ -555,20 +529,20 @@ theorem ship_pass_spec (g : Spec.Grid) (hon : ∀ s ∈ g.ships, s.OnGrid)
       have h100 : h < 100 := by omega
       dsimp only
       rw [if_neg (show ¬ (Int.ofNat h > 99) from ofNat_not_gt hh)]
-      have e1 := atL_ofNat (tab (fcv g.ships)) h (by rw [tab_size]; exact h100)
-      have e2 := atL_ofNat (tab (lcv g.ships)) h (by rw [tab_size]; exact h100)
-      have e3 := atL_ofNat (tab (ecv g.ships)) h (by rw [tab_size]; exact h100)
+      have e1 := atL_ofNat (tab (firstCell g.ships)) h (by rw [tab_size]; exact h100)
+      have e2 := atL_ofNat (tab (lastCell g.ships)) h (by rw [tab_size]; exact h100)
+      have e3 := atL_ofNat (tab (extraCell g.ships)) h (by rw [tab_size]; exact h100)
       rw [tab_get] at e1 e2 e3
       have hfi : FitsLen (h + 1) := fits_small (by omega)
       simp only [e1, e2, e3, ok_bind, pure_eq_ok, appendL_spec]
       rw [List.range_succ, List.flatMap_append,
         show ∀ F : Nat → List Int, [h].flatMap F = F h from fun F => by simp]
-      by_cases c1 : fcv g.ships h ≥ 0
+      by_cases c1 : firstCell g.ships h ≥ 0
       · simp only [c1, decide_True, if_true, ok_bind]
         rw [cellsOf_1 c1, List.push_toArray]
         exact asc_tail 99 h hfi _
-      · by_cases c2 : lcv g.ships h ≥ 0
-        · by_cases c3 : ecv g.ships h ≥ 0
+      · by_cases c2 : lastCell g.ships h ≥ 0
+        · by_cases c3 : extraCell g.ships h ≥ 0
           · simp only [c1, c2, c3, decide_True, decide_False, if_true, Bool.false_eq_true,
               if_false, ok_bind]
             rw [cellsOf_2 c1 c2 c3, List.push_toArray, List.push_toArray, List.append_assoc]
@@ -613,8 +587,6 @@ theorem peg_pass_spec (g : Spec.Grid) (hlen : g.pegs.length = 100)
   rw [decide_eq_true hall, sudoAssert_true, ok_bind]
   rfl
 
-/-- §4.1 / §4.2: a key is one or more well-formed pages. -/
-def KeyWf (pages : List Spec.Grid) : Prop := pages ≠ [] ∧ ∀ g ∈ pages, g.Wf
 
 /-- A page's ship pass has at most two cells per hole. -/
 theorem length_holeCells_le (ships : List Spec.Ship) (h : Nat) :
@@ -627,16 +599,6 @@ theorem length_holeCells_le (ships : List Spec.Ship) (h : Nat) :
     · split
       · split <;> split <;> simp
       · simp
-
-theorem length_flatMap_le {α β} (l : List α) (f : α → List β) (k : Nat)
-    (h : ∀ a ∈ l, (f a).length ≤ k) : (l.flatMap f).length ≤ k * l.length := by
-  induction l with
-  | nil => simp
-  | cons a l ih =>
-    rw [List.flatMap_cons, List.length_append, List.length_cons, Nat.mul_succ]
-    have h1 := h a (List.mem_cons_self _ _)
-    have h2 := ih (fun b hb => h b (List.mem_cons_of_mem _ hb))
-    omega
 
 theorem length_shipPass_le (g : Spec.Grid) : (Spec.shipPass g).length ≤ 200 := by
   have := length_flatMap_le (List.range 100) (Spec.holeCells g.ships) 2
@@ -701,18 +663,20 @@ theorem expOf_foldl_ge (cs : List Nat) (e : Nat) :
       exact Nat.le_add_right _ _
     omega
 
-/-- §4.3: the start marker (a white cell) leads, so the key exponent is not 0; indeed it
-    is at least `3^(cells - 1)`. -/
-theorem expOf_readKey_pos (pages : List Spec.Grid) : 0 < Spec.expOf (Spec.readKey pages) := by
+/-- §4.3: the start marker (a white cell) leads, so the key exponent is at least
+    `3^(cells − 1)`. -/
+theorem expOf_readKey_ge (pages : List Spec.Grid) :
+    3 ^ ((Spec.readKey pages).length - 1) ≤ Spec.expOf (Spec.readKey pages) := by
   unfold Spec.expOf Spec.readKey
-  rw [List.foldl_cons]
+  rw [List.foldl_cons, List.length_cons, Nat.add_sub_cancel]
   have := expOf_foldl_ge (pages.flatMap (fun g => Spec.shipPass g ++ Spec.pegPass g))
     (3 * 0 + 1)
-  have := Nat.pos_pow_of_pos
-    (pages.flatMap (fun g => Spec.shipPass g ++ Spec.pegPass g)).length (show 0 < 3 by decide)
-  have : 0 < (3 * 0 + 1) * 3 ^ (pages.flatMap
-    (fun g => Spec.shipPass g ++ Spec.pegPass g)).length := by omega
-  omega
+  rw [show 3 * 0 + 1 = 1 from rfl, Nat.one_mul] at this
+  exact this
+
+/-- §4.3: the start marker makes the key exponent non-zero. -/
+theorem expOf_readKey_pos (pages : List Spec.Grid) : 0 < Spec.expOf (Spec.readKey pages) :=
+  Nat.lt_of_lt_of_le (Nat.pos_pow_of_pos _ (by decide)) (expOf_readKey_ge pages)
 
 theorem readKey_head (pages : List Spec.Grid) : (Spec.readKey pages).head? = some 1 := rfl
 
@@ -721,7 +685,7 @@ set_option maxHeartbeats 1000000 in
     ships sharing a hole, 100 trit pegs a page), the emitted `read_key` succeeds and returns
     the model's cells: the start marker, then each page's ship pass and peg pass. The bound
     on the page count only keeps the loop counter in the emitted 64-bit range. -/
-theorem read_key_spec (pages : List Spec.Grid) (hk : KeyWf pages)
+theorem read_key_spec (pages : List Spec.Grid) (hk : Spec.KeyWf pages)
     (hfit : FitsLen pages.length) :
     Bs.read_key (embKey pages) = .ok (embed (Spec.readKey pages)) := by
   obtain ⟨hne, hwf⟩ := hk

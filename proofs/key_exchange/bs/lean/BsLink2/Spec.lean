@@ -1,7 +1,9 @@
 /-
-  BS: a hand-written model of the arithmetic of `primitives/key_exchange/bs/SPEC.md`
-  (§2.3 parameters, §3 registers, B3 multiply, B5 tidy), written from the SPEC and not
-  from `bs.sudo`. Numbers are `Nat`; a register is a `List Nat` of trits, hole 0 first,
+  BS: a hand-written model of `primitives/key_exchange/bs/SPEC.md` (§2.3 parameters, §3
+  registers, §3.1 sending, B3 multiply, B5 tidy, B7 to B9 the walk, the received-value
+  check and the exchange, §4.1 / §4.3 the key grid and READ, §4.2 the dice), written from
+  the SPEC and not from `bs.sudo` (where `bs.sudo` fixes something the SPEC leaves open,
+  the docstring says so). Numbers are `Nat`; a register is a `List Nat` of trits, hole 0 first,
   hole `i` worth `3^i` (§3). Nothing here is a security claim.
 -/
 
@@ -73,9 +75,7 @@ theorem T1_wf : T1.Wf := ⟨by decide, by decide, by decide⟩
 theorem T2_wf : T2.Wf := ⟨by decide, by decide, by decide⟩
 theorem T6_wf : T6.Wf := ⟨by decide, by decide, by decide⟩
 
-end BsLink2.Spec
-
-namespace BsLink2.Spec
+/-! ### §3.1: sending a public value -/
 
 /-- §3.1. The sender's answer to a called hole. -/
 inductive Shot where
@@ -95,9 +95,7 @@ def answer : Nat → Shot
     answers are `x`'s holes read as shots and Y ends up holding `x`. -/
 def sendPublicValue (x : List Nat) : List Shot × List Nat := (x.map answer, x)
 
-end BsLink2.Spec
-
-namespace BsLink2.Spec
+/-! ### B7: the walk's exponent, public value and shared secret -/
 
 /-- B7. The exponent a cell string encodes: the cells read as a base-3 number, first
     cell most significant (cells before the first white or red one contribute nothing). -/
@@ -112,9 +110,7 @@ def publicValue (F : Field) (cells : List Nat) : List Nat := toReg F.n (3 ^ expO
 def sharedSecret (F : Field) (base cells : List Nat) : List Nat :=
   toReg F.n (value base ^ expOf cells % F.p)
 
-end BsLink2.Spec
-
-namespace BsLink2.Spec
+/-! ### B8: checking a received value -/
 
 /-- B8. Checking a received number: it must have exactly `n` trits; square it and tidy
     (C = R·R mod p); reject (`none`) if C is empty (0) or a lone white in hole 0 (1);
@@ -125,18 +121,12 @@ def checkReceived (F : Field) (r : List Nat) : Option (List Nat) :=
     else some (toReg F.n (value r * value r % F.p))
   else none
 
-end BsLink2.Spec
-
-namespace BsLink2.Spec
+/-! ### B9: the exchange key -/
 
 /-- B9. The key both players should end with: `K = 3^(2·a·b) mod p`, as a register, where
     `a` and `b` are the exponents of Alice's and Bob's cell strings. -/
 def exchangeKey (F : Field) (cellsA cellsB : List Nat) : List Nat :=
   toReg F.n (3 ^ (2 * expOf cellsA * expOf cellsB) % F.p)
-
-end BsLink2.Spec
-
-namespace BsLink2.Spec
 
 /-! ### §4.1 and §4.3: the key grid and READ ("ships, then pegs")
 
@@ -203,12 +193,15 @@ structure Grid.Wf (g : Grid) : Prop where
   pegs_len : g.pegs.length = 100
   pegs_trits : ∀ t ∈ g.pegs, t ≤ 2
 
+/-- The ship (among `ships`) covering hole `h`, if any. -/
+def shipAt (ships : List Ship) (h : Nat) : Option Ship := ships.find? (fun s => decide (h ∈ s.holes))
+
 /-- §4.3, the ship pass at hole `h`: no ship, or a ship's middle hole, is a plain cell;
     a ship's first hole is white if it lies across, red if down; its last hole is white
     if it points back, red if it points on, and then one more cell for a Sub (plain) or a
     Cruiser (white). -/
 def holeCells (ships : List Ship) (h : Nat) : List Nat :=
-  match ships.find? (fun s => decide (h ∈ s.holes)) with
+  match shipAt ships h with
   | none => [0]
   | some s =>
     if h = s.first then [if s.down then 2 else 1]
@@ -219,6 +212,13 @@ def holeCells (ships : List Ship) (h : Nat) : List Nat :=
          | .cruiser => [1]
          | _ => [])
     else [0]
+
+theorem Kind.two_le_len (k : Kind) : 2 ≤ k.len := by cases k <;> decide
+
+theorem Kind.len_le_five (k : Kind) : k.len ≤ 5 := by cases k <;> decide
+
+/-- §4.1 / §4.2: a key is one or more well-formed pages. -/
+def KeyWf (pages : List Grid) : Prop := pages ≠ [] ∧ ∀ g ∈ pages, g.Wf
 
 /-- §4.3, the ship pass of one page, one hole at a time in reading order (the start
     marker is not part of a page). -/
@@ -232,10 +232,6 @@ def pegPass (g : Grid) : List Nat := g.pegs
     is the exponent of §4.4 (`expOf`). -/
 def readKey (pages : List Grid) : List Nat :=
   1 :: pages.flatMap (fun g => shipPass g ++ pegPass g)
-
-end BsLink2.Spec
-
-namespace BsLink2.Spec
 
 /-! ### B9: the exchange, with its two reject branches -/
 
@@ -261,7 +257,8 @@ def bobRejects : String := "B8: Bob rejects Alice's value"
 
 /-- B9 over the two cell strings. Each player publishes `3^e mod p` (B7) and sends it to
     the other (§3.1); each checks what it received (B8). Alice's check of Bob's value is
-    looked at first, so if both checks fail the result is Alice's rejection. If both pass,
+    looked at first, so if both checks fail the result is Alice's rejection: that order is
+    `bs.sudo`'s, not something SPEC B9 fixes. If both pass,
     each walks over the base it got (B7, shared phase). -/
 def exchangeCells (F : Field) (ca cb : List Nat) : Except String ExchangeRecord :=
   let pa := publicValue F ca
@@ -279,10 +276,6 @@ def exchangeCells (F : Field) (ca cb : List Nat) : Except String ExchangeRecord 
 /-- B9 from the two keys: each key is read by §4.3 first. -/
 def exchange (F : Field) (keyA keyB : List Grid) : Except String ExchangeRecord :=
   exchangeCells F (readKey keyA) (readKey keyB)
-
-end BsLink2.Spec
-
-namespace BsLink2.Spec
 
 /-! ### §4.2: the dice a build reads -/
 

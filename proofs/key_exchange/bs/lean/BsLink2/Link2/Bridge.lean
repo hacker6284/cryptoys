@@ -130,4 +130,35 @@ theorem sudoAssertEq_self (a : Int) (line : Nat) : SudoRt.sudoAssertEq a a line 
 /-- `assert !false` passes. -/
 theorem sudoAssert_not_false (line : Nat) : SudoRt.sudoAssert (!false) line = .ok () := rfl
 
+/-! ### Small-number helpers (the Scramble package has its own `fits_small`; see #162) -/
+
+/-- A small natural fits `i64`. -/
+theorem fits_small {n : Nat} (h : n ≤ 1000) : FitsLen n := by
+  unfold FitsLen i64MaxNat; omega
+
+theorem dec_ofNat_ge0 (n : Nat) : decide (Int.ofNat n ≥ 0) = true :=
+  decide_eq_true (Int.ofNat_zero_le n)
+
+theorem dec_ofNat_lt_ten (n : Nat) (h : n < 10) : decide (Int.ofNat n < 10) = true :=
+  decide_eq_true ((ofNat_lt_iff n 10).mpr h)
+
+theorem dec_ofNat_le_ten (n : Nat) (h : n ≤ 10) : decide (Int.ofNat n ≤ 10) = true :=
+  decide_eq_true ((ofNat_le_iff n 10).mpr h)
+
+theorem mulI_ten (a : Nat) (h : a < 100) : SudoRt.mulI (Int.ofNat a) 10 = .ok (Int.ofNat (a * 10)) :=
+  mulI_ofNat a 10 (fits_small (by omega))
+
+theorem mulI_one (a : Nat) (h : a < 1000) : SudoRt.mulI (Int.ofNat a) 1 = .ok (Int.ofNat (a * 1)) :=
+  mulI_ofNat a 1 (fits_small (by omega))
+
+theorem length_flatMap_le {α β} (l : List α) (f : α → List β) (k : Nat)
+    (h : ∀ a ∈ l, (f a).length ≤ k) : (l.flatMap f).length ≤ k * l.length := by
+  induction l with
+  | nil => simp
+  | cons a l ih =>
+    rw [List.flatMap_cons, List.length_append, List.length_cons, Nat.mul_succ]
+    have h1 := h a (List.mem_cons_self _ _)
+    have h2 := ih (fun b hb => h b (List.mem_cons_of_mem _ hb))
+    omega
+
 end BsLink2.Link2

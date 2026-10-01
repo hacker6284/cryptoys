@@ -537,6 +537,7 @@ BS_LINK2 = {
     "BsLink2.Link2.read_key_spec",
     "BsLink2.Link2.readKey_trits",
     "BsLink2.Link2.expOf_readKey_pos",
+    "BsLink2.Link2.expOf_readKey_ge",
     "BsLink2.Link2.length_readKey_le",
     "BsLink2.Link2.ship_holes_spec",
     "BsLink2.Link2.ship_pass_spec",
@@ -552,6 +553,8 @@ BS_LINK2 = {
     "BsLink2.Spec.TollPi.pi50_le_lower",
     "BsLink2.Spec.TollPi.upper_lt_pi50_succ",
     "BsLink2.Spec.TollPi.lower_lt_upper",
+    "BsLink2.Spec.TollPi.floor_eq_pi50",
+    "BsLink2.Spec.TollPi.lower_in_bracket",
     "BsLink2.Spec.TollPi.pi50_leading_digits",
 }
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of

@@ -29,7 +29,7 @@ No `sorry`, no `native_decide`, no `axiom`. The tier facts use `decide` and `dec
 - `Spec.expOf`: the cells read as a base-3 number, first cell most significant. `Spec.publicValue` is `3^e mod p`, `Spec.sharedSecret` is `C^e mod p`, `Spec.exchangeKey` is `3^(2ab) mod p`.
 - `Spec.checkReceived`: exactly `n` trits, else reject; `C = R·R mod p`; reject `C = 0` or `C = 1`; otherwise `C`.
 - T1 and T2 are written out from the §2.3 table, with `T1_p` and `T2_p` checking `p` against the table's values (`decide`). `Spec.T6` copies T6's 50-trit toll from `bs.sudo`; [`BsLink2/TollPi.lean`](BsLink2/TollPi.lean) checks it against π as far as core Lean can (below).
-- §4.1 / §4.3, the key: `Spec.Ship` (kind, down or across, row and column of its first hole, bow at the last hole or not), `Spec.Grid` (ships and 100 pegs), and `Spec.Grid.Wf`: every ship on the 10 × 10 grid, no two ships sharing a hole, 100 pegs that are trits. `KeyWf pages`: one or more well-formed pages. `Spec.readKey`: the start marker (a white cell), then each page's ship pass (`Spec.shipPass`, one hole at a time: a ship's first hole white across / red down, its last hole white back / red on plus a plain cell for a Sub and a white one for a Cruiser, every other hole plain) and peg pass (`Spec.pegPass`).
+- §4.1 / §4.3, the key: `Spec.Ship` (kind, down or across, row and column of its first hole, bow at the last hole or not), `Spec.Grid` (ships and 100 pegs), and `Spec.Grid.Wf`: every ship on the 10 × 10 grid, no two ships sharing a hole, 100 pegs that are trits. `Spec.KeyWf pages`: one or more well-formed pages. `Spec.readKey`: the start marker (a white cell), then each page's ship pass (`Spec.shipPass`, one hole at a time: a ship's first hole white across / red down, its last hole white back / red on plus a plain cell for a Sub and a white one for a Cruiser, every other hole plain) and peg pass (`Spec.pegPass`).
 - B9: `Spec.exchange` reads both keys, publishes, sends, checks (Alice's check of Bob's value first) and returns either `Spec.aliceRejects`, `Spec.bobRejects` (the two `bs.sudo` error texts) or the record of both publics, shots, received values, bases and secrets.
 - §4.2: `Spec.Dice`, the three face streams (d12, d6, d10) as arbitrary integers and how many of each have been read; `Spec.dice` is fresh dice.
 
@@ -37,7 +37,7 @@ No `sorry`, no `native_decide`, no `axiom`. The tier facts use `decide` and `dec
 
 ## Emitted functions
 
-Every `export func` of `bs.sudo` has a row; `check_axioms.py --selftest` checks this column against the sudo. Keys are `embKey pages` for model pages with `KeyWf pages`; no theorem takes the key reader's output as a hypothesis any more.
+Every `export func` of `bs.sudo` has a row; `check_axioms.py --selftest` checks this column against the sudo. Keys are `embKey pages` for model pages with `Spec.KeyWf pages`; no headline theorem takes the key reader's output as a hypothesis; the `*_of_read` / `exchange_cells_refines` lemmas keep the cells form.
 
 | Emitted function | Theorem | What it says |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ Every `export func` of `bs.sudo` has a row; `check_axioms.py --selftest` checks 
 | `public_value` | `public_value_refines` | For a key of well-formed pages: the register holding `3^e mod p`, where `e` is `Spec.readKey` of the key read as a base-3 number. |
 | `shared_secret` | `shared_secret_refines` | For a key of well-formed pages and a base register `C` of `n` trits: the register holding `C^e mod p`. |
 | `exchange` | `exchange_refines`, `exchange_alice_rejects`, `exchange_bob_rejects`, `exchange_agree_of_accepted` | For two keys of well-formed pages, `exchange` returns exactly `Spec.exchange`'s outcome in all three branches. Corollaries: if `3^(2b) mod p` is 0 or 1 it returns the error "B8: Alice rejects Bob's value" (whatever `a` is); if not, but `3^(2a) mod p` is 0 or 1, the error "B8: Bob rejects Alice's value"; if neither, it succeeds, publishes `3^a mod p` and `3^b mod p`, and both secrets are `3^(2ab) mod p`. |
-| `read_key` | `read_key_spec` | For a key of well-formed pages, `read_key` returns `Spec.readKey`: the start marker, then each page's ship pass and peg pass. With `readKey_trits`, `expOf_readKey_pos` (the start marker makes the exponent non-zero) and `length_readKey_le` (at most `300·pages + 1` cells) this discharges what the walk lemmas assume. |
+| `read_key` | `read_key_spec` | For a key of well-formed pages, `read_key` returns `Spec.readKey`: the start marker, then each page's ship pass and peg pass. With `readKey_trits`, `expOf_readKey_pos` (the start marker makes the exponent non-zero; `expOf_readKey_ge`: at least `3^(cells − 1)`) and `length_readKey_le` (at most `300·pages + 1` cells) this discharges what the walk lemmas assume. |
 | `dice` | `dice_refines` | For any three face streams, `dice` is `Spec.dice` (nothing read yet). |
 | `build_key_grid` | none | Not claimed (see "Remaining work"). |
 | `build_letting_go` | none | Not claimed (see "Remaining work"). |
@@ -61,10 +61,11 @@ The `FitsLen` hypotheses (that `2n + 2`, or `300·pages + 1` for a key of `pages
 SPEC §2.3 says T6's toll is `π₅₀ + 4383`, where `π₅₀` is the integer whose base-3 digits are the first 50 ternary digits of π, i.e. `⌊π·3^48⌋`. Core Lean has no real numbers, so [`TollPi.lean`](BsLink2/TollPi.lean) checks, by `decide` on naturals:
 
 - `T6_toll_eq`: `Spec.T6`'s toll is the 50-hole register of `pi50 + 4383` for an explicit `pi50`;
-- `pi50_le_lower`, `upper_lt_pi50_succ`, `lower_lt_upper`: for two explicit rationals `L < U`, `pi50 ≤ 3^48·L` and `3^48·U < pi50 + 1`, so `⌊x·3^48⌋ = pi50` for every `x` in `[L, U]`;
+- `pi50_le_lower`, `upper_lt_pi50_succ`, `lower_lt_upper`: for two explicit rationals `L < U`, `pi50 ≤ 3^48·L` and `3^48·U < pi50 + 1` (endpoint checks);
+- `floor_eq_pi50`, proved from those endpoint checks: every rational `x = a/b` with `L ≤ x ≤ U` has `⌊x·3^48⌋ = a·3^48 / b = pi50`. Core Lean has no `ℚ`, so `x` is a pair of naturals and the comparisons are cross-multiplied (`LowerLe`, `LeUpper`); `lower_in_bracket` shows the bracket is not empty;
 - `pi50_leading_digits`: its first twelve ternary digits are the 1 0 0 1 0 2 1 1 0 1 2 2 that §2.3 quotes.
 
-`L` and `U` are Machin's `16·arctan(1/5) − 4·arctan(1/239)` with each arctan cut to 16 or 17 terms of its Gregory series. **That `L ≤ π ≤ U` is cited (Machin's identity and the alternating-series bound), not proved**; no hypothesis or axiom about π enters a theorem. Not checked either: that 4383 is the smallest offset making `p` a safe prime.
+`L` and `U` are Machin's `16·arctan(1/5) − 4·arctan(1/239)` with each arctan cut to 16 or 17 terms of its Gregory series. **That `L ≤ π ≤ U` is cited (Machin's identity and the alternating-series bound), not proved**, and so is the last step from the rationals of `floor_eq_pi50` to the real π (monotonicity of `⌊·⌋`); no hypothesis or axiom about π enters a theorem. Not checked either: that 4383 is the smallest offset making `p` a safe prime.
 
 ## The peg recipes underneath
 

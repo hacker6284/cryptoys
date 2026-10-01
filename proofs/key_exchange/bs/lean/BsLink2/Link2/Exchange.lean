@@ -1,5 +1,5 @@
 /-
-  BS Link 2: B7 from a key, and B9 the exchange. For keys of well-formed pages (`KeyWf`),
+  BS Link 2: B7 from a key, and B9 the exchange. For keys of well-formed pages (`Spec.KeyWf`),
   the emitted `public_value`, `shared_secret` and `exchange` refine the model, with the key
   reader (`read_key_spec`, `Key.lean`) proved rather than assumed. `exchange_refines` covers
   all three outcomes of B9: both reject branches and the agreed one. Proof-only; not a
@@ -211,7 +211,10 @@ theorem exchange_cells_refines (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
 
 /-! ### The headline theorems: from keys of well-formed pages -/
 
-theorem key_facts (pages : List Spec.Grid) (hk : KeyWf pages)
+/-- What the walk lemmas need about a key's cells, from `read_key_spec` and the `readKey`
+    lemmas: `read_key` returns them, they are trits, their count fits `i64`, and the
+    exponent is non-zero. -/
+theorem key_facts (pages : List Spec.Grid) (hk : Spec.KeyWf pages)
     (hkf : FitsLen (300 * pages.length + 1)) :
     Bs.read_key (embKey pages) = .ok (embed (Spec.readKey pages)) ∧
       (∀ c ∈ Spec.readKey pages, c ≤ 2) ∧ FitsLen (Spec.readKey pages).length ∧
@@ -223,7 +226,7 @@ theorem key_facts (pages : List Spec.Grid) (hk : KeyWf pages)
     `public_value` is the register holding `3^e mod p`, where `e` is the key read by §4.3
     (start marker, then each page's ship pass and peg pass) as a base-3 number. -/
 theorem public_value_refines (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
-    (hfit : FitsLen (2 * F.n + 2)) (pages : List Spec.Grid) (hk : KeyWf pages)
+    (hfit : FitsLen (2 * F.n + 2)) (pages : List Spec.Grid) (hk : Spec.KeyWf pages)
     (hkf : FitsLen (300 * pages.length + 1)) :
     Bs.public_value (emb F) (embKey pages) =
       .ok (embed (Spec.publicValue F (Spec.readKey pages))) := by
@@ -234,7 +237,7 @@ theorem public_value_refines (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     register `C` of `n` trits, the emitted `shared_secret` is the register holding
     `C^e mod p`, `e` as in `public_value_refines`. -/
 theorem shared_secret_refines (F : Spec.Field) (hF : F.Wf)
-    (hfit : FitsLen (2 * F.n + 2)) (pages : List Spec.Grid) (hk : KeyWf pages)
+    (hfit : FitsLen (2 * F.n + 2)) (pages : List Spec.Grid) (hk : Spec.KeyWf pages)
     (hkf : FitsLen (300 * pages.length + 1)) (base : List Nat) (hbase : Spec.IsReg F.n base) :
     Bs.shared_secret (emb F) (embKey pages) (embed base) =
       .ok (embed (Spec.sharedSecret F base (Spec.readKey pages))) := by
@@ -246,7 +249,7 @@ theorem shared_secret_refines (F : Spec.Field) (hF : F.Wf)
     value; both accept and the record of publics, shots, bases and secrets). -/
 theorem exchange_refines (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     (hfit : FitsLen (2 * F.n + 2)) (keyA keyB : List Spec.Grid)
-    (hka : KeyWf keyA) (hkb : KeyWf keyB)
+    (hka : Spec.KeyWf keyA) (hkb : Spec.KeyWf keyB)
     (hfa : FitsLen (300 * keyA.length + 1)) (hfb : FitsLen (300 * keyB.length + 1)) :
     Bs.exchange (emb F) (embKey keyA) (embKey keyB) =
       .ok (embOutcome (Spec.exchange F keyA keyB)) := by
@@ -259,7 +262,7 @@ theorem exchange_refines (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     "B8: Alice rejects Bob's value", whatever Alice's value is. -/
 theorem exchange_alice_rejects (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     (hfit : FitsLen (2 * F.n + 2)) (keyA keyB : List Spec.Grid)
-    (hka : KeyWf keyA) (hkb : KeyWf keyB)
+    (hka : Spec.KeyWf keyA) (hkb : Spec.KeyWf keyB)
     (hfa : FitsLen (300 * keyA.length + 1)) (hfb : FitsLen (300 * keyB.length + 1))
     (hB : 3 ^ (2 * Spec.expOf (Spec.readKey keyB)) % F.p = 0 ∨
       3 ^ (2 * Spec.expOf (Spec.readKey keyB)) % F.p = 1) :
@@ -278,7 +281,7 @@ theorem exchange_alice_rejects (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     emitted `exchange` returns the error "B8: Bob rejects Alice's value". -/
 theorem exchange_bob_rejects (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     (hfit : FitsLen (2 * F.n + 2)) (keyA keyB : List Spec.Grid)
-    (hka : KeyWf keyA) (hkb : KeyWf keyB)
+    (hka : Spec.KeyWf keyA) (hkb : Spec.KeyWf keyB)
     (hfa : FitsLen (300 * keyA.length + 1)) (hfb : FitsLen (300 * keyB.length + 1))
     (hB0 : 3 ^ (2 * Spec.expOf (Spec.readKey keyB)) % F.p ≠ 0)
     (hB1 : 3 ^ (2 * Spec.expOf (Spec.readKey keyB)) % F.p ≠ 1)
@@ -303,7 +306,7 @@ theorem exchange_bob_rejects (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     §4.3. -/
 theorem exchange_agree_of_accepted (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     (hfit : FitsLen (2 * F.n + 2)) (keyA keyB : List Spec.Grid)
-    (hka : KeyWf keyA) (hkb : KeyWf keyB)
+    (hka : Spec.KeyWf keyA) (hkb : Spec.KeyWf keyB)
     (hfa : FitsLen (300 * keyA.length + 1)) (hfb : FitsLen (300 * keyB.length + 1))
     (hA0 : 3 ^ (2 * Spec.expOf (Spec.readKey keyA)) % F.p ≠ 0)
     (hA1 : 3 ^ (2 * Spec.expOf (Spec.readKey keyA)) % F.p ≠ 1)

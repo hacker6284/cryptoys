@@ -1,16 +1,16 @@
 <!-- Owns: what this tree claims and does not claim for Scramble, and how to rebuild its Generated Lean. Maintenance rules: ../../DOCS.md. -->
 # Scramble proofs
 
-Scramble stays a **teaching / lineage** hash. `scramble_v2` is current ([`primitives/hash/scramble/`](../../primitives/hash/scramble/SPEC.md)). This directory does not claim collision resistance, preimage resistance, or any other hash-security property.
+Scramble stays a **teaching / lineage** hash. `scramble_v2` is current and **broken** ([`primitives/hash/scramble/`](../../primitives/hash/scramble/SPEC.md#security)): collisions, second preimages and preimages are practical. This directory does not claim collision resistance, preimage resistance, or any other hash-security property.
 
 Sudo is normative. Emitted Lean under `lean/Generated/` is the
 algorithm. See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). This does
 **not** claim sudo↔Lean semantic-equivalence theorems (emitter soundness). The emit
 terminates gate is on. Production loops are bounded `for`.
 
-## Birthday ceiling
+## Security
 
-The digest size and attack figures are in the SPEC's [`scramble_v2`](../../primitives/hash/scramble/SPEC.md#scramble_v2) section. They are honesty about the group size, not theorems in this tree, and not a reason to treat Scramble as a hash with a security level.
+Scramble is broken. The measured attacks and the two causes (Rule B and the digest encoding) are summarised in the SPEC's [Security](../../primitives/hash/scramble/SPEC.md#security) section. The write-up, its seeded scripts and their logs are in [`security/`](security/REPORT.md). They are paper proofs and measurements, not Lean theorems in this tree.
 
 ## Generated Lean
 
@@ -25,8 +25,9 @@ Expected TAP: **15/15**. Pin and regenerating: [`../ANTI_DRIFT.md`](../ANTI_DRIF
 
 ## Link 2: `lean/ScrambleV2`
 
-Correctness of the emitted code only. Scramble v2 is broken; see Security in the SPEC and
-`proofs/scramble/security/` (#150).
+Correctness of the emitted code only. Scramble v2 is broken; see
+[Security](../../primitives/hash/scramble/SPEC.md#security) in the SPEC and
+[`proofs/scramble/security/`](security/REPORT.md) (#150).
 
 The Lake package `lean/` (library `ScrambleV2`, Lean 4.14, no Mathlib) is the Link 2
 work for `scramble.sudo`: a hand-written model of the v2 digest, and theorems that the

@@ -29,8 +29,8 @@
 
 // ---------------------------------------------------------------------------
 // §2.3 Parameters: p = 3^n - c. The toll c is a register of fewer than n trits,
-// hole 0 first, with trailing empty holes dropped (pay_toll asserts it). Values: proofs/key_exchange/bs/
-// reference/params.json.
+// hole 0 first, with trailing empty holes dropped (pay_toll asserts it).
+// Values: proofs/key_exchange/bs/reference/params.json.
 
 record Field
     n: int
@@ -91,22 +91,22 @@ func click(t: int) -> int
 // B1. Drop a peg (odometer carry). A white peg clicks the hole once, a red peg
 // twice. Whenever a hole clicks from red over to empty, flick a white into the
 // next hole up; that flick is itself a drop, so it may carry again.
-// The carry walks up at most to the strip's last hole; a carry past it fails the
-// final assert (AssertFailed), which no call in this file reaches (B3-B5).
+// The carry walks up at most to the strip's last hole and stops at the first
+// hole that does not carry; a carry past the last hole fails the final assert
+// (AssertFailed), which no call in this file reaches (B3-B5).
 func drop(strip: inout List<int>, hole: int, colour: int)
     clicks = colour
     for h = hole to strip.length - 1
-        if clicks > 0
-            carry = false
-            for k = 1 to clicks
-                if strip[h] == 2
-                    carry = true
-                strip[h] = click(strip[h])
-            if carry
-                clicks = 1
-            else
-                clicks = 0
-    assert clicks <= 0
+        carry = false
+        for k = 1 to clicks
+            if strip[h] == 2
+                carry = true
+            strip[h] = click(strip[h])
+        if not carry
+            clicks = 0
+            break
+        clicks = 1
+    assert clicks == 0
 
 // B2. Lay a copy of A starting at hole s: drop each peg of A, in its own colour,
 // into the hole s places further on.
@@ -119,17 +119,22 @@ func lay(strip: inout List<int>, a: List<int>, s: int)
 // the highest peg at or beyond hole n and lay the toll starting n holes lower,
 // twice if the lifted peg was red. Carries from the laid toll land at or below
 // the lifted hole, so the scan only ever moves down.
-// At most 4 lifts per hole. With a toll of fewer than n trits (c < 3^(n-1), so
-// p > 2·3^(n-1)), the toll laid below hole h is worth less than 3^h, so a lift
-// carries at most one white back into hole h and nothing above it. Every lift at
-// h lowers the strip's value by its colour times 3^(h-n)·p, while the holes below
-// h hold less than 3^h; so the colours lifted at h total D < (1 + d)·3^n / p
-// <= 4.5, d <= 2 being the first lifted colour, and D >= the number of lifts.
-// The assert after the lifts never fails under that precondition.
+// At most lifts_per_hole lifts per hole. With a toll of fewer than n trits
+// (c < 3^(n-1), so p > 2·3^(n-1)), the toll laid below hole h is worth less than
+// 3^h, so a lift carries at most one white back into hole h and nothing above it.
+// Every lift at h lowers the strip's value by its colour times 3^(h-n)·p, while
+// the holes below h hold less than 3^h; so the colours lifted at h total
+// D < (1 + d)·3^n / p < 1.5·(1 + d), d <= 2 being the first lifted colour, and
+// every lift after the first lifts at least a white. So a hole needs at most
+// 1 + (D - d) lifts: at most 2 if d = 1 (D <= 2) and at most 3 if d = 2 (D <= 4).
+// lifts_per_hole = 4 is an upper bound, not tight; the assert after the lifts
+// never fails under that precondition.
+lifts_per_hole = 4
+
 func pay_toll(f: Field, strip: inout List<int>)
     assert f.toll.length < f.n
     for h = strip.length - 1 downto f.n
-        for lift = 1 to 4
+        for lift = 1 to lifts_per_hole
             colour = strip[h]
             if colour != 0
                 strip[h] = 0
@@ -497,10 +502,11 @@ func roll_d6(d: inout Dice) -> int
 func throw_d10(d: inout Dice) -> int
     face = 0
     for t = d.next10 to d.d10.length - 1
-        if face == 0
-            face = d.d10[d.next10]
-            d.next10 = d.next10 + 1
-            assert (face >= 0) and (face <= 9)
+        face = d.d10[t]
+        d.next10 = t + 1
+        assert (face >= 0) and (face <= 9)
+        if face != 0
+            break
     assert face != 0
     return face
 
@@ -594,6 +600,7 @@ func grow_until_it_bumps(d: inout Dice, covered: List<bool>, row: int, col: int)
         lay_down = down
     bow_last = (face mod 2) == 0
     len = 2
+    // Destroyer (2) → Carrier (5): at most 3 growths.
     for grow = 1 to 3
         next_row = row
         next_col = col + len
@@ -791,6 +798,17 @@ test "B1 drop examples carry like an odometer"
     drop(s, 0, 1)
     assert s == [0, 0, 0, 1]
 
+test "B1 a carry past the strip's last hole fails drop's final assert"
+    s = [2, 2]
+    expect_trap AssertFailed
+        drop(s, 0, 1)
+
+test "B4 pay_toll rejects a toll of n or more trits"
+    s = filled(6, 0)
+    s[5] = 1
+    expect_trap AssertFailed
+        pay_toll(Field(3, [1, 0, 1]), s)
+
 test "B4 T1 example: a white at hole 20 folds to whites at holes 2 and 4"
     s = filled(36, 0)
     s[20] = 1
@@ -957,6 +975,11 @@ test "4.2 a row-cup d10 is thrown again on its zero face"
     assert throw_d10(d) == 6
     assert d.next10 == 3
     assert throw_d10(d) == 3
+
+test "4.2 running out of d10 faces before a non-zero one fails throw_d10's assert"
+    d = dice([], [], [0, 0])
+    expect_trap AssertFailed
+        throw_d10(d)
 
 test "4.2 the row cup is five dice in rainbow order, zero faces thrown again"
     d = dice([], [], [4, 0, 7, 1, 0, 0, 9, 2])

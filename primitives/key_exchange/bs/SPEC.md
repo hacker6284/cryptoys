@@ -151,7 +151,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
 | **R3072** | **1938** | **3¹⁹³⁸ − (π₉₆₉ + 1453486)** | **3072** | 969 trits, 663 pegs | same |
 
 * π_t is the integer whose base-3 digits are the first t ternary digits of π.
-* **Every toll has fewer than n trits** (c < 3^(n−1)); every tier above does. B4 relies on it, and `bs.sudo` asserts it.
+* **Every toll has fewer than n trits** (c < 3^(n−1)); every tier above does. The lift bound in B4 (and so `bs.sudo`'s bounded loop) relies on it; `bs.sudo` asserts it.
 * The full decimal values of p, q and c are in `reference/params.json` and `reference/params_323.json`.
 * In every big tier, q is a *probable* prime: Miller–Rabin with 50 rounds plus BPSW, with no ECPP certificate. p follows from q by Pocklington in principle (not checked).
 

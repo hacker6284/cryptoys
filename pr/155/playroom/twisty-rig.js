@@ -281,9 +281,10 @@ export async function adoptTwistyPuzzle(seat, {
         requestTimestamp(indexer.indexToMoveStartTimestamp(leaf) + indexer.moveDuration(leaf));
     }
 
-    // onStart({ at, durations }): called as playback starts (performance.now()
-    // and each leaf's duration in ms at tempo 1), so callers can time
-    // per-leaf effects such as sound.
+    // onStart({ at, durations, tempo, leaves }): called as playback starts
+    // (performance.now(), each leaf's duration in ms at tempo 1, the tempo
+    // and each leaf's move, e.g. "R'"), so callers can time per-leaf
+    // effects such as sound.
     async function playLeaves(from, to, { snap = false, onStart = null } = {}) {
         if (disposed) return { index: 0, total: 0 };
         const mine = seekGen;
@@ -314,9 +315,13 @@ export async function adoptTwistyPuzzle(seat, {
             player.play();
             if (onStart) {
                 const durations = [];
-                for (let i = start; i < end; i++) durations.push(indexer.moveDuration(i));
+                const leaves = [];
+                for (let i = start; i < end; i++) {
+                    durations.push(indexer.moveDuration(i));
+                    leaves.push(String(indexer.getAnimLeaf?.(i) ?? ""));
+                }
                 try {
-                    onStart({ at: performance.now(), durations });
+                    onStart({ at: performance.now(), durations, tempo, leaves });
                 } catch (err) {
                     console.warn("playLeaves onStart failed", err);
                 }
@@ -391,11 +396,11 @@ export async function adoptTwistyPuzzle(seat, {
         },
         playLeaves,
         jumpToLeaf: jumpToLeafEnd,
-        async playMoves(moves, { setup = "", snap = false } = {}) {
+        async playMoves(moves, { setup = "", snap = false, onStart = null } = {}) {
             player.experimentalSetupAlg = String(setup || "");
             player.alg = Array.isArray(moves) ? moves.join(" ") : String(moves || "");
             const { indexer } = await timeline();
-            return playLeaves(0, indexer.numAnimatedLeaves(), { snap });
+            return playLeaves(0, indexer.numAnimatedLeaves(), { snap, onStart });
         },
         setLifted(on, offset = 0.12) {
             seat.lift.position.y = on ? offset : 0;

@@ -1,4 +1,4 @@
-import { SETTLE_HOLD_MS, TURN_LIFT, TURN_LIFT_MS } from "./constants.js";
+import { scrambleTurnVoice, timing as scrambleTurnTiming } from "../anim/scramble-turn/index.js";
 
 function easeInOut(t) {
     return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
@@ -22,23 +22,31 @@ function tween(ms, step, snap) {
 }
 
 /**
- * Lift/settle timings, read at call time. The microdemo
- * (demos/micro/scramble-turn) passes its own copy; tuned values paste
- * back into constants.js.
+ * Lift/settle timings (TURN_LIFT, TURN_LIFT_MS, SETTLE_HOLD_MS), read at
+ * call time: the scramble-turn entry in the animation library
+ * (demos/anim/scramble-turn/settings.js).
  */
-export const CUBE_STAGE_TIMING = { TURN_LIFT, TURN_LIFT_MS, SETTLE_HOLD_MS };
+export const CUBE_STAGE_TIMING = scrambleTurnTiming;
 
 /**
  * Playroom-only cube motion around the live Scramble rig: remember the
  * seated table pose, lift for turn sequences, and ask the pose
  * controller to keep the cube in frame while it is in the air.
+ *
+ * voice: the sounds for it, by default the scramble-turn library entry's
+ * (a click per turn, a pat when the cube lands on the felt), on the
+ * page's shared AudioContext; null for none.
  */
-export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_STAGE_TIMING } = {}) {
+export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_STAGE_TIMING, voice: voiceOpt } = {}) {
     let seatedY = null;
     let lifted = false;
     let token = 0;
     let settleTimer = 0;
     let epoch = 0;
+    // Bumped whenever playback stops or ends, so clicks still waiting
+    // for a later turn stay quiet.
+    let turnGen = 0;
+    const voice = voiceOpt === undefined ? scrambleTurnVoice() : voiceOpt;
 
     function reduced() {
         return Boolean(prefersReducedMotion?.());
@@ -74,7 +82,8 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         poses?.releaseFrame?.();
     }
 
-    async function moveY(toY, { snap = false } = {}) {
+    // onMove(endsAt, stillMoving): the tween really runs and ends at endsAt.
+    async function moveY(toY, { snap = false, onMove = null } = {}) {
         const toy = rig.group;
         const fromY = toy.position.y;
         const my = ++token;
@@ -84,6 +93,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
             return true;
         }
         rig.group.userData.easeBusy = true;
+        if (onMove && !(snap || reduced())) onMove(performance.now() + timing.TURN_LIFT_MS, () => my === token);
         await tween(timing.TURN_LIFT_MS, (t) => {
             if (my !== token) return;
             toy.position.y = fromY + (toY - fromY) * t;
@@ -103,14 +113,20 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
             lifted = true;
             return;
         }
-        const ok = await moveY(up);
+        const ok = await moveY(up, {
+            onMove: (endsAt, stillMoving) => voice?.lift(performance.now(), stillMoving),
+        });
         if (ok) lifted = true;
     }
 
     async function setDown({ snap = false } = {}) {
         window.clearTimeout(settleTimer);
         const dest = destY();
-        const ok = await moveY(dest, { snap });
+        // The pat sounds where the cube touches the felt: the end of the set-down.
+        const ok = await moveY(dest, {
+            snap,
+            onMove: (endsAt, stillMoving) => voice?.landing(endsAt, stillMoving),
+        });
         if (!ok) return;
         lifted = false;
         releaseFrame();
@@ -146,6 +162,28 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         return typeof rig[name] === "function" ? (...args) => rig[name](...args) : fallback;
     }
 
+    // A timeline call that stops playback also drops its pending clicks.
+    function stopping(name) {
+        const run = call(name);
+        return run && ((...args) => {
+            turnGen += 1;
+            return run(...args);
+        });
+    }
+
+    // Plays leaves on the rig with a click per turn: the rig reports when
+    // playback starts, each leaf's move and duration, and the tempo.
+    function playWithClicks(play, opts) {
+        const mine = ++turnGen;
+        const onStart = (info) => {
+            voice?.turns(info, () => mine === turnGen);
+            opts.onStart?.(info);
+        };
+        return Promise.resolve(play({ ...opts, onStart, snap: Boolean(opts.snap) || reduced() })).finally(() => {
+            if (mine === turnGen) turnGen += 1;
+        });
+    }
+
     return {
         group: rig.group,
         inner: rig.inner ?? rig.lift,
@@ -156,29 +194,24 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         animateMove: (move, ms) => withLift(() => rig.animateMove(move, ms)),
         animateReorient: (from, up, front, ms) => withLift(() => rig.animateReorient(from, up, front, ms)),
         playLeaves: rig.playLeaves
-            ? (from, to, opts = {}) => withLift(() => rig.playLeaves(from, to, {
-                ...opts,
-                snap: Boolean(opts.snap) || reduced(),
-            }))
+            ? (from, to, opts = {}) => withLift(() => playWithClicks((o) => rig.playLeaves(from, to, o), opts))
             : undefined,
         playMoves: rig.playMoves
-            ? (moves, opts = {}) => withLift(() => rig.playMoves(moves, {
-                ...opts,
-                snap: Boolean(opts.snap) || reduced(),
-            }))
+            ? (moves, opts = {}) => withLift(() => playWithClicks((o) => rig.playMoves(moves, o), opts))
             : undefined,
-        jumpToLeaf: call("jumpToLeaf"),
+        jumpToLeaf: stopping("jumpToLeaf"),
         setAlg: call("setAlg"),
         setSetup: call("setSetup"),
         setTempo: call("setTempo"),
         status: call("status"),
-        resetTimeline: call("reset"),
-        pauseTimeline: call("pause"),
+        resetTimeline: stopping("reset"),
+        pauseTimeline: stopping("pause"),
         highlightLayer: call("highlightLayer", () => {}),
         highlightCubie: call("highlightCubie", () => {}),
         highlightRuleB: call("highlightRuleB", () => {}),
         clearHighlights: call("clearHighlights", () => {}),
         dispose: () => {
+            turnGen += 1;
             cancelEase();
             rig.group.position.y = destY();
             lifted = false;

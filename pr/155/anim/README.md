@@ -1,0 +1,51 @@
+# Animation library
+
+One entry per animation. The entry is the only place its motion and
+sound are defined: timings, easings, sound slots, files, gains and
+offsets. Everything that plays it imports it.
+
+```
+anim/
+  scramble-turn/
+    settings.js   the values (edit these)
+    index.js      the entry: exports settings and the hooks the demo code calls
+  sounds/         the files the entries name (generated, see below)
+  voice.js        settings.sounds → a sound.js player with contact timing
+  twisty.js       cubing.js move timing shared by twisty-puzzle entries
+```
+
+## The rule
+
+1. **Defined once.** An entry's values live in its `settings.js` and
+   nowhere else. Demo code reads them from the entry; nothing is copied
+   or pasted back.
+2. **The microdemo audits it.** `demos/micro/<name>/` is a thin viewer
+   that loops the entry on the real demo code. What you hear and see
+   there is what every demo does.
+3. **Demos import it.** Demo code calls the entry's hooks (e.g.
+   `playroom/cube-stage.js` calls `scrambleTurnVoice().turns(...)` and
+   reads `timing`), so changing a value changes it everywhere at once.
+4. **Approved once Zachary signs off.** An entry is marked approved
+   below at the commit he heard. Changing an approved entry's values
+   needs his sign-off again; bump the commit here when he gives it.
+
+Microdemos not in this table still keep their own `settings.js` in
+`demos/micro/<page>/`. Each moves here once Zachary approves it.
+
+## Entries
+
+| Entry | Played by | Microdemo | Status |
+|---|---|---|---|
+| `scramble-turn` | playroom Scramble seat (`playroom/cube-stage.js`): a click per face turn, a muffled pat when the cube lands on the felt | `micro/scramble-turn/` | approved by Zachary at `af9a8fb` |
+
+## Sounds
+
+`file` in a `settings.js` is a path under `sounds/` without extension.
+After changing one, run `python3 tools/sync-micro-sounds.py`: it copies
+the named files (both `.ogg` and `.mp3`) and rewrites `sounds/index.json`
+and `sounds/LICENSE.md`. `--list [primitive]` prints what can be swapped
+in; `python3 tools/check-micro-sounds.py` checks every file decodes.
+
+Sounds play on the page's one shared AudioContext (`shared/sound.js`):
+the hub tap unlocks it, with the iOS fixes, so a demo never needs its
+own prompt.

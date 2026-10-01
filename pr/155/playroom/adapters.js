@@ -5,6 +5,7 @@ import { lucideSvg } from "../shared/icons.js";
 import { createBeatClock, yieldFrame } from "./beat-clock.js";
 import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
+import { timing as scrambleTurnTiming } from "../anim/scramble-turn/index.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";
@@ -274,7 +275,7 @@ export function createScrambleAdapter() {
         tape: `
           <div id="tape" class="tape" aria-label="Message tape"></div>`,
         roundName: "symbol",
-        speed: { min: 0.5, max: 4, value: 1.4 },
+        speed: { min: 0.5, max: 4, value: scrambleTurnTiming.speed },
         digin: '<button id="solve" class="playroom-digin" type="button">Solve</button>',
     });
     let rig = null;

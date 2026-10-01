@@ -10,7 +10,6 @@ runs:
       run: |
         commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_PIN)"
         echo "commit=$commit" >> "$GITHUB_OUTPUT"
-        test -n "$commit"
     - uses: actions/checkout@v4
       with:
         repository: hacker6284/sudocode

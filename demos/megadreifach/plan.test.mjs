@@ -1,11 +1,10 @@
 import assert from "node:assert/strict";
 import { FACE_MOVE, gripMatrix, mulMatrix, spinMatrix } from "./minx.js";
-import { FULL_BLOCKS, PUZZLES, buildShow, ffBlockAt, ffMillis, oneBlockBytes, undo } from "./plan.js";
+import { FULL_BLOCKS, PUZZLES, buildShow, ffBlockAt, ffMillis, undo } from "./plan.js";
 import { bytesOfHex, loadGenerated, samePos } from "./gen.test-helper.mjs";
 
 assert.deepEqual(undo([[1, 2], [3, -4]]), [[3, 4], [1, -2]]);
 assert.equal(FULL_BLOCKS, 1);
-assert.equal(oneBlockBytes(), 19);
 assert.equal(ffBlockAt(0, 2, 147), 2);
 assert.equal(ffBlockAt(0.5, 2, 147), 75);
 assert.equal(ffBlockAt(1, 2, 147), 147);
@@ -20,9 +19,11 @@ if (!gen) {
     process.exit(0);
 }
 
-// The dock's one-block size is the generated padding's.
-assert.equal(gen.host.pad_message(new Array(19).fill(1)).length / 28, 1);
-assert.equal(gen.host.pad_message(new Array(20).fill(1)).length / 28, 2);
+// The dock's one-block size comes from the generated padding (worker.js).
+const { oneBlockBytes } = await import("./worker.js");
+assert.equal(gen.host.pad_message(new Array(oneBlockBytes()).fill(1)).length / 28, 1);
+assert.equal(gen.host.pad_message(new Array(oneBlockBytes() + 1).fill(1)).length / 28, 2);
+assert.equal(oneBlockBytes(), 19);
 
 function parseMove(move) {
     const m = /^([A-Z]+)(\d?)('?)$/.exec(move);

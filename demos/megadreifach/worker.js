@@ -13,6 +13,16 @@ import * as raw from "./generated/_megadreifach_impl.mjs";
 import { BLOCK_BYTES, buildShow } from "./plan.js";
 
 let faceTurns = null;
+let oneBlock = null;
+
+/** The longest message that pads to one block, asked of the generated pad_message. */
+export function oneBlockBytes() {
+    if (oneBlock !== null) return oneBlock;
+    let n = 0;
+    while (pad_message(new Array(n + 1).fill(0)).length === BLOCK_BYTES) n += 1;
+    oneBlock = n;
+    return n;
+}
 
 /** Generated face_turn(identity, f, +1) for each face, as plain numbers. */
 export function generatedFaceTurns() {
@@ -28,12 +38,12 @@ export function generatedFaceTurns() {
 
 export function answer({ op, bytes }) {
     const blocks = pad_message(bytes).length / BLOCK_BYTES;
-    if (op === "digest") return { digest: Hash(bytes), blocks };
+    if (op === "digest") return { digest: Hash(bytes), blocks, oneBlock: oneBlockBytes() };
     if (op === "show") {
         const trace = trace_hash(bytes);
         const show = buildShow(trace);
         if (show.final) show.faceTurns = generatedFaceTurns();
-        return { digest: trace.digest, blocks, show };
+        return { digest: trace.digest, blocks, oneBlock: oneBlockBytes(), show };
     }
     throw new Error(`unknown op ${op}`);
 }

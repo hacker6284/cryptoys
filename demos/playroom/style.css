@@ -844,6 +844,13 @@ twisty-player.twisty-host,
   display: none;
 }
 
+.drei-warning {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #f2c48d;
+}
+
 /* Fast-forward (blocks 2–N): its own marked line with the block counter. */
 .drei-ff {
   margin: 0;

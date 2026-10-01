@@ -5,15 +5,42 @@ import { stubThree } from "./three-stub.mjs";
 // hidden (or under a hidden parent) or shadow-toggled after boot relinks
 // every lit material. Lights register at boot and only intensity changes.
 const threeStub = `
-class V3 { constructor() { this.x = 0; this.y = 0; this.z = 0; } set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; } }
+class V3 {
+    constructor() { this.x = 0; this.y = 0; this.z = 0; }
+    set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; }
+}
 class Object3D {
-    constructor() { this.children = []; this.parent = null; this.visible = true; this.castShadow = false; this.userData = {}; this.position = new V3(); this.rotation = new V3(); this.quaternion = { setFromEuler() {} }; }
+    constructor() {
+        this.children = [];
+        this.parent = null;
+        this.visible = true;
+        this.castShadow = false;
+        this.userData = {};
+        this.position = new V3();
+        this.rotation = new V3();
+        this.quaternion = { setFromEuler() {} };
+    }
     add(...os) { for (const o of os) { o.parent?.remove(o); o.parent = this; this.children.push(o); } return this; }
-    remove(...os) { for (const o of os) { const i = this.children.indexOf(o); if (i >= 0) { this.children.splice(i, 1); o.parent = null; } } return this; }
+    remove(...os) {
+        for (const o of os) {
+            const i = this.children.indexOf(o);
+            if (i >= 0) {
+                this.children.splice(i, 1);
+                o.parent = null;
+            }
+        }
+        return this;
+    }
     traverseVisible(fn) { if (!this.visible) return; fn(this); for (const c of this.children) c.traverseVisible(fn); }
     updateMatrixWorld() {}
 }
-class Light extends Object3D { constructor(color, intensity = 1) { super(); this.isLight = true; this.intensity = intensity; } }
+class Light extends Object3D {
+    constructor(color, intensity = 1) {
+        super();
+        this.isLight = true;
+        this.intensity = intensity;
+    }
+}
 export class Group extends Object3D {}
 export class Scene extends Object3D {}
 export class PointLight extends Light { type = "PointLight"; }

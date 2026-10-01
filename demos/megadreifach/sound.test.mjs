@@ -40,7 +40,11 @@ function target() {
 }
 
 globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) });
-globalThis.localStorage = { store: {}, getItem(k) { return this.store[k] ?? null; }, setItem(k, v) { this.store[k] = v; } };
+globalThis.localStorage = {
+    store: {},
+    getItem(k) { return this.store[k] ?? null; },
+    setItem(k, v) { this.store[k] = v; },
+};
 
 test("nothing starts before the first gesture", async () => {
     const { Ctx, made } = fakeAudio();
@@ -77,7 +81,13 @@ test("mute silences, persists, and the toggle reflects it", async () => {
     const sound = createSound({ gestureTarget: t, AudioCtx: Ctx });
     t.fire("pointerdown");
     await new Promise((r) => setTimeout(r, 10));
-    const button = { attrs: {}, textContent: "", setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(_, fn) { this.click = fn; }, removeEventListener() {} };
+    const button = {
+        attrs: {},
+        textContent: "",
+        setAttribute(k, v) { this.attrs[k] = v; },
+        addEventListener(_, fn) { this.click = fn; },
+        removeEventListener() {},
+    };
     sound.bindToggle(button);
     assert.equal(button.attrs["aria-pressed"], "true");
     button.click();

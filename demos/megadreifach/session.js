@@ -13,7 +13,7 @@ import { bindCappedInput } from "../shared/input-cap.js";
 import { openSpec, renderTeachCard, sessionScope } from "../shared/session.js";
 import { bindTeachKeys, setDisabled } from "../shared/teach.js";
 import { createHasher } from "./hasher.js";
-import { FULL_BLOCKS, oneBlockBytes } from "./plan.js";
+import { FULL_BLOCKS } from "./plan.js";
 
 const EMPTY_STATUS = "Type a message, or pick a known answer.";
 const READY_STATUS = "Play shows every turn: cook, deal, 88 steps, 3-solve.";
@@ -122,7 +122,9 @@ export function createMegaDreifachSession({
 
     function syncControls() {
         const can = hasMessage() && animatable();
-        for (const id of ["#play", "#step", "#skip-end"]) setDisabled($(id), !can && !(show && id === "#play" && playing));
+        for (const id of ["#play", "#step", "#skip-end"]) {
+            setDisabled($(id), !can && !(show && id === "#play" && playing));
+        }
         setDisabled($("#reset"), !show);
         root.querySelectorAll("[data-jump]").forEach((button) => {
             const back = button.dataset.jump.endsWith("back");
@@ -137,7 +139,8 @@ export function createMegaDreifachSession({
             const long = Boolean(info && info.gen === gen && info.blocks > FULL_BLOCKS && hasMessage());
             animNote.hidden = !long;
             animNote.textContent = long
-                ? `${info.blocks} blocks. The show plays block 1 turn for turn (a block holds ${oneBlockBytes()} bytes), `
+                ? `${info.blocks} blocks. The show plays block 1 turn for turn `
+                    + `(a one-block message is up to ${info.oneBlock} bytes), `
                     + `then fast-forwards ${blockRange(FULL_BLOCKS + 1, info.blocks)} without showing their turns `
                     + "and lands on the real end state: A holds the digest above, B its inverse, C solved."
                 : "";
@@ -150,7 +153,8 @@ export function createMegaDreifachSession({
         const blocks = `${info.blocks} block${info.blocks === 1 ? "" : "s"}`;
         if (kat) {
             const ok = hexOf(info.digest) === kat.digest_hex;
-            return `Known answer “${kat.name}”, ${blocks}: ${ok ? "digest matches the KAT file ✓" : "DIGEST DIFFERS FROM THE KAT FILE"}`;
+            const verdict = ok ? "digest matches the KAT file ✓" : "DIGEST DIFFERS FROM THE KAT FILE";
+            return `Known answer “${kat.name}”, ${blocks}: ${verdict}`;
         }
         return `${bytes.length} bytes · ${blocks} · ${info.blocks > FULL_BLOCKS ? READY_FF_STATUS : READY_STATUS}`;
     }
@@ -206,7 +210,7 @@ export function createMegaDreifachSession({
         try {
             const reply = await hasher.digest(bytes.slice());
             if (disposed || mine !== gen) return;
-            info = { gen: mine, digest: reply.digest, blocks: reply.blocks };
+            info = { gen: mine, digest: reply.digest, blocks: reply.blocks, oneBlock: reply.oneBlock };
             if (digestEl) digestEl.value = hexOf(reply.digest);
             if (kat && hexOf(reply.digest) === kat.digest_hex) sound?.play("chime");
             status(describeReady());
@@ -259,7 +263,8 @@ export function createMegaDreifachSession({
             title: "Three solved puzzles and a deck",
             math: "",
             why: show
-                ? `A will carry the hash, B its inverse; C stays solved. ${show.blocks} block${show.blocks === 1 ? "" : "s"}`
+                ? "A will carry the hash, B its inverse; C stays solved. "
+                    + `${show.blocks} block${show.blocks === 1 ? "" : "s"}`
                     + (show.final ? `: block 1 turn for turn, then a fast-forward.` : ".")
                 : "A will carry the hash, B its inverse; C stays solved.",
             spec: "5.7 By hand: the cook and the 3-solve",
@@ -397,7 +402,7 @@ export function createMegaDreifachSession({
         kat = vector;
         setEncoding("hex");
         if (input) input.value = vector.msg_hex;
-        if (katMenu) katMenu.hidden = true;
+        setKatOpen(false);
         info = null;
         void refreshDigest();
     }
@@ -419,7 +424,9 @@ export function createMegaDreifachSession({
             button.className = "kat-pick";
             button.dataset.kat = vector.name;
             const ff = vector.n_blocks > FULL_BLOCKS;
-            button.textContent = `${vector.name} · ${vector.msg_len} B · ${vector.n_blocks} block${vector.n_blocks === 1 ? "" : "s"}${ff ? " (fast-forward after block 1)" : ""}`;
+            const blocks = `${vector.n_blocks} block${vector.n_blocks === 1 ? "" : "s"}`;
+            const suffix = ff ? " (fast-forward after block 1)" : "";
+            button.textContent = `${vector.name} · ${vector.msg_len} B · ${blocks}${suffix}`;
             button.addEventListener("click", () => pickKat(vector), listen);
             katMenu.append(button);
         }
@@ -432,9 +439,15 @@ export function createMegaDreifachSession({
             void refreshDigest();
         }, listen);
     });
+    function setKatOpen(open) {
+        if (!katMenu) return;
+        katMenu.hidden = !open;
+        $("#kat")?.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
     $("#kat")?.addEventListener("click", () => {
         if (!katMenu) return;
-        katMenu.hidden = !katMenu.hidden;
+        setKatOpen(katMenu.hidden);
         if (!katMenu.hidden && !kats.length) void loadKats();
     }, listen);
     playBtn?.addEventListener("click", () => void play(), listen);
@@ -500,7 +513,15 @@ export function createMegaDreifachSession({
             };
             return run();
         },
-        state: () => ({ cursor, playing, teaching, beats: show?.beats.length ?? 0, blocks: info?.blocks ?? 0, gen, hasShow: Boolean(show) }),
+        state: () => ({
+            cursor,
+            playing,
+            teaching,
+            beats: show?.beats.length ?? 0,
+            blocks: info?.blocks ?? 0,
+            gen,
+            hasShow: Boolean(show),
+        }),
         dispose() {
             disposed = true;
             unbindSound();

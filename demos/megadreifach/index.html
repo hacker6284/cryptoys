@@ -45,6 +45,7 @@
       <header class="stage-head">
         <p class="eyebrow">v2 · toy hash · three megaminxes and a deck</p>
         <h1>MegaDreifach</h1>
+        <p class="drei-warning" role="note">Toy hash, not secure: its compression step is known to be distinguishable from random. A fix is in progress.</p>
       </header>
       <div class="trio" id="trio">
         <figure class="minx" data-puzzle="A"><div class="minx-host"></div><figcaption>A · <span data-grip="A">white up, green front</span></figcaption></figure>
@@ -52,18 +53,18 @@
         <figure class="minx" data-puzzle="C"><div class="minx-host"></div><figcaption>C · stays solved</figcaption></figure>
       </div>
       <p class="drei-ff" id="ff-counter" role="status" aria-live="polite" hidden></p>
-      <div class="deal" id="deal" aria-label="The block's deal, read left to right, top row first"></div>
+      <div class="deal" id="deal" role="img" aria-label="The block's deal, read left to right, top row first"></div>
       <p class="read" id="read" aria-live="polite"></p>
       <div class="teach" id="teach" hidden>
         <article class="teach-card" id="teach-card"></article>
         <div class="transport" id="transport">
-          <button type="button" data-jump="round-back" title="Previous block">«</button>
-          <button type="button" data-jump="stage-back" title="Previous stage">‹</button>
+          <button type="button" data-jump="round-back" title="Previous block" aria-label="Previous block">«</button>
+          <button type="button" data-jump="stage-back" title="Previous stage" aria-label="Previous stage">‹</button>
           <button type="button" data-jump="back">Back</button>
           <span class="pos" id="teach-pos">—</span>
           <button type="button" data-jump="fwd">Forward</button>
-          <button type="button" data-jump="stage-fwd" title="Next stage">›</button>
-          <button type="button" data-jump="round-fwd" title="Next block">»</button>
+          <button type="button" data-jump="stage-fwd" title="Next stage" aria-label="Next stage">›</button>
+          <button type="button" data-jump="round-fwd" title="Next block" aria-label="Next block">»</button>
         </div>
       </div>
     </section>
@@ -74,7 +75,7 @@
         <button id="step" type="button">Step</button>
         <button id="reset" type="button">Reset</button>
         <button id="digest-btn" type="button">Copy</button>
-        <button id="kat" type="button" aria-controls="kat-menu">KAT</button>
+        <button id="kat" type="button" aria-controls="kat-menu" aria-expanded="false">KAT</button>
       </div>
       <label class="slider">Speed <input id="speed" type="range" min="0.5" max="12" step="0.1" value="2"></label>
       <div class="row">
@@ -87,7 +88,7 @@
       <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" placeholder="No message yet"></textarea>
       <p id="anim-note" class="drei-anim-note" role="status" hidden></p>
       <p id="status" class="status" aria-live="polite">Type a message, or pick a known answer.</p>
-      <p id="error" class="error"></p>
+      <p id="error" class="error" role="alert"></p>
       <p class="fine">A carries the hash, B its inverse, C stays solved. Each block deals 52 cards; every card turns A, then the 3-solve feeds the result forward.</p>
     </aside>
   </div>

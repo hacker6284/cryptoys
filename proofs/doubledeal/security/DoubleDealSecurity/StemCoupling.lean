@@ -6,8 +6,9 @@ import Mathlib.Tactic.LinearCombination
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 
 /-
-  A coupling bound for decks with a prescribed conjugate and prescribed row amounts (research
-  item (b), second slice; security README, "Roadmap", M7 "Open"). One counting lemma.
+  A coupling bound for decks with a prescribed conjugate and prescribed row amounts (second
+  slice towards the off-diagonal stem column bound; security README, "Roadmap", "Open" list,
+  the M7 entry). One counting lemma.
 
   NO BOUND ON `dpFCount` (OR ANY OTHER DIFFERENTIAL COUNT) IS PROVED HERE, and nothing here
   proves any part of the hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag`.
@@ -29,7 +30,8 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
     `content q π ρ`, the cards of `π` at the `q`-fixed positions of row `ρ`) satisfy row
     `ρ`'s condition `cond t ρ`.
   * `coupling`: for every `q δ : Perm (Fin 52)` such that `q` moves at most one position of
-    each row (`cmFlat ρ i`, `i : Fin 13`), and every `t : Fin 4 → ℕ`,
+    each row (`(movedInRow q ρ).card ≤ 1`, where `movedInRow q ρ` is the set of columns `i`
+    with `q (cmFlat ρ i) ≠ cmFlat ρ i`), and every `t : Fin 4 → ℕ`,
       `4096 · #{π | π⁻¹ δ π = q ∧ rowAmts (permDeck π) = t} ≤ 81 · #{π | π⁻¹ δ π = q}`,
     i.e. the fraction is at most `(3/8)^4 = 81/4096 ≈ 0.0198`.
 
@@ -57,7 +59,8 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
   maximum: an exhaustive enumeration over residue multisets (enumeration, not proof;
   `analysis/v12-fullcipher/NOTES.md` §5) gives the per-row maximum fraction
   13/165 ≈ 0.0788, so one row alone (at least 1/13 for the worst target) could not give the
-  ≈ 0.0342 that the unproved assembly would need for a 4-cycle, but two rows could. About
+  ≈ 0.0342 that the unproved assembly would need (for a 4-cycle and for a double
+  transposition alike), but two rows could. About
   the stem's SumRanks row amounts only.
 -/
 
@@ -220,8 +223,8 @@ theorem ite_four (p q r s : Prop) [Decidable p] [Decidable q] [Decidable r] [Dec
   split_ifs <;> simp_all
 
 /-- (PROVED) For nonzero `D0, D1, D2` mod 13, at most 3 of the 8 sums
-    `b + ε0 D0 + ε1 D1 + ε2 D2` (`ε ∈ {0,1}³`) equal a given `τ`. (Exact: the three sums
-    `b + D0`, `b + D1`, `b + D2` can coincide.) -/
+    `b + ε0 D0 + ε1 D1 + ε2 D2` (`ε ∈ {0,1}³`) equal a given `τ`. Sharp, e.g. `D0 = D1 = D2`,
+    `τ = b + D0` (not formalised). -/
 theorem card_hit_le_three (b τ D0 D1 D2 : ZMod 13) (h0 : D0 ≠ 0) (h1 : D1 ≠ 0) (h2 : D2 ≠ 0) :
     (univ.filter fun g : Bool × Bool × Bool =>
       b + (if g.1 then D0 else 0) + (if g.2.1 then D1 else 0) + (if g.2.2 then D2 else 0) = τ).card
@@ -437,6 +440,10 @@ theorem wsum_three (y : Fin 13 → Fin 52) (hy : Function.Injective y)
 
 /-! ## A row's free cards, and three pairs of them with different ranks -/
 
+/-- The columns `i` of row `ρ` whose position `cmFlat ρ i` the permutation `q` moves. -/
+def movedInRow (q : Equiv.Perm (Fin 52)) (ρ : Fin 4) : Finset (Fin 13) :=
+  univ.filter fun i : Fin 13 => q (cmFlat ρ i) ≠ cmFlat ρ i
+
 /-- The free cards of row `ρ` under `π`: the cards at the positions of row `ρ` that `q` fixes. -/
 def content (q π : Equiv.Perm (Fin 52)) (ρ : Fin 4) : Finset (Fin 52) :=
   (univ.filter fun i : Fin 13 => q (cmFlat ρ i) = cmFlat ρ i).image fun i => π (cmFlat ρ i)
@@ -449,7 +456,7 @@ theorem mem_content {q π : Equiv.Perm (Fin 52)} {ρ : Fin 4} {u : Fin 52} :
   simp [content]
 
 theorem card_content (q π : Equiv.Perm (Fin 52)) (ρ : Fin 4)
-    (hq : (univ.filter fun i : Fin 13 => q (cmFlat ρ i) ≠ cmFlat ρ i).card ≤ 1) :
+    (hq : (movedInRow q ρ).card ≤ 1) :
     12 ≤ (content q π ρ).card := by
   rw [content, card_image_of_injective _
     (show Function.Injective (fun i => π (cmFlat ρ i)) from
@@ -457,7 +464,7 @@ theorem card_content (q π : Equiv.Perm (Fin 52)) (ρ : Fin 4)
   have e := filter_card_add_filter_neg_card_eq_card (s := (univ : Finset (Fin 13)))
     (fun i => q (cmFlat ρ i) = cmFlat ρ i)
   simp only [card_univ, Fintype.card_fin] at e
-  simp only [ne_eq] at hq
+  simp only [movedInRow, ne_eq] at hq
   omega
 
 /-- (PROVED) Each rank has at most 4 cards. -/
@@ -546,7 +553,7 @@ theorem swapsOf_mem_set (p : Pairs) (g : Bool × Bool × Bool) {S : Finset (Fin 
   exact swapIf_mem_set _ h0 h1 (swapIf_mem_set _ h2 h3 (swapIf_mem_set _ h4 h5 hx))
 
 theorem content_act (q π : Equiv.Perm (Fin 52)) (ρ : Fin 4) (g : Bool × Bool × Bool)
-    (hq : (univ.filter fun i : Fin 13 => q (cmFlat ρ i) ≠ cmFlat ρ i).card ≤ 1) :
+    (hq : (movedInRow q ρ).card ≤ 1) :
     content q (act q ρ g π) ρ = content q π ρ := by
   have hP := choosePairs_good _ (card_content q π ρ hq)
   obtain ⟨hd, h0, h1, h2, h3, h4, h5, -⟩ := hP
@@ -565,7 +572,7 @@ theorem content_act (q π : Equiv.Perm (Fin 52)) (ρ : Fin 4) (g : Bool × Bool 
 
 /-- (PROVED) `act q ρ g` is an involution. -/
 theorem act_act (q π : Equiv.Perm (Fin 52)) (ρ : Fin 4) (g : Bool × Bool × Bool)
-    (hq : (univ.filter fun i : Fin 13 => q (cmFlat ρ i) ≠ cmFlat ρ i).card ≤ 1) :
+    (hq : (movedInRow q ρ).card ≤ 1) :
     act q ρ g (act q ρ g π) = π := by
   have hd := (choosePairs_good _ (card_content q π ρ hq)).1
   have e := content_act q π ρ g hq
@@ -613,7 +620,7 @@ theorem fix_of_content {q δ π : Equiv.Perm (Fin 52)} (h : π⁻¹ * δ * π = 
 /-- (PROVED) `act` keeps `π⁻¹ δ π = q`: the swapped cards are fixed by `δ`. -/
 theorem conj_act {q δ π : Equiv.Perm (Fin 52)} (h : π⁻¹ * δ * π = q) (ρ : Fin 4)
     (g : Bool × Bool × Bool)
-    (hq : (univ.filter fun i : Fin 13 => q (cmFlat ρ i) ≠ cmFlat ρ i).card ≤ 1) :
+    (hq : (movedInRow q ρ).card ≤ 1) :
     (act q ρ g π)⁻¹ * δ * (act q ρ g π) = q := by
   obtain ⟨hd, h0, h1, h2, h3, h4, h5, -⟩ := choosePairs_good _ (card_content q π ρ hq)
   set P := choosePairs (content q π ρ)
@@ -633,7 +640,7 @@ theorem conj_act {q δ π : Equiv.Perm (Fin 52)} (h : π⁻¹ * δ * π = q) (ρ
 /-- (PROVED) `act q ρ g` does not move the cards of any other row. -/
 theorem act_apply_other (q π : Equiv.Perm (Fin 52)) {ρ ρ' : Fin 4} (hne : ρ' ≠ ρ)
     (g : Bool × Bool × Bool)
-    (hq : (univ.filter fun i : Fin 13 => q (cmFlat ρ i) ≠ cmFlat ρ i).card ≤ 1) (i : Fin 13) :
+    (hq : (movedInRow q ρ).card ≤ 1) (i : Fin 13) :
     act q ρ g π (cmFlat ρ' i) = π (cmFlat ρ' i) := by
   obtain ⟨-, h0, h1, h2, h3, h4, h5, -⟩ := choosePairs_good _ (card_content q π ρ hq)
   have hn : ∀ {u}, u ∈ content q π ρ → π (cmFlat ρ' i) ≠ u := by
@@ -654,7 +661,7 @@ instance (t : Fin 4 → Nat) (ρ : Fin 4) (π : Equiv.Perm (Fin 52)) : Decidable
 
 theorem cond_act_other (q π : Equiv.Perm (Fin 52)) (t : Fin 4 → Nat) {ρ ρ' : Fin 4}
     (hne : ρ' ≠ ρ) (g : Bool × Bool × Bool)
-    (hq : (univ.filter fun i : Fin 13 => q (cmFlat ρ i) ≠ cmFlat ρ i).card ≤ 1) :
+    (hq : (movedInRow q ρ).card ≤ 1) :
     cond t ρ' (act q ρ g π) ↔ cond t ρ' π := by
   have e : rowRead (permDeck (act q ρ g π)) ρ' (readAmt t ρ') =
       rowRead (permDeck π) ρ' (readAmt t ρ') := by
@@ -666,7 +673,7 @@ theorem cond_act_other (q π : Equiv.Perm (Fin 52)) (t : Fin 4 → Nat) {ρ ρ' 
 /-- (PROVED) For every deck `π`, at most 3 of the 8 swap choices `g` satisfy row `ρ`'s
     condition after `act q ρ g`. -/
 theorem card_cond_act_le (q π : Equiv.Perm (Fin 52)) (t : Fin 4 → Nat) (ρ : Fin 4)
-    (hq : (univ.filter fun i : Fin 13 => q (cmFlat ρ i) ≠ cmFlat ρ i).card ≤ 1) :
+    (hq : (movedInRow q ρ).card ≤ 1) :
     (univ.filter fun g => cond t ρ (act q ρ g π)).card ≤ 3 := by
   have hP := choosePairs_good _ (card_content q π ρ hq)
   unfold act
@@ -729,14 +736,14 @@ theorem card_cond_act_le (q π : Equiv.Perm (Fin 52)) (t : Fin 4 → Nat) (ρ : 
   rw [e, rowTurnV10_cast, hPe, wsum_three y hy hnd g] at hc
   exact hc
 
-/-- (PROVED; research item (b), the coupling lemma for the 4-card case) Let `q` move at most
+/-- (PROVED; the coupling lemma for the 4-card case) Let `q` move at most
     one position in each row of the column-major grid. Then among the decks `π` with
     `π⁻¹ δ π = q`, the fraction whose row amounts are exactly `t` is at most `81/4096`
     (`= (3/8)^4 ≈ 0.0198`):
     `4096 · #{π | π⁻¹ δ π = q ∧ rowAmts (permDeck π) = t} ≤ 81 · #{π | π⁻¹ δ π = q}`.
     Any `δ`, `t`; no hypothesis on `δ`. -/
 theorem coupling (q δ : Equiv.Perm (Fin 52))
-    (hq : ∀ ρ : Fin 4, (univ.filter fun i : Fin 13 => q (cmFlat ρ i) ≠ cmFlat ρ i).card ≤ 1)
+    (hq : ∀ ρ : Fin 4, (movedInRow q ρ).card ≤ 1)
     (t : Fin 4 → Nat) :
     4096 * (univ.filter fun π : Equiv.Perm (Fin 52) =>
         π⁻¹ * δ * π = q ∧ ∀ r, rowAmts (permDeck π) r = t r).card ≤

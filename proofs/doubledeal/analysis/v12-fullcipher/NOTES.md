@@ -125,18 +125,21 @@ here, and nothing here is proved.
 
 **ENUMERATION ONLY; no theorem uses these numbers.** Exact integer counts over finite
 sets, but not checked in Lean. They size the constant in `StemCoupling.coupling`
-(security library, research item (b), second slice); the theorem itself uses neither.
+(security library, second slice towards the off-diagonal stem column bound); the theorem itself uses neither.
 
 Setting. When γ⁻¹β moves 4 cards (a 4-cycle or a double transposition; `(zRows, zCols) =
-(4, 12)` in `StemPosition`), a sampling check against the Python port
-`security/checks/ddport.py` (script not committed; 300 samples, not a proof) finds the ratio `q` of the two position maps moving one position
-per row, at column `(c + t_ρ) % 13` of row ρ. By `StemCoupling.rowAmts_eq_iff`, "row
+(4, 12)` in `StemPosition`), the ratio `q` of the two position maps is expected (sampling
+check against `security/checks/ddport.py`, script not in the repository; not a proof) to move
+one position per row, at column `(c + t_ρ) % 13` of row ρ. By `StemCoupling.rowAmts_eq_iff`, "row
 amounts = t" is four row conditions; row ρ's condition is a weighted rank sum mod 13 over
 row ρ with weights `13 − j` (turned). The (at least 12) positions of row ρ that `q`
 fixes carry cards fixed by δ, and any rearrangement of them keeps `π⁻¹ δ π = q`. An unproved assembly
-(`q` fixed by `(t, c, d)`, 2·13^5 choices; `#{π | π⁻¹ δ π = q} ≤ 4·48!` for a 4-cycle)
-would need a per-`q` fraction of decks with row amounts `t` of at most
-`52!/(64 · 2·13^5 · 4·48!) = 1 624 350/47 525 504 ≈ 0.0342`.
+(paper argument, not proved here) would fix `q` by `(t, c, d)` with `d ≠ 0`. For a 4-cycle
+only `d = 1, 3` can occur (`2·13^5` choices, `#{π | π⁻¹ δ π = q} ≤ 4·48!` each); for a double
+transposition δ² = 1 and only `d = 2`, the one `d ≠ 0` with q² = 1, can occur (`13^5`
+choices, `≤ 8·48!` each). The totals agree, so for both cycle types it would need a per-`q`
+fraction of decks with row amounts `t` of at most
+`52!/(64 · 13^5 · 8·48!) = 1 624 350/47 525 504 ≈ 0.0342`.
 
 * `rowmax.c` (`logs/rowmax.log`, 12–17 min on one core): for every multiset of 12 ranks
   mod 13 (each at most 4 times; 2 056 210 multisets) and the 12 weights left after one
@@ -152,11 +155,6 @@ would need a per-`q` fraction of decks with row amounts `t` of at most
   sums of `m` nonzero residues mod 13 equal to one target. `L(3) = 3` of 8, so three swaps
   of cards with different ranks per row give at most `(3/8)^4 = 81/4096 ≈ 0.0198` over
   four rows, the constant in `coupling` (proved there directly, `card_hit_le_three`). With
-  it the unproved assembly above would have a margin of about 1.73 for a 4-cycle
-  (`64 · 2·13^5 · 4·48! · 81/4096 ≈ 3.76·10^6 · 48!` against `52! = 6 497 400 · 48!`).
-  For a double transposition (centralizer `8·48!`) the same count of `q` gives
-  `≈ 7.52·10^6 · 48!`, which does not fit; that case would need a sharper count of the `q`
-  or a sharper per-`q` fraction.
-* A joint sampling check of all four rows (400 000 decks for each of three `(t, c, d)`,
-  not committed) gave hit fractions 2.8·10^-5 to 4.8·10^-5, near 13^-4 ≈ 3.5·10^-5.
-  Sampled, not a bound.
+  it the unproved assembly above would have a margin of about 1.73
+  (`64 · 13^5 · 8·48! · 81/4096 ≈ 3.76·10^6 · 48!` against `52! = 6 497 400 · 48!`), for a
+  4-cycle and for a double transposition alike.

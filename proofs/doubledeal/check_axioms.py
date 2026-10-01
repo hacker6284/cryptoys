@@ -677,7 +677,7 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.fullDiffCount_le_of_col",
             "DoubleDeal.Security.FullCipher.fullDiffCount_le_64_of_offDiag",
             "DoubleDeal.Security.FullCipher.not_col_v10Sym",
-            # StemPosition (research item (b), first slice): the stem as a position map and
+            # StemPosition (off-diagonal stem bound, first slice): the stem as a position map and
             # the support gap of gamma^-1 * beta; structure only, no count of decks, no part
             # of hoff (helpers srcRow / cmFlat_inj2 are named apart from SumRanksDP.rowOf /
             # SumRanksDP.cmFlat_injective)
@@ -689,7 +689,7 @@ PACKAGES = {
             "DoubleDeal.Security.StemPosition.card_fixed_eq",
             "DoubleDeal.Security.StemPosition.card_moved_eq",
             "DoubleDeal.Security.StemPosition.card_moved_zero_or_ge_four",
-            # StemCoupling (research item (b), second slice): decks with a prescribed conjugate
+            # StemCoupling (off-diagonal stem bound, second slice): decks with a prescribed conjugate
             # q (moving <= 1 position per row) and prescribed row amounts are at most 81/4096
             # of the decks with that conjugate; no bound on dpFCount, no part of hoff (that q
             # has this shape for support-4 differences is not proved)

@@ -1,0 +1,32 @@
+# doubledeal-table-settle: DoubleDeal enter: table settles
+
+Beat `table-settle`. The map says to play it at −6 dB. Verified 2026-09-30. Every file is **CC0** (licence text as shown on the source page); no CC-BY.
+
+## How these were made
+- **Sources:** existing verified picks from `/workspace/scrounger/megadreifach/`, `/workspace/scrounger/demos-sfx/`, the SpaceJoe "Rubik Cube Sounds" pack (all 25 turns plus "Small Noises", CC0) and Kenney packs, re-cut from the **untouched originals** (copied into `originals/`). Freesound originals are the public HQ-preview MP3s, because the lossless uploads need a login. Kenney originals are the OGGs from the official ZIPs.
+- **Processing:** mono at 44.1 kHz; silence trimmed; 3 ms fade-in; squared fade-out; linear gain only (no limiter, compressor or EQ). Encoded as OGG Vorbis q4 and MP3 96 kbps CBR, metadata stripped.
+- **Loudness:** measured with ffmpeg `ebur128` (BS.1770-4 / EBU R128) on the *encoded* files. The target is **−16 LUFS**, with true peak ≤ **−1 dBTP** on both the OGG and the MP3.
+  - Clips ≥ 1.0 s use **integrated** loudness (I).
+  - Clips < 1.0 s are too short for a meaningful integrated value, so they use **maximum momentary loudness** (M, 400 ms window, clip padded with silence).
+- **TP-limited:** most foley transients (clicks, pats, ticks) hit the −1 dBTP ceiling before −16 LUFS. They are at the loudest level that keeps TP ≤ −1 dBTP, and the "To −16" column is the extra gain needed. They were **not** peak-limited on purpose, because limiting blunts the transient. For level-matched A/B, apply each file's "To −16" gain in the page (WebAudio gain is float, so it won't clip before the master) and put a limiter on the master bus, or lower the page's reference level.
+- **Peak** is the offset in ms of the loudest sample (the contact moment) in the decoded OGG, recomputed after trimming and normalising. The MP3 value is shown only where it differs by more than 2 ms (two near-equal clicks).
+- **Clicks** are the major transients within 6 dB of the loudest, at least 40 ms apart, in ms. They sync the turn groups and multi-touch sounds.
+- `candidates.json` has the same data in machine-readable form for the tuning page.
+- I haven't listened to any of these; slices were cut by waveform only.
+- **`-lim` files (peak-limited variants):** made for every candidate more than 6 dB short of −16 LUFS. They are listed in the second table below, sitting beside the original (`<name>-lim.ogg` / `.mp3`). Recipe: the original's trimmed audio, plus extra linear gain of at most **6 dB**, through ffmpeg `alimiter` (lookahead, attack 1 ms, release 40 ms, auto-level off, latency compensated), run at 4× oversampling with a −1.5 dBFS ceiling. True peak ≤ −1 dBTP is re-measured on the encoded OGG and MP3. The 6 dB cap keeps the limiter transparent on clicks and taps: on a 20 ms click, pushing all the way to −16 LUFS (M) takes 15–30 dB of gain reduction and flattens the click into a different sound. So many `-lim` files are louder but still short of −16; the "Still short" column shows by how much. Use the **original's** peak offset for sync: on the `-lim` file the loudest sample can jump to another, now near-equal click.
+
+| File | Group | Duration | Peak (ms) | Clicks (ms) | Loudness | TP dBTP (max of ogg/mp3) | TP-limited | To −16 | Size ogg / mp3 | Source | Author (as shown) | Licence (as shown) | Description |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `setdown_eggdeng-502658.ogg` / `.mp3` | — | 0.27 s | 28 | 27 | -23.9 LUFS (M max) | -2.4 | yes | +7.9 dB | 6.2 / 4.0 KB | [place_card.mp3](https://freesound.org/people/eggdeng/sounds/502658/) | eggdeng | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | Card placed on a card table: light, bright tap (megadreifach felt-2). Original: `originals/freesound-502658_eggdeng_hq-preview.mp3` |
+| `setdown_kenney-card-place-2.ogg` / `.mp3` | — | 0.39 s | 198 | 197 | -29.6 LUFS (M max) | -1.6 | yes | +13.6 dB | 6.7 / 5.6 KB | [Casino Audio (1.1) / card-place-2.ogg](https://kenney.nl/assets/casino-audio) | Kenney Vleugels (Kenney.nl) | Creative Commons CC0 (page); License.txt: "Creative Commons Zero, CC0" (http://creativecommons.org/publicdomain/zero/1.0/) | Kenney: shorter, lighter pat. Original: `originals/kenney-casino-audio_card-place-2.ogg` |
+| `setdown_kenney-card-place-1.ogg` / `.mp3` | — | 0.42 s | 102 | 117 | -25.1 LUFS (M max) | -1.7 | yes | +9.1 dB | 7.1 / 5.6 KB | [Casino Audio (1.1) / card-place-1.ogg](https://kenney.nl/assets/casino-audio) | Kenney Vleugels (Kenney.nl) | Creative Commons CC0 (page); License.txt: "Creative Commons Zero, CC0" (http://creativecommons.org/publicdomain/zero/1.0/) | Kenney: soft, muffled pat, casino-table feel (megadreifach felt-1). Original: `originals/kenney-casino-audio_card-place-1.ogg` |
+
+## Peak-limited variants (`-lim`): 3 of 3 candidates
+
+Same source, licence, author and description as the original row above. Only the level processing differs.
+
+| File | Original loudness | `-lim` loudness | Still short of −16 | Extra gain | Peak gain reduction | TP dBTP | Peak (ms) orig → lim | Clicks (ms) | Size ogg / mp3 |
+|---|---|---|---|---|---|---|---|---|---|
+| `setdown_eggdeng-502658-lim.ogg` / `.mp3` | -23.9 | -20.1 LUFS (M max) | 4.1 dB | +6.0 dB | 5.7 dB | -1.9 | 28 → 70 | 27, 69 | 6.3 / 4.0 KB |
+| `setdown_kenney-card-place-2-lim.ogg` / `.mp3` | -29.6 | -27.7 LUFS (M max) | 11.7 dB | +6.0 dB | 6.0 dB | -1.9 | 198 → 198 | 149, 197 | 6.8 / 5.6 KB |
+| `setdown_kenney-card-place-1-lim.ogg` / `.mp3` | -25.1 | -23.0 LUFS (M max) | 7.0 dB | +6.0 dB | 5.9 dB | -1.6 | 102 → 116 | 117 | 7.3 / 5.6 KB |

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cryptoys microdemos</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./shared/micro.css">
+</head>
+<body>
+  <main class="micro-index">
+    <h1>Microdemos</h1>
+    <p class="note">Each page loops one animation primitive from the real demo code, with its sounds. Tune timing and pick sounds by ear, then <em>Copy settings</em> for JSON shaped like the source demo's config. Settings persist per page; click once to turn sound on.</p>
+    <h2>Twisty puzzles</h2>
+    <ul>
+      <li><a href="./scramble-turn/">Scramble face turn</a>: lift, cubing.js turn(s), settle</li>
+      <li><a href="./megaminx-turn/">Megaminx face turn</a>: one, two or three clicks; recorded, composite or single-per-click</li>
+    </ul>
+    <h2>DoubleDeal cards</h2>
+    <ul>
+      <li><a href="./doubledeal-grid-deal/">Deal into the grid</a> (seatPacket)</li>
+      <li><a href="./doubledeal-row-slide/">Row slide and column belt</a> (ShiftRows / SumRanks)</li>
+      <li><a href="./doubledeal-scoop/">Scoop into the hand pile</a></li>
+      <li><a href="./doubledeal-place/">Place a card</a> (GridCycle place: hop or drop)</li>
+      <li><a href="./doubledeal-take/">Take a card</a> (inverse GridCycle)</li>
+    </ul>
+    <h2>Boxes and the toy chest</h2>
+    <ul>
+      <li><a href="./doubledeal-unbox/">Unbox</a>: flap, deck out, set down, sleeve aside, deal</li>
+      <li><a href="./doubledeal-restow/">Put back</a>: cards in, flaps closed</li>
+      <li><a href="./megadreifach-deck-flap/">MegaDreifach deck-box flap</a></li>
+      <li><a href="./playroom-chest/">Toy chest</a>: lid, a toy flying out and back</li>
+    </ul>
+    <h2>New primitives</h2>
+    <ul>
+      <li><a href="./peg/">Peg into a grid hole</a></li>
+      <li><a href="./dice-cup/">Dice cup: shake and pour</a></li>
+    </ul>
+    <p class="note">Sounds: <a href="./sounds/LICENSE.md">credits and licences</a> (all CC0), synced by <code>tools/sync-micro-sounds.py</code>; <code>tools/check-micro-sounds.py</code> checks every file decodes.</p>
+  </main>
+</body>
+</html>

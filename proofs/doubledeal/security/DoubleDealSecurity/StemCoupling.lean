@@ -7,8 +7,8 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 
 /-
   A coupling bound for decks with a prescribed conjugate and prescribed row amounts (second
-  slice towards the off-diagonal stem column bound; security README, "Roadmap", "Open" list,
-  the M7 entry). One counting lemma.
+  slice towards the off-diagonal stem column bound; security README, "Roadmap",
+  the M7 row). One counting lemma.
 
   NO BOUND ON `dpFCount` (OR ANY OTHER DIFFERENTIAL COUNT) IS PROVED HERE, and nothing here
   proves any part of the hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag`.

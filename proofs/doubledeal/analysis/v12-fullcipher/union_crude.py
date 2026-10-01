@@ -1,9 +1,11 @@
-"""ARITHMETIC ONLY (no theorem uses it; NOTES.md section 5). Union bound for support s >= 8 with a crude conjugate-set bound
-#{pi | pi^-1 delta pi = q} <= s^floor(s/2) * (52-s)!  (one representative per cycle of q, every
-cycle of q has length >= 2; not proved), summed over the q parameters (t, t', e) with
-52 - zRows*zCols = s (count nq below: t free, t' agreeing with t mod 13 in exactly a rows,
-e = s' - s zero mod 4 in exactly b columns; that q depends only on (t, t', e) is a paper
-argument, not proved). Support 4 is not this route (StemSupportFour)."""
+"""ARITHMETIC ONLY (no theorem uses it; NOTES.md section 5). The arithmetic that sized the
+support s >= 8 route now PROVED in Lean (security library, StemUnion): the conjugate-set bound
+#{pi | pi^-1 delta pi = q} <= s^floor(s/2) * (52-s)!  (StemUnion.card_conjSet_le_reps), summed
+over the q parameters (t, t', e) with 52 - zRows*zCols = s (count nq below: t free, t' agreeing
+with t mod 13 in exactly a rows, e = s' - s zero mod 4 in exactly b columns; q depends only on
+(t, t', e) by StemUnion.ratio_eq_ratioQ, and the count is StemUnion.card_params; the margin is
+StemUnion.paramCount_check). This script recomputes that arithmetic independently. Support 4 is
+not this route (StemSupportFour)."""
 from math import comb, factorial
 from fractions import Fraction
 N=factorial(52)

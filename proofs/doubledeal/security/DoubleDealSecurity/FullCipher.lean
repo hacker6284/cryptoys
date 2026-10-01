@@ -72,17 +72,20 @@
     `fullDiffCount_to_one` (nothing else reaches `1`; from `Differential.dpCount_to_one`,
     which needs injective layers) and `fullDiffCount_eq_card_beforeFinal` (the final key gives
     a factor `52!`; `encryptL_snoc`, `beforeFinal`) are the facts `Linear` uses.
-    Column transfer (a REDUCTION; its hypothesis is proved for no `γ`):
+    Column transfer (a REDUCTION in this module; for `γ` outside `v10Sym` and `p = 64` its
+    hypothesis is proved in the later module `StemUnion`, `dpFCount_col_le_64`, from
+    `dpFCount_self_le_64` plus `StemUnion.dpFCount_le_of_ne`):
     `fullDiffCount_le_of_col`: if `p · dpFCount β γ ≤ 52!` for every `β ≠ 1` (a column bound
     for the stem alone), then `p · fullDiffCount α γ n y ≤ (52!)^(n+2)` for every `α ≠ 1`,
-    every `n` (no decay) and every deck `y`. `fullDiffCount_le_64_of_offDiag`: for `γ` outside `v10Sym` and `p = 64` the
+    every `n` (the same bound for every `n`; it does not decay) and every deck `y`.
+    `fullDiffCount_le_64_of_offDiag`: for `γ` outside `v10Sym` and `p = 64` the
     hypothesis is needed only for `β` outside `v10Sym` with `β ≠ γ` (the diagonal is
     `dpFCount_self_le_64`). `not_col_v10Sym`: into a nontrivial `v10Sym a x` no `p ≥ 2`
-    works. The open off-diagonal hypothesis is about the stem (SumRanks) alone, not about a
-    GridCycle round. It is not known to imply `roundBody_covariant_iff_id`; it does imply
-    that no `β` outside `v10Sym` is exactly stem-covariant into `γ ≠ β`
-    (`stem(β·m) = γ·stem(m)` on every deck would give `dpFCount β γ = 52!`), which is also
-    unproved (`sumRanksV10_commutes_iff` rules out only `γ = β`).
+    works. The off-diagonal hypothesis is about the stem (SumRanks) alone, not about a
+    GridCycle round, and it does not imply `roundBody_covariant_iff_id`. It is proved in
+    `StemUnion` (`dpFCount_le_of_ne`, every `β ≠ γ`), which also shows that no `β` is exactly
+    stem-covariant into a `γ ≠ β` (that would give `dpFCount β γ = 52!`; not stated as a
+    separate theorem).
     The row and column sums used by `LinearMasks` (for DoubleDeal's `encryptL`) are
     `sum_fullDiffCount` (every row sums to `(52!)^(n+2)`; only decks to decks is used) and
     `sum_fullDiffCount_left` (every column sums to `(52!)^(n+2)`, through `outDiff` and
@@ -115,8 +118,9 @@
   NOT proved, and limits; read before citing:
   * Any numeric bound on the full-cipher differential (independent or real keys) in this
     module. (With independent keys, `StemUnion.fullDiffCount_le_64`, a later module, proves
-    1/64 with no decay for outputs outside `v10Sym`, by discharging the hypothesis of
-    `fullDiffCount_le_64_of_offDiag`.) The real-schedule differential
+    1/64 for outputs outside `v10Sym`, the same for every `n` (the bound does not decay;
+    nothing is proved about decay), through `fullDiffCount_le_of_col` and
+    `StemUnion.dpFCount_col_le_64`.) The real-schedule differential
     `P[E(α·M) = γ·E(M)]` gets NO bound at all.
   * Anything under the real schedule beyond the proof's first mix round (key `K_0`).
   * For `v10Sym` the final round gives NO extra factor, and `K_6` never changes a relabelling
@@ -672,18 +676,23 @@ theorem fullDiffCount_v10Sym (α : Relabel) (a : Fin 13) (x : Fin 4) (n : ℕ) {
     (fun h => absurd (mem_univ _) h), dpFCount_v10Sym, if_pos rfl]
   ring
 
-/-! ### Column transfer through the final round (a reduction; its hypothesis is NOT proved)
+/-! ### Column transfer through the final round (a reduction; its hypothesis is proved in `StemUnion` for `γ` outside `v10Sym`)
 
 The final round is the stem after a uniform Compose key, so the full-cipher count into `γ` is
 an average of the final round's column `dpFCount · γ` (`fullDiffCount_eq`, rows of
 `diffCount` summing to `(52!)^n`, nothing reaching `1`). A column bound for the stem alone
 therefore bounds the whole cipher into `γ`, for every `n` and every `α ≠ 1`. No such column
-bound is proved here for any `γ`; for `γ` in `v10Sym` none exists (`not_col_v10Sym`). -/
+bound is proved in this module. For `γ` outside `v10Sym` and `p = 64` it is
+`StemUnion.dpFCount_col_le_64` (from `dpFCount_self_le_64` plus `StemUnion.dpFCount_le_of_ne`);
+for `γ` in `v10Sym` none exists (`not_col_v10Sym`). -/
 
-/-- (PROVED; a REDUCTION, the hypothesis `hcol` is not proved for any `γ`) A column bound
+/-- (PROVED; a REDUCTION. For `γ` outside `v10Sym` and `p = 64`, `hcol` is
+    `StemUnion.dpFCount_col_le_64`, from `dpFCount_self_le_64` plus
+    `StemUnion.dpFCount_le_of_ne`; that gives `StemUnion.fullDiffCount_le_64`.) A column bound
     for the final no-mix round transfers to the whole cipher: if `p · dpFCount β γ ≤ 52!` for
     every `β ≠ 1`, then `p · fullDiffCount α γ n y ≤ (52!)^(n+2)` for every `α ≠ 1`, every
-    `n` and every deck `y`. Independent uniform keys (`encryptL`); no decay in `n`. -/
+    `n` and every deck `y`. Independent uniform keys (`encryptL`); the same bound for every
+    `n` (it does not decay). -/
 theorem fullDiffCount_le_of_col {α : Relabel} (hα : α ≠ 1) (γ : Relabel) (p : ℕ)
     (hcol : ∀ β, β ≠ 1 → p * dpFCount β γ ≤ Nat.factorial 52) (n : ℕ) {y : Fin 52 → Nat}
     (hy : IsDeck y) : p * fullDiffCount α γ n y ≤ Nat.factorial 52 ^ (n + 2) := by
@@ -708,14 +717,15 @@ theorem fullDiffCount_le_of_col {α : Relabel} (hα : α ≠ 1) (γ : Relabel) (
         Nat.mul_le_mul_left _ hs
     _ = Nat.factorial 52 ^ (n + 2) := by ring
 
-/-- (PROVED; a REDUCTION. `hoff` is proved for every `γ` in the later module `StemUnion`
-    (`hoff_holds`), which gives this without hypothesis as `StemUnion.fullDiffCount_le_64`.) For an output
+/-- (PROVED; a REDUCTION. `hoff` is a special case of `StemUnion.dpFCount_le_of_ne` (every
+    `β ≠ γ`); `StemUnion.fullDiffCount_le_64` gives the conclusion without hypothesis, through
+    `fullDiffCount_le_of_col`.) For an output
     difference `γ` outside `v10Sym`, the column hypothesis of `fullDiffCount_le_of_col` with
     `p = 64` is needed only OFF the diagonal and outside `v10Sym`: the diagonal `β = γ` is
     `dpFCount_self_le_64` (`sumRanksV10_survival_le`), and a nontrivial `v10Sym` input
     reaches only itself (`dpFCount_v10Sym`). So if every `β` outside `v10Sym` with `β ≠ γ`
     has `64 · dpFCount β γ ≤ 52!`, then `64 · fullDiffCount α γ n y ≤ (52!)^(n+2)` for every
-    `α ≠ 1`, `n` and deck `y`. Independent uniform keys; no decay in `n`. -/
+    `α ≠ 1`, `n` and deck `y`. Independent uniform keys; the same bound for every `n`. -/
 theorem fullDiffCount_le_64_of_offDiag {α γ : Relabel} (hα : α ≠ 1)
     (hγ : ¬ ∃ a x, γ = v10Sym a x)
     (hoff : ∀ β, β ≠ γ → (¬ ∃ a x, β = v10Sym a x) → 64 * dpFCount β γ ≤ Nat.factorial 52)

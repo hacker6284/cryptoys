@@ -106,7 +106,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
   - One carry is one more move.
   - Moving a register costs two moves per peg: lift and place.
   - Hand time assumes 1 move per second with no errors. Real humans are slower; multiply by 2–3 [est].
-* **A4. Keys come from fair dice by the BUILD (§4.2), never from humans.** Every entropy figure assumes fair dice and the rule followed exactly. None of them applies to human-chosen fleets.
+* **A4. Keys come from fair dice by the BUILD (§4.2), never from humans.** Every entropy figure assumes fair dice and the rule followed exactly, with every let-go chosen without regard to the dice in the tray (§4.2). None of them applies to human-chosen fleets.
 * **A5. Security is classical.** Shor's algorithm breaks every tier; that is out of scope.
 * **A6. Standard hardness assumptions.** CDH and DLP in the order-q subgroup of F_p* are as hard as the best known algorithms (NFS, rho). For the long-toll primes, I additionally assume the fixed top half gives NFS no special advantage [est, §9].
 * **A7. Work is done out of sight.** The pattern of work reveals the key (§9).
@@ -290,7 +290,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 > **Ships may touch**, side by side or end to end, as in Hasbro's rules. They never overlap: a ship only ever grows into open holes.
 
 * **The d12 is exact:** its thirds and halves give each open heading and sea exactly the weights of "grow until it bumps", and its odd/even (the bow) is independent of them. This is checked exactly in all 25 room states and on whole builds (`randomizer-kit/`, part B; derivation in `key-selection/NOTES.md` §5).
-* **Why the row cup is exact.** Faces 1–9 correspond one-to-one to pairs of trits (3 × 3). A 0 is re-thrown on its own face only, which is rejection sampling. So every hole gets an exactly uniform, independent trit. Throwing unread dice again after a let-go keeps this exact, because which throw a pair uses never depends on what it shows.
+* **Why the row cup is exact.** Faces 1–9 correspond one-to-one to pairs of trits (3 × 3). A 0 is re-thrown on its own face only, which is rejection sampling. So every hole gets an exactly uniform, independent trit. Throwing unread dice again after a let-go keeps this exact provided when you let go never depends on what the unread dice in the tray show; then which throw a pair uses never depends on what it shows. If it does depend on them, a builder can steer a pair to any face by letting go and coming back at the same point, and the entropy figures do not hold.
 * **The cursor is the record.** With these let-go rules, a build is only ever left at the boundary after a die's pair, or in the step 1 → 2 gap of a die's first hole. Every hole before the cursor is finished (ship decided, growth and Sub/Cruiser rolls included, and peg rolled). The cursor hole's ship decision is finished if lane hole 10 holds a white peg and not started otherwise. Every hole after it has no peg. So "no peg" never has to mean "sea decided", and a white peg always means a white key digit.
   - A ship laid at the cursor covers only the cursor hole and holes after it, none of which has a peg yet. Pegs behind the cursor are never in a ship's way, because ships grow only right or down.
   - Build simulated with random let-go and resume at every hole boundary and every step 1 → 2 gap, resuming from the board alone. The simulation draws each hole's peg on its own (no pairs), so its let-go points include every one allowed above: the joint layout × peg distribution matches the exact model, chi-square 1,327.7 on 1,376 df (2×2, 400k builds) and 101,368 on 101,330 df (2×3, 300k builds) (`ships-pegs/combined.py`).
@@ -420,8 +420,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 * The fold for T2 is "drop it 35 holes back and 6 holes back". A peg high in the strip therefore folds several times in a chain, which the simulation includes.
 
 **Real tiers:** 5n + (toll length) + 10 holes of workspace, plus the separate key grid. A nudged product's up to 2 extra strip holes (B3) go in the spare holes of the last workspace grid (13 to 84 of them, depending on the tier).
-* Three registers X, Y and C, a 2n-hole strip, a toll register on grids, and the control lane.
-* Chain grids in reading order to form each register.
+* Chain the grids in reading order: X, Y, C, the toll register, the control lane, and the strip last, so its 2 overflow holes are spare holes.
 * R3072 workspace: 3 × 1938 + 3876 + 969 + 10 = 10,669 holes = 107 grids, plus 1 key grid = 108 grids per player.
 * Cursor ships (8 per player) lie against the frames of whichever grids they point into.
 * No paper anywhere; nothing is stored off the grids.

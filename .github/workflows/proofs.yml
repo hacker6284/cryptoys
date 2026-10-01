@@ -32,7 +32,7 @@ env:
 
 jobs:
   # Anti-drift: committed Generated/ Lean must match emit from current .sudo
-  # via the pinned sudocode main commit (PR #9 merge; see proofs/SUDOCODE_PIN).
+  # via the pinned sudocode main commit (see proofs/SUDOCODE_PIN).
   generated-fresh:
     runs-on: ubuntu-latest
     env:
@@ -43,9 +43,8 @@ jobs:
       - name: Read the sudocode pin
         id: pin
         run: |
-          commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_PIN)"
+          commit="$(sh proofs/sudocode_pin.sh)"
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
-          test -n "$commit"
       - uses: actions/checkout@v5
         with:
           repository: hacker6284/sudocode

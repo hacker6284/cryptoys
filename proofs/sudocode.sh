@@ -1,13 +1,13 @@
 # Sourced (not run) by proofs/emit_lean.sh and proofs/doubledeal/vectors/regen.sh.
-# The single place that reads the sudocode pin (proofs/SUDOCODE_PIN) and sets the
-# SUDOCODE_DIR default. Needs ROOT (repo root). Sets and exports:
+# Reads the sudocode pin (proofs/SUDOCODE_PIN, via proofs/sudocode_pin.sh) and sets
+# the SUDOCODE_DIR default. Needs ROOT (repo root). Sets and exports:
 #   SUDOCODE_COMMIT  the pinned sudocode commit
 #   SUDOCODE_REF     the branch it is on (main)
 #   SUDOCODE_DIR     sudocode checkout (default /tmp/sudocode)
 #   SUDOC            sudoc binary ($SUDOC if set, else built in $SUDOCODE_DIR at the pin)
 SUDOCODE_REPO=https://github.com/hacker6284/sudocode.git
 SUDOCODE_REF=main
-SUDOCODE_COMMIT="$(grep -E '^[0-9a-f]{40}$' "$ROOT/proofs/SUDOCODE_PIN" || true)"
+SUDOCODE_COMMIT="$(sh "$ROOT/proofs/sudocode_pin.sh" || true)"
 if [[ -z "$SUDOCODE_COMMIT" ]]; then
   echo "could not read a 40-char SHA from $ROOT/proofs/SUDOCODE_PIN" >&2
   exit 1

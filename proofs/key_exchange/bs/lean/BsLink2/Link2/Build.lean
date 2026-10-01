@@ -2766,4 +2766,47 @@ theorem stageD_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : 
     simp only [Option.some_bind]
     exact stageE_spec lg row col hr hc st hread htray hface
 
+theorem ships_push (l : List Spec.Ship) (s : Spec.Ship) :
+    (l.map embShip).toArray.push (embShip s) = ((l ++ [s]).map embShip).toArray := by
+  simp [Array.push]
+
+/-- The emitted grow stage (then the gap let-go and the peg) is `Spec.growAt` then the rest. -/
+theorem stageC_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : Nat)
+    (hr : row < 10) (hc : col < 10) (st : Spec.BuildSt) (hd : DiceFit st.dice)
+    (hread : st.read ≤ 5) (htray : TrayOk st.tray) (hlen : st.tray.length ≤ 5)
+    (hface : col % 2 = 1 → 1 ≤ st.face ∧ st.face ≤ 9) :
+    (stageCE (embLG lg) (Int.ofNat row) (Int.ofNat col) (Int.ofNat (row * 10 + col))
+      (embDice st.dice) (embed st.tray) (Int.ofNat st.read) (tab st.covered)
+      (st.ships.map embShip).toArray (Int.ofNat st.face)
+      (tab (fun x => Int.ofNat (st.pegs x)))).toOption =
+    ((Spec.growAt row col st).bind fun st =>
+      (Spec.letGoAt lg (row * 10 + col) true st).bind (Spec.pegAt (row * 10 + col) col)).map
+      (fun st' => SudoRt.Flow.cont (embSt st')) := by
+  unfold stageCE Spec.growAt
+  rw [atL_ofNat _ _ (by rw [tab_size]; omega), ok_bind, tab_get]
+  by_cases hcv : st.covered (row * 10 + col) = true
+  · rw [hcv]
+    simp only [Bool.not_true, Bool.false_eq_true, if_false, Option.some_bind]
+    exact stageD_spec lg hlg row col hr hc st hd.2.2 hread htray hlen hface
+  · have hcv' : st.covered (row * 10 + col) = false := by simpa using hcv
+    rw [hcv']
+    simp only [Bool.not_false, if_true]
+    rw [toOpt_bind, grow_until_it_bumps_spec _ _ _ _ hr hc hd.1 hd.2.1]
+    cases hg : Spec.growUntilItBumps st.dice st.covered row col with
+    | none => rfl
+    | some p =>
+      obtain ⟨o, d1⟩ := p
+      obtain ⟨hs, hon⟩ := growUntilItBumps_facts _ _ _ _ _ _ hr hc hg
+      have h10 : FitsLen d1.d10.length := by rw [hs.2.2]; exact hd.2.2
+      cases o with
+      | none =>
+        simp only [Option.map_some', Option.some_bind, Option.map_none']
+        exact stageD_spec lg hlg row col hr hc { st with dice := d1 } h10 hread htray hlen hface
+      | some s =>
+        simp only [Option.map_some', Option.some_bind]
+        rw [cover_spec _ _ (hon s rfl), ok_bind, appendL_spec, ships_push]
+        exact stageD_spec lg hlg row col hr hc
+          { st with dice := d1, covered := Spec.cover st.covered s, ships := st.ships ++ [s] }
+          h10 hread htray hlen hface
+
 end BsLink2.Link2

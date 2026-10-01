@@ -1,0 +1,31 @@
+entropy (bits): {"uniform_layout+pegs": 308.6837140721156, "bump_H": 306.33040570017795, "bump_H2": 303.99072152432734, "bump_Hmin": 283.27672546015003}
+== exhaustive injectivity (every layout x every peg pattern) ==
+  1x2: 27 keys, all distinct, decode = identity (both orders)
+  2x1: 27 keys, all distinct, decode = identity (both orders)
+  2x2: 1377 keys, all distinct, decode = identity (both orders)
+  1x5: 13365 keys, all distinct, decode = identity (both orders)
+  2x3: 101331 keys, all distinct, decode = identity (both orders)
+  3x2: 101331 keys, all distinct, decode = identity (both orders)
+  1x7: 785133 keys, all distinct, decode = identity (both orders)
+== physical one-pass build (cursor + lane-10 marker) vs exact model, 2x2 and 2x3 ==
+  (2, 2): chi-square 1327.7 on 1376 df
+  (2, 3): chi-square 101367.7 on 101330 df
+== 10x10: 20000 builds, round trips, walk statistics ==
+{
+ "cells": 211.1048,
+ "cells_max_seen": 222,
+ "cells_max_possible": 233,
+ "hit_units": 203.34965,
+ "mults_per_grid": 1048.76885,
+ "mults_per_H_bit": 3.4236524696359605,
+ "mults_per_Hmin_bit": 3.7022768047618353,
+ "public_mults_per_bit": 1.3782817250378967,
+ "pegs_only_mults_per_bit": 3.119947631410857,
+ "ships_only_mults_per_bit": 3.7114508326508
+}
+{"rolls": 289.91455, "moves_incl_cursor_and_lane": 454.82085}
+{'tier': 'R1024', 'target': 80, 'pegs_grids': 2, 'pegs_mults': 994.5, 'pegs_trim_cells': 101, 'pegs_trim_mults': 499.5, 'comb_grids_H': 1, 'comb_mults_H': 1048.76885, 'comb_grids_Hmin': 1, 'comb_mults_Hmin': 1048.76885, 'injective_mod_q': True, 'pegs_moves': 740902500.0, 'pegs_trim_moves': 372127500.0, 'comb_moves_H': 781332793.25, 'comb_moves_Hmin': 781332793.25}
+{'tier': 'R2048', 'target': 112, 'pegs_grids': 2, 'pegs_mults': 994.5, 'pegs_trim_cells': 142, 'pegs_trim_mults': 704.5, 'comb_grids_H': 1, 'comb_mults_H': 1048.76885, 'comb_grids_Hmin': 1, 'comb_mults_Hmin': 1048.76885, 'injective_mod_q': True, 'pegs_moves': 2953665000.0, 'pegs_trim_moves': 2092365000.0, 'comb_moves_H': 3114843484.5, 'comb_moves_Hmin': 3114843484.5}
+{'tier': 'R3072', 'target': 128, 'pegs_grids': 2, 'pegs_mults': 994.5, 'pegs_trim_cells': 162, 'pegs_trim_mults': 804.5, 'comb_grids_H': 1, 'comb_mults_H': 1048.76885, 'comb_grids_Hmin': 1, 'comb_mults_Hmin': 1048.76885, 'injective_mod_q': True, 'pegs_moves': 6583590000.0, 'pegs_trim_moves': 5325790000.0, 'comb_moves_H': 6942849787.0, 'comb_moves_Hmin': 6942849787.0}
+{'tier': 'R7680', 'target': 192, 'pegs_grids': 3, 'pegs_mults': 1494.5, 'pegs_trim_cells': 243, 'pegs_trim_mults': 1209.5, 'comb_grids_H': 2, 'comb_mults_H': 2096.5377, 'comb_grids_Hmin': 2, 'comb_mults_Hmin': 2096.5377, 'injective_mod_q': True, 'pegs_moves': 61872300000.0, 'pegs_trim_moves': 50073300000.0, 'comb_moves_H': 86796660780.0, 'comb_moves_Hmin': 86796660780.0}
+{'tier': 'R15360', 'target': 256, 'pegs_grids': 4, 'pegs_mults': 1994.5, 'pegs_trim_cells': 324, 'pegs_trim_mults': 1614.5, 'comb_grids_H': 2, 'comb_mults_H': 2096.5377, 'comb_grids_Hmin': 2, 'comb_mults_Hmin': 2096.5377, 'injective_mod_q': True, 'pegs_moves': 331087000000.0, 'pegs_trim_moves': 268007000000.0, 'comb_moves_H': 348025258200.0, 'comb_moves_Hmin': 348025258200.0}

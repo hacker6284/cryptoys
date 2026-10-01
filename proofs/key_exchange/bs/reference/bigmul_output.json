@@ -1,0 +1,74 @@
+{
+ "T1": {
+  "n": 18,
+  "toll_trits": 3,
+  "toll_pegs": 2,
+  "trials": 30,
+  "correct": "30/30",
+  "moves_per_mul": 457,
+  "moves_per_mul_over_n2": 1.411,
+  "carry_share": 0.361,
+  "fold_lifts_per_mul": 12,
+  "python_seconds_per_mul": 0.0
+ },
+ "T2": {
+  "n": 35,
+  "toll_trits": 30,
+  "toll_pegs": 2,
+  "trials": 30,
+  "correct": "30/30",
+  "moves_per_mul": 1659,
+  "moves_per_mul_over_n2": 1.354,
+  "carry_share": 0.394,
+  "fold_lifts_per_mul": 24,
+  "python_seconds_per_mul": 0.0
+ },
+ "T6demo": {
+  "n": 100,
+  "toll_trits": 50,
+  "toll_pegs": 40,
+  "trials": 30,
+  "correct": "30/30",
+  "moves_per_mul": 18367,
+  "moves_per_mul_over_n2": 1.837,
+  "carry_share": 0.42,
+  "fold_lifts_per_mul": 66,
+  "python_seconds_per_mul": 0.01
+ },
+ "R1024": {
+  "n": 646,
+  "toll_trits": 323,
+  "toll_pegs": 230,
+  "trials": 3,
+  "correct": "3/3",
+  "moves_per_mul": 745004,
+  "moves_per_mul_over_n2": 1.785,
+  "carry_share": 0.429,
+  "fold_lifts_per_mul": 426,
+  "python_seconds_per_mul": 0.18
+ },
+ "R2048": {
+  "n": 1292,
+  "toll_trits": 646,
+  "toll_pegs": 448,
+  "trials": 3,
+  "correct": "3/3",
+  "moves_per_mul": 2974984,
+  "moves_per_mul_over_n2": 1.782,
+  "carry_share": 0.428,
+  "fold_lifts_per_mul": 856,
+  "python_seconds_per_mul": 0.58
+ },
+ "R3072": {
+  "n": 1938,
+  "toll_trits": 969,
+  "toll_pegs": 663,
+  "trials": 3,
+  "correct": "3/3",
+  "moves_per_mul": 6623117,
+  "moves_per_mul_over_n2": 1.763,
+  "carry_share": 0.429,
+  "fold_lifts_per_mul": 1295,
+  "python_seconds_per_mul": 1.11
+ }
+}

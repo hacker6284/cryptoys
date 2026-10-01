@@ -1,0 +1,34 @@
+flat (2, 2) layouts=17 H=3.668839 H2=3.311944 Hmin=2.169925 n3=0.000000 DP agrees
+flat (2, 3) layouts=139 H=6.788110 H2=6.472695 Hmin=5.076816 n3=0.588889 DP agrees
+flat (3, 3) layouts=3073 H=11.052721 H2=10.572305 Hmin=8.076816 n3=1.217269 DP agrees
+flat (3, 4) layouts=64557 H=15.119184 H2=14.351045 Hmin=11.469133 n3=1.617314 DP agrees
+flat (4, 4) layouts=3996513 H=20.443371 H2=19.216326 Hmin=15.697952 n3=2.156962 DP agrees
+flat (2, 6) layouts=49601 H=14.077009 H2=12.379390 Hmin=8.392317 n3=1.081121 DP agrees
+flat (5, 3) layouts=1363527 H=18.395576 H2=16.269469 Hmin=12.129283 n3=1.744400 DP agrees
+skew (2, 2) layouts=17 H=3.668839 H2=3.311944 Hmin=2.169925 n3=0.000000 DP agrees
+skew (2, 3) layouts=139 H=6.470295 H2=5.925426 Hmin=4.147205 n3=0.185185 DP agrees
+skew (3, 3) layouts=3073 H=10.815448 H2=10.142171 Hmin=7.446413 n3=0.488309 DP agrees
+skew (3, 4) layouts=64557 H=15.059289 H2=14.220538 Hmin=10.871399 n3=0.709845 DP agrees
+skew (4, 4) layouts=3996513 H=20.901918 H2=19.944090 Hmin=15.356826 n3=1.042379 DP agrees
+skew (2, 6) layouts=49601 H=14.669164 H2=13.751642 Hmin=10.391554 n3=0.562082 DP agrees
+skew (5, 3) layouts=1363527 H=19.442698 H2=18.593120 Hmin=14.296794 n3=0.961877 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) (2, 3) layouts=139 H=6.627248 H2=6.144872 Hmin=4.381543 n3=0.292354 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) (3, 3) layouts=3073 H=11.044085 H2=10.505502 Hmin=8.095661 n3=0.713447 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) (3, 4) layouts=64557 H=15.327186 H2=14.638916 Hmin=11.269474 n3=1.030086 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) (2, 6) layouts=49601 H=14.929417 H2=14.219712 Hmin=10.924252 n3=0.846220 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) (5, 3) layouts=1363527 H=19.719413 H2=19.083553 Hmin=15.264824 n3=1.390043 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) / misfit -> water (2, 3) layouts=139 H=5.685082 H2=4.471579 Hmin=2.559098 n3=0.230410 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) / misfit -> water (3, 3) layouts=3073 H=9.981832 H2=8.564273 Hmin=5.369734 n3=0.609492 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) / misfit -> water (3, 4) layouts=64557 H=14.121862 H2=12.405364 Hmin=8.382522 n3=0.908054 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) / misfit -> water (2, 6) layouts=49601 H=13.540638 H2=11.611649 Hmin=7.290704 n3=0.707280 DP agrees
+grow d6 (1-2 water; grow on 4-6, then on 6, then on 6) / misfit -> water (5, 3) layouts=1363527 H=18.351864 H2=16.459014 Hmin=11.436970 n3=1.208333 DP agrees
+grow until it bumps; re-roll if no room for 2 (2, 3) layouts=139 H=6.877715 H2=6.647235 Hmin=5.169925 n3=0.270833 DP agrees
+grow until it bumps; re-roll if no room for 2 (3, 3) layouts=3073 H=11.327261 H2=11.081229 Hmin=9.169925 n3=0.737847 DP agrees
+grow until it bumps; re-roll if no room for 2 (3, 4) layouts=64557 H=15.613069 H2=15.248386 Hmin=13.339850 n3=1.046714 DP agrees
+grow until it bumps; re-roll if no room for 2 (2, 6) layouts=49601 H=15.079980 H2=14.531169 Hmin=11.924813 n3=0.740435 DP agrees
+grow until it bumps; re-roll if no room for 2 (5, 3) layouts=1363527 H=20.043063 H2=19.718911 Hmin=16.602884 n3=1.384446 DP agrees
+grow until it bumps; turn if no room (2, 3) layouts=139 H=6.902692 H2=6.704449 Hmin=5.754888 n3=0.290123 DP agrees
+grow until it bumps; turn if no room (3, 3) layouts=3073 H=11.315655 H2=11.040151 Hmin=8.924813 n3=0.789209 DP agrees
+grow until it bumps; turn if no room (3, 4) layouts=64557 H=15.594176 H2=15.198533 Hmin=12.509775 n3=1.109646 DP agrees
+grow until it bumps; turn if no room (2, 6) layouts=49601 H=15.144602 H2=14.669672 Hmin=11.509775 n3=0.798337 DP agrees
+grow until it bumps; turn if no room (5, 3) layouts=1363527 H=19.950668 H2=19.517367 Hmin=16.679700 n3=1.488812 DP agrees

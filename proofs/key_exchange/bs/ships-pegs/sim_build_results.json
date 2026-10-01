@@ -1,0 +1,24 @@
+{
+ "N": 20000,
+ "rolls_per_grid": 213.5778,
+ "ships_per_grid": 30.2982,
+ "miss_pegs_per_grid": 24.4496,
+ "cells_walked": 111.20965,
+ "hit_units": 100.49465,
+ "kinds_per_grid": {
+  "S": 5.64275,
+  "C": 5.5669,
+  "D": 17.3399,
+  "B": 1.5016,
+  "A": 0.24705
+ },
+ "max_kind_seen": {
+  "S": 16,
+  "C": 14,
+  "D": 31,
+  "B": 7,
+  "A": 4
+ },
+ "MC_shannon": 146.81426546881636,
+ "MC_shannon_se": 0.022540285383171398
+}

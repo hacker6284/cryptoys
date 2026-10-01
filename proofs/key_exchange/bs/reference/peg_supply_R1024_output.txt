@@ -1,0 +1,1 @@
+R1024 {"n": 646, "runs": 1, "note": "registers only; add key pegs", "peak_white": 1266, "peak_red": 1234, "holes_in_use": 3553, "peak_red_per_hole": 0.347, "peak_white_per_hole": 0.356}

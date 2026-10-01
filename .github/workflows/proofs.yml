@@ -8,6 +8,7 @@ on:
       - "primitives/hash/megadreifach/**"
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
+      - "primitives/key_exchange/**"
       - "tools/emit_lean.py"
       - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
@@ -19,6 +20,7 @@ on:
       - "primitives/hash/megadreifach/**"
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
+      - "primitives/key_exchange/**"
       - "tools/emit_lean.py"
       - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
@@ -67,6 +69,10 @@ jobs:
           for v in v8 v9 v10 v11; do
             proofs/doubledeal/vectors/regen.sh "$v" --check
           done
+      - name: BS vectors rebuild byte-identically from bs.sudo
+        run: proofs/key_exchange/bs/vectors/regen.sh --check
+      - name: BS vectors agree with pow() and the Python evidence harness
+        run: python3 proofs/key_exchange/bs/vectors/check_oracle.py
       # Scramble (marked broken): the 10 SPEC vectors, the attack messages in logs/, the
       # `hello` twin and the decoded `cube` pose through the JS this sudoc generates from
       # scramble.sudo (about 1 s). The seeded Python attack runs (REPORT S7) are not run here.

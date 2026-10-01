@@ -198,6 +198,21 @@ test("offsetMs schedules relative to contact; too late skips into the file", asy
     assert.ok(Math.abs(b.args[1] - 0.1) < 1e-9, "skips the 100 ms it missed");
 });
 
+test("startMs trims the head; offsetMs still counts from the untrimmed start", async () => {
+    const { Ctx, made } = fakeAudio();
+    const t = target();
+    const sound = createSound({ sounds: { land: { files: ["d/land"], gains: [1], gapMs: 0, voices: 4, offsetMs: -250, startMs: 200 } }, base: BASE, gestureTarget: t, AudioCtx: Ctx });
+    t.fire("click");
+    await settle();
+    sound.play("land", { leadMs: 400 });
+    sound.play("land", { leadMs: 10 });
+    const [a, b] = made[0].started;
+    assert.ok(Math.abs(a.args[0] - 10.35) < 1e-9, "audible part starts 50 ms before contact");
+    assert.ok(Math.abs(a.args[1] - 0.2) < 1e-9, "from 200 ms into the file");
+    assert.equal(b.args[0], 10);
+    assert.ok(Math.abs(b.args[1] - 0.24) < 1e-9, "late: skips the head and the 40 ms it missed");
+});
+
 test("configure swaps files and gains", async () => {
     const { Ctx, made } = fakeAudio();
     const t = target();

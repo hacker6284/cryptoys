@@ -23,7 +23,7 @@
  *   { file, gainDb, offsetMs, fadeMs, maxMs } | { perClick: true } | null } }
  *   file: path under demos/micro/sounds/ without extension.
  *   offsetMs: when the file starts relative to the contact (−peak lands
- *   the loudest sample on the contact).
+ *   the loudest sample on the contact). startMs: skip the file's head.
  *
  * Sounds go through demos/shared/sound.js (the MegaDreifach Web Audio
  * path), limiter on the master. Sound is on: the page's AudioContext
@@ -59,6 +59,7 @@ export function soundTable(slots, sounds) {
             gapMs: slot.gapMs ?? 0,
             voices: slot.voices ?? 4,
             offsetMs: s.offsetMs ?? 0,
+            ...(s.startMs ? { startMs: s.startMs } : {}),
             ...(s.maxMs ? { maxMs: s.maxMs } : {}),
             ...(s.fadeMs ? { fadeMs: s.fadeMs } : {}),
             ...(slot.jitter ? { jitter: slot.jitter } : {}),

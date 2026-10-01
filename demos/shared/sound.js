@@ -31,6 +31,8 @@
  *            from now to contact. Without offsetMs the file starts now
  *            (the MegaDreifach behaviour).
  *   jitter   playbackRate spread (±); MegaDreifach's "turn" uses 0.06.
+ *   startMs  skip this much of the file's head (pre-roll); offsetMs still
+ *            counts from the untrimmed start
  *   maxMs    stop the file this long after it starts (0 = play it out)
  *   fadeMs   linear fade to silence over the last fadeMs before the stop
  *
@@ -379,11 +381,14 @@ export function createSound({
         src.onended = () => {
             live[name] -= 1;
         };
-        const delay = spec.offsetMs === undefined ? 0 : (leadMs + spec.offsetMs) / 1000;
-        const skip = delay < 0 ? Math.min(-delay, Math.max(0, (src.buffer.duration ?? 0) - 0.005)) : 0;
+        // startMs trims the file's head; offsetMs still counts from the
+        // untrimmed start, so −peak keeps the peak on the contact.
+        const head = Math.max(0, spec.startMs ?? 0) / 1000;
+        const delay = spec.offsetMs === undefined ? 0 : (leadMs + spec.offsetMs) / 1000 + head;
+        const skip = Math.min(head + (delay < 0 ? -delay : 0), Math.max(0, (src.buffer.duration ?? 0) - 0.005));
         const at = ctx.currentTime + Math.max(0, delay);
-        if (delay > 0) src.start(at);
-        else if (delay < 0) src.start(ctx.currentTime, skip);
+        if (delay > 0) src.start(at, ...(skip ? [skip] : []));
+        else if (delay < 0 || skip) src.start(ctx.currentTime, skip);
         else src.start();
         const rate = src.playbackRate.value || 1;
         const natural = Math.max(0, ((src.buffer.duration ?? 0) - skip) / rate);

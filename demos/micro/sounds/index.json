@@ -442,6 +442,24 @@
     "scramble-turn"
    ]
   },
+  "scramble-turn/settle/settle_bwarpus99-452535-slice": {
+   "group": "settle",
+   "peakMs": 246,
+   "clicksMs": [
+    244,
+    309
+   ],
+   "lufs": -22.6,
+   "gainTo16": 6.6,
+   "durationS": 0.542,
+   "author": "bwarpus99",
+   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
+   "source": "https://freesound.org/people/bwarpus99/sounds/452535/",
+   "description": "Plastic object set down on a wood desk (megadreifach regrip-2; shelf return).",
+   "pages": [
+    "scramble-turn"
+   ]
+  },
   "scramble-turn/settle/settle_emapuree-848748": {
    "group": "settle",
    "peakMs": 33,
@@ -456,8 +474,7 @@
    "source": "https://freesound.org/people/emapuree/sounds/848748/",
    "description": "Wooden block tapped on felt: short, muffled, dry thud (megadreifach regrip-3; map pick).",
    "pages": [
-    "megaminx-turn",
-    "scramble-turn"
+    "megaminx-turn"
    ]
   },
   "scramble-turn/single/single_spacejoe-486564": {

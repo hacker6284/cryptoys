@@ -281,7 +281,10 @@ export async function adoptTwistyPuzzle(seat, {
         requestTimestamp(indexer.indexToMoveStartTimestamp(leaf) + indexer.moveDuration(leaf));
     }
 
-    async function playLeaves(from, to, { snap = false } = {}) {
+    // onStart({ at, durations }): called as playback starts (performance.now()
+    // and each leaf's duration in ms at tempo 1), so callers can time
+    // per-leaf effects such as sound.
+    async function playLeaves(from, to, { snap = false, onStart = null } = {}) {
         if (disposed) return { index: 0, total: 0 };
         const mine = seekGen;
         seat.group.userData.turnBusy = true;
@@ -309,6 +312,15 @@ export async function adoptTwistyPuzzle(seat, {
             for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
             if (disposed || mine !== seekGen) return { index: start, total };
             player.play();
+            if (onStart) {
+                const durations = [];
+                for (let i = start; i < end; i++) durations.push(indexer.moveDuration(i));
+                try {
+                    onStart({ at: performance.now(), durations });
+                } catch (err) {
+                    console.warn("playLeaves onStart failed", err);
+                }
+            }
             const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
             const deadline = performance.now() + budget;
             while (performance.now() < deadline) {

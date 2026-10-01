@@ -1,0 +1,801 @@
+// BS (Battleship Diffie–Hellman), the runnable spec of primitives/key_exchange/bs/SPEC.md.
+// A toy. The small tiers are broken in seconds (SPEC §9).
+//
+// Trits, holes and cells (SPEC §3, §4):
+//   0 = empty hole / no peg / plain cell
+//   1 = white peg / white cell
+//   2 = red peg / red cell
+// A register is a List<int> of n trits, hole 0 first; hole i is worth 3^i.
+// No step turns a register into a number: every step below is a peg recipe of §3.
+//
+// Sections, in file order (B9 comes last because it uses everything above it):
+//   §2.3       Field, tier
+//   §3 B0-B2   click, drop, lay
+//   §3 B3-B6   multiply, pay_toll, tidy, cube
+//   §3 B7      walk (the key walk, both phases)
+//   §3 B8      check_received
+//   §3.1       answer, copy_shot, call_the_shots (sending a public value)
+//   §4.3       READ: Kind, Ship, KeyGrid, ship_pass, peg_pass, read_key
+//   §4.2       BUILD: Dice, read_pair_die, grow_until_it_bumps, build_key_grid
+//   §3 B9      public_value, shared_secret, exchange
+// B10 (the optional parity check) is a hand check on these same registers and is
+// not encoded. Neither are the SPEC's optional variants. BUILD has one dice
+// recipe: the d12 hole die and the d6 for the fleet, one row-cup d10 per hole pair.
+
+// ---------------------------------------------------------------------------
+// §2.3 Parameters: p = 3^n - c. The toll c is a register of at most n trits,
+// hole 0 first, with trailing empty holes dropped. Values: proofs/key_exchange/bs/
+// reference/params.json.
+
+record Field
+    n: int
+    toll: List<int>
+
+// T1 skiff: p = 3^18 - 3^2 - 1, toll = white at holes 0 and 2.
+t1 = Field(18, [1, 0, 1])
+
+// T2 frigate: p = 3^35 - 3^29 - 1, toll = white at holes 0 and 29.
+t2 = Field(35, [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+
+// T6 demo: p = 3^100 - (pi_50 + 4383), a 50-trit long toll.
+t6 = Field(100, [1, 2, 2, 2, 1, 2, 1, 2, 2, 1, 1, 1, 0, 2, 2, 2, 2, 2, 1, 2,
+                 2, 0, 1, 1, 1, 1, 1, 2, 0, 0, 1, 1, 2, 0, 1, 0, 2, 2, 2, 2,
+                 1, 0, 1, 1, 2, 0, 1, 0, 0, 1])
+
+// The tier by its §2.3 name. The real tiers' long tolls are not listed here;
+// any Field(n, toll) from params.json works the same way.
+export func tier(name: text) -> Field
+    if name == "T1"
+        return t1
+    if name == "T2"
+        return t2
+    assert name == "T6"
+    return t6
+
+func empty_register(f: Field) -> List<int>
+    return filled(f.n, 0)
+
+func is_empty(x: List<int>) -> bool
+    for i = 0 to x.length - 1
+        if x[i] != 0
+            return false
+    return true
+
+// "A lone white in hole 0": the register holding 1.
+func is_lone_white(x: List<int>) -> bool
+    if x[0] != 1
+        return false
+    for i = 1 to x.length - 1
+        if x[i] != 0
+            return false
+    return true
+
+func is_trits(x: List<int>) -> bool
+    for i = 0 to x.length - 1
+        if (x[i] < 0) or (x[i] > 2)
+            return false
+    return true
+
+// ---------------------------------------------------------------------------
+// §3 B0. Colour wheel: empty -> white -> red -> empty. One step is one click.
+
+func click(t: int) -> int
+    return (t + 1) mod 3
+
+// B1. Drop a peg (odometer carry). A white peg clicks the hole once, a red peg
+// twice. Whenever a hole clicks from red over to empty, flick a white into the
+// next hole up; that flick is itself a drop, so it may carry again.
+func drop(strip: inout List<int>, hole: int, colour: int)
+    h = hole
+    clicks = colour
+    while clicks > 0
+        carry = false
+        for k = 1 to clicks
+            if strip[h] == 2
+                carry = true
+            strip[h] = click(strip[h])
+        if carry
+            h = h + 1
+            clicks = 1
+        else
+            clicks = 0
+
+// B2. Lay a copy of A starting at hole s: drop each peg of A, in its own colour,
+// into the hole s places further on.
+func lay(strip: inout List<int>, a: List<int>, s: int)
+    for j = 0 to a.length - 1
+        if a[j] != 0
+            drop(strip, s + j, a[j])
+
+// B4. Pay the toll (fold). Repeat until nothing sits at or beyond hole n: lift
+// the highest peg at or beyond hole n and lay the toll starting n holes lower,
+// twice if the lifted peg was red. Carries from the laid toll land at or below
+// the lifted hole, so the scan only ever moves down.
+func pay_toll(f: Field, strip: inout List<int>)
+    h = strip.length - 1
+    while h >= f.n
+        colour = strip[h]
+        if colour == 0
+            h = h - 1
+        else
+            strip[h] = 0
+            for k = 1 to colour
+                lay(strip, f.toll, h - f.n)
+
+// B3. Multiply A x B. Clear a product strip of 2n holes (plus the nudge, at most
+// 2, in the public phase: the SPEC's 2n + 2). For every pegged hole i of B, lay
+// a copy of A starting at hole i (+ nudge): once if B's peg is white, twice if
+// it is red. Pay the toll. Holes 0 .. n-1 are the answer; slide it out.
+// A nudge of 1 or 2 lays every copy one or two holes higher: times 3 or 9 (B6).
+// The strip cannot overflow (A·B·3^nudge < 3^(2n + nudge)); if it did, a drop
+// past the last hole would trap OutOfBounds.
+export func multiply(f: Field, a: List<int>, b: List<int>, nudge: int) -> List<int>
+    assert (a.length == f.n) and (b.length == f.n)
+    assert (nudge >= 0) and (nudge <= 2)
+    strip = filled(2 * f.n + nudge, 0)
+    for i = 0 to f.n - 1
+        for k = 1 to b[i]
+            lay(strip, a, i + nudge)
+    pay_toll(f, strip)
+    out = empty_register(f)
+    for i = 0 to f.n - 1
+        out[i] = strip[i]
+    return out
+
+// B5. Tidy (canonical form). Copy the register into the strip with one extra
+// hole on top and pour the toll into the copy. If a white spills into the extra
+// hole, throw the spill away: the copy is the tidy answer (x >= p exactly when
+// x + c >= 3^n). Otherwise keep the original.
+export func tidy(f: Field, x: List<int>) -> List<int>
+    assert x.length == f.n
+    copy = x + [0]
+    lay(copy, f.toll, 0)
+    if copy[f.n] == 0
+        return x
+    assert copy[f.n] == 1
+    copy.pop()
+    return copy
+
+// B6. Cube, with a nudge: Y = X x X, then X <- Y x X. In the public phase on a
+// white or red cell, every copy of the second product is laid one or two holes
+// higher (nudge = the cell's trit): times g or g^2 for free.
+func cube(f: Field, x: List<int>, nudge: int) -> List<int>
+    y = multiply(f, x, x, 0)
+    return multiply(f, y, x, nudge)
+
+// ---------------------------------------------------------------------------
+// §3 B7. Key walk (the exponentiation): a left-to-right cube-and-multiply walk
+// over the key's cells (READ, §4.3, gives them in order, start marker first).
+
+enum Phase
+    Public
+    Shared(base: List<int>)
+
+// B7 step 3: start the accumulator X at the first white or red cell.
+//   Public: a lone white peg at hole 1 (white cell) or hole 2 (red cell).
+//   Shared: a copy of the base C (white), or C x C (red).
+func start_accumulator(f: Field, cell: int, phase: Phase) -> List<int>
+    match phase
+        case Public
+            x = empty_register(f)
+            x[cell] = 1
+            return x
+        case Shared(base)
+            if cell == 1
+                return base
+            return multiply(f, base, base, 0)
+
+// B7. Before the first white or red cell do nothing (the accumulator is 1).
+// At every later cell cube (B6); then:
+//   Public: a white or red cell was the nudge; nothing else to do.
+//   Shared: multiply by C once for a white cell, twice for a red one.
+// At the end, tidy (B5).
+func walk(f: Field, cells: List<int>, phase: Phase) -> List<int>
+    started = false
+    x = empty_register(f)
+    for j = 0 to cells.length - 1
+        cell = cells[j]
+        assert (cell >= 0) and (cell <= 2)
+        if started
+            match phase
+                case Public
+                    x = cube(f, x, cell)
+                case Shared(base)
+                    x = cube(f, x, 0)
+                    for k = 1 to cell
+                        x = multiply(f, x, base, 0)
+        else if cell != 0
+            x = start_accumulator(f, cell, phase)
+            started = true
+    if not started
+        x[0] = 1
+    return tidy(f, x)
+
+// ---------------------------------------------------------------------------
+// §3 B8. Check the received number (Wong 5.4). It must have exactly n trits.
+// Square it (B3), then tidy. If the square is empty or a lone white in hole 0,
+// reject (None). Otherwise the square C is the base for the shared walk.
+export func check_received(f: Field, received: List<int>) -> Option<List<int>>
+    if received.length != f.n
+        return None
+    if not is_trits(received)
+        return None
+    square = tidy(f, multiply(f, received, received, 0))
+    if is_empty(square) or is_lone_white(square)
+        return None
+    return Some(square)
+
+// ---------------------------------------------------------------------------
+// §3.1 Sending a public value: call the shots. The receiver calls every hole of
+// the sender's tidy X register, hole 0 first up to hole n - 1; the sender
+// answers by the peg in that hole; the receiver copies each answer into the
+// same hole of their own Y register.
+
+enum Shot
+    Hit
+    Miss
+    Misfire
+
+// The sender looks at the called hole: red "Hit!", white "Miss!", empty "Misfire!".
+func answer(x: List<int>, hole: int) -> Shot
+    if x[hole] == 2
+        return Hit
+    if x[hole] == 1
+        return Miss
+    assert x[hole] == 0
+    return Misfire
+
+// The receiver copies the answer into the same hole of Y: a red peg on a hit,
+// a white peg on a miss, nothing on a misfire.
+func copy_shot(y: inout List<int>, hole: int, shot: Shot)
+    match shot
+        case Hit
+            y[hole] = 2
+        case Miss
+            y[hole] = 1
+        case Misfire
+            skip
+
+// Clear Y; then call every hole of X from hole 0 up to hole n - 1, a fixed n
+// calls that never stop early (not even after a run of misfires), copying each
+// answer into Y. Returns the answers in call order.
+func call_the_shots(f: Field, x: List<int>, y: inout List<int>) -> List<Shot>
+    assert (x.length == f.n) and (y.length == f.n)
+    for hole = 0 to f.n - 1
+        y[hole] = 0
+    shots: List<Shot> = []
+    for hole = 0 to f.n - 1
+        shot = answer(x, hole)
+        shots.append(shot)
+        copy_shot(y, hole, shot)
+    return shots
+
+record Called
+    shots: List<Shot>
+    y: List<int>
+
+// One public value sent: the answers called and the receiver's Y afterwards.
+export func send_public_value(f: Field, x: List<int>) -> Called
+    y = empty_register(f)
+    shots = call_the_shots(f, x, y)
+    return Called(shots, y)
+
+// ---------------------------------------------------------------------------
+// §4.1-§4.3 The key grid. BUILD (§4.2) fills it with dice; READ (§4.3) turns it
+// into the cell string B7 walks. READ accepts any grid of non-overlapping ships
+// with a peg (0, 1, 2) in every hole, so a key grid can also be given directly.
+
+// §4.1. Every kind has its own piece: D2, S3, C3, B4, A5.
+enum Kind
+    Destroyer
+    Sub
+    Cruiser
+    Battleship
+    Carrier
+
+// A ship on the key grid. Its first hole (the one reached first in reading
+// order) is at row `row` (A..J = 0..9), hole `col` (1..10 = 0..9). `down` is true
+// if it lies down, false if it lies across. `bow_last` is true if its bow is at
+// its last hole (it points on), false if at its first hole (it points back).
+record Ship
+    kind: Kind
+    down: bool
+    row: int
+    col: int
+    bow_last: bool
+
+// One key grid (one page): its fleet, and a peg trit in every one of the 100
+// holes in reading order (A1 .. A10, B1, .., J10), whether in a ship's hole or a
+// grid hole.
+record KeyGrid
+    ships: List<Ship>
+    pegs: List<int>
+
+grid_rows = 10
+grid_cols = 10
+
+func ship_length(kind: Kind) -> int
+    match kind
+        case Destroyer
+            return 2
+        case Sub
+            return 3
+        case Cruiser
+            return 3
+        case Battleship
+            return 4
+        case Carrier
+            return 5
+
+// §4.3 The ship pass: the fleet walk, one cell per hole in reading order:
+//   no ship, or a ship's middle hole: plain;
+//   a ship's first hole: white if it lies across, red if it lies down;
+//   a ship's last hole: white if it points back, red if it points on; then for
+//   a Sub or a Cruiser one more cell: plain for the Sub, white for the Cruiser.
+// The start marker is not part of a page (read_key adds it once).
+func ship_pass(g: KeyGrid) -> List<int>
+    holes = grid_rows * grid_cols
+    covered = filled(holes, false)
+    first_cell = filled(holes, -1)
+    last_cell = filled(holes, -1)
+    extra_cell = filled(holes, -1)
+    for i = 0 to g.ships.length - 1
+        s = g.ships[i]
+        len = ship_length(s.kind)
+        step = 1
+        if s.down
+            step = grid_cols
+            assert (s.col >= 0) and (s.col < grid_cols) and (s.row >= 0) and (s.row + len <= grid_rows)
+        else
+            assert (s.row >= 0) and (s.row < grid_rows) and (s.col >= 0) and (s.col + len <= grid_cols)
+        head = s.row * grid_cols + s.col
+        for t = 0 to len - 1
+            assert not covered[head + t * step]
+            covered[head + t * step] = true
+        tail = head + (len - 1) * step
+        if s.down
+            first_cell[head] = 2
+        else
+            first_cell[head] = 1
+        if s.bow_last
+            last_cell[tail] = 2
+        else
+            last_cell[tail] = 1
+        match s.kind
+            case Sub
+                extra_cell[tail] = 0
+            case Cruiser
+                extra_cell[tail] = 1
+            case _
+                skip
+    cells: List<int> = []
+    for h = 0 to holes - 1
+        if first_cell[h] >= 0
+            cells.append(first_cell[h])
+        else if last_cell[h] >= 0
+            cells.append(last_cell[h])
+            if extra_cell[h] >= 0
+                cells.append(extra_cell[h])
+        else
+            cells.append(0)
+    return cells
+
+// §4.3 The peg pass: one cell per hole in reading order: no peg plain, white
+// white, red red. Ships are ignored; a peg in a ship's hole counts like any other.
+func peg_pass(g: KeyGrid) -> List<int>
+    assert g.pegs.length == grid_rows * grid_cols
+    assert is_trits(g.pegs)
+    return g.pegs
+
+// §4.3 READ, "ships, then pegs": the start marker (a white cell before A1, once
+// for the whole key), then for every page its ship pass and its peg pass. This
+// is the cell string B7 walks; read as a ternary numeral, most significant cell
+// first, it is the exponent e of §4.4.
+export func read_key(pages: List<KeyGrid>) -> List<int>
+    assert pages.length >= 1
+    cells = [1]
+    for i = 0 to pages.length - 1
+        cells = cells + ship_pass(pages[i]) + peg_pass(pages[i])
+    return cells
+
+// ---------------------------------------------------------------------------
+// §4.2 BUILD: "one hole at a time: ship, then peg", one row-cup d10 per hole pair.
+//
+// The dice are an injected source: one stream of faces per kind of die, read in
+// order, so a build is a pure function of the faces thrown. Each read takes the
+// next face of that kind and checks it is a face of that die. The d6 stream
+// serves the growth rolls and the Sub/Cruiser roll, in the order they are made.
+
+record Dice
+    d12: List<int>
+    d6: List<int>
+    d10: List<int>
+    next12: int
+    next6: int
+    next10: int
+
+export func dice(d12: List<int>, d6: List<int>, d10: List<int>) -> Dice
+    return Dice(d12, d6, d10, 0, 0, 0)
+
+// The hole die (d12), faces 1-12.
+func roll_hole_die(d: inout Dice) -> int
+    face = d.d12[d.next12]
+    d.next12 = d.next12 + 1
+    assert (face >= 1) and (face <= 12)
+    return face
+
+// The d6, faces 1-6.
+func roll_d6(d: inout Dice) -> int
+    face = d.d6[d.next6]
+    d.next6 = d.next6 + 1
+    assert (face >= 1) and (face <= 6)
+    return face
+
+// A pair's row-cup d10, faces 0-9. A 0 is thrown again until it shows 1-9.
+func read_pair_die(d: inout Dice) -> int
+    face = 0
+    while face == 0
+        face = d.d10[d.next10]
+        d.next10 = d.next10 + 1
+        assert (face >= 0) and (face <= 9)
+    return face
+
+// The keypad (1 2 3 / 4 5 6 / 7 8 9): the row the face sits in gives the peg for
+// the pair's first hole, its column the peg for the second hole. Top row or left
+// column: no peg (0); middle: white (1); bottom row or right column: red (2).
+func keypad_first(face: int) -> int
+    return (face - 1) / 3
+
+func keypad_second(face: int) -> int
+    return (face - 1) mod 3
+
+// A heading "has room for a Destroyer" when the next hole that way is on the grid
+// and not under a ship.
+func has_room(covered: List<bool>, row: int, col: int) -> bool
+    if (row >= grid_rows) or (col >= grid_cols)
+        return false
+    return not covered[row * grid_cols + col]
+
+func cover(covered: inout List<bool>, s: Ship)
+    step = 1
+    if s.down
+        step = grid_cols
+    head = s.row * grid_cols + s.col
+    for t = 0 to ship_length(s.kind) - 1
+        covered[head + t * step] = true
+
+// Step 1, "grow until it bumps", at a hole no ship covers. Returns the ship laid,
+// or None for sea. The hole is finished here, growth and Sub/Cruiser rolls
+// included.
+//   Neither heading has room: sea, no roll.
+//   Both have room: hole die 1-4 sea, 5-8 across, 9-12 down.
+//   Only one has room: hole die 1-6 sea, 7-12 a ship in the open heading.
+//   Bow: the same hole die, odd at this hole, even at the far end.
+//   Lay a Destroyer; while there is room for one more hole roll the d6: from 2
+//   holes it grows on 4-6, from 3 and from 4 only on a 6. Growing swaps in the
+//   next longer piece. It stops when a roll fails or when it bumps.
+//   A 3-holer: d6 1-3 Sub, 4-6 Cruiser.
+func grow_until_it_bumps(d: inout Dice, covered: List<bool>, row: int, col: int) -> Option<Ship>
+    across = has_room(covered, row, col + 1)
+    down = has_room(covered, row + 1, col)
+    if (not across) and (not down)
+        return None
+    face = roll_hole_die(d)
+    lay_down = false
+    if across and down
+        if face <= 4
+            return None
+        lay_down = face >= 9
+    else
+        if face <= 6
+            return None
+        lay_down = down
+    bow_last = (face mod 2) == 0
+    len = 2
+    while len < 5
+        next_row = row
+        next_col = col + len
+        if lay_down
+            next_row = row + len
+            next_col = col
+        if not has_room(covered, next_row, next_col)
+            break
+        need = 6
+        if len == 2
+            need = 4
+        if roll_d6(d) >= need
+            len = len + 1
+        else
+            break
+    kind = Destroyer
+    if len == 3
+        kind = Cruiser
+        if roll_d6(d) <= 3
+            kind = Sub
+    else if len == 4
+        kind = Battleship
+    else if len == 5
+        kind = Carrier
+    return Some(Ship(kind, lay_down, row, col, bow_last))
+
+// BUILD. The cursor walks the holes in reading order, a pair at a time (holes
+// 1-2, 3-4, .., 9-10 of each row). For each hole of the pair that no ship covers,
+// decide it (step 1). Then read the pair's d10 and peg both holes from it, the
+// first hole then the second, as one step: in the ship's hole where a ship covers
+// the hole, otherwise in the grid hole. A ship laid in a pair covers only holes of
+// that pair and later ones, so no peg is ever in a ship's way.
+// Let-go points are only between pairs, after both pegs of a pair are in; a die
+// carries nothing over (an unread die is simply thrown when its pair comes up).
+func build(d: inout Dice) -> KeyGrid
+    holes = grid_rows * grid_cols
+    covered = filled(holes, false)
+    ships: List<Ship> = []
+    pegs = filled(holes, 0)
+    for row = 0 to grid_rows - 1
+        for pair = 0 to grid_cols / 2 - 1
+            for side = 0 to 1
+                col = 2 * pair + side
+                if not covered[row * grid_cols + col]
+                    laid = grow_until_it_bumps(d, covered, row, col)
+                    match laid
+                        case Some(s)
+                            cover(covered, s)
+                            ships.append(s)
+                        case None
+                            skip
+            face = read_pair_die(d)
+            pegs[row * grid_cols + 2 * pair] = keypad_first(face)
+            pegs[row * grid_cols + 2 * pair + 1] = keypad_second(face)
+    return KeyGrid(ships, pegs)
+
+// A built key grid and how many faces of each die it read.
+record Built
+    grid: KeyGrid
+    used12: int
+    used6: int
+    used10: int
+
+export func build_key_grid(source: Dice) -> Built
+    d = source
+    grid = build(d)
+    return Built(grid, d.next12, d.next6, d.next10)
+
+// ---------------------------------------------------------------------------
+// §3 B9. The exchange.
+
+// B9 step 1: walk your key grid with g = 3 (public phase). The tidy X register
+// is the public value.
+export func public_value(f: Field, key: List<KeyGrid>) -> List<int>
+    return walk(f, read_key(key), Public)
+
+// B9 step 3: walk your own key grid over the checked square C (shared phase).
+export func shared_secret(f: Field, key: List<KeyGrid>, base: List<int>) -> List<int>
+    assert base.length == f.n
+    return walk(f, read_key(key), Shared(base))
+
+// Everything one exchange puts on the boards, in B9 order.
+//   publica, publicb: Alice's and Bob's tidy X registers (step 1)
+//   shotsa:  Bob calling Alice's X (§3.1); receiveda: Bob's Y afterwards
+//   shotsb:  Alice calling Bob's X;        receivedb: Alice's Y afterwards
+//   basea:   Alice's checked square of Bob's value (step 2); baseb likewise
+//   secreta, secretb: K on each player's grid (step 3); equal in an honest run
+record Exchange
+    publica: List<int>
+    publicb: List<int>
+    shotsa: List<Shot>
+    receiveda: List<int>
+    shotsb: List<Shot>
+    receivedb: List<int>
+    basea: List<int>
+    baseb: List<int>
+    secreta: List<int>
+    secretb: List<int>
+
+// B9. 1. Each walks their key grid with g = 3 and publishes the tidy result; the
+// other copies it by calling the shots (§3.1). 2. Each checks and squares the
+// copy (B8). 3. Each walks their own key grid over the square:
+// K = (B^2)^a = (A^2)^b = 3^(2ab). BS ends with K on the grid.
+export func exchange(f: Field, keya: List<KeyGrid>, keyb: List<KeyGrid>) -> Result<Exchange, text>
+    publica = public_value(f, keya)
+    publicb = public_value(f, keyb)
+    receiveda = empty_register(f)
+    shotsa = call_the_shots(f, publica, receiveda)
+    receivedb = empty_register(f)
+    shotsb = call_the_shots(f, publicb, receivedb)
+    checkb = check_received(f, receivedb)
+    checka = check_received(f, receiveda)
+    if checkb.is_none()
+        return Err("B8: Alice rejects Bob's value")
+    if checka.is_none()
+        return Err("B8: Bob rejects Alice's value")
+    basea = checkb.unwrap()
+    baseb = checka.unwrap()
+    secreta = shared_secret(f, keya, basea)
+    secretb = shared_secret(f, keyb, baseb)
+    return Ok(Exchange(publica, publicb, shotsa, receiveda, shotsb, receivedb, basea, baseb, secreta, secretb))
+
+// ---------------------------------------------------------------------------
+// Conformance tests. Expected registers were cross-checked against the Python
+// reference (proofs/key_exchange/bs/reference/bspegs.py, bsref.py) and pow().
+
+// Two hand-made key grids (not dice-built; any fleet is a valid key).
+sample_grid_a = KeyGrid(
+    [Ship(Cruiser, false, 0, 0, true), Ship(Sub, true, 0, 4, false), Ship(Destroyer, false, 9, 8, true),
+     Ship(Battleship, true, 2, 0, false), Ship(Carrier, false, 7, 1, true)],
+    [0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
+     1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0,
+     2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1,
+     0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
+     1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0])
+
+sample_grid_b = KeyGrid(
+    [Ship(Destroyer, true, 0, 9, false), Ship(Sub, false, 4, 3, true), Ship(Cruiser, true, 5, 6, true)],
+    [2, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0, 1, 0, 0, 0, 1, 0, 0,
+     0, 1, 2, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0,
+     0, 1, 0, 0, 2, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0, 1, 0, 0,
+     0, 1, 0, 0, 0, 1, 2, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0,
+     0, 1, 0, 0, 0, 1, 0, 0, 2, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2])
+
+test "B1 drop examples carry like an odometer"
+    s = [2, 0, 0]
+    drop(s, 0, 1)
+    assert s == [0, 1, 0]
+    s = [1, 0, 0]
+    drop(s, 0, 2)
+    assert s == [0, 1, 0]
+    s = [2, 0, 0]
+    drop(s, 0, 2)
+    assert s == [1, 1, 0]
+    s = [2, 2, 2, 0]
+    drop(s, 0, 1)
+    assert s == [0, 0, 0, 1]
+
+test "B4 T1 example: a white at hole 20 folds to whites at holes 2 and 4"
+    s = filled(36, 0)
+    s[20] = 1
+    pay_toll(t1, s)
+    expected = filled(36, 0)
+    expected[2] = 1
+    expected[4] = 1
+    assert s == expected
+
+test "B3 one times x is x, and x times one is x"
+    one = empty_register(t1)
+    one[0] = 1
+    x = [2, 1, 0, 0, 2, 2, 1, 0, 1, 0, 2, 1, 1, 0, 2, 2, 0, 1]
+    assert multiply(t1, one, x, 0) == x
+    assert multiply(t1, x, one, 0) == x
+
+test "B3 worst case: all red times all red with nudge 2 does not overflow"
+    red = filled(18, 2)
+    assert multiply(t1, red, red, 2) == [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    red2 = filled(35, 2)
+    assert multiply(t2, red2, red2, 2).length == 35
+
+test "B5 p tidies to the empty register in T1 and T2"
+    p1 = filled(18, 2)
+    p1[2] = 1
+    assert tidy(t1, p1) == empty_register(t1)
+    p2 = filled(35, 2)
+    p2[29] = 1
+    assert tidy(t2, p2) == empty_register(t2)
+    below = filled(18, 2)
+    below[2] = 0
+    assert tidy(t1, below) == below
+
+test "B8 rejects 0, 1, p - 1, p + 1 and a wrong length"
+    zero = empty_register(t1)
+    one = empty_register(t1)
+    one[0] = 1
+    pminus1 = filled(18, 2)
+    pminus1[0] = 1
+    pminus1[2] = 1
+    pplus1 = filled(18, 2)
+    pplus1[0] = 0
+    pplus1[1] = 0
+    pplus1[2] = 2
+    assert check_received(t1, zero).is_none()
+    assert check_received(t1, one).is_none()
+    assert check_received(t1, pminus1).is_none()
+    assert check_received(t1, pplus1).is_none()
+    assert check_received(t1, filled(17, 1)).is_none()
+    assert check_received(t1, filled(18, 3)).is_none()
+
+test "3.1 calling the shots copies X into Y, misfires and all"
+    x = [2, 1, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    y = filled(18, 2)
+    shots = call_the_shots(t1, x, y)
+    assert y == x
+    assert shots.length == 18
+    assert shots[0] == Hit
+    assert shots[1] == Miss
+    assert shots[2] == Misfire
+    for hole = 5 to 17
+        assert shots[hole] == Misfire
+
+test "3.1 an empty register is eighteen misfires"
+    sent = send_public_value(t1, empty_register(t1))
+    assert sent.y == empty_register(t1)
+    assert sent.shots == filled(18, Misfire)
+
+test "4.3 READ: start marker, ship pass, peg pass"
+    cells = read_key([sample_grid_a])
+    assert cells.length == 1 + 102 + 100
+    assert cells[0] == 1
+    ships = [1, 0, 2, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0,
+             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             1, 2]
+    for j = 0 to 101
+        assert cells[1 + j] == ships[j]
+    for h = 0 to 99
+        assert cells[103 + h] == sample_grid_a.pegs[h]
+
+test "4.3 READ rejects overlapping ships"
+    g = KeyGrid([Ship(Destroyer, false, 0, 0, false), Ship(Destroyer, true, 0, 1, false)], filled(100, 0))
+    expect_trap AssertFailed
+        read_key([g])
+
+test "B9 T1 exchange with the sample grids"
+    r = exchange(t1, [sample_grid_a], [sample_grid_b])
+    assert r.is_ok()
+    e = r.unwrap()
+    assert e.publica == [0, 0, 1, 1, 0, 0, 2, 2, 0, 1, 1, 0, 2, 1, 1, 2, 2, 1]
+    assert e.publicb == [0, 1, 2, 0, 0, 2, 1, 2, 1, 1, 2, 1, 2, 1, 0, 0, 1, 0]
+    assert e.receiveda == e.publica
+    assert e.receivedb == e.publicb
+    assert e.secreta == [0, 1, 1, 1, 0, 2, 2, 0, 0, 1, 2, 0, 2, 0, 1, 1, 1, 2]
+    assert e.secretb == e.secreta
+
+test "4.2 keypad: row for the first hole, column for the second"
+    assert (keypad_first(6) == 1) and (keypad_second(6) == 2)
+    firsts: List<int> = []
+    seconds: List<int> = []
+    for face = 1 to 9
+        firsts.append(keypad_first(face))
+        seconds.append(keypad_second(face))
+    assert firsts == [0, 0, 0, 1, 1, 1, 2, 2, 2]
+    assert seconds == [0, 1, 2, 0, 1, 2, 0, 1, 2]
+
+test "4.2 a pair's d10 is thrown again on 0"
+    d = dice([], [], [0, 0, 6, 3])
+    assert read_pair_die(d) == 6
+    assert d.next10 == 3
+    assert read_pair_die(d) == 3
+
+test "4.2 grow until it bumps"
+    open = filled(100, false)
+    // Both headings open: 5 is across, odd puts the bow here; grows on 4, 6, 6 to a Carrier.
+    d = dice([5], [4, 6, 6], [])
+    assert grow_until_it_bumps(d, open, 0, 0) == Some(Ship(Carrier, false, 0, 0, false))
+    assert (d.next12 == 1) and (d.next6 == 3)
+    // 10 is down, even puts the bow at the far end; 3 does not grow a Destroyer.
+    d = dice([10], [3], [])
+    assert grow_until_it_bumps(d, open, 0, 0) == Some(Ship(Destroyer, true, 0, 0, true))
+    // 9 is down; 5 grows to 3 holes, 2 stops it, then 1-3 is a Sub.
+    d = dice([9], [5, 2, 3], [])
+    assert grow_until_it_bumps(d, open, 0, 0) == Some(Ship(Sub, true, 0, 0, false))
+    // 1-4 is sea, and no d6 is read.
+    d = dice([4], [], [])
+    assert grow_until_it_bumps(d, open, 0, 0) == None
+    // Only across has room in row J: 1-6 sea, 7-12 across. A Carrier stops growing at 5
+    // holes; at J6, 1 does not grow the Destroyer.
+    d = dice([7, 8], [4, 6, 6, 1], [])
+    assert grow_until_it_bumps(d, open, 9, 0) == Some(Ship(Carrier, false, 9, 0, false))
+    assert grow_until_it_bumps(d, open, 9, 5) == Some(Ship(Destroyer, false, 9, 5, true))
+    // No room at J10: sea with no roll. A 4-6 grows a Destroyer into a 3-holer, which then
+    // bumps the frame (no growth roll); 4-6 is a Cruiser.
+    d = dice([], [], [])
+    assert grow_until_it_bumps(d, open, 9, 9) == None
+    d = dice([7], [4, 4], [])
+    assert grow_until_it_bumps(d, open, 9, 7) == Some(Ship(Cruiser, false, 9, 7, false))
+    assert d.next6 == 2
+
+test "4.2 BUILD: all sea and all white pegs"
+    built = build_key_grid(dice(filled(99, 1), [], filled(50, 5)))
+    assert built.grid.ships.length == 0
+    assert built.grid.pegs == filled(100, 1)
+    assert (built.used12 == 99) and (built.used6 == 0) and (built.used10 == 50)
+    assert read_key([built.grid]).length == 201

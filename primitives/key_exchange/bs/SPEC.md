@@ -9,6 +9,7 @@ Finite-field Diffie–Hellman (powers of 3 modulo a prime p), worked by hand on 
 The small tiers are deliberately weak. The goal is a working, honest DH that scales up by adding boards.
 
 **Code and evidence** live in `proofs/key_exchange/bs/` (index in its `README.md`). Each directory is a note, not a theorem: scripts with their recorded outputs beside them.
+**Runnable spec:** `bs.sudo` beside this file (BUILD, READ, B1–B9 and §3.1); its sudoc-generated vectors are in `proofs/key_exchange/bs/vectors/`.
 * `reference/`: the peg recipes (`bspegs.py`, colours only), the integer reference (`bsref.py`), the prime search (`bsparams.py`), arithmetic and malicious-value tests (`run_bs.py`), full-size multiplications (`bigmul.py`), the tier table (`tiers.py`), the toy-tier attacks (`break_small.py`, `break_t2.c`), the parity checksum (`parity_check.py`) and peg provisioning (`peg_supply.py`).
 * `exchange/`: full exchanges with ships+pegs keys through the peg recipes, every tier.
 * `ships-pegs/`: the key (§4): a literal implementation of BUILD and READ (`keygrid.py`), the exact entropy DP, brute force, injectivity and build checks.

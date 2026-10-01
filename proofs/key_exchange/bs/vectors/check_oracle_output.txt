@@ -1,0 +1,17 @@
+bs_vectors.json: sudocode 16b5a8b, 15 vectors
+ok  exchange_T1_run0: cells 206/208, ships 32/34, trailing misfires A 1 B 0, K = 115146631
+ok  exchange_T1_run3: cells 209/212, ships 37/30, trailing misfires A 6 B 0, K = 353695180
+ok  exchange_T2_run3: cells 207/208, ships 26/31, trailing misfires A 1 B 8, K = 25611588251773982
+ok  exchange_T6_run0: cells 211/208, ships 28/30, trailing misfires A 0 B 1, K = 425521796189967385042505749677741999705324108203
+ok  multiply_T1_all_red_nudge2: product 729
+ok  multiply_T2_all_red_nudge2: product 206739584562072
+ok  tidy_T1_p: tidy 0
+ok  tidy_T1_p_plus_1: tidy 1
+ok  check_T1_zero: rejected
+ok  check_T1_one: rejected
+ok  check_T1_p_minus_1: rejected
+ok  check_T1_p_plus_1: rejected
+ok  check_T1_three: base 9
+ok  call_T1_trailing_misfires: 18 calls, 14 misfires
+ok  call_T1_all_misfires: 18 calls, 18 misfires
+all vectors agree with the Python reference and pow()

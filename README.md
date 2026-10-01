@@ -13,7 +13,7 @@ Each primitive is a directory holding a normative specification and one [sudocod
 | MegaDreifach | Toy three-megaminx Merkle–Damgård hash. Current: v2; v1 is [deprecated](primitives/hash/megadreifach/v1/SPEC.md). | [SPEC.md](primitives/hash/megadreifach/SPEC.md), [README](primitives/hash/megadreifach/README.md) | [proofs/megadreifach/](proofs/megadreifach/) (v2); frozen v1: [proofs/deprecated/megadreifach-v1/](proofs/deprecated/megadreifach-v1/README.md) |
 | DoubleDeal | Toy block cipher on a 52-card deck. | [SPEC.md](primitives/cipher/doubledeal/SPEC.md) (version history: [§7a](primitives/cipher/doubledeal/SPEC.md#7a-version-history)) | [proofs/doubledeal/](proofs/doubledeal/); frozen versions: [proofs/deprecated/](proofs/deprecated/README.md) |
 | DoubleDeal-CBC-HMAC | Toy Encrypt-then-MAC: DoubleDeal in CBC, then HMAC with MegaDreifach as the hash. Not DoubleDeal-SCM. | [SPEC.md](primitives/aead/doubledeal-cbc-hmac/SPEC.md), [README](primitives/aead/doubledeal-cbc-hmac/README.md) | [proofs/doubledeal-cbc-hmac/](proofs/doubledeal-cbc-hmac/) |
-| BS | Toy finite-field Diffie–Hellman worked by hand on Battleship pegboards; the key is one dice-built ships+pegs grid. No `.sudo` yet; Python reference in its proofs. | [SPEC.md](primitives/key_exchange/bs/SPEC.md) | [proofs/key_exchange/bs/](proofs/key_exchange/bs/README.md) |
+| BS | Toy finite-field Diffie–Hellman worked by hand on Battleship pegboards; the key is one dice-built ships+pegs grid. Vectors: [proofs/key_exchange/bs/vectors/](proofs/key_exchange/bs/vectors/README.md). | [SPEC.md](primitives/key_exchange/bs/SPEC.md) | [proofs/key_exchange/bs/](proofs/key_exchange/bs/README.md) |
 
 ## Layout
 
@@ -38,6 +38,8 @@ sudoc build --target js --tests -o /tmp/megadreifach primitives/hash/megadreifac
 node /tmp/megadreifach/_megadreifach_impl.mjs
 sudoc build --target js --tests -o /tmp/doubledeal primitives/cipher/doubledeal/doubledeal.sudo
 node /tmp/doubledeal/_doubledeal_impl.mjs
+sudoc build --target js --tests -o /tmp/bs primitives/key_exchange/bs/bs.sudo
+node /tmp/bs/_bs_impl.mjs
 ```
 
 DoubleDeal-CBC-HMAC needs `-I primitives/hash/megadreifach` and a JavaScript step; its commands are in [its README](primitives/aead/doubledeal-cbc-hmac/README.md). Building and serving the demos: [demos/README.md](demos/README.md#local).

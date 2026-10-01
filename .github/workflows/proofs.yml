@@ -8,6 +8,7 @@ on:
       - "primitives/hash/megadreifach/**"
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
+      - "primitives/key_exchange/**"
       - "tools/emit_lean.py"
       - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
@@ -19,6 +20,7 @@ on:
       - "primitives/hash/megadreifach/**"
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
+      - "primitives/key_exchange/**"
       - "tools/emit_lean.py"
       - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
@@ -68,6 +70,10 @@ jobs:
           for v in v8 v9 v10 v11; do
             proofs/doubledeal/vectors/regen.sh "$v" --check
           done
+      - name: BS vectors rebuild byte-identically from bs.sudo
+        run: proofs/key_exchange/bs/vectors/regen.sh --check
+      - name: BS vectors agree with the Python reference and pow()
+        run: python3 proofs/key_exchange/bs/vectors/check_oracle.py
 
   generated:
     # Emitted Lean of each primitive builds and its sudo tests pass (TAP).

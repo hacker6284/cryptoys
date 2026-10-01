@@ -9,6 +9,7 @@ Status: **a note, not a theorem.** Nothing here is proved in Lean. Every figure 
 | [`exchange/`](exchange/README.md) | Full exchanges with ships+pegs keys through the peg recipes, T1 to R3072 | §0, §7, §8 |
 | [`ships-pegs/`](ships-pegs/README.md) | The key: a literal BUILD/READ implementation, exact entropy DP, brute force, injectivity, build-vs-model checks, walk statistics | §4 |
 | [`randomizer-kit/`](randomizer-kit/README.md) | The key's dice: face rules, hole-die equality, row-cup counts (also cited by ECBS) | §4.2 |
+| [`vectors/`](vectors/README.md) | Known-answer vectors generated from `bs.sudo` by sudoc at the pin, cross-checked against `reference/`, `ships-pegs/keygrid.py` and `pow()` | §3, §3.1, §4.2, §4.3 |
 | [`key-selection/`](key-selection/README.md) | Why the key is ships + pegs: the candidate comparison (analysis only; none of those keys is a SPEC option) | none |
 
 Python 3 with numpy, sympy and gmpy2 (`bsparams.py`), mpmath not needed. Each directory's README gives its run commands; every path in the scripts is relative to the script's own directory. Seeds are fixed, so reruns reproduce the recorded outputs except for timings (and the exceptions listed in each README).

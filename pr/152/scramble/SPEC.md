@@ -144,7 +144,9 @@ rank(p) = Σ inv(n) · (len(p) - 1 - n)!
 
 where `inv(n)` counts entries after index `n` that are smaller than `p[n]`.
 
-Let `cp` be the eight corner ids, `co` the first seven corner orientations, `ep` the twelve edge ids, and `eo` the first eleven edge orientation bits packed little-endian (`eo = Σ b[i] · 2^i` for `i` from 0 through 10). Then
+Let `cp` be the eight corner ids, `co` the first seven corner orientations, `ep` the twelve edge ids, and `eo` the first eleven edge orientation bits packed little-endian (`eo = Σ b[i] · 2^i` for `i` from 0 through 10).
+
+`co` packs the first seven corner orientations little-endian in base 3, the same way: `co = Σ o[i] · 3^i` for `i` from 0 through 6, where `o[i]` is the orientation of corner slot `i`. Then
 
 ```text
 s = rank(cp)
@@ -154,6 +156,8 @@ s = s · 2048 + eo          # 2048 = 2^11
 ```
 
 `⌊rank(ep) / 2⌋` is truncating division of the rank, which is what the shipped engine does. The canonical digest is `s` as a 9-byte big-endian integer. The display form is the uppercase hexadecimal of `s`, zero-padded to 17 digits.
+
+> Note (non-normative): in `scramble.sudo`, `index_bytes` computes `co` as `ori_acc = ori_acc + slot * pow3`.
 
 ## Trace
 

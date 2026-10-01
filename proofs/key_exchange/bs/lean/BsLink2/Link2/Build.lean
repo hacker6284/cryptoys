@@ -2809,4 +2809,40 @@ theorem stageC_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : 
           { st with dice := d1, covered := Spec.cover st.covered s, ships := st.ships ++ [s] }
           h10 hread htray hlen hface
 
+theorem DiceFit.of_streams {d0 d : Spec.Dice} (hd : DiceFit d0) (hs : Streams d0 d) : DiceFit d :=
+  ⟨by rw [hs.1]; exact hd.1, by rw [hs.2.1]; exact hd.2.1, by rw [hs.2.2]; exact hd.2.2⟩
+
+/-- The emitted hole step after the first let-go (row cup, grow, gap let-go, peg) is
+    `Spec.rowCupAt` then the rest. -/
+theorem stageB_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : Nat)
+    (hr : row < 10) (hc : col < 10) (st : Spec.BuildSt) (hd : DiceFit st.dice)
+    (hread : st.read ≤ 5) (htray : TrayOk st.tray) (hlen : st.tray.length ≤ 5)
+    (hface : col % 2 = 1 → 1 ≤ st.face ∧ st.face ≤ 9) :
+    (stageBE (embLG lg) (Int.ofNat row) (Int.ofNat col) (Int.ofNat (row * 10 + col))
+      (embDice st.dice) (embed st.tray) (Int.ofNat st.read) (tab st.covered)
+      (st.ships.map embShip).toArray (Int.ofNat st.face)
+      (tab (fun x => Int.ofNat (st.pegs x)))).toOption =
+    ((Spec.rowCupAt col st).bind fun st => (Spec.growAt row col st).bind fun st =>
+      (Spec.letGoAt lg (row * 10 + col) true st).bind (Spec.pegAt (row * 10 + col) col)).map
+      (fun st' => SudoRt.Flow.cont (embSt st')) := by
+  unfold stageBE Spec.rowCupAt
+  have hb : SudoRt.SEq.beq (Int.ofNat col) (0 : Int) = decide (col = 0) := by
+    show decide _ = _
+    exact decide_eq_decide.mpr (by show ((col : Nat) : Int) = ((0 : Nat) : Int) ↔ _; omega)
+  rw [hb]
+  by_cases h0 : col = 0
+  · subst h0
+    simp only [decide_True, if_true]
+    rw [toOpt_bind, throw_row_cup_spec _ hd.2.2]
+    cases ht : Spec.throwRowCup st.dice with
+    | none => rfl
+    | some p =>
+      obtain ⟨t1, d1⟩ := p
+      obtain ⟨hl1, ht1, hs⟩ := throwRowCup_facts ht
+      simp only [Option.map_some', Option.some_bind]
+      exact stageC_spec lg hlg row 0 hr hc { st with dice := d1, tray := t1, read := 0 }
+        (hd.of_streams hs) (Nat.zero_le _) ht1 (by show t1.length ≤ 5; omega) (by intro h; simp at h)
+  · simp only [h0, decide_False, Bool.false_eq_true, if_false, Option.some_bind]
+    exact stageC_spec lg hlg row col hr hc st hd hread htray hlen hface
+
 end BsLink2.Link2

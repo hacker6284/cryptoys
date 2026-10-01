@@ -459,16 +459,16 @@
     "megaminx-turn"
    ]
   },
-  "scramble-turn/settle/settle_kenney-rpg-bookclose-cut": {
+  "scramble-turn/settle/settle_kenney-carpet-003-soft-cut": {
    "group": "settle",
-   "author": "Kenney Vleugels (Kenney.nl)",
+   "author": "Kenney (www.kenney.nl)",
    "license": "Creative Commons Zero, CC0 (License.txt in the pack)",
-   "source": "https://kenney.nl/assets/rpg-audio",
-   "description": "Kenney RPG Audio bookClose, cut to the single thump: a hardcover closing, soft and dull (no paper tail).",
-   "peakMs": 19,
-   "lufs": -24.1,
-   "gainTo16": 8.1,
-   "durationS": 0.173,
+   "source": "https://kenney.nl/assets/impact-sounds",
+   "description": "Kenney footstep_carpet_003, low-passed 1.5 kHz, 20 ms fade-in: a barely-there muffled pat on cloth.",
+   "peakMs": 27,
+   "lufs": -24.7,
+   "gainTo16": 8.7,
+   "durationS": 0.104,
    "pages": [
     "scramble-turn"
    ]

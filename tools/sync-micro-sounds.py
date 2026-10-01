@@ -75,7 +75,10 @@ FALLBACK = {
 }
 
 # primitive -> list of (group, scrounge-relative raw file, cut name, cut spec, credit)
-# cut spec: start / dur / fade_out in seconds (3 ms fade-in).
+# cut spec: start / dur / fade_out [/ fade_in, default 0.003] in seconds,
+# optional lowpass in Hz.
+KENNEY_IMPACT = {"author": "Kenney (www.kenney.nl)", "license": "Creative Commons Zero, CC0 (License.txt in the pack)", "source": "https://kenney.nl/assets/impact-sounds"}
+KENNEY_CASINO = {"author": "Kenney Vleugels (Kenney.nl)", "license": "Creative Commons Zero, CC0 (License.txt in the pack)", "source": "https://kenney.nl/assets/casino-audio"}
 KENNEY_RPG = {"author": "Kenney Vleugels (Kenney.nl)", "license": "Creative Commons Zero, CC0 (License.txt in the pack)", "source": "https://kenney.nl/assets/rpg-audio"}
 CUTS = {
     "scramble-turn": [
@@ -88,6 +91,20 @@ CUTS = {
         ("settle", "_dl/kenney_rpg-audio/Audio/bookPlace1.ogg", "settle_kenney-rpg-bookplace1-cut",
          {"start": 0.045, "dur": 0.16, "fade_out": 0.09}, KENNEY_RPG,
          "Kenney RPG Audio bookPlace1, cut past its pre-tick: a book set down on wood, a little firmer and brighter."),
+        # Gentle landings (Zachary: "all 3 much too loud and forceful"): soft
+        # attack, low-passed, short, no tail.
+        ("settle", "_dl/kenney_impact-sounds/Audio/footstep_carpet_003.ogg", "settle_kenney-carpet-003-soft-cut",
+         {"start": 0.0, "dur": 0.11, "fade_in": 0.02, "fade_out": 0.06, "lowpass": 1500}, KENNEY_IMPACT,
+         "Kenney footstep_carpet_003, low-passed 1.5 kHz, 20 ms fade-in: a barely-there muffled pat on cloth."),
+        ("settle", "_dl/kenney_impact-sounds/Audio/footstep_carpet_000.ogg", "settle_kenney-carpet-000-soft-cut",
+         {"start": 0.007, "dur": 0.12, "fade_in": 0.02, "fade_out": 0.07, "lowpass": 1800}, KENNEY_IMPACT,
+         "Kenney footstep_carpet_000 past its first scuff, low-passed 1.8 kHz, 20 ms fade-in: a soft muffled pat, a touch more present."),
+        ("settle", "_dl/kenney_casino-audio/Audio/card-place-1.ogg", "settle_kenney-card-place-1-soft-cut",
+         {"start": 0.14, "dur": 0.11, "fade_in": 0.03, "fade_out": 0.06, "lowpass": 2000}, KENNEY_CASINO,
+         "Kenney card-place-1, its pat on felt, 30 ms fade-in over the pat, low-passed 2 kHz."),
+        ("settle", "_dl/kenney_rpg-audio/Audio/bookOpen.ogg", "settle_kenney-rpg-bookopen-gentle-cut",
+         {"start": 0.0, "dur": 0.12, "fade_in": 0.02, "fade_out": 0.06, "lowpass": 1500}, KENNEY_RPG,
+         "Kenney bookOpen, low-passed 1.5 kHz: a book cover settling down, a soft swell into a dull thump."),
     ],
 }
 
@@ -141,10 +158,13 @@ def manifest_row(scrounge_root, rel):
 
 
 def cut(src, dest_noext, spec):
-    """Trim, fade, mono 44.1 kHz, peak-normalise to -1.5 dBFS, encode OGG and MP3."""
+    """Trim, optional low-pass (two 2-pole stages), fades, mono 44.1 kHz,
+    peak-normalise to -1.5 dBFS, encode OGG and MP3."""
     import array
     start, dur, fade = spec["start"], spec["dur"], spec["fade_out"]
-    shape = f"atrim=start={start}:duration={dur},asetpts=N/SR/TB,afade=t=in:d=0.003,afade=t=out:st={dur - fade:.4f}:d={fade}"
+    fade_in = spec.get("fade_in", 0.003)
+    lowpass = f"lowpass=f={spec['lowpass']},lowpass=f={spec['lowpass']}," if spec.get("lowpass") else ""
+    shape = f"atrim=start={start}:duration={dur},asetpts=N/SR/TB,{lowpass}afade=t=in:d={fade_in},afade=t=out:st={dur - fade:.4f}:d={fade}"
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(src), "-af", shape, "-ac", "1", "-ar", "44100", "-f", "f32le", "-"],
                          check=True, capture_output=True).stdout
     samples = array.array("f")

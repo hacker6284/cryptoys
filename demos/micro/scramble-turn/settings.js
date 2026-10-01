@@ -30,8 +30,9 @@ export default {
         // Lift off felt; contact: the puzzle leaves the felt. Off (try "scramble-lift/lift/regrip-1_01kamii05-428594").
         lift: null,
         // Settle on felt; contact: the puzzle touches the felt.
-        // A hardcover book's cover closing, cut to the single soft thump
-        // (Kenney RPG Audio bookClose); well under the click.
-        settle: { file: "scramble-turn/settle/settle_kenney-rpg-bookclose-cut", gainDb: 0, offsetMs: -19 }, // ~8 dB under the click
+        // A barely-there muffled pat (Kenney carpet footstep, low-passed
+        // 1.5 kHz, 20 ms soft attack, 104 ms). Its output peak sits about
+        // 20 dB under the click's (the master limiter squashes the click).
+        settle: { file: "scramble-turn/settle/settle_kenney-carpet-003-soft-cut", gainDb: -17.7, offsetMs: -27 },
     },
 };

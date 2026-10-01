@@ -13,6 +13,8 @@ import { amountOf, cubingMs, slotOf, twistySlots } from "../../anim/twisty.js";
  * page only watches: cube-stage.js plays the entry's timings and
  * sounds, exactly as in the playroom. Without it (megaminx-turn, not
  * yet in the library) the page passes its own timing and sounds.
+ *
+ * page.choice: which settings.choices key picks the move (default "move").
  */
 
 function invert(moves) {
@@ -82,7 +84,7 @@ export function mountTwistyTurn(page, settings) {
         async reset(ctx) {
             if (!rig?.setAlg) return;
             await rig.settle?.({ snap: true });
-            const moves = page.moves[ctx.choice("move")] || page.moves[page.defaultMove];
+            const moves = page.moves[ctx.choice(page.choice ?? "move")] || page.moves[page.defaultMove];
             const alg = [...moves, ...invert(moves)].join(" ");
             if (alg !== loaded) {
                 rig.setAlg(alg);
@@ -101,7 +103,7 @@ export function mountTwistyTurn(page, settings) {
                 return;
             }
             const gen = ctx.alive;
-            const moves = page.moves[ctx.choice("move")] || page.moves[page.defaultMove];
+            const moves = page.moves[ctx.choice(page.choice ?? "move")] || page.moves[page.defaultMove];
             const leaves = leg % 2 === 0 ? moves : invert(moves);
             const from = leg % 2 === 0 ? 0 : moves.length;
             const tempo = ctx.timing("speed");

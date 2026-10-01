@@ -85,6 +85,7 @@ FALLBACK = {
 # optional lowpass in Hz.
 KENNEY_IMPACT = {"author": "Kenney (www.kenney.nl)", "license": "Creative Commons Zero, CC0 (License.txt in the pack)", "source": "https://kenney.nl/assets/impact-sounds"}
 KENNEY_CASINO = {"author": "Kenney Vleugels (Kenney.nl)", "license": "Creative Commons Zero, CC0 (License.txt in the pack)", "source": "https://kenney.nl/assets/casino-audio"}
+KAMII = {"author": "01Kamii05", "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)", "source": "https://freesound.org/people/01Kamii05/sounds/428594/"}
 KENNEY_RPG = {"author": "Kenney Vleugels (Kenney.nl)", "license": "Creative Commons Zero, CC0 (License.txt in the pack)", "source": "https://kenney.nl/assets/rpg-audio"}
 CUTS = {
     "scramble-turn": [
@@ -111,6 +112,16 @@ CUTS = {
         ("settle", "_dl/kenney_rpg-audio/Audio/bookOpen.ogg", "settle_kenney-rpg-bookopen-gentle-cut",
          {"start": 0.0, "dur": 0.12, "fade_in": 0.02, "fade_out": 0.06, "lowpass": 1500}, KENNEY_RPG,
          "Kenney bookOpen, low-passed 1.5 kHz: a book cover settling down, a soft swell into a dull thump."),
+        # Gentle whole-cube rotations (Zachary: gentle, not forceful, no rattle).
+        ("rotation", "_dl/kenney_rpg-audio/Audio/cloth4.ogg", "rotation_kenney-cloth4-swish-cut",
+         {"start": 0.025, "dur": 0.21, "fade_in": 0.04, "fade_out": 0.08, "lowpass": 2500}, KENNEY_RPG,
+         "Kenney cloth4, low-passed 2.5 kHz, 40 ms fade-in: a soft fabric swish, like hands turning the cube over."),
+        ("rotation", "_dl/kenney_rpg-audio/Audio/handleSmallLeather.ogg", "rotation_kenney-leather-grip-cut",
+         {"start": 0.06, "dur": 0.14, "fade_in": 0.03, "fade_out": 0.06, "lowpass": 2200}, KENNEY_RPG,
+         "Kenney handleSmallLeather, low-passed 2.2 kHz, 30 ms fade-in: a soft leathery grip, the hands settling on the cube."),
+        ("rotation", "_dl/fs/428594.mp3", "rotation_01kamii05-428594-muffled-cut",
+         {"start": 0.265, "dur": 0.135, "fade_in": 0.012, "fade_out": 0.07, "lowpass": 1500}, KAMII,
+         "The current cube-handling knock (01Kamii05), low-passed 1.5 kHz with a 12 ms fade-in: the same knock, muffled."),
     ],
 }
 

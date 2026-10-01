@@ -20,7 +20,8 @@ anim/
    nowhere else. Demo code reads them from the entry; nothing is copied
    or pasted back.
 2. **The microdemo audits it.** `demos/micro/<name>/` is a thin viewer
-   that loops the entry on the real demo code. What you hear and see
+   that loops the entry on the real demo code (an entry with several
+   sounds can have more than one viewer, e.g. `micro/scramble-rotate/`). What you hear and see
    there is what every demo does.
 3. **Demos import it.** Demo code calls the entry's hooks (e.g.
    `playroom/cube-stage.js` calls `scrambleTurnVoice().turns(...)` and
@@ -36,7 +37,7 @@ Microdemos not in this table still keep their own `settings.js` in
 
 | Entry | Played by | Microdemo | Status |
 |---|---|---|---|
-| `scramble-turn` | playroom Scramble seat (`playroom/cube-stage.js`): a click per face turn, a muffled pat when the cube lands on the felt | `micro/scramble-turn/` | approved by Zachary at `af9a8fb` |
+| `scramble-turn` | playroom Scramble seat (`playroom/cube-stage.js`): a click per face turn, a sound per whole-cube rotation, a muffled pat when the cube lands on the felt | `micro/scramble-turn/` (face turn), `micro/scramble-rotate/` (rotation) | approved by Zachary at `af9a8fb`: the single face-turn click, the landing pat and the lift timing. Rotation sound under audit; double and triple turns not yet heard |
 
 ## Sounds
 

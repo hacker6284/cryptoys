@@ -1,8 +1,10 @@
 /-
   BS Link 2: B7 the walk (`cube`, `start_accumulator`, `walk`) and the public value and
   shared secret it computes, against the model `Spec.publicValue` / `Spec.sharedSecret`.
-  The key reader (`read_key`, §4.3) is NOT covered: the headline theorems here take its
-  output as a hypothesis (`Bs.read_key key = .ok (embed cells)`). Proof-only.
+  The lemmas here take the key reader's output as a hypothesis
+  (`Bs.read_key key = .ok (embed cells)`); `Exchange.lean` discharges it with
+  `read_key_spec` (`Key.lean`) for the headline `public_value_refines` and
+  `shared_secret_refines`. Proof-only.
 -/
 import BsLink2.Link2.Send
 
@@ -317,11 +319,11 @@ theorem walk_shared_spec (f : Bs.Field) (n : Nat) (toll : Array Int)
     · rw [sudoAssert_true, ok_bind, ← tidy_eq_in_place, htid, ok_bind]; rfl
     · rw [htv, hmod hstart]
 
-/-- B7, public phase, refines the model, **given what the key reader returned**: if
-    `read_key key` returns the cells `cells` (trits, with at least one white or red cell),
-    the emitted `public_value` is the register holding `3^e mod p`, where `e` is the cells
-    read as a base-3 number. Nothing is claimed about `read_key` itself. -/
-theorem public_value_refines (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
+/-- B7, public phase, **given what the key reader returned**: if `read_key key` returns
+    the cells `cells` (trits, with at least one white or red cell), the emitted
+    `public_value` is the register holding `3^e mod p`, where `e` is the cells read as a
+    base-3 number. The headline `public_value_refines` discharges the reader hypotheses. -/
+theorem public_value_refines_of_read (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     (hfit : FitsLen (2 * F.n + 2)) (key : Array Bs.KeyGrid) (cells : List Nat)
     (hread : Bs.read_key key = .ok (embed cells)) (hcells : ∀ c ∈ cells, c ≤ 2)
     (hfc : FitsLen cells.length) (hstart : 0 < Spec.expOf cells) :
@@ -339,10 +341,10 @@ theorem public_value_refines (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
   rw [hv, ← p_cast F hF, pw_natCast]
   rfl
 
-/-- B7, shared phase, refines the model, **given what the key reader returned**: for a
-    base register `C` of `n` trits, the emitted `shared_secret` is the register holding
-    `C^e mod p`. Nothing is claimed about `read_key` itself. -/
-theorem shared_secret_refines (F : Spec.Field) (hF : F.Wf)
+/-- B7, shared phase, **given what the key reader returned**: for a base register `C` of
+    `n` trits, the emitted `shared_secret` is the register holding `C^e mod p`. The
+    headline `shared_secret_refines` discharges the reader hypotheses. -/
+theorem shared_secret_refines_of_read (F : Spec.Field) (hF : F.Wf)
     (hfit : FitsLen (2 * F.n + 2)) (key : Array Bs.KeyGrid) (base : List Nat)
     (hbase : Spec.IsReg F.n base) (cells : List Nat)
     (hread : Bs.read_key key = .ok (embed cells)) (hcells : ∀ c ∈ cells, c ≤ 2)
@@ -356,9 +358,8 @@ theorem shared_secret_refines (F : Spec.Field) (hF : F.Wf)
   unfold Bs.shared_secret Bs.shared_walk
   rw [empty_register_spec (emb F) F.n rfl, ok_bind]
   dsimp only
-  rw [show SudoRt.sudoAssertEq (SudoRt.listLen (embed base)) (emb F).sudo_5Field_1n 707 = .ok () by
-    simp only [listLen_eq, hbs]
-    simp [SudoRt.sudoAssertEq, sEq_int, emb], ok_bind, hread, ok_bind, hw]
+  rw [sudoAssertEq_int (a := SudoRt.listLen (embed base)) (b := (emb F).sudo_5Field_1n)
+    (by simp only [listLen_eq, hbs]; simp [emb]), ok_bind, hread, ok_bind, hw]
   show Except.ok r.1 = _
   congr 1
   apply eq_embed_toReg hr1.trits hr1.size

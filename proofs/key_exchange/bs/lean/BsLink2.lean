@@ -11,3 +11,6 @@ import BsLink2.Link2.Send
 import BsLink2.Link2.Walk
 import BsLink2.Link2.Check
 import BsLink2.Link2.Exchange
+import BsLink2.Link2.Key
+import BsLink2.Link2.Dice
+import BsLink2.TollPi

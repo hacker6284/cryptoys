@@ -11,7 +11,7 @@ lake exe cache get                  # prebuilt Mathlib; never build Mathlib from
 lake build
 python3 ../check_axioms.py security # audits EVERY DoubleDealSecurity theorem
 lake build DoubleDealSecurityHeavy AuditAll                   # heavy witnesses (five decide! encryptions, GridCycle survival checks, covariant-case checks); Lake may build several 4.5-5 GB modules in parallel
-python3 checks/heavy_rss.py                                    # what CI runs: the heavy modules one at a time, wall time and peak RSS per module; whole `doubledeal-security-heavy` CI job: MEAS_JOB; a measurement, not a bound
+python3 checks/heavy_rss.py                                    # what CI runs: the heavy modules one at a time, wall time and peak RSS per module; whole `doubledeal-security-heavy` CI job: 29m43s, measured once at 5f2dc8f (#170), largest step `GridCycleSurvival` 8.09 GiB peak RSS (then `RealKey` 6.35 GiB); a measurement, not a bound
 python3 ../check_axioms.py security-heavy                      # audits EVERY heavy theorem
 python3 checks/scan_sorry.py --selftest && python3 checks/scan_sorry.py  # no admit/native_decide/sorryAx/axiom; sorry only in the conjecture
 python3 checks/selftest.py && python3 checks/check_relabel.py && python3 checks/check_covariant.py

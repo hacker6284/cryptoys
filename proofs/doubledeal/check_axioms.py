@@ -691,13 +691,28 @@ PACKAGES = {
             "DoubleDeal.Security.StemPosition.card_moved_zero_or_ge_four",
             # StemCoupling (research item (b), second slice): decks with a prescribed conjugate
             # q (moving <= 1 position per row) and prescribed row amounts are at most 81/4096
-            # of the decks with that conjugate; no bound on dpFCount, no part of hoff (that q
-            # has this shape for support-4 differences is not proved)
+            # of the decks with that conjugate; no bound on dpFCount by itself (the support-4
+            # assembly is StemSupportFour below)
             "DoubleDeal.Security.StemCoupling.rowAmts_eq_iff",
             "DoubleDeal.Security.StemCoupling.card_hit_le_three",
             "DoubleDeal.Security.StemCoupling.double_count",
             "DoubleDeal.Security.StemCoupling.card_cond_act_le",
             "DoubleDeal.Security.StemCoupling.coupling",
+            # StemSupportFour (research item (b), third slice): the 4-card case of hoff,
+            # 64 * dpFCount beta gamma <= 52! when gamma^-1 * beta moves exactly 4 cards; the
+            # support >= 8 case of hoff stays a hypothesis (offDiag_of_support_ge_eight)
+            "DoubleDeal.Security.StemSupportFour.qPerm_moves_le_one",
+            "DoubleDeal.Security.StemSupportFour.ratio_eq_qPerm",
+            "DoubleDeal.Security.StemSupportFour.ratio_eq_qPerm_of_support_four",
+            "DoubleDeal.Security.StemSupportFour.ratio_moves_le_one_of_support_four",
+            "DoubleDeal.Security.StemSupportFour.card_conj_eq_card_centralizer",
+            "DoubleDeal.Security.StemSupportFour.card_conjSet_le_odd",
+            "DoubleDeal.Security.StemSupportFour.card_conjSet_le_two",
+            "DoubleDeal.Security.StemSupportFour.sum_card_conjSet_le",
+            "DoubleDeal.Security.StemSupportFour.dpFCount_le_of_support_four",
+            "DoubleDeal.Security.StemSupportFour.dpFCount_eq_zero_of_support",
+            "DoubleDeal.Security.StemSupportFour.offDiag_of_support_ge_eight",
+            "DoubleDeal.Security.StemSupportFour.fullDiffCount_le_64_of_support_ge_eight",
             # row/column sums of fullDiffCount (used by LinearMasks, M8b)
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",

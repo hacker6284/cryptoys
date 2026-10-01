@@ -43,22 +43,23 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
   points of each row then contain at most 3 decks meeting that row's condition; the four
   rows act independently.
 
-  Not proved here (the rest of the 4-card case of `hoff`):
+  Not proved here (the rest of the 4-card case of `hoff`, proved in `StemSupportFour`, third
+  slice: `ratio_eq_qPerm_of_support_four`, `ratio_moves_le_one_of_support_four`,
+  `card_conjSet_le_odd`, `card_conjSet_le_two`, `dpFCount_le_of_support_four`):
   * that the ratio `q = stemPerm x * (stemPerm (β·x))⁻¹` of `StemPosition.conj_of_stem_rel`
     moves at most one position per row when `γ⁻¹β` moves 4 cards (support 4, i.e.
-    `(zRows, zCols) = (4, 12)`). A sampling check (not a proof) finds the moved positions at
-    `cmFlat ρ ((c + t ρ) % 13)`, one per row, for a column `c`;
-  * that `q` is determined by `(rowAmts x, c, d)` (few choices), the count
-    `#{π | π⁻¹ δ π = q} = |C(δ)|` (a coset of the centralizer) and the centralizer sizes;
-  * the assembly `64 · dpFCount β γ ≤ 52!` for support 4, and the union bound for the other
-    support sizes.
+    `(zRows, zCols) = (4, 12)`); the moved positions are `cmFlat ρ ((c + t ρ) % 13)`, one per
+    row, for a column `c`;
+  * that `q` is determined by `(rowAmts x, c, d)`, and upper bounds on `#{π | π⁻¹ δ π = q}`;
+  * the assembly `64 · dpFCount β γ ≤ 52!` for support 4. The union bound for the other
+    support sizes (at least 8) is not proved anywhere.
 
   Caveats. The constant 81/4096 comes from 3 swap pairs per row, not from the exact per-row
   maximum: an exhaustive enumeration over residue multisets (enumeration, not proof;
   `analysis/v12-fullcipher/NOTES.md` §5) gives the per-row maximum fraction
   13/165 ≈ 0.0788, so one row alone (at least 1/13 for the worst target) could not give the
-  ≈ 0.0342 that the unproved assembly would need for a 4-cycle, but two rows could. About
-  the stem's SumRanks row amounts only.
+  ≈ 0.0342 per cell that `StemSupportFour`'s assembly needs (both cycle types), but two
+  rows could. About the stem's SumRanks row amounts only.
 -/
 
 namespace DoubleDeal.Security.StemCoupling

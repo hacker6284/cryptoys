@@ -2,7 +2,7 @@
 # M7 measurements (EMPIRICAL ONLY; no theorem uses them). Not run by CI.
 # Builds into $BUILD (default /tmp/v12-fullcipher); no binaries in the repository.
 # Logs are written to ./logs. Timed on the dev box: final 1 min, mixfinal ~11 min and
-# scoping ~4 min (4 and 8 cores), coupling ~12 min (one core; section 5 of NOTES.md).
+# scoping ~4 min (4 and 8 cores), coupling ~13 min (one core; section 5 of NOTES.md).
 # Usage: sh run.sh [final|mixfinal|scoping|coupling|all]
 set -e
 cd "$(dirname "$0")"
@@ -30,4 +30,7 @@ fi
 if [ "$what" = coupling ] || [ "$what" = all ]; then   # section 5: coupling constants
   "$B/rowmax" > logs/rowmax.log
   python3 pairs.py > logs/pairs.log
+  python3 qtype.py > logs/qtype.log
+  python3 pairs5.py > logs/pairs5.log
+  python3 union_crude.py > logs/union_crude.log
 fi

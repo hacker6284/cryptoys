@@ -393,4 +393,125 @@ theorem lets_go_spec (lg : List Spec.LetGo) (hole : Nat) (gap : Bool) (hfit : Fi
         List.any_eq_true.mpr ⟨lg[i], List.getElem_mem hi', hb⟩
       rw [this]; rfl
 
+theorem beq_embLetGo (a b : Spec.LetGo) :
+    SudoRt.SEq.beq (embLetGo a) (embLetGo b) = decide (a = b) := by
+  obtain ⟨h1, g1⟩ := a
+  obtain ⟨h2, g2⟩ := b
+  show (decide (h1 = h2) && decide (g1 = g2)) = _
+  by_cases e1 : h1 = h2 <;> by_cases e2 : g1 = g2 <;> simp [e1, e2]
+
+open Classical in
+/-- Whether entry `i` of the list equals a later one (classical; a proof device). -/
+noncomputable def dupAt (lg : List Spec.LetGo) (i : Nat) : Bool :=
+  if ∃ j, ∃ (hi : i < lg.length) (hj : j < lg.length), i < j ∧ lg[i] = lg[j] then true else false
+
+theorem nodup_iff_dupAt (lg : List Spec.LetGo) :
+    lg.Nodup ↔ ∀ i, i < lg.length → dupAt lg i = false := by
+  unfold List.Nodup
+  rw [List.pairwise_iff_getElem]
+  constructor
+  · intro h i hi
+    unfold dupAt
+    rw [if_neg]
+    rintro ⟨j, hi', hj, hij, he⟩
+    exact h i j hi' hj hij he
+  · intro h i j hi hj hij he
+    have := h i hi
+    unfold dupAt at this
+    rw [if_pos ⟨j, hi, hj, hij, he⟩] at this
+    cases this
+
+/-- §4.2: the emitted `letgo_unique` says whether the let-go list has no repeats. -/
+theorem letgo_unique_spec (lg : List Spec.LetGo) (hfit : FitsLen lg.length) :
+    Bs.letgo_unique (embLG lg) = .ok (decide lg.Nodup) := by
+  unfold Bs.letgo_unique
+  rw [show SudoRt.listLen (embLG lg) = Int.ofNat lg.length by rw [listLen_eq, size_embLG],
+    subI_len_one _ hfit, ok_bind, except_bind_pure, fuelRange_eq]
+  cases hl : lg.length with
+  | zero =>
+    have : lg = [] := List.eq_nil_of_length_eq_zero hl
+    subst this
+    rfl
+  | succ n =>
+    rw [show Int.ofNat (n + 1) - 1 = Int.ofNat n by simp only [ofNat_eq_natCast]; omega]
+    refine asc_scan_ret_goal false _ _ _ (dupAt lg) 0 n (Nat.zero_le _) _ ?_ ?_ ?_
+    · intro i _ hi
+      dsimp only
+      rw [if_neg (by simp only [ofNat_eq_natCast]; omega),
+        addI_ofNat_one _ (FitsLen.of_le hfit (show i + 1 ≤ lg.length by omega)), ok_bind,
+        ok_bind, except_bind_pure, fuelRange_eq]
+      have hinner : ∀ (R : Except SudoRt.Trap (SudoRt.Flow Unit Bool)),
+          R = .ok (if dupAt lg i then .ret false else .cont ()) → ∀ step after,
+          (∀ j, i + 1 ≤ j → j ≤ n → step (Int.ofNat j) =
+            if (if h : j < lg.length ∧ i < lg.length then decide (lg[i] = lg[j]) else false)
+            then .ok (.ret false)
+            else if j = n then .ok (.brk (Int.ofNat j)) else .ok (.cont (Int.ofNat (j + 1)))) →
+          (∀ j, after j = .ok (.cont ())) → 
+          (Int.ofNat (i + 1) > Int.ofNat n → step (Int.ofNat (i + 1)) = .ok (.brk (Int.ofNat (i + 1)))) →
+          SudoRt.runLoopOn (Int.ofNat (i + 1)) (fuelRange (Int.ofNat (i + 1)) (Int.ofNat n))
+            step after (fun r => pure (SudoRt.Flow.ret r)) = R := by
+        intro R hR step after hst haf hemp
+        by_cases hlast : i = n
+        · subst hlast
+          have hgt : Int.ofNat (i + 1) > Int.ofNat i := by simp only [ofNat_eq_natCast]; omega
+          rw [fuelRange_gt hgt, show (1 : Nat) = 0 + 1 from rfl, runLoopOn_succ, hemp hgt]
+          have hd : dupAt lg i = false := by
+            unfold dupAt
+            rw [if_neg (by rintro ⟨j, _, hj, hij, _⟩; omega)]
+          rw [hR, hd]
+          exact haf _
+        · refine asc_scan_ret_goal false step after _ _ (i + 1) n (by omega) R hst ?_ ?_
+          · intro hall
+            have hd : dupAt lg i = false := by
+              unfold dupAt
+              rw [if_neg]
+              rintro ⟨j, hi', hj, hij, he⟩
+              have := hall j (by omega) (by omega)
+              rw [dif_pos ⟨hj, hi'⟩, decide_eq_true he] at this
+              cases this
+            rw [hR, haf, hd]; rfl
+          · intro j h1 h2 hb
+            rw [hR]
+            have hj : j < lg.length ∧ i < lg.length := by omega
+            rw [dif_pos hj] at hb
+            have hex : ∃ j, ∃ (hi : i < lg.length) (hj : j < lg.length), i < j ∧ lg[i] = lg[j] :=
+              ⟨j, hj.2, hj.1, by omega, of_decide_eq_true hb⟩
+            have hd : dupAt lg i = true := by unfold dupAt; rw [if_pos hex]
+            rw [hd]; rfl
+      rw [hinner _ rfl]
+      · by_cases hd : dupAt lg i = true
+        · rw [if_pos hd, if_pos hd]; rfl
+        · rw [if_neg hd, if_neg hd]
+          by_cases hn : i = n
+          · subst hn; rw [if_pos rfl]; simp; rfl
+          · have hb : (Int.ofNat i == Int.ofNat n) = false := by
+              apply beq_false_of_ne; intro h; have := Int.ofNat.inj h; omega
+            rw [if_neg hn]; simp only [hb]; rfl
+      · intro j h1 h2
+        have hj : j < lg.length := by omega
+        have hi' : i < lg.length := by omega
+        rw [if_neg (by simp only [ofNat_eq_natCast]; omega),
+          atL_ofNat _ _ (by rw [size_embLG]; exact hi'), ok_bind,
+          atL_ofNat _ _ (by rw [size_embLG]; exact hj), ok_bind, embLG_get, embLG_get,
+          beq_embLetGo, dif_pos ⟨hj, hi'⟩]
+        by_cases he : lg[i] = lg[j]
+        · simp only [decide_eq_true he, if_true]; rfl
+        · simp only [decide_eq_false he, Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
+          by_cases hn : j = n
+          · subst hn; simp
+          · have hb : (Int.ofNat j == Int.ofNat n) = false := by
+              apply beq_false_of_ne; intro h; have := Int.ofNat.inj h; omega
+            simp only [hb, if_neg hn, Bool.false_eq_true, if_false,
+              addI_ofNat_one _ (FitsLen.of_le hfit (show j + 1 ≤ lg.length by omega)), ok_bind]
+      · intro j; rfl
+      · intro hgt; dsimp only; rw [if_pos hgt]; rfl
+    · intro hall
+      rw [decide_eq_true ((nodup_iff_dupAt lg).mpr (fun i hi => hall i (Nat.zero_le _) (by omega)))]
+      rfl
+    · intro i _ hi hb
+      have : ¬ lg.Nodup := fun h => by
+        rw [(nodup_iff_dupAt lg).mp h i (by omega)] at hb; cases hb
+      rw [decide_eq_false this]
+      rfl
+
 end BsLink2.Link2

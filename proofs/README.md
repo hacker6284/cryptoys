@@ -18,14 +18,14 @@ Five layers of evidence. (1) and (4) are theorems; (2) and (3) are evidence; (5)
 
 ## Taxonomy
 
-Four kinds. The first three apply to **current** algorithms. The fourth applies only after an algorithm is **deprecated**.
+Four kinds. The first three apply to **current** algorithms. The fourth applies only after an algorithm is **deprecated** or marked broken.
 
 | Kind | What it is | When it belongs here |
 | --- | --- | --- |
 | **Correctness** | Bijections, encrypt/decrypt round-trip, content-preservation, encoding injectivity. Algebraic facts about the published definition. | Current algorithms, as soon as the claim is honest and the proof is sorry-free. |
 | **Reduction** | "Breaking this is as hard as that assumption." | Current algorithms, only when earned. Not in this first drop. |
 | **Attack-bounds** | Concrete work estimates (birthday, MITM, distinguishing advantage). | Current algorithms, only when earned as a theorem. Heuristic ceilings already in a SPEC stay SPEC honesty, not proofs. |
-| **Vulnerability proofs** | A named attack that *works*, with a checkable witness. | **Deprecated** algorithms only. Deprecate first; then file the proof next to that frozen artifact. Current algorithms do not collect vuln write-ups as a substitute for deprecation. |
+| **Vulnerability proofs** | A named attack that *works*, with a checkable witness. | Deprecated algorithms, or a current algorithm whose SPEC is marked broken (filed under `<alg>/security/`). Otherwise, current algorithms do not collect vuln write-ups as a substitute for deprecation. |
 
 Current algorithms get correctness now, and stronger security proofs (reductions, attack-bounds) later if they earn them. They do not get collision-resistance or AES-class numbers from a correctness package.
 
@@ -43,7 +43,7 @@ proofs/
   README.md                 # this taxonomy
   doubledeal/               # DoubleDeal correctness stones (+ security/, analysis/, vectors/)
   megadreifach/             # MegaDreifach correctness stones (+ security/: v1 grip-rule weakness report)
-  scramble/                 # Generated Lean + teaching / lineage; no algebraic stones
+  scramble/                 # Generated Lean + teaching / lineage; no algebraic stones (+ security/: attacks showing v2 is broken)
   doubledeal-cbc-hmac/      # Generated Lean for HMAC / KDF / pad + Link 2 to a hand-written model
   scm/                      # placeholder; SCM/SMAC stay later (CBC-HMAC is the AEAD)
   audit/                    # core-only #audit_all package shared by the axiom audits
@@ -60,7 +60,7 @@ proofs/
 | --- | --- | --- |
 | DoubleDeal | `primitives/cipher/doubledeal/` | **Generated** Lean under `doubledeal/lean/Generated/` (from `doubledeal.sudo`; TAP all-pass under the terminates gate). Proof-only stones under `doubledeal/lean/DoubleDeal/`. Proved versus open: [`doubledeal/README.md`](doubledeal/README.md). Security theorems, the open conjecture and the AES-style roadmap: [`doubledeal/security/README.md`](doubledeal/security/README.md). |
 | MegaDreifach | `primitives/hash/megadreifach/` (v2; deprecated v1 frozen in `v1/`) | **Generated** Lean under `megadreifach/lean/Generated/` (from the v2 sudo; [TAP](megadreifach/README.md#three-layers-be-honest)). Proof-only stones under `megadreifach/lean/MegaDreifach/`, about v2. Proved versus open: [`megadreifach/README.md`](megadreifach/README.md). The v1 weakness proofs, frozen: [`deprecated/megadreifach-v1/`](deprecated/megadreifach-v1/README.md). |
-| Scramble | `scramble_v2` | **Generated** Lean under `scramble/lean/Generated/` (from `scramble.sudo`; [TAP](scramble/README.md#generated-lean) under the terminates gate). Teaching hash; single-cube birthday ceiling. No algebraic stones. Not a collision-resistance claim. |
+| Scramble | `scramble_v2` (**broken**) | **Generated** Lean under `scramble/lean/Generated/` (from `scramble.sudo`; [TAP](scramble/README.md#generated-lean) under the terminates gate). Teaching hash. **Broken**: practical collisions, second preimages and preimages (measured; write-up, scripts and logs in [`scramble/security/`](scramble/security/REPORT.md)). No algebraic stones. Not a collision-resistance claim. |
 | DoubleDeal-CBC-HMAC | `primitives/aead/doubledeal-cbc-hmac/` | **Generated** Lean under `doubledeal-cbc-hmac/lean/Generated/` (from `doubledeal_cbc_hmac.sudo` + imported MegaDreifach; [TAP](doubledeal-cbc-hmac/README.md#generated-lean)). HMAC / KDF / pad / MAC-input evidence, plus [Link 2](doubledeal-cbc-hmac/README.md#link-2) of every exported function to a hand-written model on byte inputs. No AEAD security theorem. Not SCM. |
 | DoubleDeal-SCM / SMAC | not in `primitives/` | Stub [`scm/README.md`](scm/README.md). Stays later. |
 | DoubleDeal v8–v11 (frozen) | `primitives/cipher/doubledeal/v8/` … `v11/` | Vulnerability proofs (v8, v9), a per-layer write-up (v10) and a superseded-not-attacked write-up (v11) under `deprecated/`; see [`deprecated/README.md`](deprecated/README.md). |

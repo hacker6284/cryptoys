@@ -9,6 +9,10 @@
 //   (more negative = earlier; −peak puts the loudest sample on it).
 //   startMs skips the file's head; fadeMs / maxMs shorten the tail
 //   (0 = play it out). null = silent.
+//   The turn sounds (single, double, triple, rotation) are tuned at
+//   timing.speed. At another speed the time from the file's loudest
+//   sample to the contact scales with the turn (× speed / tempo), so a
+//   click keeps its place in the turn. The settle pat does not scale.
 // timing: read by playroom/cube-stage.js (lift height and time, hold before
 //   setting down); speed = the dock's starting tempo (cubing.js tempoScale).
 // loopGapMs, choices: the microdemo loop only.
@@ -25,7 +29,7 @@ export default {
     },
     sounds: {
         // Single turn (one click); contact: the face seats (end of leaf).
-        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, offsetMs: -393 }, // peak 250 ms before the face seats, ~65% into the 714 ms turn (Zachary: "still late ... maybe 200 ms earlier")
+        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, offsetMs: -393 }, // at 1.4×: peak 250 ms before the face seats, ~65% into the 714 ms turn (Zachary: "still late ... maybe 200 ms earlier")
         // Double turn (two clicks); contact: the face seats (end of leaf). Or { perClick: true }: the single file once per click.
         double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, offsetMs: -119 },
         // Triple turn (three clicks); contact: the face seats (end of leaf). Or { perClick: true }: the single file once per click.

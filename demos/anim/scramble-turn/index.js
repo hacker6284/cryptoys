@@ -34,13 +34,15 @@ export function scrambleTurnVoice() {
         /**
          * Playback of `leaves` started at `at` (performance.now()), each
          * leaf `durations[k]` ms long at tempo 1. A turn's contact is the
-         * moment its face seats.
+         * moment its face seats. The offsets were tuned at timing.speed;
+         * at another tempo the clicks keep their place in the turn.
          */
         turns({ at, durations = [], tempo = timing.speed, leaves = [] }, when) {
+            const stretch = timing.speed / tempo;
             let t = at;
             leaves.forEach((move, k) => {
                 t += (durations[k] ?? cubingMs(amountOf(move))) / tempo;
-                v.contact(slotOf(move), t, { tempo, when });
+                v.contact(slotOf(move), t, { tempo, stretch, when });
             });
         },
         /** The cube touches the felt at `atMs`. */

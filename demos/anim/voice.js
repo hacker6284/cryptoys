@@ -36,6 +36,15 @@ export function soundTable(slots, sounds) {
     return table;
 }
 
+/**
+ * The contact time that puts the file's loudest sample `stretch` times
+ * as far from the real contact `atMs` as it is when tuned (the file
+ * starts at the returned time + offsetMs).
+ */
+export function stretchContact(atMs, offsetMs, peakMs, stretch) {
+    return atMs + (offsetMs + peakMs) * (stretch - 1);
+}
+
 export function createVoice({ settings, slots, base, autostart = false }) {
     const sounds = settings.sounds || {};
     const sound = createSound({ sounds: soundTable(slots, sounds), base, limiter: true, autostart });
@@ -53,16 +62,22 @@ export function createVoice({ settings, slots, base, autostart = false }) {
      * Sound for slot `name` whose contact is at performance.now() time
      * `atMs` (the file starts at contact + offsetMs). `when()` is asked
      * again just before a later start, so a cancelled motion stays quiet.
+     *
+     * stretch: for a sound tied to a motion played at another speed than
+     * the one it was tuned at (tuned tempo / actual tempo). The time from
+     * the file's loudest sample to the contact is multiplied by it, so the
+     * sound keeps its place in the motion: half the tempo, twice the lead.
      */
-    function contact(name, atMs, { tempo = settings.timing?.speed ?? 1, when = null } = {}) {
+    function contact(name, atMs, { tempo = settings.timing?.speed ?? 1, stretch = 1, when = null } = {}) {
         const s = sounds[name];
         if (!s) return;
         if (s.perClick) {
             const pc = slots.find((slot) => slot.name === name)?.perClick;
-            if (pc) for (const rel of pc.clicks(tempo)) contact(pc.slot, atMs + rel, { tempo, when });
+            if (pc) for (const rel of pc.clicks(tempo)) contact(pc.slot, atMs + rel, { tempo, stretch, when });
             return;
         }
         if (!s.file) return;
+        atMs = stretchContact(atMs, s.offsetMs ?? 0, sound.peakMs(name) ?? 0, stretch);
         const now = performance.now();
         const startIn = atMs + (s.offsetMs ?? 0) - now;
         if (startIn > 90) {

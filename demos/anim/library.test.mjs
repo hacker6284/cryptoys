@@ -39,4 +39,17 @@ const [half, seat] = clickTimes(2, 1);
 assert.ok(Math.abs(seat) < 1, "the last click is the seat");
 assert.equal(Math.round(half), -750, "a double turn's first click is at half way");
 
+// A click tuned at 1.4× keeps its place in the turn at any tempo: its
+// loudest sample lands at the same fraction of the turn.
+const { stretchContact } = await import(new URL("voice.js", here));
+const { offsetMs } = settings.sounds.single;
+const peakMs = 143; // single_spacejoe-486564's loudest sample
+for (const tempo of [0.5, 1.4, 4]) {
+    const turn = 1000 / tempo;
+    const contactAt = stretchContact(turn, offsetMs, peakMs, timing.speed / tempo);
+    const peakAt = contactAt + offsetMs + peakMs;
+    assert.ok(Math.abs(peakAt / turn - (1000 / 1.4 - 250) / (1000 / 1.4)) < 1e-9, `peak fraction at ${tempo}×`);
+}
+assert.equal(stretchContact(1000, offsetMs, peakMs, 1), 1000, "unchanged at the tuned tempo");
+
 console.log("animation library tests ok");

@@ -250,6 +250,7 @@ export function createSound({
     let muted = false;
     let loading = null;
     let buffers = {};
+    let peaks = {};
     const last = {};
     const live = {};
     const rr = {};
@@ -301,6 +302,24 @@ export function createSound({
         return cache.get(key);
     }
 
+    /** Where a buffer's loudest sample is, in ms from its start (null if unknown). */
+    function loudestMs(buffer) {
+        if (!buffer?.getChannelData || !buffer.sampleRate) return null;
+        let best = 0;
+        let at = 0;
+        for (let c = 0; c < buffer.numberOfChannels; c++) {
+            const data = buffer.getChannelData(c);
+            for (let i = 0; i < data.length; i++) {
+                const v = Math.abs(data[i]);
+                if (v > best) {
+                    best = v;
+                    at = i;
+                }
+            }
+        }
+        return (at / buffer.sampleRate) * 1000;
+    }
+
     function load() {
         if (loading) return loading;
         const kind = ext();
@@ -309,6 +328,8 @@ export function createSound({
             next[name] = await Promise.all((spec.files || []).map((file) => decode(file, kind)));
         })).then(() => {
             buffers = next;
+            peaks = {};
+            for (const [name, list] of Object.entries(next)) peaks[name] = loudestMs(list[0]);
         }).catch((err) => {
             console.warn("sound failed to load", err);
         });
@@ -470,6 +491,10 @@ export function createSound({
         },
         ready() {
             return loading || Promise.resolve();
+        },
+        /** ms from the start of `name`'s (first) file to its loudest sample, once decoded; else null. */
+        peakMs(name) {
+            return peaks[name] ?? null;
         },
         dispose() {
             offState();

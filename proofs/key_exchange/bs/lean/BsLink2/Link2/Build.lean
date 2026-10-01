@@ -599,4 +599,501 @@ theorem cover_spec (cov : Nat → Bool) (s : Spec.Ship) (hs : s.OnGrid) :
     rw [List.take_of_length_le (Nat.le_refl _)]
     rfl
 
+/-! ### grow_until_it_bumps -/
+
+open Bs in
+/-- The body of `grow_until_it_bumps`'s growing loop, copied verbatim from the emitted code
+    (both headings share it; `lay_down` is the heading). A proof device: the theorem below
+    is about the emitted function itself. -/
+def growStepE (covered : Array Bool) (row col : Int) (lay_down : Bool) (_toV : Int) :
+    Int × (Dice × Int) → Except SudoRt.Trap (SudoRt.Flow (Int × (Dice × Int)) ((Option Ship) × Dice)) :=
+  fun σ =>
+    let grow := σ.1
+    let d := σ.2.1
+    let _sp508 := σ.2.2
+    let len := _sp508
+    do
+      if grow > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Option (Ship)) × (Dice)) (grow, (d, len)))
+      else
+        match ← ((do
+  let next_row := row
+  let _t475 ← SudoRt.addI col len
+  let next_col := _t475
+  if lay_down then
+    do
+      let _t476 ← SudoRt.addI row len
+      let next_row := _t476
+      let next_col := col
+      let _t477 ← has_room covered next_row next_col
+      if (!( _t477 )) then
+        do
+          pure (SudoRt.Flow.brk (ρ := (Option (Ship)) × (Dice)) (d, len))
+      else
+        do
+          let need := (6 : Int)
+          if (SudoRt.SEq.beq len (2 : Int)) then
+            do
+              let need := (4 : Int)
+              let _io479 ← roll_d6 d
+              let ⟨_ret480, _iw0481⟩ := _io479
+              let d := _iw0481
+              let _sudo_h0 := _ret480
+              if (decide (_sudo_h0 ≥ need)) then
+                do
+                  let _t483 ← SudoRt.addI len (1 : Int)
+                  let len := _t483
+                  pure (SudoRt.Flow.cont (ρ := (Option (Ship)) × (Dice)) (d, len))
+              else
+                do
+                  pure (SudoRt.Flow.brk (ρ := (Option (Ship)) × (Dice)) (d, len))
+          else
+            do
+              let _io484 ← roll_d6 d
+              let ⟨_ret485, _iw0486⟩ := _io484
+              let d := _iw0486
+              let _sudo_h0 := _ret485
+              if (decide (_sudo_h0 ≥ need)) then
+                do
+                  let _t488 ← SudoRt.addI len (1 : Int)
+                  let len := _t488
+                  pure (SudoRt.Flow.cont (ρ := (Option (Ship)) × (Dice)) (d, len))
+              else
+                do
+                  pure (SudoRt.Flow.brk (ρ := (Option (Ship)) × (Dice)) (d, len))
+  else
+    do
+      let _t489 ← has_room covered next_row next_col
+      if (!( _t489 )) then
+        do
+          pure (SudoRt.Flow.brk (ρ := (Option (Ship)) × (Dice)) (d, len))
+      else
+        do
+          let need := (6 : Int)
+          if (SudoRt.SEq.beq len (2 : Int)) then
+            do
+              let need := (4 : Int)
+              let _io491 ← roll_d6 d
+              let ⟨_ret492, _iw0493⟩ := _io491
+              let d := _iw0493
+              let _sudo_h0 := _ret492
+              if (decide (_sudo_h0 ≥ need)) then
+                do
+                  let _t495 ← SudoRt.addI len (1 : Int)
+                  let len := _t495
+                  pure (SudoRt.Flow.cont (ρ := (Option (Ship)) × (Dice)) (d, len))
+              else
+                do
+                  pure (SudoRt.Flow.brk (ρ := (Option (Ship)) × (Dice)) (d, len))
+          else
+            do
+              let _io496 ← roll_d6 d
+              let ⟨_ret497, _iw0498⟩ := _io496
+              let d := _iw0498
+              let _sudo_h0 := _ret497
+              if (decide (_sudo_h0 ≥ need)) then
+                do
+                  let _t500 ← SudoRt.addI len (1 : Int)
+                  let len := _t500
+                  pure (SudoRt.Flow.cont (ρ := (Option (Ship)) × (Dice)) (d, len))
+              else
+                do
+                  pure (SudoRt.Flow.brk (ρ := (Option (Ship)) × (Dice)) (d, len))) : Except SudoRt.Trap (SudoRt.Flow _ ((Option (Ship)) × (Dice)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Option (Ship)) × (Dice)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Option (Ship)) × (Dice)) (grow, _fs))
+        | .cont _fs => do
+            if grow == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Option (Ship)) × (Dice)) (grow, _fs))
+            else do
+              let i' ← SudoRt.addI grow (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Option (Ship)) × (Dice)) (i', _fs))
+
+open Bs in
+/-- What `grow_until_it_bumps` does after its growing loop (the piece), copied verbatim. -/
+def growAfterE (row col : Int) (lay_down bow_last : Bool) :
+    Int × (Dice × Int) → Except SudoRt.Trap ((Option Ship) × Dice) :=
+  fun σ =>
+    let d := σ.2.1
+    let _sp509 := σ.2.2
+    let len := _sp509
+    do
+      let kind := Kind.Sudo_4Kind_9Destroyer
+      if (SudoRt.SEq.beq len (3 : Int)) then
+        do
+          let kind := Kind.Sudo_4Kind_7Cruiser
+          let _io502 ← roll_d6 d
+          let ⟨_ret503, _iw0504⟩ := _io502
+          let d := _iw0504
+          let _sudo_h1 := _ret503
+          if (decide (_sudo_h1 ≤ (3 : Int))) then
+            do
+              let kind := Kind.Sudo_4Kind_3Sub
+              pure ((some ({ sudo_4Ship_4kind := kind, sudo_4Ship_4down := lay_down, sudo_4Ship_3row := row, sudo_4Ship_3col := col, sudo_4Ship_8bow_last := bow_last } : Ship)), d)
+          else
+            do
+              pure ((some ({ sudo_4Ship_4kind := kind, sudo_4Ship_4down := lay_down, sudo_4Ship_3row := row, sudo_4Ship_3col := col, sudo_4Ship_8bow_last := bow_last } : Ship)), d)
+      else
+        do
+          if (SudoRt.SEq.beq len (4 : Int)) then
+            do
+              let kind := Kind.Sudo_4Kind_10Battleship
+              pure ((some ({ sudo_4Ship_4kind := kind, sudo_4Ship_4down := lay_down, sudo_4Ship_3row := row, sudo_4Ship_3col := col, sudo_4Ship_8bow_last := bow_last } : Ship)), d)
+          else
+            do
+              if (SudoRt.SEq.beq len (5 : Int)) then
+                do
+                  let kind := Kind.Sudo_4Kind_7Carrier
+                  pure ((some ({ sudo_4Ship_4kind := kind, sudo_4Ship_4down := lay_down, sudo_4Ship_3row := row, sudo_4Ship_3col := col, sudo_4Ship_8bow_last := bow_last } : Ship)), d)
+              else
+                do
+                  pure ((some ({ sudo_4Ship_4kind := kind, sudo_4Ship_4down := lay_down, sudo_4Ship_3row := row, sudo_4Ship_3col := col, sudo_4Ship_8bow_last := bow_last } : Ship)), d)
+
+theorem rollD6_d6 {d d' : Spec.Dice} {f : Nat} (h : Spec.rollD6 d = some (f, d')) :
+    d'.d6 = d.d6 := by
+  unfold Spec.rollD6 at h
+  split at h
+  · cases h
+  · split at h
+    · cases h; rfl
+    · cases h
+
+/-- One growth step of the model, as `brkFold` takes it. -/
+def growM (cov : Nat → Bool) (row col : Nat) (down : Bool) (_ : Nat) (s : Spec.Dice × Nat) :
+    Option ((Spec.Dice × Nat) ⊕ (Spec.Dice × Nat)) :=
+  if Spec.hasRoom cov (if down then row + s.2 else row) (if down then col else col + s.2) then
+    match Spec.rollD6 s.1 with
+    | none => none
+    | some (f, d') => if (if s.2 = 2 then 4 else 6) ≤ f then some (.inl (d', s.2 + 1)) else some (.inr (d', s.2))
+  else some (.inr s)
+
+theorem brkFold_growM (cov : Nat → Bool) (row col : Nat) (down : Bool) :
+    ∀ k i (d : Spec.Dice) (len : Nat),
+      brkFold (growM cov row col down) i k (d, len) = Spec.growLoop cov row col down k d len
+  | 0, _, _, _ => rfl
+  | k + 1, i, d, len => by
+    simp only [brkFold, growM, Spec.growLoop]
+    by_cases hb : Spec.hasRoom cov (if down then row + len else row)
+        (if down then col else col + len) = true
+    · rw [if_pos hb, if_pos hb]
+      cases Spec.rollD6 d with
+      | none => rfl
+      | some p =>
+        obtain ⟨f, d'⟩ := p
+        dsimp only
+        by_cases hf : (if len = 2 then 4 else 6) ≤ f
+        · rw [if_pos hf, if_pos hf]
+          exact brkFold_growM cov row col down k (i + 1) d' (len + 1)
+        · rw [if_neg hf, if_neg hf]; rfl
+    · rw [if_neg hb, if_neg hb]; rfl
+
+/-- The growing loop and the piece, for either heading `ld` and bow `bl`. -/
+theorem grow_loop_spec (cov : Nat → Bool) (row col : Nat) (ld bl : Bool) (d : Spec.Dice)
+    (hr : row < 10) (hc : col < 10) (h6 : FitsLen d.d6.length) :
+    (SudoRt.runLoopOn ((1 : Int), (embDice d, (2 : Int))) (fuelRange 1 3)
+      (growStepE (tab cov) (Int.ofNat row) (Int.ofNat col) ld 3)
+      (growAfterE (Int.ofNat row) (Int.ofNat col) ld bl) (fun r => pure r)).toOption =
+    ((Spec.growLoop cov row col ld 3 d 2).bind (fun p => Spec.pieceOf p.2 p.1)).map
+      (fun p => (some (embShip ⟨p.1, ld, row, col, bl⟩), embDice p.2)) := by
+  refine (loop_brk_inv (S := Spec.Dice × Nat) (fun s => (embDice s.1, Int.ofNat s.2)) _ _ _
+    (growM cov row col ld) (fun i s => s.1.d6 = d.d6 ∧ 2 ≤ s.2 ∧ s.2 ≤ i + 1)
+    (fun s => (Spec.pieceOf s.2 s.1).map
+      (fun p => (some (embShip ⟨p.1, ld, row, col, bl⟩), embDice p.2)))
+    1 4 (by decide) ?_ ?_ ?_ (d, 2) ⟨rfl, Nat.le_refl _, Nat.le_refl _⟩).trans ?_
+  · intro i s hi1 hi2 hP
+    obtain ⟨dd, len⟩ := s
+    obtain ⟨hd6, hl1, hl2⟩ := hP
+    dsimp only at hd6 hl1 hl2
+    unfold growStepE growM
+    dsimp only
+    rw [if_neg (by simp only [ofNat_eq_natCast]; omega), toOpt_bind,
+      addI_ofNat _ _ (fits_small (show col + len ≤ 1000 by omega)), ok_bind]
+    have hbeq2 : SudoRt.SEq.beq (Int.ofNat len) (2 : Int) = decide (len = 2) := by
+      show decide _ = _; by_cases h : len = 2 <;> simp [h]; omega
+    have hb3 : (Int.ofNat i == (3 : Int)) = decide (i + 1 = 4) := by
+      by_cases h : i + 1 = 4
+      · rw [decide_eq_true h]; apply beq_iff_eq.mpr; show Int.ofNat i = Int.ofNat 3; congr 1; omega
+      · rw [decide_eq_false h]; apply beq_false_of_ne; intro e
+        have := Int.ofNat.inj (e.trans (show (3 : Int) = Int.ofNat 3 from rfl)); omega
+    cases ld
+    · simp only [Bool.false_eq_true, if_false]
+      rw [toOpt_bind, has_room_spec]
+      cases hb : Spec.hasRoom cov row (col + len)
+      · rfl
+      · simp only [toOpt_ok, Option.some_bind, Bool.not_true, Bool.false_eq_true, if_false,
+          if_true, hbeq2]
+        by_cases h2 : len = 2
+        · rw [decide_eq_true h2, if_pos rfl, if_pos h2]
+          rw [toOpt_bind, roll_d6_spec dd (hd6 ▸ h6)]
+          cases hroll : Spec.rollD6 dd with
+          | none => rfl
+          | some p =>
+            obtain ⟨f, d'⟩ := p
+            simp only [Option.map_some', Option.some_bind]
+            by_cases hf : 4 ≤ f
+            · have : decide (Int.ofNat f ≥ 4) = true := by
+                apply decide_eq_true; show ((4 : Nat) : Int) ≤ (f : Int); omega
+              rw [this, if_pos rfl, if_pos hf, toOpt_bind,
+                addI_ofNat_one _ (fits_small (show len + 1 ≤ 1000 by omega)), toOpt_ok, Option.some_bind]
+              rw [pure_eq_ok, toOpt_ok, Option.some_bind]
+              dsimp only
+              rw [hb3]
+              by_cases h4 : i + 1 = 4
+              · simp only [h4, decide_True, if_true, Option.map_some']; rfl
+              · simp only [h4, decide_False, Bool.false_eq_true, if_false, Option.map_some',
+                  addI_ofNat_one _ (fits_small (show i + 1 ≤ 1000 by omega))]; rfl
+            · have : decide (Int.ofNat f ≥ 4) = false := by
+                apply decide_eq_false; show ¬ ((4 : Nat) : Int) ≤ (f : Int); omega
+              rw [this, if_neg (by decide), if_neg hf]
+              rfl
+        · rw [decide_eq_false h2, if_neg (by decide), if_neg h2]
+          rw [toOpt_bind, roll_d6_spec dd (hd6 ▸ h6)]
+          cases hroll : Spec.rollD6 dd with
+          | none => rfl
+          | some p =>
+            obtain ⟨f, d'⟩ := p
+            simp only [Option.map_some', Option.some_bind]
+            by_cases hf : 6 ≤ f
+            · have : decide (Int.ofNat f ≥ 6) = true := by
+                apply decide_eq_true; show ((6 : Nat) : Int) ≤ (f : Int); omega
+              rw [this, if_pos rfl, if_pos hf, toOpt_bind,
+                addI_ofNat_one _ (fits_small (show len + 1 ≤ 1000 by omega)), toOpt_ok, Option.some_bind]
+              rw [pure_eq_ok, toOpt_ok, Option.some_bind]
+              dsimp only
+              rw [hb3]
+              by_cases h4 : i + 1 = 4
+              · simp only [h4, decide_True, if_true, Option.map_some']; rfl
+              · simp only [h4, decide_False, Bool.false_eq_true, if_false, Option.map_some',
+                  addI_ofNat_one _ (fits_small (show i + 1 ≤ 1000 by omega))]; rfl
+            · have : decide (Int.ofNat f ≥ 6) = false := by
+                apply decide_eq_false; show ¬ ((6 : Nat) : Int) ≤ (f : Int); omega
+              rw [this, if_neg (by decide), if_neg hf]
+              rfl
+    · simp only [if_true]
+      rw [toOpt_bind, addI_ofNat _ _ (fits_small (show row + len ≤ 1000 by omega)), toOpt_ok,
+        Option.some_bind, toOpt_bind, has_room_spec]
+      cases hb : Spec.hasRoom cov (row + len) col
+      · rfl
+      · simp only [toOpt_ok, Option.some_bind, Bool.not_true, Bool.false_eq_true, if_false,
+          if_true, hbeq2]
+        by_cases h2 : len = 2
+        · rw [decide_eq_true h2, if_pos rfl, if_pos h2]
+          rw [toOpt_bind, roll_d6_spec dd (hd6 ▸ h6)]
+          cases hroll : Spec.rollD6 dd with
+          | none => rfl
+          | some p =>
+            obtain ⟨f, d'⟩ := p
+            simp only [Option.map_some', Option.some_bind]
+            by_cases hf : 4 ≤ f
+            · have : decide (Int.ofNat f ≥ 4) = true := by
+                apply decide_eq_true; show ((4 : Nat) : Int) ≤ (f : Int); omega
+              rw [this, if_pos rfl, if_pos hf, toOpt_bind,
+                addI_ofNat_one _ (fits_small (show len + 1 ≤ 1000 by omega)), toOpt_ok, Option.some_bind]
+              rw [pure_eq_ok, toOpt_ok, Option.some_bind]
+              dsimp only
+              rw [hb3]
+              by_cases h4 : i + 1 = 4
+              · simp only [h4, decide_True, if_true, Option.map_some']; rfl
+              · simp only [h4, decide_False, Bool.false_eq_true, if_false, Option.map_some',
+                  addI_ofNat_one _ (fits_small (show i + 1 ≤ 1000 by omega))]; rfl
+            · have : decide (Int.ofNat f ≥ 4) = false := by
+                apply decide_eq_false; show ¬ ((4 : Nat) : Int) ≤ (f : Int); omega
+              rw [this, if_neg (by decide), if_neg hf]
+              rfl
+        · rw [decide_eq_false h2, if_neg (by decide), if_neg h2]
+          rw [toOpt_bind, roll_d6_spec dd (hd6 ▸ h6)]
+          cases hroll : Spec.rollD6 dd with
+          | none => rfl
+          | some p =>
+            obtain ⟨f, d'⟩ := p
+            simp only [Option.map_some', Option.some_bind]
+            by_cases hf : 6 ≤ f
+            · have : decide (Int.ofNat f ≥ 6) = true := by
+                apply decide_eq_true; show ((6 : Nat) : Int) ≤ (f : Int); omega
+              rw [this, if_pos rfl, if_pos hf, toOpt_bind,
+                addI_ofNat_one _ (fits_small (show len + 1 ≤ 1000 by omega)), toOpt_ok, Option.some_bind]
+              rw [pure_eq_ok, toOpt_ok, Option.some_bind]
+              dsimp only
+              rw [hb3]
+              by_cases h4 : i + 1 = 4
+              · simp only [h4, decide_True, if_true, Option.map_some']; rfl
+              · simp only [h4, decide_False, Bool.false_eq_true, if_false, Option.map_some',
+                  addI_ofNat_one _ (fits_small (show i + 1 ≤ 1000 by omega))]; rfl
+            · have : decide (Int.ofNat f ≥ 6) = false := by
+                apply decide_eq_false; show ¬ ((6 : Nat) : Int) ≤ (f : Int); omega
+              rw [this, if_neg (by decide), if_neg hf]
+              rfl
+  · intro i s r _ _ hP hm
+    obtain ⟨dd, len⟩ := s
+    obtain ⟨hd6, hl1, hl2⟩ := hP
+    unfold growM at hm
+    dsimp only at hm hd6 hl1 hl2
+    by_cases hb : Spec.hasRoom cov (if ld then row + len else row)
+        (if ld then col else col + len) = true
+    · rw [if_pos hb] at hm
+      cases hroll : Spec.rollD6 dd with
+      | none => rw [hroll] at hm; cases hm
+      | some p =>
+        obtain ⟨f, d'⟩ := p
+        rw [hroll] at hm
+        have hd' := rollD6_d6 hroll
+        dsimp only at hm
+        by_cases hf : (if len = 2 then 4 else 6) ≤ f
+        · rw [if_pos hf] at hm
+          rw [← Option.some.inj hm]
+          exact ⟨hd'.trans hd6, by simp; omega, by simp; omega⟩
+        · rw [if_neg hf] at hm
+          rw [← Option.some.inj hm]
+          exact ⟨hd'.trans hd6, by simp; omega, by simp; omega⟩
+    · rw [if_neg hb] at hm
+      rw [← Option.some.inj hm]
+      exact ⟨hd6, by simp; omega, by simp; omega⟩
+  · intro i j s hi hP
+    obtain ⟨dd, len⟩ := s
+    obtain ⟨hd6, hl1, hl2⟩ := hP
+    dsimp only at hd6 hl1 hl2 ⊢
+    unfold growAfterE Spec.pieceOf
+    dsimp only
+    have hbeq : ∀ a b : Nat, SudoRt.SEq.beq (Int.ofNat a) (Int.ofNat b) = decide (a = b) := by
+      intro a b; show decide _ = _; by_cases h : a = b <;> simp [h]; omega
+    by_cases h3 : len = 3
+    · subst h3
+      rw [show (3 : Int) = Int.ofNat 3 from rfl, hbeq, if_pos (by decide)]
+      rw [toOpt_bind, roll_d6_spec dd (hd6 ▸ h6)]
+      cases hroll : Spec.rollD6 dd with
+      | none => rfl
+      | some p =>
+        obtain ⟨f, d'⟩ := p
+        simp only [Option.map_some', Option.some_bind]
+        by_cases hf : f ≤ 3
+        · have : decide (Int.ofNat f ≤ Int.ofNat 3) = true := by
+            apply decide_eq_true; simp only [ofNat_eq_natCast]; omega
+          rw [this, if_pos rfl, if_pos hf]; rfl
+        · have : decide (Int.ofNat f ≤ Int.ofNat 3) = false := by
+            apply decide_eq_false; simp only [ofNat_eq_natCast]; omega
+          rw [this, if_neg (by decide), if_neg hf]; rfl
+    · rw [show (3 : Int) = Int.ofNat 3 from rfl, hbeq, if_neg (by simpa using h3), if_neg h3]
+      by_cases h4 : len = 4
+      · subst h4
+        rw [show (4 : Int) = Int.ofNat 4 from rfl, hbeq, if_pos (by decide)]; rfl
+      · rw [show (4 : Int) = Int.ofNat 4 from rfl, hbeq, if_neg (by simpa using h4), if_neg h4]
+        by_cases h5 : len = 5
+        · subst h5
+          rw [show (5 : Int) = Int.ofNat 5 from rfl, hbeq, if_pos (by decide)]; rfl
+        · rw [show (5 : Int) = Int.ofNat 5 from rfl, hbeq, if_neg (by simpa using h5), if_neg h5]
+          rfl
+  · rw [show 4 - 1 = 3 from rfl, brkFold_growM]
+    cases Spec.growLoop cov row col ld 3 d 2 <;> rfl
+
+theorem rollHole_d6 {d d' : Spec.Dice} {f : Nat} (h : Spec.rollHole d = some (f, d')) :
+    d'.d6 = d.d6 := by
+  unfold Spec.rollHole at h
+  split at h
+  · cases h
+  · split at h
+    · cases h; rfl
+    · cases h
+
+/-- §4.2 step 1: the emitted `grow_until_it_bumps` is `Spec.growUntilItBumps`, traps
+    included, at any hole of the grid and any covered table. -/
+theorem grow_until_it_bumps_spec (d : Spec.Dice) (cov : Nat → Bool) (row col : Nat)
+    (hr : row < 10) (hc : col < 10) (h12 : FitsLen d.d12.length) (h6 : FitsLen d.d6.length) :
+    (Bs.grow_until_it_bumps (embDice d) (tab cov) (Int.ofNat row) (Int.ofNat col)).toOption =
+      (Spec.growUntilItBumps d cov row col).map (fun p => (p.1.map embShip, embDice p.2)) := by
+  unfold Bs.grow_until_it_bumps Spec.growUntilItBumps
+  rw [addI_ofNat_one _ (fits_small (show col + 1 ≤ 1000 by omega)), ok_bind, has_room_spec,
+    ok_bind, addI_ofNat_one _ (fits_small (show row + 1 ≤ 1000 by omega)), ok_bind,
+    has_room_spec, ok_bind]
+  cases ha : Spec.hasRoom cov row (col + 1) <;> cases hb : Spec.hasRoom cov (row + 1) col
+  · rfl
+  · simp only [Bool.not_true, Bool.not_false, Bool.false_eq_true, Bool.true_and, Bool.and_true,
+      Bool.and_false, Bool.false_and, if_false, if_true, pure_eq_ok, ok_bind]
+    rw [toOpt_bind, roll_hole_die_spec d h12]
+    cases hroll : Spec.rollHole d with
+    | none => rfl
+    | some p =>
+      obtain ⟨f, d'⟩ := p
+      have h6' : FitsLen d'.d6.length := by rw [rollHole_d6 hroll]; exact h6
+      simp only [Option.map_some', Option.some_bind]
+      have hbl : SudoRt.SEq.beq (Int.ofNat (f % 2)) (0 : Int) = decide (f % 2 = 0) := by
+        show decide _ = _; by_cases h : f % 2 = 0 <;> simp [h]; omega
+      have hld : decide (Int.ofNat f ≥ 9) = decide (9 ≤ f) := by
+        by_cases h : 9 ≤ f
+        · rw [decide_eq_true h]; apply decide_eq_true; show ((9 : Nat) : Int) ≤ (f : Int); omega
+        · rw [decide_eq_false h]; apply decide_eq_false; show ¬ ((9 : Nat) : Int) ≤ (f : Int); omega
+      by_cases hf : f ≤ 6
+      · rw [decide_eq_true (show Int.ofNat f ≤ 6 by show (f : Int) ≤ ((6 : Nat) : Int); omega),
+          if_pos rfl, if_pos hf]; rfl
+      · rw [decide_eq_false (show ¬ Int.ofNat f ≤ 6 by show ¬ (f : Int) ≤ ((6 : Nat) : Int); omega),
+          if_neg (by decide), if_neg hf, show (2 : Int) = Int.ofNat 2 from rfl,
+          modI_ofNat _ (by decide), ok_bind, bind_ok_right]
+        refine (grow_loop_spec cov row col true (SudoRt.SEq.beq (Int.ofNat (f % 2)) (0 : Int)) d' hr hc h6').trans ?_
+        rw [hbl]
+        unfold Spec.layShip
+        cases Spec.growLoop cov row col _ 3 d' 2 with
+    | none => rfl
+    | some q =>
+      obtain ⟨dd, len⟩ := q
+      simp only [Option.some_bind]
+      cases Spec.pieceOf len dd <;> rfl
+  · simp only [Bool.not_true, Bool.not_false, Bool.false_eq_true, Bool.true_and, Bool.and_true,
+      Bool.and_false, Bool.false_and, if_false, if_true, pure_eq_ok, ok_bind]
+    rw [toOpt_bind, roll_hole_die_spec d h12]
+    cases hroll : Spec.rollHole d with
+    | none => rfl
+    | some p =>
+      obtain ⟨f, d'⟩ := p
+      have h6' : FitsLen d'.d6.length := by rw [rollHole_d6 hroll]; exact h6
+      simp only [Option.map_some', Option.some_bind]
+      have hbl : SudoRt.SEq.beq (Int.ofNat (f % 2)) (0 : Int) = decide (f % 2 = 0) := by
+        show decide _ = _; by_cases h : f % 2 = 0 <;> simp [h]; omega
+      have hld : decide (Int.ofNat f ≥ 9) = decide (9 ≤ f) := by
+        by_cases h : 9 ≤ f
+        · rw [decide_eq_true h]; apply decide_eq_true; show ((9 : Nat) : Int) ≤ (f : Int); omega
+        · rw [decide_eq_false h]; apply decide_eq_false; show ¬ ((9 : Nat) : Int) ≤ (f : Int); omega
+      by_cases hf : f ≤ 6
+      · rw [decide_eq_true (show Int.ofNat f ≤ 6 by show (f : Int) ≤ ((6 : Nat) : Int); omega),
+          if_pos rfl, if_pos hf]; rfl
+      · rw [decide_eq_false (show ¬ Int.ofNat f ≤ 6 by show ¬ (f : Int) ≤ ((6 : Nat) : Int); omega),
+          if_neg (by decide), if_neg hf, show (2 : Int) = Int.ofNat 2 from rfl,
+          modI_ofNat _ (by decide), ok_bind, bind_ok_right]
+        refine (grow_loop_spec cov row col false (SudoRt.SEq.beq (Int.ofNat (f % 2)) (0 : Int)) d' hr hc h6').trans ?_
+        rw [hbl]
+        unfold Spec.layShip
+        cases Spec.growLoop cov row col _ 3 d' 2 with
+    | none => rfl
+    | some q =>
+      obtain ⟨dd, len⟩ := q
+      simp only [Option.some_bind]
+      cases Spec.pieceOf len dd <;> rfl
+  · simp only [Bool.not_true, Bool.not_false, Bool.false_eq_true, Bool.true_and, Bool.and_true,
+      Bool.and_false, Bool.false_and, if_false, if_true, pure_eq_ok, ok_bind]
+    rw [toOpt_bind, roll_hole_die_spec d h12]
+    cases hroll : Spec.rollHole d with
+    | none => rfl
+    | some p =>
+      obtain ⟨f, d'⟩ := p
+      have h6' : FitsLen d'.d6.length := by rw [rollHole_d6 hroll]; exact h6
+      simp only [Option.map_some', Option.some_bind]
+      have hbl : SudoRt.SEq.beq (Int.ofNat (f % 2)) (0 : Int) = decide (f % 2 = 0) := by
+        show decide _ = _; by_cases h : f % 2 = 0 <;> simp [h]; omega
+      have hld : decide (Int.ofNat f ≥ 9) = decide (9 ≤ f) := by
+        by_cases h : 9 ≤ f
+        · rw [decide_eq_true h]; apply decide_eq_true; show ((9 : Nat) : Int) ≤ (f : Int); omega
+        · rw [decide_eq_false h]; apply decide_eq_false; show ¬ ((9 : Nat) : Int) ≤ (f : Int); omega
+      by_cases hf : f ≤ 4
+      · rw [decide_eq_true (show Int.ofNat f ≤ 4 by show (f : Int) ≤ ((4 : Nat) : Int); omega),
+          if_pos rfl, if_pos hf]; rfl
+      · rw [decide_eq_false (show ¬ Int.ofNat f ≤ 4 by show ¬ (f : Int) ≤ ((4 : Nat) : Int); omega),
+          if_neg (by decide), if_neg hf, show (2 : Int) = Int.ofNat 2 from rfl,
+          modI_ofNat _ (by decide), ok_bind, bind_ok_right]
+        refine (grow_loop_spec cov row col (decide (Int.ofNat f ≥ 9)) (SudoRt.SEq.beq (Int.ofNat (f % 2)) (0 : Int)) d' hr hc h6').trans ?_
+        rw [hbl, hld]
+        unfold Spec.layShip
+        cases Spec.growLoop cov row col _ 3 d' 2 with
+    | none => rfl
+    | some q =>
+      obtain ⟨dd, len⟩ := q
+      simp only [Option.some_bind]
+      cases Spec.pieceOf len dd <;> rfl
+
 end BsLink2.Link2

@@ -232,4 +232,50 @@ theorem asc_scan_ret_goal {ρ β} (rv : ρ)
     obtain ⟨i, h1, h2, hb⟩ := hex
     rw [hsc.2 ⟨i, h1, h2, hb⟩]; exact hB i h1 h2 hb
 
+/-- `loop_brk_opt` with an invariant `P i s` (state `s` before iteration `i`), kept by the
+    model steps. -/
+theorem loop_brk_inv {S α ρ β} (E : S → α)
+    (step : Int × α → Except SudoRt.Trap (SudoRt.Flow (Int × α) ρ))
+    (after : Int × α → Except SudoRt.Trap β) (onRet : ρ → Except SudoRt.Trap β)
+    (m : Nat → S → Option (S ⊕ S)) (P : Nat → S → Prop) (A : S → Option β) (fromN n : Nat)
+    (hlt : fromN < n)
+    (hstep : ∀ i s, fromN ≤ i → i < n → P i s →
+      (step (Int.ofNat i, E s)).toOption = (m i s).map (fun r => match r with
+        | .inl s' => if i + 1 = n then .brk (Int.ofNat i, E s') else .cont (Int.ofNat (i + 1), E s')
+        | .inr s' => .brk (Int.ofNat i, E s')))
+    (hP : ∀ i s r, fromN ≤ i → i < n → P i s → m i s = some r → P (i + 1) (Sum.elim id id r))
+    (hafter : ∀ i j s, i ≤ n → P i s → (after (j, E s)).toOption = A s) (s0 : S)
+    (h0 : P fromN s0) :
+    (SudoRt.runLoopOn (Int.ofNat fromN, E s0) (fuelRange (Int.ofNat fromN) (Int.ofNat (n - 1)))
+      step after onRet).toOption = (brkFold m fromN (n - fromN) s0).bind A := by
+  rw [fuelRange_le (by omega)]
+  obtain ⟨k, hk⟩ : ∃ k, n - fromN = k + 1 := ⟨n - fromN - 1, by omega⟩
+  rw [show n - 1 - fromN = k by omega, hk]
+  induction k generalizing fromN s0 with
+  | zero =>
+    rw [runLoopOn_succ_opt, hstep fromN s0 (Nat.le_refl _) hlt h0]
+    simp only [brkFold]
+    cases hm : m fromN s0 with
+    | none => rfl
+    | some r =>
+      have hr := hP fromN s0 r (Nat.le_refl _) hlt h0 hm
+      cases r with
+      | inl s' =>
+        simp only [Option.map_some', Option.some_bind, if_pos (show fromN + 1 = n by omega)]
+        exact hafter _ _ s' (by omega) hr
+      | inr s' => simp only [Option.map_some', Option.some_bind]; exact hafter _ _ s' (by omega) hr
+  | succ k ih =>
+    rw [runLoopOn_succ_opt, hstep fromN s0 (Nat.le_refl _) hlt h0]
+    simp only [brkFold]
+    cases hm : m fromN s0 with
+    | none => rfl
+    | some r =>
+      have hr := hP fromN s0 r (Nat.le_refl _) hlt h0 hm
+      cases r with
+      | inl s' =>
+        simp only [Option.map_some', Option.some_bind, if_neg (show ¬ fromN + 1 = n by omega)]
+        exact ih (fromN + 1) (by omega) (fun i s h1 h2 => hstep i s (by omega) h2)
+          (fun i s r h1 h2 => hP i s r (by omega) h2) s' hr (by omega)
+      | inr s' => simp only [Option.map_some', Option.some_bind]; exact hafter _ _ s' (by omega) hr
+
 end BsLink2.Link2

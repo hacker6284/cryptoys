@@ -1,6 +1,7 @@
 /-
-  The stem as a position map, and the support gap of its relabelling differences (research
-  item (b), first slice; security README, "Roadmap", M7 "Open"). Structure only.
+  The stem as a position map, and the support gap of its relabelling differences (first slice
+  towards the off-diagonal stem column bound; security README, "Roadmap", "Open" list, the
+  M7 entry). Structure only.
 
   NO BOUND ON `dpFCount` (OR ANY OTHER DIFFERENTIAL COUNT) IS PROVED HERE. Every statement is
   exact and deck-by-deck; nothing is counted over decks or keys.
@@ -41,19 +42,20 @@
     row-shifted copy of rows × columns, of the same size, not literally that product).
   * `card_fixed_eq`: under the same hypothesis, `γ⁻¹ * β` fixes exactly
     `zRows x (β·x) * zCols x (β·x)` cards; `card_moved_eq`: it moves `52 - zRows · zCols`.
-  * `card_moved_zero_or_ge_four`: so it moves `0` cards or at least `4`. Never moving
-    exactly 1 card holds for every permutation; the content is "never exactly 2 or 3"
-    (`zRows ≤ 4`, `zCols ≤ 13`, and no product of such numbers is 49 or 50). This is only a
-    slice of `card_moved_eq`: the values `52 - a·b` with `a ≤ 4`, `b ≤ 13` also exclude the
-    moved counts 5, 6, 7, 9, 10, 11, 14, 15, 17, 18, 21, 23, 27, 29, 33 and 35, which is
-    not stated here.
+  * `card_moved_cases`: so it moves `0` cards, exactly `4` cards with
+    `(zRows, zCols) = (4, 12)`, or at least `8` cards (`zRows ≤ 4`, `zCols ≤ 13`, and the only
+    such product in `45..51` is `48 = 4 · 12`). `card_moved_zero_or_ge_four` (`0` or at
+    least `4`) is its corollary; never moving exactly 1 card holds for every permutation, so
+    its content is "never exactly 2 or 3". The values `52 - a·b` also exclude the moved
+    counts 9, 10, 11, 14, 15, 17, 18, 21, 23, 27, 29, 33 and 35, which is not stated here.
 
   NOT proved, and limits:
   * No count of decks: nothing here bounds `dpFCount β γ` or any differential probability.
     This proves no part of `hoff`. It would give `dpFCount β γ = 0` only when the support
     size of `γ⁻¹ * β` is not of the form `52 - a·b` (`a ≤ 4`, `b ≤ 13`), e.g. 2 or 3 (a
-    transposition or a 3-cycle); that corollary is not stated or proved here, and nothing
-    here says anything for any other `β`.
+    transposition or a 3-cycle). For supports 1–3 and 5–7 that corollary is
+    `StemSupportFour.dpFCount_eq_zero_of_support_lt_eight_ne_four`; for the other excluded
+    values it is not stated. Nothing here says anything for any other `β`.
   * Which pairs `(zRows, zCols)` actually occur for a given `β` is not studied; the amounts
     of `x` and `β·x` are not related to `β` here.
   * About the stem (the final no-mix round) only, not GridCycle or a mix round.
@@ -64,6 +66,7 @@ import Mathlib.Data.Fintype.BigOperators
 import Mathlib.Tactic.IntervalCases
 import Mathlib.Algebra.Group.Fin.Basic
 import Mathlib.Algebra.BigOperators.Ring
+import Mathlib.GroupTheory.Perm.Support
 import DoubleDealSecurity.SumRanksV10Iff
 
 namespace DoubleDeal.Security.StemPosition
@@ -331,17 +334,33 @@ theorem card_moved_eq {β γ π : Equiv.Perm (Fin 52)}
   omega
 
 /-- (PROVED) The support gap: under the hypothesis of `conj_of_stem_rel`, `γ⁻¹ * β` moves no
-    card or at least 4 cards. (Never exactly 1 holds for every permutation; the content is
-    never exactly 2 or 3. `card_moved_eq` excludes more values; not stated here.) -/
-theorem card_moved_zero_or_ge_four {β γ π : Equiv.Perm (Fin 52)}
+    card, exactly 4 cards with `(zRows, zCols) = (4, 12)`, or at least 8 cards. (`card_moved_eq`
+    excludes more values, e.g. 9–11; not stated here.) -/
+theorem card_moved_cases {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))) :
-    (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 0 ∨
-      4 ≤ (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card := by
-  rw [card_moved_eq h]
+    (γ⁻¹ * β).support.card = 0 ∨
+      ((γ⁻¹ * β).support.card = 4 ∧ zRows (permDeck π) (rel β (permDeck π)) = 4 ∧
+        zCols (permDeck π) (rel β (permDeck π)) = 12) ∨
+      8 ≤ (γ⁻¹ * β).support.card := by
+  have e : (γ⁻¹ * β).support.card =
+      52 - zRows (permDeck π) (rel β (permDeck π)) * zCols (permDeck π) (rel β (permDeck π)) :=
+    card_moved_eq h
+  rw [e]
   have h1 := zRows_le (permDeck π) (rel β (permDeck π))
   have h2 := zCols_le (permDeck π) (rel β (permDeck π))
   generalize zRows (permDeck π) (rel β (permDeck π)) = a at h1 ⊢
   generalize zCols (permDeck π) (rel β (permDeck π)) = b at h2 ⊢
   interval_cases a <;> omega
+
+/-- (PROVED) Corollary of `card_moved_cases`: `γ⁻¹ * β` moves no card or at least 4 cards.
+    (Never exactly 1 holds for every permutation; the content is never exactly 2 or 3.) -/
+theorem card_moved_zero_or_ge_four {β γ π : Equiv.Perm (Fin 52)}
+    (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))) :
+    (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 0 ∨
+      4 ≤ (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card := by
+  rcases card_moved_cases h with e | ⟨e, -⟩ | e
+  · exact Or.inl e
+  · exact Or.inr e.ge
+  · exact Or.inr (le_trans (by decide) e)
 
 end DoubleDeal.Security.StemPosition

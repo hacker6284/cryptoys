@@ -2,11 +2,12 @@
 # M7 measurements (EMPIRICAL ONLY; no theorem uses them). Not run by CI.
 # Builds into $BUILD (default /tmp/v12-fullcipher); no binaries in the repository.
 # Logs are written to ./logs. Timed on the dev box: final 1 min, mixfinal ~11 min and
-# scoping ~4 min (4 and 8 cores). Usage: sh run.sh [final|mixfinal|scoping|all]
+# scoping ~4 min (4 and 8 cores), coupling ~13 min (one core; section 5 of NOTES.md).
+# Usage: sh run.sh [final|mixfinal|scoping|coupling|all]
 set -e
 cd "$(dirname "$0")"
 B=${BUILD:-/tmp/v12-fullcipher}; mkdir -p "$B" logs
-for p in final1 mixfinal; do cc -O2 -Wall -Wextra -o "$B/$p" "$p.c"; done
+for p in final1 mixfinal rowmax; do cc -O2 -Wall -Wextra -o "$B/$p" "$p.c"; done
 what=${1:-all}
 if [ "$what" = final ] || [ "$what" = all ]; then   # final no-mix round alone, 10^6 decks
   : > logs/final1.log
@@ -25,4 +26,11 @@ if [ "$what" = scoping ] || [ "$what" = all ]; then   # the M7 scoping run of 5â
     ( printf 'seed %s: ' "$i"; "$B/mixfinal" 43,46 25000000 "$i" ) > "$B/sc_$i.log" &
   done; wait
   for i in 101 102 103 104 105 106 107 108; do cat "$B/sc_$i.log"; done > logs/mixfinal_scoping.log
+fi
+if [ "$what" = coupling ] || [ "$what" = all ]; then   # section 5: coupling constants
+  "$B/rowmax" > logs/rowmax.log
+  python3 pairs.py > logs/pairs.log
+  python3 qtype.py > logs/qtype.log
+  python3 pairs5.py > logs/pairs5.log
+  python3 union_crude.py > logs/union_crude.log
 fi

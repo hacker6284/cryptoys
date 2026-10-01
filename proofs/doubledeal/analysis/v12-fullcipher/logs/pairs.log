@@ -1,0 +1,6 @@
+m=1: L=1/2 = 0.5000; four rows: 0.06250; two rows: 0.2500 (no-WLOG check: 1)
+m=2: L=2/4 = 0.5000; four rows: 0.06250; two rows: 0.2500 (no-WLOG check: 2)
+m=3: L=3/8 = 0.3750; four rows: 0.01978; two rows: 0.1406 (no-WLOG check: 3)
+m=4: L=6/16 = 0.3750; four rows: 0.01978; two rows: 0.1406 (no-WLOG check: 6)
+m=5: L=10/32 = 0.3125; four rows: 0.00954; two rows: 0.0977
+m=6: L=20/64 = 0.3125; four rows: 0.00954; two rows: 0.0977

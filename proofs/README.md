@@ -46,7 +46,7 @@ proofs/
   scramble/                 # Generated Lean + teaching / lineage; Link 2 to a hand-written model (+ security/: attacks showing v2 is broken)
   doubledeal-cbc-hmac/      # Generated Lean for HMAC / KDF / pad + Link 2 to a hand-written model
   scm/                      # placeholder; SCM/SMAC stay later (CBC-HMAC is the AEAD)
-  key_exchange/bs/          # BS evidence: reference code, exchanges, key checks, sudo vectors (no Lean)
+  key_exchange/bs/          # BS evidence: Python evidence harness, exchanges, key checks, sudo vectors (no Lean)
   audit/                    # core-only #audit_all package shared by the axiom audits
   deprecated/               # vulnerability proofs for deprecated, frozen algorithms
     doubledeal-v8/          # DoubleDeal v8 relabelling distinguisher + witness

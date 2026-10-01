@@ -190,21 +190,21 @@ theorem desc_exists {α ρ β}
 
 /-- Ascending `for i = fromN to toN` that may `break` early: each iteration either
     keeps the invariant (and continues, or ends the loop at `toN`) or breaks with a state
-    satisfying `Done`. The loop joins `after` with a state satisfying `Inv (toN + 1)` or
-    `Done`, at some index `j`. -/
+    satisfying `Done i` at the iteration `i` it breaks in. The loop joins `after` at some
+    index `j` with a state satisfying `Inv (toN + 1)` or `Done j`. -/
 theorem asc_brk_inv {α ρ β}
     (step : Int × α → Except SudoRt.Trap (SudoRt.Flow (Int × α) ρ))
     (after : Int × α → Except SudoRt.Trap β)
     (onRet : ρ → Except SudoRt.Trap β)
-    (Inv : Nat → α → Prop) (Done : α → Prop) (fromN toN : Nat) (hle : fromN ≤ toN)
+    (Inv : Nat → α → Prop) (Done : Nat → α → Prop) (fromN toN : Nat) (hle : fromN ≤ toN)
     (hstep : ∀ i s, fromN ≤ i → i ≤ toN → Inv i s →
       (∃ s', Inv (i + 1) s' ∧
         step (Int.ofNat i, s) =
           if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, s'))
           else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), s'))) ∨
-      (∃ s', Done s' ∧ step (Int.ofNat i, s) = .ok (SudoRt.Flow.brk (Int.ofNat i, s'))))
+      (∃ s', Done i s' ∧ step (Int.ofNat i, s) = .ok (SudoRt.Flow.brk (Int.ofNat i, s'))))
     (s0 : α) (h0 : Inv fromN s0) :
-    ∃ j s, (Inv (toN + 1) s ∨ Done s) ∧
+    ∃ j s, (Inv (toN + 1) s ∨ Done j s) ∧
       SudoRt.runLoopOn (Int.ofNat fromN, s0) (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
         step after onRet = after (Int.ofNat j, s) := by
   rw [fuelRange_le hle]
@@ -234,7 +234,7 @@ theorem asc_brk_exists {α ρ β}
     {step : Int × α → Except SudoRt.Trap (SudoRt.Flow (Int × α) ρ)}
     {after : Int × α → Except SudoRt.Trap β}
     {onRet : ρ → Except SudoRt.Trap β}
-    (Inv : Nat → α → Prop) (Done : α → Prop) {fromN toN : Nat} {s0 : α} {P : β → Prop}
+    (Inv : Nat → α → Prop) (Done : Nat → α → Prop) {fromN toN : Nat} {s0 : α} {P : β → Prop}
     (hle : fromN ≤ toN)
     (h0 : Inv fromN s0)
     (hstep : ∀ i s, fromN ≤ i → i ≤ toN → Inv i s →
@@ -242,12 +242,61 @@ theorem asc_brk_exists {α ρ β}
         step (Int.ofNat i, s) =
           if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, s'))
           else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), s'))) ∨
-      (∃ s', Done s' ∧ step (Int.ofNat i, s) = .ok (SudoRt.Flow.brk (Int.ofNat i, s'))))
-    (hpost : ∀ j s, (Inv (toN + 1) s ∨ Done s) → ∃ r, after (Int.ofNat j, s) = .ok r ∧ P r) :
+      (∃ s', Done i s' ∧ step (Int.ofNat i, s) = .ok (SudoRt.Flow.brk (Int.ofNat i, s'))))
+    (hpost : ∀ j s, (Inv (toN + 1) s ∨ Done j s) → ∃ r, after (Int.ofNat j, s) = .ok r ∧ P r) :
     ∃ r, SudoRt.runLoopOn (Int.ofNat fromN, s0) (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
       step after onRet = .ok r ∧ P r := by
   obtain ⟨j, s, hs, heq⟩ := asc_brk_inv step after onRet Inv Done fromN toN hle hstep s0 h0
   rw [heq]; exact hpost j s hs
+
+/-- `len - 1` for a list length that may be 0 (the bound of `for i = 0 to xs.length - 1`). -/
+theorem subI_len_one (n : Nat) (h : FitsLen n) :
+    SudoRt.subI (Int.ofNat n) 1 = .ok (Int.ofNat n - 1) := by
+  cases n with
+  | zero => exact subI_zero_one
+  | succ m =>
+    rw [subI_ofNat_one _ (Nat.succ_pos _) h]
+    congr 1
+    show ((m + 1 - 1 : Nat) : Int) = ((m + 1 : Nat) : Int) - 1
+    omega
+
+/-- `for i = 0 to n - 1` over a list of length `n`, possibly empty: with `n = 0` the
+    emitted loop breaks at once (`0 > -1`) and joins `after` with the start state. -/
+theorem asc_goal_upto {α ρ β}
+    {step : Int × α → Except SudoRt.Trap (SudoRt.Flow (Int × α) ρ)}
+    {after : Int × α → Except SudoRt.Trap β}
+    {onRet : ρ → Except SudoRt.Trap β}
+    (Inv : Nat → α → Prop) {n : Nat} {s0 : α} {goal : Except SudoRt.Trap β}
+    (h0 : Inv 0 s0)
+    (hempty : n = 0 → step (0, s0) = .ok (SudoRt.Flow.brk (0, s0)))
+    (hstep : ∀ i s, i < n → Inv i s → ∃ s', Inv (i + 1) s' ∧
+      step (Int.ofNat i, s) =
+        if i = n - 1 then .ok (SudoRt.Flow.brk (Int.ofNat i, s'))
+        else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), s')))
+    (hpost : ∀ j s, Inv n s → after (j, s) = goal) :
+    SudoRt.runLoopOn ((0 : Int), s0) (fuelRange 0 (Int.ofNat n - 1)) step after onRet = goal := by
+  cases n with
+  | zero =>
+    rw [show fuelRange 0 (Int.ofNat 0 - 1) = 0 + 1 from rfl, runLoopOn_succ, hempty rfl]
+    exact hpost 0 s0 h0
+  | succ m =>
+    rw [show Int.ofNat (m + 1) - 1 = Int.ofNat m by
+      rw [ofNat_eq_natCast, ofNat_eq_natCast]; omega]
+    exact asc_goal (fromN := 0) (toN := m) Inv (Nat.zero_le _) h0
+      (fun i s _ hi hI => hstep i s (by omega) hI) (fun s hs => hpost _ s hs)
+
+/-- The tail of an emitted `for i = 0 to n - 1` (bound `Int.ofNat n - 1`). -/
+theorem asc_tail_len {S ρ : Type} (n i : Nat) (hi : i < n) (hfit : FitsLen (i + 1)) (s : S) :
+    (if (Int.ofNat i == Int.ofNat n - 1) = true then
+        (Except.ok (SudoRt.Flow.brk (Int.ofNat i, s)) : Except SudoRt.Trap (SudoRt.Flow (Int × S) ρ))
+      else SudoRt.addI (Int.ofNat i) 1 >>= fun i' => Except.ok (SudoRt.Flow.cont (i', s))) =
+      if i = n - 1 then .ok (.brk (Int.ofNat i, s)) else .ok (.cont (Int.ofNat (i + 1), s)) := by
+  rw [show Int.ofNat n - 1 = Int.ofNat (n - 1) by
+    rw [ofNat_eq_natCast, ofNat_eq_natCast]; omega]
+  exact asc_tail (n - 1) i hfit s
+
+theorem not_gt_len {i n : Nat} (hi : i < n) : ¬ (Int.ofNat i > Int.ofNat n - 1) := by
+  rw [ofNat_eq_natCast, ofNat_eq_natCast]; omega
 
 /-- Ascending index-only `for` loop that returns `false` at the first bad index. -/
 theorem asc_scan {β}

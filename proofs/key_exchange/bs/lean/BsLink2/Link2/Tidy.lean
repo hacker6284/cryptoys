@@ -2,6 +2,7 @@
   BS Link 2: B3 step 3 `slide` and B5 `tidy`. Proof-only.
 -/
 import BsLink2.Link2.Multiply
+import BsLink2.Link2.Bridge
 
 namespace BsLink2.Link2
 
@@ -13,8 +14,7 @@ theorem slide_spec (dest answer : Array Int) (h : dest.size = answer.size) (hpos
     (hfit : FitsLen dest.size) : Bs.slide dest answer = .ok answer := by
   unfold Bs.slide
   simp only [listLen_eq, h, sEq_int, decide_True]
-  rw [show SudoRt.sudoAssertEq (Int.ofNat answer.size) (Int.ofNat answer.size) 169 = .ok () from by
-    simp [SudoRt.sudoAssertEq, sEq_int], ok_bind, subI_ofNat_one _ (by omega) (by rw [← h]; exact hfit)]
+  rw [sudoAssertEq_self, ok_bind, subI_ofNat_one _ (by omega) (by rw [← h]; exact hfit)]
   simp only [ok_bind]
   have hfa : FitsLen answer.size := by rw [← h]; exact hfit
   have hpa : 0 < answer.size := by omega
@@ -68,9 +68,7 @@ theorem tidy_spec (f : Bs.Field) (n : Nat) (toll : Array Int)
       val y = val x % (pw n - val toll) := by
   unfold Bs.tidy Bs.tidy_in_place
   simp only [listLen_eq, hn, hx, ht, sEq_int]
-  have hae : ∀ (a : Int) (l : Nat), SudoRt.sudoAssertEq a a l = .ok () := by
-    intro a l; simp [SudoRt.sudoAssertEq, sEq_int]
-  rw [hae, ok_bind]
+  rw [sudoAssertEq_self, ok_bind]
   -- the copy with one extra hole
   have hcs : (SudoRt.concatL x #[0]).size = n + 1 := by simp [SudoRt.concatL, hx]
   have hctl : (SudoRt.concatL x #[0]).toList = x.toList ++ [0] := by simp [SudoRt.concatL]
@@ -128,7 +126,7 @@ theorem tidy_spec (f : Bs.Field) (n : Nat) (toll : Array Int)
       rw [Array.toList_pop, List.dropLast_eq_take]; congr 1; simp; omega
     have hslide := slide_spec x c1.pop (by omega) (by omega) (FitsLen.of_le hfit (by omega))
     refine ⟨c1.pop, ?_, hpsz, by unfold Trits; rw [hptl]; exact tritsL_take htr1 n, ?_⟩
-    · simp only [e, decide_True, Bool.true_eq_false, if_false, ok_bind, hae, hpop, hslide]
+    · simp only [e, decide_True, Bool.true_eq_false, if_false, ok_bind, sudoAssertEq_self, hpop, hslide]
       simp [ite_false]; rfl
     · have hp : val x = (val x - (pw n - val toll)) + (pw n - val toll) * 1 := by
         rw [Int.mul_one]; omega

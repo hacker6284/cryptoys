@@ -26,7 +26,7 @@ theorem drop_spec (strip : Array Int) (hole : Nat) (c : Int) (hc : 1 ≤ c ∧ c
   -- `Inv i`: still carrying `k ∈ {1, 2}` into hole `i`; `Done`: the carry stopped.
   refine asc_brk_exists (fun i (st : Array Int × Int) => st.1.size = strip.size ∧
       Trits st.1 ∧ 1 ≤ st.2 ∧ st.2 ≤ 2 ∧ val st.1 + st.2 * pw i = val strip + c * pw hole)
-    (fun (st : Array Int × Int) => st.1.size = strip.size ∧ Trits st.1 ∧ st.2 = 0 ∧
+    (fun _ (st : Array Int × Int) => st.1.size = strip.size ∧ Trits st.1 ∧ st.2 = 0 ∧
       val st.1 = val strip + c * pw hole)
     (by omega) ⟨rfl, htr, hc.1, hc.2, rfl⟩ ?_ ?_
   · intro i st h1 h2 hI

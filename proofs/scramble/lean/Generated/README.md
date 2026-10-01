@@ -6,7 +6,9 @@
 by `proofs/emit_lean.sh`.
 
 This directory is a standalone Lake package (its own `lakefile.lean`).
-There is no algebraic proof package next door. `lake-manifest.json` is
+The Link 2 package next door (`../`, library `ScrambleV2`) requires it by
+path and proves facts about these emitted definitions without editing them;
+see [`proofs/scramble/README.md`](../../README.md). `lake-manifest.json` is
 committed so `lean-action` can `lake build`; do not gitignore it.
 
 See [`proofs/ANTI_DRIFT.md`](../../../ANTI_DRIFT.md).

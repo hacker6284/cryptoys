@@ -1,0 +1,1836 @@
+{
+ "schema": 1,
+ "generated_by": "proofs/key_exchange/bs/vectors/regen.sh",
+ "source": "primitives/key_exchange/bs/bs.sudo",
+ "sudo_sha256": "ca53b5b2b9d186cd5176ab51881447432489405ce21e98ae2e3850feecf24009",
+ "sudocode_commit": "2c7edef4c735b747287401d02e351515c28402d2",
+ "note": "Known-answer vectors evaluated by the sudoc JS target of bs.sudo over inputs.json. Cross-checked by check_oracle.py against pow() and the Python evidence harness (not a reference).",
+ "registers": "'.WR' strings, hole 0 first: '.' empty, 'W' white, 'R' red (SPEC §3)",
+ "dice": "faces by kind of die, in the order they are thrown (SPEC §4.2): d12 hole die, d6 (growth and Sub/Cruiser), d10 (the row cup: five dice thrown at the start of each row, taken in rainbow order, one per hole pair; a zero face is thrown again and comes just before that die's final face)",
+ "cells": "the key's cell string as B7 walks it (READ, SPEC §4.3): start marker, ship pass, peg pass; '.WR' = plain/white/red",
+ "shots": "§3.1 answers in call order, hole 0 first: shots_a is Bob calling Alice's X, shots_b is Alice calling Bob's X",
+ "vectors": [
+  {
+   "name": "exchange_T1_run0",
+   "kind": "exchange",
+   "tier": "T1",
+   "source": "proofs/key_exchange/bs/exchange/exchange.py T1 seed 11, run 0: the first recorded T1 exchange",
+   "dice_a": {
+    "d12": [10, 3, 9, 3, 2, 8, 3, 2, 9, 10, 9, 1, 1, 4, 4, 10, 9, 11, 8, 11, 12, 6, 4, 9, 1, 5, 7, 1, 11, 4, 4, 1, 10, 5, 2, 5, 6, 7, 8, 11, 9, 12, 7, 7, 7, 10, 2, 1, 6, 7, 2, 2, 2, 4, 10, 8, 10],
+    "d6": [2, 4, 6, 5, 3, 6, 6, 1, 1, 1, 1, 2, 3, 1, 1, 3, 3, 1, 1, 6, 2, 6, 3, 1, 2, 5, 2, 4, 2, 2, 6, 4, 1, 4, 2, 1, 6, 5, 3, 2, 4, 5],
+    "d10": [7, 8, 7, 7, 8, 9, 6, 7, 9, 2, 7, 5, 7, 9, 3, 7, 4, 6, 8, 1, 1, 9, 1, 6, 1, 7, 6, 6, 6, 1, 1, 2, 3, 1, 0, 0, 7, 4, 9, 4, 0, 3, 2, 2, 3, 7, 4, 0, 9, 9, 3, 0, 9, 5, 5]
+   },
+   "dice_b": {
+    "d12": [4, 10, 12, 3, 12, 11, 2, 7, 2, 5, 7, 9, 12, 3, 4, 5, 4, 12, 2, 5, 9, 6, 8, 6, 6, 12, 1, 1, 10, 2, 12, 6, 6, 12, 12, 6, 6, 10, 10, 10, 10, 2, 2, 11, 8, 9, 9, 5, 8, 10, 11, 8, 4, 9],
+    "d6": [2, 2, 6, 5, 2, 4, 4, 5, 1, 5, 4, 3, 2, 1, 2, 1, 3, 5, 2, 1, 2, 3, 6, 1, 4, 3, 1, 6, 6, 2, 1, 6, 4, 4, 1, 1, 1, 4, 4, 1, 5, 1],
+    "d10": [2, 6, 2, 2, 4, 1, 0, 8, 4, 3, 6, 7, 8, 9, 9, 1, 4, 6, 7, 3, 0, 0, 2, 8, 9, 2, 9, 0, 0, 7, 2, 1, 1, 7, 8, 1, 7, 1, 6, 0, 7, 4, 6, 5, 6, 9, 9, 1, 7, 0, 3, 1, 4, 0, 5, 4, 2, 9]
+   },
+   "key_a": {
+    "ships": [
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A1",
+      "bow": "last"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "A3",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A6",
+      "bow": "last"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "A10",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B9",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "C1",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "C5",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "C6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "C8",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "D2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "D7",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "E3",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E6",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "F1",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "F2",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "F7",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "F9",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "G2",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "G4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G5",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G6",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "G7",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "G10",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "H2",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "H7",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "I1",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I3",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J1",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J4",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "across",
+      "first": "J8",
+      "bow": "last"
+     }
+    ],
+    "pegs": [
+     "R.RWR.R.RW",
+     "RRWRR.RR.W",
+     "R.WWR.RR.R",
+     "R.W.WRRW..",
+     "..RR..WR..",
+     "R.WRWRWR..",
+     "...W.R..R.",
+     "W.RRW..R.W",
+     ".W.RR.W.RR",
+     "RR.RRRWWWW"
+    ]
+   },
+   "key_b": {
+    "ships": [
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A3",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "A5",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "A6",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A8",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "B4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B7",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B8",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "C1",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "C9",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "D1",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "D3",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "D5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "D7",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "E1",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E4",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "E7",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E9",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "F1",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "F5",
+      "bow": "last"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "F6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G1",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "G2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G3",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G4",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G10",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "H5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "H7",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "H8",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I1",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I3",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "I9",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J9",
+      "bow": "first"
+     }
+    ],
+    "pegs": [
+     ".WWR.W.WW.",
+     "..RWW..RWR",
+     "R.RWRRRR..",
+     "W.WRR..R.W",
+     "RWRR.WRRR.",
+     ".W....R.RW",
+     "..R...WRR.",
+     "W.WRWWWRRR",
+     "RR..R..R..",
+     "W.WWW..WRR"
+    ]
+   },
+   "cells_a": "WR.R..WR..RRR.R....R.RR.WRWRRR.WRW.W.RW.W.RWW.RW...RWW..WWRWW.WRRRRW.W.RRWWW.WRR...WRRWW.....W.WRWWR.RWW.RWR.RWR.R.RWRRWRR.RR.WR.WWR.RR.RR.W.WRRW....RR..WR..R.WRWRWR.....W.R..R.W.RRW..R.W.W.RR.W.RRRR.RRRWWWW",
+   "cells_b": "W.RR.RR.WW..RRR..RR..WW..R.WWWRR.WWRW.WRWRR.WR.R..R.R.WRW.RRR..R.RRRRR.RW..RR.RRR.RR.WRRWRR.RW.WRR.RWRW..W.WW.WWR.W.WW...RWW..RWRR.RWRRRR..W.WRR..R.WRWRR.WRRR..W....R.RW..R...WRR.W.WRWWWRRRRR..R..R..W.WWW..WRR",
+   "public_a": "RW..RWRRW.RRW...R.",
+   "public_b": "WRWRRW.WRW.RWWWRWW",
+   "shots_a": ["Hit", "Miss", "Misfire", "Misfire", "Hit", "Miss", "Hit", "Hit", "Miss", "Misfire", "Hit", "Hit", "Miss", "Misfire", "Misfire", "Misfire", "Hit", "Misfire"],
+   "received_a": "RW..RWRRW.RRW...R.",
+   "shots_b": ["Miss", "Hit", "Miss", "Hit", "Hit", "Miss", "Misfire", "Miss", "Hit", "Miss", "Misfire", "Hit", "Miss", "Miss", "Miss", "Hit", "Miss", "Miss"],
+   "received_b": "WRWRRW.WRW.RWWWRWW",
+   "base_a": "RWW.W..RWRR.WWWRWW",
+   "base_b": "WWW.R.R.RRWRR.WWWW",
+   "secret_a": "W..WWWW....R...RR.",
+   "secret_b": "W..WWWW....R...RR."
+  },
+  {
+   "name": "exchange_T1_run3",
+   "kind": "exchange",
+   "tier": "T1",
+   "source": "proofs/key_exchange/bs/exchange/exchange.py T1 seed 11, run 3: Alice's public value ends in 6 misfires",
+   "dice_a": {
+    "d12": [8, 4, 7, 2, 6, 1, 12, 9, 10, 2, 8, 1, 4, 9, 9, 9, 9, 6, 5, 12, 12, 8, 7, 9, 10, 7, 11, 1, 7, 7, 4, 12, 7, 1, 8, 12, 5, 1, 6, 4, 3, 6, 4, 10, 8, 5, 11, 9, 9, 8, 2, 8, 7],
+    "d6": [3, 6, 5, 2, 3, 5, 3, 4, 2, 5, 2, 2, 3, 1, 2, 3, 1, 1, 6, 4, 2, 2, 5, 3, 4, 3, 6, 1, 6, 1, 3, 1, 4, 2, 2, 5, 3, 3, 3, 1, 1, 2, 2, 4, 2, 3, 2],
+    "d10": [9, 4, 7, 8, 4, 5, 6, 9, 6, 3, 9, 4, 0, 6, 1, 9, 1, 5, 1, 0, 2, 1, 5, 5, 2, 7, 7, 7, 8, 0, 8, 5, 0, 1, 6, 2, 5, 3, 6, 2, 2, 0, 7, 0, 9, 7, 9, 7, 9, 8, 3, 4, 7, 6, 5, 8]
+   },
+   "dice_b": {
+    "d12": [5, 11, 1, 8, 8, 12, 7, 11, 9, 10, 1, 4, 3, 3, 2, 8, 12, 5, 4, 1, 9, 3, 5, 6, 8, 2, 6, 2, 11, 1, 7, 8, 5, 3, 5, 12, 6, 2, 5, 5, 10, 11, 8, 3, 10, 1, 8, 10, 12, 2, 2, 4, 6, 7],
+    "d6": [1, 2, 3, 2, 4, 5, 2, 2, 6, 5, 3, 5, 1, 2, 2, 6, 4, 1, 5, 5, 5, 4, 5, 4, 6, 6, 2, 6, 6, 2, 6, 4, 5, 3, 4, 5, 6, 3, 4, 6, 3, 4, 1, 1, 1, 5, 2],
+    "d10": [0, 3, 2, 6, 8, 8, 5, 2, 4, 8, 2, 1, 5, 4, 9, 8, 0, 3, 6, 3, 1, 7, 4, 6, 1, 8, 4, 1, 6, 7, 1, 7, 9, 1, 7, 0, 3, 9, 3, 3, 6, 1, 5, 2, 2, 2, 3, 6, 0, 2, 1, 6, 6, 1]
+   },
+   "key_a": {
+    "ships": [
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A1",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "A4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A8",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "B1",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B2",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "B3",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "B5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B9",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B10",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "C4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "C5",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "C6",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "D2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "D6",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "across",
+      "first": "D7",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "D10",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "E1",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E3",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "E4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E7",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E9",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "F4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "F10",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "G2",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "G6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G8",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "H2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "H6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "H10",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "I1",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "I3",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I6",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I7",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I8",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I9",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J4",
+      "bow": "first"
+     }
+    ],
+    "pegs": [
+     "RRW.R.RWW.",
+     "WWWRRRWR.R",
+     "RRW.WR..RR",
+     "..WW...W..",
+     "WWWW.WR.R.",
+     "R.RWRWWW..",
+     "WR.WWW.RWR",
+     ".W.WR.RRR.",
+     "RRR.RRRW.R",
+     "W.R.WRWWRW"
+    ]
+   },
+   "key_b": {
+    "ships": [
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A1",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A3",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A7",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "A9",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A10",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "B1",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "B2",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B4",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "C5",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "C8",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "D5",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "D9",
+      "bow": "last"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "across",
+      "first": "E1",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E10",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "across",
+      "first": "F2",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "F6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "F8",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "across",
+      "first": "G2",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G5",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "across",
+      "first": "G6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "H1",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "H3",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "H4",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "H6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "H10",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I6",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "J8",
+      "bow": "first"
+     }
+    ],
+    "pegs": [
+     ".R.WWRRWRW",
+     "WW.WW.RW.W",
+     "..WWW.RRRW",
+     ".RWR.R..R.",
+     "W.WR..RWW.",
+     "..WRR...R.",
+     "RR..R..RRR",
+     ".R.RWR..WW",
+     ".W.W.W.RWR",
+     ".W..WRWR.."
+    ]
+   },
+   "cells_a": "WWR.W.W..WR.RRR.WR..RR.W.RRWR.WWRWRR.WWRW.RWRR.RWWRR.RW.R.RW.W.W.WRWWW.W..WRR.R.WR..WRR.RWRW.W.RRRRR.WRWWWWWR.RRW.R.RWW.WWWRRRWR.RRRW.WR..RR..WW...W..WWWW.WR.R.R.RWRWWW..WR.WWW.RWR.W.WR.RRR.RRR.RRRW.RW.R.WRWWRW",
+   "cells_b": "WWWR.WRWRRRRRWR.....W...RW.R.RR..W.W...R...WRW..R...RW.R.W.WWWWWRWWW.W.WWRW.RW..WWRRRW.R..R.R.WRR...R.RRW.RR.W.W..R.WWRRWRWWW.WW.RW.W..WWW.RRRW.RWR.R..R.W.WR..RWW...WRR...R.RR..R..RRR.R.RWR..WW.W.W.W.RWR.W..WRWR..",
+   "public_a": "RW.RWRRRW.WR......",
+   "public_b": "WWWWR.W..WW.RR.RRW",
+   "shots_a": ["Hit", "Miss", "Misfire", "Hit", "Miss", "Hit", "Hit", "Hit", "Miss", "Misfire", "Miss", "Hit", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire"],
+   "received_a": "RW.RWRRRW.WR......",
+   "shots_b": ["Miss", "Miss", "Miss", "Miss", "Hit", "Misfire", "Miss", "Misfire", "Misfire", "Miss", "Miss", "Misfire", "Hit", "Hit", "Misfire", "Hit", "Hit", "Miss"],
+   "received_b": "WWWWR.W..WW.RR.RRW",
+   "base_a": "RWWRR.WRW...RWRWR.",
+   "base_b": "RRWRRRR.WW.RRWRRW.",
+   "secret_a": "WWW.RW.RWRWWRRW.RR",
+   "secret_b": "WWW.RW.RWRWWRRW.RR"
+  },
+  {
+   "name": "exchange_T2_run3",
+   "kind": "exchange",
+   "tier": "T2",
+   "source": "proofs/key_exchange/bs/exchange/exchange.py T2 seed 12, run 3: Bob's public value ends in 8 misfires",
+   "dice_a": {
+    "d12": [2, 2, 6, 4, 12, 5, 1, 8, 7, 12, 2, 3, 10, 1, 1, 4, 6, 8, 12, 3, 6, 8, 6, 2, 7, 5, 4, 1, 7, 2, 1, 11, 3, 1, 6, 4, 3, 9, 8, 3, 11, 12, 2, 3, 12, 5, 6, 12, 5, 3, 2, 1, 8, 11, 2, 1, 8, 8, 9],
+    "d6": [3, 3, 4, 4, 3, 4, 6, 5, 6, 6, 4, 1, 4, 2, 6, 4, 5, 3, 2, 4, 1, 3, 3, 2, 6, 6, 6, 5, 1, 3, 3, 2, 2, 4, 3, 4, 2, 1, 4, 5, 2],
+    "d10": [6, 6, 5, 4, 5, 1, 1, 6, 0, 2, 3, 7, 4, 8, 4, 3, 1, 6, 2, 1, 9, 4, 5, 5, 0, 1, 5, 2, 3, 9, 0, 3, 4, 6, 9, 1, 1, 1, 7, 1, 0, 0, 7, 0, 0, 8, 3, 8, 6, 6, 1, 5, 7, 6, 9, 4, 8]
+   },
+   "dice_b": {
+    "d12": [1, 8, 3, 12, 8, 9, 4, 3, 11, 12, 3, 3, 11, 9, 3, 8, 12, 8, 6, 11, 2, 9, 3, 4, 10, 10, 3, 6, 4, 7, 9, 11, 4, 2, 4, 3, 11, 9, 2, 10, 7, 10, 10, 1, 11, 11, 6, 5, 4, 4, 2, 1, 7, 9],
+    "d6": [3, 2, 3, 5, 6, 1, 4, 2, 5, 4, 6, 4, 3, 4, 3, 6, 2, 4, 5, 3, 6, 6, 5, 5, 5, 1, 1, 4, 4, 1, 1, 2, 4, 2, 3, 1, 1, 2, 5, 4, 6, 4, 2, 1, 1],
+    "d10": [7, 6, 2, 3, 9, 2, 9, 0, 2, 7, 8, 0, 8, 1, 3, 9, 4, 7, 6, 1, 9, 0, 1, 8, 0, 0, 1, 6, 6, 7, 6, 1, 4, 8, 4, 2, 3, 7, 9, 7, 6, 6, 5, 1, 8, 2, 4, 7, 7, 1, 8, 6, 9, 9, 2]
+   },
+   "key_a": {
+    "ships": [
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A3",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A6",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "A7",
+      "bow": "first"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "across",
+      "first": "B1",
+      "bow": "last"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "B5",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B7",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "B10",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "C6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "C8",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "D1",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "D4",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "E1",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "E9",
+      "bow": "first"
+     },
+     {
+      "kind": "Carrier",
+      "lies": "down",
+      "first": "F3",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "F6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G1",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G5",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "G6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G9",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "H7",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "I4",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I8",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J1",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "J4",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J9",
+      "bow": "first"
+     }
+    ],
+    "pegs": [
+     "WRWRWWW.WW",
+     "....WR.W.R",
+     "R.W.RWW..R",
+     "..WR.W..RR",
+     "W.WWWW..WW",
+     ".W.RRR.RW.",
+     "WRRR......",
+     "R...R.RW.R",
+     "RWWRWR..WW",
+     "R.WRRRW.RW"
+    ]
+   },
+   "key_b": {
+    "ships": [
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A6",
+      "bow": "last"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "A8",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "B1",
+      "bow": "first"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "B2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B6",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "B7",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B10",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "C3",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "C4",
+      "bow": "last"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "D4",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "D6",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E1",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "E5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "E8",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "F2",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "F7",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "F8",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G3",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G6",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G10",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "H1",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "H4",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "H5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "H9",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I1",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "I2",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "I6",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J7",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J9",
+      "bow": "first"
+     }
+    ],
+    "pegs": [
+     "R.WR.W.RRR",
+     ".WRR.WR.RW",
+     "RW...RRRW.",
+     "R.WR..RR..",
+     "RW..WRWRR.",
+     "WR..W.RWW.",
+     ".W.RR.RRR.",
+     "WRWRWW..RW",
+     ".WW.R.R...",
+     "RWWRRRRR.W"
+    ]
+   },
+   "cells_a": "W..WR.RW.W..W..RRRR..R.....RRR..W.R.R...R.RWWW.RWR...WW..R..W.R...RR..RR..R.WR..W.R.R....WRRWRR..WRWW.R..WWWWRWRWWW.WW....WR.W.RR.W.RWW..R..WR.W..RRW.WWWW..WW.W.RRR.RW.WRRR......R...R.RW.RRWWRWR..WWR.WRRRW.RW",
+   "cells_b": "W.WR.RWRR..RR..RRR..R..RWRW...RWW..R.RWWW..RRR..R..WR.RWW..W.RR....RWR.RW..RWWWRRW.W.RRRWR..WW.W.W..RWRW.WWWWR.WR.W.RRR.WRR.WR.RWRW...RRRW.R.WR..RR..RW..WRWRR.WR..W.RWW..W.RR.RRR.WRWRWW..RW.WW.R.R...RWWRRRRR.W",
+   "public_a": "W.R.WWWWW.WR..R.W..WRW.RR.RW.RRRRW.",
+   "public_b": "RW.RRWWRR...R.RRW..WWWW.RRW........",
+   "shots_a": ["Miss", "Misfire", "Hit", "Misfire", "Miss", "Miss", "Miss", "Miss", "Miss", "Misfire", "Miss", "Hit", "Misfire", "Misfire", "Hit", "Misfire", "Miss", "Misfire", "Misfire", "Miss", "Hit", "Miss", "Misfire", "Hit", "Hit", "Misfire", "Hit", "Miss", "Misfire", "Hit", "Hit", "Hit", "Hit", "Miss", "Misfire"],
+   "received_a": "W.R.WWWWW.WR..R.W..WRW.RR.RW.RRRRW.",
+   "shots_b": ["Hit", "Miss", "Misfire", "Hit", "Hit", "Miss", "Miss", "Hit", "Hit", "Misfire", "Misfire", "Misfire", "Hit", "Misfire", "Hit", "Hit", "Miss", "Misfire", "Misfire", "Miss", "Miss", "Miss", "Miss", "Misfire", "Hit", "Hit", "Miss", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire"],
+   "received_b": "RW.RRWWRR...R.RRW..WWWW.RRW........",
+   "base_a": "R.WWRWRR...WRWWR.WRWRRRWW.WW.WR..W.",
+   "base_b": "W..R.WR.RWRRRWRRRRWR..W.R..RWWR..WR",
+   "secret_a": "RRW.WW.WW....R.RRR.RRR..RRWW.WWRWWW",
+   "secret_b": "RRW.WW.WW....R.RRR.RRR..RRWW.WWRWWW"
+  },
+  {
+   "name": "exchange_T6_run0",
+   "kind": "exchange",
+   "tier": "T6",
+   "source": "proofs/key_exchange/bs/exchange/exchange.py T6demo seed 13, run 0: the first recorded T6 demo exchange (n = 100, long toll)",
+   "dice_a": {
+    "d12": [4, 11, 2, 9, 12, 1, 7, 11, 3, 5, 6, 4, 8, 9, 10, 8, 3, 8, 3, 9, 5, 8, 10, 7, 4, 4, 12, 3, 2, 7, 12, 3, 12, 6, 4, 12, 12, 10, 1, 6, 3, 11, 4, 3, 2, 6, 11, 2, 9, 1, 3, 5, 10, 8],
+    "d6": [6, 2, 2, 2, 3, 2, 5, 1, 3, 5, 4, 6, 6, 3, 6, 5, 5, 6, 3, 3, 3, 3, 2, 3, 6, 6, 4, 4, 6, 3, 4, 6, 3, 6, 3, 5, 6, 2, 6, 2, 5, 6, 5, 1, 6, 1, 5, 3],
+    "d10": [4, 4, 2, 3, 2, 1, 4, 7, 6, 2, 5, 6, 5, 1, 5, 7, 8, 2, 4, 3, 9, 7, 8, 3, 9, 6, 0, 6, 0, 3, 2, 7, 7, 3, 9, 0, 9, 9, 9, 5, 2, 4, 3, 6, 9, 8, 8, 0, 7, 1, 6, 4, 4, 9]
+   },
+   "dice_b": {
+    "d12": [9, 11, 5, 7, 12, 5, 4, 6, 10, 7, 4, 2, 2, 1, 10, 11, 4, 8, 9, 1, 2, 6, 3, 4, 5, 3, 2, 6, 10, 9, 3, 1, 11, 2, 8, 2, 6, 8, 10, 9, 2, 10, 9, 9, 9, 9, 2, 6, 2, 5, 7, 5, 1, 9, 5, 6, 4, 4],
+    "d6": [5, 4, 2, 2, 1, 5, 6, 2, 2, 2, 3, 1, 3, 4, 2, 2, 4, 4, 5, 4, 1, 3, 3, 2, 3, 2, 4, 5, 1, 1, 2, 3, 4, 3, 2, 3, 6, 3, 4, 4, 4, 3],
+    "d10": [0, 0, 5, 5, 2, 7, 8, 6, 3, 4, 6, 9, 5, 6, 0, 5, 6, 7, 7, 8, 6, 5, 0, 4, 4, 9, 6, 4, 0, 5, 5, 2, 8, 2, 0, 3, 4, 3, 0, 3, 3, 8, 4, 1, 5, 0, 0, 2, 0, 1, 6, 2, 9, 4, 0, 1, 2, 2, 7, 4, 0, 8]
+   },
+   "key_a": {
+    "ships": [
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "A2",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A7",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "A9",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "B7",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "B10",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "C1",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "across",
+      "first": "C3",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "C7",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "D3",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "D4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "D6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "D8",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "D9",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E5",
+      "bow": "last"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "E10",
+      "bow": "first"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "F1",
+      "bow": "last"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "down",
+      "first": "F3",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "F7",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "down",
+      "first": "F8",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "F9",
+      "bow": "last"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "across",
+      "first": "G4",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "H4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I5",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "I7",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "J1",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "across",
+      "first": "J8",
+      "bow": "last"
+     }
+    ],
+    "pegs": [
+     "W.W..W.R.W",
+     "..W.R.WR.W",
+     "WWWRWW..WW",
+     "R.RW.WW..R",
+     "RRR.RW.RRR",
+     "WRWR.R.WR.",
+     "R..RRRRRRR",
+     "RRWW.WW..R",
+     "WRRRRWRWR.",
+     "..WRW.W.RR"
+    ]
+   },
+   "key_b": {
+    "ships": [
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "A1",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A2",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "A3",
+      "bow": "first"
+     },
+     {
+      "kind": "Battleship",
+      "lies": "across",
+      "first": "A5",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "A9",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "B4",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "B6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "B7",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "C5",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "C7",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "C9",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "D1",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "D9",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "across",
+      "first": "E4",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "E7",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "E8",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "F2",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "F4",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "F9",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G1",
+      "bow": "last"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "G3",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G6",
+      "bow": "last"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G8",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "G9",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "down",
+      "first": "G10",
+      "bow": "first"
+     },
+     {
+      "kind": "Sub",
+      "lies": "down",
+      "first": "H2",
+      "bow": "first"
+     },
+     {
+      "kind": "Cruiser",
+      "lies": "across",
+      "first": "I4",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "I7",
+      "bow": "first"
+     },
+     {
+      "kind": "Destroyer",
+      "lies": "across",
+      "first": "J4",
+      "bow": "first"
+     }
+    ],
+    "pegs": [
+     "WWWW.WR.RW",
+     "WR.RW.WRRR",
+     "WWWRWWWRR.",
+     "R.RWWRWWW.",
+     "W.RRWRW.WW",
+     "WW.WRW.W.R",
+     "W..R.R.RRW",
+     "W...WW.W..",
+     "WR.WRRW...",
+     ".W.WR.W.RW"
+    ]
+   },
+   "cells_a": "W.R.RR.WWR....WR.WR.RRW.W.RW.WRW....RWWWRRRWWRW.W.R..RWRR.R.R.RRR....W.RW..R....R..RWRW.WR.R.R.R...W.R.W.W.WW.R.W.W..W.R.W..W.R.WR.WWWWRWW..WWR.RW.WW..RRRR.RW.RRRWRWR.R.WR.R..RRRRRRRRRWW.WW..RWRRRRWRWR...WRW.W.RR",
+   "cells_b": "WRRWWW..WR..W.WRRWWR.W....RRR.WRR...R.W.WW...W.RWRR..W.R.WR..WWRRWRR.RR.RRRRR.W.R.W.W..R.W.WWWWW...W..WW.....WWWW.WR.RWWR.RW.WRRRWWWRWWWRR.R.RWWRWWW.W.RRWRW.WWWW.WRW.W.RW..R.R.RRWW...WW.W..WR.WRRW....W.WR.W.RW",
+   "public_a": "RWW.R.W...WRRWWWWR..WRRWR..RWR.W.W.RRWW.RW.WW..R.RR.WRRRWR..RW..R.WWRRRRW.W..WWWR.RR..W.WWRR.R.WWW.W",
+   "public_b": ".W.WRWRRW.RRWRWRWWWR.R.WWR..RWW.WW.RR..R.W.WW.W.RWWR.W.R.R..RWW..RWWW.RWWRR.R.RWR.R...RWRR..WRRW.WR.",
+   "shots_a": ["Hit", "Miss", "Miss", "Misfire", "Hit", "Misfire", "Miss", "Misfire", "Misfire", "Misfire", "Miss", "Hit", "Hit", "Miss", "Miss", "Miss", "Miss", "Hit", "Misfire", "Misfire", "Miss", "Hit", "Hit", "Miss", "Hit", "Misfire", "Misfire", "Hit", "Miss", "Hit", "Misfire", "Miss", "Misfire", "Miss", "Misfire", "Hit", "Hit", "Miss", "Miss", "Misfire", "Hit", "Miss", "Misfire", "Miss", "Miss", "Misfire", "Misfire", "Hit", "Misfire", "Hit", "Hit", "Misfire", "Miss", "Hit", "Hit", "Hit", "Miss", "Hit", "Misfire", "Misfire", "Hit", "Miss", "Misfire", "Misfire", "Hit", "Misfire", "Miss", "Miss", "Hit", "Hit", "Hit", "Hit", "Miss", "Misfire", "Miss", "Misfire", "Misfire", "Miss", "Miss", "Miss", "Hit", "Misfire", "Hit", "Hit", "Misfire", "Misfire", "Miss", "Misfire", "Miss", "Miss", "Hit", "Hit", "Misfire", "Hit", "Misfire", "Miss", "Miss", "Miss", "Misfire", "Miss"],
+   "received_a": "RWW.R.W...WRRWWWWR..WRRWR..RWR.W.W.RRWW.RW.WW..R.RR.WRRRWR..RW..R.WWRRRRW.W..WWWR.RR..W.WWRR.R.WWW.W",
+   "shots_b": ["Misfire", "Miss", "Misfire", "Miss", "Hit", "Miss", "Hit", "Hit", "Miss", "Misfire", "Hit", "Hit", "Miss", "Hit", "Miss", "Hit", "Miss", "Miss", "Miss", "Hit", "Misfire", "Hit", "Misfire", "Miss", "Miss", "Hit", "Misfire", "Misfire", "Hit", "Miss", "Miss", "Misfire", "Miss", "Miss", "Misfire", "Hit", "Hit", "Misfire", "Misfire", "Hit", "Misfire", "Miss", "Misfire", "Miss", "Miss", "Misfire", "Miss", "Misfire", "Hit", "Miss", "Miss", "Hit", "Misfire", "Miss", "Misfire", "Hit", "Misfire", "Hit", "Misfire", "Misfire", "Hit", "Miss", "Miss", "Misfire", "Misfire", "Hit", "Miss", "Miss", "Miss", "Misfire", "Hit", "Miss", "Miss", "Hit", "Hit", "Misfire", "Hit", "Misfire", "Hit", "Miss", "Hit", "Misfire", "Hit", "Misfire", "Misfire", "Misfire", "Hit", "Miss", "Hit", "Hit", "Misfire", "Misfire", "Miss", "Hit", "Hit", "Miss", "Misfire", "Miss", "Hit", "Misfire"],
+   "received_b": ".W.WRWRRW.RRWRWRWWWR.R.WWR..RWW.WW.RR..R.W.WW.W.RWWR.W.R.R..RWW..RWWW.RWWRR.R.RWR.R...RWRR..WRRW.WR.",
+   "base_a": "R..W.WRRW..W..RRWRW.R.WRRR.R.WWRWR.WRR.W.R.WWRW...RW.RWRR.RRWRRR.WWRRWWWWRRWR.WRW.WR.W.RRR.W.RWWR..R",
+   "base_b": ".R..WWW..R.WRW.R...RWRWWWWRR..WWRRWR.WRRWWWRWRRWRWRRWRWR....RWWW..WR.W.WWWWW.WW.RRRWWWRWWRWRW...RRR.",
+   "secret_a": "R.RRR..WWW...W....W.WWWW.RRRR..WW.RR.WRRRR...RWW.RWRRRW.WW...RR......RR..WRWRRWRRR..RWRWWR..RRWR.WWR",
+   "secret_b": "R.RRR..WWW...W....W.WWWW.RRRR..WW.RR.WRRRR...RWW.RWRRRW.WW...RR......RR..WRWRRWRRR..RWRWWR..RRWR.WWR"
+  },
+  {
+   "name": "multiply_T1_all_red_nudge2",
+   "kind": "multiply",
+   "tier": "T1",
+   "a": "RRRRRRRRRRRRRRRRRR",
+   "b": "RRRRRRRRRRRRRRRRRR",
+   "nudge": 2,
+   "source": "SPEC §8 worst case",
+   "product": "......W..........."
+  },
+  {
+   "name": "multiply_T2_all_red_nudge2",
+   "kind": "multiply",
+   "tier": "T2",
+   "a": "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
+   "b": "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR",
+   "nudge": 2,
+   "source": "SPEC §8 worst case",
+   "product": ".W.....W.....W.....W.....W....W...."
+  },
+  {
+   "name": "tidy_T1_p",
+   "kind": "tidy",
+   "tier": "T1",
+   "x": "RRWRRRRRRRRRRRRRRR",
+   "source": "SPEC B5: p tidies to the empty register",
+   "tidy": ".................."
+  },
+  {
+   "name": "tidy_T1_p_plus_1",
+   "kind": "tidy",
+   "tier": "T1",
+   "x": "..RRRRRRRRRRRRRRRR",
+   "source": "SPEC B5: p + 1 tidies to 1",
+   "tidy": "W................."
+  },
+  {
+   "name": "check_T1_zero",
+   "kind": "check",
+   "tier": "T1",
+   "received": "..................",
+   "source": "SPEC B8: reject 0",
+   "base": null
+  },
+  {
+   "name": "check_T1_one",
+   "kind": "check",
+   "tier": "T1",
+   "received": "W.................",
+   "source": "SPEC B8: reject 1",
+   "base": null
+  },
+  {
+   "name": "check_T1_p_minus_1",
+   "kind": "check",
+   "tier": "T1",
+   "received": "WRWRRRRRRRRRRRRRRR",
+   "source": "SPEC B8: reject p - 1",
+   "base": null
+  },
+  {
+   "name": "check_T1_p_plus_1",
+   "kind": "check",
+   "tier": "T1",
+   "received": "..RRRRRRRRRRRRRRRR",
+   "source": "SPEC B8: reject p + 1",
+   "base": null
+  },
+  {
+   "name": "check_T1_three",
+   "kind": "check",
+   "tier": "T1",
+   "received": ".W................",
+   "source": "SPEC B8: accept g = 3, base 9",
+   "base": "..W..............."
+  },
+  {
+   "name": "call_T1_trailing_misfires",
+   "kind": "call",
+   "tier": "T1",
+   "x": "RW.WR.............",
+   "source": "SPEC §3.1: every hole is called, even after a run of misfires",
+   "shots": ["Hit", "Miss", "Misfire", "Miss", "Hit", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire"],
+   "y": "RW.WR............."
+  },
+  {
+   "name": "call_T1_all_misfires",
+   "kind": "call",
+   "tier": "T1",
+   "x": "..................",
+   "source": "SPEC §3.1: an empty register is n misfires",
+   "shots": ["Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire", "Misfire"],
+   "y": ".................."
+  }
+ ]
+}

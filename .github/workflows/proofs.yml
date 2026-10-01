@@ -8,6 +8,7 @@ on:
       - "primitives/hash/megadreifach/**"
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
+      - "primitives/key_exchange/**"
       - "tools/emit_lean.py"
       - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
@@ -19,6 +20,7 @@ on:
       - "primitives/hash/megadreifach/**"
       - "primitives/hash/scramble/**"
       - "primitives/aead/doubledeal-cbc-hmac/**"
+      - "primitives/key_exchange/**"
       - "tools/emit_lean.py"
       - "tools/gencheck.py"
       - ".github/workflows/proofs.yml"
@@ -30,7 +32,7 @@ env:
 
 jobs:
   # Anti-drift: committed Generated/ Lean must match emit from current .sudo
-  # via the pinned sudocode main commit (PR #9 merge; see proofs/SUDOCODE_PIN).
+  # via the pinned sudocode main commit (see proofs/SUDOCODE_PIN).
   generated-fresh:
     runs-on: ubuntu-latest
     env:
@@ -41,9 +43,8 @@ jobs:
       - name: Read the sudocode pin
         id: pin
         run: |
-          commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_PIN)"
+          commit="$(sh proofs/sudocode_pin.sh)"
           echo "commit=$commit" >> "$GITHUB_OUTPUT"
-          test -n "$commit"
       - uses: actions/checkout@v5
         with:
           repository: hacker6284/sudocode
@@ -68,6 +69,18 @@ jobs:
           for v in v8 v9 v10 v11; do
             proofs/doubledeal/vectors/regen.sh "$v" --check
           done
+      - name: BS vectors rebuild byte-identically from bs.sudo
+        run: proofs/key_exchange/bs/vectors/regen.sh --check
+      - name: BS vectors agree with pow() and the Python evidence harness
+        run: python3 proofs/key_exchange/bs/vectors/check_oracle.py
+      # Scramble (marked broken): the 10 SPEC vectors, the attack messages in logs/, the
+      # `hello` twin and the decoded `cube` pose through the JS this sudoc generates from
+      # scramble.sudo (about 1 s). The seeded Python attack runs (REPORT S7) are not run here.
+      - name: scramble_sudo_check.mjs output matches its log
+        run: |
+          out="$RUNNER_TEMP/scramble_sudo_check.log"
+          node proofs/scramble/security/scramble_sudo_check.mjs > "$out" || { cat "$out"; exit 1; }
+          diff -u proofs/scramble/security/logs/scramble_sudo_check.log "$out"
 
   generated:
     # Emitted Lean of each primitive builds and its sudo tests pass (TAP).
@@ -81,6 +94,7 @@ jobs:
           - { name: megadreifach, dir: proofs/megadreifach/lean/Generated, test: megadreifach_test }
           - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
           - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
+          - { name: bs, dir: proofs/key_exchange/bs/lean/Generated, test: bs_test }
           # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property; not an
           # attack, so no witness package): emitted TAP only (proofs/deprecated/doubledeal-v11/).
           - { name: doubledeal-v11, dir: proofs/deprecated/doubledeal-v11/lean/Generated, test: doubledeal_v11_test }
@@ -313,3 +327,42 @@ jobs:
           lake-package-directory: proofs/doubledeal-cbc-hmac/lean
       - name: Axiom audit of every DoubleDealCbcHmac theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py cbc-hmac
+
+  scramble-lean:
+    # Scramble Link 2 (proofs/scramble/lean): the hand-written v2 and v1 models, their SPEC
+    # vectors (kernel decide!, a few seconds), the reachability invariant, and the
+    # refinement of the emitted code: the v2 digest path (digest-only and traced, several
+    # updates) and the v1 digest-only path. Rebuilds the MegaDreifach Link 2 runtime
+    # lemmas it uses (Embed, Sudo, Loop) against this package's own emitted SudoRt.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/scramble/lean --exclude Generated
+      - name: Axiom gate keying rules; SCRAMBLE_LINK2 equals the README-cited theorems
+        run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/scramble/lean
+      - name: Axiom audit of every ScrambleV2 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py scramble
+
+  bs-lean:
+    # BS Link 2 (proofs/key_exchange/bs/lean): the hand-written model of SPEC §2.3, §3,
+    # §3.1 and B3 to B9, and the refinement of the emitted tier, multiply, tidy,
+    # check_received, send_public_value, public_value, shared_secret and exchange (the last
+    # three given read_key's output). Short: the build is about a minute, no heavy checks.
+    # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
+    # this package's own emitted SudoRt.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/key_exchange/bs/lean --exclude Generated
+      - name: Axiom gate keying rules; BS_LINK2 equals the README-cited theorems; export table
+        run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/key_exchange/bs/lean
+      - name: Axiom audit of every BsLink2 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py bs

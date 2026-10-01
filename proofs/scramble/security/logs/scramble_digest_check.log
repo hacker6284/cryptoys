@@ -1,0 +1,18 @@
+[1] encoding check on hand-built states
+  solved            digest 00000000000000700  facelets WWWWWWWWWRRRRRRRRRGGGGGGGGGYYYYYYYYYOOOOOOOOOBBBBBBBBB
+  RW+OW flipped     digest 00000000000000700  facelets WWWOWRWWWRWRRRRRRRGGGGGGGGGYYYYYYYYYOWOOOOOOOBBBBBBBBB
+  RW+GW flipped     digest 00000000000000702  (control: GW flip is visible)
+  distinct states with equal digest: True
+[2] a real message pair: M1 = preimage of the solved-seated... skipped; instead
+    take M = b"hello" and the state that differs from its seated pose by the RW+OW flip;
+    seated(hello) digest 052A3C7D12291D140; flipped pose digest 052A3C7D12291D140; poses differ: True
+      42 corner-collision stages: blocks tried per stage mean 21112 (2^14.37), min 2658, max 46945; sqrt(pi/2 * 24*(8!/2)*3^7) = 40769 (2^15.32)
+      corner bridge 4+4 nybbles: 63633 distinct forward ends, 2 meets
+      edge MITM: 2097150 forward edge outcomes (2^21.00)
+    M = 24f6439258b7be8a8fc94885fda78bdff48702de273ecbc8f16f7711cadf41ce40acdabee8dd04e5d588e5cd296e7d1a67d8bd2c85965c5b531a19c55fb6e623814d452db6ba327020979926cd413ea652fa56154f0f5abd55177f5010f2fdb0da2e9b3f7c6c54f225d3d579978ebca0f5c9a39ab4cd92c4085764dbf3bd027b429ef570eafb52d19b5a79f7e51863d17b0dcb1b8431ad9af5ef7d69e73995b35e9d38c58d357f5015c12823
+    digest(M) = 052A3C7D12291D140, digest(hello) = 052A3C7D12291D140; seated poses differ: True; seat(M) == flipped pose: True
+[3] preimages per digest value (exact count)
+    ambiguous edge pieces: [0, 2, 4, 6]; P(slot 11 holds one) = 0.3333
+    image size = |G| * 0.083333 = |G|/12.0 = 2^61.644 (|G| = 2^65.229)
+    generic birthday on the image: ~2^30.82
+    300 random 8-byte messages: legal states sharing the digest (incl. itself) -> {8: 109, 16: 191}

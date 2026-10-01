@@ -442,24 +442,6 @@
     "scramble-turn"
    ]
   },
-  "scramble-turn/settle/settle_bwarpus99-452535-slice": {
-   "group": "settle",
-   "peakMs": 246,
-   "clicksMs": [
-    244,
-    309
-   ],
-   "lufs": -22.6,
-   "gainTo16": 6.6,
-   "durationS": 0.542,
-   "author": "bwarpus99",
-   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://freesound.org/people/bwarpus99/sounds/452535/",
-   "description": "Plastic object set down on a wood desk (megadreifach regrip-2; shelf return).",
-   "pages": [
-    "scramble-turn"
-   ]
-  },
   "scramble-turn/settle/settle_emapuree-848748": {
    "group": "settle",
    "peakMs": 33,
@@ -475,6 +457,20 @@
    "description": "Wooden block tapped on felt: short, muffled, dry thud (megadreifach regrip-3; map pick).",
    "pages": [
     "megaminx-turn"
+   ]
+  },
+  "scramble-turn/settle/settle_kenney-rpg-bookclose-cut": {
+   "group": "settle",
+   "author": "Kenney Vleugels (Kenney.nl)",
+   "license": "Creative Commons Zero, CC0 (License.txt in the pack)",
+   "source": "https://kenney.nl/assets/rpg-audio",
+   "description": "Kenney RPG Audio bookClose, cut to the single thump: a hardcover closing, soft and dull (no paper tail).",
+   "peakMs": 19,
+   "lufs": -24.1,
+   "gainTo16": 8.1,
+   "durationS": 0.173,
+   "pages": [
+    "scramble-turn"
    ]
   },
   "scramble-turn/single/single_spacejoe-486564": {

@@ -1,7 +1,7 @@
 /-
   BS: a hand-written model of `primitives/key_exchange/bs/SPEC.md` (§2.3 parameters, §3
   registers, §3.1 sending, B3 multiply, B5 tidy, B7 to B9 the walk, the received-value
-  check and the exchange, §4.1 / §4.3 the key grid and READ, §4.2 the dice), written from
+  check and the exchange, §4.1 / §4.3 the key grid and READ, §4.2 the dice and BUILD), written from
   the SPEC and not from `bs.sudo` (where `bs.sudo` fixes something the SPEC leaves open,
   the docstring says so). Numbers are `Nat`; a register is a `List Nat` of trits, hole 0 first,
   hole `i` worth `3^i` (§3). Nothing here is a security claim.
@@ -295,7 +295,9 @@ def dice (d12 d6 d10 : List Int) : Dice := ⟨d12, d6, d10, 0, 0, 0⟩
 
 /-! ### §4.2 BUILD, "one hole at a time: ship, then peg"
 
-The build reads three face streams (`Dice`) and an arbitrary let-go list fixed in advance.
+The build reads three face streams (`Dice`) and an arbitrary let-go list. The theorems
+about it hold for each dice and each let-go list separately; whether the list is fixed
+before the dice are read would matter only to a probability statement, and there is none.
 It is partial (`Option`): it fails when a stream runs out or shows a face off its die, and
 when the let-go list is unusable. No probability is modelled. -/
 
@@ -307,9 +309,12 @@ structure LetGo where
   gap : Bool
   deriving DecidableEq
 
-/-- §4.2: a usable let-go list. Each point appears at most once (you come back from one
-    let-go before the next), and each is at a die's first hole of the grid: a hole of the
-    100, in an even (0-based) column, i.e. holes 1, 3, 5, 7, 9 of a row. -/
+/-- §4.2: a usable let-go list. Each point is at a die's first hole of the grid (SPEC
+    §4.2): a hole of the 100, in an even (0-based) column, i.e. holes 1, 3, 5, 7, 9 of a
+    row. Each point appears at most once: **bs.sudo's rule (`letgo_unique`); SPEC does not
+    forbid it** (§4.2 discusses letting go and coming back at the same point). A list that
+    repeats a point fails here, as the emitted `build` traps on it, so no theorem covers a
+    build that lets go twice at one point. -/
 def letGoOk (lg : List LetGo) : Bool :=
   decide lg.Nodup && lg.all (fun x => decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0))
 

@@ -6,9 +6,11 @@
   let-go list is an arbitrary input. Every grid BUILD returns is well formed (`build_wf`).
   No probability. Proof-only.
 
-  `build`'s loop bodies are copied verbatim below (`holeStepE`, `stage*E`, `holeInnerE`,
-  `rowStepE`, `checkStepE`, `buildAfterE`) as a proof device; `build_eq` and
-  `holeStepE_eq` / `rowStepE_eq` are `rfl`, so the theorems are about the emitted `build`.
+  `build`'s and `grow_until_it_bumps`'s loop bodies are copied below as a proof device
+  (`holeStepE`, `holeInnerE`, `stage*E`, `rowStepE`, `checkStepE`, `buildAfterE`,
+  `growStepE` / `growAfterE`), the same code up to named loop steps and `_`-prefixed unused binders; `rfl` is the check:
+  `build_eq` and `holeStepE_eq` / `rowStepE_eq` are `rfl`, so the theorems are about the
+  emitted `build`.
 -/
 import BsLink2.Link2.Dice
 import BsLink2.Link2.Key
@@ -18,24 +20,9 @@ namespace BsLink2.Link2
 
 open MegaDreifach.Link2
 
-theorem atL_toOpt {α} (a : Array α) (i : Nat) : (SudoRt.atL a (Int.ofNat i)).toOption = a[i]? := by
-  by_cases h : i < a.size
-  · rw [atL_ofNat _ _ h, Array.getElem?_eq_getElem h]; rfl
-  · have hf : (SudoRt.idxCheck a.size (Int.ofNat i)).toOption = none := by
-      unfold SudoRt.idxCheck
-      rw [if_pos (by simp; omega)]; rfl
-    unfold SudoRt.atL
-    rw [show a[i]? = none by simp; omega]
-    revert hf
-    cases SudoRt.idxCheck a.size (Int.ofNat i) with
-    | error e => intro _; rfl
-    | ok j => intro hf; cases hf
-
 /-- Dice whose three streams have lengths that fit `i64` (so the read counts do). -/
 def DiceFit (d : Spec.Dice) : Prop :=
   FitsLen d.d12.length ∧ FitsLen d.d6.length ∧ FitsLen d.d10.length
-
-theorem sudoAssert_false_opt (line : Nat) : (SudoRt.sudoAssert false line).toOption = none := rfl
 
 /-- §4.2: the emitted `roll_hole_die` is `Spec.rollHole`, traps included. -/
 theorem roll_hole_die_spec (d : Spec.Dice) (hfit : FitsLen d.d12.length) :
@@ -271,12 +258,6 @@ theorem throw_row_cup_spec (d : Spec.Dice) (hfit : FitsLen d.d10.length) :
 
 /-! ### rethrow_unread -/
 
-theorem embed_set (l : List Nat) (k x : Nat) (h : k < (embed l).size) :
-    (embed l).set ⟨k, h⟩ (Int.ofNat x) = embed (l.set k x) := by
-  simp [embed, Array.set, List.map_set]
-
-theorem size_embed' (l : List Nat) : (embed l).size = l.length := by simp [embed]
-
 /-- §4.2 letting go: the emitted `rethrow_unread` is `Spec.rethrowUnread`, traps included. -/
 theorem rethrow_unread_spec (d : Spec.Dice) (tray : List Nat) (read : Nat)
     (hfit : FitsLen d.d10.length) (htr : FitsLen tray.length) :
@@ -301,7 +282,7 @@ theorem rethrow_unread_spec (d : Spec.Dice) (tray : List Nat) (read : Nat)
       | none => rfl
       | some p =>
         obtain ⟨f, dd'⟩ := p
-        have hi : i < (embed tr).size := by rw [size_embed']; omega
+        have hi : i < (embed tr).size := by rw [size_embed]; omega
         simp only [Option.map_some', Option.some_bind]
         rw [toOpt_bind, putL_ofNat _ _ _ hi, toOpt_ok, Option.some_bind, embed_set]
         by_cases hl : i + 1 = tray.length
@@ -580,7 +561,7 @@ theorem cover_spec (cov : Nat → Bool) (s : Spec.Ship) (hs : s.OnGrid) :
     simp [Spec.Ship.holes] at hn; omega
   · intro i c hi hI
     subst hI
-    have hlt : i < (embed s.holes).size := by rw [size_embed']; exact hi
+    have hlt : i < (embed s.holes).size := by rw [size_embed]; exact hi
     have hh : s.holes[i] < 100 := holes_lt s hs (List.getElem_mem hi)
     refine ⟨tab (fun h => cov h || decide (h ∈ s.holes.take (i + 1))), rfl, ?_⟩
     dsimp only
@@ -607,8 +588,8 @@ theorem cover_spec (cov : Nat → Bool) (s : Spec.Ship) (hs : s.OnGrid) :
 /-! ### grow_until_it_bumps -/
 
 open Bs in
-/-- The body of `grow_until_it_bumps`'s growing loop, copied verbatim from the emitted code
-    (both headings share it; `lay_down` is the heading). A proof device: the theorem below
+/-- The body of `grow_until_it_bumps`'s growing loop, copied from the emitted code
+    (up to named loop steps and `_`-prefixed unused binders; `rfl` is the check; both headings share it; `lay_down` is the heading). A proof device: the theorem below
     is about the emitted function itself. -/
 def growStepE (covered : Array Bool) (row col : Int) (lay_down : Bool) (_toV : Int) :
     Int × (Dice × Int) → Except SudoRt.Trap (SudoRt.Flow (Int × (Dice × Int)) ((Option Ship) × Dice)) :=
@@ -714,7 +695,8 @@ def growStepE (covered : Array Bool) (row col : Int) (lay_down : Bool) (_toV : I
               pure (SudoRt.Flow.cont (ρ := (Option (Ship)) × (Dice)) (i', _fs))
 
 open Bs in
-/-- What `grow_until_it_bumps` does after its growing loop (the piece), copied verbatim. -/
+/-- What `grow_until_it_bumps` does after its growing loop (the piece), copied from the
+    emitted code (up to named loop steps and `_`-prefixed unused binders; `rfl` is the check). -/
 def growAfterE (row col : Int) (lay_down bow_last : Bool) :
     Int × (Dice × Int) → Except SudoRt.Trap ((Option Ship) × Dice) :=
   fun σ =>
@@ -1349,737 +1331,7 @@ theorem growUntilItBumps_facts (d d' : Spec.Dice) (cov : Nat → Bool) (row col 
 /-! ### build: one hole -/
 
 open Bs in
-/-- The body of `build`'s hole loop (`for col = 0 to 9`), copied verbatim from the emitted
-    code. A proof device: the theorems below are about the emitted `build` itself. -/
-def holeStepE (letgo : Array LetGo) (row : Int) (_toV : Int) :
-    Int × (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int) →
-      Except SudoRt.Trap (SudoRt.Flow
-        (Int × (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)) (KeyGrid × Dice)) :=
-  fun σ =>
-    let col := σ.1
-    let d := σ.2.1
-    let _sp908 := σ.2.2
-    let tray := _sp908.1
-    let _sp909 := _sp908.2
-    let read := _sp909.1
-    let _sp910 := _sp909.2
-    let covered := _sp910.1
-    let _sp911 := _sp910.2
-    let ships := _sp911.1
-    let _sp912 := _sp911.2
-    let face := _sp912.1
-    let _sp913 := _sp912.2
-    let pegs := _sp913
-    do
-      if col > _toV then
-        pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (col, (d, tray, read, covered, ships, face, pegs)))
-      else
-        match ← ((do
-  let _t573 ← SudoRt.mulI row grid_cols
-  let _t574 ← SudoRt.addI _t573 col
-  let h := _t574
-  let _t575 ← lets_go letgo h false
-  if _t575 then
-    do
-      let _io576 ← rethrow_unread d tray read
-      let ⟨_iw0577, _iw1578⟩ := _io576
-      let d := _iw0577
-      let tray := _iw1578
-      if (SudoRt.SEq.beq col (0 : Int)) then
-        do
-          let _io580 ← throw_row_cup d
-          let ⟨_ret581, _iw0582⟩ := _io580
-          let d := _iw0582
-          let tray := _ret581
-          let read := (0 : Int)
-          let _t583 ← SudoRt.atL covered h
-          if (!( _t583 )) then
-            do
-              let _io584 ← grow_until_it_bumps d covered row col
-              let ⟨_ret585, _iw0586⟩ := _io584
-              let d := _iw0586
-              let laid := _ret585
-              match (laid : Option (Ship)) with
-              | some s =>
-                do
-                  let _io587 ← cover covered s
-                  let covered := _io587
-                  let _mb588 := SudoRt.appendL ships s
-                  let ⟨_nr589, _⟩ := _mb588
-                  let ships := _nr589
-                  let _hm551 := ()
-                  let _u590 := _hm551
-                  let _t591 ← lets_go letgo h true
-                  if _t591 then
-                    do
-                      let _io592 ← rethrow_unread d tray read
-                      let ⟨_iw0593, _iw1594⟩ := _io592
-                      let d := _iw0593
-                      let tray := _iw1594
-                      let _t595 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t595 (0 : Int)) then
-                        do
-                          let _t597 ← SudoRt.atL tray read
-                          let face := _t597
-                          let _t598 ← SudoRt.addI read (1 : Int)
-                          let read := _t598
-                          let _ix599 := h
-                          let _t600 ← keypad_first face
-                          let _t601 ← SudoRt.putL pegs _ix599 _t600
-                          let pegs := _t601
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix602 := h
-                          let _t603 ← keypad_second face
-                          let _t604 ← SudoRt.putL pegs _ix602 _t603
-                          let pegs := _t604
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _t605 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t605 (0 : Int)) then
-                        do
-                          let _t607 ← SudoRt.atL tray read
-                          let face := _t607
-                          let _t608 ← SudoRt.addI read (1 : Int)
-                          let read := _t608
-                          let _ix609 := h
-                          let _t610 ← keypad_first face
-                          let _t611 ← SudoRt.putL pegs _ix609 _t610
-                          let pegs := _t611
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix612 := h
-                          let _t613 ← keypad_second face
-                          let _t614 ← SudoRt.putL pegs _ix612 _t613
-                          let pegs := _t614
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              | _ =>
-                do
-                  match (laid : Option (Ship)) with
-                  | none =>
-                    do
-                      let _t615 ← lets_go letgo h true
-                      if _t615 then
-                        do
-                          let _io616 ← rethrow_unread d tray read
-                          let ⟨_iw0617, _iw1618⟩ := _io616
-                          let d := _iw0617
-                          let tray := _iw1618
-                          let _t619 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t619 (0 : Int)) then
-                            do
-                              let _t621 ← SudoRt.atL tray read
-                              let face := _t621
-                              let _t622 ← SudoRt.addI read (1 : Int)
-                              let read := _t622
-                              let _ix623 := h
-                              let _t624 ← keypad_first face
-                              let _t625 ← SudoRt.putL pegs _ix623 _t624
-                              let pegs := _t625
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix626 := h
-                              let _t627 ← keypad_second face
-                              let _t628 ← SudoRt.putL pegs _ix626 _t627
-                              let pegs := _t628
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _t629 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t629 (0 : Int)) then
-                            do
-                              let _t631 ← SudoRt.atL tray read
-                              let face := _t631
-                              let _t632 ← SudoRt.addI read (1 : Int)
-                              let read := _t632
-                              let _ix633 := h
-                              let _t634 ← keypad_first face
-                              let _t635 ← SudoRt.putL pegs _ix633 _t634
-                              let pegs := _t635
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix636 := h
-                              let _t637 ← keypad_second face
-                              let _t638 ← SudoRt.putL pegs _ix636 _t637
-                              let pegs := _t638
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-          else
-            do
-              let _t639 ← lets_go letgo h true
-              if _t639 then
-                do
-                  let _io640 ← rethrow_unread d tray read
-                  let ⟨_iw0641, _iw1642⟩ := _io640
-                  let d := _iw0641
-                  let tray := _iw1642
-                  let _t643 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t643 (0 : Int)) then
-                    do
-                      let _t645 ← SudoRt.atL tray read
-                      let face := _t645
-                      let _t646 ← SudoRt.addI read (1 : Int)
-                      let read := _t646
-                      let _ix647 := h
-                      let _t648 ← keypad_first face
-                      let _t649 ← SudoRt.putL pegs _ix647 _t648
-                      let pegs := _t649
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix650 := h
-                      let _t651 ← keypad_second face
-                      let _t652 ← SudoRt.putL pegs _ix650 _t651
-                      let pegs := _t652
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              else
-                do
-                  let _t653 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t653 (0 : Int)) then
-                    do
-                      let _t655 ← SudoRt.atL tray read
-                      let face := _t655
-                      let _t656 ← SudoRt.addI read (1 : Int)
-                      let read := _t656
-                      let _ix657 := h
-                      let _t658 ← keypad_first face
-                      let _t659 ← SudoRt.putL pegs _ix657 _t658
-                      let pegs := _t659
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix660 := h
-                      let _t661 ← keypad_second face
-                      let _t662 ← SudoRt.putL pegs _ix660 _t661
-                      let pegs := _t662
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-      else
-        do
-          let _t663 ← SudoRt.atL covered h
-          if (!( _t663 )) then
-            do
-              let _io664 ← grow_until_it_bumps d covered row col
-              let ⟨_ret665, _iw0666⟩ := _io664
-              let d := _iw0666
-              let laid := _ret665
-              match (laid : Option (Ship)) with
-              | some s =>
-                do
-                  let _io667 ← cover covered s
-                  let covered := _io667
-                  let _mb668 := SudoRt.appendL ships s
-                  let ⟨_nr669, _⟩ := _mb668
-                  let ships := _nr669
-                  let _hm551 := ()
-                  let _u670 := _hm551
-                  let _t671 ← lets_go letgo h true
-                  if _t671 then
-                    do
-                      let _io672 ← rethrow_unread d tray read
-                      let ⟨_iw0673, _iw1674⟩ := _io672
-                      let d := _iw0673
-                      let tray := _iw1674
-                      let _t675 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t675 (0 : Int)) then
-                        do
-                          let _t677 ← SudoRt.atL tray read
-                          let face := _t677
-                          let _t678 ← SudoRt.addI read (1 : Int)
-                          let read := _t678
-                          let _ix679 := h
-                          let _t680 ← keypad_first face
-                          let _t681 ← SudoRt.putL pegs _ix679 _t680
-                          let pegs := _t681
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix682 := h
-                          let _t683 ← keypad_second face
-                          let _t684 ← SudoRt.putL pegs _ix682 _t683
-                          let pegs := _t684
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _t685 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t685 (0 : Int)) then
-                        do
-                          let _t687 ← SudoRt.atL tray read
-                          let face := _t687
-                          let _t688 ← SudoRt.addI read (1 : Int)
-                          let read := _t688
-                          let _ix689 := h
-                          let _t690 ← keypad_first face
-                          let _t691 ← SudoRt.putL pegs _ix689 _t690
-                          let pegs := _t691
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix692 := h
-                          let _t693 ← keypad_second face
-                          let _t694 ← SudoRt.putL pegs _ix692 _t693
-                          let pegs := _t694
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              | _ =>
-                do
-                  match (laid : Option (Ship)) with
-                  | none =>
-                    do
-                      let _t695 ← lets_go letgo h true
-                      if _t695 then
-                        do
-                          let _io696 ← rethrow_unread d tray read
-                          let ⟨_iw0697, _iw1698⟩ := _io696
-                          let d := _iw0697
-                          let tray := _iw1698
-                          let _t699 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t699 (0 : Int)) then
-                            do
-                              let _t701 ← SudoRt.atL tray read
-                              let face := _t701
-                              let _t702 ← SudoRt.addI read (1 : Int)
-                              let read := _t702
-                              let _ix703 := h
-                              let _t704 ← keypad_first face
-                              let _t705 ← SudoRt.putL pegs _ix703 _t704
-                              let pegs := _t705
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix706 := h
-                              let _t707 ← keypad_second face
-                              let _t708 ← SudoRt.putL pegs _ix706 _t707
-                              let pegs := _t708
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _t709 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t709 (0 : Int)) then
-                            do
-                              let _t711 ← SudoRt.atL tray read
-                              let face := _t711
-                              let _t712 ← SudoRt.addI read (1 : Int)
-                              let read := _t712
-                              let _ix713 := h
-                              let _t714 ← keypad_first face
-                              let _t715 ← SudoRt.putL pegs _ix713 _t714
-                              let pegs := _t715
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix716 := h
-                              let _t717 ← keypad_second face
-                              let _t718 ← SudoRt.putL pegs _ix716 _t717
-                              let pegs := _t718
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-          else
-            do
-              let _t719 ← lets_go letgo h true
-              if _t719 then
-                do
-                  let _io720 ← rethrow_unread d tray read
-                  let ⟨_iw0721, _iw1722⟩ := _io720
-                  let d := _iw0721
-                  let tray := _iw1722
-                  let _t723 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t723 (0 : Int)) then
-                    do
-                      let _t725 ← SudoRt.atL tray read
-                      let face := _t725
-                      let _t726 ← SudoRt.addI read (1 : Int)
-                      let read := _t726
-                      let _ix727 := h
-                      let _t728 ← keypad_first face
-                      let _t729 ← SudoRt.putL pegs _ix727 _t728
-                      let pegs := _t729
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix730 := h
-                      let _t731 ← keypad_second face
-                      let _t732 ← SudoRt.putL pegs _ix730 _t731
-                      let pegs := _t732
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              else
-                do
-                  let _t733 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t733 (0 : Int)) then
-                    do
-                      let _t735 ← SudoRt.atL tray read
-                      let face := _t735
-                      let _t736 ← SudoRt.addI read (1 : Int)
-                      let read := _t736
-                      let _ix737 := h
-                      let _t738 ← keypad_first face
-                      let _t739 ← SudoRt.putL pegs _ix737 _t738
-                      let pegs := _t739
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix740 := h
-                      let _t741 ← keypad_second face
-                      let _t742 ← SudoRt.putL pegs _ix740 _t741
-                      let pegs := _t742
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-  else
-    do
-      if (SudoRt.SEq.beq col (0 : Int)) then
-        do
-          let _io744 ← throw_row_cup d
-          let ⟨_ret745, _iw0746⟩ := _io744
-          let d := _iw0746
-          let tray := _ret745
-          let read := (0 : Int)
-          let _t747 ← SudoRt.atL covered h
-          if (!( _t747 )) then
-            do
-              let _io748 ← grow_until_it_bumps d covered row col
-              let ⟨_ret749, _iw0750⟩ := _io748
-              let d := _iw0750
-              let laid := _ret749
-              match (laid : Option (Ship)) with
-              | some s =>
-                do
-                  let _io751 ← cover covered s
-                  let covered := _io751
-                  let _mb752 := SudoRt.appendL ships s
-                  let ⟨_nr753, _⟩ := _mb752
-                  let ships := _nr753
-                  let _hm551 := ()
-                  let _u754 := _hm551
-                  let _t755 ← lets_go letgo h true
-                  if _t755 then
-                    do
-                      let _io756 ← rethrow_unread d tray read
-                      let ⟨_iw0757, _iw1758⟩ := _io756
-                      let d := _iw0757
-                      let tray := _iw1758
-                      let _t759 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t759 (0 : Int)) then
-                        do
-                          let _t761 ← SudoRt.atL tray read
-                          let face := _t761
-                          let _t762 ← SudoRt.addI read (1 : Int)
-                          let read := _t762
-                          let _ix763 := h
-                          let _t764 ← keypad_first face
-                          let _t765 ← SudoRt.putL pegs _ix763 _t764
-                          let pegs := _t765
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix766 := h
-                          let _t767 ← keypad_second face
-                          let _t768 ← SudoRt.putL pegs _ix766 _t767
-                          let pegs := _t768
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _t769 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t769 (0 : Int)) then
-                        do
-                          let _t771 ← SudoRt.atL tray read
-                          let face := _t771
-                          let _t772 ← SudoRt.addI read (1 : Int)
-                          let read := _t772
-                          let _ix773 := h
-                          let _t774 ← keypad_first face
-                          let _t775 ← SudoRt.putL pegs _ix773 _t774
-                          let pegs := _t775
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix776 := h
-                          let _t777 ← keypad_second face
-                          let _t778 ← SudoRt.putL pegs _ix776 _t777
-                          let pegs := _t778
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              | _ =>
-                do
-                  match (laid : Option (Ship)) with
-                  | none =>
-                    do
-                      let _t779 ← lets_go letgo h true
-                      if _t779 then
-                        do
-                          let _io780 ← rethrow_unread d tray read
-                          let ⟨_iw0781, _iw1782⟩ := _io780
-                          let d := _iw0781
-                          let tray := _iw1782
-                          let _t783 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t783 (0 : Int)) then
-                            do
-                              let _t785 ← SudoRt.atL tray read
-                              let face := _t785
-                              let _t786 ← SudoRt.addI read (1 : Int)
-                              let read := _t786
-                              let _ix787 := h
-                              let _t788 ← keypad_first face
-                              let _t789 ← SudoRt.putL pegs _ix787 _t788
-                              let pegs := _t789
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix790 := h
-                              let _t791 ← keypad_second face
-                              let _t792 ← SudoRt.putL pegs _ix790 _t791
-                              let pegs := _t792
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _t793 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t793 (0 : Int)) then
-                            do
-                              let _t795 ← SudoRt.atL tray read
-                              let face := _t795
-                              let _t796 ← SudoRt.addI read (1 : Int)
-                              let read := _t796
-                              let _ix797 := h
-                              let _t798 ← keypad_first face
-                              let _t799 ← SudoRt.putL pegs _ix797 _t798
-                              let pegs := _t799
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix800 := h
-                              let _t801 ← keypad_second face
-                              let _t802 ← SudoRt.putL pegs _ix800 _t801
-                              let pegs := _t802
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-          else
-            do
-              let _t803 ← lets_go letgo h true
-              if _t803 then
-                do
-                  let _io804 ← rethrow_unread d tray read
-                  let ⟨_iw0805, _iw1806⟩ := _io804
-                  let d := _iw0805
-                  let tray := _iw1806
-                  let _t807 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t807 (0 : Int)) then
-                    do
-                      let _t809 ← SudoRt.atL tray read
-                      let face := _t809
-                      let _t810 ← SudoRt.addI read (1 : Int)
-                      let read := _t810
-                      let _ix811 := h
-                      let _t812 ← keypad_first face
-                      let _t813 ← SudoRt.putL pegs _ix811 _t812
-                      let pegs := _t813
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix814 := h
-                      let _t815 ← keypad_second face
-                      let _t816 ← SudoRt.putL pegs _ix814 _t815
-                      let pegs := _t816
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              else
-                do
-                  let _t817 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t817 (0 : Int)) then
-                    do
-                      let _t819 ← SudoRt.atL tray read
-                      let face := _t819
-                      let _t820 ← SudoRt.addI read (1 : Int)
-                      let read := _t820
-                      let _ix821 := h
-                      let _t822 ← keypad_first face
-                      let _t823 ← SudoRt.putL pegs _ix821 _t822
-                      let pegs := _t823
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix824 := h
-                      let _t825 ← keypad_second face
-                      let _t826 ← SudoRt.putL pegs _ix824 _t825
-                      let pegs := _t826
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-      else
-        do
-          let _t827 ← SudoRt.atL covered h
-          if (!( _t827 )) then
-            do
-              let _io828 ← grow_until_it_bumps d covered row col
-              let ⟨_ret829, _iw0830⟩ := _io828
-              let d := _iw0830
-              let laid := _ret829
-              match (laid : Option (Ship)) with
-              | some s =>
-                do
-                  let _io831 ← cover covered s
-                  let covered := _io831
-                  let _mb832 := SudoRt.appendL ships s
-                  let ⟨_nr833, _⟩ := _mb832
-                  let ships := _nr833
-                  let _hm551 := ()
-                  let _u834 := _hm551
-                  let _t835 ← lets_go letgo h true
-                  if _t835 then
-                    do
-                      let _io836 ← rethrow_unread d tray read
-                      let ⟨_iw0837, _iw1838⟩ := _io836
-                      let d := _iw0837
-                      let tray := _iw1838
-                      let _t839 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t839 (0 : Int)) then
-                        do
-                          let _t841 ← SudoRt.atL tray read
-                          let face := _t841
-                          let _t842 ← SudoRt.addI read (1 : Int)
-                          let read := _t842
-                          let _ix843 := h
-                          let _t844 ← keypad_first face
-                          let _t845 ← SudoRt.putL pegs _ix843 _t844
-                          let pegs := _t845
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix846 := h
-                          let _t847 ← keypad_second face
-                          let _t848 ← SudoRt.putL pegs _ix846 _t847
-                          let pegs := _t848
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _t849 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t849 (0 : Int)) then
-                        do
-                          let _t851 ← SudoRt.atL tray read
-                          let face := _t851
-                          let _t852 ← SudoRt.addI read (1 : Int)
-                          let read := _t852
-                          let _ix853 := h
-                          let _t854 ← keypad_first face
-                          let _t855 ← SudoRt.putL pegs _ix853 _t854
-                          let pegs := _t855
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix856 := h
-                          let _t857 ← keypad_second face
-                          let _t858 ← SudoRt.putL pegs _ix856 _t857
-                          let pegs := _t858
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              | _ =>
-                do
-                  match (laid : Option (Ship)) with
-                  | none =>
-                    do
-                      let _t859 ← lets_go letgo h true
-                      if _t859 then
-                        do
-                          let _io860 ← rethrow_unread d tray read
-                          let ⟨_iw0861, _iw1862⟩ := _io860
-                          let d := _iw0861
-                          let tray := _iw1862
-                          let _t863 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t863 (0 : Int)) then
-                            do
-                              let _t865 ← SudoRt.atL tray read
-                              let face := _t865
-                              let _t866 ← SudoRt.addI read (1 : Int)
-                              let read := _t866
-                              let _ix867 := h
-                              let _t868 ← keypad_first face
-                              let _t869 ← SudoRt.putL pegs _ix867 _t868
-                              let pegs := _t869
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix870 := h
-                              let _t871 ← keypad_second face
-                              let _t872 ← SudoRt.putL pegs _ix870 _t871
-                              let pegs := _t872
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _t873 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t873 (0 : Int)) then
-                            do
-                              let _t875 ← SudoRt.atL tray read
-                              let face := _t875
-                              let _t876 ← SudoRt.addI read (1 : Int)
-                              let read := _t876
-                              let _ix877 := h
-                              let _t878 ← keypad_first face
-                              let _t879 ← SudoRt.putL pegs _ix877 _t878
-                              let pegs := _t879
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix880 := h
-                              let _t881 ← keypad_second face
-                              let _t882 ← SudoRt.putL pegs _ix880 _t881
-                              let pegs := _t882
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-          else
-            do
-              let _t883 ← lets_go letgo h true
-              if _t883 then
-                do
-                  let _io884 ← rethrow_unread d tray read
-                  let ⟨_iw0885, _iw1886⟩ := _io884
-                  let d := _iw0885
-                  let tray := _iw1886
-                  let _t887 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t887 (0 : Int)) then
-                    do
-                      let _t889 ← SudoRt.atL tray read
-                      let face := _t889
-                      let _t890 ← SudoRt.addI read (1 : Int)
-                      let read := _t890
-                      let _ix891 := h
-                      let _t892 ← keypad_first face
-                      let _t893 ← SudoRt.putL pegs _ix891 _t892
-                      let pegs := _t893
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix894 := h
-                      let _t895 ← keypad_second face
-                      let _t896 ← SudoRt.putL pegs _ix894 _t895
-                      let pegs := _t896
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              else
-                do
-                  let _t897 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t897 (0 : Int)) then
-                    do
-                      let _t899 ← SudoRt.atL tray read
-                      let face := _t899
-                      let _t900 ← SudoRt.addI read (1 : Int)
-                      let read := _t900
-                      let _ix901 := h
-                      let _t902 ← keypad_first face
-                      let _t903 ← SudoRt.putL pegs _ix901 _t902
-                      let pegs := _t903
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix904 := h
-                      let _t905 ← keypad_second face
-                      let _t906 ← SudoRt.putL pegs _ix904 _t905
-                      let pegs := _t906
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))) : Except SudoRt.Trap (SudoRt.Flow _ ((KeyGrid) × (Dice)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (col, _fs))
-        | .cont _fs => do
-            if col == _toV then
-              pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (col, _fs))
-            else do
-              let i' ← SudoRt.addI col (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (i', _fs))
-
-open Bs in
-/-- The emitted hole step from the peg (keypad row at a pair's first hole, column at its second), copied verbatim (one of its identical copies). -/
+/-- The emitted hole step from the peg (keypad row at a pair's first hole, column at its second), as emitted (each copy in `build` is the same up to binder names). -/
 def stageEE (_letgo : Array LetGo) (_row : Int) (col h : Int) (d : Dice) (tray : Array Int) (read : Int)
     (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
     Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
@@ -2104,10 +1356,9 @@ def stageEE (_letgo : Array LetGo) (_row : Int) (col h : Int) (d : Dice) (tray :
         let _t604 ← SudoRt.putL pegs _ix602 _t603
         let pegs := _t604
         pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-
 open Bs in
-/-- The emitted hole step from letting go in the step 1 → 2 gap, then the peg, copied verbatim (one of its identical copies). -/
-def stageDE (letgo : Array LetGo) (_row : Int) (col h : Int) (d : Dice) (tray : Array Int) (read : Int)
+/-- The emitted hole step from letting go in the step 1 → 2 gap, then the peg (`stageEE`). -/
+def stageDE (letgo : Array LetGo) (row : Int) (col h : Int) (d : Dice) (tray : Array Int) (read : Int)
     (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
     Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
       (KeyGrid × Dice)) :=
@@ -2117,51 +1368,13 @@ def stageDE (letgo : Array LetGo) (_row : Int) (col h : Int) (d : Dice) (tray : 
       do
         let _io592 ← rethrow_unread d tray read
         let ⟨_iw0593, _iw1594⟩ := _io592
-        let d := _iw0593
-        let tray := _iw1594
-        let _t595 ← SudoRt.modI col (2 : Int)
-        if (SudoRt.SEq.beq _t595 (0 : Int)) then
-          do
-            let _t597 ← SudoRt.atL tray read
-            let face := _t597
-            let _t598 ← SudoRt.addI read (1 : Int)
-            let read := _t598
-            let _ix599 := h
-            let _t600 ← keypad_first face
-            let _t601 ← SudoRt.putL pegs _ix599 _t600
-            let pegs := _t601
-            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-        else
-          do
-            let _ix602 := h
-            let _t603 ← keypad_second face
-            let _t604 ← SudoRt.putL pegs _ix602 _t603
-            let pegs := _t604
-            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+        stageEE letgo row col h _iw0593 _iw1594 read covered ships face pegs
     else
-      do
-        let _t605 ← SudoRt.modI col (2 : Int)
-        if (SudoRt.SEq.beq _t605 (0 : Int)) then
-          do
-            let _t607 ← SudoRt.atL tray read
-            let face := _t607
-            let _t608 ← SudoRt.addI read (1 : Int)
-            let read := _t608
-            let _ix609 := h
-            let _t610 ← keypad_first face
-            let _t611 ← SudoRt.putL pegs _ix609 _t610
-            let pegs := _t611
-            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-        else
-          do
-            let _ix612 := h
-            let _t613 ← keypad_second face
-            let _t614 ← SudoRt.putL pegs _ix612 _t613
-            let pegs := _t614
-            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+      stageEE letgo row col h d tray read covered ships face pegs
 
 open Bs in
-/-- The emitted hole step from growing until it bumps at an uncovered hole, then the gap let-go and the peg, copied verbatim (one of its identical copies). -/
+/-- The emitted hole step from growing until it bumps at an uncovered hole, then the gap
+    let-go and the peg (`stageDE`). -/
 def stageCE (letgo : Array LetGo) (row col h : Int) (d : Dice) (tray : Array Int) (read : Int)
     (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
     Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
@@ -2172,170 +1385,22 @@ def stageCE (letgo : Array LetGo) (row col h : Int) (d : Dice) (tray : Array Int
       do
         let _io584 ← grow_until_it_bumps d covered row col
         let ⟨_ret585, _iw0586⟩ := _io584
-        let d := _iw0586
-        let laid := _ret585
-        match (laid : Option (Ship)) with
+        match (_ret585 : Option (Ship)) with
         | some s =>
           do
             let _io587 ← cover covered s
-            let covered := _io587
-            let _mb588 := SudoRt.appendL ships s
-            let ⟨_nr589, _⟩ := _mb588
-            let ships := _nr589
-            let _hm551 := ()
-            let _u590 := _hm551
-            let _t591 ← lets_go letgo h true
-            if _t591 then
-              do
-                let _io592 ← rethrow_unread d tray read
-                let ⟨_iw0593, _iw1594⟩ := _io592
-                let d := _iw0593
-                let tray := _iw1594
-                let _t595 ← SudoRt.modI col (2 : Int)
-                if (SudoRt.SEq.beq _t595 (0 : Int)) then
-                  do
-                    let _t597 ← SudoRt.atL tray read
-                    let face := _t597
-                    let _t598 ← SudoRt.addI read (1 : Int)
-                    let read := _t598
-                    let _ix599 := h
-                    let _t600 ← keypad_first face
-                    let _t601 ← SudoRt.putL pegs _ix599 _t600
-                    let pegs := _t601
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                else
-                  do
-                    let _ix602 := h
-                    let _t603 ← keypad_second face
-                    let _t604 ← SudoRt.putL pegs _ix602 _t603
-                    let pegs := _t604
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-            else
-              do
-                let _t605 ← SudoRt.modI col (2 : Int)
-                if (SudoRt.SEq.beq _t605 (0 : Int)) then
-                  do
-                    let _t607 ← SudoRt.atL tray read
-                    let face := _t607
-                    let _t608 ← SudoRt.addI read (1 : Int)
-                    let read := _t608
-                    let _ix609 := h
-                    let _t610 ← keypad_first face
-                    let _t611 ← SudoRt.putL pegs _ix609 _t610
-                    let pegs := _t611
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                else
-                  do
-                    let _ix612 := h
-                    let _t613 ← keypad_second face
-                    let _t614 ← SudoRt.putL pegs _ix612 _t613
-                    let pegs := _t614
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+            let ⟨_nr589, _⟩ := SudoRt.appendL ships s
+            stageDE letgo row col h _iw0586 tray read _io587 _nr589 face pegs
         | _ =>
           do
-            match (laid : Option (Ship)) with
-            | none =>
-              do
-                let _t615 ← lets_go letgo h true
-                if _t615 then
-                  do
-                    let _io616 ← rethrow_unread d tray read
-                    let ⟨_iw0617, _iw1618⟩ := _io616
-                    let d := _iw0617
-                    let tray := _iw1618
-                    let _t619 ← SudoRt.modI col (2 : Int)
-                    if (SudoRt.SEq.beq _t619 (0 : Int)) then
-                      do
-                        let _t621 ← SudoRt.atL tray read
-                        let face := _t621
-                        let _t622 ← SudoRt.addI read (1 : Int)
-                        let read := _t622
-                        let _ix623 := h
-                        let _t624 ← keypad_first face
-                        let _t625 ← SudoRt.putL pegs _ix623 _t624
-                        let pegs := _t625
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                    else
-                      do
-                        let _ix626 := h
-                        let _t627 ← keypad_second face
-                        let _t628 ← SudoRt.putL pegs _ix626 _t627
-                        let pegs := _t628
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                else
-                  do
-                    let _t629 ← SudoRt.modI col (2 : Int)
-                    if (SudoRt.SEq.beq _t629 (0 : Int)) then
-                      do
-                        let _t631 ← SudoRt.atL tray read
-                        let face := _t631
-                        let _t632 ← SudoRt.addI read (1 : Int)
-                        let read := _t632
-                        let _ix633 := h
-                        let _t634 ← keypad_first face
-                        let _t635 ← SudoRt.putL pegs _ix633 _t634
-                        let pegs := _t635
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                    else
-                      do
-                        let _ix636 := h
-                        let _t637 ← keypad_second face
-                        let _t638 ← SudoRt.putL pegs _ix636 _t637
-                        let pegs := _t638
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+            match (_ret585 : Option (Ship)) with
+            | none => stageDE letgo row col h _iw0586 tray read covered ships face pegs
             | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
     else
-      do
-        let _t639 ← lets_go letgo h true
-        if _t639 then
-          do
-            let _io640 ← rethrow_unread d tray read
-            let ⟨_iw0641, _iw1642⟩ := _io640
-            let d := _iw0641
-            let tray := _iw1642
-            let _t643 ← SudoRt.modI col (2 : Int)
-            if (SudoRt.SEq.beq _t643 (0 : Int)) then
-              do
-                let _t645 ← SudoRt.atL tray read
-                let face := _t645
-                let _t646 ← SudoRt.addI read (1 : Int)
-                let read := _t646
-                let _ix647 := h
-                let _t648 ← keypad_first face
-                let _t649 ← SudoRt.putL pegs _ix647 _t648
-                let pegs := _t649
-                pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-            else
-              do
-                let _ix650 := h
-                let _t651 ← keypad_second face
-                let _t652 ← SudoRt.putL pegs _ix650 _t651
-                let pegs := _t652
-                pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-        else
-          do
-            let _t653 ← SudoRt.modI col (2 : Int)
-            if (SudoRt.SEq.beq _t653 (0 : Int)) then
-              do
-                let _t655 ← SudoRt.atL tray read
-                let face := _t655
-                let _t656 ← SudoRt.addI read (1 : Int)
-                let read := _t656
-                let _ix657 := h
-                let _t658 ← keypad_first face
-                let _t659 ← SudoRt.putL pegs _ix657 _t658
-                let pegs := _t659
-                pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-            else
-              do
-                let _ix660 := h
-                let _t661 ← keypad_second face
-                let _t662 ← SudoRt.putL pegs _ix660 _t661
-                let pegs := _t662
-                pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+      stageDE letgo row col h d tray read covered ships face pegs
 
 open Bs in
-/-- The emitted hole step from the row cup at a row's first hole, then the rest of the hole, copied verbatim (one of its identical copies). -/
+/-- The emitted hole step from the row cup (at a row's first hole), then `stageCE`. -/
 def stageBE (letgo : Array LetGo) (row col h : Int) (d : Dice) (tray : Array Int) (read : Int)
     (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
     Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
@@ -2345,343 +1410,10 @@ def stageBE (letgo : Array LetGo) (row col h : Int) (d : Dice) (tray : Array Int
       do
         let _io580 ← throw_row_cup d
         let ⟨_ret581, _iw0582⟩ := _io580
-        let d := _iw0582
-        let tray := _ret581
-        let read := (0 : Int)
-        let _t583 ← SudoRt.atL covered h
-        if (!( _t583 )) then
-          do
-            let _io584 ← grow_until_it_bumps d covered row col
-            let ⟨_ret585, _iw0586⟩ := _io584
-            let d := _iw0586
-            let laid := _ret585
-            match (laid : Option (Ship)) with
-            | some s =>
-              do
-                let _io587 ← cover covered s
-                let covered := _io587
-                let _mb588 := SudoRt.appendL ships s
-                let ⟨_nr589, _⟩ := _mb588
-                let ships := _nr589
-                let _hm551 := ()
-                let _u590 := _hm551
-                let _t591 ← lets_go letgo h true
-                if _t591 then
-                  do
-                    let _io592 ← rethrow_unread d tray read
-                    let ⟨_iw0593, _iw1594⟩ := _io592
-                    let d := _iw0593
-                    let tray := _iw1594
-                    let _t595 ← SudoRt.modI col (2 : Int)
-                    if (SudoRt.SEq.beq _t595 (0 : Int)) then
-                      do
-                        let _t597 ← SudoRt.atL tray read
-                        let face := _t597
-                        let _t598 ← SudoRt.addI read (1 : Int)
-                        let read := _t598
-                        let _ix599 := h
-                        let _t600 ← keypad_first face
-                        let _t601 ← SudoRt.putL pegs _ix599 _t600
-                        let pegs := _t601
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                    else
-                      do
-                        let _ix602 := h
-                        let _t603 ← keypad_second face
-                        let _t604 ← SudoRt.putL pegs _ix602 _t603
-                        let pegs := _t604
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                else
-                  do
-                    let _t605 ← SudoRt.modI col (2 : Int)
-                    if (SudoRt.SEq.beq _t605 (0 : Int)) then
-                      do
-                        let _t607 ← SudoRt.atL tray read
-                        let face := _t607
-                        let _t608 ← SudoRt.addI read (1 : Int)
-                        let read := _t608
-                        let _ix609 := h
-                        let _t610 ← keypad_first face
-                        let _t611 ← SudoRt.putL pegs _ix609 _t610
-                        let pegs := _t611
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                    else
-                      do
-                        let _ix612 := h
-                        let _t613 ← keypad_second face
-                        let _t614 ← SudoRt.putL pegs _ix612 _t613
-                        let pegs := _t614
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-            | _ =>
-              do
-                match (laid : Option (Ship)) with
-                | none =>
-                  do
-                    let _t615 ← lets_go letgo h true
-                    if _t615 then
-                      do
-                        let _io616 ← rethrow_unread d tray read
-                        let ⟨_iw0617, _iw1618⟩ := _io616
-                        let d := _iw0617
-                        let tray := _iw1618
-                        let _t619 ← SudoRt.modI col (2 : Int)
-                        if (SudoRt.SEq.beq _t619 (0 : Int)) then
-                          do
-                            let _t621 ← SudoRt.atL tray read
-                            let face := _t621
-                            let _t622 ← SudoRt.addI read (1 : Int)
-                            let read := _t622
-                            let _ix623 := h
-                            let _t624 ← keypad_first face
-                            let _t625 ← SudoRt.putL pegs _ix623 _t624
-                            let pegs := _t625
-                            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                        else
-                          do
-                            let _ix626 := h
-                            let _t627 ← keypad_second face
-                            let _t628 ← SudoRt.putL pegs _ix626 _t627
-                            let pegs := _t628
-                            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                    else
-                      do
-                        let _t629 ← SudoRt.modI col (2 : Int)
-                        if (SudoRt.SEq.beq _t629 (0 : Int)) then
-                          do
-                            let _t631 ← SudoRt.atL tray read
-                            let face := _t631
-                            let _t632 ← SudoRt.addI read (1 : Int)
-                            let read := _t632
-                            let _ix633 := h
-                            let _t634 ← keypad_first face
-                            let _t635 ← SudoRt.putL pegs _ix633 _t634
-                            let pegs := _t635
-                            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                        else
-                          do
-                            let _ix636 := h
-                            let _t637 ← keypad_second face
-                            let _t638 ← SudoRt.putL pegs _ix636 _t637
-                            let pegs := _t638
-                            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-        else
-          do
-            let _t639 ← lets_go letgo h true
-            if _t639 then
-              do
-                let _io640 ← rethrow_unread d tray read
-                let ⟨_iw0641, _iw1642⟩ := _io640
-                let d := _iw0641
-                let tray := _iw1642
-                let _t643 ← SudoRt.modI col (2 : Int)
-                if (SudoRt.SEq.beq _t643 (0 : Int)) then
-                  do
-                    let _t645 ← SudoRt.atL tray read
-                    let face := _t645
-                    let _t646 ← SudoRt.addI read (1 : Int)
-                    let read := _t646
-                    let _ix647 := h
-                    let _t648 ← keypad_first face
-                    let _t649 ← SudoRt.putL pegs _ix647 _t648
-                    let pegs := _t649
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                else
-                  do
-                    let _ix650 := h
-                    let _t651 ← keypad_second face
-                    let _t652 ← SudoRt.putL pegs _ix650 _t651
-                    let pegs := _t652
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-            else
-              do
-                let _t653 ← SudoRt.modI col (2 : Int)
-                if (SudoRt.SEq.beq _t653 (0 : Int)) then
-                  do
-                    let _t655 ← SudoRt.atL tray read
-                    let face := _t655
-                    let _t656 ← SudoRt.addI read (1 : Int)
-                    let read := _t656
-                    let _ix657 := h
-                    let _t658 ← keypad_first face
-                    let _t659 ← SudoRt.putL pegs _ix657 _t658
-                    let pegs := _t659
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                else
-                  do
-                    let _ix660 := h
-                    let _t661 ← keypad_second face
-                    let _t662 ← SudoRt.putL pegs _ix660 _t661
-                    let pegs := _t662
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+        stageCE letgo row col h _iw0582 _ret581 (0 : Int) covered ships face pegs
     else
-      do
-        let _t663 ← SudoRt.atL covered h
-        if (!( _t663 )) then
-          do
-            let _io664 ← grow_until_it_bumps d covered row col
-            let ⟨_ret665, _iw0666⟩ := _io664
-            let d := _iw0666
-            let laid := _ret665
-            match (laid : Option (Ship)) with
-            | some s =>
-              do
-                let _io667 ← cover covered s
-                let covered := _io667
-                let _mb668 := SudoRt.appendL ships s
-                let ⟨_nr669, _⟩ := _mb668
-                let ships := _nr669
-                let _hm551 := ()
-                let _u670 := _hm551
-                let _t671 ← lets_go letgo h true
-                if _t671 then
-                  do
-                    let _io672 ← rethrow_unread d tray read
-                    let ⟨_iw0673, _iw1674⟩ := _io672
-                    let d := _iw0673
-                    let tray := _iw1674
-                    let _t675 ← SudoRt.modI col (2 : Int)
-                    if (SudoRt.SEq.beq _t675 (0 : Int)) then
-                      do
-                        let _t677 ← SudoRt.atL tray read
-                        let face := _t677
-                        let _t678 ← SudoRt.addI read (1 : Int)
-                        let read := _t678
-                        let _ix679 := h
-                        let _t680 ← keypad_first face
-                        let _t681 ← SudoRt.putL pegs _ix679 _t680
-                        let pegs := _t681
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                    else
-                      do
-                        let _ix682 := h
-                        let _t683 ← keypad_second face
-                        let _t684 ← SudoRt.putL pegs _ix682 _t683
-                        let pegs := _t684
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                else
-                  do
-                    let _t685 ← SudoRt.modI col (2 : Int)
-                    if (SudoRt.SEq.beq _t685 (0 : Int)) then
-                      do
-                        let _t687 ← SudoRt.atL tray read
-                        let face := _t687
-                        let _t688 ← SudoRt.addI read (1 : Int)
-                        let read := _t688
-                        let _ix689 := h
-                        let _t690 ← keypad_first face
-                        let _t691 ← SudoRt.putL pegs _ix689 _t690
-                        let pegs := _t691
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                    else
-                      do
-                        let _ix692 := h
-                        let _t693 ← keypad_second face
-                        let _t694 ← SudoRt.putL pegs _ix692 _t693
-                        let pegs := _t694
-                        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-            | _ =>
-              do
-                match (laid : Option (Ship)) with
-                | none =>
-                  do
-                    let _t695 ← lets_go letgo h true
-                    if _t695 then
-                      do
-                        let _io696 ← rethrow_unread d tray read
-                        let ⟨_iw0697, _iw1698⟩ := _io696
-                        let d := _iw0697
-                        let tray := _iw1698
-                        let _t699 ← SudoRt.modI col (2 : Int)
-                        if (SudoRt.SEq.beq _t699 (0 : Int)) then
-                          do
-                            let _t701 ← SudoRt.atL tray read
-                            let face := _t701
-                            let _t702 ← SudoRt.addI read (1 : Int)
-                            let read := _t702
-                            let _ix703 := h
-                            let _t704 ← keypad_first face
-                            let _t705 ← SudoRt.putL pegs _ix703 _t704
-                            let pegs := _t705
-                            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                        else
-                          do
-                            let _ix706 := h
-                            let _t707 ← keypad_second face
-                            let _t708 ← SudoRt.putL pegs _ix706 _t707
-                            let pegs := _t708
-                            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                    else
-                      do
-                        let _t709 ← SudoRt.modI col (2 : Int)
-                        if (SudoRt.SEq.beq _t709 (0 : Int)) then
-                          do
-                            let _t711 ← SudoRt.atL tray read
-                            let face := _t711
-                            let _t712 ← SudoRt.addI read (1 : Int)
-                            let read := _t712
-                            let _ix713 := h
-                            let _t714 ← keypad_first face
-                            let _t715 ← SudoRt.putL pegs _ix713 _t714
-                            let pegs := _t715
-                            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                        else
-                          do
-                            let _ix716 := h
-                            let _t717 ← keypad_second face
-                            let _t718 ← SudoRt.putL pegs _ix716 _t717
-                            let pegs := _t718
-                            pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-        else
-          do
-            let _t719 ← lets_go letgo h true
-            if _t719 then
-              do
-                let _io720 ← rethrow_unread d tray read
-                let ⟨_iw0721, _iw1722⟩ := _io720
-                let d := _iw0721
-                let tray := _iw1722
-                let _t723 ← SudoRt.modI col (2 : Int)
-                if (SudoRt.SEq.beq _t723 (0 : Int)) then
-                  do
-                    let _t725 ← SudoRt.atL tray read
-                    let face := _t725
-                    let _t726 ← SudoRt.addI read (1 : Int)
-                    let read := _t726
-                    let _ix727 := h
-                    let _t728 ← keypad_first face
-                    let _t729 ← SudoRt.putL pegs _ix727 _t728
-                    let pegs := _t729
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                else
-                  do
-                    let _ix730 := h
-                    let _t731 ← keypad_second face
-                    let _t732 ← SudoRt.putL pegs _ix730 _t731
-                    let pegs := _t732
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-            else
-              do
-                let _t733 ← SudoRt.modI col (2 : Int)
-                if (SudoRt.SEq.beq _t733 (0 : Int)) then
-                  do
-                    let _t735 ← SudoRt.atL tray read
-                    let face := _t735
-                    let _t736 ← SudoRt.addI read (1 : Int)
-                    let read := _t736
-                    let _ix737 := h
-                    let _t738 ← keypad_first face
-                    let _t739 ← SudoRt.putL pegs _ix737 _t738
-                    let pegs := _t739
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                else
-                  do
-                    let _ix740 := h
-                    let _t741 ← keypad_second face
-                    let _t742 ← SudoRt.putL pegs _ix740 _t741
-                    let pegs := _t742
-                    pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+      stageCE letgo row col h d tray read covered ships face pegs
+
 
 /-- A model build state as the emitted loop state. -/
 def embSt (st : Spec.BuildSt) :
@@ -2696,9 +1428,6 @@ structure HoleInv (d0 : Spec.Dice) (col : Nat) (st : Spec.BuildSt) : Prop where
   trayLen : st.tray.length ≤ 5
   read : st.read ≤ st.tray.length
   face : col % 2 = 1 → 1 ≤ st.face ∧ st.face ≤ 9
-
-theorem embed_getElem? (l : List Nat) (i : Nat) : (embed l)[i]? = (l[i]?).map Int.ofNat := by
-  simp [embed]
 
 theorem tab_pegs_set (pegs : Nat → Nat) (h v : Nat) (hh : h < 100) :
     (tab (fun x => Int.ofNat (pegs x))).set ⟨h, by rw [tab_size]; exact hh⟩ (Int.ofNat v) =
@@ -2851,8 +1580,7 @@ theorem stageB_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : 
     exact stageC_spec lg hlg row col hr hc st hd hread htray hlen hface
 
 open Bs in
-/-- The emitted hole step's body (the let-go before the hole through the peg), copied verbatim
-    from `holeStepE`. -/
+/-- The emitted hole step's body: the let-go before the hole, then `stageBE`. -/
 def holeInnerE (letgo : Array LetGo) (row col : Int) (d : Dice) (tray : Array Int) (read : Int)
     (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
     Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
@@ -2865,692 +1593,45 @@ def holeInnerE (letgo : Array LetGo) (row col : Int) (d : Dice) (tray : Array In
     do
       let _io576 ← rethrow_unread d tray read
       let ⟨_iw0577, _iw1578⟩ := _io576
-      let d := _iw0577
-      let tray := _iw1578
-      if (SudoRt.SEq.beq col (0 : Int)) then
-        do
-          let _io580 ← throw_row_cup d
-          let ⟨_ret581, _iw0582⟩ := _io580
-          let d := _iw0582
-          let tray := _ret581
-          let read := (0 : Int)
-          let _t583 ← SudoRt.atL covered h
-          if (!( _t583 )) then
-            do
-              let _io584 ← grow_until_it_bumps d covered row col
-              let ⟨_ret585, _iw0586⟩ := _io584
-              let d := _iw0586
-              let laid := _ret585
-              match (laid : Option (Ship)) with
-              | some s =>
-                do
-                  let _io587 ← cover covered s
-                  let covered := _io587
-                  let _mb588 := SudoRt.appendL ships s
-                  let ⟨_nr589, _⟩ := _mb588
-                  let ships := _nr589
-                  let _hm551 := ()
-                  let _u590 := _hm551
-                  let _t591 ← lets_go letgo h true
-                  if _t591 then
-                    do
-                      let _io592 ← rethrow_unread d tray read
-                      let ⟨_iw0593, _iw1594⟩ := _io592
-                      let d := _iw0593
-                      let tray := _iw1594
-                      let _t595 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t595 (0 : Int)) then
-                        do
-                          let _t597 ← SudoRt.atL tray read
-                          let face := _t597
-                          let _t598 ← SudoRt.addI read (1 : Int)
-                          let read := _t598
-                          let _ix599 := h
-                          let _t600 ← keypad_first face
-                          let _t601 ← SudoRt.putL pegs _ix599 _t600
-                          let pegs := _t601
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix602 := h
-                          let _t603 ← keypad_second face
-                          let _t604 ← SudoRt.putL pegs _ix602 _t603
-                          let pegs := _t604
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _t605 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t605 (0 : Int)) then
-                        do
-                          let _t607 ← SudoRt.atL tray read
-                          let face := _t607
-                          let _t608 ← SudoRt.addI read (1 : Int)
-                          let read := _t608
-                          let _ix609 := h
-                          let _t610 ← keypad_first face
-                          let _t611 ← SudoRt.putL pegs _ix609 _t610
-                          let pegs := _t611
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix612 := h
-                          let _t613 ← keypad_second face
-                          let _t614 ← SudoRt.putL pegs _ix612 _t613
-                          let pegs := _t614
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              | _ =>
-                do
-                  match (laid : Option (Ship)) with
-                  | none =>
-                    do
-                      let _t615 ← lets_go letgo h true
-                      if _t615 then
-                        do
-                          let _io616 ← rethrow_unread d tray read
-                          let ⟨_iw0617, _iw1618⟩ := _io616
-                          let d := _iw0617
-                          let tray := _iw1618
-                          let _t619 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t619 (0 : Int)) then
-                            do
-                              let _t621 ← SudoRt.atL tray read
-                              let face := _t621
-                              let _t622 ← SudoRt.addI read (1 : Int)
-                              let read := _t622
-                              let _ix623 := h
-                              let _t624 ← keypad_first face
-                              let _t625 ← SudoRt.putL pegs _ix623 _t624
-                              let pegs := _t625
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix626 := h
-                              let _t627 ← keypad_second face
-                              let _t628 ← SudoRt.putL pegs _ix626 _t627
-                              let pegs := _t628
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _t629 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t629 (0 : Int)) then
-                            do
-                              let _t631 ← SudoRt.atL tray read
-                              let face := _t631
-                              let _t632 ← SudoRt.addI read (1 : Int)
-                              let read := _t632
-                              let _ix633 := h
-                              let _t634 ← keypad_first face
-                              let _t635 ← SudoRt.putL pegs _ix633 _t634
-                              let pegs := _t635
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix636 := h
-                              let _t637 ← keypad_second face
-                              let _t638 ← SudoRt.putL pegs _ix636 _t637
-                              let pegs := _t638
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-          else
-            do
-              let _t639 ← lets_go letgo h true
-              if _t639 then
-                do
-                  let _io640 ← rethrow_unread d tray read
-                  let ⟨_iw0641, _iw1642⟩ := _io640
-                  let d := _iw0641
-                  let tray := _iw1642
-                  let _t643 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t643 (0 : Int)) then
-                    do
-                      let _t645 ← SudoRt.atL tray read
-                      let face := _t645
-                      let _t646 ← SudoRt.addI read (1 : Int)
-                      let read := _t646
-                      let _ix647 := h
-                      let _t648 ← keypad_first face
-                      let _t649 ← SudoRt.putL pegs _ix647 _t648
-                      let pegs := _t649
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix650 := h
-                      let _t651 ← keypad_second face
-                      let _t652 ← SudoRt.putL pegs _ix650 _t651
-                      let pegs := _t652
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              else
-                do
-                  let _t653 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t653 (0 : Int)) then
-                    do
-                      let _t655 ← SudoRt.atL tray read
-                      let face := _t655
-                      let _t656 ← SudoRt.addI read (1 : Int)
-                      let read := _t656
-                      let _ix657 := h
-                      let _t658 ← keypad_first face
-                      let _t659 ← SudoRt.putL pegs _ix657 _t658
-                      let pegs := _t659
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix660 := h
-                      let _t661 ← keypad_second face
-                      let _t662 ← SudoRt.putL pegs _ix660 _t661
-                      let pegs := _t662
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-      else
-        do
-          let _t663 ← SudoRt.atL covered h
-          if (!( _t663 )) then
-            do
-              let _io664 ← grow_until_it_bumps d covered row col
-              let ⟨_ret665, _iw0666⟩ := _io664
-              let d := _iw0666
-              let laid := _ret665
-              match (laid : Option (Ship)) with
-              | some s =>
-                do
-                  let _io667 ← cover covered s
-                  let covered := _io667
-                  let _mb668 := SudoRt.appendL ships s
-                  let ⟨_nr669, _⟩ := _mb668
-                  let ships := _nr669
-                  let _hm551 := ()
-                  let _u670 := _hm551
-                  let _t671 ← lets_go letgo h true
-                  if _t671 then
-                    do
-                      let _io672 ← rethrow_unread d tray read
-                      let ⟨_iw0673, _iw1674⟩ := _io672
-                      let d := _iw0673
-                      let tray := _iw1674
-                      let _t675 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t675 (0 : Int)) then
-                        do
-                          let _t677 ← SudoRt.atL tray read
-                          let face := _t677
-                          let _t678 ← SudoRt.addI read (1 : Int)
-                          let read := _t678
-                          let _ix679 := h
-                          let _t680 ← keypad_first face
-                          let _t681 ← SudoRt.putL pegs _ix679 _t680
-                          let pegs := _t681
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix682 := h
-                          let _t683 ← keypad_second face
-                          let _t684 ← SudoRt.putL pegs _ix682 _t683
-                          let pegs := _t684
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _t685 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t685 (0 : Int)) then
-                        do
-                          let _t687 ← SudoRt.atL tray read
-                          let face := _t687
-                          let _t688 ← SudoRt.addI read (1 : Int)
-                          let read := _t688
-                          let _ix689 := h
-                          let _t690 ← keypad_first face
-                          let _t691 ← SudoRt.putL pegs _ix689 _t690
-                          let pegs := _t691
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix692 := h
-                          let _t693 ← keypad_second face
-                          let _t694 ← SudoRt.putL pegs _ix692 _t693
-                          let pegs := _t694
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              | _ =>
-                do
-                  match (laid : Option (Ship)) with
-                  | none =>
-                    do
-                      let _t695 ← lets_go letgo h true
-                      if _t695 then
-                        do
-                          let _io696 ← rethrow_unread d tray read
-                          let ⟨_iw0697, _iw1698⟩ := _io696
-                          let d := _iw0697
-                          let tray := _iw1698
-                          let _t699 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t699 (0 : Int)) then
-                            do
-                              let _t701 ← SudoRt.atL tray read
-                              let face := _t701
-                              let _t702 ← SudoRt.addI read (1 : Int)
-                              let read := _t702
-                              let _ix703 := h
-                              let _t704 ← keypad_first face
-                              let _t705 ← SudoRt.putL pegs _ix703 _t704
-                              let pegs := _t705
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix706 := h
-                              let _t707 ← keypad_second face
-                              let _t708 ← SudoRt.putL pegs _ix706 _t707
-                              let pegs := _t708
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _t709 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t709 (0 : Int)) then
-                            do
-                              let _t711 ← SudoRt.atL tray read
-                              let face := _t711
-                              let _t712 ← SudoRt.addI read (1 : Int)
-                              let read := _t712
-                              let _ix713 := h
-                              let _t714 ← keypad_first face
-                              let _t715 ← SudoRt.putL pegs _ix713 _t714
-                              let pegs := _t715
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix716 := h
-                              let _t717 ← keypad_second face
-                              let _t718 ← SudoRt.putL pegs _ix716 _t717
-                              let pegs := _t718
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-          else
-            do
-              let _t719 ← lets_go letgo h true
-              if _t719 then
-                do
-                  let _io720 ← rethrow_unread d tray read
-                  let ⟨_iw0721, _iw1722⟩ := _io720
-                  let d := _iw0721
-                  let tray := _iw1722
-                  let _t723 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t723 (0 : Int)) then
-                    do
-                      let _t725 ← SudoRt.atL tray read
-                      let face := _t725
-                      let _t726 ← SudoRt.addI read (1 : Int)
-                      let read := _t726
-                      let _ix727 := h
-                      let _t728 ← keypad_first face
-                      let _t729 ← SudoRt.putL pegs _ix727 _t728
-                      let pegs := _t729
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix730 := h
-                      let _t731 ← keypad_second face
-                      let _t732 ← SudoRt.putL pegs _ix730 _t731
-                      let pegs := _t732
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              else
-                do
-                  let _t733 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t733 (0 : Int)) then
-                    do
-                      let _t735 ← SudoRt.atL tray read
-                      let face := _t735
-                      let _t736 ← SudoRt.addI read (1 : Int)
-                      let read := _t736
-                      let _ix737 := h
-                      let _t738 ← keypad_first face
-                      let _t739 ← SudoRt.putL pegs _ix737 _t738
-                      let pegs := _t739
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix740 := h
-                      let _t741 ← keypad_second face
-                      let _t742 ← SudoRt.putL pegs _ix740 _t741
-                      let pegs := _t742
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+      stageBE letgo row col h _iw0577 _iw1578 read covered ships face pegs
   else
+    stageBE letgo row col h d tray read covered ships face pegs
+
+open Bs in
+/-- The body of `build`'s hole loop (`for col = 0 to 9`) as emitted, with its body named
+    `holeInnerE`. -/
+def holeStepE (letgo : Array LetGo) (row : Int) (_toV : Int) :
+    Int × (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int) →
+      Except SudoRt.Trap (SudoRt.Flow
+        (Int × (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)) (KeyGrid × Dice)) :=
+  fun σ =>
+    let col := σ.1
+    let d := σ.2.1
+    let _sp908 := σ.2.2
+    let tray := _sp908.1
+    let _sp909 := _sp908.2
+    let read := _sp909.1
+    let _sp910 := _sp909.2
+    let covered := _sp910.1
+    let _sp911 := _sp910.2
+    let ships := _sp911.1
+    let _sp912 := _sp911.2
+    let face := _sp912.1
+    let _sp913 := _sp912.2
+    let pegs := _sp913
     do
-      if (SudoRt.SEq.beq col (0 : Int)) then
-        do
-          let _io744 ← throw_row_cup d
-          let ⟨_ret745, _iw0746⟩ := _io744
-          let d := _iw0746
-          let tray := _ret745
-          let read := (0 : Int)
-          let _t747 ← SudoRt.atL covered h
-          if (!( _t747 )) then
-            do
-              let _io748 ← grow_until_it_bumps d covered row col
-              let ⟨_ret749, _iw0750⟩ := _io748
-              let d := _iw0750
-              let laid := _ret749
-              match (laid : Option (Ship)) with
-              | some s =>
-                do
-                  let _io751 ← cover covered s
-                  let covered := _io751
-                  let _mb752 := SudoRt.appendL ships s
-                  let ⟨_nr753, _⟩ := _mb752
-                  let ships := _nr753
-                  let _hm551 := ()
-                  let _u754 := _hm551
-                  let _t755 ← lets_go letgo h true
-                  if _t755 then
-                    do
-                      let _io756 ← rethrow_unread d tray read
-                      let ⟨_iw0757, _iw1758⟩ := _io756
-                      let d := _iw0757
-                      let tray := _iw1758
-                      let _t759 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t759 (0 : Int)) then
-                        do
-                          let _t761 ← SudoRt.atL tray read
-                          let face := _t761
-                          let _t762 ← SudoRt.addI read (1 : Int)
-                          let read := _t762
-                          let _ix763 := h
-                          let _t764 ← keypad_first face
-                          let _t765 ← SudoRt.putL pegs _ix763 _t764
-                          let pegs := _t765
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix766 := h
-                          let _t767 ← keypad_second face
-                          let _t768 ← SudoRt.putL pegs _ix766 _t767
-                          let pegs := _t768
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _t769 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t769 (0 : Int)) then
-                        do
-                          let _t771 ← SudoRt.atL tray read
-                          let face := _t771
-                          let _t772 ← SudoRt.addI read (1 : Int)
-                          let read := _t772
-                          let _ix773 := h
-                          let _t774 ← keypad_first face
-                          let _t775 ← SudoRt.putL pegs _ix773 _t774
-                          let pegs := _t775
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix776 := h
-                          let _t777 ← keypad_second face
-                          let _t778 ← SudoRt.putL pegs _ix776 _t777
-                          let pegs := _t778
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              | _ =>
-                do
-                  match (laid : Option (Ship)) with
-                  | none =>
-                    do
-                      let _t779 ← lets_go letgo h true
-                      if _t779 then
-                        do
-                          let _io780 ← rethrow_unread d tray read
-                          let ⟨_iw0781, _iw1782⟩ := _io780
-                          let d := _iw0781
-                          let tray := _iw1782
-                          let _t783 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t783 (0 : Int)) then
-                            do
-                              let _t785 ← SudoRt.atL tray read
-                              let face := _t785
-                              let _t786 ← SudoRt.addI read (1 : Int)
-                              let read := _t786
-                              let _ix787 := h
-                              let _t788 ← keypad_first face
-                              let _t789 ← SudoRt.putL pegs _ix787 _t788
-                              let pegs := _t789
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix790 := h
-                              let _t791 ← keypad_second face
-                              let _t792 ← SudoRt.putL pegs _ix790 _t791
-                              let pegs := _t792
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _t793 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t793 (0 : Int)) then
-                            do
-                              let _t795 ← SudoRt.atL tray read
-                              let face := _t795
-                              let _t796 ← SudoRt.addI read (1 : Int)
-                              let read := _t796
-                              let _ix797 := h
-                              let _t798 ← keypad_first face
-                              let _t799 ← SudoRt.putL pegs _ix797 _t798
-                              let pegs := _t799
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix800 := h
-                              let _t801 ← keypad_second face
-                              let _t802 ← SudoRt.putL pegs _ix800 _t801
-                              let pegs := _t802
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-          else
-            do
-              let _t803 ← lets_go letgo h true
-              if _t803 then
-                do
-                  let _io804 ← rethrow_unread d tray read
-                  let ⟨_iw0805, _iw1806⟩ := _io804
-                  let d := _iw0805
-                  let tray := _iw1806
-                  let _t807 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t807 (0 : Int)) then
-                    do
-                      let _t809 ← SudoRt.atL tray read
-                      let face := _t809
-                      let _t810 ← SudoRt.addI read (1 : Int)
-                      let read := _t810
-                      let _ix811 := h
-                      let _t812 ← keypad_first face
-                      let _t813 ← SudoRt.putL pegs _ix811 _t812
-                      let pegs := _t813
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix814 := h
-                      let _t815 ← keypad_second face
-                      let _t816 ← SudoRt.putL pegs _ix814 _t815
-                      let pegs := _t816
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              else
-                do
-                  let _t817 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t817 (0 : Int)) then
-                    do
-                      let _t819 ← SudoRt.atL tray read
-                      let face := _t819
-                      let _t820 ← SudoRt.addI read (1 : Int)
-                      let read := _t820
-                      let _ix821 := h
-                      let _t822 ← keypad_first face
-                      let _t823 ← SudoRt.putL pegs _ix821 _t822
-                      let pegs := _t823
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix824 := h
-                      let _t825 ← keypad_second face
-                      let _t826 ← SudoRt.putL pegs _ix824 _t825
-                      let pegs := _t826
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+      if col > _toV then
+        pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (col, (d, tray, read, covered, ships, face, pegs)))
       else
-        do
-          let _t827 ← SudoRt.atL covered h
-          if (!( _t827 )) then
-            do
-              let _io828 ← grow_until_it_bumps d covered row col
-              let ⟨_ret829, _iw0830⟩ := _io828
-              let d := _iw0830
-              let laid := _ret829
-              match (laid : Option (Ship)) with
-              | some s =>
-                do
-                  let _io831 ← cover covered s
-                  let covered := _io831
-                  let _mb832 := SudoRt.appendL ships s
-                  let ⟨_nr833, _⟩ := _mb832
-                  let ships := _nr833
-                  let _hm551 := ()
-                  let _u834 := _hm551
-                  let _t835 ← lets_go letgo h true
-                  if _t835 then
-                    do
-                      let _io836 ← rethrow_unread d tray read
-                      let ⟨_iw0837, _iw1838⟩ := _io836
-                      let d := _iw0837
-                      let tray := _iw1838
-                      let _t839 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t839 (0 : Int)) then
-                        do
-                          let _t841 ← SudoRt.atL tray read
-                          let face := _t841
-                          let _t842 ← SudoRt.addI read (1 : Int)
-                          let read := _t842
-                          let _ix843 := h
-                          let _t844 ← keypad_first face
-                          let _t845 ← SudoRt.putL pegs _ix843 _t844
-                          let pegs := _t845
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix846 := h
-                          let _t847 ← keypad_second face
-                          let _t848 ← SudoRt.putL pegs _ix846 _t847
-                          let pegs := _t848
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _t849 ← SudoRt.modI col (2 : Int)
-                      if (SudoRt.SEq.beq _t849 (0 : Int)) then
-                        do
-                          let _t851 ← SudoRt.atL tray read
-                          let face := _t851
-                          let _t852 ← SudoRt.addI read (1 : Int)
-                          let read := _t852
-                          let _ix853 := h
-                          let _t854 ← keypad_first face
-                          let _t855 ← SudoRt.putL pegs _ix853 _t854
-                          let pegs := _t855
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _ix856 := h
-                          let _t857 ← keypad_second face
-                          let _t858 ← SudoRt.putL pegs _ix856 _t857
-                          let pegs := _t858
-                          pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              | _ =>
-                do
-                  match (laid : Option (Ship)) with
-                  | none =>
-                    do
-                      let _t859 ← lets_go letgo h true
-                      if _t859 then
-                        do
-                          let _io860 ← rethrow_unread d tray read
-                          let ⟨_iw0861, _iw1862⟩ := _io860
-                          let d := _iw0861
-                          let tray := _iw1862
-                          let _t863 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t863 (0 : Int)) then
-                            do
-                              let _t865 ← SudoRt.atL tray read
-                              let face := _t865
-                              let _t866 ← SudoRt.addI read (1 : Int)
-                              let read := _t866
-                              let _ix867 := h
-                              let _t868 ← keypad_first face
-                              let _t869 ← SudoRt.putL pegs _ix867 _t868
-                              let pegs := _t869
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix870 := h
-                              let _t871 ← keypad_second face
-                              let _t872 ← SudoRt.putL pegs _ix870 _t871
-                              let pegs := _t872
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                      else
-                        do
-                          let _t873 ← SudoRt.modI col (2 : Int)
-                          if (SudoRt.SEq.beq _t873 (0 : Int)) then
-                            do
-                              let _t875 ← SudoRt.atL tray read
-                              let face := _t875
-                              let _t876 ← SudoRt.addI read (1 : Int)
-                              let read := _t876
-                              let _ix877 := h
-                              let _t878 ← keypad_first face
-                              let _t879 ← SudoRt.putL pegs _ix877 _t878
-                              let pegs := _t879
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                          else
-                            do
-                              let _ix880 := h
-                              let _t881 ← keypad_second face
-                              let _t882 ← SudoRt.putL pegs _ix880 _t881
-                              let pegs := _t882
-                              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
-          else
-            do
-              let _t883 ← lets_go letgo h true
-              if _t883 then
-                do
-                  let _io884 ← rethrow_unread d tray read
-                  let ⟨_iw0885, _iw1886⟩ := _io884
-                  let d := _iw0885
-                  let tray := _iw1886
-                  let _t887 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t887 (0 : Int)) then
-                    do
-                      let _t889 ← SudoRt.atL tray read
-                      let face := _t889
-                      let _t890 ← SudoRt.addI read (1 : Int)
-                      let read := _t890
-                      let _ix891 := h
-                      let _t892 ← keypad_first face
-                      let _t893 ← SudoRt.putL pegs _ix891 _t892
-                      let pegs := _t893
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix894 := h
-                      let _t895 ← keypad_second face
-                      let _t896 ← SudoRt.putL pegs _ix894 _t895
-                      let pegs := _t896
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-              else
-                do
-                  let _t897 ← SudoRt.modI col (2 : Int)
-                  if (SudoRt.SEq.beq _t897 (0 : Int)) then
-                    do
-                      let _t899 ← SudoRt.atL tray read
-                      let face := _t899
-                      let _t900 ← SudoRt.addI read (1 : Int)
-                      let read := _t900
-                      let _ix901 := h
-                      let _t902 ← keypad_first face
-                      let _t903 ← SudoRt.putL pegs _ix901 _t902
-                      let pegs := _t903
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-                  else
-                    do
-                      let _ix904 := h
-                      let _t905 ← keypad_second face
-                      let _t906 ← SudoRt.putL pegs _ix904 _t905
-                      let pegs := _t906
-                      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+        match ← holeInnerE letgo row col d tray read covered ships face pegs with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (col, _fs))
+        | .cont _fs => do
+            if col == _toV then
+              pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (col, _fs))
+            else do
+              let i' ← SudoRt.addI col (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (i', _fs))
 
 open Bs in
 theorem holeStepE_eq (letgo : Array LetGo) (row toV col : Int)
@@ -3711,7 +1792,7 @@ theorem hole_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row : N
 
 open Bs in
 /-- The emitted row step of `build` (face 0, then the column loop over `holeStepE`), copied
-    verbatim from the generated `build` with the column loop's step named. -/
+    from the generated `build` (up to named loop steps and `_`-prefixed unused binders; `rfl` is the check). -/
 def rowStepE (letgo : Array LetGo) (_toV : Int) :
     Int × (Dice × Array Int × Int × Array Bool × Array Ship × Array Int) →
       Except SudoRt.Trap (SudoRt.Flow
@@ -3847,7 +1928,7 @@ theorem row_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d0 : Spe
       rfl
 
 open Bs in
-/-- The emitted let-go check step of `build` (verbatim). -/
+/-- The emitted let-go check step of `build` (up to named loop steps and `_`-prefixed unused binders; `rfl` is the check). -/
 def checkStepE (letgo : Array LetGo) (_toV : Int) :
     Int → Except SudoRt.Trap (SudoRt.Flow Int (KeyGrid × Dice)) :=
   fun σ =>
@@ -3878,8 +1959,7 @@ def checkStepE (letgo : Array LetGo) (_toV : Int) :
               pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) i')
 
 open Bs in
-/-- The emitted body of `build` after the let-go check (verbatim, with the row loop's step
-    named). -/
+/-- The emitted body of `build` after the let-go check (up to named loop steps and `_`-prefixed unused binders; `rfl` is the check). -/
 def buildAfterE (letgo : Array LetGo) (d : Dice) : Int → Except SudoRt.Trap (KeyGrid × Dice) :=
   fun _ =>
     do
@@ -4011,10 +2091,6 @@ theorem check_step_spec (lg : List Spec.LetGo) (n : Nat) (hl : lg.length = n + 1
       apply decide_eq_false; omega
     rw [hob']; rfl
 
-theorem embed_range_map (f : Nat → Nat) :
-    embed ((List.range 100).map f) = tab (fun h => Int.ofNat (f h)) := by
-  simp [embed, tab]
-
 /-- The empty grid BUILD starts from. -/
 def buildInit (d : Spec.Dice) : Spec.BuildSt :=
   { dice := d, tray := [], read := 0, covered := fun _ => false, ships := [], face := 0,
@@ -4105,10 +2181,11 @@ def embBuilt (b : Spec.Built) : Bs.Built :=
     sudo_5Built_5used6 := Int.ofNat b.used6, sudo_5Built_6used10 := Int.ofNat b.used10 }
 
 /-- §4.2: for any model dice whose three face lists fit `i64` and any let-go list (an
-    arbitrary input, fixed in advance), `build_letting_go` succeeds exactly when
+    arbitrary input; the theorem holds for each list separately), `build_letting_go` succeeds exactly when
     `Spec.buildLettingGo` does and then returns its grid and read counts; it traps exactly
     when the model fails (a die runs out or shows a face out of range, a tray has no unread
-    die, a let-go point is repeated or is not a die's first hole of the grid). -/
+    die, a let-go point is not a die's first hole of the grid, or is repeated: bs.sudo's rule,
+    which SPEC does not forbid, see `Spec.letGoOk`). -/
 theorem build_letting_go_refines (d : Spec.Dice) (lg : List Spec.LetGo) (hd : DiceFit d)
     (hlg : FitsLen lg.length) :
     (Bs.build_letting_go (embDice d) (embLG lg)).toOption =

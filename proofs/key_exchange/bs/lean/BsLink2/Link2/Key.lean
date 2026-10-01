@@ -130,6 +130,10 @@ theorem tab_const {α} (v : α) : Array.mkArray 100 v = tab (fun _ => v) := by
   intro h h1 h2
   rw [tab_get]; simp
 
+theorem embed_range_map (f : Nat → Nat) :
+    embed ((List.range 100).map f) = tab (fun h => Int.ofNat (f h)) := by
+  simp [embed, tab]
+
 /-- `covered[h]`: some ship of `P` covers `h`. -/
 def covered (P : List Spec.Ship) (h : Nat) : Bool := P.any (fun s => decide (h ∈ s.holes))
 

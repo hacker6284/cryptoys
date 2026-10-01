@@ -4128,4 +4128,358 @@ theorem build_key_grid_dice (d12 d6 d10 : List Int) (h12 : FitsLen d12.length)
   rw [dice_refines, ok_bind]
   exact build_key_grid_refines _ ⟨h12, h6, h10⟩
 
+/-! ### A built grid is well formed -/
+
+/-- The first `len` holes of the heading from (`row`, `col`) are not under a ship. -/
+def Clear (cov : Nat → Bool) (row col : Nat) (down : Bool) (len : Nat) : Prop :=
+  ∀ t, t < len → cov (10 * row + col + t * (if down then 10 else 1)) = false
+
+theorem hasRoom_clear {cov : Nat → Bool} {r c : Nat} (h : Spec.hasRoom cov r c = true) :
+    cov (r * 10 + c) = false := by
+  unfold Spec.hasRoom at h
+  cases hc : cov (r * 10 + c)
+  · rfl
+  · rw [hc] at h; simp at h
+
+theorem growLoop_room (cov : Nat → Bool) (row col : Nat) (down : Bool) :
+    ∀ (fuel : Nat) (d d' : Spec.Dice) (len len' : Nat), Clear cov row col down len →
+      Spec.growLoop cov row col down fuel d len = some (d', len') → Clear cov row col down len'
+  | 0, d, d', len, len', hc, h => by cases h; exact hc
+  | fuel + 1, d, d', len, len', hc, h => by
+    unfold Spec.growLoop at h
+    by_cases hb : Spec.hasRoom cov (if down then row + len else row)
+        (if down then col else col + len) = true
+    · rw [if_pos hb] at h
+      cases hr : Spec.rollD6 d with
+      | none => rw [hr] at h; cases h
+      | some p =>
+        obtain ⟨f, d1⟩ := p
+        rw [hr] at h
+        dsimp only at h
+        by_cases hg : (if len = 2 then 4 else 6) ≤ f
+        · rw [if_pos hg] at h
+          refine growLoop_room cov row col down fuel d1 d' (len + 1) len' ?_ h
+          intro t ht
+          by_cases e : t = len
+          · subst e
+            have := hasRoom_clear hb
+            cases down
+            · simp only [Bool.false_eq_true, if_false] at this ⊢
+              rw [show 10 * row + col + t * 1 = row * 10 + (col + t) by omega]; exact this
+            · simp only [if_true] at this ⊢
+              rw [show 10 * row + col + t * 10 = (row + t) * 10 + col by omega]; exact this
+          · exact hc t (by omega)
+        · rw [if_neg hg] at h
+          cases h; exact hc
+    · rw [if_neg hb] at h
+      cases h; exact hc
+
+theorem layShip_room (cov : Nat → Bool) (row col : Nat) (d d' : Spec.Dice) (face : Nat)
+    (down : Bool) (o : Option Spec.Ship) (hf : Fits row col down 2)
+    (hc : Clear cov row col down 2) (h : Spec.layShip cov row col d face down = some (o, d')) :
+    ∀ s, o = some s → ∀ x ∈ s.holes, cov x = false := by
+  unfold Spec.layShip at h
+  cases hg : Spec.growLoop cov row col down 3 d 2 with
+  | none => rw [hg] at h; cases h
+  | some p =>
+    obtain ⟨d1, len⟩ := p
+    rw [hg] at h
+    obtain ⟨_, hl1, hl2, _⟩ := growLoop_facts cov row col down 3 d d1 2 len hf hg
+    have hcl := growLoop_room cov row col down 3 d d1 2 len hc hg
+    dsimp only at h
+    cases hp : Spec.pieceOf len d1 with
+    | none => rw [hp] at h; cases h
+    | some q =>
+      obtain ⟨k, d2⟩ := q
+      rw [hp] at h
+      obtain ⟨hk, _⟩ := pieceOf_facts (by omega) (by omega) hp
+      simp only [Option.map_some', Option.some.injEq, Prod.mk.injEq] at h
+      obtain ⟨ho, _⟩ := h
+      intro s hs x hx
+      rw [← ho] at hs
+      cases hs
+      unfold Spec.Ship.holes at hx
+      obtain ⟨t, ht, rfl⟩ := List.mem_map.mp hx
+      rw [List.mem_range] at ht
+      exact hcl t (by rw [← hk]; exact ht)
+
+theorem growUntilItBumps_room (d d' : Spec.Dice) (cov : Nat → Bool) (row col : Nat)
+    (o : Option Spec.Ship) (hcov : cov (row * 10 + col) = false)
+    (h : Spec.growUntilItBumps d cov row col = some (o, d')) :
+    ∀ s, o = some s → ∀ x ∈ s.holes, cov x = false := by
+  unfold Spec.growUntilItBumps at h
+  dsimp only at h
+  have hA : Spec.hasRoom cov row (col + 1) = true → Fits row col false 2 ∧ Clear cov row col false 2 := by
+    intro ha
+    have hcl := hasRoom_clear ha
+    unfold Spec.hasRoom at ha
+    refine ⟨by unfold Fits; simp at ha ⊢; omega, ?_⟩
+    intro t ht
+    simp only [Bool.false_eq_true, if_false]
+    rcases (show t = 0 ∨ t = 1 by omega) with e | e <;> subst e
+    · rw [show 10 * row + col + 0 * 1 = row * 10 + col by omega]; exact hcov
+    · rw [show 10 * row + col + 1 * 1 = row * 10 + (col + 1) by omega]; exact hcl
+  have hD : Spec.hasRoom cov (row + 1) col = true → Fits row col true 2 ∧ Clear cov row col true 2 := by
+    intro ha
+    have hcl := hasRoom_clear ha
+    unfold Spec.hasRoom at ha
+    refine ⟨by unfold Fits; simp at ha ⊢; omega, ?_⟩
+    intro t ht
+    simp only [if_true]
+    rcases (show t = 0 ∨ t = 1 by omega) with e | e <;> subst e
+    · rw [show 10 * row + col + 0 * 10 = row * 10 + col by omega]; exact hcov
+    · rw [show 10 * row + col + 1 * 10 = (row + 1) * 10 + col by omega]; exact hcl
+  by_cases hn : (!Spec.hasRoom cov row (col + 1) && !Spec.hasRoom cov (row + 1) col) = true
+  · rw [if_pos hn] at h; cases h
+    exact fun s hs => by cases hs
+  · rw [if_neg hn] at h
+    cases hrh : Spec.rollHole d with
+    | none => rw [hrh] at h; cases h
+    | some p =>
+      obtain ⟨face, d1⟩ := p
+      rw [hrh] at h
+      dsimp only at h
+      split at h
+      · next hab =>
+        simp only [Bool.and_eq_true] at hab
+        split at h
+        · cases h; exact fun s hs => by cases hs
+        · have hf : Fits row col (decide (9 ≤ face)) 2 ∧ Clear cov row col (decide (9 ≤ face)) 2 := by
+            cases decide (9 ≤ face)
+            · exact hA hab.1
+            · exact hD hab.2
+          exact layShip_room cov row col d1 d' face _ o hf.1 hf.2 h
+      · next hab =>
+        split at h
+        · cases h; exact fun s hs => by cases hs
+        · have hf : Fits row col (Spec.hasRoom cov (row + 1) col) 2 ∧
+              Clear cov row col (Spec.hasRoom cov (row + 1) col) 2 := by
+            cases hb : Spec.hasRoom cov (row + 1) col
+            · have : Spec.hasRoom cov row (col + 1) = true := by
+                cases ha : Spec.hasRoom cov row (col + 1)
+                · rw [ha, hb] at hn; exact absurd rfl hn
+                · rfl
+              exact hA this
+            · exact hD hb
+          exact layShip_room cov row col d1 d' face _ o hf.1 hf.2 h
+
+/-- What BUILD keeps of the grid as it walks: ships on the grid, no two sharing a hole,
+    every hole of a ship covered, pegs that are trits. -/
+structure GridInv (st : Spec.BuildSt) : Prop where
+  onGrid : ∀ s ∈ st.ships, s.OnGrid
+  disjoint : st.ships.Pairwise (fun a b => ∀ h ∈ a.holes, h ∉ b.holes)
+  covers : ∀ s ∈ st.ships, ∀ h ∈ s.holes, st.covered h = true
+  pegs : ∀ h, st.pegs h ≤ 2
+
+theorem GridInv.frame {st st' : Spec.BuildSt} (g : GridInv st) (h1 : st'.ships = st.ships)
+    (h2 : st'.covered = st.covered) (h3 : st'.pegs = st.pegs) : GridInv st' :=
+  ⟨h1 ▸ g.onGrid, h1 ▸ g.disjoint, by rw [h1, h2]; exact g.covers, by rw [h3]; exact g.pegs⟩
+
+theorem letGoAt_frame {lg : List Spec.LetGo} {h : Nat} {gap : Bool} {st st' : Spec.BuildSt}
+    (hs : Spec.letGoAt lg h gap st = some st') :
+    st'.ships = st.ships ∧ st'.covered = st.covered ∧ st'.pegs = st.pegs := by
+  unfold Spec.letGoAt at hs
+  split at hs
+  · unfold Spec.BuildSt.rethrow at hs
+    cases hr : Spec.rethrowUnread st.dice st.tray st.read with
+    | none => rw [hr] at hs; cases hs
+    | some p => rw [hr] at hs; cases hs; exact ⟨rfl, rfl, rfl⟩
+  · cases hs; exact ⟨rfl, rfl, rfl⟩
+
+theorem rowCupAt_frame {col : Nat} {st st' : Spec.BuildSt} (hs : Spec.rowCupAt col st = some st') :
+    st'.ships = st.ships ∧ st'.covered = st.covered ∧ st'.pegs = st.pegs := by
+  unfold Spec.rowCupAt at hs
+  split at hs
+  · cases hr : Spec.throwRowCup st.dice with
+    | none => rw [hr] at hs; cases hs
+    | some p => rw [hr] at hs; cases hs; exact ⟨rfl, rfl, rfl⟩
+  · cases hs; exact ⟨rfl, rfl, rfl⟩
+
+theorem growAt_grid {row col : Nat} {st st' : Spec.BuildSt} (hr : row < 10) (hc : col < 10)
+    (g : GridInv st) (hs : Spec.growAt row col st = some st') : GridInv st' := by
+  unfold Spec.growAt at hs
+  split at hs
+  · next hcv =>
+    have hcov : st.covered (row * 10 + col) = false := by simpa using hcv
+    cases hg : Spec.growUntilItBumps st.dice st.covered row col with
+    | none => rw [hg] at hs; cases hs
+    | some p =>
+      obtain ⟨o, d1⟩ := p
+      rw [hg] at hs
+      have hon := (growUntilItBumps_facts _ _ _ _ _ _ hr hc hg).2
+      have hroom := growUntilItBumps_room _ _ _ _ _ _ hcov hg
+      cases o with
+      | none => cases hs; exact g.frame rfl rfl rfl
+      | some s =>
+        cases hs
+        have hsg := hon s rfl
+        have hsr := hroom s rfl
+        refine ⟨?_, ?_, ?_, g.pegs⟩
+        · intro a ha
+          rcases List.mem_append.mp ha with ha | ha
+          · exact g.onGrid a ha
+          · rw [List.mem_singleton] at ha; subst ha; exact hsg
+        · refine List.pairwise_append.mpr ⟨g.disjoint, List.pairwise_singleton _ _, ?_⟩
+          intro a ha b hb x hx hxb
+          rw [List.mem_singleton] at hb; subst hb
+          have h1 := g.covers a ha x hx
+          have h2 := hsr x hxb
+          rw [h1] at h2; cases h2
+        · intro a ha x hx
+          show (st.covered x || decide (x ∈ s.holes)) = true
+          rcases List.mem_append.mp ha with ha | ha
+          · rw [g.covers a ha x hx]; rfl
+          · rw [List.mem_singleton] at ha; subst ha
+            simp [hx]
+  · cases hs; exact g
+
+theorem pegAt_grid {h col : Nat} {st st' : Spec.BuildSt} (ht : TrayOk st.tray) (g : GridInv st)
+    (hs : Spec.pegAt h col st = some st') : GridInv st' := by
+  unfold Spec.pegAt at hs
+  split at hs
+  · cases hf : st.tray[st.read]? with
+    | none => rw [hf] at hs; cases hs
+    | some f =>
+      rw [hf] at hs; cases hs
+      obtain ⟨hlt, he⟩ := List.getElem?_eq_some_iff.mp hf
+      have hm := ht f (he ▸ List.getElem_mem hlt)
+      refine ⟨g.onGrid, g.disjoint, g.covers, fun x => ?_⟩
+      show (if x = h then Spec.keypadFirst f else st.pegs x) ≤ 2
+      split
+      · unfold Spec.keypadFirst; omega
+      · exact g.pegs x
+  · cases hs
+    refine ⟨g.onGrid, g.disjoint, g.covers, fun x => ?_⟩
+    show (if x = h then Spec.keypadSecond st.face else st.pegs x) ≤ 2
+    split
+    · unfold Spec.keypadSecond; omega
+    · exact g.pegs x
+
+theorem holeStep_grid {d0 : Spec.Dice} {lg : List Spec.LetGo} {row col : Nat} {st st' : Spec.BuildSt}
+    (hr : row < 10) (hc : col < 10) (hinv : HoleInv d0 col st) (g : GridInv st)
+    (hs : Spec.holeStep lg row col st = some st') : GridInv st' := by
+  unfold Spec.holeStep at hs
+  cases h1 : Spec.letGoAt lg (row * 10 + col) false st with
+  | none => rw [h1] at hs; cases hs
+  | some s1 =>
+  rw [h1, Option.some_bind] at hs
+  obtain ⟨_, a2, a3, _, _⟩ := letGoAt_facts hinv.tray h1
+  have g1 := g.frame (letGoAt_frame h1).1 (letGoAt_frame h1).2.1 (letGoAt_frame h1).2.2
+  cases h2 : Spec.rowCupAt col s1 with
+  | none => rw [h2] at hs; cases hs
+  | some s2 =>
+  rw [h2, Option.some_bind] at hs
+  obtain ⟨_, b2, _, _, _⟩ := rowCupAt_facts a2 (by have := hinv.trayLen; omega)
+    (by have := hinv.read; omega) h2
+  have g2 := g1.frame (rowCupAt_frame h2).1 (rowCupAt_frame h2).2.1 (rowCupAt_frame h2).2.2
+  cases h3 : Spec.growAt row col s2 with
+  | none => rw [h3] at hs; cases hs
+  | some s3 =>
+  rw [h3, Option.some_bind] at hs
+  obtain ⟨_, c2, _, _⟩ := growAt_facts hr hc h3
+  have g3 := growAt_grid hr hc g2 h3
+  cases h4 : Spec.letGoAt lg (row * 10 + col) true s3 with
+  | none => rw [h4] at hs; cases hs
+  | some s4 =>
+  rw [h4, Option.some_bind] at hs
+  obtain ⟨_, e2, _, _, _⟩ := letGoAt_facts (c2 ▸ b2) h4
+  have g4 := g3.frame (letGoAt_frame h4).1 (letGoAt_frame h4).2.1 (letGoAt_frame h4).2.2
+  exact pegAt_grid e2 g4 hs
+
+theorem holeSteps_grid {d0 : Spec.Dice} {lg : List Spec.LetGo} {row : Nat} (hr : row < 10) :
+    ∀ (k a : Nat) (st st' : Spec.BuildSt), a + k ≤ 10 → HoleInv d0 a st → GridInv st →
+      (List.range' a k).foldlM (fun s i => Spec.holeStep lg row i s) st = some st' → GridInv st'
+  | 0, a, st, st', _, _, g, hs => by cases hs; exact g
+  | k + 1, a, st, st', hk, h, g, hs => by
+    rw [foldlM_range'_succ] at hs
+    cases h1 : Spec.holeStep lg row a st with
+    | none => rw [h1] at hs; cases hs
+    | some s1 =>
+      rw [h1, Option.some_bind] at hs
+      exact holeSteps_grid hr k (a + 1) s1 st' (by omega) (holeStep_inv hr (by omega) h h1)
+        (holeStep_grid hr (by omega) h g h1) hs
+
+theorem rows_grid {d0 : Spec.Dice} {lg : List Spec.LetGo} :
+    ∀ (k a : Nat) (st st' : Spec.BuildSt), a + k ≤ 10 → HoleInv d0 0 st → GridInv st →
+      (List.range' a k).foldlM (fun s i => Spec.rowStep lg i s) st = some st' → GridInv st'
+  | 0, a, st, st', _, _, g, hs => by cases hs; exact g
+  | k + 1, a, st, st', hk, h, g, hs => by
+    rw [foldlM_range'_succ] at hs
+    cases h1 : Spec.rowStep lg a st with
+    | none => rw [h1] at hs; cases hs
+    | some s1 =>
+      rw [h1, Option.some_bind] at hs
+      have h0 : HoleInv d0 0 { st with face := 0 } :=
+        ⟨h.streams, h.tray, h.trayLen, h.read, fun h => by simp at h⟩
+      have g1 : GridInv s1 := by
+        have h1' := h1
+        unfold Spec.rowStep at h1'
+        rw [List.range_eq_range'] at h1'
+        exact holeSteps_grid (by omega) 10 0 _ s1 (by omega) h0 (g.frame rfl rfl rfl) h1'
+      exact rows_grid k (a + 1) s1 st' (by omega) (rowStep_inv (by omega) h h1) g1 hs
+
+/-- §4.2 / §4.1: every grid BUILD returns is well formed: its ships lie on the grid and
+    never overlap, and its 100 pegs are trits. -/
+theorem build_wf {d : Spec.Dice} {lg : List Spec.LetGo} {g : Spec.Grid} {d' : Spec.Dice}
+    (h : Spec.build d lg = some (g, d')) : g.Wf := by
+  unfold Spec.build at h
+  split at h
+  · cases hf : (List.range 10).foldlM (fun st row => Spec.rowStep lg row st)
+        ({ dice := d, tray := [], read := 0, covered := fun _ => false, ships := [], face := 0,
+           pegs := fun _ => 0 } : Spec.BuildSt) with
+    | none => rw [hf] at h; cases h
+    | some st =>
+      rw [hf] at h
+      simp only [Option.map_some', Option.some.injEq, Prod.mk.injEq] at h
+      obtain ⟨rfl, _⟩ := h
+      rw [List.range_eq_range'] at hf
+      have gi := rows_grid (d0 := d) 10 0 _ st (by omega)
+        ⟨Streams.refl d, fun x hx => by simp at hx, Nat.zero_le _, Nat.zero_le _,
+          fun h => by simp at h⟩
+        ⟨fun s hs => by simp at hs, List.Pairwise.nil, fun s hs => by simp at hs,
+          fun _ => Nat.zero_le _⟩ hf
+      refine ⟨gi.onGrid, gi.disjoint, by simp, ?_⟩
+      intro t ht
+      obtain ⟨x, _, rfl⟩ := List.mem_map.mp ht
+      exact gi.pegs x
+  · cases h
+
+/-- §4.2: a grid built by `Spec.buildLettingGo` (so, by `build_letting_go_refines`, by the
+    emitted `build_letting_go`) is a well-formed one-page key. -/
+theorem buildLettingGo_keyWf {d : Spec.Dice} {lg : List Spec.LetGo} {b : Spec.Built}
+    (h : Spec.buildLettingGo d lg = some b) : Spec.KeyWf [b.grid] := by
+  unfold Spec.buildLettingGo at h
+  cases hb : Spec.build d lg with
+  | none => rw [hb] at h; cases h
+  | some p =>
+    rw [hb] at h; cases h
+    exact ⟨by simp, fun g hg => by
+      rw [List.mem_singleton] at hg; subst hg; exact build_wf hb⟩
+
+/-- §4.2 then §4.3: whatever grid the emitted `build_letting_go` returns is `embGrid` of a
+    well-formed model page, so the one-page key `#[bb.grid]` is `embKey [g]` with
+    `Spec.KeyWf [g]`, which is what the walk and exchange theorems assume of a key. -/
+theorem build_letting_go_wf (d : Spec.Dice) (lg : List Spec.LetGo) (hd : DiceFit d)
+    (hlg : FitsLen lg.length) {bb : Bs.Built}
+    (h : Bs.build_letting_go (embDice d) (embLG lg) = .ok bb) :
+    ∃ b, Spec.buildLettingGo d lg = some b ∧ bb = embBuilt b ∧
+      #[bb.sudo_5Built_4grid] = embKey [b.grid] ∧ Spec.KeyWf [b.grid] := by
+  have := build_letting_go_refines d lg hd hlg
+  rw [h, toOpt_ok] at this
+  cases hb : Spec.buildLettingGo d lg with
+  | none => rw [hb] at this; cases this
+  | some b =>
+    rw [hb] at this
+    cases this
+    exact ⟨b, rfl, rfl, rfl, buildLettingGo_keyWf hb⟩
+
+/-- `build_letting_go_wf` without letting go. -/
+theorem build_key_grid_wf (d : Spec.Dice) (hd : DiceFit d) {bb : Bs.Built}
+    (h : Bs.build_key_grid (embDice d) = .ok bb) :
+    ∃ b, Spec.buildKeyGrid d = some b ∧ bb = embBuilt b ∧
+      #[bb.sudo_5Built_4grid] = embKey [b.grid] ∧ Spec.KeyWf [b.grid] := by
+  have h' : Bs.build_letting_go (embDice d) (embLG []) = .ok bb := by
+    unfold Bs.build_key_grid at h; rw [except_bind_pure] at h; exact h
+  exact build_letting_go_wf d [] hd (fits_small (by decide)) h'
+
 end BsLink2.Link2

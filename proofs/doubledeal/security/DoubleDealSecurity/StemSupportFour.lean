@@ -3,12 +3,13 @@ import DoubleDealSecurity.FullCipher
 
 /-
   The 4-card case of the off-diagonal stem bound (third slice towards the off-diagonal stem column
-  bound; security README, "Roadmap", "Open" list, the M7 entry). One bound on `dpFCount`, for one support size.
+  bound; security README, "Roadmap", the M7 row). One bound on `dpFCount`, for one support size.
 
   THIS IS A BOUND ON ONE ENTRY OF THE FINAL ROUND'S DIFFERENCE TABLE, ONLY WHEN `γ⁻¹ * β`
-  MOVES EXACTLY 4 CARDS. It is not a bound on the full-cipher differential: the off-diagonal
-  hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag` stays open for the `β` with
-  `γ⁻¹ * β` moving at least 8 cards. No security claim.
+  MOVES EXACTLY 4 CARDS (and zero for 1–3 and 5–7 cards). It is not a bound on the
+  full-cipher differential by itself: the `β` with `γ⁻¹ * β` moving at least 8 cards are the
+  next module, `StemUnion`, which assembles the off-diagonal bound
+  (`StemUnion.dpFCount_le_of_ne`). No security claim.
 
   Notation: `x = permDeck π`, `δ = γ⁻¹ * β`, "`δ` moves `k` cards" is `δ.support.card = k`
   (Mathlib's `Equiv.Perm.support`), `q = stemPerm x * (stemPerm (β·x))⁻¹` (the ratio of
@@ -38,13 +39,10 @@ import DoubleDealSecurity.FullCipher
     `(t, c, d)`; so `64 · dpFCount β γ ≤ 52!`.
   * `dpFCount_eq_zero_of_support_lt_eight_ne_four`: if `δ` moves 1–3 or 5–7 cards,
     `dpFCount β γ = 0` (`StemPosition.card_moved_cases`).
-  * `offDiag_of_offDiag_ge_eight`, `fullDiffCount_le_64_of_offDiag_ge_eight`: so `hoff`
-    reduces to the `β` with `δ` moving at least 8 cards. That case is a hypothesis here,
-    NOT proved.
 
   Not proved, and limits:
-  * The support-≥ 8 case of `hoff` (no union bound over those supports is formalised; the
-    arithmetic of one candidate route is in `analysis/v12-fullcipher/NOTES.md` §5, not proof).
+  * The support-≥ 8 case (not here; it is `StemUnion.dpFCount_le_of_support_ge_eight`, a union
+    bound).
   * Anything about `γ` in `v10Sym`, a mix round, several rounds, or the real key schedule.
   * About the stem (final no-mix round) only.
 -/
@@ -608,7 +606,7 @@ theorem dpFCount_bound_of_support_four (β γ : Relabel)
   ((Nat.mul_le_mul_left 4096 (dpFCount_le_card_cells β γ h4)).trans
     (card_cells_le _ h4)).trans_eq (by ring)
 
-/-- (PROVED; the 4-card case of `hoff`) If `γ⁻¹ * β` moves exactly
+/-- (PROVED; the 4-card case of the off-diagonal stem bound) If `γ⁻¹ * β` moves exactly
     4 cards, then `64 · dpFCount β γ ≤ 52!`: at most 1/64 of the decks `x` have
     `stem(β·x) = γ·stem(x)`. (Exact counting, all in Lean: `x` lies in one of the cells
     `cell δ a b e f c d` (`δ = γ⁻¹β`, `13^5 · 4` of them, `mem_cell`), each at most `81/4096` of
@@ -626,10 +624,10 @@ theorem dpFCount_le_of_support_four (β γ : Relabel)
   generalize Nat.factorial 48 = F at h5 ⊢
   omega
 
-/-! ## What is left of `hoff`: the supports of at least 8 -/
+/-! ## Supports 1–3 and 5–7 -/
 
 /-- (PROVED) If `γ⁻¹ * β` moves between 1 and 7 cards but not 4, no deck is counted:
-    `dpFCount β γ = 0` (`card_moved_eq`: the support is `52 - a·b`, `a ≤ 4`, `b ≤ 13`). -/
+    `dpFCount β γ = 0` (`StemPosition.card_moved_cases`). -/
 theorem dpFCount_eq_zero_of_support_lt_eight_ne_four (β γ : Relabel)
     (h0 : 0 < (γ⁻¹ * β).support.card)
     (h4 : (γ⁻¹ * β).support.card ≠ 4)
@@ -643,39 +641,5 @@ theorem dpFCount_eq_zero_of_support_lt_eight_ne_four (β γ : Relabel)
 theorem eq_of_support_zero {β γ : Relabel}
     (h : (γ⁻¹ * β).support.card = 0) : β = γ :=
   (inv_mul_eq_one.mp (Equiv.Perm.support_eq_empty_iff.mp (card_eq_zero.mp h))).symm
-
-/-- (PROVED) The off-diagonal hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag`
-    reduces to the `β` for which `γ⁻¹ * β` moves at least 8 cards: support 4 is
-    `dpFCount_le_of_support_four`, supports 1–3 and 5–7 count no deck, and support 0 is
-    `β = γ`. -/
-theorem offDiag_of_offDiag_ge_eight {γ : Relabel}
-    (h8 : ∀ β, β ≠ γ → (¬ ∃ a x, β = v10Sym a x) →
-      8 ≤ (γ⁻¹ * β).support.card →
-        64 * FullCipher.dpFCount β γ ≤ Nat.factorial 52) :
-    ∀ β, β ≠ γ → (¬ ∃ a x, β = v10Sym a x) →
-      64 * FullCipher.dpFCount β γ ≤ Nat.factorial 52 := by
-  intro β hne hv
-  by_cases hs : 8 ≤ (γ⁻¹ * β).support.card
-  · exact h8 β hne hv hs
-  by_cases h4 : (γ⁻¹ * β).support.card = 4
-  · exact dpFCount_le_of_support_four β γ h4
-  have h0 : 0 < (γ⁻¹ * β).support.card :=
-    Nat.pos_of_ne_zero fun e => hne (eq_of_support_zero e)
-  rw [dpFCount_eq_zero_of_support_lt_eight_ne_four β γ h0 h4 (by omega)]
-  exact Nat.zero_le _
-
-/-- (PROVED) `FullCipher.fullDiffCount_le_64_of_offDiag` with its hypothesis narrowed to the
-    support-≥ 8 case: for `α ≠ 1` and `γ` outside `v10Sym`, if
-    `64 · dpFCount β γ ≤ 52!` for every `β ≠ γ` outside `v10Sym` with `γ⁻¹ * β` moving at least
-    8 cards, then `64 · fullDiffCount α γ n y ≤ (52!)^(n+2)`. The support-≥ 8 hypothesis is
-    NOT proved. -/
-theorem fullDiffCount_le_64_of_offDiag_ge_eight {α γ : Relabel} (hα : α ≠ 1)
-    (hγ : ¬ ∃ a x, γ = v10Sym a x)
-    (h8 : ∀ β, β ≠ γ → (¬ ∃ a x, β = v10Sym a x) →
-      8 ≤ (γ⁻¹ * β).support.card →
-        64 * FullCipher.dpFCount β γ ≤ Nat.factorial 52)
-    (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
-    64 * FullCipher.fullDiffCount α γ n y ≤ Nat.factorial 52 ^ (n + 2) :=
-  FullCipher.fullDiffCount_le_64_of_offDiag hα hγ (offDiag_of_offDiag_ge_eight h8) n hy
 
 end DoubleDeal.Security.StemSupportFour

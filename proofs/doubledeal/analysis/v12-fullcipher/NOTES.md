@@ -2,8 +2,9 @@
 
 **EMPIRICAL ONLY**, except that §4 and §5 quote theorems of the security library, each named and
 marked PROVED; those are proved in Lean, not in this note. Everything else here is sampled or
-enumerated (§5). No theorem uses it, and no number here is proved. **No numeric bound on the full-cipher differential is proved**
-anywhere. Not a bit-security claim. These measurements found no weakness.
+enumerated (§5). No theorem uses it, and no number here is proved. The only numeric bound on the full-cipher
+differential is PROVED in the security library, not here: `StemUnion.fullDiffCount_le_64`,
+the same 1/64 for every n (the bound does not decay; nothing is proved about decay), independent keys, outputs outside `v10Sym`. Not a bit-security claim. These measurements found no weakness.
 
 ## 0. What is proved (pointer)
 
@@ -105,11 +106,11 @@ here, and nothing here is proved.
 
 ## 4. Not measured, not proved
 
-* Any numeric bound on the full-cipher differential (independent or real keys). What is
-  PROVED toward it (the reduction `fullDiffCount_le_64_of_offDiag` and the stem slices
-  `StemPosition`, `StemCoupling`, `StemSupportFour`) is listed in the security README (module
-  table, and the M7 entry of the "Open" list); not repeated here. Open: the `β` with `γ⁻¹β`
-  moving at least 8 cards, the hypothesis of `fullDiffCount_le_64_of_offDiag_ge_eight`. §2
+* Any numeric bound on the full-cipher differential beyond 1/64 (independent keys), into a
+  nontrivial `v10Sym` output, or under the real keys. What is PROVED (the reduction
+  `fullDiffCount_le_of_col`, the stem slices `StemPosition`, `StemCoupling`,
+  `StemSupportFour`, `StemUnion`, and `StemUnion.fullDiffCount_le_64`) is listed in the
+  security README (module table and the M7 row; what is still open is its "Open" list); not repeated here. §2
   samples single off-diagonal entries of a few rows at ≤ 3·10^-6, which is not a bound and
   not a column.
   More than one mix round before the final round; any γ ≠ α after the final round in §3.
@@ -171,15 +172,15 @@ four `d` the conjugate sets hold at most `8 · 48!` decks for each `(t, c)`
   but an arbitrary greedy choice of pairs, as `StemCoupling.exists_good` makes, can be left
   with only 4 (`[4,1,…,1]`), so a 5-pair version would need a different choice lemma; and
   `L(5) = 10` of 32 over all `12^5` nonzero tuples without the scaling WLOG.
-* `union_crude.py` (`logs/union_crude.log`, seconds; arithmetic, not proof), one candidate
-  route for the open supports `s ≥ 8`: bound `#{π | π⁻¹ δ π = q}` by `s^⌊s/2⌋ · (52 − s)!`
-  (`π` is fixed on the support of `q` by its values at one point of each cycle, and there
-  are at most `s/2` cycles) and sum over the `q` parameters with `52 − zRows·zCols = s`
+* `union_crude.py` (`logs/union_crude.log`, seconds; arithmetic only): the arithmetic that
+  sized the support-`s ≥ 8` route now PROVED in `StemUnion`. The route bounds
+  `#{π | π⁻¹ δ π = q}` by `s^⌊s/2⌋ · (52 − s)!` (`StemUnion.card_conjSet_le_reps`) and sums
+  over the `q` parameters with `52 − zRows·zCols = s`
   (`#q = Σ_{a ≤ 4, b ≤ 13, 52 − ab = s} 13^4 · C(4,a)·12^(4−a) · C(13,b)·3^(13−b)`: `t` free,
   `t'` agreeing with `t` mod 13 in exactly `a` rows, `e = s' − s` zero mod 4 in exactly `b`
-  columns; that `q` depends on the amounts only through `(t, t', e)` is a paper argument,
-  not proved). The largest value of `64 · #q · s^⌊s/2⌋ · (52 − s)! / 52!` over `s ≥ 8` is
-  0.173 (at `s = 8`); at `s = 4` it gives 175 and does not work (hence the coupling there).
-  Formalising this route needs three things: the general ratio formula, a count of
-  functions by their number of agreements, and the cycle-representative bound. None of it
-  is in Lean.
+  columns; `q` depends on the amounts only through `(t, t', e)` by
+  `StemUnion.ratio_eq_ratioQ`, and the count is `StemUnion.card_params`). The largest value
+  of `64 · #q · s^⌊s/2⌋ · (52 − s)! / 52!` over `s ≥ 8` is 0.173 (at `s = 8`), the margin
+  `StemUnion.paramCount_check` checks by `decide`; at `s = 4` it gives 175 and does not work
+  (hence the coupling there). The script is an independent recomputation of that
+  arithmetic; no theorem uses it.

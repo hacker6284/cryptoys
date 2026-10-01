@@ -7,11 +7,11 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
 
 /-
   A coupling bound for decks with a prescribed conjugate and prescribed row amounts (second
-  slice towards the off-diagonal stem column bound; security README, "Roadmap", "Open" list,
-  the M7 entry). One counting lemma.
+  slice towards the off-diagonal stem column bound; security README, "Roadmap",
+  the M7 row). One counting lemma.
 
   NO BOUND ON `dpFCount` (OR ANY OTHER DIFFERENTIAL COUNT) IS PROVED HERE, and nothing here
-  proves any part of the hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag`.
+  proves any part of the off-diagonal stem bound (`StemUnion.dpFCount_le_of_ne`).
 
   Proved:
   * `rowAmts_eq_iff`: `StemPosition.rowAmts m = t` (as functions on `Fin 4`) iff four row
@@ -45,7 +45,7 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
   points of each row then contain at most 3 decks meeting that row's condition; the four
   rows act independently.
 
-  Not proved here (the rest of the 4-card case of `hoff`, proved in `StemSupportFour`, third
+  Not proved here (the rest of the 4-card case of the off-diagonal stem bound, proved in `StemSupportFour`, third
   slice: `ratio_eq_qPerm_of_support_four`, `ratio_moves_le_one_of_support_four`,
   `card_conjSet_le_odd`, `card_conjSet_le_two`, `dpFCount_le_of_support_four`):
   * that the ratio `q = stemPerm x * (stemPerm (β·x))⁻¹` of `StemPosition.conj_of_stem_rel`
@@ -54,7 +54,7 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
     row, for a column `c`;
   * that `q` is determined by `(rowAmts x, c, d)`, and upper bounds on `#{π | π⁻¹ δ π = q}`;
   * the assembly `64 · dpFCount β γ ≤ 52!` for support 4. The union bound for the other
-    support sizes (at least 8) is not proved anywhere.
+    support sizes (at least 8) is `StemUnion`.
 
   Caveats. The constant 81/4096 comes from 3 swap pairs per row, not from the exact per-row
   maximum: an exhaustive enumeration over residue multisets (enumeration, not proof;

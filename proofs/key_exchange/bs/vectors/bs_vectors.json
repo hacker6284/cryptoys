@@ -3,7 +3,7 @@
  "generated_by": "proofs/key_exchange/bs/vectors/regen.sh",
  "source": "primitives/key_exchange/bs/bs.sudo",
  "sudo_sha256": "9123750d5550f99755297fd158c685b90e3b086b8804b83d021946ee9473927f",
- "sudocode_commit": "16b5a8b182ff80b43436dc997f02790aa79724df",
+ "sudocode_commit": "2c7edef4c735b747287401d02e351515c28402d2",
  "note": "Known-answer vectors evaluated by the sudoc JS target of bs.sudo over inputs.json. Cross-checked by check_oracle.py against pow() and the Python evidence harness (not a reference).",
  "registers": "'.WR' strings, hole 0 first: '.' empty, 'W' white, 'R' red (SPEC §3)",
  "dice": "faces by kind of die, in the order they are thrown (SPEC §4.2): d12 hole die, d6 (growth and Sub/Cruiser), d10 (the row cup: five dice thrown at the start of each row, taken in rainbow order, one per hole pair; a zero face is thrown again and comes just before that die's final face)",

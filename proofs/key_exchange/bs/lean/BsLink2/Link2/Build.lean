@@ -4006,4 +4006,90 @@ theorem check_step_spec (lg : List Spec.LetGo) (n : Nat) (hl : lg.length = n + 1
       apply decide_eq_false; omega
     rw [hob']; rfl
 
+theorem embed_range_map (f : Nat → Nat) :
+    embed ((List.range 100).map f) = tab (fun h => Int.ofNat (f h)) := by
+  simp [embed, tab]
+
+/-- The empty grid BUILD starts from. -/
+def buildInit (d : Spec.Dice) : Spec.BuildSt :=
+  { dice := d, tray := [], read := 0, covered := fun _ => false, ships := [], face := 0,
+    pegs := fun _ => 0 }
+
+theorem rowStep_inv {d0 : Spec.Dice} {lg : List Spec.LetGo} {row : Nat} (hr : row < 10)
+    {st st' : Spec.BuildSt} (h : HoleInv d0 0 st) (hs : Spec.rowStep lg row st = some st') :
+    HoleInv d0 0 st' := by
+  unfold Spec.rowStep at hs
+  rw [List.range_eq_range'] at hs
+  have := holeSteps_inv (lg := lg) hr 10 0 { st with face := 0 } st' (by omega)
+    ⟨h.streams, h.tray, h.trayLen, h.read, fun h => by simp at h⟩ hs
+  exact ⟨this.streams, this.tray, this.trayLen, this.read, fun h => by simp at h⟩
+
+/-- §4.2 BUILD after the let-go check: the ten rows from the empty grid. -/
+theorem build_after_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d : Spec.Dice)
+    (hd : DiceFit d) (j : Int) :
+    (buildAfterE (embLG lg) (embDice d) j).toOption =
+      ((List.range 10).foldlM (fun st row => Spec.rowStep lg row st) (buildInit d)).map
+        (fun st => (embGrid ⟨st.ships, (List.range 100).map st.pegs⟩, embDice st.dice)) := by
+  unfold buildAfterE
+  simp only [Bs.grid_rows, Bs.grid_cols]
+  have hmul : SudoRt.mulI (10 : Int) (10 : Int) = .ok (Int.ofNat (10 * 10)) :=
+    mulI_ofNat 10 10 (fits_small (by omega))
+  have hsub : SudoRt.subI (10 : Int) (1 : Int) = .ok (Int.ofNat (10 - 1)) :=
+    subI_ofNat_one 10 (by decide) (fits_small (by decide))
+  rw [hmul, ok_bind]
+  rw [show SudoRt.filledL (Int.ofNat (10 * 10)) false = .ok (tab fun _ => false) by
+      rw [← tab_const]; rfl, ok_bind,
+    show SudoRt.filledL (Int.ofNat (10 * 10)) (0 : Int) = .ok (tab fun _ => (0 : Int)) by
+      rw [← tab_const]; rfl, ok_bind,
+    hsub, ok_bind, except_bind_pure]
+  refine (loop_opt (S := Spec.BuildSt) embRowSt (rowStepE (embLG lg) (Int.ofNat 9)) _ _
+    (fun i s => Spec.rowStep lg i s) (fun _ s => HoleInv d 0 s)
+    (fun s => some (embGrid ⟨s.ships, (List.range 100).map s.pegs⟩, embDice s.dice)) 0 10
+    (by decide) (fun i s _ hi hP => row_step_spec lg hlg d hd i hi s hP)
+    (fun i s s' _ hi hP hs => rowStep_inv hi hP hs) ?_ (buildInit d)
+    ⟨Streams.refl d, fun x hx => by simp [buildInit] at hx, Nat.zero_le _, Nat.zero_le _,
+      fun h => by simp at h⟩).trans ?_
+  · intro j s _
+    simp only [embGrid, embed_range_map]
+    rfl
+  · rw [show List.range 10 = List.range' 0 (10 - 0) by rw [List.range_eq_range']]
+    cases (List.range' 0 (10 - 0)).foldlM (fun s i => Spec.rowStep lg i s) (buildInit d) <;> rfl
+
+/-- §4.2 BUILD: the emitted `build` is `Spec.build`, traps included (a trap is `none`), for
+    dice whose face lists fit and a let-go list whose length fits. -/
+theorem build_spec (d : Spec.Dice) (hd : DiceFit d) (lg : List Spec.LetGo)
+    (hlg : FitsLen lg.length) :
+    (Bs.build (embDice d) (embLG lg)).toOption =
+      (Spec.build d lg).map (fun p => (embGrid p.1, embDice p.2)) := by
+  rw [build_eq, letgo_unique_spec _ hlg, ok_bind]
+  unfold Spec.build Spec.letGoOk
+  by_cases hnd : lg.Nodup
+  · rw [decide_eq_true hnd, sudoAssert_true, ok_bind,
+      show SudoRt.listLen (embLG lg) = Int.ofNat lg.length by rw [listLen_eq, size_embLG],
+      subI_len_one _ hlg, ok_bind, except_bind_pure]
+    simp only [Bool.true_and]
+    have hfin : ∀ j, (buildAfterE (embLG lg) (embDice d) j).toOption =
+        (((List.range 10).foldlM (fun st row => Spec.rowStep lg row st) (buildInit d)).map
+          (fun st => ((⟨st.ships, (List.range 100).map st.pegs⟩ : Spec.Grid), st.dice))).map
+          (fun p => (embGrid p.1, embDice p.2)) := by
+      intro j; rw [build_after_spec lg hlg d hd, Option.map_map]; rfl
+    cases hl : lg.length with
+    | zero =>
+      have : lg = [] := List.eq_nil_of_length_eq_zero hl
+      subst this
+      rw [show fuelRange 0 (Int.ofNat 0 - 1) = 0 + 1 from rfl, runLoopOn_succ_opt,
+        show checkStepE (embLG []) (Int.ofNat 0 - 1) 0 = .ok (.brk 0) from rfl, toOpt_ok,
+        Option.some_bind]
+      exact hfin 0
+    | succ n =>
+      rw [show Int.ofNat (n + 1) - 1 = Int.ofNat n by simp only [ofNat_eq_natCast]; omega,
+        show fuelRange 0 (Int.ofNat n) = n + 1 from fuelRange_le (fromN := 0) (Nat.zero_le n)]
+      refine (asc_check _ _ _ (okAt lg) 0 n (fun i _ hi => check_step_spec lg n hl hlg i (by omega))).trans ?_
+      rw [← hl, all_okAt]
+      split
+      · exact hfin _
+      · rfl
+  · rw [decide_eq_false hnd, toOpt_bind, sudoAssert_false_opt]
+    simp [hnd]
+
 end BsLink2.Link2

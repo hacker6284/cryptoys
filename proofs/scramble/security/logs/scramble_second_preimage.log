@@ -1,4 +1,4 @@
-[second] seed 20260930; engine self-check: 10/10 SPEC KATs ok
+[second] seed 20260930; reference self-check: 10/10 SPEC KATs ok
   target: target message eccf719dd60b198defdc0d14fe2b5ab227c0a421ce177c038ee333675489b2d58d4a5c11c914fc878706a761af87ae5f2245b981dfec8ca3f41798852e149355
   42 corner-collision stages: blocks tried per stage mean 22370 (2^14.45), min 6098, max 62305; sqrt(pi/2 * 24*(8!/2)*3^7) = 40769 (2^15.32)
   corner bridge 4+4 nybbles: 63552 distinct forward ends, 5 meets

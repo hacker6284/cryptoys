@@ -1,4 +1,4 @@
-[collision] seed 20260930; engine self-check: 10/10 SPEC KATs ok
+[collision] seed 20260930; reference self-check: 10/10 SPEC KATs ok
   22 corner-collision stages: blocks tried per stage mean 21875 (2^14.42), min 6098, max 48411; sqrt(pi/2 * 24*(8!/2)*3^7) = 40769 (2^15.32)
   edge birthday: 1769627 edge outcomes stored before the first match
   m1 = 84725426e936d44d4fe39468866a366150f6d5bedfa585744d848b1de8cd919263dedef5110b5720525d5ecd34d8530fea117c1709f6beacd553ac9f704bd94adf465b4526123600721cb72c0b83afbc0a32717708b18735

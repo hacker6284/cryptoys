@@ -48,6 +48,7 @@ try {
     // [1] The 10 vectors, read from the SPEC's scramble_v1 and scramble_v2 tables.
     console.log("[1] SPEC vectors (digest, step count, final facelets)");
     let version = 0, rows = 0;
+    const specFacelets = {}; // "v2 `hello`" -> the SPEC row's final facelets
     for (const line of readFileSync(spec, "utf8").split("\n")) {
         if (/^## /.test(line)) {
             version = line === "## scramble_v1" ? 1 : line === "## scramble_v2" ? 2 : 0;
@@ -62,6 +63,7 @@ try {
         const got = run(version, bytes);
         const ok = got.hex === m[5] && got.steps === Number(m[4]) && got.facelets === m[6];
         check(`v${version} ${m[1]}`, ok, ok ? m[5] : JSON.stringify(got));
+        specFacelets[`v${version} ${m[1]}`] = m[6];
         rows++;
     }
     check("vector count", rows === 10, `${rows}/10`);
@@ -92,21 +94,21 @@ try {
     check("second preimage: digest(M)", ds === "0A38700830D1C599C", ds);
     const pre = log("scramble_decode_preimage.log");
     const mp = grab(pre, /found M = ([0-9a-f]+) /);
-    const dp = run(2, mp).hex;
+    const rp = run(2, mp), dp = rp.hex;
     check(`hex-only preimage: ${mp.length} bytes`, mp.length === 172);
     check("hex-only preimage: digest(M)", dp === "132FDCE0BF26E5898", dp);
 
     // [3] SPEC "Digest" (scramble_digest_check.log [2], scramble_decode_preimage.log [3]):
-    // equal digest, different seated cube.
-    console.log("[3] equal digest, different final facelets (scramble_v2)");
+    // equal digest, seated cube differs from the SPEC row by the RW+OW flip (4 stickers).
+    console.log("[3] equal digest, final facelets 4 stickers off the SPEC row (scramble_v2)");
+    const off = (a, b) => [...a].filter((c, i) => c !== b[i]).length;
     const tw = run(2, grab(log("scramble_digest_check.log"), /^ {4}M = ([0-9a-f]+)$/m));
-    const hello = run(2, Buffer.from("hello")), cube = run(2, Buffer.from("cube"));
-    check("hello twin: digest", tw.hex === hello.hex && tw.hex === "052A3C7D12291D140", tw.hex);
-    check("hello twin: facelets differ from hello's", tw.facelets !== hello.facelets, tw.facelets);
+    const hello = specFacelets["v2 `hello`"], cube = specFacelets["v2 `cube`"];
+    check("hello twin: digest", tw.hex === "052A3C7D12291D140", tw.hex);
+    check("hello twin: 4 stickers off SPEC `hello`", off(tw.facelets, hello) === 4, tw.facelets);
     const pose = find(pre, /decoded pose facelets ([WYROBG]{54})$/m);
-    check("decoded cube pose: hex-only preimage lands on it", run(2, mp).facelets === pose, pose);
-    check("decoded cube pose != SPEC `cube` facelets (shown), same digest",
-        pose !== cube.facelets && cube.hex === dp, cube.facelets);
+    check("decoded cube pose: hex-only preimage lands on it", rp.facelets === pose, pose);
+    check("decoded cube pose: 4 stickers off SPEC `cube`", off(pose, cube) === 4, cube);
 } finally {
     rmSync(out, { recursive: true, force: true });
 }

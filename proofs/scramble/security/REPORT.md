@@ -84,14 +84,13 @@ PYTHONDONTWRITEBYTECODE=1 python3 scramble_digest_check.py
 SUDOC=/path/to/sudoc node scramble_sudo_check.mjs   # default: <repo>/.sudocode/sudoc/target/release/sudoc
 ```
 
-CI (job `scramble-sudo-check` in `.github/workflows/proofs.yml`) runs `scramble_sudo_check.mjs`
-and requires its output to equal its log byte for byte. CI does not run the Python scripts
-(follow-up S7, §5). The logs were regenerated when the printed corner-bound
-estimate was corrected to 24·(8!/2)·3^7; the messages, digests and work counts were unchanged,
-and only that estimate, wall time and memory differ from the first run. Later the label on
-line 1 of the collision and second-preimage logs was renamed by hand from "reference
-self-check" to "engine self-check". Reruns gave the same output apart from that label, wall
-time and memory, so the logs keep the original wall times and memory.
+CI (the `generated-fresh` job in `.github/workflows/proofs.yml`, which builds `sudoc` at the
+pin) runs `scramble_sudo_check.mjs` and requires its output to equal its log byte for byte. CI
+does not run the Python scripts (follow-up S7, §5). The logs were regenerated when the printed
+corner-bound estimate was corrected to 24·(8!/2)·3^7; the messages, digests and work counts were
+unchanged, and only that estimate, wall time and memory differ from the first run. The collision
+and second-preimage logs predate the label rename and print "reference self-check" on line 1;
+the scripts now print "engine self-check". A rerun reproduced every count, digest and message.
 
 ## 2. Structural facts (proved (paper))
 
@@ -173,7 +172,8 @@ permutation of edge slots depending only on (n, c).
     same digest.
   - Both instances are re-checked through the sudoc-generated JS
     (`logs/scramble_sudo_check.log` [3]): the `hello` twin and the hex-only preimage are hashed
-    there, and their final facelets are compared with those of `hello` and `cube`.
+    there, and their final facelets each differ from the SPEC's `hello` and `cube` rows in
+    exactly 4 stickers (the RW+OW flip).
 
 ## 3. The attacks (measured)
 

@@ -68,6 +68,14 @@ jobs:
           for v in v8 v9 v10 v11; do
             proofs/doubledeal/vectors/regen.sh "$v" --check
           done
+      # Scramble (marked broken): the 10 SPEC vectors, the attack messages in logs/, the
+      # `hello` twin and the decoded `cube` pose through the JS this sudoc generates from
+      # scramble.sudo (about 1 s). The seeded Python attack runs (REPORT S7) are not run here.
+      - name: scramble_sudo_check.mjs output matches its log
+        run: |
+          out="$RUNNER_TEMP/scramble_sudo_check.log"
+          node proofs/scramble/security/scramble_sudo_check.mjs > "$out" || { cat "$out"; exit 1; }
+          diff -u proofs/scramble/security/logs/scramble_sudo_check.log "$out"
 
   generated:
     # Emitted Lean of each primitive builds and its sudo tests pass (TAP).
@@ -92,40 +100,6 @@ jobs:
       - name: Generated TAP (sudo tests)
         working-directory: ${{ matrix.dir }}
         run: ./.lake/build/bin/${{ matrix.test }}
-
-  scramble-sudo-check:
-    # Scramble v2 is marked broken (proofs/scramble/security/REPORT.md). Re-checks the 10
-    # SPEC vectors, the attack messages in logs/, the `hello` twin and the decoded `cube`
-    # pose through the JS that sudoc (at the pin) generates from scramble.sudo, and
-    # requires the output to match the committed log byte for byte. The seeded Python
-    # attack runs (REPORT follow-up S7) are not run here.
-    runs-on: ubuntu-latest
-    env:
-      SUDOC: ${{ github.workspace }}/.sudocode/sudoc/target/release/sudoc
-    steps:
-      - uses: actions/checkout@v5
-      - name: Read the sudocode pin
-        id: pin
-        run: |
-          commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_PIN)"
-          echo "commit=$commit" >> "$GITHUB_OUTPUT"
-          test -n "$commit"
-      - uses: actions/checkout@v5
-        with:
-          repository: hacker6284/sudocode
-          ref: ${{ steps.pin.outputs.commit }}
-          path: .sudocode
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: .sudocode/sudoc
-      - name: Build sudoc
-        run: cargo build --release --manifest-path .sudocode/sudoc/Cargo.toml
-      - name: Scramble vectors and logged attack results through sudoc-generated JS (scramble_sudo_check.mjs, about 1 s); output matches logs/scramble_sudo_check.log
-        run: |
-          out="$RUNNER_TEMP/scramble_sudo_check.log"
-          node proofs/scramble/security/scramble_sudo_check.mjs > "$out" || { cat "$out"; exit 1; }
-          diff -u proofs/scramble/security/logs/scramble_sudo_check.log "$out"
 
   doubledeal-v8-deprecated:
     # Frozen, deprecated DoubleDeal v8: emitted TAP + vulnerability-proof witness

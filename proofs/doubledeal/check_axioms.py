@@ -738,6 +738,28 @@ PACKAGES = {
             "DoubleDeal.Security.StemUnion.dpFCount_le_of_ne",
             "DoubleDeal.Security.StemUnion.dpFCount_col_le_64",
             "DoubleDeal.Security.StemUnion.fullDiffCount_le_64",
+            # OneRoundDP (roadmap B1, one mix round): any eps_1 < 1 implies the open covariant
+            # conjecture; the 51 v10Sym rows are bounded (1/52, and 1/17 for v10Sym 0 3); rows
+            # outside v10Sym are NOT proved; not a security claim
+            "DoubleDeal.Security.OneRoundDP.dp1Count_eq_of_covPair",
+            "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1_lt",
+            "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1Bound",
+            "DoubleDeal.Security.OneRoundDP.scoop_rmIdx",
+            "DoubleDeal.Security.OneRoundDP.rmIdx_injective",
+            "DoubleDeal.Security.OneRoundDP.mixColumns_seat2",
+            "DoubleDeal.Security.OneRoundDP.seat2_ne_start",
+            "DoubleDeal.Security.OneRoundDP.rmIdx_seat2_ne_26",
+            "DoubleDeal.Security.OneRoundDP.step_reads",
+            "DoubleDeal.Security.OneRoundDP.card_three_le",
+            "DoubleDeal.Security.OneRoundDP.sameSeat2_subset",
+            "DoubleDeal.Security.OneRoundDP.sameSeat2_eq_empty",
+            "DoubleDeal.Security.OneRoundDP.card_agree_le_fifty",
+            "DoubleDeal.Security.OneRoundDP.unkeyedWithMix_perm_injective",
+            "DoubleDeal.Security.OneRoundDP.dp1Count_v10Sym_le_sum",
+            "DoubleDeal.Security.OneRoundDP.dp1Count_v10Sym_self_le",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym03",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym_row",
             # row/column sums of fullDiffCount (used by LinearMasks, M8b)
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",

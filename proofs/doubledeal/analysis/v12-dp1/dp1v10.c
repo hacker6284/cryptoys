@@ -6,7 +6,7 @@
         Also checks stem(alpha.x) = alpha.stem(x) on every sample (proved: unkeyedNoMix_rel_v10Sym).
      k: row alpha = SPEC restricted to the decks x whose stem output starts with K-clubs or
         K-spades (stem(x)[0] in {12, 38}; rejection sampling; N accepted decks). These are the
-        first cards for which the proof's two-read argument (Lean, OneRoundV10) gives no factor.
+        first cards for which the proof's two-read argument (Lean, OneRoundDP) gives no factor.
      c: column beta = SPEC;  y uniform; gamma = diff(U^-1 y, U^-1(beta.y)); P[gamma] = T[gamma][beta].
    Each sampled difference is reduced to a 64-bit FNV-style hash (ddiff.h hsh). Equal hashes are
    counted as equal differences (a hash collision can only add a spurious repeat).

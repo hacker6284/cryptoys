@@ -154,10 +154,15 @@ export function mountTwistyTurn(page, settings) {
             const lead = ctx.leadIn([["lift", 0]]);
             if (lead && !(await ctx.wait(lead))) return;
             ctx.contact("lift", performance.now());
+            // Each leaf's contact is the moment its face seats: playback
+            // start plus the leaf durations so far, at the tempo.
             await rig.playLeaves(from, from + moves.length, {
-                onLeaf: (i) => {
-                    const move = leaves[i - from];
-                    if (move) ctx.contact(slotOf(move), performance.now() + cubingMs(amountOf(move)) / tempo);
+                onStart: ({ at, durations }) => {
+                    let t = at;
+                    leaves.forEach((move, k) => {
+                        t += (durations[k] ?? cubingMs(amountOf(move))) / tempo;
+                        ctx.contact(slotOf(move), t);
+                    });
                 },
             });
             if (gen !== ctx.alive) return;

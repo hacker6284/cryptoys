@@ -4,7 +4,8 @@
 //   tools/sync-micro-sounds.py after changing it). gainDb = loudness
 //   (+ louder). offsetMs = when the file starts relative to the contact
 //   (more negative = earlier; −peak puts the loudest sample on it).
-//   fadeMs / maxMs shorten long files (0 = play it out). null = silent.
+//   startMs skips the file's head; fadeMs / maxMs shorten the tail
+//   (0 = play it out). null = silent.
 // timing: real code values (playroom/cube-stage.js CUBE_STAGE_TIMING; speed = the dock tempo (cubing.js tempoScale)).
 export default {
     loopGapMs: 700,
@@ -29,6 +30,8 @@ export default {
         // Lift off felt; contact: the puzzle leaves the felt. Off (try "scramble-lift/lift/regrip-1_01kamii05-428594").
         lift: null,
         // Settle on felt; contact: the puzzle touches the felt.
-        settle: { file: "scramble-turn/settle/settle_emapuree-848748", gainDb: 6, offsetMs: -33 },
+        // A small plastic object set down on a desk (light clack and a tiny
+        // settle rattle), head pre-roll skipped, tail cut short.
+        settle: { file: "scramble-turn/settle/settle_bwarpus99-452535-slice", gainDb: 3, offsetMs: -247, startMs: 225, maxMs: 220, fadeMs: 100 },
     },
 };

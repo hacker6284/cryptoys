@@ -2,7 +2,7 @@
  "schema": 1,
  "generated_by": "proofs/key_exchange/bs/vectors/regen.sh",
  "source": "primitives/key_exchange/bs/bs.sudo",
- "sudo_sha256": "9123750d5550f99755297fd158c685b90e3b086b8804b83d021946ee9473927f",
+ "sudo_sha256": "eaba2e5cf5633c527066085183d2873e81128bb916cc5e2333a4b204b40d4f83",
  "sudocode_commit": "2c7edef4c735b747287401d02e351515c28402d2",
  "note": "Known-answer vectors evaluated by the sudoc JS target of bs.sudo over inputs.json. Cross-checked by check_oracle.py against pow() and the Python evidence harness (not a reference).",
  "registers": "'.WR' strings, hole 0 first: '.' empty, 'W' white, 'R' red (SPEC §3)",

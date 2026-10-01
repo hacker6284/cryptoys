@@ -256,8 +256,9 @@ export func check_received(f: Field, received: List<int>) -> Option<List<int>>
 
 // ---------------------------------------------------------------------------
 // §3.1 Sending a public value: call the shots. The value is the sender's tidy
-// answer from B9 step 1 (on the board it is in X, where B5 leaves it; here it
-// is just the register `value`). The receiver clears Y,
+// answer from B9 step 1 (on the board it is in X: the walk ends in X, and B5
+// leaves the tidy answer in the register it tidied; here it is just the
+// register `value`). The receiver clears Y,
 // calls every hole of the value, hole 0 first up to hole n - 1; the sender
 // answers by the peg in that hole; the receiver copies each answer into the same
 // hole of Y. The board bookkeeping (the lane-5 "calling" peg, naming holes by
@@ -543,7 +544,6 @@ func letgo_unique(letgo: List<LetGo>) -> bool
     return true
 
 func lets_go(letgo: List<LetGo>, hole: int, gap: bool) -> bool
-    assert letgo_unique(letgo)
     for i = 0 to letgo.length - 1
         if (letgo[i].hole == hole) and (letgo[i].gap == gap)
             return true
@@ -622,6 +622,7 @@ func grow_until_it_bumps(d: inout Dice, covered: List<bool>, row: int, col: int)
 // the unread tray dice again. With no let-go the d10 faces are read in the order
 // they were thrown. Never between a die's two pegs: the pair is one step.
 func build(d: inout Dice, letgo: List<LetGo>) -> KeyGrid
+    assert letgo_unique(letgo)
     for i = 0 to letgo.length - 1
         assert (letgo[i].hole >= 0) and (letgo[i].hole < grid_rows * grid_cols)
         assert (letgo[i].hole mod grid_cols) mod 2 == 0

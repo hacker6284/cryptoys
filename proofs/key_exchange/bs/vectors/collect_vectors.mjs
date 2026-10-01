@@ -58,11 +58,13 @@ function buildKey(name, faces) {
   const built = bs.build_key_grid(bs.dice(faces.d12, faces.d6, faces.d10));
   const used = { d12: built.used12, d6: built.used6, d10: built.used10 };
   for (const k of ["d12", "d6", "d10"]) {
-    assert(used[k] === faces[k].length, `${name}: BUILD read ${used[k]} ${k} faces of ${faces[k].length}`);
+    assert(used[k] === faces[k].length,
+      `${name}: BUILD read ${used[k]} ${k} faces of ${faces[k].length}`);
   }
   const grid = gridOut(built.grid);
   // The JSON form of the grid must read back to the same grid.
-  assert(JSON.stringify(gridOut(gridIn(grid))) === JSON.stringify(grid), `${name}: grid JSON round trip`);
+  assert(JSON.stringify(gridOut(gridIn(grid))) === JSON.stringify(grid),
+    `${name}: grid JSON round trip`);
   return { grid: built.grid, json: grid };
 }
 
@@ -79,18 +81,19 @@ for (const v of inputs.vectors) {
       key_b: b.json,
       cells_a: toPegs(bs.read_key([a.grid])),
       cells_b: toPegs(bs.read_key([b.grid])),
-      public_a: toPegs(e.publica),
-      public_b: toPegs(e.publicb),
-      shots_a: e.shotsa.map(shotName),
-      received_a: toPegs(e.receiveda),
-      shots_b: e.shotsb.map(shotName),
-      received_b: toPegs(e.receivedb),
-      base_a: toPegs(e.basea),
-      base_b: toPegs(e.baseb),
-      secret_a: toPegs(e.secreta),
-      secret_b: toPegs(e.secretb),
+      public_a: toPegs(e.public_a),
+      public_b: toPegs(e.public_b),
+      shots_a: e.shots_a.map(shotName),
+      received_a: toPegs(e.received_a),
+      shots_b: e.shots_b.map(shotName),
+      received_b: toPegs(e.received_b),
+      base_a: toPegs(e.base_a),
+      base_b: toPegs(e.base_b),
+      secret_a: toPegs(e.secret_a),
+      secret_b: toPegs(e.secret_b),
     });
-    assert(out.received_a === out.public_a && out.received_b === out.public_b, `${v.name}: §3.1 copy differs`);
+    assert(out.received_a === out.public_a && out.received_b === out.public_b,
+      `${v.name}: §3.1 copy differs`);
     assert(out.secret_a === out.secret_b, `${v.name}: K_A != K_B`);
   } else if (v.kind === "multiply") {
     out.product = toPegs(bs.multiply(f, toTrits(v.a), toTrits(v.b), v.nudge));
@@ -116,14 +119,24 @@ const doc = {
   source: "primitives/key_exchange/bs/bs.sudo",
   sudo_sha256: process.env.BS_SUDO_SHA256 || "",
   sudocode_commit: process.env.SUDOCODE_COMMIT || "",
-  note: "Known-answer vectors evaluated by the sudoc JS target of bs.sudo over inputs.json. Cross-checked against the Python reference and pow() by check_oracle.py.",
+  note:
+    "Known-answer vectors evaluated by the sudoc JS target of bs.sudo over inputs.json. " +
+    "Cross-checked by check_oracle.py against pow() and the Python evidence harness " +
+    "(not a reference).",
   registers: inputs.registers,
   dice: inputs.dice,
-  cells: "the key's cell string as B7 walks it (READ, SPEC §4.3): start marker, ship pass, peg pass; '.WR' = plain/white/red",
-  shots: "§3.1 answers in call order, hole 0 first: shots_a is Bob calling Alice's X, shots_b is Alice calling Bob's X",
+  cells:
+    "the key's cell string as B7 walks it (READ, SPEC §4.3): start marker, ship pass, " +
+    "peg pass; '.WR' = plain/white/red",
+  shots:
+    "§3.1 answers in call order, hole 0 first: shots_a is Bob calling Alice's X, " +
+    "shots_b is Alice calling Bob's X",
   vectors,
 };
 // One line per list of numbers or of shots.
-const text = JSON.stringify(doc, null, 1).replace(/\[[-0-9,\s]*\]/g, (m) => "[" + m.slice(1, -1).split(",").map((x) => x.trim()).filter((x) => x).join(", ") + "]")
-  .replace(/\[(\s*"(?:Hit|Miss|Misfire)",?)+\s*\]/g, (m) => "[" + m.slice(1, -1).split(",").map((x) => x.trim()).join(", ") + "]");
+const oneLine = (m, keep) =>
+  "[" + m.slice(1, -1).split(",").map((x) => x.trim()).filter(keep).join(", ") + "]";
+const text = JSON.stringify(doc, null, 1)
+  .replace(/\[[-0-9,\s]*\]/g, (m) => oneLine(m, (x) => x))
+  .replace(/\[(\s*"(?:Hit|Miss|Misfire)",?)+\s*\]/g, (m) => oneLine(m, () => true));
 process.stdout.write(text + "\n");

@@ -2,7 +2,8 @@
 
 The outputs are not computed here: regen.sh runs the sudoc JS build of
 primitives/key_exchange/bs/bs.sudo over these inputs. check_oracle.py then
-cross-checks every output against the Python reference and pow().
+cross-checks every output against pow() and the Python evidence harness
+(not a reference; bs.sudo and the SPEC are normative).
 
 Key grids are given as the dice faces that built them (BUILD, SPEC §4.2): one
 stream per kind of die (d12 hole die, d6, d10). The faces are the ones
@@ -59,8 +60,9 @@ def recorded_keys(tier, runs):
 
 
 def compact(text):
-    """Put each list of numbers on one line (as JSON.stringify output is post-processed in collect_vectors.mjs)."""
-    return re.sub(r"\[[-0-9,\s]*\]", lambda m: "[" + ", ".join(m.group(0)[1:-1].split()).replace(",,", ",") + "]", text)
+    """Put each list of numbers on one line (as collect_vectors.mjs does to its JSON)."""
+    one_line = lambda m: "[" + ", ".join(m.group(0)[1:-1].split()).replace(",,", ",") + "]"
+    return re.sub(r"\[[-0-9,\s]*\]", one_line, text)
 
 
 def reg(trits):
@@ -76,35 +78,44 @@ def main():
             if t != tier:
                 continue
             a, b = keys[r]
-            vectors.append(dict(name=f"exchange_{TIER[tier]}_run{r}", kind="exchange", tier=TIER[tier],
-                                source=f"proofs/key_exchange/bs/exchange/exchange.py {tier} seed {SEED[tier]}, run {r}: {why}",
-                                dice_a=a, dice_b=b))
+            source = (f"proofs/key_exchange/bs/exchange/exchange.py {tier} seed {SEED[tier]}, "
+                      f"run {r}: {why}")
+            vectors.append(dict(name=f"exchange_{TIER[tier]}_run{r}", kind="exchange",
+                                tier=TIER[tier], source=source, dice_a=a, dice_b=b))
     n1, n2 = 18, 35
     p1 = [2] * n1; p1[2] = 1                    # T1 p: all red except a white at hole k = 2
     pm1 = [2] * n1; pm1[0] = 1; pm1[2] = 1      # p - 1
     pp1 = [2] * n1; pp1[0] = 0; pp1[1] = 0; pp1[2] = 2   # p + 1 (a non-canonical 1)
     one = [1] + [0] * (n1 - 1)
+    def vec(name, kind, tier, source, **inputs):
+        return dict(name=name, kind=kind, tier=tier, **inputs, source=source)
     vectors += [
-        dict(name="multiply_T1_all_red_nudge2", kind="multiply", tier="T1", a=reg([2] * n1), b=reg([2] * n1), nudge=2,
-             source="SPEC §8 worst case"),
-        dict(name="multiply_T2_all_red_nudge2", kind="multiply", tier="T2", a=reg([2] * n2), b=reg([2] * n2), nudge=2,
-             source="SPEC §8 worst case"),
-        dict(name="tidy_T1_p", kind="tidy", tier="T1", x=reg(p1), source="SPEC B5: p tidies to the empty register"),
-        dict(name="tidy_T1_p_plus_1", kind="tidy", tier="T1", x=reg(pp1), source="SPEC B5: p + 1 tidies to 1"),
-        dict(name="check_T1_zero", kind="check", tier="T1", received=reg([0] * n1), source="SPEC B8: reject 0"),
-        dict(name="check_T1_one", kind="check", tier="T1", received=reg(one), source="SPEC B8: reject 1"),
-        dict(name="check_T1_p_minus_1", kind="check", tier="T1", received=reg(pm1), source="SPEC B8: reject p - 1"),
-        dict(name="check_T1_p_plus_1", kind="check", tier="T1", received=reg(pp1), source="SPEC B8: reject p + 1"),
-        dict(name="check_T1_three", kind="check", tier="T1", received=reg([0, 1] + [0] * (n1 - 2)),
-             source="SPEC B8: accept g = 3, base 9"),
-        dict(name="call_T1_trailing_misfires", kind="call", tier="T1", x=reg([2, 1, 0, 1, 2] + [0] * 13),
-             source="SPEC §3.1: every hole is called, even after a run of misfires"),
-        dict(name="call_T1_all_misfires", kind="call", tier="T1", x=reg([0] * n1),
-             source="SPEC §3.1: an empty register is n misfires"),
+        vec("multiply_T1_all_red_nudge2", "multiply", "T1", "SPEC §8 worst case",
+            a=reg([2] * n1), b=reg([2] * n1), nudge=2),
+        vec("multiply_T2_all_red_nudge2", "multiply", "T2", "SPEC §8 worst case",
+            a=reg([2] * n2), b=reg([2] * n2), nudge=2),
+        vec("tidy_T1_p", "tidy", "T1", "SPEC B5: p tidies to the empty register", x=reg(p1)),
+        vec("tidy_T1_p_plus_1", "tidy", "T1", "SPEC B5: p + 1 tidies to 1", x=reg(pp1)),
+        vec("check_T1_zero", "check", "T1", "SPEC B8: reject 0", received=reg([0] * n1)),
+        vec("check_T1_one", "check", "T1", "SPEC B8: reject 1", received=reg(one)),
+        vec("check_T1_p_minus_1", "check", "T1", "SPEC B8: reject p - 1", received=reg(pm1)),
+        vec("check_T1_p_plus_1", "check", "T1", "SPEC B8: reject p + 1", received=reg(pp1)),
+        vec("check_T1_three", "check", "T1", "SPEC B8: accept g = 3, base 9",
+            received=reg([0, 1] + [0] * (n1 - 2))),
+        vec("call_T1_trailing_misfires", "call", "T1",
+            "SPEC §3.1: every hole is called, even after a run of misfires",
+            x=reg([2, 1, 0, 1, 2] + [0] * 13)),
+        vec("call_T1_all_misfires", "call", "T1", "SPEC §3.1: an empty register is n misfires",
+            x=reg([0] * n1)),
     ]
-    doc = dict(note="Inputs of bs_vectors.json. Written by make_inputs.py; regen.sh adds the outputs from bs.sudo.",
+    doc = dict(note="Inputs of bs_vectors.json. Written by make_inputs.py; "
+                    "regen.sh adds the outputs from bs.sudo.",
                registers="'.WR' strings, hole 0 first: '.' empty, 'W' white, 'R' red (SPEC §3)",
-               dice="faces by kind of die, in the order BUILD reads them (SPEC §4.2): d12 hole die, d6 (growth and Sub/Cruiser), d10 (one per hole pair; 0 is thrown again)",
+               dice="faces by kind of die, in the order they are thrown (SPEC §4.2): "
+                    "d12 hole die, d6 (growth and Sub/Cruiser), d10 (the row cup: five dice "
+                    "thrown at the start of each row, taken in rainbow order, one per hole "
+                    "pair; a zero face is thrown again and comes just before that die's "
+                    "final face)",
                vectors=vectors)
     with open(os.path.join(HERE, "inputs.json"), "w") as fh:
         fh.write(compact(json.dumps(doc, indent=1)) + "\n")

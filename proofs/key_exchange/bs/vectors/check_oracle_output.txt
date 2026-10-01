@@ -14,4 +14,4 @@ ok  check_T1_p_plus_1: rejected
 ok  check_T1_three: base 9
 ok  call_T1_trailing_misfires: 18 calls, 14 misfires
 ok  call_T1_all_misfires: 18 calls, 18 misfires
-all vectors agree with the Python reference and pow()
+all vectors agree with pow() and the Python evidence harness

@@ -1,7 +1,7 @@
 {
  "note": "Inputs of bs_vectors.json. Written by make_inputs.py; regen.sh adds the outputs from bs.sudo.",
  "registers": "'.WR' strings, hole 0 first: '.' empty, 'W' white, 'R' red (SPEC \u00a73)",
- "dice": "faces by kind of die, in the order BUILD reads them (SPEC \u00a74.2): d12 hole die, d6 (growth and Sub/Cruiser), d10 (one per hole pair; 0 is thrown again)",
+ "dice": "faces by kind of die, in the order they are thrown (SPEC \u00a74.2): d12 hole die, d6 (growth and Sub/Cruiser), d10 (the row cup: five dice thrown at the start of each row, taken in rainbow order, one per hole pair; a zero face is thrown again and comes just before that die's final face)",
  "vectors": [
   {
    "name": "exchange_T1_run0",

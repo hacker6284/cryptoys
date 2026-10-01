@@ -10,7 +10,7 @@ Known-answer vectors for [`primitives/key_exchange/bs/bs.sudo`](../../../../prim
 | `collect_vectors.mjs` | Runs the generated `bs.mjs` over `inputs.json` (JSON conversion only) |
 | `regen.sh` | Builds `bs.sudo` at the pin, runs its tests and the collector, writes `bs_vectors.json`; `--check` fails unless the committed file is byte-identical (run in CI by `.github/workflows/proofs.yml`) |
 | `bs_vectors.json` | The vectors. Do not hand-edit |
-| `check_oracle.py` | Cross-checks every vector against `keygrid.build` / `key_cells` (BUILD, READ), `bspegs.py` (multiply, tidy, walk, check) and `pow()`, and the header against the pin and the `.sudo` hash (run in CI) |
+| `check_oracle.py` | Cross-checks every vector against `pow()` and the Python evidence harness, which is not a reference: `keygrid.build` / `key_cells` (BUILD, READ) and `bspegs.py` (multiply, tidy, walk, check). It also checks the header against the pin and the `.sudo` hash (run in CI) |
 | `check_oracle_output.txt` | Its recorded output |
 
 Vectors: exchanges at T1 (two, one with a public value ending in 6 misfires), T2 (Bob's value ends in 8 misfires) and T6, each from dice to K on both sides with K_A = K_B; worst-case multiplications at T1 and T2; tidy of p and p + 1; the received-value check on 0, 1, p − 1, p + 1 and 3; call-the-shots round trips ending in misfires.

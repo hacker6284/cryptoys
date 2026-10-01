@@ -1,5 +1,6 @@
 """Cross-check bs_vectors.json (generated from bs.sudo by regen.sh) against the
-Python evidence code, which is an oracle here and not a second spec:
+Python evidence harness. bs.sudo and SPEC.md are normative; the Python is an
+evidence harness cross-checked against bs.sudo here, not a reference:
 
   BUILD   ../ships-pegs/keygrid.py build(), fed the same dice faces by kind
   READ    keygrid.key_cells() (its ship pass is itself checked against read_rule.encode)
@@ -54,11 +55,12 @@ def oracle_key(name, faces, key_json):
     src = Faces(faces)
     ships, pegs = KG.build(src)
     check(name, all(not v for v in src.q.values()), "keygrid.build left dice unread")
-    want = sorted((KIND[K], "across" if o == "H" else "down", "ABCDEFGHIJ"[r] + str(c + 1), "last" if bow else "first")
-                  for K, o, (r, c), bow in ships)
+    want = sorted((KIND[K], "across" if o == "H" else "down", "ABCDEFGHIJ"[r] + str(c + 1),
+                   "last" if bow else "first") for K, o, (r, c), bow in ships)
     got = sorted((s["kind"], s["lies"], s["first"], s["bow"]) for s in key_json["ships"])
     check(name, want == got, "BUILD fleet differs from keygrid.build")
-    check(name, "".join(key_json["pegs"]) == "".join(".WR"[t] for t in pegs), "BUILD pegs differ from keygrid.build")
+    check(name, "".join(key_json["pegs"]) == "".join(".WR"[t] for t in pegs),
+          "BUILD pegs differ from keygrid.build")
     cells = KG.key_cells([(ships, pegs)])
     return "".join(".WR"[t] for t in cells)
 
@@ -74,30 +76,41 @@ def run(v):
     if v["kind"] == "exchange":
         ca = oracle_key(name + " Alice", v["dice_a"], v["key_a"])
         cb = oracle_key(name + " Bob", v["dice_b"], v["key_b"])
-        check(name, ca == v["cells_a"] and cb == v["cells_b"], "READ cells differ from keygrid.key_cells")
+        check(name, ca == v["cells_a"] and cb == v["cells_b"],
+              "READ cells differ from keygrid.key_cells")
         ea, eb = R.exponent([ca]), R.exponent([cb])
         A, B = pow(3, ea, p), pow(3, eb, p)
-        check(name, v["public_a"] == "".join(R.enc(A, n)) and v["public_b"] == "".join(R.enc(B, n)), "public values != pow(3, e, p)")
-        check(name, reg(v["public_a"]) == P.walk(F, [ca]) and reg(v["public_b"]) == P.walk(F, [cb]), "public values != bspegs.walk")
-        for who, pub, shots, rec in (("A", v["public_a"], v["shots_a"], v["received_a"]), ("B", v["public_b"], v["shots_b"], v["received_b"])):
-            check(name, len(shots) == n and shots == [CALL[c] for c in pub], f"§3.1 answers for {who}")
+        check(name, v["public_a"] == "".join(R.enc(A, n)) and v["public_b"] == "".join(R.enc(B, n)),
+              "public values != pow(3, e, p)")
+        check(name, reg(v["public_a"]) == P.walk(F, [ca]) and reg(v["public_b"]) == P.walk(F, [cb]),
+              "public values != bspegs.walk")
+        for who, pub, shots, rec in (("A", v["public_a"], v["shots_a"], v["received_a"]),
+                                     ("B", v["public_b"], v["shots_b"], v["received_b"])):
+            check(name, len(shots) == n and shots == [CALL[c] for c in pub],
+                  f"§3.1 answers for {who}")
             check(name, rec == pub, f"§3.1 copy of {who}")
         CB, CA = pow(B, 2, p), pow(A, 2, p)
-        check(name, v["base_a"] == "".join(R.enc(CB, n)) and v["base_b"] == "".join(R.enc(CA, n)), "B8 bases != square mod p")
+        check(name, v["base_a"] == "".join(R.enc(CB, n)) and v["base_b"] == "".join(R.enc(CA, n)),
+              "B8 bases != square mod p")
         check(name, reg(v["base_a"]) == P.check_and_square(F, reg(v["received_b"]))
-              and reg(v["base_b"]) == P.check_and_square(F, reg(v["received_a"])), "B8 bases != bspegs.check_and_square")
+              and reg(v["base_b"]) == P.check_and_square(F, reg(v["received_a"])),
+              "B8 bases != bspegs.check_and_square")
         K = pow(3, 2 * ea * eb % q, p)
         check(name, K == pow(CB, ea, p) == pow(CA, eb, p), "pow identities")
-        check(name, v["secret_a"] == "".join(R.enc(K, n)) == v["secret_b"], "K != 3^(2ab) mod p, or K_A != K_B")
+        check(name, v["secret_a"] == "".join(R.enc(K, n)) == v["secret_b"],
+              "K != 3^(2ab) mod p, or K_A != K_B")
         check(name, reg(v["secret_a"]) == P.walk(F, [ca], reg(v["base_a"]))
-              and reg(v["secret_b"]) == P.walk(F, [cb], reg(v["base_b"])), "K != bspegs.walk (shared phase)")
+              and reg(v["secret_b"]) == P.walk(F, [cb], reg(v["base_b"])),
+              "K != bspegs.walk (shared phase)")
         tz = lambda s: len(s) - len(s.rstrip("."))
-        return (f"cells {len(ca) - 1}/{len(cb) - 1}, ships {len(v['key_a']['ships'])}/{len(v['key_b']['ships'])}, "
+        ships = f"{len(v['key_a']['ships'])}/{len(v['key_b']['ships'])}"
+        return (f"cells {len(ca) - 1}/{len(cb) - 1}, ships {ships}, "
                 f"trailing misfires A {tz(v['public_a'])} B {tz(v['public_b'])}, K = {K}")
     if v["kind"] == "multiply":
         got = P.multiply(F, reg(v["a"]), reg(v["b"]), v["nudge"])
         check(name, reg(v["product"]) == got, "!= bspegs.multiply")
-        check(name, R.dec(v["product"]) % p == R.dec(v["a"]) * R.dec(v["b"]) * 3 ** v["nudge"] % p, "!= a*b*3^nudge mod p")
+        check(name, R.dec(v["product"]) % p == R.dec(v["a"]) * R.dec(v["b"]) * 3 ** v["nudge"] % p,
+              "!= a*b*3^nudge mod p")
         return f"product {R.dec(v['product'])}"
     if v["kind"] == "tidy":
         check(name, reg(v["tidy"]) == P.tidy(F, reg(v["x"])), "!= bspegs.tidy")
@@ -113,7 +126,8 @@ def run(v):
         check(name, (v["base"] is None) == (x2 in (0, 1)), "reject iff the square is 0 or 1")
         return "rejected" if v["base"] is None else f"base {R.dec(v['base'])}"
     if v["kind"] == "call":
-        check(name, v["shots"] == [CALL[c] for c in v["x"]] and len(v["shots"]) == n, "§3.1 answers")
+        check(name, v["shots"] == [CALL[c] for c in v["x"]] and len(v["shots"]) == n,
+              "§3.1 answers")
         check(name, v["y"] == v["x"], "§3.1 copy")
         return f"{len(v['shots'])} calls, {sum(s == 'Misfire' for s in v['shots'])} misfires"
     raise ValueError(v["kind"])
@@ -121,9 +135,11 @@ def run(v):
 
 def main():
     doc = json.load(open(os.path.join(HERE, "bs_vectors.json")))
-    pin = [l.strip() for l in open(os.path.join(ROOT, "proofs", "SUDOCODE_PIN")) if len(l.strip()) == 40 and not l.startswith("#")][0]
+    pin = [l.strip() for l in open(os.path.join(ROOT, "proofs", "SUDOCODE_PIN"))
+           if len(l.strip()) == 40 and not l.startswith("#")][0]
     sha = hashlib.sha256(open(os.path.join(ROOT, doc["source"]), "rb").read()).hexdigest()
-    check("header", doc["sudocode_commit"] == pin, f"sudocode_commit {doc['sudocode_commit']} != pin {pin}")
+    check("header", doc["sudocode_commit"] == pin,
+          f"sudocode_commit {doc['sudocode_commit']} != pin {pin}")
     check("header", doc["sudo_sha256"] == sha, "sudo_sha256 is not the current bs.sudo")
     print(f"bs_vectors.json: sudocode {doc['sudocode_commit'][:7]}, {len(doc['vectors'])} vectors")
     for v in doc["vectors"]:
@@ -133,7 +149,7 @@ def main():
     if failures:
         print("\n".join(failures))
         sys.exit(1)
-    print("all vectors agree with the Python reference and pow()")
+    print("all vectors agree with pow() and the Python evidence harness")
 
 
 if __name__ == "__main__":

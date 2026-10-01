@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { ASSET_BASE, CARD_D, DREI_GAP, DREI_SEAT_XZ, DREI_TRAY, MINX } from "./constants.js";
+import { CARD_D, DREI_GAP, DREI_SEAT_XZ, MINX } from "./constants.js";
 import { measureLocalBox } from "./motion.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { HOME, PUZZLES, ffBlockAt, ffMillis } from "../megadreifach/plan.js";
@@ -7,8 +7,8 @@ import { setSetupPosition } from "../megadreifach/pattern.js";
 import { FACE_MOVE, FACE_NORMAL, cardFaceIndex, gripQuaternion, pieceDirection } from "../megadreifach/minx.js";
 
 /**
- * MegaDreifach's toys in the room: a wooden tray holding three cubing.js
- * megaminxes in a row (B | A | C) and a real 52-card deck
+ * MegaDreifach's toys in the room: three cubing.js megaminxes standing
+ * on the felt in a row (B | A | C) and a real 52-card deck
  * whose deal is laid on the felt in four rows of thirteen. The session
  * hands this view the show (plan.js) and it plays each beat exactly:
  * cubing.js plays the face turns (by colour, so grips never change an
@@ -17,11 +17,10 @@ import { FACE_MOVE, FACE_NORMAL, cardFaceIndex, gripQuaternion, pieceDirection }
  * drives its step. It computes nothing about the hash.
  */
 
-const TRAY = DREI_TRAY;
-// Seat centres on the tray (tray-local x, z).
+// Seat centres in the row (from the row centre, x and z).
 const SEAT_XZ = DREI_SEAT_XZ;
-// Puzzles always rest in their cups: face turns happen seated (as on a
-// table), and a re-grip picks the puzzle up just clear of the cup
+// Puzzles always rest on the felt: face turns happen seated (as on a
+// table), and a re-grip picks the puzzle up just clear of the felt
 // (REGRIP_HOP: a dodecahedron's corners reach 9 mm below its resting
 // face while it rolls), rotates it, and sets it down again.
 const REGRIP_HOP = 0.014;
@@ -30,152 +29,32 @@ const CARD_T = 0.00135;
 // Pitch leaves each card's index corner showing (63 × 88 mm cards).
 const COL_PITCH = 0.025;
 const ROW_PITCH = 0.05;
-// Grid centre from the tray centre: far row one gap in front of the tray.
-export const DEAL_OFFSET = { x: 0, z: TRAY.d / 2 + DREI_GAP + CARD_D / 2 + 1.5 * ROW_PITCH };
-
-function woodMaterial(color) {
-    return new THREE.MeshStandardMaterial({ color, roughness: 0.82, metalness: 0 });
-}
-
-// What each puzzle holds, in the SPEC's own symbols (short enough to
-// read from the seat at the table).
-const ROLE = { A: "h", B: "h⁻¹", C: "solved" };
-// Steep faces: they catch less of the pendant straight above.
-const TENT = { w: 0.058, h: 0.03, lean: 0.24 };
-
-let paperMaps = null;
-function loadPaper() {
-    if (paperMaps || typeof document === "undefined") return paperMaps;
-    const loader = new THREE.TextureLoader();
-    const url = (path) => new URL(path, ASSET_BASE).href;
-    const load = (path, color) => {
-        const tex = loader.load(url(path));
-        if (color) tex.colorSpace = THREE.SRGBColorSpace;
-        return tex;
-    };
-    paperMaps = {
-        white: new Promise((resolve) => {
-            const image = new Image();
-            image.onload = () => resolve(image);
-            image.onerror = () => resolve(null);
-            image.src = url("textures/paper001/Color.jpg");
-        }),
-        normal: load("textures/paper001/NormalGL.jpg", false),
-        kraft: load("textures/paper005/Color.jpg", true),
-    };
-    return paperMaps;
-}
-
-// Canvas label on the white ambientCG paper: the letter and its role.
-function tentLabel(letter) {
-    // Same aspect as the tent face (58 × 30 mm): letter left, role right.
-    const W = 384;
-    const H = 199;
-    const canvas = document.createElement("canvas");
-    canvas.width = W;
-    canvas.height = H;
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
-    const draw = (paper) => {
-        const g = canvas.getContext("2d");
-        g.fillStyle = "#f3ecdf";
-        g.fillRect(0, 0, W, H);
-        if (paper) {
-            g.globalAlpha = 0.5;
-            g.drawImage(paper, 0, 0, W, H);
-            g.globalAlpha = 1;
-        }
-        g.strokeStyle = "#8a6a44";
-        g.lineWidth = 5;
-        g.strokeRect(10, 10, W - 20, H - 20);
-        g.fillStyle = "#2b1d12";
-        g.textAlign = "center";
-        g.textBaseline = "middle";
-        g.font = "600 140px Georgia,serif";
-        g.fillText(letter, 96, H / 2 + 6);
-        g.fillRect(172, 40, 3, H - 80);
-        g.font = `${letter === "C" ? 70 : 104}px Georgia,serif`;
-        g.fillText(ROLE[letter], 278, H / 2 + 4);
-        tex.needsUpdate = true;
-    };
-    draw(null);
-    loadPaper()?.white.then(draw);
-    return tex;
-}
-
-/** A folded paper tent card (two leaning faces), label on both faces. */
-function createTent(letter) {
-    const group = new THREE.Group();
-    group.name = `tent-${letter}`;
-    const maps = loadPaper();
-    const label = new THREE.MeshStandardMaterial({
-        map: tentLabel(letter),
-        normalMap: maps?.normal ?? null,
-        // Paper under the pendant blows out at full albedo.
-        color: 0xc2c2c2,
-        roughness: 1,
-        metalness: 0,
-    });
-    const inside = new THREE.MeshStandardMaterial({
-        map: maps?.kraft ?? null,
-        color: maps ? 0xffffff : 0xb08a5a,
-        roughness: 0.95,
-        metalness: 0,
-        side: THREE.BackSide,
-    });
-    const face = new THREE.PlaneGeometry(TENT.w, TENT.h);
-    for (const dir of [1, -1]) {
-        const leaf = new THREE.Group();
-        // Hinge at the ridge; each face leans out by TENT.lean.
-        leaf.position.y = Math.cos(TENT.lean) * TENT.h;
-        // Same lean for both; the back face is the front one turned 180°.
-        leaf.rotation.set(-TENT.lean, dir > 0 ? 0 : Math.PI, 0, "YXZ");
-        for (const mat of [label, inside]) {
-            const mesh = new THREE.Mesh(face, mat);
-            mesh.position.y = -TENT.h / 2;
-            // Inside a hair behind the label, so the two never z-fight.
-            if (mat === inside) mesh.position.z = -0.0004;
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            leaf.add(mesh);
-        }
-        group.add(leaf);
-    }
-    return group;
-}
+// Grid centre from the row centre: far row one gap in front of the
+// puzzles. The grid (12 × COL_PITCH + a card) is as wide as the row.
+export const DEAL_OFFSET = { x: 0, z: MINX / 2 + DREI_GAP + CARD_D / 2 + 1.5 * ROW_PITCH };
 
 /**
- * The shelf toy is the tray with A in its cup; B and C are toys of their
- * own (`dreiB`, `dreiC`) that wait in the toy chest and fly to their
- * cups on enter. One megaminx on the shelf. Seats adopt cubing.js later.
+ * MegaDreifach's megaminx toys. The shelf toy `drei` is A alone (its
+ * origin on the surface it stands on, the row's centre); B and C are toys
+ * of their own (`dreiB`, `dreiC`) that wait in the toy chest and fly to
+ * their places in the row on enter. All three stand straight on the felt:
+ * no tray, no cups, no labels. Seats adopt cubing.js later.
  */
 export function createDreiToy() {
     const group = new THREE.Group();
     group.name = "drei";
-    const tray = new THREE.Mesh(new THREE.BoxGeometry(TRAY.w, TRAY.h, TRAY.d), woodMaterial(0x2b1d15));
-    tray.position.y = TRAY.h / 2;
-    tray.castShadow = true;
-    tray.receiveShadow = true;
-    group.add(tray);
-    const lip = new THREE.Mesh(
-        new THREE.BoxGeometry(TRAY.w + 0.01, 0.004, TRAY.d + 0.01),
-        woodMaterial(0x21160f),
-    );
-    lip.position.y = 0.002;
-    lip.receiveShadow = true;
-    group.add(lip);
     const seats = {};
     const extras = {};
     for (const p of PUZZLES) {
         const seat = createTwistySeat({ edge: MINX });
         const [x, z] = SEAT_XZ[p];
         seat.group.name = `minx-${p}`;
-        seat.base = p === "A" ? TRAY.h : 0;
+        seat.base = 0;
         if (p === "A") {
-            seat.group.position.set(x, TRAY.h + MINX * 0.42, z);
+            seat.group.position.set(x, MINX * 0.42, z);
+            group.add(seat.group);
         } else {
-            // Its own toy: origin on the cup (tray top), puzzle above it.
+            // Its own toy: origin on the felt, puzzle above it.
             const toy = new THREE.Group();
             toy.name = `drei${p}`;
             seat.group.position.set(0, MINX * 0.42, 0);
@@ -183,20 +62,6 @@ export function createDreiToy() {
             toy.userData.keepFitted = () => seat.group.userData.keepFitted?.();
             extras[`drei${p}`] = toy;
         }
-        const cup = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.026, 0.03, 0.003, 32),
-            woodMaterial(0x1a110b),
-        );
-        cup.position.set(x, TRAY.h + 0.0015, z);
-        cup.receiveShadow = true;
-        group.add(cup);
-        if (typeof document !== "undefined") {
-            // Square in front of its cup, on the tray (not the puzzle's toy).
-            const tent = createTent(p);
-            tent.position.set(x, TRAY.h, z + 0.057);
-            group.add(tent);
-        }
-        if (p === "A") group.add(seat.group);
         seats[p] = seat;
     }
     group.userData.keepFitted = () => seats.A.group.userData.keepFitted?.();
@@ -343,7 +208,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         const box = measureLocalBox(seat.fit);
         const drop = -box?.min?.y;
         if (!Number.isFinite(drop) || drop <= 0 || drop > MINX) return;
-        seat.group.position.y = seat.base + 0.0015 + drop;
+        seat.group.position.y = seat.base + drop;
     }
 
     function adopt() {
@@ -624,8 +489,8 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     const spinQ = new THREE.Quaternion();
 
     /**
-     * The three puzzles spin about the vertical in a blur and bob in their
-     * cups, speeding up then slowing to rest on whole turns (so A ends in
+     * The three puzzles spin about the vertical in a blur and bob on the
+     * felt, speeding up then slowing to rest on whole turns (so A ends in
      * its grip). onMid runs at full speed: the moment to swap positions.
      */
     async function spinTrio(duration, mine, { onTick, onMid } = {}) {
@@ -999,4 +864,4 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     };
 }
 
-export { COL_PITCH, ROW_PITCH, REGRIP_HOP, slotLocal, TRAY };
+export { COL_PITCH, ROW_PITCH, REGRIP_HOP, slotLocal };

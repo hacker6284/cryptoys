@@ -46,16 +46,18 @@ dropped — Play/Step still advance; those leaves are empty. Solve is 3×3
 only. MegaDreifach is a different product; this UI does not run it.
 
 MegaDreifach ([`drei-stage.js`](drei-stage.js)) seats **three** megaminx
-rigs (`createTwistySeat`, edge `MINX` 72 mm): A on the tray (the shelf
-toy `drei`), B and C as their own toys (`dreiB`, `dreiC`) that fly from
-the toy chest into the tray's cups. Each gets its
+rigs (`createTwistySeat`, edge `MINX` 72 mm): A (the shelf toy `drei`),
+B and C as their own toys (`dreiB`, `dreiC`) that fly from the toy chest.
+All three stand straight on the felt in one row, B | A | C, as wide as
+the deal (no tray, cups or label cards; the roll call's status line names
+them left to right). Each gets its
 own player and alg (the show's A / B / C move lists, literal turns such
 as `U2'`); grips are a quaternion on `rig.lift`, never on the adopted
 object. Adopting three players costs about three times the 3×3 boot on
 software GL. `playLeaves` takes an optional `onLeaf(index)` callback
 (used only by MegaDreifach, for its turn sound and to ring the face each
 turn moves); without it behaviour is unchanged. The puzzles always rest
-in their cups: face turns play seated, and a re-grip or King spin lifts
+on the felt: face turns play seated, and a re-grip or King spin lifts
 A by `REGRIP_HOP` (14 mm) while it rotates, then sets it down. A puzzle
 is only ever solved by undoing its turns (SPEC §5.7): on leave each rig
 keeps its turns since it was last solved (its alg becomes that list,

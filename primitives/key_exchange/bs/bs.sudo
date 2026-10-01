@@ -158,8 +158,9 @@ export func tidy(f: Field, x: List<int>) -> List<int>
 
 // B6. Cube, with a nudge: Y = X x X, then X <- Y x X. In the public phase on a
 // white or red cell, every copy of the second product is laid one or two holes
-// higher (nudge = the cell's trit): times g or g^2 for free.
-func cube(f: Field, x: List<int>, nudge: int) -> List<int>
+// higher (nudge = the cell's trit): times g or g^2 for free. Y is the player's Y
+// register and keeps X x X afterwards, as B6 is written (§3.1 clears it).
+func cube(f: Field, x: List<int>, nudge: int, y: inout List<int>) -> List<int>
     y = multiply(f, x, x, 0)
     return multiply(f, y, x, nudge)
 
@@ -190,7 +191,8 @@ func start_accumulator(f: Field, cell: int, phase: Phase) -> List<int>
 //   Public: a white or red cell was the nudge; nothing else to do.
 //   Shared: multiply by C once for a white cell, twice for a red one.
 // At the end, tidy (B5).
-func walk(f: Field, cells: List<int>, phase: Phase) -> List<int>
+// y is the player's Y register (B6 writes it).
+func walk(f: Field, cells: List<int>, phase: Phase, y: inout List<int>) -> List<int>
     started = false
     x = empty_register(f)
     for j = 0 to cells.length - 1
@@ -199,9 +201,9 @@ func walk(f: Field, cells: List<int>, phase: Phase) -> List<int>
         if started
             match phase
                 case Public
-                    x = cube(f, x, cell)
+                    x = cube(f, x, cell, y)
                 case Shared(base)
-                    x = cube(f, x, 0)
+                    x = cube(f, x, 0, y)
                     for k = 1 to cell
                         x = multiply(f, x, base, 0)
         else if cell != 0
@@ -226,23 +228,27 @@ export func check_received(f: Field, received: List<int>) -> Option<List<int>>
     return Some(square)
 
 // ---------------------------------------------------------------------------
-// §3.1 Sending a public value: call the shots. The receiver calls every hole of
-// the sender's tidy X register, hole 0 first up to hole n - 1; the sender
-// answers by the peg in that hole; the receiver copies each answer into the
-// same hole of their own Y register.
+// §3.1 Sending a public value: call the shots. The value is the sender's tidy
+// answer from B9 step 1 (on the board it is in X, or in the strip copy if B5
+// kept the copy; here it is just the register `value`). The receiver clears Y,
+// calls every hole of the value, hole 0 first up to hole n - 1; the sender
+// answers by the peg in that hole; the receiver copies each answer into the same
+// hole of Y. The board bookkeeping (the lane-5 "calling" peg, naming holes by
+// coordinates, the cursor parked on Y) records progress and is not modelled.
 
 enum Shot
     Hit
     Miss
     Misfire
 
-// The sender looks at the called hole: red "Hit!", white "Miss!", empty "Misfire!".
-func answer(x: List<int>, hole: int) -> Shot
-    if x[hole] == 2
+// The sender looks at the called hole of their value: red "Hit!", white "Miss!",
+// empty "Misfire!".
+func answer(value: List<int>, hole: int) -> Shot
+    if value[hole] == 2
         return Hit
-    if x[hole] == 1
+    if value[hole] == 1
         return Miss
-    assert x[hole] == 0
+    assert value[hole] == 0
     return Misfire
 
 // The receiver copies the answer into the same hole of Y: a red peg on a hit,
@@ -256,16 +262,17 @@ func copy_shot(y: inout List<int>, hole: int, shot: Shot)
         case Misfire
             skip
 
-// Clear Y; then call every hole of X from hole 0 up to hole n - 1, a fixed n
-// calls that never stop early (not even after a run of misfires), copying each
-// answer into Y. Returns the answers in call order.
-func call_the_shots(f: Field, x: List<int>, y: inout List<int>) -> List<Shot>
-    assert (x.length == f.n) and (y.length == f.n)
+// 1. Clear Y (B6 left the last X x X there, and a misfire lays nothing). Then
+// call every hole of the value from hole 0 up to hole n - 1, a fixed n calls
+// that never stop early (not even after a run of misfires), copying each answer
+// into Y. Returns the answers in call order.
+func call_the_shots(f: Field, value: List<int>, y: inout List<int>) -> List<Shot>
+    assert (value.length == f.n) and (y.length == f.n)
     for hole = 0 to f.n - 1
         y[hole] = 0
     shots: List<Shot> = []
     for hole = 0 to f.n - 1
-        shot = answer(x, hole)
+        shot = answer(value, hole)
         shots.append(shot)
         copy_shot(y, hole, shot)
     return shots
@@ -275,9 +282,9 @@ record Called
     y: List<int>
 
 // One public value sent: the answers called and the receiver's Y afterwards.
-export func send_public_value(f: Field, x: List<int>) -> Called
+export func send_public_value(f: Field, value: List<int>) -> Called
     y = empty_register(f)
-    shots = call_the_shots(f, x, y)
+    shots = call_the_shots(f, value, y)
     return Called(shots, y)
 
 // ---------------------------------------------------------------------------
@@ -518,34 +525,42 @@ func grow_until_it_bumps(d: inout Dice, covered: List<bool>, row: int, col: int)
         kind = Carrier
     return Some(Ship(kind, lay_down, row, col, bow_last))
 
-// BUILD. The cursor walks the holes in reading order, a pair at a time (holes
-// 1-2, 3-4, .., 9-10 of each row). For each hole of the pair that no ship covers,
-// decide it (step 1). Then read the pair's d10 and peg both holes from it, the
-// first hole then the second, as one step: in the ship's hole where a ship covers
-// the hole, otherwise in the grid hole. A ship laid in a pair covers only holes of
-// that pair and later ones, so no peg is ever in a ship's way.
-// Let-go points are only between pairs, after both pegs of a pair are in; a die
-// carries nothing over (an unread die is simply thrown when its pair comes up).
+// BUILD, "one hole at a time: ship, then peg". The cursor walks the holes in
+// reading order. At each hole:
+//   1. if no ship covers it, decide it ("grow until it bumps");
+//   2. peg it from its pair's d10 (holes 1-2, 3-4, .., 9-10 of each row share one
+//      die): at the pair's first hole read the die (0 is thrown again) and peg
+//      that hole from the keypad row; at its second hole peg it from the same
+//      face's keypad column. The peg goes in the ship's hole if a ship covers the
+//      hole, otherwise in the grid hole.
+// A ship laid at the cursor covers only the cursor hole and later ones, none of
+// which has a peg yet, so no peg is ever in a ship's way.
+// Let-go points (not modelled; they change nothing in the result): after a
+// die's second hole, or in the step 1 -> 2 gap at a die's first hole with the
+// lane-10 peg standing. Never between a die's two pegs: the pair is one step.
+// The dice carry nothing over a let-go: a die is read only when its pair begins.
 func build(d: inout Dice) -> KeyGrid
     holes = grid_rows * grid_cols
     covered = filled(holes, false)
     ships: List<Ship> = []
     pegs = filled(holes, 0)
     for row = 0 to grid_rows - 1
-        for pair = 0 to grid_cols / 2 - 1
-            for side = 0 to 1
-                col = 2 * pair + side
-                if not covered[row * grid_cols + col]
-                    laid = grow_until_it_bumps(d, covered, row, col)
-                    match laid
-                        case Some(s)
-                            cover(covered, s)
-                            ships.append(s)
-                        case None
-                            skip
-            face = read_pair_die(d)
-            pegs[row * grid_cols + 2 * pair] = keypad_first(face)
-            pegs[row * grid_cols + 2 * pair + 1] = keypad_second(face)
+        face = 0
+        for col = 0 to grid_cols - 1
+            h = row * grid_cols + col
+            if not covered[h]
+                laid = grow_until_it_bumps(d, covered, row, col)
+                match laid
+                    case Some(s)
+                        cover(covered, s)
+                        ships.append(s)
+                    case None
+                        skip
+            if col mod 2 == 0
+                face = read_pair_die(d)
+                pegs[h] = keypad_first(face)
+            else
+                pegs[h] = keypad_second(face)
     return KeyGrid(ships, pegs)
 
 // A built key grid and how many faces of each die it read.
@@ -563,20 +578,28 @@ export func build_key_grid(source: Dice) -> Built
 // ---------------------------------------------------------------------------
 // §3 B9. The exchange.
 
-// B9 step 1: walk your key grid with g = 3 (public phase). The tidy X register
-// is the public value.
-export func public_value(f: Field, key: List<KeyGrid>) -> List<int>
-    return walk(f, read_key(key), Public)
+// B9 step 1: walk your key grid with g = 3 (public phase). The tidy answer is
+// the public value. y is your Y register.
+func public_walk(f: Field, key: List<KeyGrid>, y: inout List<int>) -> List<int>
+    return walk(f, read_key(key), Public, y)
 
 // B9 step 3: walk your own key grid over the checked square C (shared phase).
-export func shared_secret(f: Field, key: List<KeyGrid>, base: List<int>) -> List<int>
+func shared_walk(f: Field, key: List<KeyGrid>, base: List<int>, y: inout List<int>) -> List<int>
     assert base.length == f.n
-    return walk(f, read_key(key), Shared(base))
+    return walk(f, read_key(key), Shared(base), y)
+
+export func public_value(f: Field, key: List<KeyGrid>) -> List<int>
+    y = empty_register(f)
+    return public_walk(f, key, y)
+
+export func shared_secret(f: Field, key: List<KeyGrid>, base: List<int>) -> List<int>
+    y = empty_register(f)
+    return shared_walk(f, key, base, y)
 
 // Everything one exchange puts on the boards, in B9 order.
-//   publica, publicb: Alice's and Bob's tidy X registers (step 1)
-//   shotsa:  Bob calling Alice's X (§3.1); receiveda: Bob's Y afterwards
-//   shotsb:  Alice calling Bob's X;        receivedb: Alice's Y afterwards
+//   publica, publicb: Alice's and Bob's tidy public values (step 1)
+//   shotsa:  Bob calling Alice's value (§3.1); receiveda: Bob's Y afterwards
+//   shotsb:  Alice calling Bob's value;        receivedb: Alice's Y afterwards
 //   basea:   Alice's checked square of Bob's value (step 2); baseb likewise
 //   secreta, secretb: K on each player's grid (step 3); equal in an honest run
 record Exchange
@@ -595,13 +618,16 @@ record Exchange
 // other copies it by calling the shots (§3.1). 2. Each checks and squares the
 // copy (B8). 3. Each walks their own key grid over the square:
 // K = (B^2)^a = (A^2)^b = 3^(2ab). BS ends with K on the grid.
+// Each player's Y register carries over between the steps, as on the board.
 export func exchange(f: Field, keya: List<KeyGrid>, keyb: List<KeyGrid>) -> Result<Exchange, text>
-    publica = public_value(f, keya)
-    publicb = public_value(f, keyb)
-    receiveda = empty_register(f)
-    shotsa = call_the_shots(f, publica, receiveda)
-    receivedb = empty_register(f)
-    shotsb = call_the_shots(f, publicb, receivedb)
+    ya = empty_register(f)
+    yb = empty_register(f)
+    publica = public_walk(f, keya, ya)
+    publicb = public_walk(f, keyb, yb)
+    shotsa = call_the_shots(f, publica, yb)
+    receiveda = yb
+    shotsb = call_the_shots(f, publicb, ya)
+    receivedb = ya
     checkb = check_received(f, receivedb)
     checka = check_received(f, receiveda)
     if checkb.is_none()
@@ -610,8 +636,8 @@ export func exchange(f: Field, keya: List<KeyGrid>, keyb: List<KeyGrid>) -> Resu
         return Err("B8: Bob rejects Alice's value")
     basea = checkb.unwrap()
     baseb = checka.unwrap()
-    secreta = shared_secret(f, keya, basea)
-    secretb = shared_secret(f, keyb, baseb)
+    secreta = shared_walk(f, keya, basea, ya)
+    secretb = shared_walk(f, keyb, baseb, yb)
     return Ok(Exchange(publica, publicb, shotsa, receiveda, shotsb, receivedb, basea, baseb, secreta, secretb))
 
 // ---------------------------------------------------------------------------
@@ -701,7 +727,7 @@ test "B8 rejects 0, 1, p - 1, p + 1 and a wrong length"
     assert check_received(t1, filled(17, 1)).is_none()
     assert check_received(t1, filled(18, 3)).is_none()
 
-test "3.1 calling the shots copies X into Y, misfires and all"
+test "3.1 calling the shots copies the value into Y, misfires and all"
     x = [2, 1, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     y = filled(18, 2)
     shots = call_the_shots(t1, x, y)
@@ -712,6 +738,14 @@ test "3.1 calling the shots copies X into Y, misfires and all"
     assert shots[2] == Misfire
     for hole = 5 to 17
         assert shots[hole] == Misfire
+
+test "3.1 Clear Y: the public walk leaves X x X in Y, and the call clears it first"
+    y = empty_register(t1)
+    a = public_walk(t1, [sample_grid_a], y)
+    assert not is_empty(y)
+    shots = call_the_shots(t1, a, y)
+    assert y == a
+    assert shots.length == 18
 
 test "3.1 an empty register is eighteen misfires"
     sent = send_public_value(t1, empty_register(t1))

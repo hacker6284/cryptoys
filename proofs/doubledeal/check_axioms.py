@@ -762,27 +762,29 @@ PACKAGES = {
             "DoubleDeal.Security.StemUnion.dpFCount_col_le_64",
             "DoubleDeal.Security.StemUnion.fullDiffCount_le_64",
             # OneRoundDP (roadmap B1, one mix round): any eps_1 < 1 implies the open covariant
-            # conjecture; the 51 v10Sym rows are bounded (1/52, and 1/17 for v10Sym 0 3); rows
-            # outside v10Sym are NOT proved; not a security claim
+            # conjecture, and on the rows outside v10Sym alone already does; the 51 v10Sym rows
+            # are bounded (1/52, and 1/17 for v10Sym 0 3); rows outside v10Sym are NOT proved;
+            # not a security claim
             "DoubleDeal.Security.OneRoundDP.dp1Count_eq_of_covPair",
             "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1_lt",
             "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1Bound",
-            "DoubleDeal.Security.OneRoundDP.scoop_rmIdx",
-            "DoubleDeal.Security.OneRoundDP.rmIdx_injective",
+            "DoubleDeal.Security.OneRoundDP.scoop_rmFlat",
+            "DoubleDeal.Security.OneRoundDP.rmFlat_inj",
             "DoubleDeal.Security.OneRoundDP.mixColumns_seat2",
             "DoubleDeal.Security.OneRoundDP.seat2_ne_start",
-            "DoubleDeal.Security.OneRoundDP.rmIdx_seat2_ne_26",
-            "DoubleDeal.Security.OneRoundDP.step_reads",
-            "DoubleDeal.Security.OneRoundDP.card_three_le",
+            "DoubleDeal.Security.OneRoundDP.seat2Idx_ne_26",
+            "DoubleDeal.Security.OneRoundDP.mixRound_v10Sym_reads",
+            "DoubleDeal.Security.OneRoundDP.card_seat_link_le",
             "DoubleDeal.Security.OneRoundDP.sameSeat2_subset",
             "DoubleDeal.Security.OneRoundDP.sameSeat2_eq_empty",
             "DoubleDeal.Security.OneRoundDP.card_agree_le_fifty",
-            "DoubleDeal.Security.OneRoundDP.unkeyedWithMix_perm_injective",
             "DoubleDeal.Security.OneRoundDP.dp1Count_v10Sym_le_sum",
             "DoubleDeal.Security.OneRoundDP.dp1Count_v10Sym_self_le",
             "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym",
-            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym03",
-            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym_row",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym_zero_three",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym_all",
+            "DoubleDeal.Security.OneRoundDP.seat2_eq_of_seat2Idx_eq",
+            "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1_lt_off_v10Sym",
             # row/column sums of fullDiffCount (used by LinearMasks, M8b)
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",
@@ -790,6 +792,9 @@ PACKAGES = {
             # decks to decks, and (for _to_one) an explicit injectivity hypothesis
             "DoubleDeal.Security.Differential.dpCount_one_left",
             "DoubleDeal.Security.Differential.dpCount_to_one",
+            # layer outputs as permutations (shared by D4 and OneRoundDP)
+            "DoubleDeal.Security.Differential.permDeck_layerPerm",
+            "DoubleDeal.Security.Differential.layerPerm_injective",
             # Linear (roadmap M8a): sums of squared correlations as autocorrelations weighted
             # by differential counts; L1 and the final-key step for arbitrary layers that
             # send decks to decks, L2-L4 for DoubleDeal's encryptL; independent full-permutation keys only; no numeric

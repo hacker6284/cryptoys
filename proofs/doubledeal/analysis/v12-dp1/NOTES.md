@@ -1,6 +1,7 @@
 # v12 one mix round, roadmap item B1 (`dp1_le`): what is proved, and the `v10Sym` rows measured
 
-Lean: `security/DoubleDealSecurity/OneRoundDP.lean`. Measurements: `dp1v10.c`, `run.sh`, `logs/`.
+Lean: `security/DoubleDealSecurity/OneRoundDP.lean`. Measurements: `../v12-differential/diff1.c`
+(modes `r`, `k`, `c`), `run.sh`, `logs/`.
 **The measurements are EMPIRICAL ONLY; no theorem uses them. Not a security claim.**
 
 ## What B1 asks, and how it relates to the stem bounds
@@ -22,13 +23,16 @@ The only exact link: for `α ∈ v10Sym` the stem passes `α` unchanged
   `dp1Count α β < 52!` for every `α ≠ 1` and `β`, then `roundBody_covariant_iff_id` holds (a
   covariant pair counts every deck, `dp1Count_eq_of_covPair`); `covariant_iff_id_of_dp1Bound`
   for `DP1Bound p`, `p ≥ 2`. That conjecture is the one allowed `sorry`, so B1 for the rows
-  outside `v10Sym` is at least as hard and is NOT proved.
+  outside `v10Sym` is at least as hard and is NOT proved: since the `v10Sym` rows are bounded
+  (below), a bound below 1 on the rows outside `v10Sym` alone already implies the conjecture
+  (`covariant_iff_id_of_dp1_lt_off_v10Sym`).
 * **The 51 `v10Sym` rows**, for every output `β`:
   `dp1_le_v10Sym`: `52 · dp1Count (v10Sym a x) β ≤ 52!` for `(a, x) ∉ {(0, 0), (0, 3)}`;
-  `dp1_le_v10Sym03`: `17 ·` for `v10Sym 0 3`; `dp1_le_v10Sym_row`: `17 ·` for all 51.
-  Method: GridCycle's first two output seats (`step_reads`) give `β (y 26) = α (y 26)` and
-  `β (y p') = α (y p)` with `p = seat2 (y 26)`, `p' = seat2 (α (y 26))`; three distinct seats of
-  a uniform deck (`card_three_le`), at most 50 agreeing first cards (`card_agree_le_fifty`), and
+  `dp1_le_v10Sym_zero_three`: `17 ·` for `v10Sym 0 3`; `dp1_le_v10Sym_all`: `17 ·` for all 51.
+  Method: GridCycle's first two output seats (`mixRound_v10Sym_reads`; seat 26 is D4's
+  `Differential.v10Sym_step_agree`) give `β (y 26) = α (y 26)` and
+  `β (y p') = α (y p)` with `p = seat2Idx (y 26)`, `p' = seat2Idx (α (y 26))`; three distinct seats of
+  a uniform deck (`card_seat_link_le`), at most 50 agreeing first cards (`card_agree_le_fifty`), and
   GridCycle survival for the diagonal (`dp1Count_v10Sym_self_le`). For `v10Sym 0 3` and first
   card K♣ or K♠ the two reads coincide (`sameSeat2`) and those first cards are counted in full,
   hence 1/17 instead of 1/52: a limit of the proof, not a measured value.
@@ -37,7 +41,8 @@ NOT proved: B1 for any row outside `v10Sym`; anything about several rounds or th
 
 ## Measured (EMPIRICAL)
 
-`sh run.sh 20000000 6` (about 20 minutes on 6 cores): for each of the 51 nontrivial `v10Sym a x`,
+`sh run.sh 20000000 6` (about 20 minutes on 6 cores; `diff1 SPEC N SEED - r|c|k`): for each of
+the 51 nontrivial `v10Sym a x`,
 * row run (`r`): `N = 2·10^7` uniform decks x, output difference `β = diff(U x, U(α·x))`;
   also checks `stem(α·x) = α·stem(x)` on every sample;
 * column run (`c`): `N = 2·10^7` uniform outputs y, input difference through `U^-1`;
@@ -62,3 +67,8 @@ So, per run at 95% confidence: every entry of each `v10Sym` row and column is be
 `4.744/(2·10^7) ≈ 2.4·10^-7` (about 2^-22), far below the proved 1/52 and 1/17; on the K♣/K♠
 first cards of `v10Sym 0 3`, every conditional entry is below `2.4·10^-6`. 103 runs at 95% each
 are not a joint 95% statement. Nothing here is about rows outside `v10Sym`.
+
+The logs were recorded with an earlier standalone copy of these modes (`dp1v10.c`, removed); the
+`r`, `k`, `c` modes of `diff1.c` use the same code and seed streams and reproduce them exactly
+(checked: `control_swap01.log` and `kcks_0_3.log` byte for byte, and the rows `v10Sym 1 0`,
+`v10Sym 12 3` and the column `v10Sym 1 0` line for line).

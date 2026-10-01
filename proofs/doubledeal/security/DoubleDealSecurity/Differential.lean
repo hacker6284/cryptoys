@@ -34,7 +34,9 @@
     `diffCount_one`.
   * D4 `dp1Count_v10Sym_le_agree`: for input `v10Sym a x`, the one-round count to `β` is at
     most `52!/52` times the number of cards on which `v10Sym a x` and `β` agree (the first
-    card placed by GridCycle is not moved). Corollaries `dp1Count_v10Sym_eq_zero`,
+    card placed by GridCycle is not moved). Refined in `OneRoundDP` by a second GridCycle seat
+    (`OneRoundDP.dp1Count_v10Sym_le_sum`) to `52 · dp1Count (v10Sym a x) β ≤ 52!` for every `β`
+    and `(a, x) ∉ {(0, 0), (0, 3)}` (`OneRoundDP.dp1_le_v10Sym`; `17 ·` for `(0, 3)`). Corollaries `dp1Count_v10Sym_eq_zero`,
     `dp1Count_v10Sym_v10Sym_eq_zero`: `v10Sym a x → v10Sym a' x'` with
     `(a', x') ≠ (a, x)` has one-round count `0`.
   * D5 `staysInV10_iff_trail`: a path whose difference stays a `v10Sym a' x'` after every
@@ -339,6 +341,28 @@ theorem diffCount_to_one {α : Relabel} (hα : α ≠ 1) : ∀ (R : ℕ) {y : Fi
       · rw [hγ, dp1Count_to_one hα, Nat.zero_mul]
       · rw [diffCount_to_one hγ R hy, Nat.mul_zero]
 
+/-! ## Layer outputs as permutations -/
+
+/-- The output deck `U (permDeck π)` of a layer `U` that sends decks to decks, as a
+    permutation (`permDeck_layerPerm`). Used to inject the decks counted by `dpCount` into a
+    set of output permutations. -/
+noncomputable def layerPerm (U : (Fin 52 → Nat) → Fin 52 → Nat)
+    (hU : ∀ m, IsDeck m → IsDeck (U m)) (π : Equiv.Perm (Fin 52)) : Equiv.Perm (Fin 52) :=
+  deckPerm (U (permDeck π)) (hU _ (isDeck_permDeck π))
+
+theorem permDeck_layerPerm (U : (Fin 52 → Nat) → Fin 52 → Nat)
+    (hU : ∀ m, IsDeck m → IsDeck (U m)) (π : Equiv.Perm (Fin 52)) :
+    permDeck (layerPerm U hU π) = U (permDeck π) :=
+  funext fun i => deckPerm_val _ _ i
+
+/-- (PROVED) An injective layer gives an injective `layerPerm`. -/
+theorem layerPerm_injective (U : (Fin 52 → Nat) → Fin 52 → Nat)
+    (hU : ∀ m, IsDeck m → IsDeck (U m)) (hinj : ∀ ⦃m m' : Fin 52 → Nat⦄, U m = U m' → m = m') :
+    Function.Injective (layerPerm U hU) := fun π₁ π₂ h => by
+  have h' : U (permDeck π₁) = U (permDeck π₂) := by
+    rw [← permDeck_layerPerm U hU, ← permDeck_layerPerm U hU, h]
+  exact Equiv.ext fun i => Fin.ext (congrFun (hinj h') i)
+
 /-! ## D4: out of `v10Sym`, one round (first-card argument) -/
 
 theorem unkeyedNoMix_rel_v10Sym (a : Fin 13) (x : Fin 4) {m : Fin 52 → Nat} (hm : Cards m) :
@@ -388,10 +412,7 @@ theorem dp1Count_v10Sym_le_agree (a : Fin 13) (x : Fin 4) (β : Relabel) :
       (univ.filter fun c : Fin 52 => v10Sym a x c = β c).card * Nat.factorial 52 := by
   rw [← card_first_mem]
   refine Nat.mul_le_mul_left 52 ?_
-  let f : Equiv.Perm (Fin 52) → Equiv.Perm (Fin 52) := fun π =>
-    deckPerm (unkeyedNoMix (permDeck π)) (isDeck_unkeyedNoMix (isDeck_permDeck π))
-  have hf : ∀ π, permDeck (f π) = unkeyedNoMix (permDeck π) :=
-    fun π => funext fun i => deckPerm_val _ _ i
+  let f := layerPerm unkeyedNoMix (fun _ h => isDeck_unkeyedNoMix h)
   apply card_le_card_of_injOn f
   · intro π hπ
     simp only [coe_filter, Set.mem_setOf_eq, mem_filter, mem_univ, true_and, mem_coe] at hπ ⊢
@@ -399,15 +420,10 @@ theorem dp1Count_v10Sym_le_agree (a : Fin 13) (x : Fin 4) (β : Relabel) :
     have e0 : f π ⟨0, by decide⟩ =
         ⟨unkeyedNoMix (permDeck π) ⟨0, by decide⟩,
           (isDeck_unkeyedNoMix (isDeck_permDeck π)).1 _⟩ :=
-      Fin.ext (deckPerm_val _ _ _)
+      Fin.ext (congrFun (permDeck_layerPerm _ _ π) _)
     rw [show (0 : Fin 52) = ⟨0, by decide⟩ from rfl, e0]
     exact e
-  · intro π₁ _ π₂ _ h
-    have h' : unkeyedNoMix (permDeck π₁) = unkeyedNoMix (permDeck π₂) := by
-      rw [← hf, ← hf, h]
-    have h'' : permDeck π₁ = permDeck π₂ := by
-      rw [← invUnkeyedNoMix_unkeyedNoMix (permDeck π₁), h', invUnkeyedNoMix_unkeyedNoMix]
-    exact Equiv.ext fun i => Fin.ext (congrFun h'' i)
+  · exact fun π₁ _ π₂ _ h => layerPerm_injective _ _ unkeyedNoMix_injective h
 
 /-- (PROVED) If `β` agrees with `v10Sym a x` on no card, the one-round count is `0`. -/
 theorem dp1Count_v10Sym_eq_zero (a : Fin 13) (x : Fin 4) (β : Relabel)

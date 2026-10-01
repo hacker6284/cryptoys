@@ -1,11 +1,14 @@
 # The one sudocode pin for cryptoys: hacker6284/sudocode main.
-# Read by proofs/sudocode.sh (sourced by proofs/emit_lean.sh and
-# proofs/doubledeal/vectors/regen.sh) and by CI (.github/workflows/proofs.yml,
-# which builds sudoc at this commit). The Lean emitter and the JS vector builds
-# both use it, and every vectors JSON records it as sudocode_commit.
+# Read only by proofs/sudocode_pin.sh, which proofs/sudocode.sh (sourced by
+# proofs/emit_lean.sh and proofs/doubledeal/vectors/regen.sh), CI
+# (.github/workflows/proofs.yml and .github/actions/generate-demos) and
+# tools/render-build.sh call to build sudoc at this commit. The Lean emitter
+# and the JS vector builds both use it, and every vectors JSON records it as
+# sudocode_commit.
 # Squash merge of PR #9 (JS shares values of record types no body writes in
 # place); the Lean emitter is as of PR #8 (Lean is in ALL_BACKENDS, empty
 # predicates, full IR). cryptoys consumes the emitter only, not lockstep.
 # Bump only when you intend to change the compiler, then re-run
 # proofs/emit_lean.sh and proofs/doubledeal/vectors/regen.sh for every version.
+# A bump also changes the sudoc that the Pages and Render demo builds use.
 16b5a8b182ff80b43436dc997f02790aa79724df

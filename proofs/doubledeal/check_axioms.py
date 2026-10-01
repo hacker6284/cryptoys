@@ -16,6 +16,8 @@
                                           # (DoubleDeal-CBC-HMAC Link 2)
     python3 proofs/doubledeal/check_axioms.py scramble  # proofs/scramble/lean
                                           # (Scramble Link 2: v2 and v1 digest paths)
+    python3 proofs/doubledeal/check_axioms.py bs  # proofs/key_exchange/bs/lean
+                                          # (BS Link 2: arithmetic, walk, check, exchange)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -64,6 +66,11 @@ axiom) fails, as does a Lean error.
   required: the theorems proofs/scramble/README.md cites
   (SCRAMBLE_LINK2). `--selftest` checks its "Emitted function" column against
   primitives/hash/scramble/scramble.sudo too (LINK2_EXPORT_TABLES).
+- bs: like scramble (mode "all", key "full", no KNOWN_SORRY) for
+  proofs/key_exchange/bs/lean (root `BsLink2`, the BS Link 2 package); required: the
+  theorems proofs/key_exchange/bs/lean/README.md cites (BS_LINK2). `--selftest` checks
+  its "Emitted function" column against primitives/key_exchange/bs/bs.sudo
+  (LINK2_EXPORT_TABLES).
 
 `#audit_all` is the one command in the core-only package proofs/audit (required by
 path by both the security package and MegaDreifach); in mode "all" this script
@@ -496,6 +503,38 @@ SCRAMBLE_LINK2 = {
     "ScrambleV2.Link2.scramble_v1_digest_refines",
     "ScrambleV2.Link2.scramble_v1_digest_refines_digestV1",
 }
+
+# proofs/key_exchange/bs/lean (BS Link 2; scope in its README): every theorem that README
+# cites by name; `--selftest` re-derives the list the same way as MD_README_THEOREMS.
+BS_LEAN = ROOT.parent / "key_exchange" / "bs" / "lean"
+BS_LINK2 = {
+    "BsLink2.Spec.T1_p",
+    "BsLink2.Spec.T2_p",
+    "BsLink2.Link2.tier_T1_refines",
+    "BsLink2.Link2.tier_T2_refines",
+    "BsLink2.Link2.tier_T6_wf",
+    "BsLink2.Link2.multiply_refines",
+    "BsLink2.Link2.tidy_refines",
+    "BsLink2.Link2.check_received_refines",
+    "BsLink2.Link2.send_public_value_refines",
+    "BsLink2.Link2.public_value_refines",
+    "BsLink2.Link2.shared_secret_refines",
+    "BsLink2.Link2.exchange_agree",
+    "BsLink2.Link2.drop_spec",
+    "BsLink2.Link2.lay_spec",
+    "BsLink2.Link2.pay_toll_spec",
+    "BsLink2.Link2.multiply_spec",
+    "BsLink2.Link2.slide_spec",
+    "BsLink2.Link2.tidy_spec",
+    "BsLink2.Link2.cube_spec",
+    "BsLink2.Link2.walk_public_spec",
+    "BsLink2.Link2.walk_shared_spec",
+    "BsLink2.Link2.call_the_shots_spec",
+    "BsLink2.Link2.is_trits_spec",
+    "BsLink2.Link2.is_empty_spec",
+    "BsLink2.Link2.is_lone_white_spec",
+    "BsLink2.Link2.eq_embed_toReg",
+}
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only
 # exports (S6 of the #140 review). MegaDreifach is not listed yet: its README has no
@@ -506,12 +545,15 @@ SCRAMBLE_LINK2 = {
 # none. Registering it (wrapper theorems plus an 11-row table) is a planned follow-up.
 # Scramble is listed: its table has a row for each of the 7 exports. `scramble_v1_digest`
 # has three theorems; the traced `scramble_v1` row says it is not claimed (no theorem), so
-# that gap is in the table rather than silent.
+# that gap is in the table rather than silent. BS is listed: its table has a row for each of
+# the 12 exports; the four key-reading and key-building rows say they are not claimed.
 LINK2_EXPORT_TABLES = {
     "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                  / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
     "scramble": (ROOT.parent.parent / "primitives" / "hash" / "scramble" / "scramble.sudo",
                  SCRAMBLE_LEAN.parent / "README.md"),
+    "bs": (ROOT.parent.parent / "primitives" / "key_exchange" / "bs" / "bs.sudo",
+           BS_LEAN / "README.md"),
 }
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
@@ -714,6 +756,14 @@ PACKAGES = {
         "known_sorry": set(),
         "min": 100,  # sanity: the audit must actually see the package
         "required": SCRAMBLE_LINK2,
+    },
+    "bs": {
+        "dir": BS_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": 150,  # sanity: the audit must actually see the package
+        "required": BS_LINK2,
     },
     "megadreifach-heavy": {
         "dir": MD_LEAN,
@@ -1023,7 +1073,7 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} HEAVY_GENERATED {what}: "
               f"{len(bad)} problem(s), expected {len(want)}")
-    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 / SCRAMBLE_LINK2 must be
+    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 / SCRAMBLE_LINK2 / BS_LINK2 must be
     # exactly the theorems the MegaDreifach README / the frozen v1 package's README / the
     # DoubleDeal-CBC-HMAC proofs README / the Scramble proofs README cites.
     for what, listed, readme, root in [
@@ -1032,7 +1082,8 @@ def selftest():
             ("CBC_HMAC_LINK2", CBC_HMAC_LINK2, CBC_HMAC_LEAN.parent / "README.md",
              CBC_HMAC_LEAN),
             ("SCRAMBLE_LINK2", SCRAMBLE_LINK2, SCRAMBLE_LEAN.parent / "README.md",
-             SCRAMBLE_LEAN)]:
+             SCRAMBLE_LEAN),
+            ("BS_LINK2", BS_LINK2, BS_LEAN / "README.md", BS_LEAN)]:
         cited, bad = md_readme_cited(readme=readme, root=root)
         for b in bad:
             print(f"check_axioms selftest: FAIL {b}")

@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { ASSET_BASE, CARD_D, DREI_GAP, DREI_SEAT_XZ, DREI_TRAY, MINX } from "./constants.js";
 import { measureLocalBox } from "./motion.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
-import { HOME, PUZZLES } from "../megadreifach/plan.js";
+import { HOME, PUZZLES, ffBlockAt, ffMillis } from "../megadreifach/plan.js";
+import { setSetupPosition } from "../megadreifach/pattern.js";
 import { FACE_MOVE, FACE_NORMAL, cardFaceIndex, gripQuaternion, pieceDirection } from "../megadreifach/minx.js";
 
 /**
@@ -299,6 +300,10 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     // solved by undoing). On leave each keeps its turns since it was last
     // solved; the next enter undoes them in the scene.
     const leftover = { A: [], B: [], C: [] };
+    // After a fast-forward the puzzles hold the trace's final positions as
+    // setup states (no move list reaches them in reasonable time).
+    let leftoverFinal = false;
+    let finalOn = false;
     let cursor = -1;
 
     function reduced() {
@@ -593,7 +598,146 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     }
 
     function hasLeftover() {
-        return PUZZLES.some((p) => leftover[p].length);
+        return leftoverFinal || PUZZLES.some((p) => leftover[p].length);
+    }
+
+    // From the fast-forward beat on, each rig shows its final position (A =
+    // h, B = h⁻¹, C solved) with an empty alg; before it, block 1's alg.
+    async function setFinal(on) {
+        if (!show || on === finalOn) return;
+        finalOn = on;
+        await Promise.all(PUZZLES.map(async (p) => {
+            const rig = rigs[p];
+            rig.pause?.();
+            if (on) {
+                rig.setAlg("");
+                await setSetupPosition(rig.player, show.final[p] ?? null, show.faceTurns);
+                await rig.jumpToLeaf(-1);
+            } else {
+                await setSetupPosition(rig.player, null);
+                rig.setAlg(show.moves[p].join(" "));
+            }
+        }));
+    }
+
+    const yAxis = new THREE.Vector3(0, 1, 0);
+    const spinQ = new THREE.Quaternion();
+
+    /**
+     * The three puzzles spin about the vertical in a blur and bob in their
+     * cups, speeding up then slowing to rest on whole turns (so A ends in
+     * its grip). onMid runs at full speed: the moment to swap positions.
+     */
+    async function spinTrio(duration, mine, { onTick, onMid } = {}) {
+        const base = {};
+        for (const p of PUZZLES) base[p] = drei.seats[p].lift.quaternion.clone();
+        const revs = Math.max(2, Math.round(duration / 380));
+        let mid = false;
+        let lastClick = 0;
+        const ok = await new Promise((resolve) => {
+            const start = performance.now();
+            function tick(now) {
+                if (mine !== gen) return resolve(false);
+                const t = Math.min(1, (now - start) / duration);
+                const turn = revs * (t - Math.sin(2 * Math.PI * t) / (2 * Math.PI));
+                PUZZLES.forEach((p, i) => {
+                    const lift = drei.seats[p].lift;
+                    spinQ.setFromAxisAngle(yAxis, 2 * Math.PI * turn * (i === 1 ? -1 : 1));
+                    lift.quaternion.copy(spinQ).multiply(base[p]);
+                    lift.position.y = restY[p] + Math.sin(Math.PI * t) * 0.022 + Math.abs(Math.sin(18 * Math.PI * t)) * 0.004;
+                });
+                if (now - lastClick > 170 && t > 0.05 && t < 0.95) {
+                    lastClick = now;
+                    hear("turn");
+                }
+                onTick?.(t);
+                if (!mid && t >= 0.5) {
+                    mid = true;
+                    onMid?.();
+                }
+                if (t < 1) requestAnimationFrame(tick);
+                else resolve(true);
+            }
+            requestAnimationFrame(tick);
+        });
+        for (const p of PUZZLES) {
+            drei.seats[p].lift.quaternion.copy(base[p]);
+            drei.seats[p].lift.position.y = restY[p];
+        }
+        return ok;
+    }
+
+    /**
+     * Cards during the fast-forward: the deck deals face down and gathers
+     * again, over and over, until the counter is done. Only backs show:
+     * these are not the blocks' real deals.
+     */
+    async function shuffleDeals(duration, mine) {
+        if (!deck) return;
+        ensureDealGroup();
+        placeDealGroup();
+        deck.packet.visible = true;
+        const home = new THREE.Vector3();
+        deck.group.getWorldPosition(home);
+        dealGroup.worldToLocal(home);
+        home.y += 0.02;
+        const down = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI));
+        const meshes = deck.cards.slice(0, 52);
+        for (const mesh of meshes) {
+            dealGroup.attach(mesh);
+            mesh.quaternion.copy(down);
+            mesh.position.copy(home);
+            mesh.visible = true;
+        }
+        await tween(Math.min(200, duration * 0.1), (t) => deck.setFlap(t), mine);
+        const cycles = Math.max(1, Math.round(duration / 900));
+        const cycle = Math.max(300, (duration * 0.8) / cycles);
+        const spread = 0.45; // share of each half-cycle the start times are spread over
+        for (let c = 0; c < cycles && mine === gen; c++) {
+            await tween(cycle, (t) => {
+                // 0..0.5 out to the rows, 0.5..1 back to the box.
+                meshes.forEach((mesh, i) => {
+                    const half = t < 0.5 ? t * 2 : (t - 0.5) * 2;
+                    const lag = (i / 52) * spread;
+                    const k = Math.min(1, Math.max(0, (half - lag) / (1 - spread)));
+                    const u = t < 0.5 ? k : 1 - k;
+                    const sl = slotLocal(i);
+                    mesh.position.set(
+                        home.x + (sl.x - home.x) * u,
+                        home.y + (sl.y - home.y) * u + Math.sin(Math.PI * u) * 0.035,
+                        home.z + (sl.z - home.z) * u,
+                    );
+                });
+                if (Math.random() < 0.08) hear("deal");
+            }, mine);
+        }
+        await tween(Math.min(200, duration * 0.1), (t) => deck.setFlap(1 - t), mine);
+        restowCards();
+    }
+
+    /** Blocks 2–N: a marked fast-forward to the trace's real end state. */
+    async function fastForward(beat, mine, progress) {
+        hideMarks();
+        restowCards();
+        const quick = reduced();
+        const total = quick ? 0 : ffMillis(beat.from, beat.to, tempo);
+        if (total) {
+            let shown = -1;
+            await Promise.all([
+                spinTrio(total, mine, {
+                    onTick: (t) => {
+                        const block = ffBlockAt(t, beat.from, beat.to);
+                        if (block !== shown) progress?.(shown = block);
+                    },
+                    onMid: () => void setFinal(true),
+                }),
+                shuffleDeals(total, mine),
+            ]);
+        }
+        if (mine !== gen) return;
+        await setFinal(true);
+        setGrip(HOME);
+        progress?.(beat.to);
     }
 
     // Fold the current show's turns (up to the cursor) into the leftovers
@@ -602,10 +746,16 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         if (!show || !leafAt) return;
         const at = Math.min(cursor, show.beats.length - 1);
         const grip = stateAt(at).grip;
-        for (const p of PUZZLES) {
-            const n = at < 0 ? 0 : leafAt[p][at];
-            leftover[p].push(...show.moves[p].slice(0, n));
+        if (finalOn) {
+            // The rigs already show the final positions with empty algs.
+            leftoverFinal = true;
+        } else {
+            for (const p of PUZZLES) {
+                const n = at < 0 ? 0 : leafAt[p][at];
+                leftover[p].push(...show.moves[p].slice(0, n));
+            }
         }
+        finalOn = false;
         show = null;
         leafAt = null;
         cursor = -1;
@@ -637,6 +787,15 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         const mine = ++gen;
         hideMarks();
         const quick = snap || reduced();
+        if (leftoverFinal) {
+            // No word short enough to undo a fast-forwarded position: the
+            // puzzles spin back to solved, as the fast-forward spun them on.
+            const clear = () => Promise.all(PUZZLES.map((p) => setSetupPosition(rigs[p].player, null)));
+            if (quick) await clear();
+            else await spinTrio(ms(1100), mine, { onMid: () => void clear() });
+            await clear();
+            leftoverFinal = false;
+        }
         const jobs = PUZZLES.map(async (p) => {
             const rig = rigs[p];
             const turns = leftover[p];
@@ -670,6 +829,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         await resetPuzzles();
         gen += 1;
         show = next;
+        finalOn = false;
         computeLeafAt();
         for (const p of PUZZLES) {
             rigs[p].setAlg(next.moves[p].join(" "));
@@ -683,7 +843,9 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         hideMarks();
         if (!show) return;
         cursor = index;
-        await jumpRigs(index);
+        const atEnd = Boolean(show.final) && index >= show.ffAt;
+        await setFinal(atEnd);
+        if (!atEnd) await jumpRigs(index);
         const st = stateAt(index);
         setGrip(st.grip);
         for (const p of PUZZLES) drei.seats[p].lift.position.y = restY[p];
@@ -712,7 +874,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         });
     }
 
-    async function playBeat(beat, index) {
+    async function playBeat(beat, index, { progress } = {}) {
         const mine = ++gen;
         hideMarks();
         if (Number.isInteger(index)) cursor = index;
@@ -760,6 +922,9 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         }
         case "gather":
             await gatherCards(mine);
+            break;
+        case "ff":
+            await fastForward(beat, mine, progress);
             break;
         default:
             break;

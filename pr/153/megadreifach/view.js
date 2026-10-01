@@ -7,7 +7,8 @@
  */
 import { cardAssetUrl } from "../doubledeal/table.js";
 import { FACE_NAME, cardLabel } from "./minx.js";
-import { HOME, PUZZLES } from "./plan.js";
+import { HOME, PUZZLES, ffBlockAt, ffMillis } from "./plan.js";
+import { setSetupPosition } from "./pattern.js";
 
 const TWISTY_URL = "https://cdn.cubing.net/v0/js/cubing/twisty";
 const SUIT_FILE = ["club", "heart", "spade", "diamond"];
@@ -37,7 +38,10 @@ export function mountTrio(root = document) {
     let leafAt = null;
     let gen = 0;
     let ready = null;
+    let finalOn = false;
     const imgs = [];
+    const trioEl = root.querySelector("#trio");
+    const reduced = () => Boolean(globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
 
     for (let i = 0; i < 52; i++) {
         const img = document.createElement("img");
@@ -136,6 +140,48 @@ export function mountTrio(root = document) {
         return { grip, deal, faceUp };
     }
 
+    // From the fast-forward on, the puzzles show the trace's final positions
+    // (A = h, B = h⁻¹, C solved) as setup states with empty algs; before it,
+    // the block-1 alg timeline.
+    async function setFinal(on) {
+        if (on === finalOn) return;
+        finalOn = on;
+        for (const p of PUZZLES) {
+            const player = players[p];
+            player.pause();
+            player.alg = on ? "" : show.moves[p].join(" ");
+            await setSetupPosition(player, on ? show.final[p] ?? null : null, show.faceTurns);
+            if (on) player.jumpToStart();
+        }
+    }
+
+    // Fast-forward: the puzzles spin in a blur and the deal shuffles face
+    // down while the counter runs; no turns or card faces of those blocks
+    // are shown. They settle on the real final positions.
+    async function fastForward(beat, mine, progress) {
+        const quick = reduced();
+        const total = quick ? 0 : ffMillis(beat.from, beat.to, tempo);
+        if (total) {
+            trioEl?.classList.add("is-ff");
+            dealEl?.classList.add("is-ff");
+            layDeal(Array.from({ length: 52 }, (_, i) => i), 0);
+            const start = performance.now();
+            let shown = -1;
+            while (mine === gen) {
+                const t = Math.min(1, (performance.now() - start) / total);
+                const block = ffBlockAt(t, beat.from, beat.to);
+                if (block !== shown) progress?.(shown = block);
+                if (t >= 1) break;
+                await frame();
+            }
+        }
+        if (mine === gen) await setFinal(true);
+        trioEl?.classList.remove("is-ff");
+        dealEl?.classList.remove("is-ff");
+        layDeal(null, 0);
+        if (mine === gen) progress?.(beat.to);
+    }
+
     function readText(beat) {
         return `Noon ${beat.read.corner ? "corner" : "edge"}: ${FACE_NAME[beat.c1]}, ${FACE_NAME[beat.c2]}.`;
     }
@@ -144,6 +190,9 @@ export function mountTrio(root = document) {
         async loadShow(next) {
             await load();
             gen += 1;
+            if (finalOn && show) await setFinal(false);
+            finalOn = false;
+            for (const p of PUZZLES) await setSetupPosition(players[p], null);
             show = next;
             leafAt = { A: [], B: [], C: [] };
             const now = { A: 0, B: 0, C: 0 };
@@ -162,14 +211,21 @@ export function mountTrio(root = document) {
         async seek(index) {
             gen += 1;
             if (!show) return;
-            await Promise.all(PUZZLES.map((p) => jumpToLeaf(p, (index < 0 ? 0 : leafAt[p][index]) - 1)));
+            const atEnd = Boolean(show.final) && index >= show.ffAt;
+            await setFinal(atEnd);
+            if (!atEnd) await Promise.all(PUZZLES.map((p) => jumpToLeaf(p, (index < 0 ? 0 : leafAt[p][index]) - 1)));
             const st = stateAt(index);
             setGrip(st.grip);
             layDeal(st.deal, st.faceUp);
             if (readEl) readEl.textContent = "";
         },
-        async playBeat(beat) {
+        async playBeat(beat, _index, { progress } = {}) {
             const mine = ++gen;
+            if (beat.kind === "ff") {
+                if (readEl) readEl.textContent = "";
+                await fastForward(beat, mine, progress);
+                return;
+            }
             if (beat.kind === "deal") layDeal(beat.deal, 0);
             if (beat.kind === "card") {
                 const img = imgs[beat.pos - 1];
@@ -190,10 +246,14 @@ export function mountTrio(root = document) {
             layDeal(null, 0);
             setGrip(HOME);
             if (readEl) readEl.textContent = "";
+            finalOn = false;
+            trioEl?.classList.remove("is-ff");
+            dealEl?.classList.remove("is-ff");
             if (!ready) return;
             await ready;
             for (const p of PUZZLES) {
                 players[p].alg = "";
+                await setSetupPosition(players[p], null);
                 players[p].jumpToStart();
             }
         },

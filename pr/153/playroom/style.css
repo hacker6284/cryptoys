@@ -844,6 +844,26 @@ twisty-player.twisty-host,
   display: none;
 }
 
+/* Fast-forward (blocks 2–N): its own marked line with the block counter. */
+.drei-ff {
+  margin: 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font: 500 13px/1.3 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.02em;
+  color: #ffe2b0;
+  background: color-mix(in srgb, #d48630 30%, transparent);
+  border: 1px solid color-mix(in srgb, #ffc36b 55%, transparent);
+}
+
+.drei-ff[hidden] {
+  display: none;
+}
+
+.drei-ff.is-running::before {
+  content: "⏩ ";
+}
+
 .drei-status {
   margin: 0;
   font: 12px/1.35 var(--font-mono, ui-monospace, monospace);

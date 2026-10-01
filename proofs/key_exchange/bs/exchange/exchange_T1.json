@@ -4,10 +4,10 @@
   "runs": 20,
   "all_ok": true,
   "mean_mults_per_person": 1053.4,
-  "mean_moves_per_person": 489051.1,
-  "mean_moves_per_mult": 464.2596354661097,
+  "mean_moves_per_person": 489027.05,
+  "mean_moves_per_mult": 464.2368046326182,
   "mean_key_cells": 211.875,
-  "seconds": 3.0
+  "seconds": 5.9
  },
  "exchanges": [
   {
@@ -32,12 +32,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1038.5,
-   "moves_per_person": 487986.5,
-   "moves_per_mult": 469.8955223880597,
+   "moves_per_person": 487961.0,
+   "moves_per_mult": 469.8709677419355,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 191857,
-     "seconds": 0.0,
+     "moves": 191845,
+     "seconds": 0.1,
      "cube": 206,
      "mul": 412,
      "fold_lift": 4855,
@@ -45,8 +45,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 190537,
-     "seconds": 0.0,
+     "moves": 190524,
+     "seconds": 0.1,
      "cube": 208,
      "mul": 416,
      "fold_lift": 4790,
@@ -70,8 +70,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 289740,
-     "seconds": 0.0,
+     "moves": 289729,
+     "seconds": 0.2,
      "cube": 206,
      "mul": 617,
      "carry": 102643,
@@ -79,8 +79,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 302688,
-     "seconds": 0.0,
+     "moves": 302673,
+     "seconds": 0.1,
      "cube": 208,
      "mul": 630,
      "carry": 108145,
@@ -111,12 +111,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1047.5,
-   "moves_per_person": 495842.5,
-   "moves_per_mult": 473.35799522673034,
+   "moves_per_person": 495816.0,
+   "moves_per_mult": 473.3326968973747,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 193877,
-     "seconds": 0.0,
+     "moves": 193861,
+     "seconds": 0.1,
      "cube": 208,
      "mul": 416,
      "fold_lift": 4769,
@@ -124,8 +124,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 199038,
-     "seconds": 0.0,
+     "moves": 199025,
+     "seconds": 0.1,
      "cube": 217,
      "mul": 434,
      "fold_lift": 4975,
@@ -149,8 +149,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 273693,
-     "seconds": 0.0,
+     "moves": 273680,
+     "seconds": 0.1,
      "cube": 208,
      "mul": 609,
      "carry": 96244,
@@ -158,8 +158,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 324113,
-     "seconds": 0.0,
+     "moves": 324102,
+     "seconds": 0.1,
      "cube": 217,
      "mul": 634,
      "carry": 116880,
@@ -190,12 +190,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1071.5,
-   "moves_per_person": 517615.5,
-   "moves_per_mult": 483.075594960336,
+   "moves_per_person": 517591.0,
+   "moves_per_mult": 483.05272981801215,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 196458,
-     "seconds": 0.0,
+     "moves": 196445,
+     "seconds": 0.1,
      "cube": 215,
      "mul": 430,
      "fold_lift": 4960,
@@ -203,8 +203,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 200456,
-     "seconds": 0.0,
+     "moves": 200447,
+     "seconds": 0.1,
      "cube": 217,
      "mul": 434,
      "fold_lift": 4988,
@@ -228,7 +228,7 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 329718,
+     "moves": 329706,
      "seconds": 0.1,
      "cube": 215,
      "mul": 643,
@@ -237,8 +237,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 307895,
-     "seconds": 0.0,
+     "moves": 307880,
+     "seconds": 0.1,
      "cube": 217,
      "mul": 634,
      "carry": 109946,
@@ -269,12 +269,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1049.0,
-   "moves_per_person": 503593.0,
-   "moves_per_mult": 480.069590085796,
+   "moves_per_person": 503570.5,
+   "moves_per_mult": 480.0481410867493,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 193162,
-     "seconds": 0.0,
+     "moves": 193152,
+     "seconds": 0.1,
      "cube": 209,
      "mul": 418,
      "fold_lift": 4755,
@@ -282,8 +282,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 191999,
-     "seconds": 0.0,
+     "moves": 191988,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 424,
      "fold_lift": 4867,
@@ -307,8 +307,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 305235,
-     "seconds": 0.0,
+     "moves": 305225,
+     "seconds": 0.1,
      "cube": 209,
      "mul": 641,
      "carry": 108754,
@@ -316,8 +316,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 315945,
-     "seconds": 0.0,
+     "moves": 315931,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 613,
      "carry": 113772,
@@ -348,12 +348,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1061.5,
-   "moves_per_person": 492387.5,
-   "moves_per_mult": 463.860103626943,
+   "moves_per_person": 492368.0,
+   "moves_per_mult": 463.84173339613756,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 187502,
-     "seconds": 0.0,
+     "moves": 187492,
+     "seconds": 0.1,
      "cube": 211,
      "mul": 422,
      "fold_lift": 4818,
@@ -361,8 +361,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 197886,
-     "seconds": 0.0,
+     "moves": 197875,
+     "seconds": 0.1,
      "cube": 214,
      "mul": 428,
      "fold_lift": 4936,
@@ -386,8 +386,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 300073,
-     "seconds": 0.0,
+     "moves": 300064,
+     "seconds": 0.1,
      "cube": 211,
      "mul": 643,
      "carry": 105997,
@@ -395,8 +395,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 298481,
-     "seconds": 0.0,
+     "moves": 298472,
+     "seconds": 0.1,
      "cube": 214,
      "mul": 628,
      "carry": 105859,
@@ -427,12 +427,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1060.5,
-   "moves_per_person": 489564.0,
-   "moves_per_mult": 461.6350777934936,
+   "moves_per_person": 489538.5,
+   "moves_per_mult": 461.6110325318246,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 197110,
-     "seconds": 0.0,
+     "moves": 197095,
+     "seconds": 0.1,
      "cube": 214,
      "mul": 428,
      "fold_lift": 4876,
@@ -440,8 +440,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 193846,
-     "seconds": 0.0,
+     "moves": 193833,
+     "seconds": 0.1,
      "cube": 213,
      "mul": 426,
      "fold_lift": 4870,
@@ -465,8 +465,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 282608,
-     "seconds": 0.0,
+     "moves": 282596,
+     "seconds": 0.1,
      "cube": 214,
      "mul": 640,
      "carry": 99649,
@@ -474,8 +474,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 304392,
-     "seconds": 0.0,
+     "moves": 304381,
+     "seconds": 0.1,
      "cube": 213,
      "mul": 625,
      "carry": 108185,
@@ -506,12 +506,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1029.0,
-   "moves_per_person": 477358.5,
-   "moves_per_mult": 463.90524781341105,
+   "moves_per_person": 477337.5,
+   "moves_per_mult": 463.88483965014575,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 193290,
-     "seconds": 0.0,
+     "moves": 193280,
+     "seconds": 0.1,
      "cube": 210,
      "mul": 420,
      "fold_lift": 4811,
@@ -519,8 +519,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 194775,
-     "seconds": 0.0,
+     "moves": 194765,
+     "seconds": 0.1,
      "cube": 210,
      "mul": 420,
      "fold_lift": 4815,
@@ -544,8 +544,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 276557,
-     "seconds": 0.0,
+     "moves": 276544,
+     "seconds": 0.1,
      "cube": 210,
      "mul": 623,
      "carry": 97334,
@@ -553,7 +553,7 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 288510,
+     "moves": 288501,
      "seconds": 0.0,
      "cube": 210,
      "mul": 593,
@@ -585,11 +585,11 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1048.5,
-   "moves_per_person": 485747.0,
-   "moves_per_mult": 463.2780162136385,
+   "moves_per_person": 485722.0,
+   "moves_per_mult": 463.2541726275632,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 191374,
+     "moves": 191359,
      "seconds": 0.0,
      "cube": 209,
      "mul": 418,
@@ -598,7 +598,7 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 193163,
+     "moves": 193151,
      "seconds": 0.0,
      "cube": 211,
      "mul": 422,
@@ -623,8 +623,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 306635,
-     "seconds": 0.1,
+     "moves": 306620,
+     "seconds": 0.0,
      "cube": 209,
      "mul": 640,
      "carry": 109184,
@@ -632,7 +632,7 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 279186,
+     "moves": 279178,
      "seconds": 0.0,
      "cube": 211,
      "mul": 615,
@@ -664,11 +664,11 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1058.0,
-   "moves_per_person": 492942.5,
-   "moves_per_mult": 465.91918714555766,
+   "moves_per_person": 492917.5,
+   "moves_per_mult": 465.89555765595463,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 186737,
+     "moves": 186724,
      "seconds": 0.0,
      "cube": 210,
      "mul": 420,
@@ -677,7 +677,7 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 194736,
+     "moves": 194724,
      "seconds": 0.0,
      "cube": 212,
      "mul": 424,
@@ -702,7 +702,7 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 298667,
+     "moves": 298654,
      "seconds": 0.0,
      "cube": 210,
      "mul": 631,
@@ -711,7 +711,7 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 305061,
+     "moves": 305049,
      "seconds": 0.0,
      "cube": 212,
      "mul": 639,
@@ -743,11 +743,11 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1051.5,
-   "moves_per_person": 478170.5,
-   "moves_per_mult": 454.7508321445554,
+   "moves_per_person": 478147.5,
+   "moves_per_mult": 454.7289586305278,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 193588,
+     "moves": 193575,
      "seconds": 0.0,
      "cube": 212,
      "mul": 424,
@@ -756,7 +756,7 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 193148,
+     "moves": 193136,
      "seconds": 0.0,
      "cube": 211,
      "mul": 422,
@@ -781,8 +781,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 285780,
-     "seconds": 0.0,
+     "moves": 285769,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 635,
      "carry": 100411,
@@ -790,8 +790,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 282974,
-     "seconds": 0.0,
+     "moves": 282964,
+     "seconds": 0.1,
      "cube": 211,
      "mul": 620,
      "carry": 99676,
@@ -822,12 +822,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1045.5,
-   "moves_per_person": 480369.5,
-   "moves_per_mult": 459.46389287422284,
+   "moves_per_person": 480342.5,
+   "moves_per_mult": 459.43806791009087,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 192534,
-     "seconds": 0.0,
+     "moves": 192520,
+     "seconds": 0.1,
      "cube": 211,
      "mul": 422,
      "fold_lift": 4814,
@@ -835,8 +835,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 195217,
-     "seconds": 0.0,
+     "moves": 195205,
+     "seconds": 0.1,
      "cube": 214,
      "mul": 428,
      "fold_lift": 4941,
@@ -860,8 +860,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 272470,
-     "seconds": 0.0,
+     "moves": 272456,
+     "seconds": 0.1,
      "cube": 211,
      "mul": 601,
      "carry": 95737,
@@ -869,8 +869,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 299895,
-     "seconds": 0.0,
+     "moves": 299881,
+     "seconds": 0.1,
      "cube": 214,
      "mul": 638,
      "carry": 106127,
@@ -901,12 +901,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1058.0,
-   "moves_per_person": 499994.0,
-   "moves_per_mult": 472.58412098298675,
+   "moves_per_person": 499972.5,
+   "moves_per_mult": 472.5637996219282,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 191438,
-     "seconds": 0.0,
+     "moves": 191425,
+     "seconds": 0.1,
      "cube": 211,
      "mul": 422,
      "fold_lift": 4838,
@@ -914,8 +914,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 196140,
-     "seconds": 0.0,
+     "moves": 196130,
+     "seconds": 0.1,
      "cube": 214,
      "mul": 428,
      "fold_lift": 4951,
@@ -939,8 +939,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 284411,
-     "seconds": 0.0,
+     "moves": 284402,
+     "seconds": 0.1,
      "cube": 211,
      "mul": 622,
      "carry": 100401,
@@ -948,7 +948,7 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 327400,
+     "moves": 327389,
      "seconds": 0.1,
      "cube": 214,
      "mul": 642,
@@ -980,12 +980,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1058.0,
-   "moves_per_person": 485983.5,
-   "moves_per_mult": 459.3416824196597,
+   "moves_per_person": 485958.5,
+   "moves_per_mult": 459.3180529300567,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 189444,
-     "seconds": 0.0,
+     "moves": 189432,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 424,
      "fold_lift": 4913,
@@ -993,8 +993,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 192812,
-     "seconds": 0.0,
+     "moves": 192800,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 424,
      "fold_lift": 4829,
@@ -1018,8 +1018,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 296417,
-     "seconds": 0.0,
+     "moves": 296404,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 633,
      "carry": 104851,
@@ -1027,8 +1027,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 292051,
-     "seconds": 0.0,
+     "moves": 292038,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 633,
      "carry": 103264,
@@ -1059,12 +1059,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1046.0,
-   "moves_per_person": 468754.5,
-   "moves_per_mult": 448.14005736137665,
+   "moves_per_person": 468733.5,
+   "moves_per_mult": 448.1199808795411,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 190983,
-     "seconds": 0.0,
+     "moves": 190972,
+     "seconds": 0.1,
      "cube": 213,
      "mul": 426,
      "fold_lift": 4878,
@@ -1072,7 +1072,7 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 189326,
+     "moves": 189319,
      "seconds": 0.0,
      "cube": 211,
      "mul": 422,
@@ -1097,7 +1097,7 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 275587,
+     "moves": 275574,
      "seconds": 0.0,
      "cube": 213,
      "mul": 614,
@@ -1106,7 +1106,7 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 280452,
+     "moves": 280441,
      "seconds": 0.0,
      "cube": 211,
      "mul": 628,
@@ -1138,11 +1138,11 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1046.5,
-   "moves_per_person": 500068.0,
-   "moves_per_mult": 477.84806497849974,
+   "moves_per_person": 500045.5,
+   "moves_per_mult": 477.8265647396082,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 197710,
+     "moves": 197698,
      "seconds": 0.0,
      "cube": 211,
      "mul": 422,
@@ -1151,7 +1151,7 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 195840,
+     "moves": 195828,
      "seconds": 0.0,
      "cube": 211,
      "mul": 422,
@@ -1176,7 +1176,7 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 312005,
+     "moves": 311996,
      "seconds": 0.0,
      "cube": 211,
      "mul": 619,
@@ -1185,7 +1185,7 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 293922,
+     "moves": 293910,
      "seconds": 0.0,
      "cube": 211,
      "mul": 628,
@@ -1217,11 +1217,11 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1055.0,
-   "moves_per_person": 490037.5,
-   "moves_per_mult": 464.4905213270142,
+   "moves_per_person": 490012.5,
+   "moves_per_mult": 464.4668246445498,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 196829,
+     "moves": 196815,
      "seconds": 0.0,
      "cube": 210,
      "mul": 420,
@@ -1230,7 +1230,7 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 197988,
+     "moves": 197976,
      "seconds": 0.0,
      "cube": 211,
      "mul": 422,
@@ -1255,7 +1255,7 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 299083,
+     "moves": 299072,
      "seconds": 0.0,
      "cube": 210,
      "mul": 641,
@@ -1264,7 +1264,7 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 285147,
+     "moves": 285134,
      "seconds": 0.0,
      "cube": 211,
      "mul": 625,
@@ -1296,11 +1296,11 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1051.5,
-   "moves_per_person": 474194.5,
-   "moves_per_mult": 450.9695672848312,
+   "moves_per_person": 474167.5,
+   "moves_per_mult": 450.94388968140754,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 188433,
+     "moves": 188418,
      "seconds": 0.0,
      "cube": 213,
      "mul": 426,
@@ -1309,8 +1309,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 188180,
-     "seconds": 0.0,
+     "moves": 188167,
+     "seconds": 0.1,
      "cube": 209,
      "mul": 418,
      "fold_lift": 4813,
@@ -1334,8 +1334,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 273443,
-     "seconds": 0.0,
+     "moves": 273430,
+     "seconds": 0.1,
      "cube": 213,
      "mul": 641,
      "carry": 94780,
@@ -1343,8 +1343,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 297242,
-     "seconds": 0.0,
+     "moves": 297229,
+     "seconds": 0.1,
      "cube": 209,
      "mul": 616,
      "carry": 105917,
@@ -1375,12 +1375,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1068.0,
-   "moves_per_person": 481929.0,
-   "moves_per_mult": 451.2443820224719,
+   "moves_per_person": 481902.5,
+   "moves_per_mult": 451.2195692883895,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 191038,
-     "seconds": 0.0,
+     "moves": 191024,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 424,
      "fold_lift": 4858,
@@ -1388,8 +1388,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 194665,
-     "seconds": 0.0,
+     "moves": 194654,
+     "seconds": 0.1,
      "cube": 217,
      "mul": 434,
      "fold_lift": 5025,
@@ -1413,8 +1413,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 289597,
-     "seconds": 0.0,
+     "moves": 289582,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 629,
      "carry": 101719,
@@ -1422,8 +1422,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 287307,
-     "seconds": 0.0,
+     "moves": 287294,
+     "seconds": 0.1,
      "cube": 217,
      "mul": 647,
      "carry": 100794,
@@ -1454,12 +1454,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1062.0,
-   "moves_per_person": 498702.0,
-   "moves_per_mult": 469.5875706214689,
+   "moves_per_person": 498679.5,
+   "moves_per_mult": 469.566384180791,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 196249,
-     "seconds": 0.0,
+     "moves": 196240,
+     "seconds": 0.1,
      "cube": 211,
      "mul": 422,
      "fold_lift": 4856,
@@ -1467,8 +1467,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 197437,
-     "seconds": 0.0,
+     "moves": 197426,
+     "seconds": 0.1,
      "cube": 216,
      "mul": 432,
      "fold_lift": 4933,
@@ -1492,8 +1492,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 298283,
-     "seconds": 0.0,
+     "moves": 298270,
+     "seconds": 0.1,
      "cube": 211,
      "mul": 637,
      "carry": 105701,
@@ -1501,8 +1501,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 304114,
-     "seconds": 0.0,
+     "moves": 304102,
+     "seconds": 0.1,
      "cube": 216,
      "mul": 631,
      "carry": 108568,
@@ -1533,12 +1533,12 @@
    "K_matches_pow": true,
    "K_canonical": true,
    "mults_per_person": 1062.0,
-   "moves_per_person": 479782.0,
-   "moves_per_mult": 451.77212806026364,
+   "moves_per_person": 479757.0,
+   "moves_per_mult": 451.74858757062145,
    "phases": {
     "A = walk(a, g=3)": {
-     "moves": 194973,
-     "seconds": 0.0,
+     "moves": 194962,
+     "seconds": 0.1,
      "cube": 215,
      "mul": 430,
      "fold_lift": 4940,
@@ -1546,8 +1546,8 @@
      "tidy": 1
     },
     "B = walk(b, g=3)": {
-     "moves": 200136,
-     "seconds": 0.0,
+     "moves": 200125,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 424,
      "fold_lift": 4929,
@@ -1571,8 +1571,8 @@
      "tidy": 1
     },
     "K_A = walk(a, base B^2)": {
-     "moves": 286569,
-     "seconds": 0.0,
+     "moves": 286555,
+     "seconds": 0.1,
      "cube": 215,
      "mul": 644,
      "carry": 100476,
@@ -1580,8 +1580,8 @@
      "tidy": 1
     },
     "K_B = walk(b, base A^2)": {
-     "moves": 277239,
-     "seconds": 0.0,
+     "moves": 277225,
+     "seconds": 0.1,
      "cube": 212,
      "mul": 624,
      "carry": 96921,

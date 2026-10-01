@@ -4,69 +4,69 @@
   "runs": 20,
   "all_ok": true,
   "mean_mults_per_person": 1053.4,
-  "mean_moves_per_person": 489051.1,
-  "mean_moves_per_mult": 464.2596354661097,
+  "mean_moves_per_person": 489027.05,
+  "mean_moves_per_mult": 464.2368046326182,
   "mean_key_cells": 211.875,
-  "seconds": 3.0
+  "seconds": 5.9
  },
  "T2": {
   "tier": "T2",
   "runs": 5,
   "all_ok": true,
   "mean_mults_per_person": 1047.9,
-  "mean_moves_per_person": 1662523.9,
-  "mean_moves_per_mult": 1586.5291535451856,
+  "mean_moves_per_person": 1662484.2,
+  "mean_moves_per_mult": 1586.4912682507872,
   "mean_key_cells": 210.8,
-  "seconds": 2.7
+  "seconds": 4.7
  },
  "T6demo": {
   "tier": "T6demo",
   "runs": 2,
   "all_ok": true,
   "mean_mults_per_person": 1048.75,
-  "mean_moves_per_person": 19714006.5,
-  "mean_moves_per_mult": 18797.62240762813,
+  "mean_moves_per_person": 19713876.75,
+  "mean_moves_per_mult": 18797.498688915377,
   "mean_key_cells": 211.75,
-  "seconds": 12.8
+  "seconds": 23.9
  },
  "R512": {
   "tier": "R512",
   "runs": 1,
   "all_ok": true,
   "mean_mults_per_person": 1034.5,
-  "mean_moves_per_person": 189077322.0,
-  "mean_moves_per_mult": 182771.69840502657,
+  "mean_moves_per_person": 189076884.5,
+  "mean_moves_per_mult": 182771.27549540842,
   "mean_key_cells": 212.5,
-  "seconds": 59.2
+  "seconds": 99.5
  },
  "R1024": {
   "tier": "R1024",
   "runs": 1,
   "all_ok": true,
   "mean_mults_per_person": 1065.0,
-  "mean_moves_per_person": 786345453.5,
-  "mean_moves_per_mult": 738352.5384976526,
+  "mean_moves_per_person": 786344566.5,
+  "mean_moves_per_mult": 738351.7056338028,
   "mean_key_cells": 214.5,
-  "seconds": 324.6
+  "seconds": 683.3
  },
  "R2048": {
   "tier": "R2048",
   "runs": 1,
   "all_ok": true,
   "mean_mults_per_person": 1027.0,
-  "mean_moves_per_person": 3008732215.0,
-  "mean_moves_per_mult": 2929632.147030185,
+  "mean_moves_per_person": 3008730526.5,
+  "mean_moves_per_mult": 2929630.5029211296,
   "mean_key_cells": 209.5,
-  "seconds": 1262.2
+  "seconds": 2081.3
  },
  "R3072": {
   "tier": "R3072",
   "runs": 1,
   "all_ok": true,
   "mean_mults_per_person": 1036.0,
-  "mean_moves_per_person": 6754925525.0,
-  "mean_moves_per_mult": 6520198.383204633,
+  "mean_moves_per_person": 6754922936.5,
+  "mean_moves_per_mult": 6520195.884652509,
   "mean_key_cells": 209.0,
-  "seconds": 2954.1
+  "seconds": 4273.3
  }
 }

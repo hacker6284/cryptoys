@@ -1,5 +1,5 @@
-T1      runs 20  all correct True  mults/person   1053.4  moves/person 4.891e+05  moves/mult 464.3  key cells 211.9
-T2      runs  5  all correct True  mults/person   1047.9  moves/person 1.663e+06  moves/mult 1587  key cells 210.8
+T1      runs 20  all correct True  mults/person   1053.4  moves/person 4.89e+05  moves/mult 464.2  key cells 211.9
+T2      runs  5  all correct True  mults/person   1047.9  moves/person 1.662e+06  moves/mult 1586  key cells 210.8
 T6demo  runs  2  all correct True  mults/person   1048.8  moves/person 1.971e+07  moves/mult 1.88e+04  key cells 211.8
 R512    runs  1  all correct True  mults/person   1034.5  moves/person 1.891e+08  moves/mult 1.828e+05  key cells 212.5
 R1024   runs  1  all correct True  mults/person   1065.0  moves/person 7.863e+08  moves/mult 7.384e+05  key cells 214.5

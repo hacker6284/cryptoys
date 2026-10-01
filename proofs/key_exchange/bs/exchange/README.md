@@ -20,12 +20,12 @@ Results (`exchange_output.txt`); every exchange is correct:
 | Tier | Exchanges | All correct | Mults per person | Moves per mult | Moves per person (mean) | Key cells (mean) |
 |---|---|---|---|---|---|---|
 | T1 skiff | 20 | yes | 1,053.4 | 464 | 4.89·10⁵ | 211.9 |
-| T2 frigate | 5 | yes | 1,047.9 | 1,587 | 1.66·10⁶ | 210.8 |
-| T6 demo | 2 | yes | 1,048.8 | 18,798 | 1.97·10⁷ | 211.8 |
-| R512 | 1 | yes | 1,034.5 | 182,772 | 1.89·10⁸ | 212.5 |
-| R1024 | 1 | yes | 1,065.0 | 738,353 | 7.86·10⁸ | 214.5 |
-| R2048 | 1 | yes | 1,027.0 | 2,929,632 | 3.01·10⁹ | 209.5 |
-| R3072 | 1 | yes | 1,036.0 | 6,520,198 | 6.75·10⁹ | 209.0 |
+| T2 frigate | 5 | yes | 1,047.9 | 1,586 | 1.66·10⁶ | 210.8 |
+| T6 demo | 2 | yes | 1,048.8 | 18,797 | 1.97·10⁷ | 211.8 |
+| R512 | 1 | yes | 1,034.5 | 182,771 | 1.89·10⁸ | 212.5 |
+| R1024 | 1 | yes | 1,065.0 | 738,352 | 7.86·10⁸ | 214.5 |
+| R2048 | 1 | yes | 1,027.0 | 2,929,631 | 3.01·10⁹ | 209.5 |
+| R3072 | 1 | yes | 1,036.0 | 6,520,196 | 6.75·10⁹ | 209.0 |
 
 ## Files
 
@@ -40,4 +40,4 @@ for t in T1 T2 T6demo R512 R1024 R2048 R3072; do python3 exchange.py $t > log_$t
 python3 exchange.py summary > exchange_output.txt
 ```
 
-Run time on one core: T1 3 s, T2 and T6demo under a minute, R512 ≈ 1 min, R1024 ≈ 5 min, R2048 ≈ 21 min, R3072 ≈ 50 min (on a shared, loaded machine).
+Run time on one core: T1 3 s, T2 and T6demo under a minute, R512 ≈ 1 min, R1024 ≈ 5 min, R2048 ≈ 21 min, R3072 ≈ 50–70 min (on a shared, loaded machine).

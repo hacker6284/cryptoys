@@ -1,2 +1,2 @@
-R1024 0 {'key_cells': [213, 216], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1065.0, 'moves_per_person': 786345453.5}
-R1024 SUMMARY {"tier": "R1024", "runs": 1, "all_ok": true, "mean_mults_per_person": 1065.0, "mean_moves_per_person": 786345453.5, "mean_moves_per_mult": 738352.5384976526, "mean_key_cells": 214.5, "seconds": 324.6}
+R1024 0 {'key_cells': [213, 216], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1065.0, 'moves_per_person': 786344566.5}
+R1024 SUMMARY {"tier": "R1024", "runs": 1, "all_ok": true, "mean_mults_per_person": 1065.0, "mean_moves_per_person": 786344566.5, "mean_moves_per_mult": 738351.7056338028, "mean_key_cells": 214.5, "seconds": 683.3}

@@ -1,7 +1,8 @@
 # v12 whole cipher and final no-mix round: measurements (roadmap milestone M7)
 
-**EMPIRICAL ONLY.** Everything in this note is sampled or enumerated (§5). No theorem uses it, and no
-number here is proved. **No numeric bound on the full-cipher differential is proved**
+**EMPIRICAL ONLY**, except that §4 and §5 quote theorems of the security library, each named and
+marked PROVED; those are proved in Lean, not in this note. Everything else here is sampled or
+enumerated (§5). No theorem uses it, and no number here is proved. **No numeric bound on the full-cipher differential is proved**
 anywhere. Not a bit-security claim. These measurements found no weakness.
 
 ## 0. What is proved (pointer)
@@ -104,21 +105,13 @@ here, and nothing here is proved.
 
 ## 4. Not measured, not proved
 
-* Any numeric bound on the full-cipher differential (independent or real keys). Proved
-  reduction only: for outputs γ outside `v10Sym`, 1/64 would follow from
-  `64 · dpFCount β γ ≤ 52!` for every β outside `v10Sym` with β ≠ γ
-  (`fullDiffCount_le_64_of_offDiag`); §2 samples single off-diagonal entries of a few rows
-  at ≤ 3·10^-6, which is not a bound and not a column. `StemPosition` proves no part of
-  that hypothesis: if the stem sends `(x, β·x)`, `x = permDeck π`, to a pair with
-  difference γ (the filter predicate of `dpFCount β γ`), then γ⁻¹β is π-conjugate to the
-  ratio of the two decks' position maps and moves exactly `52 − zRows · zCols` cards
-  (`card_moved_eq`). That would give `dpFCount β γ = 0` only when the support size of γ⁻¹β
-  is not of the form 52 − ab (a ≤ 4, b ≤ 13), e.g. 2 or 3 (not stated), and says nothing
-  for any other β. `StemCoupling` and `StemSupportFour` (security library) prove it for
-  every `β` with `γ⁻¹β` moving exactly 4 cards (`dpFCount_le_of_support_four`, §5), and
-  supports 1–3 and 5–7 count no deck (`dpFCount_eq_zero_of_support`). The `β` with `γ⁻¹β`
-  moving at least 8 cards are open; `fullDiffCount_le_64_of_support_ge_eight` takes exactly
-  that case as its hypothesis.
+* Any numeric bound on the full-cipher differential (independent or real keys). What is
+  PROVED toward it (the reduction `fullDiffCount_le_64_of_offDiag` and the stem slices
+  `StemPosition`, `StemCoupling`, `StemSupportFour`) is listed in the security README (module
+  table, and the M7 entry of the "Open" list); not repeated here. Open: the `β` with `γ⁻¹β`
+  moving at least 8 cards, the hypothesis of `fullDiffCount_le_64_of_offDiag_ge_eight`. §2
+  samples single off-diagonal entries of a few rows at ≤ 3·10^-6, which is not a bound and
+  not a column.
   More than one mix round before the final round; any γ ≠ α after the final round in §3.
 * Anything under the real PassKey schedule beyond what M5/M6 already record.
 
@@ -132,8 +125,7 @@ sets, but not checked in Lean. They size the constant in `StemCoupling.coupling`
 Setting. When γ⁻¹β moves 4 cards (a 4-cycle or a double transposition; `(zRows, zCols) =
 (4, 12)` in `StemPosition`), the ratio `q` of the two position maps is
 `StemSupportFour.qPerm t c d` with `t = rowAmts x`, `c` the one column whose amounts differ
-mod 4 and `d ≠ 0` that difference (`ratio_eq_qPerm_of_support_four`, PROVED; a 300-sample
-check against `security/checks/ddport.py` had found the same shape first). It moves
+mod 4 and `d ≠ 0` that difference (`ratio_eq_qPerm_of_support_four`, PROVED). It moves
 `cmFlat ρ ((c + t_ρ) % 13)` to the same seat of row `ρ + d`, one position per row
 (`ratio_moves_le_one_of_support_four`). By `StemCoupling.rowAmts_eq_iff`, "row amounts = t"
 is four row conditions; row ρ's condition is a weighted rank sum mod 13 over row ρ with
@@ -183,8 +175,11 @@ four `d` the conjugate sets hold at most `8 · 48!` decks for each `(t, c)`
   route for the open supports `s ≥ 8`: bound `#{π | π⁻¹ δ π = q}` by `s^⌊s/2⌋ · (52 − s)!`
   (`π` is fixed on the support of `q` by its values at one point of each cycle, and there
   are at most `s/2` cycles) and sum over the `q` parameters with `52 − zRows·zCols = s`
-  (the count of `research-b-union-bound/allsupp.py`; that `q` depends on the amounts only
-  through `(t, t', s' − s)` is a paper argument, not proved). The largest value of
-  `64 · #q · s^⌊s/2⌋ · (52 − s)! / 52!` over `s ≥ 8` is 0.173 (at `s = 8`), so this route
-  would close `hoff` if formalised; at `s = 4` it gives 175 and does not work (hence the
-  coupling there). None of it is in Lean.
+  (`#q = Σ_{a ≤ 4, b ≤ 13, 52 − ab = s} 13^4 · C(4,a)·12^(4−a) · C(13,b)·3^(13−b)`: `t` free,
+  `t'` agreeing with `t` mod 13 in exactly `a` rows, `e = s' − s` zero mod 4 in exactly `b`
+  columns; that `q` depends on the amounts only through `(t, t', e)` is a paper argument,
+  not proved). The largest value of `64 · #q · s^⌊s/2⌋ · (52 − s)! / 52!` over `s ≥ 8` is
+  0.173 (at `s = 8`); at `s = 4` it gives 175 and does not work (hence the coupling there).
+  Formalising this route needs three things: the general ratio formula, a count of
+  functions by their number of agreements, and the cycle-representative bound. None of it
+  is in Lean.

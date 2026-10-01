@@ -2,15 +2,16 @@ import DoubleDealSecurity.StemCoupling
 import DoubleDealSecurity.FullCipher
 
 /-
-  The 4-card case of the off-diagonal stem bound (research item (b), third slice; security
-  README, "Roadmap", M7 "Open"). One bound on `dpFCount`, for one support size.
+  The 4-card case of the off-diagonal stem bound (third slice towards the off-diagonal stem column
+  bound; security README, "Roadmap", "Open" list, the M7 entry). One bound on `dpFCount`, for one support size.
 
   THIS IS A BOUND ON ONE ENTRY OF THE FINAL ROUND'S DIFFERENCE TABLE, ONLY WHEN `γ⁻¹ * β`
   MOVES EXACTLY 4 CARDS. It is not a bound on the full-cipher differential: the off-diagonal
   hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag` stays open for the `β` with
   `γ⁻¹ * β` moving at least 8 cards. No security claim.
 
-  Notation: `x = permDeck π`, `δ = γ⁻¹ * β`, `q = stemPerm x * (stemPerm (β·x))⁻¹` (the ratio of
+  Notation: `x = permDeck π`, `δ = γ⁻¹ * β`, "`δ` moves `k` cards" is `δ.support.card = k`
+  (Mathlib's `Equiv.Perm.support`), `q = stemPerm x * (stemPerm (β·x))⁻¹` (the ratio of
   `StemPosition.conj_of_stem_rel`, so `π⁻¹ δ π = q` on every deck counted by `dpFCount β γ`).
 
   Proved:
@@ -20,12 +21,10 @@ import DoubleDealSecurity.FullCipher
   * `ratio_eq_qPerm`: if the row amounts of two packets agree mod 13 and their column amounts
     agree mod 4 except at column `c`, the ratio of their position maps is
     `qPerm (rowAmts m) c (colDiff ..)`.
-  * `amts_of_support_four`, `ratio_eq_qPerm_of_support_four`, part (b): if `δ` moves exactly 4
+  * `amts_of_support_four`, `ratio_eq_qPerm_of_support_four`: if `δ` moves exactly 4
     cards (so `(zRows, zCols) = (4, 12)`), then `q = qPerm (rowAmts x) c d` for a column `c` and
     `d ≠ 0`; `q` is determined by `(rowAmts x, c, d)`.
-  * `ratio_moves_le_one_of_support_four`, part (a): then `q` moves at most one position per row.
-  * `card_conj_eq_card_centralizer`: if `π₀⁻¹ δ π₀ = q`, then `#{π | π⁻¹ δ π = q}` equals the
-    size of the centralizer `#{g | g δ = δ g}` (a coset).
+  * `ratio_moves_le_one_of_support_four`: then `q` moves at most one position per row.
   * `card_conjSet_le_odd`, `card_conjSet_le_two`: for `δ` moving exactly 4 cards,
     `#{π | π⁻¹ δ π = qPerm t c d} ≤ 4 · 48!` for `d = 1, 3` and `≤ 8 · 48!` for `d = 2`.
     Upper bounds only (the exact values `4 · 48!` and `8 · 48!` when nonempty are not proved;
@@ -33,12 +32,13 @@ import DoubleDealSecurity.FullCipher
   * `sum_card_conjSet_le`: over the four `d`, at most `8 · 48!` in total, because `d = 0`
     gives `q = 1`, and `qPerm t c d` squares to `1` for `d = 2` but not for `d = 1, 3`, so
     `δ * δ = 1` allows only `d = 2` and `δ * δ ≠ 1` only `d = 1, 3` (no cycle types used).
-  * `dpFCount_le_of_support_four`, part (d): if `δ` moves exactly 4 cards, then
-    `64 · dpFCount β γ ≤ 52!`. The proof gives `4096 · dpFCount β γ ≤ 81 · 13^5 · 8 · 48!`
-    (`≈ 0.00904 · 52!`; a factor of about 1.73 below `52!/64`), from
-    `StemCoupling.coupling` on each of the `13^5 · 4` cells `(t, c, d)`.
-  * `dpFCount_eq_zero_of_support`: if `δ` moves 1–3 or 5–7 cards, `dpFCount β γ = 0`.
-  * `offDiag_of_support_ge_eight`, `fullDiffCount_le_64_of_support_ge_eight`: so `hoff`
+  * `dpFCount_bound_of_support_four`, `dpFCount_le_of_support_four`: if `δ` moves exactly 4
+    cards, then `4096 · dpFCount β γ ≤ 81 · 13^5 · 8 · 48!` (`≈ 0.00904 · 52!`; a factor of
+    about 1.73 below `52!/64`), from `StemCoupling.coupling` on each of the `13^5 · 4` cells
+    `(t, c, d)`; so `64 · dpFCount β γ ≤ 52!`.
+  * `dpFCount_eq_zero_of_support_lt_eight_ne_four`: if `δ` moves 1–3 or 5–7 cards,
+    `dpFCount β γ = 0` (`StemPosition.card_moved_cases`).
+  * `offDiag_of_offDiag_ge_eight`, `fullDiffCount_le_64_of_offDiag_ge_eight`: so `hoff`
     reduces to the `β` with `δ` moving at least 8 cards. That case is a hypothesis here,
     NOT proved.
 
@@ -165,19 +165,16 @@ theorem ratio_eq_qPerm (m m' : Fin 52 → Nat) (c : Fin 13)
     agreeing mod 4 at all but one column `c`. -/
 theorem amts_of_support_four {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π)))
-    (h4 : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 4) :
+    (h4 : (γ⁻¹ * β).support.card = 4) :
     (∀ r, rowAmts (permDeck π) r % 13 = rowAmts (rel β (permDeck π)) r % 13) ∧
     ∃ c : Fin 13, colAmts (permDeck π) c % 4 ≠ colAmts (rel β (permDeck π)) c % 4 ∧
       ∀ j, j ≠ c → colAmts (permDeck π) j % 4 = colAmts (rel β (permDeck π)) j % 4 := by
-  have e := card_moved_eq h
-  rw [h4] at e
-  have h1 := zRows_le (permDeck π) (rel β (permDeck π))
-  have h2 := zCols_le (permDeck π) (rel β (permDeck π))
   have hz : zRows (permDeck π) (rel β (permDeck π)) = 4 ∧
       zCols (permDeck π) (rel β (permDeck π)) = 12 := by
-    generalize zRows (permDeck π) (rel β (permDeck π)) = a at h1 e ⊢
-    generalize zCols (permDeck π) (rel β (permDeck π)) = b at h2 e ⊢
-    interval_cases a <;> omega
+    rcases card_moved_cases h with e | ⟨-, hz⟩ | e
+    · omega
+    · exact hz
+    · omega
   obtain ⟨hr, hc⟩ := hz
   constructor
   · intro r
@@ -216,13 +213,13 @@ theorem colDiff_ne_zero {s s' : Fin 13 → Nat} {c : Fin 13} (h : s c % 4 ≠ s'
   simp only [colDiff, Fin.val_zero] at e'
   omega
 
-/-- (PROVED; research item (b), part (b)) When `γ⁻¹ * β` moves exactly 4 cards, the ratio
+/-- (PROVED) When `γ⁻¹ * β` moves exactly 4 cards, the ratio
     `q = stemPerm x * (stemPerm (β·x))⁻¹` of `conj_of_stem_rel` (`x = permDeck π`) is
     `qPerm (rowAmts x) c d` for a column `c` and a nonzero `d : Fin 4`: it is determined by
     the row amounts of `x`, `c` and `d`. -/
 theorem ratio_eq_qPerm_of_support_four {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π)))
-    (h4 : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 4) :
+    (h4 : (γ⁻¹ * β).support.card = 4) :
     ∃ c : Fin 13, ∃ d : Fin 4, d ≠ 0 ∧
       stemPerm (permDeck π) * (stemPerm (rel β (permDeck π)))⁻¹ =
         qPerm (rowAmts (permDeck π)) c d := by
@@ -251,22 +248,20 @@ theorem pos_injective (t : Fin 4 → Nat) (c : Fin 13) : Function.Injective (pos
 /-- (PROVED) `qPerm t c d` moves at most one position of each row `ρ` (the one at column
     `mcol t c ρ`). -/
 theorem qPerm_moves_le_one (t : Fin 4 → Nat) (c : Fin 13) (d : Fin 4) (ρ : Fin 4) :
-    (univ.filter fun i : Fin 13 => qPerm t c d (cmFlat ρ i) ≠ cmFlat ρ i).card ≤ 1 := by
+    (movedInRow (qPerm t c d) ρ).card ≤ 1 := by
   refine (card_le_card (t := {mcol t c ρ}) fun i hi => ?_).trans (card_singleton _).le
-  rw [mem_filter] at hi
+  rw [movedInRow, mem_filter] at hi
   rw [mem_singleton]
   by_contra hn
   exact hi.2 (qPerm_cmFlat_of_ne t c d hn)
 
-/-- (PROVED; research item (b), part (a)) When `γ⁻¹ * β` moves exactly 4 cards
+/-- (PROVED) When `γ⁻¹ * β` moves exactly 4 cards
     (`(zRows, zCols) = (4, 12)`), the ratio `q` of `conj_of_stem_rel` moves at most one
     position of each row `ρ` (positions `cmFlat ρ i`). -/
 theorem ratio_moves_le_one_of_support_four {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π)))
-    (h4 : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 4) (ρ : Fin 4) :
-    (univ.filter fun i : Fin 13 =>
-      (stemPerm (permDeck π) * (stemPerm (rel β (permDeck π)))⁻¹) (cmFlat ρ i) ≠
-        cmFlat ρ i).card ≤ 1 := by
+    (h4 : (γ⁻¹ * β).support.card = 4) (ρ : Fin 4) :
+    (movedInRow (stemPerm (permDeck π) * (stemPerm (rel β (permDeck π)))⁻¹) ρ).card ≤ 1 := by
   obtain ⟨c, d, -, e⟩ := ratio_eq_qPerm_of_support_four h h4
   rw [e]
   exact qPerm_moves_le_one _ c d ρ
@@ -282,18 +277,9 @@ theorem conj_apply {δ q π : Equiv.Perm (Fin 52)} (h : π⁻¹ * δ * π = q) (
 theorem card_fix_eq (A : Finset (Fin 52)) :
     (univ.filter fun σ : Equiv.Perm (Fin 52) => ∀ x ∈ A, σ x = x).card =
       Nat.factorial (52 - A.card) := by
-  have e1 : (univ.filter fun σ : Equiv.Perm (Fin 52) => ∀ x ∈ A, σ x = x).card =
-      Fintype.card {σ : Equiv.Perm (Fin 52) // ∀ a, ¬ (a ∉ A) → σ a = a} := by
-    rw [Fintype.card_subtype]
-    congr 1
-    apply filter_congr
-    intro σ _
-    simp only [not_not]
-  rw [e1, ← Fintype.card_congr (Equiv.Perm.subtypeEquivSubtypePerm (fun a => a ∉ A)),
-    Fintype.card_perm]
-  congr 1
-  rw [Fintype.card_subtype, filter_not, filter_mem_eq_inter, univ_inter,
-    card_sdiff (subset_univ _), card_univ, Fintype.card_fin]
+  rw [← Fintype.card_subtype, ← Fintype.card_congr ((Equiv.Perm.subtypeEquivSubtypePerm (· ∉ A)).trans
+    (Equiv.subtypeEquivRight fun σ => by simp)), Fintype.card_perm, Fintype.card_subtype, filter_not,
+    filter_mem_eq_inter, univ_inter, card_sdiff (subset_univ _), card_univ, Fintype.card_fin]
 
 /-- (PROVED) At most `(52 - #A)!` permutations agree with a given map `f` on `A`. -/
 theorem card_agree_le (A : Finset (Fin 52)) (f : Fin 52 → Fin 52) :
@@ -312,31 +298,6 @@ theorem card_agree_le (A : Finset (Fin 52)) (f : Fin 52 → Fin 52) :
   · rw [filter_false_of_mem fun π _ hπ => hne ⟨π, hπ⟩]
     simp
 
-/-- (PROVED) The decks with a prescribed conjugate form a coset of the centralizer: if
-    `π₀⁻¹ δ π₀ = q`, then `#{π | π⁻¹ δ π = q} = #{g | g δ = δ g}`. -/
-theorem card_conj_eq_card_centralizer {δ q π0 : Equiv.Perm (Fin 52)} (h0 : π0⁻¹ * δ * π0 = q) :
-    (univ.filter fun π : Equiv.Perm (Fin 52) => π⁻¹ * δ * π = q).card =
-      (univ.filter fun g : Equiv.Perm (Fin 52) => g * δ = δ * g).card := by
-  refine card_nbij' (fun π => π * π0⁻¹) (fun g => g * π0) ?_ ?_ ?_ ?_
-  · intro π hπ
-    simp only [mem_filter, mem_univ, true_and] at hπ ⊢
-    rw [← h0] at hπ
-    have e : δ = π * π0⁻¹ * δ * (π * π0⁻¹)⁻¹ := by
-      calc δ = π * (π⁻¹ * δ * π) * π⁻¹ := by group
-        _ = π * (π0⁻¹ * δ * π0) * π⁻¹ := by rw [hπ]
-        _ = π * π0⁻¹ * δ * (π * π0⁻¹)⁻¹ := by group
-    calc π * π0⁻¹ * δ = π * π0⁻¹ * δ * (π * π0⁻¹)⁻¹ * (π * π0⁻¹) := by group
-      _ = δ * (π * π0⁻¹) := by rw [← e]
-  · intro g hg
-    simp only [mem_filter, mem_univ, true_and] at hg ⊢
-    rw [← h0]
-    calc (g * π0)⁻¹ * δ * (g * π0) = π0⁻¹ * (g⁻¹ * (g * δ)) * π0 := by rw [hg]; group
-      _ = π0⁻¹ * δ * π0 := by group
-  · intro π _
-    simp only [inv_mul_cancel_right]
-  · intro g _
-    simp only [mul_inv_cancel_right]
-
 /-! ## The conjugate `qPerm t c d`: how many decks -/
 
 /-- The four positions `qPerm t c d` moves. -/
@@ -350,19 +311,13 @@ theorem step_agree {δ π π1 : Equiv.Perm (Fin 52)} {t : Fin 4 → Nat} {c : Fi
     (e : π (pos t c ρ) = π1 (pos t c ρ)) : π (pos t c (ρ + d)) = π1 (pos t c (ρ + d)) := by
   rw [← qPerm_pos t c d ρ, ← conj_apply h, ← conj_apply h1, e]
 
-/-- The set of cards that `δ` moves. -/
-def supp (δ : Equiv.Perm (Fin 52)) : Finset (Fin 52) := univ.filter fun a => δ a ≠ a
-
-theorem mem_supp {δ : Equiv.Perm (Fin 52)} {a : Fin 52} : a ∈ supp δ ↔ δ a ≠ a := by
-  simp [supp]
-
 /-- The decks `π` with `π⁻¹ δ π = q`. -/
 def conjSet (δ q : Equiv.Perm (Fin 52)) : Finset (Equiv.Perm (Fin 52)) :=
   univ.filter fun π => π⁻¹ * δ * π = q
 
 theorem mem_supp_of_conj {δ π : Equiv.Perm (Fin 52)} {t : Fin 4 → Nat} {c : Fin 13} {d : Fin 4}
-    (hd : d ≠ 0) (h : π⁻¹ * δ * π = qPerm t c d) (ρ : Fin 4) : π (pos t c ρ) ∈ supp δ := by
-  rw [mem_supp, conj_apply h, qPerm_pos]
+    (hd : d ≠ 0) (h : π⁻¹ * δ * π = qPerm t c d) (ρ : Fin 4) : π (pos t c ρ) ∈ δ.support := by
+  rw [Equiv.Perm.mem_support, conj_apply h, qPerm_pos]
   intro e
   have e' := pos_injective t c (π.injective e)
   apply hd
@@ -370,9 +325,9 @@ theorem mem_supp_of_conj {δ π : Equiv.Perm (Fin 52)} {t : Fin 4 → Nat} {c : 
   simpa using this
 
 /-- (PROVED) For `d = 1` or `3` (`qPerm t c d` a 4-cycle on its four positions) and `δ` moving
-    exactly 4 cards, at most `4 · 48!` decks `π` satisfy `π⁻¹ δ π = qPerm t c d`: `π` is fixed
-    on the four positions by the card it puts at the first, one of the 4 cards `δ` moves. -/
-theorem card_conjSet_le_odd (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4)
+    exactly 4 cards, at most `4 · 48!` decks `π` satisfy `π⁻¹ δ π = qPerm t c d`: `π` on the four
+    positions is determined by the card it puts at the first, one of the 4 cards `δ` moves. -/
+theorem card_conjSet_le_odd (δ : Equiv.Perm (Fin 52)) (hS : (δ.support).card = 4)
     (t : Fin 4 → Nat) (c : Fin 13) {d : Fin 4} (hd : d = 1 ∨ d = 3) :
     (conjSet δ (qPerm t c d)).card ≤ 4 * Nat.factorial 48 := by
   have hd0 : d ≠ 0 := by rcases hd with rfl | rfl <;> decide
@@ -402,7 +357,7 @@ theorem card_conjSet_le_odd (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4)
             exacts [e0, e1, e2, e3]
       _ ≤ Nat.factorial (52 - (posSet t c).card) := card_agree_le _ _
       _ = Nat.factorial 48 := by rw [card_posSet]
-  have himg : (conjSet δ (qPerm t c d)).image (fun π => π (pos t c 0)) ⊆ supp δ := by
+  have himg : (conjSet δ (qPerm t c d)).image (fun π => π (pos t c 0)) ⊆ δ.support := by
     intro v hv
     obtain ⟨π, hπ, rfl⟩ := mem_image.mp hv
     simp only [conjSet, mem_filter, mem_univ, true_and] at hπ
@@ -415,29 +370,29 @@ theorem card_conjSet_le_odd (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4)
 
 /-- (PROVED) For `δ` moving the 4 cards of `S`, at most 8 ordered pairs `(u, v)` of `S` have
     `v ≠ u` and `v ≠ δ u`. -/
-theorem card_pairs_le (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4) :
-    ((supp δ ×ˢ supp δ).filter fun uv : Fin 52 × Fin 52 => uv.2 ≠ uv.1 ∧ uv.2 ≠ δ uv.1).card
+theorem card_pairs_le (δ : Equiv.Perm (Fin 52)) (hS : (δ.support).card = 4) :
+    ((δ.support ×ˢ δ.support).filter fun uv : Fin 52 × Fin 52 => uv.2 ≠ uv.1 ∧ uv.2 ≠ δ uv.1).card
       ≤ 8 := by
   rw [card_filter, sum_product]
-  have hu : ∀ u ∈ supp δ,
-      (∑ v ∈ supp δ, if v ≠ u ∧ v ≠ δ u then 1 else 0) = 2 := by
+  have hu : ∀ u ∈ δ.support,
+      (∑ v ∈ δ.support, if v ≠ u ∧ v ≠ δ u then 1 else 0) = 2 := by
     intro u hu
     rw [← card_filter]
-    have e : (supp δ).filter (fun v => v ≠ u ∧ v ≠ δ u) = ((supp δ).erase u).erase (δ u) := by
+    have e : (δ.support).filter (fun v => v ≠ u ∧ v ≠ δ u) = ((δ.support).erase u).erase (δ u) := by
       ext v
       simp only [mem_filter, mem_erase]
       tauto
-    have hδu : δ u ∈ supp δ := by
-      rw [mem_supp] at hu ⊢
+    have hδu : δ u ∈ δ.support := by
+      rw [Equiv.Perm.mem_support] at hu ⊢
       exact fun e => hu (δ.injective e)
-    rw [e, card_erase_of_mem (mem_erase.mpr ⟨(mem_supp.mp hu), hδu⟩), card_erase_of_mem hu, hS]
+    rw [e, card_erase_of_mem (mem_erase.mpr ⟨(Equiv.Perm.mem_support.mp hu), hδu⟩), card_erase_of_mem hu, hS]
   rw [sum_congr rfl hu, sum_const, hS]
   rfl
 
 /-- (PROVED) For `d = 2` (`qPerm t c 2` two transpositions) and `δ` moving exactly 4 cards, at
-    most `8 · 48!` decks `π` satisfy `π⁻¹ δ π = qPerm t c 2`: `π` is fixed on the four positions
-    by the cards it puts at the first two, and there are at most 8 such pairs. -/
-theorem card_conjSet_le_two (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4)
+    most `8 · 48!` decks `π` satisfy `π⁻¹ δ π = qPerm t c 2`: `π` on the four positions is
+    determined by the cards it puts at the first two, and there are at most 8 such pairs. -/
+theorem card_conjSet_le_two (δ : Equiv.Perm (Fin 52)) (hS : (δ.support).card = 4)
     (t : Fin 4 → Nat) (c : Fin 13) :
     (conjSet δ (qPerm t c 2)).card ≤ 8 * Nat.factorial 48 := by
   have hfib : ∀ v ∈ (conjSet δ (qPerm t c 2)).image
@@ -460,7 +415,7 @@ theorem card_conjSet_le_two (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4)
       _ ≤ Nat.factorial (52 - (posSet t c).card) := card_agree_le _ _
       _ = Nat.factorial 48 := by rw [card_posSet]
   have himg : (conjSet δ (qPerm t c 2)).image (fun π => (π (pos t c 0), π (pos t c 1))) ⊆
-      (supp δ ×ˢ supp δ).filter fun uv : Fin 52 × Fin 52 => uv.2 ≠ uv.1 ∧ uv.2 ≠ δ uv.1 := by
+      (δ.support ×ˢ δ.support).filter fun uv : Fin 52 × Fin 52 => uv.2 ≠ uv.1 ∧ uv.2 ≠ δ uv.1 := by
     intro v hv
     obtain ⟨π, hπ, rfl⟩ := mem_image.mp hv
     simp only [conjSet, mem_filter, mem_univ, true_and] at hπ
@@ -522,12 +477,12 @@ theorem conjSet_eq_empty_of {δ q : Equiv.Perm (Fin 52)}
     decks: `d = 0` none (`qPerm t c 0 = 1`, `δ ≠ 1`); if `δ * δ = 1`, only `d = 2`
     (`≤ 8 · 48!`), since `qPerm t c d` squares to `1` exactly for `d = 2` (among `d ≠ 0`);
     otherwise only `d = 1, 3` (`≤ 4 · 48!` each). -/
-theorem sum_card_conjSet_le (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4)
+theorem sum_card_conjSet_le (δ : Equiv.Perm (Fin 52)) (hS : (δ.support).card = 4)
     (t : Fin 4 → Nat) (c : Fin 13) :
     ∑ d : Fin 4, (conjSet δ (qPerm t c d)).card ≤ 8 * Nat.factorial 48 := by
   have hδ1 : δ ≠ 1 := by
     rintro rfl
-    simp [supp] at hS
+    simp at hS
   have z0 : (conjSet δ (qPerm t c 0)).card = 0 :=
     conjSet_eq_empty_of fun π h => hδ1 (eq_one_of_conj_eq_one (h.trans (qPerm_zero t c)))
   rw [Fin.sum_univ_four, z0]
@@ -571,7 +526,7 @@ def cell (δ : Equiv.Perm (Fin 52)) (a b e f c : Fin 13) (d : Fin 4) :
     the cell of `(rowAmts x, c, d)`. -/
 theorem mem_cell {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π)))
-    (h4 : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 4) :
+    (h4 : (γ⁻¹ * β).support.card = 4) :
     ∃ a b e f c d, π ∈ cell (γ⁻¹ * β) a b e f c d := by
   obtain ⟨c, d, -, e⟩ := ratio_eq_qPerm_of_support_four h h4
   have hc := conj_of_stem_rel h
@@ -601,7 +556,7 @@ def cells (δ : Equiv.Perm (Fin 52)) : Finset (Equiv.Perm (Fin 52)) :=
 
 /-- (PROVED) For support 4, every deck counted by `dpFCount β γ` lies in a cell. -/
 theorem dpFCount_le_card_cells (β γ : Relabel)
-    (h4 : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 4) :
+    (h4 : (γ⁻¹ * β).support.card = 4) :
     FullCipher.dpFCount β γ ≤ (cells (γ⁻¹ * β)).card := by
   unfold FullCipher.dpFCount Differential.dpCount
   refine card_le_card fun π hπ => ?_
@@ -620,7 +575,7 @@ theorem card_biUnion_mul_le {ι : Type} [Fintype ι] (F : ι → Finset (Equiv.P
     _ = Fintype.card ι * B := by rw [sum_const, card_univ, smul_eq_mul]
 
 /-- (PROVED) For `δ` moving exactly 4 cards, `4096 · #cells ≤ 13^5 · 81 · 8 · 48!`. -/
-theorem card_cells_le (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4) :
+theorem card_cells_le (δ : Equiv.Perm (Fin 52)) (hS : (δ.support).card = 4) :
     4096 * (cells δ).card ≤ 13 * (13 * (13 * (13 * (13 * (81 * (8 * Nat.factorial 48)))))) := by
   have bound : ∀ a b e f c, 4096 * (univ.biUnion fun d => cell δ a b e f c d).card ≤
       81 * (8 * Nat.factorial 48) := by
@@ -645,7 +600,15 @@ theorem card_cells_le (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4) :
   refine (card_biUnion_mul_le _ X fun c => ?_).trans (by rw [Fintype.card_fin])
   exact bound a b e f c
 
-/-- (PROVED; research item (b), part (d), the 4-card case of `hoff`) If `γ⁻¹ * β` moves exactly
+/-- (PROVED) The bound the proof of `dpFCount_le_of_support_four` gives: if `γ⁻¹ * β` moves
+    exactly 4 cards, `4096 · dpFCount β γ ≤ 81 · 13^5 · 8 · 48!` (about `0.00904 · 52!`). -/
+theorem dpFCount_bound_of_support_four (β γ : Relabel)
+    (h4 : (γ⁻¹ * β).support.card = 4) :
+    4096 * FullCipher.dpFCount β γ ≤ 81 * 13 ^ 5 * 8 * Nat.factorial 48 :=
+  ((Nat.mul_le_mul_left 4096 (dpFCount_le_card_cells β γ h4)).trans
+    (card_cells_le _ h4)).trans_eq (by ring)
+
+/-- (PROVED; the 4-card case of `hoff`) If `γ⁻¹ * β` moves exactly
     4 cards, then `64 · dpFCount β γ ≤ 52!`: at most 1/64 of the decks `x` have
     `stem(β·x) = γ·stem(x)`. (Exact counting, all in Lean: `x` lies in one of the cells
     `cell δ a b e f c d` (`δ = γ⁻¹β`, `13^5 · 4` of them, `mem_cell`), each at most `81/4096` of
@@ -654,10 +617,10 @@ theorem card_cells_le (δ : Equiv.Perm (Fin 52)) (hS : (supp δ).card = 4) :
     `4096 · dpFCount β γ ≤ 81 · 13^5 · 8 · 48!`, i.e. `dpFCount β γ / 52! ≤ 0.00904`, below
     `1/64 ≈ 0.0156` by a factor of about 1.73.) -/
 theorem dpFCount_le_of_support_four (β γ : Relabel)
-    (h4 : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 4) :
+    (h4 : (γ⁻¹ * β).support.card = 4) :
     64 * FullCipher.dpFCount β γ ≤ Nat.factorial 52 := by
-  have h5 := (Nat.mul_le_mul_left 4096 (dpFCount_le_card_cells β γ h4)).trans
-    (card_cells_le _ h4)
+  have h5 := dpFCount_bound_of_support_four β γ h4
+  rw [show 81 * 13 ^ 5 * 8 = 240597864 from rfl] at h5
   rw [factorial_52_eq]
   generalize FullCipher.dpFCount β γ = D at h5 ⊢
   generalize Nat.factorial 48 = F at h5 ⊢
@@ -667,48 +630,38 @@ theorem dpFCount_le_of_support_four (β γ : Relabel)
 
 /-- (PROVED) If `γ⁻¹ * β` moves between 1 and 7 cards but not 4, no deck is counted:
     `dpFCount β γ = 0` (`card_moved_eq`: the support is `52 - a·b`, `a ≤ 4`, `b ≤ 13`). -/
-theorem dpFCount_eq_zero_of_support (β γ : Relabel)
-    (h0 : 0 < (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card)
-    (h4 : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card ≠ 4)
-    (h8 : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card < 8) :
+theorem dpFCount_eq_zero_of_support_lt_eight_ne_four (β γ : Relabel)
+    (h0 : 0 < (γ⁻¹ * β).support.card)
+    (h4 : (γ⁻¹ * β).support.card ≠ 4)
+    (h8 : (γ⁻¹ * β).support.card < 8) :
     FullCipher.dpFCount β γ = 0 := by
   unfold FullCipher.dpFCount Differential.dpCount
   rw [card_eq_zero, filter_eq_empty_iff]
   intro π _ hπ
-  have e := card_moved_eq hπ
-  have h1 := zRows_le (permDeck π) (rel β (permDeck π))
-  have h2 := zCols_le (permDeck π) (rel β (permDeck π))
-  rw [e] at h0 h4 h8
-  generalize zRows (permDeck π) (rel β (permDeck π)) = a at h0 h1 h4 h8
-  generalize zCols (permDeck π) (rel β (permDeck π)) = b at h0 h2 h4 h8
-  interval_cases a <;> omega
+  rcases card_moved_cases hπ with e | ⟨e, -⟩ | e <;> omega
 
 theorem eq_of_support_zero {β γ : Relabel}
-    (h : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 0) : β = γ := by
-  rw [card_eq_zero, filter_eq_empty_iff] at h
-  have e : γ⁻¹ * β = 1 := Equiv.ext fun a => by
-    have := h (mem_univ a)
-    simpa using this
-  exact (inv_mul_eq_one.mp e).symm
+    (h : (γ⁻¹ * β).support.card = 0) : β = γ :=
+  (inv_mul_eq_one.mp (Equiv.Perm.support_eq_empty_iff.mp (card_eq_zero.mp h))).symm
 
 /-- (PROVED) The off-diagonal hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag`
     reduces to the `β` for which `γ⁻¹ * β` moves at least 8 cards: support 4 is
     `dpFCount_le_of_support_four`, supports 1–3 and 5–7 count no deck, and support 0 is
     `β = γ`. -/
-theorem offDiag_of_support_ge_eight {γ : Relabel}
+theorem offDiag_of_offDiag_ge_eight {γ : Relabel}
     (h8 : ∀ β, β ≠ γ → (¬ ∃ a x, β = v10Sym a x) →
-      8 ≤ (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card →
+      8 ≤ (γ⁻¹ * β).support.card →
         64 * FullCipher.dpFCount β γ ≤ Nat.factorial 52) :
     ∀ β, β ≠ γ → (¬ ∃ a x, β = v10Sym a x) →
       64 * FullCipher.dpFCount β γ ≤ Nat.factorial 52 := by
   intro β hne hv
-  by_cases hs : 8 ≤ (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card
+  by_cases hs : 8 ≤ (γ⁻¹ * β).support.card
   · exact h8 β hne hv hs
-  by_cases h4 : (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 4
+  by_cases h4 : (γ⁻¹ * β).support.card = 4
   · exact dpFCount_le_of_support_four β γ h4
-  have h0 : 0 < (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card :=
+  have h0 : 0 < (γ⁻¹ * β).support.card :=
     Nat.pos_of_ne_zero fun e => hne (eq_of_support_zero e)
-  rw [dpFCount_eq_zero_of_support β γ h0 h4 (by omega)]
+  rw [dpFCount_eq_zero_of_support_lt_eight_ne_four β γ h0 h4 (by omega)]
   exact Nat.zero_le _
 
 /-- (PROVED) `FullCipher.fullDiffCount_le_64_of_offDiag` with its hypothesis narrowed to the
@@ -716,13 +669,13 @@ theorem offDiag_of_support_ge_eight {γ : Relabel}
     `64 · dpFCount β γ ≤ 52!` for every `β ≠ γ` outside `v10Sym` with `γ⁻¹ * β` moving at least
     8 cards, then `64 · fullDiffCount α γ n y ≤ (52!)^(n+2)`. The support-≥ 8 hypothesis is
     NOT proved. -/
-theorem fullDiffCount_le_64_of_support_ge_eight {α γ : Relabel} (hα : α ≠ 1)
+theorem fullDiffCount_le_64_of_offDiag_ge_eight {α γ : Relabel} (hα : α ≠ 1)
     (hγ : ¬ ∃ a x, γ = v10Sym a x)
     (h8 : ∀ β, β ≠ γ → (¬ ∃ a x, β = v10Sym a x) →
-      8 ≤ (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card →
+      8 ≤ (γ⁻¹ * β).support.card →
         64 * FullCipher.dpFCount β γ ≤ Nat.factorial 52)
     (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
     64 * FullCipher.fullDiffCount α γ n y ≤ Nat.factorial 52 ^ (n + 2) :=
-  FullCipher.fullDiffCount_le_64_of_offDiag hα hγ (offDiag_of_support_ge_eight h8) n hy
+  FullCipher.fullDiffCount_le_64_of_offDiag hα hγ (offDiag_of_offDiag_ge_eight h8) n hy
 
 end DoubleDeal.Security.StemSupportFour

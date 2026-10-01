@@ -22,13 +22,6 @@ export const SOLVE_CHUNK = 12;
 export const PUZZLES = ["A", "B", "C"];
 export const HOME = { up: 0, front: 1 };
 
-export function oneBlockBytes() {
-    // SPEC §3 pad: M ‖ 0x80 ‖ zeros ‖ 8-byte length, so n bytes take
-    // ceil((n + 9) / 28) blocks and one block holds 19 bytes. The worker
-    // counts blocks with the generated pad_message; this is the dock's copy.
-    return FULL_BLOCKS * BLOCK_BYTES - 9;
-}
-
 /**
  * Length of the fast-forward over blocks from..to: long enough to read the
  * counter, short at any length (1.8 s for one block, at most 5 s at

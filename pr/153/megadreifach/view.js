@@ -5,17 +5,15 @@
  * setTempo). Grips are named under A instead of drawn; the room draws
  * them. Nothing here computes the hash.
  */
-import { cardAssetUrl } from "../doubledeal/table.js";
+import { cardAssetUrl, cardFile as faceFile } from "../doubledeal/table.js";
 import { FACE_NAME, cardLabel } from "./minx.js";
 import { HOME, PUZZLES, ffBlockAt, ffMillis } from "./plan.js";
 import { setSetupPosition } from "./pattern.js";
 
 const TWISTY_URL = "https://cdn.cubing.net/v0/js/cubing/twisty";
-const SUIT_FILE = ["club", "heart", "spade", "diamond"];
-const RANK_FILE = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
-
+// MegaDreifach card ids are rank × 4 + suit (SPEC §3).
 function cardFile(card) {
-    return `${SUIT_FILE[card % 4]}_${RANK_FILE[Math.floor(card / 4)]}.png`;
+    return faceFile(card % 4, Math.floor(card / 4));
 }
 
 function frame() {

@@ -8,6 +8,7 @@ import { test } from "node:test";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ready = existsSync(join(here, "generated/_megadreifach_impl.mjs"));
+if (!ready && process.env.CI) throw new Error("generated module missing: run tools/build.sh (CI never skips these tests)");
 
 function el(tag, id = "", dataset = {}) {
     const node = {

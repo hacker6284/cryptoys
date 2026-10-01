@@ -1,14 +1,25 @@
 // Shared by the MegaDreifach node tests: the generated module (tools/build.sh)
 // and plain-number views of its internal records.
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Throws in CI when the generated module is missing (CI builds it first,
+ * so a missing module there is a failure, not a skip). Locally returns
+ * null and the caller skips its generated checks.
+ */
+export function requireGenerated(file = "generated/_megadreifach_impl.mjs") {
+    if (existsSync(join(here, file))) return true;
+    if (process.env.CI) throw new Error(`${file} is missing: run tools/build.sh (CI never skips these tests)`);
+    return false;
+}
+
 export async function loadGenerated() {
     const impl = join(here, "generated/_megadreifach_impl.mjs");
-    if (!existsSync(impl)) return null;
+    if (!requireGenerated()) return null;
     const [host, raw, rt] = await Promise.all([
         import(join(here, "generated/megadreifach.mjs")),
         import(impl),
@@ -27,16 +38,8 @@ export async function loadGenerated() {
         nbrs: (f) => list(raw.face_nbrs(BigInt(f))),
         opposite: (f) => num([...raw.opposites][f]),
         spin: (o, k) => list(raw.spin_about_up(rt.lst(o.map(BigInt)), BigInt(k))),
-        kats: () => JSON.parse(
-            // eslint-disable-next-line no-undef
-            require_json(join(here, "generated/kats.json")),
-        ),
+        kats: () => JSON.parse(readFileSync(join(here, "generated/kats.json"), "utf8")),
     };
-}
-
-import { readFileSync } from "node:fs";
-function require_json(path) {
-    return readFileSync(path, "utf8");
 }
 
 export function samePos(a, b) {

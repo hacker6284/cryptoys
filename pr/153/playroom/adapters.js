@@ -149,17 +149,22 @@ function mountDock(algo, { controls, fields, digestButton, hint, tape = "", roun
               <span class="icon-play">${lucideSvg("play")}</span>
               <span class="icon-pause">${lucideSvg("pause")}</span>
             </button>
-            <button id="skip-end" class="icon-btn" type="button" aria-label="Skip to end" title="Skip to end">${lucideSvg("skip-forward")}</button>
-            <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
-            <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
+            <button id="skip-end" class="icon-btn" type="button" aria-label="Skip to end"
+              title="Skip to end">${lucideSvg("skip-forward")}</button>
+            <button id="step" class="icon-btn" type="button" aria-label="Step"
+              title="Step">${lucideSvg("chevron-right")}</button>
+            <button id="reset" class="icon-btn" type="button" aria-label="Reset"
+              title="Reset">${lucideSvg("rotate-ccw")}</button>
           </div>
-          <label class="slider">Speed <input id="speed" type="range" min="${speed.min}" max="${speed.max}" step="0.1" value="${speed.value}"></label>
+          <label class="slider">Speed <input id="speed" type="range" min="${speed.min}" max="${speed.max}" step="0.1"
+            value="${speed.value}"></label>
         </div>
       </div>
       <div class="playroom-digins">
         ${digin}
         <button id="spec-btn" class="playroom-digin" type="button">Spec</button>
-        <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">${lucideSvg("info", 18)}</button>
+        <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false"
+          title="Teach">${lucideSvg("info", 18)}</button>
       </div>
       <dialog id="spec">
         <div class="spec-bar">
@@ -255,7 +260,8 @@ export function createScrambleAdapter() {
             <label class="playroom-label" for="message">Message</label>
             <div class="playroom-message-row">
               <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
-              <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file" title="Hash a file">${lucideSvg("paperclip", 16)}</button>
+              <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file"
+                title="Hash a file">${lucideSvg("paperclip", 16)}</button>
             </div>
             <div id="message-file" class="file-chip" hidden>
               <span id="message-file-name"></span>
@@ -266,7 +272,8 @@ export function createScrambleAdapter() {
           <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label">Digest</span>
-            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false"
+              autocomplete="off"></textarea>
           </label>
           <p id="puzzle-note" class="playroom-puzzle-note" hidden>Digest is 3×3 Scramble. This puzzle is visual.</p>
           <p id="status" class="status playroom-status">Solved start · white up, green front, red right</p>`,
@@ -509,7 +516,8 @@ export function createDoubleDealAdapter() {
           </div>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label" id="output-label">Digest</span>
-            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false"
+              autocomplete="off"></textarea>
           </label>
           <p id="status" class="status playroom-status">Plaintext on the left. Key on the right.</p>`,
         digestButton: "Copy",
@@ -820,14 +828,18 @@ export function createMegaDreifachAdapter() {
         fields: `
           <label class="playroom-ctl playroom-ctl--field" for="message">
             <span class="playroom-label">Message</span>
-            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="Type a message to hash"></textarea>
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false"
+              placeholder="Type a message to hash"></textarea>
           </label>
           <p id="io-note" class="io-note" hidden></p>
           <div id="kat-menu" class="drei-kat-menu" role="group" aria-label="Known-answer tests" hidden></div>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label">Digest</span>
-            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off" placeholder="No message yet"></textarea>
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"
+              placeholder="No message yet"></textarea>
           </label>
+          <p class="drei-warning" role="note">Toy hash, not secure: its compression step is known to be
+            distinguishable from random. A fix is in progress.</p>
           <p id="anim-note" class="drei-anim-note" role="status" hidden></p>
           <p id="ff-counter" class="drei-ff" role="status" aria-live="polite" hidden></p>
           <p id="status" class="status drei-status" aria-live="polite">Type a message, or pick a known answer.</p>`,
@@ -835,9 +847,12 @@ export function createMegaDreifachAdapter() {
         hint: "Step to see each turn.",
         roundName: "block",
         speed: { min: 0.5, max: 12, value: 2 },
-        digin: '<button id="kat" class="playroom-digin" type="button" aria-controls="kat-menu">KAT</button>'
-            + '<button id="recentre" class="playroom-digin" type="button" title="Back to the table view">Recentre</button>'
-            + '<button id="sound" class="playroom-digin drei-sound" type="button" aria-pressed="true" title="Sound is on: mute">Sound</button>',
+        digin: '<button id="kat" class="playroom-digin" type="button" aria-controls="kat-menu" aria-expanded="false">'
+            + 'KAT</button>'
+            + '<button id="recentre" class="playroom-digin" type="button" title="Back to the table view">'
+            + 'Recentre</button>'
+            + '<button id="sound" class="playroom-digin drei-sound" type="button" aria-pressed="true"'
+            + ' title="Sound is on: mute">Sound</button>',
     });
     let world = null;
     let poses = null;

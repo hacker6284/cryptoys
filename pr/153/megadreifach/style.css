@@ -203,3 +203,11 @@ h1 {
     filter: none;
   }
 }
+
+.drei-warning {
+  margin: 6px 0 0;
+  max-width: 60ch;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #f2c48d;
+}

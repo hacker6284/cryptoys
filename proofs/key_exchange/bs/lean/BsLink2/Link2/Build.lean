@@ -6,6 +6,7 @@
   let-go list is an arbitrary input. No probability. Proof-only.
 -/
 import BsLink2.Link2.Dice
+import BsLink2.Link2.Key
 import BsLink2.Link2.Opt
 
 namespace BsLink2.Link2
@@ -513,5 +514,89 @@ theorem letgo_unique_spec (lg : List Spec.LetGo) (hfit : FitsLen lg.length) :
         rw [(nodup_iff_dupAt lg).mp h i (by omega)] at hb; cases hb
       rw [decide_eq_false this]
       rfl
+
+/-! ### keypad, has_room, cover -/
+
+/-- §4.2 step 2: the emitted `keypad_first` is `Spec.keypadFirst` on faces `≥ 1`. -/
+theorem keypad_first_spec (f : Nat) (hf : 1 ≤ f) (hfit : FitsLen f) :
+    Bs.keypad_first (Int.ofNat f) = .ok (Int.ofNat (Spec.keypadFirst f)) := by
+  unfold Bs.keypad_first Spec.keypadFirst
+  rw [subI_ofNat_one _ hf hfit, ok_bind, show (3 : Int) = Int.ofNat 3 from rfl,
+    divI_ofNat _ (by decide), except_bind_pure]
+
+/-- §4.2 step 2: the emitted `keypad_second` is `Spec.keypadSecond` on faces `≥ 1`. -/
+theorem keypad_second_spec (f : Nat) (hf : 1 ≤ f) (hfit : FitsLen f) :
+    Bs.keypad_second (Int.ofNat f) = .ok (Int.ofNat (Spec.keypadSecond f)) := by
+  unfold Bs.keypad_second Spec.keypadSecond
+  rw [subI_ofNat_one _ hf hfit, ok_bind, show (3 : Int) = Int.ofNat 3 from rfl,
+    modI_ofNat _ (by decide), except_bind_pure]
+  congr 2
+  omega
+
+/-- §4.2 step 1: the emitted `has_room` is `Spec.hasRoom` on the covered table. -/
+theorem has_room_spec (cov : Nat → Bool) (row col : Nat) :
+    Bs.has_room (tab cov) (Int.ofNat row) (Int.ofNat col) = .ok (Spec.hasRoom cov row col) := by
+  unfold Bs.has_room Spec.hasRoom
+  simp only [Bs.grid_rows, Bs.grid_cols]
+  by_cases hr : row < 10
+  · have h1 : decide (Int.ofNat row ≥ 10) = false := by
+      apply decide_eq_false; simp only [ofNat_eq_natCast]; omega
+    rw [h1]
+    by_cases hc : col < 10
+    · have h2 : decide (Int.ofNat col ≥ 10) = false := by
+        apply decide_eq_false; simp only [ofNat_eq_natCast]; omega
+      simp only [h2, Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
+      rw [show (10 : Int) = Int.ofNat 10 from rfl, mulI_ofNat _ _ (fits_small (by omega)), ok_bind,
+        addI_ofNat _ _ (fits_small (by omega)), ok_bind,
+        atL_ofNat _ _ (by rw [tab_size]; omega), ok_bind, tab_get]
+      simp [hr, hc]
+    · have h2 : decide (Int.ofNat col ≥ 10) = true := by
+        apply decide_eq_true; simp only [ofNat_eq_natCast]; omega
+      simp only [h2, if_true, Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
+      simp [hc]
+  · have h1 : decide (Int.ofNat row ≥ 10) = true := by
+      apply decide_eq_true; simp only [ofNat_eq_natCast]; omega
+    rw [h1]
+    simp [hr]; rfl
+
+/-- Covering a ship's holes. -/
+theorem cover_spec (cov : Nat → Bool) (s : Spec.Ship) (hs : s.OnGrid) :
+    Bs.cover (tab cov) (embShip s) = .ok (tab (Spec.cover cov s)) := by
+  unfold Bs.cover
+  rw [ship_holes_spec s hs, ok_bind]
+  dsimp only
+  rw [listLen_embed,
+    subI_len_one _ (fits_small (by have := s.kind.len_le_five; simp [Spec.Ship.holes]; omega)),
+    ok_bind, except_bind_pure, fuelRange_eq]
+  refine asc_goal_upto (fun i (c : Array Bool) =>
+      c = tab (fun h => cov h || decide (h ∈ s.holes.take i))) (by simp) ?_ ?_ ?_
+  · intro hn
+    have := s.kind.two_le_len
+    simp [Spec.Ship.holes] at hn; omega
+  · intro i c hi hI
+    subst hI
+    have hlt : i < (embed s.holes).size := by rw [size_embed']; exact hi
+    have hh : s.holes[i] < 100 := holes_lt s hs (List.getElem_mem hi)
+    refine ⟨tab (fun h => cov h || decide (h ∈ s.holes.take (i + 1))), rfl, ?_⟩
+    dsimp only
+    rw [if_neg (not_gt_len hi), atL_ofNat _ _ hlt, ok_bind]
+    have hget : (embed s.holes)[i] = Int.ofNat s.holes[i] := by simp [embed]
+    rw [hget, putL_ofNat _ _ _ (by rw [tab_size]; exact hh), ok_bind, tab_set]
+    have htab : tab (fun h => if h = s.holes[i] then true
+        else (cov h || decide (h ∈ s.holes.take i))) =
+        tab (fun h => cov h || decide (h ∈ s.holes.take (i + 1))) := by
+      congr 1; funext h
+      rw [List.take_succ, List.getElem?_eq_getElem hi]
+      by_cases e : h = s.holes[i]
+      · subst e; simp
+      · simp [e]
+    rw [htab, pure_eq_ok, ok_bind]
+    dsimp only
+    exact asc_tail_len _ _ hi (fits_small (by
+      have := s.kind.len_le_five; simp [Spec.Ship.holes] at hi; omega)) _
+  · intro j c hI
+    subst hI
+    rw [List.take_of_length_le (Nat.le_refl _)]
+    rfl
 
 end BsLink2.Link2

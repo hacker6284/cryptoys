@@ -113,8 +113,11 @@
     `Doubledeal.encrypt` maps the relabelled message to the relabelled ciphertext.
 
   NOT proved, and limits; read before citing:
-  * Any numeric bound on the full-cipher differential (independent or real keys). The
-    real-schedule differential `P[E(α·M) = γ·E(M)]` gets NO bound at all.
+  * Any numeric bound on the full-cipher differential (independent or real keys) in this
+    module. (With independent keys, `StemUnion.fullDiffCount_le_64`, a later module, proves
+    1/64 with no decay for outputs outside `v10Sym`, by discharging the hypothesis of
+    `fullDiffCount_le_64_of_offDiag`.) The real-schedule differential
+    `P[E(α·M) = γ·E(M)]` gets NO bound at all.
   * Anything under the real schedule beyond the proof's first mix round (key `K_0`).
   * For `v10Sym` the final round gives NO extra factor, and `K_6` never changes a relabelling
     difference. Every `v10Sym` bound needs `(a, x) ≠ (0, 0)` (`v10Sym 0 0 = 1`).
@@ -705,7 +708,8 @@ theorem fullDiffCount_le_of_col {α : Relabel} (hα : α ≠ 1) (γ : Relabel) (
         Nat.mul_le_mul_left _ hs
     _ = Nat.factorial 52 ^ (n + 2) := by ring
 
-/-- (PROVED; a REDUCTION, the hypothesis `hoff` is not proved for any `γ`) For an output
+/-- (PROVED; a REDUCTION. `hoff` is proved for every `γ` in the later module `StemUnion`
+    (`hoff_holds`), which gives this without hypothesis as `StemUnion.fullDiffCount_le_64`.) For an output
     difference `γ` outside `v10Sym`, the column hypothesis of `fullDiffCount_le_of_col` with
     `p = 64` is needed only OFF the diagonal and outside `v10Sym`: the diagonal `β = γ` is
     `dpFCount_self_le_64` (`sumRanksV10_survival_le`), and a nontrivial `v10Sym` input

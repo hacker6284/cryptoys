@@ -2,8 +2,9 @@
 
 **EMPIRICAL ONLY**, except that §4 and §5 quote theorems of the security library, each named and
 marked PROVED; those are proved in Lean, not in this note. Everything else here is sampled or
-enumerated (§5). No theorem uses it, and no number here is proved. **No numeric bound on the full-cipher differential is proved**
-anywhere. Not a bit-security claim. These measurements found no weakness.
+enumerated (§5). No theorem uses it, and no number here is proved. The only numeric bound on the full-cipher
+differential is PROVED in the security library, not here: `StemUnion.fullDiffCount_le_64`,
+1/64 with no decay in n, independent keys, outputs outside `v10Sym`. Not a bit-security claim. These measurements found no weakness.
 
 ## 0. What is proved (pointer)
 
@@ -105,11 +106,11 @@ here, and nothing here is proved.
 
 ## 4. Not measured, not proved
 
-* Any numeric bound on the full-cipher differential (independent or real keys). What is
-  PROVED toward it (the reduction `fullDiffCount_le_64_of_offDiag` and the stem slices
-  `StemPosition`, `StemCoupling`, `StemSupportFour`) is listed in the security README (module
-  table, and the M7 entry of the "Open" list); not repeated here. Open: the `β` with `γ⁻¹β`
-  moving at least 8 cards, the hypothesis of `fullDiffCount_le_64_of_offDiag_ge_eight`. §2
+* Any numeric bound on the full-cipher differential beyond 1/64 (independent keys), into a
+  nontrivial `v10Sym` output, or under the real keys. What is PROVED (the reduction
+  `fullDiffCount_le_64_of_offDiag`, the stem slices `StemPosition`, `StemCoupling`,
+  `StemSupportFour`, `StemUnion`, and `StemUnion.fullDiffCount_le_64`) is listed in the
+  security README (module table, the M7 row and the "Open" list); not repeated here. §2
   samples single off-diagonal entries of a few rows at ≤ 3·10^-6, which is not a bound and
   not a column.
   More than one mix round before the final round; any γ ≠ α after the final round in §3.
@@ -180,6 +181,6 @@ four `d` the conjugate sets hold at most `8 · 48!` decks for each `(t, c)`
   columns; that `q` depends on the amounts only through `(t, t', e)` is a paper argument,
   not proved). The largest value of `64 · #q · s^⌊s/2⌋ · (52 − s)! / 52!` over `s ≥ 8` is
   0.173 (at `s = 8`); at `s = 4` it gives 175 and does not work (hence the coupling there).
-  Formalising this route needs three things: the general ratio formula, a count of
-  functions by their number of agreements, and the cycle-representative bound. None of it
-  is in Lean.
+  This route is now PROVED in Lean (`StemUnion`: `ratio_eq_ratioQ`, `card_agree_eq`,
+  `card_conjSet_le_reps`, `paramCount_check`, `dpFCount_le_of_support_ge_eight`); the script
+  stays as the independent arithmetic check that sized it.

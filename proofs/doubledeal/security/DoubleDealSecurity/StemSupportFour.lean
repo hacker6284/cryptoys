@@ -7,8 +7,9 @@ import DoubleDealSecurity.FullCipher
 
   THIS IS A BOUND ON ONE ENTRY OF THE FINAL ROUND'S DIFFERENCE TABLE, ONLY WHEN `γ⁻¹ * β`
   MOVES EXACTLY 4 CARDS. It is not a bound on the full-cipher differential: the off-diagonal
-  hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag` stays open for the `β` with
-  `γ⁻¹ * β` moving at least 8 cards. No security claim.
+  hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag` is left here for the `β` with
+  `γ⁻¹ * β` moving at least 8 cards (proved in the next module, `StemUnion`). No security
+  claim.
 
   Notation: `x = permDeck π`, `δ = γ⁻¹ * β`, "`δ` moves `k` cards" is `δ.support.card = k`
   (Mathlib's `Equiv.Perm.support`), `q = stemPerm x * (stemPerm (β·x))⁻¹` (the ratio of
@@ -39,12 +40,11 @@ import DoubleDealSecurity.FullCipher
   * `dpFCount_eq_zero_of_support_lt_eight_ne_four`: if `δ` moves 1–3 or 5–7 cards,
     `dpFCount β γ = 0` (`StemPosition.card_moved_cases`).
   * `offDiag_of_offDiag_ge_eight`, `fullDiffCount_le_64_of_offDiag_ge_eight`: so `hoff`
-    reduces to the `β` with `δ` moving at least 8 cards. That case is a hypothesis here,
-    NOT proved.
+    reduces to the `β` with `δ` moving at least 8 cards. That case is a hypothesis here; it is
+    proved in `StemUnion` (`dpFCount_le_of_support_ge_eight`).
 
   Not proved, and limits:
-  * The support-≥ 8 case of `hoff` (no union bound over those supports is formalised; the
-    arithmetic of one candidate route is in `analysis/v12-fullcipher/NOTES.md` §5, not proof).
+  * The support-≥ 8 case of `hoff` (here; it is `StemUnion`, a union bound).
   * Anything about `γ` in `v10Sym`, a mix round, several rounds, or the real key schedule.
   * About the stem (final no-mix round) only.
 -/

@@ -54,7 +54,7 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
     row, for a column `c`;
   * that `q` is determined by `(rowAmts x, c, d)`, and upper bounds on `#{π | π⁻¹ δ π = q}`;
   * the assembly `64 · dpFCount β γ ≤ 52!` for support 4. The union bound for the other
-    support sizes (at least 8) is not proved anywhere.
+    support sizes (at least 8) is `StemUnion`.
 
   Caveats. The constant 81/4096 comes from 3 swap pairs per row, not from the exact per-row
   maximum: an exhaustive enumeration over residue multisets (enumeration, not proof;

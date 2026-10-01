@@ -2738,4 +2738,32 @@ theorem stageE_spec (lg : List Spec.LetGo) (row col : Nat) (hr : row < 10) (hc :
       putL_ofNat _ _ _ hh, ok_bind, tab_pegs_set _ _ _ (by omega)]
     rfl
 
+/-- The emitted gap let-go and peg stage is `Spec.letGoAt … true` then `Spec.pegAt`. -/
+theorem stageD_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : Nat)
+    (hr : row < 10) (hc : col < 10) (st : Spec.BuildSt) (h10 : FitsLen st.dice.d10.length)
+    (hread : st.read ≤ 5) (htray : TrayOk st.tray) (hlen : st.tray.length ≤ 5)
+    (hface : col % 2 = 1 → 1 ≤ st.face ∧ st.face ≤ 9) :
+    (stageDE (embLG lg) (Int.ofNat row) (Int.ofNat col) (Int.ofNat (row * 10 + col))
+      (embDice st.dice) (embed st.tray) (Int.ofNat st.read) (tab st.covered)
+      (st.ships.map embShip).toArray (Int.ofNat st.face)
+      (tab (fun x => Int.ofNat (st.pegs x)))).toOption =
+    ((Spec.letGoAt lg (row * 10 + col) true st).bind (Spec.pegAt (row * 10 + col) col)).map
+      (fun st' => SudoRt.Flow.cont (embSt st')) := by
+  unfold stageDE Spec.letGoAt
+  rw [lets_go_spec _ _ _ hlg, ok_bind]
+  by_cases hA : Spec.letsGo lg (row * 10 + col) true = true
+  · rw [if_pos hA, if_pos hA]
+    unfold Spec.BuildSt.rethrow
+    rw [toOpt_bind, rethrow_unread_spec _ _ _ h10 (fits_small (by omega))]
+    cases hrt : Spec.rethrowUnread st.dice st.tray st.read with
+    | none => rfl
+    | some p =>
+      obtain ⟨d1, t1⟩ := p
+      obtain ⟨hl1, ht1, _⟩ := rethrowUnread_facts htray hrt
+      simp only [Option.map_some', Option.some_bind]
+      exact stageE_spec lg row col hr hc { st with dice := d1, tray := t1 } hread ht1 hface
+  · rw [if_neg hA, if_neg hA]
+    simp only [Option.some_bind]
+    exact stageE_spec lg row col hr hc st hread htray hface
+
 end BsLink2.Link2

@@ -20,7 +20,7 @@ export default {
     },
     sounds: {
         // Single turn (one click); contact: the face seats (end of leaf).
-        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, offsetMs: -193 }, // 50 ms before the peak-on-seat point (Zachary: "a little late")
+        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, offsetMs: -393 }, // peak 250 ms before the face seats, ~65% into the 714 ms turn (Zachary: "still late ... maybe 200 ms earlier")
         // Double turn (two clicks); contact: the face seats (end of leaf). Or { perClick: true }: the single file once per click.
         double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, offsetMs: -119 },
         // Triple turn (three clicks); contact: the face seats (end of leaf). Or { perClick: true }: the single file once per click.

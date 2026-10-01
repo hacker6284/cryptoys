@@ -1,4 +1,6 @@
 """BS (Battleship Diffie-Hellman): peg-recipe simulation of arithmetic mod p = 3^n - c.
+Evidence harness, cross-checked against bs.sudo by check_oracle.py; not a reference.  The
+normative description is primitives/key_exchange/bs/SPEC.md with bs.sudo beside it.
 Everything here acts on COLOURS only: '.' empty, 'W' white, 'R' red.  No colour is ever turned into a
 number; the only operations are the recipes of BS SPEC section 3:
   CLICK  : spin a hole one click on the wheel  empty -> white -> red -> empty
@@ -64,23 +66,28 @@ def slide_out(F, strip):
 
 def clear(reg): C.moves += sum(x != '.' for x in reg)
 
-def multiply(F, A, B, nudge=0):
-    """A x B mod p.  nudge = 1 or 2 lays every copy one/two holes higher (= also multiply by 3 or 9)."""
+def multiply(F, A, B, nudge=0, dest=None):
+    """A x B mod p.  nudge = 1 or 2 lays every copy one/two holes higher (= also multiply by 3 or 9).
+       The strip has 2n holes; a nudged product runs up to `nudge` holes further (BS SPEC B3 step 1).
+       dest = the register the answer slides into: its old pegs are lifted first (B3 step 3)."""
     C.op('mul')
-    strip = F.empty(2 * F.n + 3)
-    for i, b in enumerate(B):
-        if b != '.': lay(strip, A, i + nudge, 1 if b == 'W' else 2)
-    assert all(x == '.' for x in strip[2 * F.n + 2:]), "strip overflow"
+    strip = F.empty(2 * F.n + nudge)
+    try:
+        for i, b in enumerate(B):
+            if b != '.': lay(strip, A, i + nudge, 1 if b == 'W' else 2)
+    except IndexError:
+        raise AssertionError("strip overflow: the product ran past hole 2n + nudge - 1")
     fold(F, strip)
+    if dest is not None: clear(dest)
     return slide_out(F, strip)
 
 def tidy(F, X):
     """canonical form: if X >= p return X - p.  Copy X, pour the toll in; spill into hole n => take copy."""
     C.op('tidy')
-    cp = X[:] + ['.', '.']; C.moves += sum(x != '.' for x in X)
+    cp = X[:] + ['.']; C.moves += sum(x != '.' for x in X)        # one spare hole: X + c < 2 * 3^n
     lay(cp, F.toll, 0)
     if cp[F.n] != '.':
-        assert cp[F.n] == 'W' and cp[F.n + 1] == '.'
+        assert cp[F.n] == 'W'
         clear(X); C.moves += 1; return cp[:F.n]          # lift the spilled white; copy is the answer
     clear(cp); return X
 
@@ -103,7 +110,7 @@ def walk(F, fleets, base=None):
        base None  -> public phase, base g = 3: a hit is a NUDGE of the second cube product
                      (white: lay one hole higher, red: two holes higher);
        base = reg -> shared phase: after cubing, white -> multiply by base once, red -> twice."""
-    X = None
+    X = Y = None
     for board in fleets:
         for cell in board:
             if X is None:
@@ -115,10 +122,11 @@ def walk(F, fleets, base=None):
                     if cell == 'W': C.moves += sum(x != '.' for x in base)
                 continue
             C.op('cube')
-            Y = multiply(F, X, X)                                # square
+            Y = multiply(F, X, X, dest=Y)                        # square; lifts Y's old pegs first
             nud = 0 if (base is not None or cell == '.') else (1 if cell == 'W' else 2)
-            X2 = multiply(F, Y, X, nud); clear(X); clear(Y); X = X2   # cube (and nudge on a hit)
+            X = multiply(F, Y, X, nud, dest=X)                   # cube (and nudge on a hit); Y keeps X x X
             if base is not None and cell != '.':
                 for _ in range(1 if cell == 'W' else 2):
-                    X2 = multiply(F, X, base); clear(X); X = X2
+                    X = multiply(F, X, base, dest=X)
+    assert X is not None, "the walk never started: the key must begin with the start marker (B7)"
     return tidy(F, X)

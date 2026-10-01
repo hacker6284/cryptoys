@@ -5,7 +5,7 @@ interleaved order); the board-only one-pass BUILD with random let-go/resume at h
 let-go is allowed) against the exact joint model; 10x10 round trips, walk and build statistics.
 step() uses the former d6 wording for the ship decision and a d6 per peg (dropped from the SPEC); they have
 exactly the SPEC's distribution (../randomizer-kit/, part B; the row cup gives uniform trits).
-The SPEC-literal dice are in keygrid.py."""
+The SPEC dice are simulated in keygrid.py."""
 import math, random, itertools, json, collections, statistics, sys
 from read_rule import encode, decode, all_layouts, KL
 from sim_bump import build_bump
@@ -124,7 +124,9 @@ def step(board, rng, stats):
     return True
 
 def build_combined(rng, n=10, m=10, stats=None, letgo_prob=0.3):
-    """Run step() to completion, 'letting go' at random step boundaries: the only thing
+    """Evidence harness, not a reference: bs.sudo and SPEC §4.2 are normative, and
+    check_oracle.py cross-checks the harness's keygrid.build against bs.sudo.
+    Run step() to completion, 'letting go' at random step boundaries: the only thing
     carried between steps is the board dict itself (a fresh copy each time)."""
     stats = stats if stats is not None else collections.Counter()
     board = new_board(n, m)

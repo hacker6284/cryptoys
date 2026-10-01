@@ -3,30 +3,30 @@
   "n": 18,
   "runs": 20,
   "note": "registers only; add key pegs",
-  "peak_white": 47,
-  "peak_red": 46,
+  "peak_white": 48,
+  "peak_red": 48,
   "holes_in_use": 90,
-  "peak_red_per_hole": 0.511,
-  "peak_white_per_hole": 0.522
+  "peak_red_per_hole": 0.533,
+  "peak_white_per_hole": 0.533
  },
  "T2": {
   "n": 35,
   "runs": 5,
   "note": "registers only; add key pegs",
-  "peak_white": 80,
+  "peak_white": 81,
   "peak_red": 79,
   "holes_in_use": 175,
   "peak_red_per_hole": 0.451,
-  "peak_white_per_hole": 0.457
+  "peak_white_per_hole": 0.463
  },
  "T6demo": {
   "n": 100,
   "runs": 1,
   "note": "registers only; add key pegs",
-  "peak_white": 217,
+  "peak_white": 218,
   "peak_red": 236,
   "holes_in_use": 550,
   "peak_red_per_hole": 0.429,
-  "peak_white_per_hole": 0.395
+  "peak_white_per_hole": 0.396
  }
 }

@@ -1,5 +1,5 @@
-<!-- Owns: the file map and run commands for the BS / ECBS randomizer-kit checks. Maintenance rules: ../../../../DOCS.md. -->
-# BS / ECBS keying: randomizer-kit checks
+<!-- Owns: the file map and run commands for the BS randomizer-kit checks. Maintenance rules: ../../../../DOCS.md. -->
+# BS keying: randomizer-kit checks
 
 Status: **a note, not a theorem.** Nothing in this directory is proved in Lean. Parts A and B are exact enumerations (Fractions); part C is Monte Carlo counts with a fixed seed. The dice rules they check are stated in [`primitives/key_exchange/bs/SPEC.md`](../../../../primitives/key_exchange/bs/SPEC.md) §4.2 (hole die, growth, Sub/Cruiser, row cup). The d6 layouts that parts B and C also enumerate are the one-d6-per-peg and all-d6 layouts the SPEC dropped, and the former d6 wording. They are kept as analysis only (`../key-selection/NOTES.md` §5) and are not options.
 

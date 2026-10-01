@@ -9,10 +9,10 @@ Finite-field Diffie–Hellman (powers of 3 modulo a prime p), worked by hand on 
 The small tiers are deliberately weak. The goal is a working, honest DH that scales up by adding boards.
 
 **Code and evidence** live in `proofs/key_exchange/bs/` (index in its `README.md`). Each directory is a note, not a theorem: scripts with their recorded outputs beside them.
-**Runnable spec:** `bs.sudo` beside this file (BUILD, READ, B1–B9 and §3.1); its sudoc-generated vectors are in `proofs/key_exchange/bs/vectors/`.
-* `reference/`: the peg recipes (`bspegs.py`, colours only), the integer reference (`bsref.py`), the prime search (`bsparams.py`), arithmetic and malicious-value tests (`run_bs.py`), full-size multiplications (`bigmul.py`), the tier table (`tiers.py`), the toy-tier attacks (`break_small.py`, `break_t2.c`), the parity checksum (`parity_check.py`) and peg provisioning (`peg_supply.py`).
+**Normative:** this SPEC and `bs.sudo` beside it, the runnable spec (BUILD, READ, B1–B9 and §3.1); its sudoc-generated vectors are in `proofs/key_exchange/bs/vectors/`. The Python under `proofs/key_exchange/bs/` is an evidence harness, cross-checked against `bs.sudo` by `vectors/check_oracle.py`; it is not a reference.
+* `reference/`: the peg recipes simulated on colours (`bspegs.py`), integer arithmetic (`bsref.py`), the prime search (`bsparams.py`), arithmetic and malicious-value tests (`run_bs.py`), full-size multiplications (`bigmul.py`), the tier table (`tiers.py`), the toy-tier attacks (`break_small.py`, `break_t2.c`), the parity checksum (`parity_check.py`) and peg provisioning (`peg_supply.py`).
 * `exchange/`: full exchanges with ships+pegs keys through the peg recipes, every tier.
-* `ships-pegs/`: the key (§4): a literal implementation of BUILD and READ (`keygrid.py`), the exact entropy DP, brute force, injectivity and build checks.
+* `ships-pegs/`: the key (§4): a simulation of BUILD and READ (`keygrid.py`), the exact entropy DP, brute force, injectivity and build checks.
 * `randomizer-kit/`: the dice rules.
 * `key-selection/`: why this key and not another (analysis only).
 
@@ -32,23 +32,15 @@ The small tiers are deliberately weak. The goal is a working, honest DH that sca
 
 **Nothing in BS may rely on paper.** Every register and every piece of state must live in physical grids, pegs and ships. A **kit** is half a classic Hasbro set: one player's ocean (ship) grid, target grid, 5-ship fleet, 42 red pegs and 84 white pegs. **1 game set = 2 kits** (4 grids, 2 fleets, 84 red and 168 white pegs [lit: Hasbro contents list]).
 
-**Audit.** These are the places the earlier text relied on paper or off-board state, and what they became:
-
-| Earlier text | Now |
-|---|---|
-| §1 A1: the fleet could be "marker pieces or a sketch" | The key always sits on its own grid (an ocean grid holding the key's ships and pegs) and is counted per player. |
-| §6: idle registers as paper "photographs" | Removed. Every register lives on grids and is counted in the holes. |
-| §6: the long toll "could be a printed card" | Removed. The toll is a register on grids (it was already counted). |
-| Implicit: loop counters and positions in your head (which key cell you're on, which hole of B, A and the strip you're laying at) | **Cursor ships** plus a **10-hole control lane** (below). |
-| Implicit: "pair off the whites" parity and the sub-step of the cell in your head | Pegs in the control lane. |
-| §3 B9 and §9: "hash K" and "compare a short hash aloud" | BS now ends with K on the grid; hashing is outside BS. Key confirmation is done physically (§9). |
-| Public values as "W/R/. strings" | The other player calls your published register hole by hole and copies it into their own Y register (§3.1). Nothing is stored except pegs. |
+**Audit.** The places where earlier text relied on paper or off-board state, and what each became, are listed in `proofs/key_exchange/bs/key-selection/NOTES.md` §6.
 
 Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are part of the recipe (like "drop it n back and n−k back"), not state.
 
 **Control state, made physical.**
 * **Control lane:** 10 holes per player.
-  - One peg in holes 1–6 marks the cell sub-step: square, cube product, hit-multiply 1, hit-multiply 2. Hole 5 marks "calling in progress" while a public value is being called (§3.1); hole 6 is spare.
+  - One peg in holes 1–4 marks the cell sub-step: square, cube product, hit-multiply 1, hit-multiply 2.
+  - Hole 5 marks "calling in progress" while a public value is being called (§3.1).
+  - Hole 6 is spare.
   - Hole 7 is the parity bit (white = odd).
   - Hole 8 is the phase: empty = public walk, white = check, red = shared walk.
   - Hole 9 is the "accumulator started" flag.
@@ -59,7 +51,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
   - **Finger rule:** you may keep your place with a finger while laying, but **before you take your hands off, park the cursor ships**, so the table is always a complete record.
   - Parking costs only O(n) moves per multiplication, which is negligible. Moving the cursors on *every* peg instead would add about 2n² moves per multiplication, roughly doubling all hand times.
 * **Only grids count.** Pegs and ship pieces (the cursor ships and the key's ships) are unlimited, because extra ones can be bought, and they are not counted. **Game sets per player** = ⌈grids/4⌉.
-  - Peg provisioning, measured peak pegs in use per player (registers only): T1 46 red / 47 white; T2 79 / 80; T6 236 / 217 (`reference/peg_supply.py`). For big tiers it is ~0.36 per workspace hole of each colour, plus the key's ~33 ± 5 of each colour per key grid (≈ 67 pegs per grid, §4.7).
+  - Peg provisioning, measured peak pegs in use per player (registers only): T1 48 red / 48 white; T2 79 / 81; T6 236 / 218 (`reference/peg_supply.py`). Y keeps its last square until the next one slides in (B6, §3.1), and these peaks count it. For big tiers it is ~0.36 per workspace hole of each colour, plus the key's ~33 ± 5 of each colour per key grid (≈ 67 pegs per grid, §4.7).
   - Ship provisioning: the 8 cursor ships, plus the key's ≈ 31.6 ships per grid on average (D 18.8, S 5.5, C 5.6, B 1.5, A 0.23; at most 50 D, 33 S or C, 25 B, 20 A).
 * **The key** is one **key grid**: an ocean grid holding a dice-built free fleet and a dice-rolled peg in every hole (§4). It is its own grid and is counted.
 * **T1:** the arithmetic still fits on one grid, exactly (90 register holes + the 10-hole control lane). With the key grid, a T1 player needs **2 grids = 1 game set**.
@@ -98,7 +90,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
   - A victim who skips the check leaks e mod 2 to a p−1 attacker (4/4 trials).
 
 **Caveats, in one breath**
-* This is ~180× more hand work than ECBS for similar security. Finite-field DH is simply worse by hand than ECDH.
+* This is ~180× more hand work than ECBS for similar security [unverified: ECBS is not in this repository]. Finite-field DH is simply worse by hand than ECDH.
 * The long-toll prime family fixes the top half of the digits. I know no attack on that, but nobody has reviewed it [est].
 * The key is a short, structured exponent: e ∈ [3^M, 2·3^M) with M ≤ 233 (one key grid). Security rests on the standard short-exponent assumption with a safe prime, and on the √ heuristic for the ship part, which is a sum of per-ship terms (§4.9, §9).
 * NFS precomputation is per-prime and amortises over all users of that prime (Logjam).
@@ -176,10 +168,10 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
   - Examples: white into red gives empty plus a white next door. Red into white gives empty plus a white next door. Red into red gives white plus a white next door.
 * **B2. Lay a copy of A starting at hole s:** drop each peg of A, in its own colour, into the hole s places further on.
 * **B3. Multiply A × B.**
-  1. Clear a product strip of 2n holes (2n + 2 in the public phase).
+  1. Clear a 2n-hole product strip; a nudged product may run up to 2 holes further (§6).
   2. For every pegged hole i of B, lay a copy of A starting at hole i: once if B's peg is white, **twice if it is red**.
   3. Pay the toll (B4). Holes 0 … n−1 are the answer; slide it into its register.
-  - The strip can never overflow: A·B < 3^(2n), and partial sums only grow toward it.
+  - The strip can never overflow: A·B < 3^(2n), so a product nudged k holes (B6) fits in 2n + k holes, and partial sums only grow toward it.
 * **B4. Pay the toll (fold).** Repeat until nothing sits at or beyond hole n: **lift the highest peg at or beyond hole n, and lay the toll starting n holes lower** (twice if the lifted peg was red).
   - *Two-peg toll:* drop the lifted peg's colour at h − n and at h − n + k.
   - *T1 example:* a white peg at hole 20 is lifted, and whites are dropped into holes 2 and 4, since 3²⁰ ≡ 3²·(3² + 1).
@@ -228,7 +220,7 @@ Why plain ternary and not balanced ternary: `proofs/key_exchange/bs/key-selectio
 A public value is the sender's tidy answer from B9 step 1. It is in X, or in the strip copy if B5 kept the copy: n holes, hole 0 to hole n − 1. Each player receives the other's value like this:
 
 1. **Clear Y.** B6 leaves the last X × X in Y, and a misfire lays nothing, so a peg left there would end up in the copy. Once Y is clear, the copy needs no extra grid.
-2. **Mark "calling in progress":** stand a peg in control-lane hole 5, a spare sub-step hole (No-paper rule).
+2. **Mark "calling in progress":** stand a peg in control-lane hole 5 (No-paper rule).
 3. **Call the holes aloud, hole 0 first (§3), up to hole n − 1.** Name each one by its Battleship coordinates within the register: rows A–J counted from the register's first row, holes numbered along the row, and in real tiers the register's grids numbered from 1.
    - **T1:** "A1" to "B9", in columns 1–9; column 10 is the control lane (§6).
    - **T2:** "A1" to "D8". T2's last register hole, D9, is unused (§6) and is not called.
@@ -241,7 +233,7 @@ A public value is the sender's tidy answer from B9 step 1. It is in X, or in the
 5. **Copy each answer into the same hole of Y**, exactly as in Battleship: a red peg on a hit, a white peg on a miss, nothing on a misfire. Call every hole of the register; never stop early, even after a long run of misfires.
 6. **When every hole has been called,** Y is an exact copy of the sender's value. Lift the peg from lane hole 5. The sender keeps their value on the board until the copy is done.
 
-**Letting go.** Before you let go, park the cursor ships on Y at the next hole to call, as BUILD does (§4.2). With the lane-hole-5 peg standing, the board then says where to resume: every hole before the cursor has been called and copied, and no hole after it has.
+**Letting go.** Before you let go, park the strip-hole cursor (its 2 ships) on Y at the next hole to call, as BUILD does with the walk cursor (§4.2). With the lane-hole-5 peg standing, the board then says where to resume: every hole before the cursor has been called and copied, and no hole after it has.
 
 Only public values are called; key grids are never shown or called.
 
@@ -271,7 +263,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 ### 4.2 BUILD: "one hole at a time: ship, then peg"
 
 > **Lay the walk cursor (2 ships on the frame) at A1.** At the cursor hole:
-> 0. **At the start of each row, throw the row cup:** the five d10s (red, orange, yellow, green, blue). Throw again any die showing its zero face, whether it is printed "0" or "10", until it shows 1–9. Read them in rainbow order, one die per hole pair: the next die you read gives the cursor's next empty pair (holes 1–2, 3–4, …, 9–10 of the row).
+> 0. **At the start of each row, throw the row cup:** the five d10s (red, orange, yellow, green, blue). Throw again any die showing its zero face, whether it is printed "0" or "10", until it shows 1–9. Read them in rainbow order, one die per hole pair: the next die you read gives the pair the cursor is on (holes 1–2, 3–4, …, 9–10 of the row).
 > 1. **If no ship covers this hole, decide it with "grow until it bumps"** (below).
 > 2. **Peg it from its row-cup die.** Picture the number on a phone keypad (1 2 3 / 4 5 6 / 7 8 9). It is never the zero face ("0" or "10"): that face is thrown again (step 0). **The row the number sits in gives the peg for the pair's first hole; its column gives the peg for the pair's second hole.** Top row or left column: no peg. Middle row or middle column: white. Bottom row or right column: red. (So 6, middle row and right column, is white then red.) Put the peg in the ship's hole if a ship covers this hole, otherwise in the grid hole. The die goes back in the cup after its second hole.
 > 3. **Move the cursor to the next hole** (reading order). After J10, park it off the grid.
@@ -279,7 +271,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 > **Letting go.** You may let go only where the hole is finished (the rule is in step 1 below) and no die's pair is half done. With the row cup, that is after a die's second hole (holes 2, 4, 6, 8 and 10 of a row), and the cursor is then parked at the hole you are about to start.
 > - **A die's pair is one step you may not interrupt.** Its two pegs still go in one at a time, each when the cursor reaches its hole. But once the first is in, you may not let go until the second is in and the die is back in the cup.
 > - **The one exception to finishing the hole is the gap between steps 1 and 2 at a die's first hole** (holes 1, 3, 5, 7 and 9). You may let go there, before that die's first peg, if you first stand a **white peg in control-lane hole 10** ("ship decision made"). Lift it when you move the cursor.
-> - **Dice in the tray carry no meaning.** When you come back, throw again every row-cup die still in the tray (any zero face, "0" or "10", again until 1–9) and go on: the next die you read, in rainbow order, gives the cursor's next empty pair.
+> - **Dice in the tray carry no meaning.** When you come back, throw again every row-cup die still in the tray (any zero face, "0" or "10", again until 1–9) and go on: the next die you read, in rainbow order, gives the pair the cursor is on.
 
 **Step 1: grow until it bumps** (at the cursor hole, when no ship covers it)
 
@@ -302,7 +294,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 > **Ships may touch**, side by side or end to end, as in Hasbro's rules. They never overlap: a ship only ever grows into open holes.
 
 * **The d12 is exact:** its thirds and halves give each open heading and sea exactly the weights of "grow until it bumps", and its odd/even (the bow) is independent of them. This is checked exactly in all 25 room states and on whole builds (`randomizer-kit/`, part B; derivation in `key-selection/NOTES.md` §5).
-* **Why the row cup is exact.** Faces 1–9 correspond one-to-one to pairs of trits (3 × 3). A 0 is re-thrown on its own face only, which is rejection sampling. So every hole gets an exactly uniform, independent trit. Throwing unread dice again after a let-go keeps this exact: every face is still read from a throw made before the die was chosen.
+* **Why the row cup is exact.** Faces 1–9 correspond one-to-one to pairs of trits (3 × 3). A 0 is re-thrown on its own face only, which is rejection sampling. So every hole gets an exactly uniform, independent trit. Throwing unread dice again after a let-go keeps this exact, because which throw a pair uses never depends on what it shows.
 * **The cursor is the record.** With these let-go rules, a build is only ever left at the boundary after a die's pair, or in the step 1 → 2 gap of a die's first hole. Every hole before the cursor is finished (ship decided, growth and Sub/Cruiser rolls included, and peg rolled). The cursor hole's ship decision is finished if lane hole 10 holds a white peg and not started otherwise. Every hole after it has no peg. So "no peg" never has to mean "sea decided", and a white peg always means a white key digit.
   - A ship laid at the cursor covers only the cursor hole and holes after it, none of which has a peg yet. Pegs behind the cursor are never in a ship's way, because ships grow only right or down.
   - Build simulated with random let-go and resume at every hole boundary and every step 1 → 2 gap, resuming from the board alone. The simulation draws each hole's peg on its own (no pairs), so its let-go points include every one allowed above: the joint layout × peg distribution matches the exact model, chi-square 1,327.7 on 1,376 df (2×2, 400k builds) and 101,368 on 101,330 df (2×3, 300k builds) (`ships-pegs/combined.py`).
@@ -376,7 +368,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
   - Layout figures: exact DP over 5^10 profile states, cross-checked against brute force on small grids and by Monte Carlo (`ships-pegs/build_dp.py`, `brute_build.py`, `viterbi.py`). The layout's min-entropy is lower because heavy grids exist: the most likely layout (p = 2^−124.78) is columns of down-ships separated by sea.
   - Totals: `ships-pegs/combined.py`.
 * **Walk:** 211.10 cells on average (largest seen 222, at most 233); 203.35 hit units (shared phase: white = 1 multiplication, red = 2). **1,048.8 multiplications per grid per person** = 4·211.10 (two walks × a 2-multiplication cube per cell) + 203.35 (shared hits) + 1 (check) = 3.42 per Shannon bit and 3.70 per min-entropy bit (`ships-pegs/combined.py`, 20,000 built grids; the literal dice give 211.08 cells and 203.26 hit units, `keygrid_check.py`).
-* **Build:** 156 dice reads (100.5 layout + 55.5 peg d10s, 5.5 of them void zero faces), about 31 throws, ≈ 265 moves (≈ 88 ship moves + ≈ 66.7 pegs + 110 cursor moves) (`ships-pegs/combined.py`, `keygrid_check.py`). Using the lane marker at every hole adds up to 200 more. Pieces: ≈ 31.6 ships and ≈ 67 pegs per grid. The build is negligible next to the walk.
+* **Build:** 156 dice reads (100.5 layout + 55.5 peg d10s, 5.5 of them void zero faces), about 31 throws, ≈ 265 moves (≈ 88 ship moves + ≈ 66.7 pegs + 110 cursor moves) (`ships-pegs/combined.py`, `keygrid_check.py`). The lane-10 marker (§4.2, letting go) costs at most 200 more moves per grid: a place and a lift at each of the 100 holes. Pieces: ≈ 31.6 ships and ≈ 67 pegs per grid. The build is negligible next to the walk.
 
 ### 4.8 Grids by tier
 
@@ -398,7 +390,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
   - With a safe prime the only small subgroups are {1} and {±1}. So the worst leak is one bit, e mod 2. A non-residue would also leak that bit through the Legendre symbol of K.
   - **Demonstrated** (`reference/run_bs.py`): with the check skipped, B = p − 1 gives K = ±1, and K = 1 exactly when e_A is even (4/4 trials).
 * **The fix (B8).** Square first; reject 0 and 1.
-  - This clears the cofactor 2, like ECBS's "clear the cofactor 5", at the cost of one multiplication.
+  - This clears the cofactor 2, at the cost of one multiplication. ECBS is said to clear its cofactor 5 the same way [unverified: ECBS is not in this repository].
   - **Tested** (`reference/run_bs.py`): 0, 1, p − 1 and p + 1 (a non-canonical 1) are all rejected in T1, T2 and T6. A non-residue is accepted, and its square lies in the order-q subgroup.
 * Why not the full check B^q = 1: `proofs/key_exchange/bs/key-selection/NOTES.md` §5.
 * The exchange must use (B²)^a on both sides. Both sides do, so K = 3^(2ab).
@@ -411,10 +403,10 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 
 | Rows | Contents |
 |---|---|
-| 1–2 | X, the accumulator (holes 0–8, then 9–17) |
-| 3–4 | Y, the square |
-| 5–8 | S, the product strip, holes 0–35 |
-| 9–10 | C, the checked base (shared phase). In the public phase these rows are empty, and the strip's nudge overflow (holes 36–37) runs into row 9. |
+| A–B | X, the accumulator (holes 0–8, then 9–17) |
+| C–D | Y, the square |
+| E–H | S, the product strip, holes 0–35 |
+| I–J | C, the checked base (shared phase). In the public phase these rows are empty, and the strip's nudge overflow (holes 36–37) runs into row I. |
 
 * Holes used: 18 × 3 + 36 = 90, plus the 10-hole control lane = 100. No spare hole.
 * The tidy copy (19 holes) goes in the strip after the walk.
@@ -424,10 +416,10 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 
 | Rows | Contents |
 |---|---|
-| 1–4 | X |
-| 5–8 | Y |
-| 9–16 | Strip: 72 holes, exactly 2n + 2 |
-| 17–20 | C |
+| Grid 1, A–D | X |
+| Grid 1, E–H | Y |
+| Grid 1, I–J and grid 2, A–F | Strip: 72 holes, exactly 2n + 2 |
+| Grid 2, G–J | C |
 
 * The fold for T2 is "drop it 35 holes back and 6 holes back". A peg high in the strip therefore folds several times in a chain, which the simulation includes.
 
@@ -591,4 +583,4 @@ Paths are under `proofs/key_exchange/bs/`.
 * **Verdict:**
   - BS is a correct, honest, fully specified DH that runs on Battleship kit.
   - It is a fine teaching toy at 1–2 boards: textbook DH, a visible toll fold, a visible small-subgroup check, and a live demonstration that the result is broken in seconds.
-  - At real sizes it is theoretically hand-doable only on multi-century timescales. For hand-scale security, ECBS is the better design by about two orders of magnitude.
+  - At real sizes it is theoretically hand-doable only on multi-century timescales. For hand-scale security, ECBS is the better design by about two orders of magnitude [unverified: ECBS is not in this repository].

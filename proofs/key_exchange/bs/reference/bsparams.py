@@ -9,8 +9,8 @@ order-q subgroup of quadratic residues), 3 not = 1.
 Primality: gmpy2.is_prime (Miller-Rabin with 50 random bases after trial division); for p < 3.3e24 the
 deterministic Miller-Rabin set (first 12 prime bases) is also run; sympy.isprime (BPSW) is run as a
 second, independent test for every p and q.  q in the big tiers is a *probable* prime (no ECPP proof)."""
-import os
-os.chdir(os.path.dirname(os.path.abspath(__file__)))          # every path below is relative to this directory
+from pathlib import Path
+HERE = Path(__file__).resolve().parent                        # every path below is built from this directory
 import gmpy2, sympy, json, sys, math, time
 import numpy as np
 from mpmath import mp
@@ -96,4 +96,4 @@ if __name__ == "__main__":
         out[r['tier']]=r
         print(r['tier'], json.dumps({kk:v for kk,v in r.items() if kk not in ('p','q','c')}), flush=True)
     fn = "params.json" if not sys.argv[1:] else f"params_{'_'.join(sys.argv[1:])}.json"
-    json.dump(out, open(fn,"w"), indent=1)
+    json.dump(out, open(HERE / fn, "w"), indent=1)

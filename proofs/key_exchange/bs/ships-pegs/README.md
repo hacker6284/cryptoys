@@ -3,12 +3,12 @@
 
 Status: **a note, not a theorem.** Exact enumerations, an exact DP and Monte Carlo checks with fixed seeds; nothing is proved in Lean. The key's rules (BUILD "one hole at a time: ship, then peg", "grow until it bumps", READ "ships, then pegs", the fleet walk) are stated in [`primitives/key_exchange/bs/SPEC.md`](../../../../primitives/key_exchange/bs/SPEC.md) §4.2–§4.3 and only there.
 
-Two implementations of the build are used. `keygrid.py` follows the SPEC wording literally (d12 hole die, d6 growth and Sub/Cruiser rolls, d10 row cup). Its `fallback="d6"` mode is the all-d6 layout, which the SPEC dropped; it is kept only so `keygrid_check.py` can compare it (`../key-selection/NOTES.md` §5). The older scripts use the former d6 wording of the ship decision, which has exactly the same distribution (`../randomizer-kit/`, part B), and in `rules.py` that rule is `bump_reroll`.
+The normative BUILD and READ are the SPEC and `bs.sudo` beside it. Everything here is an evidence harness, not a reference. Two simulations of the build are used. `keygrid.py` follows the SPEC wording step by step (d12 hole die, d6 growth and Sub/Cruiser rolls, d10 row cup) and is cross-checked against `bs.sudo` by `../vectors/check_oracle.py`. The all-d6 layout the SPEC dropped is no longer in it; it is analysis in `../key-selection/alld6.py` (`../key-selection/NOTES.md` §5). The older scripts use the former d6 wording of the ship decision, which has exactly the same distribution (`../randomizer-kit/`, part B), and in `rules.py` that rule is `bump_reroll`.
 
 | Script | What it checks | Output | SPEC |
 | --- | --- | --- | --- |
-| `keygrid.py` | Literal BUILD and READ (start marker, ship pass, peg pass) and the exponent; its ship pass is asserted equal to `read_rule.encode` on every read | (library) | §4.2–§4.4 |
-| `keygrid_check.py` | `keygrid.build` against the exact model on 2×2, 2×3, 3×2, 1×5, 5×1 (layout, pegs, and the 2×2 joint), for the SPEC dice and the dropped all-d6 layout; 20,000 10×10 builds round-trip; cells, hit units, rolls per grid | `keygrid_check_results.txt`, `.json` | §4.2, §4.5, §4.7 |
+| `keygrid.py` | BUILD and READ simulated from the SPEC wording (start marker, ship pass, peg pass); evidence harness, cross-checked against `bs.sudo` by `../vectors/check_oracle.py`, not a reference and the exponent; its ship pass is asserted equal to `read_rule.encode` on every read | (library) | §4.2–§4.4 |
+| `keygrid_check.py` | `keygrid.build` against the exact model on 2×2, 2×3, 3×2, 1×5, 5×1 (layout, pegs, and the 2×2 joint), for the SPEC dice; 20,000 10×10 builds round-trip; cells, hit units, rolls per grid | `keygrid_check_results.txt`, `.json` | §4.2, §4.5, §4.7 |
 | `rules.py`, `build_dp.py` | Candidate build rules as local distributions; exact DP over 5^10 row profiles for H, H₂, H∞ | (libraries) | §4.7 |
 | `brute_build.py` | Brute-force enumeration of whole builds on small grids, against the DP | `brute_build_results.txt` | §4.7 |
 | `run_rules.py` | The DP for every candidate rule (four batches) | `run_rules1.log` … `run_rules4.log`, `rules_*.json` | §4.7 |

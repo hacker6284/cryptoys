@@ -9,6 +9,7 @@ Status: **a note, not a theorem.** Analysis only: none of the keys compared here
 | `ecbs_lemma_a.py` | ECBS Lemma A positions for a free-fleet page and a ships+pegs page (NOTES §4); the ECBS n and ℓ values are copied into the script from the ECBS spec | `ecbs_lemma_a_results.txt` |
 | `themed_kit.py` | The themed fleet's d20 / d8 / d4 face rules, and the full-restart placement (former part D of the randomizer kit): per-ship placement distribution computed face by face for the spec d10 and best-fit along-dice, with negative controls (a die too small for the ship) that must fail, plus Monte Carlo reads / re-rolls / restarts | `themed_kit_results.txt`, `.json` |
 | `ecbs13_kit.py` | The themed full-restart placement end to end | `ecbs13_kit_results.txt`, `.json` |
+| `alld6.py`, `alld6_check.py` | The all-d6 key-grid layout the SPEC dropped (moved from `../ships-pegs/keygrid.py`), checked against the exact model by `../ships-pegs/keygrid_check.py`'s checks (NOTES §5) | `alld6_check_results.txt`, `.json` |
 
 ## Run
 
@@ -18,6 +19,7 @@ From this directory:
 python3 costs.py
 python3 ecbs_lemma_a.py > ecbs_lemma_a_results.txt
 python3 themed_kit.py > themed_kit_results.txt
+python3 alld6_check.py > alld6_check_results.txt     # replays the SPEC-dice runs first, ~2× keygrid_check.py
 python3 ecbs13_kit.py > ecbs13_kit_results.txt
 ```
 

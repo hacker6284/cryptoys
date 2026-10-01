@@ -1,13 +1,14 @@
-"""BS peg recipes (bspegs) vs integer reference (bsref / Python pow): arithmetic tests and
+"""BS peg recipes (bspegs) vs integer arithmetic (bsref / Python pow): arithmetic tests and
 malicious received values.  Full exchanges with ships+pegs keys: ../exchange/exchange.py."""
-import os, sys
-os.chdir(os.path.dirname(os.path.abspath(__file__)))          # every path below is relative to this directory
-sys.path.insert(0, os.path.join("..", "ships-pegs"))
+import sys
+from pathlib import Path
+HERE = Path(__file__).resolve().parent                        # every path below is built from this directory
+sys.path.insert(0, str(HERE.parent / "ships-pegs"))
 import keygrid as KG
 KEY = lambda rng: [KG.board_string(rng)]                    # one ships+pegs key grid (BS SPEC §4.2-§4.3)
 import json, random, sys, time
 import bspegs as P, bsref as R
-PAR = json.load(open("params.json"))
+PAR = json.load(open(HERE / "params.json"))
 def field(tier):
     d = PAR[tier]; n = d['n']; c = int(d['c']); p = int(d['p'])
     return P.Field(n, trim(R.enc(c, n))), p, int(d["q"])
@@ -63,4 +64,4 @@ if __name__ == "__main__":
         rep['seconds'] = round(time.time() - t0, 1)
         report[tier] = rep
         print(tier, json.dumps(rep['arith']), json.dumps(rep['malicious']), flush=True)
-    json.dump(report, open("run_output.json" if not sys.argv[1:] else f"run_output_{'_'.join(sys.argv[1:])}.json", "w"), indent=1)
+    json.dump(report, open(HERE / ("run_output.json" if not sys.argv[1:] else f"run_output_{'_'.join(sys.argv[1:])}.json"), "w"), indent=1)

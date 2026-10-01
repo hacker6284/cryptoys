@@ -1,7 +1,7 @@
 """Checks for the themed three-state fleet key's dice (a candidate key that was not chosen;
-NOTES.md): the face rules of the d20 / d8 / d4 readings and the former BS §4.1 = ECBS §1.3
-full-restart placement with the spec d10 and the best-fit along-dice (part D of the former
-randomizer-kit script).  ecbs13_kit.py is the same placement end to end."""
+NOTES.md): the face rules of the d20 / d8 / d4 readings and the former BS §4.1 full-restart
+placement, said to be ECBS §1.3 [unverified: not in this repository], with the spec d10 and
+the best-fit along-dice (part D of the former randomizer-kit script).  ecbs13_kit.py is the same placement end to end."""
 import json, random, collections, math
 from fractions import Fraction as F
 from pathlib import Path
@@ -28,7 +28,7 @@ for a in A: print("A", a)
 assert all(a["exact_uniform"] for a in A), [a["rule"] for a in A if not a["exact_uniform"]]
 
 rng = random.Random(2026)
-# ---------------------------------------------------------------- D. ECBS 1.3 themed fleet placement
+# ---------------------------------------------------------------- D. themed fleet placement (former BS §4.1)
 FLEET = [5, 4, 3, 3, 2]
 ALONG = {5: 6, 4: 8, 3: 8, 2: 10}      # best-fit along-die: smallest die whose top face still fits
 def per_ship_dist(L, along_sides):

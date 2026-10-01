@@ -1,11 +1,12 @@
-"""Dice rules of the BS ships+pegs key (BS SPEC §4.2); the row cup is also the ECBS key recipe.
+"""Dice rules of the BS ships+pegs key (BS SPEC §4.2).
 A. Face rules: every die-reading rule is enumerated face by face (exact Fractions).
 B. Ship build: the d12 hole die (and the all-d6 layout the SPEC dropped, as analysis) give exactly the 'grow until it
    bumps' local distribution of the former d6 wording for every room state (so the whole build
    distribution is identical), plus a global exact enumeration on small grids.
 C. Monte Carlo counts: reads, throws (queue cups), voids/rerolls per grid for each build
-   wording, and the d10 row cup at 100 holes (one key grid) and at the ECBS key sizes
-   2/16/51/162 (200 is kept so the seeded stream, and ECBS's cited counts, reproduce).
+   wording, and the d10 row cup at 100 holes (one key grid) and at 2/16/51/162/200 holes,
+   said to be ECBS's key sizes [unverified: not in this repository]; they are kept so the
+   seeded stream reproduces.
 The themed-fleet placement checks that used to be part D are in ../key-selection/themed_kit.py."""
 import os, sys, json, random, itertools, collections, math
 from fractions import Fraction as F
@@ -155,7 +156,9 @@ out["B_ship_build"] = B
 
 # ---------------------------------------------------------------- C. Monte Carlo counts per grid
 def build(rng, kit, n=10, m=10, st=None):
-    """kit: 'spec' (one d6 per spec roll, re-roll the hole), 'R' (hole d6 thirds/halves, no re-roll;
+    """Evidence harness, not a reference: bs.sudo and SPEC §4.2 are normative, and
+    check_oracle.py cross-checks the harness's keygrid.build against bs.sudo.
+    kit: 'spec' (one d6 per spec roll, re-roll the hole), 'R' (hole d6 thirds/halves, no re-roll;
     growth, kind, bow d6), 'C' (hole d12 + odd/even bow; growth, kind d6)."""
     occ = [[None] * m for _ in range(n)]; ships = []
     def rd(kind, sides=6):

@@ -1,10 +1,11 @@
-"""Checks keygrid.py (the SPEC-literal BUILD and READ, BS SPEC §4.2-§4.3) against the exact model.
+"""Checks keygrid.py (the evidence harness's BUILD and READ, BS SPEC §4.2-§4.3) against the exact
+model.  The dropped all-d6 layout is compared in ../key-selection/alld6_check.py.
 
-1. Small boards, two dice sets (the SPEC's d12 + row cup, and the dropped all-d6 layout, for comparison): chi-square of the
-   sampled layouts against the exact grow-until-it-bumps distribution (brute_build.enumerate_build
+1. Small boards, the SPEC's dice (d12 + row cup): chi-square of the sampled layouts against
+   the exact grow-until-it-bumps distribution (brute_build.enumerate_build
    with rules.extra_rules()["bump_reroll"]), of the peg patterns against uniform 3^cells, and on
    2x2 of the joint (layout, pegs) against model x uniform.  z is the Wilson-Hilferty normal score.
-2. 10x10: 20000 builds per dice set; read() -> exponent -> digits round trip; mean key cells,
+2. 10x10: 20000 builds; read() -> exponent -> digits round trip; mean key cells,
    mean hit units, dice rolls per grid.
 Output: keygrid_check_results.txt / .json.  Seed 2027."""
 import collections, itertools, json, math, random, statistics
@@ -34,39 +35,45 @@ def digits(e):
     return d[::-1]
 
 
+GRIDS = [((2, 2), 300000), ((2, 3), 300000), ((3, 2), 300000), ((1, 5), 200000), ((5, 1), 200000)]
+
+
+def run_set(rng, build, tag, out):
+    """Parts 1 and 2 for one build function build(rng, n=10, m=10, stats=None)."""
+    for g, N in GRIDS:
+        exact = enumerate_build(RULE, *g)
+        cells = g[0] * g[1]
+        lay, peg, joint = collections.Counter(), collections.Counter(), collections.Counter()
+        for _ in range(N):
+            s, p = build(rng, *g)
+            k = tuple(sorted(s)); lay[k] += 1; peg[tuple(p)] += 1
+            if g == (2, 2): joint[(k, tuple(p))] += 1
+        upeg = {pg: 3 ** -cells for pg in itertools.product(range(3), repeat=cells)}
+        res = {"N": N, "layouts": len(exact)}
+        for name, cnt, pr in [("layout", lay, exact), ("pegs", peg, upeg)] + (
+                [("joint", joint, {(k, pg): q * 3 ** -cells for k, q in exact.items() for pg in upeg})]
+                if g == (2, 2) else []):
+            c, df = chi2(cnt, pr, N)
+            res[name] = {"chi2": round(c, 1), "df": df, "z": round(z_of(c, df), 2)}
+        out["small"][f"{tag} {g[0]}x{g[1]}"] = res
+        print(tag, g, json.dumps(res), flush=True)
+    N = 20000; st = {}; C = []; H = []
+    for _ in range(N):
+        s, p = build(rng, stats=st)
+        t = keygrid.key_cells([(s, p)])
+        assert digits(keygrid.exponent(t)) == t
+        C.append(len(t) - 1); H.append(sum(t) - 1)
+    r = {"N": N, "mean_cells": round(statistics.mean(C), 3), "max_cells": max(C),
+         "mean_hit_units": round(statistics.mean(H), 3),
+         "rolls_per_grid": {k: round(v / N, 3) for k, v in sorted(st.items())}}
+    out["10x10"][tag] = r
+    print(tag, "10x10", json.dumps(r), flush=True)
+
+
 def main():
     rng = random.Random(2027)
     out = {"small": {}, "10x10": {}}
-    for fb in (None, "d6"):
-        tag = "d12+cup" if fb is None else "d6"
-        for g, N in [((2, 2), 300000), ((2, 3), 300000), ((3, 2), 300000), ((1, 5), 200000), ((5, 1), 200000)]:
-            exact = enumerate_build(RULE, *g)
-            cells = g[0] * g[1]
-            lay, peg, joint = collections.Counter(), collections.Counter(), collections.Counter()
-            for _ in range(N):
-                s, p = keygrid.build(rng, *g, fallback=fb)
-                k = tuple(sorted(s)); lay[k] += 1; peg[tuple(p)] += 1
-                if g == (2, 2): joint[(k, tuple(p))] += 1
-            upeg = {pg: 3 ** -cells for pg in itertools.product(range(3), repeat=cells)}
-            res = {"N": N, "layouts": len(exact)}
-            for name, cnt, pr in [("layout", lay, exact), ("pegs", peg, upeg)] + (
-                    [("joint", joint, {(k, pg): q * 3 ** -cells for k, q in exact.items() for pg in upeg})]
-                    if g == (2, 2) else []):
-                c, df = chi2(cnt, pr, N)
-                res[name] = {"chi2": round(c, 1), "df": df, "z": round(z_of(c, df), 2)}
-            out["small"][f"{tag} {g[0]}x{g[1]}"] = res
-            print(tag, g, json.dumps(res), flush=True)
-        N = 20000; st = {}; C = []; H = []
-        for _ in range(N):
-            s, p = keygrid.build(rng, fallback=fb, stats=st)
-            t = keygrid.key_cells([(s, p)])
-            assert digits(keygrid.exponent(t)) == t
-            C.append(len(t) - 1); H.append(sum(t) - 1)
-        r = {"N": N, "mean_cells": round(statistics.mean(C), 3), "max_cells": max(C),
-             "mean_hit_units": round(statistics.mean(H), 3),
-             "rolls_per_grid": {k: round(v / N, 3) for k, v in sorted(st.items())}}
-        out["10x10"][tag] = r
-        print(tag, "10x10", json.dumps(r), flush=True)
+    run_set(rng, keygrid.build, "d12+cup", out)
     json.dump(out, open(HERE / "keygrid_check_results.json", "w"), indent=1)
 
 

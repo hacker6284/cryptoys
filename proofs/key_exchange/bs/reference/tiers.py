@@ -5,12 +5,13 @@ Inputs, all relative to this directory:
   ../ships-pegs/combined_results.json  key entropy and multiplications per grid (20,000 built grids)
   ../exchange/exchange_output.json     full exchanges with ships+pegs keys: measured moves per multiplication
 Moves per person = (mean multiplications per grid) x (moves per multiplication measured in the exchanges)."""
-import json, math, os
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-P = json.load(open("params.json")); P["R512"] = json.load(open("params_323.json"))["n323"]
-BM = json.load(open("bigmul_output.json"))
-KEY = json.load(open(os.path.join("..", "ships-pegs", "combined_results.json")))
-EX = json.load(open(os.path.join("..", "exchange", "exchange_output.json")))
+import json, math
+from pathlib import Path
+HERE = Path(__file__).resolve().parent                        # every path below is built from this directory
+P = json.load(open(HERE / "params.json")); P["R512"] = json.load(open(HERE / "params_323.json"))["n323"]
+BM = json.load(open(HERE / "bigmul_output.json"))
+KEY = json.load(open(HERE.parent / "ships-pegs" / "combined_results.json"))
+EX = json.load(open(HERE.parent / "exchange" / "exchange_output.json"))
 H, HMIN = KEY["entropy"]["bump_H"], KEY["entropy"]["bump_Hmin"]
 MULTS = KEY["walk"]["mults_per_grid"]
 CELLS_MAX = KEY["walk"]["cells_max_possible"]
@@ -49,4 +50,4 @@ for name, key, t in ROWS:
                     moves_per_person=float(f"{moves:.4g}"), exchange_mean_moves_per_person=float(f"{ex['mean_moves_per_person']:.4g}"),
                     hours_nonstop=round(moves/3600, 1), years_nonstop=round(yrs, 3), years_8h_day=round(yrs*3, 3)))
 for r in out: print(json.dumps(r))
-json.dump(out, open("tiers_output.json", "w"), indent=1)
+json.dump(out, open(HERE / "tiers_output.json", "w"), indent=1)

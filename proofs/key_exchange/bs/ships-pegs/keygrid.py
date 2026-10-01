@@ -1,8 +1,9 @@
-"""Ships+pegs key grid: a literal implementation of BS SPEC §4.2 BUILD (d12 hole die, d6 growth
-and Sub/Cruiser rolls, d10 row cup; fallback="d6" is the all-d6 layout the SPEC dropped, kept for comparison only) and §4.3
-READ (start marker, ship pass, peg pass).  The SPEC is the home of the rules; this file follows
-its wording step by step.  read_ship_pass is written from the SPEC wording and cross-checked
-against read_rule.encode on every call.
+"""Ships+pegs key grid: evidence harness, cross-checked against bs.sudo by check_oracle.py; not a
+reference.  It simulates BS SPEC §4.2 BUILD (d12 hole die, d6 growth and Sub/Cruiser rolls, d10
+row cup) and §4.3 READ (start marker, ship pass, peg pass).  The normative description is
+primitives/key_exchange/bs/SPEC.md with bs.sudo beside it; this file follows the SPEC's wording
+step by step.  read_ship_pass is written from the SPEC wording and cross-checked against
+read_rule.encode on every call.  The dropped all-d6 layout is in ../key-selection/alld6.py.
 
 Layout records use read_rule's convention: (kind, 'H'/'V', (row, col) of first hole, bow),
 bow 0 = at the first hole, 1 = at the last hole.  Pegs: 0 none, 1 white, 2 red.
@@ -13,7 +14,8 @@ from read_rule import encode, KL
 KIND = {2: "D", 4: "B", 5: "A"}
 
 
-def build(rng, n=10, m=10, fallback=None, stats=None):
+def build(rng, n=10, m=10, stats=None):
+    """Evidence harness, cross-checked against bs.sudo by check_oracle.py; not a reference."""
     st = stats if stats is not None else {}
     def roll(kind, sides):
         st[kind] = st.get(kind, 0) + 1
@@ -24,7 +26,7 @@ def build(rng, n=10, m=10, fallback=None, stats=None):
     cup = []
     for h in range(n * m):          # the cursor
         r, c = divmod(h, m)
-        if c == 0 and fallback is None:            # step 0: the row cup
+        if c == 0:                                 # step 0: the row cup
             cup = []
             for _ in range((m + 1) // 2):
                 while True:
@@ -36,20 +38,12 @@ def build(rng, n=10, m=10, fallback=None, stats=None):
             across, down = free(r, c + 1), free(r + 1, c)
             heading = bow = None
             if across or down:
-                if fallback is None:
-                    f = roll("hole_d12", 12)
-                    if across and down:
-                        heading = None if f <= 4 else ("H" if f <= 8 else "V")
-                    else:
-                        heading = None if f <= 6 else ("H" if across else "V")
-                    bow = 0 if f % 2 else 1          # odd: bow at this hole
+                f = roll("hole_d12", 12)
+                if across and down:
+                    heading = None if f <= 4 else ("H" if f <= 8 else "V")
                 else:
-                    f = roll("hole_d6", 6)
-                    if across and down:
-                        heading = None if f <= 2 else ("H" if f <= 4 else "V")
-                    else:
-                        heading = None if f <= 3 else ("H" if across else "V")
-                    if heading: bow = 0 if roll("bow_d6", 6) <= 3 else 1
+                    heading = None if f <= 6 else ("H" if across else "V")
+                bow = 0 if f % 2 else 1              # odd: bow at this hole
             if heading:
                 dr, dc = (0, 1) if heading == "H" else (1, 0)
                 L = 2                                  # lay a Destroyer
@@ -59,11 +53,8 @@ def build(rng, n=10, m=10, fallback=None, stats=None):
                 K = KIND.get(L) or ("S" if roll("kind_d6", 6) <= 3 else "C")
                 for t in range(L): under[(r + dr * t, c + dc * t)] = len(ships)
                 ships.append((K, heading, (r, c), bow))
-        if fallback is None:                          # step 2: the peg
-            f = cup[c // 2]
-            pegs[h] = (f - 1) // 3 if c % 2 == 0 else (f - 1) % 3
-        else:
-            pegs[h] = (roll("peg_d6", 6) - 1) // 2
+        f = cup[c // 2]                               # step 2: the peg
+        pegs[h] = (f - 1) // 3 if c % 2 == 0 else (f - 1) % 3
     return ships, pegs
 
 
@@ -96,10 +87,10 @@ def key_cells(pages, n=10, m=10):
     return [1] + sum((read(s, p, n, m) for s, p in pages), [])
 
 
-def board_string(rng, fallback=None):
+def board_string(rng):
     """One dice-built key grid as the walk string bspegs.walk takes: 'W' (start marker), then the
     ship pass and the peg pass, '.'/'W'/'R' = plain/white/red."""
-    ships, pegs = build(rng, fallback=fallback)
+    ships, pegs = build(rng)
     return "".join(".WR"[t] for t in key_cells([(ships, pegs)]))
 
 

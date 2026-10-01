@@ -4,14 +4,14 @@ as two).  Checks:  (1) before folding: the strip has odd whites  <=>  A and B bo
 (a nudge multiplies by 3 or 9, which is odd: no change).  (2) folding: each lifted WHITE flips the
 parity, lifted reds don't (lifting d*3^h and laying d*toll*3^(h-n) subtracts d*3^(h-n)*p, p odd).
 We verify the checks hold on correct runs and measure how often a single wrong peg is caught."""
-import os
-os.chdir(os.path.dirname(os.path.abspath(__file__)))          # every path below is relative to this directory
+from pathlib import Path
+HERE = Path(__file__).resolve().parent                        # every path below is built from this directory
 import json, random
 import bspegs as P, bsref as R
-PAR = json.load(open("params.json")); rng = random.Random(3)
+PAR = json.load(open(HERE / "params.json")); rng = random.Random(3)
 odd = lambda reg: sum(x == 'W' for x in reg) % 2 == 1
 def checked_mul(F, A, B, nudge=0, inject=None):
-    strip = F.empty(2*F.n + 3)
+    strip = F.empty(2*F.n + nudge)
     for i, b in enumerate(B):
         if b != '.': P.lay(strip, A, i + nudge, 1 if b == 'W' else 2)
     if inject == 'lay':                                   # one wrong peg while laying

@@ -1,4 +1,5 @@
-"""Independent integer reference for BS (never looks at pegs except to encode/decode)."""
+"""Independent integer arithmetic for the BS evidence harness (never looks at pegs except to
+encode/decode).  Part of the harness, not a reference: bs.sudo and the SPEC are normative."""
 def enc(x, n):
     out = []
     for _ in range(n): out.append('.WR'[x % 3]); x //= 3

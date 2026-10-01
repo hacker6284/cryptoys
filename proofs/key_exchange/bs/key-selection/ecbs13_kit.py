@@ -1,4 +1,6 @@
-"""Themed three-state fleet key (a candidate key that was not chosen; NOTES.md): the former BS §4.1 = ECBS §1.3 placement with the proposed dice: d20 = heading (low half across, high half down) +
+"""Themed three-state fleet key (a candidate key that was not chosen; NOTES.md): the former
+BS §4.1 placement, said to be ECBS §1.3 [unverified: not in this repository], with the
+proposed dice: d20 = heading (low half across, high half down) +
 across coordinate (last digit, 0 = 10); along die = smallest die whose top face keeps the ship on
 the grid (Carrier d6, Battleship d8, 3-holers d8, Destroyer d10), re-rolled if off the grid;
 full restart on overlap (unchanged); signs: one d8 per two ship cells (half, then odd/even)."""

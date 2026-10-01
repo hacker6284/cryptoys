@@ -10,14 +10,14 @@ all walks and checks of both parties / 2, as in the reference exchange tooling.
   python3 exchange.py T1 T2 ...     run tiers, write exchange_<tier>.json
   python3 exchange.py summary       merge them into exchange_output.json / print the table
 """
-import json, os, random, sys, time
-HERE = os.path.dirname(os.path.abspath(__file__))
-os.chdir(HERE)                                   # outputs are written beside this script
-sys.path[:0] = [os.path.join(HERE, "..", "reference"), os.path.join(HERE, "..", "ships-pegs")]
+import json, random, sys, time
+from pathlib import Path
+HERE = Path(__file__).resolve().parent             # outputs are written beside this script
+sys.path[:0] = [str(HERE.parent / "reference"), str(HERE.parent / "ships-pegs")]
 import bspegs as P, bsref as R, keygrid as KG
 
-PAR = json.load(open(os.path.join(HERE, "..", "reference", "params.json")))
-PAR["R512"] = json.load(open(os.path.join(HERE, "..", "reference", "params_323.json")))["n323"]
+PAR = json.load(open(HERE.parent / "reference" / "params.json"))
+PAR["R512"] = json.load(open(HERE.parent / "reference" / "params_323.json"))["n323"]
 PLAN = {"T1": 20, "T2": 5, "T6demo": 2, "R512": 1, "R1024": 1, "R2048": 1, "R3072": 1}
 SEED = {"T1": 11, "T2": 12, "T6demo": 13, "R512": 14, "R1024": 15, "R2048": 16, "R3072": 17}
 
@@ -79,19 +79,19 @@ def run_tier(tier):
              mean_key_cells=sum(sum(e["key_cells"]) for e in ex) / (2 * len(ex)),
              seconds=round(time.time() - t0, 1))
     print(tier, "SUMMARY", json.dumps(s), flush=True)
-    json.dump(dict(summary=s, exchanges=ex), open(f"exchange_{tier}.json", "w"), indent=1)
+    json.dump(dict(summary=s, exchanges=ex), open(HERE / f"exchange_{tier}.json", "w"), indent=1)
 
 
 def summary():
     out = {}
     for tier in PLAN:
-        fn = f"exchange_{tier}.json"
-        if os.path.exists(fn): out[tier] = json.load(open(fn))["summary"]
+        fn = HERE / f"exchange_{tier}.json"
+        if fn.exists(): out[tier] = json.load(open(fn))["summary"]
     for tier, s in out.items():
         print(f"{tier:7s} runs {s['runs']:2d}  all correct {s['all_ok']}  mults/person {s['mean_mults_per_person']:8.1f}"
               f"  moves/person {s['mean_moves_per_person']:.4g}  moves/mult {s['mean_moves_per_mult']:.4g}"
               f"  key cells {s['mean_key_cells']:.1f}")
-    json.dump(out, open("exchange_output.json", "w"), indent=1)
+    json.dump(out, open(HERE / "exchange_output.json", "w"), indent=1)
 
 
 if __name__ == "__main__":

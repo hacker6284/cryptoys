@@ -1,12 +1,12 @@
-<!-- Owns: the BS reference implementation (peg recipes, integer reference, parameters) and its test outputs. Maintenance rules: ../../../../DOCS.md. -->
+<!-- Owns: the BS evidence harness (peg recipes, integer arithmetic, parameters) and its test outputs. Maintenance rules: ../../../../DOCS.md. -->
 # BS reference code
 
-Status: **a note, not a theorem.** The recipes are normative in [`primitives/key_exchange/bs/SPEC.md`](../../../../primitives/key_exchange/bs/SPEC.md) §3; `bspegs.py` implements them on colours only and is tested against the integer reference `bsref.py` and Python's `pow`. Test results, not proofs.
+Status: **a note, not a theorem.** The recipes are normative in [`primitives/key_exchange/bs/SPEC.md`](../../../../primitives/key_exchange/bs/SPEC.md) §3 and in `bs.sudo` beside it. The Python here is an **evidence harness, cross-checked against `bs.sudo` by `../vectors/check_oracle.py`; not a reference.** `bspegs.py` simulates the recipes on colours only and is tested against the integer arithmetic of `bsref.py` and Python's `pow`. Test results, not proofs. The harness is due to be replaced (`../README.md`, "Evidence harness").
 
 | Script | What it does | Output | SPEC |
 | --- | --- | --- | --- |
 | `bspegs.py` | The peg recipes B0–B10 (colours only), with a move counter | (library) | §3 |
-| `bsref.py` | Integer reference: register encode/decode, key exponent | (library) | §3, §4.4 |
+| `bsref.py` | Integer arithmetic: register encode/decode, key exponent | (library) | §3, §4.4 |
 | `bsparams.py` | Prime search and verification (MR-50 + BPSW, deterministic MR for T1/T2, 3^q = 1); `bsparams.py 323` for R512 | `params.json`, `params_output.txt`; `params_323.json`, `params_323_output.txt` | §2 |
 | `run_bs.py` | Arithmetic tests (multiply, nudge, worst case, tidy) and malicious received values, T1 / T2 / T6 | `run_output.json`, `.txt` | §5, §8 |
 | `bigmul.py` | Full-size multiplications with the long tolls: correctness and moves per multiplication | `bigmul_output.json`, `.txt` | §7, §8, §10 |
@@ -19,7 +19,7 @@ Keys for `run_bs.py`, `break_small.py` and `peg_supply.py` come from [`../ships-
 
 ## Run
 
-Every script changes to its own directory first, so it can be started from anywhere:
+Every script builds its paths from its own directory (`Path(__file__)`), so it can be started from anywhere:
 
 ```sh
 python3 bsparams.py > params_output.txt              # ~30 s

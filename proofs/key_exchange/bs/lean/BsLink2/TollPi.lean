@@ -5,7 +5,8 @@
   are the first `t` ternary digits of π, and T6 has `c = π₅₀ + 4383`. Since
   π = 10.0102…₃ has two digits before the point, `π₅₀ = ⌊π · 3^48⌋`.
 
-  What is checked here, by `decide` on natural numbers (no `native_decide`):
+  What is checked here, on natural numbers (each check by `decide`, no `native_decide`;
+  `floor_eq_pi50` is proved from the checks, not by `decide`):
   * `T6.toll` is the 50-hole register of `pi50 + 4383` (`T6_toll_eq`);
   * `pi50 ≤ 3^48 · L` and `3^48 · U < pi50 + 1`, for two explicit rationals `L < U`
     (`pi50_le_lower`, `upper_lt_pi50_succ`, `lower_lt_upper`);
@@ -20,8 +21,9 @@
   `L` takes 16 terms for 1/5 (a lower bound) and 17 for 1/239 (an upper bound), `U` the
   other way round. **That `L ≤ π ≤ U` is cited, not proved**: core Lean has no real
   numbers, so Machin's identity and the alternating-series bound are classical facts this
-  file relies on in its prose only, and so is the last step from rationals in `[L, U]` to
-  the real π (monotonicity of `⌊·⌋`). No hypothesis or axiom about π enters any theorem.
+  file relies on in its prose only, and so is the last step to the real π: `L ≤ π ≤ U`
+  and `⌊·⌋` being monotone give `⌊L·3^48⌋ ≤ ⌊π·3^48⌋ ≤ ⌊U·3^48⌋`, and `floor_eq_pi50`
+  makes both ends `pi50`. No hypothesis or axiom about π enters any theorem.
 
   Not checked: that `j = 4383` is the *smallest* offset making `p` a safe prime
   (`reference/bsparams.py` does that search).

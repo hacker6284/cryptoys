@@ -108,4 +108,26 @@ theorem _root_.BsLink2.Spec.Field.Wf.embed_parts {F : Spec.Field} (hF : F.Wf) :
   · exact hF.toll_pos
   · exact hF.toll_lt
 
+/-! ### Passing asserts without naming the sudo line
+
+The emitted asserts carry the sudo source line as an argument. These lemmas leave it
+free, so a proof that rewrites with them keeps working when `bs.sudo` moves a line. -/
+
+/-- `assert_eq` passes when the emitted equality test holds. -/
+theorem sudoAssertEq_of_beq {α : Type} [SudoRt.SEq α] [SudoRt.Canon α] {a b : α}
+    (h : SudoRt.SEq.beq a b = true) (line : Nat) : SudoRt.sudoAssertEq a b line = .ok () := by
+  unfold SudoRt.sudoAssertEq; rw [h]; rfl
+
+/-- `assert_eq` on integers passes when they are equal. -/
+theorem sudoAssertEq_int {a b : Int} (h : a = b) (line : Nat) :
+    SudoRt.sudoAssertEq a b line = .ok () :=
+  sudoAssertEq_of_beq (by rw [sEq_int, h]; exact decide_eq_true rfl) line
+
+/-- `assert_eq x x` on integers passes. -/
+theorem sudoAssertEq_self (a : Int) (line : Nat) : SudoRt.sudoAssertEq a a line = .ok () :=
+  sudoAssertEq_int rfl line
+
+/-- `assert !false` passes. -/
+theorem sudoAssert_not_false (line : Nat) : SudoRt.sudoAssert (!false) line = .ok () := rfl
+
 end BsLink2.Link2

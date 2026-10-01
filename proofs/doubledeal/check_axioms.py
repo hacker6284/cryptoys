@@ -534,6 +534,25 @@ BS_LINK2 = {
     "BsLink2.Link2.is_empty_spec",
     "BsLink2.Link2.is_lone_white_spec",
     "BsLink2.Link2.eq_embed_toReg",
+    "BsLink2.Link2.read_key_spec",
+    "BsLink2.Link2.readKey_trits",
+    "BsLink2.Link2.expOf_readKey_pos",
+    "BsLink2.Link2.length_readKey_le",
+    "BsLink2.Link2.ship_holes_spec",
+    "BsLink2.Link2.ship_pass_spec",
+    "BsLink2.Link2.peg_pass_spec",
+    "BsLink2.Link2.public_value_refines_of_read",
+    "BsLink2.Link2.shared_secret_refines_of_read",
+    "BsLink2.Link2.exchange_cells_refines",
+    "BsLink2.Link2.exchange_refines",
+    "BsLink2.Link2.exchange_alice_rejects",
+    "BsLink2.Link2.exchange_bob_rejects",
+    "BsLink2.Link2.dice_refines",
+    "BsLink2.Spec.TollPi.T6_toll_eq",
+    "BsLink2.Spec.TollPi.pi50_le_lower",
+    "BsLink2.Spec.TollPi.upper_lt_pi50_succ",
+    "BsLink2.Spec.TollPi.lower_lt_upper",
+    "BsLink2.Spec.TollPi.pi50_leading_digits",
 }
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only
@@ -546,7 +565,8 @@ BS_LINK2 = {
 # Scramble is listed: its table has a row for each of the 7 exports. `scramble_v1_digest`
 # has three theorems; the traced `scramble_v1` row says it is not claimed (no theorem), so
 # that gap is in the table rather than silent. BS is listed: its table has a row for each of
-# the 12 exports; the four key-reading and key-building rows say they are not claimed.
+# the 12 exports; the two key-building rows (build_key_grid, build_letting_go) say they are
+# not claimed.
 LINK2_EXPORT_TABLES = {
     "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                  / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),

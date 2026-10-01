@@ -74,15 +74,14 @@ theorem tier_T2_refines : Bs.tier #[84, 50] = .ok (emb Spec.T2) := by
 
 /-- §2.3: the emitted `tier "T6"` (`#[84, 54]` = "T6") is `Spec.T6`, a well-formed field
     with `n = 100` and a 50-trit toll. Its toll digits are the sudo's (cross-checked against
-    `params.json` by `vectors/check_oracle.py`); this theorem does not check them against π. -/
+    `params.json` by `vectors/check_oracle.py`); this theorem does not check them against π
+    (`BsLink2.TollPi` does, against a cited rational bracket). -/
 theorem tier_T6_wf : Bs.tier #[84, 54] = .ok (emb Spec.T6) ∧ Spec.T6.Wf ∧ Spec.T6.n = 100 ∧
     Spec.T6.toll.length = 50 := by
   refine ⟨?_, Spec.T6_wf, rfl, rfl⟩
   unfold Bs.tier; rw [beq_T6_T1]; simp only [Bool.false_eq_true, if_false]; rw [beq_T6_T2]
   simp only [Bool.false_eq_true, if_false]
-  rw [show SudoRt.sudoAssertEq (#[84, 54] : Array Int) #[84, 54] 58 = .ok () by
-    unfold SudoRt.sudoAssertEq
-    rw [show SudoRt.SEq.beq (#[84, 54] : Array Int) #[84, 54] = true by decide!]; rfl]
+  rw [sudoAssertEq_of_beq (a := (#[84, 54] : Array Int)) (b := #[84, 54]) (by decide!)]
   rfl
 
 end BsLink2.Link2

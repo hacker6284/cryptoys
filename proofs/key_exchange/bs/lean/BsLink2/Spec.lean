@@ -57,7 +57,9 @@ def T1 : Field := ⟨18, [1, 0, 1]⟩
 def T2 : Field := ⟨35, [1] ++ List.replicate 28 0 ++ [1]⟩
 
 /-- §2.3 tier T6 (demo): `n = 100` and a 50-trit toll (`p = 3^100 − (π₅₀ + 4383)`). The
-    digits are copied from `bs.sudo`; nothing here checks them against π. -/
+    digits are copied from `bs.sudo`. `BsLink2.TollPi` checks them against a rational
+    bracket of π (Machin's formula, cited, not proved): see that file for exactly what is
+    checked. -/
 def T6 : Field := ⟨100, [1, 2, 2, 2, 1, 2, 1, 2, 2, 1, 1, 1, 0, 2, 2, 2, 2, 2, 1, 2,
                         2, 0, 1, 1, 1, 1, 1, 2, 0, 0, 1, 1, 2, 0, 1, 0, 2, 2, 2, 2,
                         1, 0, 1, 1, 2, 0, 1, 0, 0, 1]⟩
@@ -131,5 +133,171 @@ namespace BsLink2.Spec
     `a` and `b` are the exponents of Alice's and Bob's cell strings. -/
 def exchangeKey (F : Field) (cellsA cellsB : List Nat) : List Nat :=
   toReg F.n (3 ^ (2 * expOf cellsA * expOf cellsB) % F.p)
+
+end BsLink2.Spec
+
+namespace BsLink2.Spec
+
+/-! ### §4.1 and §4.3: the key grid and READ ("ships, then pegs")
+
+A key grid is 10 × 10 holes in reading order (row A to J = 0 to 9, holes 1 to 10 = columns
+0 to 9); hole `(row, col)` is index `10 · row + col`. -/
+
+/-- §4.1. Every kind has its own piece: Destroyer (2 holes), Sub (3), Cruiser (3),
+    Battleship (4), Carrier (5). -/
+inductive Kind where
+  | destroyer
+  | sub
+  | cruiser
+  | battleship
+  | carrier
+  deriving DecidableEq, Repr
+
+/-- §4.1. How many holes a piece plugs into. -/
+def Kind.len : Kind → Nat
+  | .destroyer => 2
+  | .sub => 3
+  | .cruiser => 3
+  | .battleship => 4
+  | .carrier => 5
+
+/-- §4.1. A ship: its kind, whether it lies down (else across), the row and column of its
+    first hole (the one reached first in reading order), and whether its bow is at its
+    last hole ("points on") rather than its first ("points back"). -/
+structure Ship where
+  kind : Kind
+  down : Bool
+  row : Nat
+  col : Nat
+  bowLast : Bool
+  deriving DecidableEq, Repr
+
+/-- Reading-order distance between neighbouring holes of the ship. -/
+def Ship.step (s : Ship) : Nat := if s.down then 10 else 1
+
+/-- §4.1. The ship's first hole. -/
+def Ship.first (s : Ship) : Nat := 10 * s.row + s.col
+
+/-- The holes the ship covers, first hole first. -/
+def Ship.holes (s : Ship) : List Nat := (List.range s.kind.len).map (fun t => s.first + t * s.step)
+
+/-- §4.1. The ship's last hole. -/
+def Ship.last (s : Ship) : Nat := s.first + (s.kind.len - 1) * s.step
+
+/-- The ship lies on the 10 × 10 grid. -/
+def Ship.OnGrid (s : Ship) : Prop :=
+  if s.down then s.col < 10 ∧ s.row + s.kind.len ≤ 10 else s.row < 10 ∧ s.col + s.kind.len ≤ 10
+
+/-- §4.1. A key grid (one page): its fleet and the peg in each of its 100 holes, in
+    reading order (0 no peg, 1 white, 2 red). -/
+structure Grid where
+  ships : List Ship
+  pegs : List Nat
+
+/-- §4.1 / §4.2. A key grid as the SPEC describes it: every ship lies on the grid, no two
+    ships share a hole ("they never overlap"), and every one of the 100 holes has one
+    3-state peg. -/
+structure Grid.Wf (g : Grid) : Prop where
+  onGrid : ∀ s ∈ g.ships, s.OnGrid
+  disjoint : g.ships.Pairwise (fun a b => ∀ h ∈ a.holes, h ∉ b.holes)
+  pegs_len : g.pegs.length = 100
+  pegs_trits : ∀ t ∈ g.pegs, t ≤ 2
+
+/-- §4.3, the ship pass at hole `h`: no ship, or a ship's middle hole, is a plain cell;
+    a ship's first hole is white if it lies across, red if down; its last hole is white
+    if it points back, red if it points on, and then one more cell for a Sub (plain) or a
+    Cruiser (white). -/
+def holeCells (ships : List Ship) (h : Nat) : List Nat :=
+  match ships.find? (fun s => decide (h ∈ s.holes)) with
+  | none => [0]
+  | some s =>
+    if h = s.first then [if s.down then 2 else 1]
+    else if h = s.last then
+      [if s.bowLast then 2 else 1] ++
+        (match s.kind with
+         | .sub => [0]
+         | .cruiser => [1]
+         | _ => [])
+    else [0]
+
+/-- §4.3, the ship pass of one page, one hole at a time in reading order (the start
+    marker is not part of a page). -/
+def shipPass (g : Grid) : List Nat := (List.range 100).flatMap (holeCells g.ships)
+
+/-- §4.3, the peg pass: one cell per hole in reading order, the peg's colour. -/
+def pegPass (g : Grid) : List Nat := g.pegs
+
+/-- §4.3 READ: the start marker (a white cell, once for the whole key), then every page's
+    ship pass and peg pass. Read as a base-3 numeral, first cell most significant, this
+    is the exponent of §4.4 (`expOf`). -/
+def readKey (pages : List Grid) : List Nat :=
+  1 :: pages.flatMap (fun g => shipPass g ++ pegPass g)
+
+end BsLink2.Spec
+
+namespace BsLink2.Spec
+
+/-! ### B9: the exchange, with its two reject branches -/
+
+/-- B9. What a completed exchange records: both public values, the shots each sender
+    answered and what each receiver's Y ended up holding, both bases and both secrets. -/
+structure ExchangeRecord where
+  publicA : List Nat
+  publicB : List Nat
+  shotsA : List Shot
+  receivedA : List Nat
+  shotsB : List Shot
+  receivedB : List Nat
+  baseA : List Nat
+  baseB : List Nat
+  secretA : List Nat
+  secretB : List Nat
+
+/-- B8 reject text when Alice's check of Bob's value fails (as `bs.sudo` spells it). -/
+def aliceRejects : String := "B8: Alice rejects Bob's value"
+
+/-- B8 reject text when Bob's check of Alice's value fails (as `bs.sudo` spells it). -/
+def bobRejects : String := "B8: Bob rejects Alice's value"
+
+/-- B9 over the two cell strings. Each player publishes `3^e mod p` (B7) and sends it to
+    the other (§3.1); each checks what it received (B8). Alice's check of Bob's value is
+    looked at first, so if both checks fail the result is Alice's rejection. If both pass,
+    each walks over the base it got (B7, shared phase). -/
+def exchangeCells (F : Field) (ca cb : List Nat) : Except String ExchangeRecord :=
+  let pa := publicValue F ca
+  let pb := publicValue F cb
+  match checkReceived F pb, checkReceived F pa with
+  | none, _ => .error aliceRejects
+  | some _, none => .error bobRejects
+  | some ba, some bb =>
+    .ok { publicA := pa, publicB := pb,
+          shotsA := (sendPublicValue pa).1, receivedA := (sendPublicValue pa).2,
+          shotsB := (sendPublicValue pb).1, receivedB := (sendPublicValue pb).2,
+          baseA := ba, baseB := bb,
+          secretA := sharedSecret F ba ca, secretB := sharedSecret F bb cb }
+
+/-- B9 from the two keys: each key is read by §4.3 first. -/
+def exchange (F : Field) (keyA keyB : List Grid) : Except String ExchangeRecord :=
+  exchangeCells F (readKey keyA) (readKey keyB)
+
+end BsLink2.Spec
+
+namespace BsLink2.Spec
+
+/-! ### §4.2: the dice a build reads -/
+
+/-- §4.2. The dice a build reads: the faces of the hole die (d12), the d6 and the row-cup
+    d10s, each stream in the order thrown, and how many faces of each have been read. The
+    faces are arbitrary integers here; the build checks each face it reads. -/
+structure Dice where
+  d12 : List Int
+  d6 : List Int
+  d10 : List Int
+  next12 : Nat
+  next6 : Nat
+  next10 : Nat
+
+/-- §4.2. Fresh dice: nothing read yet. -/
+def dice (d12 d6 d10 : List Int) : Dice := ⟨d12, d6, d10, 0, 0, 0⟩
 
 end BsLink2.Spec

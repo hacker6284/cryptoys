@@ -108,7 +108,7 @@ here, and nothing here is proved.
 
 * Any numeric bound on the full-cipher differential beyond 1/64 (independent keys), into a
   nontrivial `v10Sym` output, or under the real keys. What is PROVED (the reduction
-  `fullDiffCount_le_64_of_offDiag`, the stem slices `StemPosition`, `StemCoupling`,
+  `fullDiffCount_le_of_col`, the stem slices `StemPosition`, `StemCoupling`,
   `StemSupportFour`, `StemUnion`, and `StemUnion.fullDiffCount_le_64`) is listed in the
   security README (module table and the M7 row; what is still open is its "Open" list); not repeated here. §2
   samples single off-diagonal entries of a few rows at ≤ 3·10^-6, which is not a bound and

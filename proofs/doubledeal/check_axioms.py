@@ -672,14 +672,14 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.fullDiffCount_one_left",
             "DoubleDeal.Security.FullCipher.fullDiffCount_to_one",
             "DoubleDeal.Security.FullCipher.fullDiffCount_eq_card_beforeFinal",
-            # column transfer through the final round: REDUCTIONS (hypothesis unproved);
-            # not_col_v10Sym says the route is closed into v10Sym
+            # column transfer through the final round: a REDUCTION (the column hypothesis is
+            # StemUnion.dpFCount_col_le_64 outside v10Sym); not_col_v10Sym says the route is
+            # closed into v10Sym
             "DoubleDeal.Security.FullCipher.fullDiffCount_le_of_col",
-            "DoubleDeal.Security.FullCipher.fullDiffCount_le_64_of_offDiag",
             "DoubleDeal.Security.FullCipher.not_col_v10Sym",
             # StemPosition (off-diagonal stem bound, first slice): the stem as a position map and
             # the support gap of gamma^-1 * beta; structure only, no count of decks, no part
-            # of hoff (helpers srcRow / cmFlat_inj2 are named apart from SumRanksDP.rowOf /
+            # of the off-diagonal stem bound (helpers srcRow / cmFlat_inj2 are named apart from SumRanksDP.rowOf /
             # SumRanksDP.cmFlat_injective)
             "DoubleDeal.Security.StemPosition.unkeyedNoMix_eq_comp",
             "DoubleDeal.Security.StemPosition.stemPosOf_injective",
@@ -700,7 +700,7 @@ PACKAGES = {
             "DoubleDeal.Security.StemCoupling.double_count",
             "DoubleDeal.Security.StemCoupling.card_cond_act_le",
             "DoubleDeal.Security.StemCoupling.coupling",
-            # StemSupportFour (off-diagonal stem bound, third slice): the 4-card case of hoff,
+            # StemSupportFour (off-diagonal stem bound, third slice): the 4-card case of the off-diagonal stem bound,
             # 64 * dpFCount beta gamma <= 52! when gamma^-1 * beta moves exactly 4 cards, and
             # supports 1-3, 5-7 count no deck (support >= 8: StemUnion below)
             "DoubleDeal.Security.StemSupportFour.qPerm_moves_le_one",

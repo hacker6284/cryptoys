@@ -606,7 +606,7 @@ theorem dpFCount_bound_of_support_four (β γ : Relabel)
   ((Nat.mul_le_mul_left 4096 (dpFCount_le_card_cells β γ h4)).trans
     (card_cells_le _ h4)).trans_eq (by ring)
 
-/-- (PROVED; the 4-card case of `hoff`) If `γ⁻¹ * β` moves exactly
+/-- (PROVED; the 4-card case of the off-diagonal stem bound) If `γ⁻¹ * β` moves exactly
     4 cards, then `64 · dpFCount β γ ≤ 52!`: at most 1/64 of the decks `x` have
     `stem(β·x) = γ·stem(x)`. (Exact counting, all in Lean: `x` lies in one of the cells
     `cell δ a b e f c d` (`δ = γ⁻¹β`, `13^5 · 4` of them, `mem_cell`), each at most `81/4096` of

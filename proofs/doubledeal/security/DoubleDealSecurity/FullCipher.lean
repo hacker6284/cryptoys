@@ -78,11 +78,10 @@
     `fullDiffCount_le_of_col`: if `p · dpFCount β γ ≤ 52!` for every `β ≠ 1` (a column bound
     for the stem alone), then `p · fullDiffCount α γ n y ≤ (52!)^(n+2)` for every `α ≠ 1`,
     every `n` (the same bound for every `n`; it does not decay) and every deck `y`.
-    `fullDiffCount_le_64_of_offDiag`: for `γ` outside `v10Sym` and `p = 64` the
-    hypothesis is needed only for `β` outside `v10Sym` with `β ≠ γ` (the diagonal is
-    `dpFCount_self_le_64`). `not_col_v10Sym`: into a nontrivial `v10Sym a x` no `p ≥ 2`
+    For `γ` outside `v10Sym` and `p = 64` the diagonal is `dpFCount_self_le_64`.
+    `not_col_v10Sym`: into a nontrivial `v10Sym a x` no `p ≥ 2`
     works. The off-diagonal hypothesis is about the stem (SumRanks) alone, not about a
-    GridCycle round, and it does not imply `roundBody_covariant_iff_id`. It is proved in
+    GridCycle round, and it is not known to imply `roundBody_covariant_iff_id`. It is proved in
     `StemUnion` (`dpFCount_le_of_ne`, every `β ≠ γ`), which also shows that no `β` is exactly
     stem-covariant into a `γ ≠ β` (that would give `dpFCount β γ = 52!`; not stated as a
     separate theorem).
@@ -716,30 +715,6 @@ theorem fullDiffCount_le_of_col {α : Relabel} (hα : α ≠ 1) (γ : Relabel) (
     _ ≤ Nat.factorial 52 * (Nat.factorial 52 ^ n * Nat.factorial 52) :=
         Nat.mul_le_mul_left _ hs
     _ = Nat.factorial 52 ^ (n + 2) := by ring
-
-/-- (PROVED; a REDUCTION. `hoff` is a special case of `StemUnion.dpFCount_le_of_ne` (every
-    `β ≠ γ`); `StemUnion.fullDiffCount_le_64` gives the conclusion without hypothesis, through
-    `fullDiffCount_le_of_col`.) For an output
-    difference `γ` outside `v10Sym`, the column hypothesis of `fullDiffCount_le_of_col` with
-    `p = 64` is needed only OFF the diagonal and outside `v10Sym`: the diagonal `β = γ` is
-    `dpFCount_self_le_64` (`sumRanksV10_survival_le`), and a nontrivial `v10Sym` input
-    reaches only itself (`dpFCount_v10Sym`). So if every `β` outside `v10Sym` with `β ≠ γ`
-    has `64 · dpFCount β γ ≤ 52!`, then `64 · fullDiffCount α γ n y ≤ (52!)^(n+2)` for every
-    `α ≠ 1`, `n` and deck `y`. Independent uniform keys; the same bound for every `n`. -/
-theorem fullDiffCount_le_64_of_offDiag {α γ : Relabel} (hα : α ≠ 1)
-    (hγ : ¬ ∃ a x, γ = v10Sym a x)
-    (hoff : ∀ β, β ≠ γ → (¬ ∃ a x, β = v10Sym a x) → 64 * dpFCount β γ ≤ Nat.factorial 52)
-    (n : ℕ) {y : Fin 52 → Nat} (hy : IsDeck y) :
-    64 * fullDiffCount α γ n y ≤ Nat.factorial 52 ^ (n + 2) := by
-  refine fullDiffCount_le_of_col hα γ 64 (fun β _ => ?_) n hy
-  by_cases hβγ : β = γ
-  · subst hβγ
-    exact dpFCount_self_le_64 β hγ
-  · by_cases hv : ∃ a x, β = v10Sym a x
-    · obtain ⟨a, x, rfl⟩ := hv
-      rw [dpFCount_v10Sym, if_neg (Ne.symm hβγ)]
-      simp
-    · exact hoff β hβγ hv
 
 /-- (PROVED) The column route gives nothing for outputs in `v10Sym`: for `(a, x) ≠ (0, 0)`
     the final round keeps `v10Sym a x` on every deck (`dpFCount_v10Sym`), so for no `p ≥ 2`

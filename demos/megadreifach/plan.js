@@ -11,22 +11,40 @@
  */
 import { FACE_NAME, cardLabel, cardRank, turnMove, turnText } from "./minx.js";
 
-// Animate at most two blocks (messages of up to 47 bytes). Every block
-// more than doubles the undo-solves: block 1 plays 648 leader turns,
-// block 2 adds 1,656, and a third block alone would add 3,696 (a 2,304 +
-// 1,440 undo word), about 11 minutes even at the top speed. Longer
-// messages show the digest only, and the dock says so.
-export const MAX_ANIM_BLOCKS = 2;
+// Block 1 plays turn for turn, for any message. Every later block more
+// than doubles the undo-solves (block 2 alone adds 1,656 leader turns, a
+// third 3,696), so blocks 2–N are a marked fast-forward instead: the
+// puzzles land on the trace's real final h (A), h⁻¹ (B) and solved (C),
+// with the digest. No turns or cards of those blocks are shown.
+export const FULL_BLOCKS = 1;
 export const BLOCK_BYTES = 28;
 export const SOLVE_CHUNK = 12;
 export const PUZZLES = ["A", "B", "C"];
 export const HOME = { up: 0, front: 1 };
 
-export function maxAnimBytes() {
+export function oneBlockBytes() {
     // SPEC §3 pad: M ‖ 0x80 ‖ zeros ‖ 8-byte length, so n bytes take
-    // ceil((n + 9) / 28) blocks and two blocks hold 47 bytes. The worker
+    // ceil((n + 9) / 28) blocks and one block holds 19 bytes. The worker
     // counts blocks with the generated pad_message; this is the dock's copy.
-    return MAX_ANIM_BLOCKS * BLOCK_BYTES - 9;
+    return FULL_BLOCKS * BLOCK_BYTES - 9;
+}
+
+/**
+ * Length of the fast-forward over blocks from..to: long enough to read the
+ * counter, short at any length (1.8 s for one block, at most 5 s at
+ * tempo 1). Speed shortens it only gently, never under 1.4 s.
+ */
+export function ffMillis(from, to, tempo = 1) {
+    const n = Math.max(1, to - from + 1);
+    const base = Math.min(5000, 1800 + 160 * (n - 1));
+    const speedUp = Math.min(2, Math.max(1, Math.sqrt(Number(tempo) || 1)));
+    return Math.max(1400, base / speedUp);
+}
+
+/** The block the fast-forward counter shows at progress t (0..1). */
+export function ffBlockAt(t, from, to) {
+    const n = to - from + 1;
+    return Math.min(to, from + Math.floor(Math.max(0, t) * n));
 }
 
 export function undo(turns) {
@@ -85,11 +103,12 @@ const SOLVE_WORDS = {
 
 /**
  * @param trace host `trace_hash` output (plain numbers)
- * @returns {{ moves, beats, digest, blocks }}
+ * @returns {{ moves, beats, digest, blocks, final, ffAt }} `final` (A = h, B = h⁻¹ after
+ *   the last block) and `ffAt` (the fast-forward beat) are set when blocks > 1.
  */
 export function buildShow(trace) {
     const blocks = trace.blocks.length;
-    if (blocks > MAX_ANIM_BLOCKS) throw new RangeError(`${blocks} blocks is too long to animate`);
+    const shown = trace.blocks.slice(0, FULL_BLOCKS);
     const moves = { A: [], B: [], C: [] };
     const hist = { A: [], B: [], C: [] };
     const beats = [];
@@ -133,7 +152,7 @@ export function buildShow(trace) {
         });
     });
 
-    trace.blocks.forEach((blk, b) => {
+    shown.forEach((blk, b) => {
         beats.push({
             kind: "deal", block: b, stage: `deal-${b}`, ranges: {},
             chunk: blk.chunk.slice(), deal: blk.deal.slice(),
@@ -238,14 +257,38 @@ export function buildShow(trace) {
         beats.push({
             kind: "gather", block: b, stage: `gather-${b}`, ranges: {},
             caption: b + 1 < blocks
-                ? note(`Block ${b + 1} done`, "Gather the cards", "A carries h′ into the next block.", SPEC_HAND,
+                ? note(`Block ${b + 1} done`, "Gather the cards", `A carries h′ into block ${b + 2}.`, SPEC_HAND,
                     `Block ${b + 1} done`)
                 : note("Done", "A holds the digest", "Read it off A (§6).", SPEC_HAND, "Done: A holds the digest",
                     hex(trace.digest)),
         });
     });
 
-    return { moves, beats, digest: trace.digest.slice(), blocks };
+    let final = null;
+    let ffAt = -1;
+    if (blocks > shown.length) {
+        // Blocks 2–N: no turns, no cards. The puzzles settle on the trace's
+        // own last chaining value, its inverse, and solved.
+        const last = trace.blocks[blocks - 1];
+        final = { A: last.h_next, B: last.h_next_inv };
+        const from = shown.length + 1;
+        const range = from === blocks ? `block ${blocks}` : `blocks ${from}–${blocks}`;
+        ffAt = beats.length;
+        beats.push({
+            kind: "ff", block: shown.length, stage: "ff", ranges: {}, from, to: blocks,
+            caption: note(`Fast-forward · ${range}`, `Fast-forward: ${range}`,
+                `Each block deals 52 cards, plays 88 steps and the 3-solve, just as block 1 did. Those turns are not shown; the puzzles land on the real result.`,
+                SPEC_HAND, `Fast-forward: ${range}`),
+        });
+        beats.push({
+            kind: "done", block: blocks - 1, stage: "done", ranges: {},
+            caption: note("Done", "A holds the digest",
+                `After block ${blocks}: A is h, B its inverse, C solved. Read the digest off A (§6).`, SPEC_HAND,
+                "Done: A holds the digest", hex(trace.digest)),
+        });
+    }
+
+    return { moves, beats, digest: trace.digest.slice(), blocks, final, ffAt };
 }
 
 /** Beats per stage key, for the transport's stage jumps. */

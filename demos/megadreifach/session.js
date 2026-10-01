@@ -3,26 +3,28 @@
  *
  * The digest comes from the generated Hash in a worker (hasher.js). Play
  * asks the worker for the generated trace_hash and plays every turn of
- * it on the view: the cook, each block's 52 card steps and 36 F3 rounds,
- * and the full 3-solve. Messages over two blocks show the digest only.
- * No algorithm step is computed here.
+ * block 1 on the view: the cook, the deal, 52 card steps and 36 F3 rounds,
+ * and the full 3-solve. Longer messages then fast-forward blocks 2–N, with
+ * a block counter, to the trace's real end state. No algorithm step is
+ * computed here.
  */
 import { bindGrowFields } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
 import { openSpec, renderTeachCard, sessionScope } from "../shared/session.js";
 import { bindTeachKeys, setDisabled } from "../shared/teach.js";
 import { createHasher } from "./hasher.js";
-import { MAX_ANIM_BLOCKS, maxAnimBytes } from "./plan.js";
+import { FULL_BLOCKS, oneBlockBytes } from "./plan.js";
 
 const EMPTY_STATUS = "Type a message, or pick a known answer.";
 const READY_STATUS = "Play shows every turn: cook, deal, 88 steps, 3-solve.";
+const READY_FF_STATUS = "Play shows block 1 turn for turn, then fast-forwards to the end.";
+
+function blockRange(from, to) {
+    return from === to ? `block ${to}` : `blocks ${from}–${to}`;
+}
 
 function hexOf(bytes) {
     return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function kindCount(show, kind) {
-    return show.beats.filter((beat) => beat.kind === kind).length;
 }
 
 export function createMegaDreifachSession({
@@ -40,6 +42,7 @@ export function createMegaDreifachSession({
     const statusEl = $("#status");
     const errorEl = $("#error");
     const animNote = $("#anim-note");
+    const ffEl = $("#ff-counter");
     const ioNote = $("#io-note");
     const teachEl = $("#teach");
     const teachCard = $("#teach-card");
@@ -91,7 +94,30 @@ export function createMegaDreifachSession({
     }
 
     function animatable() {
-        return Boolean(info && info.gen === gen && info.blocks <= MAX_ANIM_BLOCKS);
+        return Boolean(info && info.gen === gen);
+    }
+
+    // The fast-forward's own line: "Fast-forward: blocks 2–N", then the
+    // block it has reached. Hidden before the fast-forward beat.
+    function ffCounter(block) {
+        if (!ffEl) return;
+        if (!show?.final || block == null) {
+            ffEl.hidden = true;
+            ffEl.textContent = "";
+            ffEl.classList.remove("is-running");
+            return;
+        }
+        const beat = show.beats[show.ffAt];
+        const doneAll = block >= beat.to;
+        ffEl.hidden = false;
+        ffEl.classList.toggle("is-running", !doneAll);
+        ffEl.textContent = `Fast-forward: ${blockRange(beat.from, beat.to)} · `
+            + (doneAll ? `done, ${beat.to} of ${beat.to}` : `block ${block} of ${beat.to}`);
+    }
+
+    function ffAtCursor() {
+        if (!show?.final || cursor < show.ffAt) return null;
+        return show.beats[show.ffAt].to;
     }
 
     function syncControls() {
@@ -108,12 +134,12 @@ export function createMegaDreifachSession({
             playBtn.title = playing ? "Pause" : "Play";
         }
         if (animNote) {
-            const tooLong = Boolean(info && info.gen === gen && info.blocks > MAX_ANIM_BLOCKS && hasMessage());
-            animNote.hidden = !tooLong;
-            animNote.textContent = tooLong
-                ? `Too long to animate: ${info.blocks} blocks. The show plays every turn of up to `
-                    + `${MAX_ANIM_BLOCKS} blocks (${maxAnimBytes()} bytes); longer messages get the digest only. `
-                    + "The digest above is exact."
+            const long = Boolean(info && info.gen === gen && info.blocks > FULL_BLOCKS && hasMessage());
+            animNote.hidden = !long;
+            animNote.textContent = long
+                ? `${info.blocks} blocks. The show plays block 1 turn for turn (a block holds ${oneBlockBytes()} bytes), `
+                    + `then fast-forwards ${blockRange(FULL_BLOCKS + 1, info.blocks)} without showing their turns `
+                    + "and lands on the real end state: A holds the digest above, B its inverse, C solved."
                 : "";
         }
     }
@@ -126,8 +152,7 @@ export function createMegaDreifachSession({
             const ok = hexOf(info.digest) === kat.digest_hex;
             return `Known answer “${kat.name}”, ${blocks}: ${ok ? "digest matches the KAT file ✓" : "DIGEST DIFFERS FROM THE KAT FILE"}`;
         }
-        if (info.blocks > MAX_ANIM_BLOCKS) return `${bytes.length} bytes · ${blocks} · digest only`;
-        return `${bytes.length} bytes · ${blocks} · ${READY_STATUS}`;
+        return `${bytes.length} bytes · ${blocks} · ${info.blocks > FULL_BLOCKS ? READY_FF_STATUS : READY_STATUS}`;
     }
 
     function dropShow() {
@@ -137,6 +162,7 @@ export function createMegaDreifachSession({
         showGen = -1;
         loading = null;
         cursor = -1;
+        ffCounter(null);
         setTeaching(false);
         void view?.clearShow?.();
     }
@@ -233,7 +259,8 @@ export function createMegaDreifachSession({
             title: "Three solved puzzles and a deck",
             math: "",
             why: show
-                ? `A will carry the hash, B its inverse; C stays solved. ${kindCount(show, "deal")} block${kindCount(show, "deal") === 1 ? "" : "s"}.`
+                ? `A will carry the hash, B its inverse; C stays solved. ${show.blocks} block${show.blocks === 1 ? "" : "s"}`
+                    + (show.final ? `: block 1 turn for turn, then a fast-forward.` : ".")
                 : "A will carry the hash, B its inverse; C stays solved.",
             spec: "5.7 By hand: the cook and the 3-solve",
         };
@@ -253,6 +280,7 @@ export function createMegaDreifachSession({
         job += 1;
         playing = false;
         cursor = Math.max(-1, Math.min(show.beats.length - 1, index));
+        ffCounter(ffAtCursor());
         await view.seek(cursor);
         status(captionAt(cursor));
         renderTeach();
@@ -264,7 +292,16 @@ export function createMegaDreifachSession({
         status(captionAt(cursor));
         renderTeach();
         syncControls();
-        await view.playBeat(show.beats[cursor], cursor);
+        const beat = show.beats[cursor];
+        if (beat.kind === "ff") {
+            ffCounter(beat.from);
+            await view.playBeat(beat, cursor, {
+                progress: (block) => { if (mine === job) ffCounter(block); },
+            });
+            if (mine === job) ffCounter(beat.to);
+        } else {
+            await view.playBeat(beat, cursor);
+        }
         return mine === job;
     }
 
@@ -381,8 +418,8 @@ export function createMegaDreifachSession({
             button.type = "button";
             button.className = "kat-pick";
             button.dataset.kat = vector.name;
-            const animated = vector.n_blocks <= MAX_ANIM_BLOCKS;
-            button.textContent = `${vector.name} · ${vector.msg_len} B · ${vector.n_blocks} block${vector.n_blocks === 1 ? "" : "s"}${animated ? "" : " (digest only)"}`;
+            const ff = vector.n_blocks > FULL_BLOCKS;
+            button.textContent = `${vector.name} · ${vector.msg_len} B · ${vector.n_blocks} block${vector.n_blocks === 1 ? "" : "s"}${ff ? " (fast-forward after block 1)" : ""}`;
             button.addEventListener("click", () => pickKat(vector), listen);
             katMenu.append(button);
         }

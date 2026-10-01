@@ -145,3 +145,61 @@ h1 {
   width: auto;
   max-width: 720px;
 }
+
+/* Fast-forward (blocks 2–N): a marked state, never turn by turn. The
+   puzzles spin in a blur and the face-down deal shuffles while the
+   counter runs; then they settle on the real end state. */
+.drei-ff {
+  margin: 0;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--accent, #ffc36b);
+}
+
+.drei-ff[hidden] {
+  display: none;
+}
+
+.drei-ff.is-running::before {
+  content: "⏩ ";
+}
+
+.trio.is-ff .minx-host {
+  animation: drei-ff-spin 0.45s linear infinite;
+  filter: blur(2.5px);
+}
+
+.deal.is-ff .card {
+  animation: drei-ff-shuffle 0.5s ease-in-out infinite;
+}
+
+.deal.is-ff .card:nth-child(odd) {
+  animation-delay: -0.25s;
+}
+
+@keyframes drei-ff-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes drei-ff-shuffle {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-18px) scale(0.9);
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trio.is-ff .minx-host,
+  .deal.is-ff .card {
+    animation: none;
+    filter: none;
+  }
+}

@@ -61,7 +61,10 @@ is only ever solved by undoing its turns (SPEC §5.7): on leave each rig
 keeps its turns since it was last solved (its alg becomes that list,
 jumped to the end), and the next enter plays them backwards, fast, in
 the scene (`resetPuzzles`). The list lives in the page, so a reload
-starts solved. Rest heights come from `measureLocalBox(seat.fit)`: a
+starts solved. The fast-forward (blocks 2–N) puts the trace's final positions on the
+rigs with an empty alg and `experimentalModel.setupTransformation`
+(`megadreifach/pattern.js` builds the KTransformation); the next enter
+clears it with a spin instead of an undo. Rest heights come from `measureLocalBox(seat.fit)`: a
 world box measured mid-flight left C floating.
 
 ## Host / matrix / three.js

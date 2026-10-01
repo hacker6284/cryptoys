@@ -60,10 +60,11 @@ function el(tag, id = "", dataset = {}) {
 function makeRoot() {
     const ids = ["message", "digest", "status", "error", "anim-note", "io-note", "teach", "teach-card",
         "teach-pos", "play", "step", "skip-end", "reset", "speed", "kat", "kat-menu", "spec", "spec-body",
-        "spec-btn", "spec-close", "digest-btn", "sound"];
+        "spec-btn", "spec-close", "digest-btn", "sound", "ff-counter"];
     const byId = Object.fromEntries(ids.map((id) => [id, el(id === "message" || id === "digest" ? "textarea" : "div", id)]));
     byId.speed.value = "12";
     byId["anim-note"].hidden = true;
+    byId["ff-counter"].hidden = true;
     const enc = ["text", "hex"].map((e) => el("button", "", { encoding: e }));
     const jumps = ["back", "fwd", "stage-back", "stage-fwd", "round-back", "round-fwd"].map((j) => el("button", "", { jump: j }));
     const root = {
@@ -75,13 +76,22 @@ function makeRoot() {
     return root;
 }
 
-function stubView() {
+function stubView(root) {
     const calls = [];
     return {
         calls,
         loadShow: async (show) => { calls.push(["load", show.beats.length]); },
         seek: async (i) => { calls.push(["seek", i]); },
-        playBeat: async (beat, i) => { calls.push(["beat", i]); },
+        playBeat: async (beat, i, hooks) => {
+            calls.push(["beat", i]);
+            if (beat.kind === "ff") {
+                // A real view ticks the counter through every block it shows.
+                for (let b = beat.from; b <= beat.to; b++) {
+                    hooks.progress(b);
+                    calls.push(["ff", b, root.byId["ff-counter"].textContent]);
+                }
+            }
+        },
         clearShow: async () => { calls.push(["clear"]); },
         setTempo: (t) => { calls.push(["tempo", t]); },
     };
@@ -105,7 +115,7 @@ async function setup() {
     const chimes = [];
     const sound = { play: (n) => chimes.push(n), bindToggle: (b) => { b.bound = true; return () => { b.bound = false; }; } };
     const root = makeRoot();
-    const view = stubView();
+    const view = stubView(root);
     const session = createMegaDreifachSession({ view, root, specUrl: "SPEC.md", hasher, sound, katsUrl: "kats.json" });
     return { root, view, session, chimes, answer };
 }
@@ -152,16 +162,44 @@ test("KAT picker: every vector's digest matches, and a pass chimes", { skip: !re
     session.dispose();
 });
 
-test("too long to animate: digest only, with a plain note", { skip: !ready }, async () => {
-    const { root, session } = await setup();
+test("longer than one block: block 1 turn for turn, then a marked fast-forward", { skip: !ready }, async () => {
+    const { root, view, session, chimes } = await setup();
     const $ = root.byId;
     await session.pickKat("multi_56");
     await settle();
     assert.equal($["anim-note"].hidden, false);
-    assert.match($["anim-note"].textContent, /Too long to animate: 3 blocks.*2 blocks \(47 bytes\)/);
-    assert.equal($.play.disabled, true);
-    assert.equal($.step.disabled, true);
-    assert.ok($.digest.value.length > 0, "digest still shown");
+    assert.match($["anim-note"].textContent, /^3 blocks\. The show plays block 1 turn for turn.*fast-forwards blocks 2–3/);
+    assert.doesNotMatch($["anim-note"].textContent, /47|digest only/);
+    assert.equal($.play.disabled, false);
+    assert.equal($.step.disabled, false);
+    assert.match($.status.textContent, /“multi_56”, 3 blocks: digest matches the KAT file ✓/);
+    chimes.length = 0;
+    await session.play();
+    const { beats } = session.state();
+    const ff = view.calls.filter((c) => c[0] === "ff");
+    assert.deepEqual(ff.map((c) => c[1]), [2, 3], "the counter ticks through blocks 2 and 3");
+    assert.match(ff[0][2], /^Fast-forward: blocks 2–3 · block 2 of 3$/);
+    assert.equal($["ff-counter"].hidden, false);
+    assert.match($["ff-counter"].textContent, /^Fast-forward: blocks 2–3 · done, 3 of 3$/);
+    assert.equal(session.state().cursor, beats - 1);
+    assert.match($.status.textContent, new RegExp(`^Done\\. A holds the digest ${$.digest.value}\\.$`));
+    assert.deepEqual(chimes, ["chime"]);
+    // Seeking back into block 1 hides the counter; the end shows it done.
+    await session.seek(10);
+    assert.equal($["ff-counter"].hidden, true);
+    await session.skipToEnd();
+    assert.match($["ff-counter"].textContent, /done, 3 of 3$/);
+    session.dispose();
+});
+
+test("KAT menu: one-block vectors play fully, longer ones are marked fast-forward", { skip: !ready }, async () => {
+    const { root, session } = await setup();
+    await session.pickKat("empty");
+    const labels = root.byId["kat-menu"].children.map((b) => b.textContent);
+    assert.equal(labels.length, 8);
+    const ff = labels.filter((t) => t.endsWith("(fast-forward after block 1)"));
+    assert.equal(ff.length, 5, labels.join(" | "));
+    assert.ok(labels.every((t) => !/digest only/.test(t)));
     session.dispose();
 });
 

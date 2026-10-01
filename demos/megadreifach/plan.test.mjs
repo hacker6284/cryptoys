@@ -1,10 +1,18 @@
 import assert from "node:assert/strict";
 import { FACE_MOVE, gripMatrix, mulMatrix, spinMatrix } from "./minx.js";
-import { MAX_ANIM_BLOCKS, PUZZLES, buildShow, maxAnimBytes, undo } from "./plan.js";
+import { FULL_BLOCKS, PUZZLES, buildShow, ffBlockAt, ffMillis, oneBlockBytes, undo } from "./plan.js";
 import { bytesOfHex, loadGenerated, samePos } from "./gen.test-helper.mjs";
 
 assert.deepEqual(undo([[1, 2], [3, -4]]), [[3, 4], [1, -2]]);
-assert.equal(maxAnimBytes(), 47);
+assert.equal(FULL_BLOCKS, 1);
+assert.equal(oneBlockBytes(), 19);
+assert.equal(ffBlockAt(0, 2, 147), 2);
+assert.equal(ffBlockAt(0.5, 2, 147), 75);
+assert.equal(ffBlockAt(1, 2, 147), 147);
+assert.equal(ffBlockAt(1, 2, 2), 2);
+assert.equal(ffMillis(2, 2), 1800);
+assert.equal(ffMillis(2, 147), 5000);
+assert.ok(ffMillis(2, 2, 12) >= 1400 && ffMillis(2, 147, 12) >= 1400);
 
 const gen = await loadGenerated();
 if (!gen) {
@@ -12,9 +20,9 @@ if (!gen) {
     process.exit(0);
 }
 
-// The dock's byte limit is the generated padding's two-block limit.
-assert.equal(gen.host.pad_message(new Array(47).fill(1)).length / 28, 2);
-assert.equal(gen.host.pad_message(new Array(48).fill(1)).length / 28, 3);
+// The dock's one-block size is the generated padding's.
+assert.equal(gen.host.pad_message(new Array(19).fill(1)).length / 28, 1);
+assert.equal(gen.host.pad_message(new Array(20).fill(1)).length / 28, 2);
 
 function parseMove(move) {
     const m = /^([A-Z]+)(\d?)('?)$/.exec(move);
@@ -25,17 +33,13 @@ function parseMove(move) {
 
 const close = (a, b) => a.every((row, i) => row.every((v, j) => Math.abs(v - b[i][j]) < 1e-9));
 const kats = gen.kats().vectors;
-let animated = 0;
+let fastForwarded = 0;
 for (const kat of kats) {
     const msg = bytesOfHex(kat.msg_hex);
     const trace = gen.host.trace_hash(msg);
     assert.equal(trace.blocks.length, kat.n_blocks);
     assert.equal(trace.digest.map((b) => b.toString(16).padStart(2, "0")).join(""), kat.digest_hex);
-    if (trace.blocks.length > MAX_ANIM_BLOCKS) {
-        assert.throws(() => buildShow(trace), RangeError);
-        continue;
-    }
-    animated += 1;
+    if (trace.blocks.length > FULL_BLOCKS) fastForwarded += 1;
     const show = buildShow(trace);
     const pos = { A: gen.identity(), B: gen.identity(), C: gen.identity() };
     const done = { A: 0, B: 0, C: 0 };
@@ -82,6 +86,12 @@ for (const kat of kats) {
             assert.ok(beat.caption.title.length <= 64, beat.caption.title);
             assert.ok(!beat.caption.math.includes(","), beat.caption.math);
         }
+        if (beat.kind === "ff" || beat.kind === "done") {
+            // No turns in the fast-forward: the view shows show.final, which
+            // is the trace's last chaining value, its inverse, and solved.
+            assert.deepEqual(beat.ranges, {});
+            continue;
+        }
         if (beat.kind === "home") assert.ok(samePos(pos.A, blk.e), `${kat.name}: A = e after E_m`);
         if (beat.kind === "gather") {
             assert.ok(samePos(pos.A, blk.h_next), `${kat.name}: A = h' after the 3-solve`);
@@ -92,14 +102,29 @@ for (const kat of kats) {
     }
     for (const p of PUZZLES) assert.equal(done[p], show.moves[p].length);
     const counts = PUZZLES.map((p) => show.moves[p].length);
-    if (trace.blocks.length === 1) assert.deepEqual(counts, [648, 12 + 12 + 216, 216 + 216]);
-    if (trace.blocks.length === 2) assert.deepEqual(counts, [2304, 240 + 216 + 624, 432 + 624 + 624]);
-    // Every block shows the full 3-solve, the last included.
-    for (let b = 0; b < trace.blocks.length; b++) {
-        for (const s of [1, 2, 3]) assert.ok(show.beats.some((x) => x.kind === "solve" && x.block === b && x.solve === s));
+    // Block 1 is played in full at any length; later blocks add no turns.
+    assert.deepEqual(counts, [648, 12 + 12 + 216, 216 + 216]);
+    for (const s of [1, 2, 3]) assert.ok(show.beats.some((x) => x.kind === "solve" && x.block === 0 && x.solve === s));
+    assert.equal(show.beats.filter((x) => x.kind === "deal").length, 1);
+    const last = trace.blocks[trace.blocks.length - 1];
+    if (trace.blocks.length === 1) {
+        assert.equal(show.final, null);
+        assert.equal(show.ffAt, -1);
+        assert.equal(show.beats.at(-1).kind, "gather");
+    } else {
+        // A after block 1 really is block 2's h (the fast-forward starts there).
+        assert.ok(samePos(pos.A, trace.blocks[1].h));
+        assert.deepEqual(show.final, { A: last.h_next, B: last.h_next_inv });
+        assert.equal(gen.host.position_to_bytes(show.final.A).map((b) => b.toString(16).padStart(2, "0")).join(""), kat.digest_hex);
+        assert.equal(show.beats[show.ffAt].kind, "ff");
+        assert.equal(show.beats[show.ffAt].from, 2);
+        assert.equal(show.beats[show.ffAt].to, trace.blocks.length);
+        assert.equal(show.beats.at(-1).kind, "done");
+        assert.equal(show.ffAt, show.beats.length - 2);
+        assert.match(show.beats[show.ffAt].caption.title, /^Fast-forward: blocks? /);
     }
 }
-assert.equal(animated, 6);
+assert.equal(fastForwarded, 5);
 const one = buildShow(gen.host.trace_hash([0x61]));
 assert.equal(one.beats.filter((b) => b.kind === "read").length, 88);
 assert.ok(one.beats.filter((b) => b.kind === "solve").every((b) => / · turns \d+–\d+ of \d+$/.test(b.caption.short)));

@@ -829,6 +829,7 @@ export function createMegaDreifachAdapter() {
             <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off" placeholder="No message yet"></textarea>
           </label>
           <p id="anim-note" class="drei-anim-note" role="status" hidden></p>
+          <p id="ff-counter" class="drei-ff" role="status" aria-live="polite" hidden></p>
           <p id="status" class="status drei-status" aria-live="polite">Type a message, or pick a known answer.</p>`,
         digestButton: "Copy",
         hint: "Step to see each turn.",

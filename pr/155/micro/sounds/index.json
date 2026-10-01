@@ -459,16 +459,16 @@
     "megaminx-turn"
    ]
   },
-  "scramble-turn/settle/settle_kenney-carpet-003-soft-cut": {
+  "scramble-turn/settle/settle_kenney-carpet-000-soft-cut": {
    "group": "settle",
    "author": "Kenney (www.kenney.nl)",
    "license": "Creative Commons Zero, CC0 (License.txt in the pack)",
    "source": "https://kenney.nl/assets/impact-sounds",
-   "description": "Kenney footstep_carpet_003, low-passed 1.5 kHz, 20 ms fade-in: a barely-there muffled pat on cloth.",
-   "peakMs": 27,
-   "lufs": -24.7,
-   "gainTo16": 8.7,
-   "durationS": 0.104,
+   "description": "Kenney footstep_carpet_000 past its first scuff, low-passed 1.8 kHz, 20 ms fade-in: a soft muffled pat, a touch more present.",
+   "peakMs": 22,
+   "lufs": -25.8,
+   "gainTo16": 9.8,
+   "durationS": 0.117,
    "pages": [
     "scramble-turn"
    ]

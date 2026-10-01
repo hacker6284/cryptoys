@@ -30,9 +30,9 @@ export default {
         // Lift off felt; contact: the puzzle leaves the felt. Off (try "scramble-lift/lift/regrip-1_01kamii05-428594").
         lift: null,
         // Settle on felt; contact: the puzzle touches the felt.
-        // A barely-there muffled pat (Kenney carpet footstep, low-passed
-        // 1.5 kHz, 20 ms soft attack, 104 ms). Its output peak sits about
-        // 20 dB under the click's (the master limiter squashes the click).
-        settle: { file: "scramble-turn/settle/settle_kenney-carpet-003-soft-cut", gainDb: -17.7, offsetMs: -27 },
+        // Zachary's pick (option 3): a soft muffled pat (Kenney carpet
+        // footstep past its first scuff, low-passed 1.8 kHz, 20 ms soft
+        // attack, ~115 ms). Output peak about 17 dB under the click's.
+        settle: { file: "scramble-turn/settle/settle_kenney-carpet-000-soft-cut", gainDb: -14.6, offsetMs: -22 },
     },
 };

@@ -28,7 +28,7 @@ Same path as GitHub Pages (`.github/actions/generate-demos` →
 `tools/render-build.sh` is that sequence for Render (install rustup if `cargo`
 is missing, wipe and shallow-fetch sudocode at the pin every build, cargo
 build, then `tools/generate-demos.sh`). Pages, Render and CI all build sudoc at
-`proofs/SUDOCODE_PIN`, so a deploy changes compiler only when the pin is bumped.
+`proofs/SUDOCODE_PIN`, so sudoc's source changes only when the pin is bumped.
 
 ## Dashboard settings (existing service — do not create a second site)
 

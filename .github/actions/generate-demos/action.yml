@@ -10,7 +10,7 @@ runs:
       run: |
         commit="$(sh proofs/sudocode_pin.sh)"
         echo "commit=$commit" >> "$GITHUB_OUTPUT"
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         repository: hacker6284/sudocode
         ref: ${{ steps.pin.outputs.commit }}

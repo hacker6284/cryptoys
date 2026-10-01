@@ -1,4 +1,5 @@
 import { mountMicro } from "../shared/micro.js";
+import settings from "./settings.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DEN } from "../../playroom/constants.js";
 import { easeInOutCubic, easeOutCubic } from "../../playroom/beat-clock.js";
@@ -265,30 +266,25 @@ let loopIndex = 0;
 
 void mountMicro({
     id: "dice-cup",
-    title: "Dice cup: shake and pour",
-    summary: "A leather dice cup shakes, then pours polyhedral dice into the felt tray. Separate shake, pour/slam and settle sounds: the landing contact is the first die to hit the felt, the settle contact the last die coming to rest.",
-    source: "new (no demo code yet) · models: Scrounger bs-ecbs procedural cup + felt tray; dice are three.js polyhedra",
-    camera: { position: [DEN.x + 0.24, 1.1, DEN.z + 0.52], target: [DEN.x + 0.075, 0.82, DEN.z], fov: 36 },
-    timingTitle: "Timing (starting values: no demo code yet)",
-    loopGapMs: 700,
-    choices: [{ key: "set", label: "Dice", value: "poly", options: [["poly", "polyhedral (d4 d6 d8 d12 d20 d20)"], ["d6", "five d6"], ["d20", "two d20"]] }],
-    timing: [
-        { key: "shakeMs", label: "shakeMs", min: 0, max: 2500, step: 10, value: 900, unit: " ms" },
-        { key: "shakeHz", label: "shake rate", min: 2, max: 12, step: 0.5, value: 6.5, unit: " Hz" },
-        { key: "shakeAmp", label: "shake travel", min: 0, max: 40, step: 1, value: 14, unit: " mm" },
-        { key: "shakeTilt", label: "shake tilt", min: 0, max: 30, step: 1, value: 9, unit: "°" },
-        { key: "pourMs", label: "pourMs", min: 100, max: 1500, step: 10, value: 520, unit: " ms" },
-        { key: "pourAngle", label: "pour angle", min: 60, max: 160, step: 1, value: 118, unit: "°" },
-        { key: "releaseAt", label: "release (of pour)", min: 0.2, max: 1, step: 0.01, value: 0.55, unit: "" },
-        { key: "restitution", label: "bounce", min: 0, max: 0.7, step: 0.01, value: 0.32, unit: "" },
-        { key: "friction", label: "felt friction", min: 0.5, max: 12, step: 0.1, value: 4.5, unit: "/s" },
-        { key: "holdMs", label: "dice rest for", min: 0, max: 3000, step: 50, value: 900, unit: " ms" },
-    ],
+    title: "Dice cup",
+    camera: { position: [DEN.x + 0.24, 1.1, DEN.z + 0.52], target: [DEN.x + 0.075, 0.82, DEN.z], fov: 34, margin: 1.02 },
     slots: [
-        { name: "shake", label: "Cup shake", contact: "the shake starts", from: [["dice-cup", "shake"]], gapMs: 300, voices: 2 },
-        { name: "land", label: "Dice land", contact: "the first die hits the felt", from: [["dice-cup", "pour-slam"]], gapMs: 300, voices: 2 },
-        { name: "settle", label: "Dice settle", contact: "the last die comes to rest", from: [["dice-cup", "settle"]], gapMs: 300, voices: 2 },
+        { name: "shake", gapMs: 300, voices: 2 },
+        { name: "land", gapMs: 300, voices: 2 },
+        { name: "settle", gapMs: 300, voices: 2 },
     ],
+    frame(ctx) {
+        // The tray and the cup in its upright and poured poses.
+        const box = new ctx.THREE.Box3().setFromObject(tray);
+        const T = this.T(ctx);
+        for (const t of [0, T.shakeMs + T.pourMs]) {
+            applyCup(cupPose(T, t));
+            cupPivot.updateMatrixWorld(true);
+            box.expandByObject(cupPivot);
+        }
+        applyCup(cupPose(T, 0));
+        return box;
+    },
     async setup(ctx) {
         THREE = ctx.THREE;
         ctx.status("Loading the cup and tray…");
@@ -370,11 +366,4 @@ void mountMicro({
         });
         await ctx.wait(T.holdMs);
     },
-    config(ctx) {
-        return {
-            demo: "dice-cup (new primitive)",
-            paste: "DICE_CUP → the future dice demo; sounds → a demos/shared/sound.js table (offsetMs is relative to each contact)",
-            DICE_CUP: this.T(ctx),
-        };
-    },
-});
+}, settings);

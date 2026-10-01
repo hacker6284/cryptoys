@@ -10,33 +10,23 @@
 <body>
   <main class="micro-index">
     <h1>Microdemos</h1>
-    <p class="note">Each page loops one animation primitive from the real demo code, with its sounds. Tune timing and pick sounds by ear, then <em>Copy settings</em> for JSON shaped like the source demo's config. Settings persist per page; click once to turn sound on.</p>
-    <h2>Twisty puzzles</h2>
+    <p class="note">Each page loops one animation from the playroom with its sound. Click once on a page to turn sound on.</p>
     <ul>
-      <li><a href="./scramble-turn/">Scramble face turn</a>: lift, cubing.js turn(s), settle</li>
-      <li><a href="./megaminx-turn/">Megaminx face turn</a>: one, two or three clicks; recorded, composite or single-per-click</li>
+      <li><a href="./scramble-turn/">Scramble face turn</a>: the cube lifts, turns R, settles; the next loop turns it back.</li>
+      <li><a href="./megaminx-turn/">Megaminx face turn</a>: the megaminx lifts, turns one face one click, settles.</li>
+      <li><a href="./doubledeal-grid-deal/">Deal into the grid</a>: the hand packet is dealt into the 4×13 grid.</li>
+      <li><a href="./doubledeal-row-slide/">Row slide</a>: a row of the grid slides three places along the felt and back.</li>
+      <li><a href="./doubledeal-scoop/">Scoop</a>: the whole grid is swept into the hand pile.</li>
+      <li><a href="./doubledeal-place/">Place a card</a>: a card hops from the hand pile to its seat in the grid.</li>
+      <li><a href="./doubledeal-take/">Take a card</a>: a seated card hops onto the hand pile.</li>
+      <li><a href="./doubledeal-unbox/">Unbox</a>: the deck box flap opens, the deck slides out and is set down.</li>
+      <li><a href="./doubledeal-restow/">Put the decks back</a>: the grids gather onto both boxes and the flaps close.</li>
+      <li><a href="./megadreifach-deck-flap/">MegaDreifach deck flap</a>: the deck box flap opens for a deal and closes.</li>
+      <li><a href="./playroom-chest/">Toy chest</a>: the lid opens, a deck flies out onto the table, the lid closes.</li>
+      <li><a href="./peg/">Peg</a>: a peg is pushed into a grid hole and pulled out.</li>
+      <li><a href="./dice-cup/">Dice cup</a>: the cup shakes and pours dice into the felt tray.</li>
     </ul>
-    <h2>DoubleDeal cards</h2>
-    <ul>
-      <li><a href="./doubledeal-grid-deal/">Deal into the grid</a> (seatPacket)</li>
-      <li><a href="./doubledeal-row-slide/">Row slide and column belt</a> (ShiftRows / SumRanks)</li>
-      <li><a href="./doubledeal-scoop/">Scoop into the hand pile</a></li>
-      <li><a href="./doubledeal-place/">Place a card</a> (GridCycle place: hop or drop)</li>
-      <li><a href="./doubledeal-take/">Take a card</a> (inverse GridCycle)</li>
-    </ul>
-    <h2>Boxes and the toy chest</h2>
-    <ul>
-      <li><a href="./doubledeal-unbox/">Unbox</a>: flap, deck out, set down, sleeve aside, deal</li>
-      <li><a href="./doubledeal-restow/">Put back</a>: cards in, flaps closed</li>
-      <li><a href="./megadreifach-deck-flap/">MegaDreifach deck-box flap</a></li>
-      <li><a href="./playroom-chest/">Toy chest</a>: lid, a toy flying out and back</li>
-    </ul>
-    <h2>New primitives</h2>
-    <ul>
-      <li><a href="./peg/">Peg into a grid hole</a></li>
-      <li><a href="./dice-cup/">Dice cup: shake and pour</a></li>
-    </ul>
-    <p class="note">Sounds: <a href="./sounds/LICENSE.md">credits and licences</a> (all CC0), synced by <code>tools/sync-micro-sounds.py</code>; <code>tools/check-micro-sounds.py</code> checks every file decodes.</p>
+    <p class="note">Sounds: <a href="./sounds/LICENSE.md">credits</a> (all CC0).</p>
   </main>
 </body>
 </html>

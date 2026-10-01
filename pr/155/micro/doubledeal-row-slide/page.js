@@ -1,18 +1,13 @@
 import { ORDER, mountTablePage } from "../shared/doubledeal-table.js";
+import settings from "./settings.js";
 
 void mountTablePage({
     id: "doubledeal-row-slide",
-    title: "DoubleDeal: row slide and column belt",
-    summary: "ShiftRows / SumRanks slide a row along the felt (low hop); the SumRanks column belt lifts a column round. Each loop slides back.",
-    choices: [
-        { key: "kind", label: "Step", value: "shift", options: [["shift", "ShiftRows row (shift)"], ["sumrow", "SumRanks row (sumrow)"], ["sumcol", "SumRanks column belt (sumcol)"]] },
-        { key: "amount", label: "Amount", value: 3, options: [[1, "1"], [2, "2"], [3, "3"], [5, "5"], [6, "6"], [13, "13 (hop in place)"]] },
-    ],
-    timingKeys: ["shiftMs", "sumrowMs", "sumcolMs", "hop", "liftHop", "zeroShiftHop"],
+    title: "Row slide",
     slots: [
-        { name: "slide", label: "Row slide", contact: "the row starts moving", from: ["doubledeal-row-slide"], gapMs: 120, voices: 2 },
-        { name: "belt", label: "Column belt", contact: "the column starts moving", from: ["doubledeal-column-belt"], gapMs: 120, voices: 2 },
-        { name: "hop", label: "Hop in place (amount 13)", contact: "the card lands", from: ["doubledeal-table-settle"], gapMs: 120, voices: 2 },
+        { name: "slide", gapMs: 120, voices: 2 },
+        { name: "belt", gapMs: 120, voices: 2 },
+        { name: "hop", gapMs: 120, voices: 2 },
     ],
     prepare(table) {
         table.applyInstant({ kind: "dealrm", message: ORDER });
@@ -28,4 +23,4 @@ void mountTablePage({
         const contacts = Math.abs(amount) % 13 === 0 ? [["hop", ms]] : [["slide", 0]];
         return { step: { kind, row: 1, amount }, contacts };
     },
-});
+}, settings);

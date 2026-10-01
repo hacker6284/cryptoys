@@ -57,13 +57,12 @@ export function clickTimes(amount, tempo) {
     return out;
 }
 
-export function mountTwistyTurn(page) {
+export function mountTwistyTurn(page, settings) {
     const timing = { ...CUBE_STAGE_TIMING };
     let adapter = null;
     let rig = null;
     let leg = 0;
     let loaded = "";
-    const turnSlots = page.turnSlots;
 
     function syncTiming(ctx) {
         timing.TURN_LIFT = ctx.timing("TURN_LIFT");
@@ -71,33 +70,19 @@ export function mountTwistyTurn(page) {
         timing.SETTLE_HOLD_MS = ctx.timing("SETTLE_HOLD_MS");
     }
 
-    const perClick = (amount) => ({
-        slot: "single",
-        label: `single turn file × ${amount}, at the real click times`,
-        clicks: (ctx) => clickTimes(amount, ctx.timing("speed")),
-    });
+    const perClick = (amount) => ({ slot: "single", clicks: (ctx) => clickTimes(amount, ctx.timing("speed")) });
 
     return mountMicro({
         id: page.id,
         title: page.title,
-        summary: page.summary,
-        source: page.source,
-        camera: page.camera || { position: [DEN.x + 0.32, 1.17, DEN.z + 0.74], target: [DEN.x, 0.9, DEN.z], fov: 28 },
-        loopGapMs: 700,
-        choices: [{ key: "move", label: "Move", value: page.defaultMove, options: page.moveOptions }],
-        timing: [
-            { key: "speed", label: "Speed (tempo)", min: 0.5, max: 4, step: 0.1, value: 1.4, unit: "×", note: "Dock speed slider → rig.setTempo (cubing.js tempoScale)" },
-            { key: "TURN_LIFT_MS", label: "TURN_LIFT_MS", min: 60, max: 900, step: 10, value: CUBE_STAGE_TIMING.TURN_LIFT_MS, unit: " ms" },
-            { key: "TURN_LIFT", label: "TURN_LIFT", min: 0, max: 0.3, step: 0.005, value: CUBE_STAGE_TIMING.TURN_LIFT, unit: " m" },
-            { key: "SETTLE_HOLD_MS", label: "SETTLE_HOLD_MS", min: 0, max: 800, step: 10, value: CUBE_STAGE_TIMING.SETTLE_HOLD_MS, unit: " ms" },
-        ],
+        camera: { position: [DEN.x + 0.32, 1.17, DEN.z + 0.74], target: [DEN.x, 0.9, DEN.z], fov: 30, margin: page.margin ?? 1.2 },
         slots: [
-            { name: "single", label: "Single turn (one click)", contact: "the face seats (end of leaf)", from: [[turnSlots, "single"]], gapMs: 55, voices: 3, jitter: 0.06 },
-            { name: "double", label: "Double turn (two clicks)", contact: "the face seats (end of leaf)", from: [[turnSlots, "double"]], gapMs: 55, voices: 3, jitter: 0.06, perClick: perClick(2) },
-            { name: "triple", label: "Triple turn (three clicks)", contact: "the face seats (end of leaf)", from: [[turnSlots, "triple"]], gapMs: 55, voices: 3, jitter: 0.06, perClick: perClick(3) },
-            ...(page.rotation ? [{ name: "rotation", label: "Whole-puzzle rotation", contact: "rotation ends", from: [[turnSlots, "rotation"]], gapMs: 140, voices: 2 }] : []),
-            { name: "lift", label: "Lift off felt", contact: "the puzzle leaves the felt", from: ["scramble-lift"], gapMs: 140, voices: 2, off: true, gainTrimDb: -6 },
-            { name: "settle", label: "Settle on felt", contact: "the puzzle touches the felt", from: [["scramble-turn", "settle"]], pick: "scramble-turn/settle/settle_emapuree-848748", gapMs: 140, voices: 2 },
+            { name: "single", gapMs: 55, voices: 3, jitter: 0.06 },
+            { name: "double", gapMs: 55, voices: 3, jitter: 0.06, perClick: perClick(2) },
+            { name: "triple", gapMs: 55, voices: 3, jitter: 0.06, perClick: perClick(3) },
+            { name: "rotation", gapMs: 140, voices: 2 },
+            { name: "lift", gapMs: 140, voices: 2 },
+            { name: "settle", gapMs: 140, voices: 2 },
         ],
         async setup(ctx) {
             syncTiming(ctx);
@@ -122,14 +107,20 @@ export function mountTwistyTurn(page) {
             cube.userData.seatedY = cube.position.y;
         },
         async ready(ctx) {
-            ctx.status(`Loading cubing.js${page.puzzle ? ` (${page.puzzle})` : ""}…`);
+            ctx.status("Loading the puzzle…");
             rig = await adapter.ready();
             rig.rememberSeated?.();
             ctx.status("");
         },
-        onTiming(ctx, key, v) {
-            syncTiming(ctx);
-            if (key === "speed") rig?.setTempo?.(v);
+        frame(ctx) {
+            // The puzzle seated on the felt (it may be lifted right now)
+            // and the height it lifts to.
+            const { THREE, world } = ctx;
+            const size = new THREE.Box3().setFromObject(world.toys.cube).getSize(new THREE.Vector3());
+            const seat = world.getTablePose("cube").position;
+            const box = new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(seat.x, seat.y, seat.z), size);
+            box.max.y += ctx.timing("TURN_LIFT");
+            return box;
         },
         async reset(ctx) {
             if (!rig?.setAlg) return;
@@ -176,18 +167,5 @@ export function mountTwistyTurn(page) {
             await ctx.wait(down + 40);
             leg += 1;
         },
-        config(ctx) {
-            return {
-                demo: page.demo,
-                paste: "constants → demos/playroom/constants.js; speed → createScrambleAdapter speed; sounds → a demos/shared/sound.js table (offsetMs is relative to each contact; perClick = play that slot once per click at clicksMs)",
-                ...(page.puzzle ? { puzzle: page.puzzle } : {}),
-                constants: {
-                    TURN_LIFT: ctx.timing("TURN_LIFT"),
-                    TURN_LIFT_MS: ctx.timing("TURN_LIFT_MS"),
-                    SETTLE_HOLD_MS: ctx.timing("SETTLE_HOLD_MS"),
-                },
-                speed: { min: 0.5, max: 4, value: ctx.timing("speed") },
-            };
-        },
-    });
+    }, settings);
 }

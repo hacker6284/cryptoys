@@ -1,4 +1,5 @@
 import { mountMicro } from "../shared/micro.js";
+import settings from "./settings.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DEN } from "../../playroom/constants.js";
 import { easeInOutCubic, easeOutCubic } from "../../playroom/beat-clock.js";
@@ -50,31 +51,18 @@ function holeLocal(i) {
 
 void mountMicro({
     id: "peg",
-    title: "Peg into a grid hole",
-    summary: "A peg is pushed into a hole of the procedural ocean grid on the felt, held, and pulled out; each loop takes the next hole along the row.",
-    source: "new (no demo code yet) · models: Scrounger bs-ecbs procedural peg + ocean grid",
-    camera: { position: [DEN.x + 0.05, 0.98, DEN.z + 0.26], target: [DEN.x, 0.775, DEN.z - 0.005], fov: 34 },
-    timingTitle: "Timing (starting values: no demo code yet)",
-    loopGapMs: 500,
-    choices: [
-        { key: "color", label: "Peg", value: "white", options: [["white", "white"], ["red", "red"]] },
-        { key: "fill", label: "Holes", value: "row", options: [["row", "next hole each loop (fills the row)"], ["same", "same hole, pulled out"]] },
-        { key: "approachEase", label: "approach ease", value: "easeInOutCubic", options: EASES },
-        { key: "pushEase", label: "push ease", value: "easeInCubic", options: EASES },
-        { key: "pullEase", label: "pull ease", value: "easeOutCubic", options: EASES },
-    ],
-    timing: [
-        { key: "approachMs", label: "approachMs", min: 60, max: 1500, step: 10, value: 420, unit: " ms" },
-        { key: "pushMs", label: "pushMs (into the seat)", min: 20, max: 800, step: 5, value: 140, unit: " ms" },
-        { key: "holdMs", label: "holdMs", min: 0, max: 2000, step: 10, value: 450, unit: " ms" },
-        { key: "pullMs", label: "pullMs", min: 60, max: 1500, step: 10, value: 320, unit: " ms" },
-        { key: "hover", label: "start height (mm)", min: 5, max: 80, step: 1, value: 28, unit: " mm" },
-        { key: "seat", label: "seat depth (mm)", min: 1, max: 9, step: 0.5, value: 5, unit: " mm" },
-    ],
+    title: "Peg",
+    camera: { position: [DEN.x + 0.05, 0.98, DEN.z + 0.26], target: [DEN.x, 0.775, DEN.z - 0.005], fov: 34, margin: 1.0 },
     slots: [
-        { name: "push", label: "Peg seats", contact: "the peg bottoms out", from: [["peg", "in"]], gapMs: 60, voices: 3 },
-        { name: "pull", label: "Peg pulled out", contact: "the peg starts to lift", from: [["peg", "out"]], gapMs: 60, voices: 3 },
+        { name: "push", gapMs: 60, voices: 3 },
+        { name: "pull", gapMs: 60, voices: 3 },
     ],
+    frame(ctx) {
+        // The grid plate and the height the peg comes in from.
+        const box = new ctx.THREE.Box3().setFromObject(ctx.plate);
+        box.max.y += (ctx.timing("hover") + 12.5) / 1000;
+        return box;
+    },
     async setup(ctx) {
         ctx.status("Loading the grid and pegs…");
         const loader = new GLTFLoader();
@@ -147,13 +135,4 @@ void mountMicro({
         peg.parent?.remove(peg);
         pegs.pop();
     },
-    config(ctx) {
-        const t = {};
-        for (const k of ["approachMs", "pushMs", "holdMs", "pullMs", "hover", "seat"]) t[k] = ctx.timing(k);
-        return {
-            demo: "peg (new primitive)",
-            paste: "PEG_TIMING → the future peg demo; sounds → a demos/shared/sound.js table (offsetMs is relative to each contact)",
-            PEG_TIMING: { ...t, approachEase: ctx.choice("approachEase"), pushEase: ctx.choice("pushEase"), pullEase: ctx.choice("pullEase") },
-        };
-    },
-});
+}, settings);

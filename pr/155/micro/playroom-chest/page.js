@@ -1,4 +1,5 @@
 import { mountMicro } from "../shared/micro.js";
+import settings from "./settings.js";
 import { DEN } from "../../playroom/constants.js";
 import { DIRECTOR_TIMING, createToyDirector } from "../../playroom/toy-director.js";
 
@@ -16,31 +17,28 @@ function sync(ctx) {
 
 void mountMicro({
     id: "playroom-chest",
-    title: "Toy chest: lid and a toy flying out",
-    summary: "The toy chest lid opens, the MSG deck flies out onto the felt (and the KEY deck off the shelf), the lid closes; or the reverse.",
-    source: "playroom/toy-director.js borrow / home / lid (DIRECTOR_TIMING) · world.js chest",
-    camera: { position: [0.55, 1.75, 2.35], target: [-1.2, 0.75, 0.55], fov: 46 },
-    loopGapMs: 1200,
-    choices: [{ key: "mode", label: "Loop", value: "borrow", options: [["lid", "lid opens and closes"], ["borrow", "out of the chest (borrow)"], ["home", "back into the chest (home)"], ["both", "out, then back"]] }],
-    timing: [
-        { key: "LID_OPEN_MS", label: "LID_OPEN_MS", min: 100, max: 2000, step: 10, value: DIRECTOR_TIMING.LID_OPEN_MS, unit: " ms" },
-        { key: "LID_CLOSE_MS", label: "LID_CLOSE_MS", min: 100, max: 2000, step: 10, value: DIRECTOR_TIMING.LID_CLOSE_MS, unit: " ms" },
-        { key: "FLY_MS", label: "FLY_MS", min: 400, max: 4000, step: 20, value: DIRECTOR_TIMING.FLY_MS, unit: " ms" },
-        { key: "LIFT_MS", label: "LIFT_MS", min: 0, max: 1200, step: 10, value: DIRECTOR_TIMING.LIFT_MS, unit: " ms" },
-    ],
+    title: "Toy chest",
+    camera: { position: [0.55, 1.75, 2.35], target: [-1.2, 0.75, 0.55], fov: 40, margin: 1.05 },
     slots: [
-        { name: "lidOpen", label: "Lid opens (creak)", contact: "the lid starts to open", from: [["unbox", "chest-lid-open"]], gapMs: 300, voices: 2 },
-        { name: "lidClose", label: "Lid closes", contact: "the lid shuts", from: [["unbox", "chest-lid-close"]], gapMs: 300, voices: 2 },
-        { name: "lift", label: "Toy lifts off", contact: "a toy leaves its seat", from: ["playroom-fly"], gapMs: 150, voices: 2, off: true },
-        { name: "land", label: "Toy lands", contact: "a toy lands (felt, shelf or chest)", from: [["unbox", "box-setdown-felt"]], gapMs: 120, voices: 3 },
+        { name: "lidOpen", gapMs: 300, voices: 2 },
+        { name: "lidClose", gapMs: 300, voices: 2 },
+        { name: "lift", gapMs: 150, voices: 2 },
+        { name: "land", gapMs: 120, voices: 3 },
     ],
+    frame(ctx) {
+        // The chest with its lid open and where the MSG deck lands on the felt.
+        const { world } = ctx;
+        world.chest.setLid?.(1);
+        const box = new ctx.THREE.Box3().setFromObject(world.chest.group);
+        world.chest.setLid?.(0);
+        const land = world.getTablePose("deck2").position;
+        box.expandByPoint(new ctx.THREE.Vector3(land.x + 0.1, land.y + 0.1, land.z + 0.1));
+        return box;
+    },
     async setup(ctx) {
         sync(ctx);
         director = createToyDirector(ctx.world, DEMOS, { timing });
         ctx.onFrame = (now) => director.update(now);
-    },
-    onTiming(ctx) {
-        sync(ctx);
     },
     stop() {
         director?.skip();
@@ -99,12 +97,4 @@ void mountMicro({
             await run("home");
         }
     },
-    config(ctx) {
-        sync(ctx);
-        return {
-            demo: "playroom",
-            paste: "constants → demos/playroom/constants.js; sounds → a demos/shared/sound.js table (offsetMs is relative to each contact)",
-            constants: { ...timing },
-        };
-    },
-});
+}, settings);

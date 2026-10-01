@@ -1,10 +1,11 @@
 import { mountMicro } from "../shared/micro.js";
+import settings from "./settings.js";
 import { ORDER } from "../shared/doubledeal-table.js";
 import { addGlow, buildBox, restowBox } from "../shared/boxes.js";
 import { loadCardTextures } from "../../doubledeal/table.js";
 import { createBeatClock } from "../../playroom/beat-clock.js";
 import { stageCardTable } from "../../playroom/card-stage.js";
-import { DEN, GATHER_MS, RESTOW_MS } from "../../playroom/constants.js";
+import { DEN } from "../../playroom/constants.js";
 import { gatherSessionTable } from "../../playroom/table-form.js";
 import { createDealerKey, playRestow } from "../../playroom/unbox-physical.js";
 
@@ -28,21 +29,23 @@ function seatBoxes(ctx) {
 
 void mountMicro({
     id: "doubledeal-restow",
-    title: "Put back: cards in, flap closed",
-    summary: "DoubleDeal's leave: the two card grids hop back onto their boxes, vanish inside, and both tuck flaps close.",
-    source: "playroom/adapters.js leave · table-form.js gatherSessionTable · unbox-physical.js playRestow",
-    camera: { position: [DEN.x, 1.55, 1.05], target: [DEN.x, 0.8, -0.18], fov: 55 },
-    loopGapMs: 900,
-    choices: [{ key: "phase", label: "Loop", value: "leave", options: [["leave", "gather → restow (leave)"], ["restow", "flaps close only (playRestow)"]] }],
-    timing: [
-        { key: "GATHER_MS", label: "GATHER_MS", min: 100, max: 2000, step: 10, value: GATHER_MS, unit: " ms" },
-        { key: "RESTOW_MS", label: "RESTOW_MS", min: 60, max: 1500, step: 10, value: RESTOW_MS, unit: " ms" },
-    ],
+    title: "Put the decks back",
+    camera: { position: [DEN.x, 1.6, 1.0], target: [DEN.x, 0.8, -0.15], fov: 40, margin: 1.02 },
     slots: [
-        { name: "gather", label: "Cards gathered", contact: "the piles land on the boxes", from: ["doubledeal-gather"], gapMs: 200, voices: 2 },
-        { name: "deckIn", label: "Deck slides in", contact: "restow starts (piles go in)", from: [["unbox", "deck-slide-in"], ["doubledeal-restow", "extract"]], gapMs: 200, voices: 2 },
-        { name: "flap", label: "Flap closes", contact: "the flap shuts", from: [["doubledeal-restow", "flap"], ["unbox", "tuck-flap-open"]], gapMs: 100, voices: 3 },
+        { name: "gather", gapMs: 200, voices: 2 },
+        { name: "deckIn", gapMs: 200, voices: 2 },
+        { name: "flap", gapMs: 100, voices: 3 },
     ],
+    frame(ctx) {
+        // Both boxes at rest and the two grids between them.
+        const box = new ctx.THREE.Box3();
+        seatBoxes(ctx);
+        box.expandByObject(key.group).expandByObject(msg.group);
+        table.applyInstant({ kind: "dealrm", message: ORDER });
+        table.group.updateMatrixWorld(true);
+        for (const side of ["message", "key"]) for (const mesh of table.cardsOf(side)) box.expandByObject(mesh);
+        return box;
+    },
     async setup(ctx) {
         const keyLight = createDealerKey(ctx.world);
         keyLight.intensity = 0.45;
@@ -85,11 +88,4 @@ void mountMicro({
             playRestow({ rig: msg, clock, gen, ms: restow }),
         ]);
     },
-    config(ctx) {
-        return {
-            demo: "doubledeal (playroom leave)",
-            paste: "constants → demos/playroom/constants.js; sounds → a demos/shared/sound.js table (offsetMs is relative to each contact)",
-            constants: { GATHER_MS: ctx.timing("GATHER_MS"), RESTOW_MS: ctx.timing("RESTOW_MS") },
-        };
-    },
-});
+}, settings);

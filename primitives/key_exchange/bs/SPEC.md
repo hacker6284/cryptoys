@@ -170,7 +170,7 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
 * **B3. Multiply A × B.**
   1. Clear a 2n-hole product strip; a nudged product may run up to 2 holes further (§6).
   2. For every pegged hole i of B, lay a copy of A starting at hole i: once if B's peg is white, **twice if it is red**.
-  3. Pay the toll (B4). Holes 0 … n−1 are the answer; slide it into its register.
+  3. Pay the toll (B4). Holes 0 … n−1 are the answer. Lift the register's pegs, then slide the answer into it.
   - The strip can never overflow: A·B < 3^(2n), so a product nudged k holes (B6) fits in 2n + k holes, and partial sums only grow toward it.
 * **B4. Pay the toll (fold).** Repeat until nothing sits at or beyond hole n: **lift the highest peg at or beyond hole n, and lay the toll starting n holes lower** (twice if the lifted peg was red).
   - *Two-peg toll:* drop the lifted peg's colour at h − n and at h − n + k.
@@ -179,7 +179,8 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
 * **B5. Tidy (canonical form; needed only for published values and the final secret).**
   1. Copy the register into the strip, with one extra hole on top.
   2. Pour the toll into the copy.
-  3. If a white spills into the extra hole, throw the spill away: the copy is the tidy answer. Otherwise keep the original and clear the copy.
+  3. If a white spills into the extra hole, throw the spill away: the copy is the tidy answer. Lift X's pegs, then slide the copy back into X. Otherwise keep the original and clear the copy.
+  - Either way, the tidy answer ends in X.
   - This works because x ≥ p exactly when x + c ≥ 3ⁿ.
   - In the toy tiers, p itself looks like **all red except a white at hole k**. Tidying it gives the empty register.
 * **B6. Cube, with a nudge.**
@@ -213,7 +214,7 @@ Why plain ternary and not balanced ternary: `proofs/key_exchange/bs/key-selectio
 
 ### 3.1 Sending a public value: call the shots
 
-A public value is the sender's tidy answer from B9 step 1. It is in X, or in the strip copy if B5 kept the copy: n holes, hole 0 to hole n − 1. Each player receives the other's value like this:
+A public value is the sender's tidy answer from B9 step 1. It is in X (B5 leaves the tidy answer there): n holes, hole 0 to hole n − 1. Each player receives the other's value like this:
 
 1. **Clear Y.** B6 leaves the last X × X in Y, and a misfire lays nothing, so a peg left there would end up in the copy. Once Y is clear, the copy needs no extra grid.
 2. **Mark "calling in progress":** stand a peg in control-lane hole 5 (No-paper rule).

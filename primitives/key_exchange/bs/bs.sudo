@@ -149,8 +149,8 @@ export func multiply(f: Field, a: List<int>, b: List<int>, nudge: int) -> List<i
         out[i] = strip[i]
     return out
 
-// B3 step 3. Slide the answer into its register; it replaces whatever the
-// register held.
+// B3 step 3. Slide the answer into its register: lift the register's pegs, then
+// slide the answer in.
 func slide(dest: inout List<int>, answer: List<int>)
     assert dest.length == answer.length
     for i = 0 to dest.length - 1
@@ -158,19 +158,26 @@ func slide(dest: inout List<int>, answer: List<int>)
     for i = 0 to dest.length - 1
         dest[i] = answer[i]
 
-// B5. Tidy (canonical form). Copy the register into the strip with one extra
-// hole on top and pour the toll into the copy. If a white spills into the extra
-// hole, throw the spill away: the copy is the tidy answer (x >= p exactly when
-// x + c >= 3^n). Otherwise keep the original.
-export func tidy(f: Field, x: List<int>) -> List<int>
+// B5. Tidy X (canonical form). Copy X into the strip with one extra hole on
+// top and pour the toll into the copy. If a white spills into the extra hole,
+// throw the spill away: the copy is the tidy answer (x >= p exactly when
+// x + c >= 3^n), and it slides back into X. Otherwise keep X and clear the copy.
+// Either way the tidy answer ends in X.
+func tidy_x(f: Field, x: inout List<int>)
     assert x.length == f.n
     copy = x + [0]
     lay(copy, f.toll, 0)
     if copy[f.n] == 0
-        return x
+        return
     assert copy[f.n] == 1
     copy.pop()
-    return copy
+    slide(x, copy)
+
+// The tidy answer of a register (B5 on a register holding x).
+export func tidy(f: Field, x: List<int>) -> List<int>
+    r = x
+    tidy_x(f, r)
+    return r
 
 // B6. Cube, with a nudge: Y = X x X, then X <- Y x X. In the public phase on a
 // white or red cell, every copy of the second product is laid one or two holes
@@ -227,7 +234,8 @@ func walk(f: Field, cells: List<int>, phase: Phase, y: inout List<int>) -> List<
             slide(x, start_accumulator(f, cell, phase))
             started = true
     assert started
-    return tidy(f, x)
+    tidy_x(f, x)
+    return x
 
 // ---------------------------------------------------------------------------
 // §3 B8. Check the received number (Wong 5.4). It must have exactly n trits.
@@ -245,8 +253,8 @@ export func check_received(f: Field, received: List<int>) -> Option<List<int>>
 
 // ---------------------------------------------------------------------------
 // §3.1 Sending a public value: call the shots. The value is the sender's tidy
-// answer from B9 step 1 (on the board it is in X, or in the strip copy if B5
-// kept the copy; here it is just the register `value`). The receiver clears Y,
+// answer from B9 step 1 (on the board it is in X, where B5 leaves it; here it
+// is just the register `value`). The receiver clears Y,
 // calls every hole of the value, hole 0 first up to hole n - 1; the sender
 // answers by the peg in that hole; the receiver copies each answer into the same
 // hole of Y. The board bookkeeping (the lane-5 "calling" peg, naming holes by
@@ -842,10 +850,35 @@ test "B6 the public walk leaves the last square X x X in Y, unnudged"
     assert b == [0, 1, 2, 0, 0, 2, 1, 2, 1, 1, 2, 1, 2, 1, 0, 0, 1, 0]
     assert y == [2, 2, 2, 2, 2, 2, 1, 2, 0, 1, 0, 2, 0, 1, 2, 0, 0, 0]
 
-test "B3 slide replaces the register's old pegs with the answer"
+test "B3 slide lifts the register's old pegs, then slides the answer in"
     r = [2, 1, 2]
     slide(r, [0, 1, 0])
     assert r == [0, 1, 0]
+
+test "B6 stale pegs in Y are lifted before the square slides in"
+    x0 = [2, 1, 0, 0, 2, 2, 1, 0, 1, 0, 2, 1, 1, 0, 2, 2, 0, 1]
+    x = x0
+    y = filled(18, 2)
+    cube(t1, x, 0, y)
+    assert y == multiply(t1, x0, x0, 0)
+    assert x == multiply(t1, multiply(t1, x0, x0, 0), x0, 0)
+
+test "B5 on a spill the tidy answer slides back into X"
+    // p + 1 in T1 (a non-canonical 1): the copy spills, and X ends as a lone
+    // white in hole 0.
+    x = filled(18, 2)
+    x[0] = 0
+    x[1] = 0
+    one = empty_register(t1)
+    one[0] = 1
+    tidy_x(t1, x)
+    assert x == one
+    // Below p nothing spills and X is kept.
+    below = filled(18, 2)
+    below[2] = 0
+    x = below
+    tidy_x(t1, x)
+    assert x == below
 
 test "3.1 an empty register is eighteen misfires"
     sent = send_public_value(t1, empty_register(t1))

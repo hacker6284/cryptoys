@@ -11,7 +11,7 @@ number; the only operations are the recipes of BS SPEC section 3:
   FOLD   : while any peg sits at/after hole n: lift the highest one and lay the TOLL register starting
            n holes lower (twice if the lifted peg was red)
   TIDY   : copy, pour the toll into the copy; if a peg spills into hole n the copy (minus the spill)
-           is the tidy answer, otherwise the original is
+           is the tidy answer and slides back into X, otherwise the original is kept
 A move = one peg placed, lifted, or swapped for another colour in one hole (so a drop costs one move
 for its own hole plus one move per carry it causes)."""
 
@@ -82,13 +82,14 @@ def multiply(F, A, B, nudge=0, dest=None):
     return slide_out(F, strip)
 
 def tidy(F, X):
-    """canonical form: if X >= p return X - p.  Copy X, pour the toll in; spill into hole n => take copy."""
+    """canonical form: if X >= p return X - p.  Copy X, pour the toll in; spill into hole n => the copy slides back into X."""
     C.op('tidy')
     cp = X[:] + ['.']; C.moves += sum(x != '.' for x in X)        # one spare hole: X + c < 2 * 3^n
     lay(cp, F.toll, 0)
     if cp[F.n] != '.':
         assert cp[F.n] == 'W'
-        clear(X); C.moves += 1; return cp[:F.n]          # lift the spilled white; copy is the answer
+        C.moves += 1                                     # lift the spilled white; the copy is the answer
+        clear(X); return slide_out(F, cp)                # lift X's pegs, slide the copy back into X
     clear(cp); return X
 
 def one(F): r = F.empty(); r[0] = 'W'; return r

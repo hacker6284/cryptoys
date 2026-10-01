@@ -65,3 +65,25 @@ theorem T1_wf : T1.Wf := ⟨by decide, by decide, by decide⟩
 theorem T2_wf : T2.Wf := ⟨by decide, by decide, by decide⟩
 
 end BsLink2.Spec
+
+namespace BsLink2.Spec
+
+/-- §3.1. The sender's answer to a called hole. -/
+inductive Shot where
+  | hit
+  | miss
+  | misfire
+  deriving DecidableEq, Repr
+
+/-- §3.1: red "Hit!", white "Miss!", empty "Misfire!". -/
+def answer : Nat → Shot
+  | 2 => .hit
+  | 1 => .miss
+  | _ => .misfire
+
+/-- §3.1. Sending a public value `x`: the receiver calls every hole from 0 to `n − 1`
+    (a fixed `n` calls) and copies each answer into the same hole of a cleared Y, so the
+    answers are `x`'s holes read as shots and Y ends up holding `x`. -/
+def sendPublicValue (x : List Nat) : List Shot × List Nat := (x.map answer, x)
+
+end BsLink2.Spec

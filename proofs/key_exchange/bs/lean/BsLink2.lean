@@ -7,3 +7,4 @@ import BsLink2.Link2.Tidy
 import BsLink2.Spec
 import BsLink2.Link2.Bridge
 import BsLink2.Link2.Refines
+import BsLink2.Link2.Send

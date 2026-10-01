@@ -100,4 +100,12 @@ theorem p_cast (F : Spec.Field) (hF : F.Wf) :
   rw [Int.ofNat_sub hc]
   rfl
 
+/-- A well-formed field's toll, embedded, is what the emitted `pay_toll`/`tidy` lemmas ask
+    for: a non-empty trit array of fewer than `n` trits. Use as `hF.embed_parts`. -/
+theorem _root_.BsLink2.Spec.Field.Wf.embed_parts {F : Spec.Field} (hF : F.Wf) :
+    Trits (embed F.toll) ∧ 0 < (embed F.toll).size ∧ (embed F.toll).size < F.n := by
+  refine ⟨trits_embed hF.toll_trits, ?_, ?_⟩ <;> rw [size_embed]
+  · exact hF.toll_pos
+  · exact hF.toll_lt
+
 end BsLink2.Link2

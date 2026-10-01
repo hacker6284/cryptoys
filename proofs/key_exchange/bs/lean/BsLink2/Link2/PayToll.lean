@@ -1,8 +1,8 @@
 /-
   BS Link 2: B4 `pay_toll` (the fold). On a trit strip longer than `n`, with a toll of
   fewer than `n` trits, the emitted fold never fails its asserts (in particular the
-  4-lift bound per hole holds), and it leaves a trit strip below `3^n` whose value
-  differs from the input by a multiple of `p = 3^n - c`. Proof-only.
+  `lifts_per_hole` = 4 bound per hole holds), and it leaves a trit strip below `3^n`
+  whose value differs from the input by a multiple of `p = 3^n - c`. Proof-only.
 -/
 import BsLink2.Link2.Lay
 
@@ -13,16 +13,16 @@ open MegaDreifach.Link2
 set_option maxHeartbeats 2000000 in
 /-- B4. Paying the toll: for a field with `n` holes and a non-empty trit toll `c` of
     fewer than `n` trits, and a trit strip of more than `n` holes, `pay_toll` succeeds
-    (no assert fails: at most 4 lifts empty each hole) and returns a trit strip of the
-    same size whose value is below `3^n` and equals the input's value minus a multiple
-    of `p = 3^n - c`. -/
+    (no assert fails: at most `Bs.lifts_per_hole` = 4 lifts empty each hole) and returns a
+    trit strip of the same size whose value is below `3^n` and equals the input's value
+    minus a multiple of `p = 3^n - c`. -/
 theorem pay_toll_spec (f : Bs.Field) (n : Nat) (toll strip : Array Int)
     (hn : f.sudo_5Field_1n = Int.ofNat n) (ht : f.sudo_5Field_4toll = toll)
     (htt : Trits toll) (hts : 0 < toll.size) (htn : toll.size < n)
     (htr : Trits strip) (hL : n < strip.size) (hfit : FitsLen strip.size) :
     ∃ s', Bs.pay_toll f strip = .ok s' ∧ s'.size = strip.size ∧ Trits s' ∧
       val s' < pw n ∧ ∃ K : Int, val s' = val strip - K * (pw n - val toll) := by
-  unfold Bs.pay_toll
+  unfold Bs.pay_toll Bs.lifts_per_hole
   simp only [listLen_eq]
   rw [hn, ht,
     show decide (Int.ofNat toll.size < Int.ofNat n) = true from

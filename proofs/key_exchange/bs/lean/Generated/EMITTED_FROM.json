@@ -1,6 +1,6 @@
 {
   "sudo_file": "primitives/key_exchange/bs/bs.sudo",
-  "sudo_sha256": "e968fe279749ad78987acf04e0c4e6158e8daa1b43a77d9434dbb563769cae6d",
+  "sudo_sha256": "ca53b5b2b9d186cd5176ab51881447432489405ce21e98ae2e3850feecf24009",
   "sudocode_lean_commit": "2c7edef4c735b747287401d02e351515c28402d2",
   "sudocode_lean_ref": "main",
   "terminates_gate": true,

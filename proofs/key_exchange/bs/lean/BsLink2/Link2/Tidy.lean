@@ -13,7 +13,7 @@ theorem slide_spec (dest answer : Array Int) (h : dest.size = answer.size) (hpos
     (hfit : FitsLen dest.size) : Bs.slide dest answer = .ok answer := by
   unfold Bs.slide
   simp only [listLen_eq, h, sEq_int, decide_True]
-  rw [show SudoRt.sudoAssertEq (Int.ofNat answer.size) (Int.ofNat answer.size) 164 = .ok () from by
+  rw [show SudoRt.sudoAssertEq (Int.ofNat answer.size) (Int.ofNat answer.size) 169 = .ok () from by
     simp [SudoRt.sudoAssertEq, sEq_int], ok_bind, subI_ofNat_one _ (by omega) (by rw [← h]; exact hfit)]
   simp only [ok_bind]
   have hfa : FitsLen answer.size := by rw [← h]; exact hfit

@@ -317,12 +317,6 @@ theorem walk_shared_spec (f : Bs.Field) (n : Nat) (toll : Array Int)
     · rw [sudoAssert_true, ok_bind, ← tidy_eq_in_place, htid, ok_bind]; rfl
     · rw [htv, hmod hstart]
 
-private theorem wf_parts' (F : Spec.Field) (hF : F.Wf) :
-    Trits (embed F.toll) ∧ 0 < (embed F.toll).size ∧ (embed F.toll).size < F.n := by
-  refine ⟨trits_embed hF.toll_trits, ?_, ?_⟩ <;> rw [size_embed]
-  · exact hF.toll_pos
-  · exact hF.toll_lt
-
 /-- B7, public phase, refines the model, **given what the key reader returned**: if
     `read_key key` returns the cells `cells` (trits, with at least one white or red cell),
     the emitted `public_value` is the register holding `3^e mod p`, where `e` is the cells
@@ -332,7 +326,7 @@ theorem public_value_refines (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     (hread : Bs.read_key key = .ok (embed cells)) (hcells : ∀ c ∈ cells, c ≤ 2)
     (hfc : FitsLen cells.length) (hstart : 0 < Spec.expOf cells) :
     Bs.public_value (emb F) key = .ok (embed (Spec.publicValue F cells)) := by
-  obtain ⟨htt, hts, htn⟩ := wf_parts' F hF
+  obtain ⟨htt, hts, htn⟩ := hF.embed_parts
   obtain ⟨r, hw, hr1, _, hv⟩ := walk_public_spec (emb F) F.n (embed F.toll) rfl rfl htt hts htn
     h3 hfit cells hcells hfc hstart (Array.mkArray F.n 0) ⟨by simp, trits_mkArray_zero _⟩
   unfold Bs.public_value Bs.public_walk
@@ -354,7 +348,7 @@ theorem shared_secret_refines (F : Spec.Field) (hF : F.Wf)
     (hread : Bs.read_key key = .ok (embed cells)) (hcells : ∀ c ∈ cells, c ≤ 2)
     (hfc : FitsLen cells.length) (hstart : 0 < Spec.expOf cells) :
     Bs.shared_secret (emb F) key (embed base) = .ok (embed (Spec.sharedSecret F base cells)) := by
-  obtain ⟨htt, hts, htn⟩ := wf_parts' F hF
+  obtain ⟨htt, hts, htn⟩ := hF.embed_parts
   have hbs : (embed base).size = F.n := by rw [size_embed]; exact hbase.1
   obtain ⟨r, hw, hr1, _, hv⟩ := walk_shared_spec (emb F) F.n (embed F.toll) rfl rfl htt hts htn
     hfit cells hcells hfc hstart (embed base) ⟨hbs, trits_embed hbase.2⟩
@@ -362,7 +356,7 @@ theorem shared_secret_refines (F : Spec.Field) (hF : F.Wf)
   unfold Bs.shared_secret Bs.shared_walk
   rw [empty_register_spec (emb F) F.n rfl, ok_bind]
   dsimp only
-  rw [show SudoRt.sudoAssertEq (SudoRt.listLen (embed base)) (emb F).sudo_5Field_1n 700 = .ok () by
+  rw [show SudoRt.sudoAssertEq (SudoRt.listLen (embed base)) (emb F).sudo_5Field_1n 707 = .ok () by
     simp only [listLen_eq, hbs]
     simp [SudoRt.sudoAssertEq, sEq_int, emb], ok_bind, hread, ok_bind, hw]
   show Except.ok r.1 = _

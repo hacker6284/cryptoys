@@ -98,7 +98,7 @@ Production loops are bounded `for` (PassKey drain over initial
 remainders and `digest_bytes` over the 12-byte buffer; CBC-HMAC
 `xor_byte` over 8 bits, pad/unpad, and length-delimited MAC input; BS
 `drop`'s carry over the strip, `pay_toll`'s four lifts per hole, the d10
-stream and the row cup's re-throws).
+stream and `grow_until_it_bumps`).
 DoubleDeal test-only `while`s that scan traces by `kind` are stripped
 under the gate (JS/Python still run those tests). Generated TAP is
 the remaining tests.

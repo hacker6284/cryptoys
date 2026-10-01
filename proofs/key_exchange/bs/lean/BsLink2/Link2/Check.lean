@@ -1,87 +1,13 @@
 /-
   BS Link 2: B8 checking a received number (`is_trits`, `is_empty`, `is_lone_white`,
   `check_received`) against the model `Spec.checkReceived`, for an arbitrary received
-  list. Includes an index-only scan driver for loops that return early. Proof-only.
+  list. Proof-only.
 -/
 import BsLink2.Link2.Walk
 
 namespace BsLink2.Link2
 
 open MegaDreifach.Link2
-
-/-- Ascending index-only `for` loop that returns `false` at the first bad index. -/
-theorem asc_scan {β}
-    (step : Int → Except SudoRt.Trap (SudoRt.Flow Int Bool))
-    (after : Int → Except SudoRt.Trap β) (onRet : Bool → Except SudoRt.Trap β)
-    (bad : Nat → Bool) (fromN toN : Nat) (hle : fromN ≤ toN)
-    (hstep : ∀ i, fromN ≤ i → i ≤ toN → step (Int.ofNat i) =
-      if bad i then .ok (.ret false)
-      else if i = toN then .ok (.brk (Int.ofNat i)) else .ok (.cont (Int.ofNat (i + 1)))) :
-    ((∀ i, fromN ≤ i → i ≤ toN → bad i = false) →
-      SudoRt.runLoopOn (Int.ofNat fromN) (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
-        step after onRet = after (Int.ofNat toN)) ∧
-    ((∃ i, fromN ≤ i ∧ i ≤ toN ∧ bad i = true) →
-      SudoRt.runLoopOn (Int.ofNat fromN) (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
-        step after onRet = onRet false) := by
-  rw [fuelRange_le hle]
-  obtain ⟨d, hd⟩ : ∃ d, toN - fromN = d := ⟨_, rfl⟩
-  rw [hd]
-  induction d generalizing fromN with
-  | zero =>
-    have heq : fromN = toN := by omega
-    subst heq
-    constructor
-    · intro hall
-      have hb := hall fromN (Nat.le_refl _) (Nat.le_refl _)
-      rw [runLoopOn_succ, hstep fromN (Nat.le_refl _) (Nat.le_refl _),
-        if_neg (by simp [hb]), if_pos rfl]
-    · intro ⟨i, h1, h2, hb⟩
-      have heq : i = fromN := by omega
-      subst heq
-      rw [runLoopOn_succ, hstep i (Nat.le_refl _) (Nat.le_refl _),
-        if_pos hb]
-  | succ d ih =>
-    have hne : fromN ≠ toN := by omega
-    have ih' := ih (fromN + 1) (by omega) (fun i h1 h2 => hstep i (by omega) h2) (by omega)
-    constructor
-    · intro hall
-      have hb := hall fromN (Nat.le_refl _) hle
-      rw [runLoopOn_succ, hstep fromN (Nat.le_refl _) hle,
-        if_neg (by simp [hb]), if_neg hne]
-      exact ih'.1 (fun i h1 h2 => hall i (by omega) h2)
-    · intro ⟨i, h1, h2, hb⟩
-      cases hf : bad fromN
-      · rw [runLoopOn_succ, hstep fromN (Nat.le_refl _) hle, hf]
-        simp only [Bool.false_eq_true, if_false, if_neg hne]
-        have : i ≠ fromN := fun e => by subst e; rw [hf] at hb; exact absurd hb (by decide)
-        exact ih'.2 ⟨i, by omega, h2, hb⟩
-      · rw [runLoopOn_succ, hstep fromN (Nat.le_refl _) hle, hf]
-        rfl
-
-/-- `asc_scan` in goal form. -/
-theorem asc_scan_goal {β}
-    (step : Int → Except SudoRt.Trap (SudoRt.Flow Int Bool))
-    (after : Int → Except SudoRt.Trap β) (onRet : Bool → Except SudoRt.Trap β)
-    (bad : Nat → Bool) (fromN toN : Nat) (hle : fromN ≤ toN) (R : Except SudoRt.Trap β)
-    (hstep : ∀ i, fromN ≤ i → i ≤ toN → step (Int.ofNat i) =
-      if bad i then .ok (.ret false)
-      else if i = toN then .ok (.brk (Int.ofNat i)) else .ok (.cont (Int.ofNat (i + 1))))
-    (hA : (∀ i, fromN ≤ i → i ≤ toN → bad i = false) → after (Int.ofNat toN) = R)
-    (hB : ∀ i, fromN ≤ i → i ≤ toN → bad i = true → onRet false = R) :
-    SudoRt.runLoopOn (Int.ofNat fromN) (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
-      step after onRet = R := by
-  have hsc := asc_scan step after onRet bad fromN toN hle hstep
-  by_cases hall : ∀ i, fromN ≤ i → i ≤ toN → bad i = false
-  · rw [hsc.1 hall]; exact hA hall
-  · have hex : ∃ i, fromN ≤ i ∧ i ≤ toN ∧ bad i = true := by
-      apply Classical.byContradiction
-      intro hne; apply hall
-      intro i h1 h2
-      cases h : bad i
-      · rfl
-      · exact absurd ⟨i, h1, h2, h⟩ hne
-    obtain ⟨i, h1, h2, hb⟩ := hex
-    rw [hsc.2 ⟨i, h1, h2, hb⟩]; exact hB i h1 h2 hb
 
 /-- Two trit arrays of the same size with the same value are equal. -/
 theorem trits_ext {a b : Array Int} (ha : Trits a) (hb : Trits b) (hs : a.size = b.size)
@@ -231,9 +157,7 @@ theorem is_trits_spec (x : Array Int) (n : Nat) (hx : x.size = n)
 theorem check_received_refines (F : Spec.Field) (hF : F.Wf)
     (hfit : FitsLen (2 * F.n + 2)) (r : List Nat) :
     Bs.check_received (emb F) (embed r) = .ok ((Spec.checkReceived F r).map embed) := by
-  have htt := trits_embed hF.toll_trits
-  have hts : 0 < (embed F.toll).size := by rw [size_embed]; exact hF.toll_pos
-  have htn : (embed F.toll).size < F.n := by rw [size_embed]; exact hF.toll_lt
+  obtain ⟨htt, hts, htn⟩ := hF.embed_parts
   have hn2 : 2 ≤ F.n := by have := hF.toll_pos; have := hF.toll_lt; omega
   have hfn : FitsLen F.n := FitsLen.of_le hfit (by omega)
   unfold Bs.check_received Spec.checkReceived

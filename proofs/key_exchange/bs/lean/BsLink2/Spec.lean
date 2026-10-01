@@ -56,6 +56,12 @@ def T1 : Field := ⟨18, [1, 0, 1]⟩
 /-- §2.3 tier T2 (frigate): `p = 3^35 − 3^29 − 1`, toll white at holes 0 and 29. -/
 def T2 : Field := ⟨35, [1] ++ List.replicate 28 0 ++ [1]⟩
 
+/-- §2.3 tier T6 (demo): `n = 100` and a 50-trit toll (`p = 3^100 − (π₅₀ + 4383)`). The
+    digits are copied from `bs.sudo`; nothing here checks them against π. -/
+def T6 : Field := ⟨100, [1, 2, 2, 2, 1, 2, 1, 2, 2, 1, 1, 1, 0, 2, 2, 2, 2, 2, 1, 2,
+                        2, 0, 1, 1, 1, 1, 1, 2, 0, 0, 1, 1, 2, 0, 1, 0, 2, 2, 2, 2,
+                        1, 0, 1, 1, 2, 0, 1, 0, 0, 1]⟩
+
 /-- The SPEC §2.3 table's values of `p` for T1 and T2. -/
 theorem T1_p : T1.p = 387420479 := by decide
 theorem T2_p : T2.p = 49962914721634823 := by decide
@@ -63,6 +69,7 @@ theorem T1_p_formula : T1.p = 3 ^ 18 - 3 ^ 2 - 1 := by decide
 theorem T2_p_formula : T2.p = 3 ^ 35 - 3 ^ 29 - 1 := by decide
 theorem T1_wf : T1.Wf := ⟨by decide, by decide, by decide⟩
 theorem T2_wf : T2.Wf := ⟨by decide, by decide, by decide⟩
+theorem T6_wf : T6.Wf := ⟨by decide, by decide, by decide⟩
 
 end BsLink2.Spec
 

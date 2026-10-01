@@ -519,7 +519,7 @@ BS_LINK2 = {
     "BsLink2.Link2.send_public_value_refines",
     "BsLink2.Link2.public_value_refines",
     "BsLink2.Link2.shared_secret_refines",
-    "BsLink2.Link2.exchange_agree",
+    "BsLink2.Link2.exchange_agree_of_accepted",
     "BsLink2.Link2.drop_spec",
     "BsLink2.Link2.lay_spec",
     "BsLink2.Link2.pay_toll_spec",
@@ -1075,7 +1075,8 @@ def selftest():
               f"{len(bad)} problem(s), expected {len(want)}")
     # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 / SCRAMBLE_LINK2 / BS_LINK2 must be
     # exactly the theorems the MegaDreifach README / the frozen v1 package's README / the
-    # DoubleDeal-CBC-HMAC proofs README / the Scramble proofs README cites.
+    # DoubleDeal-CBC-HMAC proofs README / the Scramble proofs README / the BS Link 2 README
+    # (proofs/key_exchange/bs/lean/README.md) cites.
     for what, listed, readme, root in [
             ("MD_README_THEOREMS", MD_README_THEOREMS, MD_README, MD_LEAN),
             ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN),

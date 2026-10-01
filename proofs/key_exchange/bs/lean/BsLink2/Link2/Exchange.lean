@@ -51,9 +51,7 @@ theorem public_walk_spec (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     (y : Array Int) (hy : Reg F.n y) :
     ∃ y', Bs.public_walk (emb F) key y = .ok (embed (Spec.publicValue F cells), y') ∧
       Reg F.n y' := by
-  have htt := trits_embed hF.toll_trits
-  have hts : 0 < (embed F.toll).size := by rw [size_embed]; exact hF.toll_pos
-  have htn : (embed F.toll).size < F.n := by rw [size_embed]; exact hF.toll_lt
+  obtain ⟨htt, hts, htn⟩ := hF.embed_parts
   obtain ⟨r, hw, hr1, hr2, hv⟩ := walk_public_spec (emb F) F.n (embed F.toll) rfl rfl htt hts htn
     h3 hfit cells hcells hfc hstart y hy
   refine ⟨r.2, ?_, hr2⟩
@@ -74,15 +72,13 @@ theorem shared_walk_spec (F : Spec.Field) (hF : F.Wf)
     (y : Array Int) (hy : Reg F.n y) :
     ∃ y', Bs.shared_walk (emb F) key (embed base) y =
       .ok (embed (Spec.sharedSecret F base cells), y') ∧ Reg F.n y' := by
-  have htt := trits_embed hF.toll_trits
-  have hts : 0 < (embed F.toll).size := by rw [size_embed]; exact hF.toll_pos
-  have htn : (embed F.toll).size < F.n := by rw [size_embed]; exact hF.toll_lt
+  obtain ⟨htt, hts, htn⟩ := hF.embed_parts
   have hbs : (embed base).size = F.n := by rw [size_embed]; exact hbase.1
   obtain ⟨r, hw, hr1, hr2, hv⟩ := walk_shared_spec (emb F) F.n (embed F.toll) rfl rfl htt hts htn
     hfit cells hcells hfc hstart (embed base) ⟨hbs, trits_embed hbase.2⟩ y hy
   refine ⟨r.2, ?_, hr2⟩
   unfold Bs.shared_walk
-  rw [show SudoRt.sudoAssertEq (SudoRt.listLen (embed base)) (emb F).sudo_5Field_1n 700 = .ok () by
+  rw [show SudoRt.sudoAssertEq (SudoRt.listLen (embed base)) (emb F).sudo_5Field_1n 707 = .ok () by
     simp only [listLen_eq, hbs]
     simp [SudoRt.sudoAssertEq, sEq_int, emb], ok_bind, hread, ok_bind, hw]
   show Except.ok (r.1, r.2) = _
@@ -109,7 +105,7 @@ theorem sharedSecret_square (F : Spec.Field) (hF : F.Wf) (e : Nat) (cells : List
     and neither received square is rejected by B8 (`3^(2a) mod p` and `3^(2b) mod p` are
     neither 0 nor 1), then `exchange` succeeds, the published values are the model's
     `3^a mod p` and `3^b mod p`, and both secrets are the model's `K = 3^(2ab) mod p`. -/
-theorem exchange_agree (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
+theorem exchange_agree_of_accepted (F : Spec.Field) (hF : F.Wf) (h3 : 3 ≤ F.n)
     (hfit : FitsLen (2 * F.n + 2)) (keyA keyB : Array Bs.KeyGrid) (ca cb : List Nat)
     (hra : Bs.read_key keyA = .ok (embed ca)) (hrb : Bs.read_key keyB = .ok (embed cb))
     (hca : ∀ c ∈ ca, c ≤ 2) (hcb : ∀ c ∈ cb, c ≤ 2)

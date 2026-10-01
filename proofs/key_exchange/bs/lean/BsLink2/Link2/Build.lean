@@ -3,7 +3,12 @@
   `grow_until_it_bumps` refine `Spec.buildKeyGrid`, `Spec.buildLettingGo` and
   `Spec.growUntilItBumps`, traps included: the emitted code succeeds with the embedded
   model result exactly when the model does, and traps exactly when the model fails. The
-  let-go list is an arbitrary input. No probability. Proof-only.
+  let-go list is an arbitrary input. Every grid BUILD returns is well formed (`build_wf`).
+  No probability. Proof-only.
+
+  `build`'s loop bodies are copied verbatim below (`holeStepE`, `stage*E`, `holeInnerE`,
+  `rowStepE`, `checkStepE`, `buildAfterE`) as a proof device; `build_eq` and
+  `holeStepE_eq` / `rowStepE_eq` are `rfl`, so the theorems are about the emitted `build`.
 -/
 import BsLink2.Link2.Dice
 import BsLink2.Link2.Key

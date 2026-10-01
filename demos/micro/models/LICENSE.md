@@ -1,6 +1,6 @@
 # Microdemo models
 
-Copied unchanged from Scrounger's scrounge (`/workspace/scrounger/bs-ecbs/`, 2026-09-30). All five are **procedural blockouts made for this project** (Blender, "procedural (mine)" in the scrounge MANIFEST): no third-party content, so no outside licence applies. The scrounge MANIFEST gives them no explicit licence; treat them as project-owned (CC0 intended) until Zachary confirms.
+All five are **procedural blockouts made for this project** (modelled in Blender for cryptoys, 2026-09-30). They contain no third-party content and are project-owned; CC0 is intended. `ocean_grid_10x10_holes.glb` has one change from the original blockout: a deeper blue plate material (roughness 0.85), so the top reads as blue under the den's warm key light.
 
 | File | Real size | Used by | Scrounge path |
 |---|---|---|---|

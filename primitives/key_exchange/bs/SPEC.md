@@ -213,7 +213,7 @@ Why plain ternary and not balanced ternary: `proofs/key_exchange/bs/key-selectio
 
 ### 3.1 Sending a public value: call the shots
 
-A public value is the sender's tidy answer from B9 step 1. It is in X (B5 leaves the tidy answer there): n holes, hole 0 to hole n − 1. Each player receives the other's value like this:
+A public value is the sender's tidy answer from B9 step 1. It is in X (the walk ends in X, and B5 leaves the tidy answer in the register it tidied): n holes, hole 0 to hole n − 1. Each player receives the other's value like this:
 
 1. **Clear Y.** B6 leaves the last X × X in Y, and a misfire lays nothing, so a peg left there would end up in the copy. Once Y is clear, the copy needs no extra grid.
 2. **Mark "calling in progress":** stand a peg in control-lane hole 5 (No-paper rule).

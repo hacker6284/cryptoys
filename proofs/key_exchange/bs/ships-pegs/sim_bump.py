@@ -7,6 +7,8 @@ from read_rule import encode, bs_decode_exponent, bs_exponent, KL
 from rules import extra_rules
 from sim_build import model_logp
 from brute_build import enumerate_build
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 
 def build_bump(rng, n=10, m=10, st=None):
     occ = [[None] * m for _ in range(n)]
@@ -70,4 +72,4 @@ if __name__ == "__main__":
                 "kinds": {k: v / N for k, v in kinds.items()}, "across_frac": heads["H"] / (heads["H"] + heads["V"]),
                 "MC_H": statistics.mean(lps), "MC_H_se": statistics.stdev(lps) / math.sqrt(N)})
     print(json.dumps(out, indent=1))
-    json.dump(out, open("sim_bump_results.json", "w"), indent=1)
+    json.dump(out, open(HERE / "sim_bump_results.json", "w"), indent=1)

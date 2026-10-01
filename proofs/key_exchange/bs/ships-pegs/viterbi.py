@@ -3,6 +3,8 @@ max-product DP with stored float32 tables and traceback."""
 import math, numpy as np, sys, json
 from build_dp import KIND_LEN
 from rules import make_rules, extra_rules
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 
 def viterbi(rule, n=10, m=10):
     base = 5; size = base ** m
@@ -82,4 +84,4 @@ if __name__ == "__main__":
     R = {**make_rules(), **extra_rules()}[sys.argv[1]]     # bump_reroll (the SPEC rule) is in extra_rules
     h, g = viterbi(R)
     print(sys.argv[1], "Hmin", h); print("\n".join(g))
-    json.dump({"rule": sys.argv[1], "Hmin": h, "grid": g}, open(f"viterbi_{sys.argv[1]}.json", "w"))
+    json.dump({"rule": sys.argv[1], "Hmin": h, "grid": g}, open(HERE / f"viterbi_{sys.argv[1]}.json", "w"))

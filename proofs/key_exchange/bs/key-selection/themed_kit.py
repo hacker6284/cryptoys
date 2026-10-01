@@ -4,6 +4,8 @@ full-restart placement with the spec d10 and the best-fit along-dice (part D of 
 randomizer-kit script).  ecbs13_kit.py is the same placement end to end."""
 import json, random, collections, math
 from fractions import Fraction as F
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 out = {}
 def uniform_check(name, faces, rule, void=()):
     cnt = collections.Counter()
@@ -23,6 +25,7 @@ A.append(uniform_check("d8 top half + top pair of its half + odd/even", range(1,
 A.append(uniform_check("d4 top half (3-4) + odd/even", range(1, 5), lambda f: (f > 2, f % 2)))
 out["A_face_rules"] = A
 for a in A: print("A", a)
+assert all(a["exact_uniform"] for a in A), [a["rule"] for a in A if not a["exact_uniform"]]
 
 rng = random.Random(2026)
 # ---------------------------------------------------------------- D. ECBS 1.3 themed fleet placement
@@ -80,4 +83,4 @@ for along in ("spec", "bestfit"):
     D[along] = {k: v / M for k, v in st.items()}
     print("D", along, D[along])
 out["D_ecbs13"] = D
-json.dump(out, open("themed_kit_results.json", "w"), indent=1, default=str)
+json.dump(out, open(HERE / "themed_kit_results.json", "w"), indent=1, default=str)

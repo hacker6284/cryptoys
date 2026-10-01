@@ -20,11 +20,11 @@ Two implementations of the build are used. `keygrid.py` follows the SPEC wording
 | `combined_multi.py` | 3,000 two-page keys decode to both grids | `combined_multi_results.txt` | §4.5 |
 | `free_fleet_count.py` | Exact layout counts on 10×10 (uniform-layout ceiling 150.19 bits; the standard fleet, 30,093,975,536 labelled placements = 34.81 bits), then a Monte Carlo stage | `run.log`, `results_exact.json`, `results_mc.json` | ../key-selection |
 
-**Let-go and resume.** `combined.py`'s `step()` lets go only where the SPEC allows it: after the whole ship decision (growth and Sub/Cruiser rolls included) with the lane peg standing, or after the peg. The resumed build reads only the board. The chi-squares match the exact model, which is the evidence for the "finish the hole before you let go" rule as written. A build that let go between a Destroyer and its growth roll would, on resuming, see a covered hole and leave the Destroyer short; that case is excluded by the rule and is not simulated.
+**Let-go and resume.** `combined.py`'s `step()` lets go after the whole ship decision (growth and Sub/Cruiser rolls included) with the lane peg standing, or after the peg, at every hole. It pegs with the per-hole d6, so there are no row-cup pairs. Its let-go points are a superset of those the SPEC allows, since the SPEC also forbids letting go inside a row-cup die's pair (§4.2). The resumed build reads only the board. The chi-squares match the exact model, which is the evidence for the "finish the hole before you let go" rule as written. A build that let go between a Destroyer and its growth roll would, on resuming, see a covered hole and leave the Destroyer short; that case is excluded by the rule and is not simulated.
 
 ## Run
 
-From this directory (outputs are written to the current directory, and `combined.py` reads `sim_bump_results.json`):
+From this directory (redirected logs land in the current directory; JSON outputs are written beside the scripts, and `combined.py` reads `sim_bump_results.json` from there):
 
 ```sh
 python3 brute_build.py > brute_build_results.txt

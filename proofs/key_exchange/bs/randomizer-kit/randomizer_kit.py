@@ -9,6 +9,8 @@ C. Monte Carlo counts: reads, throws (queue cups), voids/rerolls per grid for ea
 The themed-fleet placement checks that used to be part D are in ../key-selection/themed_kit.py."""
 import os, sys, json, random, itertools, collections, math
 from fractions import Fraction as F
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "ships-pegs"))
 out = {}
 
@@ -221,5 +223,5 @@ for holes in (100, 200, 2, 16, 51, 162):
     print("C pegs", holes, C[f"pegs_d10_rowcup_{holes}"])
 out["C_counts"] = C
 
-json.dump(out, open("randomizer_kit_results.json", "w"), indent=1, default=str)
+json.dump(out, open(HERE / "randomizer_kit_results.json", "w"), indent=1, default=str)
 print("saved randomizer_kit_results.json")

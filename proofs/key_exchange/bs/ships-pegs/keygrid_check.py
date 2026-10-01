@@ -11,6 +11,8 @@ import collections, itertools, json, math, random, statistics
 import keygrid
 from brute_build import enumerate_build
 from rules import extra_rules
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 
 RULE = extra_rules()["bump_reroll"]
 
@@ -65,7 +67,7 @@ def main():
              "rolls_per_grid": {k: round(v / N, 3) for k, v in sorted(st.items())}}
         out["10x10"][tag] = r
         print(tag, "10x10", json.dumps(r), flush=True)
-    json.dump(out, open("keygrid_check_results.json", "w"), indent=1)
+    json.dump(out, open(HERE / "keygrid_check_results.json", "w"), indent=1)
 
 
 if __name__ == "__main__":

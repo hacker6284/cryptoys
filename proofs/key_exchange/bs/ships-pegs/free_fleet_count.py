@@ -27,6 +27,8 @@ big-int dict DP and a brute-force enumeration of placements/labellings on tiny g
 import math, sys, time, itertools, json
 from functools import reduce
 import numpy as np
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 
 KINDS = [("D", 2), ("S", 3), ("C", 3), ("B", 4), ("A", 5)]
 
@@ -449,8 +451,8 @@ def fmt(x):
 
 def run_mc(N=10, NS=100000):
     """Monte Carlo stage (separate process: needs ~4 GB for the stored float32 DP)."""
-    A = int(json.load(open("results_exact.json"))["exact"]["A"])
-    B = int(json.load(open("results_exact.json"))["exact"]["B"])
+    A = int(json.load(open(HERE / "results_exact.json"))["exact"]["A"])
+    B = int(json.load(open(HERE / "results_exact.json"))["exact"]["B"])
     print(f"== Monte Carlo on {N}x{N} (exact sampler, {NS} samples per distribution) ==", flush=True)
     mc = monte_carlo(N, N, NS, seed=12345)
     print(f"  E_A[1/multiplicity of (kind,part) labelling] = {mc['A'][0]:.5f} +- {mc['A'][1]:.5f}", flush=True)
@@ -459,7 +461,7 @@ def run_mc(N=10, NS=100000):
     cl = lg(B) + math.log2(mc["B"][0]); ce = mc["B"][1] / mc["B"][0] / math.log(2)
     print(f"  => log2 #(kind,part)-labellings ~ {kpl:.4f} +- {kpe:.4f};  log2 C ~ {cl:.4f} +- {ce:.4f}", flush=True)
     json.dump({"nsamp": NS, "inv_mult": mc["A"], "C_frac": mc["B"], "log2_KP_labellings": [kpl, kpe],
-               "log2_C": [cl, ce]}, open("results_mc.json", "w"), indent=1, default=float)
+               "log2_C": [cl, ce]}, open(HERE / "results_mc.json", "w"), indent=1, default=float)
 
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "mc":
     run_mc()
@@ -532,7 +534,7 @@ elif __name__ == "__main__":
         "C_strips_log2": strip, "C_strip_extrap": [cE, cN, bE, bN],
         "runtime_s": time.time() - T0,
     })
-    json.dump(out, open("results_exact.json", "w"), indent=1, default=float)
+    json.dump(out, open(HERE / "results_exact.json", "w"), indent=1, default=float)
     print("exact stage done", time.time() - T0, flush=True)
     import subprocess
     subprocess.run([sys.executable, __file__, "mc"], check=True)

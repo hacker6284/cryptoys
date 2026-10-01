@@ -4,6 +4,8 @@ the grid (Carrier d6, Battleship d8, 3-holers d8, Destroyer d10), re-rolled if o
 full restart on overlap (unchanged); signs: one d8 per two ship cells (half, then odd/even)."""
 import random, collections, json, itertools
 from fractions import Fraction as F
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 FLEET = [5, 4, 3, 3, 2]; ALONG = {5: 6, 4: 8, 3: 8, 2: 10}
 # exactness of the d20 split: (half, last digit as 1..10) uniform over 2 x 10
 cnt = collections.Counter((f > 10, (f % 10) or 10) for f in range(1, 21))
@@ -28,4 +30,4 @@ def place(rng, st):
 rng = random.Random(13); st = collections.Counter(); M = 200000
 for _ in range(M): place(rng, st)
 res = {k: v / M for k, v in st.items()}
-print(json.dumps(res)); json.dump(res, open("ecbs13_kit_results.json", "w"), indent=1)
+print(json.dumps(res)); json.dump(res, open(HERE / "ecbs13_kit_results.json", "w"), indent=1)

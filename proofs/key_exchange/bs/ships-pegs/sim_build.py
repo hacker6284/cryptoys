@@ -5,6 +5,8 @@ chi-square check that the physical procedure has exactly the modelled distributi
 import random, math, sys, json, collections
 from read_rule import encode, bs_decode_exponent, bs_exponent, KL
 from rules import make_rules
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 
 def build_grow(rng, n=10, m=10, stats=None):
     """The 'grow' rule as a player does it.  Returns ship list in encode() format."""
@@ -111,4 +113,4 @@ if __name__ == "__main__":
            "kinds_per_grid": {k: v / N for k, v in kinds.items()}, "max_kind_seen": dict(maxk),
            "MC_shannon": statistics.mean(lps), "MC_shannon_se": statistics.stdev(lps) / math.sqrt(N)}
     print(json.dumps(res, indent=1))
-    json.dump(res, open("sim_build_results.json", "w"), indent=1)
+    json.dump(res, open(HERE / "sim_build_results.json", "w"), indent=1)

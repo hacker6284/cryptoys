@@ -1,6 +1,6 @@
 # BS: Battleship Diffie–Hellman
 
-Finite-field Diffie–Hellman (powers of 3 modulo a prime p), worked by hand on Battleship pegboards. The private exponent is one dice-built **ships+pegs key grid**: a free fleet (any number of ships, built by "grow until it bumps") plus a 3-state peg in every one of the 100 holes, read as "ships, then pegs" (§4). BS is the prime-field sister of **ECBS** (`../ecbs/SPEC.md`) and reuses its conventions:
+Finite-field Diffie–Hellman (powers of 3 modulo a prime p), worked by hand on Battleship pegboards. The private exponent is one dice-built **ships+pegs key grid**: a free fleet (any number of ships, built by "grow until it bumps") plus a 3-state peg in every one of the 100 holes, read as "ships, then pegs" (§4). BS is the prime-field sister of **ECBS**, a pegboard elliptic-curve design that is not in this repository. It shares these conventions, each stated in full below:
 * holes empty/white/red = 0/1/2;
 * the colour wheel;
 * fold recipes;
@@ -48,7 +48,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
 
 **Control state, made physical.**
 * **Control lane:** 10 holes per player.
-  - One peg in holes 1–6 marks the cell sub-step: square, cube product, hit-multiply 1, hit-multiply 2 (holes 5–6 spare).
+  - One peg in holes 1–6 marks the cell sub-step: square, cube product, hit-multiply 1, hit-multiply 2. Hole 5 marks "calling in progress" while a public value is being called (§3.1); hole 6 is spare.
   - Hole 7 is the parity bit (white = odd).
   - Hole 8 is the phase: empty = public walk, white = check, red = shared walk.
   - Hole 9 is the "accumulator started" flag.
@@ -77,22 +77,11 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
 * **Group:** every p is a **safe prime** (q = (p−1)/2 is prime) and **g = 3**. For every safe prime p > 7, 3 is a quadratic residue, so g = 3 generates the prime-order subgroup of size q.
 * **Arithmetic** is plain ternary with an **odometer carry**: when a hole clicks from red over to empty, flick a white into the next hole up.
 * **Multiplication** is ECBS's "lay a copy at every pegged hole" (twice for red), followed by paying the toll.
-* **Key: one ships+pegs key grid** (§4): dice put a free fleet and a 3-state peg in every hole (BUILD, §4.2), and the grid is read as a ternary string, ships then pegs (READ, §4.3). **306.33 bits Shannon / 283.28 bits min-entropy per grid**, with zero aliasing, so **one key grid covers every tier up to R3072** even when sized by min-entropy.
+* **Key: one ships+pegs key grid** (§4): dice put a free fleet and a 3-state peg in every hole (BUILD, §4.2), and the grid is read as a ternary string, ships then pegs (READ, §4.3). Entropy and aliasing: §4.5, §4.7. Grids per tier: §4.8.
 * **Exponentiation:** a left-to-right cube-and-multiply walk over that string (B7). Public-phase hits are free nudges, because multiplying by g = 3 is a shift (B6).
 * **Received-value check** (Wong §5.4): square the received number first and reject 0 and 1 (B8). The shared secret is K = 3^(2ab).
 
-**Tiers (details in §7).** One ships+pegs key grid in every tier, no paper. Security is the minimum of NFS, rho on q, and the key's √ bound. Moves are per person; hand time assumes 1 move per second.
-
-| Tier | Grids per player (workspace + key) | Game sets | p | Security | Moves per person | Non-stop / 8 h per day |
-|---|---|---|---|---|---|---|
-| **T1 skiff** | **2 (1 + 1)** | **1** | 3¹⁸ − 3² − 1 (29 bits) | ≈ 2^14; **broken in 0.00 s** | 4.87·10⁵ | 135 h / 17 days |
-| **T2 frigate** | **3 (2 + 1)** | **1** | 3³⁵ − 3²⁹ − 1 (56 bits) | ≈ 2^27; **broken in 3.3 s** | 1.66·10⁶ | 19 days / 58 days |
-| T6 demo | 7 (6 + 1) | 2 | 159 bits | ~2^31 [est] | 1.97·10⁷ | 228 days / 22 months |
-| R1024 | 37 (36 + 1) | 10 | 1024 bits | 80 | 7.74·10⁸ | 25 years / 74 years |
-| R2048 | 73 (72 + 1) | 19 | 2048 bits | 112 | 3.07·10⁹ | 97 years / 292 years |
-| **R3072 serious** | **108 (107 + 1)** | **27** | 3072 bits | **128** | 6.84·10⁹ | **217 years / 650 years** |
-
-Only grids count (No-paper rule). In T1, T2 and T6 the key wraps mod q (injectivity fails, §4.6); those tiers are capped by q.
+**Tiers:** the tier table (grids and game sets per player, p, security, moves and hand time, T1 to R3072) is in [§7](#7-tier-table).
 
 **Verified** (details and pointers in §8)
 * p and q are prime (Miller–Rabin with 50 rounds, plus BPSW; also deterministic Miller–Rabin for T1 and T2), and 3^q ≡ 1 (mod p), for T1, T2, T6, R512, R1024, R2048 and R3072.
@@ -144,7 +133,7 @@ Only grids count (No-paper rule). In T1, T2 and T6 the key wraps mod q (injectiv
   - That means c ≡ 1 (mod 3).
   - c must also be even, so that p is odd.
 * **Two-peg tolls, c = 3ᵏ + 1 (toy tiers).**
-  - The fold is: *lift, drop it n holes back and n−k holes back* (ECBS R3, verbatim).
+  - The fold is: *lift, drop it n holes back and n−k holes back*.
   - Safe primes of this shape for n = 16…44 exist only at **n = 18 (k = 2), 30 (k = 4, 12), 31 (k = 1), 35 (k = 29)** (`reference/bsparams.py`). There are none at n = 20 or 40, which is why the rows don't line up with 10-hole rows (§6).
 * **Long tolls (real tiers).**
   - c = (first ⌈n/2⌉ ternary digits of π) + j, where j is the smallest offset that makes p a safe prime (`reference/bsparams.py`).
@@ -232,20 +221,29 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
   - *While folding:* every lifted **white** flips the parity; lifted reds don't. (Lifting d·3^h and laying d·c·3^(h−n) subtracts d·3^(h−n)·p, and p is odd.)
   - It catches every forgotten carry and every wrong click count (each is off by an odd power of 3), and about 2/3 of random single-peg errors (63–69% measured, §8).
 
-**Why plain ternary and not balanced.**
-* Balanced ternary (red = −1) makes subtraction free, but BS never subtracts.
-* It would clash with the exponent digits, where red must mean *two* (multiply by the base twice): a −1 digit would need the base's inverse, which costs a whole extra exponentiation for a received base.
-* It would also make the canonical-form test sign-dependent.
-* Plain ternary keeps ECBS's colour meanings: red is "two clicks".
+Why plain ternary and not balanced ternary: `proofs/key_exchange/bs/key-selection/NOTES.md` §5.
 
 ### 3.1 Sending a public value: call the shots
 
-A public value is the sender's tidy X register (B9 step 1): n holes, hole 0 to hole n − 1. The receiver calls each hole of it aloud, in the order this spec reads a number off the board: **hole 0 first, up to hole n − 1**. On the board, that is grid by grid in the order the register's grids are chained (§6), row A to J, left to right within each row, calling only the register's own holes. In T1 and T2 those are holes 1–9 of the register's rows; hole 10 is the control lane. The sender looks at that hole and answers:
-- a red peg: **"Hit!"**
-- a white peg: **"Miss!"**
-- an empty hole: **"Misfire!"**
+A public value is the sender's tidy answer from B9 step 1. It is in X, or in the strip copy if B5 kept the copy: n holes, hole 0 to hole n − 1. Each player receives the other's value like this:
 
-The receiver copies each answer into the same hole of their own Y register, exactly as in Battleship: a red peg on a hit, a white peg on a miss, nothing on a misfire. Y is empty at this point, so no extra grid is needed. The sender keeps A in X until the copy is done. When every hole has been called, the receiver's Y is an exact copy of the sender's X. Call every hole of the register; never stop early, even after a long run of misfires. Before letting go, park the cursor ships at the last hole called. Only public values are called; key grids are never shown or called.
+1. **Clear Y.** B6 leaves the last X × X in Y, and a misfire lays nothing, so a peg left there would end up in the copy. Once Y is clear, the copy needs no extra grid.
+2. **Mark "calling in progress":** stand a peg in control-lane hole 5, a spare sub-step hole (No-paper rule).
+3. **Call the holes aloud, hole 0 first (§3), up to hole n − 1.** Name each one by its Battleship coordinates within the register: rows A–J counted from the register's first row, holes numbered along the row, and in real tiers the register's grids numbered from 1.
+   - **T1:** "A1" to "B9", in columns 1–9; column 10 is the control lane (§6).
+   - **T2:** "A1" to "D8". T2's last register hole, D9, is unused (§6) and is not called.
+   - **Real tiers:** count the register in rows of 10 holes and grids of 10 rows from its first hole, so a call is like "grid 3, B7".
+   - Saying the name lets both players catch a skipped hole.
+4. **The sender looks at that hole of their value and answers:**
+   - a red peg: **"Hit!"**
+   - a white peg: **"Miss!"**
+   - an empty hole: **"Misfire!"**
+5. **Copy each answer into the same hole of Y**, exactly as in Battleship: a red peg on a hit, a white peg on a miss, nothing on a misfire. Call every hole of the register; never stop early, even after a long run of misfires.
+6. **When every hole has been called,** Y is an exact copy of the sender's value. Lift the peg from lane hole 5. The sender keeps their value on the board until the copy is done.
+
+**Letting go.** Before you let go, park the cursor ships on Y at the next hole to call, as BUILD does (§4.2). With the lane-hole-5 peg standing, the board then says where to resume: every hole before the cursor has been called and copied, and no hole after it has.
+
+Only public values are called; key grids are never shown or called.
 
 *Mnemonic: "Red hits, white misses, empty misfires."*
 
@@ -279,7 +277,9 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 >    - **Zero-reroll fallback:** roll a d6 for the peg instead, 1–2 no peg, 3–4 white, 5–6 red.
 > 3. **Move the cursor to the next hole** (reading order). After J10, park it off the grid.
 >
-> **Letting go.** Finish the hole before you let go (the rule is in step 1 below); the cursor is then parked at the hole you are about to start. **The one exception is the gap between steps 1 and 2:** you may let go there if you first stand a **white peg in control-lane hole 10** ("ship decision made"). Lift it when you move the cursor.
+> **Letting go.** You may let go only where the hole is finished (the rule is in step 1 below) and no die's pair is half done. With the row cup, that is after a die's second hole (holes 2, 4, 6, 8 and 10 of a row), and the cursor is then parked at the hole you are about to start.
+> - **A die's pair is one step you may not interrupt.** Its two pegs still go in one at a time, each when the cursor reaches its hole. But once the first is in, you may not let go until the second is in and the die is back in the cup.
+> - **The one exception to finishing the hole is the gap between steps 1 and 2 at a die's first hole** (holes 1, 3, 5, 7 and 9). You may let go there, before that die's first peg, if you first stand a **white peg in control-lane hole 10** ("ship decision made"). Lift it when you move the cursor.
 
 **Step 1: grow until it bumps** (at the cursor hole, when no ship covers it)
 
@@ -301,12 +301,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 >
 > **Ships may touch**, side by side or end to end, as in Hasbro's rules. They never overlap: a ship only ever grows into open holes.
 
-* **Why the d12 is exact.** The former wording rolled sea on 1–2, then a heading on 1–3 / 4–6, and "rolled again for this hole" if not even a Destroyer fitted. That is rejection sampling. Sea has weight 1/3 and each heading 1/3 if it has room. After renormalising:
-  - both headings open: 1/3, 1/3, 1/3 (the d12 thirds);
-  - one heading open: 1/2, 1/2 (the halves);
-  - none open: sea.
-  - The bow is an independent fair bit. On a d12, odd/even splits every third (2 + 2) and every half (3 + 3) evenly, so it is independent of the hole decision.
-  - Checked exactly, with Fractions: all 25 room states, and whole builds on 2×3, 3×3, 2×5 and 3×4 (64,557 layouts) are identical to the former rule (`randomizer-kit/`, part B).
+* **The d12 is exact:** it gives the same distribution as the former d6 wording, checked exactly in all 25 room states and on whole builds (`randomizer-kit/`, part B). The derivation is in `key-selection/NOTES.md` §5.
   - The former wording (d6 sea roll, heading roll, roll again, d6 bow) gives the same distribution and remains valid.
 * **All-d6, zero-reroll fallback** (equally exact):
   - The hole die is a d6: **1–2 sea, 3–4 across, 5–6 down**. If only one heading has room: **1–3 sea, 4–6 that heading**.
@@ -314,9 +309,9 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
   - Do **not** take the bow from a d6's odd/even. In the halves 1–3 / 4–6 it splits 2 : 1.
 * **Why the row cup is exact.** Faces 1–9 correspond one-to-one to pairs of trits (3 × 3). A 0 is re-thrown on its own face only, which is rejection sampling. So every hole gets an exactly uniform, independent trit. The d6 fallback also gives exactly uniform trits.
 * **Hands-off:** the row-cup d10s still in the tray show which hole pairs of the current row are unfinished (colour ↔ pair).
-* **The cursor is the record.** With the finish-the-hole rule, a build is only ever left at a hole boundary or in the step 1 → 2 gap. Every hole before the cursor is finished (ship decided, growth and Sub/Cruiser rolls included, and peg rolled). The cursor hole's ship decision is finished if lane hole 10 holds a white peg and not started otherwise. Every hole after it has no peg. So "no peg" never has to mean "sea decided", and a white peg always means a white key digit.
+* **The cursor is the record.** With these let-go rules, a build is only ever left at the boundary after a die's pair, or in the step 1 → 2 gap of a die's first hole. Every hole before the cursor is finished (ship decided, growth and Sub/Cruiser rolls included, and peg rolled). The cursor hole's ship decision is finished if lane hole 10 holds a white peg and not started otherwise. Every hole after it has no peg. So "no peg" never has to mean "sea decided", and a white peg always means a white key digit.
   - A ship laid at the cursor covers only the cursor hole and holes after it, none of which has a peg yet. Pegs behind the cursor are never in a ship's way, because ships grow only right or down.
-  - Build simulated with random let-go and resume at every allowed point, resuming from the board alone: the joint layout × peg distribution matches the exact model, chi-square 1,327.7 on 1,376 df (2×2, 400k builds) and 101,368 on 101,330 df (2×3, 300k builds) (`ships-pegs/combined.py`).
+  - Build simulated with random let-go and resume at every hole boundary and every step 1 → 2 gap, resuming from the board alone. The simulation pegs with the per-hole d6, so it has no pairs, and its let-go points include every one allowed above: the joint layout × peg distribution matches the exact model, chi-square 1,327.7 on 1,376 df (2×2, 400k builds) and 101,368 on 101,330 df (2×3, 300k builds) (`ships-pegs/combined.py`).
   - The literal dice of this section (`ships-pegs/keygrid.py`), d12 + row cup and the all-d6 fallback: layout and peg chi-squares against the exact model on 2×2, 2×3, 3×2, 1×5 and 5×1 all within |z| < 2 (`ships-pegs/keygrid_check.py`).
 * So a resumed build needs only what is on the table: the pieces, the pegs, the cursor, the lane peg and the row-cup dice in the tray. The layout dice use only thirds, halves, odd/even on the d12, and "a six".
 
@@ -401,13 +396,6 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 * The ship part is a sum of per-ship terms, so a ship-split meet-in-the-middle is the natural structured attack, and the √ bound is heuristic. I know no attack better than √ [heuristic].
 * The peg part is 100 independent uniform trits (P in §4.4).
 
-### 4.10 Why a ternary walk (cube) and not binary (square)
-
-* Squaring per cell would cost about 1.9× less.
-* But with digits {0, 1, 2} in base 2, the cells-to-exponent map is not injective. For example, two red cells in a row equal two white cells one place higher (2·2ʷ + 2·2^(w−1) = 2^(w+1) + 2ʷ).
-* The resulting entropy loss was not measured. So I chose honesty over speed.
-* A base-4 walk (square twice) is injective but costs the same as cubing.
-
 ---
 
 ## 5. Received-value check (Wong §5.4)
@@ -418,7 +406,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 * **The fix (B8).** Square first; reject 0 and 1.
   - This clears the cofactor 2, like ECBS's "clear the cofactor 5", at the cost of one multiplication.
   - **Tested** (`reference/run_bs.py`): 0, 1, p − 1 and p + 1 (a non-canonical 1) are all rejected in T1, T2 and T6. A non-residue is accepted, and its square lies in the order-q subgroup.
-* **Why not the full check B^q = 1?** It would need a walk over the n-trit public exponent q: about 5,000 multiplications at 3072 bits, about 5× one person's whole exchange (≈ 1,049 multiplications, §4.7). The square-first variant gives the same protection for honest protocols.
+* Why not the full check B^q = 1: `proofs/key_exchange/bs/key-selection/NOTES.md` §5.
 * The exchange must use (B²)^a on both sides. Both sides do, so K = 3^(2ab).
 
 ---
@@ -463,11 +451,12 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 Figures: `reference/tiers.py` (`tiers_output.txt`), from the key figures in `ships-pegs/combined.py` and the exchanges in `exchange/`. This is the ships+pegs key (one key grid) under the no-paper rule.
 * **NFS:** the NIST SP 800-57 equivalences where tabulated (1024/2048/3072 bits → 80/112/128) [lit-mem]. Otherwise the L_p[1/3, 1.923] formula, shifted to match NIST at 1024 bits [est]. The formula is meaningless below ~128 bits.
 * **Rho on q:** Pollard rho, ≈ √(πq/4). Pohlig–Hellman adds nothing, because p − 1 = 2q and g has prime order q.
-* **Key √:** 141.6 bits per key grid by min-entropy (153.2 by Shannon), the √ heuristic of §4.9, capped at log₂(q)/2.
+* **Key √:** the per-grid √ bound by min-entropy (§4.8), capped at log₂(q)/2.
 * **Security** is the minimum of the three.
 * **Grids** = workspace ⌈(5n + toll + 10)/100⌉ + 1 key grid. **Game sets** = ⌈grids/4⌉ (only grids count).
 * **Mults per person** = 1,048.8 = 4 × 211.10 cells (2 walks × a 2-multiplication cube per cell, from the start marker on) + 203.35 hit multiplications in the shared walk + the check squaring; the mean over 20,000 built grids (`ships-pegs/combined.py`).
 * **Moves per mult** is measured in full exchanges with ships+pegs keys at every tier (`exchange/`; runs per tier in §8). **Moves per person** = 1,048.8 × moves per mult. Hand time at 1 move per second.
+* Sending the public values (§3.1: clearing Y, the calls and the copies) is not counted in the moves; the simulated exchanges hand each public value over directly.
 
 | Tier | Grids per player (workspace + key) | **Game sets** | n / p bits | NFS | Rho on q | Key √ | **Security** | Mults per person | Moves per mult | Moves per person | Non-stop / 8 h per day |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -479,7 +468,7 @@ Figures: `reference/tiers.py` (`tiers_output.txt`), from the key figures in `shi
 | R2048 | 73 (72 + 1) | **19** | 1292 / 2048 | 112 | 2^1023 | 2^141.6 | **112** | 1,049 | 2,929,632 | 3.07·10⁹ | 97 years / 292 years |
 | **R3072** | **108 (107 + 1)** | **27** | **1938 / 3072** | **128** | 2^1535 | 2^141.6 | **128** | **1,049** | **6,520,198** | **6.84·10⁹** | **217 years / 650 years** |
 
-**Tiers:** R3072 (128-bit) is the top tier; 192- and 256-bit tiers (R7680, R15360) are out of scope as overkill for this toy. Every tier's key fits on one key grid.
+**Tiers:** R3072 (128-bit) is the top tier; 192- and 256-bit tiers (R7680, R15360) are out of scope as overkill for this toy.
 
 Reading the table:
 * In T1, T2 and T6 the key wraps mod q (§4.6), so its √ bound is the q cap; one key grid is still the minimum.
@@ -532,7 +521,7 @@ Paths are under `proofs/key_exchange/bs/`.
 * **Ships+pegs key** (`ships-pegs/`):
   - Entropy: layout H / H₂ / H∞ = 147.83 / 145.49 / 124.78 bits by exact DP, cross-checked by brute force and Monte Carlo; + 158.50 for the pegs (`build_dp.py`, `brute_build.py`, `viterbi.py`, `combined.py`).
   - Injectivity: exhaustive on 1×2, 2×1, 2×2, 1×5, 2×3, 3×2 and 1×7 (every layout × every peg pattern); 20,000 built 10×10 grids round-trip; 3,000 two-page keys decode (`combined.py`, `combined_multi.py`). Ship pass alone exhaustive up to 4×4 (`read_rule.py`).
-  - Build: the board-only one-pass BUILD with random let-go/resume at the allowed points matches the exact joint model (chi-square 1,327.7 on 1,376 df at 2×2; 101,368 on 101,330 df at 2×3; `combined.py`). The literal §4.2 dice match it too, for the d12 + row cup and for the all-d6 fallback (`keygrid_check.py`). The d12 hole die equals the former rule exactly (`randomizer-kit/`, part B).
+  - Build: the board-only one-pass BUILD with random let-go/resume at every hole boundary and step 1 → 2 gap (a superset of the allowed points, §4.2) matches the exact joint model (chi-square 1,327.7 on 1,376 df at 2×2; 101,368 on 101,330 df at 2×3; `combined.py`). The literal §4.2 dice match it too, for the d12 + row cup and for the all-d6 fallback (`keygrid_check.py`). The d12 hole die equals the former rule exactly (`randomizer-kit/`, part B).
   - Walk: 211.10 cells, 203.35 hit units, 1,048.8 multiplications per grid (20,000 built grids; `combined.py`).
 * **Malicious values** (`reference/run_output.txt`): 0, 1, p − 1 and p + 1 were rejected in all tiers. A non-residue was accepted and squared into the subgroup. The unchecked victim leaked e mod 2 in 4/4 trials.
 * **Attacks on the toy tiers** (`reference/break_small_output.txt`), on public keys from ships+pegs key grids: T1 fell to baby-step/giant-step in Python in 0.00 s. T2 fell to Pollard rho in C in 3.3 s (9.19·10⁷ iterations; the time varies with the key). In both, Eve's K equalled the real K.
@@ -560,7 +549,7 @@ Paths are under `proofs/key_exchange/bs/`.
 4. **Short exponents.**
    * e ∈ [3^M, 2·3^M) with M ≤ 233 (one key grid): e < 2·3^233 ≈ 2^370, in a group of order 2^3071 at R3072. That is a standard short-exponent DH setting, but e is not uniform on that interval.
      - With a safe prime, short exponents don't leak through Pohlig–Hellman [lit, van Oorschot–Wiener].
-     - Key strength by the √ heuristic: 141.6 bits (min-entropy) or 153.2 bits (Shannon) per grid, against targets of 80, 112 and 128 (§4.8).
+     - Key strength by the √ heuristic: §4.8, above every tier's target.
      - The ship part is a sum of per-ship terms. The ship-split meet-in-the-middle is the natural attack (§4.9), and I have no proof that cleverer structured-key attacks don't exist [unverified]. At toy sizes this doesn't matter, because q caps everything.
 5. **g = 3 and a base-3 exponent.**
    * A = ∏ (3^(3^(M−1−j)))^(dⱼ): a product of public table entries chosen by the key trits.
@@ -593,12 +582,12 @@ Paths are under `proofs/key_exchange/bs/`.
 
 ## 10. Cost, and comparison with ECBS
 
-* **R3072 per person:** 1,048.8 multiplications of 1938-trit numbers at 6.52 M moves each (measured in the R3072 exchange, `exchange/`) gives **6.84·10⁹ moves** (§7). That is ~217 years non-stop, or ~650 years at 8 h/day. ECBS (§4) needed 3.9·10⁷ moves per person for ~2^136. **BS is ~180× more work for 128 bits.**
+* **R3072 per person:** 1,048.8 multiplications of 1938-trit numbers at 6.52 M moves each (measured in the R3072 exchange, `exchange/`) gives **6.84·10⁹ moves** (§7). That is ~217 years non-stop, or ~650 years at 8 h/day. The ECBS design's own estimate is 3.9·10⁷ moves per person for ~2^136 [unverified: ECBS is not in this repository]. **BS is ~180× more work for 128 bits.**
 * **Where it goes:**
   - ~80% cubing in the two walks (2 × ~211 cubes × 2 multiplications);
   - ~20% shared-phase hit multiplications (203.35 per grid, about 1 per cell);
   - within a multiplication, ~43% of moves are carries, and the long-toll fold is about a third of all moves (33% at R3072, 34% at R1024; `reference/bigmul_output.txt`).
-* **ECBS §3 estimated ~1.3·10⁹ moves per 3072-bit exponentiation.** BS's figure is ~3.4·10⁹ (half of a person's exchange), for three reasons:
+* **An earlier back-of-envelope estimate for a 3072-bit prime-field exponentiation was ~1.3·10⁹ moves** (≈ 380 multiplications of ~3.5 M moves each [est]). BS's figure is ~3.4·10⁹ (half of a person's exchange), for three reasons:
   - the ~211-cell ternary walk needs ~420 (public) to ~630 (shared) multiplications per walk, versus ~380 for a 256-bit binary exponent;
   - carries;
   - the long-toll fold.

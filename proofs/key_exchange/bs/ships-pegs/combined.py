@@ -12,6 +12,8 @@ from sim_bump import build_bump
 from rules import extra_rules
 from sim_build import model_logp
 from brute_build import enumerate_build
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 
 LOG3 = math.log2(3)
 
@@ -140,7 +142,7 @@ def build_combined(rng, n=10, m=10, stats=None, letgo_prob=0.3):
 if __name__ == "__main__":
     out = {}
     rule = extra_rules()["bump_reroll"]
-    R = {r["key"]: r for r in json.load(open("rules_bump_turn_bump_reroll_grow_turn.json"))}["bump_reroll"]
+    R = {r["key"]: r for r in json.load(open(HERE / "rules_bump_turn_bump_reroll_grow_turn.json"))}["bump_reroll"]
     out["entropy"] = {"uniform_layout+pegs": 150.187464 + 100 * LOG3,
                       "bump_H": R["H"] + 100 * LOG3, "bump_H2": R["H2"] + 100 * LOG3, "bump_Hmin": R["Hmin"] + 100 * LOG3}
     print("entropy (bits):", json.dumps(out["entropy"]))
@@ -183,7 +185,7 @@ if __name__ == "__main__":
         cells.append(len(t)); hits.append(sum(t))
     C, Hh = statistics.mean(cells), statistics.mean(hits)
     mults = 4 * C + Hh + 1
-    SB = json.load(open("sim_bump_results.json"))
+    SB = json.load(open(HERE / "sim_bump_results.json"))
     PEG = 500 - 5.5; FLEET = 4 * SB["cells"] + SB["hit_units"] + 1     # ship pass alone (as ../key-selection/costs.py)
     out["walk"] = {"cells": C, "cells_max_seen": max(cells), "cells_max_possible": 233, "hit_units": Hh,
                    "mults_per_grid": mults, "mults_per_H_bit": mults / out["entropy"]["bump_H"],
@@ -210,4 +212,4 @@ if __name__ == "__main__":
         tiers.append(row)
     out["tiers"] = tiers
     for r in tiers: print(r)
-    json.dump(out, open("combined_results.json", "w"), indent=1)
+    json.dump(out, open(HERE / "combined_results.json", "w"), indent=1)

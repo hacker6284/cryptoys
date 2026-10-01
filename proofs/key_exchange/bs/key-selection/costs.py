@@ -2,6 +2,8 @@
 (fleet walk + grow-until-it-bumps build) and pegs-only.  Run from this directory; reads the
 ships-pegs build statistics and DP results."""
 import json, math, os
+from pathlib import Path
+HERE = Path(__file__).resolve().parent            # every file path is anchored on this script's directory
 SP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "ships-pegs")
 sim = json.load(open(os.path.join(SP, "sim_bump_results.json")))
 rules = {}
@@ -43,4 +45,4 @@ out["sub_eq_cruiser_variant"]["ratio_H"] = (out["sub_eq_cruiser_variant"]["mults
 out["uniform_restart"] = {"x": 0.31291, "log2_acceptance": 150.187464 + 100 * math.log2(0.31291),
                           "x_5_16_log2_acceptance": 150.187464 + 100 * math.log2(5 / 16)}
 print(json.dumps(out, indent=1))
-json.dump(out, open("costs_results.json", "w"), indent=1)
+json.dump(out, open(HERE / "costs_results.json", "w"), indent=1)

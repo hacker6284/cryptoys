@@ -1,5 +1,5 @@
 <!-- Owns: the BS evidence harness (peg recipes, integer arithmetic, parameters) and its test outputs. Maintenance rules: ../../../../DOCS.md. -->
-# BS reference code
+# BS evidence harness: peg recipes and arithmetic
 
 Status: **a note, not a theorem.** The recipes are normative in [`primitives/key_exchange/bs/SPEC.md`](../../../../primitives/key_exchange/bs/SPEC.md) §3 and in `bs.sudo` beside it. The Python here is an **evidence harness, cross-checked against `bs.sudo` by `../vectors/check_oracle.py`; not a reference.** `bspegs.py` simulates the recipes on colours only and is tested against the integer arithmetic of `bsref.py` and Python's `pow`. Test results, not proofs. The harness is due to be replaced (`../README.md`, "Evidence harness").
 

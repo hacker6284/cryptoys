@@ -5,7 +5,7 @@ Both parties build a key grid with the SPEC dice (../ships-pegs/keygrid.py), rea
 recipes (../reference/bspegs.py): public walk, received-value check and square, shared walk.
 Every result is compared with Python's pow: A = 3^a, B = 3^b, K_A = K_B = 3^(2ab) mod p.
 Moves are counted by bspegs (one peg placed, lifted or swapped = one move); moves per person =
-all walks and checks of both parties / 2, as in the reference exchange tooling.
+all walks and checks of both parties / 2.
 
   python3 exchange.py T1 T2 ...     run tiers, write exchange_<tier>.json
   python3 exchange.py summary       merge them into exchange_output.json / print the table

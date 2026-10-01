@@ -59,7 +59,7 @@ Per person, per key; moves at the measured moves per multiplication.
 
 ## 4. ECBS is not affected
 
-ECBS keeps its own pegs-only key. A combined ships+pegs page uses up to 234 positions, above Lemma A's certified 175 at Serious and above n = 179, so it is not certified there; a single free-fleet grid is certified injective at Serious but is far below the 256-bit target.
+[unverified: ECBS is not in this repository; its n, ℓ and Lemma A bound are copied into `ecbs_lemma_a.py` from that spec.] ECBS keeps its own pegs-only key. A combined ships+pegs page uses up to 234 positions, above Lemma A's certified 175 at Serious and above n = 179, so it is not certified there; a single free-fleet grid is certified injective at Serious but is far below the 256-bit target.
 
 ## 5. Design choices kept out of the spec
 

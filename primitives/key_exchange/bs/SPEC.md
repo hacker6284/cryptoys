@@ -40,8 +40,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
 * **Control lane:** 10 holes per player.
   - One peg in holes 1–4 marks the cell sub-step: square, cube product, hit-multiply 1, hit-multiply 2.
   - Hole 5 marks "calling in progress" while a public value is being called (§3.1).
-  - Hole 6 is spare.
-  - Hole 7 is free. It used to hold a parity bit; the parity check is now an optional hand check that changes no peg (§9).
+  - Holes 6 and 7 are spare.
   - Hole 8 is the phase: empty = public walk, white = check, red = shared walk.
   - Hole 9 is the "accumulator started" flag.
   - Hole 10 is the key's lane peg, used while building and while reading (§4.2, §4.3).
@@ -62,13 +61,13 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
 
 **The design**
 * **Field:** a prime p = 3ⁿ − c. I call c the **toll**.
-* **Reduction:** a peg that spills past the last hole of a register is lifted and replaced by a copy of the toll, laid n holes lower (twice if the peg was red). This is ECBS's fold, now with integer carries.
+* **Reduction:** a peg that spills past the last hole of a register is lifted and replaced by a copy of the toll, laid n holes lower (twice if the peg was red).
 * **Toll size by tier:**
-  - Toy tiers use a two-peg toll, c = 3ᵏ + 1. The fold is then "drop it n holes back and n−k holes back", word for word the ECBS fold.
+  - Toy tiers use a two-peg toll, c = 3ᵏ + 1. The fold is then "drop it n holes back and n−k holes back".
   - Real tiers use a **long toll** of about n/2 trits, taken from the ternary digits of π. This avoids special-number-field-sieve weakness (§9).
 * **Group:** every p is a **safe prime** (q = (p−1)/2 is prime) and **g = 3**. For every safe prime p > 7, 3 is a quadratic residue, so g = 3 generates the prime-order subgroup of size q.
 * **Arithmetic** is plain ternary with an **odometer carry**: when a hole clicks from red over to empty, flick a white into the next hole up.
-* **Multiplication** is ECBS's "lay a copy at every pegged hole" (twice for red), followed by paying the toll.
+* **Multiplication** is "lay a copy at every pegged hole" (twice for red), followed by paying the toll.
 * **Key: one ships+pegs key grid** (§4): dice put a free fleet and a 3-state peg in every hole (BUILD, §4.2), and the grid is read as a ternary string, ships then pegs (READ, §4.3). Entropy and aliasing: §4.5, §4.7. Grids per tier: §4.8.
 * **Exponentiation:** a left-to-right cube-and-multiply walk over that string (B7). Public-phase hits are free nudges, because multiplying by g = 3 is a shift (B6).
 * **Received-value check** (Wong §5.4): square the received number first and reject 0 and 1 (B8). The shared secret is K = 3^(2ab).
@@ -176,11 +175,11 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
   - *Two-peg toll:* drop the lifted peg's colour at h − n and at h − n + k.
   - *T1 example:* a white peg at hole 20 is lifted, and whites are dropped into holes 2 and 4, since 3²⁰ ≡ 3²·(3² + 1).
   - Carries from the laid toll can only land at or below the lifted hole: the value went down, and everything above was already empty. So "always the highest" terminates.
-* **B5. Tidy (canonical form; needed only for published values and the final secret).**
+* **B5. Tidy a register (canonical form; needed only for published values, the B8 square and the final secret).**
   1. Copy the register into the strip, with one extra hole on top.
   2. Pour the toll into the copy.
-  3. If a white spills into the extra hole, throw the spill away: the copy is the tidy answer. Lift X's pegs, then slide the copy back into X. Otherwise keep the original and clear the copy.
-  - Either way, the tidy answer ends in X.
+  3. If a white spills into the extra hole, throw the spill away: the copy is the tidy answer. Lift that register's pegs, then slide the copy back into it. Otherwise keep the original and clear the copy.
+  - Either way, the tidy answer ends in the register you tidied.
   - This works because x ≥ p exactly when x + c ≥ 3ⁿ.
   - In the toy tiers, p itself looks like **all red except a white at hole k**. Tidying it gives the empty register.
 * **B6. Cube, with a nudge.**
@@ -200,7 +199,7 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
   5. At the end, tidy (B5).
 * **B8. Check the received number (Wong 5.4).**
   1. The number must have exactly n trits.
-  2. Square it (B3), then tidy.
+  2. Square it (B3) into C, then tidy C.
   3. **If the square is empty, or is a lone white in hole 0, reject.**
   4. Otherwise the square C is your base.
   - Squaring maps anything into the order-q subgroup. 0, 1 and −1 are exactly the inputs that fail.
@@ -420,7 +419,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 
 * The fold for T2 is "drop it 35 holes back and 6 holes back". A peg high in the strip therefore folds several times in a chain, which the simulation includes.
 
-**Real tiers:** 5n + (toll length) + 10 holes of workspace, plus the separate key grid.
+**Real tiers:** 5n + (toll length) + 10 holes of workspace, plus the separate key grid. A nudged product's up to 2 extra strip holes (B3) go in the spare holes of the last workspace grid (13 to 84 of them, depending on the tier).
 * Three registers X, Y and C, a 2n-hole strip, a toll register on grids, and the control lane.
 * Chain grids in reading order to form each register.
 * R3072 workspace: 3 × 1938 + 3876 + 969 + 10 = 10,669 holes = 107 grids, plus 1 key grid = 108 grids per player.
@@ -568,7 +567,7 @@ Paths are under `proofs/key_exchange/bs/`.
 
 ## 10. Cost, and comparison with ECBS
 
-* **R3072 per person:** 1,048.8 multiplications of 1938-trit numbers at 6.52 M moves each (measured in the R3072 exchange, `exchange/`) gives **6.84·10⁹ moves** (§7). That is ~217 years non-stop, or ~650 years at 8 h/day. The ECBS design's own estimate is 3.9·10⁷ moves per person for ~2^136 [unverified: ECBS is not in this repository]. **BS is ~180× more work for 128 bits.**
+* **R3072 per person:** 1,048.8 multiplications of 1938-trit numbers at 6.52 M moves each (measured in the R3072 exchange, `exchange/`) gives **6.84·10⁹ moves** (§7). That is ~217 years non-stop, or ~650 years at 8 h/day. The ECBS design's own estimate is 3.9·10⁷ moves per person for ~2^136 [unverified: ECBS is not in this repository]. So BS would be ~180× more work for 128 bits [unverified: ECBS is not in this repository].
 * **Where it goes:**
   - ~80% cubing in the two walks (2 × ~211 cubes × 2 multiplications);
   - ~20% shared-phase hit multiplications (203.35 per grid, about 1 per cell);

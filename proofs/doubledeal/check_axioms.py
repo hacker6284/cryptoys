@@ -504,9 +504,9 @@ SCRAMBLE_LINK2 = {
 # position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
 # one-line wrappers MegaDreifachBody, HashDeckBodyFrom and MegaDreifachBodyFrom have
 # none. Registering it (wrapper theorems plus an 11-row table) is a planned follow-up.
-# Scramble is listed: its table has a row for each of the 7 exports. `scramble_v1_digest`
-# has three theorems; the traced `scramble_v1` row says it is not claimed (no theorem), so
-# that gap is in the table rather than silent.
+# Scramble is listed: its table has a row for each of the 8 exports. `scramble_v1_digest`
+# has three theorems; the traced `scramble_v1` and the demo's `apply_move` rows say they are
+# not claimed (no theorem), so those gaps are in the table rather than silent.
 LINK2_EXPORT_TABLES = {
     "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                  / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),

@@ -235,6 +235,7 @@ v1 constructor `scramble_v1` and the v1 trace; several v1 updates.
 | `update` | `update_v2_digest`, `update_v2_gen`, `updates_evaluate_v2`, `update_v1_digest` | v2 state (or digest-only v1 state with `processed = 8q`), not done, pending nybbles below 16, reachable cube; byte messages; counts fit i64 |
 | `evaluate` | `evaluate_v2_digest`, `evaluate_v2_gen`, `scramble_v2_digest_refines_digestV2`, `evaluate_v1_digest`, `scramble_v1_digest_refines_digestV1` | as `update` |
 | `solved_facelets` | `solved_facelets_ok` | none (returns 54 color letters) |
+| `apply_move` | none: the demo's face turn of a facelet string is not claimed | |
 | `scramble_v1_digest` | `scramble_v1_digest_refines`, `fresh_refines`, `scramble_v1_digest_refines_digestV1` | byte message, `2·len + 40` fits i64; one `update` |
 | `scramble_v1` | none: the traced v1 constructor is not claimed | |
 

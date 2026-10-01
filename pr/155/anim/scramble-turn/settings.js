@@ -19,7 +19,8 @@
 export default {
     loopGapMs: 700,
     choices: {
-        move: "R", // "R", "Ri", "R2", "seq", "x", "R3"
+        move: "R", // micro/scramble-turn: "R", "Ri", "R2", "seq", "x", "R3"
+        rotation: "y", // micro/scramble-rotate: "y", "yi", "x", "xi", "z", "zy"
     },
     timing: {
         speed: 1.4, // ×

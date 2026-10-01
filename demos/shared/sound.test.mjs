@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { createSound, dbToGain, gainToDb } from "./sound.js";
+import { createAudioHub, createSound, dbToGain, gainToDb } from "./sound.js";
 
-function fakeAudio() {
+function fakeAudio({ startState = "running", resumable = () => true } = {}) {
     const made = [];
     class Ctx {
         constructor() {
-            this.state = "running";
+            this.state = startState;
+            this.handlers = [];
+            this.resumes = 0;
+            this.silent = 0;
             this.destination = {};
             this.currentTime = 10;
             this.started = [];
@@ -23,10 +26,22 @@ function fakeAudio() {
             };
             return src;
         }
+        createBuffer(channels, length) {
+            return { length, duration: 0 };
+        }
         decodeAudioData() {
             return Promise.resolve({ duration: 0.5 });
         }
-        resume() {}
+        addEventListener(type, fn) {
+            if (type === "statechange") this.handlers.push(fn);
+        }
+        resume() {
+            this.resumes += 1;
+            if (!resumable()) return Promise.reject(new Error("NotAllowedError"));
+            this.state = "running";
+            for (const fn of this.handlers) fn();
+            return Promise.resolve();
+        }
     }
     return { Ctx, made };
 }
@@ -34,9 +49,10 @@ function fakeAudio() {
 function target() {
     const handlers = {};
     return {
-        addEventListener: (type, fn) => { handlers[type] = fn; },
-        removeEventListener: (type) => { delete handlers[type]; },
-        fire: (type) => handlers[type]?.(),
+        handlers,
+        addEventListener: (type, fn) => { (handlers[type] ||= []).push(fn); },
+        removeEventListener: (type, fn) => { handlers[type] = (handlers[type] || []).filter((f) => f !== fn); },
+        fire: (type) => (handlers[type] || []).forEach((fn) => fn({ type })),
     };
 }
 
@@ -45,7 +61,6 @@ globalThis.fetch = async (url) => {
     fetched.push(String(url));
     return { ok: true, arrayBuffer: async () => new ArrayBuffer(4) };
 };
-globalThis.localStorage = { store: {}, getItem(k) { return this.store[k] ?? null; }, setItem(k, v) { this.store[k] = v; } };
 
 const BASE = "https://example.test/sounds/";
 const SOUNDS = {
@@ -55,21 +70,107 @@ const SOUNDS = {
 
 const settle = () => new Promise((r) => setTimeout(r, 10));
 
-test("nothing loads before the first gesture", async () => {
+test("autostart: no context before the first gesture without it, one with it", async () => {
     const { Ctx, made } = fakeAudio();
     const t = target();
-    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx, store: "t1" });
+    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx, autostart: false });
     assert.equal(sound.play("tick"), false);
     assert.equal(made.length, 0);
+    assert.equal(sound.state, "none");
     t.fire("pointerdown");
     await settle();
     assert.equal(sound.play("tick"), true);
+
+    const auto = fakeAudio();
+    const sound2 = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: target(), AudioCtx: auto.Ctx });
+    assert.equal(auto.made.length, 1, "created on load");
+    await settle();
+    assert.equal(sound2.running, true, "autoplay allowed: runs with no gesture");
+    assert.equal(sound2.play("tick"), true, "and its sounds decoded");
+});
+
+test("autoplay blocked: stays suspended until a gesture, which resumes synchronously", async () => {
+    let gesture = false;
+    const { Ctx, made } = fakeAudio({ startState: "suspended", resumable: () => gesture });
+    const t = target();
+    const states = [];
+    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx });
+    sound.onState((s) => states.push(s));
+    await settle();
+    assert.equal(sound.running, false);
+    assert.equal(sound.play("tick"), false);
+    assert.equal(made[0].resumes, 1, "tried once on load");
+    // A touch pointerdown is not a gesture on iOS: the resume is refused.
+    t.fire("pointerdown");
+    await settle();
+    assert.equal(sound.running, false);
+    // touchend is: resume() and the silent buffer happen inside the handler.
+    gesture = true;
+    t.fire("touchend");
+    gesture = false;
+    assert.equal(made[0].state, "running", "resumed synchronously in the gesture");
+    assert.equal(made[0].started.filter((s) => s.src.buffer?.length === 1).length >= 1, true, "silent buffer started");
+    await settle();
+    assert.equal(sound.running, true);
+    assert.equal(states.at(-1), "running");
+    assert.equal(sound.play("tick"), true);
+    assert.equal(made.length, 1, "one context throughout");
+});
+
+test("every gesture type is caught on the target in the capture phase", () => {
+    const t = target();
+    const seen = [];
+    t.addEventListener = (type, fn, opts) => seen.push([type, opts?.capture]);
+    createAudioHub({ AudioCtx: fakeAudio().Ctx, gestureTarget: t }).install();
+    assert.deepEqual(seen.map((s) => s[0]).sort(), ["click", "keydown", "mousedown", "pointerdown", "pointerup", "touchend"]);
+    assert.ok(seen.every((s) => s[1] === true));
+});
+
+test("one hub, two engines: a demo opened after the unlock needs no gesture", async () => {
+    const { Ctx, made } = fakeAudio({ startState: "suspended" });
+    const t = target();
+    const hub = createAudioHub({ AudioCtx: Ctx, gestureTarget: t });
+    hub.install();
+    t.fire("click");
+    await settle();
+    assert.equal(hub.state, "running");
+    const later = createSound({ sounds: SOUNDS, base: BASE, audio: hub });
+    await later.ready();
+    assert.equal(later.play("tick"), true);
+    assert.equal(made.length, 1);
+});
+
+test("audioSession is set to playback inside the unlock", () => {
+    const nav = { audioSession: { type: "auto" }, userAgent: "iPhone" };
+    const hub = createAudioHub({ AudioCtx: fakeAudio().Ctx, gestureTarget: target(), nav });
+    hub.unlock();
+    assert.equal(nav.audioSession.type, "playback");
+});
+
+test("old iOS without audioSession loops a silent <audio> clip from the gesture", () => {
+    const clips = [];
+    class FakeAudio {
+        constructor(src) { this.src = src; this.paused = true; clips.push(this); }
+        setAttribute() {}
+        play() { this.paused = false; return Promise.resolve(); }
+    }
+    const t = target();
+    const hub = createAudioHub({ AudioCtx: fakeAudio().Ctx, gestureTarget: t, nav: { userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)" }, HtmlAudio: FakeAudio });
+    hub.install();
+    t.fire("touchend");
+    assert.equal(clips.length, 1);
+    assert.equal(clips[0].loop, true);
+    assert.equal(clips[0].paused, false);
+    assert.match(clips[0].src, /^data:audio\/wav;base64,/);
+    const desktop = createAudioHub({ AudioCtx: fakeAudio().Ctx, gestureTarget: target(), nav: { userAgent: "Mozilla/5.0 (X11; Linux x86_64) Chrome/140" }, HtmlAudio: FakeAudio });
+    desktop.unlock();
+    assert.equal(clips.length, 1, "not on other browsers");
 });
 
 test("without offsetMs a sound starts now, round-robin, gap and voice capped", async () => {
     const { Ctx, made } = fakeAudio();
     const t = target();
-    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx, store: "t2" });
+    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx });
     t.fire("keydown");
     await settle();
     assert.equal(sound.play("tick", { leadMs: 500 }), true);
@@ -86,7 +187,7 @@ test("without offsetMs a sound starts now, round-robin, gap and voice capped", a
 test("offsetMs schedules relative to contact; too late skips into the file", async () => {
     const { Ctx, made } = fakeAudio();
     const t = target();
-    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx, store: "t3" });
+    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx });
     t.fire("pointerdown");
     await settle();
     sound.play("thud", { leadMs: 400 });
@@ -100,7 +201,7 @@ test("offsetMs schedules relative to contact; too late skips into the file", asy
 test("configure swaps files and gains", async () => {
     const { Ctx, made } = fakeAudio();
     const t = target();
-    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx, store: "t4" });
+    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx });
     t.fire("pointerdown");
     await settle();
     await sound.configure({ tick: { files: ["c/new"], gains: [dbToGain(-6)], gapMs: 0, voices: 4 } });
@@ -111,29 +212,18 @@ test("configure swaps files and gains", async () => {
     assert.equal(made[0].started.length, 1);
 });
 
-test("mute persists and the toggle reflects it", async () => {
+test("sound starts on; the toggle mutes for this page only", async () => {
     const { Ctx } = fakeAudio();
     const t = target();
-    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx, store: "t5" });
+    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: t, AudioCtx: Ctx });
+    assert.equal(sound.muted, false);
     const button = { attrs: {}, textContent: "", setAttribute(k, v) { this.attrs[k] = v; }, addEventListener(_, fn) { this.click = fn; }, removeEventListener() {} };
     sound.bindToggle(button);
     assert.equal(button.attrs["aria-pressed"], "true");
     button.click();
     assert.equal(sound.muted, true);
-    assert.equal(globalThis.localStorage.store.t5, "1");
     assert.equal(button.attrs["aria-pressed"], "false");
     assert.equal(sound.play("tick"), false);
-});
-
-test("store: null ignores and never writes a remembered mute", async () => {
-    const { Ctx } = fakeAudio();
-    globalThis.localStorage.store.null = "1";
-    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: target(), AudioCtx: Ctx, store: null });
-    assert.equal(sound.muted, false);
-    const before = { ...globalThis.localStorage.store };
-    sound.setMuted(true);
-    assert.equal(sound.muted, true);
-    assert.deepEqual(globalThis.localStorage.store, before);
 });
 
 test("maxMs stops early with a fade; the limiter sits on the master", async () => {
@@ -161,7 +251,7 @@ test("maxMs stops early with a fade; the limiter sits on the master", async () =
     const t = target();
     const sound = createSound({
         sounds: { creak: { files: ["c/creak"], gains: [1], gapMs: 0, voices: 2, offsetMs: 0, maxMs: 300, fadeMs: 100 } },
-        base: BASE, gestureTarget: t, AudioCtx: Ctx, store: "t6", limiter: true,
+        base: BASE, gestureTarget: t, AudioCtx: Ctx, limiter: true,
     });
     t.fire("pointerdown");
     await settle();
@@ -192,7 +282,7 @@ test("an MP3 that will not decode falls back to the OGG twin, and is logged", as
     console.warn = (...a) => warned.push(a.join(" "));
     try {
         const t = target();
-        const sound = createSound({ sounds: { tick: { files: ["c/short", "c/long"], gains: [1, 1] } }, base: BASE, gestureTarget: t, AudioCtx: Picky, store: "t7" });
+        const sound = createSound({ sounds: { tick: { files: ["c/short", "c/long"], gains: [1, 1] } }, base: BASE, gestureTarget: t, AudioCtx: Picky });
         t.fire("pointerdown");
         await settle();
         await sound.ready();

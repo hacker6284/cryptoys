@@ -35,6 +35,9 @@ export function createMegaDreifachSession({
     hasher = createHasher(),
     katsUrl = new URL("./generated/kats.json", import.meta.url).href,
     sound = null,
+    // Optional words naming the puzzles where they stand (the playroom's
+    // table has no labels): shown ahead of the empty-message status.
+    cast = "",
 } = {}) {
     const { abort, listen, $, $$ } = sessionScope(root);
     const input = $("#message");
@@ -67,6 +70,7 @@ export function createMegaDreifachSession({
     let job = 0;
     let disposed = false;
     let kats = [];
+    const emptyStatus = cast ? `${cast} ${EMPTY_STATUS}` : EMPTY_STATUS;
 
     function status(text) {
         if (statusEl) statusEl.textContent = text;
@@ -148,7 +152,7 @@ export function createMegaDreifachSession({
     }
 
     function describeReady() {
-        if (!hasMessage()) return EMPTY_STATUS;
+        if (!hasMessage()) return emptyStatus;
         if (!info || info.gen !== gen) return "Hashing…";
         const blocks = `${info.blocks} block${info.blocks === 1 ? "" : "s"}`;
         if (kat) {
@@ -196,7 +200,7 @@ export function createMegaDreifachSession({
         if (!hasMessage()) {
             info = null;
             if (digestEl) digestEl.value = "";
-            status(EMPTY_STATUS);
+            status(emptyStatus);
             syncControls();
             return;
         }

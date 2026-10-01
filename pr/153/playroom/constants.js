@@ -14,27 +14,31 @@ export const CUBE = 0.057;
 // Presentation edge (local max extent) of each MegaDreifach megaminx:
 // a real 12-colour megaminx is about 70 mm across.
 export const MINX = 0.072;
-// MegaDreifach layout (metres, tray-local). One row, symmetric about the
-// table axis: B | A | C, 11.5 cm apart, A (the working puzzle) in the
-// middle next to both solve partners. A tent card sits square in front
-// of each cup. The tray is exactly as wide as the 13-column deal
-// (12 × 25 mm + a 63 mm card = 363 mm), so the deal's side edges line
-// up with the tray's, 22 mm in front of it. The DEAL box stands square
-// on the row's line, one gap left of the tray. A rides the tray from
+// MegaDreifach layout (metres, from the row centre). The three megaminxes
+// stand straight on the felt in one row, symmetric about the table axis:
+// B | A | C, A (the working puzzle) in the middle next to both solve
+// partners. The row is exactly as wide as the 13-column deal (12 × 25 mm
+// + a 63 mm card = 363 mm): B's and C's outer sides line up with the
+// deal's side edges, and the deal's far row lies 22 mm in front of the
+// puzzles. The DEAL box stands square on the row's line, one gap left of
+// B. No tray, no cups, no labels: only toys on the table. A flies from
 // the shelf; B and C (one megaminx each) come out of the toy chest.
-export const DREI_TRAY = { w: 0.363, h: 0.012, d: 0.13 };
-export const DREI_TRAY_Z = -0.13; // tray centre, from DEN.z
-export const DREI_SEAT_XZ = { A: [0, -0.012], B: [-0.115, -0.012], C: [0.115, -0.012] };
+export const DREI_ROW_W = 0.363;
+export const DREI_ROW_Z = -0.13; // row centre line, from DEN.z
+export const DREI_SEAT_XZ = {
+    A: [0, 0],
+    B: [-(DREI_ROW_W - MINX) / 2, 0],
+    C: [(DREI_ROW_W - MINX) / 2, 0],
+};
 export const DREI_GAP = 0.022;
-export const DREI_DECK_X = -(0.363 / 2 + 0.03 + 0.067 / 2); // from DEN.x
+export const DREI_DECK_X = -(DREI_ROW_W / 2 + 0.03 + 0.067 / 2); // from DEN.x
 export const DREI_EXTRA = { dreiB: "B", dreiC: "C" };
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = 0.092;
 
 export function toyHalfHeight(name) {
     if (name === "deck" || name === "deck2" || name === "deck3") return DECK_H / 2;
-    if (name === "drei") return MINX / 2 + 0.012;
-    if (name === "dreiB" || name === "dreiC") return MINX / 2;
+    if (name === "drei" || name === "dreiB" || name === "dreiC") return MINX / 2;
     return CUBE / 2;
 }
 
@@ -56,7 +60,7 @@ export const SHELF_TOP = SHELF_Y1 + SHELF_THICK / 2;
 export const SLOTS = {
     deck: { x: -1.35, y: SHELF_Y1 },
     cube: { x: -0.55, y: SHELF_Y1 },
-    // MegaDreifach's tray of three megaminxes; its deck waits in the chest.
+    // MegaDreifach's megaminx A; B, C and its deck wait in the chest.
     drei: { x: -0.04, y: SHELF_Y1 },
 };
 

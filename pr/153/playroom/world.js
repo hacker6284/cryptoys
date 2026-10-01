@@ -15,9 +15,8 @@ import {
     CHEST,
     DREI_DECK_X,
     DREI_EXTRA,
+    DREI_ROW_Z,
     DREI_SEAT_XZ,
-    DREI_TRAY,
-    DREI_TRAY_Z,
     SHELF_Y0,
     SHELF_Y1,
     SLOTS,
@@ -576,11 +575,11 @@ export async function mountWorld(canvas) {
         deck: makeDeckBox(0x6b1e1e, "KEY"),
         deck2: makeDeckBox(0x1a2a44, "MSG"),
         cube: makeCubeSlot(),
-        // MegaDreifach: the megaminx tray (adapter swaps in the real one)
-        // and its deck, which waits in the chest beside MSG.
+        // MegaDreifach: megaminx A (adapter swaps in the real one) and its
+        // deck, which waits in the chest beside MSG.
         drei: makeCubeSlot(),
         // B and C: extra megaminxes, kept in the chest (adapter swaps in
-        // the real ones). The shelf holds only A, on the tray.
+        // the real ones). The shelf holds only A.
         dreiB: makeCubeSlot(),
         dreiC: makeCubeSlot(),
         deck3: makeDeckBox(0x3a2140, "DEAL"),
@@ -600,13 +599,20 @@ export async function mountWorld(canvas) {
 
     // Shared post-scale AABB seat. Lowest measured point lands on the
     // surface — scale changes must not float or clip.
-    function seatOn(object, { x, surfaceY, z, rotation, name }) {
+    // MegaDreifach's megaminx toys keep their origin on the surface they
+    // stand on (the puzzle rests just above it, measured once its fit is
+    // known), so a re-gripped A cannot change where the toy is set down.
+    const ORIGIN_SEATED = new Set(["drei", "dreiB", "dreiC"]);
+    const originBox = () => ({ min: { y: 0 } });
+
+    function seatOn(object, { x, surfaceY, z, rotation, name, origin = false }) {
         return seatOnSurface(object, {
             x,
             surfaceY,
             z,
             rotation,
             fallbackHalfHeight: toyHalfHeight(name),
+            ...(origin ? { measureBox: originBox } : {}),
         });
     }
 
@@ -633,12 +639,12 @@ export async function mountWorld(canvas) {
     }
 
     // MegaDreifach's deck stands square on the puzzle row's line, one
-    // gap left of the tray (constants.js has the layout).
+    // gap left of B (constants.js has the layout).
     function getDreiDeckPose() {
         return seatOn(toys.deck3, {
             x: DEN.x + DREI_DECK_X,
             surfaceY: feltTopY() + 0.001,
-            z: DEN.z + DREI_TRAY_Z,
+            z: DEN.z + DREI_ROW_Z,
             rotation: { x: 0, y: 0, z: 0 },
             name: "deck3",
         });
@@ -667,29 +673,32 @@ export async function mountWorld(canvas) {
             // Yaw only — pitch was driving corners through the board.
             rotation: { x: 0, y: name === "cube" ? 0.45 : name === "drei" ? 0.12 : 0.15, z: 0 },
             name,
+            origin: ORIGIN_SEATED.has(name),
         });
     }
 
     function getTablePose(name) {
         if (name === "deck2" || name === "deck3") return getBoxRestPose(name);
         if (DREI_EXTRA[name]) {
-            // Into its cup on the tray (tray table pose, no yaw).
+            // Straight onto the felt, in its place in the row (no yaw).
             const [dx, dz] = DREI_SEAT_XZ[DREI_EXTRA[name]];
             return seatOn(toys[name], {
                 x: DEN.x + dx,
-                surfaceY: feltTopY() + 0.001 + DREI_TRAY.h + 0.0015,
-                z: DEN.z + DREI_TRAY_Z + dz,
+                surfaceY: feltTopY() + 0.001,
+                z: DEN.z + DREI_ROW_Z + dz,
                 rotation: { x: 0, y: 0, z: 0 },
                 name,
+                origin: true,
             });
         }
         return seatOn(toys[name], {
             x: DEN.x,
             surfaceY: feltTopY() + 0.001,
-            // The tray sits back so its deal fits in front of it.
-            z: name === "drei" ? DEN.z + DREI_TRAY_Z : DEN.z,
+            // The puzzle row sits back so its deal fits in front of it.
+            z: name === "drei" ? DEN.z + DREI_ROW_Z : DEN.z,
             rotation: { x: 0, y: 0, z: 0 },
             name,
+            origin: ORIGIN_SEATED.has(name),
         });
     }
 
@@ -796,7 +805,7 @@ export async function mountWorld(canvas) {
     function render() {
         // Re-apply Twisty fit after cubing.js's own rAF so a late
         // matrix/scale write cannot stick as the drawn size (the cube,
-        // and the three megaminxes on the MegaDreifach tray).
+        // and the three MegaDreifach megaminxes).
         for (const toy of Object.values(toys)) toy?.userData?.keepFitted?.();
         renderer.render(scene, camera);
     }

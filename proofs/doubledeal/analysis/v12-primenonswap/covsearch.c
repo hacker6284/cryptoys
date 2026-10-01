@@ -2,7 +2,8 @@
    Covariant sigma: exists tau with F(sigma.m) = tau.F(m) on every deck (F = unkeyed round body).
    tau is forced by one deck m1 (tau[F(m1)[k]] = F(sigma.m1)[k]); sigma is refuted if a further
    deck breaks F(sigma.m) = tau.F(m).  usage: covsearch FAMILY N SEED
-   FAMILY: norm   = the 3744 maps (rank, label) -> (u*rank + a, A*label + b) (normalizer of v10Sym)
+   FAMILY: norm   = the 3744 maps (rank, label) -> (u*rank + a, A*label + b) (the normalizer of
+                    v10Sym; true by the holomorph count, not a Lean theorem)
            prod   = N random (pi(rank), rho(label)), pi in S13, rho in S4 (labels)
            fiber  = N random maps with rank -> pi_label(rank), label -> rho(label) (per-suit rank perms)
            rand   = N uniform random sigma
@@ -24,7 +25,7 @@ static int is_v10(const int *s) { char sp[16]; int v[52];
   for (int a = 0; a < 13; a++) for (int x = 0; x < 4; x++) { snprintf(sp, sizeof sp, "v10:%d,%d", a, x); parse_rel(sp, v);
     if (same(s, v)) return 1; } return 0; }
 int main(int argc, char **argv) {
-  if (argc < 4) { fprintf(stderr, "usage: covsearch norm|prod|fiber|rand|prime N SEED\n"); return 2; }
+  if (argc < 4) { fprintf(stderr, "usage: covsearch norm|dbl|cyc3|prime|prod|fiber|rand N SEED\n"); return 2; }
   const char *fam = argv[1]; long n = atol(argv[2]); uint64_t st = seed_for(atol(argv[3]), 5, 23);
   long tested = 0, refuted = 0, skipped = 0, hist[8] = {0}; int s[52];
   if (!strcmp(fam, "norm")) {

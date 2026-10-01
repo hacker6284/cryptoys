@@ -1,21 +1,25 @@
-"""Witness tables (and their Lean boilerplate) for the theorem that no AFFINE
-relabelling with a nontrivial linear part is covariant for the unkeyed v12 round
-body F = GridCycle o stem, for any output relabelling tau:
-`CovariantAffine.roundBody_not_covariant_affine` (heavy library).
+"""Witness tables (and their Lean boilerplate) for the theorem that no NONTRIVIAL
+AFFINE relabelling is covariant for the unkeyed v12 round body F = GridCycle o stem,
+for any output relabelling tau: `CovariantAffine.roundBody_not_covariant_affine`
+(heavy library).
 
-Affine relabellings: c = (rank r, GF(4) suit label l) -> (u r + a mod 13, A l + x)
-with u in Z13* (u = k + 1, k = 0..11) and A in GL(2,2) (g = 0..5, table GL_TAB,
-g = 0 the identity). In Lean: `v10Sym a x * linSym k g`. They are the 3744 elements
-of the normalizer of v10Sym in Sym(52) (v10Sym = the 52 translations); the 3692 with
-(k, g) != (0, 0) are the ones outside v10Sym. Covariance of v10Sym a x * L reduces to
-the seat-26 condition for the linear part L = linSym k g alone (v10Sym commutes with
-stem), so one witness per (k, g): EXHAUSTIVE over the 71 nontrivial (k, g). Not a
-proof by itself: the heavy Lean library re-checks every table entry by kernel
-decide!, so a wrong entry fails the heavy build.
+Affine relabellings: c = (rank index r = c % 13, GF(4) suit label l) ->
+(u r + a mod 13, A l xor x) with u = k + 1 in Z13* (k = 0..11) and A in GL(2,2)
+(g = 0..5, cell0lib.GL_MATS, g = 0 the identity). In Lean: `v10Sym a x * linSym k g`.
+There are 3744 parameter tuples (the maps are pairwise distinct: Lean
+`affine_params_inj`); the 3692 with (k, g) != (0, 0) are the ones outside v10Sym.
+They form the normalizer of v10Sym in Sym(52) (true by the holomorph count, not a Lean
+theorem). Covariance of v10Sym a x * L reduces to the seat-26 condition for the
+linear part L = linSym k g alone (v10Sym commutes with stem), so one witness per
+(k, g): EXHAUSTIVE over the 71 nontrivial (k, g). Not a proof by itself: the heavy
+Lean library re-checks every table entry by kernel decide!, so a wrong entry fails
+the heavy build.
 
-Witness: m1 = identity deck, m2 = identity deck with seats i, j exchanged, with
-g(m1) = g(m2) (g = stem cell 0) but g(L.m1) != g(L.m2). Same argument as
-`../v12-covariant/cell0_witness.py`.
+The tables of linSym (glTab, glInvTab, unitInvTab) are emitted into
+CovariantAffineLists.lean from cell0lib.py, so the Lean maps and the Python maps
+searched here are the same data (`--check` compares them). The witness search is
+shared with ../v12-covariant/cell0_witness.py (cell0lib.py); the pairs used here are
+part of the Lean list `cell0Pairs` written by that script.
 
 Usage:
     python3 aff_witness.py           # print the table
@@ -23,122 +27,81 @@ Usage:
     python3 aff_witness.py --check   # CI: fail if a Lean file or the log is stale
 
 --lean writes
-  security/DoubleDealSecurity/CovariantAffineLists.lean (affPairs, affW),
+  security/DoubleDealSecurity/CovariantAffineLists.lean (glTab, glInvTab, unitInvTab, affW),
   security/DoubleDealSecurityHeavy/CovariantAffineChecks.lean (check_lin_k_g, lin_checks_all),
   aff_witness.log (the printed output).
 """
 import contextlib
 import io
-import itertools
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[3]
 SEC = HERE.parents[1] / 'security'
-sys.path.insert(0, str(SEC / 'checks'))
+sys.path.insert(0, str(HERE.parent / 'v12-covariant'))
 sys.path.insert(0, str(REPO / 'tools'))
-import ddport as P  # noqa: E402
+import cell0lib as C  # noqa: E402
 from gencheck import parser, emit  # noqa: E402
 
-V = 12
 LISTS_OUT = SEC / 'DoubleDealSecurity' / 'CovariantAffineLists.lean'
 CHECKS_OUT = SEC / 'DoubleDealSecurityHeavy' / 'CovariantAffineChecks.lean'
 LOG_OUT = HERE / 'aff_witness.log'
 FIX = 'python3 proofs/doubledeal/analysis/v12-primenonswap/aff_witness.py --lean'
 
-# GL(2,2) on GF(4) labels 0..3 (bit 0 = l % 2, bit 1 = l // 2); same table as
-# `CovariantAffine.glTab`. Row g = images of labels 0, 1, 2, 3.
-GL_TAB = [[0, 1, 2, 3], [0, 2, 1, 3], [0, 1, 3, 2], [0, 3, 2, 1], [0, 2, 3, 1], [0, 3, 1, 2]]
-
-
-def lin(k, g):
-    """linSym k g as an image list: rank * (k + 1) mod 13, label -> GL_TAB[g][label]."""
-    return [13 * P.SUIT_OF_LABEL[GL_TAB[g][P.LABEL[c // 13]]] + ((k + 1) * (c % 13)) % 13
-            for c in range(52)]
-
-
-def sanity():
-    for row in GL_TAB:  # linear, bijective, and the 6 rows are distinct
-        assert row[0] == 0 and row[3] == row[1] ^ row[2] and sorted(row) == [0, 1, 2, 3]
-    assert len({tuple(r) for r in GL_TAB}) == 6
-    for k in range(12):
-        for g in range(6):
-            s = lin(k, g)
-            assert sorted(s) == list(range(52))
-            assert (s == list(range(52))) == ((k, g) == (0, 0))
-
-
-def gfun(m):
-    return P.stem(m, V)[0]
-
-
-def pos_swap(i, j):
-    d = list(range(52))
-    d[i], d[j] = d[j], d[i]
-    return d
-
 
 def table():
-    """(c, number of candidate pairs, affW with entry 0 unused, sorted used pairs).
-    affW is indexed by 6 k + g."""
-    idd = list(range(52))
-    c = gfun(idd)
-    cands = [(i, j) for i, j in itertools.combinations(range(52), 2)
-             if gfun(pos_swap(i, j)) == c]
-    tab = [(1, 2)]  # entry 0 unused ((k, g) = (0, 0) is the identity)
-    for n in range(1, 72):
-        k, g = divmod(n, 6)
-        s = lin(k, g)
-        v1 = gfun([s[x] for x in idd])
-        for i, j in cands:
-            if gfun([s[x] for x in pos_swap(i, j)]) != v1:
-                tab.append((i, j))
-                break
-        else:
-            raise SystemExit(f'no witness for (k, g) = {(k, g)}')
-    used = sorted(set(tab[1:]))
-    for i, j in used:
-        assert gfun(pos_swap(i, j)) == c
-    return c, len(cands), tab, used
+    """(c, number of candidate pairs, affW with entry 0 unused, sorted used pairs,
+    cell0Pairs). affW is indexed by 6 k + g."""
+    c, ncand, _, aff, pairs = C.tables()
+    return c, ncand, [pairs[0]] + aff, sorted(set(aff)), pairs
 
 
 def report(t):
-    c, ncand, tab, used = t
+    c, ncand, tab, used, pairs = t
     print(f'g(identity deck) = {c}; single position swaps (i, j) keeping g: {ncand} of 1326')
     print(f'witness found for all 71 nontrivial linear parts (k, g); position pairs used: {used}')
+    print(f'(all in cell0Pairs = {pairs})')
+    print(f'glTab = {C.GL_TAB}; glInvTab = {C.GL_INV}; unitInvTab = {C.UNIT_INV}')
     for n in range(1, 72):
         k, g = divmod(n, 6)
         print(f'  u = {k + 1:2d} (k = {k:2d}), g = {g}: swap {tab[n]}')
     print('affW =', tab)
 
 
-def fmt(ps):
-    rows = [', '.join(f'({i}, {j})' for i, j in ps[k:k + 8]) for k in range(0, len(ps), 8)]
-    return '[' + ',\n    '.join(rows) + ']'
-
-
-def lists_text(tab, used):
+def lists_text(tab):
     return f'''/-
   GENERATED by proofs/doubledeal/analysis/v12-primenonswap/aff_witness.py --lean;
   do not edit (CI: `aff_witness.py --check`).
 
-  Witness seat pairs for `CovariantAffine.linCheck`: for the linear part `(k, g)`
-  (`(k, g) ≠ (0, 0)`), `affW[6 k + g] = (i, j)` names the deck `posSwapDeck i j` (the
-  identity deck with seats `i`, `j` exchanged). `affPairs` lists the {len(used)} pairs used.
-  Entry 0 of `affW` is unused. These lists are data, not trusted: the heavy library
-  checks every entry by kernel `decide!` (`affPairsCheck_ok`, `check_lin_*`), so a
-  wrong entry fails the heavy build.
+  The tables of `CovariantAffine.linSym` (from `analysis/v12-covariant/cell0lib.py`,
+  the same data the witness search uses), and the witness seat pairs for
+  `CovariantAffine.linCheck`: for the linear part `(k, g)` (`(k, g) ≠ (0, 0)`),
+  `affW[6 k + g] = (i, j)` names the deck `posSwapDeck i j` (the identity deck with
+  seats `i`, `j` exchanged); every pair is in `CovariantNarrow.cell0Pairs`. Entry 0
+  of `affW` is unused (set to the first pair of `cell0Pairs`). These lists are data,
+  not trusted: Lean proves the tables give inverse bijections and linear maps
+  (`linFn_left`, `linFn_right`, `glApp_gfAdd`), and the heavy library checks every
+  witness by kernel `decide!` (`cell0PairsCheck_ok`, `check_lin_*`).
 -/
 namespace DoubleDeal.Security.CovariantAffine
 
-/-- The seat pairs used by `affW` (each keeps stem cell 0 of the identity deck). -/
-def affPairs : List (Fin 52 × Fin 52) :=
-  {fmt(used)}
+/-- GL(2,2) on GF(4) labels `0..3` (bit 0 = `l % 2`, bit 1 = `l / 2`): row `g` lists
+    the images of labels 0, 1, 2, 3. Row 0 is the identity. -/
+def glTab : List (List Nat) :=
+  {C.GL_TAB}
+
+/-- `glInvTab[g]`: the index of the inverse matrix of row `g`. -/
+def glInvTab : List (Fin 6) :=
+  {C.GL_INV}
+
+/-- `unitInvTab[k] = k'` with `(k + 1)(k' + 1) ≡ 1 (mod 13)`. -/
+def unitInvTab : List (Fin 12) :=
+  {C.UNIT_INV}
 
 /-- The witness seat pair for each linear part, at index `6 k + g` (entry 0 unused). -/
 def affW : List (Fin 52 × Fin 52) :=
-  {fmt(tab)}
+  {C.fmt(tab)}
 
 end DoubleDeal.Security.CovariantAffine
 '''
@@ -177,17 +140,16 @@ end DoubleDeal.Security.CovariantAffine
 
 def main():
     args = cli.parse_args()
-    sanity()
     t = table()
     if not (args.lean or args.check):
         report(t)
         return 0
-    _, _, tab, used = t
+    tab = t[2]
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         report(t)
     rc = 0
-    for path, text in ((LISTS_OUT, lists_text(tab, used)), (CHECKS_OUT, checks_text()),
+    for path, text in ((LISTS_OUT, lists_text(tab)), (CHECKS_OUT, checks_text()),
                        (LOG_OUT, buf.getvalue())):
         rc |= emit(path, text, args.check, fix=FIX)
     return rc

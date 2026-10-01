@@ -1,9 +1,11 @@
 /-
   HEAVY (not in the default build target): the unconditional forms of the
   transposition results of DoubleDealSecurity/CovariantNarrow.lean.
-  * `goodPairsCheck_ok`: check A of `Cov0Checks` (five stem evaluations).
-  * Check B, one `decide!` per representative `e`, is the generated file
-    `CovariantNarrowChecks.lean` (`check_e1` … `check_e51`, `checks_all`).
+  * Check A, `pairsCheck cell0Pairs` (shared by `Cov0Checks` and
+    `CovariantAffine.AffChecks`), one `decide!` per pair, and check B, one `decide!` per
+    representative `e`, are the generated file `CovariantNarrowChecks.lean`
+    (`pair_ok_*`, `cell0PairsCheck_ok`; `check_e1` … `check_e51`, `checks_all`). This
+    module runs no `decide!`.
   Timing and memory: see `../README.md` (module table) for the measured figures and
   their scope. Built and audited by the `doubledeal-security-heavy` CI job.
   Python reproduction: `analysis/v12-covariant/cell0_witness.py`.
@@ -15,11 +17,8 @@ namespace DoubleDeal.Security.CovariantNarrow
 
 open DoubleDeal Relabel
 
-/-- (PROVED, kernel `decide!`) Finite check A of `Cov0Checks`. -/
-theorem goodPairsCheck_ok : goodPairsCheck = true := by decide!
-
 /-- (PROVED) Both finite checks. -/
-theorem cov0Checks_ok : Cov0Checks := ⟨goodPairsCheck_ok, checks_all⟩
+theorem cov0Checks_ok : Cov0Checks := ⟨cell0PairsCheck_ok, checks_all⟩
 
 /-- (PROVED, unconditional) The covariant round conjecture holds for every
     transposition: for all card values `a ≠ b` there is NO relabelling `τ` with

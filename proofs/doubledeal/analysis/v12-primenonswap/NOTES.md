@@ -24,33 +24,49 @@ EQUIVALENT to the conjecture. By cycle type, the σ left are:
 * p odd, 3 ≤ p ≤ 47: products of c disjoint p-cycles, 1 ≤ c ≤ ⌊52/p⌋, minus the 12
   rank shifts `v10Sym a 0` (p = 13, c = 4).
 
-Covariance is NOT invariant under conjugation by `v10Sym` (only `Cell0Cov` is,
-`cell0Cov_conj`), and conjugation by a general relabelling does not preserve it, so
-the cycle type does not reduce the problem to finitely many σ.
+Covariance is not known to be invariant under conjugation by `v10Sym` (only
+`Cell0Cov` is, `cell0Cov_conj`; v10Sym itself is not covariant), nor under
+conjugation by a general relabelling (if the conjecture holds, the covariant set is
+{1} and every conjugation preserves it, but that is the open statement). So no proved
+symmetry reduces the problem by cycle type to finitely many σ.
 
-## New PROVED result: the affine relabellings (normalizer of v10Sym)
+## New PROVED result: the nontrivial affine relabellings
+
+(The affine relabellings are the normalizer of v10Sym; true by the holomorph count,
+not a Lean theorem.)
 
 `security/DoubleDealSecurity/CovariantAffine.lean` (+ generated
 `CovariantAffineLists.lean`), heavy `security/DoubleDealSecurityHeavy/CovariantAffine.lean`
 (+ generated `CovariantAffineChecks.lean`), generator `aff_witness.py` (log
 `aff_witness.log`, CI `--check`).
-* `cell0Cov_mul`, `cell0Cov_inv`, `cell0Cov_self_of_commutes`: the seat-26 condition
-  is a group condition, satisfied by every SumRanks-commuting ρ with τ = ρ.
+* In `CovariantNarrow.lean` (next to `covPair_mul` / `covPair_inv`): `cell0Cov_one`,
+  `cell0Cov_mul`, `cell0Cov_inv`, `cell0Cov_self_of_commutes` (the seat-26 condition is
+  closed under products and inverses, and every SumRanks-commuting ρ satisfies it with
+  τ = ρ), `cell0Subgroup` (the σ with some τ), `cell0Cov_conj` now derived from them;
+  and the generic two-deck witness check `pairsCheck` / `witnessCheck` /
+  `not_cell0Cov_of_checks`, used for both the transpositions and the affine family,
+  with one pair list `cell0Pairs` and one check A (`cell0PairsCheck_ok`).
 * `linSym k g`: `(r, l) ↦ ((k+1) r, A_g l)` on (rank index c % 13, GF(4) label),
-  k : Fin 12, g : Fin 6 (GL(2,2)). The affine relabellings are `v10Sym a x * linSym k g`
-  (3744; they form the normalizer of v10Sym in Sym(52), stated for orientation and
-  not a Lean theorem).
+  k : Fin 12, g : Fin 6 (GL(2,2)); its tables `glTab`, `glInvTab`, `unitInvTab` are
+  generated from `../v12-covariant/cell0lib.py` (the data the search uses), and Lean
+  proves they give inverse bijections (`linFn_left`, `linFn_right`) and linear label
+  maps (`glApp_gfAdd`). The affine relabellings are `v10Sym a x * linSym k g`: 3744
+  parameter tuples, pairwise distinct relabellings (`affine_params_inj`).
 * `roundBody_not_covariant_affine` (heavy, unconditional): for `(k, g) ≠ (0, 0)`,
-  `v10Sym a x * linSym k g` is not covariant for ANY τ (3692 relabellings);
-  `…_right` for `linSym k g * v10Sym a x`; `roundBody_covariant_affine_iff`: an
-  affine relabelling is covariant iff it is the identity.
+  `v10Sym a x * linSym k g` is not covariant for ANY τ (3692 parameter tuples, pairwise
+  distinct); `…_right` states the same for `linSym k g * v10Sym a x` (the same
+  relabellings, `linSym k g * v10Sym a x = v10Sym ((k+1)a) (A_g x) * linSym k g`, not a
+  Lean theorem); `roundBody_covariant_affine_iff`: an affine relabelling is covariant
+  iff it is the identity.
 * Proof: `Cell0Cov` for `v10Sym a x * L` gives `Cell0Cov` for `L` (multiply by
   `(v10Sym a x)⁻¹`, which satisfies it with itself). For each of the 71 nontrivial
   linear parts one witness pair (identity deck, identity deck with seats (1,5), (1,8)
   or (1,12) exchanged; same stem cell 0, different stem cell 0 after `L`) is checked
-  by kernel `decide!` (`check_lin_k_g`, two stem evaluations each; `affPairsCheck_ok`).
-* Scope: this includes every prime-order element of the normalizer outside v10Sym,
-  but it is NOT `PrimeNonSwapCase`: almost all prime-order σ are not affine.
+  by kernel `decide!` (`check_lin_k_g`, two stem evaluations each; check A
+  `cell0PairsCheck_ok`).
+* Scope: all 3692 nontrivial affine relabellings, of any order; the prime-order ones
+  are the part inside `PrimeNonSwapCase`. It is NOT `PrimeNonSwapCase`: almost all
+  prime-order σ are not affine.
 
 ## Counterexample search (EXACT / MEASURED; `covsearch.c`, `logs/covsearch.log`)
 
@@ -59,7 +75,7 @@ further random deck breaks `F(σ·m) = τ·F(m)` (up to 6 decks).
 
 | family | σ tested | result |
 |---|---|---|
-| `norm`: all affine σ outside v10Sym (EXACT) | 3692 | all refuted at the 2nd deck |
+| `norm`: all nontrivial affine σ, i.e. outside v10Sym (EXACT) | 3692 | all refuted at the 2nd deck |
 | `dbl`: ALL products of 2 disjoint transpositions (EXACT) | 812175 | all refuted at the 2nd deck |
 | `cyc3`: ALL 3-cycles (EXACT) | 44200 | all refuted at the 2nd deck |
 | `prime`: random prime order, non-transposition (MEASURED, seed 6) | 10⁶ | all refuted at the 2nd deck |
@@ -92,10 +108,12 @@ time per witness as measured for `CovariantAffineChecks`, so `dbl` alone would b
    With τ ≠ σ (δ = σ⁻¹τ) the same holds iff stem(m)₀ ∈ Fix(δ). Breaks: to conclude
    one needs a single-cell analogue of `sumRanksV10_commutes_iff` (which is about all
    52 cells and τ = σ) for one cell and τ ≠ σ; no such statement is known.
-4. **Group theory.** K = {σ : ∃ τ, Cell0Cov σ τ} is a subgroup (this PR) containing
-   v10Sym and no transposition. Showing K = v10Sym in general needs a classification
+4. **Group theory.** K = {σ : ∃ τ, Cell0Cov σ τ} is a subgroup
+   (`CovariantNarrow.cell0Subgroup`) containing v10Sym and no transposition (the
+   argument of `not_covariant_swap_of_check`). Showing K = v10Sym in general needs a classification
    of the overgroups of a regular Z13 × Z2² in S52 (primitive / imprimitive cases), not
-   viable in Lean here. Inside the normalizer of v10Sym it is finite, which is the
+   viable in Lean here. Restricted to the affine relabellings (the normalizer of
+   v10Sym; true by the holomorph count, not a Lean theorem) it is finite, which is the
    proved affine result.
 
 ## What a full proof would take

@@ -1,5 +1,7 @@
 g(identity deck) = 0; single position swaps (i, j) keeping g: 235 of 1326
 witness found for all 71 nontrivial linear parts (k, g); position pairs used: [(1, 5), (1, 8), (1, 12)]
+(all in cell0Pairs = [(1, 2), (1, 3), (1, 5), (1, 8), (1, 12), (1, 34)])
+glTab = [[0, 1, 2, 3], [0, 2, 1, 3], [0, 1, 3, 2], [0, 3, 2, 1], [0, 2, 3, 1], [0, 3, 1, 2]]; glInvTab = [0, 1, 2, 3, 5, 4]; unitInvTab = [0, 6, 8, 9, 7, 10, 1, 4, 2, 3, 5, 11]
   u =  1 (k =  0), g = 1: swap (1, 5)
   u =  1 (k =  0), g = 2: swap (1, 5)
   u =  1 (k =  0), g = 3: swap (1, 5)

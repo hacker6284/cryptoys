@@ -48,9 +48,7 @@ import DoubleDealSecurity.StemSupportFour
     `StemSupportFour`). `dpFCount_col_le_64`: the column bound, `64 · dpFCount β γ ≤ 52!` for
     every `β ≠ 1` when `γ` is outside `v10Sym` (the diagonal is
     `FullCipher.dpFCount_self_le_64`). `fullDiffCount_le_64`: the full-cipher statement above,
-    from `FullCipher.fullDiffCount_le_of_col`, with no remaining hypothesis. (The hypothesis
-    `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag` is a special case of
-    `dpFCount_le_of_ne`.)
+    from `FullCipher.fullDiffCount_le_of_col`, with no remaining hypothesis.
 
   Not proved, and limits:
   * `γ` in `v10Sym` (the column route fails there; `not_col_v10Sym`).
@@ -468,7 +466,7 @@ theorem dpFCount_le_union (β γ : Relabel) :
   rw [sum_congr rfl fun T _ => card_params T s, sum_const, card_univ, Fintype.card_fun,
     Fintype.card_fin, Fintype.card_fin, smul_eq_mul]
 
-/-- (PROVED; the support-≥ 8 case of `hoff`) If `γ⁻¹ * β` moves at least 8 cards, then
+/-- (PROVED; the support-≥ 8 case of the off-diagonal stem bound) If `γ⁻¹ * β` moves at least 8 cards, then
     `64 · dpFCount β γ ≤ 52!`. -/
 theorem dpFCount_le_of_support_ge_eight (β γ : Relabel)
     (h8 : 8 ≤ (γ⁻¹ * β).support.card) :

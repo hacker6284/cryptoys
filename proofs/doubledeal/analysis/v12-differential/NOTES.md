@@ -123,8 +123,7 @@ CHARACTERISTIC is `(1/64)² ≈ 2.4e-4`; nothing numeric is proved for the DIFFE
   alone. It is not known to imply `roundBody_covariant_iff_id`; it does imply that no β
   outside `v10Sym` is exactly stem-covariant into γ ≠ β, which now follows from
   `StemUnion.dpFCount_le_of_ne` (not stated as a separate theorem; `sumRanksV10_commutes_iff`
-  rules out γ = β). See `FullCipher.fullDiffCount_le_of_col`,
-  `fullDiffCount_le_64_of_offDiag` (PROVED reductions; the off-diagonal stem hypothesis is now
+  rules out γ = β). See `FullCipher.fullDiffCount_le_of_col` (a PROVED reduction; the off-diagonal stem hypothesis is now
   PROVED, `StemUnion.dpFCount_le_of_ne`, and with the diagonal it is the column bound
   `StemUnion.dpFCount_col_le_64`, giving `StemUnion.fullDiffCount_le_64`: the same 1/64 for every n (the bound does not decay; nothing is proved about decay),
   independent keys, outputs outside `v10Sym`). Into `v10Sym` columns this route gives nothing (`not_col_v10Sym`).

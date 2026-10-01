@@ -11,7 +11,7 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
   the M7 row). One counting lemma.
 
   NO BOUND ON `dpFCount` (OR ANY OTHER DIFFERENTIAL COUNT) IS PROVED HERE, and nothing here
-  proves any part of the hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag`.
+  proves any part of the off-diagonal stem bound (`StemUnion.dpFCount_le_of_ne`).
 
   Proved:
   * `rowAmts_eq_iff`: `StemPosition.rowAmts m = t` (as functions on `Fin 4`) iff four row
@@ -45,7 +45,7 @@ import Mathlib.Algebra.Order.BigOperators.Group.Finset
   points of each row then contain at most 3 decks meeting that row's condition; the four
   rows act independently.
 
-  Not proved here (the rest of the 4-card case of `hoff`, proved in `StemSupportFour`, third
+  Not proved here (the rest of the 4-card case of the off-diagonal stem bound, proved in `StemSupportFour`, third
   slice: `ratio_eq_qPerm_of_support_four`, `ratio_moves_le_one_of_support_four`,
   `card_conjSet_le_odd`, `card_conjSet_le_two`, `dpFCount_le_of_support_four`):
   * that the ratio `q = stemPerm x * (stemPerm (β·x))⁻¹` of `StemPosition.conj_of_stem_rel`

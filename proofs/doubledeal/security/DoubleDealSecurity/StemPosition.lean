@@ -31,7 +31,7 @@
     `q = stemPerm x * (stemPerm (β·x))⁻¹`, the ratio of the two decks' position maps.
     The hypothesis is exactly the filter predicate of `FullCipher.dpFCount β γ`
     (`Differential.dpCount unkeyedNoMix β γ`) at the deck `permDeck π`, the count in the
-    hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag`, and it is the one-deck
+    off-diagonal stem bound (`StemUnion.dpFCount_le_of_ne`), and it is the one-deck
     form of "the stem is exactly covariant from `β` to `γ`". In prose (not a separate
     theorem): since `stemPos m = cmFlat ∘ S_m ∘ inSeat` with `S_m` the seat map of `m`, the
     fixed layer `inSeat` cancels in the ratio, and `q = cmFlat ∘ (S_x ∘ S_(β·x)⁻¹) ∘ cmFlat⁻¹`:
@@ -51,7 +51,7 @@
 
   NOT proved, and limits:
   * No count of decks: nothing here bounds `dpFCount β γ` or any differential probability.
-    This proves no part of `hoff`. It would give `dpFCount β γ = 0` only when the support
+    This proves no part of the off-diagonal stem bound. It would give `dpFCount β γ = 0` only when the support
     size of `γ⁻¹ * β` is not of the form `52 - a·b` (`a ≤ 4`, `b ≤ 13`), e.g. 2 or 3 (a
     transposition or a 3-cycle). For supports 1–3 and 5–7 that corollary is
     `StemSupportFour.dpFCount_eq_zero_of_support_lt_eight_ne_four`; for the other excluded

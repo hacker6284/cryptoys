@@ -9,6 +9,8 @@ import DoubleDealSecurity.SumRanksV10Iff
 import DoubleDealSecurity.StemPosition
 import DoubleDealSecurity.StemCoupling
 import DoubleDealSecurity.StemSupportFour
+import DoubleDealSecurity.StemUnion
+import DoubleDealSecurity.OneRoundDP
 import DoubleDealSecurity.Walk
 import DoubleDealSecurity.GridCycle
 import DoubleDealSecurity.BranchNumber

@@ -793,16 +793,17 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.fullDiffCount_one_left",
             "DoubleDeal.Security.FullCipher.fullDiffCount_to_one",
             "DoubleDeal.Security.FullCipher.fullDiffCount_eq_card_beforeFinal",
-            # column transfer through the final round: REDUCTIONS (hypothesis unproved);
-            # not_col_v10Sym says the route is closed into v10Sym
+            # column transfer through the final round: a REDUCTION (the column hypothesis is
+            # StemUnion.dpFCount_col_le_64 outside v10Sym); not_col_v10Sym says the route is
+            # closed into v10Sym
             "DoubleDeal.Security.FullCipher.fullDiffCount_le_of_col",
-            "DoubleDeal.Security.FullCipher.fullDiffCount_le_64_of_offDiag",
             "DoubleDeal.Security.FullCipher.not_col_v10Sym",
             # StemPosition (off-diagonal stem bound, first slice): the stem as a position map and
             # the support gap of gamma^-1 * beta; structure only, no count of decks, no part
-            # of hoff (helpers srcRow / cmFlat_inj2 are named apart from SumRanksDP.rowOf /
+            # of the off-diagonal stem bound (helpers srcRow / cmFlat_inj2 are named apart from SumRanksDP.rowOf /
             # SumRanksDP.cmFlat_injective)
             "DoubleDeal.Security.StemPosition.unkeyedNoMix_eq_comp",
+            "DoubleDeal.Security.StemPosition.stemPosOf_injective",
             "DoubleDeal.Security.StemPosition.stemPos_injective",
             "DoubleDeal.Security.StemPosition.conj_of_stem_rel",
             "DoubleDeal.Security.StemPosition.seatMap_eq_iff",
@@ -820,9 +821,9 @@ PACKAGES = {
             "DoubleDeal.Security.StemCoupling.double_count",
             "DoubleDeal.Security.StemCoupling.card_cond_act_le",
             "DoubleDeal.Security.StemCoupling.coupling",
-            # StemSupportFour (off-diagonal stem bound, third slice): the 4-card case of hoff,
-            # 64 * dpFCount beta gamma <= 52! when gamma^-1 * beta moves exactly 4 cards; the
-            # support >= 8 case of hoff stays a hypothesis (offDiag_of_offDiag_ge_eight)
+            # StemSupportFour (off-diagonal stem bound, third slice): the 4-card case of the off-diagonal stem bound,
+            # 64 * dpFCount beta gamma <= 52! when gamma^-1 * beta moves exactly 4 cards, and
+            # supports 1-3, 5-7 count no deck (support >= 8: StemUnion below)
             "DoubleDeal.Security.StemSupportFour.qPerm_moves_le_one",
             "DoubleDeal.Security.StemSupportFour.ratio_eq_qPerm",
             "DoubleDeal.Security.StemSupportFour.ratio_eq_qPerm_of_support_four",
@@ -833,8 +834,55 @@ PACKAGES = {
             "DoubleDeal.Security.StemSupportFour.dpFCount_bound_of_support_four",
             "DoubleDeal.Security.StemSupportFour.dpFCount_le_of_support_four",
             "DoubleDeal.Security.StemSupportFour.dpFCount_eq_zero_of_support_lt_eight_ne_four",
-            "DoubleDeal.Security.StemSupportFour.offDiag_of_offDiag_ge_eight",
-            "DoubleDeal.Security.StemSupportFour.fullDiffCount_le_64_of_offDiag_ge_eight",
+            # StemUnion (off-diagonal stem bound, final slice): the support >= 8 case by a
+            # union bound (general ratio formula, agreement count, cycle-representative
+            # bound); the column bound into gamma outside v10Sym, hence
+            # 64 * fullDiffCount <= 52!^(n+2) for alpha != 1 and gamma outside v10Sym
+            # (independent keys; the same 1/64 for every n, nothing proved about decay;
+            # gamma in v10Sym not covered; not a security claim)
+            "DoubleDeal.Security.StemUnion.seatMap_shift",
+            "DoubleDeal.Security.StemUnion.ratio_eq_ratioQ",
+            "DoubleDeal.Security.StemUnion.exists_rep",
+            "DoubleDeal.Security.StemUnion.apply_rep_not_rep",
+            "DoubleDeal.Security.StemUnion.two_mul_card_reps_le",
+            "DoubleDeal.Security.StemUnion.card_conjSet_le_reps",
+            "DoubleDeal.Security.StemUnion.card_agree_eq",
+            "DoubleDeal.Security.StemUnion.card_zR_eq",
+            "DoubleDeal.Security.StemUnion.card_zC_eq",
+            "DoubleDeal.Security.StemUnion.card_params",
+            "DoubleDeal.Security.StemUnion.paramCount_check",
+            "DoubleDeal.Security.StemUnion.zRows_eq_zR",
+            "DoubleDeal.Security.StemUnion.zCols_eq_zC",
+            "DoubleDeal.Security.StemUnion.mem_ratioCell",
+            "DoubleDeal.Security.StemUnion.dpFCount_le_union",
+            "DoubleDeal.Security.StemUnion.dpFCount_le_of_support_ge_eight",
+            "DoubleDeal.Security.StemUnion.dpFCount_le_of_ne",
+            "DoubleDeal.Security.StemUnion.dpFCount_col_le_64",
+            "DoubleDeal.Security.StemUnion.fullDiffCount_le_64",
+            # OneRoundDP (roadmap B1, one mix round): any eps_1 < 1 implies the open covariant
+            # conjecture, and on the rows outside v10Sym alone already does; the 51 v10Sym rows
+            # are bounded (1/52, and 1/17 for v10Sym 0 3); rows outside v10Sym are NOT proved;
+            # not a security claim
+            "DoubleDeal.Security.OneRoundDP.dp1Count_eq_of_covPair",
+            "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1_lt",
+            "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1Bound",
+            "DoubleDeal.Security.OneRoundDP.scoop_rmFlat",
+            "DoubleDeal.Security.OneRoundDP.rmFlat_inj",
+            "DoubleDeal.Security.OneRoundDP.mixColumns_seat2",
+            "DoubleDeal.Security.OneRoundDP.seat2_ne_start",
+            "DoubleDeal.Security.OneRoundDP.seat2Idx_ne_26",
+            "DoubleDeal.Security.OneRoundDP.mixRound_v10Sym_reads",
+            "DoubleDeal.Security.OneRoundDP.card_seat_link_le",
+            "DoubleDeal.Security.OneRoundDP.sameSeat2_subset",
+            "DoubleDeal.Security.OneRoundDP.sameSeat2_eq_empty",
+            "DoubleDeal.Security.OneRoundDP.card_agree_le_fifty",
+            "DoubleDeal.Security.OneRoundDP.dp1Count_v10Sym_le_sum",
+            "DoubleDeal.Security.OneRoundDP.dp1Count_v10Sym_self_le",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym_zero_three",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym_all",
+            "DoubleDeal.Security.OneRoundDP.seat2_eq_of_seat2Idx_eq",
+            "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1_lt_off_v10Sym",
             # row/column sums of fullDiffCount (used by LinearMasks, M8b)
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",
@@ -842,6 +890,9 @@ PACKAGES = {
             # decks to decks, and (for _to_one) an explicit injectivity hypothesis
             "DoubleDeal.Security.Differential.dpCount_one_left",
             "DoubleDeal.Security.Differential.dpCount_to_one",
+            # layer outputs as permutations (shared by D4 and OneRoundDP)
+            "DoubleDeal.Security.Differential.permDeck_layerPerm",
+            "DoubleDeal.Security.Differential.layerPerm_injective",
             # Linear (roadmap M8a): sums of squared correlations as autocorrelations weighted
             # by differential counts; L1 and the final-key step for arbitrary layers that
             # send decks to decks, L2-L4 for DoubleDeal's encryptL; independent full-permutation keys only; no numeric

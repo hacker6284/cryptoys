@@ -126,7 +126,7 @@ here, and nothing here is proved.
 
 **ENUMERATION ONLY; no theorem uses these numbers.** Exact integer counts over finite
 sets, but not checked in Lean. They size the constant in `StemCoupling.coupling`
-(security library, research item (b), second slice) and check the counting in
+(security library, second slice towards the off-diagonal stem column bound) and check the counting in
 `StemSupportFour` (third slice); the theorems use none of them.
 
 Setting. When γ⁻¹β moves 4 cards (a 4-cycle or a double transposition; `(zRows, zCols) =
@@ -188,6 +188,3 @@ four `d` the conjugate sets hold at most `8 · 48!` decks for each `(t, c)`
   `64 · #q · s^⌊s/2⌋ · (52 − s)! / 52!` over `s ≥ 8` is 0.173 (at `s = 8`), so this route
   would close `hoff` if formalised; at `s = 4` it gives 175 and does not work (hence the
   coupling there). None of it is in Lean.
-* A joint sampling check of all four rows (400 000 decks for each of three `(t, c, d)`,
-  not committed) gave hit fractions 2.8·10^-5 to 4.8·10^-5, near 13^-4 ≈ 3.5·10^-5.
-  Sampled, not a bound.

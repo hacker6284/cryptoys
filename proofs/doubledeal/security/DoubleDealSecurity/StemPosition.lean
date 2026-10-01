@@ -1,6 +1,7 @@
 /-
-  The stem as a position map, and the support gap of its relabelling differences (research
-  item (b), first slice; security README, "Roadmap", M7 "Open"). Structure only.
+  The stem as a position map, and the support gap of its relabelling differences (first slice
+  towards the off-diagonal stem column bound; security README, "Roadmap", "Open" list, the
+  M7 entry). Structure only.
 
   NO BOUND ON `dpFCount` (OR ANY OTHER DIFFERENTIAL COUNT) IS PROVED HERE. Every statement is
   exact and deck-by-deck; nothing is counted over decks or keys.

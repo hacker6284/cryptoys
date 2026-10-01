@@ -87,3 +87,20 @@ def answer : Nat → Shot
 def sendPublicValue (x : List Nat) : List Shot × List Nat := (x.map answer, x)
 
 end BsLink2.Spec
+
+namespace BsLink2.Spec
+
+/-- B7. The exponent a cell string encodes: the cells read as a base-3 number, first
+    cell most significant (cells before the first white or red one contribute nothing). -/
+def expOf (cells : List Nat) : Nat := cells.foldl (fun e c => 3 * e + c) 0
+
+/-- B7, public phase: the tidy answer of the walk with `g = 3` over `cells`, i.e. the
+    register holding `3^e mod p`. -/
+def publicValue (F : Field) (cells : List Nat) : List Nat := toReg F.n (3 ^ expOf cells % F.p)
+
+/-- B7, shared phase: the tidy answer of the walk with base `C` over `cells`, i.e. the
+    register holding `C^e mod p`. -/
+def sharedSecret (F : Field) (base cells : List Nat) : List Nat :=
+  toReg F.n (value base ^ expOf cells % F.p)
+
+end BsLink2.Spec

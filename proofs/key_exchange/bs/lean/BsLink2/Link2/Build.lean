@@ -3841,4 +3841,169 @@ theorem row_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d0 : Spe
         if_neg (by omega)]
       rfl
 
+open Bs in
+/-- The emitted let-go check step of `build` (verbatim). -/
+def checkStepE (letgo : Array LetGo) (_toV : Int) :
+    Int → Except SudoRt.Trap (SudoRt.Flow Int (KeyGrid × Dice)) :=
+  fun σ =>
+    let i := σ
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) i)
+      else
+        match ← ((do
+  let _t555 ← SudoRt.atL letgo i
+  let _t557 ← (if (decide ((_t555).sudo_5LetGo_4hole ≥ (0 : Int))) then (do
+  let _t558 ← SudoRt.atL letgo i
+  let _t559 ← SudoRt.mulI grid_rows grid_cols
+  pure (decide ((_t558).sudo_5LetGo_4hole < _t559))) else pure false)
+  let _as561 ← SudoRt.sudoAssert _t557 646
+  let _t562 ← SudoRt.atL letgo i
+  let _t563 ← SudoRt.modI (_t562).sudo_5LetGo_4hole grid_cols
+  let _t564 ← SudoRt.modI _t563 (2 : Int)
+  let _as565 ← SudoRt.sudoAssertEq _t564 (0 : Int) 647
+  pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) ())) : Except SudoRt.Trap (SudoRt.Flow _ ((KeyGrid) × (Dice)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) i)
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) i)
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) i')
+
+open Bs in
+/-- The emitted body of `build` after the let-go check (verbatim, with the row loop's step
+    named). -/
+def buildAfterE (letgo : Array LetGo) (d : Dice) : Int → Except SudoRt.Trap (KeyGrid × Dice) :=
+  fun _ =>
+    do
+      let _t568 ← SudoRt.mulI grid_rows grid_cols
+      let holes := _t568
+      let _t569 ← SudoRt.filledL holes false
+      let covered := _t569
+      let ships := (#[] : Array (Ship))
+      let _t570 ← SudoRt.filledL holes (0 : Int)
+      let pegs := _t570
+      let tray := (#[] : Array (Int))
+      let read := (0 : Int)
+      let _t921 ← SudoRt.subI grid_rows (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t921
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init932 := (_fromV, (d, tray, read, covered, ships, pegs))
+      let _out ← (SudoRt.runLoopOn (ρ := (KeyGrid) × (Dice)) _init932 fuel (rowStepE letgo _toV) (fun σ =>
+    let d := σ.2.1
+    let _sp927 := σ.2.2
+    let _tray := _sp927.1
+    let _sp928 := _sp927.2
+    let _read := _sp928.1
+    let _sp929 := _sp928.2
+    let _covered := _sp929.1
+    let _sp930 := _sp929.2
+    let ships := _sp930.1
+    let _sp931 := _sp930.2
+    let pegs := _sp931
+    do
+      pure (({ sudo_7KeyGrid_5ships := ships, sudo_7KeyGrid_4pegs := pegs } : KeyGrid), d)) (fun r => pure r))
+      pure _out
+
+open Bs in
+theorem build_eq (d : Dice) (letgo : Array LetGo) :
+    Bs.build d letgo = (do
+      let t ← letgo_unique letgo
+      let _as ← SudoRt.sudoAssert t 644
+      let toV ← SudoRt.subI (SudoRt.listLen letgo) (1 : Int)
+      let _out ← SudoRt.runLoopOn (ρ := KeyGrid × Dice) (0 : Int) (fuelRange 0 toV)
+        (checkStepE letgo toV) (buildAfterE letgo d) (fun r => pure r)
+      pure _out) := rfl
+
+/-- Whether let-go `i` of the list is usable (§4.2: a hole of the grid at a die's first hole). -/
+def okAt (lg : List Spec.LetGo) (i : Nat) : Bool :=
+  match lg[i]? with
+  | some x => decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0)
+  | none => true
+
+theorem all_okAt (lg : List Spec.LetGo) :
+    (List.range' 0 lg.length).all (okAt lg) =
+      lg.all (fun x => decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0)) := by
+  apply Bool.eq_iff_iff.mpr
+  simp only [List.all_eq_true, List.mem_range']
+  constructor
+  · intro h x hx
+    obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem hx
+    have := h i ⟨i, hi, by omega⟩
+    simpa [okAt, List.getElem?_eq_getElem hi] using this
+  · rintro h i ⟨j, hj, rfl⟩
+    have hi : 0 + 1 * j < lg.length := by omega
+    have := h (lg[0 + 1 * j]) (List.getElem_mem hi)
+    simp only [okAt, List.getElem?_eq_getElem hi]
+    simpa using this
+
+/-- One step of the emitted let-go check: let-go `i` must be a hole (`0 ≤ hole < 100`) at a
+    die's first hole (`hole % 10` even), else `build` traps. -/
+theorem check_step_spec (lg : List Spec.LetGo) (n : Nat) (hl : lg.length = n + 1)
+    (hlg : FitsLen lg.length) (i : Nat) (hi : i ≤ n) :
+    (checkStepE (embLG lg) (Int.ofNat n) (Int.ofNat i)).toOption =
+      if okAt lg i then some (if i = 0 + n then .brk (Int.ofNat i) else .cont (Int.ofNat (i + 1)))
+      else none := by
+  have hi' : i < (embLG lg).size := by rw [size_embLG]; omega
+  have hil : i < lg.length := by omega
+  unfold checkStepE
+  dsimp only
+  rw [if_neg (by show ¬ ((n : Nat) : Int) < ((i : Nat) : Int); omega),
+    toOpt_bind, atL_ofNat _ _ hi', ok_bind, embLG_get]
+  simp only [Bs.grid_rows, Bs.grid_cols]
+  have hok : okAt lg i = decide (0 ≤ lg[i].hole ∧ lg[i].hole < 100 ∧ lg[i].hole % 10 % 2 = 0) := by
+    unfold okAt; rw [List.getElem?_eq_getElem hil]
+  rw [hok]
+  generalize lg[i] = x
+  have hmul : SudoRt.mulI (10 : Int) (10 : Int) = .ok (Int.ofNat (10 * 10)) :=
+    mulI_ofNat 10 10 (fits_small (by omega))
+  have hmod10 : ∀ k : Nat, SudoRt.modI (Int.ofNat k) (10 : Int) = .ok (Int.ofNat (k % 10)) :=
+    fun k => modI_ofNat k (b := 10) (by decide)
+  have hmod2 : ∀ k : Nat, SudoRt.modI (Int.ofNat k) (2 : Int) = .ok (Int.ofNat (k % 2)) :=
+    fun k => modI_ofNat k (b := 2) (by decide)
+  have hA : ∀ k : Nat, k ≠ 0 →
+      (SudoRt.sudoAssertEq (Int.ofNat k) (0 : Int) 647).toOption = none := by
+    intro k hk; unfold SudoRt.sudoAssertEq
+    rw [sEq_int, decide_eq_false (by show ¬ ((k : Nat) : Int) = ((0 : Nat) : Int); omega)]; rfl
+  by_cases h0 : 0 ≤ x.hole
+  · obtain ⟨m, hm⟩ := Int.eq_ofNat_of_zero_le h0
+    have hx : (embLetGo x).sudo_5LetGo_4hole = Int.ofNat m := hm
+    rw [hx, decide_eq_true (show Int.ofNat m ≥ 0 by show (0 : Int) ≤ ((m : Nat) : Int); omega), if_pos rfl,
+      ok_bind, hx, hmul, ok_bind]
+    by_cases hm1 : m < 100
+    · rw [decide_eq_true (show Int.ofNat m < Int.ofNat (10 * 10) by
+          show ((m : Nat) : Int) < ((10 * 10 : Nat) : Int); omega), pure_eq_ok, ok_bind,
+        sudoAssert_true, ok_bind, ok_bind, hx, hmod10, ok_bind, hmod2, ok_bind]
+      by_cases hp : m % 10 % 2 = 0
+      · have hob' : decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0) = true := by
+          apply decide_eq_true; rw [hm]; omega
+        rw [hp, sudoAssertEq_int (show Int.ofNat 0 = (0 : Int) from rfl), ok_bind, pure_eq_ok, toOpt_ok, Option.some_bind, hob',
+          if_pos rfl]
+        by_cases hn : i = n
+        · subst hn
+          rw [if_pos (by simp), if_pos (by simp)]; rfl
+        · have hb : (Int.ofNat i == Int.ofNat n) = false := by
+            apply beq_false_of_ne; intro e; exact hn (Int.ofNat.inj e)
+          rw [hb, if_neg (by decide), addI_ofNat_one _ (FitsLen.of_le hlg (by omega)), ok_bind,
+            if_neg (by omega)]
+          rfl
+      · have hob' : decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0) = false := by
+          apply decide_eq_false; rw [hm]; omega
+        rw [toOpt_bind, hA _ hp, Option.none_bind, hob']; rfl
+    · rw [decide_eq_false (show ¬ Int.ofNat m < Int.ofNat (10 * 10) by
+          show ¬ ((m : Nat) : Int) < ((10 * 10 : Nat) : Int); omega), pure_eq_ok, ok_bind,
+        toOpt_bind, sudoAssert_false_opt, Option.none_bind]
+      have hob' : decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0) = false := by
+        apply decide_eq_false; rw [hm]; omega
+      rw [hob']; rfl
+  · rw [show (embLetGo x).sudo_5LetGo_4hole = x.hole from rfl,
+      decide_eq_false (show ¬ x.hole ≥ 0 from h0), if_neg (by decide), pure_eq_ok, ok_bind,
+      toOpt_bind, sudoAssert_false_opt, Option.none_bind]
+    have hob' : decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0) = false := by
+      apply decide_eq_false; omega
+    rw [hob']; rfl
+
 end BsLink2.Link2

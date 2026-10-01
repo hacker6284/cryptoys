@@ -278,4 +278,29 @@ theorem loop_brk_inv {S α ρ β} (E : S → α)
           (fun i s r h1 h2 => hP i s r (by omega) h2) s' hr (by omega)
       | inr s' => simp only [Option.map_some', Option.some_bind]; exact hafter _ _ s' (by omega) hr
 
+/-- An ascending loop over `[fromN, fromN + k]` on the index alone whose iterations either
+    pass or trap (`ok i`): it reaches `after` iff every iteration passes. -/
+theorem asc_check {ρ β} (step : Int → Except SudoRt.Trap (SudoRt.Flow Int ρ))
+    (after : Int → Except SudoRt.Trap β) (onRet : ρ → Except SudoRt.Trap β)
+    (ok : Nat → Bool) (fromN k : Nat)
+    (hstep : ∀ i, fromN ≤ i → i ≤ fromN + k → (step (Int.ofNat i)).toOption =
+      if ok i then some (if i = fromN + k then .brk (Int.ofNat i) else .cont (Int.ofNat (i + 1)))
+      else none) :
+    (SudoRt.runLoopOn (Int.ofNat fromN) (k + 1) step after onRet).toOption =
+      if (List.range' fromN (k + 1)).all ok then (after (Int.ofNat (fromN + k))).toOption
+      else none := by
+  induction k generalizing fromN with
+  | zero =>
+    rw [runLoopOn_succ_opt, hstep fromN (Nat.le_refl _) (by omega)]
+    cases hok : ok fromN <;> simp [List.range', hok]
+  | succ k ih =>
+    rw [runLoopOn_succ_opt, hstep fromN (Nat.le_refl _) (by omega)]
+    cases hok : ok fromN
+    · simp [List.range', hok]
+    · simp only [if_true, if_neg (show fromN ≠ fromN + (k + 1) by omega), Option.some_bind]
+      rw [ih (fromN + 1) (fun i h1 h2 => by
+        rw [hstep i (by omega) (by omega), show fromN + (k + 1) = fromN + 1 + k by omega])]
+      simp only [List.range', List.all_cons, hok, Bool.true_and,
+        show fromN + 1 + k = fromN + (k + 1) by omega]
+
 end BsLink2.Link2

@@ -10,3 +10,5 @@ import DoubleDealSecurityHeavy.Differential
 import DoubleDealSecurityHeavy.FullCipher
 import DoubleDealSecurityHeavy.CovariantNarrowChecks
 import DoubleDealSecurityHeavy.CovariantNarrow
+import DoubleDealSecurityHeavy.CovariantAffineChecks
+import DoubleDealSecurityHeavy.CovariantAffine

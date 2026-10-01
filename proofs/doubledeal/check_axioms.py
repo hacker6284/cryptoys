@@ -151,71 +151,39 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.FullCipher.realFullTrail_card_le_64",
     "DoubleDeal.Security.FullCipher.realFullStaysInV10_card_le_4420",
     # DoubleDealSecurityHeavy/CovariantNarrow.lean and the generated CovariantNarrowChecks.lean
-    # (check_e*, checks_all: cell0_witness.py --lean): the covariant round conjecture for
-    # every transposition, and the reduction to the remaining prime-order case
-    "DoubleDeal.Security.CovariantNarrow.goodPairsCheck_ok",
-    "DoubleDeal.Security.CovariantNarrow.check_e1",
-    "DoubleDeal.Security.CovariantNarrow.check_e2",
-    "DoubleDeal.Security.CovariantNarrow.check_e3",
-    "DoubleDeal.Security.CovariantNarrow.check_e4",
-    "DoubleDeal.Security.CovariantNarrow.check_e5",
-    "DoubleDeal.Security.CovariantNarrow.check_e6",
-    "DoubleDeal.Security.CovariantNarrow.check_e7",
-    "DoubleDeal.Security.CovariantNarrow.check_e8",
-    "DoubleDeal.Security.CovariantNarrow.check_e9",
-    "DoubleDeal.Security.CovariantNarrow.check_e10",
-    "DoubleDeal.Security.CovariantNarrow.check_e11",
-    "DoubleDeal.Security.CovariantNarrow.check_e12",
-    "DoubleDeal.Security.CovariantNarrow.check_e13",
-    "DoubleDeal.Security.CovariantNarrow.check_e14",
-    "DoubleDeal.Security.CovariantNarrow.check_e15",
-    "DoubleDeal.Security.CovariantNarrow.check_e16",
-    "DoubleDeal.Security.CovariantNarrow.check_e17",
-    "DoubleDeal.Security.CovariantNarrow.check_e18",
-    "DoubleDeal.Security.CovariantNarrow.check_e19",
-    "DoubleDeal.Security.CovariantNarrow.check_e20",
-    "DoubleDeal.Security.CovariantNarrow.check_e21",
-    "DoubleDeal.Security.CovariantNarrow.check_e22",
-    "DoubleDeal.Security.CovariantNarrow.check_e23",
-    "DoubleDeal.Security.CovariantNarrow.check_e24",
-    "DoubleDeal.Security.CovariantNarrow.check_e25",
-    "DoubleDeal.Security.CovariantNarrow.check_e26",
-    "DoubleDeal.Security.CovariantNarrow.check_e27",
-    "DoubleDeal.Security.CovariantNarrow.check_e28",
-    "DoubleDeal.Security.CovariantNarrow.check_e29",
-    "DoubleDeal.Security.CovariantNarrow.check_e30",
-    "DoubleDeal.Security.CovariantNarrow.check_e31",
-    "DoubleDeal.Security.CovariantNarrow.check_e32",
-    "DoubleDeal.Security.CovariantNarrow.check_e33",
-    "DoubleDeal.Security.CovariantNarrow.check_e34",
-    "DoubleDeal.Security.CovariantNarrow.check_e35",
-    "DoubleDeal.Security.CovariantNarrow.check_e36",
-    "DoubleDeal.Security.CovariantNarrow.check_e37",
-    "DoubleDeal.Security.CovariantNarrow.check_e38",
-    "DoubleDeal.Security.CovariantNarrow.check_e39",
-    "DoubleDeal.Security.CovariantNarrow.check_e40",
-    "DoubleDeal.Security.CovariantNarrow.check_e41",
-    "DoubleDeal.Security.CovariantNarrow.check_e42",
-    "DoubleDeal.Security.CovariantNarrow.check_e43",
-    "DoubleDeal.Security.CovariantNarrow.check_e44",
-    "DoubleDeal.Security.CovariantNarrow.check_e45",
-    "DoubleDeal.Security.CovariantNarrow.check_e46",
-    "DoubleDeal.Security.CovariantNarrow.check_e47",
-    "DoubleDeal.Security.CovariantNarrow.check_e48",
-    "DoubleDeal.Security.CovariantNarrow.check_e49",
-    "DoubleDeal.Security.CovariantNarrow.check_e50",
-    "DoubleDeal.Security.CovariantNarrow.check_e51",
+    # (pair_ok_*, cell0PairsCheck_ok, check_e*, checks_all: cell0_witness.py --lean): the
+    # covariant round conjecture for every transposition, and the reduction to the
+    # remaining prime-order case. The pair list is cell0Pairs (CovariantNarrowLists.lean).
+    *(f"DoubleDeal.Security.CovariantNarrow.pair_ok_{i}_{j}"
+      for i, j in ((1, 2), (1, 3), (1, 5), (1, 8), (1, 12), (1, 34))),
+    "DoubleDeal.Security.CovariantNarrow.cell0PairsCheck_ok",
+    *(f"DoubleDeal.Security.CovariantNarrow.check_e{e}" for e in range(1, 52)),
     "DoubleDeal.Security.CovariantNarrow.checks_all",
     "DoubleDeal.Security.CovariantNarrow.cov0Checks_ok",
     "DoubleDeal.Security.CovariantNarrow.roundBody_not_covariant_swap",
     "DoubleDeal.Security.CovariantNarrow.roundBody_not_commutes_swap",
     "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime_nonswap",
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
+    # DoubleDealSecurityHeavy/CovariantAffine.lean and the generated CovariantAffineChecks.lean
+    # (check_lin_k_g for the 71 (k, g) != (0, 0), lin_checks_all: aff_witness.py --lean): the
+    # covariant round conjecture for the 3692 affine relabellings outside v10Sym (the
+    # normalizer of v10Sym minus v10Sym; true by the holomorph count, not a Lean theorem)
+    *(f"DoubleDeal.Security.CovariantAffine.check_lin_{n // 6}_{n % 6}" for n in range(1, 72)),
+    "DoubleDeal.Security.CovariantAffine.lin_checks_all",
+    "DoubleDeal.Security.CovariantAffine.affChecks_ok",
+    "DoubleDeal.Security.CovariantAffine.not_cell0Cov_lin",
+    "DoubleDeal.Security.CovariantAffine.roundBody_not_covariant_affine",
+    "DoubleDeal.Security.CovariantAffine.roundBody_not_covariant_affine_right",
+    "DoubleDeal.Security.CovariantAffine.roundBody_covariant_affine_iff",
 }
 # Lean-generated theorems of the heavy modules (no source declaration; see the comment
 # above HEAVY_THEOREMS). chunkOK.eq_1: `of_chunks` unfolds `chunkOK` with `simp only`.
 HEAVY_GENERATED = {
     "DoubleDeal.Security.GridCycleSurvival.chunkOK.eq_1",
+    # cell0PairsCheck_ok (generated CovariantNarrowChecks.lean) unfolds `pairsCheck` and
+    # `cell0Pairs` with `simp only`.
+    "DoubleDeal.Security.CovariantNarrow.pairsCheck.eq_1",
+    "DoubleDeal.Security.CovariantNarrow.cell0Pairs.eq_1",
 }
 # proofs/megadreifach/lean (MegaDreifach v2): the 8 v2 hash KATs in
 # MegaDreifachHeavy/Kat.lean. The names match the vectors of

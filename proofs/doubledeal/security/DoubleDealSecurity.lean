@@ -36,3 +36,5 @@ import DoubleDealSecurity.Linear
 import DoubleDealSecurity.LinearMasks
 import DoubleDealSecurity.CovariantNarrowLists
 import DoubleDealSecurity.CovariantNarrow
+import DoubleDealSecurity.CovariantAffineLists
+import DoubleDealSecurity.CovariantAffine

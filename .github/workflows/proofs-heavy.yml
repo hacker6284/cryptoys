@@ -102,14 +102,21 @@ jobs:
       github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.doubledeal == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # 60, not 45: the heavy modules are built one at a time (next step), so their kernel
+    # times add up instead of overlapping.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
       - name: No admit / native_decide / sorryAx / axiom; sorry only in the allowlisted conjecture
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py
       - uses: ./.github/actions/lean-security
         with:
-          build-args: "DoubleDealSecurityHeavy AuditAll"
+          build-args: "DoubleDealSecurity AuditAll"
+      # One `lake build` per heavy module (import order of DoubleDealSecurityHeavy.lean),
+      # so at most one heavy module (4.7-8.1 GiB peak RSS (CI, 5f2dc8f)) runs at a time on the ~16 GB runner; logs the
+      # wall time and peak RSS of each step (also in the job summary).
+      - name: Heavy library, one module at a time (wall time and peak RSS per module)
+        run: python3 proofs/doubledeal/security/checks/heavy_rss.py
       - name: Axiom audit of every DoubleDealSecurityHeavy theorem (registry must match the source)
         working-directory: proofs/doubledeal/security
         run: python3 ../check_axioms.py security-heavy

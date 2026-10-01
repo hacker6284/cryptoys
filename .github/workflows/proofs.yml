@@ -245,10 +245,21 @@ jobs:
         run: python3 proofs/doubledeal/analysis/v12-covariant/cell0_witness.py --check
       - name: cell0_sample.log matches a fresh seeded run (measurement log, ~10 s)
         run: python3 proofs/doubledeal/analysis/v12-covariant/cell0_sample.py --check
+      - name: CovariantAffineLists.lean / CovariantAffineChecks.lean and aff_witness.log match aff_witness.py
+        run: python3 proofs/doubledeal/analysis/v12-primenonswap/aff_witness.py --check
+      # numpy is imported by proofs/doubledeal/analysis/v10-sumranks/check_cand.py (directly)
+      # and sbox-search/verify.py (via sb.py), which selftest.py runs. Probe with find_spec, which returns
+      # None instead of raising, then require a working import (fails the step if absent).
       - name: cc and numpy for the analysis checks run by selftest.py
         run: |
           cc --version | head -1
-          python3 -c "import numpy" || (sudo apt-get update -q && sudo apt-get install -y -q python3-numpy)
+          if python3 -c "import importlib.util, sys; sys.exit(importlib.util.find_spec('numpy') is None)"; then
+            echo "numpy already installed"
+          else
+            echo "numpy not installed: installing python3-numpy"
+            sudo apt-get update -q && sudo apt-get install -y -q python3-numpy
+          fi
+          python3 -c "import numpy; print('numpy', numpy.__version__)"
       - name: Python port + relabelling checks
         run: |
           python3 proofs/doubledeal/security/checks/selftest.py

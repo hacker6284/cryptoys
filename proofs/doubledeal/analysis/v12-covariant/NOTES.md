@@ -114,6 +114,11 @@ This is evidence for the prime-restricted `hcell` of
   disjoint p-cycles for odd p, in each case excluding the v10Sym.
   * By `prime_nonswap_case_iff` this is equivalent to the conjecture, so nothing
     weaker would suffice along this route.
+  * Narrowed further: the 3692 affine relabellings outside v10Sym (the normalizer
+    of v10Sym minus v10Sym; true by the holomorph count, not a Lean theorem) are proved
+    non-covariant (`CovariantAffine`); `PrimeNonSwapCase` stays open. Routes, the exhaustive
+    `dbl`/`cyc3` search and the remaining obstacle are in
+    [`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md).
 * **One possible route (not attempted):** prove a single-cell `hcell` from D. That
   would be an analogue of `sumRanksV10_commutes_iff` for output cell (0,0) only.
   * Caveat: `hcell` is a sufficient condition not known to be true, so this route

@@ -1,0 +1,15 @@
+# EMPIRICAL measurement log (not a proof; not CI-checked). Reproduce: cc -O2 -o covsearch covsearch.c && ./covsearch FAMILY N SEED
+$ covsearch norm 0 0
+family norm N 0 seed 0: tested 3692 refuted 3692 skipped(id/v10Sym) 52; refuted at deck #: 1:3692
+$ covsearch dbl 0 5
+family dbl N 0 seed 5: tested 812175 refuted 812175 skipped(id/v10Sym) 0; refuted at deck #: 1:812175
+$ covsearch cyc3 0 4
+family cyc3 N 0 seed 4: tested 44200 refuted 44200 skipped(id/v10Sym) 0; refuted at deck #: 1:44200
+$ covsearch prime 1000000 6
+family prime N 1000000 seed 6: tested 1000000 refuted 1000000 skipped(id/v10Sym) 0; refuted at deck #: 1:1000000
+$ covsearch prod 1000000 1
+family prod N 1000000 seed 1: tested 1000000 refuted 1000000 skipped(id/v10Sym) 0; refuted at deck #: 1:1000000
+$ covsearch fiber 1000000 2
+family fiber N 1000000 seed 2: tested 1000000 refuted 1000000 skipped(id/v10Sym) 0; refuted at deck #: 1:1000000
+$ covsearch rand 1000000 3
+family rand N 1000000 seed 3: tested 1000000 refuted 1000000 skipped(id/v10Sym) 0; refuted at deck #: 1:1000000

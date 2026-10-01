@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Headless check: every microdemo sound file decodes, in both formats.
+"""Headless check: every library and microdemo sound file decodes, in both formats.
 
-Reads demos/micro/sounds/index.json and decodes each <file>.ogg and
+Reads demos/anim/sounds/index.json and demos/micro/sounds/index.json and decodes each <file>.ogg and
 <file>.mp3 with ffmpeg (`-f null`), failing on any decode error or an
 empty result. Run after tools/sync-micro-sounds.py:
 
@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SOUNDS = ROOT / "demos" / "micro" / "sounds"
+SOUNDS = [ROOT / "demos" / "anim" / "sounds", ROOT / "demos" / "micro" / "sounds"]
 
 
 def decode(path):
@@ -38,15 +38,16 @@ def decode(path):
 
 
 def main():
-    index = json.loads((SOUNDS / "index.json").read_text())
     total = 0
     bad = []
-    for file in sorted(index["files"]):
-        for ext in ("ogg", "mp3"):
-            total += 1
-            ok, detail = decode(SOUNDS / f"{file}.{ext}")
-            if not ok:
-                bad.append(f"{file}.{ext}: {detail}")
+    for sounds in SOUNDS:
+        index = json.loads((sounds / "index.json").read_text())
+        for file in sorted(index["files"]):
+            for ext in ("ogg", "mp3"):
+                total += 1
+                ok, detail = decode(sounds / f"{file}.{ext}")
+                if not ok:
+                    bad.append(f"{sounds.relative_to(ROOT)}/{file}.{ext}: {detail}")
     print(f"{total - len(bad)}/{total} sound files decode")
     for line in bad:
         print("  FAIL", line)

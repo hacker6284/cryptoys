@@ -2,59 +2,21 @@ import { mountMicro } from "./micro.js";
 import { createScrambleAdapter } from "../../playroom/adapters.js";
 import { CUBE_STAGE_TIMING } from "../../playroom/cube-stage.js";
 import { DEN } from "../../playroom/constants.js";
+import { amountOf, cubingMs, slotOf, twistySlots } from "../../anim/twisty.js";
 
 /**
  * Twisty face-turn page (Scramble 3×3 or the megaminx), on the real
  * playroom adapter: one lift per step, cubing.js leaves at the dock
  * speed (tempo), settle on the felt. Each loop undoes the last.
+ *
+ * With page.voice (a library entry, e.g. demos/anim/scramble-turn) the
+ * page only watches: cube-stage.js plays the entry's timings and
+ * sounds, exactly as in the playroom. Without it (megaminx-turn, not
+ * yet in the library) the page passes its own timing and sounds.
  */
-
-export function amountOf(move) {
-    const m = /^([A-Za-z]+)(\d*)('?)$/.exec(move);
-    return m ? Number(m[2] || 1) : 1;
-}
-
-function slotOf(move) {
-    if (/^[xyz]/.test(move)) return "rotation";
-    const n = amountOf(move);
-    return n === 1 ? "single" : n === 2 ? "double" : "triple";
-}
 
 function invert(moves) {
     return moves.slice().reverse().map((m) => (m.endsWith("'") ? m.slice(0, -1) : `${m}'`));
-}
-
-/** cubing.js default move durations (ms at tempo 1): 1 → 1000, 2 → 1500, more → 2000. */
-export function cubingMs(amount) {
-    return amount === 1 ? 1000 : amount === 2 ? 1500 : 2000;
-}
-
-/** cubing.js eases every move with smootherStep (Cube3D and PG3D `ease`). */
-export function smootherStep(x) {
-    return x * x * x * (10 - x * (15 - 6 * x));
-}
-
-function inverseSmootherStep(y) {
-    let lo = 0;
-    let hi = 1;
-    for (let i = 0; i < 40; i++) {
-        const mid = (lo + hi) / 2;
-        if (smootherStep(mid) < y) lo = mid;
-        else hi = mid;
-    }
-    return (lo + hi) / 2;
-}
-
-/**
- * Detent click times for an `amount`-click turn, in ms relative to the
- * end of the leaf (the face seats on the last click): click k lands
- * when the eased angle crosses k/amount.
- */
-export function clickTimes(amount, tempo) {
-    const total = cubingMs(amount) / tempo;
-    const out = [];
-    for (let k = 1; k <= amount; k++) out.push((inverseSmootherStep(k / amount) - 1) * total);
-    return out;
 }
 
 export function mountTwistyTurn(page, settings) {
@@ -70,22 +32,16 @@ export function mountTwistyTurn(page, settings) {
         timing.SETTLE_HOLD_MS = ctx.timing("SETTLE_HOLD_MS");
     }
 
-    const perClick = (amount) => ({ slot: "single", clicks: (ctx) => clickTimes(amount, ctx.timing("speed")) });
+    const viewer = Boolean(page.voice);
 
     return mountMicro({
         id: page.id,
         title: page.title,
         camera: { position: [DEN.x + 0.32, 1.17, DEN.z + 0.74], target: [DEN.x, 0.9, DEN.z], fov: 30, margin: page.margin ?? 1.08 },
-        slots: [
-            { name: "single", gapMs: 55, voices: 3, jitter: 0.06 },
-            { name: "double", gapMs: 55, voices: 3, jitter: 0.06, perClick: perClick(2) },
-            { name: "triple", gapMs: 55, voices: 3, jitter: 0.06, perClick: perClick(3) },
-            { name: "rotation", gapMs: 140, voices: 2 },
-            { name: "lift", gapMs: 140, voices: 2 },
-            { name: "settle", gapMs: 140, voices: 2 },
-        ],
+        voice: page.voice,
+        slots: twistySlots(),
         async setup(ctx) {
-            syncTiming(ctx);
+            if (!viewer) syncTiming(ctx);
             adapter = createScrambleAdapter();
             // The adapter reads the puzzle from ?puzzle= (alt puzzles need
             // ?debug=1) when it installs; set it just for the install.
@@ -97,7 +53,8 @@ export function mountTwistyTurn(page, settings) {
                 history.replaceState(history.state, "", url);
             }
             try {
-                adapter.install(ctx.world, { poses: null, prefersReducedMotion: () => false, timing });
+                const stage = viewer ? { voice: page.voice } : { voice: null, timing };
+                adapter.install(ctx.world, { poses: null, prefersReducedMotion: () => false, ...stage });
             } finally {
                 if (page.puzzle) history.replaceState(history.state, "", href);
             }
@@ -144,12 +101,20 @@ export function mountTwistyTurn(page, settings) {
                 return;
             }
             const gen = ctx.alive;
-            syncTiming(ctx);
             const moves = page.moves[ctx.choice("move")] || page.moves[page.defaultMove];
             const leaves = leg % 2 === 0 ? moves : invert(moves);
             const from = leg % 2 === 0 ? 0 : moves.length;
             const tempo = ctx.timing("speed");
             rig.setTempo(tempo);
+            if (viewer) {
+                // cube-stage.js lifts, turns, sets down and plays the sounds.
+                await rig.playLeaves(from, from + moves.length);
+                if (gen !== ctx.alive) return;
+                await ctx.wait(timing.SETTLE_HOLD_MS + timing.TURN_LIFT_MS + 40);
+                leg += 1;
+                return;
+            }
+            syncTiming(ctx);
             // The lift starts the step; the lead-in lets an early file start first.
             const lead = ctx.leadIn([["lift", 0]]);
             if (lead && !(await ctx.wait(lead))) return;

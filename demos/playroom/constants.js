@@ -52,10 +52,8 @@ export const LID_OPEN_MS = 520;
 export const LID_CLOSE_MS = 560;
 export const GATHER_MS = 680;
 export const RESTOW_MS = 380;
-// Pick the cube up this far for face turns so layers clear the felt/rim.
-export const TURN_LIFT = 0.14;
-export const TURN_LIFT_MS = 320;
-export const SETTLE_HOLD_MS = 90;
+// The cube's lift for face turns (TURN_LIFT, TURN_LIFT_MS, SETTLE_HOLD_MS)
+// is in the animation library: demos/anim/scramble-turn/settings.js.
 // Brief hub hold so a lift reads in the landing frame before the
 // shared follow-cam starts chasing. Click/Escape still skip after LIFT_MS.
 export const HOLD_MS = 760;

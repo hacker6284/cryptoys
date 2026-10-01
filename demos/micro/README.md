@@ -4,7 +4,11 @@ Tiny pages, each looping one animation from the real demo code in the
 playroom with its sound. There are no controls: open a page, click once to
 turn sound on, and listen. `index.html` lists them.
 
-- **Settings:** each page's `settings.js` holds everything you hear and
+- **Animation library:** a page whose animation Zachary has approved is
+  only a viewer of its entry in `../anim/` (see `../anim/README.md`):
+  the values live there and the real demos import them. So far:
+  `scramble-turn`. The rest keep their own `settings.js` until approved.
+- **Settings:** each other page's `settings.js` holds everything you hear and
   see move: one sound file per slot, `gainDb`, `offsetMs` (when the file
   starts relative to the contact moment; −peak puts the loudest sample on
   it), `fadeMs`/`maxMs`, the timings and easings (real code values) and

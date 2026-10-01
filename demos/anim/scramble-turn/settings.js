@@ -1,12 +1,17 @@
-// Scramble face turn: what you hear and how it moves. Edit a value and reload.
+// Scramble face turn: what you hear and how it moves, everywhere it plays
+// (the playroom's Scramble seat and demos/micro/scramble-turn). Edit a
+// value and reload the microdemo; see ../README.md before changing an
+// approved entry.
 //
-// sounds: file = path under demos/micro/sounds/ (no extension; run
+// sounds: file = path under demos/anim/sounds/ (no extension; run
 //   tools/sync-micro-sounds.py after changing it). gainDb = loudness
 //   (+ louder). offsetMs = when the file starts relative to the contact
 //   (more negative = earlier; −peak puts the loudest sample on it).
 //   startMs skips the file's head; fadeMs / maxMs shorten the tail
 //   (0 = play it out). null = silent.
-// timing: real code values (playroom/cube-stage.js CUBE_STAGE_TIMING; speed = the dock tempo (cubing.js tempoScale)).
+// timing: read by playroom/cube-stage.js (lift height and time, hold before
+//   setting down); speed = the dock's starting tempo (cubing.js tempoScale).
+// loopGapMs, choices: the microdemo loop only.
 export default {
     loopGapMs: 700,
     choices: {

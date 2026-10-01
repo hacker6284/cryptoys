@@ -8,10 +8,13 @@
  *   spec.id, spec.title
  *   spec.camera { position, target, fov, margin }  view direction + fov;
  *                 the view is fitted to spec.frame(ctx) (a THREE.Box3)
- *   spec.slots  [{ name, gapMs, voices, jitter, perClick }]
- *               perClick: { slot, clicks(ctx) } lets settings say
+ *   spec.voice  a library entry's voice (demos/anim/<name>/): the page
+ *               is then only a viewer, and the code the entry drives
+ *               plays its sounds (ctx.contact is not needed)
+ *   spec.slots  without a voice: [{ name, gapMs, voices, jitter, perClick }]
+ *               perClick: { slot, clicks(tempo) } lets settings say
  *               `{ perClick: true }`: play `slot`'s file once per click
- *               (clicks(ctx) returns ms relative to the contact, ≤ 0)
+ *               (clicks(tempo) returns ms relative to the contact, ≤ 0)
  *   spec.setup(ctx)  build the scene (before the light registry is sealed)
  *   spec.ready(ctx)  async loads after the first render
  *   spec.frame(ctx)  → THREE.Box3 to fit the view to (before reset)
@@ -21,7 +24,8 @@
  *
  * settings (settings.js): { loopGapMs, choices, timing, sounds: { slot:
  *   { file, gainDb, offsetMs, fadeMs, maxMs } | { perClick: true } | null } }
- *   file: path under demos/micro/sounds/ without extension.
+ *   file: path under demos/micro/sounds/ (demos/anim/sounds/ for a
+ *   library entry) without extension.
  *   offsetMs: when the file starts relative to the contact (−peak lands
  *   the loudest sample on the contact). startMs: skip the file's head.
  *
@@ -33,7 +37,8 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { mountWorld } from "../../playroom/world.js";
-import { createSound, dbToGain } from "../../shared/sound.js";
+import { sharedAudio } from "../../shared/sound.js";
+import { createVoice } from "../../anim/voice.js";
 
 const SOUND_BASE = new URL("../sounds/", import.meta.url);
 
@@ -45,27 +50,6 @@ function el(tag, attrs = {}, ...kids) {
     }
     for (const kid of kids.flat()) if (kid != null) node.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
     return node;
-}
-
-/** The sound.js table for `settings.sounds` (slots without a file are left out). */
-export function soundTable(slots, sounds) {
-    const table = {};
-    for (const slot of slots) {
-        const s = sounds?.[slot.name];
-        if (!s?.file) continue;
-        table[slot.name] = {
-            files: [s.file],
-            gains: [dbToGain(s.gainDb ?? 0)],
-            gapMs: slot.gapMs ?? 0,
-            voices: slot.voices ?? 4,
-            offsetMs: s.offsetMs ?? 0,
-            ...(s.startMs ? { startMs: s.startMs } : {}),
-            ...(s.maxMs ? { maxMs: s.maxMs } : {}),
-            ...(s.fadeMs ? { fadeMs: s.fadeMs } : {}),
-            ...(slot.jitter ? { jitter: slot.jitter } : {}),
-        };
-    }
-    return table;
 }
 
 /**
@@ -90,11 +74,11 @@ export function fitDistance(box, target, dir, fovDeg, aspect) {
 
 export async function mountMicro(spec, settings) {
     document.title = `${spec.title} · microdemo`;
-    const slots = spec.slots || [];
-    const sounds = settings.sounds || {};
+    const voice = spec.voice ?? createVoice({ settings, slots: spec.slots || [], base: SOUND_BASE });
+    const sound = voice.sound;
     // The page's shared AudioContext: started on load where autoplay is
     // allowed, otherwise unlocked by the first tap, click or key anywhere.
-    const sound = createSound({ sounds: soundTable(slots, sounds), base: SOUND_BASE, limiter: true });
+    sharedAudio().tryStart();
 
     const canvas = el("canvas", { class: "micro-canvas", "aria-label": `${spec.title} in the playroom` });
     const status = el("p", { class: "micro-status", role: "status" }, "Loading…");
@@ -190,35 +174,12 @@ export async function mountMicro(spec, settings) {
 
     /** Sound for slot `name` at a contact at performance.now() time `atMs` (file starts at contact + offsetMs). */
     function contact(name, atMs) {
-        const s = sounds[name];
-        if (!s) return;
-        if (s.perClick) {
-            const pc = slots.find((slot) => slot.name === name)?.perClick;
-            if (pc) for (const rel of pc.clicks(ctx)) contact(pc.slot, atMs + rel);
-            return;
-        }
-        if (!s.file) return;
-        const now = performance.now();
-        const startIn = atMs + (s.offsetMs ?? 0) - now;
-        if (startIn > 90) later(startIn - 60, () => sound.play(name, { leadMs: atMs - performance.now() }));
-        else sound.play(name, { leadMs: atMs - now });
+        voice.contact?.(name, atMs, { tempo: settings.timing?.speed ?? 1 });
     }
 
     /** Lead-in so every listed contact's file can start on time: max(0, −(atMs + offset)). */
     function leadIn(list) {
-        let lead = 0;
-        for (const [name, atMs] of list) {
-            const s = sounds[name];
-            if (!s) continue;
-            if (s.perClick) {
-                const pc = slots.find((slot) => slot.name === name)?.perClick;
-                const off = sounds[pc?.slot]?.offsetMs ?? 0;
-                for (const rel of pc ? pc.clicks(ctx) : []) lead = Math.max(lead, -(atMs + rel + off));
-            } else if (s.file) {
-                lead = Math.max(lead, -(atMs + (s.offsetMs ?? 0)));
-            }
-        }
-        return Math.min(2000, lead);
+        return voice.leadIn ? voice.leadIn(list, settings.timing?.speed ?? 1) : 0;
     }
 
     function wait(ms) {

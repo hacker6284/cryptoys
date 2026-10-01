@@ -407,41 +407,6 @@
     "peg"
    ]
   },
-  "scramble-turn/double/double_spacejoe-486567": {
-   "group": "double",
-   "peakMs": 119,
-   "clicksMs": [
-    72,
-    119
-   ],
-   "lufs": -24.7,
-   "gainTo16": 8.7,
-   "durationS": 0.257,
-   "author": "SpaceJoe",
-   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://freesound.org/people/SpaceJoe/sounds/486567/",
-   "description": "Turn 15: two near-equal clicks ~50 ms apart (click-clack detent).",
-   "pages": [
-    "scramble-turn"
-   ]
-  },
-  "scramble-turn/rotation/rotation_01kamii05-428594": {
-   "group": "rotation",
-   "peakMs": 30,
-   "clicksMs": [
-    29
-   ],
-   "lufs": -19.5,
-   "gainTo16": 3.5,
-   "durationS": 0.168,
-   "author": "01Kamii05",
-   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://freesound.org/people/01Kamii05/sounds/428594/",
-   "description": "Rubik's cube taken out of a pocket: short soft handling knock (megadreifach regrip-1).",
-   "pages": [
-    "scramble-turn"
-   ]
-  },
   "scramble-turn/settle/settle_emapuree-848748": {
    "group": "settle",
    "peakMs": 33,
@@ -457,55 +422,6 @@
    "description": "Wooden block tapped on felt: short, muffled, dry thud (megadreifach regrip-3; map pick).",
    "pages": [
     "megaminx-turn"
-   ]
-  },
-  "scramble-turn/settle/settle_kenney-carpet-000-soft-cut": {
-   "group": "settle",
-   "author": "Kenney (www.kenney.nl)",
-   "license": "Creative Commons Zero, CC0 (License.txt in the pack)",
-   "source": "https://kenney.nl/assets/impact-sounds",
-   "description": "Kenney footstep_carpet_000 past its first scuff, low-passed 1.8 kHz, 20 ms fade-in: a soft muffled pat, a touch more present.",
-   "peakMs": 22,
-   "lufs": -25.8,
-   "gainTo16": 9.8,
-   "durationS": 0.117,
-   "pages": [
-    "scramble-turn"
-   ]
-  },
-  "scramble-turn/single/single_spacejoe-486564": {
-   "group": "single",
-   "peakMs": 143,
-   "clicksMs": [
-    142
-   ],
-   "lufs": -27.1,
-   "gainTo16": 11.1,
-   "durationS": 0.297,
-   "author": "SpaceJoe",
-   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://freesound.org/people/SpaceJoe/sounds/486564/",
-   "description": "Turn 12: one hard snap, faint lead-in.",
-   "pages": [
-    "scramble-turn"
-   ]
-  },
-  "scramble-turn/triple/triple_spacejoe-486581": {
-   "group": "triple",
-   "peakMs": 194,
-   "clicksMs": [
-    144,
-    224
-   ],
-   "lufs": -22.3,
-   "gainTo16": 6.3,
-   "durationS": 0.392,
-   "author": "SpaceJoe",
-   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://freesound.org/people/SpaceJoe/sounds/486581/",
-   "description": "Turn 5: three strong clicks ~45-50 ms apart (ratchet).",
-   "pages": [
-    "scramble-turn"
    ]
   },
   "unbox/box-setdown-felt/1_emapuree-848748": {

@@ -1,6 +1,6 @@
 # v12 whole cipher and final no-mix round: measurements (roadmap milestone M7)
 
-**EMPIRICAL ONLY.** Everything in this note is sampled. No theorem uses it, and no
+**EMPIRICAL ONLY.** Everything in this note is sampled or enumerated (§5). No theorem uses it, and no
 number here is proved. **No numeric bound on the full-cipher differential is proved**
 anywhere. Not a bit-security claim. These measurements found no weakness.
 
@@ -114,6 +114,47 @@ here, and nothing here is proved.
   ratio of the two decks' position maps and moves exactly `52 − zRows · zCols` cards
   (`card_moved_eq`). That would give `dpFCount β γ = 0` only when the support size of γ⁻¹β
   is not of the form 52 − ab (a ≤ 4, b ≤ 13), e.g. 2 or 3 (not stated), and says nothing
-  for any other β. More than one mix round before the final round; any γ ≠ α after the
-  final round in §3.
+  for any other β. `StemCoupling` proves no part of it either: its `coupling` bounds, for
+  a fixed conjugate `q` moving at most one position per row, the decks with prescribed row
+  amounts by 81/4096 of the decks with that conjugate (§5); that the support-4 ratios have
+  this shape, the count of such `q`, and the assembly into `dpFCount` are not proved.
+  More than one mix round before the final round; any γ ≠ α after the final round in §3.
 * Anything under the real PassKey schedule beyond what M5/M6 already record.
+
+## 5. Coupling constants for the 4-card stem case (`rowmax.c`, `pairs.py`)
+
+**ENUMERATION ONLY; no theorem uses these numbers.** Exact integer counts over finite
+sets, but not checked in Lean. They size the constant in `StemCoupling.coupling`
+(security library, second slice towards the off-diagonal stem column bound); the theorem itself uses neither.
+
+Setting. When γ⁻¹β moves 4 cards (a 4-cycle or a double transposition; `(zRows, zCols) =
+(4, 12)` in `StemPosition`), the ratio `q` of the two position maps is expected (sampling
+check against `security/checks/ddport.py`, script not in the repository; not a proof) to move
+one position per row, at column `(c + t_ρ) % 13` of row ρ. By `StemCoupling.rowAmts_eq_iff`, "row
+amounts = t" is four row conditions; row ρ's condition is a weighted rank sum mod 13 over
+row ρ with weights `13 − j` (turned). The (at least 12) positions of row ρ that `q`
+fixes carry cards fixed by δ, and any rearrangement of them keeps `π⁻¹ δ π = q`. An unproved assembly
+(paper argument, not proved here) would fix `q` by `(t, c, d)` with `d ≠ 0`. For a 4-cycle
+only `d = 1, 3` can occur (`2·13^5` choices, `#{π | π⁻¹ δ π = q} ≤ 4·48!` each); for a double
+transposition δ² = 1 and only `d = 2`, the one `d ≠ 0` with q² = 1, can occur (`13^5`
+choices, `≤ 8·48!` each). The totals agree, so for both cycle types it would need a per-`q`
+fraction of decks with row amounts `t` of at most
+`52!/(64 · 13^5 · 8·48!) = 1 624 350/47 525 504 ≈ 0.0342`.
+
+* `rowmax.c` (`logs/rowmax.log`, 12–17 min on one core): for every multiset of 12 ranks
+  mod 13 (each at most 4 times; 2 056 210 multisets) and the 12 weights left after one
+  column is removed (translated to 1..12, which shifts only the target), the largest
+  fraction of arrangements whose weighted sum hits one target. Maximum 2730/34650 =
+  13/165 ≈ 0.0788, at three ranks with 4 cards each; every multiset's maximum lies in
+  [0.075, 0.080). So one row alone cannot give 0.0342 (the largest fraction is at least
+  the average over the 13 targets, 1/13 ≈ 0.077); as a product over independent rows, two rows give ≈ 0.0062 and
+  four ≈ 3.9·10^-5. (The product bound for several rows follows because the four rows'
+  rearrangement groups commute and each preserves the other rows; this is the argument
+  `coupling` formalises with 3 swaps per row.)
+* `pairs.py` (`logs/pairs.log`, seconds): `L(m)`, the largest number of the `2^m` subset
+  sums of `m` nonzero residues mod 13 equal to one target. `L(3) = 3` of 8, so three swaps
+  of cards with different ranks per row give at most `(3/8)^4 = 81/4096 ≈ 0.0198` over
+  four rows, the constant in `coupling` (proved there directly, `card_hit_le_three`). With
+  it the unproved assembly above would have a margin of about 1.73
+  (`64 · 13^5 · 8·48! · 81/4096 ≈ 3.76·10^6 · 48!` against `52! = 6 497 400 · 48!`), for a
+  4-cycle and for a double transposition alike.

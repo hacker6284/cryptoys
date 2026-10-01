@@ -1,6 +1,7 @@
 #!/bin/sh
 # Render static-site build: same generate path as GitHub Pages.
-# Clone + build sudoc, then tools/generate-demos.sh (tests + tools/build.sh).
+# Fetch sudocode at proofs/SUDOCODE_PIN and build sudoc, then
+# tools/generate-demos.sh (tests + tools/build.sh).
 # Publish directory must be demos/. See .github/RENDER.md.
 set -eu
 root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
@@ -41,11 +42,13 @@ ensure_cargo() {
 
 ensure_cargo
 
-# Always refresh. Render's build cache can leave a stale sudocode tip if
-# we skip the clone when .sudocode/.git already exists. Floating default-
-# branch tip, same as Pages generate-demos (no pin).
+# Always refresh: Render's build cache can keep a stale .sudocode. Build the
+# commit in proofs/SUDOCODE_PIN, same as Pages generate-demos and CI.
+pin=$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_PIN)
 rm -rf .sudocode
-git clone --depth 1 https://github.com/hacker6284/sudocode.git .sudocode
+git init -q .sudocode
+git -C .sudocode fetch -q --depth 1 https://github.com/hacker6284/sudocode.git "$pin"
+git -C .sudocode checkout -q --detach FETCH_HEAD
 cargo build --release --manifest-path .sudocode/sudoc/Cargo.toml
 
 export SUDOC="$root/.sudocode/sudoc/target/release/sudoc"

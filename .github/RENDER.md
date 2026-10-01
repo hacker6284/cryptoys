@@ -15,6 +15,7 @@ Same path as GitHub Pages (`.github/actions/generate-demos` →
 `tools/generate-demos.sh`):
 
 1. Build `sudoc` from [hacker6284/sudocode](https://github.com/hacker6284/sudocode)
+   at the commit in [`proofs/SUDOCODE_PIN`](../proofs/SUDOCODE_PIN)
    (`cargo build --release --manifest-path .sudocode/sudoc/Cargo.toml`).
 2. Run the primitive JS tests and `tools/build.sh`.
 3. Require these files before publish:
@@ -25,9 +26,9 @@ Same path as GitHub Pages (`.github/actions/generate-demos` →
    ```
 
 `tools/render-build.sh` is that sequence for Render (install rustup if `cargo`
-is missing, wipe and shallow-clone sudocode every build, cargo build, then
-`tools/generate-demos.sh`). Sudoc is the default-branch tip on both Pages and
-Render (no pin); pin later if deploys must be reproducible.
+is missing, wipe and shallow-fetch sudocode at the pin every build, cargo
+build, then `tools/generate-demos.sh`). Pages, Render and CI all build sudoc at
+`proofs/SUDOCODE_PIN`, so a deploy changes compiler only when the pin is bumped.
 
 ## Dashboard settings (existing service — do not create a second site)
 

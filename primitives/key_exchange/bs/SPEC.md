@@ -41,7 +41,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
   - One peg in holes 1–4 marks the cell sub-step: square, cube product, hit-multiply 1, hit-multiply 2.
   - Hole 5 marks "calling in progress" while a public value is being called (§3.1).
   - Hole 6 is spare.
-  - Hole 7 is the parity bit (white = odd).
+  - Hole 7 is free. It used to hold a parity bit; the parity check is now an optional hand check that changes no peg (§9).
   - Hole 8 is the phase: empty = public walk, white = check, red = shared walk.
   - Hole 9 is the "accumulator started" flag.
   - Hole 10 is the key's lane peg, used while building and while reading (§4.2, §4.3).
@@ -208,10 +208,6 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
   2. Each checks and squares the other's number (B8).
   3. Each walks their own key grid over the square (B7, shared phase): K = (B²)^a = (A²)^b = 3^(2ab).
   4. BS ends with K on the grid. Any hashing or later use happens outside BS (no-paper rule).
-* **B10. Optional error check: "pair off the whites" (casting out twos).** A register is odd exactly when it holds an odd number of white pegs, because every 3ⁱ is odd and a red counts as two.
-  - *Before folding:* the strip has odd whites ⇔ A and B both have odd whites. A nudge changes nothing, because 3 and 9 are odd.
-  - *While folding:* every lifted **white** flips the parity; lifted reds don't. (Lifting d·3^h and laying d·c·3^(h−n) subtracts d·3^(h−n)·p, and p is odd.)
-  - It catches every forgotten carry and every wrong click count (each is off by an odd power of 3), and about 2/3 of random single-peg errors (63–69% measured, §8).
 
 Why plain ternary and not balanced ternary: `proofs/key_exchange/bs/key-selection/NOTES.md` §5.
 
@@ -552,7 +548,10 @@ Paths are under `proofs/key_exchange/bs/`.
      - It adds about a third to the shared phase if every cell does two multiplications instead [est].
 9. **Human error.**
    * One wrong peg gives garbage. That breaks correctness, not secrecy.
-   * Use the B10 parity check on every multiplication; it catches all forgotten carries.
+   * **Optional hand check: "pair off the whites" (casting out twos).** It changes no peg and nothing in BS relies on it; use it on any multiplication you want to check. A register is odd exactly when it holds an odd number of white pegs, because every 3ⁱ is odd and a red counts as two.
+     - *Before folding:* the strip has odd whites ⇔ A and B both have odd whites. A nudge changes nothing, because 3 and 9 are odd.
+     - *While folding:* every lifted **white** flips the parity; lifted reds don't. (Lifting d·3^h and laying d·c·3^(h−n) subtracts d·3^(h−n)·p, and p is odd.)
+     - It catches every forgotten carry and every wrong click count (each is off by an odd power of 3), and about 2/3 of random single-peg errors (63–69% measured, §8).
    * Confirm the result without paper: compare the parity of K ("pair off the whites") and K's lowest 4 trits out loud, abort if they differ, and afterwards treat those 4 trits as public, i.e. don't use them (about 7.3 bits spent) [est].
    * There is no cheap point-on-curve style check for F_p* public values. The received-value check only catches 0 and ±1.
 10. **Authentication:** none. Plain DH falls to an active man in the middle (Wong ch. 5); authenticate public values.

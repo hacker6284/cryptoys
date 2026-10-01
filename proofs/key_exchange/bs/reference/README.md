@@ -5,12 +5,12 @@ Status: **a note, not a theorem.** The recipes are normative in [`primitives/key
 
 | Script | What it does | Output | SPEC |
 | --- | --- | --- | --- |
-| `bspegs.py` | The peg recipes B0–B10 (colours only), with a move counter | (library) | §3 |
+| `bspegs.py` | The peg recipes B0–B9 (colours only), with a move counter | (library) | §3 |
 | `bsref.py` | Integer arithmetic: register encode/decode, key exponent | (library) | §3, §4.4 |
 | `bsparams.py` | Prime search and verification (MR-50 + BPSW, deterministic MR for T1/T2, 3^q = 1); `bsparams.py 323` for R512 | `params.json`, `params_output.txt`; `params_323.json`, `params_323_output.txt` | §2 |
 | `run_bs.py` | Arithmetic tests (multiply, nudge, worst case, tidy) and malicious received values, T1 / T2 / T6 | `run_output.json`, `.txt` | §5, §8 |
 | `bigmul.py` | Full-size multiplications with the long tolls: correctness and moves per multiplication | `bigmul_output.json`, `.txt` | §7, §8, §10 |
-| `parity_check.py` | The B10 "pair off the whites" checksum: passes on correct products, catch rate on injected errors | `parity_check_output.txt` | §3 B10, §8 |
+| `parity_check.py` | The optional "pair off the whites" hand check: passes on correct products, catch rate on injected errors | `parity_check_output.txt` | §8, §9 |
 | `break_small.py`, `break_t2.c` | T1 by baby-step/giant-step, T2 by Pollard rho in C, on public keys from ships+pegs key grids | `break_small_output.txt` | §8, §9 |
 | `peg_supply.py` | Peak white and red pegs in use per player during an exchange (registers only); `peg_supply.py R1024` is a 30-cell spot check | `peg_supply_output.json`, `.txt`; `peg_supply_output_R1024.json`, `peg_supply_R1024_output.txt` | No-paper rule |
 | `tiers.py` | The §7 tier table for the ships+pegs key (reads `../ships-pegs/combined_results.json` and `../exchange/exchange_output.json`) | `tiers_output.json`, `.txt` | §0, §4.6, §7 |

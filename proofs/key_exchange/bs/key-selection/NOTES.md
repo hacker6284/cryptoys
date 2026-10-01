@@ -106,6 +106,8 @@ Moved here from the No-paper rule of `primitives/key_exchange/bs/SPEC.md` (DHH's
 | §3 B9 and §9: "hash K" and "compare a short hash aloud" | BS now ends with K on the grid; hashing is outside BS. Key confirmation is done physically (§9). |
 | Public values as "W/R/. strings" | The other player calls your published register hole by hole and copies it into their own Y register (§3.1). Nothing is stored except pegs. |
 
+Since then the parity check has become an optional hand check that changes no peg (SPEC §9), so lane hole 7 no longer holds a parity bit and is free.
+
 ## Sources
 
 Paths are relative to this directory.

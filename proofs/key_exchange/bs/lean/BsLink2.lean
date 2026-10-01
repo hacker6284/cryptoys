@@ -3,3 +3,7 @@ import BsLink2.Link2.Drop
 import BsLink2.Link2.Lay
 import BsLink2.Link2.PayToll
 import BsLink2.Link2.Multiply
+import BsLink2.Link2.Tidy
+import BsLink2.Spec
+import BsLink2.Link2.Bridge
+import BsLink2.Link2.Refines

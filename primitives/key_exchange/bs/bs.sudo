@@ -158,25 +158,26 @@ func slide(dest: inout List<int>, answer: List<int>)
     for i = 0 to dest.length - 1
         dest[i] = answer[i]
 
-// B5. Tidy X (canonical form). Copy X into the strip with one extra hole on
-// top and pour the toll into the copy. If a white spills into the extra hole,
-// throw the spill away: the copy is the tidy answer (x >= p exactly when
-// x + c >= 3^n), and it slides back into X. Otherwise keep X and clear the copy.
-// Either way the tidy answer ends in X.
-func tidy_x(f: Field, x: inout List<int>)
-    assert x.length == f.n
-    copy = x + [0]
+// B5. Tidy a register (canonical form). Copy the register into the strip with
+// one extra hole on top and pour the toll into the copy. If a white spills into
+// the extra hole, throw the spill away: the copy is the tidy answer (x >= p
+// exactly when x + c >= 3^n), and it slides back into the register. Otherwise
+// keep the register and clear the copy. Either way the tidy answer ends in the
+// register you tidied.
+func tidy_in_place(f: Field, r: inout List<int>)
+    assert r.length == f.n
+    copy = r + [0]
     lay(copy, f.toll, 0)
     if copy[f.n] == 0
         return
     assert copy[f.n] == 1
     copy.pop()
-    slide(x, copy)
+    slide(r, copy)
 
 // The tidy answer of a register (B5 on a register holding x).
 export func tidy(f: Field, x: List<int>) -> List<int>
     r = x
-    tidy_x(f, r)
+    tidy_in_place(f, r)
     return r
 
 // B6. Cube, with a nudge: Y = X x X, then X <- Y x X. In the public phase on a
@@ -234,22 +235,24 @@ func walk(f: Field, cells: List<int>, phase: Phase, y: inout List<int>) -> List<
             slide(x, start_accumulator(f, cell, phase))
             started = true
     assert started
-    tidy_x(f, x)
+    tidy_in_place(f, x)
     return x
 
 // ---------------------------------------------------------------------------
 // §3 B8. Check the received number (Wong 5.4). It must have exactly n trits.
-// Square it (B3), then tidy. If the square is empty or a lone white in hole 0,
-// reject (None). Otherwise the square C is the base for the shared walk.
+// Square it (B3) into C, then tidy C. If the square is empty or a lone white in
+// hole 0, reject (None). Otherwise the square C is the base for the shared walk.
 export func check_received(f: Field, received: List<int>) -> Option<List<int>>
     if received.length != f.n
         return None
     if not is_trits(received)
         return None
-    square = tidy(f, multiply(f, received, received, 0))
-    if is_empty(square) or is_lone_white(square)
+    c = empty_register(f)
+    slide(c, multiply(f, received, received, 0))
+    tidy_in_place(f, c)
+    if is_empty(c) or is_lone_white(c)
         return None
-    return Some(square)
+    return Some(c)
 
 // ---------------------------------------------------------------------------
 // §3.1 Sending a public value: call the shots. The value is the sender's tidy
@@ -531,7 +534,16 @@ record LetGo
     hole: int
     gap: bool
 
+// Each point appears at most once: you come back from a let-go before the next.
+func letgo_unique(letgo: List<LetGo>) -> bool
+    for i = 0 to letgo.length - 1
+        for j = i + 1 to letgo.length - 1
+            if letgo[i] == letgo[j]
+                return false
+    return true
+
 func lets_go(letgo: List<LetGo>, hole: int, gap: bool) -> bool
+    assert letgo_unique(letgo)
     for i = 0 to letgo.length - 1
         if (letgo[i].hole == hole) and (letgo[i].gap == gap)
             return true
@@ -863,7 +875,7 @@ test "B6 stale pegs in Y are lifted before the square slides in"
     assert y == multiply(t1, x0, x0, 0)
     assert x == multiply(t1, multiply(t1, x0, x0, 0), x0, 0)
 
-test "B5 on a spill the tidy answer slides back into X"
+test "B5 on a spill the tidy answer slides back into the register"
     // p + 1 in T1 (a non-canonical 1): the copy spills, and X ends as a lone
     // white in hole 0.
     x = filled(18, 2)
@@ -871,13 +883,13 @@ test "B5 on a spill the tidy answer slides back into X"
     x[1] = 0
     one = empty_register(t1)
     one[0] = 1
-    tidy_x(t1, x)
+    tidy_in_place(t1, x)
     assert x == one
     // Below p nothing spills and X is kept.
     below = filled(18, 2)
     below[2] = 0
     x = below
-    tidy_x(t1, x)
+    tidy_in_place(t1, x)
     assert x == below
 
 test "3.1 an empty register is eighteen misfires"
@@ -1010,3 +1022,17 @@ test "4.2 BUILD: letting go throws the unread tray dice again"
 test "4.2 BUILD: let-go points are only at a die's first hole"
     expect_trap AssertFailed
         build_letting_go(dice(filled(99, 1), [], filled(50, 5)), [LetGo(5, false)])
+
+test "4.2 BUILD: each let-go point is listed once"
+    assert letgo_unique([LetGo(4, false), LetGo(4, true)])
+    assert not letgo_unique([LetGo(4, false), LetGo(4, false)])
+    expect_trap AssertFailed
+        build_letting_go(dice(filled(99, 1), [], filled(56, 5)), [LetGo(4, false), LetGo(4, false)])
+
+test "B8 squares into C and tidies C"
+    // 3 squares to 9, a lone white in hole 2.
+    three = empty_register(t1)
+    three[1] = 1
+    nine = empty_register(t1)
+    nine[2] = 1
+    assert check_received(t1, three) == Some(nine)

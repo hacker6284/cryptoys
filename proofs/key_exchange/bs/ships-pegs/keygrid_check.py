@@ -1,6 +1,6 @@
 """Checks keygrid.py (the SPEC-literal BUILD and READ, BS SPEC §4.2-§4.3) against the exact model.
 
-1. Small boards, both dice sets (d12 + row cup, and the all-d6 fallback): chi-square of the
+1. Small boards, two dice sets (the SPEC's d12 + row cup, and the dropped all-d6 layout, for comparison): chi-square of the
    sampled layouts against the exact grow-until-it-bumps distribution (brute_build.enumerate_build
    with rules.extra_rules()["bump_reroll"]), of the peg patterns against uniform 3^cells, and on
    2x2 of the joint (layout, pegs) against model x uniform.  z is the Wilson-Hilferty normal score.

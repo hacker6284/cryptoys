@@ -1,6 +1,6 @@
 """Dice rules of the BS ships+pegs key (BS SPEC §4.2); the row cup is also the ECBS key recipe.
 A. Face rules: every die-reading rule is enumerated face by face (exact Fractions).
-B. Ship build: the d12 hole die (and the all-d6 fallback) give exactly the 'grow until it
+B. Ship build: the d12 hole die (and the all-d6 layout the SPEC dropped, as analysis) give exactly the 'grow until it
    bumps' local distribution of the former d6 wording for every room state (so the whole build
    distribution is identical), plus a global exact enumeration on small grids.
 C. Monte Carlo counts: reads, throws (queue cups), voids/rerolls per grid for each build

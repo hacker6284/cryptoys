@@ -3,7 +3,7 @@ Checks here: exhaustive injectivity of the two-pass read (and, not used by the S
 interleaved order); the board-only one-pass BUILD with random let-go/resume at hole boundaries
 (step() finishes the whole ship decision, growth and Sub/Cruiser rolls included, before a
 let-go is allowed) against the exact joint model; 10x10 round trips, walk and build statistics.
-step() uses the former d6 wording for the ship decision and the d6 peg fallback; they have
+step() uses the former d6 wording for the ship decision and a d6 per peg (dropped from the SPEC); they have
 exactly the SPEC's distribution (../randomizer-kit/, part B; the row cup gives uniform trits).
 The SPEC-literal dice are in keygrid.py."""
 import math, random, itertools, json, collections, statistics, sys

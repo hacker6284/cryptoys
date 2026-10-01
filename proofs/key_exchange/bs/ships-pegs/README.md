@@ -3,12 +3,12 @@
 
 Status: **a note, not a theorem.** Exact enumerations, an exact DP and Monte Carlo checks with fixed seeds; nothing is proved in Lean. The key's rules (BUILD "one hole at a time: ship, then peg", "grow until it bumps", READ "ships, then pegs", the fleet walk) are stated in [`primitives/key_exchange/bs/SPEC.md`](../../../../primitives/key_exchange/bs/SPEC.md) §4.2–§4.3 and only there.
 
-Two implementations of the build are used. `keygrid.py` follows the SPEC wording literally (d12 hole die, d6 growth and Sub/Cruiser rolls, d10 row cup; or the all-d6 fallback). The older scripts use the former d6 wording of the ship decision, which has exactly the same distribution (`../randomizer-kit/`, part B), and in `rules.py` that rule is `bump_reroll`.
+Two implementations of the build are used. `keygrid.py` follows the SPEC wording literally (d12 hole die, d6 growth and Sub/Cruiser rolls, d10 row cup). Its `fallback="d6"` mode is the all-d6 layout, which the SPEC dropped; it is kept only so `keygrid_check.py` can compare it (`../key-selection/NOTES.md` §5). The older scripts use the former d6 wording of the ship decision, which has exactly the same distribution (`../randomizer-kit/`, part B), and in `rules.py` that rule is `bump_reroll`.
 
 | Script | What it checks | Output | SPEC |
 | --- | --- | --- | --- |
 | `keygrid.py` | Literal BUILD and READ (start marker, ship pass, peg pass) and the exponent; its ship pass is asserted equal to `read_rule.encode` on every read | (library) | §4.2–§4.4 |
-| `keygrid_check.py` | `keygrid.build` against the exact model on 2×2, 2×3, 3×2, 1×5, 5×1 (layout, pegs, and the 2×2 joint), for both dice sets; 20,000 10×10 builds round-trip; cells, hit units, rolls per grid | `keygrid_check_results.txt`, `.json` | §4.2, §4.5, §4.7 |
+| `keygrid_check.py` | `keygrid.build` against the exact model on 2×2, 2×3, 3×2, 1×5, 5×1 (layout, pegs, and the 2×2 joint), for the SPEC dice and the dropped all-d6 layout; 20,000 10×10 builds round-trip; cells, hit units, rolls per grid | `keygrid_check_results.txt`, `.json` | §4.2, §4.5, §4.7 |
 | `rules.py`, `build_dp.py` | Candidate build rules as local distributions; exact DP over 5^10 row profiles for H, H₂, H∞ | (libraries) | §4.7 |
 | `brute_build.py` | Brute-force enumeration of whole builds on small grids, against the DP | `brute_build_results.txt` | §4.7 |
 | `run_rules.py` | The DP for every candidate rule (four batches) | `run_rules1.log` … `run_rules4.log`, `rules_*.json` | §4.7 |
@@ -20,7 +20,7 @@ Two implementations of the build are used. `keygrid.py` follows the SPEC wording
 | `combined_multi.py` | 3,000 two-page keys decode to both grids | `combined_multi_results.txt` | §4.5 |
 | `free_fleet_count.py` | Exact layout counts on 10×10 (uniform-layout ceiling 150.19 bits; the standard fleet, 30,093,975,536 labelled placements = 34.81 bits), then a Monte Carlo stage | `run.log`, `results_exact.json`, `results_mc.json` | ../key-selection |
 
-**Let-go and resume.** `combined.py`'s `step()` lets go after the whole ship decision (growth and Sub/Cruiser rolls included) with the lane peg standing, or after the peg, at every hole. It pegs with the per-hole d6, so there are no row-cup pairs. Its let-go points are a superset of those the SPEC allows, since the SPEC also forbids letting go inside a row-cup die's pair (§4.2). The resumed build reads only the board. The chi-squares match the exact model, which is the evidence for the "finish the hole before you let go" rule as written. A build that let go between a Destroyer and its growth roll would, on resuming, see a covered hole and leave the Destroyer short; that case is excluded by the rule and is not simulated.
+**Let-go and resume.** `combined.py`'s `step()` lets go after the whole ship decision (growth and Sub/Cruiser rolls included) with the lane peg standing, or after the peg, at every hole. It draws each hole's peg on its own, so there are no row-cup pairs. Its let-go points are a superset of those the SPEC allows, since the SPEC also forbids letting go inside a row-cup die's pair (§4.2). The resumed build reads only the board. The chi-squares match the exact model, which is the evidence for the "finish the hole before you let go" rule as written. A build that let go between a Destroyer and its growth roll would, on resuming, see a covered hole and leave the Destroyer short; that case is excluded by the rule and is not simulated.
 
 ## Run
 

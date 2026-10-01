@@ -1,5 +1,5 @@
 """Ships+pegs key grid: a literal implementation of BS SPEC §4.2 BUILD (d12 hole die, d6 growth
-and Sub/Cruiser rolls, d10 row cup; fallback="d6" for the all-d6 zero-reroll fallback) and §4.3
+and Sub/Cruiser rolls, d10 row cup; fallback="d6" is the all-d6 layout the SPEC dropped, kept for comparison only) and §4.3
 READ (start marker, ship pass, peg pass).  The SPEC is the home of the rules; this file follows
 its wording step by step.  read_ship_pass is written from the SPEC wording and cross-checked
 against read_rule.encode on every call.

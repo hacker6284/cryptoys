@@ -14,6 +14,9 @@ after swapping a file in a settings.js, re-run this. Candidates come from:
    megadreifach / demos-sfx / bs-ecbs scrounges. Peak and loudness are
    measured here with ffmpeg (loudest sample; ebur128 momentary max).
    A Scrounger folder of the same name replaces its fallback.
+3. CUTS below: our own cuts from raw CC0 packs in Scrounger's downloads
+   (trim, fades, mono, peak-normalised to -1.5 dBFS, OGG q4 + MP3 96k),
+   for sounds no scrounge has cut yet. These are added to any primitive.
 
 Only CC0 candidates can be chosen; anything else is printed as rejected.
 
@@ -71,6 +74,23 @@ FALLBACK = {
     ],
 }
 
+# primitive -> list of (group, scrounge-relative raw file, cut name, cut spec, credit)
+# cut spec: start / dur / fade_out in seconds (3 ms fade-in).
+KENNEY_RPG = {"author": "Kenney Vleugels (Kenney.nl)", "license": "Creative Commons Zero, CC0 (License.txt in the pack)", "source": "https://kenney.nl/assets/rpg-audio"}
+CUTS = {
+    "scramble-turn": [
+        ("settle", "_dl/kenney_rpg-audio/Audio/bookClose.ogg", "settle_kenney-rpg-bookclose-cut",
+         {"start": 0.058, "dur": 0.15, "fade_out": 0.09}, KENNEY_RPG,
+         "Kenney RPG Audio bookClose, cut to the single thump: a hardcover closing, soft and dull (no paper tail)."),
+        ("settle", "_dl/kenney_rpg-audio/Audio/bookOpen.ogg", "settle_kenney-rpg-bookopen-cut",
+         {"start": 0.0, "dur": 0.15, "fade_out": 0.07}, KENNEY_RPG,
+         "Kenney RPG Audio bookOpen, cut: a darker, softer cover flop that swells into its thump."),
+        ("settle", "_dl/kenney_rpg-audio/Audio/bookPlace1.ogg", "settle_kenney-rpg-bookplace1-cut",
+         {"start": 0.045, "dur": 0.16, "fade_out": 0.09}, KENNEY_RPG,
+         "Kenney RPG Audio bookPlace1, cut past its pre-tick: a book set down on wood, a little firmer and brighter."),
+    ],
+}
+
 CC0 = re.compile(r"\bCC0\b|Creative Commons 0|Creative Commons Zero|publicdomain/zero", re.I)
 LINK = re.compile(r"\[([^\]]*)\]\((https?://[^)]+)\)")
 
@@ -118,6 +138,24 @@ def manifest_row(scrounge_root, rel):
                 return {"license": lic, "source_url": link.group(2) if link else "", "source_title": link.group(1) if link else "", "author": author}
         # also accept a bs-ecbs style manifest that names the file in any line
     return {"license": "", "source_url": "", "source_title": "", "author": ""}
+
+
+def cut(src, dest_noext, spec):
+    """Trim, fade, mono 44.1 kHz, peak-normalise to -1.5 dBFS, encode OGG and MP3."""
+    import array
+    start, dur, fade = spec["start"], spec["dur"], spec["fade_out"]
+    shape = f"atrim=start={start}:duration={dur},asetpts=N/SR/TB,afade=t=in:d=0.003,afade=t=out:st={dur - fade:.4f}:d={fade}"
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", str(src), "-af", shape, "-ac", "1", "-ar", "44100", "-f", "f32le", "-"],
+                         check=True, capture_output=True).stdout
+    samples = array.array("f")
+    samples.frombytes(raw[: len(raw) // 4 * 4])
+    peak = max((abs(v) for v in samples), default=0) or 1.0
+    gain = 10 ** (-1.5 / 20) / peak
+    dest_noext.parent.mkdir(parents=True, exist_ok=True)
+    af = f"{shape},volume={gain:.6f}"
+    run(["ffmpeg", "-y", "-v", "error", "-i", str(src), "-af", af, "-ac", "1", "-ar", "44100", "-c:a", "libvorbis", "-q:a", "4", "-map_metadata", "-1", "-fflags", "+bitexact", "-flags:a", "+bitexact", str(dest_noext) + ".ogg"])
+    run(["ffmpeg", "-y", "-v", "error", "-i", str(src), "-af", af, "-ac", "1", "-ar", "44100", "-c:a", "libmp3lame", "-b:a", "96k", "-map_metadata", "-1", "-fflags", "+bitexact", "-flags:a", "+bitexact", str(dest_noext) + ".mp3"])
+    return True
 
 
 def twin(src_dir, rel_noext, dest_noext):
@@ -188,6 +226,20 @@ def catalogue(root):
                 "description": f"from {rel}",
                 "measure": True,
             }
+    for prim, rows in CUTS.items():
+        for group, rel, name, spec, credit, description in rows:
+            if not CC0.search(credit["license"]) or not (root / rel).exists():
+                rejected.append((prim, rel, credit["license"] if (root / rel).exists() else "raw file not found"))
+                continue
+            cat[f"{prim}/{group}/{name}"] = {
+                "cut": (root / rel, spec),
+                "group": group,
+                "author": credit["author"],
+                "license": credit["license"],
+                "source": credit["source"],
+                "description": description,
+                "measure": True,
+            }
     return cat, rejected
 
 
@@ -231,11 +283,15 @@ def main():
         c = cat.get(relout)
         if not c:
             continue
-        src_dir, src_rel = c["src"]
-        if not twin(src_dir, src_rel, OUT / relout):
+        if "cut" in c:
+            ok = cut(c["cut"][0], OUT / relout, c["cut"][1])
+        else:
+            src_dir, src_rel = c["src"]
+            ok = twin(src_dir, src_rel, OUT / relout)
+        if not ok:
             missing.append(relout)
             continue
-        meta = {k: v for k, v in c.items() if k not in ("src", "measure")}
+        meta = {k: v for k, v in c.items() if k not in ("src", "cut", "measure")}
         if c.get("measure"):
             peak, lufs, dur = measure(str(OUT / relout) + ".ogg")
             meta.update(peakMs=peak, lufs=round(lufs, 1) if lufs is not None else None,
@@ -248,7 +304,7 @@ def main():
     lines = [
         "# Microdemo sounds: credits",
         "",
-        "The sounds the microdemo pages play (chosen in `demos/micro/*/settings.js`), copied by `tools/sync-micro-sounds.py` from Scrounger's scrounges (`/workspace/scrounger/micro/*`, with fallbacks from `megadreifach/`, `demos-sfx/` and `bs-ecbs/`). Every file is **CC0**. Each sound ships as `.ogg` and `.mp3`.",
+        "The sounds the microdemo pages play (chosen in `demos/micro/*/settings.js`), copied by `tools/sync-micro-sounds.py` from Scrounger's scrounges (`/workspace/scrounger/micro/*`, with fallbacks from `megadreifach/`, `demos-sfx/` and `bs-ecbs/`, and a few of our own cuts from raw CC0 packs in Scrounger's downloads, named `*-cut`). Every file is **CC0**. Each sound ships as `.ogg` and `.mp3`.",
         "",
         "| File | Author | Licence | Source |",
         "|---|---|---|---|",

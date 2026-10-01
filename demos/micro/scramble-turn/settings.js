@@ -20,7 +20,7 @@ export default {
     },
     sounds: {
         // Single turn (one click); contact: the face seats (end of leaf).
-        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, offsetMs: -143 },
+        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, offsetMs: -193 }, // 50 ms before the peak-on-seat point (Zachary: "a little late")
         // Double turn (two clicks); contact: the face seats (end of leaf). Or { perClick: true }: the single file once per click.
         double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, offsetMs: -119 },
         // Triple turn (three clicks); contact: the face seats (end of leaf). Or { perClick: true }: the single file once per click.
@@ -30,8 +30,8 @@ export default {
         // Lift off felt; contact: the puzzle leaves the felt. Off (try "scramble-lift/lift/regrip-1_01kamii05-428594").
         lift: null,
         // Settle on felt; contact: the puzzle touches the felt.
-        // A small plastic object set down on a desk (light clack and a tiny
-        // settle rattle), head pre-roll skipped, tail cut short.
-        settle: { file: "scramble-turn/settle/settle_bwarpus99-452535-slice", gainDb: 3, offsetMs: -247, startMs: 225, maxMs: 220, fadeMs: 100 },
+        // A hardcover book's cover closing, cut to the single soft thump
+        // (Kenney RPG Audio bookClose); well under the click.
+        settle: { file: "scramble-turn/settle/settle_kenney-rpg-bookclose-cut", gainDb: 0, offsetMs: -19 }, // ~8 dB under the click
     },
 };

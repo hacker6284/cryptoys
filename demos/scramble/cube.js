@@ -1,7 +1,8 @@
-// Physical cube for the demo: face turns, facelets, and the short solve.
-// The hash rules live in scramble.sudo. This file only turns faces.
+// Demo cube: sticker spots for drawing, move names, and the short solve.
+// Face turns and the solved pose come from the generated scramble.mjs (scramble.sudo).
+import { apply_move, solved_facelets } from "./generated/scramble.mjs";
 
-const SOLVED_FACELETS = "WWWWWWWWWRRRRRRRRRGGGGGGGGGYYYYYYYYYOOOOOOOOOBBBBBBBBB";
+const SOLVED_FACELETS = solved_facelets();
 
 const SPOTS = [
     // U
@@ -34,86 +35,6 @@ const MOVES = ["U", "U'", "U2", "D", "D'", "D2", "L", "L'", "L2", "R", "R'", "R2
 
 const FACE_INDEX = { U: 0, D: 1, R: 2, L: 3, F: 4, B: 5 };
 
-function rot(face, x, y, z) {
-    if (face === 0 || face === 1) return [z, y, -x];
-    if (face === 2) return [x, z, -y];
-    if (face === 3) return [x, -z, y];
-    if (face === 4) return [y, -x, z];
-    return [-y, x, z];
-}
-
-function axisName(x, y, z) {
-    if (x === 1) return "xp";
-    if (x === -1) return "xn";
-    if (y === 1) return "yp";
-    if (y === -1) return "yn";
-    if (z === 1) return "zp";
-    return "zn";
-}
-
-function onFace(face, x, y, z) {
-    if (face === 0) return y === 1;
-    if (face === 1) return y === -1;
-    if (face === 2) return x === 1;
-    if (face === 3) return x === -1;
-    if (face === 4) return z === 1;
-    return z === -1;
-}
-
-function solvedCube() {
-    const cube = [];
-    for (let x = -1; x <= 1; x++) {
-        for (let y = -1; y <= 1; y++) {
-            for (let z = -1; z <= 1; z++) {
-                if (x === 0 && y === 0 && z === 0) continue;
-                cube.push({
-                    x, y, z,
-                    xp: x === 1 ? "R" : "",
-                    xn: x === -1 ? "O" : "",
-                    yp: y === 1 ? "W" : "",
-                    yn: y === -1 ? "Y" : "",
-                    zp: z === 1 ? "G" : "",
-                    zn: z === -1 ? "B" : "",
-                });
-            }
-        }
-    }
-    return cube;
-}
-
-function turnCubie(c, face) {
-    const [nx, ny, nz] = rot(face, c.x, c.y, c.z);
-    const next = { x: nx, y: ny, z: nz, xp: "", xn: "", yp: "", yn: "", zp: "", zn: "" };
-    for (const [ax, ay, az, key] of [[1, 0, 0, "xp"], [-1, 0, 0, "xn"], [0, 1, 0, "yp"], [0, -1, 0, "yn"], [0, 0, 1, "zp"], [0, 0, -1, "zn"]]) {
-        if (!c[key]) continue;
-        const [rx, ry, rz] = rot(face, ax, ay, az);
-        next[axisName(rx, ry, rz)] = c[key];
-    }
-    return next;
-}
-
-function quarter(cube, face) {
-    return cube.map((c) => onFace(face, c.x, c.y, c.z) ? turnCubie(c, face) : { ...c });
-}
-
-function faceletsOf(cube) {
-    let out = "";
-    for (const [x, y, z, axis] of SPOTS) {
-        const cubie = cube.find((c) => c.x === x && c.y === y && c.z === z);
-        out += cubie[axis];
-    }
-    return out;
-}
-
-function cubeFromFacelets(text) {
-    const cube = solvedCube().map((c) => ({ x: c.x, y: c.y, z: c.z, xp: "", xn: "", yp: "", yn: "", zp: "", zn: "" }));
-    SPOTS.forEach(([x, y, z, axis], i) => {
-        const cubie = cube.find((c) => c.x === x && c.y === y && c.z === z);
-        cubie[axis] = text[i];
-    });
-    return cube;
-}
-
 export function parseMove(move) {
     const face = FACE_INDEX[move[0]];
     const turns = move.endsWith("2") ? 2 : move.endsWith("'") ? 3 : 1;
@@ -131,11 +52,14 @@ export function quarterSpin(face) {
     return { axis: "z", sign: 1 };
 }
 
+// apply_move only moves letters between facelets, so each move's map is read once,
+// from 54 distinct letters, and reused: shortSolve makes about 65,000 moves.
+const LABELS = String.fromCharCode(...Array.from({ length: 54 }, (_, i) => 48 + i));
+const FROM = new Map();
+
 export function applyMove(facelets, move) {
-    const { face, turns } = parseMove(move);
-    let cube = cubeFromFacelets(facelets);
-    for (let i = 0; i < turns; i++) cube = quarter(cube, face);
-    return faceletsOf(cube);
+    if (!FROM.has(move)) FROM.set(move, Array.from(apply_move(LABELS, move), (ch) => ch.charCodeAt(0) - 48));
+    return FROM.get(move).map((i) => facelets[i]).join("");
 }
 
 export function isSolved(facelets) {

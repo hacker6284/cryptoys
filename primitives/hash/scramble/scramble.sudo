@@ -593,6 +593,39 @@ func check(version: int, message: List<int>, digest: List<int>, faces: text, nst
     assert quick.digest == digest
     assert quick.trace.length == 0
 
+func with_sticker(c: Cubie, axis: int, color: int) -> Cubie
+    if axis == 0
+        return Cubie(c.x, c.y, c.z, color, c.xn, c.yp, c.yn, c.zp, c.zn)
+    if axis == 1
+        return Cubie(c.x, c.y, c.z, c.xp, color, c.yp, c.yn, c.zp, c.zn)
+    if axis == 2
+        return Cubie(c.x, c.y, c.z, c.xp, c.xn, color, c.yn, c.zp, c.zn)
+    if axis == 3
+        return Cubie(c.x, c.y, c.z, c.xp, c.xn, c.yp, color, c.zp, c.zn)
+    if axis == 4
+        return Cubie(c.x, c.y, c.z, c.xp, c.xn, c.yp, c.yn, color, c.zn)
+    return Cubie(c.x, c.y, c.z, c.xp, c.xn, c.yp, c.yn, c.zp, color)
+
+// For the demo: one move (U, U', U2, ... as move_name spells it) on any 54-letter
+// facelet string. Each sticker is labelled with its facelet number, the labelled cube
+// is turned, and each facelet then takes the letter of the label that landed on it.
+export func apply_move(facelets: text, move: text) -> text
+    assert facelets.length == 54
+    cube = solved_cube()
+    for i = 0 to 53
+        k = cubie_at(cube, fx[i], fy[i], fz[i])
+        cube[k] = with_sticker(cube[k], fa[i], i + 1)
+    for face = 0 to 5
+        for turns = 1 to 3
+            if move_name(face, turns) == move
+                cube = apply_turns(cube, face, turns)
+                out = ""
+                for i = 0 to 53
+                    out.append(facelets[sticker_on(cube[cubie_at(cube, fx[i], fy[i], fz[i])], fa[i]) - 1])
+                return out
+    assert false
+    return ""
+
 test "solved facelets are the start pose"
     assert solved_facelets() == "WWWWWWWWWRRRRRRRRRGGGGGGGGGYYYYYYYYYOOOOOOOOOBBBBBBBBB"
 

@@ -3525,4 +3525,172 @@ def check (version : Int) (message : Array (Int)) (digest : Array (Int)) (faces 
     let _as1248 ← SudoRt.sudoAssertEq (SudoRt.listLen (quick).sudo_10Evaluation_5trace) (0 : Int) 594
     pure ()
 
+def «with_sticker» (c : Cubie) (axis : Int) (color : Int) : Except SudoRt.Trap (Cubie) :=
+  do
+    if (SudoRt.SEq.beq axis (0 : Int)) then
+      do
+        pure ({ sudo_5Cubie_1x := (c).sudo_5Cubie_1x, sudo_5Cubie_1y := (c).sudo_5Cubie_1y, sudo_5Cubie_1z := (c).sudo_5Cubie_1z, sudo_5Cubie_2xp := color, sudo_5Cubie_2xn := (c).sudo_5Cubie_2xn, sudo_5Cubie_2yp := (c).sudo_5Cubie_2yp, sudo_5Cubie_2yn := (c).sudo_5Cubie_2yn, sudo_5Cubie_2zp := (c).sudo_5Cubie_2zp, sudo_5Cubie_2zn := (c).sudo_5Cubie_2zn } : Cubie)
+    else
+      do
+        if (SudoRt.SEq.beq axis (1 : Int)) then
+          do
+            pure ({ sudo_5Cubie_1x := (c).sudo_5Cubie_1x, sudo_5Cubie_1y := (c).sudo_5Cubie_1y, sudo_5Cubie_1z := (c).sudo_5Cubie_1z, sudo_5Cubie_2xp := (c).sudo_5Cubie_2xp, sudo_5Cubie_2xn := color, sudo_5Cubie_2yp := (c).sudo_5Cubie_2yp, sudo_5Cubie_2yn := (c).sudo_5Cubie_2yn, sudo_5Cubie_2zp := (c).sudo_5Cubie_2zp, sudo_5Cubie_2zn := (c).sudo_5Cubie_2zn } : Cubie)
+        else
+          do
+            if (SudoRt.SEq.beq axis (2 : Int)) then
+              do
+                pure ({ sudo_5Cubie_1x := (c).sudo_5Cubie_1x, sudo_5Cubie_1y := (c).sudo_5Cubie_1y, sudo_5Cubie_1z := (c).sudo_5Cubie_1z, sudo_5Cubie_2xp := (c).sudo_5Cubie_2xp, sudo_5Cubie_2xn := (c).sudo_5Cubie_2xn, sudo_5Cubie_2yp := color, sudo_5Cubie_2yn := (c).sudo_5Cubie_2yn, sudo_5Cubie_2zp := (c).sudo_5Cubie_2zp, sudo_5Cubie_2zn := (c).sudo_5Cubie_2zn } : Cubie)
+            else
+              do
+                if (SudoRt.SEq.beq axis (3 : Int)) then
+                  do
+                    pure ({ sudo_5Cubie_1x := (c).sudo_5Cubie_1x, sudo_5Cubie_1y := (c).sudo_5Cubie_1y, sudo_5Cubie_1z := (c).sudo_5Cubie_1z, sudo_5Cubie_2xp := (c).sudo_5Cubie_2xp, sudo_5Cubie_2xn := (c).sudo_5Cubie_2xn, sudo_5Cubie_2yp := (c).sudo_5Cubie_2yp, sudo_5Cubie_2yn := color, sudo_5Cubie_2zp := (c).sudo_5Cubie_2zp, sudo_5Cubie_2zn := (c).sudo_5Cubie_2zn } : Cubie)
+                else
+                  do
+                    if (SudoRt.SEq.beq axis (4 : Int)) then
+                      do
+                        pure ({ sudo_5Cubie_1x := (c).sudo_5Cubie_1x, sudo_5Cubie_1y := (c).sudo_5Cubie_1y, sudo_5Cubie_1z := (c).sudo_5Cubie_1z, sudo_5Cubie_2xp := (c).sudo_5Cubie_2xp, sudo_5Cubie_2xn := (c).sudo_5Cubie_2xn, sudo_5Cubie_2yp := (c).sudo_5Cubie_2yp, sudo_5Cubie_2yn := (c).sudo_5Cubie_2yn, sudo_5Cubie_2zp := color, sudo_5Cubie_2zn := (c).sudo_5Cubie_2zn } : Cubie)
+                    else
+                      do
+                        pure ({ sudo_5Cubie_1x := (c).sudo_5Cubie_1x, sudo_5Cubie_1y := (c).sudo_5Cubie_1y, sudo_5Cubie_1z := (c).sudo_5Cubie_1z, sudo_5Cubie_2xp := (c).sudo_5Cubie_2xp, sudo_5Cubie_2xn := (c).sudo_5Cubie_2xn, sudo_5Cubie_2yp := (c).sudo_5Cubie_2yp, sudo_5Cubie_2yn := (c).sudo_5Cubie_2yn, sudo_5Cubie_2zp := (c).sudo_5Cubie_2zp, sudo_5Cubie_2zn := color } : Cubie)
+
+def «apply_move» (facelets : Array (Int)) (move : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
+  do
+    let _as1256 ← SudoRt.sudoAssertEq (SudoRt.listLen facelets) (54 : Int) 613
+    let _t1257 ← solved_cube
+    let cube := _t1257
+    let _fromV := (0 : Int)
+    let _toV := (53 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init1291 := (_fromV, cube)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1291 fuel (fun σ =>
+    let i := σ.1
+    let cube := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, cube))
+      else
+        match ← ((do
+  let _t1259 ← SudoRt.atL fx i
+  let _t1260 ← SudoRt.atL fy i
+  let _t1261 ← SudoRt.atL fz i
+  let _t1262 ← cubie_at cube _t1259 _t1260 _t1261
+  let k := _t1262
+  let _ix1263 := k
+  let _t1264 ← SudoRt.atL cube k
+  let _t1265 ← SudoRt.atL fa i
+  let _t1266 ← SudoRt.addI i (1 : Int)
+  let _t1267 ← «with_sticker» _t1264 _t1265 _t1266
+  let _t1268 ← SudoRt.putL cube _ix1263 _t1267
+  let cube := _t1268
+  pure (SudoRt.Flow.cont (ρ := Array (Int)) cube)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let cube := σ.2
+    do
+      let _fromV := (0 : Int)
+      let _toV := (5 : Int)
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init1290 := (_fromV, cube)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1290 fuel (fun σ =>
+    let face := σ.1
+    let cube := σ.2
+    do
+      if face > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (face, cube))
+      else
+        match ← ((do
+  let _fromV := (1 : Int)
+  let _toV := (3 : Int)
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init1288 := (_fromV, cube)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1288 fuel (fun σ =>
+    let turns := σ.1
+    let cube := σ.2
+    do
+      if turns > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (turns, cube))
+      else
+        match ← ((do
+  let _t1271 ← move_name face turns
+  if (SudoRt.SEq.beq _t1271 move) then
+    do
+      let _t1273 ← «apply_turns» cube face turns
+      let cube := _t1273
+      let out := (#[] : Array Int)
+      let _fromV := (0 : Int)
+      let _toV := (53 : Int)
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init1287 := (_fromV, out)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init1287 fuel (fun σ =>
+    let i := σ.1
+    let out := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
+      else
+        match ← ((do
+  let _t1275 ← SudoRt.atL fx i
+  let _t1276 ← SudoRt.atL fy i
+  let _t1277 ← SudoRt.atL fz i
+  let _t1278 ← cubie_at cube _t1275 _t1276 _t1277
+  let _t1279 ← SudoRt.atL cube _t1278
+  let _t1280 ← SudoRt.atL fa i
+  let _t1281 ← sticker_on _t1279 _t1280
+  let _t1282 ← SudoRt.subI _t1281 (1 : Int)
+  let _t1283 ← SudoRt.atL facelets _t1282
+  let _mb1284 := SudoRt.appendL out _t1283
+  let ⟨_nr1285, _⟩ := _mb1284
+  let out := _nr1285
+  let _hm1254 := ()
+  let _u1286 := _hm1254
+  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let out := σ.2
+    do
+      pure (SudoRt.Flow.ret (ρ := Array (Int)) out)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
+      pure _out
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Array (Int)) cube)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (turns, _fs))
+        | .cont _fs => do
+            if turns == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (turns, _fs))
+            else do
+              let i' ← SudoRt.addI turns (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let cube := σ.2
+    do
+      pure (SudoRt.Flow.cont (ρ := Array (Int)) cube)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (face, _fs))
+        | .cont _fs => do
+            if face == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (face, _fs))
+            else do
+              let i' ← SudoRt.addI face (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let cube := σ.2
+    do
+      let _as1289 ← SudoRt.sudoAssert false 626
+      pure (#[] : Array Int)) (fun r => pure r))
+      pure _out) (fun r => pure r))
+    pure _out
+
 end Scramble

@@ -2,8 +2,9 @@
 # Read only by proofs/sudocode_pin.sh, which proofs/sudocode.sh (sourced by
 # proofs/emit_lean.sh and proofs/doubledeal/vectors/regen.sh), CI
 # (.github/workflows/proofs.yml and .github/actions/generate-demos) and
-# tools/render-build.sh call to build sudoc at this commit. The Lean emitter and the JS vector builds
-# both use it, and every vectors JSON records it as sudocode_commit.
+# tools/render-build.sh call to build sudoc at this commit. The Lean emitter
+# and the JS vector builds both use it, and every vectors JSON records it as
+# sudocode_commit.
 # Squash merge of PR #9 (JS shares values of record types no body writes in
 # place); the Lean emitter is as of PR #8 (Lean is in ALL_BACKENDS, empty
 # predicates, full IR). cryptoys consumes the emitter only, not lockstep.

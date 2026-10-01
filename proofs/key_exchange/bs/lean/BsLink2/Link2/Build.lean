@@ -4092,4 +4092,40 @@ theorem build_spec (d : Spec.Dice) (hd : DiceFit d) (lg : List Spec.LetGo)
   · rw [decide_eq_false hnd, toOpt_bind, sudoAssert_false_opt]
     simp [hnd]
 
+/-! ### Headlines: BUILD -/
+
+/-- A model built grid as the emitted `Built` record. -/
+def embBuilt (b : Spec.Built) : Bs.Built :=
+  { sudo_5Built_4grid := embGrid b.grid, sudo_5Built_6used12 := Int.ofNat b.used12,
+    sudo_5Built_5used6 := Int.ofNat b.used6, sudo_5Built_6used10 := Int.ofNat b.used10 }
+
+/-- §4.2: for any model dice whose three face lists fit `i64` and any let-go list (an
+    arbitrary input, fixed in advance), `build_letting_go` succeeds exactly when
+    `Spec.buildLettingGo` does and then returns its grid and read counts; it traps exactly
+    when the model fails (a die runs out or shows a face out of range, a tray has no unread
+    die, a let-go point is repeated or is not a die's first hole of the grid). -/
+theorem build_letting_go_refines (d : Spec.Dice) (lg : List Spec.LetGo) (hd : DiceFit d)
+    (hlg : FitsLen lg.length) :
+    (Bs.build_letting_go (embDice d) (embLG lg)).toOption =
+      (Spec.buildLettingGo d lg).map embBuilt := by
+  unfold Bs.build_letting_go Spec.buildLettingGo
+  rw [toOpt_bind, build_spec d hd lg hlg]
+  cases Spec.build d lg <;> rfl
+
+/-- §4.2: `build_key_grid` is `Spec.buildKeyGrid` (BUILD without letting go), traps included. -/
+theorem build_key_grid_refines (d : Spec.Dice) (hd : DiceFit d) :
+    (Bs.build_key_grid (embDice d)).toOption = (Spec.buildKeyGrid d).map embBuilt := by
+  unfold Bs.build_key_grid Spec.buildKeyGrid
+  rw [except_bind_pure]
+  exact build_letting_go_refines d [] hd (fits_small (by decide))
+
+/-- §4.2 from fresh dice: for any three face streams that fit `i64`, building from
+    `dice d12 d6 d10` is `Spec.buildKeyGrid` of `Spec.dice d12 d6 d10`. -/
+theorem build_key_grid_dice (d12 d6 d10 : List Int) (h12 : FitsLen d12.length)
+    (h6 : FitsLen d6.length) (h10 : FitsLen d10.length) :
+    (Bs.dice d12.toArray d6.toArray d10.toArray >>= Bs.build_key_grid).toOption =
+      (Spec.buildKeyGrid (Spec.dice d12 d6 d10)).map embBuilt := by
+  rw [dice_refines, ok_bind]
+  exact build_key_grid_refines _ ⟨h12, h6, h10⟩
+
 end BsLink2.Link2

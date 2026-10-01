@@ -5,10 +5,11 @@
 # tools/render-build.sh call to build sudoc at this commit. The Lean emitter
 # and the JS vector builds both use it, and every vectors JSON records it as
 # sudocode_commit.
-# Squash merge of PR #9 (JS shares values of record types no body writes in
-# place); the Lean emitter is as of PR #8 (Lean is in ALL_BACKENDS, empty
-# predicates, full IR). cryptoys consumes the emitter only, not lockstep.
+# Squash merge of PR #10 (the Lean emitter escapes every Lean 4.14 keyword).
+# JS shares never-field-written records since PR #9; Lean is in ALL_BACKENDS
+# since PR #8 (empty predicates, full IR). cryptoys consumes the emitter only,
+# not lockstep.
 # Bump only when you intend to change the compiler, then re-run
 # proofs/emit_lean.sh and proofs/doubledeal/vectors/regen.sh for every version.
 # A bump also changes the sudoc that the Pages and Render demo builds use.
-16b5a8b182ff80b43436dc997f02790aa79724df
+2c7edef4c735b747287401d02e351515c28402d2

@@ -1,4 +1,5 @@
 import { mountMicro } from "../shared/micro.js";
+import settings from "./settings.js";
 import { addGlow, buildBox, restowBox } from "../shared/boxes.js";
 import { DEN } from "../../playroom/constants.js";
 
@@ -39,20 +40,19 @@ function ms(ctx, base) {
 
 void mountMicro({
     id: "megadreifach-deck-flap",
-    title: "MegaDreifach: deck-box flap",
-    summary: "The DEAL deck's flap opens for a block's deal and closes after it (ms(260) each way at the demo speed). Timing mirrors drei-stage.js on keynote/megadreifach-demo.",
-    source: "unbox-rig.js setFlap · timing from drei-stage.js dealCards (keynote/megadreifach-demo, not on main)",
-    camera: { position: [DEN.x + 0.22, 1.02, DEN.z + 0.42], target: [DEN.x, 0.82, DEN.z], fov: 30 },
-    loopGapMs: 700,
-    timing: [
-        { key: "tempo", label: "Speed (tempo)", min: 0.5, max: 12, step: 0.1, value: 2, unit: "×", note: "MegaDreifach dock speed (default 2)" },
-        { key: "flapMs", label: "flap (ms at 1×)", min: 40, max: 1500, step: 10, value: 260, unit: " ms" },
-        { key: "holdMs", label: "deal in between (ms at 1×)", min: 0, max: 4000, step: 10, value: 51 * 38 + 320, unit: " ms", note: "52 cards: stagger 38 ms × 51 + flight 320 ms" },
-    ],
+    title: "MegaDreifach deck flap",
+    camera: { position: [DEN.x + 0.22, 1.02, DEN.z + 0.42], target: [DEN.x, 0.82, DEN.z], fov: 30, margin: 1.4 },
     slots: [
-        { name: "open", label: "Flap opens", contact: "the flap starts to lift", from: [["unbox", "tuck-flap-open"], "doubledeal-tuck-flap"], gapMs: 100, voices: 2 },
-        { name: "close", label: "Flap closes", contact: "the flap shuts", from: [["doubledeal-restow", "flap"]], gapMs: 100, voices: 2 },
+        { name: "open", gapMs: 100, voices: 2 },
+        { name: "close", gapMs: 100, voices: 2 },
     ],
+    frame(ctx) {
+        // The box at rest with its flap open.
+        ctx.world.applyPose(rig.group, ctx.world.getTablePose("deck"));
+        rig.setFlap(1);
+        rig.group.updateMatrixWorld(true);
+        return new ctx.THREE.Box3().setFromObject(rig.group);
+    },
     async setup(ctx) {
         addGlow(ctx.world, "deck");
         ctx.status("Loading the deck…");
@@ -80,12 +80,4 @@ void mountMicro({
         if (!(await ctx.wait(hold))) return;
         await tween(flap, (t) => rig.setFlap(1 - t));
     },
-    config(ctx) {
-        return {
-            demo: "megadreifach",
-            paste: "flap → drei-stage.js dealCards ms(260); speed → createMegaDreifachAdapter speed; sounds → demos/megadreifach/sound.js SOUNDS shape",
-            dealCards: { flapMs: ctx.timing("flapMs") },
-            speed: { min: 0.5, max: 12, value: ctx.timing("tempo") },
-        };
-    },
-});
+}, settings);

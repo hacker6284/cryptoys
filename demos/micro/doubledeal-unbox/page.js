@@ -1,5 +1,6 @@
 import { mountMicro } from "../shared/micro.js";
-import { EASE_OPTIONS, addGlow, buildBox, restowBox } from "../shared/boxes.js";
+import settings from "./settings.js";
+import { addGlow, buildBox, restowBox } from "../shared/boxes.js";
 import { createBeatClock } from "../../playroom/beat-clock.js";
 import { DEN } from "../../playroom/constants.js";
 import {
@@ -7,19 +8,7 @@ import {
     unboxAside, unboxDeal, unboxExtract, unboxFlap, unboxLay,
 } from "../../playroom/unbox-physical.js";
 
-const NUM = [
-    ["flapMs", "flapMs", 60, 2000, 10],
-    ["flapPauseMs", "flapPauseMs", 0, 800, 10],
-    ["extractMs", "extractMs", 60, 2000, 10],
-    ["extractRise", "extractRise (m)", 0.02, 0.2, 0.002],
-    ["layMs", "layMs", 60, 2000, 10],
-    ["layLift", "layLift (m)", 0, 0.15, 0.002],
-    ["asideMs", "asideMs", 60, 2000, 10],
-    ["asideLift", "asideLift (m)", 0, 0.15, 0.002],
-    ["dealStaggerMs", "dealStaggerMs", 0, 300, 2],
-    ["dealMs", "dealMs", 60, 1500, 10],
-    ["dealLift", "dealLift (m)", 0, 0.2, 0.002],
-];
+const NUM = ["flapMs", "flapPauseMs", "extractMs", "extractRise", "layMs", "layLift", "asideMs", "asideLift", "dealStaggerMs", "dealMs", "dealLift"];
 const EASES = ["flapEase", "extractEase", "layEase", "asideEase", "dealEase"];
 const ZERO = { ...UNBOX_TIMING, flapMs: 0, flapPauseMs: 0, extractMs: 0, layMs: 0, asideMs: 0, dealMs: 0, dealStaggerMs: 0 };
 
@@ -28,37 +17,39 @@ let keyLight = null;
 let clock = null;
 
 function apply(ctx) {
-    for (const [key] of NUM) UNBOX_TIMING[key] = ctx.timing(key);
+    for (const key of NUM) UNBOX_TIMING[key] = ctx.timing(key);
     for (const key of EASES) UNBOX_TIMING[key] = ctx.choice(key);
 }
 
 void mountMicro({
     id: "doubledeal-unbox",
-    title: "Unbox: flap, deck out, set down",
-    summary: "The DoubleDeal KEY tuck box on the felt: the flap lifts, the short packet slides out, is laid on the felt, the sleeve hops aside and the cards are dealt (playroom/unbox-physical.js, the same beats as the enter).",
-    source: "playroom/unbox-physical.js (UNBOX_TIMING, unboxFlap/Extract/Lay/Aside/Deal, playUnbox) · unbox-rig.js",
-    camera: { position: [DEN.x + 0.42, 1.2, DEN.z + 0.86], target: [DEN.x + 0.2, 0.8, DEN.z + 0.04], fov: 38 },
-    loopGapMs: 900,
-    choices: [
-        { key: "phase", label: "Loop", value: "out", options: [["flap", "flap only"], ["extract", "deck slides out (flap already open)"], ["out", "flap → deck out → set down"], ["lay", "set down only"], ["deal", "sleeve aside + deal"], ["full", "whole unbox (playUnbox)"]] },
-        ...EASES.map((key) => ({ key, label: key, value: UNBOX_TIMING[key], options: EASE_OPTIONS })),
-    ],
-    timing: NUM.map(([key, label, min, max, step]) => ({ key, label, min, max, step, value: UNBOX_TIMING[key], unit: key.endsWith("Ms") ? " ms" : "" })),
+    title: "Unbox",
+    camera: { position: [DEN.x + 0.42, 1.2, DEN.z + 0.86], target: [DEN.x + 0.2, 0.8, DEN.z + 0.04], fov: 34, margin: 0.95 },
     slots: [
-        { name: "flap", label: "Flap opens", contact: "the flap starts to lift (flap beat)", from: [["unbox", "tuck-flap-open"], "doubledeal-tuck-flap"], gapMs: 200, voices: 2 },
-        { name: "extract", label: "Deck slides out", contact: "the packet starts to rise (extract beat)", from: [["unbox", "deck-slide-out"], "doubledeal-tuck-extract"], gapMs: 200, voices: 2 },
-        { name: "lay", label: "Packet set down", contact: "the packet lands on the felt", from: ["doubledeal-packet-lay", ["unbox", "box-setdown-felt"]], gapMs: 200, voices: 2 },
-        { name: "aside", label: "Sleeve set aside", contact: "the empty box lands", from: ["doubledeal-sleeve-aside", ["unbox", "box-setdown-felt"]], gapMs: 200, voices: 2 },
-        { name: "deal", label: "Card dealt (per card)", contact: "each card lands", from: ["doubledeal-deal"], gapMs: 50, voices: 4 },
+        { name: "flap", gapMs: 200, voices: 2 },
+        { name: "extract", gapMs: 200, voices: 2 },
+        { name: "lay", gapMs: 200, voices: 2 },
+        { name: "aside", gapMs: 200, voices: 2 },
+        { name: "deal", gapMs: 50, voices: 4 },
     ],
+    frame(ctx) {
+        // The box with its flap open, the packet's rise above it and the
+        // spot on the felt where the packet is laid.
+        restowBox(rig);
+        ctx.world.applyPose(rig.group, ctx.world.getTablePose("deck"));
+        rig.setFlap(1);
+        const box = new ctx.THREE.Box3().setFromObject(rig.group);
+        box.max.y += ctx.timing("extractRise");
+        const pile = packetOrigin(ctx.world, "deck");
+        box.expandByPoint(new ctx.THREE.Vector3(pile.x - 0.05, pile.y, pile.z - 0.05));
+        box.expandByPoint(new ctx.THREE.Vector3(pile.x + 0.05, pile.y, pile.z + 0.05));
+        return box;
+    },
     async setup(ctx) {
         keyLight = createDealerKey(ctx.world);
         addGlow(ctx.world, "deck");
         ctx.status("Loading the deck…");
         rig = await buildBox(ctx.world, "deck", "KEY");
-        apply(ctx);
-    },
-    onTiming(ctx) {
         apply(ctx);
     },
     stop() {
@@ -124,12 +115,4 @@ void mountMicro({
         if (phase === "deal") await Promise.all([unboxAside(beat), unboxDeal(beat)]);
         gen = 0;
     },
-    config(ctx) {
-        apply(ctx);
-        return {
-            demo: "doubledeal (playroom unbox)",
-            paste: "UNBOX_TIMING → demos/playroom/unbox-physical.js; sounds → a demos/shared/sound.js table (offsetMs is relative to each contact)",
-            UNBOX_TIMING: { ...UNBOX_TIMING },
-        };
-    },
-});
+}, settings);

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Headless check: every microdemo sound candidate decodes, in both formats.
+"""Headless check: every microdemo sound file decodes, in both formats.
 
 Reads demos/micro/sounds/index.json and decodes each <file>.ogg and
 <file>.mp3 with ffmpeg (`-f null`), failing on any decode error or an
@@ -41,13 +41,12 @@ def main():
     index = json.loads((SOUNDS / "index.json").read_text())
     total = 0
     bad = []
-    for prim, entry in sorted(index["primitives"].items()):
-        for cand in entry["candidates"]:
-            for ext in ("ogg", "mp3"):
-                total += 1
-                ok, detail = decode(SOUNDS / f"{cand['file']}.{ext}")
-                if not ok:
-                    bad.append(f"{cand['file']}.{ext}: {detail}")
+    for file in sorted(index["files"]):
+        for ext in ("ogg", "mp3"):
+            total += 1
+            ok, detail = decode(SOUNDS / f"{file}.{ext}")
+            if not ok:
+                bad.append(f"{file}.{ext}: {detail}")
     print(f"{total - len(bad)}/{total} sound files decode")
     for line in bad:
         print("  FAIL", line)

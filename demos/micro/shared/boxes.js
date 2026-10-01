@@ -53,4 +53,3 @@ export function restowBox(rig) {
     rig.packet.userData.unboxBusy = false;
 }
 
-export const EASE_OPTIONS = [["easeOutCubic", "easeOutCubic"], ["easeInOutCubic", "easeInOutCubic"], ["easeOutQuart", "easeOutQuart"], ["linear", "linear"]];

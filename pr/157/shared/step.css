@@ -1,0 +1,155 @@
+.teach {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.teach[hidden] { display: none; }
+
+.tape {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  top: 118px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: min(640px, calc(100% - 64px));
+  pointer-events: auto;
+}
+
+.tape-cell {
+  min-width: 1.6em;
+  padding: 3px 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--raised);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
+}
+
+.tape-cell.pad {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+.tape-cell.marker { color: var(--accent); }
+
+.tape-cell.on {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+}
+
+.teach-card {
+  position: absolute;
+  left: 32px;
+  bottom: 72px;
+  width: min(420px, calc(100% - 48px));
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(12, 12, 14, 0.88);
+  pointer-events: auto;
+}
+
+.stage:has(#caption) .teach-card {
+  top: 118px;
+  bottom: auto;
+  width: min(380px, calc(100% - 48px));
+  padding: 12px 14px 14px;
+}
+
+.teach-card .kicker {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.teach-card h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-weight: 520;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.teach-card .math,
+.teach-card .why {
+  margin: 0 0 8px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.teach-card .math { font-family: var(--font-mono); font-size: 13px; color: var(--fg); }
+
+.teach-card .why { color: var(--muted); }
+
+.transport {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.transport .pos {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 5.5em;
+}
+
+.outline {
+  overflow: auto;
+  max-height: 28vh;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  padding: 6px 0;
+}
+
+.outline[hidden] { display: none; }
+
+.outline details { padding: 0 8px 6px; }
+
+.outline summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.outline-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  padding: 4px 8px;
+  border-radius: var(--radius);
+}
+
+.outline-item:hover { background: var(--accent-soft); border-color: transparent; }
+
+.outline-item.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .tape { top: 96px; left: 16px; right: 16px; }
+  .teach-card { left: 16px; bottom: 64px; }
+  .transport { left: 16px; right: 16px; }
+  .outline { max-height: 22vh; }
+}

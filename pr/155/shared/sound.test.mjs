@@ -309,3 +309,32 @@ test("an MP3 that will not decode falls back to the OGG twin, and is logged", as
         console.warn = warn;
     }
 });
+
+test("peakMs: where each sound's loudest sample is, once decoded", async () => {
+    const { Ctx } = fakeAudio();
+    class Peaky extends Ctx {
+        decodeAudioData() {
+            const data = new Float32Array(1000);
+            data[250] = -0.9;
+            data[600] = 0.5;
+            return Promise.resolve({ duration: 1, sampleRate: 1000, numberOfChannels: 1, length: 1000, getChannelData: () => data });
+        }
+    }
+    const before = globalThis.fetch;
+    globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) });
+    try {
+        const sound = createSound({
+            sounds: { tick: { files: ["a"], gains: [1], gapMs: 0, voices: 2 } },
+            base: "http://x/",
+            AudioCtx: Peaky,
+            gestureTarget: new EventTarget(),
+            autostart: false,
+        });
+        assert.equal(sound.peakMs("tick"), null, "unknown before decoding");
+        sound.unlock();
+        await sound.ready();
+        assert.equal(sound.peakMs("tick"), 250);
+    } finally {
+        globalThis.fetch = before;
+    }
+});

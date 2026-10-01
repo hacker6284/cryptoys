@@ -41,6 +41,11 @@ Microdemos not in this table still keep their own `settings.js` in
 ## Sounds
 
 `file` in a `settings.js` is a path under `sounds/` without extension.
+`offsetMs` is when the file starts relative to the contact. A sound tied
+to a motion whose speed changes (a face turn at the dock's tempo) is
+tuned at the entry's `timing.speed`; at another speed the entry scales
+the time from the file's loudest sample to the contact with the motion,
+so the sound keeps its place in it.
 After changing one, run `python3 tools/sync-micro-sounds.py`: it copies
 the named files (both `.ogg` and `.mp3`) and rewrites `sounds/index.json`
 and `sounds/LICENSE.md`. `--list [primitive]` prints what can be swapped

@@ -7,6 +7,11 @@ import { resolvePoseName } from "./poses.js";
 import { playroomDebugEnabled } from "./puzzles.js";
 import { createToyDirector } from "./toy-director.js";
 import { mountWorld } from "./world.js";
+import { installAudioUnlock } from "../shared/sound.js";
+
+// One AudioContext for the page, unlocked by the visitor's first tap,
+// click or key in the hub, so demo sounds never need their own prompt.
+installAudioUnlock();
 
 const canvas = document.querySelector("#playroom");
 const titleEl = document.querySelector("#title");

@@ -26,7 +26,9 @@
  *   the loudest sample on the contact).
  *
  * Sounds go through demos/shared/sound.js (the MegaDreifach Web Audio
- * path): unlocked on the first click or key, limiter on the master.
+ * path), limiter on the master. Sound is on: the page's AudioContext
+ * starts on load where autoplay is allowed; otherwise the first tap,
+ * click or key anywhere unlocks it, and a small prompt shows until then.
  */
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -89,22 +91,58 @@ export async function mountMicro(spec, settings) {
     document.title = `${spec.title} · microdemo`;
     const slots = spec.slots || [];
     const sounds = settings.sounds || {};
-    const sound = createSound({ sounds: soundTable(slots, sounds), base: SOUND_BASE, store: null, limiter: true });
+    // The page's shared AudioContext: started on load where autoplay is
+    // allowed, otherwise unlocked by the first tap, click or key anywhere.
+    const sound = createSound({ sounds: soundTable(slots, sounds), base: SOUND_BASE, limiter: true });
 
     const canvas = el("canvas", { class: "micro-canvas", "aria-label": `${spec.title} in the playroom` });
     const status = el("p", { class: "micro-status", role: "status" }, "Loading…");
-    const hint = el("p", { class: "micro-hint" }, "Click to turn sound on");
+    const touch = globalThis.matchMedia?.("(pointer: coarse)").matches;
+    const ask = touch ? "Tap to turn sound on" : "Click to turn sound on";
+    const hint = el("button", { type: "button", class: "micro-hint", hidden: "" }, ask);
     document.body.append(el("main", { class: "micro" },
         canvas,
         el("header", { class: "micro-head" }, el("a", { href: "../", class: "micro-back" }, "← microdemos"), el("h1", {}, spec.title)),
         status,
         hint,
     ));
-    const hideHint = () => setTimeout(() => {
-        if (sound.running) hint.hidden = true;
-    }, 80);
-    window.addEventListener("pointerdown", hideHint);
-    window.addEventListener("keydown", hideHint);
+    // The prompt shows only while the context is not running (after a
+    // short grace for autoplay), hides as soon as it is, and says so if a
+    // gesture did not start it.
+    let shown = false;
+    let checkTimer = 0;
+    function syncHint() {
+        const state = sound.state;
+        if (state === "running") {
+            hint.hidden = true;
+            hint.classList.remove("is-blocked");
+            hint.textContent = ask;
+            return;
+        }
+        if (!shown) return;
+        hint.hidden = false;
+        if (state === "unsupported") {
+            hint.textContent = "Sound isn't supported in this browser";
+            hint.disabled = true;
+        }
+    }
+    sound.onState(syncHint);
+    setTimeout(() => {
+        shown = true;
+        syncHint();
+    }, 500);
+    function afterGesture() {
+        clearTimeout(checkTimer);
+        checkTimer = setTimeout(() => {
+            if (sound.running || sound.state === "unsupported") return;
+            shown = true;
+            hint.hidden = false;
+            hint.classList.add("is-blocked");
+            hint.textContent = touch ? "Sound didn't start. Tap here to try again" : "Sound didn't start. Click here to try again";
+        }, 1200);
+    }
+    hint.addEventListener("click", () => sound.unlock());
+    for (const type of ["pointerup", "touchend", "click", "keydown"]) window.addEventListener(type, afterGesture, { capture: true, passive: true });
 
     const world = await mountWorld(canvas);
     const camera = world.camera;

@@ -439,27 +439,43 @@ structure BuildSt where
 def BuildSt.rethrow (st : BuildSt) : Option BuildSt :=
   (rethrowUnread st.dice st.tray st.read).map (fun p => { st with dice := p.1, tray := p.2 })
 
-/-- §4.2, one hole (`row`, `col`): let go before it if the list says so; at the start of a
-    row throw the row cup; if no ship covers the hole, grow until it bumps; let go in the
-    step 1 → 2 gap if the list says so; then peg it from its pair's die (the first hole of
-    a pair reads the next tray die and takes the keypad row, the second the column). -/
-def holeStep (lg : List LetGo) (row col : Nat) (st : BuildSt) : Option BuildSt := do
-  let h := row * 10 + col
-  let st ← if letsGo lg h false then st.rethrow else some st
-  let st ← if col = 0 then
-      (throwRowCup st.dice).map (fun p => { st with dice := p.2, tray := p.1, read := 0 })
-    else some st
-  let st ← if !st.covered h then
-      (growUntilItBumps st.dice st.covered row col).map (fun p =>
-        match p.1 with
-        | some s => { st with dice := p.2, covered := cover st.covered s, ships := st.ships ++ [s] }
-        | none => { st with dice := p.2 })
-    else some st
-  let st ← if letsGo lg h true then st.rethrow else some st
+/-- §4.2 letting go at the point (`h`, `gap`) if the list says so: on coming back, the unread
+    tray dice are thrown again. -/
+def letGoAt (lg : List LetGo) (h : Nat) (gap : Bool) (st : BuildSt) : Option BuildSt :=
+  if letsGo lg h gap then st.rethrow else some st
+
+/-- §4.2 step 0: at the start of a row (`col = 0`) throw the row cup; nothing read yet. -/
+def rowCupAt (col : Nat) (st : BuildSt) : Option BuildSt :=
+  if col = 0 then
+    (throwRowCup st.dice).map (fun p => { st with dice := p.2, tray := p.1, read := 0 })
+  else some st
+
+/-- §4.2 step 1: if no ship covers the hole, grow until it bumps; a ship laid covers its
+    holes and joins the fleet. -/
+def growAt (row col : Nat) (st : BuildSt) : Option BuildSt :=
+  if !st.covered (row * 10 + col) then
+    (growUntilItBumps st.dice st.covered row col).map (fun p =>
+      match p.1 with
+      | some s => { st with dice := p.2, covered := cover st.covered s, ships := st.ships ++ [s] }
+      | none => { st with dice := p.2 })
+  else some st
+
+/-- §4.2 step 2: peg hole `h` from its pair's die. The first hole of a pair (`col` even)
+    reads the next tray die and takes the keypad row; the second takes the column. Fails
+    when the tray has no unread die. -/
+def pegAt (h col : Nat) (st : BuildSt) : Option BuildSt :=
   if col % 2 = 0 then
     st.tray[st.read]?.map (fun f =>
       { st with face := f, read := st.read + 1, pegs := setPeg st.pegs h (keypadFirst f) })
   else some { st with pegs := setPeg st.pegs h (keypadSecond st.face) }
+
+/-- §4.2, one hole (`row`, `col`), `h = 10·row + col`: let go before it, the row cup, grow,
+    let go in the gap, peg. -/
+def holeStep (lg : List LetGo) (row col : Nat) (st : BuildSt) : Option BuildSt :=
+  (letGoAt lg (row * 10 + col) false st).bind fun st =>
+  (rowCupAt col st).bind fun st =>
+  (growAt row col st).bind fun st =>
+  (letGoAt lg (row * 10 + col) true st).bind (pegAt (row * 10 + col) col)
 
 /-- One row: its ten holes in order, the pair face starting at 0. -/
 def rowStep (lg : List LetGo) (row : Nat) (st : BuildSt) : Option BuildSt :=

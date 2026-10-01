@@ -20,4 +20,9 @@
   ok   second preimage: digest(M): 0A38700830D1C599C
   ok   hex-only preimage: 172 bytes
   ok   hex-only preimage: digest(M): 132FDCE0BF26E5898
+[3] equal digest, different final facelets (scramble_v2)
+  ok   hello twin: digest: 052A3C7D12291D140
+  ok   hello twin: facelets differ from hello's: ORWOWRWYWGWRORWGBOROORGBOBYBRRGYYYWYYWGGOGBYWBYBBBOGGR
+  ok   decoded cube pose: hex-only preimage lands on it: OGBYWWWYYGBRBRWGRORGRWGOBRWOYORYGRBWGOGROOBBYYOYGBWBYW
+  ok   decoded cube pose != SPEC `cube` facelets (shown), same digest: OGBYWWWYYGBRBRWGRORGROGOBRWOYORYGRBWGOGWOWBBYYOYGBRBYW
 ALL OK

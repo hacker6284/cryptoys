@@ -57,7 +57,8 @@ the source.
   - There is partial length extension: the digest fixes the internal state up to ≤ 384
     candidates (argued, §4).
 - **Honest claim for Scramble v2: none.** Collisions, second preimages and preimages are
-  practical, seconds on a laptop-class core. Even without F1, any single-cube walk with this
+  practical: the logs record 17 s, 37 s and 37 s of wall time, one Python process each, on
+  the one machine that produced them (S8, §5). Even without F1, any single-cube walk with this
   digest encoding is capped by the size of the digest image: generic collisions cost ≈2^30.8
   (birthday on 2^61.64 values; §3.3), below any AES/SHA-level target.
 
@@ -67,7 +68,7 @@ the source.
 | --- | --- | --- |
 | Spec | [`primitives/hash/scramble/SPEC.md`](../../../primitives/hash/scramble/SPEC.md) | "Rule B", "Digest", `scramble_v2`, "Security" |
 | Attack engine | [`scramble_ref.py`](scramble_ref.py) | Fast attack engine: Scramble v1/v2 as a 54-facelet permutation model, written from the SPEC. Not the reference: `scramble.sudo` is normative. Checked against the vectors (computed): all 10 SPEC vectors (digest, facelets and step counts) reproduce |
-| sudoc check | [`scramble_sudo_check.mjs`](scramble_sudo_check.mjs) | Builds JS from `scramble.sudo` with `sudoc build --target js` (as `tools/build.sh` does), then checks the 10 SPEC vectors and the attack messages in `logs/` through it → [`logs/scramble_sudo_check.log`](logs/scramble_sudo_check.log) |
+| sudoc check | [`scramble_sudo_check.mjs`](scramble_sudo_check.mjs) | Builds JS from `scramble.sudo` with `sudoc build --target js` (as `tools/build.sh` does), then checks the 10 SPEC vectors, the attack messages in `logs/`, the `hello` twin and the decoded `cube` pose through it → [`logs/scramble_sudo_check.log`](logs/scramble_sudo_check.log) |
 | F1 attacks | [`scramble_attack.py`](scramble_attack.py) `{collision\|second\|preimage}` | `preimage` takes its target pose from hashing `hello`; superseded by `scramble_decode.py` |
 | F2 evidence | [`scramble_digest_check.py`](scramble_digest_check.py) | → [`logs/scramble_digest_check.log`](logs/scramble_digest_check.log) |
 | Digest decoder + preimage | [`scramble_decode.py`](scramble_decode.py) `[HEX]` | digest→pose decoder (round-trips 2000/2000; invariants hold on 2000/2000 random states) plus a preimage of a digest given only as hex → [`logs/scramble_decode_preimage.log`](logs/scramble_decode_preimage.log) |
@@ -83,9 +84,14 @@ PYTHONDONTWRITEBYTECODE=1 python3 scramble_digest_check.py
 SUDOC=/path/to/sudoc node scramble_sudo_check.mjs   # default: <repo>/.sudocode/sudoc/target/release/sudoc
 ```
 
-CI does not run them (follow-up S7, §5). The logs were regenerated when the printed corner-bound
+CI (job `scramble-sudo-check` in `.github/workflows/proofs.yml`) runs `scramble_sudo_check.mjs`
+and requires its output to equal its log byte for byte. CI does not run the Python scripts
+(follow-up S7, §5). The logs were regenerated when the printed corner-bound
 estimate was corrected to 24·(8!/2)·3^7; the messages, digests and work counts were unchanged,
-and only that estimate, wall time and memory differ from the first run.
+and only that estimate, wall time and memory differ from the first run. Later the label on
+line 1 of the collision and second-preimage logs was renamed by hand from "reference
+self-check" to "engine self-check". Reruns gave the same output apart from that label, wall
+time and memory, so the logs keep the original wall times and memory.
 
 ## 2. Structural facts (proved (paper))
 
@@ -165,6 +171,9 @@ permutation of edge slots depending only on (n, c).
   - the decoder in `logs/scramble_decode_preimage.log` [3] returns a pose for the `cube`
     vector's digest whose facelets differ from the SPEC's listed facelets, but which has the
     same digest.
+  - Both instances are re-checked through the sudoc-generated JS
+    (`logs/scramble_sudo_check.log` [3]): the `hello` twin and the hex-only preimage are hashed
+    there, and their final facelets are compared with those of `hello` and `cube`.
 
 ## 3. The attacks (measured)
 
@@ -274,6 +283,7 @@ Tracked follow-ups from the review of this write-up:
 - **S6.** The SPEC banner should also say that the vectors, the conformance tests and the
   generated-Lean TAP still hold.
 - **S7.** A `scramble-attack-logs` CI job that re-runs the seeded scripts and checks their logs
-  (the scripts are seeded and deterministic).
+  (the scripts are seeded and deterministic). Only `scramble_sudo_check.mjs` runs in CI so far
+  (§1).
 - **S8.** The wall times come from one unnamed machine. The reviewer measured 97–202 s under
   load.

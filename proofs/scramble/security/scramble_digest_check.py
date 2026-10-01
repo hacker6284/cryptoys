@@ -2,7 +2,7 @@
 
 SPEC 'Digest': edge orientation bit = 0 iff the first-axis sticker is W, Y, R or O.
 For the four edge pieces RW, OW, RY, OY BOTH stickers are in {W,Y,R,O}, so their flip is
-invisible. This script (COMPUTED):
+invisible. This script (computed):
   1. builds solved and solved-with-RW-and-OW-flipped (a legal 2-flip), shows equal digests;
   2. reaches the flipped state by a real v2 message: preimage machinery of scramble_attack
      is not needed -- we exhibit two MESSAGES with equal digest whose seated final cubes

@@ -72,8 +72,16 @@ jobs:
           done
       - name: BS vectors rebuild byte-identically from bs.sudo
         run: proofs/key_exchange/bs/vectors/regen.sh --check
-      - name: BS vectors agree with the Python reference and pow()
+      - name: BS vectors agree with pow() and the Python evidence harness
         run: python3 proofs/key_exchange/bs/vectors/check_oracle.py
+      # Scramble (marked broken): the 10 SPEC vectors, the attack messages in logs/, the
+      # `hello` twin and the decoded `cube` pose through the JS this sudoc generates from
+      # scramble.sudo (about 1 s). The seeded Python attack runs (REPORT S7) are not run here.
+      - name: scramble_sudo_check.mjs output matches its log
+        run: |
+          out="$RUNNER_TEMP/scramble_sudo_check.log"
+          node proofs/scramble/security/scramble_sudo_check.mjs > "$out" || { cat "$out"; exit 1; }
+          diff -u proofs/scramble/security/logs/scramble_sudo_check.log "$out"
 
   generated:
     # Emitted Lean of each primitive builds and its sudo tests pass (TAP).
@@ -319,3 +327,22 @@ jobs:
           lake-package-directory: proofs/doubledeal-cbc-hmac/lean
       - name: Axiom audit of every DoubleDealCbcHmac theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py cbc-hmac
+
+  scramble-lean:
+    # Scramble Link 2 (proofs/scramble/lean): the hand-written v2 and v1 models, their SPEC
+    # vectors (kernel decide!, a few seconds), the reachability invariant, and the
+    # refinement of the emitted code: the v2 digest path (digest-only and traced, several
+    # updates) and the v1 digest-only path. Rebuilds the MegaDreifach Link 2 runtime
+    # lemmas it uses (Embed, Sudo, Loop) against this package's own emitted SudoRt.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/scramble/lean --exclude Generated
+      - name: Axiom gate keying rules; SCRAMBLE_LINK2 equals the README-cited theorems
+        run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/scramble/lean
+      - name: Axiom audit of every ScrambleV2 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py scramble

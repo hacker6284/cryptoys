@@ -1,7 +1,7 @@
 /-
   The stem as a position map, and the support gap of its relabelling differences (first slice
-  towards the off-diagonal stem column bound; security README, "Roadmap", "Open" list, the
-  M7 entry). Structure only.
+  towards the off-diagonal stem column bound; security README, "Roadmap", the M7
+  row). Structure only.
 
   NO BOUND ON `dpFCount` (OR ANY OTHER DIFFERENTIAL COUNT) IS PROVED HERE. Every statement is
   exact and deck-by-deck; nothing is counted over decks or keys.
@@ -209,13 +209,25 @@ theorem stemPosOf_eq_iff (t t' : Fin 4 → Nat) (s s' : Fin 13 → Nat) (k : Fin
     stemPosOf t s k = stemPosOf t' s' k ↔ seatMap t s (inSeat k) = seatMap t' s' (inSeat k) :=
   ⟨fun h => cmFlat_inj2 h, fun h => by unfold stemPosOf; rw [h]⟩
 
-/-- (PROVED) The stem's position map is injective, for every packet. -/
-theorem stemPos_injective (m : Fin 52 → Nat) : Function.Injective (stemPos m) :=
+/-- (PROVED) The position map for row amounts `t` and column amounts `s` is injective. -/
+theorem stemPosOf_injective (t : Fin 4 → Nat) (s : Fin 13 → Nat) :
+    Function.Injective (stemPosOf t s) :=
   fun _ _ h => inSeat_injective (seatMap_injective _ _ (cmFlat_inj2 h))
 
-/-- `stemPos m` as a permutation of the positions. -/
+/-- `stemPosOf t s` as a permutation of the positions. -/
+noncomputable def seatPerm (t : Fin 4 → Nat) (s : Fin 13 → Nat) : Equiv.Perm (Fin 52) :=
+  Equiv.ofBijective (stemPosOf t s) (Finite.injective_iff_bijective.mp (stemPosOf_injective t s))
+
+theorem seatPerm_apply (t : Fin 4 → Nat) (s : Fin 13 → Nat) (k : Fin 52) :
+    seatPerm t s k = stemPosOf t s k := rfl
+
+/-- (PROVED) The stem's position map is injective, for every packet. -/
+theorem stemPos_injective (m : Fin 52 → Nat) : Function.Injective (stemPos m) :=
+  stemPosOf_injective _ _
+
+/-- `stemPos m` as a permutation of the positions: the seat permutation of `m`'s amounts. -/
 noncomputable def stemPerm (m : Fin 52 → Nat) : Equiv.Perm (Fin 52) :=
-  Equiv.ofBijective (stemPos m) (Finite.injective_iff_bijective.mp (stemPos_injective m))
+  seatPerm (rowAmts m) (colAmts m)
 
 theorem stemPerm_apply (m : Fin 52 → Nat) (k : Fin 52) : stemPerm m k = stemPos m k := rfl
 
@@ -325,11 +337,12 @@ theorem zCols_le (m m' : Fin 52 → Nat) : zCols m m' ≤ 13 :=
     `52 - zRows x (β·x) * zCols x (β·x)` cards (`x = permDeck π`). -/
 theorem card_moved_eq {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))) :
-    (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card =
+    (γ⁻¹ * β).support.card =
       52 - zRows (permDeck π) (rel β (permDeck π)) * zCols (permDeck π) (rel β (permDeck π)) := by
   have e := filter_card_add_filter_neg_card_eq_card (s := (univ : Finset (Fin 52)))
     (fun a : Fin 52 => (γ⁻¹ * β) a = a)
   rw [card_fixed_eq h, card_univ, Fintype.card_fin] at e
+  show (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = _
   simp only [ne_eq]
   omega
 
@@ -356,8 +369,7 @@ theorem card_moved_cases {β γ π : Equiv.Perm (Fin 52)}
     (Never exactly 1 holds for every permutation; the content is never exactly 2 or 3.) -/
 theorem card_moved_zero_or_ge_four {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))) :
-    (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 0 ∨
-      4 ≤ (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card := by
+    (γ⁻¹ * β).support.card = 0 ∨ 4 ≤ (γ⁻¹ * β).support.card := by
   rcases card_moved_cases h with e | ⟨e, -⟩ | e
   · exact Or.inl e
   · exact Or.inr e.ge

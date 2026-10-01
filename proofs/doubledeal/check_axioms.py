@@ -682,6 +682,7 @@ PACKAGES = {
             # of hoff (helpers srcRow / cmFlat_inj2 are named apart from SumRanksDP.rowOf /
             # SumRanksDP.cmFlat_injective)
             "DoubleDeal.Security.StemPosition.unkeyedNoMix_eq_comp",
+            "DoubleDeal.Security.StemPosition.stemPosOf_injective",
             "DoubleDeal.Security.StemPosition.stemPos_injective",
             "DoubleDeal.Security.StemPosition.conj_of_stem_rel",
             "DoubleDeal.Security.StemPosition.seatMap_eq_iff",
@@ -700,8 +701,8 @@ PACKAGES = {
             "DoubleDeal.Security.StemCoupling.card_cond_act_le",
             "DoubleDeal.Security.StemCoupling.coupling",
             # StemSupportFour (off-diagonal stem bound, third slice): the 4-card case of hoff,
-            # 64 * dpFCount beta gamma <= 52! when gamma^-1 * beta moves exactly 4 cards; the
-            # support >= 8 case of hoff stays a hypothesis (offDiag_of_offDiag_ge_eight)
+            # 64 * dpFCount beta gamma <= 52! when gamma^-1 * beta moves exactly 4 cards, and
+            # supports 1-3, 5-7 count no deck (support >= 8: StemUnion below)
             "DoubleDeal.Security.StemSupportFour.qPerm_moves_le_one",
             "DoubleDeal.Security.StemSupportFour.ratio_eq_qPerm",
             "DoubleDeal.Security.StemSupportFour.ratio_eq_qPerm_of_support_four",
@@ -712,15 +713,14 @@ PACKAGES = {
             "DoubleDeal.Security.StemSupportFour.dpFCount_bound_of_support_four",
             "DoubleDeal.Security.StemSupportFour.dpFCount_le_of_support_four",
             "DoubleDeal.Security.StemSupportFour.dpFCount_eq_zero_of_support_lt_eight_ne_four",
-            "DoubleDeal.Security.StemSupportFour.offDiag_of_offDiag_ge_eight",
-            "DoubleDeal.Security.StemSupportFour.fullDiffCount_le_64_of_offDiag_ge_eight",
-            # StemUnion (off-diagonal stem bound, fourth slice): the support >= 8 case by a
+            # StemUnion (off-diagonal stem bound, final slice): the support >= 8 case by a
             # union bound (general ratio formula, agreement count, cycle-representative
-            # bound); discharges hoff: 64 * fullDiffCount <= 52!^(n+2) for alpha != 1 and
-            # gamma outside v10Sym (independent keys, no decay; gamma in v10Sym not covered)
+            # bound); the column bound into gamma outside v10Sym, hence
+            # 64 * fullDiffCount <= 52!^(n+2) for alpha != 1 and gamma outside v10Sym
+            # (independent keys; the same 1/64 for every n, nothing proved about decay;
+            # gamma in v10Sym not covered; not a security claim)
             "DoubleDeal.Security.StemUnion.seatMap_shift",
             "DoubleDeal.Security.StemUnion.ratio_eq_ratioQ",
-            "DoubleDeal.Security.StemUnion.card_support_conj",
             "DoubleDeal.Security.StemUnion.exists_rep",
             "DoubleDeal.Security.StemUnion.apply_rep_not_rep",
             "DoubleDeal.Security.StemUnion.two_mul_card_reps_le",
@@ -730,11 +730,13 @@ PACKAGES = {
             "DoubleDeal.Security.StemUnion.card_zC_eq",
             "DoubleDeal.Security.StemUnion.card_params",
             "DoubleDeal.Security.StemUnion.paramCount_check",
-            "DoubleDeal.Security.StemUnion.mem_cellQ",
+            "DoubleDeal.Security.StemUnion.zRows_eq_zR",
+            "DoubleDeal.Security.StemUnion.zCols_eq_zC",
+            "DoubleDeal.Security.StemUnion.mem_ratioCell",
             "DoubleDeal.Security.StemUnion.dpFCount_le_union",
             "DoubleDeal.Security.StemUnion.dpFCount_le_of_support_ge_eight",
             "DoubleDeal.Security.StemUnion.dpFCount_le_of_ne",
-            "DoubleDeal.Security.StemUnion.hoff_holds",
+            "DoubleDeal.Security.StemUnion.dpFCount_col_le_64",
             "DoubleDeal.Security.StemUnion.fullDiffCount_le_64",
             # row/column sums of fullDiffCount (used by LinearMasks, M8b)
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount",

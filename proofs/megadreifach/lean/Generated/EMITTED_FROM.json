@@ -1,7 +1,7 @@
 {
   "sudo_file": "primitives/hash/megadreifach/megadreifach.sudo",
   "sudo_sha256": "02391cd36029acdb97c97cefabd04067644917899cad0002c87341f3391e2b7d",
-  "sudocode_lean_commit": "16b5a8b182ff80b43436dc997f02790aa79724df",
+  "sudocode_lean_commit": "2c7edef4c735b747287401d02e351515c28402d2",
   "sudocode_lean_ref": "main",
   "terminates_gate": true,
   "with_tests": true

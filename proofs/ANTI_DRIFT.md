@@ -74,8 +74,7 @@ The other counts: [MegaDreifach](megadreifach/README.md#three-layers-be-honest),
 | --- | --- |
 | Repo | [hacker6284/sudocode](https://github.com/hacker6284/sudocode) |
 | Branch | `main` |
-| Commit | `16b5a8b182ff80b43436dc997f02790aa79724df` (file: [`SUDOCODE_PIN`](SUDOCODE_PIN), also used for the JS vector builds) — squash merge of [PR #9](https://github.com/hacker6284/sudocode/pull/9) |
-| Prior pin | [PR #8](https://github.com/hacker6284/sudocode/pull/8) `ff63b629406bd5d3ab9e9434ea2d4695a2921d8a` (Lean in `ALL_BACKENDS`) |
+| Commit | the SHA in [`SUDOCODE_PIN`](SUDOCODE_PIN) (also used for the JS vector builds; its comment names the sudocode PR) |
 
 This pin is **durable on sudocode main**. Lean is an `ALL_BACKENDS`
 lockstep peer as of #8 (empty predicates, full IR). cryptoys still
@@ -128,7 +127,7 @@ total-fragment / terminating-subset emitter.
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | Link 2 **CLOSED** on `CardBound` messages (`encrypt_refines`). Not bit-security. |
 | `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-HMAC. All four publics ready (bounded `for`). |
 | PassKey S3/S4 *about* `Except Trap` emitted defs | Link 2 **CLOSED** on `FitsLen` (length and cards) / `WellFormed` (`passkey_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, and the inverse / `WellFormed` forms). Other stones about emitted defs stay open. Not bit-security. |
-| Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |
+| Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. Algebraic ≃ Generated (Link 2) proved in `proofs/scramble/lean/ScrambleV2/`; see [`scramble/README.md`](scramble/README.md#link-2-leanscramblev2). |
 | DoubleDeal-CBC-HMAC generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach via emit-ir `-I`. Link 2: next row. No AEAD security theorem. |
 | algebraic≃Generated for CBC-HMAC (Link 2) | DONE on byte inputs, every exported function: [`doubledeal-cbc-hmac/README.md`](doubledeal-cbc-hmac/README.md#link-2). For HMAC and the KDF, the theorems prove the HMAC / KDF wiring around the hash; the hash itself is only as independent as `vhashAlg`, which is a transliteration of the MegaDreifach sudo, not an independent specification. Link 1 (sudo↔Lean) stays OPEN. |
 | AEAD security (EtM reduction, HMAC-MD PRF, CBC confidentiality) | OPEN. Not claimed. SCM stays later. |

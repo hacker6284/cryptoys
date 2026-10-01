@@ -19,6 +19,8 @@ node /tmp/scramble-test/_scramble_impl.mjs
 node /tmp/megadreifach-test/_megadreifach_impl.mjs
 "$sudoc" build --target js --tests -o /tmp/doubledeal-test primitives/cipher/doubledeal/doubledeal.sudo
 node /tmp/doubledeal-test/_doubledeal_impl.mjs
+"$sudoc" build --target js --tests -o /tmp/bs-test primitives/key_exchange/bs/bs.sudo
+node /tmp/bs-test/_bs_impl.mjs
 "$sudoc" emit-ir --require terminates -I primitives/hash/megadreifach \
     primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo > /dev/null
 "$sudoc" build --target js --tests -o /tmp/ddch-test \

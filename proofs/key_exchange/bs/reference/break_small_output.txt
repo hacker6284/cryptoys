@@ -1,0 +1,2 @@
+T1: q ~ 2^27.5; BSGS (Python): recovered e_A mod q in 0.00s; e_A mod q correct: True; Eve's K == real K: True
+T2: q ~ 2^54.5; Pollard rho (C, 91,880,832 Floyd iterations): recovered e_A mod q in 3.30s; e_A mod q correct: True; Eve's K == real K: True

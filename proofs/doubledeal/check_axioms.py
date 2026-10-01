@@ -14,6 +14,8 @@
                                           # (proofs/deprecated/megadreifach-v1/lean)
     python3 proofs/doubledeal/check_axioms.py cbc-hmac  # proofs/doubledeal-cbc-hmac/lean
                                           # (DoubleDeal-CBC-HMAC Link 2)
+    python3 proofs/doubledeal/check_axioms.py scramble  # proofs/scramble/lean
+                                          # (Scramble Link 2: v2 and v1 digest paths)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -56,6 +58,12 @@ axiom) fails, as does a Lean error.
   required: the Link 2 theorem of every exported sudo function (CBC_HMAC_LINK2).
   `--selftest` also requires every `export func` of the package's sudo to appear in
   its README's "Emitted function" column, and only exports there (LINK2_EXPORT_TABLES).
+- scramble: like cbc-hmac (mode "all", key "full", no KNOWN_SORRY) for
+  proofs/scramble/lean (root `ScrambleV2`, the Scramble Link 2 package: v2 digest-only
+  and traced headlines, several updates, v1 digest-only; trace step fields, not letters);
+  required: the theorems proofs/scramble/README.md cites
+  (SCRAMBLE_LINK2). `--selftest` checks its "Emitted function" column against
+  primitives/hash/scramble/scramble.sudo too (LINK2_EXPORT_TABLES).
 
 `#audit_all` is the one command in the core-only package proofs/audit (required by
 path by both the security package and MegaDreifach); in mode "all" this script
@@ -398,6 +406,96 @@ CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
     "unpad_iso7816_refines", "unpad_iso7816_rejects", "mac_input_refines",
     "derive_keys_refines", "derive_keys_empty", "cbc_chain_from_cipher_block_refines",
     "tags_equal_refines"]}
+# proofs/scramble/lean (Scramble Link 2; scope in its README): every theorem
+# proofs/scramble/README.md cites by name; `--selftest` re-derives the list the same way
+# as MD_README_THEOREMS.
+SCRAMBLE_LEAN = ROOT.parent / "scramble" / "lean"
+SCRAMBLE_LINK2 = {
+    "ScrambleV2.Kat.kat_empty",
+    "ScrambleV2.Kat.kat_a",
+    "ScrambleV2.Kat.kat_A7",
+    "ScrambleV2.Kat.kat_hello",
+    "ScrambleV2.Kat.kat_cube",
+    "ScrambleV2.Link2.digestV2_isSome",
+    "ScrambleV2.Link2.reach_solved",
+    "ScrambleV2.Link2.reach_quarter",
+    "ScrambleV2.Link2.reach_rotate",
+    "ScrambleV2.Link2.centerOf_reach",
+    "ScrambleV2.Link2.cubieAt_reach",
+    "ScrambleV2.Link2.rotateTo_reach",
+    "ScrambleV2.Link2.ruleB_reach",
+    "ScrambleV2.Link2.turn_cubie_refines",
+    "ScrambleV2.Link2.quarter_refines",
+    "ScrambleV2.Link2.apply_turns_refines",
+    "ScrambleV2.Link2.cross_refines",
+    "ScrambleV2.Link2.dot_refines",
+    "ScrambleV2.Link2.mul_vec_refines",
+    "ScrambleV2.Link2.apply_matrix_refines",
+    "ScrambleV2.Link2.reorient_refines",
+    "ScrambleV2.Link2.fresh_refines",
+    "ScrambleV2.Link2.scramble_v2_refines",
+    "ScrambleV2.Link2.scramble_v2_digest_refines",
+    "ScrambleV2.Link2.push_step_digest",
+    "ScrambleV2.Link2.push_step_traced",
+    "ScrambleV2.Link2.do_move_refines",
+    "ScrambleV2.Link2.do_rule_digest",
+    "ScrambleV2.Link2.apply_v2_symbol_digest",
+    "ScrambleV2.Link2.cubie_at_refines",
+    "ScrambleV2.Link2.is_center_refines",
+    "ScrambleV2.Link2.has_color_refines",
+    "ScrambleV2.Link2.hasCode_posed",
+    "ScrambleV2.Link2.center_dir_refines",
+    "ScrambleV2.Link2.sticker_on_refines",
+    "ScrambleV2.Link2.color_char_refines",
+    "ScrambleV2.Link2.is_ud_refines",
+    "ScrambleV2.Link2.edge_bit_refines",
+    "ScrambleV2.Link2.corner_piece_refines",
+    "ScrambleV2.Link2.edge_piece_refines",
+    "ScrambleV2.Link2.fact_refines",
+    "ScrambleV2.Link2.rank_perm_refines",
+    "ScrambleV2.Link2.digest_bytes_refines",
+    "ScrambleV2.Link2.index_bytes_refines",
+    "ScrambleV2.Link2.Reach.index_bytes",
+    "ScrambleV2.Link2.Reach.facelets_of",
+    "ScrambleV2.Link2.solved_cube_refines",
+    "ScrambleV2.Link2.solved_facelets_ok",
+    "ScrambleV2.Link2.letter_refines",
+    "ScrambleV2.Link2.hex_digit_refines",
+    "ScrambleV2.Link2.move_name_refines",
+    "ScrambleV2.Link2.pad_v2",
+    "ScrambleV2.Link2.padV2_eq",
+    "ScrambleV2.Link2.apply_ready_v2_digest",
+    "ScrambleV2.Link2.update_v2_digest",
+    "ScrambleV2.Link2.finish_digest",
+    "ScrambleV2.Link2.evaluate_v2_digest",
+    "ScrambleV2.Link2.scramble_v2_digest_refines_digestV2",
+    "ScrambleV2.Link2.push_step_gen",
+    "ScrambleV2.Link2.do_move_gen",
+    "ScrambleV2.Link2.do_rule_gen",
+    "ScrambleV2.Link2.apply_v2_symbol_gen",
+    "ScrambleV2.Link2.apply_ready_v2_gen",
+    "ScrambleV2.Link2.update_v2_gen",
+    "ScrambleV2.Link2.finish_gen",
+    "ScrambleV2.Link2.evaluate_v2_gen",
+    "ScrambleV2.Link2.updates_v2",
+    "ScrambleV2.Link2.updates_evaluate_v2",
+    "ScrambleV2.Link2.scramble_v2_refines_digestV2",
+    "ScrambleV2.Link2.padV2_length",
+    "ScrambleV2.Kat.kat_v1_empty",
+    "ScrambleV2.Kat.kat_v1_a",
+    "ScrambleV2.Kat.kat_v1_A7",
+    "ScrambleV2.Kat.kat_v1_hello",
+    "ScrambleV2.Kat.kat_v1_cube",
+    "ScrambleV2.Link2.apply_v1_block_digest",
+    "ScrambleV2.Link2.apply_ready_v1_digest",
+    "ScrambleV2.Link2.pad_v1",
+    "ScrambleV2.Link2.padV1_eq",
+    "ScrambleV2.Link2.update_v1_digest",
+    "ScrambleV2.Link2.evaluate_v1_digest",
+    "ScrambleV2.Link2.walkV1_append8",
+    "ScrambleV2.Link2.scramble_v1_digest_refines",
+    "ScrambleV2.Link2.scramble_v1_digest_refines_digestV1",
+}
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only
 # exports (S6 of the #140 review). MegaDreifach is not listed yet: its README has no
@@ -406,9 +504,14 @@ CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
 # position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
 # one-line wrappers MegaDreifachBody, HashDeckBodyFrom and MegaDreifachBodyFrom have
 # none. Registering it (wrapper theorems plus an 11-row table) is a planned follow-up.
+# Scramble is listed: its table has a row for each of the 7 exports. `scramble_v1_digest`
+# has three theorems; the traced `scramble_v1` row says it is not claimed (no theorem), so
+# that gap is in the table rather than silent.
 LINK2_EXPORT_TABLES = {
     "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                  / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
+    "scramble": (ROOT.parent.parent / "primitives" / "hash" / "scramble" / "scramble.sudo",
+                 SCRAMBLE_LEAN.parent / "README.md"),
 }
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
@@ -603,6 +706,14 @@ PACKAGES = {
         "known_sorry": set(),
         "min": 50,  # sanity: the audit must actually see the package
         "required": CBC_HMAC_LINK2,
+    },
+    "scramble": {
+        "dir": SCRAMBLE_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": 100,  # sanity: the audit must actually see the package
+        "required": SCRAMBLE_LINK2,
     },
     "megadreifach-heavy": {
         "dir": MD_LEAN,
@@ -912,14 +1023,16 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} HEAVY_GENERATED {what}: "
               f"{len(bad)} problem(s), expected {len(want)}")
-    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 must be exactly the
-    # theorems the MegaDreifach README / the frozen v1 package's README / the
-    # DoubleDeal-CBC-HMAC proofs README cites.
+    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 / SCRAMBLE_LINK2 must be
+    # exactly the theorems the MegaDreifach README / the frozen v1 package's README / the
+    # DoubleDeal-CBC-HMAC proofs README / the Scramble proofs README cites.
     for what, listed, readme, root in [
             ("MD_README_THEOREMS", MD_README_THEOREMS, MD_README, MD_LEAN),
             ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN),
             ("CBC_HMAC_LINK2", CBC_HMAC_LINK2, CBC_HMAC_LEAN.parent / "README.md",
-             CBC_HMAC_LEAN)]:
+             CBC_HMAC_LEAN),
+            ("SCRAMBLE_LINK2", SCRAMBLE_LINK2, SCRAMBLE_LEAN.parent / "README.md",
+             SCRAMBLE_LEAN)]:
         cited, bad = md_readme_cited(readme=readme, root=root)
         for b in bad:
             print(f"check_axioms selftest: FAIL {b}")

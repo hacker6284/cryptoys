@@ -1,0 +1,3 @@
+T1 {"None": "checks pass 300/300", "lay": "error caught 189/300", "fold": "error caught 193/300"}
+T2 {"None": "checks pass 300/300", "lay": "error caught 199/300", "fold": "error caught 203/300"}
+T6demo {"None": "checks pass 300/300", "lay": "error caught 193/300", "fold": "error caught 208/300"}

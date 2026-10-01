@@ -5,6 +5,8 @@ on:
   pull_request:
     paths:
       - "primitives/**"
+      - "proofs/SUDOCODE_PIN"
+      - "proofs/sudocode_pin.sh"
       - "tools/build.sh"
       - "tools/generate-demos.sh"
       - ".github/actions/generate-demos/**"
@@ -12,6 +14,8 @@ on:
   push:
     paths:
       - "primitives/**"
+      - "proofs/SUDOCODE_PIN"
+      - "proofs/sudocode_pin.sh"
       - "tools/build.sh"
       - "tools/generate-demos.sh"
       - ".github/actions/generate-demos/**"

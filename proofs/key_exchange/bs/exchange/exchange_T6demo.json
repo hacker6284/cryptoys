@@ -1,0 +1,172 @@
+{
+ "summary": {
+  "tier": "T6demo",
+  "runs": 2,
+  "all_ok": true,
+  "mean_mults_per_person": 1048.75,
+  "mean_moves_per_person": 19713876.75,
+  "mean_moves_per_mult": 18797.498688915377,
+  "mean_key_cells": 211.75,
+  "seconds": 23.9
+ },
+ "exchanges": [
+  {
+   "tier": "T6demo",
+   "n": 100,
+   "key_cells": [
+    211,
+    208
+   ],
+   "key_hit_units": [
+    204,
+    189
+   ],
+   "key_ships": [
+    28,
+    30
+   ],
+   "pub_A_ok": true,
+   "pub_B_ok": true,
+   "A_in_subgroup": true,
+   "agree": true,
+   "K_matches_pow": true,
+   "K_canonical": true,
+   "mults_per_person": 1035.5,
+   "moves_per_person": 19435534.5,
+   "moves_per_mult": 18769.226943505553,
+   "phases": {
+    "A = walk(a, g=3)": {
+     "moves": 7755285,
+     "seconds": 1.8,
+     "cube": 211,
+     "mul": 422,
+     "fold_lift": 27467,
+     "carry": 3254805,
+     "tidy": 1
+    },
+    "B = walk(b, g=3)": {
+     "moves": 7667783,
+     "seconds": 2.7,
+     "cube": 208,
+     "mul": 416,
+     "fold_lift": 27131,
+     "carry": 3217219,
+     "tidy": 1
+    },
+    "Alice checks+squares B": {
+     "moves": 18454,
+     "seconds": 0.0,
+     "mul": 1,
+     "carry": 7688,
+     "fold_lift": 59,
+     "tidy": 1
+    },
+    "Bob checks+squares A": {
+     "moves": 18858,
+     "seconds": 0.0,
+     "mul": 1,
+     "carry": 7834,
+     "fold_lift": 69,
+     "tidy": 1
+    },
+    "K_A = walk(a, base B^2)": {
+     "moves": 12008001,
+     "seconds": 3.6,
+     "cube": 211,
+     "mul": 626,
+     "carry": 5041276,
+     "fold_lift": 41617,
+     "tidy": 1
+    },
+    "K_B = walk(b, base A^2)": {
+     "moves": 11402688,
+     "seconds": 3.6,
+     "cube": 208,
+     "mul": 605,
+     "carry": 4782038,
+     "fold_lift": 39969,
+     "tidy": 1
+    }
+   }
+  },
+  {
+   "tier": "T6demo",
+   "n": 100,
+   "key_cells": [
+    213,
+    215
+   ],
+   "key_hit_units": [
+    206,
+    204
+   ],
+   "key_ships": [
+    32,
+    33
+   ],
+   "pub_A_ok": true,
+   "pub_B_ok": true,
+   "A_in_subgroup": true,
+   "agree": true,
+   "K_matches_pow": true,
+   "K_canonical": true,
+   "mults_per_person": 1062.0,
+   "moves_per_person": 19992219.0,
+   "moves_per_mult": 18825.064971751413,
+   "phases": {
+    "A = walk(a, g=3)": {
+     "moves": 7871376,
+     "seconds": 2.1,
+     "cube": 213,
+     "mul": 426,
+     "fold_lift": 27613,
+     "carry": 3303248,
+     "tidy": 1
+    },
+    "B = walk(b, g=3)": {
+     "moves": 7910675,
+     "seconds": 2.8,
+     "cube": 215,
+     "mul": 430,
+     "fold_lift": 27922,
+     "carry": 3319743,
+     "tidy": 1
+    },
+    "Alice checks+squares B": {
+     "moves": 20170,
+     "seconds": 0.0,
+     "mul": 1,
+     "carry": 8356,
+     "fold_lift": 65,
+     "tidy": 1
+    },
+    "Bob checks+squares A": {
+     "moves": 23190,
+     "seconds": 0.0,
+     "mul": 1,
+     "carry": 9782,
+     "fold_lift": 71,
+     "tidy": 1
+    },
+    "K_A = walk(a, base B^2)": {
+     "moves": 12096988,
+     "seconds": 4.0,
+     "cube": 213,
+     "mul": 632,
+     "carry": 5078442,
+     "fold_lift": 42019,
+     "tidy": 1
+    },
+    "K_B = walk(b, base A^2)": {
+     "moves": 12062039,
+     "seconds": 3.3,
+     "cube": 215,
+     "mul": 634,
+     "carry": 5060875,
+     "fold_lift": 41876,
+     "tidy": 1
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+12 cards, ranks<=4: min over rank-multiplicity patterns of max disjoint diff-rank pairs: (6, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+13 cards:  (6, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+adversarial greedy, 12 cards: (4, [4, 1, 1, 1, 1, 1, 1, 1, 1])
+L(5) without WLOG over all 12^5 nonzero tuples: 10 / 32

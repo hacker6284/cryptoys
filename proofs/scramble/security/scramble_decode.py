@@ -3,7 +3,7 @@
 Removes the caveat of `scramble_attack.py preimage`, which obtained the target's seated pose by
 hashing b'hello'. Here the target is only a 17-hex-digit digest string (default: the SPEC v2
 KAT digest of b'cube', 132FDCE0BF26E5898); no message is hashed to get the pose.
-COMPUTED checks:
+computed checks:
   1. corner-twist sum = 0 mod 3 and standard edge-flip sum = 0 mod 2 on 2000 random reachable
      states (validates the invariants the decoder uses);
   2. decode(digest(s)) round-trips (equal digest, legal) for 2000 random reachable states;

@@ -2,7 +2,7 @@
 
 Scramble is a toy hash. A message is a walk on a solved cube. The digest is the seated pose at the end of that walk. 
 
-> **Status: BROKEN. Do not use Scramble for anything.** Collisions, second preimages and preimages of `scramble_v2` have each been found end to end, in under a minute of one Python process on one machine (measured). The causes are Rule B and the digest encoding; the same two flaws hold for `scramble_v1` (proved (paper)). There is no replacement version. The algorithm, `scramble.sudo` and the vectors below are unchanged. See [Security](#security).
+> **Status: BROKEN. Do not use Scramble for anything.** Collisions, second preimages and preimages of `scramble_v2` have each been found end to end (measured; run times in [REPORT §0](../../../proofs/scramble/security/REPORT.md#0-summary)). The causes are Rule B and the digest encoding; the same two flaws hold for `scramble_v1` (proved (paper)). There is no replacement version. The algorithm, `scramble.sudo` and the vectors below are unchanged. See [Security](#security).
 
 The prose in this file is normative. `scramble.sudo` is the conformance implementation. Its tests assert the vectors below. A mismatch is a bug in the implementation. Changing the behavior of a frozen version means publishing a new version.
 
@@ -254,11 +254,13 @@ Why it is broken:
 
 Measured attacks on full-size `scramble_v2`. One seeded run each (seed `20260930`); each run succeeded, and its messages and digests were re-checked through the JavaScript that `sudoc` generates from `scramble.sudo`, which in the same run reproduces all 10 vectors in this file ([`scramble_sudo_check.mjs`](../../../proofs/scramble/security/scramble_sudo_check.mjs), log [`scramble_sudo_check.log`](../../../proofs/scramble/security/logs/scramble_sudo_check.log)). A success rate over repeated runs was not measured. Work is in nybble steps (two quarter turns plus Rule B); one hash of a message of 11 or more nybbles is at least 12 steps, which gives the hash equivalents.
 
-| Attack | Work (measured) | Result | Time, one Python process |
-| --- | --- | --- | --- |
-| Collision | `2^21.88` nybble steps (`≈2^18.29` hash equivalents), plus `2^21.76` edge-only permutation applications | two distinct 88-byte messages with digest `0AFB0BE3439EF6892` | 17 s |
-| Second preimage of a random 64-byte message | `2^22.94` nybble steps (`≈2^19.35` hash equivalents), plus `2^22.09` edge-only permutation applications | a 172-byte message with the target's digest `0A38700830D1C599C` | 37 s |
-| Preimage of a digest given only as hex, the `cube` vector `132FDCE0BF26E5898` | `2^22.95` nybble steps | a 172-byte message with that digest | 37 s |
+| Attack | Work (measured) | Result |
+| --- | --- | --- |
+| Collision | `2^21.88` nybble steps (`≈2^18.29` hash equivalents), plus `2^21.76` edge-only permutation applications | two distinct 88-byte messages with digest `0AFB0BE3439EF6892` |
+| Second preimage of a random 64-byte message | `2^22.94` nybble steps (`≈2^19.35` hash equivalents), plus `2^22.09` edge-only permutation applications | a 172-byte message with the target's digest `0A38700830D1C599C` |
+| Preimage of a digest given only as hex, the `cube` vector `132FDCE0BF26E5898` | `2^22.95` nybble steps | a 172-byte message with that digest |
+
+Run times are in [REPORT §0](../../../proofs/scramble/security/REPORT.md#0-summary).
 
 Cost models (heuristic): collision `≈ 2^21.9`; preimage `≈ 2^23`, dominated by the Joux stages. Both use the measured mean Joux stage cost of `2^14.4` blocks, so they are a fit to these runs, not an independent prediction.
 

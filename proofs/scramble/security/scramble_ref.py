@@ -213,7 +213,7 @@ def selfcheck(verbose=True):
     return ok
 
 if __name__ == '__main__':
-    print('Scramble reference self-check (10 SPEC KATs):')
+    print('Scramble engine self-check (10 SPEC KATs):')
     r = selfcheck()
     print(f'  |G| = {GROUP} = 2^{math.log2(GROUP):.3f}; sqrt = 2^{math.log2(GROUP) / 2:.3f}')
     print('ALL OK' if r else 'FAILED')

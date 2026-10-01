@@ -263,4 +263,134 @@ theorem throw_row_cup_spec (d : Spec.Dice) (hfit : FitsLen d.d10.length) :
     rw [foldlM_range'_shift _ 1 0 5]
     exact bind_some_map _ _
 
+/-! ### rethrow_unread -/
+
+theorem embed_set (l : List Nat) (k x : Nat) (h : k < (embed l).size) :
+    (embed l).set ⟨k, h⟩ (Int.ofNat x) = embed (l.set k x) := by
+  simp [embed, Array.set, List.map_set]
+
+theorem size_embed' (l : List Nat) : (embed l).size = l.length := by simp [embed]
+
+/-- §4.2 letting go: the emitted `rethrow_unread` is `Spec.rethrowUnread`, traps included. -/
+theorem rethrow_unread_spec (d : Spec.Dice) (tray : List Nat) (read : Nat)
+    (hfit : FitsLen d.d10.length) (htr : FitsLen tray.length) :
+    (Bs.rethrow_unread (embDice d) (embed tray) (Int.ofNat read)).toOption =
+      (Spec.rethrowUnread d tray read).map (fun p => (embDice p.1, embed p.2)) := by
+  unfold Bs.rethrow_unread Spec.rethrowUnread
+  rw [listLen_embed, subI_len_one _ htr, ok_bind, except_bind_pure, fuelRange_eq]
+  by_cases hr : read < tray.length
+  · rw [show Int.ofNat tray.length - 1 = Int.ofNat (tray.length - 1) by
+      simp only [ofNat_eq_natCast]; omega]
+    refine (loop_opt (S := Spec.Dice × List Nat) (fun s => (embed s.2, embDice s.1)) _ _ _
+      (fun k s => (Spec.throwD10 s.1).map (fun p => (p.2, s.2.set k p.1)))
+      (fun _ s => s.1.d10 = d.d10 ∧ s.2.length = tray.length)
+      (fun s => some (embDice s.1, embed s.2)) read tray.length hr ?_ ?_ ?_ (d, tray)
+      ⟨rfl, rfl⟩).trans ?_
+    · intro i s hi1 hi2 hP
+      obtain ⟨dd, tr⟩ := s
+      dsimp only at hP ⊢
+      rw [if_neg (by simp only [ofNat_eq_natCast]; omega), toOpt_bind, toOpt_bind,
+        throw_d10_spec dd (by rw [hP.1]; exact hfit)]
+      cases ht : Spec.throwD10 dd with
+      | none => rfl
+      | some p =>
+        obtain ⟨f, dd'⟩ := p
+        have hi : i < (embed tr).size := by rw [size_embed']; omega
+        simp only [Option.map_some', Option.some_bind]
+        rw [toOpt_bind, putL_ofNat _ _ _ hi, toOpt_ok, Option.some_bind, embed_set]
+        by_cases hl : i + 1 = tray.length
+        · have hb : (Int.ofNat i == Int.ofNat (tray.length - 1)) = true := by
+            apply beq_iff_eq.mpr; congr 1; omega
+          simp only [hb, if_true, if_pos hl, toOpt_ok]
+          rfl
+        · have hb : (Int.ofNat i == Int.ofNat (tray.length - 1)) = false := by
+            apply beq_false_of_ne; intro h; have := Int.ofNat.inj h; omega
+          simp only [hb, Bool.false_eq_true, if_false, if_neg hl, toOpt_bind,
+            addI_ofNat_one _ (FitsLen.of_le htr (show i + 1 ≤ tray.length by omega)), toOpt_ok,
+            Option.some_bind]
+          rfl
+    · intro i s s' _ _ hP hm
+      obtain ⟨dd, tr⟩ := s
+      cases ht : Spec.throwD10 dd with
+      | none => simp [ht] at hm
+      | some p =>
+        simp only [ht, Option.map_some', Option.some.injEq] at hm
+        subst hm
+        exact ⟨(throwD10_d10 ht).trans hP.1, by rw [List.length_set]; exact hP.2⟩
+    · intro j s _; rfl
+    · exact bind_some_map _ _
+  · refine (congrArg Except.toOption (loop_opt_empty (S := Spec.Dice × List Nat)
+      (fun s => (embed s.2, embDice s.1)) _ _ _ read _ ?_ (d, tray) ?_)).trans ?_
+    · simp only [ofNat_eq_natCast]; omega
+    · dsimp only; rw [if_pos (by simp only [ofNat_eq_natCast]; omega)]; rfl
+    · rw [show tray.length - read = 0 by omega]; rfl
+
+/-! ### Let-go lists -/
+
+/-- A model let-go point as the emitted record. -/
+def embLetGo (x : Spec.LetGo) : Bs.LetGo := ⟨x.hole, x.gap⟩
+
+/-- A model let-go list as the emitted array. -/
+def embLG (lg : List Spec.LetGo) : Array Bs.LetGo := (lg.map embLetGo).toArray
+
+theorem size_embLG (lg : List Spec.LetGo) : (embLG lg).size = lg.length := by simp [embLG]
+
+theorem embLG_get (lg : List Spec.LetGo) (i : Nat) (h : i < (embLG lg).size) :
+    (embLG lg)[i] = embLetGo (lg[i]'(by rw [size_embLG] at h; exact h)) := by
+  simp [embLG]
+
+/-- §4.2: the emitted `lets_go` is `Spec.letsGo`; it never traps. -/
+theorem lets_go_spec (lg : List Spec.LetGo) (hole : Nat) (gap : Bool) (hfit : FitsLen lg.length) :
+    Bs.lets_go (embLG lg) (Int.ofNat hole) gap = .ok (Spec.letsGo lg hole gap) := by
+  unfold Bs.lets_go
+  rw [show SudoRt.listLen (embLG lg) = Int.ofNat lg.length by rw [listLen_eq, size_embLG],
+    subI_len_one _ hfit, ok_bind, except_bind_pure, fuelRange_eq]
+  cases hl : lg.length with
+  | zero =>
+    have : lg = [] := List.eq_nil_of_length_eq_zero hl
+    subst this
+    rfl
+  | succ n =>
+    rw [show Int.ofNat (n + 1) - 1 = Int.ofNat n by simp only [ofNat_eq_natCast]; omega]
+    refine asc_scan_ret_goal true _ _ _
+      (fun i => if h : i < lg.length then decide (lg[i].hole = Int.ofNat hole) && lg[i].gap == gap
+        else false) 0 n (Nat.zero_le _) _ ?_ ?_ ?_
+    · intro i _ hi
+      have hi' : i < lg.length := by omega
+      have hi'' : i < (embLG lg).size := by rw [size_embLG]; omega
+      dsimp only
+      rw [if_neg (by simp only [ofNat_eq_natCast]; omega), atL_ofNat _ _ hi'', ok_bind,
+        embLG_get, dif_pos hi']
+      simp only [embLetGo, SudoRt.SEq.beq]
+      by_cases hh : lg[i].hole = Int.ofNat hole
+      · simp only [hh, decide_True, if_true, atL_ofNat _ _ hi'', ok_bind, embLG_get, pure_eq_ok,
+          ok_bind, Bool.true_and]
+        cases lg[i].gap <;> cases gap <;> simp <;> by_cases hn : i = n <;> simp [hn] <;>
+          (first | rfl | (rw [if_neg (by omega), show ((i : Int)) = Int.ofNat i from rfl,
+          addI_ofNat_one i (FitsLen.of_le hfit (show i + 1 ≤ lg.length by omega))]; rfl))
+      · simp only [hh, decide_False, if_false, pure_eq_ok, ok_bind, Bool.false_and,
+          Bool.false_eq_true]
+        by_cases hn : i = n <;> simp [hn] <;>
+          (first | rfl | (rw [if_neg (by omega), show ((i : Int)) = Int.ofNat i from rfl,
+          addI_ofNat_one i (FitsLen.of_le hfit (show i + 1 ≤ lg.length by omega))]; rfl))
+    · intro hall
+      unfold Spec.letsGo
+      have : lg.any (fun x => decide (x.hole = Int.ofNat hole) && x.gap == gap) = false := by
+        rw [List.any_eq_false]
+        intro x hx
+        obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.mp hx
+        have := hall i (Nat.zero_le _) (by omega)
+        dsimp only at this
+        rw [dif_pos hi] at this
+        rw [this]; decide
+      rw [this]; rfl
+    · intro i _ hi hb
+      have hi' : i < lg.length := by omega
+      dsimp only at hb
+      rw [dif_pos hi'] at hb
+      unfold Spec.letsGo
+      have : lg.any (fun x => decide (x.hole = Int.ofNat hole) && x.gap == gap) = true :=
+        List.any_eq_true.mpr ⟨lg[i], List.getElem_mem hi', hb⟩
+      rw [this]; rfl
+
 end BsLink2.Link2

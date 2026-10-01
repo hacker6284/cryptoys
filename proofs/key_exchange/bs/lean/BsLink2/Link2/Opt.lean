@@ -158,4 +158,78 @@ theorem loop_brk_opt {S α ρ β} (E : S → α)
         exact ih (fromN + 1) (by omega) (fun i s h1 h2 => hstep i s (by omega) h2) s' (by omega)
       | inr s' => simp only [Option.map_some', Option.some_bind]; exact hafter _ s'
 
+/-- `asc_scan` for any returned value `rv` (`asc_scan` is `rv = false`). -/
+theorem asc_scan_ret {ρ β} (rv : ρ)
+    (step : Int → Except SudoRt.Trap (SudoRt.Flow Int ρ))
+    (after : Int → Except SudoRt.Trap β) (onRet : ρ → Except SudoRt.Trap β)
+    (bad : Nat → Bool) (fromN toN : Nat) (hle : fromN ≤ toN)
+    (hstep : ∀ i, fromN ≤ i → i ≤ toN → step (Int.ofNat i) =
+      if bad i then .ok (.ret rv)
+      else if i = toN then .ok (.brk (Int.ofNat i)) else .ok (.cont (Int.ofNat (i + 1)))) :
+    ((∀ i, fromN ≤ i → i ≤ toN → bad i = false) →
+      SudoRt.runLoopOn (Int.ofNat fromN) (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
+        step after onRet = after (Int.ofNat toN)) ∧
+    ((∃ i, fromN ≤ i ∧ i ≤ toN ∧ bad i = true) →
+      SudoRt.runLoopOn (Int.ofNat fromN) (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
+        step after onRet = onRet rv) := by
+  rw [fuelRange_le hle]
+  obtain ⟨d, hd⟩ : ∃ d, toN - fromN = d := ⟨_, rfl⟩
+  rw [hd]
+  induction d generalizing fromN with
+  | zero =>
+    have heq : fromN = toN := by omega
+    subst heq
+    constructor
+    · intro hall
+      have hb := hall fromN (Nat.le_refl _) (Nat.le_refl _)
+      rw [runLoopOn_succ, hstep fromN (Nat.le_refl _) (Nat.le_refl _),
+        if_neg (by simp [hb]), if_pos rfl]
+    · intro ⟨i, h1, h2, hb⟩
+      have heq : i = fromN := by omega
+      subst heq
+      rw [runLoopOn_succ, hstep i (Nat.le_refl _) (Nat.le_refl _),
+        if_pos hb]
+  | succ d ih =>
+    have hne : fromN ≠ toN := by omega
+    have ih' := ih (fromN + 1) (by omega) (fun i h1 h2 => hstep i (by omega) h2) (by omega)
+    constructor
+    · intro hall
+      have hb := hall fromN (Nat.le_refl _) hle
+      rw [runLoopOn_succ, hstep fromN (Nat.le_refl _) hle,
+        if_neg (by simp [hb]), if_neg hne]
+      exact ih'.1 (fun i h1 h2 => hall i (by omega) h2)
+    · intro ⟨i, h1, h2, hb⟩
+      cases hf : bad fromN
+      · rw [runLoopOn_succ, hstep fromN (Nat.le_refl _) hle, hf]
+        simp only [Bool.false_eq_true, if_false, if_neg hne]
+        have : i ≠ fromN := fun e => by subst e; rw [hf] at hb; exact absurd hb (by decide)
+        exact ih'.2 ⟨i, by omega, h2, hb⟩
+      · rw [runLoopOn_succ, hstep fromN (Nat.le_refl _) hle, hf]
+        rfl
+
+/-- `asc_scan_ret` in goal form. -/
+theorem asc_scan_ret_goal {ρ β} (rv : ρ)
+    (step : Int → Except SudoRt.Trap (SudoRt.Flow Int ρ))
+    (after : Int → Except SudoRt.Trap β) (onRet : ρ → Except SudoRt.Trap β)
+    (bad : Nat → Bool) (fromN toN : Nat) (hle : fromN ≤ toN) (R : Except SudoRt.Trap β)
+    (hstep : ∀ i, fromN ≤ i → i ≤ toN → step (Int.ofNat i) =
+      if bad i then .ok (.ret rv)
+      else if i = toN then .ok (.brk (Int.ofNat i)) else .ok (.cont (Int.ofNat (i + 1))))
+    (hA : (∀ i, fromN ≤ i → i ≤ toN → bad i = false) → after (Int.ofNat toN) = R)
+    (hB : ∀ i, fromN ≤ i → i ≤ toN → bad i = true → onRet rv = R) :
+    SudoRt.runLoopOn (Int.ofNat fromN) (fuelRange (Int.ofNat fromN) (Int.ofNat toN))
+      step after onRet = R := by
+  have hsc := asc_scan_ret rv step after onRet bad fromN toN hle hstep
+  by_cases hall : ∀ i, fromN ≤ i → i ≤ toN → bad i = false
+  · rw [hsc.1 hall]; exact hA hall
+  · have hex : ∃ i, fromN ≤ i ∧ i ≤ toN ∧ bad i = true := by
+      apply Classical.byContradiction
+      intro hne; apply hall
+      intro i h1 h2
+      cases h : bad i
+      · rfl
+      · exact absurd ⟨i, h1, h2, h⟩ hne
+    obtain ⟨i, h1, h2, hb⟩ := hex
+    rw [hsc.2 ⟨i, h1, h2, hb⟩]; exact hB i h1 h2 hb
+
 end BsLink2.Link2

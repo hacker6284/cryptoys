@@ -151,6 +151,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
 | **R3072** | **1938** | **3¹⁹³⁸ − (π₉₆₉ + 1453486)** | **3072** | 969 trits, 663 pegs | same |
 
 * π_t is the integer whose base-3 digits are the first t ternary digits of π.
+* **Every toll has fewer than n trits** (c < 3^(n−1)); every tier above does. The lift bound in B4 (and so `bs.sudo`'s bounded loop) relies on it; `bs.sudo` asserts it.
 * The full decimal values of p, q and c are in `reference/params.json` and `reference/params_323.json`.
 * In every big tier, q is a *probable* prime: Miller–Rabin with 50 rounds plus BPSW, with no ECPP certificate. p follows from q by Pocklington in principle (not checked).
 
@@ -175,6 +176,7 @@ Registers are strips of n holes. Hole 0 is first, and hole i is worth 3ⁱ. No s
   - *Two-peg toll:* drop the lifted peg's colour at h − n and at h − n + k.
   - *T1 example:* a white peg at hole 20 is lifted, and whites are dropped into holes 2 and 4, since 3²⁰ ≡ 3²·(3² + 1).
   - Carries from the laid toll can only land at or below the lifted hole: the value went down, and everything above was already empty. So "always the highest" terminates.
+  - Because the toll has fewer than n trits (§2.3), each hole is lifted at most 4 times before it stays empty (the bound and its reason are in `bs.sudo`, `pay_toll`).
 * **B5. Tidy a register (canonical form; needed only for published values, the B8 square and the final secret).**
   1. Copy the register into the strip, with one extra hole on top.
   2. Pour the toll into the copy.

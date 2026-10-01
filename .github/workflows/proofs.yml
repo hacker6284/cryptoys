@@ -94,6 +94,7 @@ jobs:
           - { name: megadreifach, dir: proofs/megadreifach/lean/Generated, test: megadreifach_test }
           - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
           - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
+          - { name: bs, dir: proofs/key_exchange/bs/lean/Generated, test: bs_test }
           # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property; not an
           # attack, so no witness package): emitted TAP only (proofs/deprecated/doubledeal-v11/).
           - { name: doubledeal-v11, dir: proofs/deprecated/doubledeal-v11/lean/Generated, test: doubledeal_v11_test }
@@ -345,3 +346,23 @@ jobs:
           lake-package-directory: proofs/scramble/lean
       - name: Axiom audit of every ScrambleV2 theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py scramble
+
+  bs-lean:
+    # BS Link 2 (proofs/key_exchange/bs/lean): the hand-written model of SPEC §2.3, §3,
+    # §3.1 and B3 to B9, and the refinement of the emitted tier, multiply, tidy,
+    # check_received, send_public_value, public_value, shared_secret and exchange (the last
+    # three given read_key's output). Short: the build is about a minute, no heavy checks.
+    # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
+    # this package's own emitted SudoRt.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/key_exchange/bs/lean --exclude Generated
+      - name: Axiom gate keying rules; BS_LINK2 equals the README-cited theorems; export table
+        run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/key_exchange/bs/lean
+      - name: Axiom audit of every BsLink2 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py bs

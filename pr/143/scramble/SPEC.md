@@ -2,9 +2,11 @@
 
 Scramble is a toy hash. A message is a walk on a solved cube. The digest is the seated pose at the end of that walk. 
 
+> **Status: BROKEN. Do not use Scramble for anything.** Collisions, second preimages and preimages of `scramble_v2` have each been found end to end, in under a minute of one Python process on one machine (measured). The causes are Rule B and the digest encoding; the same two flaws hold for `scramble_v1` (proved (paper)). There is no replacement version. The algorithm, `scramble.sudo` and the vectors below are unchanged. See [Security](#security).
+
 The prose in this file is normative. `scramble.sudo` is the conformance implementation. Its tests assert the vectors below. A mismatch is a bug in the implementation. Changing the behavior of a frozen version means publishing a new version.
 
-`scramble_v1` is superseded. `scramble_v2` is current. Names stay frozen. The demo's default pointer is v2.
+`scramble_v1` is superseded. `scramble_v2` is current, and broken. Names stay frozen. The demo's default pointer is v2.
 
 ## Prior art
 
@@ -218,7 +220,7 @@ Padding. Append the marker nybble `8`. Let `n = (8 - (length mod 8)) mod 8`, and
 
 ## scramble_v2
 
-Current. The design notes record a collision attack around `2^32.6`, and a meet-in-the-middle second-preimage attack around `2^33`. The digest is about 65.2 bits wide because that is the order of the cube group. Those facts are why this version is still a toy. It stays callable so the demo and these vectors keep working.
+Current, and broken: see [Security](#security). It stays callable so the demo and these vectors keep working.
 
 Each nybble is two clockwise quarter turns, then Rule B. The block index is the nybble's index in the padded tape, and `index` is `0` for the first turn and `1` for the second.
 
@@ -238,3 +240,26 @@ Padding. Append the marker nybble `8`. While the tape is shorter than 12 nybbles
 | byte `A7` | 39 | `1552B6EF7DA10C2E8` | `OGBYWYBWRYORWROGWRRGGBGROROWGYBYOBBWYRWBOWOOGYYBGBRGYW` |
 | `hello` | 39 | `052A3C7D12291D140` | `ORWWWWWYWGRRORWGBOROORGBOBYBRRGYYYWYYOGGOGBYWBYBBBOGGR` |
 | `cube` | 39 | `132FDCE0BF26E5898` | `OGBYWWWYYGBRBRWGRORGROGOBRWOYORYGRBWGOGWOWBBYYOYGBRBYW` |
+
+## Security
+
+**Broken. Scramble makes no security claim.** Tags below: *proved (paper)* (argument written out in the report; nothing here is kernel-checked), *computed* (exact, by a script in the report's directory, with its log), *measured* (a seeded run and its log), *heuristic*, *argued* (not run). Write-up, scripts and logs: [`proofs/scramble/security/`](../../../proofs/scramble/security/REPORT.md).
+
+Why it is broken:
+
+- **Rule B (proved (paper)).** Rule B reads only the up-front-right corner, and face turns never mix corners with edges. So the corners and the face centres evolve on their own, in at most `24 · (8!/2) · 3^7 ≈ 2^29.98` states, and the edges are only permuted by maps chosen by the nybble and that corner state. An attacker runs Joux multicollisions on the corner chain, then a birthday search or a meet-in-the-middle on the edges.
+- **Digest (proved (paper); the counts are computed exactly, and only the report's 300-sample check is measured).** The edge orientation bit cannot see a flip of RW, OW, RY or OY, because both of their stickers are in `{W, Y, R, O}`. Each digest has 8 or 16 legal seated poses, so the digest takes `|G|/12 ≈ 2^61.64` values, not the full `|G| ≈ 2^65.23`. Solved and solved-with-RW-and-OW-flipped both give `00000000000000700`, and a real message whose seated cube differs from `hello`'s has `hello`'s digest `052A3C7D12291D140` (measured).
+- **Invertible walk (proved (paper)).** Each symbol is a bijection on the whole state, so a preimage costs the same as a second preimage.
+- **Length extension (argued, not run).** A digest fixes the state after `m ‖ 8` up to at most 384 candidates.
+
+Measured attacks on full-size `scramble_v2`. One seeded run each (seed `20260930`); each run succeeded, and its messages and digests were re-checked through the JavaScript that `sudoc` generates from `scramble.sudo`, which in the same run reproduces all 10 vectors in this file ([`scramble_sudo_check.mjs`](../../../proofs/scramble/security/scramble_sudo_check.mjs), log [`scramble_sudo_check.log`](../../../proofs/scramble/security/logs/scramble_sudo_check.log)). A success rate over repeated runs was not measured. Work is in nybble steps (two quarter turns plus Rule B); one hash of a message of 11 or more nybbles is at least 12 steps, which gives the hash equivalents.
+
+| Attack | Work (measured) | Result | Time, one Python process |
+| --- | --- | --- | --- |
+| Collision | `2^21.88` nybble steps (`≈2^18.29` hash equivalents), plus `2^21.76` edge-only permutation applications | two distinct 88-byte messages with digest `0AFB0BE3439EF6892` | 17 s |
+| Second preimage of a random 64-byte message | `2^22.94` nybble steps (`≈2^19.35` hash equivalents), plus `2^22.09` edge-only permutation applications | a 172-byte message with the target's digest `0A38700830D1C599C` | 37 s |
+| Preimage of a digest given only as hex, the `cube` vector `132FDCE0BF26E5898` | `2^22.95` nybble steps | a 172-byte message with that digest | 37 s |
+
+Cost models (heuristic): collision `≈ 2^21.9`; preimage `≈ 2^23`, dominated by the Joux stages. Both use the measured mean Joux stage cost of `2^14.4` blocks, so they are a fit to these runs, not an independent prediction.
+
+An earlier version of this file gave the generic square-root costs for the cube group as Scramble v2's attack costs. They were not; the report's §0 and §3.3 explain the difference.

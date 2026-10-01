@@ -8,7 +8,7 @@ runs:
       id: pin
       shell: bash
       run: |
-        commit="$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_PIN)"
+        commit="$(sh proofs/sudocode_pin.sh)"
         echo "commit=$commit" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v4
       with:

@@ -44,7 +44,7 @@ ensure_cargo
 
 # Always refresh: Render's build cache can keep a stale .sudocode. Build the
 # commit in proofs/SUDOCODE_PIN, same as Pages generate-demos and CI.
-pin=$(grep -E '^[0-9a-f]{40}$' proofs/SUDOCODE_PIN)
+pin=$(sh proofs/sudocode_pin.sh)
 rm -rf .sudocode
 git init -q .sudocode
 git -C .sudocode fetch -q --depth 1 https://github.com/hacker6284/sudocode.git "$pin"

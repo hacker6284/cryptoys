@@ -104,3 +104,25 @@ def sharedSecret (F : Field) (base cells : List Nat) : List Nat :=
   toReg F.n (value base ^ expOf cells % F.p)
 
 end BsLink2.Spec
+
+namespace BsLink2.Spec
+
+/-- B8. Checking a received number: it must have exactly `n` trits; square it and tidy
+    (C = R·R mod p); reject (`none`) if C is empty (0) or a lone white in hole 0 (1);
+    otherwise C is the base. -/
+def checkReceived (F : Field) (r : List Nat) : Option (List Nat) :=
+  if r.length = F.n ∧ ∀ t ∈ r, t ≤ 2 then
+    if value r * value r % F.p = 0 ∨ value r * value r % F.p = 1 then none
+    else some (toReg F.n (value r * value r % F.p))
+  else none
+
+end BsLink2.Spec
+
+namespace BsLink2.Spec
+
+/-- B9. The key both players should end with: `K = 3^(2·a·b) mod p`, as a register, where
+    `a` and `b` are the exponents of Alice's and Bob's cell strings. -/
+def exchangeKey (F : Field) (cellsA cellsB : List Nat) : List Nat :=
+  toReg F.n (3 ^ (2 * expOf cellsA * expOf cellsB) % F.p)
+
+end BsLink2.Spec

@@ -1,13 +1,15 @@
 """Structural attacks on Scramble v2: the corner+frame sub-state is autonomous.
 
-OBSERVATION (proved in REPORT.md §2): face turns never mix corners with edges;
+OBSERVATION (proved on paper in REPORT.md §2): face turns never mix corners with edges;
 Rule B reads only the corner cubie in slot (1,1,1) and the centre positions (the frame).
-So (corner stickers, centre stickers) evolve on their own, a set of 24 * 8! * 3^7 ~ 2^31.0
-states, and the edge stickers are only permuted by a map that depends on (nybble, corner
-state), never on the edges.
+So (corner stickers, centre stickers) evolve on their own, a set of at most
+24 * (8!/2) * 3^7 ~ 2^29.98 states (corner permutations are even; REPORT.md P4), and the
+edge stickers are only permuted by a map that depends on (nybble, corner state), never on
+the edges.
 
-ATTACKS (all end-to-end, every result re-verified with the full reference evaluate()):
-  collision  : Joux multicollision on the 2^31 corner chain (t stages of 8-nybble blocks),
+ATTACKS (all end-to-end, every result re-verified with the engine's full evaluate(); the
+sudoc-generated JS re-check is scramble_sudo_check.mjs):
+  collision  : Joux multicollision on the 2^29.98 corner chain (t stages of 8-nybble blocks),
                then a birthday search over the 2^t edge outcomes (edge space ~2^38.8).
   second     : second preimage of a random 64-byte message.
   preimage   : preimage of a given digest (default: the SPEC KAT digest of b'hello').
@@ -118,7 +120,8 @@ def joux(c0, t, rng, log):
         stages.append((b1, b2, g1, g2)); tries.append(n)
     log(f"  {t} corner-collision stages: blocks tried per stage mean {sum(tries) / t:.0f} "
         f"(2^{math.log2(sum(tries) / t):.2f}), min {min(tries)}, max {max(tries)}; "
-        f"sqrt(pi/2 * 24*8!*3^7) = {math.sqrt(math.pi / 2 * 24 * 40320 * 2187):.0f}")
+        f"sqrt(pi/2 * 24*(8!/2)*3^7) = {math.sqrt(math.pi / 2 * 24 * 20160 * 2187):.0f} "
+        f"(2^{math.log2(math.pi / 2 * 24 * 20160 * 2187) / 2:.2f})")
     return stages, c
 
 EG = [0]

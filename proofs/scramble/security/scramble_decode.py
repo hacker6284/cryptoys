@@ -8,7 +8,7 @@ COMPUTED checks:
      states (validates the invariants the decoder uses);
   2. decode(digest(s)) round-trips (equal digest, legal) for 2000 random reachable states;
   3. preimage of the given digest: decode -> 24 pre-padding states -> attack_preimage ->
-     verify with the full reference evaluate().
+     verify with the engine's full evaluate().
 Stage-3 review script (PYTHONDONTWRITEBYTECODE=1). Seeded.
 """
 import itertools, math, os, random, sys, time

@@ -6,12 +6,17 @@
 > paper, seeded scripts and their logs), not a Lean theorem, and not a proposal for a new
 > version. The design-fix proposals of the original review are not included.
 
-Tags:
-- **PROVED**: proof given here.
-- **COMPUTED**: seeded script in this directory, with its recorded output in `logs/`.
-- **LIT**: literature; *(unverified detail)* where the reviewer did not re-read it.
-- **HEUR**: heuristic.
-- **ARGUED**: argument given, not run.
+Tags (the same set as the SPEC's Security section):
+- **proved (paper)**: proof written out here, on paper. Nothing in this report is kernel-checked.
+- **computed**: an exact value from a script in this directory, with its recorded output in
+  `logs/`.
+- **measured**: the outcome of a seeded run of a script in this directory (work counts, sample
+  frequencies, wall times), with its recorded output in `logs/`.
+- **heuristic**: a cost model or estimate, not a bound.
+- **argued**: argument given, not run.
+
+Citations are marked *literature*, with *(unverified detail)* where the reviewer did not re-read
+the source.
 
 ## 0. Summary
 
@@ -19,24 +24,27 @@ Tags:
   collision attack around 2^32.6, and a meet-in-the-middle second-preimage attack around
   2^33". Those design notes are not in the tree. The numbers are the *generic* square-root
   costs for a 65-bit state. Scramble v2 has structure that makes all three properties much
-  cheaper. End-to-end attacks on the real function (COMPUTED; each result re-verified with a
-  reference that reproduces all 10 SPEC vectors):
+  cheaper. End-to-end attacks on the real function (measured). Each result's messages and
+  digests were re-checked through the JavaScript that `sudoc` generates from `scramble.sudo`,
+  which in the same run reproduces all 10 SPEC vectors
+  ([`scramble_sudo_check.mjs`](scramble_sudo_check.mjs) →
+  [`logs/scramble_sudo_check.log`](logs/scramble_sudo_check.log)):
 
   | Attack | Old SPEC figure | Measured | Time (1 Python process) | Log |
   | --- | --- | --- | --- | --- |
-  | Collision | ≈2^32.6 | **2^21.88 nybble steps** (≈2^18.29 hash-equivalents) + 2^21.76 edge-only permutations | 9 s | [`logs/scramble_collision.log`](logs/scramble_collision.log) |
-  | Second preimage (random 64-byte target) | ≈2^33 | **2^22.94 nybble steps** (≈2^19.35 hash-equivalents) + 2^22.09 edge-only permutations | 21 s | [`logs/scramble_second_preimage.log`](logs/scramble_second_preimage.log) |
-  | Preimage of a given digest (hex only) | not stated | **2^22.95 nybble steps** | 22 s | [`logs/scramble_decode_preimage.log`](logs/scramble_decode_preimage.log) |
+  | Collision | ≈2^32.6 | **2^21.88 nybble steps** (≈2^18.29 hash-equivalents) + 2^21.76 edge-only permutations | 17 s | [`logs/scramble_collision.log`](logs/scramble_collision.log) |
+  | Second preimage (random 64-byte target) | ≈2^33 | **2^22.94 nybble steps** (≈2^19.35 hash-equivalents) + 2^22.09 edge-only permutations | 37 s | [`logs/scramble_second_preimage.log`](logs/scramble_second_preimage.log) |
+  | Preimage of a given digest (hex only) | not stated | **2^22.95 nybble steps** | 37 s | [`logs/scramble_decode_preimage.log`](logs/scramble_decode_preimage.log) |
 
   Each row is one seeded run (seed 20260930), and each run succeeded. A success rate over
   repeated runs was not measured.
 
-- **Flaw F1, Rule B (PROVED): the corner-and-centre sub-state is autonomous.** Rule B reads
+- **Flaw F1, Rule B (proved (paper)): the corner-and-centre sub-state is autonomous.** Rule B reads
   only the up-front-right corner, and face turns never mix corners with edges. So corners and
   the frame evolve on their own, in ≤ 2^29.98 states. Edges are merely permuted by maps chosen
   by (nybble, corner state). This makes Joux multicollisions on a 30-bit chain possible,
   followed by a birthday search or meet-in-the-middle on the edges.
-- **Flaw F2, digest (PROVED + COMPUTED): the digest encoding is not injective.** The edge
+- **Flaw F2, digest (proved (paper) + computed): the digest encoding is not injective.** The edge
   orientation rule ("bit 0 iff the first-axis sticker is W, Y, R or O") cannot see flips of RW,
   OW, RY and OY, since both stickers are in the set.
   - Each digest has 8 or 16 legal seated poses.
@@ -44,20 +52,22 @@ Tags:
     already ≈2^30.8 rather than 2^32.6.
   - Two real messages with equal digest but different cubes are exhibited.
 - **Also:**
-  - The walk is invertible step by step (PROVED), so a preimage costs the same as a second
+  - The walk is invertible step by step (proved (paper)), so a preimage costs the same as a second
     preimage.
   - There is partial length extension: the digest fixes the internal state up to ≤ 384
-    candidates (ARGUED, §4).
+    candidates (argued, §4).
 - **Honest claim for Scramble v2: none.** Collisions, second preimages and preimages are
-  practical, seconds on a laptop-class core. Any single-cube walk is in any case capped by the
-  state size (≈2^32.6 collision, ≈2^33 preimage; §3.3), below any AES/SHA-level target.
+  practical, seconds on a laptop-class core. Even without F1, any single-cube walk with this
+  digest encoding is capped by the size of the digest image: generic collisions cost ≈2^30.8
+  (birthday on 2^61.64 values; §3.3), below any AES/SHA-level target.
 
 ## 1. Files
 
 | Item | Path | Notes |
 | --- | --- | --- |
 | Spec | [`primitives/hash/scramble/SPEC.md`](../../../primitives/hash/scramble/SPEC.md) | "Rule B", "Digest", `scramble_v2`, "Security" |
-| Reference | [`scramble_ref.py`](scramble_ref.py) | Scramble v1/v2 written from the SPEC as a 54-facelet permutation model. COMPUTED: all 10 SPEC vectors (digest, facelets and step counts) reproduce |
+| Attack engine | [`scramble_ref.py`](scramble_ref.py) | Fast attack engine: Scramble v1/v2 as a 54-facelet permutation model, written from the SPEC. Not the reference: `scramble.sudo` is normative. Checked against the vectors (computed): all 10 SPEC vectors (digest, facelets and step counts) reproduce |
+| sudoc check | [`scramble_sudo_check.mjs`](scramble_sudo_check.mjs) | Builds JS from `scramble.sudo` with `sudoc build --target js` (as `tools/build.sh` does), then checks the 10 SPEC vectors and the attack messages in `logs/` through it → [`logs/scramble_sudo_check.log`](logs/scramble_sudo_check.log) |
 | F1 attacks | [`scramble_attack.py`](scramble_attack.py) `{collision\|second\|preimage}` | `preimage` takes its target pose from hashing `hello`; superseded by `scramble_decode.py` |
 | F2 evidence | [`scramble_digest_check.py`](scramble_digest_check.py) | → [`logs/scramble_digest_check.log`](logs/scramble_digest_check.log) |
 | Digest decoder + preimage | [`scramble_decode.py`](scramble_decode.py) `[HEX]` | digest→pose decoder (round-trips 2000/2000; invariants hold on 2000/2000 random states) plus a preimage of a digest given only as hex → [`logs/scramble_decode_preimage.log`](logs/scramble_decode_preimage.log) |
@@ -70,19 +80,21 @@ PYTHONDONTWRITEBYTECODE=1 python3 scramble_attack.py collision
 PYTHONDONTWRITEBYTECODE=1 python3 scramble_attack.py second
 PYTHONDONTWRITEBYTECODE=1 python3 scramble_decode.py 132FDCE0BF26E5898
 PYTHONDONTWRITEBYTECODE=1 python3 scramble_digest_check.py
+SUDOC=/path/to/sudoc node scramble_sudo_check.mjs   # default: <repo>/.sudocode/sudoc/target/release/sudoc
 ```
 
-CI does not run them. Their output, apart from wall time and memory, reproduced the logs here
-when they were added.
+CI does not run them (follow-up S7, §5). The logs were regenerated when the printed corner-bound
+estimate was corrected to 24·(8!/2)·3^7; the messages, digests and work counts were unchanged,
+and only that estimate, wall time and memory differ from the first run.
 
-## 2. Structural facts (PROVED)
+## 2. Structural facts (proved (paper))
 
 The function, as specified: each message nybble n performs two clockwise quarter turns V2[n],
 then Rule B (read the colours `up`, `front` of the cubie in slot (1,1,1) on +Y and +Z, and
 rotate the whole cube so the centre of `up` goes to +Y and the centre of `front` to +Z). Padding
 is marker 8, then `6 0 7 1` cyclically up to 12 nybbles. The closer is F2, B2, then the seat
 (W up, G front). The digest is the rank of the seated pose (cp, co, ⌊rank(ep)/2⌋, eo), 9 bytes.
-|G| = 8!·3^7·12!/2·2^11 = 2^65.229 (COMPUTED), and √|G| = 2^32.615, so the old SPEC's 2^32.6
+|G| = 8!·3^7·12!/2·2^11 = 2^65.229 (computed), and √|G| = 2^32.615, so the old SPEC's 2^32.6
 is the generic birthday bound on |G|.
 
 **P1. Face turns preserve cubie kind.**
@@ -141,11 +153,11 @@ permutation of edge slots depending only on (n, c).
 - Flipping two of them (a legal move: an even number of flips) changes the cube but not the
   digest.
 - The 12th edge bit is not encoded; it is implied only for the true orientation.
-- Exact count (COMPUTED, `logs/scramble_digest_check.log` [3]):
+- Exact count (computed, `logs/scramble_digest_check.log` [3]):
   - 8 legal seated poses share a digest when slot 11 holds one of the four ambiguous pieces;
   - otherwise 16;
   - so the image is |G|/12 = 2^61.644;
-  - sample of 300: {8: 109, 16: 191}, matching probabilities 1/3 and 2/3.
+  - sample of 300 (measured): {8: 109, 16: 191}, matching probabilities 1/3 and 2/3.
 - Instances:
   - solved and RW+OW-flipped both give digest 00000000000000700; the control RW+GW gives …702;
   - a real message whose seated pose is `hello`'s pose with RW+OW flipped (so its digest is
@@ -154,7 +166,7 @@ permutation of edge slots depending only on (n, c).
     vector's digest whose facelets differ from the SPEC's listed facelets, but which has the
     same digest.
 
-## 3. The attacks (COMPUTED)
+## 3. The attacks (measured)
 
 Work unit: one **nybble step** (two quarter turns plus Rule B). Corner-only steps are counted as
 full steps, which is an over-count. One hash of a ≥ 11-nybble message is ≥ 12 nybble steps, so
@@ -163,7 +175,7 @@ hash.
 
 ### 3.1 Collision (F1 plus Joux)
 
-1. **Joux stages (LIT: Joux, "Multicollisions in iterated hash functions", CRYPTO 2004,
+1. **Joux stages (literature: Joux, "Multicollisions in iterated hash functions", CRYPTO 2004,
    LNCS 3152).** From the current corner state c_i, try random 8-nybble blocks. Stop at the
    first two blocks b, b′ that reach the same c_{i+1}.
    - By P2, b and b′ then induce two edge permutations g_b, g_{b′}.
@@ -185,7 +197,8 @@ The stage cost is *below* the uniform-model birthday estimate √(π/2·2^29.98)
 8-nybble walk from a fixed state is non-uniform on the corner states. This helps the attacker
 and is not a model error.
 
-**Cost model (HEUR, fits the logs):**
+**Cost model (heuristic):** it uses the measured mean stage cost 2^{14.4}, so it is a fit to
+the run, not an independent prediction.
 C_coll ≈ t·8·2^{14.4} + 2^{t} edge applications, with t ≈ ½·log2(edge space) ≈ 19.4–22.
 This gives ≈2^{21.9}.
 
@@ -205,19 +218,20 @@ This gives ≈2^{21.9}.
    - a 172-byte second preimage of a random 64-byte message (digest `0A38700830D1C599C`), in
      2^22.94 steps (`logs/scramble_second_preimage.log`);
    - a 172-byte preimage of the digest **given only as hex** `132FDCE0BF26E5898` (the SPEC's
-     `cube` vector), in 2^22.95 steps, 22 s (`logs/scramble_decode_preimage.log`).
+     `cube` vector), in 2^22.95 steps, 37 s (`logs/scramble_decode_preimage.log`).
 
-**Extrapolation (HEUR):** C_pre ≈ t·8·2^{14.4} + 2·2^{t/2} + 2·16^{4} with t ≈ 40.
-The dominant term is the Joux stages, ≈2^{23}. No reduced-size extrapolation is needed: every
+**Cost model (heuristic):** C_pre ≈ t·8·2^{14.4} + 2·2^{t/2} + 2·16^{4} with t ≈ 40.
+The dominant term is the Joux stages, ≈2^{23}. Like the collision model, it uses the measured
+stage cost 2^{14.4}, so it is a fit to the runs. No reduced-size extrapolation is needed: every
 number is measured on full-size Scramble v2.
 
 ### 3.3 Generic attacks (what would remain without F1/F2)
 
 | Attack | Generic cost | Status |
 | --- | --- | --- |
-| Collision, current encoding (image 2^61.64) | ≈2^30.8 | PROVED count + standard birthday (LIT) |
+| Collision, current encoding (image 2^61.64) | ≈2^30.8 | computed count + standard birthday (literature) |
 | Collision, injective encoding | ≈2^32.6 | as above |
-| Preimage / second preimage by MITM over the invertible walk (P3), 192–384 target states | ≈2·2^{32.6} steps, with ≈2^{32.6} memory; a low-memory variant via parallel collision search (LIT: van Oorschot–Wiener, J. Cryptology 12(1), 1999) at a small constant factor | HEUR (standard) |
+| Preimage / second preimage by MITM over the invertible walk (P3), 192–384 target states | ≈2·2^{32.6} steps, with ≈2^{32.6} memory; a low-memory variant via parallel collision search (literature: van Oorschot–Wiener, J. Cryptology 12(1), 1999) at a small constant factor | heuristic (standard) |
 | Brute-force preimage | ≈2^{61.6}/384 per target digest | trivial |
 
 The old SPEC sentence gave the first-order generic numbers (2^32.6 and "≈2^33 MITM"). It
@@ -226,30 +240,40 @@ omitted that the MITM applies to preimages too (P3), that the encoding shrinks t
 
 ## 4. Other attacks considered
 
-- **Length extension (ARGUED, not run).** Scramble has no length encoding and no finalisation
+- **Length extension (argued, not run).** Scramble has no length encoding and no finalisation
   beyond F2 B2 plus the seat, both invertible. From a digest, P5 gives ≤ 384 candidate states
   after m‖8. Continuing each candidate with a suffix gives the digests of m‖(0x8X)‖s (the
   marker nybble becomes the high nybble of a data byte). So a secret-prefix MAC H(k‖m) would be
   forgeable with probability ≥ 1/384 per attempt. Scramble is keyless, and the SPEC offers no
   MAC mode; noted for completeness.
-- **Cayley-graph / group-theoretic attacks (LIT).** Walk hashes in groups are vulnerable when
+- **Cayley-graph / group-theoretic attacks (literature).** Walk hashes in groups are vulnerable when
   short relations or subgroup structure can be exploited (Tillich–Zémor: Grassl, Ilić,
   Magliveras, Steinwandt, J. Cryptology 24 (2011) *(unverified detail)*; survey: Petit,
   Quisquater, "Rubik's for cryptographers", Notices AMS 60(6), 2013 *(unverified detail)*).
   Here Rule B makes the walk state-dependent, not a Cayley walk, but P2 shows that the
   dependence factors through a small quotient (the corner states), which is what §3 exploits.
   Short-relation collisions were not searched; they are not needed given §3.
-- **Solver-based preimages (HEUR).** A cube solver reaches any pose in ≤ 20 face turns (LIT:
+- **Solver-based preimages (heuristic).** A cube solver reaches any pose in ≤ 20 face turns (literature:
   Rokicki, Kociemba, Davidson, Dethridge, SIAM J. Discrete Math. 27(2), 2013 *(unverified
   detail)*), but that does not directly give a *message*, because Rule B interleaves rotations
   and each nybble fixes a pair of turns. Not pursued.
 - **Fixed points / cycles of Rule B, slide-type self-similarity.** Not searched. They would not
   change the verdict.
 - **v1 (superseded).** v1 uses the same Rule B (after 8-move blocks) and the same digest
-  encoding. P2 and P6 apply verbatim, so F1 and F2 hold for v1 too (PROVED by the same
-  arguments). The attacks were not run on v1.
+  encoding. P2 and P6 apply verbatim, so F1 and F2 hold for v1 too (proved (paper), by the
+  same arguments). The attacks were not run on v1.
 
 ## 5. Open
 
 - Short-relation and solver-assisted attacks (§4).
-- A CI-checkable version of the attack logs. The scripts are seeded and deterministic.
+
+Tracked follow-ups from the review of this write-up:
+
+- **S5.** Keep one home for the attack table. It is currently in both the SPEC's Security
+  section and §0 here.
+- **S6.** The SPEC banner should also say that the vectors, the conformance tests and the
+  generated-Lean TAP still hold.
+- **S7.** A `scramble-attack-logs` CI job that re-runs the seeded scripts and checks their logs
+  (the scripts are seeded and deterministic).
+- **S8.** The wall times come from one unnamed machine. The reviewer measured 97–202 s under
+  load.

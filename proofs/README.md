@@ -18,14 +18,14 @@ Five layers of evidence. (1) and (4) are theorems; (2) and (3) are evidence; (5)
 
 ## Taxonomy
 
-Four kinds. The first three apply to **current** algorithms. The fourth applies only after an algorithm is **deprecated**.
+Four kinds. The first three apply to **current** algorithms. The fourth applies only after an algorithm is **deprecated** or marked broken.
 
 | Kind | What it is | When it belongs here |
 | --- | --- | --- |
 | **Correctness** | Bijections, encrypt/decrypt round-trip, content-preservation, encoding injectivity. Algebraic facts about the published definition. | Current algorithms, as soon as the claim is honest and the proof is sorry-free. |
 | **Reduction** | "Breaking this is as hard as that assumption." | Current algorithms, only when earned. Not in this first drop. |
 | **Attack-bounds** | Concrete work estimates (birthday, MITM, distinguishing advantage). | Current algorithms, only when earned as a theorem. Heuristic ceilings already in a SPEC stay SPEC honesty, not proofs. |
-| **Vulnerability proofs** | A named attack that *works*, with a checkable witness. | **Deprecated** algorithms only. Deprecate first; then file the proof next to that frozen artifact. Current algorithms do not collect vuln write-ups as a substitute for deprecation. |
+| **Vulnerability proofs** | A named attack that *works*, with a checkable witness. | Deprecated algorithms, or a current algorithm whose SPEC is marked broken (filed under `<alg>/security/`). Otherwise, current algorithms do not collect vuln write-ups as a substitute for deprecation. |
 
 Current algorithms get correctness now, and stronger security proofs (reductions, attack-bounds) later if they earn them. They do not get collision-resistance or AES-class numbers from a correctness package.
 

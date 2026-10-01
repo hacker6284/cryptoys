@@ -1,5 +1,8 @@
-"""Scramble v2 (and v1) reference, written from primitives/hash/scramble/SPEC.md (snapshot
-e01b982), plus a fast facelet-permutation engine used by the attacks.
+"""Fast attack engine for Scramble v2 (and v1), written from primitives/hash/scramble/SPEC.md
+(snapshot e01b982): a direct cubie model plus the facelet-permutation engine the attacks use.
+It is not the reference: scramble.sudo is normative. It is checked against the 10 SPEC vectors
+by selfcheck(), and the attack results are re-checked through the JS that sudoc generates from
+scramble.sudo (scramble_sudo_check.mjs).
 
 State = colour of each of the 54 facelet slots (position p, outward direction d).
 Every face turn and whole-cube rotation is a permutation of slots, so a state update is

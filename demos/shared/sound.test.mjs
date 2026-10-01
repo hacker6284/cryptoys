@@ -125,6 +125,17 @@ test("mute persists and the toggle reflects it", async () => {
     assert.equal(sound.play("tick"), false);
 });
 
+test("store: null ignores and never writes a remembered mute", async () => {
+    const { Ctx } = fakeAudio();
+    globalThis.localStorage.store.null = "1";
+    const sound = createSound({ sounds: SOUNDS, base: BASE, gestureTarget: target(), AudioCtx: Ctx, store: null });
+    assert.equal(sound.muted, false);
+    const before = { ...globalThis.localStorage.store };
+    sound.setMuted(true);
+    assert.equal(sound.muted, true);
+    assert.deepEqual(globalThis.localStorage.store, before);
+});
+
 test("maxMs stops early with a fade; the limiter sits on the master", async () => {
     const { Ctx, made } = fakeAudio();
     const ramps = [];

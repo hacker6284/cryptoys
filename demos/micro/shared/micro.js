@@ -89,7 +89,7 @@ export async function mountMicro(spec, settings) {
     document.title = `${spec.title} · microdemo`;
     const slots = spec.slots || [];
     const sounds = settings.sounds || {};
-    const sound = createSound({ sounds: soundTable(slots, sounds), base: SOUND_BASE, store: "cryptoys.micro.muted", limiter: true });
+    const sound = createSound({ sounds: soundTable(slots, sounds), base: SOUND_BASE, store: null, limiter: true });
 
     const canvas = el("canvas", { class: "micro-canvas", "aria-label": `${spec.title} in the playroom` });
     const status = el("p", { class: "micro-status", role: "status" }, "Loading…");

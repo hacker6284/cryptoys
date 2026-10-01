@@ -3,7 +3,8 @@
  * demos/megadreifach/sound.js), with the sound table passed in.
  *
  * Web Audio only, and only after the first user gesture: nothing is
- * fetched or decoded until then. Mute is remembered in localStorage.
+ * fetched or decoded until then. Mute is remembered in localStorage
+ * under `store` (store: null keeps it in memory only).
  * Each sound has a minimum gap and a voice cap, so fast play is a
  * patter, not noise.
  *
@@ -176,7 +177,7 @@ export function createSound({
     function setMuted(on) {
         muted = Boolean(on);
         try {
-            globalThis.localStorage?.setItem(store, muted ? "1" : "0");
+            if (store) globalThis.localStorage?.setItem(store, muted ? "1" : "0");
         } catch {
             // private mode
         }
@@ -237,6 +238,7 @@ export function createSound({
 }
 
 function readMuted(store) {
+    if (!store) return false;
     try {
         return globalThis.localStorage?.getItem(store) === "1";
     } catch {

@@ -75,7 +75,7 @@ export function mountTwistyTurn(page, settings) {
     return mountMicro({
         id: page.id,
         title: page.title,
-        camera: { position: [DEN.x + 0.32, 1.17, DEN.z + 0.74], target: [DEN.x, 0.9, DEN.z], fov: 30, margin: page.margin ?? 1.2 },
+        camera: { position: [DEN.x + 0.32, 1.17, DEN.z + 0.74], target: [DEN.x, 0.9, DEN.z], fov: 30, margin: page.margin ?? 1.08 },
         slots: [
             { name: "single", gapMs: 55, voices: 3, jitter: 0.06 },
             { name: "double", gapMs: 55, voices: 3, jitter: 0.06, perClick: perClick(2) },

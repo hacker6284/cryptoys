@@ -29,7 +29,7 @@ The sounds the microdemo pages play (chosen in `demos/micro/*/settings.js`), cop
 | `scramble-turn/double/double_spacejoe-486567` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486567/ |
 | `scramble-turn/rotation/rotation_01kamii05-428594` | 01Kamii05 | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/01Kamii05/sounds/428594/ |
 | `scramble-turn/settle/settle_emapuree-848748` | emapuree | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/emapuree/sounds/848748/ |
-| `scramble-turn/settle/settle_kenney-carpet-003-soft-cut` | Kenney (www.kenney.nl) | Creative Commons Zero, CC0 (License.txt in the pack) | https://kenney.nl/assets/impact-sounds |
+| `scramble-turn/settle/settle_kenney-carpet-000-soft-cut` | Kenney (www.kenney.nl) | Creative Commons Zero, CC0 (License.txt in the pack) | https://kenney.nl/assets/impact-sounds |
 | `scramble-turn/single/single_spacejoe-486564` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486564/ |
 | `scramble-turn/triple/triple_spacejoe-486581` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486581/ |
 | `unbox/box-setdown-felt/1_emapuree-848748` | emapuree | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/emapuree/sounds/848748/ |

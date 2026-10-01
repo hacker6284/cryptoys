@@ -166,7 +166,7 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
     # DoubleDealSecurityHeavy/CovariantAffine.lean and the generated CovariantAffineChecks.lean
     # (check_lin_k_g for the 71 (k, g) != (0, 0), lin_checks_all: aff_witness.py --lean): the
-    # covariant round conjecture for the 3692 nontrivial affine relabellings (the
+    # covariant round conjecture for the 3692 affine relabellings outside v10Sym (the
     # normalizer of v10Sym minus v10Sym; true by the holomorph count, not a Lean theorem)
     *(f"DoubleDeal.Security.CovariantAffine.check_lin_{n // 6}_{n % 6}" for n in range(1, 72)),
     "DoubleDeal.Security.CovariantAffine.lin_checks_all",

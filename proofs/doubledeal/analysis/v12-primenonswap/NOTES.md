@@ -30,7 +30,7 @@ conjugation by a general relabelling (if the conjecture holds, the covariant set
 {1} and every conjugation preserves it, but that is the open statement). So no proved
 symmetry reduces the problem by cycle type to finitely many σ.
 
-## New PROVED result: the nontrivial affine relabellings
+## New PROVED result: the affine relabellings outside v10Sym
 
 (The affine relabellings are the normalizer of v10Sym; true by the holomorph count,
 not a Lean theorem.)
@@ -64,7 +64,7 @@ not a Lean theorem.)
   or (1,12) exchanged; same stem cell 0, different stem cell 0 after `L`) is checked
   by kernel `decide!` (`check_lin_k_g`, two stem evaluations each; check A
   `cell0PairsCheck_ok`).
-* Scope: all 3692 nontrivial affine relabellings, of any order; the prime-order ones
+* Scope: all 3692 affine relabellings outside v10Sym, of any order; the prime-order ones
   are the part inside `PrimeNonSwapCase`. It is NOT `PrimeNonSwapCase`: almost all
   prime-order σ are not affine.
 
@@ -75,7 +75,7 @@ further random deck breaks `F(σ·m) = τ·F(m)` (up to 6 decks).
 
 | family | σ tested | result |
 |---|---|---|
-| `norm`: all nontrivial affine σ, i.e. outside v10Sym (EXACT) | 3692 | all refuted at the 2nd deck |
+| `norm`: all affine σ outside v10Sym (EXACT) | 3692 | all refuted at the 2nd deck |
 | `dbl`: ALL products of 2 disjoint transpositions (EXACT) | 812175 | all refuted at the 2nd deck |
 | `cyc3`: ALL 3-cycles (EXACT) | 44200 | all refuted at the 2nd deck |
 | `prime`: random prime order, non-transposition (MEASURED, seed 6) | 10⁶ | all refuted at the 2nd deck |
@@ -84,8 +84,9 @@ further random deck breaks `F(σ·m) = τ·F(m)` (up to 6 decks).
 This is evidence that the conjecture is true, not a proof of any case beyond the
 Lean theorems above. The `dbl` and `cyc3` families are exhaustive in C; a kernel
 check of them is out of reach (after v10Sym conjugation about 15.6k and 850
-representatives; one seat-26 witness costs two stem evaluations, about 4.7 s of kernel
-time per witness as measured for `CovariantAffineChecks`, so `dbl` alone would be about
+representatives; one seat-26 witness costs two stem evaluations, about 4.5 s of kernel
+time per witness on the dev box and about 5.3 s on CI, as measured for
+`CovariantAffineChecks`, so `dbl` alone would be about
 20 hours of kernel time).
 
 ## Routes tried toward the full case, and where each breaks

@@ -29,7 +29,7 @@
   * `covariant_affine_iff_of_check`: given `AffChecks`, an affine relabelling is
     covariant iff it is the identity.
 
-  This covers all 3692 nontrivial affine relabellings, of any order; the ones of prime
+  This covers all 3692 affine relabellings outside `v10Sym`, of any order; the ones of prime
   order are the part that lies inside `PrimeNonSwapCase`. It is NOT
   `PrimeNonSwapCase`: almost all prime-order relabellings are not affine.
   Write-up: `../analysis/v12-primenonswap/NOTES.md`.

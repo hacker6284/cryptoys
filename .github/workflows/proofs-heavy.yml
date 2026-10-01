@@ -113,7 +113,7 @@ jobs:
         with:
           build-args: "DoubleDealSecurity AuditAll"
       # One `lake build` per heavy module (import order of DoubleDealSecurityHeavy.lean),
-      # so at most one 4.5-5 GB kernel check runs at a time on the ~16 GB runner; logs the
+      # so at most one heavy module (4.7-8.1 GiB peak RSS (CI, 5f2dc8f)) runs at a time on the ~16 GB runner; logs the
       # wall time and peak RSS of each step (also in the job summary).
       - name: Heavy library, one module at a time (wall time and peak RSS per module)
         run: python3 proofs/doubledeal/security/checks/heavy_rss.py

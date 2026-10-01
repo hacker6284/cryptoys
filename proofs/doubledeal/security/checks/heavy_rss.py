@@ -2,9 +2,12 @@
 """Build the heavy library DoubleDealSecurityHeavy ONE MODULE AT A TIME and log the
 wall time and peak RSS of each step (CI job doubledeal-security-heavy).
 
-Why one at a time: several heavy modules each need 4.5-5 GB of kernel memory; built by
+Why one at a time: the heavy modules need 4.7-8.1 GiB peak RSS (CI, 5f2dc8f) each; built by
 one `lake build DoubleDealSecurityHeavy`, Lake may run them in parallel on a ~16 GB
 runner. Sequential steps both bound the peak by the largest single module and measure it.
+If the job time ever matters: go to two lanes (RealKey -> GridCycleSurvival -> its
+dependents | the two Checks modules), measured with cgroup memory.peak; never go back to
+an uncapped parallel build.
 
 Each step is `lake build <module>` in proofs/doubledeal/security, in the import order
 of DoubleDealSecurityHeavy.lean, after the default library is built (the CI job builds

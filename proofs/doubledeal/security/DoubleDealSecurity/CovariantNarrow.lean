@@ -44,7 +44,7 @@
   Open after this file: the conjecture for σ of prime order p ≤ 52 that are neither
   a transposition nor a `v10Sym` (exactly the hypothesis of
   `roundBody_covariant_iff_id_of_prime_nonswap`). Write-up:
-  `../analysis/v12-covariant/NOTES.md`. The nontrivial affine relabellings (all
+  `../analysis/v12-covariant/NOTES.md`. The affine relabellings outside `v10Sym` (all
   orders; the prime-order ones lie inside that case) are handled in
   `CovariantAffine.lean` (`../analysis/v12-primenonswap/NOTES.md`).
 -/

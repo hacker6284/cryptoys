@@ -233,6 +233,10 @@ def permDeck (π : Equiv.Perm (Fin 52)) : Fin 52 → Nat := fun k => (π k).val
 theorem isDeck_permDeck (π : Equiv.Perm (Fin 52)) : IsDeck (permDeck π) :=
   ⟨fun k => (π k).isLt, fun _ _ h => π.injective (Fin.ext h)⟩
 
+/-- Relabelling the deck of `π` by `α` is the deck of `α * π`. -/
+theorem rel_permDeck (α π : Equiv.Perm (Fin 52)) : rel α (permDeck π) = permDeck (α * π) :=
+  funext fun i => app_fin α (π i)
+
 theorem isDeck_lay_permDeck (π : Equiv.Perm (Fin 52)) :
     IsDeck (scoopColumnMajor (layColumnMajor (permDeck π))) := by
   rw [scoop_lay_columnMajor]; exact isDeck_permDeck π

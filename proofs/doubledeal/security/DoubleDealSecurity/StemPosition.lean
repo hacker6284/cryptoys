@@ -180,6 +180,29 @@ theorem unkeyedNoMix_eq_comp (m : Fin 52 → Nat) :
     colRotate_rowRotate_apply, layColumnMajor]
   rfl
 
+/-- The row of column 0 that the last column step brings to the top (seat 0). -/
+def c0Row (m : Fin 52 → Nat) : Fin 4 := srcRow (colAmts m) 0 0
+
+/-- The seat `(ρ, t ρ % 13)` of row `ρ`. -/
+def rowSeat (t : Fin 4 → Nat) (ρ : Fin 4) : Fin 52 :=
+  cmFlat ρ ⟨t ρ % 13, Nat.mod_lt _ (by decide)⟩
+
+/-- (PROVED) `unkeyedNoMix_eq_comp` at output position 0: stem cell 0 of any packet `m` is
+    `m` at the seat `(ρ, rowAmts m ρ % 13)` of the row `ρ = c0Row m` (column 0 is turned
+    only by the last column step; ShiftRows does not move row 0). -/
+theorem stemPos_zero (m : Fin 52 → Nat) :
+    unkeyedNoMix m 0 = m (rowSeat (rowAmts m) (c0Row m)) := by
+  rw [unkeyedNoMix_eq_comp]
+  show m (cmFlat (seatMap (rowAmts m) (colAmts m) (inSeat 0)).1
+    (seatMap (rowAmts m) (colAmts m) (inSeat 0)).2) = _
+  have h0 : inSeat 0 = (0, 0) := rfl
+  rw [h0]
+  unfold rowSeat c0Row seatMap
+  congr 2
+  apply Fin.ext
+  simp only [Fin.val_zero, Nat.zero_add]
+  exact Nat.mod_eq_of_lt (Nat.mod_lt _ (by decide))
+
 theorem inSeat_injective : Function.Injective inSeat := by
   intro k1 k2 h
   simp only [inSeat, Prod.mk.injEq, Fin.ext_iff, cmRow, cmCol] at h

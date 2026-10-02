@@ -3,8 +3,9 @@
 The conjecture `roundBody_covariant_iff_id` (`security/DoubleDealSecurity/Rounds.lean`,
 DRAFT-SORRY) is **still open** and keeps its `sorry`. `PrimeNonSwapCase`
 (`security/DoubleDealSecurity/CovariantNarrow.lean`) is **still open**. This note
-records one new proved family (the affine relabellings), the routes tried toward the
-full case, where each breaks, and the counterexample search. No covariant pair
+records two new proved results (the affine relabellings; the rank-partition lemma, one
+step toward `PrimeNonSwapCase`), the routes tried toward the full case, where each
+breaks, and the counterexample search. No covariant pair
 (σ ≠ 1 with some τ) was found.
 
 Labels (as in `../v12-covariant/NOTES.md`): PROVED (Lean, audited), CONDITIONAL
@@ -89,6 +90,43 @@ time per witness on the dev box and about 5.3 s on CI, as measured for
 `CovariantAffineChecks`, so `dbl` alone would be about
 20 hours of kernel time).
 
+## New PROVED result: the seat-26 condition preserves the rank partition
+
+One step toward `PrimeNonSwapCase`; it is NOT `PrimeNonSwapCase` and NOT the conjecture.
+
+`security/DoubleDealSecurity/RankPartition.lean` (+ generated `RankPartitionLists.lean`),
+heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
+`RankPartitionChecks.lean`), generator `rank_family.py` (log `rank_family.log`, CI
+`--check`).
+* Statement (`cell0Cov_rank`, heavy, unconditional; `cell0Cov_rank_of_checks` in the
+  default library GIVEN the finite checks `RankChecks`): if `Cell0Cov σ τ` for some τ,
+  then `a % 13 = b % 13 → σ a % 13 = σ b % 13` (`cell0Cov_rank_iff`: iff, via σ⁻¹).
+  Hence every covariant σ permutes the 13 rank classes (`covariant_rank`). Nothing is
+  claimed about the rank map σ induces (affine or not), about τ, or about labels.
+* `cell0Subgroup_le_rankStab` (heavy, unconditional): `cell0Subgroup` lies in the
+  rank-partition stabiliser `rankStab` (S4 ≀ S13; not a Lean theorem).
+* Symbolic stem facts (default library, no computation, in the stem modules):
+  `StemPosition.stemPos_zero` (stem cell 0 is the packet at the seat `(ρ, rowAmts ρ % 13)`
+  of the row `ρ` that the last column step brings to seat 0),
+  `StemCoupling.rowAmts_eq_of_agree` (the row amounts of rows 1-3 read only rows 0-2),
+  `StemCoupling.rowAmts_prev` at row 0 (row 0's amount is the v10 row turn of row 3 read
+  after row 3's turn).
+* Argument (`rank_eq_of_family`, for EVERY σ, τ): take nine decks `π k i` agreeing
+  outside row 3, member `(k, 1)` = member `(k, 0)` with cards x ≠ y (both in row 3)
+  exchanged, member `(k, 2)` agreeing with `(k, 0)` in row 3 only at x and y, and stem
+  cell 0 of class k at the row-0 seat `(0, col k)`, `col` injective. Their σ-images share
+  rows 0-2, hence the amounts of rows 1-3, so `σ⁻¹τ(stem cell 0)` sits in one of four
+  seats; row 3 is excluded by members 1 and 2 (it would put the card in and out of
+  {x, y}), rows 1 and 2 by injectivity across the three classes (pigeonhole), so for some
+  class the row-0 amount of members 0 and 1 agree mod 13; the swap formula
+  (`StemCoupling.wsum_swap`, `wt_sub_ne`, `rk_sub_ne`) then gives rank σx = rank σy.
+* Finite data: three families (x = card 0, y = 13, 26, 39), found by `rank_family.py`
+  (seeded row-3 shuffles); the heavy library checks their structure and the 27 stem
+  cell 0 values by kernel `decide!` (`fam_struct_D`, `fam_c0_D_k_i`, one stem evaluation
+  per theorem). Every equal-rank pair is moved to (0, y) by a `v10Sym` (which satisfies
+  `Cell0Cov` with itself), so three families suffice.
+* Formalizing it exposed no hole in the paper argument.
+
 ## Routes tried toward the full case, and where each breaks
 
 1. **Uniform deck witness by cycle type.** For transpositions one witness per v10Sym
@@ -115,7 +153,12 @@ time per witness on the dev box and about 5.3 s on CI, as measured for
    of the overgroups of a regular Z13 × Z2² in S52 (primitive / imprimitive cases), not
    viable in Lean here. Restricted to the affine relabellings (the normalizer of
    v10Sym; true by the holomorph count, not a Lean theorem) it is finite, which is the
-   proved affine result.
+   proved affine result. **Imprimitivity step, PROVED** (`RankPartition`, heavy
+   `cell0Subgroup_le_rankStab`): K lies in the stabiliser of the rank partition (13
+   blocks of 4 cards), the wreath product S4 ≀ S13 (that identification is not a Lean
+   theorem). What is left is still large: about 24^13 · 13! ≈ 5 · 10^27 elements, and
+   nothing is proved about the induced map on the 13 rank classes (S13 part) or about the
+   suit parts (the S4 factors).
 
 ## What a full proof would take
 
@@ -125,4 +168,6 @@ not known true), proved symbolically from the SumRanks amount chain; or (b) a
 classification of the subgroups of S52 containing v10Sym, plus a finite witness per
 class. Neither is in reach of a computer-checked case split (the 52-card σ space has
 no finite reduction, see route 1), and the rules exclude computer- or paper-checked
-bounds as a fallback.
+bounds as a fallback. Route 4's imprimitivity step is now proved (K ≤ S4 ≀ S13), which
+removes the primitive case of (b) but leaves about 5 · 10^27 elements of the
+stabiliser; the induced S13 map and the suit parts are open.

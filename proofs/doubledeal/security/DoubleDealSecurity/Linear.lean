@@ -71,9 +71,10 @@ import DoubleDealSecurity.FullCipher
 namespace DoubleDeal.Security.Linear
 
 open DoubleDeal Relabel Finset
-open DoubleDeal.Security (Key isDeck_compose isDeck_rel isDeck_unkeyedNoMix composeVec_inj)
+open DoubleDeal.Security (Key isDeck_compose isDeck_rel isDeck_unkeyedNoMix composeVec_inj
+  rel_permDeck)
 open DoubleDeal.Security.TrailBound (rounds isDeck_rounds card_keys_compose compose_permDeck
-  card_filter_snoc rel_permDeck sum_keys_compose)
+  card_filter_snoc sum_keys_compose)
 open DoubleDeal.Security.Differential (diffCount relDiff rel_relDiff relDiff_eq_iff dpCount)
 open DoubleDeal.Security.FullCipher (encryptL FullDiff fullDiffCount dpFCount fullDiffCount_eq
   fullDiffCount_eq_of_isDeck fullDiffCount_one_left fullDiffCount_to_one sum_comp_fiber

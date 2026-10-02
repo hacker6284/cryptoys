@@ -103,6 +103,36 @@ theorem rowAmts_prev (m : Fin 52 → Nat) (r : Fin 4) :
   fin_cases r <;> simp (config := {decide := true}) [rowRead, rowStepOf, prevRow, layColumnMajor,
     rowAmts]
 
+/-- (PROVED) `rowRead m ρ a` reads only row `ρ` of `m`. -/
+theorem rowRead_congr {m m' : Fin 52 → Nat} {ρ : Fin 4}
+    (h : ∀ c : Fin 13, m (cmFlat ρ c) = m' (cmFlat ρ c)) (a : Nat) :
+    rowRead m ρ a = rowRead m' ρ a := funext fun _ => h _
+
+/-- Two packets agree outside row 3. -/
+def AgreeOff3 (m m' : Fin 52 → Nat) : Prop := ∀ s : Fin 52, (cmRow s).val ≠ 3 → m s = m' s
+
+theorem agree_row {m m' : Fin 52 → Nat} (h : AgreeOff3 m m') {ρ : Fin 4} (hρ : ρ.val ≠ 3)
+    (c : Fin 13) : m (cmFlat ρ c) = m' (cmFlat ρ c) :=
+  h _ (by rw [(cm_cmFlat ρ c).1]; exact hρ)
+
+/-- (PROVED) The row amounts of rows 1, 2, 3 read only rows 0, 1, 2: packets that agree
+    outside row 3 have the same amounts there. -/
+theorem rowAmts_eq_of_agree {m m' : Fin 52 → Nat} (h : AgreeOff3 m m') :
+    rowAmts m 1 = rowAmts m' 1 ∧ rowAmts m 2 = rowAmts m' 2 ∧ rowAmts m 3 = rowAmts m' 3 := by
+  have e1 : rowAmts m 1 = rowAmts m' 1 := by
+    rw [rowAmts_prev m 1, rowAmts_prev m' 1]
+    show rowTurnV10 (rowRead m 0 0) = rowTurnV10 (rowRead m' 0 0)
+    rw [rowRead_congr (agree_row h (by decide))]
+  have e2 : rowAmts m 2 = rowAmts m' 2 := by
+    rw [rowAmts_prev m 2, rowAmts_prev m' 2]
+    show rowTurnV10 (rowRead m 1 (rowAmts m 1)) = rowTurnV10 (rowRead m' 1 (rowAmts m' 1))
+    rw [e1, rowRead_congr (agree_row h (by decide))]
+  have e3 : rowAmts m 3 = rowAmts m' 3 := by
+    rw [rowAmts_prev m 3, rowAmts_prev m' 3]
+    show rowTurnV10 (rowRead m 2 (rowAmts m 2)) = rowTurnV10 (rowRead m' 2 (rowAmts m' 2))
+    rw [e2, rowRead_congr (agree_row h (by decide))]
+  exact ⟨e1, e2, e3⟩
+
 /-- (PROVED) `rowAmts m = t` iff four conditions, one per row: the turn total of row `ρ`,
     read after its turn `readAmt t ρ`, is `t (nextRow ρ)`. Each condition reads one row. -/
 theorem rowAmts_eq_iff (m : Fin 52 → Nat) (t : Fin 4 → Nat) :

@@ -1,9 +1,9 @@
 /-
-  Narrowing the covariant round conjecture `roundBody_covariant_iff_id`
-  (`Rounds.lean`, DRAFT-SORRY; roadmap milestone M4 (security README, Roadmap)).
+  Narrowing the covariant round statement `roundBody_covariant_iff_id` (roadmap
+  milestone M4 (security README, Roadmap); proved in the heavy library,
+  `DoubleDealSecurityHeavy/V10Sym.lean`, and not stated in the default library).
 
-  The conjecture itself is NOT proved here, and its statement, name and `sorry` are
-  not touched. This file proves separate theorems around it (`F = unkeyedWithMix`,
+  The statement itself is NOT proved here. This file proves separate theorems around it (`F = unkeyedWithMix`,
   the unkeyed round body, GridCycle ∘ stem):
 
   A. Algebra of covariance (no computation).
@@ -17,7 +17,7 @@
        some τ form a subgroup) and `v10Sym_mem_cell0Subgroup`.
      * `roundBody_covariant_iff_id_of_prime`: the conjecture follows from its
        special case for σ of prime order p ≤ 52 (the hypothesis `h` here; it follows from
-       `LabelStep.roundBody_covariant_iff_id_heavy`, heavy library).
+       `roundBody_covariant_iff_id`, heavy library).
        `prime_case_iff` proves that `h` is EQUIVALENT to the conjecture, so this is
        a reformulation, not a weaker target. Same for the commuting case:
        `roundBody_commutes_iff_id_of_prime`.
@@ -47,10 +47,11 @@
 
   Not covered by this file alone: the conjecture for σ of prime order p ≤ 52 that are
   neither a transposition nor a `v10Sym` (exactly the hypothesis of
-  `roundBody_covariant_iff_id_of_prime_nonswap`). The conjecture's statement is proved in
-  the heavy library (finite checks by kernel `decide!`; `LabelStep.roundBody_covariant_iff_id_heavy`); in
-  the default library it is a hypothesis (`LabelStep.roundBody_covariant_iff_id_of_checks`,
-  given `V10SymChecks`) and the `sorry` stays until the follow-up. Write-up:
+  `roundBody_covariant_iff_id_of_prime_nonswap`). The full statement is proved in the heavy
+  library (finite checks by kernel `decide!`; `roundBody_covariant_iff_id`); in the default
+  library it is proved only given `V10SymChecks` (`LabelStep.roundBody_covariant_iff_id_of_checks`),
+  and its consequences are the `_of_covariant` reductions (`fullRound_commutes_iff_id_of_covariant`,
+  `encrypt6_commutes_iff_id_of_covariant`). Write-up:
   `../analysis/v12-covariant/NOTES.md`. The affine relabellings outside `v10Sym` (all
   orders; the prime-order ones lie inside that case) are handled in
   `CovariantAffine.lean` (`../analysis/v12-primenonswap/NOTES.md`).
@@ -217,7 +218,7 @@ theorem eq_one_of_no_prime_order (H : Subgroup Relabel)
 /-- (PROVED, a reduction) The covariant round conjecture follows from its special
     case for relabellings of prime order `p ≤ 52`. The special case is the
     HYPOTHESIS `h`; it is not proved here (it follows from
-    `LabelStep.roundBody_covariant_iff_id_heavy`, heavy library). -/
+    `roundBody_covariant_iff_id`, heavy library). -/
 theorem roundBody_covariant_iff_id_of_prime
     (h : ∀ σ : Relabel, ∀ p : ℕ, p.Prime → p ≤ 52 → orderOf σ = p →
       ¬ Covariant σ unkeyedWithMix)
@@ -482,7 +483,7 @@ theorem prime_nonswap_case_iff_of_check (hchk : Cov0Checks) :
     `v10Sym`. `hcell` is a HYPOTHESIS of this theorem and a SUFFICIENT condition
     (`Cell0Cov` is weaker than covariance). It is proved in the heavy library (finite
     checks by kernel `decide!`; `LabelStep.cell0Cov_mem_v10Sym`), which gives
-    `LabelStep.roundBody_covariant_iff_id_heavy`; in the default library it is a
+    `roundBody_covariant_iff_id`; in the default library it is a
     hypothesis (`LabelStep.cell0Cov_mem_v10Sym_of_checks`, given `V10SymChecks`). -/
 theorem roundBody_covariant_iff_id_of_cell0
     (hcell : ∀ σ τ : Relabel, Cell0Cov σ τ → ∃ a x, σ = v10Sym a x)

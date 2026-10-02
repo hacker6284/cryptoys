@@ -32,10 +32,10 @@ axiom) fails, as does a Lean error.
   (the kernel-checked single-deck K♣↔K♦ witness on the emitted frozen v10 mix_columns).
 - security: security/Axioms.lean audits EVERY theorem declared in a
   `DoubleDealSecurity.*` module, private ones included (`#audit_all`), and the
-  parsed report count must equal the `audited N` line Lean prints. Exception, by exact name: the
-  theorems in KNOWN_SORRY may also use `sorryAx`. A KNOWN_SORRY entry that is
-  not reported, or no longer uses sorryAx, fails (stale allowlist); so does any
-  `axiom` declared in the package, used or not.
+  parsed report count must equal the `audited N` line Lean prints. KNOWN_SORRY (names
+  that may also use `sorryAx`) is EMPTY for this package, so no theorem may use
+  `sorryAx`. A KNOWN_SORRY entry that is not reported, or no longer uses sorryAx, fails
+  (stale allowlist); so does any `axiom` declared in the package, used or not.
 - security-heavy: security/AxiomsHeavy.lean audits every theorem declared in a
   `DoubleDealSecurityHeavy.*` module (the heavy kernel witnesses, not a default
   build target), with the same rules and no KNOWN_SORRY. Every theorem declared in
@@ -190,9 +190,10 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.RankPartition.cell0Subgroup_le_rankStab",
     # DoubleDealSecurityHeavy/V10Sym.lean and the generated V10SymChecks.lean (aff_struct,
     # aff_c0_k_i, tau_g0_i, tau_cand_l, lab_struct, lab_kill_e: v10sym_witness.py --lean):
-    # every sigma with Cell0Cov sigma tau is a v10Sym and tau = sigma, hence the STATEMENT of
-    # the conjecture (roundBody_covariant_iff_id_heavy); the default-library theorem
-    # roundBody_covariant_iff_id keeps its sorry
+    # every sigma with Cell0Cov sigma tau is a v10Sym and tau = sigma, hence
+    # roundBody_covariant_iff_id (not stated in the default library) and the unconditional
+    # fullRound_commutes_iff_id and encrypt6_commutes_iff_id (from the default-library
+    # _of_covariant reductions)
     "DoubleDeal.Security.RankAffine.aff_struct",
     *(f"DoubleDeal.Security.RankAffine.aff_c0_{n // 3}_{n % 3}" for n in range(9)),
     "DoubleDeal.Security.RankAffine.aff_c0_all",
@@ -210,7 +211,9 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.LabelStep.v10SymChecks_ok",
     "DoubleDeal.Security.LabelStep.cell0Cov_mem_v10Sym",
     "DoubleDeal.Security.LabelStep.cell0Cov_iff",
-    "DoubleDeal.Security.LabelStep.roundBody_covariant_iff_id_heavy",
+    "DoubleDeal.Security.roundBody_covariant_iff_id",
+    "DoubleDeal.Security.fullRound_commutes_iff_id",
+    "DoubleDeal.Security.encrypt6_commutes_iff_id",
     "DoubleDeal.Security.CovariantNarrow.primeNonSwapCase",
 }
 # Lean-generated theorems of the heavy modules (no source declaration; see the comment
@@ -609,14 +612,12 @@ PACKAGES = {
     "security": {
         "dir": ROOT / "security",
         "mode": "all",
-        # The conjecture (DRAFT-SORRY; its statement is proved in the heavy library,
-        # LabelStep.roundBody_covariant_iff_id_heavy) and the two theorems that rest on it.
-        # Keep in sync with ALLOWED_SORRY in security/checks/scan_sorry.py.
-        "known_sorry": {
-            "DoubleDeal.Security.roundBody_covariant_iff_id",  # the conjecture
-            "DoubleDeal.Security.fullRound_commutes_iff_id",   # its case tau = sigma
-            "DoubleDeal.Security.encrypt6_commutes_iff_id",    # via round_covariant_of_encrypt6
-        },
+        # Empty: the package has no sorry. roundBody_covariant_iff_id (formerly the one
+        # DRAFT-SORRY) is proved in the heavy library (HEAVY_THEOREMS), with
+        # fullRound_commutes_iff_id and encrypt6_commutes_iff_id; the default library has
+        # their _of_covariant reductions (required below). Keep in sync with ALLOWED_SORRY
+        # in security/checks/scan_sorry.py.
+        "known_sorry": set(),
         "min": 100,  # sanity: the audit must actually see the package
         # Headline theorems that must be reported (and axiom-clean) by the audit.
         "required": {
@@ -629,6 +630,10 @@ PACKAGES = {
             "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime",
             "DoubleDeal.Security.CovariantNarrow.not_covariant_swap_of_check",
             "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff_of_check",
+            # the consequences of the covariant round statement, as reductions (hypothesis
+            # hconj; unconditional forms in the heavy library, HEAVY_THEOREMS)
+            "DoubleDeal.Security.fullRound_commutes_iff_id_of_covariant",
+            "DoubleDeal.Security.encrypt6_commutes_iff_id_of_covariant",
             # RankPartition: rank classes are preserved, GIVEN the finite checks RankChecks
             # (discharged in the heavy library); not the conjecture
             "DoubleDeal.Security.StemPosition.stemPos_zero",
@@ -648,7 +653,7 @@ PACKAGES = {
             "DoubleDeal.Security.CovariantNarrow.cell0Cov_conj",
             # RankAffine, TauEq, LabelStep: every sigma with Cell0Cov sigma tau is a v10Sym
             # and tau = sigma, GIVEN the finite checks V10SymChecks (discharged in the heavy
-            # library); roundBody_covariant_iff_id itself keeps its sorry
+            # library, which proves roundBody_covariant_iff_id from it)
             # the card coordinates (one home: SumRanksV10.lean)
             "DoubleDeal.Security.rk_eq_iff",
             "DoubleDeal.Security.rk_v10Sym",
@@ -1192,6 +1197,30 @@ elab "#list_file_theorems" : command => do
 """
 
 
+def axiom_problems(expected, seen, known_sorry):
+    """Per-theorem axiom rules: each expected name must be reported and use only ALLOWED;
+    a KNOWN_SORRY name may (and must) also use sorryAx, nothing else. Returns
+    (problems, number of clean theorems, one line per allowlisted known-sorry theorem)."""
+    bad, ok, known = [], 0, []
+    for name in expected:
+        if name not in seen:
+            bad.append(f"no axiom report for {name}")
+            continue
+        axs = seen[name]
+        if name in known_sorry:
+            if axs - ALLOWED - {"sorryAx"}:
+                bad.append(f"{name} uses {sorted(axs - ALLOWED - {'sorryAx'})}")
+            elif "sorryAx" not in axs:
+                bad.append(f"{name} is in KNOWN_SORRY but no longer uses sorryAx; remove it")
+            else:
+                known.append(f"known-sorry {name}: {sorted(axs)}")
+        elif axs - ALLOWED:
+            bad.append(f"{name} uses {sorted(axs - ALLOWED)}")
+        else:
+            ok += 1
+    return bad, ok, known
+
+
 def selftest_lean():
     """Elaborate HEAVY_SCAN_FIXTURE with `lean` (core only; run from a directory whose
     lean-toolchain is the audited one) and require its theorems to be exactly
@@ -1230,6 +1259,31 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} key={'full' if full else 'user'} "
               f"{names}: {len(bad)} problem(s), expected {want}")
+    # Per-theorem axiom rules (axiom_problems), on synthetic reports: first with a scratch
+    # allowlist {"A.c"}, then with the real (empty) KNOWN_SORRY of the security package.
+    std = {"propext", "Classical.choice", "Quot.sound"}
+    for what, seen_, known_sorry, want, want_known in [
+            ("clean", {"A.t": std}, set(), [], 0),
+            ("allowlisted sorry", {"A.t": std, "A.c": std | {"sorryAx"}}, {"A.c"}, [], 1),
+            ("sorry not allowlisted", {"A.t": {"sorryAx"}}, set(), ["A.t uses ['sorryAx']"], 0),
+            ("allowlisted, sorry gone", {"A.c": std}, {"A.c"}, ["no longer uses sorryAx"], 0),
+            ("allowlisted, other axiom", {"A.c": {"sorryAx", "Lean.ofReduceBool"}}, {"A.c"},
+             ["A.c uses ['Lean.ofReduceBool']"], 0),
+            ("native_decide", {"A.t": {"Lean.ofReduceBool"}}, set(), ["A.t uses ['Lean.ofReduceBool']"], 0),
+            ("security KNOWN_SORRY: the former conjecture with sorry",
+             {"DoubleDeal.Security.roundBody_covariant_iff_id": std | {"sorryAx"}},
+             PACKAGES["security"]["known_sorry"],
+             ["DoubleDeal.Security.roundBody_covariant_iff_id uses ['sorryAx']"], 0)]:
+        bad, _, known_l = axiom_problems(sorted(seen_), seen_, known_sorry)
+        ok = (len(bad) == len(want) and all(w in b for w, b in zip(want, bad))
+              and len(known_l) == want_known)
+        failed += not ok
+        print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} axiom rules ({what}): "
+              f"{len(bad)} problem(s), expected {len(want)}" + ("" if ok else f": {bad}"))
+    empty = not PACKAGES["security"]["known_sorry"]
+    failed += not empty
+    print(f"check_axioms selftest: {'ok' if empty else 'FAIL'} security KNOWN_SORRY is empty"
+          + ("" if empty else f": {sorted(PACKAGES['security']['known_sorry'])}"))
     # security-heavy: audited = HEAVY_THEOREMS + HEAVY_GENERATED, exactly.
     lst, gen = {"A.t"}, {"A.f.eq_1"}
     for what, audited, listed, want in [
@@ -1402,24 +1456,11 @@ def main(argv) -> int:
         bad.append(f"KNOWN_SORRY entry {name} was not reported (renamed or removed?)")
     for name in re.findall(r"'(\S+?)' is an axiom declared in the package", out):
         bad.append(f"axiom declared in the package: {name}")
-    ok = known = 0
-    for name in expected:
-        if name not in seen:
-            bad.append(f"no axiom report for {name}")
-            continue
-        axs = seen[name]
-        if name in known_sorry:
-            if axs - ALLOWED - {"sorryAx"}:
-                bad.append(f"{name} uses {sorted(axs - ALLOWED - {'sorryAx'})}")
-            elif "sorryAx" not in axs:
-                bad.append(f"{name} is in KNOWN_SORRY but no longer uses sorryAx; remove it")
-            else:
-                known += 1
-                print(f"known-sorry {name}: {sorted(axs)}")
-        elif axs - ALLOWED:
-            bad.append(f"{name} uses {sorted(axs - ALLOWED)}")
-        else:
-            ok += 1
+    probs, ok, known_lines = axiom_problems(expected, seen, known_sorry)
+    bad += probs
+    known = len(known_lines)
+    for line in known_lines:
+        print(line)
     for b in bad:
         print(f"check_axioms: FAIL {b}", file=sys.stderr)
     print(f"check_axioms: {pkg}: {len(expected)} theorems audited, {ok} use only "

@@ -10,10 +10,12 @@ import DoubleDealSecurity.Differential
      `roundBody_covariant_iff_id` (`covariant_iff_id_of_dp1_lt`, `covariant_iff_id_of_dp1Bound`):
      a covariant pair `(σ, τ)` has `dp1Count σ τ = 52!` (`dp1Count_eq_of_covPair`). Since the
      `v10Sym` rows are bounded (item 2), a bound below 1 on the rows OUTSIDE `v10Sym` alone is
-     enough (`covariant_iff_id_of_dp1_lt_off_v10Sym`). That conjecture keeps the one allowed
-     `sorry` (`Rounds.roundBody_covariant_iff_id`; its statement is proved in the heavy library
-     (finite checks by kernel `decide!`), `LabelStep.roundBody_covariant_iff_id_heavy`); B1 for those rows is
-     not proved here.
+     enough (`covariant_iff_id_of_dp1_lt_off_v10Sym`). That statement,
+     `roundBody_covariant_iff_id`, is proved in the heavy library (finite checks by kernel
+     `decide!`; `DoubleDealSecurityHeavy/V10Sym.lean`), not via B1; the default library has
+     no `sorry` and states its consequences as `_of_covariant` reductions
+     (`fullRound_commutes_iff_id_of_covariant`, `encrypt6_commutes_iff_id_of_covariant`).
+     B1 for those rows is not proved here (no bound on `DP_1` below 1 is claimed).
 
   2. THE 51 `v10Sym` ROWS ARE PROVED, for every output `β`:
      * `dp1_le_v10Sym`: `52 · dp1Count (v10Sym a x) β ≤ 52!` for every `(a, x)` other than
@@ -65,9 +67,9 @@ theorem dp1Count_eq_of_covPair {σ τ : Relabel}
     Fintype.card_fin]
 
 /-- (PROVED) Any one-round bound below 1 (`dp1Count α β < 52!` for every `α ≠ 1` and `β`)
-    implies the covariant conjecture `roundBody_covariant_iff_id`. (The `←` direction repeats
-    the proved half of `Rounds.roundBody_covariant_iff_id`; citing that theorem would put its
-    `sorry` in this closure.) -/
+    implies the statement of `roundBody_covariant_iff_id` (which is proved unconditionally in
+    the heavy library, `DoubleDealSecurityHeavy/V10Sym.lean`, by finite checks, not via this
+    bound). -/
 theorem covariant_iff_id_of_dp1_lt
     (h : ∀ α : Relabel, α ≠ 1 → ∀ β, dp1Count α β < Nat.factorial 52) (σ : Relabel) :
     Covariant σ unkeyedWithMix ↔ σ = 1 := by

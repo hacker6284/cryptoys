@@ -1,6 +1,6 @@
 /-
   Step 2 toward `PrimeNonSwapCase` (NOT `PrimeNonSwapCase` by itself, NOT the covariant round
-  conjecture `roundBody_covariant_iff_id`, which keeps its `sorry`): the rank map of a
+  statement `roundBody_covariant_iff_id`, proved in the heavy library): the rank map of a
   relabelling with the seat-26 condition is affine.
 
   Statement (`cell0Cov_rk_affine_of_checks`, GIVEN the finite checks `RankChecks` and

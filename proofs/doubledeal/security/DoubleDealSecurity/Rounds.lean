@@ -1,8 +1,8 @@
 /-
   T1: rounds and encrypt versus relabellings. Layer-wise lifting, the stem
-  maps decks onto decks, v8 consequences, the covariant round conjecture
-  `roundBody_covariant_iff_id` (the only DRAFT-SORRY), and a side lemma with
-  degenerate constant keys. Permutation round keys: `PermKeys.lean`.
+  maps decks onto decks, v8 consequences, the `_of_covariant` reductions of the
+  covariant round statement `roundBody_covariant_iff_id` (proved in the heavy library,
+  `DoubleDealSecurityHeavy/V10Sym.lean`), and a side lemma with degenerate constant keys. Permutation round keys: `PermKeys.lean`.
 -/
 import DoubleDealSecurity.GridCycle
 import DoubleDealSecurity.SumRanksV10
@@ -209,58 +209,34 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
   subst hστ
   exact (mixColumns_commutes_iff_id τ).1 hmix
 
-/-- (DRAFT-SORRY here; statement PROVED in the heavy library,
-    `LabelStep.roundBody_covariant_iff_id_heavy`) v11: no nontrivial σ makes
-    the unkeyed round body covariant, i.e. there is no pair (σ, τ) with σ ≠ id
-    and `F(σ·m) = τ·F(m)` on every deck, `F = GridCycle ∘ stem`.
-    Checked (`checks/check_covariant.py`, log committed): all 1,326
-    transpositions, all 51 nontrivial `v10Sym` (and `v9Sym`) and 200 random σ
-    are non-covariant, for v8, v9, v10 and v11 (v11 keeps v10 SumRanks and
-    changes only GridCycle). The `v10Sym` cases are proved
-    (`roundBody_not_covariant_of_stem` with `sumRanksV10_commutes_v10Sym`).
-    The assessment below was written for v9; v10 rows and columns are
-    chained, which makes the single-cell argument harder, not easier.
+/-! ### 4b'. The covariant round statement
 
-    Assessment: the other σ already fail at SumRanks, but a failing layer
-    inside a composite does not by itself make the composite fail. Covariance
-    is equivalent to `gridW (stem (σ·m)) = τ · gridW (stem m)` on all decks
-    (`walkW_rel_iff` machinery). Its AS cell gives `stem(σ·m)₀ = τ(stem(m)₀)`,
-    a single-cell condition on the SumRanks rotation amounts (row sum mod 13 of
-    one row, column-0 sum mod 4 after the row rotation). Turning that into
-    "σ ∈ v9Sym" needs a swap-pair argument like `sumRanks_shift_of_commutes`,
-    but with one cell and the column sum depending on the row rotations; the
-    remaining cells interleave two different walks. Effort: uncertain,
-    ~1–2 weeks. Not attempted further.
+  `roundBody_covariant_iff_id` (no nontrivial σ makes the unkeyed round body covariant,
+  i.e. no pair (σ, τ) with σ ≠ id and `F(σ·m) = τ·F(m)` on every deck,
+  `F = GridCycle ∘ stem`) is PROVED in the heavy library
+  (`DoubleDealSecurityHeavy/V10Sym.lean`; finite checks by kernel `decide!`, via
+  `LabelStep.roundBody_covariant_iff_id_of_checks`). It is not stated in the default
+  library; its consequences here are the `_of_covariant` reductions below, which take the
+  hard direction as the hypothesis `hconj`. A one-round symmetry statement (only the
+  identity commutes with the unkeyed round), not a security bound.
 
-    Narrowed in v12 (separate theorems; this statement and its `sorry` are
-    unchanged), `CovariantNarrow.lean`: it holds for every transposition
-    (`CovariantNarrow.roundBody_not_covariant_swap`, heavy library). It is
-    equivalent to its prime-order case (`CovariantNarrow.prime_case_iff`), and to
-    its case of prime-order σ that are neither a transposition nor a `v10Sym`
-    (`CovariantNarrow.prime_nonswap_case_iff`, heavy library).
-    It also follows from single-cell SumRanks statements
-    (`CovariantNarrow.roundBody_covariant_iff_id_of_cell0`, `…_of_cell0_prime`;
-    sufficient conditions, hypotheses there). The full one is proved in the heavy
-    library (finite checks by kernel `decide!`; `LabelStep.cell0Cov_mem_v10Sym`), and so is this
-    statement (`LabelStep.roundBody_covariant_iff_id_heavy`); in the default library
-    it is a hypothesis (`LabelStep.roundBody_covariant_iff_id_of_checks`, given
-    `V10SymChecks`), and the `sorry` below stays until the follow-up. Write-up:
-    `../analysis/v12-covariant/NOTES.md`, `../analysis/v12-primenonswap/NOTES.md`. -/
-theorem roundBody_covariant_iff_id (σ : Relabel) :
-    Covariant σ unkeyedWithMix ↔ σ = 1 := by
-  constructor
-  · intro h
-    sorry -- DRAFT-SORRY (conjecture)
-  · rintro rfl
-    exact ⟨1, fun m _ => by rw [rel_one, rel_one]⟩
+  Checked numerically as well (`checks/check_covariant.py`, log committed): all 1,326
+  transpositions, all 51 nontrivial `v10Sym` (and `v9Sym`) and 200 random σ are
+  non-covariant, for v8, v9, v10 and v11. History and the route to the proof:
+  `CovariantNarrow.lean`, `RankPartition.lean`, `RankAffine.lean`, `TauEq.lean`,
+  `LabelStep.lean`; write-ups `../analysis/v12-covariant/NOTES.md`,
+  `../analysis/v12-primenonswap/NOTES.md`. -/
 
-/-- (PROVED from the covariant conjecture) No nontrivial σ commutes with the
-    full round for all keys (the case τ = σ, key = id). -/
-theorem fullRound_commutes_iff_id (σ : Relabel) :
+/-- (PROVED, a reduction; GIVEN `hconj`, the hard direction of the covariant round
+    statement, proved in the heavy library as `roundBody_covariant_iff_id`) No nontrivial σ
+    commutes with the full round for all keys (the case τ = σ, key = id). Unconditional
+    form: heavy library, `fullRound_commutes_iff_id`. -/
+theorem fullRound_commutes_iff_id_of_covariant
+    (hconj : ∀ σ : Relabel, Covariant σ unkeyedWithMix → σ = 1) (σ : Relabel) :
     (∀ pos, CommutesOnDecks σ (fun m => fullRound m pos)) ↔ σ = 1 := by
   constructor
   · intro h
-    exact (roundBody_covariant_iff_id σ).1 ⟨σ, fun m hm => h id m hm⟩
+    exact hconj σ ⟨σ, fun m hm => h id m hm⟩
   · rintro rfl _; exact commutesOnDecks_one _
 
 /-! ### 4c. Degenerate model keys (constant, non-permutation)

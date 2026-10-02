@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """CI gate for the security package: no admit / admitGoal / native_decide / sorryAx / initialize /
 `[init]` / `[builtin_init]` attributes / axiom declarations anywhere, and
-`sorry` only inside the listed known conjectures (by declaration name).
+`sorry` only inside the listed known conjectures (by declaration name). For this
+package the list (ALLOWED_SORRY) is EMPTY: no `sorry` at all. (The last one,
+`roundBody_covariant_iff_id`, was removed: that statement is proved in the heavy library,
+and the default library has the `_of_covariant` reductions.)
 
-The allowlist must match exactly: a new sorry fails, and so does a listed
-conjecture that no longer contains one (then remove it here and from
-KNOWN_SORRY in ../check_axioms.py).
+An allowlist must match exactly: a new sorry fails, and so does a listed
+conjecture that no longer contains one (then remove it from the list, and here
+also from KNOWN_SORRY in ../check_axioms.py).
 
 A sorry is attributed to its top-level declaration, except inside a `let rec`
 or a `where` item: Lean compiles those to their own declarations (`top.f`),
@@ -14,7 +17,7 @@ The axiom gate (../check_axioms.py) is the real enforcer; this scan is a
 cheap source-level check. `--selftest` runs the built-in cases below.
 
 Other Lean packages use the same gate (one line per CI job):
-  scan_sorry.py                                    # this package, ALLOWED_SORRY
+  scan_sorry.py                                    # this package, ALLOWED_SORRY (empty)
   scan_sorry.py --root DIR_OR_FILE ... [--exclude PART ...] [--allow-sorry NAME ...]
 With --root, the sorry allowlist is exactly the --allow-sorry names (default: none).
 --exclude skips files with that path component (e.g. Generated); .lake is always skipped.
@@ -27,9 +30,9 @@ import sys
 from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent
-# Known DRAFT-SORRY theorems (the statement may be proved elsewhere, e.g. in the heavy
-# library). Each must contain exactly one sorry.
-ALLOWED_SORRY = {"roundBody_covariant_iff_id"}
+# Known DRAFT-SORRY theorems of this package; each must contain exactly one sorry.
+# Empty: the package has no sorry. Keep in sync with KNOWN_SORRY in ../check_axioms.py.
+ALLOWED_SORRY: set[str] = set()
 
 DECL = re.compile(
     r"^\s*(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable|partial)\s+)*"
@@ -158,7 +161,10 @@ def main(roots, exclude, allowed, label) -> int:
     return 0
 
 
-C = "roundBody_covariant_iff_id"
+# The allowlist mechanics (still used via --allow-sorry) are tested with a scratch
+# allowlist {C}; DEFAULT_SELFTEST below runs against the package default ALLOWED_SORRY.
+C = "someConjecture"
+SELFTEST_ALLOWED = {C}
 SELFTEST = [
     # (name, source, expect_pass, substring expected in the failure output)
     ("clean conjecture", f"theorem {C} : P := by\n  sorry\n", True, None),
@@ -187,6 +193,16 @@ SELFTEST = [
     ("attribute [init]", f"theorem {C} : P := by\n  sorry\ndef evil : IO Unit := pure ()\nattribute [init] evil\n", False, "forbidden [init] attribute:"),
     ("attribute [local init]", f"theorem {C} : P := by\n  sorry\nattribute [local init] evil\n", False, "forbidden [init] attribute:"),
     ("init-like names are fine", f"theorem {C} : P := by\n  sorry\n@[simp] theorem init_eq : xs.init = ys := rfl\n-- @[init] in a comment\n", True, None),
+]
+
+# Against the package default ALLOWED_SORRY (empty): no sorry anywhere, including in the
+# former DRAFT-SORRY theorem.
+DEFAULT_SELFTEST = [
+    ("default: clean", "theorem t : True := trivial\n-- sorry in a comment\n", True, None),
+    ("default: former conjecture with sorry", "theorem roundBody_covariant_iff_id : P := by\n  sorry\n",
+     False, "(in roundBody_covariant_iff_id)"),
+    ("default: any sorry", "theorem t : P := by\n  sorry\n", False, "(in t)"),
+    ("default: native_decide", "theorem t : True := by native_decide\n", False, "forbidden native_decide:"),
 ]
 
 
@@ -244,8 +260,13 @@ def run(a) -> int:
 def selftest() -> int:
     import contextlib, io, os, tempfile
     fails = 0
-    for name, src, ok, want in SELFTEST:
-        bad = check([("<selftest>", src)], ALLOWED_SORRY)
+    if ALLOWED_SORRY:
+        fails += 1
+        print(f"SELFTEST FAIL: ALLOWED_SORRY should be empty, is {sorted(ALLOWED_SORRY)}", file=sys.stderr)
+    cases = [(n, s, ok, w, SELFTEST_ALLOWED) for n, s, ok, w in SELFTEST]
+    cases += [(n, s, ok, w, ALLOWED_SORRY) for n, s, ok, w in DEFAULT_SELFTEST]
+    for name, src, ok, want, allowed in cases:
+        bad = check([("<selftest>", src)], allowed)
         good = (not bad) if ok else (bool(bad) and any(want in b for b in bad))
         if not good:
             fails += 1
@@ -273,7 +294,8 @@ def selftest() -> int:
             print(f"SELFTEST FAIL {name}: rc={rc} {got!r}", file=sys.stderr)
     if fails:
         return 1
-    print(f"scan_sorry selftest: {len(SELFTEST)} cases + {len(FLAG_SELFTEST)} flag cases pass")
+    print(f"scan_sorry selftest: {len(SELFTEST)} cases + {len(DEFAULT_SELFTEST)} default-allowlist cases + "
+          f"{len(FLAG_SELFTEST)} flag cases pass")
     return 0
 
 

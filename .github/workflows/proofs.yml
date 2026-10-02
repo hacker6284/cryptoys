@@ -233,7 +233,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: No admit / native_decide / sorryAx / axiom; sorry only in the allowlisted conjecture
+      - name: No admit / native_decide / sorryAx / axiom / sorry
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py
       - name: scan_sorry selftest (including --root / --exclude / --allow-sorry)
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --selftest

@@ -1,8 +1,8 @@
 /-
-  The covariant round conjecture `roundBody_covariant_iff_id` (`Rounds.lean`,
-  DRAFT-SORRY) for the AFFINE relabellings: a finite, structured family. The
-  conjecture itself, its statement, name and `sorry` are not touched, and
-  `CovariantNarrow.PrimeNonSwapCase` is not proved here (it is proved in the heavy library,
+  The covariant round statement `roundBody_covariant_iff_id` (proved in the heavy library,
+  `DoubleDealSecurityHeavy/V10Sym.lean`) for the AFFINE relabellings: a finite, structured
+  family. The general statement and `CovariantNarrow.PrimeNonSwapCase` are not proved here
+  (both are proved in the heavy library: `roundBody_covariant_iff_id`,
   `CovariantNarrow.primeNonSwapCase`).
 
   Affine relabellings. A card is (rank index r = c % 13 ∈ Z13 (A = 0), GF(4) suit

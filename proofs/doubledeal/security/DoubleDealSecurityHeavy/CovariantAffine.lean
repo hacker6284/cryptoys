@@ -31,8 +31,8 @@ theorem not_cell0Cov_lin (k : Fin 12) (g : Fin 6) (hkg : (k, g) ≠ (0, 0)) (τ 
     nontrivial linear part `(k, g) ≠ (0, 0)` is covariant for the unkeyed round body,
     for ANY output relabelling τ. This is the statement of `roundBody_covariant_iff_id`
     restricted to these 3692 parameter tuples (pairwise distinct relabellings,
-    `affine_params_inj`); the general statement is `LabelStep.roundBody_covariant_iff_id_heavy`;
-    `roundBody_covariant_iff_id` keeps its `sorry` until the follow-up. -/
+    `affine_params_inj`); the general statement is `roundBody_covariant_iff_id`
+    (`V10Sym.lean`). -/
 theorem roundBody_not_covariant_affine (a : Fin 13) (x : Fin 4) (k : Fin 12) (g : Fin 6)
     (hkg : (k, g) ≠ (0, 0)) : ¬ Covariant (v10Sym a x * linSym k g) unkeyedWithMix :=
   not_covariant_affine_of_check affChecks_ok a x k g hkg

@@ -121,7 +121,7 @@ CHARACTERISTIC is `(1/64)² ≈ 2.4e-4`; nothing numeric is proved for the DIFFE
   (`encryptL`, which ends with the stem and no GridCycle), a column bound for the final
   round's stem is enough for outputs outside `v10Sym`. That is a statement about SumRanks
   alone. No proof of `roundBody_covariant_iff_id` goes through it (that statement is proved
-  in the heavy library, `LabelStep.roundBody_covariant_iff_id_heavy`); it does imply that no β
+  in the heavy library, `roundBody_covariant_iff_id`); it does imply that no β
   outside `v10Sym` is exactly stem-covariant into γ ≠ β, which now follows from
   `StemUnion.dpFCount_le_of_ne` (not stated as a separate theorem; `sumRanksV10_commutes_iff`
   rules out γ = β). See `FullCipher.fullDiffCount_le_of_col` (a PROVED reduction; the off-diagonal stem hypothesis is now

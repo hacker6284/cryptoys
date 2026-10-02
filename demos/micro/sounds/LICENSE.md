@@ -21,12 +21,8 @@ The sounds the microdemo pages not yet in the library play (chosen in `demos/mic
 | `doubledeal-square/knock-a_hoganthelogan-466789-slice` | HogantheLogan | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/HogantheLogan/sounds/466789/ |
 | `doubledeal-table-settle/setdown_eggdeng-502658` | eggdeng | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/eggdeng/sounds/502658/ |
 | `doubledeal-take/deal_kenney-card-slide-1` | Kenney Vleugels (Kenney.nl) | Creative Commons CC0 (page); License.txt: "Creative Commons Zero, CC0" (http://creativecommons.org/publicdomain/zero/1.0/) | https://kenney.nl/assets/casino-audio |
-| `megaminx-turn/double/double_spacejoe-486565` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486565/ |
-| `megaminx-turn/single/single_spacejoe-486573` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486573/ |
-| `megaminx-turn/triple/triple_spacejoe-486566` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486566/ |
 | `peg/in/peg_in_lego_click_670000` | ImmergoMedia | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/ImmergoMedia/sounds/670000/ |
 | `peg/out/peg_out_punch_pulled_431447` | StarTowerStudio | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/StarTowerStudio/sounds/431447/ |
-| `scramble-turn/settle/settle_emapuree-848748` | emapuree | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/emapuree/sounds/848748/ |
 | `unbox/box-setdown-felt/1_emapuree-848748` | emapuree | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/emapuree/sounds/848748/ |
 | `unbox/chest-lid-close/1_sheyvan-475294-slice` | Sheyvan | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/Sheyvan/sounds/475294/ |
 | `unbox/chest-lid-open/1_sheyvan-475294-slice` | Sheyvan | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/Sheyvan/sounds/475294/ |

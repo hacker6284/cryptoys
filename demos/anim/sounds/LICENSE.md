@@ -4,6 +4,9 @@ The sounds the animation library entries play (chosen in `demos/anim/*/settings.
 
 | File | Author | Licence | Source |
 |---|---|---|---|
+| `megaminx-turn/double/double_spacejoe-486565` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486565/ |
+| `megaminx-turn/single/single_spacejoe-486573` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486573/ |
+| `megaminx-turn/triple/triple_spacejoe-486566` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486566/ |
 | `scramble-rotate/7_sadiquecat-816261-broomstick-soft` | Sadiquecat | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/Sadiquecat/sounds/816261/ |
 | `scramble-turn/double/double_spacejoe-486567` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486567/ |
 | `scramble-turn/settle/settle_kenney-carpet-000-soft-cut` | Kenney (www.kenney.nl) | Creative Commons Zero, CC0 (License.txt in the pack) | https://kenney.nl/assets/impact-sounds |

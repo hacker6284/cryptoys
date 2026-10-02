@@ -7,7 +7,8 @@ turn sound on, and listen. `index.html` lists them.
 - **Animation library:** a page whose animation Zachary has approved is
   only a viewer of its entry in `../anim/` (see `../anim/README.md`):
   the values live there and the real demos import them. So far:
-  `scramble-turn` (viewed by `scramble-turn` and `scramble-rotate`). The rest keep their own `settings.js` until approved.
+  `scramble-turn` (viewed by `scramble-turn` and `scramble-rotate`) and
+  `megaminx-turn`. The rest keep their own `settings.js` until approved.
 - **Settings:** each other page's `settings.js` holds everything you hear and
   see move: one sound file per slot, `gainDb`, `offsetMs` (when the file
   starts relative to the contact moment; −peak puts the loudest sample on

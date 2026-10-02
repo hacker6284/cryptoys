@@ -112,4 +112,25 @@ assert.equal(fileStart({ peakAtMs: 100 }, 0, 143, 1.4 / 0.7), 200 - 143, "peakAt
 }
 assert.equal(stretchContact(1000, -482, 127.6, 1), 1000, "offsetMs sounds: unchanged at the tuned tempo");
 
+// megaminx-turn: the default rules from the start (not yet approved).
+{
+    const mm = await import(new URL("megaminx-turn/index.js", here));
+    assert.equal(mm.timing, mm.settings.timing);
+    for (const [slot, move, ms] of [["single", "U", 1000], ["double", "U2", 1500], ["triple", "U3", 2000]]) {
+        const s = mm.settings.sounds[slot];
+        assert.match(s.file, new RegExp(`^megaminx-turn/${slot}/`), `megaminx ${slot}: its own click`);
+        assert.equal(s.align, "peak-velocity", `megaminx ${slot}: centred on peak velocity`);
+        assert.equal(s.offsetMs, undefined);
+        for (const tempo of [0.5, 1.4, 4]) {
+            const [[got, contactMs, stretch]] = mm.turnContacts({ at: 0, tempo, leaves: [move] });
+            assert.equal(got, slot);
+            const start = fileStart(s, contactMs, { centroidMs: 120 }, stretch);
+            assert.ok(Math.abs(start + 120 - ms / tempo / 2) < 1e-9, `megaminx ${slot} centre half way at ${tempo}×`);
+        }
+    }
+    assert.deepEqual(mm.settings.sounds.settle, settings.sounds.settle, "megaminx lands with scramble-turn's muffled pat");
+    assert.equal(mm.settings.sounds.rotation, null);
+    assert.ok(!JSON.stringify(mm.settings.sounds).includes("emapuree"), "no wooden-block thud");
+}
+
 console.log("animation library tests ok");

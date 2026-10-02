@@ -319,60 +319,6 @@
     "doubledeal-take"
    ]
   },
-  "megaminx-turn/double/double_spacejoe-486565": {
-   "group": "double",
-   "peakMs": 176,
-   "clicksMs": [
-    147,
-    197
-   ],
-   "lufs": -22.4,
-   "gainTo16": 6.4,
-   "durationS": 0.332,
-   "author": "SpaceJoe",
-   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://freesound.org/people/SpaceJoe/sounds/486565/",
-   "description": "Turn 13: detent double, two clicks 50 ms apart (weaker, then stronger).",
-   "pages": [
-    "megaminx-turn"
-   ]
-  },
-  "megaminx-turn/single/single_spacejoe-486573": {
-   "group": "single",
-   "peakMs": 132,
-   "clicksMs": [
-    132
-   ],
-   "lufs": -25.9,
-   "gainTo16": 9.9,
-   "durationS": 0.277,
-   "author": "SpaceJoe",
-   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://freesound.org/people/SpaceJoe/sounds/486573/",
-   "description": "Turn 20: one clean click at ~130 ms, nothing else within 12 dB (cleanest single).",
-   "pages": [
-    "megaminx-turn"
-   ]
-  },
-  "megaminx-turn/triple/triple_spacejoe-486566": {
-   "group": "triple",
-   "peakMs": 101,
-   "clicksMs": [
-    54,
-    99,
-    149
-   ],
-   "lufs": -21.1,
-   "gainTo16": 5.1,
-   "durationS": 0.417,
-   "author": "SpaceJoe",
-   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://freesound.org/people/SpaceJoe/sounds/486566/",
-   "description": "Turn 14: three strong clicks 45-50 ms apart (54/99/149 ms) (also in scramble-turn).",
-   "pages": [
-    "megaminx-turn"
-   ]
-  },
   "peg/in/peg_in_lego_click_670000": {
    "group": "in",
    "peakMs": 19,
@@ -405,23 +351,6 @@
    "description": "Plastic punch pulled out of a container: pop with friction (bs-ecbs top pick).",
    "pages": [
     "peg"
-   ]
-  },
-  "scramble-turn/settle/settle_emapuree-848748": {
-   "group": "settle",
-   "peakMs": 33,
-   "clicksMs": [
-    32
-   ],
-   "lufs": -22.2,
-   "gainTo16": 6.2,
-   "durationS": 0.191,
-   "author": "emapuree",
-   "license": "Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://freesound.org/people/emapuree/sounds/848748/",
-   "description": "Wooden block tapped on felt: short, muffled, dry thud (megadreifach regrip-3; map pick).",
-   "pages": [
-    "megaminx-turn"
    ]
   },
   "unbox/box-setdown-felt/1_emapuree-848748": {

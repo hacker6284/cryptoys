@@ -19,7 +19,9 @@ The secret-start test D2 was never run on v2, so nothing is claimed about v2 in 
 v3's card phase names every piece by its colours and reads all 50 pieces in every block (PROVED, §5.8). Measured on v3 (COMPUTED, §8; each figure has its own scope):
 - **Free start (D1 + D1′, 16M quotients per side):** P(fix ≥ 2) is within ±0.00016 of ideal (95% half-width). Pooling the four 8M samples is HEUR.
 - **Secret start (D2, 4M):** within ±0.00043.
-- **Merge and telescoping (400k each):** no collisions. Evidence: [`proofs/megadreifach/security/v3/`](../../../../proofs/megadreifach/security/v3/README.md).
+- **Merge and telescoping (400k each):** no collisions.
+
+Evidence: [`proofs/megadreifach/security/v3/`](../../../../proofs/megadreifach/security/v3/README.md).
 
 `megadreifach.sudo` in this directory is the normative definition of v3 (the runnable spec). This document explains it; a mismatch between the two is a bug in this prose (as §5 says for the hand procedure). Where a v2 section is cited "unchanged", the v2 text is normative for v3 too. MegaDreifach is a toy three-megaminx Merkle–Damgård hash. It makes no cryptographic security claim, and it is not for protecting anything.
 

@@ -6,7 +6,8 @@
 // Davies-Meyer (h' = compose(h, E_m(h)) = h·W·h) and the digest encoding are v2's, unchanged.
 // A sudocode int is 64-bit and overflow traps; |G| and 52! need pasted bigint.
 // Tests lock pad, φ, IV-COOK12, rank, the group law, the public API, the edge table, the colour
-// naming (every block names all 50 pieces), and the v3 KATs (kats/megaminx_hash_kats_v3.json).
+// naming (every block names all 50 pieces), the 60 distinct read words per piece, the exact cost
+// counts (em_run), and the v3 KATs (kats/megaminx_hash_kats_v3.json). This file is normative.
 
 pad_block = 28
 len_field = 8
@@ -654,22 +655,48 @@ func corner_face_of(g: Position, a: int, b: int, c: int, x: int) -> int
     assert found >= 0
     return found
 
-// One card step (SPEC v3 §5.3) with last face `last`, card rank `rank` (King = 12), suit
-// amount k, and naming colour c (card steps: the card's colour, a King uses the Ace colour;
-// echoes: the echo colour P). Returns the new position and the new last face.
-func card_step(g: Position, last: int, rank: int, k: int, c: int) -> (Position, int)
-    turned = opposites[last]
+// An E_m run: the position, the last face (the face turned last; SPEC v3 §5.1), and the SPEC v3
+// §5.6 cost counters. The counters never affect the position or the last face; em_block returns
+// only the position. turns/clicks count every face turn and its clicks;
+// finds counts the named pieces located in steps 3 and 4; relooks the step-5 look at the edge found
+// in step 3; register_looks the held edge and corner looked at before each echo.
+record Run
+    g: Position
+    last: int
+    turns: int
+    clicks: int
+    finds: int
+    relooks: int
+    register_looks: int
+
+func start_run(h: Position) -> Run
+    return Run(h, 0, 0, 0, 0, 0, 0)
+
+// One face turn, counted; the turned face becomes the last face.
+func turn_run(r: Run, face: int, amount: int) -> Run
+    return Run(face_turn(r.g, face, amount), face, r.turns + 1, r.clicks + amount, r.finds, r.relooks, r.register_looks)
+
+func count_looks(r: Run, finds: int, relooks: int, register_looks: int) -> Run
+    return Run(r.g, r.last, r.turns, r.clicks, r.finds + finds, r.relooks + relooks, r.register_looks + register_looks)
+
+// One card step (SPEC v3 §5.3) counting up from face `base` (card steps: the last face; echoes:
+// the echo colour P), with card rank `rank` (King = 12), suit amount k, and naming colour c (card
+// steps: the card's colour, a King uses the Ace colour; echoes: P). Step 5 turns the face carrying
+// the edge's n-sticker last, so the returned run's last face is that face.
+func card_step(r: Run, base: int, rank: int, k: int, c: int) -> Run
+    turned = opposites[base]
     if rank < 12
-        turned = (last + rank) mod 12
-    g = face_turn(g, turned, k)
+        turned = (base + rank) mod 12
+    r = turn_run(r, turned, k)
     n, n2 = suit_nbrs(c, k)
-    g = face_turn(g, edge_face_of(g, c, n, c), 1)
-    g = face_turn(g, edge_face_of(g, c, n, n), 1)
-    g = face_turn(g, corner_face_of(g, c, n, n2, c), 1)
-    g = face_turn(g, corner_face_of(g, c, n, n2, n), 1)
-    new_last = edge_face_of(g, c, n, n)
-    g = face_turn(g, new_last, 1)
-    return (g, new_last)
+    r = count_looks(r, 1, 0, 0)
+    r = turn_run(r, edge_face_of(r.g, c, n, c), 1)
+    r = turn_run(r, edge_face_of(r.g, c, n, n), 1)
+    r = count_looks(r, 1, 0, 0)
+    r = turn_run(r, corner_face_of(r.g, c, n, n2, c), 1)
+    r = turn_run(r, corner_face_of(r.g, c, n, n2, n), 1)
+    r = count_looks(r, 0, 1, 0)
+    return turn_run(r, edge_face_of(r.g, c, n, n), 1)
 
 // The colour a card names on: its rank's colour, Ace for a King.
 func card_colour(card: int) -> int
@@ -688,18 +715,23 @@ func echo_colour(g: Position, held: int) -> int
     y = corner_face_of(g, c, n, n2, n)
     return (x + y) mod 12
 
-// E_m = W·h: the 52 card steps from the Ace face, then echo_count echoes of card 52.
-func em_block(h: Position, deal: List<int>) -> Position
-    g = h
-    last = 0
+// The counted run of E_m = W·h: the 52 card steps from the Ace face (start_run sets the last
+// face to 0), then echo_count echoes of card 52. An echo counts up from P, not from the last face.
+func em_run(h: Position, deal: List<int>) -> Run
+    r = start_run(h)
     for i = 0 to 51
         card = deal[i]
-        g, last = card_step(g, last, card / 4, card mod 4 + 1, card_colour(card))
+        r = card_step(r, r.last, card / 4, card mod 4 + 1, card_colour(card))
     held = deal[51]
     for j = 1 to echo_count
-        p = echo_colour(g, held)
-        g, last = card_step(g, p, held / 4, held mod 4 + 1, p)
-    return g
+        p = echo_colour(r.g, held)
+        r = count_looks(r, 0, 0, 2)
+        r = card_step(r, p, held / 4, held mod 4 + 1, p)
+    return r
+
+// E_m = W·h.
+func em_block(h: Position, deal: List<int>) -> Position
+    return em_run(h, deal).g
 
 export func Hash(msg: List<int>) -> List<int>
     padded = pad_message(msg)
@@ -772,13 +804,13 @@ func kat_v3_digest(index: int) -> List<int>
 // Two HashDeckBody vectors of that file: body_vectors[0], and body_vectors[7], whose held card is K♦.
 func kat_v3_body_deal(index: int) -> List<int>
     if index == 0
-        return [22, 3, 28, 21, 40, 43, 9, 37, 48, 39, 47, 33, 13, 49, 18, 50, 17, 41, 19, 29, 23, 8, 1, 26, 34, 27, 25, 31, 11, 12, 15, 35, 46, 14, 38, 0, 24, 30, 2, 45, 10, 6, 5, 51, 42, 16, 44, 32, 7, 4, 20, 36]
-    return [29, 23, 2, 30, 1, 7, 9, 12, 21, 20, 13, 39, 34, 46, 24, 22, 33, 10, 5, 25, 50, 8, 19, 16, 27, 44, 17, 4, 3, 26, 49, 47, 15, 42, 11, 28, 36, 45, 48, 43, 37, 38, 35, 32, 31, 14, 41, 0, 6, 18, 40, 51]
+        return [0, 1, 2, 34, 12, 6, 22, 16, 46, 26, 4, 20, 8, 38, 48, 45, 40, 13, 44, 49, 41, 21, 50, 29, 28, 35, 42, 47, 18, 27, 24, 7, 30, 37, 14, 11, 3, 31, 5, 23, 25, 15, 36, 43, 17, 19, 10, 51, 32, 33, 9, 39]
+    return [1, 9, 33, 48, 27, 0, 20, 41, 8, 21, 28, 15, 3, 45, 13, 17, 29, 19, 7, 47, 49, 50, 11, 31, 42, 24, 16, 39, 10, 30, 35, 18, 5, 37, 23, 14, 32, 36, 12, 43, 22, 40, 4, 26, 44, 38, 6, 2, 34, 46, 25, 51]
 
 func kat_v3_body_digest(index: int) -> List<int>
     if index == 0
-        return [1, 17, 186, 185, 148, 28, 98, 40, 249, 214, 146, 165, 113, 207, 204, 125, 143, 178, 199, 144, 51, 18, 99, 21, 53, 230, 255, 14, 24]
-    return [1, 175, 197, 180, 10, 165, 196, 68, 81, 165, 48, 120, 160, 116, 175, 52, 74, 101, 133, 167, 43, 206, 78, 174, 39, 131, 12, 86, 86]
+        return [1, 242, 145, 93, 143, 64, 5, 30, 133, 205, 255, 32, 199, 113, 52, 90, 255, 198, 222, 227, 150, 79, 95, 205, 56, 234, 155, 69, 115]
+    return [2, 177, 50, 252, 72, 249, 244, 224, 10, 101, 125, 170, 171, 75, 163, 112, 96, 56, 62, 248, 82, 143, 60, 231, 216, 47, 140, 73, 198]
 
 // The KAT messages, in the file's order: empty, abc, 00, 0..26, 0..27, 0..28, 56 x 'm', and multi_100.
 func kat_msg(index: int) -> List<int>
@@ -981,30 +1013,77 @@ test "coverage: the 48 non-King cards name all 30 edges and all 20 corners"
         assert cseen[s] >= 1
 
 test "card pass: the last face is re-derivable from the board and the top dealt card"
-    g = iv_cook12()
-    last = 0
+    r = start_run(iv_cook12())
     for i = 0 to 51
         card = (i * 23 + 7) mod 52
-        g, last = card_step(g, last, card / 4, card mod 4 + 1, card_colour(card))
+        r = card_step(r, r.last, card / 4, card mod 4 + 1, card_colour(card))
         c = card_colour(card)
         n, n2 = suit_nbrs(c, card mod 4 + 1)
-        assert edge_face_of(g, c, n, n) == last
+        assert edge_face_of(r.g, c, n, n) == r.last
 
-test "a King turns the face opposite the last face"
-    g0 = iv_cook12()
+test "a King turns the face opposite the last face (as the rank that counts up to it)"
+    r0 = start_run(iv_cook12())
     for last = 0 to 11
+        rank = (opposites[last] - last + 12) mod 12
+        assert (rank >= 1) and (rank <= 11)
         for k = 1 to 4
-            g1, l1 = card_step(g0, last, 12, k, 0)
-            h = face_turn(g0, opposites[last], k)
-            n, n2 = suit_nbrs(0, k)
-            h = face_turn(h, edge_face_of(h, 0, n, 0), 1)
-            h = face_turn(h, edge_face_of(h, 0, n, n), 1)
-            h = face_turn(h, corner_face_of(h, 0, n, n2, 0), 1)
-            h = face_turn(h, corner_face_of(h, 0, n, n2, n), 1)
-            l2 = edge_face_of(h, 0, n, n)
-            h = face_turn(h, l2, 1)
-            assert l1 == l2
-            assert g1.cp == h.cp
-            assert g1.co == h.co
-            assert g1.ep == h.ep
-            assert g1.eo == h.eo
+            king = card_step(r0, last, 12, k, 0)
+            same = card_step(r0, last, rank, k, 0)
+            assert king.last == same.last
+            assert king.g == same.g
+
+test "cost per block (SPEC v3 §5.6): 468 turns, 520 + 26k clicks, 156 finds, 78 re-looks, 52 register looks"
+    g0 = iv_cook12()
+    for held = 0 to 51
+        deal: List<int> = []
+        for card = 0 to 51
+            if card != held
+                deal.append(card)
+        deal.append(held)
+        r = em_run(g0, deal)
+        assert r.turns == 468
+        assert r.clicks == 520 + 26 * (held mod 4 + 1)
+        assert r.finds == 156
+        assert r.relooks == 78
+        assert r.register_looks == 52
+        assert r.g == em_block(g0, deal)
+
+test "read words (SPEC v3 §5.8): for every piece and ordered pair of its colours, its 60 states give 60 distinct two-turn words"
+    for p = 0 to 29
+        a, b = edge_faces(p)
+        for order = 0 to 1
+            x = a
+            y = b
+            if order == 1
+                x = b
+                y = a
+            words: Set<Position> = Set()
+            for s = 0 to 29
+                for o = 0 to 1
+                    g = identity()
+                    g.ep[p] = g.ep[s]
+                    g.eo[p] = 0
+                    g.ep[s] = p
+                    g.eo[s] = o
+                    f1 = edge_face_of(g, a, b, x)
+                    f2 = edge_face_of(face_turn(g, f1, 1), a, b, y)
+                    words.add(face_turn(face_turn(identity(), f1, 1), f2, 1))
+            assert words.size == 60
+    for p = 0 to 19
+        a, b, c = corner_faces(p)
+        cols = [a, b, c]
+        for i1 = 0 to 2
+            for i2 = 0 to 2
+                if i1 != i2
+                    words: Set<Position> = Set()
+                    for s = 0 to 19
+                        for o = 0 to 2
+                            g = identity()
+                            g.cp[p] = g.cp[s]
+                            g.co[p] = 0
+                            g.cp[s] = p
+                            g.co[s] = o
+                            f1 = corner_face_of(g, a, b, c, cols[i1])
+                            f2 = corner_face_of(face_turn(g, f1, 1), a, b, c, cols[i2])
+                            words.add(face_turn(face_turn(identity(), f1, 1), f2, 1))
+                    assert words.size == 60

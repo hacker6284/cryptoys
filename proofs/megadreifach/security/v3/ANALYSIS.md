@@ -19,8 +19,8 @@ Sections §11–§13 are the study as run (2026-10-01/02), with paths changed to
 **How the study was checked.**
 - All runs import the v2 engine ([`../v2/engine.py`](../v2/engine.py)) read-only through [`study/mdfix_lib.py`](study/mdfix_lib.py).
 - The v2 self-check (8/8 v2 KATs, fast == slow) runs at the top of every log.
-- Each candidate rule's fast engine is checked against a literal slow transliteration of its hand text, on m9_search tuple positions, at the start of every log.
-- For ZP26, [`check_v3.py`](check_v3.py) ties that engine to the v3 sudo and KATs.
+- During the runs, each candidate rule's fast engine was checked against a literal slow transliteration of its hand text, on m9_search tuple positions, at the start of every log. The ZP-family copy (`mdw4_lib.slow_em4`) was removed from the tree afterwards. The logs still print those result lines, as the record of the runs.
+- For ZP26, [`em4_vs_sudo.py`](em4_vs_sudo.py) tests the fast engine against the sudoc JS build of the normative v3 sudo, on 64 seeded random (h, deal) pairs. It does not check the spec.
 
 **Tests.** Write W(h) for the face-turn word a block turns from start h; the block output is h·W·h. The tests look at a quotient of two W's. Ideal is a uniform element of G: P(fix ≥ 2) = .264241, mean fixed pieces 1, mean moved 49.1667, per-slot "fixed with orientation 0" 1/60.
 
@@ -384,7 +384,7 @@ The rest is fixed:
 **Tails.** N = none; E = m echoes of the held 52nd card (§11.7), named by the register; S = m further scramble rounds.
 
 **Checks (in every log).**
-- The fast engine equals a literal slow transliteration on 8/8 random blocks for every kind, including ZE3F0E9, ZP3F0E9 and ZE3F0E26.
+- The fast engine equals a literal slow transliteration on 8/8 random blocks for every kind, including ZE3F0E9, ZP3F0E9 and ZE3F0E26. This is a record of the runs: `slow_em4` has since been removed from the tree.
 - ZL3F0E26 is SBR26.
 - B is uniform: each colour shows up 5 times over the 60 states of its slot.
 - The 48 non-King card steps name 30/30 edges and 20/20 corners, so **every block reads all 50 pieces (PROVED; the naming is NRk's)**.
@@ -487,7 +487,7 @@ The 0-hit bounds are 7.5e-6 per merge pair and 6.0e-5 per telescoping cell.
 | **Fully fixed corners of Q** | **+.00101 ± .00080 (2.5σ)** |
 
 - There is **no end-of-W signature**, which was NRk52's.
-- The corner figure is a 2.5σ flag at 2M. It is checked at 8M in the next block, through mean fixC and the per-corner "fixed, orientation 0" rates.
+- The corner figure is a 2.5σ flag at 2M. It was never directly re-measured. The next block looks at it only indirectly, through mean fixC and the per-corner "fixed, orientation 0" rates at 8M.
 - P(different piece) between the last two echoes is .61, against SBR26's .89. So the register repeats more often than SBR's but less than ZH's (HEUR).
 
 **D1 + D1′ at 8M + 8M** (`logs/mdw4_final_ZP3F0E26_big8M.log`, seeds 68,000,000 + c; `logs/mdw4_final_ZP3F0E26_big8M_b.log`, seeds 71,000,000 + c; 80 chunks each, about 56 min each).
@@ -507,11 +507,11 @@ The 0-hit bounds are 7.5e-6 per merge pair and 6.0e-5 per telescoping cell.
 
 - Paired D1 − D1′ difference in P(fixC ≥ 2): run a +.00033 ± .00043, run b +.00017 ± .00043. Both are consistent with the proved equality of the two laws.
 - **Corners: clean (COMPUTED).** The pooled averaged P(fixC ≥ 2) is −.00004 ± .00016, and the difference from NRk52 is −.00064 ± .00027 (z ≈ 4.6). All per-corner "fixed, orientation 0" rates lie within ±.00012 of 1/60, with Σz² clean in all four.
-  - **The diag 2.5σ flag is not confirmed (HEUR).** The 2M diag's "fully fixed corners +.00101 ± .00080" (D1) is the sum over the 20 corners of the per-corner "fixed, orientation 0" rates.
+  - **The diag 2.5σ flag was never directly re-measured (HEUR).** The 2M diag's "fully fixed corners +.00101 ± .00080" (D1) is the sum over the 20 corners of the per-corner "fixed, orientation 0" rates.
     - The 8M runs do not print that sum. They print the per-corner rates and their Σz².
     - A uniform +.00101 spread over 20 corners is +5e-5 per corner, about 1.1σ per slot at 8M. That would add roughly 24 to the corner part of Σz².
     - The observed totals over all 50 slots in D1 are 45.5 and 33.2 (ideal 50).
-    - So an excess that large is unlikely, but this is not a direct re-measurement.
+    - So the 8M runs make an excess that large unlikely (HEUR), but the flag itself was never directly re-measured.
   - The run-a D1′ "position fixed" Bonferroni p = .0055 is the uncalibrated statistic of §4.1 (slots are not independent). Run b gives p = .48 for the same statistic. Not a finding (HEUR).
 - **Edges: settled for ZP26 (COMPUTED).** The pooled P(fixE ≥ 2) is −.00005 ± .00016 (95% upper bound +.00011), and mean fixE −.00000 ± .00035. SBR26's 2.6σ edge hint (+.00029) does not appear in this design, which shares SBR26's card pass. That suggests, but does not prove, that it was noise or specific to SBR's remembered-colour echo (HEUR).
 
@@ -555,29 +555,15 @@ The 0-hit bounds are 7.5e-6 per merge pair and 6.0e-5 per telescoping cell.
 - **Against SBR26:** the same turns and clicks, plus 52 looks. In exchange, nothing has to be carried.
 - **Against NRk52:** −10% turns, −13% clicks, the same number of looks in total (156 + 52 = 208), and one deal instead of two.
 - **Against v2:** still about 2.2× v2's clicks.
+- **Counting conventions (in-tree note, 2026-10-02).**
+  - "156 piece finds" counts the edge and corner located in steps 3 and 4 of each of the 78 steps.
+  - Step 5 also looks again at the edge found in step 3. That adds 78 re-looks, not counted above.
+  - The logs' cost line, from `mdw4_lib.cost`, prints `slot_reads 26`: one register read per echo, which looks at two pieces. That is the same 52 register looks.
+  - The v3 sudo counts all three (156 / 78 / 52) in `em_run` and tests them (SPEC v3 §5.6).
 
-### 12.7 Hand recipe (ZP26; no grip-relative names)
+### 12.7 Hand recipe (ZP26)
 
-Names, colours, ranks and "turn X +n" are as in §9.
-
-**Card steps.** Exactly SBR26 (§11.7 steps 1–5), with the last face starting as the Ace face.
-- If you lose track, the last face is the face carrying the n-coloured sticker of the edge of the **top card of the dealt pile**.
-
-**Deal once.** Do the card step for all 52 cards. Keep the 52nd card in your hand (its rank r, suit k, colour c; a King's colour is the Ace colour), together with its edge (c, n) and corner (c, n, next clockwise), as in §9 step 2.
-
-**26 echoes.** Count 26 cards off the dealt pile into a counter pile, unread. For each counter card:
-1. **Look.** Find the held card's edge: face X is the face its n-coloured sticker is on. Find the held card's corner: face Y is the face its n-coloured sticker is on.
-2. **Echo colour.** Count up from X by Y's rank, exactly as a card of Y's rank counts up from the last face in step 1. An Ace-coloured Y means X itself. Call the result P.
-3. **Echo step.** Do the card step with the held card, reading P wherever the card step says "last face" (step 1) or "the card's colour" (steps 2–5).
-   - Step 1: count up from P by the held card's rank (a King turns the face opposite P), +k.
-   - Step 2: name the edge (P, n_k) and the corner (P, n_k, next) with the held suit.
-   - Steps 3–5 as usual.
-
-Nothing carries over to the next echo: step 1 of the next echo re-reads everything from the board.
-
-**3-solve.** Unchanged (§9). The output is h·W·h.
-
-**Checked by code.** The literal slow transliteration of exactly these steps equals the fast engine on 8/8 random blocks in every log (`mdw4_lib.selftest`).
+The ZP26 hand recipe is SPEC v3 §5.1–§5.4, and the normative definition is the v3 sudo. It is not restated here. In the study, the fast engine `study/mdw4_lib.em4` (kind `ZP3F0E`, m = 26) computed every ZP26 statistic. [`em4_vs_sudo.py`](em4_vs_sudo.py) tests that it gives the same digests as the sudo build. The study's literal slow transliteration (`slow_em4`) was removed after the runs (see the README).
 
 ### 12.8 Verdict and what is not done
 
@@ -615,7 +601,7 @@ Nothing carries over to the next echo: step 1 of the next echo re-reads everythi
 
 The rule was to stop a variant that clearly fails.
 
-**Selftest.** The fast engine equals the literal slow transliteration on 8/8 random blocks for ZP3F0E13, ZP0F0E9 and ZP0F0E26. This runs at the start of every `mdw5_*` log (`study/mdw4_lib.py`, `study/mdw4_tests.py`).
+**Selftest (record of the runs; `slow_em4` has since been removed).** The fast engine equals the literal slow transliteration on 8/8 random blocks for ZP3F0E13, ZP0F0E9 and ZP0F0E26. This runs at the start of every `mdw5_*` log (`study/mdw4_lib.py`, `study/mdw4_tests.py`).
 
 **Result.**
 - **Only ZP26 passes.**

@@ -1,0 +1,5 @@
+em4_vs_sudo: study fast engine mdw4_lib.em4 (ZP3F0E, m = 26) vs HashDeckBodyFrom of the sudoc JS build of v3/megadreifach.sudo (normative). Not a check of the spec.
+seed 20261002: 60 uniform (h, deal) pairs + 4 with K♣/K♥/K♠/K♦ held
+equal digests: 64/64 (King held: 4/4)
+first digest 02272f5f55ff001c01e982806a00ff401949346c6cbc0af3cb825fb148
+last digest  01662b47d9c5c38f71ac65416f02ef9a55335013bc28fd6d0a0143f398

@@ -9,7 +9,7 @@ Toy three-megaminx Merkle–Damgård hash. Not for real use. Naming, scope and n
 | [`megadreifach.sudo`](megadreifach.sudo) | Conformance implementation, v2 |
 | [`kats/megaminx_hash_kats_v2.json`](kats/megaminx_hash_kats_v2.json) | v2 KAT file (same inputs and layout as v1) |
 | [`v1/SPEC.md`](v1/SPEC.md), [`v1/megadreifach.sudo`](v1/megadreifach.sudo) | Frozen, deprecated v1. The sudo keeps the v1 file name so the Lean emitted from it stays the module `Megadreifach` |
-| [`v3/SPEC.md`](v3/SPEC.md), [`v3/megadreifach.sudo`](v3/megadreifach.sudo) | Candidate v3: normative SPEC (only the card phase `W` of `E_m` changes) and the runnable spec / conformance implementation. The sudo keeps the file name, so its JS build is `megadreifach.mjs` with the same exports |
+| [`v3/SPEC.md`](v3/SPEC.md), [`v3/megadreifach.sudo`](v3/megadreifach.sudo) | Candidate v3: the SPEC explains it (only the card phase `W` of `E_m` changes); the sudo is the normative runnable spec, and a mismatch is a bug in the prose. The sudo keeps the file name, so its JS build is `megadreifach.mjs` with the same exports |
 | [`kats/megaminx_hash_kats_v3.json`](kats/megaminx_hash_kats_v3.json), [`kats/regen_v3.mjs`](kats/regen_v3.mjs) | v3 KAT file (v2's message inputs, plus 8 `HashDeckBody` vectors) and its generator from the sudoc JS build (`--check` in `tools/generate-demos.sh`) |
 | [`kats/megaminx_hash_kats_v1.json`](kats/megaminx_hash_kats_v1.json) | v1 KAT file (pad / IV / `\|G\|` metadata; v1 Hash hexes), formerly `kats/megaminx_hash_kats.json`; contents unchanged |
 

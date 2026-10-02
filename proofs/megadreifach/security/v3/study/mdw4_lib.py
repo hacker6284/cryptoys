@@ -181,95 +181,12 @@ def cost(kind, m):
                 + ((m + (m if P['slot'] == 'R' else 0)) if P['tail'] == 'S' else 0), regrips=0, solves=3)
 
 
-# ---------------------------------------------------------------- literal slow transliteration
-def slow_em4(kind, m, hpos, deal):
-    P = parse(kind)
-    fc = W._slow_face_carrying
-    g = [hpos]
-
-    def turn(f, a=1):
-        g[0] = ref.face_turn(g[0], f, a)
-
-    def slot_cols(kind_, f):
-        a, b = n12(f)
-        if kind_ == 'e':
-            s = ref.edge_slot(f, a)
-            ca, cb = ref.read_colours_piece('e', s, g[0][2][s], g[0][3][s], f, a)
-            return ca, cb
-        s = ref.corner_slot(f, a, b)
-        fs = CF3[s]
-        return tuple(ref.colour_on(x, fs[1], fs[2], CF3[g[0][0][s]], g[0][1][s]) for x in (f, a, b))
-
-    def breg():
-        return slot_cols('e', 0)[0]
-
-    def scr(js):
-        for j in js:
-            f = 0 if P['slot'] == 'F' else breg()
-            for c in slot_cols('c' if j & 1 else 'e', f):
-                turn(c)
-
-    def held():
-        rank_, k_ = deal[51] // 4, deal[51] % 4 + 1
-        c0 = rank_ if rank_ < 12 else 0
-        nb_ = NB[c0]
-        i_ = nb_.index(min(nb_))
-        n_, n2_ = nb_[(i_ + k_ - 1) % 5], nb_[(i_ + k_) % 5]
-        x = fc(g[0], 'e', ref.edge_slot(c0, n_), n_)
-        if P['reg'] == 'P':
-            x = (x + fc(g[0], 'c', ref.corner_slot(c0, n_, n2_), n_)) % 12
-        return x
-
-    def one(card, R, echo=False):
-        if echo and P['reg'] in 'EP':
-            reg = held()
-        else:
-            reg = breg() if (P['reg'] == 'B' or (P['reg'] == 'H' and echo)) else R
-        rank, k = card // 4, card % 4 + 1
-        face, f0 = ((rank + reg) % 12, rank) if rank < 12 else (ref.OPP[reg], 0)
-        if echo:
-            f0 = reg
-        turn(face, k)
-        nb = NB[f0]
-        i = nb.index(min(nb))
-        n, n2 = nb[(i + k - 1) % 5], nb[(i + k) % 5]
-        e, c = ref.edge_slot(f0, n), ref.corner_slot(f0, n, n2)
-        turn(fc(g[0], 'e', e, f0))
-        turn(fc(g[0], 'e', e, n))
-        turn(fc(g[0], 'c', c, f0))
-        x = fc(g[0], 'c', c, n)
-        turn(x)
-        if P['third']:
-            x = fc(g[0], 'e', e, n)
-            turn(x)
-        scr(range(1, P['s'] + 1))
-        return x
-
-    R = 0
-    for card in deal[:52]:
-        R = one(card, R)
-    if m and P['tail'] == 'E':
-        for _ in range(m):
-            R = one(deal[51], R, echo=True)
-    if m and P['tail'] == 'S':
-        scr(range(1, m + 1) if P['s'] % 2 == 0 else range(2, m + 2))
-    return g[0]
-
-
-def selftest(kinds):
+def selftest(kinds=()):
+    # In-tree change (2026-10-02 review): the literal slow transliteration slow_em4 and the fast == slow
+    # check that used it were removed after the study runs (the mdw4_* / mdw5_* logs still print its
+    # result lines). For ZP26, em4 is compared with the sudoc JS build of the normative sudo by
+    # ../em4_vs_sudo.py instead. `kinds` is kept so the study's callers still run.
     out = []
-    rng = random.Random(20261001 + 4)
-    for kind, m in kinds:
-        ok = 0
-        for _ in range(8):
-            h = L.uniform_st(rng)
-            d = list(range(52))
-            rng.shuffle(d)
-            a = eng.as_tuple_pos(eng.from_st(em4(kind, m, h, d)))
-            b = slow_em4(kind, m, eng.as_tuple_pos(eng.from_st(h)), d)
-            ok += a == b
-        assert ok == 8, (kind, m, ok)
-        out.append(f'mdw4_lib {kind}{m}: fast == slow literal transliteration on 8/8 random blocks')
     # coverage: the card naming is NRk's (48 non-Kings name 30 edges + 20 corners) -> every block reads all 50
     E_ = {NAME[c // 4][c % 4 + 1][0] for c in range(48)}
     C_ = {NAME[c // 4][c % 4 + 1][3] for c in range(48)}

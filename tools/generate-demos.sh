@@ -22,6 +22,7 @@ node /tmp/megadreifach-v3-test/_megadreifach_impl.mjs
 "$sudoc" emit-ir --require terminates primitives/hash/megadreifach/v3/megadreifach.sudo > /dev/null
 "$sudoc" build --target js -o /tmp/megadreifach-v3 primitives/hash/megadreifach/v3/megadreifach.sudo
 MD3_OUT=/tmp/megadreifach-v3 node primitives/hash/megadreifach/kats/regen_v3.mjs --check
+MD3_OUT=/tmp/megadreifach-v3 python3 proofs/megadreifach/security/v3/em4_vs_sudo.py --check
 "$sudoc" build --target js --tests -o /tmp/doubledeal-test primitives/cipher/doubledeal/doubledeal.sudo
 node /tmp/doubledeal-test/_doubledeal_impl.mjs
 "$sudoc" build --target js --tests -o /tmp/bs-test primitives/key_exchange/bs/bs.sudo

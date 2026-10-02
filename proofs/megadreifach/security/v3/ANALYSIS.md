@@ -523,7 +523,7 @@ The 0-hit bounds are 7.5e-6 per merge pair and 6.0e-5 per telescoping cell.
 - It would need full statistics before use.
 
 **Properties of ZP26.**
-- **(P1) Coverage (PROVED: sudo test "coverage").** The card pass is SBR26's, so all 50 pieces are named, found and read in every block. Echo reads are extra.
+- **(P1) Coverage.** The naming is PROVED by the sudo test "coverage": the 48 non-King cards name all 30 edges and all 20 corners. That every block therefore finds and reads all 50 pieces is ARGUED: the test uses the same `card_colour`/`suit_nbrs` as `card_step`, and the 156-finds cost test is only a count. The card pass is SBR26's. Echo reads are extra.
 - **(P2, P4, P5) (ARGUED)** hold as for SBR26 (§11.5): same card-pass words, both halves steer every step, no grip. The read words P2 rests on are PROVED (sudo test "read words").
 - **Re-derivability.**
   - During the card pass, the last face is the face carrying the n-sticker of the top dealt card's edge (PROVED: sudo test "card pass: the last face is re-derivable from the board and the top dealt card").
@@ -689,7 +689,7 @@ The rule was to stop a variant that clearly fails.
 - **No register or collision problem in any of the three (OUT-OF-TREE).** Merge and telescoping give 0 / 0 at 400k each (0-hit 95% bound 7.5e-6 per pair, 6.0e-5 per cell).
 - **No end-of-W signature where measured (OUT-OF-TREE).** In ZP26 and ZP0-26, the last-two-card excesses are all within ±.00022, about the 95% half-width of ±.00018 per item allowing for multiplicity (HEUR). ZP13's diag was cancelled after its D2 failure.
 - **D1 does not see the cheaper options' defect (OUT-OF-TREE, 2M).** Both are clean on D1 + D1′ at 2M. The defect is in D2's last-two-card swap, which is sensitive to how well the tail mixes the end of the card pass.
-- **Coverage.** The card pass naming is NRk's, so every block reads all 50 pieces. The naming coverage is PROVED by the sudo test "coverage" (all three use it). That every block reads all 50 pieces is checked by the sudo for ZP26 only, through `em_run`'s finds; for ZP13 and ZP0-26 it is ARGUED.
+- **Coverage.** The card pass naming is NRk's, so every block reads all 50 pieces. The naming coverage is PROVED by the sudo test "coverage" (all three use it). That every block reads all 50 pieces is ARGUED for all three. For ZP26 it rests on the sudo test "coverage", which uses the same `card_colour`/`suit_nbrs` as `card_step`; the 156-finds cost test is a count, not a check of which pieces are found.
 - **Last face readable from the board** (PROVED for ZP26 by the sudo test; ARGUED for ZP13 and ZP0-26).
   - In the card pass, it is the face carrying the n-sticker of the top dealt card's edge (ZP26, ZP13) or corner (ZP0-26, as in §9).
   - In the echoes, P is re-read from the held card's edge and corner before every echo.

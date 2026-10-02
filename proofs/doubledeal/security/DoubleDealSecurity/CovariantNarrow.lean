@@ -13,7 +13,8 @@
        of the 52! relabellings; likewise the commuting σ (`commSubgroup`).
      * The seat-26 condition `Cell0Cov` (used in C): `cell0Cov_of_covPair`,
        `cell0Cov_one`, `cell0Cov_mul`, `cell0Cov_inv`, `cell0Cov_self_of_commutes`,
-       `cell0Subgroup` (the σ with some τ form a subgroup).
+       `cell0Cov_v10Sym`, `cell0Cov_conj`, `cell0Cov_conj_fwd`, `cell0Subgroup` (the σ with
+       some τ form a subgroup) and `v10Sym_mem_cell0Subgroup`.
      * `roundBody_covariant_iff_id_of_prime`: the conjecture follows from its
        special case for σ of prime order p ≤ 52 (the hypothesis `h`; not proved).
        `prime_case_iff` proves that `h` is EQUIVALENT to the conjecture, so this is
@@ -151,6 +152,11 @@ theorem cell0Cov_self_of_commutes {ρ : Relabel} (hsr : CommutesG ρ sumRanksV10
   rw [unkeyedNoMix_commutes ρ hsr m hm.1]
   rfl
 
+/-- (PROVED) Every `v10Sym a x` satisfies the seat-26 condition with τ = itself (the one
+    home of this fact: `cell0Cov_self_of_commutes` with `sumRanksV10_commutes_v10Sym`). -/
+theorem cell0Cov_v10Sym (a : Fin 13) (x : Fin 4) : Cell0Cov (v10Sym a x) (v10Sym a x) :=
+  cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym a x)
+
 /-- (PROVED) τ = 1 exactly when σ = 1. -/
 theorem covPair_one_iff {σ τ : Relabel} (h : CovPair σ τ) : τ = 1 ↔ σ = 1 := by
   constructor
@@ -176,6 +182,10 @@ def cell0Subgroup : Subgroup Relabel where
   one_mem' := ⟨1, cell0Cov_one⟩
   mul_mem' := fun ⟨τ, h⟩ ⟨τ', h'⟩ => ⟨τ * τ', cell0Cov_mul h h'⟩
   inv_mem' := fun ⟨τ, h⟩ => ⟨τ⁻¹, cell0Cov_inv h⟩
+
+/-- (PROVED) Every `v10Sym a x` lies in `cell0Subgroup` (`cell0Cov_v10Sym`). -/
+theorem v10Sym_mem_cell0Subgroup (a : Fin 13) (x : Fin 4) : v10Sym a x ∈ cell0Subgroup :=
+  ⟨_, cell0Cov_v10Sym a x⟩
 
 /-- (PROVED) The σ that commute with the round body on every deck form a subgroup. -/
 def commSubgroup : Subgroup Relabel where
@@ -352,6 +362,13 @@ theorem cell0Cov_conj {ρ σ τ : Relabel} (hsr : CommutesG ρ sumRanksV10)
   simpa only [mul_assoc, inv_mul_cancel_left, inv_mul_cancel, mul_one] using
     cell0Cov_mul (cell0Cov_mul (cell0Cov_inv (cell0Cov_self_of_commutes hsr)) h)
       (cell0Cov_self_of_commutes hsr)
+
+/-- (PROVED) Forward form of `cell0Cov_conj`: conjugating a pair with the seat-26 condition by
+    a relabelling that commutes with SumRanks keeps the condition. -/
+theorem cell0Cov_conj_fwd {ρ σ τ : Relabel} (hsr : CommutesG ρ sumRanksV10)
+    (h : Cell0Cov σ τ) : Cell0Cov (ρ * σ * ρ⁻¹) (ρ * τ * ρ⁻¹) :=
+  cell0Cov_mul (cell0Cov_mul (cell0Cov_self_of_commutes hsr) h)
+    (cell0Cov_inv (cell0Cov_self_of_commutes hsr))
 
 /-- Two decks with the same stem cell 0 whose σ-images have different stem cell 0
     rule out the seat-26 condition for every τ. -/

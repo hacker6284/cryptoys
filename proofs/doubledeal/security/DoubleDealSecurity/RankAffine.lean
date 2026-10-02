@@ -30,8 +30,7 @@ namespace DoubleDeal.Security.RankAffine
 
 open DoubleDeal Relabel
 open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
-open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_mul cell0Cov_inv
-  cell0Cov_self_of_commutes g0 g0_eq)
+open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_mul cell0Cov_v10Sym g0 g0_eq)
 open DoubleDeal.Security.StemCoupling (rk wt wsum wsum_swap zmod13_mul_ne cmFlat_col_injective)
 open DoubleDeal.Security.RankPartition (FamilyQ readIdx readIdx_injective readIdx_surj
   wt_sub_readIdx swapsPerm RankChecks cell0Cov_rank_of_checks cell0Cov_rank_iff_of_checks)
@@ -220,7 +219,7 @@ theorem cell0Cov_rk_affine_of_checks (hR : RankChecks) (hA : AffRankChecks) {σ 
       F ((r.val : ZMod 13) + 1) = 0 := by
     intro r
     have hcv : Cell0Cov (σ * v10Sym r 0) (τ * v10Sym r 0) :=
-      cell0Cov_mul h (cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym r 0))
+      cell0Cov_mul h (cell0Cov_v10Sym r 0)
     have := rk_sum_of_family2 hfam hcv
     simp only [Equiv.Perm.mul_apply, hF, rk_v10Sym, rk_small] at this
     have e3 : (3 : ZMod 13) + r.val = (r.val + 1) + 2 := by ring

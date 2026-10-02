@@ -41,8 +41,7 @@ namespace DoubleDeal.Security.CovariantAffine
 
 open DoubleDeal Relabel
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Pairs pairsCheck witnessCheck
-  not_cell0Cov_of_checks cell0Cov_of_covPair cell0Cov_mul cell0Cov_inv
-  cell0Cov_self_of_commutes)
+  not_cell0Cov_of_checks cell0Cov_of_covPair cell0Cov_mul cell0Cov_inv cell0Cov_v10Sym)
 
 /-! ## The linear parts (tables generated in `CovariantAffineLists.lean`) -/
 
@@ -135,9 +134,6 @@ theorem not_cell0Cov_lin_of_check (hchk : AffChecks) (k : Fin 12) (g : Fin 6)
   not_cell0Cov_of_checks hchk.1 (hchk.2 k g hkg) τ
 
 /-! ## Affine relabellings -/
-
-theorem cell0Cov_v10Sym (a : Fin 13) (x : Fin 4) : Cell0Cov (v10Sym a x) (v10Sym a x) :=
-  cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym a x)
 
 /-- (PROVED, given `AffChecks`) No affine relabelling `v10Sym a x * linSym k g` with
     a nontrivial linear part is covariant for the unkeyed round body, for ANY output

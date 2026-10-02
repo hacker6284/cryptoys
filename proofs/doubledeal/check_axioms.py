@@ -608,7 +608,8 @@ PACKAGES = {
     "security": {
         "dir": ROOT / "security",
         "mode": "all",
-        # The open conjecture (DRAFT-SORRY) and the two theorems that rest on it.
+        # The conjecture (DRAFT-SORRY; its statement is proved in the heavy library,
+        # LabelStep.roundBody_covariant_iff_id_heavy) and the two theorems that rest on it.
         # Keep in sync with ALLOWED_SORRY in security/checks/scan_sorry.py.
         "known_sorry": {
             "DoubleDeal.Security.roundBody_covariant_iff_id",  # the conjecture
@@ -622,7 +623,7 @@ PACKAGES = {
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_le'",
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_threeCycle",
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_lower",
-            # CovariantNarrow (roadmap M4): reductions of the open conjecture
+            # CovariantNarrow (roadmap M4): reductions of the conjecture
             "DoubleDeal.Security.CovariantNarrow.prime_case_iff",
             "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime",
             "DoubleDeal.Security.CovariantNarrow.not_covariant_swap_of_check",
@@ -640,6 +641,11 @@ PACKAGES = {
             "DoubleDeal.Security.RankPartition.cell0Cov_rank_iff_of_checks",
             "DoubleDeal.Security.RankPartition.covariant_rank_of_checks",
             "DoubleDeal.Security.RankPartition.cell0Subgroup_le_rankStab_of_checks",
+            # the one home of the v10Sym seat-26 fact and of conjugation (CovariantNarrow)
+            "DoubleDeal.Security.CovariantNarrow.cell0Cov_v10Sym",
+            "DoubleDeal.Security.CovariantNarrow.v10Sym_mem_cell0Subgroup",
+            "DoubleDeal.Security.CovariantNarrow.cell0Cov_conj",
+            "DoubleDeal.Security.CovariantNarrow.cell0Cov_conj_fwd",
             # RankAffine, TauEq, LabelStep: every sigma with Cell0Cov sigma tau is a v10Sym
             # and tau = sigma, GIVEN the finite checks V10SymChecks (discharged in the heavy
             # library); roundBody_covariant_iff_id itself keeps its sorry
@@ -659,7 +665,7 @@ PACKAGES = {
             "DoubleDeal.Security.LabelStep.chain_const",
             "DoubleDeal.Security.LabelStep.c0Row_tr_eq",
             "DoubleDeal.Security.LabelStep.d01_of_cell0",
-            "DoubleDeal.Security.LabelStep.tr_const_of_cell0",
+            "DoubleDeal.Security.LabelStep.tr_const_of_mem",
             "DoubleDeal.Security.LabelStep.perm4_xor",
             "DoubleDeal.Security.LabelStep.rankPres_mem_v10Sym",
             "DoubleDeal.Security.LabelStep.cell0Cov_mem_v10Sym_of_checks",

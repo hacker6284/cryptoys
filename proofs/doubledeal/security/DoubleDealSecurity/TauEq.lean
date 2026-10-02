@@ -27,8 +27,8 @@ namespace DoubleDeal.Security.TauEq
 
 open DoubleDeal Relabel
 open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
-open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_mul cell0Cov_inv
-  cell0Cov_self_of_commutes g0 g0_eq exists_v10Sym_zero)
+open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_mul cell0Cov_v10Sym cell0Cov_conj
+  g0 g0_eq exists_v10Sym_zero)
 open DoubleDeal.Security.StemPosition (rowAmts c0Row rowSeat stemPos_zero)
 open DoubleDeal.Security.StemCoupling (rowRead readAmt nextRow rowAmts_eq_iff rowTotal_eq_sum rk)
 open DoubleDeal.Security.RankPartition (swapsPerm RankChecks)
@@ -132,8 +132,8 @@ theorem tau_eq_of_rk (hT : TauChecks) {σ τ : Relabel} (h : Cell0Cov σ τ)
   ext1 c
   obtain ⟨r, y, hr⟩ := exists_v10Sym_zero c
   set w := v10Sym r y with hw
-  have hsw : Cell0Cov w w := cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym r y)
-  have hc : Cell0Cov (w⁻¹ * σ * w) (w⁻¹ * τ * w) := cell0Cov_mul (cell0Cov_mul (cell0Cov_inv hsw) h) hsw
+  have hc : Cell0Cov (w⁻¹ * σ * w) (w⁻¹ * τ * w) := cell0Cov_conj (sumRanksV10_commutes_v10Sym r y)
+    (by simpa only [mul_assoc, mul_inv_cancel_left, mul_inv_cancel, mul_one] using h)
   have hl' : ∀ x, rk ((w⁻¹ * σ * w) x) = 1 * rk x := by
     intro x
     simp only [Equiv.Perm.mul_apply, Equiv.Perm.inv_def, hw, rk_v10Sym_inv, hl, rk_v10Sym]
@@ -156,7 +156,7 @@ theorem cell0Cov_tau_of_checks (hR : RankChecks) (hA : AffRankChecks) (hT : TauC
   obtain ⟨a, ha⟩ := exists_shift l u hl0
   set v := v10Sym a 0 with hv
   have hc : Cell0Cov (σ * v) (τ * v) :=
-    cell0Cov_mul h (cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym a 0))
+    cell0Cov_mul h (cell0Cov_v10Sym a 0)
   have hl : ∀ c, rk ((σ * v) c) = l * rk c := by
     intro c
     rw [Equiv.Perm.mul_apply, hlu, hv, rk_v10Sym]

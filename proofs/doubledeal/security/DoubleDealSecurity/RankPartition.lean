@@ -45,7 +45,7 @@ namespace DoubleDeal.Security.RankPartition
 open DoubleDeal Relabel
 open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_of_covPair cell0Cov_mul cell0Cov_inv
-  cell0Cov_self_of_commutes g0 g0_eq exists_v10Sym_zero cell0Subgroup)
+  cell0Cov_v10Sym g0 g0_eq exists_v10Sym_zero cell0Subgroup)
 open DoubleDeal.Security.StemPosition (rowAmts c0Row rowSeat stemPos_zero)
 open DoubleDeal.Security.StemCoupling (rowRead rowAmts_prev rk wt wsum rowTurnV10_cast wsum_swap
   wt_sub_ne rk_sub_ne zmod13_mul_ne cmFlat_col_injective AgreeOff3 rowAmts_eq_of_agree)
@@ -367,7 +367,7 @@ theorem cell0Cov_rank_of_checks (hchk : RankChecks) {σ τ : Relabel} (h : Cell0
     intro e; apply heq; rw [← hv0, ← hvb, e]
   obtain ⟨D, hD⟩ := rank_zero_cards b' hb0 hbne
   have hcv : Cell0Cov (σ * v) (τ * v) :=
-    cell0Cov_mul h (cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym r yy))
+    cell0Cov_mul h (cell0Cov_v10Sym r yy)
   have := rank_eq_of_family (family_of_checks hchk D) hcv
   rw [Equiv.Perm.mul_apply, Equiv.Perm.mul_apply, hv0, ← hD, hvb] at this
   unfold rank at this

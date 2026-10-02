@@ -42,8 +42,8 @@ namespace DoubleDeal.Security.LabelStep
 
 open DoubleDeal Relabel
 open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
-open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_mul cell0Cov_inv
-  cell0Cov_self_of_commutes g0 g0_eq cell0Subgroup roundBody_covariant_iff_id_of_cell0)
+open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_v10Sym g0 g0_eq cell0Subgroup
+  v10Sym_mem_cell0Subgroup roundBody_covariant_iff_id_of_cell0)
 open DoubleDeal.Security.StemPosition (rowAmts colAmts c0Row rowSeat stemPos_zero)
 open DoubleDeal.Security.StemCoupling (rk)
 open DoubleDeal.Security.RankPartition (swapsPerm RankChecks)
@@ -345,26 +345,22 @@ theorem d01_of_cell0 (hT : TauChecks) (hL : LabelChecks) {d : Fin 13 → Fin 4} 
     simpa only [xor4_cancel, zero_xor4] using this)
   exact hL.2 _ he ((c0Row_tr_eq hL.1 d).symm.trans hc)
 
-/-- (PROVED, GIVEN `TauChecks` and `LabelChecks`) If `tr d` satisfies the seat-26 condition
-    (for some τ), `d` is constant. -/
-theorem tr_const_of_cell0 (hT : TauChecks) (hL : LabelChecks) {d : Fin 13 → Fin 4}
-    {τ : Relabel} (h : Cell0Cov (tr d) τ) : ∀ r, d r = d 0 := by
+/-- (PROVED, GIVEN `TauChecks` and `LabelChecks`) If `tr d` lies in `cell0Subgroup` (the
+    seat-26 condition for some τ), `d` is constant. -/
+theorem tr_const_of_mem (hT : TauChecks) (hL : LabelChecks) {d : Fin 13 → Fin 4}
+    (h : tr d ∈ cell0Subgroup) : ∀ r, d r = d 0 := by
   have step : ∀ r, d (r + 1) = xor4 (d r) 0 := by
     intro r
-    have hsw : Cell0Cov (v10Sym (-r) 0) (v10Sym (-r) 0) :=
-      cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym _ 0)
-    have hc := cell0Cov_mul (cell0Cov_mul hsw h) (cell0Cov_inv hsw)
-    rw [conj_tr] at hc
-    have := d01_of_cell0 hT hL hc
+    have hc : tr (fun r' => d (r' - -r)) ∈ cell0Subgroup := by
+      rw [← conj_tr (-r) d]
+      exact cell0Subgroup.mul_mem (cell0Subgroup.mul_mem (v10Sym_mem_cell0Subgroup _ 0) h)
+        (cell0Subgroup.inv_mem (v10Sym_mem_cell0Subgroup _ 0))
+    obtain ⟨_, hτ⟩ := hc
+    have := d01_of_cell0 hT hL hτ
     simp only [zero_sub, neg_neg, sub_neg_eq_add] at this
     rw [zero_add, add_comm 1 r] at this
     rw [xor4_zero, this]
   exact (chain_const d 0 step).2
-
-theorem tr_const_of_mem (hT : TauChecks) (hL : LabelChecks) {d : Fin 13 → Fin 4}
-    (h : tr d ∈ cell0Subgroup) : ∀ r, d r = d 0 :=
-  let ⟨_, hτ⟩ := h
-  tr_const_of_cell0 hT hL hτ
 
 /-! ## D. A rank-preserving σ with the seat-26 condition is a `v10Sym 0 x` -/
 
@@ -398,9 +394,6 @@ theorem perm4_xor (h : Fin 4 → Fin 4) (hi : Function.Injective h) (a x : Fin 4
   rw [hg, hg, hg, hg]
   exact affine_core g x0 a x
 
-theorem v10Sym_mem (a : Fin 13) (x : Fin 4) : v10Sym a x ∈ cell0Subgroup :=
-  ⟨_, cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym a x)⟩
-
 theorem xor4_shuffle : ∀ c c' l : Fin 4, xor4 c (xor4 l (xor4 c' c)) = xor4 c' l := by decide
 
 theorem xor4_eq_iff : ∀ a b k : Fin 4, xor4 a b = k → a = xor4 b k := by decide
@@ -433,7 +426,7 @@ theorem rankPres_mem_v10Sym (hT : TauChecks) (hL : LabelChecks) (hA : AffChecks)
     intro r x
     have hm : tr (fun r => δ r x) ∈ cell0Subgroup := by
       rw [← hconj, tr_const]
-      exact cell0Subgroup.mul_mem (cell0Subgroup.mul_mem hσ (v10Sym_mem 0 x))
+      exact cell0Subgroup.mul_mem (cell0Subgroup.mul_mem hσ (v10Sym_mem_cell0Subgroup 0 x))
         (cell0Subgroup.inv_mem hσ)
     exact tr_const_of_mem hT hL hm r
   have haff : ∀ r a x, lab r (xor4 a x) = xor4 (lab r a) (δ 0 x) := by
@@ -458,8 +451,8 @@ theorem rankPres_mem_v10Sym (hT : TauChecks) (hL : LabelChecks) (hA : AffChecks)
     have : tr e = σ⁻¹ * (u⁻¹ * σ * u) := by rw [hcomm, inv_mul_cancel_left]
     rw [this]
     exact cell0Subgroup.mul_mem (cell0Subgroup.inv_mem hσ)
-      (cell0Subgroup.mul_mem (cell0Subgroup.mul_mem (cell0Subgroup.inv_mem (v10Sym_mem 1 0)) hσ)
-        (v10Sym_mem 1 0))
+      (cell0Subgroup.mul_mem (cell0Subgroup.mul_mem (cell0Subgroup.inv_mem (v10Sym_mem_cell0Subgroup 1 0)) hσ)
+        (v10Sym_mem_cell0Subgroup 1 0))
   have hec := tr_const_of_mem hT hL hem
   have hcc := (chain_const c (e 0) fun r => xor4_eq_iff _ _ _ (hec r)).2
   -- σ acts by one label map on every rank
@@ -477,7 +470,7 @@ theorem rankPres_mem_v10Sym (hT : TauChecks) (hL : LabelChecks) (hA : AffChecks)
     have hm : linSym 0 g ∈ cell0Subgroup := by
       have : linSym 0 g = (v10Sym 0 x)⁻¹ * σ := by rw [hσeq, inv_mul_cancel_left]
       rw [this]
-      exact cell0Subgroup.mul_mem (cell0Subgroup.inv_mem (v10Sym_mem 0 x)) hσ
+      exact cell0Subgroup.mul_mem (cell0Subgroup.inv_mem (v10Sym_mem_cell0Subgroup 0 x)) hσ
     obtain ⟨τ, hτ⟩ := hm
     exact not_cell0Cov_lin_of_check hA 0 g (fun e => hg (Prod.mk.inj e).2) τ hτ
   refine ⟨x, ?_⟩
@@ -502,8 +495,8 @@ theorem cell0Cov_mem_v10Sym_of_checks (hchk : V10SymChecks) {σ τ : Relabel}
   obtain ⟨hR, hA, hAR, hT, hL⟩ := hchk
   obtain ⟨hτ, u, hu⟩ := cell0Cov_tau_of_checks hR hAR hT h
   obtain ⟨a, ha⟩ := exists_neg u
-  have hm : σ * v10Sym a 0 ∈ cell0Subgroup := ⟨τ * v10Sym a 0,
-    cell0Cov_mul h (cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym a 0))⟩
+  have hm : σ * v10Sym a 0 ∈ cell0Subgroup :=
+    cell0Subgroup.mul_mem ⟨τ, h⟩ (v10Sym_mem_cell0Subgroup a 0)
   have hp : RankPres (σ * v10Sym a 0) := rankPres_of_rk fun c => by
     rw [Equiv.Perm.mul_apply, hu, rk_v10Sym]
     linear_combination ha
@@ -520,7 +513,7 @@ theorem cell0Cov_iff_of_checks (hchk : V10SymChecks) (σ τ : Relabel) :
     Cell0Cov σ τ ↔ (∃ (a : Fin 13) (x : Fin 4), σ = v10Sym a x) ∧ τ = σ := by
   refine ⟨cell0Cov_mem_v10Sym_of_checks hchk, ?_⟩
   rintro ⟨⟨a, x, rfl⟩, rfl⟩
-  exact cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym a x)
+  exact cell0Cov_v10Sym a x
 
 /-- (PROVED, GIVEN `V10SymChecks`) The statement of the covariant round conjecture
     `Rounds.roundBody_covariant_iff_id`: σ is covariant for the unkeyed round body (for

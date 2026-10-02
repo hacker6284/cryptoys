@@ -27,7 +27,7 @@ let voice = null;
  * `at`: face turns on their start, rotations (and per-click turns,
  * whose clicks count back from the seat) on their end.
  */
-function contacts({ at, durations = [], tempo = timing.speed, leaves = [] }) {
+export function turnContacts({ at, durations = [], tempo = timing.speed, leaves = [] }) {
     const stretch = timing.speed / tempo;
     const out = [];
     let t = at;
@@ -59,7 +59,7 @@ export function scrambleTurnVoice() {
          * the turn. `at` may be in the future (see lead()).
          */
         turns(info, when) {
-            for (const [slot, atMs, stretch, tempo] of contacts(info)) v.contact(slot, atMs, { tempo, stretch, when });
+            for (const [slot, atMs, stretch, tempo] of turnContacts(info)) v.contact(slot, atMs, { tempo, stretch, when });
         },
         /**
          * How long before the turn starts its first sound's file has to
@@ -68,7 +68,7 @@ export function scrambleTurnVoice() {
          * this long ahead.
          */
         lead(info) {
-            const list = contacts({ ...info, at: 0 });
+            const list = turnContacts({ ...info, at: 0 });
             const ms = list.length ? v.startsBefore(list.map(([slot, atMs, stretch]) => [slot, atMs, stretch]), 0, list[0][3]) : 0;
             return ms > 0 ? ms + 30 : 0;
         },

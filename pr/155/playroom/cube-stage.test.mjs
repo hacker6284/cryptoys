@@ -63,6 +63,16 @@ const askedAt = performance.now();
 await again;
 const next = heard.find(([kind]) => kind === "turns");
 assert.ok(next[4] - askedAt >= 25 && Math.abs(startedAt - next[4]) < 20, "cube already up: the turn starts after the voice's lead-in");
+// No lead-in (the single click): no wait, and the voice hears the turn
+// as it really starts (onStart), as before.
+voice.lead = () => 0;
+heard.length = 0;
+const quick = loud.playLeaves(2, 3);
+const quickAt = performance.now();
+await quick;
+const plain = heard.find(([kind]) => kind === "turns");
+assert.ok(startedAt - quickAt < 15, "cube already up and no lead-in: the turn starts at once");
+assert.ok(Math.abs(plain[4] - startedAt) < 1e-6 && plain[5] >= startedAt, "the voice hears it at the real start");
 const setDownAt = performance.now();
 await new Promise((r) => setTimeout(r, 200));
 const landings = heard.filter(([kind]) => kind === "landing");

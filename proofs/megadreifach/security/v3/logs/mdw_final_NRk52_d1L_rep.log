@@ -1,0 +1,26 @@
+tables: Em.lean face turns, 60 rotations, neighbours, opposites and corner faces == ../tables.py (v1 sudo): yes
+fast engine C36 vs v2 KATs: 8/8 Hash digests, HashDeck vector, IV-COOK12 digest and |G|: OK
+slow reference (m9_search, Em.lean transliteration) vs v2 KATs: 8/8 Hash digests: OK
+fast engine C36 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A_vn vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine C76 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+Hash('') and Hash('abc') prefixes of rules A_vn, C36, A == the review engine md3.py (its out/md3_selfcheck.txt): yes
+mdfix_lib: Ct(36)==C36, Ct(76)==C76 (200 blocks), fast==slow ref for t in 36,76,0,12, inv_st==md.inverse, sweep tour covers 50 slots, 60 turn pairs (c1,c2) distinct: OK
+mdw_lib CF24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NP24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NPL24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NPr13: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NRr0: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NRr52: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NRk52: fast == slow literal transliteration on 12/12 random blocks
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+read->turn encodings: for every piece and ordered pair of its colours, the 60 piece states give 60 distinct two-turn words (NP) and the first turn alone takes all 12 faces, 5 states each (NPL): OK
+d1L (left flip only; Q = W^-1 W'') NRk52: seeds 37652500+...; W unchanged = exact prediction
+D1L NRk52: W unchanged 0 [0.00e+00,1.50e-06]
+D2 D1L-Q NRk52 n=2000000  P(fixE>=2) 0.2638 [0.2632,0.2644] adv -0.0004 | P(fixC>=2) 0.2644 [0.2638,0.2650] adv +0.0002 | mean fixE 0.9993, fixC 1.0003 (ideal 1 +-0.0014) | mean moved 49.1651 +- 0.0013 (ideal 49.1667, diff -0.0015) | chi2 cyc-type E 1254.1/1225 p=0.28, C 266.6/237 p=0.09 | chi2 fixE-hist p=0.43, fixC-hist p=0.98  [676s]
+wall time 676 s, workers 4
+
+real	11m16.953s
+user	37m37.074s
+sys	0m0.129s

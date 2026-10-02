@@ -1,0 +1,14 @@
+# command: d1 50000 81000000
+selfcheck: sampler positions are build group elements 8/8; y == HashDeckBodyFrom 8/8; face-turn words legal 8/8; reference laws sum to 1: true
+ideal (uniform G): P(fixE>=2) 0.264241, P(fixC>=2) 0.264241, mean moved 49.1667
+D1 + D1' ZP26: uniform deal K, uniform h, uniform 2-edge flip g; same samples; N=50000, seeds 81000000+chunk (chunk 2500)
+D1  n=50000: exact prediction 0/50000 [0.0, 0.000060]
+D1  n=50000: P(fixE>=2) 0.26614 [0.26228, 0.27003] adv +0.00190 | P(fixC>=2) 0.26196 [0.25812, 0.26583] adv -0.00228
+D1  n=50000: mean fixE 1.0040, mean fixC 0.9945 (ideal 1 +- 0.0088) | mean moved 49.1675 +- 0.0080 (ideal 49.1667, diff +0.0009)
+D1  n=50000: chi2 fixE-hist p=0.92, fixC-hist p=0.47 | cycle type E 390.4/390 p=0.48, C 115.5/147 p=0.97
+D1' n=50000: exact prediction 0/50000 [0.0, 0.000060]
+D1' n=50000: P(fixE>=2) 0.26680 [0.26294, 0.27069] adv +0.00256 | P(fixC>=2) 0.26632 [0.26246, 0.27021] adv +0.00208
+D1' n=50000: mean fixE 1.0064, mean fixC 1.0030 (ideal 1 +- 0.0088) | mean moved 49.1639 +- 0.0080 (ideal 49.1667, diff -0.0027)
+D1' n=50000: chi2 fixE-hist p=0.65, fixC-hist p=0.89 | cycle type E 388.4/390 p=0.51, C 141.4/147 p=0.62
+D1+D1' averaged: P(fixE>=2) adv +0.00223, P(fixC>=2) adv -0.00010 (HEUR pooling); paired D1 - D1' P(fixC>=2) -0.00436 +- 0.00547
+# time D1: 464.3 s, 150000 blocks, 323.1 blocks/s, 4 workers

@@ -1,0 +1,21 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SAF0: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+d3 SCR26: N=50000, seeds 44200000+...; cost {'steps': 78, 'turns': 390, 'piece_turn_clicks': 312, 'card_clicks': '130 + sum of echo amounts (echo amount = suit of the held card, so 130 + m*k)', 'face_lookups': 390, 'pieces_found_per_step': 2, 'regrips': 0, 'solves': 3}
+D3 SCR26 start IV   pair same n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [22s]
+D3 SCR26 start IV   pair opp  n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [21s]
+D3 SCR26 start IV   pair KA   n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [22s]
+D3 SCR26 start IV   pair rand n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [22s]
+D3 SCR26 start rand pair same n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [22s]
+D3 SCR26 start rand pair opp  n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [22s]
+D3 SCR26 start rand pair KA   n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [22s]
+D3 SCR26 start rand pair rand n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [22s]
+wall time 175 s, workers 4

@@ -1,0 +1,48 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SAF0: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+diag SBR26: N=2000000, seeds 46000000+...; cost {'steps': 78, 'turns': 468, 'piece_turn_clicks': 390, 'card_clicks': '130 + sum of echo amounts (echo amount = suit of the held card, so 130 + m*k)', 'face_lookups': 390, 'pieces_found_per_step': 2, 'regrips': 0, 'solves': 3}
+  check: #coinciding corners == #fully fixed corners of Q in 2000000/2000000
+  fully fixed corners of Q: mean 0.33328 (ideal 0.33333, excess -0.00005 +- 0.00080); edges 0.50086 (ideal 0.50000, excess +0.00086 +- 0.00098)  [approx. null sd: sqrt(mean)]
+  last step's corner coincides:   0.01668 [0.01651,0.01686] (ideal 0.01667, excess +0.00002)
+  last step's edge coincides:     0.01665 [0.01647,0.01682] (ideal 0.01667, excess -0.00002)
+  second-to-last step's corner (if a different piece; P(different) 0.89185): 0.01486 [0.01469,0.01503] (ideal 0.01486, excess -0.00000)
+  second-to-last step's edge   (if a different piece; P(different) 0.89902): 0.01513 [0.01496,0.01530] (ideal 0.01498, excess +0.00015)
+  final registers equal: 0.08312 [0.08274,0.08350] (ideal 0.08333, excess -0.00021); given equal: last corner coincides 0.01701, mean coinciding corners 0.33170
+wall time 636 s, workers 4
+
+real	10m37.343s
+user	35m32.110s
+sys	0m0.159s
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SAF0: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+diag SCR26: N=2000000, seeds 46000000+...; cost {'steps': 78, 'turns': 390, 'piece_turn_clicks': 312, 'card_clicks': '130 + sum of echo amounts (echo amount = suit of the held card, so 130 + m*k)', 'face_lookups': 390, 'pieces_found_per_step': 2, 'regrips': 0, 'solves': 3}
+  check: #coinciding corners == #fully fixed corners of Q in 2000000/2000000
+  fully fixed corners of Q: mean 0.33354 (ideal 0.33333, excess +0.00021 +- 0.00080); edges 0.50085 (ideal 0.50000, excess +0.00085 +- 0.00098)  [approx. null sd: sqrt(mean)]
+  last step's corner coincides:   0.01671 [0.01653,0.01689] (ideal 0.01667, excess +0.00004)
+  last step's edge coincides:     0.01673 [0.01655,0.01691] (ideal 0.01667, excess +0.00006)
+  second-to-last step's corner (if a different piece; P(different) 0.88092): 0.01469 [0.01452,0.01486] (ideal 0.01468, excess +0.00001)
+  second-to-last step's edge   (if a different piece; P(different) 0.88774): 0.01477 [0.01460,0.01493] (ideal 0.01480, excess -0.00003)
+  final registers equal: 0.08374 [0.08336,0.08412] (ideal 0.08333, excess +0.00041); given equal: last corner coincides 0.01710, mean coinciding corners 0.33634
+wall time 585 s, workers 4
+
+real	9m46.017s
+user	32m40.378s
+sys	0m0.127s

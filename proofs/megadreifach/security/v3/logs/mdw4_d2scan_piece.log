@@ -1,0 +1,29 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+mdw4_lib ZB0F1N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3R3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH0F0E5: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZE3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F1S9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0R2S8: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every block reads all 50)
+mdw4_lib board register: the 60 states of the (Ace, n1) edge slot give each of the 12 colours 5 times
+D2 scan, 100000 pairs each; seeds 62000000 + 1000*j + chunk (j = item index)
+D2 ZE3F0E26 n= 100000  P(fixE>=2) 0.2650 [0.2623,0.2678] adv +0.0008 | P(fixC>=2) 0.2643 [0.2615,0.2670] adv +0.0000 | mean fixE 1.0040, fixC 1.0013 (ideal 1 +-0.0062) | mean moved 49.1635 +- 0.0057 (ideal 49.1667, diff -0.0032) | chi2 cyc-type E 512.9/508 p=0.43, C 208.7/172 p=0.03 | chi2 fixE-hist p=0.24, fixC-hist p=0.41  [31s]
+     cost {'turns': 468, 'clicks': '520 + echo card clicks (m*k)', 'piece_finds': 156, 'slot_reads': 26, 'regrips': 0, 'solves': 3}
+D2 ZP3F0E26 n= 100000  P(fixE>=2) 0.2664 [0.2637,0.2692] adv +0.0022 | P(fixC>=2) 0.2632 [0.2605,0.2659] adv -0.0010 | mean fixE 1.0050, fixC 0.9986 (ideal 1 +-0.0062) | mean moved 49.1635 +- 0.0057 (ideal 49.1667, diff -0.0032) | chi2 cyc-type E 505.4/508 p=0.52, C 174.8/172 p=0.43 | chi2 fixE-hist p=0.24, fixC-hist p=0.66  [32s]
+     cost {'turns': 468, 'clicks': '520 + echo card clicks (m*k)', 'piece_finds': 156, 'slot_reads': 26, 'regrips': 0, 'solves': 3}
+D2 ZP3F0E13 n= 100000  P(fixE>=2) 0.2649 [0.2622,0.2677] adv +0.0007 | P(fixC>=2) 0.2635 [0.2608,0.2662] adv -0.0007 | mean fixE 1.0027, fixC 0.9990 (ideal 1 +-0.0062) | mean moved 49.1702 +- 0.0056 (ideal 49.1667, diff +0.0035) | chi2 cyc-type E 538.9/508 p=0.17, C 180.1/172 p=0.32 | chi2 fixE-hist p=0.72, fixC-hist p=0.56  [26s]
+     cost {'turns': 390, 'clicks': '455 + echo card clicks (m*k)', 'piece_finds': 130, 'slot_reads': 13, 'regrips': 0, 'solves': 3}
+wall time 90 s, workers 4
+
+real	1m31.087s
+user	5m0.604s
+sys	0m0.124s

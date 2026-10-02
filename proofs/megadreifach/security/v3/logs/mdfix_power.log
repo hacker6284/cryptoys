@@ -1,0 +1,11 @@
+null: P(fixE>=2) = 0.264241; fixE mean 1.000000 var 1.000000; moved mean 49.166667 var 0.833333 (exact laws)
+n = 400000:
+  P(fix>=2)      : 95% CI half-width 0.00137; power at true advantage = half-width: 0.500; at 0.0009: 0.252; smallest advantage detected with 90% power: 0.00226
+  mean fixE/fixC : 95% CI half-width 0.00310; power at true advantage = half-width: 0.500; at 0.0009: 0.088; smallest advantage detected with 90% power: 0.00513
+  mean moved     : 95% CI half-width 0.00283; power at true advantage = half-width: 0.500; at 0.0009: 0.096; smallest advantage detected with 90% power: 0.00468
+  exact prediction, 0 hits: one-sided 95% upper bound 7.49e-06
+n = 1000000:
+  P(fix>=2)      : 95% CI half-width 0.00086; power at true advantage = half-width: 0.500; at 0.0009: 0.532; smallest advantage detected with 90% power: 0.00143
+  mean fixE/fixC : 95% CI half-width 0.00196; power at true advantage = half-width: 0.500; at 0.0009: 0.147; smallest advantage detected with 90% power: 0.00324
+  mean moved     : 95% CI half-width 0.00179; power at true advantage = half-width: 0.500; at 0.0009: 0.167; smallest advantage detected with 90% power: 0.00296
+  exact prediction, 0 hits: one-sided 95% upper bound 3.00e-06

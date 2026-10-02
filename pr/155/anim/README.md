@@ -37,7 +37,7 @@ Microdemos not in this table still keep their own `settings.js` in
 
 | Entry | Played by | Microdemo | Status |
 |---|---|---|---|
-| `scramble-turn` | playroom Scramble seat (`playroom/cube-stage.js`): a click per face turn, a sound per whole-cube rotation, a muffled pat when the cube lands on the felt | `micro/scramble-turn/` (face turn), `micro/scramble-rotate/` (rotation) | approved by Zachary at `af9a8fb`: the single face-turn click, the landing pat and the lift timing. Rotation sound under audit; double and triple turns not yet heard |
+| `scramble-turn` | playroom Scramble seat (`playroom/cube-stage.js`): a click per face turn, a sound per whole-cube rotation, a muffled pat when the cube lands on the felt | `micro/scramble-turn/` (face turn), `micro/scramble-rotate/` (rotation) | approved by Zachary: the single face-turn click, the landing pat and the lift timing at `af9a8fb`; the rotation sound (Sadiquecat broomstick swish, swell at mid-rotation) on 2026-10-02. Double and triple turns not yet heard |
 
 ## Sounds
 

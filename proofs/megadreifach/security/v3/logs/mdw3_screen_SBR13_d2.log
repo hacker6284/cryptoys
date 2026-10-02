@@ -1,0 +1,14 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SAF0: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+d2 SBR13: N=400000, seeds 42300000+...; cost {'steps': 65, 'turns': 390, 'piece_turn_clicks': 325, 'card_clicks': '130 + sum of echo amounts (echo amount = suit of the held card, so 130 + m*k)', 'face_lookups': 325, 'pieces_found_per_step': 2, 'regrips': 0, 'solves': 3}
+D2 SBR13    n= 400000  P(fixE>=2) 0.2659 [0.2645,0.2673] adv +0.0017 | P(fixC>=2) 0.2630 [0.2616,0.2643] adv -0.0013 | mean fixE 1.0047, fixC 0.9975 (ideal 1 +-0.0031) | mean moved 49.1639 +- 0.0028 (ideal 49.1667, diff -0.0028) | chi2 cyc-type E 936.2/886 p=0.12, C 207.8/215 p=0.62 | chi2 fixE-hist p=0.082, fixC-hist p=0.59  [86s]
+wall time 86 s, workers 4

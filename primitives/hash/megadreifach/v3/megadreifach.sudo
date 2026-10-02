@@ -1,0 +1,1010 @@
+// MegaDreifach v3 (candidate; v2 stays current until a separate change). The rules are
+// primitives/hash/megadreifach/v3/SPEC.md. A toy three-megaminx Merkle-Damgard hash. Not for real use.
+// Product name MegaDreifach is locked. The puzzle/group is megaminx.
+// v3 changes only the card phase W inside E_m (SPEC v3 §5): colour-named card steps with a last-face
+// register (ZP26), no grips and no F3 rounds. Pad, φ, card ids, face-turn tables, IV-COOK12, chaining,
+// Davies-Meyer (h' = compose(h, E_m(h)) = h·W·h) and the digest encoding are v2's, unchanged.
+// A sudocode int is 64-bit and overflow traps; |G| and 52! need pasted bigint.
+// Tests lock pad, φ, IV-COOK12, rank, the group law, the public API, the edge table, the colour
+// naming (every block names all 50 pieces), and the v3 KATs (kats/megaminx_hash_kats_v3.json).
+
+pad_block = 28
+len_field = 8
+digest_len = 29
+body_len = 52
+// 26 echoes of the held 52nd card after the deal (SPEC v3 §5.4).
+echo_count = 26
+limb_base = 1000000000
+ori3_span = 1162261467
+ori2_span = 536870912
+
+record Position
+    cp: List<int>
+    co: List<int>
+    ep: List<int>
+    eo: List<int>
+
+record BigInt
+    negative: bool
+    limbs: List<int>
+
+opposites = [11, 9, 10, 6, 7, 8, 3, 4, 5, 1, 2, 0]
+
+nbrs_0 = [1, 2, 3, 4, 5]
+nbrs_1 = [0, 5, 6, 7, 2]
+nbrs_2 = [0, 1, 7, 8, 3]
+nbrs_3 = [0, 2, 8, 9, 4]
+nbrs_4 = [0, 3, 9, 10, 5]
+nbrs_5 = [0, 4, 10, 6, 1]
+nbrs_6 = [1, 5, 10, 11, 7]
+nbrs_7 = [1, 6, 11, 8, 2]
+nbrs_8 = [2, 7, 11, 9, 3]
+nbrs_9 = [3, 8, 11, 10, 4]
+nbrs_10 = [4, 9, 11, 6, 5]
+nbrs_11 = [6, 10, 9, 8, 7]
+
+func face_nbrs(f: int) -> List<int>
+    if f == 0
+        return nbrs_0
+    else if f == 1
+        return nbrs_1
+    else if f == 2
+        return nbrs_2
+    else if f == 3
+        return nbrs_3
+    else if f == 4
+        return nbrs_4
+    else if f == 5
+        return nbrs_5
+    else if f == 6
+        return nbrs_6
+    else if f == 7
+        return nbrs_7
+    else if f == 8
+        return nbrs_8
+    else if f == 9
+        return nbrs_9
+    else if f == 10
+        return nbrs_10
+    return nbrs_11
+
+func corner_faces(slot: int) -> (int, int, int)
+    if slot == 0
+        return (0, 1, 2)
+    else if slot == 1
+        return (0, 2, 3)
+    else if slot == 2
+        return (0, 3, 4)
+    else if slot == 3
+        return (0, 4, 5)
+    else if slot == 4
+        return (0, 5, 1)
+    else if slot == 5
+        return (1, 5, 6)
+    else if slot == 6
+        return (1, 6, 7)
+    else if slot == 7
+        return (1, 7, 2)
+    else if slot == 8
+        return (2, 7, 8)
+    else if slot == 9
+        return (2, 8, 3)
+    else if slot == 10
+        return (3, 8, 9)
+    else if slot == 11
+        return (3, 9, 4)
+    else if slot == 12
+        return (4, 9, 10)
+    else if slot == 13
+        return (4, 10, 5)
+    else if slot == 14
+        return (5, 10, 6)
+    else if slot == 15
+        return (6, 10, 11)
+    else if slot == 16
+        return (6, 11, 7)
+    else if slot == 17
+        return (7, 11, 8)
+    else if slot == 18
+        return (8, 11, 9)
+    return (9, 11, 10)
+
+ft_cp_0 = [4, 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+ft_co_0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_ep_0 = [4, 0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+ft_eo_0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_cp_1 = [7, 1, 2, 3, 0, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+ft_co_1 = [1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_ep_1 = [8, 1, 2, 3, 4, 0, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+ft_eo_1 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_cp_2 = [1, 9, 2, 3, 4, 5, 6, 0, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+ft_co_2 = [1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_ep_2 = [0, 11, 2, 3, 4, 5, 6, 7, 1, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+ft_eo_2 = [0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_cp_3 = [0, 2, 11, 3, 4, 5, 6, 7, 8, 1, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19]
+ft_co_3 = [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_ep_3 = [0, 1, 14, 3, 4, 5, 6, 7, 8, 9, 10, 2, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+ft_eo_3 = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_cp_4 = [0, 1, 3, 13, 4, 5, 6, 7, 8, 9, 10, 2, 11, 12, 14, 15, 16, 17, 18, 19]
+ft_co_4 = [0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+ft_ep_4 = [0, 1, 2, 17, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 3, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+ft_eo_4 = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_cp_5 = [0, 1, 2, 4, 5, 14, 6, 7, 8, 9, 10, 11, 12, 3, 13, 15, 16, 17, 18, 19]
+ft_co_5 = [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+ft_ep_5 = [0, 1, 2, 3, 5, 19, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 4, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+ft_eo_5 = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_cp_6 = [0, 1, 2, 3, 4, 6, 16, 7, 8, 9, 10, 11, 12, 13, 5, 14, 15, 17, 18, 19]
+ft_co_6 = [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+ft_ep_6 = [0, 1, 2, 3, 4, 5, 22, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 6, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29]
+ft_eo_6 = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+ft_cp_7 = [0, 1, 2, 3, 4, 5, 7, 8, 17, 9, 10, 11, 12, 13, 14, 15, 6, 16, 18, 19]
+ft_co_7 = [0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+ft_ep_7 = [0, 1, 2, 3, 4, 5, 6, 9, 8, 24, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 7, 22, 23, 25, 26, 27, 28, 29]
+ft_eo_7 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+ft_cp_8 = [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 18, 11, 12, 13, 14, 15, 16, 8, 17, 19]
+ft_co_8 = [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0]
+ft_ep_8 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 11, 26, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 10, 24, 25, 27, 28, 29]
+ft_eo_8 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+ft_cp_9 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 19, 13, 14, 15, 16, 17, 10, 18]
+ft_co_9 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1]
+ft_ep_9 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 14, 28, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 13, 26, 27, 29]
+ft_eo_9 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+ft_cp_10 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 19, 16, 17, 18, 12]
+ft_co_10 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 0]
+ft_ep_10 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 17, 20, 19, 29, 21, 22, 23, 24, 25, 26, 27, 16, 28]
+ft_eo_10 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+ft_cp_11 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 15]
+ft_co_11 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 2]
+ft_ep_11 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 23, 22, 25, 24, 27, 26, 29, 28, 21]
+ft_eo_11 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+func face_move(face: int) -> Position
+    if face == 0
+        return Position(ft_cp_0, ft_co_0, ft_ep_0, ft_eo_0)
+    else if face == 1
+        return Position(ft_cp_1, ft_co_1, ft_ep_1, ft_eo_1)
+    else if face == 2
+        return Position(ft_cp_2, ft_co_2, ft_ep_2, ft_eo_2)
+    else if face == 3
+        return Position(ft_cp_3, ft_co_3, ft_ep_3, ft_eo_3)
+    else if face == 4
+        return Position(ft_cp_4, ft_co_4, ft_ep_4, ft_eo_4)
+    else if face == 5
+        return Position(ft_cp_5, ft_co_5, ft_ep_5, ft_eo_5)
+    else if face == 6
+        return Position(ft_cp_6, ft_co_6, ft_ep_6, ft_eo_6)
+    else if face == 7
+        return Position(ft_cp_7, ft_co_7, ft_ep_7, ft_eo_7)
+    else if face == 8
+        return Position(ft_cp_8, ft_co_8, ft_ep_8, ft_eo_8)
+    else if face == 9
+        return Position(ft_cp_9, ft_co_9, ft_ep_9, ft_eo_9)
+    else if face == 10
+        return Position(ft_cp_10, ft_co_10, ft_ep_10, ft_eo_10)
+    return Position(ft_cp_11, ft_co_11, ft_ep_11, ft_eo_11)
+
+func range_list(n: int) -> List<int>
+    xs: List<int> = []
+    for i = 0 to n - 1
+        xs.append(i)
+    return xs
+
+func zeros(n: int) -> List<int>
+    return filled(n, 0)
+
+func identity() -> Position
+    return Position(range_list(20), zeros(20), range_list(30), zeros(30))
+
+func compose(g: Position, h: Position) -> Position
+    cp: List<int> = []
+    co: List<int> = []
+    for s = 0 to 19
+        cp.append(h.cp[g.cp[s]])
+        co.append((h.co[g.cp[s]] + g.co[s]) mod 3)
+    ep: List<int> = []
+    eo: List<int> = []
+    for s = 0 to 29
+        ep.append(h.ep[g.ep[s]])
+        eo.append((h.eo[g.ep[s]] + g.eo[s]) mod 2)
+    return Position(cp, co, ep, eo)
+
+func inverse(g: Position) -> Position
+    cp_inv = filled(20, 0)
+    for s = 0 to 19
+        cp_inv[g.cp[s]] = s
+    co_inv = filled(20, 0)
+    for s = 0 to 19
+        co_inv[s] = (3 - (g.co[cp_inv[s]] mod 3)) mod 3
+    ep_inv = filled(30, 0)
+    for s = 0 to 29
+        ep_inv[g.ep[s]] = s
+    eo_inv = filled(30, 0)
+    for s = 0 to 29
+        eo_inv[s] = (2 - (g.eo[ep_inv[s]] mod 2)) mod 2
+    return Position(cp_inv, co_inv, ep_inv, eo_inv)
+
+func face_turn(g: Position, face: int, amount: int) -> Position
+    a = amount mod 5
+    if a == 0
+        return g
+    t = face_move(face)
+    out = g
+    for i = 1 to a
+        out = compose(t, out)
+    return out
+
+func iv_cook12() -> Position
+    g = identity()
+    for f = 0 to 11
+        g = face_turn(g, f, 1)
+    return g
+
+func big_zero() -> BigInt
+    empty: List<int> = []
+    return BigInt(false, empty)
+
+func trim(limbs: List<int>) -> List<int>
+    n = 0
+    for i = limbs.length - 1 downto 0
+        if (n == 0) and (limbs[i] != 0)
+            n = i + 1
+    out: List<int> = []
+    for i = 0 to n - 1
+        out.append(limbs[i])
+    return out
+
+func make_big(negative: bool, limbs: List<int>) -> BigInt
+    t = trim(limbs)
+    if t.length == 0
+        return big_zero()
+    return BigInt(negative, t)
+
+func mag_cmp(a: List<int>, b: List<int>) -> int
+    if a.length < b.length
+        return -1
+    if b.length < a.length
+        return 1
+    for i = a.length - 1 downto 0
+        if a[i] < b[i]
+            return -1
+        if b[i] < a[i]
+            return 1
+    return 0
+
+func mag_add(a: List<int>, b: List<int>) -> List<int>
+    out: List<int> = []
+    carry = 0
+    n = a.length
+    if b.length > n
+        n = b.length
+    for i = 0 to n - 1
+        cur = carry
+        if i < a.length
+            cur = cur + a[i]
+        if i < b.length
+            cur = cur + b[i]
+        out.append(cur mod limb_base)
+        carry = cur / limb_base
+    if carry > 0
+        out.append(carry)
+    return out
+
+func mag_sub(a: List<int>, b: List<int>) -> List<int>
+    out: List<int> = []
+    borrow = 0
+    for i = 0 to a.length - 1
+        cur = a[i] - borrow
+        if i < b.length
+            cur = cur - b[i]
+        if cur < 0
+            cur = cur + limb_base
+            borrow = 1
+        else
+            borrow = 0
+        out.append(cur)
+    return trim(out)
+
+func big_from_int(v: int) -> BigInt
+    if v == 0
+        return big_zero()
+    assert v >= 0
+    limbs: List<int> = []
+    m = v
+    for peel = 1 to 3
+        if m > 0
+            limbs.append(m mod limb_base)
+            m = m / limb_base
+    return BigInt(false, limbs)
+
+func big_add(a: BigInt, b: BigInt) -> BigInt
+    return make_big(false, mag_add(a.limbs, b.limbs))
+
+func big_mul(a: BigInt, b: BigInt) -> BigInt
+    if a.limbs.length == 0 or b.limbs.length == 0
+        return big_zero()
+    out = filled(a.limbs.length + b.limbs.length, 0)
+    for i = 0 to a.limbs.length - 1
+        carry = 0
+        for j = 0 to b.limbs.length - 1
+            cur = out[i + j] + a.limbs[i] * b.limbs[j] + carry
+            out[i + j] = cur mod limb_base
+            carry = cur / limb_base
+        k0 = i + b.limbs.length
+        for k = k0 to out.length - 1
+            if carry > 0
+                cur = out[k] + carry
+                out[k] = cur mod limb_base
+                carry = cur / limb_base
+    return make_big(false, out)
+
+func big_divmod_small(a: BigInt, d: int) -> (BigInt, int)
+    assert d > 0 and d < limb_base
+    if a.limbs.length == 0
+        return (big_zero(), 0)
+    q = filled(a.limbs.length, 0)
+    rem = 0
+    for i = a.limbs.length - 1 downto 0
+        cur = rem * limb_base + a.limbs[i]
+        q[i] = cur / d
+        rem = cur mod d
+    return (make_big(false, q), rem)
+
+func big_from_be(bs: List<int>) -> BigInt
+    n = big_zero()
+    two56 = big_from_int(256)
+    for i = 0 to bs.length - 1
+        n = big_add(big_mul(n, two56), big_from_int(bs[i]))
+    return n
+
+func big_to_be(n: BigInt, width: int) -> List<int>
+    acc = n
+    rev: List<int> = []
+    for i = 1 to width
+        acc, r = big_divmod_small(acc, 256)
+        rev.append(r)
+    out: List<int> = []
+    for i = rev.length - 1 downto 0
+        out.append(rev[i])
+    return out
+
+func big_factorial(n: int) -> BigInt
+    r = big_from_int(1)
+    for i = 2 to n
+        r = big_mul(r, big_from_int(i))
+    return r
+
+func two224() -> BigInt
+    n = big_from_int(1)
+    two = big_from_int(2)
+    for i = 1 to 224
+        n = big_mul(n, two)
+    return n
+
+func even30() -> BigInt
+    f = big_factorial(30)
+    q, r = big_divmod_small(f, 2)
+    assert r == 0
+    return q
+
+func limb_to_small(n: BigInt) -> int
+    acc = 0
+    place = 1
+    for i = 0 to n.limbs.length - 1
+        acc = acc + n.limbs[i] * place
+        place = place * limb_base
+    return acc
+
+func peel_leading(n: BigInt, d: int) -> (BigInt, int)
+    q = n
+    for f = 2 to d
+        q, rr = big_divmod_small(q, f)
+    idx = limb_to_small(q)
+    fact = big_factorial(d)
+    prod = big_mul(big_from_int(idx), fact)
+    rest = make_big(false, mag_sub(n.limbs, prod.limbs))
+    return (rest, idx)
+
+func pad_z(msg_len: int) -> int
+    return (pad_block - (msg_len + 1 + len_field) mod pad_block) mod pad_block
+
+export func pad_message(msg: List<int>) -> List<int>
+    for i = 0 to msg.length - 1
+        assert (msg[i] >= 0) and (msg[i] <= 255)
+    bitlen = 8 * msg.length
+    z = pad_z(msg.length)
+    out: List<int> = []
+    for i = 0 to msg.length - 1
+        out.append(msg[i])
+    out.append(128)
+    for i = 1 to z
+        out.append(0)
+    lenb = big_to_be(big_from_int(bitlen), 8)
+    for i = 0 to 7
+        out.append(lenb[i])
+    return out
+
+func phi_chunk(chunk: List<int>) -> List<int>
+    assert chunk.length == pad_block
+    rem = big_from_be(chunk)
+    avail = range_list(52)
+    out: List<int> = []
+    for i = 0 to 51
+        d = 51 - i
+        if d == 0
+            out.append(avail[0])
+        else
+            rem, idx = peel_leading(rem, d)
+            assert (idx >= 0) and (idx < avail.length)
+            out.append(avail[idx])
+            fresh: List<int> = []
+            for t = 0 to avail.length - 1
+                if t != idx
+                    fresh.append(avail[t])
+            avail = fresh
+    return out
+
+func phi_inv(deal: List<int>) -> List<int>
+    avail = range_list(52)
+    n = big_zero()
+    for i = 0 to 51
+        v = deal[i]
+        found = -1
+        for t = 0 to avail.length - 1
+            if (found < 0) and (avail[t] == v)
+                found = t
+        assert found >= 0
+        idx = found
+        n = big_add(big_mul(n, big_from_int(52 - i)), big_from_int(idx))
+        fresh: List<int> = []
+        for t = 0 to avail.length - 1
+            if t != idx
+                fresh.append(avail[t])
+        avail = fresh
+    assert mag_cmp(n.limbs, two224().limbs) < 0
+    return big_to_be(n, pad_block)
+
+export func require_permutation(deal: List<int>) -> List<int>
+    assert deal.length == body_len
+    seen = filled(52, 0)
+    for i = 0 to 51
+        c = deal[i]
+        assert (c >= 0) and (c < 52)
+        assert seen[c] == 0
+        seen[c] = 1
+    return deal
+
+func even_perm_rank_big(perm: List<int>) -> BigInt
+    n = perm.length
+    avail = range_list(n)
+    rank = big_zero()
+    for i = 0 to n - 3
+        found = -1
+        for t = 0 to avail.length - 1
+            if (found < 0) and (avail[t] == perm[i])
+                found = t
+        assert found >= 0
+        idx = found
+        rank = big_add(big_mul(rank, big_from_int(n - i)), big_from_int(idx))
+        fresh: List<int> = []
+        for t = 0 to avail.length - 1
+            if t != idx
+                fresh.append(avail[t])
+        avail = fresh
+    return rank
+
+func pack_ori3(co: List<int>) -> BigInt
+    n = big_zero()
+    three = big_from_int(3)
+    for i = 0 to 18
+        n = big_add(big_mul(n, three), big_from_int(co[i]))
+    return n
+
+func pack_ori2(eo: List<int>) -> BigInt
+    n = big_zero()
+    two = big_from_int(2)
+    for i = 0 to 28
+        n = big_add(big_mul(n, two), big_from_int(eo[i]))
+    return n
+
+export func position_to_bytes(p: Position) -> List<int>
+    n = even_perm_rank_big(p.cp)
+    n = big_add(big_mul(n, big_from_int(ori3_span)), pack_ori3(p.co))
+    n = big_mul(n, even30())
+    n = big_add(n, even_perm_rank_big(p.ep))
+    n = big_mul(n, big_from_int(ori2_span))
+    n = big_add(n, pack_ori2(p.eo))
+    return big_to_be(n, digest_len)
+
+func colour_on(face: int, f0: int, f1: int, f2: int, c0: int, c1: int, c2: int, ori: int) -> int
+    loc = 0
+    if face == f1
+        loc = 1
+    if face == f2
+        loc = 2
+    k = (loc - ori + 3) mod 3
+    if k == 0
+        return c0
+    if k == 1
+        return c1
+    return c2
+
+func corner_slot(a: int, b: int, c: int) -> int
+    x = a
+    y = b
+    z = c
+    if (b < a) and (b < c)
+        x = b
+        y = c
+        z = a
+    if (c < a) and (c < b)
+        x = c
+        y = a
+        z = b
+    for s = 0 to 19
+        f0, f1, f2 = corner_faces(s)
+        if ((f0 == x) and (f1 == y)) and (f2 == z)
+            return s
+    assert false
+    return 0
+
+func colours_at(g: Position, a: int, b: int, c: int) -> (int, int)
+    slot = corner_slot(a, b, c)
+    f0, f1, f2 = corner_faces(slot)
+    cubie = g.cp[slot]
+    ori = g.co[slot]
+    c0, c1, c2 = corner_faces(cubie)
+    cf0 = colour_on(a, f0, f1, f2, c0, c1, c2, ori)
+    cf1 = colour_on(b, f0, f1, f2, c0, c1, c2, ori)
+    return (cf0, cf1)
+
+// Edge slot s lies between faces edge_faces_flat[2s] and edge_faces_flat[2s+1].
+// The first is the slot's reference face: eo[s] = 0 iff the piece's reference
+// colour (its lower-numbered colour) sits on it. Software data only (the hand
+// procedure never needs it). Derived from ft_ep / ft_eo: each slot is moved by
+// exactly these two faces, and a face turn keeps the turned face's colour on it.
+edge_faces_flat = [
+    0, 1, 0, 2, 0, 3, 0, 4, 0, 5,
+    1, 5, 1, 6, 1, 7, 1, 2, 2, 7,
+    2, 8, 2, 3, 3, 8, 3, 9, 3, 4,
+    4, 9, 4, 10, 4, 5, 5, 10, 5, 6,
+    6, 10, 6, 11, 6, 7, 7, 11, 7, 8,
+    8, 11, 8, 9, 9, 11, 9, 10, 10, 11
+]
+
+func edge_faces(slot: int) -> (int, int)
+    return (edge_faces_flat[2 * slot], edge_faces_flat[2 * slot + 1])
+
+func edge_slot(a: int, b: int) -> int
+    for s = 0 to 29
+        x, y = edge_faces(s)
+        if ((x == a) and (y == b)) or ((x == b) and (y == a))
+            return s
+    assert false
+    return 0
+
+// Colours showing on faces a and b of the edge slot between a and b.
+func edge_colours_at(g: Position, a: int, b: int) -> (int, int)
+    slot = edge_slot(a, b)
+    piece = g.ep[slot]
+    ori = g.eo[slot]
+    loc_a = 0
+    ref, other = edge_faces(slot)
+    if a != ref
+        loc_a = 1
+    p0, p1 = edge_faces(piece)
+    if (loc_a + ori) mod 2 == 0
+        return (p0, p1)
+    return (p1, p0)
+
+// ---- v3 W: colour-named card steps, last-face register, 26 echoes (SPEC v3 §5) ----
+// Colours are centre ids 0..11 and carry the card ranks A, 2, ..., Q (colour r = rank r).
+// Faces are named by their centre colour; nothing depends on how the puzzle is held.
+
+// The index in face_nbrs(f) of f's lowest-ranked neighbour (the Clubs neighbour).
+func lowest_nbr_index(f: int) -> int
+    nb = face_nbrs(f)
+    best = 0
+    for i = 1 to 4
+        if nb[i] < nb[best]
+            best = i
+    return best
+
+// The suit picks a neighbour of colour c: going clockwise (seen from outside c) from the
+// lowest-ranked neighbour, k = 1 (Clubs), 2 (Hearts), 3 (Spades), 4 (Diamonds). Returns that
+// neighbour n and the next one clockwise, n2. The card's edge is (c, n); its corner (c, n, n2).
+func suit_nbrs(c: int, k: int) -> (int, int)
+    nb = face_nbrs(c)
+    i = lowest_nbr_index(c)
+    return (nb[(i + k - 1) mod 5], nb[(i + k) mod 5])
+
+// The face now carrying the x-coloured sticker of the edge piece coloured (a, b).
+func edge_face_of(g: Position, a: int, b: int, x: int) -> int
+    piece = edge_slot(a, b)
+    slot = -1
+    for s = 0 to 29
+        if g.ep[s] == piece
+            slot = s
+    assert slot >= 0
+    f0, f1 = edge_faces(slot)
+    c0, c1 = edge_colours_at(g, f0, f1)
+    if c0 == x
+        return f0
+    assert c1 == x
+    return f1
+
+// The face now carrying the x-coloured sticker of the corner piece coloured (a, b, c),
+// (a, b, c) in clockwise order around a.
+func corner_face_of(g: Position, a: int, b: int, c: int, x: int) -> int
+    piece = corner_slot(a, b, c)
+    slot = -1
+    for s = 0 to 19
+        if g.cp[s] == piece
+            slot = s
+    assert slot >= 0
+    f0, f1, f2 = corner_faces(slot)
+    p0, p1, p2 = corner_faces(piece)
+    ori = g.co[slot]
+    found = -1
+    if colour_on(f0, f0, f1, f2, p0, p1, p2, ori) == x
+        found = f0
+    if colour_on(f1, f0, f1, f2, p0, p1, p2, ori) == x
+        found = f1
+    if colour_on(f2, f0, f1, f2, p0, p1, p2, ori) == x
+        found = f2
+    assert found >= 0
+    return found
+
+// One card step (SPEC v3 §5.3) with last face `last`, card rank `rank` (King = 12), suit
+// amount k, and naming colour c (card steps: the card's colour, a King uses the Ace colour;
+// echoes: the echo colour P). Returns the new position and the new last face.
+func card_step(g: Position, last: int, rank: int, k: int, c: int) -> (Position, int)
+    turned = opposites[last]
+    if rank < 12
+        turned = (last + rank) mod 12
+    g = face_turn(g, turned, k)
+    n, n2 = suit_nbrs(c, k)
+    g = face_turn(g, edge_face_of(g, c, n, c), 1)
+    g = face_turn(g, edge_face_of(g, c, n, n), 1)
+    g = face_turn(g, corner_face_of(g, c, n, n2, c), 1)
+    g = face_turn(g, corner_face_of(g, c, n, n2, n), 1)
+    new_last = edge_face_of(g, c, n, n)
+    g = face_turn(g, new_last, 1)
+    return (g, new_last)
+
+// The colour a card names on: its rank's colour, Ace for a King.
+func card_colour(card: int) -> int
+    rank = card / 4
+    if rank < 12
+        return rank
+    return 0
+
+// The echo colour P (SPEC v3 §5.4), read from the board and the held card alone: X = the face
+// carrying the n-sticker of the held card's edge, Y = the face carrying the n-sticker of its
+// corner, and P = X counted up by Y's rank.
+func echo_colour(g: Position, held: int) -> int
+    c = card_colour(held)
+    n, n2 = suit_nbrs(c, held mod 4 + 1)
+    x = edge_face_of(g, c, n, n)
+    y = corner_face_of(g, c, n, n2, n)
+    return (x + y) mod 12
+
+// E_m = W·h: the 52 card steps from the Ace face, then echo_count echoes of card 52.
+func em_block(h: Position, deal: List<int>) -> Position
+    g = h
+    last = 0
+    for i = 0 to 51
+        card = deal[i]
+        g, last = card_step(g, last, card / 4, card mod 4 + 1, card_colour(card))
+    held = deal[51]
+    for j = 1 to echo_count
+        p = echo_colour(g, held)
+        g, last = card_step(g, p, held / 4, held mod 4 + 1, p)
+    return g
+
+export func Hash(msg: List<int>) -> List<int>
+    padded = pad_message(msg)
+    assert padded.length > 0
+    assert padded.length mod pad_block == 0
+    h = iv_cook12()
+    nblocks = padded.length / pad_block
+    for b = 0 to nblocks - 1
+        i = b * pad_block
+        chunk: List<int> = []
+        for j = 0 to 27
+            chunk.append(padded[i + j])
+        deal = phi_chunk(chunk)
+        e = em_block(h, deal)
+        h = compose(h, e)
+    return position_to_bytes(h)
+
+export func MegaDreifach(msg: List<int>) -> List<int>
+    return Hash(msg)
+
+export func HashDeck(deal: List<int>) -> List<int>
+    deal = require_permutation(deal)
+    raw = phi_inv(deal)
+    return Hash(raw)
+
+export func MegaDreifachDeck(deal: List<int>) -> List<int>
+    return HashDeck(deal)
+
+func body_from(deal: List<int>, h: Position) -> List<int>
+    deal = require_permutation(deal)
+    e = em_block(h, deal)
+    return position_to_bytes(compose(h, e))
+
+export func HashDeckBody(deal: List<int>) -> List<int>
+    return body_from(deal, iv_cook12())
+
+export func MegaDreifachBody(deal: List<int>) -> List<int>
+    return HashDeckBody(deal)
+
+export func HashDeckBodyFrom(deal: List<int>, h: Position) -> List<int>
+    return body_from(deal, h)
+
+export func MegaDreifachBodyFrom(deal: List<int>, h: Position) -> List<int>
+    return HashDeckBodyFrom(deal, h)
+
+func hex_iv() -> List<int>
+    return [0, 0, 2, 26, 235, 135, 110, 183, 109, 216, 191, 131, 52, 87, 162, 192, 38, 19, 229, 86, 86, 150, 62, 2, 216, 223, 237, 181, 170]
+
+// v3 digests of kats/megaminx_hash_kats_v3.json (same inputs as the v1 and v2 files; index 8 = HashDeck
+// of the identity deal).
+func kat_v3_digest(index: int) -> List<int>
+    if index == 0
+        return [2, 152, 107, 18, 51, 217, 171, 47, 169, 194, 240, 208, 103, 254, 94, 10, 25, 3, 12, 149, 237, 228, 254, 105, 132, 65, 164, 81, 216]
+    else if index == 1
+        return [3, 22, 194, 169, 40, 46, 5, 200, 139, 77, 160, 80, 84, 143, 12, 109, 217, 110, 106, 16, 77, 107, 155, 159, 131, 8, 150, 254, 222]
+    else if index == 2
+        return [0, 194, 76, 134, 157, 79, 65, 30, 148, 191, 15, 133, 35, 62, 145, 229, 255, 207, 154, 6, 95, 241, 158, 73, 174, 234, 164, 12, 200]
+    else if index == 3
+        return [3, 181, 17, 206, 163, 113, 179, 199, 69, 213, 255, 100, 116, 217, 213, 188, 35, 120, 152, 176, 194, 42, 117, 82, 159, 53, 147, 84, 196]
+    else if index == 4
+        return [3, 152, 172, 224, 161, 51, 231, 83, 140, 176, 129, 175, 154, 156, 12, 6, 77, 216, 25, 114, 205, 133, 216, 146, 71, 96, 25, 223, 143]
+    else if index == 5
+        return [2, 228, 52, 187, 25, 129, 133, 43, 209, 156, 40, 57, 152, 139, 224, 100, 114, 233, 242, 83, 62, 156, 86, 149, 34, 142, 94, 3, 226]
+    else if index == 6
+        return [2, 240, 247, 171, 75, 72, 100, 182, 104, 178, 1, 9, 40, 107, 63, 232, 70, 249, 217, 25, 144, 195, 204, 32, 152, 168, 117, 210, 190]
+    else if index == 7
+        return [3, 146, 253, 59, 170, 64, 158, 38, 128, 90, 32, 100, 157, 178, 16, 133, 37, 61, 178, 253, 44, 175, 116, 39, 229, 149, 239, 176, 165]
+    return [3, 36, 99, 21, 12, 184, 249, 41, 172, 46, 43, 105, 210, 71, 117, 243, 99, 78, 54, 12, 79, 46, 68, 211, 35, 172, 51, 157, 0]
+
+// Two HashDeckBody vectors of that file: body_vectors[0], and body_vectors[7], whose held card is K♦.
+func kat_v3_body_deal(index: int) -> List<int>
+    if index == 0
+        return [22, 3, 28, 21, 40, 43, 9, 37, 48, 39, 47, 33, 13, 49, 18, 50, 17, 41, 19, 29, 23, 8, 1, 26, 34, 27, 25, 31, 11, 12, 15, 35, 46, 14, 38, 0, 24, 30, 2, 45, 10, 6, 5, 51, 42, 16, 44, 32, 7, 4, 20, 36]
+    return [29, 23, 2, 30, 1, 7, 9, 12, 21, 20, 13, 39, 34, 46, 24, 22, 33, 10, 5, 25, 50, 8, 19, 16, 27, 44, 17, 4, 3, 26, 49, 47, 15, 42, 11, 28, 36, 45, 48, 43, 37, 38, 35, 32, 31, 14, 41, 0, 6, 18, 40, 51]
+
+func kat_v3_body_digest(index: int) -> List<int>
+    if index == 0
+        return [1, 17, 186, 185, 148, 28, 98, 40, 249, 214, 146, 165, 113, 207, 204, 125, 143, 178, 199, 144, 51, 18, 99, 21, 53, 230, 255, 14, 24]
+    return [1, 175, 197, 180, 10, 165, 196, 68, 81, 165, 48, 120, 160, 116, 175, 52, 74, 101, 133, 167, 43, 206, 78, 174, 39, 131, 12, 86, 86]
+
+// The KAT messages, in the file's order: empty, abc, 00, 0..26, 0..27, 0..28, 56 x 'm', and multi_100.
+func kat_msg(index: int) -> List<int>
+    out: List<int> = []
+    if index == 1
+        return [97, 98, 99]
+    if index == 2
+        return [0]
+    if (index >= 3) and (index <= 5)
+        for i = 0 to 23 + index
+            out.append(i)
+        return out
+    if index == 6
+        for i = 1 to 56
+            out.append(109)
+        return out
+    if index == 7
+        return [0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255, 16, 33, 50, 67, 84, 101, 118, 135, 152, 169, 186, 203, 220, 237, 254, 15, 32, 49, 66, 83, 100, 117, 134, 151, 168, 185, 202, 219, 236, 253, 14, 31, 48, 65, 82, 99, 116, 133, 150, 167, 184, 201, 218, 235, 252, 13, 30, 47, 64, 81, 98, 115, 132, 149, 166, 183, 200, 217, 234, 251, 12, 29, 46, 63, 80, 97, 114, 131, 148, 165, 182, 199, 216, 233, 250, 11, 28, 45, 62, 79, 96, 113, 130, 147]
+    return out
+
+test "identity rank is 29 zero bytes"
+    z = position_to_bytes(identity())
+    assert z.length == digest_len
+    for i = 0 to 28
+        assert z[i] == 0
+
+test "compose inverse round trip"
+    t = compose(face_move(3), face_move(7))
+    idp = identity()
+    left = compose(t, inverse(t))
+    right = compose(inverse(t), t)
+    assert left.cp == idp.cp
+    assert left.co == idp.co
+    assert left.ep == idp.ep
+    assert left.eo == idp.eo
+    assert right.cp == idp.cp
+    assert right.co == idp.co
+    assert right.ep == idp.ep
+    assert right.eo == idp.eo
+
+test "IV-COOK12 digest"
+    d = position_to_bytes(iv_cook12())
+    assert d == hex_iv()
+
+test "empty pad is one block"
+    p = pad_message([])
+    assert p.length == 28
+    assert p[0] == 128
+    for i = 1 to 27
+        assert p[i] == 0
+
+test "KAT pad lengths"
+    assert pad_message([]).length == 28
+    assert pad_message([97, 98, 99]).length == 28
+    assert pad_message([0]).length == 28
+    m27: List<int> = []
+    for i = 0 to 26
+        m27.append(i)
+    assert pad_message(m27).length == 56
+    m28: List<int> = []
+    for i = 0 to 27
+        m28.append(i)
+    assert pad_message(m28).length == 56
+    m29: List<int> = []
+    for i = 0 to 28
+        m29.append(i)
+    assert pad_message(m29).length == 56
+    m56: List<int> = []
+    for i = 1 to 56
+        m56.append(109)
+    assert pad_message(m56).length == 84
+    m100: List<int> = []
+    for i = 0 to 99
+        m100.append((i * 17) mod 256)
+    assert pad_message(m100).length == 112
+
+test "abc pad recovers the 24-bit length"
+    p = pad_message([97, 98, 99])
+    assert p.length == 28
+    assert p[0] == 97
+    assert p[1] == 98
+    assert p[2] == 99
+    assert p[3] == 128
+    assert p[27] == 24
+
+test "phi of 28 zero bytes is the identity deal"
+    z = filled(28, 0)
+    deal = phi_chunk(z)
+    assert deal.length == 52
+    for i = 0 to 51
+        assert deal[i] == i
+    assert require_permutation(deal) == deal
+    assert phi_inv(deal) == z
+
+test "Hash aliases agree on the empty message"
+    d = Hash([])
+    assert d.length == digest_len
+    assert MegaDreifach([]) == d
+
+test "HashDeckBody on the identity deal is 29 bytes"
+    deal = range_list(52)
+    b = HashDeckBody(deal)
+    assert b.length == digest_len
+    assert MegaDreifachBody(deal) == b
+
+test "HashDeckBodyFrom at IV matches HashDeckBody"
+    deal = range_list(52)
+    iv = iv_cook12()
+    from_iv = HashDeckBodyFrom(deal, iv)
+    assert from_iv == HashDeckBody(deal)
+    assert MegaDreifachBodyFrom(deal, iv) == MegaDreifachBody(deal)
+    from_id = HashDeckBodyFrom(deal, identity())
+    assert from_id.length == digest_len
+    assert from_id != from_iv
+
+test "require_permutation rejects a duplicate"
+    bad = filled(52, 0)
+    expect_trap AssertFailed
+        require_permutation(bad)
+
+test "v3 KAT digests (kats/megaminx_hash_kats_v3.json)"
+    for n = 0 to 7
+        assert Hash(kat_msg(n)) == kat_v3_digest(n)
+
+test "v3 KAT HashDeck of the identity deal"
+    deal = range_list(52)
+    assert HashDeck(deal) == kat_v3_digest(8)
+    assert HashDeck(deal) == Hash(filled(28, 0))
+
+test "v3 KAT HashDeckBody vectors (one with a King held for the echoes)"
+    for n = 0 to 1
+        assert HashDeckBody(kat_v3_body_deal(n)) == kat_v3_body_digest(n)
+    assert kat_v3_body_deal(1)[51] == 51
+
+test "edge-slot table: every adjacent face pair owns exactly one slot"
+    for f = 0 to 11
+        nb = face_nbrs(f)
+        for i = 0 to 4
+            s = edge_slot(f, nb[i])
+            a, b = edge_faces(s)
+            assert ((a == f) and (b == nb[i])) or ((b == f) and (a == nb[i]))
+    for s = 0 to 29
+        a, b = edge_faces(s)
+        assert a < b
+        assert edge_slot(a, b) == s
+
+test "edge-slot table: exactly the two owning faces move each slot"
+    for f = 0 to 11
+        t = face_move(f)
+        for s = 0 to 29
+            a, b = edge_faces(s)
+            moved = t.ep[s] != s
+            assert moved == ((f == a) or (f == b))
+
+test "edge and corner read: solved shows own colours, a turn keeps its colour on its pieces"
+    idp = identity()
+    for s = 0 to 29
+        a, b = edge_faces(s)
+        assert edge_colours_at(idp, a, b) == (a, b)
+        assert edge_face_of(idp, a, b, a) == a
+        assert edge_face_of(idp, a, b, b) == b
+    for f = 0 to 11
+        g = face_turn(identity(), f, 1)
+        for k = 1 to 4
+            n, n2 = suit_nbrs(f, k)
+            assert edge_face_of(g, f, n, f) == f
+            assert corner_face_of(g, f, n, n2, f) == f
+
+test "suit neighbours: four different neighbours, n2 follows n clockwise"
+    for c = 0 to 11
+        nb = face_nbrs(c)
+        lo = nb[lowest_nbr_index(c)]
+        for i = 0 to 4
+            assert lo <= nb[i]
+        n1, m1 = suit_nbrs(c, 1)
+        assert n1 == lo
+        for k = 1 to 4
+            n, n2 = suit_nbrs(c, k)
+            hit = 0
+            for i = 0 to 4
+                if (nb[i] == n) and (nb[(i + 1) mod 5] == n2)
+                    hit = hit + 1
+            assert hit == 1
+            for j = 1 to 4
+                if j != k
+                    m, m2 = suit_nbrs(c, j)
+                    assert m != n
+
+test "coverage: the 48 non-King cards name all 30 edges and all 20 corners"
+    eseen = filled(30, 0)
+    cseen = filled(20, 0)
+    for card = 0 to 47
+        c = card_colour(card)
+        n, n2 = suit_nbrs(c, card mod 4 + 1)
+        eseen[edge_slot(c, n)] = eseen[edge_slot(c, n)] + 1
+        cseen[corner_slot(c, n, n2)] = cseen[corner_slot(c, n, n2)] + 1
+    for s = 0 to 29
+        assert eseen[s] >= 1
+    for s = 0 to 19
+        assert cseen[s] >= 1
+
+test "card pass: the last face is re-derivable from the board and the top dealt card"
+    g = iv_cook12()
+    last = 0
+    for i = 0 to 51
+        card = (i * 23 + 7) mod 52
+        g, last = card_step(g, last, card / 4, card mod 4 + 1, card_colour(card))
+        c = card_colour(card)
+        n, n2 = suit_nbrs(c, card mod 4 + 1)
+        assert edge_face_of(g, c, n, n) == last
+
+test "a King turns the face opposite the last face"
+    g0 = iv_cook12()
+    for last = 0 to 11
+        for k = 1 to 4
+            g1, l1 = card_step(g0, last, 12, k, 0)
+            h = face_turn(g0, opposites[last], k)
+            n, n2 = suit_nbrs(0, k)
+            h = face_turn(h, edge_face_of(h, 0, n, 0), 1)
+            h = face_turn(h, edge_face_of(h, 0, n, n), 1)
+            h = face_turn(h, corner_face_of(h, 0, n, n2, 0), 1)
+            h = face_turn(h, corner_face_of(h, 0, n, n2, n), 1)
+            l2 = edge_face_of(h, 0, n, n)
+            h = face_turn(h, l2, 1)
+            assert l1 == l2
+            assert g1.cp == h.cp
+            assert g1.co == h.co
+            assert g1.ep == h.ep
+            assert g1.eo == h.eo

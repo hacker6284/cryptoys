@@ -1,0 +1,34 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+mdw4_lib ZB0F1N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3R3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH0F0E5: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZE3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP3F0E13: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP0F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP0F0E26: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F1S9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0R2S8: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every block reads all 50)
+mdw4_lib board register: the 60 states of the (Ace, n1) edge slot give each of the 12 colours 5 times
+d3 ZP0F0E26: N=50000, seeds 80200000+...; cost {'turns': 390, 'clicks': '442 + echo card clicks (m*k)', 'piece_finds': 156, 'slot_reads': 26, 'regrips': 0, 'solves': 3}
+D3 ZP0F0E26 start IV   pair same n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [34s]
+D3 ZP0F0E26 start IV   pair opp  n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [39s]
+D3 ZP0F0E26 start IV   pair KA   n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [47s]
+D3 ZP0F0E26 start IV   pair rand n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [27s]
+D3 ZP0F0E26 start rand pair same n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [29s]
+D3 ZP0F0E26 start rand pair opp  n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [35s]
+D3 ZP0F0E26 start rand pair KA   n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [29s]
+D3 ZP0F0E26 start rand pair rand n=50000: card-phase positions equal 0, output collisions 0 (0-hit 95% bound 6.0e-05) ex []  [34s]
+wall time 274 s, workers 4
+
+real	4m36.039s
+user	14m15.206s
+sys	0m0.571s

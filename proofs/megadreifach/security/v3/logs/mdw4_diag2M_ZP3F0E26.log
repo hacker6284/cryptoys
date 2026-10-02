@@ -1,0 +1,30 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+mdw4_lib ZB0F1N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3R3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH0F0E5: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZE3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F1S9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0R2S8: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every block reads all 50)
+mdw4_lib board register: the 60 states of the (Ace, n1) edge slot give each of the 12 colours 5 times
+diag ZP3F0E26: N=2000000, seeds 67000000+...; cost {'turns': 468, 'clicks': '520 + echo card clicks (m*k)', 'piece_finds': 156, 'slot_reads': 26, 'regrips': 0, 'solves': 3}
+  check: #coinciding corners == #fully fixed corners of Q in 2000000/2000000
+  fully fixed corners of Q: mean 0.33434 (ideal 0.33333, excess +0.00101 +- 0.00080); edges 0.50029 (ideal 0.50000, excess +0.00029 +- 0.00098)  [approx. null sd: sqrt(mean)]
+  last step's corner coincides:   0.01674 [0.01657,0.01692] (ideal 0.01667, excess +0.00008)
+  last step's edge coincides:     0.01657 [0.01639,0.01674] (ideal 0.01667, excess -0.00010)
+  second-to-last step's corner (if a different piece; P(different) 0.60793): 0.01018 [0.01005,0.01033] (ideal 0.01013, excess +0.00005)
+  second-to-last step's edge   (if a different piece; P(different) 0.61184): 0.01023 [0.01009,0.01037] (ideal 0.01020, excess +0.00004)
+  final registers equal: 0.08329 [0.08291,0.08367] (ideal 0.08333, excess -0.00005); given equal: last corner coincides 0.01732, mean coinciding corners 0.33735
+wall time 686 s, workers 4
+
+real	11m27.237s
+user	38m10.404s
+sys	0m0.154s

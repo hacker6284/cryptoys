@@ -10,7 +10,7 @@ Each primitive is a directory holding a normative specification and one [sudocod
 | Primitive | Purpose | Specification | Proofs |
 | --- | --- | --- | --- |
 | Scramble | Toy hash. A message walks a solved cube; the digest is the seated pose. **Broken; do not use** ([Security](primitives/hash/scramble/SPEC.md#security)). | [SPEC.md](primitives/hash/scramble/SPEC.md) | [proofs/scramble/](proofs/scramble/) |
-| MegaDreifach | Toy three-megaminx Merkle–Damgård hash. Current: v2; v1 is [deprecated](primitives/hash/megadreifach/v1/SPEC.md). | [SPEC.md](primitives/hash/megadreifach/SPEC.md), [README](primitives/hash/megadreifach/README.md) | [proofs/megadreifach/](proofs/megadreifach/) (v2); frozen v1: [proofs/deprecated/megadreifach-v1/](proofs/deprecated/megadreifach-v1/README.md) |
+| MegaDreifach | Toy three-megaminx Merkle–Damgård hash. Current: v2; v1 is [deprecated](primitives/hash/megadreifach/v1/SPEC.md); v3 is a [candidate](primitives/hash/megadreifach/v3/SPEC.md) (colour-named card phase). | [SPEC.md](primitives/hash/megadreifach/SPEC.md), [README](primitives/hash/megadreifach/README.md) | [proofs/megadreifach/](proofs/megadreifach/) (v2); v3 evidence: [proofs/megadreifach/security/v3/](proofs/megadreifach/security/v3/README.md); frozen v1: [proofs/deprecated/megadreifach-v1/](proofs/deprecated/megadreifach-v1/README.md) |
 | DoubleDeal | Toy block cipher on a 52-card deck. | [SPEC.md](primitives/cipher/doubledeal/SPEC.md) (version history: [§7a](primitives/cipher/doubledeal/SPEC.md#7a-version-history)) | [proofs/doubledeal/](proofs/doubledeal/); frozen versions: [proofs/deprecated/](proofs/deprecated/README.md) |
 | DoubleDeal-CBC-HMAC | Toy Encrypt-then-MAC: DoubleDeal in CBC, then HMAC with MegaDreifach as the hash. Not DoubleDeal-SCM. | [SPEC.md](primitives/aead/doubledeal-cbc-hmac/SPEC.md), [README](primitives/aead/doubledeal-cbc-hmac/README.md) | [proofs/doubledeal-cbc-hmac/](proofs/doubledeal-cbc-hmac/) |
 | BS | Toy finite-field Diffie–Hellman worked by hand on Battleship pegboards; the key is one dice-built ships+pegs grid. Vectors: [proofs/key_exchange/bs/vectors/](proofs/key_exchange/bs/vectors/README.md). | [SPEC.md](primitives/key_exchange/bs/SPEC.md) | [proofs/key_exchange/bs/](proofs/key_exchange/bs/README.md) |
@@ -36,6 +36,8 @@ sudoc build --target js --tests -o /tmp/scramble primitives/hash/scramble/scramb
 node /tmp/scramble/_scramble_impl.mjs
 sudoc build --target js --tests -o /tmp/megadreifach primitives/hash/megadreifach/megadreifach.sudo
 node /tmp/megadreifach/_megadreifach_impl.mjs
+sudoc build --target js --tests -o /tmp/megadreifach-v3-test primitives/hash/megadreifach/v3/megadreifach.sudo
+node /tmp/megadreifach-v3-test/_megadreifach_impl.mjs
 sudoc build --target js --tests -o /tmp/doubledeal primitives/cipher/doubledeal/doubledeal.sudo
 node /tmp/doubledeal/_doubledeal_impl.mjs
 sudoc build --target js --tests -o /tmp/bs primitives/key_exchange/bs/bs.sudo

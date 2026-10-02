@@ -304,6 +304,8 @@ jobs:
         run: python3 proofs/megadreifach/security/suit_blind_collision.py --check
       - name: v2 security evidence, quick set matches its logs (engine self-check against the 8 v2 KATs + HashDeck; cost, grip-merge and suit counts, v2e pair, pseudo-collision pairs; a few seconds; the report-size runs are in proofs-heavy.yml)
         run: python3 proofs/megadreifach/security/v2/experiments.py --check
+      - name: v3 (candidate) hand recipe == runnable spec (SPEC v3 §5 transliteration reproduces the v3 KATs written from v3/megadreifach.sudo; exact cost counts; study engine == transliteration; about 1 s)
+        run: python3 proofs/megadreifach/security/v3/check_v3.py
       - name: M9 two-card window search (Python cross-check of the Lean M9 proof, not part of it; self-checks the 8 v2 KATs; asserts its counts; about 20 s in CI)
         run: python3 proofs/megadreifach/m9/m9_search.py
       - name: M9 decoder certificate M9Cert.lean matches a fresh generation (untrusted data, re-checked by the kernel; about 10 s)

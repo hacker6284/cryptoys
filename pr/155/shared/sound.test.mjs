@@ -355,3 +355,14 @@ test("anchorMs holds a moment of the file in place under pitch jitter", async ()
     const [a] = made[0].started;
     assert.ok(Math.abs(a.args[0] - 10.38) < 1e-9, "starts 20 ms early so the click lands at 400 + 180 ms");
 });
+
+test("audibleCentroidMs: energy centre of the part within −30 dB of the peak", async () => {
+    const { audibleCentroidMs } = await import(new URL("./sound.js", import.meta.url));
+    const sr = 1000;
+    const data = new Float32Array(1000);
+    for (let i = 100; i < 110; i++) data[i] = 1; // a click at 100–110 ms
+    for (let i = 300; i < 310; i++) data[i] = 1; // an equal click at 300–310 ms
+    for (let i = 600; i < 700; i++) data[i] = 0.001; // −60 dB hiss: not audible
+    const buffer = { sampleRate: sr, length: data.length, numberOfChannels: 1, getChannelData: () => data };
+    assert.ok(Math.abs(audibleCentroidMs(buffer) - 204.5) < 1e-9, "centre of the cluster, hiss ignored");
+});

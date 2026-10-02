@@ -39,60 +39,41 @@ const [half, seat] = clickTimes(2, 1);
 assert.ok(Math.abs(seat) < 1, "the last click is the seat");
 assert.equal(Math.round(half), -750, "a double turn's first click is at half way");
 
-// Face-turn clicks are placed from the moment the face starts moving:
-// peakAtMs is where the loudest click lands, scaled with the turn, so
-// at peakAtMs 0 it sits on the turn's start at any tempo (the file
-// starts its head's length before the turn).
+// LOCKED rule (Zachary, 2026-10-02, superseding the single's af9a8fb /
+// 2b5f6d4 lock): "the audible part of the sound should be centered over
+// the part of the animation where the face is at maximum velocity."
+// cubing.js's smootherStep is fastest at exactly half of each move; every
+// face-turn sound's audible centroid lands there, at any tempo. Do not
+// loosen this test to fit a new value; change the rule with Zachary.
 const { stretchContact, fileStart } = await import(new URL("voice.js", here));
-const peaks = { double: 119.8, triple: 194.3 }; // loudest samples, decoded
-for (const [slot, peakMs] of Object.entries(peaks)) {
+const { PEAK_VELOCITY, smootherStep } = await import(new URL("twisty.js", here));
+assert.ok(Math.abs(PEAK_VELOCITY - 0.5) < 1e-3, "smootherStep turns fastest half way");
+assert.ok(Math.abs((smootherStep(0.5 + 1e-6) - smootherStep(0.5 - 1e-6)) / 2e-6 - 1.875) < 1e-6, "1.875× the mean speed there");
+const { turnContacts } = await import(new URL("scramble-turn/index.js", here));
+const files = { // decoded: audible centroid (sound.js audibleCentroidMs), loudest sample
+    single: { move: "R", centroidMs: 141.2, peakMs: 143.3 },
+    double: { move: "R2", centroidMs: 106.9, peakMs: 119.8 },
+    triple: { move: "R3", centroidMs: 203.0, peakMs: 194.3 },
+};
+for (const [slot, { move, centroidMs, peakMs }] of Object.entries(files)) {
     const s = settings.sounds[slot];
-    assert.equal(s.offsetMs, undefined, `${slot} is placed by peakAtMs`);
-    for (const tempo of [0.5, 1.4, 4]) {
-        const turnStart = 5000;
-        const peakAt = fileStart(s, turnStart, peakMs, timing.speed / tempo) + peakMs;
-        assert.ok(Math.abs(peakAt - (turnStart + s.peakAtMs * timing.speed / tempo)) < 1e-9, `${slot} peak at ${tempo}×`);
-    }
-}
-// Zachary: "Give them exactly the delay of the single turn for now": the
-// double's and triple's loudest clicks land the same ms after the turn
-// starts as the single's (its file start + its 143.3 ms peak).
-for (const slot of ["double", "triple"]) {
-    assert.ok(Math.abs(settings.sounds[slot].peakAtMs - (settings.sounds.single.offsetMs + 143.3)) < 1e-9, `${slot} clicks with the single's delay`);
-}
-assert.equal(fileStart({ peakAtMs: 100 }, 0, 143, 1.4 / 0.7), 200 - 143, "peakAtMs scales with the turn: half the tempo, twice as late");
-
-// LOCKED: the single click as Zachary approved it (af9a8fb; tempo-scaled
-// at 2b5f6d4). At 1.4× its file starts 393 ms before the face seats
-// (321.3 ms into the 714 ms turn) whatever the decoded peak, and its
-// loudest click lands ~250 ms before seating (~65%). At other tempos
-// the peak keeps that fraction, exactly as 2b5f6d4's seat-relative
-// stretch did. Do not loosen this test to fit a new value.
-{
-    const single = settings.sounds.single;
-    assert.equal(single.file, "scramble-turn/single/single_spacejoe-486564", "single file is locked");
-    assert.equal(single.gainDb, 11, "single gain is locked");
-    assert.equal(single.peakAtMs, undefined, "single is placed by its file start (offsetMs), as approved");
-    const { turnContacts } = await import(new URL("scramble-turn/index.js", here));
-    const peak = 143.3;
+    assert.equal(s.align, "peak-velocity", `${slot} is centred on peak velocity`);
+    assert.equal(s.nudgeMs ?? 0, 0, `${slot} has no nudge`);
+    assert.equal(s.offsetMs, undefined, `${slot} has no magic offset`);
+    assert.equal(s.peakAtMs, undefined, `${slot} has no magic offset`);
     for (const tempo of [0.5, 1.4, 4]) {
         const at = 10000;
-        const len = 1000 / tempo;
-        const [[slot, contactMs, stretch]] = turnContacts({ at, durations: [1000], tempo, leaves: ["R"] });
-        assert.equal(slot, "single");
-        const start = fileStart(single, contactMs, peak, stretch);
-        // 2b5f6d4: contact = seat, offsetMs −393, stretch around the peak.
-        const approved = stretchContact(at + len, -393, peak, timing.speed / tempo) - 393;
-        assert.ok(Math.abs(start - approved) < 1e-9, `single file start as approved at ${tempo}×`);
-        if (tempo === 1.4) {
-            assert.ok(Math.abs(start - at - 321.2857) < 1e-3, "file starts 321.3 ms into the turn at 1.4×");
-            assert.ok(Math.abs(at + len - start - 393) < 1e-9, "393 ms before the face seats at 1.4×");
-        }
-        const fraction = (start + peak - at) / len;
-        assert.ok(Math.abs(fraction - 0.6504) < 0.001, `loudest click ~65% into the turn at ${tempo}× (${fraction.toFixed(4)})`);
+        const len = { R: 1000, R2: 1500, R3: 2000 }[move] / tempo;
+        const [[got, contactMs, stretch]] = turnContacts({ at, tempo, leaves: [move] });
+        assert.equal(got, slot);
+        const start = fileStart(s, contactMs, { centroidMs, peakMs }, stretch);
+        assert.ok(Math.abs(start + centroidMs - (at + len / 2)) < 1e-9, `${slot}'s audible centre on peak velocity at ${tempo}×`);
     }
-    assert.equal(stretchContact(1000, single.offsetMs, peak, 1), 1000, "no stretch at the tuned tempo");
 }
+assert.equal(fileStart({ align: "peak-velocity", nudgeMs: 20 }, 1000, { centroidMs: 100 }, 1.4 / 0.7), 1000 + 40 - 100, "nudgeMs scales with the turn");
+assert.equal(settings.sounds.single.file, "scramble-turn/single/single_spacejoe-486564", "single file is the approved one");
+assert.equal(settings.sounds.single.gainDb, 11, "single gain is the approved one");
+assert.equal(fileStart({ peakAtMs: 100 }, 0, 143, 1.4 / 0.7), 200 - 143, "peakAtMs scales with the turn");
 
 // offsetMs sounds (the rotation): the time from the loudest sample to
 // the contact scales the same way.

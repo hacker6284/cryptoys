@@ -6,26 +6,25 @@
 // sounds: file = path under demos/anim/sounds/ (no extension; run
 //   tools/sync-micro-sounds.py after changing it). gainDb = loudness
 //   (+ louder). Placement, from the slot's contact:
-//   peakAtMs = when the file's loudest click lands (0 = on the contact,
-//   + later), or offsetMs = when the file starts (more negative =
-//   earlier; −peak puts the loudest sample on it).
+//   align: "peak-velocity" = the centre of the file's audible part (its
+//   energy centroid above −30 dB, measured from the decoded file) lands
+//   where the face turns fastest; nudgeMs moves it (+ later, ms at
+//   timing.speed). Or offsetMs = when the file starts (more negative =
+//   earlier; −peak puts the loudest sample on it); peakAtMs = when its
+//   loudest sample lands.
 //   startMs skips the file's head; fadeMs / maxMs shorten the tail
 //   (0 = play it out). null = silent.
-//   The turn sounds (single, double, triple, rotation) are tuned at
-//   timing.speed. At another speed the time from the contact to the
-//   file's loudest sample scales with the turn (× speed / tempo), so a
-//   click keeps its place in the turn. The settle pat does not scale.
-//   A face turn whose file starts before the turn does gets it in time:
-//   the stage hands the voice the turn ahead (during the lift).
+//   The turn sounds (single, double, triple, rotation) keep their place
+//   in the turn at any speed: an aligned sound's contact is a point of
+//   the turn and its nudgeMs scales (× speed / tempo); an offsetMs
+//   sound's loudest-sample-to-contact time scales the same way. The
+//   settle pat does not scale.
+//   A file that has to start before its turn does gets the turn handed
+//   over during the lift; with the cube already up the turn never waits
+//   (the file's head is skipped instead).
 // timing: read by playroom/cube-stage.js (lift height and time, hold before
 //   setting down); speed = the dock's starting tempo (cubing.js tempoScale).
 // loopGapMs, choices: the microdemo loop only.
-// The single click, LOCKED (see sounds.single): its file starts this
-// long after the turn starts at 1.4×, and its loudest click (143.3 ms
-// into the decoded file) lands SINGLE_CLICK_MS after the turn starts.
-const SINGLE_FILE_MS = 1000 / 1.4 - 393; // 321.3
-const SINGLE_CLICK_MS = SINGLE_FILE_MS + 143.3; // 464.6
-
 export default {
     loopGapMs: 700,
     choices: {
@@ -39,23 +38,20 @@ export default {
         SETTLE_HOLD_MS: 90,
     },
     sounds: {
-        // Single turn (one click); contact: the face starts moving (start of leaf).
-        // LOCKED, approved by Zachary (af9a8fb, tempo-scaled at 2b5f6d4): do not
-        // change. The file starts 393 ms before the face seats at 1.4×, i.e.
-        // 1000/1.4 − 393 = 321.3 ms into the 714 ms turn; its loudest click
-        // (143 ms in) lands ~464 ms after the start, 250 ms before seating,
-        // ~65% of the way through. Pinned by ../library.test.mjs.
-        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, offsetMs: SINGLE_FILE_MS },
-        // Double turn (two clicks); contact: the face starts moving (start of leaf).
-        // Zachary: "They're too early too. Give them exactly the delay of the single
-        // turn for now." peakAtMs = the single's: the loudest click lands 464.6 ms
-        // after the turn starts at 1.4× (the same ms, not the same fraction; of a
-        // 1071 ms turn), tempo-scaled like the single. + ms = later.
+        // Face turns. Rule (Zachary, 2026-10-02; supersedes the single's lock at
+        // af9a8fb/2b5f6d4): "the audible part of the sound should be centered
+        // over the part of the animation where the face is at maximum
+        // velocity." cubing.js eases every turn with smootherStep, fastest at
+        // exactly half way: 357 ms into a single (714 ms), 536 ms into a double
+        // (1071 ms), 714 ms into a triple (1429 ms) at 1.4×; it scales with the
+        // tempo. LOCKED to this rule: pinned by ../library.test.mjs.
+        // Single turn (one click), audible centre 141 ms into the file.
+        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, align: "peak-velocity", nudgeMs: 0 },
+        // Double turn (two clicks), audible centre of the cluster 107 ms in.
         // Or { perClick: true }: the single file once per click.
-        double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, peakAtMs: SINGLE_CLICK_MS },
-        // Triple turn (three clicks); contact: the face starts moving (start of leaf).
-        // peakAtMs = the single's, as the double (of a 1429 ms turn at 1.4×). Or { perClick: true }.
-        triple: { file: "scramble-turn/triple/triple_spacejoe-486581", gainDb: 6.5, peakAtMs: SINGLE_CLICK_MS },
+        double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, align: "peak-velocity", nudgeMs: 0 },
+        // Triple turn (three clicks), audible centre of the cluster 203 ms in. Or { perClick: true }.
+        triple: { file: "scramble-turn/triple/triple_spacejoe-486581", gainDb: 6.5, align: "peak-velocity", nudgeMs: 0 },
         // Whole-puzzle rotation; contact: rotation ends. Zachary's pick: a real
         // recording of a plastic broomstick swung softly past the mic (Sadiquecat),
         // a low, rounded swish; its swell (125 ms in) peaks at mid-rotation

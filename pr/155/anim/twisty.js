@@ -25,6 +25,29 @@ export function smootherStep(x) {
     return x * x * x * (10 - x * (15 - 6 * x));
 }
 
+/**
+ * Where in a move (0..1 of its duration) the face turns fastest: the
+ * peak of smootherStep's derivative, found numerically. 30x²(1−x)² has
+ * one peak, at the middle (0.5), 1.875× the mean speed; no plateau.
+ * cubing.js eases quarter, half and three-quarter turns the same way
+ * (each over its own duration), checked by sampling the real face angle.
+ */
+export function peakVelocityFraction(steps = 20000) {
+    let best = 0;
+    let at = 0;
+    for (let i = 1; i < steps; i++) {
+        const x = i / steps;
+        const v = (smootherStep(x + 0.5 / steps) - smootherStep(x - 0.5 / steps)) * steps;
+        if (v > best + 1e-12) {
+            best = v;
+            at = x;
+        }
+    }
+    return at;
+}
+
+export const PEAK_VELOCITY = peakVelocityFraction();
+
 function inverseSmootherStep(y) {
     let lo = 0;
     let hi = 1;

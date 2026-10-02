@@ -1,6 +1,6 @@
 /**
  * Scramble face turn: the cube lifts off the felt, cubing.js turns the
- * faces (each turn clicks as its face starts moving) and the cube sets
+ * faces (each turn's click centred where its face turns fastest) and the cube sets
  * down with a muffled pat. The values live in ./settings.js.
  *
  * Played by playroom/cube-stage.js around the Scramble rig (the
@@ -8,7 +8,7 @@
  */
 import settings from "./settings.js";
 import { createVoice } from "../voice.js";
-import { amountOf, cubingMs, slotOf, twistySlots } from "../twisty.js";
+import { PEAK_VELOCITY, amountOf, cubingMs, slotOf, twistySlots } from "../twisty.js";
 
 export { settings };
 export const timing = settings.timing;
@@ -24,8 +24,10 @@ let voice = null;
  */
 /**
  * [slot, contactMs, stretch, tempo] per leaf of a playback starting at
- * `at`: face turns on their start, rotations (and per-click turns,
- * whose clicks count back from the seat) on their end.
+ * `at`. A face turn with align "peak-velocity" has its contact where its
+ * face turns fastest (PEAK_VELOCITY of the way through, scaling with the
+ * turn); other face turns on their start; rotations (and per-click
+ * turns, whose clicks count back from the seat) on their end.
  */
 export function turnContacts({ at, durations = [], tempo = timing.speed, leaves = [] }) {
     const stretch = timing.speed / tempo;
@@ -34,8 +36,10 @@ export function turnContacts({ at, durations = [], tempo = timing.speed, leaves 
     leaves.forEach((move, k) => {
         const len = (durations[k] ?? cubingMs(amountOf(move))) / tempo;
         const slot = slotOf(move);
-        const onEnd = slot === "rotation" || settings.sounds[slot]?.perClick;
-        out.push([slot, onEnd ? t + len : t, stretch, tempo]);
+        const s = settings.sounds[slot];
+        const onEnd = slot === "rotation" || s?.perClick;
+        const contact = onEnd ? t + len : s?.align === "peak-velocity" ? t + PEAK_VELOCITY * len : t;
+        out.push([slot, contact, stretch, tempo]);
         t += len;
     });
     return out;
@@ -53,8 +57,8 @@ export function scrambleTurnVoice() {
         /**
          * Playback of `leaves` starts at `at` (performance.now()), each
          * leaf `durations[k]` ms long at tempo 1. A face turn's contact
-         * is the moment its face starts moving (its sound's peakAtMs
-         * counts from there); a rotation's is the moment it ends. Tuned
+         * is the moment its face turns fastest (align "peak-velocity");
+         * a rotation's is the moment it ends. Tuned
          * at timing.speed; at another tempo each sound keeps its place in
          * the turn. `at` may be in the future (see lead()).
          */

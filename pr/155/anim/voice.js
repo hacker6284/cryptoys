@@ -15,10 +15,12 @@
  *   peakAtMs   the file's loudest sample lands this long after the
  *              contact (0 = on it; positive = later), whatever the file's
  *              head; measured from the decoded file
- *   align      the centre of the file's audible part (sound.js
- *              audibleCentroidMs) lands on the contact, + nudgeMs (later
- *              if positive); the entry says what the contact is for its
- *              align rule (e.g. "peak-velocity")
+ *   align      the centre of the file lands on the contact, + nudgeMs
+ *              (later if positive); the entry says what the contact is
+ *              for its align rule (e.g. "peak-velocity"). centre: which
+ *              centre: "audible" (default; sound.js audibleCentroidMs, for
+ *              clicks) or "swell" (sound.js swellMs, its loudest 10 ms,
+ *              for a swish)
  *
  * The voice uses the page's shared AudioContext (sharedAudio() in
  * sound.js), so the hub tap, the iOS unlock and mute work the same in
@@ -64,22 +66,27 @@ function placed(s) {
 
 /**
  * When the file starts (performance.now() ms) for a sound `s` whose
- * contact is at `atMs`. `file` = { peakMs, centroidMs } of the decoded
- * file. align: its audible centre lands nudgeMs × stretch after the
+ * contact is at `atMs`. `file` = { peakMs, centroidMs, swellMs } of the
+ * decoded file. align: its centre lands nudgeMs × stretch after the
  * contact. peakAtMs: its loudest sample lands peakAtMs × stretch after.
  * offsetMs: see stretchContact.
  */
 export function fileStart(s, atMs, file = {}, stretch = 1) {
-    const { peakMs = 0, centroidMs = 0 } = typeof file === "number" ? { peakMs: file } : file;
-    if (s.align != null) return atMs + (s.nudgeMs ?? 0) * stretch - (centroidMs ?? 0);
+    const { peakMs = 0 } = typeof file === "number" ? { peakMs: file } : file;
+    if (s.align != null) return atMs + (s.nudgeMs ?? 0) * stretch - centreOf(s, file);
     if (s.peakAtMs != null) return atMs + s.peakAtMs * stretch - (peakMs ?? 0);
     const off = s.offsetMs ?? 0;
     return stretchContact(atMs, off, peakMs ?? 0, stretch) + off;
 }
 
+/** The aligned centre of a file: its audible centroid, or its swell. */
+function centreOf(s, file) {
+    return (s.centre === "swell" ? file.swellMs : file.centroidMs) ?? 0;
+}
+
 /** The file moment that holds still under pitch jitter (0: its start). */
 function anchorOf(s, file) {
-    if (s.align != null) return file.centroidMs ?? 0;
+    if (s.align != null) return centreOf(s, file);
     if (s.peakAtMs != null) return file.peakMs ?? 0;
     return 0;
 }
@@ -88,7 +95,7 @@ export function createVoice({ settings, slots, base, autostart = false }) {
     const sounds = settings.sounds || {};
     const sound = createSound({ sounds: soundTable(slots, sounds), base, limiter: true, autostart });
     const timers = new Set();
-    const describe = (name) => ({ peakMs: sound.peakMs(name) ?? 0, centroidMs: sound.centroidMs?.(name) ?? 0 });
+    const describe = (name) => ({ peakMs: sound.peakMs(name) ?? 0, centroidMs: sound.centroidMs?.(name) ?? 0, swellMs: sound.swellMs?.(name) ?? 0 });
 
     function later(ms, fn) {
         const id = setTimeout(() => {

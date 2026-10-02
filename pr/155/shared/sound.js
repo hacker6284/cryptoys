@@ -252,6 +252,7 @@ export function createSound({
     let buffers = {};
     let peaks = {};
     let centroids = {};
+    let swells = {};
     const last = {};
     const live = {};
     const rr = {};
@@ -331,9 +332,11 @@ export function createSound({
             buffers = next;
             peaks = {};
             centroids = {};
+            swells = {};
             for (const [name, list] of Object.entries(next)) {
                 peaks[name] = loudestMs(list[0]);
                 centroids[name] = audibleCentroidMs(list[0]);
+                swells[name] = swellMs(list[0]);
             }
         }).catch((err) => {
             console.warn("sound failed to load", err);
@@ -509,6 +512,10 @@ export function createSound({
         centroidMs(name) {
             return centroids[name] ?? null;
         },
+        /** ms from the start of `name`'s (first) file to the centre of its loudest 10 ms (swellMs), once decoded; else null. */
+        swellMs(name) {
+            return swells[name] ?? null;
+        },
         dispose() {
             offState();
             stateFns.clear();
@@ -553,6 +560,34 @@ export function audibleCentroidMs(buffer, { floorDb = -30, windowMs = 5 } = {}) 
         moment += i * e[i];
     }
     return sum ? (moment / sum / buffer.sampleRate) * 1000 : null;
+}
+
+/**
+ * The centre of a decoded file's swell, in ms from its start: the middle
+ * of its loudest `windowMs` (10 ms) stretch of energy, channels summed.
+ * For a sound with a body (a swish) rather than a click.
+ */
+export function swellMs(buffer, { windowMs = 10 } = {}) {
+    if (!buffer?.getChannelData || !buffer.sampleRate || !buffer.length) return null;
+    const n = buffer.length;
+    const e = new Float64Array(n);
+    for (let c = 0; c < buffer.numberOfChannels; c++) {
+        const data = buffer.getChannelData(c);
+        for (let i = 0; i < n; i++) e[i] += data[i] * data[i];
+    }
+    const w = Math.max(1, Math.min(n, Math.round((windowMs / 1000) * buffer.sampleRate)));
+    let sum = 0;
+    for (let i = 0; i < w; i++) sum += e[i];
+    let best = sum;
+    let at = 0;
+    for (let i = w; i < n; i++) {
+        sum += e[i] - e[i - w];
+        if (sum > best) {
+            best = sum;
+            at = i - w + 1;
+        }
+    }
+    return ((at + w / 2) / buffer.sampleRate) * 1000;
 }
 
 /** dB ↔ linear gain helpers for tuning UIs. */

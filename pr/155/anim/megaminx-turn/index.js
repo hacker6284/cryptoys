@@ -1,12 +1,12 @@
 /**
- * Scramble face turn: the cube lifts off the felt, cubing.js turns the
- * faces (each turn's sound centred where its face turns fastest, each
- * rotation's where the cube does) and the cube sets down with a muffled
- * pat. The values live in ./settings.js.
+ * Megaminx face turn: the puzzle lifts off the felt, cubing.js turns a
+ * face (its sound centred where the face turns fastest) and the puzzle
+ * sets down with the muffled pat. The values live in ./settings.js.
  *
- * Played by playroom/cube-stage.js around the Scramble rig (the
- * playroom's Scramble seat) and audited by demos/micro/scramble-turn and
- * demos/micro/scramble-rotate.
+ * Played by playroom/cube-stage.js around a megaminx rig (pass
+ * { voice: megaminxTurnVoice(), timing } to stageCubeView) and audited by
+ * demos/micro/megaminx-turn. MegaDreifach's own stage (PR #153) should
+ * import it from here when it lands.
  */
 import settings from "./settings.js";
 import { twistySlots } from "../twisty.js";
@@ -25,7 +25,7 @@ export function turnContacts(info) {
 }
 
 /** The entry's sounds on the page's shared AudioContext (made once). */
-export function scrambleTurnVoice() {
+export function megaminxTurnVoice() {
     voice ??= createTwistyVoice({ settings, slots, base: SOUNDS });
     return voice;
 }

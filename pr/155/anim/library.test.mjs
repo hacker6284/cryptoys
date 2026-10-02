@@ -24,6 +24,7 @@ for (const name of entries) {
 
 // scramble-turn is approved as Zachary heard it at af9a8fb.
 assert.match(readme, /\| `scramble-turn` \|[^\n]*approved[^\n]*af9a8fb/);
+assert.match(readme, /\| `scramble-turn` \|[^\n]*face-turn sounds approved and LOCKED at `6014bfc`/, "README records the face-turn lock");
 
 const { settings, timing, slots } = await import(new URL("scramble-turn/index.js", here));
 assert.equal(timing, settings.timing, "timing is the settings object itself");
@@ -50,6 +51,17 @@ const { PEAK_VELOCITY, smootherStep } = await import(new URL("twisty.js", here))
 assert.ok(Math.abs(PEAK_VELOCITY - 0.5) < 1e-3, "smootherStep turns fastest half way");
 assert.ok(Math.abs((smootherStep(0.5 + 1e-6) - smootherStep(0.5 - 1e-6)) / 2e-6 - 1.875) < 1e-6, "1.875× the mean speed there");
 const { turnContacts } = await import(new URL("scramble-turn/index.js", here));
+// APPROVED and LOCKED at 6014bfc (Zachary: "All look pretty good."):
+// exactly these entries; nothing else may move them.
+assert.deepEqual(
+    { single: settings.sounds.single, double: settings.sounds.double, triple: settings.sounds.triple },
+    {
+        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, align: "peak-velocity", nudgeMs: 0 },
+        double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, align: "peak-velocity", nudgeMs: 0 },
+        triple: { file: "scramble-turn/triple/triple_spacejoe-486581", gainDb: 6.5, align: "peak-velocity", nudgeMs: 0 },
+    },
+    "the approved face-turn sounds (6014bfc) are unchanged",
+);
 const files = { // decoded: audible centroid (sound.js audibleCentroidMs), loudest sample
     single: { move: "R", centroidMs: 141.2, peakMs: 143.3 },
     double: { move: "R2", centroidMs: 106.9, peakMs: 119.8 },
@@ -75,15 +87,50 @@ assert.equal(settings.sounds.single.file, "scramble-turn/single/single_spacejoe-
 assert.equal(settings.sounds.single.gainDb, 11, "single gain is the approved one");
 assert.equal(fileStart({ peakAtMs: 100 }, 0, 143, 1.4 / 0.7), 200 - 143, "peakAtMs scales with the turn");
 
-// offsetMs sounds (the rotation): the time from the loudest sample to
-// the contact scales the same way.
-const { offsetMs } = settings.sounds.rotation;
-const peakMs = 127.6;
-for (const tempo of [0.5, 1.4, 4]) {
-    const end = 1000 / tempo;
-    const peakAt = fileStart({ offsetMs }, end, peakMs, timing.speed / tempo) + peakMs;
-    assert.ok(Math.abs((end - peakAt) - (-offsetMs - peakMs) * timing.speed / tempo) < 1e-9, `rotation peak at ${tempo}×`);
+// The rotation swish (approved 2026-10-02, its swell at mid-rotation for
+// a quarter turn) follows the same rule: its swell (loudest 10 ms, 124.3
+// ms into the decoded file) at mid-rotation for any rotation and tempo.
+{
+    const rot = settings.sounds.rotation;
+    assert.deepEqual(rot, { file: "scramble-rotate/7_sadiquecat-816261-broomstick-soft", gainDb: -14.9, align: "peak-velocity", centre: "swell", nudgeMs: 0 }, "the approved rotation swish");
+    const file = { swellMs: 124.3, centroidMs: 146.1, peakMs: 127.6 };
+    for (const [move, ms] of [["y", 1000], ["y2", 1500], ["x'", 1000]]) {
+        for (const tempo of [0.5, 1.4, 4]) {
+            const at = 10000;
+            const len = ms / tempo;
+            const [[slot, contactMs, stretch]] = turnContacts({ at, tempo, leaves: [move] });
+            assert.equal(slot, "rotation");
+            const swellAt = fileStart(rot, contactMs, file, stretch) + file.swellMs;
+            assert.ok(Math.abs(swellAt - (at + len / 2)) < 1e-9, `${move} swell at mid-rotation at ${tempo}×`);
+            if (move === "y" && tempo === 1.4) {
+                // Where Zachary approved it: the file 482 ms before the end of
+                // the 714 ms quarter rotation (offsetMs −482, 2026-10-02).
+                assert.ok(Math.abs(fileStart(rot, contactMs, file, stretch) - (at + len - 482)) < 1, "quarter rotation within 1 ms of the approved timing");
+            }
+        }
+    }
 }
-assert.equal(stretchContact(1000, offsetMs, peakMs, 1), 1000, "unchanged at the tuned tempo");
+assert.equal(stretchContact(1000, -482, 127.6, 1), 1000, "offsetMs sounds: unchanged at the tuned tempo");
+
+// megaminx-turn: the default rules from the start (not yet approved).
+{
+    const mm = await import(new URL("megaminx-turn/index.js", here));
+    assert.equal(mm.timing, mm.settings.timing);
+    for (const [slot, move, ms] of [["single", "U", 1000], ["double", "U2", 1500], ["triple", "U3", 2000]]) {
+        const s = mm.settings.sounds[slot];
+        assert.match(s.file, new RegExp(`^megaminx-turn/${slot}/`), `megaminx ${slot}: its own click`);
+        assert.equal(s.align, "peak-velocity", `megaminx ${slot}: centred on peak velocity`);
+        assert.equal(s.offsetMs, undefined);
+        for (const tempo of [0.5, 1.4, 4]) {
+            const [[got, contactMs, stretch]] = mm.turnContacts({ at: 0, tempo, leaves: [move] });
+            assert.equal(got, slot);
+            const start = fileStart(s, contactMs, { centroidMs: 120 }, stretch);
+            assert.ok(Math.abs(start + 120 - ms / tempo / 2) < 1e-9, `megaminx ${slot} centre half way at ${tempo}×`);
+        }
+    }
+    assert.deepEqual(mm.settings.sounds.settle, settings.sounds.settle, "megaminx lands with scramble-turn's muffled pat");
+    assert.equal(mm.settings.sounds.rotation, null);
+    assert.ok(!JSON.stringify(mm.settings.sounds).includes("emapuree"), "no wooden-block thud");
+}
 
 console.log("animation library tests ok");

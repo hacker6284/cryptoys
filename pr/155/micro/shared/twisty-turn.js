@@ -14,6 +14,8 @@ import { amountOf, cubingMs, slotOf, twistySlots } from "../../anim/twisty.js";
  * sounds, exactly as in the playroom. Without it (megaminx-turn, not
  * yet in the library) the page passes its own timing and sounds.
  *
+ * page.order: turns in a full face turn (4; the megaminx 5).
+ * page.timing: the entry's timing for the stage (default: scramble-turn's).
  * page.choice: which settings.choices key picks the move (default "move").
  * page.moves[key]: an array of moves is one step (lift, the moves,
  * settle), turned back on the next loop. { steps: [...] } plays each
@@ -34,21 +36,23 @@ function quarters(move) {
 /**
  * The leaves one round of the loop plays: [...moves, ...undo] for a
  * single step; for { steps } on one face, the steps repeated until the
- * face is back home (R R2 R3 is six quarters: two rounds).
+ * face is back home (`order` turns make a full face turn: 4 on the cube,
+ * so R R2 R3, six quarters, takes two rounds; 5 on the megaminx).
  */
-export function loopLeaves(entry) {
+export function loopLeaves(entry, order = 4) {
     if (Array.isArray(entry)) return [...entry, ...invert(entry)];
     const steps = entry.steps;
     const faces = new Set(steps.map((m) => m.replace(/[\d']+$/, "")));
     if (faces.size !== 1 || /^[xyz]/.test(steps[0])) return [...steps, ...invert(steps)];
-    const net = ((steps.reduce((a, m) => a + quarters(m), 0) % 4) + 4) % 4;
-    const rounds = net === 0 ? 1 : net === 2 ? 2 : 4;
+    const net = ((steps.reduce((a, m) => a + quarters(m), 0) % order) + order) % order;
+    const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+    const rounds = net === 0 ? 1 : order / gcd(net, order);
     return Array.from({ length: rounds }, () => steps).flat();
 }
 
 /** [from, to) leaf ranges, one per loop. */
-function loopSteps(entry) {
-    const leaves = loopLeaves(entry);
+function loopSteps(entry, order) {
+    const leaves = loopLeaves(entry, order);
     if (Array.isArray(entry)) return [[0, entry.length], [entry.length, leaves.length]];
     return leaves.map((_, k) => [k, k + 1]);
 }
@@ -88,7 +92,7 @@ export function mountTwistyTurn(page, settings) {
                 history.replaceState(history.state, "", url);
             }
             try {
-                const stage = viewer ? { voice: page.voice } : { voice: null, timing };
+                const stage = viewer ? { voice: page.voice, ...(page.timing ? { timing: page.timing } : {}) } : { voice: null, timing };
                 adapter.install(ctx.world, { poses: null, prefersReducedMotion: () => false, ...stage });
             } finally {
                 if (page.puzzle) history.replaceState(history.state, "", href);
@@ -117,7 +121,7 @@ export function mountTwistyTurn(page, settings) {
         async reset(ctx) {
             if (!rig?.setAlg) return;
             await rig.settle?.({ snap: true });
-            const alg = loopLeaves(pick(ctx)).join(" ");
+            const alg = loopLeaves(pick(ctx), page.order).join(" ");
             if (alg !== loaded) {
                 rig.setAlg(alg);
                 loaded = alg;
@@ -136,8 +140,8 @@ export function mountTwistyTurn(page, settings) {
             }
             const gen = ctx.alive;
             const entry = pick(ctx);
-            const all = loopLeaves(entry);
-            const ranges = loopSteps(entry);
+            const all = loopLeaves(entry, page.order);
+            const ranges = loopSteps(entry, page.order);
             if (leg >= ranges.length) {
                 // A full round: the cube is home again. A single step and
                 // its undo just play again; a step list rewinds its alg.

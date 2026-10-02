@@ -9,9 +9,11 @@ anim/
   scramble-turn/
     settings.js   the values (edit these)
     index.js      the entry: exports settings and the hooks the demo code calls
+  megaminx-turn/  (same layout)
   sounds/         the files the entries name (generated, see below)
   voice.js        settings.sounds → a sound.js player with contact timing
   twisty.js       cubing.js move timing shared by twisty-puzzle entries
+  twisty-voice.js the lift / turns / landing hooks of a twisty-puzzle entry
 ```
 
 ## The rule
@@ -31,13 +33,16 @@ anim/
    needs his sign-off again; bump the commit here when he gives it.
 
 Microdemos not in this table still keep their own `settings.js` in
-`demos/micro/<page>/`. Each moves here once Zachary approves it.
+`demos/micro/<page>/` until they move here. A new entry starts from the
+default rules: a turn sound's audible centre at the face's peak
+velocity (`align: "peak-velocity"`), the scramble-turn landing pat.
 
 ## Entries
 
 | Entry | Played by | Microdemo | Status |
 |---|---|---|---|
-| `scramble-turn` | playroom Scramble seat (`playroom/cube-stage.js`): a click per face turn, a sound per whole-cube rotation, a muffled pat when the cube lands on the felt | `micro/scramble-turn/` (single, double and triple face turns, one step each), `micro/scramble-rotate/` (rotation) | approved by Zachary: the single face-turn click's file and gain, the landing pat and the lift timing at `af9a8fb`; the rotation sound (Sadiquecat broomstick swish, swell at mid-rotation) on 2026-10-02. Face-turn timing **locked to Zachary's rule** (2026-10-02, superseding the single's af9a8fb/2b5f6d4 timing): "the audible part of the sound should be centered over the part of the animation where the face is at maximum velocity": `align: "peak-velocity"` puts each file's audible centroid half way through its turn (cubing.js smootherStep), at any tempo; pinned by `library.test.mjs`. Double and triple sounds not yet approved |
+| `scramble-turn` | playroom Scramble seat (`playroom/cube-stage.js`): a click per face turn, a sound per whole-cube rotation, a muffled pat when the cube lands on the felt | `micro/scramble-turn/` (single, double and triple face turns, one step each), `micro/scramble-rotate/` (rotation) | approved by Zachary: the single face-turn click's file and gain, the landing pat and the lift timing at `af9a8fb`; the rotation sound (Sadiquecat broomstick swish, swell at mid-rotation) on 2026-10-02; it now follows the turns' rule (`align: "peak-velocity"`, `centre: "swell"`): its swell at mid-rotation for any rotation (y, y2) at any tempo, unchanged (within 1 ms) for the quarter rotation he approved. **Single, double and triple face-turn sounds approved and LOCKED at `6014bfc`** (Zachary: "All look pretty good."): their files, gains, `align: "peak-velocity"` and `nudgeMs: 0`, under his rule "the audible part of the sound should be centered over the part of the animation where the face is at maximum velocity" (each file's audible centroid half way through its turn, cubing.js smootherStep, at any tempo); pinned by `library.test.mjs` |
+| `megaminx-turn` | the megaminx in a cube stage (`playroom/cube-stage.js` with `{ voice: megaminxTurnVoice(), timing }`): a click per face turn (72°), a muffled pat when it lands. MegaDreifach's own stage is on PR #153 (held): import this entry there when it lands | `micro/megaminx-turn/` (single, double and triple turns U, U2, U3, one step each, in the Scramble seat's debug megaminx) | not yet approved. Default rules from the start: SpaceJoe clicks centred on peak face velocity (cubing.js smootherStep, half way); scramble-turn's muffled pat |
 
 ## Sounds
 

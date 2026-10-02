@@ -82,7 +82,7 @@ Moved here from `primitives/key_exchange/bs/SPEC.md` (DHH's #152 review: the spe
 * *One d6 per peg* (formerly the "zero-reroll fallback": 1–2 no peg, 3–4 white, 5–6 red). It is exact, since a d6 splits into thirds, and never needs a re-throw. But it costs one read per hole (100 per grid) instead of one d10 per pair (≈ 55.5 reads with the re-thrown zeros, SPEC §4.7).
 * *All-d6 ship decision* (formerly the "all-d6 fallback"): a d6 hole die (1–2 sea, 3–4 across, 5–6 down; with one heading open, 1–3 sea, 4–6 that heading) plus a separate d6 for the bow. The bow needs its own die because a d6's odd/even splits the halves 1–3 / 4–6 two to one. It has the same distribution as the d12 (`../randomizer-kit/` part B; `alld6_check.py` here, which runs the layout of `alld6.py` through the checks of `../ships-pegs/keygrid_check.py`), at one more read per ship.
 * *The former d6 wording* (d6 sea roll, heading roll, roll again, d6 bow) is a third way to the same distribution. It is the rule the older scripts simulate (`bump_reroll` in `../ships-pegs/rules.py`, `combined.py`), which is why it stays in the evidence. It is no longer an option.
-* All three are exact. They were dropped so the spec has one recipe, not because any of them is wrong. Since dice in the tray now carry no meaning (unread dice are thrown again after a let-go), no layout is needed as a way around a half-used die.
+* All three are exact. They were dropped so the spec has one recipe, not because any of them is wrong. A grid is built in one sitting (§4.2), so no die is ever left half-used and no layout is needed as a way around one.
 
 **Why a ternary walk (cube) and not binary (square)** (SPEC §3 B7, the former §4.10).
 * Squaring per cell would cost about 1.9× less.

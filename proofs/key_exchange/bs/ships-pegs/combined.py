@@ -1,8 +1,10 @@
 """Ships + pegs key grid: the rules are BS SPEC §4.2 (BUILD) and §4.3 (READ, "ships, then pegs").
 Checks here: exhaustive injectivity of the two-pass read (and, not used by the SPEC, an
 interleaved order); the board-only one-pass BUILD with random let-go/resume at hole boundaries
-(step() finishes the whole ship decision, growth and Sub/Cruiser rolls included, before a
-let-go is allowed) against the exact joint model; 10x10 round trips, walk and build statistics.
+under the FORMER let-go rules (dropped 2026-10-02; a grid is now built in one sitting; step()
+finished the whole ship decision, growth and Sub/Cruiser rolls included, before a let-go was
+allowed), kept as historical evidence, against the exact joint model; 10x10 round trips, walk
+and build statistics.
 step() uses the former d6 wording for the ship decision and a d6 per peg (dropped from the SPEC); they have
 exactly the SPEC's distribution (../randomizer-kit/, part B; the row cup gives uniform trits).
 The SPEC dice are simulated in keygrid.py."""
@@ -88,7 +90,9 @@ def step(board, rng, stats):
     """One hands-off-to-hands-off step, reading ONLY the board.  Returns False when done.
     Half-steps: (a) the ship decision at the cursor hole (if no ship covers it), after which
     a white peg is stood in control-lane hole 10; (b) the peg roll, after which the lane
-    peg is lifted and the cursor moved on.  Letting go is allowed after (a) or (b)."""
+    peg is lifted and the cursor moved on.  Under the FORMER let-go rules (dropped 2026-10-02;
+    a grid is now built in one sitting), letting go was allowed after (a) or (b); the let-go
+    code is kept as historical evidence."""
     n, m = board["n"], board["m"]
     h = board["cursor"]
     if h == n * m: return False

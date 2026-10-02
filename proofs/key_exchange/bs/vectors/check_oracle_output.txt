@@ -1,4 +1,4 @@
-bs_vectors.json: sudocode 2c7edef, 15 vectors
+bs_vectors.json: sudocode a57e336, 15 vectors
 ok  exchange_T1_run0: cells 206/208, ships 32/34, trailing misfires A 1 B 0, K = 115146631
 ok  exchange_T1_run3: cells 209/212, ships 37/30, trailing misfires A 6 B 0, K = 353695180
 ok  exchange_T2_run3: cells 207/208, ships 26/31, trailing misfires A 1 B 8, K = 25611588251773982

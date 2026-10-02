@@ -10,11 +10,11 @@ A local run without $SUDOC clones and builds sudoc into $SUDOCODE_DIR (default /
     dd = sudo_py.doubledeal(9)         # DoubleDeal v8..v12 (DOUBLEDEAL table)
     dd.encrypt(msg, key)               # any sudo func, exported or not: plain lists in, plain lists out
 
-Only the generated implementation module is loaded (with its runtime), under the name sudoc gives
-it (_doubledeal_v9_impl, ...; distinct for DoubleDeal v8..v12); sudoc's host API module is not
-used. If the name is already loaded, load() raises rather than alias it: sudoc's py output for
-MegaDreifach v1 and v2 collides on module names, a fix that belongs in sudoc, not here. This file
-is a loader only; the algorithms are sudoc's.
+Builds are isolated per load: each build directory is imported as its own package, registered
+under its unique temporary directory name (not via sys.path), and sudoc's package-relative imports
+keep its modules and runtime inside it. So builds whose modules share names load side by side,
+each with its own runtime. Only the generated implementation module is used; sudoc's host API
+module is not. This file is a loader only; the algorithms are sudoc's.
 
 usage: python3 proofs/sudo_py.py --selftest
 """
@@ -41,34 +41,25 @@ def _outdir():
     return Path(d)
 
 
-def _exec(name, path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-def to_rt(x):
-    """Host value -> sudoc runtime value: list -> CowList (recursively), anything else (int, bool,
-    float) unchanged."""
+def to_rt(x, rt):
+    """Host value -> value of the build's runtime rt: list -> CowList (recursively), anything else
+    (int, bool, float) unchanged."""
     if isinstance(x, list):
-        return sys.modules['_sudo_rt'].lst([to_rt(e) for e in x])
+        return rt.lst([to_rt(e, rt) for e in x])
     return x
 
 
-def host(v):
-    """sudoc runtime value -> plain Python: CowList -> list, record -> SimpleNamespace, tuple ->
-    tuple (recursively). Text is a list of code points in sudo; compare it with text(s)."""
-    rt = sys.modules['_sudo_rt']
+def host(v, rt):
+    """Value of the build's runtime rt -> plain Python: CowList -> list, record -> SimpleNamespace,
+    tuple -> tuple (recursively). Text is a list of code points in sudo; compare it with text(s)."""
     if isinstance(v, rt.CowList):
-        return [host(e) for e in v]
+        return [host(e, rt) for e in v]
     if isinstance(v, rt.CowRec):
         v = v._box.d
     if dataclasses.is_dataclass(v) and not isinstance(v, type):
-        return types.SimpleNamespace(**{f.name: host(getattr(v, f.name)) for f in dataclasses.fields(v)})
+        return types.SimpleNamespace(**{f.name: host(getattr(v, f.name), rt) for f in dataclasses.fields(v)})
     if isinstance(v, tuple):
-        return tuple(host(e) for e in v)
+        return tuple(host(e, rt) for e in v)
     return v
 
 
@@ -83,29 +74,25 @@ class Sudo:
         self.impl = impl
 
     def __getattr__(self, name):
-        f = getattr(self.impl, name)
+        f, rt = getattr(self.impl, name), self.impl._rt
         if not callable(f) or isinstance(f, type):
-            return host(f)
-        return functools.wraps(f)(lambda *args: host(f(*map(to_rt, args))))
+            return host(f, rt)
+        return functools.wraps(f)(lambda *args: host(f(*(to_rt(a, rt) for a in args)), rt))
 
 
 @functools.cache
 def load(sudo):
-    """Build REPO/sudo with sudoc --target py and import it (cached per sudo path)."""
-    out = Path(tempfile.mkdtemp(dir=_outdir()))
+    """Build REPO/sudo with sudoc --target py and import it as its own package (cached per sudo
+    path)."""
+    out = Path(tempfile.mkdtemp(dir=_outdir()))   # mkdtemp names (tmp + [a-z0-9_]) are identifiers
     subprocess.run([sudoc(), 'build', '--target', 'py', '-o', str(out), str(REPO / sudo)],
                    check=True, stdout=subprocess.DEVNULL)
-    rt_path = out / '_sudo_rt.py'
-    if '_sudo_rt' not in sys.modules:          # one runtime per process: identical across builds of one sudoc
-        _exec('_sudo_rt', rt_path)
-    elif Path(sys.modules['_sudo_rt'].__file__).read_bytes() != rt_path.read_bytes():
-        raise RuntimeError(f'{sudo}: _sudo_rt.py differs from the runtime already loaded')
-    impl_path, = out.glob('_*_impl.py')        # one impl per build (no sudo imports yet)
-    name = impl_path.stem
-    if name in sys.modules:
-        raise RuntimeError(f'{sudo}: module {name} is already loaded '
-                           f'(from {getattr(sys.modules[name], "__file__", "?")})')
-    return Sudo(_exec(name, impl_path))
+    pkg, init = out.name, out / '__init__.py'
+    init.touch()                                  # sudoc emits no package file; an empty one
+    spec = importlib.util.spec_from_file_location(pkg, init, submodule_search_locations=[str(out)])
+    sys.modules[pkg] = mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return Sudo(importlib.import_module(f'{pkg}._{Path(sudo).stem}_impl'))
 
 
 def doubledeal(v):
@@ -128,6 +115,8 @@ def _selftest():
                 n += 1
         assert n, path
         print(f'DoubleDeal v{v}: {DOUBLEDEAL[v]} agrees on {n} encrypt vectors')
+    assert doubledeal(11).impl._rt is not doubledeal(12).impl._rt, 'builds share a runtime'
+    print('DoubleDeal v11, v12: each build has its own runtime')
 
 
 if __name__ == '__main__':

@@ -295,32 +295,10 @@ def dice (d12 d6 d10 : List Int) : Dice := ⟨d12, d6, d10, 0, 0, 0⟩
 
 /-! ### §4.2 BUILD, "one hole at a time: ship, then peg"
 
-The build reads three face streams (`Dice`) and an arbitrary let-go list. The theorems
-about it hold for each dice and each let-go list separately; whether the list is fixed
-before the dice are read would matter only to a probability statement, and there is none.
-It is partial (`Option`): it fails when a stream runs out or shows a face off its die, and
-when the let-go list is unusable. No probability is modelled. -/
-
-/-- §4.2 letting go. A let-go point: at the boundary before hole `hole` (`gap = false`), or
-    in the step 1 → 2 gap at hole `hole` (`gap = true`). `hole` is the reading-order index
-    `10·row + col`; it is an arbitrary integer here, and BUILD checks it. -/
-structure LetGo where
-  hole : Int
-  gap : Bool
-  deriving DecidableEq
-
-/-- §4.2: a usable let-go list. Each point is at a die's first hole of the grid (SPEC
-    §4.2): a hole of the 100, in an even (0-based) column, i.e. holes 1, 3, 5, 7, 9 of a
-    row. Each point appears at most once: **bs.sudo's rule (`letgo_unique`); SPEC does not
-    forbid it** (§4.2 discusses letting go and coming back at the same point). A list that
-    repeats a point fails here, as the emitted `build` traps on it, so no theorem covers a
-    build that lets go twice at one point. -/
-def letGoOk (lg : List LetGo) : Bool :=
-  decide lg.Nodup && lg.all (fun x => decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0))
-
-/-- Whether the builder lets go at the point (`hole`, `gap`). -/
-def letsGo (lg : List LetGo) (hole : Nat) (gap : Bool) : Bool :=
-  lg.any (fun x => decide (x.hole = Int.ofNat hole) && x.gap == gap)
+The build reads three face streams (`Dice`). A key grid is built in one sitting, without
+letting go (SPEC §4.2), so there is no let-go input. The theorems about it hold for each
+dice separately. It is partial (`Option`): it fails when a stream runs out or shows a face
+off its die, or when a tray has no unread die. No probability is modelled. -/
 
 /-- §4.2 step 1: roll the hole die (d12), faces 1–12. Fails if the stream has run out or
     the face is off the die. -/
@@ -352,12 +330,6 @@ def throwD10 (d : Dice) : Option (Nat × Dice) :=
 def throwRowCup (d : Dice) : Option (List Nat × Dice) :=
   (List.range 5).foldlM (fun (acc : List Nat × Dice) _ =>
     (throwD10 acc.2).map (fun p => (acc.1 ++ [p.1], p.2))) ([], d)
-
-/-- §4.2 letting go: on coming back, throw again every tray die not yet read (the tray's
-    dice from position `read` on). -/
-def rethrowUnread (d : Dice) (tray : List Nat) (read : Nat) : Option (Dice × List Nat) :=
-  (List.range' read (tray.length - read)).foldlM (fun (acc : Dice × List Nat) k =>
-    (throwD10 acc.1).map (fun p => (p.2, acc.2.set k p.1))) (d, tray)
 
 /-- §4.2 step 2, the keypad (1 2 3 / 4 5 6 / 7 8 9): the row of the face is the peg of the
     pair's first hole (0 none, 1 white, 2 red). For faces 1–9. -/
@@ -440,15 +412,6 @@ structure BuildSt where
   face : Nat
   pegs : Nat → Nat
 
-/-- Coming back from a let-go: throw the unread tray dice again. -/
-def BuildSt.rethrow (st : BuildSt) : Option BuildSt :=
-  (rethrowUnread st.dice st.tray st.read).map (fun p => { st with dice := p.1, tray := p.2 })
-
-/-- §4.2 letting go at the point (`h`, `gap`) if the list says so: on coming back, the unread
-    tray dice are thrown again. -/
-def letGoAt (lg : List LetGo) (h : Nat) (gap : Bool) (st : BuildSt) : Option BuildSt :=
-  if letsGo lg h gap then st.rethrow else some st
-
 /-- §4.2 step 0: at the start of a row (`col = 0`) throw the row cup; nothing read yet. -/
 def rowCupAt (col : Nat) (st : BuildSt) : Option BuildSt :=
   if col = 0 then
@@ -474,27 +437,22 @@ def pegAt (h col : Nat) (st : BuildSt) : Option BuildSt :=
       { st with face := f, read := st.read + 1, pegs := setPeg st.pegs h (keypadFirst f) })
   else some { st with pegs := setPeg st.pegs h (keypadSecond st.face) }
 
-/-- §4.2, one hole (`row`, `col`), `h = 10·row + col`: let go before it, the row cup, grow,
-    let go in the gap, peg. -/
-def holeStep (lg : List LetGo) (row col : Nat) (st : BuildSt) : Option BuildSt :=
-  (letGoAt lg (row * 10 + col) false st).bind fun st =>
+/-- §4.2, one hole (`row`, `col`), `h = 10·row + col`: the row cup, grow, peg. -/
+def holeStep (row col : Nat) (st : BuildSt) : Option BuildSt :=
   (rowCupAt col st).bind fun st =>
-  (growAt row col st).bind fun st =>
-  (letGoAt lg (row * 10 + col) true st).bind (pegAt (row * 10 + col) col)
+  (growAt row col st).bind (pegAt (row * 10 + col) col)
 
 /-- One row: its ten holes in order, the pair face starting at 0. -/
-def rowStep (lg : List LetGo) (row : Nat) (st : BuildSt) : Option BuildSt :=
-  (List.range 10).foldlM (fun st col => holeStep lg row col st) { st with face := 0 }
+def rowStep (row : Nat) (st : BuildSt) : Option BuildSt :=
+  (List.range 10).foldlM (fun st col => holeStep row col st) { st with face := 0 }
 
-/-- §4.2 BUILD over a usable let-go list (else it fails): from an empty grid and an empty
-    tray, the ten rows in order. Returns the key grid and the dice left. -/
-def build (d : Dice) (lg : List LetGo) : Option (Grid × Dice) :=
-  if letGoOk lg then
-    ((List.range 10).foldlM (fun st row => rowStep lg row st)
-      ({ dice := d, tray := [], read := 0, covered := fun _ => false, ships := [], face := 0,
-         pegs := fun _ => 0 } : BuildSt)).map
-      (fun st => (⟨st.ships, (List.range 100).map st.pegs⟩, st.dice))
-  else none
+/-- §4.2 BUILD, in one sitting: from an empty grid and an empty tray, the ten rows in
+    order. Returns the key grid and the dice left. -/
+def build (d : Dice) : Option (Grid × Dice) :=
+  ((List.range 10).foldlM (fun st row => rowStep row st)
+    ({ dice := d, tray := [], read := 0, covered := fun _ => false, ships := [], face := 0,
+       pegs := fun _ => 0 } : BuildSt)).map
+    (fun st => (⟨st.ships, (List.range 100).map st.pegs⟩, st.dice))
 
 /-- A built key grid and how many faces of each die it read (the read counts of the dice
     after the build). -/
@@ -504,11 +462,8 @@ structure Built where
   used6 : Nat
   used10 : Nat
 
-/-- §4.2 BUILD from the given dice, letting go at the given points. -/
-def buildLettingGo (d : Dice) (lg : List LetGo) : Option Built :=
-  (build d lg).map (fun p => ⟨p.1, p.2.next12, p.2.next6, p.2.next10⟩)
-
-/-- §4.2 BUILD without letting go. -/
-def buildKeyGrid (d : Dice) : Option Built := buildLettingGo d []
+/-- §4.2 BUILD from the given dice, with the read counts. -/
+def buildKeyGrid (d : Dice) : Option Built :=
+  (build d).map (fun p => ⟨p.1, p.2.next12, p.2.next6, p.2.next10⟩)
 
 end BsLink2.Spec

@@ -1,16 +1,15 @@
 /-
-  BS Link 2: §4.2 BUILD. The emitted `build_key_grid`, `build_letting_go` and
-  `grow_until_it_bumps` refine `Spec.buildKeyGrid`, `Spec.buildLettingGo` and
-  `Spec.growUntilItBumps`, traps included: the emitted code succeeds with the embedded
-  model result exactly when the model does, and traps exactly when the model fails. The
-  let-go list is an arbitrary input. Every grid BUILD returns is well formed (`build_wf`).
-  No probability. Proof-only.
+  BS Link 2: §4.2 BUILD. The emitted `build_key_grid` and `grow_until_it_bumps` refine
+  `Spec.buildKeyGrid` and `Spec.growUntilItBumps`, traps included: the emitted code
+  succeeds with the embedded model result exactly when the model does, and traps exactly
+  when the model fails. A key grid is built in one sitting, without letting go (SPEC §4.2).
+  Every grid BUILD returns is well formed (`build_wf`). No probability. Proof-only.
 
   `build`'s and `grow_until_it_bumps`'s loop bodies are copied below as a proof device
-  (`holeStepE`, `holeInnerE`, `stage*E`, `rowStepE`, `checkStepE`, `buildAfterE`,
-  `growStepE` / `growAfterE`), the same code up to named loop steps and `_`-prefixed unused binders; `rfl` is the check:
-  `build_eq` and `holeStepE_eq` / `rowStepE_eq` are `rfl`, so the theorems are about the
-  emitted `build`.
+  (`holeStepE`, `holeInnerE`, `stage*E`, `rowStepE`, `buildE`, `growStepE` /
+  `growAfterE`), the same code up to named loop steps and `_`-prefixed unused binders;
+  `rfl` is the check: `build_eq` and `holeStepE_eq` / `rowStepE_eq` are `rfl`, so the
+  theorems are about the emitted `build`.
 -/
 import BsLink2.Link2.Dice
 import BsLink2.Link2.Key
@@ -255,251 +254,6 @@ theorem throw_row_cup_spec (d : Spec.Dice) (hfit : FitsLen d.d10.length) :
   · rw [show List.range 5 = List.range' 0 5 from List.range_eq_range' 5]
     rw [foldlM_range'_shift _ 1 0 5]
     exact bind_some_map _ _
-
-/-! ### rethrow_unread -/
-
-/-- §4.2 letting go: the emitted `rethrow_unread` is `Spec.rethrowUnread`, traps included. -/
-theorem rethrow_unread_spec (d : Spec.Dice) (tray : List Nat) (read : Nat)
-    (hfit : FitsLen d.d10.length) (htr : FitsLen tray.length) :
-    (Bs.rethrow_unread (embDice d) (embed tray) (Int.ofNat read)).toOption =
-      (Spec.rethrowUnread d tray read).map (fun p => (embDice p.1, embed p.2)) := by
-  unfold Bs.rethrow_unread Spec.rethrowUnread
-  rw [listLen_embed, subI_len_one _ htr, ok_bind, except_bind_pure, fuelRange_eq]
-  by_cases hr : read < tray.length
-  · rw [show Int.ofNat tray.length - 1 = Int.ofNat (tray.length - 1) by
-      simp only [ofNat_eq_natCast]; omega]
-    refine (loop_opt (S := Spec.Dice × List Nat) (fun s => (embed s.2, embDice s.1)) _ _ _
-      (fun k s => (Spec.throwD10 s.1).map (fun p => (p.2, s.2.set k p.1)))
-      (fun _ s => s.1.d10 = d.d10 ∧ s.2.length = tray.length)
-      (fun s => some (embDice s.1, embed s.2)) read tray.length hr ?_ ?_ ?_ (d, tray)
-      ⟨rfl, rfl⟩).trans ?_
-    · intro i s hi1 hi2 hP
-      obtain ⟨dd, tr⟩ := s
-      dsimp only at hP ⊢
-      rw [if_neg (by simp only [ofNat_eq_natCast]; omega), toOpt_bind, toOpt_bind,
-        throw_d10_spec dd (by rw [hP.1]; exact hfit)]
-      cases ht : Spec.throwD10 dd with
-      | none => rfl
-      | some p =>
-        obtain ⟨f, dd'⟩ := p
-        have hi : i < (embed tr).size := by rw [size_embed]; omega
-        simp only [Option.map_some', Option.some_bind]
-        rw [toOpt_bind, putL_ofNat _ _ _ hi, toOpt_ok, Option.some_bind, embed_set]
-        by_cases hl : i + 1 = tray.length
-        · have hb : (Int.ofNat i == Int.ofNat (tray.length - 1)) = true := by
-            apply beq_iff_eq.mpr; congr 1; omega
-          simp only [hb, if_true, if_pos hl, toOpt_ok]
-          rfl
-        · have hb : (Int.ofNat i == Int.ofNat (tray.length - 1)) = false := by
-            apply beq_false_of_ne; intro h; have := Int.ofNat.inj h; omega
-          simp only [hb, Bool.false_eq_true, if_false, if_neg hl, toOpt_bind,
-            addI_ofNat_one _ (FitsLen.of_le htr (show i + 1 ≤ tray.length by omega)), toOpt_ok,
-            Option.some_bind]
-          rfl
-    · intro i s s' _ _ hP hm
-      obtain ⟨dd, tr⟩ := s
-      cases ht : Spec.throwD10 dd with
-      | none => simp [ht] at hm
-      | some p =>
-        simp only [ht, Option.map_some', Option.some.injEq] at hm
-        subst hm
-        exact ⟨(throwD10_d10 ht).trans hP.1, by rw [List.length_set]; exact hP.2⟩
-    · intro j s _; rfl
-    · exact bind_some_map _ _
-  · refine (congrArg Except.toOption (loop_opt_empty (S := Spec.Dice × List Nat)
-      (fun s => (embed s.2, embDice s.1)) _ _ _ read _ ?_ (d, tray) ?_)).trans ?_
-    · simp only [ofNat_eq_natCast]; omega
-    · dsimp only; rw [if_pos (by simp only [ofNat_eq_natCast]; omega)]; rfl
-    · rw [show tray.length - read = 0 by omega]; rfl
-
-/-! ### Let-go lists -/
-
-/-- A model let-go point as the emitted record. -/
-def embLetGo (x : Spec.LetGo) : Bs.LetGo := ⟨x.hole, x.gap⟩
-
-/-- A model let-go list as the emitted array. -/
-def embLG (lg : List Spec.LetGo) : Array Bs.LetGo := (lg.map embLetGo).toArray
-
-theorem size_embLG (lg : List Spec.LetGo) : (embLG lg).size = lg.length := by simp [embLG]
-
-theorem embLG_get (lg : List Spec.LetGo) (i : Nat) (h : i < (embLG lg).size) :
-    (embLG lg)[i] = embLetGo (lg[i]'(by rw [size_embLG] at h; exact h)) := by
-  simp [embLG]
-
-/-- §4.2: the emitted `lets_go` is `Spec.letsGo`; it never traps. -/
-theorem lets_go_spec (lg : List Spec.LetGo) (hole : Nat) (gap : Bool) (hfit : FitsLen lg.length) :
-    Bs.lets_go (embLG lg) (Int.ofNat hole) gap = .ok (Spec.letsGo lg hole gap) := by
-  unfold Bs.lets_go
-  rw [show SudoRt.listLen (embLG lg) = Int.ofNat lg.length by rw [listLen_eq, size_embLG],
-    subI_len_one _ hfit, ok_bind, except_bind_pure, fuelRange_eq]
-  cases hl : lg.length with
-  | zero =>
-    have : lg = [] := List.eq_nil_of_length_eq_zero hl
-    subst this
-    rfl
-  | succ n =>
-    rw [show Int.ofNat (n + 1) - 1 = Int.ofNat n by simp only [ofNat_eq_natCast]; omega]
-    refine asc_scan_ret_goal true _ _ _
-      (fun i => if h : i < lg.length then decide (lg[i].hole = Int.ofNat hole) && lg[i].gap == gap
-        else false) 0 n (Nat.zero_le _) _ ?_ ?_ ?_
-    · intro i _ hi
-      have hi' : i < lg.length := by omega
-      have hi'' : i < (embLG lg).size := by rw [size_embLG]; omega
-      dsimp only
-      rw [if_neg (by simp only [ofNat_eq_natCast]; omega), atL_ofNat _ _ hi'', ok_bind,
-        embLG_get, dif_pos hi']
-      simp only [embLetGo, SudoRt.SEq.beq]
-      by_cases hh : lg[i].hole = Int.ofNat hole
-      · simp only [hh, decide_True, if_true, atL_ofNat _ _ hi'', ok_bind, embLG_get, pure_eq_ok,
-          ok_bind, Bool.true_and]
-        cases lg[i].gap <;> cases gap <;> simp <;> by_cases hn : i = n <;> simp [hn] <;>
-          (first | rfl | (rw [if_neg (by omega), show ((i : Int)) = Int.ofNat i from rfl,
-          addI_ofNat_one i (FitsLen.of_le hfit (show i + 1 ≤ lg.length by omega))]; rfl))
-      · simp only [hh, decide_False, if_false, pure_eq_ok, ok_bind, Bool.false_and,
-          Bool.false_eq_true]
-        by_cases hn : i = n <;> simp [hn] <;>
-          (first | rfl | (rw [if_neg (by omega), show ((i : Int)) = Int.ofNat i from rfl,
-          addI_ofNat_one i (FitsLen.of_le hfit (show i + 1 ≤ lg.length by omega))]; rfl))
-    · intro hall
-      unfold Spec.letsGo
-      have : lg.any (fun x => decide (x.hole = Int.ofNat hole) && x.gap == gap) = false := by
-        rw [List.any_eq_false]
-        intro x hx
-        obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.mp hx
-        have := hall i (Nat.zero_le _) (by omega)
-        dsimp only at this
-        rw [dif_pos hi] at this
-        rw [this]; decide
-      rw [this]; rfl
-    · intro i _ hi hb
-      have hi' : i < lg.length := by omega
-      dsimp only at hb
-      rw [dif_pos hi'] at hb
-      unfold Spec.letsGo
-      have : lg.any (fun x => decide (x.hole = Int.ofNat hole) && x.gap == gap) = true :=
-        List.any_eq_true.mpr ⟨lg[i], List.getElem_mem hi', hb⟩
-      rw [this]; rfl
-
-theorem beq_embLetGo (a b : Spec.LetGo) :
-    SudoRt.SEq.beq (embLetGo a) (embLetGo b) = decide (a = b) := by
-  obtain ⟨h1, g1⟩ := a
-  obtain ⟨h2, g2⟩ := b
-  show (decide (h1 = h2) && decide (g1 = g2)) = _
-  by_cases e1 : h1 = h2 <;> by_cases e2 : g1 = g2 <;> simp [e1, e2]
-
-open Classical in
-/-- Whether entry `i` of the list equals a later one (classical; a proof device). -/
-noncomputable def dupAt (lg : List Spec.LetGo) (i : Nat) : Bool :=
-  if ∃ j, ∃ (hi : i < lg.length) (hj : j < lg.length), i < j ∧ lg[i] = lg[j] then true else false
-
-theorem nodup_iff_dupAt (lg : List Spec.LetGo) :
-    lg.Nodup ↔ ∀ i, i < lg.length → dupAt lg i = false := by
-  unfold List.Nodup
-  rw [List.pairwise_iff_getElem]
-  constructor
-  · intro h i hi
-    unfold dupAt
-    rw [if_neg]
-    rintro ⟨j, hi', hj, hij, he⟩
-    exact h i j hi' hj hij he
-  · intro h i j hi hj hij he
-    have := h i hi
-    unfold dupAt at this
-    rw [if_pos ⟨j, hi, hj, hij, he⟩] at this
-    cases this
-
-/-- §4.2: the emitted `letgo_unique` says whether the let-go list has no repeats. -/
-theorem letgo_unique_spec (lg : List Spec.LetGo) (hfit : FitsLen lg.length) :
-    Bs.letgo_unique (embLG lg) = .ok (decide lg.Nodup) := by
-  unfold Bs.letgo_unique
-  rw [show SudoRt.listLen (embLG lg) = Int.ofNat lg.length by rw [listLen_eq, size_embLG],
-    subI_len_one _ hfit, ok_bind, except_bind_pure, fuelRange_eq]
-  cases hl : lg.length with
-  | zero =>
-    have : lg = [] := List.eq_nil_of_length_eq_zero hl
-    subst this
-    rfl
-  | succ n =>
-    rw [show Int.ofNat (n + 1) - 1 = Int.ofNat n by simp only [ofNat_eq_natCast]; omega]
-    refine asc_scan_ret_goal false _ _ _ (dupAt lg) 0 n (Nat.zero_le _) _ ?_ ?_ ?_
-    · intro i _ hi
-      dsimp only
-      rw [if_neg (by simp only [ofNat_eq_natCast]; omega),
-        addI_ofNat_one _ (FitsLen.of_le hfit (show i + 1 ≤ lg.length by omega)), ok_bind,
-        ok_bind, except_bind_pure, fuelRange_eq]
-      have hinner : ∀ (R : Except SudoRt.Trap (SudoRt.Flow Unit Bool)),
-          R = .ok (if dupAt lg i then .ret false else .cont ()) → ∀ step after,
-          (∀ j, i + 1 ≤ j → j ≤ n → step (Int.ofNat j) =
-            if (if h : j < lg.length ∧ i < lg.length then decide (lg[i] = lg[j]) else false)
-            then .ok (.ret false)
-            else if j = n then .ok (.brk (Int.ofNat j)) else .ok (.cont (Int.ofNat (j + 1)))) →
-          (∀ j, after j = .ok (.cont ())) → 
-          (Int.ofNat (i + 1) > Int.ofNat n → step (Int.ofNat (i + 1)) = .ok (.brk (Int.ofNat (i + 1)))) →
-          SudoRt.runLoopOn (Int.ofNat (i + 1)) (fuelRange (Int.ofNat (i + 1)) (Int.ofNat n))
-            step after (fun r => pure (SudoRt.Flow.ret r)) = R := by
-        intro R hR step after hst haf hemp
-        by_cases hlast : i = n
-        · subst hlast
-          have hgt : Int.ofNat (i + 1) > Int.ofNat i := by simp only [ofNat_eq_natCast]; omega
-          rw [fuelRange_gt hgt, show (1 : Nat) = 0 + 1 from rfl, runLoopOn_succ, hemp hgt]
-          have hd : dupAt lg i = false := by
-            unfold dupAt
-            rw [if_neg (by rintro ⟨j, _, hj, hij, _⟩; omega)]
-          rw [hR, hd]
-          exact haf _
-        · refine asc_scan_ret_goal false step after _ _ (i + 1) n (by omega) R hst ?_ ?_
-          · intro hall
-            have hd : dupAt lg i = false := by
-              unfold dupAt
-              rw [if_neg]
-              rintro ⟨j, hi', hj, hij, he⟩
-              have := hall j (by omega) (by omega)
-              rw [dif_pos ⟨hj, hi'⟩, decide_eq_true he] at this
-              cases this
-            rw [hR, haf, hd]; rfl
-          · intro j h1 h2 hb
-            rw [hR]
-            have hj : j < lg.length ∧ i < lg.length := by omega
-            rw [dif_pos hj] at hb
-            have hex : ∃ j, ∃ (hi : i < lg.length) (hj : j < lg.length), i < j ∧ lg[i] = lg[j] :=
-              ⟨j, hj.2, hj.1, by omega, of_decide_eq_true hb⟩
-            have hd : dupAt lg i = true := by unfold dupAt; rw [if_pos hex]
-            rw [hd]; rfl
-      rw [hinner _ rfl]
-      · by_cases hd : dupAt lg i = true
-        · rw [if_pos hd, if_pos hd]; rfl
-        · rw [if_neg hd, if_neg hd]
-          by_cases hn : i = n
-          · subst hn; rw [if_pos rfl]; simp; rfl
-          · have hb : (Int.ofNat i == Int.ofNat n) = false := by
-              apply beq_false_of_ne; intro h; have := Int.ofNat.inj h; omega
-            rw [if_neg hn]; simp only [hb]; rfl
-      · intro j h1 h2
-        have hj : j < lg.length := by omega
-        have hi' : i < lg.length := by omega
-        rw [if_neg (by simp only [ofNat_eq_natCast]; omega),
-          atL_ofNat _ _ (by rw [size_embLG]; exact hi'), ok_bind,
-          atL_ofNat _ _ (by rw [size_embLG]; exact hj), ok_bind, embLG_get, embLG_get,
-          beq_embLetGo, dif_pos ⟨hj, hi'⟩]
-        by_cases he : lg[i] = lg[j]
-        · simp only [decide_eq_true he, if_true]; rfl
-        · simp only [decide_eq_false he, Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
-          by_cases hn : j = n
-          · subst hn; simp
-          · have hb : (Int.ofNat j == Int.ofNat n) = false := by
-              apply beq_false_of_ne; intro h; have := Int.ofNat.inj h; omega
-            simp only [hb, if_neg hn, Bool.false_eq_true, if_false,
-              addI_ofNat_one _ (FitsLen.of_le hfit (show j + 1 ≤ lg.length by omega)), ok_bind]
-      · intro j; rfl
-      · intro hgt; dsimp only; rw [if_pos hgt]; rfl
-    · intro hall
-      rw [decide_eq_true ((nodup_iff_dupAt lg).mpr (fun i hi => hall i (Nat.zero_le _) (by omega)))]
-      rfl
-    · intro i _ hi hb
-      have : ¬ lg.Nodup := fun h => by
-        rw [(nodup_iff_dupAt lg).mp h i (by omega)] at hb; cases hb
-      rw [decide_eq_false this]
-      rfl
 
 /-! ### keypad, has_room, cover -/
 
@@ -1146,35 +900,6 @@ theorem throwRowCup_facts {d d' : Spec.Dice} {tray : List Nat}
   have := key (List.range 5) ([], d) (tray, d') (by intro y hy; cases hy) h
   exact ⟨by simpa using this.1, this.2.1, this.2.2⟩
 
-theorem rethrowUnread_facts {d d' : Spec.Dice} {tray tray' : List Nat} {read : Nat}
-    (ht : TrayOk tray) (h : Spec.rethrowUnread d tray read = some (d', tray')) :
-    tray'.length = tray.length ∧ TrayOk tray' ∧ Streams d d' := by
-  unfold Spec.rethrowUnread at h
-  have key : ∀ (k : List Nat) (acc : Spec.Dice × List Nat) (r : Spec.Dice × List Nat),
-      TrayOk acc.2 → k.foldlM (fun (acc : Spec.Dice × List Nat) k =>
-        (Spec.throwD10 acc.1).map (fun p => (p.2, acc.2.set k p.1))) acc = some r →
-      r.2.length = acc.2.length ∧ TrayOk r.2 ∧ Streams acc.1 r.1 := by
-    intro k
-    induction k with
-    | nil => intro acc r ht h; cases h; exact ⟨rfl, ht, Streams.refl _⟩
-    | cons x k ih =>
-      intro acc r ht h
-      simp only [List.foldlM_cons] at h
-      cases hd : Spec.throwD10 acc.1 with
-      | none => rw [hd] at h; cases h
-      | some p =>
-        obtain ⟨f, d1⟩ := p
-        rw [hd] at h
-        obtain ⟨hf1, hf2, hs⟩ := throwD10_facts hd
-        have := ih (d1, acc.2.set x f) r (by
-          intro y hy
-          rcases List.mem_or_eq_of_mem_set hy with hy | hy
-          · exact ht y hy
-          · omega) h
-        exact ⟨by rw [this.1]; simp, this.2.1, hs.trans this.2.2⟩
-  have := key _ (d, tray) (d', tray') ht h
-  exact this
-
 theorem rollHole_facts {d d' : Spec.Dice} {f : Nat} (h : Spec.rollHole d = some (f, d')) :
     Streams d d' := by
   unfold Spec.rollHole at h
@@ -1331,94 +1056,80 @@ theorem growUntilItBumps_facts (d d' : Spec.Dice) (cov : Nat → Bool) (row col 
 /-! ### build: one hole -/
 
 open Bs in
-/-- The emitted hole step from the peg (keypad row at a pair's first hole, column at its second), as emitted (each copy in `build` is the same up to binder names). -/
-def stageEE (_letgo : Array LetGo) (_row : Int) (col h : Int) (d : Dice) (tray : Array Int) (read : Int)
+/-- The emitted hole step from the peg (keypad row at a pair's first hole, column at its
+    second), as emitted (each copy in `build` is the same up to binder names). -/
+def stageEE (col h : Int) (d : Dice) (tray : Array Int) (read : Int)
     (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
+    Except SudoRt.Trap (SudoRt.Flow (Array Int × Dice × Int × Array Bool × Array Ship × Int × Array Int)
       (KeyGrid × Dice)) :=
   do
-    let _t595 ← SudoRt.modI col (2 : Int)
-    if (SudoRt.SEq.beq _t595 (0 : Int)) then
+    let _t560 ← SudoRt.modI col (2 : Int)
+    if (SudoRt.SEq.beq _t560 (0 : Int)) then
       do
-        let _t597 ← SudoRt.atL tray read
-        let face := _t597
-        let _t598 ← SudoRt.addI read (1 : Int)
-        let read := _t598
-        let _ix599 := h
-        let _t600 ← keypad_first face
-        let _t601 ← SudoRt.putL pegs _ix599 _t600
-        let pegs := _t601
-        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
+        let _t562 ← SudoRt.atL tray read
+        let face := _t562
+        let _t563 ← SudoRt.addI read (1 : Int)
+        let read := _t563
+        let _ix564 := h
+        let _t565 ← keypad_first face
+        let _t566 ← SudoRt.putL pegs _ix564 _t565
+        let pegs := _t566
+        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (tray, d, read, covered, ships, face, pegs))
     else
       do
-        let _ix602 := h
-        let _t603 ← keypad_second face
-        let _t604 ← SudoRt.putL pegs _ix602 _t603
-        let pegs := _t604
-        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, face, pegs))
-open Bs in
-/-- The emitted hole step from letting go in the step 1 → 2 gap, then the peg (`stageEE`). -/
-def stageDE (letgo : Array LetGo) (row : Int) (col h : Int) (d : Dice) (tray : Array Int) (read : Int)
-    (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
-      (KeyGrid × Dice)) :=
-  do
-    let _t591 ← lets_go letgo h true
-    if _t591 then
-      do
-        let _io592 ← rethrow_unread d tray read
-        let ⟨_iw0593, _iw1594⟩ := _io592
-        stageEE letgo row col h _iw0593 _iw1594 read covered ships face pegs
-    else
-      stageEE letgo row col h d tray read covered ships face pegs
+        let _ix567 := h
+        let _t568 ← keypad_second face
+        let _t569 ← SudoRt.putL pegs _ix567 _t568
+        let pegs := _t569
+        pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (tray, d, read, covered, ships, face, pegs))
 
 open Bs in
-/-- The emitted hole step from growing until it bumps at an uncovered hole, then the gap
-    let-go and the peg (`stageDE`). -/
-def stageCE (letgo : Array LetGo) (row col h : Int) (d : Dice) (tray : Array Int) (read : Int)
+/-- The emitted hole step from growing until it bumps at an uncovered hole, then the peg
+    (`stageEE`). -/
+def stageCE (row col h : Int) (d : Dice) (tray : Array Int) (read : Int)
     (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
+    Except SudoRt.Trap (SudoRt.Flow (Array Int × Dice × Int × Array Bool × Array Ship × Int × Array Int)
       (KeyGrid × Dice)) :=
   do
-    let _t583 ← SudoRt.atL covered h
-    if (!( _t583 )) then
+    let _t570 ← SudoRt.atL covered h
+    if (!( _t570 )) then
       do
-        let _io584 ← grow_until_it_bumps d covered row col
-        let ⟨_ret585, _iw0586⟩ := _io584
-        match (_ret585 : Option (Ship)) with
+        let _io571 ← grow_until_it_bumps d covered row col
+        let ⟨_ret572, _iw0573⟩ := _io571
+        match (_ret572 : Option (Ship)) with
         | some s =>
           do
-            let _io587 ← cover covered s
-            let ⟨_nr589, _⟩ := SudoRt.appendL ships s
-            stageDE letgo row col h _iw0586 tray read _io587 _nr589 face pegs
+            let _io574 ← cover covered s
+            let ⟨_nr576, _⟩ := SudoRt.appendL ships s
+            stageEE col h _iw0573 tray read _io574 _nr576 face pegs
         | _ =>
           do
-            match (_ret585 : Option (Ship)) with
-            | none => stageDE letgo row col h _iw0586 tray read covered ships face pegs
+            match (_ret572 : Option (Ship)) with
+            | none => stageEE col h _iw0573 tray read covered ships face pegs
             | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
     else
-      stageDE letgo row col h d tray read covered ships face pegs
+      stageEE col h d tray read covered ships face pegs
 
 open Bs in
 /-- The emitted hole step from the row cup (at a row's first hole), then `stageCE`. -/
-def stageBE (letgo : Array LetGo) (row col h : Int) (d : Dice) (tray : Array Int) (read : Int)
+def stageBE (row col h : Int) (d : Dice) (tray : Array Int) (read : Int)
     (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
+    Except SudoRt.Trap (SudoRt.Flow (Array Int × Dice × Int × Array Bool × Array Ship × Int × Array Int)
       (KeyGrid × Dice)) :=
   do
     if (SudoRt.SEq.beq col (0 : Int)) then
       do
-        let _io580 ← throw_row_cup d
-        let ⟨_ret581, _iw0582⟩ := _io580
-        stageCE letgo row col h _iw0582 _ret581 (0 : Int) covered ships face pegs
+        let _io529 ← throw_row_cup d
+        let ⟨_ret530, _iw0531⟩ := _io529
+        stageCE row col h _iw0531 _ret530 (0 : Int) covered ships face pegs
     else
-      stageCE letgo row col h d tray read covered ships face pegs
+      stageCE row col h d tray read covered ships face pegs
 
 
-/-- A model build state as the emitted loop state. -/
+/-- A model build state as the emitted loop state (the emitted loop carries the tray first). -/
 def embSt (st : Spec.BuildSt) :
-    Bs.Dice × Array Int × Int × Array Bool × Array Bs.Ship × Int × Array Int :=
-  (embDice st.dice, embed st.tray, Int.ofNat st.read, tab st.covered,
+    Array Int × Bs.Dice × Int × Array Bool × Array Bs.Ship × Int × Array Int :=
+  (embed st.tray, embDice st.dice, Int.ofNat st.read, tab st.covered,
     (st.ships.map embShip).toArray, Int.ofNat st.face, tab (fun h => Int.ofNat (st.pegs h)))
 
 /-- What the hole step needs of the state before hole (`row`, `col`). -/
@@ -1438,10 +1149,10 @@ theorem tab_pegs_set (pegs : Nat → Nat) (h v : Nat) (hh : h < 100) :
   by_cases e : x = h <;> simp [e]
 
 /-- The emitted peg stage is `Spec.pegAt`. -/
-theorem stageE_spec (lg : List Spec.LetGo) (row col : Nat) (hr : row < 10) (hc : col < 10)
+theorem stageE_spec (row col : Nat) (hr : row < 10) (hc : col < 10)
     (st : Spec.BuildSt) (hread : st.read ≤ 5) (htray : TrayOk st.tray)
     (hface : col % 2 = 1 → 1 ≤ st.face ∧ st.face ≤ 9) :
-    (stageEE (embLG lg) (Int.ofNat row) (Int.ofNat col) (Int.ofNat (row * 10 + col))
+    (stageEE (Int.ofNat col) (Int.ofNat (row * 10 + col))
       (embDice st.dice) (embed st.tray) (Int.ofNat st.read) (tab st.covered)
       (st.ships.map embShip).toArray (Int.ofNat st.face)
       (tab (fun x => Int.ofNat (st.pegs x)))).toOption =
@@ -1472,56 +1183,27 @@ theorem stageE_spec (lg : List Spec.LetGo) (row col : Nat) (hr : row < 10) (hc :
       putL_ofNat _ _ _ hh, ok_bind, tab_pegs_set _ _ _ (by omega)]
     rfl
 
-/-- The emitted gap let-go and peg stage is `Spec.letGoAt … true` then `Spec.pegAt`. -/
-theorem stageD_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : Nat)
-    (hr : row < 10) (hc : col < 10) (st : Spec.BuildSt) (h10 : FitsLen st.dice.d10.length)
-    (hread : st.read ≤ 5) (htray : TrayOk st.tray) (hlen : st.tray.length ≤ 5)
-    (hface : col % 2 = 1 → 1 ≤ st.face ∧ st.face ≤ 9) :
-    (stageDE (embLG lg) (Int.ofNat row) (Int.ofNat col) (Int.ofNat (row * 10 + col))
-      (embDice st.dice) (embed st.tray) (Int.ofNat st.read) (tab st.covered)
-      (st.ships.map embShip).toArray (Int.ofNat st.face)
-      (tab (fun x => Int.ofNat (st.pegs x)))).toOption =
-    ((Spec.letGoAt lg (row * 10 + col) true st).bind (Spec.pegAt (row * 10 + col) col)).map
-      (fun st' => SudoRt.Flow.cont (embSt st')) := by
-  unfold stageDE Spec.letGoAt
-  rw [lets_go_spec _ _ _ hlg, ok_bind]
-  by_cases hA : Spec.letsGo lg (row * 10 + col) true = true
-  · rw [if_pos hA, if_pos hA]
-    unfold Spec.BuildSt.rethrow
-    rw [toOpt_bind, rethrow_unread_spec _ _ _ h10 (fits_small (by omega))]
-    cases hrt : Spec.rethrowUnread st.dice st.tray st.read with
-    | none => rfl
-    | some p =>
-      obtain ⟨d1, t1⟩ := p
-      obtain ⟨hl1, ht1, _⟩ := rethrowUnread_facts htray hrt
-      simp only [Option.map_some', Option.some_bind]
-      exact stageE_spec lg row col hr hc { st with dice := d1, tray := t1 } hread ht1 hface
-  · rw [if_neg hA, if_neg hA]
-    simp only [Option.some_bind]
-    exact stageE_spec lg row col hr hc st hread htray hface
-
 theorem ships_push (l : List Spec.Ship) (s : Spec.Ship) :
     (l.map embShip).toArray.push (embShip s) = ((l ++ [s]).map embShip).toArray := by
   simp [Array.push]
 
-/-- The emitted grow stage (then the gap let-go and the peg) is `Spec.growAt` then the rest. -/
-theorem stageC_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : Nat)
+/-- The emitted grow stage (then the peg) is `Spec.growAt` then `Spec.pegAt`. -/
+theorem stageC_spec (row col : Nat)
     (hr : row < 10) (hc : col < 10) (st : Spec.BuildSt) (hd : DiceFit st.dice)
-    (hread : st.read ≤ 5) (htray : TrayOk st.tray) (hlen : st.tray.length ≤ 5)
+    (hread : st.read ≤ 5) (htray : TrayOk st.tray)
     (hface : col % 2 = 1 → 1 ≤ st.face ∧ st.face ≤ 9) :
-    (stageCE (embLG lg) (Int.ofNat row) (Int.ofNat col) (Int.ofNat (row * 10 + col))
+    (stageCE (Int.ofNat row) (Int.ofNat col) (Int.ofNat (row * 10 + col))
       (embDice st.dice) (embed st.tray) (Int.ofNat st.read) (tab st.covered)
       (st.ships.map embShip).toArray (Int.ofNat st.face)
       (tab (fun x => Int.ofNat (st.pegs x)))).toOption =
-    ((Spec.growAt row col st).bind fun st =>
-      (Spec.letGoAt lg (row * 10 + col) true st).bind (Spec.pegAt (row * 10 + col) col)).map
+    ((Spec.growAt row col st).bind (Spec.pegAt (row * 10 + col) col)).map
       (fun st' => SudoRt.Flow.cont (embSt st')) := by
   unfold stageCE Spec.growAt
   rw [atL_ofNat _ _ (by rw [tab_size]; omega), ok_bind, tab_get]
   by_cases hcv : st.covered (row * 10 + col) = true
   · rw [hcv]
     simp only [Bool.not_true, Bool.false_eq_true, if_false, Option.some_bind]
-    exact stageD_spec lg hlg row col hr hc st hd.2.2 hread htray hlen hface
+    exact stageE_spec row col hr hc st hread htray hface
   · have hcv' : st.covered (row * 10 + col) = false := by simpa using hcv
     rw [hcv']
     simp only [Bool.not_false, if_true]
@@ -1530,34 +1212,33 @@ theorem stageC_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : 
     | none => rfl
     | some p =>
       obtain ⟨o, d1⟩ := p
-      obtain ⟨hs, hon⟩ := growUntilItBumps_facts _ _ _ _ _ _ hr hc hg
-      have h10 : FitsLen d1.d10.length := by rw [hs.2.2]; exact hd.2.2
+      obtain ⟨_, hon⟩ := growUntilItBumps_facts _ _ _ _ _ _ hr hc hg
       cases o with
       | none =>
         simp only [Option.map_some', Option.some_bind, Option.map_none']
-        exact stageD_spec lg hlg row col hr hc { st with dice := d1 } h10 hread htray hlen hface
+        exact stageE_spec row col hr hc { st with dice := d1 } hread htray hface
       | some s =>
         simp only [Option.map_some', Option.some_bind]
         rw [cover_spec _ _ (hon s rfl), ok_bind, appendL_spec, ships_push]
-        exact stageD_spec lg hlg row col hr hc
+        exact stageE_spec row col hr hc
           { st with dice := d1, covered := Spec.cover st.covered s, ships := st.ships ++ [s] }
-          h10 hread htray hlen hface
+          hread htray hface
 
 theorem DiceFit.of_streams {d0 d : Spec.Dice} (hd : DiceFit d0) (hs : Streams d0 d) : DiceFit d :=
   ⟨by rw [hs.1]; exact hd.1, by rw [hs.2.1]; exact hd.2.1, by rw [hs.2.2]; exact hd.2.2⟩
 
-/-- The emitted hole step after the first let-go (row cup, grow, gap let-go, peg) is
-    `Spec.rowCupAt` then the rest. -/
-theorem stageB_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : Nat)
+/-- The emitted hole step after the hole index (row cup, grow, peg) is `Spec.rowCupAt` then
+    the rest. -/
+theorem stageB_spec (row col : Nat)
     (hr : row < 10) (hc : col < 10) (st : Spec.BuildSt) (hd : DiceFit st.dice)
-    (hread : st.read ≤ 5) (htray : TrayOk st.tray) (hlen : st.tray.length ≤ 5)
+    (hread : st.read ≤ 5) (htray : TrayOk st.tray)
     (hface : col % 2 = 1 → 1 ≤ st.face ∧ st.face ≤ 9) :
-    (stageBE (embLG lg) (Int.ofNat row) (Int.ofNat col) (Int.ofNat (row * 10 + col))
+    (stageBE (Int.ofNat row) (Int.ofNat col) (Int.ofNat (row * 10 + col))
       (embDice st.dice) (embed st.tray) (Int.ofNat st.read) (tab st.covered)
       (st.ships.map embShip).toArray (Int.ofNat st.face)
       (tab (fun x => Int.ofNat (st.pegs x)))).toOption =
-    ((Spec.rowCupAt col st).bind fun st => (Spec.growAt row col st).bind fun st =>
-      (Spec.letGoAt lg (row * 10 + col) true st).bind (Spec.pegAt (row * 10 + col) col)).map
+    ((Spec.rowCupAt col st).bind fun st =>
+      (Spec.growAt row col st).bind (Spec.pegAt (row * 10 + col) col)).map
       (fun st' => SudoRt.Flow.cont (embSt st')) := by
   unfold stageBE Spec.rowCupAt
   have hb : SudoRt.SEq.beq (Int.ofNat col) (0 : Int) = decide (col = 0) := by
@@ -1572,58 +1253,51 @@ theorem stageB_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : 
     | none => rfl
     | some p =>
       obtain ⟨t1, d1⟩ := p
-      obtain ⟨hl1, ht1, hs⟩ := throwRowCup_facts ht
+      obtain ⟨_, ht1, hs⟩ := throwRowCup_facts ht
       simp only [Option.map_some', Option.some_bind]
-      exact stageC_spec lg hlg row 0 hr hc { st with dice := d1, tray := t1, read := 0 }
-        (hd.of_streams hs) (Nat.zero_le _) ht1 (by show t1.length ≤ 5; omega) (by intro h; simp at h)
+      exact stageC_spec row 0 hr hc { st with dice := d1, tray := t1, read := 0 }
+        (hd.of_streams hs) (Nat.zero_le _) ht1 (by intro h; simp at h)
   · simp only [h0, decide_False, Bool.false_eq_true, if_false, Option.some_bind]
-    exact stageC_spec lg hlg row col hr hc st hd hread htray hlen hface
+    exact stageC_spec row col hr hc st hd hread htray hface
 
 open Bs in
-/-- The emitted hole step's body: the let-go before the hole, then `stageBE`. -/
-def holeInnerE (letgo : Array LetGo) (row col : Int) (d : Dice) (tray : Array Int) (read : Int)
+/-- The emitted hole step's body: the hole index `h = row·10 + col`, then `stageBE`. -/
+def holeInnerE (row col : Int) (d : Dice) (tray : Array Int) (read : Int)
     (covered : Array Bool) (ships : Array Ship) (face : Int) (pegs : Array Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)
+    Except SudoRt.Trap (SudoRt.Flow (Array Int × Dice × Int × Array Bool × Array Ship × Int × Array Int)
       (KeyGrid × Dice)) := do
-  let _t573 ← SudoRt.mulI row grid_cols
-  let _t574 ← SudoRt.addI _t573 col
-  let h := _t574
-  let _t575 ← lets_go letgo h false
-  if _t575 then
-    do
-      let _io576 ← rethrow_unread d tray read
-      let ⟨_iw0577, _iw1578⟩ := _io576
-      stageBE letgo row col h _iw0577 _iw1578 read covered ships face pegs
-  else
-    stageBE letgo row col h d tray read covered ships face pegs
+  let _t526 ← SudoRt.mulI row grid_cols
+  let _t527 ← SudoRt.addI _t526 col
+  let h := _t527
+  stageBE row col h d tray read covered ships face pegs
 
 open Bs in
 /-- The body of `build`'s hole loop (`for col = 0 to 9`) as emitted, with its body named
     `holeInnerE`. -/
-def holeStepE (letgo : Array LetGo) (row : Int) (_toV : Int) :
-    Int × (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int) →
+def holeStepE (row : Int) (_toV : Int) :
+    Int × (Array Int × Dice × Int × Array Bool × Array Ship × Int × Array Int) →
       Except SudoRt.Trap (SudoRt.Flow
-        (Int × (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int)) (KeyGrid × Dice)) :=
+        (Int × (Array Int × Dice × Int × Array Bool × Array Ship × Int × Array Int)) (KeyGrid × Dice)) :=
   fun σ =>
     let col := σ.1
-    let d := σ.2.1
-    let _sp908 := σ.2.2
-    let tray := _sp908.1
-    let _sp909 := _sp908.2
-    let read := _sp909.1
-    let _sp910 := _sp909.2
-    let covered := _sp910.1
-    let _sp911 := _sp910.2
-    let ships := _sp911.1
-    let _sp912 := _sp911.2
-    let face := _sp912.1
-    let _sp913 := _sp912.2
-    let pegs := _sp913
+    let tray := σ.2.1
+    let _sp609 := σ.2.2
+    let d := _sp609.1
+    let _sp610 := _sp609.2
+    let read := _sp610.1
+    let _sp611 := _sp610.2
+    let covered := _sp611.1
+    let _sp612 := _sp611.2
+    let ships := _sp612.1
+    let _sp613 := _sp612.2
+    let face := _sp613.1
+    let _sp614 := _sp613.2
+    let pegs := _sp614
     do
       if col > _toV then
-        pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (col, (d, tray, read, covered, ships, face, pegs)))
+        pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (col, (tray, d, read, covered, ships, face, pegs)))
       else
-        match ← holeInnerE letgo row col d tray read covered ships face pegs with
+        match ← holeInnerE row col d tray read covered ships face pegs with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (col, _fs))
         | .cont _fs => do
@@ -1634,11 +1308,11 @@ def holeStepE (letgo : Array LetGo) (row : Int) (_toV : Int) :
               pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (i', _fs))
 
 open Bs in
-theorem holeStepE_eq (letgo : Array LetGo) (row toV col : Int)
-    (s : Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int) :
-    holeStepE letgo row toV (col, s) =
+theorem holeStepE_eq (row toV col : Int)
+    (s : Array Int × Dice × Int × Array Bool × Array Ship × Int × Array Int) :
+    holeStepE row toV (col, s) =
       (if col > toV then pure (SudoRt.Flow.brk (col, s)) else do
-        match ← holeInnerE letgo row col s.1 s.2.1 s.2.2.1 s.2.2.2.1 s.2.2.2.2.1 s.2.2.2.2.2.1
+        match ← holeInnerE row col s.2.1 s.1 s.2.2.1 s.2.2.2.1 s.2.2.2.2.1 s.2.2.2.2.2.1
             s.2.2.2.2.2.2 with
         | .ret r => pure (SudoRt.Flow.ret r)
         | .brk fs => pure (SudoRt.Flow.brk (col, fs))
@@ -1647,49 +1321,21 @@ theorem holeStepE_eq (letgo : Array LetGo) (row toV col : Int)
             pure (SudoRt.Flow.cont (i', fs))) := rfl
 
 /-- §4.2, one hole: the emitted hole body is `Spec.holeStep`. -/
-theorem hole_inner_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row col : Nat)
+theorem hole_inner_spec (row col : Nat)
     (hr : row < 10) (hc : col < 10) (st : Spec.BuildSt) (hd : DiceFit st.dice)
     (htray : TrayOk st.tray) (hlen : st.tray.length ≤ 5) (hread : st.read ≤ st.tray.length)
     (hface : col % 2 = 1 → 1 ≤ st.face ∧ st.face ≤ 9) :
-    (holeInnerE (embLG lg) (Int.ofNat row) (Int.ofNat col) (embDice st.dice) (embed st.tray)
+    (holeInnerE (Int.ofNat row) (Int.ofNat col) (embDice st.dice) (embed st.tray)
       (Int.ofNat st.read) (tab st.covered) (st.ships.map embShip).toArray (Int.ofNat st.face)
       (tab (fun x => Int.ofNat (st.pegs x)))).toOption =
-    (Spec.holeStep lg row col st).map (fun st' => SudoRt.Flow.cont (embSt st')) := by
-  unfold holeInnerE Spec.holeStep Spec.letGoAt
+    (Spec.holeStep row col st).map (fun st' => SudoRt.Flow.cont (embSt st')) := by
+  unfold holeInnerE Spec.holeStep
   simp only [Bs.grid_cols]
   rw [show (10 : Int) = Int.ofNat 10 from rfl, mulI_ofNat _ _ (fits_small (by omega)), ok_bind,
-    addI_ofNat _ _ (fits_small (by omega)), ok_bind, lets_go_spec _ _ _ hlg, ok_bind]
-  cases hl : Spec.letsGo lg (row * 10 + col) false
-  · simp only [Bool.false_eq_true, if_false, Option.some_bind]
-    exact stageB_spec lg hlg row col hr hc st hd (by omega) htray hlen hface
-  · simp only [if_true]
-    rw [toOpt_bind, rethrow_unread_spec _ _ _ hd.2.2 (fits_small (by omega))]
-    unfold Spec.BuildSt.rethrow
-    cases hrt : Spec.rethrowUnread st.dice st.tray st.read with
-    | none => rfl
-    | some p =>
-      obtain ⟨d1, t1⟩ := p
-      obtain ⟨hl1, ht1, hs⟩ := rethrowUnread_facts htray hrt
-      simp only [Option.map_some', Option.some_bind]
-      exact stageB_spec lg hlg row col hr hc { st with dice := d1, tray := t1 } (hd.of_streams hs)
-        (by show st.read ≤ 5; omega) ht1 (by show t1.length ≤ 5; omega) hface
+    addI_ofNat _ _ (fits_small (by omega)), ok_bind]
+  exact stageB_spec row col hr hc st hd (by omega) htray hface
 
 /-! ### The hole step keeps the tray usable -/
-
-theorem letGoAt_facts {lg : List Spec.LetGo} {h : Nat} {gap : Bool} {st st' : Spec.BuildSt}
-    (ht : TrayOk st.tray) (hs : Spec.letGoAt lg h gap st = some st') :
-    Streams st.dice st'.dice ∧ TrayOk st'.tray ∧ st'.tray.length = st.tray.length ∧
-      st'.read = st.read ∧ st'.face = st.face := by
-  unfold Spec.letGoAt at hs
-  split at hs
-  · unfold Spec.BuildSt.rethrow at hs
-    cases hr : Spec.rethrowUnread st.dice st.tray st.read with
-    | none => rw [hr] at hs; cases hs
-    | some p =>
-      rw [hr] at hs; cases hs
-      obtain ⟨h1, h2, h3⟩ := rethrowUnread_facts ht hr
-      exact ⟨h3, h2, h1, rfl, rfl⟩
-  · cases hs; exact ⟨Streams.refl _, ht, rfl, rfl, rfl⟩
 
 theorem rowCupAt_facts {col : Nat} {st st' : Spec.BuildSt} (ht : TrayOk st.tray)
     (hl : st.tray.length ≤ 5) (hrd : st.read ≤ st.tray.length)
@@ -1736,49 +1382,37 @@ theorem pegAt_facts {h col : Nat} {st st' : Spec.BuildSt} (ht : TrayOk st.tray)
         fun h1 => by omega⟩
   · cases hs; exact ⟨rfl, rfl, hrd, fun h0 => by omega, fun _ => rfl⟩
 
-theorem holeStep_inv {d0 : Spec.Dice} {lg : List Spec.LetGo} {row col : Nat} {st st' : Spec.BuildSt}
+theorem holeStep_inv {d0 : Spec.Dice} {row col : Nat} {st st' : Spec.BuildSt}
     (hr : row < 10) (hc : col < 10) (hinv : HoleInv d0 col st)
-    (hs : Spec.holeStep lg row col st = some st') : HoleInv d0 (col + 1) st' := by
+    (hs : Spec.holeStep row col st = some st') : HoleInv d0 (col + 1) st' := by
   unfold Spec.holeStep at hs
-  cases h1 : Spec.letGoAt lg (row * 10 + col) false st with
-  | none => rw [h1] at hs; cases hs
-  | some s1 =>
-  rw [h1, Option.some_bind] at hs
-  obtain ⟨a1, a2, a3, a4, a5⟩ := letGoAt_facts hinv.tray h1
-  cases h2 : Spec.rowCupAt col s1 with
+  cases h2 : Spec.rowCupAt col st with
   | none => rw [h2] at hs; cases hs
   | some s2 =>
   rw [h2, Option.some_bind] at hs
-  obtain ⟨b1, b2, b3, b4, b5⟩ := rowCupAt_facts a2 (by have := hinv.trayLen; omega)
-    (by have := hinv.read; omega) h2
+  obtain ⟨b1, b2, b3, b4, _⟩ := rowCupAt_facts hinv.tray hinv.trayLen hinv.read h2
   cases h3 : Spec.growAt row col s2 with
   | none => rw [h3] at hs; cases hs
   | some s3 =>
   rw [h3, Option.some_bind] at hs
-  obtain ⟨c1, c2, c3, c4⟩ := growAt_facts hr hc h3
-  cases h4 : Spec.letGoAt lg (row * 10 + col) true s3 with
-  | none => rw [h4] at hs; cases hs
-  | some s4 =>
-  rw [h4, Option.some_bind] at hs
-  obtain ⟨e1, e2, e3, e4, e5⟩ := letGoAt_facts (c2 ▸ b2) h4
-  obtain ⟨f1, f2, f3, f4, f5⟩ := pegAt_facts e2 (by rw [e3, e4, c2, c3]; exact b4) hs
-  refine ⟨?_, f2 ▸ e2, by rw [f2, e3, c2]; exact b3, f3, ?_⟩
-  · have := hinv.streams.trans (a1.trans (b1.trans (c1.trans e1)))
-    rw [f1]; exact this
+  obtain ⟨c1, c2, c3, _⟩ := growAt_facts hr hc h3
+  obtain ⟨f1, f2, f3, f4, _⟩ := pegAt_facts (c2 ▸ b2) (by rw [c2, c3]; exact b4) hs
+  refine ⟨?_, by rw [f2, c2]; exact b2, by rw [f2, c2]; exact b3, f3, ?_⟩
+  · rw [f1]; exact hinv.streams.trans (b1.trans c1)
   · intro hodd
     exact f4 (by omega)
 
 /-- §4.2, one hole, as a step of the emitted column loop (`col` from 0 to 9). -/
-theorem hole_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row : Nat) (hr : row < 10)
+theorem hole_step_spec (row : Nat) (hr : row < 10)
     (d0 : Spec.Dice) (hd0 : DiceFit d0) (col : Nat) (hc : col < 10) (st : Spec.BuildSt)
     (hinv : HoleInv d0 col st) :
-    (holeStepE (embLG lg) (Int.ofNat row) (Int.ofNat 9) (Int.ofNat col, embSt st)).toOption =
-    (Spec.holeStep lg row col st).map (fun s' =>
+    (holeStepE (Int.ofNat row) (Int.ofNat 9) (Int.ofNat col, embSt st)).toOption =
+    (Spec.holeStep row col st).map (fun s' =>
       if col + 1 = 10 then .brk (Int.ofNat col, embSt s') else .cont (Int.ofNat (col + 1), embSt s')) := by
   rw [holeStepE_eq, if_neg (by show ¬ ((9 : Nat) : Int) < ((col : Nat) : Int); omega), toOpt_bind]
-  refine (congrArg (fun o => Option.bind o _) (hole_inner_spec lg hlg row col hr hc st
+  refine (congrArg (fun o => Option.bind o _) (hole_inner_spec row col hr hc st
     (hd0.of_streams hinv.streams) hinv.tray hinv.trayLen hinv.read hinv.face)).trans ?_
-  cases Spec.holeStep lg row col st with
+  cases Spec.holeStep row col st with
   | none => rfl
   | some s' =>
     simp only [Option.map_some', Option.some_bind]
@@ -1792,51 +1426,52 @@ theorem hole_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (row : N
 
 open Bs in
 /-- The emitted row step of `build` (face 0, then the column loop over `holeStepE`), copied
-    from the generated `build` (up to named loop steps and `_`-prefixed unused binders; `rfl` is the check). -/
-def rowStepE (letgo : Array LetGo) (_toV : Int) :
-    Int × (Dice × Array Int × Int × Array Bool × Array Ship × Array Int) →
+    from the generated `build` (up to named loop steps and `_`-prefixed unused binders;
+    `rfl` is the check). -/
+def rowStepE (_toV : Int) :
+    Int × (Array Int × Dice × Int × Array Bool × Array Ship × Array Int) →
       Except SudoRt.Trap (SudoRt.Flow
-        (Int × (Dice × Array Int × Int × Array Bool × Array Ship × Array Int)) (KeyGrid × Dice)) :=
+        (Int × (Array Int × Dice × Int × Array Bool × Array Ship × Array Int)) (KeyGrid × Dice)) :=
   fun σ =>
     let row := σ.1
-    let d := σ.2.1
-    let _sp922 := σ.2.2
-    let tray := _sp922.1
-    let _sp923 := _sp922.2
-    let read := _sp923.1
-    let _sp924 := _sp923.2
-    let covered := _sp924.1
-    let _sp925 := _sp924.2
-    let ships := _sp925.1
-    let _sp926 := _sp925.2
-    let pegs := _sp926
+    let tray := σ.2.1
+    let _sp623 := σ.2.2
+    let d := _sp623.1
+    let _sp624 := _sp623.2
+    let read := _sp624.1
+    let _sp625 := _sp624.2
+    let covered := _sp625.1
+    let _sp626 := _sp625.2
+    let ships := _sp626.1
+    let _sp627 := _sp626.2
+    let pegs := _sp627
     do
       if row > _toV then
-        pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (row, (d, tray, read, covered, ships, pegs)))
+        pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (row, (tray, d, read, covered, ships, pegs)))
       else
         match ← ((do
   let face := (0 : Int)
-  let _t907 ← SudoRt.subI grid_cols (1 : Int)
+  let _t608 ← SudoRt.subI grid_cols (1 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t907
+  let _toV := _t608
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init920 := (_fromV, (d, tray, read, covered, ships, face, pegs))
-  let _out ← (SudoRt.runLoopOn (ρ := (KeyGrid) × (Dice)) _init920 fuel (holeStepE letgo row _toV) (fun σ =>
-    let d := σ.2.1
-    let _sp914 := σ.2.2
-    let tray := _sp914.1
-    let _sp915 := _sp914.2
-    let read := _sp915.1
-    let _sp916 := _sp915.2
-    let covered := _sp916.1
-    let _sp917 := _sp916.2
-    let ships := _sp917.1
-    let _sp918 := _sp917.2
-    let _face := _sp918.1
-    let _sp919 := _sp918.2
-    let pegs := _sp919
+  let _init621 := (_fromV, (tray, d, read, covered, ships, face, pegs))
+  let _out ← (SudoRt.runLoopOn (ρ := (KeyGrid) × (Dice)) _init621 fuel (holeStepE row _toV) (fun σ =>
+    let tray := σ.2.1
+    let _sp615 := σ.2.2
+    let d := _sp615.1
+    let _sp616 := _sp615.2
+    let read := _sp616.1
+    let _sp617 := _sp616.2
+    let covered := _sp617.1
+    let _sp618 := _sp617.2
+    let ships := _sp618.1
+    let _sp619 := _sp618.2
+    let _face := _sp619.1
+    let _sp620 := _sp619.2
+    let pegs := _sp620
     do
-      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (d, tray, read, covered, ships, pegs))) (fun r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)))
+      pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) (tray, d, read, covered, ships, pegs))) (fun r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((KeyGrid) × (Dice)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) (row, _fs))
@@ -1850,22 +1485,22 @@ def rowStepE (letgo : Array LetGo) (_toV : Int) :
 
 open Bs in
 /-- After the column loop: drop the pair face. -/
-def colAfterE : Int × (Dice × Array Int × Int × Array Bool × Array Ship × Int × Array Int) →
-    Except SudoRt.Trap (SudoRt.Flow (Dice × Array Int × Int × Array Bool × Array Ship × Array Int)
+def colAfterE : Int × (Array Int × Dice × Int × Array Bool × Array Ship × Int × Array Int) →
+    Except SudoRt.Trap (SudoRt.Flow (Array Int × Dice × Int × Array Bool × Array Ship × Array Int)
       (KeyGrid × Dice)) :=
   fun σ => pure (SudoRt.Flow.cont (σ.2.1, σ.2.2.1, σ.2.2.2.1, σ.2.2.2.2.1, σ.2.2.2.2.2.1,
     σ.2.2.2.2.2.2.2))
 
 open Bs in
-theorem rowStepE_eq (letgo : Array LetGo) (toV row : Int)
-    (s : Dice × Array Int × Int × Array Bool × Array Ship × Array Int) :
-    rowStepE letgo toV (row, s) =
+theorem rowStepE_eq (toV row : Int)
+    (s : Array Int × Dice × Int × Array Bool × Array Ship × Array Int) :
+    rowStepE toV (row, s) =
       (if row > toV then pure (SudoRt.Flow.brk (row, s)) else do
         match ← (do
             let t ← SudoRt.subI grid_cols (1 : Int)
             let _out ← SudoRt.runLoopOn (ρ := KeyGrid × Dice)
               ((0 : Int), (s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, (0 : Int), s.2.2.2.2.2))
-              (fuelRange 0 t) (holeStepE letgo row t) colAfterE (fun r => pure (SudoRt.Flow.ret r))
+              (fuelRange 0 t) (holeStepE row t) colAfterE (fun r => pure (SudoRt.Flow.ret r))
             pure _out) with
         | .ret r => pure (SudoRt.Flow.ret r)
         | .brk fs => pure (SudoRt.Flow.brk (row, fs))
@@ -1873,20 +1508,20 @@ theorem rowStepE_eq (letgo : Array LetGo) (toV row : Int)
             let i' ← SudoRt.addI row (1 : Int)
             pure (SudoRt.Flow.cont (i', fs))) := rfl
 
-/-- The emitted row state (no pair face). -/
+/-- The emitted row state (no pair face; the tray first). -/
 def embRowSt (st : Spec.BuildSt) :
-    Bs.Dice × Array Int × Int × Array Bool × Array Bs.Ship × Array Int :=
-  (embDice st.dice, embed st.tray, Int.ofNat st.read, tab st.covered,
+    Array Int × Bs.Dice × Int × Array Bool × Array Bs.Ship × Array Int :=
+  (embed st.tray, embDice st.dice, Int.ofNat st.read, tab st.covered,
     (st.ships.map embShip).toArray, tab (fun h => Int.ofNat (st.pegs h)))
 
-theorem holeSteps_inv {d0 : Spec.Dice} {lg : List Spec.LetGo} {row : Nat} (hr : row < 10) :
+theorem holeSteps_inv {d0 : Spec.Dice} {row : Nat} (hr : row < 10) :
     ∀ (k a : Nat) (st st' : Spec.BuildSt), a + k ≤ 10 → HoleInv d0 a st →
-      (List.range' a k).foldlM (fun s i => Spec.holeStep lg row i s) st = some st' →
+      (List.range' a k).foldlM (fun s i => Spec.holeStep row i s) st = some st' →
       HoleInv d0 (a + k) st'
   | 0, a, st, st', _, h, hs => by cases hs; exact h
   | k + 1, a, st, st', hk, h, hs => by
     rw [foldlM_range'_succ] at hs
-    cases h1 : Spec.holeStep lg row a st with
+    cases h1 : Spec.holeStep row a st with
     | none => rw [h1] at hs; cases hs
     | some s1 =>
       rw [h1, Option.some_bind] at hs
@@ -1894,10 +1529,10 @@ theorem holeSteps_inv {d0 : Spec.Dice} {lg : List Spec.LetGo} {row : Nat} (hr : 
       rwa [show a + 1 + k = a + (k + 1) by omega] at this
 
 /-- §4.2, one row, as a step of the emitted row loop (`row` from 0 to 9). -/
-theorem row_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d0 : Spec.Dice)
+theorem row_step_spec (d0 : Spec.Dice)
     (hd0 : DiceFit d0) (row : Nat) (hr : row < 10) (st : Spec.BuildSt) (hinv : HoleInv d0 0 st) :
-    (rowStepE (embLG lg) (Int.ofNat 9) (Int.ofNat row, embRowSt st)).toOption =
-    (Spec.rowStep lg row st).map (fun s' =>
+    (rowStepE (Int.ofNat 9) (Int.ofNat row, embRowSt st)).toOption =
+    (Spec.rowStep row st).map (fun s' =>
       if row + 1 = 10 then .brk (Int.ofNat row, embRowSt s')
       else .cont (Int.ofNat (row + 1), embRowSt s')) := by
   rw [rowStepE_eq, if_neg (by show ¬ ((9 : Nat) : Int) < ((row : Nat) : Int); omega)]
@@ -1907,15 +1542,15 @@ theorem row_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d0 : Spe
   have h0 : HoleInv d0 0 { st with face := 0 } :=
     ⟨hinv.streams, hinv.tray, hinv.trayLen, hinv.read, fun h => by simp at h⟩
   refine (congrArg (fun o => Option.bind o _)
-    (loop_opt (S := Spec.BuildSt) embSt (holeStepE (embLG lg) (Int.ofNat row) (Int.ofNat 9))
-      colAfterE (fun r => pure (SudoRt.Flow.ret r)) (fun i s => Spec.holeStep lg row i s)
+    (loop_opt (S := Spec.BuildSt) embSt (holeStepE (Int.ofNat row) (Int.ofNat 9))
+      colAfterE (fun r => pure (SudoRt.Flow.ret r)) (fun i s => Spec.holeStep row i s)
       (HoleInv d0) (fun s => some (SudoRt.Flow.cont (embRowSt s))) 0 10 (by decide)
-      (fun i s _ hi hP => hole_step_spec lg hlg row hr d0 hd0 i hi s hP)
+      (fun i s _ hi hP => hole_step_spec row hr d0 hd0 i hi s hP)
       (fun i s s' _ hi hP hs => holeStep_inv hr hi hP hs)
       (fun _ _ _ => rfl) { st with face := 0 } h0)).trans ?_
   unfold Spec.rowStep
   rw [List.range_eq_range']
-  cases (List.range' 0 (10 - 0)).foldlM (fun s i => Spec.holeStep lg row i s) { st with face := 0 } with
+  cases (List.range' 0 (10 - 0)).foldlM (fun s i => Spec.holeStep row i s) { st with face := 0 } with
   | none => rfl
   | some s' =>
     simp only [Option.some_bind, Option.map_some']
@@ -1928,190 +1563,63 @@ theorem row_step_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d0 : Spe
       rfl
 
 open Bs in
-/-- The emitted let-go check step of `build` (up to named loop steps and `_`-prefixed unused binders; `rfl` is the check). -/
-def checkStepE (letgo : Array LetGo) (_toV : Int) :
-    Int → Except SudoRt.Trap (SudoRt.Flow Int (KeyGrid × Dice)) :=
-  fun σ =>
-    let i := σ
-    do
-      if i > _toV then
-        pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) i)
-      else
-        match ← ((do
-  let _t555 ← SudoRt.atL letgo i
-  let _t557 ← (if (decide ((_t555).sudo_5LetGo_4hole ≥ (0 : Int))) then (do
-  let _t558 ← SudoRt.atL letgo i
-  let _t559 ← SudoRt.mulI grid_rows grid_cols
-  pure (decide ((_t558).sudo_5LetGo_4hole < _t559))) else pure false)
-  let _as561 ← SudoRt.sudoAssert _t557 646
-  let _t562 ← SudoRt.atL letgo i
-  let _t563 ← SudoRt.modI (_t562).sudo_5LetGo_4hole grid_cols
-  let _t564 ← SudoRt.modI _t563 (2 : Int)
-  let _as565 ← SudoRt.sudoAssertEq _t564 (0 : Int) 647
-  pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) ())) : Except SudoRt.Trap (SudoRt.Flow _ ((KeyGrid) × (Dice)))) with
-        | .ret r => pure (SudoRt.Flow.ret (ρ := (KeyGrid) × (Dice)) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) i)
-        | .cont _fs => do
-            if i == _toV then
-              pure (SudoRt.Flow.brk (ρ := (KeyGrid) × (Dice)) i)
-            else do
-              let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (KeyGrid) × (Dice)) i')
-
-open Bs in
-/-- The emitted body of `build` after the let-go check (up to named loop steps and `_`-prefixed unused binders; `rfl` is the check). -/
-def buildAfterE (letgo : Array LetGo) (d : Dice) : Int → Except SudoRt.Trap (KeyGrid × Dice) :=
-  fun _ =>
-    do
-      let _t568 ← SudoRt.mulI grid_rows grid_cols
-      let holes := _t568
-      let _t569 ← SudoRt.filledL holes false
-      let covered := _t569
-      let ships := (#[] : Array (Ship))
-      let _t570 ← SudoRt.filledL holes (0 : Int)
-      let pegs := _t570
-      let tray := (#[] : Array (Int))
-      let read := (0 : Int)
-      let _t921 ← SudoRt.subI grid_rows (1 : Int)
-      let _fromV := (0 : Int)
-      let _toV := _t921
-      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init932 := (_fromV, (d, tray, read, covered, ships, pegs))
-      let _out ← (SudoRt.runLoopOn (ρ := (KeyGrid) × (Dice)) _init932 fuel (rowStepE letgo _toV) (fun σ =>
-    let d := σ.2.1
-    let _sp927 := σ.2.2
-    let _tray := _sp927.1
-    let _sp928 := _sp927.2
-    let _read := _sp928.1
-    let _sp929 := _sp928.2
-    let _covered := _sp929.1
-    let _sp930 := _sp929.2
-    let ships := _sp930.1
-    let _sp931 := _sp930.2
-    let pegs := _sp931
+/-- The emitted body of `build` (up to the named row loop step and `_`-prefixed unused
+    binders; `rfl` is the check). -/
+def buildE (d : Dice) : Except SudoRt.Trap (KeyGrid × Dice) :=
+  do
+    let _t521 ← SudoRt.mulI grid_rows grid_cols
+    let holes := _t521
+    let _t522 ← SudoRt.filledL holes false
+    let covered := _t522
+    let ships := (#[] : Array (Ship))
+    let _t523 ← SudoRt.filledL holes (0 : Int)
+    let pegs := _t523
+    let tray := (#[] : Array (Int))
+    let read := (0 : Int)
+    let _t622 ← SudoRt.subI grid_rows (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t622
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init633 := (_fromV, (tray, d, read, covered, ships, pegs))
+    let _out ← (SudoRt.runLoopOn (ρ := (KeyGrid) × (Dice)) _init633 fuel (rowStepE _toV) (fun σ =>
+    let _tray := σ.2.1
+    let _sp628 := σ.2.2
+    let d := _sp628.1
+    let _sp629 := _sp628.2
+    let _read := _sp629.1
+    let _sp630 := _sp629.2
+    let _covered := _sp630.1
+    let _sp631 := _sp630.2
+    let ships := _sp631.1
+    let _sp632 := _sp631.2
+    let pegs := _sp632
     do
       pure (({ sudo_7KeyGrid_5ships := ships, sudo_7KeyGrid_4pegs := pegs } : KeyGrid), d)) (fun r => pure r))
-      pure _out
+    pure _out
 
 open Bs in
-theorem build_eq (d : Dice) (letgo : Array LetGo) :
-    Bs.build d letgo = (do
-      let t ← letgo_unique letgo
-      let _as ← SudoRt.sudoAssert t 644
-      let toV ← SudoRt.subI (SudoRt.listLen letgo) (1 : Int)
-      let _out ← SudoRt.runLoopOn (ρ := KeyGrid × Dice) (0 : Int) (fuelRange 0 toV)
-        (checkStepE letgo toV) (buildAfterE letgo d) (fun r => pure r)
-      pure _out) := rfl
-
-/-- Whether let-go `i` of the list is usable (§4.2: a hole of the grid at a die's first hole). -/
-def okAt (lg : List Spec.LetGo) (i : Nat) : Bool :=
-  match lg[i]? with
-  | some x => decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0)
-  | none => true
-
-theorem all_okAt (lg : List Spec.LetGo) :
-    (List.range' 0 lg.length).all (okAt lg) =
-      lg.all (fun x => decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0)) := by
-  apply Bool.eq_iff_iff.mpr
-  simp only [List.all_eq_true, List.mem_range']
-  constructor
-  · intro h x hx
-    obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem hx
-    have := h i ⟨i, hi, by omega⟩
-    simpa [okAt, List.getElem?_eq_getElem hi] using this
-  · rintro h i ⟨j, hj, rfl⟩
-    have hi : 0 + 1 * j < lg.length := by omega
-    have := h (lg[0 + 1 * j]) (List.getElem_mem hi)
-    simp only [okAt, List.getElem?_eq_getElem hi]
-    simpa using this
-
-/-- One step of the emitted let-go check: let-go `i` must be a hole (`0 ≤ hole < 100`) at a
-    die's first hole (`hole % 10` even), else `build` traps. -/
-theorem check_step_spec (lg : List Spec.LetGo) (n : Nat) (hl : lg.length = n + 1)
-    (hlg : FitsLen lg.length) (i : Nat) (hi : i ≤ n) :
-    (checkStepE (embLG lg) (Int.ofNat n) (Int.ofNat i)).toOption =
-      if okAt lg i then some (if i = 0 + n then .brk (Int.ofNat i) else .cont (Int.ofNat (i + 1)))
-      else none := by
-  have hi' : i < (embLG lg).size := by rw [size_embLG]; omega
-  have hil : i < lg.length := by omega
-  unfold checkStepE
-  dsimp only
-  rw [if_neg (by show ¬ ((n : Nat) : Int) < ((i : Nat) : Int); omega),
-    toOpt_bind, atL_ofNat _ _ hi', ok_bind, embLG_get]
-  simp only [Bs.grid_rows, Bs.grid_cols]
-  have hok : okAt lg i = decide (0 ≤ lg[i].hole ∧ lg[i].hole < 100 ∧ lg[i].hole % 10 % 2 = 0) := by
-    unfold okAt; rw [List.getElem?_eq_getElem hil]
-  rw [hok]
-  generalize lg[i] = x
-  have hmul : SudoRt.mulI (10 : Int) (10 : Int) = .ok (Int.ofNat (10 * 10)) :=
-    mulI_ofNat 10 10 (fits_small (by omega))
-  have hmod10 : ∀ k : Nat, SudoRt.modI (Int.ofNat k) (10 : Int) = .ok (Int.ofNat (k % 10)) :=
-    fun k => modI_ofNat k (b := 10) (by decide)
-  have hmod2 : ∀ k : Nat, SudoRt.modI (Int.ofNat k) (2 : Int) = .ok (Int.ofNat (k % 2)) :=
-    fun k => modI_ofNat k (b := 2) (by decide)
-  have hA : ∀ k : Nat, k ≠ 0 →
-      (SudoRt.sudoAssertEq (Int.ofNat k) (0 : Int) 647).toOption = none := by
-    intro k hk; unfold SudoRt.sudoAssertEq
-    rw [sEq_int, decide_eq_false (by show ¬ ((k : Nat) : Int) = ((0 : Nat) : Int); omega)]; rfl
-  by_cases h0 : 0 ≤ x.hole
-  · obtain ⟨m, hm⟩ := Int.eq_ofNat_of_zero_le h0
-    have hx : (embLetGo x).sudo_5LetGo_4hole = Int.ofNat m := hm
-    rw [hx, decide_eq_true (show Int.ofNat m ≥ 0 by show (0 : Int) ≤ ((m : Nat) : Int); omega), if_pos rfl,
-      ok_bind, hx, hmul, ok_bind]
-    by_cases hm1 : m < 100
-    · rw [decide_eq_true (show Int.ofNat m < Int.ofNat (10 * 10) by
-          show ((m : Nat) : Int) < ((10 * 10 : Nat) : Int); omega), pure_eq_ok, ok_bind,
-        sudoAssert_true, ok_bind, ok_bind, hx, hmod10, ok_bind, hmod2, ok_bind]
-      by_cases hp : m % 10 % 2 = 0
-      · have hob' : decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0) = true := by
-          apply decide_eq_true; rw [hm]; omega
-        rw [hp, sudoAssertEq_int (show Int.ofNat 0 = (0 : Int) from rfl), ok_bind, pure_eq_ok, toOpt_ok, Option.some_bind, hob',
-          if_pos rfl]
-        by_cases hn : i = n
-        · subst hn
-          rw [if_pos (by simp), if_pos (by simp)]; rfl
-        · have hb : (Int.ofNat i == Int.ofNat n) = false := by
-            apply beq_false_of_ne; intro e; exact hn (Int.ofNat.inj e)
-          rw [hb, if_neg (by decide), addI_ofNat_one _ (FitsLen.of_le hlg (by omega)), ok_bind,
-            if_neg (by omega)]
-          rfl
-      · have hob' : decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0) = false := by
-          apply decide_eq_false; rw [hm]; omega
-        rw [toOpt_bind, hA _ hp, Option.none_bind, hob']; rfl
-    · rw [decide_eq_false (show ¬ Int.ofNat m < Int.ofNat (10 * 10) by
-          show ¬ ((m : Nat) : Int) < ((10 * 10 : Nat) : Int); omega), pure_eq_ok, ok_bind,
-        toOpt_bind, sudoAssert_false_opt, Option.none_bind]
-      have hob' : decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0) = false := by
-        apply decide_eq_false; rw [hm]; omega
-      rw [hob']; rfl
-  · rw [show (embLetGo x).sudo_5LetGo_4hole = x.hole from rfl,
-      decide_eq_false (show ¬ x.hole ≥ 0 from h0), if_neg (by decide), pure_eq_ok, ok_bind,
-      toOpt_bind, sudoAssert_false_opt, Option.none_bind]
-    have hob' : decide (0 ≤ x.hole ∧ x.hole < 100 ∧ x.hole % 10 % 2 = 0) = false := by
-      apply decide_eq_false; omega
-    rw [hob']; rfl
+theorem build_eq (d : Dice) : Bs.build d = buildE d := rfl
 
 /-- The empty grid BUILD starts from. -/
 def buildInit (d : Spec.Dice) : Spec.BuildSt :=
   { dice := d, tray := [], read := 0, covered := fun _ => false, ships := [], face := 0,
     pegs := fun _ => 0 }
 
-theorem rowStep_inv {d0 : Spec.Dice} {lg : List Spec.LetGo} {row : Nat} (hr : row < 10)
-    {st st' : Spec.BuildSt} (h : HoleInv d0 0 st) (hs : Spec.rowStep lg row st = some st') :
+theorem rowStep_inv {d0 : Spec.Dice} {row : Nat} (hr : row < 10)
+    {st st' : Spec.BuildSt} (h : HoleInv d0 0 st) (hs : Spec.rowStep row st = some st') :
     HoleInv d0 0 st' := by
   unfold Spec.rowStep at hs
   rw [List.range_eq_range'] at hs
-  have := holeSteps_inv (lg := lg) hr 10 0 { st with face := 0 } st' (by omega)
+  have := holeSteps_inv hr 10 0 { st with face := 0 } st' (by omega)
     ⟨h.streams, h.tray, h.trayLen, h.read, fun h => by simp at h⟩ hs
   exact ⟨this.streams, this.tray, this.trayLen, this.read, fun h => by simp at h⟩
 
-/-- §4.2 BUILD after the let-go check: the ten rows from the empty grid. -/
-theorem build_after_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d : Spec.Dice)
-    (hd : DiceFit d) (j : Int) :
-    (buildAfterE (embLG lg) (embDice d) j).toOption =
-      ((List.range 10).foldlM (fun st row => Spec.rowStep lg row st) (buildInit d)).map
+/-- §4.2 BUILD's body: the ten rows from the empty grid. -/
+theorem build_body_spec (d : Spec.Dice) (hd : DiceFit d) :
+    (buildE (embDice d)).toOption =
+      ((List.range 10).foldlM (fun st row => Spec.rowStep row st) (buildInit d)).map
         (fun st => (embGrid ⟨st.ships, (List.range 100).map st.pegs⟩, embDice st.dice)) := by
-  unfold buildAfterE
+  unfold buildE
   simp only [Bs.grid_rows, Bs.grid_cols]
   have hmul : SudoRt.mulI (10 : Int) (10 : Int) = .ok (Int.ofNat (10 * 10)) :=
     mulI_ofNat 10 10 (fits_small (by omega))
@@ -2123,10 +1631,10 @@ theorem build_after_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d : S
     show SudoRt.filledL (Int.ofNat (10 * 10)) (0 : Int) = .ok (tab fun _ => (0 : Int)) by
       rw [← tab_const]; rfl, ok_bind,
     hsub, ok_bind, except_bind_pure]
-  refine (loop_opt (S := Spec.BuildSt) embRowSt (rowStepE (embLG lg) (Int.ofNat 9)) _ _
-    (fun i s => Spec.rowStep lg i s) (fun _ s => HoleInv d 0 s)
+  refine (loop_opt (S := Spec.BuildSt) embRowSt (rowStepE (Int.ofNat 9)) _ _
+    (fun i s => Spec.rowStep i s) (fun _ s => HoleInv d 0 s)
     (fun s => some (embGrid ⟨s.ships, (List.range 100).map s.pegs⟩, embDice s.dice)) 0 10
-    (by decide) (fun i s _ hi hP => row_step_spec lg hlg d hd i hi s hP)
+    (by decide) (fun i s _ hi hP => row_step_spec d hd i hi s hP)
     (fun i s s' _ hi hP hs => rowStep_inv hi hP hs) ?_ (buildInit d)
     ⟨Streams.refl d, fun x hx => by simp [buildInit] at hx, Nat.zero_le _, Nat.zero_le _,
       fun h => by simp at h⟩).trans ?_
@@ -2134,44 +1642,17 @@ theorem build_after_spec (lg : List Spec.LetGo) (hlg : FitsLen lg.length) (d : S
     simp only [embGrid, embed_range_map]
     rfl
   · rw [show List.range 10 = List.range' 0 (10 - 0) by rw [List.range_eq_range']]
-    cases (List.range' 0 (10 - 0)).foldlM (fun s i => Spec.rowStep lg i s) (buildInit d) <;> rfl
+    cases (List.range' 0 (10 - 0)).foldlM (fun s i => Spec.rowStep i s) (buildInit d) <;> rfl
 
 /-- §4.2 BUILD: the emitted `build` is `Spec.build`, traps included (a trap is `none`), for
-    dice whose face lists fit and a let-go list whose length fits. -/
-theorem build_spec (d : Spec.Dice) (hd : DiceFit d) (lg : List Spec.LetGo)
-    (hlg : FitsLen lg.length) :
-    (Bs.build (embDice d) (embLG lg)).toOption =
-      (Spec.build d lg).map (fun p => (embGrid p.1, embDice p.2)) := by
-  rw [build_eq, letgo_unique_spec _ hlg, ok_bind]
-  unfold Spec.build Spec.letGoOk
-  by_cases hnd : lg.Nodup
-  · rw [decide_eq_true hnd, sudoAssert_true, ok_bind,
-      show SudoRt.listLen (embLG lg) = Int.ofNat lg.length by rw [listLen_eq, size_embLG],
-      subI_len_one _ hlg, ok_bind, except_bind_pure]
-    simp only [Bool.true_and]
-    have hfin : ∀ j, (buildAfterE (embLG lg) (embDice d) j).toOption =
-        (((List.range 10).foldlM (fun st row => Spec.rowStep lg row st) (buildInit d)).map
-          (fun st => ((⟨st.ships, (List.range 100).map st.pegs⟩ : Spec.Grid), st.dice))).map
-          (fun p => (embGrid p.1, embDice p.2)) := by
-      intro j; rw [build_after_spec lg hlg d hd, Option.map_map]; rfl
-    cases hl : lg.length with
-    | zero =>
-      have : lg = [] := List.eq_nil_of_length_eq_zero hl
-      subst this
-      rw [show fuelRange 0 (Int.ofNat 0 - 1) = 0 + 1 from rfl, runLoopOn_succ_opt,
-        show checkStepE (embLG []) (Int.ofNat 0 - 1) 0 = .ok (.brk 0) from rfl, toOpt_ok,
-        Option.some_bind]
-      exact hfin 0
-    | succ n =>
-      rw [show Int.ofNat (n + 1) - 1 = Int.ofNat n by simp only [ofNat_eq_natCast]; omega,
-        show fuelRange 0 (Int.ofNat n) = n + 1 from fuelRange_le (fromN := 0) (Nat.zero_le n)]
-      refine (asc_check _ _ _ (okAt lg) 0 n (fun i _ hi => check_step_spec lg n hl hlg i (by omega))).trans ?_
-      rw [← hl, all_okAt]
-      split
-      · exact hfin _
-      · rfl
-  · rw [decide_eq_false hnd, toOpt_bind, sudoAssert_false_opt]
-    simp [hnd]
+    dice whose face lists fit. -/
+theorem build_spec (d : Spec.Dice) (hd : DiceFit d) :
+    (Bs.build (embDice d)).toOption =
+      (Spec.build d).map (fun p => (embGrid p.1, embDice p.2)) := by
+  rw [build_eq, build_body_spec d hd]
+  unfold Spec.build
+  rw [Option.map_map]
+  rfl
 
 /-! ### Headlines: BUILD -/
 
@@ -2180,26 +1661,15 @@ def embBuilt (b : Spec.Built) : Bs.Built :=
   { sudo_5Built_4grid := embGrid b.grid, sudo_5Built_6used12 := Int.ofNat b.used12,
     sudo_5Built_5used6 := Int.ofNat b.used6, sudo_5Built_6used10 := Int.ofNat b.used10 }
 
-/-- §4.2: for any model dice whose three face lists fit `i64` and any let-go list (an
-    arbitrary input; the theorem holds for each list separately), `build_letting_go` succeeds exactly when
-    `Spec.buildLettingGo` does and then returns its grid and read counts; it traps exactly
-    when the model fails (a die runs out or shows a face out of range, a tray has no unread
-    die, a let-go point is not a die's first hole of the grid, or is repeated: bs.sudo's rule,
-    which SPEC does not forbid, see `Spec.letGoOk`). -/
-theorem build_letting_go_refines (d : Spec.Dice) (lg : List Spec.LetGo) (hd : DiceFit d)
-    (hlg : FitsLen lg.length) :
-    (Bs.build_letting_go (embDice d) (embLG lg)).toOption =
-      (Spec.buildLettingGo d lg).map embBuilt := by
-  unfold Bs.build_letting_go Spec.buildLettingGo
-  rw [toOpt_bind, build_spec d hd lg hlg]
-  cases Spec.build d lg <;> rfl
-
-/-- §4.2: `build_key_grid` is `Spec.buildKeyGrid` (BUILD without letting go), traps included. -/
+/-- §4.2: for any model dice whose three face lists fit `i64`, `build_key_grid` succeeds
+    exactly when `Spec.buildKeyGrid` does and then returns its grid and read counts; it
+    traps exactly when the model fails (a die runs out or shows a face out of range, or a
+    tray has no unread die). The grid is built in one sitting (SPEC §4.2: no letting go). -/
 theorem build_key_grid_refines (d : Spec.Dice) (hd : DiceFit d) :
     (Bs.build_key_grid (embDice d)).toOption = (Spec.buildKeyGrid d).map embBuilt := by
   unfold Bs.build_key_grid Spec.buildKeyGrid
-  rw [except_bind_pure]
-  exact build_letting_go_refines d [] hd (fits_small (by decide))
+  rw [toOpt_bind, build_spec d hd]
+  cases Spec.build d <;> rfl
 
 /-- §4.2 from fresh dice: for any three face streams that fit `i64`, building from
     `dice d12 d6 d10` is `Spec.buildKeyGrid` of `Spec.dice d12 d6 d10`. -/
@@ -2357,17 +1827,6 @@ theorem GridInv.frame {st st' : Spec.BuildSt} (g : GridInv st) (h1 : st'.ships =
     (h2 : st'.covered = st.covered) (h3 : st'.pegs = st.pegs) : GridInv st' :=
   ⟨h1 ▸ g.onGrid, h1 ▸ g.disjoint, by rw [h1, h2]; exact g.covers, by rw [h3]; exact g.pegs⟩
 
-theorem letGoAt_frame {lg : List Spec.LetGo} {h : Nat} {gap : Bool} {st st' : Spec.BuildSt}
-    (hs : Spec.letGoAt lg h gap st = some st') :
-    st'.ships = st.ships ∧ st'.covered = st.covered ∧ st'.pegs = st.pegs := by
-  unfold Spec.letGoAt at hs
-  split at hs
-  · unfold Spec.BuildSt.rethrow at hs
-    cases hr : Spec.rethrowUnread st.dice st.tray st.read with
-    | none => rw [hr] at hs; cases hs
-    | some p => rw [hr] at hs; cases hs; exact ⟨rfl, rfl, rfl⟩
-  · cases hs; exact ⟨rfl, rfl, rfl⟩
-
 theorem rowCupAt_frame {col : Nat} {st st' : Spec.BuildSt} (hs : Spec.rowCupAt col st = some st') :
     st'.ships = st.ships ∧ st'.covered = st.covered ∧ st'.pegs = st.pegs := by
   unfold Spec.rowCupAt at hs
@@ -2437,57 +1896,44 @@ theorem pegAt_grid {h col : Nat} {st st' : Spec.BuildSt} (ht : TrayOk st.tray) (
     · unfold Spec.keypadSecond; omega
     · exact g.pegs x
 
-theorem holeStep_grid {d0 : Spec.Dice} {lg : List Spec.LetGo} {row col : Nat} {st st' : Spec.BuildSt}
+theorem holeStep_grid {d0 : Spec.Dice} {row col : Nat} {st st' : Spec.BuildSt}
     (hr : row < 10) (hc : col < 10) (hinv : HoleInv d0 col st) (g : GridInv st)
-    (hs : Spec.holeStep lg row col st = some st') : GridInv st' := by
+    (hs : Spec.holeStep row col st = some st') : GridInv st' := by
   unfold Spec.holeStep at hs
-  cases h1 : Spec.letGoAt lg (row * 10 + col) false st with
-  | none => rw [h1] at hs; cases hs
-  | some s1 =>
-  rw [h1, Option.some_bind] at hs
-  obtain ⟨_, a2, a3, _, _⟩ := letGoAt_facts hinv.tray h1
-  have g1 := g.frame (letGoAt_frame h1).1 (letGoAt_frame h1).2.1 (letGoAt_frame h1).2.2
-  cases h2 : Spec.rowCupAt col s1 with
+  cases h2 : Spec.rowCupAt col st with
   | none => rw [h2] at hs; cases hs
   | some s2 =>
   rw [h2, Option.some_bind] at hs
-  obtain ⟨_, b2, _, _, _⟩ := rowCupAt_facts a2 (by have := hinv.trayLen; omega)
-    (by have := hinv.read; omega) h2
-  have g2 := g1.frame (rowCupAt_frame h2).1 (rowCupAt_frame h2).2.1 (rowCupAt_frame h2).2.2
+  obtain ⟨_, b2, _, _, _⟩ := rowCupAt_facts hinv.tray hinv.trayLen hinv.read h2
+  have g2 := g.frame (rowCupAt_frame h2).1 (rowCupAt_frame h2).2.1 (rowCupAt_frame h2).2.2
   cases h3 : Spec.growAt row col s2 with
   | none => rw [h3] at hs; cases hs
   | some s3 =>
   rw [h3, Option.some_bind] at hs
   obtain ⟨_, c2, _, _⟩ := growAt_facts hr hc h3
   have g3 := growAt_grid hr hc g2 h3
-  cases h4 : Spec.letGoAt lg (row * 10 + col) true s3 with
-  | none => rw [h4] at hs; cases hs
-  | some s4 =>
-  rw [h4, Option.some_bind] at hs
-  obtain ⟨_, e2, _, _, _⟩ := letGoAt_facts (c2 ▸ b2) h4
-  have g4 := g3.frame (letGoAt_frame h4).1 (letGoAt_frame h4).2.1 (letGoAt_frame h4).2.2
-  exact pegAt_grid e2 g4 hs
+  exact pegAt_grid (c2 ▸ b2) g3 hs
 
-theorem holeSteps_grid {d0 : Spec.Dice} {lg : List Spec.LetGo} {row : Nat} (hr : row < 10) :
+theorem holeSteps_grid {d0 : Spec.Dice} {row : Nat} (hr : row < 10) :
     ∀ (k a : Nat) (st st' : Spec.BuildSt), a + k ≤ 10 → HoleInv d0 a st → GridInv st →
-      (List.range' a k).foldlM (fun s i => Spec.holeStep lg row i s) st = some st' → GridInv st'
+      (List.range' a k).foldlM (fun s i => Spec.holeStep row i s) st = some st' → GridInv st'
   | 0, a, st, st', _, _, g, hs => by cases hs; exact g
   | k + 1, a, st, st', hk, h, g, hs => by
     rw [foldlM_range'_succ] at hs
-    cases h1 : Spec.holeStep lg row a st with
+    cases h1 : Spec.holeStep row a st with
     | none => rw [h1] at hs; cases hs
     | some s1 =>
       rw [h1, Option.some_bind] at hs
       exact holeSteps_grid hr k (a + 1) s1 st' (by omega) (holeStep_inv hr (by omega) h h1)
         (holeStep_grid hr (by omega) h g h1) hs
 
-theorem rows_grid {d0 : Spec.Dice} {lg : List Spec.LetGo} :
+theorem rows_grid {d0 : Spec.Dice} :
     ∀ (k a : Nat) (st st' : Spec.BuildSt), a + k ≤ 10 → HoleInv d0 0 st → GridInv st →
-      (List.range' a k).foldlM (fun s i => Spec.rowStep lg i s) st = some st' → GridInv st'
+      (List.range' a k).foldlM (fun s i => Spec.rowStep i s) st = some st' → GridInv st'
   | 0, a, st, st', _, _, g, hs => by cases hs; exact g
   | k + 1, a, st, st', hk, h, g, hs => by
     rw [foldlM_range'_succ] at hs
-    cases h1 : Spec.rowStep lg a st with
+    cases h1 : Spec.rowStep a st with
     | none => rw [h1] at hs; cases hs
     | some s1 =>
       rw [h1, Option.some_bind] at hs
@@ -2502,66 +1948,54 @@ theorem rows_grid {d0 : Spec.Dice} {lg : List Spec.LetGo} :
 
 /-- §4.2 / §4.1: every grid BUILD returns is well formed: its ships lie on the grid and
     never overlap, and its 100 pegs are trits. -/
-theorem build_wf {d : Spec.Dice} {lg : List Spec.LetGo} {g : Spec.Grid} {d' : Spec.Dice}
-    (h : Spec.build d lg = some (g, d')) : g.Wf := by
+theorem build_wf {d : Spec.Dice} {g : Spec.Grid} {d' : Spec.Dice}
+    (h : Spec.build d = some (g, d')) : g.Wf := by
   unfold Spec.build at h
-  split at h
-  · cases hf : (List.range 10).foldlM (fun st row => Spec.rowStep lg row st)
-        ({ dice := d, tray := [], read := 0, covered := fun _ => false, ships := [], face := 0,
-           pegs := fun _ => 0 } : Spec.BuildSt) with
-    | none => rw [hf] at h; cases h
-    | some st =>
-      rw [hf] at h
-      simp only [Option.map_some', Option.some.injEq, Prod.mk.injEq] at h
-      obtain ⟨rfl, _⟩ := h
-      rw [List.range_eq_range'] at hf
-      have gi := rows_grid (d0 := d) 10 0 _ st (by omega)
-        ⟨Streams.refl d, fun x hx => by simp at hx, Nat.zero_le _, Nat.zero_le _,
-          fun h => by simp at h⟩
-        ⟨fun s hs => by simp at hs, List.Pairwise.nil, fun s hs => by simp at hs,
-          fun _ => Nat.zero_le _⟩ hf
-      refine ⟨gi.onGrid, gi.disjoint, by simp, ?_⟩
-      intro t ht
-      obtain ⟨x, _, rfl⟩ := List.mem_map.mp ht
-      exact gi.pegs x
-  · cases h
+  cases hf : (List.range 10).foldlM (fun st row => Spec.rowStep row st)
+      ({ dice := d, tray := [], read := 0, covered := fun _ => false, ships := [], face := 0,
+         pegs := fun _ => 0 } : Spec.BuildSt) with
+  | none => rw [hf] at h; cases h
+  | some st =>
+    rw [hf] at h
+    simp only [Option.map_some', Option.some.injEq, Prod.mk.injEq] at h
+    obtain ⟨rfl, _⟩ := h
+    rw [List.range_eq_range'] at hf
+    have gi := rows_grid (d0 := d) 10 0 _ st (by omega)
+      ⟨Streams.refl d, fun x hx => by simp at hx, Nat.zero_le _, Nat.zero_le _,
+        fun h => by simp at h⟩
+      ⟨fun s hs => by simp at hs, List.Pairwise.nil, fun s hs => by simp at hs,
+        fun _ => Nat.zero_le _⟩ hf
+    refine ⟨gi.onGrid, gi.disjoint, by simp, ?_⟩
+    intro t ht
+    obtain ⟨x, _, rfl⟩ := List.mem_map.mp ht
+    exact gi.pegs x
 
-/-- §4.2: a grid built by `Spec.buildLettingGo` (so, by `build_letting_go_refines`, by the
-    emitted `build_letting_go`) is a well-formed one-page key. -/
-theorem buildLettingGo_keyWf {d : Spec.Dice} {lg : List Spec.LetGo} {b : Spec.Built}
-    (h : Spec.buildLettingGo d lg = some b) : Spec.KeyWf [b.grid] := by
-  unfold Spec.buildLettingGo at h
-  cases hb : Spec.build d lg with
+/-- §4.2: a grid built by `Spec.buildKeyGrid` (so, by `build_key_grid_refines`, by the
+    emitted `build_key_grid`) is a well-formed one-page key. -/
+theorem buildKeyGrid_keyWf {d : Spec.Dice} {b : Spec.Built}
+    (h : Spec.buildKeyGrid d = some b) : Spec.KeyWf [b.grid] := by
+  unfold Spec.buildKeyGrid at h
+  cases hb : Spec.build d with
   | none => rw [hb] at h; cases h
   | some p =>
     rw [hb] at h; cases h
     exact ⟨by simp, fun g hg => by
       rw [List.mem_singleton] at hg; subst hg; exact build_wf hb⟩
 
-/-- §4.2 then §4.3: whatever grid the emitted `build_letting_go` returns is `embGrid` of a
+/-- §4.2 then §4.3: whatever grid the emitted `build_key_grid` returns is `embGrid` of a
     well-formed model page, so the one-page key `#[bb.grid]` is `embKey [g]` with
     `Spec.KeyWf [g]`, which is what the walk and exchange theorems assume of a key. -/
-theorem build_letting_go_wf (d : Spec.Dice) (lg : List Spec.LetGo) (hd : DiceFit d)
-    (hlg : FitsLen lg.length) {bb : Bs.Built}
-    (h : Bs.build_letting_go (embDice d) (embLG lg) = .ok bb) :
-    ∃ b, Spec.buildLettingGo d lg = some b ∧ bb = embBuilt b ∧
-      #[bb.sudo_5Built_4grid] = embKey [b.grid] ∧ Spec.KeyWf [b.grid] := by
-  have := build_letting_go_refines d lg hd hlg
-  rw [h, toOpt_ok] at this
-  cases hb : Spec.buildLettingGo d lg with
-  | none => rw [hb] at this; cases this
-  | some b =>
-    rw [hb] at this
-    cases this
-    exact ⟨b, rfl, rfl, rfl, buildLettingGo_keyWf hb⟩
-
-/-- `build_letting_go_wf` without letting go. -/
 theorem build_key_grid_wf (d : Spec.Dice) (hd : DiceFit d) {bb : Bs.Built}
     (h : Bs.build_key_grid (embDice d) = .ok bb) :
     ∃ b, Spec.buildKeyGrid d = some b ∧ bb = embBuilt b ∧
       #[bb.sudo_5Built_4grid] = embKey [b.grid] ∧ Spec.KeyWf [b.grid] := by
-  have h' : Bs.build_letting_go (embDice d) (embLG []) = .ok bb := by
-    unfold Bs.build_key_grid at h; rw [except_bind_pure] at h; exact h
-  exact build_letting_go_wf d [] hd (fits_small (by decide)) h'
+  have := build_key_grid_refines d hd
+  rw [h, toOpt_ok] at this
+  cases hb : Spec.buildKeyGrid d with
+  | none => rw [hb] at this; cases this
+  | some b =>
+    rw [hb] at this
+    cases this
+    exact ⟨b, rfl, rfl, rfl, buildKeyGrid_keyWf hb⟩
 
 end BsLink2.Link2

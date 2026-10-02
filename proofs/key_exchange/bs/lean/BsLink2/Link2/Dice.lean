@@ -1,6 +1,6 @@
 /-
   BS Link 2: §4.2 the dice record. The emitted `dice` refines `Spec.dice`.
-  The build itself (`build_key_grid`, `build_letting_go`) is not covered here.
+  The build itself (`build_key_grid`) is covered in `Build.lean`.
 -/
 import BsLink2.Link2.Key
 

@@ -54,7 +54,13 @@ only. MegaDreifach is a different product; this UI does not run it.
   pyraminx vanish on the spike.
 - Fit from the puzzle's **local** shape (parent-space TRS), not a
   rotated world box: its face-to-face width (narrowest across its face
-  normals) or its edge (longest line across), per `REAL_SIZES`. Shelf yaw used to inflate the measured edge and
+  normals) or its edge (longest line across), per `REAL_SIZES`.
+- Measure and seat only what three.js draws (`drawnRanges` in
+  `motion.js`). cubing.js keeps hidden geometry in the same buffers
+  (hint stickers behind invisible group materials). Counting it fitted
+  the megaminx's visible faces to 52.7 mm instead of 70 and seated it
+  9.6 mm above the felt. Seating uses the exact drawn vertices, not a
+  mesh bounding box. Shelf yaw used to inflate the measured edge and
   lock in an undersized scale for the rest of the scene.
 - `keepFitted` runs on Twisty's render-scheduled callback and on every
   host frame. Rest-pose `nativeMeasure` is locked; only a *root*

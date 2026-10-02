@@ -9,21 +9,22 @@
 
 These are unchanged from v2: pad, φ, card ids, the face-turn tables, chaining, Davies–Meyer `h' = compose(h, E_m(h)) = h·W·h` with the unchanged 3-solve, IV-COOK12, the digest encoding, and the public API. All digests change (`../kats/megaminx_hash_kats_v3.json`).
 
-**Why.** The v2 compression function is **distinguishable in the free-start setting**, so it is not a PRF there. The distinguisher is the D1/D1′ test of §8: a related-key flip of two edges of the chaining value `h`. A v2 block reads only the pieces that pass its read slots, on average 41.2 of 50. Unread pieces never steer `W`. So flipping two unread edges of `h` leaves `W` unchanged, and the output is then predictable exactly:
+**Why.** The v2 compression function is **distinguishable in the free-start setting**, so it is not a PRF there. The distinguisher is the D1/D1′ test of §8: a related-key flip of two edges of the chaining value `h`. A v2 block reads only the pieces that pass its read slots, on average 41.2 of 50. Unread pieces never steer `W`. So flipping two unread edges of `h` leaves `W` unchanged, and the output is then predictable exactly (measured with out-of-tree code, §8):
 - 5.18% of free-start flip pairs give an exact prediction;
 - P(fixE ≥ 2) of the quotient is +0.080 above ideal;
 - see v2 SPEC §8 for the pseudo-collisions.
 
 The secret-start test D2 was never run on v2, so nothing is claimed about v2 in that setting.
 
-v3's card phase names every piece by its colours and reads all 50 pieces in every block (PROVED, §5.8). Measured on v3 (COMPUTED, §8; each figure has its own scope):
-- **Free start (D1 + D1′, 16M quotients per side):** P(fix ≥ 2) is within ±0.00016 of ideal (95% half-width). Pooling the four 8M samples is HEUR.
-- **Secret start (D2, 4M):** within ±0.00043.
-- **Merge and telescoping (400k each):** no collisions.
+v3's card phase names every piece by its colours and reads all 50 pieces in every block (PROVED, §5.8). Measured on v3 (§8; each figure has its own scope):
+- **Free start (D1 + D1′, 16M quotients per side; OUT-OF-TREE):** P(fix ≥ 2) is within ±0.00016 of ideal (95% half-width). Pooling the four 8M samples is HEUR.
+- **Secret start (D2, 4M; OUT-OF-TREE):** within ±0.00043.
+- **Merge and telescoping (400k each; OUT-OF-TREE):** no collisions.
+- **In-tree, on the sudoc build of this spec (IN-TREE, smaller):** D2 at 100k within ±0.0027; D1 + D1′ at 50k within ±0.0039 per side, with 0 exact predictions; merge and D3 at 64k each, no collisions.
 
 Evidence: [`proofs/megadreifach/security/v3/`](../../../../proofs/megadreifach/security/v3/README.md).
 
-`megadreifach.sudo` in this directory is the normative definition of v3 (the runnable spec). This document explains it; a mismatch between the two is a bug in this prose (as §5 says for the hand procedure). Where a v2 section is cited "unchanged", the v2 text is normative for v3 too. MegaDreifach is a toy three-megaminx Merkle–Damgård hash. It makes no cryptographic security claim, and it is not for protecting anything.
+`megadreifach.sudo` in this directory is the normative definition of v3 (the runnable spec). This document explains it; a mismatch between the two is a bug in this prose (as §5 says for the hand procedure). Where a v2 section is cited "unchanged", the v2 sudo ([`../megadreifach.sudo`](../megadreifach.sudo)) is normative for that part, and the v3 sudo carries it unchanged; the v2 prose explains it. MegaDreifach is a toy three-megaminx Merkle–Damgård hash. It makes no cryptographic security claim, and it is not for protecting anything.
 
 ---
 
@@ -167,7 +168,7 @@ Return `(g, last)`.
 
 Face ids are colours and ranks, so "count up from X by rank r" is `(X + r) mod 12`.
 
-## 5.6 Cost per block (PROVED counts, exact for every block)
+## 5.6 Cost per block (v3 counts PROVED by the sudo test "cost per block", exact for every block)
 
 | | v2 (C36) | **v3 (ZP26)** |
 | --- | --- | --- |
@@ -190,7 +191,7 @@ Face ids are colours and ranks, so "count up from X by rank r" is `(X + r) mod 1
 - **Re-looks:** step 5 looks again at the edge found in step 3. That is 78.
 - **Register looks:** each echo looks at the held edge and the held corner before its step. That is 52.
 
-The sudo counts all of these in `em_run`, and its test "cost per block" asserts them for every possible held card. The study's cost line (`mdw4_lib.cost`, printed in the logs) differs only in how it groups the counts: it prints `piece_finds 156` and `slot_reads 26`, counting each echo's register read once although it looks at two pieces. That is the same 52 register looks.
+The sudo counts all of these in `em_run`, and its test "cost per block" asserts them for every possible held card. The cost line printed in the study logs counts differently: it prints `piece_finds 156` and `slot_reads 26`, counting each echo's register read once although it looks at two pieces (the same 52 register looks), and it leaves out the 78 re-looks (ANALYSIS §12.6).
 
 v3 costs about 2.4× v2's face turns and **about 2.2× v2's clicks** (585 / 270 on average). No human trials have been run, so error rates and wall time by hand are unknown.
 
@@ -202,24 +203,24 @@ v3 costs about 2.4× v2's face turns and **about 2.2× v2's clicks** (585 / 270 
 
 All as in v2 §5.7. E_m runs on A, held any way.
 
-## 5.8 Coverage and what a person must keep track of (PROVED)
+## 5.8 Coverage and what a person must keep track of
 
-**Coverage.**
+**Coverage (PROVED).**
 - The 48 non-King cards name 48 (edge, corner) pairs that together contain all 30 edges and all 20 corners (enumeration; sudo test "coverage: the 48 non-King cards name all 30 edges and all 20 corners").
 - A deal holds each card once.
 - So every block finds and reads **all 50 pieces** in its card steps, whatever the deal and the state.
 - Echo reads are extra.
 
-**Every input difference changes the turn sequence.**
+**Every input difference changes the turn sequence (ARGUED, from the PROVED read words).**
 - For a fixed deal, take two start positions h ≠ h′. Common turns keep the same set of pieces in different (slot, orientation) states, so that set stays non-empty.
 - Each of its pieces is read in the card pass.
 - For every piece and every ordered pair of its colours, the 60 states of the piece give 60 distinct two-turn read words (steps 3 and 4). This is an enumeration, asserted by the sudo test "read words".
 - So at the first read of a differing piece the turned words differ. The unread-piece predictor of v2 is gone for every perturbation, not only edge flips.
 - This is about the turn sequence only. Two different turn sequences can still give the same group element `W`; that rate is measured in §8 as "exact prediction".
 
-**No grip.** Every face is named by a colour, by counting up colours, or as an opposite. How puzzle A is held never matters.
+**No grip (ARGUED).** Every face is named by a colour, by counting up colours, or as an opposite. How puzzle A is held never matters.
 
-**Nothing carried between steps.**
+**Nothing carried between steps (ARGUED; the card-pass last face is PROVED by a sudo test).**
 - **During the deal:** the last face is the face carrying the n-coloured sticker of the edge of the **top card of the dealt pile**. Step 5 turns exactly that face, and a turn keeps that sticker on it. So if you lose track, re-derive it (sudo test "card pass: the last face is re-derivable from the board and the top dealt card").
 - **During the echoes:** step 1 of every echo re-reads X, Y and P from the board and the held card. The previous P is not needed.
 - **Within one echo:** P is held only from the look until the echo's edge and corner have been found. Both carry P as a sticker.
@@ -243,8 +244,7 @@ Unchanged from v2 §6.
 The pad lengths, block counts, IV-COOK12 digest and `|G|` are as in v2.
 
 How the vectors are made and checked:
-- **Generated** from the normative sudo: `../kats/regen_v3.mjs` imports the sudoc JS build of `megadreifach.sudo` and writes the file, including the IV-COOK12 digest. With `--check` it confirms that a fresh run reproduces the file byte for byte. CI does this in `tools/generate-demos.sh`. No hand-written copy of `W` checks the sudo.
-- **The study engine.** `proofs/megadreifach/security/v3/em4_vs_sudo.py` tests that the fast engine the §8 statistics were computed with gives the same `HashDeckBodyFrom` digests as the sudo build, on 64 seeded random (h, deal) pairs. It also runs in `tools/generate-demos.sh`, against its committed log. It ties the statistics to the sudo; it is not a check of the spec.
+- **Generated** from the normative sudo: `../kats/regen_v3.mjs` imports the sudoc JS build of `megadreifach.sudo` and writes the file, including the IV-COOK12 digest. With `--check` it confirms that a fresh run reproduces the file byte for byte. CI does this in `tools/generate-demos.sh`. The repo has no other implementation of v3's `W`.
 - **Sudo tests** assert:
   - pad, φ, IV-COOK12, the rank, the group law, the API and the edge table (all as v2);
   - the piece-colour reads;
@@ -252,7 +252,7 @@ How the vectors are made and checked:
   - coverage;
   - the 60 distinct read words per piece and colour pair (§5.8);
   - the re-derivable card-pass last face;
-  - the King turn, which equals the step of the rank that counts up to the opposite face;
+  - that `card_step` uses the rank only for its first turn (a King equals the rank that counts up to the opposite face), and that no face is its own opposite;
   - the exact cost counts for every held card (§5.6);
   - the eight `Hash` digests and the `HashDeck` vector;
   - two `HashDeckBody` vectors, one of them with K♦ held.
@@ -263,25 +263,27 @@ How the vectors are made and checked:
 
 # 8. Security status
 
-Nothing here is a security claim. All statistics are about **one compression block** of `E_m` and **named distinguishers** only. Evidence, scripts, seeds and unedited logs are in [`proofs/megadreifach/security/v3/`](../../../../proofs/megadreifach/security/v3/README.md); the analysis, including the rejected variants, is in [`ANALYSIS.md`](../../../../proofs/megadreifach/security/v3/ANALYSIS.md) there.
+Nothing here is a security claim. All statistics are about **one compression block** of `E_m` and **named distinguishers** only. Evidence, seeds, the in-tree harness and the logs are in [`proofs/megadreifach/security/v3/`](../../../../proofs/megadreifach/security/v3/README.md); the analysis, including the rejected variants, is in [`ANALYSIS.md`](../../../../proofs/megadreifach/security/v3/ANALYSIS.md) there.
 
 **Tags.**
-- **PROVED**: an argument or a finite enumeration.
-- **COMPUTED**: seeded, with 95% intervals. For 0 hits, the exact one-sided 95% bound.
+- **PROVED**: checked by a named test of `megadreifach.sudo`.
+- **ARGUED**: a written argument, not machine-checked.
+- **OUT-OF-TREE**: measured with out-of-tree code (see the evidence README). Seeded, with 95% intervals; for 0 hits, the exact one-sided 95% bound. The log is a record, not a repo-checked result.
+- **IN-TREE**: measured by the repo's harness on the sudoc JS build of `megadreifach.sudo`; each log records the command that reproduces it.
 - **HEUR**: a heuristic.
 
 **Tests.** Q is the quotient of two related `W`s. The ideal is a uniform element of G: P(fix ≥ 2) = 0.264241, mean fixed pieces 1, mean moved 49.1667.
 - **D1** is a free start with a 2-edge flip of h, on the left: `W(h)⁻¹W(gh)`.
-- **D1′** is the same flip on the right: `W(hg)W(h)⁻¹`. D1 and D1′ have the same law (PROVED).
+- **D1′** is the same flip on the right: `W(hg)W(h)⁻¹`. D1 and D1′ have the same law (ARGUED).
 - **D2** is a secret uniform start, with cards 51 and 52 swapped.
 - **D3** is telescoping card pairs at 51/52.
 - **Merge** swaps adjacent cards at 8 positions and looks for state merges and output collisions.
 
-**Results.**
+**Results (OUT-OF-TREE except the "Pieces read" v3 cell).**
 
 | Test | v2 (C36): D1′ at 1M, coverage at 100k blocks | **v3 (ZP26)**: D1 + D1′ at 16M per side (pooled), D2 at 4M |
 | --- | --- | --- |
-| Pieces read per block | 41.2 of 50 on average (COMPUTED) | **50 of 50 (PROVED)** |
+| Pieces read per block | 41.2 of 50 on average | **50 of 50 (PROVED)** |
 | Free start, exact prediction (Δ = id, or W unchanged) | **5.18%** [5.14, 5.23] | 0 in 32M quotients (≤ 9.4e-8) |
 | Free start, P(fixC ≥ 2) above ideal | +0.0550 | **−0.00004 ± 0.00016** (HEUR pooling of four 8M samples) |
 | Free start, P(fixE ≥ 2) above ideal | +0.0796 | **−0.00005 ± 0.00016** |
@@ -291,7 +293,16 @@ Nothing here is a security claim. All statistics are about **one compression blo
 | D3, 8 × 50k | — | 0 positions equal, 0 collisions (≤ 6.0e-5 per cell) |
 | End-of-W diagnostic, 2M | — | no last-two-step excess beyond ±0.00022. Fully fixed corners of Q +0.00101 ± 0.00080 (a 2.5σ flag, never directly re-measured; the 8M runs' per-corner rates make an excess that large unlikely, HEUR) |
 
-**Power** (normal approximation):
+**In-tree results (IN-TREE; ZP26 only, much smaller; ANALYSIS §12.9).** The harness `proofs/megadreifach/security/v3/harness/zp26_stats.mjs` drives the sudoc JS build of this sudo.
+
+| Test | Result (±: 95% half-width) |
+| --- | --- |
+| D2, 100k | P(fixE ≥ 2) / P(fixC ≥ 2) above ideal +0.00015 / −0.00103 (±0.0027); histogram p .44 / .79 |
+| D1 / D1′, 50k (same samples) | P(fixE ≥ 2) +0.0019 / +0.0026, P(fixC ≥ 2) −0.0023 / +0.0021 (±0.0039 each); 0 exact predictions in 100k quotients |
+| Merge, 64k adjacent swaps | 0 output collisions (≤ 4.7e-5 per pair) |
+| D3, 8 × 8,000 | 0 output collisions (≤ 3.7e-4 per cell) |
+
+**Power** (normal approximation, for the OUT-OF-TREE sizes):
 - D1 + D1′ at 16M: 90% power at |adv| ≥ 0.00026 on P(fix ≥ 2).
 - D2 at 4M: 90% power at 0.0007.
 

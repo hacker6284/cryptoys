@@ -1,0 +1,8 @@
+# command: d2 100000 80000000
+selfcheck: sampler positions are build group elements 8/8; y == HashDeckBodyFrom 8/8; face-turn words legal 8/8; reference laws sum to 1: true
+ideal (uniform G): P(fixE>=2) 0.264241, P(fixC>=2) 0.264241, mean moved 49.1667
+D2 ZP26: secret uniform h, uniform deal, cards 51 and 52 swapped; N=100000, seeds 80000000+chunk (chunk 2500)
+D2 n=100000: P(fixE>=2) 0.26439 [0.26167, 0.26713] adv +0.00015 | P(fixC>=2) 0.26321 [0.26049, 0.26595] adv -0.00103
+D2 n=100000: mean fixE 0.9988, mean fixC 0.9983 (ideal 1 +- 0.0062) | mean moved 49.1645 +- 0.0057 (ideal 49.1667, diff -0.0021)
+D2 n=100000: chi2 fixE-hist p=0.44, fixC-hist p=0.79 | cycle type E 511.2/508 p=0.45, C 201.4/172 p=0.062
+# time D2: 574.4 s, 200000 blocks, 348.2 blocks/s, 4 workers

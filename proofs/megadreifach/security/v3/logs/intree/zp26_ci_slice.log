@@ -1,0 +1,51 @@
+# command: ci - 84000000
+selfcheck: sampler positions are build group elements 8/8; y == HashDeckBodyFrom 8/8; face-turn words legal 8/8; reference laws sum to 1: true
+ideal (uniform G): P(fixE>=2) 0.264241, P(fixC>=2) 0.264241, mean moved 49.1667
+D2 ZP26: secret uniform h, uniform deal, cards 51 and 52 swapped; N=400, seeds 84000000+chunk (chunk 50)
+D2 n=400: P(fixE>=2) 0.24500 [0.20541, 0.28944] adv -0.01924 | P(fixC>=2) 0.24750 [0.20774, 0.29206] adv -0.01674
+D2 n=400: mean fixE 0.9750, mean fixC 1.0050 (ideal 1 +- 0.0980) | mean moved 49.1325 +- 0.0905 (ideal 49.1667, diff -0.0342)
+D2 n=400: chi2 fixE-hist p=0.70, fixC-hist p=0.17 | cycle type E 0.1/1 p=0.78, C 4.6/2 p=0.10
+# time D2: 2.9 s, 800 blocks, 277.2 blocks/s, 4 workers
+D1 + D1' ZP26: uniform deal K, uniform h, uniform 2-edge flip g; same samples; N=200, seeds 84100000+chunk (chunk 25)
+D1  n=200: exact prediction 0/200 [0.0, 0.015]
+D1  n=200: P(fixE>=2) 0.26500 [0.20868, 0.33018] adv +0.00076 | P(fixC>=2) 0.27500 [0.21780, 0.34068] adv +0.01076
+D1  n=200: mean fixE 1.0400, mean fixC 1.0550 (ideal 1 +- 0.1386) | mean moved 49.1550 +- 0.1220 (ideal 49.1667, diff -0.0117)
+D1  n=200: chi2 fixE-hist p=0.44, fixC-hist p=0.71 | cycle type E 0.0/0 p=1.0, C 0.8/1 p=0.36
+D1' n=200: exact prediction 0/200 [0.0, 0.015]
+D1' n=200: P(fixE>=2) 0.25500 [0.19960, 0.31963] adv -0.00924 | P(fixC>=2) 0.29000 [0.23154, 0.35638] adv +0.02576
+D1' n=200: mean fixE 0.9550, mean fixC 1.1050 (ideal 1 +- 0.1386) | mean moved 49.1000 +- 0.1266 (ideal 49.1667, diff -0.0667)
+D1' n=200: chi2 fixE-hist p=0.30, fixC-hist p=0.41 | cycle type E 0.0/0 p=1.0, C 0.9/1 p=0.35
+D1+D1' averaged: P(fixE>=2) adv -0.00424, P(fixC>=2) adv +0.01826 (HEUR pooling); paired D1 - D1' P(fixC>=2) -0.01500 +- 0.08392
+# time D1: 2.0 s, 600 blocks, 297.3 blocks/s, 4 workers
+merge ZP26: adjacent swap at deal positions 1, 2, 13, 26, 27, 39, 50, 51, IV and uniform start, N=25 each; seeds 84200000 + 10000*[uniform] + 100*position + chunk
+  IV   swap at  1: mean differing slots 48.4800, collisions 0
+  IV   swap at  2: mean differing slots 49.1600, collisions 0
+  IV   swap at 13: mean differing slots 49.4800, collisions 0
+  IV   swap at 26: mean differing slots 49.3200, collisions 0
+  IV   swap at 27: mean differing slots 49.2800, collisions 0
+  IV   swap at 39: mean differing slots 49.1600, collisions 0
+  IV   swap at 50: mean differing slots 48.8800, collisions 0
+  IV   swap at 51: mean differing slots 49.4400, collisions 0
+  IV   differing output slots: mean 49.1500 (ideal 49.1667); [0-40] 0.00000 (ideal 0.00000); [41-44] 0.00000 (ideal 0.00023); [45-46] 0.02000 (ideal 0.01019); [47-47] 0.04500 (ideal 0.04192); [48-48] 0.12500 (ideal 0.15090); [49-49] 0.38500 (ideal 0.36217); [50-50] 0.42500 (ideal 0.43460)
+  rand swap at  1: mean differing slots 49.2000, collisions 0
+  rand swap at  2: mean differing slots 49.2800, collisions 0
+  rand swap at 13: mean differing slots 49.3600, collisions 0
+  rand swap at 26: mean differing slots 49.3200, collisions 0
+  rand swap at 27: mean differing slots 48.8800, collisions 0
+  rand swap at 39: mean differing slots 49.0000, collisions 0
+  rand swap at 50: mean differing slots 49.0000, collisions 0
+  rand swap at 51: mean differing slots 49.2000, collisions 0
+  rand differing output slots: mean 49.1550 (ideal 49.1667); [0-40] 0.00000 (ideal 0.00000); [41-44] 0.00000 (ideal 0.00023); [45-46] 0.01500 (ideal 0.01019); [47-47] 0.07000 (ideal 0.04192); [48-48] 0.13000 (ideal 0.15090); [49-49] 0.31500 (ideal 0.36217); [50-50] 0.47000 (ideal 0.43460)
+merge ZP26: 400 adjacent-swap pairs; output collisions 0; 0-hit 95% bound per pair 7.5e-3
+# time merge: 2.2 s, 800 blocks, 370.5 blocks/s, 4 workers
+D3 ZP26: telescoping pair at deal positions 51, 52 (both orders), IV and uniform start, N=50 per (start, class); seeds 84300000 + 100*(4*start + class) + chunk
+  start IV   pair same n=50: output collisions 0 (0-hit 95% bound 5.8e-2)
+  start IV   pair opp  n=50: output collisions 0 (0-hit 95% bound 5.8e-2)
+  start IV   pair KA   n=50: output collisions 0 (0-hit 95% bound 5.8e-2)
+  start IV   pair rand n=50: output collisions 0 (0-hit 95% bound 5.8e-2)
+  start rand pair same n=50: output collisions 0 (0-hit 95% bound 5.8e-2)
+  start rand pair opp  n=50: output collisions 0 (0-hit 95% bound 5.8e-2)
+  start rand pair KA   n=50: output collisions 0 (0-hit 95% bound 5.8e-2)
+  start rand pair rand n=50: output collisions 0 (0-hit 95% bound 5.8e-2)
+D3 ZP26: 400 pairs; output collisions 0
+# time D3: 2.4 s, 800 blocks, 337.4 blocks/s, 4 workers

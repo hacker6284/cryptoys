@@ -24,10 +24,10 @@ let voice = null;
  */
 /**
  * [slot, contactMs, stretch, tempo] per leaf of a playback starting at
- * `at`. A face turn with align "peak-velocity" has its contact where its
- * face turns fastest (PEAK_VELOCITY of the way through, scaling with the
- * turn); other face turns on their start; rotations (and per-click
- * turns, whose clicks count back from the seat) on their end.
+ * `at`. A turn or rotation with align "peak-velocity" has its contact
+ * where it turns fastest (PEAK_VELOCITY of the way through, scaling with
+ * the move); otherwise rotations (and per-click turns, whose clicks count
+ * back from the seat) on their end, face turns on their start.
  */
 export function turnContacts({ at, durations = [], tempo = timing.speed, leaves = [] }) {
     const stretch = timing.speed / tempo;
@@ -37,8 +37,8 @@ export function turnContacts({ at, durations = [], tempo = timing.speed, leaves 
         const len = (durations[k] ?? cubingMs(amountOf(move))) / tempo;
         const slot = slotOf(move);
         const s = settings.sounds[slot];
-        const onEnd = slot === "rotation" || s?.perClick;
-        const contact = onEnd ? t + len : s?.align === "peak-velocity" ? t + PEAK_VELOCITY * len : t;
+        const contact = s?.align === "peak-velocity" ? t + PEAK_VELOCITY * len
+            : slot === "rotation" || s?.perClick ? t + len : t;
         out.push([slot, contact, stretch, tempo]);
         t += len;
     });
@@ -57,8 +57,8 @@ export function scrambleTurnVoice() {
         /**
          * Playback of `leaves` starts at `at` (performance.now()), each
          * leaf `durations[k]` ms long at tempo 1. A face turn's contact
-         * is the moment its face turns fastest (align "peak-velocity");
-         * a rotation's is the moment it ends. Tuned
+         * and a rotation's is the moment it turns fastest (align
+         * "peak-velocity"). Tuned
          * at timing.speed; at another tempo each sound keeps its place in
          * the turn. `at` may be in the future (see lead()).
          */

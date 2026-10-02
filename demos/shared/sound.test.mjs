@@ -366,3 +366,13 @@ test("audibleCentroidMs: energy centre of the part within −30 dB of the peak",
     const buffer = { sampleRate: sr, length: data.length, numberOfChannels: 1, getChannelData: () => data };
     assert.ok(Math.abs(audibleCentroidMs(buffer) - 204.5) < 1e-9, "centre of the cluster, hiss ignored");
 });
+
+test("swellMs: centre of the loudest 10 ms", async () => {
+    const { swellMs } = await import(new URL("./sound.js", import.meta.url));
+    const sr = 1000;
+    const data = new Float32Array(500);
+    for (let i = 50; i < 200; i++) data[i] = 0.2; // body
+    for (let i = 120; i < 130; i++) data[i] = 0.5; // swell 120–130 ms
+    const buffer = { sampleRate: sr, length: data.length, numberOfChannels: 1, getChannelData: () => data };
+    assert.equal(swellMs(buffer), 125);
+});

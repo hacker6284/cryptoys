@@ -87,15 +87,29 @@ assert.equal(settings.sounds.single.file, "scramble-turn/single/single_spacejoe-
 assert.equal(settings.sounds.single.gainDb, 11, "single gain is the approved one");
 assert.equal(fileStart({ peakAtMs: 100 }, 0, 143, 1.4 / 0.7), 200 - 143, "peakAtMs scales with the turn");
 
-// offsetMs sounds (the rotation): the time from the loudest sample to
-// the contact scales the same way.
-const { offsetMs } = settings.sounds.rotation;
-const peakMs = 127.6;
-for (const tempo of [0.5, 1.4, 4]) {
-    const end = 1000 / tempo;
-    const peakAt = fileStart({ offsetMs }, end, peakMs, timing.speed / tempo) + peakMs;
-    assert.ok(Math.abs((end - peakAt) - (-offsetMs - peakMs) * timing.speed / tempo) < 1e-9, `rotation peak at ${tempo}×`);
+// The rotation swish (approved 2026-10-02, its swell at mid-rotation for
+// a quarter turn) follows the same rule: its swell (loudest 10 ms, 124.3
+// ms into the decoded file) at mid-rotation for any rotation and tempo.
+{
+    const rot = settings.sounds.rotation;
+    assert.deepEqual(rot, { file: "scramble-rotate/7_sadiquecat-816261-broomstick-soft", gainDb: -14.9, align: "peak-velocity", centre: "swell", nudgeMs: 0 }, "the approved rotation swish");
+    const file = { swellMs: 124.3, centroidMs: 146.1, peakMs: 127.6 };
+    for (const [move, ms] of [["y", 1000], ["y2", 1500], ["x'", 1000]]) {
+        for (const tempo of [0.5, 1.4, 4]) {
+            const at = 10000;
+            const len = ms / tempo;
+            const [[slot, contactMs, stretch]] = turnContacts({ at, tempo, leaves: [move] });
+            assert.equal(slot, "rotation");
+            const swellAt = fileStart(rot, contactMs, file, stretch) + file.swellMs;
+            assert.ok(Math.abs(swellAt - (at + len / 2)) < 1e-9, `${move} swell at mid-rotation at ${tempo}×`);
+            if (move === "y" && tempo === 1.4) {
+                // Where Zachary approved it: the file 482 ms before the end of
+                // the 714 ms quarter rotation (offsetMs −482, 2026-10-02).
+                assert.ok(Math.abs(fileStart(rot, contactMs, file, stretch) - (at + len - 482)) < 1, "quarter rotation within 1 ms of the approved timing");
+            }
+        }
+    }
 }
-assert.equal(stretchContact(1000, offsetMs, peakMs, 1), 1000, "unchanged at the tuned tempo");
+assert.equal(stretchContact(1000, -482, 127.6, 1), 1000, "offsetMs sounds: unchanged at the tuned tempo");
 
 console.log("animation library tests ok");

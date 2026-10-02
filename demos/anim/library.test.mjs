@@ -54,6 +54,12 @@ for (const [slot, peakMs] of Object.entries(peaks)) {
         assert.ok(Math.abs(peakAt - (turnStart + s.peakAtMs * timing.speed / tempo)) < 1e-9, `${slot} peak at ${tempo}×`);
     }
 }
+// Zachary: "Give them exactly the delay of the single turn for now": the
+// double's and triple's loudest clicks land the same ms after the turn
+// starts as the single's (its file start + its 143.3 ms peak).
+for (const slot of ["double", "triple"]) {
+    assert.ok(Math.abs(settings.sounds[slot].peakAtMs - (settings.sounds.single.offsetMs + 143.3)) < 1e-9, `${slot} clicks with the single's delay`);
+}
 assert.equal(fileStart({ peakAtMs: 100 }, 0, 143, 1.4 / 0.7), 200 - 143, "peakAtMs scales with the turn: half the tempo, twice as late");
 
 // LOCKED: the single click as Zachary approved it (af9a8fb; tempo-scaled

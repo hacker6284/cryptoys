@@ -24,6 +24,7 @@ for (const name of entries) {
 
 // scramble-turn is approved as Zachary heard it at af9a8fb.
 assert.match(readme, /\| `scramble-turn` \|[^\n]*approved[^\n]*af9a8fb/);
+assert.match(readme, /\| `scramble-turn` \|[^\n]*face-turn sounds approved and LOCKED at `6014bfc`/, "README records the face-turn lock");
 
 const { settings, timing, slots } = await import(new URL("scramble-turn/index.js", here));
 assert.equal(timing, settings.timing, "timing is the settings object itself");
@@ -50,6 +51,17 @@ const { PEAK_VELOCITY, smootherStep } = await import(new URL("twisty.js", here))
 assert.ok(Math.abs(PEAK_VELOCITY - 0.5) < 1e-3, "smootherStep turns fastest half way");
 assert.ok(Math.abs((smootherStep(0.5 + 1e-6) - smootherStep(0.5 - 1e-6)) / 2e-6 - 1.875) < 1e-6, "1.875× the mean speed there");
 const { turnContacts } = await import(new URL("scramble-turn/index.js", here));
+// APPROVED and LOCKED at 6014bfc (Zachary: "All look pretty good."):
+// exactly these entries; nothing else may move them.
+assert.deepEqual(
+    { single: settings.sounds.single, double: settings.sounds.double, triple: settings.sounds.triple },
+    {
+        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, align: "peak-velocity", nudgeMs: 0 },
+        double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, align: "peak-velocity", nudgeMs: 0 },
+        triple: { file: "scramble-turn/triple/triple_spacejoe-486581", gainDb: 6.5, align: "peak-velocity", nudgeMs: 0 },
+    },
+    "the approved face-turn sounds (6014bfc) are unchanged",
+);
 const files = { // decoded: audible centroid (sound.js audibleCentroidMs), loudest sample
     single: { move: "R", centroidMs: 141.2, peakMs: 143.3 },
     double: { move: "R2", centroidMs: 106.9, peakMs: 119.8 },

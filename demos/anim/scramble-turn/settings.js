@@ -44,7 +44,11 @@ export default {
         // velocity." cubing.js eases every turn with smootherStep, fastest at
         // exactly half way: 357 ms into a single (714 ms), 536 ms into a double
         // (1071 ms), 714 ms into a triple (1429 ms) at 1.4×; it scales with the
-        // tempo. LOCKED to this rule: pinned by ../library.test.mjs.
+        // tempo.
+        // APPROVED and LOCKED (Zachary at 6014bfc: "All look pretty good."):
+        // single, double and triple: file, gainDb, align "peak-velocity",
+        // nudgeMs 0. Do not change them, or anything they depend on, without
+        // his sign-off; ../library.test.mjs pins them.
         // Single turn (one click), audible centre 141 ms into the file.
         single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, align: "peak-velocity", nudgeMs: 0 },
         // Double turn (two clicks), audible centre of the cluster 107 ms in.

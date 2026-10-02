@@ -16,7 +16,7 @@
 //   §3 B8      check_received
 //   §3.1       answer, copy_shot, call_the_shots (sending a public value)
 //   §4.3       READ: Kind, Ship, KeyGrid, ship_pass, peg_pass, read_key
-//   §4.2       BUILD: Dice, throw_row_cup, LetGo, grow_until_it_bumps, build_key_grid
+//   §4.2       BUILD: Dice, throw_row_cup, grow_until_it_bumps, build_key_grid
 //   §3 B9      public_value, shared_secret, exchange
 // The parity check (SPEC §9) is a hand check that changes no peg and is not
 // encoded. Neither are the SPEC's optional variants. BUILD has one dice recipe:
@@ -276,8 +276,7 @@ export func check_received(f: Field, received: List<int>) -> Option<List<int>>
 // calls every hole of the value, hole 0 first up to hole n - 1; the sender
 // answers by the peg in that hole; the receiver copies each answer into the same
 // hole of Y. The board bookkeeping (the lane-5 "calling" peg, naming holes by
-// coordinates, the strip-hole cursor parked on Y) records progress and is not
-// modelled.
+// coordinates) records progress and is not modelled.
 
 enum Shot
     Hit
@@ -521,13 +520,6 @@ func throw_row_cup(d: inout Dice) -> List<int>
         tray.append(throw_d10(d))
     return tray
 
-// Letting go (SPEC §4.2): dice in the tray carry no meaning, so on coming back
-// throw again every die not yet read (each again until it shows 1-9). `read` is
-// how many of the tray's dice have been read, in rainbow order.
-func rethrow_unread(d: inout Dice, tray: inout List<int>, read: int)
-    for k = read to tray.length - 1
-        tray[k] = throw_d10(d)
-
 // The keypad (1 2 3 / 4 5 6 / 7 8 9): the row the face sits in gives the peg for
 // the pair's first hole, its column the peg for the second hole. Top row or left
 // column: no peg (0); middle: white (1); bottom row or right column: red (2).
@@ -543,29 +535,6 @@ func has_room(covered: List<bool>, row: int, col: int) -> bool
     if (row >= grid_rows) or (col >= grid_cols)
         return false
     return not covered[row * grid_cols + col]
-
-// A let-go point. gap = false: at the boundary before hole `hole`, which must be
-// a die's first hole (holes 1, 3, 5, 7, 9 of a row: an even col here). gap = true:
-// in the step 1 -> 2 gap at that hole, after its ship decision (the lane-10 peg
-// standing) and before the die is read. These are the only places the SPEC lets
-// go. `hole` is the reading-order index row * 10 + col.
-record LetGo
-    hole: int
-    gap: bool
-
-// Each point appears at most once: you come back from a let-go before the next.
-func letgo_unique(letgo: List<LetGo>) -> bool
-    for i = 0 to letgo.length - 1
-        for j = i + 1 to letgo.length - 1
-            if letgo[i] == letgo[j]
-                return false
-    return true
-
-func lets_go(letgo: List<LetGo>, hole: int, gap: bool) -> bool
-    for i = 0 to letgo.length - 1
-        if (letgo[i].hole == hole) and (letgo[i].gap == gap)
-            return true
-    return false
 
 func cover(covered: inout List<bool>, s: Ship)
     under = ship_holes(s)
@@ -637,14 +606,9 @@ func grow_until_it_bumps(d: inout Dice, covered: List<bool>, row: int, col: int)
 //      if a ship covers the hole, otherwise in the grid hole.
 // A ship laid at the cursor covers only the cursor hole and later ones, none of
 // which has a peg yet, so no peg is ever in a ship's way.
-// letgo lists where the builder lets go and comes back (LetGo); each one throws
-// the unread tray dice again. With no let-go the d10 faces are read in the order
-// they were thrown. Never between a die's two pegs: the pair is one step.
-func build(d: inout Dice, letgo: List<LetGo>) -> KeyGrid
-    assert letgo_unique(letgo)
-    for i = 0 to letgo.length - 1
-        assert (letgo[i].hole >= 0) and (letgo[i].hole < grid_rows * grid_cols)
-        assert (letgo[i].hole mod grid_cols) mod 2 == 0
+// Each key grid is built in one sitting, without letting go (SPEC §4.2), so the
+// d10 faces are read in the order they were thrown.
+func build(d: inout Dice) -> KeyGrid
     holes = grid_rows * grid_cols
     covered = filled(holes, false)
     ships: List<Ship> = []
@@ -655,8 +619,6 @@ func build(d: inout Dice, letgo: List<LetGo>) -> KeyGrid
         face = 0
         for col = 0 to grid_cols - 1
             h = row * grid_cols + col
-            if lets_go(letgo, h, false)
-                rethrow_unread(d, tray, read)
             if col == 0
                 tray = throw_row_cup(d)
                 read = 0
@@ -668,8 +630,6 @@ func build(d: inout Dice, letgo: List<LetGo>) -> KeyGrid
                         ships.append(s)
                     case None
                         skip
-            if lets_go(letgo, h, true)
-                rethrow_unread(d, tray, read)
             if col mod 2 == 0
                 face = tray[read]
                 read = read + 1
@@ -686,12 +646,8 @@ record Built
     used10: int
 
 export func build_key_grid(source: Dice) -> Built
-    return build_letting_go(source, [])
-
-// The same build, letting go and coming back at the given points.
-export func build_letting_go(source: Dice, letgo: List<LetGo>) -> Built
     d = source
-    grid = build(d, letgo)
+    grid = build(d)
     return Built(grid, d.next12, d.next6, d.next10)
 
 // ---------------------------------------------------------------------------
@@ -1033,37 +989,6 @@ test "4.2 BUILD: a ship across a die pair takes both pairs' pegs"
     assert (built.used12 == 98) and (built.used6 == 1) and (built.used10 == 50)
     cells = read_key([built.grid])
     assert (cells[1] == 0) and (cells[2] == 1) and (cells[3] == 1) and (cells[4] == 0)
-
-test "4.2 BUILD: letting go throws the unread tray dice again"
-    // All sea. Let go after pair 2 of row A (the boundary before A5): the three
-    // unread dice (yellow, green, blue) are thrown again and show 9, 8, 7.
-    faces = [1, 2, 3, 4, 5] + [9, 8, 7] + filled(45, 5)
-    built = build_letting_go(dice(filled(99, 1), [], faces), [LetGo(4, false)])
-    assert built.grid.pegs == [0, 0, 0, 1, 2, 2, 2, 1, 2, 0] + filled(90, 1)
-    assert built.used10 == 53
-    // Without the let-go the same throws give pair 3 the 3 and leave 3 faces unread.
-    plain = build_key_grid(dice(filled(99, 1), [], faces))
-    assert plain.grid.pegs[4] == 0
-    assert plain.used10 == 50
-    // Let go in the step 1 -> 2 gap at B3: pair 1 of row B is read, the other
-    // four dice are thrown again; the first shows its zero face and is thrown again.
-    faces = filled(5, 5) + [1, 2, 3, 4, 5] + [0, 6, 6, 6, 6] + filled(40, 5)
-    built = build_letting_go(dice(filled(99, 1), [], faces), [LetGo(12, true)])
-    assert built.grid.pegs[10] == 0
-    assert built.grid.pegs[11] == 0
-    for h = 12 to 19
-        assert built.grid.pegs[h] == ((h mod 2) + 1)
-    assert built.used10 == 55
-
-test "4.2 BUILD: let-go points are only at a die's first hole"
-    expect_trap AssertFailed
-        build_letting_go(dice(filled(99, 1), [], filled(50, 5)), [LetGo(5, false)])
-
-test "4.2 BUILD: each let-go point is listed once"
-    assert letgo_unique([LetGo(4, false), LetGo(4, true)])
-    assert not letgo_unique([LetGo(4, false), LetGo(4, false)])
-    expect_trap AssertFailed
-        build_letting_go(dice(filled(99, 1), [], filled(56, 5)), [LetGo(4, false), LetGo(4, false)])
 
 test "B8 squares into C and tidies C"
     // 3 squares to 9, a lone white in hole 2.

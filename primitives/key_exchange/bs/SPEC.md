@@ -24,7 +24,7 @@ The small tiers are deliberately weak. The goal is a working, honest DH that sca
 
 **Dice.** The key's dice and what each roll decides are in §4.2 (checked in `randomizer-kit/` and `ships-pegs/`).
 * **Optional everywhere:** the **rainbow queue**: throw a cup of same-shape dice, one per rainbow colour (red, orange, yellow, green, blue, purple). Each roll the recipe asks for takes the next colour still in the tray, and that die goes back in the cup once read. When none are left, throw the cup again. It is exact because the colour order is fixed before the throw and no die is read twice.
-* Dice are a source, never storage. Dice in the tray carry no meaning: after a let-go, throw again every die you have not read (§4.2).
+* Dice are a source, never storage.
 
 ---
 
@@ -106,7 +106,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
   - One carry is one more move.
   - Moving a register costs two moves per peg: lift and place.
   - Hand time assumes 1 move per second with no errors. Real humans are slower; multiply by 2–3 [est].
-* **A4. Keys come from fair dice by the BUILD (§4.2), never from humans.** Every entropy figure assumes fair dice and the rule followed exactly, with every let-go chosen without regard to the dice in the tray (§4.2). None of them applies to human-chosen fleets.
+* **A4. Keys come from fair dice by the BUILD (§4.2), never from humans.** Every entropy figure assumes fair dice and the rule followed exactly. None of them applies to human-chosen fleets.
 * **A5. Security is classical.** Shor's algorithm breaks every tier; that is out of scope.
 * **A6. Standard hardness assumptions.** CDH and DLP in the order-q subgroup of F_p* are as hard as the best known algorithms (NFS, rho). For the long-toll primes, I additionally assume the fixed top half gives NFS no special advantage [est, §9].
 * **A7. Work is done out of sight.** The pattern of work reveals the key (§9).
@@ -231,8 +231,6 @@ A public value is the sender's tidy answer from B9 step 1. It is in X (the walk 
 5. **Copy each answer into the same hole of Y**, exactly as in Battleship: a red peg on a hit, a white peg on a miss, nothing on a misfire. Call every hole of the register; never stop early, even after a long run of misfires.
 6. **When every hole has been called,** Y is an exact copy of the sender's value. Lift the peg from lane hole 5. The sender keeps their value on the board until the copy is done.
 
-**Letting go.** Before you let go, park the strip-hole cursor (its 2 ships) on Y at the next hole to call, as BUILD does with the walk cursor (§4.2). With the lane-hole-5 peg standing, the board then says where to resume: every hole before the cursor has been called and copied, and no hole after it has.
-
 Only public values are called; key grids are never shown or called.
 
 *Mnemonic: "Red hits, white misses, empty misfires."*
@@ -266,15 +264,10 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 > 2. **Peg it from its row-cup die.** Picture the number on a phone keypad (1 2 3 / 4 5 6 / 7 8 9). It is never the zero face ("0" or "10"): that face is thrown again (step 0). **The row the number sits in gives the peg for the pair's first hole; its column gives the peg for the pair's second hole.** Top row or left column: no peg. Middle row or middle column: white. Bottom row or right column: red. (So 6, middle row and right column, is white then red.) Put the peg in the ship's hole if a ship covers this hole, otherwise in the grid hole. The die goes back in the cup after its second hole.
 > 3. **Move the cursor to the next hole** (reading order). After J10, park it off the grid.
 >
-> **Letting go.** You may let go only where the hole is finished (the rule is in step 1 below) and no die's pair is half done. With the row cup, that is after a die's second hole (holes 2, 4, 6, 8 and 10 of a row), and the cursor is then parked at the hole you are about to start.
-> - **A die's pair is one step you may not interrupt.** Its two pegs still go in one at a time, each when the cursor reaches its hole. But once the first is in, you may not let go until the second is in and the die is back in the cup.
-> - **The one exception to finishing the hole is the gap between steps 1 and 2 at a die's first hole** (holes 1, 3, 5, 7 and 9). You may let go there, before that die's first peg, if you first stand a **white peg in control-lane hole 10** ("ship decision made"). Lift it when you move the cursor.
-> - **Dice in the tray carry no meaning.** When you come back, throw again every row-cup die still in the tray (any zero face, "0" or "10", again until 1–9) and go on: the next die you read, in rainbow order, gives the pair the cursor is on.
+> **Build each key grid in one sitting, without letting go.**
 
 **Step 1: grow until it bumps** (at the cursor hole, when no ship covers it)
 
-> **Finish the hole, including all growth rolls and the Sub/Cruiser roll, before you let go.** A ship waiting for a growth roll looks exactly like a finished one of its current length, so a build resumed from the board would stop it short.
->
 > A heading "has room for a Destroyer" when the next hole that way is on the grid and not under a ship.
 > - **If neither heading has room:** it is **sea**, with no roll.
 > - **If both have room, roll the hole die (d12): 1–4 sea, 5–8 across, 9–12 down.**
@@ -285,19 +278,17 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 >   2. **Lay a Destroyer** from this hole in that heading.
 >   3. **Grow it with the d6:** while there is room for one more hole, roll. From 2 holes it **grows on 4–6**. From 3 holes, and from 4, it grows **only on a 6**.
 >      - **Growing means swapping the physical piece for the next longer ship, lying over the same holes plus the next one in its heading:** Destroyer → a 3-holer (Sub or Cruiser) → Battleship → Carrier.
->      - While a ship grows, the piece on the board *is* its current length. Nothing on the board says whether it is still growing; that is why you finish the hole first.
+>      - While a ship grows, the piece on the board *is* its current length.
 >   4. **It stops growing** when a roll fails, or with no roll at all when it **bumps**: the next hole is off the grid or under a ship.
 >   5. **A 3-holer:** roll the d6: **1–3 Sub, 4–6 Cruiser.** Swap in that piece if the one lying there is the other.
 >
 > **Ships may touch**, side by side or end to end, as in Hasbro's rules. They never overlap: a ship only ever grows into open holes.
 
 * **The d12 is exact:** its thirds and halves give each open heading and sea exactly the weights of "grow until it bumps", and its odd/even (the bow) is independent of them. This is checked exactly in all 25 room states and on whole builds (`randomizer-kit/`, part B; derivation in `key-selection/NOTES.md` §5).
-* **Why the row cup is exact.** Faces 1–9 correspond one-to-one to pairs of trits (3 × 3). A 0 is re-thrown on its own face only, which is rejection sampling. So every hole gets an exactly uniform, independent trit. Throwing unread dice again after a let-go keeps this exact provided when you let go never depends on what the unread dice in the tray show; then which throw a pair uses never depends on what it shows. If it does depend on them, a builder can steer a pair to any face by letting go and coming back at the same point, and the entropy figures do not hold.
-* **The cursor is the record.** With these let-go rules, a build is only ever left at the boundary after a die's pair, or in the step 1 → 2 gap of a die's first hole. Every hole before the cursor is finished (ship decided, growth and Sub/Cruiser rolls included, and peg rolled). The cursor hole's ship decision is finished if lane hole 10 holds a white peg and not started otherwise. Every hole after it has no peg. So "no peg" never has to mean "sea decided", and a white peg always means a white key digit.
-  - A ship laid at the cursor covers only the cursor hole and holes after it, none of which has a peg yet. Pegs behind the cursor are never in a ship's way, because ships grow only right or down.
-  - Build simulated with random let-go and resume at every hole boundary and every step 1 → 2 gap, resuming from the board alone. The simulation draws each hole's peg on its own (no pairs), so its let-go points include every one allowed above: the joint layout × peg distribution matches the exact model, chi-square 1,327.7 on 1,376 df (2×2, 400k builds) and 101,368 on 101,330 df (2×3, 300k builds) (`ships-pegs/combined.py`).
-  - The literal dice of this section (`ships-pegs/keygrid.py`, d12 + row cup): layout and peg chi-squares against the exact model on 2×2, 2×3, 3×2, 1×5 and 5×1 all within |z| < 2 (`ships-pegs/keygrid_check.py`).
-* So a resumed build needs only what is on the table: the pieces, the pegs, the cursor and the lane peg. The dice carry nothing over. The layout dice use only thirds, halves, odd/even on the d12, and "a six".
+* **Why the row cup is exact.** Faces 1–9 correspond one-to-one to pairs of trits (3 × 3). A 0 is re-thrown on its own face only, which is rejection sampling. So every hole gets an exactly uniform, independent trit.
+* A ship laid at the cursor covers only the cursor hole and holes after it, none of which has a peg yet. Pegs behind the cursor are never in a ship's way, because ships grow only right or down.
+* The literal dice of this section (`ships-pegs/keygrid.py`, d12 + row cup): layout and peg chi-squares against the exact model on 2×2, 2×3, 3×2, 1×5 and 5×1 all within |z| < 2 (`ships-pegs/keygrid_check.py`).
+* The layout dice use only thirds, halves, odd/even on the d12, and "a six".
 
 ### 4.3 READ: "ships, then pegs"
 
@@ -366,7 +357,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
   - Layout figures: exact DP over 5^10 profile states, cross-checked against brute force on small grids and by Monte Carlo (`ships-pegs/build_dp.py`, `brute_build.py`, `viterbi.py`). The layout's min-entropy is lower because heavy grids exist: the most likely layout (p = 2^−124.78) is columns of down-ships separated by sea.
   - Totals: `ships-pegs/combined.py`.
 * **Walk:** 211.10 cells on average (largest seen 222, at most 233); 203.35 hit units (shared phase: white = 1 multiplication, red = 2). **1,048.8 multiplications per grid per person** = 4·211.10 (two walks × a 2-multiplication cube per cell) + 203.35 (shared hits) + 1 (check) = 3.42 per Shannon bit and 3.70 per min-entropy bit (`ships-pegs/combined.py`, 20,000 built grids; the literal dice give 211.08 cells and 203.26 hit units, `keygrid_check.py`).
-* **Build:** 156 dice reads (100.5 layout + 55.5 peg d10s, 5.5 of them void zero faces), about 31 throws, ≈ 265 moves (≈ 88 ship moves + ≈ 66.7 pegs + 110 cursor moves) (`ships-pegs/combined.py`, `keygrid_check.py`). The lane-10 marker (§4.2, letting go) costs at most 200 more moves per grid: a place and a lift at each of the 100 holes. Pieces: ≈ 31.6 ships and ≈ 67 pegs per grid. The build is negligible next to the walk.
+* **Build:** 156 dice reads (100.5 layout + 55.5 peg d10s, 5.5 of them void zero faces), about 31 throws, ≈ 265 moves (≈ 88 ship moves + ≈ 66.7 pegs + 110 cursor moves) (`ships-pegs/combined.py`, `keygrid_check.py`). Pieces: ≈ 31.6 ships and ≈ 67 pegs per grid. The build is negligible next to the walk.
 
 ### 4.8 Grids by tier
 
@@ -504,7 +495,7 @@ Paths are under `proofs/key_exchange/bs/`.
 * **Ships+pegs key** (`ships-pegs/`):
   - Entropy: layout H / H₂ / H∞ = 147.83 / 145.49 / 124.78 bits by exact DP, cross-checked by brute force and Monte Carlo; + 158.50 for the pegs (`build_dp.py`, `brute_build.py`, `viterbi.py`, `combined.py`).
   - Injectivity: exhaustive on 1×2, 2×1, 2×2, 1×5, 2×3, 3×2 and 1×7 (every layout × every peg pattern); 20,000 built 10×10 grids round-trip; 3,000 two-page keys decode (`combined.py`, `combined_multi.py`). Ship pass alone exhaustive up to 4×4 (`read_rule.py`).
-  - Build: the board-only one-pass BUILD with random let-go/resume at every hole boundary and step 1 → 2 gap (a superset of the allowed points, §4.2) matches the exact joint model (chi-square 1,327.7 on 1,376 df at 2×2; 101,368 on 101,330 df at 2×3; `combined.py`). The literal §4.2 dice (d12 + row cup) match it too (`keygrid_check.py`). The d12 hole die gives exactly the distribution of the d6 rule the older scripts simulate (`randomizer-kit/`, part B).
+  - Build: the literal §4.2 dice (d12 + row cup) match the exact joint model (`keygrid_check.py`). The d12 hole die gives exactly the distribution of the d6 rule the older scripts simulate (`randomizer-kit/`, part B).
   - Walk: 211.10 cells, 203.35 hit units, 1,048.8 multiplications per grid (20,000 built grids; `combined.py`).
 * **Malicious values** (`reference/run_output.txt`): 0, 1, p − 1 and p + 1 were rejected in all tiers. A non-residue was accepted and squared into the subgroup. The unchecked victim leaked e mod 2 in 4/4 trials.
 * **Attacks on the toy tiers** (`reference/break_small_output.txt`), on public keys from ships+pegs key grids: T1 fell to baby-step/giant-step in Python in 0.00 s. T2 fell to Pollard rho in C in 3.3 s (9.19·10⁷ iterations; the time varies with the key). In both, Eve's K equalled the real K.

@@ -179,18 +179,75 @@ function finishBox(minX, minY, minZ, maxX, maxY, maxZ, hits) {
     };
 }
 
+/**
+ * The vertex ranges the renderer actually draws for a mesh: null = all of
+ * them; [] = none; else [[start, count], …] in draw order (index space if
+ * indexed). cubing.js puzzles carry hidden geometry in the same buffer
+ * (hint stickers, outer copies) behind invisible materials; measuring it
+ * made the megaminx fit and seat on faces nobody sees.
+ */
+export function drawnRanges(node) {
+    const geo = node?.geometry;
+    if (!geo) return [];
+    const mat = node.material;
+    const total = geo.index ? geo.index.count : (geo.attributes?.position?.count || 0);
+    const dr = geo.drawRange || { start: 0, count: Infinity };
+    const lo = Math.max(0, dr.start || 0);
+    const hi = Math.min(total, lo + (Number.isFinite(dr.count) ? dr.count : Infinity));
+    const clip = (a, n) => {
+        const s0 = Math.max(a, lo);
+        const e0 = Math.min(a + n, hi);
+        return e0 > s0 ? [s0, e0 - s0] : null;
+    };
+    if (Array.isArray(mat)) {
+        const groups = geo.groups?.length ? geo.groups : [{ start: 0, count: total, materialIndex: 0 }];
+        const out = [];
+        for (const g of groups) {
+            const m = mat[g.materialIndex ?? 0];
+            if (!m || m.visible === false) continue;
+            const r = clip(g.start, Number.isFinite(g.count) ? g.count : total - g.start);
+            if (r) out.push(r);
+        }
+        return out;
+    }
+    if (mat && mat.visible === false) return [];
+    if (lo === 0 && hi === total) return null;
+    const r = clip(0, total);
+    return r ? [r] : [];
+}
+
+/** Calls fn(vertexIndex) for each drawn vertex of the mesh. */
+function eachDrawnVertex(node, fn) {
+    const geo = node.geometry;
+    const count = geo?.attributes?.position?.count || 0;
+    const ranges = drawnRanges(node);
+    const index = geo?.index?.array;
+    if (ranges === null) {
+        if (index) for (let i = 0; i < index.length; i += 1) fn(index[i]);
+        else for (let i = 0; i < count; i += 1) fn(i);
+        return;
+    }
+    for (const [start, n] of ranges) {
+        for (let k = start; k < start + n; k += 1) fn(index ? index[k] : k);
+    }
+}
+
 function absorbGeometry(node, e, absorb, absorbBox) {
     const geo = (node.isMesh || node.isInstancedMesh) ? node.geometry : null;
     if (!geo || !e || e.length < 16) return;
     const pos = geo.attributes?.position;
     const count = pos?.count || 0;
-    if (count > 0 && count <= 256 && pos.array) {
+    const ranges = drawnRanges(node);
+    if (ranges && !ranges.length) return;
+    // Exact drawn vertices (not the geometry's bounding box, which also
+    // covers hidden parts and swells when rotated), unless huge.
+    if (count > 0 && count <= 20000 && pos.array) {
         const stride = pos.itemSize || 3;
         const arr = pos.array;
-        for (let i = 0; i < arr.length; i += stride) {
-            const w = transformPoint(e, arr[i], arr[i + 1], arr[i + 2]);
+        eachDrawnVertex(node, (i) => {
+            const w = transformPoint(e, arr[i * stride], arr[i * stride + 1], arr[i * stride + 2]);
             absorb(w.x, w.y, w.z);
-        }
+        });
         return;
     }
     if (geo.boundingBox) absorbBox(e, geo.boundingBox);
@@ -340,22 +397,27 @@ export function measureLocalShape(object) {
         const geo = (node.isMesh || node.isInstancedMesh) ? node.geometry : null;
         const pos = geo?.attributes?.position;
         if (pos?.array && pos.count > 0) {
+            // Only what the renderer draws (see drawnRanges).
             const stride = pos.itemSize || 3;
             const arr = pos.array;
-            const at = [];
-            for (let i = 0; i < pos.count; i += 1) {
-                const w = transformPoint(e, arr[i * stride], arr[i * stride + 1], arr[i * stride + 2]);
-                at.push(w);
-                points.push(w);
-            }
-            const index = geo.index?.array;
-            const tris = index ? index.length : (pos.count >= 3 ? pos.count - (pos.count % 3) : 0);
-            for (let t = 0; t + 2 < tris; t += 3) {
-                const a = index ? at[index[t]] : at[t];
-                const b = index ? at[index[t + 1]] : at[t + 1];
-                const c = index ? at[index[t + 2]] : at[t + 2];
-                if (a && b && c) normalOf(a, b, c);
-            }
+            const at = new Map();
+            const vert = (i) => {
+                let w = at.get(i);
+                if (!w) {
+                    w = transformPoint(e, arr[i * stride], arr[i * stride + 1], arr[i * stride + 2]);
+                    at.set(i, w);
+                    points.push(w);
+                }
+                return w;
+            };
+            const tri = [];
+            eachDrawnVertex(node, (i) => {
+                tri.push(vert(i));
+                if (tri.length === 3) {
+                    normalOf(tri[0], tri[1], tri[2]);
+                    tri.length = 0;
+                }
+            });
         }
         for (const child of node.children || []) walk(child, e);
     }

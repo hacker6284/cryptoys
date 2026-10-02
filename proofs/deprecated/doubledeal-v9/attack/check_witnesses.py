@@ -1,6 +1,6 @@
 """All recorded K♣↔Q♥ witnesses (F4 and F6 runs) and ../witness_v9.json against sudoc's Python output
 of the frozen v9 sudo (v9.py)."""
-import json, pathlib, sys
+import json, pathlib
 HERE = pathlib.Path(__file__).resolve().parent
 from v9 import V, swap, encrypt_stages
 n = 0

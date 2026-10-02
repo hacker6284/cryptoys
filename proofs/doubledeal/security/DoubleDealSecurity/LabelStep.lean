@@ -47,7 +47,8 @@ open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_v10Sym g0 g0_eq cell
 open DoubleDeal.Security.StemPosition (rowAmts colAmts c0Row rowSeat stemPos_zero)
 open DoubleDeal.Security.RankPartition (swapsPerm RankChecks)
 open DoubleDeal.Security.RankAffine (AffRankChecks)
-open DoubleDeal.Security.TauEq (TauChecks rowAmts_congr tau_eq_of_rk cell0Cov_tau_of_checks)
+open DoubleDeal.Security.TauEq (TauChecks rowAmts_congr tau_eq_of_rk exists_shift
+  cell0Cov_tau_of_checks)
 open DoubleDeal.Security.CovariantAffine (AffChecks glApp linSym linSym_zero_zero
   not_cell0Cov_lin_of_check)
 
@@ -441,10 +442,6 @@ theorem rankPres_mem_v10Sym (hT : TauChecks) (hL : LabelChecks) (hA : AffChecks)
 abbrev V10SymChecks : Prop :=
   RankChecks ∧ AffChecks ∧ AffRankChecks ∧ TauChecks ∧ LabelChecks
 
-theorem neg13_eq : ∀ a : Fin 13, neg13 a = -a := by decide
-
-theorem exists_neg : ∀ u : ZMod 13, ∃ a : Fin 13, (a.val : ZMod 13) + u = 0 := by decide
-
 /-- (PROVED, GIVEN the finite checks `V10SymChecks` as a hypothesis) If `Cell0Cov σ τ`, then
     σ is a `v10Sym a x` and τ = σ. Unconditional form: heavy library,
     `LabelStep.cell0Cov_mem_v10Sym`. -/
@@ -452,7 +449,7 @@ theorem cell0Cov_mem_v10Sym_of_checks (hchk : V10SymChecks) {σ τ : Relabel}
     (h : Cell0Cov σ τ) : (∃ (a : Fin 13) (x : Fin 4), σ = v10Sym a x) ∧ τ = σ := by
   obtain ⟨hR, hA, hAR, hT, hL⟩ := hchk
   obtain ⟨hτ, u, hu⟩ := cell0Cov_tau_of_checks hR hAR hT h
-  obtain ⟨a, ha⟩ := exists_neg u
+  obtain ⟨a, ha⟩ := exists_shift 1 u one_ne_zero
   have hm : σ * v10Sym a 0 ∈ cell0Subgroup :=
     cell0Subgroup.mul_mem ⟨τ, h⟩ (v10Sym_mem_cell0Subgroup a 0)
   have hp : RankPres (σ * v10Sym a 0) := fun c => by

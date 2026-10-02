@@ -31,7 +31,7 @@ namespace DoubleDeal.Security.RankAffine
 open DoubleDeal Relabel
 open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_mul cell0Cov_v10Sym g0 g0_eq)
-open DoubleDeal.Security.StemCoupling (wt wsum wsum_swap zmod13_mul_ne cmFlat_col_injective)
+open DoubleDeal.Security.StemCoupling (wt wsum wsum_swap wt_sub_ne zmod13_mul_ne cmFlat_col_injective)
 open DoubleDeal.Security.RankPartition (FamilyQ readIdx readIdx_injective readIdx_surj
   wt_sub_readIdx swapsPerm RankChecks cell0Cov_rank_of_checks cell0Cov_rank_iff_of_checks)
 
@@ -52,13 +52,6 @@ structure Family2 (π : Fin 3 → Fin 3 → Relabel) (col : Fin 3 → Fin 13) : 
   pos : ∀ k, ∃ cx cy cx2 cy2 : Fin 13, π k 0 (cmFlat 3 cx) = 0 ∧ π k 0 (cmFlat 3 cy) = 1 ∧
     π k 0 (cmFlat 3 cx2) = 2 ∧ π k 0 (cmFlat 3 cy2) = 14 ∧
     (cx.val + cy2.val) % 13 = (cy.val + cx2.val) % 13
-
-theorem cast_sub_ne {a b : Fin 13} (h : a ≠ b) : (b.val : ZMod 13) - (a.val : ZMod 13) ≠ 0 := by
-  intro e
-  rw [sub_eq_zero, ZMod.natCast_eq_natCast_iff'] at e
-  apply h; apply Fin.ext
-  have := a.isLt; have := b.isLt
-  omega
 
 /-- (PROVED) For every σ, τ with the seat-26 condition, a `Family2` forces
     `(rk σ1 - rk σ0) + (rk σ14 - rk σ2) = 0`. -/
@@ -108,13 +101,13 @@ theorem rk_sum_of_family2 {π : Fin 3 → Fin 3 → Relabel} {col : Fin 3 → Fi
     rw [sub_eq_sub_iff_add_eq_add, ← Nat.cast_add, ← Nat.cast_add, ZMod.natCast_eq_natCast_iff']
     omega
   rw [hcz] at hz
-  have hcx : cx ≠ cy := by
-    rintro rfl; rw [px] at py; exact absurd py (by decide)
+  have hcne : (cy.val : ZMod 13) - (cx.val : ZMod 13) ≠ 0 := by
+    rw [← wt_sub_readIdx hj1 hj2]; exact wt_sub_ne h12
   have hprod : ((cy.val : ZMod 13) - (cx.val : ZMod 13)) *
       ((rk (σ 1) - rk (σ 0)) + (rk (σ 14) - rk (σ 2))) = 0 := by
     linear_combination hz
   by_contra hr
-  exact zmod13_mul_ne _ _ (cast_sub_ne hcx) hr hprod
+  exact zmod13_mul_ne _ _ hcne hr hprod
 
 /-! ## B. The family of `V10SymLists.lean`, transported to every rank shift -/
 

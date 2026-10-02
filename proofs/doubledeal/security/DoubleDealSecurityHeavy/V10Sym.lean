@@ -56,8 +56,7 @@ theorem LabelStep.cell0Cov_iff (σ τ : Relabel) :
     `roundBody_covariant_iff_id`: σ is covariant for the unkeyed round body (for some output
     relabelling) iff σ = 1. `roundBody_covariant_iff_id` itself (default library) is not
     changed and keeps its `sorry`. -/
-theorem LabelStep.roundBody_covariant_iff_id_heavy (σ : Relabel) :
-    Covariant σ unkeyedWithMix ↔ σ = 1 :=
-  LabelStep.roundBody_covariant_iff_id_of_checks LabelStep.v10SymChecks_ok σ
+theorem LabelStep.roundBody_covariant_iff_id_heavy : type_of% @roundBody_covariant_iff_id :=
+  LabelStep.roundBody_covariant_iff_id_of_checks LabelStep.v10SymChecks_ok
 
 end DoubleDeal.Security

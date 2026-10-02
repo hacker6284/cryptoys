@@ -35,8 +35,11 @@ export default {
         double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, offsetMs: -119 },
         // Triple turn (three clicks); contact: the face seats (end of leaf). Or { perClick: true }: the single file once per click.
         triple: { file: "scramble-turn/triple/triple_spacejoe-486581", gainDb: 6.5, offsetMs: -194 },
-        // Whole-puzzle rotation; contact: rotation ends.
-        rotation: { file: "scramble-turn/rotation/rotation_01kamii05-428594", gainDb: 3.5, offsetMs: -30 },
+        // Whole-puzzle rotation; contact: rotation ends. Zachary's pick: a real
+        // recording of a plastic broomstick swung softly past the mic (Sadiquecat),
+        // a low, rounded swish; its swell (125 ms in) peaks at mid-rotation
+        // (357 ms before the end at 1.4×), at about the pat's level.
+        rotation: { file: "scramble-rotate/7_sadiquecat-816261-broomstick-soft", gainDb: -14.9, offsetMs: -482 },
         // Lift off felt; contact: the puzzle leaves the felt. Off (try "scramble-lift/lift/regrip-1_01kamii05-428594").
         lift: null,
         // Settle on felt; contact: the puzzle touches the felt.

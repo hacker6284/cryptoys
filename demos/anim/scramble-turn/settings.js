@@ -32,9 +32,9 @@ export default {
         // Single turn (one click); contact: the face seats (end of leaf).
         single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, offsetMs: -393 }, // at 1.4×: peak 250 ms before the face seats, ~65% into the 714 ms turn (Zachary: "still late ... maybe 200 ms earlier")
         // Double turn (two clicks); contact: the face seats (end of leaf). Or { perClick: true }: the single file once per click.
-        double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, offsetMs: -119 },
+        double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, offsetMs: -495 }, // at 1.4×: loudest click (120 ms in) 375 ms before the face seats, ~65% into the 1071 ms turn, like the single (Zachary: "even more delayed than the single turn was")
         // Triple turn (three clicks); contact: the face seats (end of leaf). Or { perClick: true }: the single file once per click.
-        triple: { file: "scramble-turn/triple/triple_spacejoe-486581", gainDb: 6.5, offsetMs: -194 },
+        triple: { file: "scramble-turn/triple/triple_spacejoe-486581", gainDb: 6.5, offsetMs: -694 }, // at 1.4×: loudest click (194 ms in) 500 ms before the face seats, ~65% into the 1429 ms turn, like the single
         // Whole-puzzle rotation; contact: rotation ends. Zachary's pick: a real
         // recording of a plastic broomstick swung softly past the mic (Sadiquecat),
         // a low, rounded swish; its swell (125 ms in) peaks at mid-rotation

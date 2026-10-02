@@ -1,12 +1,16 @@
 # DoubleDeal v12: attacking `PrimeNonSwapCase` (the last open piece of the covariant round conjecture)
 
 The conjecture `roundBody_covariant_iff_id` (`security/DoubleDealSecurity/Rounds.lean`,
-DRAFT-SORRY) is **still open** and keeps its `sorry`. `PrimeNonSwapCase`
-(`security/DoubleDealSecurity/CovariantNarrow.lean`) is **still open**. This note
-records two new proved results (the affine relabellings; the rank-partition lemma, one
-step toward `PrimeNonSwapCase`), the routes tried toward the full case, where each
-breaks, and the counterexample search. No covariant pair
-(σ ≠ 1 with some τ) was found.
+DRAFT-SORRY) keeps its `sorry`: that theorem is unchanged. Its STATEMENT is now proved in
+the heavy library (`LabelStep.roundBody_covariant_iff_id_heavy`, unconditional) and in the
+default library GIVEN the finite checks `V10SymChecks` as a hypothesis
+(`LabelStep.roundBody_covariant_iff_id_of_checks`), via the single-cell statement `hcell`
+of `CovariantNarrow.roundBody_covariant_iff_id_of_cell0` (steps 1-4 below: every σ with
+the seat-26 condition `Cell0Cov σ τ` is a `v10Sym a x`, and τ = σ). Replacing the `sorry`
+is a separate change. `PrimeNonSwapCase` (`security/DoubleDealSecurity/CovariantNarrow.lean`)
+follows from it by `prime_nonswap_case_iff` (not stated as its own Lean theorem). This note
+records the proved results (the affine relabellings; steps 1-4), the routes tried earlier,
+and the counterexample search. No covariant pair (σ ≠ 1 with some τ) was found.
 
 Labels (as in `../v12-covariant/NOTES.md`): PROVED (Lean, audited), CONDITIONAL
 (hypothesis in the statement), EXACT (exhaustive, C or Python), MEASURED (sampled,
@@ -16,6 +20,8 @@ fixed seed). `F = unkeyedWithMix` = GridCycle ∘ stem. `Covariant σ F` means
 `cell0Cov_of_covPair`).
 
 ## The remaining case, exactly
+
+(Written before steps 2-4 below; kept as the description of the case they close.)
 
 `PrimeNonSwapCase`: every σ of prime order p ≤ 52 that is neither a transposition
 nor a `v10Sym a x` is non-covariant. `prime_nonswap_case_iff` (heavy) proves it is
@@ -101,10 +107,11 @@ heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
 * Statement (`cell0Cov_rank`, heavy, unconditional; `cell0Cov_rank_of_checks` in the
   default library GIVEN the finite checks `RankChecks`): if `Cell0Cov σ τ` for some τ,
   then `a % 13 = b % 13 → σ a % 13 = σ b % 13` (`cell0Cov_rank_iff`: iff, via σ⁻¹).
-  Hence every covariant σ permutes the 13 rank classes (`covariant_rank`). Nothing is
-  claimed about the rank map σ induces (affine or not), about τ, or about labels.
+  Hence every covariant σ permutes the 13 rank classes (`covariant_rank`). This step
+  claims nothing about the rank map σ induces, about τ, or about labels (steps 2-4 below).
 * `cell0Subgroup_le_rankStab` (heavy, unconditional): `cell0Subgroup` lies in the
-  rank-partition stabiliser `rankStab` (S4 ≀ S13; not a Lean theorem).
+  rank-partition stabiliser `rankStab` (≅ S4 ≀ S13; that identification is not a Lean
+  theorem).
 * Symbolic stem facts (default library, no computation, in the stem modules):
   `StemPosition.stemPos_zero` (stem cell 0 is the packet at the seat `(ρ, rowAmts ρ % 13)`
   of the row `ρ` that the last column step brings to seat 0),
@@ -126,6 +133,67 @@ heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
   per theorem). Every equal-rank pair is moved to (0, y) by a `v10Sym` (which satisfies
   `Cell0Cov` with itself), so three families suffice.
 * Formalizing it exposed no hole in the paper argument.
+* The argument is now stated for a general row-3 exchange `q` (`FamilyQ`,
+  `FamilyQ.wsum_eq`: for some class the σ-images of the row-3 reads of members 0 and 1 have
+  equal row totals mod 13); `rank_eq_of_family` (unchanged statement) is its case
+  `q = swap x y`, and step 2 uses a double swap.
+
+## New PROVED result: steps 2-4, every σ with the seat-26 condition is a `v10Sym`
+
+`security/DoubleDealSecurity/RankAffine.lean`, `TauEq.lean`, `LabelStep.lean` (+ generated
+`V10SymLists.lean`), heavy `security/DoubleDealSecurityHeavy/V10Sym.lean` (+ generated
+`V10SymChecks.lean`), generator `v10sym_witness.py` (log `v10sym_witness.log`, CI
+`--check`). `rk c` is the rank mod 13 (`ZMod 13`), `ri c = c % 13`.
+* Statements (heavy, unconditional; `…_of_checks` in the default library GIVEN the finite
+  checks as hypotheses):
+  * `RankAffine.cell0Cov_rk_affine`: `Cell0Cov σ τ → ∃ l u, l ≠ 0 ∧ ∀ c, rk (σ c) = l · rk c + u`
+    (checks `RankChecks`, `AffRankChecks`).
+  * `TauEq.cell0Cov_tau`: `Cell0Cov σ τ → τ = σ ∧ ∃ u, ∀ c, rk (σ c) = rk c + u`
+    (adds `TauChecks`).
+  * `LabelStep.cell0Cov_mem_v10Sym`: `Cell0Cov σ τ → (∃ a x, σ = v10Sym a x) ∧ τ = σ`;
+    `LabelStep.cell0Cov_iff`: and conversely (all checks, `V10SymChecks` =
+    `RankChecks ∧ AffChecks ∧ AffRankChecks ∧ TauChecks ∧ LabelChecks`).
+  * `LabelStep.roundBody_covariant_iff_id_heavy`: `Covariant σ unkeyedWithMix ↔ σ = 1`, the
+    statement of `roundBody_covariant_iff_id`, from `roundBody_covariant_iff_id_of_cell0`.
+* Step 2 (`RankAffine.rk_sum_of_family2`, for EVERY σ, τ): nine decks as in step 1, but
+  member `(k, 1)` exchanges both 0 ↔ 1 and 2 ↔ 14 in row 3, whose columns in member
+  `(k, 0)` satisfy `cx + cy2 = cy + cx2 (mod 13)`. `FamilyQ.wsum_eq` and `wsum_swap` twice
+  give `δ · ((rk σ1 − rk σ0) + (rk σ14 − rk σ2)) = 0` with `δ = cy − cx ≠ 0` (the weight
+  difference of two read positions is their column difference, `wt_sub_readIdx`).
+  Transported by the rank shifts `v10Sym r 0`, the induced map `F` on ranks
+  (`rk ∘ σ = F ∘ rk` by step 1) has zero second differences, so it is affine
+  (`affine_of_second_diff`); `l ≠ 0` because σ permutes the rank classes.
+* Step 3 (`TauEq`): row amounts read ranks mod 13 only (`rowAmts_congr`), so if
+  `rk ∘ σ = l · rk`, stem cell 0 of `σ · m` is σ of the card of `m` at a seat
+  `(ρ, rowAmts (scaleP l m) ρ % 13)` (`cand_of_cell0Cov`, from `stemPos_zero`). On two decks
+  with stem cell 0 = card 0, these candidate sets meet only in card 0 for `l = 1` and are
+  disjoint for `l = 2..12` (`TauChecks`), so `l = 1` and `σ 0 = τ 0` (`tau_step`).
+  Composing with `v10Sym a 0` (`l · a = −u`) makes any affine rank map linear, and
+  conjugating by the `v10Sym r y` sending card 0 to `c` gives `σ c = τ c`.
+* Step 4 (`LabelStep`), for σ preserving every rank index (after step 3, `σ · v10Sym a 0`):
+  * Column chain (`colAmt_congr_label`, symbolic): grids differing in labels by a constant
+    per column get the same v10 column amounts (`1 ⊕ w ⊕ w² = 0` in the column value; four
+    equal shifts cancel in the column suits).
+  * Per-rank label translations `tr d` (`l ↦ l ⊕ d r` at rank index `r`): if `tr d`
+    satisfies the seat-26 condition, `d` is constant (`tr_const_of_cell0`). By step 3 τ =
+    `tr d`; on one deck whose post-row-stage columns are full rank classes of a rank index
+    ≠ 0 or hold only rank indices 0 and 1 (`LabStruct`), `tr d` and `tr (eVec (d 0 ⊕ d 1))`
+    differ by a constant per column, so they give the same source row of stem cell 0
+    (`c0Row_tr_eq`), and `LabKill` says `tr (eVec e)` moves it for `e ≠ 0`; so `d 0 = d 1`,
+    and conjugating by the rank shifts (`conj_tr`) gives `d r = d (r + 1)`.
+  * Group step (`rankPres_mem_v10Sym`): σ has a label map `g r` per rank index. Every
+    permutation of `Fin 4` is affine (`perm4_affine`, from `diag_table`: `decide!` over the
+    4-tuples of distinct values), so `σ · v10Sym 0 x · σ⁻¹ = tr (δ · x)`, and the previous point
+    makes `δ` rank-independent; so `g r = g 0 ∘ (· ⊕ c r)`. The commutator with
+    `v10Sym 1 0` is `tr (c (r + 1) ⊕ c r)`, so `c (r + 1) = c r ⊕ κ`; 13 is odd, so `κ = 0`
+    (`chain_const`) and σ is one label map on every rank, `v10Sym 0 x * linSym 0 g`;
+    `not_cell0Cov_lin_of_check` (`AffChecks`) forces `g = 0`.
+* Finite data (`v10sym_witness.py`, deterministic xorshift64 searches): 9 decks for step 2,
+  2 for step 3, 1 for step 4. The heavy library checks them by kernel `decide!`, one stem
+  evaluation per theorem (`aff_struct`, `aff_c0_k_i`, `tau_g0_i`, `tau_cand_l`,
+  `lab_struct`, `lab_kill_e`).
+* Formalizing steps 2-4 exposed no hole in the paper argument (column-chain lemma,
+  per-rank decomposition and commutator reduction included).
 
 ## Routes tried toward the full case, and where each breaks
 
@@ -155,19 +223,19 @@ heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
    v10Sym; true by the holomorph count, not a Lean theorem) it is finite, which is the
    proved affine result. **Imprimitivity step, PROVED** (`RankPartition`, heavy
    `cell0Subgroup_le_rankStab`): K lies in the stabiliser of the rank partition (13
-   blocks of 4 cards), the wreath product S4 ≀ S13 (that identification is not a Lean
-   theorem). What is left is still large: about 24^13 · 13! ≈ 5 · 10^27 elements, and
-   nothing is proved about the induced map on the 13 rank classes (S13 part) or about the
-   suit parts (the S4 factors).
+   blocks of 4 cards), `rankStab` (≅ S4 ≀ S13; that identification is not a Lean
+   theorem). **Update:** steps 2-4 above (the induced rank map, then the suit parts)
+   finish this route without a subgroup classification: K = v10Sym (heavy
+   `LabelStep.cell0Cov_iff`).
 
-## What a full proof would take
+## What a full proof would take (status)
 
-Either (a) a structural single-cell statement: if `stem(σ·m)₀ = τ(stem(m)₀)` on every
-deck then σ ∈ v10Sym (`hcell` of `roundBody_covariant_iff_id_of_cell0`; sufficient,
-not known true), proved symbolically from the SumRanks amount chain; or (b) a
-classification of the subgroups of S52 containing v10Sym, plus a finite witness per
-class. Neither is in reach of a computer-checked case split (the 52-card σ space has
-no finite reduction, see route 1), and the rules exclude computer- or paper-checked
-bounds as a fallback. Route 4's imprimitivity step is now proved (K ≤ S4 ≀ S13), which
-removes the primitive case of (b) but leaves about 5 · 10^27 elements of the
-stabiliser; the induced S13 map and the suit parts are open.
+Route (a) of the earlier plan, the structural single-cell statement `hcell` of
+`roundBody_covariant_iff_id_of_cell0`, is now proved (steps 1-4; heavy library
+unconditional, default library given `V10SymChecks`). What is left is bookkeeping, not
+mathematics: `roundBody_covariant_iff_id` in the default library still has its `sorry`
+because the finite checks live in the heavy library. Removing that `sorry` (for example
+by moving the conjecture or its dependents, or by stating the default theorem with the
+checks) is a separate, small follow-up, to be agreed before it is done. Until then the
+default-library docstrings that call `hcell` "not known to be true" (`Rounds.lean`,
+`CovariantNarrow.lean`) predate this result and are unchanged here.

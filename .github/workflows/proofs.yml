@@ -249,6 +249,8 @@ jobs:
         run: python3 proofs/doubledeal/analysis/v12-primenonswap/aff_witness.py --check
       - name: RankPartitionLists.lean / RankPartitionChecks.lean and rank_family.log match rank_family.py
         run: python3 proofs/doubledeal/analysis/v12-primenonswap/rank_family.py --check
+      - name: V10SymLists.lean / V10SymChecks.lean and v10sym_witness.log match v10sym_witness.py
+        run: python3 proofs/doubledeal/analysis/v12-primenonswap/v10sym_witness.py --check
       # numpy is imported by proofs/doubledeal/analysis/v10-sumranks/check_cand.py (directly)
       # and sbox-search/verify.py (via sb.py), which selftest.py runs. Probe with find_spec, which returns
       # None instead of raising, then require a working import (fails the step if absent).

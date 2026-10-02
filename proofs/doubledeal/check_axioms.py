@@ -188,6 +188,29 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.RankPartition.cell0Cov_rank_iff",
     "DoubleDeal.Security.RankPartition.covariant_rank",
     "DoubleDeal.Security.RankPartition.cell0Subgroup_le_rankStab",
+    # DoubleDealSecurityHeavy/V10Sym.lean and the generated V10SymChecks.lean (aff_struct,
+    # aff_c0_k_i, tau_g0_i, tau_cand_l, lab_struct, lab_kill_e: v10sym_witness.py --lean):
+    # every sigma with Cell0Cov sigma tau is a v10Sym and tau = sigma, hence the STATEMENT of
+    # the conjecture (roundBody_covariant_iff_id_heavy); the default-library theorem
+    # roundBody_covariant_iff_id keeps its sorry
+    "DoubleDeal.Security.RankAffine.aff_struct",
+    *(f"DoubleDeal.Security.RankAffine.aff_c0_{n // 3}_{n % 3}" for n in range(9)),
+    "DoubleDeal.Security.RankAffine.aff_c0_all",
+    "DoubleDeal.Security.RankAffine.affRankChecks_ok",
+    *(f"DoubleDeal.Security.TauEq.tau_g0_{i}" for i in range(2)),
+    *(f"DoubleDeal.Security.TauEq.tau_cand_{l}" for l in range(1, 13)),
+    "DoubleDeal.Security.TauEq.tau_cand_all",
+    "DoubleDeal.Security.TauEq.tauChecks_ok",
+    "DoubleDeal.Security.LabelStep.lab_struct",
+    *(f"DoubleDeal.Security.LabelStep.lab_kill_{e}" for e in range(1, 4)),
+    "DoubleDeal.Security.LabelStep.lab_kill_all",
+    "DoubleDeal.Security.LabelStep.labelChecks_ok",
+    "DoubleDeal.Security.RankAffine.cell0Cov_rk_affine",
+    "DoubleDeal.Security.TauEq.cell0Cov_tau",
+    "DoubleDeal.Security.LabelStep.v10SymChecks_ok",
+    "DoubleDeal.Security.LabelStep.cell0Cov_mem_v10Sym",
+    "DoubleDeal.Security.LabelStep.cell0Cov_iff",
+    "DoubleDeal.Security.LabelStep.roundBody_covariant_iff_id_heavy",
 }
 # Lean-generated theorems of the heavy modules (no source declaration; see the comment
 # above HEAVY_THEOREMS). chunkOK.eq_1: `of_chunks` unfolds `chunkOK` with `simp only`.
@@ -617,6 +640,31 @@ PACKAGES = {
             "DoubleDeal.Security.RankPartition.cell0Cov_rank_iff_of_checks",
             "DoubleDeal.Security.RankPartition.covariant_rank_of_checks",
             "DoubleDeal.Security.RankPartition.cell0Subgroup_le_rankStab_of_checks",
+            # RankAffine, TauEq, LabelStep: every sigma with Cell0Cov sigma tau is a v10Sym
+            # and tau = sigma, GIVEN the finite checks V10SymChecks (discharged in the heavy
+            # library); roundBody_covariant_iff_id itself keeps its sorry
+            "DoubleDeal.Security.RankPartition.FamilyQ.wsum_eq",
+            "DoubleDeal.Security.RankPartition.Family.toQ",
+            "DoubleDeal.Security.RankAffine.rk_sum_of_family2",
+            "DoubleDeal.Security.RankAffine.family2_of_checks",
+            "DoubleDeal.Security.RankAffine.affine_of_second_diff",
+            "DoubleDeal.Security.RankAffine.cell0Cov_rk_affine_of_checks",
+            "DoubleDeal.Security.TauEq.rowAmts_congr",
+            "DoubleDeal.Security.TauEq.cand_of_cell0Cov",
+            "DoubleDeal.Security.TauEq.tau_step",
+            "DoubleDeal.Security.TauEq.tau_eq_of_rk",
+            "DoubleDeal.Security.TauEq.cell0Cov_tau_of_checks",
+            "DoubleDeal.Security.LabelStep.colAmt_congr_label",
+            "DoubleDeal.Security.LabelStep.conj_tr",
+            "DoubleDeal.Security.LabelStep.chain_const",
+            "DoubleDeal.Security.LabelStep.c0Row_tr_eq",
+            "DoubleDeal.Security.LabelStep.d01_of_cell0",
+            "DoubleDeal.Security.LabelStep.tr_const_of_cell0",
+            "DoubleDeal.Security.LabelStep.perm4_xor",
+            "DoubleDeal.Security.LabelStep.rankPres_mem_v10Sym",
+            "DoubleDeal.Security.LabelStep.cell0Cov_mem_v10Sym_of_checks",
+            "DoubleDeal.Security.LabelStep.cell0Cov_iff_of_checks",
+            "DoubleDeal.Security.LabelStep.roundBody_covariant_iff_id_of_checks",
             # RealSchedule (roadmap M5): real PassKey schedule
             "DoubleDeal.Security.RealSchedule.masterList_injective",
             "DoubleDeal.Security.RealSchedule.exists_masterList_eq",

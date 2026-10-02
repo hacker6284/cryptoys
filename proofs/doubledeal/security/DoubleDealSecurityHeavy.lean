@@ -14,3 +14,5 @@ import DoubleDealSecurityHeavy.CovariantAffineChecks
 import DoubleDealSecurityHeavy.CovariantAffine
 import DoubleDealSecurityHeavy.RankPartitionChecks
 import DoubleDealSecurityHeavy.RankPartition
+import DoubleDealSecurityHeavy.V10SymChecks
+import DoubleDealSecurityHeavy.V10Sym

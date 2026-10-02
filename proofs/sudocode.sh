@@ -1,4 +1,5 @@
-# Sourced (not run) by proofs/emit_lean.sh and proofs/doubledeal/vectors/regen.sh.
+# Sourced (not run) by proofs/emit_lean.sh and proofs/doubledeal/vectors/regen.sh, and
+# (through bash) by proofs/sudo_py.py.
 # Reads the sudocode pin (proofs/SUDOCODE_PIN, via proofs/sudocode_pin.sh) and sets
 # the SUDOCODE_DIR default. Needs ROOT (repo root). Sets and exports:
 #   SUDOCODE_COMMIT  the pinned sudocode commit

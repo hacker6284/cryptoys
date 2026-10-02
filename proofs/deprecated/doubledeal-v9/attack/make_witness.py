@@ -2,8 +2,9 @@
 
 The JSON carries the witness (sigma, key, message, cipher, sigma M, sigma C) and, as
 hints for the Lean kernel check, the round keys K1..K6 and the state after each stage for
-both runs (computed with sudoc's Python output of the frozen v9 sudo, via v9.py). The kernel re-derives every hint from the emitted
-Lean, so a wrong hint makes the Lean build fail; nothing here is trusted by Lean.
+both runs (computed with sudoc's Python output of the frozen v9 sudo, via v9.py). The kernel
+re-derives every hint from the emitted Lean, so a wrong hint makes the Lean build fail; nothing
+here is trusted by Lean.
 usage: python3 make_witness.py [INDEX]
 """
 import json, pathlib, sys

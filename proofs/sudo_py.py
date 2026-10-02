@@ -4,6 +4,7 @@ The generated Python is not committed. Each process builds what it loads into a 
 directory (removed at exit), with the sudoc that proofs/sudocode.sh selects: $SUDOC if set (as in
 the generated-fresh CI job, which builds it at proofs/SUDOCODE_PIN), otherwise built at the pin in
 $SUDOCODE_DIR (default /tmp/sudocode). A py build takes a fraction of a second per .sudo.
+A local run without $SUDOC clones and builds sudoc into $SUDOCODE_DIR (default /tmp/sudocode).
 
     sys.path.insert(0, str(REPO / 'proofs')); import sudo_py
     dd = sudo_py.doubledeal(9)         # DoubleDeal v8..v12 (DOUBLEDEAL table)
@@ -49,15 +50,10 @@ def _exec(name, path):
 
 
 def to_rt(x):
-    """Host value -> sudoc runtime value: list/bytes/bytearray -> CowList (recursively), tuple
-    -> tuple, anything else (int, bool, float) unchanged."""
-    rt = sys.modules['_sudo_rt']
-    if isinstance(x, (bytes, bytearray)):
-        return rt.lst(list(x))
+    """Host value -> sudoc runtime value: list -> CowList (recursively), anything else (int, bool,
+    float) unchanged."""
     if isinstance(x, list):
-        return rt.lst([to_rt(e) for e in x])
-    if isinstance(x, tuple):
-        return tuple(to_rt(e) for e in x)
+        return sys.modules['_sudo_rt'].lst([to_rt(e) for e in x])
     return x
 
 
@@ -89,18 +85,14 @@ class Sudo:
     def __getattr__(self, name):
         f = getattr(self.impl, name)
         if not callable(f) or isinstance(f, type):
-            return f
+            return host(f)
         return functools.wraps(f)(lambda *args: host(f(*map(to_rt, args))))
 
 
-_LOADED = {}
-
-
+@functools.cache
 def load(sudo):
     """Build REPO/sudo with sudoc --target py and import it (cached per sudo path)."""
-    if sudo in _LOADED:
-        return _LOADED[sudo]
-    out = _outdir() / str(len(_LOADED))
+    out = Path(tempfile.mkdtemp(dir=_outdir()))
     subprocess.run([sudoc(), 'build', '--target', 'py', '-o', str(out), str(REPO / sudo)],
                    check=True, stdout=subprocess.DEVNULL)
     rt_path = out / '_sudo_rt.py'
@@ -113,8 +105,7 @@ def load(sudo):
     if name in sys.modules:
         raise RuntimeError(f'{sudo}: module {name} is already loaded '
                            f'(from {getattr(sys.modules[name], "__file__", "?")})')
-    _LOADED[sudo] = s = Sudo(_exec(name, impl_path))
-    return s
+    return Sudo(_exec(name, impl_path))
 
 
 def doubledeal(v):

@@ -8,12 +8,12 @@ $SUDOCODE_DIR (default /tmp/sudocode). A py build takes a fraction of a second p
     sys.path.insert(0, str(REPO / 'proofs')); import sudo_py
     dd = sudo_py.doubledeal(9)         # DoubleDeal v8..v12 (DOUBLEDEAL table)
     dd.encrypt(msg, key)               # any sudo func, exported or not: plain lists in, plain lists out
-    dd.api, dd.impl, dd.rt             # the generated modules (api = exports with host checks)
 
-The generated modules keep the names sudoc gives them (doubledeal_v9 / _doubledeal_v9_impl, ...;
-DoubleDeal v8..v12 are all distinct). If a name is already loaded, load() raises rather than alias
-it: sudoc's py output for MegaDreifach v1 and v2 collides on module names, a fix that belongs in
-sudoc, not here. This file is a loader only; the algorithms are sudoc's.
+Only the generated implementation module is loaded (with its runtime), under the name sudoc gives
+it (_doubledeal_v9_impl, ...; distinct for DoubleDeal v8..v12); sudoc's host API module is not
+used. If the name is already loaded, load() raises rather than alias it: sudoc's py output for
+MegaDreifach v1 and v2 collides on module names, a fix that belongs in sudoc, not here. This file
+is a loader only; the algorithms are sudoc's.
 
 usage: python3 proofs/sudo_py.py --selftest
 """
@@ -83,8 +83,8 @@ def text(s):
 
 class Sudo:
     """One generated build. Attribute access gives impl funcs wrapped with to_rt / host."""
-    def __init__(self, api, impl, rt):
-        self.api, self.impl, self.rt = api, impl, rt
+    def __init__(self, impl):
+        self.impl = impl
 
     def __getattr__(self, name):
         f = getattr(self.impl, name)
@@ -109,14 +109,11 @@ def load(sudo):
     elif Path(sys.modules['_sudo_rt'].__file__).read_bytes() != rt_path.read_bytes():
         raise RuntimeError(f'{sudo}: _sudo_rt.py differs from the runtime already loaded')
     impl_path, = out.glob('_*_impl.py')        # one impl per build (no sudo imports yet)
-    api_path = out / (impl_path.stem[1:-len('_impl')] + '.py')
-    for name in (impl_path.stem, api_path.stem):
-        if name in sys.modules:
-            raise RuntimeError(f'{sudo}: module {name} is already loaded '
-                               f'(from {getattr(sys.modules[name], "__file__", "?")})')
-    impl = _exec(impl_path.stem, impl_path)
-    api = _exec(api_path.stem, api_path)       # its `import <impl> as _impl` binds the impl just loaded
-    _LOADED[sudo] = s = Sudo(api, impl, sys.modules['_sudo_rt'])
+    name = impl_path.stem
+    if name in sys.modules:
+        raise RuntimeError(f'{sudo}: module {name} is already loaded '
+                           f'(from {getattr(sys.modules[name], "__file__", "?")})')
+    _LOADED[sudo] = s = Sudo(_exec(name, impl_path))
     return s
 
 

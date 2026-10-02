@@ -1,13 +1,8 @@
 """All recorded K♣↔Q♥ witnesses (F4 and F6 runs) and ../witness_v9.json against sudoc's Python output
-of the frozen v9 sudo (proofs/sudo_py.py). The per-stage states are the Compose steps of its
-trace_encrypt: whitening, full rounds 1-5, final round."""
+of the frozen v9 sudo (v9.py)."""
 import json, pathlib, sys
 HERE = pathlib.Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[2]))
-import sudo_py
-V = sudo_py.doubledeal(9)
-def swap(x, y): return lambda c: y if c == x else x if c == y else c
-def encrypt_stages(m, k): return [s.hand for s in V.trace_encrypt(m, k) if s.kind == sudo_py.text("compose")]
+from v9 import V, swap, encrypt_stages
 n = 0
 for f in ("results/F6_KcQh_witnesses.json",):
     run = json.loads((HERE / f).read_text()); sg = swap(*run["swap"])

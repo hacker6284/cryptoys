@@ -2,18 +2,13 @@
 
 The JSON carries the witness (sigma, key, message, cipher, sigma M, sigma C) and, as
 hints for the Lean kernel check, the round keys K1..K6 and the state after each stage for
-both runs (computed with sudoc's Python output of the frozen v9 sudo, via proofs/sudo_py.py;
-the states are the Compose steps of its trace_encrypt). The kernel re-derives every hint from the emitted
+both runs (computed with sudoc's Python output of the frozen v9 sudo, via v9.py). The kernel re-derives every hint from the emitted
 Lean, so a wrong hint makes the Lean build fail; nothing here is trusted by Lean.
 usage: python3 make_witness.py [INDEX]
 """
 import json, pathlib, sys
 HERE = pathlib.Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[2]))
-import sudo_py
-V = sudo_py.doubledeal(9)
-def swap(x, y): return lambda c: y if c == x else x if c == y else c
-def encrypt_stages(m, k): return [s.hand for s in V.trace_encrypt(m, k) if s.kind == sudo_py.text("compose")]
+from v9 import V, swap, encrypt_stages
 idx = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 run = json.loads((HERE / "results/F6_KcQh_witnesses.json").read_text())
 w = run["witnesses"][idx]

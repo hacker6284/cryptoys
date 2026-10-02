@@ -71,7 +71,7 @@ jobs:
           done
       # sudoc's Python output (proofs/sudo_py.py builds it with the $SUDOC above): the loader
       # selftest, then the deprecated v8/v9/v10 vector and witness checks that run on it.
-      - name: sudo_py loader (DoubleDeal v8-v12 table, MegaDreifach v1 and v2 in one process)
+      - name: sudo_py loader (DoubleDeal v8-v12 table against the committed vectors)
         run: python3 proofs/sudo_py.py --selftest
       - name: Frozen v8/v9 vectors (sha + sudoc py; hand copies while they have callers), v9 witnesses, witness_v10.json
         run: |

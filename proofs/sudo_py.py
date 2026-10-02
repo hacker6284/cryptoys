@@ -9,22 +9,20 @@ $SUDOCODE_DIR (default /tmp/sudocode). A py build takes a fraction of a second p
     dd = sudo_py.doubledeal(9)         # DoubleDeal v8..v12 (DOUBLEDEAL table)
     dd.encrypt(msg, key)               # any sudo func, exported or not: plain lists in, plain lists out
     dd.api, dd.impl, dd.rt             # the generated modules (api = exports with host checks)
-    v1, v2 = sudo_py.megadreifach(1), sudo_py.megadreifach(2)   # coexist in one process
 
-Each .sudo is imported under its own alias (module `<alias>` for the API, `<alias>_impl` for the
-implementation), because builds can emit colliding module names (v1 and v2 MegaDreifach both emit
-megadreifach.py / _megadreifach_impl.py). This file is a loader only; the algorithms are sudoc's.
+The generated modules keep the names sudoc gives them (doubledeal_v9 / _doubledeal_v9_impl, ...;
+DoubleDeal v8..v12 are all distinct). If a name is already loaded, load() raises rather than alias
+it: sudoc's py output for MegaDreifach v1 and v2 collides on module names, a fix that belongs in
+sudoc, not here. This file is a loader only; the algorithms are sudoc's.
 
 usage: python3 proofs/sudo_py.py --selftest
 """
-import atexit, dataclasses, functools, importlib.util, json, re, shutil, subprocess, sys, tempfile, types
+import atexit, dataclasses, functools, importlib.util, json, shutil, subprocess, sys, tempfile, types
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 DOUBLEDEAL = {v: f'primitives/cipher/doubledeal/v{v}/doubledeal_v{v}.sudo' for v in (8, 9, 10, 11)}
 DOUBLEDEAL[12] = 'primitives/cipher/doubledeal/doubledeal.sudo'
-MEGADREIFACH = {1: 'primitives/hash/megadreifach/v1/megadreifach.sudo',
-                2: 'primitives/hash/megadreifach/megadreifach.sudo'}
 
 
 @functools.cache
@@ -98,13 +96,11 @@ class Sudo:
 _LOADED = {}
 
 
-def load(sudo, alias):
-    """Build REPO/sudo with sudoc --target py and import it as `alias` (cached per process)."""
-    if alias in _LOADED:
-        if _LOADED[alias][0] != sudo:
-            raise ValueError(f'alias {alias} already loaded from {_LOADED[alias][0]}')
-        return _LOADED[alias][1]
-    out = _outdir() / alias
+def load(sudo):
+    """Build REPO/sudo with sudoc --target py and import it (cached per sudo path)."""
+    if sudo in _LOADED:
+        return _LOADED[sudo]
+    out = _outdir() / str(len(_LOADED))
     subprocess.run([sudoc(), 'build', '--target', 'py', '-o', str(out), str(REPO / sudo)],
                    check=True, stdout=subprocess.DEVNULL)
     rt_path = out / '_sudo_rt.py'
@@ -114,35 +110,24 @@ def load(sudo, alias):
         raise RuntimeError(f'{sudo}: _sudo_rt.py differs from the runtime already loaded')
     impl_path, = out.glob('_*_impl.py')        # one impl per build (no sudo imports yet)
     api_path = out / (impl_path.stem[1:-len('_impl')] + '.py')
-    name = impl_path.stem                      # e.g. _megadreifach_impl, emitted by v1 and v2 alike
-    saved = sys.modules.pop(name, None)
-    try:
-        impl = _exec(name, impl_path)
-        api = _exec(alias, api_path)           # its `import <name> as _impl` binds the impl just loaded
-    finally:
-        sys.modules.pop(name, None)
-        if saved is not None:
-            sys.modules[name] = saved
-    sys.modules[alias + '_impl'] = impl
-    s = Sudo(api, impl, sys.modules['_sudo_rt'])
-    _LOADED[alias] = (sudo, s)
+    for name in (impl_path.stem, api_path.stem):
+        if name in sys.modules:
+            raise RuntimeError(f'{sudo}: module {name} is already loaded '
+                               f'(from {getattr(sys.modules[name], "__file__", "?")})')
+    impl = _exec(impl_path.stem, impl_path)
+    api = _exec(api_path.stem, api_path)       # its `import <impl> as _impl` binds the impl just loaded
+    _LOADED[sudo] = s = Sudo(api, impl, sys.modules['_sudo_rt'])
     return s
 
 
 def doubledeal(v):
-    """DoubleDeal v (8..12) from DOUBLEDEAL, as module sudo_doubledeal_v<v>."""
-    return load(DOUBLEDEAL[v], f'sudo_doubledeal_v{v}')
-
-
-def megadreifach(v):
-    """MegaDreifach v (1 or 2) from MEGADREIFACH, as module sudo_megadreifach_v<v>."""
-    return load(MEGADREIFACH[v], f'sudo_megadreifach_v{v}')
+    """DoubleDeal v (8..12), from DOUBLEDEAL."""
+    return load(DOUBLEDEAL[v])
 
 
 def _selftest():
     """Each DOUBLEDEAL entry is the sudo its committed vectors were built from (JSON `source`) and
-    reproduces their encrypt vectors; MegaDreifach v1 and v2, both loaded before either is used,
-    reproduce their own KATs through the generated API (fails if the aliases collide)."""
+    reproduces their encrypt vectors."""
     vec = {v: f'proofs/deprecated/doubledeal-v{v}/vectors/doubledeal_v{v}_vectors.json' for v in (8, 9, 10, 11)}
     vec[12] = 'proofs/doubledeal/vectors/doubledeal_vectors.json'
     for v, path in vec.items():
@@ -155,13 +140,6 @@ def _selftest():
                 n += 1
         assert n, path
         print(f'DoubleDeal v{v}: {DOUBLEDEAL[v]} agrees on {n} encrypt vectors')
-    md = {v: megadreifach(v) for v in MEGADREIFACH}
-    assert md[1].impl is not md[2].impl and md[1].api._impl is md[1].impl and md[2].api._impl is md[2].impl
-    for v, m in md.items():
-        kats = json.loads((REPO / f'primitives/hash/megadreifach/kats/megaminx_hash_kats_v{v}.json').read_text())
-        for x in kats['vectors']:
-            assert bytes(m.api.Hash(list(bytes.fromhex(x['msg_hex'])))).hex() == x['digest_hex'], (v, x['name'])
-        print(f'MegaDreifach v{v}: {MEGADREIFACH[v]} agrees on {len(kats["vectors"])} KATs')
 
 
 if __name__ == '__main__':

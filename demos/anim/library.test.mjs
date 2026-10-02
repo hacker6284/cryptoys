@@ -112,9 +112,21 @@ assert.equal(fileStart({ peakAtMs: 100 }, 0, 143, 1.4 / 0.7), 200 - 143, "peakAt
 }
 assert.equal(stretchContact(1000, -482, 127.6, 1), 1000, "offsetMs sounds: unchanged at the tuned tempo");
 
-// megaminx-turn: the default rules from the start (not yet approved).
+// megaminx-turn: the default rules from the start. Its single, double and
+// triple sounds are APPROVED and LOCKED at d952e6a (Zachary: "Sounds are ok
+// for that one."): exactly these entries; nothing else may move them.
+assert.match(readme, /\| `megaminx-turn` \|[^\n]*sounds approved and LOCKED at `d952e6a`/, "README records the megaminx lock");
 {
     const mm = await import(new URL("megaminx-turn/index.js", here));
+    assert.deepEqual(
+        { single: mm.settings.sounds.single, double: mm.settings.sounds.double, triple: mm.settings.sounds.triple },
+        {
+            single: { file: "megaminx-turn/single/single_spacejoe-486573", gainDb: 10, align: "peak-velocity", nudgeMs: 0 },
+            double: { file: "megaminx-turn/double/double_spacejoe-486565", gainDb: 6.5, align: "peak-velocity", nudgeMs: 0 },
+            triple: { file: "megaminx-turn/triple/triple_spacejoe-486566", gainDb: 5, align: "peak-velocity", nudgeMs: 0 },
+        },
+        "the approved megaminx face-turn sounds (d952e6a) are unchanged",
+    );
     assert.equal(mm.timing, mm.settings.timing);
     for (const [slot, move, ms] of [["single", "U", 1000], ["double", "U2", 1500], ["triple", "U3", 2000]]) {
         const s = mm.settings.sounds[slot];

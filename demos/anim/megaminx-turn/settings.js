@@ -31,8 +31,12 @@ export default {
         SETTLE_HOLD_MS: 90,
     },
     sounds: {
+        // APPROVED and LOCKED (Zachary at d952e6a: "Sounds are ok for that
+        // one."): single, double and triple: file, gainDb, align
+        // "peak-velocity", nudgeMs 0. Do not change them, or anything they
+        // depend on, without his sign-off; ../library.test.mjs pins them.
         // Single turn (one 72° click): SpaceJoe "Rubik Cube Turn – 20", one clean
-        // click, audible centre 128.5 ms in. Not yet approved.
+        // click, audible centre 128.5 ms in.
         single: { file: "megaminx-turn/single/single_spacejoe-486573", gainDb: 10, align: "peak-velocity", nudgeMs: 0 },
         // Double turn (two clicks): SpaceJoe "Rubik Cube Turn – 13", a weaker then a
         // stronger click 50 ms apart, cluster centre 171.9 ms in. Or { perClick: true }.

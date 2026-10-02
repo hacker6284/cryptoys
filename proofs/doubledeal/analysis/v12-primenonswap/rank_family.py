@@ -126,18 +126,14 @@ def swaps_of(m):
             j = cur.index(i)
             cur[i], cur[j] = cur[j], cur[i]   # cur := cur * (i j)
             ts.append((i, j))
-    ts.reverse()                              # m = t_n' ... with cur * t1 * ... = id
+    ts.reverse()                              # now m * a_1 * ... * a_n = id (a_i appended in
+                                              # order), so m = a_n * ... * a_1 = ts[0] * ts[1] * ...
     for s in range(52):                       # self-check against the Lean meaning
         v = s
         for a, b in reversed(ts):
             v = b if v == a else a if v == b else v
         assert v == m[s]
     return ts
-
-
-def tables():
-    fams = [family(D) for D in range(3)]
-    return fams
 
 
 def check_structure(fams):
@@ -246,7 +242,7 @@ end DoubleDeal.Security.RankPartition
 
 def main():
     args = cli.parse_args()
-    fams = tables()
+    fams = [family(D) for D in range(3)]
     check_structure(fams)
     if not (args.lean or args.check):
         report(fams)

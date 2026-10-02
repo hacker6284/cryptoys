@@ -103,11 +103,14 @@ heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
   then `a % 13 = b % 13 → σ a % 13 = σ b % 13` (`cell0Cov_rank_iff`: iff, via σ⁻¹).
   Hence every covariant σ permutes the 13 rank classes (`covariant_rank`). Nothing is
   claimed about the rank map σ induces (affine or not), about τ, or about labels.
-* Symbolic stem facts (default library, no computation): `c0_eq` (stem cell 0 is the
-  packet at the seat `(ρ, rowAmts ρ % 13)` of the row `ρ` that the last column step
-  brings to seat 0), `rowAmts_eq_of_agree` (the row amounts of rows 1-3 read only rows
-  0-2), `rowAmts_zero` (row 0's amount is the v10 row turn of row 3 read after row 3's
-  turn).
+* `cell0Subgroup_le_rankStab` (heavy, unconditional): `cell0Subgroup` lies in the
+  rank-partition stabiliser `rankStab` (S4 ≀ S13; not a Lean theorem).
+* Symbolic stem facts (default library, no computation, in the stem modules):
+  `StemPosition.stemPos_zero` (stem cell 0 is the packet at the seat `(ρ, rowAmts ρ % 13)`
+  of the row `ρ` that the last column step brings to seat 0),
+  `StemCoupling.rowAmts_eq_of_agree` (the row amounts of rows 1-3 read only rows 0-2),
+  `StemCoupling.rowAmts_prev` at row 0 (row 0's amount is the v10 row turn of row 3 read
+  after row 3's turn).
 * Argument (`rank_eq_of_family`, for EVERY σ, τ): take nine decks `π k i` agreeing
   outside row 3, member `(k, 1)` = member `(k, 0)` with cards x ≠ y (both in row 3)
   exchanged, member `(k, 2)` agreeing with `(k, 0)` in row 3 only at x and y, and stem
@@ -150,7 +153,12 @@ heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
    of the overgroups of a regular Z13 × Z2² in S52 (primitive / imprimitive cases), not
    viable in Lean here. Restricted to the affine relabellings (the normalizer of
    v10Sym; true by the holomorph count, not a Lean theorem) it is finite, which is the
-   proved affine result.
+   proved affine result. **Imprimitivity step, PROVED** (`RankPartition`, heavy
+   `cell0Subgroup_le_rankStab`): K lies in the stabiliser of the rank partition (13
+   blocks of 4 cards), the wreath product S4 ≀ S13 (that identification is not a Lean
+   theorem). What is left is still large: about 24^13 · 13! ≈ 5 · 10^27 elements, and
+   nothing is proved about the induced map on the 13 rank classes (S13 part) or about the
+   suit parts (the S4 factors).
 
 ## What a full proof would take
 
@@ -160,4 +168,6 @@ not known true), proved symbolically from the SumRanks amount chain; or (b) a
 classification of the subgroups of S52 containing v10Sym, plus a finite witness per
 class. Neither is in reach of a computer-checked case split (the 52-card σ space has
 no finite reduction, see route 1), and the rules exclude computer- or paper-checked
-bounds as a fallback.
+bounds as a fallback. Route 4's imprimitivity step is now proved (K ≤ S4 ≀ S13), which
+removes the primitive case of (b) but leaves about 5 · 10^27 elements of the
+stabiliser; the induced S13 map and the suit parts are open.

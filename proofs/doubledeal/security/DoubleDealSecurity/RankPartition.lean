@@ -10,13 +10,14 @@
   (`covariant_rank_of_checks`). Nothing is claimed about labels (suits), about the rank map
   σ induces, or about τ.
 
-  A. Symbolic stem facts (no computation; from `StemPosition` / `StemCoupling`):
-     * `c0_eq`: stem cell 0 of any packet `d` is `d` at the seat `(ρ, rowAmts d ρ % 13)` for
-       the row `ρ = srcRow (colAmts d) 0 0` (column 0 is turned only by the last column
-       step; ShiftRows does not move row 0).
-     * `rowAmts_eq_of_agree`: the row amounts of rows 1, 2, 3 read only rows 0, 1, 2 of the
-       packet (seats `s` with `s % 4 ≠ 3`).
-     * `rowAmts_zero`: row 0's amount is the v10 row turn of row 3 read after row 3's turn.
+  A. Symbolic stem facts used (no computation), in the stem modules:
+     * `StemPosition.stemPos_zero`: stem cell 0 of any packet `d` is `d` at the seat
+       `(ρ, rowAmts d ρ % 13)` of the row `ρ = c0Row d` (column 0 is turned only by the last
+       column step; ShiftRows does not move row 0).
+     * `StemCoupling.rowAmts_eq_of_agree`: the row amounts of rows 1, 2, 3 read only rows 0,
+       1, 2 of the packet (seats `s` with `s % 4 ≠ 3`).
+     * `StemCoupling.rowAmts_prev` at row 0: row 0's amount is the v10 row turn of row 3 read
+       after row 3's turn.
   B. `rank_eq_of_family`: for nine decks `π k i` (k, i : Fin 3) that agree outside row 3,
      whose stem cell 0 is the card at the row-0 seat `(0, col k)` (`col` injective), where
      member `(k, 1)` is member `(k, 0)` with the cards `x ≠ y` exchanged (both in row 3) and
@@ -28,7 +29,9 @@
      and the swap formula `StemCoupling.wsum_swap` gives the rank equality.
   C. `cell0Cov_rank_of_checks`: the three families of `RankPartitionLists.lean` (x = card 0,
      y = 13, 26, 39), transported to every equal-rank pair by `v10Sym`
-     (`cell0Cov_mul`, `cell0Cov_self_of_commutes`).
+     (`cell0Cov_mul`, `cell0Cov_self_of_commutes`). `cell0Subgroup_le_rankStab_of_checks`:
+     the subgroup `cell0Subgroup` lies in the rank-partition stabiliser `rankStab` (the σ that
+     permute the 13 rank classes; it is S4 ≀ S13, which is not a Lean theorem here).
 
   Write-up: `../analysis/v12-primenonswap/NOTES.md`; data: `rank_family.py`.
 -/
@@ -39,87 +42,14 @@ import DoubleDealSecurity.RankPartitionLists
 namespace DoubleDeal.Security.RankPartition
 
 open DoubleDeal Relabel
-open DoubleDeal.Security (permDeck isDeck_permDeck)
+open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_of_covPair cell0Cov_mul cell0Cov_inv
-  cell0Cov_self_of_commutes g0 g0_eq exists_v10Sym_zero)
-open DoubleDeal.Security.StemPosition (stemPos stemPosOf seatMap inSeat srcRow rowAmts colAmts
-  unkeyedNoMix_eq_comp)
+  cell0Cov_self_of_commutes g0 g0_eq exists_v10Sym_zero cell0Subgroup)
+open DoubleDeal.Security.StemPosition (rowAmts c0Row rowSeat stemPos_zero)
 open DoubleDeal.Security.StemCoupling (rowRead rowAmts_prev rk wt wsum rowTurnV10_cast wsum_swap
-  wt_sub_ne rk_sub_ne zmod13_mul_ne cmFlat_col_injective)
-
-/-! ## A. Symbolic stem facts -/
-
-/-- The row of column 0 that the last column step brings to the top (seat 0). -/
-def c0Row (d : Fin 52 → Nat) : Fin 4 := srcRow (colAmts d) 0 0
-
-/-- The seat `(ρ, t ρ % 13)` of row `ρ`. -/
-def rowSeat (t : Fin 4 → Nat) (ρ : Fin 4) : Fin 52 :=
-  cmFlat ρ ⟨t ρ % 13, Nat.mod_lt _ (by decide)⟩
-
-/-- (PROVED) Stem cell 0 of any packet `d` is `d` at the seat `(ρ, rowAmts d ρ % 13)` of the
-    row `ρ = c0Row d`. -/
-theorem c0_eq (d : Fin 52 → Nat) :
-    unkeyedNoMix d 0 = d (rowSeat (rowAmts d) (c0Row d)) := by
-  rw [unkeyedNoMix_eq_comp]
-  show d (cmFlat (seatMap (rowAmts d) (colAmts d) (inSeat 0)).1
-    (seatMap (rowAmts d) (colAmts d) (inSeat 0)).2) = _
-  have h0 : inSeat 0 = (0, 0) := rfl
-  rw [h0]
-  unfold rowSeat c0Row seatMap
-  congr 2
-  apply Fin.ext
-  simp only [Fin.val_zero, Nat.zero_add]
-  exact Nat.mod_eq_of_lt (Nat.mod_lt _ (by decide))
-
-/-- (PROVED) `rowRead d ρ a` reads only row `ρ` of `d`. -/
-theorem rowRead_congr {d d' : Fin 52 → Nat} {ρ : Fin 4}
-    (h : ∀ c : Fin 13, d (cmFlat ρ c) = d' (cmFlat ρ c)) (a : Nat) :
-    rowRead d ρ a = rowRead d' ρ a := funext fun _ => h _
-
-/-- Two packets agree outside row 3. -/
-def AgreeOff3 (d d' : Fin 52 → Nat) : Prop := ∀ s : Fin 52, (cmRow s).val ≠ 3 → d s = d' s
-
-theorem agree_row {d d' : Fin 52 → Nat} (h : AgreeOff3 d d') {ρ : Fin 4} (hρ : ρ.val ≠ 3)
-    (c : Fin 13) : d (cmFlat ρ c) = d' (cmFlat ρ c) :=
-  h _ (by rw [(cm_cmFlat ρ c).1]; exact hρ)
-
-/-- (PROVED) The row amounts of rows 1, 2, 3 read only rows 0, 1, 2. -/
-theorem rowAmts_eq_of_agree {d d' : Fin 52 → Nat} (h : AgreeOff3 d d') :
-    rowAmts d 1 = rowAmts d' 1 ∧ rowAmts d 2 = rowAmts d' 2 ∧ rowAmts d 3 = rowAmts d' 3 := by
-  have e1 : rowAmts d 1 = rowAmts d' 1 := by
-    rw [rowAmts_prev d 1, rowAmts_prev d' 1]
-    show rowTurnV10 (rowRead d 0 0) = rowTurnV10 (rowRead d' 0 0)
-    rw [rowRead_congr (agree_row h (by decide))]
-  have e2 : rowAmts d 2 = rowAmts d' 2 := by
-    rw [rowAmts_prev d 2, rowAmts_prev d' 2]
-    show rowTurnV10 (rowRead d 1 (rowAmts d 1)) = rowTurnV10 (rowRead d' 1 (rowAmts d' 1))
-    rw [e1, rowRead_congr (agree_row h (by decide))]
-  have e3 : rowAmts d 3 = rowAmts d' 3 := by
-    rw [rowAmts_prev d 3, rowAmts_prev d' 3]
-    show rowTurnV10 (rowRead d 2 (rowAmts d 2)) = rowTurnV10 (rowRead d' 2 (rowAmts d' 2))
-    rw [e2, rowRead_congr (agree_row h (by decide))]
-  exact ⟨e1, e2, e3⟩
-
-/-- (PROVED) Row 0's amount is the v10 row turn of row 3, read after row 3's own turn. -/
-theorem rowAmts_zero (d : Fin 52 → Nat) :
-    rowAmts d 0 = rowTurnV10 (rowRead d 3 (rowAmts d 3)) :=
-  rowAmts_prev d 0
+  wt_sub_ne rk_sub_ne zmod13_mul_ne cmFlat_col_injective AgreeOff3 rowAmts_eq_of_agree)
 
 /-! ## B. One family of nine decks -/
-
-theorem rel_permDeck' (σ π : Relabel) : rel σ (permDeck π) = permDeck (σ * π) :=
-  funext fun i => app_fin σ (π i)
-
-theorem perm_swap_apply (σ : Relabel) (x y z : Fin 52) :
-    σ (Equiv.swap x y z) = Equiv.swap (σ x) (σ y) (σ z) := by
-  by_cases hx : z = x
-  · subst hx; rw [Equiv.swap_apply_left, Equiv.swap_apply_left]
-  · by_cases hy : z = y
-    · subst hy; rw [Equiv.swap_apply_right, Equiv.swap_apply_right]
-    · rw [Equiv.swap_apply_of_ne_of_ne hx hy,
-        Equiv.swap_apply_of_ne_of_ne (fun e => hx (σ.injective e)) (fun e => hy (σ.injective e))]
-
-theorem rowSeat_row (t : Fin 4 → Nat) (ρ : Fin 4) : cmRow (rowSeat t ρ) = ρ := (cm_cmFlat _ _).1
 
 /-- The hypotheses on a family of nine decks `π k i` (`k`: class, `i`: member). -/
 structure Family (π : Fin 3 → Fin 3 → Relabel) (col : Fin 3 → Fin 13) (x y : Fin 52) : Prop where
@@ -167,7 +97,7 @@ theorem rank_eq_of_family (hf : Family π col x y) {σ τ : Relabel} (hc : Cell0
   have key : ∀ k i, π k i (seat k i) = e k := by
     intro k i
     have h1 := hc (permDeck (π k i)) (isDeck_permDeck _)
-    rw [hf.c0 k i, rel_permDeck', c0_eq] at h1
+    rw [hf.c0 k i, rel_permDeck, stemPos_zero] at h1
     have h2 : σ (π k i (seat k i)) = τ (R k) := by
       apply Fin.ext
       rw [← app_fin τ]
@@ -248,7 +178,9 @@ theorem rank_eq_of_family (hf : Family π col x y) {σ τ : Relabel} (hc : Cell0
   rw [hk1, hk0] at hamt
   -- the row-0 amounts of members 0 and 1 agree
   have hK : rowAmts (D k 1) 3 = rowAmts (D k 0) 3 := ((hTr k 1).2.2).trans ((hTr k 0).2.2).symm
-  rw [rowAmts_zero, rowAmts_zero, hK] at hamt
+  have h0 : ∀ d, rowAmts d 0 = rowTurnV10 (rowRead d 3 (rowAmts d 3)) :=
+    fun d => rowAmts_prev d 0
+  rw [h0, h0, hK] at hamt
   set K := rowAmts (D k 0) 3
   have hlt : ∀ z : Fin 13 → Nat, rowTurnV10 z < 13 := fun z => Nat.mod_lt _ (by decide)
   rw [Nat.mod_eq_of_lt (hlt _), Nat.mod_eq_of_lt (hlt _)] at hamt
@@ -281,7 +213,9 @@ theorem rank_eq_of_family (hf : Family π col x y) {σ τ : Relabel} (hc : Cell0
   have r1 : rowRead (D k 1) 3 K = fun j => (Equiv.swap (yv j1) (yv j2) (yv j)).val := by
     funext j
     show ((σ * π k 1) (cmFlat 3 (idx j))).val = _
-    rw [Equiv.Perm.mul_apply, hf.swap1, perm_swap_apply, hy1, hy2]
+    have hs : ∀ z, σ (Equiv.swap x y z) = Equiv.swap (σ x) (σ y) (σ z) := fun z => by
+      rw [Equiv.swap_apply_apply]; simp
+    rw [Equiv.Perm.mul_apply, hf.swap1, hs, hy1, hy2]
     rfl
   rw [r0, r1] at hamt
   have hz := congrArg (fun n : Nat => (n : ZMod 13)) hamt
@@ -349,11 +283,6 @@ theorem family_of_checks (h : RankChecks) (D : Fin 3) :
     simp only [famY] at this
     omega
 
-theorem v10SymFn_mod (r : Fin 13) (y : Fin 4) (c : Fin 52) :
-    (v10SymFn r y c).val % 13 = (c.val % 13 + r.val) % 13 := by
-  simp only [v10SymFn]
-  omega
-
 theorem rank_zero_cards : ∀ c : Fin 52, c.val % 13 = 0 → c ≠ 0 → ∃ D : Fin 3, c = famY D := by
   decide
 
@@ -369,13 +298,16 @@ theorem cell0Cov_rank_of_checks (hchk : RankChecks) {σ τ : Relabel} (h : Cell0
   have hv0 : v 0 = a := hr
   set b' := v.symm b with hb'
   have hvb : v b' = b := Equiv.apply_symm_apply v b
-  have hma : a.val % 13 = (0 + r.val) % 13 := by
-    rw [← hv0]; exact v10SymFn_mod r yy 0
-  have hmb : b.val % 13 = (b'.val % 13 + r.val) % 13 := by
-    rw [← hvb]; exact v10SymFn_mod r yy b'
+  have hma := v10SymFn_rank r yy 0
+  have hmb := v10SymFn_rank r yy b'
+  have hvb' : v10SymFn r yy b' = b := hvb
+  rw [hr] at hma
+  rw [hvb'] at hmb
+  simp only [cardRank, rank] at hma hmb
   have hb0 : b'.val % 13 = 0 := by
     have := Nat.mod_lt b'.val (by decide : 0 < 13)
     have := r.isLt
+    simp only [Fin.val_zero] at hma
     omega
   have hbne : b' ≠ 0 := by
     intro e; apply heq; rw [← hv0, ← hvb, e]
@@ -405,5 +337,24 @@ theorem covariant_rank_of_checks (hchk : RankChecks) {σ : Relabel}
     (σ a).val % 13 = (σ b).val % 13 := by
   obtain ⟨τ, hτ⟩ := h
   exact cell0Cov_rank_of_checks hchk (cell0Cov_of_covPair hτ) hab
+
+/-- The rank-partition stabiliser: the relabellings that map the 13 rank classes
+    (`c % 13`) onto rank classes. (It is the wreath product S4 ≀ S13, of order
+    24^13 · 13!; that identification is not a Lean theorem here.) -/
+def rankStab : Subgroup Relabel where
+  carrier := {σ | ∀ a b : Fin 52, (σ a).val % 13 = (σ b).val % 13 ↔ a.val % 13 = b.val % 13}
+  one_mem' := fun _ _ => Iff.rfl
+  mul_mem' := fun {σ ρ} hσ hρ a b => by
+    simp only [Equiv.Perm.mul_apply]; exact (hσ _ _).trans (hρ a b)
+  inv_mem' := fun {σ} hσ a b => by
+    have := hσ (σ⁻¹ a) (σ⁻¹ b)
+    simp only [Equiv.Perm.apply_inv_self] at this
+    exact this.symm
+
+/-- (PROVED, GIVEN `RankChecks`) `cell0Subgroup` (the σ with some τ satisfying the seat-26
+    condition) lies in the rank-partition stabiliser. Unconditional form: heavy library,
+    `RankPartition.cell0Subgroup_le_rankStab`. -/
+theorem cell0Subgroup_le_rankStab_of_checks (hchk : RankChecks) : cell0Subgroup ≤ rankStab :=
+  fun _ ⟨_, h⟩ a b => cell0Cov_rank_iff_of_checks hchk h a b
 
 end DoubleDeal.Security.RankPartition

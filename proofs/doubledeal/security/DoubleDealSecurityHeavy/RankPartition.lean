@@ -17,7 +17,7 @@ import DoubleDealSecurityHeavy.RankPartitionChecks
 namespace DoubleDeal.Security.RankPartition
 
 open DoubleDeal Relabel
-open DoubleDeal.Security.CovariantNarrow (Cell0Cov)
+open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Subgroup)
 
 /-- (PROVED, unconditional) If `Cell0Cov σ τ`, σ maps cards of equal rank (`c % 13`) to
     cards of equal rank. -/
@@ -37,5 +37,11 @@ theorem cell0Cov_rank_iff {σ τ : Relabel} (h : Cell0Cov σ τ) (a b : Fin 52) 
 theorem covariant_rank {σ : Relabel} (h : Covariant σ unkeyedWithMix) {a b : Fin 52}
     (hab : a.val % 13 = b.val % 13) : (σ a).val % 13 = (σ b).val % 13 :=
   covariant_rank_of_checks rankChecks_ok h hab
+
+/-- (PROVED, unconditional) `cell0Subgroup` lies in the rank-partition stabiliser
+    `rankStab` (S4 ≀ S13; that identification is not a Lean theorem). Nothing is proved
+    about the induced map on the 13 rank classes or about the suit parts. -/
+theorem cell0Subgroup_le_rankStab : cell0Subgroup ≤ rankStab :=
+  cell0Subgroup_le_rankStab_of_checks rankChecks_ok
 
 end DoubleDeal.Security.RankPartition

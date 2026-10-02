@@ -187,6 +187,7 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.RankPartition.cell0Cov_rank",
     "DoubleDeal.Security.RankPartition.cell0Cov_rank_iff",
     "DoubleDeal.Security.RankPartition.covariant_rank",
+    "DoubleDeal.Security.RankPartition.cell0Subgroup_le_rankStab",
 }
 # Lean-generated theorems of the heavy modules (no source declaration; see the comment
 # above HEAVY_THEOREMS). chunkOK.eq_1: `of_chunks` unfolds `chunkOK` with `simp only`.
@@ -605,13 +606,17 @@ PACKAGES = {
             "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff_of_check",
             # RankPartition: rank classes are preserved, GIVEN the finite checks RankChecks
             # (discharged in the heavy library); not the conjecture
-            "DoubleDeal.Security.RankPartition.c0_eq",
-            "DoubleDeal.Security.RankPartition.rowAmts_zero",
+            "DoubleDeal.Security.StemPosition.stemPos_zero",
+            "DoubleDeal.Security.StemCoupling.rowRead_congr",
+            "DoubleDeal.Security.StemCoupling.agree_row",
+            "DoubleDeal.Security.StemCoupling.rowAmts_eq_of_agree",
+            "DoubleDeal.Security.rel_permDeck",
             "DoubleDeal.Security.RankPartition.rank_eq_of_family",
             "DoubleDeal.Security.RankPartition.family_of_checks",
             "DoubleDeal.Security.RankPartition.cell0Cov_rank_of_checks",
             "DoubleDeal.Security.RankPartition.cell0Cov_rank_iff_of_checks",
             "DoubleDeal.Security.RankPartition.covariant_rank_of_checks",
+            "DoubleDeal.Security.RankPartition.cell0Subgroup_le_rankStab_of_checks",
             # RealSchedule (roadmap M5): real PassKey schedule
             "DoubleDeal.Security.RealSchedule.masterList_injective",
             "DoubleDeal.Security.RealSchedule.exists_masterList_eq",

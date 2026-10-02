@@ -5,9 +5,9 @@
 //
 // Usage, from the repo root:
 //   sudoc build --target js -o /tmp/megadreifach-v3 primitives/hash/megadreifach/v3/megadreifach.sudo
-//   MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_stats.mjs TEST N SEED0 [--workers W]
-//   MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_stats.mjs --check LOG
-// TEST:
+//   MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_stats.mjs COMMAND [--workers W]
+//   MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_stats.mjs --check LOG [COMMAND]
+// COMMAND:
 //   selfcheck            harness checks against the build (sampler legality, y == HashDeckBodyFrom, laws)
 //   bench   N SEED0      N blocks of em_block on uniform (h, deal): blocks/s
 //   d2      N SEED0      D2: secret uniform h, uniform deal, cards 51 and 52 swapped; z = y^-1 y''
@@ -17,11 +17,12 @@
 //                        N per (start, position): differing output slots and output collisions
 //   d3      N SEED0      telescoping pair at deal positions 51, 52 (both orders), pair classes same/opp/KA/rand,
 //                        IV and uniform start, N per (start, class): output collisions
-//   ci      -  SEED0     a small fixed slice: d2 400, d1 200, merge 25 and d3 50 (tools/generate-demos.sh, --check)
+//   ci      SEED0        a small fixed slice: d2 400, d1 200, merge 25 and d3 50 (tools/generate-demos.sh, --check)
 // Work is split into chunks whose size depends only on N; chunk c uses the seed SEED0 + c, so results do
 // not depend on the worker count. Every line of output is deterministic except the lines starting with "# time".
-// --check LOG reruns the command recorded on the log's first line and compares the output with the
-// log, ignoring the "# time" lines. It prints "OK <log>" or "STALE <log>" (exit 1).
+// Output starts with "# command: COMMAND". --check LOG COMMAND runs COMMAND and compares its whole output
+// (that first line included) with the log, ignoring the "# time" lines; without COMMAND it runs the
+// command on the log's first line. It prints "OK <log>" or "STALE <log>" (exit 1).
 import { Worker, isMainThread, parentPort, workerData } from "node:worker_threads";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -70,17 +71,19 @@ function rng(seed) {
 }
 
 const range = (n) => [...Array(n).keys()];
-function parity(p) {
+function cycles(p) {                                                 // cycle lengths of a permutation
     const seen = new Array(p.length).fill(false);
-    let par = 0;
+    const out = [];
     for (let i = 0; i < p.length; i++) {
         if (seen[i]) continue;
         let L = 0;
         for (let j = i; !seen[j]; j = p[j]) { seen[j] = true; L++; }
-        par ^= (L - 1) & 1;
+        out.push(L);
     }
-    return par;
+    return out;
 }
+const parity = (p) => cycles(p).reduce((s, L) => s + L - 1, 0) & 1;
+const cycleType = (p) => cycles(p).sort((x, y) => y - x).join(",");
 // A uniform legal position: even corner and edge permutations, corner twists summing to 0 mod 3,
 // edge flips summing to 0 mod 2 (the legality of v2 §4, which the sudo's position_to_bytes ranks).
 function uniformH(R) {
@@ -105,20 +108,10 @@ function flip2(R) {                                                  // a unifor
 // ------------------------------------------------------------------ statistics of a quotient z
 const fixC = (z) => { let k = 0; for (let s = 0; s < 20; s++) k += z[0][s] === s; return k; };
 const fixE = (z) => { let k = 0; for (let s = 0; s < 30; s++) k += z[2][s] === s; return k; };
-const moved = (z) => { let k = 0; for (let s = 0; s < 20; s++) k += z[0][s] !== s || z[1][s] !== 0; for (let s = 0; s < 30; s++) k += z[2][s] !== s || z[3][s] !== 0; return k; };
-function cyc(p) {
-    const seen = new Array(p.length).fill(false);
-    const out = [];
-    for (let i = 0; i < p.length; i++) {
-        if (seen[i]) continue;
-        let L = 0;
-        for (let j = i; !seen[j]; j = p[j]) { seen[j] = true; L++; }
-        out.push(L);
-    }
-    return out.sort((x, y) => y - x).join(",");
-}
 const same = (a, b) => a.every((xs, i) => xs.every((x, j) => x === b[i][j]));
 const diffSlots = (a, b) => { let k = 0; for (let s = 0; s < 20; s++) k += a[0][s] !== b[0][s] || a[1][s] !== b[1][s]; for (let s = 0; s < 30; s++) k += a[2][s] !== b[2][s] || a[3][s] !== b[3][s]; return k; };
+const IDENTITY = fromPos(impl.identity());
+const moved = (z) => diffSlots(z, IDENTITY);                         // slots not at identity (orientation counted)
 
 const inc = (o, k, v = 1) => { o[k] = (o[k] || 0) + v; };
 function newSide() { return { n: 0, pred: 0, fe: 0, fc: 0, mv: 0, mv2: 0, he: {}, hc: {}, ce: {}, cc: {} }; }
@@ -126,7 +119,7 @@ function acc(r, zp, ident) {
     const z = fromPos(zp);
     const a1 = fixE(z), a2 = fixC(z), m = moved(z);
     r.n++; r.pred += ident; r.fe += a1 >= 2; r.fc += a2 >= 2; r.mv += m; r.mv2 += m * m;
-    inc(r.he, a1); inc(r.hc, a2); inc(r.ce, cyc(z[2])); inc(r.cc, cyc(z[0]));
+    inc(r.he, a1); inc(r.hc, a2); inc(r.ce, cycleType(z[2])); inc(r.cc, cycleType(z[0]));
     return [a2 >= 2 ? 1 : 0, m];
 }
 function mergeObj(a, b) {
@@ -146,15 +139,14 @@ function telePair(R, cls) {
     return R.sample2(52);
 }
 
-// One chunk of work: {test, n, seed, start?, pos?, cls?}
-function work(job) {
-    const R = rng(job.seed);
-    const IV = impl.iv_cook12();
-    if (job.test === "bench") {
+// One chunk of work per test: (job = {test, n, seed, start?, pos?, cls?}, R = the chunk's PRNG).
+const startOf = (job, R) => (job.start === "IV" ? impl.iv_cook12() : toPos(uniformH(R)));
+const WORK = {
+    bench(job, R) {
         for (let i = 0; i < job.n; i++) impl.em_block(toPos(uniformH(R)), deal(uniformDeal(R)));
         return { n: job.n };
-    }
-    if (job.test === "d2") {
+    },
+    d2(job, R) {
         const r = newSide();
         for (let i = 0; i < job.n; i++) {
             const h = toPos(uniformH(R));
@@ -164,29 +156,29 @@ function work(job) {
             acc(r, comp(inv(block(h, d)), block(h, d2)), 0);
         }
         return r;
-    }
-    if (job.test === "d1") {
+    },
+    d1(job, R) {
         const A = newSide(), B = newSide(), pr = { dfc: 0, dfc2: 0 };
         for (let i = 0; i < job.n; i++) {
             const K = uniformDeal(R);
             const h = toPos(uniformH(R));
             const g = toPos(flip2(R));
-            const Wof = (x) => { const xi = inv(x); return comp(xi, comp(block(x, K), xi)); };
-            const Wh = Wof(h), Whi = inv(Wh);
-            const W2 = Wof(comp(g, h));
-            const W3 = Wof(comp(h, g));
+            const cardPhaseW = (x) => { const xi = inv(x); return comp(xi, comp(block(x, K), xi)); };   // W(x) = x^-1 y x^-1
+            const Wh = cardPhaseW(h), Whi = inv(Wh);
+            const W2 = cardPhaseW(comp(g, h));
+            const W3 = cardPhaseW(comp(h, g));
             const whA = fromPos(Wh);
-            const [fa] = acc(A, comp(Whi, W2), same(fromPos(W2), whA) ? 1 : 0);
-            const [fb] = acc(B, comp(W3, Whi), same(fromPos(W3), whA) ? 1 : 0);
-            pr.dfc += fa - fb; pr.dfc2 += (fa - fb) ** 2;
+            const [leftFixC2] = acc(A, comp(Whi, W2), same(fromPos(W2), whA) ? 1 : 0);
+            const [rightFixC2] = acc(B, comp(W3, Whi), same(fromPos(W3), whA) ? 1 : 0);
+            pr.dfc += leftFixC2 - rightFixC2; pr.dfc2 += (leftFixC2 - rightFixC2) ** 2;
         }
         return { A, B, pr };
-    }
-    if (job.test === "merge") {
+    },
+    merge(job, R) {
         const hist = new Array(51).fill(0);
         let coll = 0;
         for (let i = 0; i < job.n; i++) {
-            const h = job.start === "IV" ? IV : toPos(uniformH(R));
+            const h = startOf(job, R);
             const d = uniformDeal(R);
             const d2 = [...d];
             [d2[job.pos - 1], d2[job.pos]] = [d2[job.pos], d2[job.pos - 1]];
@@ -195,18 +187,21 @@ function work(job) {
             coll += k === 0;
         }
         return { hist, coll };
-    }
-    if (job.test === "d3") {
+    },
+    d3(job, R) {
         let coll = 0;
         for (let i = 0; i < job.n; i++) {
-            const h = job.start === "IV" ? IV : toPos(uniformH(R));
+            const h = startOf(job, R);
             const [a, b] = telePair(R, job.cls);
             const rest = R.shuffle(range(52).filter((c) => c !== a && c !== b));
             coll += same(fromPos(block(h, [...rest, a, b])), fromPos(block(h, [...rest, b, a])));
         }
         return { n: job.n, coll };
-    }
-    throw new Error(`unknown test ${job.test}`);
+    },
+};
+function work(job) {
+    if (!(job.test in WORK)) throw new Error(`unknown test ${job.test}`);
+    return WORK[job.test](job, rng(job.seed));
 }
 
 // ------------------------------------------------------------------ exact reference laws (uniform G)
@@ -311,57 +306,64 @@ function chunks(test, n, seed0, extra = {}) {
     for (let c = 0; c < k; c++) out.push({ test, n: Math.min(size, n - c * size), seed: seed0 + c, ...extra });
     return out;
 }
-const f = (x, d = 5) => x.toFixed(d);
-const sg = (x, d = 5) => (x >= 0 ? "+" : "") + x.toFixed(d);
-const p2 = (x) => x.toPrecision(2);
+const fixed = (x, d = 5) => x.toFixed(d);
+const signed = (x, d = 5) => (x >= 0 ? "+" : "") + x.toFixed(d);
+const twoSig = (x) => x.toPrecision(2);
 
-let LAWE, LAWC, P2E, P2C, ML, MMEAN, CPE, CPC;
-function laws() {
-    LAWE = fixLaw(30); LAWC = fixLaw(20);
-    P2E = 1 - LAWE[0] - LAWE[1]; P2C = 1 - LAWC[0] - LAWC[1];
-    ML = movedLaw(); MMEAN = ML.reduce((s, p, k) => s + k * p, 0);
-    CPE = classProbs(30); CPC = classProbs(20);
+// The exact reference laws of a uniform element of G (main thread only; the workers only count).
+function referenceLaws() {
+    const fixE = fixLaw(30), fixC = fixLaw(20), moved = movedLaw();
+    return {
+        fixE, fixC, moved,
+        p2E: 1 - fixE[0] - fixE[1], p2C: 1 - fixC[0] - fixC[1],
+        movedMean: moved.reduce((s, p, k) => s + k * p, 0),
+        cycleE: classProbs(30), cycleC: classProbs(20),
+    };
 }
+const LAWS = isMainThread ? referenceLaws() : null;
+
 function showSide(tag, r, withPred) {
     const n = r.n, out = [];
     const [lo, hi] = wilson(r.fe, n), [loc, hic] = wilson(r.fc, n);
     const m = r.mv / n, sd = Math.sqrt(Math.max(r.mv2 / n - m * m, 0) * n / (n - 1));
     const mfe = Object.entries(r.he).reduce((s, [k, v]) => s + k * v, 0) / n, mfc = Object.entries(r.hc).reduce((s, [k, v]) => s + k * v, 0) / n;
-    if (withPred) { const [a, b] = wilson(r.pred, n); out.push(`${tag} n=${n}: exact prediction ${r.pred}/${n} [${p2(a)}, ${p2(b)}]`); }
-    out.push(`${tag} n=${n}: P(fixE>=2) ${f(r.fe / n)} [${f(lo)}, ${f(hi)}] adv ${sg(r.fe / n - P2E)} | P(fixC>=2) ${f(r.fc / n)} [${f(loc)}, ${f(hic)}] adv ${sg(r.fc / n - P2C)}`);
-    out.push(`${tag} n=${n}: mean fixE ${f(mfe, 4)}, mean fixC ${f(mfc, 4)} (ideal 1 +- ${f(1.96 / Math.sqrt(n), 4)}) | mean moved ${f(m, 4)} +- ${f(1.96 * sd / Math.sqrt(n), 4)} (ideal ${f(MMEAN, 4)}, diff ${sg(m - MMEAN, 4)})`);
-    const xe = cycChi(r.ce, CPE), xc = cycChi(r.cc, CPC);
-    out.push(`${tag} n=${n}: chi2 fixE-hist p=${p2(histChi(r.he, LAWE, 5))}, fixC-hist p=${p2(histChi(r.hc, LAWC, 5))} | cycle type E ${f(xe[0], 1)}/${xe[1]} p=${p2(xe[2])}, C ${f(xc[0], 1)}/${xc[1]} p=${p2(xc[2])}`);
+    if (withPred) { const [a, b] = wilson(r.pred, n); out.push(`${tag} n=${n}: exact prediction ${r.pred}/${n} [${twoSig(a)}, ${twoSig(b)}]`); }
+    out.push(`${tag} n=${n}: P(fixE>=2) ${fixed(r.fe / n)} [${fixed(lo)}, ${fixed(hi)}] adv ${signed(r.fe / n - LAWS.p2E)} | P(fixC>=2) ${fixed(r.fc / n)} [${fixed(loc)}, ${fixed(hic)}] adv ${signed(r.fc / n - LAWS.p2C)}`);
+    out.push(`${tag} n=${n}: mean fixE ${fixed(mfe, 4)}, mean fixC ${fixed(mfc, 4)} (ideal 1 +- ${fixed(1.96 / Math.sqrt(n), 4)}) | mean moved ${fixed(m, 4)} +- ${fixed(1.96 * sd / Math.sqrt(n), 4)} (ideal ${fixed(LAWS.movedMean, 4)}, diff ${signed(m - LAWS.movedMean, 4)})`);
+    const xe = cycChi(r.ce, LAWS.cycleE), xc = cycChi(r.cc, LAWS.cycleC);
+    out.push(`${tag} n=${n}: chi2 fixE-hist p=${twoSig(histChi(r.he, LAWS.fixE, 5))}, fixC-hist p=${twoSig(histChi(r.hc, LAWS.fixC, 5))} | cycle type E ${fixed(xe[0], 1)}/${xe[1]} p=${twoSig(xe[2])}, C ${fixed(xc[0], 1)}/${xc[1]} p=${twoSig(xc[2])}`);
     return out;
 }
 
-async function runTest(test, N, seed0, w, emit) {
-    const t0 = performance.now();
-    const time = (what, blocks) => { const s = (performance.now() - t0) / 1000; emit(`# time ${what}: ${s.toFixed(1)} s, ${blocks} blocks, ${(blocks / s).toFixed(1)} blocks/s, ${w} workers`); };
-    if (test === "bench") {
+// The tests: each runs its chunks on the pool, prints its lines and returns the number of blocks.
+const TESTS = {
+    async bench(N, seed0, w, emit) {
         await pool(chunks("bench", N, seed0), w);
         emit(`bench: ${N} blocks of em_block on uniform (h, deal), seeds ${seed0}+chunk`);
-        time("bench", N);
-    } else if (test === "d2") {
+        return { label: "bench", blocks: N };
+    },
+    async d2(N, seed0, w, emit) {
         const R = (await pool(chunks("d2", N, seed0), w)).reduce(mergeObj);
         emit(`D2 ZP26: secret uniform h, uniform deal, cards 51 and 52 swapped; N=${N}, seeds ${seed0}+chunk (chunk ${chunkSize(N)})`);
         showSide("D2", R, false).forEach(emit);
-        time("D2", 2 * N);
-    } else if (test === "d1") {
+        return { label: "D2", blocks: 2 * N };
+    },
+    async d1(N, seed0, w, emit) {
         const R = (await pool(chunks("d1", N, seed0), w)).reduce(mergeObj);
         emit(`D1 + D1' ZP26: uniform deal K, uniform h, uniform 2-edge flip g; same samples; N=${N}, seeds ${seed0}+chunk (chunk ${chunkSize(N)})`);
         showSide("D1 ", R.A, true).forEach(emit);
         showSide("D1'", R.B, true).forEach(emit);
-        const n = N, avgE = (R.A.fe + R.B.fe) / (2 * n) - P2E, avgC = (R.A.fc + R.B.fc) / (2 * n) - P2C;
+        const n = N, avgE = (R.A.fe + R.B.fe) / (2 * n) - LAWS.p2E, avgC = (R.A.fc + R.B.fc) / (2 * n) - LAWS.p2C;
         const md = R.pr.dfc / n, sdd = Math.sqrt(Math.max(R.pr.dfc2 / n - md * md, 0) * n / (n - 1));
-        emit(`D1+D1' averaged: P(fixE>=2) adv ${sg(avgE)}, P(fixC>=2) adv ${sg(avgC)} (HEUR pooling); paired D1 - D1' P(fixC>=2) ${sg(md)} +- ${f(1.96 * sdd / Math.sqrt(n))}`);
-        time("D1", 3 * N);
-    } else if (test === "merge") {
+        emit(`D1+D1' averaged: P(fixE>=2) adv ${signed(avgE)}, P(fixC>=2) adv ${signed(avgC)} (HEUR pooling); paired D1 - D1' P(fixC>=2) ${signed(md)} +- ${fixed(1.96 * sdd / Math.sqrt(n))}`);
+        return { label: "D1", blocks: 3 * N };
+    },
+    async merge(N, seed0, w, emit) {
         const jobs = [];
         for (const start of ["IV", "rand"]) for (const pos of POS) jobs.push(...chunks("merge", N, seed0 + (start === "IV" ? 0 : 10000) + 100 * pos, { start, pos }));
         const res = await pool(jobs, w);
         emit(`merge ZP26: adjacent swap at deal positions ${POS.join(", ")}, IV and uniform start, N=${N} each; seeds ${seed0} + 10000*[uniform] + 100*position + chunk`);
-        const law = ML, bins = [[0, 40], [41, 44], [45, 46], [47, 47], [48, 48], [49, 49], [50, 50]];
+        const law = LAWS.moved, bins = [[0, 40], [41, 44], [45, 46], [47, 47], [48, 48], [49, 49], [50, 50]];
         let tot = 0, coll = 0;
         for (const start of ["IV", "rand"]) {
             let H = new Array(51).fill(0);
@@ -369,15 +371,16 @@ async function runTest(test, N, seed0, w, emit) {
                 const rs = res.filter((_, i) => jobs[i].start === start && jobs[i].pos === pos);
                 const h = rs.map((r) => r.hist).reduce(mergeObj), c = rs.reduce((s, r) => s + r.coll, 0), n = h.reduce((s, v) => s + v, 0);
                 H = mergeObj(H, h); tot += n; coll += c;
-                emit(`  ${start.padEnd(4)} swap at ${String(pos).padStart(2)}: mean differing slots ${f(h.reduce((s, v, k) => s + k * v, 0) / n, 4)}, collisions ${c}`);
+                emit(`  ${start.padEnd(4)} swap at ${String(pos).padStart(2)}: mean differing slots ${fixed(h.reduce((s, v, k) => s + k * v, 0) / n, 4)}, collisions ${c}`);
             }
             const n = H.reduce((s, v) => s + v, 0);
-            emit(`  ${start.padEnd(4)} differing output slots: mean ${f(H.reduce((s, v, k) => s + k * v, 0) / n, 4)} (ideal ${f(MMEAN, 4)}); ` +
-                bins.map(([a, b]) => `[${a}-${b}] ${f(H.slice(a, b + 1).reduce((s, v) => s + v, 0) / n)} (ideal ${f(law.slice(a, b + 1).reduce((s, v) => s + v, 0))})`).join("; "));
+            emit(`  ${start.padEnd(4)} differing output slots: mean ${fixed(H.reduce((s, v, k) => s + k * v, 0) / n, 4)} (ideal ${fixed(LAWS.movedMean, 4)}); ` +
+                bins.map(([a, b]) => `[${a}-${b}] ${fixed(H.slice(a, b + 1).reduce((s, v) => s + v, 0) / n)} (ideal ${fixed(law.slice(a, b + 1).reduce((s, v) => s + v, 0))})`).join("; "));
         }
         emit(`merge ZP26: ${tot} adjacent-swap pairs; output collisions ${coll}; 0-hit 95% bound per pair ${(1 - 0.05 ** (1 / tot)).toExponential(1)}`);
-        time("merge", 2 * tot);
-    } else if (test === "d3") {
+        return { label: "merge", blocks: 2 * tot };
+    },
+    async d3(N, seed0, w, emit) {
         const jobs = [];
         ["IV", "rand"].forEach((start, si) => CLASSES.forEach((cls, ci) => jobs.push(...chunks("d3", N, seed0 + 100 * (4 * si + ci), { start, cls }))));
         const res = await pool(jobs, w);
@@ -390,81 +393,97 @@ async function runTest(test, N, seed0, w, emit) {
             emit(`  start ${start.padEnd(4)} pair ${cls.padEnd(4)} n=${n}: output collisions ${c} (0-hit 95% bound ${(1 - 0.05 ** (1 / n)).toExponential(1)})`);
         }
         emit(`D3 ZP26: ${tot} pairs; output collisions ${coll}`);
-        time("D3", 2 * tot);
-    } else {
-        throw new Error(`unknown test ${test}`);
-    }
+        return { label: "D3", blocks: 2 * tot };
+    },
+};
+
+async function runTest(test, N, seed0, w, emit) {
+    const t0 = performance.now();
+    const { label, blocks } = await TESTS[test](N, seed0, w, emit);
+    const s = (performance.now() - t0) / 1000;
+    emit(`# time ${label}: ${s.toFixed(1)} s, ${blocks} blocks, ${(blocks / s).toFixed(1)} blocks/s, ${w} workers`);
 }
 
-function selfcheck(emit) {
-    const md = { HashDeckBodyFrom: null };
-    return import(join(OUT, "megadreifach.mjs")).then((api) => {
-        md.HashDeckBodyFrom = api.HashDeckBodyFrom;
-        const R = rng(20261002);
-        const ident = fromPos(impl.identity());
-        let legal = 0, digest = 0;
-        for (let i = 0; i < 8; i++) {
-            const hs = uniformH(R), h = toPos(hs), d = uniformDeal(R);
-            // the sampler's positions are group elements of the build: h * h^-1 = id, and rankable
-            legal += same(fromPos(comp(h, inv(h))), ident) && impl.position_to_bytes(h).length === 29;
-            // the harness's y = h * E_m(h) is the build's HashDeckBodyFrom output
-            const y = [...impl.position_to_bytes(block(h, d))].map(Number);
-            const api = md.HashDeckBodyFrom(d, { cp: hs[0], co: hs[1], ep: hs[2], eo: hs[3] });
-            digest += y.every((x, j) => x === api[j]);
-        }
-        // the sampler's legality matches the build's face turns: a random face-turn word from the identity
-        // satisfies the same constraints (twists 0 mod 3, flips 0 mod 2, even permutations)
-        let words = 0;
-        for (let i = 0; i < 8; i++) {
-            let g = impl.identity();
-            for (let t = 0; t < 40; t++) g = impl.face_turn(g, BigInt(R.below(12)), BigInt(1 + R.below(4)));
-            const z = fromPos(g);
-            words += z[1].reduce((s, v) => s + v, 0) % 3 === 0 && z[3].reduce((s, v) => s + v, 0) % 2 === 0 && !parity(z[0]) && !parity(z[2]);
-        }
-        const sums = [LAWE, LAWC, ML, Object.values(CPE), Object.values(CPC)].map((l) => Math.abs(l.reduce((s, v) => s + v, 0) - 1) < 1e-12);
-        emit(`selfcheck: sampler positions are build group elements ${legal}/8; y == HashDeckBodyFrom ${digest}/8; face-turn words legal ${words}/8; reference laws sum to 1: ${sums.every(Boolean)}`);
-        emit(`ideal (uniform G): P(fixE>=2) ${f(P2E, 6)}, P(fixC>=2) ${f(P2C, 6)}, mean moved ${f(MMEAN, 4)}`);
-        if (legal !== 8 || digest !== 8 || words !== 8 || !sums.every(Boolean)) throw new Error("selfcheck failed");
-    });
+async function selfcheck(emit) {
+    const api = await import(join(OUT, "megadreifach.mjs"));
+    const R = rng(20261002);
+    let legal = 0, digest = 0;
+    for (let i = 0; i < 8; i++) {
+        const hs = uniformH(R), h = toPos(hs), d = uniformDeal(R);
+        // the sampler's positions are group elements of the build: h * h^-1 = id, and rankable
+        legal += same(fromPos(comp(h, inv(h))), IDENTITY) && impl.position_to_bytes(h).length === 29;
+        // the harness's y = h * E_m(h) is the build's HashDeckBodyFrom output
+        const y = [...impl.position_to_bytes(block(h, d))].map(Number);
+        const want = api.HashDeckBodyFrom(d, { cp: hs[0], co: hs[1], ep: hs[2], eo: hs[3] });
+        digest += y.every((x, j) => x === want[j]);
+    }
+    // the sampler's legality matches the build's face turns: a random face-turn word from the identity
+    // satisfies the same constraints (twists 0 mod 3, flips 0 mod 2, even permutations)
+    let words = 0;
+    for (let i = 0; i < 8; i++) {
+        let g = impl.identity();
+        for (let t = 0; t < 40; t++) g = impl.face_turn(g, BigInt(R.below(12)), BigInt(1 + R.below(4)));
+        const z = fromPos(g);
+        words += z[1].reduce((s, v) => s + v, 0) % 3 === 0 && z[3].reduce((s, v) => s + v, 0) % 2 === 0 && !parity(z[0]) && !parity(z[2]);
+    }
+    const sums = [LAWS.fixE, LAWS.fixC, LAWS.moved, Object.values(LAWS.cycleE), Object.values(LAWS.cycleC)].map((l) => Math.abs(l.reduce((s, v) => s + v, 0) - 1) < 1e-12);
+    emit(`selfcheck: sampler positions are build group elements ${legal}/8; y == HashDeckBodyFrom ${digest}/8; face-turn words legal ${words}/8; reference laws sum to 1: ${sums.every(Boolean)}`);
+    emit(`ideal (uniform G): P(fixE>=2) ${fixed(LAWS.p2E, 6)}, P(fixC>=2) ${fixed(LAWS.p2C, 6)}, mean moved ${fixed(LAWS.movedMean, 4)}`);
+    if (legal !== 8 || digest !== 8 || words !== 8 || !sums.every(Boolean)) throw new Error("selfcheck failed");
+}
+
+// The commands: their argument names, and what they run after the self-check.
+const int = (x) => { if (!/^\d+$/.test(x ?? "")) throw new Error(`expected a non-negative integer, got ${x}`); return parseInt(x, 10); };
+const COMMANDS = {
+    selfcheck: { args: [], run: async () => {} },
+    bench: { args: ["N", "SEED0"], run: (a, w, emit) => runTest("bench", int(a[0]), int(a[1]), w, emit) },
+    d2: { args: ["N", "SEED0"], run: (a, w, emit) => runTest("d2", int(a[0]), int(a[1]), w, emit) },
+    d1: { args: ["N", "SEED0"], run: (a, w, emit) => runTest("d1", int(a[0]), int(a[1]), w, emit) },
+    merge: { args: ["N", "SEED0"], run: (a, w, emit) => runTest("merge", int(a[0]), int(a[1]), w, emit) },
+    d3: { args: ["N", "SEED0"], run: (a, w, emit) => runTest("d3", int(a[0]), int(a[1]), w, emit) },
+    ci: {
+        args: ["SEED0"],
+        run: async (a, w, emit) => {
+            const s0 = int(a[0]);
+            await runTest("d2", 400, s0, w, emit);
+            await runTest("d1", 200, s0 + 100000, w, emit);
+            await runTest("merge", 25, s0 + 200000, w, emit);
+            await runTest("d3", 50, s0 + 300000, w, emit);
+        },
+    },
+};
+const usage = () => "usage: zp26_stats.mjs COMMAND [--workers W] | --check LOG [COMMAND]; COMMAND is " +
+    Object.entries(COMMANDS).map(([k, c]) => [k, ...c.args].join(" ")).join(" | ");
+
+async function run(args, w, emit) {
+    const [name, ...rest] = args;
+    const command = COMMANDS[name];
+    if (!command || rest.length !== command.args.length) throw new Error(usage());
+    emit(`# command: ${args.join(" ")}`);
+    await selfcheck(emit);
+    await command.run(rest, w, emit);
 }
 
 async function main() {
     const args = process.argv.slice(2);
     let w = 4;
     const wi = args.indexOf("--workers");
-    if (wi >= 0) { w = parseInt(args[wi + 1], 10); args.splice(wi, 2); }
-    laws();
-    const ci = args.indexOf("--check");
-    if (ci >= 0) {
-        const logPath = args[ci + 1];
+    if (wi >= 0) { w = int(args[wi + 1]); args.splice(wi, 2); }
+    if (args[0] === "--check") {
+        const logPath = args[1];
+        if (!logPath) throw new Error(usage());
         const old = readFileSync(logPath, "utf8").split("\n");
-        const cmd = old[0].replace(/^# command: /, "").split(" ");
+        const cmd = args.length > 2 ? args.slice(2) : old[0].replace(/^# command: /, "").split(" ");
         const lines = [];
         await run(cmd, w, (s) => lines.push(s));
         const keep = (xs) => xs.filter((s) => s !== "" && !s.startsWith("# time"));
-        const a = keep(old.slice(1)), b = keep(lines);
+        const a = keep(old), b = keep(lines);
         if (a.length === b.length && a.every((s, i) => s === b[i])) { console.log(`OK ${logPath}`); return; }
         console.log(`STALE ${logPath}`);
         b.forEach((s) => console.error(s));
         process.exit(1);
     }
-    console.log(`# command: ${args.join(" ")}`);
     await run(args, w, (s) => console.log(s));
-}
-
-async function run(args, w, emit) {
-    const [test, n, seed] = args;
-    await selfcheck(emit);
-    if (test === "selfcheck") return;
-    if (test === "ci") {
-        const s0 = parseInt(seed, 10);
-        await runTest("d2", 400, s0, w, emit);
-        await runTest("d1", 200, s0 + 100000, w, emit);
-        await runTest("merge", 25, s0 + 200000, w, emit);
-        await runTest("d3", 50, s0 + 300000, w, emit);
-        return;
-    }
-    await runTest(test, parseInt(n, 10), parseInt(seed, 10), w, emit);
 }
 
 if (!isMainThread) {

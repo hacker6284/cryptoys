@@ -20,7 +20,7 @@ v3's card phase names every piece by its colours and reads all 50 pieces in ever
 - **Free start (D1 + D1′, 16M quotients per side; OUT-OF-TREE):** P(fix ≥ 2) is within ±0.00016 of ideal (95% half-width). Pooling the four 8M samples is HEUR.
 - **Secret start (D2, 4M; OUT-OF-TREE):** within ±0.00043.
 - **Merge and telescoping (400k each; OUT-OF-TREE):** no collisions.
-- **In-tree, on the sudoc build of this spec (IN-TREE, smaller):** D2 at 100k within ±0.0027; D1 + D1′ at 50k within ±0.0039 per side, with 0 exact predictions; merge and D3 at 64k each, no collisions.
+- **In-tree, on the sudoc build of this spec (IN-TREE, smaller):** D2 at 100k within ±0.0027; D1 + D1′ at 50k within ±0.0039 per side, with 0 exact predictions; merge and D3 at 64k each, no collisions (in-tree merge/D3 count output collisions only; the build exports no partial-block state).
 
 Evidence: [`proofs/megadreifach/security/v3/`](../../../../proofs/megadreifach/security/v3/README.md).
 
@@ -252,7 +252,7 @@ How the vectors are made and checked:
   - coverage;
   - the 60 distinct read words per piece and colour pair (§5.8);
   - the re-derivable card-pass last face;
-  - that `card_step` uses the rank only for its first turn (a King equals the rank that counts up to the opposite face), and that no face is its own opposite;
+  - that a King's card step equals the step of the rank that counts up to the opposite face, and that no face is its own opposite;
   - the exact cost counts for every held card (§5.6);
   - the eight `Hash` digests and the `HashDeck` vector;
   - two `HashDeckBody` vectors, one of them with K♦ held.
@@ -277,7 +277,7 @@ Nothing here is a security claim. All statistics are about **one compression blo
 - **D1′** is the same flip on the right: `W(hg)W(h)⁻¹`. D1 and D1′ have the same law (ARGUED).
 - **D2** is a secret uniform start, with cards 51 and 52 swapped.
 - **D3** is telescoping card pairs at 51/52.
-- **Merge** swaps adjacent cards at 8 positions and looks for state merges and output collisions.
+- **Merge** swaps adjacent cards at 8 positions and looks for state merges and output collisions. The in-tree merge/D3 count output collisions only; the build exports no partial-block state.
 
 **Results (OUT-OF-TREE except the "Pieces read" v3 cell).**
 
@@ -302,9 +302,11 @@ Nothing here is a security claim. All statistics are about **one compression blo
 | Merge, 64k adjacent swaps | 0 output collisions (≤ 4.7e-5 per pair) |
 | D3, 8 × 8,000 | 0 output collisions (≤ 3.7e-4 per cell) |
 
-**Power** (normal approximation, for the OUT-OF-TREE sizes):
-- D1 + D1′ at 16M: 90% power at |adv| ≥ 0.00026 on P(fix ≥ 2).
-- D2 at 4M: 90% power at 0.0007.
+The in-tree merge/D3 count output collisions only; the build exports no partial-block state (no "state merges" or "positions equal" counts in tree).
+
+**Power** (normal approximation):
+- OUT-OF-TREE sizes: D1 + D1′ at 16M has 90% power at |adv| ≥ 0.00026 on P(fix ≥ 2); D2 at 4M at 0.0007.
+- IN-TREE sizes: D2 at 100k has 90% power at about 0.0044, and D1 + D1′ at 50k at about 0.0064 per side. The in-tree battery rules out only large defects.
 
 Effects smaller than these are not excluded. Comparisons with the rejected variants are in the analysis.
 

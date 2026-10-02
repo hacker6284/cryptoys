@@ -1030,7 +1030,7 @@ test "card pass: the last face is re-derivable from the board and the top dealt 
         n, n2 = suit_nbrs(c, card mod 4 + 1)
         assert edge_face_of(r.g, c, n, n) == r.last
 
-test "card_step uses the rank only for its first turn (a King equals the rank that counts up to the opposite face), and opposites[last] != last"
+test "a King step equals the step of the rank that counts up to the opposite face (opposites[last] != last)"
     r0 = start_run(iv_cook12())
     for last = 0 to 11
         assert opposites[last] != last

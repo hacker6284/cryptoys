@@ -99,7 +99,7 @@ The run: `logs/mdw_d1big_NRk52_8M.log`, seeds 38,652,000 + c.
 
 ## 5. Properties of the named-pair card step (P1–P5)
 
-P1 is PROVED for this naming by the sudo test "coverage" (v3 names cards the same way). P2 is ARGUED from the sudo-tested read words (§2.4). P3–P5 are ARGUED.
+For P1, only the naming is PROVED: the sudo test "coverage" checks that this naming (which v3 keeps) covers all 50 pieces; that a pass then reads every named piece is ARGUED. P2 is ARGUED from the sudo-tested read words (§2.4). P3–P5 are ARGUED.
 
 - **P1, coverage.** Each pass reads all 50 pieces (§2.3).
 - **P2, every input difference changes the turn sequence.** Common turns preserve the set of pieces whose (slot, orientation) differs between the two runs. That set is non-empty, and each of its pieces is read. At the first such read, the read words differ (§2.4).
@@ -177,7 +177,7 @@ NRk52's step is SPEC v3 §5.3 steps 1–4, with the new last face being the face
 - **Echo-R:** the echo names pieces on **the last face's colour**, with the held card's suit.
 - Kind strings are S + step + tail, for example SBR with m = 26.
 
-**Coverage.** The 52 card steps name 30/30 edges and 20/20 corners. So **every block reads all 50 pieces** (PROVED for this naming by the sudo test "coverage"; the naming is NRk's, which v3 keeps).
+**Coverage.** The 52 card steps name 30/30 edges and 20/20 corners. So **every block reads all 50 pieces**. The naming coverage is PROVED by the sudo test "coverage" (the naming is NRk's, which v3 keeps); that these rules' blocks read every named piece is ARGUED.
 
 ### 11.3 Screen: D2 first, then merge and telescoping (OUT-OF-TREE)
 
@@ -384,7 +384,7 @@ The rest is fixed:
 **Notes.**
 - ZL3F0E26 is SBR26.
 - B is uniform: each colour shows up 5 times over the 60 states of its slot (OUT-OF-TREE enumeration, printed in the logs).
-- The 48 non-King card steps name 30/30 edges and 20/20 corners, so **every block reads all 50 pieces** (PROVED for this naming by the sudo test "coverage"; the naming is NRk's).
+- The 48 non-King card steps name 30/30 edges and 20/20 corners, so **every block reads all 50 pieces**. The naming coverage is PROVED by the sudo test "coverage" (the naming is NRk's); that these variants' blocks read every named piece is ARGUED.
 
 ### 12.2 Per-card scrambles, single pass: all fail D2 (OUT-OF-TREE; `logs/mdw4_d2scan_pass.log`, 100k pairs each, seeds 40,000,000 + 1000·j + chunk)
 
@@ -543,7 +543,7 @@ The 0-hit bounds are 7.5e-6 per merge pair and 6.0e-5 per telescoping cell.
 | v2 (C36) | once | 52 + 36 | 192 | 270 | 88 slot reads | 88 | grip |
 | NRk52 | twice | 104 | 520 | 676 | 208 | 0 | nothing (last face re-derivable) |
 | SBR26 | once | 52 + 26 echoes | 468 | 546–624 (mean 585) | 156 | 0 | **one colour across all 26 echoes** |
-| **ZP26** | **once** | **52 + 26 echoes** | **468** | **546–624 (mean 585)** | **156 + 52 register looks** | **0** | **nothing** |
+| **ZP26** | **once** | **52 + 26 echoes** | **468** | **546–624 (mean 585)** | **156 + 78 re-looks + 52 register looks** | **0** | **nothing** |
 | ZB0F1N (per-card scramble, fails) | once | 52 | 416 | 494 | 104 + 104 slot reads | 0 | nothing |
 | ZB3R6N (best per-card scramble, fails) | once | 52 | 1092 | 1170 | 104 + 676 slot reads | 0 | nothing |
 
@@ -554,7 +554,7 @@ The 0-hit bounds are 7.5e-6 per merge pair and 6.0e-5 per telescoping cell.
 - **Against v2:** still about 2.2× v2's clicks.
 - **Counting conventions (2026-10-02 note).**
   - "156 piece finds" counts the edge and corner located in steps 3 and 4 of each of the 78 steps.
-  - Step 5 also looks again at the edge found in step 3. That adds 78 re-looks, which the table and the logs' cost line leave out.
+  - Step 5 also looks again at the edge found in step 3. That adds 78 re-looks. The ZP26 row includes them; the other rows and the logs' cost line leave them out (SBR26 has the same 78).
   - The logs' cost line prints `slot_reads 26`: one register read per echo, which looks at two pieces. That is the same 52 register looks.
   - The v3 sudo counts all three (156 / 78 / 52) in `em_run` and tests them (SPEC v3 §5.6).
 
@@ -689,7 +689,7 @@ The rule was to stop a variant that clearly fails.
 - **No register or collision problem in any of the three (OUT-OF-TREE).** Merge and telescoping give 0 / 0 at 400k each (0-hit 95% bound 7.5e-6 per pair, 6.0e-5 per cell).
 - **No end-of-W signature where measured (OUT-OF-TREE).** In ZP26 and ZP0-26, the last-two-card excesses are all within ±.00022, about the 95% half-width of ±.00018 per item allowing for multiplicity (HEUR). ZP13's diag was cancelled after its D2 failure.
 - **D1 does not see the cheaper options' defect (OUT-OF-TREE, 2M).** Both are clean on D1 + D1′ at 2M. The defect is in D2's last-two-card swap, which is sensitive to how well the tail mixes the end of the card pass.
-- **Coverage (PROVED for this naming by the sudo test "coverage"; all three use it).** The card pass naming is NRk's, so every block reads all 50 pieces.
+- **Coverage.** The card pass naming is NRk's, so every block reads all 50 pieces. The naming coverage is PROVED by the sudo test "coverage" (all three use it). That every block reads all 50 pieces is checked by the sudo for ZP26 only, through `em_run`'s finds; for ZP13 and ZP0-26 it is ARGUED.
 - **Last face readable from the board** (PROVED for ZP26 by the sudo test; ARGUED for ZP13 and ZP0-26).
   - In the card pass, it is the face carrying the n-sticker of the top dealt card's edge (ZP26, ZP13) or corner (ZP0-26, as in §9).
   - In the echoes, P is re-read from the held card's edge and corner before every echo.

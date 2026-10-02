@@ -33,12 +33,12 @@ This is the one place that describes the code behind the OUT-OF-TREE logs.
 ```sh
 sudoc build --target js -o /tmp/megadreifach-v3 primitives/hash/megadreifach/v3/megadreifach.sudo
 MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_stats.mjs d2 100000 80000000      # one log's command
-MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_stats.mjs --check proofs/megadreifach/security/v3/logs/intree/zp26_ci_slice.log
+MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_stats.mjs --check proofs/megadreifach/security/v3/logs/intree/zp26_ci_slice.log ci 84000000
 ```
 
 - Each run starts with a self-check against the build: the sampled positions are group elements of the build, the harness's `y = compose(h, em_block(h, deal))` equals the build's `HashDeckBodyFrom` digest, the sampler's legality matches the build's face turns, and the reference laws sum to 1.
 - Work is split into chunks whose size depends only on N, and chunk c uses seed SEED0 + c, so the output does not depend on the worker count. Only the `# time` lines vary.
-- `--check LOG` re-runs the command on the log's first line and compares the output, ignoring `# time` lines. `tools/generate-demos.sh` does this for `logs/intree/zp26_ci_slice.log` (a fixed-seed slice of all four tests, about 3,000 blocks).
+- `--check LOG COMMAND` runs COMMAND and compares its whole output, including the `# command:` first line, with the log, ignoring `# time` lines; it prints `OK` or `STALE` (exit 1). Without COMMAND it runs the log's own first line. `tools/generate-demos.sh` pins the command: `--check logs/intree/zp26_ci_slice.log ci 84000000` (a fixed-seed slice of all four tests, about 3,000 blocks).
 - Merge and D3 count output collisions only. The out-of-tree "state equal right after the swapped pair" and "card-phase positions equal" counts need a partial block, which the build does not export, so the harness does not measure them.
 
 **The in-tree ZP26 battery** (2026-10-02, about 29 min, one heavy job on 4 workers; ANALYSIS §12.9):

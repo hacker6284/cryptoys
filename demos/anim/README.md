@@ -37,6 +37,16 @@ Microdemos not in this table still keep their own `settings.js` in
 default rules: a turn sound's audible centre at the face's peak
 velocity (`align: "peak-velocity"`), the scramble-turn landing pat.
 
+## Real-life scale
+
+Every toy an entry animates is at real-life scale; never fit a toy to
+another toy's box. Each puzzle is sized to its own real measure from the
+one table, `REAL_SIZES` in `../playroom/constants.js` (3×3 57 mm edge,
+megaminx 70 mm face to face, pyraminx 97 mm edge, with sources; see
+`../README.md`). A puzzle may share the cube's size only when that is its
+own real size. Lift heights and timings are in metres and milliseconds
+in the real room, so they hold for a bigger toy.
+
 ## Entries
 
 | Entry | Played by | Microdemo | Status |

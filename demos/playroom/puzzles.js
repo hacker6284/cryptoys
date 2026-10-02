@@ -5,6 +5,10 @@
  * Product dock is 3×3 only. Mega / Pyra chrome and `?puzzle=` deep
  * links require the room debug flag (`?debug=1`, same as flight /
  * beat debug on `document.documentElement.dataset.playroomDebug`).
+ *
+ * Each puzzle is shown at its own real-life size, from the one table of
+ * real sizes (REAL_SIZES in constants.js: 3×3 57 mm edge, megaminx 70 mm
+ * face to face, pyraminx 97 mm edge), never fitted to the cube's box.
  */
 
 export const PUZZLES = {

@@ -3,6 +3,21 @@
 
 The playroom hub is `demos/`. GitHub Pages publishes that tree.
 
+## Real-life scale (invariant)
+
+Every toy in the room is at real-life scale; never fit a toy to another toy's box (Zachary, 2026-10-02: "All toys in real life scale in the room and that's an invariant."). Each toy is sized to its own real measure. A puzzle may share the cube's size only when that is its own real size. The one table of real sizes, with a source beside each to check by eye, is `REAL_SIZES` in [`playroom/constants.js`](playroom/constants.js):
+
+| Toy | Real size | Measure | Source |
+| --- | --- | --- | --- |
+| 3×3 (Scramble) | 57 mm | edge (face to face) | Rubik's 3×3 "57mm" (rubiksgift.com/faqs); "the original cube size was 57mm" (funCUBING) |
+| Megaminx | 70 mm (≈88 mm corner to corner) | face to face | Tomy Megaminx "2.75 inches between opposite faces" (J. A. Storer); ShengShou Megaminx 72 × 72 × 72 mm |
+| Pyraminx | 97 mm | edge | QiYi Pyraminx "Edge-Length: 97.0mm"; QiYi QiMing A 97.5 mm |
+| Playing card | 63 × 88 mm | face | poker size 2.5 × 3.5 in (63.5 × 88.9 mm) |
+| Deck box | 67 × 92 × 20 mm | box | poker tuck box 66 × 91 × 19 mm; Bicycle 807 70 × 95 × 20 mm |
+| Toy chest | 95 cm | longest side | IKEA SMÅSTAD 90 cm; KALIX 93.5 cm |
+
+Twisty puzzles are fitted on that true measure ([`playroom/motion.js`](playroom/motion.js) `fitToRealSize`: face to face is the narrowest width across the puzzle's face normals; edge is the longest line across it), not on their bounding box, and `seatOnSurface` seats the live post-scale shape. Known exceptions, waiting on a decision: the DoubleDeal 4×13 grid (`DEAL_SCALE`) draws its cards at 38 × 55 mm (real scale would make the two grids ~1.96 m wide on the 2.05 m table), and the unbox stand-in packets use 1.35 mm thick cards (real ~0.3 mm) so eight cards read as a deck. Shelf plants are set dressing, each fitted to its own height.
+
 ## IO fields
 
 Message / Key / Nonce / Digest (and standalone DoubleDeal output) use the shared growable field in [`shared/grow-field.css`](shared/grow-field.css) + [`shared/grow-field.js`](shared/grow-field.js). Fields start at one row and grow with content. Height cap is `--grow-field-max: 8.5rem` (~5–6 lines at 15px / 1.4); past that the field scrolls so one box cannot eat the stage or the portrait IO band. Portrait transport stays on the stage (`--io-band`). Prefer grow over truncate — do not clip with ellipsis or a one-line `<input>`.

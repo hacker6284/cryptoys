@@ -1,14 +1,17 @@
 import * as THREE from "three";
-import { CARD_D, CARD_W, DECK_H } from "./constants.js";
+import { CARD_D, CARD_W, DECK_H, REAL_SIZES } from "./constants.js";
 import { cardAssetUrl } from "../doubledeal/table.js";
 import { HAND } from "./unbox-hand.js";
 
 // Standing tuck box — same outer measure as world.makeDeckBox so
 // toy-director seat / fly keep working after replaceToy.
-const BW = 0.067;
+const BW = REAL_SIZES.deckBox.w;
 const BH = DECK_H;
-const BD = 0.020;
+const BD = REAL_SIZES.deckBox.d;
 const WALL = 0.0016;
+// KNOWN EXCEPTION to the real-scale invariant (constants.js): a real card
+// is ~0.3 mm thick; these 8-card stand-in packets use 1.35 mm cards so
+// the packet reads as a deck in the box. Waiting on a decision.
 const CARD_T = 0.00135;
 
 function loadImage(url) {

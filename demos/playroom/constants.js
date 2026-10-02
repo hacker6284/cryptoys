@@ -1,19 +1,62 @@
-// 1:1 playroom measures. Poker card 63×88 mm; classic 3×3 ~57 mm; table ~2 m Ø.
-// Demo-layer presentation only.
+// 1:1 playroom measures (metres). Demo-layer presentation only.
+//
+// INVARIANT (Zachary, 2026-10-02): "All toys in real life scale in the
+// room and that's an invariant." Every toy in the room is at real-life
+// scale; never fit a toy to another toy's box. Each toy is sized to its
+// own real measure, below. A puzzle may share the cube's size only if
+// that is its own real size. motion.js fitToRealSize applies a puzzle's
+// entry on its true measure (not its bounding box); seatOnSurface then
+// plants the live post-scale shape, so a bigger toy still sits on the
+// felt or shelf.
+//
+// REAL_SIZES is the one table of real sizes, with the source beside
+// each, to check by eye.
+//   measure "face-to-face": distance between opposite parallel faces (a
+//     cube's edge; how a megaminx is quoted, and the same in any
+//     orientation). "edge": the longest straight line across the toy (a
+//     tetrahedron's edge, how a pyraminx is quoted). "box": w × h × d.
+//     "longest": the longest side.
+export const REAL_SIZES = {
+    // Rubik's 3×3: "3×3: … 57mm version" (Rubik's, rubiksgift.com/faqs);
+    // "the original cube size was 57mm" (funCUBING, hjreggel.net/fun/fc_size.html).
+    "3x3x3": { m: 0.057, measure: "face-to-face" },
+    // Megaminx: Tomy original "2.75 inches between opposite faces" = 69.9 mm
+    // (J. A. Storer, cs.brandeis.edu/~storer/JimPuzzles/ZPAGES/zzzMegaminx.html);
+    // ShengShou Megaminx 72 × 72 × 72 mm (cuberspace.shop). 70 mm face to
+    // face is about 88 mm corner to corner.
+    megaminx: { m: 0.070, measure: "face-to-face" },
+    // Pyraminx: QiYi Pyraminx "Edge-Length: 97.0mm" (yoyosam.com); QiYi
+    // QiMing A 97.5 mm (cuberspace.shop); MoYu WeiLong 96 mm.
+    pyraminx: { m: 0.097, measure: "edge" },
+    // Poker-size playing card, 2.5 × 3.5 in (63.5 × 88.9 mm), sold as
+    // 63 × 88 mm (boxbaba.com/blog/standard-playing-card-dimensions).
+    card: { w: 0.063, d: 0.088, measure: "box" },
+    // Poker tuck box: 66 × 91 × 19 mm (onocustomboxes.com/blog/playing-card-box-dimensions);
+    // Bicycle 807 Rider Back 70 × 95 × 20 mm (dateks.lv).
+    deckBox: { w: 0.067, h: 0.092, d: 0.020, measure: "box" },
+    // Wooden toy chest: IKEA SMÅSTAD 90 × 52 × 48 cm (ikea.com); KALIX
+    // 93.5 × 53 × 34.5 cm (nateoconcept.com).
+    chest: { m: 0.95, measure: "longest" },
+};
+
+/** A puzzle's real size: { m, measure } (unknown ids get the 3×3's). */
+export function realSizeOf(puzzleId) {
+    const entry = REAL_SIZES[puzzleId];
+    return entry && Number.isFinite(entry.m) && entry.measure !== "box" ? entry : REAL_SIZES["3x3x3"];
+}
 
 export const ASSET_BASE = new URL("./assets/", import.meta.url);
 
-export const CARD_W = 0.063;
-export const CARD_D = 0.088;
-// Presentation edge for the playroom Twisty cube. Locked for the
-// whole scene: cubing.js may spawn at native size, then a later
-// layout / world-AABB / 1/3 puzzle.scale must not crush it. 57 mm
-// is real-life 3×3 scale (120 mm was ~2× life size); seatOnSurface
-// plants the live post-scale AABB.
-export const CUBE = 0.057;
+export const CARD_W = REAL_SIZES.card.w;
+export const CARD_D = REAL_SIZES.card.d;
+// The Scramble 3×3's real edge. Not a size for any other toy: each puzzle
+// is fitted to its own REAL_SIZES entry (twisty-rig adoptTwistyPuzzle).
+export const CUBE = REAL_SIZES["3x3x3"].m;
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
-export const DECK_H = 0.092;
+export const DECK_H = REAL_SIZES.deckBox.h;
 
+// Fallback only, when a toy cannot be measured: seatOnSurface seats from
+// the live post-scale shape (a megaminx's own height, not the cube's).
 export function toyHalfHeight(name) {
     return name === "deck" || name === "deck2" ? DECK_H / 2 : CUBE / 2;
 }
@@ -60,7 +103,10 @@ export const HOLD_MS = 760;
 export const FOLLOW_HOLD_MS = 360; // position hold; look already eases onto the toys
 
 // Standalone DoubleDeal table is ~17.4 units wide. Scale the live 4×13
-// session onto the playroom felt. Enter lays these seats from the two
+// session onto the playroom felt. KNOWN EXCEPTION to the real-scale
+// invariant: its cards (0.56 units) land 38 × 55 mm, not 63 × 88 (real
+// scale, 0.1125, makes the two grids ~1.96 m wide on the 2.05 m table).
+// Waiting on a layout decision. Enter lays these seats from the two
 // physical decks after the short unbox packet — do not teleport a
 // hidden pre-seated grid in.
 export const DEAL_SCALE = 0.068;

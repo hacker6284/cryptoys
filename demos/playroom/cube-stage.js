@@ -173,10 +173,10 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
 
     // A turn step: lift, then the leaves, with the voice's sounds. The
     // rig readies the leaves while the cube lifts and asks before they
-    // play; the voice gets the turn then, timed to the planned start, so
-    // a click whose file begins before the turn starts in time. The turn
-    // starts when the lift ends, or after the voice's lead-in when the
-    // cube is already up (or the lift is shorter).
+    // play; when a click's file has to begin before the turn (a lead-in),
+    // the voice gets the turn then, timed to the planned start. The turn
+    // starts when the lift ends, or after the lead-in when the cube is
+    // already up. A step needing no lead-in (the single click) never waits.
     async function liftAndTurn(play, opts) {
         const mine = epoch;
         const gen = ++turnGen;
@@ -185,9 +185,16 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         const tweening = Math.abs(rig.group.position.y - up) >= 1e-3 && !reduced();
         const liftEndsAt = performance.now() + (tweening ? timing.TURN_LIFT_MS : 0);
         const lifting = lift();
+        // Without a lead-in the voice hears the turn as it really starts
+        // (onStart), as before; with one, at the planned start.
+        let planned = false;
         const beforeStart = async (info) => {
-            const at = Math.max(liftEndsAt, performance.now() + (voice?.lead?.(info) ?? 0));
-            voice?.turns({ ...info, at }, live);
+            const lead = voice?.lead?.(info) ?? 0;
+            const at = Math.max(liftEndsAt, performance.now() + lead);
+            if (lead > 0) {
+                planned = true;
+                voice?.turns({ ...info, at }, live);
+            }
             const wait = at - performance.now();
             if (wait > 0) await new Promise((resolve) => window.setTimeout(resolve, wait));
             if (!live()) return false;
@@ -195,7 +202,11 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
             return true;
         };
         try {
-            const result = await play({ ...opts, beforeStart, snap: Boolean(opts.snap) || reduced() });
+            const onStart = (info) => {
+                if (!planned) voice?.turns(info, live);
+                opts.onStart?.(info);
+            };
+            const result = await play({ ...opts, beforeStart, onStart, snap: Boolean(opts.snap) || reduced() });
             await lifting;
             return mine === epoch ? result : undefined;
         } finally {

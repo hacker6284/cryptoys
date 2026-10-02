@@ -34,13 +34,20 @@ export default {
     },
     sounds: {
         // Single turn (one click); contact: the face starts moving (start of leaf).
+        // LOCKED, approved by Zachary (af9a8fb, tempo-scaled at 2b5f6d4): do not
+        // change. The file starts 393 ms before the face seats at 1.4×, i.e.
+        // 1000/1.4 − 393 = 321.3 ms into the 714 ms turn; its loudest click
+        // (143 ms in) lands ~464 ms after the start, 250 ms before seating,
+        // ~65% of the way through. Pinned by ../library.test.mjs.
+        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, offsetMs: 1000 / 1.4 - 393 },
+        // Double turn (two clicks); contact: the face starts moving (start of leaf).
         // Zachary: "The sounds are too late! They should be playing right at the
         // beginning and then if they seem too early we adjust." peakAtMs 0: the
-        // loudest click on the turn's start; later = + ms (at 1.4×, of a 714 ms turn).
-        single: { file: "scramble-turn/single/single_spacejoe-486564", gainDb: 11, peakAtMs: 0 },
-        // Double turn (two clicks); contact: the face starts moving (start of leaf). The loudest click on it (of a 1071 ms turn at 1.4×). Or { perClick: true }: the single file once per click.
+        // loudest click on the turn's start; later = + ms (of a 1071 ms turn at 1.4×).
+        // Or { perClick: true }: the single file once per click.
         double: { file: "scramble-turn/double/double_spacejoe-486567", gainDb: 8.5, peakAtMs: 0 },
-        // Triple turn (three clicks); contact: the face starts moving (start of leaf). The loudest click on it (of a 1429 ms turn at 1.4×). Or { perClick: true }: the single file once per click.
+        // Triple turn (three clicks); contact: the face starts moving (start of leaf).
+        // peakAtMs 0, as the double (of a 1429 ms turn at 1.4×). Or { perClick: true }.
         triple: { file: "scramble-turn/triple/triple_spacejoe-486581", gainDb: 6.5, peakAtMs: 0 },
         // Whole-puzzle rotation; contact: rotation ends. Zachary's pick: a real
         // recording of a plastic broomstick swung softly past the mic (Sadiquecat),

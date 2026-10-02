@@ -20,6 +20,8 @@ Other Lean packages use the same gate (one line per CI job):
   scan_sorry.py                                    # this package, ALLOWED_SORRY (empty)
   scan_sorry.py --root DIR_OR_FILE ... [--exclude PART ...] [--allow-sorry NAME ...]
 With --root, the sorry allowlist is exactly the --allow-sorry names (default: none).
+--allow-sorry without --root is rejected (exit 2): the default scan's allowlist is
+ALLOWED_SORRY only.
 --exclude skips files with that path component (e.g. Generated); .lake is always skipped.
 This is a source-level scan and parses no imports; the import-closure bound for
 SumRanks.lean is checks/check_closure.py (run after `lake build`).
@@ -231,6 +233,8 @@ FLAG_SELFTEST = [
     (".lake always skipped", {"A/X.lean": "", "A/.lake/p/Z.lean": "theorem z : Q := sorry\n"},
      ["--root", "A"], True, None),
     ("root: missing path", {}, ["--root", "nope"], False, "no such file"),
+    ("default: --allow-sorry without --root rejected", {}, ["--allow-sorry", C], False,
+     "--allow-sorry needs --root"),
     ("root: no .lean files", {"A/readme.md": "sorry"}, ["--root", "A"], False, "no .lean files"),
 ]
 
@@ -242,13 +246,19 @@ def parse(argv):
                     "default: the security package with ALLOWED_SORRY)")
     ap.add_argument("--exclude", action="append", default=[], help="skip paths with this component")
     ap.add_argument("--allow-sorry", action="append", help="declaration allowed exactly one sorry "
-                    "(repeatable; with --root the default is none)")
+                    "(repeatable; only with --root, where the default is none)")
     return ap.parse_args(argv)
 
 
 def run(a) -> int:
     """a: parsed arguments. The one place that picks the roots and the allowlist default:
-    no --root = the security package with ALLOWED_SORRY; with --root, none."""
+    no --root = the security package with ALLOWED_SORRY (and --allow-sorry is rejected);
+    with --root, none."""
+    if a.root is None and a.allow_sorry is not None:
+        print("scan_sorry: --allow-sorry needs --root (the security package's allowlist is "
+              "ALLOWED_SORRY, which is empty; it cannot be widened from the command line)",
+              file=sys.stderr)
+        return 2
     if a.root is None:
         roots, label, default = [PKG], "security package", ALLOWED_SORRY
     else:

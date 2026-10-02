@@ -1,4 +1,4 @@
-# DoubleDeal v12: `PrimeNonSwapCase` and the covariant round conjecture (statement proved in the heavy library)
+# DoubleDeal v12: `PrimeNonSwapCase` and the covariant round statement (a conjecture until proved in the heavy library)
 
 The conjecture `roundBody_covariant_iff_id` (formerly `security/DoubleDealSecurity/Rounds.lean`,
 DRAFT-SORRY) is proved, same name and statement, in the heavy library
@@ -28,7 +28,7 @@ fixed seed). `F = unkeyedWithMix` = GridCycle ∘ stem. `Covariant σ F` means
 
 `PrimeNonSwapCase`: every σ of prime order p ≤ 52 that is neither a transposition
 nor a `v10Sym a x` is non-covariant. `prime_nonswap_case_iff` (heavy) proves it is
-EQUIVALENT to the conjecture. By cycle type, the σ left are:
+EQUIVALENT to the covariant round statement. By cycle type, the σ left are:
 * p = 2: products of c disjoint transpositions, 2 ≤ c ≤ 26, minus the 3 nontrivial
   label shifts `v10Sym 0 x` (c = 26);
 * p odd, 3 ≤ p ≤ 47: products of c disjoint p-cycles, 1 ≤ c ≤ ⌊52/p⌋, minus the 12
@@ -102,7 +102,7 @@ time per witness on the dev box and about 5.3 s on CI, as measured for
 
 ## New PROVED result: the seat-26 condition preserves the rank partition
 
-One step toward `PrimeNonSwapCase`; it is NOT `PrimeNonSwapCase` and NOT the conjecture.
+One step toward `PrimeNonSwapCase`; it is NOT `PrimeNonSwapCase` and NOT the covariant round statement.
 
 `security/DoubleDealSecurity/RankPartition.lean` (+ generated `RankPartitionLists.lean`),
 heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
@@ -241,5 +241,6 @@ unconditional, default library given `V10SymChecks`). The remaining bookkeeping 
 too (two tiers): the sorry'd default-library `roundBody_covariant_iff_id` was deleted and
 the theorem of that name and statement is in the heavy library (where the finite checks
 live); the default-library dependents became `fullRound_commutes_iff_id_of_covariant` and
-`encrypt6_commutes_iff_id_of_covariant` (hypothesis `hconj`), and their unconditional
+`encrypt6_commutes_iff_id_of_covariant` (hypothesis `hcov : CovariantOnlyId`, defined in
+`Rounds.lean`), and their unconditional
 forms are heavy one-liners. The default library has no `sorry`.

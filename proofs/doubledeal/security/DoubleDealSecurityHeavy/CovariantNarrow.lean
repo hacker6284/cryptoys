@@ -20,7 +20,7 @@ open DoubleDeal Relabel
 /-- (PROVED) Both finite checks. -/
 theorem cov0Checks_ok : Cov0Checks := ⟨cell0PairsCheck_ok, checks_all⟩
 
-/-- (PROVED, unconditional) The covariant round conjecture holds for every
+/-- (PROVED, unconditional) The covariant round statement holds for every
     transposition: for all card values `a ≠ b` there is NO relabelling `τ` with
     `unkeyedWithMix (swap a b · m) = τ · unkeyedWithMix m` on every deck. This is
     the statement of `roundBody_covariant_iff_id` restricted to `σ = swap a b`; the
@@ -36,7 +36,7 @@ theorem roundBody_not_commutes_swap (a b : Fin 52) (hab : a ≠ b) :
     ¬ CommutesOnDecks (Equiv.swap a b) unkeyedWithMix :=
   fun hc => roundBody_not_covariant_swap a b hab ⟨_, hc⟩
 
-/-- (PROVED, a reduction, unconditional) The covariant round conjecture follows from
+/-- (PROVED, a reduction, unconditional) The covariant round statement follows from
     `PrimeNonSwapCase`: its special case for σ of prime order `p ≤ 52` that are
     neither a transposition nor a `v10Sym`. That case is the HYPOTHESIS `h` here; it is
     proved in `V10Sym.lean` (`CovariantNarrow.primeNonSwapCase`). The excluded σ are proved non-covariant for every τ: transpositions
@@ -46,8 +46,8 @@ theorem roundBody_covariant_iff_id_of_prime_nonswap (h : PrimeNonSwapCase) (σ :
     Covariant σ unkeyedWithMix ↔ σ = 1 :=
   roundBody_covariant_iff_id_of_prime_nonswap_of_check cov0Checks_ok h σ
 
-/-- (PROVED, unconditional) `PrimeNonSwapCase` is EQUIVALENT to the conjecture (the
-    statement of `roundBody_covariant_iff_id` for all σ). -/
+/-- (PROVED, unconditional) `PrimeNonSwapCase` is EQUIVALENT to the covariant round
+    statement `roundBody_covariant_iff_id` (for all σ). -/
 theorem prime_nonswap_case_iff :
     PrimeNonSwapCase ↔ (∀ σ : Relabel, Covariant σ unkeyedWithMix ↔ σ = 1) :=
   prime_nonswap_case_iff_of_check cov0Checks_ok

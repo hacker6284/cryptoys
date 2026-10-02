@@ -6,7 +6,7 @@ import DoubleDealSecurity.Differential
   B1 asks for `max_{α ≠ 1, β} DP_1(α → β) ≤ ε₁` for one v12 MIX round (stem, then GridCycle;
   `Differential.dp1Count`, independent uniform key, so `DP_1 = dp1Count / 52!`). Two results:
 
-  1. B1 IMPLIES THE COVARIANT CONJECTURE. Any bound with `ε₁ < 1` gives
+  1. B1 IMPLIES THE COVARIANT ROUND STATEMENT. Any bound with `ε₁ < 1` gives
      `roundBody_covariant_iff_id` (`covariant_iff_id_of_dp1_lt`, `covariant_iff_id_of_dp1Bound`):
      a covariant pair `(σ, τ)` has `dp1Count σ τ = 52!` (`dp1Count_eq_of_covPair`). Since the
      `v10Sym` rows are bounded (item 2), a bound below 1 on the rows OUTSIDE `v10Sym` alone is
@@ -39,7 +39,8 @@ import DoubleDealSecurity.Differential
      (`../analysis/v12-dp1/NOTES.md`, EMPIRICAL).
 
   NOT proved: B1 for any row `α` outside `v10Sym` (that would imply the covariant
-  conjecture, whose statement is proved separately in the heavy library);
+  round statement `roundBody_covariant_iff_id`, which is proved separately in the heavy
+  library);
   any multi-round or real-schedule bound. Not a security claim.
 -/
 
@@ -51,7 +52,7 @@ open DoubleDeal.Security.Differential (dp1Count dpCount unkeyedNoMix_rel_v10Sym
 open DoubleDeal.Security.GridCycleSurvival (gcSurvivors GCSurvives gcSurvivors_v10Sym_eq_empty
   gc_survival_v10Sym03 v10Sym_fixfree v10SymFn_KC_KS v10SymFn_KS_KC)
 
-/-! ## B1 implies the covariant conjecture -/
+/-! ## B1 implies the covariant round statement -/
 
 /-- Roadmap item B1 with `ε₁ = 1/p`, in count form: `p · dp1Count α β ≤ 52!` for every
     `α ≠ 1` and every `β` (one mix round, independent uniform key). A statement, NOT proved. -/
@@ -80,7 +81,7 @@ theorem covariant_iff_id_of_dp1_lt
   · rintro rfl
     exact ⟨1, fun m _ => by rw [rel_one, rel_one]⟩
 
-/-- (PROVED) B1 with any `ε₁ = 1/p ≤ 1/2` implies the covariant conjecture. -/
+/-- (PROVED) B1 with any `ε₁ = 1/p ≤ 1/2` implies the covariant round statement. -/
 theorem covariant_iff_id_of_dp1Bound {p : ℕ} (hp : 2 ≤ p) (h : DP1Bound p) (σ : Relabel) :
     Covariant σ unkeyedWithMix ↔ σ = 1 := by
   refine covariant_iff_id_of_dp1_lt (fun α hα β => ?_) σ
@@ -401,7 +402,7 @@ theorem dp1_le_v10Sym_all (a : Fin 13) (x : Fin 4) (hne : ¬ (a = 0 ∧ x = 0)) 
     omega
 
 /-- (PROVED) A bound below 1 on the rows OUTSIDE `v10Sym` alone implies the covariant
-    conjecture: the `v10Sym` rows are covered by `dp1_le_v10Sym_all`. -/
+    round statement: the `v10Sym` rows are covered by `dp1_le_v10Sym_all`. -/
 theorem covariant_iff_id_of_dp1_lt_off_v10Sym
     (h : ∀ α : Relabel, α ≠ 1 → (¬ ∃ a x, α = v10Sym a x) → ∀ β,
       dp1Count α β < Nat.factorial 52) (σ : Relabel) :

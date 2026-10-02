@@ -9,7 +9,8 @@
   `roundBody_covariant_iff_id` (only the identity is covariant for the unkeyed round body;
   a one-round symmetry result, not a security bound), and from it, through the
   default-library reductions `fullRound_commutes_iff_id_of_covariant` and
-  `encrypt6_commutes_iff_id_of_covariant`, the unconditional `fullRound_commutes_iff_id`
+  `encrypt6_commutes_iff_id_of_covariant` (hypothesis `CovariantOnlyId`, discharged here by
+  `fun σ => (roundBody_covariant_iff_id σ).1`), the unconditional `fullRound_commutes_iff_id`
   and `encrypt6_commutes_iff_id`. The default library states none of these three without
   a hypothesis and has no `sorry`.
   Timing and memory: see `../README.md` (module table). Built and audited by the
@@ -68,14 +69,14 @@ theorem roundBody_covariant_iff_id (σ : Relabel) :
 /-- (PROVED, unconditional) No nontrivial σ commutes with the full round for all keys. -/
 theorem fullRound_commutes_iff_id (σ : Relabel) :
     (∀ pos, CommutesOnDecks σ (fun m => fullRound m pos)) ↔ σ = 1 :=
-  fullRound_commutes_iff_id_of_covariant (fun σ h => (roundBody_covariant_iff_id σ).1 h) σ
+  fullRound_commutes_iff_id_of_covariant (fun σ => (roundBody_covariant_iff_id σ).1) σ
 
 /-- (PROVED, unconditional) No nontrivial σ gives `E_K(σM) = σ E_K(M)` for all permutation
     round keys and decks (`encrypt6` with permutation keys; a symmetry statement, not a
     security bound). -/
 theorem encrypt6_commutes_iff_id (σ : Relabel) :
     (∀ k0 kMix kF, CommutesOnDecks σ (fun m => encrypt6P m k0 kMix kF)) ↔ σ = 1 :=
-  encrypt6_commutes_iff_id_of_covariant (fun σ h => (roundBody_covariant_iff_id σ).1 h) σ
+  encrypt6_commutes_iff_id_of_covariant (fun σ => (roundBody_covariant_iff_id σ).1) σ
 
 /-- (PROVED, unconditional) `PrimeNonSwapCase`: no σ of prime order `p ≤ 52` that is neither
     a transposition nor a `v10Sym` is covariant (from `roundBody_covariant_iff_id` via

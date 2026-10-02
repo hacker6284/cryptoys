@@ -152,7 +152,7 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.FullCipher.realFullStaysInV10_card_le_4420",
     # DoubleDealSecurityHeavy/CovariantNarrow.lean and the generated CovariantNarrowChecks.lean
     # (pair_ok_*, cell0PairsCheck_ok, check_e*, checks_all: cell0_witness.py --lean): the
-    # covariant round conjecture for every transposition, and the reduction to the
+    # covariant round statement for every transposition, and the reduction to the
     # remaining prime-order case. The pair list is cell0Pairs (CovariantNarrowLists.lean).
     *(f"DoubleDeal.Security.CovariantNarrow.pair_ok_{i}_{j}"
       for i, j in ((1, 2), (1, 3), (1, 5), (1, 8), (1, 12), (1, 34))),
@@ -166,7 +166,7 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
     # DoubleDealSecurityHeavy/CovariantAffine.lean and the generated CovariantAffineChecks.lean
     # (check_lin_k_g for the 71 (k, g) != (0, 0), lin_checks_all: aff_witness.py --lean): the
-    # covariant round conjecture for the 3692 affine relabellings outside v10Sym (the
+    # covariant round statement for the 3692 affine relabellings outside v10Sym (the
     # normalizer of v10Sym minus v10Sym; true by the holomorph count, not a Lean theorem)
     *(f"DoubleDeal.Security.CovariantAffine.check_lin_{n // 6}_{n % 6}" for n in range(1, 72)),
     "DoubleDeal.Security.CovariantAffine.lin_checks_all",
@@ -178,7 +178,7 @@ HEAVY_THEOREMS = {
     # DoubleDealSecurityHeavy/RankPartition.lean and the generated RankPartitionChecks.lean
     # (fam_struct_D, fam_c0_D_k_i: rank_family.py --lean): a sigma with Cell0Cov sigma tau
     # (in particular every covariant sigma) permutes the 13 rank classes; one step toward
-    # PrimeNonSwapCase, NOT the conjecture
+    # PrimeNonSwapCase, NOT the covariant round statement
     *(f"DoubleDeal.Security.RankPartition.fam_struct_{d}" for d in range(3)),
     *(f"DoubleDeal.Security.RankPartition.fam_c0_{n // 9}_{n // 3 % 3}_{n % 3}"
       for n in range(27)),
@@ -625,17 +625,18 @@ PACKAGES = {
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_le'",
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_threeCycle",
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_lower",
-            # CovariantNarrow (roadmap M4): reductions of the conjecture
+            # CovariantNarrow (roadmap M4): reductions of the covariant round statement
             "DoubleDeal.Security.CovariantNarrow.prime_case_iff",
             "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime",
             "DoubleDeal.Security.CovariantNarrow.not_covariant_swap_of_check",
             "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff_of_check",
             # the consequences of the covariant round statement, as reductions (hypothesis
-            # hconj; unconditional forms in the heavy library, HEAVY_THEOREMS)
+            # hcov : CovariantOnlyId, a def in Rounds.lean, not audited; unconditional forms in
+            # the heavy library, HEAVY_THEOREMS)
             "DoubleDeal.Security.fullRound_commutes_iff_id_of_covariant",
             "DoubleDeal.Security.encrypt6_commutes_iff_id_of_covariant",
             # RankPartition: rank classes are preserved, GIVEN the finite checks RankChecks
-            # (discharged in the heavy library); not the conjecture
+            # (discharged in the heavy library); not the covariant round statement
             "DoubleDeal.Security.StemPosition.stemPos_zero",
             "DoubleDeal.Security.StemCoupling.rowRead_congr",
             "DoubleDeal.Security.StemCoupling.agree_row",
@@ -686,6 +687,7 @@ PACKAGES = {
             "DoubleDeal.Security.LabelStep.cell0Cov_mem_v10Sym_of_checks",
             "DoubleDeal.Security.LabelStep.cell0Cov_iff_of_checks",
             "DoubleDeal.Security.LabelStep.roundBody_covariant_iff_id_of_checks",
+            "DoubleDeal.Security.LabelStep.primeNonSwapCase_of_checks",
             # RealSchedule (roadmap M5): real PassKey schedule
             "DoubleDeal.Security.RealSchedule.masterList_injective",
             "DoubleDeal.Security.RealSchedule.exists_masterList_eq",
@@ -841,8 +843,8 @@ PACKAGES = {
             "DoubleDeal.Security.StemUnion.dpFCount_le_of_ne",
             "DoubleDeal.Security.StemUnion.dpFCount_col_le_64",
             "DoubleDeal.Security.StemUnion.fullDiffCount_le_64",
-            # OneRoundDP (roadmap B1, one mix round): any eps_1 < 1 implies the open covariant
-            # conjecture, and on the rows outside v10Sym alone already does; the 51 v10Sym rows
+            # OneRoundDP (roadmap B1, one mix round): any eps_1 < 1 implies the covariant round
+            # statement (proved in the heavy library), and on the rows outside v10Sym alone already does; the 51 v10Sym rows
             # are bounded (1/52, and 1/17 for v10Sym 0 3); rows outside v10Sym are NOT proved;
             # not a security claim
             "DoubleDeal.Security.OneRoundDP.dp1Count_eq_of_covPair",

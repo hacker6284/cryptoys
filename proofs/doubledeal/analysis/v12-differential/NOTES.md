@@ -114,9 +114,10 @@ CHARACTERISTIC is `(1/64)² ≈ 2.4e-4`; nothing numeric is proved for the DIFFE
 * Any numeric bound on the full differential. Pushing a one-round column bound
   (`p · dp1Count γ β ≤ 52!` for every `γ ≠ 1`) through the Markov recursion gives the
   same bound for `R` rounds by convexity (the same bound for every `R`; it does not decay); for `β ≠ 1` and `p ≥ 2` its
-  hypothesis would already imply the `τ = β` case of the covariant conjecture
-  `roundBody_covariant_iff_id` (and, for every `β ≠ 1`, the whole conjecture), so it is
-  neither proved nor claimed.
+  hypothesis would already imply the `τ = β` case of the covariant round statement
+  `roundBody_covariant_iff_id` (and, for every `β ≠ 1`, the whole statement; that statement
+  is now proved in the heavy library by finite checks, but the column bound itself is not),
+  so it is neither proved nor claimed.
   This applies to a column bound for the MIX round (`dp1Count`). For the whole cipher
   (`encryptL`, which ends with the stem and no GridCycle), a column bound for the final
   round's stem is enough for outputs outside `v10Sym`. That is a statement about SumRanks

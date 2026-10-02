@@ -277,7 +277,7 @@ jobs:
       # The heavy library DoubleDealSecurityHeavy is not built here; it is built and
       # audited by proofs-heavy.yml. This audit still fails if its HEAVY_THEOREMS
       # registry and the heavy sources disagree.
-      - name: Axiom audit of every DoubleDealSecurity theorem (KNOWN_SORRY allowlist by name; heavy library audited separately)
+      - name: Axiom audit of every DoubleDealSecurity theorem (no sorryAx allowed, KNOWN_SORRY empty; heavy library audited separately)
         working-directory: proofs/doubledeal/security
         run: python3 ../check_axioms.py security
       # Core Lean only (no Mathlib import; about a second): the registry's source scan must

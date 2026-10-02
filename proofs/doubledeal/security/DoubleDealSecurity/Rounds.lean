@@ -176,8 +176,12 @@ theorem v8_same_rank_swap_commutes_except_gridCycle (a b : Fin 52)
 
 With permutation round keys, encrypt only pins down that the round body maps
 σ-relabelled decks to τ-relabelled decks for *some* τ (see `PermKeys.lean`).
-So the conjecture is stated in that (stronger) covariant form; the commuting
-form is the case τ = σ. -/
+So the round-level hypothesis is the (stronger) covariant one, `CovariantOnlyId` (§4b'):
+only σ = 1 is covariant for the unkeyed round body; the commuting form is the case
+τ = σ. The default library proves the full-round and permutation-key results from it
+(`fullRound_commutes_iff_id_of_covariant`, `encrypt6_commutes_iff_id_of_covariant` in
+`PermKeys.lean`);
+the heavy library proves it (`roundBody_covariant_iff_id`, `DoubleDealSecurityHeavy/V10Sym.lean`). -/
 
 /-- `F` maps σ-relabelled decks to τ-relabelled outputs for one fixed τ. -/
 def Covariant (σ : Relabel) (F : (Fin 52 → Nat) → (Fin 52 → Nat)) : Prop :=
@@ -216,9 +220,9 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
   `F = GridCycle ∘ stem`) is PROVED in the heavy library
   (`DoubleDealSecurityHeavy/V10Sym.lean`; finite checks by kernel `decide!`, via
   `LabelStep.roundBody_covariant_iff_id_of_checks`). It is not stated in the default
-  library; its consequences here are the `_of_covariant` reductions below, which take the
-  hard direction as the hypothesis `hconj`. A one-round symmetry statement (only the
-  identity commutes with the unkeyed round), not a security bound.
+  library; its consequences here are the `_of_covariant` reductions below, which take its
+  hard direction, `CovariantOnlyId`, as the hypothesis `hcov`. A one-round symmetry
+  statement (only the identity is covariant for the unkeyed round), not a security bound.
 
   Checked numerically as well (`checks/check_covariant.py`, log committed): all 1,326
   transpositions, all 51 nontrivial `v10Sym` (and `v9Sym`) and 200 random σ are
@@ -227,16 +231,26 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
   `LabelStep.lean`; write-ups `../analysis/v12-covariant/NOTES.md`,
   `../analysis/v12-primenonswap/NOTES.md`. -/
 
-/-- (PROVED, a reduction; GIVEN `hconj`, the hard direction of the covariant round
-    statement, proved in the heavy library as `roundBody_covariant_iff_id`) No nontrivial σ
-    commutes with the full round for all keys (the case τ = σ, key = id). Unconditional
-    form: heavy library, `fullRound_commutes_iff_id`. -/
-theorem fullRound_commutes_iff_id_of_covariant
-    (hconj : ∀ σ : Relabel, Covariant σ unkeyedWithMix → σ = 1) (σ : Relabel) :
+/-- The hard direction of the covariant round statement `roundBody_covariant_iff_id`
+    (only the identity relabelling is covariant for the unkeyed round body
+    `unkeyedWithMix = GridCycle ∘ stem`, for any output relabelling τ). The one home of
+    this hypothesis: the `_of_covariant` reductions take it as `hcov`. NOT proved in the
+    default library (given the finite checks: `LabelStep.roundBody_covariant_iff_id_of_checks`);
+    proved in the heavy library (`roundBody_covariant_iff_id`,
+    `DoubleDealSecurityHeavy/V10Sym.lean`). A one-round symmetry statement, not a security
+    bound. -/
+def CovariantOnlyId : Prop :=
+  ∀ σ : Relabel, Covariant σ unkeyedWithMix → σ = 1
+
+/-- (PROVED, a reduction; GIVEN `hcov : CovariantOnlyId`, the hard direction of the covariant
+    round statement, proved in the heavy library as `roundBody_covariant_iff_id`) No
+    nontrivial σ commutes with the full round for all keys (the case τ = σ, key = id).
+    Unconditional form: heavy library, `fullRound_commutes_iff_id`. -/
+theorem fullRound_commutes_iff_id_of_covariant (hcov : CovariantOnlyId) (σ : Relabel) :
     (∀ pos, CommutesOnDecks σ (fun m => fullRound m pos)) ↔ σ = 1 := by
   constructor
   · intro h
-    exact hconj σ ⟨σ, fun m hm => h id m hm⟩
+    exact hcov σ ⟨σ, fun m hm => h id m hm⟩
   · rintro rfl _; exact commutesOnDecks_one _
 
 /-! ### 4c. Degenerate model keys (constant, non-permutation)
@@ -244,8 +258,10 @@ theorem fullRound_commutes_iff_id_of_covariant
 Clearly labelled side lemma, not the headline: the Lean model allows any key
 map `Fin 52 → Fin 52`. With constant round keys every mixing round outputs a
 constant vector, so `encrypt6` exposes one cell of the round body per key.
-Real keys are permutations; the permutation-key statement is
-`encrypt6_commutes_iff_id` in `PermKeys.lean`. -/
+Real keys are permutations; the permutation-key statements are the reduction
+`encrypt6_commutes_iff_id_of_covariant` in `PermKeys.lean` (given `CovariantOnlyId`) and the
+unconditional `encrypt6_commutes_iff_id` in the heavy library
+(`DoubleDealSecurityHeavy/V10Sym.lean`). -/
 
 def constDeck (c : Nat) : Fin 52 → Nat := fun _ => c
 

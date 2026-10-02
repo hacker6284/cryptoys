@@ -15,10 +15,10 @@
        `cell0Cov_one`, `cell0Cov_mul`, `cell0Cov_inv`, `cell0Cov_self_of_commutes`,
        `cell0Cov_v10Sym`, `cell0Cov_conj`, `cell0Subgroup` (the σ with
        some τ form a subgroup) and `v10Sym_mem_cell0Subgroup`.
-     * `roundBody_covariant_iff_id_of_prime`: the conjecture follows from its
+     * `roundBody_covariant_iff_id_of_prime`: the covariant round statement follows from its
        special case for σ of prime order p ≤ 52 (the hypothesis `h` here; it follows from
        `roundBody_covariant_iff_id`, heavy library).
-       `prime_case_iff` proves that `h` is EQUIVALENT to the conjecture, so this is
+       `prime_case_iff` proves that `h` is EQUIVALENT to the statement, so this is
        a reformulation, not a weaker target. Same for the commuting case:
        `roundBody_commutes_iff_id_of_prime`.
   B. The commuting case (τ = σ) and survival.
@@ -33,19 +33,19 @@
      `roundBody_not_covariant_swap`, and its commuting corollary
      `roundBody_not_commutes_swap`), via the seat-26 condition `Cell0Cov`.
      `roundBody_covariant_iff_id_of_prime_nonswap_of_check`: given `Cov0Checks`,
-     the conjecture follows from its special case for σ of prime order p ≤ 52 that
+     the covariant round statement follows from its special case for σ of prime order p ≤ 52 that
      are neither a transposition nor a `v10Sym` (the hypothesis here; proved in the heavy
      library: `CovariantNarrow.primeNonSwapCase`;
-     `prime_nonswap_case_iff_of_check`: equivalent to the conjecture). Unconditional
+     `prime_nonswap_case_iff_of_check`: equivalent to the statement). Unconditional
      form in the heavy library: `roundBody_covariant_iff_id_of_prime_nonswap`.
-  D. `roundBody_covariant_iff_id_of_cell0` and `…_of_cell0_prime`: the conjecture
+  D. `roundBody_covariant_iff_id_of_cell0` and `…_of_cell0_prime`: the covariant round statement
      follows from a single-cell SumRanks statement `hcell` (all σ, resp. σ of prime
      order p ≤ 52). `hcell` is a SUFFICIENT condition (`Cell0Cov` is weaker than
      covariance). It is a hypothesis here; the full `hcell`
      is proved in the heavy library (finite checks by kernel `decide!`; `LabelStep.cell0Cov_mem_v10Sym`;
      in the default library given `V10SymChecks`: `LabelStep.cell0Cov_mem_v10Sym_of_checks`).
 
-  Not covered by this file alone: the conjecture for σ of prime order p ≤ 52 that are
+  Not covered by this file alone: the statement for σ of prime order p ≤ 52 that are
   neither a transposition nor a `v10Sym` (exactly the hypothesis of
   `roundBody_covariant_iff_id_of_prime_nonswap`). The full statement is proved in the heavy
   library (finite checks by kernel `decide!`; `roundBody_covariant_iff_id`); in the default
@@ -215,7 +215,7 @@ theorem eq_one_of_no_prime_order (H : Subgroup Relabel)
   have hp52 : p ≤ 52 := (Nat.Prime.dvd_factorial hp).1 hdvd
   exact h (x : Relabel) x.2 p hp hp52 ((Subgroup.orderOf_coe x).trans hx)
 
-/-- (PROVED, a reduction) The covariant round conjecture follows from its special
+/-- (PROVED, a reduction) The covariant round statement follows from its special
     case for relabellings of prime order `p ≤ 52`. The special case is the
     HYPOTHESIS `h`; it is not proved here (it follows from
     `roundBody_covariant_iff_id`, heavy library). -/
@@ -238,7 +238,7 @@ theorem ne_one_of_orderOf_prime {σ : Relabel} {p : ℕ} (hp : p.Prime) (ho : or
   exact hp.one_lt.ne ho
 
 /-- (PROVED) The hypothesis of `roundBody_covariant_iff_id_of_prime` is EQUIVALENT to
-    the conjecture (the statement of `roundBody_covariant_iff_id`, for all σ). -/
+    the covariant round statement `roundBody_covariant_iff_id` (for all σ). -/
 theorem prime_case_iff :
     (∀ σ : Relabel, ∀ p : ℕ, p.Prime → p ≤ 52 → orderOf σ = p →
       ¬ Covariant σ unkeyedWithMix) ↔
@@ -418,7 +418,7 @@ def Cov0Checks : Prop := pairsCheck cell0Pairs = true ∧ ∀ e : Fin 52, e ≠ 
 
 /-- (PROVED, given the finite checks `Cov0Checks` as a hypothesis) No transposition
     of two card values is covariant for the unkeyed round body, for ANY output
-    relabelling: the conjecture `roundBody_covariant_iff_id` holds for every
+    relabelling: the statement `roundBody_covariant_iff_id` holds for every
     transposition. (Unconditional form: heavy library,
     `roundBody_not_covariant_swap`.) -/
 theorem not_covariant_swap_of_check (hchk : Cov0Checks) (a b : Fin 52) (hab : a ≠ b) :
@@ -446,7 +446,7 @@ def PrimeNonSwapCase : Prop :=
     ¬ Covariant σ unkeyedWithMix
 
 /-- (PROVED, a reduction; GIVEN the finite checks `Cov0Checks` as a hypothesis) The
-    conjecture follows from `PrimeNonSwapCase` (the hypothesis `h` here; proved in the heavy
+    covariant round statement follows from `PrimeNonSwapCase` (the hypothesis `h` here; proved in the heavy
     library: `CovariantNarrow.primeNonSwapCase`).
     Transpositions are handled by `not_covariant_swap_of_check`, nontrivial `v10Sym`
     by `roundBody_not_covariant_of_stem` (every τ), and the rest of the argument is
@@ -468,7 +468,7 @@ theorem roundBody_covariant_iff_id_of_prime_nonswap_of_check (hchk : Cov0Checks)
   push_neg at hs hv
   exact h σ p hp hp52 ho hs hv
 
-/-- (PROVED; GIVEN `Cov0Checks`) `PrimeNonSwapCase` is EQUIVALENT to the conjecture. -/
+/-- (PROVED; GIVEN `Cov0Checks`) `PrimeNonSwapCase` is EQUIVALENT to the covariant round statement. -/
 theorem prime_nonswap_case_iff_of_check (hchk : Cov0Checks) :
     PrimeNonSwapCase ↔ (∀ σ : Relabel, Covariant σ unkeyedWithMix ↔ σ = 1) := by
   constructor
@@ -478,7 +478,7 @@ theorem prime_nonswap_case_iff_of_check (hchk : Cov0Checks) :
 
 /-! ## D. Sufficient single-cell conditions (hypotheses here; the full one is proved in `LabelStep`) -/
 
-/-- (PROVED, a reduction) The conjecture follows from the single-cell statement
+/-- (PROVED, a reduction) The covariant round statement follows from the single-cell statement
     `hcell`: every σ satisfying the seat-26 condition `Cell0Cov σ τ` for some τ is a
     `v10Sym`. `hcell` is a HYPOTHESIS of this theorem and a SUFFICIENT condition
     (`Cell0Cov` is weaker than covariance). It is proved in the heavy library (finite

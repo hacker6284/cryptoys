@@ -33,7 +33,7 @@ theorem cell0Cov_rank_iff {σ τ : Relabel} (h : Cell0Cov σ τ) (a b : Fin 52) 
 
 /-- (PROVED, unconditional) Every σ covariant for the unkeyed round body (for some output
     relabelling τ) maps cards of equal rank to cards of equal rank. One step toward
-    `PrimeNonSwapCase`; NOT the conjecture `roundBody_covariant_iff_id`. -/
+    `PrimeNonSwapCase`; NOT the covariant round statement `roundBody_covariant_iff_id`. -/
 theorem covariant_rank {σ : Relabel} (h : Covariant σ unkeyedWithMix) {a b : Fin 52}
     (hab : a.val % 13 = b.val % 13) : (σ a).val % 13 = (σ b).val % 13 :=
   covariant_rank_of_checks rankChecks_ok h hab

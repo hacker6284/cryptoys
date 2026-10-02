@@ -3,8 +3,7 @@
 The generated Python is not committed. Each process builds what it loads into a temporary
 directory (removed at exit), with the sudoc that proofs/sudocode.sh selects: $SUDOC if set (as in
 the generated-fresh CI job, which builds it at proofs/SUDOCODE_PIN), otherwise built at the pin in
-$SUDOCODE_DIR (default /tmp/sudocode). A py build takes a fraction of a second per .sudo.
-A local run without $SUDOC clones and builds sudoc into $SUDOCODE_DIR (default /tmp/sudocode).
+$SUDOCODE_DIR (default /tmp/sudocode).
 
     sys.path.insert(0, str(REPO / 'proofs')); import sudo_py
     dd = sudo_py.doubledeal(9)         # DoubleDeal v8..v12 (DOUBLEDEAL table)
@@ -18,7 +17,8 @@ module is not. This file is a loader only; the algorithms are sudoc's.
 
 usage: python3 proofs/sudo_py.py --selftest
 """
-import atexit, dataclasses, functools, importlib.util, json, shutil, subprocess, sys, tempfile, types
+import atexit, dataclasses, functools, json, shutil, subprocess, sys, tempfile, types
+import importlib, importlib.machinery, importlib.util
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -71,10 +71,10 @@ def text(s):
 class Sudo:
     """One generated build. Attribute access gives impl funcs wrapped with to_rt / host."""
     def __init__(self, impl):
-        self.impl = impl
+        self.impl, self.rt = impl, impl._rt     # _rt: the generated header's name for the build's runtime
 
     def __getattr__(self, name):
-        f, rt = getattr(self.impl, name), self.impl._rt
+        f, rt = getattr(self.impl, name), self.rt
         if not callable(f) or isinstance(f, type):
             return host(f, rt)
         return functools.wraps(f)(lambda *args: host(f(*(to_rt(a, rt) for a in args)), rt))
@@ -84,14 +84,14 @@ class Sudo:
 def load(sudo):
     """Build REPO/sudo with sudoc --target py and import it as its own package (cached per sudo
     path)."""
-    out = Path(tempfile.mkdtemp(dir=_outdir()))   # mkdtemp names (tmp + [a-z0-9_]) are identifiers
+    out = Path(tempfile.mkdtemp(prefix='sudo_', dir=_outdir()))
     subprocess.run([sudoc(), 'build', '--target', 'py', '-o', str(out), str(REPO / sudo)],
                    check=True, stdout=subprocess.DEVNULL)
-    pkg, init = out.name, out / '__init__.py'
-    init.touch()                                  # sudoc emits no package file; an empty one
-    spec = importlib.util.spec_from_file_location(pkg, init, submodule_search_locations=[str(out)])
-    sys.modules[pkg] = mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    pkg = out.name
+    assert pkg.isidentifier(), pkg
+    spec = importlib.machinery.ModuleSpec(pkg, None, is_package=True)
+    spec.submodule_search_locations = [str(out)]
+    sys.modules[pkg] = importlib.util.module_from_spec(spec)
     return Sudo(importlib.import_module(f'{pkg}._{Path(sudo).stem}_impl'))
 
 
@@ -102,7 +102,8 @@ def doubledeal(v):
 
 def _selftest():
     """Each DOUBLEDEAL entry is the sudo its committed vectors were built from (JSON `source`) and
-    reproduces their encrypt vectors."""
+    reproduces their encrypt vectors. MegaDreifach v1 and v2, whose modules share names, load side by
+    side, each with its own runtime, and pass their committed KATs."""
     vec = {v: f'proofs/deprecated/doubledeal-v{v}/vectors/doubledeal_v{v}_vectors.json' for v in (8, 9, 10, 11)}
     vec[12] = 'proofs/doubledeal/vectors/doubledeal_vectors.json'
     for v, path in vec.items():
@@ -115,8 +116,14 @@ def _selftest():
                 n += 1
         assert n, path
         print(f'DoubleDeal v{v}: {DOUBLEDEAL[v]} agrees on {n} encrypt vectors')
-    assert doubledeal(11).impl._rt is not doubledeal(12).impl._rt, 'builds share a runtime'
-    print('DoubleDeal v11, v12: each build has its own runtime')
+    md = {1: 'primitives/hash/megadreifach/v1/megadreifach.sudo', 2: 'primitives/hash/megadreifach/megadreifach.sudo'}
+    for v, sudo in md.items():                  # both builds' modules are named _megadreifach_impl
+        h = load(sudo)
+        kats = json.loads((REPO / f'primitives/hash/megadreifach/kats/megaminx_hash_kats_v{v}.json').read_text())
+        for x in kats['vectors']:
+            assert bytes(h.Hash(list(bytes.fromhex(x['msg_hex'])))).hex() == x['digest_hex'], (v, x['name'])
+        print(f'MegaDreifach v{v}: {sudo} agrees on {len(kats["vectors"])} KATs')
+    assert load(md[1]).rt is not load(md[2]).rt and '_sudo_rt' not in sys.modules, 'builds share a runtime'
 
 
 if __name__ == '__main__':

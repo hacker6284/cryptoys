@@ -8,7 +8,8 @@
 # Squash merge of PR #16 (py: a build loaded as a package imports its own
 # modules and runtime relatively, so proofs/sudo_py.py loads each build as its
 # own package); includes PR #12 (py: moves owned values). Both change only the
-# py target; the Lean emitter escapes every Lean 4.14 keyword since PR #10.
+# py backend and an IR pass only it uses (#12 adds ir/ownership.rs); the Lean
+# emitter escapes every Lean 4.14 keyword since PR #10.
 # JS shares never-field-written records since PR #9; Lean is in ALL_BACKENDS
 # since PR #8 (empty predicates, full IR). cryptoys consumes the emitter only,
 # not lockstep.

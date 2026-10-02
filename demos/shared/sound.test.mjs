@@ -338,3 +338,20 @@ test("peakMs: where each sound's loudest sample is, once decoded", async () => {
         globalThis.fetch = before;
     }
 });
+
+test("anchorMs holds a moment of the file in place under pitch jitter", async () => {
+    const { Ctx, made } = fakeAudio();
+    const t = target();
+    const sound = createSound({ sounds: { click: { files: ["e/click"], gains: [1], gapMs: 0, voices: 4, offsetMs: 0, jitter: 0.1 } }, base: BASE, gestureTarget: t, AudioCtx: Ctx });
+    t.fire("click");
+    await settle();
+    const random = Math.random;
+    Math.random = () => 0; // rate 0.9: the 180 ms click would land 20 ms late
+    try {
+        sound.play("click", { leadMs: 400, anchorMs: 180 });
+    } finally {
+        Math.random = random;
+    }
+    const [a] = made[0].started;
+    assert.ok(Math.abs(a.args[0] - 10.38) < 1e-9, "starts 20 ms early so the click lands at 400 + 180 ms");
+});

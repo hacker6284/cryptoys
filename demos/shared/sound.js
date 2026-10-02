@@ -379,9 +379,11 @@ export function createSound({
      * Fire one sound (dropped if muted, locked, too soon or too busy).
      * leadMs: time from now to the sound's contact moment; the file
      * starts at contact + offsetMs (clamped to now: an earlier start
-     * skips into the file instead).
+     * skips into the file instead). anchorMs: a moment in the file (its
+     * loudest click) that stays at its place when jitter changes the
+     * playback rate: the start moves instead.
      */
-    function play(name, { gain = 1, leadMs = 0 } = {}) {
+    function play(name, { gain = 1, leadMs = 0, anchorMs = 0 } = {}) {
         if (muted || !ctx || ctx.state !== "running") return false;
         const spec = table[name];
         const list = buffers[name];
@@ -405,7 +407,9 @@ export function createSound({
         // startMs trims the file's head; offsetMs still counts from the
         // untrimmed start, so −peak keeps the peak on the contact.
         const head = Math.max(0, spec.startMs ?? 0) / 1000;
-        const delay = spec.offsetMs === undefined ? 0 : (leadMs + spec.offsetMs) / 1000 + head;
+        const rate0 = src.playbackRate.value || 1;
+        const anchor = anchorMs > 0 ? (anchorMs - anchorMs / rate0) / 1000 : 0;
+        const delay = spec.offsetMs === undefined ? 0 : (leadMs + spec.offsetMs) / 1000 + head + anchor;
         const skip = Math.min(head + (delay < 0 ? -delay : 0), Math.max(0, (src.buffer.duration ?? 0) - 0.005));
         const at = ctx.currentTime + Math.max(0, delay);
         if (delay > 0) src.start(at, ...(skip ? [skip] : []));

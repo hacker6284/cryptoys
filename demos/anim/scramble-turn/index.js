@@ -1,6 +1,6 @@
 /**
  * Scramble face turn: the cube lifts off the felt, cubing.js turns the
- * faces (each turn clicks just before its face seats) and the cube sets
+ * faces (each turn clicks as its face starts moving) and the cube sets
  * down with a muffled pat. The values live in ./settings.js.
  *
  * Played by playroom/cube-stage.js around the Scramble rig (the
@@ -22,6 +22,25 @@ let voice = null;
  * Each hook takes a `when()` guard, asked again just before a sound
  * that starts later, so a cancelled motion stays quiet.
  */
+/**
+ * [slot, contactMs, stretch, tempo] per leaf of a playback starting at
+ * `at`: face turns on their start, rotations (and per-click turns,
+ * whose clicks count back from the seat) on their end.
+ */
+function contacts({ at, durations = [], tempo = timing.speed, leaves = [] }) {
+    const stretch = timing.speed / tempo;
+    const out = [];
+    let t = at;
+    leaves.forEach((move, k) => {
+        const len = (durations[k] ?? cubingMs(amountOf(move))) / tempo;
+        const slot = slotOf(move);
+        const onEnd = slot === "rotation" || settings.sounds[slot]?.perClick;
+        out.push([slot, onEnd ? t + len : t, stretch, tempo]);
+        t += len;
+    });
+    return out;
+}
+
 export function scrambleTurnVoice() {
     if (voice) return voice;
     const v = createVoice({ settings, slots, base: SOUNDS });
@@ -32,18 +51,26 @@ export function scrambleTurnVoice() {
             v.contact("lift", atMs, { when });
         },
         /**
-         * Playback of `leaves` started at `at` (performance.now()), each
-         * leaf `durations[k]` ms long at tempo 1. A turn's contact is the
-         * moment its face seats. The offsets were tuned at timing.speed;
-         * at another tempo the clicks keep their place in the turn.
+         * Playback of `leaves` starts at `at` (performance.now()), each
+         * leaf `durations[k]` ms long at tempo 1. A face turn's contact
+         * is the moment its face starts moving (its sound's peakAtMs
+         * counts from there); a rotation's is the moment it ends. Tuned
+         * at timing.speed; at another tempo each sound keeps its place in
+         * the turn. `at` may be in the future (see lead()).
          */
-        turns({ at, durations = [], tempo = timing.speed, leaves = [] }, when) {
-            const stretch = timing.speed / tempo;
-            let t = at;
-            leaves.forEach((move, k) => {
-                t += (durations[k] ?? cubingMs(amountOf(move))) / tempo;
-                v.contact(slotOf(move), t, { tempo, stretch, when });
-            });
+        turns(info, when) {
+            for (const [slot, atMs, stretch, tempo] of contacts(info)) v.contact(slot, atMs, { tempo, stretch, when });
+        },
+        /**
+         * How long before the turn starts its first sound's file has to
+         * start (a click on the turn start begins before it), plus 30 ms
+         * for pitch jitter and timers: the stage hands the voice the turn
+         * this long ahead.
+         */
+        lead(info) {
+            const list = contacts({ ...info, at: 0 });
+            const ms = list.length ? v.startsBefore(list.map(([slot, atMs, stretch]) => [slot, atMs, stretch]), 0, list[0][3]) : 0;
+            return ms > 0 ? ms + 30 : 0;
         },
         /** The cube touches the felt at `atMs`. */
         landing(atMs, when) {

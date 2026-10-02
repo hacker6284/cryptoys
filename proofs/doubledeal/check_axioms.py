@@ -175,6 +175,18 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.CovariantAffine.roundBody_not_covariant_affine",
     "DoubleDeal.Security.CovariantAffine.roundBody_not_covariant_affine_right",
     "DoubleDeal.Security.CovariantAffine.roundBody_covariant_affine_iff",
+    # DoubleDealSecurityHeavy/RankPartition.lean and the generated RankPartitionChecks.lean
+    # (fam_struct_D, fam_c0_D_k_i: rank_family.py --lean): a sigma with Cell0Cov sigma tau
+    # (in particular every covariant sigma) permutes the 13 rank classes; one step toward
+    # PrimeNonSwapCase, NOT the conjecture
+    *(f"DoubleDeal.Security.RankPartition.fam_struct_{d}" for d in range(3)),
+    *(f"DoubleDeal.Security.RankPartition.fam_c0_{n // 9}_{n // 3 % 3}_{n % 3}"
+      for n in range(27)),
+    "DoubleDeal.Security.RankPartition.fam_c0_all",
+    "DoubleDeal.Security.RankPartition.rankChecks_ok",
+    "DoubleDeal.Security.RankPartition.cell0Cov_rank",
+    "DoubleDeal.Security.RankPartition.cell0Cov_rank_iff",
+    "DoubleDeal.Security.RankPartition.covariant_rank",
 }
 # Lean-generated theorems of the heavy modules (no source declaration; see the comment
 # above HEAVY_THEOREMS). chunkOK.eq_1: `of_chunks` unfolds `chunkOK` with `simp only`.
@@ -591,6 +603,15 @@ PACKAGES = {
             "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime",
             "DoubleDeal.Security.CovariantNarrow.not_covariant_swap_of_check",
             "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff_of_check",
+            # RankPartition: rank classes are preserved, GIVEN the finite checks RankChecks
+            # (discharged in the heavy library); not the conjecture
+            "DoubleDeal.Security.RankPartition.c0_eq",
+            "DoubleDeal.Security.RankPartition.rowAmts_zero",
+            "DoubleDeal.Security.RankPartition.rank_eq_of_family",
+            "DoubleDeal.Security.RankPartition.family_of_checks",
+            "DoubleDeal.Security.RankPartition.cell0Cov_rank_of_checks",
+            "DoubleDeal.Security.RankPartition.cell0Cov_rank_iff_of_checks",
+            "DoubleDeal.Security.RankPartition.covariant_rank_of_checks",
             # RealSchedule (roadmap M5): real PassKey schedule
             "DoubleDeal.Security.RealSchedule.masterList_injective",
             "DoubleDeal.Security.RealSchedule.exists_masterList_eq",

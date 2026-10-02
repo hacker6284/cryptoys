@@ -247,6 +247,8 @@ jobs:
         run: python3 proofs/doubledeal/analysis/v12-covariant/cell0_sample.py --check
       - name: CovariantAffineLists.lean / CovariantAffineChecks.lean and aff_witness.log match aff_witness.py
         run: python3 proofs/doubledeal/analysis/v12-primenonswap/aff_witness.py --check
+      - name: RankPartitionLists.lean / RankPartitionChecks.lean and rank_family.log match rank_family.py
+        run: python3 proofs/doubledeal/analysis/v12-primenonswap/rank_family.py --check
       # numpy is imported by proofs/doubledeal/analysis/v10-sumranks/check_cand.py (directly)
       # and sbox-search/verify.py (via sb.py), which selftest.py runs. Probe with find_spec, which returns
       # None instead of raising, then require a working import (fails the step if absent).

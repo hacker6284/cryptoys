@@ -38,3 +38,5 @@ import DoubleDealSecurity.CovariantNarrowLists
 import DoubleDealSecurity.CovariantNarrow
 import DoubleDealSecurity.CovariantAffineLists
 import DoubleDealSecurity.CovariantAffine
+import DoubleDealSecurity.RankPartitionLists
+import DoubleDealSecurity.RankPartition

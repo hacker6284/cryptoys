@@ -251,6 +251,7 @@ export function createSound({
     let loading = null;
     let buffers = {};
     let peaks = {};
+    let centroids = {};
     const last = {};
     const live = {};
     const rr = {};
@@ -329,7 +330,11 @@ export function createSound({
         })).then(() => {
             buffers = next;
             peaks = {};
-            for (const [name, list] of Object.entries(next)) peaks[name] = loudestMs(list[0]);
+            centroids = {};
+            for (const [name, list] of Object.entries(next)) {
+                peaks[name] = loudestMs(list[0]);
+                centroids[name] = audibleCentroidMs(list[0]);
+            }
         }).catch((err) => {
             console.warn("sound failed to load", err);
         });
@@ -500,11 +505,54 @@ export function createSound({
         peakMs(name) {
             return peaks[name] ?? null;
         },
+        /** ms from the start of `name`'s (first) file to the centre of its audible part (audibleCentroidMs), once decoded; else null. */
+        centroidMs(name) {
+            return centroids[name] ?? null;
+        },
         dispose() {
             offState();
             stateFns.clear();
         },
     };
+}
+
+/**
+ * The centre of a decoded file's audible part, in ms from its start:
+ * the energy-weighted time centroid (Σ t·x² / Σ x², channels summed) of
+ * the samples whose 5 ms RMS envelope is within `floorDb` (−30 dB) of the
+ * envelope's peak. It takes in the lead-in, every click of a cluster
+ * and the tail, not just the loudest sample.
+ */
+export function audibleCentroidMs(buffer, { floorDb = -30, windowMs = 5 } = {}) {
+    if (!buffer?.getChannelData || !buffer.sampleRate || !buffer.length) return null;
+    const n = buffer.length;
+    const e = new Float64Array(n);
+    for (let c = 0; c < buffer.numberOfChannels; c++) {
+        const data = buffer.getChannelData(c);
+        for (let i = 0; i < n; i++) e[i] += data[i] * data[i];
+    }
+    const w = Math.max(1, Math.round((windowMs / 1000) * buffer.sampleRate));
+    const half = Math.floor(w / 2);
+    const prefix = new Float64Array(n + 1);
+    for (let i = 0; i < n; i++) prefix[i + 1] = prefix[i] + e[i];
+    const env = new Float64Array(n);
+    let top = 0;
+    for (let i = 0; i < n; i++) {
+        const a = Math.max(0, i - half);
+        const b = Math.min(n, i - half + w);
+        env[i] = (prefix[b] - prefix[a]) / w;
+        if (env[i] > top) top = env[i];
+    }
+    if (!top) return null;
+    const floor = top * 10 ** (floorDb / 10); // env is mean power
+    let sum = 0;
+    let moment = 0;
+    for (let i = 0; i < n; i++) {
+        if (env[i] < floor) continue;
+        sum += e[i];
+        moment += i * e[i];
+    }
+    return sum ? (moment / sum / buffer.sampleRate) * 1000 : null;
 }
 
 /** dB ↔ linear gain helpers for tuning UIs. */

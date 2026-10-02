@@ -15,6 +15,10 @@
  *   peakAtMs   the file's loudest sample lands this long after the
  *              contact (0 = on it; positive = later), whatever the file's
  *              head; measured from the decoded file
+ *   align      the centre of the file's audible part (sound.js
+ *              audibleCentroidMs) lands on the contact, + nudgeMs (later
+ *              if positive); the entry says what the contact is for its
+ *              align rule (e.g. "peak-velocity")
  *
  * The voice uses the page's shared AudioContext (sharedAudio() in
  * sound.js), so the hub tap, the iOS unlock and mute work the same in
@@ -33,8 +37,8 @@ export function soundTable(slots, sounds) {
             gains: [dbToGain(s.gainDb ?? 0)],
             gapMs: slot.gapMs ?? 0,
             voices: slot.voices ?? 4,
-            // peakAtMs: contact() passes the time to the file's start itself.
-            offsetMs: s.peakAtMs != null ? 0 : s.offsetMs ?? 0,
+            // peakAtMs / align: contact() passes the time to the file's start itself.
+            offsetMs: placed(s) ? 0 : s.offsetMs ?? 0,
             ...(s.startMs ? { startMs: s.startMs } : {}),
             ...(s.maxMs ? { maxMs: s.maxMs } : {}),
             ...(s.fadeMs ? { fadeMs: s.fadeMs } : {}),
@@ -53,22 +57,38 @@ export function stretchContact(atMs, offsetMs, peakMs, stretch) {
     return atMs + (offsetMs + peakMs) * (stretch - 1);
 }
 
+/** Placed by a moment inside the file (peakAtMs or align) rather than by its start. */
+function placed(s) {
+    return s.peakAtMs != null || s.align != null;
+}
+
 /**
  * When the file starts (performance.now() ms) for a sound `s` whose
- * contact is at `atMs`; `peakMs` is the file's loudest sample. With
- * peakAtMs the loudest sample lands peakAtMs × stretch after the
- * contact; with offsetMs see stretchContact.
+ * contact is at `atMs`. `file` = { peakMs, centroidMs } of the decoded
+ * file. align: its audible centre lands nudgeMs × stretch after the
+ * contact. peakAtMs: its loudest sample lands peakAtMs × stretch after.
+ * offsetMs: see stretchContact.
  */
-export function fileStart(s, atMs, peakMs, stretch = 1) {
-    if (s.peakAtMs != null) return atMs + s.peakAtMs * stretch - peakMs;
+export function fileStart(s, atMs, file = {}, stretch = 1) {
+    const { peakMs = 0, centroidMs = 0 } = typeof file === "number" ? { peakMs: file } : file;
+    if (s.align != null) return atMs + (s.nudgeMs ?? 0) * stretch - (centroidMs ?? 0);
+    if (s.peakAtMs != null) return atMs + s.peakAtMs * stretch - (peakMs ?? 0);
     const off = s.offsetMs ?? 0;
-    return stretchContact(atMs, off, peakMs, stretch) + off;
+    return stretchContact(atMs, off, peakMs ?? 0, stretch) + off;
+}
+
+/** The file moment that holds still under pitch jitter (0: its start). */
+function anchorOf(s, file) {
+    if (s.align != null) return file.centroidMs ?? 0;
+    if (s.peakAtMs != null) return file.peakMs ?? 0;
+    return 0;
 }
 
 export function createVoice({ settings, slots, base, autostart = false }) {
     const sounds = settings.sounds || {};
     const sound = createSound({ sounds: soundTable(slots, sounds), base, limiter: true, autostart });
     const timers = new Set();
+    const describe = (name) => ({ peakMs: sound.peakMs(name) ?? 0, centroidMs: sound.centroidMs?.(name) ?? 0 });
 
     function later(ms, fn) {
         const id = setTimeout(() => {
@@ -98,11 +118,12 @@ export function createVoice({ settings, slots, base, autostart = false }) {
             return;
         }
         if (!s.file) return;
-        const start = fileStart(s, atMs, sound.peakMs(name) ?? 0, stretch);
+        const file = describe(name);
+        const start = fileStart(s, atMs, file, stretch);
         // sound.js starts the file at leadMs + its table offsetMs.
-        const tableOffset = s.peakAtMs != null ? 0 : s.offsetMs ?? 0;
-        // peakAtMs places the loudest click: it holds still under pitch jitter.
-        const anchorMs = s.peakAtMs != null ? sound.peakMs(name) ?? 0 : 0;
+        const tableOffset = placed(s) ? 0 : s.offsetMs ?? 0;
+        // The placed moment (loudest click / audible centre) holds still under pitch jitter.
+        const anchorMs = anchorOf(s, file);
         const now = performance.now();
         const startIn = start - now;
         if (startIn > 90) {
@@ -127,7 +148,7 @@ export function createVoice({ settings, slots, base, autostart = false }) {
                 const pc = slots.find((slot) => slot.name === name)?.perClick;
                 if (pc) lead = Math.max(lead, startsBefore(pc.clicks(tempo).map((rel) => [pc.slot, at + rel, stretch]), atMs, tempo));
             } else if (s.file) {
-                lead = Math.max(lead, atMs - fileStart(s, at, sound.peakMs(name) ?? 0, stretch));
+                lead = Math.max(lead, atMs - fileStart(s, at, describe(name), stretch));
             }
         }
         return lead;

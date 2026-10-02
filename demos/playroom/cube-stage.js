@@ -175,8 +175,8 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
     // rig readies the leaves while the cube lifts and asks before they
     // play; when a click's file has to begin before the turn (a lead-in),
     // the voice gets the turn then, timed to the planned start. The turn
-    // starts when the lift ends, or after the lead-in when the cube is
-    // already up. A step needing no lead-in (the single click) never waits.
+    // starts when the lift ends (the lead-in fits in the lift), or at once
+    // when the cube is already up: it never waits for a sound.
     async function liftAndTurn(play, opts) {
         const mine = epoch;
         const gen = ++turnGen;
@@ -189,8 +189,11 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         // (onStart), as before; with one, at the planned start.
         let planned = false;
         const beforeStart = async (info) => {
+            // Never a pre-turn wait: during a lift the lead-in fits inside
+            // it; with the cube already up the turn starts now and a file
+            // that should have begun earlier skips its head.
             const lead = voice?.lead?.(info) ?? 0;
-            const at = Math.max(liftEndsAt, performance.now() + lead);
+            const at = tweening ? Math.max(liftEndsAt, performance.now() + lead) : performance.now();
             if (lead > 0) {
                 planned = true;
                 voice?.turns({ ...info, at }, live);

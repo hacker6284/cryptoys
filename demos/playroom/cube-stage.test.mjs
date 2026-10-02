@@ -56,13 +56,14 @@ assert.equal(turn[3](), false, "clicks still pending after playback ends stay qu
 assert.ok(turn[5] < turn[4] - 20, "the voice hears the turn before it starts (during the lift)");
 assert.ok(Math.abs(startedAt - turn[4]) < 20, "the turn starts when planned");
 assert.ok(turn[4] - liftStart >= timing.TURN_LIFT_MS - 5, "and not before the lift ends");
-// Already up (the next step of a Play): the turn waits out the lead-in.
+// Already up (the next step of a Play): the turn never waits for a sound;
+// it starts at once (a file that should have begun earlier skips its head).
 heard.length = 0;
 const again = loud.playLeaves(1, 2);
 const askedAt = performance.now();
 await again;
 const next = heard.find(([kind]) => kind === "turns");
-assert.ok(next[4] - askedAt >= 25 && Math.abs(startedAt - next[4]) < 20, "cube already up: the turn starts after the voice's lead-in");
+assert.ok(next[4] - askedAt < 15 && Math.abs(startedAt - next[4]) < 20, "cube already up: no pre-turn wait even with a lead-in");
 // No lead-in (the single click): no wait, and the voice hears the turn
 // as it really starts (onStart), as before.
 voice.lead = () => 0;

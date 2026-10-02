@@ -171,17 +171,37 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         });
     }
 
-    // Plays leaves on the rig with a click per turn: the rig reports when
-    // playback starts, each leaf's move and duration, and the tempo.
-    function playWithClicks(play, opts) {
-        const mine = ++turnGen;
-        const onStart = (info) => {
-            voice?.turns(info, () => mine === turnGen);
-            opts.onStart?.(info);
+    // A turn step: lift, then the leaves, with the voice's sounds. The
+    // rig readies the leaves while the cube lifts and asks before they
+    // play; the voice gets the turn then, timed to the planned start, so
+    // a click whose file begins before the turn starts in time. The turn
+    // starts when the lift ends, or after the voice's lead-in when the
+    // cube is already up (or the lift is shorter).
+    async function liftAndTurn(play, opts) {
+        const mine = epoch;
+        const gen = ++turnGen;
+        const live = () => mine === epoch && gen === turnGen;
+        const up = destY() + timing.TURN_LIFT;
+        const tweening = Math.abs(rig.group.position.y - up) >= 1e-3 && !reduced();
+        const liftEndsAt = performance.now() + (tweening ? timing.TURN_LIFT_MS : 0);
+        const lifting = lift();
+        const beforeStart = async (info) => {
+            const at = Math.max(liftEndsAt, performance.now() + (voice?.lead?.(info) ?? 0));
+            voice?.turns({ ...info, at }, live);
+            const wait = at - performance.now();
+            if (wait > 0) await new Promise((resolve) => window.setTimeout(resolve, wait));
+            if (!live()) return false;
+            await opts.beforeStart?.(info);
+            return true;
         };
-        return Promise.resolve(play({ ...opts, onStart, snap: Boolean(opts.snap) || reduced() })).finally(() => {
-            if (mine === turnGen) turnGen += 1;
-        });
+        try {
+            const result = await play({ ...opts, beforeStart, snap: Boolean(opts.snap) || reduced() });
+            await lifting;
+            return mine === epoch ? result : undefined;
+        } finally {
+            if (gen === turnGen) turnGen += 1;
+            if (mine === epoch) scheduleSetDown();
+        }
     }
 
     return {
@@ -194,10 +214,10 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         animateMove: (move, ms) => withLift(() => rig.animateMove(move, ms)),
         animateReorient: (from, up, front, ms) => withLift(() => rig.animateReorient(from, up, front, ms)),
         playLeaves: rig.playLeaves
-            ? (from, to, opts = {}) => withLift(() => playWithClicks((o) => rig.playLeaves(from, to, o), opts))
+            ? (from, to, opts = {}) => liftAndTurn((o) => rig.playLeaves(from, to, o), opts)
             : undefined,
         playMoves: rig.playMoves
-            ? (moves, opts = {}) => withLift(() => playWithClicks((o) => rig.playMoves(moves, o), opts))
+            ? (moves, opts = {}) => liftAndTurn((o) => rig.playMoves(moves, o), opts)
             : undefined,
         jumpToLeaf: stopping("jumpToLeaf"),
         setAlg: call("setAlg"),

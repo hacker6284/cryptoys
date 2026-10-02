@@ -39,16 +39,31 @@ const [half, seat] = clickTimes(2, 1);
 assert.ok(Math.abs(seat) < 1, "the last click is the seat");
 assert.equal(Math.round(half), -750, "a double turn's first click is at half way");
 
-// A click tuned at 1.4× keeps its place in the turn at any tempo: its
-// loudest sample lands at the same fraction of the turn.
-const { stretchContact } = await import(new URL("voice.js", here));
-const { offsetMs } = settings.sounds.single;
-const peakMs = 143; // single_spacejoe-486564's loudest sample
+// Face-turn clicks are placed from the moment the face starts moving:
+// peakAtMs is where the loudest click lands, scaled with the turn, so
+// at peakAtMs 0 it sits on the turn's start at any tempo (the file
+// starts its head's length before the turn).
+const { stretchContact, fileStart } = await import(new URL("voice.js", here));
+const peaks = { single: 143.3, double: 119.8, triple: 194.3 }; // loudest samples, decoded
+for (const [slot, peakMs] of Object.entries(peaks)) {
+    const s = settings.sounds[slot];
+    assert.equal(s.offsetMs, undefined, `${slot} is placed by peakAtMs`);
+    for (const tempo of [0.5, 1.4, 4]) {
+        const turnStart = 5000;
+        const peakAt = fileStart(s, turnStart, peakMs, timing.speed / tempo) + peakMs;
+        assert.ok(Math.abs(peakAt - (turnStart + s.peakAtMs * timing.speed / tempo)) < 1e-9, `${slot} peak at ${tempo}×`);
+    }
+}
+assert.equal(fileStart({ peakAtMs: 100 }, 0, 143, 1.4 / 0.7), 200 - 143, "peakAtMs scales with the turn: half the tempo, twice as late");
+
+// offsetMs sounds (the rotation): the time from the loudest sample to
+// the contact scales the same way.
+const { offsetMs } = settings.sounds.rotation;
+const peakMs = 127.6;
 for (const tempo of [0.5, 1.4, 4]) {
-    const turn = 1000 / tempo;
-    const contactAt = stretchContact(turn, offsetMs, peakMs, timing.speed / tempo);
-    const peakAt = contactAt + offsetMs + peakMs;
-    assert.ok(Math.abs(peakAt / turn - (1000 / 1.4 - 250) / (1000 / 1.4)) < 1e-9, `peak fraction at ${tempo}×`);
+    const end = 1000 / tempo;
+    const peakAt = fileStart({ offsetMs }, end, peakMs, timing.speed / tempo) + peakMs;
+    assert.ok(Math.abs((end - peakAt) - (-offsetMs - peakMs) * timing.speed / tempo) < 1e-9, `rotation peak at ${tempo}×`);
 }
 assert.equal(stretchContact(1000, offsetMs, peakMs, 1), 1000, "unchanged at the tuned tempo");
 

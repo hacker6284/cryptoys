@@ -161,10 +161,6 @@ theorem length_flatMap_le {α β} (l : List α) (f : α → List β) (k : Nat)
     have h2 := ih (fun b hb => h b (List.mem_cons_of_mem _ hb))
     omega
 
-theorem embed_set (l : List Nat) (k x : Nat) (h : k < (embed l).size) :
-    (embed l).set ⟨k, h⟩ (Int.ofNat x) = embed (l.set k x) := by
-  simp [embed, Array.set, List.map_set]
-
 theorem embed_getElem? (l : List Nat) (i : Nat) : (embed l)[i]? = (l[i]?).map Int.ofNat := by
   simp [embed]
 

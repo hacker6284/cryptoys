@@ -1,4 +1,4 @@
-import { CUBE, GATHER_MS, RESTOW_MS } from "./constants.js";
+import { GATHER_MS, RESTOW_MS } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { bindGrowFields } from "../shared/grow-field.js";
 import { lucideSvg } from "../shared/icons.js";
@@ -381,9 +381,10 @@ export function createScrambleAdapter() {
             installOpts = opts;
             // Seat is sync so the hub can hold the wrapper. Fly waits
             // for adopt via prepareEnter / ready. Fit is kept on every
-            // Twisty render so a later layout cannot crush scale.
+            // Twisty render so a later layout cannot crush scale. Each
+            // puzzle shows at its own real size (constants.js REAL_SIZES).
             puzzleId = readPuzzleSearchParam();
-            const seat = createTwistySeat({ edge: CUBE });
+            const seat = createTwistySeat({ puzzle: puzzleId });
             const prev = nextWorld.toys.cube;
             nextWorld.replaceToy("cube", seat.group);
             if (prev) disposeObject(prev);
@@ -392,7 +393,6 @@ export function createScrambleAdapter() {
             rig = stageCubeView(pendingTwistyRig(seat, puzzleId), opts);
             adoptPromise = adoptTwistyPuzzle(seat, {
                 puzzle: puzzleId,
-                edge: CUBE,
                 onFitChange() {
                     const group = world?.toys?.cube || seat.group;
                     reseatCube(group);

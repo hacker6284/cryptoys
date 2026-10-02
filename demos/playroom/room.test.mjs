@@ -6,6 +6,8 @@ import {
     CUBE,
     DEAL_SCALE,
     DEN,
+    DREI_ROW_W,
+    DREI_SEAT_XZ,
     FLY_MS,
     LID_CLOSE_MS,
     LID_OPEN_MS,
@@ -13,13 +15,14 @@ import {
     SHELF_Z,
     SLOTS,
     TABLE_R,
+    MINX,
     TOP_Y,
     toyHalfHeight,
 } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
 import { seatOnSurface } from "./motion.js";
 import { stubThree } from "./three-stub.mjs";
-import { createToyDirector, recipeMotionMs } from "./toy-director.js";
+import { createToyDirector, EXTRA_STAGGER_MS, recipeMotionMs } from "./toy-director.js";
 
 // The registry holds the adapters; they touch three only once installed.
 stubThree();
@@ -81,6 +84,25 @@ assert.equal(DEMOS.doubledeal.pose, "doubledeal");
 assert.equal(DEMOS.scramble.toys[0], "cube");
 assert.equal(recipeMotionMs(DEMOS.scramble), FLY_MS);
 assert.equal(recipeMotionMs(DEMOS.doubledeal), LID_OPEN_MS + FLY_MS + LID_CLOSE_MS);
+// MegaDreifach: one megaminx (A) from the shelf; B, C and the DEAL deck
+// come out of the chest, 2 staggers after the first extra. Only toys: no
+// tray, cups or label cards anywhere in the recipe.
+assert.deepEqual(DEMOS.megadreifach.toys, ["drei", "dreiB", "dreiC", "deck3"]);
+// B | A | C straight on the felt, symmetric, square to the seat, and as
+// wide as the 13-column deal (12 × 25 mm pitch + a 63 mm card).
+assert.ok(Math.abs(DREI_ROW_W - (12 * 0.025 + 0.063)) < 1e-9);
+assert.deepEqual(DREI_SEAT_XZ.A, [0, 0]);
+assert.equal(DREI_SEAT_XZ.B[0], -DREI_SEAT_XZ.C[0]);
+assert.equal(DREI_SEAT_XZ.B[1], 0);
+assert.equal(DREI_SEAT_XZ.C[1], 0);
+assert.ok(Math.abs(DREI_SEAT_XZ.C[0] + MINX / 2 - DREI_ROW_W / 2) < 1e-9);
+assert.equal(toyHalfHeight("drei"), MINX / 2);
+for (const prop of ["tray", "tent", "cup"]) {
+    assert.ok(!new RegExp(`\\b${prop}s?\\b`, "i").test(readFileSync(new URL("./drei-stage.js", import.meta.url), "utf8")
+        .replace(/no tray, no cups, no labels/g, "")), `drei-stage.js: no ${prop}`);
+}
+assert.equal(DEMOS.megadreifach.chest, true);
+assert.equal(recipeMotionMs(DEMOS.megadreifach), LID_OPEN_MS + FLY_MS + LID_CLOSE_MS + 2 * EXTRA_STAGGER_MS);
 const idleDirector = createToyDirector({}, DEMOS);
 assert.equal(idleDirector.borrowMs("doubledeal"), idleDirector.homeMs("doubledeal"));
 assert.equal(CLOCK_STEP_MS, 50);

@@ -1,4 +1,4 @@
-import { createDoubleDealAdapter, createScrambleAdapter } from "./adapters.js";
+import { createDoubleDealAdapter, createMegaDreifachAdapter, createScrambleAdapter } from "./adapters.js";
 
 // One entry per playroom demo, keyed by its ?algo= id (null prototype:
 // ?algo=constructor is no demo). Boot installs the adapters in this
@@ -26,5 +26,13 @@ export const DEMOS = Object.assign(Object.create(null), {
         chest: true,
         deepLinkPlays: true,
         adapter: createDoubleDealAdapter(),
+    },
+    megadreifach: {
+        title: "MegaDreifach",
+        pose: "drei",
+        toys: ["drei", "dreiB", "dreiC", "deck3"],
+        chest: true,
+        deepLinkPlays: true,
+        adapter: createMegaDreifachAdapter(),
     },
 });

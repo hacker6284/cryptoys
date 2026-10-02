@@ -2,7 +2,7 @@
 # Shared generate path for GitHub Pages and Render.
 # Assumes sudoc is already built. Matches .github/actions/generate-demos
 # after the cargo build step: primitive JS tests, tools/build.sh, extra
-# checks, then require the two demo modules Pages/Render must serve.
+# checks, then require the demo modules Pages/Render must serve.
 set -eu
 root=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 cd "$root"
@@ -35,7 +35,10 @@ AEAD_OUT=/tmp/ddch-test node primitives/aead/doubledeal-cbc-hmac/kats/regen.mjs 
 python3 primitives/aead/doubledeal-cbc-hmac/kats/check.py
 test -f demos/scramble/generated/scramble.mjs
 test -f demos/doubledeal/generated/doubledeal.mjs
+test -f demos/megadreifach/generated/megadreifach.mjs
+test -f demos/megadreifach/generated/kats.json
 test -f demos/scramble/SPEC.md
 test -f demos/doubledeal/SPEC.md
+test -f demos/megadreifach/SPEC.md
 for t in demos/*/*.test.mjs; do node "$t"; done
 touch demos/.nojekyll

@@ -5,7 +5,7 @@ Toy three-megaminx Merkle–Damgård hash. Not for real use. Naming, scope and n
 
 | File | Role |
 | --- | --- |
-| [`SPEC.md`](SPEC.md) | Normative specification, v2 (`Hash` / `HashDeck` / `HashDeckBody`, plus `MegaDreifach*` aliases; `*BodyFrom` is the free-start analysis surface) |
+| [`SPEC.md`](SPEC.md) | Normative specification, v2 (`Hash` / `HashDeck` / `HashDeckBody`, plus `MegaDreifach*` aliases; `*BodyFrom` is the free-start analysis surface; `trace_hash` is the demo's animation trace) |
 | [`megadreifach.sudo`](megadreifach.sudo) | Conformance implementation, v2 |
 | [`kats/megaminx_hash_kats_v2.json`](kats/megaminx_hash_kats_v2.json) | v2 KAT file (same inputs and layout as v1) |
 | [`v1/SPEC.md`](v1/SPEC.md), [`v1/megadreifach.sudo`](v1/megadreifach.sudo) | Frozen, deprecated v1. The sudo keeps the v1 file name so the Lean emitted from it stays the module `Megadreifach` |

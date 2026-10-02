@@ -831,5 +831,257 @@ def test_lower_ring_noon_is_the_upper_left_of_the_two_upper_ring_neighbours : Ex
       pure ()) (fun r => pure r))
     pure _out
 
+def test_trace_hash_matches_hash_em_block_and_iv_cook12_on_every_kat : Except SudoRt.Trap Unit :=
+  do
+    let _fromV := (0 : Int)
+    let _toV := (7 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init311 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Unit) _init311 fuel (fun σ =>
+    let n := σ
+    do
+      if n > _toV then
+        pure (SudoRt.Flow.brk (ρ := Unit) n)
+      else
+        match ← ((do
+  let _t265 ← kat_msg n
+  let msg := _t265
+  let _t266 ← trace_hash msg
+  let tr := _t266
+  let _t267 ← kat_v2_digest n
+  let _as268 ← SudoRt.sudoAssertEq (tr).sudo_5Trace_6digest _t267 1180
+  let _t269 ← v_Hash msg
+  let _as270 ← SudoRt.sudoAssertEq (tr).sudo_5Trace_6digest _t269 1181
+  let _t271 ← identity
+  let _t272 ← replay_turns _t271 (tr).sudo_5Trace_8iv_turns
+  let _t273 ← iv_cook12
+  let _as274 ← SudoRt.sudoAssertEq _t272 _t273 1182
+  let _t275 ← pad_message msg
+  let padded := _t275
+  let _t277 ← SudoRt.mulI (SudoRt.listLen (tr).sudo_5Trace_6blocks) pad_block
+  let _as279 ← SudoRt.sudoAssertEq _t277 (SudoRt.listLen padded) 1184
+  let _t280 ← iv_cook12
+  let h := _t280
+  let _t309 ← SudoRt.subI (SudoRt.listLen (tr).sudo_5Trace_6blocks) (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t309
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init310 := (_fromV, h)
+  let _out ← (SudoRt.runLoopOn (ρ := Unit) _init310 fuel (fun σ =>
+    let b := σ.1
+    let h := σ.2
+    do
+      if b > _toV then
+        pure (SudoRt.Flow.brk (ρ := Unit) (b, h))
+      else
+        match ← ((do
+  let _t282 ← SudoRt.atL (tr).sudo_5Trace_6blocks b
+  let blk := _t282
+  let _as283 ← SudoRt.sudoAssertEq (blk).sudo_10TraceBlock_1h h 1188
+  let _t284 ← phi_chunk (blk).sudo_10TraceBlock_5chunk
+  let _as285 ← SudoRt.sudoAssertEq (blk).sudo_10TraceBlock_4deal _t284 1189
+  let _t286 ← em_block h (blk).sudo_10TraceBlock_4deal
+  let _as287 ← SudoRt.sudoAssertEq (blk).sudo_10TraceBlock_1e _t286 1190
+  let _t289 ← SudoRt.addI body_len f3_t
+  let _as290 ← SudoRt.sudoAssertEq (SudoRt.listLen (blk).sudo_10TraceBlock_5steps) _t289 1191
+  let g := h
+  let _t297 ← SudoRt.subI (SudoRt.listLen (blk).sudo_10TraceBlock_5steps) (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t297
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init307 := (_fromV, g)
+  let _out ← (SudoRt.runLoopOn (ρ := Unit) _init307 fuel (fun σ =>
+    let s := σ.1
+    let g := σ.2
+    do
+      if s > _toV then
+        pure (SudoRt.Flow.brk (ρ := Unit) (s, g))
+      else
+        match ← ((do
+  let _t292 ← SudoRt.atL (blk).sudo_10TraceBlock_5steps s
+  let st := _t292
+  let _t293 ← SudoRt.addI s (1 : Int)
+  let _as294 ← SudoRt.sudoAssertEq (st).sudo_9TraceStep_3pos _t293 1195
+  let _t295 ← replay_turns g (st).sudo_9TraceStep_5turns
+  let g := _t295
+  pure (SudoRt.Flow.cont (ρ := Unit) g)) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) (s, _fs))
+        | .cont _fs => do
+            if s == _toV then
+              pure (SudoRt.Flow.brk (ρ := Unit) (s, _fs))
+            else do
+              let i' ← SudoRt.addI s (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
+    let g := σ.2
+    do
+      let _as298 ← SudoRt.sudoAssertEq g (blk).sudo_10TraceBlock_1e 1197
+      let _t299 ← compose h (blk).sudo_10TraceBlock_1e
+      let _as300 ← SudoRt.sudoAssertEq (blk).sudo_10TraceBlock_6h_next _t299 1198
+      let _t301 ← compose (blk).sudo_10TraceBlock_1h (blk).sudo_10TraceBlock_5h_inv
+      let _t302 ← identity
+      let _as303 ← SudoRt.sudoAssertEq _t301 _t302 1199
+      let _t304 ← compose (blk).sudo_10TraceBlock_6h_next (blk).sudo_10TraceBlock_10h_next_inv
+      let _t305 ← identity
+      let _as306 ← SudoRt.sudoAssertEq _t304 _t305 1200
+      let h := (blk).sudo_10TraceBlock_6h_next
+      pure (SudoRt.Flow.cont (ρ := Unit) h)) (fun r => pure (SudoRt.Flow.ret (ρ := Unit) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) (b, _fs))
+        | .cont _fs => do
+            if b == _toV then
+              pure (SudoRt.Flow.brk (ρ := Unit) (b, _fs))
+            else do
+              let i' ← SudoRt.addI b (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
+    let h := σ.2
+    do
+      pure (SudoRt.Flow.cont (ρ := Unit) ())) (fun r => pure (SudoRt.Flow.ret (ρ := Unit) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) n)
+        | .cont _fs => do
+            if n == _toV then
+              pure (SudoRt.Flow.brk (ρ := Unit) n)
+            else do
+              let i' ← SudoRt.addI n (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Unit) i')) (fun σ =>
+    do
+      pure ()) (fun r => pure r))
+    pure _out
+
+def test_cook_b_backwards_is_iv_cook12_inverse_and_the_3_solve_leaves_h_h_1_solved : Except SudoRt.Trap Unit :=
+  do
+    let _t312 ← identity
+    let b := _t312
+    let _fromV := (0 : Int)
+    let _toV := (11 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init356 := (_fromV, b)
+    let _out ← (SudoRt.runLoopOn (ρ := Unit) _init356 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Unit) (i, b))
+      else
+        match ← ((do
+  let _t314 ← SudoRt.subI (11 : Int) i
+  let _t315 ← face_turn b _t314 (4 : Int)
+  let b := _t315
+  pure (SudoRt.Flow.cont (ρ := Unit) b)) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Unit) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
+    let b := σ.2
+    do
+      let _t316 ← iv_cook12
+      let _t317 ← inverse _t316
+      let _as318 ← SudoRt.sudoAssertEq b _t317 1210
+      let _fromV := (0 : Int)
+      let _toV := (7 : Int)
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init355 := _fromV
+      let _out ← (SudoRt.runLoopOn (ρ := Unit) _init355 fuel (fun σ =>
+    let n := σ
+    do
+      if n > _toV then
+        pure (SudoRt.Flow.brk (ρ := Unit) n)
+      else
+        match ← ((do
+  let _t320 ← kat_msg n
+  let _t321 ← trace_hash _t320
+  let tr := _t321
+  let _t322 ← iv_cook12
+  let pa := _t322
+  let pb := b
+  let _t323 ← identity
+  let pc := _t323
+  let _t346 ← SudoRt.subI (SudoRt.listLen (tr).sudo_5Trace_6blocks) (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t346
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init354 := (_fromV, (pa, pb, pc))
+  let _out ← (SudoRt.runLoopOn (ρ := Unit) _init354 fuel (fun σ =>
+    let k := σ.1
+    let pa := σ.2.1
+    let _sp350 := σ.2.2
+    let pb := _sp350.1
+    let _sp351 := _sp350.2
+    let pc := _sp351
+    do
+      if k > _toV then
+        pure (SudoRt.Flow.brk (ρ := Unit) (k, (pa, pb, pc)))
+      else
+        match ← ((do
+  let _t325 ← SudoRt.atL (tr).sudo_5Trace_6blocks k
+  let blk := _t325
+  let _as326 ← SudoRt.sudoAssertEq pa (blk).sudo_10TraceBlock_1h 1218
+  let _t327 ← compose pa pb
+  let _t328 ← identity
+  let _as329 ← SudoRt.sudoAssertEq _t327 _t328 1219
+  let _t330 ← identity
+  let _as331 ← SudoRt.sudoAssertEq pc _t330 1220
+  let pa := (blk).sudo_10TraceBlock_1e
+  let _t332 ← inverse pb
+  let _t333 ← compose _t332 pa
+  let pa := _t333
+  let _t334 ← identity
+  let pb := _t334
+  let _as335 ← SudoRt.sudoAssertEq pa (blk).sudo_10TraceBlock_6h_next 1224
+  let _t336 ← inverse pa
+  let s2 := _t336
+  let _t337 ← identity
+  let pa := _t337
+  let _t338 ← compose s2 pb
+  let pb := _t338
+  let _t339 ← compose s2 pc
+  let pc := _t339
+  let _t340 ← inverse pc
+  let _t341 ← compose _t340 pa
+  let pa := _t341
+  let _t342 ← identity
+  let pc := _t342
+  let _as343 ← SudoRt.sudoAssertEq pa (blk).sudo_10TraceBlock_6h_next 1231
+  let _as344 ← SudoRt.sudoAssertEq pb (blk).sudo_10TraceBlock_10h_next_inv 1232
+  pure (SudoRt.Flow.cont (ρ := Unit) (pa, pb, pc))) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) (k, _fs))
+        | .cont _fs => do
+            if k == _toV then
+              pure (SudoRt.Flow.brk (ρ := Unit) (k, _fs))
+            else do
+              let i' ← SudoRt.addI k (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
+    let pa := σ.2.1
+    let _sp352 := σ.2.2
+    let pb := _sp352.1
+    let _sp353 := _sp352.2
+    let pc := _sp353
+    do
+      let _t347 ← position_to_bytes pa
+      let _t348 ← kat_v2_digest n
+      let _as349 ← SudoRt.sudoAssertEq _t347 _t348 1233
+      pure (SudoRt.Flow.cont (ρ := Unit) ())) (fun r => pure (SudoRt.Flow.ret (ρ := Unit) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) n)
+        | .cont _fs => do
+            if n == _toV then
+              pure (SudoRt.Flow.brk (ρ := Unit) n)
+            else do
+              let i' ← SudoRt.addI n (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Unit) i')) (fun σ =>
+    do
+      pure ()) (fun r => pure r))
+      pure _out) (fun r => pure r))
+    pure _out
+
 def main : IO UInt32 :=
-  SudoRt.runTests [("test_identity_rank_is_29_zero_bytes", fun _ => test_identity_rank_is_29_zero_bytes), ("test_compose_inverse_round_trip", fun _ => test_compose_inverse_round_trip), ("test_iv_cook12_digest", fun _ => test_iv_cook12_digest), ("test_empty_pad_is_one_block", fun _ => test_empty_pad_is_one_block), ("test_kat_pad_lengths", fun _ => test_kat_pad_lengths), ("test_abc_pad_recovers_the_24_bit_length", fun _ => test_abc_pad_recovers_the_24_bit_length), ("test_phi_of_28_zero_bytes_is_the_identity_deal", fun _ => test_phi_of_28_zero_bytes_is_the_identity_deal), ("test_hash_aliases_agree_on_the_empty_message", fun _ => test_hash_aliases_agree_on_the_empty_message), ("test_hashdeckbody_on_the_identity_deal_is_29_bytes", fun _ => test_hashdeckbody_on_the_identity_deal_is_29_bytes), ("test_hashdeckbodyfrom_at_iv_matches_hashdeckbody", fun _ => test_hashdeckbodyfrom_at_iv_matches_hashdeckbody), ("test_require_permutation_rejects_a_duplicate", fun _ => test_require_permutation_rejects_a_duplicate), ("test_v2_kat_digests_kats_megaminx_hash_kats_v2_json", fun _ => test_v2_kat_digests_kats_megaminx_hash_kats_v2_json), ("test_v2_kat_hashdeck_of_the_identity_deal", fun _ => test_v2_kat_hashdeck_of_the_identity_deal), ("test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot", fun _ => test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot), ("test_edge_slot_table_exactly_the_two_owning_faces_move_each_slot", fun _ => test_edge_slot_table_exactly_the_two_owning_faces_move_each_slot), ("test_edge_read_solved_shows_own_colours_a_turn_keeps_its_colour_on_its_edges", fun _ => test_edge_read_solved_shows_own_colours_a_turn_keeps_its_colour_on_its_edges), ("test_visual_noon_is_a_neighbour_of_the_held_face_in_all_60_grips", fun _ => test_visual_noon_is_a_neighbour_of_the_held_face_in_all_60_grips), ("test_lower_ring_noon_is_the_upper_left_of_the_two_upper_ring_neighbours", fun _ => test_lower_ring_noon_is_the_upper_left_of_the_two_upper_ring_neighbours)]
+  SudoRt.runTests [("test_identity_rank_is_29_zero_bytes", fun _ => test_identity_rank_is_29_zero_bytes), ("test_compose_inverse_round_trip", fun _ => test_compose_inverse_round_trip), ("test_iv_cook12_digest", fun _ => test_iv_cook12_digest), ("test_empty_pad_is_one_block", fun _ => test_empty_pad_is_one_block), ("test_kat_pad_lengths", fun _ => test_kat_pad_lengths), ("test_abc_pad_recovers_the_24_bit_length", fun _ => test_abc_pad_recovers_the_24_bit_length), ("test_phi_of_28_zero_bytes_is_the_identity_deal", fun _ => test_phi_of_28_zero_bytes_is_the_identity_deal), ("test_hash_aliases_agree_on_the_empty_message", fun _ => test_hash_aliases_agree_on_the_empty_message), ("test_hashdeckbody_on_the_identity_deal_is_29_bytes", fun _ => test_hashdeckbody_on_the_identity_deal_is_29_bytes), ("test_hashdeckbodyfrom_at_iv_matches_hashdeckbody", fun _ => test_hashdeckbodyfrom_at_iv_matches_hashdeckbody), ("test_require_permutation_rejects_a_duplicate", fun _ => test_require_permutation_rejects_a_duplicate), ("test_v2_kat_digests_kats_megaminx_hash_kats_v2_json", fun _ => test_v2_kat_digests_kats_megaminx_hash_kats_v2_json), ("test_v2_kat_hashdeck_of_the_identity_deal", fun _ => test_v2_kat_hashdeck_of_the_identity_deal), ("test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot", fun _ => test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot), ("test_edge_slot_table_exactly_the_two_owning_faces_move_each_slot", fun _ => test_edge_slot_table_exactly_the_two_owning_faces_move_each_slot), ("test_edge_read_solved_shows_own_colours_a_turn_keeps_its_colour_on_its_edges", fun _ => test_edge_read_solved_shows_own_colours_a_turn_keeps_its_colour_on_its_edges), ("test_visual_noon_is_a_neighbour_of_the_held_face_in_all_60_grips", fun _ => test_visual_noon_is_a_neighbour_of_the_held_face_in_all_60_grips), ("test_lower_ring_noon_is_the_upper_left_of_the_two_upper_ring_neighbours", fun _ => test_lower_ring_noon_is_the_upper_left_of_the_two_upper_ring_neighbours), ("test_trace_hash_matches_hash_em_block_and_iv_cook12_on_every_kat", fun _ => test_trace_hash_matches_hash_em_block_and_iv_cook12_on_every_kat), ("test_cook_b_backwards_is_iv_cook12_inverse_and_the_3_solve_leaves_h_h_1_solved", fun _ => test_cook_b_backwards_is_iv_cook12_inverse_and_the_3_solve_leaves_h_h_1_solved)]

@@ -44,6 +44,26 @@ export const POSES = {
         fov: 30,
         overlays: { title: true, menu: false, teach: true },
     },
+    // MegaDreifach: high enough to read the 4×13 deal in front of the
+    // puzzles, close enough that a megaminx face and its read piece read.
+    // Puzzle row at DEN.z − 0.13, deal centred at DEN.z + 0.05, deck box left.
+    drei: {
+        // Square-on to the tidy table (deck | B A C over the deal),
+        // ~40° down, aimed right of centre so the set sits in the frame's
+        // left part, clear of the dock on the right.
+        position: [DEN.x + 0.07, 1.315, DEN.z + 0.614],
+        target: [DEN.x + 0.07, 0.78, DEN.z + 0.02],
+        fov: 32,
+        overlays: { title: true, menu: false, teach: true },
+        // Phones: steeper (~55°), centred on the whole set (deck to C),
+        // aimed below it so deck, puzzles and deal sit above the transport
+        // and dock.
+        portrait: {
+            position: [DEN.x - 0.05, 1.825, DEN.z + 0.746],
+            target: [DEN.x - 0.05, 0.76, DEN.z + 0.227],
+            fov: 50,
+        },
+    },
     // Legacy named travel shot. Production enter uses followTo and
     // does not snap or ease through this pose.
     unbox_travel: {
@@ -81,6 +101,8 @@ const ALIASES = {
     lean_cube: "scramble",
     doubledeal: "doubledeal",
     lean_deck: "doubledeal",
+    drei: "drei",
+    megadreifach: "drei",
     unbox_travel: "unbox_travel",
     unbox: "unbox",
     unbox_deal: "unbox_deal",

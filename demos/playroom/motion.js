@@ -697,14 +697,14 @@ export function followLeave(poses, opts = {}) {
 }
 
 /** Ease from the live camera to a named pose. Skip uses this too. */
-export function continueTo(poses, name, { duration = 720, reduced = false } = {}) {
+export function continueTo(poses, name, { duration = 720, reduced = false, restart = false } = {}) {
     if (!poses) return Promise.resolve();
     if (reduced) {
         poses.snap?.(name);
         return Promise.resolve(name);
     }
-    if (poses.playTo) return poses.playTo(name, { duration });
-    poses.goTo?.(name, { duration });
+    if (poses.playTo) return poses.playTo(name, { duration, restart });
+    poses.goTo?.(name, { duration, restart });
     return Promise.resolve(name);
 }
 

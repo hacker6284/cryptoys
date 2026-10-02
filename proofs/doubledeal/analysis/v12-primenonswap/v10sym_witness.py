@@ -35,7 +35,6 @@ Usage:
 """
 import contextlib
 import io
-import itertools
 import sys
 from pathlib import Path
 
@@ -56,24 +55,9 @@ LOG_OUT = HERE / 'v10sym_witness.log'
 FIX = 'python3 proofs/doubledeal/analysis/v12-primenonswap/v10sym_witness.py --lean'
 
 # ---------------------------------------------------------------- the row stage, c0Row
-def lay(m):
-    return [[m[4 * c + r] for c in range(13)] for r in range(4)]
-
-
-def row_turn_vals(row):
-    """rowTurnV10 on a row of packet values: sum (13 - j) * rank, rank = v % 13 + 1."""
-    return sum((13 - j) * (v % 13 + 1) for j, v in enumerate(row)) % 13
-
-
 def row_stage(m):
-    """(row amounts T, post-row grid) of the packet m: rows 1, 2, 3, 0, each turned by the
-    amount read from the previous (already turned) row."""
-    g = lay(m)
-    T = [0] * 4
-    for i in (1, 2, 3, 0):
-        T[i] = row_turn_vals(g[(i + 3) % 4])
-        g[i] = P.rotl(g[i], T[i])
-    return T, g
+    """(row amounts T, post-row grid) of the packet m (`ddport.row_stage_v10` on its layout)."""
+    return P.row_stage_v10(P.lay_cm(m))
 
 
 def c0_row(m):
@@ -207,13 +191,7 @@ def tau_check(pair):
 # ---------------------------------------------------------------- lab
 def deck_of_post(gp):
     """The deck whose post-row grid is gp (undo rows 0, 3, 2, 1)."""
-    g = [r[:] for r in gp]
-    for i in (0, 3, 2, 1):
-        g[i] = P.rotl(g[i], -row_turn_vals(g[(i + 3) % 4]))
-    m = [0] * 52
-    for r in range(4):
-        for c in range(13):
-            m[4 * c + r] = g[r][c]
+    m = P.scoop_cm(P.inv_row_stage_v10(gp))
     assert row_stage(m)[1] == gp
     return m
 

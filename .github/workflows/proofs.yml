@@ -69,6 +69,16 @@ jobs:
           for v in v8 v9 v10 v11; do
             proofs/doubledeal/vectors/regen.sh "$v" --check
           done
+      # sudoc's Python output (proofs/sudo_py.py builds it with the $SUDOC above): the loader
+      # selftest, then the deprecated v8/v9/v10 vector and witness checks that run on it.
+      - name: sudo_py loader (DoubleDeal v8-v12 table against the committed vectors)
+        run: python3 proofs/sudo_py.py --selftest
+      - name: Frozen v8/v9 vectors (sha + sudoc py; hand copies while they have callers), v9 witnesses, witness_v10.json
+        run: |
+          python3 proofs/deprecated/doubledeal-v8/attack/check_vectors.py
+          python3 proofs/deprecated/doubledeal-v9/attack/check_vectors.py
+          python3 proofs/deprecated/doubledeal-v9/attack/check_witnesses.py
+          python3 proofs/deprecated/doubledeal-v10/attack/make_witness.py --check
       - name: BS vectors rebuild byte-identically from bs.sudo
         run: proofs/key_exchange/bs/vectors/regen.sh --check
       - name: BS vectors agree with pow() and the Python evidence harness
@@ -109,7 +119,7 @@ jobs:
 
   doubledeal-v8-deprecated:
     # Frozen, deprecated DoubleDeal v8: emitted TAP + vulnerability-proof witness
-    # (see proofs/deprecated/doubledeal-v8/README.md).
+    # (see proofs/deprecated/doubledeal-v8/README.md). Its vector check runs in generated-fresh.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -117,8 +127,6 @@ jobs:
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v8/lean --exclude Generated
       - name: Witness Lean data matches witness_v8.json
         run: python3 proofs/deprecated/doubledeal-v8/lean/witness_to_lean.py --check
-      - name: Frozen v8 vectors (sha + Python port)
-        run: python3 proofs/deprecated/doubledeal-v8/attack/check_vectors.py
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/deprecated/doubledeal-v8/lean/Generated
@@ -133,9 +141,9 @@ jobs:
         run: lake exe doubledeal_v8_witness
 
   doubledeal-v9-deprecated:
-    # Frozen, deprecated DoubleDeal v9 (superseded by v10): emitted TAP,
-    # witness data and vectors. The ~9 min kernel witness build and its axiom
-    # audit run in proofs-v9-deprecated.yml
+    # Frozen, deprecated DoubleDeal v9 (superseded by v10): emitted TAP and
+    # witness data (vectors and recorded witnesses: generated-fresh). The ~9 min
+    # kernel witness build and its axiom audit run in proofs-v9-deprecated.yml
     # (see proofs/deprecated/doubledeal-v9/README.md).
     runs-on: ubuntu-latest
     steps:
@@ -144,10 +152,6 @@ jobs:
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v9/lean --exclude Generated
       - name: Witness Lean data matches witness_v9.json
         run: python3 proofs/deprecated/doubledeal-v9/lean/witness_to_lean.py --check
-      - name: Frozen v9 vectors (sha + Python port) and recorded witnesses
-        run: |
-          python3 proofs/deprecated/doubledeal-v9/attack/check_vectors.py
-          python3 proofs/deprecated/doubledeal-v9/attack/check_witnesses.py
       - uses: leanprover/lean-action@v1
         with:
           lake-package-directory: proofs/deprecated/doubledeal-v9/lean/Generated
@@ -159,16 +163,14 @@ jobs:
     # Frozen, deprecated DoubleDeal v10 (GridCycle per-layer parity shortfall):
     # emitted TAP, the single-deck K♣↔K♦ kernel witness on the emitted v10
     # mix_columns (cheap, ~30 s) and its axiom audit
-    # (see proofs/deprecated/doubledeal-v10/README.md).
+    # (see proofs/deprecated/doubledeal-v10/README.md). witness_v10.json --check: generated-fresh.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - name: No native_decide / sorry / admit / initialize in the v10 witness package
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-v10/lean --exclude Generated
-      - name: Witness JSON matches the Python port; Lean data matches witness_v10.json
-        run: |
-          python3 proofs/deprecated/doubledeal-v10/attack/make_witness.py --check
-          python3 proofs/deprecated/doubledeal-v10/lean/witness_to_lean.py --check
+      - name: Lean data matches witness_v10.json
+        run: python3 proofs/deprecated/doubledeal-v10/lean/witness_to_lean.py --check
       - name: C measurement model agrees with the Python port (v10 GridCycle)
         run: python3 proofs/doubledeal/analysis/v10-gridcycle/xcheck.py
       - uses: leanprover/lean-action@v1

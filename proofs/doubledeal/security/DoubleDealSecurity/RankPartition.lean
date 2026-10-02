@@ -47,7 +47,7 @@ open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_of_covPair cell0Cov_mul cell0Cov_inv
   cell0Cov_v10Sym g0 g0_eq exists_v10Sym_zero cell0Subgroup)
 open DoubleDeal.Security.StemPosition (rowAmts c0Row rowSeat stemPos_zero)
-open DoubleDeal.Security.StemCoupling (rowRead rowAmts_prev rk wt wsum rowTurnV10_cast wsum_swap
+open DoubleDeal.Security.StemCoupling (rowRead rowAmts_prev wt wsum rowTurnV10_cast wsum_swap
   wt_sub_ne rk_sub_ne zmod13_mul_ne cmFlat_col_injective AgreeOff3 rowAmts_eq_of_agree)
 
 /-! ## B. One family of nine decks -/

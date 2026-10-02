@@ -11,8 +11,13 @@
   The converse (these are the only relabellings that commute on decks) is
   proved in `SumRanksV10Iff.lean`: `sumRanksV10_commutes_iff`.
   The group is `ℤ/13 × (ℤ/2)²`, not cyclic (v9's was `ℤ/52`).
+
+  Also the one home of the card coordinates (section "Card coordinates"): `rk` (rank mod 13),
+  `ri` (rank index), `lbl` (GF(4) label), `crd r l = v10Sym r l 0`, `cardOfRk`, `scaleP`, and
+  GF(4) addition `xor4` on `Fin 4`.
 -/
 import DoubleDealSecurity.SumRanks
+import Mathlib.Data.ZMod.Basic
 import Mathlib.Tactic.Ring
 
 namespace DoubleDeal.Security
@@ -68,6 +73,90 @@ theorem v10Sym_app_label (a : Fin 13) (x : Fin 4) {n : Nat} (h : n < 52) :
   have := v10SymFn_label a x ⟨n, h⟩
   rw [show n = (⟨n, h⟩ : Fin 52).val from rfl, app_fin]
   exact this
+
+/-! ## Card coordinates
+
+  Used by `StemCoupling`, `RankPartition`, `RankAffine`, `TauEq`, `LabelStep` (and the
+  `xor4` algebra by `SumRanksV10Iff`, `Differential`). -/
+
+/-- The rank of a card mod 13 (A = 1). -/
+def rk (v : Fin 52) : ZMod 13 := (rank v.val : ZMod 13)
+
+theorem rk_eq_iff (a b : Fin 52) : rk a = rk b ↔ a.val % 13 = b.val % 13 := by
+  unfold rk rank
+  rw [ZMod.natCast_eq_natCast_iff']
+  omega
+
+theorem rk_v10Sym (r : Fin 13) (y : Fin 4) (c : Fin 52) :
+    rk (v10Sym r y c) = rk c + (r.val : ZMod 13) := by
+  have h := v10SymFn_rank r y c
+  unfold rk
+  rw [← Nat.cast_add, ZMod.natCast_eq_natCast_iff']
+  exact h
+
+theorem rk_v10Sym_inv (r : Fin 13) (y : Fin 4) (c : Fin 52) :
+    rk ((v10Sym r y).symm c) = rk c - (r.val : ZMod 13) := by
+  have := rk_v10Sym r y ((v10Sym r y).symm c)
+  rw [Equiv.apply_symm_apply] at this
+  rw [this]; ring
+
+/-- A card of rank `s` (mod 13): rank index `s - 1`, clubs. -/
+def cardOfRk (s : ZMod 13) : Fin 52 := ⟨(s.val + 12) % 13, by omega⟩
+
+theorem rk_cardOfRk : ∀ s : ZMod 13, rk (cardOfRk s) = s := by decide
+
+/-- A packet with ranks `l · rank (m s)` (mod 13): the card `cardOfRk` of that rank. -/
+def scaleP (l : ZMod 13) (m : Fin 52 → Nat) : Fin 52 → Nat :=
+  fun s => (cardOfRk (l * ((rank (m s) : ℕ) : ZMod 13))).val
+
+theorem rank_scaleP (l : ZMod 13) (m : Fin 52 → Nat) (s : Fin 52) :
+    ((rank (scaleP l m s) : ℕ) : ZMod 13) = l * ((rank (m s) : ℕ) : ZMod 13) :=
+  rk_cardOfRk _
+
+/-- The rank index `c % 13` (A = 0). -/
+def ri (c : Fin 52) : Fin 13 := ⟨c.val % 13, Nat.mod_lt _ (by decide)⟩
+
+/-- The GF(4) label of the suit. -/
+def lbl (c : Fin 52) : Fin 4 := ⟨suitLabel c.val, suitLabel_lt _⟩
+
+/-- The card of rank index `r` and label `l`: the image of card 0 (A♣) under `v10Sym r l`. -/
+def crd (r : Fin 13) (l : Fin 4) : Fin 52 := v10SymFn r l 0
+
+theorem ri_crd : ∀ r l, ri (crd r l) = r := by decide
+theorem lbl_crd : ∀ r l, lbl (crd r l) = l := by decide
+theorem crd_ri_lbl : ∀ c, crd (ri c) (lbl c) = c := by decide
+
+theorem crd_inj {r r' : Fin 13} {l l' : Fin 4} (h : crd r l = crd r' l') : r = r' ∧ l = l' :=
+  ⟨by rw [← ri_crd r l, h, ri_crd], by rw [← lbl_crd r l, h, lbl_crd]⟩
+
+theorem ri_eq_of_rk {a b : Fin 52} (h : rk a = rk b) : ri a = ri b :=
+  Fin.ext ((rk_eq_iff a b).mp h)
+
+/-- Two relabellings agreeing on every `crd r l` are equal. -/
+theorem ext_crd {σ ρ : Relabel} (h : ∀ r l, σ (crd r l) = ρ (crd r l)) : σ = ρ :=
+  Equiv.ext fun c => by rw [← crd_ri_lbl c]; exact h _ _
+
+/-- GF(4) addition (XOR) on `Fin 4`; `(xor4 a b).val = gfAdd a.val b.val` by definition. -/
+def xor4 (a b : Fin 4) : Fin 4 := ⟨gfAdd a.val b.val, gfAdd_lt _ _⟩
+
+theorem xor4_comm : ∀ a b, xor4 a b = xor4 b a := by decide
+theorem xor4_assoc : ∀ a b c, xor4 (xor4 a b) c = xor4 a (xor4 b c) := by decide
+theorem xor4_left_comm : ∀ a b c, xor4 a (xor4 b c) = xor4 b (xor4 a c) := by decide
+theorem xor4_self : ∀ a, xor4 a a = 0 := by decide
+theorem xor4_self_left : ∀ a b, xor4 a (xor4 a b) = b := by decide
+theorem xor4_zero : ∀ a, xor4 a 0 = a := by decide
+theorem zero_xor4 : ∀ a, xor4 0 a = a := by decide
+theorem xor4_cancel : ∀ a b, xor4 (xor4 a b) b = a := by decide
+theorem xor4_left_inj : ∀ a b c, xor4 a c = xor4 b c → a = b := by decide
+theorem xor4_right_inj : ∀ a b c, xor4 a b = xor4 a c → b = c := by decide
+theorem xor4_eq_iff : ∀ a b k : Fin 4, xor4 a b = k → a = xor4 b k := by decide
+
+theorem v10Sym_crd : ∀ (a : Fin 13) (x : Fin 4) (r : Fin 13) (l : Fin 4),
+    v10Sym a x (crd r l) = crd (r + a) (xor4 l x) := by decide!
+
+theorem v10Sym_symm_crd (a : Fin 13) (x : Fin 4) (r : Fin 13) (l : Fin 4) :
+    (v10Sym a x).symm (crd r l) = crd (r - a) (xor4 l x) := by
+  rw [Equiv.symm_apply_eq, v10Sym_crd, sub_add_cancel, xor4_cancel]
 
 /-! ## Row turns are invariant under a rank shift -/
 

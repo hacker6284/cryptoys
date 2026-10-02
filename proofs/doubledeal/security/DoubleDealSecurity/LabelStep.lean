@@ -11,9 +11,9 @@
     `Rounds.roundBody_covariant_iff_id` GIVEN `V10SymChecks`; that theorem itself is not
     changed here and keeps its `sorry`.
 
-  A. Coordinates: `ri c` (rank index `c % 13`), `lbl c` (GF(4) label), `crd r l`; per-rank
-     label translations `tr d` (label `l ⊕ d r` at rank index `r`; `tr` of a constant is
-     `v10Sym 0 x`).
+  A. Per-rank label translations `tr d` (label `l ⊕ d r` at rank index `r`; `tr` of a constant
+     is `v10Sym 0 x`), in the card coordinates `ri`, `lbl`, `crd r l = v10Sym r l 0` of
+     `SumRanksV10.lean`.
   B. Column chain (symbolic, `colAmt_congr_label`): if two grids differ, in labels, by a
      constant per column, the v10 column stage turns their columns by the same amounts
      (`colTurnV10` is unchanged: the column value has weights `1 ⊕ w ⊕ w² = 0`, and four
@@ -45,42 +45,16 @@ open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_v10Sym g0 g0_eq cell0Subgroup
   v10Sym_mem_cell0Subgroup roundBody_covariant_iff_id_of_cell0)
 open DoubleDeal.Security.StemPosition (rowAmts colAmts c0Row rowSeat stemPos_zero)
-open DoubleDeal.Security.StemCoupling (rk)
 open DoubleDeal.Security.RankPartition (swapsPerm RankChecks)
-open DoubleDeal.Security.RankAffine (AffRankChecks rk_eq_iff rk_v10Sym)
+open DoubleDeal.Security.RankAffine (AffRankChecks)
 open DoubleDeal.Security.TauEq (TauChecks rowAmts_congr tau_eq_of_rk cell0Cov_tau_of_checks)
-open DoubleDeal.Security.CovariantAffine (AffChecks linSym linSym_zero_zero
+open DoubleDeal.Security.CovariantAffine (AffChecks glApp linSym linSym_zero_zero
   not_cell0Cov_lin_of_check)
 
-/-! ## A. Coordinates and per-rank label translations -/
+/-! ## A. Per-rank label translations
 
-/-- The rank index `c % 13` (A = 0). -/
-def ri (c : Fin 52) : Fin 13 := ⟨c.val % 13, Nat.mod_lt _ (by decide)⟩
-
-/-- The GF(4) label of the suit. -/
-def lbl (c : Fin 52) : Fin 4 := ⟨suitLabel c.val, suitLabel_lt _⟩
-
-/-- The card of rank index `r` and label `l`. -/
-def crd (r : Fin 13) (l : Fin 4) : Fin 52 :=
-  ⟨13 * (suitOfLabel l.val % 4) + r.val, by have := r.isLt; omega⟩
-
-theorem ri_crd : ∀ r l, ri (crd r l) = r := by decide
-theorem lbl_crd : ∀ r l, lbl (crd r l) = l := by decide
-theorem crd_ri_lbl : ∀ c, crd (ri c) (lbl c) = c := by decide
-
-theorem crd_inj {r r' : Fin 13} {l l' : Fin 4} (h : crd r l = crd r' l') : r = r' ∧ l = l' :=
-  ⟨by rw [← ri_crd r l, h, ri_crd], by rw [← lbl_crd r l, h, lbl_crd]⟩
-
-/-- GF(4) addition (XOR) on `Fin 4`. -/
-def xor4 (a b : Fin 4) : Fin 4 := ⟨gfAdd a.val b.val, by unfold gfAdd; omega⟩
-
-theorem xor4_comm : ∀ a b, xor4 a b = xor4 b a := by decide
-theorem xor4_assoc : ∀ a b c, xor4 (xor4 a b) c = xor4 a (xor4 b c) := by decide
-theorem xor4_self : ∀ a, xor4 a a = 0 := by decide
-theorem xor4_zero : ∀ a, xor4 a 0 = a := by decide
-theorem zero_xor4 : ∀ a, xor4 0 a = a := by decide
-theorem xor4_cancel : ∀ a b, xor4 (xor4 a b) b = a := by decide
-theorem xor4_left_inj : ∀ a b c, xor4 a c = xor4 b c → a = b := by decide
+  The card coordinates `ri`, `lbl`, `crd`, `xor4`, `ext_crd`, `v10Sym_crd` are in
+  `SumRanksV10.lean`. -/
 
 /-- The per-rank label translation: label `l ⊕ d r` at rank index `r`. -/
 def trFn (d : Fin 13 → Fin 4) (c : Fin 52) : Fin 52 := crd (ri c) (xor4 (lbl c) (d (ri c)))
@@ -108,17 +82,6 @@ theorem tr_ri (d : Fin 13 → Fin 4) (c : Fin 52) : ri (tr d c) = ri c := by
 
 theorem tr_lbl (d : Fin 13 → Fin 4) (c : Fin 52) : lbl (tr d c) = xor4 (lbl c) (d (ri c)) := by
   show lbl (crd _ _) = _; rw [lbl_crd]
-
-/-- Two relabellings agreeing on every `crd r l` are equal. -/
-theorem ext_crd {σ ρ : Relabel} (h : ∀ r l, σ (crd r l) = ρ (crd r l)) : σ = ρ :=
-  Equiv.ext fun c => by rw [← crd_ri_lbl c]; exact h _ _
-
-theorem v10Sym_crd : ∀ (a : Fin 13) (x : Fin 4) (r : Fin 13) (l : Fin 4),
-    v10Sym a x (crd r l) = crd (r + a) (xor4 l x) := by decide!
-
-theorem v10Sym_symm_crd (a : Fin 13) (x : Fin 4) (r : Fin 13) (l : Fin 4) :
-    (v10Sym a x).symm (crd r l) = crd (r - a) (xor4 l x) := by
-  rw [Equiv.symm_apply_eq, v10Sym_crd, sub_add_cancel, xor4_cancel]
 
 theorem tr_const (x : Fin 4) : tr (fun _ => x) = v10Sym 0 x :=
   ext_crd fun r l => by rw [tr_crd, v10Sym_crd, add_zero]
@@ -217,20 +180,15 @@ theorem colAmt_congr_label {G' G : Grid Nat} {κ : Fin 13 → Nat} (h : LabelShi
 
 /-! ## C. Per-rank translations with the seat-26 condition are constant -/
 
-/-- σ preserves the rank index of every card. -/
-def RankPres (σ : Relabel) : Prop := ∀ c, ri (σ c) = ri c
+/-- σ preserves the rank (mod 13) of every card. -/
+def RankPres (σ : Relabel) : Prop := ∀ c, rk (σ c) = rk c
 
-theorem rk_of_rankPres {σ : Relabel} (hp : RankPres σ) (c : Fin 52) : rk (σ c) = rk c :=
-  (rk_eq_iff _ _).mpr (congrArg Fin.val (hp c))
-
-theorem rankPres_of_rk {σ : Relabel} (h : ∀ c, rk (σ c) = rk c) : RankPres σ :=
-  fun c => Fin.ext ((rk_eq_iff _ _).mp (h c))
-
-theorem tr_rankPres (d : Fin 13 → Fin 4) : RankPres (tr d) := tr_ri d
+theorem tr_rankPres (d : Fin 13 → Fin 4) : RankPres (tr d) :=
+  fun c => (rk_eq_iff _ _).mpr (congrArg Fin.val (tr_ri d c))
 
 theorem rowAmts_rankPres {σ : Relabel} (hp : RankPres σ) (π : Relabel) :
     rowAmts (permDeck (σ * π)) = rowAmts (permDeck π) :=
-  rowAmts_congr fun s => rk_of_rankPres hp (π s)
+  rowAmts_congr fun s => hp (π s)
 
 theorem lay_permDeck_mul (σ π : Relabel) :
     layColumnMajor (permDeck (σ * π)) = relG σ (layColumnMajor (permDeck π)) := by
@@ -329,7 +287,7 @@ theorem c0Row_tr_eq (hS : LabStruct) (d : Fin 13 → Fin 4) :
     then `d 0 = d 1`. -/
 theorem d01_of_cell0 (hT : TauChecks) (hL : LabelChecks) {d : Fin 13 → Fin 4} {τ : Relabel}
     (h : Cell0Cov (tr d) τ) : d 0 = d 1 := by
-  have hτ : τ = tr d := tau_eq_of_rk hT h (rk_of_rankPres (tr_rankPres d))
+  have hτ : τ = tr d := tau_eq_of_rk hT h (tr_rankPres d)
   subst hτ
   have hc : c0Row (permDeck (tr d * labPerm)) = c0Row (permDeck labPerm) := by
     have h1 := h (permDeck labPerm) (isDeck_permDeck _)
@@ -364,8 +322,10 @@ theorem tr_const_of_mem (hT : TauChecks) (hL : LabelChecks) {d : Fin 13 → Fin 
 
 /-! ## D. A rank-preserving σ with the seat-26 condition is a `v10Sym 0 x` -/
 
-/-- The label map of `linSym 0 g` (on every rank index). -/
-def gl4 (g : Fin 6) (l : Fin 4) : Fin 4 := lbl (linSym 0 g (crd 0 l))
+theorem glApp_lt : ∀ (g : Fin 6) (l : Fin 4), glApp g l.val < 4 := by decide
+
+/-- The label map `glApp g` of `linSym 0 g` (on every rank index), on `Fin 4`. -/
+def gl4 (g : Fin 6) (l : Fin 4) : Fin 4 := ⟨glApp g l.val, glApp_lt g l⟩
 
 theorem linSym_crd : ∀ (g : Fin 6) (r : Fin 13) (l : Fin 4),
     linSym 0 g (crd r l) = crd r (gl4 g l) := by decide!
@@ -396,8 +356,6 @@ theorem perm4_xor (h : Fin 4 → Fin 4) (hi : Function.Injective h) (a x : Fin 4
 
 theorem xor4_shuffle : ∀ c c' l : Fin 4, xor4 c (xor4 l (xor4 c' c)) = xor4 c' l := by decide
 
-theorem xor4_eq_iff : ∀ a b k : Fin 4, xor4 a b = k → a = xor4 b k := by decide
-
 /-- (PROVED, GIVEN `TauChecks`, `LabelChecks`, `AffChecks`) A rank-preserving σ in
     `cell0Subgroup` is a `v10Sym 0 x`. -/
 theorem rankPres_mem_v10Sym (hT : TauChecks) (hL : LabelChecks) (hA : AffChecks) {σ : Relabel}
@@ -407,7 +365,7 @@ theorem rankPres_mem_v10Sym (hT : TauChecks) (hL : LabelChecks) (hA : AffChecks)
   have hσc : ∀ r l, σ (crd r l) = crd r (lab r l) := by
     intro r l
     conv_lhs => rw [← crd_ri_lbl (σ (crd r l))]
-    rw [hp, ri_crd]
+    rw [ri_eq_of_rk (hp _), ri_crd]
   have linj : ∀ r, Function.Injective (lab r) := by
     intro r a b e
     have : σ (crd r a) = σ (crd r b) := by rw [hσc, hσc, e]
@@ -497,7 +455,7 @@ theorem cell0Cov_mem_v10Sym_of_checks (hchk : V10SymChecks) {σ τ : Relabel}
   obtain ⟨a, ha⟩ := exists_neg u
   have hm : σ * v10Sym a 0 ∈ cell0Subgroup :=
     cell0Subgroup.mul_mem ⟨τ, h⟩ (v10Sym_mem_cell0Subgroup a 0)
-  have hp : RankPres (σ * v10Sym a 0) := rankPres_of_rk fun c => by
+  have hp : RankPres (σ * v10Sym a 0) := fun c => by
     rw [Equiv.Perm.mul_apply, hu, rk_v10Sym]
     linear_combination ha
   obtain ⟨x, hx⟩ := rankPres_mem_v10Sym hT hL hA hm hp

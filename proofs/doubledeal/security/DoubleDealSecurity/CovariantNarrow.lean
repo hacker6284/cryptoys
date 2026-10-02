@@ -345,15 +345,8 @@ theorem commutes_gc_le_of_not_v10Sym {σ : Relabel} (hc : CommutesOnDecks σ unk
 
 /-! ## C. The covariant case for transpositions (any output relabelling) -/
 
-/-- The suit-label shift sending card 0's suit to suit `s` (from `ddport.v10sym`). -/
-def yOf (s : Nat) : Fin 4 := if s = 0 then 0 else if s = 1 then 2 else if s = 2 then 3 else 1
-
-theorem v10SymFn_zero_table :
-    ∀ a : Fin 52, v10SymFn ⟨a.val % 13, Nat.mod_lt _ (by decide)⟩ (yOf (a.val / 13)) 0 = a := by
-  decide
-
 theorem exists_v10Sym_zero (a : Fin 52) : ∃ r : Fin 13, ∃ y : Fin 4, v10SymFn r y 0 = a :=
-  ⟨_, _, v10SymFn_zero_table a⟩
+  ⟨ri a, lbl a, crd_ri_lbl a⟩
 
 /-- (PROVED) The seat-26 condition is invariant under conjugation by any relabelling
     that commutes with SumRanks (e.g. every `v10Sym a x`). -/

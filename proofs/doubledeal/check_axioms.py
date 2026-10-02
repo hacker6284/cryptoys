@@ -649,6 +649,16 @@ PACKAGES = {
             # RankAffine, TauEq, LabelStep: every sigma with Cell0Cov sigma tau is a v10Sym
             # and tau = sigma, GIVEN the finite checks V10SymChecks (discharged in the heavy
             # library); roundBody_covariant_iff_id itself keeps its sorry
+            # the card coordinates (one home: SumRanksV10.lean)
+            "DoubleDeal.Security.rk_eq_iff",
+            "DoubleDeal.Security.rk_v10Sym",
+            "DoubleDeal.Security.rk_v10Sym_inv",
+            "DoubleDeal.Security.rk_cardOfRk",
+            "DoubleDeal.Security.rank_scaleP",
+            "DoubleDeal.Security.crd_ri_lbl",
+            "DoubleDeal.Security.ext_crd",
+            "DoubleDeal.Security.v10Sym_crd",
+            "DoubleDeal.Security.xor4_eq_iff",
             "DoubleDeal.Security.RankPartition.FamilyQ.wsum_eq",
             "DoubleDeal.Security.RankPartition.Family.toQ",
             "DoubleDeal.Security.RankAffine.rk_sum_of_family2",

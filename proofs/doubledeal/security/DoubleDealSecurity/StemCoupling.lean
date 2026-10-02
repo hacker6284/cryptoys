@@ -178,8 +178,7 @@ theorem rowAmts_eq_iff (m : Fin 52 → Nat) (t : Fin 4 → Nat) :
 
 /-! ## The row total mod 13, and one swap of two cards in a row -/
 
-/-- The rank of a card, mod 13. -/
-def rk (v : Fin 52) : ZMod 13 := (rank v.val : ZMod 13)
+-- `rk` (the rank of a card mod 13) lives in `SumRanksV10.lean` (card coordinates).
 
 /-- The weight `13 - j` of read index `j`, mod 13. -/
 def wt (j : Fin 13) : ZMod 13 := ((13 - j.val : ℕ) : ZMod 13)

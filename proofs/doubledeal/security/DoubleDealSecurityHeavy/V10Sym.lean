@@ -22,7 +22,6 @@ namespace DoubleDeal.Security
 
 open DoubleDeal Relabel
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov)
-open DoubleDeal.Security.StemCoupling (rk)
 
 /-- (PROVED, unconditional) If `Cell0Cov σ τ`, the rank map of σ is affine. -/
 theorem RankAffine.cell0Cov_rk_affine {σ τ : Relabel} (h : Cell0Cov σ τ) :

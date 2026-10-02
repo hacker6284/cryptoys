@@ -30,9 +30,9 @@ open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_mul cell0Cov_v10Sym cell0Cov_conj
   g0 g0_eq exists_v10Sym_zero)
 open DoubleDeal.Security.StemPosition (rowAmts c0Row rowSeat stemPos_zero)
-open DoubleDeal.Security.StemCoupling (rowRead readAmt nextRow rowAmts_eq_iff rowTotal_eq_sum rk)
+open DoubleDeal.Security.StemCoupling (rowRead readAmt nextRow rowAmts_eq_iff rowTotal_eq_sum)
 open DoubleDeal.Security.RankPartition (swapsPerm RankChecks)
-open DoubleDeal.Security.RankAffine (AffRankChecks cell0Cov_rk_affine_of_checks rk_v10Sym)
+open DoubleDeal.Security.RankAffine (AffRankChecks cell0Cov_rk_affine_of_checks)
 
 /-! ## A. Row amounts read ranks mod 13 only -/
 
@@ -55,16 +55,7 @@ theorem rowAmts_congr {m m' : Fin 52 → Nat}
   rw [← hm ρ]
   exact rowTurnV10_congr fun j => (h _).symm
 
-/-- A packet with ranks `l · rank (m s)` (mod 13). -/
-def scaleP (l : ZMod 13) (m : Fin 52 → Nat) : Fin 52 → Nat :=
-  fun s => ((l * ((rank (m s) : ℕ) : ZMod 13)).val + 12) % 13
-
-theorem rank_val_cast : ∀ v : ZMod 13, ((rank ((v.val + 12) % 13) : ℕ) : ZMod 13) = v := by
-  decide
-
-theorem rank_scaleP (l : ZMod 13) (m : Fin 52 → Nat) (s : Fin 52) :
-    ((rank (scaleP l m s) : ℕ) : ZMod 13) = l * ((rank (m s) : ℕ) : ZMod 13) :=
-  rank_val_cast _
+-- `scaleP l m` (ranks `l · rank`, via `cardOfRk`) and `rank_scaleP`: `SumRanksV10.lean`.
 
 /-- (PROVED) If `rk ∘ σ = l · rk`, the σ-image of `permDeck π` has the row amounts of
     `scaleP l (permDeck π)`. -/
@@ -119,12 +110,6 @@ theorem tau_step (hT : TauChecks) {σ τ : Relabel} (h : Cell0Cov σ τ) {l : ZM
   exact ⟨hl1, by rw [hz] at h0; exact h0⟩
 
 /-! ## C. τ = σ -/
-
-theorem rk_v10Sym_inv (r : Fin 13) (y : Fin 4) (c : Fin 52) :
-    rk ((v10Sym r y).symm c) = rk c - (r.val : ZMod 13) := by
-  have := rk_v10Sym r y ((v10Sym r y).symm c)
-  rw [Equiv.apply_symm_apply] at this
-  rw [this]; ring
 
 /-- (PROVED, GIVEN `TauChecks`) If `Cell0Cov σ τ` and σ preserves `rk`, then `τ = σ`. -/
 theorem tau_eq_of_rk (hT : TauChecks) {σ τ : Relabel} (h : Cell0Cov σ τ)

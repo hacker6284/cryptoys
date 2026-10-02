@@ -31,7 +31,7 @@ namespace DoubleDeal.Security.RankAffine
 open DoubleDeal Relabel
 open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_mul cell0Cov_v10Sym g0 g0_eq)
-open DoubleDeal.Security.StemCoupling (rk wt wsum wsum_swap zmod13_mul_ne cmFlat_col_injective)
+open DoubleDeal.Security.StemCoupling (wt wsum wsum_swap zmod13_mul_ne cmFlat_col_injective)
 open DoubleDeal.Security.RankPartition (FamilyQ readIdx readIdx_injective readIdx_surj
   wt_sub_readIdx swapsPerm RankChecks cell0Cov_rank_of_checks cell0Cov_rank_iff_of_checks)
 
@@ -164,24 +164,7 @@ theorem family2_of_checks (h : AffRankChecks) : Family2 affPerm affColOf := by
   · obtain ⟨a, b, c, d, e⟩ := hpos k
     exact ⟨_, _, _, _, a, b, c, d, e⟩
 
-/-! ### Ranks mod 13 -/
-
-theorem rk_eq_iff (a b : Fin 52) : rk a = rk b ↔ a.val % 13 = b.val % 13 := by
-  unfold rk rank
-  rw [ZMod.natCast_eq_natCast_iff']
-  omega
-
-/-- A card of rank `s` (mod 13): rank index `s - 1`, clubs. -/
-def cardOfRk (s : ZMod 13) : Fin 52 := ⟨(s.val + 12) % 13, by omega⟩
-
-theorem rk_cardOfRk : ∀ s : ZMod 13, rk (cardOfRk s) = s := by decide
-
-theorem rk_v10Sym (r : Fin 13) (y : Fin 4) (c : Fin 52) :
-    rk (v10Sym r y c) = rk c + (r.val : ZMod 13) := by
-  have h := v10SymFn_rank r y c
-  unfold rk
-  rw [← Nat.cast_add, ZMod.natCast_eq_natCast_iff']
-  exact h
+/-! ### Ranks mod 13 (`rk`, `rk_eq_iff`, `cardOfRk`, `rk_v10Sym`: `SumRanksV10.lean`) -/
 
 theorem rk_small : rk 0 = 1 ∧ rk 1 = 2 ∧ rk 2 = 3 ∧ rk 14 = 2 := by decide
 

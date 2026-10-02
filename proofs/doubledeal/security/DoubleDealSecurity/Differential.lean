@@ -386,12 +386,6 @@ theorem v10Sym_step_agree (a : Fin 13) (x : Fin 4) (β : Relabel) {x₀ : Fin 52
   rw [← app_fin, ← app_fin]
   exact e
 
-/-- GF(4) addition by a fixed `l` is injective on `Fin 4`. -/
-theorem gfAdd_cancel (l : Nat) {x x' : Fin 4} (h : gfAdd l x.val = gfAdd l x'.val) :
-    x = x' := by
-  unfold gfAdd at h
-  omega
-
 /-- (PROVED) Two different `v10Sym` agree on no card. -/
 theorem eq_of_v10Sym_apply_eq {a a' : Fin 13} {x x' : Fin 4} (c : Fin 52)
     (h : v10Sym a x c = v10Sym a' x' c) : a = a' ∧ x = x' := by
@@ -401,7 +395,7 @@ theorem eq_of_v10Sym_apply_eq {a a' : Fin 13} {x x' : Fin 4} (c : Fin 52)
   have hl' := v10SymFn_label a' x' c
   change v10SymFn a x c = v10SymFn a' x' c at h
   rw [h] at hr hl
-  refine ⟨Fin.ext ?_, gfAdd_cancel _ (hl.symm.trans hl')⟩
+  refine ⟨Fin.ext ?_, xor4_right_inj (lbl c) x x' (Fin.ext (hl.symm.trans hl'))⟩
   have := hr.symm.trans hr'
   omega
 

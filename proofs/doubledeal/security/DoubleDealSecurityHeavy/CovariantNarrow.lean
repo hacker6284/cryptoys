@@ -39,8 +39,8 @@ theorem roundBody_not_commutes_swap (a b : Fin 52) (hab : a ≠ b) :
 
 /-- (PROVED, a reduction, unconditional) The covariant round conjecture follows from
     `PrimeNonSwapCase`: its special case for σ of prime order `p ≤ 52` that are
-    neither a transposition nor a `v10Sym`. That case is the HYPOTHESIS `h`; it is
-    not proved. The excluded σ are proved non-covariant for every τ: transpositions
+    neither a transposition nor a `v10Sym`. That case is the HYPOTHESIS `h` here; it is
+    proved in `V10Sym.lean` (`CovariantNarrow.primeNonSwapCase`). The excluded σ are proved non-covariant for every τ: transpositions
     by `roundBody_not_covariant_swap`, nontrivial `v10Sym` by
     `roundBody_not_covariant_of_stem`. -/
 theorem roundBody_covariant_iff_id_of_prime_nonswap (h : PrimeNonSwapCase) (σ : Relabel) :

@@ -2,7 +2,8 @@
   The covariant round conjecture `roundBody_covariant_iff_id` (`Rounds.lean`,
   DRAFT-SORRY) for the AFFINE relabellings: a finite, structured family. The
   conjecture itself, its statement, name and `sorry` are not touched, and
-  `CovariantNarrow.PrimeNonSwapCase` is not proved here.
+  `CovariantNarrow.PrimeNonSwapCase` is not proved here (it is proved in the heavy library,
+  `CovariantNarrow.primeNonSwapCase`).
 
   Affine relabellings. A card is (rank index r = c % 13 ∈ Z13 (A = 0), GF(4) suit
   label l = `suitLabel c`). For `k : Fin 12` (unit `u = k + 1` of Z13) and `g : Fin 6`
@@ -46,6 +47,8 @@ open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Pairs pairsCheck witness
 /-! ## The linear parts (tables generated in `CovariantAffineLists.lean`) -/
 
 def glApp (g : Fin 6) (l : Nat) : Nat := (glTab.getD g.val []).getD l 0
+
+theorem glApp_lt : ∀ (g : Fin 6) (l : Fin 4), glApp g l.val < 4 := by decide
 
 /-- The inverse matrix (table `glInvTab`). -/
 def glInv (g : Fin 6) : Fin 6 := glInvTab.getD g.val 0

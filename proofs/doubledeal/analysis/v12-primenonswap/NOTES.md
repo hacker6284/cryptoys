@@ -8,7 +8,8 @@ default library GIVEN the finite checks `V10SymChecks` as a hypothesis
 of `CovariantNarrow.roundBody_covariant_iff_id_of_cell0` (steps 1-4 below: every σ with
 the seat-26 condition `Cell0Cov σ τ` is a `v10Sym a x`, and τ = σ). Replacing the `sorry`
 is a separate change. `PrimeNonSwapCase` (`security/DoubleDealSecurity/CovariantNarrow.lean`)
-follows from it by `prime_nonswap_case_iff` (not stated as its own Lean theorem). This note
+follows from it by `prime_nonswap_case_iff`: `CovariantNarrow.primeNonSwapCase` (heavy
+library, `V10Sym.lean`). This note
 records the proved results (the affine relabellings; steps 1-4), the routes tried earlier,
 and the counterexample search. No covariant pair (σ ≠ 1 with some τ) was found.
 
@@ -175,7 +176,7 @@ heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
     per column get the same v10 column amounts (`1 ⊕ w ⊕ w² = 0` in the column value; four
     equal shifts cancel in the column suits).
   * Per-rank label translations `tr d` (`l ↦ l ⊕ d r` at rank index `r`): if `tr d`
-    satisfies the seat-26 condition, `d` is constant (`tr_const_of_cell0`). By step 3 τ =
+    satisfies the seat-26 condition, `d` is constant (`tr_const_of_mem`). By step 3 τ =
     `tr d`; on one deck whose post-row-stage columns are full rank classes of a rank index
     ≠ 0 or hold only rank indices 0 and 1 (`LabStruct`), `tr d` and `tr (eVec (d 0 ⊕ d 1))`
     differ by a constant per column, so they give the same source row of stem cell 0
@@ -238,5 +239,5 @@ because the finite checks live in the heavy library. Removing that `sorry` (for 
 by moving the conjecture or its dependents, or by stating the default theorem with the
 checks) is a separate, small follow-up, to be agreed before it is done. The
 default-library docstrings (`Rounds.lean`, `CovariantNarrow.lean`) say this: proved in the
-heavy library by kernel `decide!`, a hypothesis in the default library, `sorry` until the
+heavy library (finite checks by kernel `decide!`), a hypothesis in the default library, `sorry` until the
 follow-up.

@@ -150,6 +150,8 @@ theorem xor4_cancel : ∀ a b, xor4 (xor4 a b) b = a := by decide
 theorem xor4_left_inj : ∀ a b c, xor4 a c = xor4 b c → a = b := by decide
 theorem xor4_right_inj : ∀ a b c, xor4 a b = xor4 a c → b = c := by decide
 theorem xor4_eq_iff : ∀ a b k : Fin 4, xor4 a b = k → a = xor4 b k := by decide
+theorem xor4_e0 : ∀ l d0 d1 : Fin 4, xor4 l d0 = xor4 (xor4 l (xor4 d0 d1)) d1 := by decide
+theorem xor4_shuffle : ∀ c c' l : Fin 4, xor4 c (xor4 l (xor4 c' c)) = xor4 c' l := by decide
 
 theorem v10Sym_crd : ∀ (a : Fin 13) (x : Fin 4) (r : Fin 13) (l : Fin 4),
     v10Sym a x (crd r l) = crd (r + a) (xor4 l x) := by decide!

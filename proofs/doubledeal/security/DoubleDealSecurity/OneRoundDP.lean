@@ -12,7 +12,7 @@ import DoubleDealSecurity.Differential
      `v10Sym` rows are bounded (item 2), a bound below 1 on the rows OUTSIDE `v10Sym` alone is
      enough (`covariant_iff_id_of_dp1_lt_off_v10Sym`). That conjecture keeps the one allowed
      `sorry` (`Rounds.roundBody_covariant_iff_id`; its statement is proved in the heavy library
-     by kernel `decide!`, `LabelStep.roundBody_covariant_iff_id_heavy`); B1 for those rows is
+     (finite checks by kernel `decide!`), `LabelStep.roundBody_covariant_iff_id_heavy`); B1 for those rows is
      not proved here.
 
   2. THE 51 `v10Sym` ROWS ARE PROVED, for every output `β`:
@@ -36,7 +36,8 @@ import DoubleDealSecurity.Differential
      counted in full), not a measured value: sampled values are far smaller
      (`../analysis/v12-dp1/NOTES.md`, EMPIRICAL).
 
-  NOT proved: B1 for any row `α` outside `v10Sym` (that would prove the covariant conjecture);
+  NOT proved: B1 for any row `α` outside `v10Sym` (that would imply the covariant
+  conjecture, whose statement is proved separately in the heavy library);
   any multi-round or real-schedule bound. Not a security claim.
 -/
 

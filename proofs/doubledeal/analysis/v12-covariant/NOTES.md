@@ -2,7 +2,7 @@
 
 The conjecture `roundBody_covariant_iff_id` (`security/DoubleDealSecurity/Rounds.lean`,
 DRAFT-SORRY) keeps its statement, name and `sorry`. Its statement is now proved in the
-heavy library by kernel `decide!` (`LabelStep.roundBody_covariant_iff_id_heavy`); in the
+heavy library (finite checks by kernel `decide!`; `LabelStep.roundBody_covariant_iff_id_heavy`); in the
 default library it is a hypothesis (`LabelStep.roundBody_covariant_iff_id_of_checks`) and
 the `sorry` stays until the follow-up (see
 [`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md)). This milestone (written
@@ -88,7 +88,7 @@ every output relabelling τ. `roundBody_not_commutes_swap` is its τ = σ coroll
 * The default library has both as `…_of_check`, with the finite checks
   `Cov0Checks` as a hypothesis.
 
-**D. Sufficient single-cell conditions (reductions; hypotheses NOT proved).**
+**D. Sufficient single-cell conditions (reductions; hypotheses of these theorems).**
 * `roundBody_covariant_iff_id_of_cell0 (hcell : ∀ σ τ, Cell0Cov σ τ → ∃ a x, σ = v10Sym a x)`.
 * `roundBody_covariant_iff_id_of_cell0_prime`: the same, with `hcell` only for σ of
   prime order p ≤ 52.
@@ -125,8 +125,8 @@ This is evidence for the prime-restricted `hcell` of
     weaker would suffice along this route.
   * Narrowed further: the 3692 affine relabellings outside v10Sym (the normalizer
     of v10Sym minus v10Sym; true by the holomorph count, not a Lean theorem) are proved
-    non-covariant (`CovariantAffine`); `PrimeNonSwapCase` was left open here (it follows since
-    from `LabelStep.cell0Cov_mem_v10Sym`, heavy library, kernel `decide!`). Routes, the exhaustive
+    non-covariant (`CovariantAffine`); `PrimeNonSwapCase` was left open here (proved since in the
+    heavy library: `CovariantNarrow.primeNonSwapCase`). Routes, the exhaustive
     `dbl`/`cyc3` search and the remaining obstacle are in
     [`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md).
 * **One possible route:** prove a single-cell `hcell` from D. That

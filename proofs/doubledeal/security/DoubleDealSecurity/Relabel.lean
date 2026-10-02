@@ -10,7 +10,7 @@
   `Link.lean`. Link 1 (sudo = Generated) stays open.
 
   The one `sorry` is the conjecture `roundBody_covariant_iff_id` (`Rounds.lean`; its
-  statement is proved in the heavy library by kernel `decide!`,
+  statement is proved in the heavy library (finite checks by kernel `decide!`),
   `LabelStep.roundBody_covariant_iff_id_heavy`; marked `DRAFT-SORRY`, checked numerically by
   `checks/check_covariant.py`). `../check_axioms.py security` audits the axioms
   of every theorem in these modules. Structural facts, not a security proof.

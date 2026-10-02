@@ -209,7 +209,8 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
   subst hστ
   exact (mixColumns_commutes_iff_id τ).1 hmix
 
-/-- (DRAFT-SORRY, CONJECTURE — checked, not proved) v11: no nontrivial σ makes
+/-- (DRAFT-SORRY here; statement PROVED in the heavy library,
+    `LabelStep.roundBody_covariant_iff_id_heavy`) v11: no nontrivial σ makes
     the unkeyed round body covariant, i.e. there is no pair (σ, τ) with σ ≠ id
     and `F(σ·m) = τ·F(m)` on every deck, `F = GridCycle ∘ stem`.
     Checked (`checks/check_covariant.py`, log committed): all 1,326
@@ -240,7 +241,7 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
     It also follows from single-cell SumRanks statements
     (`CovariantNarrow.roundBody_covariant_iff_id_of_cell0`, `…_of_cell0_prime`;
     sufficient conditions, hypotheses there). The full one is proved in the heavy
-    library by kernel `decide!` (`LabelStep.cell0Cov_mem_v10Sym`), and so is this
+    library (finite checks by kernel `decide!`; `LabelStep.cell0Cov_mem_v10Sym`), and so is this
     statement (`LabelStep.roundBody_covariant_iff_id_heavy`); in the default library
     it is a hypothesis (`LabelStep.roundBody_covariant_iff_id_of_checks`, given
     `V10SymChecks`), and the `sorry` below stays until the follow-up. Write-up:

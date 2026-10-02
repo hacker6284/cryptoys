@@ -15,6 +15,7 @@
 -/
 import DoubleDealSecurity.LabelStep
 import DoubleDealSecurityHeavy.RankPartitionChecks
+import DoubleDealSecurityHeavy.CovariantNarrow
 import DoubleDealSecurityHeavy.CovariantAffine
 import DoubleDealSecurityHeavy.V10SymChecks
 
@@ -58,5 +59,11 @@ theorem LabelStep.cell0Cov_iff (σ τ : Relabel) :
     changed and keeps its `sorry`. -/
 theorem LabelStep.roundBody_covariant_iff_id_heavy : type_of% @roundBody_covariant_iff_id :=
   LabelStep.roundBody_covariant_iff_id_of_checks LabelStep.v10SymChecks_ok
+
+/-- (PROVED, unconditional) `PrimeNonSwapCase`: no σ of prime order `p ≤ 52` that is neither
+    a transposition nor a `v10Sym` is covariant (from the statement of the conjecture via
+    `CovariantNarrow.prime_nonswap_case_iff`). -/
+theorem CovariantNarrow.primeNonSwapCase : CovariantNarrow.PrimeNonSwapCase :=
+  CovariantNarrow.prime_nonswap_case_iff.2 LabelStep.roundBody_covariant_iff_id_heavy
 
 end DoubleDeal.Security

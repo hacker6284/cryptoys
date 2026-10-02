@@ -1,8 +1,9 @@
 /-
   The rank-partition lemma for the seat-26 condition (one step toward `PrimeNonSwapCase`,
   `CovariantNarrow.lean`; NOT the covariant round conjecture `roundBody_covariant_iff_id`,
-  which keeps its `sorry`, and NOT `PrimeNonSwapCase`; both statements are proved in the
-  heavy library by kernel `decide!` via steps 2-4, `LabelStep`).
+  which keeps its `sorry`, and NOT `PrimeNonSwapCase`; both are proved in the heavy library
+  (finite checks by kernel `decide!`) via steps 2-4: `LabelStep.roundBody_covariant_iff_id_heavy`,
+  `CovariantNarrow.primeNonSwapCase`).
 
   Statement (`cell0Cov_rank_of_checks`, GIVEN the finite checks `RankChecks`; unconditional
   in the heavy library, `RankPartition.cell0Cov_rank`): if `Cell0Cov σ τ` (stem cell 0 of

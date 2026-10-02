@@ -211,6 +211,7 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.LabelStep.cell0Cov_mem_v10Sym",
     "DoubleDeal.Security.LabelStep.cell0Cov_iff",
     "DoubleDeal.Security.LabelStep.roundBody_covariant_iff_id_heavy",
+    "DoubleDeal.Security.CovariantNarrow.primeNonSwapCase",
 }
 # Lean-generated theorems of the heavy modules (no source declaration; see the comment
 # above HEAVY_THEOREMS). chunkOK.eq_1: `of_chunks` unfolds `chunkOK` with `simp only`.
@@ -645,7 +646,6 @@ PACKAGES = {
             "DoubleDeal.Security.CovariantNarrow.cell0Cov_v10Sym",
             "DoubleDeal.Security.CovariantNarrow.v10Sym_mem_cell0Subgroup",
             "DoubleDeal.Security.CovariantNarrow.cell0Cov_conj",
-            "DoubleDeal.Security.CovariantNarrow.cell0Cov_conj_fwd",
             # RankAffine, TauEq, LabelStep: every sigma with Cell0Cov sigma tau is a v10Sym
             # and tau = sigma, GIVEN the finite checks V10SymChecks (discharged in the heavy
             # library); roundBody_covariant_iff_id itself keeps its sorry

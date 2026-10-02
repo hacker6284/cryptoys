@@ -49,7 +49,7 @@ open DoubleDeal.Security.RankPartition (swapsPerm RankChecks)
 open DoubleDeal.Security.RankAffine (AffRankChecks)
 open DoubleDeal.Security.TauEq (TauChecks rowAmts_congr tau_eq_of_rk exists_shift
   cell0Cov_tau_of_checks)
-open DoubleDeal.Security.CovariantAffine (AffChecks glApp linSym linSym_zero_zero
+open DoubleDeal.Security.CovariantAffine (AffChecks glApp glApp_lt linSym linSym_zero_zero
   not_cell0Cov_lin_of_check)
 
 /-! ## A. Per-rank label translations
@@ -242,8 +242,6 @@ abbrev LabKill (e : Fin 4) : Prop :=
     `LabelStep.labelChecks_ok`). -/
 abbrev LabelChecks : Prop := LabStruct ∧ ∀ e : Fin 4, e ≠ 0 → LabKill e
 
-theorem xor4_e0 : ∀ l d0 d1 : Fin 4, xor4 l d0 = xor4 (xor4 l (xor4 d0 d1)) d1 := by decide
-
 /-- (PROVED, GIVEN `LabStruct`) `tr d` and `tr (eVec (d 0 ⊕ d 1))` give the deck the same
     source row of stem cell 0. -/
 theorem c0Row_tr_eq (hS : LabStruct) (d : Fin 13 → Fin 4) :
@@ -323,8 +321,6 @@ theorem tr_const_of_mem (hT : TauChecks) (hL : LabelChecks) {d : Fin 13 → Fin 
 
 /-! ## D. A rank-preserving σ with the seat-26 condition is a `v10Sym 0 x` -/
 
-theorem glApp_lt : ∀ (g : Fin 6) (l : Fin 4), glApp g l.val < 4 := by decide
-
 /-- The label map `glApp g` of `linSym 0 g` (on every rank index), on `Fin 4`. -/
 def gl4 (g : Fin 6) (l : Fin 4) : Fin 4 := ⟨glApp g l.val, glApp_lt g l⟩
 
@@ -354,8 +350,6 @@ theorem perm4_xor (h : Fin 4 → Fin 4) (hi : Function.Injective h) (a x : Fin 4
   obtain ⟨x0, g, hg⟩ := perm4_affine h hi
   rw [hg, hg, hg, hg]
   exact affine_core g x0 a x
-
-theorem xor4_shuffle : ∀ c c' l : Fin 4, xor4 c (xor4 l (xor4 c' c)) = xor4 c' l := by decide
 
 /-- (PROVED, GIVEN `TauChecks`, `LabelChecks`, `AffChecks`) A rank-preserving σ in
     `cell0Subgroup` is a `v10Sym 0 x`. -/

@@ -1,7 +1,9 @@
 /-
   The rank-partition lemma for the seat-26 condition (one step toward `PrimeNonSwapCase`,
   `CovariantNarrow.lean`; NOT the covariant round conjecture `roundBody_covariant_iff_id`,
-  which stays open with its `sorry`, and NOT `PrimeNonSwapCase`, which stays open).
+  which keeps its `sorry`, and NOT `PrimeNonSwapCase`; both are proved in the heavy library
+  (finite checks by kernel `decide!`) via steps 2-4: `LabelStep.roundBody_covariant_iff_id_heavy`,
+  `CovariantNarrow.primeNonSwapCase`).
 
   Statement (`cell0Cov_rank_of_checks`, GIVEN the finite checks `RankChecks`; unconditional
   in the heavy library, `RankPartition.cell0Cov_rank`): if `Cell0Cov σ τ` (stem cell 0 of
@@ -44,12 +46,26 @@ namespace DoubleDeal.Security.RankPartition
 open DoubleDeal Relabel
 open DoubleDeal.Security (permDeck isDeck_permDeck rel_permDeck)
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Cov_of_covPair cell0Cov_mul cell0Cov_inv
-  cell0Cov_self_of_commutes g0 g0_eq exists_v10Sym_zero cell0Subgroup)
+  cell0Cov_v10Sym g0 g0_eq exists_v10Sym_zero cell0Subgroup)
 open DoubleDeal.Security.StemPosition (rowAmts c0Row rowSeat stemPos_zero)
-open DoubleDeal.Security.StemCoupling (rowRead rowAmts_prev rk wt wsum rowTurnV10_cast wsum_swap
+open DoubleDeal.Security.StemCoupling (rowRead rowAmts_prev wt wsum rowTurnV10_cast wsum_swap
   wt_sub_ne rk_sub_ne zmod13_mul_ne cmFlat_col_injective AgreeOff3 rowAmts_eq_of_agree)
 
 /-! ## B. One family of nine decks -/
+
+/-- The hypotheses on a family of nine decks `π k i` (`k`: class, `i`: member) for a general
+    exchange `q` of row-3 cards: member `(k, 1)` is member `(k, 0)` with every row-3 card `z`
+    replaced by `q z`, and member `(k, 2)` agrees with member `(k, 0)` in row 3 only at cards in
+    `S`, none of which `q` fixes. (`Family` is the case `q = swap x y`; `RankAffine` uses a
+    double swap.) -/
+structure FamilyQ (π : Fin 3 → Fin 3 → Relabel) (col : Fin 3 → Fin 13) (q : Relabel)
+    (S : Fin 52 → Prop) : Prop where
+  agree : ∀ k i s, (cmRow s).val ≠ 3 → π k i s = π 0 0 s
+  col_inj : Function.Injective col
+  c0 : ∀ k i, unkeyedNoMix (permDeck (π k i)) 0 = (π k 0 (cmFlat 0 (col k))).val
+  swap1 : ∀ k (c : Fin 13), π k 1 (cmFlat 3 c) = q (π k 0 (cmFlat 3 c))
+  nofix : ∀ z, S z → q z ≠ z
+  member2 : ∀ k (c : Fin 13), π k 2 (cmFlat 3 c) = π k 0 (cmFlat 3 c) → S (π k 0 (cmFlat 3 c))
 
 /-- The hypotheses on a family of nine decks `π k i` (`k`: class, `i`: member). -/
 structure Family (π : Fin 3 → Fin 3 → Relabel) (col : Fin 3 → Fin 13) (x y : Fin 52) : Prop where
@@ -63,13 +79,42 @@ structure Family (π : Fin 3 → Fin 3 → Relabel) (col : Fin 3 → Fin 13) (x 
   member2 : ∀ k (c : Fin 13), π k 2 (cmFlat 3 c) = π k 0 (cmFlat 3 c) →
     π k 0 (cmFlat 3 c) = x ∨ π k 0 (cmFlat 3 c) = y
 
+/-- The read index of row 3 after a turn by `K`: read position `j` is column `(j + K) % 13`. -/
+def readIdx (K : Nat) (j : Fin 13) : Fin 13 := ⟨(j.val + K % 13) % 13, Nat.mod_lt _ (by decide)⟩
+
+theorem readIdx_injective (K : Nat) : Function.Injective (readIdx K) := by
+  intro a b h
+  have h2 := congrArg Fin.val h
+  simp only [readIdx] at h2
+  apply Fin.ext
+  have := a.isLt; have := b.isLt; have := Nat.mod_lt K (by decide : 0 < 13)
+  omega
+
+theorem readIdx_surj (K : Nat) (c : Fin 13) : ∃ j, readIdx K j = c := by
+  refine ⟨⟨(c.val + 13 - K % 13) % 13, Nat.mod_lt _ (by decide)⟩, Fin.ext ?_⟩
+  simp only [readIdx]
+  have := c.isLt; have := Nat.mod_lt K (by decide : 0 < 13)
+  omega
+
+/-- The weight difference of two read positions is the column difference, mod 13. -/
+theorem wt_sub_readIdx {K : Nat} {j1 j2 : Fin 13} {c1 c2 : Fin 13} (h1 : readIdx K j1 = c1)
+    (h2 : readIdx K j2 = c2) : wt j1 - wt j2 = (c2.val : ZMod 13) - (c1.val : ZMod 13) := by
+  rw [sub_eq_sub_iff_add_eq_add]
+  unfold wt
+  rw [← Nat.cast_add, ← Nat.cast_add, ZMod.natCast_eq_natCast_iff']
+  have e1 := congrArg Fin.val h1
+  have e2 := congrArg Fin.val h2
+  simp only [readIdx] at e1 e2
+  have := j1.isLt; have := j2.isLt
+  omega
+
 section family
 
-variable {π : Fin 3 → Fin 3 → Relabel} {col : Fin 3 → Fin 13} {x y : Fin 52}
+variable {π : Fin 3 → Fin 3 → Relabel} {col : Fin 3 → Fin 13} {q : Relabel} {S : Fin 52 → Prop}
 
 /-- Two members showing the same card at seats `(ρ, c)` and `(ρ', c')`, `ρ' ≠ 3`, show it at
     the same seat. -/
-theorem Family.seat_eq (hf : Family π col x y) {k i k' i' : Fin 3} {ρ ρ' : Fin 4}
+theorem FamilyQ.seat_eq (hf : FamilyQ π col q S) {k i k' i' : Fin 3} {ρ ρ' : Fin 4}
     {c c' : Fin 13} (hρ' : ρ'.val ≠ 3) (h : π k i (cmFlat ρ c) = π k' i' (cmFlat ρ' c')) :
     ρ = ρ' ∧ c = c' := by
   have hs : (cmRow (cmFlat ρ' c')).val ≠ 3 := by rw [(cm_cmFlat ρ' c').1]; exact hρ'
@@ -78,10 +123,13 @@ theorem Family.seat_eq (hf : Family π col x y) {k i k' i' : Fin 3} {ρ ρ' : Fi
   exact ⟨by simpa [(cm_cmFlat ρ c).1, (cm_cmFlat ρ' c').1] using congrArg cmRow e,
     by simpa [(cm_cmFlat ρ c).2, (cm_cmFlat ρ' c').2] using congrArg cmCol e⟩
 
-/-- (PROVED) For every σ, τ with the seat-26 condition, a family forces
-    `rank (σ x) = rank (σ y)`. -/
-theorem rank_eq_of_family (hf : Family π col x y) {σ τ : Relabel} (hc : Cell0Cov σ τ) :
-    rank (σ x).val = rank (σ y).val := by
+/-- (PROVED) For every σ, τ with the seat-26 condition, some class `k` and some turn `K` of row
+    3 give equal row totals (mod 13) of the σ-images of the row-3 reads of members `(k, 0)`
+    and `(k, 1)`. -/
+theorem FamilyQ.wsum_eq (hf : FamilyQ π col q S) {σ τ : Relabel} (hc : Cell0Cov σ τ) :
+    ∃ k : Fin 3, ∃ K : Nat,
+      wsum (fun j => σ (q (π k 0 (cmFlat 3 (readIdx K j))))) =
+        wsum (fun j => σ (π k 0 (cmFlat 3 (readIdx K j)))) := by
   -- the σ-images of the family decks
   set D : Fin 3 → Fin 3 → (Fin 52 → Nat) := fun k i => permDeck (σ * π k i) with hD
   have hagD : ∀ k i, AgreeOff3 (D k i) (D 0 0) := fun k i s hs => by
@@ -125,9 +173,7 @@ theorem rank_eq_of_family (hf : Family π col x y) {σ τ : Relabel} (hc : Cell0
     rw [hf.swap1, e0] at e1
     have hm := hf.member2 k _ (e2.trans e0.symm)
     rw [e0] at hm
-    rcases hm with hm | hm
-    · rw [hm, Equiv.swap_apply_left] at e1; exact hf.ne e1.symm
-    · rw [hm, Equiv.swap_apply_right] at e1; exact hf.ne e1
+    exact hf.nofix _ hm e1
   -- members 0 and 1 use the same row and column
   have same01 : ∀ k, ρ k 1 = ρ k 0 ∧
       rowAmts (D k 1) (ρ k 1) % 13 = rowAmts (D k 0) (ρ k 0) % 13 := by
@@ -178,49 +224,58 @@ theorem rank_eq_of_family (hf : Family π col x y) {σ τ : Relabel} (hc : Cell0
   rw [hk1, hk0] at hamt
   -- the row-0 amounts of members 0 and 1 agree
   have hK : rowAmts (D k 1) 3 = rowAmts (D k 0) 3 := ((hTr k 1).2.2).trans ((hTr k 0).2.2).symm
-  have h0 : ∀ d, rowAmts d 0 = rowTurnV10 (rowRead d 3 (rowAmts d 3)) :=
-    fun d => rowAmts_prev d 0
-  rw [h0, h0, hK] at hamt
+  rw [rowAmts_prev _ 0, rowAmts_prev _ 0] at hamt
+  simp only [show (prevRow 0) = 3 from rfl] at hamt
+  rw [if_neg (by decide), if_neg (by decide), hK] at hamt
   set K := rowAmts (D k 0) 3
   have hlt : ∀ z : Fin 13 → Nat, rowTurnV10 z < 13 := fun z => Nat.mod_lt _ (by decide)
   rw [Nat.mod_eq_of_lt (hlt _), Nat.mod_eq_of_lt (hlt _)] at hamt
-  -- read indices and the swap
-  let idx : Fin 13 → Fin 13 := fun j => ⟨(j.val + K % 13) % 13, Nat.mod_lt _ (by decide)⟩
-  let yv : Fin 13 → Fin 52 := fun j => (σ * π k 0) (cmFlat 3 (idx j))
-  have hyv : Function.Injective yv := by
-    intro a b h
-    have h1 := cmFlat_col_injective 3 ((σ * π k 0).injective h)
-    have h2 := congrArg Fin.val h1
-    simp only [idx] at h2
-    apply Fin.ext
-    have := a.isLt; have := b.isLt; have := Nat.mod_lt K (by decide : 0 < 13)
-    omega
-  have hpre : ∀ c : Fin 13, ∃ j, idx j = c := by
-    intro c
-    refine ⟨⟨(c.val + 13 - K % 13) % 13, Nat.mod_lt _ (by decide)⟩, Fin.ext ?_⟩
-    simp only [idx]
-    have := c.isLt; have := Nat.mod_lt K (by decide : 0 < 13)
-    omega
-  obtain ⟨cx, hcx⟩ := hf.hasX k
-  obtain ⟨cy, hcy⟩ := hf.hasY k
-  obtain ⟨j1, hj1⟩ := hpre cx
-  obtain ⟨j2, hj2⟩ := hpre cy
-  have hy1 : yv j1 = σ x := by simp only [yv, Equiv.Perm.mul_apply, hj1, hcx]
-  have hy2 : yv j2 = σ y := by simp only [yv, Equiv.Perm.mul_apply, hj2, hcy]
-  have hj : j1 ≠ j2 := by
-    intro h; apply hf.ne; apply σ.injective; rw [← hy1, ← hy2, h]
-  have r0 : rowRead (D k 0) 3 K = fun j => (yv j).val := rfl
-  have r1 : rowRead (D k 1) 3 K = fun j => (Equiv.swap (yv j1) (yv j2) (yv j)).val := by
+  refine ⟨k, K, ?_⟩
+  have r0 : rowRead (D k 0) 3 K = fun j => (σ (π k 0 (cmFlat 3 (readIdx K j)))).val := rfl
+  have r1 : rowRead (D k 1) 3 K = fun j => (σ (q (π k 0 (cmFlat 3 (readIdx K j))))).val := by
     funext j
-    show ((σ * π k 1) (cmFlat 3 (idx j))).val = _
-    have hs : ∀ z, σ (Equiv.swap x y z) = Equiv.swap (σ x) (σ y) (σ z) := fun z => by
-      rw [Equiv.swap_apply_apply]; simp
-    rw [Equiv.Perm.mul_apply, hf.swap1, hs, hy1, hy2]
-    rfl
+    show ((σ * π k 1) (cmFlat 3 (readIdx K j))).val = _
+    rw [Equiv.Perm.mul_apply, hf.swap1]
   rw [r0, r1] at hamt
   have hz := congrArg (fun n : Nat => (n : ZMod 13)) hamt
   simp only [rowTurnV10_cast] at hz
-  rw [wsum_swap yv hyv hj] at hz
+  exact hz
+
+/-- A `Family` is the `FamilyQ` of `q = swap x y`, `S = {x, y}`. -/
+theorem Family.toQ {x y : Fin 52} (hf : Family π col x y) :
+    FamilyQ π col (Equiv.swap x y) (fun z => z = x ∨ z = y) where
+  agree := hf.agree
+  col_inj := hf.col_inj
+  c0 := hf.c0
+  swap1 := hf.swap1
+  nofix := by
+    rintro z (rfl | rfl)
+    · rw [Equiv.swap_apply_left]; exact hf.ne.symm
+    · rw [Equiv.swap_apply_right]; exact hf.ne
+  member2 := hf.member2
+
+/-- (PROVED) For every σ, τ with the seat-26 condition, a family forces
+    `rank (σ x) = rank (σ y)`. -/
+theorem rank_eq_of_family {x y : Fin 52} (hf : Family π col x y) {σ τ : Relabel}
+    (hc : Cell0Cov σ τ) : rank (σ x).val = rank (σ y).val := by
+  obtain ⟨k, K, hz⟩ := hf.toQ.wsum_eq hc
+  set yv : Fin 13 → Fin 52 := fun j => σ (π k 0 (cmFlat 3 (readIdx K j))) with hyvd
+  have hyv : Function.Injective yv := fun a b h =>
+    readIdx_injective K (cmFlat_col_injective 3 ((π k 0).injective (σ.injective h)))
+  obtain ⟨cx, hcx⟩ := hf.hasX k
+  obtain ⟨cy, hcy⟩ := hf.hasY k
+  obtain ⟨j1, hj1⟩ := readIdx_surj K cx
+  obtain ⟨j2, hj2⟩ := readIdx_surj K cy
+  have hy1 : yv j1 = σ x := by simp only [yv, hj1, hcx]
+  have hy2 : yv j2 = σ y := by simp only [yv, hj2, hcy]
+  have hj : j1 ≠ j2 := by
+    intro h; apply hf.ne; apply σ.injective; rw [← hy1, ← hy2, h]
+  have hs : ∀ z, σ (Equiv.swap x y z) = Equiv.swap (σ x) (σ y) (σ z) := fun z => by
+    rw [Equiv.swap_apply_apply]; simp
+  simp only [hs] at hz
+  rw [← hy1, ← hy2] at hz
+  rw [show (fun j => Equiv.swap (yv j1) (yv j2) (σ (π k 0 (cmFlat 3 (readIdx K j))))) =
+    fun j => Equiv.swap (yv j1) (yv j2) (yv j) from rfl, wsum_swap yv hyv hj] at hz
   have hprod : (wt j1 - wt j2) * (rk (yv j2) - rk (yv j1)) = 0 := by
     have := congrArg (fun z => z - wsum yv) hz
     simp only [add_sub_cancel_left, sub_self] at this
@@ -313,7 +368,7 @@ theorem cell0Cov_rank_of_checks (hchk : RankChecks) {σ τ : Relabel} (h : Cell0
     intro e; apply heq; rw [← hv0, ← hvb, e]
   obtain ⟨D, hD⟩ := rank_zero_cards b' hb0 hbne
   have hcv : Cell0Cov (σ * v) (τ * v) :=
-    cell0Cov_mul h (cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym r yy))
+    cell0Cov_mul h (cell0Cov_v10Sym r yy)
   have := rank_eq_of_family (family_of_checks hchk D) hcv
   rw [Equiv.Perm.mul_apply, Equiv.Perm.mul_apply, hv0, ← hD, hvb] at this
   unfold rank at this

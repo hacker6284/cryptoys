@@ -302,33 +302,24 @@ theorem v10_col_turn (σ : Relabel) (h : CommutesOnDecksG σ sumRanksV10) (H : G
   have := (sumRanksV10_turns_of_commute σ g hg (h g hg)).2.2
   rwa [hback] at this
 
-theorem gfAdd_shift_fin : ∀ V V' x y : Fin 4,
-    gfAdd V'.val x.val = gfAdd V.val y.val → x.val = gfAdd (gfAdd V.val V'.val) y.val := by
-  decide
-
-theorem gfAdd_peel_fin : ∀ la' R' D la R : Fin 4,
-    gfAdd la'.val R'.val = gfAdd D.val (gfAdd la.val R.val) →
-      gfAdd la'.val la.val = gfAdd (gfAdd D.val R.val) R'.val := by
-  decide
-
-theorem gfAdd_solve_fin : ∀ l' l m' m : Fin 4,
-    gfAdd l'.val l.val = gfAdd m'.val m.val → l'.val = gfAdd l.val (gfAdd m'.val m.val) := by
-  decide
+/-- `v' ⊕ (a' ⊕ r') = v ⊕ (a ⊕ r)` gives `a' ⊕ a = (v ⊕ v') ⊕ (r ⊕ r')` (`xor4` algebra,
+    `SumRanksV10.lean`). -/
+theorem xor4_peel {v v' r r' a a' : Fin 4} (h : xor4 v' (xor4 a' r') = xor4 v (xor4 a r)) :
+    xor4 a' a = xor4 (xor4 v v') (xor4 r r') := by
+  rw [xor4_left_comm] at h
+  rw [xor4_eq_iff _ _ _ h]
+  simp only [xor4_assoc, xor4_comm, xor4_left_comm, xor4_self, xor4_self_left, xor4_zero,
+    zero_xor4]
 
 theorem gfAdd_pair_core (V V' R R' la lb la' lb' : Nat) (hV : V < 4) (hV' : V' < 4)
     (hR : R < 4) (hR' : R' < 4) (ha : la < 4) (hb : lb < 4) (ha' : la' < 4) (hb' : lb' < 4)
     (E1 : gfAdd V' (gfAdd la' R') = gfAdd V (gfAdd la R))
     (E2 : gfAdd V' (gfAdd lb' R') = gfAdd V (gfAdd lb R)) :
-    gfAdd la' la = gfAdd lb' lb := by
-  have F1 := gfAdd_shift_fin ⟨V, hV⟩ ⟨V', hV'⟩
-    ⟨_, gfAdd_lt la' R'⟩ ⟨_, gfAdd_lt la R⟩ E1
-  have F2 := gfAdd_shift_fin ⟨V, hV⟩ ⟨V', hV'⟩
-    ⟨_, gfAdd_lt lb' R'⟩ ⟨_, gfAdd_lt lb R⟩ E2
-  have G1 := gfAdd_peel_fin ⟨la', ha'⟩ ⟨R', hR'⟩ ⟨_, gfAdd_lt V V'⟩
-    ⟨la, ha⟩ ⟨R, hR⟩ F1
-  have G2 := gfAdd_peel_fin ⟨lb', hb'⟩ ⟨R', hR'⟩ ⟨_, gfAdd_lt V V'⟩
-    ⟨lb, hb⟩ ⟨R, hR⟩ F2
-  exact G1.trans G2.symm
+    gfAdd la' la = gfAdd lb' lb :=
+  congrArg Fin.val ((xor4_peel (v := ⟨V, hV⟩) (v' := ⟨V', hV'⟩) (r := ⟨R, hR⟩) (r' := ⟨R', hR'⟩)
+    (a := ⟨la, ha⟩) (a' := ⟨la', ha'⟩) (Fin.ext E1)).trans
+    (xor4_peel (v := ⟨V, hV⟩) (v' := ⟨V', hV'⟩) (r := ⟨R, hR⟩) (r' := ⟨R', hR'⟩)
+      (a := ⟨lb, hb⟩) (a' := ⟨lb', hb'⟩) (Fin.ext E2)).symm)
 
 theorem colSuits_split (y : Fin 4 → Nat) :
     colSuits y = gfAdd (suitLabel (y 0))
@@ -407,8 +398,8 @@ theorem v10Sym_of_sumRanksV10_commutes (σ : Relabel) (h : CommutesOnDecksG σ s
   · show suitLabel (σ c).val = suitLabel (v10SymFn _ _ c).val
     rw [v10SymFn_label]
     have hp := v10_col_pair σ h c 0
-    exact gfAdd_solve_fin ⟨_, suitLabel_lt (σ c).val⟩ ⟨_, suitLabel_lt c.val⟩
-      ⟨_, suitLabel_lt (σ 0).val⟩ ⟨_, suitLabel_lt (0 : Fin 52).val⟩ hp
+    exact congrArg Fin.val
+      (xor4_eq_iff (lbl (σ c)) (lbl c) (xor4 (lbl (σ 0)) (lbl 0)) (Fin.ext hp))
 
 /-- **v10 SumRanks characterisation** (PROVED, both directions): a relabelling
     commutes with v10 SumRanks on every well-formed deck iff it is one of the 52

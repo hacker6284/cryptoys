@@ -1,8 +1,12 @@
 # DoubleDeal v12: narrowing the covariant round conjecture (roadmap milestone M4)
 
 The conjecture `roundBody_covariant_iff_id` (`security/DoubleDealSecurity/Rounds.lean`,
-DRAFT-SORRY) is **still open**. Its statement, name and `sorry` are unchanged. This
-milestone proves **separate** theorems that narrow it, in namespace
+DRAFT-SORRY) keeps its statement, name and `sorry`. Its statement is now proved in the
+heavy library (finite checks by kernel `decide!`; `LabelStep.roundBody_covariant_iff_id_heavy`); in the
+default library it is a hypothesis (`LabelStep.roundBody_covariant_iff_id_of_checks`) and
+the `sorry` stays until the follow-up (see
+[`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md)). This milestone (written
+before that result) proves **separate** theorems that narrow it, in namespace
 `DoubleDeal.Security.CovariantNarrow`:
 * `security/DoubleDealSecurity/CovariantNarrow.lean`, with generated data in
   `CovariantNarrowLists.lean`;
@@ -84,13 +88,18 @@ every output relabelling τ. `roundBody_not_commutes_swap` is its τ = σ coroll
 * The default library has both as `…_of_check`, with the finite checks
   `Cov0Checks` as a hypothesis.
 
-**D. Sufficient single-cell conditions (reductions; hypotheses NOT proved).**
+**D. Sufficient single-cell conditions (reductions; hypotheses of these theorems).**
 * `roundBody_covariant_iff_id_of_cell0 (hcell : ∀ σ τ, Cell0Cov σ τ → ∃ a x, σ = v10Sym a x)`.
 * `roundBody_covariant_iff_id_of_cell0_prime`: the same, with `hcell` only for σ of
   prime order p ≤ 52.
-* Both `hcell` are **sufficient conditions, not known to be true or necessary**.
-  Each `hcell` implies the conjecture; the converse is not known (`Cell0Cov` is weaker
-  than covariance, so each `hcell` might be false even if the conjecture is true).
+* Both `hcell` are **sufficient conditions**: each implies the conjecture (these
+  reductions are PROVED theorems). `Cell0Cov` is weaker than covariance, so `hcell` is a
+  statement about the seat-26 condition, not about covariance itself.
+* **Update:** the full `hcell` (hence also the prime one) is now PROVED, GIVEN finite
+  checks in the default library (`LabelStep.cell0Cov_mem_v10Sym_of_checks`) and
+  unconditionally in the heavy library (`LabelStep.cell0Cov_mem_v10Sym`, with τ = σ);
+  see [`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md). The theorems above
+  still take it as a hypothesis, and `roundBody_covariant_iff_id` keeps its `sorry`.
 * Each is a statement about SumRanks' output cell (0,0) alone: ShiftRows fixes row 0,
   and scoop_cm reads (0,0) first.
 
@@ -107,7 +116,7 @@ This is evidence for the prime-restricted `hcell` of
 * **Control:** the 51 v10Sym, where no witness can exist; none was found.
 * This is evidence only. It says nothing about unsampled σ, even of the same cycle type.
 
-## What remains open (precisely)
+## What remained open after this milestone (closed since, see the Update in D)
 
 * **`PrimeNonSwapCase`**: σ of prime order p ≤ 52 that are neither a transposition
   nor a v10Sym. These are products of ≥ 2 disjoint transpositions and products of
@@ -116,13 +125,15 @@ This is evidence for the prime-restricted `hcell` of
     weaker would suffice along this route.
   * Narrowed further: the 3692 affine relabellings outside v10Sym (the normalizer
     of v10Sym minus v10Sym; true by the holomorph count, not a Lean theorem) are proved
-    non-covariant (`CovariantAffine`); `PrimeNonSwapCase` stays open. Routes, the exhaustive
+    non-covariant (`CovariantAffine`); `PrimeNonSwapCase` was left open here (proved since in the
+    heavy library: `CovariantNarrow.primeNonSwapCase`). Routes, the exhaustive
     `dbl`/`cyc3` search and the remaining obstacle are in
     [`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md).
-* **One possible route (not attempted):** prove a single-cell `hcell` from D. That
+* **One possible route:** prove a single-cell `hcell` from D. That
   would be an analogue of `sumRanksV10_commutes_iff` for output cell (0,0) only.
-  * Caveat: `hcell` is a sufficient condition not known to be true, so this route
-    may be a dead end even if the conjecture holds.
+  * **Update:** done, see D above and
+    [`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md); this section is kept
+    as written before that result.
   * Difficulty: the cell depends on the whole row chain (row 0 turns by row 3, which
     turns by row 2, …) and on the last column step (column 0 turns by column 12's
     GF(4) value and its own suits). The Rounds.lean assessment describes this.

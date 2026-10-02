@@ -442,6 +442,8 @@ def v9SymFn (a : Fin 13) (b : Fin 4) (c : Fin 52) : Fin 52 :=
   ⟨13 * ((su + b.val + 16 - a.val + wrap) % 4) + (r0 + a.val) % 13, by omega⟩
 
 def neg13 (a : Fin 13) : Fin 13 := ⟨(13 - a.val) % 13, Nat.mod_lt _ (by decide)⟩
+
+theorem neg13_eq : ∀ a : Fin 13, neg13 a = -a := by decide
 def neg4 (b : Fin 4) : Fin 4 := ⟨(4 - b.val) % 4, Nat.mod_lt _ (by decide)⟩
 
 theorem v9SymFn_left : ∀ (a : Fin 13) (b : Fin 4) (c : Fin 52),

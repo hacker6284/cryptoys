@@ -27,7 +27,8 @@ import sys
 from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent
-# Known open conjectures (DRAFT-SORRY). Each must contain exactly one sorry.
+# Known DRAFT-SORRY theorems (the statement may be proved elsewhere, e.g. in the heavy
+# library). Each must contain exactly one sorry.
 ALLOWED_SORRY = {"roundBody_covariant_iff_id"}
 
 DECL = re.compile(

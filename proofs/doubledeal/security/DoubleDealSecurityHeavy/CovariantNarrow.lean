@@ -24,7 +24,8 @@ theorem cov0Checks_ok : Cov0Checks := ⟨cell0PairsCheck_ok, checks_all⟩
     transposition: for all card values `a ≠ b` there is NO relabelling `τ` with
     `unkeyedWithMix (swap a b · m) = τ · unkeyedWithMix m` on every deck. This is
     the statement of `roundBody_covariant_iff_id` restricted to `σ = swap a b`; the
-    general conjecture (all σ) stays open and keeps its `sorry`. -/
+    general statement (all σ) is `LabelStep.roundBody_covariant_iff_id_heavy`;
+    `roundBody_covariant_iff_id` keeps its `sorry` until the follow-up. -/
 theorem roundBody_not_covariant_swap (a b : Fin 52) (hab : a ≠ b) :
     ¬ Covariant (Equiv.swap a b) unkeyedWithMix :=
   not_covariant_swap_of_check cov0Checks_ok a b hab
@@ -38,8 +39,8 @@ theorem roundBody_not_commutes_swap (a b : Fin 52) (hab : a ≠ b) :
 
 /-- (PROVED, a reduction, unconditional) The covariant round conjecture follows from
     `PrimeNonSwapCase`: its special case for σ of prime order `p ≤ 52` that are
-    neither a transposition nor a `v10Sym`. That case is the HYPOTHESIS `h`; it is
-    not proved. The excluded σ are proved non-covariant for every τ: transpositions
+    neither a transposition nor a `v10Sym`. That case is the HYPOTHESIS `h` here; it is
+    proved in `V10Sym.lean` (`CovariantNarrow.primeNonSwapCase`). The excluded σ are proved non-covariant for every τ: transpositions
     by `roundBody_not_covariant_swap`, nontrivial `v10Sym` by
     `roundBody_not_covariant_of_stem`. -/
 theorem roundBody_covariant_iff_id_of_prime_nonswap (h : PrimeNonSwapCase) (σ : Relabel) :

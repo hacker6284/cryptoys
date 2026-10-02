@@ -2,7 +2,8 @@
   The covariant round conjecture `roundBody_covariant_iff_id` (`Rounds.lean`,
   DRAFT-SORRY) for the AFFINE relabellings: a finite, structured family. The
   conjecture itself, its statement, name and `sorry` are not touched, and
-  `CovariantNarrow.PrimeNonSwapCase` is not proved here.
+  `CovariantNarrow.PrimeNonSwapCase` is not proved here (it is proved in the heavy library,
+  `CovariantNarrow.primeNonSwapCase`).
 
   Affine relabellings. A card is (rank index r = c % 13 ∈ Z13 (A = 0), GF(4) suit
   label l = `suitLabel c`). For `k : Fin 12` (unit `u = k + 1` of Z13) and `g : Fin 6`
@@ -41,12 +42,13 @@ namespace DoubleDeal.Security.CovariantAffine
 
 open DoubleDeal Relabel
 open DoubleDeal.Security.CovariantNarrow (Cell0Cov cell0Pairs pairsCheck witnessCheck
-  not_cell0Cov_of_checks cell0Cov_of_covPair cell0Cov_mul cell0Cov_inv
-  cell0Cov_self_of_commutes)
+  not_cell0Cov_of_checks cell0Cov_of_covPair cell0Cov_mul cell0Cov_inv cell0Cov_v10Sym)
 
 /-! ## The linear parts (tables generated in `CovariantAffineLists.lean`) -/
 
 def glApp (g : Fin 6) (l : Nat) : Nat := (glTab.getD g.val []).getD l 0
+
+theorem glApp_lt : ∀ (g : Fin 6) (l : Fin 4), glApp g l.val < 4 := by decide
 
 /-- The inverse matrix (table `glInvTab`). -/
 def glInv (g : Fin 6) : Fin 6 := glInvTab.getD g.val 0
@@ -135,9 +137,6 @@ theorem not_cell0Cov_lin_of_check (hchk : AffChecks) (k : Fin 12) (g : Fin 6)
   not_cell0Cov_of_checks hchk.1 (hchk.2 k g hkg) τ
 
 /-! ## Affine relabellings -/
-
-theorem cell0Cov_v10Sym (a : Fin 13) (x : Fin 4) : Cell0Cov (v10Sym a x) (v10Sym a x) :=
-  cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym a x)
 
 /-- (PROVED, given `AffChecks`) No affine relabelling `v10Sym a x * linSym k g` with
     a nontrivial linear part is covariant for the unkeyed round body, for ANY output

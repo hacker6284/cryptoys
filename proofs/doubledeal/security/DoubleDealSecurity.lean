@@ -40,3 +40,7 @@ import DoubleDealSecurity.CovariantAffineLists
 import DoubleDealSecurity.CovariantAffine
 import DoubleDealSecurity.RankPartitionLists
 import DoubleDealSecurity.RankPartition
+import DoubleDealSecurity.V10SymLists
+import DoubleDealSecurity.RankAffine
+import DoubleDealSecurity.TauEq
+import DoubleDealSecurity.LabelStep

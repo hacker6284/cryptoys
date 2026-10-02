@@ -81,7 +81,9 @@
     For `γ` outside `v10Sym` and `p = 64` the diagonal is `dpFCount_self_le_64`.
     `not_col_v10Sym`: into a nontrivial `v10Sym a x` no `p ≥ 2`
     works. The off-diagonal hypothesis is about the stem (SumRanks) alone, not about a
-    GridCycle round, and it is not known to imply `roundBody_covariant_iff_id`. It is proved in
+    GridCycle round, and no proof of `roundBody_covariant_iff_id` goes through it (that
+    statement is proved in the heavy library, `LabelStep.roundBody_covariant_iff_id_heavy`).
+    It is proved in
     `StemUnion` (`dpFCount_le_of_ne`, every `β ≠ γ`), which also shows that no `β` is exactly
     stem-covariant into a `γ ≠ β` (that would give `dpFCount β γ = 52!`; not stated as a
     separate theorem).

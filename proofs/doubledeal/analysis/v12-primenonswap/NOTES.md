@@ -32,11 +32,12 @@ EQUIVALENT to the conjecture. By cycle type, the σ left are:
 * p odd, 3 ≤ p ≤ 47: products of c disjoint p-cycles, 1 ≤ c ≤ ⌊52/p⌋, minus the 12
   rank shifts `v10Sym a 0` (p = 13, c = 4).
 
-Covariance is not known to be invariant under conjugation by `v10Sym` (only
-`Cell0Cov` is, `cell0Cov_conj`; v10Sym itself is not covariant), nor under
-conjugation by a general relabelling (if the conjecture holds, the covariant set is
-{1} and every conjugation preserves it, but that is the open statement). So no proved
-symmetry reduces the problem by cycle type to finitely many σ.
+Before steps 1-4, covariance had no proved invariance under conjugation by `v10Sym` (only
+`Cell0Cov` has one, `cell0Cov_conj`; v10Sym itself is not covariant) or by a general
+relabelling, so no proved symmetry reduced the problem by cycle type to finitely many σ.
+(Now that the statement is proved in the heavy library,
+`LabelStep.roundBody_covariant_iff_id_heavy`, the covariant set is {1} and every
+conjugation preserves it, but that came after this route, not through it.)
 
 ## New PROVED result: the affine relabellings outside v10Sym
 

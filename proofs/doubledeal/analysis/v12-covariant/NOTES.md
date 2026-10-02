@@ -92,9 +92,9 @@ every output relabelling τ. `roundBody_not_commutes_swap` is its τ = σ coroll
 * `roundBody_covariant_iff_id_of_cell0 (hcell : ∀ σ τ, Cell0Cov σ τ → ∃ a x, σ = v10Sym a x)`.
 * `roundBody_covariant_iff_id_of_cell0_prime`: the same, with `hcell` only for σ of
   prime order p ≤ 52.
-* Both `hcell` are **sufficient conditions**; neither is known to be necessary.
-  Each `hcell` implies the conjecture; the converse is not known (`Cell0Cov` is weaker
-  than covariance).
+* Both `hcell` are **sufficient conditions**: each implies the conjecture (these
+  reductions are PROVED theorems). `Cell0Cov` is weaker than covariance, so `hcell` is a
+  statement about the seat-26 condition, not about covariance itself.
 * **Update:** the full `hcell` (hence also the prime one) is now PROVED, GIVEN finite
   checks in the default library (`LabelStep.cell0Cov_mem_v10Sym_of_checks`) and
   unconditionally in the heavy library (`LabelStep.cell0Cov_mem_v10Sym`, with τ = σ);

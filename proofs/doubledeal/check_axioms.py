@@ -533,17 +533,11 @@ BS_LINK2 = {
     "BsLink2.Link2.build_key_grid_refines",
     "BsLink2.Link2.build_key_grid_dice",
     "BsLink2.Link2.build_key_grid_wf",
-    "BsLink2.Link2.build_letting_go_refines",
-    "BsLink2.Link2.build_letting_go_wf",
     "BsLink2.Link2.build_spec",
     "BsLink2.Link2.hole_step_spec",
     "BsLink2.Link2.row_step_spec",
     "BsLink2.Link2.throw_row_cup_spec",
-    "BsLink2.Link2.rethrow_unread_spec",
     "BsLink2.Link2.grow_until_it_bumps_spec",
-    "BsLink2.Link2.lets_go_spec",
-    "BsLink2.Link2.letgo_unique_spec",
-    "BsLink2.Link2.check_step_spec",
     "BsLink2.Link2.build_eq",
     "BsLink2.Link2.build_wf",
     "BsLink2.Link2.growUntilItBumps_room",
@@ -566,8 +560,7 @@ BS_LINK2 = {
 # Scramble is listed: its table has a row for each of the 7 exports. `scramble_v1_digest`
 # has three theorems; the traced `scramble_v1` row says it is not claimed (no theorem), so
 # that gap is in the table rather than silent. BS is listed: its table has a row for each of
-# the 12 exports; the two key-building rows (build_key_grid, build_letting_go) say they are
-# not claimed.
+# the 11 exports (build_letting_go went with letting go, SPEC §4.2: nobody lets go).
 LINK2_EXPORT_TABLES = {
     "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                  / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),

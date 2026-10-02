@@ -8,7 +8,7 @@
   over all permutations, while the rest of `encrypt6` stays an injective map,
   shows: if σ commutes with `encrypt6` for all permutation keys, then the
   unkeyed round body is σ-covariant (`F(σ·m) = τ·F(m)` for one fixed τ). The
-  output relabelling τ need not equal σ, which is why the open conjecture is
+  output relabelling τ need not equal σ, which is why the conjecture is
   stated in covariant form (`roundBody_covariant_iff_id`).
 
   Scope: keys are independent `Equiv.Perm (Fin 52)` per round. That is a

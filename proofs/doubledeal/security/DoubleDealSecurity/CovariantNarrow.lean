@@ -37,13 +37,17 @@
      form in the heavy library: `roundBody_covariant_iff_id_of_prime_nonswap`.
   D. `roundBody_covariant_iff_id_of_cell0` and `…_of_cell0_prime`: the conjecture
      follows from a single-cell SumRanks statement `hcell` (all σ, resp. σ of prime
-     order p ≤ 52). `hcell` is a SUFFICIENT condition, not known to be true or
-     necessary: `hcell` implies the conjecture; the converse is not known (`Cell0Cov`
-     is weaker than covariance, so `hcell` might be false even if the conjecture is true).
+     order p ≤ 52). `hcell` is a SUFFICIENT condition (`Cell0Cov` is weaker than
+     covariance). It is a hypothesis here; the full `hcell`
+     is proved in the heavy library by kernel `decide!` (`LabelStep.cell0Cov_mem_v10Sym`;
+     in the default library given `V10SymChecks`: `LabelStep.cell0Cov_mem_v10Sym_of_checks`).
 
-  Open after this file: the conjecture for σ of prime order p ≤ 52 that are neither
-  a transposition nor a `v10Sym` (exactly the hypothesis of
-  `roundBody_covariant_iff_id_of_prime_nonswap`). Write-up:
+  Left open by this file alone: the conjecture for σ of prime order p ≤ 52 that are
+  neither a transposition nor a `v10Sym` (exactly the hypothesis of
+  `roundBody_covariant_iff_id_of_prime_nonswap`). The conjecture's statement is proved in
+  the heavy library by kernel `decide!` (`LabelStep.roundBody_covariant_iff_id_heavy`); in
+  the default library it is a hypothesis (`LabelStep.roundBody_covariant_iff_id_of_checks`,
+  given `V10SymChecks`) and the `sorry` stays until the follow-up. Write-up:
   `../analysis/v12-covariant/NOTES.md`. The affine relabellings outside `v10Sym` (all
   orders; the prime-order ones lie inside that case) are handled in
   `CovariantAffine.lean` (`../analysis/v12-primenonswap/NOTES.md`).
@@ -464,14 +468,15 @@ theorem prime_nonswap_case_iff_of_check (hchk : Cov0Checks) :
   · intro h σ p hp _ ho _ _ hc
     exact ne_one_of_orderOf_prime hp ho ((h σ).1 hc)
 
-/-! ## D. Sufficient single-cell conditions (not known to be true or necessary) -/
+/-! ## D. Sufficient single-cell conditions (hypotheses here; the full one is proved in `LabelStep`) -/
 
 /-- (PROVED, a reduction) The conjecture follows from the single-cell statement
     `hcell`: every σ satisfying the seat-26 condition `Cell0Cov σ τ` for some τ is a
-    `v10Sym`. `hcell` is a HYPOTHESIS and is NOT proved. It is a SUFFICIENT
-    condition, not known to be true or necessary: `hcell` implies the conjecture;
-    the converse is not known (`Cell0Cov` is weaker than covariance, so `hcell`
-    might be false even if the conjecture is true). -/
+    `v10Sym`. `hcell` is a HYPOTHESIS of this theorem. It is a SUFFICIENT condition,
+    not known to be necessary (`Cell0Cov` is weaker than covariance). It is proved in the
+    heavy library by kernel `decide!` (`LabelStep.cell0Cov_mem_v10Sym`), which gives
+    `LabelStep.roundBody_covariant_iff_id_heavy`; in the default library it is a
+    hypothesis (`LabelStep.cell0Cov_mem_v10Sym_of_checks`, given `V10SymChecks`). -/
 theorem roundBody_covariant_iff_id_of_cell0
     (hcell : ∀ σ τ : Relabel, Cell0Cov σ τ → ∃ a x, σ = v10Sym a x)
     (σ : Relabel) : Covariant σ unkeyedWithMix ↔ σ = 1 := by
@@ -484,8 +489,9 @@ theorem roundBody_covariant_iff_id_of_cell0
     exact ⟨1, covPair_one⟩
 
 /-- (PROVED, a reduction) As `roundBody_covariant_iff_id_of_cell0`, with `hcell`
-    only for σ of prime order `p ≤ 52`. `hcell` is a HYPOTHESIS, NOT proved, and a
-    SUFFICIENT condition not known to be true or necessary (as above). It is the
+    only for σ of prime order `p ≤ 52`. `hcell` is a HYPOTHESIS of this theorem and a
+    SUFFICIENT condition, not known to be necessary; it follows from the full one, proved
+    in the heavy library by kernel `decide!` (`LabelStep.cell0Cov_mem_v10Sym`). It is the
     statement sampled by `../analysis/v12-covariant/cell0_sample.py`: a seat-26
     witness for a sampled σ refutes `Cell0Cov σ τ` for every τ for that σ only. -/
 theorem roundBody_covariant_iff_id_of_cell0_prime

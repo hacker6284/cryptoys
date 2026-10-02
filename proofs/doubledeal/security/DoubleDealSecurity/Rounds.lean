@@ -231,16 +231,20 @@ theorem roundBody_not_covariant_of_stem (σ : Relabel) (hid : σ ≠ 1)
     remaining cells interleave two different walks. Effort: uncertain,
     ~1–2 weeks. Not attempted further.
 
-    Narrowed in v12 (separate theorems; this statement is unchanged and still
-    open), `CovariantNarrow.lean`: it holds for every transposition
+    Narrowed in v12 (separate theorems; this statement and its `sorry` are
+    unchanged), `CovariantNarrow.lean`: it holds for every transposition
     (`CovariantNarrow.roundBody_not_covariant_swap`, heavy library). It is
     equivalent to its prime-order case (`CovariantNarrow.prime_case_iff`), and to
     its case of prime-order σ that are neither a transposition nor a `v10Sym`
     (`CovariantNarrow.prime_nonswap_case_iff`, heavy library).
     It also follows from single-cell SumRanks statements
-    (`CovariantNarrow.roundBody_covariant_iff_id_of_cell0`, `…_of_cell0_prime`) that
-    are sufficient conditions, not known to be true or necessary. The reduced cases
-    are hypotheses there, not proved. Write-up: `../analysis/v12-covariant/NOTES.md`. -/
+    (`CovariantNarrow.roundBody_covariant_iff_id_of_cell0`, `…_of_cell0_prime`;
+    sufficient conditions, hypotheses there). The full one is proved in the heavy
+    library by kernel `decide!` (`LabelStep.cell0Cov_mem_v10Sym`), and so is this
+    statement (`LabelStep.roundBody_covariant_iff_id_heavy`); in the default library
+    it is a hypothesis (`LabelStep.roundBody_covariant_iff_id_of_checks`, given
+    `V10SymChecks`), and the `sorry` below stays until the follow-up. Write-up:
+    `../analysis/v12-covariant/NOTES.md`, `../analysis/v12-primenonswap/NOTES.md`. -/
 theorem roundBody_covariant_iff_id (σ : Relabel) :
     Covariant σ unkeyedWithMix ↔ σ = 1 := by
   constructor

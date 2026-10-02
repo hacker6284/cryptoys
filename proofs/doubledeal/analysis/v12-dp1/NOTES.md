@@ -19,10 +19,10 @@ The only exact link: for `α ∈ v10Sym` the stem passes `α` unchanged
 
 ## Proved (`OneRoundDP`)
 
-* **B1 implies the open covariant conjecture.** `covariant_iff_id_of_dp1_lt`: if
+* **B1 implies the covariant conjecture.** `covariant_iff_id_of_dp1_lt`: if
   `dp1Count α β < 52!` for every `α ≠ 1` and `β`, then `roundBody_covariant_iff_id` holds (a
   covariant pair counts every deck, `dp1Count_eq_of_covPair`); `covariant_iff_id_of_dp1Bound`
-  for `DP1Bound p`, `p ≥ 2`. That conjecture is the one allowed `sorry`, so B1 for the rows
+  for `DP1Bound p`, `p ≥ 2`. That conjecture is the one allowed `sorry` (in the default library; its statement is proved in the heavy library by kernel `decide!`, `LabelStep.roundBody_covariant_iff_id_heavy`), and B1 for the rows
   outside `v10Sym` is at least as hard and is NOT proved: since the `v10Sym` rows are bounded
   (below), a bound below 1 on the rows outside `v10Sym` alone already implies the conjecture
   (`covariant_iff_id_of_dp1_lt_off_v10Sym`).

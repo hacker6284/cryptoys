@@ -1,4 +1,4 @@
-# DoubleDeal v12: attacking `PrimeNonSwapCase` (the last open piece of the covariant round conjecture)
+# DoubleDeal v12: `PrimeNonSwapCase` and the covariant round conjecture (statement proved in the heavy library)
 
 The conjecture `roundBody_covariant_iff_id` (`security/DoubleDealSecurity/Rounds.lean`,
 DRAFT-SORRY) keeps its `sorry`: that theorem is unchanged. Its STATEMENT is now proved in
@@ -236,6 +236,7 @@ unconditional, default library given `V10SymChecks`). What is left is bookkeepin
 mathematics: `roundBody_covariant_iff_id` in the default library still has its `sorry`
 because the finite checks live in the heavy library. Removing that `sorry` (for example
 by moving the conjecture or its dependents, or by stating the default theorem with the
-checks) is a separate, small follow-up, to be agreed before it is done. Until then the
-default-library docstrings that call `hcell` "not known to be true" (`Rounds.lean`,
-`CovariantNarrow.lean`) predate this result and are unchanged here.
+checks) is a separate, small follow-up, to be agreed before it is done. The
+default-library docstrings (`Rounds.lean`, `CovariantNarrow.lean`) say this: proved in the
+heavy library by kernel `decide!`, a hypothesis in the default library, `sorry` until the
+follow-up.

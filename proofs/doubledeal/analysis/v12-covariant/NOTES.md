@@ -1,8 +1,12 @@
 # DoubleDeal v12: narrowing the covariant round conjecture (roadmap milestone M4)
 
 The conjecture `roundBody_covariant_iff_id` (`security/DoubleDealSecurity/Rounds.lean`,
-DRAFT-SORRY) is **still open**. Its statement, name and `sorry` are unchanged. This
-milestone proves **separate** theorems that narrow it, in namespace
+DRAFT-SORRY) keeps its statement, name and `sorry`. Its statement is now proved in the
+heavy library by kernel `decide!` (`LabelStep.roundBody_covariant_iff_id_heavy`); in the
+default library it is a hypothesis (`LabelStep.roundBody_covariant_iff_id_of_checks`) and
+the `sorry` stays until the follow-up (see
+[`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md)). This milestone (written
+before that result) proves **separate** theorems that narrow it, in namespace
 `DoubleDeal.Security.CovariantNarrow`:
 * `security/DoubleDealSecurity/CovariantNarrow.lean`, with generated data in
   `CovariantNarrowLists.lean`;
@@ -112,7 +116,7 @@ This is evidence for the prime-restricted `hcell` of
 * **Control:** the 51 v10Sym, where no witness can exist; none was found.
 * This is evidence only. It says nothing about unsampled σ, even of the same cycle type.
 
-## What remains open (precisely)
+## What remained open after this milestone (closed since, see the Update in D)
 
 * **`PrimeNonSwapCase`**: σ of prime order p ≤ 52 that are neither a transposition
   nor a v10Sym. These are products of ≥ 2 disjoint transpositions and products of
@@ -121,7 +125,8 @@ This is evidence for the prime-restricted `hcell` of
     weaker would suffice along this route.
   * Narrowed further: the 3692 affine relabellings outside v10Sym (the normalizer
     of v10Sym minus v10Sym; true by the holomorph count, not a Lean theorem) are proved
-    non-covariant (`CovariantAffine`); `PrimeNonSwapCase` stays open. Routes, the exhaustive
+    non-covariant (`CovariantAffine`); `PrimeNonSwapCase` was left open here (it follows since
+    from `LabelStep.cell0Cov_mem_v10Sym`, heavy library, kernel `decide!`). Routes, the exhaustive
     `dbl`/`cyc3` search and the remaining obstacle are in
     [`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md).
 * **One possible route:** prove a single-cell `hcell` from D. That

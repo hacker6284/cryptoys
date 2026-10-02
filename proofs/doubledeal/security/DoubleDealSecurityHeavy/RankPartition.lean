@@ -6,7 +6,8 @@
     `rankChecks_ok`); this module runs no `decide!`.
   Scope: these say only that a σ with `Cell0Cov σ τ` (in particular every covariant σ)
   permutes the 13 rank classes. They do NOT say σ is affine, that τ = σ, or anything about
-  suits; `roundBody_covariant_iff_id` stays open and keeps its `sorry`.
+  suits (that is steps 2-4, `V10Sym.lean`); `roundBody_covariant_iff_id` keeps its `sorry`
+  until the follow-up.
   Timing and memory: see `../README.md` (module table). Built and audited by the
   `doubledeal-security-heavy` CI job.
   Python reproduction: `analysis/v12-primenonswap/rank_family.py`.

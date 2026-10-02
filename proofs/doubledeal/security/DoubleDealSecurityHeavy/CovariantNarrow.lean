@@ -24,7 +24,8 @@ theorem cov0Checks_ok : Cov0Checks := ⟨cell0PairsCheck_ok, checks_all⟩
     transposition: for all card values `a ≠ b` there is NO relabelling `τ` with
     `unkeyedWithMix (swap a b · m) = τ · unkeyedWithMix m` on every deck. This is
     the statement of `roundBody_covariant_iff_id` restricted to `σ = swap a b`; the
-    general conjecture (all σ) stays open and keeps its `sorry`. -/
+    general statement (all σ) is `LabelStep.roundBody_covariant_iff_id_heavy`;
+    `roundBody_covariant_iff_id` keeps its `sorry` until the follow-up. -/
 theorem roundBody_not_covariant_swap (a b : Fin 52) (hab : a ≠ b) :
     ¬ Covariant (Equiv.swap a b) unkeyedWithMix :=
   not_covariant_swap_of_check cov0Checks_ok a b hab

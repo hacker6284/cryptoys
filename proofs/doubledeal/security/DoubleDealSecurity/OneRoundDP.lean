@@ -6,12 +6,14 @@ import DoubleDealSecurity.Differential
   B1 asks for `max_{α ≠ 1, β} DP_1(α → β) ≤ ε₁` for one v12 MIX round (stem, then GridCycle;
   `Differential.dp1Count`, independent uniform key, so `DP_1 = dp1Count / 52!`). Two results:
 
-  1. B1 IMPLIES THE OPEN COVARIANT CONJECTURE. Any bound with `ε₁ < 1` gives
+  1. B1 IMPLIES THE COVARIANT CONJECTURE. Any bound with `ε₁ < 1` gives
      `roundBody_covariant_iff_id` (`covariant_iff_id_of_dp1_lt`, `covariant_iff_id_of_dp1Bound`):
      a covariant pair `(σ, τ)` has `dp1Count σ τ = 52!` (`dp1Count_eq_of_covPair`). Since the
      `v10Sym` rows are bounded (item 2), a bound below 1 on the rows OUTSIDE `v10Sym` alone is
-     enough (`covariant_iff_id_of_dp1_lt_off_v10Sym`). That conjecture is open (the one allowed
-     `sorry`, `Rounds.roundBody_covariant_iff_id`), so B1 for those rows is not proved here.
+     enough (`covariant_iff_id_of_dp1_lt_off_v10Sym`). That conjecture keeps the one allowed
+     `sorry` (`Rounds.roundBody_covariant_iff_id`; its statement is proved in the heavy library
+     by kernel `decide!`, `LabelStep.roundBody_covariant_iff_id_heavy`); B1 for those rows is
+     not proved here.
 
   2. THE 51 `v10Sym` ROWS ARE PROVED, for every output `β`:
      * `dp1_le_v10Sym`: `52 · dp1Count (v10Sym a x) β ≤ 52!` for every `(a, x)` other than

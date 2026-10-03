@@ -2,6 +2,14 @@
 // (demos/micro/megaminx-turn; MegaDreifach's stage once it lands, see
 // ../README.md). Edit a value and reload the microdemo.
 //
+// APPROVED and LOCKED at a927bb2, animation and sounds (Zachary approved
+// the megaminx-turn animation at its real 70 mm face-to-face size, seated
+// on the felt by its drawn geometry, with the sounds locked at d952e6a):
+// every value below (timing, sounds) and what it depends on (REAL_SIZES
+// megaminx 70 mm in ../../playroom/constants.js, the drawn-geometry seat
+// in ../../playroom/motion.js). Do not change them without his sign-off;
+// ../library.test.mjs pins them.
+//
 // sounds: file = path under demos/anim/sounds/ (no extension; run
 //   tools/sync-micro-sounds.py after changing it). gainDb = loudness
 //   (+ louder). Placement, from the slot's contact:
@@ -32,7 +40,7 @@ export default {
     },
     sounds: {
         // APPROVED and LOCKED (Zachary at d952e6a: "Sounds are ok for that
-        // one."): single, double and triple: file, gainDb, align
+        // one."; the whole entry at a927bb2): single, double and triple: file, gainDb, align
         // "peak-velocity", nudgeMs 0. Do not change them, or anything they
         // depend on, without his sign-off; ../library.test.mjs pins them.
         // Single turn (one 72° click): SpaceJoe "Rubik Cube Turn – 20", one clean

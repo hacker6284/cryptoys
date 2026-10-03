@@ -4,6 +4,7 @@ The sounds the animation library entries play (chosen in `demos/anim/*/settings.
 
 | File | Author | Licence | Source |
 |---|---|---|---|
+| `doubledeal-grid-deal/fan-1_kenney-card-fan-1` | Kenney Vleugels (Kenney.nl) | Creative Commons CC0 (page); License.txt: "Creative Commons Zero, CC0" (http://creativecommons.org/publicdomain/zero/1.0/) | https://kenney.nl/assets/casino-audio |
 | `megaminx-turn/double/double_spacejoe-486565` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486565/ |
 | `megaminx-turn/single/single_spacejoe-486573` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486573/ |
 | `megaminx-turn/triple/triple_spacejoe-486566` | SpaceJoe | Creative Commons 0 (http://creativecommons.org/publicdomain/zero/1.0/) | https://freesound.org/people/SpaceJoe/sounds/486566/ |

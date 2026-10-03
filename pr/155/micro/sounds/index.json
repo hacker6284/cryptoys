@@ -129,24 +129,6 @@
     "doubledeal-restow"
    ]
   },
-  "doubledeal-grid-deal/fan-1_kenney-card-fan-1": {
-   "group": null,
-   "peakMs": 467,
-   "clicksMs": [
-    468,
-    558
-   ],
-   "lufs": -21.3,
-   "gainTo16": 5.3,
-   "durationS": 0.612,
-   "author": "Kenney Vleugels (Kenney.nl)",
-   "license": "Creative Commons CC0 (page); License.txt: \"Creative Commons Zero, CC0\" (http://creativecommons.org/publicdomain/zero/1.0/)",
-   "source": "https://kenney.nl/assets/casino-audio",
-   "description": "Kenney: short card fan / ripple (~0.7 s).",
-   "pages": [
-    "doubledeal-grid-deal"
-   ]
-  },
   "doubledeal-packet-lay/setdown_kenney-card-place-1": {
    "group": null,
    "peakMs": 102,

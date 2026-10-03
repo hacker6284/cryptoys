@@ -116,6 +116,9 @@ assert.equal(stretchContact(1000, -482, 127.6, 1), 1000, "offsetMs sounds: uncha
 // triple sounds are APPROVED and LOCKED at d952e6a (Zachary: "Sounds are ok
 // for that one."): exactly these entries; nothing else may move them.
 assert.match(readme, /\| `megaminx-turn` \|[^\n]*sounds approved and LOCKED at `d952e6a`/, "README records the megaminx lock");
+// The whole entry (animation and sounds) is APPROVED and LOCKED at a927bb2
+// (Zachary approved the animation at the real 70 mm size, seated on the felt).
+assert.match(readme, /\| `megaminx-turn` \|[^\n]*Animation and sounds APPROVED and LOCKED at `a927bb2`/, "README records the megaminx animation lock");
 {
     const mm = await import(new URL("megaminx-turn/index.js", here));
     assert.deepEqual(
@@ -128,6 +131,12 @@ assert.match(readme, /\| `megaminx-turn` \|[^\n]*sounds approved and LOCKED at `
         "the approved megaminx face-turn sounds (d952e6a) are unchanged",
     );
     assert.equal(mm.timing, mm.settings.timing);
+    assert.deepEqual(
+        { ...mm.settings.timing },
+        { speed: 1.4, TURN_LIFT_MS: 320, TURN_LIFT: 0.14, SETTLE_HOLD_MS: 90 },
+        "the approved megaminx animation timing (a927bb2) is unchanged",
+    );
+    assert.deepEqual(Object.keys(mm.settings.sounds), ["single", "double", "triple", "rotation", "lift", "settle"]);
     for (const [slot, move, ms] of [["single", "U", 1000], ["double", "U2", 1500], ["triple", "U3", 2000]]) {
         const s = mm.settings.sounds[slot];
         assert.match(s.file, new RegExp(`^megaminx-turn/${slot}/`), `megaminx ${slot}: its own click`);
@@ -143,6 +152,56 @@ assert.match(readme, /\| `megaminx-turn` \|[^\n]*sounds approved and LOCKED at `
     assert.deepEqual(mm.settings.sounds.settle, settings.sounds.settle, "megaminx lands with scramble-turn's muffled pat");
     assert.equal(mm.settings.sounds.rotation, null);
     assert.ok(!JSON.stringify(mm.settings.sounds).includes("emapuree"), "no wooden-block thud");
+}
+
+// doubledeal-grid-deal (not yet approved): the same rule for a moving
+// card. Each card slides with easeInOutQuad (fastest half way) while it
+// hops sin(πt) × liftHop; on the real-size layout every card's path is
+// long enough that its speed peaks half way, and the stream's audible
+// centre lands on the mean of the 52 cards' peaks at any pace.
+{
+    const gd = await import(new URL("doubledeal-grid-deal/index.js", here));
+    const { REAL_LAYOUT } = await import(new URL("../doubledeal/real-layout.js", here));
+    assert.equal(gd.timing, gd.settings.timing);
+    assert.equal(gd.PEAK_VELOCITY, 0.5);
+    const s = gd.settings.sounds.stream;
+    assert.equal(s.align, "peak-velocity", "grid deal stream: centred on peak velocity");
+    assert.equal(s.offsetMs, undefined);
+    assert.equal(gd.settings.sounds.card, null);
+    for (const pace of [1, 1.8, 3]) {
+        const [[slot, at], ...cards] = gd.dealContacts(pace);
+        assert.equal(slot, "stream");
+        assert.equal(cards.length, 52);
+        const mean = cards.reduce((a, [, t]) => a + t, 0) / 52;
+        assert.ok(Math.abs(at - mean) < 1e-9);
+        assert.ok(Math.abs(at - (25.5 * gd.timing.dealStaggerMs + 0.5 * gd.timing.dealMs) / pace) < 1e-9);
+        assert.ok(Math.abs(fileStart(s, at, { centroidMs: 300 }) + 300 - at) < 1e-9, `stream centre on the mean peak at ${pace}×`);
+    }
+    const table = readFileSync(new URL("../doubledeal/table.js", here), "utf8");
+    const hop = Number(table.match(/liftHop: ([\d.]+)/)[1]);
+    const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2);
+    for (const major of ["col", "row"]) {
+        for (let i = 0; i < 52; i++) {
+            const row = major === "row" ? Math.floor(i / 13) : i % 4;
+            const col = major === "row" ? i % 13 : Math.floor(i / 4);
+            const a = REAL_LAYOUT.pile("hand", i, 52);
+            const b = REAL_LAYOUT.cell(row, col, "message");
+            const dist = Math.hypot(b.x - a.x, b.z - a.z);
+            const pos = (t) => [dist * ease(t), Math.sin(Math.PI * t) * hop];
+            let best = 0;
+            let bestT = 0;
+            for (let k = 0; k < 2000; k++) {
+                const t = (k + 0.5) / 2000;
+                const [x0, y0] = pos(t - 2.5e-4);
+                const [x1, y1] = pos(t + 2.5e-4);
+                const v = Math.hypot(x1 - x0, y1 - y0);
+                if (v > best) [best, bestT] = [v, t];
+            }
+            assert.ok(Math.abs(bestT - 0.5) < 2e-3, `card ${i} (${major}) moves fastest half way (got ${bestT.toFixed(3)})`);
+        }
+    }
+    const gaps = REAL_LAYOUT.restingClearance();
+    for (const [k, v] of Object.entries(gaps)) assert.ok(v > 0, `real layout: no overlap (${k})`);
 }
 
 console.log("animation library tests ok");

@@ -8,8 +8,10 @@
   * `cell0Cov_mem_v10Sym_of_checks`: `Cell0Cov σ τ → (∃ a x, σ = v10Sym a x) ∧ τ = σ`.
   * `roundBody_covariant_iff_id_of_checks`: `Covariant σ unkeyedWithMix ↔ σ = 1`, via
     `CovariantNarrow.roundBody_covariant_iff_id_of_cell0`. This is the statement of
-    `Rounds.roundBody_covariant_iff_id` GIVEN `V10SymChecks`; that theorem itself is not
-    changed here and keeps its `sorry`.
+    `roundBody_covariant_iff_id` GIVEN `V10SymChecks`; the unconditional theorem of that
+    name is in the heavy library (`DoubleDealSecurityHeavy/V10Sym.lean`).
+  * `primeNonSwapCase_of_checks`: `CovariantNarrow.PrimeNonSwapCase`, from the previous item
+    (a covariant σ is 1, which has no prime order).
 
   A. Per-rank label translations `tr d` (label `l ⊕ d r` at rank index `r`; `tr` of a constant
      is `v10Sym 0 x`), in the card coordinates `ri`, `lbl`, `crd r l = v10Sym r l 0` of
@@ -464,13 +466,20 @@ theorem cell0Cov_iff_of_checks (hchk : V10SymChecks) (σ τ : Relabel) :
   rintro ⟨⟨a, x, rfl⟩, rfl⟩
   exact cell0Cov_v10Sym a x
 
-/-- (PROVED, GIVEN `V10SymChecks`) The statement of the covariant round conjecture
-    `Rounds.roundBody_covariant_iff_id`: σ is covariant for the unkeyed round body (for
-    some output relabelling) iff σ = 1. Via `roundBody_covariant_iff_id_of_cell0`.
-    `roundBody_covariant_iff_id` itself is unchanged and keeps its `sorry`. Unconditional
-    form: heavy library, `LabelStep.roundBody_covariant_iff_id_heavy`. -/
+/-- (PROVED, GIVEN `V10SymChecks`) The covariant round statement: σ is covariant for the
+    unkeyed round body (for some output relabelling) iff σ = 1. Via
+    `roundBody_covariant_iff_id_of_cell0`. Unconditional form: heavy library,
+    `roundBody_covariant_iff_id` (`DoubleDealSecurityHeavy/V10Sym.lean`). -/
 theorem roundBody_covariant_iff_id_of_checks (hchk : V10SymChecks) (σ : Relabel) :
     Covariant σ unkeyedWithMix ↔ σ = 1 :=
   roundBody_covariant_iff_id_of_cell0 (fun _ _ h => (cell0Cov_mem_v10Sym_of_checks hchk h).1) σ
+
+/-- (PROVED, GIVEN `V10SymChecks`) `CovariantNarrow.PrimeNonSwapCase`: no σ of prime order
+    `p ≤ 52` that is neither a transposition nor a `v10Sym` is covariant (a covariant σ is
+    1, which has order 1). Unconditional form: heavy library,
+    `CovariantNarrow.primeNonSwapCase`. -/
+theorem primeNonSwapCase_of_checks (hchk : V10SymChecks) : CovariantNarrow.PrimeNonSwapCase :=
+  fun σ _ hp _ ho _ _ hc =>
+    CovariantNarrow.ne_one_of_orderOf_prime hp ho ((roundBody_covariant_iff_id_of_checks hchk σ).1 hc)
 
 end DoubleDeal.Security.LabelStep

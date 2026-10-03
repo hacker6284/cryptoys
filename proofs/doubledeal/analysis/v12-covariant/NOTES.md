@@ -1,11 +1,14 @@
 # DoubleDeal v12: narrowing the covariant round conjecture (roadmap milestone M4)
 
-The conjecture `roundBody_covariant_iff_id` (`security/DoubleDealSecurity/Rounds.lean`,
-DRAFT-SORRY) keeps its statement, name and `sorry`. Its statement is now proved in the
-heavy library (finite checks by kernel `decide!`; `LabelStep.roundBody_covariant_iff_id_heavy`); in the
-default library it is a hypothesis (`LabelStep.roundBody_covariant_iff_id_of_checks`) and
-the `sorry` stays until the follow-up (see
-[`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md)). This milestone (written
+The conjecture `roundBody_covariant_iff_id` (formerly `security/DoubleDealSecurity/Rounds.lean`,
+DRAFT-SORRY) is now proved, with the same name and statement, in the heavy library
+(`DoubleDealSecurityHeavy/V10Sym.lean`, finite checks by kernel `decide!`). The default
+library has no `sorry`: it no longer states the theorem, proves it given the finite checks
+(`LabelStep.roundBody_covariant_iff_id_of_checks`), and states its consequences as
+`_of_covariant` reductions (`fullRound_commutes_iff_id_of_covariant`,
+`encrypt6_commutes_iff_id_of_covariant`); see
+[`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md). A one-round symmetry
+result, not a security bound. This milestone (written
 before that result) proves **separate** theorems that narrow it, in namespace
 `DoubleDeal.Security.CovariantNarrow`:
 * `security/DoubleDealSecurity/CovariantNarrow.lean`, with generated data in
@@ -99,7 +102,8 @@ every output relabelling τ. `roundBody_not_commutes_swap` is its τ = σ coroll
   checks in the default library (`LabelStep.cell0Cov_mem_v10Sym_of_checks`) and
   unconditionally in the heavy library (`LabelStep.cell0Cov_mem_v10Sym`, with τ = σ);
   see [`../v12-primenonswap/NOTES.md`](../v12-primenonswap/NOTES.md). The theorems above
-  still take it as a hypothesis, and `roundBody_covariant_iff_id` keeps its `sorry`.
+  still take it as a hypothesis; `roundBody_covariant_iff_id` is proved from it in the
+  heavy library.
 * Each is a statement about SumRanks' output cell (0,0) alone: ShiftRows fixes row 0,
   and scoop_cm reads (0,0) first.
 

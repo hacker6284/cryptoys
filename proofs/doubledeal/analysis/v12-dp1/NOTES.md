@@ -19,12 +19,12 @@ The only exact link: for `α ∈ v10Sym` the stem passes `α` unchanged
 
 ## Proved (`OneRoundDP`)
 
-* **B1 implies the covariant conjecture.** `covariant_iff_id_of_dp1_lt`: if
+* **B1 implies the covariant round statement.** `covariant_iff_id_of_dp1_lt`: if
   `dp1Count α β < 52!` for every `α ≠ 1` and `β`, then `roundBody_covariant_iff_id` holds (a
   covariant pair counts every deck, `dp1Count_eq_of_covPair`); `covariant_iff_id_of_dp1Bound`
-  for `DP1Bound p`, `p ≥ 2`. That conjecture is the one allowed `sorry` (in the default library; its statement is proved in the heavy library (finite checks by kernel `decide!`), `LabelStep.roundBody_covariant_iff_id_heavy`), and B1 for the rows
+  for `DP1Bound p`, `p ≥ 2`. That statement is proved in the heavy library (finite checks by kernel `decide!`, `roundBody_covariant_iff_id`; not via B1; the default library has no `sorry`), and B1 for the rows
   outside `v10Sym` is at least as hard and is NOT proved: since the `v10Sym` rows are bounded
-  (below), a bound below 1 on the rows outside `v10Sym` alone already implies the conjecture
+  (below), a bound below 1 on the rows outside `v10Sym` alone already implies the statement
   (`covariant_iff_id_of_dp1_lt_off_v10Sym`).
 * **The 51 `v10Sym` rows**, for every output `β`:
   `dp1_le_v10Sym`: `52 · dp1Count (v10Sym a x) β ≤ 52!` for `(a, x) ∉ {(0, 0), (0, 3)}`;

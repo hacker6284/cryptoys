@@ -1,6 +1,6 @@
 /-
   Step 3 toward `PrimeNonSwapCase` (NOT `PrimeNonSwapCase` by itself, NOT the covariant round
-  conjecture `roundBody_covariant_iff_id`, which keeps its `sorry`): for a relabelling with
+  statement `roundBody_covariant_iff_id`, proved in the heavy library): for a relabelling with
   the seat-26 condition, the output relabelling is the input one, and the rank map is a shift.
 
   Statement (`cell0Cov_tau_of_checks`, GIVEN the finite checks `RankChecks`, `AffRankChecks`

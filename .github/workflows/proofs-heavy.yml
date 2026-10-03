@@ -107,7 +107,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
-      - name: No admit / native_decide / sorryAx / axiom; sorry only in the allowlisted conjecture
+      - name: No admit / native_decide / sorryAx / axiom / sorry
         run: python3 proofs/doubledeal/security/checks/scan_sorry.py
       - uses: ./.github/actions/lean-security
         with:

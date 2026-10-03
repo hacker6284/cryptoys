@@ -12,9 +12,10 @@
 // moved into the library use it (demos/anim/doubledeal-*); the playroom
 // DoubleDeal keeps doubledeal/layout.js until every move has moved.
 //
-// The card face art is 338×489 px (1.447) on a 63×88 mm card (1.397), so
-// it is drawn 3.5 % taller than it is wide here; the old layout used the
-// art's aspect for the card instead.
+// The card art is 338×489 px (1.447); a 63×88 mm card is 1.397. The stage
+// loads it redrawn at artAspect (table.js loadCardTextures), so faces and
+// backs map onto the card undistorted; the old layout used the art's
+// aspect for the card instead.
 import { CARD_W, edgeGap } from "./layout.js";
 
 export const UNIT_M = 0.063 / CARD_W; // m per table unit
@@ -84,6 +85,7 @@ export const REAL_LAYOUT = {
     cardW: W,
     cardD: D,
     cardT: T,
+    artAspect: 63 / 88, // loadCardTextures(…, { aspect }): the art undistorted on the card
     seatY: T / 2, // card centre: its bottom on the group's plane
     liftM: 0.0005, // m: the card bottoms above the felt top (the stage's group height)
     cell,

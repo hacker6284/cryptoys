@@ -12,6 +12,8 @@
                                           # `lake build MegaDreifachHeavy`)
     python3 proofs/doubledeal/check_axioms.py megadreifach-v1-deprecated  # frozen v1 package
                                           # (proofs/deprecated/megadreifach-v1/lean)
+    python3 proofs/doubledeal/check_axioms.py megadreifach-v3  # MegaDreifach v3 package
+                                          # (proofs/megadreifach-v3/lean)
     python3 proofs/doubledeal/check_axioms.py cbc-hmac  # proofs/doubledeal-cbc-hmac/lean
                                           # (DoubleDeal-CBC-HMAC Link 2)
     python3 proofs/doubledeal/check_axioms.py scramble  # proofs/scramble/lean
@@ -55,6 +57,11 @@ axiom) fails, as does a Lean error.
 - megadreifach-v1-deprecated: like megadreifach (mode "all", key "full") for the
   frozen v1 package proofs/deprecated/megadreifach-v1/lean (root `MegaDreifachV1`);
   required: the theorems its README cites (MD_V1_README_THEOREMS).
+- megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
+  for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
+  README cites (MD_V3_README_THEOREMS, empty until Link 2 lands, so min is 0 for now).
+  `--selftest` checks its "Emitted function" column against
+  primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
   proofs/doubledeal-cbc-hmac/lean (root `DoubleDealCbcHmac`, the Link 2 package);
   required: the Link 2 theorem of every exported sudo function (CBC_HMAC_LINK2).
@@ -407,6 +414,13 @@ MD_V1_README_THEOREMS = {
     "MegaDreifachV1.Security.foldl_dmBlock_sameCorners",
 }
 
+# proofs/megadreifach-v3/lean (MegaDreifach v3, the ZP26 card phase): every theorem its
+# README cites by name; `--selftest` re-derives the list the same way as MD_README_THEOREMS.
+# Empty until Link 2 lands (the package has the emitted code and a compiled KAT runner only).
+MD_V3_LEAN = ROOT.parent / "megadreifach-v3" / "lean"
+MD_V3_README = MD_V3_LEAN.parent / "README.md"
+MD_V3_README_THEOREMS: set[str] = set()
+
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
                       "multi_56", "multi_100"]}
@@ -578,7 +592,7 @@ BS_LINK2 = {
 }
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only
-# exports (S6 of the #140 review). MegaDreifach is not listed yet: its README has no
+# exports (S6 of the #140 review). MegaDreifach v2 is not listed yet: its README has no
 # "Emitted function" column (its Link 2 rows are Stone / Claim / Status). 8 of its 11
 # exports have a Link 2 `_refines` theorem (pad_message, require_permutation,
 # position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
@@ -589,6 +603,8 @@ BS_LINK2 = {
 # that gap is in the table rather than silent. BS is listed: its table has a row for each of
 # the 11 exports (build_letting_go went with letting go, SPEC §4.2: nobody lets go).
 LINK2_EXPORT_TABLES = {
+    "megadreifach-v3": (ROOT.parent.parent / "primitives" / "hash" / "megadreifach" / "v3"
+                        / "megadreifach.sudo", MD_V3_README),
     "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                  / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
     "scramble": (ROOT.parent.parent / "primitives" / "hash" / "scramble" / "scramble.sudo",
@@ -914,6 +930,16 @@ PACKAGES = {
         "known_sorry": set(),
         "min": 500,  # sanity: the audit must actually see the package
         "required": MD_V1_README_THEOREMS,
+    },
+    "megadreifach-v3": {
+        "dir": MD_V3_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        # 0 until Link 2 lands (no stated theorems yet; the audit sees only Lean-generated
+        # equation lemmas of the KAT runner); raise it with the first Link 2 chunk.
+        "min": 0,
+        "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac": {
         "dir": CBC_HMAC_LEAN,
@@ -1303,6 +1329,7 @@ def selftest():
     for what, listed, readme, root in [
             ("MD_README_THEOREMS", MD_README_THEOREMS, MD_README, MD_LEAN),
             ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN),
+            ("MD_V3_README_THEOREMS", MD_V3_README_THEOREMS, MD_V3_README, MD_V3_LEAN),
             ("CBC_HMAC_LINK2", CBC_HMAC_LINK2, CBC_HMAC_LEAN.parent / "README.md",
              CBC_HMAC_LEAN),
             ("SCRAMBLE_LINK2", SCRAMBLE_LINK2, SCRAMBLE_LEAN.parent / "README.md",

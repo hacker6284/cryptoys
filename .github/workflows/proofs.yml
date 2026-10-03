@@ -102,6 +102,7 @@ jobs:
         include:
           - { name: doubledeal, dir: proofs/doubledeal/lean/Generated, test: doubledeal_test }
           - { name: megadreifach, dir: proofs/megadreifach/lean/Generated, test: megadreifach_test }
+          - { name: megadreifach-v3, dir: proofs/megadreifach-v3/lean/Generated, test: megadreifach_test }
           - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
           - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
           - { name: bs, dir: proofs/key_exchange/bs/lean/Generated, test: bs_test }
@@ -327,6 +328,29 @@ jobs:
       # here; it is built and audited by megadreifach-heavy in proofs-heavy.yml.
       - name: Axiom audit of every MegaDreifach theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py megadreifach
+
+  megadreifach-v3-lean:
+    # MegaDreifach v3 (ZP26 card phase; proofs/megadreifach-v3): the KAT data mirrored from
+    # kats/megaminx_hash_kats_v3.json, a compiled run of the emitted v3 code on every vector
+    # (52 checks, about a second; not a kernel proof), and the axiom audit. No Link 2 yet.
+    # The emitted TAP is megadreifach-v3-generated; emit freshness is generated-fresh.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach-v3/lean --exclude Generated
+      - name: Vectors.lean matches the published v3 KAT JSON
+        run: python3 proofs/megadreifach-v3/vectors/json_to_lean.py --check
+      - name: check_axioms selftest (keying rules, README-cited theorems, v3 sudo exports vs README table)
+        run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/megadreifach-v3/lean
+      - name: v3 KATs against the compiled emitted code (Hash, HashDeck, HashDeckBody, IV digest)
+        working-directory: proofs/megadreifach-v3/lean
+        run: lake exe megadreifach_v3_kat
+      - name: Axiom audit of every MegaDreifachV3 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py megadreifach-v3
 
   cbc-hmac-lean:
     # DoubleDeal-CBC-HMAC Link 2 (proofs/doubledeal-cbc-hmac/lean): the emitted functions

@@ -6,7 +6,7 @@
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
 # Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10, v11),
-# MegaDreifach (current v2 and frozen v1), Scramble, DoubleDeal-CBC-HMAC and BS. DoubleDeal's test-only
+# MegaDreifach (v2, v3 and frozen v1), Scramble, DoubleDeal-CBC-HMAC and BS. DoubleDeal's test-only
 # kind-scan whiles are stripped under the gate. CBC-HMAC imports
 # MegaDreifach via an extra -I.
 #
@@ -40,10 +40,14 @@ doubledeal-v10  primitives/cipher/doubledeal/v10/doubledeal_v10.sudo      proofs
 doubledeal-v11  primitives/cipher/doubledeal/v11/doubledeal_v11.sudo      proofs/deprecated/doubledeal-v11/lean/Generated
 megadreifach    primitives/hash/megadreifach/megadreifach.sudo            proofs/megadreifach/lean/Generated
 megadreifach-v1 primitives/hash/megadreifach/v1/megadreifach.sudo         proofs/deprecated/megadreifach-v1/lean/Generated
+megadreifach-v3 primitives/hash/megadreifach/v3/megadreifach.sudo         proofs/megadreifach-v3/lean/Generated
 scramble        primitives/hash/scramble/scramble.sudo                    proofs/scramble/lean/Generated
 cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach
 bs              primitives/key_exchange/bs/bs.sudo                        proofs/key_exchange/bs/lean/Generated
 "
+# megadreifach-v3 is v3 (v3/megadreifach.sudo, the ZP26 card phase): the Lean package
+# proofs/megadreifach-v3/ (generated Lean, KAT runner; Link 2 to follow). Its module is
+# also `Megadreifach`, in its own Generated/ package. Do not change the v3 .sudo here.
 # Parsed once: the names in order, and each target's .sudo, Generated/ and -I dirs.
 ALL_TARGETS=()
 declare -A T_SUDO T_GEN T_INC

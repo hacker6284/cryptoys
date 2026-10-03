@@ -1,0 +1,22 @@
+name = "MegaDreifachV3"
+version = "0.1.0"
+defaultTargets = ["MegaDreifachV3", "megadreifach_v3_kat"]
+
+# MegaDreifach v3 (ZP26 card phase). Path-requires the Lean emitted from
+# primitives/hash/megadreifach/v3/megadreifach.sudo (do not edit Generated/). See ../README.md.
+[[require]]
+name = "sudo"
+path = "Generated"
+
+# `#audit_all` for Axioms.lean (gate: proofs/doubledeal/check_axioms.py megadreifach-v3).
+[[require]]
+name = "audit"
+path = "../../audit"
+
+[[lean_lib]]
+name = "MegaDreifachV3"
+
+# Compiled KAT runner (MegaDreifachV3/KatRun.lean): not a kernel proof.
+[[lean_exe]]
+name = "megadreifach_v3_kat"
+root = "Main"

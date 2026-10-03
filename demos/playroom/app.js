@@ -8,6 +8,9 @@ import { playroomDebugEnabled } from "./puzzles.js";
 import { createToyDirector } from "./toy-director.js";
 import { mountWorld } from "./world.js";
 
+// DIAGNOSTIC (do not merge): input overlay, only with ?touchdebug=1.
+if (new URLSearchParams(location.search).get("touchdebug") === "1") await import("./touch-debug.js");
+
 const canvas = document.querySelector("#playroom");
 const titleEl = document.querySelector("#title");
 const menuEl = document.querySelector("#menu");

@@ -52,6 +52,14 @@ are `Option`-valued in the model, and `none` is the emitted code's trap. So far:
   the position. Whenever the model search returns `some y`, the emitted function returns `y`:
   its slot scan (30 or 20 slots) is driven by `chain_loop`, and its asserts pass. When the
   model search returns `some` (the found-invariant) is proved separately.
+- The found-invariants (`Link2/FaceOfFound.lean`):
+  - `edgeFaceOf_found` and `cornerFaceOf_found`: on a position whose edge (or corner)
+    table is injective, hence bijective by pigeonhole, the search returns `some` for every
+    colour of the named piece. The corner case uses `corner_cover`, a finite `decide` check
+    that every slot and twist show all three colour indices.
+  - With `triples_ok`, `card_edge_found` and `card_corner_found`: for every colour `c` and
+    `k ∈ 1..4`, the edge `(c, n)` and the corner `(c, n, n2)` have slots, and their `c`- and
+    `n`-coloured stickers are found.
 
 Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
 EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The v3 card

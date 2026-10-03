@@ -33,7 +33,7 @@ DoubleDeal-CBC-HMAC is a toy Encrypt-then-MAC construction. It makes no cryptogr
 | Item | Value |
 | --- | --- |
 | Construction | DoubleDeal in CBC, then Encrypt-then-MAC |
-| Hash | MegaDreifach `Hash` (`primitives/hash/megadreifach/`) |
+| Hash | MegaDreifach v2 `Hash` (`primitives/hash/megadreifach/megadreifach.sudo`; v2 is deprecated, v3 is current) |
 | HMAC block size \(B\) | **28** (MegaDreifach pad / compression block) |
 | HMAC tag | full MegaDreifach digest, **29 bytes** |
 | CBC message block | **28 bytes** (§5.3 injective capacity) |
@@ -225,7 +225,7 @@ A failed tag, a 29-byte integer \(\ge 52!\), a decrypted deck with rank \(\ge 2^
 
 `kats/doubledeal_cbc_hmac_kats.json` is generated from the conformance sudo plus the §5.3 encoding. JS tests assert round-trips and negative tag / AAD / IV / ciphertext tampers.
 
-**Hash version.** The vectors and the published HMAC test tag in `doubledeal_cbc_hmac.sudo` use the current MegaDreifach, **v2**. They were regenerated when MegaDreifach v1 was deprecated; every tag and blob changed, and vectors made with MegaDreifach v1 no longer verify. Nothing else in this construction changed, and the version label stays `DoubleDeal-CBC-HMAC/v1`.
+**Hash version.** The vectors and the published HMAC test tag in `doubledeal_cbc_hmac.sudo` use MegaDreifach **v2** (`primitives/hash/megadreifach/megadreifach.sudo`). v2 is now deprecated and v3 is current, but this construction stays on v2 until a separate decision moves it; that move would change every tag and blob. They were regenerated when MegaDreifach v1 was deprecated; every tag and blob changed, and vectors made with MegaDreifach v1 no longer verify. Nothing else in this construction changed, and the version label stays `DoubleDeal-CBC-HMAC/v1`.
 
 ---
 

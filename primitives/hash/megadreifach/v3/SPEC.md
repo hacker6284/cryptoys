@@ -1,6 +1,6 @@
-# MegaDreifach v3 (candidate)
+# MegaDreifach v3 (current)
 
-> **Status: candidate.** v2 ([`../SPEC.md`](../SPEC.md)) stays the current version until a separate change makes v3 current and deprecates v1/v2. HMAC-MegaDreifach and DoubleDeal-CBC-HMAC keep using v2. The Lean package models v2 only (§7).
+> **Status: current.** v3 is the current MegaDreifach. v2 ([`../SPEC.md`](../SPEC.md)) and v1 ([`../v1/SPEC.md`](../v1/SPEC.md)) are deprecated. HMAC-MegaDreifach and DoubleDeal-CBC-HMAC still use v2; moving them to v3 changes their digests and is a separate decision. The Lean package models v2 only; v3 has no Lean model (§7).
 
 **What v3 changes.** v3 changes one thing: the card phase `W` inside `E_m`. The v2 card rule (grips, visual noon, slot reads, 36 F3 rounds) is replaced by **ZP26**:
 - colour-named card steps with a last-face register;
@@ -51,7 +51,7 @@ Unchanged from v2 §2: `Hash` / `MegaDreifach`, `HashDeck` / `MegaDreifachDeck`,
 
 | Item | Value |
 | --- | --- |
-| Version | **v3** (candidate). v2 is current; v1 is deprecated |
+| Version | **v3** (current). v2 and v1 are deprecated |
 | Pad, φ, card ids | v2 §3, unchanged. Card id → rank = id // 4 (A, 2, …, 10, J, Q, K = 0…12), suit = id % 4 (Clubs, Hearts, Spades, Diamonds), amount k = suit + 1 |
 | E_m | **ZP26**: 52 card steps from the Ace face, then 26 echoes of card 52 (§5). No grip, no F3 rounds |
 | Chaining, IV, DM, digest | v2 §3, unchanged: final position only, IV-COOK12, `h' = compose(h, E_m(h))`, 29-byte rank |

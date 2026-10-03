@@ -1,4 +1,4 @@
-<!-- Owns: the evidence for MegaDreifach v3 (candidate, ZP26): what the repo checks (sudo tests, the in-tree harness on the sudoc build and its logs), the one note on the out-of-tree study code behind the other logs, and which log backs each SPEC v3 §8 number. Maintenance rules: ../../../../DOCS.md. -->
+<!-- Owns: the evidence for MegaDreifach v3 (current, ZP26): what the repo checks (sudo tests, the in-tree harness on the sudoc build and its logs), the one note on the out-of-tree study code behind the other logs, and which log backs each SPEC v3 §8 number. Maintenance rules: ../../../../DOCS.md. -->
 # MegaDreifach v3: evidence
 
 This directory backs the numbers in [SPEC v3 §8](../../../../primitives/hash/megadreifach/v3/SPEC.md#8-security-status). It is empirical evidence, not a proof of security. The design analysis, including every rejected variant, is in [`ANALYSIS.md`](ANALYSIS.md).

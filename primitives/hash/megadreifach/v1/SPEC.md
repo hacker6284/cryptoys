@@ -1,6 +1,6 @@
 # MegaDreifach v1 (deprecated, broken, frozen)
 
-> **Deprecated and broken.** This is the frozen v1 specification. It is kept verbatim below this banner so the published v1 vectors (`../kats/megaminx_hash_kats_v1.json`, formerly `kats/megaminx_hash_kats.json`) and the write-ups keep a fixed target. Do not change its behavior. The current version is v2 (`../SPEC.md`, `../megadreifach.sudo`, KATs `../kats/megaminx_hash_kats_v2.json`).
+> **Deprecated and broken.** This is the frozen v1 specification. It is kept verbatim below this banner so the published v1 vectors (`../kats/megaminx_hash_kats_v1.json`, formerly `kats/megaminx_hash_kats.json`) and the write-ups keep a fixed target. Do not change its behavior. The current version is v3 (`../v3/SPEC.md`, `../v3/megadreifach.sudo`, KATs `../kats/megaminx_hash_kats_v3.json`); v2 (`../SPEC.md`, `../megadreifach.sudo`, KATs `../kats/megaminx_hash_kats_v2.json`) is deprecated too.
 >
 > **Why deprecated.** The v1 grip rule (Recipe A: read the clockwise-noon corner *after* the held-face, noon and Front turns, with the table noon; 12 F3 rounds) has two separate flaws, both documented in PR #119 ([`proofs/megadreifach/security/REPORT.md`](../../../../proofs/megadreifach/security/REPORT.md)):
 >

@@ -8,6 +8,9 @@
  *   spec.id, spec.title
  *   spec.camera { position, target, fov, margin }  view direction + fov;
  *                 the view is fitted to spec.frame(ctx) (a THREE.Box3)
+ *                 fill: instead of margin, fit in perspective: the box's
+ *                 projection centred, filling that fraction of the
+ *                 view's height or width (whichever it reaches first)
  *   spec.voice  a library entry's voice (demos/anim/<name>/): the page
  *               is then only a viewer, and the code the entry drives
  *               plays its sounds (ctx.contact is not needed)
@@ -70,6 +73,40 @@ export function fitDistance(box, target, dir, fovDeg, aspect) {
         d = Math.max(d, Math.abs(q.dot(right)) / tanH + toward, Math.abs(q.dot(up)) / tanV + toward);
     }
     return d;
+}
+
+/**
+ * Perspective fit: { target, position } looking along -dir so the box's
+ * projected corners are centred and fill `fill` of the view (height or
+ * width, whichever binds). fitDistance above is a conservative bound
+ * that leaves a long, deep box low and small in the frame.
+ */
+export function perspectiveFit(box, dir, fovDeg, aspect, fill) {
+    const cam = new THREE.PerspectiveCamera(fovDeg, aspect, 0.01, 100);
+    const target = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3()).length();
+    let d = size;
+    const forward = dir.clone().negate();
+    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    const up = new THREE.Vector3().crossVectors(right, forward).normalize();
+    const q = new THREE.Vector3();
+    for (let k = 0; k < 60; k++) {
+        cam.position.copy(target).addScaledVector(dir, d);
+        cam.lookAt(target);
+        cam.updateMatrixWorld(true);
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (let i = 0; i < 8; i++) {
+            q.set(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z).project(cam);
+            minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x); minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);
+        }
+        const tanV = Math.tan((fovDeg * Math.PI) / 360);
+        // Recentre (NDC offset → world at the target's depth), then scale the distance.
+        target.addScaledVector(right, ((minX + maxX) / 2) * d * tanV * aspect * 0.8);
+        target.addScaledVector(up, ((minY + maxY) / 2) * d * tanV * 0.8);
+        const ext = Math.max((maxX - minX) / 2, (maxY - minY) / 2);
+        d *= 1 + (ext / fill - 1) * 0.8;
+    }
+    return { target, position: target.clone().addScaledVector(dir, d) };
 }
 
 export async function mountMicro(spec, settings) {
@@ -147,9 +184,15 @@ export async function mountMicro(spec, settings) {
         camera.aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
         if (frameBox && !frameBox.isEmpty()) {
             const dir = from.clone().sub(target).normalize();
-            frameBox.getCenter(target);
-            const d = fitDistance(frameBox, target, dir, camera.fov, camera.aspect) * (cam.margin ?? 1.08);
-            from.copy(target).addScaledVector(dir, d);
+            if (cam.fill) {
+                const fit = perspectiveFit(frameBox, dir, camera.fov, camera.aspect, cam.fill);
+                target.copy(fit.target);
+                from.copy(fit.position);
+            } else {
+                frameBox.getCenter(target);
+                const d = fitDistance(frameBox, target, dir, camera.fov, camera.aspect) * (cam.margin ?? 1.08);
+                from.copy(target).addScaledVector(dir, d);
+            }
         }
         camera.position.copy(from);
         camera.updateProjectionMatrix();

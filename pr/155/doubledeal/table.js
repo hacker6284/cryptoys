@@ -38,11 +38,57 @@ function paintTexture(image, anisotropy) {
     return texture;
 }
 
+// The card art's own outline (px): 5 px black, outer corner radius 12.
+const ART_BORDER = 5;
+const ART_RADIUS = 12;
+
+/**
+ * The art redrawn at the card's own aspect (width / height), undistorted:
+ * the art inside its outline keeps its scale and full height, centred,
+ * with white margins at the sides; the outline is drawn again on the new
+ * edge. (The art is 338×489 px, 1.447; a 63×88 mm card is 1.397.)
+ */
+function paintCardTexture(image, anisotropy, aspect) {
+    if (!aspect) return paintTexture(image, anisotropy);
+    const B = ART_BORDER;
+    const h = image.height;
+    const w = Math.round(h * aspect);
+    const iw = image.width - 2 * B;
+    const ih = h - 2 * B;
+    const x0 = Math.round((w - iw) / 2);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const g = canvas.getContext("2d");
+    g.fillStyle = "#fffdf8";
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = "#ffffff";
+    g.fillRect(B, B, w - 2 * B, h - 2 * B);
+    g.drawImage(image, B, B, iw, ih, x0, B, iw, ih);
+    // The old outline's curved corners reach 6 px into the interior: clear them.
+    g.fillStyle = "#ffffff";
+    for (const [x, y] of [[x0, B], [x0 + iw - 8, B], [x0, B + ih - 8], [x0 + iw - 8, B + ih - 8]]) g.fillRect(x, y, 8, 8);
+    g.strokeStyle = "#000000";
+    g.lineWidth = B;
+    g.beginPath();
+    g.roundRect(B / 2, B / 2, w - B, h - B, ART_RADIUS - B / 2);
+    g.stroke();
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = anisotropy;
+    return texture;
+}
+
 export function cardAssetUrl(file) {
     return new URL(`./vendor/cards/${file}`, import.meta.url).href;
 }
 
-export async function loadCardTextures(anisotropy = 1) {
+/**
+ * aspect: the card's width / height (doubledeal/real-layout.js REAL_LAYOUT
+ * .artAspect, 63 / 88) to redraw the art undistorted at it; omitted, the
+ * art as it is (the standalone card is the art's own aspect).
+ */
+export async function loadCardTextures(anisotropy = 1, { aspect = null } = {}) {
     const faceImages = await Promise.all(
         SUIT_FILE.flatMap((suit) => RANK_FILE.map((rank) => loadImage(cardAssetUrl(`${suit}_${rank}.png`)))),
     );
@@ -51,9 +97,9 @@ export async function loadCardTextures(anisotropy = 1) {
         loadImage(cardAssetUrl("back-red.png")),
     ]);
     return {
-        faces: faceImages.map((image) => paintTexture(image, anisotropy)),
-        navy: paintTexture(navyImage, anisotropy),
-        red: paintTexture(redImage, anisotropy),
+        faces: faceImages.map((image) => paintCardTexture(image, anisotropy, aspect)),
+        navy: paintCardTexture(navyImage, anisotropy, aspect),
+        red: paintCardTexture(redImage, anisotropy, aspect),
     };
 }
 

@@ -17,10 +17,10 @@ void mountTablePage({
     layout: REAL_LAYOUT,
     frameAll: true,
     frameLift: TABLE_TIMING.liftHop * REAL_LAYOUT.scale, // the cards' hop (101 mm)
-    // From the table's near edge, 55° down the 13 rows (kept under the
-    // 2.68 m ceiling, so a wider lens).
-    camera: { position: [DEN.x, 1.772, DEN.z + 0.7], target: [DEN.x, 0.772, DEN.z], fov: 50, margin: 0.92 },
-    frameNear: 0.15,
+    // The dealer's view from the table's near edge, 42° down the 13 rows,
+    // fitted in perspective: the whole 8×13 and the packet centred,
+    // filling 88 % of the view.
+    camera: { position: [DEN.x, 1.672, DEN.z + 1.0], target: [DEN.x, 0.772, DEN.z], fov: 40, fill: 0.88 },
     prepareEach: true,
     prepare(table, ctx) {
         const kind = ctx.choice("major");

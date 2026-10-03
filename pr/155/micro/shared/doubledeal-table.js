@@ -34,7 +34,6 @@ export const ORDER = (() => {
  *   frameAll  frame both grids and the hand pile (else the message grid
  *             and the pile)
  *   frameLift m of room above the cards (their hop)
- *   frameNear m of room on the camera's side
  */
 export function mountTablePage(page, settings) {
     let table = null;
@@ -47,11 +46,13 @@ export function mountTablePage(page, settings) {
         ...(page.voice ? { voice: page.voice } : { slots: page.slots }),
         async setup(ctx) {
             ctx.status("Loading cards…");
-            const textures = await loadCardTextures(4);
+            const textures = await loadCardTextures(4, { aspect: page.layout?.artAspect ?? null });
             table = stageCardTable(ctx.world, textures, { poses: null, visible: true, layout: page.layout ?? null });
             table.setCardsVisible(true);
         },
         frame(ctx) {
+            // Every card in place first (the key grid too: frameAll).
+            table.showDecks(ORDER, ORDER.slice().reverse());
             // The message grid and the hand pile in front of it (frameAll: and the key grid).
             const box = new ctx.THREE.Box3();
             for (const state of [{ kind: "dealrm", message: ORDER }, { kind: "scoopcm" }]) {
@@ -62,9 +63,6 @@ export function mountTablePage(page, settings) {
             }
             // frameLift (m): room above the cards for their hop.
             if (page.frameLift) box.max.y += page.frameLift;
-            // frameNear (m): extra room on the camera's side (perspective
-            // makes the near end of a long layout take more of the view).
-            if (page.frameNear) box.max.z += page.frameNear;
             return box;
         },
         async reset(ctx) {

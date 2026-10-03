@@ -420,7 +420,11 @@ MD_V1_README_THEOREMS = {
 MD_V3_LEAN = ROOT.parent / "megadreifach-v3" / "lean"
 MD_V3_README = MD_V3_LEAN.parent / "README.md"
 MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
-    "compose_refines", "face_move_refines", "face_turn_refines", "inverse_refines"]}
+    "compose_refines", "face_move_refines", "face_turn_refines", "inverse_refines",
+    "pad_message_refines", "pad_message_refines_array", "require_permutation_refines",
+    "require_permutation_refines_array", "position_to_bytes_refines_gen",
+    "position_to_bytes_refines", "phi_chunk_refines", "phi_chunk_refines_array",
+    "phi_inv_refines", "phi_inv_refines_array"]}
 
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",

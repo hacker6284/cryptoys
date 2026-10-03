@@ -19,30 +19,38 @@ compiled and run. It is not a kernel proof, not a proof that the emitted Lean ma
 JSON is generated from the sudoc JS build of the same sudo (`kats/regen_v3.mjs`), so the KAT run
 compares two builds of one source, not two independent implementations.
 
-## Link 2 so far: the shared position layer
+## Link 2 so far: the layers shared with v2
 
 [`lean/MegaDreifachV3/Link2/Shared.lean`](lean/MegaDreifachV3/Link2/Shared.lean) states, for
 the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
 `inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
-`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 49 v2 modules
-that elaborate unchanged against the v3 emit). The model side is the v2 position algebra,
+`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 61 v2 modules
+that elaborate against the v3 emit). The model side is the v2 position algebra,
 which v3 keeps. These four functions are not exports.
 
-Not reusable unchanged, so not in the roots:
-- the v2 grip lemmas (EmHelpers and everything above it), which v3 has no use for;
-- EvenRank, PadRef and RequirePerm. They hard-code v2 `.sudo` line numbers, which the emitter
-  puts in every `sudoAssert` (e.g. 538 in v2, 468 in v3), or a v2 matcher name
-  (`rot_slice.match_2`). Their dependents PosBytes, PhiChunk and PhiInv are out as well.
+[`lean/MegaDreifachV3/Link2/Codec.lean`](lean/MegaDreifachV3/Link2/Codec.lean) states, for the
+v3 byte codecs, `pad_message_refines` (on `PadWf`), `pad_message_refines_array`,
+`require_permutation_refines` (on permutations of `0..51`; it returns its input),
+`require_permutation_refines_array`, `position_to_bytes_refines_gen` (the digest encoding, on
+every position with bijective corner and edge tables), `position_to_bytes_refines` (under the
+v2 side conditions `PosBytesWf`), `phi_chunk_refines`, `phi_chunk_refines_array`,
+`phi_inv_refines` and `phi_inv_refines_array`. Same method: the v2 lemmas, whose step lemmas
+take the `.sudo` assert line as a parameter (the emitter writes it into every `sudoAssert`;
+v2 and v3 differ there), re-elaborated against this package's `Generated/`.
+
+Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
+EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The v3 card
+phase (`em_run`, `em_block`) and `Hash`, `HashDeck`, `HashDeckBody` are not linked yet.
 
 ## Link 2 status of each export
 
-Every `export func` of the v3 sudo, and its Link 2 theorem. None exists yet.
+Every `export func` of the v3 sudo, and its Link 2 theorem.
 
 | Emitted function | Link 2 theorem |
 | --- | --- |
-| `pad_message` | none yet |
-| `require_permutation` | none yet |
-| `position_to_bytes` | none yet |
+| `pad_message` | `pad_message_refines` (on `PadWf`) |
+| `require_permutation` | `require_permutation_refines` (on permutations of `0..51`) |
+| `position_to_bytes` | `position_to_bytes_refines_gen` (bijective cp and ep) |
 | `Hash` | none yet |
 | `MegaDreifach` | none yet |
 | `HashDeck` | none yet |

@@ -25,13 +25,15 @@ root = "Main"
 # v2 Link 2 layers re-elaborated against the v3 emit (this package's Generated/, module
 # `Megadreifach`): the sources stay in ../../megadreifach/lean, the .olean files are built
 # here. Explicit roots, not a `MegaDreifach.+` glob: the roots are exactly the modules
-# (with their full import closure) that elaborate unchanged against the v3 emit. Not
-# listed, because they do not: the v2 grip lemmas (EmHelpers, EmCorner, EmEdge, EmSpin,
-# EmRecipe, EmStep, EmInv, EmBlock, EmIv, VHash, VHashDeck, InjInv) and the modules that
-# hard-code v2 .sudo line numbers or v2 matcher names (EvenRank, PadRef, RequirePerm and
-# their dependents PosBytes, PhiChunk, PhiInv). See ../README.md.
-# MegaDreifach.Em (the v2 model, grips included) is re-elaborated only because FaceTurn
-# and Inverse take faceTurn / inverse from it; it states nothing about v3's card phase.
+# (with their full import closure) that elaborate against the v3 emit. The step lemmas of
+# RequirePerm, PadRef, EvenRank(Gen), PosBytes, PhiChunk and PhiInv take the .sudo assert
+# line as a parameter, so they hold for both emits. EmHelpers, EmCorner and EmEdge are the
+# generic face / corner / edge tables (the grip lemmas are in EmGrip). Not listed, because
+# they name v2-only emitted functions: EmGrip, EmSpin, EmRecipe, EmStep, EmInv, EmBlock,
+# EmIv, InjInv, VHash, VHashDeck. See ../README.md.
+# MegaDreifach.Em (the v2 model, grips included) is re-elaborated because the reused layers
+# take faceTurn / inverse / nbr / cornerSlot / edgeSlot from it; it states nothing about
+# v3's card phase.
 [[lean_lib]]
 name = "MegaDreifachLink"
 srcDir = "../../megadreifach/lean"
@@ -84,4 +86,16 @@ roots = [
   "MegaDreifach.Link2.ToBePad",
   "MegaDreifach.Domain",
   "MegaDreifach.DaviesMeyer",
-  "MegaDreifach.Chain"]
+  "MegaDreifach.Chain",
+  "MegaDreifach.Link2.RequirePerm",
+  "MegaDreifach.Link2.UnfoldMatchers",
+  "MegaDreifach.Link2.PadRef",
+  "MegaDreifach.Link2.EvenRank",
+  "MegaDreifach.Link2.EvenRankGen",
+  "MegaDreifach.Link2.PosBytes",
+  "MegaDreifach.Link2.PosBytesGen",
+  "MegaDreifach.Link2.PhiChunk",
+  "MegaDreifach.Link2.PhiInv",
+  "MegaDreifach.Link2.EmHelpers",
+  "MegaDreifach.Link2.EmCorner",
+  "MegaDreifach.Link2.EmEdge"]

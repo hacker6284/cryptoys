@@ -1,7 +1,7 @@
 <!-- Owns: what this Generated/ package is and that its emitted files are not hand-edited (this README is hand-written; tools/emit_lean.py keeps it). Maintenance rules: ../../../../DOCS.md. -->
 # Generated MegaDreifach Lean
 
-**Do not edit these files by hand.** They are produced from the current **v2**
+**Do not edit these files by hand.** They are produced from the deprecated **v2** (v3 is current and has no Lean target)
 [`primitives/hash/megadreifach/megadreifach.sudo`](../../../../primitives/hash/megadreifach/megadreifach.sudo)
 by `proofs/emit_lean.sh` (target `megadreifach`). The frozen v1 emit lives in
 [`proofs/deprecated/megadreifach-v1/lean/Generated/`](../../../deprecated/megadreifach-v1/lean/Generated/README.md).

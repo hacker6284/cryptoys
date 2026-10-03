@@ -1,4 +1,4 @@
-// MegaDreifach v3 (candidate; v2 stays current until a separate change). The rules are
+// MegaDreifach v3 (current; v1 and v2 are deprecated). The rules are
 // primitives/hash/megadreifach/v3/SPEC.md. A toy three-megaminx Merkle-Damgard hash. Not for real use.
 // Product name MegaDreifach is locked. The puzzle/group is megaminx.
 // v3 changes only the card phase W inside E_m (SPEC v3 §5): colour-named card steps with a last-face

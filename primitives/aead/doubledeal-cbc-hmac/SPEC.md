@@ -263,7 +263,7 @@ AEAD_OUT=/tmp/ddch node primitives/aead/doubledeal-cbc-hmac/aead.test.mjs
 | Byte-domain AEAD | `primitives/aead/doubledeal-cbc-hmac/aead.mjs` | CBC over §5.3 + sudo HMAC |
 | KATs | `primitives/aead/doubledeal-cbc-hmac/kats/doubledeal_cbc_hmac_kats.json` | Published vectors |
 | DoubleDeal rounds | `primitives/cipher/doubledeal/doubledeal.sudo` | `encrypt` / `decrypt` |
-| MegaDreifach | `primitives/hash/megadreifach/megadreifach.sudo` | `Hash` |
+| MegaDreifach v2 (deprecated) | `primitives/hash/megadreifach/megadreifach.sudo` | `Hash` |
 | §5.3 encoding | `demos/doubledeal/cards.js` | 28-byte / 29-byte ranks |
 
 ---

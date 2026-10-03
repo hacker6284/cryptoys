@@ -2,7 +2,9 @@
 
 > **v2 (this file) is deprecated. MegaDreifach v3 supersedes it** ([`v3/SPEC.md`](v3/SPEC.md), KATs [`kats/megaminx_hash_kats_v3.json`](kats/megaminx_hash_kats_v3.json)). Why: v2's compression step is distinguishable from random in the free-start setting, because a block reads only some of the 50 pieces and flipping unread pieces of the chaining value leaves the output predictable (§8). v3's ZP26 card phase fixes that: every block reads all 50 pieces (PROVED by a v3 sudo test), and the same free-start test finds no bias on v3 (measured with out-of-tree code, v3 SPEC §8).
 >
-> v2 stays here, frozen and unchanged, because DoubleDeal-CBC-HMAC (and the HMAC-MegaDreifach inside it) and the Lean package [`proofs/megadreifach/`](../../../proofs/megadreifach/README.md) still use it. Moving them to v3 is a separate decision.
+> v2 stays here. What is frozen is v2's definition, [`megadreifach.sudo`](megadreifach.sudo) and the KATs (every vector and digest in [`kats/megaminx_hash_kats_v2.json`](kats/megaminx_hash_kats_v2.json); only its `status` line now says deprecated). This file's prose is not frozen: it carries the deprecation notes. The header comments of the frozen `.sudo` files, "MegaDreifach v2 (current)" in `megadreifach.sudo` and "Current: ../megadreifach.sudo (v2)" in `v1/megadreifach.sudo`, predate this deprecation and stay as they are.
+>
+> Still on v2: DoubleDeal-CBC-HMAC and the HMAC-MegaDreifach inside it; the MegaDreifach Lean package [`proofs/megadreifach/`](../../../proofs/megadreifach/README.md); the Scramble and BS Lean packages, through v2's Link 2 lemmas; `proofs/sudo_py.py --selftest`; and v3 itself, whose SPEC points here for pad, φ, Merkle–Damgård and the digest. Moving any of them to v3 is a separate decision.
 
 > **v1 is deprecated (broken)** and frozen at [`v1/`](v1/SPEC.md) (KATs: [`kats/megaminx_hash_kats_v1.json`](kats/megaminx_hash_kats_v1.json)). Why, with the #119 evidence: the banner of [`v1/SPEC.md`](v1/SPEC.md).
 

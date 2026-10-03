@@ -77,7 +77,7 @@ The hand procedure needs none of these tables.
 2. `e ← E_m(h) = W·h`: start at position h. Run the 52 card steps (§5.3), then the 26 echoes (§5.4).
 3. `h ← compose(h, e)`. In the sudo, steps 2–3 are `dm_step(h, deal)`, used by `Hash`, `HashDeckBody` and `HashDeckBodyFrom`.
 
-Merkle–Damgård and the digest are as in v2 §5.
+Merkle–Damgård chaining is as in v2 §3, and the digest as in v2 §6.
 
 §5.1–§5.4 are the hand procedure. §5.5 states the same rule in the terms of the sudo. If any of them disagrees with the sudo, the sudo is normative, and the prose is a bug.
 
@@ -197,14 +197,14 @@ v3 costs about 2.4× v2's face turns and **about 2.2× v2's clicks** (585 / 270 
 
 ## 5.7 Hand details: IV-COOK12 and the 3-solve (unchanged from v2)
 
-**IV-COOK12 by hand.** As in v2 §5.7.
+**IV-COOK12 by hand.** From solved, in the home grip, turn each face +1 once, in card order A, 2, 3, …, Q (Up, Front, the upper ring, the lower ring, Down). No re-grip.
 
 **3-solve by hand.** Between blocks you have three megaminxes, (A, B, C) = (h, h⁻¹, id). Run E_m on A, held any way. Then:
 1. solve B, making each of its turns on A as well;
 2. solve A, making each of its turns on B and C as well;
 3. solve C, making each of its turns on A as well.
 
-Solve each megaminx by any method you know. Afterwards A holds the next chaining value, B its inverse, and C is solved, ready for the next block. The software form is `compose(h, e)` (§5).
+Solve each megaminx by any method you know. Afterwards A holds the next chaining value, B its inverse, and C is solved, ready for the next block. The software form is `compose(h, e)`, the sudo's `dm_step` (§5).
 
 ## 5.8 Coverage and what a person must keep track of
 

@@ -6,7 +6,8 @@
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
 # Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10, v11),
-# MegaDreifach (current v2 and frozen v1), Scramble, DoubleDeal-CBC-HMAC and BS. DoubleDeal's test-only
+# MegaDreifach (deprecated v2 and frozen v1; v3 is current and has no Lean target), Scramble,
+# DoubleDeal-CBC-HMAC and BS. DoubleDeal's test-only
 # kind-scan whiles are stripped under the gate. CBC-HMAC imports
 # MegaDreifach via an extra -I.
 #

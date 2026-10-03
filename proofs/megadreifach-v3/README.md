@@ -38,6 +38,17 @@ v2 side conditions `PosBytesWf`), `phi_chunk_refines`, `phi_chunk_refines_array`
 take the `.sudo` assert line as a parameter (the emitter writes it into every `sudoAssert`;
 v2 and v3 differ there), re-elaborated against this package's `Generated/`.
 
+The v3 card phase starts here. [`lean/MegaDreifachV3/Em.lean`](lean/MegaDreifachV3/Em.lean) is a
+typed Lean model of the v3 sudo's `lowest_nbr_index` .. `em_block`, a transliteration on the v2
+position algebra. Like v2's `MegaDreifach.Em`, it is hand-written, so its agreement with the
+emitted code is what Link 2 proves. The two piece searches (`edge_face_of`, `corner_face_of`)
+are `Option`-valued in the model, and `none` is the emitted code's trap. So far:
+- `triples_ok` (`Link2/CardFacts.lean`, kernel `decide`). For every colour `c` and suit amount
+  `k ∈ 1..4`, `suit_nbrs c k = (n, n2)` names a real edge `(c, n)` and a real corner
+  `(c, n, n2)`, which `corner_slot` finds. These are the side conditions of the piece searches.
+- `lowest_nbr_index_refines` and `suit_nbrs_refines` (`Link2/CardTables.lean`, kernel
+  `decide!` tables): exact on every colour and every `k ∈ 1..4`.
+
 Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
 EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The v3 card
 phase (`em_run`, `em_block`) and `Hash`, `HashDeck`, `HashDeckBody` are not linked yet.

@@ -39,7 +39,7 @@ take the `.sudo` assert line as a parameter (the emitter writes it into every `s
 v2 and v3 differ there), re-elaborated against this package's `Generated/`.
 
 The v3 card phase starts here. [`lean/MegaDreifachV3/Em.lean`](lean/MegaDreifachV3/Em.lean) is a
-typed Lean model of the v3 sudo's `lowest_nbr_index` .. `em_block`, a transliteration on the v2
+typed Lean model of the v3 sudo's `lowest_nbr_index` .. `dm_step`, a transliteration on the v2
 position algebra. Like v2's `MegaDreifach.Em`, it is hand-written, so its agreement with the
 emitted code is what Link 2 proves. The two piece searches (`edge_face_of`, `corner_face_of`)
 are `Option`-valued in the model, and `none` is the emitted code's trap. So far:
@@ -73,18 +73,22 @@ are `Option`-valued in the model, and `none` is the emitted code's trap. So far:
   `chain_loop`. A card step keeps bijective tables and adds at most 10 to each counter, an echo
   at most 12, so every iteration meets the `card_step_refines` side conditions. `emBlock_inj`:
   `E_m` keeps bijective tables.
+  `dm_step_refines`: the sudo's Davies–Meyer step
+  `dm_step(h, deal) = compose(h, em_block(h, deal))` (used by `Hash`, `HashDeckBody` and
+  `HashDeckBodyFrom`) is the model `dmStep`, under the same conditions. `dmStep_inj`: it
+  keeps bijective tables.
 - `Hash` (`Link2/VHash.lean`). `iv_cook12_refines`: the emitted IV is `Em.ivCook12` (v3 keeps
   the v2 IV). `v_Hash_refines` (on `PadWf`): the emitted `Hash` returns `vhashAlg msg`, i.e. pad,
   28-byte blocks, `phiUnrank ∘ fromBE`, Davies–Meyer with the v3 step
-  `compose h (emBlock h deal)` from `ivCook12`, then the 29-byte rank digest. Every chaining
-  value has bijective tables, so `em_block_refines` and `position_to_bytes_refines_gen` apply.
+  `dmStep` (the sudo's `dm_step`) from `ivCook12`, then the 29-byte rank digest. Every chaining
+  value has bijective tables, so `dm_step_refines` and `position_to_bytes_refines_gen` apply.
 - `HashDeck` and the body exports (`Link2/VHashDeck.lean`). `v_HashDeck_refines` (on
   `PhiInvWf`): `HashDeck(deal) = Hash(φ⁻¹(deal))`, the algebraic hash of the deal's 28-byte
   Lehmer rank. `v_HashDeck_two_blocks`: that is one v3 Davies–Meyer block keyed by the deal
   itself from `ivCook12` (via the φ round trip `phiUnrank_lehmerRank`), then the fixed pad
   block `deckPadBlock`. `body_from_refines`, `v_HashDeckBody_refines` and
   `v_HashDeckBodyFrom_refines`: on a permutation of `0..51` (and, for `BodyFrom`, a chaining
-  value with bijective tables) the digest of `compose h (emBlock h deal)`.
+  value with bijective tables) the digest of `dmStep h deal`.
 
 Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
 EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The v3 files restate the few generic

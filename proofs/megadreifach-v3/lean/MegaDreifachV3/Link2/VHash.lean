@@ -2,8 +2,9 @@
   MegaDreifach v3 Link 2: `iv_cook12` and `Hash`.
   `iv_cook12_refines`: the emitted IV is the v2 model `Em.ivCook12` (v3 keeps the IV).
   `v_Hash_refines` (on `PadWf`): the emitted v3 `Hash` is the algebraic MD hash: pad, split
-  into 28-byte blocks, `phiUnrank ∘ fromBE`, Davies–Meyer with the v3 `Em.dmStep`
-  (`compose h (emBlock h deal)`) from `ivCook12`, then the 29-byte rank digest.
+  into 28-byte blocks, `phiUnrank ∘ fromBE`, Davies–Meyer with the v3 `Em.dmStep` (the
+  sudo's `dm_step`, `compose h (emBlock h deal)`) from `ivCook12`, then the 29-byte rank
+  digest.
   The chunk-copy loop lemmas restate the v2 ones (v2 VHash imports the v2-only EmBlock).
 -/
 import MegaDreifachV3.Link2.EmRun
@@ -219,7 +220,7 @@ def vhashAlg (msg : List Nat) : List Nat :=
   positionToBytes (chainPre (pad msg) ((pad msg).length / 28))
 
 theorem injPos_dmBlock (h : Position) (blk : List Nat) (hh : InjPos h) : InjPos (dmBlock h blk) :=
-  injPos_compose' _ _ hh (emBlock_inj h hh _)
+  dmStep_inj h hh _
 
 theorem injPos_foldl_dmBlock (l : List (List Nat)) : ∀ h, InjPos h →
     InjPos (l.foldl dmBlock h) := by
@@ -263,13 +264,11 @@ theorem v_Hash_refines (msg : List Nat) (hp : PadWf msg) :
     dsimp only
     rw [show List.take 28 (List.drop (28 * b) (pad msg)) = blockAt (pad msg) b from rfl,
       phi_chunk_refines _ hwf, ok_bind,
-      em_block_refines _ (injPos_chainPre _ _) _
-        (by rw [phiUnrank_length_of_wf _ hwf]; exact Nat.le_refl _) (phiUnrank_cards _ hwf), ok_bind,
-      compose_refines, ok_bind, pure_bind]
-    rw [show compose (chainPre (pad msg) b) (MegaDreifachV3.Em.emBlock (chainPre (pad msg) b)
-        (phiUnrank (fromBE (blockAt (pad msg) b)))) = chainPre (pad msg) (b + 1) from
+      dm_step_refines _ (injPos_chainPre _ _) _
+        (by rw [phiUnrank_length_of_wf _ hwf]; exact Nat.le_refl _) (phiUnrank_cards _ hwf), ok_bind]
+    rw [show MegaDreifachV3.Em.dmStep (chainPre (pad msg) b)
+        (phiUnrank (fromBE (blockAt (pad msg) b))) = chainPre (pad msg) (b + 1) from
       (chainPre_succ _ _).symm, pure_bind]
-    dsimp only
     exact loopTailN b _ hb (FitsLen.of_le hfitsP (by omega)) _
   · dsimp only
     rw [position_to_bytes_refines_gen _ (injPos_chainPre _ _), ok_bind]

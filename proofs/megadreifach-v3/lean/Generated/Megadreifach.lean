@@ -3114,23 +3114,29 @@ def em_block (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position)
     let _t882 ← em_run h deal
     pure (_t882).sudo_3Run_1g
 
+def dm_step (h : Position) (deal : Array (Int)) : Except SudoRt.Trap (Position) :=
+  do
+    let _t883 ← em_block h deal
+    let _t884 ← compose h _t883
+    pure _t884
+
 def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t884 ← pad_message msg
-    let padded := _t884
-    let _as887 ← SudoRt.sudoAssert (decide ((SudoRt.listLen padded) > (0 : Int))) 747
-    let _t889 ← SudoRt.modI (SudoRt.listLen padded) pad_block
-    let _as890 ← SudoRt.sudoAssertEq _t889 (0 : Int) 748
-    let _t891 ← iv_cook12
-    let h := _t891
-    let _t893 ← SudoRt.divI (SudoRt.listLen padded) pad_block
-    let nblocks := _t893
-    let _t906 ← SudoRt.subI nblocks (1 : Int)
+    let _t886 ← pad_message msg
+    let padded := _t886
+    let _as889 ← SudoRt.sudoAssert (decide ((SudoRt.listLen padded) > (0 : Int))) 751
+    let _t891 ← SudoRt.modI (SudoRt.listLen padded) pad_block
+    let _as892 ← SudoRt.sudoAssertEq _t891 (0 : Int) 752
+    let _t893 ← iv_cook12
+    let h := _t893
+    let _t895 ← SudoRt.divI (SudoRt.listLen padded) pad_block
+    let nblocks := _t895
+    let _t907 ← SudoRt.subI nblocks (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t906
+    let _toV := _t907
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init908 := (_fromV, h)
-    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init908 fuel (fun σ =>
+    let _init909 := (_fromV, h)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init909 fuel (fun σ =>
     let b := σ.1
     let h := σ.2
     do
@@ -3138,14 +3144,14 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (b, h))
       else
         match ← ((do
-  let _t895 ← SudoRt.mulI b pad_block
-  let i := _t895
+  let _t897 ← SudoRt.mulI b pad_block
+  let i := _t897
   let chunk := (#[] : Array (Int))
   let _fromV := (0 : Int)
   let _toV := (27 : Int)
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init905 := (_fromV, chunk)
-  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init905 fuel (fun σ =>
+  let _init906 := (_fromV, chunk)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init906 fuel (fun σ =>
     let j := σ.1
     let chunk := σ.2
     do
@@ -3153,13 +3159,13 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
         pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, chunk))
       else
         match ← ((do
-  let _t897 ← SudoRt.addI i j
-  let _t898 ← SudoRt.atL padded _t897
-  let _mb899 := SudoRt.appendL chunk _t898
-  let ⟨_nr900, _⟩ := _mb899
-  let chunk := _nr900
-  let _hm883 := ()
-  let _u901 := _hm883
+  let _t899 ← SudoRt.addI i j
+  let _t900 ← SudoRt.atL padded _t899
+  let _mb901 := SudoRt.appendL chunk _t900
+  let ⟨_nr902, _⟩ := _mb901
+  let chunk := _nr902
+  let _hm885 := ()
+  let _u903 := _hm885
   pure (SudoRt.Flow.cont (ρ := Array (Int)) chunk)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (j, _fs))
@@ -3171,12 +3177,10 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let chunk := σ.2
     do
-      let _t902 ← phi_chunk chunk
-      let deal := _t902
-      let _t903 ← em_block h deal
-      let e := _t903
-      let _t904 ← compose h e
-      let h := _t904
+      let _t904 ← phi_chunk chunk
+      let deal := _t904
+      let _t905 ← dm_step h deal
+      let h := _t905
       pure (SudoRt.Flow.cont (ρ := Array (Int)) h)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
@@ -3189,36 +3193,34 @@ def v_Hash (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let h := σ.2
     do
-      let _t907 ← position_to_bytes h
-      pure _t907) (fun r => pure r))
+      let _t908 ← position_to_bytes h
+      pure _t908) (fun r => pure r))
     pure _out
 
 def v_MegaDreifach (msg : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t909 ← v_Hash msg
-    pure _t909
+    let _t910 ← v_Hash msg
+    pure _t910
 
 def v_HashDeck (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t910 ← require_permutation deal
-    let deal := _t910
-    let _t911 ← phi_inv deal
-    let «raw» := _t911
-    let _t912 ← v_Hash «raw»
-    pure _t912
+    let _t911 ← require_permutation deal
+    let deal := _t911
+    let _t912 ← phi_inv deal
+    let «raw» := _t912
+    let _t913 ← v_Hash «raw»
+    pure _t913
 
 def v_MegaDreifachDeck (deal : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t913 ← v_HashDeck deal
-    pure _t913
+    let _t914 ← v_HashDeck deal
+    pure _t914
 
 def body_from (deal : Array (Int)) (h : Position) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t914 ← require_permutation deal
-    let deal := _t914
-    let _t915 ← em_block h deal
-    let e := _t915
-    let _t916 ← compose h e
+    let _t915 ← require_permutation deal
+    let deal := _t915
+    let _t916 ← dm_step h deal
     let _t917 ← position_to_bytes _t916
     pure _t917
 

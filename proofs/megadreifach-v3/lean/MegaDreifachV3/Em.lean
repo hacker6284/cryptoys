@@ -1,6 +1,6 @@
 /-
   The v3 card phase E_m (SPEC v3 §5) as a typed Lean model: a transliteration of the v3 sudo
-  (primitives/hash/megadreifach/v3/megadreifach.sudo, `lowest_nbr_index` .. `em_block`), on the
+  (primitives/hash/megadreifach/v3/megadreifach.sudo, `lowest_nbr_index` .. `dm_step`), on the
   v2 position algebra (`MegaDreifach.Em`: `faceTurn`, `nbr`, `opp`, `cornerSlot`, `colourOn`,
   `edgeSlot`, `edgeFace`, `edgeColoursAt`, `cornerFace`, `compose`), which v3 keeps.
 
@@ -145,7 +145,8 @@ def emRun (h : Position) (deal : List Nat) : Run :=
 /-- `em_block h deal = em_run(h, deal).g` (E_m = W·h). -/
 def emBlock (h : Position) (deal : List Nat) : Position := (emRun h deal).g
 
-/-- Davies–Meyer step of v3 `Hash`: `h' = compose h (E_m h deal)`. -/
+/-- `dm_step h deal`, the sudo's one Davies–Meyer step (used by `Hash`, `HashDeckBody` and
+    `HashDeckBodyFrom`): `h' = compose h (E_m h deal)`. -/
 def dmStep (h : Position) (deal : List Nat) : Position := compose h (emBlock h deal)
 
 end MegaDreifachV3.Em

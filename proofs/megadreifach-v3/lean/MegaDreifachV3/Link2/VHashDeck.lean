@@ -6,7 +6,7 @@
     deal from IV-COOK12, then the fixed pad block `deckPadBlock`.
   * `body_from_refines`, `v_HashDeckBody_refines`, `v_HashDeckBodyFrom_refines` (on
     permutations of `0..51`; `BodyFrom` also on a chaining value with bijective tables): the
-    digest of `compose h (emBlock h deal)`.
+    digest of `dmStep h deal = compose h (emBlock h deal)` (the sudo's `dm_step`).
   The φ round trip lemmas restate the v2 ones (v2 VHashDeck imports the v2-only EmBlock).
 -/
 import MegaDreifachV3.Link2.VHash
@@ -212,8 +212,8 @@ theorem body_from_refines (h : Position) (hh : InjPos h) (deal : List Nat)
   unfold Megadreifach.body_from
   rw [(require_permutation_refines deal hp).1, ok_bind]
   dsimp only
-  rw [em_block_refines h hh deal (by rw [hp.1]; exact Nat.le_refl _) hp.2.2, ok_bind, compose_refines, ok_bind,
-    position_to_bytes_refines_gen _ (injPos_compose' _ _ hh (emBlock_inj h hh deal)), ok_bind]
+  rw [dm_step_refines h hh deal (by rw [hp.1]; exact Nat.le_refl _) hp.2.2, ok_bind,
+    position_to_bytes_refines_gen _ (dmStep_inj h hh deal), ok_bind]
   rfl
 
 theorem v_HashDeckBody_refines (deal : List Nat) (hp : isPermutation52 deal) :

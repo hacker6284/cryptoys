@@ -13,7 +13,7 @@ def test_identity_rank_is_29_zero_bytes : Except SudoRt.Trap Unit :=
     let _t1 ← identity
     let _t2 ← position_to_bytes _t1
     let z := _t2
-    let _as4 ← SudoRt.sudoAssertEq (SudoRt.listLen z) digest_len 845
+    let _as4 ← SudoRt.sudoAssertEq (SudoRt.listLen z) digest_len 847
     let _fromV := (0 : Int)
     let _toV := (28 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
@@ -26,7 +26,7 @@ def test_identity_rank_is_29_zero_bytes : Except SudoRt.Trap Unit :=
       else
         match ← ((do
   let _t6 ← SudoRt.atL z i
-  let _as7 ← SudoRt.sudoAssertEq _t6 (0 : Int) 847
+  let _as7 ← SudoRt.sudoAssertEq _t6 (0 : Int) 849
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) i)
@@ -54,14 +54,14 @@ def test_compose_inverse_round_trip : Except SudoRt.Trap Unit :=
     let _t15 ← inverse t
     let _t16 ← compose _t15 t
     let right := _t16
-    let _as17 ← SudoRt.sudoAssertEq (left).sudo_8Position_2cp (idp).sudo_8Position_2cp 854
-    let _as18 ← SudoRt.sudoAssertEq (left).sudo_8Position_2co (idp).sudo_8Position_2co 855
-    let _as19 ← SudoRt.sudoAssertEq (left).sudo_8Position_2ep (idp).sudo_8Position_2ep 856
-    let _as20 ← SudoRt.sudoAssertEq (left).sudo_8Position_2eo (idp).sudo_8Position_2eo 857
-    let _as21 ← SudoRt.sudoAssertEq (right).sudo_8Position_2cp (idp).sudo_8Position_2cp 858
-    let _as22 ← SudoRt.sudoAssertEq (right).sudo_8Position_2co (idp).sudo_8Position_2co 859
-    let _as23 ← SudoRt.sudoAssertEq (right).sudo_8Position_2ep (idp).sudo_8Position_2ep 860
-    let _as24 ← SudoRt.sudoAssertEq (right).sudo_8Position_2eo (idp).sudo_8Position_2eo 861
+    let _as17 ← SudoRt.sudoAssertEq (left).sudo_8Position_2cp (idp).sudo_8Position_2cp 856
+    let _as18 ← SudoRt.sudoAssertEq (left).sudo_8Position_2co (idp).sudo_8Position_2co 857
+    let _as19 ← SudoRt.sudoAssertEq (left).sudo_8Position_2ep (idp).sudo_8Position_2ep 858
+    let _as20 ← SudoRt.sudoAssertEq (left).sudo_8Position_2eo (idp).sudo_8Position_2eo 859
+    let _as21 ← SudoRt.sudoAssertEq (right).sudo_8Position_2cp (idp).sudo_8Position_2cp 860
+    let _as22 ← SudoRt.sudoAssertEq (right).sudo_8Position_2co (idp).sudo_8Position_2co 861
+    let _as23 ← SudoRt.sudoAssertEq (right).sudo_8Position_2ep (idp).sudo_8Position_2ep 862
+    let _as24 ← SudoRt.sudoAssertEq (right).sudo_8Position_2eo (idp).sudo_8Position_2eo 863
     pure ()
 
 def test_iv_cook12_digest : Except SudoRt.Trap Unit :=
@@ -70,16 +70,16 @@ def test_iv_cook12_digest : Except SudoRt.Trap Unit :=
     let _t26 ← position_to_bytes _t25
     let d := _t26
     let _t27 ← hex_iv
-    let _as28 ← SudoRt.sudoAssertEq d _t27 865
+    let _as28 ← SudoRt.sudoAssertEq d _t27 867
     pure ()
 
 def test_empty_pad_is_one_block : Except SudoRt.Trap Unit :=
   do
     let _t29 ← pad_message (#[] : Array (Int))
     let p := _t29
-    let _as31 ← SudoRt.sudoAssertEq (SudoRt.listLen p) (28 : Int) 869
+    let _as31 ← SudoRt.sudoAssertEq (SudoRt.listLen p) (28 : Int) 871
     let _t32 ← SudoRt.atL p (0 : Int)
-    let _as33 ← SudoRt.sudoAssertEq _t32 (128 : Int) 870
+    let _as33 ← SudoRt.sudoAssertEq _t32 (128 : Int) 872
     let _fromV := (1 : Int)
     let _toV := (27 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
@@ -92,7 +92,7 @@ def test_empty_pad_is_one_block : Except SudoRt.Trap Unit :=
       else
         match ← ((do
   let _t35 ← SudoRt.atL p i
-  let _as36 ← SudoRt.sudoAssertEq _t35 (0 : Int) 872
+  let _as36 ← SudoRt.sudoAssertEq _t35 (0 : Int) 874
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) i)
@@ -109,11 +109,11 @@ def test_empty_pad_is_one_block : Except SudoRt.Trap Unit :=
 def test_kat_pad_lengths : Except SudoRt.Trap Unit :=
   do
     let _t43 ← pad_message (#[] : Array (Int))
-    let _as45 ← SudoRt.sudoAssertEq (SudoRt.listLen _t43) (28 : Int) 875
+    let _as45 ← SudoRt.sudoAssertEq (SudoRt.listLen _t43) (28 : Int) 877
     let _t46 ← pad_message (#[(97 : Int), (98 : Int), (99 : Int)] : Array (Int))
-    let _as48 ← SudoRt.sudoAssertEq (SudoRt.listLen _t46) (28 : Int) 876
+    let _as48 ← SudoRt.sudoAssertEq (SudoRt.listLen _t46) (28 : Int) 878
     let _t49 ← pad_message (#[(0 : Int)] : Array (Int))
-    let _as51 ← SudoRt.sudoAssertEq (SudoRt.listLen _t49) (28 : Int) 877
+    let _as51 ← SudoRt.sudoAssertEq (SudoRt.listLen _t49) (28 : Int) 879
     let m27 := (#[] : Array (Int))
     let _fromV := (0 : Int)
     let _toV := (26 : Int)
@@ -144,7 +144,7 @@ def test_kat_pad_lengths : Except SudoRt.Trap Unit :=
     let m27 := σ.2
     do
       let _t56 ← pad_message m27
-      let _as58 ← SudoRt.sudoAssertEq (SudoRt.listLen _t56) (56 : Int) 881
+      let _as58 ← SudoRt.sudoAssertEq (SudoRt.listLen _t56) (56 : Int) 883
       let m28 := (#[] : Array (Int))
       let _fromV := (0 : Int)
       let _toV := (27 : Int)
@@ -175,7 +175,7 @@ def test_kat_pad_lengths : Except SudoRt.Trap Unit :=
     let m28 := σ.2
     do
       let _t63 ← pad_message m28
-      let _as65 ← SudoRt.sudoAssertEq (SudoRt.listLen _t63) (56 : Int) 885
+      let _as65 ← SudoRt.sudoAssertEq (SudoRt.listLen _t63) (56 : Int) 887
       let m29 := (#[] : Array (Int))
       let _fromV := (0 : Int)
       let _toV := (28 : Int)
@@ -206,7 +206,7 @@ def test_kat_pad_lengths : Except SudoRt.Trap Unit :=
     let m29 := σ.2
     do
       let _t70 ← pad_message m29
-      let _as72 ← SudoRt.sudoAssertEq (SudoRt.listLen _t70) (56 : Int) 889
+      let _as72 ← SudoRt.sudoAssertEq (SudoRt.listLen _t70) (56 : Int) 891
       let m56 := (#[] : Array (Int))
       let _fromV := (1 : Int)
       let _toV := (56 : Int)
@@ -237,7 +237,7 @@ def test_kat_pad_lengths : Except SudoRt.Trap Unit :=
     let m56 := σ.2
     do
       let _t77 ← pad_message m56
-      let _as79 ← SudoRt.sudoAssertEq (SudoRt.listLen _t77) (84 : Int) 893
+      let _as79 ← SudoRt.sudoAssertEq (SudoRt.listLen _t77) (84 : Int) 895
       let m100 := (#[] : Array (Int))
       let _fromV := (0 : Int)
       let _toV := (99 : Int)
@@ -270,7 +270,7 @@ def test_kat_pad_lengths : Except SudoRt.Trap Unit :=
     let m100 := σ.2
     do
       let _t86 ← pad_message m100
-      let _as88 ← SudoRt.sudoAssertEq (SudoRt.listLen _t86) (112 : Int) 897
+      let _as88 ← SudoRt.sudoAssertEq (SudoRt.listLen _t86) (112 : Int) 899
       pure ()) (fun r => pure r))
       pure _out) (fun r => pure r))
       pure _out) (fun r => pure r))
@@ -282,17 +282,17 @@ def test_abc_pad_recovers_the_24_bit_length : Except SudoRt.Trap Unit :=
   do
     let _t94 ← pad_message (#[(97 : Int), (98 : Int), (99 : Int)] : Array (Int))
     let p := _t94
-    let _as96 ← SudoRt.sudoAssertEq (SudoRt.listLen p) (28 : Int) 901
+    let _as96 ← SudoRt.sudoAssertEq (SudoRt.listLen p) (28 : Int) 903
     let _t97 ← SudoRt.atL p (0 : Int)
-    let _as98 ← SudoRt.sudoAssertEq _t97 (97 : Int) 902
+    let _as98 ← SudoRt.sudoAssertEq _t97 (97 : Int) 904
     let _t99 ← SudoRt.atL p (1 : Int)
-    let _as100 ← SudoRt.sudoAssertEq _t99 (98 : Int) 903
+    let _as100 ← SudoRt.sudoAssertEq _t99 (98 : Int) 905
     let _t101 ← SudoRt.atL p (2 : Int)
-    let _as102 ← SudoRt.sudoAssertEq _t101 (99 : Int) 904
+    let _as102 ← SudoRt.sudoAssertEq _t101 (99 : Int) 906
     let _t103 ← SudoRt.atL p (3 : Int)
-    let _as104 ← SudoRt.sudoAssertEq _t103 (128 : Int) 905
+    let _as104 ← SudoRt.sudoAssertEq _t103 (128 : Int) 907
     let _t105 ← SudoRt.atL p (27 : Int)
-    let _as106 ← SudoRt.sudoAssertEq _t105 (24 : Int) 906
+    let _as106 ← SudoRt.sudoAssertEq _t105 (24 : Int) 908
     pure ()
 
 def test_phi_of_28_zero_bytes_is_the_identity_deal : Except SudoRt.Trap Unit :=
@@ -301,7 +301,7 @@ def test_phi_of_28_zero_bytes_is_the_identity_deal : Except SudoRt.Trap Unit :=
     let z := _t107
     let _t108 ← phi_chunk z
     let deal := _t108
-    let _as110 ← SudoRt.sudoAssertEq (SudoRt.listLen deal) (52 : Int) 911
+    let _as110 ← SudoRt.sudoAssertEq (SudoRt.listLen deal) (52 : Int) 913
     let _fromV := (0 : Int)
     let _toV := (51 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
@@ -314,7 +314,7 @@ def test_phi_of_28_zero_bytes_is_the_identity_deal : Except SudoRt.Trap Unit :=
       else
         match ← ((do
   let _t112 ← SudoRt.atL deal i
-  let _as113 ← SudoRt.sudoAssertEq _t112 i 913
+  let _as113 ← SudoRt.sudoAssertEq _t112 i 915
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) i)
@@ -326,9 +326,9 @@ def test_phi_of_28_zero_bytes_is_the_identity_deal : Except SudoRt.Trap Unit :=
               pure (SudoRt.Flow.cont (ρ := Unit) i')) (fun σ =>
     do
       let _t114 ← require_permutation deal
-      let _as115 ← SudoRt.sudoAssertEq _t114 deal 914
+      let _as115 ← SudoRt.sudoAssertEq _t114 deal 916
       let _t116 ← phi_inv deal
-      let _as117 ← SudoRt.sudoAssertEq _t116 z 915
+      let _as117 ← SudoRt.sudoAssertEq _t116 z 917
       pure ()) (fun r => pure r))
     pure _out
 
@@ -336,9 +336,9 @@ def test_hash_aliases_agree_on_the_empty_message : Except SudoRt.Trap Unit :=
   do
     let _t119 ← v_Hash (#[] : Array (Int))
     let d := _t119
-    let _as121 ← SudoRt.sudoAssertEq (SudoRt.listLen d) digest_len 919
+    let _as121 ← SudoRt.sudoAssertEq (SudoRt.listLen d) digest_len 921
     let _t122 ← v_MegaDreifach (#[] : Array (Int))
-    let _as123 ← SudoRt.sudoAssertEq _t122 d 920
+    let _as123 ← SudoRt.sudoAssertEq _t122 d 922
     pure ()
 
 def test_hashdeckbody_on_the_identity_deal_is_29_bytes : Except SudoRt.Trap Unit :=
@@ -347,9 +347,9 @@ def test_hashdeckbody_on_the_identity_deal_is_29_bytes : Except SudoRt.Trap Unit
     let deal := _t124
     let _t125 ← v_HashDeckBody deal
     let b := _t125
-    let _as127 ← SudoRt.sudoAssertEq (SudoRt.listLen b) digest_len 925
+    let _as127 ← SudoRt.sudoAssertEq (SudoRt.listLen b) digest_len 927
     let _t128 ← v_MegaDreifachBody deal
-    let _as129 ← SudoRt.sudoAssertEq _t128 b 926
+    let _as129 ← SudoRt.sudoAssertEq _t128 b 928
     pure ()
 
 def test_hashdeckbodyfrom_at_iv_matches_hashdeckbody : Except SudoRt.Trap Unit :=
@@ -361,15 +361,15 @@ def test_hashdeckbodyfrom_at_iv_matches_hashdeckbody : Except SudoRt.Trap Unit :
     let _t132 ← v_HashDeckBodyFrom deal iv
     let «from_iv» := _t132
     let _t133 ← v_HashDeckBody deal
-    let _as134 ← SudoRt.sudoAssertEq «from_iv» _t133 932
+    let _as134 ← SudoRt.sudoAssertEq «from_iv» _t133 934
     let _t135 ← v_MegaDreifachBodyFrom deal iv
     let _t136 ← v_MegaDreifachBody deal
-    let _as137 ← SudoRt.sudoAssertEq _t135 _t136 933
+    let _as137 ← SudoRt.sudoAssertEq _t135 _t136 935
     let _t138 ← identity
     let _t139 ← v_HashDeckBodyFrom deal _t138
     let «from_id» := _t139
-    let _as141 ← SudoRt.sudoAssertEq (SudoRt.listLen «from_id») digest_len 935
-    let _as143 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq «from_id» «from_iv»)) 936
+    let _as141 ← SudoRt.sudoAssertEq (SudoRt.listLen «from_id») digest_len 937
+    let _as143 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq «from_id» «from_iv»)) 938
     pure ()
 
 def test_require_permutation_rejects_a_duplicate : Except SudoRt.Trap Unit :=
@@ -382,8 +382,8 @@ def test_require_permutation_rejects_a_duplicate : Except SudoRt.Trap Unit :=
   pure ()
   pure ())
     match _ex147 with
-    | .error t => if t.kind == "AssertFailed" then pure () else SudoRt.fail "AssertFailed" s!"line 940: expected trap AssertFailed, got {t.kind}"
-    | .ok _ => SudoRt.fail "AssertFailed" "line 940: expected trap AssertFailed, but nothing trapped"
+    | .error t => if t.kind == "AssertFailed" then pure () else SudoRt.fail "AssertFailed" s!"line 942: expected trap AssertFailed, got {t.kind}"
+    | .ok _ => SudoRt.fail "AssertFailed" "line 942: expected trap AssertFailed, but nothing trapped"
     pure ()
 
 def test_v3_kat_digests_kats_megaminx_hash_kats_v3_json : Except SudoRt.Trap Unit :=
@@ -402,7 +402,7 @@ def test_v3_kat_digests_kats_megaminx_hash_kats_v3_json : Except SudoRt.Trap Uni
   let _t149 ← kat_msg n
   let _t150 ← v_Hash _t149
   let _t151 ← kat_v3_digest n
-  let _as152 ← SudoRt.sudoAssertEq _t150 _t151 945
+  let _as152 ← SudoRt.sudoAssertEq _t150 _t151 947
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) n)
@@ -422,11 +422,11 @@ def test_v3_kat_hashdeck_of_the_identity_deal : Except SudoRt.Trap Unit :=
     let deal := _t154
     let _t155 ← v_HashDeck deal
     let _t156 ← kat_v3_digest (8 : Int)
-    let _as157 ← SudoRt.sudoAssertEq _t155 _t156 949
+    let _as157 ← SudoRt.sudoAssertEq _t155 _t156 951
     let _t158 ← v_HashDeck deal
     let _t159 ← SudoRt.filledL (28 : Int) (0 : Int)
     let _t160 ← v_Hash _t159
-    let _as161 ← SudoRt.sudoAssertEq _t158 _t160 950
+    let _as161 ← SudoRt.sudoAssertEq _t158 _t160 952
     pure ()
 
 def test_v3_kat_hashdeckbody_vectors_one_with_a_king_held_for_the_echoes : Except SudoRt.Trap Unit :=
@@ -445,7 +445,7 @@ def test_v3_kat_hashdeckbody_vectors_one_with_a_king_held_for_the_echoes : Excep
   let _t163 ← kat_v3_body_deal n
   let _t164 ← v_HashDeckBody _t163
   let _t165 ← kat_v3_body_digest n
-  let _as166 ← SudoRt.sudoAssertEq _t164 _t165 954
+  let _as166 ← SudoRt.sudoAssertEq _t164 _t165 956
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) n)
@@ -458,7 +458,7 @@ def test_v3_kat_hashdeckbody_vectors_one_with_a_king_held_for_the_echoes : Excep
     do
       let _t167 ← kat_v3_body_deal (1 : Int)
       let _t168 ← SudoRt.atL _t167 (51 : Int)
-      let _as169 ← SudoRt.sudoAssertEq _t168 (51 : Int) 955
+      let _as169 ← SudoRt.sudoAssertEq _t168 (51 : Int) 957
       pure ()) (fun r => pure r))
     pure _out
 
@@ -501,7 +501,7 @@ def test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot : Except
   let _t184 ← SudoRt.atL nb i
   pure (SudoRt.SEq.beq a _t184)) else pure false)
   pure _t183))
-  let _as186 ← SudoRt.sudoAssert _t181 963
+  let _as186 ← SudoRt.sudoAssert _t181 965
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) i)
@@ -536,9 +536,9 @@ def test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot : Except
         match ← ((do
   let _t189 ← edge_faces s
   let ⟨a, b⟩ := _t189
-  let _as191 ← SudoRt.sudoAssert (decide (a < b)) 966
+  let _as191 ← SudoRt.sudoAssert (decide (a < b)) 968
   let _t192 ← edge_slot a b
-  let _as193 ← SudoRt.sudoAssertEq _t192 s 967
+  let _as193 ← SudoRt.sudoAssertEq _t192 s 969
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) s)
@@ -585,7 +585,7 @@ def test_edge_slot_table_exactly_the_two_owning_faces_move_each_slot : Except Su
   let moved := (!(SudoRt.SEq.beq _t200 s))
   let _t203 ← (if (SudoRt.SEq.beq f a) then pure true else (do
   pure (SudoRt.SEq.beq f b)))
-  let _as205 ← SudoRt.sudoAssertEq moved _t203 975
+  let _as205 ← SudoRt.sudoAssertEq moved _t203 977
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) s)
@@ -628,11 +628,11 @@ def test_edge_and_corner_read_solved_shows_own_colours_a_turn_keeps_its_colour_o
   let _t210 ← edge_faces s
   let ⟨a, b⟩ := _t210
   let _t211 ← edge_colours_at idp a b
-  let _as212 ← SudoRt.sudoAssertEq _t211 (a, b) 981
+  let _as212 ← SudoRt.sudoAssertEq _t211 (a, b) 983
   let _t213 ← edge_face_of idp a b a
-  let _as214 ← SudoRt.sudoAssertEq _t213 a 982
+  let _as214 ← SudoRt.sudoAssertEq _t213 a 984
   let _t215 ← edge_face_of idp a b b
-  let _as216 ← SudoRt.sudoAssertEq _t215 b 983
+  let _as216 ← SudoRt.sudoAssertEq _t215 b 985
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) s)
@@ -671,9 +671,9 @@ def test_edge_and_corner_read_solved_shows_own_colours_a_turn_keeps_its_colour_o
   let _t221 ← suit_nbrs f k
   let ⟨n, n2⟩ := _t221
   let _t222 ← edge_face_of g f n f
-  let _as223 ← SudoRt.sudoAssertEq _t222 f 988
+  let _as223 ← SudoRt.sudoAssertEq _t222 f 990
   let _t224 ← corner_face_of g f n n2 f
-  let _as225 ← SudoRt.sudoAssertEq _t224 f 989
+  let _as225 ← SudoRt.sudoAssertEq _t224 f 991
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) k)
@@ -729,7 +729,7 @@ def test_suit_neighbours_four_different_neighbours_n2_follows_n_clockwise : Exce
       else
         match ← ((do
   let _t234 ← SudoRt.atL nb i
-  let _as236 ← SudoRt.sudoAssert (decide (lo ≤ _t234)) 996
+  let _as236 ← SudoRt.sudoAssert (decide (lo ≤ _t234)) 998
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) i)
@@ -742,7 +742,7 @@ def test_suit_neighbours_four_different_neighbours_n2_follows_n_clockwise : Exce
     do
       let _t237 ← suit_nbrs c (1 : Int)
       let ⟨n1, m1⟩ := _t237
-      let _as238 ← SudoRt.sudoAssertEq n1 lo 998
+      let _as238 ← SudoRt.sudoAssertEq n1 lo 1000
       let _fromV := (1 : Int)
       let _toV := (4 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
@@ -793,7 +793,7 @@ def test_suit_neighbours_four_different_neighbours_n2_follows_n_clockwise : Exce
               pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
     let hit := σ.2
     do
-      let _as250 ← SudoRt.sudoAssertEq hit (1 : Int) 1005
+      let _as250 ← SudoRt.sudoAssertEq hit (1 : Int) 1007
       let _fromV := (1 : Int)
       let _toV := (4 : Int)
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
@@ -809,7 +809,7 @@ def test_suit_neighbours_four_different_neighbours_n2_follows_n_clockwise : Exce
     do
       let _t253 ← suit_nbrs c j
       let ⟨m, m2⟩ := _t253
-      let _as255 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq m n)) 1009
+      let _as255 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq m n)) 1011
       pure (SudoRt.Flow.cont (ρ := Unit) ())
   else
     do
@@ -915,7 +915,7 @@ def test_coverage_the_48_non_king_cards_name_all_30_edges_and_all_20_corners : E
       else
         match ← ((do
   let _t281 ← SudoRt.atL eseen s
-  let _as283 ← SudoRt.sudoAssert (decide (_t281 ≥ (1 : Int))) 1020
+  let _as283 ← SudoRt.sudoAssert (decide (_t281 ≥ (1 : Int))) 1022
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) s)
@@ -938,7 +938,7 @@ def test_coverage_the_48_non_king_cards_name_all_30_edges_and_all_20_corners : E
       else
         match ← ((do
   let _t285 ← SudoRt.atL cseen s
-  let _as287 ← SudoRt.sudoAssert (decide (_t285 ≥ (1 : Int))) 1022
+  let _as287 ← SudoRt.sudoAssert (decide (_t285 ≥ (1 : Int))) 1024
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) s)
@@ -988,7 +988,7 @@ def test_card_pass_the_last_face_is_re_derivable_from_the_board_and_the_top_deal
   let _t307 ← suit_nbrs c _t306
   let ⟨n, n2⟩ := _t307
   let _t308 ← edge_face_of (r).sudo_3Run_1g c n n
-  let _as309 ← SudoRt.sudoAssertEq _t308 (r).sudo_3Run_4last 1031
+  let _as309 ← SudoRt.sudoAssertEq _t308 (r).sudo_3Run_4last 1033
   pure (SudoRt.Flow.cont (ρ := Unit) r)) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) (i, _fs))
@@ -1003,7 +1003,7 @@ def test_card_pass_the_last_face_is_re_derivable_from_the_board_and_the_top_deal
       pure ()) (fun r => pure r))
     pure _out
 
-def test_a_king_step_equals_the_step_of_the_rank_that_counts_up_to_the_opposite_face_opposites_last_last : Except SudoRt.Trap Unit :=
+def test_a_king_steps_as_the_rank_counting_up_to_its_opposite_face : Except SudoRt.Trap Unit :=
   do
     let _t311 ← iv_cook12
     let _t312 ← start_run _t311
@@ -1020,7 +1020,7 @@ def test_a_king_step_equals_the_step_of_the_rank_that_counts_up_to_the_opposite_
       else
         match ← ((do
   let _t314 ← SudoRt.atL opposites last
-  let _as316 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq _t314 last)) 1036
+  let _as316 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq _t314 last)) 1039
   let _t317 ← SudoRt.atL opposites last
   let _t318 ← SudoRt.subI _t317 last
   let _t319 ← SudoRt.addI _t318 (12 : Int)
@@ -1041,8 +1041,8 @@ def test_a_king_step_equals_the_step_of_the_rank_that_counts_up_to_the_opposite_
   let king := _t322
   let _t323 ← card_step r0 last rank k (0 : Int)
   let same := _t323
-  let _as324 ← SudoRt.sudoAssertEq (king).sudo_3Run_4last (same).sudo_3Run_4last 1041
-  let _as325 ← SudoRt.sudoAssertEq (king).sudo_3Run_1g (same).sudo_3Run_1g 1042
+  let _as324 ← SudoRt.sudoAssertEq (king).sudo_3Run_4last (same).sudo_3Run_4last 1044
+  let _as325 ← SudoRt.sudoAssertEq (king).sudo_3Run_1g (same).sudo_3Run_1g 1045
   pure (SudoRt.Flow.cont (ρ := Unit) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Unit) k)
@@ -1123,15 +1123,15 @@ def test_cost_per_block_spec_v3_5_6_468_turns_520_26k_clicks_156_finds_78_re_loo
       let _u339 := _hm329
       let _t340 ← em_run g0 deal
       let r := _t340
-      let _as341 ← SudoRt.sudoAssertEq (r).sudo_3Run_5turns (468 : Int) 1053
+      let _as341 ← SudoRt.sudoAssertEq (r).sudo_3Run_5turns (468 : Int) 1056
       let _t342 ← SudoRt.modI held (4 : Int)
       let _t343 ← SudoRt.addI _t342 (1 : Int)
       let _t344 ← SudoRt.mulI (26 : Int) _t343
       let _t345 ← SudoRt.addI (520 : Int) _t344
-      let _as346 ← SudoRt.sudoAssertEq (r).sudo_3Run_6clicks _t345 1054
-      let _as347 ← SudoRt.sudoAssertEq (r).sudo_3Run_5finds (156 : Int) 1055
-      let _as348 ← SudoRt.sudoAssertEq (r).sudo_3Run_7relooks (78 : Int) 1056
-      let _as349 ← SudoRt.sudoAssertEq (r).sudo_3Run_14register_looks (52 : Int) 1057
+      let _as346 ← SudoRt.sudoAssertEq (r).sudo_3Run_6clicks _t345 1057
+      let _as347 ← SudoRt.sudoAssertEq (r).sudo_3Run_5finds (156 : Int) 1058
+      let _as348 ← SudoRt.sudoAssertEq (r).sudo_3Run_7relooks (78 : Int) 1059
+      let _as349 ← SudoRt.sudoAssertEq (r).sudo_3Run_14register_looks (52 : Int) 1060
       pure (SudoRt.Flow.cont (ρ := Unit) ())) (fun r => pure (SudoRt.Flow.ret (ρ := Unit) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
@@ -1258,7 +1258,7 @@ def test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_
               pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
     let words := σ.2
     do
-      let _as387 ← SudoRt.sudoAssertEq (SudoRt.setSize words) (60 : Int) 1079
+      let _as387 ← SudoRt.sudoAssertEq (SudoRt.setSize words) (60 : Int) 1082
       pure (SudoRt.Flow.cont (ρ := Unit) ())) (fun r => pure (SudoRt.Flow.ret (ρ := Unit) r)))
       pure _out
   else
@@ -1343,7 +1343,7 @@ def test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_
               pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
     let words := σ.2
     do
-      let _as418 ← SudoRt.sudoAssertEq (SudoRt.setSize words) (60 : Int) 1079
+      let _as418 ← SudoRt.sudoAssertEq (SudoRt.setSize words) (60 : Int) 1082
       pure (SudoRt.Flow.cont (ρ := Unit) ())) (fun r => pure (SudoRt.Flow.ret (ρ := Unit) r)))
       pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Unit))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Unit) r)
@@ -1486,7 +1486,7 @@ def test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_
               pure (SudoRt.Flow.cont (ρ := Unit) (i', _fs))) (fun σ =>
     let words := σ.2
     do
-      let _as457 ← SudoRt.sudoAssertEq (SudoRt.setSize words) (60 : Int) 1097
+      let _as457 ← SudoRt.sudoAssertEq (SudoRt.setSize words) (60 : Int) 1100
       pure (SudoRt.Flow.cont (ρ := Unit) ())) (fun r => pure (SudoRt.Flow.ret (ρ := Unit) r)))
       pure _out
   else
@@ -1528,4 +1528,4 @@ def test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_
     pure _out
 
 def main : IO UInt32 :=
-  SudoRt.runTests [("test_identity_rank_is_29_zero_bytes", fun _ => test_identity_rank_is_29_zero_bytes), ("test_compose_inverse_round_trip", fun _ => test_compose_inverse_round_trip), ("test_iv_cook12_digest", fun _ => test_iv_cook12_digest), ("test_empty_pad_is_one_block", fun _ => test_empty_pad_is_one_block), ("test_kat_pad_lengths", fun _ => test_kat_pad_lengths), ("test_abc_pad_recovers_the_24_bit_length", fun _ => test_abc_pad_recovers_the_24_bit_length), ("test_phi_of_28_zero_bytes_is_the_identity_deal", fun _ => test_phi_of_28_zero_bytes_is_the_identity_deal), ("test_hash_aliases_agree_on_the_empty_message", fun _ => test_hash_aliases_agree_on_the_empty_message), ("test_hashdeckbody_on_the_identity_deal_is_29_bytes", fun _ => test_hashdeckbody_on_the_identity_deal_is_29_bytes), ("test_hashdeckbodyfrom_at_iv_matches_hashdeckbody", fun _ => test_hashdeckbodyfrom_at_iv_matches_hashdeckbody), ("test_require_permutation_rejects_a_duplicate", fun _ => test_require_permutation_rejects_a_duplicate), ("test_v3_kat_digests_kats_megaminx_hash_kats_v3_json", fun _ => test_v3_kat_digests_kats_megaminx_hash_kats_v3_json), ("test_v3_kat_hashdeck_of_the_identity_deal", fun _ => test_v3_kat_hashdeck_of_the_identity_deal), ("test_v3_kat_hashdeckbody_vectors_one_with_a_king_held_for_the_echoes", fun _ => test_v3_kat_hashdeckbody_vectors_one_with_a_king_held_for_the_echoes), ("test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot", fun _ => test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot), ("test_edge_slot_table_exactly_the_two_owning_faces_move_each_slot", fun _ => test_edge_slot_table_exactly_the_two_owning_faces_move_each_slot), ("test_edge_and_corner_read_solved_shows_own_colours_a_turn_keeps_its_colour_on_its_pieces", fun _ => test_edge_and_corner_read_solved_shows_own_colours_a_turn_keeps_its_colour_on_its_pieces), ("test_suit_neighbours_four_different_neighbours_n2_follows_n_clockwise", fun _ => test_suit_neighbours_four_different_neighbours_n2_follows_n_clockwise), ("test_coverage_the_48_non_king_cards_name_all_30_edges_and_all_20_corners", fun _ => test_coverage_the_48_non_king_cards_name_all_30_edges_and_all_20_corners), ("test_card_pass_the_last_face_is_re_derivable_from_the_board_and_the_top_dealt_card", fun _ => test_card_pass_the_last_face_is_re_derivable_from_the_board_and_the_top_dealt_card), ("test_a_king_step_equals_the_step_of_the_rank_that_counts_up_to_the_opposite_face_opposites_last_last", fun _ => test_a_king_step_equals_the_step_of_the_rank_that_counts_up_to_the_opposite_face_opposites_last_last), ("test_cost_per_block_spec_v3_5_6_468_turns_520_26k_clicks_156_finds_78_re_looks_52_register_looks", fun _ => test_cost_per_block_spec_v3_5_6_468_turns_520_26k_clicks_156_finds_78_re_looks_52_register_looks), ("test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_its_60_states_give_60_distinct_two_turn_words", fun _ => test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_its_60_states_give_60_distinct_two_turn_words)]
+  SudoRt.runTests [("test_identity_rank_is_29_zero_bytes", fun _ => test_identity_rank_is_29_zero_bytes), ("test_compose_inverse_round_trip", fun _ => test_compose_inverse_round_trip), ("test_iv_cook12_digest", fun _ => test_iv_cook12_digest), ("test_empty_pad_is_one_block", fun _ => test_empty_pad_is_one_block), ("test_kat_pad_lengths", fun _ => test_kat_pad_lengths), ("test_abc_pad_recovers_the_24_bit_length", fun _ => test_abc_pad_recovers_the_24_bit_length), ("test_phi_of_28_zero_bytes_is_the_identity_deal", fun _ => test_phi_of_28_zero_bytes_is_the_identity_deal), ("test_hash_aliases_agree_on_the_empty_message", fun _ => test_hash_aliases_agree_on_the_empty_message), ("test_hashdeckbody_on_the_identity_deal_is_29_bytes", fun _ => test_hashdeckbody_on_the_identity_deal_is_29_bytes), ("test_hashdeckbodyfrom_at_iv_matches_hashdeckbody", fun _ => test_hashdeckbodyfrom_at_iv_matches_hashdeckbody), ("test_require_permutation_rejects_a_duplicate", fun _ => test_require_permutation_rejects_a_duplicate), ("test_v3_kat_digests_kats_megaminx_hash_kats_v3_json", fun _ => test_v3_kat_digests_kats_megaminx_hash_kats_v3_json), ("test_v3_kat_hashdeck_of_the_identity_deal", fun _ => test_v3_kat_hashdeck_of_the_identity_deal), ("test_v3_kat_hashdeckbody_vectors_one_with_a_king_held_for_the_echoes", fun _ => test_v3_kat_hashdeckbody_vectors_one_with_a_king_held_for_the_echoes), ("test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot", fun _ => test_edge_slot_table_every_adjacent_face_pair_owns_exactly_one_slot), ("test_edge_slot_table_exactly_the_two_owning_faces_move_each_slot", fun _ => test_edge_slot_table_exactly_the_two_owning_faces_move_each_slot), ("test_edge_and_corner_read_solved_shows_own_colours_a_turn_keeps_its_colour_on_its_pieces", fun _ => test_edge_and_corner_read_solved_shows_own_colours_a_turn_keeps_its_colour_on_its_pieces), ("test_suit_neighbours_four_different_neighbours_n2_follows_n_clockwise", fun _ => test_suit_neighbours_four_different_neighbours_n2_follows_n_clockwise), ("test_coverage_the_48_non_king_cards_name_all_30_edges_and_all_20_corners", fun _ => test_coverage_the_48_non_king_cards_name_all_30_edges_and_all_20_corners), ("test_card_pass_the_last_face_is_re_derivable_from_the_board_and_the_top_dealt_card", fun _ => test_card_pass_the_last_face_is_re_derivable_from_the_board_and_the_top_dealt_card), ("test_a_king_steps_as_the_rank_counting_up_to_its_opposite_face", fun _ => test_a_king_steps_as_the_rank_counting_up_to_its_opposite_face), ("test_cost_per_block_spec_v3_5_6_468_turns_520_26k_clicks_156_finds_78_re_looks_52_register_looks", fun _ => test_cost_per_block_spec_v3_5_6_468_turns_520_26k_clicks_156_finds_78_re_looks_52_register_looks), ("test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_its_60_states_give_60_distinct_two_turn_words", fun _ => test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_its_60_states_give_60_distinct_two_turn_words)]

@@ -1,12 +1,13 @@
 import MegaDreifachV3.Link2.RunStep
 
 /-
-  MegaDreifach v3 Link 2: `echo_colour`, `em_run` and `em_block`.
+  MegaDreifach v3 Link 2: `echo_colour`, `em_run`, `em_block` and `dm_step`.
   `cardStep` keeps bijective tables and adds at most 10 to each counter; an echo adds at most
   12. Hence every run of `em_run` (52 card steps, then 26 echoes) stays below `counterCap`, and
   the `card_step_refines` side conditions hold at every iteration. `em_run_refines`: on a
   position with bijective corner and edge tables and a deal of at least 52 cards, each < 52,
   the emitted `em_run` returns the model `emRun`; both loops are driven by `chain_loop`.
+  `dm_step_refines`: the sudo's Davies–Meyer step `compose h (em_block h deal)`.
 -/
 
 namespace MegaDreifachV3.Link2
@@ -202,5 +203,17 @@ theorem emBlock_inj (h : Position) (hh : InjPos h) (deal : List Nat) :
     InjPos (MegaDreifachV3.Em.emBlock h deal) := by
   obtain ⟨hinj, hcnt⟩ := dealFold_inv (deal.take 52) (startRun h) 0 hh (countersLe_start h)
   exact (echoRun_inv _ echoCount _ _ hinj hcnt).1
+
+theorem dm_step_refines (h : Position) (hh : InjPos h) (deal : List Nat)
+    (hlen : 52 ≤ deal.length) (hcards : ∀ c ∈ deal, c < 52) :
+    Megadreifach.dm_step (embedPos h) (embed deal) = .ok (embedPos (MegaDreifachV3.Em.dmStep h deal)) := by
+  unfold Megadreifach.dm_step
+  rw [em_block_refines h hh deal hlen hcards, ok_bind, compose_refines, ok_bind]
+  rfl
+
+/-- The Davies–Meyer step keeps bijective tables. -/
+theorem dmStep_inj (h : Position) (hh : InjPos h) (deal : List Nat) :
+    InjPos (MegaDreifachV3.Em.dmStep h deal) :=
+  injPos_compose' _ _ hh (emBlock_inj h hh deal)
 
 end MegaDreifachV3.Link2

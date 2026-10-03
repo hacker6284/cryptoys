@@ -24,7 +24,7 @@ compares two builds of one source, not two independent implementations.
 [`lean/MegaDreifachV3/Link2/Shared.lean`](lean/MegaDreifachV3/Link2/Shared.lean) states, for
 the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
 `inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
-`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 61 v2 modules
+`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 62 v2 modules
 that elaborate against the v3 emit). The model side is the v2 position algebra,
 which v3 keeps. These four functions are not exports.
 
@@ -60,6 +60,12 @@ are `Option`-valued in the model, and `none` is the emitted code's trap. So far:
   - With `triples_ok`, `card_edge_found` and `card_corner_found`: for every colour `c` and
     `k ∈ 1..4`, the edge `(c, n)` and the corner `(c, n, n2)` have slots, and their `c`- and
     `n`-coloured stickers are found.
+- The counted run state and one card step (`Link2/RunStep.lean`). `turn_run_refines`,
+  `count_find_refines`, `count_relook_refines` and `count_register_looks_refines` hold while
+  the counter update fits in an Int64. `card_colour_refines` is exact on every card number.
+  `card_step_refines`: on a position with bijective corner and edge tables, with all five
+  counters at most `counterCap` (2^40, far above any run), the emitted `card_step` returns the
+  model `cardStep` for every base face, rank ≤ 12, `k ∈ 1..4` and colour.
 
 Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
 EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The v3 card

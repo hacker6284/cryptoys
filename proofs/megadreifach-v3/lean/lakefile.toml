@@ -28,7 +28,8 @@ root = "Main"
 # (with their full import closure) that elaborate against the v3 emit. The step lemmas of
 # RequirePerm, PadRef, EvenRank(Gen), PosBytes, PhiChunk and PhiInv take the .sudo assert
 # line as a parameter, so they hold for both emits. EmHelpers, EmCorner and EmEdge are the
-# generic face / corner / edge tables (the grip lemmas are in EmGrip). Not listed, because
+# generic face / corner / edge tables (the grip lemmas are in EmGrip). IV holds the
+# v2 IV-COOK12 constant data that v3's iv_cook12 reuses. Not listed, because
 # they name v2-only emitted functions: EmGrip, EmSpin, EmRecipe, EmStep, EmInv, EmBlock,
 # EmIv, InjInv, VHash, VHashDeck. See ../README.md.
 # MegaDreifach.Em (the v2 model, grips included) is re-elaborated because the reused layers
@@ -98,4 +99,5 @@ roots = [
   "MegaDreifach.Link2.PhiInv",
   "MegaDreifach.Link2.EmHelpers",
   "MegaDreifach.Link2.EmCorner",
-  "MegaDreifach.Link2.EmEdge"]
+  "MegaDreifach.Link2.EmEdge",
+  "MegaDreifach.IV"]

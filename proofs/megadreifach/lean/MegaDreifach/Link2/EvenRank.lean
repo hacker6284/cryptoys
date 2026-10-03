@@ -1207,11 +1207,12 @@ theorem findPerm_eq (avail : Array Int) (perm : List Nat) (i : Nat)
   rw [← ofNat_eq_natCast i, atL_embed perm i hi]
   simp [ok_bind, pure_eq_ok, ofNat_eq_natCast]
 
-def rankAfter (n i : Int) (rank : Megadreifach.BigInt) (avail : Array Int)
+-- `line`: the `.sudo` line of the `assert found >= 0` (a trap label only); see Loop.byteCheckStep.
+def rankAfter (line : Nat) (n i : Int) (rank : Megadreifach.BigInt) (avail : Array Int)
     (σ : Int × Int) :
     Except SudoRt.Trap (SudoRt.Flow (Megadreifach.BigInt × Array Int) Megadreifach.BigInt) := do
   let found := σ.2
-  let _ ← SudoRt.sudoAssert (decide (found ≥ (0 : Int))) 556
+  let _ ← SudoRt.sudoAssert (decide (found ≥ (0 : Int))) line
   let idx := found
   let rad ← SudoRt.subI n i
   let rb ← Megadreifach.big_from_int rad
@@ -1233,7 +1234,7 @@ def rankAfter (n i : Int) (rank : Megadreifach.BigInt) (avail : Array Int)
     (fun r => pure (SudoRt.Flow.ret (ρ := Megadreifach.BigInt) r))
   pure _out
 
-def rankStep (permA : Array Int) (n toV : Int)
+def rankStep (line : Nat) (permA : Array Int) (n toV : Int)
     (σ : Int × (Megadreifach.BigInt × Array Int)) :
     Except SudoRt.Trap
       (SudoRt.Flow (Int × (Megadreifach.BigInt × Array Int)) Megadreifach.BigInt) :=
@@ -1254,7 +1255,7 @@ def rankStep (permA : Array Int) (n toV : Int)
         let init := (fromA, found)
         let _out ← SudoRt.runLoopOn (ρ := Megadreifach.BigInt) init fuel
           (findPerm avail permA i toA)
-          (rankAfter n i rank avail)
+          (rankAfter line n i rank avail)
           (fun r => pure (SudoRt.Flow.ret (ρ := Megadreifach.BigInt) r))
         pure _out) : Except SudoRt.Trap (SudoRt.Flow _ Megadreifach.BigInt)) with
       | .ret r => pure (SudoRt.Flow.ret (ρ := Megadreifach.BigInt) r)
@@ -1266,8 +1267,8 @@ def rankStep (permA : Array Int) (n toV : Int)
             let i' ← SudoRt.addI i (1 : Int)
             pure (SudoRt.Flow.cont (ρ := Megadreifach.BigInt) (i', fs))
 
-private theorem rankStep_hit (perm : List Nat) (h : Rank20Wf perm) (i : Nat) (hi : i ≤ 17) :
-    rankStep (embed perm) (20 : Int) (17 : Int)
+private theorem rankStep_hit (line : Nat) (perm : List Nat) (h : Rank20Wf perm) (i : Nat) (hi : i ≤ 17) :
+    rankStep line (embed perm) (20 : Int) (17 : Int)
         (Int.ofNat i, bigNat (rankAcc perm i), embed (availAt perm i)) =
       if i = 17 then
         .ok (SudoRt.Flow.brk (Int.ofNat i,
@@ -1346,11 +1347,11 @@ private theorem availAt_zero (perm : List Nat) (h : Perm20Wf perm) :
   simp [availAt, dropUsed, List.take_zero, h.len]
 
 /-- Outer Lehmer loop, `i = 0` to `17`, on a small length-20 rank. -/
-private theorem rankRun (perm : List Nat) (h : Rank20Wf perm) :
+private theorem rankRun (line : Nat) (perm : List Nat) (h : Rank20Wf perm) :
     SudoRt.runLoopOn (ρ := Megadreifach.BigInt)
       (Int.ofNat 0, (bigNat (rankAcc perm 0), embed (availAt perm 0)))
       (fuelRange (Int.ofNat 0) (Int.ofNat 17))
-      (rankStep (embed perm) (Int.ofNat 20) (Int.ofNat 17))
+      (rankStep line (embed perm) (Int.ofNat 20) (Int.ofNat 17))
       (fun σ => pure σ.2.1)
       (fun r => pure r) =
       .ok (bigNat (evenRank perm)) := by
@@ -1359,7 +1360,7 @@ private theorem rankRun (perm : List Nat) (h : Rank20Wf perm) :
     (fromN := 0) (toN := 17) (hle := by decide)
     (goal := .ok (bigNat (evenRank perm)))
   · intro i _ hi
-    simpa using rankStep_hit perm h i hi
+    simpa using rankStep_hit line perm h i hi
   · rw [evenRank_eq_acc perm (by rw [h.base.len]; decide), h.base.len]
     rfl
 
@@ -1380,7 +1381,7 @@ theorem even_perm_rank_big_refines (perm : List Nat) (h : Rank20Wf perm) :
   rw [← hfuel, except_bind_pure]
   apply Eq.trans
   · apply runLoopOn_step_pointwise
-      (step' := rankStep (embed perm) (Int.ofNat 20) (Int.ofNat 17))
+      (step' := rankStep _ (embed perm) (Int.ofNat 20) (Int.ofNat 17))
     intro σ
     unfold rankStep findPerm rankAfter eraseStep
     dsimp
@@ -1388,7 +1389,7 @@ theorem even_perm_rank_big_refines (perm : List Nat) (h : Rank20Wf perm) :
   · rw [show bigOf [] = bigNat (rankAcc perm 0) by rw [rankAcc_zero, bigNat_zero],
       show embed (List.range 20) = embed (availAt perm 0) from
         (congrArg embed (availAt_zero perm h.base)).symm]
-    exact rankRun perm h
+    exact rankRun _ perm h
 
 theorem even_perm_rank_big_refines_array (a : Array Int) (h : WellFormedRank20 a) :
     Megadreifach.even_perm_rank_big a = .ok (bigNat (evenRank (decode a))) := by

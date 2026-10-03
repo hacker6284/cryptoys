@@ -8,6 +8,7 @@ import MegaDreifach.Pad
 import MegaDreifach.Link2.Be
 import MegaDreifach.Link2.Big
 import MegaDreifach.Link2.Loop
+import MegaDreifach.Link2.UnfoldMatchers
 
 namespace MegaDreifach.Link2
 
@@ -30,14 +31,14 @@ private theorem push_zero_acc (pref : List Nat) (i : Nat) (hi : 1 ≤ i) :
     ← replicate_succ_append, hsub]
 
 /-- Byte scan ignores its break index: on `PadWf` every cell passes the assert. -/
-theorem pad_check_then {α} (msg : List Nat) (hp : PadWf msg)
+theorem pad_check_then {α} (line : Nat) (msg : List Nat) (hp : PadWf msg)
     (k : Except SudoRt.Trap α)
     (onRet : Array Int → Except SudoRt.Trap α) :
     (do
       let toV ← SudoRt.subI (SudoRt.listLen (embed msg)) (1 : Int)
       let fuel : Nat := if (0 : Int) > toV then 1 else (toV - (0 : Int)).natAbs + 1
       let out ← SudoRt.runLoopOn (ρ := Array Int) (0 : Int) fuel
-        (byteCheckStep (embed msg) toV) (fun _ => k) onRet
+        (byteCheckStep line (embed msg) toV) (fun _ => k) onRet
       pure out) = k := by
   by_cases h0 : msg.length = 0
   · have hempty : msg = [] := List.length_eq_zero.mp h0
@@ -46,18 +47,18 @@ theorem pad_check_then {α} (msg : List Nat) (hp : PadWf msg)
       show Int.ofNat 0 = (0 : Int) from rfl, subI_zero_one, ok_bind,
       fuelRange_eq (0 : Int) (-1), except_bind_pure]
     have hgt : (0 : Int) > -1 := by decide
-    rw [idx_break (0 : Int) (-1) (byteCheckStep (embed []) (-1)) (fun _ => k) onRet hgt
-      (byteCheckStep_gt (embed []) (-1) 0 hgt)]
+    rw [idx_break (0 : Int) (-1) (byteCheckStep line (embed []) (-1)) (fun _ => k) onRet hgt
+      (byteCheckStep_gt line (embed []) (-1) 0 hgt)]
   · have hpos : 0 < msg.length := Nat.pos_of_ne_zero h0
     have hfits : FitsLen msg.length := FitsBitlen.fitsLen hp.bitlen
     rw [listLen_embed, subI_ofNat_one _ hpos hfits, ok_bind,
       fuelRange_eq (0 : Int) (Int.ofNat (msg.length - 1)), except_bind_pure]
-    apply chain_idx (byteCheckStep (embed msg) (Int.ofNat (msg.length - 1)))
+    apply chain_idx (byteCheckStep line (embed msg) (Int.ofNat (msg.length - 1)))
       (fun _ => k) onRet 0 (msg.length - 1) (Nat.zero_le _)
       (by
         intro i _ hiN
         have hlt : i < msg.length := by omega
-        exact byteCheckStep_hit msg (msg.length - 1) i hiN hlt
+        exact byteCheckStep_hit line msg (msg.length - 1) i hiN hlt
           (hp.bytes _ (List.getElem_mem hlt)) hfits)
       k rfl
 
@@ -219,12 +220,13 @@ def padAfter (msg : List Nat) : Except SudoRt.Trap (Array Int) :=
       (fun r => pure r)
     pure copied
 
-def padRun (msg : List Nat) : Except SudoRt.Trap (Array Int) :=
+/-- The emitted `pad_message` with its byte-check assert labelled `line` (see `byteCheckStep`). -/
+def padRun (line : Nat) (msg : List Nat) : Except SudoRt.Trap (Array Int) :=
   do
     let toV ← SudoRt.subI (SudoRt.listLen (embed msg)) (1 : Int)
     let fuel : Nat := if (0 : Int) > toV then 1 else (toV - (0 : Int)).natAbs + 1
     let out ← SudoRt.runLoopOn (ρ := Array Int) (0 : Int) fuel
-      (byteCheckStep (embed msg) toV) (fun _ => padAfter msg) (fun r => pure r)
+      (byteCheckStep line (embed msg) toV) (fun _ => padAfter msg) (fun r => pure r)
     pure out
 
 theorem padLenPart_eq (msg : List Nat) (hp : PadWf msg) :
@@ -292,10 +294,10 @@ theorem padAfter_eq (msg : List Nat) (hp : PadWf msg) :
     (fun r => pure r) (FitsBitlen.fitsLen hp.bitlen)
     (.ok (embed (pad msg))) (padFromOut_eq msg hp)
 
-theorem padRun_eq (msg : List Nat) (hp : PadWf msg) :
-    padRun msg = .ok (embed (pad msg)) := by
+theorem padRun_eq (line : Nat) (msg : List Nat) (hp : PadWf msg) :
+    padRun line msg = .ok (embed (pad msg)) := by
   unfold padRun
-  rw [pad_check_then msg hp (padAfter msg) (fun r => pure r)]
+  rw [pad_check_then line msg hp (padAfter msg) (fun r => pure r)]
   exact padAfter_eq msg hp
 
 /-- `pad_message (embed msg) = ok (embed (pad msg))` when every byte is `≤ 255`
@@ -303,16 +305,17 @@ theorem padRun_eq (msg : List Nat) (hp : PadWf msg) :
     not collision resistance. -/
 theorem pad_message_refines (msg : List Nat) (hp : PadWf msg) :
     Megadreifach.pad_message (embed msg) = .ok (embed (pad msg)) := by
-  have h := padRun_eq msg hp
+  have h := fun line => padRun_eq line msg hp
   unfold padRun padAfter padFromOut padLenPart at h
   dsimp at h
   unfold byteCheckStep copyStep pushStep at h
   unfold Megadreifach.pad_message
   dsimp
-  -- Splitters are per definition; unfolding makes the branches compare.
   unfold byteCheckStep.match_1 copyStep.match_1 at h
-  unfold Megadreifach.pad_message.match_1 Megadreifach.rot_slice.match_2
-  exact h
+  -- The emitted side's matchers are unfolded without naming them (`unfold_matchers`):
+  -- an emit may share and number them differently. The assert line is whatever the emit wrote.
+  unfold_matchers
+  exact h _
 
 theorem pad_message_refines_array (a : Array Int) (h : WellFormedPad a) :
     Megadreifach.pad_message a = .ok (embed (pad (decode a))) := by

@@ -551,8 +551,10 @@ private theorem sudoAssertEq_ofNat (n : Nat) (line : Nat) :
   rw [hb]
   rfl
 
-/-- Generated outer closure of `phi_chunk`, in the shape the emitter leaves it. -/
-def phiChunkStep (σ : PhiSt) :
+/-- Generated outer closure of `phi_chunk`, in the shape the emitter leaves it, with the
+    `.sudo` line of its index assert as a parameter `line` (a trap label only; it differs
+    between emits, see `Loop.byteCheckStep`). -/
+def phiChunkStepL (line : Nat) (σ : PhiSt) :
     Except SudoRt.Trap (SudoRt.Flow PhiSt (Array Int)) :=
   let i := σ.1
   let out := σ.2.1
@@ -576,7 +578,7 @@ def phiChunkStep (σ : PhiSt) :
             let ⟨rem, idx⟩ ← Megadreifach.peel_leading rem d
             let ok ← (if (decide (idx ≥ (0 : Int))) then
                 (pure (decide (idx < SudoRt.listLen avail))) else pure false)
-            let _ ← SudoRt.sudoAssert ok 508
+            let _ ← SudoRt.sudoAssert ok line
             let x ← SudoRt.atL avail idx
             let out := (SudoRt.appendL out x).1
             let u : Unit := ()
@@ -687,9 +689,14 @@ private theorem phiOuterFinish (i : Nat) (hi : i < 51)
   have hadd := addI_ofNat_one i (FitsLen.of_le fits52 (by omega))
   rw [if_neg hne, hadd, ok_bind]
 
-/-- One step of the outer loop, `i < 51`. -/
-theorem phiChunkStep_lt (rank : Nat) (hrank : rank < factorial 52) (i : Nat) (hi : i < 51) :
-    phiChunkStep (Int.ofNat i, phiState rank i) =
+/-- `phiChunkStepL` at the v2 assert line (508). -/
+def phiChunkStep : PhiSt → Except SudoRt.Trap (SudoRt.Flow PhiSt (Array Int)) :=
+  phiChunkStepL 508
+
+/-- One step of the outer loop, `i < 51`, for any assert line. -/
+theorem phiChunkStepL_lt (line : Nat) (rank : Nat) (hrank : rank < factorial 52) (i : Nat)
+    (hi : i < 51) :
+    phiChunkStepL line (Int.ofNat i, phiState rank i) =
       .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), phiState rank (i + 1))) := by
   have hi52 : i < 52 := by omega
   have hile : i ≤ 51 := by omega
@@ -719,7 +726,7 @@ theorem phiChunkStep_lt (rank : Nat) (hrank : rank < factorial 52) (i : Nat) (hi
     rw [sEq_int, decide_eq_false_iff_not, ofNat_eq_zero_iff]
     omega
   rw [phiState_of_le rank i hile]
-  unfold phiChunkStep
+  unfold phiChunkStepL
   dsimp only
   rw [show (51 : Int) = Int.ofNat 51 from rfl]
   rw [if_neg (ofNat_not_gt hile)]
@@ -767,9 +774,10 @@ private theorem phiOuterFinish51
       .ok (SudoRt.Flow.brk (Int.ofNat 51, st)) := by
   rw [if_pos (by rw [beq_int_iff])]
 
-/-- One step of the outer loop at `i = 51` (stores the full picks, breaks). -/
-theorem phiChunkStep_51 (rank : Nat) (hrank : rank < factorial 52) :
-    phiChunkStep (Int.ofNat 51, phiState rank 51) =
+/-- One step of the outer loop at `i = 51` (stores the full picks, breaks), for any
+    assert line. -/
+theorem phiChunkStepL_51 (line : Nat) (rank : Nat) (hrank : rank < factorial 52) :
+    phiChunkStepL line (Int.ofNat 51, phiState rank 51) =
       .ok (SudoRt.Flow.brk (Int.ofNat 51, phiState rank 52)) := by
   have hlen : (phiLeftover rank 51).length = 1 :=
     phiLeftover_length rank hrank 51 (by omega)
@@ -792,7 +800,7 @@ theorem phiChunkStep_51 (rank : Nat) (hrank : rank < factorial 52) :
     rw [← picksOf_take_succ rank 51 hrank (by decide)]
     rw [h1, picksOf_full rank hrank]
   rw [phiState_of_le rank 51 (by omega)]
-  unfold phiChunkStep
+  unfold phiChunkStepL
   dsimp only
   rw [← phiLeftover_def]
   rw [show (51 : Int) = Int.ofNat 51 from rfl]
@@ -810,6 +818,18 @@ theorem phiChunkStep_51 (rank : Nat) (hrank : rank < factorial 52) :
   rw [phiState_52 rank, hout]
   rfl
 
+/-- One step of the outer loop, `i < 51` (v2 assert line). -/
+theorem phiChunkStep_lt (rank : Nat) (hrank : rank < factorial 52) (i : Nat) (hi : i < 51) :
+    phiChunkStep (Int.ofNat i, phiState rank i) =
+      .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), phiState rank (i + 1))) :=
+  phiChunkStepL_lt 508 rank hrank i hi
+
+/-- One step of the outer loop at `i = 51` (stores the full picks, breaks; v2 assert line). -/
+theorem phiChunkStep_51 (rank : Nat) (hrank : rank < factorial 52) :
+    phiChunkStep (Int.ofNat 51, phiState rank 51) =
+      .ok (SudoRt.Flow.brk (Int.ofNat 51, phiState rank 52)) :=
+  phiChunkStepL_51 508 rank hrank
+
 /-! ## Refinement -/
 
 /-- `phi_chunk` refines `phiUnrank` on the 28-byte pad block. -/
@@ -824,15 +844,15 @@ theorem phi_chunk_refines (bs : List Nat) (h : PhiChunkWf bs) :
     rfl
   unfold Megadreifach.phi_chunk
   rw [listLen_embed, h.len, show Megadreifach.pad_block = Int.ofNat 28 from rfl,
-    sudoAssertEq_ofNat 28 498, ok_bind]
+    sudoAssertEq_ofNat 28 _, ok_bind]
   rw [big_from_be_pad bs (phiChunk_bePadWf bs h), ok_bind]
   rw [show (52 : Int) = Int.ofNat 52 from rfl, range_list_refines 52 (by decide) fits52, ok_bind]
   dsimp only
   rw [except_bind_pure]
   apply Eq.trans
-  · apply runLoopOn_step_pointwise (step' := phiChunkStep)
+  · apply runLoopOn_step_pointwise (step' := phiChunkStepL _)
     intro σ
-    unfold phiChunkStep
+    unfold phiChunkStepL
     dsimp
     rfl
   · rw [hinit]
@@ -843,10 +863,10 @@ theorem phi_chunk_refines (bs : List Nat) (h : PhiChunkWf bs) :
     · intro i _ hhi
       rcases (by omega : i < 51 ∨ i = 51) with hlt | heq
       · rw [if_neg (by omega)]
-        exact phiChunkStep_lt (fromBE bs) hrank i hlt
+        exact phiChunkStepL_lt _ (fromBE bs) hrank i hlt
       · subst heq
         rw [if_pos rfl]
-        exact phiChunkStep_51 (fromBE bs) hrank
+        exact phiChunkStepL_51 _ (fromBE bs) hrank
     · rw [phiState_52 (fromBE bs)]
       rfl
 

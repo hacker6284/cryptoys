@@ -1,7 +1,8 @@
 // MegaDreifach v3 (ZP26) statistics harness. It drives only the sudoc JS build of the normative
-// v3/megadreifach.sudo: every block is the build's em_block, and every group operation is the
-// build's compose / inverse / identity / iv_cook12 / opposites. This file implements no part of
-// W or E_m. It samples inputs, counts and runs the statistics.
+// v3/megadreifach.sudo: every block is the build's dm_step (= compose(h, em_block(h, deal))), and
+// every group operation is the build's compose / inverse / identity / iv_cook12 / opposites. This
+// file implements no part of W, E_m or the Davies-Meyer step. It samples inputs, counts and runs the
+// statistics.
 //
 // Usage, from the repo root:
 //   sudoc build --target js -o /tmp/megadreifach-v3 primitives/hash/megadreifach/v3/megadreifach.sudo
@@ -39,7 +40,7 @@ const fromPos = (p) => [[...p.cp].map(Number), [...p.co].map(Number), [...p.ep].
 const deal = (d) => rt.lst(d.map(BigInt));
 const comp = (a, b) => impl.compose(a, b);
 const inv = (a) => impl.inverse(a);
-const block = (h, d) => comp(h, impl.em_block(h, deal(d)));      // y = h * E_m(h) = h W h (SPEC v3 §5)
+const block = (h, d) => impl.dm_step(h, deal(d));                 // y = h * E_m(h) = h W h: the build's dm_step
 const OPP = [...impl.opposites].map(Number);
 
 // ------------------------------------------------------------------ seeded PRNG (xoshiro128**)

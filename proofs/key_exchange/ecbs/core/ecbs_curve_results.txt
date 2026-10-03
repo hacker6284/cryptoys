@@ -1,0 +1,89 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+
+==============================================================================
+1. E(GF(3)) and the trace recurrence
+==============================================================================
+points over GF(3): [None, (0, 1), (0, 2), (1, 1), (1, 2)]  -> #E(GF(3)) = 5, trace t = -1
+characteristic polynomial of Frobenius: T^2 - (-1)T + 3 = T^2 + T + 3; disc = -11
+  n=2: 3^n+1-V_n = 15   PARI ellcard over GF(3^2) = 15   agree=True
+  n=3: 3^n+1-V_n = 20   PARI ellcard over GF(3^3) = 20   agree=True
+  n=4: 3^n+1-V_n = 75   PARI ellcard over GF(3^4) = 75   agree=True
+  n=5: 3^n+1-V_n = 275   PARI ellcard over GF(3^5) = 275   agree=True
+  n=7: 3^n+1-V_n = 2105   PARI ellcard over GF(3^7) = 2105   agree=True
+
+==============================================================================
+2. Tier point counts #E(GF(3^n)) = 3^n + 1 - V_n
+==============================================================================
+
+Demo: n = 7 (n prime: True)
+  V_n (trace over GF(3^n)) = 83
+  #E = 2105
+  #E mod 5 = 0;  l = #E/5 = 421
+  l proven prime: True;  bits(l) = 9;  log2 l = 8.7177
+  ordinary (3 does not divide V_n): True;   anomalous (#E == 3^n): False;  l == 3: False
+  l-1 = 2^2 * 3 * 5 * 7   (all factors proven prime: True) [0.0s]
+  embedding degree k = ord_l(3^n) = 15  (log2 k = 3.91; k == l-1: False; (l-1)/k = 28)
+  q^j == 1 mod l for some j <= 2000: [15, 30, 45]
+  quadratic twist order = 2271 = 3 * 757   (last factor proven prime, 10 bits)
+  roots of x^2+x+3 mod l: 2; roots with lambda^n = 1: 1
+  fold rule x^7 = x^5 + 1: x^7 - x^5 - 1 irreducible over GF(3): True
+  Pollard rho, expected iterations (log2): plain 4.68; with negation 4.18; with negation+Frobenius (class size 2n) 2.78
+  source formula sqrt(pi*l/4)/sqrt(2n) = 2^2.28  (counts the negation factor twice; 0.50 bit lower than sqrt(pi*l/(4n)))
+
+Toy: n = 23 (n prime: True)
+  V_n (trace over GF(3^n)) = 268133
+  #E = 94142910695
+  #E mod 5 = 0;  l = #E/5 = 18828582139
+  l proven prime: True;  bits(l) = 35;  log2 l = 34.1322
+  ordinary (3 does not divide V_n): True;   anomalous (#E == 3^n): False;  l == 3: False
+  l-1 = 2 * 3^3 * 23 * 67 * 226267   (all factors proven prime: True) [0.0s]
+  embedding degree k = ord_l(3^n) = 818634006  (log2 k = 29.61; k == l-1: False; (l-1)/k = 23)
+  q^j == 1 mod l for some j <= 2000: none
+  quadratic twist order = 94143446961 = 3 * 47^2 * 14206043   (last factor proven prime, 24 bits)
+  roots of x^2+x+3 mod l: 2; roots with lambda^n = 1: 1
+  fold rule x^23 = x^15 + 1: x^23 - x^15 - 1 irreducible over GF(3): True
+  Pollard rho, expected iterations (log2): plain 17.39; with negation 16.89; with negation+Frobenius (class size 2n) 14.63
+  source formula sqrt(pi*l/4)/sqrt(2n) = 2^14.13  (counts the negation factor twice; 0.50 bit lower than sqrt(pi*l/(4n)))
+
+Hobby: n = 59 (n prime: True)
+  V_n (trace over GF(3^n)) = -237742473477667
+  #E = 14130386091738972247238288735
+  #E mod 5 = 0;  l = #E/5 = 2826077218347794449447657747
+  l proven prime: True;  bits(l) = 92;  log2 l = 91.1909
+  ordinary (3 does not divide V_n): True;   anomalous (#E == 3^n): False;  l == 3: False
+  l-1 = 2 * 3^3 * 41 * 59 * 1759 * 12107 * 1015902464920517   (all factors proven prime: True) [0.0s]
+  embedding degree k = ord_l(3^n) = 15966537956767200279365298  (log2 k = 83.72; k == l-1: False; (l-1)/k = 177)
+  q^j == 1 mod l for some j <= 2000: none
+  quadratic twist order = 14130386091738496762291333401 = 3 * 6373 * 6491 * 173829577 * 655018509997   (last factor proven prime, 40 bits)
+  roots of x^2+x+3 mod l: 2; roots with lambda^n = 1: 1
+  fold rule x^59 = x^39 + 1: x^59 - x^39 - 1 irreducible over GF(3): True
+  Pollard rho, expected iterations (log2): plain 45.92; with negation 45.42; with negation+Frobenius (class size 2n) 42.48
+  source formula sqrt(pi*l/4)/sqrt(2n) = 2^41.98  (counts the negation factor twice; 0.50 bit lower than sqrt(pi*l/(4n)))
+
+Serious: n = 179 (n prime: True)
+  V_n (trace over GF(3^n)) = 8415761749837112564717203646960402152220333
+  #E = 25392449348622130779763242573538520583474925385036649070887957197782065487275527119535
+  #E mod 5 = 0;  l = #E/5 = 5078489869724426155952648514707704116694985077007329814177591439556413097455105423907
+  l proven prime: True;  bits(l) = 282;  log2 l = 281.3864
+  ordinary (3 does not divide V_n): True;   anomalous (#E == 3^n): False;  l == 3: False
+  l-1 = 2 * 3^2 * 47 * 179 * 10125222756042811 * 703353447714603929148486975269 * 4709046612308978229431976119158651   (all factors proven prime: True) [9.8s]
+  embedding degree k = ord_l(3^n) = 28371451786169978524875131367082145903323938977694579967472577874616832946676566614  (log2 k = 273.90; k == l-1: False; (l-1)/k = 179)
+  q^j == 1 mod l for some j <= 2000: none
+  quadratic twist order = 25392449348622130779763242573538520583474942216560148745113086632189359408079831560201 = 3 * 1433 * 160881263 * 36713998232070252360179093503707346270365370129244632978249507489669029173   (last factor composite/unfactored, 245 bits)
+  roots of x^2+x+3 mod l: 2; roots with lambda^n = 1: 1
+  fold rule x^179 = x^59 + 1: x^179 - x^59 - 1 irreducible over GF(3): True
+  Pollard rho, expected iterations (log2): plain 141.02; with negation 140.52; with negation+Frobenius (class size 2n) 136.78
+  source formula sqrt(pi*l/4)/sqrt(2n) = 2^136.28  (counts the negation factor twice; 0.50 bit lower than sqrt(pi*l/(4n)))
+
+==============================================================================
+3. The cofactor strip: 5 = tau^3 - tau^2 + tau - 1 in Z[tau], tau^2 = -tau - 3
+==============================================================================
+tau^3 - tau^2 + tau - 1 = 5 + 0*tau  (== 5: True);  N(tau - 1) = 5
+
+==============================================================================
+4. Family scan: prime n < 200 with #E(GF(3^n)) = 5 * prime
+==============================================================================
+n with cofactor exactly 5 and prime l: [2, 7, 23, 59, 179]
+(composite n with the same property, excluded because of subfields: [] )
+
+(total 22.8s)

@@ -1,0 +1,41 @@
+{
+ "Serious": {
+  "inversion_wrong": 0,
+  "trace honest kP": {
+   "trials": 1000,
+   "in_subgroup": 1000,
+   "accepted": 1000,
+   "rejected": 0
+  },
+  "trace kP + GF(3) point": {
+   "trials": 1000,
+   "in_subgroup": 0,
+   "accepted": 0,
+   "rejected": 1000
+  },
+  "trace random curve point": {
+   "trials": 1000,
+   "in_subgroup": 196,
+   "accepted": 196,
+   "rejected": 804
+  },
+  "trace pure order-5 point": {
+   "trials": 4,
+   "in_subgroup": 0,
+   "accepted": 0,
+   "rejected": 4
+  },
+  "trace secs": 597.4,
+  "certificate": {
+   "honest_accepted": 1000,
+   "of": 1000,
+   "adversary_images_in_subgroup": 1000,
+   "adversary_images_exceptional": 0,
+   "nonsubgroup_A_accepted": 0,
+   "gf3_C_accepted": 0,
+   "secs": 281.0
+  },
+  "lemma": "image of (tau-1) on E(GF(3^n)) lies in <P>: every adversary image in subgroup",
+  "secs_total": 886.1
+ }
+}

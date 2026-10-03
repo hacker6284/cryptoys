@@ -1,0 +1,22 @@
+{
+ "Demo": 50,
+ "Toy": 50,
+ "Hobby": 50,
+ "Serious": 50,
+ "palin23": {
+  "irreducible": true,
+  "mul_ok": 30,
+  "reps": 30,
+  "moves": 462.06666666666666,
+  "poly_moves": 268.03333333333336,
+  "ratio": 1.7239149359532397
+ },
+ "palin179": {
+  "irreducible": true,
+  "mul_ok": 30,
+  "reps": 30,
+  "moves": 28350.733333333334,
+  "poly_moves": 14479.666666666666,
+  "ratio": 1.9579686456870553
+ }
+}

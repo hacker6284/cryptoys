@@ -1,0 +1,73 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+==============================================================================
+Demo: proposed no-paper budget 2 grids per player; aligned layout: one 10-hole row per register (7 used)
+==============================================================================
+[three 1] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 34,691 (+ control-marker moves 1,352); max tally 3
+    peak in public walk : 10 live registers + overflow(n-1) = 76 holes -> workspace grids aligned 2, packed 1
+    peak in validation  : 9 live registers + overflow(2n-2) = 75 holes -> workspace grids aligned 2, packed 1
+    peak in shared walk : 10 live registers + overflow(n-1) = 76 holes -> workspace grids aligned 2, packed 1
+    + key 1 grid(s) + cursor grid 1 + control (39 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 4 grids + control;  packed: 3 grids + control (budget 2)
+[pegs 3] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 4,467 (+ control-marker moves 184); max tally 3
+    peak in public walk : 10 live registers + overflow(n-1) = 76 holes -> workspace grids aligned 2, packed 1
+    peak in validation  : 9 live registers + overflow(2n-2) = 75 holes -> workspace grids aligned 2, packed 1
+    peak in shared walk : 10 live registers + overflow(n-1) = 76 holes -> workspace grids aligned 2, packed 1
+    + key 1 grid(s) + cursor grid 1 + control (39 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 4 grids + control;  packed: 3 grids + control (budget 2)
+==============================================================================
+Toy: proposed no-paper budget 5 grids per player; aligned layout: one 5x5 quarter-grid per register (23 of 25 used)
+==============================================================================
+[three 1] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 219,674 (+ control-marker moves 1,910); max tally 11
+    peak in public walk : 10 live registers + overflow(n-1) = 252 holes -> workspace grids aligned 3, packed 3
+    peak in validation  : 9 live registers + overflow(2n-2) = 251 holes -> workspace grids aligned 3, packed 3
+    peak in shared walk : 10 live registers + overflow(n-1) = 252 holes -> workspace grids aligned 3, packed 3
+    + key 1 grid(s) + cursor grid 1 + control (47 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 5 grids + control;  packed: 5 grids + control (budget 5)
+[pegs 19] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 136,596 (+ control-marker moves 1,274); max tally 11
+    peak in public walk : 10 live registers + overflow(n-1) = 252 holes -> workspace grids aligned 3, packed 3
+    peak in validation  : 9 live registers + overflow(2n-2) = 251 holes -> workspace grids aligned 3, packed 3
+    peak in shared walk : 10 live registers + overflow(n-1) = 252 holes -> workspace grids aligned 3, packed 3
+    + key 1 grid(s) + cursor grid 1 + control (47 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 5 grids + control;  packed: 5 grids + control (budget 5)
+==============================================================================
+Hobby: proposed no-paper budget 11 grids per player; aligned layout: one grid per register (59 of 100 used)
+==============================================================================
+[three 2] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 2,077,634 (+ control-marker moves 4,636); max tally 29
+    peak in public walk : 10 live registers + overflow(n-1) = 648 holes -> workspace grids aligned 11, packed 7
+    peak in validation  : 9 live registers + overflow(2n-2) = 647 holes -> workspace grids aligned 11, packed 7
+    peak in shared walk : 10 live registers + overflow(n-1) = 648 holes -> workspace grids aligned 11, packed 7
+    + key 2 grid(s) + cursor grid 1 + control (65 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 14 grids + control;  packed: 10 grids + control (budget 11)
+[pegs 55] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 2,008,854 (+ control-marker moves 4,212); max tally 29
+    peak in public walk : 10 live registers + overflow(n-1) = 648 holes -> workspace grids aligned 11, packed 7
+    peak in validation  : 9 live registers + overflow(2n-2) = 647 holes -> workspace grids aligned 11, packed 7
+    peak in shared walk : 10 live registers + overflow(n-1) = 648 holes -> workspace grids aligned 11, packed 7
+    + key 1 grid(s) + cursor grid 1 + control (65 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 13 grids + control;  packed: 9 grids + control (budget 11)
+[six 1] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 3,985,772 (+ control-marker moves 7,028); max tally 29
+    peak in public walk : 10 live registers + overflow(n-1) = 648 holes -> workspace grids aligned 11, packed 7
+    peak in validation  : 9 live registers + overflow(2n-2) = 647 holes -> workspace grids aligned 11, packed 7
+    peak in shared walk : 10 live registers + overflow(n-1) = 648 holes -> workspace grids aligned 11, packed 7
+    + key 1 grid(s) + cursor grid 1 + control (65 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 13 grids + control;  packed: 9 grids + control (budget 11)
+==============================================================================
+Serious: proposed no-paper budget 32 grids per player; aligned layout: two grids per register (179 of 200 used)
+==============================================================================
+[three 6] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 42,230,897 (+ control-marker moves 15,220); max tally 89
+    peak in public walk : 10 live registers + overflow(n-1) = 1968 holes -> workspace grids aligned 22, packed 20
+    peak in validation  : 9 live registers + overflow(2n-2) = 1967 holes -> workspace grids aligned 22, packed 20
+    peak in shared walk : 10 live registers + overflow(n-1) = 1968 holes -> workspace grids aligned 22, packed 20
+    + key 6 grid(s) + cursor grid 1 + control (125 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 29 grids + control;  packed: 27 grids + control (budget 32)
+[pegs 175] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 47,452,711 (+ control-marker moves 14,560); max tally 89
+    peak in public walk : 10 live registers + overflow(n-1) = 1968 holes -> workspace grids aligned 22, packed 20
+    peak in validation  : 9 live registers + overflow(2n-2) = 1967 holes -> workspace grids aligned 22, packed 20
+    peak in shared walk : 10 live registers + overflow(n-1) = 1968 holes -> workspace grids aligned 22, packed 20
+    + key 2 grid(s) + cursor grid 1 + control (125 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 25 grids + control;  packed: 23 grids + control (budget 32)
+[six 2] correct (pub, on-curve, trace, shared) = (True, True, True, True); stray registers left = 0; moves per person 65,060,354 (+ control-marker moves 17,852); max tally 89
+    peak in public walk : 10 live registers + overflow(n-1) = 1968 holes -> workspace grids aligned 22, packed 20
+    peak in validation  : 9 live registers + overflow(2n-2) = 1967 holes -> workspace grids aligned 22, packed 20
+    peak in shared walk : 10 live registers + overflow(n-1) = 1968 holes -> workspace grids aligned 22, packed 20
+    + key 2 grid(s) + cursor grid 1 + control (125 holes: tally, script line, chain line, fleet index)
+    TOTAL aligned: 25 grids + control;  packed: 23 grids + control (budget 32)

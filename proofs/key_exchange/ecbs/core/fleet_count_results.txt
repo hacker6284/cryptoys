@@ -1,0 +1,7 @@
+placements per ship: 5:120 4:140 3:160 2:180  (independent tuples 77414400000)
+labelled fleets, no overlap (touching allowed): 30093975536  acceptance 0.388739
+labelled fleets, no touching even diagonally:   3851502784
+
+real	0m33.366s
+user	0m33.366s
+sys	0m0.000s

@@ -1,0 +1,10 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+== 1. Verse = chord rule kept over a bottom (PARI, random points)
+  Demo: 50/50 additions satisfy all five scale identities and equal PARI's sum
+  Toy: 50/50 additions satisfy all five scale identities and equal PARI's sum
+  Hobby: 50/50 additions satisfy all five scale identities and equal PARI's sum
+  Serious: 50/50 additions satisfy all five scale identities and equal PARI's sum
+
+== 2. Palindromic type-II basis, independent re-check
+  n=23: (D_(n+1) - D_n)/(x - 2) irreducible True; multiply correct 30/30; mean moves 462 vs polynomial basis 268 (x1.72)
+  n=179: (D_(n+1) - D_n)/(x - 2) irreducible True; multiply correct 30/30; mean moves 28,351 vs polynomial basis 14,480 (x1.96)

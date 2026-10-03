@@ -1,0 +1,142 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+Toy {
+ "runs": 10,
+ "people": 20,
+ "moves_per_person_mean": 141822,
+ "moves_min": 100208,
+ "moves_max": 170550,
+ "moves_by_phase_mean": {
+  "base point": 23400,
+  "own walk": 52302,
+  "swap": 61,
+  "curve test": 879,
+  "make certificate": 7176,
+  "rebuild theirs": 7238,
+  "shared walk": 50763,
+  "fold": 4
+ },
+ "check_share_mean": 0.1078,
+ "base_point_moves": 23400,
+ "base_point_share_mean": 0.165,
+ "control_moves_mean": 1302,
+ "ladder_build_once": 65,
+ "calls_per_person": 92,
+ "calls_expected_4n": 92,
+ "control_row": {
+  "holes": 40,
+  "need": 33,
+  "layout": "script 0-14, phase 15, calling 16, ladder 17-20, parking 21, tally 22-32",
+  "highest_hole_used": 32
+ },
+ "grids": {
+  "7": {
+   "workspace": 4,
+   "key": 1,
+   "total": 5
+  },
+  "9": {
+   "workspace": 4,
+   "key": 1,
+   "total": 5
+  }
+ },
+ "all_four_at_once": {
+  "empty_homes": 3,
+  "bands_to_receive": 4,
+  "fits": false
+ }
+}
+Hobby {
+ "runs": 6,
+ "people": 12,
+ "moves_per_person_mean": 1714807,
+ "moves_min": 1358709,
+ "moves_max": 1970226,
+ "moves_by_phase_mean": {
+  "base point": 105759,
+  "own walk": 765780,
+  "swap": 156,
+  "curve test": 4213,
+  "make certificate": 44250,
+  "rebuild theirs": 44404,
+  "shared walk": 750234,
+  "fold": 12
+ },
+ "check_share_mean": 0.0542,
+ "base_point_moves": 105759,
+ "base_point_share_mean": 0.0617,
+ "control_moves_mean": 3367,
+ "ladder_build_once": 173,
+ "calls_per_person": 236,
+ "calls_expected_4n": 236,
+ "control_row": {
+  "holes": 80,
+  "need": 52,
+  "layout": "script 0-14, phase 15, calling 16, ladder 17-21, parking 22, tally 23-51",
+  "highest_hole_used": 51
+ },
+ "grids": {
+  "7": {
+   "workspace": 8,
+   "key": 1,
+   "total": 9
+  },
+  "9": {
+   "workspace": 8,
+   "key": 1,
+   "total": 9
+  }
+ },
+ "all_four_at_once": {
+  "empty_homes": 3,
+  "bands_to_receive": 4,
+  "fits": false
+ }
+}
+Serious {
+ "runs": 4,
+ "people": 8,
+ "moves_per_person_mean": 40287769,
+ "moves_min": 37235693,
+ "moves_max": 43999129,
+ "moves_by_phase_mean": {
+  "base point": 734962,
+  "own walk": 19437484,
+  "swap": 473,
+  "curve test": 30658,
+  "make certificate": 363624,
+  "rebuild theirs": 364102,
+  "shared walk": 19356413,
+  "fold": 52
+ },
+ "check_share_mean": 0.0188,
+ "base_point_moves": 734962,
+ "base_point_share_mean": 0.0182,
+ "control_moves_mean": 10564,
+ "ladder_build_once": 533,
+ "calls_per_person": 716,
+ "calls_expected_4n": 716,
+ "control_row": {
+  "holes": 200,
+  "need": 114,
+  "layout": "script 0-14, phase 15, calling 16, ladder 17-23, parking 24, tally 25-113",
+  "highest_hole_used": 113
+ },
+ "grids": {
+  "7": {
+   "workspace": 20,
+   "key": 2,
+   "total": 22
+  },
+  "9": {
+   "workspace": 24,
+   "key": 2,
+   "total": 26
+  }
+ },
+ "all_four_at_once": {
+  "empty_homes": 3,
+  "bands_to_receive": 4,
+  "fits": false
+ }
+}

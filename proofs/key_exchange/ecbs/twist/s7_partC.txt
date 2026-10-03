@@ -1,0 +1,4 @@
+# python s7_certificate.py C Demo,Toy  (recorded from s7_certificate.json)
+Demo {"curve_test_rejects_C": true, "rebuilt_A_order": "(q+1)/4 = 2^9.10", "key_cells": 2, "key_space_bits": 3.17, "fflog_secs": 0.0, "recovered_key_equals_receivers_key": true}
+Toy {"curve_test_rejects_C": true, "rebuilt_A_order": "(q+1)/4 = 2^34.45", "key_cells": 16, "key_space_bits": 25.36, "fflog_secs": 1.1, "recovered_key_equals_receivers_key": true}
+# python s7_certificate.py C Hobby  (timeout 1500): killed by the timeout with no output; fflog in GF(3^118) did not finish.

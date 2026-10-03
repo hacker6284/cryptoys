@@ -1,0 +1,129 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+
+==============================================================================
+Demo: n = 7, fold x^7 = x^5 + 1, l = 421 (9 bits)
+==============================================================================
+peg arithmetic vs PARI (mul / cube / invert): [20, 20, 20]
+base point P (x, y registers, hole 0 first):
+  x = .RWR.WW
+  y = R..RRWR
+lambda (Frobenius eigenvalue on <P>) = 385; lambda^n = 1: True; tau-bar eigenvalue = 35
+average moves per op: {'mul': 40, 'cube': 30, 'inv': 367, 'ptadd': 446}
+
+[three 1] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 1  additions (Alice) 16  Frobenius steps 100   [0s]
+   moves per person: pub 14,835, on_curve 170, trace 3,178, tau_bar 0, shared 15,499, per_person 33,682
+
+cofactor strip on P gives 5P: True (2,236 moves)
+  adversarial: order5_on_curve: True
+  adversarial: order5_in_F3_visual: True
+  adversarial: order5_trace: False
+  adversarial: order5_cofactor: True
+  adversarial: order5_walk_leak(ref): (True, 'reveals sum of signs mod 5 = 2')
+  adversarial: mixed_on_curve: True
+  adversarial: mixed_trace: False
+  adversarial: mixed_cofactor_equals_5B: True
+  adversarial: invalid_curve_b2_order: (2102, [(2, 1), (1051, 1)])
+  adversarial: invalid_on_curve_check: False
+  adversarial: invalid_leak: walk output lies in <Z> of order 1051: attacker learns a value mod 1051 (index 877)
+
+==============================================================================
+Toy: n = 23, fold x^23 = x^15 + 1, l = 18828582139 (35 bits)
+==============================================================================
+peg arithmetic vs PARI (mul / cube / invert): [20, 20, 20]
+base point P (x, y registers, hole 0 first):
+  x = RW..W.WWWR..W...WWWRWRR
+  y = RRWWRRR..R.WRRW..RWWRRW
+lambda (Frobenius eigenvalue on <P>) = 7532247422; lambda^n = 1: True; tau-bar eigenvalue = 11296334716
+average moves per op: {'mul': 258, 'cube': 112, 'inv': 4397, 'ptadd': 2988}
+
+[three 1] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 16  Frobenius steps 100   [0s]
+   moves per person: pub 95,300, on_curve 794, trace 52,693, tau_bar 0, shared 93,641, per_person 242,428
+
+[pegs 21] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 15  Frobenius steps 21   [0s]
+   moves per person: pub 68,123, on_curve 914, trace 53,044, tau_bar 0, shared 69,778, per_person 191,858
+
+cofactor strip on P gives 5P: True (17,061 moves)
+  adversarial: order5_on_curve: True
+  adversarial: order5_in_F3_visual: True
+  adversarial: order5_trace: False
+  adversarial: order5_cofactor: True
+  adversarial: order5_walk_leak(ref): (True, 'reveals sum of signs mod 5 = 2')
+  adversarial: mixed_on_curve: True
+  adversarial: mixed_trace: False
+  adversarial: mixed_cofactor_equals_5B: True
+  adversarial: invalid_curve_b2_order: (94143792374, [(2, 1), (47071896187, 1)])
+  adversarial: invalid_leak: no odd prime factor below 10^6 in the b'=2 order
+
+==============================================================================
+Hobby: n = 59, fold x^59 = x^39 + 1, l = 2826077218347794449447657747 (92 bits)
+==============================================================================
+peg arithmetic vs PARI (mul / cube / invert): [20, 20, 20]
+base point P (x, y registers, hole 0 first):
+  x = RRR.WWWW.RWW..WWW.WR.R.WWRW.RW...R.W.RRW.R.WR.W..R.WW..WR..
+  y = WRRRRWWRRWWRWRRW.RWW.WRRRWRRRRWRR.RWR.W.W.RW.R.W.RRW.W.WWRW
+lambda (Frobenius eigenvalue on <P>) = 1612020963452423912222102066; lambda^n = 1: True; tau-bar eigenvalue = 1214056254895370537225555680
+average moves per op: {'mul': 1785, 'cube': 259, 'inv': 31274, 'ptadd': 15220}
+
+[three 2] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 33  Frobenius steps 200   [0s]
+   moves per person: pub 892,882, on_curve 4,018, trace 430,068, tau_bar 0, shared 905,331, per_person 2,232,300
+
+[twisted 2] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 33  Frobenius steps 200   [0s]
+   moves per person: pub 890,589, on_curve 3,918, trace 435,985, tau_bar 50,953, shared 887,161, per_person 2,268,606
+
+[pegs 55] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 35  Frobenius steps 55   [0s]
+   moves per person: pub 834,831, on_curve 4,202, trace 429,763, tau_bar 0, shared 806,956, per_person 2,075,752
+
+cofactor strip on P gives 5P: True (92,626 moves)
+  adversarial: order5_on_curve: True
+  adversarial: order5_in_F3_visual: True
+  adversarial: order5_trace: False
+  adversarial: order5_cofactor: True
+  adversarial: order5_walk_leak(ref): (True, 'reveals sum of signs mod 5 = 3')
+  adversarial: mixed_on_curve: True
+  adversarial: mixed_trace: False
+  adversarial: mixed_cofactor_equals_5B: True
+  adversarial: invalid_curve_b2_order: (14130386091738500818388309702, [(2, 1), (16993, 1), (3770219, 1), (110277623308041353, 1)])
+  adversarial: invalid_on_curve_check: False
+  adversarial: invalid_leak: walk output lies in <Z> of order 16993: attacker learns a value mod 16993 (index 3375)
+
+==============================================================================
+Serious: n = 179, fold x^179 = x^59 + 1, l = 5078489869724426155952648514707704116694985077007329814177591439556413097455105423907 (282 bits)
+==============================================================================
+peg arithmetic vs PARI (mul / cube / invert): [20, 20, 20]
+base point P (x, y registers, hole 0 first):
+  x = WW..WWW.RWW.RWRRRWRWRRWRRW.W.WWRRR.RR.R..WW.R.R.WRWW.RWRR.W.W.RRW.R.RRWWW..WRW.WWRW.WRR..WWRWR..RWWW..WW.R.WRW....W.WR.WWW....R.WW..WRRRW..WWR.RWR.WR.RRWRRRWWR.R.R.W.W...WWRWRRWR.
+  y = R.RWRRWRWW.WRWRR.W.W.R...RRW.WRW..RWR.WWRWR..WW.R...WR..R.RRW.W.W.WW..RWWRRW.RRW.WWWRWWWR.R...R..RRWRR..RW.WR..RRRRWW.RRW.R.WRRWRRWWW..R..RRWRRWRWR..R...WWRWRW.W.RWR.WW..WRWRRRR..
+lambda (Frobenius eigenvalue on <P>) = 2724716931866115321011608622302111260925807250373068262036350515634267291007833764549; lambda^n = 1: True; tau-bar eigenvalue = 2353772937858310834941039892405592855769177826634261552141240923922145806447271659357
+average moves per op: {'mul': 15090, 'cube': 608, 'inv': 268739, 'ptadd': 119095}
+
+[three 6] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 101  Frobenius steps 600   [9s]
+   moves per person: pub 19,458,365, on_curve 30,028, trace 4,439,136, tau_bar 0, shared 19,245,236, per_person 43,172,764
+
+[three 7] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 118  Frobenius steps 700   [10s]
+   moves per person: pub 22,818,094, on_curve 28,052, trace 4,440,409, tau_bar 0, shared 22,583,677, per_person 49,870,232
+
+[twisted 6] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 101  Frobenius steps 600   [10s]
+   moves per person: pub 19,343,185, on_curve 30,328, trace 4,422,992, tau_bar 2,103,470, shared 19,317,639, per_person 45,217,614
+
+[pegs 162] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 103  Frobenius steps 162   [9s]
+   moves per person: pub 19,009,932, on_curve 29,854, trace 4,488,352, tau_bar 0, shared 18,995,169, per_person 42,523,307
+
+[pegs 175] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 107  Frobenius steps 175   [10s]
+   moves per person: pub 19,741,596, on_curve 27,159, trace 4,354,688, tau_bar 0, shared 19,544,288, per_person 43,667,731
+
+[six 2] pub ok True,True  on-curve (True, True)  trace-check (True, True)  agree True  equals ref ab*P True  rerolls 0  additions (Alice) 171  Frobenius steps 400   [14s]
+   moves per person: pub 31,605,660, on_curve 29,062, trace 4,406,690, tau_bar 0, shared 31,507,837, per_person 67,549,249
+
+cofactor strip on P gives 5P: True (786,768 moves)
+  adversarial: order5_on_curve: True
+  adversarial: order5_in_F3_visual: True
+  adversarial: order5_trace: False
+  adversarial: order5_cofactor: True
+  adversarial: order5_walk_leak(ref): (True, 'reveals sum of signs mod 5 = 1')
+  adversarial: mixed_on_curve: True
+  adversarial: mixed_trace: False
+  adversarial: mixed_cofactor_equals_5B: True
+  adversarial: invalid_curve_b2_order: (25392449348622130779763242573538520583474931649413192357606225788662483413542352544102, [(2, 1), (12696224674311065389881621286769260291737465824706596178803112894331241706771176272051, 1)])
+  adversarial: invalid_leak: no odd prime factor below 10^6 in the b'=2 order
+
+(total 68s)

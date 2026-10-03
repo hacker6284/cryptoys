@@ -431,7 +431,11 @@ MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
     "turn_run_refines", "count_find_refines", "count_relook_refines",
     "count_register_looks_refines", "card_colour_refines", "card_step_refines",
     "echo_colour_refines", "em_run_refines", "em_block_refines", "emBlock_inj",
-    "iv_cook12_refines", "v_Hash_refines", "v_Hash_refines_array", "v_MegaDreifach_refines"]}
+    "iv_cook12_refines", "v_Hash_refines", "v_Hash_refines_array", "v_MegaDreifach_refines",
+    "v_HashDeck_refines", "v_HashDeck_refines_array", "v_HashDeck_two_blocks",
+    "v_MegaDreifachDeck_refines", "phiUnrank_lehmerRank", "body_from_refines",
+    "v_HashDeckBody_refines", "v_MegaDreifachBody_refines", "v_HashDeckBodyFrom_refines",
+    "v_MegaDreifachBodyFrom_refines"]}
 
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",

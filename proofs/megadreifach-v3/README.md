@@ -4,8 +4,8 @@
 Lean for MegaDreifach v3, the ZP26 card phase
 ([`primitives/hash/megadreifach/v3/SPEC.md`](../../primitives/hash/megadreifach/v3/SPEC.md),
 [`v3/megadreifach.sudo`](../../primitives/hash/megadreifach/v3/megadreifach.sudo)).
-The sudo is the source of truth. Link 2 (the emitted code equals a hand-written model) is
-started: only the shared position layer is linked so far. **No export is linked yet.**
+The sudo is the source of truth. Link 2 (the emitted code equals a hand-written model): every
+export has a Link 2 theorem, under the input conditions listed in the export table below.
 
 | Piece | What it is | Checked by |
 | --- | --- | --- |
@@ -78,10 +78,17 @@ are `Option`-valued in the model, and `none` is the emitted code's trap. So far:
   28-byte blocks, `phiUnrank ∘ fromBE`, Davies–Meyer with the v3 step
   `compose h (emBlock h deal)` from `ivCook12`, then the 29-byte rank digest. Every chaining
   value has bijective tables, so `em_block_refines` and `position_to_bytes_refines_gen` apply.
+- `HashDeck` and the body exports (`Link2/VHashDeck.lean`). `v_HashDeck_refines` (on
+  `PhiInvWf`): `HashDeck(deal) = Hash(φ⁻¹(deal))`, the algebraic hash of the deal's 28-byte
+  Lehmer rank. `v_HashDeck_two_blocks`: that is one v3 Davies–Meyer block keyed by the deal
+  itself from `ivCook12` (via the φ round trip `phiUnrank_lehmerRank`), then the fixed pad
+  block `deckPadBlock`. `body_from_refines`, `v_HashDeckBody_refines` and
+  `v_HashDeckBodyFrom_refines`: on a permutation of `0..51` (and, for `BodyFrom`, a chaining
+  value with bijective tables) the digest of `compose h (emBlock h deal)`.
 
 Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
-EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions.
-`HashDeck`, `HashDeckBody` and their wrappers are not linked yet.
+EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The v3 files restate the few generic
+lemmas they need from those layers (`injPos_*'`, the chunk-copy loop, the φ round trip).
 
 ## Link 2 status of each export
 
@@ -94,12 +101,12 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 | `position_to_bytes` | `position_to_bytes_refines_gen` (bijective cp and ep) |
 | `Hash` | `v_Hash_refines` (on `PadWf`), `v_Hash_refines_array` |
 | `MegaDreifach` | `v_MegaDreifach_refines` (on `PadWf`) |
-| `HashDeck` | none yet |
-| `MegaDreifachDeck` | none yet |
-| `HashDeckBody` | none yet |
-| `MegaDreifachBody` | none yet |
-| `HashDeckBodyFrom` | none yet |
-| `MegaDreifachBodyFrom` | none yet |
+| `HashDeck` | `v_HashDeck_refines` (on `PhiInvWf`), `v_HashDeck_refines_array`, `v_HashDeck_two_blocks` |
+| `MegaDreifachDeck` | `v_MegaDreifachDeck_refines` (on `PhiInvWf`) |
+| `HashDeckBody` | `v_HashDeckBody_refines` (on permutations of `0..51`) |
+| `MegaDreifachBody` | `v_MegaDreifachBody_refines` (on permutations of `0..51`) |
+| `HashDeckBodyFrom` | `v_HashDeckBodyFrom_refines` (permutations of `0..51`, chaining value with bijective tables) |
+| `MegaDreifachBodyFrom` | `v_MegaDreifachBodyFrom_refines` (same) |
 
 ## Where this sits
 

@@ -10,6 +10,7 @@ anim/
     settings.js   the values (edit these)
     index.js      the entry: exports settings and the hooks the demo code calls
   megaminx-turn/  (same layout)
+  doubledeal-grid-deal/ (same layout)
   sounds/         the files the entries name (generated, see below)
   voice.js        settings.sounds → a sound.js player with contact timing
   twisty.js       cubing.js move timing shared by twisty-puzzle entries
@@ -35,7 +36,8 @@ anim/
 Microdemos not in this table still keep their own `settings.js` in
 `demos/micro/<page>/` until they move here. A new entry starts from the
 default rules: a turn sound's audible centre at the face's peak
-velocity (`align: "peak-velocity"`), the scramble-turn landing pat.
+velocity (`align: "peak-velocity"`), the scramble-turn landing pat; a
+moving card's sound has its audible centre where the card moves fastest.
 
 ## Real-life scale
 
@@ -45,7 +47,9 @@ one table, `REAL_SIZES` in `../playroom/constants.js` (3×3 57 mm edge,
 megaminx 70 mm face to face, pyraminx 97 mm edge, with sources; see
 `../README.md`). A puzzle may share the cube's size only when that is its
 own real size. Lift heights and timings are in metres and milliseconds
-in the real room, so they hold for a bigger toy.
+in the real room, so they hold for a bigger toy. Cards are 63 × 88 mm
+poker cards laid out by `../doubledeal/real-layout.js` (each grid with
+small even gaps, nothing overlapping, the cards' drawn bottoms on the felt).
 
 ## Entries
 
@@ -53,6 +57,7 @@ in the real room, so they hold for a bigger toy.
 |---|---|---|---|
 | `scramble-turn` | playroom Scramble seat (`playroom/cube-stage.js`): a click per face turn, a sound per whole-cube rotation, a muffled pat when the cube lands on the felt | `micro/scramble-turn/` (single, double and triple face turns, one step each), `micro/scramble-rotate/` (rotation) | approved by Zachary: the single face-turn click's file and gain, the landing pat and the lift timing at `af9a8fb`; the rotation sound (Sadiquecat broomstick swish, swell at mid-rotation) on 2026-10-02; it now follows the turns' rule (`align: "peak-velocity"`, `centre: "swell"`): its swell at mid-rotation for any rotation (y, y2) at any tempo, unchanged (within 1 ms) for the quarter rotation he approved. **Single, double and triple face-turn sounds approved and LOCKED at `6014bfc`** (Zachary: "All look pretty good."): their files, gains, `align: "peak-velocity"` and `nudgeMs: 0`, under his rule "the audible part of the sound should be centered over the part of the animation where the face is at maximum velocity" (each file's audible centroid half way through its turn, cubing.js smootherStep, at any tempo); pinned by `library.test.mjs` |
 | `megaminx-turn` | the megaminx in a cube stage (`playroom/cube-stage.js` with `{ voice: megaminxTurnVoice(), timing }`): a click per face turn (72°), a muffled pat when it lands. MegaDreifach's own stage is on PR #153 (held): import this entry there when it lands | `micro/megaminx-turn/` (single, double and triple turns U, U2, U3, one step each, in the Scramble seat's debug megaminx) | **Animation and sounds APPROVED and LOCKED at `a927bb2`** (Zachary approved the animation: the megaminx at its real 70 mm face to face, seated on the felt by its drawn geometry; the lift, turn tempo and settle timing and every sound as they are). **Single, double and triple face-turn sounds approved and LOCKED at `d952e6a`** (Zachary: "Sounds are ok for that one."): their files, gains, `align: "peak-velocity"` and `nudgeMs: 0` (SpaceJoe clicks centred on peak face velocity, cubing.js smootherStep, half way); pinned by `library.test.mjs`. Landing: scramble-turn's muffled pat |
+| `doubledeal-grid-deal` | `doubledeal/table.js` on the real-size layout (`doubledeal/real-layout.js`, via `playroom/card-stage.js` `stageCardTable(..., { layout: REAL_LAYOUT })`): the hand packet, a neat stack with its top card first, dealt card by card onto the message grid, column by column, each card hopping from the packet to its seat; one card-fan sound per deal (Kenney card fan), its audible centre on the mean of the cards' peak-velocity times. `TABLE_TIMING` reads `dealMs` and `dealStaggerMs` from it. The playroom DoubleDeal keeps the old 4×13 layout (no sound) until its other moves have moved | `micro/doubledeal-grid-deal/` (the deal, both grids at real size, 8 columns × 13 rows) | not yet approved |
 
 ## Sounds
 

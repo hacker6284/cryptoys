@@ -26,6 +26,15 @@ export const ORDER = (() => {
  *         prepareEach                call prepare before every loop
  *         step(ctx, loop, pace) → { step, contacts: [[slot, msFromStart]] } }
  * settings.timing: pace plus any TABLE_TIMING keys (written into it).
+ *
+ * A library entry's viewer (demos/anim/doubledeal-*) passes instead
+ *   voice   the entry's voice (its settings are the page's), no slots
+ *   layout  doubledeal/real-layout.js REAL_LAYOUT: real-size cards
+ *   camera  { position, target, fov, margin } override
+ *   frameAll  frame both grids and the hand pile (else the message grid
+ *             and the pile)
+ *   frameLift m of room above the cards (their hop)
+ *   frameNear m of room on the camera's side
  */
 export function mountTablePage(page, settings) {
     let table = null;
@@ -34,22 +43,28 @@ export function mountTablePage(page, settings) {
     return mountMicro({
         id: page.id,
         title: page.title,
-        camera: { position: [DEN.x + 0.1, 1.3, DEN.z + 0.62], target: [DEN.x, 0.78, DEN.z], fov: 34, margin: page.margin ?? 0.96 },
-        slots: page.slots,
+        camera: page.camera ?? { position: [DEN.x + 0.1, 1.3, DEN.z + 0.62], target: [DEN.x, 0.78, DEN.z], fov: 34, margin: page.margin ?? 0.96 },
+        ...(page.voice ? { voice: page.voice } : { slots: page.slots }),
         async setup(ctx) {
             ctx.status("Loading cards…");
             const textures = await loadCardTextures(4);
-            table = stageCardTable(ctx.world, textures, { poses: null, visible: true });
+            table = stageCardTable(ctx.world, textures, { poses: null, visible: true, layout: page.layout ?? null });
             table.setCardsVisible(true);
         },
         frame(ctx) {
-            // The message grid and the hand pile in front of it.
+            // The message grid and the hand pile in front of it (frameAll: and the key grid).
             const box = new ctx.THREE.Box3();
             for (const state of [{ kind: "dealrm", message: ORDER }, { kind: "scoopcm" }]) {
                 table.applyInstant(state);
                 table.group.updateMatrixWorld(true);
                 for (const mesh of table.cardsOf("message")) box.expandByObject(mesh);
+                if (page.frameAll) for (const mesh of table.cardsOf("key")) box.expandByObject(mesh);
             }
+            // frameLift (m): room above the cards for their hop.
+            if (page.frameLift) box.max.y += page.frameLift;
+            // frameNear (m): extra room on the camera's side (perspective
+            // makes the near end of a long layout take more of the view).
+            if (page.frameNear) box.max.z += page.frameNear;
             return box;
         },
         async reset(ctx) {

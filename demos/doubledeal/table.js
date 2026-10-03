@@ -10,6 +10,7 @@ import {
     edgeGap,
     restingClearance,
 } from "./layout.js";
+import { timing as GRID_DEAL } from "../anim/doubledeal-grid-deal/index.js";
 
 const SUIT_FILE = ["club", "heart", "spade", "diamond"];
 const RANK_FILE = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
@@ -56,16 +57,23 @@ export async function loadCardTextures(anisotropy = 1) {
     };
 }
 
-function gridPos(row, col, centerX) {
-    const at = cell(row, col, centerX);
-    return new THREE.Vector3(at.x, 0.04, at.z);
-}
-
-function pilePos(side, index, count) {
-    const x = side === "hand" ? MESSAGE_X : KEY_X;
-    const along = (index - (count - 1) / 2) * 0.04;
-    return new THREE.Vector3(x + along, 0.03 + index * 0.008, 2.4);
-}
+// The standalone layout (doubledeal/layout.js): 4×13 grids side by side,
+// the hand packet fanned at z 2.4. doubledeal/real-layout.js is the
+// real-size one the library entries (demos/anim/doubledeal-*) use.
+const STANDALONE_LAYOUT = {
+    name: "standalone",
+    cardW: CARD_W,
+    cardD: CARD_D,
+    cardT: 0.018,
+    seatY: 0.04,
+    cell: (row, col, side) => cell(row, col, side === "key" ? KEY_X : MESSAGE_X),
+    pile(side, index, count) {
+        const x = side === "hand" ? MESSAGE_X : KEY_X;
+        const along = (index - (count - 1) / 2) * 0.04;
+        return { x: x + along, y: 0.03 + index * 0.008, z: 2.4 };
+    },
+    restingClearance,
+};
 
 // PassKey's two piles stay on the key side, in front of that grid. The message
 // deck is still laid out during the decrypt schedule, so the hand cannot sit
@@ -85,15 +93,6 @@ function rowPos(which, index) {
     return new THREE.Vector3((index - 25.5) * 0.22, which === "out" ? 0.08 : 0.04, z);
 }
 
-function meshBox(mesh) {
-    return {
-        minX: mesh.position.x - CARD_W / 2,
-        maxX: mesh.position.x + CARD_W / 2,
-        minZ: mesh.position.z - CARD_D / 2,
-        maxZ: mesh.position.z + CARD_D / 2,
-    };
-}
-
 function disposeMaterial(mat) {
     if (!mat) return;
     mat.dispose?.();
@@ -102,12 +101,14 @@ function disposeMaterial(mat) {
 /**
  * Step timings (ms at pace 1) and hop heights, read at call time. One
  * mutable object so the microdemos (demos/micro/doubledeal-*) can tune
- * it live; tuned values paste straight back here.
+ * it live; tuned values paste straight back here. The moves that have
+ * moved into the animation library read theirs from the entry
+ * (demos/anim/doubledeal-grid-deal: dealMs, dealStaggerMs).
  */
 export const TABLE_TIMING = {
     stepMs: 280,
-    dealMs: 260,
-    dealStaggerMs: 36,
+    dealMs: GRID_DEAL.dealMs,
+    dealStaggerMs: GRID_DEAL.dealStaggerMs,
     shiftMs: 320,
     sumrowMs: 380,
     sumcolMs: 300,
@@ -129,9 +130,32 @@ export const TABLE_TIMING = {
  * Live 52+52 card table. Positions stay in the standalone DoubleDeal
  * units; the playroom adapter scales the parent group onto the felt.
  */
-export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMING } = {}) {
+export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMING, layout = STANDALONE_LAYOUT } = {}) {
     if (!parent) throw new Error("createCardTable needs a parent group.");
     if (!faces?.length || !navy || !red) throw new Error("createCardTable needs card textures.");
+    const L = layout;
+    // Card size of this layout (the module CARD_W / CARD_D are the standalone one).
+    const CARD_W = L.cardW;
+    const CARD_D = L.cardD;
+
+    function gridPos(row, col, centerX) {
+        const at = L.cell(row, col, centerX === KEY_X ? "key" : "message");
+        return new THREE.Vector3(at.x, L.seatY, at.z);
+    }
+
+    function pilePos(side, index, count) {
+        const at = L.pile(side, index, count);
+        return new THREE.Vector3(at.x, at.y, at.z);
+    }
+
+    function meshBox(mesh) {
+        return {
+            minX: mesh.position.x - CARD_W / 2,
+            maxX: mesh.position.x + CARD_W / 2,
+            minZ: mesh.position.z - CARD_D / 2,
+            maxZ: mesh.position.z + CARD_D / 2,
+        };
+    }
 
     const marker = new THREE.Mesh(
         new THREE.BoxGeometry(CARD_W, 0.01, CARD_D),
@@ -146,8 +170,8 @@ export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMIN
             const face = new THREE.MeshStandardMaterial({ map: faces[id], roughness: 0.86 });
             const backMat = new THREE.MeshStandardMaterial({ map: back, roughness: 0.9 });
             const edge = new THREE.MeshStandardMaterial({ color: 0xf7f1e6, roughness: 0.95 });
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(CARD_W, 0.018, CARD_D), [edge, edge, face, backMat, edge, edge]);
-            mesh.position.set(0, 0.04, 0);
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(CARD_W, L.cardT, CARD_D), [edge, edge, face, backMat, edge, edge]);
+            mesh.position.set(0, L.seatY, 0);
             mesh.castShadow = true;
             parent.add(mesh);
             meshes.push(mesh);
@@ -772,7 +796,7 @@ export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMIN
         for (const a of messageBoxes) {
             for (const b of keyBoxes) between = Math.min(between, edgeGap(a, b));
         }
-        return { within, between, designed: restingClearance() };
+        return { within, between, designed: L.restingClearance() };
     }
 
     async function play(step, nextPace) {

@@ -742,8 +742,7 @@ func em_run(h: Position, deal: List<int>) -> Run
 func em_block(h: Position, deal: List<int>) -> Position
     return em_run(h, deal).g
 
-// Davies-Meyer step, the one home of the feed-forward: h' = compose(h, E_m(h)) = h·W·h (v2's 3-solve).
-// Hash, body_from and the statistics harness all call this.
+// Davies–Meyer step, the one home of the feed-forward: h' = compose(h, E_m(h)) = h·W·h (the 3-solve, SPEC §5.7).
 func dm_step(h: Position, deal: List<int>) -> Position
     return compose(h, em_block(h, deal))
 

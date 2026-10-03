@@ -144,6 +144,7 @@ function telePair(R, cls) {
 const startOf = (job, R) => (job.start === "IV" ? impl.iv_cook12() : toPos(uniformH(R)));
 const WORK = {
     bench(job, R) {
+        // bench times em_block (E_m) alone, not dm_step; see the bench COMMAND above.
         for (let i = 0; i < job.n; i++) impl.em_block(toPos(uniformH(R)), deal(uniformDeal(R)));
         return { n: job.n };
     },

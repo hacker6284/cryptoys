@@ -75,7 +75,7 @@ The hand procedure needs none of these tables.
 
 1. φ(chunk) → a 52-card deal.
 2. `e ← E_m(h) = W·h`: start at position h. Run the 52 card steps (§5.3), then the 26 echoes (§5.4).
-3. `h ← compose(h, e)`. In the sudo, steps 2–3 are `dm_step(h, deal)`, used by `Hash` and `HashDeckBody(From)`.
+3. `h ← compose(h, e)`. In the sudo, steps 2–3 are `dm_step(h, deal)`, used by `Hash`, `HashDeckBody` and `HashDeckBodyFrom`.
 
 Merkle–Damgård and the digest are as in v2 §5.
 

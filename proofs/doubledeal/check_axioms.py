@@ -59,7 +59,7 @@ axiom) fails, as does a Lean error.
   required: the theorems its README cites (MD_V1_README_THEOREMS).
 - megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
   for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
-  README cites (MD_V3_README_THEOREMS, empty until Link 2 lands, so min is 0 for now).
+  README cites (MD_V3_README_THEOREMS; min is their count).
   `--selftest` checks its "Emitted function" column against
   primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
@@ -416,10 +416,11 @@ MD_V1_README_THEOREMS = {
 
 # proofs/megadreifach-v3/lean (MegaDreifach v3, the ZP26 card phase): every theorem its
 # README cites by name; `--selftest` re-derives the list the same way as MD_README_THEOREMS.
-# Empty until Link 2 lands (the package has the emitted code and a compiled KAT runner only).
+# So far the shared position layer (Link2/Shared.lean); no export is linked yet.
 MD_V3_LEAN = ROOT.parent / "megadreifach-v3" / "lean"
 MD_V3_README = MD_V3_LEAN.parent / "README.md"
-MD_V3_README_THEOREMS: set[str] = set()
+MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
+    "compose_refines", "face_move_refines", "face_turn_refines", "inverse_refines"]}
 
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
@@ -936,9 +937,8 @@ PACKAGES = {
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
-        # 0 until Link 2 lands (no stated theorems yet; the audit sees only Lean-generated
-        # equation lemmas of the KAT runner); raise it with the first Link 2 chunk.
-        "min": 0,
+        # sanity: at least the README-cited Link 2 theorems (raise as Link 2 grows)
+        "min": len(MD_V3_README_THEOREMS),
         "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac": {

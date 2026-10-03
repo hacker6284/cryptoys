@@ -4,8 +4,8 @@
 Lean for MegaDreifach v3, the ZP26 card phase
 ([`primitives/hash/megadreifach/v3/SPEC.md`](../../primitives/hash/megadreifach/v3/SPEC.md),
 [`v3/megadreifach.sudo`](../../primitives/hash/megadreifach/v3/megadreifach.sudo)).
-The sudo is the source of truth. **This package has no theorems yet.** Link 2 (the emitted
-code equals a hand-written model) is planned and not done.
+The sudo is the source of truth. Link 2 (the emitted code equals a hand-written model) is
+started: only the shared position layer is linked so far. **No export is linked yet.**
 
 | Piece | What it is | Checked by |
 | --- | --- | --- |
@@ -18,6 +18,21 @@ compiled and run. It is not a kernel proof, not a proof that the emitted Lean ma
 (that is trusted, see [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md)), and not a security claim. The KAT
 JSON is generated from the sudoc JS build of the same sudo (`kats/regen_v3.mjs`), so the KAT run
 compares two builds of one source, not two independent implementations.
+
+## Link 2 so far: the shared position layer
+
+[`lean/MegaDreifachV3/Link2/Shared.lean`](lean/MegaDreifachV3/Link2/Shared.lean) states, for
+the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
+`inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
+`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 49 v2 modules
+that elaborate unchanged against the v3 emit). The model side is the v2 position algebra,
+which v3 keeps. These four functions are not exports.
+
+Not reusable unchanged, so not in the roots:
+- the v2 grip lemmas (EmHelpers and everything above it), which v3 has no use for;
+- EvenRank, PadRef and RequirePerm. They hard-code v2 `.sudo` line numbers, which the emitter
+  puts in every `sudoAssert` (e.g. 538 in v2, 468 in v3), or a v2 matcher name
+  (`rot_slice.match_2`). Their dependents PosBytes, PhiChunk and PhiInv are out as well.
 
 ## Link 2 status of each export
 
@@ -46,8 +61,8 @@ Every `export func` of the v3 sudo, and its Link 2 theorem. None exists yet.
 - The emitted module is `Megadreifach`, the same name as the v1 and v2 emits; each lives in its
   own Lake package and they are never imported together.
 - Gates: `scan_sorry.py --root proofs/megadreifach-v3/lean --exclude Generated`, and
-  `check_axioms.py megadreifach-v3` (every theorem in `MegaDreifachV3.*`; today only 6
-  Lean-generated equation/match lemmas of the KAT runner's definitions, no stated theorem). Its
+  `check_axioms.py megadreifach-v3` (every theorem in `MegaDreifachV3.*`, plus the
+  Lean-generated equation/match lemmas of the KAT runner's definitions). Its
   `--selftest` checks the table above against the sudo's exports.
 
 Build locally one package at a time: `lake build` in `lean/Generated`, then in `lean`.

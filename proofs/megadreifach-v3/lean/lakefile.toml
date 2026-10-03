@@ -1,6 +1,6 @@
 name = "MegaDreifachV3"
 version = "0.1.0"
-defaultTargets = ["MegaDreifachV3", "megadreifach_v3_kat"]
+defaultTargets = ["MegaDreifachV3", "MegaDreifachLink", "megadreifach_v3_kat"]
 
 # MegaDreifach v3 (ZP26 card phase). Path-requires the Lean emitted from
 # primitives/hash/megadreifach/v3/megadreifach.sudo (do not edit Generated/). See ../README.md.
@@ -20,3 +20,68 @@ name = "MegaDreifachV3"
 [[lean_exe]]
 name = "megadreifach_v3_kat"
 root = "Main"
+
+
+# v2 Link 2 layers re-elaborated against the v3 emit (this package's Generated/, module
+# `Megadreifach`): the sources stay in ../../megadreifach/lean, the .olean files are built
+# here. Explicit roots, not a `MegaDreifach.+` glob: the roots are exactly the modules
+# (with their full import closure) that elaborate unchanged against the v3 emit. Not
+# listed, because they do not: the v2 grip lemmas (EmHelpers, EmCorner, EmEdge, EmSpin,
+# EmRecipe, EmStep, EmInv, EmBlock, EmIv, VHash, VHashDeck, InjInv) and the modules that
+# hard-code v2 .sudo line numbers or v2 matcher names (EvenRank, PadRef, RequirePerm and
+# their dependents PosBytes, PhiChunk, PhiInv). See ../README.md.
+# MegaDreifach.Em (the v2 model, grips included) is re-elaborated only because FaceTurn
+# and Inverse take faceTurn / inverse from it; it states nothing about v3's card phase.
+[[lean_lib]]
+name = "MegaDreifachLink"
+srcDir = "../../megadreifach/lean"
+roots = [
+  "MegaDreifach.Basic",
+  "MegaDreifach.NatUtil",
+  "MegaDreifach.Position",
+  "MegaDreifach.Group",
+  "MegaDreifach.Link2.Embed",
+  "MegaDreifach.Link2.Sudo",
+  "MegaDreifach.Link2.Loop",
+  "MegaDreifach.Pad",
+  "MegaDreifach.Link2.Bytes",
+  "MegaDreifach.Link2.Helpers",
+  "MegaDreifach.Link2.Compose",
+  "MegaDreifach.Em",
+  "MegaDreifach.Link2.FaceTurn",
+  "MegaDreifach.Link2.Inverse",
+  "MegaDreifach.Factoradic",
+  "MegaDreifach.Rank",
+  "MegaDreifach.Link2.Big",
+  "MegaDreifach.Link2.Be",
+  "MegaDreifach.Link2.PackOri",
+  "MegaDreifach.Link2.NatLimbs",
+  "MegaDreifach.Link2.Factorial",
+  "MegaDreifach.Link2.DivWide",
+  "MegaDreifach.Link2.MulSmall",
+  "MegaDreifach.Link2.DivInd",
+  "MegaDreifach.Link2.MulWide",
+  "MegaDreifach.Link2.MulLeft",
+  "MegaDreifach.Link2.MulGenMath",
+  "MegaDreifach.Link2.MulGen",
+  "MegaDreifach.Link2.PeelLimb",
+  "MegaDreifach.Link2.FactTwo",
+  "MegaDreifach.Link2.PeelFact",
+  "MegaDreifach.Link2.FactThree",
+  "MegaDreifach.Link2.AccThree",
+  "MegaDreifach.Link2.PeelCube",
+  "MegaDreifach.Link2.PeelZeroThree",
+  "MegaDreifach.Link2.PeelBelow",
+  "MegaDreifach.Link2.PeelOne",
+  "MegaDreifach.Link2.MagSub",
+  "MegaDreifach.Link2.MagAdd",
+  "MegaDreifach.Link2.FromBe",
+  "MegaDreifach.Link2.FromBeShort",
+  "MegaDreifach.Link2.FromBeLimb2",
+  "MegaDreifach.Link2.FromBePad",
+  "MegaDreifach.Link2.Fact51",
+  "MegaDreifach.Link2.Peel51",
+  "MegaDreifach.Link2.ToBePad",
+  "MegaDreifach.Domain",
+  "MegaDreifach.DaviesMeyer",
+  "MegaDreifach.Chain"]

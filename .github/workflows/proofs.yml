@@ -332,7 +332,9 @@ jobs:
   megadreifach-v3-lean:
     # MegaDreifach v3 (ZP26 card phase; proofs/megadreifach-v3): the KAT data mirrored from
     # kats/megaminx_hash_kats_v3.json, a compiled run of the emitted v3 code on every vector
-    # (52 checks, about a second; not a kernel proof), and the axiom audit. No Link 2 yet.
+    # (52 checks, about a second; not a kernel proof), the first Link 2 layer (v2 lemmas for
+    # compose / face_move / face_turn / inverse re-elaborated against the v3 emit: 49 modules,
+    # about 3 min serial locally, under 0.5 GB) and the axiom audit. No export is linked yet.
     # The emitted TAP is megadreifach-v3-generated; emit freshness is generated-fresh.
     runs-on: ubuntu-latest
     steps:

@@ -34,6 +34,7 @@ export const ORDER = (() => {
  *   frameAll  frame both grids and the hand pile (else the message grid
  *             and the pile)
  *   frameLift m of room above the cards (their hop)
+ *   opening(table, ctx)  the state shown before the first loop
  */
 export function mountTablePage(page, settings) {
     let table = null;
@@ -47,6 +48,9 @@ export function mountTablePage(page, settings) {
         async setup(ctx) {
             ctx.status("Loading cards…");
             const textures = await loadCardTextures(4, { aspect: page.layout?.artAspect ?? null });
+            // Upload the 54 card textures now, while "Loading cards…" shows,
+            // not in the first frames of the first deal.
+            for (const t of [...textures.faces, textures.navy, textures.red]) ctx.world.renderer?.initTexture?.(t);
             table = stageCardTable(ctx.world, textures, { poses: null, visible: true, layout: page.layout ?? null });
             table.setCardsVisible(true);
         },
@@ -68,7 +72,10 @@ export function mountTablePage(page, settings) {
         async reset(ctx) {
             loop = 0;
             table.showDecks(ORDER, ORDER.slice().reverse());
-            await page.prepare?.(table, ctx, loop);
+            // opening: what shows until the first loop runs (prepareEach
+            // pages set their start state per loop anyway).
+            if (page.opening) page.opening(table, ctx);
+            else await page.prepare?.(table, ctx, loop);
         },
         async cycle(ctx) {
             const gen = ctx.alive;

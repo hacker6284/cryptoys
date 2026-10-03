@@ -9,10 +9,12 @@
   the emitted `Doubledeal.encrypt` (Link 2, `encrypt_refines`) is in
   `Link.lean`. Link 1 (sudo = Generated) stays open.
 
-  The one `sorry` is the conjecture `roundBody_covariant_iff_id` (`Rounds.lean`; its
-  statement is proved in the heavy library (finite checks by kernel `decide!`),
-  `LabelStep.roundBody_covariant_iff_id_heavy`; marked `DRAFT-SORRY`, checked numerically by
-  `checks/check_covariant.py`). `../check_axioms.py security` audits the axioms
+  There is no `sorry`. The covariant round statement `roundBody_covariant_iff_id` (only the
+  identity is covariant for the unkeyed round; a one-round symmetry result, not a security
+  bound) is proved in the heavy library (`DoubleDealSecurityHeavy/V10Sym.lean`, finite checks
+  by kernel `decide!`; also checked numerically by `checks/check_covariant.py`); the default
+  library has the `_of_covariant` reductions (`fullRound_commutes_iff_id_of_covariant`,
+  `encrypt6_commutes_iff_id_of_covariant`). `../check_axioms.py security` audits the axioms
   of every theorem in these modules. Structural facts, not a security proof.
 -/
 import Mathlib.GroupTheory.Perm.Basic

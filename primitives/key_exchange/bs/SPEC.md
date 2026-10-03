@@ -43,7 +43,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
   - Holes 6 and 7 are spare.
   - Hole 8 is the phase: empty = public walk, white = check, red = shared walk.
   - Hole 9 is the "accumulator started" flag.
-  - Hole 10 is the key's lane peg, used while building and while reading (§4.2, §4.3).
+  - Hole 10 is the key's lane peg, used while reading (§4.3).
   - Fold progress needs no marker ("always the highest peg" is visible).
 * **Cursors:** 4 cursors (key-walk cell, B hole, A hole, strip hole), each a pair of ships laid flat against a grid's frame. One ship points at the row, the other at the column; the ship type names the cursor.
   - That is 8 ships per player (pieces are not counted, see below).

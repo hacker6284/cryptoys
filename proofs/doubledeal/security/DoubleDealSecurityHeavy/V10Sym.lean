@@ -5,10 +5,14 @@
     (`CovariantAffineChecks.lean`) and the generated `V10SymChecks.lean` (`AffRankChecks`,
     `TauChecks`, `LabelChecks`); this module runs no `decide!`.
   Scope: every σ with the seat-26 condition `Cell0Cov σ τ` (some τ) is a `v10Sym a x` and
-  τ = σ (`LabelStep.cell0Cov_mem_v10Sym`); hence the statement of the covariant round
-  conjecture holds (`LabelStep.roundBody_covariant_iff_id_heavy`). The default-library
-  theorem `roundBody_covariant_iff_id` (Rounds.lean) is NOT changed here and keeps its
-  `sorry`; replacing that `sorry` is a separate change.
+  τ = σ (`LabelStep.cell0Cov_mem_v10Sym`); hence the covariant round statement
+  `roundBody_covariant_iff_id` (only the identity is covariant for the unkeyed round body;
+  a one-round symmetry result, not a security bound), and from it, through the
+  default-library reductions `fullRound_commutes_iff_id_of_covariant` and
+  `encrypt6_commutes_iff_id_of_covariant` (hypothesis `CovariantOnlyId`, discharged here by
+  `fun σ => (roundBody_covariant_iff_id σ).1`), the unconditional `fullRound_commutes_iff_id`
+  and `encrypt6_commutes_iff_id`. The default library states none of these three without
+  a hypothesis and has no `sorry`.
   Timing and memory: see `../README.md` (module table). Built and audited by the
   `doubledeal-security-heavy` CI job.
   Python reproduction: `analysis/v12-primenonswap/v10sym_witness.py`.
@@ -53,17 +57,31 @@ theorem LabelStep.cell0Cov_iff (σ τ : Relabel) :
     Cell0Cov σ τ ↔ (∃ (a : Fin 13) (x : Fin 4), σ = v10Sym a x) ∧ τ = σ :=
   LabelStep.cell0Cov_iff_of_checks LabelStep.v10SymChecks_ok σ τ
 
-/-- (PROVED, unconditional) The statement of the covariant round conjecture
-    `roundBody_covariant_iff_id`: σ is covariant for the unkeyed round body (for some output
-    relabelling) iff σ = 1. `roundBody_covariant_iff_id` itself (default library) is not
-    changed and keeps its `sorry`. -/
-theorem LabelStep.roundBody_covariant_iff_id_heavy : type_of% @roundBody_covariant_iff_id :=
-  LabelStep.roundBody_covariant_iff_id_of_checks LabelStep.v10SymChecks_ok
+/-- (PROVED, unconditional) The covariant round statement: σ is covariant for the unkeyed
+    round body (for some output relabelling τ, `F(σ·m) = τ·F(m)` on every deck,
+    `F = GridCycle ∘ stem`) iff σ = 1. A one-round symmetry statement, not a security
+    bound. Default library: `LabelStep.roundBody_covariant_iff_id_of_checks`, given
+    `V10SymChecks`. -/
+theorem roundBody_covariant_iff_id (σ : Relabel) :
+    Covariant σ unkeyedWithMix ↔ σ = 1 :=
+  LabelStep.roundBody_covariant_iff_id_of_checks LabelStep.v10SymChecks_ok σ
+
+/-- (PROVED, unconditional) No nontrivial σ commutes with the full round for all keys. -/
+theorem fullRound_commutes_iff_id (σ : Relabel) :
+    (∀ pos, CommutesOnDecks σ (fun m => fullRound m pos)) ↔ σ = 1 :=
+  fullRound_commutes_iff_id_of_covariant (fun σ => (roundBody_covariant_iff_id σ).1) σ
+
+/-- (PROVED, unconditional) No nontrivial σ gives `E_K(σM) = σ E_K(M)` for all permutation
+    round keys and decks (`encrypt6` with permutation keys; a symmetry statement, not a
+    security bound). -/
+theorem encrypt6_commutes_iff_id (σ : Relabel) :
+    (∀ k0 kMix kF, CommutesOnDecks σ (fun m => encrypt6P m k0 kMix kF)) ↔ σ = 1 :=
+  encrypt6_commutes_iff_id_of_covariant (fun σ => (roundBody_covariant_iff_id σ).1) σ
 
 /-- (PROVED, unconditional) `PrimeNonSwapCase`: no σ of prime order `p ≤ 52` that is neither
-    a transposition nor a `v10Sym` is covariant (from the statement of the conjecture via
+    a transposition nor a `v10Sym` is covariant (from `roundBody_covariant_iff_id` via
     `CovariantNarrow.prime_nonswap_case_iff`). -/
 theorem CovariantNarrow.primeNonSwapCase : CovariantNarrow.PrimeNonSwapCase :=
-  CovariantNarrow.prime_nonswap_case_iff.2 LabelStep.roundBody_covariant_iff_id_heavy
+  CovariantNarrow.prime_nonswap_case_iff.2 roundBody_covariant_iff_id
 
 end DoubleDeal.Security

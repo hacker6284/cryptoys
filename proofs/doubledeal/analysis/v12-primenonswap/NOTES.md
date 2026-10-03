@@ -1,13 +1,15 @@
-# DoubleDeal v12: `PrimeNonSwapCase` and the covariant round conjecture (statement proved in the heavy library)
+# DoubleDeal v12: `PrimeNonSwapCase` and the covariant round statement (a conjecture until proved in the heavy library)
 
-The conjecture `roundBody_covariant_iff_id` (`security/DoubleDealSecurity/Rounds.lean`,
-DRAFT-SORRY) keeps its `sorry`: that theorem is unchanged. Its STATEMENT is now proved in
-the heavy library (`LabelStep.roundBody_covariant_iff_id_heavy`, unconditional) and in the
-default library GIVEN the finite checks `V10SymChecks` as a hypothesis
+The conjecture `roundBody_covariant_iff_id` (formerly `security/DoubleDealSecurity/Rounds.lean`,
+DRAFT-SORRY) is proved, same name and statement, in the heavy library
+(`DoubleDealSecurityHeavy/V10Sym.lean`, unconditional) and in the default library GIVEN the finite checks `V10SymChecks` as a hypothesis
 (`LabelStep.roundBody_covariant_iff_id_of_checks`), via the single-cell statement `hcell`
 of `CovariantNarrow.roundBody_covariant_iff_id_of_cell0` (steps 1-4 below: every σ with
-the seat-26 condition `Cell0Cov σ τ` is a `v10Sym a x`, and τ = σ). Replacing the `sorry`
-is a separate change. `PrimeNonSwapCase` (`security/DoubleDealSecurity/CovariantNarrow.lean`)
+the seat-26 condition `Cell0Cov σ τ` is a `v10Sym a x`, and τ = σ). The default library
+has no `sorry` and no unconditional statement of it; its dependents there are the
+`_of_covariant` reductions (`fullRound_commutes_iff_id_of_covariant`,
+`encrypt6_commutes_iff_id_of_covariant`), and the unconditional `fullRound_commutes_iff_id`
+and `encrypt6_commutes_iff_id` are heavy one-liners. `PrimeNonSwapCase` (`security/DoubleDealSecurity/CovariantNarrow.lean`)
 follows from it by `prime_nonswap_case_iff`: `CovariantNarrow.primeNonSwapCase` (heavy
 library, `V10Sym.lean`). This note
 records the proved results (the affine relabellings; steps 1-4), the routes tried earlier,
@@ -26,7 +28,7 @@ fixed seed). `F = unkeyedWithMix` = GridCycle ∘ stem. `Covariant σ F` means
 
 `PrimeNonSwapCase`: every σ of prime order p ≤ 52 that is neither a transposition
 nor a `v10Sym a x` is non-covariant. `prime_nonswap_case_iff` (heavy) proves it is
-EQUIVALENT to the conjecture. By cycle type, the σ left are:
+EQUIVALENT to the covariant round statement. By cycle type, the σ left are:
 * p = 2: products of c disjoint transpositions, 2 ≤ c ≤ 26, minus the 3 nontrivial
   label shifts `v10Sym 0 x` (c = 26);
 * p odd, 3 ≤ p ≤ 47: products of c disjoint p-cycles, 1 ≤ c ≤ ⌊52/p⌋, minus the 12
@@ -36,7 +38,7 @@ Before steps 1-4, covariance had no proved invariance under conjugation by `v10S
 `Cell0Cov` has one, `cell0Cov_conj`; v10Sym itself is not covariant) or by a general
 relabelling, so no proved symmetry reduced the problem by cycle type to finitely many σ.
 (Now that the statement is proved in the heavy library,
-`LabelStep.roundBody_covariant_iff_id_heavy`, the covariant set is {1} and every
+`roundBody_covariant_iff_id`, the covariant set is {1} and every
 conjugation preserves it, but that came after this route, not through it.)
 
 ## New PROVED result: the affine relabellings outside v10Sym
@@ -100,7 +102,7 @@ time per witness on the dev box and about 5.3 s on CI, as measured for
 
 ## New PROVED result: the seat-26 condition preserves the rank partition
 
-One step toward `PrimeNonSwapCase`; it is NOT `PrimeNonSwapCase` and NOT the conjecture.
+One step toward `PrimeNonSwapCase`; it is NOT `PrimeNonSwapCase` and NOT the covariant round statement.
 
 `security/DoubleDealSecurity/RankPartition.lean` (+ generated `RankPartitionLists.lean`),
 heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
@@ -155,8 +157,9 @@ heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
   * `LabelStep.cell0Cov_mem_v10Sym`: `Cell0Cov σ τ → (∃ a x, σ = v10Sym a x) ∧ τ = σ`;
     `LabelStep.cell0Cov_iff`: and conversely (all checks, `V10SymChecks` =
     `RankChecks ∧ AffChecks ∧ AffRankChecks ∧ TauChecks ∧ LabelChecks`).
-  * `LabelStep.roundBody_covariant_iff_id_heavy`: `Covariant σ unkeyedWithMix ↔ σ = 1`, the
-    statement of `roundBody_covariant_iff_id`, from `roundBody_covariant_iff_id_of_cell0`.
+  * `roundBody_covariant_iff_id`: `Covariant σ unkeyedWithMix ↔ σ = 1`, from
+    `roundBody_covariant_iff_id_of_cell0`; with `fullRound_commutes_iff_id` and
+    `encrypt6_commutes_iff_id` from the default-library `_of_covariant` reductions.
 * Step 2 (`RankAffine.rk_sum_of_family2`, for EVERY σ, τ): nine decks as in step 1, but
   member `(k, 1)` exchanges both 0 ↔ 1 and 2 ↔ 14 in row 3, whose columns in member
   `(k, 0)` satisfy `cx + cy2 = cy + cx2 (mod 13)`. `FamilyQ.wsum_eq` and `wsum_swap` twice
@@ -234,11 +237,10 @@ heavy `security/DoubleDealSecurityHeavy/RankPartition.lean` (+ generated
 
 Route (a) of the earlier plan, the structural single-cell statement `hcell` of
 `roundBody_covariant_iff_id_of_cell0`, is now proved (steps 1-4; heavy library
-unconditional, default library given `V10SymChecks`). What is left is bookkeeping, not
-mathematics: `roundBody_covariant_iff_id` in the default library still has its `sorry`
-because the finite checks live in the heavy library. Removing that `sorry` (for example
-by moving the conjecture or its dependents, or by stating the default theorem with the
-checks) is a separate, small follow-up, to be agreed before it is done. The
-default-library docstrings (`Rounds.lean`, `CovariantNarrow.lean`) say this: proved in the
-heavy library (finite checks by kernel `decide!`), a hypothesis in the default library, `sorry` until the
-follow-up.
+unconditional, default library given `V10SymChecks`). The remaining bookkeeping is done
+too (two tiers): the sorry'd default-library `roundBody_covariant_iff_id` was deleted and
+the theorem of that name and statement is in the heavy library (where the finite checks
+live); the default-library dependents became `fullRound_commutes_iff_id_of_covariant` and
+`encrypt6_commutes_iff_id_of_covariant` (hypothesis `hcov : CovariantOnlyId`, defined in
+`Rounds.lean`), and their unconditional
+forms are heavy one-liners. The default library has no `sorry`.

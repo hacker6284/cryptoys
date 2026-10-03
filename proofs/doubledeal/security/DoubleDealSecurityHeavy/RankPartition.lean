@@ -6,8 +6,7 @@
     `rankChecks_ok`); this module runs no `decide!`.
   Scope: these say only that a σ with `Cell0Cov σ τ` (in particular every covariant σ)
   permutes the 13 rank classes. They do NOT say σ is affine, that τ = σ, or anything about
-  suits (that is steps 2-4, `V10Sym.lean`); `roundBody_covariant_iff_id` keeps its `sorry`
-  until the follow-up.
+  suits (that is steps 2-4, `V10Sym.lean`, which proves `roundBody_covariant_iff_id`).
   Timing and memory: see `../README.md` (module table). Built and audited by the
   `doubledeal-security-heavy` CI job.
   Python reproduction: `analysis/v12-primenonswap/rank_family.py`.
@@ -34,7 +33,7 @@ theorem cell0Cov_rank_iff {σ τ : Relabel} (h : Cell0Cov σ τ) (a b : Fin 52) 
 
 /-- (PROVED, unconditional) Every σ covariant for the unkeyed round body (for some output
     relabelling τ) maps cards of equal rank to cards of equal rank. One step toward
-    `PrimeNonSwapCase`; NOT the conjecture `roundBody_covariant_iff_id`. -/
+    `PrimeNonSwapCase`; NOT the covariant round statement `roundBody_covariant_iff_id`. -/
 theorem covariant_rank {σ : Relabel} (h : Covariant σ unkeyedWithMix) {a b : Fin 52}
     (hab : a.val % 13 = b.val % 13) : (σ a).val % 13 = (σ b).val % 13 :=
   covariant_rank_of_checks rankChecks_ok h hab

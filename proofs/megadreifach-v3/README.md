@@ -73,10 +73,15 @@ are `Option`-valued in the model, and `none` is the emitted code's trap. So far:
   `chain_loop`. A card step keeps bijective tables and adds at most 10 to each counter, an echo
   at most 12, so every iteration meets the `card_step_refines` side conditions. `emBlock_inj`:
   `E_m` keeps bijective tables.
+- `Hash` (`Link2/VHash.lean`). `iv_cook12_refines`: the emitted IV is `Em.ivCook12` (v3 keeps
+  the v2 IV). `v_Hash_refines` (on `PadWf`): the emitted `Hash` returns `vhashAlg msg`, i.e. pad,
+  28-byte blocks, `phiUnrank ∘ fromBE`, Davies–Meyer with the v3 step
+  `compose h (emBlock h deal)` from `ivCook12`, then the 29-byte rank digest. Every chaining
+  value has bijective tables, so `em_block_refines` and `position_to_bytes_refines_gen` apply.
 
 Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
 EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions.
-`Hash`, `HashDeck`, `HashDeckBody` are not linked yet.
+`HashDeck`, `HashDeckBody` and their wrappers are not linked yet.
 
 ## Link 2 status of each export
 
@@ -87,8 +92,8 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 | `pad_message` | `pad_message_refines` (on `PadWf`) |
 | `require_permutation` | `require_permutation_refines` (on permutations of `0..51`) |
 | `position_to_bytes` | `position_to_bytes_refines_gen` (bijective cp and ep) |
-| `Hash` | none yet |
-| `MegaDreifach` | none yet |
+| `Hash` | `v_Hash_refines` (on `PadWf`), `v_Hash_refines_array` |
+| `MegaDreifach` | `v_MegaDreifach_refines` (on `PadWf`) |
 | `HashDeck` | none yet |
 | `MegaDreifachDeck` | none yet |
 | `HashDeckBody` | none yet |

@@ -5,8 +5,8 @@
   position_to_bytes, phi_chunk, phi_inv), via the v2 lemmas re-elaborated against the v3 emit.
   The card-phase model (Em.lean, a typed transliteration of the v3 sudo) with its first
   Link 2 pieces (Link2/CardFacts.lean, Link2/CardTables.lean, Link2/FaceOf.lean,
-  Link2/FaceOfFound.lean, Link2/RunStep.lean, Link2/EmRun.lean: em_run / em_block). Hash and the
-  other exports are not linked yet; see ../README.md.
+  Link2/FaceOfFound.lean, Link2/RunStep.lean, Link2/EmRun.lean: em_run / em_block; Link2/VHash.lean: iv_cook12, Hash, MegaDreifach).
+  HashDeck, HashDeckBody and their wrappers are not linked yet; see ../README.md.
 -/
 import MegaDreifachV3.Vectors
 import MegaDreifachV3.KatRun
@@ -19,3 +19,4 @@ import MegaDreifachV3.Link2.FaceOf
 import MegaDreifachV3.Link2.FaceOfFound
 import MegaDreifachV3.Link2.RunStep
 import MegaDreifachV3.Link2.EmRun
+import MegaDreifachV3.Link2.VHash

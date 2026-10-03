@@ -22,6 +22,11 @@ void mountTablePage({
     // filling 88 % of the view.
     camera: { position: [DEN.x, 1.672, DEN.z + 1.0], target: [DEN.x, 0.772, DEN.z], fov: 40, fill: 0.88 },
     prepareEach: true,
+    // Until the first deal starts (textures loading, sound unlocking): the
+    // whole 8×13, the message grid as the deal leaves it.
+    opening(table, ctx) {
+        table.applyInstant({ kind: ctx.choice("major"), message: ORDER });
+    },
     prepare(table, ctx) {
         const kind = ctx.choice("major");
         table.applyInstant({ kind, message: ORDER });

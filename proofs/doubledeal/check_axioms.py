@@ -425,7 +425,8 @@ MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
     "require_permutation_refines_array", "position_to_bytes_refines_gen",
     "position_to_bytes_refines", "phi_chunk_refines", "phi_chunk_refines_array",
     "phi_inv_refines", "phi_inv_refines_array",
-    "triples_ok", "lowest_nbr_index_refines", "suit_nbrs_refines"]}
+    "triples_ok", "lowest_nbr_index_refines", "suit_nbrs_refines",
+    "edge_face_of_refines", "corner_face_of_refines"]}
 
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",

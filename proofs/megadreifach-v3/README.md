@@ -48,6 +48,10 @@ are `Option`-valued in the model, and `none` is the emitted code's trap. So far:
   `(c, n, n2)`, which `corner_slot` finds. These are the side conditions of the piece searches.
 - `lowest_nbr_index_refines` and `suit_nbrs_refines` (`Link2/CardTables.lean`, kernel
   `decide!` tables): exact on every colour and every `k ∈ 1..4`.
+- `edge_face_of_refines` and `corner_face_of_refines` (`Link2/FaceOf.lean`) are symbolic in
+  the position. Whenever the model search returns `some y`, the emitted function returns `y`:
+  its slot scan (30 or 20 slots) is driven by `chain_loop`, and its asserts pass. When the
+  model search returns `some` (the found-invariant) is proved separately.
 
 Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
 EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The v3 card

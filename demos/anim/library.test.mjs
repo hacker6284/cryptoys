@@ -116,6 +116,9 @@ assert.equal(stretchContact(1000, -482, 127.6, 1), 1000, "offsetMs sounds: uncha
 // triple sounds are APPROVED and LOCKED at d952e6a (Zachary: "Sounds are ok
 // for that one."): exactly these entries; nothing else may move them.
 assert.match(readme, /\| `megaminx-turn` \|[^\n]*sounds approved and LOCKED at `d952e6a`/, "README records the megaminx lock");
+// The whole entry (animation and sounds) is APPROVED and LOCKED at a927bb2
+// (Zachary approved the animation at the real 70 mm size, seated on the felt).
+assert.match(readme, /\| `megaminx-turn` \|[^\n]*Animation and sounds APPROVED and LOCKED at `a927bb2`/, "README records the megaminx animation lock");
 {
     const mm = await import(new URL("megaminx-turn/index.js", here));
     assert.deepEqual(
@@ -128,6 +131,12 @@ assert.match(readme, /\| `megaminx-turn` \|[^\n]*sounds approved and LOCKED at `
         "the approved megaminx face-turn sounds (d952e6a) are unchanged",
     );
     assert.equal(mm.timing, mm.settings.timing);
+    assert.deepEqual(
+        { ...mm.settings.timing },
+        { speed: 1.4, TURN_LIFT_MS: 320, TURN_LIFT: 0.14, SETTLE_HOLD_MS: 90 },
+        "the approved megaminx animation timing (a927bb2) is unchanged",
+    );
+    assert.deepEqual(Object.keys(mm.settings.sounds), ["single", "double", "triple", "rotation", "lift", "settle"]);
     for (const [slot, move, ms] of [["single", "U", 1000], ["double", "U2", 1500], ["triple", "U3", 2000]]) {
         const s = mm.settings.sounds[slot];
         assert.match(s.file, new RegExp(`^megaminx-turn/${slot}/`), `megaminx ${slot}: its own click`);

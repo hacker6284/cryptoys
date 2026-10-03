@@ -200,7 +200,7 @@ Edge slot `s` lies between the two faces `edge_faces(s)` below; the first is its
 
 **IV-COOK12 by hand.** From solved, in the home grip, turn each face +1 once, in card order A, 2, 3, …, Q (Up, Front, the upper ring, the lower ring, Down). No re-grip.
 
-**3-solve hand (informal).** Between blocks, puzzles `(A,B,C) = (h, h⁻¹, id)`. Run E_m on A; solve B onto A; solve A onto B and C; solve C onto A. Software is `compose(h, e)`.
+**3-solve hand (informal).** Between blocks, megaminxes `(A,B,C) = (h, h⁻¹, id)`. Run E_m on A; solve B, making each of its turns on A as well; solve A, making each of its turns on B and C as well; solve C, making each of its turns on A as well. Solve each megaminx by any method you know. Software is `compose(h, e)`.
 
 **Cost per block** (v1 → v2): 168 → 192 face turns (246 → 270 clicks), 64 → 88 pieces read, 64 → 88 whole-puzzle re-grips. These are exact for every block, since every deal holds each card once ([`cost.log`](../../../proofs/megadreifach/security/v2/logs/cost.log)).
 

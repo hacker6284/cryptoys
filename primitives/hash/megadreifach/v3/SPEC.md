@@ -135,7 +135,7 @@ A step makes 6 turns: k clicks, then five single clicks.
 
 After the 26th echo, `W` is done. The board of puzzle A is `W·h`.
 
-**3-solve.** Unchanged (v2 §5.7). The output is h·W·h.
+**3-solve.** Unchanged from v2; by hand, see §5.7. The output is h·W·h.
 
 ## 5.5 Software form (the sudo's `card_step` / `em_run`, equal to §5.1–§5.4)
 
@@ -195,13 +195,16 @@ The sudo counts all of these in `em_run`, and its test "cost per block" asserts 
 
 v3 costs about 2.4× v2's face turns and **about 2.2× v2's clicks** (585 / 270 on average). No human trials have been run, so error rates and wall time by hand are unknown.
 
-## 5.7 Hand details unchanged from v2
+## 5.7 Hand details: IV-COOK12 and the 3-solve (unchanged from v2)
 
-- IV-COOK12 by hand.
-- The 3-solve.
-- Puzzles (A, B, C) = (h, h⁻¹, id).
+**IV-COOK12 by hand.** As in v2 §5.7.
 
-All as in v2 §5.7. E_m runs on A, held any way.
+**3-solve by hand.** Between blocks you have three megaminxes, (A, B, C) = (h, h⁻¹, id). Run E_m on A, held any way. Then:
+1. solve B, making each of its turns on A as well;
+2. solve A, making each of its turns on B and C as well;
+3. solve C, making each of its turns on A as well.
+
+Solve each megaminx by any method you know. Afterwards A holds the next chaining value, B its inverse, and C is solved, ready for the next block. The software form is `compose(h, e)` (§5).
 
 ## 5.8 Coverage and what a person must keep track of
 

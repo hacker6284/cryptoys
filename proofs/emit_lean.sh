@@ -28,7 +28,7 @@ cd "$ROOT"
 # The targets, spelled once: name | .sudo | Generated/ | extra -I directories.
 # doubledeal-v8, -v9, -v10 are frozen, deprecated (vulnerability-proof / write-up
 # targets); doubledeal-v11 is frozen, superseded (not attacked). Do not change their .sudo.
-# megadreifach is v2 (megadreifach.sudo; deprecated, v3 is current and has no Lean target): the proof package proofs/megadreifach/.
+# megadreifach is v2 (megadreifach.sudo; deprecated, v3 is current: target megadreifach-v3 below): the proof package proofs/megadreifach/.
 # megadreifach-v1 is frozen, deprecated v1 (v1/megadreifach.sudo): the v1 weakness-proof
 # package proofs/deprecated/megadreifach-v1/. Do not change the v1 .sudo. Both files are
 # named megadreifach.sudo, so both emitted modules are `Megadreifach` (the entry is the
@@ -47,7 +47,7 @@ cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo pro
 bs              primitives/key_exchange/bs/bs.sudo                        proofs/key_exchange/bs/lean/Generated
 "
 # megadreifach-v3 is v3 (v3/megadreifach.sudo, the ZP26 card phase): the Lean package
-# proofs/megadreifach-v3/ (generated Lean, KAT runner; Link 2 to follow). Its module is
+# proofs/megadreifach-v3/ (generated Lean, KAT runner, Link 2 of every export). Its module is
 # also `Megadreifach`, in its own Generated/ package. Do not change the v3 .sudo here.
 # Parsed once: the names in order, and each target's .sudo, Generated/ and -I dirs.
 ALL_TARGETS=()

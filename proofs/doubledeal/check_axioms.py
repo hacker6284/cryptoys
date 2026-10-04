@@ -416,7 +416,7 @@ MD_V1_README_THEOREMS = {
 
 # proofs/megadreifach-v3/lean (MegaDreifach v3, the ZP26 card phase): every theorem its
 # README cites by name; `--selftest` re-derives the list the same way as MD_README_THEOREMS.
-# So far the shared position layer (Link2/Shared.lean); no export is linked yet.
+# Link 2 of all 11 v3 exports (MegaDreifachV3.Link2) and the layers under them.
 MD_V3_LEAN = ROOT.parent / "megadreifach-v3" / "lean"
 MD_V3_README = MD_V3_LEAN.parent / "README.md"
 MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [

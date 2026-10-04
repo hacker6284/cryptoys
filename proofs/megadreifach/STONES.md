@@ -6,7 +6,7 @@ Length extension on bare Hash is **accepted by design** (SHA-2-shaped) — do no
 
 A green Lean build is not a security claim.
 
-**Every stone below is about MegaDreifach v2 (C36)**, now deprecated (v3 is current and has no Lean model; `primitives/hash/megadreifach/SPEC.md`, `megadreifach.sudo`): `Generated/` is emitted from that sudo and the KAT stones use the v2 KAT file. The frozen v1 weakness proofs are in `proofs/deprecated/megadreifach-v1/` (its README).
+**Every stone below is about MegaDreifach v2 (C36)**, now deprecated (v3 is current; its Lean is in `proofs/megadreifach-v3/`; `primitives/hash/megadreifach/SPEC.md`, `megadreifach.sudo`): `Generated/` is emitted from that sudo and the KAT stones use the v2 KAT file. The frozen v1 weakness proofs are in `proofs/deprecated/megadreifach-v1/` (its README).
 
 ## Must-ship
 

@@ -19,7 +19,7 @@ compiled and run. It is not a kernel proof, not a proof that the emitted Lean ma
 JSON is generated from the sudoc JS build of the same sudo (`kats/regen_v3.mjs`), so the KAT run
 compares two builds of one source, not two independent implementations.
 
-## Link 2 so far: the layers shared with v2
+## Link 2: the layers shared with v2, then the v3 card phase
 
 [`lean/MegaDreifachV3/Link2/Shared.lean`](lean/MegaDreifachV3/Link2/Shared.lean) states, for
 the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
@@ -38,11 +38,11 @@ v2 side conditions `PosBytesWf`), `phi_chunk_refines`, `phi_chunk_refines_array`
 take the `.sudo` assert line as a parameter (the emitter writes it into every `sudoAssert`;
 v2 and v3 differ there), re-elaborated against this package's `Generated/`.
 
-The v3 card phase starts here. [`lean/MegaDreifachV3/Em.lean`](lean/MegaDreifachV3/Em.lean) is a
+The v3 card phase. [`lean/MegaDreifachV3/Em.lean`](lean/MegaDreifachV3/Em.lean) is a
 typed Lean model of the v3 sudo's `lowest_nbr_index` .. `dm_step`, a transliteration on the v2
 position algebra. Like v2's `MegaDreifach.Em`, it is hand-written, so its agreement with the
 emitted code is what Link 2 proves. The two piece searches (`edge_face_of`, `corner_face_of`)
-are `Option`-valued in the model, and `none` is the emitted code's trap. So far:
+are `Option`-valued in the model, and `none` is the emitted code's trap. The card-phase layers:
 - `triples_ok` (`Link2/CardFacts.lean`, kernel `decide`). For every colour `c` and suit amount
   `k ∈ 1..4`, `suit_nbrs c k = (n, n2)` names a real edge `(c, n)` and a real corner
   `(c, n, n2)`, which `corner_slot` finds. These are the side conditions of the piece searches.

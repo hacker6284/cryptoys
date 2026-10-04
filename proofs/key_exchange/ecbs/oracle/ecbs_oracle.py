@@ -2,8 +2,10 @@
 The evidence drivers run the code sudoc generates from primitives/key_exchange/ecbs/ecbs.sudo and check
 it against this module. Nothing here models the board: no pegs, homes, workbench or card steps; it
 computes P, [k]P, pi(C) - C, the key scalar and the SPEC 6 fold straight from the curve.
-The tier constants (n, k, lane width, key cells, kept rows) are not restated here: they are
-read once from the generated tier() of ecbs.sudo. Only the PARI math is independent.
+n, the tap k, the key cells and l are pinned below as literals copied from SPEC 1 and 4, checked
+by PARI (pinned_checks: x^n - x^k - 1 irreducible over GF(3), l prime, l = #E/5), and the generated
+tier() of ecbs.sudo must equal them (asserted at import). The layout constants (lane width, kept
+rows) are read from the generated tier().
 A number is a list of n trits (hole 0 first; 0 empty, 1 white, 2 red) or a '.WR' string."""
 import os, sys
 import cypari2
@@ -21,8 +23,23 @@ def _sudo_tiers():
         s.close()
 
 
+# Pinned from SPEC 1 (n, tap x^n = x^k + 1, l = #E/5) and SPEC 4 (key cells). SPEC 1 prints
+# Serious's l abbreviated (5078489869...5423907, 282 bits); the full value is core/ecbs_curve's.
+PINNED = {
+    "Demo":    dict(n=7,   k=5,  cells=2,   l=421),
+    "Toy":     dict(n=23,  k=15, cells=16,  l=18828582139),
+    "Hobby":   dict(n=59,  k=39, cells=51,  l=2826077218347794449447657747),
+    "Serious": dict(n=179, k=59, cells=162,
+                    l=5078489869724426155952648514707704116694985077007329814177591439556413097455105423907),
+}
+assert str(PINNED["Serious"]["l"]).startswith("5078489869") and str(PINNED["Serious"]["l"]).endswith("5423907")
+
 SUDO_TIER = _sudo_tiers()                 # the generated Tier records, by name
-TIERS = {name: (t["n"], t["k"]) for name, t in SUDO_TIER.items()}
+for _name, _p in PINNED.items():          # the generated tier() must equal the pinned SPEC values
+    _t = SUDO_TIER[_name]
+    assert (_t["n"], _t["k"], _t["cells"]) == (_p["n"], _p["k"], _p["cells"]), \
+        f"generated tier({_name}) n/k/cells {(_t['n'], _t['k'], _t['cells'])} != SPEC {_p}"
+TIERS = {name: (p["n"], p["k"]) for name, p in PINNED.items()}
 _vecrev = pari('(a,n)->Vecrev(a.pol, n)')
 
 def V(n, t=-1, q=3):
@@ -59,7 +76,20 @@ class Ref:
 
 FOLD_KEEP_ROWS = {name: t["keeprows"] for name, t in SUDO_TIER.items()}
 LANE = {name: t["w"] for name, t in SUDO_TIER.items()}
-CELLS = {name: t["cells"] for name, t in SUDO_TIER.items()}
+CELLS = {name: p["cells"] for name, p in PINNED.items()}
+
+
+def pinned_checks():
+    """PARI on the pinned literals: the tap is irreducible over GF(3), l is prime (PARI isprime,
+    proven), and l = #E(GF(3^n))/5 from the trace recurrence. Returns {name: (irreducible, prime, l_is_E/5)}."""
+    out = {}
+    for name, p in PINNED.items():
+        n, k, l = p["n"], p["k"], p["l"]
+        irr = bool(pari.polisirreducible(pari(f"Mod(1,3)*(x^{n} - x^{k} - 1)")))
+        prime = bool(pari.isprime(l))
+        NE = 3 ** n + 1 - V(n)
+        out[name] = (irr, prime, NE % 5 == 0 and NE // 5 == l)
+    return out
 
 
 class Tier:
@@ -67,6 +97,7 @@ class Tier:
     def __init__(self, name):
         self.name = name; n, k = TIERS[name]; self.n, self.k = n, k
         self.R = Ref(n, k); self.l = self.R.l; self.cells = CELLS[name]
+        assert self.l == PINNED[name]["l"], f"{name}: #E/5 != the pinned l"
         # base point BY RULE: x = one white peg in hole j (j = 1, 2, ...), y = rhs^((3^n+1)/4);
         # the first j with y*y = rhs; then P = 5 (x, y).
         w = self.R.w; e = (3 ** n + 1) // 4; j = 1

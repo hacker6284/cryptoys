@@ -11,6 +11,8 @@ every expected value from the curve alone, never from the board:
                shared = [(lambda-1)ab]P on both sides, folded = the SPEC 6 fold of its x
   fold         z_j = sum of x_i over i = j (mod m)
   roll         the keypad rule of SPEC 4 (face row = first hole, column = second; 0 thrown again)
+  tier         n, k, cells and l pinned as SPEC 1/4 literals in the oracle (not read from the
+               generated tier()); PARI checks the tap is irreducible and l = #E/5 is prime
 
 Also checks that the JSON records the pinned sudocode commit and the current ecbs.sudo
 hash. Prints one line per check group; exits 1 on any mismatch. Needs cypari2.
@@ -23,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", "..", "..", ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "oracle"))
 sys.dont_write_bytecode = True
-from ecbs_oracle import Tier, pari
+from ecbs_oracle import Tier, pari, PINNED, pinned_checks
 
 failures = []
 T_ = lambda s: [".WR".index(c) for c in s]
@@ -58,7 +60,9 @@ def tier_checks(name, v):
     def group(g, ok):
         counts.setdefault(g, [0, 0]); counts[g][0] += 1; counts[g][1] += bool(ok)
         check(name, ok, f"{g} #{counts[g][0]}")
-    group("tier", v["tier"]["n"] == T.n and v["tier"]["k"] == T.k and v["tier"]["cells"] == T.cells)
+    p = PINNED[name]               # SPEC 1 / 4 literals, not the generated tier()
+    group("tier", v["tier"]["n"] == p["n"] and v["tier"]["k"] == p["k"] and v["tier"]["cells"] == p["cells"]
+          and T.l == p["l"])
     group("base point", same(v["base_point"], T.Pref))
     for a in v["arith"]:
         x, y = R.el(a["x"]), R.el(a["y"])
@@ -113,6 +117,13 @@ def main():
           f"sudocode_commit {doc['sudocode_commit']} != pin {pin}")
     check("header", doc["sudo_sha256"] == sha, "sudo_sha256 is not the current ecbs.sudo")
     print(f"ecbs_vectors.json: sudocode {doc['sudocode_commit'][:7]}, tiers {', '.join(doc['tiers'])}")
+    pc = pinned_checks()
+    for name, (irr, prime, ldiv) in pc.items():
+        check(name, irr, "pinned tap x^n - x^k - 1 not irreducible over GF(3)")
+        check(name, prime, "pinned l not prime")
+        check(name, ldiv, "pinned l != #E/5")
+    print("pinned SPEC 1/4 values (n, k, cells, l): tap irreducible over GF(3), l prime (PARI isprime), "
+          f"l = #E/5, generated tier() equal: {', '.join(n for n, r in pc.items() if all(r))}")
     for name, v in doc["tiers"].items():
         before = len(failures)
         info = tier_checks(name, v)

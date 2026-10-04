@@ -1,6 +1,6 @@
 {
   "sudo_file": "primitives/key_exchange/ecbs/ecbs.sudo",
-  "sudo_sha256": "0527ebec9e0ad1fada72578f73a62347267080865aa31ecaa6d3183e3370a2b9",
+  "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
   "sudocode_lean_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
   "sudocode_lean_ref": "main",
   "terminates_gate": true,

@@ -2,7 +2,7 @@
  "schema": 1,
  "generated_by": "proofs/key_exchange/ecbs/vectors/regen.sh",
  "source": "primitives/key_exchange/ecbs/ecbs.sudo",
- "sudo_sha256": "49d49bece8f57745a209d28d06d507ae913f5143fc6836d745f395831431193d",
+ "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
  "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
  "note": "Known-answer vectors evaluated by the sudoc JS target of ecbs.sudo over inputs.json. Cross-checked against PARI/GP by check_oracle.py.",
  "numbers": "'.WR' strings, hole 0 first: '.' empty, 'W' white, 'R' red (SPEC §1)",
@@ -302,7 +302,6 @@
       "moves": 6484,
       "moves_by_phase": {
        "base point": 3208,
-       "store P": 0,
        "own walk": 710,
        "swap": 19,
        "curve test": 182,
@@ -352,7 +351,6 @@
       "moves": 5081,
       "moves_by_phase": {
        "base point": 3208,
-       "store P": 0,
        "own walk": 20,
        "swap": 18,
        "curve test": 191,
@@ -424,7 +422,6 @@
       "moves": 5278,
       "moves_by_phase": {
        "base point": 3208,
-       "store P": 0,
        "own walk": 117,
        "swap": 19,
        "curve test": 184,
@@ -474,7 +471,6 @@
       "moves": 5278,
       "moves_by_phase": {
        "base point": 3208,
-       "store P": 0,
        "own walk": 117,
        "swap": 19,
        "curve test": 184,
@@ -859,7 +855,6 @@
       "moves": 144389,
       "moves_by_phase": {
        "base point": 23400,
-       "store P": 0,
        "own walk": 52846,
        "swap": 66,
        "curve test": 990,
@@ -909,7 +904,6 @@
       "moves": 142100,
       "moves_by_phase": {
        "base point": 23400,
-       "store P": 0,
        "own walk": 52047,
        "swap": 66,
        "curve test": 1091,
@@ -995,7 +989,6 @@
       "moves": 160941,
       "moves_by_phase": {
        "base point": 23400,
-       "store P": 0,
        "own walk": 62972,
        "swap": 55,
        "curve test": 792,
@@ -1045,7 +1038,6 @@
       "moves": 159099,
       "moves_by_phase": {
        "base point": 23400,
-       "store P": 0,
        "own walk": 62063,
        "swap": 59,
        "curve test": 848,
@@ -1479,7 +1471,6 @@
       "moves": 1881197,
       "moves_by_phase": {
        "base point": 105759,
-       "store P": 0,
        "own walk": 835391,
        "swap": 166,
        "curve test": 4186,
@@ -1529,7 +1520,6 @@
       "moves": 1600335,
       "moves_by_phase": {
        "base point": 105759,
-       "store P": 0,
        "own walk": 716073,
        "swap": 151,
        "curve test": 4111,
@@ -2082,7 +2072,6 @@
       "moves": 41341418,
       "moves_by_phase": {
        "base point": 734962,
-       "store P": 0,
        "own walk": 20010762,
        "swap": 472,
        "curve test": 31492,
@@ -2132,7 +2121,6 @@
       "moves": 41605900,
       "moves_by_phase": {
        "base point": 734962,
-       "store P": 0,
        "own walk": 20122809,
        "swap": 463,
        "curve test": 29995,

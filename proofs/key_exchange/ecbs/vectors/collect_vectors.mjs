@@ -107,7 +107,7 @@ for (const [name, tin] of Object.entries(inputs.tiers)) {
   });
   v.exchanges = tin.exchanges.map((x) => {
     const ra = roll(t, x.faces_a), rb = roll(t, x.faces_b);
-    const r = E.exchange(t, ra.cells, rb.cells, false);
+    const r = E.exchange(t, ra.cells, rb.cells);
     assert(r instanceof Object && "a" in r, `exchange failed at ${name}`);
     return { faces_a: x.faces_a, faces_b: x.faces_b, cells_a: toPegs(ra.cells), cells_b: toPegs(rb.cells),
       P: ptOut(r.a.base), A: player(r.a), B: player(r.b) };

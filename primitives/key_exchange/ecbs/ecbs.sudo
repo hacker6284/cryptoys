@@ -83,15 +83,14 @@ export func tier(name: text) -> Tier
     assert name == "Serious"
     return serious_tier
 
-// The same tier with another script-marker length (only to show that the other
-// tiers' 15-hole script row overruns Demo's 16 control holes, SPEC §2).
-export func with_script(t: Tier, script: int) -> Tier
+// The same tier with another script-marker length. Test only (not exported): it shows
+// that the other tiers' 15-hole script row overruns Demo's 16 control holes (SPEC §2).
+func with_script(t: Tier, script: int) -> Tier
     u = t
     u.script = script
     return u
 
-// Homes (SPEC §2): the seven bands every player uses, two optional bands that keep
-// P between games (the store-P variant, not the rule), and the inverse check's
+// Homes (SPEC §2): the seven bands every player uses, and the inverse check's
 // workbench-only target, which is never a home.
 across = 0
 up = 1
@@ -100,26 +99,24 @@ base_across = 3
 base_up = 4
 gap = 5
 spare = 6
-p_across = 7
-p_up = 8
-check_target = 9
-home_count = 10
+band_homes = 7
+check_target = 7
+home_count = 8
 
 // Phases, for the cost evidence (moves and band peaks per phase).
 ph_base_point = 0
-ph_store_p = 1
-ph_own_walk = 2
-ph_swap = 3
-ph_curve_test = 4
-ph_make = 5
-ph_rebuild = 6
-ph_shared_walk = 7
-ph_fold = 8
-phase_count = 9
+ph_own_walk = 1
+ph_swap = 2
+ph_curve_test = 3
+ph_make = 4
+ph_rebuild = 5
+ph_shared_walk = 6
+ph_fold = 7
+phase_count = 8
 
 // Names of the phases and the operation counters, in index order (for reports).
 export func phase_names() -> List<text>
-    return ["base point", "store P", "own walk", "swap", "curve test", "make certificate",
+    return ["base point", "own walk", "swap", "curve test", "make certificate",
             "rebuild theirs", "shared walk", "fold"]
 
 export func op_names() -> List<text>
@@ -171,7 +168,6 @@ op_count = 5
 
 record Board
     t: Tier
-    nhomes: int
     home: List<List<int>>
     held: List<bool>
     bench_on: bool
@@ -233,7 +229,7 @@ func is_trits(x: List<int>) -> bool
 
 func occupied(b: Board) -> int
     v = 0
-    for h = 0 to b.nhomes - 1
+    for h = 0 to band_homes - 1
         if b.held[h]
             v = v + 1
     return v
@@ -651,15 +647,12 @@ func bench_read_and_clear(b: inout Board) -> List<int>
 // leftover away, keep one of each pair, and repeat down to one peg." The rungs go
 // into the control row left to right as they are made; built once per kit (its
 // moves are reported apart and not counted in moves).
-export func new_board(t: Tier, store_p: bool) -> Board
-    nh = 7
-    if store_p
-        nh = 9
+export func new_board(t: Tier) -> Board
     empty: List<int> = []
     log: List<Call> = []
     cost = Costs(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, filled(phase_count, 0),
                  filled(phase_count, 0), filled(op_count, 0))
-    b = Board(t, nh, filled(home_count, empty), filled(home_count, false), false, -1, empty,
+    b = Board(t, filled(home_count, empty), filled(home_count, false), false, -1, empty,
               cost, 0, 0, 0, filled(t.control, 0), t.script, t.script + 1, t.script + 2, 0,
               -1, -1, -1, -1, 0, false, 0, empty, -1, 0, log)
     m0 = b.cost.moves
@@ -1219,7 +1212,9 @@ func fold_key(b: inout Board) -> List<int>
 // face's row gives the first hole's peg, its column the second's (top/left empty,
 // middle white, bottom/right red). A partial row throws only the dice it needs; an
 // odd count reads only the last die's keypad row. If every hole came up empty, roll
-// again. The faces are an injected stream, read in order.
+// again. The key is rolled in one sitting, without letting go: an unrolled hole looks
+// like an empty one, so a half-rolled key cannot be resumed from the board. The faces
+// are an injected stream, read in order.
 
 record Rolled
     cells: List<int>
@@ -1290,16 +1285,11 @@ func point_of(b: Board, xh: int, yh: int) -> Point
 
 // Card 9-10 for one player: base point, roll (the cells are given), own walk and
 // finish: C in the across and up. Returns false on an exceptional case.
-func publish(b: inout Board, cells: List<int>, store_p: bool, p: inout Player) -> bool
+func publish(b: inout Board, cells: List<int>, p: inout Player) -> bool
     begin_phase(b, ph_base_point)
     p.base_hole = base_point(b)
     end_phase(b)
     p.base = point_of(b, base_across, base_up)
-    if store_p
-        begin_phase(b, ph_store_p)
-        copy_band(b, p_across, base_across, false)
-        copy_band(b, p_up, base_up, false)
-        end_phase(b)
     b.cost.key_grid_moves = b.cost.key_grid_moves + npeg(cells)
     begin_phase(b, ph_own_walk)
     ok = walk_and_finish(b, cells)
@@ -1456,18 +1446,17 @@ func walk_and_fold(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout
 // in the phase hole; each rebuilds the other's certificate in its base bands (a
 // second white peg: red); each calls the other's A into its bottom and gap and
 // compares; then each walks its key over the rebuilt A and folds the across.
-// K = [(lambda - 1)ab]P on both boards. store_p keeps P in two extra bands (not the
-// rule). Err names the first player and step that rejects or must reroll.
-export func exchange(t: Tier, cells_a: List<int>, cells_b: List<int>, store_p: bool) -> Result<Exchange, text>
+// K = [(lambda - 1)ab]P on both boards. Err names the first player and step that rejects or must reroll.
+export func exchange(t: Tier, cells_a: List<int>, cells_b: List<int>) -> Result<Exchange, text>
     assert (cells_a.length == t.cells) and (cells_b.length == t.cells)
     assert is_trits(cells_a) and is_trits(cells_b)
-    ba = new_board(t, store_p)
-    bb = new_board(t, store_p)
+    ba = new_board(t)
+    bb = new_board(t)
     pa = blank_player(ba)
     pb = blank_player(bb)
-    if not publish(ba, cells_a, store_p, pa)
+    if not publish(ba, cells_a, pa)
         return Err("A: reroll (empty key or exceptional case)")
-    if not publish(bb, cells_b, store_p, pb)
+    if not publish(bb, cells_b, pb)
         return Err("B: reroll (empty key or exceptional case)")
     swap_both(ba, bb)
     fail = curve_tests(ba, bb, pa, pb)
@@ -1482,9 +1471,6 @@ export func exchange(t: Tier, cells_a: List<int>, cells_b: List<int>, store_p: b
         fail = walk_and_fold(ba, bb, pa, pb, cells_a, cells_b)
     if fail != ""
         return Err(fail)
-    if store_p
-        assert point_of(ba, p_across, p_up) == pa.base
-        assert point_of(bb, p_across, p_up) == pb.base
     report(ba, pa)
     report(bb, pb)
     return Ok(Exchange(pa, pb))
@@ -1511,10 +1497,10 @@ record Checked
     control_highest: int
 
 export func receive_check(t: Tier, own: Point, sent_c: Point, sent_a: Point) -> Checked
-    rec = new_board(t, false)
+    rec = new_board(t)
     put(rec, across, own.x)
     put(rec, up, own.y)
-    snd = new_board(t, false)
+    snd = new_board(t)
     put(snd, across, sent_c.x)
     put(snd, up, sent_c.y)
     call_session(rec, snd)
@@ -1543,7 +1529,7 @@ export func receive_check(t: Tier, own: Point, sent_c: Point, sent_a: Point) -> 
 // The sender's certificate of any (x, y) (the card's formulas, which never use the
 // curve's constant term): None if the certificate is empty.
 export func make_certificate(t: Tier, c: Point) -> Option<Point>
-    b = new_board(t, false)
+    b = new_board(t)
     put(b, across, c.x)
     put(b, up, c.y)
     if not certificate(b, across, up)
@@ -1552,14 +1538,14 @@ export func make_certificate(t: Tier, c: Point) -> Option<Point>
 
 // The curve test alone, on any (x, y).
 export func curve_test(t: Tier, c: Point) -> bool
-    b = new_board(t, false)
+    b = new_board(t)
     put(b, base_across, c.x)
     put(b, base_up, c.y)
     return on_curve(b)
 
 // The base point by rule.
 export func base_point_of(t: Tier) -> Point
-    b = new_board(t, false)
+    b = new_board(t)
     j = base_point(b)
     assert j > 0
     return point_of(b, base_across, base_up)
@@ -1567,7 +1553,7 @@ export func base_point_of(t: Tier) -> Point
 // Walk a key over any point in the base bands and finish (the receiver's shared
 // walk, without any check): None on an empty key or an exceptional case.
 export func walk_key(t: Tier, cells: List<int>, base: Point) -> Option<Point>
-    b = new_board(t, false)
+    b = new_board(t)
     put(b, base_across, base.x)
     put(b, base_up, base.y)
     if not walk_and_finish(b, cells)
@@ -1576,14 +1562,14 @@ export func walk_key(t: Tier, cells: List<int>, base: Point) -> Option<Point>
 
 // The ladder-and-tally inversion of a nonzero number (the bottom), sign fixed.
 export func invert_number(t: Tier, x: List<int>) -> List<int>
-    b = new_board(t, false)
+    b = new_board(t)
     put(b, bottom, x)
     invert_checked(b, bottom)
     return value(b, gap)
 
 // One multiply (lay x, lift a copy of y) and one comb cube, for the arithmetic vectors.
 export func multiply(t: Tier, x: List<int>, y: List<int>) -> List<int>
-    b = new_board(t, false)
+    b = new_board(t)
     put(b, across, x)
     put(b, up, y)
     mul(b, gap, across, up, true, false, false)
@@ -1591,7 +1577,7 @@ export func multiply(t: Tier, x: List<int>, y: List<int>) -> List<int>
     return value(b, gap)
 
 export func cube_number(t: Tier, x: List<int>) -> List<int>
-    b = new_board(t, false)
+    b = new_board(t)
     put(b, across, x)
     cube(b, across, across)
     settle(b)
@@ -1599,7 +1585,7 @@ export func cube_number(t: Tier, x: List<int>) -> List<int>
 
 // The fold of an across (§6).
 export func fold(t: Tier, x: List<int>) -> List<int>
-    b = new_board(t, false)
+    b = new_board(t)
     put(b, across, x)
     return fold_key(b)
 
@@ -1641,10 +1627,10 @@ test "§3 R6 the ladder-and-tally inverse times the number is one (Demo, every 3
         assert multiply(t, x, invert_number(t, x)) == one
 
 test "§3 R6 the ladder is the halving strip of n - 1"
-    b = new_board(tier("Demo"), false)
+    b = new_board(tier("Demo"))
     assert b.nrungs == 2
     assert (b.row[b.ladder0] == 1) and (b.row[b.ladder0 + 1] == 2)
-    c = new_board(tier("Toy"), false)
+    c = new_board(tier("Toy"))
     assert c.nrungs == 4
     assert [c.row[c.ladder0], c.row[c.ladder0 + 1], c.row[c.ladder0 + 2], c.row[c.ladder0 + 3]] == [1, 2, 2, 1]
 
@@ -1681,7 +1667,7 @@ test "§5.3 the receiver's verdicts: accept, mismatch, empty certificate, curve 
 
 test "§5 a Demo exchange agrees with PARI: C, A, shared key and fold"
     t = tier("Demo")
-    r = exchange(t, [0, 1], [2, 1], false)
+    r = exchange(t, [0, 1], [2, 1])
     match r
         case Ok(e)
             assert e.a.base == base_point_of(t)
@@ -1701,7 +1687,7 @@ test "§5 a Toy exchange agrees with PARI"
     t = tier("Toy")
     a = [1, 0, 2, 0, 2, 1, 0, 0, 1, 0, 2, 2, 0, 1, 0, 2]
     b = [0, 2, 1, 0, 1, 1, 0, 2, 0, 0, 2, 0, 1, 0, 2, 1]
-    r = exchange(t, a, b, false)
+    r = exchange(t, a, b)
     match r
         case Ok(e)
             assert e.a.base_hole == 2
@@ -1717,21 +1703,12 @@ test "§5 a Toy exchange agrees with PARI"
             assert false
 
 test "§5 an empty key is refused"
-    r = exchange(tier("Demo"), [0, 0], [1, 0], false)
+    r = exchange(tier("Demo"), [0, 0], [1, 0])
     match r
         case Ok(e)
             assert false
         case Err(m)
             assert true
-
-test "§5 keeping P all game leaves it in its two bands"
-    r = exchange(tier("Demo"), [2, 2], [1, 2], true)
-    match r
-        case Ok(e)
-            assert e.a.matched and e.b.matched and (e.a.shared == e.b.shared)
-            assert e.a.cost.moves_by_phase[ph_store_p] > 0
-        case Err(m)
-            assert false
 
 test "§5.2 a call names the sender's published hole, never a key grid or row J"
     t = tier("Toy")
@@ -1745,10 +1722,10 @@ test "§5.2 a call names the sender's published hole, never a key grid or row J"
 
 test "§5.2 calling resumes from the board alone, and clears a stale home first"
     t = tier("Toy")
-    snd = new_board(t, false)
+    snd = new_board(t)
     snd = place(snd, across, [1, 0, 2, 0, 2, 1, 0, 0, 1, 0, 2, 2, 0, 1, 0, 2, 1, 1, 1, 0, 2, 2, 0])
     snd = place(snd, up, [0, 2, 1, 0, 1, 1, 0, 2, 0, 0, 2, 0, 1, 0, 2, 1, 2, 2, 2, 1, 0, 0, 1])
-    rec = new_board(t, false)
+    rec = new_board(t)
     rec = place(rec, base_up, filled(23, 2))
     rec = start_calling(rec)
     assert rec.cost.stale_cleared == 23
@@ -1777,4 +1754,4 @@ test "§4 an all-empty key is rolled again; running out of faces gives none"
 test "§1 Demo's 16-hole control row overruns with a 15-hole script"
     t = with_script(tier("Demo"), 15)
     expect_trap AssertFailed
-        new_board(t, false)
+        new_board(t)

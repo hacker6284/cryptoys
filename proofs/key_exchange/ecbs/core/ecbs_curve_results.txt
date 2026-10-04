@@ -1,4 +1,3 @@
-PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
 
 ==============================================================================
 1. E(GF(3)) and the trace recurrence
@@ -66,7 +65,7 @@ Serious: n = 179 (n prime: True)
   #E mod 5 = 0;  l = #E/5 = 5078489869724426155952648514707704116694985077007329814177591439556413097455105423907
   l proven prime: True;  bits(l) = 282;  log2 l = 281.3864
   ordinary (3 does not divide V_n): True;   anomalous (#E == 3^n): False;  l == 3: False
-  l-1 = 2 * 3^2 * 47 * 179 * 10125222756042811 * 703353447714603929148486975269 * 4709046612308978229431976119158651   (all factors proven prime: True) [9.8s]
+  l-1 = 2 * 3^2 * 47 * 179 * 10125222756042811 * 703353447714603929148486975269 * 4709046612308978229431976119158651   (all factors proven prime: True) [28.5s]
   embedding degree k = ord_l(3^n) = 28371451786169978524875131367082145903323938977694579967472577874616832946676566614  (log2 k = 273.90; k == l-1: False; (l-1)/k = 179)
   q^j == 1 mod l for some j <= 2000: none
   quadratic twist order = 25392449348622130779763242573538520583474942216560148745113086632189359408079831560201 = 3 * 1433 * 160881263 * 36713998232070252360179093503707346270365370129244632978249507489669029173   (last factor composite/unfactored, 245 bits)
@@ -86,4 +85,4 @@ tau^3 - tau^2 + tau - 1 = 5 + 0*tau  (== 5: True);  N(tau - 1) = 5
 n with cofactor exactly 5 and prime l: [2, 7, 23, 59, 179]
 (composite n with the same property, excluded because of subfields: [] )
 
-(total 22.8s)
+(total 61.5s)

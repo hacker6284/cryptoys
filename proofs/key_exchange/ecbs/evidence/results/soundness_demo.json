@@ -1,10 +1,10 @@
 {
  "provenance": {
   "source": "primitives/key_exchange/ecbs/ecbs.sudo",
-  "sudo_sha256": "0527ebec9e0ad1fada72578f73a62347267080865aa31ecaa6d3183e3370a2b9",
+  "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
   "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
   "target": "sudoc js",
-  "sudo_tests": "# 17/17 passed"
+  "sudo_tests": "# 16/16 passed"
  },
  "exhaustive": {
   "selftest_oracle_tables_vs_PARI": {
@@ -51,12 +51,11 @@
   "off_curve": {
    "pairs": 4780865,
    "rejected_by_curve_test": 4780865,
-   "would_pass_without_curve_test": 4774308,
-   "run_empty_without_curve_test": 6557
+   "non_empty_run": 4774308,
+   "run_empty": 6557
   },
   "ladder": "WR",
-  "inversion_wrong_of_2186": 0,
-  "exhaustive_node_secs": "794 (4 node processes, shared box)"
+  "inversion_wrong_of_2186": 0
  },
  "board": {
   "every on-curve C, honest A": {
@@ -125,6 +124,5 @@
    "highest_control_hole": 8,
    "accepted_A_is_PARI_piC_minus_C": 0
   }
- },
- "secs": 8.4
+ }
 }

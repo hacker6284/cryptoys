@@ -1,11 +1,4 @@
 {
- "provenance": {
-  "source": "primitives/key_exchange/ecbs/ecbs.sudo",
-  "sudo_sha256": "0527ebec9e0ad1fada72578f73a62347267080865aa31ecaa6d3183e3370a2b9",
-  "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
-  "target": "sudoc js",
-  "sudo_tests": "# 17/17 passed"
- },
  "B_invalid_GF3_curves": {
   "Demo": {
    "E'(GF(3)) affine": [
@@ -282,7 +275,6 @@
    "rebuilt_A_order": "(q+1)/4 = 2^9.10",
    "key_cells": 2,
    "key_space_bits": 3.17,
-   "fflog_secs": 0.0,
    "recovered_key_equals_receivers_key": true
   },
   "Toy": {
@@ -290,13 +282,11 @@
    "rebuilt_A_order": "(q+1)/4 = 2^34.45",
    "key_cells": 16,
    "key_space_bits": 25.36,
-   "fflog_secs": 1.0,
    "recovered_key_equals_receivers_key": true
   }
  },
  "A_demo_exhaustive": {
   "pairs_x_not_in_GF3": 4776408,
-  "exhaustive_node_secs": "794 (4 node processes, shared box)",
   "GF3_defined_curves": {
    "a4=0,a6=0": {
     "points": 2184,
@@ -378,6 +368,29 @@
    "of_which_on_a_GF3_defined_curve_": 0,
    "twist_order_PARI": 2271,
    "generated_curve_test_rejects_all": true
+  }
+ },
+ "provenance_by_part": {
+  "B": {
+   "source": "primitives/key_exchange/ecbs/ecbs.sudo",
+   "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
+   "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
+   "target": "sudoc js",
+   "sudo_tests": "# 16/16 passed"
+  },
+  "C": {
+   "source": "primitives/key_exchange/ecbs/ecbs.sudo",
+   "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
+   "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
+   "target": "sudoc js",
+   "sudo_tests": "# 16/16 passed"
+  },
+  "A": {
+   "source": "primitives/key_exchange/ecbs/ecbs.sudo",
+   "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
+   "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
+   "target": "sudoc js",
+   "sudo_tests": "# 16/16 passed"
   }
  }
 }

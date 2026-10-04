@@ -1,6 +1,5 @@
 A {
  "pairs_x_not_in_GF3": 4776408,
- "exhaustive_node_secs": "794 (4 node processes, shared box)",
  "GF3_defined_curves": {
   "a4=0,a6=0": {
    "points": 2184,
@@ -84,4 +83,3 @@ A {
   "generated_curve_test_rejects_all": true
  }
 }
-secs 21.9

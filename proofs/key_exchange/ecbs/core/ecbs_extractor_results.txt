@@ -1,4 +1,3 @@
-PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
 == 1. Demo exact (all 420 points of <P> minus O)
   max |character sum| over all 2186 nonzero functionals = 65.82 = 1.407 sqrt(q)  (bound 3 sqrt(q) = 140.3)
   m=1: exact SD from uniform = 0.0048 (bound 2^-2.08); exact H_inf = 1.564 bits (lower bound 0.583, max 1.585)

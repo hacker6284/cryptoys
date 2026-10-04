@@ -1,4 +1,3 @@
-PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
 n=3: PARI ellcard E True, twist y^2=x^3+x^2+2 True, E' True
 n=5: PARI ellcard E True, twist y^2=x^3+x^2+2 True, E' True
 n=7: PARI ellcard E True, twist y^2=x^3+x^2+2 True, E' True

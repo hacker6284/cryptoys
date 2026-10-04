@@ -1,0 +1,2438 @@
+{
+ "schema": 1,
+ "generated_by": "proofs/key_exchange/ecbs/vectors/regen.sh",
+ "source": "primitives/key_exchange/ecbs/ecbs.sudo",
+ "sudo_sha256": "0527ebec9e0ad1fada72578f73a62347267080865aa31ecaa6d3183e3370a2b9",
+ "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
+ "note": "Known-answer vectors evaluated by the sudoc JS target of ecbs.sudo over inputs.json. Cross-checked against PARI/GP by check_oracle.py.",
+ "numbers": "'.WR' strings, hole 0 first: '.' empty, 'W' white, 'R' red (SPEC §1)",
+ "tiers": {
+  "Demo": {
+   "tier": {
+    "n": 7,
+    "k": 5,
+    "cells": 2,
+    "bench": 20,
+    "control": 16,
+    "script": 5
+   },
+   "base_point": {
+    "x": ".RWR.WW",
+    "y": "R..RRWR"
+   },
+   "arith": [
+    {
+     "x": ".WRRWWW",
+     "y": "RRR..WW",
+     "product": ".RRW..W",
+     "cube": "..R.RR.",
+     "inverse": ".RRRWR."
+    },
+    {
+     "x": "RRRRWWW",
+     "y": "W.RRWWW",
+     "product": "R.RRWRR",
+     "cube": "R.RWRR.",
+     "inverse": "RRWRRR."
+    },
+    {
+     "x": "WW.WW.W",
+     "y": "RWRR.RW",
+     "product": "W.WRWR.",
+     "cube": "RR..W.R",
+     "inverse": "WR.W.RR"
+    },
+    {
+     "x": "RRRRWRR",
+     "y": ".RR...W",
+     "product": "RW.RWWR",
+     "cube": ".RRRWW.",
+     "inverse": ".WWW..."
+    }
+   ],
+   "fold": [
+    {
+     "x": "...RWWW",
+     "folded": "WWWR"
+    },
+    {
+     "x": "RR..WW.",
+     "folded": "...."
+    },
+    {
+     "x": "..WRRW.",
+     "folded": "RWWR"
+    }
+   ],
+   "points": [
+    {
+     "why": "P",
+     "x": ".RWR.WW",
+     "y": "R..RRWR",
+     "curve_test": true,
+     "certificate": {
+      "x": ".R.RRRR",
+      "y": "R.W.R.W"
+     }
+    },
+    {
+     "why": "a subgroup point",
+     "x": "WR.W.RW",
+     "y": "R.RRWRR",
+     "curve_test": true,
+     "certificate": {
+      "x": "R..WWWW",
+      "y": "W.RR.WR"
+     }
+    },
+    {
+     "why": "a point outside the subgroup",
+     "x": "RWWRRRR",
+     "y": "WWW..R.",
+     "curve_test": true,
+     "certificate": {
+      "x": "W....RR",
+      "y": "WRWRWR."
+     }
+    },
+    {
+     "why": "an order-5 point (x in GF(3))",
+     "x": ".......",
+     "y": "W......",
+     "curve_test": true,
+     "certificate": null
+    },
+    {
+     "why": "off the curve",
+     "x": "RWWWWR.",
+     "y": ".R..W.W",
+     "curve_test": false,
+     "certificate": {
+      "x": "R.RRR.W",
+      "y": "WW.RRW."
+     }
+    }
+   ],
+   "walks": [
+    {
+     "faces": [
+      8,
+      8,
+      9,
+      4,
+      4
+     ],
+     "cells": "RW",
+     "faces_used": 1,
+     "base": {
+      "x": ".RWR.WW",
+      "y": "R..RRWR"
+     },
+     "walked": {
+      "x": ".R.RRRR",
+      "y": "W.R.W.R"
+     }
+    },
+    {
+     "faces": [
+      9,
+      1,
+      4,
+      6,
+      1
+     ],
+     "cells": "RR",
+     "faces_used": 1,
+     "base": {
+      "x": "WWWRR..",
+      "y": "WRRW.RW"
+     },
+     "walked": {
+      "x": "WWRWWW.",
+      "y": "RRRW..R"
+     }
+    }
+   ],
+   "receive": [
+    {
+     "why": "honest",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "C": {
+      "x": ".R.RWW.",
+      "y": "WWRRRWW"
+     },
+     "A": {
+      "x": "WR...WR",
+      "y": "WW.RRR."
+     },
+     "verdict": "Accept",
+     "rebuilt": {
+      "x": "WR...WR",
+      "y": "WW.RRR."
+     },
+     "peak": 7,
+     "check_moves": 868
+    },
+    {
+     "why": "A = C",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "C": {
+      "x": ".R.RWW.",
+      "y": "WWRRRWW"
+     },
+     "A": {
+      "x": ".R.RWW.",
+      "y": "WWRRRWW"
+     },
+     "verdict": "Mismatch",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 872
+    },
+    {
+     "why": "C outside the subgroup, correct certificate",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "C": {
+      "x": "RR..W.R",
+      "y": "W..WWWW"
+     },
+     "A": {
+      "x": "..WRW.W",
+      "y": ".RWR..R"
+     },
+     "verdict": "Accept",
+     "rebuilt": {
+      "x": "..WRW.W",
+      "y": ".RWR..R"
+     },
+     "peak": 7,
+     "check_moves": 1009
+    },
+    {
+     "why": "C an order-5 point",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "C": {
+      "x": ".......",
+      "y": "W......"
+     },
+     "A": {
+      "x": ".......",
+      "y": "W......"
+     },
+     "verdict": "EmptyCertificate",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 8
+    },
+    {
+     "why": "C off the curve",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "C": {
+      "x": "RWRRRWR",
+      "y": "WWRWR.R"
+     },
+     "A": {
+      "x": "WR...WR",
+      "y": "WW.RRR."
+     },
+     "verdict": "CurveFails",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 228
+    }
+   ],
+   "exchanges": [
+    {
+     "faces_a": [
+      6,
+      3,
+      4,
+      2,
+      3
+     ],
+     "faces_b": [
+      2,
+      0,
+      7,
+      6,
+      1
+     ],
+     "cells_a": "WR",
+     "cells_b": ".W",
+     "P": {
+      "x": ".RWR.WW",
+      "y": "R..RRWR"
+     },
+     "A": {
+      "base_hole": 2,
+      "sent_C": {
+       "x": ".R.RRRR",
+       "y": "R.W.R.W"
+      },
+      "sent_A": {
+       "x": "R.WW..R",
+       "y": "WW.WWW."
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": ".R.RRRR",
+       "y": "R.W.R.W"
+      },
+      "matched": true,
+      "shared": {
+       "x": "R.WW..R",
+       "y": "WW.WWW."
+      },
+      "folded": "R..W",
+      "moves": 6484,
+      "moves_by_phase": {
+       "base point": 3208,
+       "store P": 0,
+       "own walk": 710,
+       "swap": 19,
+       "curve test": 182,
+       "make certificate": 809,
+       "rebuild theirs": 816,
+       "shared walk": 739,
+       "fold": 1
+      },
+      "peak": 7,
+      "max_bench_hole": 18,
+      "ctrl": 261,
+      "calls": 28,
+      "ladder": "WR",
+      "ladder_moves": 17,
+      "tally_max": 3,
+      "control_highest": 12,
+      "script_marker_max": 5,
+      "ops": {
+       "mul": 65,
+       "cube": 75,
+       "inv": 7,
+       "chord": 7,
+       "fadd": 0
+      }
+     },
+     "B": {
+      "base_hole": 2,
+      "sent_C": {
+       "x": ".RWR.WW",
+       "y": "R..RRWR"
+      },
+      "sent_A": {
+       "x": ".R.RRRR",
+       "y": "R.W.R.W"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "R.WW..R",
+       "y": "WW.WWW."
+      },
+      "matched": true,
+      "shared": {
+       "x": "R.WW..R",
+       "y": "WW.WWW."
+      },
+      "folded": "R..W",
+      "moves": 5081,
+      "moves_by_phase": {
+       "base point": 3208,
+       "store P": 0,
+       "own walk": 20,
+       "swap": 18,
+       "curve test": 191,
+       "make certificate": 798,
+       "rebuild theirs": 827,
+       "shared walk": 18,
+       "fold": 1
+      },
+      "peak": 7,
+      "max_bench_hole": 18,
+      "ctrl": 203,
+      "calls": 28,
+      "ladder": "WR",
+      "ladder_moves": 17,
+      "tally_max": 3,
+      "control_highest": 12,
+      "script_marker_max": 5,
+      "ops": {
+       "mul": 51,
+       "cube": 59,
+       "inv": 5,
+       "chord": 5,
+       "fadd": 0
+      }
+     }
+    },
+    {
+     "faces_a": [
+      7,
+      1,
+      4,
+      3,
+      6
+     ],
+     "faces_b": [
+      0,
+      1,
+      1,
+      7,
+      8
+     ],
+     "cells_a": "R.",
+     "cells_b": "R.",
+     "P": {
+      "x": ".RWR.WW",
+      "y": "R..RRWR"
+     },
+     "A": {
+      "base_hole": 2,
+      "sent_C": {
+       "x": ".RR.RWW",
+       "y": "WWRR.R."
+      },
+      "sent_A": {
+       "x": "W.R.WRR",
+       "y": "W.W.R.R"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "W.R.WRR",
+       "y": "W.W.R.R"
+      },
+      "matched": true,
+      "shared": {
+       "x": ".R..WR.",
+       "y": "RRRRWRW"
+      },
+      "folded": "WW..",
+      "moves": 5278,
+      "moves_by_phase": {
+       "base point": 3208,
+       "store P": 0,
+       "own walk": 117,
+       "swap": 19,
+       "curve test": 184,
+       "make certificate": 813,
+       "rebuild theirs": 831,
+       "shared walk": 104,
+       "fold": 2
+      },
+      "peak": 7,
+      "max_bench_hole": 18,
+      "ctrl": 211,
+      "calls": 28,
+      "ladder": "WR",
+      "ladder_moves": 17,
+      "tally_max": 3,
+      "control_highest": 12,
+      "script_marker_max": 5,
+      "ops": {
+       "mul": 51,
+       "cube": 63,
+       "inv": 5,
+       "chord": 5,
+       "fadd": 0
+      }
+     },
+     "B": {
+      "base_hole": 2,
+      "sent_C": {
+       "x": ".RR.RWW",
+       "y": "WWRR.R."
+      },
+      "sent_A": {
+       "x": "W.R.WRR",
+       "y": "W.W.R.R"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "W.R.WRR",
+       "y": "W.W.R.R"
+      },
+      "matched": true,
+      "shared": {
+       "x": ".R..WR.",
+       "y": "RRRRWRW"
+      },
+      "folded": "WW..",
+      "moves": 5278,
+      "moves_by_phase": {
+       "base point": 3208,
+       "store P": 0,
+       "own walk": 117,
+       "swap": 19,
+       "curve test": 184,
+       "make certificate": 813,
+       "rebuild theirs": 831,
+       "shared walk": 104,
+       "fold": 2
+      },
+      "peak": 7,
+      "max_bench_hole": 18,
+      "ctrl": 211,
+      "calls": 28,
+      "ladder": "WR",
+      "ladder_moves": 17,
+      "tally_max": 3,
+      "control_highest": 12,
+      "script_marker_max": 5,
+      "ops": {
+       "mul": 51,
+       "cube": 63,
+       "inv": 5,
+       "chord": 5,
+       "fadd": 0
+      }
+     }
+    }
+   ],
+   "roll": [
+    {
+     "faces": [
+      0
+     ],
+     "rolled": null
+    },
+    {
+     "faces": [
+      1,
+      5,
+      4,
+      2,
+      6,
+      1,
+      7
+     ],
+     "rolled": {
+      "cells": "WW",
+      "used": 2,
+      "rolls": 2
+     }
+    }
+   ],
+   "coordinates": {
+    "across": "grid 1, A3 .. grid 1, D3",
+    "up": "grid 1, A5 .. grid 1, D5",
+    "bottom": "grid 1, A7 .. grid 1, D7",
+    "base across": "grid 1, A9 .. grid 1, D9",
+    "base up": "grid 1, E3 .. grid 1, H3",
+    "gap": "grid 1, E5 .. grid 1, H5",
+    "spare": "grid 1, E7 .. grid 1, H7"
+   }
+  },
+  "Toy": {
+   "tier": {
+    "n": 23,
+    "k": 15,
+    "cells": 16,
+    "bench": 72,
+    "control": 40,
+    "script": 15
+   },
+   "base_point": {
+    "x": "RW..W.WWWR..W...WWWRWRR",
+    "y": "RRWWRRR..R.WRRW..RWWRRW"
+   },
+   "arith": [
+    {
+     "x": "RWRWR..W.R.R..W.WRW.RRR",
+     "y": "R..WW.RRRR.RR..WWR.R.WW",
+     "product": "R.WRRRRW.W.RWWRR.WWRRR.",
+     "cube": ".W.WWW.W..R.RRRR...WRWW",
+     "inverse": "..W.WRRWWR.WWW.WR..RR.."
+    },
+    {
+     "x": "RRR..RW.RW..RRWWWWWWRR.",
+     "y": "..RRWW..RRR..WWRWRRRRWW",
+     "product": "RWWRWR.R..RRWWRRRWR.RR.",
+     "cube": "R.RRRRWWRRWRWW..WRR..WR",
+     "inverse": "R.R.R.W.R.WWR.R.RW.R..W"
+    },
+    {
+     "x": ".WWWRW..WR.WWWWRW.W.WWW",
+     "y": "RWRW...RR.WWR...WRWWRRR",
+     "product": "W..R..WWW..RWR..WWRR.WW",
+     "cube": "WRR.RRRW.WWRWR..WWRW.R.",
+     "inverse": "R.W.WR.W.WR..RR..W.RRRW"
+    },
+    {
+     "x": ".RW.RR..RWRRRR.WRWWR.WR",
+     "y": ".RWW.R.W....W.R..RWRRRR",
+     "product": "W..WWRW.W.WW.RRRRWRWRWW",
+     "cube": "RW.RR.R.WWWWWRWRW.RW.WW",
+     "inverse": "..WWWWRRWRWWRW.W..R.RR."
+    }
+   ],
+   "fold": [
+    {
+     "x": "W..W.R.RRR..WRRR..WR..W",
+     "folded": "W.W..RWRRR..WRRR"
+    },
+    {
+     "x": "R.R...R....W.R..W..W..R",
+     "folded": "..RW..W....W.R.."
+    },
+    {
+     "x": "..W.WWWWWRRW..RWWRW...R",
+     "folded": "WRR.WW.WWRRW..RW"
+    }
+   ],
+   "points": [
+    {
+     "why": "P",
+     "x": "RW..W.WWWR..W...WWWRWRR",
+     "y": "RRWWRRR..R.WRRW..RWWRRW",
+     "curve_test": true,
+     "certificate": {
+      "x": ".WWRRRWRWRR..WW.RWW.RWW",
+      "y": "WR..RW...WWW..WR..R.W.W"
+     }
+    },
+    {
+     "why": "a subgroup point",
+     "x": "WR.W.RWW.R.W.WW.WRRRR.R",
+     "y": "RWRWWW.RWW.RRWWWW..RW.W",
+     "curve_test": true,
+     "certificate": {
+      "x": "RR.W.....RW.RRR.R.WWR.R",
+      "y": "RW.WRW..RRRRWW..RR.WWWW"
+     }
+    },
+    {
+     "why": "a point outside the subgroup",
+     "x": "WRWRW..R.WWWWWRWW.RW.R.",
+     "y": "WR..RW..RWR...WWWWR....",
+     "curve_test": true,
+     "certificate": {
+      "x": "W.RRWRRWR..W.RRRW.RR.WR",
+      "y": ".R....W.WWWRWRRRRW.WWRW"
+     }
+    },
+    {
+     "why": "an order-5 point (x in GF(3))",
+     "x": ".......................",
+     "y": "W......................",
+     "curve_test": true,
+     "certificate": null
+    },
+    {
+     "why": "off the curve",
+     "x": "RRRR.RRR.WR.WRRWWWW.W..",
+     "y": ".WRRWWRWR.RWRR.RW.R.WR.",
+     "curve_test": false,
+     "certificate": {
+      "x": "RRW....W...WW.WRWWRRR.R",
+      "y": "..WWRW.RRWWRWR..R.RRRWR"
+     }
+    }
+   ],
+   "walks": [
+    {
+     "faces": [
+      2,
+      1,
+      4,
+      1,
+      9,
+      8,
+      5,
+      5,
+      5,
+      8,
+      7,
+      6
+     ],
+     "cells": ".W..W...RRRWWWWW",
+     "faces_used": 8,
+     "base": {
+      "x": "RW..W.WWWR..W...WWWRWRR",
+      "y": "RRWWRRR..R.WRRW..RWWRRW"
+     },
+     "walked": {
+      "x": "WWR..W.R.WR..WR.WR..WRW",
+      "y": "R.W.RWWW..RW..RRR.RRWW."
+     }
+    },
+    {
+     "faces": [
+      8,
+      6,
+      6,
+      4,
+      2,
+      7,
+      9,
+      3,
+      6,
+      8,
+      5,
+      1
+     ],
+     "cells": "RWWRWRW..WR.RR.R",
+     "faces_used": 8,
+     "base": {
+      "x": ".WW.R...WRWR.WRW.RRW..W",
+      "y": "RRRWW..R.W..RRRRWR..W.R"
+     },
+     "walked": {
+      "x": "WWRR.WR...W.RR..R...RRW",
+      "y": "W.W.W.WWRR.RW..WR.RRRWW"
+     }
+    }
+   ],
+   "receive": [
+    {
+     "why": "honest",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "C": {
+      "x": "WR.R..WRRW..WWR.RWR...W",
+      "y": "WR.W.RW...WWWRRW..W.WR."
+     },
+     "A": {
+      "x": "W.RWW.R.WWRW..RR.W..WR.",
+      "y": "RRWWRRWWWWWRR.WWRWWW.RW"
+     },
+     "verdict": "Accept",
+     "rebuilt": {
+      "x": "W.RWW.R.WWRW..RR.W..WR.",
+      "y": "RRWWRRWWWWWRR.WWRWWW.RW"
+     },
+     "peak": 7,
+     "check_moves": 7956
+    },
+    {
+     "why": "A = C",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "C": {
+      "x": "WR.R..WRRW..WWR.RWR...W",
+      "y": "WR.W.RW...WWWRRW..W.WR."
+     },
+     "A": {
+      "x": "WR.R..WRRW..WWR.RWR...W",
+      "y": "WR.W.RW...WWWRRW..W.WR."
+     },
+     "verdict": "Mismatch",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 7942
+    },
+    {
+     "why": "C outside the subgroup, correct certificate",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "C": {
+      "x": "R.RRW.R.WWRW..RWR.RWWWR",
+      "y": "R.WRW.RRW.WRR.WWWR.R.R."
+     },
+     "A": {
+      "x": ".R...R.RRWRRR..W...WRWW",
+      "y": ".W.W.WR.WWWRR.R.WRR..RR"
+     },
+     "verdict": "Accept",
+     "rebuilt": {
+      "x": ".R...R.RRWRRR..W...WRWW",
+      "y": ".W.W.WR.WWWRR.R.WRR..RR"
+     },
+     "peak": 7,
+     "check_moves": 8537
+    },
+    {
+     "why": "C an order-5 point",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "C": {
+      "x": ".......................",
+      "y": "W......................"
+     },
+     "A": {
+      "x": ".......................",
+      "y": "W......................"
+     },
+     "verdict": "EmptyCertificate",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 8
+    },
+    {
+     "why": "C off the curve",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "C": {
+      "x": "R..RRRR.RW.RR..R.RWWRR.",
+      "y": "R.R..WR..RRRW..W.WRWW.."
+     },
+     "A": {
+      "x": "W.RWW.R.WWRW..RR.W..WR.",
+      "y": "RRWWRRWWWWWRR.WWRWWW.RW"
+     },
+     "verdict": "CurveFails",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 809
+    }
+   ],
+   "exchanges": [
+    {
+     "faces_a": [
+      9,
+      5,
+      4,
+      6,
+      6,
+      2,
+      1,
+      2,
+      7,
+      7,
+      1,
+      3
+     ],
+     "faces_b": [
+      1,
+      6,
+      6,
+      8,
+      8,
+      2,
+      2,
+      0,
+      2,
+      9,
+      5,
+      8
+     ],
+     "cells_a": "RRWWW.WRWR.W...W",
+     "cells_b": "..WRWRRWRW.W.W.W",
+     "P": {
+      "x": "RW..W.WWWR..W...WWWRWRR",
+      "y": "RRWWRRR..R.WRRW..RWWRRW"
+     },
+     "A": {
+      "base_hole": 2,
+      "sent_C": {
+       "x": "WRRWWRR.WWWRWRR.RWWWWWR",
+       "y": "RW..W.RR.W.WW.R..W.RW.R"
+      },
+      "sent_A": {
+       "x": "WW.RWW.WRR.RR....W.RRRR",
+       "y": "RR.RRWR.R.W..RWWRW.WWRW"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "RR..RWRR.R.WRWW....R.WW",
+       "y": "WRRWR..WRWR.RWWRRRW.RRR"
+      },
+      "matched": true,
+      "shared": {
+       "x": "WRRW..R...W.WRRWWR..RR.",
+       "y": "..WRWR.RR.RWR.RRWW.R.R."
+      },
+      "folded": "RWRWRRR...W.WRRW",
+      "moves": 144389,
+      "moves_by_phase": {
+       "base point": 23400,
+       "store P": 0,
+       "own walk": 52846,
+       "swap": 66,
+       "curve test": 990,
+       "make certificate": 7194,
+       "rebuild theirs": 7401,
+       "shared walk": 52488,
+       "fold": 4
+      },
+      "peak": 7,
+      "max_bench_hole": 66,
+      "ctrl": 1315,
+      "calls": 92,
+      "ladder": "WRRW",
+      "ladder_moves": 65,
+      "tally_max": 11,
+      "control_highest": 32,
+      "script_marker_max": 15,
+      "ops": {
+       "mul": 355,
+       "cube": 264,
+       "inv": 5,
+       "chord": 2,
+       "fadd": 23
+      }
+     },
+     "B": {
+      "base_hole": 2,
+      "sent_C": {
+       "x": "W.RWRRWR.WWRRR.W..WWWRW",
+       "y": "RWW.R.RWRRR.WR.W..W..WW"
+      },
+      "sent_A": {
+       "x": "RR..RWRR.R.WRWW....R.WW",
+       "y": "WRRWR..WRWR.RWWRRRW.RRR"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "WW.RWW.WRR.RR....W.RRRR",
+       "y": "RR.RRWR.R.W..RWWRW.WWRW"
+      },
+      "matched": true,
+      "shared": {
+       "x": "WRRW..R...W.WRRWWR..RR.",
+       "y": "..WRWR.RR.RWR.RRWW.R.R."
+      },
+      "folded": "RWRWRRR...W.WRRW",
+      "moves": 142100,
+      "moves_by_phase": {
+       "base point": 23400,
+       "store P": 0,
+       "own walk": 52047,
+       "swap": 66,
+       "curve test": 1091,
+       "make certificate": 7336,
+       "rebuild theirs": 7259,
+       "shared walk": 50897,
+       "fold": 4
+      },
+      "peak": 7,
+      "max_bench_hole": 66,
+      "ctrl": 1291,
+      "calls": 92,
+      "ladder": "WRRW",
+      "ladder_moves": 65,
+      "tally_max": 11,
+      "control_highest": 32,
+      "script_marker_max": 15,
+      "ops": {
+       "mul": 355,
+       "cube": 252,
+       "inv": 5,
+       "chord": 2,
+       "fadd": 23
+      }
+     }
+    },
+    {
+     "faces_a": [
+      9,
+      6,
+      9,
+      5,
+      2,
+      8,
+      1,
+      5,
+      4,
+      9,
+      5,
+      6
+     ],
+     "faces_b": [
+      6,
+      3,
+      4,
+      9,
+      5,
+      5,
+      7,
+      9,
+      8,
+      4,
+      9,
+      7
+     ],
+     "cells_a": "RRWRRRWW.WRW..WW",
+     "cells_b": "WR.RW.RRWWWWR.RR",
+     "P": {
+      "x": "RW..W.WWWR..W...WWWRWRR",
+      "y": "RRWWRRR..R.WRRW..RWWRRW"
+     },
+     "A": {
+      "base_hole": 2,
+      "sent_C": {
+       "x": "WR.RW...RRRWW..RR....RR",
+       "y": ".W.WRRRWWR..RR.R.WW.WRW"
+      },
+      "sent_A": {
+       "x": "WR.R.R...RWR.R.RR.WWWRW",
+       "y": ".W..W..RRRWRRW.WW.RWWR."
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "RW..WRW.WWRRRRW.WW..W..",
+       "y": "W....WW..WWWWRWRW.W.W.W"
+      },
+      "matched": true,
+      "shared": {
+       "x": "R.WWWR.RWW.RWW.WRRWRR.W",
+       "y": "R.RRRWWR...W..WR.RWWWWR"
+      },
+      "folded": "WRR..RWRWW.RWW.W",
+      "moves": 160941,
+      "moves_by_phase": {
+       "base point": 23400,
+       "store P": 0,
+       "own walk": 62972,
+       "swap": 55,
+       "curve test": 792,
+       "make certificate": 7321,
+       "rebuild theirs": 6541,
+       "shared walk": 59854,
+       "fold": 6
+      },
+      "peak": 7,
+      "max_bench_hole": 66,
+      "ctrl": 1411,
+      "calls": 92,
+      "ladder": "WRRW",
+      "ladder_moves": 65,
+      "tally_max": 11,
+      "control_highest": 32,
+      "script_marker_max": 15,
+      "ops": {
+       "mul": 403,
+       "cube": 264,
+       "inv": 5,
+       "chord": 2,
+       "fadd": 27
+      }
+     },
+     "B": {
+      "base_hole": 2,
+      "sent_C": {
+       "x": "R...W...WRWRRWWR.WRRRWR",
+       "y": ".W.RR.WRR..R...R..W...W"
+      },
+      "sent_A": {
+       "x": "RW..WRW.WWRRRRW.WW..W..",
+       "y": "W....WW..WWWWRWRW.W.W.W"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "WR.R.R...RWR.R.RR.WWWRW",
+       "y": ".W..W..RRRWRRW.WW.RWWR."
+      },
+      "matched": true,
+      "shared": {
+       "x": "R.WWWR.RWW.RWW.WRRWRR.W",
+       "y": "R.RRRWWR...W..WR.RWWWWR"
+      },
+      "folded": "WRR..RWRWW.RWW.W",
+      "moves": 159099,
+      "moves_by_phase": {
+       "base point": 23400,
+       "store P": 0,
+       "own walk": 62063,
+       "swap": 59,
+       "curve test": 848,
+       "make certificate": 6482,
+       "rebuild theirs": 7380,
+       "shared walk": 58861,
+       "fold": 6
+      },
+      "peak": 7,
+      "max_bench_hole": 66,
+      "ctrl": 1411,
+      "calls": 92,
+      "ladder": "WRRW",
+      "ladder_moves": 65,
+      "tally_max": 11,
+      "control_highest": 32,
+      "script_marker_max": 15,
+      "ops": {
+       "mul": 403,
+       "cube": 264,
+       "inv": 5,
+       "chord": 2,
+       "fadd": 27
+      }
+     }
+    }
+   ],
+   "roll": [
+    {
+     "faces": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "rolled": null
+    },
+    {
+     "faces": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      5,
+      5,
+      5,
+      2,
+      3,
+      3,
+      3,
+      6,
+      5,
+      8,
+      8,
+      9,
+      4
+     ],
+     "rolled": {
+      "cells": "WWWWWW.W.R.R.RWR",
+      "used": 16,
+      "rolls": 2
+     }
+    }
+   ],
+   "coordinates": {
+    "across": "grid 2, A1 .. grid 2, C7",
+    "up": "grid 2, D1 .. grid 2, F7",
+    "bottom": "grid 2, G1 .. grid 2, I7",
+    "base across": "grid 3, A1 .. grid 3, C7",
+    "base up": "grid 3, D1 .. grid 3, F7",
+    "gap": "grid 3, G1 .. grid 3, I7",
+    "spare": "grid 4, A1 .. grid 4, C7"
+   }
+  },
+  "Hobby": {
+   "tier": {
+    "n": 59,
+    "k": 39,
+    "cells": 51,
+    "bench": 180,
+    "control": 80,
+    "script": 15
+   },
+   "base_point": {
+    "x": "RRR.WWWW.RWW..WWW.WR.R.WWRW.RW...R.W.RRW.R.WR.W..R.WW..WR..",
+    "y": "WRRRRWWRRWWRWRRW.RWW.WRRRWRRRRWRR.RWR.W.W.RW.R.W.RRW.W.WWRW"
+   },
+   "arith": [
+    {
+     "x": "RW..R.W.RRW..RWWWRRWR.W.WWW.WWW..W....R..RRRWWRRWWRWR.WWRWR",
+     "y": "R....WR.W..WWRR.WRR.WW..WWRRRWR.W.WR.W...WWWRR...RWWWRWWR.W",
+     "product": "RRR...W.W.RR.RWRRR.RRWWRR.....RRWWR.R..RWWRW...W...R..RRWWR",
+     "cube": "WRR.RW..WWRRWRR.R.R...R..RR.R.W...WRRRR..RR.WRWW.W...W...W.",
+     "inverse": ".RR.WR.RRR..RW..RWRWR..RWWRR.RWWRW.RW.WWW.WRWRRWR.RRWWR.R.R"
+    },
+    {
+     "x": ".RRRRW....R.RRWWWW.RRWW.RWWWW..RWW.W.WRWR..W.W....RW.R.WW.W",
+     "y": "WRWW.RR.RRW..WWWRRWWR...RW..RWWW...RR....RWR.WWR......R....",
+     "product": ".W.RWRW.W.W.W..WW..WRWW.RWRRW.WRW..WRRR.RW.WW.WR.RRRWRR..R.",
+     "cube": ".W.RWWWW..W.WR..RRWW..W..WRR.WRR...WRWWRWWWWW..WRRRR...RW.R",
+     "inverse": ".W.WRR.WRRR.RRW.RR.RRW......WWW..WWRRWWWWRWWW.WW.W.RWRRW.WR"
+    },
+    {
+     "x": "RRRR.WRWWWR..RRR.WW.WR.R..WRR.WWW...WRWRWWWWW....RRRRW.WWRW",
+     "y": "RR.RWR.WR..WW.WR.RR..RWR....W.RRWR.RRWWRRWWWWR..RW.RW.RW..R",
+     "product": "WWR.WRRRWW.RWWW..RWWWWWW.RW..RWRW.W.RWRRRRRW.RWRRWR...WR..R",
+     "cube": ".R.R...W.R.WRWWW..RWWWR.RRWWRWR..R.WR.W..RR.W.RRRR.RRW.RWR.",
+     "inverse": ".R.RWWR..W.R..RWR..WW.WRWRR.WR..WWRWRW.WWR.W.WRW..RW.RRR..."
+    },
+    {
+     "x": "R...R.W..W.R.W..W.WWRW..WWR....RWRR..WRW.RW.W.W..W.WRWW.RWW",
+     "y": "RR..WW.....WWWRR.RWWWW..WWRWRRR.RWWWR.RWRWRRRRR.W.WWRRRWWR.",
+     "product": "RWWR.W...R.WWR..RRRR.R.RRRW.RRR.WW..R.R..W..WWR.RWWWWWRRRR.",
+     "cube": "WR...R.WRW..WRWRW...WR..W..RW.W.RR.WR..WRW..R.W..RRRW.WWWRW",
+     "inverse": "R.W.R..W.WWRRWWRR.R...RW..WRWRRW.WRWW..R.RRRW.R.RWR.RRWWWWW"
+    }
+   ],
+   "fold": [
+    {
+     "x": "..W.RRRWWW.W..WRRW...RWRWRRWWRRRWWWWR.R...RWWR.RRWWW.R.RW.R",
+     "folded": "...W.WR..RWR.RWW.WR..RWRWRRWWRRRWWWWR.R."
+    },
+    {
+     "x": "RRR.WW.WWR.RRR.WRRW.W...WWWWWWWRRR.WRRRR..WRWWRW.WRR.RRRRRW",
+     "folded": "RR.RRRRRW.RWRWR.WWR.W...WWWWWWWRRR.WRRRR"
+    },
+    {
+     "x": "W.RW.RW.RRW.RWRR.RWWWR.RW.WRRR.WRRWWR...W..W.R.R.R..WR....R",
+     "folded": "R.RR.WWRRWW...RR.R.WWR.RW.WRRR.WRRWWR..."
+    }
+   ],
+   "points": [
+    {
+     "why": "P",
+     "x": "RRR.WWWW.RWW..WWW.WR.R.WWRW.RW...R.W.RRW.R.WR.W..R.WW..WR..",
+     "y": "WRRRRWWRRWWRWRRW.RWW.WRRRWRRRRWRR.RWR.W.W.RW.R.W.RRW.W.WWRW",
+     "curve_test": true,
+     "certificate": {
+      "x": "WR.....WRW..RWW.WW...RR......WWWRWRWW.R...R.WRR.RR.WWRRW...",
+      "y": ".RRRW.RRRWWWRRRRW.RR.WRRRW.RWRWR..RWR.WWRWW.WRW..WRWWWR.R.W"
+     }
+    },
+    {
+     "why": "a subgroup point",
+     "x": "W.RRR.WWRR.WRRWR.WWR...WRW.W.WW.WWR..RW.W..WWRWW..R...R..RR",
+     "y": "W.WWRRWRRR.W.WWWW..RWWRWRW..WRR..R.W...WW..WWW.RWRWRW.RRRRR",
+     "curve_test": true,
+     "certificate": {
+      "x": "W.R.RWRW.R..WR.WW.RWRRRRRW.RWRW..WW..RR.WR..R.WRR.W.RR....W",
+      "y": "W..R.W.WW.WWWR.R.RRW..RR.W.R.R..WRWR..W.W.W...WWWR..WR..W.R"
+     }
+    },
+    {
+     "why": "a point outside the subgroup",
+     "x": "WWW..R........RRWWR.WRRWRRWRWRR.RW..WW.R.WWWW.WRR.W.RRR.W.R",
+     "y": "RR.WWR.R..RW.WR.WR.RR.RW.RRRWWWW.WR..WW.RR.R.WRWWWRW..W..W.",
+     "curve_test": true,
+     "certificate": {
+      "x": ".RWRR.R.W.WRRW..RRWW..WWWRR.RR...R.R.RR.RR.RR.RWR..WW...RWR",
+      "y": ".RRRRRW..WW..R.WWR.WR.W.WR....WW...RRW.RW.WR.R.RR..RW..WWR."
+     }
+    },
+    {
+     "why": "an order-5 point (x in GF(3))",
+     "x": "...........................................................",
+     "y": "W..........................................................",
+     "curve_test": true,
+     "certificate": null
+    },
+    {
+     "why": "off the curve",
+     "x": ".R.RW....R..R.WW.RRRR.WRRWW..RWRW.R.R...WW..RRRWW.RR.RWW.W.",
+     "y": "WWRWW.RRR...R.RR...WWW..RW..RR.WWW..WRW..R.RRWRW...WRW.WRR.",
+     "curve_test": false,
+     "certificate": {
+      "x": "RRWW.W.W.W.R.WRR...RW.WRW.RWRR.RWWR...W.WW..R.WW..WR..RWR..",
+      "y": "WRR..RR.WW.WW.WRRW........WRW..WWRW.RW.WRRR........W...W.RR"
+     }
+    }
+   ],
+   "walks": [
+    {
+     "faces": [
+      8,
+      9,
+      3,
+      4,
+      9,
+      3,
+      5,
+      8,
+      8,
+      3,
+      7,
+      5,
+      6,
+      8,
+      7,
+      2,
+      2,
+      4,
+      2,
+      5,
+      3,
+      5,
+      2,
+      9,
+      4,
+      1,
+      8,
+      2,
+      2,
+      4
+     ],
+     "cells": "RWRR.RW.RR.RWWRWRW.RR.WWWRRWR..W.WW..WWW.RWW.WRRW..",
+     "faces_used": 26,
+     "base": {
+      "x": "RRR.WWWW.RWW..WWW.WR.R.WWRW.RW...R.W.RRW.R.WR.W..R.WW..WR..",
+      "y": "WRRRRWWRRWWRWRRW.RWW.WRRRWRRRRWRR.RWR.W.W.RW.R.W.RRW.W.WWRW"
+     },
+     "walked": {
+      "x": "WWR.WWWR.W.RR...WWWRRR.WR..RWRWR..RRRR..RWWRWRWWRWW...WWRWW",
+      "y": "RRRW.RRWW..WW.R....RRW.W.WRW.WWRR.WR..RWWR.WW.R....RWR..R.W"
+     }
+    }
+   ],
+   "receive": [
+    {
+     "why": "honest",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "C": {
+      "x": "RRRRWW.WWWWW.RRR.RRRR.RWRWRR.R.WR....RWWWW.WR.....WW.W.R.WR",
+      "y": "R..WRW.RR..RRRWRWWRWRR.W.W..R.R.RRW.RRR.WWW.WW..WRWRRWW.WRR"
+     },
+     "A": {
+      "x": ".R..RRWRW.WWWWRRW.WWRRRWRWWRRWR.W..W.RRRR.R.RRR..R.WRW.RWRW",
+      "y": "RRW.WWR.RR.W.W.W....RWRRRWWWWWWWRR.WW.WRR.RWWW.RRRRR....RRW"
+     },
+     "verdict": "Accept",
+     "rebuilt": {
+      "x": ".R..RRWRW.WWWWRRW.WWRRRWRWWRRWR.W..W.RRRR.R.RRR..R.WRW.RWRW",
+      "y": "RRW.WWR.RR.W.W.W....RWRRRWWWWWWWRR.WW.WRR.RWWW.RRRRR....RRW"
+     },
+     "peak": 7,
+     "check_moves": 49457
+    },
+    {
+     "why": "A = C",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "C": {
+      "x": "RRRRWW.WWWWW.RRR.RRRR.RWRWRR.R.WR....RWWWW.WR.....WW.W.R.WR",
+      "y": "R..WRW.RR..RRRWRWWRWRR.W.W..R.R.RRW.RRR.WWW.WW..WRWRRWW.WRR"
+     },
+     "A": {
+      "x": "RRRRWW.WWWWW.RRR.RRRR.RWRWRR.R.WR....RWWWW.WR.....WW.W.R.WR",
+      "y": "R..WRW.RR..RRRWRWWRWRR.W.W..R.R.RRW.RRR.WWW.WW..WRWRRWW.WRR"
+     },
+     "verdict": "Mismatch",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 49449
+    },
+    {
+     "why": "C outside the subgroup, correct certificate",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "C": {
+      "x": "RR.WRWRRWWRRRR.WWRRR.WW.WWWW.W.WR.RRRW.WWWRRWRRWRW.RRWWWW.W",
+      "y": ".RRW..R.W..W.RRWRRWR.RRRWRRR.WRWRR.WRWWWWWWRW.W..WRR.RWR.WR"
+     },
+     "A": {
+      "x": "RRRWR.RRR.WRR.WWW...W...W...R.WRWRRW...W.WRWW..W...WR..WR.W",
+      "y": "RW.W.WR..R.WR.W.R.WWWRR.R..R.WRRWRW.WRR.WRRRWRR.W.WW.R.RRWR"
+     },
+     "verdict": "Accept",
+     "rebuilt": {
+      "x": "RRRWR.RRR.WRR.WWW...W...W...R.WRWRRW...W.WRWW..W...WR..WR.W",
+      "y": "RW.W.WR..R.WR.W.R.WWWRR.R..R.WRRWRW.WRR.WRRRWRR.W.WW.R.RRWR"
+     },
+     "peak": 7,
+     "check_moves": 51408
+    },
+    {
+     "why": "C an order-5 point",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "C": {
+      "x": "...........................................................",
+      "y": "W.........................................................."
+     },
+     "A": {
+      "x": "...........................................................",
+      "y": "W.........................................................."
+     },
+     "verdict": "EmptyCertificate",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 8
+    },
+    {
+     "why": "C off the curve",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "C": {
+      "x": "RR.W.R.RWRRRWW.RW.W.WR.WR.R.WR..RW.WRWW.WR.WW.W.RRR.RWRWR.W",
+      "y": "WW.R.RRW.WRRWW.WW.RWR..RWRWRWR.R.R.W.WR..WWR.WRR.RWWRW..WWW"
+     },
+     "A": {
+      "x": ".R..RRWRW.WWWWRRW.WWRRRWRWWRRWR.W..W.RRRR.R.RRR..R.WRW.RWRW",
+      "y": "RRW.WWR.RR.W.W.W....RWRRRWWWWWWWRR.WW.WRR.RWWW.RRRRR....RRW"
+     },
+     "verdict": "CurveFails",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 4552
+    }
+   ],
+   "exchanges": [
+    {
+     "faces_a": [
+      5,
+      5,
+      3,
+      4,
+      1,
+      5,
+      2,
+      8,
+      7,
+      6,
+      0,
+      6,
+      3,
+      0,
+      4,
+      7,
+      9,
+      7,
+      3,
+      8,
+      9,
+      6,
+      5,
+      1,
+      7,
+      2,
+      3,
+      7,
+      4,
+      7
+     ],
+     "faces_b": [
+      8,
+      5,
+      9,
+      3,
+      1,
+      1,
+      2,
+      9,
+      2,
+      6,
+      2,
+      1,
+      9,
+      1,
+      3,
+      7,
+      6,
+      3,
+      4,
+      1,
+      3,
+      9,
+      5,
+      1,
+      8,
+      2,
+      5,
+      6,
+      3,
+      3
+     ],
+     "cells_a": "WWWW.RW...WW.WRWR.WRWR.RW.R.RRR..RRWRRWRWW..R..W.RR",
+     "cells_b": "RWWWRR.R.....WRR.WWR.W..RR...RR.WR.RW....RRRWW..RW.",
+     "P": {
+      "x": "RRR.WWWW.RWW..WWW.WR.R.WWRW.RW...R.W.RRW.R.WR.W..R.WW..WR..",
+      "y": "WRRRRWWRRWWRWRRW.RWW.WRRRWRRRRWRR.RWR.W.W.RW.R.W.RRW.W.WWRW"
+     },
+     "A": {
+      "base_hole": 1,
+      "sent_C": {
+       "x": "R.WRWW.WWWWR.RRRRRWRR..WRR.R.W.R.R.WWWWRW....WR.RRWRR..RR..",
+       "y": "WWWWWW.RWW.W...W.RRRRW.R.WW.W.WR...WRRRR...WRRRR..RWR..RR.R"
+      },
+      "sent_A": {
+       "x": "R.W.RWWWR.RWWRWR.RWWRWRWR...W.RWR.R.R.W.RR.RWRWR.W.WW.RRW..",
+       "y": "W.RRR..RWWRR.WW....RWR.R.WW.RR..WWW..R.....R..W.W.W.WW..RRW"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "RRRRW.R..W.RW.RWWW.RRRRWWRWW.RR.RRWRWRWRWWWRRR.R.WRR.R.R.WR",
+       "y": "R.RW.W.RRRR..WWW.WRWRWW.W..WWW.WRWR.W.WRW.RWWWRWRR.WW.R...W"
+      },
+      "matched": true,
+      "shared": {
+       "x": ".RR.RW.RWRW...W.RRRRWW.....W..W..W..W.RR..RW.R.RRR.RRW.WWR.",
+       "y": "W...R.R.W.RW.WRRWR.R..RWRRW.WWWWRRRWWRRW.RWW..R.W.W.WRRRWWR"
+      },
+      "folded": ".RWWR..W.WWRRWWW.WRRWW.....W..W..W..W.RR",
+      "moves": 1881197,
+      "moves_by_phase": {
+       "base point": 105759,
+       "store P": 0,
+       "own walk": 835391,
+       "swap": 166,
+       "curve test": 4186,
+       "make certificate": 44408,
+       "rebuild theirs": 43944,
+       "shared walk": 847331,
+       "fold": 12
+      },
+      "peak": 7,
+      "max_bench_hole": 174,
+      "ctrl": 3532,
+      "calls": 236,
+      "ladder": "WRWRR",
+      "ladder_moves": 173,
+      "tally_max": 29,
+      "control_highest": 51,
+      "script_marker_max": 15,
+      "ops": {
+       "mul": 944,
+       "cube": 667,
+       "inv": 5,
+       "chord": 2,
+       "fadd": 71
+      }
+     },
+     "B": {
+      "base_hole": 1,
+      "sent_C": {
+       "x": "RWR.RRRR.WW.RW......R.RWWR..W..W..WRWR...RW.RWR.RR.RRRWR.WW",
+       "y": "RRWRWW.WWRRWW.RWR.W.RWWWRR.R..WW.RRRRR...WWWR.RRR.WRR.R.RR."
+      },
+      "sent_A": {
+       "x": "RRRRW.R..W.RW.RWWW.RRRRWWRWW.RR.RRWRWRWRWWWRRR.R.WRR.R.R.WR",
+       "y": "R.RW.W.RRRR..WWW.WRWRWW.W..WWW.WRWR.W.WRW.RWWWRWRR.WW.R...W"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "R.W.RWWWR.RWWRWR.RWWRWRWR...W.RWR.R.R.W.RR.RWRWR.W.WW.RRW..",
+       "y": "W.RRR..RWWRR.WW....RWR.R.WW.RR..WWW..R.....R..W.W.W.WW..RRW"
+      },
+      "matched": true,
+      "shared": {
+       "x": ".RR.RW.RWRW...W.RRRRWW.....W..W..W..W.RR..RW.R.RRR.RRW.WWR.",
+       "y": "W...R.R.W.RW.WRRWR.R..RWRRW.WWWWRRRWWRRW.RWW..R.W.W.WRRRWWR"
+      },
+      "folded": ".RWWR..W.WWRRWWW.WRRWW.....W..W..W..W.RR",
+      "moves": 1600335,
+      "moves_by_phase": {
+       "base point": 105759,
+       "store P": 0,
+       "own walk": 716073,
+       "swap": 151,
+       "curve test": 4111,
+       "make certificate": 43784,
+       "rebuild theirs": 44568,
+       "shared walk": 685877,
+       "fold": 12
+      },
+      "peak": 7,
+      "max_bench_hole": 174,
+      "ctrl": 3244,
+      "calls": 236,
+      "ladder": "WRWRR",
+      "ladder_moves": 173,
+      "tally_max": 29,
+      "control_highest": 51,
+      "script_marker_max": 15,
+      "ops": {
+       "mul": 800,
+       "cube": 667,
+       "inv": 5,
+       "chord": 2,
+       "fadd": 59
+      }
+     }
+    }
+   ],
+   "roll": [
+    {
+     "faces": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "rolled": null
+    },
+    {
+     "faces": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      5,
+      6,
+      6,
+      4,
+      5,
+      8,
+      3,
+      9,
+      5,
+      3,
+      4,
+      2,
+      3,
+      8,
+      2,
+      1,
+      9,
+      3,
+      1,
+      7,
+      8,
+      1,
+      6,
+      2,
+      7,
+      3,
+      2,
+      8,
+      5,
+      6,
+      2
+     ],
+     "rolled": {
+      "cells": "WWWRWRW.WWRW.RRRWW.RW..W.RRW.W..RR.R..R.RW..WR.WR..",
+      "used": 52,
+      "rolls": 2
+     }
+    }
+   ],
+   "coordinates": {
+    "across": "grid 3, A1 .. grid 4, C9",
+    "up": "grid 3, D1 .. grid 4, F9",
+    "bottom": "grid 3, G1 .. grid 4, I9",
+    "base across": "grid 5, A1 .. grid 6, C9",
+    "base up": "grid 5, D1 .. grid 6, F9",
+    "gap": "grid 5, G1 .. grid 6, I9",
+    "spare": "grid 7, A1 .. grid 8, C9"
+   }
+  },
+  "Serious": {
+   "tier": {
+    "n": 179,
+    "k": 59,
+    "cells": 162,
+    "bench": 540,
+    "control": 200,
+    "script": 15
+   },
+   "base_point": {
+    "x": "WW..WWW.RWW.RWRRRWRWRRWRRW.W.WWRRR.RR.R..WW.R.R.WRWW.RWRR.W.W.RRW.R.RRWWW..WRW.WWRW.WRR..WWRWR..RWWW..WW.R.WRW....W.WR.WWW....R.WW..WRRRW..WWR.RWR.WR.RRWRRRWWR.R.R.W.W...WWRWRRWR.",
+    "y": "R.RWRRWRWW.WRWRR.W.W.R...RRW.WRW..RWR.WWRWR..WW.R...WR..R.RRW.W.W.WW..RWWRRW.RRW.WWWRWWWR.R...R..RRWRR..RW.WR..RRRRWW.RRW.R.WRRWRRWWW..R..RRWRRWRWR..R...WWRWRW.W.RWR.WW..WRWRRRR.."
+   },
+   "arith": [
+    {
+     "x": "WRWRWWRWRWRRRWRWR.RR.....RWRW.RW.WR..RW.W.WWR..WR.RWW..R.W..RW.RWW.R..R.R.WW.W.RWWW.W.W.WW.RWWRWWWRR.RRWWR...R.RWWRWW.RW.RWWR..RWRR...R...WWWRW.WRWW.R.WR.RW.RWRRR.RRWWW.WWRW.WWWWW",
+     "y": "WR.W.RRR.W.R..R.W.RW.WRRRRW.WRRRRRR..R.RWWR.W...RWWW.R..R.R.WW.RW.R.RWRWR.RR.WWWRWR.W.RWWR.RWWRR.WR.WWRRW..WWRRRRWWRR.RRWRRW.W.WWWWRW..W..RR.RR.R.....W.WWRWR.R.WRWR..WRRRWRRRW.R.R",
+     "product": "WWWRWRRWR.WRRWW.W....W.W.RRRR.WR..WRR.RRWR.R.WW..WRWRWWW..RR.RW..WRRR.RRRRR.W..WW.RRW..WWW.WWRW.RRWW....WRR.R..R.WRR.WR..RWR..RW.WWRWR.RRR.WRWRRWWRWRWWRWW.RWRWR.R..RWWW.W...WRWW..",
+     "cube": "W.WRR.W.WR.RW..WRRRWRW.WR.WWWWRRWR.WRRRWW.RRWW.RRWR..RR..RRW.WWRRR..W.R..RWW.RRWWRWWW..WRRWW.WRWRWRRW.W.R.WWWW.RWRWWWRWRWRRR.R.W.WWRW.RW.WRRWWRWW..W.WR.WRWR.RWWW.R.WW.WRWW.WWWWW.R",
+     "inverse": ".WWWW.R.RWRR.W..W.W..R..W.WWRWRRR.W....RRRR...WWRW.WR..WW.RWWW.WWWW..RWWW..WWRWRRR..RRWWR.R...RR..RWRWW..RR..RRW.R....RRW.RWR..R.WW.W....WWWR.WR.RW.RRW.W.WWWW..R....RRRWRR..WRR.WR"
+    },
+    {
+     "x": "..W.W.WW.WWWWWWWWR.W...RWRWRRW.WR.WWW..RWWWWWWW..W..RWR...RR..RWWWWR.R.R.RW.RRRRWRWW.RRWWRR..W.WR.WWW.WW.RR...RRR.R....R.WWW.WRW...RRWRRRR.WRRWR.WRWWWR.R.WWRWWWR.WWWWRRRW.WW.RRRRW",
+     "y": "WR.RW.RR.WR..RRWRR....WWWR..WWRWRWWWWRWW.WRR.WW.R.WWWWR.WR.R.W.R.RRWR.WWW.RRW.WW.WRR.WW..RRWRWWWWW..R.RWW.R.RW..R...R...WR..R..R.R.WRW.RW.WWW.WRRRRR..WW.WR.R.R.RW.WRRW..WWWR..WWRR",
+     "product": "R.R.RWWRRR..WRWR.RRRR..W.RRW.RWWR.RWWWW...WW....RW.WWRW..WRRRWRR.WRWW.W.RRR.WRRRR.W.R.RWR.RW.W..WRRWR.W.....WR..WW..WRWRRR..W.R..W.WW.WR.R.WRW...RW.WR.W.RRW.RWWW.R.WRWW.W.RWR....W",
+     "cube": "..W.RWWW..W.WWR.W.WR.W.R.WWW.RWW.WWWWWWWRWWW.WW.WW.R....RWRW.WRRWRW.W..RR...WW..RR.W.WWWRWWRRRW..WRR..RWWRRWR.R.WW.WWW.WWRRWW.W.WWRWR.WRWWW.RWRR.RRWRWR...RWR.W....WRRRR.WRWRRWRWWW",
+     "inverse": "W.WR...WR.W.RW.RWWWWRWR..RR.W.RW.WRR.R..WWRRWRWRR..R.RRRRWWRR.WWRRWRW.RR.RR.WWW.RWRWWR.RW.WWR.RW.R.WW.WRR..RW.WRW.W.WR..RWRRR.WWWRRRR.R.RWRWW.R.WR.RRRW.RWRR.W...W.R.W.R.RWRRWWWWWR"
+    },
+    {
+     "x": "....W.WR.....W..RWWWWRWR..R.WWR....RW..R..W.R..RWRW.RW.WRWRR.R.WWW.WRR..W.WWWWWRRRWRRRR.WWW..RW..WWWRRRW.R.WRWWRWW.R..R.WRW..WR.R.RRW.WR..WWR.WW..R.WWRWWRRR...R.RR..RW.WW.RRRW.RWW",
+     "y": "R..R.R..WWRR.R.RRRWWRWWRR.R.RW..RWRR.RWWRR..RRWRWRRRRRRW.RR.RW.R.W..R.WRWW.RRW.WRRRRWWRWRW.RWRWRW.WWRR.RW.RRR.W.WR.RWRRR.W.....WWR.RWW.RWRRW..RRR.WW.W.WRRR..WW.WRRW....RRR.RWW.WWW",
+     "product": ".RR.R...WRRRRW...RR.WW.WWWRR.WRRW.WWR.W...W.W..WW.RWRRWWRRRRRWW.W.W..RR.RW..R...RW..WWW.WWWWRR.RR.R.WW.WRW....RWW...R.RW.W..WWR.RRRR.RWR.WWWWWWWWR.WWWRRR.W.RWRRRRW.WRWWR.RRRRR....",
+     "cube": ".WW.W...R...WW...RWRWRR..RW.WR..R.....RW.W....RRRWWWWRW..WWWRWR...W.WRRWWR..W.W.RR...RWRWWRRR.WW.RW.RR..RWWRR..WW......R....RRRWRR..W..RRRRWWRW.RWWW.WWR.WWRR.RRRR.WW...W.R..WRRWWW",
+     "inverse": ".RWRRRWWW.RWRWRRRWW.R.WW.WRRRR.WR...W.RR.WWRR.W.....RWRW.WWWRWWWRRRWW.RWRRWWWW.R.R.RWW.WWWWR.RWWR.WW....W...W.W..R.WR.RWWR.RR.RR.W.WW.RRRWWRR..WW..RR.RRRR.....W.WW.RRRRRRWWR.RRR.R"
+    },
+    {
+     "x": "RRR..R...R.WW.RWRW...RRRR..RW..RWWWR.W..RW.R.WWRRR....RR.W.R.WWWRRW.RWRR..WR.W..R.W.WRRR.RWWW...WWR.WW.R...R.RR...RWWW...W.RRWRR..WRRW...WR.RW..RRWRWWR.RR...W...R..R.WWR.RRW.WW.WR",
+     "y": "R..WWWW.RW.R.RRWWR.WW..R.W..RR.W.WWW.WWWRRRR..WWRWR.R.R.W.W.W..WWWR..WRWR..R.WR.WWWW.R..WW.R...W.RWWWWRWWW.RRR..R..WWW.RR.R.W.....RW.RW.WRWWRRR.RR.RRWW..R.RW.RR..RRR..WWRRWW.WWR..",
+     "product": "RWRR.WW..RWWRWR.WWR.RR.RRRR.R.WR..WRR.WWWRW.RRWRRWRRWWW.R.RW...R..RRWWWWW.RWR.W.WWRRWR.RRRRWW.RWRWW..WWWWWW..WW..R..RW...W..WWWW..W....W.RRW.WWWW.RW.RRR.RRRW.W.RRRR.WWRWRW..WRWR.W",
+     "cube": "R..R.RRW...R.W.RWW.RW.WW..WRW...RWR.WRW.RWR.RW.RRW.W.........RRRRW.W.RW..RRWWRR.W..RW.WWRW..RWR..RR.RRW..R..WW.W.W......WR.W.RW..WR.RWRWW..RWW.WWRRWW.W.RR.RWWWWW..RW.WWWW.W.W..RR.",
+     "inverse": "W.R...WR.W.RWR....RWRRRR.RWR.WRRRWR.WWR..RRRW.RW.RW..WR.WRWRW.W..RRRW.R.WWWRW.W.R...WR.WWR..R.RRWW..RWR...WWRW.WRR.WWRRRWR.WRRWRWWRRWWRR.RWW..WRW.W..RRR...RWWR.RWRWR.R.W.WWRWWR.RW"
+    }
+   ],
+   "fold": [
+    {
+     "x": ".R..WR.R...WRRWWWWWRWWWWWRWWWRWW..RRWWWRRWWR.R.R..WWWWWWWWRW.RWRR.R.RW.WRW.WWWRW.RRW....RWW.WRWWW.WR.WW.RRRW..WRW..WWRR..WWW..RWR.R..WWRW..W..WWRR..RWWRRRWR.RW.RWW.RRWWW.RWRR..R.W",
+     "folded": "..W..WR...W..RWRR..RWRRRWR.R.R.W.W.WRWW.RWR.RW.RRWR...R.W..WR.RRWR.W.WRRW..W.W.W.RRW....RWW.WRWWW.WR"
+    },
+    {
+     "x": "RW.WR.WWRRRRRWRW..RRWW.WRRRR.RR..WWR.RWWRW..RWRWWW.RW.W....R.R.RWR.WRWR.W.RRR.RW.R.WW.WWR.WWR.RWRRRRWWWW.W.RWRR.R..WWRWWWWWW.RR.WRW.RWWRW..WWW.RWRW..R.RRWW.RRW...W.RWRR.W.RWW.RRRW",
+     "folded": ".RWRRWW..WWRWWRRWR..RRWRRWWRWW..RRRWWRWR.R.R...WW..W.WR.RRWR.RWR..R.RRRRRWRWWR.W.R.WW.WWR.WWR.RWRRRR"
+    },
+    {
+     "x": ".W..RWR.WW..RWWRRRWRR.....WRRWWRR.W.RW.WWRWWR.R...WWWRRRRRRW.WW.WW.RW..R.R.WW.RWRR.R.WRW.WRWWWWRRWR.RRR.WW.W..WWW.RRW.WWW.WWR.WWW.RW.RW.WWR..RW...WWWRRR.R.R..W.WWW.W.RRW..RW.WRW.R",
+     "folded": "R.R..RRWWWWW.W.W.RR...WWR.R..W..RRR..RRWWWRWR..WWR..WWRWRR.WWRR.RWRWR..WWRW.R.WWRR.R.WRW.WRWWWWRRWR."
+    }
+   ],
+   "points": [
+    {
+     "why": "P",
+     "x": "WW..WWW.RWW.RWRRRWRWRRWRRW.W.WWRRR.RR.R..WW.R.R.WRWW.RWRR.W.W.RRW.R.RRWWW..WRW.WWRW.WRR..WWRWR..RWWW..WW.R.WRW....W.WR.WWW....R.WW..WRRRW..WWR.RWR.WR.RRWRRRWWR.R.R.W.W...WWRWRRWR.",
+     "y": "R.RWRRWRWW.WRWRR.W.W.R...RRW.WRW..RWR.WWRWR..WW.R...WR..R.RRW.W.W.WW..RWWRRW.RRW.WWWRWWWR.R...R..RRWRR..RW.WR..RRRRWW.RRW.R.WRRWRRWWW..R..RRWRRWRWR..R...WWRWRW.W.RWR.WW..WRWRRRR..",
+     "curve_test": true,
+     "certificate": {
+      "x": ".W.R.WRWWW.W..WRWRRW.WW.WRW..WW.RWWWW.WWR..WWW...RRRWRRWWR.WW.WRWW..WW....RW.WRRW....W...WWWWWW.RRWWW..RR.WWRRWRRW.WWWW.RRRWWWR.WWWRW..WR..RR.RWW.W.....WWWRR.WW.WW.RWWR.R.WWRWWWRR",
+      "y": "RRR.RW.RR...R.WWWWWWRWRR.R..RR..WR.RRWRWWWRW.RWWR.RWRWW..WR....R.WW.WW.RRW.WR...RWWR.R.W.WRRR..RW..RWW.WRWRRR.RRW.WWR.WRW.R....RW.RRWWWR..RRRWW..WRR.RRW.R.RRRR.RRWRW..WWRRR...R.R."
+     }
+    },
+    {
+     "why": "a subgroup point",
+     "x": "RRWW.RR.WRRR.W.W.RWR.WWR.WW..RR..R.R.WR.R..WWRR.WR..RRW..WWRWRRW.RWWWWRR.W.R.W.WWRWRWWW.RWRR..RRWR.R.R...RR.R.WR.....W.RR..RRR.RW.WWWW..W.R.WR.W.WWR.WRWWRWR.WWRW......RRRW..RR....",
+     "y": "W..WWRRWWRW.W.WWW..WR.RRRWWWWR.RWRRWR.RW.R.R.W....RRRRW..W.RWRW..WWRW.R..RWR.RWWWRWRW...WRWRWR..W.R.RWR.WWRR..W..RRW.RRWW.W.RWWRR..R.WRR.RRWWWWRRWRWW.W.WWRWWR.RRRWW.W.W.WR.WWR.RW.",
+     "curve_test": true,
+     "certificate": {
+      "x": "..R..WRR..RWWRR..RRWRW.RR.WWR.W...W.WRWRW.WRRRWWR.W.RR.WRW..RRR.WWWWRW...R.RWW...WR..RRR...RR..RWR.R..RW..RRW..RWRWWR.RW.RW..R.RR..WWR.RWWR.W..RR.RWW..RRRWRWRRWWWRR...RR.WWRRRW.RW",
+      "y": "RRWRWW.WR...WRWWR.RW.WWR..WWRRWWR.RWRWR.W.R...WR.WWRR..R.WR.WWRWWRRW...WWW..R..W...RRR..RRR..WWRRW.R...R.WRRWR.WR.R.WRR.RRRR..R.WR.RR.WWRWWRRWR.RRWW.RWR.RRWRRRW..RWWR.RW.WRRRRWR.R"
+     }
+    },
+    {
+     "why": "a point outside the subgroup",
+     "x": "WWWRRWRR..RWRRW.RRRWW.RRRR...WRRWWRR.W.WR..RR..W..WWWWW...WR.R...RWR..R.W..W.WR.WW.RW..WRRR...RW.W.RWWW.WW.WWRWRW.RW.WW.WRRWRWRWW..W....RW...RRWRWRRW.RWWWW.WRR.RRRRRRWR.RWW.R.RWW.",
+     "y": "RWWWW...W.WRRW..RWR.WW.RRR..WWRRW..RR.WRRWR..RWW..RW..WWWWWWW.WWRWWW.WRWRR.WRW.WWWRR.WW....WWW.RW.WRW..RWRRRR.W.R..WRW..RW..WRW.W.WWR.RRW.R..R.R.R.RR..WRWW..W.WRRW.WRW..WWRR..RWW.",
+     "curve_test": true,
+     "certificate": {
+      "x": "RRRW.RWRWR.W..W.WWWWWR....WW.RW.RWRR.R.R..W..R..WWR.WWR..RWW..W.R.RWRWWRRW..RR.WW.RW.WRRR.RR...RR..RWWR.WW...RR.R.R.WWWRWRWWRRRW...WRRR.RR.RRR.RWWRRR..WWW.RR...RWRWRRWRR....RWWWRR",
+      "y": "WWWRRWW..R..W.WRR.WRR..RR.RW.RR.W..RWWR..WRW..RRWWRRW..WW.WWRRRRWR...RWW.RRR.WWRW.RR.RRWRWWRWWWRRWWRWWWR.RW.W..WR.RWW..WWW..WRRWWR.WRWRWWR.RR.WR.R.RRW..WWWW.W.WWWWRRWWW.WRWRRWRR.W"
+     }
+    },
+    {
+     "why": "an order-5 point (x in GF(3))",
+     "x": "...................................................................................................................................................................................",
+     "y": "W..................................................................................................................................................................................",
+     "curve_test": true,
+     "certificate": null
+    },
+    {
+     "why": "off the curve",
+     "x": "RRWR..RRWRWW.R.RWWRWR..W.RRRWRRR.WRRRW.WW..WWWRRWWRWWRRWWRWR..RW.W..WRWWWWRR.R.WR.R.RRRW.WRR.WRW.WWRWWWR.R.R.RW.W.RWWWRWRRRRRWW.W.RW.RRR.WR..WRW.....RRRW.W..RWR.RR..RWWWRRWR..WW.W",
+     "y": ".WW...WRR.RRWRWW..R..R.W..WRRR..WR.RRRWRR.R.RWR..RRR.RW..WR..R.WW.WR..RRRRRRRWR...WW.WRWW.W.RW..RR..RW..RRW.RWWWWW.R....R..WRRW.RWRRWWW..R.WWRRRW.R.WRR.RRWRWRW.RRR..WR.RR.RWRRRR.R",
+     "curve_test": false,
+     "certificate": {
+      "x": "W.W.R.WR..R...W..R...R..WR.R.RWWR.RRR.RRRR.R.R..W.RR.RWRWRWWRW....WW.R.RR..W.WWRWR.WW.R..W.R..R.WR.RR.WWW.W.WRWRRR.W.WWWWWRWR..WR.WR.RW..RRR..WRWR....RW..RRRR.RWR..WWR.R...WWR.WW.",
+      "y": "W.WR..W.RW..RRW...R.RW...WW.W.W.W..WRW.W.WW.R.W..RWW.RR.RWRWRW.W.WRW..RR.RWWRW.R.W.WRRWRWW...R.RR.WWRRWRRRRRRW...RRR.RRWWWRRWRWWW..R.W.WR.RWR.WRWWRWRW..WRWR.WW..R.WWWRWW.RRWRRRRRW"
+     }
+    }
+   ],
+   "walks": [],
+   "receive": [
+    {
+     "why": "honest",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "C": {
+      "x": "WRWR.R..W...R.WWWR..W.RWWRR.RWWWR.W.R..RWR..W..WRRR...RRR.WRR.RWR.R...WWW.W.W..WW...RRRWRRWR.W..RR.W...WR.WW.RWWW.W.W..W.W..WWR.W.WW...R.WWR.RRRWW....WR.RW.WR.WWWWRRWRRRWR...W.WR.",
+      "y": "..R.WWRR...RRRRR.WWWWRR..R.R.R.RWW.RWRW..W.RRR...R.W....W.W...WWWW...RRRWRR.R.RR.WWW..WR.....W.R.RWW..WRWW..RR...R..WWRRRWRWRR.RR.R.RW...R.WR..RWR.WRR.WRR..WRWWWR.WWW.RW.R.RW.RWWW"
+     },
+     "A": {
+      "x": "RRWW.WR.WRRR.RR....R.R..R.RW.WWRR.RWR.RRWRR.R.RW.WWR..WR..W.RRWWR.WR...W.WWWRWR..WWR..WR.RWW.W..RRRR.W.W.RWRRW..WR.WW.W.RRW.WRWRRR.RW.RWW..WRWWWWW.W..R.RRR.RRR.R..W.WWWWRR.WR..R.R",
+      "y": ".R.R.WRRWRRWW.WR..W.RR..RWWWRRRRW.WRR.RRW.R.R.RRR.W.RR.WW.W.RR.R.WRR.RWWRRWRRW...W.WWWWWWR.W..R.W.RRRRWWW.R....WRRW..WWWWR.R.RWRR.W.R..WRWRWWWR.R.R.WWW.RRRRWWWWWW.RR...RRWWWWW.R.W"
+     },
+     "verdict": "Accept",
+     "rebuilt": {
+      "x": "RRWW.WR.WRRR.RR....R.R..R.RW.WWRR.RWR.RRWRR.R.RW.WWR..WR..W.RRWWR.WR...W.WWWRWR..WWR..WR.RWW.W..RRRR.W.W.RWRRW..WR.WW.W.RRW.WRWRRR.RW.RWW..WRWWWWW.W..R.RRR.RRR.R..W.WWWWRR.WR..R.R",
+      "y": ".R.R.WRRWRRWW.WR..W.RR..RWWWRRRRW.WRR.RRW.R.R.RRR.W.RR.WW.W.RR.R.WRR.RWWRRWRRW...W.WWWWWWR.W..R.W.RRRRWWW.R....WRRW..WWWWR.R.RWRR.W.R..WRWRWWWR.R.R.WWW.RRRRWWWWWW.RR...RRWWWWW.R.W"
+     },
+     "peak": 7,
+     "check_moves": 391377
+    },
+    {
+     "why": "A = C",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "C": {
+      "x": "WRWR.R..W...R.WWWR..W.RWWRR.RWWWR.W.R..RWR..W..WRRR...RRR.WRR.RWR.R...WWW.W.W..WW...RRRWRRWR.W..RR.W...WR.WW.RWWW.W.W..W.W..WWR.W.WW...R.WWR.RRRWW....WR.RW.WR.WWWWRRWRRRWR...W.WR.",
+      "y": "..R.WWRR...RRRRR.WWWWRR..R.R.R.RWW.RWRW..W.RRR...R.W....W.W...WWWW...RRRWRR.R.RR.WWW..WR.....W.R.RWW..WRWW..RR...R..WWRRRWRWRR.RR.R.RW...R.WR..RWR.WRR.WRR..WRWWWR.WWW.RW.R.RW.RWWW"
+     },
+     "A": {
+      "x": "WRWR.R..W...R.WWWR..W.RWWRR.RWWWR.W.R..RWR..W..WRRR...RRR.WRR.RWR.R...WWW.W.W..WW...RRRWRRWR.W..RR.W...WR.WW.RWWW.W.W..W.W..WWR.W.WW...R.WWR.RRRWW....WR.RW.WR.WWWWRRWRRRWR...W.WR.",
+      "y": "..R.WWRR...RRRRR.WWWWRR..R.R.R.RWW.RWRW..W.RRR...R.W....W.W...WWWW...RRRWRR.R.RR.WWW..WR.....W.R.RWW..WRWW..RR...R..WWRRRWRWRR.RR.R.RW...R.WR..RWR.WRR.WRR..WRWWWR.WWW.RW.R.RW.RWWW"
+     },
+     "verdict": "Mismatch",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 391327
+    },
+    {
+     "why": "C outside the subgroup, correct certificate",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "C": {
+      "x": "RWW.WR..RRRWWRRRRW.R.RRRWWRRWRW.W..RRW.R...WWWRR.W.W.R..W.WR....R.RWWRWRRRWRRWR.WWWRWWR.RW..WRWRWWWRW..RRRWRR.W.RW.RRWRRR.RR.WWWRRWWRWR.WWWWRRWRR..WR.WRW.RR.RWWWRR.RWWWW.W.WRWW.RW",
+      "y": "RRWWW.RRW.WWRRWRRRRRRWRRRWRWR.R.WRWRWW.W.W.W.RW..RWRW.RRRRW..RRWRWWW..R.WW..WR..W.W.WWW.R..RW.WWW.WWR.RRWRR.W.W..W.RWRRRWWWWW.W.R.R..RW.R.W.WRWWRW..WRWW.W..WR.RRRWWWWWWW...RR.W..W"
+     },
+     "A": {
+      "x": ".WW.W.W..R.W..W..R...RRR.R.RR.WWR..RR.R..WW.R.RR.RWRWRWWWW.W.RW..W.W..RWWRRRWW.R.WRW..WWW.WW.WWRWW.WW..RWRRWWW.RRW.WWRW.WW.WW...RWRR..WRW..WWRWW.WRRW..R.WWR.RR..W..WW..W.WRWW.W.WW",
+      "y": "..RRRRRR.WRRW..RR..WWRRWRRR.R.W.WR..R.RW.WWWWW.WW.WRRRRR....R.RRR.RW..RWR..R.R.R.WWRW.R..W....R.WW.....WW..W...RRWW.W...W..R.R.RWW.WR..RRWWRWW.RRRRRRWRW.W.RRRRWRWR.WWW..W.WRR..WW."
+     },
+     "verdict": "Accept",
+     "rebuilt": {
+      "x": ".WW.W.W..R.W..W..R...RRR.R.RR.WWR..RR.R..WW.R.RR.RWRWRWWWW.W.RW..W.W..RWWRRRWW.R.WRW..WWW.WW.WWRWW.WW..RWRRWWW.RRW.WWRW.WW.WW...RWRR..WRW..WWRWW.WRRW..R.WWR.RR..W..WW..W.WRWW.W.WW",
+      "y": "..RRRRRR.WRRW..RR..WWRRWRRR.R.W.WR..R.RW.WWWWW.WW.WRRRRR....R.RRR.RW..RWR..R.R.R.WWRW.R..W....R.WW.....WW..W...RRWW.W...W..R.R.RWW.WR..RRWWRWW.RRRRRRWRW.W.RRRRWRWR.WWW..W.WRR..WW."
+     },
+     "peak": 7,
+     "check_moves": 407636
+    },
+    {
+     "why": "C an order-5 point",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "C": {
+      "x": "...................................................................................................................................................................................",
+      "y": "W.................................................................................................................................................................................."
+     },
+     "A": {
+      "x": "...................................................................................................................................................................................",
+      "y": "W.................................................................................................................................................................................."
+     },
+     "verdict": "EmptyCertificate",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 8
+    },
+    {
+     "why": "C off the curve",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "C": {
+      "x": "WWR.WRRR..RWR..R.WWRRRR..W.W.R..W.WRRRRWWW.WW..WWRWW.R.RRRRWRWRWW...RR.RRRWWWRRW.RRWR.W.R..RRR.WRW.WWRR...R.....RR.RW...WR.WR.W..W.RW.RR.WR.WRWRWWWWRW..WWWWRW.WRR.RRWWRWWWR.WWR.RR",
+      "y": "...RRWWWRWW...RR..WR..WWW.RWRW.RWRR...RR.RRW.WWW.WRR.WRR.RWW.W.RW.W.R....WWW.WRWRW..R.WR.RWR......WWW...WRRR..RWRRR....WWR.WWWR.W.RRRRRWW.RRRRRWWR.WW.W..RRRRWWRR.WR.RR.RWRRW.WWRW."
+     },
+     "A": {
+      "x": "RRWW.WR.WRRR.RR....R.R..R.RW.WWRR.RWR.RRWRR.R.RW.WWR..WR..W.RRWWR.WR...W.WWWRWR..WWR..WR.RWW.W..RRRR.W.W.RWRRW..WR.WW.W.RRW.WRWRRR.RW.RWW..WRWWWWW.W..R.RRR.RRR.R..W.WWWWRR.WR..R.R",
+      "y": ".R.R.WRRWRRWW.WR..W.RR..RWWWRRRRW.WRR.RRW.R.R.RRR.W.RR.WW.W.RR.R.WRR.RWWRRWRRW...W.WWWWWWR.W..R.W.RRRRWWW.R....WRRW..WWWWR.R.RWRR.W.R..WRWRWWWR.R.R.WWW.RRRRWWWWWW.RR...RRWWWWW.R.W"
+     },
+     "verdict": "CurveFails",
+     "rebuilt": null,
+     "peak": 7,
+     "check_moves": 32427
+    }
+   ],
+   "exchanges": [
+    {
+     "faces_a": [
+      6,
+      5,
+      5,
+      2,
+      0,
+      2,
+      3,
+      8,
+      8,
+      5,
+      6,
+      5,
+      1,
+      5,
+      4,
+      9,
+      5,
+      4,
+      4,
+      4,
+      3,
+      3,
+      3,
+      4,
+      1,
+      5,
+      9,
+      9,
+      7,
+      4,
+      9,
+      7,
+      9,
+      4,
+      1,
+      1,
+      4,
+      6,
+      4,
+      8,
+      7,
+      2,
+      6,
+      8,
+      9,
+      7,
+      8,
+      7,
+      0,
+      5,
+      9,
+      3,
+      9,
+      6,
+      5,
+      4,
+      5,
+      0,
+      8,
+      5,
+      3,
+      1,
+      4,
+      5,
+      1,
+      3,
+      9,
+      1,
+      1,
+      1,
+      0,
+      7,
+      3,
+      9,
+      8,
+      5,
+      8,
+      1,
+      4,
+      3,
+      7,
+      1,
+      3,
+      4,
+      5
+     ],
+     "faces_b": [
+      5,
+      3,
+      5,
+      3,
+      2,
+      8,
+      1,
+      9,
+      4,
+      7,
+      1,
+      5,
+      4,
+      0,
+      4,
+      6,
+      1,
+      9,
+      3,
+      4,
+      1,
+      7,
+      8,
+      1,
+      9,
+      5,
+      2,
+      6,
+      8,
+      6,
+      5,
+      5,
+      3,
+      6,
+      5,
+      5,
+      6,
+      4,
+      4,
+      6,
+      4,
+      3,
+      9,
+      8,
+      8,
+      5,
+      7,
+      8,
+      7,
+      5,
+      7,
+      6,
+      8,
+      8,
+      9,
+      5,
+      5,
+      9,
+      9,
+      3,
+      3,
+      1,
+      4,
+      0,
+      2,
+      9,
+      5,
+      3,
+      1,
+      1,
+      2,
+      1,
+      4,
+      2,
+      7,
+      3,
+      2,
+      8,
+      1,
+      1,
+      3,
+      9,
+      2,
+      3,
+      7
+     ],
+     "cells_a": "WRWWWW.W.W.RRWRWWWWRWW..WWW.RRWWW.W.W..R.R.RW...WWRRRRR.W.RRR.RRW.....W.WRW.RWR..WWRRWRRR.RWR.WWRR.RRRWRWWW.WWRWWW.R..W.WW...RRR......R..RRRRWWWRW..W..RR....RW.WW",
+     "cells_b": "WW.RWW.R.WRW..RRW.R...WWW.W.WR..RR.RW...R.RW..RRWW.WWRRWWRWWWW.RWRWWWWWRW.W.WRW..RRRRWRWWWR.RWR.WWR.WRRWRWRRWWWWRRRR.R.R..W..WRRWW.R.....W..W..WR..R.WRW.....RRR.W",
+     "P": {
+      "x": "WW..WWW.RWW.RWRRRWRWRRWRRW.W.WWRRR.RR.R..WW.R.R.WRWW.RWRR.W.W.RRW.R.RRWWW..WRW.WWRW.WRR..WWRWR..RWWW..WW.R.WRW....W.WR.WWW....R.WW..WRRRW..WWR.RWR.WR.RRWRRRWWR.R.R.W.W...WWRWRRWR.",
+      "y": "R.RWRRWRWW.WRWRR.W.W.R...RRW.WRW..RWR.WWRWR..WW.R...WR..R.RRW.W.W.WW..RWWRRW.RRW.WWWRWWWR.R...R..RRWRR..RW.WR..RRRRWW.RRW.R.WRRWRRWWW..R..RRWRRWRWR..R...WWRWRW.W.RWR.WW..WRWRRRR.."
+     },
+     "A": {
+      "base_hole": 1,
+      "sent_C": {
+       "x": "WW...RWWW.WW...WR..R.W.RRWW.R.RRWR..RRW.RR..RW.R.RWWWWRR....W..W.WWWR.R....RRWRR..W.R.WW..W.W...R.WRR.RWWRWWR.WRRR.RR.W.WRWW....WRRR..R......R.WR...WRWW..R...W.RWRW...WW.RRRWW..WW",
+       "y": "RRRWRW..W.WWR....WW.WWR..R..WW.RWRR..RW.RRRW.RRWRW.WWWWRRW.WWWR.R.RRRRRRR.RWRWWWRR.RRRRRW.WW.R..WRRRWR..W.WWWRR.W..RW.WR.WWR..WRWW.RRRW.WR..WR.RRWRRWR.WWWRW.W.RWRWRRR.W.W.R.RW.WR."
+      },
+      "sent_A": {
+       "x": "WWRR...RWR.WR.RRRW.RWR..R..WRRW.RW.RW.WRR.RRW.R..WRW.R.WR..WR..RRRWW.RR..W....RWRRRRWRW..RR...RRWRW.W.R.RRWRWRRR.RW.W..RRR.RW.RR.R......WRW..R..WRR.R..RWRRR..WR.RWWR.W.WRW..RWW.WW",
+       "y": ".R.RWW....R.RRWWRWWWW..WRWR.WRW...RRRWRW.WRW.RRRRWRRWWRR.W.RR..RR.RW.RWR.W..W..RWWW.R..WWR..RWRW.R..R.WWRRWWWWW..W.WWWW..RR...RRRWW.R..R.WR.WWRW.R.W..WRR..WRWWRRWWWRWRR....R..RWRW"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "WWW....WWWWR.WRWRW.W..WWW......WWR.RW.R.RR.WR..RW.RRRRW...RRWWWWR.R.WRRW.W...RRR.WWRW.RW..RRW.W.WWR.W.RRRRWRRRRRW.R.RW..W...WWRW.WRW.WRRWWRR...WRW.RR..RR..RW..RWW.W.WWW..R.R.W...R",
+       "y": "RRRWWW..W.WRWR.......RR.W..WWR.RWW.WW.R.WWWW..WW.R.RWRRRRR.R.WWWRWR..RWWR.W.WWWRW.W.RW.WRWW..WRW..RRR.W.RWW.RW..RWR..RW.RRR.RRWWWRWRWR.WRRW..WRWR...WRRW.RW..R.WRR.RR.WRW.RRWR.R.WR"
+      },
+      "matched": true,
+      "shared": {
+       "x": "RWRRRW...WW.WRW..W.RW.WRW.W.W.RWRWRWWRRRWW..W..WWWWRWW...WRW.R.RW..WW.WWW.WR.WRWW..W.WWRRRRW.WRWRWWW..W.RWR.WWWWWRR.RRR.RWR.R...W.R..RWWRWRW.R.R..RR.....WR.RR.RWWW....RR.W..RR.WR.",
+       "y": "RWWRRW.R.WR.W.W..WWWWWWWRWWRR..W.R..R.WRW...WWWWWWRWW.W.WRWRRWRRWWRWWWW...WWR...R..W.W..W....R..W.WW..WW...RR.R.W.W.WWRRR.RRR.R.W.W.WRW.WRRRRWR.RWRRRRR.RWRW.WRWR.RWR.WW.RWW.R..R.W"
+      },
+      "folded": "RW.RWRR.WRRWRW..R.RR.W.R..W.R.WWR..R..W.W..RW.R.WWWRWRR.R.R.W.WRW.....RWWR.RW.RWW..W.WWRRRRW.WRWRWWW",
+      "moves": 41341418,
+      "moves_by_phase": {
+       "base point": 734962,
+       "store P": 0,
+       "own walk": 20010762,
+       "swap": 472,
+       "curve test": 31492,
+       "make certificate": 369822,
+       "rebuild theirs": 373036,
+       "shared walk": 19820826,
+       "fold": 46
+      },
+      "peak": 7,
+      "max_bench_hole": 534,
+      "ctrl": 10702,
+      "calls": 716,
+      "ladder": "WRWWRRW",
+      "ladder_moves": 533,
+      "tally_max": 89,
+      "control_highest": 113,
+      "script_marker_max": 15,
+      "ops": {
+       "mul": 2742,
+       "cube": 2053,
+       "inv": 5,
+       "chord": 2,
+       "fadd": 215
+      }
+     },
+     "B": {
+      "base_hole": 1,
+      "sent_C": {
+       "x": "W.W..RWWRR.RW.WWW.WWR..RRRW.W.R...RW...W.W.W..RWR.WR.WWRWRR..RW..WR..WRRR..WWRW.W.RWWRW..WWRRRRR.RRWWRR.WW.RRR..W..RRR.RWR.RWWRWW..WWRRWW.RRW..WW.RWRR.R.RR.RW.RW...WR.WRRRWR..R..R",
+       "y": ".WRRWWRRRW.R.WWRW...W..WR...R.WW.R..RWRR....RWWRR.WRRR.R.RW.RRRWW..WW.WRWR..RW.W.RRWW..RRRWR.RR.R.WRWWRWW.WRW.WW.W..W.WW.R.W...RWWR.W.RWW.RWWRR.R..WRRWRRWRRRRW.RRW..WW..RWRR.WWR.R"
+      },
+      "sent_A": {
+       "x": "WWW....WWWWR.WRWRW.W..WWW......WWR.RW.R.RR.WR..RW.RRRRW...RRWWWWR.R.WRRW.W...RRR.WWRW.RW..RRW.W.WWR.W.RRRRWRRRRRW.R.RW..W...WWRW.WRW.WRRWWRR...WRW.RR..RR..RW..RWW.W.WWW..R.R.W...R",
+       "y": "RRRWWW..W.WRWR.......RR.W..WWR.RWW.WW.R.WWWW..WW.R.RWRRRRR.R.WWWRWR..RWWR.W.WWWRW.W.RW.WRWW..WRW..RRR.W.RWW.RW..RWR..RW.RRR.RRWWWRWRWR.WRRW..WRWR...WRRW.RW..R.WRR.RR.WRW.RRWR.R.WR"
+      },
+      "on_curve": true,
+      "rebuilt_A": {
+       "x": "WWRR...RWR.WR.RRRW.RWR..R..WRRW.RW.RW.WRR.RRW.R..WRW.R.WR..WR..RRRWW.RR..W....RWRRRRWRW..RR...RRWRW.W.R.RRWRWRRR.RW.W..RRR.RW.RR.R......WRW..R..WRR.R..RWRRR..WR.RWWR.W.WRW..RWW.WW",
+       "y": ".R.RWW....R.RRWWRWWWW..WRWR.WRW...RRRWRW.WRW.RRRRWRRWWRR.W.RR..RR.RW.RWR.W..W..RWWW.R..WWR..RWRW.R..R.WWRRWWWWW..W.WWWW..RR...RRRWW.R..R.WR.WWRW.R.W..WRR..WRWWRRWWWRWRR....R..RWRW"
+      },
+      "matched": true,
+      "shared": {
+       "x": "RWRRRW...WW.WRW..W.RW.WRW.W.W.RWRWRWWRRRWW..W..WWWWRWW...WRW.R.RW..WW.WWW.WR.WRWW..W.WWRRRRW.WRWRWWW..W.RWR.WWWWWRR.RRR.RWR.R...W.R..RWWRWRW.R.R..RR.....WR.RR.RWWW....RR.W..RR.WR.",
+       "y": "RWWRRW.R.WR.W.W..WWWWWWWRWWRR..W.R..R.WRW...WWWWWWRWW.W.WRWRRWRRWWRWWWW...WWR...R..W.W..W....R..W.WW..WW...RR.R.W.W.WWRRR.RRR.R.W.W.WRW.WRRRRWR.RWRRRRR.RWRW.WRWR.RWR.WW.RWW.R..R.W"
+      },
+      "folded": "RW.RWRR.WRRWRW..R.RR.W.R..W.R.WWR..R..W.W..RW.R.WWWRWRR.R.R.W.WRW.....RWWR.RW.RWW..W.WWRRRRW.WRWRWWW",
+      "moves": 41605900,
+      "moves_by_phase": {
+       "base point": 734962,
+       "store P": 0,
+       "own walk": 20122809,
+       "swap": 463,
+       "curve test": 29995,
+       "make certificate": 372570,
+       "rebuild theirs": 370288,
+       "shared walk": 19974767,
+       "fold": 46
+      },
+      "peak": 7,
+      "max_bench_hole": 534,
+      "ctrl": 10750,
+      "calls": 716,
+      "ladder": "WRWWRRW",
+      "ladder_moves": 533,
+      "tally_max": 89,
+      "control_highest": 113,
+      "script_marker_max": 15,
+      "ops": {
+       "mul": 2766,
+       "cube": 2053,
+       "inv": 5,
+       "chord": 2,
+       "fadd": 217
+      }
+     }
+    }
+   ],
+   "roll": [
+    {
+     "faces": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "rolled": null
+    },
+    {
+     "faces": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      5,
+      1,
+      1,
+      6,
+      7,
+      5,
+      9,
+      9,
+      7,
+      5,
+      5,
+      9,
+      7,
+      9,
+      9,
+      6,
+      2,
+      5,
+      7,
+      2,
+      7,
+      4,
+      8,
+      8,
+      2,
+      1,
+      3,
+      4,
+      5,
+      4,
+      6,
+      1,
+      4,
+      9,
+      4,
+      2,
+      3,
+      1,
+      7,
+      8,
+      6,
+      7,
+      8,
+      1,
+      8,
+      4,
+      1,
+      1,
+      1,
+      8,
+      7,
+      2,
+      8,
+      6,
+      6,
+      8,
+      8,
+      7,
+      2,
+      4,
+      0,
+      1,
+      0,
+      8,
+      7,
+      5,
+      8,
+      1,
+      9,
+      7,
+      7,
+      5,
+      7,
+      8,
+      1,
+      3,
+      4,
+      9,
+      8,
+      4,
+      9,
+      7,
+      8,
+      1,
+      5,
+      2
+     ],
+     "rolled": {
+      "cells": "WW....WRR.WWRRRRR.WWWWRRR.RRRRWR.WWWR..WR.W.RWRW.W...RW.WWW.WR..W.RRW..W.R..R.RWWRR.RW..RWW.......RWR..WRWWRWRRWRWR..WW...RWR.WWRW..RRR.R.WWR.RW...RW.RRRWW.RRR.RW",
+      "used": 164,
+      "rolls": 2
+     }
+    }
+   ],
+   "coordinates": {
+    "across": "grid 7, A1 .. grid 8, I9",
+    "up": "grid 9, A1 .. grid 10, I9",
+    "bottom": "grid 11, A1 .. grid 12, I9",
+    "base across": "grid 13, A1 .. grid 14, I9",
+    "base up": "grid 15, A1 .. grid 16, I9",
+    "gap": "grid 17, A1 .. grid 18, I9",
+    "spare": "grid 19, A1 .. grid 20, I9"
+   }
+  }
+ }
+}

@@ -13,8 +13,8 @@ even for an attacker who uses no negation/Frobenius tricks at all).
 Also: pegs-only walks never meet the exceptional case (v empty) for m <= n - 3 -- checked exhaustively at Demo."""
 import math, json, sys
 sys.dont_write_bytecode = True
-from ecbs_ref import TIERS, Ref
-import ecbs_exchange as X
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'oracle'))  # PARI oracle
+from ecbs_oracle import TIERS, Ref, Tier
 
 def lg(x): return math.log2(x)
 def Ec(n, m):
@@ -31,7 +31,7 @@ def row(name, n, l, m):
 
 def demo_exceptional(m):
     """every nonzero pegs-only key of m cells at Demo: does any addition step have lam*s = +-1 (mod l)?"""
-    T = X.Tier("Demo"); l, lam = T.l, T.lam; bad = 0; tot = 0
+    T = Tier("Demo"); l, lam = T.l, T.lam; bad = 0; tot = 0
     for idx in range(1, 3 ** m):
         d = []; t = idx
         for _ in range(m): d.append((0, 1, -1)[t % 3]); t //= 3

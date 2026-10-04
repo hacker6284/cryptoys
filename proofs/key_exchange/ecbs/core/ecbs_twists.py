@@ -8,7 +8,8 @@ which verifies the factorisation completely.  The trace check passes exactly the
 the node (index 4) [review, proved]; the leak = the part of that odd order made of primes < 2^60."""
 import math, sys
 sys.dont_write_bytecode = True
-from ecbs_ref import pari, V
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'oracle'))  # PARI oracle
+from ecbs_oracle import pari, V
 def lg(x): return math.log2(x)
 def orders(n):
     q = 3 ** n

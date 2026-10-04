@@ -13,9 +13,9 @@ on <P> minus O -- NOT a random oracle.  Analysis:
 Exact at Demo; Monte-Carlo bias test at Toy; bounds at every tier."""
 import json, math, random
 import numpy as np
-from ecbs_ref import TIERS, pari
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'oracle'))  # PARI oracle
+from ecbs_oracle import TIERS, pari, Tier
 KS_C = 3
-import ecbs_exchange as X
 from mpmath import mp, mpf, log, sqrt
 mp.dps = 60
 
@@ -30,7 +30,7 @@ def subgroup_x_hist(n):
     """same curve y^2 = x^3 - x^2 + 1 over GF(3^n) (field from ffinit); histogram of x over the prime-order
        subgroup minus O (largest prime factor of #E), computed in GP."""
     gp = pari
-    from ecbs_ref import V
+    from ecbs_oracle import V
     N = 3 ** n + 1 - V(n); fa = pari.factor(N); l = int(fa[0][len(fa[0]) - 1]); h = N // l
     res = pari(f"""
       my(w = ffgen(ffinit(3, {n}), 'w), E = ellinit([0,2,0,0,1], w), c = vector(3^{n}), f = vector(3^{n}), tot = 0, q = 3^{n});
@@ -72,7 +72,7 @@ RECIPES = {  # (m, spoken recipe on the lane layout)
 def main():
     out = {}
     print("== 1. Demo exact (all 420 points of <P> minus O)")
-    T = X.Tier("Demo"); R = T.R; l = T.l; n = 7
+    T = Tier("Demo"); R = T.R; l = T.l; n = 7
     pts = []; Q = T.Pref
     for k in range(1, l):
         pts.append(R.unpt(R.mul(k, T.Pref))[0])
@@ -105,7 +105,7 @@ def main():
                                                       full_max=wf, full_ratio=wf / math.sqrt(q))
     print("\n== 3. Bounds per tier, for K uniform on <P> minus O  [model; see review C19]")
     for name, (n, k, _) in TIERS.items():
-        T = X.Tier(name); l = T.l
+        T = Tier(name); l = T.l
         b = bounds(n, l, n)
         print(f"  {name}: no fold (m = n = {n}): H_inf(x) = log2((l-1)/2) = {math.log2((l-1)/2):.2f} bits exactly; per-trit SD <= 2^{b['trit_sd_log2']:.1f}")
         for m, txt in RECIPES[name]:
@@ -118,7 +118,7 @@ def main():
             print(f"    largest m with SD bound <= 2^{tgt}: {best}" + (f" ({best*math.log2(3):.1f} bits)" if best else ""))
             out['tiers'][name][f"m_for_{tgt}"] = best
     print("\n== 4. Toy Monte-Carlo bias test (200,000 uniform K = kP), m = 5 fold (i mod 5)")
-    T = X.Tier("Toy"); R = T.R; rnd = random.Random(99); N = 200000; cnt = {}; tri = np.zeros((5, 3))
+    T = Tier("Toy"); R = T.R; rnd = random.Random(99); N = 200000; cnt = {}; tri = np.zeros((5, 3))
     for _ in range(N):
         xr = R.unpt(R.mul(rnd.randrange(1, T.l), T.Pref))[0]
         z = fold(xr, 5); key = ''.join(z); cnt[key] = cnt.get(key, 0) + 1

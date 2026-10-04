@@ -1,0 +1,2716 @@
+{
+ "provenance": {
+  "source": "primitives/key_exchange/ecbs/ecbs.sudo",
+  "sudo_sha256": "0527ebec9e0ad1fada72578f73a62347267080865aa31ecaa6d3183e3370a2b9",
+  "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
+  "target": "sudoc js",
+  "sudo_tests": "# 17/17 passed"
+ },
+ "Toy": {
+  "summary": {
+   "exchanges": 10,
+   "people": 20,
+   "all_checks_pass": 10,
+   "base_point_is_P": 20,
+   "shared_is_lam1abP": 10,
+   "band_peak": 7,
+   "peak_by_phase": {
+    "base point": 7,
+    "own walk": 7,
+    "swap": 6,
+    "curve test": 7,
+    "make certificate": 7,
+    "rebuild theirs": 7,
+    "shared walk": 7
+   },
+   "highest_bench_hole": 66,
+   "moves_per_person_mean": 141822,
+   "moves_min": 100208,
+   "moves_max": 170550,
+   "moves_by_phase_mean": {
+    "base point": 23400,
+    "own walk": 52302,
+    "swap": 61,
+    "curve test": 879,
+    "make certificate": 7176,
+    "rebuild theirs": 7238,
+    "shared walk": 50763,
+    "fold": 4
+   },
+   "check_moves_mean": 15293,
+   "control_moves_mean": 1302,
+   "ladder_build_once": 65,
+   "calls_per_receiver": [
+    92
+   ],
+   "tally_max": 11,
+   "control_highest_hole": 32,
+   "script_marker_max": 15,
+   "same_keys_as_phase1": true,
+   "identical_to_phase1_python": "10/10",
+   "differences": [],
+   "homes_disjoint": true,
+   "secs": 1.1
+  },
+  "runs": [
+   {
+    "keys": [
+     "..WWWR.RRR.W.WRW",
+     ".....WWW..R...WW"
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 142983,
+     "B": 100208
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 51666,
+      "swap": 63,
+      "curve test": 907,
+      "make certificate": 7003,
+      "rebuild theirs": 7682,
+      "shared walk": 52259,
+      "fold": 3
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 30429,
+      "swap": 66,
+      "curve test": 1016,
+      "make certificate": 7619,
+      "rebuild theirs": 7066,
+      "shared walk": 30609,
+      "fold": 3
+     }
+    },
+    "ctrl": {
+     "A": 1291,
+     "B": 1015
+    },
+    "key_grid": {
+     "A": 19,
+     "B": 14
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 355,
+     "cube": 252,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 23
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.3
+   },
+   {
+    "keys": [
+     "R..RWR..WRRW...W",
+     "RWWRRRWR...RRRRW"
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 122496,
+     "B": 158857
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 41898,
+      "swap": 62,
+      "curve test": 807,
+      "make certificate": 6933,
+      "rebuild theirs": 7164,
+      "shared walk": 42226,
+      "fold": 6
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 61906,
+      "swap": 63,
+      "curve test": 886,
+      "make certificate": 7097,
+      "rebuild theirs": 7000,
+      "shared walk": 58499,
+      "fold": 6
+     }
+    },
+    "ctrl": {
+     "A": 1219,
+     "B": 1411
+    },
+    "key_grid": {
+     "A": 17,
+     "B": 21
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 307,
+     "cube": 264,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 19
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.1
+   },
+   {
+    "keys": [
+     "RWR.RWW.R.RRWRWW",
+     "WRR...RRRWRRRRWW"
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 156414,
+     "B": 161992
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 62236,
+      "swap": 47,
+      "curve test": 698,
+      "make certificate": 7168,
+      "rebuild theirs": 6910,
+      "shared walk": 55952,
+      "fold": 3
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 62665,
+      "swap": 69,
+      "curve test": 999,
+      "make certificate": 6852,
+      "rebuild theirs": 7226,
+      "shared walk": 60778,
+      "fold": 3
+     }
+    },
+    "ctrl": {
+     "A": 1411,
+     "B": 1411
+    },
+    "key_grid": {
+     "A": 21,
+     "B": 21
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 403,
+     "cube": 264,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 27
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.1
+   },
+   {
+    "keys": [
+     "WR...RW...R.RR.R",
+     "RW..R.W..WRWW.R."
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 119347,
+     "B": 125085
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 41475,
+      "swap": 56,
+      "curve test": 837,
+      "make certificate": 7412,
+      "rebuild theirs": 7011,
+      "shared walk": 39151,
+      "fold": 5
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 44127,
+      "swap": 55,
+      "curve test": 812,
+      "make certificate": 6958,
+      "rebuild theirs": 7465,
+      "shared walk": 42263,
+      "fold": 5
+     }
+    },
+    "ctrl": {
+     "A": 1171,
+     "B": 1219
+    },
+    "key_grid": {
+     "A": 16,
+     "B": 17
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 283,
+     "cube": 264,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 17
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.1
+   },
+   {
+    "keys": [
+     "R.R..W..RWRWRWRR",
+     "WRW.WWRWRRWWWW.W"
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 143345,
+     "B": 170550
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 52382,
+      "swap": 66,
+      "curve test": 985,
+      "make certificate": 6987,
+      "rebuild theirs": 7655,
+      "shared walk": 51864,
+      "fold": 6
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 65957,
+      "swap": 56,
+      "curve test": 680,
+      "make certificate": 7591,
+      "rebuild theirs": 7051,
+      "shared walk": 65809,
+      "fold": 6
+     }
+    },
+    "ctrl": {
+     "A": 1315,
+     "B": 1459
+    },
+    "key_grid": {
+     "A": 19,
+     "B": 22
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 355,
+     "cube": 264,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 23
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.1
+   },
+   {
+    "keys": [
+     "RWR.WR.WWWW....R",
+     ".WW.RRRWRRWW.RWR"
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 133847,
+     "B": 157004
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 48042,
+      "swap": 67,
+      "curve test": 1167,
+      "make certificate": 7206,
+      "rebuild theirs": 7244,
+      "shared walk": 46716,
+      "fold": 5
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 61581,
+      "swap": 59,
+      "curve test": 920,
+      "make certificate": 7188,
+      "rebuild theirs": 7262,
+      "shared walk": 56589,
+      "fold": 5
+     }
+    },
+    "ctrl": {
+     "A": 1267,
+     "B": 1399
+    },
+    "key_grid": {
+     "A": 18,
+     "B": 21
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 331,
+     "cube": 264,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 21
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.1
+   },
+   {
+    "keys": [
+     "W.WW.R.RWWR.RWRW",
+     "RRW.RW...RW.R.RR"
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 152431,
+     "B": 135302
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 57259,
+      "swap": 69,
+      "curve test": 1012,
+      "make certificate": 7185,
+      "rebuild theirs": 6922,
+      "shared walk": 56581,
+      "fold": 3
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 49049,
+      "swap": 60,
+      "curve test": 907,
+      "make certificate": 6857,
+      "rebuild theirs": 7250,
+      "shared walk": 47776,
+      "fold": 3
+     }
+    },
+    "ctrl": {
+     "A": 1363,
+     "B": 1267
+    },
+    "key_grid": {
+     "A": 20,
+     "B": 18
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 379,
+     "cube": 264,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 25
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.1
+   },
+   {
+    "keys": [
+     "WWWRW..WW..RWRWR",
+     "WRRWR.W.RWRRW.R."
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 154294,
+     "B": 152226
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 58914,
+      "swap": 59,
+      "curve test": 777,
+      "make certificate": 6963,
+      "rebuild theirs": 7699,
+      "shared walk": 56478,
+      "fold": 4
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 56293,
+      "swap": 61,
+      "curve test": 822,
+      "make certificate": 7633,
+      "rebuild theirs": 7029,
+      "shared walk": 56984,
+      "fold": 4
+     }
+    },
+    "ctrl": {
+     "A": 1363,
+     "B": 1363
+    },
+    "key_grid": {
+     "A": 20,
+     "B": 20
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 379,
+     "cube": 264,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 25
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.1
+   },
+   {
+    "keys": [
+     "WWRRW.RWW.RWR..W",
+     "WWW.RRW.R....WW."
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 153659,
+     "B": 127374
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 56773,
+      "swap": 65,
+      "curve test": 932,
+      "make certificate": 6925,
+      "rebuild theirs": 7423,
+      "shared walk": 58137,
+      "fold": 4
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 45275,
+      "swap": 57,
+      "curve test": 733,
+      "make certificate": 7358,
+      "rebuild theirs": 6990,
+      "shared walk": 43557,
+      "fold": 4
+     }
+    },
+    "ctrl": {
+     "A": 1363,
+     "B": 1219
+    },
+    "key_grid": {
+     "A": 20,
+     "B": 17
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 379,
+     "cube": 264,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 25
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.1
+   },
+   {
+    "keys": [
+     "R.RW.RRWW.RRW.RR",
+     "..WRWR..W..W..RR"
+    ],
+    "tier": "Toy",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 2,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 66,
+    "control": {
+     "ladder": "WRRW",
+     "park_hole": 21,
+     "tally_first": 22,
+     "tally_max": 11,
+     "highest_hole_used": 32,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 151411,
+     "B": 117620
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 23400,
+      "own walk": 57262,
+      "swap": 63,
+      "curve test": 886,
+      "make certificate": 6908,
+      "rebuild theirs": 7743,
+      "shared walk": 55144,
+      "fold": 5
+     },
+     "B": {
+      "base point": 23400,
+      "own walk": 40841,
+      "swap": 50,
+      "curve test": 788,
+      "make certificate": 7687,
+      "rebuild theirs": 6964,
+      "shared walk": 37885,
+      "fold": 5
+     }
+    },
+    "ctrl": {
+     "A": 1363,
+     "B": 1147
+    },
+    "key_grid": {
+     "A": 20,
+     "B": 16
+    },
+    "calls": {
+     "A": 92,
+     "B": 92
+    },
+    "cursor_steps": {
+     "A": 94,
+     "B": 94
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 65,
+    "ops": {
+     "mul": 379,
+     "cube": 264,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 25
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 2, A1",
+     "grid 2, A2"
+    ],
+    "secs": 0.1
+   }
+  ]
+ },
+ "Hobby": {
+  "summary": {
+   "exchanges": 6,
+   "people": 12,
+   "all_checks_pass": 6,
+   "base_point_is_P": 12,
+   "shared_is_lam1abP": 6,
+   "band_peak": 7,
+   "peak_by_phase": {
+    "base point": 7,
+    "own walk": 7,
+    "swap": 6,
+    "curve test": 7,
+    "make certificate": 7,
+    "rebuild theirs": 7,
+    "shared walk": 7
+   },
+   "highest_bench_hole": 174,
+   "moves_per_person_mean": 1714807,
+   "moves_min": 1358709,
+   "moves_max": 1970226,
+   "moves_by_phase_mean": {
+    "base point": 105759,
+    "own walk": 765780,
+    "swap": 156,
+    "curve test": 4213,
+    "make certificate": 44250,
+    "rebuild theirs": 44404,
+    "shared walk": 750234,
+    "fold": 12
+   },
+   "check_moves_mean": 92867,
+   "control_moves_mean": 3367,
+   "ladder_build_once": 173,
+   "calls_per_receiver": [
+    236
+   ],
+   "tally_max": 29,
+   "control_highest_hole": 51,
+   "script_marker_max": 15,
+   "same_keys_as_phase1": true,
+   "identical_to_phase1_python": "6/6",
+   "differences": [],
+   "homes_disjoint": true,
+   "secs": 5.4
+  },
+  "runs": [
+   {
+    "keys": [
+     "W.RWWR.R.RRRRR......RWWRWW....W....RRW..R.RW..W.WW.",
+     ".W..RW.RR.R....WW..WRRWR.RRWR.WWW.RW.R...W.R.WR.WW."
+    ],
+    "tier": "Hobby",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 174,
+    "control": {
+     "ladder": "WRWRR",
+     "park_hole": 22,
+     "tally_first": 23,
+     "tally_max": 29,
+     "highest_hole_used": 51,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 1508628,
+     "B": 1614919
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 105759,
+      "own walk": 668941,
+      "swap": 148,
+      "curve test": 3977,
+      "make certificate": 43852,
+      "rebuild theirs": 43498,
+      "shared walk": 642443,
+      "fold": 10
+     },
+     "B": {
+      "base point": 105759,
+      "own walk": 709545,
+      "swap": 159,
+      "curve test": 4064,
+      "make certificate": 43344,
+      "rebuild theirs": 44006,
+      "shared walk": 708032,
+      "fold": 10
+     }
+    },
+    "ctrl": {
+     "A": 3148,
+     "B": 3232
+    },
+    "key_grid": {
+     "A": 35,
+     "B": 37
+    },
+    "calls": {
+     "A": 236,
+     "B": 236
+    },
+    "cursor_steps": {
+     "A": 238,
+     "B": 238
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 173,
+    "ops": {
+     "mul": 752,
+     "cube": 667,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 55
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 3, A1",
+     "grid 3, A2"
+    ],
+    "secs": 1.0
+   },
+   {
+    "keys": [
+     ".W..RW.RRR.WR..W.W.W.WR.RW.WW.R.WWRRRWRRW.WW..W.RRR",
+     "R.RWWRWW.W.W.W.W.RWWWRR.RR.W.W.RW.WWRRRWRR.RRR.R.WR"
+    ],
+    "tier": "Hobby",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 174,
+    "control": {
+     "ladder": "WRWRR",
+     "park_hole": 22,
+     "tally_first": 23,
+     "tally_max": 29,
+     "highest_hole_used": 51,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 1785211,
+     "B": 1970226
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 105759,
+      "own walk": 801364,
+      "swap": 153,
+      "curve test": 3780,
+      "make certificate": 44381,
+      "rebuild theirs": 44241,
+      "shared walk": 785523,
+      "fold": 10
+     },
+     "B": {
+      "base point": 105759,
+      "own walk": 896769,
+      "swap": 158,
+      "curve test": 4149,
+      "make certificate": 44082,
+      "rebuild theirs": 44540,
+      "shared walk": 874759,
+      "fold": 10
+     }
+    },
+    "ctrl": {
+     "A": 3424,
+     "B": 3628
+    },
+    "key_grid": {
+     "A": 41,
+     "B": 45
+    },
+    "calls": {
+     "A": 236,
+     "B": 236
+    },
+    "cursor_steps": {
+     "A": 238,
+     "B": 238
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 173,
+    "ops": {
+     "mul": 896,
+     "cube": 661,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 67
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 3, A1",
+     "grid 3, A2"
+    ],
+    "secs": 1.1
+   },
+   {
+    "keys": [
+     "W.WRRR.RW.W.RRWRRW..WW.WRRWW.WWW.RR.WR.R..R.WW.W.R.",
+     "WW..W.RW.R.WRWR...R.R..R.RWWR..W..R....W.RW..R.W.WR"
+    ],
+    "tier": "Hobby",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 174,
+    "control": {
+     "ladder": "WRWRR",
+     "park_hole": 22,
+     "tally_first": 23,
+     "tally_max": 29,
+     "highest_hole_used": 51,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 1814154,
+     "B": 1455761
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 105759,
+      "own walk": 819335,
+      "swap": 156,
+      "curve test": 4248,
+      "make certificate": 42631,
+      "rebuild theirs": 43475,
+      "shared walk": 798540,
+      "fold": 10
+     },
+     "B": {
+      "base point": 105759,
+      "own walk": 632551,
+      "swap": 150,
+      "curve test": 3947,
+      "make certificate": 43325,
+      "rebuild theirs": 42781,
+      "shared walk": 627238,
+      "fold": 10
+     }
+    },
+    "ctrl": {
+     "A": 3484,
+     "B": 3100
+    },
+    "key_grid": {
+     "A": 42,
+     "B": 34
+    },
+    "calls": {
+     "A": 236,
+     "B": 236
+    },
+    "cursor_steps": {
+     "A": 238,
+     "B": 238
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 173,
+    "ops": {
+     "mul": 920,
+     "cube": 667,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 69
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 3, A1",
+     "grid 3, A2"
+    ],
+    "secs": 0.8
+   },
+   {
+    "keys": [
+     "R.RRWW...RW..RR.R..RWR.W.RR....WR.RWRWW.WRR.WWR.RW.",
+     "WR...W..WR.WR.R.WRR.WR.WRR.WRR..RWWRRWWW..WRRRR.RRW"
+    ],
+    "tier": "Hobby",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 174,
+    "control": {
+     "ladder": "WRWRR",
+     "park_hole": 22,
+     "tally_first": 23,
+     "tally_max": 29,
+     "highest_hole_used": 51,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 1702084,
+     "B": 1866245
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 105759,
+      "own walk": 751156,
+      "swap": 171,
+      "curve test": 5090,
+      "make certificate": 46815,
+      "rebuild theirs": 45702,
+      "shared walk": 747380,
+      "fold": 11
+     },
+     "B": {
+      "base point": 105759,
+      "own walk": 843194,
+      "swap": 158,
+      "curve test": 4215,
+      "make certificate": 45541,
+      "rebuild theirs": 46976,
+      "shared walk": 820391,
+      "fold": 11
+     }
+    },
+    "ctrl": {
+     "A": 3340,
+     "B": 3532
+    },
+    "key_grid": {
+     "A": 39,
+     "B": 43
+    },
+    "calls": {
+     "A": 236,
+     "B": 236
+    },
+    "cursor_steps": {
+     "A": 238,
+     "B": 238
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 173,
+    "ops": {
+     "mul": 848,
+     "cube": 667,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 63
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 3, A1",
+     "grid 3, A2"
+    ],
+    "secs": 0.8
+   },
+   {
+    "keys": [
+     ".WWWR.WRWRRW.RRR.RWRRRW.R..WWW.RRWR..WWW.WRRWRR...R",
+     ".WRR.W.WW.W..R.R.R...RR.W...R.W...W..W.R.WRW.R.R..W"
+    ],
+    "tier": "Hobby",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 174,
+    "control": {
+     "ladder": "WRWRR",
+     "park_hole": 22,
+     "tally_first": 23,
+     "tally_max": 29,
+     "highest_hole_used": 51,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 1925156,
+     "B": 1358709
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 105759,
+      "own walk": 874768,
+      "swap": 150,
+      "curve test": 3988,
+      "make certificate": 44038,
+      "rebuild theirs": 43681,
+      "shared walk": 852759,
+      "fold": 13
+     },
+     "B": {
+      "base point": 105759,
+      "own walk": 585757,
+      "swap": 157,
+      "curve test": 4555,
+      "make certificate": 43534,
+      "rebuild theirs": 44185,
+      "shared walk": 574749,
+      "fold": 13
+     }
+    },
+    "ctrl": {
+     "A": 3616,
+     "B": 2992
+    },
+    "key_grid": {
+     "A": 45,
+     "B": 32
+    },
+    "calls": {
+     "A": 236,
+     "B": 236
+    },
+    "cursor_steps": {
+     "A": 238,
+     "B": 238
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 173,
+    "ops": {
+     "mul": 992,
+     "cube": 661,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 75
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 3, A1",
+     "grid 3, A2"
+    ],
+    "secs": 0.8
+   },
+   {
+    "keys": [
+     "WWRRWW...WR.WW...WWWRRWRW.WR.W.RW.W.WR...R.RRRR.R.R",
+     ".WR.WW.WWRW.WWRWW.W.RWRRWWRWWR..WRW......W.WR.RWW.W"
+    ],
+    "tier": "Hobby",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 174,
+    "control": {
+     "ladder": "WRWRR",
+     "park_hole": 22,
+     "tally_first": 23,
+     "tally_max": 29,
+     "highest_hole_used": 51,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 1768310,
+     "B": 1808285
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 105759,
+      "own walk": 790753,
+      "swap": 156,
+      "curve test": 4375,
+      "make certificate": 44947,
+      "rebuild theirs": 44665,
+      "shared walk": 777640,
+      "fold": 15
+     },
+     "B": {
+      "base point": 105759,
+      "own walk": 815229,
+      "swap": 153,
+      "curve test": 4165,
+      "make certificate": 44515,
+      "rebuild theirs": 45097,
+      "shared walk": 793352,
+      "fold": 15
+     }
+    },
+    "ctrl": {
+     "A": 3436,
+     "B": 3472
+    },
+    "key_grid": {
+     "A": 41,
+     "B": 42
+    },
+    "calls": {
+     "A": 236,
+     "B": 236
+    },
+    "cursor_steps": {
+     "A": 238,
+     "B": 238
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 173,
+    "ops": {
+     "mul": 896,
+     "cube": 667,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 67
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 3, A1",
+     "grid 3, A2"
+    ],
+    "secs": 1.0
+   }
+  ]
+ },
+ "Serious": {
+  "summary": {
+   "exchanges": 4,
+   "people": 8,
+   "all_checks_pass": 4,
+   "base_point_is_P": 8,
+   "shared_is_lam1abP": 4,
+   "band_peak": 7,
+   "peak_by_phase": {
+    "base point": 7,
+    "own walk": 7,
+    "swap": 6,
+    "curve test": 7,
+    "make certificate": 7,
+    "rebuild theirs": 7,
+    "shared walk": 7
+   },
+   "highest_bench_hole": 534,
+   "moves_per_person_mean": 40287769,
+   "moves_min": 37235693,
+   "moves_max": 43999129,
+   "moves_by_phase_mean": {
+    "base point": 734962,
+    "own walk": 19437484,
+    "swap": 473,
+    "curve test": 30658,
+    "make certificate": 363624,
+    "rebuild theirs": 364102,
+    "shared walk": 19356413,
+    "fold": 52
+   },
+   "check_moves_mean": 758385,
+   "control_moves_mean": 10564,
+   "ladder_build_once": 533,
+   "calls_per_receiver": [
+    716
+   ],
+   "tally_max": 89,
+   "control_highest_hole": 113,
+   "script_marker_max": 15,
+   "same_keys_as_phase1": true,
+   "identical_to_phase1_python": "4/4",
+   "differences": [],
+   "homes_disjoint": true,
+   "secs": 69.9
+  },
+  "runs": [
+   {
+    "keys": [
+     "W.W..W.R.WRR.W.RRW.WW..WW...RWRWWWW..W.W.WRRR.W.W..R.RW.WR..W....RW..RR.W..W.R.RWWR.WWW.RW..RR.WWWR...RR.W.WWRR.RW.RWWR.RW.R..W..W.WW.WR.W..WW..WRRRR.R.R.RR.RWW.W",
+     "RR..WRW...RW..RRR.RWWW.....WRWRWRW.WRW.RWRRRRRRRWR.WWR.WWRR.RR..R.WWW..WW..W.R.R.RWWWW.W.WW...WWWRRRWRW.RWWWRWRRRRWRRRRWWWRRRRWW.WWWWWR.R..RWWWWR.RRR...W..W....WR"
+    ],
+    "tier": "Serious",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 534,
+    "control": {
+     "ladder": "WRWWRRW",
+     "park_hole": 24,
+     "tally_first": 25,
+     "tally_max": 89,
+     "highest_hole_used": 113,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 37235693,
+     "B": 43999129
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 734962,
+      "own walk": 17886218,
+      "swap": 477,
+      "curve test": 32201,
+      "make certificate": 356332,
+      "rebuild theirs": 359160,
+      "shared walk": 17866289,
+      "fold": 54
+     },
+     "B": {
+      "base point": 734962,
+      "own walk": 21255679,
+      "swap": 484,
+      "curve test": 33427,
+      "make certificate": 358686,
+      "rebuild theirs": 356806,
+      "shared walk": 21259031,
+      "fold": 54
+     }
+    },
+    "ctrl": {
+     "A": 10174,
+     "B": 11038
+    },
+    "key_grid": {
+     "A": 104,
+     "B": 122
+    },
+    "calls": {
+     "A": 716,
+     "B": 716
+    },
+    "cursor_steps": {
+     "A": 718,
+     "B": 718
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 533,
+    "ops": {
+     "mul": 2478,
+     "cube": 2053,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 193
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 7, A1",
+     "grid 7, A2"
+    ],
+    "secs": 16.7
+   },
+   {
+    "keys": [
+     "W....WWW.WR..RWW.WW.W.RR..RRRWRRW.RRWRRW..RW.WR.RRWR....R.WRWR..WWRWRWR.RR.RRRRR.RR.W....WWW.WRRR.WWRW.W...WWW...RWW.RR.W.WRW....R.RRW.RRWRRR...RWRRW.WR.WWRRR.RR.",
+     "R.WWRWWRWRRRWW...RR.W...R.W....WR.R...WR..R.WWWR..WWR.W..WRWRWRWW..R.RRWRRWW..RRR..W.RW.W.W..R..RRW.R.RR.W..R.RRR..W..RWRW..R.WRRR.R.WRRW..R.R.WR..WW..WR.WRRWWRW."
+    ],
+    "tier": "Serious",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 534,
+    "control": {
+     "ladder": "WRWWRRW",
+     "park_hole": 24,
+     "tally_first": 25,
+     "tally_max": 89,
+     "highest_hole_used": 113,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 40820572,
+     "B": 37637254
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 734962,
+      "own walk": 19692761,
+      "swap": 492,
+      "curve test": 34207,
+      "make certificate": 367070,
+      "rebuild theirs": 369245,
+      "shared walk": 19621781,
+      "fold": 54
+     },
+     "B": {
+      "base point": 734962,
+      "own walk": 18316740,
+      "swap": 439,
+      "curve test": 26983,
+      "make certificate": 368782,
+      "rebuild theirs": 367533,
+      "shared walk": 17821761,
+      "fold": 54
+     }
+    },
+    "ctrl": {
+     "A": 10606,
+     "B": 10270
+    },
+    "key_grid": {
+     "A": 113,
+     "B": 106
+    },
+    "calls": {
+     "A": 716,
+     "B": 716
+    },
+    "cursor_steps": {
+     "A": 718,
+     "B": 718
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 533,
+    "ops": {
+     "mul": 2694,
+     "cube": 2053,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 211
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 7, A1",
+     "grid 7, A2"
+    ],
+    "secs": 16.4
+   },
+   {
+    "keys": [
+     "RR..W.WWWW..RRWWW..WWRRWR..WRR.WRWWW..R.WR.W.R..WRRR..R.WRWW.W.RW..R.W.W..W.W.RW.WRRWRRWR..WWWR.RW..RW.W..WRW..RWWWWR.WWWWR..WRR.RW...W..R...WR.W..W.WRR...R.W.WRR",
+     "R...RWRR.WR.WWWRWRW.WR...WWWWWR.RR..WW.WRWR.RRR.R..RRRWRWRWW.RWR.WWWW.W..W.RW.RWR.RWRWWWWRW.W.WW....WWRR.WWWW..RW.RW.WWRWRRW..RR.RRWRW.WWWW..WRR.R.W.WWWWW.R.R..WR"
+    ],
+    "tier": "Serious",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 534,
+    "control": {
+     "ladder": "WRWWRRW",
+     "park_hole": 24,
+     "tally_first": 25,
+     "tally_max": 89,
+     "highest_hole_used": 113,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 38875873,
+     "B": 43129938
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 734962,
+      "own walk": 18665782,
+      "swap": 476,
+      "curve test": 29437,
+      "make certificate": 361550,
+      "rebuild theirs": 366826,
+      "shared walk": 18716789,
+      "fold": 51
+     },
+     "B": {
+      "base point": 734962,
+      "own walk": 20985578,
+      "swap": 471,
+      "curve test": 32030,
+      "make certificate": 366349,
+      "rebuild theirs": 362027,
+      "shared walk": 20648470,
+      "fold": 51
+     }
+    },
+    "ctrl": {
+     "A": 10366,
+     "B": 10990
+    },
+    "key_grid": {
+     "A": 108,
+     "B": 121
+    },
+    "calls": {
+     "A": 716,
+     "B": 716
+    },
+    "cursor_steps": {
+     "A": 718,
+     "B": 718
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 533,
+    "ops": {
+     "mul": 2574,
+     "cube": 2053,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 201
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 7, A1",
+     "grid 7, A2"
+    ],
+    "secs": 17.8
+   },
+   {
+    "keys": [
+     "RWWWR.RRW.WWWWW.R.RWWWWWR..RWW..W.RRRWR.WW.W..WWRRW.WW.R..WWRRRW..WRRWW.WRWW.WWWW...R..W..RRWRRW..RRWW.RR.W.R..RR..RWW.RW.W.W.WRWWW.R..WRRR.W.W..RRR..W.WR....W..R",
+     "W.W..W..WRW.W.WRR..W...RW.W.WWW..W.RW...R..WW.RR.R...WW..WWRWW.....W...WRWRW..WRRRW.WR..WRRW.RWRR.RW.RRRWRWRWW.WWRRRW..W..WW.R.R.RRRW.WW.RWR...RWWRR.WRR.RRRWRWWRR"
+    ],
+    "tier": "Serious",
+    "store_P": false,
+    "P_ok": [
+     true,
+     true
+    ],
+    "base_hole": 1,
+    "C_ok": [
+     true,
+     true
+    ],
+    "on_curve": [
+     true,
+     true
+    ],
+    "A_ok": [
+     true,
+     true,
+     true
+    ],
+    "match": [
+     true,
+     true
+    ],
+    "agree": true,
+    "shared_ok": true,
+    "fold_ref_ok": [
+     true,
+     true
+    ],
+    "fold_agree": true,
+    "peak_by_phase": {
+     "base point": 7,
+     "own walk": 7,
+     "swap": 6,
+     "curve test": 7,
+     "make certificate": 7,
+     "rebuild theirs": 7,
+     "shared walk": 7
+    },
+    "peak": [
+     7,
+     7
+    ],
+    "peak_strict": [
+     7,
+     7
+    ],
+    "max_bench_hole": 534,
+    "control": {
+     "ladder": "WRWWRRW",
+     "park_hole": 24,
+     "tally_first": 25,
+     "tally_max": 89,
+     "highest_hole_used": 113,
+     "script_marker_max": 15,
+     "phase_end": [
+      "R",
+      "R"
+     ],
+     "calling_hole": 16
+    },
+    "moves": {
+     "A": 41340075,
+     "B": 39263616
+    },
+    "moves_by_phase": {
+     "A": {
+      "base point": 734962,
+      "own walk": 19661254,
+      "swap": 486,
+      "curve test": 28102,
+      "make certificate": 369220,
+      "rebuild theirs": 361502,
+      "shared walk": 20184500,
+      "fold": 49
+     },
+     "B": {
+      "base point": 734962,
+      "own walk": 19035861,
+      "swap": 460,
+      "curve test": 28880,
+      "make certificate": 361007,
+      "rebuild theirs": 369715,
+      "shared walk": 18732682,
+      "fold": 49
+     }
+    },
+    "ctrl": {
+     "A": 10606,
+     "B": 10462
+    },
+    "key_grid": {
+     "A": 113,
+     "B": 110
+    },
+    "calls": {
+     "A": 716,
+     "B": 716
+    },
+    "cursor_steps": {
+     "A": 718,
+     "B": 718
+    },
+    "stale_cleared": {
+     "A": 0,
+     "B": 0
+    },
+    "ladder_build_once": 533,
+    "ops": {
+     "mul": 2694,
+     "cube": 2053,
+     "inv": 5,
+     "chord": 2,
+     "fadd": 211
+    },
+    "calls_ok": true,
+    "call_example": [
+     "grid 7, A1",
+     "grid 7, A2"
+    ],
+    "secs": 18.9
+   }
+  ]
+ }
+}

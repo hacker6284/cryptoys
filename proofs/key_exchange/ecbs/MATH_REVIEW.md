@@ -2,6 +2,8 @@
 
 Companion to `ECBS_SPEC.md`. All scripts and results files are in `kx-specs/ecbs/`.
 
+> **Note (2026-10-04, ECBS landing).** This packet is a record of the 2026-09-30 draft. Most `[code: …]` scripts it names (the peg recipes, `ecbs_physical`, `ecbs_workbench`, `ecbs_fform`, `ecbs_validation`, `ecbs_entropy`, `fleet_*`, …) were removed when `primitives/key_exchange/ecbs/ecbs.sudo` replaced the hand-written implementation; their recorded outputs stay in `core/*_results.txt` / `.json`, and the scripts are in git history (commit `ad80f54`). The exchange, soundness, calling and twist evidence now runs on the generated code: see `evidence/`.
+
 **Updated 2026-09-30 after Mathematician's review** (`proofs/key_exchange/ecbs/review/REVIEW.md`, scripts `mr_*`). Every correction is folded in below. Where I re-ran or re-derived a review result with my own code, the tag says [code: my script]. Where I rely on the reviewer's computation without re-running it, the tag says **[review: mr_script]**. Zachary has chosen the key encoding: **pegs-only, 162 cells at Serious, "128-bit security, key-limited"** (C27). The three-state encoding is **dropped in every tier** (C7).
 
 **Status tags:**

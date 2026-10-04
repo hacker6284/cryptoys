@@ -4,12 +4,13 @@ Elliptic-curve Diffie–Hellman on **E: y² = x³ − x² + 1 over GF(3ⁿ)**, w
 
 **Design (Zachary, 2026-10-03):** player's card v3 with the certificate check is *the* ECBS design. This SPEC carries that one design. The losing receiver check (the trace check) and earlier variants are kept only as evidence under [`proofs/key_exchange/ecbs/trace-check/`](../../../proofs/key_exchange/ecbs/trace-check/TRACE_CHECK.md) and [`HISTORY.md`](../../../proofs/key_exchange/ecbs/HISTORY.md).
 
-**Normative:** this SPEC and the **player's card [`CARD.md`](CARD.md)** beside it. The card is the hand procedure: the exact words players follow (play card, check card, Demo changes). §3 and §5 give the mathematics each card line implements. There is no `ecbs.sudo` yet; the reference implementation must be `ecbs.sudo`, compiled by sudoc, as for BS (§11 lists what it needs).
+**Normative:** this SPEC, the **player's card [`CARD.md`](CARD.md)** and the runnable spec **[`ecbs.sudo`](ecbs.sudo)** beside them (compiled by sudoc, as for BS; §11). The card is the hand procedure: the exact words players follow (play card, check card, Demo changes). §3 and §5 give the mathematics each card line implements; `ecbs.sudo` runs the card line by line.
 
-**Code and evidence** live in [`proofs/key_exchange/ecbs/`](../../../proofs/key_exchange/ecbs/README.md) (index in its README). The Python there is an **evidence harness, not a reference**: simulations that follow the card literally on a peg board and check every result against PARI/GP.
+**Code and evidence** live in [`proofs/key_exchange/ecbs/`](../../../proofs/key_exchange/ecbs/README.md) (index in its README). The evidence there runs the code sudoc generates from `ecbs.sudo` (the card followed literally on a modelled peg board) and checks every result against PARI/GP. There is no hand-written implementation of ECBS.
 
 **Marks.**
-- [run: dir/script] = computed by that script under `proofs/key_exchange/ecbs/` (its recorded output sits beside it).
+- [run: dir/script] = computed by that script under `proofs/key_exchange/ecbs/`; `evidence/…` drivers run the sudoc-generated code of `ecbs.sudo` (recorded output in `evidence/results/`).
+- [log: path] (also `log:` inside a run tag) = the recorded output of a Phase-1 script that was removed when `ecbs.sudo` replaced the hand-written board model; kept as history, not re-run (git history: commit `ad80f54`).
 - [proof] = a short argument given here or in `proofs/key_exchange/ecbs/MATH_REVIEW.md` (item named).
 - [review: mr_…] = computed or proved by the Mathematician's review (`proofs/key_exchange/ecbs/review/`), not re-run unless also marked [run].
 - [heuristic] = a standard but unproven model. [open] = not known. [lit] = literature, not re-checked. [lit-mem] = literature cited from memory, not re-fetched.
@@ -33,15 +34,15 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 |---|---|---|
 | 1 | Receiver check (§5.3) | **Certificate:** send C = [a]P and A = π(C) − C. The receiver tests C on the curve, rebuilds A with one chord addition, rejects an empty run, rejects unless the rebuilt A matches peg for peg, and walks over A. Shared point K = [(λ − 1)ab]P |
 | 2 | What is accepted | Lemma (§5.3): π − 1 maps E(GF(3ⁿ)) onto ⟨P⟩ with kernel E(GF(3)). An accepted A is in ⟨P⟩∖{O}; C itself may lie outside ⟨P⟩ and is harmless. (The draft's "accepts exactly ⟨P⟩∖{O}" was the trace check's property.) |
-| 3 | Curve test, §7 | Still **mandatory**: with a self-consistent A, every off-curve C with a non-empty run passes the certificate (Demo 4,774,308 of 4,774,308). §7 is rewritten for the certificate [run: twist/s7_certificate, demo/soundness_demo] |
+| 3 | Curve test, §7 | Still **mandatory**: with a self-consistent A, every off-curve C with a non-empty run passes the certificate (Demo 4,774,308 of 4,774,308). §7 is rewritten for the certificate [run: evidence/twist_s7, evidence/soundness_demo] |
 | 4 | §6 | K restated; the uniform shared-point model is unchanged because λ − 1 is a unit mod ℓ |
 | 5 | Exchange (§5.2) | BS PR #152 §3.1 calling as revised after DHH's review: clear the receiving homes, a calling-in-progress hole, cursor parked at the next hole to call, holes named by grid and coordinate. C is called into the base bands first; A into the bottom and gap after both players have certified |
 | 6 | Control (§2) | One ladder, one tally, a phase hole and a calling hole, in one control row (row J of the workspace grids; Demo rows I–J). The trace ladder, second tally and 3-hole protocol marker are gone |
-| 7 | Numbers (§2, §5) | Check per person 1,890 / 15,293 / 92,867 / 758,384 moves (Demo / Toy / Hobby / Serious; the trace check cost 3.93 M at Serious). Per person 5,916 / 0.142 M / 1.71 M / 40.3 M. Peak 7 bands in every phase; grids 2 / 5 / 9 / 22 |
+| 7 | Numbers (§2, §5) | Check per person 1,890 / 15,293 / 92,867 / 758,385 moves (Demo / Toy / Hobby / Serious; the trace check cost 3.93 M at Serious). Per person 5,916 / 0.142 M / 1.71 M / 40.3 M. Peak 7 bands in every phase; grids 2 / 5 / 9 / 22 |
 | 8 | R6 | One inversion ladder, laid in the spare from n − 1 pegs, leftover thrown away; rungs in build order in the control row; climbed from the last made with the parking hole; one tally, no rebuild rule |
 | 9 | §5.1 | The root strip lives in the across; white-red-white-red goes in the first four key cells; the script marker counts strip steps; the base point is made before the key is rolled |
 | 10 | R7, §8 | The chord rule appears only in the certificate (Toy–Serious) and in the Demo walk. Receiver-chain and trace rows dropped; certificate and calling rows added |
-| 11 | Demo | Simulated for the first time with the certificate: all 64 key pairs exact against PARI; control row fixed (5 script holes; 13 of 16 holes) [run: demo/card_sim_demo] |
+| 11 | Demo | Simulated for the first time with the certificate: all 64 key pairs exact against PARI; control row fixed (5 script holes; 13 of 16 holes) [run: evidence/card_sim Demo] |
 
 ---
 
@@ -58,10 +59,10 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 | Hobby | 59 | k = 39 | 20 × 3 (a double grid) | "one band up and one on; one row up" | 2826077218347794449447657747 | 91.19 | 2^42.48 |
 | Serious | 179 | k = 59 | 20 × 9 (a double grid) | "one band up and one on; **six** rows up" | 5078489869…5423907 (282 bits) | 281.39 | 2^136.78 |
 
-[run: core/ecbs_curve, core/ecbs_layout]
-- Taps: the lane layout needs n − k to be a whole number of rows; k = 15 (Toy) and k = 39 (Hobby) are the only "+ +" irreducible taps with that property [run: core/ecbs_layout §1]. GF(3ⁿ) is unique up to isomorphism and E is defined over GF(3), so #E, ℓ, λ and rho do not depend on the tap [proof, MATH_REVIEW C1].
+[run: core/ecbs_curve, log: core/ecbs_layout_results.txt]
+- Taps: the lane layout needs n − k to be a whole number of rows; k = 15 (Toy) and k = 39 (Hobby) are the only "+ +" irreducible taps with that property [log: core/ecbs_layout_results.txt §1]. GF(3ⁿ) is unique up to isomorphism and E is defined over GF(3), so #E, ℓ, λ and rho do not depend on the tap [proof, MATH_REVIEW C1].
 - Every n is prime, every tap irreducible, every curve ordinary and non-anomalous. Embedding degree 15 (Demo), 2^29.6, 2^83.7, 2^273.9 (Toy, Hobby, Serious) [run: core/ecbs_curve].
-- Exactly one root λ of x² + x + 3 mod ℓ has λⁿ = 1; Frobenius acts on ⟨P⟩ as multiplication by λ. λ − 1 ≢ 0 mod ℓ in every tier (λ = 1 would give 1 + 1 + 3 = 5 ≡ 0 mod ℓ) [run: card/card_sim_v3, demo/card_sim_demo].
+- Exactly one root λ of x² + x + 3 mod ℓ has λⁿ = 1; Frobenius acts on ⟨P⟩ as multiplication by λ. λ − 1 ≢ 0 mod ℓ in every tier (λ = 1 would give 1 + 1 + 3 = 5 ≡ 0 mod ℓ) [run: evidence/card_sim (all tiers)].
 - The quadratic twist and the GF(3)-defined invalid curves are weak. Under the certificate this is harmless only because y is sent and the curve equation is tested (§7).
 - **No GHS/Weil descent applies** (n prime, E over GF(3)) [review Q5: lit + reasoning]. Summation-polynomial index calculus in characteristic 3: no analysis known; **literature-based, unverified**.
 - **Key target (Zachary's choice):** the key is deliberately the weak link. Serious: 162 cells, H∞ = 256.76, modelled best key search ≈ 2^128.4, 8.4 bits below rho. Headline **"128-bit security, key-limited"** (§4).
@@ -89,11 +90,11 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 | **need / available** | **13 / 16** | **33 / 40** | **52 / 80** | **114 / 200** |
 | highest hole used | 12 | 32 | 51 | 113 |
 
-[run: demo/card_sim_demo; card/card_sim_v3, card/extras_v3]. Asserted in every run: no overrun; the parked rung always matches the ladder; never a second tally; the phase hole ends red on both boards.
-- **Demo fix.** With the other tiers' 15-hole script row, Demo needs 23 control holes and overruns the 16 holes of rows I–J (the sim stops while laying the ladder) [run: demo/card_sim_demo]. The Demo walk is the chord rule, whose script marker peaks at 5 holes (two cubes and three multiplies per cell; the marker stands still during the inversion), so Demo's script row is 5 holes and the control row needs 13 of 16. The free 8th slot (lane 5, rows E–H) stays spare.
+[run: evidence/card_sim (all tiers); log: card/extras_v3.txt]. Asserted in every run: no overrun; the parked rung always matches the ladder; never a second tally; the phase hole ends red on both boards.
+- **Demo fix.** With the other tiers' 15-hole script row, Demo needs 23 control holes and overruns the 16 holes of rows I–J (the generated code traps while laying the ladder; a sudo test) [run: evidence/card_sim Demo]. The Demo walk is the chord rule, whose script marker peaks at 5 holes (two cubes and three multiplies per cell; the marker stands still during the inversion), so Demo's script row is 5 holes and the control row needs 13 of 16. The free 8th slot (lane 5, rows E–H) stays spare.
 - The key's walk position uses **coordinate rails** in unused holes of the key grid (20 holes), not control holes.
 
-**Measured peak** [run: card/card_sim_v3 (Toy 10, Hobby 6, Serious 4 exchanges), demo/card_sim_demo (all 64 Demo key pairs)]: **7 register bands plus the workbench in every phase** (base point, walk, curve test, make certificate, rebuild, shared walk; 6 while calling), counting bands being lifted. Highest workbench hole: 18/20, 66/72, 174/180, 534/540. Not shown: that 7 is minimal.
+**Measured peak** [run: evidence/card_sim (Toy 10, Hobby 6, Serious 4 exchanges), evidence/card_sim Demo (all 64 Demo key pairs)]: **7 register bands plus the workbench in every phase** (base point, walk, curve test, make certificate, rebuild, shared walk; 6 while calling), counting bands being lifted. Highest workbench hole: 18/20, 66/72, 174/180, 534/540. Not shown: that 7 is minimal.
 
 **Grids and moves per player:**
 
@@ -104,7 +105,7 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 | Hobby (11) | pegs-only 51 | F-form | **8 + 1 = 9** | 1,714,807 (1.36–1.97 M) | 3,367 | ≈ 476 h |
 | Serious (32) | pegs-only 162 | F-form | **20 + 2 = 22** | 40,287,769 (37.2–44.0 M) | 10,564 | ≈ 11,191 h |
 
-[run: card/card_sim_v3, demo/card_sim_demo; grid counts: core/ecbs_budget bookkeeping at 7 bands, card/extras_v3; hand time = mean ÷ 3600, an assumption of 1 move/s]. Move convention: place, lift or drop a peg = 1; slide or jump = 2 per peg; clear = 1 per peg; calls move no pegs (laying an answer = 1).
+[run: evidence/card_sim (all tiers); grid counts: core/ecbs_budget bookkeeping at 7 bands, log: card/extras_v3.txt; hand time = mean ÷ 3600, an assumption of 1 move/s]. Move convention: place, lift or drop a peg = 1; slide or jump = 2 per peg; clear = 1 per peg; calls move no pegs (laying an answer = 1).
 
 | Phase (mean moves per person) | Demo | Toy | Hobby | Serious |
 |---|---|---|---|---|
@@ -118,7 +119,7 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 | check share (curve + make + rebuild) | 31.9 % | 10.8 % | 5.4 % | 1.9 % |
 | base point share | 54.2 % | 16.5 % | 6.2 % | 1.8 % |
 
-Ladder build, once per kit: 17 / 65 / 173 / 533 moves. Storing P across games instead of re-deriving it raises the peak to 9 bands (Serious 22 → 26 grids); re-deriving is the rule at every tier [run: card/card_sim_v3 store_P].
+Ladder build, once per kit: 17 / 65 / 173 / 533 moves. Storing P across games instead of re-deriving it raises the peak to 9 bands (Serious 22 → 26 grids); re-deriving is the rule at every tier [run: evidence/card_sim store_P].
 
 ---
 
@@ -128,18 +129,18 @@ Ladder build, once per kit: 17 / 65 / 173 / 533 moves. Storing P across games in
 
 **R2 Add / take away:** drop every peg of one number onto the same holes of the other; to take away, drop it mirrored.
 
-**R3 Fold** (lane layout): "From the far end, lift each peg beyond the number and drop it **one band up and one hole on**, and again **one row up** (Serious: **six rows up**)." "One on" at a row's end is the next row's start. With n = w·h − 1, "n back" is h rows up and one hole on; with n − k = w·r, "n − k back" is r rows up [proof, MATH_REVIEW C18]. 300/300 random strips per tier match the reference reduction [run: core/ecbs_workbench A].
+**R3 Fold** (lane layout): "From the far end, lift each peg beyond the number and drop it **one band up and one hole on**, and again **one row up** (Serious: **six rows up**)." "One on" at a row's end is the next row's start. With n = w·h − 1, "n back" is h rows up and one hole on; with n − k = w·r, "n − k back" is r rows up [proof, MATH_REVIEW C18]. 300/300 random strips per tier match the reference reduction [log: core/ecbs_workbench_results.txt A].
 
 **R4 This times that** (on the workbench): lift that number's highest peg and lay this number from that hole (mirrored for a red peg) until that band is empty; then fold. "A copy of" that: copy it into the spare first and lift the copy. "Onto" a number: slide it onto the workbench first. Slide the result "into" the band named.
 
-**R5 Comb cube:** comb each row, top first, into the next workbench band, one peg on every third hole, a cursor ship keeping your place; then fold. Frobenius = cube every coordinate of the point. 300/300 cubes per tier; the strip plus the 2-hole comb gap fits the workbench (69 ≤ 72, 177 ≤ 180, 537 ≤ 540) [run: core/ecbs_workbench A]. **Demo:** rows are 2 holes, a finger keeps the place, no gap; the 19-hole cube strip fits the 20-hole workbench (highest hole 18) [run: demo/card_sim_demo].
-- No rigid motion of holes can be the cube in a polynomial basis; a normal basis needs a multiplication table [run: core/ecbs_layout §2–3].
+**R5 Comb cube:** comb each row, top first, into the next workbench band, one peg on every third hole, a cursor ship keeping your place; then fold. Frobenius = cube every coordinate of the point. 300/300 cubes per tier; the strip plus the 2-hole comb gap fits the workbench (69 ≤ 72, 177 ≤ 180, 537 ≤ 540) [log: core/ecbs_workbench_results.txt A]. **Demo:** rows are 2 holes, a finger keeps the place, no gap; the 19-hole cube strip fits the 20-hole workbench (highest hole 18) [run: evidence/card_sim Demo].
+- No rigid motion of holes can be the cube in a polynomial basis; a normal basis needs a multiplication table [log: core/ecbs_layout_results.txt §2–3].
 
 **R6 Invert (Itoh–Tsujii) with one halving ladder.**
-- **Build once per kit:** lay a number's pegs less one (n − 1 pegs) in the spare; pair them off; a leftover makes a **red rung**, none a **white rung**; throw the leftover away, keep one peg of each pair, repeat down to one peg. Rungs go into the control row in build order: WR, WRRW, WRWRR, WRWWRRW [run: card/card_sim_v3, demo/card_sim_demo]; these are the Itoh–Tsujii programs for n − 1 [run: core/ecbs_basepoint].
+- **Build once per kit:** lay a number's pegs less one (n − 1 pegs) in the spare; pair them off; a leftover makes a **red rung**, none a **white rung**; throw the leftover away, keep one peg of each pair, repeat down to one peg. Rungs go into the control row in build order: WR, WRRW, WRWRR, WRWWRRW [run: evidence/card_sim (all tiers)]; these are the Itoh–Tsujii programs for n − 1 [log: core/ecbs_basepoint_results.txt].
 - **Use:** copy the number into the gap; tally = one white peg. Climb from the last rung made, parking each rung in the parking hole while you work it. At each rung: cube a copy of the gap in the spare once per tally peg, the gap times the spare into the gap, double the tally; on a red rung also cube the gap into the spare, the number times the spare into the gap, add a tally peg. At the last rung skip the doubling and the extra peg. Cube the gap once more. The gap times a copy of the number must be one peg in hole 0 (the quadratic character ±1); if red, mirror the gap.
 - **Tally:** "once per tally peg" turns a white tally peg red after each go; to double, drop red on each red and lay as many whites again. One tally, no rebuild rule (inversions never nest).
-- Every nonzero element at Demo (2186/2186) and 5000 / 3000 / 1000 samples at Toy / Hobby / Serious invert correctly [run: demo/soundness_demo; card/soundness_v3].
+- Every nonzero element at Demo (2186/2186) and 5000 / 3000 / 1000 samples at Toy / Hobby / Serious invert correctly [run: evidence/soundness_demo; evidence/soundness].
 
 **R7 Addition.**
 - **F-form walk** (Toy, Hobby, Serious): "the chord rule told from the base point" (x₂, y₂), the division saved up in the bottom Z. Card wording (play card step 12) and the identity each line implements:
@@ -149,12 +150,12 @@ Ladder build, once per kit: 17 / 65 / 173 / 533 moves. Storing P across games in
   4. **Bottom:** new Z = v·(v²Z).
   5. **New across:** new X = v·F + x₂·(new Z).
   6. **New up:** new Y = −(u·F + y₂·(new Z)).
-  For a red cell use −y₂ throughout. The identities hold in 50/50 random additions per tier against PARI [run: core/ecbs_fform §1; proof MATH_REVIEW C25].
+  For a red cell use −y₂ throughout. The identities hold in 50/50 random additions per tier against PARI [log: core/ecbs_fform_results.txt §1; proof MATH_REVIEW C25].
 - **Chord rule** (the certificate at every tier, and the Demo walk): "slope = rise over run; new x = slope squared, plus one, plus the first x, minus the run; new y = slope times (first x minus new x), minus the first y" (the "plus one" is −a₂; plus the first x minus the run equals minus both x's, since −2 = 1 in GF(3)). The run is inverted first and the rise made afterwards ("lazy y"). On the card the chord is "do the gap times the spare, into the gap; do the gap times a copy of itself, drop a white peg in hole 0, add its across, take away the bottom, and put it into the bottom; take the bottom away from its across; mirror its up and lay the gap times its across onto it; clear the gap and slide the bottom into its across".
 
 **R8 Walk:**
 - Visit key cells in reading order. At each cell: Frobenius the accumulator (skip while it is empty), then add +P for white, −P for red. The first non-empty cell copies the base point (Toy–Serious also a white peg in hole 0 of the bottom). Toy–Serious finish by inverting the bottom (R6) and multiplying the across and up by it.
-- **Script marker:** one hole on per cube or multiply of the walk (and of the root strip), lifted at each new cell: 15 holes (F-form: 3 cubes + 12 multiplies); Demo 5 (2 cubes + 3 multiplies; it stands still during the inversion) [run: card/card_sim_v3, demo/card_sim_demo].
+- **Script marker:** one hole on per cube or multiply of the walk (and of the root strip), lifted at each new cell: 15 holes (F-form: 3 cubes + 12 multiplies); Demo 5 (2 cubes + 3 multiplies; it stands still during the inversion) [run: evidence/card_sim (all tiers)].
 - **Where am I** in the key: coordinate rails ("B-7") in unused holes of the key grid.
 - If an addition finds the run empty, re-roll the key. For pegs-only keys with m ≤ n − 3 cells this never happens, for any base point in ⟨P⟩∖{O} (so also over a received A), except for the all-empty key [proof, MATH_REVIEW C28; run: core/ecbs_tiers]. The all-empty key is re-rolled at once.
 
@@ -188,9 +189,9 @@ Ladder build, once per kit: 17 / 65 / 173 / 533 moves. Storing P across games in
 
 "A white peg in hole 1 of the base across; its curve side in the bottom; the bottom times a copy of itself in the gap; a white peg in hole 0 of the up. In the across, lay the **root strip**, one hole short: red, empty, red, empty …, ending red, white. At each strip hole, under a cursor ship, cube the up, then on red do the up times a copy of the gap, on white of the bottom, into the up. … Not the bottom? Clear everything, move the white peg one hole on, and restart. … Walk **white, red, white, red**, laid in the first key cells; … slide the result into the base bands."
 - The base point is made **before** the key is rolled, so the first four key cells are free for white-red-white-red.
-- **Root strip:** y = rhs^((3ⁿ+1)/4), a square root because 3ⁿ ≡ 3 (mod 4); its digits are red, empty, …, red, white (n − 1 of them) [run: core/ecbs_basepoint]. The script marker counts strip steps (two per hole at most).
+- **Root strip:** y = rhs^((3ⁿ+1)/4), a square root because 3ⁿ ≡ 3 (mod 4); its digits are red, empty, …, red, white (n − 1 of them) [log: core/ecbs_basepoint_results.txt]. The script marker counts strip steps (two per hole at most).
 - **White, red, white, red** = τ³ − τ² + τ − 1 = 5 on this curve [proof, MATH_REVIEW C16]: any R outside E(GF(3)) has 5R of order ℓ.
-- First working hole 2 (Demo, Toy), 1 (Hobby, Serious). The base point by rule equals P in every simulated game: 128/128 (Demo), 20/20, 12/12, 8/8 [run: demo/card_sim_demo, card/card_sim_v3].
+- First working hole 2 (Demo, Toy), 1 (Hobby, Serious). The base point by rule equals P in every simulated game: 128/128 (Demo), 20/20, 12/12, 8/8 [run: evidence/card_sim (all tiers)].
 - **Test vectors** (hole 0 first): Demo x = `.RWR.WW`, y = `R..RRWR`; Toy x = `RW..W.WWWR..W...WWWRWRR`, y = `RRWWRRR..R.WRRW..RWWRRW`; Hobby sha256(x|y)[:16] = `e6635080e15e0cd7`; Serious `345ec55420cdd25e`. Full registers in `core/ecbs_exchange_results.txt`. P is self-checking on the board (y·y = rhs, then order ℓ by construction).
 
 ### 5.2 Exchange (card: play steps 11–14, check card)
@@ -202,15 +203,15 @@ Ladder build, once per kit: 17 / 65 / 173 / 533 moves. Storing P across games in
 5. **Call A.** Once the partner's phase hole shows a peg, call their across into your bottom and their up into your gap. Unless they match the base across and base up peg for peg, reject. Clear the bottom and gap and, once both have called, your across and up.
 6. **Shared key:** walk your key over the base bands (their A) and finish; fold the across (§6).
 
-C must be called before anyone certifies: each sender certifies in place, consuming C. A is called only after both have certified: with C and A called together, each receiver would still hold its own C and A and have 3 empty homes for 4 called bands [run: card/extras_v3].
+C must be called before anyone certifies: each sender certifies in place, consuming C. A is called only after both have certified: with C and A called together, each receiver would still hold its own C and A and have 3 empty homes for 4 called bands [log: card/extras_v3.txt].
 
 **Calling** (BS PR #152 §3.1 as revised after DHH's review; the card's "Calling"):
 - Clear the homes named. Stand a peg in the **calling hole** ("calling in progress"). Put the cursor ships on hole 0 of the first home.
 - Call the matching hole of the sender's published band aloud by **grid and coordinate** ("grid 3, B7"; Demo "grid 1, A3"), hole 0 to n − 1 in number order, every hole, no early stop, never a key grid or the control row. Red hits, white misses, empty misfires; lay each answer in the cursor hole and move the cursor ships to the **next** hole to call. After the last, park the ships off the board and lift the calling peg.
 - Each call is driven by the board alone: the phase hole picks C or A, the cursor picks band and hole.
-- Holes called per receiver: **28 / 92 / 236 / 716** (4 bands × n), every call naming the same hole of the sender's band (asserted) [run: demo/card_sim_demo, card/card_sim_v3]. Letting go before every one of the 14 / 46 / 118 / 358 calls of a two-band session and resuming from the board alone gives an exact copy. A stale receiving home laid over without clearing gives a wrong copy in 193/200 (Demo), 200/200 (other tiers); with "clear the homes named" 0/200 [run: demo/soundness_demo, card/calling_check].
+- Holes called per receiver: **28 / 92 / 236 / 716** (4 bands × n), every call naming the same hole of the sender's band (asserted) [run: evidence/card_sim (all tiers)]. Letting go before every one of the 14 / 46 / 118 / 358 calls of a two-band session and resuming from the board alone gives an exact copy. A stale receiving home laid over without clearing gives a wrong copy in 193/200 (Demo), 200/200 (other tiers); with "clear the homes named" 0/200 [run: evidence/soundness_demo, evidence/calling_check].
 
-**Full exchanges against PARI** [run: demo/card_sim_demo (all 64 pairs of non-empty Demo keys), card/card_sim_v3 (Toy 10, Hobby 6, Serious 4)]: base point = P, sent C = [a]P, sent A = [(λ − 1)a]P = π(C) − C, the receiver's rebuilt A = the sender's A, curve test passed, both shared points agree and equal [(λ − 1)ab]P, folded key = the §6 reference fold on both sides: **every check in every run** (Demo 128/128 people, 64/64 exchanges; Toy 20/20; Hobby 12/12; Serious 8/8). No home clash; every called answer landed in an empty home.
+**Full exchanges against PARI** [run: evidence/card_sim Demo (all 64 pairs of non-empty Demo keys), evidence/card_sim (Toy 10, Hobby 6, Serious 4)]: base point = P, sent C = [a]P, sent A = [(λ − 1)a]P = π(C) − C, the receiver's rebuilt A = the sender's A, curve test passed, both shared points agree and equal [(λ − 1)ab]P, folded key = the §6 reference fold on both sides: **every check in every run** (Demo 128/128 people, 64/64 exchanges; Toy 20/20; Hobby 12/12; Serious 8/8). No home clash; every called answer landed in an empty home.
 
 ### 5.3 Receiver check: the certificate
 
@@ -223,7 +224,7 @@ Pedantic choice: **reject, never transform.** On the called C = (x, y):
 **Lemma** [proof]. E(GF(q)) is cyclic of order 5ℓ with ℓ ≠ 5 prime. π − 1 is an endomorphism of E(GF(q)) whose kernel is the set of Frobenius-fixed points, E(GF(3)), of order 5. So its image has order ℓ and is the unique subgroup of that order, ⟨P⟩. Hence for every C ∈ E(GF(q)), A = π(C) − C ∈ ⟨P⟩, each point of ⟨P⟩ is the image of exactly 5 points C, and A = O exactly for C ∈ E(GF(3)). For affine C the run x − x³ is empty iff x ∈ GF(3); on E (n odd) the affine points with x ∈ GF(3) are exactly the 4 affine GF(3)-points, so "reject if empty" rejects exactly A = O. For x ∉ GF(3), π(C) ≠ ±C and the chord gives the true sum.
 - So an accepted A is always in ⟨P⟩∖{O}. **C itself may lie outside ⟨P⟩** (for example C = [a]P + T with T ∈ E(GF(3)), which gives the same A as [a]P); it is accepted and harmless, because the receiver uses A, never C. No small-subgroup leak is possible.
 
-**Soundness** (receiver verdicts: accept / curve / empty / mismatch). Demo is exhaustive over GF(3⁷)² [run: demo/soundness_demo]; Toy / Hobby / Serious sample 5000 / 3000 / 1000 per class at field level [run: card/soundness_v3].
+**Soundness** (receiver verdicts: accept / curve / empty / mismatch). Demo is exhaustive over GF(3⁷)² [run: evidence/soundness_demo]; Toy / Hobby / Serious sample 5000 / 3000 / 1000 per class [run: evidence/soundness]. Every verdict below comes from the generated code of `ecbs.sudo` (`receive_check` on boards), checked against PARI/GP.
 
 | Class | Demo (exhaustive) | Toy | Hobby | Serious |
 |---|---|---|---|---|
@@ -237,9 +238,9 @@ Pedantic choice: **reject, never transform.** On the called C = (x, y):
 | … of those, would pass with no curve test | 4,774,308 (all with a non-empty run) | 5000 | 3000 | 1000 |
 | ladder inversion wrong | 0 of 2186 | 0 / 5000 | 0 / 3000 | 0 / 1000 |
 
-Peg level, the card followed literally on boards (receiver holding its own A while rebuilding, C and A called in): Demo every on-curve C (2104: 2100 accept, 4 empty) plus 200 / 200 / 8 / 300 / 300 sampled in the other classes; Toy 30, Hobby 15, Serious 6 per class: identical verdicts, peak 7 bands throughout [run: demo/soundness_demo, card/soundness_v3].
+Board level: every row above is the card followed literally on boards by the generated code (receiver holding its own A while rebuilding, C and A called in), peak 7 bands throughout; Demo also runs every on-curve C (2104: 2100 accept, 4 empty) plus 200 / 200 / 8 / 300 / 300 sampled in the other classes on boards [run: evidence/soundness_demo, evidence/soundness]. (Before `ecbs.sudo`, the Python sample was field level at Toy–Serious with a peg-level spot check of 30 / 15 / 6 per class [log: card/soundness_v3_peg_*.json].)
 
-**Cost of the check** per person (curve test + make own + rebuild theirs + compare + clears): **1,890 / 15,293 / 92,867 / 758,384** moves (Demo / Toy / Hobby / Serious) [run: demo/card_sim_demo, card/card_sim_v3]. The trace check it replaced cost 2,721 / 46.9 k / 0.390 M / 3.93 M per person (curve test + lazy-y trace chain) [run: core/ecbs_fform].
+**Cost of the check** per person (curve test + make own + rebuild theirs + compare + clears): **1,890 / 15,293 / 92,867 / 758,385** moves (Demo / Toy / Hobby / Serious) [run: evidence/card_sim (all tiers)]. The trace check it replaced cost 2,721 / 46.9 k / 0.390 M / 3.93 M per person (curve test + lazy-y trace chain) [log: core/ecbs_fform_results.txt].
 
 ### 5.4 Shared point
 
@@ -249,7 +250,7 @@ Alice sends C_a = [a]P and A_a = π(C_a) − C_a = [(λ − 1)a]P (π acts on �
 
 ## 6. The x-register "hash": a fold, honestly an extractor
 
-**Recipe** (card step 14): "Fold the across: Serious drops rows F to I onto rows A to D, Toy and Hobby row C onto row A. The key is rows A to E (Serious) or A to B." Demo: "drop rows C and D onto rows A and B; the key is rows A and B." That is 100 / 40 / 16 / 4 trits. The fold is the F₃-linear map z_j = Σ_{i ≡ j (mod m)} x_i; the card's fold equals it on both sides of every simulated exchange [run: demo/card_sim_demo, card/card_sim_v3].
+**Recipe** (card step 14): "Fold the across: Serious drops rows F to I onto rows A to D, Toy and Hobby row C onto row A. The key is rows A to E (Serious) or A to B." Demo: "drop rows C and D onto rows A and B; the key is rows A and B." That is 100 / 40 / 16 / 4 trits. The fold is the F₃-linear map z_j = Σ_{i ≡ j (mod m)} x_i; the card's fold equals it on both sides of every simulated exchange [run: evidence/card_sim (all tiers)].
 
 **Claim, and its model** [run: core/ecbs_extractor; review C19]:
 - **Model: the uniform shared-point model.** K = [(λ − 1)ab]P is uniform on ⟨P⟩∖{O}. **This is the only claim.** It is not implied by anything unconditional (K is determined by the public values), and **no DDH-type claim is made**.
@@ -282,14 +283,14 @@ The receiver's formulas never use the curve's constant term, and they hard-wire 
 
 **(ii) Everything else** (Demo: 4,757,256 pairs). The rebuilt A lies on the cubic through π(C) and −C, y² = x³ − x² + a₄′x + a₆′ with a₄′ = (b³ − b)/(x³ − x), b = y² − x³ + x²; a₄′ ≠ 0 and the cubic is not defined over GF(3) for every one of these pairs, so each Frobenius of the walk moves the point to another curve and the walk is not a group operation on any one curve. 2,002 of these A happen to satisfy E's equation. **[open]:** this class is not analysed and nothing is claimed about it; the curve test rejects all of it.
 
-**The quadratic twist** falls entirely in (ii): all 2268 twist points with x ∉ GF(3) (twist order 2271 by PARI; the same in the model −y² = x³ − x² + 1) [run: twist/s7_certificate A]. A twist point (model y² = x³ + x² + 2) has b = 2x² + 2, which would need x to satisfy a degree-2 equation over GF(3); x has degree n (odd prime). The twist's own group law (a₂ = +1) is never computed, because y is sent and the formulas hard-wire a₂ = −1. So **a twist point gains an attacker nothing beyond class (ii)**, and with the curve test nothing at all.
+**The quadratic twist** falls entirely in (ii): all 2268 twist points with x ∉ GF(3) (twist order 2271 by PARI; the same in the model −y² = x³ − x² + 1) [run: evidence/twist_s7 A]. A twist point (model y² = x³ + x² + 2) has b = 2x² + 2, which would need x to satisfy a degree-2 equation over GF(3); x has degree n (odd prime). The twist's own group law (a₂ = +1) is never computed, because y is sent and the formulas hard-wire a₂ = −1. So **a twist point gains an attacker nothing beyond class (ii)**, and with the curve test nothing at all.
 
 **With the curve test** (the design): the accepted C are exactly E(GF(q))∖E(GF(3)) and the rebuilt A is in ⟨P⟩∖{O} (Lemma, §5.3; Demo exhaustive). Twist and invalid points never reach the walk. The serious-tier twist's own weakness (fully factored, largest prime 115.4 bits, rho ≈ 2^57.7; Hobby's largest twist prime 39.3 bits [run: core/ecbs_twists]) is therefore irrelevant.
 
 **Without the curve test** (why it stays mandatory):
-- A self-consistent A (the card's formulas applied to C) passes the certificate for **every** off-curve C with a non-empty run: Demo 4,774,308 of 4,774,308 (the other 6,557 off-curve pairs have x ∈ GF(3)); Toy 5000/5000, Hobby 3000/3000, Serious 1000/1000 sampled [run: demo/soundness_demo, card/soundness_v3]. The comparison step cannot catch an off-curve C.
-- On **E′** and the **node** the kernel of π − 1 is their GF(3)-points (E′: (2, 0) and O; node: (1, 0), (2, ±1) and O), so the rebuilt A ranges over the subgroup of **index 2** (E′) or **4** (node). In every tier that subgroup is exactly the odd part of the group [run: twist/s7_certificate B].
-- **Mechanism** [run: twist/s7_certificate B, every tier]: for C of prime order r on E′, the receiver's walk ends at [κ(μ) mod r]A, where π acts on ⟨A⟩ as the root μ of μ² − 2μ + 3 ≡ 0 (mod r) and κ(z) = Σ_j c_j z^{m−1−j} is the key polynomial (4/4 per tier, against PARI). On the node, ψ(x, y) = (y + ix)/(y − ix), with i² = −1 in GF(3^{2n}), maps the non-singular points onto the norm-1 torus of GF(3^{2n})*: the chord rule becomes multiplication, π becomes z ↦ z^(−3), the certificate becomes ψ(C)^(−4), and the walk ends at ψ(A)^κ(−3) (6/6 per tier). So the node exposes **κ(−3), the key read as a balanced base-(−3) integer**, modulo the order of A.
+- A self-consistent A (the card's formulas applied to C) passes the certificate for **every** off-curve C with a non-empty run: Demo 4,774,308 of 4,774,308 (the other 6,557 off-curve pairs have x ∈ GF(3)); Toy 5000/5000, Hobby 3000/3000, Serious 1000/1000 sampled [run: evidence/soundness_demo, evidence/soundness]. The comparison step cannot catch an off-curve C.
+- On **E′** and the **node** the kernel of π − 1 is their GF(3)-points (E′: (2, 0) and O; node: (1, 0), (2, ±1) and O), so the rebuilt A ranges over the subgroup of **index 2** (E′) or **4** (node). In every tier that subgroup is exactly the odd part of the group [run: evidence/twist_s7 B].
+- **Mechanism** [run: evidence/twist_s7 B, every tier]: for C of prime order r on E′, the receiver's walk ends at [κ(μ) mod r]A, where π acts on ⟨A⟩ as the root μ of μ² − 2μ + 3 ≡ 0 (mod r) and κ(z) = Σ_j c_j z^{m−1−j} is the key polynomial (4/4 per tier, against PARI). On the node, ψ(x, y) = (y + ix)/(y − ix), with i² = −1 in GF(3^{2n}), maps the non-singular points onto the norm-1 torus of GF(3^{2n})*: the chord rule becomes multiplication, π becomes z ↦ z^(−3), the certificate becomes ψ(C)^(−4), and the walk ends at ψ(A)^κ(−3) (6/6 per tier). So the node exposes **κ(−3), the key read as a balanced base-(−3) integer**, modulo the order of A.
 
 | Tier | Key bits | E′: order of the image (factors) | Node: order of the image (factors) | Leak, primes < 2^40: E′ / node | Leak, primes < 2^60: E′ / node |
 |---|---|---|---|---|---|
@@ -298,8 +299,8 @@ The receiver's formulas never use the curve's constant term, and they hard-wire 
 | Hobby | 80.83 | 16993 · 3770219 · 312996889 · 352328177 | 3187 · p80 | 92.5 / 11.6 | 92.5 / 11.6 |
 | Serious | 256.76 | p44 · p239 | 3755779 · p46 · p54 · p162 | 0 / 21.8 | 43.9 / 120.3 |
 
-[run: twist/s7_certificate B; Serious factors are the review's, re-verified: each divides exactly and is prime]. "Leak" = log₂ of the product of the image's prime factors below the bound: what an attacker learns from one chosen C per prime if it can try up to that many candidate shared points per prime (for example against traffic under the folded key). On E′ each prime r gives κ(μ_r) mod r with a different μ_r; turning those residues into key digits is a modular knapsack, not attempted here (at Hobby the residues carry 92.5 bits against an 80.83-bit key).
-- **Whole key from one node point, run end to end:** if the attacker learns the receiver's shared point, one node point whose rebuilt A has the full order (q + 1)/4 gives κ(−3) mod (q + 1)/4 by a finite-field logarithm in GF(3^{2n}) (PARI `fflog`), and (q + 1)/4 > 3^m in every tier, so the balanced base-(−3) digits are the key: recovered exactly at **Demo** and **Toy** (log 1.1 s) [run: twist/s7_certificate C]. At **Hobby** (logarithm in GF(3¹¹⁸)*) PARI `fflog` **did not finish within a 1,500 s run**, so recovery is not demonstrated there [run: twist/s7_partC.txt]. At Serious the logarithm is in GF(3³⁵⁸)*, where discrete logarithms in small characteristic are quasi-polynomial [lit-mem: Barbulescu–Gaudry–Joux–Thomé 2014]; not run.
+[run: evidence/twist_s7 B; Serious factors are the review's, re-verified: each divides exactly and is prime]. "Leak" = log₂ of the product of the image's prime factors below the bound: what an attacker learns from one chosen C per prime if it can try up to that many candidate shared points per prime (for example against traffic under the folded key). On E′ each prime r gives κ(μ_r) mod r with a different μ_r; turning those residues into key digits is a modular knapsack, not attempted here (at Hobby the residues carry 92.5 bits against an 80.83-bit key).
+- **Whole key from one node point, run end to end:** if the attacker learns the receiver's shared point, one node point whose rebuilt A has the full order (q + 1)/4 gives κ(−3) mod (q + 1)/4 by a finite-field logarithm in GF(3^{2n}) (PARI `fflog`), and (q + 1)/4 > 3^m in every tier, so the balanced base-(−3) digits are the key: recovered exactly at **Demo** and **Toy** (log 1.1 s) [run: evidence/twist_s7 C]. At **Hobby** (logarithm in GF(3¹¹⁸)*) PARI `fflog` **did not finish within a 1,500 s run**, so recovery is not demonstrated there [log: twist/s7_partC.txt]. At Serious the logarithm is in GF(3³⁵⁸)*, where discrete logarithms in small characteristic are quasi-polynomial [lit-mem: Barbulescu–Gaudry–Joux–Thomé 2014]; not run.
 - Therefore: **send y, test the curve equation before anything else, and never adopt an x-only variant.** A receiver that skips the curve test loses its whole key at Demo and Toy (run), gives an attacker residues worth 92.5 bits against an 80.83-bit key at Hobby, and 43.9 + 120.3 bits of residues at Serious (primes < 2^60); the last two are not turned into a key here.
 
 ### 7.2 Other limits
@@ -310,6 +311,8 @@ The receiver's formulas never use the curve's constant term, and they hard-wire 
 ---
 
 ## 8. No-rulebook audit: every former reference and its memorable rule
+
+The "Verified" column names the Phase-1 scripts under `proofs/key_exchange/ecbs/` (commit ad80f54) that first verified each rule. Apart from `core/ecbs_curve`, `core/ecbs_tiers` and `core/ecbs_extractor`, they were removed when `ecbs.sudo` landed and are cited by their recorded logs (`*_results.txt`, `*.json` beside where they stood). Every row is now carried by `ecbs.sudo` itself and re-checked on the generated code against PARI/GP by `evidence/` (card_sim, soundness, soundness_demo, calling_check, twist_s7) and `vectors/` (base point, cube, fold, walks).
 
 | Former reference | Memorable rule now | Verified |
 |---|---|---|
@@ -337,7 +340,7 @@ The receiver's formulas never use the curve's constant term, and they hard-wire 
 
 **Remaining flags:**
 - A player must remember the four lane shapes, the Serious "six rows up", the six F-form lines, the certificate's chord and the ladder rule. These are spoken rules, not tables; whether that is memorable enough is Zachary's call.
-- The card is 1,440 words (play card 1,089 + check card 350, a wc-style count) for Toy–Serious, so it is split into a play card and a check card; the single-page target is not met [run: card/V3_NOTES]. The Demo section adds 391 (wc -w).
+- The card is 1,440 words (play card 1,089 + check card 350, a wc-style count) for Toy–Serious, so it is split into a play card and a check card; the single-page target is not met [log: card/V3_NOTES.md]. The Demo section adds 391 (wc -w).
 - Not simulated: hands-off position *inside* a certificate or an inversion step (the script marker covers walks and the root strip only); the coordinate rails.
 
 ---
@@ -362,8 +365,8 @@ The receiver's formulas never use the curve's constant term, and they hard-wire 
 
 ## 10. Files
 
-Evidence index: [`proofs/key_exchange/ecbs/README.md`](../../../proofs/key_exchange/ecbs/README.md). In short: `core/` (curve, tiers, layout, workbench, F-form, budget, extractor, twists, base point), `card/` (the v3 card on peg boards: full exchanges, soundness, calling, control row), `demo/` (Demo with the certificate), `twist/` (§7.1), `trace-check/` (the losing option), `review/` (the Mathematician's review, read-only), `MATH_REVIEW.md`, `HISTORY.md`.
+Runnable spec: [`ecbs.sudo`](ecbs.sudo). Evidence index: [`proofs/key_exchange/ecbs/README.md`](../../../proofs/key_exchange/ecbs/README.md). In short: `evidence/` (drivers of the generated code: full exchanges, soundness, calling, §7.1), `vectors/` (known-answer vectors, PARI cross-check), `oracle/` (PARI), `lean/Generated/` (emitted Lean, TAP), `core/` (curve, tiers, extractor, twists, budget analysis; draft logs), `card/`, `demo/`, `twist/` (Phase-1 logs), `trace-check/` (the losing option, docs and logs), `review/` (the Mathematician's review, read-only), `MATH_REVIEW.md`, `HISTORY.md`.
 
-## 11. Toward `ecbs.sudo`
+## 11. `ecbs.sudo`
 
-Not written yet. A runnable spec needs: GF(3ⁿ) arithmetic in the peg basis with the four taps (add, mirror, the lane fold, multiply, comb cube); the halving ladder and Itoh–Tsujii inversion with the quadratic-character sign; the curve-side and curve test; the chord addition and the F-form addition; the root strip and the base point by rule (white peg slid on, then W R W R); the pegs-only key walk (Frobenius per cell, ±P, the empty-run reroll); the certificate (make, rebuild, compare, reject on empty); the exchange and calling order (C, curve test, certify, rebuild, A, compare); the fold per tier; and known-answer vectors per tier (P above, plus C, A and K for fixed keys), cross-checked against PARI and against this harness.
+[`ecbs.sudo`](ecbs.sudo) models the board literally, as the card plays it, with the cost model of §2 in counters that never change a peg: GF(3ⁿ) arithmetic in the peg basis with the four taps (add, mirror, the lane fold, multiply, comb cube); the halving ladder and Itoh–Tsujii inversion with the tally and the quadratic-character sign; the curve side and curve test; the chord addition (Demo) and the F-form addition; the root strip and the base point by rule; the pegs-only key walk and the d10 row cup (§4); the certificate (make, rebuild, compare, reject on empty); calling with the phase hole, calling hole and cursor, resumable from the board; the exchange in card order; the fold per tier. Its sudo tests (Demo and Toy, values from PARI) run in JS and, emitted, in Lean. Known-answer vectors per tier (P, arithmetic, fold, certificate, walks, receiver verdicts, exchanges from dice to the folded key): [`proofs/key_exchange/ecbs/vectors/`](../../../proofs/key_exchange/ecbs/vectors/README.md), cross-checked against PARI. Nothing about the emitted Lean is proved (no Link 2).

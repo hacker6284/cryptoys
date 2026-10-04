@@ -83,6 +83,16 @@ jobs:
         run: proofs/key_exchange/bs/vectors/regen.sh --check
       - name: BS vectors agree with pow() and the Python evidence harness
         run: python3 proofs/key_exchange/bs/vectors/check_oracle.py
+      # ECBS: vectors from ecbs.sudo (about 20 s, most of it one Serious exchange), then
+      # PARI/GP as the oracle. The evidence drivers (proofs/key_exchange/ecbs/evidence/) are
+      # not run here: Demo exhaustive and the Serious soundness classes take tens of minutes.
+      - name: ECBS vectors rebuild byte-identically from ecbs.sudo
+        run: proofs/key_exchange/ecbs/vectors/regen.sh --check
+      - name: ECBS vectors agree with PARI/GP
+        run: |
+          python3 -m venv "$RUNNER_TEMP/pari"
+          "$RUNNER_TEMP/pari/bin/pip" install --quiet cypari2
+          "$RUNNER_TEMP/pari/bin/python" proofs/key_exchange/ecbs/vectors/check_oracle.py
       # Scramble (marked broken): the 10 SPEC vectors, the attack messages in logs/, the
       # `hello` twin and the decoded `cube` pose through the JS this sudoc generates from
       # scramble.sudo (about 1 s). The seeded Python attack runs (REPORT S7) are not run here.
@@ -105,6 +115,8 @@ jobs:
           - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
           - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
           - { name: bs, dir: proofs/key_exchange/bs/lean/Generated, test: bs_test }
+          # ECBS: emitted TAP only; no Link 2 package yet (proofs/key_exchange/ecbs/README.md).
+          - { name: ecbs, dir: proofs/key_exchange/ecbs/lean/Generated, test: ecbs_test }
           # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property; not an
           # attack, so no witness package): emitted TAP only (proofs/deprecated/doubledeal-v11/).
           - { name: doubledeal-v11, dir: proofs/deprecated/doubledeal-v11/lean/Generated, test: doubledeal_v11_test }

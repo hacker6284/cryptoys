@@ -59,7 +59,7 @@ axiom) fails, as does a Lean error.
   required: the theorems its README cites (MD_V1_README_THEOREMS).
 - megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
   for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
-  README cites (MD_V3_README_THEOREMS); min is the audited count (217).
+  README cites (MD_V3_README_THEOREMS); min is the audited count (182).
   `--selftest` checks its "Emitted function" column against
   primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
@@ -434,7 +434,7 @@ MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
     "dm_step_refines", "dmStep_inj",
     "iv_cook12_refines", "v_Hash_refines", "v_Hash_refines_array", "v_MegaDreifach_refines",
     "v_HashDeck_refines", "v_HashDeck_refines_array", "v_HashDeck_two_blocks",
-    "v_MegaDreifachDeck_refines", "phiUnrank_lehmerRank", "body_from_refines",
+    "v_MegaDreifachDeck_refines", "body_from_refines",
     "v_HashDeckBody_refines", "v_MegaDreifachBody_refines", "v_HashDeckBodyFrom_refines",
     "v_MegaDreifachBodyFrom_refines"]} | {f"MegaDreifachV3.Em.{n}" for n in [
     "edgeFaceOf_spec", "cornerFaceOf_spec", "turnedFace_countUp", "turnedFace_king",
@@ -958,7 +958,7 @@ PACKAGES = {
         "known_sorry": set(),
         # sanity: the audit must see the whole package (the real audited count; raise as
         # Link 2 grows, lower only with a reason in the commit)
-        "min": 217,
+        "min": 182,
         "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac": {

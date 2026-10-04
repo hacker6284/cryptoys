@@ -16,7 +16,7 @@ open MegaDreifach MegaDreifach.Em MegaDreifach.Link2 MegaDreifachV3.Em
 theorem cardStep_inj (r : Run) (hg : InjPos r.g) (base : Fin 12) (rank k : Nat) (c : Fin 12) :
     InjPos (cardStep r base rank k c).g := by
   simp only [cardStep, run_proj]
-  repeat (first | assumption | apply injPos_faceTurn')
+  repeat (first | assumption | apply injPos_faceTurn)
 
 theorem cardStep_counters (r : Run) (m : Nat) (hb : CountersLe r m) (base : Fin 12)
     (rank k : Nat) (hk : k ≤ 4) (c : Fin 12) :
@@ -80,7 +80,7 @@ theorem echo_colour_refines (g : Position) (hg : InjPos g) (held : Nat) :
   have hk1 : 1 ≤ held % 4 + 1 := by omega
   have hk4 : held % 4 + 1 ≤ 4 := by omega
   rw [card_colour_refines, ok_bind, show (4 : Int) = Int.ofNat 4 from rfl,
-    modI_ofNat _ 4 (by decide), ok_bind, show (1 : Int) = Int.ofNat 1 from rfl,
+    modI_ofNat _ (b := 4) (by decide), ok_bind, show (1 : Int) = Int.ofNat 1 from rfl,
     addI_ofNat _ _ (fits_of_cap (by unfold counterCap; omega)), ok_bind,
     suit_nbrs_refines _ _ hk1 hk4, ok_bind]
   dsimp only
@@ -93,7 +93,7 @@ theorem echo_colour_refines (g : Position) (hg : InjPos g) (held : Nat) :
         (suitNbrs (cardColour held) (held % 4 + 1)).2
         (suitNbrs (cardColour held) (held % 4 + 1)).1).isLt
       unfold counterCap; simp only [startRun]; omega)), ok_bind,
-    show (12 : Int) = Int.ofNat 12 from rfl, modI_ofNat _ 12 (by decide)]
+    show (12 : Int) = Int.ofNat 12 from rfl, modI_ofNat _ (b := 12) (by decide)]
   rfl
 
 
@@ -134,7 +134,7 @@ theorem em_run_refines (h : Position) (hh : InjPos h) (deal : List Nat)
       by_cases h : i = 51 <;> simp [h] <;> omega
     dsimp only
     rw [if_neg hgt, atL_embed deal i hil, ok_bind, show (4 : Int) = Int.ofNat 4 from rfl,
-      divI_ofNat _ 4 (by decide), ok_bind, modI_ofNat _ 4 (by decide), ok_bind,
+      divI_ofNat _ (b := 4) (by decide), ok_bind, modI_ofNat _ (b := 4) (by decide), ok_bind,
       addI_ofNat_one _ (by unfold FitsLen i64MaxNat; omega), ok_bind, card_colour_refines, ok_bind,
       show (embedRun ((deal.take i).foldl dealStep (startRun h))).sudo_3Run_4last =
         Int.ofNat ((deal.take i).foldl dealStep (startRun h)).last.val from rfl,
@@ -175,7 +175,7 @@ theorem em_run_refines (h : Position) (hh : InjPos h) (deal : List Nat)
         echo_colour_refines _ hinj, ok_bind,
         count_register_looks_refines _ (fits_of_cap (by unfold counterCap; omega)), ok_bind,
         show (4 : Int) = Int.ofNat 4 from rfl,
-        divI_ofNat _ 4 (by decide), ok_bind, modI_ofNat _ 4 (by decide), ok_bind,
+        divI_ofNat _ (b := 4) (by decide), ok_bind, modI_ofNat _ (b := 4) (by decide), ok_bind,
         addI_ofNat_one _ (by unfold FitsLen i64MaxNat; omega), ok_bind,
         card_step_refines _ (by exact hinj) hrl _ _ _ (by omega) (by omega) (by omega), ok_bind,
         show j + 1 - 1 = (j - 1) + 1 by omega, echoRun_succ']
@@ -211,6 +211,6 @@ theorem dm_step_refines (h : Position) (hh : InjPos h) (deal : List Nat)
 /-- The Davies–Meyer step keeps bijective tables. -/
 theorem dmStep_inj (h : Position) (hh : InjPos h) (deal : List Nat) :
     InjPos (MegaDreifachV3.Em.dmStep h deal) :=
-  injPos_compose' _ _ hh (emBlock_inj h hh deal)
+  injPos_compose _ _ hh (emBlock_inj h hh deal)
 
 end MegaDreifachV3.Link2

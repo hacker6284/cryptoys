@@ -8,7 +8,7 @@ import MegaDreifach.Pad
 import MegaDreifach.Link2.Be
 import MegaDreifach.Link2.Big
 import MegaDreifach.Link2.Loop
-import MegaDreifach.Link2.UnfoldMatchers
+import UnfoldMatchers
 
 namespace MegaDreifach.Link2
 
@@ -311,9 +311,9 @@ theorem pad_message_refines (msg : List Nat) (hp : PadWf msg) :
   unfold byteCheckStep copyStep pushStep at h
   unfold Megadreifach.pad_message
   dsimp
-  unfold byteCheckStep.match_1 copyStep.match_1 at h
-  -- The emitted side's matchers are unfolded without naming them (`unfold_matchers`):
-  -- an emit may share and number them differently. The assert line is whatever the emit wrote.
+  -- Matchers are unfolded without naming them (`unfold_matchers`, proofs/audit): an emit may
+  -- share and number them differently. The assert line is whatever the emit wrote.
+  unfold_matchers at h
   unfold_matchers
   exact h _
 

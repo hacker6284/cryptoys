@@ -24,17 +24,6 @@ def scanAcc (i : Nat) (p : Nat → Bool) : Int :=
   | none => -1
   | some s => Int.ofNat s
 
-theorem sEq_ofNatV3 (a b : Nat) :
-    SudoRt.SEq.beq (Int.ofNat a) (Int.ofNat b) = decide (a = b) := by
-  rw [sEq_int, decide_eq_decide]
-  exact ⟨fun e => Int.ofNat.inj e, fun e => e ▸ rfl⟩
-
-theorem atL_listOf30' (f : Fin 30 → Fin 30) (i : Nat) (hi : i < 30) :
-    SudoRt.atL (embed (listOf f)) (Int.ofNat i) = .ok (Int.ofNat (f ⟨i % 30, Nat.mod_lt _ (by decide)⟩).val) := by
-  have hlen : i < (listOf f).length := by rw [listOf_length]; exact hi
-  rw [atL_embed (listOf f) i hlen]
-  simp [listOf, List.getElem_map, List.getElem_range, Nat.mod_eq_of_lt hi, hi]
-
 theorem lastIdx_lt (n : Nat) (p : Nat → Bool) (t : Nat) (h : lastIdx n p = some t) : t < n := by
   induction n with
   | zero => simp [lastIdx] at h
@@ -76,7 +65,9 @@ theorem edge_face_of_refines (g : Position) (a b x : Fin 12) (s : Fin 30)
     have hgt : ¬ (Int.ofNat i > (29 : Int)) := by rw [Int.ofNat_eq_coe]; omega
     dsimp only
     rw [if_neg hgt, show (embedPos g).sudo_8Position_2ep = embed (listOf g.ep) from rfl,
-      atL_listOf30' g.ep i hi30, ok_bind, sEq_ofNatV3]
+      atL_listOf30 g.ep ⟨i, hi30⟩, ok_bind, sEq_ofNat,
+      show (⟨i, hi30⟩ : Fin 30) = ⟨i % 30, Nat.mod_lt _ (by decide)⟩ from
+        Fin.ext (Nat.mod_eq_of_lt hi30).symm]
     have hfit : FitsLen (i + 1) := by unfold FitsLen i64MaxNat; omega
     have hadd : SudoRt.addI (Int.ofNat i) 1 = .ok (Int.ofNat (i + 1)) := addI_ofNat i 1 hfit
     have hbeq : (Int.ofNat i == 29) = decide (i = 29) := by
@@ -116,7 +107,7 @@ theorem edge_face_of_refines (g : Position) (a b x : Fin 12) (s : Fin 30)
       dsimp only
       rw [edge_colours_at_refines g _ _ ⟨sl, hsl⟩ (edgeSlot?_faces ⟨sl, hsl⟩), ok_bind]
       dsimp only
-      rw [sEq_ofNatV3]
+      rw [sEq_ofNat]
       by_cases h0 : (edgeColoursAt g (edgeFace sl 0) (edgeFace sl 1)).1 = x
       · rw [if_pos h0] at hy
         cases hy
@@ -130,18 +121,6 @@ theorem edge_face_of_refines (g : Position) (a b x : Fin 12) (s : Fin 30)
           rfl
         · rw [if_neg h1] at hy
           cases hy
-
-theorem atL_listOf20' (f : Fin 20 → Fin 20) (i : Nat) (hi : i < 20) :
-    SudoRt.atL (embed (listOf f)) (Int.ofNat i) = .ok (Int.ofNat (f ⟨i % 20, Nat.mod_lt _ (by decide)⟩).val) := by
-  have hlen : i < (listOf f).length := by rw [listOf_length]; exact hi
-  rw [atL_embed (listOf f) i hlen]
-  simp [listOf, List.getElem_map, List.getElem_range, Nat.mod_eq_of_lt hi, hi]
-
-theorem atL_listOfOri20' (f : Fin 20 → Fin 3) (i : Nat) (hi : i < 20) :
-    SudoRt.atL (embed (listOfOri f)) (Int.ofNat i) = .ok (Int.ofNat (f ⟨i % 20, Nat.mod_lt _ (by decide)⟩).val) := by
-  have hlen : i < (listOfOri f).length := by rw [listOfOri_length]; exact hi
-  rw [atL_embed (listOfOri f) i hlen]
-  simp [listOfOri, List.getElem_map, List.getElem_range, Nat.mod_eq_of_lt hi, hi]
 
 theorem corner_face_of_refines (g : Position) (a b c x : Fin 12) (t : Fin 20)
     (ht : cornerSlot? a b c = some t) (y : Fin 12) (hy : cornerFaceOf? g a b c x = some y) :
@@ -160,7 +139,9 @@ theorem corner_face_of_refines (g : Position) (a b c x : Fin 12) (t : Fin 20)
     have hgt : ¬ (Int.ofNat i > (19 : Int)) := by rw [Int.ofNat_eq_coe]; omega
     dsimp only
     rw [if_neg hgt, show (embedPos g).sudo_8Position_2cp = embed (listOf g.cp) from rfl,
-      atL_listOf20' g.cp i hi20, ok_bind, sEq_ofNatV3]
+      atL_listOf20 g.cp ⟨i, hi20⟩, ok_bind, sEq_ofNat,
+      show (⟨i, hi20⟩ : Fin 20) = ⟨i % 20, Nat.mod_lt _ (by decide)⟩ from
+        Fin.ext (Nat.mod_eq_of_lt hi20).symm]
     have hfit : FitsLen (i + 1) := by unfold FitsLen i64MaxNat; omega
     have hadd : SudoRt.addI (Int.ofNat i) 1 = .ok (Int.ofNat (i + 1)) := addI_ofNat i 1 hfit
     have hbeq : (Int.ofNat i == 19) = decide (i = 19) := by
@@ -201,8 +182,10 @@ theorem corner_face_of_refines (g : Position) (a b c x : Fin 12) (t : Fin 20)
       rw [corner_faces_refines t, ok_bind]
       dsimp only
       rw [show (embedPos g).sudo_8Position_2co = embed (listOfOri g.co) from rfl,
-        atL_listOfOri20' g.co sl hsl, ok_bind, ok_bind]
-      simp only [colour_on_refines, ok_bind, sEq_ofNatV3]
+        atL_listOfOri20 g.co ⟨sl, hsl⟩, ok_bind, ok_bind,
+        show (⟨sl, hsl⟩ : Fin 20) = ⟨sl % 20, Nat.mod_lt _ (by decide)⟩ from
+          Fin.ext (Nat.mod_eq_of_lt hsl).symm]
+      simp only [colour_on_refines, ok_bind, sEq_ofNat]
       by_cases h2 : colourOn (cornerFace sl 2) (cornerFace sl 1) (cornerFace sl 2) (cornerFace t.val 0)
           (cornerFace t.val 1) (cornerFace t.val 2) (g.co ⟨sl % 20, Nat.mod_lt _ (by decide)⟩) = x <;>
       by_cases h1 : colourOn (cornerFace sl 1) (cornerFace sl 1) (cornerFace sl 2) (cornerFace t.val 0)

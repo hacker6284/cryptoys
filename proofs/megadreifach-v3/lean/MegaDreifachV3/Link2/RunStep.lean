@@ -1,5 +1,6 @@
 import MegaDreifachV3.Link2.FaceOfFound
 import MegaDreifach.Link2.FaceTurn
+import MegaDreifach.Link2.InjPos
 import MegaDreifach.IV
 import MegaDreifachV3.Link2.RunSimp
 
@@ -18,63 +19,6 @@ import MegaDreifachV3.Link2.RunSimp
 
 namespace MegaDreifachV3.Link2
 open MegaDreifach MegaDreifach.Em MegaDreifach.Link2 MegaDreifachV3.Em
-
-theorem fdiv_ofNat (a b : Nat) (hb : 0 < b) :
-    Int.fdiv (Int.ofNat a) (Int.ofNat b) = Int.ofNat (a / b) := by
-  cases a with
-  | zero => simp [Int.fdiv]
-  | succ m => cases b with
-    | zero => omega
-    | succ n => rfl
-
-theorem fmod_ofNat (a b : Nat) (hb : 0 < b) :
-    Int.fmod (Int.ofNat a) (Int.ofNat b) = Int.ofNat (a % b) := by
-  cases a with
-  | zero => simp [Int.fmod]
-  | succ m => cases b with
-    | zero => omega
-    | succ n => rfl
-
-theorem divI_ofNat (a b : Nat) (hb : 0 < b) :
-    SudoRt.divI (Int.ofNat a) (Int.ofNat b) = .ok (Int.ofNat (a / b)) := by
-  have h1 : (Int.ofNat b == 0) = false := by simp; omega
-  have h2 : (Int.ofNat a == SudoRt.i64Min) = false := by simp [SudoRt.i64Min]
-  unfold SudoRt.divI
-  simp only [h1, h2, Bool.false_and, Bool.false_eq_true, if_false, fdiv_ofNat a b hb]
-
-theorem modI_ofNat (a b : Nat) (hb : 0 < b) :
-    SudoRt.modI (Int.ofNat a) (Int.ofNat b) = .ok (Int.ofNat (a % b)) := by
-  have h1 : (Int.ofNat b == 0) = false := by simp; omega
-  unfold SudoRt.modI
-  simp only [h1, Bool.false_eq_true, if_false, fmod_ofNat a b hb]
-
-/-! ## Bijective tables are kept by face turns (as v2's InjInv, whose module is v2-only) -/
-
-theorem injective_comp' {α β γ : Type _} {f : β → γ} {g : α → β}
-    (hf : Injective f) (hg : Injective g) : Injective (f ∘ g) :=
-  fun h => hg (hf h)
-
-theorem injPos_compose' (g h : Position) (hg : InjPos g) (hh : InjPos h) :
-    InjPos (compose g h) :=
-  ⟨injective_comp' hh.1 hg.1, injective_comp' hh.2 hg.2⟩
-
-theorem faceMove_cp_inj :
-    ∀ f : Fin 12, ∀ x y : Fin 20, (faceMove f).cp x = (faceMove f).cp y → x = y := by
-  decide
-
-theorem faceMove_ep_inj :
-    ∀ f : Fin 12, ∀ x y : Fin 30, (faceMove f).ep x = (faceMove f).ep y → x = y := by
-  decide
-
-theorem injPos_leftIter' (T : Position) (hT : InjPos T) :
-    ∀ n g, InjPos g → InjPos (leftIter T n g)
-  | 0, _, hg => hg
-  | n + 1, g, hg => injPos_compose' _ _ hT (injPos_leftIter' T hT n g hg)
-
-/-- Face turns keep bijective corner and edge tables. -/
-theorem injPos_faceTurn' (g : Position) (f : Fin 12) (a : Nat) (hg : InjPos g) :
-    InjPos (faceTurn g f a) :=
-  injPos_leftIter' _ ⟨fun h => faceMove_cp_inj f _ _ h, fun h => faceMove_ep_inj f _ _ h⟩ _ _ hg
 
 /-! ## The run record -/
 
@@ -166,7 +110,7 @@ theorem count_register_looks_refines (r : Run) (h : FitsLen (r.registerLooks + 2
 theorem card_colour_refines (card : Nat) :
     Megadreifach.card_colour (Int.ofNat card) = .ok (Int.ofNat (cardColour card).val) := by
   unfold Megadreifach.card_colour cardColour
-  rw [show (4 : Int) = Int.ofNat 4 from rfl, divI_ofNat card 4 (by decide), ok_bind]
+  rw [show (4 : Int) = Int.ofNat 4 from rfl, divI_ofNat card (b := 4) (by decide), ok_bind]
   by_cases h : card / 4 < 12
   · have hd : decide (Int.ofNat (card / 4) < 12) = true := by
       simp; omega
@@ -222,7 +166,7 @@ theorem corner_face_of_run (r : Run) (hr : InjPos r.g) (c : Fin 12) (k : Nat) (h
 /-- Side goals of the card-step rewrites: counter bounds and bijective tables. -/
 macro "run_side" : tactic => `(tactic| first
   | (apply fits_of_cap; simp only [run_proj, counterCap]; omega)
-  | ((repeat (first | assumption | apply injPos_faceTurn')); done))
+  | ((repeat (first | assumption | apply injPos_faceTurn)); done))
 
 /-- The model's `cardStep` after its face choice: the `k`-click turn of face `f` and the eight
 moves that follow. `cardStep r base rank k c = cardTail r (turnedFace base rank) k c` by `rfl`. -/
@@ -312,7 +256,7 @@ theorem card_step_refines (r : Run) (hg : InjPos r.g) (hb : CountersLe r counter
   · have hd : decide (Int.ofNat rank < 12) = true := by simp; omega
     have hfit : FitsLen (base.val + rank) := by unfold FitsLen i64MaxNat; omega
     rw [hd, if_pos rfl, addI_ofNat _ _ hfit, ok_bind, show (12 : Int) = Int.ofNat 12 from rfl,
-      modI_ofNat _ 12 (by decide), ok_bind,
+      modI_ofNat _ (b := 12) (by decide), ok_bind,
       show Int.ofNat ((base.val + rank) % 12) = Int.ofNat (turnedFace base rank).val by
         simp [turnedFace, hr]]
     exact card_step_tail_refines r hg ⟨b1, b2, b3, b4, b5⟩ _ k hk1 hk4 c

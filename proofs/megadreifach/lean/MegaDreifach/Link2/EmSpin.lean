@@ -111,15 +111,6 @@ theorem physFinal_getElem (up : Fin 12) (k : Nat) (hk1 : 1 ≤ k) (hk : k ≤ 4)
   simp only [h, List.getElem_map, List.getElem_range, x.isLt, dite_true]
 
 
-private theorem sEq_ofNat3 (a b : Nat) :
-    SudoRt.SEq.beq (Int.ofNat a) (Int.ofNat b) = decide (a = b) := by
-  rw [sEq_int]
-  by_cases h : a = b
-  · subst h; simp
-  · have : ¬ (Int.ofNat a = Int.ofNat b) := fun e => h (Int.ofNat.inj e)
-    simp [h]
-    exact this
-
 theorem subI_small (i k : Nat) (hi : i ≤ 4) (hk : k ≤ 4) :
     SudoRt.subI (Int.ofNat i) (Int.ofNat k) = .ok ((i : Int) - (k : Int)) := by
   unfold SudoRt.subI
@@ -181,7 +172,7 @@ theorem spin_about_up_refines (o : Grip) (k : Nat) :
   unfold Megadreifach.spin_about_up
   rw [show (5 : Int) = Int.ofNat 5 from rfl, modI_ofNat k (by decide : (5 : Nat) ≠ 0), ok_bind]
   dsimp only
-  rw [show (0 : Int) = Int.ofNat 0 from rfl, sEq_ofNat3]
+  rw [show (0 : Int) = Int.ofNat 0 from rfl, sEq_ofNat]
   by_cases h0 : k % 5 = 0
   · rw [decide_eq_true h0]
     simp only [ite_true]

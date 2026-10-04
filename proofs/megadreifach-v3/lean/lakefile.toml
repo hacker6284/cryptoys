@@ -29,7 +29,9 @@ root = "Main"
 # RequirePerm, PadRef, EvenRank(Gen), PosBytes, PhiChunk and PhiInv take the .sudo assert
 # line as a parameter, so they hold for both emits. EmHelpers, EmCorner and EmEdge are the
 # generic face / corner / edge tables (the grip lemmas are in EmGrip). IV holds the
-# v2 IV-COOK12 constant data that v3's iv_cook12 reuses. Not listed, because
+# v2 IV-COOK12 constant data that v3's iv_cook12 reuses. InjPos (bijective tables kept by
+# face turns) and VHashCommon (chunk-copy loop, deck pad block) are the version-neutral parts
+# of InjInv and VHash / VHashDeck; Compose has `identity_refines`. Not listed, because
 # they name v2-only emitted functions: EmGrip, EmSpin, EmRecipe, EmStep, EmInv, EmBlock,
 # EmIv, InjInv, VHash, VHashDeck. See ../README.md.
 # MegaDreifach.Em (the v2 model, grips included) is re-elaborated because the reused layers
@@ -89,7 +91,6 @@ roots = [
   "MegaDreifach.DaviesMeyer",
   "MegaDreifach.Chain",
   "MegaDreifach.Link2.RequirePerm",
-  "MegaDreifach.Link2.UnfoldMatchers",
   "MegaDreifach.Link2.PadRef",
   "MegaDreifach.Link2.EvenRank",
   "MegaDreifach.Link2.EvenRankGen",
@@ -97,6 +98,8 @@ roots = [
   "MegaDreifach.Link2.PosBytesGen",
   "MegaDreifach.Link2.PhiChunk",
   "MegaDreifach.Link2.PhiInv",
+  "MegaDreifach.Link2.InjPos",
+  "MegaDreifach.Link2.VHashCommon",
   "MegaDreifach.Link2.EmHelpers",
   "MegaDreifach.Link2.EmCorner",
   "MegaDreifach.Link2.EmEdge",

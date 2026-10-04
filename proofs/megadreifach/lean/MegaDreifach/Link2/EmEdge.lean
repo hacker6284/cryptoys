@@ -87,26 +87,17 @@ theorem edge_slot_traps (a b : Fin 12) (h : edgeSlot? a b = none) :
 
 /-! ## `edge_colours_at` -/
 
-private theorem atL_listOf30 (f : Fin 30 → Fin 30) (i : Fin 30) :
+theorem atL_listOf30 (f : Fin 30 → Fin 30) (i : Fin 30) :
     SudoRt.atL (embed (listOf f)) (Int.ofNat i.val) = .ok (Int.ofNat (f i).val) := by
   have hlen : i.val < (listOf f).length := by rw [listOf_length]; exact i.isLt
   rw [atL_embed (listOf f) i.val hlen]
   simp [listOf, List.getElem_map, List.getElem_range, i.isLt]
 
-private theorem atL_listOfOri30 (f : Fin 30 → Fin 2) (i : Fin 30) :
+theorem atL_listOfOri30 (f : Fin 30 → Fin 2) (i : Fin 30) :
     SudoRt.atL (embed (listOfOri f)) (Int.ofNat i.val) = .ok (Int.ofNat (f i).val) := by
   have hlen : i.val < (listOfOri f).length := by rw [listOfOri_length]; exact i.isLt
   rw [atL_embed (listOfOri f) i.val hlen]
   simp [listOfOri, List.getElem_map, List.getElem_range, i.isLt]
-
-private theorem sEq_ofNat5 (a b : Nat) :
-    SudoRt.SEq.beq (Int.ofNat a) (Int.ofNat b) = decide (a = b) := by
-  rw [sEq_int]
-  by_cases h : a = b
-  · subst h; simp
-  · have : ¬ (Int.ofNat a = Int.ofNat b) := fun e => h (Int.ofNat.inj e)
-    simp [h]
-    exact this
 
 private theorem fitsEdge3 (k : Nat) (hk : k ≤ 3) : FitsLen k :=
   FitsLen.of_le (by unfold FitsLen i64MaxNat; decide : FitsLen 3) hk
@@ -124,7 +115,7 @@ private theorem edge_parity (l : Int) (locA : Nat) (hl0 : l = Int.ofNat locA) (h
   have ho := ori.isLt
   rw [addI_ofNat _ _ (fitsEdge3 _ (by omega)), ok_bind, show (2 : Int) = Int.ofNat 2 from rfl,
     modI_ofNat _ (by decide : (2 : Nat) ≠ 0), ok_bind, show (0 : Int) = Int.ofNat 0 from rfl,
-    sEq_ofNat5]
+    sEq_ofNat]
   by_cases hp : (locA + ori.val) % 2 = 0
   · rw [decide_eq_true hp, if_pos hp]; rfl
   · rw [decide_eq_false hp, if_neg hp]; rfl
@@ -143,7 +134,7 @@ theorem edge_colours_at_refines (g : Position) (a b : Fin 12) (s : Fin 30)
     show (embedPos g).sudo_8Position_2eo = embed (listOfOri g.eo) from rfl,
     atL_listOf30, ok_bind, atL_listOfOri30, ok_bind, edge_faces_refines s, ok_bind]
   dsimp only
-  rw [sEq_ofNat5, hs]
+  rw [sEq_ofNat, hs]
   by_cases ha : a = edgeFace s.val 0
   · have hd : decide (a.val = (edgeFace s.val 0).val) = true := by simp [ha]
     rw [hd]

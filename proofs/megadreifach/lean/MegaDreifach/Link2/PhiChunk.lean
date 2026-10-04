@@ -554,7 +554,7 @@ private theorem sudoAssertEq_ofNat (n : Nat) (line : Nat) :
 /-- Generated outer closure of `phi_chunk`, in the shape the emitter leaves it, with the
     `.sudo` line of its index assert as a parameter `line` (a trap label only; it differs
     between emits, see `Loop.byteCheckStep`). -/
-def phiChunkStepL (line : Nat) (σ : PhiSt) :
+def phiChunkStep (line : Nat) (σ : PhiSt) :
     Except SudoRt.Trap (SudoRt.Flow PhiSt (Array Int)) :=
   let i := σ.1
   let out := σ.2.1
@@ -689,14 +689,10 @@ private theorem phiOuterFinish (i : Nat) (hi : i < 51)
   have hadd := addI_ofNat_one i (FitsLen.of_le fits52 (by omega))
   rw [if_neg hne, hadd, ok_bind]
 
-/-- `phiChunkStepL` at the v2 assert line (508). -/
-def phiChunkStep : PhiSt → Except SudoRt.Trap (SudoRt.Flow PhiSt (Array Int)) :=
-  phiChunkStepL 508
-
 /-- One step of the outer loop, `i < 51`, for any assert line. -/
-theorem phiChunkStepL_lt (line : Nat) (rank : Nat) (hrank : rank < factorial 52) (i : Nat)
+theorem phiChunkStep_lt (line : Nat) (rank : Nat) (hrank : rank < factorial 52) (i : Nat)
     (hi : i < 51) :
-    phiChunkStepL line (Int.ofNat i, phiState rank i) =
+    phiChunkStep line (Int.ofNat i, phiState rank i) =
       .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), phiState rank (i + 1))) := by
   have hi52 : i < 52 := by omega
   have hile : i ≤ 51 := by omega
@@ -726,7 +722,7 @@ theorem phiChunkStepL_lt (line : Nat) (rank : Nat) (hrank : rank < factorial 52)
     rw [sEq_int, decide_eq_false_iff_not, ofNat_eq_zero_iff]
     omega
   rw [phiState_of_le rank i hile]
-  unfold phiChunkStepL
+  unfold phiChunkStep
   dsimp only
   rw [show (51 : Int) = Int.ofNat 51 from rfl]
   rw [if_neg (ofNat_not_gt hile)]
@@ -776,8 +772,8 @@ private theorem phiOuterFinish51
 
 /-- One step of the outer loop at `i = 51` (stores the full picks, breaks), for any
     assert line. -/
-theorem phiChunkStepL_51 (line : Nat) (rank : Nat) (hrank : rank < factorial 52) :
-    phiChunkStepL line (Int.ofNat 51, phiState rank 51) =
+theorem phiChunkStep_51 (line : Nat) (rank : Nat) (hrank : rank < factorial 52) :
+    phiChunkStep line (Int.ofNat 51, phiState rank 51) =
       .ok (SudoRt.Flow.brk (Int.ofNat 51, phiState rank 52)) := by
   have hlen : (phiLeftover rank 51).length = 1 :=
     phiLeftover_length rank hrank 51 (by omega)
@@ -800,7 +796,7 @@ theorem phiChunkStepL_51 (line : Nat) (rank : Nat) (hrank : rank < factorial 52)
     rw [← picksOf_take_succ rank 51 hrank (by decide)]
     rw [h1, picksOf_full rank hrank]
   rw [phiState_of_le rank 51 (by omega)]
-  unfold phiChunkStepL
+  unfold phiChunkStep
   dsimp only
   rw [← phiLeftover_def]
   rw [show (51 : Int) = Int.ofNat 51 from rfl]
@@ -817,18 +813,6 @@ theorem phiChunkStepL_51 (line : Nat) (rank : Nat) (hrank : rank < factorial 52)
   rw [phiOuterFinish51]
   rw [phiState_52 rank, hout]
   rfl
-
-/-- One step of the outer loop, `i < 51` (v2 assert line). -/
-theorem phiChunkStep_lt (rank : Nat) (hrank : rank < factorial 52) (i : Nat) (hi : i < 51) :
-    phiChunkStep (Int.ofNat i, phiState rank i) =
-      .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), phiState rank (i + 1))) :=
-  phiChunkStepL_lt 508 rank hrank i hi
-
-/-- One step of the outer loop at `i = 51` (stores the full picks, breaks; v2 assert line). -/
-theorem phiChunkStep_51 (rank : Nat) (hrank : rank < factorial 52) :
-    phiChunkStep (Int.ofNat 51, phiState rank 51) =
-      .ok (SudoRt.Flow.brk (Int.ofNat 51, phiState rank 52)) :=
-  phiChunkStepL_51 508 rank hrank
 
 /-! ## Refinement -/
 
@@ -850,9 +834,9 @@ theorem phi_chunk_refines (bs : List Nat) (h : PhiChunkWf bs) :
   dsimp only
   rw [except_bind_pure]
   apply Eq.trans
-  · apply runLoopOn_step_pointwise (step' := phiChunkStepL _)
+  · apply runLoopOn_step_pointwise (step' := phiChunkStep _)
     intro σ
-    unfold phiChunkStepL
+    unfold phiChunkStep
     dsimp
     rfl
   · rw [hinit]
@@ -863,10 +847,10 @@ theorem phi_chunk_refines (bs : List Nat) (h : PhiChunkWf bs) :
     · intro i _ hhi
       rcases (by omega : i < 51 ∨ i = 51) with hlt | heq
       · rw [if_neg (by omega)]
-        exact phiChunkStepL_lt _ (fromBE bs) hrank i hlt
+        exact phiChunkStep_lt _ (fromBE bs) hrank i hlt
       · subst heq
         rw [if_pos rfl]
-        exact phiChunkStepL_51 _ (fromBE bs) hrank
+        exact phiChunkStep_51 _ (fromBE bs) hrank
     · rw [phiState_52 (fromBE bs)]
       rfl
 

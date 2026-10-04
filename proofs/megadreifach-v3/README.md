@@ -24,9 +24,9 @@ compares two builds of one source, not two independent implementations.
 [`lean/MegaDreifachV3/Link2/Shared.lean`](lean/MegaDreifachV3/Link2/Shared.lean) states, for
 the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
 `inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
-`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 62 v2 modules,
+`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 63 v2 modules,
 exactly their own import closure, that elaborate against the v3 emit; with the 17 v3 modules
-the package builds 79 modules, plus the `Generated/` package). The model side is the v2 position algebra,
+the package builds 80 modules, plus the `Generated/` package). The model side is the v2 position algebra,
 which v3 keeps. These four functions are not exports.
 
 [`lean/MegaDreifachV3/Link2/Codec.lean`](lean/MegaDreifachV3/Link2/Codec.lean) states, for the
@@ -106,7 +106,7 @@ The card-phase layers:
 - `HashDeck` and the body exports (`Link2/VHashDeck.lean`). `v_HashDeck_refines` (on
   `PhiInvWf`): `HashDeck(deal) = Hash(φ⁻¹(deal))`, the algebraic hash of the deal's 28-byte
   Lehmer rank. `v_HashDeck_two_blocks`: that is one v3 Davies–Meyer block keyed by the deal
-  itself from `ivCook12` (via the φ round trip `phiUnrank_lehmerRank`), then the fixed pad
+  itself from `ivCook12` (via the φ round trip `phiUnrank_lehmerRank` of v2's PhiInv), then the fixed pad
   block `deckPadBlock`. `body_from_refines`, `v_HashDeckBody_refines` and
   `v_HashDeckBodyFrom_refines`: on a permutation of `0..51` (and, for `BodyFrom`, a chaining
   value with bijective tables) the digest of `dmStep h deal`.
@@ -115,8 +115,11 @@ The card-phase layers:
   (an emitted `Position` record that is not such an embedding is not covered).
 
 Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
-EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The v3 files restate the few generic
-lemmas they need from those layers (`injPos_*'`, the chunk-copy loop, the φ round trip).
+EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The generic
+lemmas v3 needs from those layers live in version-neutral v2 modules that both versions import:
+InjPos (`injPos_faceTurn`, `injPos_compose`), VHashCommon (the chunk-copy loop, `padWf_toBE28`,
+`deckPadBlock`), PhiInv (the φ round trip `phiUnrank_lehmerRank`) and Compose
+(`identity_refines`). `unfold_matchers` (used by PadRef) is in the shared `proofs/audit` package.
 
 ## Link 2 status of each export
 

@@ -1,7 +1,7 @@
 {
   "spec": "MegaDreifach",
   "version": "v3",
-  "status": "Candidate (v2 stays current until a separate change makes v3 current). Not a security claim. MegaDreifach v3 = card phase ZP26: colour-named card steps with a last-face register, deal once, 26 echoes of the held 52nd card (SPEC v3 section 5); no grips, no F3 rounds.",
+  "status": "Current (v2 and v1 are deprecated). Not a security claim. MegaDreifach v3 = card phase ZP26: colour-named card steps with a last-face register, deal once, 26 echoes of the held 52nd card (SPEC v3 section 5); no grips, no F3 rounds.",
   "date": "2026-10-02",
   "digest_encoding": "LOCKED position_to_bytes 29-byte BE rank (SPEC v2 sections 3 and 6, unchanged)",
   "digest_len": 29,

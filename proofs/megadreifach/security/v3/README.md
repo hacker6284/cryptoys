@@ -1,4 +1,4 @@
-<!-- Owns: the evidence for MegaDreifach v3 (candidate, ZP26): what the repo checks (sudo tests, the in-tree harness on the sudoc build and its logs), the one note on the out-of-tree study code behind the other logs, and which log backs each SPEC v3 §8 number. Maintenance rules: ../../../../DOCS.md. -->
+<!-- Owns: the evidence for MegaDreifach v3 (current, ZP26): what the repo checks (sudo tests, the in-tree harness on the sudoc build and its logs), the one note on the out-of-tree study code behind the other logs, and which log backs each SPEC v3 §8 number. Maintenance rules: ../../../../DOCS.md. -->
 # MegaDreifach v3: evidence
 
 This directory backs the numbers in [SPEC v3 §8](../../../../primitives/hash/megadreifach/v3/SPEC.md#8-security-status). It is empirical evidence, not a proof of security. The design analysis, including every rejected variant, is in [`ANALYSIS.md`](ANALYSIS.md).
@@ -14,7 +14,7 @@ Every other log in [`logs/`](logs/) is a record of a run of out-of-tree code (OU
 | File | Role |
 | --- | --- |
 | [`ANALYSIS.md`](ANALYSIS.md) | The study: the v2 baseline, the constraints, NRk52, SBR26, the per-card scrambles and board registers, ZP26, ZP13 and ZP0F0E26, and the in-tree battery (§12.9) |
-| [`harness/zp26_stats.mjs`](harness/zp26_stats.mjs) | The statistics harness. It calls only the sudoc JS build (`em_block`, `compose`, `inverse`, `identity`, `iv_cook12`, `opposites`, `face_turn`, `position_to_bytes`, `HashDeckBodyFrom`); it samples, counts and runs the statistics, and implements no part of `W` |
+| [`harness/zp26_stats.mjs`](harness/zp26_stats.mjs) | The statistics harness. It calls only functions from the sudoc JS build (`dm_step`, `em_block`, `compose`, `inverse`, `identity`, `iv_cook12`, `opposites`, `face_turn`, `position_to_bytes`, `HashDeckBodyFrom`); it samples, counts and runs the statistics, and implements no part of `W`, `E_m` or the Davies–Meyer step |
 | [`logs/intree/`](logs/intree/) | IN-TREE logs. The first line of each is the command that reproduces it |
 | [`logs/`](logs/) (the rest) | OUT-OF-TREE study logs, unedited run output, kept as the record of what was run |
 
@@ -36,10 +36,10 @@ MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_s
 MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_stats.mjs --check proofs/megadreifach/security/v3/logs/intree/zp26_ci_slice.log ci 84000000
 ```
 
-- Each run starts with a self-check against the build: the sampled positions are group elements of the build, the harness's `y = compose(h, em_block(h, deal))` equals the build's `HashDeckBodyFrom` digest, the sampler's legality matches the build's face turns, and the reference laws sum to 1.
+- Each run starts with a self-check against the build: the sampled positions are group elements of the build, the harness's `y = dm_step(h, deal)` (the build's Davies–Meyer step) equals the build's `HashDeckBodyFrom` digest, the sampler's legality matches the build's face turns, and the reference laws sum to 1. Both sides of the digest check now run `dm_step`, so it checks only the JS bridge and the digest encoding; only the KATs pin the feed-forward.
 - Work is split into chunks whose size depends only on N, and chunk c uses seed SEED0 + c, so the output does not depend on the worker count. Only the `# time` lines vary.
 - `--check LOG COMMAND` runs COMMAND and compares its whole output, including the `# command:` first line, with the log, ignoring `# time` lines; it prints `OK` or `STALE` (exit 1). Without COMMAND it runs the log's own first line. `tools/generate-demos.sh` pins the command: `--check logs/intree/zp26_ci_slice.log ci 84000000` (a fixed-seed slice of all four tests, about 3,000 blocks).
-- Merge and D3 count output collisions only. The out-of-tree "state equal right after the swapped pair" and "card-phase positions equal" counts need a partial block, which the build does not export, so the harness does not measure them.
+- Merge and D3 count output collisions only. The out-of-tree "state equal right after the swapped pair" and "card-phase positions equal" counts need a partial block, which no function from the sudoc build returns, so the harness does not measure them.
 
 **The in-tree ZP26 battery** (2026-10-02, about 29 min, one heavy job on 4 workers; ANALYSIS §12.9):
 

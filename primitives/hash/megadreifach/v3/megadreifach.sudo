@@ -1,4 +1,4 @@
-// MegaDreifach v3 (candidate; v2 stays current until a separate change). The rules are
+// MegaDreifach v3 (current; v1 and v2 are deprecated). The rules are
 // primitives/hash/megadreifach/v3/SPEC.md. A toy three-megaminx Merkle-Damgard hash. Not for real use.
 // Product name MegaDreifach is locked. The puzzle/group is megaminx.
 // v3 changes only the card phase W inside E_m (SPEC v3 §5): colour-named card steps with a last-face
@@ -742,6 +742,10 @@ func em_run(h: Position, deal: List<int>) -> Run
 func em_block(h: Position, deal: List<int>) -> Position
     return em_run(h, deal).g
 
+// Davies–Meyer step, the one home of the feed-forward: h' = compose(h, E_m(h)) = h·W·h (the 3-solve, SPEC §5.7).
+func dm_step(h: Position, deal: List<int>) -> Position
+    return compose(h, em_block(h, deal))
+
 export func Hash(msg: List<int>) -> List<int>
     padded = pad_message(msg)
     assert padded.length > 0
@@ -754,8 +758,7 @@ export func Hash(msg: List<int>) -> List<int>
         for j = 0 to 27
             chunk.append(padded[i + j])
         deal = phi_chunk(chunk)
-        e = em_block(h, deal)
-        h = compose(h, e)
+        h = dm_step(h, deal)
     return position_to_bytes(h)
 
 export func MegaDreifach(msg: List<int>) -> List<int>
@@ -771,8 +774,7 @@ export func MegaDreifachDeck(deal: List<int>) -> List<int>
 
 func body_from(deal: List<int>, h: Position) -> List<int>
     deal = require_permutation(deal)
-    e = em_block(h, deal)
-    return position_to_bytes(compose(h, e))
+    return position_to_bytes(dm_step(h, deal))
 
 export func HashDeckBody(deal: List<int>) -> List<int>
     return body_from(deal, iv_cook12())
@@ -1030,7 +1032,8 @@ test "card pass: the last face is re-derivable from the board and the top dealt 
         n, n2 = suit_nbrs(c, card mod 4 + 1)
         assert edge_face_of(r.g, c, n, n) == r.last
 
-test "a King step equals the step of the rank that counts up to the opposite face (opposites[last] != last)"
+// A King steps exactly like the rank that counts up from the last face to its opposite (opposites[last] != last).
+test "a King steps as the rank counting up to its opposite face"
     r0 = start_run(iv_cook12())
     for last = 0 to 11
         assert opposites[last] != last

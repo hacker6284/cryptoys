@@ -2,7 +2,7 @@
   E_m — the MegaDreifach v2 block map (G2 body + F3 tail) over `Position`.
 
   A typed transliteration of `primitives/hash/megadreifach/megadreifach.sudo`
-  (v2, current; normative), not an independent specification: same procedures, same
+  (v2, deprecated; normative), not an independent specification: same procedures, same
   control flow, tables copied verbatim. The Link 2 theorems show that the emitted code
   computes this function; they do not validate the sudo's design. It covers:
   `face_move`, `face_turn`, `inverse`, `visual_noon`, `spin_about_up`,

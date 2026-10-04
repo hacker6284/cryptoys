@@ -4,7 +4,7 @@
 **Do not edit these files by hand.** They are produced from the frozen, deprecated **v1**
 [`primitives/hash/megadreifach/v1/megadreifach.sudo`](../../../../../primitives/hash/megadreifach/v1/megadreifach.sudo)
 by `proofs/emit_lean.sh` (target `megadreifach-v1`). The module is `Megadreifach` (the file
-stem), the same name as the current v2 module in `proofs/megadreifach/lean/Generated/`; the two
+stem), the same name as the deprecated v2 module in `proofs/megadreifach/lean/Generated/`; the two
 live in separate Lake packages and are never imported together.
 
 This directory is a standalone Lake package (its own `lakefile.lean`, package `sudo`).

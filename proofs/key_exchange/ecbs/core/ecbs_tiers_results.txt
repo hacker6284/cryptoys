@@ -1,4 +1,3 @@
-PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
 Demo (n = 7, log2 l = 8.72, n-3 = 4):
   m =   2: H_inf = 3.00 (exact); plain BSGS 2^2.58, with negation 2^2.08; E[c] = 1.500 -> modelled 2^1.79; GGM floor 2^-0.40; rho 2^2.78; key-limited (plain BSGS < rho): True (margin +0.20)
   m =   3: H_inf = 4.70 (exact); plain BSGS 2^3.58, with negation 2^3.08; E[c] = 1.769 -> modelled 2^2.67; GGM floor 2^0.45; rho 2^2.78; key-limited (plain BSGS < rho): False (margin -0.80)
@@ -23,7 +22,7 @@ Serious (n = 179, log2 l = 281.39, n-3 = 176):
   m = 172: H_inf = 272.61 (exact); plain BSGS 2^137.31, with negation 2^136.81; E[c] = 2.075 -> modelled 2^136.28; GGM floor 2^132.06; rho 2^136.78; key-limited (plain BSGS < rho): False (margin -0.53)
   m = 173: H_inf = 274.20 (exact); plain BSGS 2^138.31, with negation 2^137.81; E[c] = 2.226 -> modelled 2^137.23; GGM floor 2^132.86; rho 2^136.78; key-limited (plain BSGS < rho): False (margin -1.53)
   m = 176: H_inf = 278.95 (exact); plain BSGS 2^140.48, with negation 2^139.98; E[c] = 8.333 -> modelled 2^138.45; GGM floor 2^135.23; rho 2^136.78; key-limited (plain BSGS < rho): False (margin -3.70)
-Demo exhaustive exceptional-case check (pegs-only, chord or projective walk):
-  m = 2: 8 nonzero keys, 0 meet lam*s = +-1 at an addition
-  m = 3: 26 nonzero keys, 0 meet lam*s = +-1 at an addition
-  m = 4: 80 nonzero keys, 0 meet lam*s = +-1 at an addition
+Demo exhaustive exceptional-case check (pegs-only keys, the generated chord walk over P):
+  m = 2: 8 nonzero keys, 0 meet the exceptional case (generated walk_key), 0 of the others differ from PARI's [k]P
+  m = 3: 26 nonzero keys, 0 meet the exceptional case (generated walk_key), 0 of the others differ from PARI's [k]P
+  m = 4: 80 nonzero keys, 0 meet the exceptional case (generated walk_key), 0 of the others differ from PARI's [k]P

@@ -2,10 +2,27 @@
 The evidence drivers run the code sudoc generates from primitives/key_exchange/ecbs/ecbs.sudo and check
 it against this module. Nothing here models the board: no pegs, homes, workbench or card steps; it
 computes P, [k]P, pi(C) - C, the key scalar and the SPEC 6 fold straight from the curve.
+The tier constants (n, k, lane width, key cells, kept rows) are not restated here: they are
+read once from the generated tier() of ecbs.sudo. Only the PARI math is independent.
 A number is a list of n trits (hole 0 first; 0 empty, 1 white, 2 red) or a '.WR' string."""
+import os, sys
 import cypari2
-pari = cypari2.Pari(); pari.allocatemem(2 * 10**9)
-TIERS = {"Demo": (7, 5, 1), "Toy": (23, 15, 1), "Hobby": (59, 39, 2), "Serious": (179, 59, 6)}
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))  # proofs/
+import sudo_js as SJ
+pari = cypari2.Pari(); pari.allocatemem(2 * 10**9, silent=True)
+NAMES = ("Demo", "Toy", "Hobby", "Serious")
+
+
+def _sudo_tiers():
+    s = SJ.Sudo("primitives/key_exchange/ecbs/ecbs.sudo")
+    try:
+        return {name: s.call("tier", name) for name in NAMES}
+    finally:
+        s.close()
+
+
+SUDO_TIER = _sudo_tiers()                 # the generated Tier records, by name
+TIERS = {name: (t["n"], t["k"]) for name, t in SUDO_TIER.items()}
 _vecrev = pari('(a,n)->Vecrev(a.pol, n)')
 
 def V(n, t=-1, q=3):
@@ -36,20 +53,19 @@ class Ref:
     def add(self, R, S): return pari.elladd(self.E, R, S)
     def neg(self, R): return pari.ellneg(self.E, R)
     def frob(self, R): return pari([R[0] ** 3, R[1] ** 3])
-    def is_zero(self, R): return pari.ellisoncurve(self.E, R) and len(R) == 1
     def on(self, R): return bool(pari.ellisoncurve(self.E, R))
     def rand_el(self, rnd): return ['.WR'[rnd.randrange(3)] for _ in range(self.n)]
 
 
-FOLD_KEEP_ROWS = {"Demo": 2, "Toy": 2, "Hobby": 2, "Serious": 5}
-LANE = {"Demo": 2, "Toy": 8, "Hobby": 20, "Serious": 20}
-CELLS = {"Demo": 2, "Toy": 16, "Hobby": 51, "Serious": 162}
+FOLD_KEEP_ROWS = {name: t["keeprows"] for name, t in SUDO_TIER.items()}
+LANE = {name: t["w"] for name, t in SUDO_TIER.items()}
+CELLS = {name: t["cells"] for name, t in SUDO_TIER.items()}
 
 
 class Tier:
     """A tier from the curve alone: P by the base-point rule (SPEC 5.1), l, lambda."""
     def __init__(self, name):
-        self.name = name; n, k, G = TIERS[name]; self.n, self.k, self.G = n, k, G
+        self.name = name; n, k = TIERS[name]; self.n, self.k = n, k
         self.R = Ref(n, k); self.l = self.R.l; self.cells = CELLS[name]
         # base point BY RULE: x = one white peg in hole j (j = 1, 2, ...), y = rhs^((3^n+1)/4);
         # the first j with y*y = rhs; then P = 5 (x, y).
@@ -86,8 +102,13 @@ class Tier:
     def kP(self, k): return self.R.mul(k, self.Pref)
     def pi_minus_1(self, C): return self.R.add(self.R.frob(C), self.R.neg(C))
     def ref_fold(self, x):
-        """SPEC 6: z_j = sum of x_i over i = j (mod m), m = kept rows x lane width."""
-        m = FOLD_KEEP_ROWS[self.name] * LANE[self.name]
-        z = [0] * m
-        for i, c in enumerate(x): z[i % m] = (z[i % m] + c) % 3
-        return z
+        """SPEC 6: the fold to m = kept rows x lane width (fold_mod)."""
+        return fold_mod(x, FOLD_KEEP_ROWS[self.name] * LANE[self.name])
+
+
+def fold_mod(x, m):
+    """z_j = sum of x_i over i = j (mod m), over GF(3); x as trits or a '.WR' string (returned alike)."""
+    t = ['.WR'.index(c) for c in x] if isinstance(x, str) else list(x)
+    z = [0] * m
+    for i, c in enumerate(t): z[i % m] = (z[i % m] + c) % 3
+    return ''.join('.WR'[d] for d in z) if isinstance(x, str) else z

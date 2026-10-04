@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""ECBS curve facts, re-derived from scratch (does not import anything from kx-report/peg).
+"""ECBS curve facts from PARI/GP: the tier sizes n and fold exponents k come from the generated
+tier() of ecbs.sudo (via ../oracle/ecbs_oracle.py), the trace recurrence V from the oracle; every
+curve fact below is computed here.
 
 E : y^2 = x^3 + 2x^2 + 1 over GF(3), then over GF(3^n) for the tier values of n.
 Prints: #E(GF(3)), trace recurrence, #E(GF(3^n)) = 5*l with l proven prime (PARI isprime),
@@ -9,10 +11,12 @@ fold trinomial irreducibility, family scan n < 200, and Pollard-rho cost estimat
 Run: python ecbs_curve.py (Python with cypari2, from this directory)
 """
 import math, sys, time, json
-import cypari2
-pari = cypari2.Pari(); pari.allocatemem(2 * 10**9)
-TIERS = {"Demo": 7, "Toy": 23, "Hobby": 59, "Serious": 179}
-FOLD_K = {7: 5, 23: 15, 59: 39, 179: 59}           # x^n = x^k + 1 (visual edition: Toy 3 -> 15, Hobby 17 -> 39, after TOYMASTER_IDEAS F1; re-checked below)
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "oracle"))
+sys.dont_write_bytecode = True
+from ecbs_oracle import pari, V, TIERS as _TIERS
+TIERS = {name: n for name, (n, k) in _TIERS.items()}
+FOLD_K = {n: k for n, k in _TIERS.values()}          # x^n = x^k + 1 (irreducibility re-checked below)
 
 def hdr(s): print("\n" + "=" * 78 + "\n" + s + "\n" + "=" * 78, flush=True)
 
@@ -23,13 +27,6 @@ def count_F3():
         for y in range(3):
             if (y * y - (x ** 3 + 2 * x * x + 1)) % 3 == 0: pts.append((x, y))
     return pts
-
-def V(n, t=-1, q=3):
-    """V_k = tau^k + taubar^k: V_0 = 2, V_1 = t, V_k = t V_{k-1} - q V_{k-2}."""
-    a, b = 2, t
-    if n == 0: return a
-    for _ in range(n - 1): a, b = b, t * b - q * a
-    return b
 
 def is_prime(m): return bool(pari.isprime(m))       # PARI: proven (APR-CL / ECPP) for these sizes
 

@@ -14,7 +14,7 @@ Exact at Demo; Monte-Carlo bias test at Toy; bounds at every tier."""
 import json, math, random
 import numpy as np
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), '..', 'oracle'))  # PARI oracle
-from ecbs_oracle import TIERS, pari, Tier
+from ecbs_oracle import TIERS, pari, Tier, fold_mod
 KS_C = 3
 from mpmath import mp, mpf, log, sqrt
 mp.dps = 60
@@ -56,10 +56,8 @@ def bounds(n, l, m):
                 trit_sd_log2=float(log(mpf(1) / 2 * sqrt(2) * delta, 2)))
 
 def fold(xreg, m):
-    z = ['.'] * m; order = '.WR'
-    for i, c in enumerate(xreg):
-        z[i % m] = order[(order.index(z[i % m]) + order.index(c)) % 3]
-    return z
+    """the SPEC 6 fold to m holes (the oracle's fold_mod), as a list of '.WR' characters."""
+    return list(fold_mod(''.join(xreg), m))
 
 RECIPES = {  # (m, spoken recipe on the lane layout)
     "Demo": [(4, "2-wide lane: drop rows C-D onto rows A-B"), (2, "then drop row B onto row A")],
@@ -104,7 +102,7 @@ def main():
         out.setdefault('ks_empirical', {})[nn] = dict(l=ll, cof=N // ll, max=wm, ratio=wm / math.sqrt(q), trivial=triv,
                                                       full_max=wf, full_ratio=wf / math.sqrt(q))
     print("\n== 3. Bounds per tier, for K uniform on <P> minus O  [model; see review C19]")
-    for name, (n, k, _) in TIERS.items():
+    for name, (n, k) in TIERS.items():
         T = Tier(name); l = T.l
         b = bounds(n, l, n)
         print(f"  {name}: no fold (m = n = {n}): H_inf(x) = log2((l-1)/2) = {math.log2((l-1)/2):.2f} bits exactly; per-trit SD <= 2^{b['trit_sd_log2']:.1f}")

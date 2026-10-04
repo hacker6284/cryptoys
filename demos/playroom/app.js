@@ -145,6 +145,9 @@ try {
             }
             adapter.view()?.rememberSeated?.();
             await adapter.enter({ snap: reduced || skippedStart });
+            // startAlgo started the live follow, so startAlgo ends it.
+            // While it is set the pose controller keeps orbit off.
+            poses.followLive?.(null);
             starting = false;
             markBeat("enter-done");
             capture.end();

@@ -6,7 +6,8 @@
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
 # Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10, v11),
-# MegaDreifach (v2, v3 and frozen v1), Scramble, DoubleDeal-CBC-HMAC and BS. DoubleDeal's test-only
+# MegaDreifach (current v3, deprecated v2 and frozen v1), Scramble,
+# DoubleDeal-CBC-HMAC and BS. DoubleDeal's test-only
 # kind-scan whiles are stripped under the gate. CBC-HMAC imports
 # MegaDreifach via an extra -I.
 #
@@ -27,7 +28,7 @@ cd "$ROOT"
 # The targets, spelled once: name | .sudo | Generated/ | extra -I directories.
 # doubledeal-v8, -v9, -v10 are frozen, deprecated (vulnerability-proof / write-up
 # targets); doubledeal-v11 is frozen, superseded (not attacked). Do not change their .sudo.
-# megadreifach is the current v2 (megadreifach.sudo): the proof package proofs/megadreifach/.
+# megadreifach is v2 (megadreifach.sudo; deprecated, v3 is current and has no Lean target): the proof package proofs/megadreifach/.
 # megadreifach-v1 is frozen, deprecated v1 (v1/megadreifach.sudo): the v1 weakness-proof
 # package proofs/deprecated/megadreifach-v1/. Do not change the v1 .sudo. Both files are
 # named megadreifach.sudo, so both emitted modules are `Megadreifach` (the entry is the

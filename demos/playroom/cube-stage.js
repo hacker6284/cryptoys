@@ -1,4 +1,4 @@
-import { SETTLE_HOLD_MS, TURN_LIFT, TURN_LIFT_MS } from "./constants.js";
+import { scrambleTurnVoice, timing as scrambleTurnTiming } from "../anim/scramble-turn/index.js";
 
 function easeInOut(t) {
     return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
@@ -22,16 +22,31 @@ function tween(ms, step, snap) {
 }
 
 /**
+ * Lift/settle timings (TURN_LIFT, TURN_LIFT_MS, SETTLE_HOLD_MS), read at
+ * call time: the scramble-turn entry in the animation library
+ * (demos/anim/scramble-turn/settings.js).
+ */
+export const CUBE_STAGE_TIMING = scrambleTurnTiming;
+
+/**
  * Playroom-only cube motion around the live Scramble rig: remember the
  * seated table pose, lift for turn sequences, and ask the pose
  * controller to keep the cube in frame while it is in the air.
+ *
+ * voice: the sounds for it, by default the scramble-turn library entry's
+ * (a click per turn, a pat when the cube lands on the felt), on the
+ * page's shared AudioContext; null for none.
  */
-export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
+export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_STAGE_TIMING, voice: voiceOpt } = {}) {
     let seatedY = null;
     let lifted = false;
     let token = 0;
     let settleTimer = 0;
     let epoch = 0;
+    // Bumped whenever playback stops or ends, so clicks still waiting
+    // for a later turn stay quiet.
+    let turnGen = 0;
+    const voice = voiceOpt === undefined ? scrambleTurnVoice() : voiceOpt;
 
     function reduced() {
         return Boolean(prefersReducedMotion?.());
@@ -67,7 +82,8 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         poses?.releaseFrame?.();
     }
 
-    async function moveY(toY, { snap = false } = {}) {
+    // onMove(endsAt, stillMoving): the tween really runs and ends at endsAt.
+    async function moveY(toY, { snap = false, onMove = null } = {}) {
         const toy = rig.group;
         const fromY = toy.position.y;
         const my = ++token;
@@ -77,7 +93,8 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
             return true;
         }
         rig.group.userData.easeBusy = true;
-        await tween(TURN_LIFT_MS, (t) => {
+        if (onMove && !(snap || reduced())) onMove(performance.now() + timing.TURN_LIFT_MS, () => my === token);
+        await tween(timing.TURN_LIFT_MS, (t) => {
             if (my !== token) return;
             toy.position.y = fromY + (toY - fromY) * t;
         }, snap || reduced());
@@ -91,19 +108,25 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         window.clearTimeout(settleTimer);
         engageFrame();
         if (seatedY == null) rememberSeated();
-        const up = destY() + TURN_LIFT;
+        const up = destY() + timing.TURN_LIFT;
         if (Math.abs(rig.group.position.y - up) < 1e-3) {
             lifted = true;
             return;
         }
-        const ok = await moveY(up);
+        const ok = await moveY(up, {
+            onMove: (endsAt, stillMoving) => voice?.lift(performance.now(), stillMoving),
+        });
         if (ok) lifted = true;
     }
 
     async function setDown({ snap = false } = {}) {
         window.clearTimeout(settleTimer);
         const dest = destY();
-        const ok = await moveY(dest, { snap });
+        // The pat sounds where the cube touches the felt: the end of the set-down.
+        const ok = await moveY(dest, {
+            snap,
+            onMove: (endsAt, stillMoving) => voice?.landing(endsAt, stillMoving),
+        });
         if (!ok) return;
         lifted = false;
         releaseFrame();
@@ -119,7 +142,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         window.clearTimeout(settleTimer);
         settleTimer = window.setTimeout(() => {
             void setDown();
-        }, SETTLE_HOLD_MS);
+        }, timing.SETTLE_HOLD_MS);
     }
 
     // Per-move lift; the settle-hold timer is cleared by the next lift so a
@@ -139,6 +162,62 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         return typeof rig[name] === "function" ? (...args) => rig[name](...args) : fallback;
     }
 
+    // A timeline call that stops playback also drops its pending clicks.
+    function stopping(name) {
+        const run = call(name);
+        return run && ((...args) => {
+            turnGen += 1;
+            return run(...args);
+        });
+    }
+
+    // A turn step: lift, then the leaves, with the voice's sounds. The
+    // rig readies the leaves while the cube lifts and asks before they
+    // play; when a click's file has to begin before the turn (a lead-in),
+    // the voice gets the turn then, timed to the planned start. The turn
+    // starts when the lift ends (the lead-in fits in the lift), or at once
+    // when the cube is already up: it never waits for a sound.
+    async function liftAndTurn(play, opts) {
+        const mine = epoch;
+        const gen = ++turnGen;
+        const live = () => mine === epoch && gen === turnGen;
+        const up = destY() + timing.TURN_LIFT;
+        const tweening = Math.abs(rig.group.position.y - up) >= 1e-3 && !reduced();
+        const liftEndsAt = performance.now() + (tweening ? timing.TURN_LIFT_MS : 0);
+        const lifting = lift();
+        // Without a lead-in the voice hears the turn as it really starts
+        // (onStart), as before; with one, at the planned start.
+        let planned = false;
+        const beforeStart = async (info) => {
+            // Never a pre-turn wait: during a lift the lead-in fits inside
+            // it; with the cube already up the turn starts now and a file
+            // that should have begun earlier skips its head.
+            const lead = voice?.lead?.(info) ?? 0;
+            const at = tweening ? Math.max(liftEndsAt, performance.now() + lead) : performance.now();
+            if (lead > 0) {
+                planned = true;
+                voice?.turns({ ...info, at }, live);
+            }
+            const wait = at - performance.now();
+            if (wait > 0) await new Promise((resolve) => window.setTimeout(resolve, wait));
+            if (!live()) return false;
+            await opts.beforeStart?.(info);
+            return true;
+        };
+        try {
+            const onStart = (info) => {
+                if (!planned) voice?.turns(info, live);
+                opts.onStart?.(info);
+            };
+            const result = await play({ ...opts, beforeStart, onStart, snap: Boolean(opts.snap) || reduced() });
+            await lifting;
+            return mine === epoch ? result : undefined;
+        } finally {
+            if (gen === turnGen) turnGen += 1;
+            if (mine === epoch) scheduleSetDown();
+        }
+    }
+
     return {
         group: rig.group,
         inner: rig.inner ?? rig.lift,
@@ -149,28 +228,24 @@ export function stageCubeView(rig, { poses, prefersReducedMotion } = {}) {
         animateMove: (move, ms) => withLift(() => rig.animateMove(move, ms)),
         animateReorient: (from, up, front, ms) => withLift(() => rig.animateReorient(from, up, front, ms)),
         playLeaves: rig.playLeaves
-            ? (from, to, opts = {}) => withLift(() => rig.playLeaves(from, to, {
-                ...opts,
-                snap: Boolean(opts.snap) || reduced(),
-            }))
+            ? (from, to, opts = {}) => liftAndTurn((o) => rig.playLeaves(from, to, o), opts)
             : undefined,
         playMoves: rig.playMoves
-            ? (moves, opts = {}) => withLift(() => rig.playMoves(moves, {
-                ...opts,
-                snap: Boolean(opts.snap) || reduced(),
-            }))
+            ? (moves, opts = {}) => liftAndTurn((o) => rig.playMoves(moves, o), opts)
             : undefined,
-        jumpToLeaf: call("jumpToLeaf"),
+        jumpToLeaf: stopping("jumpToLeaf"),
         setAlg: call("setAlg"),
         setSetup: call("setSetup"),
         setTempo: call("setTempo"),
-        resetTimeline: call("reset"),
-        pauseTimeline: call("pause"),
+        status: call("status"),
+        resetTimeline: stopping("reset"),
+        pauseTimeline: stopping("pause"),
         highlightLayer: call("highlightLayer", () => {}),
         highlightCubie: call("highlightCubie", () => {}),
         highlightRuleB: call("highlightRuleB", () => {}),
         clearHighlights: call("clearHighlights", () => {}),
         dispose: () => {
+            turnGen += 1;
             cancelEase();
             rig.group.position.y = destY();
             lifted = false;

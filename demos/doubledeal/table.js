@@ -10,6 +10,7 @@ import {
     edgeGap,
     restingClearance,
 } from "./layout.js";
+import { timing as GRID_DEAL } from "../anim/doubledeal-grid-deal/index.js";
 
 const SUIT_FILE = ["club", "heart", "spade", "diamond"];
 const RANK_FILE = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
@@ -37,11 +38,57 @@ function paintTexture(image, anisotropy) {
     return texture;
 }
 
+// The card art's own outline (px): 5 px black, outer corner radius 12.
+const ART_BORDER = 5;
+const ART_RADIUS = 12;
+
+/**
+ * The art redrawn at the card's own aspect (width / height), undistorted:
+ * the art inside its outline keeps its scale and full height, centred,
+ * with white margins at the sides; the outline is drawn again on the new
+ * edge. (The art is 338×489 px, 1.447; a 63×88 mm card is 1.397.)
+ */
+function paintCardTexture(image, anisotropy, aspect) {
+    if (!aspect) return paintTexture(image, anisotropy);
+    const B = ART_BORDER;
+    const h = image.height;
+    const w = Math.round(h * aspect);
+    const iw = image.width - 2 * B;
+    const ih = h - 2 * B;
+    const x0 = Math.round((w - iw) / 2);
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const g = canvas.getContext("2d");
+    g.fillStyle = "#fffdf8";
+    g.fillRect(0, 0, w, h);
+    g.fillStyle = "#ffffff";
+    g.fillRect(B, B, w - 2 * B, h - 2 * B);
+    g.drawImage(image, B, B, iw, ih, x0, B, iw, ih);
+    // The old outline's curved corners reach 6 px into the interior: clear them.
+    g.fillStyle = "#ffffff";
+    for (const [x, y] of [[x0, B], [x0 + iw - 8, B], [x0, B + ih - 8], [x0 + iw - 8, B + ih - 8]]) g.fillRect(x, y, 8, 8);
+    g.strokeStyle = "#000000";
+    g.lineWidth = B;
+    g.beginPath();
+    g.roundRect(B / 2, B / 2, w - B, h - B, ART_RADIUS - B / 2);
+    g.stroke();
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = anisotropy;
+    return texture;
+}
+
 export function cardAssetUrl(file) {
     return new URL(`./vendor/cards/${file}`, import.meta.url).href;
 }
 
-export async function loadCardTextures(anisotropy = 1) {
+/**
+ * aspect: the card's width / height (doubledeal/real-layout.js REAL_LAYOUT
+ * .artAspect, 63 / 88) to redraw the art undistorted at it; omitted, the
+ * art as it is (the standalone card is the art's own aspect).
+ */
+export async function loadCardTextures(anisotropy = 1, { aspect = null } = {}) {
     const faceImages = await Promise.all(
         SUIT_FILE.flatMap((suit) => RANK_FILE.map((rank) => loadImage(cardAssetUrl(`${suit}_${rank}.png`)))),
     );
@@ -50,22 +97,29 @@ export async function loadCardTextures(anisotropy = 1) {
         loadImage(cardAssetUrl("back-red.png")),
     ]);
     return {
-        faces: faceImages.map((image) => paintTexture(image, anisotropy)),
-        navy: paintTexture(navyImage, anisotropy),
-        red: paintTexture(redImage, anisotropy),
+        faces: faceImages.map((image) => paintCardTexture(image, anisotropy, aspect)),
+        navy: paintCardTexture(navyImage, anisotropy, aspect),
+        red: paintCardTexture(redImage, anisotropy, aspect),
     };
 }
 
-function gridPos(row, col, centerX) {
-    const at = cell(row, col, centerX);
-    return new THREE.Vector3(at.x, 0.04, at.z);
-}
-
-function pilePos(side, index, count) {
-    const x = side === "hand" ? MESSAGE_X : KEY_X;
-    const along = (index - (count - 1) / 2) * 0.04;
-    return new THREE.Vector3(x + along, 0.03 + index * 0.008, 2.4);
-}
+// The standalone layout (doubledeal/layout.js): 4×13 grids side by side,
+// the hand packet fanned at z 2.4. doubledeal/real-layout.js is the
+// real-size one the library entries (demos/anim/doubledeal-*) use.
+const STANDALONE_LAYOUT = {
+    name: "standalone",
+    cardW: CARD_W,
+    cardD: CARD_D,
+    cardT: 0.018,
+    seatY: 0.04,
+    cell: (row, col, side) => cell(row, col, side === "key" ? KEY_X : MESSAGE_X),
+    pile(side, index, count) {
+        const x = side === "hand" ? MESSAGE_X : KEY_X;
+        const along = (index - (count - 1) / 2) * 0.04;
+        return { x: x + along, y: 0.03 + index * 0.008, z: 2.4 };
+    },
+    restingClearance,
+};
 
 // PassKey's two piles stay on the key side, in front of that grid. The message
 // deck is still laid out during the decrypt schedule, so the hand cannot sit
@@ -85,27 +139,69 @@ function rowPos(which, index) {
     return new THREE.Vector3((index - 25.5) * 0.22, which === "out" ? 0.08 : 0.04, z);
 }
 
-function meshBox(mesh) {
-    return {
-        minX: mesh.position.x - CARD_W / 2,
-        maxX: mesh.position.x + CARD_W / 2,
-        minZ: mesh.position.z - CARD_D / 2,
-        maxZ: mesh.position.z + CARD_D / 2,
-    };
-}
-
 function disposeMaterial(mat) {
     if (!mat) return;
     mat.dispose?.();
 }
 
 /**
+ * Step timings (ms at pace 1) and hop heights, read at call time. One
+ * mutable object so the microdemos (demos/micro/doubledeal-*) can tune
+ * it live; tuned values paste straight back here. The moves that have
+ * moved into the animation library read theirs from the entry
+ * (demos/anim/doubledeal-grid-deal: dealMs, dealStaggerMs).
+ */
+export const TABLE_TIMING = {
+    stepMs: 280,
+    dealMs: GRID_DEAL.dealMs,
+    dealStaggerMs: GRID_DEAL.dealStaggerMs,
+    shiftMs: 320,
+    sumrowMs: 380,
+    sumcolMs: 300,
+    scoopColMs: 240,
+    scoopRowMs: 300,
+    placeMs: 240,
+    dropMs: 160,
+    takeMs: 200,
+    counterMs: 180,
+    markMs: 180,
+    scanMs: 8,
+    hop: 0.25,
+    liftHop: 0.9,
+    zeroShiftHop: 0.18,
+    dropY: 1.4,
+};
+
+/**
  * Live 52+52 card table. Positions stay in the standalone DoubleDeal
  * units; the playroom adapter scales the parent group onto the felt.
  */
-export function createCardTable({ parent, faces, navy, red } = {}) {
+export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMING, layout = STANDALONE_LAYOUT } = {}) {
     if (!parent) throw new Error("createCardTable needs a parent group.");
     if (!faces?.length || !navy || !red) throw new Error("createCardTable needs card textures.");
+    const L = layout;
+    // Card size of this layout (the module CARD_W / CARD_D are the standalone one).
+    const CARD_W = L.cardW;
+    const CARD_D = L.cardD;
+
+    function gridPos(row, col, centerX) {
+        const at = L.cell(row, col, centerX === KEY_X ? "key" : "message");
+        return new THREE.Vector3(at.x, L.seatY, at.z);
+    }
+
+    function pilePos(side, index, count) {
+        const at = L.pile(side, index, count);
+        return new THREE.Vector3(at.x, at.y, at.z);
+    }
+
+    function meshBox(mesh) {
+        return {
+            minX: mesh.position.x - CARD_W / 2,
+            maxX: mesh.position.x + CARD_W / 2,
+            minZ: mesh.position.z - CARD_D / 2,
+            maxZ: mesh.position.z + CARD_D / 2,
+        };
+    }
 
     const marker = new THREE.Mesh(
         new THREE.BoxGeometry(CARD_W, 0.01, CARD_D),
@@ -120,8 +216,8 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             const face = new THREE.MeshStandardMaterial({ map: faces[id], roughness: 0.86 });
             const backMat = new THREE.MeshStandardMaterial({ map: back, roughness: 0.9 });
             const edge = new THREE.MeshStandardMaterial({ color: 0xf7f1e6, roughness: 0.95 });
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(CARD_W, 0.018, CARD_D), [edge, edge, face, backMat, edge, edge]);
-            mesh.position.set(0, 0.04, 0);
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(CARD_W, L.cardT, CARD_D), [edge, edge, face, backMat, edge, edge]);
+            mesh.position.set(0, L.seatY, 0);
             mesh.castShadow = true;
             parent.add(mesh);
             meshes.push(mesh);
@@ -161,7 +257,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
 
     function moveTo(mesh, pos, ms, lift) {
         const from = mesh.position.clone();
-        const hop = lift ? 0.9 : 0.25;
+        const hop = lift ? timing.liftHop : timing.hop;
         return tween(ms, (t) => {
             mesh.position.lerpVectors(from, pos, t);
             mesh.position.y = pos.y + Math.sin(Math.PI * t) * hop;
@@ -186,8 +282,8 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             grid[row][col] = mesh;
             setTimeout(() => {
                 if (gen !== generation) resolve();
-                else moveTo(mesh, gridPos(row, col, MESSAGE_X), 260, true).then(resolve);
-            }, index * (36 / pace));
+                else moveTo(mesh, gridPos(row, col, MESSAGE_X), timing.dealMs, true).then(resolve);
+            }, index * (timing.dealStaggerMs / pace));
         })));
     }
 
@@ -197,7 +293,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             if (mesh) {
                 const y = mesh.position.y;
                 await tween(ms, (t) => {
-                    mesh.position.y = y + Math.sin(Math.PI * t) * 0.18;
+                    mesh.position.y = y + Math.sin(Math.PI * t) * timing.zeroShiftHop;
                 });
             }
             return;
@@ -247,7 +343,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         sequence.forEach((mesh, index) => {
             if (!mesh) return;
             packet.push(mesh);
-            jobs.push(moveTo(mesh, pilePos("hand", index, 52), major === "col" ? 240 : 300, major !== "col"));
+            jobs.push(moveTo(mesh, pilePos("hand", index, 52), major === "col" ? timing.scoopColMs : timing.scoopRowMs, major !== "col"));
         });
         await Promise.all(jobs);
     }
@@ -258,7 +354,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         const target = gridPos(step.row, step.col, MESSAGE_X);
         if (step.flag === 1) {
             const drop = target.clone();
-            drop.y = 1.4;
+            drop.y = timing.dropY;
             mesh.position.copy(drop);
             await moveTo(mesh, target, ms, false);
         } else {
@@ -274,7 +370,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         marker.material.color.setHex(0xf2d48a);
         for (let c = 0; c < 13; c++) {
             if (gen !== generation) return;
-            await tween(8, (t) => {
+            await tween(timing.scanMs, (t) => {
                 marker.position.copy(gridPos(row, c, MESSAGE_X));
                 marker.position.y = 0.02;
                 marker.material.opacity = 0.35 + 0.5 * (1 - t);
@@ -746,12 +842,12 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
         for (const a of messageBoxes) {
             for (const b of keyBoxes) between = Math.min(between, edgeGap(a, b));
         }
-        return { within, between, designed: restingClearance() };
+        return { within, between, designed: L.restingClearance() };
     }
 
     async function play(step, nextPace) {
         pace = nextPace || 1;
-        const ms = 280;
+        const ms = timing.stepMs;
         if (step.kind === "reset") {
             await resetKey(step, ms);
             return;
@@ -772,7 +868,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
                 const mesh = message[id];
                 const lifted = mesh.position.clone();
                 lifted.y = 0.55;
-                return moveTo(mesh, lifted, 180, false);
+                return moveTo(mesh, lifted, timing.counterMs, false);
             }));
             return;
         }
@@ -785,11 +881,11 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             return;
         }
         if (step.kind === "sumrow" || step.kind === "shift") {
-            await slideRow(step.row, step.amount, step.kind === "shift" ? 320 : 380);
+            await slideRow(step.row, step.amount, step.kind === "shift" ? timing.shiftMs : timing.sumrowMs);
             return;
         }
         if (step.kind === "sumcol") {
-            await beltColumn(step.col, step.amount, 300);
+            await beltColumn(step.col, step.amount, timing.sumcolMs);
             return;
         }
         if (step.kind === "scoopcm") {
@@ -806,7 +902,7 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             marker.material.color.setHex(0xf2d48a);
             marker.position.copy(gridPos(2, 0, MESSAGE_X));
             marker.position.y = 0.02;
-            await tween(180, () => {});
+            await tween(timing.markMs, () => {});
             return;
         }
         if (step.kind === "scan") {
@@ -814,11 +910,11 @@ export function createCardTable({ parent, faces, navy, red } = {}) {
             return;
         }
         if (step.kind === "place") {
-            await placeCard(step, step.flag === 1 ? 160 : 240);
+            await placeCard(step, step.flag === 1 ? timing.dropMs : timing.placeMs);
             return;
         }
         if (step.kind === "take") {
-            await takeCard(step, 200);
+            await takeCard(step, timing.takeMs);
             return;
         }
         if (step.kind === "uncompose") {

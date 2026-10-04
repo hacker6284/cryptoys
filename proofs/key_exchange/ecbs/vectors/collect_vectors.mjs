@@ -28,9 +28,8 @@ const toTrits = (s) => [...s].map((c) => ".WR".indexOf(c));
 const toPegs = (xs) => xs.map((t) => ".WR"[t]).join("");
 const ptIn = (p) => ({ x: toTrits(p.x), y: toTrits(p.y) });
 const ptOut = (p) => ({ x: toPegs(p.x), y: toPegs(p.y) });
-const PHASES = ["base point", "store P", "own walk", "swap", "curve test", "make certificate",
-  "rebuild theirs", "shared walk", "fold"];
-const OPS = ["mul", "cube", "inv", "chord", "fadd"];
+const PHASES = E.phase_names();
+const OPS = E.op_names();
 const HOMES = ["across", "up", "bottom", "base across", "base up", "gap", "spare"];
 const ROWS = "ABCDEFGHIJ";
 const byName = (names, xs) => Object.fromEntries(names.map((k, i) => [k, xs[i]]));
@@ -51,18 +50,18 @@ function player(p) {
     matched: p.matched,
     shared: ptOut(p.shared),
     folded: toPegs(p.folded),
-    moves: p.moves,
-    moves_by_phase: byName(PHASES, p.moves_by_phase),
-    peak: p.peak,
-    max_bench_hole: p.max_bench_hole,
-    ctrl: p.ctrl,
-    calls: p.calls,
+    moves: p.cost.moves,
+    moves_by_phase: byName(PHASES, p.cost.moves_by_phase),
+    peak: p.cost.peak,
+    max_bench_hole: p.cost.max_bench_hole,
+    ctrl: p.cost.ctrl,
+    calls: p.cost.calls,
     ladder: toPegs(p.ladder),
-    ladder_moves: p.ladder_moves,
-    tally_max: p.tally_max,
-    control_highest: p.control_highest,
-    script_marker_max: p.script_marker_max,
-    ops: byName(OPS, p.ops),
+    ladder_moves: p.cost.ladder_moves,
+    tally_max: p.cost.tally_max,
+    control_highest: p.cost.control_highest,
+    script_marker_max: p.cost.script_marker_max,
+    ops: byName(OPS, p.cost.ops),
   };
 }
 

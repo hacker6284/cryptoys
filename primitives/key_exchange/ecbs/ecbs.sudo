@@ -117,6 +117,14 @@ ph_shared_walk = 7
 ph_fold = 8
 phase_count = 9
 
+// Names of the phases and the operation counters, in index order (for reports).
+export func phase_names() -> List<text>
+    return ["base point", "store P", "own walk", "swap", "curve test", "make certificate",
+            "rebuild theirs", "shared walk", "fold"]
+
+export func op_names() -> List<text>
+    return ["mul", "cube", "inv", "chord", "fadd"]
+
 // One call of the swap, as the receiver names it: the receiving home, the sender's
 // home, the hole, and the hole's grid, row (A..J = 0..9) and column (1..10).
 record Call
@@ -127,6 +135,40 @@ record Call
     row: int
     col: int
 
+// The cost model of SPEC §2, one record on the board and in each player's report.
+// Moves, slides (2 per peg), control-row moves (ctrl), calls and cursor steps, pegs
+// cleared from stale homes, key-grid moves, the ladder's one-off build (not in
+// moves); the band peaks (homes holding a number; peak_strict at the moment of a
+// lift), the highest workbench hole, the highest control hole, the script holes
+// used, the largest tally; moves and band peaks per phase; operation counts (ops,
+// indexed by op_mul .. op_fadd). The counters never change a peg.
+record Costs
+    moves: int
+    slides: int
+    ctrl: int
+    calls: int
+    cursor_steps: int
+    stale_cleared: int
+    key_grid_moves: int
+    ladder_moves: int
+    peak: int
+    peak_strict: int
+    max_bench_hole: int
+    control_highest: int
+    script_marker_max: int
+    tally_max: int
+    moves_by_phase: List<int>
+    peak_by_phase: List<int>
+    ops: List<int>
+
+// Operation counters (Costs.ops).
+op_mul = 0
+op_cube = 1
+op_inv = 2
+op_chord = 3
+op_fadd = 4
+op_count = 5
+
 record Board
     t: Tier
     nhomes: int
@@ -135,28 +177,10 @@ record Board
     bench_on: bool
     bench_to: int
     bench: List<int>
-    moves: int
-    slides: int
-    ctrl: int
-    peak: int
-    peak_strict: int
-    max_index: int
-    n_mul: int
-    n_cube: int
-    n_inv: int
-    n_chord: int
-    n_fadd: int
-    tally_holes_peak: int
-    calls: int
-    key_grid_moves: int
-    cursor_steps: int
-    stale_cleared: int
-    ladder_moves: int
+    cost: Costs
     phase: int
     phase_m0: int
     phase_pk: int
-    moves_by_phase: List<int>
-    peak_by_phase: List<int>
     row: List<int>
     phase_hole: int
     calling_hole: int
@@ -165,11 +189,8 @@ record Board
     park_hole: int
     tally0: int
     marker: int
-    marker_max: int
     parked_from: int
     tally_len: int
-    tally_max: int
-    max_hole: int
     marker_on: bool
     rung_idx: int
     ladder: List<int>
@@ -219,26 +240,26 @@ func occupied(b: Board) -> int
 
 func note_peak(b: inout Board)
     v = occupied(b)
-    if v > b.peak
-        b.peak = v
+    if v > b.cost.peak
+        b.cost.peak = v
 
 func note_strict(b: inout Board)
     v = occupied(b)
-    if v > b.peak_strict
-        b.peak_strict = v
+    if v > b.cost.peak_strict
+        b.cost.peak_strict = v
 
 func begin_phase(b: inout Board, p: int)
     b.phase = p
-    b.phase_m0 = b.moves
-    b.phase_pk = b.peak
-    b.peak = 0
+    b.phase_m0 = b.cost.moves
+    b.phase_pk = b.cost.peak
+    b.cost.peak = 0
 
 func end_phase(b: inout Board)
-    b.moves_by_phase[b.phase] = b.moves_by_phase[b.phase] + b.moves - b.phase_m0
-    if b.peak > b.peak_by_phase[b.phase]
-        b.peak_by_phase[b.phase] = b.peak
-    if b.phase_pk > b.peak
-        b.peak = b.phase_pk
+    b.cost.moves_by_phase[b.phase] = b.cost.moves_by_phase[b.phase] + b.cost.moves - b.phase_m0
+    if b.cost.peak > b.cost.peak_by_phase[b.phase]
+        b.cost.peak_by_phase[b.phase] = b.cost.peak
+    if b.phase_pk > b.cost.peak
+        b.cost.peak = b.phase_pk
 
 // ---------------------------------------------------------------------------
 // §2 Control row: script marker (t.script holes), phase hole, calling hole, ladder
@@ -248,8 +269,8 @@ func end_phase(b: inout Board)
 func set_control(b: inout Board, i: int, c: int)
     assert (i >= 0) and (i < b.t.control)
     b.row[i] = c
-    if i > b.max_hole
-        b.max_hole = i
+    if i > b.cost.control_highest
+        b.cost.control_highest = i
 
 func lay_rung(b: inout Board, colour: int)
     i = b.ladder0 + b.nrungs
@@ -257,7 +278,7 @@ func lay_rung(b: inout Board, colour: int)
     assert b.row[i] == 0
     set_control(b, i, colour)
     b.nrungs = b.nrungs + 1
-    b.ctrl = b.ctrl + 1
+    b.cost.ctrl = b.cost.ctrl + 1
 
 // The rung holes, climbing from the last rung made (next to the parking hole).
 func climb_holes(b: Board) -> List<int>
@@ -272,7 +293,7 @@ func unpark(b: inout Board)
     set_control(b, b.parked_from, b.row[b.park_hole])
     b.row[b.park_hole] = 0
     b.parked_from = -1
-    b.ctrl = b.ctrl + 2
+    b.cost.ctrl = b.cost.ctrl + 2
 
 // Lift the rung in `hole` into the parking hole (putting the previous one back).
 func park(b: inout Board, hole: int) -> int
@@ -281,7 +302,7 @@ func park(b: inout Board, hole: int) -> int
     set_control(b, b.park_hole, b.row[hole])
     b.row[hole] = 0
     b.parked_from = hole
-    b.ctrl = b.ctrl + 2
+    b.cost.ctrl = b.cost.ctrl + 2
     return b.row[b.park_hole]
 
 // The inversion parks the rungs in climbing order and checks each against the ladder.
@@ -300,39 +321,37 @@ func unpark_rung(b: inout Board)
 func marker_step(b: inout Board)
     if b.marker < 0
         b.marker = 0
-        b.ctrl = b.ctrl + 1
+        b.cost.ctrl = b.cost.ctrl + 1
     else
         b.marker = b.marker + 1
-        b.ctrl = b.ctrl + 2
+        b.cost.ctrl = b.cost.ctrl + 2
     assert b.marker < b.t.script
-    if b.marker > b.marker_max
-        b.marker_max = b.marker
+    if b.marker + 1 > b.cost.script_marker_max
+        b.cost.script_marker_max = b.marker + 1
 
 func marker_lift(b: inout Board)
     if b.marker >= 0
         b.marker = -1
-        b.ctrl = b.ctrl + 1
+        b.cost.ctrl = b.cost.ctrl + 1
 
 // The phase hole: drop a white peg (empty -> white -> red).
 func phase_drop(b: inout Board)
     set_control(b, b.phase_hole, (b.row[b.phase_hole] + 1) mod 3)
-    b.ctrl = b.ctrl + 1
+    b.cost.ctrl = b.cost.ctrl + 1
 
 // The colour-flip tally, laid after the parking hole.
 func tally_put(b: inout Board, j: int, c: int)
     set_control(b, b.tally0 + j, c)
 
 func tally_note(b: inout Board)
-    if b.tally_len > b.tally_max
-        b.tally_max = b.tally_len
-    if b.tally_len > b.tally_holes_peak
-        b.tally_holes_peak = b.tally_len
+    if b.tally_len > b.cost.tally_max
+        b.cost.tally_max = b.tally_len
 
 func tally_start(b: inout Board)
     assert b.tally_len == 0
     tally_put(b, 0, 1)
     b.tally_len = 1
-    b.ctrl = b.ctrl + 1
+    b.cost.ctrl = b.cost.ctrl + 1
     tally_note(b)
 
 // "Double it": drop a red peg on each red (back to white), and lay as many white
@@ -342,11 +361,11 @@ func tally_double(b: inout Board)
     for j = 0 to m - 1
         if b.row[b.tally0 + j] == 2
             tally_put(b, j, 1)
-            b.ctrl = b.ctrl + 1
+            b.cost.ctrl = b.cost.ctrl + 1
     for j = m to 2 * m - 1
         assert b.row[b.tally0 + j] == 0
         tally_put(b, j, 1)
-        b.ctrl = b.ctrl + 1
+        b.cost.ctrl = b.cost.ctrl + 1
     b.tally_len = 2 * m
     tally_note(b)
 
@@ -355,13 +374,13 @@ func tally_add_one(b: inout Board)
     assert b.row[b.tally0 + j] == 0
     tally_put(b, j, 1)
     b.tally_len = b.tally_len + 1
-    b.ctrl = b.ctrl + 1
+    b.cost.ctrl = b.cost.ctrl + 1
     tally_note(b)
 
 func tally_clear(b: inout Board)
     for j = 0 to b.tally_len - 1
         tally_put(b, j, 0)
-        b.ctrl = b.ctrl + 1
+        b.cost.ctrl = b.cost.ctrl + 1
     b.tally_len = 0
 
 // ---------------------------------------------------------------------------
@@ -403,8 +422,8 @@ func settle(b: inout Board)
     need_empty(b, b.bench_to)
     v = prefix(b.bench, b.t.n)
     m = 2 * npeg(v)
-    b.moves = b.moves + m
-    b.slides = b.slides + m
+    b.cost.moves = b.cost.moves + m
+    b.cost.slides = b.cost.slides + m
     b.home[b.bench_to] = v
     b.held[b.bench_to] = true
     b.bench_on = false
@@ -416,7 +435,7 @@ func put(b: inout Board, h: int, v: List<int>)
     need_empty(b, h)
     b.home[h] = v
     b.held[h] = true
-    b.moves = b.moves + npeg(v)
+    b.cost.moves = b.cost.moves + npeg(v)
     note_peak(b)
 
 // One white peg in hole 0 (a fresh number if the home is empty).
@@ -428,7 +447,7 @@ func white0(b: inout Board, h: int)
     else
         v = get_number(b, h)
         v[0] = (v[0] + 1) mod 3
-        b.moves = b.moves + 1
+        b.cost.moves = b.cost.moves + 1
         set_number(b, h, v)
 
 func copy_band(b: inout Board, dst: int, src: int, mirror: bool)
@@ -439,7 +458,7 @@ func copy_band(b: inout Board, dst: int, src: int, mirror: bool)
             s[i] = flip(s[i])
     b.home[dst] = s
     b.held[dst] = true
-    b.moves = b.moves + npeg(s)
+    b.cost.moves = b.cost.moves + npeg(s)
     note_peak(b)
 
 // Slide a whole number to another home.
@@ -451,19 +470,19 @@ func move_band(b: inout Board, dst: int, src: int)
     b.held[src] = false
     b.home[src] = []
     m = 2 * npeg(v)
-    b.moves = b.moves + m
-    b.slides = b.slides + m
+    b.cost.moves = b.cost.moves + m
+    b.cost.slides = b.cost.slides + m
     b.home[dst] = v
     b.held[dst] = true
     note_peak(b)
 
 func clear(b: inout Board, h: int)
     if b.bench_on and (b.bench_to == h) and (not b.held[h])
-        b.moves = b.moves + npeg(b.bench)
+        b.cost.moves = b.cost.moves + npeg(b.bench)
         b.bench_on = false
         return
     assert b.held[h]
-    b.moves = b.moves + npeg(b.home[h])
+    b.cost.moves = b.cost.moves + npeg(b.home[h])
     b.held[h] = false
     b.home[h] = []
 
@@ -472,7 +491,7 @@ func mirror(b: inout Board, h: int)
     for i = 0 to b.t.n - 1
         if v[i] != 0
             v[i] = flip(v[i])
-            b.moves = b.moves + 1
+            b.cost.moves = b.cost.moves + 1
     set_number(b, h, v)
 
 // Drop every peg of src onto the same holes of dst (mirrored: take it away).
@@ -485,7 +504,7 @@ func add(b: inout Board, dst: int, src: int, mirror: bool)
             if mirror
                 c = flip(c)
             d[i] = (d[i] + c) mod 3
-            b.moves = b.moves + 1
+            b.cost.moves = b.cost.moves + 1
     set_number(b, dst, d)
 
 // The lane fold (R3): lift every peg at or beyond hole n, highest first, and drop it
@@ -498,14 +517,14 @@ func lane_fold(b: inout Board, strip: inout List<int>)
     for i = 0 to strip.length - 1
         if strip[i] != 0
             top = i
-    if top > b.max_index
-        b.max_index = top
+    if top > b.cost.max_bench_hole
+        b.cost.max_bench_hole = top
     assert top < t.benchlen
     for e = strip.length - 1 downto t.n
         c = strip[e]
         if c != 0
             strip[e] = 0
-            b.moves = b.moves + 1
+            b.cost.moves = b.cost.moves + 1
             row = e / t.w
             col = e mod t.w
             r1 = row - t.h
@@ -519,7 +538,7 @@ func lane_fold(b: inout Board, strip: inout List<int>)
             assert (d1 >= 0) and (d1 < e) and (d2 >= 0) and (d2 < e)
             strip[d1] = (strip[d1] + c) mod 3
             strip[d2] = (strip[d2] + c) mod 3
-            b.moves = b.moves + 2
+            b.cost.moves = b.cost.moves + 2
 
 func log_op(b: inout Board)
     if b.marker_on
@@ -531,7 +550,7 @@ func log_op(b: inout Board)
 // second number into the spare band and lift the copy. onto: the result is added
 // onto dst's number (it slides onto the workbench first). Then the lane fold.
 func mul(b: inout Board, dst: int, first: int, second: int, copy_second: bool, onto: bool, mirror: bool)
-    b.n_mul = b.n_mul + 1
+    b.cost.ops[op_mul] = b.cost.ops[op_mul] + 1
     log_op(b)
     n = b.t.n
     strip: List<int> = []
@@ -546,8 +565,8 @@ func mul(b: inout Board, dst: int, first: int, second: int, copy_second: bool, o
             b.held[dst] = false
             b.home[dst] = []
             m = 2 * npeg(r)
-            b.moves = b.moves + m
-            b.slides = b.slides + m
+            b.cost.moves = b.cost.moves + m
+            b.cost.slides = b.cost.slides + m
             for i = 0 to n - 1
                 strip[i] = r[i]
         b.bench_on = true
@@ -569,7 +588,7 @@ func mul(b: inout Board, dst: int, first: int, second: int, copy_second: bool, o
     for i = n - 1 downto 0
         c = s[i]
         if c != 0
-            b.moves = b.moves + 1
+            b.cost.moves = b.cost.moves + 1
             mir = (c == 2) != mirror
             for j = 0 to n - 1
                 d = a[j]
@@ -577,7 +596,7 @@ func mul(b: inout Board, dst: int, first: int, second: int, copy_second: bool, o
                     if mir
                         d = flip(d)
                     strip[i + j] = (strip[i + j] + d) mod 3
-                    b.moves = b.moves + 1
+                    b.cost.moves = b.cost.moves + 1
     lane_fold(b, strip)
     b.bench = strip
     note_peak(b)
@@ -586,7 +605,7 @@ func mul(b: inout Board, dst: int, first: int, second: int, copy_second: bool, o
 // peg jumps: 2 moves), then fold. The source band empties. In characteristic 3,
 // (sum t_i x^i)^3 = sum t_i x^(3i).
 func cube(b: inout Board, dst: int, src: int)
-    b.n_cube = b.n_cube + 1
+    b.cost.ops[op_cube] = b.cost.ops[op_cube] + 1
     log_op(b)
     settle(b)
     note_strict(b)
@@ -598,7 +617,7 @@ func cube(b: inout Board, dst: int, src: int)
     for i = 0 to b.t.n - 1
         if v[i] != 0
             strip[3 * i] = v[i]
-            b.moves = b.moves + 2
+            b.cost.moves = b.cost.moves + 2
     assert 3 * (b.t.n - 1) + b.t.combgap < b.t.benchlen
     b.bench_on = true
     b.bench_to = dst
@@ -608,7 +627,7 @@ func cube(b: inout Board, dst: int, src: int)
 
 func bench_white0(b: inout Board)
     b.bench[0] = (b.bench[0] + 1) mod 3
-    b.moves = b.moves + 1
+    b.cost.moves = b.cost.moves + 1
 
 func bench_add(b: inout Board, src: int, mirror: bool)
     v = b.home[src]
@@ -618,11 +637,11 @@ func bench_add(b: inout Board, src: int, mirror: bool)
             if mirror
                 c = flip(c)
             b.bench[i] = (b.bench[i] + c) mod 3
-            b.moves = b.moves + 1
+            b.cost.moves = b.cost.moves + 1
 
 func bench_read_and_clear(b: inout Board) -> List<int>
     v = prefix(b.bench, b.t.n)
-    b.moves = b.moves + npeg(v)
+    b.cost.moves = b.cost.moves + npeg(v)
     b.bench_on = false
     return v
 
@@ -638,12 +657,12 @@ export func new_board(t: Tier, store_p: bool) -> Board
         nh = 9
     empty: List<int> = []
     log: List<Call> = []
+    cost = Costs(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, filled(phase_count, 0),
+                 filled(phase_count, 0), filled(op_count, 0))
     b = Board(t, nh, filled(home_count, empty), filled(home_count, false), false, -1, empty,
-              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-              0, 0, 0, filled(phase_count, 0), filled(phase_count, 0),
-              filled(t.control, 0), t.script, t.script + 1, t.script + 2, 0, -1, -1,
-              -1, -1, -1, 0, 0, -1, false, 0, empty, -1, 0, log)
-    m0 = b.moves
+              cost, 0, 0, 0, filled(t.control, 0), t.script, t.script + 1, t.script + 2, 0,
+              -1, -1, -1, -1, 0, false, 0, empty, -1, 0, log)
+    m0 = b.cost.moves
     c = t.n - 1
     pegs = filled(t.n, 0)
     for i = 0 to c - 1
@@ -657,13 +676,13 @@ export func new_board(t: Tier, store_p: bool) -> Board
             lay_rung(b, 2)
         else
             lay_rung(b, 1)
-        b.moves = b.moves + left + c / 2
+        b.cost.moves = b.cost.moves + left + c / 2
         c = c / 2
     clear(b, spare)
     b.park_hole = b.ladder0 + b.nrungs
     b.tally0 = b.park_hole + 1
-    b.ladder_moves = b.moves - m0
-    b.moves = m0
+    b.cost.ladder_moves = b.cost.moves - m0
+    b.cost.moves = m0
     holes = climb_holes(b)
     for i = 0 to holes.length - 1
         b.ladder.append(b.row[holes[i]])
@@ -680,7 +699,7 @@ export func new_board(t: Tier, store_p: bool) -> Board
 // once more: that is the inverse." This gives x^(3^n - 3) up to the sign of the
 // quadratic character: the check below fixes it.
 func invert(b: inout Board, x: int)
-    b.n_inv = b.n_inv + 1
+    b.cost.ops[op_inv] = b.cost.ops[op_inv] + 1
     copy_band(b, gap, x, false)
     tally_start(b)
     nr = b.ladder.length
@@ -695,7 +714,7 @@ func invert(b: inout Board, x: int)
         for j = 0 to m - 1
             cube(b, spare, spare)
             tally_put(b, j, 2)
-            b.ctrl = b.ctrl + 1
+            b.cost.ctrl = b.cost.ctrl + 1
         mul(b, gap, gap, spare, false, false, false)
         clear(b, gap)
         if not last
@@ -742,7 +761,7 @@ func frobenius_point(b: inout Board)
 // The six verse lines (card step 11), adding the base point (its up mirrored on a red
 // cell). Returns false on an empty run (an exceptional case: reroll the key).
 func fform_add(b: inout Board, red: bool) -> bool
-    b.n_fadd = b.n_fadd + 1
+    b.cost.ops[op_fadd] = b.cost.ops[op_fadd] + 1
     // Run: mirror the across; lay base across times a copy of the bottom onto it.
     mirror(b, across)
     mul(b, across, base_across, bottom, true, true, false)
@@ -812,7 +831,7 @@ func frobenius_affine(b: inout Board)
 // Reroll your key. Invert the bottom. Rise: copy the base up into the spare and take
 // the up away. Then as the certificate." The marker holds still during the inversion.
 func chord_add_demo(b: inout Board, red: bool) -> bool
-    b.n_chord = b.n_chord + 1
+    b.cost.ops[op_chord] = b.cost.ops[op_chord] + 1
     copy_band(b, bottom, base_across, false)
     add(b, bottom, across, true)
     if is_zero(b, bottom)
@@ -956,7 +975,7 @@ func base_point(b: inout Board) -> int
     clear(b, bottom)
     clear(b, across)
     move_band(b, base_up, up)
-    b.key_grid_moves = b.key_grid_moves + 4
+    b.cost.key_grid_moves = b.cost.key_grid_moves + 4
     wrwr = [1, 2, 1, 2]
     if b.t.demo
         live, ok = walk_chord(b, wrwr)
@@ -964,7 +983,7 @@ func base_point(b: inout Board) -> int
     else
         live, ok = walk_fform(b, wrwr)
         assert live and ok
-    b.key_grid_moves = b.key_grid_moves + 4
+    b.cost.key_grid_moves = b.cost.key_grid_moves + 4
     if not b.t.demo
         finish(b)
     clear(b, base_across)
@@ -1001,7 +1020,7 @@ func on_curve(b: inout Board) -> bool
 // times its across onto it. Clear the gap and slide the bottom into its across."
 // Returns false if the certificate is empty (pi(C) = C: reject).
 func certificate(b: inout Board, xh: int, yh: int) -> bool
-    b.n_chord = b.n_chord + 1
+    b.cost.ops[op_chord] = b.cost.ops[op_chord] + 1
     copy_band(b, bottom, xh, false)
     cube(b, bottom, bottom)
     settle(b)
@@ -1104,14 +1123,14 @@ export func start_calling(b: Board) -> Board
     dsts = plan_dst(c)
     for k = 0 to dsts.length - 1
         if c.held[dsts[k]]
-            c.stale_cleared = c.stale_cleared + npeg(c.home[dsts[k]])
+            c.cost.stale_cleared = c.cost.stale_cleared + npeg(c.home[dsts[k]])
             clear(c, dsts[k])
     set_control(c, c.calling_hole, 1)
-    c.ctrl = c.ctrl + 1
+    c.cost.ctrl = c.cost.ctrl + 1
     c.cursor_home = dsts[0]
     c.cursor_hole = 0
-    c.ctrl = c.ctrl + 1
-    c.cursor_steps = c.cursor_steps + 1
+    c.cost.ctrl = c.cost.ctrl + 1
+    c.cost.cursor_steps = c.cost.cursor_steps + 1
     return c
 
 // One call, driven by the receiver's board alone (phase hole, calling hole, cursor):
@@ -1143,9 +1162,9 @@ export func call_step(rec: Board, sender: Board) -> Board
     answer = sender.home[src][i]
     if answer != 0
         v[i] = answer
-        b.moves = b.moves + 1
+        b.cost.moves = b.cost.moves + 1
         b.home[dst] = v
-    b.calls = b.calls + 1
+    b.cost.calls = b.cost.calls + 1
     b.log.append(Call(dst, src, i, hole.grid, hole.row, hole.col))
     if i + 1 < b.t.n
         b.cursor_hole = i + 1
@@ -1155,9 +1174,9 @@ export func call_step(rec: Board, sender: Board) -> Board
     else
         b.cursor_home = -1
         set_control(b, b.calling_hole, 0)
-        b.ctrl = b.ctrl + 1
-    b.ctrl = b.ctrl + 1
-    b.cursor_steps = b.cursor_steps + 1
+        b.cost.ctrl = b.cost.ctrl + 1
+    b.cost.ctrl = b.cost.ctrl + 1
+    b.cost.cursor_steps = b.cost.cursor_steps + 1
     return b
 
 // A whole calling session: every hole of both published bands, in number order, no
@@ -1190,7 +1209,7 @@ func fold_key(b: inout Board) -> List<int>
             j = t.folddst[p] * t.w + c
             if (i < t.n) and (x[i] != 0)
                 out[j] = (out[j] + x[i]) mod 3
-                b.moves = b.moves + 1
+                b.cost.moves = b.cost.moves + 1
     return prefix(out, t.keeprows * t.w)
 
 // ---------------------------------------------------------------------------
@@ -1241,7 +1260,9 @@ record Point
     x: List<int>
     y: List<int>
 
-// Everything one player's board shows and costs.
+// Everything one player's board shows and costs: what was published, called and
+// checked, the cost counters, and the control row's layout (ladder rungs in build
+// order, parking hole, first tally hole, calling hole, the phase hole at the end).
 record Player
     base_hole: int
     base: Point
@@ -1252,27 +1273,12 @@ record Player
     matched: bool
     shared: Point
     folded: List<int>
-    moves: int
-    moves_by_phase: List<int>
-    peak_by_phase: List<int>
-    peak: int
-    peak_strict: int
-    max_bench_hole: int
-    ctrl: int
-    calls: int
-    cursor_steps: int
-    stale_cleared: int
-    key_grid_moves: int
+    cost: Costs
     ladder: List<int>
-    ladder_moves: int
     park_hole: int
     tally_first: int
-    tally_max: int
-    control_highest: int
-    script_marker_max: int
-    phase_end: int
     calling_hole: int
-    ops: List<int>
+    phase_end: int
     log: List<Call>
 
 record Exchange
@@ -1294,7 +1300,7 @@ func publish(b: inout Board, cells: List<int>, store_p: bool, p: inout Player) -
         copy_band(b, p_across, base_across, false)
         copy_band(b, p_up, base_up, false)
         end_phase(b)
-    b.key_grid_moves = b.key_grid_moves + npeg(cells)
+    b.cost.key_grid_moves = b.cost.key_grid_moves + npeg(cells)
     begin_phase(b, ph_own_walk)
     ok = walk_and_finish(b, cells)
     if ok
@@ -1308,40 +1314,141 @@ func publish(b: inout Board, cells: List<int>, store_p: bool, p: inout Player) -
 func empty_point(t: Tier) -> Point
     return Point(filled(t.n, 0), filled(t.n, 0))
 
-func blank_player(t: Tier) -> Player
-    e = empty_point(t)
+func blank_player(b: Board) -> Player
+    e = empty_point(b.t)
     none: List<int> = []
     log: List<Call> = []
-    return Player(0, e, e, false, e, e, false, e, none, 0, none, none, 0, 0, 0, 0, 0, 0, 0, 0,
-                  none, 0, 0, 0, 0, 0, 0, 0, 0, none, log)
+    return Player(0, e, e, false, e, e, false, e, none, b.cost, none, 0, 0, 0, 0, log)
 
+// The report: the board's costs as they stand (every move falls in a phase), the
+// control row's layout and the call log.
 func report(b: Board, p: inout Player)
-    p.moves = 0
+    total = 0
     for i = 0 to phase_count - 1
-        p.moves = p.moves + b.moves_by_phase[i]
-    p.moves_by_phase = b.moves_by_phase
-    p.peak_by_phase = b.peak_by_phase
-    p.peak = b.peak
-    p.peak_strict = b.peak_strict
-    p.max_bench_hole = b.max_index
-    p.ctrl = b.ctrl
-    p.calls = b.calls
-    p.cursor_steps = b.cursor_steps
-    p.stale_cleared = b.stale_cleared
-    p.key_grid_moves = b.key_grid_moves
+        total = total + b.cost.moves_by_phase[i]
+    assert total == b.cost.moves
+    p.cost = b.cost
     p.ladder = []
     for i = b.ladder0 to b.ladder0 + b.nrungs - 1
         p.ladder.append(b.row[i])
-    p.ladder_moves = b.ladder_moves
     p.park_hole = b.park_hole
     p.tally_first = b.tally0
-    p.tally_max = b.tally_max
-    p.control_highest = b.max_hole
-    p.script_marker_max = b.marker_max + 1
-    p.phase_end = b.row[b.phase_hole]
     p.calling_hole = b.calling_hole
-    p.ops = [b.n_mul, b.n_cube, b.n_inv, b.n_chord, b.n_fadd]
+    p.phase_end = b.row[b.phase_hole]
     p.log = b.log
+
+// The exchange's steps after publishing (card play steps 10-14), each on both
+// boards. A step returns "" when both players go on, else the first player and step
+// that rejects.
+
+// Swap: each calls the other's published bands (C, or A once the phase hole is red).
+func swap_both(ba: inout Board, bb: inout Board)
+    begin_phase(ba, ph_swap)
+    call_session(ba, bb)
+    end_phase(ba)
+    begin_phase(bb, ph_swap)
+    call_session(bb, ba)
+    end_phase(bb)
+
+// Each tests the C it called in on the curve.
+func curve_tests(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player) -> text
+    begin_phase(ba, ph_curve_test)
+    on_a = on_curve(ba)
+    pa.on_curve = on_a
+    end_phase(ba)
+    begin_phase(bb, ph_curve_test)
+    on_b = on_curve(bb)
+    pb.on_curve = on_b
+    end_phase(bb)
+    if not pa.on_curve
+        return "A: B's C fails the curve test"
+    if not pb.on_curve
+        return "B: A's C fails the curve test"
+    return ""
+
+// Each makes its own certificate in place and drops a white peg in the phase hole.
+func certify_own(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player) -> text
+    begin_phase(ba, ph_make)
+    ok_a = certificate(ba, across, up)
+    end_phase(ba)
+    phase_drop(ba)
+    begin_phase(bb, ph_make)
+    ok_b = certificate(bb, across, up)
+    end_phase(bb)
+    phase_drop(bb)
+    if not (ok_a and ok_b)
+        return "empty certificate"
+    pa.sent_a = point_of(ba, across, up)
+    pb.sent_a = point_of(bb, across, up)
+    return ""
+
+// Each rebuilds the other's certificate in its base bands (a second white peg: red).
+func rebuild_theirs(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player) -> text
+    begin_phase(ba, ph_rebuild)
+    ok_a = certificate(ba, base_across, base_up)
+    end_phase(ba)
+    phase_drop(ba)
+    begin_phase(bb, ph_rebuild)
+    ok_b = certificate(bb, base_across, base_up)
+    end_phase(bb)
+    phase_drop(bb)
+    if not ok_a
+        return "A: B's certificate is empty"
+    if not ok_b
+        return "B: A's certificate is empty"
+    pa.rebuilt = point_of(ba, base_across, base_up)
+    pb.rebuilt = point_of(bb, base_across, base_up)
+    return ""
+
+func clear_two(b: inout Board, h1: int, h2: int)
+    begin_phase(b, ph_rebuild)
+    clear(b, h1)
+    clear(b, h2)
+    end_phase(b)
+
+// After calling A in: each compares, then clears the called A and its own A.
+func compare_both(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player) -> text
+    pa.matched = certificate_matches(ba)
+    clear_two(ba, bottom, gap)
+    pb.matched = certificate_matches(bb)
+    clear_two(bb, bottom, gap)
+    clear_two(ba, across, up)
+    clear_two(bb, across, up)
+    if not pa.matched
+        return "A: B's certificate does not match"
+    if not pb.matched
+        return "B: A's certificate does not match"
+    return ""
+
+// One player's shared walk over the rebuilt A in the base bands, and finish.
+func shared_walk(b: inout Board, cells: List<int>) -> bool
+    begin_phase(b, ph_shared_walk)
+    ok = walk_and_finish(b, cells)
+    if ok
+        clear(b, base_across)
+        clear(b, base_up)
+    end_phase(b)
+    return ok
+
+// One player's fold of the across (§6).
+func fold_phase(b: inout Board) -> List<int>
+    m0 = b.cost.moves
+    folded = fold_key(b)
+    b.cost.moves_by_phase[ph_fold] = b.cost.moves - m0
+    return folded
+
+func walk_and_fold(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player, cells_a: List<int>, cells_b: List<int>) -> text
+    ok_a = shared_walk(ba, cells_a)
+    ok_b = shared_walk(bb, cells_b)
+    if not (ok_a and ok_b)
+        return "exceptional case in the shared walk"
+    pa.shared = point_of(ba, across, up)
+    pb.shared = point_of(bb, across, up)
+    folded_a = fold_phase(ba)
+    pa.folded = folded_a
+    folded_b = fold_phase(bb)
+    pb.folded = folded_b
+    return ""
 
 // One exchange (SPEC §5.2, card play steps 9-14): each player derives P, walks its
 // key and publishes C; each calls the other's C into its base bands and tests it on
@@ -1356,114 +1463,25 @@ export func exchange(t: Tier, cells_a: List<int>, cells_b: List<int>, store_p: b
     assert is_trits(cells_a) and is_trits(cells_b)
     ba = new_board(t, store_p)
     bb = new_board(t, store_p)
-    pa = blank_player(t)
-    pb = blank_player(t)
+    pa = blank_player(ba)
+    pb = blank_player(bb)
     if not publish(ba, cells_a, store_p, pa)
         return Err("A: reroll (empty key or exceptional case)")
     if not publish(bb, cells_b, store_p, pb)
         return Err("B: reroll (empty key or exceptional case)")
-    // Swap C.
-    begin_phase(ba, ph_swap)
-    call_session(ba, bb)
-    end_phase(ba)
-    begin_phase(bb, ph_swap)
-    call_session(bb, ba)
-    end_phase(bb)
-    // Curve test.
-    begin_phase(ba, ph_curve_test)
-    on_a = on_curve(ba)
-    pa.on_curve = on_a
-    end_phase(ba)
-    begin_phase(bb, ph_curve_test)
-    on_b = on_curve(bb)
-    pb.on_curve = on_b
-    end_phase(bb)
-    if not pa.on_curve
-        return Err("A: B's C fails the curve test")
-    if not pb.on_curve
-        return Err("B: A's C fails the curve test")
-    // Make your own certificate, in place.
-    begin_phase(ba, ph_make)
-    ok_a = certificate(ba, across, up)
-    end_phase(ba)
-    phase_drop(ba)
-    begin_phase(bb, ph_make)
-    ok_b = certificate(bb, across, up)
-    end_phase(bb)
-    phase_drop(bb)
-    if not (ok_a and ok_b)
-        return Err("empty certificate")
-    pa.sent_a = point_of(ba, across, up)
-    pb.sent_a = point_of(bb, across, up)
-    // Rebuild theirs in the base bands.
-    begin_phase(ba, ph_rebuild)
-    ok_a = certificate(ba, base_across, base_up)
-    end_phase(ba)
-    phase_drop(ba)
-    begin_phase(bb, ph_rebuild)
-    ok_b = certificate(bb, base_across, base_up)
-    end_phase(bb)
-    phase_drop(bb)
-    if not ok_a
-        return Err("A: B's certificate is empty")
-    if not ok_b
-        return Err("B: A's certificate is empty")
-    pa.rebuilt = point_of(ba, base_across, base_up)
-    pb.rebuilt = point_of(bb, base_across, base_up)
-    // Swap A and compare.
-    begin_phase(ba, ph_swap)
-    call_session(ba, bb)
-    end_phase(ba)
-    begin_phase(bb, ph_swap)
-    call_session(bb, ba)
-    end_phase(bb)
-    pa.matched = certificate_matches(ba)
-    begin_phase(ba, ph_rebuild)
-    clear(ba, bottom)
-    clear(ba, gap)
-    end_phase(ba)
-    pb.matched = certificate_matches(bb)
-    begin_phase(bb, ph_rebuild)
-    clear(bb, bottom)
-    clear(bb, gap)
-    end_phase(bb)
-    begin_phase(ba, ph_rebuild)
-    clear(ba, across)
-    clear(ba, up)
-    end_phase(ba)
-    begin_phase(bb, ph_rebuild)
-    clear(bb, across)
-    clear(bb, up)
-    end_phase(bb)
-    if not pa.matched
-        return Err("A: B's certificate does not match")
-    if not pb.matched
-        return Err("B: A's certificate does not match")
-    // Shared walk over the rebuilt A, finish, fold.
-    begin_phase(ba, ph_shared_walk)
-    ok_a = walk_and_finish(ba, cells_a)
-    if ok_a
-        clear(ba, base_across)
-        clear(ba, base_up)
-    end_phase(ba)
-    begin_phase(bb, ph_shared_walk)
-    ok_b = walk_and_finish(bb, cells_b)
-    if ok_b
-        clear(bb, base_across)
-        clear(bb, base_up)
-    end_phase(bb)
-    if not (ok_a and ok_b)
-        return Err("exceptional case in the shared walk")
-    pa.shared = point_of(ba, across, up)
-    pb.shared = point_of(bb, across, up)
-    m0 = ba.moves
-    folded_a = fold_key(ba)
-    pa.folded = folded_a
-    ba.moves_by_phase[ph_fold] = ba.moves - m0
-    m0 = bb.moves
-    folded_b = fold_key(bb)
-    pb.folded = folded_b
-    bb.moves_by_phase[ph_fold] = bb.moves - m0
+    swap_both(ba, bb)
+    fail = curve_tests(ba, bb, pa, pb)
+    if fail == ""
+        fail = certify_own(ba, bb, pa, pb)
+    if fail == ""
+        fail = rebuild_theirs(ba, bb, pa, pb)
+    if fail == ""
+        swap_both(ba, bb)
+        fail = compare_both(ba, bb, pa, pb)
+    if fail == ""
+        fail = walk_and_fold(ba, bb, pa, pb, cells_a, cells_b)
+    if fail != ""
+        return Err(fail)
     if store_p
         assert point_of(ba, p_across, p_up) == pa.base
         assert point_of(bb, p_across, p_up) == pb.base
@@ -1500,7 +1518,7 @@ export func receive_check(t: Tier, own: Point, sent_c: Point, sent_a: Point) -> 
     put(snd, across, sent_c.x)
     put(snd, up, sent_c.y)
     call_session(rec, snd)
-    m0 = rec.moves
+    m0 = rec.cost.moves
     v = Accept
     rebuilt = empty_point(t)
     if not on_curve(rec)
@@ -1520,7 +1538,7 @@ export func receive_check(t: Tier, own: Point, sent_c: Point, sent_a: Point) -> 
             v = Mismatch
         clear(rec, bottom)
         clear(rec, gap)
-    return Checked(v, rebuilt, rec.peak, rec.moves - m0, rec.tally_max, rec.max_hole)
+    return Checked(v, rebuilt, rec.cost.peak, rec.cost.moves - m0, rec.cost.tally_max, rec.cost.control_highest)
 
 // The sender's certificate of any (x, y) (the card's formulas, which never use the
 // curve's constant term): None if the certificate is empty.
@@ -1674,8 +1692,8 @@ test "§5 a Demo exchange agrees with PARI: C, A, shared key and fold"
             assert e.b.shared == e.a.shared
             assert e.a.folded == [2, 0, 0, 1]
             assert e.b.folded == e.a.folded
-            assert e.a.peak == 7
-            assert e.a.calls == 28
+            assert e.a.cost.peak == 7
+            assert e.a.cost.calls == 28
         case Err(m)
             assert false
 
@@ -1693,8 +1711,8 @@ test "§5 a Toy exchange agrees with PARI"
             assert e.a.shared == pt([2, 2, 0, 1, 1, 2, 0, 0, 0, 2, 2, 2, 2, 1, 2, 0, 0, 1, 2, 2, 0, 0, 2], [0, 1, 2, 0, 0, 2, 2, 2, 2, 1, 1, 1, 1, 0, 1, 1, 1, 2, 2, 0, 0, 0, 2])
             assert e.b.shared == e.a.shared
             assert e.a.folded == [2, 0, 2, 0, 1, 2, 2, 0, 0, 2, 2, 2, 2, 1, 2, 0]
-            assert e.a.peak == 7
-            assert e.a.max_bench_hole <= 72
+            assert e.a.cost.peak == 7
+            assert e.a.cost.max_bench_hole <= 72
         case Err(m)
             assert false
 
@@ -1711,7 +1729,7 @@ test "§5 keeping P all game leaves it in its two bands"
     match r
         case Ok(e)
             assert e.a.matched and e.b.matched and (e.a.shared == e.b.shared)
-            assert e.a.moves_by_phase[ph_store_p] > 0
+            assert e.a.cost.moves_by_phase[ph_store_p] > 0
         case Err(m)
             assert false
 
@@ -1733,7 +1751,7 @@ test "§5.2 calling resumes from the board alone, and clears a stale home first"
     rec = new_board(t, false)
     rec = place(rec, base_up, filled(23, 2))
     rec = start_calling(rec)
-    assert rec.stale_cleared == 23
+    assert rec.cost.stale_cleared == 23
     steps = 0
     for k = 1 to 46
         if rec.row[rec.calling_hole] == 1

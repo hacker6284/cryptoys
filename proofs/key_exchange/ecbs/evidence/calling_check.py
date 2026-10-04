@@ -41,7 +41,7 @@ def main():
             return snd, rec
         # (a)
         snd, rec = pair(); rec = sudo.call("place", rec, BASE_UP, rand())
-        rec = sudo.call("start_calling", rec); k = 0; ok_a = rec["stale_cleared"] > 0
+        rec = sudo.call("start_calling", rec); k = 0; ok_a = rec["cost"]["stale_cleared"] > 0
         while rec["row"][rec["calling_hole"]] == 1:
             dst, i = rec["cursor_home"], rec["cursor_hole"]; src = SRC[dst]
             if rec["held"][dst]:

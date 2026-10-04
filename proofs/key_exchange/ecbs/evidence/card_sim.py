@@ -47,6 +47,8 @@ def exchange(sudo, T, ca, cb, store_p):
     R = T.R; l = T.l; lam1 = (T.lam - 1) % l
     r = sudo.call("exchange", SJ.tier(T.name), ca, cb, store_p)
     a, b = r["a"], r["b"]
+    for p in (a, b):
+        p.update(p.pop("cost"))              # the board's Costs record, read like the other fields
     ka, kb = T.scalar(ca), T.scalar(cb)
     pt = T.point
     st = {"keys": [S_(ca), S_(cb)], "tier": T.name, "store_P": store_p}

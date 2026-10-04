@@ -17,10 +17,21 @@ export class Vector3 {
     lerp(v, a) { return this.set(this.x + (v.x - this.x) * a, this.y + (v.y - this.y) * a, this.z + (v.z - this.z) * a); }
     lerpVectors(a, b, t) { return this.copy(a).lerp(b, t); }
 }`;
+// Only the OrbitControls surface the controller touches.
+const orbitStub = `
+export class OrbitControls {
+    constructor() {
+        this.enabled = true;
+        this.updates = 0;
+        this.target = { copy(v) { this.x = v.x; this.y = v.y; this.z = v.z; return this; } };
+        (globalThis.orbitControls ||= []).push(this);
+    }
+    update() { this.updates += 1; }
+}`;
 const hooks = `
 const MAP = {
     "three": "data:text/javascript," + encodeURIComponent(${JSON.stringify(threeStub)}),
-    "three/addons/controls/OrbitControls.js": "data:text/javascript,export class OrbitControls {}",
+    "three/addons/controls/OrbitControls.js": "data:text/javascript," + encodeURIComponent(${JSON.stringify(orbitStub)}),
 };
 export async function resolve(spec, ctx, next) {
     if (MAP[spec]) return { url: MAP[spec], shortCircuit: true };
@@ -63,5 +74,37 @@ const finalStep = step(looks.at(-1), looks.at(-2));
 const settleSteps = looks.slice(-40, -1).map((l, i, arr) => (i ? step(l, arr[i - 1]) : 0));
 assert.ok(finalStep < 0.005, `last return frame snaps the look by ${finalStep.toFixed(4)}`);
 assert.ok(finalStep <= Math.max(...settleSteps) + 1e-9, "final frame is not the biggest look step");
+
+// Hub→play enter: startAlgo pairs followTo with followLive on the same
+// track. Orbit stays off while the live follow is set, even after the
+// tween lands, and drives again once it is released. Whether startAlgo
+// does release it is enter-follow.test.mjs.
+{
+    const enter = createPoseController(makeCamera(), { domElement: {} });
+    const controls = globalThis.orbitControls.at(-1);
+    const cube = { x: -0.35, y: 0.8, z: 0.15, r: 0.08 };
+    let now = 0;
+    const run = (ms) => {
+        for (const end = now + ms; now < end;) enter.update((now += 16));
+    };
+    enter.snap("landing");
+    enter.followTo("scramble", { track: cube, delay: 400, duration: 1600 });
+    enter.followLive(cube);
+    run(4000);
+    assert.equal(enter.busy, false, "enter tween has landed");
+    assert.equal(controls.enabled, false, "orbit stays off while the live follow is set");
+    assert.equal(controls.updates, 0, "nothing drives orbit while following");
+    enter.followLive(null);
+    run(32);
+    assert.equal(controls.enabled, true, "orbit is back once the follow is released");
+    assert.ok(controls.updates > 0, "orbit is driven again after release");
+    // startAlgo's error path snaps instead of releasing; snap clears it too.
+    enter.followLive(cube);
+    run(32);
+    assert.equal(controls.enabled, false);
+    enter.snap("landing");
+    run(32);
+    assert.equal(controls.enabled, true, "snap ends the live follow");
+}
 
 console.log("pose-controller tests ok");

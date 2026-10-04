@@ -352,8 +352,10 @@ jobs:
       - name: v3 KATs against the compiled emitted code (Hash, HashDeck, HashDeckBody, IV digest)
         working-directory: proofs/megadreifach-v3/lean
         run: lake exe megadreifach_v3_kat
-      - name: The v3 KAT run fails on a planted bad digest and on emptied vector lists
-        run: python3 proofs/megadreifach-v3/vectors/kat_negatives.py
+      - name: The v3 KAT run fails on a planted bad digest and on emptied vector lists (by its own summary lines; a crash is not accepted)
+        run: |
+          python3 proofs/megadreifach-v3/vectors/kat_negatives.py
+          python3 proofs/megadreifach-v3/vectors/kat_negatives.py --selftest-crash
       - name: Axiom audit of every MegaDreifachV3 theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py megadreifach-v3
 

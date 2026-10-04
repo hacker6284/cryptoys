@@ -22,7 +22,7 @@ Elliptic-curve Diffie–Hellman on **E: y² = x³ − x² + 1 over GF(3ⁿ)**, w
 1. Every step is a visual peg recipe: no lookup tables, no colour arithmetic.
 2. **No paper.** All working state lives in grids, pegs and ships.
 3. **No printed rulebook.** Every rule is a short spoken recipe (CARD.md); every constant is spoken ("cube, minus square, plus one") or derived on the board (the base point, the ladder).
-4. Fingers may hold a place during a pass. Cursor ships are parked before you let go **[assume; confirmed by Zachary]**. Rolling the key is one sitting, with no letting go until every key hole is rolled: an unrolled hole looks like an empty one (§4).
+4. Fingers may hold a place during a pass. Cursor ships are parked before you let go **[assume; confirmed by Zachary]**. Rolling the key is one sitting, with no letting go until every key hole is rolled: an unrolled hole looks like an empty one (§4). Calling is one sitting too: nobody lets go, as in BS since #175 (§5.2).
 5. Pegs and ship pieces are unlimited; only grids count. Game sets per player = ⌈grids/4⌉, as in BS (a game set is 4 grids; a kit, ½ set, is 2). Hours of hand work are fine.
 6. Claims are narrow, and each one names its assumptions.
 
@@ -38,7 +38,7 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 | 2 | What is accepted | Lemma (§5.3): π − 1 maps E(GF(3ⁿ)) onto ⟨P⟩ with kernel E(GF(3)). An accepted A is in ⟨P⟩∖{O}; C itself may lie outside ⟨P⟩ and is harmless. (The draft's "accepts exactly ⟨P⟩∖{O}" was the trace check's property.) |
 | 3 | Curve test, §7 | Still **mandatory**: with a self-consistent A, every off-curve C with a non-empty run passes the certificate (ARGUED, §7.1; Demo has 4,774,308 such C). §7 is rewritten for the certificate [run: evidence/twist_s7, evidence/soundness_demo] |
 | 4 | §6 | K restated; the uniform shared-point model is unchanged because λ − 1 is a unit mod ℓ |
-| 5 | Exchange (§5.2) | BS PR #152 §3.1 calling as revised after DHH's review: clear the receiving homes, a calling-in-progress hole, cursor parked at the next hole to call, holes named by grid and coordinate. C is called into the base bands first; A into the bottom and gap after both players have certified |
+| 5 | Exchange (§5.2) | BS §3.1 calling as on main since #175 (nobody lets go): clear the receiving homes, a calling-in-progress hole, holes named by grid and coordinate. C is called into the base bands first; A into the bottom and gap after both players have certified |
 | 6 | Control (§2) | One ladder, one tally, a phase hole and a calling hole, in one control row (row J of the workspace grids; Demo rows I–J). The trace ladder, second tally and 3-hole protocol marker are gone |
 | 7 | Numbers (§2, §5) | Check per person 1,890 / 15,293 / 92,867 / 758,385 moves (Demo / Toy / Hobby / Serious; the trace check cost 3.93 M at Serious). Per person 5,916 / 0.142 M / 1.71 M / 40.3 M. Peak 7 bands in every phase; grids 2 / 5 / 9 / 22 (game sets 1 / 2 / 3 / 6) |
 | 8 | R6 | One inversion ladder, laid in the spare from n − 1 pegs, leftover thrown away; rungs in build order in the control row; climbed from the last made with the parking hole; one tally, no rebuild rule |
@@ -208,11 +208,11 @@ Ladder build, once per kit: 17 / 65 / 173 / 533 moves. The base point is derived
 
 C must be called before anyone certifies: each sender certifies in place, consuming C. A is called only after both have certified: with C and A called together, each receiver would still hold its own C and A and have 3 empty homes for 4 called bands [log: history/card/extras_v3.txt].
 
-**Calling** (BS PR #152 §3.1 as revised after DHH's review; the card's "Calling"):
-- Clear the homes named. Stand a peg in the **calling hole** ("calling in progress"). Put the cursor ships on hole 0 of the first home.
-- Call the matching hole of the sender's published band aloud by **grid and coordinate** ("grid 3, B7"; Demo "grid 1, A3"), hole 0 to n − 1 in number order, every hole, no early stop, never a key grid or the control row. Red hits, white misses, empty misfires; lay each answer in the cursor hole and move the cursor ships to the **next** hole to call. After the last, park the ships off the board and lift the calling peg.
-- Each call is driven by the board alone: the phase hole picks C or A, the cursor picks band and hole.
-- Holes called per receiver: **28 / 92 / 236 / 716** (4 bands × n), every call naming the same hole of the sender's band (asserted) [run: evidence/card_sim (all tiers)]; PROVED at Demo and Toy (test "§5.2 a call names the sender's published hole, never a key grid or row J"). Letting go before every one of the 14 / 46 / 118 / 358 calls of a two-band session and resuming from the board alone gives an exact copy. A stale receiving home laid over without clearing gives a wrong copy in 191/200 (Demo), 200/200 (other tiers); with "clear the homes named" 0/200 [run: evidence/calling_check]. Resuming from the board and clearing a stale home are also PROVED (test "§5.2 calling resumes from the board alone, and clears a stale home first").
+**Calling** (BS §3.1 as on main since #175; the card's "Calling"). Call each session in one sitting, without letting go.
+- Clear the homes named. Stand a peg in the **calling hole** ("calling in progress").
+- Call the matching hole of the sender's published band aloud by **grid and coordinate** ("grid 3, B7"; Demo "grid 1, A3"), hole 0 to n − 1 in number order, every hole, no early stop, never a key grid or the control row. Red hits, white misses, empty misfires; lay each answer in the same hole of your home. After the last, lift the calling peg.
+- The phase hole picks C or A.
+- Holes called per receiver: **28 / 92 / 236 / 716** (4 bands × n), every call naming the same hole of the sender's band (asserted) [run: evidence/card_sim (all tiers)]; PROVED at Demo and Toy (test "§5.2 a call names the sender's published hole, never a key grid or row J"). A stale receiving home laid over without clearing gives a wrong copy in 191/200 (Demo), 200/200 (other tiers); with "clear the homes named" 0/200 [run: evidence/calling_check]. Clearing a stale home is also PROVED (test "§5.2 calling clears a stale home first").
 
 **Full exchanges against PARI** [run: evidence/card_sim Demo (all 64 pairs of non-empty Demo keys), evidence/card_sim (Toy 10, Hobby 6, Serious 4)]: base point = P, sent C = [a]P, sent A = [(λ − 1)a]P = π(C) − C, the receiver's rebuilt A = the sender's A, curve test passed, both shared points agree and equal [(λ − 1)ab]P, folded key = the §6 reference fold on both sides: **every check in every run** (Demo 128/128 people, 64/64 exchanges; Toy 20/20; Hobby 12/12; Serious 8/8). No home clash; every called answer landed in an empty home. One exchange per tier is also PROVED (tests "§5 a Demo exchange agrees with PARI: C, A, shared key and fold" and "§5 a Toy exchange agrees with PARI"), and an empty key is refused (test "§5 an empty key is refused").
 
@@ -342,7 +342,7 @@ The "Verified" column names the Phase-1 scripts under `proofs/key_exchange/ecbs/
 
 **Remaining flags:**
 - A player must remember the four lane shapes, the Serious "six rows up", the six F-form lines, the certificate's chord and the ladder rule. These are spoken rules, not tables; whether that is memorable enough is Zachary's call.
-- The card is 1,483 words (play card 1,133 + check card 350; `wc -w` of each card from its title to the next `---`) for Toy–Serious, so it is split into a play card and a check card; the single-page target is not met (the v3 notes counted 1,440 before later card edits [log: history/card/V3_NOTES.md]). The Demo section adds 391 (`wc -w`).
+- The card is 1,461 words (play card 1,135 + check card 326; `wc -w` of each card from its title to the next `---`) for Toy–Serious, so it is split into a play card and a check card; the single-page target is not met (the v3 notes counted 1,440 before later card edits [log: history/card/V3_NOTES.md]). The Demo section adds 391 (`wc -w`).
 - Not simulated: hands-off position *inside* a certificate or an inversion step (the script marker covers walks and the root strip only); the coordinate rails.
 
 ---
@@ -351,7 +351,7 @@ The "Verified" column names the Phase-1 scripts under `proofs/key_exchange/ecbs/
 
 **Assumptions (all confirmed by Zachary):**
 1. Grids placed side by side are treated as adjacent: two grids form one 20-wide double grid with continuous rows (Hobby, Serious).
-2. Fingers hold a place within a pass, and cursor ships are parked before letting go. (Not while rolling the key: that is one sitting, house rule 4.)
+2. Fingers hold a place within a pass, and cursor ships are parked before letting go. (Not while rolling the key or calling: those are one sitting, house rule 4.)
 
 **Other stated assumptions:** 1 move per second for hand time; the uniform shared-point model for the fold (§6); physical privacy (§7.2).
 
@@ -360,7 +360,6 @@ The "Verified" column names the Phase-1 scripts under `proofs/key_exchange/ecbs/
 - §7.1 class (ii): what a receiver that skipped the curve test would compute is not analysed (moot with the curve test).
 - Summation-polynomial / index-calculus attacks in characteristic 3: literature-based, unverified.
 - The 3√q character-sum constant is the reviewer's proof, not re-derived here.
-- **Awaiting Zachary:** BS main has since removed letting go from its §3.1 calling (#175); ECBS keeps the #152-as-revised rule with cursor ships and resume (§5.2).
 
 ---
 
@@ -370,4 +369,4 @@ Normative: this SPEC, [`CARD.md`](CARD.md) and [`ecbs.sudo`](ecbs.sudo). Everyth
 
 ## 11. `ecbs.sudo`
 
-[`ecbs.sudo`](ecbs.sudo) models the board literally, as the card plays it, with the cost model of §2 in counters that never change a peg: GF(3ⁿ) arithmetic in the peg basis with the four taps (add, mirror, the lane fold, multiply, comb cube); the halving ladder and Itoh–Tsujii inversion with the tally and the quadratic-character sign; the curve side and curve test; the chord addition (Demo) and the F-form addition; the root strip and the base point by rule; the pegs-only key walk and the d10 row cup (§4); the certificate (make, rebuild, compare, reject on empty); calling with the phase hole, calling hole and cursor, resumable from the board; the exchange in card order; the fold per tier. Its 16 sudo tests (Demo and Toy, values from PARI) run in JS. **Lean is emitted, not built:** `lean/Generated/` is emitted and checked fresh in CI, but elaborating it does not finish in a CI-sized budget (see [`evidence/README.md`](../../../proofs/key_exchange/ecbs/evidence/README.md#lean)); the sudocode issue is https://github.com/hacker6284/sudocode/issues/17. Known-answer vectors per tier (P, arithmetic, fold, certificate, walks, receiver verdicts, exchanges from dice to the folded key): [`proofs/key_exchange/ecbs/vectors/`](../../../proofs/key_exchange/ecbs/vectors/README.md), cross-checked against PARI. Nothing about the emitted Lean is proved (no Link 2).
+[`ecbs.sudo`](ecbs.sudo) models the board literally, as the card plays it, with the cost model of §2 in counters that never change a peg: GF(3ⁿ) arithmetic in the peg basis with the four taps (add, mirror, the lane fold, multiply, comb cube); the halving ladder and Itoh–Tsujii inversion with the tally and the quadratic-character sign; the curve side and curve test; the chord addition (Demo) and the F-form addition; the root strip and the base point by rule; the pegs-only key walk and the d10 row cup (§4); the certificate (make, rebuild, compare, reject on empty); calling with the phase hole and calling hole, in one sitting; the exchange in card order; the fold per tier. Its 16 sudo tests (Demo and Toy, values from PARI) run in JS. **Lean is emitted, not built:** `lean/Generated/` is emitted and checked fresh in CI, but elaborating it does not finish in a CI-sized budget (see [`evidence/README.md`](../../../proofs/key_exchange/ecbs/evidence/README.md#lean)); the sudocode issue is https://github.com/hacker6284/sudocode/issues/17. Known-answer vectors per tier (P, arithmetic, fold, certificate, walks, receiver verdicts, exchanges from dice to the folded key): [`proofs/key_exchange/ecbs/vectors/`](../../../proofs/key_exchange/ecbs/vectors/README.md), cross-checked against PARI. Nothing about the emitted Lean is proved (no Link 2).

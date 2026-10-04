@@ -30,7 +30,7 @@ Toy, Hobby and Serious as written; Demo changes are listed in the last section, 
 13. **Finish:** invert the bottom. Do the gap times the across, into the across, and the gap times the up, into the up. Clear the gap, bottom and base bands. Your point is the across and up.
 14. **Exchange** by the check card. **Shared key:** walk your key over the base bands (steps 11 to 13). Fold the across: Serious drops rows F to I onto A to D, Toy and Hobby row C onto A. The key is rows A to E (Serious) or A to B.
 
-**Hands:** a finger may hold your place, but park the cursor ships before you let go. Never let go while rolling your key (step 10).
+**Hands:** a finger may hold your place, but park the cursor ships before you let go. Never let go while rolling your key (step 10) or calling.
 
 ---
 
@@ -38,7 +38,7 @@ Toy, Hobby and Serious as written; Demo changes are listed in the last section, 
 
 **Certificate** of a point ("its" bands are the point's own): copy its across into the bottom, cube it, mirror it and add its across. If the bottom is empty, the certificate is empty. Invert the bottom. Copy its up into the spare, cube it, add its up and mirror it. Do the gap times the spare, into the gap, and Frobenius the point. Do the gap times a copy of itself, drop a white peg in hole 0, add its across, take away the bottom, and put it into the bottom. Take the bottom away from its across. Mirror its up and lay the gap times its across onto it. Clear the gap and slide the bottom into its across.
 
-**Calling:** clear the homes named, stand a peg in the calling hole, and put the cursor ships on hole 0 of the first. Call the matching hole of your partner's band aloud by grid and coordinate ("grid 3, B7"): hole 0 first in number order, every hole, never the key or the control row. Red hits, white misses, empty misfires: lay each answer in the cursor hole, then move the cursor ships to the next hole to call. After the last, park them off the board and lift the calling peg.
+**Calling:** clear the homes named and stand a peg in the calling hole. Call the matching hole of your partner's band aloud by grid and coordinate ("grid 3, B7"): hole 0 first in number order, every hole, never the key or the control row. Red hits, white misses, empty misfires: lay each answer in the same hole of your home. After the last, lift the calling peg.
 
 1. **Send:** after your walk, call their across and up (their point) into your base bands. The base up times a copy of itself, in the gap, must match the base across's curve side, in the bottom, or reject. Clear both. Make the certificate of your across and up, and drop a white peg in the phase hole.
 2. **Check:** make the certificate of the base bands; if it is empty, reject. Drop a white peg in the phase hole. Once theirs shows a peg, call their across into your bottom and their up into your gap. Unless they match the base across and base up peg for peg, reject. Clear the bottom and gap and, once you have both called, the across and up.

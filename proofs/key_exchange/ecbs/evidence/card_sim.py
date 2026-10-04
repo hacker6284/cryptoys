@@ -11,14 +11,17 @@ keys and checks what the sudo returns against ../oracle/ecbs_oracle.py:
 It also records the band peak, control-row use and moves per phase (phase and operation names
 from the sudo's phase_names() / op_names()), and compares every run with the Phase-1 Python
 simulation of the same keys (../history/card/card_sim_v3_*.json, ../history/demo/card_sim_demo.json; those
-scripts were removed when ecbs.sudo replaced them). Phase 1 recorded the keys of each Demo
+scripts were removed when ecbs.sudo replaced them). Calling no longer has a cursor (nobody lets
+go, #175): Phase 1 counted each cursor step as one control-row move, so its ctrl less its
+cursor_steps is compared. Phase 1 recorded the keys of each Demo
 run but not of the Toy / Hobby / Serious runs: there the summary says so
 (same_keys_as_phase1: "not recorded") and the match rests on the identical results.
 
 Keys: Toy / Hobby / Serious draw them exactly as the Phase-1 simulation did
 (random.Random(20261001 + len(name)); rnd.choice('.WR') per cell, redrawn
-until both are non-empty; then the 4 calling sessions' rnd.sample(range(2n), 3) let-go draws,
-which do not change any result), so run i here has the keys of run i there. Demo: all 8 x 8
+until both are non-empty; then the 4 calling sessions' rnd.sample(range(2n), 3) draws of
+let-go points, from before nobody let go (#175); they change no result and are kept so the keys
+stay the same), so run i here has the keys of run i there. Demo: all 8 x 8
 pairs of non-empty 2-cell keys.
 
 Usage: python card_sim.py Demo | Toy,Hobby,Serious [reps]
@@ -82,7 +85,6 @@ def exchange(sudo, T, ca, cb):
     st["ctrl"] = {"A": a["ctrl"], "B": b["ctrl"]}
     st["key_grid"] = {"A": a["key_grid_moves"], "B": b["key_grid_moves"]}
     st["calls"] = {"A": a["calls"], "B": b["calls"]}
-    st["cursor_steps"] = {"A": a["cursor_steps"], "B": b["cursor_steps"]}
     st["stale_cleared"] = {"A": a["stale_cleared"], "B": b["stale_cleared"]}
     st["ladder_build_once"] = a["ladder_moves"]
     st["ops"] = dict(zip(OPS, a["ops"]))
@@ -116,13 +118,15 @@ def homes_disjoint(sudo, T):
 
 
 CHECKS = ["P_ok", "C_ok", "on_curve", "A_ok", "match", "fold_ref_ok"]
-SAME = ["moves", "moves_by_phase", "ctrl", "key_grid", "calls", "cursor_steps", "stale_cleared", "peak",
+SAME = ["moves", "moves_by_phase", "ctrl", "key_grid", "calls", "stale_cleared", "peak",
         "peak_strict", "max_bench_hole", "ladder_build_once", "base_hole", "peak_by_phase"]
 
 
 def compare(st, old):
     """differences from the Phase-1 Python run of the same keys (empty = identical)."""
     diff = {}
+    if "cursor_steps" in old:                # Phase 1's calling cursor (gone, #175), 1 ctrl per step
+        old = dict(old, ctrl={w: old["ctrl"][w] - old["cursor_steps"][w] for w in "AB"})
     for k in SAME:
         if k in old and old[k] != st[k]: diff[k] = {"python": old[k], "sudo": st[k]}
     oc = old.get("control", {})
@@ -170,7 +174,7 @@ def keys_like_phase1(rnd, M, n):
         ca = [PEG.index(rnd.choice(PEG)) for _ in range(M)]
         cb = [PEG.index(rnd.choice(PEG)) for _ in range(M)]
         if any(ca) and any(cb): break
-    for _ in range(4):                       # the 4 calling sessions' let-go draws (no effect on results)
+    for _ in range(4):                       # Phase 1's let-go draws (pre-#175), kept for the keys
         rnd.sample(range(2 * n), min(3, 2 * n))
     return ca, cb
 

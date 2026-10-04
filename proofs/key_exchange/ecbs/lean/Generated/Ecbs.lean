@@ -72,7 +72,6 @@ structure Costs where
   sudo_5Costs_6slides : Int
   sudo_5Costs_4ctrl : Int
   sudo_5Costs_5calls : Int
-  sudo_5Costs_12cursor_steps : Int
   sudo_5Costs_13stale_cleared : Int
   sudo_5Costs_14key_grid_moves : Int
   sudo_5Costs_12ladder_moves : Int
@@ -88,17 +87,17 @@ structure Costs where
   deriving BEq, Repr
 
 instance : Inhabited Costs where
-  default := { sudo_5Costs_5moves := default, sudo_5Costs_6slides := default, sudo_5Costs_4ctrl := default, sudo_5Costs_5calls := default, sudo_5Costs_12cursor_steps := default, sudo_5Costs_13stale_cleared := default, sudo_5Costs_14key_grid_moves := default, sudo_5Costs_12ladder_moves := default, sudo_5Costs_4peak := default, sudo_5Costs_11peak_strict := default, sudo_5Costs_14max_bench_hole := default, sudo_5Costs_15control_highest := default, sudo_5Costs_17script_marker_max := default, sudo_5Costs_9tally_max := default, sudo_5Costs_14moves_by_phase := default, sudo_5Costs_13peak_by_phase := default, sudo_5Costs_3ops := default }
+  default := { sudo_5Costs_5moves := default, sudo_5Costs_6slides := default, sudo_5Costs_4ctrl := default, sudo_5Costs_5calls := default, sudo_5Costs_13stale_cleared := default, sudo_5Costs_14key_grid_moves := default, sudo_5Costs_12ladder_moves := default, sudo_5Costs_4peak := default, sudo_5Costs_11peak_strict := default, sudo_5Costs_14max_bench_hole := default, sudo_5Costs_15control_highest := default, sudo_5Costs_17script_marker_max := default, sudo_5Costs_9tally_max := default, sudo_5Costs_14moves_by_phase := default, sudo_5Costs_13peak_by_phase := default, sudo_5Costs_3ops := default }
 
 instance : SudoRt.SEq Costs where
-  beq a b := SudoRt.SEq.beq a.sudo_5Costs_5moves b.sudo_5Costs_5moves && SudoRt.SEq.beq a.sudo_5Costs_6slides b.sudo_5Costs_6slides && SudoRt.SEq.beq a.sudo_5Costs_4ctrl b.sudo_5Costs_4ctrl && SudoRt.SEq.beq a.sudo_5Costs_5calls b.sudo_5Costs_5calls && SudoRt.SEq.beq a.sudo_5Costs_12cursor_steps b.sudo_5Costs_12cursor_steps && SudoRt.SEq.beq a.sudo_5Costs_13stale_cleared b.sudo_5Costs_13stale_cleared && SudoRt.SEq.beq a.sudo_5Costs_14key_grid_moves b.sudo_5Costs_14key_grid_moves && SudoRt.SEq.beq a.sudo_5Costs_12ladder_moves b.sudo_5Costs_12ladder_moves && SudoRt.SEq.beq a.sudo_5Costs_4peak b.sudo_5Costs_4peak && SudoRt.SEq.beq a.sudo_5Costs_11peak_strict b.sudo_5Costs_11peak_strict && SudoRt.SEq.beq a.sudo_5Costs_14max_bench_hole b.sudo_5Costs_14max_bench_hole && SudoRt.SEq.beq a.sudo_5Costs_15control_highest b.sudo_5Costs_15control_highest && SudoRt.SEq.beq a.sudo_5Costs_17script_marker_max b.sudo_5Costs_17script_marker_max && SudoRt.SEq.beq a.sudo_5Costs_9tally_max b.sudo_5Costs_9tally_max && SudoRt.SEq.beq a.sudo_5Costs_14moves_by_phase b.sudo_5Costs_14moves_by_phase && SudoRt.SEq.beq a.sudo_5Costs_13peak_by_phase b.sudo_5Costs_13peak_by_phase && SudoRt.SEq.beq a.sudo_5Costs_3ops b.sudo_5Costs_3ops
+  beq a b := SudoRt.SEq.beq a.sudo_5Costs_5moves b.sudo_5Costs_5moves && SudoRt.SEq.beq a.sudo_5Costs_6slides b.sudo_5Costs_6slides && SudoRt.SEq.beq a.sudo_5Costs_4ctrl b.sudo_5Costs_4ctrl && SudoRt.SEq.beq a.sudo_5Costs_5calls b.sudo_5Costs_5calls && SudoRt.SEq.beq a.sudo_5Costs_13stale_cleared b.sudo_5Costs_13stale_cleared && SudoRt.SEq.beq a.sudo_5Costs_14key_grid_moves b.sudo_5Costs_14key_grid_moves && SudoRt.SEq.beq a.sudo_5Costs_12ladder_moves b.sudo_5Costs_12ladder_moves && SudoRt.SEq.beq a.sudo_5Costs_4peak b.sudo_5Costs_4peak && SudoRt.SEq.beq a.sudo_5Costs_11peak_strict b.sudo_5Costs_11peak_strict && SudoRt.SEq.beq a.sudo_5Costs_14max_bench_hole b.sudo_5Costs_14max_bench_hole && SudoRt.SEq.beq a.sudo_5Costs_15control_highest b.sudo_5Costs_15control_highest && SudoRt.SEq.beq a.sudo_5Costs_17script_marker_max b.sudo_5Costs_17script_marker_max && SudoRt.SEq.beq a.sudo_5Costs_9tally_max b.sudo_5Costs_9tally_max && SudoRt.SEq.beq a.sudo_5Costs_14moves_by_phase b.sudo_5Costs_14moves_by_phase && SudoRt.SEq.beq a.sudo_5Costs_13peak_by_phase b.sudo_5Costs_13peak_by_phase && SudoRt.SEq.beq a.sudo_5Costs_3ops b.sudo_5Costs_3ops
 
 instance : SudoRt.SOrd Costs where
   le a b :=
-    (if !(SudoRt.SEq.beq a.sudo_5Costs_5moves b.sudo_5Costs_5moves) then SudoRt.SOrd.le a.sudo_5Costs_5moves b.sudo_5Costs_5moves else (if !(SudoRt.SEq.beq a.sudo_5Costs_6slides b.sudo_5Costs_6slides) then SudoRt.SOrd.le a.sudo_5Costs_6slides b.sudo_5Costs_6slides else (if !(SudoRt.SEq.beq a.sudo_5Costs_4ctrl b.sudo_5Costs_4ctrl) then SudoRt.SOrd.le a.sudo_5Costs_4ctrl b.sudo_5Costs_4ctrl else (if !(SudoRt.SEq.beq a.sudo_5Costs_5calls b.sudo_5Costs_5calls) then SudoRt.SOrd.le a.sudo_5Costs_5calls b.sudo_5Costs_5calls else (if !(SudoRt.SEq.beq a.sudo_5Costs_12cursor_steps b.sudo_5Costs_12cursor_steps) then SudoRt.SOrd.le a.sudo_5Costs_12cursor_steps b.sudo_5Costs_12cursor_steps else (if !(SudoRt.SEq.beq a.sudo_5Costs_13stale_cleared b.sudo_5Costs_13stale_cleared) then SudoRt.SOrd.le a.sudo_5Costs_13stale_cleared b.sudo_5Costs_13stale_cleared else (if !(SudoRt.SEq.beq a.sudo_5Costs_14key_grid_moves b.sudo_5Costs_14key_grid_moves) then SudoRt.SOrd.le a.sudo_5Costs_14key_grid_moves b.sudo_5Costs_14key_grid_moves else (if !(SudoRt.SEq.beq a.sudo_5Costs_12ladder_moves b.sudo_5Costs_12ladder_moves) then SudoRt.SOrd.le a.sudo_5Costs_12ladder_moves b.sudo_5Costs_12ladder_moves else (if !(SudoRt.SEq.beq a.sudo_5Costs_4peak b.sudo_5Costs_4peak) then SudoRt.SOrd.le a.sudo_5Costs_4peak b.sudo_5Costs_4peak else (if !(SudoRt.SEq.beq a.sudo_5Costs_11peak_strict b.sudo_5Costs_11peak_strict) then SudoRt.SOrd.le a.sudo_5Costs_11peak_strict b.sudo_5Costs_11peak_strict else (if !(SudoRt.SEq.beq a.sudo_5Costs_14max_bench_hole b.sudo_5Costs_14max_bench_hole) then SudoRt.SOrd.le a.sudo_5Costs_14max_bench_hole b.sudo_5Costs_14max_bench_hole else (if !(SudoRt.SEq.beq a.sudo_5Costs_15control_highest b.sudo_5Costs_15control_highest) then SudoRt.SOrd.le a.sudo_5Costs_15control_highest b.sudo_5Costs_15control_highest else (if !(SudoRt.SEq.beq a.sudo_5Costs_17script_marker_max b.sudo_5Costs_17script_marker_max) then SudoRt.SOrd.le a.sudo_5Costs_17script_marker_max b.sudo_5Costs_17script_marker_max else (if !(SudoRt.SEq.beq a.sudo_5Costs_9tally_max b.sudo_5Costs_9tally_max) then SudoRt.SOrd.le a.sudo_5Costs_9tally_max b.sudo_5Costs_9tally_max else (if !(SudoRt.SEq.beq a.sudo_5Costs_14moves_by_phase b.sudo_5Costs_14moves_by_phase) then SudoRt.SOrd.le a.sudo_5Costs_14moves_by_phase b.sudo_5Costs_14moves_by_phase else (if !(SudoRt.SEq.beq a.sudo_5Costs_13peak_by_phase b.sudo_5Costs_13peak_by_phase) then SudoRt.SOrd.le a.sudo_5Costs_13peak_by_phase b.sudo_5Costs_13peak_by_phase else (if !(SudoRt.SEq.beq a.sudo_5Costs_3ops b.sudo_5Costs_3ops) then SudoRt.SOrd.le a.sudo_5Costs_3ops b.sudo_5Costs_3ops else true)))))))))))))))))
+    (if !(SudoRt.SEq.beq a.sudo_5Costs_5moves b.sudo_5Costs_5moves) then SudoRt.SOrd.le a.sudo_5Costs_5moves b.sudo_5Costs_5moves else (if !(SudoRt.SEq.beq a.sudo_5Costs_6slides b.sudo_5Costs_6slides) then SudoRt.SOrd.le a.sudo_5Costs_6slides b.sudo_5Costs_6slides else (if !(SudoRt.SEq.beq a.sudo_5Costs_4ctrl b.sudo_5Costs_4ctrl) then SudoRt.SOrd.le a.sudo_5Costs_4ctrl b.sudo_5Costs_4ctrl else (if !(SudoRt.SEq.beq a.sudo_5Costs_5calls b.sudo_5Costs_5calls) then SudoRt.SOrd.le a.sudo_5Costs_5calls b.sudo_5Costs_5calls else (if !(SudoRt.SEq.beq a.sudo_5Costs_13stale_cleared b.sudo_5Costs_13stale_cleared) then SudoRt.SOrd.le a.sudo_5Costs_13stale_cleared b.sudo_5Costs_13stale_cleared else (if !(SudoRt.SEq.beq a.sudo_5Costs_14key_grid_moves b.sudo_5Costs_14key_grid_moves) then SudoRt.SOrd.le a.sudo_5Costs_14key_grid_moves b.sudo_5Costs_14key_grid_moves else (if !(SudoRt.SEq.beq a.sudo_5Costs_12ladder_moves b.sudo_5Costs_12ladder_moves) then SudoRt.SOrd.le a.sudo_5Costs_12ladder_moves b.sudo_5Costs_12ladder_moves else (if !(SudoRt.SEq.beq a.sudo_5Costs_4peak b.sudo_5Costs_4peak) then SudoRt.SOrd.le a.sudo_5Costs_4peak b.sudo_5Costs_4peak else (if !(SudoRt.SEq.beq a.sudo_5Costs_11peak_strict b.sudo_5Costs_11peak_strict) then SudoRt.SOrd.le a.sudo_5Costs_11peak_strict b.sudo_5Costs_11peak_strict else (if !(SudoRt.SEq.beq a.sudo_5Costs_14max_bench_hole b.sudo_5Costs_14max_bench_hole) then SudoRt.SOrd.le a.sudo_5Costs_14max_bench_hole b.sudo_5Costs_14max_bench_hole else (if !(SudoRt.SEq.beq a.sudo_5Costs_15control_highest b.sudo_5Costs_15control_highest) then SudoRt.SOrd.le a.sudo_5Costs_15control_highest b.sudo_5Costs_15control_highest else (if !(SudoRt.SEq.beq a.sudo_5Costs_17script_marker_max b.sudo_5Costs_17script_marker_max) then SudoRt.SOrd.le a.sudo_5Costs_17script_marker_max b.sudo_5Costs_17script_marker_max else (if !(SudoRt.SEq.beq a.sudo_5Costs_9tally_max b.sudo_5Costs_9tally_max) then SudoRt.SOrd.le a.sudo_5Costs_9tally_max b.sudo_5Costs_9tally_max else (if !(SudoRt.SEq.beq a.sudo_5Costs_14moves_by_phase b.sudo_5Costs_14moves_by_phase) then SudoRt.SOrd.le a.sudo_5Costs_14moves_by_phase b.sudo_5Costs_14moves_by_phase else (if !(SudoRt.SEq.beq a.sudo_5Costs_13peak_by_phase b.sudo_5Costs_13peak_by_phase) then SudoRt.SOrd.le a.sudo_5Costs_13peak_by_phase b.sudo_5Costs_13peak_by_phase else (if !(SudoRt.SEq.beq a.sudo_5Costs_3ops b.sudo_5Costs_3ops) then SudoRt.SOrd.le a.sudo_5Costs_3ops b.sudo_5Costs_3ops else true))))))))))))))))
 
 instance : SudoRt.Canon Costs where
-  canon r := SudoRt.canonRecord "Costs" [SudoRt.Canon.canon r.sudo_5Costs_5moves, SudoRt.Canon.canon r.sudo_5Costs_6slides, SudoRt.Canon.canon r.sudo_5Costs_4ctrl, SudoRt.Canon.canon r.sudo_5Costs_5calls, SudoRt.Canon.canon r.sudo_5Costs_12cursor_steps, SudoRt.Canon.canon r.sudo_5Costs_13stale_cleared, SudoRt.Canon.canon r.sudo_5Costs_14key_grid_moves, SudoRt.Canon.canon r.sudo_5Costs_12ladder_moves, SudoRt.Canon.canon r.sudo_5Costs_4peak, SudoRt.Canon.canon r.sudo_5Costs_11peak_strict, SudoRt.Canon.canon r.sudo_5Costs_14max_bench_hole, SudoRt.Canon.canon r.sudo_5Costs_15control_highest, SudoRt.Canon.canon r.sudo_5Costs_17script_marker_max, SudoRt.Canon.canon r.sudo_5Costs_9tally_max, SudoRt.Canon.canon r.sudo_5Costs_14moves_by_phase, SudoRt.Canon.canon r.sudo_5Costs_13peak_by_phase, SudoRt.Canon.canon r.sudo_5Costs_3ops]
+  canon r := SudoRt.canonRecord "Costs" [SudoRt.Canon.canon r.sudo_5Costs_5moves, SudoRt.Canon.canon r.sudo_5Costs_6slides, SudoRt.Canon.canon r.sudo_5Costs_4ctrl, SudoRt.Canon.canon r.sudo_5Costs_5calls, SudoRt.Canon.canon r.sudo_5Costs_13stale_cleared, SudoRt.Canon.canon r.sudo_5Costs_14key_grid_moves, SudoRt.Canon.canon r.sudo_5Costs_12ladder_moves, SudoRt.Canon.canon r.sudo_5Costs_4peak, SudoRt.Canon.canon r.sudo_5Costs_11peak_strict, SudoRt.Canon.canon r.sudo_5Costs_14max_bench_hole, SudoRt.Canon.canon r.sudo_5Costs_15control_highest, SudoRt.Canon.canon r.sudo_5Costs_17script_marker_max, SudoRt.Canon.canon r.sudo_5Costs_9tally_max, SudoRt.Canon.canon r.sudo_5Costs_14moves_by_phase, SudoRt.Canon.canon r.sudo_5Costs_13peak_by_phase, SudoRt.Canon.canon r.sudo_5Costs_3ops]
 
 structure Board where
   sudo_5Board_1t : Tier
@@ -124,23 +123,21 @@ structure Board where
   sudo_5Board_9marker_on : Bool
   sudo_5Board_8rung_idx : Int
   sudo_5Board_6ladder : Array (Int)
-  sudo_5Board_11cursor_home : Int
-  sudo_5Board_11cursor_hole : Int
   sudo_5Board_3log : Array (Call)
   deriving BEq, Repr
 
 instance : Inhabited Board where
-  default := { sudo_5Board_1t := default, sudo_5Board_4home := default, sudo_5Board_4held := default, sudo_5Board_8bench_on := default, sudo_5Board_8bench_to := default, sudo_5Board_5bench := default, sudo_5Board_4cost := default, sudo_5Board_5phase := default, sudo_5Board_8phase_m0 := default, sudo_5Board_8phase_pk := default, sudo_5Board_3row := default, sudo_5Board_10phase_hole := default, sudo_5Board_12calling_hole := default, sudo_5Board_7ladder0 := default, sudo_5Board_6nrungs := default, sudo_5Board_9park_hole := default, sudo_5Board_6tally0 := default, sudo_5Board_6marker := default, sudo_5Board_11parked_from := default, sudo_5Board_9tally_len := default, sudo_5Board_9marker_on := default, sudo_5Board_8rung_idx := default, sudo_5Board_6ladder := default, sudo_5Board_11cursor_home := default, sudo_5Board_11cursor_hole := default, sudo_5Board_3log := default }
+  default := { sudo_5Board_1t := default, sudo_5Board_4home := default, sudo_5Board_4held := default, sudo_5Board_8bench_on := default, sudo_5Board_8bench_to := default, sudo_5Board_5bench := default, sudo_5Board_4cost := default, sudo_5Board_5phase := default, sudo_5Board_8phase_m0 := default, sudo_5Board_8phase_pk := default, sudo_5Board_3row := default, sudo_5Board_10phase_hole := default, sudo_5Board_12calling_hole := default, sudo_5Board_7ladder0 := default, sudo_5Board_6nrungs := default, sudo_5Board_9park_hole := default, sudo_5Board_6tally0 := default, sudo_5Board_6marker := default, sudo_5Board_11parked_from := default, sudo_5Board_9tally_len := default, sudo_5Board_9marker_on := default, sudo_5Board_8rung_idx := default, sudo_5Board_6ladder := default, sudo_5Board_3log := default }
 
 instance : SudoRt.SEq Board where
-  beq a b := SudoRt.SEq.beq a.sudo_5Board_1t b.sudo_5Board_1t && SudoRt.SEq.beq a.sudo_5Board_4home b.sudo_5Board_4home && SudoRt.SEq.beq a.sudo_5Board_4held b.sudo_5Board_4held && SudoRt.SEq.beq a.sudo_5Board_8bench_on b.sudo_5Board_8bench_on && SudoRt.SEq.beq a.sudo_5Board_8bench_to b.sudo_5Board_8bench_to && SudoRt.SEq.beq a.sudo_5Board_5bench b.sudo_5Board_5bench && SudoRt.SEq.beq a.sudo_5Board_4cost b.sudo_5Board_4cost && SudoRt.SEq.beq a.sudo_5Board_5phase b.sudo_5Board_5phase && SudoRt.SEq.beq a.sudo_5Board_8phase_m0 b.sudo_5Board_8phase_m0 && SudoRt.SEq.beq a.sudo_5Board_8phase_pk b.sudo_5Board_8phase_pk && SudoRt.SEq.beq a.sudo_5Board_3row b.sudo_5Board_3row && SudoRt.SEq.beq a.sudo_5Board_10phase_hole b.sudo_5Board_10phase_hole && SudoRt.SEq.beq a.sudo_5Board_12calling_hole b.sudo_5Board_12calling_hole && SudoRt.SEq.beq a.sudo_5Board_7ladder0 b.sudo_5Board_7ladder0 && SudoRt.SEq.beq a.sudo_5Board_6nrungs b.sudo_5Board_6nrungs && SudoRt.SEq.beq a.sudo_5Board_9park_hole b.sudo_5Board_9park_hole && SudoRt.SEq.beq a.sudo_5Board_6tally0 b.sudo_5Board_6tally0 && SudoRt.SEq.beq a.sudo_5Board_6marker b.sudo_5Board_6marker && SudoRt.SEq.beq a.sudo_5Board_11parked_from b.sudo_5Board_11parked_from && SudoRt.SEq.beq a.sudo_5Board_9tally_len b.sudo_5Board_9tally_len && SudoRt.SEq.beq a.sudo_5Board_9marker_on b.sudo_5Board_9marker_on && SudoRt.SEq.beq a.sudo_5Board_8rung_idx b.sudo_5Board_8rung_idx && SudoRt.SEq.beq a.sudo_5Board_6ladder b.sudo_5Board_6ladder && SudoRt.SEq.beq a.sudo_5Board_11cursor_home b.sudo_5Board_11cursor_home && SudoRt.SEq.beq a.sudo_5Board_11cursor_hole b.sudo_5Board_11cursor_hole && SudoRt.SEq.beq a.sudo_5Board_3log b.sudo_5Board_3log
+  beq a b := SudoRt.SEq.beq a.sudo_5Board_1t b.sudo_5Board_1t && SudoRt.SEq.beq a.sudo_5Board_4home b.sudo_5Board_4home && SudoRt.SEq.beq a.sudo_5Board_4held b.sudo_5Board_4held && SudoRt.SEq.beq a.sudo_5Board_8bench_on b.sudo_5Board_8bench_on && SudoRt.SEq.beq a.sudo_5Board_8bench_to b.sudo_5Board_8bench_to && SudoRt.SEq.beq a.sudo_5Board_5bench b.sudo_5Board_5bench && SudoRt.SEq.beq a.sudo_5Board_4cost b.sudo_5Board_4cost && SudoRt.SEq.beq a.sudo_5Board_5phase b.sudo_5Board_5phase && SudoRt.SEq.beq a.sudo_5Board_8phase_m0 b.sudo_5Board_8phase_m0 && SudoRt.SEq.beq a.sudo_5Board_8phase_pk b.sudo_5Board_8phase_pk && SudoRt.SEq.beq a.sudo_5Board_3row b.sudo_5Board_3row && SudoRt.SEq.beq a.sudo_5Board_10phase_hole b.sudo_5Board_10phase_hole && SudoRt.SEq.beq a.sudo_5Board_12calling_hole b.sudo_5Board_12calling_hole && SudoRt.SEq.beq a.sudo_5Board_7ladder0 b.sudo_5Board_7ladder0 && SudoRt.SEq.beq a.sudo_5Board_6nrungs b.sudo_5Board_6nrungs && SudoRt.SEq.beq a.sudo_5Board_9park_hole b.sudo_5Board_9park_hole && SudoRt.SEq.beq a.sudo_5Board_6tally0 b.sudo_5Board_6tally0 && SudoRt.SEq.beq a.sudo_5Board_6marker b.sudo_5Board_6marker && SudoRt.SEq.beq a.sudo_5Board_11parked_from b.sudo_5Board_11parked_from && SudoRt.SEq.beq a.sudo_5Board_9tally_len b.sudo_5Board_9tally_len && SudoRt.SEq.beq a.sudo_5Board_9marker_on b.sudo_5Board_9marker_on && SudoRt.SEq.beq a.sudo_5Board_8rung_idx b.sudo_5Board_8rung_idx && SudoRt.SEq.beq a.sudo_5Board_6ladder b.sudo_5Board_6ladder && SudoRt.SEq.beq a.sudo_5Board_3log b.sudo_5Board_3log
 
 instance : SudoRt.SOrd Board where
   le a b :=
-    (if !(SudoRt.SEq.beq a.sudo_5Board_1t b.sudo_5Board_1t) then SudoRt.SOrd.le a.sudo_5Board_1t b.sudo_5Board_1t else (if !(SudoRt.SEq.beq a.sudo_5Board_4home b.sudo_5Board_4home) then SudoRt.SOrd.le a.sudo_5Board_4home b.sudo_5Board_4home else (if !(SudoRt.SEq.beq a.sudo_5Board_4held b.sudo_5Board_4held) then SudoRt.SOrd.le a.sudo_5Board_4held b.sudo_5Board_4held else (if !(SudoRt.SEq.beq a.sudo_5Board_8bench_on b.sudo_5Board_8bench_on) then SudoRt.SOrd.le a.sudo_5Board_8bench_on b.sudo_5Board_8bench_on else (if !(SudoRt.SEq.beq a.sudo_5Board_8bench_to b.sudo_5Board_8bench_to) then SudoRt.SOrd.le a.sudo_5Board_8bench_to b.sudo_5Board_8bench_to else (if !(SudoRt.SEq.beq a.sudo_5Board_5bench b.sudo_5Board_5bench) then SudoRt.SOrd.le a.sudo_5Board_5bench b.sudo_5Board_5bench else (if !(SudoRt.SEq.beq a.sudo_5Board_4cost b.sudo_5Board_4cost) then SudoRt.SOrd.le a.sudo_5Board_4cost b.sudo_5Board_4cost else (if !(SudoRt.SEq.beq a.sudo_5Board_5phase b.sudo_5Board_5phase) then SudoRt.SOrd.le a.sudo_5Board_5phase b.sudo_5Board_5phase else (if !(SudoRt.SEq.beq a.sudo_5Board_8phase_m0 b.sudo_5Board_8phase_m0) then SudoRt.SOrd.le a.sudo_5Board_8phase_m0 b.sudo_5Board_8phase_m0 else (if !(SudoRt.SEq.beq a.sudo_5Board_8phase_pk b.sudo_5Board_8phase_pk) then SudoRt.SOrd.le a.sudo_5Board_8phase_pk b.sudo_5Board_8phase_pk else (if !(SudoRt.SEq.beq a.sudo_5Board_3row b.sudo_5Board_3row) then SudoRt.SOrd.le a.sudo_5Board_3row b.sudo_5Board_3row else (if !(SudoRt.SEq.beq a.sudo_5Board_10phase_hole b.sudo_5Board_10phase_hole) then SudoRt.SOrd.le a.sudo_5Board_10phase_hole b.sudo_5Board_10phase_hole else (if !(SudoRt.SEq.beq a.sudo_5Board_12calling_hole b.sudo_5Board_12calling_hole) then SudoRt.SOrd.le a.sudo_5Board_12calling_hole b.sudo_5Board_12calling_hole else (if !(SudoRt.SEq.beq a.sudo_5Board_7ladder0 b.sudo_5Board_7ladder0) then SudoRt.SOrd.le a.sudo_5Board_7ladder0 b.sudo_5Board_7ladder0 else (if !(SudoRt.SEq.beq a.sudo_5Board_6nrungs b.sudo_5Board_6nrungs) then SudoRt.SOrd.le a.sudo_5Board_6nrungs b.sudo_5Board_6nrungs else (if !(SudoRt.SEq.beq a.sudo_5Board_9park_hole b.sudo_5Board_9park_hole) then SudoRt.SOrd.le a.sudo_5Board_9park_hole b.sudo_5Board_9park_hole else (if !(SudoRt.SEq.beq a.sudo_5Board_6tally0 b.sudo_5Board_6tally0) then SudoRt.SOrd.le a.sudo_5Board_6tally0 b.sudo_5Board_6tally0 else (if !(SudoRt.SEq.beq a.sudo_5Board_6marker b.sudo_5Board_6marker) then SudoRt.SOrd.le a.sudo_5Board_6marker b.sudo_5Board_6marker else (if !(SudoRt.SEq.beq a.sudo_5Board_11parked_from b.sudo_5Board_11parked_from) then SudoRt.SOrd.le a.sudo_5Board_11parked_from b.sudo_5Board_11parked_from else (if !(SudoRt.SEq.beq a.sudo_5Board_9tally_len b.sudo_5Board_9tally_len) then SudoRt.SOrd.le a.sudo_5Board_9tally_len b.sudo_5Board_9tally_len else (if !(SudoRt.SEq.beq a.sudo_5Board_9marker_on b.sudo_5Board_9marker_on) then SudoRt.SOrd.le a.sudo_5Board_9marker_on b.sudo_5Board_9marker_on else (if !(SudoRt.SEq.beq a.sudo_5Board_8rung_idx b.sudo_5Board_8rung_idx) then SudoRt.SOrd.le a.sudo_5Board_8rung_idx b.sudo_5Board_8rung_idx else (if !(SudoRt.SEq.beq a.sudo_5Board_6ladder b.sudo_5Board_6ladder) then SudoRt.SOrd.le a.sudo_5Board_6ladder b.sudo_5Board_6ladder else (if !(SudoRt.SEq.beq a.sudo_5Board_11cursor_home b.sudo_5Board_11cursor_home) then SudoRt.SOrd.le a.sudo_5Board_11cursor_home b.sudo_5Board_11cursor_home else (if !(SudoRt.SEq.beq a.sudo_5Board_11cursor_hole b.sudo_5Board_11cursor_hole) then SudoRt.SOrd.le a.sudo_5Board_11cursor_hole b.sudo_5Board_11cursor_hole else (if !(SudoRt.SEq.beq a.sudo_5Board_3log b.sudo_5Board_3log) then SudoRt.SOrd.le a.sudo_5Board_3log b.sudo_5Board_3log else true))))))))))))))))))))))))))
+    (if !(SudoRt.SEq.beq a.sudo_5Board_1t b.sudo_5Board_1t) then SudoRt.SOrd.le a.sudo_5Board_1t b.sudo_5Board_1t else (if !(SudoRt.SEq.beq a.sudo_5Board_4home b.sudo_5Board_4home) then SudoRt.SOrd.le a.sudo_5Board_4home b.sudo_5Board_4home else (if !(SudoRt.SEq.beq a.sudo_5Board_4held b.sudo_5Board_4held) then SudoRt.SOrd.le a.sudo_5Board_4held b.sudo_5Board_4held else (if !(SudoRt.SEq.beq a.sudo_5Board_8bench_on b.sudo_5Board_8bench_on) then SudoRt.SOrd.le a.sudo_5Board_8bench_on b.sudo_5Board_8bench_on else (if !(SudoRt.SEq.beq a.sudo_5Board_8bench_to b.sudo_5Board_8bench_to) then SudoRt.SOrd.le a.sudo_5Board_8bench_to b.sudo_5Board_8bench_to else (if !(SudoRt.SEq.beq a.sudo_5Board_5bench b.sudo_5Board_5bench) then SudoRt.SOrd.le a.sudo_5Board_5bench b.sudo_5Board_5bench else (if !(SudoRt.SEq.beq a.sudo_5Board_4cost b.sudo_5Board_4cost) then SudoRt.SOrd.le a.sudo_5Board_4cost b.sudo_5Board_4cost else (if !(SudoRt.SEq.beq a.sudo_5Board_5phase b.sudo_5Board_5phase) then SudoRt.SOrd.le a.sudo_5Board_5phase b.sudo_5Board_5phase else (if !(SudoRt.SEq.beq a.sudo_5Board_8phase_m0 b.sudo_5Board_8phase_m0) then SudoRt.SOrd.le a.sudo_5Board_8phase_m0 b.sudo_5Board_8phase_m0 else (if !(SudoRt.SEq.beq a.sudo_5Board_8phase_pk b.sudo_5Board_8phase_pk) then SudoRt.SOrd.le a.sudo_5Board_8phase_pk b.sudo_5Board_8phase_pk else (if !(SudoRt.SEq.beq a.sudo_5Board_3row b.sudo_5Board_3row) then SudoRt.SOrd.le a.sudo_5Board_3row b.sudo_5Board_3row else (if !(SudoRt.SEq.beq a.sudo_5Board_10phase_hole b.sudo_5Board_10phase_hole) then SudoRt.SOrd.le a.sudo_5Board_10phase_hole b.sudo_5Board_10phase_hole else (if !(SudoRt.SEq.beq a.sudo_5Board_12calling_hole b.sudo_5Board_12calling_hole) then SudoRt.SOrd.le a.sudo_5Board_12calling_hole b.sudo_5Board_12calling_hole else (if !(SudoRt.SEq.beq a.sudo_5Board_7ladder0 b.sudo_5Board_7ladder0) then SudoRt.SOrd.le a.sudo_5Board_7ladder0 b.sudo_5Board_7ladder0 else (if !(SudoRt.SEq.beq a.sudo_5Board_6nrungs b.sudo_5Board_6nrungs) then SudoRt.SOrd.le a.sudo_5Board_6nrungs b.sudo_5Board_6nrungs else (if !(SudoRt.SEq.beq a.sudo_5Board_9park_hole b.sudo_5Board_9park_hole) then SudoRt.SOrd.le a.sudo_5Board_9park_hole b.sudo_5Board_9park_hole else (if !(SudoRt.SEq.beq a.sudo_5Board_6tally0 b.sudo_5Board_6tally0) then SudoRt.SOrd.le a.sudo_5Board_6tally0 b.sudo_5Board_6tally0 else (if !(SudoRt.SEq.beq a.sudo_5Board_6marker b.sudo_5Board_6marker) then SudoRt.SOrd.le a.sudo_5Board_6marker b.sudo_5Board_6marker else (if !(SudoRt.SEq.beq a.sudo_5Board_11parked_from b.sudo_5Board_11parked_from) then SudoRt.SOrd.le a.sudo_5Board_11parked_from b.sudo_5Board_11parked_from else (if !(SudoRt.SEq.beq a.sudo_5Board_9tally_len b.sudo_5Board_9tally_len) then SudoRt.SOrd.le a.sudo_5Board_9tally_len b.sudo_5Board_9tally_len else (if !(SudoRt.SEq.beq a.sudo_5Board_9marker_on b.sudo_5Board_9marker_on) then SudoRt.SOrd.le a.sudo_5Board_9marker_on b.sudo_5Board_9marker_on else (if !(SudoRt.SEq.beq a.sudo_5Board_8rung_idx b.sudo_5Board_8rung_idx) then SudoRt.SOrd.le a.sudo_5Board_8rung_idx b.sudo_5Board_8rung_idx else (if !(SudoRt.SEq.beq a.sudo_5Board_6ladder b.sudo_5Board_6ladder) then SudoRt.SOrd.le a.sudo_5Board_6ladder b.sudo_5Board_6ladder else (if !(SudoRt.SEq.beq a.sudo_5Board_3log b.sudo_5Board_3log) then SudoRt.SOrd.le a.sudo_5Board_3log b.sudo_5Board_3log else true))))))))))))))))))))))))
 
 instance : SudoRt.Canon Board where
-  canon r := SudoRt.canonRecord "Board" [SudoRt.Canon.canon r.sudo_5Board_1t, SudoRt.Canon.canon r.sudo_5Board_4home, SudoRt.Canon.canon r.sudo_5Board_4held, SudoRt.Canon.canon r.sudo_5Board_8bench_on, SudoRt.Canon.canon r.sudo_5Board_8bench_to, SudoRt.Canon.canon r.sudo_5Board_5bench, SudoRt.Canon.canon r.sudo_5Board_4cost, SudoRt.Canon.canon r.sudo_5Board_5phase, SudoRt.Canon.canon r.sudo_5Board_8phase_m0, SudoRt.Canon.canon r.sudo_5Board_8phase_pk, SudoRt.Canon.canon r.sudo_5Board_3row, SudoRt.Canon.canon r.sudo_5Board_10phase_hole, SudoRt.Canon.canon r.sudo_5Board_12calling_hole, SudoRt.Canon.canon r.sudo_5Board_7ladder0, SudoRt.Canon.canon r.sudo_5Board_6nrungs, SudoRt.Canon.canon r.sudo_5Board_9park_hole, SudoRt.Canon.canon r.sudo_5Board_6tally0, SudoRt.Canon.canon r.sudo_5Board_6marker, SudoRt.Canon.canon r.sudo_5Board_11parked_from, SudoRt.Canon.canon r.sudo_5Board_9tally_len, SudoRt.Canon.canon r.sudo_5Board_9marker_on, SudoRt.Canon.canon r.sudo_5Board_8rung_idx, SudoRt.Canon.canon r.sudo_5Board_6ladder, SudoRt.Canon.canon r.sudo_5Board_11cursor_home, SudoRt.Canon.canon r.sudo_5Board_11cursor_hole, SudoRt.Canon.canon r.sudo_5Board_3log]
+  canon r := SudoRt.canonRecord "Board" [SudoRt.Canon.canon r.sudo_5Board_1t, SudoRt.Canon.canon r.sudo_5Board_4home, SudoRt.Canon.canon r.sudo_5Board_4held, SudoRt.Canon.canon r.sudo_5Board_8bench_on, SudoRt.Canon.canon r.sudo_5Board_8bench_to, SudoRt.Canon.canon r.sudo_5Board_5bench, SudoRt.Canon.canon r.sudo_5Board_4cost, SudoRt.Canon.canon r.sudo_5Board_5phase, SudoRt.Canon.canon r.sudo_5Board_8phase_m0, SudoRt.Canon.canon r.sudo_5Board_8phase_pk, SudoRt.Canon.canon r.sudo_5Board_3row, SudoRt.Canon.canon r.sudo_5Board_10phase_hole, SudoRt.Canon.canon r.sudo_5Board_12calling_hole, SudoRt.Canon.canon r.sudo_5Board_7ladder0, SudoRt.Canon.canon r.sudo_5Board_6nrungs, SudoRt.Canon.canon r.sudo_5Board_9park_hole, SudoRt.Canon.canon r.sudo_5Board_6tally0, SudoRt.Canon.canon r.sudo_5Board_6marker, SudoRt.Canon.canon r.sudo_5Board_11parked_from, SudoRt.Canon.canon r.sudo_5Board_9tally_len, SudoRt.Canon.canon r.sudo_5Board_9marker_on, SudoRt.Canon.canon r.sudo_5Board_8rung_idx, SudoRt.Canon.canon r.sudo_5Board_6ladder, SudoRt.Canon.canon r.sudo_5Board_3log]
 
 structure Hole where
   sudo_4Hole_4grid : Int
@@ -678,7 +675,7 @@ def set_control (b : Board) (i : Int) (c : Int) : Except SudoRt.Trap (Board) :=
   do
     let _t75 ← (if (decide (i ≥ (0 : Int))) then (do
   pure (decide (i < ((b).sudo_5Board_1t).sudo_4Tier_7control))) else pure false)
-    let _as77 ← SudoRt.sudoAssert _t75 266
+    let _as77 ← SudoRt.sudoAssert _t75 263
     let _ix78 := i
     let _t79 ← SudoRt.putL (b).sudo_5Board_3row _ix78 c
     let _t80 := { b with sudo_5Board_3row := _t79 }
@@ -697,9 +694,9 @@ def lay_rung (b : Board) (colour : Int) : Except SudoRt.Trap (Board) :=
   do
     let _t84 ← SudoRt.addI (b).sudo_5Board_7ladder0 (b).sudo_5Board_6nrungs
     let i := _t84
-    let _as86 ← SudoRt.sudoAssert (decide (i < ((b).sudo_5Board_1t).sudo_4Tier_7control)) 273
+    let _as86 ← SudoRt.sudoAssert (decide (i < ((b).sudo_5Board_1t).sudo_4Tier_7control)) 270
     let _t87 ← SudoRt.atL (b).sudo_5Board_3row i
-    let _as88 ← SudoRt.sudoAssertEq _t87 (0 : Int) 274
+    let _as88 ← SudoRt.sudoAssertEq _t87 (0 : Int) 271
     let _io89 ← set_control b i colour
     let b := _io89
     let _t90 ← SudoRt.addI (b).sudo_5Board_6nrungs (1 : Int)
@@ -778,7 +775,7 @@ def park (b : Board) (hole : Int) : Except SudoRt.Trap ((Int) × (Board)) :=
     let _t117 ← (if (!(SudoRt.SEq.beq _t115 (0 : Int))) then (do
   let _t118 ← SudoRt.atL (b).sudo_5Board_3row (b).sudo_5Board_9park_hole
   pure (SudoRt.SEq.beq _t118 (0 : Int))) else pure false)
-    let _as120 ← SudoRt.sudoAssert _t117 297
+    let _as120 ← SudoRt.sudoAssert _t117 294
     let _t121 ← SudoRt.atL (b).sudo_5Board_3row hole
     let _io122 ← set_control b (b).sudo_5Board_9park_hole _t121
     let b := _io122
@@ -804,7 +801,7 @@ def park_rung (b : Board) (rung : Int) : Except SudoRt.Trap (Board) :=
     let ⟨_ret134, _iw0135⟩ := _io133
     let b := _iw0135
     let got := _ret134
-    let _as136 ← SudoRt.sudoAssertEq got rung 308
+    let _as136 ← SudoRt.sudoAssertEq got rung 305
     let _t137 ← SudoRt.addI (b).sudo_5Board_8rung_idx (1 : Int)
     let _t138 := { b with sudo_5Board_8rung_idx := _t137 }
     let b := _t138
@@ -828,7 +825,7 @@ def marker_step (b : Board) : Except SudoRt.Trap (Board) :=
         let _t144 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t143 }
         let _t145 := { b with sudo_5Board_4cost := _t144 }
         let b := _t145
-        let _as147 ← SudoRt.sudoAssert (decide ((b).sudo_5Board_6marker < ((b).sudo_5Board_1t).sudo_4Tier_6script)) 324
+        let _as147 ← SudoRt.sudoAssert (decide ((b).sudo_5Board_6marker < ((b).sudo_5Board_1t).sudo_4Tier_6script)) 321
         let _t148 ← SudoRt.addI (b).sudo_5Board_6marker (1 : Int)
         if (decide (_t148 > ((b).sudo_5Board_4cost).sudo_5Costs_17script_marker_max)) then
           do
@@ -849,7 +846,7 @@ def marker_step (b : Board) : Except SudoRt.Trap (Board) :=
         let _t156 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t155 }
         let _t157 := { b with sudo_5Board_4cost := _t156 }
         let b := _t157
-        let _as159 ← SudoRt.sudoAssert (decide ((b).sudo_5Board_6marker < ((b).sudo_5Board_1t).sudo_4Tier_6script)) 324
+        let _as159 ← SudoRt.sudoAssert (decide ((b).sudo_5Board_6marker < ((b).sudo_5Board_1t).sudo_4Tier_6script)) 321
         let _t160 ← SudoRt.addI (b).sudo_5Board_6marker (1 : Int)
         if (decide (_t160 > ((b).sudo_5Board_4cost).sudo_5Costs_17script_marker_max)) then
           do
@@ -912,7 +909,7 @@ def tally_note (b : Board) : Except SudoRt.Trap (Board) :=
 
 def tally_start (b : Board) : Except SudoRt.Trap (Board) :=
   do
-    let _as183 ← SudoRt.sudoAssertEq (b).sudo_5Board_9tally_len (0 : Int) 347
+    let _as183 ← SudoRt.sudoAssertEq (b).sudo_5Board_9tally_len (0 : Int) 344
     let _io184 ← tally_put b (0 : Int) (1 : Int)
     let b := _io184
     let _t185 := { b with sudo_5Board_9tally_len := (1 : Int) }
@@ -981,7 +978,7 @@ def tally_double (b : Board) : Except SudoRt.Trap (Board) :=
         match ← ((do
   let _t200 ← SudoRt.addI (b).sudo_5Board_6tally0 j
   let _t201 ← SudoRt.atL (b).sudo_5Board_3row _t200
-  let _as202 ← SudoRt.sudoAssertEq _t201 (0 : Int) 362
+  let _as202 ← SudoRt.sudoAssertEq _t201 (0 : Int) 359
   let _io203 ← tally_put b j (1 : Int)
   let b := _io203
   let _t204 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
@@ -1013,7 +1010,7 @@ def tally_add_one (b : Board) : Except SudoRt.Trap (Board) :=
     let j := (b).sudo_5Board_9tally_len
     let _t214 ← SudoRt.addI (b).sudo_5Board_6tally0 j
     let _t215 ← SudoRt.atL (b).sudo_5Board_3row _t214
-    let _as216 ← SudoRt.sudoAssertEq _t215 (0 : Int) 370
+    let _as216 ← SudoRt.sudoAssertEq _t215 (0 : Int) 367
     let _io217 ← tally_put b j (1 : Int)
     let b := _io217
     let _t218 ← SudoRt.addI (b).sudo_5Board_9tally_len (1 : Int)
@@ -1074,7 +1071,7 @@ def «where_bench» (b : Board) (h : Int) : Except SudoRt.Trap (Bool) :=
       do
         let _t233 ← (if (b).sudo_5Board_8bench_on then (do
   pure (SudoRt.SEq.beq (b).sudo_5Board_8bench_to h)) else pure false)
-        let _as235 ← SudoRt.sudoAssert _t233 389
+        let _as235 ← SudoRt.sudoAssert _t233 386
         pure true
 
 def get_number (b : Board) (h : Int) : Except SudoRt.Trap (Array (Int)) :=
@@ -1119,7 +1116,7 @@ def is_zero (b : Board) (h : Int) : Except SudoRt.Trap (Bool) :=
 def need_empty (b : Board) (h : Int) : Except SudoRt.Trap (Unit) :=
   do
     let _t247 ← SudoRt.atL (b).sudo_5Board_4held h
-    let _as248 ← SudoRt.sudoAssert (!( _t247 )) 410
+    let _as248 ← SudoRt.sudoAssert (!( _t247 )) 407
     pure ()
 
 def settle (b : Board) : Except SudoRt.Trap (Board) :=
@@ -1142,7 +1139,7 @@ def settle (b : Board) : Except SudoRt.Trap (Board) :=
       else
         match ← ((do
   let _t250 ← SudoRt.atL (b).sudo_5Board_5bench i
-  let _as251 ← SudoRt.sudoAssertEq _t250 (0 : Int) 417
+  let _as251 ← SudoRt.sudoAssertEq _t250 (0 : Int) 414
   pure (SudoRt.Flow.cont (ρ := Board) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) i)
@@ -1185,7 +1182,7 @@ def settle (b : Board) : Except SudoRt.Trap (Board) :=
 
 def put (b : Board) (h : Int) (v : Array (Int)) : Except SudoRt.Trap (Board) :=
   do
-    let _as275 ← SudoRt.sudoAssertEq (SudoRt.listLen v) ((b).sudo_5Board_1t).sudo_4Tier_1n 430
+    let _as275 ← SudoRt.sudoAssertEq (SudoRt.listLen v) ((b).sudo_5Board_1t).sudo_4Tier_1n 427
     let _t276 ← need_empty b h
     let _u277 := _t276
     let _ix278 := h
@@ -1320,7 +1317,7 @@ def move_band (b : Board) (dst : Int) (src : Int) : Except SudoRt.Trap (Board) :
     let _t341 ← need_empty b dst
     let _u342 := _t341
     let _t343 ← SudoRt.atL (b).sudo_5Board_4held src
-    let _as344 ← SudoRt.sudoAssert _t343 464
+    let _as344 ← SudoRt.sudoAssert _t343 461
     let _t345 ← SudoRt.atL (b).sudo_5Board_4home src
     let v := _t345
     let _ix346 := src
@@ -1374,7 +1371,7 @@ def clear (b : Board) (h : Int) : Except SudoRt.Trap (Board) :=
     else
       do
         let _t376 ← SudoRt.atL (b).sudo_5Board_4held h
-        let _as377 ← SudoRt.sudoAssert _t376 480
+        let _as377 ← SudoRt.sudoAssert _t376 477
         let _t378 ← SudoRt.atL (b).sudo_5Board_4home h
         let _t379 ← npeg _t378
         let _t380 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves _t379
@@ -1556,7 +1553,7 @@ def lane_fold (b : Board) (strip : Array (Int)) : Except SudoRt.Trap ((Board) ×
           let _t438 := { (b).sudo_5Board_4cost with sudo_5Costs_14max_bench_hole := top }
           let _t439 := { b with sudo_5Board_4cost := _t438 }
           let b := _t439
-          let _as441 ← SudoRt.sudoAssert (decide (top < (t).sudo_4Tier_8benchlen)) 518
+          let _as441 ← SudoRt.sudoAssert (decide (top < (t).sudo_4Tier_8benchlen)) 515
           let _t523 ← SudoRt.subI (SudoRt.listLen strip) (1 : Int)
           let _fromV := _t523
           let _toV := (t).sudo_4Tier_1n
@@ -1608,14 +1605,14 @@ def lane_fold (b : Board) (strip : Array (Int)) : Except SudoRt.Trap ((Board) ×
   let _t464 ← SudoRt.subI (t).sudo_4Tier_1n (t).sudo_4Tier_1k
   let _t465 ← SudoRt.subI e _t464
   pure (SudoRt.SEq.beq d2 _t465)) else pure false)
-          let _as467 ← SudoRt.sudoAssert _t463 533
+          let _as467 ← SudoRt.sudoAssert _t463 530
           let _t469 ← (if (decide (d1 ≥ (0 : Int))) then (do
   pure (decide (d1 < e))) else pure false)
           let _t471 ← (if _t469 then (do
   pure (decide (d2 ≥ (0 : Int)))) else pure false)
           let _t473 ← (if _t471 then (do
   pure (decide (d2 < e))) else pure false)
-          let _as475 ← SudoRt.sudoAssert _t473 534
+          let _as475 ← SudoRt.sudoAssert _t473 531
           let _ix476 := d1
           let _t477 ← SudoRt.atL strip d1
           let _t478 ← SudoRt.addI _t477 c
@@ -1647,14 +1644,14 @@ def lane_fold (b : Board) (strip : Array (Int)) : Except SudoRt.Trap ((Board) ×
   let _t497 ← SudoRt.subI (t).sudo_4Tier_1n (t).sudo_4Tier_1k
   let _t498 ← SudoRt.subI e _t497
   pure (SudoRt.SEq.beq d2 _t498)) else pure false)
-          let _as500 ← SudoRt.sudoAssert _t496 533
+          let _as500 ← SudoRt.sudoAssert _t496 530
           let _t502 ← (if (decide (d1 ≥ (0 : Int))) then (do
   pure (decide (d1 < e))) else pure false)
           let _t504 ← (if _t502 then (do
   pure (decide (d2 ≥ (0 : Int)))) else pure false)
           let _t506 ← (if _t504 then (do
   pure (decide (d2 < e))) else pure false)
-          let _as508 ← SudoRt.sudoAssert _t506 534
+          let _as508 ← SudoRt.sudoAssert _t506 531
           let _ix509 := d1
           let _t510 ← SudoRt.atL strip d1
           let _t511 ← SudoRt.addI _t510 c
@@ -1691,7 +1688,7 @@ def lane_fold (b : Board) (strip : Array (Int)) : Except SudoRt.Trap ((Board) ×
           pure _out
       else
         do
-          let _as528 ← SudoRt.sudoAssert (decide (top < (t).sudo_4Tier_8benchlen)) 518
+          let _as528 ← SudoRt.sudoAssert (decide (top < (t).sudo_4Tier_8benchlen)) 515
           let _t610 ← SudoRt.subI (SudoRt.listLen strip) (1 : Int)
           let _fromV := _t610
           let _toV := (t).sudo_4Tier_1n
@@ -1743,14 +1740,14 @@ def lane_fold (b : Board) (strip : Array (Int)) : Except SudoRt.Trap ((Board) ×
   let _t551 ← SudoRt.subI (t).sudo_4Tier_1n (t).sudo_4Tier_1k
   let _t552 ← SudoRt.subI e _t551
   pure (SudoRt.SEq.beq d2 _t552)) else pure false)
-          let _as554 ← SudoRt.sudoAssert _t550 533
+          let _as554 ← SudoRt.sudoAssert _t550 530
           let _t556 ← (if (decide (d1 ≥ (0 : Int))) then (do
   pure (decide (d1 < e))) else pure false)
           let _t558 ← (if _t556 then (do
   pure (decide (d2 ≥ (0 : Int)))) else pure false)
           let _t560 ← (if _t558 then (do
   pure (decide (d2 < e))) else pure false)
-          let _as562 ← SudoRt.sudoAssert _t560 534
+          let _as562 ← SudoRt.sudoAssert _t560 531
           let _ix563 := d1
           let _t564 ← SudoRt.atL strip d1
           let _t565 ← SudoRt.addI _t564 c
@@ -1782,14 +1779,14 @@ def lane_fold (b : Board) (strip : Array (Int)) : Except SudoRt.Trap ((Board) ×
   let _t584 ← SudoRt.subI (t).sudo_4Tier_1n (t).sudo_4Tier_1k
   let _t585 ← SudoRt.subI e _t584
   pure (SudoRt.SEq.beq d2 _t585)) else pure false)
-          let _as587 ← SudoRt.sudoAssert _t583 533
+          let _as587 ← SudoRt.sudoAssert _t583 530
           let _t589 ← (if (decide (d1 ≥ (0 : Int))) then (do
   pure (decide (d1 < e))) else pure false)
           let _t591 ← (if _t589 then (do
   pure (decide (d2 ≥ (0 : Int)))) else pure false)
           let _t593 ← (if _t591 then (do
   pure (decide (d2 < e))) else pure false)
-          let _as595 ← SudoRt.sudoAssert _t593 534
+          let _as595 ← SudoRt.sudoAssert _t593 531
           let _ix596 := d1
           let _t597 ← SudoRt.atL strip d1
           let _t598 ← SudoRt.addI _t597 c
@@ -1861,21 +1858,21 @@ def mul (b : Board) (dst : Int) («first» : Int) (second : Int) (copy_second : 
       do
         let strip := (b).sudo_5Board_5bench
         let _t628 ← SudoRt.atL (b).sudo_5Board_4held «first»
-        let _as629 ← SudoRt.sudoAssert _t628 571
+        let _as629 ← SudoRt.sudoAssert _t628 568
         let _t630 ← SudoRt.atL (b).sudo_5Board_4home «first»
         let a := _t630
         let src := second
         if copy_second then
           do
-            let _as632 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq second spare)) 575
+            let _as632 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq second spare)) 572
             let _io633 ← copy_band b spare second false
             let b := _io633
             let src := spare
-            let _as635 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 578
+            let _as635 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 575
             let _io636 ← note_strict b
             let b := _io636
             let _t637 ← SudoRt.atL (b).sudo_5Board_4held src
-            let _as638 ← SudoRt.sudoAssert _t637 580
+            let _as638 ← SudoRt.sudoAssert _t637 577
             let _t639 ← SudoRt.atL (b).sudo_5Board_4home src
             let s := _t639
             let _ix640 := src
@@ -2005,11 +2002,11 @@ def mul (b : Board) (dst : Int) («first» : Int) (second : Int) (copy_second : 
             pure _out
         else
           do
-            let _as692 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 578
+            let _as692 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 575
             let _io693 ← note_strict b
             let b := _io693
             let _t694 ← SudoRt.atL (b).sudo_5Board_4held src
-            let _as695 ← SudoRt.sudoAssert _t694 580
+            let _as695 ← SudoRt.sudoAssert _t694 577
             let _t696 ← SudoRt.atL (b).sudo_5Board_4home src
             let s := _t696
             let _ix697 := src
@@ -2146,7 +2143,7 @@ def mul (b : Board) (dst : Int) («first» : Int) (second : Int) (copy_second : 
         if onto then
           do
             let _t750 ← SudoRt.atL (b).sudo_5Board_4held dst
-            let _as751 ← SudoRt.sudoAssert _t750 559
+            let _as751 ← SudoRt.sudoAssert _t750 556
             let _t752 ← SudoRt.atL (b).sudo_5Board_4home dst
             let r := _t752
             let _ix753 := dst
@@ -2203,21 +2200,21 @@ def mul (b : Board) (dst : Int) («first» : Int) (second : Int) (copy_second : 
       let _t774 := { b with sudo_5Board_5bench := strip }
       let b := _t774
       let _t775 ← SudoRt.atL (b).sudo_5Board_4held «first»
-      let _as776 ← SudoRt.sudoAssert _t775 571
+      let _as776 ← SudoRt.sudoAssert _t775 568
       let _t777 ← SudoRt.atL (b).sudo_5Board_4home «first»
       let a := _t777
       let src := second
       if copy_second then
         do
-          let _as779 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq second spare)) 575
+          let _as779 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq second spare)) 572
           let _io780 ← copy_band b spare second false
           let b := _io780
           let src := spare
-          let _as782 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 578
+          let _as782 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 575
           let _io783 ← note_strict b
           let b := _io783
           let _t784 ← SudoRt.atL (b).sudo_5Board_4held src
-          let _as785 ← SudoRt.sudoAssert _t784 580
+          let _as785 ← SudoRt.sudoAssert _t784 577
           let _t786 ← SudoRt.atL (b).sudo_5Board_4home src
           let s := _t786
           let _ix787 := src
@@ -2347,11 +2344,11 @@ def mul (b : Board) (dst : Int) («first» : Int) (second : Int) (copy_second : 
           pure _out
       else
         do
-          let _as839 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 578
+          let _as839 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 575
           let _io840 ← note_strict b
           let b := _io840
           let _t841 ← SudoRt.atL (b).sudo_5Board_4held src
-          let _as842 ← SudoRt.sudoAssert _t841 580
+          let _as842 ← SudoRt.sudoAssert _t841 577
           let _t843 ← SudoRt.atL (b).sudo_5Board_4home src
           let s := _t843
           let _ix844 := src
@@ -2489,21 +2486,21 @@ def mul (b : Board) (dst : Int) («first» : Int) (second : Int) (copy_second : 
             let _t898 := { b with sudo_5Board_5bench := strip }
             let b := _t898
             let _t899 ← SudoRt.atL (b).sudo_5Board_4held «first»
-            let _as900 ← SudoRt.sudoAssert _t899 571
+            let _as900 ← SudoRt.sudoAssert _t899 568
             let _t901 ← SudoRt.atL (b).sudo_5Board_4home «first»
             let a := _t901
             let src := second
             if copy_second then
               do
-                let _as903 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq second spare)) 575
+                let _as903 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq second spare)) 572
                 let _io904 ← copy_band b spare second false
                 let b := _io904
                 let src := spare
-                let _as906 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 578
+                let _as906 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 575
                 let _io907 ← note_strict b
                 let b := _io907
                 let _t908 ← SudoRt.atL (b).sudo_5Board_4held src
-                let _as909 ← SudoRt.sudoAssert _t908 580
+                let _as909 ← SudoRt.sudoAssert _t908 577
                 let _t910 ← SudoRt.atL (b).sudo_5Board_4home src
                 let s := _t910
                 let _ix911 := src
@@ -2633,11 +2630,11 @@ def mul (b : Board) (dst : Int) («first» : Int) (second : Int) (copy_second : 
                 pure _out
             else
               do
-                let _as963 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 578
+                let _as963 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 575
                 let _io964 ← note_strict b
                 let b := _io964
                 let _t965 ← SudoRt.atL (b).sudo_5Board_4held src
-                let _as966 ← SudoRt.sudoAssert _t965 580
+                let _as966 ← SudoRt.sudoAssert _t965 577
                 let _t967 ← SudoRt.atL (b).sudo_5Board_4home src
                 let s := _t967
                 let _ix968 := src
@@ -2782,7 +2779,7 @@ def cube (b : Board) (dst : Int) (src : Int) : Except SudoRt.Trap (Board) :=
     let _io1027 ← note_strict b
     let b := _io1027
     let _t1028 ← SudoRt.atL (b).sudo_5Board_4held src
-    let _as1029 ← SudoRt.sudoAssert _t1028 608
+    let _as1029 ← SudoRt.sudoAssert _t1028 605
     let _t1030 ← SudoRt.atL (b).sudo_5Board_4home src
     let v := _t1030
     let _ix1031 := src
@@ -2841,7 +2838,7 @@ def cube (b : Board) (dst : Int) (src : Int) : Except SudoRt.Trap (Board) :=
       let _t1049 ← SudoRt.subI ((b).sudo_5Board_1t).sudo_4Tier_1n (1 : Int)
       let _t1050 ← SudoRt.mulI (3 : Int) _t1049
       let _t1051 ← SudoRt.addI _t1050 ((b).sudo_5Board_1t).sudo_4Tier_7combgap
-      let _as1053 ← SudoRt.sudoAssert (decide (_t1051 < ((b).sudo_5Board_1t).sudo_4Tier_8benchlen)) 617
+      let _as1053 ← SudoRt.sudoAssert (decide (_t1051 < ((b).sudo_5Board_1t).sudo_4Tier_8benchlen)) 614
       let _t1054 := { b with sudo_5Board_8bench_on := true }
       let b := _t1054
       let _t1055 := { b with sudo_5Board_8bench_to := dst }
@@ -2960,7 +2957,7 @@ def new_board (t : Tier) : Except SudoRt.Trap (Board) :=
     let _t1107 ← SudoRt.filledL phase_count (0 : Int)
     let _t1108 ← SudoRt.filledL phase_count (0 : Int)
     let _t1109 ← SudoRt.filledL op_count (0 : Int)
-    let cost := ({ sudo_5Costs_5moves := (0 : Int), sudo_5Costs_6slides := (0 : Int), sudo_5Costs_4ctrl := (0 : Int), sudo_5Costs_5calls := (0 : Int), sudo_5Costs_12cursor_steps := (0 : Int), sudo_5Costs_13stale_cleared := (0 : Int), sudo_5Costs_14key_grid_moves := (0 : Int), sudo_5Costs_12ladder_moves := (0 : Int), sudo_5Costs_4peak := (0 : Int), sudo_5Costs_11peak_strict := (0 : Int), sudo_5Costs_14max_bench_hole := (0 : Int), sudo_5Costs_15control_highest := _t1106, sudo_5Costs_17script_marker_max := (0 : Int), sudo_5Costs_9tally_max := (0 : Int), sudo_5Costs_14moves_by_phase := _t1107, sudo_5Costs_13peak_by_phase := _t1108, sudo_5Costs_3ops := _t1109 } : Costs)
+    let cost := ({ sudo_5Costs_5moves := (0 : Int), sudo_5Costs_6slides := (0 : Int), sudo_5Costs_4ctrl := (0 : Int), sudo_5Costs_5calls := (0 : Int), sudo_5Costs_13stale_cleared := (0 : Int), sudo_5Costs_14key_grid_moves := (0 : Int), sudo_5Costs_12ladder_moves := (0 : Int), sudo_5Costs_4peak := (0 : Int), sudo_5Costs_11peak_strict := (0 : Int), sudo_5Costs_14max_bench_hole := (0 : Int), sudo_5Costs_15control_highest := _t1106, sudo_5Costs_17script_marker_max := (0 : Int), sudo_5Costs_9tally_max := (0 : Int), sudo_5Costs_14moves_by_phase := _t1107, sudo_5Costs_13peak_by_phase := _t1108, sudo_5Costs_3ops := _t1109 } : Costs)
     let _t1110 ← SudoRt.filledL home_count empty
     let _t1111 ← SudoRt.filledL home_count false
     let _t1112 ← SudoRt.negI (1 : Int)
@@ -2971,19 +2968,18 @@ def new_board (t : Tier) : Except SudoRt.Trap (Board) :=
     let _t1117 ← SudoRt.negI (1 : Int)
     let _t1118 ← SudoRt.negI (1 : Int)
     let _t1119 ← SudoRt.negI (1 : Int)
-    let _t1120 ← SudoRt.negI (1 : Int)
-    let b := ({ sudo_5Board_1t := t, sudo_5Board_4home := _t1110, sudo_5Board_4held := _t1111, sudo_5Board_8bench_on := false, sudo_5Board_8bench_to := _t1112, sudo_5Board_5bench := empty, sudo_5Board_4cost := cost, sudo_5Board_5phase := (0 : Int), sudo_5Board_8phase_m0 := (0 : Int), sudo_5Board_8phase_pk := (0 : Int), sudo_5Board_3row := _t1113, sudo_5Board_10phase_hole := (t).sudo_4Tier_6script, sudo_5Board_12calling_hole := _t1114, sudo_5Board_7ladder0 := _t1115, sudo_5Board_6nrungs := (0 : Int), sudo_5Board_9park_hole := _t1116, sudo_5Board_6tally0 := _t1117, sudo_5Board_6marker := _t1118, sudo_5Board_11parked_from := _t1119, sudo_5Board_9tally_len := (0 : Int), sudo_5Board_9marker_on := false, sudo_5Board_8rung_idx := (0 : Int), sudo_5Board_6ladder := empty, sudo_5Board_11cursor_home := _t1120, sudo_5Board_11cursor_hole := (0 : Int), sudo_5Board_3log := log } : Board)
+    let b := ({ sudo_5Board_1t := t, sudo_5Board_4home := _t1110, sudo_5Board_4held := _t1111, sudo_5Board_8bench_on := false, sudo_5Board_8bench_to := _t1112, sudo_5Board_5bench := empty, sudo_5Board_4cost := cost, sudo_5Board_5phase := (0 : Int), sudo_5Board_8phase_m0 := (0 : Int), sudo_5Board_8phase_pk := (0 : Int), sudo_5Board_3row := _t1113, sudo_5Board_10phase_hole := (t).sudo_4Tier_6script, sudo_5Board_12calling_hole := _t1114, sudo_5Board_7ladder0 := _t1115, sudo_5Board_6nrungs := (0 : Int), sudo_5Board_9park_hole := _t1116, sudo_5Board_6tally0 := _t1117, sudo_5Board_6marker := _t1118, sudo_5Board_11parked_from := _t1119, sudo_5Board_9tally_len := (0 : Int), sudo_5Board_9marker_on := false, sudo_5Board_8rung_idx := (0 : Int), sudo_5Board_6ladder := empty, sudo_5Board_3log := log } : Board)
     let m0 := ((b).sudo_5Board_4cost).sudo_5Costs_5moves
-    let _t1121 ← SudoRt.subI (t).sudo_4Tier_1n (1 : Int)
-    let c := _t1121
-    let _t1122 ← SudoRt.filledL (t).sudo_4Tier_1n (0 : Int)
-    let pegs := _t1122
-    let _t1126 ← SudoRt.subI c (1 : Int)
+    let _t1120 ← SudoRt.subI (t).sudo_4Tier_1n (1 : Int)
+    let c := _t1120
+    let _t1121 ← SudoRt.filledL (t).sudo_4Tier_1n (0 : Int)
+    let pegs := _t1121
+    let _t1125 ← SudoRt.subI c (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1126
+    let _toV := _t1125
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1170 := (_fromV, pegs)
-    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1170 fuel (fun σ =>
+    let _init1169 := (_fromV, pegs)
+    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1169 fuel (fun σ =>
     let i := σ.1
     let pegs := σ.2
     do
@@ -2991,9 +2987,9 @@ def new_board (t : Tier) : Except SudoRt.Trap (Board) :=
         pure (SudoRt.Flow.brk (ρ := Board) (i, pegs))
       else
         match ← ((do
-  let _ix1124 := i
-  let _t1125 ← SudoRt.putL pegs _ix1124 (1 : Int)
-  let pegs := _t1125
+  let _ix1123 := i
+  let _t1124 ← SudoRt.putL pegs _ix1123 (1 : Int)
+  let pegs := _t1124
   pure (SudoRt.Flow.cont (ρ := Board) pegs)) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) (i, _fs))
@@ -3005,17 +3001,17 @@ def new_board (t : Tier) : Except SudoRt.Trap (Board) :=
               pure (SudoRt.Flow.cont (ρ := Board) (i', _fs))) (fun σ =>
     let pegs := σ.2
     do
-      let _io1127 ← put b spare pegs
-      let b := _io1127
+      let _io1126 ← put b spare pegs
+      let b := _io1126
       let _fromV := (1 : Int)
       let _toV := (t).sudo_4Tier_1n
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1169 := (_fromV, (b, c))
-      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1169 fuel (fun σ =>
+      let _init1168 := (_fromV, (b, c))
+      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1168 fuel (fun σ =>
     let step := σ.1
     let b := σ.2.1
-    let _sp1167 := σ.2.2
-    let c := _sp1167
+    let _sp1166 := σ.2.2
+    let c := _sp1166
     do
       if step > _toV then
         pure (SudoRt.Flow.brk (ρ := Board) (step, (b, c)))
@@ -3026,33 +3022,33 @@ def new_board (t : Tier) : Except SudoRt.Trap (Board) :=
       pure (SudoRt.Flow.brk (ρ := Board) (b, c))
   else
     do
-      let _t1130 ← SudoRt.modI c (2 : Int)
-      let left := _t1130
+      let _t1129 ← SudoRt.modI c (2 : Int)
+      let left := _t1129
       if (SudoRt.SEq.beq left (1 : Int)) then
         do
-          let _io1132 ← lay_rung b (2 : Int)
-          let b := _io1132
-          let _t1133 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves left
-          let _t1134 ← SudoRt.divI c (2 : Int)
-          let _t1135 ← SudoRt.addI _t1133 _t1134
-          let _t1136 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1135 }
-          let _t1137 := { b with sudo_5Board_4cost := _t1136 }
-          let b := _t1137
-          let _t1138 ← SudoRt.divI c (2 : Int)
-          let c := _t1138
+          let _io1131 ← lay_rung b (2 : Int)
+          let b := _io1131
+          let _t1132 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves left
+          let _t1133 ← SudoRt.divI c (2 : Int)
+          let _t1134 ← SudoRt.addI _t1132 _t1133
+          let _t1135 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1134 }
+          let _t1136 := { b with sudo_5Board_4cost := _t1135 }
+          let b := _t1136
+          let _t1137 ← SudoRt.divI c (2 : Int)
+          let c := _t1137
           pure (SudoRt.Flow.cont (ρ := Board) (b, c))
       else
         do
-          let _io1139 ← lay_rung b (1 : Int)
-          let b := _io1139
-          let _t1140 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves left
-          let _t1141 ← SudoRt.divI c (2 : Int)
-          let _t1142 ← SudoRt.addI _t1140 _t1141
-          let _t1143 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1142 }
-          let _t1144 := { b with sudo_5Board_4cost := _t1143 }
-          let b := _t1144
-          let _t1145 ← SudoRt.divI c (2 : Int)
-          let c := _t1145
+          let _io1138 ← lay_rung b (1 : Int)
+          let b := _io1138
+          let _t1139 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves left
+          let _t1140 ← SudoRt.divI c (2 : Int)
+          let _t1141 ← SudoRt.addI _t1139 _t1140
+          let _t1142 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1141 }
+          let _t1143 := { b with sudo_5Board_4cost := _t1142 }
+          let b := _t1143
+          let _t1144 ← SudoRt.divI c (2 : Int)
+          let c := _t1144
           pure (SudoRt.Flow.cont (ρ := Board) (b, c))) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) (step, _fs))
@@ -3063,32 +3059,32 @@ def new_board (t : Tier) : Except SudoRt.Trap (Board) :=
               let i' ← SudoRt.addI step (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Board) (i', _fs))) (fun σ =>
     let b := σ.2.1
-    let _sp1168 := σ.2.2
-    let c := _sp1168
+    let _sp1167 := σ.2.2
+    let c := _sp1167
     do
-      let _io1146 ← clear b spare
-      let b := _io1146
-      let _t1147 ← SudoRt.addI (b).sudo_5Board_7ladder0 (b).sudo_5Board_6nrungs
-      let _t1148 := { b with sudo_5Board_9park_hole := _t1147 }
-      let b := _t1148
-      let _t1149 ← SudoRt.addI (b).sudo_5Board_9park_hole (1 : Int)
-      let _t1150 := { b with sudo_5Board_6tally0 := _t1149 }
-      let b := _t1150
-      let _t1151 ← SudoRt.subI ((b).sudo_5Board_4cost).sudo_5Costs_5moves m0
-      let _t1152 := { (b).sudo_5Board_4cost with sudo_5Costs_12ladder_moves := _t1151 }
-      let _t1153 := { b with sudo_5Board_4cost := _t1152 }
-      let b := _t1153
-      let _t1154 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := m0 }
-      let _t1155 := { b with sudo_5Board_4cost := _t1154 }
-      let b := _t1155
-      let _t1156 ← climb_holes b
-      let holes := _t1156
-      let _t1165 ← SudoRt.subI (SudoRt.listLen holes) (1 : Int)
+      let _io1145 ← clear b spare
+      let b := _io1145
+      let _t1146 ← SudoRt.addI (b).sudo_5Board_7ladder0 (b).sudo_5Board_6nrungs
+      let _t1147 := { b with sudo_5Board_9park_hole := _t1146 }
+      let b := _t1147
+      let _t1148 ← SudoRt.addI (b).sudo_5Board_9park_hole (1 : Int)
+      let _t1149 := { b with sudo_5Board_6tally0 := _t1148 }
+      let b := _t1149
+      let _t1150 ← SudoRt.subI ((b).sudo_5Board_4cost).sudo_5Costs_5moves m0
+      let _t1151 := { (b).sudo_5Board_4cost with sudo_5Costs_12ladder_moves := _t1150 }
+      let _t1152 := { b with sudo_5Board_4cost := _t1151 }
+      let b := _t1152
+      let _t1153 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := m0 }
+      let _t1154 := { b with sudo_5Board_4cost := _t1153 }
+      let b := _t1154
+      let _t1155 ← climb_holes b
+      let holes := _t1155
+      let _t1164 ← SudoRt.subI (SudoRt.listLen holes) (1 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t1165
+      let _toV := _t1164
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1166 := (_fromV, b)
-      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1166 fuel (fun σ =>
+      let _init1165 := (_fromV, b)
+      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1165 fuel (fun σ =>
     let i := σ.1
     let b := σ.2
     do
@@ -3096,14 +3092,14 @@ def new_board (t : Tier) : Except SudoRt.Trap (Board) :=
         pure (SudoRt.Flow.brk (ρ := Board) (i, b))
       else
         match ← ((do
-  let _t1158 ← SudoRt.atL holes i
-  let _t1159 ← SudoRt.atL (b).sudo_5Board_3row _t1158
-  let _mb1160 := SudoRt.appendL (b).sudo_5Board_6ladder _t1159
-  let ⟨_nr1161, _⟩ := _mb1160
-  let _t1162 := { b with sudo_5Board_6ladder := _nr1161 }
-  let b := _t1162
+  let _t1157 ← SudoRt.atL holes i
+  let _t1158 ← SudoRt.atL (b).sudo_5Board_3row _t1157
+  let _mb1159 := SudoRt.appendL (b).sudo_5Board_6ladder _t1158
+  let ⟨_nr1160, _⟩ := _mb1159
+  let _t1161 := { b with sudo_5Board_6ladder := _nr1160 }
+  let b := _t1161
   let _hm1105 := ()
-  let _u1163 := _hm1105
+  let _u1162 := _hm1105
   pure (SudoRt.Flow.cont (ρ := Board) b)) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) (i, _fs))
@@ -3122,24 +3118,24 @@ def new_board (t : Tier) : Except SudoRt.Trap (Board) :=
 
 def invert (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
   do
-    let _ix1171 := op_inv
-    let _t1172 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_inv
-    let _t1173 ← SudoRt.addI _t1172 (1 : Int)
-    let _t1174 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix1171 _t1173
-    let _t1175 := { (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t1174 }
-    let _t1176 := { b with sudo_5Board_4cost := _t1175 }
-    let b := _t1176
-    let _io1177 ← copy_band b gap x false
+    let _ix1170 := op_inv
+    let _t1171 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_inv
+    let _t1172 ← SudoRt.addI _t1171 (1 : Int)
+    let _t1173 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix1170 _t1172
+    let _t1174 := { (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t1173 }
+    let _t1175 := { b with sudo_5Board_4cost := _t1174 }
+    let b := _t1175
+    let _io1176 ← copy_band b gap x false
+    let b := _io1176
+    let _io1177 ← tally_start b
     let b := _io1177
-    let _io1178 ← tally_start b
-    let b := _io1178
     let nr := (SudoRt.listLen (b).sudo_5Board_6ladder)
-    let _t1211 ← SudoRt.subI nr (1 : Int)
+    let _t1210 ← SudoRt.subI nr (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1211
+    let _toV := _t1210
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1216 := (_fromV, b)
-    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1216 fuel (fun σ =>
+    let _init1215 := (_fromV, b)
+    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1215 fuel (fun σ =>
     let idx := σ.1
     let b := σ.2
     do
@@ -3147,30 +3143,30 @@ def invert (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
         pure (SudoRt.Flow.brk (ρ := Board) (idx, b))
       else
         match ← ((do
-  let _t1181 ← SudoRt.subI nr (1 : Int)
-  let last := (SudoRt.SEq.beq idx _t1181)
-  let _t1183 ← SudoRt.atL (b).sudo_5Board_6ladder idx
-  let rung := _t1183
-  let _io1184 ← park_rung b rung
+  let _t1180 ← SudoRt.subI nr (1 : Int)
+  let last := (SudoRt.SEq.beq idx _t1180)
+  let _t1182 ← SudoRt.atL (b).sudo_5Board_6ladder idx
+  let rung := _t1182
+  let _io1183 ← park_rung b rung
+  let b := _io1183
+  let _io1184 ← copy_band b spare gap false
   let b := _io1184
-  let _io1185 ← copy_band b spare gap false
-  let b := _io1185
   let m := (b).sudo_5Board_9tally_len
-  let _t1190 ← SudoRt.subI m (1 : Int)
+  let _t1189 ← SudoRt.subI m (1 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t1190
+  let _toV := _t1189
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1210 := _fromV
-  let _out ← (SudoRt.runLoopOn (ρ := Board) _init1210 fuel (fun σ =>
+  let _init1209 := _fromV
+  let _out ← (SudoRt.runLoopOn (ρ := Board) _init1209 fuel (fun σ =>
     let j := σ
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := Board) j)
       else
         match ← ((do
-  let _t1187 ← SudoRt.addI (b).sudo_5Board_6tally0 j
-  let _t1188 ← SudoRt.atL (b).sudo_5Board_3row _t1187
-  let _as1189 ← SudoRt.sudoAssertEq _t1188 (1 : Int) 706
+  let _t1186 ← SudoRt.addI (b).sudo_5Board_6tally0 j
+  let _t1187 ← SudoRt.atL (b).sudo_5Board_3row _t1186
+  let _as1188 ← SudoRt.sudoAssertEq _t1187 (1 : Int) 703
   pure (SudoRt.Flow.cont (ρ := Board) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) j)
@@ -3181,12 +3177,12 @@ def invert (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Board) i')) (fun σ =>
     do
-      let _t1197 ← SudoRt.subI m (1 : Int)
+      let _t1196 ← SudoRt.subI m (1 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t1197
+      let _toV := _t1196
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1209 := (_fromV, b)
-      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1209 fuel (fun σ =>
+      let _init1208 := (_fromV, b)
+      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1208 fuel (fun σ =>
     let j := σ.1
     let b := σ.2
     do
@@ -3194,14 +3190,14 @@ def invert (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
         pure (SudoRt.Flow.brk (ρ := Board) (j, b))
       else
         match ← ((do
-  let _io1192 ← cube b spare spare
+  let _io1191 ← cube b spare spare
+  let b := _io1191
+  let _io1192 ← tally_put b j (2 : Int)
   let b := _io1192
-  let _io1193 ← tally_put b j (2 : Int)
-  let b := _io1193
-  let _t1194 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-  let _t1195 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1194 }
-  let _t1196 := { b with sudo_5Board_4cost := _t1195 }
-  let b := _t1196
+  let _t1193 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
+  let _t1194 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1193 }
+  let _t1195 := { b with sudo_5Board_4cost := _t1194 }
+  let b := _t1195
   pure (SudoRt.Flow.cont (ρ := Board) b)) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) (j, _fs))
@@ -3213,24 +3209,24 @@ def invert (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
               pure (SudoRt.Flow.cont (ρ := Board) (i', _fs))) (fun σ =>
     let b := σ.2
     do
-      let _io1198 ← mul b gap gap spare false false false
+      let _io1197 ← mul b gap gap spare false false false
+      let b := _io1197
+      let _io1198 ← clear b gap
       let b := _io1198
-      let _io1199 ← clear b gap
-      let b := _io1199
       if (!( last )) then
         do
-          let _io1200 ← tally_double b
-          let b := _io1200
+          let _io1199 ← tally_double b
+          let b := _io1199
           if (SudoRt.SEq.beq rung (2 : Int)) then
             do
-              let _io1202 ← cube b spare gap
+              let _io1201 ← cube b spare gap
+              let b := _io1201
+              let _io1202 ← mul b gap x spare false false false
               let b := _io1202
-              let _io1203 ← mul b gap x spare false false false
-              let b := _io1203
               if (!( last )) then
                 do
-                  let _io1204 ← tally_add_one b
-                  let b := _io1204
+                  let _io1203 ← tally_add_one b
+                  let b := _io1203
                   pure (SudoRt.Flow.cont (ρ := Board) b)
               else
                 do
@@ -3242,14 +3238,14 @@ def invert (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
         do
           if (SudoRt.SEq.beq rung (2 : Int)) then
             do
-              let _io1206 ← cube b spare gap
+              let _io1205 ← cube b spare gap
+              let b := _io1205
+              let _io1206 ← mul b gap x spare false false false
               let b := _io1206
-              let _io1207 ← mul b gap x spare false false false
-              let b := _io1207
               if (!( last )) then
                 do
-                  let _io1208 ← tally_add_one b
-                  let b := _io1208
+                  let _io1207 ← tally_add_one b
+                  let b := _io1207
                   pure (SudoRt.Flow.cont (ρ := Board) b)
               else
                 do
@@ -3269,43 +3265,43 @@ def invert (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
               pure (SudoRt.Flow.cont (ρ := Board) (i', _fs))) (fun σ =>
     let b := σ.2
     do
-      let _io1212 ← unpark_rung b
+      let _io1211 ← unpark_rung b
+      let b := _io1211
+      let _io1212 ← cube b gap gap
       let b := _io1212
-      let _io1213 ← cube b gap gap
+      let _io1213 ← settle b
       let b := _io1213
-      let _io1214 ← settle b
+      let _io1214 ← tally_clear b
       let b := _io1214
-      let _io1215 ← tally_clear b
-      let b := _io1215
       pure b) (fun r => pure r))
     pure _out
 
 def invert_checked (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
   do
-    let _io1217 ← invert b x
+    let _io1216 ← invert b x
+    let b := _io1216
+    let _io1217 ← mul b check_target gap x true false false
     let b := _io1217
-    let _io1218 ← mul b check_target gap x true false false
-    let b := _io1218
-    let _io1219 ← bench_read_and_clear b
-    let ⟨_ret1220, _iw01221⟩ := _io1219
-    let b := _iw01221
-    let v := _ret1220
-    let _t1222 ← SudoRt.atL v (0 : Int)
-    let _as1224 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq _t1222 (0 : Int))) 731
-    let _t1229 ← SudoRt.subI (SudoRt.listLen v) (1 : Int)
+    let _io1218 ← bench_read_and_clear b
+    let ⟨_ret1219, _iw01220⟩ := _io1218
+    let b := _iw01220
+    let v := _ret1219
+    let _t1221 ← SudoRt.atL v (0 : Int)
+    let _as1223 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq _t1221 (0 : Int))) 728
+    let _t1228 ← SudoRt.subI (SudoRt.listLen v) (1 : Int)
     let _fromV := (1 : Int)
-    let _toV := _t1229
+    let _toV := _t1228
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1233 := _fromV
-    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1233 fuel (fun σ =>
+    let _init1232 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1232 fuel (fun σ =>
     let i := σ
     do
       if i > _toV then
         pure (SudoRt.Flow.brk (ρ := Board) i)
       else
         match ← ((do
-  let _t1226 ← SudoRt.atL v i
-  let _as1227 ← SudoRt.sudoAssertEq _t1226 (0 : Int) 733
+  let _t1225 ← SudoRt.atL v i
+  let _as1226 ← SudoRt.sudoAssertEq _t1225 (0 : Int) 730
   pure (SudoRt.Flow.cont (ρ := Board) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) i)
@@ -3316,11 +3312,11 @@ def invert_checked (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
               let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Board) i')) (fun σ =>
     do
-      let _t1230 ← SudoRt.atL v (0 : Int)
-      if (SudoRt.SEq.beq _t1230 (2 : Int)) then
+      let _t1229 ← SudoRt.atL v (0 : Int)
+      if (SudoRt.SEq.beq _t1229 (2 : Int)) then
         do
-          let _io1232 ← mirror b gap
-          let b := _io1232
+          let _io1231 ← mirror b gap
+          let b := _io1231
           pure b
       else
         do
@@ -3329,122 +3325,122 @@ def invert_checked (b : Board) (x : Int) : Except SudoRt.Trap (Board) :=
 
 def start_walk (b : Board) (red : Bool) : Except SudoRt.Trap (Board) :=
   do
-    let _io1234 ← copy_band b across base_across false
+    let _io1233 ← copy_band b across base_across false
+    let b := _io1233
+    let _io1234 ← copy_band b up base_up red
     let b := _io1234
-    let _io1235 ← copy_band b up base_up red
+    let _io1235 ← white0 b bottom
     let b := _io1235
-    let _io1236 ← white0 b bottom
-    let b := _io1236
     pure b
 
 def frobenius_point (b : Board) : Except SudoRt.Trap (Board) :=
   do
-    let _io1237 ← cube b across across
+    let _io1236 ← cube b across across
+    let b := _io1236
+    let _io1237 ← cube b up up
     let b := _io1237
-    let _io1238 ← cube b up up
+    let _io1238 ← cube b bottom bottom
     let b := _io1238
-    let _io1239 ← cube b bottom bottom
-    let b := _io1239
     pure b
 
 def fform_add (b : Board) (red : Bool) : Except SudoRt.Trap ((Bool) × (Board)) :=
   do
-    let _ix1240 := op_fadd
-    let _t1241 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_fadd
-    let _t1242 ← SudoRt.addI _t1241 (1 : Int)
-    let _t1243 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix1240 _t1242
-    let _t1244 := { (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t1243 }
-    let _t1245 := { b with sudo_5Board_4cost := _t1244 }
-    let b := _t1245
-    let _io1246 ← mirror b across
+    let _ix1239 := op_fadd
+    let _t1240 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_fadd
+    let _t1241 ← SudoRt.addI _t1240 (1 : Int)
+    let _t1242 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix1239 _t1241
+    let _t1243 := { (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t1242 }
+    let _t1244 := { b with sudo_5Board_4cost := _t1243 }
+    let b := _t1244
+    let _io1245 ← mirror b across
+    let b := _io1245
+    let _io1246 ← mul b across base_across bottom true true false
     let b := _io1246
-    let _io1247 ← mul b across base_across bottom true true false
-    let b := _io1247
-    let _t1248 ← is_zero b across
-    if _t1248 then
+    let _t1247 ← is_zero b across
+    if _t1247 then
       do
         pure (false, b)
     else
       do
-        let _io1249 ← mirror b up
+        let _io1248 ← mirror b up
+        let b := _io1248
+        let _io1249 ← mul b up base_up bottom true true red
         let b := _io1249
-        let _io1250 ← mul b up base_up bottom true true red
+        let _io1250 ← mul b gap up up true false false
         let b := _io1250
-        let _io1251 ← mul b gap up up true false false
+        let _io1251 ← mul b gap bottom gap false false false
         let b := _io1251
-        let _io1252 ← mul b gap bottom gap false false false
+        let _io1252 ← mul b spare across across true false false
         let b := _io1252
-        let _io1253 ← mul b spare across across true false false
+        let _io1253 ← mul b bottom spare bottom false false false
         let b := _io1253
-        let _io1254 ← mul b bottom spare bottom false false false
+        let _io1254 ← mul b gap across spare false true false
         let b := _io1254
-        let _io1255 ← mul b gap across spare false true false
+        let _io1255 ← add b gap bottom false
         let b := _io1255
-        let _io1256 ← add b gap bottom false
+        let _io1256 ← mul b bottom across bottom false false false
         let b := _io1256
-        let _io1257 ← mul b bottom across bottom false false false
+        let _io1257 ← mul b across gap across false false false
         let b := _io1257
-        let _io1258 ← mul b across gap across false false false
+        let _io1258 ← mul b across base_across bottom true true false
         let b := _io1258
-        let _io1259 ← mul b across base_across bottom true true false
+        let _io1259 ← mul b up gap up false false true
         let b := _io1259
-        let _io1260 ← mul b up gap up false false true
+        let _io1260 ← mul b up base_up bottom true true (!( red ))
         let b := _io1260
-        let _io1261 ← mul b up base_up bottom true true (!( red ))
+        let _io1261 ← clear b gap
         let b := _io1261
-        let _io1262 ← clear b gap
-        let b := _io1262
         pure (true, b)
 
 def walk_fform (b : Board) (cells : Array (Int)) : Except SudoRt.Trap (((Bool) × (Bool)) × (Board)) :=
   do
     let live := false
-    let _t1263 := { b with sudo_5Board_9marker_on := true }
-    let b := _t1263
-    let _t1289 ← SudoRt.subI (SudoRt.listLen cells) (1 : Int)
+    let _t1262 := { b with sudo_5Board_9marker_on := true }
+    let b := _t1262
+    let _t1288 ← SudoRt.subI (SudoRt.listLen cells) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1289
+    let _toV := _t1288
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1294 := (_fromV, (b, live))
-    let _out ← (SudoRt.runLoopOn (ρ := ((Bool) × (Bool)) × (Board)) _init1294 fuel (fun σ =>
+    let _init1293 := (_fromV, (b, live))
+    let _out ← (SudoRt.runLoopOn (ρ := ((Bool) × (Bool)) × (Board)) _init1293 fuel (fun σ =>
     let j := σ.1
     let b := σ.2.1
-    let _sp1292 := σ.2.2
-    let live := _sp1292
+    let _sp1291 := σ.2.2
+    let live := _sp1291
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := ((Bool) × (Bool)) × (Board)) (j, (b, live)))
       else
         match ← ((do
-  let _t1265 ← SudoRt.atL cells j
-  let c := _t1265
-  let _t1267 ← (if (decide (c ≥ (0 : Int))) then (do
+  let _t1264 ← SudoRt.atL cells j
+  let c := _t1264
+  let _t1266 ← (if (decide (c ≥ (0 : Int))) then (do
   pure (decide (c ≤ (2 : Int)))) else pure false)
-  let _as1269 ← SudoRt.sudoAssert _t1267 791
-  let _io1270 ← marker_lift b
-  let b := _io1270
+  let _as1268 ← SudoRt.sudoAssert _t1266 788
+  let _io1269 ← marker_lift b
+  let b := _io1269
   if live then
     do
-      let _io1271 ← frobenius_point b
-      let b := _io1271
+      let _io1270 ← frobenius_point b
+      let b := _io1270
       if (!(SudoRt.SEq.beq c (0 : Int))) then
         do
           if (!( live )) then
             do
-              let _io1274 ← start_walk b (SudoRt.SEq.beq c (2 : Int))
-              let b := _io1274
+              let _io1273 ← start_walk b (SudoRt.SEq.beq c (2 : Int))
+              let b := _io1273
               let live := true
               pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board)) (b, live))
           else
             do
-              let _io1276 ← fform_add b (SudoRt.SEq.beq c (2 : Int))
-              let ⟨_ret1277, _iw01278⟩ := _io1276
-              let b := _iw01278
-              let _sudo_h0 := _ret1277
+              let _io1275 ← fform_add b (SudoRt.SEq.beq c (2 : Int))
+              let ⟨_ret1276, _iw01277⟩ := _io1275
+              let b := _iw01277
+              let _sudo_h0 := _ret1276
               if (!( _sudo_h0 )) then
                 do
-                  let _t1279 := { b with sudo_5Board_9marker_on := false }
-                  let b := _t1279
+                  let _t1278 := { b with sudo_5Board_9marker_on := false }
+                  let b := _t1278
                   pure (SudoRt.Flow.ret (ρ := ((Bool) × (Bool)) × (Board)) ((live, false), b))
               else
                 do
@@ -3458,20 +3454,20 @@ def walk_fform (b : Board) (cells : Array (Int)) : Except SudoRt.Trap (((Bool) �
         do
           if (!( live )) then
             do
-              let _io1282 ← start_walk b (SudoRt.SEq.beq c (2 : Int))
-              let b := _io1282
+              let _io1281 ← start_walk b (SudoRt.SEq.beq c (2 : Int))
+              let b := _io1281
               let live := true
               pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board)) (b, live))
           else
             do
-              let _io1284 ← fform_add b (SudoRt.SEq.beq c (2 : Int))
-              let ⟨_ret1285, _iw01286⟩ := _io1284
-              let b := _iw01286
-              let _sudo_h0 := _ret1285
+              let _io1283 ← fform_add b (SudoRt.SEq.beq c (2 : Int))
+              let ⟨_ret1284, _iw01285⟩ := _io1283
+              let b := _iw01285
+              let _sudo_h0 := _ret1284
               if (!( _sudo_h0 )) then
                 do
-                  let _t1287 := { b with sudo_5Board_9marker_on := false }
-                  let b := _t1287
+                  let _t1286 := { b with sudo_5Board_9marker_on := false }
+                  let b := _t1286
                   pure (SudoRt.Flow.ret (ρ := ((Bool) × (Bool)) × (Board)) ((live, false), b))
               else
                 do
@@ -3488,161 +3484,161 @@ def walk_fform (b : Board) (cells : Array (Int)) : Except SudoRt.Trap (((Bool) �
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board)) (i', _fs))) (fun σ =>
     let b := σ.2.1
-    let _sp1293 := σ.2.2
-    let live := _sp1293
+    let _sp1292 := σ.2.2
+    let live := _sp1292
     do
-      let _io1290 ← marker_lift b
-      let b := _io1290
-      let _t1291 := { b with sudo_5Board_9marker_on := false }
-      let b := _t1291
+      let _io1289 ← marker_lift b
+      let b := _io1289
+      let _t1290 := { b with sudo_5Board_9marker_on := false }
+      let b := _t1290
       pure ((live, true), b)) (fun r => pure r))
     pure _out
 
 def finish (b : Board) : Except SudoRt.Trap (Board) :=
   do
-    let _io1295 ← invert_checked b bottom
+    let _io1294 ← invert_checked b bottom
+    let b := _io1294
+    let _io1295 ← mul b across gap across false false false
     let b := _io1295
-    let _io1296 ← mul b across gap across false false false
+    let _io1296 ← mul b up gap up false false false
     let b := _io1296
-    let _io1297 ← mul b up gap up false false false
+    let _io1297 ← settle b
     let b := _io1297
-    let _io1298 ← settle b
+    let _io1298 ← clear b gap
     let b := _io1298
-    let _io1299 ← clear b gap
+    let _io1299 ← clear b bottom
     let b := _io1299
-    let _io1300 ← clear b bottom
-    let b := _io1300
     pure b
 
 def frobenius_affine (b : Board) : Except SudoRt.Trap (Board) :=
   do
-    let _io1301 ← cube b across across
+    let _io1300 ← cube b across across
+    let b := _io1300
+    let _io1301 ← cube b up up
     let b := _io1301
-    let _io1302 ← cube b up up
+    let _io1302 ← settle b
     let b := _io1302
-    let _io1303 ← settle b
-    let b := _io1303
     pure b
 
 def chord_tail (b : Board) (xh : Int) (yh : Int) : Except SudoRt.Trap (Board) :=
   do
-    let _io1304 ← mul b gap gap spare false false false
+    let _io1303 ← mul b gap gap spare false false false
+    let b := _io1303
+    let _io1304 ← clear b gap
     let b := _io1304
-    let _io1305 ← clear b gap
+    let _io1305 ← settle b
     let b := _io1305
-    let _io1306 ← settle b
+    let _io1306 ← mul b bottom gap gap true false false
     let b := _io1306
-    let _io1307 ← mul b bottom gap gap true false false
+    let _io1307 ← bench_white0 b
     let b := _io1307
-    let _io1308 ← bench_white0 b
+    let _io1308 ← bench_add b xh false
     let b := _io1308
-    let _io1309 ← bench_add b xh false
+    let _io1309 ← bench_add b bottom true
     let b := _io1309
-    let _io1310 ← bench_add b bottom true
+    let _io1310 ← clear b bottom
     let b := _io1310
-    let _io1311 ← clear b bottom
+    let _io1311 ← settle b
     let b := _io1311
-    let _io1312 ← settle b
+    let _io1312 ← add b xh bottom true
     let b := _io1312
-    let _io1313 ← add b xh bottom true
+    let _io1313 ← mirror b yh
     let b := _io1313
-    let _io1314 ← mirror b yh
+    let _io1314 ← mul b yh gap xh false true false
     let b := _io1314
-    let _io1315 ← mul b yh gap xh false true false
+    let _io1315 ← clear b gap
     let b := _io1315
-    let _io1316 ← clear b gap
+    let _io1316 ← settle b
     let b := _io1316
-    let _io1317 ← settle b
+    let _io1317 ← move_band b xh bottom
     let b := _io1317
-    let _io1318 ← move_band b xh bottom
-    let b := _io1318
     pure b
 
 def chord_add_demo (b : Board) (red : Bool) : Except SudoRt.Trap ((Bool) × (Board)) :=
   do
-    let _ix1319 := op_chord
-    let _t1320 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_chord
-    let _t1321 ← SudoRt.addI _t1320 (1 : Int)
-    let _t1322 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix1319 _t1321
-    let _t1323 := { (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t1322 }
-    let _t1324 := { b with sudo_5Board_4cost := _t1323 }
-    let b := _t1324
-    let _io1325 ← copy_band b bottom base_across false
+    let _ix1318 := op_chord
+    let _t1319 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_chord
+    let _t1320 ← SudoRt.addI _t1319 (1 : Int)
+    let _t1321 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix1318 _t1320
+    let _t1322 := { (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t1321 }
+    let _t1323 := { b with sudo_5Board_4cost := _t1322 }
+    let b := _t1323
+    let _io1324 ← copy_band b bottom base_across false
+    let b := _io1324
+    let _io1325 ← add b bottom across true
     let b := _io1325
-    let _io1326 ← add b bottom across true
-    let b := _io1326
-    let _t1327 ← is_zero b bottom
-    if _t1327 then
+    let _t1326 ← is_zero b bottom
+    if _t1326 then
       do
         pure (false, b)
     else
       do
         let on := (b).sudo_5Board_9marker_on
-        let _t1328 := { b with sudo_5Board_9marker_on := false }
-        let b := _t1328
-        let _io1329 ← invert_checked b bottom
-        let b := _io1329
-        let _t1330 := { b with sudo_5Board_9marker_on := on }
-        let b := _t1330
-        let _io1331 ← copy_band b spare base_up red
+        let _t1327 := { b with sudo_5Board_9marker_on := false }
+        let b := _t1327
+        let _io1328 ← invert_checked b bottom
+        let b := _io1328
+        let _t1329 := { b with sudo_5Board_9marker_on := on }
+        let b := _t1329
+        let _io1330 ← copy_band b spare base_up red
+        let b := _io1330
+        let _io1331 ← add b spare up true
         let b := _io1331
-        let _io1332 ← add b spare up true
+        let _io1332 ← chord_tail b across up
         let b := _io1332
-        let _io1333 ← chord_tail b across up
-        let b := _io1333
         pure (true, b)
 
 def walk_chord (b : Board) (cells : Array (Int)) : Except SudoRt.Trap (((Bool) × (Bool)) × (Board)) :=
   do
     let live := false
-    let _t1334 := { b with sudo_5Board_9marker_on := true }
-    let b := _t1334
-    let _t1362 ← SudoRt.subI (SudoRt.listLen cells) (1 : Int)
+    let _t1333 := { b with sudo_5Board_9marker_on := true }
+    let b := _t1333
+    let _t1361 ← SudoRt.subI (SudoRt.listLen cells) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1362
+    let _toV := _t1361
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1367 := (_fromV, (b, live))
-    let _out ← (SudoRt.runLoopOn (ρ := ((Bool) × (Bool)) × (Board)) _init1367 fuel (fun σ =>
+    let _init1366 := (_fromV, (b, live))
+    let _out ← (SudoRt.runLoopOn (ρ := ((Bool) × (Bool)) × (Board)) _init1366 fuel (fun σ =>
     let j := σ.1
     let b := σ.2.1
-    let _sp1365 := σ.2.2
-    let live := _sp1365
+    let _sp1364 := σ.2.2
+    let live := _sp1364
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := ((Bool) × (Bool)) × (Board)) (j, (b, live)))
       else
         match ← ((do
-  let _t1336 ← SudoRt.atL cells j
-  let c := _t1336
-  let _t1338 ← (if (decide (c ≥ (0 : Int))) then (do
+  let _t1335 ← SudoRt.atL cells j
+  let c := _t1335
+  let _t1337 ← (if (decide (c ≥ (0 : Int))) then (do
   pure (decide (c ≤ (2 : Int)))) else pure false)
-  let _as1340 ← SudoRt.sudoAssert _t1338 872
-  let _io1341 ← marker_lift b
-  let b := _io1341
+  let _as1339 ← SudoRt.sudoAssert _t1337 869
+  let _io1340 ← marker_lift b
+  let b := _io1340
   if live then
     do
-      let _io1342 ← frobenius_affine b
-      let b := _io1342
+      let _io1341 ← frobenius_affine b
+      let b := _io1341
       if (!(SudoRt.SEq.beq c (0 : Int))) then
         do
           if (!( live )) then
             do
-              let _io1344 ← copy_band b across base_across false
-              let b := _io1344
-              let _io1346 ← copy_band b up base_up (SudoRt.SEq.beq c (2 : Int))
-              let b := _io1346
+              let _io1343 ← copy_band b across base_across false
+              let b := _io1343
+              let _io1345 ← copy_band b up base_up (SudoRt.SEq.beq c (2 : Int))
+              let b := _io1345
               let live := true
               pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board)) (b, live))
           else
             do
-              let _io1348 ← chord_add_demo b (SudoRt.SEq.beq c (2 : Int))
-              let ⟨_ret1349, _iw01350⟩ := _io1348
-              let b := _iw01350
-              let _sudo_h0 := _ret1349
+              let _io1347 ← chord_add_demo b (SudoRt.SEq.beq c (2 : Int))
+              let ⟨_ret1348, _iw01349⟩ := _io1347
+              let b := _iw01349
+              let _sudo_h0 := _ret1348
               if (!( _sudo_h0 )) then
                 do
-                  let _t1351 := { b with sudo_5Board_9marker_on := false }
-                  let b := _t1351
+                  let _t1350 := { b with sudo_5Board_9marker_on := false }
+                  let b := _t1350
                   pure (SudoRt.Flow.ret (ρ := ((Bool) × (Bool)) × (Board)) ((live, false), b))
               else
                 do
@@ -3656,22 +3652,22 @@ def walk_chord (b : Board) (cells : Array (Int)) : Except SudoRt.Trap (((Bool) �
         do
           if (!( live )) then
             do
-              let _io1353 ← copy_band b across base_across false
-              let b := _io1353
-              let _io1355 ← copy_band b up base_up (SudoRt.SEq.beq c (2 : Int))
-              let b := _io1355
+              let _io1352 ← copy_band b across base_across false
+              let b := _io1352
+              let _io1354 ← copy_band b up base_up (SudoRt.SEq.beq c (2 : Int))
+              let b := _io1354
               let live := true
               pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board)) (b, live))
           else
             do
-              let _io1357 ← chord_add_demo b (SudoRt.SEq.beq c (2 : Int))
-              let ⟨_ret1358, _iw01359⟩ := _io1357
-              let b := _iw01359
-              let _sudo_h0 := _ret1358
+              let _io1356 ← chord_add_demo b (SudoRt.SEq.beq c (2 : Int))
+              let ⟨_ret1357, _iw01358⟩ := _io1356
+              let b := _iw01358
+              let _sudo_h0 := _ret1357
               if (!( _sudo_h0 )) then
                 do
-                  let _t1360 := { b with sudo_5Board_9marker_on := false }
-                  let b := _t1360
+                  let _t1359 := { b with sudo_5Board_9marker_on := false }
+                  let b := _t1359
                   pure (SudoRt.Flow.ret (ρ := ((Bool) × (Bool)) × (Board)) ((live, false), b))
               else
                 do
@@ -3688,13 +3684,13 @@ def walk_chord (b : Board) (cells : Array (Int)) : Except SudoRt.Trap (((Bool) �
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board)) (i', _fs))) (fun σ =>
     let b := σ.2.1
-    let _sp1366 := σ.2.2
-    let live := _sp1366
+    let _sp1365 := σ.2.2
+    let live := _sp1365
     do
-      let _io1363 ← marker_lift b
-      let b := _io1363
-      let _t1364 := { b with sudo_5Board_9marker_on := false }
-      let b := _t1364
+      let _io1362 ← marker_lift b
+      let b := _io1362
+      let _t1363 := { b with sudo_5Board_9marker_on := false }
+      let b := _t1363
       pure ((live, true), b)) (fun r => pure r))
     pure _out
 
@@ -3702,92 +3698,92 @@ def walk_and_finish (b : Board) (cells : Array (Int)) : Except SudoRt.Trap ((Boo
   do
     if ((b).sudo_5Board_1t).sudo_4Tier_4demo then
       do
-        let _io1368 ← walk_chord b cells
-        let ⟨_ret1369, _iw01370⟩ := _io1368
-        let b := _iw01370
-        let _sudo_h0 := _ret1369
+        let _io1367 ← walk_chord b cells
+        let ⟨_ret1368, _iw01369⟩ := _io1367
+        let b := _iw01369
+        let _sudo_h0 := _ret1368
         let ⟨live, ok⟩ := _sudo_h0
-        let _t1371 ← (if live then (do
+        let _t1370 ← (if live then (do
   pure ok) else pure false)
-        pure (_t1371, b)
+        pure (_t1370, b)
     else
       do
-        let _io1372 ← walk_fform b cells
-        let ⟨_ret1373, _iw01374⟩ := _io1372
-        let b := _iw01374
-        let _sudo_h1 := _ret1373
+        let _io1371 ← walk_fform b cells
+        let ⟨_ret1372, _iw01373⟩ := _io1371
+        let b := _iw01373
+        let _sudo_h1 := _ret1372
         let ⟨live, ok⟩ := _sudo_h1
-        let _t1375 ← (if live then (do
+        let _t1374 ← (if live then (do
   pure ok) else pure false)
-        if (!( _t1375 )) then
+        if (!( _t1374 )) then
           do
             pure (false, b)
         else
           do
-            let _io1376 ← finish b
-            let b := _io1376
+            let _io1375 ← finish b
+            let b := _io1375
             pure (true, b)
 
 def curve_side (b : Board) (src : Int) (dst : Int) : Except SudoRt.Trap (Board) :=
   do
-    let _io1377 ← copy_band b dst src false
+    let _io1376 ← copy_band b dst src false
+    let b := _io1376
+    let _io1377 ← cube b dst dst
     let b := _io1377
-    let _io1378 ← cube b dst dst
+    let _io1378 ← mul b spare src src true false false
     let b := _io1378
-    let _io1379 ← mul b spare src src true false false
+    let _io1379 ← settle b
     let b := _io1379
-    let _io1380 ← settle b
+    let _io1380 ← add b dst spare true
     let b := _io1380
-    let _io1381 ← add b dst spare true
+    let _io1381 ← clear b spare
     let b := _io1381
-    let _io1382 ← clear b spare
+    let _io1382 ← white0 b dst
     let b := _io1382
-    let _io1383 ← white0 b dst
-    let b := _io1383
     pure b
 
 def base_point (b : Board) : Except SudoRt.Trap ((Int) × (Board)) :=
   do
     let n := ((b).sudo_5Board_1t).sudo_4Tier_1n
     let found := (0 : Int)
-    let _t1436 ← SudoRt.subI n (1 : Int)
+    let _t1435 ← SudoRt.subI n (1 : Int)
     let _fromV := (1 : Int)
-    let _toV := _t1436
+    let _toV := _t1435
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1482 := (_fromV, (b, found))
-    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1482 fuel (fun σ =>
+    let _init1481 := (_fromV, (b, found))
+    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1481 fuel (fun σ =>
     let j := σ.1
     let b := σ.2.1
-    let _sp1480 := σ.2.2
-    let found := _sp1480
+    let _sp1479 := σ.2.2
+    let found := _sp1479
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (j, (b, found)))
       else
         match ← ((do
-  let _t1385 ← SudoRt.filledL n (0 : Int)
-  let x := _t1385
-  let _ix1386 := j
-  let _t1387 ← SudoRt.putL x _ix1386 (1 : Int)
-  let x := _t1387
-  let _io1388 ← put b base_across x
+  let _t1384 ← SudoRt.filledL n (0 : Int)
+  let x := _t1384
+  let _ix1385 := j
+  let _t1386 ← SudoRt.putL x _ix1385 (1 : Int)
+  let x := _t1386
+  let _io1387 ← put b base_across x
+  let b := _io1387
+  let _io1388 ← curve_side b base_across bottom
   let b := _io1388
-  let _io1389 ← curve_side b base_across bottom
+  let _io1389 ← mul b gap bottom bottom true false false
   let b := _io1389
-  let _io1390 ← mul b gap bottom bottom true false false
+  let _io1390 ← settle b
   let b := _io1390
-  let _io1391 ← settle b
+  let _io1391 ← white0 b up
   let b := _io1391
-  let _io1392 ← white0 b up
-  let b := _io1392
-  let _t1393 ← SudoRt.filledL n (0 : Int)
-  let strip := _t1393
-  let _t1399 ← SudoRt.subI n (2 : Int)
+  let _t1392 ← SudoRt.filledL n (0 : Int)
+  let strip := _t1392
+  let _t1398 ← SudoRt.subI n (2 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t1399
+  let _toV := _t1398
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1435 := (_fromV, strip)
-  let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1435 fuel (fun σ =>
+  let _init1434 := (_fromV, strip)
+  let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1434 fuel (fun σ =>
     let i := σ.1
     let strip := σ.2
     do
@@ -3795,12 +3791,12 @@ def base_point (b : Board) : Except SudoRt.Trap ((Int) × (Board)) :=
         pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, strip))
       else
         match ← ((do
-  let _t1395 ← SudoRt.modI i (2 : Int)
-  if (SudoRt.SEq.beq _t1395 (0 : Int)) then
+  let _t1394 ← SudoRt.modI i (2 : Int)
+  if (SudoRt.SEq.beq _t1394 (0 : Int)) then
     do
-      let _ix1397 := i
-      let _t1398 ← SudoRt.putL strip _ix1397 (2 : Int)
-      let strip := _t1398
+      let _ix1396 := i
+      let _t1397 ← SudoRt.putL strip _ix1396 (2 : Int)
+      let strip := _t1397
       pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) strip)
   else
     do
@@ -3815,20 +3811,20 @@ def base_point (b : Board) : Except SudoRt.Trap ((Int) × (Board)) :=
               pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (i', _fs))) (fun σ =>
     let strip := σ.2
     do
-      let _t1400 ← SudoRt.subI n (2 : Int)
-      let _ix1401 := _t1400
-      let _t1402 ← SudoRt.putL strip _ix1401 (1 : Int)
-      let strip := _t1402
-      let _io1403 ← put b across strip
-      let b := _io1403
-      let _t1404 := { b with sudo_5Board_9marker_on := true }
-      let b := _t1404
-      let _t1420 ← SudoRt.subI n (2 : Int)
+      let _t1399 ← SudoRt.subI n (2 : Int)
+      let _ix1400 := _t1399
+      let _t1401 ← SudoRt.putL strip _ix1400 (1 : Int)
+      let strip := _t1401
+      let _io1402 ← put b across strip
+      let b := _io1402
+      let _t1403 := { b with sudo_5Board_9marker_on := true }
+      let b := _t1403
+      let _t1419 ← SudoRt.subI n (2 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t1420
+      let _toV := _t1419
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1434 := (_fromV, b)
-      let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1434 fuel (fun σ =>
+      let _init1433 := (_fromV, b)
+      let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1433 fuel (fun σ =>
     let i := σ.1
     let b := σ.2
     do
@@ -3836,40 +3832,40 @@ def base_point (b : Board) : Except SudoRt.Trap ((Int) × (Board)) :=
         pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, b))
       else
         match ← ((do
-  let _t1406 ← SudoRt.atL strip i
-  let d := _t1406
-  let _io1407 ← marker_lift b
+  let _t1405 ← SudoRt.atL strip i
+  let d := _t1405
+  let _io1406 ← marker_lift b
+  let b := _io1406
+  let _io1407 ← cube b up up
   let b := _io1407
-  let _io1408 ← cube b up up
-  let b := _io1408
   if (!(SudoRt.SEq.beq d (0 : Int))) then
     do
       if (SudoRt.SEq.beq d (2 : Int)) then
         do
-          let _io1411 ← copy_band b spare gap false
+          let _io1410 ← copy_band b spare gap false
+          let b := _io1410
+          let _io1411 ← mul b up up spare false false false
           let b := _io1411
-          let _io1412 ← mul b up up spare false false false
+          let _io1412 ← clear b up
           let b := _io1412
-          let _io1413 ← clear b up
+          let _io1413 ← settle b
           let b := _io1413
-          let _io1414 ← settle b
-          let b := _io1414
           pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) b)
       else
         do
-          let _io1415 ← copy_band b spare bottom false
+          let _io1414 ← copy_band b spare bottom false
+          let b := _io1414
+          let _io1415 ← mul b up up spare false false false
           let b := _io1415
-          let _io1416 ← mul b up up spare false false false
+          let _io1416 ← clear b up
           let b := _io1416
-          let _io1417 ← clear b up
+          let _io1417 ← settle b
           let b := _io1417
-          let _io1418 ← settle b
-          let b := _io1418
           pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) b)
   else
     do
-      let _io1419 ← settle b
-      let b := _io1419
+      let _io1418 ← settle b
+      let b := _io1418
       pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) b)) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Board)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, _fs))
@@ -3881,34 +3877,34 @@ def base_point (b : Board) : Except SudoRt.Trap ((Int) × (Board)) :=
               pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (i', _fs))) (fun σ =>
     let b := σ.2
     do
-      let _io1421 ← marker_lift b
-      let b := _io1421
-      let _t1422 := { b with sudo_5Board_9marker_on := false }
-      let b := _t1422
-      let _io1423 ← clear b gap
+      let _io1420 ← marker_lift b
+      let b := _io1420
+      let _t1421 := { b with sudo_5Board_9marker_on := false }
+      let b := _t1421
+      let _io1422 ← clear b gap
+      let b := _io1422
+      let _io1423 ← mul b gap up up true false false
       let b := _io1423
-      let _io1424 ← mul b gap up up true false false
+      let _io1424 ← settle b
       let b := _io1424
-      let _io1425 ← settle b
-      let b := _io1425
-      let _t1426 ← value b gap
-      let _t1427 ← value b bottom
-      if (SudoRt.SEq.beq _t1426 _t1427) then
+      let _t1425 ← value b gap
+      let _t1426 ← value b bottom
+      if (SudoRt.SEq.beq _t1425 _t1426) then
         do
           let found := j
           pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (b, found))
       else
         do
-          let _io1429 ← clear b gap
+          let _io1428 ← clear b gap
+          let b := _io1428
+          let _io1429 ← clear b bottom
           let b := _io1429
-          let _io1430 ← clear b bottom
+          let _io1430 ← clear b up
           let b := _io1430
-          let _io1431 ← clear b up
+          let _io1431 ← clear b across
           let b := _io1431
-          let _io1432 ← clear b across
+          let _io1432 ← clear b base_across
           let b := _io1432
-          let _io1433 ← clear b base_across
-          let b := _io1433
           pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (b, found))) (fun r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)))
       pure _out) (fun r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Board)))) with
@@ -3921,303 +3917,303 @@ def base_point (b : Board) : Except SudoRt.Trap ((Int) × (Board)) :=
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (i', _fs))) (fun σ =>
     let b := σ.2.1
-    let _sp1481 := σ.2.2
-    let found := _sp1481
+    let _sp1480 := σ.2.2
+    let found := _sp1480
     do
-      let _as1438 ← SudoRt.sudoAssert (decide (found > (0 : Int))) 966
-      let _io1439 ← clear b gap
+      let _as1437 ← SudoRt.sudoAssert (decide (found > (0 : Int))) 963
+      let _io1438 ← clear b gap
+      let b := _io1438
+      let _io1439 ← clear b bottom
       let b := _io1439
-      let _io1440 ← clear b bottom
+      let _io1440 ← clear b across
       let b := _io1440
-      let _io1441 ← clear b across
+      let _io1441 ← move_band b base_up up
       let b := _io1441
-      let _io1442 ← move_band b base_up up
-      let b := _io1442
-      let _t1443 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
-      let _t1444 := { (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1443 }
-      let _t1445 := { b with sudo_5Board_4cost := _t1444 }
-      let b := _t1445
+      let _t1442 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
+      let _t1443 := { (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1442 }
+      let _t1444 := { b with sudo_5Board_4cost := _t1443 }
+      let b := _t1444
       let wrwr := (#[(1 : Int), (2 : Int), (1 : Int), (2 : Int)] : Array (Int))
       if ((b).sudo_5Board_1t).sudo_4Tier_4demo then
         do
-          let _io1446 ← walk_chord b wrwr
-          let ⟨_ret1447, _iw01448⟩ := _io1446
-          let b := _iw01448
-          let _sudo_h0 := _ret1447
+          let _io1445 ← walk_chord b wrwr
+          let ⟨_ret1446, _iw01447⟩ := _io1445
+          let b := _iw01447
+          let _sudo_h0 := _ret1446
           let ⟨live, ok⟩ := _sudo_h0
-          let _t1449 ← (if live then (do
+          let _t1448 ← (if live then (do
   pure ok) else pure false)
-          let _as1450 ← SudoRt.sudoAssert _t1449 975
-          let _t1451 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
-          let _t1452 := { (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1451 }
-          let _t1453 := { b with sudo_5Board_4cost := _t1452 }
-          let b := _t1453
+          let _as1449 ← SudoRt.sudoAssert _t1448 972
+          let _t1450 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
+          let _t1451 := { (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1450 }
+          let _t1452 := { b with sudo_5Board_4cost := _t1451 }
+          let b := _t1452
           if (!( ((b).sudo_5Board_1t).sudo_4Tier_4demo )) then
             do
-              let _io1454 ← finish b
+              let _io1453 ← finish b
+              let b := _io1453
+              let _io1454 ← clear b base_across
               let b := _io1454
-              let _io1455 ← clear b base_across
+              let _io1455 ← clear b base_up
               let b := _io1455
-              let _io1456 ← clear b base_up
+              let _io1456 ← move_band b base_across across
               let b := _io1456
-              let _io1457 ← move_band b base_across across
+              let _io1457 ← move_band b base_up up
               let b := _io1457
-              let _io1458 ← move_band b base_up up
-              let b := _io1458
               pure (found, b)
           else
             do
-              let _io1459 ← clear b base_across
+              let _io1458 ← clear b base_across
+              let b := _io1458
+              let _io1459 ← clear b base_up
               let b := _io1459
-              let _io1460 ← clear b base_up
+              let _io1460 ← move_band b base_across across
               let b := _io1460
-              let _io1461 ← move_band b base_across across
+              let _io1461 ← move_band b base_up up
               let b := _io1461
-              let _io1462 ← move_band b base_up up
-              let b := _io1462
               pure (found, b)
       else
         do
-          let _io1463 ← walk_fform b wrwr
-          let ⟨_ret1464, _iw01465⟩ := _io1463
-          let b := _iw01465
-          let _sudo_h1 := _ret1464
+          let _io1462 ← walk_fform b wrwr
+          let ⟨_ret1463, _iw01464⟩ := _io1462
+          let b := _iw01464
+          let _sudo_h1 := _ret1463
           let ⟨live, ok⟩ := _sudo_h1
-          let _t1466 ← (if live then (do
+          let _t1465 ← (if live then (do
   pure ok) else pure false)
-          let _as1467 ← SudoRt.sudoAssert _t1466 978
-          let _t1468 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
-          let _t1469 := { (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1468 }
-          let _t1470 := { b with sudo_5Board_4cost := _t1469 }
-          let b := _t1470
+          let _as1466 ← SudoRt.sudoAssert _t1465 975
+          let _t1467 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
+          let _t1468 := { (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1467 }
+          let _t1469 := { b with sudo_5Board_4cost := _t1468 }
+          let b := _t1469
           if (!( ((b).sudo_5Board_1t).sudo_4Tier_4demo )) then
             do
-              let _io1471 ← finish b
+              let _io1470 ← finish b
+              let b := _io1470
+              let _io1471 ← clear b base_across
               let b := _io1471
-              let _io1472 ← clear b base_across
+              let _io1472 ← clear b base_up
               let b := _io1472
-              let _io1473 ← clear b base_up
+              let _io1473 ← move_band b base_across across
               let b := _io1473
-              let _io1474 ← move_band b base_across across
+              let _io1474 ← move_band b base_up up
               let b := _io1474
-              let _io1475 ← move_band b base_up up
-              let b := _io1475
               pure (found, b)
           else
             do
-              let _io1476 ← clear b base_across
+              let _io1475 ← clear b base_across
+              let b := _io1475
+              let _io1476 ← clear b base_up
               let b := _io1476
-              let _io1477 ← clear b base_up
+              let _io1477 ← move_band b base_across across
               let b := _io1477
-              let _io1478 ← move_band b base_across across
+              let _io1478 ← move_band b base_up up
               let b := _io1478
-              let _io1479 ← move_band b base_up up
-              let b := _io1479
               pure (found, b)) (fun r => pure r))
     pure _out
 
 def on_curve (b : Board) : Except SudoRt.Trap ((Bool) × (Board)) :=
   do
-    let _io1483 ← mul b gap base_up base_up true false false
+    let _io1482 ← mul b gap base_up base_up true false false
+    let b := _io1482
+    let _io1483 ← copy_band b bottom base_across false
     let b := _io1483
-    let _io1484 ← copy_band b bottom base_across false
+    let _io1484 ← cube b bottom bottom
     let b := _io1484
-    let _io1485 ← cube b bottom bottom
+    let _io1485 ← mul b spare base_across base_across true false false
     let b := _io1485
-    let _io1486 ← mul b spare base_across base_across true false false
+    let _io1486 ← settle b
     let b := _io1486
-    let _io1487 ← settle b
+    let _io1487 ← add b bottom spare true
     let b := _io1487
-    let _io1488 ← add b bottom spare true
+    let _io1488 ← clear b spare
     let b := _io1488
-    let _io1489 ← clear b spare
+    let _io1489 ← white0 b bottom
     let b := _io1489
-    let _io1490 ← white0 b bottom
-    let b := _io1490
-    let _t1491 ← value b gap
-    let _t1492 ← value b bottom
-    let ok := (SudoRt.SEq.beq _t1491 _t1492)
-    let _io1494 ← clear b gap
+    let _t1490 ← value b gap
+    let _t1491 ← value b bottom
+    let ok := (SudoRt.SEq.beq _t1490 _t1491)
+    let _io1493 ← clear b gap
+    let b := _io1493
+    let _io1494 ← clear b bottom
     let b := _io1494
-    let _io1495 ← clear b bottom
-    let b := _io1495
     pure (ok, b)
 
 def certificate (b : Board) (xh : Int) (yh : Int) : Except SudoRt.Trap ((Bool) × (Board)) :=
   do
-    let _ix1496 := op_chord
-    let _t1497 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_chord
-    let _t1498 ← SudoRt.addI _t1497 (1 : Int)
-    let _t1499 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix1496 _t1498
-    let _t1500 := { (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t1499 }
-    let _t1501 := { b with sudo_5Board_4cost := _t1500 }
-    let b := _t1501
-    let _io1502 ← copy_band b bottom xh false
+    let _ix1495 := op_chord
+    let _t1496 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_chord
+    let _t1497 ← SudoRt.addI _t1496 (1 : Int)
+    let _t1498 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix1495 _t1497
+    let _t1499 := { (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t1498 }
+    let _t1500 := { b with sudo_5Board_4cost := _t1499 }
+    let b := _t1500
+    let _io1501 ← copy_band b bottom xh false
+    let b := _io1501
+    let _io1502 ← cube b bottom bottom
     let b := _io1502
-    let _io1503 ← cube b bottom bottom
+    let _io1503 ← settle b
     let b := _io1503
-    let _io1504 ← settle b
+    let _io1504 ← mirror b bottom
     let b := _io1504
-    let _io1505 ← mirror b bottom
+    let _io1505 ← add b bottom xh false
     let b := _io1505
-    let _io1506 ← add b bottom xh false
-    let b := _io1506
-    let _t1507 ← is_zero b bottom
-    if _t1507 then
+    let _t1506 ← is_zero b bottom
+    if _t1506 then
       do
-        let _io1508 ← clear b bottom
-        let b := _io1508
+        let _io1507 ← clear b bottom
+        let b := _io1507
         pure (false, b)
     else
       do
-        let _io1509 ← invert_checked b bottom
+        let _io1508 ← invert_checked b bottom
+        let b := _io1508
+        let _io1509 ← copy_band b spare yh false
         let b := _io1509
-        let _io1510 ← copy_band b spare yh false
+        let _io1510 ← cube b spare spare
         let b := _io1510
-        let _io1511 ← cube b spare spare
+        let _io1511 ← settle b
         let b := _io1511
-        let _io1512 ← settle b
+        let _io1512 ← add b spare yh false
         let b := _io1512
-        let _io1513 ← add b spare yh false
+        let _io1513 ← mirror b spare
         let b := _io1513
-        let _io1514 ← mirror b spare
+        let _io1514 ← mul b gap gap spare false false false
         let b := _io1514
-        let _io1515 ← mul b gap gap spare false false false
+        let _io1515 ← clear b gap
         let b := _io1515
-        let _io1516 ← clear b gap
+        let _io1516 ← settle b
         let b := _io1516
-        let _io1517 ← settle b
+        let _io1517 ← cube b xh xh
         let b := _io1517
-        let _io1518 ← cube b xh xh
+        let _io1518 ← cube b yh yh
         let b := _io1518
-        let _io1519 ← cube b yh yh
+        let _io1519 ← settle b
         let b := _io1519
-        let _io1520 ← settle b
+        let _io1520 ← mul b bottom gap gap true false false
         let b := _io1520
-        let _io1521 ← mul b bottom gap gap true false false
+        let _io1521 ← bench_white0 b
         let b := _io1521
-        let _io1522 ← bench_white0 b
+        let _io1522 ← bench_add b xh false
         let b := _io1522
-        let _io1523 ← bench_add b xh false
+        let _io1523 ← bench_add b bottom true
         let b := _io1523
-        let _io1524 ← bench_add b bottom true
+        let _io1524 ← clear b bottom
         let b := _io1524
-        let _io1525 ← clear b bottom
+        let _io1525 ← settle b
         let b := _io1525
-        let _io1526 ← settle b
+        let _io1526 ← add b xh bottom true
         let b := _io1526
-        let _io1527 ← add b xh bottom true
+        let _io1527 ← mirror b yh
         let b := _io1527
-        let _io1528 ← mirror b yh
+        let _io1528 ← mul b yh gap xh false true false
         let b := _io1528
-        let _io1529 ← mul b yh gap xh false true false
+        let _io1529 ← clear b gap
         let b := _io1529
-        let _io1530 ← clear b gap
+        let _io1530 ← settle b
         let b := _io1530
-        let _io1531 ← settle b
+        let _io1531 ← move_band b xh bottom
         let b := _io1531
-        let _io1532 ← move_band b xh bottom
-        let b := _io1532
         pure (true, b)
 
 def certificate_matches (b : Board) : Except SudoRt.Trap (Bool) :=
   do
-    let _t1533 ← value b bottom
-    let _t1534 ← value b base_across
-    let _t1536 ← (if (SudoRt.SEq.beq _t1533 _t1534) then (do
-  let _t1537 ← value b gap
-  let _t1538 ← value b base_up
-  pure (SudoRt.SEq.beq _t1537 _t1538)) else pure false)
-    pure _t1536
+    let _t1532 ← value b bottom
+    let _t1533 ← value b base_across
+    let _t1535 ← (if (SudoRt.SEq.beq _t1532 _t1533) then (do
+  let _t1536 ← value b gap
+  let _t1537 ← value b base_up
+  pure (SudoRt.SEq.beq _t1536 _t1537)) else pure false)
+    pure _t1535
 
 def coordinate (t : Tier) (home : Int) (i : Int) : Except SudoRt.Trap (Hole) :=
   do
-    let _t1541 ← (if (decide (home ≥ (0 : Int))) then (do
+    let _t1540 ← (if (decide (home ≥ (0 : Int))) then (do
   pure (decide (home < (7 : Int)))) else pure false)
-    let _t1543 ← (if _t1541 then (do
+    let _t1542 ← (if _t1540 then (do
   pure (decide (i ≥ (0 : Int)))) else pure false)
-    let _t1545 ← (if _t1543 then (do
+    let _t1544 ← (if _t1542 then (do
   pure (decide (i < (t).sudo_4Tier_1n))) else pure false)
-    let _as1547 ← SudoRt.sudoAssert _t1545 1071
+    let _as1546 ← SudoRt.sudoAssert _t1544 1068
     if (t).sudo_4Tier_4demo then
       do
         let lanes := (#[(2 : Int), (3 : Int), (4 : Int), (5 : Int), (2 : Int), (3 : Int), (4 : Int)] : Array (Int))
         let half := (#[(0 : Int), (0 : Int), (0 : Int), (0 : Int), (1 : Int), (1 : Int), (1 : Int)] : Array (Int))
-        let _t1548 ← SudoRt.atL half home
-        let _t1549 ← SudoRt.mulI (4 : Int) _t1548
-        let _t1550 ← SudoRt.divI i (2 : Int)
-        let _t1551 ← SudoRt.addI _t1549 _t1550
-        let _t1552 ← SudoRt.atL lanes home
-        let _t1553 ← SudoRt.mulI (2 : Int) _t1552
-        let _t1554 ← SudoRt.subI _t1553 (1 : Int)
-        let _t1555 ← SudoRt.modI i (2 : Int)
-        let _t1556 ← SudoRt.addI _t1554 _t1555
-        pure ({ sudo_4Hole_4grid := (1 : Int), sudo_4Hole_3row := _t1551, sudo_4Hole_3col := _t1556 } : Hole)
+        let _t1547 ← SudoRt.atL half home
+        let _t1548 ← SudoRt.mulI (4 : Int) _t1547
+        let _t1549 ← SudoRt.divI i (2 : Int)
+        let _t1550 ← SudoRt.addI _t1548 _t1549
+        let _t1551 ← SudoRt.atL lanes home
+        let _t1552 ← SudoRt.mulI (2 : Int) _t1551
+        let _t1553 ← SudoRt.subI _t1552 (1 : Int)
+        let _t1554 ← SudoRt.modI i (2 : Int)
+        let _t1555 ← SudoRt.addI _t1553 _t1554
+        pure ({ sudo_4Hole_4grid := (1 : Int), sudo_4Hole_3row := _t1550, sudo_4Hole_3col := _t1555 } : Hole)
     else
       do
-        let _t1557 ← SudoRt.divI home (t).sudo_4Tier_6geoper
-        let unit := _t1557
-        let _t1558 ← SudoRt.modI home (t).sudo_4Tier_6geoper
-        let band := _t1558
-        let _t1559 ← SudoRt.divI i (t).sudo_4Tier_1w
-        let r := _t1559
-        let _t1560 ← SudoRt.modI i (t).sudo_4Tier_1w
-        let c := _t1560
-        let _t1561 ← SudoRt.mulI band (t).sudo_4Tier_7georows
-        let _t1562 ← SudoRt.addI _t1561 r
-        let row := _t1562
+        let _t1556 ← SudoRt.divI home (t).sudo_4Tier_6geoper
+        let unit := _t1556
+        let _t1557 ← SudoRt.modI home (t).sudo_4Tier_6geoper
+        let band := _t1557
+        let _t1558 ← SudoRt.divI i (t).sudo_4Tier_1w
+        let r := _t1558
+        let _t1559 ← SudoRt.modI i (t).sudo_4Tier_1w
+        let c := _t1559
+        let _t1560 ← SudoRt.mulI band (t).sudo_4Tier_7georows
+        let _t1561 ← SudoRt.addI _t1560 r
+        let row := _t1561
         if (t).sudo_4Tier_9geodouble then
           do
-            let _t1563 ← SudoRt.mulI (2 : Int) unit
-            let _t1564 ← SudoRt.addI (t).sudo_4Tier_8geofirst _t1563
-            let g := _t1564
+            let _t1562 ← SudoRt.mulI (2 : Int) unit
+            let _t1563 ← SudoRt.addI (t).sudo_4Tier_8geofirst _t1562
+            let g := _t1563
             if (decide (c ≥ (10 : Int))) then
               do
-                let _t1566 ← SudoRt.addI g (1 : Int)
-                let g := _t1566
-                let _t1567 ← SudoRt.modI c (10 : Int)
-                let _t1568 ← SudoRt.addI _t1567 (1 : Int)
-                pure ({ sudo_4Hole_4grid := g, sudo_4Hole_3row := row, sudo_4Hole_3col := _t1568 } : Hole)
+                let _t1565 ← SudoRt.addI g (1 : Int)
+                let g := _t1565
+                let _t1566 ← SudoRt.modI c (10 : Int)
+                let _t1567 ← SudoRt.addI _t1566 (1 : Int)
+                pure ({ sudo_4Hole_4grid := g, sudo_4Hole_3row := row, sudo_4Hole_3col := _t1567 } : Hole)
             else
               do
-                let _t1569 ← SudoRt.modI c (10 : Int)
-                let _t1570 ← SudoRt.addI _t1569 (1 : Int)
-                pure ({ sudo_4Hole_4grid := g, sudo_4Hole_3row := row, sudo_4Hole_3col := _t1570 } : Hole)
+                let _t1568 ← SudoRt.modI c (10 : Int)
+                let _t1569 ← SudoRt.addI _t1568 (1 : Int)
+                pure ({ sudo_4Hole_4grid := g, sudo_4Hole_3row := row, sudo_4Hole_3col := _t1569 } : Hole)
         else
           do
-            let _t1571 ← SudoRt.addI (t).sudo_4Tier_8geofirst unit
-            let _t1572 ← SudoRt.addI c (1 : Int)
-            pure ({ sudo_4Hole_4grid := _t1571, sudo_4Hole_3row := row, sudo_4Hole_3col := _t1572 } : Hole)
+            let _t1570 ← SudoRt.addI (t).sudo_4Tier_8geofirst unit
+            let _t1571 ← SudoRt.addI c (1 : Int)
+            pure ({ sudo_4Hole_4grid := _t1570, sudo_4Hole_3row := row, sudo_4Hole_3col := _t1571 } : Hole)
 
 def place (b : Board) (home : Int) (v : Array (Int)) : Except SudoRt.Trap (Board) :=
   do
     let c := b
-    let _io1573 ← put c home v
-    let c := _io1573
+    let _io1572 ← put c home v
+    let c := _io1572
     pure c
 
 def band (b : Board) (home : Int) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t1574 ← value b home
-    pure _t1574
+    let _t1573 ← value b home
+    pure _t1573
 
 def plan_dst (b : Board) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t1575 ← SudoRt.atL (b).sudo_5Board_3row (b).sudo_5Board_10phase_hole
-    let p := _t1575
+    let _t1574 ← SudoRt.atL (b).sudo_5Board_3row (b).sudo_5Board_10phase_hole
+    let p := _t1574
     if (SudoRt.SEq.beq p (0 : Int)) then
       do
         pure (#[base_across, base_up] : Array (Int))
     else
       do
-        let _as1577 ← SudoRt.sudoAssertEq p (2 : Int) 1103
+        let _as1576 ← SudoRt.sudoAssertEq p (2 : Int) 1100
         pure (#[bottom, gap] : Array (Int))
 
 def plan_src (dst : Int) : Except SudoRt.Trap (Int) :=
   do
-    let _t1579 ← (if (SudoRt.SEq.beq dst base_across) then pure true else (do
+    let _t1578 ← (if (SudoRt.SEq.beq dst base_across) then pure true else (do
   pure (SudoRt.SEq.beq dst bottom)))
-    if _t1579 then
+    if _t1578 then
       do
         pure across
     else
@@ -4226,44 +4222,41 @@ def plan_src (dst : Int) : Except SudoRt.Trap (Int) :=
 
 def start_calling (b : Board) : Except SudoRt.Trap (Board) :=
   do
-    let c := b
-    let _t1582 ← (if (decide ((c).sudo_5Board_11cursor_home < (0 : Int))) then (do
-  let _t1583 ← SudoRt.atL (c).sudo_5Board_3row (c).sudo_5Board_12calling_hole
-  pure (SudoRt.SEq.beq _t1583 (0 : Int))) else pure false)
-    let _as1585 ← SudoRt.sudoAssert _t1582 1115
-    let _t1586 ← plan_dst c
-    let dsts := _t1586
-    let _t1599 ← SudoRt.subI (SudoRt.listLen dsts) (1 : Int)
+    let _t1580 ← SudoRt.atL (b).sudo_5Board_3row (b).sudo_5Board_12calling_hole
+    let _as1581 ← SudoRt.sudoAssertEq _t1580 (0 : Int) 1110
+    let _t1582 ← plan_dst b
+    let dsts := _t1582
+    let _t1595 ← SudoRt.subI (SudoRt.listLen dsts) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1599
+    let _toV := _t1595
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1613 := (_fromV, c)
-    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1613 fuel (fun σ =>
+    let _init1600 := (_fromV, b)
+    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1600 fuel (fun σ =>
     let k := σ.1
-    let c := σ.2
+    let b := σ.2
     do
       if k > _toV then
-        pure (SudoRt.Flow.brk (ρ := Board) (k, c))
+        pure (SudoRt.Flow.brk (ρ := Board) (k, b))
       else
         match ← ((do
-  let _t1588 ← SudoRt.atL dsts k
-  let _t1589 ← SudoRt.atL (c).sudo_5Board_4held _t1588
-  if _t1589 then
+  let _t1584 ← SudoRt.atL dsts k
+  let _t1585 ← SudoRt.atL (b).sudo_5Board_4held _t1584
+  if _t1585 then
     do
-      let _t1590 ← SudoRt.atL dsts k
-      let _t1591 ← SudoRt.atL (c).sudo_5Board_4home _t1590
-      let _t1592 ← npeg _t1591
-      let _t1593 ← SudoRt.addI ((c).sudo_5Board_4cost).sudo_5Costs_13stale_cleared _t1592
-      let _t1594 := { (c).sudo_5Board_4cost with sudo_5Costs_13stale_cleared := _t1593 }
-      let _t1595 := { c with sudo_5Board_4cost := _t1594 }
-      let c := _t1595
-      let _t1596 ← SudoRt.atL dsts k
-      let _io1597 ← clear c _t1596
-      let c := _io1597
-      pure (SudoRt.Flow.cont (ρ := Board) c)
+      let _t1586 ← SudoRt.atL dsts k
+      let _t1587 ← SudoRt.atL (b).sudo_5Board_4home _t1586
+      let _t1588 ← npeg _t1587
+      let _t1589 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_13stale_cleared _t1588
+      let _t1590 := { (b).sudo_5Board_4cost with sudo_5Costs_13stale_cleared := _t1589 }
+      let _t1591 := { b with sudo_5Board_4cost := _t1590 }
+      let b := _t1591
+      let _t1592 ← SudoRt.atL dsts k
+      let _io1593 ← clear b _t1592
+      let b := _io1593
+      pure (SudoRt.Flow.cont (ρ := Board) b)
   else
     do
-      pure (SudoRt.Flow.cont (ρ := Board) c)) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
+      pure (SudoRt.Flow.cont (ρ := Board) b)) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) (k, _fs))
         | .cont _fs => do
@@ -4272,74 +4265,52 @@ def start_calling (b : Board) : Except SudoRt.Trap (Board) :=
             else do
               let i' ← SudoRt.addI k (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Board) (i', _fs))) (fun σ =>
-    let c := σ.2
+    let b := σ.2
     do
-      let _io1600 ← set_control c (c).sudo_5Board_12calling_hole (1 : Int)
-      let c := _io1600
-      let _t1601 ← SudoRt.addI ((c).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-      let _t1602 := { (c).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1601 }
-      let _t1603 := { c with sudo_5Board_4cost := _t1602 }
-      let c := _t1603
-      let _t1604 ← SudoRt.atL dsts (0 : Int)
-      let _t1605 := { c with sudo_5Board_11cursor_home := _t1604 }
-      let c := _t1605
-      let _t1606 := { c with sudo_5Board_11cursor_hole := (0 : Int) }
-      let c := _t1606
-      let _t1607 ← SudoRt.addI ((c).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-      let _t1608 := { (c).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1607 }
-      let _t1609 := { c with sudo_5Board_4cost := _t1608 }
-      let c := _t1609
-      let _t1610 ← SudoRt.addI ((c).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-      let _t1611 := { (c).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1610 }
-      let _t1612 := { c with sudo_5Board_4cost := _t1611 }
-      let c := _t1612
-      pure c) (fun r => pure r))
+      let _io1596 ← set_control b (b).sudo_5Board_12calling_hole (1 : Int)
+      let b := _io1596
+      let _t1597 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
+      let _t1598 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1597 }
+      let _t1599 := { b with sudo_5Board_4cost := _t1598 }
+      let b := _t1599
+      pure b) (fun r => pure r))
     pure _out
 
-def call_step («rec» : Board) (sender : Board) : Except SudoRt.Trap (Board) :=
+def call_hole (b : Board) (sender : Board) (dst : Int) (i : Int) : Except SudoRt.Trap (Board) :=
   do
-    let b := «rec»
-    let _t1615 ← SudoRt.atL (b).sudo_5Board_3row (b).sudo_5Board_12calling_hole
-    let _t1617 ← (if (SudoRt.SEq.beq _t1615 (1 : Int)) then (do
-  pure (decide ((b).sudo_5Board_11cursor_home ≥ (0 : Int)))) else pure false)
-    let _as1619 ← SudoRt.sudoAssert _t1617 1136
-    let _t1620 ← plan_dst b
-    let dsts := _t1620
-    let dst := (b).sudo_5Board_11cursor_home
-    let i := (b).sudo_5Board_11cursor_hole
-    let _t1621 ← plan_src dst
-    let src := _t1621
+    let _t1602 ← plan_src dst
+    let src := _t1602
     if (SudoRt.SEq.beq i (0 : Int)) then
       do
-        let _t1623 ← need_empty b dst
-        let _u1624 := _t1623
-        let _ix1625 := dst
-        let _t1626 ← SudoRt.filledL ((b).sudo_5Board_1t).sudo_4Tier_1n (0 : Int)
-        let _t1627 ← SudoRt.putL (b).sudo_5Board_4home _ix1625 _t1626
-        let _t1628 := { b with sudo_5Board_4home := _t1627 }
-        let b := _t1628
-        let _ix1629 := dst
-        let _t1630 ← SudoRt.putL (b).sudo_5Board_4held _ix1629 true
-        let _t1631 := { b with sudo_5Board_4held := _t1630 }
-        let b := _t1631
-        let _io1632 ← note_peak b
-        let b := _io1632
-        let _t1633 ← SudoRt.atL (b).sudo_5Board_4home dst
-        let v := _t1633
-        let _t1637 ← SudoRt.subI ((b).sudo_5Board_1t).sudo_4Tier_1n (1 : Int)
+        let _t1604 ← need_empty b dst
+        let _u1605 := _t1604
+        let _ix1606 := dst
+        let _t1607 ← SudoRt.filledL ((b).sudo_5Board_1t).sudo_4Tier_1n (0 : Int)
+        let _t1608 ← SudoRt.putL (b).sudo_5Board_4home _ix1606 _t1607
+        let _t1609 := { b with sudo_5Board_4home := _t1608 }
+        let b := _t1609
+        let _ix1610 := dst
+        let _t1611 ← SudoRt.putL (b).sudo_5Board_4held _ix1610 true
+        let _t1612 := { b with sudo_5Board_4held := _t1611 }
+        let b := _t1612
+        let _io1613 ← note_peak b
+        let b := _io1613
+        let _t1614 ← SudoRt.atL (b).sudo_5Board_4home dst
+        let v := _t1614
+        let _t1618 ← SudoRt.subI ((b).sudo_5Board_1t).sudo_4Tier_1n (1 : Int)
         let _fromV := i
-        let _toV := _t1637
+        let _toV := _t1618
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init1743 := _fromV
-        let _out ← (SudoRt.runLoopOn (ρ := Board) _init1743 fuel (fun σ =>
+        let _init1658 := _fromV
+        let _out ← (SudoRt.runLoopOn (ρ := Board) _init1658 fuel (fun σ =>
     let j := σ
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := Board) j)
       else
         match ← ((do
-  let _t1635 ← SudoRt.atL v j
-  let _as1636 ← SudoRt.sudoAssertEq _t1635 (0 : Int) 1148
+  let _t1616 ← SudoRt.atL v j
+  let _as1617 ← SudoRt.sudoAssertEq _t1616 (0 : Int) 1132
   pure (SudoRt.Flow.cont (ρ := Board) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) j)
@@ -4350,24 +4321,24 @@ def call_step («rec» : Board) (sender : Board) : Except SudoRt.Trap (Board) :=
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Board) i')) (fun σ =>
     do
-      let _t1638 ← coordinate (b).sudo_5Board_1t src i
-      let hole := _t1638
-      let _as1640 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (hole).sudo_4Hole_3row (9 : Int))) 1150
-      let _as1642 ← SudoRt.sudoAssert (decide ((hole).sudo_4Hole_4grid ≤ ((b).sudo_5Board_1t).sudo_4Tier_7geowork)) 1151
-      let _t1648 ← SudoRt.subI (SudoRt.listLen ((b).sudo_5Board_1t).sudo_4Tier_6geokey) (1 : Int)
+      let _t1619 ← coordinate (b).sudo_5Board_1t src i
+      let hole := _t1619
+      let _as1621 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (hole).sudo_4Hole_3row (9 : Int))) 1134
+      let _as1623 ← SudoRt.sudoAssert (decide ((hole).sudo_4Hole_4grid ≤ ((b).sudo_5Board_1t).sudo_4Tier_7geowork)) 1135
+      let _t1629 ← SudoRt.subI (SudoRt.listLen ((b).sudo_5Board_1t).sudo_4Tier_6geokey) (1 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t1648
+      let _toV := _t1629
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1742 := _fromV
-      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1742 fuel (fun σ =>
+      let _init1657 := _fromV
+      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1657 fuel (fun σ =>
     let j := σ
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := Board) j)
       else
         match ← ((do
-  let _t1644 ← SudoRt.atL ((b).sudo_5Board_1t).sudo_4Tier_6geokey j
-  let _as1646 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (hole).sudo_4Hole_4grid _t1644)) 1153
+  let _t1625 ← SudoRt.atL ((b).sudo_5Board_1t).sudo_4Tier_6geokey j
+  let _as1627 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (hole).sudo_4Hole_4grid _t1625)) 1137
   pure (SudoRt.Flow.cont (ρ := Board) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) j)
@@ -4378,174 +4349,68 @@ def call_step («rec» : Board) (sender : Board) : Except SudoRt.Trap (Board) :=
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Board) i')) (fun σ =>
     do
-      let _t1649 ← SudoRt.atL (sender).sudo_5Board_4held src
-      let _as1650 ← SudoRt.sudoAssert _t1649 1154
-      let _t1651 ← SudoRt.atL (sender).sudo_5Board_4home src
-      let _t1652 ← SudoRt.atL _t1651 i
-      let answer := _t1652
+      let _t1630 ← SudoRt.atL (sender).sudo_5Board_4held src
+      let _as1631 ← SudoRt.sudoAssert _t1630 1138
+      let _t1632 ← SudoRt.atL (sender).sudo_5Board_4home src
+      let _t1633 ← SudoRt.atL _t1632 i
+      let answer := _t1633
       if (!(SudoRt.SEq.beq answer (0 : Int))) then
         do
-          let _ix1654 := i
-          let _t1655 ← SudoRt.putL v _ix1654 answer
-          let v := _t1655
-          let _t1656 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
-          let _t1657 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1656 }
-          let _t1658 := { b with sudo_5Board_4cost := _t1657 }
-          let b := _t1658
-          let _ix1659 := dst
-          let _t1660 ← SudoRt.putL (b).sudo_5Board_4home _ix1659 v
-          let _t1661 := { b with sudo_5Board_4home := _t1660 }
-          let b := _t1661
-          let _t1662 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5calls (1 : Int)
-          let _t1663 := { (b).sudo_5Board_4cost with sudo_5Costs_5calls := _t1662 }
-          let _t1664 := { b with sudo_5Board_4cost := _t1663 }
-          let b := _t1664
-          let _mb1665 := SudoRt.appendL (b).sudo_5Board_3log ({ sudo_4Call_3dst := dst, sudo_4Call_3src := src, sudo_4Call_4hole := i, sudo_4Call_4grid := (hole).sudo_4Hole_4grid, sudo_4Call_3row := (hole).sudo_4Hole_3row, sudo_4Call_3col := (hole).sudo_4Hole_3col } : Call)
-          let ⟨_nr1666, _⟩ := _mb1665
-          let _t1667 := { b with sudo_5Board_3log := _nr1666 }
-          let b := _t1667
-          let _hm1614 := ()
-          let _u1668 := _hm1614
-          let _t1669 ← SudoRt.addI i (1 : Int)
-          let _t1679 ← SudoRt.atL dsts (0 : Int)
-          if (decide (_t1669 < ((b).sudo_5Board_1t).sudo_4Tier_1n)) then
-            do
-              let _t1671 ← SudoRt.addI i (1 : Int)
-              let _t1672 := { b with sudo_5Board_11cursor_hole := _t1671 }
-              let b := _t1672
-              let _t1673 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-              let _t1674 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1673 }
-              let _t1675 := { b with sudo_5Board_4cost := _t1674 }
-              let b := _t1675
-              let _t1676 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-              let _t1677 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1676 }
-              let _t1678 := { b with sudo_5Board_4cost := _t1677 }
-              let b := _t1678
-              pure b
-          else
-            do
-              if (SudoRt.SEq.beq dst _t1679) then
-                do
-                  let _t1681 ← SudoRt.atL dsts (1 : Int)
-                  let _t1682 := { b with sudo_5Board_11cursor_home := _t1681 }
-                  let b := _t1682
-                  let _t1683 := { b with sudo_5Board_11cursor_hole := (0 : Int) }
-                  let b := _t1683
-                  let _t1684 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1685 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1684 }
-                  let _t1686 := { b with sudo_5Board_4cost := _t1685 }
-                  let b := _t1686
-                  let _t1687 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-                  let _t1688 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1687 }
-                  let _t1689 := { b with sudo_5Board_4cost := _t1688 }
-                  let b := _t1689
-                  pure b
-              else
-                do
-                  let _t1690 ← SudoRt.negI (1 : Int)
-                  let _t1691 := { b with sudo_5Board_11cursor_home := _t1690 }
-                  let b := _t1691
-                  let _io1692 ← set_control b (b).sudo_5Board_12calling_hole (0 : Int)
-                  let b := _io1692
-                  let _t1693 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1694 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1693 }
-                  let _t1695 := { b with sudo_5Board_4cost := _t1694 }
-                  let b := _t1695
-                  let _t1696 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1697 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1696 }
-                  let _t1698 := { b with sudo_5Board_4cost := _t1697 }
-                  let b := _t1698
-                  let _t1699 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-                  let _t1700 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1699 }
-                  let _t1701 := { b with sudo_5Board_4cost := _t1700 }
-                  let b := _t1701
-                  pure b
+          let _ix1635 := i
+          let _t1636 ← SudoRt.putL v _ix1635 answer
+          let v := _t1636
+          let _t1637 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t1638 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1637 }
+          let _t1639 := { b with sudo_5Board_4cost := _t1638 }
+          let b := _t1639
+          let _ix1640 := dst
+          let _t1641 ← SudoRt.putL (b).sudo_5Board_4home _ix1640 v
+          let _t1642 := { b with sudo_5Board_4home := _t1641 }
+          let b := _t1642
+          let _t1643 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5calls (1 : Int)
+          let _t1644 := { (b).sudo_5Board_4cost with sudo_5Costs_5calls := _t1643 }
+          let _t1645 := { b with sudo_5Board_4cost := _t1644 }
+          let b := _t1645
+          let _mb1646 := SudoRt.appendL (b).sudo_5Board_3log ({ sudo_4Call_3dst := dst, sudo_4Call_3src := src, sudo_4Call_4hole := i, sudo_4Call_4grid := (hole).sudo_4Hole_4grid, sudo_4Call_3row := (hole).sudo_4Hole_3row, sudo_4Call_3col := (hole).sudo_4Hole_3col } : Call)
+          let ⟨_nr1647, _⟩ := _mb1646
+          let _t1648 := { b with sudo_5Board_3log := _nr1647 }
+          let b := _t1648
+          let _hm1601 := ()
+          let _u1649 := _hm1601
+          pure b
       else
         do
-          let _t1702 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5calls (1 : Int)
-          let _t1703 := { (b).sudo_5Board_4cost with sudo_5Costs_5calls := _t1702 }
-          let _t1704 := { b with sudo_5Board_4cost := _t1703 }
-          let b := _t1704
-          let _mb1705 := SudoRt.appendL (b).sudo_5Board_3log ({ sudo_4Call_3dst := dst, sudo_4Call_3src := src, sudo_4Call_4hole := i, sudo_4Call_4grid := (hole).sudo_4Hole_4grid, sudo_4Call_3row := (hole).sudo_4Hole_3row, sudo_4Call_3col := (hole).sudo_4Hole_3col } : Call)
-          let ⟨_nr1706, _⟩ := _mb1705
-          let _t1707 := { b with sudo_5Board_3log := _nr1706 }
-          let b := _t1707
-          let _hm1614 := ()
-          let _u1708 := _hm1614
-          let _t1709 ← SudoRt.addI i (1 : Int)
-          let _t1719 ← SudoRt.atL dsts (0 : Int)
-          if (decide (_t1709 < ((b).sudo_5Board_1t).sudo_4Tier_1n)) then
-            do
-              let _t1711 ← SudoRt.addI i (1 : Int)
-              let _t1712 := { b with sudo_5Board_11cursor_hole := _t1711 }
-              let b := _t1712
-              let _t1713 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-              let _t1714 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1713 }
-              let _t1715 := { b with sudo_5Board_4cost := _t1714 }
-              let b := _t1715
-              let _t1716 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-              let _t1717 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1716 }
-              let _t1718 := { b with sudo_5Board_4cost := _t1717 }
-              let b := _t1718
-              pure b
-          else
-            do
-              if (SudoRt.SEq.beq dst _t1719) then
-                do
-                  let _t1721 ← SudoRt.atL dsts (1 : Int)
-                  let _t1722 := { b with sudo_5Board_11cursor_home := _t1721 }
-                  let b := _t1722
-                  let _t1723 := { b with sudo_5Board_11cursor_hole := (0 : Int) }
-                  let b := _t1723
-                  let _t1724 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1725 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1724 }
-                  let _t1726 := { b with sudo_5Board_4cost := _t1725 }
-                  let b := _t1726
-                  let _t1727 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-                  let _t1728 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1727 }
-                  let _t1729 := { b with sudo_5Board_4cost := _t1728 }
-                  let b := _t1729
-                  pure b
-              else
-                do
-                  let _t1730 ← SudoRt.negI (1 : Int)
-                  let _t1731 := { b with sudo_5Board_11cursor_home := _t1730 }
-                  let b := _t1731
-                  let _io1732 ← set_control b (b).sudo_5Board_12calling_hole (0 : Int)
-                  let b := _io1732
-                  let _t1733 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1734 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1733 }
-                  let _t1735 := { b with sudo_5Board_4cost := _t1734 }
-                  let b := _t1735
-                  let _t1736 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1737 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1736 }
-                  let _t1738 := { b with sudo_5Board_4cost := _t1737 }
-                  let b := _t1738
-                  let _t1739 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-                  let _t1740 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1739 }
-                  let _t1741 := { b with sudo_5Board_4cost := _t1740 }
-                  let b := _t1741
-                  pure b) (fun r => pure r))
+          let _t1650 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5calls (1 : Int)
+          let _t1651 := { (b).sudo_5Board_4cost with sudo_5Costs_5calls := _t1650 }
+          let _t1652 := { b with sudo_5Board_4cost := _t1651 }
+          let b := _t1652
+          let _mb1653 := SudoRt.appendL (b).sudo_5Board_3log ({ sudo_4Call_3dst := dst, sudo_4Call_3src := src, sudo_4Call_4hole := i, sudo_4Call_4grid := (hole).sudo_4Hole_4grid, sudo_4Call_3row := (hole).sudo_4Hole_3row, sudo_4Call_3col := (hole).sudo_4Hole_3col } : Call)
+          let ⟨_nr1654, _⟩ := _mb1653
+          let _t1655 := { b with sudo_5Board_3log := _nr1654 }
+          let b := _t1655
+          let _hm1601 := ()
+          let _u1656 := _hm1601
+          pure b) (fun r => pure r))
       pure _out) (fun r => pure r))
         pure _out
     else
       do
-        let _t1744 ← SudoRt.atL (b).sudo_5Board_4home dst
-        let v := _t1744
-        let _t1748 ← SudoRt.subI ((b).sudo_5Board_1t).sudo_4Tier_1n (1 : Int)
+        let _t1659 ← SudoRt.atL (b).sudo_5Board_4home dst
+        let v := _t1659
+        let _t1663 ← SudoRt.subI ((b).sudo_5Board_1t).sudo_4Tier_1n (1 : Int)
         let _fromV := i
-        let _toV := _t1748
+        let _toV := _t1663
         let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-        let _init1854 := _fromV
-        let _out ← (SudoRt.runLoopOn (ρ := Board) _init1854 fuel (fun σ =>
+        let _init1703 := _fromV
+        let _out ← (SudoRt.runLoopOn (ρ := Board) _init1703 fuel (fun σ =>
     let j := σ
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := Board) j)
       else
         match ← ((do
-  let _t1746 ← SudoRt.atL v j
-  let _as1747 ← SudoRt.sudoAssertEq _t1746 (0 : Int) 1148
+  let _t1661 ← SudoRt.atL v j
+  let _as1662 ← SudoRt.sudoAssertEq _t1661 (0 : Int) 1132
   pure (SudoRt.Flow.cont (ρ := Board) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) j)
@@ -4556,24 +4421,24 @@ def call_step («rec» : Board) (sender : Board) : Except SudoRt.Trap (Board) :=
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Board) i')) (fun σ =>
     do
-      let _t1749 ← coordinate (b).sudo_5Board_1t src i
-      let hole := _t1749
-      let _as1751 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (hole).sudo_4Hole_3row (9 : Int))) 1150
-      let _as1753 ← SudoRt.sudoAssert (decide ((hole).sudo_4Hole_4grid ≤ ((b).sudo_5Board_1t).sudo_4Tier_7geowork)) 1151
-      let _t1759 ← SudoRt.subI (SudoRt.listLen ((b).sudo_5Board_1t).sudo_4Tier_6geokey) (1 : Int)
+      let _t1664 ← coordinate (b).sudo_5Board_1t src i
+      let hole := _t1664
+      let _as1666 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (hole).sudo_4Hole_3row (9 : Int))) 1134
+      let _as1668 ← SudoRt.sudoAssert (decide ((hole).sudo_4Hole_4grid ≤ ((b).sudo_5Board_1t).sudo_4Tier_7geowork)) 1135
+      let _t1674 ← SudoRt.subI (SudoRt.listLen ((b).sudo_5Board_1t).sudo_4Tier_6geokey) (1 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t1759
+      let _toV := _t1674
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1853 := _fromV
-      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1853 fuel (fun σ =>
+      let _init1702 := _fromV
+      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1702 fuel (fun σ =>
     let j := σ
     do
       if j > _toV then
         pure (SudoRt.Flow.brk (ρ := Board) j)
       else
         match ← ((do
-  let _t1755 ← SudoRt.atL ((b).sudo_5Board_1t).sudo_4Tier_6geokey j
-  let _as1757 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (hole).sudo_4Hole_4grid _t1755)) 1153
+  let _t1670 ← SudoRt.atL ((b).sudo_5Board_1t).sudo_4Tier_6geokey j
+  let _as1672 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq (hole).sudo_4Hole_4grid _t1670)) 1137
   pure (SudoRt.Flow.cont (ρ := Board) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) j)
@@ -4584,224 +4449,141 @@ def call_step («rec» : Board) (sender : Board) : Except SudoRt.Trap (Board) :=
               let i' ← SudoRt.addI j (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Board) i')) (fun σ =>
     do
-      let _t1760 ← SudoRt.atL (sender).sudo_5Board_4held src
-      let _as1761 ← SudoRt.sudoAssert _t1760 1154
-      let _t1762 ← SudoRt.atL (sender).sudo_5Board_4home src
-      let _t1763 ← SudoRt.atL _t1762 i
-      let answer := _t1763
+      let _t1675 ← SudoRt.atL (sender).sudo_5Board_4held src
+      let _as1676 ← SudoRt.sudoAssert _t1675 1138
+      let _t1677 ← SudoRt.atL (sender).sudo_5Board_4home src
+      let _t1678 ← SudoRt.atL _t1677 i
+      let answer := _t1678
       if (!(SudoRt.SEq.beq answer (0 : Int))) then
         do
-          let _ix1765 := i
-          let _t1766 ← SudoRt.putL v _ix1765 answer
-          let v := _t1766
-          let _t1767 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
-          let _t1768 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1767 }
-          let _t1769 := { b with sudo_5Board_4cost := _t1768 }
-          let b := _t1769
-          let _ix1770 := dst
-          let _t1771 ← SudoRt.putL (b).sudo_5Board_4home _ix1770 v
-          let _t1772 := { b with sudo_5Board_4home := _t1771 }
-          let b := _t1772
-          let _t1773 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5calls (1 : Int)
-          let _t1774 := { (b).sudo_5Board_4cost with sudo_5Costs_5calls := _t1773 }
-          let _t1775 := { b with sudo_5Board_4cost := _t1774 }
-          let b := _t1775
-          let _mb1776 := SudoRt.appendL (b).sudo_5Board_3log ({ sudo_4Call_3dst := dst, sudo_4Call_3src := src, sudo_4Call_4hole := i, sudo_4Call_4grid := (hole).sudo_4Hole_4grid, sudo_4Call_3row := (hole).sudo_4Hole_3row, sudo_4Call_3col := (hole).sudo_4Hole_3col } : Call)
-          let ⟨_nr1777, _⟩ := _mb1776
-          let _t1778 := { b with sudo_5Board_3log := _nr1777 }
-          let b := _t1778
-          let _hm1614 := ()
-          let _u1779 := _hm1614
-          let _t1780 ← SudoRt.addI i (1 : Int)
-          let _t1790 ← SudoRt.atL dsts (0 : Int)
-          if (decide (_t1780 < ((b).sudo_5Board_1t).sudo_4Tier_1n)) then
-            do
-              let _t1782 ← SudoRt.addI i (1 : Int)
-              let _t1783 := { b with sudo_5Board_11cursor_hole := _t1782 }
-              let b := _t1783
-              let _t1784 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-              let _t1785 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1784 }
-              let _t1786 := { b with sudo_5Board_4cost := _t1785 }
-              let b := _t1786
-              let _t1787 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-              let _t1788 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1787 }
-              let _t1789 := { b with sudo_5Board_4cost := _t1788 }
-              let b := _t1789
-              pure b
-          else
-            do
-              if (SudoRt.SEq.beq dst _t1790) then
-                do
-                  let _t1792 ← SudoRt.atL dsts (1 : Int)
-                  let _t1793 := { b with sudo_5Board_11cursor_home := _t1792 }
-                  let b := _t1793
-                  let _t1794 := { b with sudo_5Board_11cursor_hole := (0 : Int) }
-                  let b := _t1794
-                  let _t1795 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1796 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1795 }
-                  let _t1797 := { b with sudo_5Board_4cost := _t1796 }
-                  let b := _t1797
-                  let _t1798 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-                  let _t1799 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1798 }
-                  let _t1800 := { b with sudo_5Board_4cost := _t1799 }
-                  let b := _t1800
-                  pure b
-              else
-                do
-                  let _t1801 ← SudoRt.negI (1 : Int)
-                  let _t1802 := { b with sudo_5Board_11cursor_home := _t1801 }
-                  let b := _t1802
-                  let _io1803 ← set_control b (b).sudo_5Board_12calling_hole (0 : Int)
-                  let b := _io1803
-                  let _t1804 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1805 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1804 }
-                  let _t1806 := { b with sudo_5Board_4cost := _t1805 }
-                  let b := _t1806
-                  let _t1807 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1808 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1807 }
-                  let _t1809 := { b with sudo_5Board_4cost := _t1808 }
-                  let b := _t1809
-                  let _t1810 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-                  let _t1811 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1810 }
-                  let _t1812 := { b with sudo_5Board_4cost := _t1811 }
-                  let b := _t1812
-                  pure b
+          let _ix1680 := i
+          let _t1681 ← SudoRt.putL v _ix1680 answer
+          let v := _t1681
+          let _t1682 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t1683 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1682 }
+          let _t1684 := { b with sudo_5Board_4cost := _t1683 }
+          let b := _t1684
+          let _ix1685 := dst
+          let _t1686 ← SudoRt.putL (b).sudo_5Board_4home _ix1685 v
+          let _t1687 := { b with sudo_5Board_4home := _t1686 }
+          let b := _t1687
+          let _t1688 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5calls (1 : Int)
+          let _t1689 := { (b).sudo_5Board_4cost with sudo_5Costs_5calls := _t1688 }
+          let _t1690 := { b with sudo_5Board_4cost := _t1689 }
+          let b := _t1690
+          let _mb1691 := SudoRt.appendL (b).sudo_5Board_3log ({ sudo_4Call_3dst := dst, sudo_4Call_3src := src, sudo_4Call_4hole := i, sudo_4Call_4grid := (hole).sudo_4Hole_4grid, sudo_4Call_3row := (hole).sudo_4Hole_3row, sudo_4Call_3col := (hole).sudo_4Hole_3col } : Call)
+          let ⟨_nr1692, _⟩ := _mb1691
+          let _t1693 := { b with sudo_5Board_3log := _nr1692 }
+          let b := _t1693
+          let _hm1601 := ()
+          let _u1694 := _hm1601
+          pure b
       else
         do
-          let _t1813 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5calls (1 : Int)
-          let _t1814 := { (b).sudo_5Board_4cost with sudo_5Costs_5calls := _t1813 }
-          let _t1815 := { b with sudo_5Board_4cost := _t1814 }
-          let b := _t1815
-          let _mb1816 := SudoRt.appendL (b).sudo_5Board_3log ({ sudo_4Call_3dst := dst, sudo_4Call_3src := src, sudo_4Call_4hole := i, sudo_4Call_4grid := (hole).sudo_4Hole_4grid, sudo_4Call_3row := (hole).sudo_4Hole_3row, sudo_4Call_3col := (hole).sudo_4Hole_3col } : Call)
-          let ⟨_nr1817, _⟩ := _mb1816
-          let _t1818 := { b with sudo_5Board_3log := _nr1817 }
-          let b := _t1818
-          let _hm1614 := ()
-          let _u1819 := _hm1614
-          let _t1820 ← SudoRt.addI i (1 : Int)
-          let _t1830 ← SudoRt.atL dsts (0 : Int)
-          if (decide (_t1820 < ((b).sudo_5Board_1t).sudo_4Tier_1n)) then
-            do
-              let _t1822 ← SudoRt.addI i (1 : Int)
-              let _t1823 := { b with sudo_5Board_11cursor_hole := _t1822 }
-              let b := _t1823
-              let _t1824 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-              let _t1825 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1824 }
-              let _t1826 := { b with sudo_5Board_4cost := _t1825 }
-              let b := _t1826
-              let _t1827 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-              let _t1828 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1827 }
-              let _t1829 := { b with sudo_5Board_4cost := _t1828 }
-              let b := _t1829
-              pure b
-          else
-            do
-              if (SudoRt.SEq.beq dst _t1830) then
-                do
-                  let _t1832 ← SudoRt.atL dsts (1 : Int)
-                  let _t1833 := { b with sudo_5Board_11cursor_home := _t1832 }
-                  let b := _t1833
-                  let _t1834 := { b with sudo_5Board_11cursor_hole := (0 : Int) }
-                  let b := _t1834
-                  let _t1835 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1836 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1835 }
-                  let _t1837 := { b with sudo_5Board_4cost := _t1836 }
-                  let b := _t1837
-                  let _t1838 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-                  let _t1839 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1838 }
-                  let _t1840 := { b with sudo_5Board_4cost := _t1839 }
-                  let b := _t1840
-                  pure b
-              else
-                do
-                  let _t1841 ← SudoRt.negI (1 : Int)
-                  let _t1842 := { b with sudo_5Board_11cursor_home := _t1841 }
-                  let b := _t1842
-                  let _io1843 ← set_control b (b).sudo_5Board_12calling_hole (0 : Int)
-                  let b := _io1843
-                  let _t1844 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1845 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1844 }
-                  let _t1846 := { b with sudo_5Board_4cost := _t1845 }
-                  let b := _t1846
-                  let _t1847 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
-                  let _t1848 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1847 }
-                  let _t1849 := { b with sudo_5Board_4cost := _t1848 }
-                  let b := _t1849
-                  let _t1850 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_12cursor_steps (1 : Int)
-                  let _t1851 := { (b).sudo_5Board_4cost with sudo_5Costs_12cursor_steps := _t1850 }
-                  let _t1852 := { b with sudo_5Board_4cost := _t1851 }
-                  let b := _t1852
-                  pure b) (fun r => pure r))
+          let _t1695 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5calls (1 : Int)
+          let _t1696 := { (b).sudo_5Board_4cost with sudo_5Costs_5calls := _t1695 }
+          let _t1697 := { b with sudo_5Board_4cost := _t1696 }
+          let b := _t1697
+          let _mb1698 := SudoRt.appendL (b).sudo_5Board_3log ({ sudo_4Call_3dst := dst, sudo_4Call_3src := src, sudo_4Call_4hole := i, sudo_4Call_4grid := (hole).sudo_4Hole_4grid, sudo_4Call_3row := (hole).sudo_4Hole_3row, sudo_4Call_3col := (hole).sudo_4Hole_3col } : Call)
+          let ⟨_nr1699, _⟩ := _mb1698
+          let _t1700 := { b with sudo_5Board_3log := _nr1699 }
+          let b := _t1700
+          let _hm1601 := ()
+          let _u1701 := _hm1601
+          pure b) (fun r => pure r))
       pure _out) (fun r => pure r))
         pure _out
 
-def call_session (b : Board) (sender : Board) : Except SudoRt.Trap (Board) :=
+def call_in («rec» : Board) (sender : Board) : Except SudoRt.Trap (Board) :=
   do
-    let _t1855 ← start_calling b
-    let b := _t1855
-    let _t1856 ← plan_dst b
-    let dsts := _t1856
-    let _t1857 ← SudoRt.mulI (2 : Int) ((b).sudo_5Board_1t).sudo_4Tier_1n
-    let total := _t1857
-    let k := (0 : Int)
-    let _fromV := (1 : Int)
-    let _toV := total
+    let b := «rec»
+    let _io1704 ← start_calling b
+    let b := _io1704
+    let _t1705 ← plan_dst b
+    let dsts := _t1705
+    let _fromV := (0 : Int)
+    let _toV := (1 : Int)
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1878 := (_fromV, (b, k))
-    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1878 fuel (fun σ =>
-    let step := σ.1
-    let b := σ.2.1
-    let _sp1876 := σ.2.2
-    let k := _sp1876
+    let _init1716 := (_fromV, b)
+    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1716 fuel (fun σ =>
+    let d := σ.1
+    let b := σ.2
     do
-      if step > _toV then
-        pure (SudoRt.Flow.brk (ρ := Board) (step, (b, k)))
+      if d > _toV then
+        pure (SudoRt.Flow.brk (ρ := Board) (d, b))
       else
         match ← ((do
-  let _t1859 ← SudoRt.atL (b).sudo_5Board_3row (b).sudo_5Board_12calling_hole
-  if (!(SudoRt.SEq.beq _t1859 (1 : Int))) then
+  let _t1710 ← SudoRt.subI ((b).sudo_5Board_1t).sudo_4Tier_1n (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t1710
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init1711 := (_fromV, b)
+  let _out ← (SudoRt.runLoopOn (ρ := Board) _init1711 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2
     do
-      pure (SudoRt.Flow.brk (ρ := Board) (b, k))
-  else
-    do
-      let _t1861 ← call_step b sender
-      let b := _t1861
-      let _t1862 ← SudoRt.addI k (1 : Int)
-      let k := _t1862
-      pure (SudoRt.Flow.cont (ρ := Board) (b, k))) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Board) (i, b))
+      else
+        match ← ((do
+  let _t1708 ← SudoRt.atL dsts d
+  let _io1709 ← call_hole b sender _t1708 i
+  let b := _io1709
+  pure (SudoRt.Flow.cont (ρ := Board) b)) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
-        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) (step, _fs))
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) (i, _fs))
         | .cont _fs => do
-            if step == _toV then
-              pure (SudoRt.Flow.brk (ρ := Board) (step, _fs))
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Board) (i, _fs))
             else do
-              let i' ← SudoRt.addI step (1 : Int)
+              let i' ← SudoRt.addI i (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Board) (i', _fs))) (fun σ =>
-    let b := σ.2.1
-    let _sp1877 := σ.2.2
-    let k := _sp1877
+    let b := σ.2
     do
-      let _t1864 ← (if (SudoRt.SEq.beq k total) then (do
-  let _t1865 ← SudoRt.atL (b).sudo_5Board_3row (b).sudo_5Board_12calling_hole
-  pure (SudoRt.SEq.beq _t1865 (0 : Int))) else pure false)
-      let _as1867 ← SudoRt.sudoAssert _t1864 1187
-      let _fromV := (0 : Int)
-      let _toV := (1 : Int)
-      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init1875 := _fromV
-      let _out ← (SudoRt.runLoopOn (ρ := Board) _init1875 fuel (fun σ =>
+      pure (SudoRt.Flow.cont (ρ := Board) b)) (fun r => pure (SudoRt.Flow.ret (ρ := Board) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) (d, _fs))
+        | .cont _fs => do
+            if d == _toV then
+              pure (SudoRt.Flow.brk (ρ := Board) (d, _fs))
+            else do
+              let i' ← SudoRt.addI d (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Board) (i', _fs))) (fun σ =>
+    let b := σ.2
+    do
+      let _io1712 ← set_control b (b).sudo_5Board_12calling_hole (0 : Int)
+      let b := _io1712
+      let _t1713 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
+      let _t1714 := { (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t1713 }
+      let _t1715 := { b with sudo_5Board_4cost := _t1714 }
+      let b := _t1715
+      pure b) (fun r => pure r))
+    pure _out
+
+def call_session (b : Board) (sender : Board) : Except SudoRt.Trap (Board) :=
+  do
+    let _t1717 ← call_in b sender
+    let b := _t1717
+    let _t1718 ← plan_dst b
+    let dsts := _t1718
+    let _fromV := (0 : Int)
+    let _toV := (1 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init1726 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := Board) _init1726 fuel (fun σ =>
     let d := σ
     do
       if d > _toV then
         pure (SudoRt.Flow.brk (ρ := Board) d)
       else
         match ← ((do
-  let _t1869 ← SudoRt.atL dsts d
-  let _t1870 ← SudoRt.atL (b).sudo_5Board_4home _t1869
-  let _t1871 ← SudoRt.atL dsts d
-  let _t1872 ← plan_src _t1871
-  let _t1873 ← SudoRt.atL (sender).sudo_5Board_4home _t1872
-  let _as1874 ← SudoRt.sudoAssertEq _t1870 _t1873 1189
+  let _t1720 ← SudoRt.atL dsts d
+  let _t1721 ← SudoRt.atL (b).sudo_5Board_4home _t1720
+  let _t1722 ← SudoRt.atL dsts d
+  let _t1723 ← plan_src _t1722
+  let _t1724 ← SudoRt.atL (sender).sudo_5Board_4home _t1723
+  let _as1725 ← SudoRt.sudoAssertEq _t1721 _t1724 1166
   pure (SudoRt.Flow.cont (ρ := Board) ())) : Except SudoRt.Trap (SudoRt.Flow _ (Board))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Board) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Board) d)
@@ -4813,69 +4595,68 @@ def call_session (b : Board) (sender : Board) : Except SudoRt.Trap (Board) :=
               pure (SudoRt.Flow.cont (ρ := Board) i')) (fun σ =>
     do
       pure b) (fun r => pure r))
-      pure _out) (fun r => pure r))
     pure _out
 
 def fold_key (b : Board) : Except SudoRt.Trap ((Array (Int)) × (Board)) :=
   do
     let t := (b).sudo_5Board_1t
-    let _t1879 ← value b across
-    let x := _t1879
+    let _t1727 ← value b across
+    let x := _t1727
     let out := x
-    let _t1906 ← SudoRt.subI (SudoRt.listLen (t).sudo_4Tier_7foldsrc) (1 : Int)
+    let _t1754 ← SudoRt.subI (SudoRt.listLen (t).sudo_4Tier_7foldsrc) (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1906
+    let _toV := _t1754
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1911 := (_fromV, (out, b))
-    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Board)) _init1911 fuel (fun σ =>
+    let _init1759 := (_fromV, (out, b))
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Board)) _init1759 fuel (fun σ =>
     let p := σ.1
     let out := σ.2.1
-    let _sp1909 := σ.2.2
-    let b := _sp1909
+    let _sp1757 := σ.2.2
+    let b := _sp1757
     do
       if p > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board)) (p, (out, b)))
       else
         match ← ((do
-  let _t1901 ← SudoRt.subI (t).sudo_4Tier_1w (1 : Int)
+  let _t1749 ← SudoRt.subI (t).sudo_4Tier_1w (1 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t1901
+  let _toV := _t1749
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1904 := (_fromV, (out, b))
-  let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Board)) _init1904 fuel (fun σ =>
+  let _init1752 := (_fromV, (out, b))
+  let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Board)) _init1752 fuel (fun σ =>
     let c := σ.1
     let out := σ.2.1
-    let _sp1902 := σ.2.2
-    let b := _sp1902
+    let _sp1750 := σ.2.2
+    let b := _sp1750
     do
       if c > _toV then
         pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board)) (c, (out, b)))
       else
         match ← ((do
-  let _t1882 ← SudoRt.atL (t).sudo_4Tier_7foldsrc p
-  let _t1883 ← SudoRt.mulI _t1882 (t).sudo_4Tier_1w
-  let _t1884 ← SudoRt.addI _t1883 c
-  let i := _t1884
-  let _t1885 ← SudoRt.atL (t).sudo_4Tier_7folddst p
-  let _t1886 ← SudoRt.mulI _t1885 (t).sudo_4Tier_1w
-  let _t1887 ← SudoRt.addI _t1886 c
-  let j := _t1887
-  let _t1889 ← (if (decide (i < (t).sudo_4Tier_1n)) then (do
-  let _t1890 ← SudoRt.atL x i
-  pure (!(SudoRt.SEq.beq _t1890 (0 : Int)))) else pure false)
-  if _t1889 then
+  let _t1730 ← SudoRt.atL (t).sudo_4Tier_7foldsrc p
+  let _t1731 ← SudoRt.mulI _t1730 (t).sudo_4Tier_1w
+  let _t1732 ← SudoRt.addI _t1731 c
+  let i := _t1732
+  let _t1733 ← SudoRt.atL (t).sudo_4Tier_7folddst p
+  let _t1734 ← SudoRt.mulI _t1733 (t).sudo_4Tier_1w
+  let _t1735 ← SudoRt.addI _t1734 c
+  let j := _t1735
+  let _t1737 ← (if (decide (i < (t).sudo_4Tier_1n)) then (do
+  let _t1738 ← SudoRt.atL x i
+  pure (!(SudoRt.SEq.beq _t1738 (0 : Int)))) else pure false)
+  if _t1737 then
     do
-      let _ix1892 := j
-      let _t1893 ← SudoRt.atL out j
-      let _t1894 ← SudoRt.atL x i
-      let _t1895 ← SudoRt.addI _t1893 _t1894
-      let _t1896 ← SudoRt.modI _t1895 (3 : Int)
-      let _t1897 ← SudoRt.putL out _ix1892 _t1896
-      let out := _t1897
-      let _t1898 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
-      let _t1899 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1898 }
-      let _t1900 := { b with sudo_5Board_4cost := _t1899 }
-      let b := _t1900
+      let _ix1740 := j
+      let _t1741 ← SudoRt.atL out j
+      let _t1742 ← SudoRt.atL x i
+      let _t1743 ← SudoRt.addI _t1741 _t1742
+      let _t1744 ← SudoRt.modI _t1743 (3 : Int)
+      let _t1745 ← SudoRt.putL out _ix1740 _t1744
+      let out := _t1745
+      let _t1746 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t1747 := { (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t1746 }
+      let _t1748 := { b with sudo_5Board_4cost := _t1747 }
+      let b := _t1748
       pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board)) (out, b))
   else
     do
@@ -4889,8 +4670,8 @@ def fold_key (b : Board) : Except SudoRt.Trap ((Array (Int)) × (Board)) :=
               let i' ← SudoRt.addI c (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board)) (i', _fs))) (fun σ =>
     let out := σ.2.1
-    let _sp1903 := σ.2.2
-    let b := _sp1903
+    let _sp1751 := σ.2.2
+    let b := _sp1751
     do
       pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board)) (out, b))) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Board)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Board)))) with
@@ -4903,35 +4684,35 @@ def fold_key (b : Board) : Except SudoRt.Trap ((Array (Int)) × (Board)) :=
               let i' ← SudoRt.addI p (1 : Int)
               pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board)) (i', _fs))) (fun σ =>
     let out := σ.2.1
-    let _sp1910 := σ.2.2
-    let b := _sp1910
+    let _sp1758 := σ.2.2
+    let b := _sp1758
     do
-      let _t1907 ← SudoRt.mulI (t).sudo_4Tier_8keeprows (t).sudo_4Tier_1w
-      let _t1908 ← «prefix» out _t1907
-      pure (_t1908, b)) (fun r => pure r))
+      let _t1755 ← SudoRt.mulI (t).sudo_4Tier_8keeprows (t).sudo_4Tier_1w
+      let _t1756 ← «prefix» out _t1755
+      pure (_t1756, b)) (fun r => pure r))
     pure _out
 
 def keypad_first (face : Int) : Except SudoRt.Trap (Int) :=
   do
-    let _t1912 ← SudoRt.subI face (1 : Int)
-    let _t1913 ← SudoRt.divI _t1912 (3 : Int)
-    pure _t1913
+    let _t1760 ← SudoRt.subI face (1 : Int)
+    let _t1761 ← SudoRt.divI _t1760 (3 : Int)
+    pure _t1761
 
 def keypad_second (face : Int) : Except SudoRt.Trap (Int) :=
   do
-    let _t1914 ← SudoRt.subI face (1 : Int)
-    let _t1915 ← SudoRt.modI _t1914 (3 : Int)
-    pure _t1915
+    let _t1762 ← SudoRt.subI face (1 : Int)
+    let _t1763 ← SudoRt.modI _t1762 (3 : Int)
+    pure _t1763
 
 def roll_key (t : Tier) (faces : Array (Int)) : Except SudoRt.Trap (Option (Rolled)) :=
   do
     let next := (0 : Int)
-    let _t1953 ← SudoRt.addI (SudoRt.listLen faces) (1 : Int)
+    let _t1801 ← SudoRt.addI (SudoRt.listLen faces) (1 : Int)
     let _fromV := (1 : Int)
-    let _toV := _t1953
+    let _toV := _t1801
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init1954 := (_fromV, next)
-    let _out ← (SudoRt.runLoopOn (ρ := Option (Rolled)) _init1954 fuel (fun σ =>
+    let _init1802 := (_fromV, next)
+    let _out ← (SudoRt.runLoopOn (ρ := Option (Rolled)) _init1802 fuel (fun σ =>
     let attempt := σ.1
     let next := σ.2
     do
@@ -4939,48 +4720,48 @@ def roll_key (t : Tier) (faces : Array (Int)) : Except SudoRt.Trap (Option (Roll
         pure (SudoRt.Flow.brk (ρ := Option (Rolled)) (attempt, next))
       else
         match ← ((do
-  let _t1917 ← SudoRt.filledL (t).sudo_4Tier_5cells (0 : Int)
-  let cells := _t1917
-  let _t1945 ← SudoRt.addI (t).sudo_4Tier_5cells (1 : Int)
-  let _t1946 ← SudoRt.divI _t1945 (2 : Int)
-  let _t1947 ← SudoRt.subI _t1946 (1 : Int)
+  let _t1765 ← SudoRt.filledL (t).sudo_4Tier_5cells (0 : Int)
+  let cells := _t1765
+  let _t1793 ← SudoRt.addI (t).sudo_4Tier_5cells (1 : Int)
+  let _t1794 ← SudoRt.divI _t1793 (2 : Int)
+  let _t1795 ← SudoRt.subI _t1794 (1 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t1947
+  let _toV := _t1795
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1951 := (_fromV, (next, cells))
-  let _out ← (SudoRt.runLoopOn (ρ := Option (Rolled)) _init1951 fuel (fun σ =>
+  let _init1799 := (_fromV, (next, cells))
+  let _out ← (SudoRt.runLoopOn (ρ := Option (Rolled)) _init1799 fuel (fun σ =>
     let pair := σ.1
     let next := σ.2.1
-    let _sp1949 := σ.2.2
-    let cells := _sp1949
+    let _sp1797 := σ.2.2
+    let cells := _sp1797
     do
       if pair > _toV then
         pure (SudoRt.Flow.brk (ρ := Option (Rolled)) (pair, (next, cells)))
       else
         match ← ((do
   let face := (0 : Int)
-  let _t1928 ← SudoRt.subI (SudoRt.listLen faces) (1 : Int)
+  let _t1776 ← SudoRt.subI (SudoRt.listLen faces) (1 : Int)
   let _fromV := next
-  let _toV := _t1928
+  let _toV := _t1776
   let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-  let _init1944 := (_fromV, (face, next))
-  let _out ← (SudoRt.runLoopOn (ρ := Option (Rolled)) _init1944 fuel (fun σ =>
+  let _init1792 := (_fromV, (face, next))
+  let _out ← (SudoRt.runLoopOn (ρ := Option (Rolled)) _init1792 fuel (fun σ =>
     let f := σ.1
     let face := σ.2.1
-    let _sp1942 := σ.2.2
-    let next := _sp1942
+    let _sp1790 := σ.2.2
+    let next := _sp1790
     do
       if f > _toV then
         pure (SudoRt.Flow.brk (ρ := Option (Rolled)) (f, (face, next)))
       else
         match ← ((do
-  let _t1920 ← SudoRt.atL faces f
-  let face := _t1920
-  let _t1921 ← SudoRt.addI f (1 : Int)
-  let next := _t1921
-  let _t1923 ← (if (decide (face ≥ (0 : Int))) then (do
+  let _t1768 ← SudoRt.atL faces f
+  let face := _t1768
+  let _t1769 ← SudoRt.addI f (1 : Int)
+  let next := _t1769
+  let _t1771 ← (if (decide (face ≥ (0 : Int))) then (do
   pure (decide (face ≤ (9 : Int)))) else pure false)
-  let _as1925 ← SudoRt.sudoAssert _t1923 1239
+  let _as1773 ← SudoRt.sudoAssert _t1771 1216
   if (!(SudoRt.SEq.beq face (0 : Int))) then
     do
       pure (SudoRt.Flow.brk (ρ := Option (Rolled)) (face, next))
@@ -4996,29 +4777,29 @@ def roll_key (t : Tier) (faces : Array (Int)) : Except SudoRt.Trap (Option (Roll
               let i' ← SudoRt.addI f (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Option (Rolled)) (i', _fs))) (fun σ =>
     let face := σ.2.1
-    let _sp1943 := σ.2.2
-    let next := _sp1943
+    let _sp1791 := σ.2.2
+    let next := _sp1791
     do
       if (SudoRt.SEq.beq face (0 : Int)) then
         do
           pure (SudoRt.Flow.ret (ρ := Option (Rolled)) (none : Option (Rolled)))
       else
         do
-          let _t1930 ← SudoRt.mulI (2 : Int) pair
-          let _ix1931 := _t1930
-          let _t1932 ← keypad_first face
-          let _t1933 ← SudoRt.putL cells _ix1931 _t1932
-          let cells := _t1933
-          let _t1934 ← SudoRt.mulI (2 : Int) pair
-          let _t1935 ← SudoRt.addI _t1934 (1 : Int)
-          if (decide (_t1935 < (t).sudo_4Tier_5cells)) then
+          let _t1778 ← SudoRt.mulI (2 : Int) pair
+          let _ix1779 := _t1778
+          let _t1780 ← keypad_first face
+          let _t1781 ← SudoRt.putL cells _ix1779 _t1780
+          let cells := _t1781
+          let _t1782 ← SudoRt.mulI (2 : Int) pair
+          let _t1783 ← SudoRt.addI _t1782 (1 : Int)
+          if (decide (_t1783 < (t).sudo_4Tier_5cells)) then
             do
-              let _t1937 ← SudoRt.mulI (2 : Int) pair
-              let _t1938 ← SudoRt.addI _t1937 (1 : Int)
-              let _ix1939 := _t1938
-              let _t1940 ← keypad_second face
-              let _t1941 ← SudoRt.putL cells _ix1939 _t1940
-              let cells := _t1941
+              let _t1785 ← SudoRt.mulI (2 : Int) pair
+              let _t1786 ← SudoRt.addI _t1785 (1 : Int)
+              let _ix1787 := _t1786
+              let _t1788 ← keypad_second face
+              let _t1789 ← SudoRt.putL cells _ix1787 _t1788
+              let cells := _t1789
               pure (SudoRt.Flow.cont (ρ := Option (Rolled)) (next, cells))
           else
             do
@@ -5033,11 +4814,11 @@ def roll_key (t : Tier) (faces : Array (Int)) : Except SudoRt.Trap (Option (Roll
               let i' ← SudoRt.addI pair (1 : Int)
               pure (SudoRt.Flow.cont (ρ := Option (Rolled)) (i', _fs))) (fun σ =>
     let next := σ.2.1
-    let _sp1950 := σ.2.2
-    let cells := _sp1950
+    let _sp1798 := σ.2.2
+    let cells := _sp1798
     do
-      let _t1948 ← is_empty cells
-      if (!( _t1948 )) then
+      let _t1796 ← is_empty cells
+      if (!( _t1796 )) then
         do
           pure (SudoRt.Flow.ret (ρ := Option (Rolled)) (some ({ sudo_6Rolled_5cells := cells, sudo_6Rolled_4used := next, sudo_6Rolled_5rolls := attempt } : Rolled)))
       else
@@ -5059,61 +4840,61 @@ def roll_key (t : Tier) (faces : Array (Int)) : Except SudoRt.Trap (Option (Roll
 
 def point_of (b : Board) (xh : Int) (yh : Int) : Except SudoRt.Trap (Point) :=
   do
-    let _t1955 ← value b xh
-    let _t1956 ← value b yh
-    pure ({ sudo_5Point_1x := _t1955, sudo_5Point_1y := _t1956 } : Point)
+    let _t1803 ← value b xh
+    let _t1804 ← value b yh
+    pure ({ sudo_5Point_1x := _t1803, sudo_5Point_1y := _t1804 } : Point)
 
 def publish (b : Board) (cells : Array (Int)) (p : Player) : Except SudoRt.Trap ((Bool) × (Board) × (Player)) :=
   do
-    let _io1957 ← begin_phase b ph_base_point
-    let b := _io1957
-    let _io1958 ← base_point b
-    let ⟨_ret1959, _iw01960⟩ := _io1958
-    let b := _iw01960
-    let _t1961 := { p with sudo_6Player_9base_hole := _ret1959 }
-    let p := _t1961
-    let _io1962 ← «end_phase» b
-    let b := _io1962
-    let _t1963 ← point_of b base_across base_up
-    let _t1964 := { p with sudo_6Player_4base := _t1963 }
-    let p := _t1964
-    let _t1965 ← npeg cells
-    let _t1966 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves _t1965
-    let _t1967 := { (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1966 }
-    let _t1968 := { b with sudo_5Board_4cost := _t1967 }
-    let b := _t1968
-    let _io1969 ← begin_phase b ph_own_walk
-    let b := _io1969
-    let _io1970 ← walk_and_finish b cells
-    let ⟨_ret1971, _iw01972⟩ := _io1970
-    let b := _iw01972
-    let ok := _ret1971
+    let _io1805 ← begin_phase b ph_base_point
+    let b := _io1805
+    let _io1806 ← base_point b
+    let ⟨_ret1807, _iw01808⟩ := _io1806
+    let b := _iw01808
+    let _t1809 := { p with sudo_6Player_9base_hole := _ret1807 }
+    let p := _t1809
+    let _io1810 ← «end_phase» b
+    let b := _io1810
+    let _t1811 ← point_of b base_across base_up
+    let _t1812 := { p with sudo_6Player_4base := _t1811 }
+    let p := _t1812
+    let _t1813 ← npeg cells
+    let _t1814 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves _t1813
+    let _t1815 := { (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1814 }
+    let _t1816 := { b with sudo_5Board_4cost := _t1815 }
+    let b := _t1816
+    let _io1817 ← begin_phase b ph_own_walk
+    let b := _io1817
+    let _io1818 ← walk_and_finish b cells
+    let ⟨_ret1819, _iw01820⟩ := _io1818
+    let b := _iw01820
+    let ok := _ret1819
     if ok then
       do
-        let _io1973 ← clear b base_across
-        let b := _io1973
-        let _io1974 ← clear b base_up
-        let b := _io1974
-        let _io1975 ← «end_phase» b
-        let b := _io1975
+        let _io1821 ← clear b base_across
+        let b := _io1821
+        let _io1822 ← clear b base_up
+        let b := _io1822
+        let _io1823 ← «end_phase» b
+        let b := _io1823
         if ok then
           do
-            let _t1976 ← point_of b across up
-            let _t1977 := { p with sudo_6Player_6sent_c := _t1976 }
-            let p := _t1977
+            let _t1824 ← point_of b across up
+            let _t1825 := { p with sudo_6Player_6sent_c := _t1824 }
+            let p := _t1825
             pure (ok, b, p)
         else
           do
             pure (ok, b, p)
     else
       do
-        let _io1978 ← «end_phase» b
-        let b := _io1978
+        let _io1826 ← «end_phase» b
+        let b := _io1826
         if ok then
           do
-            let _t1979 ← point_of b across up
-            let _t1980 := { p with sudo_6Player_6sent_c := _t1979 }
-            let p := _t1980
+            let _t1827 ← point_of b across up
+            let _t1828 := { p with sudo_6Player_6sent_c := _t1827 }
+            let p := _t1828
             pure (ok, b, p)
         else
           do
@@ -5121,14 +4902,14 @@ def publish (b : Board) (cells : Array (Int)) (p : Player) : Except SudoRt.Trap 
 
 def empty_point (t : Tier) : Except SudoRt.Trap (Point) :=
   do
-    let _t1981 ← SudoRt.filledL (t).sudo_4Tier_1n (0 : Int)
-    let _t1982 ← SudoRt.filledL (t).sudo_4Tier_1n (0 : Int)
-    pure ({ sudo_5Point_1x := _t1981, sudo_5Point_1y := _t1982 } : Point)
+    let _t1829 ← SudoRt.filledL (t).sudo_4Tier_1n (0 : Int)
+    let _t1830 ← SudoRt.filledL (t).sudo_4Tier_1n (0 : Int)
+    pure ({ sudo_5Point_1x := _t1829, sudo_5Point_1y := _t1830 } : Point)
 
 def blank_player (b : Board) : Except SudoRt.Trap (Player) :=
   do
-    let _t1983 ← empty_point (b).sudo_5Board_1t
-    let e := _t1983
+    let _t1831 ← empty_point (b).sudo_5Board_1t
+    let e := _t1831
     let «none» := (#[] : Array (Int))
     let log := (#[] : Array (Call))
     pure ({ sudo_6Player_9base_hole := (0 : Int), sudo_6Player_4base := e, sudo_6Player_6sent_c := e, sudo_6Player_8on_curve := false, sudo_6Player_6sent_a := e, sudo_6Player_7rebuilt := e, sudo_6Player_7matched := false, sudo_6Player_6shared := e, sudo_6Player_6folded := «none», sudo_6Player_4cost := (b).sudo_5Board_4cost, sudo_6Player_6ladder := «none», sudo_6Player_9park_hole := (0 : Int), sudo_6Player_11tally_first := (0 : Int), sudo_6Player_12calling_hole := (0 : Int), sudo_6Player_9phase_end := (0 : Int), sudo_6Player_3log := log } : Player)
@@ -5136,12 +4917,12 @@ def blank_player (b : Board) : Except SudoRt.Trap (Player) :=
 def report (b : Board) (p : Player) : Except SudoRt.Trap (Player) :=
   do
     let total := (0 : Int)
-    let _t1988 ← SudoRt.subI phase_count (1 : Int)
+    let _t1836 ← SudoRt.subI phase_count (1 : Int)
     let _fromV := (0 : Int)
-    let _toV := _t1988
+    let _toV := _t1836
     let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-    let _init2007 := (_fromV, total)
-    let _out ← (SudoRt.runLoopOn (ρ := Player) _init2007 fuel (fun σ =>
+    let _init1855 := (_fromV, total)
+    let _out ← (SudoRt.runLoopOn (ρ := Player) _init1855 fuel (fun σ =>
     let i := σ.1
     let total := σ.2
     do
@@ -5149,9 +4930,9 @@ def report (b : Board) (p : Player) : Except SudoRt.Trap (Player) :=
         pure (SudoRt.Flow.brk (ρ := Player) (i, total))
       else
         match ← ((do
-  let _t1986 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_14moves_by_phase i
-  let _t1987 ← SudoRt.addI total _t1986
-  let total := _t1987
+  let _t1834 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_14moves_by_phase i
+  let _t1835 ← SudoRt.addI total _t1834
+  let total := _t1835
   pure (SudoRt.Flow.cont (ρ := Player) total)) : Except SudoRt.Trap (SudoRt.Flow _ (Player))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Player) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Player) (i, _fs))
@@ -5163,18 +4944,18 @@ def report (b : Board) (p : Player) : Except SudoRt.Trap (Player) :=
               pure (SudoRt.Flow.cont (ρ := Player) (i', _fs))) (fun σ =>
     let total := σ.2
     do
-      let _as1989 ← SudoRt.sudoAssertEq total ((b).sudo_5Board_4cost).sudo_5Costs_5moves 1319
-      let _t1990 := { p with sudo_6Player_4cost := (b).sudo_5Board_4cost }
-      let p := _t1990
-      let _t1991 := { p with sudo_6Player_6ladder := (#[] : Array (Int)) }
-      let p := _t1991
-      let _t1998 ← SudoRt.addI (b).sudo_5Board_7ladder0 (b).sudo_5Board_6nrungs
-      let _t1999 ← SudoRt.subI _t1998 (1 : Int)
+      let _as1837 ← SudoRt.sudoAssertEq total ((b).sudo_5Board_4cost).sudo_5Costs_5moves 1296
+      let _t1838 := { p with sudo_6Player_4cost := (b).sudo_5Board_4cost }
+      let p := _t1838
+      let _t1839 := { p with sudo_6Player_6ladder := (#[] : Array (Int)) }
+      let p := _t1839
+      let _t1846 ← SudoRt.addI (b).sudo_5Board_7ladder0 (b).sudo_5Board_6nrungs
+      let _t1847 ← SudoRt.subI _t1846 (1 : Int)
       let _fromV := (b).sudo_5Board_7ladder0
-      let _toV := _t1999
+      let _toV := _t1847
       let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
-      let _init2006 := (_fromV, p)
-      let _out ← (SudoRt.runLoopOn (ρ := Player) _init2006 fuel (fun σ =>
+      let _init1854 := (_fromV, p)
+      let _out ← (SudoRt.runLoopOn (ρ := Player) _init1854 fuel (fun σ =>
     let i := σ.1
     let p := σ.2
     do
@@ -5182,13 +4963,13 @@ def report (b : Board) (p : Player) : Except SudoRt.Trap (Player) :=
         pure (SudoRt.Flow.brk (ρ := Player) (i, p))
       else
         match ← ((do
-  let _t1993 ← SudoRt.atL (b).sudo_5Board_3row i
-  let _mb1994 := SudoRt.appendL (p).sudo_6Player_6ladder _t1993
-  let ⟨_nr1995, _⟩ := _mb1994
-  let _t1996 := { p with sudo_6Player_6ladder := _nr1995 }
-  let p := _t1996
-  let _hm1984 := ()
-  let _u1997 := _hm1984
+  let _t1841 ← SudoRt.atL (b).sudo_5Board_3row i
+  let _mb1842 := SudoRt.appendL (p).sudo_6Player_6ladder _t1841
+  let ⟨_nr1843, _⟩ := _mb1842
+  let _t1844 := { p with sudo_6Player_6ladder := _nr1843 }
+  let p := _t1844
+  let _hm1832 := ()
+  let _u1845 := _hm1832
   pure (SudoRt.Flow.cont (ρ := Player) p)) : Except SudoRt.Trap (SudoRt.Flow _ (Player))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := Player) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := Player) (i, _fs))
@@ -5200,59 +4981,59 @@ def report (b : Board) (p : Player) : Except SudoRt.Trap (Player) :=
               pure (SudoRt.Flow.cont (ρ := Player) (i', _fs))) (fun σ =>
     let p := σ.2
     do
-      let _t2000 := { p with sudo_6Player_9park_hole := (b).sudo_5Board_9park_hole }
-      let p := _t2000
-      let _t2001 := { p with sudo_6Player_11tally_first := (b).sudo_5Board_6tally0 }
-      let p := _t2001
-      let _t2002 := { p with sudo_6Player_12calling_hole := (b).sudo_5Board_12calling_hole }
-      let p := _t2002
-      let _t2003 ← SudoRt.atL (b).sudo_5Board_3row (b).sudo_5Board_10phase_hole
-      let _t2004 := { p with sudo_6Player_9phase_end := _t2003 }
-      let p := _t2004
-      let _t2005 := { p with sudo_6Player_3log := (b).sudo_5Board_3log }
-      let p := _t2005
+      let _t1848 := { p with sudo_6Player_9park_hole := (b).sudo_5Board_9park_hole }
+      let p := _t1848
+      let _t1849 := { p with sudo_6Player_11tally_first := (b).sudo_5Board_6tally0 }
+      let p := _t1849
+      let _t1850 := { p with sudo_6Player_12calling_hole := (b).sudo_5Board_12calling_hole }
+      let p := _t1850
+      let _t1851 ← SudoRt.atL (b).sudo_5Board_3row (b).sudo_5Board_10phase_hole
+      let _t1852 := { p with sudo_6Player_9phase_end := _t1851 }
+      let p := _t1852
+      let _t1853 := { p with sudo_6Player_3log := (b).sudo_5Board_3log }
+      let p := _t1853
       pure p) (fun r => pure r))
       pure _out) (fun r => pure r))
     pure _out
 
 def swap_both (ba : Board) (bb : Board) : Except SudoRt.Trap ((Board) × (Board)) :=
   do
-    let _io2008 ← begin_phase ba ph_swap
-    let ba := _io2008
-    let _io2009 ← call_session ba bb
-    let ba := _io2009
-    let _io2010 ← «end_phase» ba
-    let ba := _io2010
-    let _io2011 ← begin_phase bb ph_swap
-    let bb := _io2011
-    let _io2012 ← call_session bb ba
-    let bb := _io2012
-    let _io2013 ← «end_phase» bb
-    let bb := _io2013
+    let _io1856 ← begin_phase ba ph_swap
+    let ba := _io1856
+    let _io1857 ← call_session ba bb
+    let ba := _io1857
+    let _io1858 ← «end_phase» ba
+    let ba := _io1858
+    let _io1859 ← begin_phase bb ph_swap
+    let bb := _io1859
+    let _io1860 ← call_session bb ba
+    let bb := _io1860
+    let _io1861 ← «end_phase» bb
+    let bb := _io1861
     pure (ba, bb)
 
 def curve_tests (ba : Board) (bb : Board) (pa : Player) (pb : Player) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player)) :=
   do
-    let _io2014 ← begin_phase ba ph_curve_test
-    let ba := _io2014
-    let _io2015 ← on_curve ba
-    let ⟨_ret2016, _iw02017⟩ := _io2015
-    let ba := _iw02017
-    let on_a := _ret2016
-    let _t2018 := { pa with sudo_6Player_8on_curve := on_a }
-    let pa := _t2018
-    let _io2019 ← «end_phase» ba
-    let ba := _io2019
-    let _io2020 ← begin_phase bb ph_curve_test
-    let bb := _io2020
-    let _io2021 ← on_curve bb
-    let ⟨_ret2022, _iw02023⟩ := _io2021
-    let bb := _iw02023
-    let on_b := _ret2022
-    let _t2024 := { pb with sudo_6Player_8on_curve := on_b }
-    let pb := _t2024
-    let _io2025 ← «end_phase» bb
-    let bb := _io2025
+    let _io1862 ← begin_phase ba ph_curve_test
+    let ba := _io1862
+    let _io1863 ← on_curve ba
+    let ⟨_ret1864, _iw01865⟩ := _io1863
+    let ba := _iw01865
+    let on_a := _ret1864
+    let _t1866 := { pa with sudo_6Player_8on_curve := on_a }
+    let pa := _t1866
+    let _io1867 ← «end_phase» ba
+    let ba := _io1867
+    let _io1868 ← begin_phase bb ph_curve_test
+    let bb := _io1868
+    let _io1869 ← on_curve bb
+    let ⟨_ret1870, _iw01871⟩ := _io1869
+    let bb := _iw01871
+    let on_b := _ret1870
+    let _t1872 := { pb with sudo_6Player_8on_curve := on_b }
+    let pb := _t1872
+    let _io1873 ← «end_phase» bb
+    let bb := _io1873
     if (!( (pa).sudo_6Player_8on_curve )) then
       do
         pure ((#[65, 58, 32, 66, 39, 115, 32, 67, 32, 102, 97, 105, 108, 115, 32, 116, 104, 101, 32, 99, 117, 114, 118, 101, 32, 116, 101, 115, 116] : Array Int), ba, bb, pa, pb)
@@ -5267,63 +5048,63 @@ def curve_tests (ba : Board) (bb : Board) (pa : Player) (pb : Player) : Except S
 
 def certify_own (ba : Board) (bb : Board) (pa : Player) (pb : Player) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player)) :=
   do
-    let _io2026 ← begin_phase ba ph_make
-    let ba := _io2026
-    let _io2027 ← certificate ba across up
-    let ⟨_ret2028, _iw02029⟩ := _io2027
-    let ba := _iw02029
-    let ok_a := _ret2028
-    let _io2030 ← «end_phase» ba
-    let ba := _io2030
-    let _io2031 ← phase_drop ba
-    let ba := _io2031
-    let _io2032 ← begin_phase bb ph_make
-    let bb := _io2032
-    let _io2033 ← certificate bb across up
-    let ⟨_ret2034, _iw02035⟩ := _io2033
-    let bb := _iw02035
-    let ok_b := _ret2034
-    let _io2036 ← «end_phase» bb
-    let bb := _io2036
-    let _io2037 ← phase_drop bb
-    let bb := _io2037
-    let _t2038 ← (if ok_a then (do
+    let _io1874 ← begin_phase ba ph_make
+    let ba := _io1874
+    let _io1875 ← certificate ba across up
+    let ⟨_ret1876, _iw01877⟩ := _io1875
+    let ba := _iw01877
+    let ok_a := _ret1876
+    let _io1878 ← «end_phase» ba
+    let ba := _io1878
+    let _io1879 ← phase_drop ba
+    let ba := _io1879
+    let _io1880 ← begin_phase bb ph_make
+    let bb := _io1880
+    let _io1881 ← certificate bb across up
+    let ⟨_ret1882, _iw01883⟩ := _io1881
+    let bb := _iw01883
+    let ok_b := _ret1882
+    let _io1884 ← «end_phase» bb
+    let bb := _io1884
+    let _io1885 ← phase_drop bb
+    let bb := _io1885
+    let _t1886 ← (if ok_a then (do
   pure ok_b) else pure false)
-    if (!( _t2038 )) then
+    if (!( _t1886 )) then
       do
         pure ((#[101, 109, 112, 116, 121, 32, 99, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101] : Array Int), ba, bb, pa, pb)
     else
       do
-        let _t2039 ← point_of ba across up
-        let _t2040 := { pa with sudo_6Player_6sent_a := _t2039 }
-        let pa := _t2040
-        let _t2041 ← point_of bb across up
-        let _t2042 := { pb with sudo_6Player_6sent_a := _t2041 }
-        let pb := _t2042
+        let _t1887 ← point_of ba across up
+        let _t1888 := { pa with sudo_6Player_6sent_a := _t1887 }
+        let pa := _t1888
+        let _t1889 ← point_of bb across up
+        let _t1890 := { pb with sudo_6Player_6sent_a := _t1889 }
+        let pb := _t1890
         pure ((#[] : Array Int), ba, bb, pa, pb)
 
 def rebuild_theirs (ba : Board) (bb : Board) (pa : Player) (pb : Player) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player)) :=
   do
-    let _io2043 ← begin_phase ba ph_rebuild
-    let ba := _io2043
-    let _io2044 ← certificate ba base_across base_up
-    let ⟨_ret2045, _iw02046⟩ := _io2044
-    let ba := _iw02046
-    let ok_a := _ret2045
-    let _io2047 ← «end_phase» ba
-    let ba := _io2047
-    let _io2048 ← phase_drop ba
-    let ba := _io2048
-    let _io2049 ← begin_phase bb ph_rebuild
-    let bb := _io2049
-    let _io2050 ← certificate bb base_across base_up
-    let ⟨_ret2051, _iw02052⟩ := _io2050
-    let bb := _iw02052
-    let ok_b := _ret2051
-    let _io2053 ← «end_phase» bb
-    let bb := _io2053
-    let _io2054 ← phase_drop bb
-    let bb := _io2054
+    let _io1891 ← begin_phase ba ph_rebuild
+    let ba := _io1891
+    let _io1892 ← certificate ba base_across base_up
+    let ⟨_ret1893, _iw01894⟩ := _io1892
+    let ba := _iw01894
+    let ok_a := _ret1893
+    let _io1895 ← «end_phase» ba
+    let ba := _io1895
+    let _io1896 ← phase_drop ba
+    let ba := _io1896
+    let _io1897 ← begin_phase bb ph_rebuild
+    let bb := _io1897
+    let _io1898 ← certificate bb base_across base_up
+    let ⟨_ret1899, _iw01900⟩ := _io1898
+    let bb := _iw01900
+    let ok_b := _ret1899
+    let _io1901 ← «end_phase» bb
+    let bb := _io1901
+    let _io1902 ← phase_drop bb
+    let bb := _io1902
     if (!( ok_a )) then
       do
         pure ((#[65, 58, 32, 66, 39, 115, 32, 99, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101, 32, 105, 115, 32, 101, 109, 112, 116, 121] : Array Int), ba, bb, pa, pb)
@@ -5334,42 +5115,42 @@ def rebuild_theirs (ba : Board) (bb : Board) (pa : Player) (pb : Player) : Excep
             pure ((#[66, 58, 32, 65, 39, 115, 32, 99, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101, 32, 105, 115, 32, 101, 109, 112, 116, 121] : Array Int), ba, bb, pa, pb)
         else
           do
-            let _t2055 ← point_of ba base_across base_up
-            let _t2056 := { pa with sudo_6Player_7rebuilt := _t2055 }
-            let pa := _t2056
-            let _t2057 ← point_of bb base_across base_up
-            let _t2058 := { pb with sudo_6Player_7rebuilt := _t2057 }
-            let pb := _t2058
+            let _t1903 ← point_of ba base_across base_up
+            let _t1904 := { pa with sudo_6Player_7rebuilt := _t1903 }
+            let pa := _t1904
+            let _t1905 ← point_of bb base_across base_up
+            let _t1906 := { pb with sudo_6Player_7rebuilt := _t1905 }
+            let pb := _t1906
             pure ((#[] : Array Int), ba, bb, pa, pb)
 
 def clear_two (b : Board) (h1 : Int) (h2 : Int) : Except SudoRt.Trap (Board) :=
   do
-    let _io2059 ← begin_phase b ph_rebuild
-    let b := _io2059
-    let _io2060 ← clear b h1
-    let b := _io2060
-    let _io2061 ← clear b h2
-    let b := _io2061
-    let _io2062 ← «end_phase» b
-    let b := _io2062
+    let _io1907 ← begin_phase b ph_rebuild
+    let b := _io1907
+    let _io1908 ← clear b h1
+    let b := _io1908
+    let _io1909 ← clear b h2
+    let b := _io1909
+    let _io1910 ← «end_phase» b
+    let b := _io1910
     pure b
 
 def compare_both (ba : Board) (bb : Board) (pa : Player) (pb : Player) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player)) :=
   do
-    let _t2063 ← certificate_matches ba
-    let _t2064 := { pa with sudo_6Player_7matched := _t2063 }
-    let pa := _t2064
-    let _io2065 ← clear_two ba bottom gap
-    let ba := _io2065
-    let _t2066 ← certificate_matches bb
-    let _t2067 := { pb with sudo_6Player_7matched := _t2066 }
-    let pb := _t2067
-    let _io2068 ← clear_two bb bottom gap
-    let bb := _io2068
-    let _io2069 ← clear_two ba across up
-    let ba := _io2069
-    let _io2070 ← clear_two bb across up
-    let bb := _io2070
+    let _t1911 ← certificate_matches ba
+    let _t1912 := { pa with sudo_6Player_7matched := _t1911 }
+    let pa := _t1912
+    let _io1913 ← clear_two ba bottom gap
+    let ba := _io1913
+    let _t1914 ← certificate_matches bb
+    let _t1915 := { pb with sudo_6Player_7matched := _t1914 }
+    let pb := _t1915
+    let _io1916 ← clear_two bb bottom gap
+    let bb := _io1916
+    let _io1917 ← clear_two ba across up
+    let ba := _io1917
+    let _io1918 ← clear_two bb across up
+    let bb := _io1918
     if (!( (pa).sudo_6Player_7matched )) then
       do
         pure ((#[65, 58, 32, 66, 39, 115, 32, 99, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101, 32, 100, 111, 101, 115, 32, 110, 111, 116, 32, 109, 97, 116, 99, 104] : Array Int), ba, bb, pa, pb)
@@ -5384,177 +5165,177 @@ def compare_both (ba : Board) (bb : Board) (pa : Player) (pb : Player) : Except 
 
 def shared_walk (b : Board) (cells : Array (Int)) : Except SudoRt.Trap ((Bool) × (Board)) :=
   do
-    let _io2071 ← begin_phase b ph_shared_walk
-    let b := _io2071
-    let _io2072 ← walk_and_finish b cells
-    let ⟨_ret2073, _iw02074⟩ := _io2072
-    let b := _iw02074
-    let ok := _ret2073
+    let _io1919 ← begin_phase b ph_shared_walk
+    let b := _io1919
+    let _io1920 ← walk_and_finish b cells
+    let ⟨_ret1921, _iw01922⟩ := _io1920
+    let b := _iw01922
+    let ok := _ret1921
     if ok then
       do
-        let _io2075 ← clear b base_across
-        let b := _io2075
-        let _io2076 ← clear b base_up
-        let b := _io2076
-        let _io2077 ← «end_phase» b
-        let b := _io2077
+        let _io1923 ← clear b base_across
+        let b := _io1923
+        let _io1924 ← clear b base_up
+        let b := _io1924
+        let _io1925 ← «end_phase» b
+        let b := _io1925
         pure (ok, b)
     else
       do
-        let _io2078 ← «end_phase» b
-        let b := _io2078
+        let _io1926 ← «end_phase» b
+        let b := _io1926
         pure (ok, b)
 
 def fold_phase (b : Board) : Except SudoRt.Trap ((Array (Int)) × (Board)) :=
   do
     let m0 := ((b).sudo_5Board_4cost).sudo_5Costs_5moves
-    let _io2079 ← fold_key b
-    let ⟨_ret2080, _iw02081⟩ := _io2079
-    let b := _iw02081
-    let folded := _ret2080
-    let _ix2082 := ph_fold
-    let _t2083 ← SudoRt.subI ((b).sudo_5Board_4cost).sudo_5Costs_5moves m0
-    let _t2084 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_14moves_by_phase _ix2082 _t2083
-    let _t2085 := { (b).sudo_5Board_4cost with sudo_5Costs_14moves_by_phase := _t2084 }
-    let _t2086 := { b with sudo_5Board_4cost := _t2085 }
-    let b := _t2086
+    let _io1927 ← fold_key b
+    let ⟨_ret1928, _iw01929⟩ := _io1927
+    let b := _iw01929
+    let folded := _ret1928
+    let _ix1930 := ph_fold
+    let _t1931 ← SudoRt.subI ((b).sudo_5Board_4cost).sudo_5Costs_5moves m0
+    let _t1932 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_14moves_by_phase _ix1930 _t1931
+    let _t1933 := { (b).sudo_5Board_4cost with sudo_5Costs_14moves_by_phase := _t1932 }
+    let _t1934 := { b with sudo_5Board_4cost := _t1933 }
+    let b := _t1934
     pure (folded, b)
 
 def walk_and_fold (ba : Board) (bb : Board) (pa : Player) (pb : Player) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player)) :=
   do
-    let _io2087 ← shared_walk ba cells_a
-    let ⟨_ret2088, _iw02089⟩ := _io2087
-    let ba := _iw02089
-    let ok_a := _ret2088
-    let _io2090 ← shared_walk bb cells_b
-    let ⟨_ret2091, _iw02092⟩ := _io2090
-    let bb := _iw02092
-    let ok_b := _ret2091
-    let _t2093 ← (if ok_a then (do
+    let _io1935 ← shared_walk ba cells_a
+    let ⟨_ret1936, _iw01937⟩ := _io1935
+    let ba := _iw01937
+    let ok_a := _ret1936
+    let _io1938 ← shared_walk bb cells_b
+    let ⟨_ret1939, _iw01940⟩ := _io1938
+    let bb := _iw01940
+    let ok_b := _ret1939
+    let _t1941 ← (if ok_a then (do
   pure ok_b) else pure false)
-    if (!( _t2093 )) then
+    if (!( _t1941 )) then
       do
         pure ((#[101, 120, 99, 101, 112, 116, 105, 111, 110, 97, 108, 32, 99, 97, 115, 101, 32, 105, 110, 32, 116, 104, 101, 32, 115, 104, 97, 114, 101, 100, 32, 119, 97, 108, 107] : Array Int), ba, bb, pa, pb)
     else
       do
-        let _t2094 ← point_of ba across up
-        let _t2095 := { pa with sudo_6Player_6shared := _t2094 }
-        let pa := _t2095
-        let _t2096 ← point_of bb across up
-        let _t2097 := { pb with sudo_6Player_6shared := _t2096 }
-        let pb := _t2097
-        let _io2098 ← fold_phase ba
-        let ⟨_ret2099, _iw02100⟩ := _io2098
-        let ba := _iw02100
-        let folded_a := _ret2099
-        let _t2101 := { pa with sudo_6Player_6folded := folded_a }
-        let pa := _t2101
-        let _io2102 ← fold_phase bb
-        let ⟨_ret2103, _iw02104⟩ := _io2102
-        let bb := _iw02104
-        let folded_b := _ret2103
-        let _t2105 := { pb with sudo_6Player_6folded := folded_b }
-        let pb := _t2105
+        let _t1942 ← point_of ba across up
+        let _t1943 := { pa with sudo_6Player_6shared := _t1942 }
+        let pa := _t1943
+        let _t1944 ← point_of bb across up
+        let _t1945 := { pb with sudo_6Player_6shared := _t1944 }
+        let pb := _t1945
+        let _io1946 ← fold_phase ba
+        let ⟨_ret1947, _iw01948⟩ := _io1946
+        let ba := _iw01948
+        let folded_a := _ret1947
+        let _t1949 := { pa with sudo_6Player_6folded := folded_a }
+        let pa := _t1949
+        let _io1950 ← fold_phase bb
+        let ⟨_ret1951, _iw01952⟩ := _io1950
+        let bb := _iw01952
+        let folded_b := _ret1951
+        let _t1953 := { pb with sudo_6Player_6folded := folded_b }
+        let pb := _t1953
         pure ((#[] : Array Int), ba, bb, pa, pb)
 
 def exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except SudoRt.Trap (SudoRt.SResult (Array (Int)) (Exchange)) :=
   do
-    let _t2108 ← (if (SudoRt.SEq.beq (SudoRt.listLen cells_a) (t).sudo_4Tier_5cells) then (do
+    let _t1956 ← (if (SudoRt.SEq.beq (SudoRt.listLen cells_a) (t).sudo_4Tier_5cells) then (do
   pure (SudoRt.SEq.beq (SudoRt.listLen cells_b) (t).sudo_4Tier_5cells)) else pure false)
-    let _as2111 ← SudoRt.sudoAssert _t2108 1451
-    let _t2112 ← is_trits cells_a
-    let _t2113 ← (if _t2112 then (do
-  let _t2114 ← is_trits cells_b
-  pure _t2114) else pure false)
-    let _as2115 ← SudoRt.sudoAssert _t2113 1452
-    let _t2116 ← new_board t
-    let ba := _t2116
-    let _t2117 ← new_board t
-    let bb := _t2117
-    let _t2118 ← blank_player ba
-    let pa := _t2118
-    let _t2119 ← blank_player bb
-    let pb := _t2119
-    let _io2120 ← publish ba cells_a pa
-    let ⟨_ret2121, _iw02122, _iw12123⟩ := _io2120
-    let ba := _iw02122
-    let pa := _iw12123
-    let _sudo_h0 := _ret2121
+    let _as1959 ← SudoRt.sudoAssert _t1956 1428
+    let _t1960 ← is_trits cells_a
+    let _t1961 ← (if _t1960 then (do
+  let _t1962 ← is_trits cells_b
+  pure _t1962) else pure false)
+    let _as1963 ← SudoRt.sudoAssert _t1961 1429
+    let _t1964 ← new_board t
+    let ba := _t1964
+    let _t1965 ← new_board t
+    let bb := _t1965
+    let _t1966 ← blank_player ba
+    let pa := _t1966
+    let _t1967 ← blank_player bb
+    let pb := _t1967
+    let _io1968 ← publish ba cells_a pa
+    let ⟨_ret1969, _iw01970, _iw11971⟩ := _io1968
+    let ba := _iw01970
+    let pa := _iw11971
+    let _sudo_h0 := _ret1969
     if (!( _sudo_h0 )) then
       do
         pure (SudoRt.SResult.err (#[65, 58, 32, 114, 101, 114, 111, 108, 108, 32, 40, 101, 109, 112, 116, 121, 32, 107, 101, 121, 32, 111, 114, 32, 101, 120, 99, 101, 112, 116, 105, 111, 110, 97, 108, 32, 99, 97, 115, 101, 41] : Array Int))
     else
       do
-        let _io2124 ← publish bb cells_b pb
-        let ⟨_ret2125, _iw02126, _iw12127⟩ := _io2124
-        let bb := _iw02126
-        let pb := _iw12127
-        let _sudo_h1 := _ret2125
+        let _io1972 ← publish bb cells_b pb
+        let ⟨_ret1973, _iw01974, _iw11975⟩ := _io1972
+        let bb := _iw01974
+        let pb := _iw11975
+        let _sudo_h1 := _ret1973
         if (!( _sudo_h1 )) then
           do
             pure (SudoRt.SResult.err (#[66, 58, 32, 114, 101, 114, 111, 108, 108, 32, 40, 101, 109, 112, 116, 121, 32, 107, 101, 121, 32, 111, 114, 32, 101, 120, 99, 101, 112, 116, 105, 111, 110, 97, 108, 32, 99, 97, 115, 101, 41] : Array Int))
         else
           do
-            let _io2128 ← swap_both ba bb
-            let ⟨_iw02129, _iw12130⟩ := _io2128
-            let ba := _iw02129
-            let bb := _iw12130
-            let _io2131 ← curve_tests ba bb pa pb
-            let ⟨_ret2132, _iw02133, _iw12134, _iw22135, _iw32136⟩ := _io2131
-            let ba := _iw02133
-            let bb := _iw12134
-            let pa := _iw22135
-            let pb := _iw32136
-            let fail := _ret2132
+            let _io1976 ← swap_both ba bb
+            let ⟨_iw01977, _iw11978⟩ := _io1976
+            let ba := _iw01977
+            let bb := _iw11978
+            let _io1979 ← curve_tests ba bb pa pb
+            let ⟨_ret1980, _iw01981, _iw11982, _iw21983, _iw31984⟩ := _io1979
+            let ba := _iw01981
+            let bb := _iw11982
+            let pa := _iw21983
+            let pb := _iw31984
+            let fail := _ret1980
             if (SudoRt.SEq.beq fail (#[] : Array Int)) then
               do
-                let _io2138 ← certify_own ba bb pa pb
-                let ⟨_ret2139, _iw02140, _iw12141, _iw22142, _iw32143⟩ := _io2138
-                let ba := _iw02140
-                let bb := _iw12141
-                let pa := _iw22142
-                let pb := _iw32143
-                let fail := _ret2139
+                let _io1986 ← certify_own ba bb pa pb
+                let ⟨_ret1987, _iw01988, _iw11989, _iw21990, _iw31991⟩ := _io1986
+                let ba := _iw01988
+                let bb := _iw11989
+                let pa := _iw21990
+                let pb := _iw31991
+                let fail := _ret1987
                 if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                   do
-                    let _io2145 ← rebuild_theirs ba bb pa pb
-                    let ⟨_ret2146, _iw02147, _iw12148, _iw22149, _iw32150⟩ := _io2145
-                    let ba := _iw02147
-                    let bb := _iw12148
-                    let pa := _iw22149
-                    let pb := _iw32150
-                    let fail := _ret2146
+                    let _io1993 ← rebuild_theirs ba bb pa pb
+                    let ⟨_ret1994, _iw01995, _iw11996, _iw21997, _iw31998⟩ := _io1993
+                    let ba := _iw01995
+                    let bb := _iw11996
+                    let pa := _iw21997
+                    let pb := _iw31998
+                    let fail := _ret1994
                     if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                       do
-                        let _io2152 ← swap_both ba bb
-                        let ⟨_iw02153, _iw12154⟩ := _io2152
-                        let ba := _iw02153
-                        let bb := _iw12154
-                        let _io2155 ← compare_both ba bb pa pb
-                        let ⟨_ret2156, _iw02157, _iw12158, _iw22159, _iw32160⟩ := _io2155
-                        let ba := _iw02157
-                        let bb := _iw12158
-                        let pa := _iw22159
-                        let pb := _iw32160
-                        let fail := _ret2156
+                        let _io2000 ← swap_both ba bb
+                        let ⟨_iw02001, _iw12002⟩ := _io2000
+                        let ba := _iw02001
+                        let bb := _iw12002
+                        let _io2003 ← compare_both ba bb pa pb
+                        let ⟨_ret2004, _iw02005, _iw12006, _iw22007, _iw32008⟩ := _io2003
+                        let ba := _iw02005
+                        let bb := _iw12006
+                        let pa := _iw22007
+                        let pb := _iw32008
+                        let fail := _ret2004
                         if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                           do
-                            let _io2162 ← walk_and_fold ba bb pa pb cells_a cells_b
-                            let ⟨_ret2163, _iw02164, _iw12165, _iw22166, _iw32167⟩ := _io2162
-                            let ba := _iw02164
-                            let bb := _iw12165
-                            let pa := _iw22166
-                            let pb := _iw32167
-                            let fail := _ret2163
+                            let _io2010 ← walk_and_fold ba bb pa pb cells_a cells_b
+                            let ⟨_ret2011, _iw02012, _iw12013, _iw22014, _iw32015⟩ := _io2010
+                            let ba := _iw02012
+                            let bb := _iw12013
+                            let pa := _iw22014
+                            let pb := _iw32015
+                            let fail := _ret2011
                             if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
                               do
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2169 ← report ba pa
-                                let pa := _io2169
-                                let _io2170 ← report bb pb
-                                let pb := _io2170
+                                let _io2017 ← report ba pa
+                                let pa := _io2017
+                                let _io2018 ← report bb pb
+                                let pb := _io2018
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                         else
                           do
@@ -5563,31 +5344,31 @@ def exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2172 ← report ba pa
-                                let pa := _io2172
-                                let _io2173 ← report bb pb
-                                let pb := _io2173
+                                let _io2020 ← report ba pa
+                                let pa := _io2020
+                                let _io2021 ← report bb pb
+                                let pb := _io2021
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                     else
                       do
                         if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                           do
-                            let _io2175 ← walk_and_fold ba bb pa pb cells_a cells_b
-                            let ⟨_ret2176, _iw02177, _iw12178, _iw22179, _iw32180⟩ := _io2175
-                            let ba := _iw02177
-                            let bb := _iw12178
-                            let pa := _iw22179
-                            let pb := _iw32180
-                            let fail := _ret2176
+                            let _io2023 ← walk_and_fold ba bb pa pb cells_a cells_b
+                            let ⟨_ret2024, _iw02025, _iw12026, _iw22027, _iw32028⟩ := _io2023
+                            let ba := _iw02025
+                            let bb := _iw12026
+                            let pa := _iw22027
+                            let pb := _iw32028
+                            let fail := _ret2024
                             if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
                               do
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2182 ← report ba pa
-                                let pa := _io2182
-                                let _io2183 ← report bb pb
-                                let pb := _io2183
+                                let _io2030 ← report ba pa
+                                let pa := _io2030
+                                let _io2031 ← report bb pb
+                                let pb := _io2031
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                         else
                           do
@@ -5596,44 +5377,44 @@ def exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2185 ← report ba pa
-                                let pa := _io2185
-                                let _io2186 ← report bb pb
-                                let pb := _io2186
+                                let _io2033 ← report ba pa
+                                let pa := _io2033
+                                let _io2034 ← report bb pb
+                                let pb := _io2034
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                 else
                   do
                     if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                       do
-                        let _io2188 ← swap_both ba bb
-                        let ⟨_iw02189, _iw12190⟩ := _io2188
-                        let ba := _iw02189
-                        let bb := _iw12190
-                        let _io2191 ← compare_both ba bb pa pb
-                        let ⟨_ret2192, _iw02193, _iw12194, _iw22195, _iw32196⟩ := _io2191
-                        let ba := _iw02193
-                        let bb := _iw12194
-                        let pa := _iw22195
-                        let pb := _iw32196
-                        let fail := _ret2192
+                        let _io2036 ← swap_both ba bb
+                        let ⟨_iw02037, _iw12038⟩ := _io2036
+                        let ba := _iw02037
+                        let bb := _iw12038
+                        let _io2039 ← compare_both ba bb pa pb
+                        let ⟨_ret2040, _iw02041, _iw12042, _iw22043, _iw32044⟩ := _io2039
+                        let ba := _iw02041
+                        let bb := _iw12042
+                        let pa := _iw22043
+                        let pb := _iw32044
+                        let fail := _ret2040
                         if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                           do
-                            let _io2198 ← walk_and_fold ba bb pa pb cells_a cells_b
-                            let ⟨_ret2199, _iw02200, _iw12201, _iw22202, _iw32203⟩ := _io2198
-                            let ba := _iw02200
-                            let bb := _iw12201
-                            let pa := _iw22202
-                            let pb := _iw32203
-                            let fail := _ret2199
+                            let _io2046 ← walk_and_fold ba bb pa pb cells_a cells_b
+                            let ⟨_ret2047, _iw02048, _iw12049, _iw22050, _iw32051⟩ := _io2046
+                            let ba := _iw02048
+                            let bb := _iw12049
+                            let pa := _iw22050
+                            let pb := _iw32051
+                            let fail := _ret2047
                             if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
                               do
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2205 ← report ba pa
-                                let pa := _io2205
-                                let _io2206 ← report bb pb
-                                let pb := _io2206
+                                let _io2053 ← report ba pa
+                                let pa := _io2053
+                                let _io2054 ← report bb pb
+                                let pb := _io2054
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                         else
                           do
@@ -5642,31 +5423,31 @@ def exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2208 ← report ba pa
-                                let pa := _io2208
-                                let _io2209 ← report bb pb
-                                let pb := _io2209
+                                let _io2056 ← report ba pa
+                                let pa := _io2056
+                                let _io2057 ← report bb pb
+                                let pb := _io2057
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                     else
                       do
                         if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                           do
-                            let _io2211 ← walk_and_fold ba bb pa pb cells_a cells_b
-                            let ⟨_ret2212, _iw02213, _iw12214, _iw22215, _iw32216⟩ := _io2211
-                            let ba := _iw02213
-                            let bb := _iw12214
-                            let pa := _iw22215
-                            let pb := _iw32216
-                            let fail := _ret2212
+                            let _io2059 ← walk_and_fold ba bb pa pb cells_a cells_b
+                            let ⟨_ret2060, _iw02061, _iw12062, _iw22063, _iw32064⟩ := _io2059
+                            let ba := _iw02061
+                            let bb := _iw12062
+                            let pa := _iw22063
+                            let pb := _iw32064
+                            let fail := _ret2060
                             if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
                               do
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2218 ← report ba pa
-                                let pa := _io2218
-                                let _io2219 ← report bb pb
-                                let pb := _io2219
+                                let _io2066 ← report ba pa
+                                let pa := _io2066
+                                let _io2067 ← report bb pb
+                                let pb := _io2067
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                         else
                           do
@@ -5675,53 +5456,53 @@ def exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2221 ← report ba pa
-                                let pa := _io2221
-                                let _io2222 ← report bb pb
-                                let pb := _io2222
+                                let _io2069 ← report ba pa
+                                let pa := _io2069
+                                let _io2070 ← report bb pb
+                                let pb := _io2070
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
             else
               do
                 if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                   do
-                    let _io2224 ← rebuild_theirs ba bb pa pb
-                    let ⟨_ret2225, _iw02226, _iw12227, _iw22228, _iw32229⟩ := _io2224
-                    let ba := _iw02226
-                    let bb := _iw12227
-                    let pa := _iw22228
-                    let pb := _iw32229
-                    let fail := _ret2225
+                    let _io2072 ← rebuild_theirs ba bb pa pb
+                    let ⟨_ret2073, _iw02074, _iw12075, _iw22076, _iw32077⟩ := _io2072
+                    let ba := _iw02074
+                    let bb := _iw12075
+                    let pa := _iw22076
+                    let pb := _iw32077
+                    let fail := _ret2073
                     if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                       do
-                        let _io2231 ← swap_both ba bb
-                        let ⟨_iw02232, _iw12233⟩ := _io2231
-                        let ba := _iw02232
-                        let bb := _iw12233
-                        let _io2234 ← compare_both ba bb pa pb
-                        let ⟨_ret2235, _iw02236, _iw12237, _iw22238, _iw32239⟩ := _io2234
-                        let ba := _iw02236
-                        let bb := _iw12237
-                        let pa := _iw22238
-                        let pb := _iw32239
-                        let fail := _ret2235
+                        let _io2079 ← swap_both ba bb
+                        let ⟨_iw02080, _iw12081⟩ := _io2079
+                        let ba := _iw02080
+                        let bb := _iw12081
+                        let _io2082 ← compare_both ba bb pa pb
+                        let ⟨_ret2083, _iw02084, _iw12085, _iw22086, _iw32087⟩ := _io2082
+                        let ba := _iw02084
+                        let bb := _iw12085
+                        let pa := _iw22086
+                        let pb := _iw32087
+                        let fail := _ret2083
                         if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                           do
-                            let _io2241 ← walk_and_fold ba bb pa pb cells_a cells_b
-                            let ⟨_ret2242, _iw02243, _iw12244, _iw22245, _iw32246⟩ := _io2241
-                            let ba := _iw02243
-                            let bb := _iw12244
-                            let pa := _iw22245
-                            let pb := _iw32246
-                            let fail := _ret2242
+                            let _io2089 ← walk_and_fold ba bb pa pb cells_a cells_b
+                            let ⟨_ret2090, _iw02091, _iw12092, _iw22093, _iw32094⟩ := _io2089
+                            let ba := _iw02091
+                            let bb := _iw12092
+                            let pa := _iw22093
+                            let pb := _iw32094
+                            let fail := _ret2090
                             if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
                               do
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2248 ← report ba pa
-                                let pa := _io2248
-                                let _io2249 ← report bb pb
-                                let pb := _io2249
+                                let _io2096 ← report ba pa
+                                let pa := _io2096
+                                let _io2097 ← report bb pb
+                                let pb := _io2097
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                         else
                           do
@@ -5730,31 +5511,31 @@ def exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2251 ← report ba pa
-                                let pa := _io2251
-                                let _io2252 ← report bb pb
-                                let pb := _io2252
+                                let _io2099 ← report ba pa
+                                let pa := _io2099
+                                let _io2100 ← report bb pb
+                                let pb := _io2100
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                     else
                       do
                         if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                           do
-                            let _io2254 ← walk_and_fold ba bb pa pb cells_a cells_b
-                            let ⟨_ret2255, _iw02256, _iw12257, _iw22258, _iw32259⟩ := _io2254
-                            let ba := _iw02256
-                            let bb := _iw12257
-                            let pa := _iw22258
-                            let pb := _iw32259
-                            let fail := _ret2255
+                            let _io2102 ← walk_and_fold ba bb pa pb cells_a cells_b
+                            let ⟨_ret2103, _iw02104, _iw12105, _iw22106, _iw32107⟩ := _io2102
+                            let ba := _iw02104
+                            let bb := _iw12105
+                            let pa := _iw22106
+                            let pb := _iw32107
+                            let fail := _ret2103
                             if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
                               do
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2261 ← report ba pa
-                                let pa := _io2261
-                                let _io2262 ← report bb pb
-                                let pb := _io2262
+                                let _io2109 ← report ba pa
+                                let pa := _io2109
+                                let _io2110 ← report bb pb
+                                let pb := _io2110
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                         else
                           do
@@ -5763,44 +5544,44 @@ def exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2264 ← report ba pa
-                                let pa := _io2264
-                                let _io2265 ← report bb pb
-                                let pb := _io2265
+                                let _io2112 ← report ba pa
+                                let pa := _io2112
+                                let _io2113 ← report bb pb
+                                let pb := _io2113
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                 else
                   do
                     if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                       do
-                        let _io2267 ← swap_both ba bb
-                        let ⟨_iw02268, _iw12269⟩ := _io2267
-                        let ba := _iw02268
-                        let bb := _iw12269
-                        let _io2270 ← compare_both ba bb pa pb
-                        let ⟨_ret2271, _iw02272, _iw12273, _iw22274, _iw32275⟩ := _io2270
-                        let ba := _iw02272
-                        let bb := _iw12273
-                        let pa := _iw22274
-                        let pb := _iw32275
-                        let fail := _ret2271
+                        let _io2115 ← swap_both ba bb
+                        let ⟨_iw02116, _iw12117⟩ := _io2115
+                        let ba := _iw02116
+                        let bb := _iw12117
+                        let _io2118 ← compare_both ba bb pa pb
+                        let ⟨_ret2119, _iw02120, _iw12121, _iw22122, _iw32123⟩ := _io2118
+                        let ba := _iw02120
+                        let bb := _iw12121
+                        let pa := _iw22122
+                        let pb := _iw32123
+                        let fail := _ret2119
                         if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                           do
-                            let _io2277 ← walk_and_fold ba bb pa pb cells_a cells_b
-                            let ⟨_ret2278, _iw02279, _iw12280, _iw22281, _iw32282⟩ := _io2277
-                            let ba := _iw02279
-                            let bb := _iw12280
-                            let pa := _iw22281
-                            let pb := _iw32282
-                            let fail := _ret2278
+                            let _io2125 ← walk_and_fold ba bb pa pb cells_a cells_b
+                            let ⟨_ret2126, _iw02127, _iw12128, _iw22129, _iw32130⟩ := _io2125
+                            let ba := _iw02127
+                            let bb := _iw12128
+                            let pa := _iw22129
+                            let pb := _iw32130
+                            let fail := _ret2126
                             if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
                               do
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2284 ← report ba pa
-                                let pa := _io2284
-                                let _io2285 ← report bb pb
-                                let pb := _io2285
+                                let _io2132 ← report ba pa
+                                let pa := _io2132
+                                let _io2133 ← report bb pb
+                                let pb := _io2133
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                         else
                           do
@@ -5809,31 +5590,31 @@ def exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2287 ← report ba pa
-                                let pa := _io2287
-                                let _io2288 ← report bb pb
-                                let pb := _io2288
+                                let _io2135 ← report ba pa
+                                let pa := _io2135
+                                let _io2136 ← report bb pb
+                                let pb := _io2136
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                     else
                       do
                         if (SudoRt.SEq.beq fail (#[] : Array Int)) then
                           do
-                            let _io2290 ← walk_and_fold ba bb pa pb cells_a cells_b
-                            let ⟨_ret2291, _iw02292, _iw12293, _iw22294, _iw32295⟩ := _io2290
-                            let ba := _iw02292
-                            let bb := _iw12293
-                            let pa := _iw22294
-                            let pb := _iw32295
-                            let fail := _ret2291
+                            let _io2138 ← walk_and_fold ba bb pa pb cells_a cells_b
+                            let ⟨_ret2139, _iw02140, _iw12141, _iw22142, _iw32143⟩ := _io2138
+                            let ba := _iw02140
+                            let bb := _iw12141
+                            let pa := _iw22142
+                            let pb := _iw32143
+                            let fail := _ret2139
                             if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
                               do
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2297 ← report ba pa
-                                let pa := _io2297
-                                let _io2298 ← report bb pb
-                                let pb := _io2298
+                                let _io2145 ← report ba pa
+                                let pa := _io2145
+                                let _io2146 ← report bb pb
+                                let pb := _io2146
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
                         else
                           do
@@ -5842,204 +5623,204 @@ def exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) : Except
                                 pure (SudoRt.SResult.err fail)
                             else
                               do
-                                let _io2300 ← report ba pa
-                                let pa := _io2300
-                                let _io2301 ← report bb pb
-                                let pb := _io2301
+                                let _io2148 ← report ba pa
+                                let pa := _io2148
+                                let _io2149 ← report bb pb
+                                let pb := _io2149
                                 pure (SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange))
 
 def receive_check (t : Tier) (own : Point) (sent_c : Point) (sent_a : Point) : Except SudoRt.Trap (Checked) :=
   do
-    let _t2302 ← new_board t
-    let «rec» := _t2302
-    let _io2303 ← put «rec» across (own).sudo_5Point_1x
-    let «rec» := _io2303
-    let _io2304 ← put «rec» up (own).sudo_5Point_1y
-    let «rec» := _io2304
-    let _t2305 ← new_board t
-    let snd := _t2305
-    let _io2306 ← put snd across (sent_c).sudo_5Point_1x
-    let snd := _io2306
-    let _io2307 ← put snd up (sent_c).sudo_5Point_1y
-    let snd := _io2307
-    let _io2308 ← call_session «rec» snd
-    let «rec» := _io2308
+    let _t2150 ← new_board t
+    let «rec» := _t2150
+    let _io2151 ← put «rec» across (own).sudo_5Point_1x
+    let «rec» := _io2151
+    let _io2152 ← put «rec» up (own).sudo_5Point_1y
+    let «rec» := _io2152
+    let _t2153 ← new_board t
+    let snd := _t2153
+    let _io2154 ← put snd across (sent_c).sudo_5Point_1x
+    let snd := _io2154
+    let _io2155 ← put snd up (sent_c).sudo_5Point_1y
+    let snd := _io2155
+    let _io2156 ← call_session «rec» snd
+    let «rec» := _io2156
     let m0 := ((«rec»).sudo_5Board_4cost).sudo_5Costs_5moves
     let v := Verdict.Sudo_7Verdict_6Accept
-    let _t2309 ← empty_point t
-    let rebuilt := _t2309
-    let _io2310 ← on_curve «rec»
-    let ⟨_ret2311, _iw02312⟩ := _io2310
-    let «rec» := _iw02312
-    let _sudo_h0 := _ret2311
+    let _t2157 ← empty_point t
+    let rebuilt := _t2157
+    let _io2158 ← on_curve «rec»
+    let ⟨_ret2159, _iw02160⟩ := _io2158
+    let «rec» := _iw02160
+    let _sudo_h0 := _ret2159
     if (!( _sudo_h0 )) then
       do
         let v := Verdict.Sudo_7Verdict_10CurveFails
-        let _t2313 ← SudoRt.subI ((«rec»).sudo_5Board_4cost).sudo_5Costs_5moves m0
-        pure ({ sudo_7Checked_7verdict := v, sudo_7Checked_7rebuilt := rebuilt, sudo_7Checked_4peak := ((«rec»).sudo_5Board_4cost).sudo_5Costs_4peak, sudo_7Checked_11check_moves := _t2313, sudo_7Checked_9tally_max := ((«rec»).sudo_5Board_4cost).sudo_5Costs_9tally_max, sudo_7Checked_15control_highest := ((«rec»).sudo_5Board_4cost).sudo_5Costs_15control_highest } : Checked)
+        let _t2161 ← SudoRt.subI ((«rec»).sudo_5Board_4cost).sudo_5Costs_5moves m0
+        pure ({ sudo_7Checked_7verdict := v, sudo_7Checked_7rebuilt := rebuilt, sudo_7Checked_4peak := ((«rec»).sudo_5Board_4cost).sudo_5Costs_4peak, sudo_7Checked_11check_moves := _t2161, sudo_7Checked_9tally_max := ((«rec»).sudo_5Board_4cost).sudo_5Costs_9tally_max, sudo_7Checked_15control_highest := ((«rec»).sudo_5Board_4cost).sudo_5Costs_15control_highest } : Checked)
     else
       do
-        let _io2314 ← certificate «rec» base_across base_up
-        let ⟨_ret2315, _iw02316⟩ := _io2314
-        let «rec» := _iw02316
-        let _sudo_h1 := _ret2315
+        let _io2162 ← certificate «rec» base_across base_up
+        let ⟨_ret2163, _iw02164⟩ := _io2162
+        let «rec» := _iw02164
+        let _sudo_h1 := _ret2163
         if (!( _sudo_h1 )) then
           do
             let v := Verdict.Sudo_7Verdict_16EmptyCertificate
-            let _t2317 ← SudoRt.subI ((«rec»).sudo_5Board_4cost).sudo_5Costs_5moves m0
-            pure ({ sudo_7Checked_7verdict := v, sudo_7Checked_7rebuilt := rebuilt, sudo_7Checked_4peak := ((«rec»).sudo_5Board_4cost).sudo_5Costs_4peak, sudo_7Checked_11check_moves := _t2317, sudo_7Checked_9tally_max := ((«rec»).sudo_5Board_4cost).sudo_5Costs_9tally_max, sudo_7Checked_15control_highest := ((«rec»).sudo_5Board_4cost).sudo_5Costs_15control_highest } : Checked)
+            let _t2165 ← SudoRt.subI ((«rec»).sudo_5Board_4cost).sudo_5Costs_5moves m0
+            pure ({ sudo_7Checked_7verdict := v, sudo_7Checked_7rebuilt := rebuilt, sudo_7Checked_4peak := ((«rec»).sudo_5Board_4cost).sudo_5Costs_4peak, sudo_7Checked_11check_moves := _t2165, sudo_7Checked_9tally_max := ((«rec»).sudo_5Board_4cost).sudo_5Costs_9tally_max, sudo_7Checked_15control_highest := ((«rec»).sudo_5Board_4cost).sudo_5Costs_15control_highest } : Checked)
         else
           do
-            let _io2318 ← phase_drop «rec»
-            let «rec» := _io2318
-            let _io2319 ← phase_drop «rec»
-            let «rec» := _io2319
-            let _t2320 ← point_of «rec» base_across base_up
-            let rebuilt := _t2320
-            let _io2321 ← clear snd across
-            let snd := _io2321
-            let _io2322 ← clear snd up
-            let snd := _io2322
-            let _io2323 ← put snd across (sent_a).sudo_5Point_1x
-            let snd := _io2323
-            let _io2324 ← put snd up (sent_a).sudo_5Point_1y
-            let snd := _io2324
-            let _io2325 ← call_session «rec» snd
-            let «rec» := _io2325
-            let _t2326 ← certificate_matches «rec»
-            if (!( _t2326 )) then
+            let _io2166 ← phase_drop «rec»
+            let «rec» := _io2166
+            let _io2167 ← phase_drop «rec»
+            let «rec» := _io2167
+            let _t2168 ← point_of «rec» base_across base_up
+            let rebuilt := _t2168
+            let _io2169 ← clear snd across
+            let snd := _io2169
+            let _io2170 ← clear snd up
+            let snd := _io2170
+            let _io2171 ← put snd across (sent_a).sudo_5Point_1x
+            let snd := _io2171
+            let _io2172 ← put snd up (sent_a).sudo_5Point_1y
+            let snd := _io2172
+            let _io2173 ← call_session «rec» snd
+            let «rec» := _io2173
+            let _t2174 ← certificate_matches «rec»
+            if (!( _t2174 )) then
               do
                 let v := Verdict.Sudo_7Verdict_8Mismatch
-                let _io2327 ← clear «rec» bottom
-                let «rec» := _io2327
-                let _io2328 ← clear «rec» gap
-                let «rec» := _io2328
-                let _t2329 ← SudoRt.subI ((«rec»).sudo_5Board_4cost).sudo_5Costs_5moves m0
-                pure ({ sudo_7Checked_7verdict := v, sudo_7Checked_7rebuilt := rebuilt, sudo_7Checked_4peak := ((«rec»).sudo_5Board_4cost).sudo_5Costs_4peak, sudo_7Checked_11check_moves := _t2329, sudo_7Checked_9tally_max := ((«rec»).sudo_5Board_4cost).sudo_5Costs_9tally_max, sudo_7Checked_15control_highest := ((«rec»).sudo_5Board_4cost).sudo_5Costs_15control_highest } : Checked)
+                let _io2175 ← clear «rec» bottom
+                let «rec» := _io2175
+                let _io2176 ← clear «rec» gap
+                let «rec» := _io2176
+                let _t2177 ← SudoRt.subI ((«rec»).sudo_5Board_4cost).sudo_5Costs_5moves m0
+                pure ({ sudo_7Checked_7verdict := v, sudo_7Checked_7rebuilt := rebuilt, sudo_7Checked_4peak := ((«rec»).sudo_5Board_4cost).sudo_5Costs_4peak, sudo_7Checked_11check_moves := _t2177, sudo_7Checked_9tally_max := ((«rec»).sudo_5Board_4cost).sudo_5Costs_9tally_max, sudo_7Checked_15control_highest := ((«rec»).sudo_5Board_4cost).sudo_5Costs_15control_highest } : Checked)
             else
               do
-                let _io2330 ← clear «rec» bottom
-                let «rec» := _io2330
-                let _io2331 ← clear «rec» gap
-                let «rec» := _io2331
-                let _t2332 ← SudoRt.subI ((«rec»).sudo_5Board_4cost).sudo_5Costs_5moves m0
-                pure ({ sudo_7Checked_7verdict := v, sudo_7Checked_7rebuilt := rebuilt, sudo_7Checked_4peak := ((«rec»).sudo_5Board_4cost).sudo_5Costs_4peak, sudo_7Checked_11check_moves := _t2332, sudo_7Checked_9tally_max := ((«rec»).sudo_5Board_4cost).sudo_5Costs_9tally_max, sudo_7Checked_15control_highest := ((«rec»).sudo_5Board_4cost).sudo_5Costs_15control_highest } : Checked)
+                let _io2178 ← clear «rec» bottom
+                let «rec» := _io2178
+                let _io2179 ← clear «rec» gap
+                let «rec» := _io2179
+                let _t2180 ← SudoRt.subI ((«rec»).sudo_5Board_4cost).sudo_5Costs_5moves m0
+                pure ({ sudo_7Checked_7verdict := v, sudo_7Checked_7rebuilt := rebuilt, sudo_7Checked_4peak := ((«rec»).sudo_5Board_4cost).sudo_5Costs_4peak, sudo_7Checked_11check_moves := _t2180, sudo_7Checked_9tally_max := ((«rec»).sudo_5Board_4cost).sudo_5Costs_9tally_max, sudo_7Checked_15control_highest := ((«rec»).sudo_5Board_4cost).sudo_5Costs_15control_highest } : Checked)
 
 def make_certificate (t : Tier) (c : Point) : Except SudoRt.Trap (Option (Point)) :=
   do
-    let _t2333 ← new_board t
-    let b := _t2333
-    let _io2334 ← put b across (c).sudo_5Point_1x
-    let b := _io2334
-    let _io2335 ← put b up (c).sudo_5Point_1y
-    let b := _io2335
-    let _io2336 ← certificate b across up
-    let ⟨_ret2337, _iw02338⟩ := _io2336
-    let b := _iw02338
-    let _sudo_h0 := _ret2337
+    let _t2181 ← new_board t
+    let b := _t2181
+    let _io2182 ← put b across (c).sudo_5Point_1x
+    let b := _io2182
+    let _io2183 ← put b up (c).sudo_5Point_1y
+    let b := _io2183
+    let _io2184 ← certificate b across up
+    let ⟨_ret2185, _iw02186⟩ := _io2184
+    let b := _iw02186
+    let _sudo_h0 := _ret2185
     if (!( _sudo_h0 )) then
       do
         pure (none : Option (Point))
     else
       do
-        let _t2339 ← point_of b across up
-        pure (some _t2339)
+        let _t2187 ← point_of b across up
+        pure (some _t2187)
 
 def curve_test (t : Tier) (c : Point) : Except SudoRt.Trap (Bool) :=
   do
-    let _t2340 ← new_board t
-    let b := _t2340
-    let _io2341 ← put b base_across (c).sudo_5Point_1x
-    let b := _io2341
-    let _io2342 ← put b base_up (c).sudo_5Point_1y
-    let b := _io2342
-    let _io2343 ← on_curve b
-    let ⟨_ret2344, _iw02345⟩ := _io2343
-    let b := _iw02345
-    let _sudo_h0 := _ret2344
+    let _t2188 ← new_board t
+    let b := _t2188
+    let _io2189 ← put b base_across (c).sudo_5Point_1x
+    let b := _io2189
+    let _io2190 ← put b base_up (c).sudo_5Point_1y
+    let b := _io2190
+    let _io2191 ← on_curve b
+    let ⟨_ret2192, _iw02193⟩ := _io2191
+    let b := _iw02193
+    let _sudo_h0 := _ret2192
     pure _sudo_h0
 
 def base_point_of (t : Tier) : Except SudoRt.Trap (Point) :=
   do
-    let _t2346 ← new_board t
-    let b := _t2346
-    let _io2347 ← base_point b
-    let ⟨_ret2348, _iw02349⟩ := _io2347
-    let b := _iw02349
-    let j := _ret2348
-    let _as2351 ← SudoRt.sudoAssert (decide (j > (0 : Int))) 1550
-    let _t2352 ← point_of b base_across base_up
-    pure _t2352
+    let _t2194 ← new_board t
+    let b := _t2194
+    let _io2195 ← base_point b
+    let ⟨_ret2196, _iw02197⟩ := _io2195
+    let b := _iw02197
+    let j := _ret2196
+    let _as2199 ← SudoRt.sudoAssert (decide (j > (0 : Int))) 1527
+    let _t2200 ← point_of b base_across base_up
+    pure _t2200
 
 def walk_key (t : Tier) (cells : Array (Int)) (base : Point) : Except SudoRt.Trap (Option (Point)) :=
   do
-    let _t2353 ← new_board t
-    let b := _t2353
-    let _io2354 ← put b base_across (base).sudo_5Point_1x
-    let b := _io2354
-    let _io2355 ← put b base_up (base).sudo_5Point_1y
-    let b := _io2355
-    let _io2356 ← walk_and_finish b cells
-    let ⟨_ret2357, _iw02358⟩ := _io2356
-    let b := _iw02358
-    let _sudo_h0 := _ret2357
+    let _t2201 ← new_board t
+    let b := _t2201
+    let _io2202 ← put b base_across (base).sudo_5Point_1x
+    let b := _io2202
+    let _io2203 ← put b base_up (base).sudo_5Point_1y
+    let b := _io2203
+    let _io2204 ← walk_and_finish b cells
+    let ⟨_ret2205, _iw02206⟩ := _io2204
+    let b := _iw02206
+    let _sudo_h0 := _ret2205
     if (!( _sudo_h0 )) then
       do
         pure (none : Option (Point))
     else
       do
-        let _t2359 ← point_of b across up
-        pure (some _t2359)
+        let _t2207 ← point_of b across up
+        pure (some _t2207)
 
 def invert_number (t : Tier) (x : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t2360 ← new_board t
-    let b := _t2360
-    let _io2361 ← put b bottom x
-    let b := _io2361
-    let _io2362 ← invert_checked b bottom
-    let b := _io2362
-    let _t2363 ← value b gap
-    pure _t2363
+    let _t2208 ← new_board t
+    let b := _t2208
+    let _io2209 ← put b bottom x
+    let b := _io2209
+    let _io2210 ← invert_checked b bottom
+    let b := _io2210
+    let _t2211 ← value b gap
+    pure _t2211
 
 def multiply (t : Tier) (x : Array (Int)) (y : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t2364 ← new_board t
-    let b := _t2364
-    let _io2365 ← put b across x
-    let b := _io2365
-    let _io2366 ← put b up y
-    let b := _io2366
-    let _io2367 ← mul b gap across up true false false
-    let b := _io2367
-    let _io2368 ← settle b
-    let b := _io2368
-    let _t2369 ← value b gap
-    pure _t2369
+    let _t2212 ← new_board t
+    let b := _t2212
+    let _io2213 ← put b across x
+    let b := _io2213
+    let _io2214 ← put b up y
+    let b := _io2214
+    let _io2215 ← mul b gap across up true false false
+    let b := _io2215
+    let _io2216 ← settle b
+    let b := _io2216
+    let _t2217 ← value b gap
+    pure _t2217
 
 def cube_number (t : Tier) (x : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t2370 ← new_board t
-    let b := _t2370
-    let _io2371 ← put b across x
-    let b := _io2371
-    let _io2372 ← cube b across across
-    let b := _io2372
-    let _io2373 ← settle b
-    let b := _io2373
-    let _t2374 ← value b across
-    pure _t2374
+    let _t2218 ← new_board t
+    let b := _t2218
+    let _io2219 ← put b across x
+    let b := _io2219
+    let _io2220 ← cube b across across
+    let b := _io2220
+    let _io2221 ← settle b
+    let b := _io2221
+    let _t2222 ← value b across
+    pure _t2222
 
 def fold (t : Tier) (x : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _t2375 ← new_board t
-    let b := _t2375
-    let _io2376 ← put b across x
-    let b := _io2376
-    let _io2377 ← fold_key b
-    let ⟨_ret2378, _iw02379⟩ := _io2377
-    let b := _iw02379
-    let _sudo_h0 := _ret2378
+    let _t2223 ← new_board t
+    let b := _t2223
+    let _io2224 ← put b across x
+    let b := _io2224
+    let _io2225 ← fold_key b
+    let ⟨_ret2226, _iw02227⟩ := _io2225
+    let b := _iw02227
+    let _sudo_h0 := _ret2226
     pure _sudo_h0
 
 def pt (x : Array (Int)) (y : Array (Int)) : Except SudoRt.Trap (Point) :=

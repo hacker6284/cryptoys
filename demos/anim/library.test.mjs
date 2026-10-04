@@ -167,12 +167,32 @@ assert.match(readme, /\| `megaminx-turn` \|[^\n]*Animation and sounds APPROVED a
     const s = gd.settings.sounds.stream;
     assert.equal(s.align, "peak-velocity", "grid deal stream: centred on peak velocity");
     assert.equal(s.offsetMs, undefined);
-    assert.equal(gd.settings.sounds.card, null);
+    assert.equal(gd.settings.sounds.card, null, "no per-card file chosen yet");
+    assert.equal(gd.CARD_ALIGN, "motion-start");
+    // every card's sound plays, overlapping freely: no gap, a voice per
+    // card of the deal (sound.js drops rather than steals; no maxMs cut)
+    const cardSlot = gd.slots.find((x) => x.name === "card");
+    assert.equal(cardSlot.gapMs, 0);
+    assert.ok(cardSlot.voices >= 52, "a voice for every card of a deal");
+    assert.equal(gd.settings.sounds.card?.maxMs, undefined);
     for (const pace of [1, 1.8, 3]) {
         const [[slot, at], ...cards] = gd.dealContacts(pace);
         assert.equal(slot, "stream");
         assert.equal(cards.length, 52);
-        const mean = cards.reduce((a, [, t]) => a + t, 0) / 52;
+        // card (motion-start, the entry's rule): each card's contact is
+        // the moment it leaves the packet, and the file's audible onset
+        // lands on it, scaling with the pace.
+        cards.forEach(([cs, t], i) => {
+            assert.equal(cs, "card");
+            assert.ok(Math.abs(t - (i * gd.timing.dealStaggerMs) / pace) < 1e-9, `card ${i} contact as it leaves the packet at ${pace}×`);
+        });
+        const card = { file: "x", align: "motion-start", nudgeMs: 0 };
+        assert.ok(Math.abs(fileStart(card, cards[7][1], { onsetMs: 12.5, centroidMs: 40 }) + 12.5 - cards[7][1]) < 1e-9, "card onset on its departure");
+        assert.equal(fileStart({ ...card, nudgeMs: 10 }, 0, { onsetMs: 0 }, 2), 20, "nudgeMs scales");
+        // the old rule still available: per card at its peak velocity
+        const peaks = gd.dealContacts(pace, 52, gd.timing, { card: { align: "peak-velocity" } }).slice(1);
+        peaks.forEach(([, t], i) => assert.ok(Math.abs(t - gd.cardPeakMs(i, pace)) < 1e-9));
+        const mean = peaks.reduce((a, [, t]) => a + t, 0) / 52;
         assert.ok(Math.abs(at - mean) < 1e-9);
         assert.ok(Math.abs(at - (25.5 * gd.timing.dealStaggerMs + 0.5 * gd.timing.dealMs) / pace) < 1e-9);
         assert.ok(Math.abs(fileStart(s, at, { centroidMs: 300 }) + 300 - at) < 1e-9, `stream centre on the mean peak at ${pace}×`);

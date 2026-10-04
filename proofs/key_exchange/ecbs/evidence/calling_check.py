@@ -10,7 +10,10 @@ start_calling() / call_step(); this driver reads the board between calls.
      or a key grid (Demo: never rows I-J or lane 1), and the published bands' ranges.
 Phase-1 results: ../history/card/calling_check.json, ../history/demo/soundness_demo.json "calling".
 
-Usage: python calling_check.py   (writes results/calling_check.json; stdout -> results/calling_check.txt)
+Usage: python calling_check.py [tiers]   (stdout -> results/calling_check.txt)
+  With no argument, every tier, and writes results/calling_check.json. With a comma list (CI runs
+  Demo,Toy) it prints only those tiers' lines, which equal the same lines of calling_check.txt
+  (each tier draws from its own seeded generator), and writes no JSON.
 """
 import json, os, random, sys, time
 
@@ -29,8 +32,9 @@ ROWS = "ABCDEFGHIJ"
 
 
 def main():
+    tiers = sys.argv[1].split(",") if len(sys.argv) > 1 else ["Demo", "Toy", "Hobby", "Serious"]
     sudo = SJ.Sudo(ECBS); out = {"provenance": SJ.provenance(ECBS)}
-    for name in ("Demo", "Toy", "Hobby", "Serious"):
+    for name in tiers:
         t0 = time.time()
         n = TIERS[name][0]; rnd = random.Random(5 + n); tier = SJ.tier(name)
         tr = sudo.call("tier", name)
@@ -87,6 +91,8 @@ def main():
             out[name].update(never_control_rows_I_J=never_ij, never_lane_1=never_lane1)
         print(name, json.dumps(out[name]), flush=True)
     sudo.close()
+    if len(sys.argv) > 1:
+        return
     json.dump(out, open(os.path.join(HERE, "results", "calling_check.json"), "w"), indent=1)
 
 

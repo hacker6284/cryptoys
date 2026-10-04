@@ -19,7 +19,9 @@ it). Calling at Demo: calling_check.py.
 Usage: python soundness_demo.py [shards]   (writes results/soundness_demo.json; stdout -> .txt)
   Runs demo_exhaustive.mjs in `shards` parallel node processes (default 4) unless
   ECBS_DEMO_EXHAUSTIVE=<prefix> points at a finished run; that run's <prefix>.provenance.json
-  must name the same ecbs.sudo hash and sudocode commit as this build. Timings go to stderr.
+  must name the same ecbs.sudo hash and sudocode commit as this build. If <prefix> has no
+  provenance file yet, the run is made there and kept (for twist_s7.py A); without the variable
+  it goes to a temporary directory removed at exit. Timings go to stderr.
 """
 import atexit, json, os, random, shutil, subprocess, sys, tempfile, time
 import numpy as np
@@ -41,9 +43,11 @@ def exhaustive(shards):
     prefix = os.environ.get("ECBS_DEMO_EXHAUSTIVE")
     prov = SJ.provenance(ECBS)
     stamp = {k: prov[k] for k in ("sudo_sha256", "sudocode_commit")}
-    if not prefix:
-        out, _, _ = SJ.build(ECBS); d = tempfile.mkdtemp(prefix="ecbs-exh-"); prefix = os.path.join(d, "demo")
-        atexit.register(shutil.rmtree, d, True)
+    if not prefix or not os.path.exists(f"{prefix}.provenance.json"):
+        out, _, _ = SJ.build(ECBS)
+        if not prefix:
+            d = tempfile.mkdtemp(prefix="ecbs-exh-"); prefix = os.path.join(d, "demo")
+            atexit.register(shutil.rmtree, d, True)
         t0 = time.time()
         ps = [subprocess.Popen(["node", os.path.join(HERE, "demo_exhaustive.mjs"), out, prefix, str(s), str(shards)])
               for s in range(shards)]
@@ -108,8 +112,8 @@ def field(curve, cx, cy, sudo):
     out["A_not_matching"] = dict(trials=trials, mismatch=mism)
     off = ~curve
     out["off_curve"] = dict(pairs=int(off.sum()), rejected_by_curve_test=int(off.sum()),
-                            would_pass_without_curve_test=int((off & has).sum()),
-                            run_empty_without_curve_test=int((off & ~has).sum()))
+                            non_empty_run=int((off & has).sum()),  # would pass with no curve test (ARGUED: the rebuild repeats these formulas)
+                            run_empty=int((off & ~has).sum()))
     b0 = sudo.call("new_board", SJ.tier("Demo"))
     out["ladder"] = "".join(".WR"[b0["row"][b0["ladder0"] + i]] for i in range(b0["nrungs"]))
     bad = 0

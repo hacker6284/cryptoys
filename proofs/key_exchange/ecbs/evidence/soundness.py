@@ -107,12 +107,13 @@ def main():
             note = "honest C, y nudged"
         a = sudo.call("make_certificate", tier, U(C))
         A = T.point(a) if a is not None else pari([zero])
-        # the comparison step alone: the receiver's rebuild of an off-curve C is the same card
-        # formulas (make_certificate), so it would equal this A whenever the run is not empty
-        passed += a is not None and sudo.call("make_certificate", tier, U(C)) == U(A)
+        # Without the curve test, the receiver's rebuild of an off-curve C is the same card
+        # formulas (make_certificate) as this A, so it matches whenever the run is not empty
+        # (an argument, not a measurement). Counted here: the non-empty runs.
+        passed += a is not None
         oc.append((C, A, note))
     tally("C off the curve (A = the card formulas on C)", oc)
-    out["C off the curve (A = the card formulas on C)"]["would_pass_without_curve_test"] = passed
+    out["C off the curve (A = the card formulas on C)"]["non_empty_run"] = passed
     bad = 0
     for _ in range(N):
         z = pari.random(w)

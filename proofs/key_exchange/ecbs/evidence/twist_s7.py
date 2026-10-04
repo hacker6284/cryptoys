@@ -19,20 +19,25 @@ Parts
  C  End to end, WITHOUT the curve test (the curve test rejects every C used here; checked): one
     node point and an attacker who learns the receiver's shared point recovers the receiver's
     whole key (finite-field logs in GF(3^(2n)) by PARI fflog). Demo and Toy; Hobby did not
-    finish within 1,500 s in Phase 1 (../twist/s7_partC.txt) and is not rerun.
-Phase-1 results: ../twist/s7_certificate.json (the script, with the receiver written at field
+    finish within 1,500 s in Phase 1 (../history/twist/s7_partC.txt) and is not rerun.
+Phase-1 results: ../history/twist/s7_certificate.json (the script, with the receiver written at field
 level, was removed when ecbs.sudo replaced it).
-Usage: python twist_s7.py [A,B,C]   (writes results/twist_s7.json; stdout -> results/twist_s7.txt)
-  Part A reads ECBS_DEMO_EXHAUSTIVE=<prefix> (a finished demo_exhaustive.mjs run), else runs it.
+Usage: python twist_s7.py A   > results/twist_s7_A.txt
+       python twist_s7.py B,C > results/twist_s7_BC.txt    (B and C share one random stream)
+  Both update results/twist_s7.json, with a provenance per part (the parts that ran). Part A
+  reads ECBS_DEMO_EXHAUSTIVE=<prefix> (a finished demo_exhaustive.mjs run), else runs it.
+  Timings go to stderr only.
 """
 import json, math, os, random, sys, time
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "oracle")); sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, "..", "oracle"))
+sys.path.insert(0, os.path.join(HERE, "..", "..", ".."))   # proofs/: sudo_js
 sys.dont_write_bytecode = True
 from ecbs_oracle import Ref, TIERS, CELLS, pari, V as trace
 import sudo_js as SJ
+ECBS = "primitives/key_exchange/ecbs/ecbs.sudo"
 
 S = None  # the generated code
 lg = math.log2
@@ -90,14 +95,14 @@ class Node:
 def part_A():
     import gf37 as F
     from soundness_demo import exhaustive
-    curve, cx, cy, secs = exhaustive(4)
+    curve, cx, cy = exhaustive(4)
     Q = F.Q; R = F.R; nd = Node(R, 7)
     xs, ys = np.meshgrid(np.arange(Q), np.arange(Q), indexing="ij"); xs = xs.ravel(); ys = ys.ravel()
     keep = F.cube(xs) != xs
     assert ((cx >= 0) == keep).all(), "certificate exists exactly when x is not in GF(3)"
     xs, ys, nx, ny = xs[keep], ys[keep], cx[keep], cy[keep]
     b = F.add(F.sub(F.mul(ys, ys), F.cube(xs)), F.mul(xs, xs))            # b' = y^2 - x^3 + x^2
-    res = {"pairs_x_not_in_GF3": int(len(xs)), "exhaustive_node_secs": secs}
+    res = {"pairs_x_not_in_GF3": int(len(xs))}
     cls = np.full(len(xs), -1)
     for a4 in range(3):
         for a6 in range(3):
@@ -164,7 +169,7 @@ def factor_full(n_, kind, N):
 def part_B(names, rnd):
     res = {}
     for name in names:
-        n, k, _ = TIERS[name]; R = Ref(n, k); q = 3 ** n; M = CELLS[name]
+        n, k = TIERS[name]; R = Ref(n, k); q = 3 ** n; M = CELLS[name]
         r_ = {}
         F3 = [(a, c) for a in range(3) for c in range(3)]
         r_["E'(GF(3)) affine"] = [p for p in F3 if (p[1] ** 2 - (p[0] ** 3 - p[0] ** 2 + 2)) % 3 == 0]
@@ -238,7 +243,7 @@ def part_B(names, rnd):
 def part_C(names, rnd):
     res = {}
     for name in names:
-        n, k, _ = TIERS[name]; R = Ref(n, k); q = 3 ** n; M = CELLS[name]; Nd = Node(R, n)
+        n, k = TIERS[name]; R = Ref(n, k); q = 3 ** n; M = CELLS[name]; Nd = Node(R, n)
         t0 = time.time(); out = {}
         img = (q + 1) // 4
         while True:
@@ -254,7 +259,7 @@ def part_C(names, rnd):
         if W is None: out["exceptional"] = True; res[name] = out; continue
         zW = Nd.psi(*W)
         e = int(pari.fflog(zW, z, img))
-        out["fflog_secs"] = round(time.time() - t0, 1)
+        print(f"{name} fflog: {time.time() - t0:.1f} s", file=sys.stderr, flush=True)
         assert img > 3 ** M
         v = e if e <= img // 2 else e - img
         digits = []
@@ -273,10 +278,13 @@ def main():
     global S
     parts = sys.argv[1].split(",") if len(sys.argv) > 1 else ["A", "B", "C"]
     rnd = random.Random(20261003); t0 = time.time()
-    S = SJ.Sudo()
+    S = SJ.Sudo(ECBS)
     path = os.path.join(HERE, "results", "twist_s7.json")
     OUT = json.load(open(path)) if os.path.exists(path) else {}
-    OUT["provenance"] = SJ.provenance()
+    OUT.pop("provenance", None)                       # older files: one stamp for all parts
+    prov = OUT.setdefault("provenance_by_part", {})
+    for p in parts:
+        prov[p] = SJ.provenance(ECBS)
     if "A" in parts:
         OUT["A_demo_exhaustive"] = part_A(); print("A", json.dumps(OUT["A_demo_exhaustive"], indent=1), flush=True)
     if "B" in parts:
@@ -285,7 +293,7 @@ def main():
         OUT["C_whole_key_from_one_node_point"] = part_C(["Demo", "Toy"], rnd)
     S.close()
     json.dump(OUT, open(path, "w"), indent=1, default=str)
-    print("secs", round(time.time() - t0, 1))
+    print(f"twist_s7 {','.join(parts)}: {time.time() - t0:.1f} s", file=sys.stderr)
 
 
 if __name__ == "__main__":

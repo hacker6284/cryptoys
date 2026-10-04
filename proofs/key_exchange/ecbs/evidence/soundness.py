@@ -6,7 +6,7 @@ Every trial is one call of the generated receive_check(): a receiver board holdi
 test; certificate rebuilt in the base bands; the sender's A called into the bottom and gap;
 compare. The verdict is accept / curve / empty / mismatch. PARI (../oracle/ecbs_oracle.py)
 picks the attack inputs and checks every accepted A. Classes, as in the Phase-1 field-level run
-(../card/soundness_v3_field_*.json; the script was removed when ecbs.sudo replaced it):
+(../history/card/soundness_v3_field_*.json; the script was removed when ecbs.sudo replaced it):
   honest; C outside the subgroup with the correct certificate pi(C) - C; C outside with a wrong
   one (A = C, a random non-subgroup point, or minus the certificate); the 4 nonzero order-5
   points (4 A's each); A not matching pi(C) - C (5 kinds); C off the curve with A = the card's
@@ -19,10 +19,12 @@ Usage: python soundness.py Toy|Hobby|Serious [N]   (default N: 5000 / 3000 / 100
 import json, os, random, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "oracle")); sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, "..", "oracle"))
+sys.path.insert(0, os.path.join(HERE, "..", "..", ".."))   # proofs/: sudo_js
 sys.dont_write_bytecode = True
 from ecbs_oracle import Tier, pari
 import sudo_js as SJ
+ECBS = "primitives/key_exchange/ecbs/ecbs.sudo"
 
 DEFAULT_N = {"Toy": 5000, "Hobby": 3000, "Serious": 1000}
 VERDICT = {"Accept": "accept", "CurveFails": "curve", "EmptyCertificate": "empty", "Mismatch": "mismatch"}
@@ -32,7 +34,7 @@ def main():
     name = sys.argv[1]; N = int(sys.argv[2]) if len(sys.argv) > 2 else DEFAULT_N[name]
     T = Tier(name); R = T.R; l = T.l; w = R.w; one = w ** 0; zero = 0 * w
     rnd = random.Random(31 + len(name) + N)
-    sudo = SJ.Sudo(); tier = SJ.tier(name)
+    sudo = SJ.Sudo(ECBS); tier = SJ.tier(name)
     gf3 = [pari([zero, one]), pari([zero, -one]), pari([one, one]), pari([one, -one])]
     for t in gf3: assert R.on(t) and len(R.mul(5, t)) == 1 and R.frob(t) == t
     sub = lambda P: len(R.mul(l, P)) == 1
@@ -53,7 +55,7 @@ def main():
         reg[c][i] = rnd.choice([z for z in range(3) if z != reg[c][i]])
         return T.point(reg)
     U = lambda Q: T.unpoint(Q) if len(Q) == 2 else {"x": [0] * T.n, "y": [0] * T.n}
-    out = {"provenance": SJ.provenance(), "tier": name, "N": N}
+    out = {"provenance": SJ.provenance(ECBS), "tier": name, "N": N}
     t0 = time.time()
 
     def tally(label, trials):
@@ -118,9 +120,9 @@ def main():
             inv = T.el(sudo.call("invert_number", tier, T.trits(z)))
             bad += inv * z != one
     out["inversion_wrong"] = bad
-    out["secs"] = round(time.time() - t0, 1)
     sudo.close()
-    print("inversion_wrong", bad, "secs", out["secs"], flush=True)
+    print("inversion_wrong", bad, flush=True)
+    print(f"soundness {name}: {time.time() - t0:.1f} s", file=sys.stderr)
     json.dump(out, open(os.path.join(HERE, "results", f"soundness_{name}.json"), "w"), indent=1)
 
 

@@ -8,17 +8,19 @@ start_calling() / call_step(); this driver reads the board between calls.
      here from the bands: a misfire lays nothing, so the old peg stays) would not;
  (c) coordinates (generated coordinate()): homes never share a hole, a call never names row J
      or a key grid (Demo: never rows I-J or lane 1), and the published bands' ranges.
-Phase-1 results: ../card/calling_check.json, ../demo/soundness_demo.json "calling".
+Phase-1 results: ../history/card/calling_check.json, ../history/demo/soundness_demo.json "calling".
 
 Usage: python calling_check.py   (writes results/calling_check.json; stdout -> results/calling_check.txt)
 """
 import json, os, random, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "oracle")); sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, "..", "oracle"))
+sys.path.insert(0, os.path.join(HERE, "..", "..", ".."))   # proofs/: sudo_js
 sys.dont_write_bytecode = True
 from ecbs_oracle import TIERS
 import sudo_js as SJ
+ECBS = "primitives/key_exchange/ecbs/ecbs.sudo"
 
 ACROSS, UP, BOTTOM, BASE_ACROSS, BASE_UP, GAP, SPARE = range(7)
 SRC = {BASE_ACROSS: ACROSS, BASE_UP: UP, BOTTOM: ACROSS, GAP: UP}
@@ -27,16 +29,16 @@ ROWS = "ABCDEFGHIJ"
 
 
 def main():
-    sudo = SJ.Sudo(); out = {"provenance": SJ.provenance()}
+    sudo = SJ.Sudo(ECBS); out = {"provenance": SJ.provenance(ECBS)}
     for name in ("Demo", "Toy", "Hobby", "Serious"):
         t0 = time.time()
         n = TIERS[name][0]; rnd = random.Random(5 + n); tier = SJ.tier(name)
         tr = sudo.call("tier", name)
         rand = lambda: [rnd.randrange(3) for _ in range(n)]
         def pair():
-            snd = sudo.call("new_board", tier, False)
+            snd = sudo.call("new_board", tier)
             snd = sudo.call("place", snd, ACROSS, rand()); snd = sudo.call("place", snd, UP, rand())
-            rec = sudo.call("new_board", tier, False)
+            rec = sudo.call("new_board", tier)
             rec = sudo.call("place", rec, ACROSS, rand()); rec = sudo.call("place", rec, UP, rand())
             return snd, rec
         # (a)
@@ -79,7 +81,8 @@ def main():
                          stale_copy_wrong_without_clearing=wrong_noclear, stale_copy_wrong_with_rule=wrong_rule,
                          homes_disjoint=len(set(allc)) == len(allc), never_row_J=never_j, never_key_grid=never_key,
                          published_bands=dict(across=cells["across"], up=cells["up"]), all_homes=cells,
-                         key_grids=tr["geokey"], workspace_grids=tr["geowork"], secs=round(time.time() - t0, 1))
+                         key_grids=tr["geokey"], workspace_grids=tr["geowork"])
+        print(f"calling {name}: {time.time() - t0:.1f} s", file=sys.stderr, flush=True)
         if name == "Demo":                    # Demo: rows I-J are the control row, lane 1 the workbench
             out[name].update(never_control_rows_I_J=never_ij, never_lane_1=never_lane1)
         print(name, json.dumps(out[name]), flush=True)

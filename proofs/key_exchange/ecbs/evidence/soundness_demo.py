@@ -13,22 +13,25 @@ from ecbs.sudo, checked against PARI/GP.
    C and A called in from a sender board) on every on-curve C with its honest A, and sampled
    classes (C outside <P> with A = C and with the correct certificate, the 4 order-5 points, A
    not matching, C off the curve).
-Phase-1 results: ../demo/soundness_demo.json (the script was removed when ecbs.sudo replaced
+Phase-1 results: ../history/demo/soundness_demo.json (the script was removed when ecbs.sudo replaced
 it). Calling at Demo: calling_check.py.
 
 Usage: python soundness_demo.py [shards]   (writes results/soundness_demo.json; stdout -> .txt)
   Runs demo_exhaustive.mjs in `shards` parallel node processes (default 4) unless
-  ECBS_DEMO_EXHAUSTIVE=<prefix> points at a finished run (ECBS_DEMO_EXHAUSTIVE_SECS: its wall time).
+  ECBS_DEMO_EXHAUSTIVE=<prefix> points at a finished run; that run's <prefix>.provenance.json
+  must name the same ecbs.sudo hash and sudocode commit as this build. Timings go to stderr.
 """
-import json, os, random, subprocess, sys, tempfile, time
+import atexit, json, os, random, shutil, subprocess, sys, tempfile, time
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "oracle")); sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, "..", "oracle"))
+sys.path.insert(0, os.path.join(HERE, "..", "..", ".."))   # proofs/: sudo_js
 sys.dont_write_bytecode = True
 import gf37 as F
 from ecbs_oracle import Tier
 import sudo_js as SJ
+ECBS = "primitives/key_exchange/ecbs/ecbs.sudo"
 
 T = Tier("Demo"); R = T.R; l = T.l; Q = F.Q
 VERDICT = {"Accept": "accept", "CurveFails": "curve", "EmptyCertificate": "empty", "Mismatch": "mismatch"}
@@ -36,14 +39,20 @@ VERDICT = {"Accept": "accept", "CurveFails": "curve", "EmptyCertificate": "empty
 
 def exhaustive(shards):
     prefix = os.environ.get("ECBS_DEMO_EXHAUSTIVE")
-    secs = os.environ.get("ECBS_DEMO_EXHAUSTIVE_SECS")    # wall time of that finished run, if known
+    prov = SJ.provenance(ECBS)
+    stamp = {k: prov[k] for k in ("sudo_sha256", "sudocode_commit")}
     if not prefix:
-        out, _, _ = SJ.build(); d = tempfile.mkdtemp(prefix="ecbs-exh-"); prefix = os.path.join(d, "demo")
+        out, _, _ = SJ.build(ECBS); d = tempfile.mkdtemp(prefix="ecbs-exh-"); prefix = os.path.join(d, "demo")
+        atexit.register(shutil.rmtree, d, True)
         t0 = time.time()
         ps = [subprocess.Popen(["node", os.path.join(HERE, "demo_exhaustive.mjs"), out, prefix, str(s), str(shards)])
               for s in range(shards)]
         assert all(p.wait() == 0 for p in ps)
-        secs = round(time.time() - t0, 1)
+        json.dump(stamp, open(f"{prefix}.provenance.json", "w"))
+        print(f"demo_exhaustive ({shards} node processes): {time.time() - t0:.1f} s", file=sys.stderr, flush=True)
+    else:
+        got = json.load(open(f"{prefix}.provenance.json"))
+        assert got == stamp, f"exhaustive run at {prefix} was made from {got}, not {stamp}"
     curve = np.zeros(Q * Q, dtype=np.uint8); cx = np.full(Q * Q, -2, dtype=np.int64); cy = cx.copy()
     s = 0
     while os.path.exists(f"{prefix}.{s}.xs.json"):
@@ -55,7 +64,7 @@ def exhaustive(shards):
             curve[x * Q:(x + 1) * Q] = c[j]; cx[x * Q:(x + 1) * Q] = a[j]; cy[x * Q:(x + 1) * Q] = b[j]
         s += 1
     assert (cx != -2).all(), "exhaustive run incomplete"
-    return curve.astype(bool), cx, cy, secs
+    return curve.astype(bool), cx, cy
 
 
 def field(curve, cx, cy, sudo):
@@ -101,7 +110,7 @@ def field(curve, cx, cy, sudo):
     out["off_curve"] = dict(pairs=int(off.sum()), rejected_by_curve_test=int(off.sum()),
                             would_pass_without_curve_test=int((off & has).sum()),
                             run_empty_without_curve_test=int((off & ~has).sum()))
-    b0 = sudo.call("new_board", SJ.tier("Demo"), False)
+    b0 = sudo.call("new_board", SJ.tier("Demo"))
     out["ladder"] = "".join(".WR"[b0["row"][b0["ladder0"] + i]] for i in range(b0["nrungs"]))
     bad = 0
     for a in range(1, Q):
@@ -162,15 +171,15 @@ def board(data, sudo, rnd):
 def main():
     shards = int(sys.argv[1]) if len(sys.argv) > 1 else 4
     t0 = time.time(); rnd = random.Random(20261003)
-    sudo = SJ.Sudo()
-    curve, cx, cy, secs = exhaustive(shards)
-    f, data = field(curve, cx, cy, sudo); f["exhaustive_node_secs"] = secs
+    sudo = SJ.Sudo(ECBS)
+    curve, cx, cy = exhaustive(shards)
+    f, data = field(curve, cx, cy, sudo)
     print("EXHAUSTIVE", json.dumps(f, indent=1), flush=True)
     p = board(data, sudo, rnd)
     sudo.close()
-    json.dump(dict(provenance=SJ.provenance(), exhaustive=f, board=p, secs=round(time.time() - t0, 1)),
+    json.dump(dict(provenance=SJ.provenance(ECBS), exhaustive=f, board=p),
               open(os.path.join(HERE, "results", "soundness_demo.json"), "w"), indent=1)
-    print("secs", round(time.time() - t0, 1))
+    print(f"soundness_demo: {time.time() - t0:.1f} s", file=sys.stderr)
 
 
 if __name__ == "__main__":

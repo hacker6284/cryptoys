@@ -1,10 +1,10 @@
 {
  "provenance": {
   "source": "primitives/key_exchange/ecbs/ecbs.sudo",
-  "sudo_sha256": "0527ebec9e0ad1fada72578f73a62347267080865aa31ecaa6d3183e3370a2b9",
+  "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
   "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
   "target": "sudoc js",
-  "sudo_tests": "# 17/17 passed"
+  "sudo_tests": "# 16/16 passed"
  },
  "Demo": {
   "summary": {
@@ -50,9 +50,7 @@
    "identical_to_phase1_python": "64/64",
    "differences": [],
    "homes_disjoint": true,
-   "fits_with_5_hole_script": true,
-   "overruns_with_15_hole_script": "SudoTrap: AssertFailed: line 256",
-   "secs": 0.7
+   "fits_with_5_hole_script": true
   },
   "runs": [
    {
@@ -61,7 +59,6 @@
      ".W"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -180,8 +177,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.2
+    ]
    },
    {
     "keys": [
@@ -189,7 +185,6 @@
      ".R"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -308,8 +303,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -317,7 +311,6 @@
      "W."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -436,8 +429,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -445,7 +437,6 @@
      "WW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -564,8 +555,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -573,7 +563,6 @@
      "WR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -692,8 +681,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -701,7 +689,6 @@
      "R."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -820,8 +807,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -829,7 +815,6 @@
      "RW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -948,8 +933,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -957,7 +941,6 @@
      "RR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -1076,8 +1059,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -1085,7 +1067,6 @@
      ".W"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -1204,8 +1185,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -1213,7 +1193,6 @@
      ".R"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -1332,8 +1311,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -1341,7 +1319,6 @@
      "W."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -1460,8 +1437,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -1469,7 +1445,6 @@
      "WW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -1588,8 +1563,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -1597,7 +1571,6 @@
      "WR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -1716,8 +1689,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -1725,7 +1697,6 @@
      "R."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -1844,8 +1815,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -1853,7 +1823,6 @@
      "RW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -1972,8 +1941,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -1981,7 +1949,6 @@
      "RR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -2100,8 +2067,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -2109,7 +2075,6 @@
      ".W"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -2228,8 +2193,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -2237,7 +2201,6 @@
      ".R"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -2356,8 +2319,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -2365,7 +2327,6 @@
      "W."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -2484,8 +2445,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -2493,7 +2453,6 @@
      "WW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -2612,8 +2571,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -2621,7 +2579,6 @@
      "WR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -2740,8 +2697,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -2749,7 +2705,6 @@
      "R."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -2868,8 +2823,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -2877,7 +2831,6 @@
      "RW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -2996,8 +2949,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -3005,7 +2957,6 @@
      "RR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -3124,8 +3075,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -3133,7 +3083,6 @@
      ".W"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -3252,8 +3201,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -3261,7 +3209,6 @@
      ".R"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -3380,8 +3327,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -3389,7 +3335,6 @@
      "W."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -3508,8 +3453,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -3517,7 +3461,6 @@
      "WW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -3636,8 +3579,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -3645,7 +3587,6 @@
      "WR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -3764,8 +3705,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -3773,7 +3713,6 @@
      "R."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -3892,8 +3831,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -3901,7 +3839,6 @@
      "RW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -4020,8 +3957,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -4029,7 +3965,6 @@
      "RR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -4148,8 +4083,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -4157,7 +4091,6 @@
      ".W"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -4276,8 +4209,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -4285,7 +4217,6 @@
      ".R"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -4404,8 +4335,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -4413,7 +4343,6 @@
      "W."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -4532,8 +4461,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -4541,7 +4469,6 @@
      "WW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -4660,8 +4587,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -4669,7 +4595,6 @@
      "WR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -4788,8 +4713,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -4797,7 +4721,6 @@
      "R."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -4916,8 +4839,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -4925,7 +4847,6 @@
      "RW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -5044,8 +4965,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -5053,7 +4973,6 @@
      "RR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -5172,8 +5091,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -5181,7 +5099,6 @@
      ".W"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -5300,8 +5217,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -5309,7 +5225,6 @@
      ".R"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -5428,8 +5343,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -5437,7 +5351,6 @@
      "W."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -5556,8 +5469,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -5565,7 +5477,6 @@
      "WW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -5684,8 +5595,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -5693,7 +5603,6 @@
      "WR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -5812,8 +5721,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -5821,7 +5729,6 @@
      "R."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -5940,8 +5847,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -5949,7 +5855,6 @@
      "RW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -6068,8 +5973,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -6077,7 +5981,6 @@
      "RR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -6196,8 +6099,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -6205,7 +6107,6 @@
      ".W"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -6324,8 +6225,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -6333,7 +6233,6 @@
      ".R"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -6452,8 +6351,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -6461,7 +6359,6 @@
      "W."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -6580,8 +6477,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -6589,7 +6485,6 @@
      "WW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -6708,8 +6603,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -6717,7 +6611,6 @@
      "WR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -6836,8 +6729,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -6845,7 +6737,6 @@
      "R."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -6964,8 +6855,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -6973,7 +6863,6 @@
      "RW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -7092,8 +6981,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -7101,7 +6989,6 @@
      "RR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -7220,8 +7107,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -7229,7 +7115,6 @@
      ".W"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -7348,8 +7233,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -7357,7 +7241,6 @@
      ".R"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -7476,8 +7359,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -7485,7 +7367,6 @@
      "W."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -7604,8 +7485,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -7613,7 +7493,6 @@
      "WW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -7732,8 +7611,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -7741,7 +7619,6 @@
      "WR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -7860,8 +7737,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -7869,7 +7745,6 @@
      "R."
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -7988,8 +7863,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -7997,7 +7871,6 @@
      "RW"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -8116,8 +7989,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    },
    {
     "keys": [
@@ -8125,7 +7997,6 @@
      "RR"
     ],
     "tier": "Demo",
-    "store_P": false,
     "P_ok": [
      true,
      true
@@ -8244,8 +8115,7 @@
     "call_example": [
      "grid 1, A3",
      "grid 1, A4"
-    ],
-    "secs": 0.0
+    ]
    }
   ]
  }

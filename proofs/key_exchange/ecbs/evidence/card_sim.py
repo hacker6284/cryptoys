@@ -8,50 +8,53 @@ keys and checks what the sudo returns against ../oracle/ecbs_oracle.py:
   A = the sender's A; curve test passed; shared points agree and equal [(lambda-1)ab]P; folded
   key = the SPEC 6 reference fold on both sides; every call names a hole of the sender's
   published band, in number order, 4 bands x n; coordinates of different homes never clash.
-It also records the band peak, control-row use and moves per phase, and compares every run
-with the Phase-1 Python simulation of the same keys (../card/card_sim_v3_*.json,
-../demo/card_sim_demo.json; those scripts were removed when ecbs.sudo replaced them).
+It also records the band peak, control-row use and moves per phase (phase and operation names
+from the sudo's phase_names() / op_names()), and compares every run with the Phase-1 Python
+simulation of the same keys (../history/card/card_sim_v3_*.json, ../history/demo/card_sim_demo.json; those
+scripts were removed when ecbs.sudo replaced them). Phase 1 recorded the keys of each Demo
+run but not of the Toy / Hobby / Serious runs: there the summary says so
+(same_keys_as_phase1: "not recorded") and the match rests on the identical results.
 
 Keys: Toy / Hobby / Serious draw them exactly as the Phase-1 simulation did
-(random.Random(20261001 + len(name)) [+ 7 for store_P]; rnd.choice('.WR') per cell, redrawn
+(random.Random(20261001 + len(name)); rnd.choice('.WR') per cell, redrawn
 until both are non-empty; then the 4 calling sessions' rnd.sample(range(2n), 3) let-go draws,
 which do not change any result), so run i here has the keys of run i there. Demo: all 8 x 8
 pairs of non-empty 2-cell keys.
 
-Usage: python card_sim.py Demo | Toy,Hobby,Serious [reps] [store_P]
-  writes results/card_sim_<tiers>[_storeP].json; stdout -> results/card_sim_<tiers>[_storeP].txt
+Usage: python card_sim.py Demo | Toy,Hobby,Serious [reps]
+  writes results/card_sim_<tiers>.json; stdout -> results/card_sim_<tiers>.txt. Timings go to
+  stderr only, so stdout and the JSON are byte-for-byte reproducible (CI diffs Demo).
 """
 import itertools, json, os, random, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "oracle")); sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, "..", "oracle"))
+sys.path.insert(0, os.path.join(HERE, "..", "..", ".."))   # proofs/: sudo_js
 sys.dont_write_bytecode = True
 from ecbs_oracle import Tier
 import sudo_js as SJ
+ECBS = "primitives/key_exchange/ecbs/ecbs.sudo"
 
-PHASES = ["base point", "store P", "own walk", "swap", "curve test", "make certificate",
-          "rebuild theirs", "shared walk", "fold"]
-OPS = ["mul", "cube", "inv", "chord", "fadd"]
+PHASES, OPS = [], []                         # filled from the sudo (phase_names, op_names)
 PEG = ".WR"
-HIST = {"Demo": "../demo/card_sim_demo.json", "Toy": "../card/card_sim_v3_Toy.json",
-        "Hobby": "../card/card_sim_v3_Hobby.json", "Serious": "../card/card_sim_v3_Serious.json",
-        "storeP": "../card/card_sim_v3_Toy_Hobby_Serious_storeP.json"}
+HIST = {"Demo": "../history/demo/card_sim_demo.json", "Toy": "../history/card/card_sim_v3_Toy.json",
+        "Hobby": "../history/card/card_sim_v3_Hobby.json", "Serious": "../history/card/card_sim_v3_Serious.json"}
 S_ = lambda t: "".join(PEG[d] for d in t)
 
 
-def phase_dict(xs, store_p):
-    return {k: v for k, v in zip(PHASES, xs) if store_p or k != "store P"}
+def phase_dict(xs):
+    return dict(zip(PHASES, xs))
 
 
-def exchange(sudo, T, ca, cb, store_p):
+def exchange(sudo, T, ca, cb):
     R = T.R; l = T.l; lam1 = (T.lam - 1) % l
-    r = sudo.call("exchange", SJ.tier(T.name), ca, cb, store_p)
+    r = sudo.call("exchange", SJ.tier(T.name), ca, cb)
     a, b = r["a"], r["b"]
     for p in (a, b):
         p.update(p.pop("cost"))              # the board's Costs record, read like the other fields
     ka, kb = T.scalar(ca), T.scalar(cb)
     pt = T.point
-    st = {"keys": [S_(ca), S_(cb)], "tier": T.name, "store_P": store_p}
+    st = {"keys": [S_(ca), S_(cb)], "tier": T.name}
     st["P_ok"] = [pt(p["base"]) == T.Pref for p in (a, b)]
     st["base_hole"] = a["base_hole"]
     st["C_ok"] = [pt(a["sent_c"]) == R.mul(ka, T.Pref), pt(b["sent_c"]) == R.mul(kb, T.Pref)]
@@ -66,7 +69,7 @@ def exchange(sudo, T, ca, cb, store_p):
     st["fold_ref_ok"] = [a["folded"] == ref, b["folded"] == ref]
     st["fold_agree"] = a["folded"] == b["folded"]
     st["peak_by_phase"] = {k: max(x, y) for k, x, y in zip(PHASES, a["peak_by_phase"], b["peak_by_phase"])
-                           if (store_p or k != "store P") and k != "fold"}
+                           if k != "fold"}
     st["peak"] = [a["peak"], b["peak"]]; st["peak_strict"] = [a["peak_strict"], b["peak_strict"]]
     st["max_bench_hole"] = max(a["max_bench_hole"], b["max_bench_hole"])
     st["control"] = dict(ladder=S_(a["ladder"]), park_hole=a["park_hole"], tally_first=a["tally_first"],
@@ -75,7 +78,7 @@ def exchange(sudo, T, ca, cb, store_p):
                          script_marker_max=max(a["script_marker_max"], b["script_marker_max"]),
                          phase_end=[PEG[a["phase_end"]], PEG[b["phase_end"]]], calling_hole=a["calling_hole"])
     st["moves"] = {"A": a["moves"], "B": b["moves"]}
-    st["moves_by_phase"] = {"A": phase_dict(a["moves_by_phase"], store_p), "B": phase_dict(b["moves_by_phase"], store_p)}
+    st["moves_by_phase"] = {"A": phase_dict(a["moves_by_phase"]), "B": phase_dict(b["moves_by_phase"])}
     st["ctrl"] = {"A": a["ctrl"], "B": b["ctrl"]}
     st["key_grid"] = {"A": a["key_grid_moves"], "B": b["key_grid_moves"]}
     st["calls"] = {"A": a["calls"], "B": b["calls"]}
@@ -154,7 +157,9 @@ def summary(T, runs, old_runs):
              script_marker_max=max(r["control"]["script_marker_max"] for r in runs))
     if old_runs is not None:
         diffs = [compare(r, o) for r, o in zip(runs, old_runs)]
-        s["same_keys_as_phase1"] = all(r["keys"] == o["keys"] for r, o in zip(runs, old_runs) if "keys" in o)
+        recorded = [(r, o) for r, o in zip(runs, old_runs) if "keys" in o]
+        s["same_keys_as_phase1"] = (all(r["keys"] == o["keys"] for r, o in recorded)
+                                    if len(recorded) == len(runs) else "not recorded")
         s["identical_to_phase1_python"] = f"{sum(not d for d in diffs)}/{len(runs)}"
         s["differences"] = [d for d in diffs if d]
     return s
@@ -173,8 +178,8 @@ def keys_like_phase1(rnd, M, n):
 def main():
     tiers = sys.argv[1].split(",")
     reps = int(sys.argv[2]) if len(sys.argv) > 2 else None
-    store = len(sys.argv) > 3 and sys.argv[3] == "store_P"
-    sudo = SJ.Sudo(); res = {"provenance": SJ.provenance()}
+    sudo = SJ.Sudo(ECBS); res = {"provenance": SJ.provenance(ECBS)}
+    PHASES[:] = sudo.call("phase_names"); OPS[:] = sudo.call("op_names")
     for name in tiers:
         T = Tier(name); t0 = time.time(); runs = []
         print(name, "n", T.n, "k", T.k, flush=True)
@@ -183,11 +188,12 @@ def main():
             pairs = list(itertools.product(keys, keys))
             old = json.load(open(os.path.join(HERE, HIST["Demo"])))["runs"]
         else:
-            rnd = random.Random(20261001 + len(name) + (7 if store else 0))
+            rnd = random.Random(20261001 + len(name))
             pairs = [keys_like_phase1(rnd, T.cells, T.n) for _ in range(reps or {"Toy": 10, "Hobby": 6, "Serious": 4}[name])]
-            old = json.load(open(os.path.join(HERE, HIST["storeP" if store else name])))[name]
+            old = json.load(open(os.path.join(HERE, HIST[name])))[name]
         for i, (ca, cb) in enumerate(pairs):
-            t1 = time.time(); st = exchange(sudo, T, ca, cb, store); st["secs"] = round(time.time() - t1, 1)
+            t1 = time.time(); st = exchange(sudo, T, ca, cb)
+            print(f"  {name} run {i}: {time.time() - t1:.1f} s", file=sys.stderr, flush=True)
             if name != "Demo" or i < 3 or not all_ok(st):
                 print(" ", json.dumps({k: v for k, v in st.items() if k != "moves_by_phase"}), flush=True)
                 print("   by phase", json.dumps(st["moves_by_phase"]), flush=True)
@@ -196,23 +202,18 @@ def main():
         s = summary(T, runs, old)
         s["homes_disjoint"] = homes_disjoint(sudo, T)
         if name == "Demo":
+            # Demo's 16-hole control row fits its 5-hole script; the 15-hole overrun is the
+            # sudo test "§1 Demo's 16-hole control row overruns with a 15-hole script".
             try:
-                sudo.call("new_board", SJ.tier("Demo"), False)  # the 5-hole script fits
-                s["fits_with_5_hole_script"] = True
+                sudo.call("new_board", SJ.tier("Demo")); s["fits_with_5_hole_script"] = True
             except SJ.SudoError:
                 s["fits_with_5_hole_script"] = False
-            t15 = sudo.call("with_script", SJ.tier("Demo"), 15)
-            try:
-                sudo.call("new_board", t15, False); s["overruns_with_15_hole_script"] = False
-            except SJ.SudoError as e:
-                s["overruns_with_15_hole_script"] = str(e)
-        s["secs"] = round(time.time() - t0, 1)
+        print(f"{name}: {time.time() - t0:.1f} s", file=sys.stderr, flush=True)
         print(name, "summary", json.dumps(s, indent=1), flush=True)
         res[name] = {"summary": s, "runs": runs}
     sudo.close()
-    tag = "_".join(tiers) + ("_storeP" if store else "")
     os.makedirs(os.path.join(HERE, "results"), exist_ok=True)
-    json.dump(res, open(os.path.join(HERE, "results", f"card_sim_{tag}.json"), "w"), indent=1)
+    json.dump(res, open(os.path.join(HERE, "results", f"card_sim_{'_'.join(tiers)}.json"), "w"), indent=1)
 
 
 if __name__ == "__main__":

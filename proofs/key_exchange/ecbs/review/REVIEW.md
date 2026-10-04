@@ -389,7 +389,7 @@ Here pX is a proved prime of X bits.
 | `mr_orders.py` | `mr_orders_results.txt` | Traces three ways, brute-force counts, #E, ℓ primality (three tests), ℓ−1, embedding degrees, λ, twist/E′/node orders, rho figures, base points, family scan |
 | `mr_factor_bg.py` | `mr_factor_bg_results.txt` | Full PARI factorisations of the Hobby/Serious twist, E′ and node |
 | `mr_factor_check.py` | `mr_factor_check_results.txt` | APR-CL primality of every factor, product checks, bit sizes and PH/rho costs |
-| `mr_invalid_trace.py` | `mr_invalid_trace_results.txt` | Node and E′ points against the spec trace chain (odd parts pass) |
+| `mr_invalid_trace.py` (removed at landing; log kept) | `mr_invalid_trace_results.txt` | Node and E′ points against the spec trace chain (odd parts pass) |
 | `mr_lemmaA.py` | `mr_lemmaA_results.txt` | Exact injectivity thresholds, the shortest relations, Demo brute force and Toy MITM |
 | `mr_fleets.c` (binary `mr_fleets`) | `mr_fleets_results.txt`, `mr_fleets_time.txt` | Exhaustive enumeration: N_LAB, global max M = 72, M histogram, (h, w)-box sums of M and M², exact Toy bound |
 | `mr_fleets2.c` (binary `mr_fleets2`) | `mr_fleets2_results.txt`, `mr_fleets2_time.txt` | Same, plus Σ1/M and Σlog₂M per box |
@@ -398,8 +398,8 @@ Here pX is a proved prime of X bits.
 | `mr_frob.py` | `mr_frob_results.txt` | Frobenius rotation model: exact E[c], E[1/c], MC, exhaustive model tests, cost table |
 | `mr_ks.py` | `mr_ks_results.txt` | Full (χ, ψ) character-sum spectra at n = 7, 9, 11, 13 |
 | `mr_extractor_recalc.py` | `mr_extractor_recalc_results.txt` | C19 SD bounds and max m with c = 3 vs 4 |
-| `mr_q13.py` | `mr_q13_results.txt` | Band-count register machine; spec walk (9) vs F-form (7) |
-| `mr_q13_validation.py` | `mr_q13_validation_results.txt` | Spec validation (8) vs lazy-y schedules (7), with honest and B+T5 tests |
+| `mr_q13.py` (removed at landing; log kept) | `mr_q13_results.txt` | Band-count register machine; spec walk (9) vs F-form (7) |
+| `mr_q13_validation.py` (removed at landing; log kept) | `mr_q13_validation_results.txt` | Spec validation (8) vs lazy-y schedules (7), with honest and B+T5 tests |
 | `mr_c22.py` | `mr_c22_results.txt` | Tap irreducibility, single-peg cube counts, GNB types |
 
 **Not done / limits.**

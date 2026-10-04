@@ -33,7 +33,7 @@ theorem edgeFaceOf_spec (g : Position) (a b x y : Fin 12) (h : edgeFaceOf? g a b
     have hp := lastIdx_spec _ _ _ hl
     simp only [decide_eq_true_eq, Nat.mod_eq_of_lt hs] at hp
     refine ⟨⟨s, hs⟩, hp, ?_⟩
-    try dsimp only at h
+    dsimp only at h
     split at h
     · cases h; exact Or.inl ⟨rfl, by assumption⟩
     · split at h
@@ -56,8 +56,8 @@ theorem cornerFaceOf_spec (g : Position) (a b c x y : Fin 12)
     have hp := lastIdx_spec _ _ _ hl
     simp only [decide_eq_true_eq, Nat.mod_eq_of_lt hs] at hp
     refine ⟨⟨s, hs⟩, hp, ?_⟩
-    try dsimp only at h
-    try simp only [Nat.mod_eq_of_lt hs] at h
+    dsimp only at h
+    simp only [Nat.mod_eq_of_lt hs] at h
     split at h
     · cases h; exact ⟨2, by decide, rfl, by assumption⟩
     · split at h

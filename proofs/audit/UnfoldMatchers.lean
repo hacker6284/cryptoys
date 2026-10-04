@@ -17,7 +17,7 @@
   copy changes shape) is an error, not a silent no-op. Each new goal / hypothesis type is
   definitionally equal to the old one (`replaceTargetDefEq` / `replaceLocalDeclDefEq`; the
   kernel re-checks the proof). A proof tool only: no theorems, no definitions of an
-  algorithm. Core Lean only, so every package that requires `audit` can use it.
+  algorithm (`selfTestSel` exists only for the self-test at the end of this file). Core Lean only, so every package that requires `audit` can use it.
 -/
 import Lean
 
@@ -57,5 +57,21 @@ syntax (name := unfoldMatchers) "unfold_matchers" (Parser.Tactic.location)? : ta
         throwError "unfold_matchers: no matcher application in the goal"
       return some (← g.replaceTargetDefEq t'))
     (failed := fun _ => throwError "unfold_matchers: no matcher application found")
+
+/-! Self-test (elaborated with this library): one goal it unfolds, and goals where it must fail. -/
+
+/-- A one-`match` function for the self-test. -/
+def selfTestSel (n : Nat) : Bool := match n with | 0 => true | _ => false
+
+example : selfTestSel 0 = true := by
+  unfold selfTestSel
+  unfold_matchers
+  fail_if_success unfold_matchers
+  rfl
+
+example (h : (1 : Nat) = 1) : (2 : Nat) = 2 := by
+  fail_if_success unfold_matchers at h
+  fail_if_success unfold_matchers
+  rfl
 
 end UnfoldMatchers

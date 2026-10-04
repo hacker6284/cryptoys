@@ -60,6 +60,11 @@ model only:
   counters never affect the position or the last face, so `emBlock` is the same from any
   starting counter values.
 
+Scope of these reading aids: they cover a card step's first turn, the piece searches and the
+echo colour. They do not restate the pair turns (the two edge and two corner turns after the
+searches) or the third turn (the final edge turn after the relook) beyond what `cardStep`'s
+definition says; for those, read `Em.cardStep` against SPEC §5 directly.
+
 The card-phase layers:
 - `triples_ok` (`Link2/CardFacts.lean`, kernel `decide`). For every colour `c` and suit amount
   `k ∈ 1..4`, `suit_nbrs c k = (n, n2)` names a real edge `(c, n)` and a real corner

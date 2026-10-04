@@ -189,34 +189,35 @@ theorem cardStep_eq_cardTail (r : Run) (base : Fin 12) (rank k : Nat) (c : Fin 1
 same block, only the `turned` face differs. Restated here (as `chunkStep` in
 `MegaDreifach/Link2/VHashCommon.lean` restates the emitted chunk loop) so the shared rewrite
 chain is proved once, in `card_step_tail_refines`; if the emitter changes the block, the
-`exact`s in `card_step_refines` fail. -/
+`exact`s in `card_step_refines` fail. The emitted temporaries (`_t824` … `_t838` in the first
+branch) have readable names here; binder names do not matter to the `exact`. -/
 def cardStepTailE (r : Megadreifach.Run) (turned k c : Int) :
     Except SudoRt.Trap Megadreifach.Run := do
-  let _t824 ← Megadreifach.turn_run r turned k
-  let r := _t824
-  let _t825 ← Megadreifach.suit_nbrs c k
-  let ⟨n, n2⟩ := _t825
-  let _t826 ← Megadreifach.count_find r
-  let r := _t826
-  let _t827 ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n c
-  let _t828 ← Megadreifach.turn_run r _t827 (1 : Int)
-  let r := _t828
-  let _t829 ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n n
-  let _t830 ← Megadreifach.turn_run r _t829 (1 : Int)
-  let r := _t830
-  let _t831 ← Megadreifach.count_find r
-  let r := _t831
-  let _t832 ← Megadreifach.corner_face_of (r).sudo_3Run_1g c n n2 c
-  let _t833 ← Megadreifach.turn_run r _t832 (1 : Int)
-  let r := _t833
-  let _t834 ← Megadreifach.corner_face_of (r).sudo_3Run_1g c n n2 n
-  let _t835 ← Megadreifach.turn_run r _t834 (1 : Int)
-  let r := _t835
-  let _t836 ← Megadreifach.count_relook r
-  let r := _t836
-  let _t837 ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n n
-  let _t838 ← Megadreifach.turn_run r _t837 (1 : Int)
-  pure _t838
+  let rTurned ← Megadreifach.turn_run r turned k
+  let r := rTurned
+  let nbrs ← Megadreifach.suit_nbrs c k
+  let ⟨n, n2⟩ := nbrs
+  let rFind1 ← Megadreifach.count_find r
+  let r := rFind1
+  let fEdgeC ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n c
+  let rEdgeC ← Megadreifach.turn_run r fEdgeC (1 : Int)
+  let r := rEdgeC
+  let fEdgeN ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n n
+  let rEdgeN ← Megadreifach.turn_run r fEdgeN (1 : Int)
+  let r := rEdgeN
+  let rFind2 ← Megadreifach.count_find r
+  let r := rFind2
+  let fCornerC ← Megadreifach.corner_face_of (r).sudo_3Run_1g c n n2 c
+  let rCornerC ← Megadreifach.turn_run r fCornerC (1 : Int)
+  let r := rCornerC
+  let fCornerN ← Megadreifach.corner_face_of (r).sudo_3Run_1g c n n2 n
+  let rCornerN ← Megadreifach.turn_run r fCornerN (1 : Int)
+  let r := rCornerN
+  let rRelook ← Megadreifach.count_relook r
+  let r := rRelook
+  let fLast ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n n
+  let rLast ← Megadreifach.turn_run r fLast (1 : Int)
+  pure rLast
 
 /-- The shared tail of `card_step_refines`: from any face `f`, the emitted block refines
 `cardTail`. -/

@@ -1,7 +1,7 @@
 /-
   Invariant `InjPos` (injective corner / edge permutation tables) is preserved
-  by `g2Step`, `f3Step`, `emBlock`, `dmStep`, and holds at `ivCook12`. The
-  version-neutral part (`compose`, `faceMove`, `faceTurn`) is in `InjPos.lean`.  Zero sorry.  No native_decide.
+  by `g2Step`, `f3Step`, `emBlock` and `dmStep`. The version-neutral part (`compose`,
+  `faceMove`, `faceTurn`, and `injPos_ivCook12`) is in `InjPos.lean`.  Zero sorry.  No native_decide.
 -/
 import MegaDreifach.Em
 import MegaDreifach.Link2.PosBytesGen
@@ -43,8 +43,6 @@ theorem injPos_dmStep (h : Position) (deal : List Nat) (hh : InjPos h) :
   injPos_compose _ _ hh (injPos_emBlock h deal hh)
 
 theorem injPos_of_isLegal (p : Position) (h : isLegal p) : InjPos p := ⟨h.1, h.2.1⟩
-
-theorem injPos_ivCook12 : InjPos Em.ivCook12 := injPos_of_isLegal _ ivCook12_isLegal
 
 theorem injPos_foldl_dm (blocks : List (List Nat)) : ∀ h, InjPos h →
     InjPos (blocks.foldl Em.dmStep h) := by

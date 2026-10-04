@@ -1,6 +1,7 @@
 /-
   Invariant `InjPos` (injective corner / edge permutation tables) is preserved by
-  `compose`, `faceMove` and `faceTurn`. Model only, version-neutral: v2's InjInv (grips,
+  `compose`, `faceMove` and `faceTurn`, and holds at `identity` and at `ivCook12` (the
+  identity cooked by twelve unit face turns, so only `faceTurn` is needed). Model only, version-neutral: v2's InjInv (grips,
   `emBlock`, `dmStep`, `ivCook12`) and v3's RunStep (card phase) both import it.
   Zero sorry. No native_decide.
 -/
@@ -38,5 +39,27 @@ theorem injPos_leftIter (T : Position) (hT : InjPos T) :
 theorem injPos_faceTurn (g : Position) (f : Fin 12) (a : Nat) (hg : InjPos g) :
     InjPos (Em.faceTurn g f a) :=
   injPos_leftIter _ (injPos_faceMove f) _ _ hg
+
+/-- The identity position has bijective tables. -/
+theorem injPos_identity : InjPos MegaDreifach.identity := by
+  constructor <;> intro a b h <;> exact h
+
+/-- IV-COOK12 has bijective tables: it is the identity after twelve unit face turns. -/
+theorem injPos_ivCook12 : InjPos Em.ivCook12 := by
+  unfold Em.ivCook12
+  generalize List.range 12 = l
+  have key : ∀ (l : List Nat) (g : Position), InjPos g →
+      InjPos (l.foldl (fun g f => if hf : f < 12 then Em.faceTurn g ⟨f, hf⟩ 1 else g) g) := by
+    intro l
+    induction l with
+    | nil => intro g hg; exact hg
+    | cons f l ih =>
+      intro g hg
+      apply ih
+      dsimp only
+      split
+      · exact injPos_faceTurn g _ 1 hg
+      · exact hg
+  exact key l _ injPos_identity
 
 end MegaDreifach.Link2

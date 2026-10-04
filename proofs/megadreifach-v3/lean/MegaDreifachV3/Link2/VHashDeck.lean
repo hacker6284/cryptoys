@@ -99,7 +99,7 @@ theorem v_HashDeckBody_refines (deal : List Nat) (hp : isPermutation52 deal) :
     Megadreifach.v_HashDeckBody (embed deal) =
       .ok (embed (positionToBytes (MegaDreifachV3.Em.dmStep Em.ivCook12 deal))) := by
   unfold Megadreifach.v_HashDeckBody
-  rw [iv_cook12_refines, ok_bind, body_from_refines _ injPos_ivCook12' deal hp, ok_bind]
+  rw [iv_cook12_refines, ok_bind, body_from_refines _ injPos_ivCook12 deal hp, ok_bind]
   rfl
 
 theorem v_MegaDreifachBody_refines (deal : List Nat) (hp : isPermutation52 deal) :

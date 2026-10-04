@@ -144,7 +144,7 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 - v3 is the current MegaDreifach (v2 deprecated; see PR #181 for the switch). v3 reuses the v2
   model and the version-neutral v2 Link 2 modules (InjPos, VHashCommon, Sudo, PhiInv, Compose,
   among the `MegaDreifachLink` roots); this PR moved shared lemmas into those modules, but v2's
-  statements are otherwise unchanged and its audit (`check_axioms.py megadreifach`) is 2744.
+  statements are otherwise unchanged and its audit (`check_axioms.py megadreifach`) is 2745.
   Its dependents (DoubleDeal-CBC-HMAC, Scramble and BS reuse its Link 2 runtime lemmas) keep
   their audit counts. Moving v3 into `proofs/megadreifach/` and v2 into `proofs/deprecated/` is
   a separate step.

@@ -43,27 +43,6 @@ theorem iv_cook12_refines : Megadreifach.iv_cook12 = .ok (embedPos Em.ivCook12) 
     exact loopTailN i 11 hi (by unfold FitsLen i64MaxNat; omega) _
   · rfl
 
-theorem injPos_identity : InjPos MegaDreifach.identity :=
-  by
-  constructor <;> intro a b h <;> exact h
-
-theorem injPos_ivCook12' : InjPos Em.ivCook12 := by
-  unfold Em.ivCook12
-  generalize List.range 12 = l
-  have key : ∀ (l : List Nat) (g : Position), InjPos g →
-      InjPos (l.foldl (fun g f => if hf : f < 12 then Em.faceTurn g ⟨f, hf⟩ 1 else g) g) := by
-    intro l
-    induction l with
-    | nil => intro g hg; exact hg
-    | cons f l ih =>
-      intro g hg
-      apply ih
-      dsimp only
-      split
-      · exact injPos_faceTurn g _ 1 hg
-      · exact hg
-  exact key l _ injPos_identity
-
 /-! ## Algebraic v3 hash -/
 
 theorem phiUnrank_cards (bs : List Nat) (h : PhiChunkWf bs) :
@@ -107,7 +86,7 @@ theorem injPos_foldl_dmBlock (l : List (List Nat)) : ∀ h, InjPos h →
   | cons b bs ih => intro h hh; exact ih _ (injPos_dmBlock h _ hh)
 
 theorem injPos_chainPre (xs : List Nat) (k : Nat) : InjPos (chainPre xs k) :=
-  injPos_foldl_dmBlock _ _ injPos_ivCook12'
+  injPos_foldl_dmBlock _ _ injPos_ivCook12
 
 theorem v_Hash_refines (msg : List Nat) (hp : PadWf msg) :
     Megadreifach.v_Hash (embed msg) = .ok (embed (vhashAlg msg)) := by

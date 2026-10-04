@@ -1,9 +1,9 @@
 # command: e1 120000 2000000
 build: HashDeckBody(new-deck order) = 0286e85ac12530b60a3c706a8f339cd238203e1eb2bf4f2b877341cf60; block = build dm_step; HashDecksBody present
-selfcheck: sampler positions are build group elements and block == build HashDeckBodyFrom: 8/8
+selfcheck: compose(h, inverse(h)) == identity (legality of h: by uniformH's construction, not checked) and block == build HashDeckBodyFrom: 8/8
 e1 N=120000 SEED0=2000000: 240 chunks of <= 500, chunk c uses seed SEED0 + c
 E1: secret uniform h, uniform deck D, D' = D with cards 51 and 52 swapped; z = f(h,D)^-1 f(h,D')
   fixE: n=120000 P(fixE>=2) = 0.2629 [0.2604,0.2654] ideal 0.264241 adv -0.0014 (95% half-width 0.0025); mean 0.9968 +- 0.0057 (ideal 1)
   fixC: n=120000 P(fixC>=2) = 0.2645 [0.2620,0.2670] ideal 0.264241 adv +0.0002 (95% half-width 0.0025); mean 0.9981 +- 0.0057 (ideal 1)
   equal outputs (collisions): 0/120000; self-check vs build HashDeckBodyFrom: 240 chunks
-# time e1: 658.7 s, 4 workers
+# time e1: 616.1 s, 4 workers

@@ -1,8 +1,8 @@
 # command: a1 100000 1000000
 build: HashDeckBody(new-deck order) = 0286e85ac12530b60a3c706a8f339cd238203e1eb2bf4f2b877341cf60; block = build dm_step; HashDecksBody present
-selfcheck: sampler positions are build group elements and block == build HashDeckBodyFrom: 8/8
+selfcheck: compose(h, inverse(h)) == identity (legality of h: by uniformH's construction, not checked) and block == build HashDeckBodyFrom: 8/8
 a1 N=100000 SEED0=1000000: 200 chunks of <= 500, chunk c uses seed SEED0 + c
 A1 (f' = f(., K turned over), 2-edge-flip prediction): accepted 0/100000 = 0.000e+0; 95% CI (Wilson) [0.00e+0, 3.84e-5]; exact one-sided 95% upper bound 3.00e-5
   accepted == (W unchanged by the flip) in every game; W unchanged 0/100000; ideal 1/|G| ~ 2^-225.9
   self-check y1 == build HashDeckBodyFrom: 200 chunks
-# time a1: 498.6 s, 4 workers
+# time a1: 540.8 s, 4 workers

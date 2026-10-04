@@ -237,13 +237,19 @@ function header(emit) {
     emit(`build: HashDeckBody(new-deck order) = ${hex([...impl.HashDeckBody(deal(id))].map(Number))}; ` +
         `block = ${HAS_DM ? "build dm_step" : "build compose(h, em_block(h, deal)) (no dm_step: a v2 build)"}; ` +
         `HashDecksBody ${HAS_DECKS ? "present" : "absent"}`);
+    // Self-check. compose(h, inverse(h)) == identity only shows the build accepts the tuple and
+    // that its group operations are consistent; any tuple of the right shape passes it, so it says
+    // nothing about legality. Legality of every sampled position comes from uniformH's
+    // construction alone (even permutations, twist sum 0 mod 3, flip sum 0 mod 2); the build has
+    // no legality predicate to call. The second half checks block() against the build's
+    // HashDeckBodyFrom.
     const R = rng(20261004);
     let ok = 0;
     for (let i = 0; i < 8; i++) {
         const h = toPos(uniformH(R)), d = uniformDeal(R);
         ok += same(fromPos(comp(h, inv(h))), fromPos(impl.identity())) && eqArr(bytesOf(block(h, d)), bodyFrom(d, h));
     }
-    emit(`selfcheck: sampler positions are build group elements and block == build HashDeckBodyFrom: ${ok}/8`);
+    emit(`selfcheck: compose(h, inverse(h)) == identity (legality of h: by uniformH's construction, not checked) and block == build HashDeckBodyFrom: ${ok}/8`);
     if (ok !== 8) throw new Error("selfcheck failed");
 }
 const int = (x) => { if (!/^\d+$/.test(x ?? "")) throw new Error(`expected a non-negative integer, got ${x}`); return parseInt(x, 10); };

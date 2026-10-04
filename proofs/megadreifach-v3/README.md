@@ -25,8 +25,8 @@ compares two builds of one source, not two independent implementations.
 the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
 `inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
 `Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 62 v2 modules,
-exactly their own import closure, that elaborate against the v3 emit; with the 16 v3 modules
-the package builds 78 modules, plus the `Generated/` package). The model side is the v2 position algebra,
+exactly their own import closure, that elaborate against the v3 emit; with the 17 v3 modules
+the package builds 79 modules, plus the `Generated/` package). The model side is the v2 position algebra,
 which v3 keeps. These four functions are not exports.
 
 [`lean/MegaDreifachV3/Link2/Codec.lean`](lean/MegaDreifachV3/Link2/Codec.lean) states, for the
@@ -43,7 +43,24 @@ The v3 card phase. [`lean/MegaDreifachV3/Em.lean`](lean/MegaDreifachV3/Em.lean) 
 typed Lean model of the v3 sudo's `lowest_nbr_index` .. `dm_step`, a transliteration on the v2
 position algebra. Like v2's `MegaDreifach.Em`, it is hand-written, so its agreement with the
 emitted code is what Link 2 proves. The two piece searches (`edge_face_of`, `corner_face_of`)
-are `Option`-valued in the model, and `none` is the emitted code's trap. The card-phase layers:
+are `Option`-valued in the model, and `none` is the emitted code's trap.
+
+**What Link 2 does and does not check.** Link 2 proves only generated = model: the code
+emitted from the sudo computes the same as `Em.lean`. It does not compare the sudo or the model
+with the SPEC prose, so a deviation of the sudo from SPEC §5 would be transliterated into the
+model and still pass. To make the model easy to check against SPEC §5 by reading,
+[`lean/MegaDreifachV3/EmReading.lean`](lean/MegaDreifachV3/EmReading.lean) proves, about the
+model only:
+- `edgeFaceOf_spec` and `cornerFaceOf_spec`: a successful piece search returns a face of the
+  slot holding the named piece, and that face shows the asked-for colour `x`.
+- `turnedFace_countUp` and `turnedFace_king`: a card step's first turn counts up from the base
+  face by the rank (`countUp`, SPEC §5.1: r steps up the colour cycle, after Q comes A), or takes
+  the opposite face for a King. `echoColour_countUp`: the echo colour counts up from X by Y.
+- `cardStep_g_last`, `dealFold_g_last`, `echoRun_g_last` and `emBlock_any_counters`: the cost
+  counters never affect the position or the last face, so `emBlock` is the same from any
+  starting counter values.
+
+The card-phase layers:
 - `triples_ok` (`Link2/CardFacts.lean`, kernel `decide`). For every colour `c` and suit amount
   `k ∈ 1..4`, `suit_nbrs c k = (n, n2)` names a real edge `(c, n)` and a real corner
   `(c, n, n2)`, which `corner_slot` finds. These are the side conditions of the piece searches.

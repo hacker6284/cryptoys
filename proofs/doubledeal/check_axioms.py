@@ -59,7 +59,7 @@ axiom) fails, as does a Lean error.
   required: the theorems its README cites (MD_V1_README_THEOREMS).
 - megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
   for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
-  README cites (MD_V3_README_THEOREMS); min is the audited count (194).
+  README cites (MD_V3_README_THEOREMS); min is the audited count (215).
   `--selftest` checks its "Emitted function" column against
   primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
@@ -436,7 +436,10 @@ MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
     "v_HashDeck_refines", "v_HashDeck_refines_array", "v_HashDeck_two_blocks",
     "v_MegaDreifachDeck_refines", "phiUnrank_lehmerRank", "body_from_refines",
     "v_HashDeckBody_refines", "v_MegaDreifachBody_refines", "v_HashDeckBodyFrom_refines",
-    "v_MegaDreifachBodyFrom_refines"]}
+    "v_MegaDreifachBodyFrom_refines"]} | {f"MegaDreifachV3.Em.{n}" for n in [
+    "edgeFaceOf_spec", "cornerFaceOf_spec", "turnedFace_countUp", "turnedFace_king",
+    "echoColour_countUp", "cardStep_g_last", "dealFold_g_last", "echoRun_g_last",
+    "emBlock_any_counters"]}
 
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
@@ -953,9 +956,9 @@ PACKAGES = {
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
-        # sanity: the audit must see the whole package (194 theorems at 308fe9b; raise as
+        # sanity: the audit must see the whole package (the real audited count; raise as
         # Link 2 grows, lower only with a reason in the commit)
-        "min": 194,
+        "min": 215,
         "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac": {

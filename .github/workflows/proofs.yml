@@ -333,8 +333,8 @@ jobs:
     # MegaDreifach v3 (ZP26 card phase; proofs/megadreifach-v3): the KAT data mirrored from
     # kats/megaminx_hash_kats_v3.json, a compiled run of the emitted v3 code on every vector
     # (52 checks, about a second; not a kernel proof), Link 2 for all 11 exports (the v3
-    # MegaDreifachV3.Link2 files plus v2 lemmas re-elaborated against the v3 emit: 78 modules,
-    # 16 v3 and 62 v2, plus Generated/; about 4 min serial locally from clean, peak about
+    # MegaDreifachV3.Link2 files plus v2 lemmas re-elaborated against the v3 emit: 79 modules,
+    # 17 v3 and 62 v2, plus Generated/; about 4 min serial locally from clean, peak about
     # 2.3 GB) and the axiom audit.
     # The emitted TAP is megadreifach-v3-generated; emit freshness is generated-fresh.
     runs-on: ubuntu-latest

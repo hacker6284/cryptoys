@@ -14,7 +14,6 @@ import MegaDreifachV3.Link2.RunSimp
   bijective corner and edge tables and counters ≤ `counterCap`, the emitted `card_step` returns
   the model `cardStep` for every base face, rank ≤ 12, suit amount `k ∈ 1..4` and colour.
   The piece searches inside it use the found-invariants of `Link2/FaceOfFound.lean`.
-  `injPos_*'` restate v2 InjInv lemmas (InjInv imports the v2-only EmBlock).
 -/
 
 namespace MegaDreifachV3.Link2
@@ -187,9 +186,10 @@ theorem cardStep_eq_cardTail (r : Run) (base : Fin 12) (rank k : Nat) (c : Fin 1
     cardStep r base rank k c = cardTail r (turnedFace base rank) k c := rfl
 
 /-- The emitted `card_step` after its `if`: both branches of the generated body continue with this
-same block, only the `turned` face differs. Restated here (as `VHash.chunkStep` restates the
-chunk loop) so the shared rewrite chain is proved once, in `card_step_tail_refines`; if the
-emitter changes the block, the `exact`s in `card_step_refines` fail. -/
+same block, only the `turned` face differs. Restated here (as `chunkStep` in
+`MegaDreifach/Link2/VHashCommon.lean` restates the emitted chunk loop) so the shared rewrite
+chain is proved once, in `card_step_tail_refines`; if the emitter changes the block, the
+`exact`s in `card_step_refines` fail. -/
 def cardStepTailE (r : Megadreifach.Run) (turned k c : Int) :
     Except SudoRt.Trap Megadreifach.Run := do
   let _t824 ← Megadreifach.turn_run r turned k

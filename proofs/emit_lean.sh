@@ -9,8 +9,8 @@
 # MegaDreifach (deprecated v2 and frozen v1; v3 is current and has no Lean target), Scramble,
 # DoubleDeal-CBC-Sandwich v2, frozen DoubleDeal-CBC-HMAC v1 and BS. DoubleDeal's test-only
 # kind-scan whiles are stripped under the gate (also when DoubleDeal is imported).
-# cbc-hmac (v2, directory name kept) imports MegaDreifach and DoubleDeal via extra -I;
-# cbc-hmac-v1 (frozen) imports MegaDreifach.
+# cbc-hmac (v2, directory name kept) imports MegaDreifach v3 and DoubleDeal via extra -I;
+# cbc-hmac-v1 (frozen) imports the deprecated MegaDreifach v2.
 #
 # Usage (from anywhere):
 #   proofs/emit_lean.sh [--check] [TARGET ...]   # no TARGET: all of them (table below)
@@ -46,7 +46,7 @@ doubledeal-v11  primitives/cipher/doubledeal/v11/doubledeal_v11.sudo      proofs
 megadreifach    primitives/hash/megadreifach/megadreifach.sudo            proofs/megadreifach/lean/Generated
 megadreifach-v1 primitives/hash/megadreifach/v1/megadreifach.sudo         proofs/deprecated/megadreifach-v1/lean/Generated
 scramble        primitives/hash/scramble/scramble.sudo                    proofs/scramble/lean/Generated
-cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach primitives/cipher/doubledeal
+cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach/v3 primitives/cipher/doubledeal
 cbc-hmac-v1     primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo proofs/deprecated/doubledeal-cbc-hmac-v1/lean/Generated primitives/hash/megadreifach
 bs              primitives/key_exchange/bs/bs.sudo                        proofs/key_exchange/bs/lean/Generated
 "

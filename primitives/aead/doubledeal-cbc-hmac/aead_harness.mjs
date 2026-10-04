@@ -32,6 +32,17 @@ export async function loadModule({ aeadOut = process.env.AEAD_OUT || "/tmp/ddch"
     return import(pathToFileURL(resolve(aeadOut, "doubledeal_cbc_hmac.mjs")).href);
 }
 
+// The fixed IV deck of the KAT vectors (SPEC §9): unrank(Hash(KAT_IV_LABEL) mod 52!), computed by
+// the build alone: the imported MegaDreifach module's Hash, then the sudo's unrank_reduce (an
+// internal function, called through the build's impl module). No arithmetic here.
+export const KAT_IV_LABEL = "DoubleDeal-CBC-Sandwich/v2 KAT IV";
+export async function katIvDeck({ aeadOut = process.env.AEAD_OUT || "/tmp/ddch" } = {}) {
+    const at = (f) => import(pathToFileURL(resolve(aeadOut, f)).href);
+    const [impl, rt, md] = await Promise.all([at("_doubledeal_cbc_hmac_impl.mjs"), at("_sudo_rt.mjs"), at("megadreifach.mjs")]);
+    const digest = [...md.Hash([...new TextEncoder().encode(KAT_IV_LABEL)])].map(Number);
+    return [...impl.unrank_reduce(rt.lst(digest.map(BigInt)))].map(Number);
+}
+
 export async function loadAead(opts = {}) {
     const m = await loadModule(opts);
     return createAead({ seal: m.aead_seal, open: m.aead_open, derive_key_decks: m.derive_key_decks });

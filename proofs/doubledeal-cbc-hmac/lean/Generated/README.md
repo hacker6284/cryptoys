@@ -5,7 +5,7 @@
 [`primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo`](../../../../primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo)
 (DoubleDeal-CBC-Sandwich v2; the directory and file keep their v1 names) by
 `proofs/emit_lean.sh cbc-hmac`, with MegaDreifach and DoubleDeal imported via
-`-I primitives/hash/megadreifach -I primitives/cipher/doubledeal`.
+`-I primitives/hash/megadreifach/v3 -I primitives/cipher/doubledeal`.
 
 This directory is a standalone Lake package (its own `lakefile.lean`).
 There is no algebraic proof package next door: v2 has no Link 2 yet (the frozen

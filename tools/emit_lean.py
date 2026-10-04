@@ -10,7 +10,7 @@ Reproduces the spike path that was green on DoubleDeal / MegaDreifach:
 
 Emit uses `sudoc emit-ir --require terminates`. DoubleDeal, MegaDreifach,
 Scramble, and DoubleDeal-CBC-Sandwich v2 (and frozen CBC-HMAC v1) production paths are bounded `for`.
-CBC-Sandwich v2 imports MegaDreifach and DoubleDeal; pass `-I primitives/hash/megadreifach -I primitives/cipher/doubledeal` (frozen v1: `-I primitives/hash/megadreifach`)
+CBC-Sandwich v2 imports MegaDreifach v3 and DoubleDeal; pass `-I primitives/hash/megadreifach/v3 -I primitives/cipher/doubledeal` (frozen v1: `-I primitives/hash/megadreifach`, the deprecated v2)
 so emit-ir resolves those modules instead of flattening a second copy.
 See proofs/ANTI_DRIFT.md.
 

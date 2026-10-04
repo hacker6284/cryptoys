@@ -5,10 +5,10 @@ The directory keeps v1's name `doubledeal-cbc-hmac` (renaming is left to review)
 
 Sudo is normative. Emitted Lean under `lean/Generated/` is the whole v2 algorithm from
 [`primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo`](../../primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo),
-with MegaDreifach and DoubleDeal imported (`-I primitives/hash/megadreifach -I primitives/cipher/doubledeal`).
+with MegaDreifach and DoubleDeal imported (`-I primitives/hash/megadreifach/v3 -I primitives/cipher/doubledeal`).
 See [`../ANTI_DRIFT.md`](../ANTI_DRIFT.md). The emit terminates gate is on; production loops are bounded `for`.
 
-**The Lean lags v2.** There is no Link 2 for v2 yet: nothing here proves the emitted functions equal a hand-written model, and nothing here is an AEAD, MAC or PRF security theorem. The security argument for v2 (relative to heuristic assumptions, with the known failure of one of them) is in the SPEC's §8 and the pull request that introduced v2.
+**The Lean lags v2.** There is no Link 2 for v2 yet: nothing here proves the emitted functions equal a hand-written model, and nothing here is an AEAD, MAC or PRF security theorem. The MAC uses MegaDreifach v3, which has no Lean model: the emitted `Megadreifach` module here is v3's emitted code, exercised by the TAP tests only. The security argument for v2 (relative to unproven heuristic assumptions on MegaDreifach v3) is in the SPEC's §8; its evidence, the Sandwich tests on v3 with a v2 positive control, is in [`security/`](security/README.md).
 
 ## Generated Lean
 

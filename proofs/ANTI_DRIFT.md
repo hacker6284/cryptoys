@@ -93,9 +93,9 @@ shadow fix from #5 is included.
 DoubleDeal, MegaDreifach, Scramble, DoubleDeal-CBC-Sandwich v2, and BS
 (and the frozen versions, including DoubleDeal-CBC-HMAC v1). All
 five current public `.sudo` files accept that flag on their exports.
-The CBC-Sandwich emit adds `-I primitives/hash/megadreifach -I primitives/cipher/doubledeal`
-so the imported MegaDreifach and DoubleDeal are those modules, not
-handwritten second models (frozen v1 adds only the MegaDreifach `-I`).
+The CBC-Sandwich emit adds `-I primitives/hash/megadreifach/v3 -I primitives/cipher/doubledeal`
+so the imported MegaDreifach v3 and DoubleDeal are those modules, not
+handwritten second models (frozen v1 adds only `-I primitives/hash/megadreifach`, the deprecated v2).
 
 Production loops are bounded `for` (PassKey drain over initial
 `deck.length`; overflow scans `0 to 3`; MD bigint trim/peel/carry,
@@ -142,7 +142,7 @@ total-fragment / terminating-subset emitter.
 | DoubleDeal-CBC-Sandwich v2 generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach and DoubleDeal via emit-ir `-I`. **No Link 2 for v2** (the Lean lags v2). No AEAD security theorem. |
 | algebraic≃Generated for CBC-Sandwich v2 (Link 2) | OPEN. |
 | algebraic≃Generated for frozen CBC-HMAC v1 (Link 2) | DONE on byte inputs, every exported v1 function: [`deprecated/doubledeal-cbc-hmac-v1/README.md`](deprecated/doubledeal-cbc-hmac-v1/README.md#link-2). Frozen; not about v2. For HMAC and the KDF, the theorems prove the HMAC / KDF wiring around the hash; the hash itself is only as independent as `vhashAlg`, which is a transliteration of the MegaDreifach sudo, not an independent specification. Link 1 (sudo↔Lean) stays OPEN. |
-| AEAD security (EtM reduction, Sandwich-MD PRF, deck-CBC confidentiality) | OPEN in Lean. A paper argument relative to heuristic assumptions is in `primitives/aead/doubledeal-cbc-hmac/SPEC.md` §8 (one of its assumptions fails for MegaDreifach v2). SCM stays later. |
+| AEAD security (EtM reduction, Sandwich-MD PRF, deck-CBC confidentiality) | OPEN in Lean. A paper argument relative to heuristic assumptions is in `primitives/aead/doubledeal-cbc-hmac/SPEC.md` §8 (on MegaDreifach v3; those assumptions failed for v2 and are unproven for v3). SCM stays later. |
 | MegaDreifach M13 (proof-package digest = KAT hex) | DONE for `Generated.v_Hash` (not a handwritten `Hash`): `proofs/megadreifach/lean/MegaDreifachHeavy/Kat.lean`, kernel `decide!` through `v_Hash_refines` (Link 2, `PadWf`). For v2: the 8 hexes of `primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json`, Generated from `primitives/hash/megadreifach/megadreifach.sudo`. The v1 KAT theorems were not kept (the frozen v1 package, `proofs/deprecated/megadreifach-v1/`, has no heavy library); no Lean checks v1's KAT hexes any more (the v1 sudo tests do not assert them; the Python `proofs/megadreifach/security/md.py` does). |
 
 ## Proofs that remain handwritten

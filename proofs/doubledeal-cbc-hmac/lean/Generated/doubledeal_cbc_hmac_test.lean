@@ -340,10 +340,10 @@ def test_optional_key_derivation_rejects_an_empty_master : Except SudoRt.Trap Un
 
 def test_published_mac_version_only_kats_doubledeal_cbc_hmac_kats_json : Except SudoRt.Trap Unit :=
   do
-    let k := (#[(7 : Int), (3 : Int), (21 : Int), (17 : Int), (28 : Int), (36 : Int), (23 : Int), (15 : Int), (44 : Int), (49 : Int), (33 : Int), (10 : Int), (19 : Int), (8 : Int), (51 : Int), (4 : Int), (27 : Int), (39 : Int), (18 : Int), (30 : Int), (12 : Int), (47 : Int), (2 : Int), (14 : Int), (6 : Int), (20 : Int), (24 : Int), (43 : Int), (29 : Int), (0 : Int), (1 : Int), (46 : Int), (32 : Int), (13 : Int), (9 : Int), (50 : Int), (48 : Int), (25 : Int), (35 : Int), (37 : Int), (45 : Int), (42 : Int), (22 : Int), (41 : Int), (16 : Int), (31 : Int), (5 : Int), (26 : Int), (38 : Int), (34 : Int), (40 : Int), (11 : Int)] : Array (Int))
+    let k := (#[(11 : Int), (30 : Int), (26 : Int), (38 : Int), (13 : Int), (44 : Int), (15 : Int), (6 : Int), (24 : Int), (35 : Int), (37 : Int), (27 : Int), (33 : Int), (32 : Int), (21 : Int), (10 : Int), (43 : Int), (4 : Int), (49 : Int), (18 : Int), (42 : Int), (19 : Int), (51 : Int), (3 : Int), (23 : Int), (41 : Int), (5 : Int), (45 : Int), (0 : Int), (50 : Int), (47 : Int), (36 : Int), (39 : Int), (31 : Int), (8 : Int), (46 : Int), (1 : Int), (22 : Int), (20 : Int), (48 : Int), (34 : Int), (17 : Int), (14 : Int), (29 : Int), (12 : Int), (9 : Int), (28 : Int), (7 : Int), (25 : Int), (2 : Int), (16 : Int), (40 : Int)] : Array (Int))
     let _t189 ← version_deck
     let _t190 ← mac_tag k (#[_t189] : Array (Array (Int)))
-    let _as191 ← SudoRt.sudoAssertEq _t190 (#[(3 : Int), (9 : Int), (15 : Int), (80 : Int), (93 : Int), (150 : Int), (106 : Int), (142 : Int), (129 : Int), (208 : Int), (211 : Int), (66 : Int), (99 : Int), (57 : Int), (225 : Int), (70 : Int), (136 : Int), (77 : Int), (222 : Int), (112 : Int), (54 : Int), (90 : Int), (70 : Int), (100 : Int), (188 : Int), (171 : Int), (70 : Int), (122 : Int), (6 : Int)] : Array (Int)) 573
+    let _as191 ← SudoRt.sudoAssertEq _t190 (#[(1 : Int), (244 : Int), (194 : Int), (178 : Int), (105 : Int), (103 : Int), (90 : Int), (186 : Int), (53 : Int), (202 : Int), (56 : Int), (17 : Int), (144 : Int), (72 : Int), (162 : Int), (174 : Int), (96 : Int), (106 : Int), (207 : Int), (14 : Int), (5 : Int), (177 : Int), (184 : Int), (5 : Int), (255 : Int), (18 : Int), (168 : Int), (54 : Int), (66 : Int)] : Array (Int)) 573
     pure ()
 
 def test_aead_seal_then_aead_open_round_trips_and_every_tamper_rejects : Except SudoRt.Trap Unit :=

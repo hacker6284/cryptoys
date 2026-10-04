@@ -1,6 +1,6 @@
 # MegaDreifach v3 (current)
 
-> **Status: current.** v3 is the current MegaDreifach. v2 ([`../SPEC.md`](../SPEC.md)) and v1 ([`../v1/SPEC.md`](../v1/SPEC.md)) are deprecated. HMAC-MegaDreifach and DoubleDeal-CBC-HMAC still use v2; moving them to v3 changes their digests and is a separate decision. The Lean package models v2 only; v3 has no Lean model (§7).
+> **Status: current.** v3 is the current MegaDreifach. v2 ([`../SPEC.md`](../SPEC.md)) and v1 ([`../v1/SPEC.md`](../v1/SPEC.md)) are deprecated. DoubleDeal-CBC-Sandwich v2 uses v3 (`HashDecksBody` and `Hash`). HMAC-MegaDreifach and the frozen DoubleDeal-CBC-HMAC v1 still use v2; moving them to v3 changes their digests and is a separate decision. The Lean package models v2 only; v3 has no Lean model (§7).
 
 **What v3 changes.** v3 changes one thing: the card phase `W` inside `E_m`. The v2 card rule (grips, visual noon, slot reads, 36 F3 rounds) is replaced by **ZP26**:
 - colour-named card steps with a last-face register;

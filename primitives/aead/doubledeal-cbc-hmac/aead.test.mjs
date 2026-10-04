@@ -1,4 +1,4 @@
-import { bytesToHex, hexToBytes, loadAead, loadModule, readKats } from "./aead_harness.mjs";
+import { bytesToHex, hexToBytes, katIvDeck, loadAead, loadModule, readKats } from "./aead_harness.mjs";
 import { randomDeck } from "./aead.mjs";
 
 function assert(cond, message) {
@@ -26,6 +26,8 @@ const [kEnc, kMac] = aead.deriveKeyDecks(hexToBytes(kats.master));
 assert(JSON.stringify(kEnc) === JSON.stringify(kats.k_enc), "KAT k_enc");
 assert(JSON.stringify(kMac) === JSON.stringify(kats.k_mac), "KAT k_mac");
 assert(bytesToHex(m.mac_tag(kMac, [m.version_deck()])) === kats.mac_version_only, "KAT mac_version_only");
+// The KAT IV deck is unrank(Hash("DoubleDeal-CBC-Sandwich/v2 KAT IV") mod 52!) (SPEC §9).
+assert(JSON.stringify(await katIvDeck()) === JSON.stringify(kats.iv), "KAT iv");
 
 for (const v of kats.vectors) {
     const pt = hexToBytes(v.plaintext);

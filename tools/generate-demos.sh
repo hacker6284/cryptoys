@@ -27,11 +27,11 @@ MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_s
 node /tmp/doubledeal-test/_doubledeal_impl.mjs
 "$sudoc" build --target js --tests -o /tmp/bs-test primitives/key_exchange/bs/bs.sudo
 node /tmp/bs-test/_bs_impl.mjs
-"$sudoc" emit-ir --require terminates -I primitives/hash/megadreifach \
+"$sudoc" emit-ir --require terminates -I primitives/hash/megadreifach/v3 \
     -I primitives/cipher/doubledeal \
     primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo > /dev/null
 "$sudoc" build --target js --tests -o /tmp/ddch-test \
-    -I primitives/hash/megadreifach -I primitives/cipher/doubledeal \
+    -I primitives/hash/megadreifach/v3 -I primitives/cipher/doubledeal \
     primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
 node /tmp/ddch-test/_doubledeal_cbc_hmac_impl.mjs
 # Frozen DoubleDeal-CBC-HMAC v1 (superseded by v2): conformance tests only.
@@ -46,6 +46,8 @@ SUDOC="$sudoc" sh tools/build.sh
 node primitives/cipher/doubledeal/encoding.test.mjs
 AEAD_OUT=/tmp/ddch-test node primitives/aead/doubledeal-cbc-hmac/aead.test.mjs
 AEAD_OUT=/tmp/ddch-test node primitives/aead/doubledeal-cbc-hmac/kats/regen.mjs --check
+# The SPEC §8 Sandwich tests on MegaDreifach v3: a small fixed-seed slice, compared with its log.
+MD_OUT=/tmp/megadreifach-v3 node proofs/doubledeal-cbc-hmac/security/sandwich_v3_stats.mjs --check proofs/doubledeal-cbc-hmac/security/logs/ci_slice.log
 python3 primitives/aead/doubledeal-cbc-hmac/kats/check.py
 test -f demos/scramble/generated/scramble.mjs
 test -f demos/doubledeal/generated/doubledeal.mjs

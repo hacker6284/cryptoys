@@ -4,6 +4,8 @@ This document is the normative specification. `doubledeal_cbc_hmac.sudo` is the 
 
 The product name is **DoubleDeal-CBC-Sandwich**, version **v2**. It replaces DoubleDeal-CBC-HMAC v1, which is frozen and superseded at [`v1/`](v1/SPEC.md). v2 has no HMAC; the name says which MAC it is (Yasuda's "Sandwich", §6). **The directory and file names still say `doubledeal-cbc-hmac`**, because renaming them would move the Lean module, the CI jobs and the proof paths. Whether to rename is left to review.
 
+**MegaDreifach version.** The MAC and the optional key derivation use **MegaDreifach v3** (ZP26, [`primitives/hash/megadreifach/v3/`](../../hash/megadreifach/v3/SPEC.md)), the current version. Drafts of this v2 before the move used MegaDreifach v2, now deprecated. Moving to v3 changed every tag, every derived key and every KAT. It did not change the version label `DoubleDeal-CBC-Sandwich/v2`, `VERSION_DECK` or the key-derivation labels, because no v2 vectors were ever released.
+
 DoubleDeal-CBC-Sandwich is a toy Encrypt-then-MAC construction. It makes no cryptographic security claim. It is not for protecting anything. Nothing in it uses XOR.
 
 ---
@@ -20,7 +22,7 @@ DoubleDeal-CBC-Sandwich is a toy Encrypt-then-MAC construction. It makes no cryp
 
 ## Non-goals
 
-- No AES-class security and no proved PRF, MAC or AEAD bound for this instance. The security argument is relative to assumptions on MegaDreifach and DoubleDeal that are heuristic, and one of them is known to fail (§8).
+- No AES-class security and no proved PRF, MAC or AEAD bound for this instance. The security argument is relative to assumptions on MegaDreifach v3 and DoubleDeal that are heuristic and unproven (§8). Two of them failed for MegaDreifach v2; the same tests detect nothing on v3, which is evidence, not a proof.
 - No nonce-misuse resistance. A repeated or predictable IV is a break (§4).
 - No constant-time claim.
 - No CFB, OFB, SCM or SMAC.
@@ -32,11 +34,12 @@ DoubleDeal-CBC-Sandwich is a toy Encrypt-then-MAC construction. It makes no cryp
 | Item | Value |
 | --- | --- |
 | Cipher | DoubleDeal (`primitives/cipher/doubledeal/`), one key deck `k_enc` |
-| MAC | Sandwich on MegaDreifach v2 (C36) whole-deck compressions, one key deck `k_mac` |
+| MAC | Sandwich on MegaDreifach v3 (ZP26) whole-deck compressions, one key deck `k_mac` |
+| Hash (MAC and key derivation) | MegaDreifach v3, `primitives/hash/megadreifach/v3/megadreifach.sudo` (`HashDecksBody`, `Hash`) |
 | Plaintext block | **28 bytes** = one deck (every 28-byte value is below 2^224 < 52!) |
 | Ciphertext block, IV, tag | **29 bytes** each (the IV and ciphertext blocks are deck ranks below 52!; the tag is a megaminx digest below the group order) |
 | Padding | `0x80`, then `0x00` to a multiple of 28 |
-| Version | **v2**, carried by `VERSION_DECK` (§5) and the KDF labels (§3.2) |
+| Version | **v2**, carried by `VERSION_DECK` (§5) and the KDF labels (§3.2); kept through the move to MegaDreifach v3 (v2 was never released) |
 | Key-derivation labels | `DoubleDeal-CBC-Sandwich/v2/enc`, `DoubleDeal-CBC-Sandwich/v2/mac` |
 
 **Decks.** A deck is a list of the 52 card ids 0..51 in DoubleDeal's CHaSeD numbering (13·suit + rank; clubs, hearts, spades, diamonds). The top card is seat 0. New-deck order is A♣ on top and K♦ at the bottom. `rank` and `unrank` are DoubleDeal's factoradic (DoubleDeal SPEC §5.3). `rank29(D)` is the 29-byte big-endian rank. A 28-byte block `P` is the deck `unrank(P)`.
@@ -56,12 +59,12 @@ DoubleDeal-CBC-Sandwich is a toy Encrypt-then-MAC construction. It makes no cryp
 For software users who hold a byte secret MK (at least one byte):
 
 ```
-d_j   = MegaDreifach.Hash( u16be(|label|) ‖ label ‖ [j] ‖ u64be(|MK|) ‖ MK )    # 29 bytes, read as an integer below |G|
+d_j   = MegaDreifach_v3.Hash( u16be(|label|) ‖ label ‖ [j] ‖ u64be(|MK|) ‖ MK )    # 29 bytes, read as an integer below |G|
 k_enc = unrank( (d_0·|G| + d_1) mod 52! )     with label = "DoubleDeal-CBC-Sandwich/v2/enc"
 k_mac = unrank( (d_2·|G| + d_3) mod 52! )     with label = "DoubleDeal-CBC-Sandwich/v2/mac"
 ```
 
-`|G|` is the megaminx group order (MegaDreifach SPEC §4). If the digests were uniform, each key would be within statistical distance about 2^-228.27 of a uniform deck. That "if" is a heuristic (random-oracle style) on MegaDreifach. The derivation is optional; it is not a password hash and adds no security beyond MK's entropy.
+`|G|` is the megaminx group order (MegaDreifach v3 SPEC §4, the same group as v2). If the digests were uniform, each key would be within statistical distance about 2^-228.27 of a uniform deck. That "if" is a heuristic (random-oracle style) on MegaDreifach. The derivation is optional; it is not a password hash and adds no security beyond MK's entropy.
 
 ---
 
@@ -125,22 +128,22 @@ The framing is injective (§8): S determines the AAD, the IV and the ciphertext 
 
 # 6. The Sandwich MAC
 
-Let `f(h, D)` be one MegaDreifach v2 (C36) Davies–Meyer compression of the whole deck D from position h (MegaDreifach SPEC §5: `h ← compose(h, E_D(h))`, the cards dealt top first). Let `f*` chain `f` over a list of decks. Then
+Let `f(h, D)` be one MegaDreifach v3 (ZP26) Davies–Meyer compression of the whole deck D from position h (MegaDreifach v3 SPEC §5: `f(h, D) = compose(h, E_D(h)) = h·W·h`, where W is the face-turn word the ZP26 card phase builds from D read against h, the cards dealt top first; the sudo's `dm_step`). Let `f*` chain `f` over a list of decks. Then
 
 ```
 tag = digest( f*( IV-COOK12, [k_mac as it lies] ‖ S ‖ [k_mac turned over] ) )
 ```
 
-"Turned over" means the old bottom card is on top: `turned_over(K)[i] = K[51 - i]`. The digest is the 29-byte position rank (MegaDreifach SPEC §6). There is no padding, no length block and no second pass: every block is a whole deck. In software this is `megadreifach.HashDecksBody` on the decks with the card ids mapped to MegaDreifach's numbering (4·rank + suit, the same physical cards).
+"Turned over" means the old bottom card is on top: `turned_over(K)[i] = K[51 - i]`. The digest is the 29-byte position rank (MegaDreifach v3 SPEC §6). There is no padding, no length block and no second pass: every block is a whole deck. In software this is MegaDreifach v3's `HashDecksBody` (one `dm_step` per deck) on the decks with the card ids mapped to MegaDreifach's numbering (4·rank + suit, the same physical cards).
 
 *Hand recipe: one puzzle, three stages; "key, message, key turned over."*
-1. Set up IV-COOK12 (MegaDreifach SPEC §5.7).
+1. Set up IV-COOK12 (MegaDreifach v3 SPEC §5.7).
 2. **Key as it lies.** Deal the MAC key deck into the puzzle, top card first, as one block.
 3. **Message.** Deal in each deck of S in order, one block each: the version deck, the IV, every ciphertext deck, the length deck (a sorted deck when there is no AAD).
 4. **Key turned over.** Turn the MAC key deck over and deal it in as the last block.
 5. **The finished puzzle is the tag.** The verifier rebuilds the same puzzle from the received decks and its own key deck and compares the two puzzles piece by piece. Any difference means reject.
 
-"One puzzle" is the hash puzzle of a single MegaDreifach chain; each block's Davies–Meyer step uses MegaDreifach's two helper puzzles as its hand procedure says (SPEC §5.7). In software the tag is the finished position's 29-byte digest.
+"One puzzle" is the hash puzzle of a single MegaDreifach chain; each block's Davies–Meyer step uses MegaDreifach's two helper puzzles as its hand procedure says (MegaDreifach v3 SPEC §5.4–§5.7). In software the tag is the finished position's 29-byte digest.
 
 **Why the key turned over.** The first and the last key blocks must differ for every key. A deck turned over never equals itself (52 is even, so every card moves seat), so the key block that closes the MAC is never the block that opened it. That is exactly the separation Yasuda's proof needs (§8).
 
@@ -172,11 +175,18 @@ Every failure is the same `(false, [])`. The host wrapper turns it into one exce
 - **Toy.** DoubleDeal and MegaDreifach are toy primitives with no security proof. Every statement below is relative to named assumptions on them, and those assumptions are **heuristic**.
 - **Confidentiality (PROVED relative to a heuristic PRP assumption on DoubleDeal).** With a uniform fresh IV per message, the deck chain is IND-CPA up to 2·(DoubleDeal PRP advantage) + 4σ²/52! for σ blocks: the birthday bound, reached at about 2^112 blocks. A predictable IV is broken; uniqueness is not enough.
 - **Composition (PROVED, Bellare–Namprempre Encrypt-then-MAC).** INT-CTXT is at most the MAC's strong-unforgeability advantage, and IND-CCA is at most twice that plus the IND-CPA advantage, provided the two key decks are independent and uniform and the decrypt order of §7 is kept.
-- **The MAC: its security is heuristic, and the proof gives no meaningful bound for this instance.**
+- **The MAC: its security rests on unproven (heuristic) assumptions on MegaDreifach v3.**
   - *Theorem S (PROVED relative to Yasuda, ACISP 2007).* Adv^prf ≤ Adv^prf_{f′}(q+1) + C(q,2)·[2ℓ·Adv^prf_{f̌}(2) + 1/|G|], for q tagged messages of at most ℓ decks of S each. Here f′(v) = f(v, key deck) is the compression keyed through the key block at chaining values the adversary chooses (the key turned over plays the role of Yasuda's padding condition), and f̌ is the compression keyed through a secret chaining value.
-  - *The f′ assumption is false for MegaDreifach v2 (COMPUTED).* Query y₁ = f′(h) at a random h and solve W = (h⁻¹·y₁)·h⁻¹. Then query y₂ = f′(h′), where h′ is h with two random edges flipped, and accept iff y₂ = h′·W·h′. This works because a block's face-turn word W depends only on the pieces of h the block reads (MegaDreifach SPEC §8). The key deck stays secret throughout. Against f′ with a uniform secret key deck the test accepts 5105 of 100,000 games (5.1%, 95% CI 4.97–5.24%). Against a random function it accepts with probability exactly 1/|G| = 2^-225.9 (PROVED), and 0 of 100,000 control games accepted. Repeating the test with one key accepts for 99 of 100 keys within 200 queries. Evidence: `sandwich_fprime` in [`proofs/megadreifach/security/v2/`](../../../proofs/megadreifach/security/v2/README.md) ([log](../../../proofs/megadreifach/security/v2/logs/sandwich_fprime.log)).
-  - *Consequence (PROVED from the above).* The first term of Theorem S is at least 0.05 for one message and close to 1 for a few hundred, so **Theorem S gives no meaningful bound for this instance**. The MAC's security (and so INT-CTXT and IND-CCA) rests on heuristics only.
-  - *No attack on the MAC is known (HEURISTIC).* The test needs two f′ inputs that the adversary knows and that differ by a known edge flip. In the MAC, every f′ input is the secret chaining value reached from f(IV-COOK12, key deck), and the tag reveals only f′'s output (PROVED: the test does not apply as stated). No other use of the flaw is known, but none was searched for systematically.
+  - *Both assumptions failed for MegaDreifach v2 (COMPUTED).* **A1 (f′).** Query y₁ = f′(h) at a uniform h and solve W = (h⁻¹·y₁)·h⁻¹. Then query y₂ = f′(h′), where h′ is h with two random edges flipped, and accept iff y₂ = h′·W·h′. On v2 a block's face-turn word W depended only on the pieces of h the block read, so the test accepted 213 of 4,000 games (5.3%, 95% CI 4.7–6.1%) against f′ with a uniform secret key deck. Against a random function it accepts with probability exactly 1/|G| = 2^-225.9 (PROVED). **A2 (f̌, two queries).** At a uniform secret chaining value h, query a uniform deck D and D with its last two cards swapped, and count the edge slots that z = f(h, D)⁻¹·f(h, D′) leaves fixed. On v2, P(at least 2 fixed edges) exceeded the uniform-group value 0.264241 by +0.070 ± 0.012 (6,000 pairs). Both numbers come from this repository's harness run on a sudoc build of the deprecated v2 sudo, as a positive control (logs below).
+  - *On MegaDreifach v3 neither test detects anything (COMPUTED).* The same harness on the sudoc build of the v3 sudo:
+    - A1: **0 of 100,000** games accepted; exact one-sided 95% upper bound 3.0·10⁻⁵ (v2: 5.3%).
+    - A2: 120,000 pairs; P(fixE ≥ 2) = 0.2629 (95% CI 0.2604–0.2654) against 0.264241, advantage −0.0014 ± 0.0025; for corners +0.0002 ± 0.0025; no two outputs equal.
+    - E3, the whole Sandwich: t = f*(IV-COOK12, [K, D, L, K turned over]) against the same with D's last two cards swapped (K, D uniform, L a fixed stand-in for the length deck); 40,000 pairs; fixE advantage −0.0016 ± 0.0043, fixC −0.0033 ± 0.0043; no two tags equal.
+    - What the runs could have seen: an A1 acceptance rate of 2.3·10⁻⁵ gives at least one acceptance in 100,000 games with probability 90%; an A2 advantage of about 0.004 and an E3 advantage of about 0.007 are detected at the 5% level with 90% power. The v2 effects (5.3% and +0.070) are far above these limits.
+
+    Harness and logs: [`proofs/doubledeal-cbc-hmac/security/`](../../../proofs/doubledeal-cbc-hmac/security/README.md). The harness calls only functions of the sudoc build; a fixed-seed slice is re-run with `--check` by `tools/generate-demos.sh`.
+  - *The assumptions are still unproven (HEURISTIC).* Two tests that find nothing are not a proof. The f′ and f̌ PRF assumptions on MegaDreifach v3 are unproven, and v3 itself has no security proof (MegaDreifach v3 SPEC §8). **So the security of the Sandwich theorem for this instance is conditional:** Theorem S bounds the MAC by the PRF advantages of f′ and f̌ on v3, and those advantages are assumed small, not shown. INT-CTXT and IND-CCA inherit the same condition. No other distinguisher was searched for beyond these tests and the v3 statistics in `proofs/megadreifach/security/v3/`.
+  - *Consequence for v2 (COMPUTED).* With MegaDreifach v2 the A1 test is an f′ distinguisher with advantage about 0.05 from two queries, so the first term of Theorem S was at least about 0.05 for one message and the theorem gave no meaningful bound. That is why the MAC moved to v3.
   - The generic birthday forgery needs about 2^113 tags, so no argument could give more than about 2^112.
 - **Parity (sign) leak.** The sign of a permutation passes through Compose exactly, so a passive observer of two consecutive ciphertext decks sees the plaintext deck's sign with correlation κ, DoubleDeal's own sign correlation (PROVED identity). κ is measured below 3·10^-4 (10^8 samples, out of tree); **there is no proved bound**, and about 1/κ² encryptions of one block would reveal that bit.
 - **Hand play.** The hand MAC (§6) is complete, but it is slow, and a mistake at any step gives a wrong tag. Deck-CBC without the MAC is malleable: moving seats of a ciphertext deck moves seats of the next plaintext deck.
@@ -188,7 +198,7 @@ The full argument, with every step marked PROVED, COMPUTED or HEURISTIC, is in t
 
 # 9. Test vectors
 
-`kats/doubledeal_cbc_hmac_kats.json` (product `DoubleDeal-CBC-Sandwich`, version `v2`) holds a byte master `"cryptoy-master"`, the key decks it derives (§3.2), a fixed IV deck `unrank(Hash("DoubleDeal-CBC-Sandwich/v2 KAT IV") mod 52!)` and five vectors: `empty`, `abc`, `abc_aad` (AAD `"hdr"`), `exact_28` and `forty` (40 bytes of plaintext, 30 bytes of AAD). `mac_version_only` is the tag of `S = [VERSION_DECK]` alone. `kats/regen.mjs` regenerates the file from the sudo (`--check` compares); `kats/check.py` checks its structure. The vectors also agree byte for byte with an independent Python implementation (kept out of tree).
+`kats/doubledeal_cbc_hmac_kats.json` (product `DoubleDeal-CBC-Sandwich`, version `v2`, on MegaDreifach v3) holds a byte master `"cryptoy-master"`, the key decks it derives (§3.2), a fixed IV deck `unrank(Hash("DoubleDeal-CBC-Sandwich/v2 KAT IV") mod 52!)` (MegaDreifach v3 `Hash`) and five vectors: `empty`, `abc`, `abc_aad` (AAD `"hdr"`), `exact_28` and `forty` (40 bytes of plaintext, 30 bytes of AAD). `mac_version_only` is the tag of `S = [VERSION_DECK]` alone. `kats/regen.mjs` computes every output, the IV deck included, from the sudoc build of the sudo (`--check` compares); `aead.test.mjs` checks the file against the build; `kats/check.py` checks its structure. There is no independent second implementation: one outside the sudo would be a hand-written copy of the algorithm, which this repository does not keep.
 
 ---
 
@@ -197,14 +207,16 @@ The full argument, with every step marked PROVED, COMPUTED or HEURISTIC, is in t
 From the repository root, with `sudoc` built:
 
 ```sh
-sudoc emit-ir --require terminates -I primitives/hash/megadreifach -I primitives/cipher/doubledeal \
+sudoc emit-ir --require terminates -I primitives/hash/megadreifach/v3 -I primitives/cipher/doubledeal \
     primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo > /dev/null
-sudoc build --target js --tests -o /tmp/ddch -I primitives/hash/megadreifach -I primitives/cipher/doubledeal \
+sudoc build --target js --tests -o /tmp/ddch -I primitives/hash/megadreifach/v3 -I primitives/cipher/doubledeal \
     primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
 node /tmp/ddch/_doubledeal_cbc_hmac_impl.mjs
 AEAD_OUT=/tmp/ddch node primitives/aead/doubledeal-cbc-hmac/aead.test.mjs
 AEAD_OUT=/tmp/ddch node primitives/aead/doubledeal-cbc-hmac/kats/regen.mjs --check
 python3 primitives/aead/doubledeal-cbc-hmac/kats/check.py
+sudoc build --target js -o /tmp/megadreifach-v3 primitives/hash/megadreifach/v3/megadreifach.sudo
+MD_OUT=/tmp/megadreifach-v3 node proofs/doubledeal-cbc-hmac/security/sandwich_v3_stats.mjs --check proofs/doubledeal-cbc-hmac/security/logs/ci_slice.log
 ```
 
 `tools/generate-demos.sh` runs all of these, and the frozen v1 sudo tests.
@@ -219,10 +231,11 @@ python3 primitives/aead/doubledeal-cbc-hmac/kats/check.py
 | Conformance sudo | `primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo` | The whole construction |
 | Host wrapper | `primitives/aead/doubledeal-cbc-hmac/aead.mjs` | Fresh IV decks, `encrypt` / `decrypt` |
 | KATs | `primitives/aead/doubledeal-cbc-hmac/kats/` | Vectors, regeneration, structure check |
-| Generated Lean | `proofs/doubledeal-cbc-hmac/lean/Generated/` | Emitted v2 Lean and its sudo tests (TAP). No Link 2 yet; the Lean proofs lag v2. |
+| Generated Lean | `proofs/doubledeal-cbc-hmac/lean/Generated/` | Emitted v2 Lean (with the imported MegaDreifach v3 and DoubleDeal) and its sudo tests (TAP). No Link 2 yet; the Lean proofs lag v2, and MegaDreifach v3 has no Lean model. |
+| Security evidence | `proofs/doubledeal-cbc-hmac/security/` | The §8 tests on MegaDreifach v3 and the v2 positive control: harness and logs |
 | Frozen v1 | `primitives/aead/doubledeal-cbc-hmac/v1/`, `proofs/deprecated/doubledeal-cbc-hmac-v1/` | DoubleDeal-CBC-HMAC v1 and its Link 2 proofs, superseded |
 | DoubleDeal | `primitives/cipher/doubledeal/doubledeal.sudo` | `encrypt` / `decrypt` |
-| MegaDreifach | `primitives/hash/megadreifach/megadreifach.sudo` | `HashDecksBody`, `Hash` |
+| MegaDreifach v3 | `primitives/hash/megadreifach/v3/megadreifach.sudo` | `HashDecksBody`, `Hash` |
 
 ---
 

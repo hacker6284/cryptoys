@@ -1,6 +1,8 @@
 // Regenerate kats/doubledeal_cbc_hmac_kats.json from the real code: the sudoc JS build of
 // doubledeal_cbc_hmac.sudo, wired by aead_harness.mjs. Keeps the inputs (master, iv,
-// plaintexts, aad); rewrites every output (k_enc, k_mac, each blob, mac_version_only).
+// plaintexts, aad); rewrites every output (k_enc, k_mac, the KAT IV deck, each blob,
+// mac_version_only). The IV deck is unrank(Hash("DoubleDeal-CBC-Sandwich/v2 KAT IV") mod 52!)
+// from the build (aead_harness.mjs katIvDeck).
 // aead.test.mjs is the check.
 //
 // Usage, from the repo root, after the sudoc JS build in this directory's README:
@@ -10,7 +12,7 @@
 // tools/generate-demos.sh runs it with --check.
 import { readFileSync, writeFileSync } from "node:fs";
 import { relative } from "node:path";
-import { bytesToHex, hexToBytes, katsPath, loadAead, loadModule, readKats, repoRoot } from "../aead_harness.mjs";
+import { bytesToHex, hexToBytes, katIvDeck, katsPath, loadAead, loadModule, readKats, repoRoot } from "../aead_harness.mjs";
 
 const args = process.argv.slice(2);
 const check = args.includes("--check");
@@ -26,6 +28,7 @@ const kats = readKats();
 const [kEnc, kMac] = aead.deriveKeyDecks(hexToBytes(kats.master));
 kats.k_enc = kEnc;
 kats.k_mac = kMac;
+kats.iv = await katIvDeck();
 let changed = 0;
 for (const v of kats.vectors) {
     const blob = bytesToHex(aead.encryptWithIv(hexToBytes(v.plaintext), kEnc, kMac, hexToBytes(v.aad), kats.iv));

@@ -59,7 +59,7 @@ axiom) fails, as does a Lean error.
   required: the theorems its README cites (MD_V1_README_THEOREMS).
 - megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
   for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
-  README cites (MD_V3_README_THEOREMS; min is their count).
+  README cites (MD_V3_README_THEOREMS); min is the audited count (194).
   `--selftest` checks its "Emitted function" column against
   primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
@@ -953,8 +953,9 @@ PACKAGES = {
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
-        # sanity: at least the README-cited Link 2 theorems (raise as Link 2 grows)
-        "min": len(MD_V3_README_THEOREMS),
+        # sanity: the audit must see the whole package (194 theorems at 308fe9b; raise as
+        # Link 2 grows, lower only with a reason in the commit)
+        "min": 194,
         "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac": {

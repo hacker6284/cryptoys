@@ -53,6 +53,11 @@ def check (name : String) (ok : Bool) (detail : String := "") : IO Bool := do
     IO.eprintln s!"FAIL {name} {detail}"
   return ok
 
+/-- The number of checks the current KAT file gives (8 messages × 3, hash_deck × 3, 8 body
+    vectors × 3, the IV digest). The run fails unless exactly this many ran, so an emptied or
+    truncated vector list cannot pass. -/
+def expectedChecks : Nat := 52
+
 def run : IO UInt32 := do
   IO.println "MegaDreifach v3 KATs against the compiled emitted code (not a kernel proof)"
   let mut nOk : Nat := 0
@@ -100,6 +105,8 @@ def run : IO UInt32 := do
   nAll := nAll + 1
   if ← check "iv_cook12_digest_hex: position_to_bytes of IV-COOK12" ivOk then nOk := nOk + 1
   IO.println s!"MegaDreifach v3 KATs: {nOk}/{nAll} checks passed"
-  return if nOk == nAll then 0 else 1
+  if nAll != expectedChecks then
+    IO.println s!"FAIL: expected {expectedChecks} checks, ran {nAll} (vector lists changed or empty)"
+  return if nOk == nAll && nAll == expectedChecks then 0 else 1
 
 end MegaDreifachV3.KatRun

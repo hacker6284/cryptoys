@@ -11,7 +11,7 @@ export has a Link 2 theorem, under the input conditions listed in the export tab
 | --- | --- | --- |
 | `lean/Generated/` | Lean emitted from the v3 sudo by `proofs/emit_lean.sh` (target `megadreifach-v3`), with `EMITTED_FROM.json`. Do not edit. | CI `generated-fresh` (`emit_lean.sh --check`); CI `megadreifach-v3-generated` builds it and runs the 23 sudo tests (TAP) |
 | `lean/MegaDreifachV3/Vectors.lean` | The v3 KAT file `kats/megaminx_hash_kats_v3.json` as Lean data, written by `vectors/json_to_lean.py` | CI `megadreifach-v3-lean` (`json_to_lean.py --check`) |
-| `lean/MegaDreifachV3/KatRun.lean` | Runs the compiled emitted code on every vector: 8 `Hash` messages (and `MegaDreifach`, `pad_message` length), the `hash_deck` vector, all 8 `body_vectors` (`HashDeckBody`, `MegaDreifachBody`, `HashDeckBodyFrom` at IV-COOK12) and the IV-COOK12 digest: 52 checks | CI `megadreifach-v3-lean` (`lake exe megadreifach_v3_kat`) |
+| `lean/MegaDreifachV3/KatRun.lean` | Runs the compiled emitted code on every vector: 8 `Hash` messages (and `MegaDreifach`, `pad_message` length), the `hash_deck` vector, all 8 `body_vectors` (`HashDeckBody`, `MegaDreifachBody`, `HashDeckBodyFrom` at IV-COOK12) and the IV-COOK12 digest: 52 checks, and it fails unless exactly 52 ran | CI `megadreifach-v3-lean` (`lake exe megadreifach_v3_kat`; `vectors/kat_negatives.py` plants a bad digest and empty vector lists and requires the run to fail) |
 
 What a green run means: the Lean build of the v3 sudo agrees with the published v3 vectors when
 compiled and run. It is not a kernel proof, not a proof that the emitted Lean matches the sudo

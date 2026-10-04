@@ -126,32 +126,35 @@ private theorem sudoAssertEq_rfl (x : Int) (line : Nat) :
   rw [hb]
   rfl
 
-private theorem assert_bodyLen (deal : List Nat) (hlen : deal.length = 52) :
-    SudoRt.sudoAssertEq (SudoRt.listLen (embed deal)) Megadreifach.body_len 538 =
+-- `line`: the `.sudo` line the emitter writes into the assert (any value; it only labels the
+-- trap message), so this file re-elaborates against any emit of the same sudo function.
+private theorem assert_bodyLen (deal : List Nat) (hlen : deal.length = 52) (line : Nat) :
+    SudoRt.sudoAssertEq (SudoRt.listLen (embed deal)) Megadreifach.body_len line =
       .ok () := by
   rw [listLen_embed, hlen]
   unfold Megadreifach.body_len
-  exact sudoAssertEq_rfl (Int.ofNat 52) 538
+  exact sudoAssertEq_rfl (Int.ofNat 52) line
 
 private theorem fits_idx (i : Nat) (hi : i ≤ 51) : FitsLen (i + 1) := by
   unfold FitsLen i64MaxNat
   omega
 
-/-- Body of one seen-array iteration, in the shape `require_permutation` leaves. -/
-private def permBody (deal seen : Array Int) (i : Int) :
+/-- Body of one seen-array iteration, in the shape `require_permutation` leaves. `l1`, `l2`:
+    the `.sudo` lines of its two asserts (trap labels only). -/
+private def permBody (l1 l2 : Nat) (deal seen : Array Int) (i : Int) :
     Except SudoRt.Trap (SudoRt.Flow (Array Int) (Array Int)) :=
   do
     let c ← SudoRt.atL deal i
     let inRange ← (if decide (c ≥ (0 : Int)) then (do
       pure (decide (c < (52 : Int)))) else pure false)
-    let _ ← SudoRt.sudoAssert inRange 542
+    let _ ← SudoRt.sudoAssert inRange l1
     let prev ← SudoRt.atL seen c
-    let _ ← SudoRt.sudoAssertEq prev (0 : Int) 543
+    let _ ← SudoRt.sudoAssertEq prev (0 : Int) l2
     let seen ← SudoRt.putL seen c (1 : Int)
     pure (SudoRt.Flow.cont (ρ := Array Int) seen)
 
 /-- One iteration of the emitted seen-array loop. -/
-def permStep (deal : Array Int) (toV : Int) (σ : Int × Array Int) :
+def permStep (l1 l2 : Nat) (deal : Array Int) (toV : Int) (σ : Int × Array Int) :
     Except SudoRt.Trap (SudoRt.Flow (Int × Array Int) (Array Int)) :=
   let i := σ.1
   let seen := σ.2
@@ -159,7 +162,7 @@ def permStep (deal : Array Int) (toV : Int) (σ : Int × Array Int) :
     if i > toV then
       pure (SudoRt.Flow.brk (ρ := Array Int) (i, seen))
     else
-      match ← (permBody deal seen i) with
+      match ← (permBody l1 l2 deal seen i) with
       | .ret r => pure (SudoRt.Flow.ret (ρ := Array Int) r)
       | .brk fs => pure (SudoRt.Flow.brk (ρ := Array Int) (i, fs))
       | .cont fs => do
@@ -169,9 +172,9 @@ def permStep (deal : Array Int) (toV : Int) (σ : Int × Array Int) :
             let i' ← SudoRt.addI i (1 : Int)
             pure (SudoRt.Flow.cont (ρ := Array Int) (i', fs))
 
-private theorem permBody_ok (deal : List Nat) (h : isPermutation52 deal)
+private theorem permBody_ok (l1 l2 : Nat) (deal : List Nat) (h : isPermutation52 deal)
     (i : Nat) (hi : i < 52) :
-    permBody (embed deal) (seenArr deal i) (i : Int) =
+    permBody l1 l2 (embed deal) (seenArr deal i) (i : Int) =
       .ok (SudoRt.Flow.cont (seenArr deal (i + 1))) := by
   have hiLen : i < deal.length := by rw [h.1]; exact hi
   have hcard : deal[i]'hiLen < 52 := h.2.2 _ (List.getElem_mem hiLen)
@@ -197,14 +200,14 @@ private theorem permBody_ok (deal : List Nat) (h : isPermutation52 deal)
     unfold seenBit
     rw [if_neg (not_mem_take_self deal h.2.1 hiLen)]
     rfl
-  rw [hzero, sudoAssertEq_rfl (0 : Int) 543, ok_bind]
+  rw [hzero, sudoAssertEq_rfl (0 : Int) l2, ok_bind]
   rw [putL_ofNat (seenArr deal i) (deal[i]'hiLen) (1 : Int) hsz, ok_bind]
   rw [seenArr_succ deal h i hi]
   rfl
 
-private theorem permStep_hit (deal : List Nat) (h : isPermutation52 deal)
+private theorem permStep_hit (l1 l2 : Nat) (deal : List Nat) (h : isPermutation52 deal)
     (i : Nat) (hi : i ≤ 51) :
-    permStep (embed deal) (51 : Int) (Int.ofNat i, seenArr deal i) =
+    permStep l1 l2 (embed deal) (51 : Int) (Int.ofNat i, seenArr deal i) =
       if i = 51 then
         .ok (SudoRt.Flow.brk (Int.ofNat i, seenArr deal (i + 1)))
       else
@@ -213,7 +216,7 @@ private theorem permStep_hit (deal : List Nat) (h : isPermutation52 deal)
   unfold permStep
   dsimp
   have hngt : ¬ (i : Int) > (51 : Int) := ofNat_not_gt hi
-  rw [if_neg hngt, permBody_ok deal h i hi52, ok_bind]
+  rw [if_neg hngt, permBody_ok l1 l2 deal h i hi52, ok_bind]
   dsimp
   by_cases heq : i = 51
   · subst heq
@@ -238,18 +241,18 @@ private theorem runLoopOn_congr {σ ρ α} (s0 : σ) (fuel : Nat)
     show after = after' from funext hafter,
     show onRet = onRet' from funext hret]
 
-private theorem permRun_eq (deal : List Nat) (h : isPermutation52 deal) :
+private theorem permRun_eq (l1 l2 : Nat) (deal : List Nat) (h : isPermutation52 deal) :
     SudoRt.runLoopOn (ρ := Array Int)
       ((0 : Int), seenArr deal 0)
       (fuelRange (0 : Int) (51 : Int))
-      (permStep (embed deal) (51 : Int))
+      (permStep l1 l2 (embed deal) (51 : Int))
       (fun _ => pure (embed deal))
       (fun r => pure r) =
     .ok (embed deal) := by
   apply chain_loop (f := seenArr deal) (fromN := 0) (toN := 51)
     (goal := .ok (embed deal)) (hle := by decide)
   · intro i _ hi
-    exact permStep_hit deal h i hi
+    exact permStep_hit l1 l2 deal h i hi
   · rfl
 
 /-- `Generated.require_permutation` on the embedding of a 52-card permutation
@@ -265,12 +268,12 @@ theorem require_permutation_refines (deal : List Nat) (h : isPermutation52 deal)
   refine ⟨?_, (requirePermutation_iff deal).mpr h⟩
   unfold Megadreifach.require_permutation
   dsimp
-  rw [assert_bodyLen deal h.1, ok_bind]
+  rw [assert_bodyLen deal h.1 _, ok_bind]
   rw [show (52 : Int) = Int.ofNat 52 from rfl, filledL_ofNat 52 (0 : Int), ok_bind]
   rw [except_bind_pure, ← seenArr_zero deal]
   apply Eq.trans
   · apply runLoopOn_congr
-      (step' := permStep (embed deal) (51 : Int))
+      (step' := permStep _ _ (embed deal) (51 : Int))
       (after' := fun _ => pure (embed deal))
       (onRet' := fun r => pure r)
     · intro σ
@@ -281,7 +284,7 @@ theorem require_permutation_refines (deal : List Nat) (h : isPermutation52 deal)
       rfl
     · intro r
       rfl
-  · exact permRun_eq deal h
+  · exact permRun_eq _ _ deal h
 
 /-- Same refinement on a `DealWf` array. `embed (decode a) = a`, and
     `decode a` is an `isPermutation52` list. -/

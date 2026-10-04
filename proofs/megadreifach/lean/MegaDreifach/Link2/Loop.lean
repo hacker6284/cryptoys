@@ -350,8 +350,10 @@ theorem pushStep_hit (ρ : Type) (v : Int) (toN fromN : Nat) (acc : Array Int)
     rw [ofNat_eq_natCast fromN] at hadd
     rw [if_neg hneI, hadd, map_ok, if_neg heq, natCast_succ]
 
-/-- Byte-range scan: `for i = 0 to len-1: assert 0 ≤ xs[i] ≤ 255`. State is the index. -/
-def byteCheckStep (xs : Array Int) (toV : Int) (i : Int) :
+/-- Byte-range scan: `for i = 0 to len-1: assert 0 ≤ xs[i] ≤ 255`. State is the index.
+    `line`: the `.sudo` line the emitter writes into the assert (a trap label only), so the
+    lemmas below hold for any emit of the same sudo loop. -/
+def byteCheckStep (line : Nat) (xs : Array Int) (toV : Int) (i : Int) :
     Except SudoRt.Trap (SudoRt.Flow Int (Array Int)) := do
   if i > toV then
     pure (SudoRt.Flow.brk (ρ := Array Int) i)
@@ -362,7 +364,7 @@ def byteCheckStep (xs : Array Int) (toV : Int) (i : Int) :
         let ok ← (if (decide (b ≥ (0 : Int))) then (do
           let b2 ← SudoRt.atL xs i
           pure (decide (b2 ≤ (255 : Int)))) else pure false)
-        let u ← SudoRt.sudoAssert ok 483
+        let u ← SudoRt.sudoAssert ok line
         pure (SudoRt.Flow.cont (ρ := Array Int) ())) :
         Except SudoRt.Trap (SudoRt.Flow Unit (Array Int))) with
     | .ret r => pure (SudoRt.Flow.ret (ρ := Array Int) r)
@@ -374,15 +376,15 @@ def byteCheckStep (xs : Array Int) (toV : Int) (i : Int) :
           let i' ← SudoRt.addI i (1 : Int)
           pure (SudoRt.Flow.cont (ρ := Array Int) i')
 
-theorem byteCheckStep_gt (xs : Array Int) (toV i : Int) (h : i > toV) :
-    byteCheckStep xs toV i = .ok (.brk i) := by
+theorem byteCheckStep_gt (line : Nat) (xs : Array Int) (toV i : Int) (h : i > toV) :
+    byteCheckStep line xs toV i = .ok (.brk i) := by
   unfold byteCheckStep
   rw [if_pos h]
   rfl
 
-theorem byteCheckStep_hit (xs : List Nat) (toN i : Nat)
+theorem byteCheckStep_hit (line : Nat) (xs : List Nat) (toN i : Nat)
     (hle : i ≤ toN) (hi : i < xs.length) (hb : Byte xs[i]) (hfits : FitsLen xs.length) :
-    byteCheckStep (embed xs) (Int.ofNat toN) (Int.ofNat i) =
+    byteCheckStep line (embed xs) (Int.ofNat toN) (Int.ofNat i) =
       if i = toN then .ok (.brk (Int.ofNat i))
       else .ok (.cont (Int.ofNat (i + 1))) := by
   unfold byteCheckStep

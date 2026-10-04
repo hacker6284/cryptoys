@@ -407,8 +407,10 @@ theorem phiInvState_zero (deal : List Nat) :
 
 private theorem fits52 : FitsLen 52 := by unfold FitsLen i64MaxNat; decide
 
-/-- Generated outer closure of `phi_inv`, in the shape the emitter leaves it. -/
-def phiInvStep (deal : Array Int) (σ : PhiInvSt) :
+/-- Generated outer closure of `phi_inv`, in the shape the emitter leaves it, with the
+    `.sudo` line of `assert found >= 0` as a parameter `line` (a trap label only; it
+    differs between emits, see `Loop.byteCheckStep`). -/
+def phiInvStepL (line : Nat) (deal : Array Int) (σ : PhiInvSt) :
     Except SudoRt.Trap (SudoRt.Flow PhiInvSt (Array Int)) :=
   let i := σ.1
   let n := σ.2.1
@@ -427,7 +429,7 @@ def phiInvStep (deal : Array Int) (σ : PhiInvSt) :
           (fun σ =>
             let found := σ.2
             do
-              let _as ← SudoRt.sudoAssert (decide (found ≥ (0 : Int))) 526
+              let _as ← SudoRt.sudoAssert (decide (found ≥ (0 : Int))) line
               let idx := found
               let _t549 ← SudoRt.subI (52 : Int) i
               let _t550 ← Megadreifach.big_from_int _t549
@@ -579,11 +581,16 @@ theorem accRank_add_limbs_fits (deal : List Nat) (h : PhiInvWf deal) (i idx : Na
     Nat.max_le.mpr ⟨h1, Nat.le_trans h2 (by decide : 1 ≤ 8)⟩
   exact FitsLen.of_le fits52 (by omega)
 
+/-- `phiInvStepL` at the v2 assert line (526). -/
+def phiInvStep (deal : Array Int) : PhiInvSt → Except SudoRt.Trap (SudoRt.Flow PhiInvSt (Array Int)) :=
+  phiInvStepL 526 deal
+
 /-! ## One outer step -/
 
-/-- One step of the outer loop, `i < 51`. -/
-theorem phiInvStep_lt (deal : List Nat) (h : PhiInvWf deal) (i : Nat) (hi : i < 51) :
-    phiInvStep (embed deal) (Int.ofNat i, phiInvState deal i) =
+/-- One step of the outer loop, `i < 51`, for any assert line. -/
+theorem phiInvStepL_lt (line : Nat) (deal : List Nat) (h : PhiInvWf deal) (i : Nat)
+    (hi : i < 51) :
+    phiInvStepL line (embed deal) (Int.ofNat i, phiInvState deal i) =
       .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), phiInvState deal (i + 1))) := by
   have hi52 : i < 52 := by omega
   have hile : i ≤ 51 := by omega
@@ -605,7 +612,7 @@ theorem phiInvStep_lt (deal : List Nat) (h : PhiInvWf deal) (i : Nat) (hi : i < 
         (dealAvail deal i).findIdx (· == deal[i]'(by rw [h.len]; exact hi52)) =
       accRank deal (i + 1) := by
     rw [accRank_succ deal h.len i hi52, ← dealDigit_eq_find deal i hklen, Nat.mul_comm]
-  unfold phiInvStep
+  unfold phiInvStepL
   dsimp only
   dsimp only [phiInvState]
   rw [show (51 : Int) = Int.ofNat 51 from rfl]
@@ -641,9 +648,10 @@ theorem phiInvStep_lt (deal : List Nat) (h : PhiInvWf deal) (i : Nat) (hi : i < 
   simp only [except_bind_pure, pure_find_eq_ok, ok_bind]
   rw [phiInvFinish i hi]
 
-/-- One step of the outer loop at `i = 51` (emits the full rank, breaks). -/
-theorem phiInvStep_51 (deal : List Nat) (h : PhiInvWf deal) :
-    phiInvStep (embed deal) (Int.ofNat 51, phiInvState deal 51) =
+/-- One step of the outer loop at `i = 51` (emits the full rank, breaks), for any
+    assert line. -/
+theorem phiInvStepL_51 (line : Nat) (deal : List Nat) (h : PhiInvWf deal) :
+    phiInvStepL line (embed deal) (Int.ofNat 51, phiInvState deal 51) =
       .ok (SudoRt.Flow.brk (Int.ofNat 51, phiInvState deal 52)) := by
   have hile : 51 ≤ 51 := Nat.le_refl _
   have hklen : 51 < deal.length := by rw [h.len]; decide
@@ -670,7 +678,7 @@ theorem phiInvStep_51 (deal : List Nat) (h : PhiInvWf deal) :
         (dealAvail deal 51).findIdx (· == deal[51]'(by rw [h.len]; decide)) =
       accRank deal 52 := by
     rw [accRank_succ deal h.len 51 (by decide), ← dealDigit_eq_find deal 51 hklen, Nat.mul_comm]
-  unfold phiInvStep
+  unfold phiInvStepL
   dsimp only
   dsimp only [phiInvState]
   rw [show (51 : Int) = Int.ofNat 51 from rfl]
@@ -706,26 +714,38 @@ theorem phiInvStep_51 (deal : List Nat) (h : PhiInvWf deal) :
   simp only [except_bind_pure, pure_find_eq_ok, ok_bind]
   rw [phiInvFinish51]
 
+/-- One step of the outer loop, `i < 51` (v2 assert line). -/
+theorem phiInvStep_lt (deal : List Nat) (h : PhiInvWf deal) (i : Nat) (hi : i < 51) :
+    phiInvStep (embed deal) (Int.ofNat i, phiInvState deal i) =
+      .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), phiInvState deal (i + 1))) :=
+  phiInvStepL_lt 526 deal h i hi
+
+/-- One step of the outer loop at `i = 51` (emits the full rank, breaks; v2 assert line). -/
+theorem phiInvStep_51 (deal : List Nat) (h : PhiInvWf deal) :
+    phiInvStep (embed deal) (Int.ofNat 51, phiInvState deal 51) =
+      .ok (SudoRt.Flow.brk (Int.ofNat 51, phiInvState deal 52)) :=
+  phiInvStepL_51 526 deal h
+
 /-- The full Horner accumulator is the Lehmer rank. -/
 theorem phiInvState_full (deal : List Nat) (h : PhiInvWf deal) :
     phiInvState deal 52 = (bigOf (natLimbs (lehmerRank deal)), embed (dealAvail deal 52)) := by
   rw [phiInvState, accRank_full deal h.len]
 
 /-- The outer `phi_inv` loop accumulates the Lehmer rank over 52 steps. -/
-theorem phiInv_loop_breaks (deal : List Nat) (h : PhiInvWf deal)
+theorem phiInv_loop_breaks (line : Nat) (deal : List Nat) (h : PhiInvWf deal)
     {α : Type} (after : PhiInvSt → Except SudoRt.Trap α)
     (onRet : Array Int → Except SudoRt.Trap α) :
     SudoRt.runLoopOn (ρ := Array Int) (Int.ofNat 0, phiInvState deal 0)
-      (fuelRange (Int.ofNat 0) (Int.ofNat 51)) (phiInvStep (embed deal)) after onRet =
+      (fuelRange (Int.ofNat 0) (Int.ofNat 51)) (phiInvStepL line (embed deal)) after onRet =
       after (Int.ofNat 51, phiInvState deal 52) := by
   apply chain_loop (f := phiInvState deal) (fromN := 0) (toN := 51) (hle := by decide)
   · intro i _ hhi
     rcases (by omega : i < 51 ∨ i = 51) with hlt | heq
     · rw [if_neg (by omega)]
-      exact phiInvStep_lt deal h i hlt
+      exact phiInvStepL_lt line deal h i hlt
     · subst heq
       rw [if_pos rfl]
-      exact phiInvStep_51 deal h
+      exact phiInvStepL_51 line deal h
   · rfl
 
 /-! ## `two224` = `2^224` -/
@@ -1085,18 +1105,18 @@ theorem magCmp_lt_natLimbs (x y : Nat) (hxy : x < y)
 /-! ## Post-handler and final assembly -/
 
 /-- Generated `after` handler of `phi_inv`: assert `n < 2^224`, emit `big_to_be n 28`. -/
-def phiInvPost (σ : PhiInvSt) : Except SudoRt.Trap (Array Int) :=
+def phiInvPost (line : Nat) (σ : PhiInvSt) : Except SudoRt.Trap (Array Int) :=
   let n := σ.2.1
   let _avail := σ.2.2
   do
     let t ← Megadreifach.two224
     let c ← Megadreifach.mag_cmp n.sudo_6BigInt_5limbs t.sudo_6BigInt_5limbs
-    let _a ← SudoRt.sudoAssert (decide (c < (0 : Int))) 534
+    let _a ← SudoRt.sudoAssert (decide (c < (0 : Int))) line
     let r ← Megadreifach.big_to_be n Megadreifach.pad_block
     pure r
 
-theorem phiInvPost_ok (deal : List Nat) (h : PhiInvWf deal) :
-    phiInvPost (Int.ofNat 51, phiInvState deal 52) =
+theorem phiInvPost_ok (line : Nat) (deal : List Nat) (h : PhiInvWf deal) :
+    phiInvPost line (Int.ofNat 51, phiInvState deal 52) =
       .ok (embed (toBE 28 (lehmerRank deal))) := by
   have hx : (natLimbs (lehmerRank deal)).length ≤ 8 := by
     have h8 := accRank_limbs_le8 deal h 52 (by decide)
@@ -1132,16 +1152,16 @@ theorem phi_inv_refines (deal : List Nat) (h : PhiInvWf deal) :
   dsimp only
   rw [except_bind_pure]
   apply Eq.trans
-  · apply runLoopOn_step_pointwise (step' := phiInvStep (embed deal))
+  · apply runLoopOn_step_pointwise (step' := phiInvStepL _ (embed deal))
     intro σ
-    unfold phiInvStep
+    unfold phiInvStepL
     dsimp
     rfl
   · rw [hinit]
     rw [show (0 : Int) = Int.ofNat 0 from rfl,
       show (51 : Int) = Int.ofNat 51 from rfl, fuelRange_eq]
-    rw [phiInv_loop_breaks deal h]
-    exact phiInvPost_ok deal h
+    rw [phiInv_loop_breaks _ deal h]
+    exact phiInvPost_ok _ deal h
 
 /-- Same refinement on a `WellFormedPhiInv` array. -/
 theorem phi_inv_refines_array (a : Array Int) (h : WellFormedPhiInv a) :

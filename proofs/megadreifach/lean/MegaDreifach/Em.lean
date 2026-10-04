@@ -25,7 +25,7 @@
 
   Algebraic layer only; Link 2 refinements live in `Link2/FaceTurn.lean`,
   `Link2/Inverse.lean`, `Link2/EmHelpers.lean`, `Link2/EmCorner.lean`,
-  `Link2/EmEdge.lean`, `Link2/EmRecipe.lean`, `Link2/EmSpin.lean`,
+  `Link2/EmEdge.lean`, `Link2/EmGrip.lean`, `Link2/EmRecipe.lean`, `Link2/EmSpin.lean`,
   `Link2/EmStep.lean`, `Link2/EmInv.lean` (the `GripOk` invariant),
   `Link2/EmIv.lean` and `Link2/EmBlock.lean` (the whole block).  Zero sorry.
   No native_decide.

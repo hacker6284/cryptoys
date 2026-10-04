@@ -204,9 +204,9 @@ theorem rank_step_natN (n : Nat) (perm : List Nat) (h : PermNWf n perm) (hn : 3 
   refine ⟨big_mul_nat_gen _ _ (fits_small _ (by omega)), ?_⟩
   rw [big_add_nat _ _ (fits_small _ (by omega)), heq]
 
-theorem rankStep_hitN (n : Nat) (perm : List Nat) (h : PermNWf n perm) (hn : 3 ≤ n)
+theorem rankStep_hitN (line : Nat) (n : Nat) (perm : List Nat) (h : PermNWf n perm) (hn : 3 ≤ n)
     (hcount : evenPermCount n < limbBase ^ 4) (hn30 : n ≤ 30) (i : Nat) (hi : i ≤ n - 3) :
-    rankStep (embed perm) (Int.ofNat n) (Int.ofNat (n - 3))
+    rankStep line (embed perm) (Int.ofNat n) (Int.ofNat (n - 3))
         (Int.ofNat i, bigOf (natLimbs (rankAcc perm i)), embed (availAt perm i)) =
       if i = n - 3 then
         .ok (SudoRt.Flow.brk (Int.ofNat i,
@@ -238,7 +238,7 @@ theorem rankStep_hitN (n : Nat) (perm : List Nat) (h : PermNWf n perm) (hn : 3 �
   rw [fuelRange_eq]
   rw [show (0 : Int) = (0 : Int) from rfl]
   have hfb := find_breaks (availAt perm i) (perm[i]'hilen) hmem hfitsA
-    (rankAfter (Int.ofNat n) (Int.ofNat i) (bigOf (natLimbs (rankAcc perm i)))
+    (rankAfter line (Int.ofNat n) (Int.ofNat i) (bigOf (natLimbs (rankAcc perm i)))
       (embed (availAt perm i)))
     (fun r => pure (SudoRt.Flow.ret (ρ := Megadreifach.BigInt) r))
   simp only [ofNat_eq_natCast] at hfb ⊢
@@ -281,12 +281,12 @@ private theorem availAt_zeroN (n : Nat) (perm : List Nat) (h : PermNWf n perm) :
     availAt perm 0 = List.range n := by
   simp [availAt, dropUsed, List.take_zero, h.len]
 
-private theorem rankRunN (n : Nat) (perm : List Nat) (h : PermNWf n perm) (hn : 3 ≤ n)
+private theorem rankRunN (line : Nat) (n : Nat) (perm : List Nat) (h : PermNWf n perm) (hn : 3 ≤ n)
     (hcount : evenPermCount n < limbBase ^ 4) (hn30 : n ≤ 30) :
     SudoRt.runLoopOn (ρ := Megadreifach.BigInt)
       (Int.ofNat 0, (bigOf (natLimbs (rankAcc perm 0)), embed (availAt perm 0)))
       (fuelRange (Int.ofNat 0) (Int.ofNat (n - 3)))
-      (rankStep (embed perm) (Int.ofNat n) (Int.ofNat (n - 3)))
+      (rankStep line (embed perm) (Int.ofNat n) (Int.ofNat (n - 3)))
       (fun σ => pure σ.2.1)
       (fun r => pure r) =
       .ok (bigOf (natLimbs (evenRank perm))) := by
@@ -294,7 +294,7 @@ private theorem rankRunN (n : Nat) (perm : List Nat) (h : PermNWf n perm) (hn : 
     (f := fun i => (bigOf (natLimbs (rankAcc perm i)), embed (availAt perm i)))
     (fromN := 0) (toN := n - 3) (hle := Nat.zero_le _)
   · intro i _ hi
-    exact rankStep_hitN n perm h hn hcount hn30 i hi
+    exact rankStep_hitN line n perm h hn hcount hn30 i hi
   · rw [evenRank_eq_acc perm (by rw [h.len]; omega), h.len,
       show n - 3 + 1 = n - 2 by omega]
     rfl
@@ -315,7 +315,7 @@ theorem even_perm_rank_big_refines_gen (n : Nat) (perm : List Nat) (h : PermNWf 
   rw [show (0 : Int) = Int.ofNat 0 from rfl, fuelRange_eq, except_bind_pure]
   apply Eq.trans
   · apply runLoopOn_step_pointwise
-      (step' := rankStep (embed perm) (Int.ofNat n) (Int.ofNat (n - 3)))
+      (step' := rankStep _ (embed perm) (Int.ofNat n) (Int.ofNat (n - 3)))
     intro σ
     unfold rankStep findPerm rankAfter eraseStep
     dsimp only
@@ -323,7 +323,7 @@ theorem even_perm_rank_big_refines_gen (n : Nat) (perm : List Nat) (h : PermNWf 
   · rw [show bigOf [] = bigOf (natLimbs (rankAcc perm 0)) by rw [rankAcc_zero, natLimbs_zero],
       show embed (List.range n) = embed (availAt perm 0) from
         (congrArg embed (availAt_zeroN n perm h)).symm]
-    exact rankRunN n perm h hn hcount hn30
+    exact rankRunN _ n perm h hn hcount hn30
 
 theorem evenPermCount20_lt : evenPermCount 20 < limbBase ^ 4 := by
   unfold evenPermCount factorial limbBase; decide

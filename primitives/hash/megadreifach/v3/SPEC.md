@@ -195,7 +195,7 @@ The sudo counts all of these in `em_run`, and its test "cost per block" asserts 
 
 v3 costs about 2.4× v2's face turns and **about 2.2× v2's clicks** (585 / 270 on average). No human trials have been run, so error rates and wall time by hand are unknown.
 
-## 5.7 Hand details: IV-COOK12 and the 3-solve (unchanged from v2)
+## 5.7 Hand details: IV-COOK12 and the 3-solve (same turns as v2)
 
 **IV-COOK12 by hand.** From solved, turn each face +1 (one click clockwise), once each, in the rank order of the centre colours: A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q.
 

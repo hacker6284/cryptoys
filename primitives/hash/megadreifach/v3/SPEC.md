@@ -38,7 +38,7 @@ As v2 §1, with these differences:
   - It also needs "count up by a rank" on that 12-cycle. This replaces v2's "no colour-to-number arithmetic": counting up colours is the only arithmetic.
 - **Non-goals added.**
   - No claim that v3's compression function is a PRF; §8 is evidence against named distinguishers only.
-  - No Lean security result about v3. Its Lean covers refinement only: the emitted code computes a hand-written model (§7).
+  - No Lean security result about v3. Its Lean covers refinement only: on its input conditions, the emitted code computes a hand-written model (§7).
   - No human trials (§5.6).
 
 # 2. Public API
@@ -247,7 +247,7 @@ Unchanged from v2 §6.
 The pad lengths, block counts, IV-COOK12 digest and `|G|` are as in v2.
 
 How the vectors are made and checked:
-- **Generated** from the normative sudo: `../kats/regen_v3.mjs` imports the sudoc JS build of `megadreifach.sudo` and writes the file, including the IV-COOK12 digest. With `--check` it confirms that a fresh run reproduces the file byte for byte. CI does this in `tools/generate-demos.sh`. Apart from the generated code, the only other description of v3's `W` in the repo is the Lean model `proofs/megadreifach-v3/lean/MegaDreifachV3/Em.lean`, which Link 2 theorems prove equal to the emitted Lean (§7). It is not used to make these vectors.
+- **Generated** from the normative sudo: `../kats/regen_v3.mjs` imports the sudoc JS build of `megadreifach.sudo` and writes the file, including the IV-COOK12 digest. With `--check` it confirms that a fresh run reproduces the file byte for byte. CI does this in `tools/generate-demos.sh`. Apart from the generated code, the only other implementation of v3's `W` in the repo is the Lean model `proofs/megadreifach-v3/lean/MegaDreifachV3/Em.lean`, which Link 2 theorems prove equal to the emitted Lean (§7). It is not used to make these vectors.
 - **Sudo tests** assert:
   - pad, φ, IV-COOK12, the rank, the group law, the API and the edge table (all as v2);
   - the piece-colour reads;
@@ -260,7 +260,7 @@ How the vectors are made and checked:
   - the eight `Hash` digests and the `HashDeck` vector;
   - two `HashDeckBody` vectors, one of them with K♦ held.
 
-**Lean coverage for v3: refinement only.** `proofs/megadreifach-v3/` holds the Lean emitted from this sudo (checked fresh in CI), a compiled run of the KATs above (52 checks), and Link 2 theorems. They prove that each of the sudo's 11 exports, as emitted, equals a hand-written Lean model (`Em.lean`), under the input conditions listed in that package's README. Link 2 proves only generated = model. It does not check the sudo or the model against this SPEC. No Lean statement is about v3's security. `proofs/megadreifach/` and its `Generated/` model v2 (v2 SPEC §7), and the frozen v1 package models v1.
+**Lean coverage for v3: refinement only.** `proofs/megadreifach-v3/` holds the Lean emitted from this sudo (checked fresh in CI), a compiled run of the KATs above (52 checks), and Link 2 theorems. They prove that each of the sudo's 11 exports, as emitted, equals a hand-written Lean model (`Em.lean`, which also uses the v2 model files in `proofs/megadreifach/`), under the input conditions listed in that package's README. Link 2 proves only generated = model. It does not check the sudo or the model against this SPEC. No Lean statement is about v3's security. `proofs/megadreifach/` and its `Generated/` model v2 (v2 SPEC §7), and the frozen v1 package models v1.
 
 ---
 

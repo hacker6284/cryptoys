@@ -95,7 +95,7 @@ def countRegisterLooks (r : Run) : Run := { r with registerLooks := r.registerLo
 /-- The face a card step turns first: `base` counted up by `rank`, or `base`'s opposite for a
     King (`rank = 12`). -/
 def turnedFace (base : Fin 12) (rank : Nat) : Fin 12 :=
-  if h : rank < 12 then ⟨(base.val + rank) % 12, Nat.mod_lt _ (by decide)⟩ else opp base
+  if rank < 12 then ⟨(base.val + rank) % 12, Nat.mod_lt _ (by decide)⟩ else opp base
 
 /-- `card_step r base rank k c` (SPEC v3 §5.3). -/
 def cardStep (r : Run) (base : Fin 12) (rank k : Nat) (c : Fin 12) : Run :=

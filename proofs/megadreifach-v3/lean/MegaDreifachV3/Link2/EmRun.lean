@@ -15,17 +15,14 @@ open MegaDreifach MegaDreifach.Em MegaDreifach.Link2 MegaDreifachV3.Em
 
 theorem cardStep_inj (r : Run) (hg : InjPos r.g) (base : Fin 12) (rank k : Nat) (c : Fin 12) :
     InjPos (cardStep r base rank k c).g := by
-  simp only [cardStep, turnRun_g, countFind_g, countRelook_g]
+  simp only [cardStep, run_proj]
   repeat (first | assumption | apply injPos_faceTurn')
 
 theorem cardStep_counters (r : Run) (m : Nat) (hb : CountersLe r m) (base : Fin 12)
     (rank k : Nat) (hk : k ≤ 4) (c : Fin 12) :
     CountersLe (cardStep r base rank k c) (m + 10) := by
   obtain ⟨b1, b2, b3, b4, b5⟩ := hb
-  simp only [CountersLe, cardStep, turnRun_turns, turnRun_clicks, turnRun_finds, turnRun_relooks,
-    turnRun_registerLooks, countFind_turns, countFind_clicks, countFind_finds, countFind_relooks,
-    countFind_registerLooks, countRelook_turns, countRelook_clicks, countRelook_finds,
-    countRelook_relooks, countRelook_registerLooks]
+  simp only [CountersLe, cardStep, run_proj]
   omega
 
 theorem dealFold_inv (l : List Nat) (r : Run) (m : Nat) (hg : InjPos r.g) (hb : CountersLe r m) :
@@ -50,8 +47,7 @@ theorem echoStep_inv (held : Nat) (r : Run) (m : Nat) (hg : InjPos r.g) (hb : Co
     InjPos (echoStep held r).g ∧ CountersLe (echoStep held r) (m + 12) := by
   have hb' : CountersLe (countRegisterLooks r) (m + 2) := by
     obtain ⟨b1, b2, b3, b4, b5⟩ := hb
-    simp only [CountersLe, countRegisterLooks_turns, countRegisterLooks_clicks,
-      countRegisterLooks_finds, countRegisterLooks_relooks, countRegisterLooks_registerLooks]
+    simp only [CountersLe, run_proj]
     omega
   unfold echoStep
   dsimp only
@@ -114,6 +110,9 @@ theorem dealPrefix_inv (h : Position) (hh : InjPos h) (deal : List Nat) (i : Nat
   have : (deal.take i).length ≤ i := by simp only [List.length_take]; exact Nat.min_le_left _ _
   omega
 
+/-- `em_run`. Sufficient hypotheses, not necessary ones: bijective tables, and a deal of at
+    least 52 entries each `< 52` (a permutation of `0..51` in every use; entries `≥ 52` would
+    still give ranks the King branch handles on both sides). -/
 theorem em_run_refines (h : Position) (hh : InjPos h) (deal : List Nat)
     (hlen : 52 ≤ deal.length) (hcards : ∀ c ∈ deal, c < 52) :
     Megadreifach.em_run (embedPos h) (embed deal) = .ok (embedRun (emRun h deal)) := by
@@ -166,9 +165,7 @@ theorem em_run_refines (h : Position) (hh : InjPos h) (deal : List Nat)
       obtain ⟨b1, b2, b3, b4, b5⟩ := hcnt'
       have hrl : CountersLe (countRegisterLooks (echoRun deal[51] (j - 1)
           ((deal.take 52).foldl dealStep (startRun h)))) counterCap := by
-        simp only [CountersLe, countRegisterLooks_turns, countRegisterLooks_clicks,
-          countRegisterLooks_finds, countRegisterLooks_relooks, countRegisterLooks_registerLooks,
-          counterCap]
+        simp only [CountersLe, run_proj, counterCap]
         omega
       dsimp only
       simp only [Megadreifach.echo_count]

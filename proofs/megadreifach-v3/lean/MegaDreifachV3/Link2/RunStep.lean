@@ -1,6 +1,7 @@
 import MegaDreifachV3.Link2.FaceOfFound
 import MegaDreifach.Link2.FaceTurn
 import MegaDreifach.IV
+import MegaDreifachV3.Link2.RunSimp
 
 /-
   MegaDreifach v3 Link 2: the counted run state and one card step.
@@ -97,33 +98,33 @@ def counterCap : Nat := 2 ^ 40
 theorem fits_of_cap {n : Nat} (h : n ≤ counterCap + 16) : FitsLen n := by
   unfold FitsLen i64MaxNat; unfold counterCap at h; omega
 
-/-! Counter projections of the run steps. -/
+/-! Counter projections of the run steps (the `run_proj` simp set). -/
 section counters
 variable (r : Run) (f : Fin 12) (a : Nat)
-theorem turnRun_g : (turnRun r f a).g = faceTurn r.g f a := rfl
-theorem turnRun_turns : (turnRun r f a).turns = r.turns + 1 := rfl
-theorem turnRun_clicks : (turnRun r f a).clicks = r.clicks + a := rfl
-theorem turnRun_finds : (turnRun r f a).finds = r.finds := rfl
-theorem turnRun_relooks : (turnRun r f a).relooks = r.relooks := rfl
-theorem turnRun_registerLooks : (turnRun r f a).registerLooks = r.registerLooks := rfl
-theorem countFind_g : (countFind r).g = r.g := rfl
-theorem countFind_turns : (countFind r).turns = r.turns := rfl
-theorem countFind_clicks : (countFind r).clicks = r.clicks := rfl
-theorem countFind_finds : (countFind r).finds = r.finds + 1 := rfl
-theorem countFind_relooks : (countFind r).relooks = r.relooks := rfl
-theorem countFind_registerLooks : (countFind r).registerLooks = r.registerLooks := rfl
-theorem countRelook_g : (countRelook r).g = r.g := rfl
-theorem countRelook_turns : (countRelook r).turns = r.turns := rfl
-theorem countRelook_clicks : (countRelook r).clicks = r.clicks := rfl
-theorem countRelook_finds : (countRelook r).finds = r.finds := rfl
-theorem countRelook_relooks : (countRelook r).relooks = r.relooks + 1 := rfl
-theorem countRelook_registerLooks : (countRelook r).registerLooks = r.registerLooks := rfl
-theorem countRegisterLooks_g : (countRegisterLooks r).g = r.g := rfl
-theorem countRegisterLooks_turns : (countRegisterLooks r).turns = r.turns := rfl
-theorem countRegisterLooks_clicks : (countRegisterLooks r).clicks = r.clicks := rfl
-theorem countRegisterLooks_finds : (countRegisterLooks r).finds = r.finds := rfl
-theorem countRegisterLooks_relooks : (countRegisterLooks r).relooks = r.relooks := rfl
-theorem countRegisterLooks_registerLooks :
+@[run_proj] theorem turnRun_g : (turnRun r f a).g = faceTurn r.g f a := rfl
+@[run_proj] theorem turnRun_turns : (turnRun r f a).turns = r.turns + 1 := rfl
+@[run_proj] theorem turnRun_clicks : (turnRun r f a).clicks = r.clicks + a := rfl
+@[run_proj] theorem turnRun_finds : (turnRun r f a).finds = r.finds := rfl
+@[run_proj] theorem turnRun_relooks : (turnRun r f a).relooks = r.relooks := rfl
+@[run_proj] theorem turnRun_registerLooks : (turnRun r f a).registerLooks = r.registerLooks := rfl
+@[run_proj] theorem countFind_g : (countFind r).g = r.g := rfl
+@[run_proj] theorem countFind_turns : (countFind r).turns = r.turns := rfl
+@[run_proj] theorem countFind_clicks : (countFind r).clicks = r.clicks := rfl
+@[run_proj] theorem countFind_finds : (countFind r).finds = r.finds + 1 := rfl
+@[run_proj] theorem countFind_relooks : (countFind r).relooks = r.relooks := rfl
+@[run_proj] theorem countFind_registerLooks : (countFind r).registerLooks = r.registerLooks := rfl
+@[run_proj] theorem countRelook_g : (countRelook r).g = r.g := rfl
+@[run_proj] theorem countRelook_turns : (countRelook r).turns = r.turns := rfl
+@[run_proj] theorem countRelook_clicks : (countRelook r).clicks = r.clicks := rfl
+@[run_proj] theorem countRelook_finds : (countRelook r).finds = r.finds := rfl
+@[run_proj] theorem countRelook_relooks : (countRelook r).relooks = r.relooks + 1 := rfl
+@[run_proj] theorem countRelook_registerLooks : (countRelook r).registerLooks = r.registerLooks := rfl
+@[run_proj] theorem countRegisterLooks_g : (countRegisterLooks r).g = r.g := rfl
+@[run_proj] theorem countRegisterLooks_turns : (countRegisterLooks r).turns = r.turns := rfl
+@[run_proj] theorem countRegisterLooks_clicks : (countRegisterLooks r).clicks = r.clicks := rfl
+@[run_proj] theorem countRegisterLooks_finds : (countRegisterLooks r).finds = r.finds := rfl
+@[run_proj] theorem countRegisterLooks_relooks : (countRegisterLooks r).relooks = r.relooks := rfl
+@[run_proj] theorem countRegisterLooks_registerLooks :
     (countRegisterLooks r).registerLooks = r.registerLooks + 2 := rfl
 end counters
 
@@ -220,9 +221,13 @@ theorem corner_face_of_run (r : Run) (hr : InjPos r.g) (c : Fin 12) (k : Nat) (h
 
 /-- Side goals of the card-step rewrites: counter bounds and bijective tables. -/
 macro "run_side" : tactic => `(tactic| first
-  | (apply fits_of_cap; simp only [turnRun_turns, turnRun_clicks, turnRun_finds, turnRun_relooks, countFind_turns, countFind_clicks, countFind_finds, countFind_relooks, countRelook_turns, countRelook_clicks, countRelook_finds, countRelook_relooks, counterCap]; omega)
+  | (apply fits_of_cap; simp only [run_proj, counterCap]; omega)
   | ((repeat (first | assumption | apply injPos_faceTurn')); done))
 
+/-- One card step. The hypotheses are sufficient, not necessary: bijective tables make the piece
+    searches succeed, counters ≤ `counterCap` keep every counter update in Int64, and
+    `rank ≤ 12`, `1 ≤ k ≤ 4` are the ranges a deal or an echo produces (a rank above 12 would
+    also take the King branch on both sides). -/
 theorem card_step_refines (r : Run) (hg : InjPos r.g) (hb : CountersLe r counterCap)
     (base : Fin 12) (rank k : Nat) (hrank : rank ≤ 12) (hk1 : 1 ≤ k) (hk4 : k ≤ 4) (c : Fin 12) :
     Megadreifach.card_step (embedRun r) (Int.ofNat base.val) (Int.ofNat rank) (Int.ofNat k)

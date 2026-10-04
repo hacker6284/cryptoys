@@ -24,8 +24,9 @@ compares two builds of one source, not two independent implementations.
 [`lean/MegaDreifachV3/Link2/Shared.lean`](lean/MegaDreifachV3/Link2/Shared.lean) states, for
 the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
 `inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
-`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 62 v2 modules
-that elaborate against the v3 emit). The model side is the v2 position algebra,
+`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 62 v2 modules,
+exactly their own import closure, that elaborate against the v3 emit; with the 16 v3 modules
+the package builds 78 modules, plus the `Generated/` package). The model side is the v2 position algebra,
 which v3 keeps. These four functions are not exports.
 
 [`lean/MegaDreifachV3/Link2/Codec.lean`](lean/MegaDreifachV3/Link2/Codec.lean) states, for the
@@ -65,10 +66,13 @@ are `Option`-valued in the model, and `none` is the emitted code's trap. The car
   the counter update fits in an Int64. `card_colour_refines` is exact on every card number.
   `card_step_refines`: on a position with bijective corner and edge tables, with all five
   counters at most `counterCap` (2^40, far above any run), the emitted `card_step` returns the
-  model `cardStep` for every base face, rank ≤ 12, `k ∈ 1..4` and colour.
+  model `cardStep` for every base face, rank ≤ 12, `k ∈ 1..4` and colour. These hypotheses are
+  sufficient, not necessary (a rank above 12 takes the King branch on both sides); they cover
+  every card step a deal or an echo makes.
 - `em_run` and `em_block` (`Link2/EmRun.lean`). `echo_colour_refines` holds on every position
   with bijective tables and every held card. `em_run_refines` and `em_block_refines`: on such a
-  position and a deal of at least 52 cards, each `< 52`, the emitted functions return the
+  position and a deal of at least 52 cards, each `< 52` (sufficient conditions; every caller
+  passes a permutation of `0..51`), the emitted functions return the
   model `emRun` / `emBlock`. Both loops (52 card steps, then 26 echoes) are driven by
   `chain_loop`. A card step keeps bijective tables and adds at most 10 to each counter, an echo
   at most 12, so every iteration meets the `card_step_refines` side conditions. `emBlock_inj`:
@@ -89,6 +93,9 @@ are `Option`-valued in the model, and `none` is the emitted code's trap. The car
   block `deckPadBlock`. `body_from_refines`, `v_HashDeckBody_refines` and
   `v_HashDeckBodyFrom_refines`: on a permutation of `0..51` (and, for `BodyFrom`, a chaining
   value with bijective tables) the digest of `dmStep h deal`.
+  Scope: the body exports are stated on `embed deal` only (there are no `_array` forms), and
+  `HashDeckBodyFrom` / `MegaDreifachBodyFrom` only for chaining values of the form `embedPos h`
+  (an emitted `Position` record that is not such an embedding is not covered).
 
 Not in the roots: the v2 grip and card-phase layers (EmGrip, EmSpin, EmRecipe, EmStep, EmInv,
 EmBlock, EmIv, InjInv, VHash, VHashDeck), which name v2-only emitted functions. The v3 files restate the few generic
@@ -107,9 +114,9 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 | `MegaDreifach` | `v_MegaDreifach_refines` (on `PadWf`) |
 | `HashDeck` | `v_HashDeck_refines` (on `PhiInvWf`), `v_HashDeck_refines_array`, `v_HashDeck_two_blocks` |
 | `MegaDreifachDeck` | `v_MegaDreifachDeck_refines` (on `PhiInvWf`) |
-| `HashDeckBody` | `v_HashDeckBody_refines` (on permutations of `0..51`) |
-| `MegaDreifachBody` | `v_MegaDreifachBody_refines` (on permutations of `0..51`) |
-| `HashDeckBodyFrom` | `v_HashDeckBodyFrom_refines` (permutations of `0..51`, chaining value with bijective tables) |
+| `HashDeckBody` | `v_HashDeckBody_refines` (on permutations of `0..51`; no `_array` form) |
+| `MegaDreifachBody` | `v_MegaDreifachBody_refines` (on permutations of `0..51`; no `_array` form) |
+| `HashDeckBodyFrom` | `v_HashDeckBodyFrom_refines` (permutations of `0..51`, chaining value `embedPos h` with bijective tables; no `_array` form) |
 | `MegaDreifachBodyFrom` | `v_MegaDreifachBodyFrom_refines` (same) |
 
 ## Where this sits

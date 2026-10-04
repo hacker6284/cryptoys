@@ -19,6 +19,7 @@ import MegaDreifachV3.Link2.CardFacts
 import MegaDreifachV3.Link2.CardTables
 import MegaDreifachV3.Link2.FaceOf
 import MegaDreifachV3.Link2.FaceOfFound
+import MegaDreifachV3.Link2.RunSimp
 import MegaDreifachV3.Link2.RunStep
 import MegaDreifachV3.Link2.EmRun
 import MegaDreifachV3.Link2.VHash

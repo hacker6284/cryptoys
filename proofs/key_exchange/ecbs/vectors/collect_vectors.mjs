@@ -2,36 +2,22 @@
 // primitives/key_exchange/ecbs/ecbs.sudo, over the inputs in inputs.json. Every
 // output below comes from the generated code; this file only converts between
 // JSON and the generated host API. Do not hand-edit the JSON this writes;
-// regenerate with regen.sh.
+// regenerate with regen.sh (proofs/key_exchange/vectors_regen.sh).
 //
 // Usage: node collect_vectors.mjs <sudoc-js-outdir> > ecbs_vectors.json
-// Env (set by regen.sh): ECBS_SUDO_SHA256, SUDOCODE_COMMIT.
+// Env (set by vectors_regen.sh): ECBS_SUDO_SHA256, SUDOCODE_COMMIT.
 
-import { readFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
+import { assert, toTrits, toPegs, ROWS, load, header } from "../../vectors_common.mjs";
 
-const outDir = process.argv[2];
-if (!outDir) {
-  console.error("usage: node collect_vectors.mjs <sudoc-js-outdir>");
-  process.exit(2);
-}
 const here = path.dirname(fileURLToPath(import.meta.url));
-const E = await import(pathToFileURL(path.resolve(outDir, "ecbs.mjs")).href);
-const inputs = JSON.parse(readFileSync(path.join(here, "inputs.json"), "utf8"));
-
-function assert(cond, msg) {
-  if (!cond) throw new Error(msg);
-}
-
-const toTrits = (s) => [...s].map((c) => ".WR".indexOf(c));
-const toPegs = (xs) => xs.map((t) => ".WR"[t]).join("");
+const { mod: E, inputs } = await load("ecbs", here);
 const ptIn = (p) => ({ x: toTrits(p.x), y: toTrits(p.y) });
 const ptOut = (p) => ({ x: toPegs(p.x), y: toPegs(p.y) });
 const PHASES = E.phase_names();
 const OPS = E.op_names();
 const HOMES = ["across", "up", "bottom", "base across", "base up", "gap", "spare"];
-const ROWS = "ABCDEFGHIJ";
 const byName = (names, xs) => Object.fromEntries(names.map((k, i) => [k, xs[i]]));
 
 function roll(t, faces) {
@@ -66,11 +52,7 @@ function player(p) {
 }
 
 const out = {
-  schema: 1,
-  generated_by: "proofs/key_exchange/ecbs/vectors/regen.sh",
-  source: "primitives/key_exchange/ecbs/ecbs.sudo",
-  sudo_sha256: process.env.ECBS_SUDO_SHA256 ?? "",
-  sudocode_commit: process.env.SUDOCODE_COMMIT ?? "",
+  ...header("ecbs"),
   note: "Known-answer vectors evaluated by the sudoc JS target of ecbs.sudo over inputs.json. Cross-checked against PARI/GP by check_oracle.py.",
   numbers: "'.WR' strings, hole 0 first: '.' empty, 'W' white, 'R' red (SPEC §1)",
   tiers: {},

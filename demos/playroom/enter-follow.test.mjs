@@ -8,7 +8,7 @@ const app = readFileSync(new URL("./app.js", import.meta.url), "utf8").replace(/
 const from = app.indexOf("async function startAlgo");
 const next = app.slice(from + 1).search(/\n\s*(async )?function /);
 const body = app.slice(from, next < 0 ? undefined : from + 1 + next);
-const order = [/followLive\??\.?\(enterTrack\)/, /await adapter\.enter\(/, /followLive\s*(\?\.)?\s*\(\s*null\s*\)/, /markBeat\("enter-done"\)/];
+const order = [/followLive(\?\.)?\(enterTrack\)/, /await adapter\.enter\(/, /followLive\s*(\?\.)?\s*\(\s*null\s*\)/, /markBeat\("enter-done"\)/];
 let at = 0;
 for (const re of order) {
     const i = body.slice(at).search(re);

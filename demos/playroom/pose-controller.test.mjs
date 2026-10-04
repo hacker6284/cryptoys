@@ -80,29 +80,29 @@ assert.ok(finalStep <= Math.max(...settleSteps) + 1e-9, "final frame is not the 
 // tween lands, and drives again once it is released. Whether startAlgo
 // does release it is enter-follow.test.mjs.
 {
-    const enter = createPoseController(makeCamera(), { domElement: {} });
+    const poses = createPoseController(makeCamera(), { domElement: {} });
     const controls = globalThis.orbitControls.at(-1);
     const cube = { x: -0.35, y: 0.8, z: 0.15, r: 0.08 };
     let now = 0;
     const run = (ms) => {
-        for (const end = now + ms; now < end;) enter.update((now += 16));
+        for (const end = now + ms; now < end;) poses.update((now += 16));
     };
-    enter.snap("landing");
-    enter.followTo("scramble", { track: cube, delay: 400, duration: 1600 });
-    enter.followLive(cube);
+    poses.snap("landing");
+    poses.followTo("scramble", { track: cube, delay: 400, duration: 1600 });
+    poses.followLive(cube);
     run(4000);
-    assert.equal(enter.busy, false, "enter tween has landed");
+    assert.equal(poses.busy, false, "enter tween has landed");
     assert.equal(controls.enabled, false, "orbit stays off while the live follow is set");
     assert.equal(controls.updates, 0, "nothing drives orbit while following");
-    enter.followLive(null);
+    poses.followLive(null);
     run(32);
     assert.equal(controls.enabled, true, "orbit is back once the follow is released");
     assert.ok(controls.updates > 0, "orbit is driven again after release");
     // startAlgo's error path snaps instead of releasing; snap clears it too.
-    enter.followLive(cube);
+    poses.followLive(cube);
     run(32);
     assert.equal(controls.enabled, false);
-    enter.snap("landing");
+    poses.snap("landing");
     run(32);
     assert.equal(controls.enabled, true, "snap ends the live follow");
 }

@@ -1,5 +1,4 @@
-"""MegaDreifach v2 (C36) attack and structure experiments behind SPEC §8 (write-or-check logs),
-and behind DoubleDeal-CBC-Sandwich v2 SPEC §8 (sandwich_fprime).
+"""MegaDreifach v2 (C36) attack and structure experiments behind SPEC §8 (write-or-check logs).
 
 Stdlib only.  Every experiment is seeded and deterministic, and its result does not depend
 on --workers (the work is split into a fixed number of chunks with per-chunk seeds, as in
@@ -905,122 +904,6 @@ def x_telescoping(workers, rule='A_vn', N=2000000, chunks=24, seed=6):
           f"{h} collisions / {t:,}, {rate_text(h, t)}")
 
 
-# ================================================================ Sandwich MAC assumption A1
-
-def _key_deck(rng):
-    """A uniform key deck K (uniform on S_52) and K turned over (seat i gets K[51 - i])."""
-    k = list(range(52))
-    rng.shuffle(k)
-    return k, k[::-1]
-
-
-def _flip2(h, rng):
-    """h with the orientations of two distinct random edge slots flipped (a legal state);
-    also returns the two slots."""
-    cp, co, ep, eo = [list(x) for x in from_st(h)]
-    a, b = rng.sample(range(30), 2)
-    for s in (a, b):
-        eo[s] = 1 - eo[s]
-    assert legal((cp, co, ep, eo))
-    return to_st((cp, co, ep, eo)), (a, b)
-
-
-def _inv_st(st):
-    return to_st(inverse(from_st(st)))
-
-
-def _fprime_trial(E, rng, m, fresh_random=False):
-    """One run of the 2-query test against f'(v) = dm(v, m), m secret.  Returns
-    (accepted, both_flipped_edges_unread, W_unchanged).  With fresh_random, query 2 is
-    answered by a lazily sampled random function instead (a fresh uniform position)."""
-    h = uniform_st(rng)
-    rec = []
-    y1 = compose_st(h, E.em(h, m, rec=rec))          # query 1: y1 = f'(h)
-    RE = {s for k, s in read_hslots(h, rec) if k == 'e'}
-    e1 = compose_st(_inv_st(h), y1)                  # y1 = h * e1
-    W = compose_st(e1, _inv_st(h))                   # e1 = W * h
-    h2, (a, b) = _flip2(h, rng)
-    if fresh_random:
-        y2 = uniform_st(rng)                         # random function: fresh point h2 != h
-        W2 = None
-    else:
-        e2 = E.em(h2, m)
-        y2 = compose_st(h2, e2)                      # query 2: y2 = f'(h2)
-        W2 = compose_st(e2, _inv_st(h2))
-    accept = y2 == compose_st(h2, compose_st(W, h2))  # predicted y2 = h2 * W * h2
-    return accept, (a not in RE and b not in RE), W2 == W
-
-
-def _fprime_work(args):
-    kind, n, seed = args
-    E = engine('C36')
-    rng = random.Random(seed)
-    if kind == 'game':                               # fresh key per game (the PRF game)
-        acc = unread = same = acc_unread = 0
-        for _ in range(n):
-            _, m = _key_deck(rng)
-            a, u, w = _fprime_trial(E, rng, m)
-            if a != w:
-                fail('2-query test: accept != (W unchanged)')
-            acc += a
-            unread += u
-            same += w
-            acc_unread += a and u
-            if u and not w:
-                fail('flipping two unread edges changed W')
-        return acc, unread, same, acc_unread
-    if kind == 'control':                            # query 2 from a random function
-        return sum(_fprime_trial(E, rng, _key_deck(rng)[1], fresh_random=True)[0]
-                   for _ in range(n))
-    keys, pairs = n                                  # 'per_key': one key, many 2-query tests
-    out = []
-    for _ in range(keys):
-        _, m = _key_deck(rng)
-        out.append([_fprime_trial(E, rng, m)[0] for _ in range(pairs)])
-    return out
-
-
-def x_sandwich_fprime(workers, N=100000, chunks=10, seed=2026, KEYS=100, PAIRS=200):
-    """Sandwich MAC assumption A1: a 2-query distinguisher against f'(v) = dm(v, K turned
-    over) for a secret uniform key deck K, with the chaining value v chosen by the adversary
-    (DoubleDeal-CBC-Sandwich v2 SPEC §8)."""
-    print("f'(v) = dm(v, m), m = K turned over, K uniform secret key deck, C36.  Test: query "
-          "y1 = f'(h) at uniform h; W := (h^-1 * y1) * h^-1; query y2 = f'(h2), h2 = h with "
-          "two random edge orientations flipped; accept iff y2 == h2 * W * h2.")
-    res = pmap(_fprime_work, [('game', N // chunks, seed + c) for c in range(chunks)], workers)
-    acc, unread, same, acc_unread = (sum(r[i] for r in res) for i in range(4))
-    n = (N // chunks) * chunks
-    lo, hi = ci95(acc, n)
-    print(f"real f' ({n} games, fresh key each, {chunks} chunks, seeds {seed}+c): accepted "
-          f"{acc}/{n} = {acc / n:.4f}, 95% CI (Wilson) [{lo:.4f},{hi:.4f}]")
-    print(f"  accepted == (W unchanged by the flip) in every game; W unchanged {same}/{n}")
-    print(f"  both flipped edges unread by query 1's block: {unread}/{n} = {unread / n:.4f}; "
-          f"all of these accepted ({acc_unread}); accepted with a flipped edge read: "
-          f"{acc - acc_unread}/{n} = {(acc - acc_unread) / n:.4f}")
-    G = eng.GROUP_ORDER
-    ctl = sum(pmap(_fprime_work, [('control', N // chunks, seed + 1000 + c)
-                                  for c in range(chunks)], workers))
-    print(f"random-function control ({n} games, seeds {seed}+1000+c; query 2 answered by a "
-          f"fresh uniform position): accepted {ctl}/{n}, {rate_text(ctl, n)}")
-    print(f"  exact ideal rate: 1/|G| = 2^-{math.log2(G):.2f} (|G| = {G:.4e}); "
-          f"advantage = {acc / n:.4f} - 2^-{math.log2(G):.1f}")
-    res = pmap(_fprime_work, [('per_key', (KEYS // chunks, PAIRS), seed + 2000 + c)
-                              for c in range(chunks)], workers)
-    rows = [r for part in res for r in part]
-    rates = sorted(sum(r) / PAIRS for r in rows)
-    k = len(rows)
-    mean = sum(rates) / k
-    var = sum((x - mean) ** 2 for x in rates) / (k - 1)
-    binvar = mean * (1 - mean) / PAIRS
-    print(f"per key ({k} keys x {PAIRS} tests, seeds {seed}+2000+c): accept rate min "
-          f"{rates[0]:.3f}, median {rates[k // 2]:.3f}, max {rates[-1]:.3f}, mean {mean:.4f}; "
-          f"variance / binomial variance = {var / binvar:.2f}")
-    for r in (1, 5, 10, 25, 50, 100):
-        hit = sum(any(row[:r]) for row in rows)
-        print(f"  {2 * r:3d} queries ({r} test{'s' if r > 1 else ''}, same key): some test accepted for "
-              f"{hit}/{k} keys")
-
-
 # ================================================================ driver
 
 QUICK = {
@@ -1041,7 +924,6 @@ HEAVY = {
     'suit_sampled': x_suit_sampled,
     'targeted_T': x_targeted_T,
     'telescoping': x_telescoping,
-    'sandwich_fprime': x_sandwich_fprime,
 }
 ALL = {**QUICK, **HEAVY}
 SETS = {'quick': QUICK, 'heavy': HEAVY, 'all': ALL}

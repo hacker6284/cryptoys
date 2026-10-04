@@ -1,0 +1,33 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+mdw4_lib ZB0F1N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3R3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F1S9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0R2S8: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every block reads all 50)
+mdw4_lib board register: the 60 states of the (Ace, n1) edge slot give each of the 12 colours 5 times
+merge ZB3F0E26: N=125000, seeds 51100000+...; cost {'turns': 468, 'clicks': '520 + echo card clicks (m*k)', 'piece_finds': 156, 'slot_reads': 78, 'regrips': 0, 'solves': 3}
+  merge ZB3F0E26 IV   swap at  1: mean differing slots 49.1614, P(<=46) 0.01059 (ideal 0.01042), state equal right after the pair 0, collisions 0  [37s]
+  merge ZB3F0E26 IV   swap at  2: mean differing slots 49.1549, P(<=46) 0.01103 (ideal 0.01042), state equal right after the pair 12, collisions 0  [38s]
+Traceback (most recent call last):
+  File "/workspace/mathematician-review/stage3/scripts/mdw4_tests.py", line 55, in <module>
+    X.main()
+    ~~~~~~^^
+  File "/workspace/mathematician-review/stage3/scripts/mdw3_tests.py", line 148, in main
+    R, dt = TT.run(p, TT.merge_work, (kind, m, start, i), N, seed0 + 10000 * si + 100 * i)
+            ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/mathematician-review/stage3/scripts/mdw_tests.py", line 356, in run
+    R = M.merge(p.map(fn, [cfg + (n // CH, seed0 + c) for c in range(CH)]))
+  File "/workspace/mathematician-review/stage3/scripts/mdfix_dist.py", line 126, in merge
+    out[k] = [sum(r[k][j] for r in rs) for j in range(len(v))]
+              ~~~^^^^^^^^^^^^^^^^^^^^^
+TypeError: unsupported operand type(s) for +: 'int' and 'tuple'
+
+real	2m0.069s
+user	6m37.219s
+sys	0m0.084s

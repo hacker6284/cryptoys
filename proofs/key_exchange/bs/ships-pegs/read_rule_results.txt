@@ -1,0 +1,11 @@
+== injectivity, exhaustive on small grids ==
+  1x2: 3 layouts (count A), 3 distinct exponents, decode(encode)=id
+  2x2: 17 layouts (count A), 17 distinct exponents, decode(encode)=id
+  1x5: 55 layouts (count A), 55 distinct exponents, decode(encode)=id
+  2x3: 139 layouts (count A), 139 distinct exponents, decode(encode)=id
+  3x3: 3073 layouts (count A), 3073 distinct exponents, decode(encode)=id
+  2x5: 6915 layouts (count A), 6915 distinct exponents, decode(encode)=id
+  3x4: 64557 layouts (count A), 64557 distinct exponents, decode(encode)=id
+  4x4: 3996513 layouts (count A), 3996513 distinct exponents, decode(encode)=id
+== 10x10 uniform layouts: 20000 round trips OK; cells walked mean 110.775 (min 102, max 121), hit units mean 104.243
+   max possible cells = 100 + 33 (33 three-hole ships tile 99 holes) = 133

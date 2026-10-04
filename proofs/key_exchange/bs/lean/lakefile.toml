@@ -1,0 +1,26 @@
+name = "BsLink2"
+version = "0.1.0"
+defaultTargets = ["BsLink2"]
+
+[[require]]
+name = "sudo"
+path = "Generated"
+
+[[require]]
+name = "audit"
+path = "../../../audit"
+
+[[lean_lib]]
+name = "BsLink2"
+
+# The MegaDreifach Link 2 runtime lemmas (`MegaDreifach.Link2.Embed`, `.Sudo`,
+# `.Loop`: `FitsLen`, the SudoRt arithmetic and the loop drivers), elaborated here
+# against this package's own emitted SudoRt (identical to MegaDreifach's but for the
+# header comment). Only modules that import nothing but SudoRt resolve: BS's Generated/
+# has no Megadreifach module. Not a build target: `globs` only lets
+# `import MegaDreifach.…` resolve to srcDir; lake builds exactly what BsLink2 imports.
+[[lean_lib]]
+name = "MegaDreifachLink"
+srcDir = "../../../megadreifach/lean"
+roots = []
+globs = ["MegaDreifach.+"]

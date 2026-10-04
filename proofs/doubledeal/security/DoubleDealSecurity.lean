@@ -7,6 +7,10 @@ import DoubleDealSecurity.SumRanks
 import DoubleDealSecurity.SumRanksV10
 import DoubleDealSecurity.SumRanksV10Iff
 import DoubleDealSecurity.StemPosition
+import DoubleDealSecurity.StemCoupling
+import DoubleDealSecurity.StemSupportFour
+import DoubleDealSecurity.StemUnion
+import DoubleDealSecurity.OneRoundDP
 import DoubleDealSecurity.Walk
 import DoubleDealSecurity.GridCycle
 import DoubleDealSecurity.BranchNumber
@@ -32,3 +36,11 @@ import DoubleDealSecurity.Linear
 import DoubleDealSecurity.LinearMasks
 import DoubleDealSecurity.CovariantNarrowLists
 import DoubleDealSecurity.CovariantNarrow
+import DoubleDealSecurity.CovariantAffineLists
+import DoubleDealSecurity.CovariantAffine
+import DoubleDealSecurity.RankPartitionLists
+import DoubleDealSecurity.RankPartition
+import DoubleDealSecurity.V10SymLists
+import DoubleDealSecurity.RankAffine
+import DoubleDealSecurity.TauEq
+import DoubleDealSecurity.LabelStep

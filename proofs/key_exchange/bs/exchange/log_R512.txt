@@ -1,0 +1,2 @@
+R512 0 {'key_cells': [214, 211], 'pub_A_ok': True, 'pub_B_ok': True, 'agree': True, 'K_matches_pow': True, 'K_canonical': True, 'mults_per_person': 1034.5, 'moves_per_person': 189076884.5}
+R512 SUMMARY {"tier": "R512", "runs": 1, "all_ok": true, "mean_mults_per_person": 1034.5, "mean_moves_per_person": 189076884.5, "mean_moves_per_mult": 182771.27549540842, "mean_key_cells": 212.5, "seconds": 99.5}

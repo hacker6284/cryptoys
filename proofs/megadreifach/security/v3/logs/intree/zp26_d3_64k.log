@@ -1,0 +1,14 @@
+# command: d3 8000 83000000
+selfcheck: sampler positions are build group elements 8/8; y == HashDeckBodyFrom 8/8; face-turn words legal 8/8; reference laws sum to 1: true
+ideal (uniform G): P(fixE>=2) 0.264241, P(fixC>=2) 0.264241, mean moved 49.1667
+D3 ZP26: telescoping pair at deal positions 51, 52 (both orders), IV and uniform start, N=8000 per (start, class); seeds 83000000 + 100*(4*start + class) + chunk
+  start IV   pair same n=8000: output collisions 0 (0-hit 95% bound 3.7e-4)
+  start IV   pair opp  n=8000: output collisions 0 (0-hit 95% bound 3.7e-4)
+  start IV   pair KA   n=8000: output collisions 0 (0-hit 95% bound 3.7e-4)
+  start IV   pair rand n=8000: output collisions 0 (0-hit 95% bound 3.7e-4)
+  start rand pair same n=8000: output collisions 0 (0-hit 95% bound 3.7e-4)
+  start rand pair opp  n=8000: output collisions 0 (0-hit 95% bound 3.7e-4)
+  start rand pair KA   n=8000: output collisions 0 (0-hit 95% bound 3.7e-4)
+  start rand pair rand n=8000: output collisions 0 (0-hit 95% bound 3.7e-4)
+D3 ZP26: 64000 pairs; output collisions 0
+# time D3: 353.9 s, 128000 blocks, 361.7 blocks/s, 4 workers

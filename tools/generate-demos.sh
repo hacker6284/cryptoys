@@ -17,8 +17,16 @@ fi
 node /tmp/scramble-test/_scramble_impl.mjs
 "$sudoc" build --target js --tests -o /tmp/megadreifach-test primitives/hash/megadreifach/megadreifach.sudo
 node /tmp/megadreifach-test/_megadreifach_impl.mjs
+"$sudoc" build --target js --tests -o /tmp/megadreifach-v3-test primitives/hash/megadreifach/v3/megadreifach.sudo
+node /tmp/megadreifach-v3-test/_megadreifach_impl.mjs
+"$sudoc" emit-ir --require terminates primitives/hash/megadreifach/v3/megadreifach.sudo > /dev/null
+"$sudoc" build --target js -o /tmp/megadreifach-v3 primitives/hash/megadreifach/v3/megadreifach.sudo
+MD3_OUT=/tmp/megadreifach-v3 node primitives/hash/megadreifach/kats/regen_v3.mjs --check
+MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_stats.mjs --check proofs/megadreifach/security/v3/logs/intree/zp26_ci_slice.log ci 84000000
 "$sudoc" build --target js --tests -o /tmp/doubledeal-test primitives/cipher/doubledeal/doubledeal.sudo
 node /tmp/doubledeal-test/_doubledeal_impl.mjs
+"$sudoc" build --target js --tests -o /tmp/bs-test primitives/key_exchange/bs/bs.sudo
+node /tmp/bs-test/_bs_impl.mjs
 "$sudoc" emit-ir --require terminates -I primitives/hash/megadreifach \
     -I primitives/cipher/doubledeal \
     primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo > /dev/null

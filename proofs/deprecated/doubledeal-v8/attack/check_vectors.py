@@ -1,4 +1,5 @@
-"""Check dd_v8.py (Python port of the frozen v8 sudo) against the frozen v8 vectors.
+"""Check sudoc's Python output of the frozen v8 sudo (proofs/sudo_py.py) against the frozen v8
+vectors (written by sudoc's JS output), and dd_v8.py too while that hand copy has callers.
 
 Also fails if the vectors' sudo_sha256 is not the frozen v8 sudo (the frozen file must not drift).
 """
@@ -9,13 +10,17 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-import dd_v8 as dd  # noqa: E402
+sys.path.insert(0, str(HERE.parents[2]))
+import sudo_py  # noqa: E402
+import dd_v8  # noqa: E402  (hand copy; drop it from IMPLS when it is deleted, issue #176)
+
+IMPLS = {'sudoc py': sudo_py.doubledeal(8), 'dd_v8.py': dd_v8}
 
 VECTORS = HERE.parent / "vectors" / "doubledeal_v8_vectors.json"
 V8_SUDO = HERE.parents[3] / "primitives" / "cipher" / "doubledeal" / "v8" / "doubledeal_v8.sudo"
 
 
-def evaluate(v):
+def evaluate(dd, v):
     k = v['kind']
     if k == 'encrypt':
         return dd.encrypt(v['message'], v['key']), v['cipher']
@@ -46,24 +51,27 @@ def main():
     if doc['sudo_sha256'] != sha:
         print(f"sudo_sha256 mismatch: json={doc['sudo_sha256']} {V8_SUDO.name}={sha}")
         sys.exit(1)
-    ok = bad = 0
-    for v in doc['vectors']:
-        res = evaluate(v)
-        if res is None:
-            print('skip', v['name'])
-            continue
-        got, exp = res
-        if got == exp:
-            ok += 1
-        else:
-            bad += 1
-            print('MISMATCH', v['name'])
-        if v['kind'] == 'encrypt':
-            assert dd.decrypt(got, v['key']) == v['message']
-        if v['kind'] == 'passkey':
-            assert dd.passkey_inv(got) == v['input']
-    print(f'{ok} ok, {bad} mismatch')
-    sys.exit(1 if bad else 0)
+    nbad = 0
+    for label, dd in IMPLS.items():
+        ok = bad = 0
+        for v in doc['vectors']:
+            res = evaluate(dd, v)
+            if res is None:
+                print('skip', v['name'])
+                continue
+            got, exp = res
+            if got == exp:
+                ok += 1
+            else:
+                bad += 1
+                print('MISMATCH', label, v['name'])
+            if v['kind'] == 'encrypt':
+                assert dd.decrypt(got, v['key']) == v['message']
+            if v['kind'] == 'passkey':
+                assert dd.passkey_inv(got) == v['input']
+        print(f'{label}: {ok} ok, {bad} mismatch')
+        nbad += bad
+    sys.exit(1 if nbad else 0)
 
 
 if __name__ == '__main__':

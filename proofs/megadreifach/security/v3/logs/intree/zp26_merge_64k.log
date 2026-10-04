@@ -1,0 +1,24 @@
+# command: merge 4000 82000000
+selfcheck: sampler positions are build group elements 8/8; y == HashDeckBodyFrom 8/8; face-turn words legal 8/8; reference laws sum to 1: true
+ideal (uniform G): P(fixE>=2) 0.264241, P(fixC>=2) 0.264241, mean moved 49.1667
+merge ZP26: adjacent swap at deal positions 1, 2, 13, 26, 27, 39, 50, 51, IV and uniform start, N=4000 each; seeds 82000000 + 10000*[uniform] + 100*position + chunk
+  IV   swap at  1: mean differing slots 49.1647, collisions 0
+  IV   swap at  2: mean differing slots 49.1743, collisions 0
+  IV   swap at 13: mean differing slots 49.1418, collisions 0
+  IV   swap at 26: mean differing slots 49.1688, collisions 0
+  IV   swap at 27: mean differing slots 49.1707, collisions 0
+  IV   swap at 39: mean differing slots 49.1773, collisions 0
+  IV   swap at 50: mean differing slots 49.1583, collisions 0
+  IV   swap at 51: mean differing slots 49.1545, collisions 0
+  IV   differing output slots: mean 49.1638 (ideal 49.1667); [0-40] 0.00000 (ideal 0.00000); [41-44] 0.00022 (ideal 0.00023); [45-46] 0.01131 (ideal 0.01019); [47-47] 0.04056 (ideal 0.04192); [48-48] 0.15322 (ideal 0.15090); [49-49] 0.35997 (ideal 0.36217); [50-50] 0.43472 (ideal 0.43460)
+  rand swap at  1: mean differing slots 49.1758, collisions 0
+  rand swap at  2: mean differing slots 49.1650, collisions 0
+  rand swap at 13: mean differing slots 49.1410, collisions 0
+  rand swap at 26: mean differing slots 49.1733, collisions 0
+  rand swap at 27: mean differing slots 49.1635, collisions 0
+  rand swap at 39: mean differing slots 49.1743, collisions 0
+  rand swap at 50: mean differing slots 49.1475, collisions 0
+  rand swap at 51: mean differing slots 49.1692, collisions 0
+  rand differing output slots: mean 49.1637 (ideal 49.1667); [0-40] 0.00000 (ideal 0.00000); [41-44] 0.00016 (ideal 0.00023); [45-46] 0.00953 (ideal 0.01019); [47-47] 0.04131 (ideal 0.04192); [48-48] 0.15606 (ideal 0.15090); [49-49] 0.35953 (ideal 0.36217); [50-50] 0.43341 (ideal 0.43460)
+merge ZP26: 64000 adjacent-swap pairs; output collisions 0; 0-hit 95% bound per pair 4.7e-5
+# time merge: 342.2 s, 128000 blocks, 374.0 blocks/s, 4 workers

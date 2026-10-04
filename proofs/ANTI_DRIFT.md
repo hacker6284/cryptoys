@@ -62,6 +62,7 @@ cd proofs/megadreifach/lean/Generated && lake build && ./.lake/build/bin/megadre
 cd proofs/scramble/lean/Generated && lake build && ./.lake/build/bin/scramble_test
 cd proofs/doubledeal-cbc-hmac/lean/Generated && lake build && ./.lake/build/bin/doubledeal_cbc_hmac_test
 cd proofs/deprecated/doubledeal-cbc-hmac-v1/lean/Generated && lake build && ./.lake/build/bin/doubledeal_cbc_hmac_test
+cd proofs/key_exchange/bs/lean/Generated && lake build && ./.lake/build/bin/bs_test
 ```
 
 Expected TAP: DoubleDeal **all pass** (every sudo `test` except the two
@@ -69,7 +70,8 @@ test-only kind-scan `while`s, which the terminates gate strips; JS runs them all
 The other counts: [MegaDreifach](megadreifach/README.md#three-layers-be-honest),
 [Scramble](scramble/README.md#generated-lean),
 [DoubleDeal-CBC-Sandwich v2](doubledeal-cbc-hmac/README.md#generated-lean),
-[frozen DoubleDeal-CBC-HMAC v1](deprecated/doubledeal-cbc-hmac-v1/README.md#generated-lean).
+[frozen DoubleDeal-CBC-HMAC v1](deprecated/doubledeal-cbc-hmac-v1/README.md#generated-lean),
+[BS](key_exchange/bs/lean/README.md#generated-lean).
 
 ## Pin (sudocode main)
 
@@ -77,8 +79,7 @@ The other counts: [MegaDreifach](megadreifach/README.md#three-layers-be-honest),
 | --- | --- |
 | Repo | [hacker6284/sudocode](https://github.com/hacker6284/sudocode) |
 | Branch | `main` |
-| Commit | `16b5a8b182ff80b43436dc997f02790aa79724df` (file: [`SUDOCODE_PIN`](SUDOCODE_PIN), also used for the JS vector builds) — squash merge of [PR #9](https://github.com/hacker6284/sudocode/pull/9) |
-| Prior pin | [PR #8](https://github.com/hacker6284/sudocode/pull/8) `ff63b629406bd5d3ab9e9434ea2d4695a2921d8a` (Lean in `ALL_BACKENDS`) |
+| Commit | the SHA in [`SUDOCODE_PIN`](SUDOCODE_PIN) (also used for the JS vector builds; its comment names the sudocode PR) |
 
 This pin is **durable on sudocode main**. Lean is an `ALL_BACKENDS`
 lockstep peer as of #8 (empty predicates, full IR). cryptoys still
@@ -89,9 +90,9 @@ shadow fix from #5 is included.
 ## Terminates gate is on
 
 `proofs/emit_lean.sh` passes `sudoc emit-ir --require terminates` for
-DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-Sandwich v2
+DoubleDeal, MegaDreifach, Scramble, DoubleDeal-CBC-Sandwich v2, and BS
 (and the frozen versions, including DoubleDeal-CBC-HMAC v1). All
-four current public `.sudo` files accept that flag on their exports.
+five current public `.sudo` files accept that flag on their exports.
 The CBC-Sandwich emit adds `-I primitives/hash/megadreifach -I primitives/cipher/doubledeal`
 so the imported MegaDreifach and DoubleDeal are those modules, not
 handwritten second models (frozen v1 adds only the MegaDreifach `-I`).
@@ -101,7 +102,9 @@ Production loops are bounded `for` (PassKey drain over initial
 φ / even-perm search, Hash MD walk; Scramble pad / apply / evaluate
 remainders and `digest_bytes` over the 12-byte buffer; CBC-Sandwich
 byte-list bigints, rank / unrank, pad / unpad, the deck chain and the
-MAC input over bounded lists).
+MAC input over bounded lists); BS
+`drop`'s carry over the strip, `pay_toll`'s four lifts per hole, the d10
+stream and `grow_until_it_bumps`).
 DoubleDeal test-only `while`s that scan traces by `kind` are stripped
 under the gate (JS/Python still run those tests). Generated TAP is
 the remaining tests.
@@ -132,9 +135,10 @@ total-fragment / terminating-subset emitter.
 | Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 **CLOSED** on every well-formed list (`passkey_refines`, `passkey_eq_twin_loop`; v12: every card `FitsLen` too). See [`LINK2.md`](LINK2.md). |
 | Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | Link 2 **CLOSED** on every well-formed list (`passkey_inv_refines`, `passkey_inv_eq_twin_loop`; v12: every card `FitsLen` too). Algebraic correctness only — not bit-security. |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | Link 2 **CLOSED** on `CardBound` messages (`encrypt_refines`). Not bit-security. |
-| `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, and DoubleDeal-CBC-Sandwich v2 (and every frozen version). All four current publics ready (bounded `for`). |
+| `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, DoubleDeal-CBC-Sandwich v2, and BS (and every frozen version). All five current publics ready (bounded `for`). |
 | PassKey S3/S4 *about* `Except Trap` emitted defs | Link 2 **CLOSED** on `FitsLen` (length and cards) / `WellFormed` (`passkey_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, and the inverse / `WellFormed` forms). Other stones about emitted defs stay open. Not bit-security. |
-| Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. No algebraic ≃ Generated refinement. |
+| Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. Algebraic ≃ Generated (Link 2) proved in `proofs/scramble/lean/ScrambleV2/`; see [`scramble/README.md`](scramble/README.md#link-2-leanscramblev2). |
+| BS generated Lean | DONE. `proofs/key_exchange/bs/lean/Generated/` + TAP. Partial Link 2 (arithmetic, walk, received-value check, key build and reader, exchange with its reject branches; values only, not the peg recipes) in `proofs/key_exchange/bs/lean/BsLink2/`; see [`key_exchange/bs/lean/README.md`](key_exchange/bs/lean/README.md). No security theorem. |
 | DoubleDeal-CBC-Sandwich v2 generated Lean | DONE. `proofs/doubledeal-cbc-hmac/lean/Generated/` + TAP. Imports MegaDreifach and DoubleDeal via emit-ir `-I`. **No Link 2 for v2** (the Lean lags v2). No AEAD security theorem. |
 | algebraic≃Generated for CBC-Sandwich v2 (Link 2) | OPEN. |
 | algebraic≃Generated for frozen CBC-HMAC v1 (Link 2) | DONE on byte inputs, every exported v1 function: [`deprecated/doubledeal-cbc-hmac-v1/README.md`](deprecated/doubledeal-cbc-hmac-v1/README.md#link-2). Frozen; not about v2. For HMAC and the KDF, the theorems prove the HMAC / KDF wiring around the hash; the hash itself is only as independent as `vhashAlg`, which is a transliteration of the MegaDreifach sudo, not an independent specification. Link 1 (sudo↔Lean) stays OPEN. |

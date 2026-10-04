@@ -1,12 +1,19 @@
 name: Generate demos
-description: Build sudoc, run primitive JS tests, emit demos JS and SPEC copies
+description: Build sudoc at proofs/SUDOCODE_PIN, run primitive JS tests, emit demos JS and SPEC copies
 
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
+    - name: Read the sudocode pin
+      id: pin
+      shell: bash
+      run: |
+        commit="$(sh proofs/sudocode_pin.sh)"
+        echo "commit=$commit" >> "$GITHUB_OUTPUT"
+    - uses: actions/checkout@v5
       with:
         repository: hacker6284/sudocode
+        ref: ${{ steps.pin.outputs.commit }}
         path: .sudocode
     - uses: dtolnay/rust-toolchain@stable
     - uses: Swatinem/rust-cache@v2

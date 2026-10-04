@@ -1,0 +1,33 @@
+tables: Em.lean face turns, 60 rotations, neighbours, opposites and corner faces == ../tables.py (v1 sudo): yes
+fast engine C36 vs v2 KATs: 8/8 Hash digests, HashDeck vector, IV-COOK12 digest and |G|: OK
+slow reference (m9_search, Em.lean transliteration) vs v2 KATs: 8/8 Hash digests: OK
+fast engine C36 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A_vn vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine C76 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+Hash('') and Hash('abc') prefixes of rules A_vn, C36, A == the review engine md3.py (its out/md3_selfcheck.txt): yes
+mdfix_lib: Ct(36)==C36, Ct(76)==C76 (200 blocks), fast==slow ref for t in 36,76,0,12, inv_st==md.inverse, sweep tour covers 50 slots, 60 turn pairs (c1,c2) distinct: OK
+mdw_lib CF24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NP24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NPL24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NPr13: fast == slow literal transliteration on 12/12 random blocks
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+read->turn encodings: for every piece and ordered pair of its colours, the 60 piece states give 60 distinct two-turn words (NP) and the first turn alone takes all 12 faces, 5 states each (NPL): OK
+D2 scan (100k pairs each; seeds 31_000_000 + 100_000*kind + 1000*t + chunk)
+D2 NP0      n= 100000  P(fixE>=2) 0.9919 [0.9914,0.9925] adv +0.7277 | P(fixC>=2) 0.8935 [0.8916,0.8954] adv +0.6293 | mean fixE 9.4536, fixC 4.4890 (ideal 1 +-0.0062) | mean moved 36.8236 +- 0.0436 (ideal 49.1667, diff -12.3431) | chi2 cyc-type E 1586193.9/508 p=0, C 3034987.3/172 p=0 | chi2 fixE-hist p=0, fixC-hist p=0  [17s]
+D2 NP12     n= 100000  P(fixE>=2) 0.4524 [0.4493,0.4554] adv +0.1881 | P(fixC>=2) 0.2967 [0.2939,0.2995] adv +0.0325 | mean fixE 1.6382, fixC 1.1308 (ideal 1 +-0.0062) | mean moved 48.6463 +- 0.0157 (ideal 49.1667, diff -0.5204) | chi2 cyc-type E 24057.3/508 p=0, C 1395.5/172 p=2e-190 | chi2 fixE-hist p=0, fixC-hist p=0  [18s]
+D2 NP24     n= 100000  P(fixE>=2) 0.3129 [0.3100,0.3157] adv +0.0486 | P(fixC>=2) 0.2705 [0.2677,0.2732] adv +0.0062 | mean fixE 1.1610, fixC 1.0359 (ideal 1 +-0.0062) | mean moved 49.0378 +- 0.0112 (ideal 49.1667, diff -0.1289) | chi2 cyc-type E 1945.7/508 p=7.8e-167, C 248.2/172 p=0.00013 | chi2 fixE-hist p=0, fixC-hist p=9.3e-21  [20s]
+D2 NP36     n= 100000  P(fixE>=2) 0.2859 [0.2832,0.2888] adv +0.0217 | P(fixC>=2) 0.2686 [0.2659,0.2714] adv +0.0044 | mean fixE 1.0865, fixC 1.0275 (ideal 1 +-0.0062) | mean moved 49.0802 +- 0.0106 (ideal 49.1667, diff -0.0865) | chi2 cyc-type E 789.0/508 p=1.6e-14, C 227.3/172 p=0.003 | chi2 fixE-hist p=1.7e-98, fixC-hist p=1.3e-22  [21s]
+D2 NPL0     n= 100000  P(fixE>=2) 1.0000 [1.0000,1.0000] adv +0.7358 | P(fixC>=2) 0.9929 [0.9924,0.9934] adv +0.7287 | mean fixE 17.2601, fixC 8.9821 (ideal 1 +-0.0062) | mean moved 24.0577 +- 0.0550 (ideal 49.1667, diff -25.1090) | chi2 cyc-type E 1910967.6/508 p=0, C 13546068.5/172 p=0 | chi2 fixE-hist p=0, fixC-hist p=0  [10s]
+D2 NPL24    n= 100000  P(fixE>=2) 0.3620 [0.3590,0.3649] adv +0.0977 | P(fixC>=2) 0.3010 [0.2981,0.3038] adv +0.0367 | mean fixE 2.1111, fixC 1.5901 (ideal 1 +-0.0062) | mean moved 47.5234 +- 0.0506 (ideal 49.1667, diff -1.6433) | chi2 cyc-type E 8174.8/508 p=0, C 20635.9/172 p=0 | chi2 fixE-hist p=0, fixC-hist p=0  [13s]
+D2 NPL48    n= 100000  P(fixE>=2) 0.3036 [0.3008,0.3065] adv +0.0394 | P(fixC>=2) 0.2876 [0.2848,0.2904] adv +0.0233 | mean fixE 1.7720, fixC 1.4753 (ideal 1 +-0.0062) | mean moved 47.9152 +- 0.0467 (ideal 49.1667, diff -1.2514) | chi2 cyc-type E 2383.9/508 p=1.1e-239, C 11569.9/172 p=0 | chi2 fixE-hist p=0, fixC-hist p=0  [15s]
+D2 CF0      n= 100000  P(fixE>=2) 0.9973 [0.9970,0.9976] adv +0.7331 | P(fixC>=2) 0.9529 [0.9516,0.9542] adv +0.6886 | mean fixE 9.2764, fixC 4.7956 (ideal 1 +-0.0062) | mean moved 37.6113 +- 0.0408 (ideal 49.1667, diff -11.5554) | chi2 cyc-type E 1631872.7/508 p=0, C 3810419.4/172 p=0 | chi2 fixE-hist p=0, fixC-hist p=0  [7s]
+D2 CF24     n= 100000  P(fixE>=2) 0.3215 [0.3186,0.3244] adv +0.0572 | P(fixC>=2) 0.2730 [0.2703,0.2758] adv +0.0088 | mean fixE 1.2516, fixC 1.0801 (ideal 1 +-0.0062) | mean moved 48.9040 +- 0.0185 (ideal 49.1667, diff -0.2627) | chi2 cyc-type E 2474.2/508 p=3.1e-255, C 460.8/172 p=3.1e-28 | chi2 fixE-hist p=0, fixC-hist p=3.9e-91  [10s]
+D2 CF48     n= 100000  P(fixE>=2) 0.2832 [0.2804,0.2860] adv +0.0189 | P(fixC>=2) 0.2716 [0.2689,0.2744] adv +0.0074 | mean fixE 1.1371, fixC 1.0737 (ideal 1 +-0.0062) | mean moved 48.9752 +- 0.0176 (ideal 49.1667, diff -0.1915) | chi2 cyc-type E 654.7/508 p=1.1e-05, C 365.9/172 p=4.6e-16 | chi2 fixE-hist p=4.3e-154, fixC-hist p=1.3e-62  [13s]
+D2 NPr13    n= 100000  P(fixE>=2) 0.2775 [0.2748,0.2803] adv +0.0133 | P(fixC>=2) 0.2649 [0.2621,0.2676] adv +0.0006 | mean fixE 1.0555, fixC 1.0159 (ideal 1 +-0.0062) | mean moved 49.1155 +- 0.0100 (ideal 49.1667, diff -0.0511) | chi2 cyc-type E 575.8/508 p=0.02, C 191.9/172 p=0.14 | chi2 fixE-hist p=2e-30, fixC-hist p=0.0032  [21s]
+D2 NPr26    n= 100000  P(fixE>=2) 0.2646 [0.2619,0.2674] adv +0.0004 | P(fixC>=2) 0.2650 [0.2623,0.2677] adv +0.0007 | mean fixE 1.0195, fixC 1.0136 (ideal 1 +-0.0062) | mean moved 49.1342 +- 0.0096 (ideal 49.1667, diff -0.0324) | chi2 cyc-type E 546.9/508 p=0.11, C 182.7/172 p=0.27 | chi2 fixE-hist p=0.013, fixC-hist p=0.26  [25s]
+wall time 191 s, workers 4
+
+real	3m11.530s
+user	10m33.787s
+sys	0m0.124s

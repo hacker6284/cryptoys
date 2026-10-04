@@ -21,6 +21,8 @@ on:
       - "demos/**"
       - "primitives/hash/scramble/**"
       - "primitives/cipher/doubledeal/**"
+      - "proofs/SUDOCODE_PIN"
+      - "proofs/sudocode_pin.sh"
       - "tools/build.sh"
       - "tools/generate-demos.sh"
       - "tools/render-build.sh"

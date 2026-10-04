@@ -9,16 +9,17 @@ Each primitive is a directory holding a normative specification and one [sudocod
 
 | Primitive | Purpose | Specification | Proofs |
 | --- | --- | --- | --- |
-| Scramble | Toy hash. A message walks a solved cube; the digest is the seated pose. | [SPEC.md](primitives/hash/scramble/SPEC.md) | [proofs/scramble/](proofs/scramble/) |
-| MegaDreifach | Toy three-megaminx Merkle–Damgård hash. Current: v2; v1 is [deprecated](primitives/hash/megadreifach/v1/SPEC.md). | [SPEC.md](primitives/hash/megadreifach/SPEC.md), [README](primitives/hash/megadreifach/README.md) | [proofs/megadreifach/](proofs/megadreifach/) (v2); frozen v1: [proofs/deprecated/megadreifach-v1/](proofs/deprecated/megadreifach-v1/README.md) |
+| Scramble | Toy hash. A message walks a solved cube; the digest is the seated pose. **Broken; do not use** ([Security](primitives/hash/scramble/SPEC.md#security)). | [SPEC.md](primitives/hash/scramble/SPEC.md) | [proofs/scramble/](proofs/scramble/) |
+| MegaDreifach | Toy three-megaminx Merkle–Damgård hash. Current: [v3](primitives/hash/megadreifach/v3/SPEC.md) (colour-named card phase ZP26); v2 is [deprecated](primitives/hash/megadreifach/SPEC.md) (DoubleDeal-CBC-HMAC still uses it); v1 is [deprecated](primitives/hash/megadreifach/v1/SPEC.md). | [v3 SPEC.md](primitives/hash/megadreifach/v3/SPEC.md), [README](primitives/hash/megadreifach/README.md), [v2 SPEC.md](primitives/hash/megadreifach/SPEC.md) | [proofs/megadreifach/](proofs/megadreifach/) (v2); v3 evidence: [proofs/megadreifach/security/v3/](proofs/megadreifach/security/v3/README.md); frozen v1: [proofs/deprecated/megadreifach-v1/](proofs/deprecated/megadreifach-v1/README.md) |
 | DoubleDeal | Toy block cipher on a 52-card deck. | [SPEC.md](primitives/cipher/doubledeal/SPEC.md) (version history: [§7a](primitives/cipher/doubledeal/SPEC.md#7a-version-history)) | [proofs/doubledeal/](proofs/doubledeal/); frozen versions: [proofs/deprecated/](proofs/deprecated/README.md) |
 | DoubleDeal-CBC-Sandwich v2 | Toy Encrypt-then-MAC on decks: DoubleDeal in deck-CBC (Compose with the previous ciphertext deck), then a Sandwich MAC on MegaDreifach (key deck, message decks, key deck turned over). Two user-supplied key decks, a fresh shuffled IV deck. Replaces DoubleDeal-CBC-HMAC v1 (frozen). Not DoubleDeal-SCM. | [SPEC.md](primitives/aead/doubledeal-cbc-hmac/SPEC.md), [README](primitives/aead/doubledeal-cbc-hmac/README.md) | [proofs/doubledeal-cbc-hmac/](proofs/doubledeal-cbc-hmac/) |
+| BS | Toy finite-field Diffie–Hellman worked by hand on Battleship pegboards; the key is one dice-built ships+pegs grid. Vectors: [proofs/key_exchange/bs/vectors/](proofs/key_exchange/bs/vectors/README.md). | [SPEC.md](primitives/key_exchange/bs/SPEC.md) | [proofs/key_exchange/bs/](proofs/key_exchange/bs/README.md) |
 
 ## Layout
 
 | Path | Contents |
 | --- | --- |
-| [primitives/](primitives/) | Specifications and `.sudo` implementations, by kind (`hash/`, `cipher/`, `aead/`) |
+| [primitives/](primitives/) | Specifications and `.sudo` implementations, by kind (`hash/`, `cipher/`, `aead/`, `key_exchange/`) |
 | [demos/](demos/README.md) | Playroom hub and the Scramble and DoubleDeal demos (GitHub Pages root) |
 | [proofs/](proofs/README.md) | Proof ledger: what is machine-checked, what is evidence, what is not claimed |
 | [tools/](tools/) | Demo generation (`build.sh`, `generate-demos.sh`, `render-build.sh`) and the Lean emit and generation-check helpers (`emit_lean.py`, `gencheck.py`) |
@@ -35,8 +36,12 @@ sudoc build --target js --tests -o /tmp/scramble primitives/hash/scramble/scramb
 node /tmp/scramble/_scramble_impl.mjs
 sudoc build --target js --tests -o /tmp/megadreifach primitives/hash/megadreifach/megadreifach.sudo
 node /tmp/megadreifach/_megadreifach_impl.mjs
+sudoc build --target js --tests -o /tmp/megadreifach-v3-test primitives/hash/megadreifach/v3/megadreifach.sudo
+node /tmp/megadreifach-v3-test/_megadreifach_impl.mjs
 sudoc build --target js --tests -o /tmp/doubledeal primitives/cipher/doubledeal/doubledeal.sudo
 node /tmp/doubledeal/_doubledeal_impl.mjs
+sudoc build --target js --tests -o /tmp/bs primitives/key_exchange/bs/bs.sudo
+node /tmp/bs/_bs_impl.mjs
 ```
 
 DoubleDeal-CBC-Sandwich needs `-I primitives/hash/megadreifach -I primitives/cipher/doubledeal` and a JavaScript step; its commands are in [its README](primitives/aead/doubledeal-cbc-hmac/README.md). Building and serving the demos: [demos/README.md](demos/README.md#local).

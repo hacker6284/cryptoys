@@ -152,10 +152,6 @@ def roundCharCount (σ : Relabel) : ℕ :=
 theorem compose_permDeck (ρ k : Equiv.Perm (Fin 52)) :
     composeVec 52 Nat (permDeck ρ) k = permDeck (ρ * k) := rfl
 
-/-- Relabelling the deck of `π` by `α` is the deck of `α * π`. -/
-theorem rel_permDeck (α π : Equiv.Perm (Fin 52)) : rel α (permDeck π) = permDeck (α * π) :=
-  funext fun i => app_fin α (π i)
-
 theorem permDeck_apply_eq (π : Equiv.Perm (Fin 52)) (s c : Fin 52) :
     permDeck π s = c.val ↔ π s = c := Fin.val_inj
 

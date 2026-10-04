@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Numerical check of the covariant round conjecture (`roundBody_covariant_iff_id`):
+"""Numerical check of the covariant round statement (`roundBody_covariant_iff_id`; proved in
+the heavy library, `DoubleDealSecurityHeavy/V10Sym.lean`):
 no nontrivial relabelling sigma admits a relabelling tau with
 F(sigma.m) = tau.F(m) on every deck, where F = GridCycle o stem is the unkeyed
 round body. (tau = sigma is the commuting case.) For each sigma, tau is forced

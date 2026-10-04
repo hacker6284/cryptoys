@@ -3,8 +3,7 @@
   (`runLoopOn` + break on the last index). Proof-only.
 
   With `Link2/Sudo.lean` this file is the shared sudo-runtime lemma library: the
-  frozen DoubleDeal-CBC-HMAC v1 (proofs/deprecated/doubledeal-cbc-hmac-v1) and Scramble Link 2
-  packages import these loop lemmas
+  DoubleDeal-CBC-HMAC and Scramble Link 2 packages import these loop lemmas
   (`asc_tail`, `asc_tail_idx`, `desc_tail`, `chain_loop`, …) instead of restating them.
 -/
 import MegaDreifach.Link2.Embed

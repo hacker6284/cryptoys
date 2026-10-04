@@ -10,7 +10,7 @@ it matches a fresh emit (`proofs/emit_lean.sh --check`) but does **not** build i
 at the current sudoc pin `Ecbs.lean` does not elaborate in reasonable time. A 20-minute
 retry after the 2026-10-04 `Costs` refactor was still elaborating when it was stopped (see
 [`evidence/README.md`](../../evidence/README.md#lean)). Tracked in sudocode as
-SUDOCODE-ISSUE-TBD. Once the emitter is fixed, the
+https://github.com/hacker6284/sudocode/issues/17. Once the emitter is fixed, the
 `generated` matrix entry in `.github/workflows/proofs.yml` builds it and runs the
 emitted sudo tests (`ecbs_test`, TAP). There is no Link 2 package for
 ECBS yet: nothing proves facts about these definitions (see

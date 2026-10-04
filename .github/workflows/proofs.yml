@@ -130,7 +130,7 @@ jobs:
           # ECBS (proofs/key_exchange/ecbs/lean/Generated) is emitted but NOT built here yet: with
           # the sudoc pin its Ecbs.lean does not elaborate in reasonable time (`deriving Repr` on
           # wide records; heartbeat/recursion limits in call_step, report, exchange). Tracked in
-          # SUDOCODE-ISSUE-TBD; see proofs/key_exchange/ecbs/evidence/README.md#lean. Re-add after
+          # https://github.com/hacker6284/sudocode/issues/17; see proofs/key_exchange/ecbs/evidence/README.md#lean. Re-add after
           # the emitter fix:
           # - { name: ecbs, dir: proofs/key_exchange/ecbs/lean/Generated, test: ecbs_test }
           # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property; not an

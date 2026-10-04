@@ -1,5 +1,6 @@
 """Key encodings for ECBS (modular: each encoding turns random physical choices into a walk).
-Every encoding returns (walk, scalar_terms), where walk is the step list for Board.walk and
+Every encoding returns (walk, scalar_terms), where walk is the step list a
+walk would take (the deleted draft board's walk; ecbs.sudo's walk_key is the live one) and
 scalar_terms is a list of (digit, base_index, frob_count_after) so the scalar can be recomputed
 independently: k = sum digit * mu[base_index] * lambda^frob_count_after  (mod l)."""
 import random

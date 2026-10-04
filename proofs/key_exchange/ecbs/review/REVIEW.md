@@ -1,5 +1,7 @@
 # ECBS: second-opinion math review
 
+> **Landing note (2026-10-04).** `mr_q13.py`, `mr_q13_validation.py` and `mr_invalid_trace.py` were removed when `ecbs.sudo` landed: they modelled the card's own schedules (the register-machine mixed add, Itoh–Tsujii, the chord add, the trace chain) by hand, and the repository keeps no hand-written ECBS implementation. Their `*_results.txt` stay here as the record. The other `mr_*` scripts are curve, field and entropy analysis and stay runnable. The review text below is unchanged.
+
 Reviewer: Mathematician (executor subagent), for Zachary Mills, at the Crypto agent's request. Date: 2026-09-30.
 
 Inputs, all read-only and untouched: `kx-specs/ECBS_MATH_REVIEW.md` (C1–C24, Q1–Q13), `kx-specs/ECBS_SPEC.md` and `kx-specs/ecbs/`.

@@ -1,7 +1,7 @@
 <!-- Owns: the change history of the ECBS draft before the 2026-10-03 edition, and the key encodings not chosen. Maintenance rules: ../../../DOCS.md. -->
 # ECBS: history (not normative)
 
-The normative design is [`primitives/key_exchange/ecbs/SPEC.md`](../../../primitives/key_exchange/ecbs/SPEC.md) with [`CARD.md`](../../../primitives/key_exchange/ecbs/CARD.md). This file keeps, verbatim, the change tables and the not-chosen key encodings of the 2026-09-30 draft (`kx-specs/ECBS_SPEC.md`, added by #146 and reverted by #148). Script names in it refer to `core/` (formerly `kx-specs/ecbs/`). Rows about the trace check, the receiver chain, the trace ladder and the 3-hole protocol marker are superseded by the certificate check (SPEC §0, §5.3); see [`trace-check/TRACE_CHECK.md`](trace-check/TRACE_CHECK.md).
+The normative design is [`primitives/key_exchange/ecbs/SPEC.md`](../../../primitives/key_exchange/ecbs/SPEC.md) with [`CARD.md`](../../../primitives/key_exchange/ecbs/CARD.md). This file keeps, verbatim, the change tables and the not-chosen key encodings of the 2026-09-30 draft (`kx-specs/ECBS_SPEC.md`, added by #146 and reverted by #148). Script names in it refer to `core/` (formerly `kx-specs/ecbs/`). Rows about the trace check, the receiver chain, the trace ladder and the 3-hole protocol marker are superseded by the certificate check (SPEC §0, §5.3); see [`history/trace-check/TRACE_CHECK.md`](history/trace-check/TRACE_CHECK.md).
 
 ## Draft §0: what changed (2026-09-30)
 

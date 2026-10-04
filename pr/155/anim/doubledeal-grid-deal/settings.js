@@ -8,15 +8,21 @@
 //   (+ louder). Placement, from the slot's contact:
 //   align: "peak-velocity" = the centre of the file's audible part (its
 //   energy centroid above −30 dB, measured from the decoded file) lands
-//   where the cards move fastest; nudgeMs moves it (+ later, ms at
-//   timing.pace). null = silent.
+//   where the cards move fastest; "motion-start" = the file's audible
+//   onset (its attack: the first moment within −30 dB of its peak) lands
+//   as the card leaves the packet. nudgeMs moves it (+ later, ms at
+//   timing.pace; push a motion-start sound later only if it feels early).
+//   null = silent.
 //   Each card slides from the hand packet to its seat in dealMs with
 //   easeInOutQuad (fastest half way) while it hops sin(πt) × liftHop; the
 //   real-size layout keeps every card's path long enough (≥ 171 mm) that
 //   its peak speed is that half-way point, not the take-off. stream: one
 //   sound per deal, contact = the mean of the 52 cards' peak-velocity
 //   times (card i at (i × dealStaggerMs + dealMs / 2) / pace: 582 ms at
-//   1.8×). card: per card, contact = that card's own peak.
+//   1.8×). card: per card, align "motion-start", contact = the moment
+//   that card leaves the packet (card i at i × dealStaggerMs / pace);
+//   every card's sound plays, overlapping freely (no gap, a voice per
+//   card).
 // timing: read by doubledeal/table.js (TABLE_TIMING; ms at pace 1, every
 //   ms is divided by the pace); pace = the microdemo's dock speed.
 // loopGapMs, choices: the microdemo loop only.
@@ -33,7 +39,8 @@ export default {
     sounds: {
         // The grid stream (one per deal): Kenney card fan.
         stream: { file: "doubledeal-grid-deal/fan-1_kenney-card-fan-1", gainDb: 5.5, align: "peak-velocity", nudgeMs: 0 },
-        // Per card (≤ 15/s). Off (try "doubledeal-table-settle/setdown_eggdeng-502658").
+        // Per card, as it leaves the packet. Off until Zachary picks one
+        // (candidates: { file, gainDb, align: "motion-start", nudgeMs: 0 }).
         card: null,
     },
 };

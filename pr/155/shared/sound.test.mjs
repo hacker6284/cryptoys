@@ -23,6 +23,7 @@ function fakeAudio({ startState = "running", resumable = () => true } = {}) {
                 playbackRate: { value: 1 },
                 connect: (g) => g,
                 start: (...args) => this.started.push({ src, args }),
+                stop: (...args) => { src.stopped = args; },
             };
             return src;
         }
@@ -182,6 +183,23 @@ test("without offsetMs a sound starts now, round-robin, gap and voice capped", a
     const starts = made[0].started;
     assert.deepEqual(starts[0].args, [], "leadMs is ignored without offsetMs");
     assert.equal(starts.length, 2);
+});
+
+test("gapMs 0 and a voice each: a whole deal of overlapping sounds all play, none cut", async () => {
+    const { Ctx, made } = fakeAudio();
+    const t = target();
+    const sound = createSound({ sounds: { card: { files: ["c/one", "c/two"], gains: [1, 1], gapMs: 0, voices: 52, offsetMs: 0 } }, base: BASE, gestureTarget: t, AudioCtx: Ctx });
+    t.fire("pointerdown");
+    await settle();
+    // 52 cards 20 ms apart, all asked for within the same instant (the
+    // fake sources never end, so every one is still live)
+    const played = Array.from({ length: 52 }, (_, i) => sound.play("card", { leadMs: 30 + i * 20 }));
+    assert.deepEqual(played, Array(52).fill(true));
+    const starts = made[0].started;
+    assert.equal(starts.length, 52);
+    starts.forEach((s, i) => assert.ok(Math.abs(s.args[0] - (10 + (30 + i * 20) / 1000)) < 1e-9, `card ${i} on time`));
+    assert.ok(starts.every((s) => s.src.stopped === undefined), "no file stopped early");
+    assert.equal(sound.play("card", { leadMs: 30 }), false, "a 53rd overlapping one would be dropped, not steal");
 });
 
 test("offsetMs schedules relative to contact; too late skips into the file", async () => {
@@ -365,6 +383,22 @@ test("audibleCentroidMs: energy centre of the part within −30 dB of the peak",
     for (let i = 600; i < 700; i++) data[i] = 0.001; // −60 dB hiss: not audible
     const buffer = { sampleRate: sr, length: data.length, numberOfChannels: 1, getChannelData: () => data };
     assert.ok(Math.abs(audibleCentroidMs(buffer) - 204.5) < 1e-9, "centre of the cluster, hiss ignored");
+});
+
+test("audibleOnsetMs: where the part within −30 dB of the peak begins", async () => {
+    const { audibleOnsetMs } = await import(new URL("./sound.js", import.meta.url));
+    const sr = 1000;
+    const data = new Float32Array(400);
+    for (let i = 0; i < 60; i++) data[i] = 0.001; // −60 dB pre-roll hiss: not audible
+    for (let i = 100; i < 104; i++) data[i] = 0.05 * (i - 99); // attack
+    for (let i = 104; i < 140; i++) data[i] = 0.5; // body
+    for (let i = 140; i < 300; i++) data[i] = 0.004; // −42 dB tail
+    const buffer = { sampleRate: sr, length: data.length, numberOfChannels: 1, getChannelData: () => data };
+    // 5 ms centred envelope (half-width 2): the first window that takes in
+    // the attack's first sample (0.05², −20 dB) after dividing by 5 is
+    // −27 dB from the body's 0.5² → the onset is 98 ms, at the attack.
+    assert.equal(audibleOnsetMs(buffer), 98);
+    assert.equal(audibleOnsetMs({ sampleRate: sr, length: 10, numberOfChannels: 1, getChannelData: () => new Float32Array(10) }), null, "silence");
 });
 
 test("swellMs: centre of the loudest 10 ms", async () => {

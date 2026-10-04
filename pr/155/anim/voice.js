@@ -20,7 +20,13 @@
  *              for its align rule (e.g. "peak-velocity"). centre: which
  *              centre: "audible" (default; sound.js audibleCentroidMs, for
  *              clicks) or "swell" (sound.js swellMs, its loudest 10 ms,
- *              for a swish)
+ *              for a swish).
+ *              align "motion-start" instead puts the file's audible onset
+ *              (sound.js audibleOnsetMs: its attack, the first moment
+ *              within −30 dB of its peak) on the contact, + nudgeMs: for
+ *              an action sound that starts as the motion starts (the
+ *              contact is the motion's start); nudge it later if it feels
+ *              early.
  *
  * The voice uses the page's shared AudioContext (sharedAudio() in
  * sound.js), so the hub tap, the iOS unlock and mute work the same in
@@ -67,8 +73,9 @@ function placed(s) {
 /**
  * When the file starts (performance.now() ms) for a sound `s` whose
  * contact is at `atMs`. `file` = { peakMs, centroidMs, swellMs } of the
- * decoded file. align: its centre lands nudgeMs × stretch after the
- * contact. peakAtMs: its loudest sample lands peakAtMs × stretch after.
+ * decoded file (+ onsetMs). align: its centre (motion-start: its
+ * audible onset) lands nudgeMs × stretch after the contact. peakAtMs:
+ * its loudest sample lands peakAtMs × stretch after.
  * offsetMs: see stretchContact.
  */
 export function fileStart(s, atMs, file = {}, stretch = 1) {
@@ -79,8 +86,9 @@ export function fileStart(s, atMs, file = {}, stretch = 1) {
     return stretchContact(atMs, off, peakMs ?? 0, stretch) + off;
 }
 
-/** The aligned centre of a file: its audible centroid, or its swell. */
+/** The aligned moment of a file: its audible onset (motion-start), audible centroid, or swell. */
 function centreOf(s, file) {
+    if (s.align === "motion-start") return file.onsetMs ?? 0;
     return (s.centre === "swell" ? file.swellMs : file.centroidMs) ?? 0;
 }
 
@@ -95,7 +103,7 @@ export function createVoice({ settings, slots, base, autostart = false }) {
     const sounds = settings.sounds || {};
     const sound = createSound({ sounds: soundTable(slots, sounds), base, limiter: true, autostart });
     const timers = new Set();
-    const describe = (name) => ({ peakMs: sound.peakMs(name) ?? 0, centroidMs: sound.centroidMs?.(name) ?? 0, swellMs: sound.swellMs?.(name) ?? 0 });
+    const describe = (name) => ({ peakMs: sound.peakMs(name) ?? 0, centroidMs: sound.centroidMs?.(name) ?? 0, swellMs: sound.swellMs?.(name) ?? 0, onsetMs: sound.onsetMs?.(name) ?? 0 });
 
     function later(ms, fn) {
         const id = setTimeout(() => {

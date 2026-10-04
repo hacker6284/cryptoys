@@ -252,6 +252,7 @@ export function createSound({
     let buffers = {};
     let peaks = {};
     let centroids = {};
+    let onsets = {};
     let swells = {};
     const last = {};
     const live = {};
@@ -332,10 +333,12 @@ export function createSound({
             buffers = next;
             peaks = {};
             centroids = {};
+            onsets = {};
             swells = {};
             for (const [name, list] of Object.entries(next)) {
                 peaks[name] = loudestMs(list[0]);
                 centroids[name] = audibleCentroidMs(list[0]);
+                onsets[name] = audibleOnsetMs(list[0]);
                 swells[name] = swellMs(list[0]);
             }
         }).catch((err) => {
@@ -512,6 +515,10 @@ export function createSound({
         centroidMs(name) {
             return centroids[name] ?? null;
         },
+        /** ms from the start of `name`'s (first) file to where its audible part begins (audibleOnsetMs), once decoded; else null. */
+        onsetMs(name) {
+            return onsets[name] ?? null;
+        },
         /** ms from the start of `name`'s (first) file to the centre of its loudest 10 ms (swellMs), once decoded; else null. */
         swellMs(name) {
             return swells[name] ?? null;
@@ -524,14 +531,10 @@ export function createSound({
 }
 
 /**
- * The centre of a decoded file's audible part, in ms from its start:
- * the energy-weighted time centroid (Σ t·x² / Σ x², channels summed) of
- * the samples whose 5 ms RMS envelope is within `floorDb` (−30 dB) of the
- * envelope's peak. It takes in the lead-in, every click of a cluster
- * and the tail, not just the loudest sample.
+ * A decoded file's energy (channels summed) and its `windowMs` RMS
+ * envelope (mean power, centred window), with the envelope's peak.
  */
-export function audibleCentroidMs(buffer, { floorDb = -30, windowMs = 5 } = {}) {
-    if (!buffer?.getChannelData || !buffer.sampleRate || !buffer.length) return null;
+function audibleEnvelope(buffer, windowMs) {
     const n = buffer.length;
     const e = new Float64Array(n);
     for (let c = 0; c < buffer.numberOfChannels; c++) {
@@ -550,6 +553,19 @@ export function audibleCentroidMs(buffer, { floorDb = -30, windowMs = 5 } = {}) 
         env[i] = (prefix[b] - prefix[a]) / w;
         if (env[i] > top) top = env[i];
     }
+    return { n, e, env, top };
+}
+
+/**
+ * The centre of a decoded file's audible part, in ms from its start:
+ * the energy-weighted time centroid (Σ t·x² / Σ x², channels summed) of
+ * the samples whose 5 ms RMS envelope is within `floorDb` (−30 dB) of the
+ * envelope's peak. It takes in the lead-in, every click of a cluster
+ * and the tail, not just the loudest sample.
+ */
+export function audibleCentroidMs(buffer, { floorDb = -30, windowMs = 5 } = {}) {
+    if (!buffer?.getChannelData || !buffer.sampleRate || !buffer.length) return null;
+    const { n, e, env, top } = audibleEnvelope(buffer, windowMs);
     if (!top) return null;
     const floor = top * 10 ** (floorDb / 10); // env is mean power
     let sum = 0;
@@ -560,6 +576,22 @@ export function audibleCentroidMs(buffer, { floorDb = -30, windowMs = 5 } = {}) 
         moment += i * e[i];
     }
     return sum ? (moment / sum / buffer.sampleRate) * 1000 : null;
+}
+
+/**
+ * Where a decoded file's audible part begins, in ms from its start: the
+ * first sample whose 5 ms RMS envelope (the one audibleCentroidMs uses)
+ * is within `floorDb` (−30 dB) of the envelope's peak, i.e. the start of
+ * its attack, with quiet pre-roll and hiss before it ignored. For a
+ * sound that starts with a motion ("motion-start").
+ */
+export function audibleOnsetMs(buffer, { floorDb = -30, windowMs = 5 } = {}) {
+    if (!buffer?.getChannelData || !buffer.sampleRate || !buffer.length) return null;
+    const { n, env, top } = audibleEnvelope(buffer, windowMs);
+    if (!top) return null;
+    const floor = top * 10 ** (floorDb / 10);
+    for (let i = 0; i < n; i++) if (env[i] >= floor) return (i / buffer.sampleRate) * 1000;
+    return null;
 }
 
 /**

@@ -41,11 +41,13 @@ Current algorithms get correctness now, and stronger security proofs (reductions
 ```text
 proofs/
   README.md                 # this taxonomy
+  sudo_py.py, sudo_js.py    # load a .sudo's sudoc Python / JS build from Python (sudo_js_serve.mjs: its JSON-lines bridge)
   doubledeal/               # DoubleDeal correctness stones (+ security/, analysis/, vectors/)
   megadreifach/             # MegaDreifach correctness stones (+ security/: v1 grip-rule weakness report)
   scramble/                 # Generated Lean + teaching / lineage; Link 2 to a hand-written model (+ security/: attacks showing v2 is broken)
   doubledeal-cbc-hmac/      # Generated Lean for HMAC / KDF / pad + Link 2 to a hand-written model
   scm/                      # placeholder; SCM/SMAC stay later (CBC-HMAC is the AEAD)
+  key_exchange/vectors_regen.sh  # BS and ECBS known-answer vectors from their .sudo (vectors_common.mjs: collector helpers)
   key_exchange/bs/          # BS evidence: Python evidence harness, exchanges, key checks, sudo vectors (+ lean/: Generated Lean and Link 2 to a hand-written arithmetic model; scope in lean/README.md)
   key_exchange/ecbs/        # ECBS evidence: drivers of the sudoc-generated code checked against PARI (exchanges, soundness, calling, twists), sudo vectors, Generated Lean (emitted, not yet built), review
   audit/                    # core-only #audit_all package shared by the axiom audits

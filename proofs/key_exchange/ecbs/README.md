@@ -22,13 +22,13 @@ Status: **evidence, not proof.** The rules are normative in [`primitives/key_exc
 Node 20, the pinned `sudoc` (`proofs/sudocode.sh` builds it), Python 3 with `cypari2` and `numpy` (`core/` and `review/` also use `sympy`, `gmpy2`, `mpmath`, `python-flint`). From the repo root:
 
 ```sh
-proofs/key_exchange/ecbs/vectors/regen.sh --check                 # vectors from ecbs.sudo
+proofs/key_exchange/ecbs/vectors/regen.sh --check                 # vectors from ecbs.sudo (= proofs/key_exchange/vectors_regen.sh ecbs --check)
 python3 proofs/key_exchange/ecbs/vectors/check_oracle.py          # against PARI
 proofs/emit_lean.sh ecbs                                          # Lean
 ```
 
-The evidence drivers and their run times: [`evidence/README.md`](evidence/README.md).
+The evidence drivers and their run times: [`evidence/README.md`](evidence/README.md). They run the generated JS through [`proofs/sudo_js.py`](../../sudo_js.py) (generic: any `.sudo`), the JS sibling of `proofs/sudo_py.py`.
 
 ## History
 
-Until `ecbs.sudo` landed, the evidence ran on a hand-written Python model of the board (`history/card/homes*.py`, `history/demo/homes_demo.py`, the `core/ecbs_pegs.py` recipes and the scripts built on them). Those scripts were deleted when `ecbs.sudo` replaced them; their recorded outputs stay beside where they ran, as history, and the scripts are in the git history of the landing branch (commit `ad80f54`). Every exchange, soundness, calling and twist measurement was re-run on the generated code ([`evidence/`](evidence/README.md)); where the keys could be reproduced the numbers are identical.
+Until `ecbs.sudo` landed, the evidence ran on a hand-written Python model of the board (`history/card/homes*.py`, `history/demo/homes_demo.py`, the `core/ecbs_pegs.py` recipes and the scripts built on them). Those scripts were deleted when `ecbs.sudo` replaced them; their recorded outputs are under [`history/`](history/README.md), and the scripts are in the git history of the landing branch (commit `ad80f54`). Every exchange, soundness, calling and twist measurement was re-run on the generated code ([`evidence/`](evidence/README.md)); where the keys could be reproduced the numbers are identical.

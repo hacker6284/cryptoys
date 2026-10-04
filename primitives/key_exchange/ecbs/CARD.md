@@ -18,7 +18,7 @@ Toy, Hobby and Serious as written; Demo changes are listed in the last section, 
 
 ## Play
 9. **Base point:** a white peg in hole 1 of the base across; its curve side in the bottom; the bottom times a copy of itself in the gap; a white peg in hole 0 of the up. In the across, lay the root strip, one hole short: red, empty, red, empty and so on, ending red, white. At each strip hole, under a cursor ship, cube the up, then on red do the up times a copy of the gap, on white of the bottom, into the up. Clear the gap; put the up times a copy of itself there. Not the bottom? Clear everything, move the white peg one hole on, and restart. Otherwise clear the gap, bottom and strip, and slide the up into the base up. Walk white, red, white, red, laid in the first key cells (steps 11 to 13); clear them, and slide the result into the base bands.
-10. **Roll your key** row by row: throw the five d10s, rethrowing any 0; they go along the row in rainbow order, two holes each. On a phone keypad, the number's row gives the first hole's peg and its column gives the second's. The top row or left column means no peg, the middle means white, and the bottom row or right column means red: 6 gives white then red.
+10. **Roll your key** row by row: throw the five d10s, rethrowing any 0; they go along the row in rainbow order, two holes each. On a phone keypad, the number's row gives the first hole's peg and its column gives the second's. The top row or left column means no peg, the middle means white, and the bottom row or right column means red: 6 gives white then red. Roll the whole key in one sitting and don't let go until it is done: an unrolled hole looks like an empty one.
 11. **Start:** keep your key cell on the rails. At the first non-empty cell, copy the base bands into the across and up (the up mirrored for red), and put a white peg in hole 0 of the bottom.
 12. **Walk:** at each later cell, Frobenius the point. Unless the cell is empty, add the base point, with the base up mirrored throughout for red:
     - **Run:** mirror the across; lay the base across times a copy of the bottom onto it. Empty? Reroll your key.
@@ -30,7 +30,7 @@ Toy, Hobby and Serious as written; Demo changes are listed in the last section, 
 13. **Finish:** invert the bottom. Do the gap times the across, into the across, and the gap times the up, into the up. Clear the gap, bottom and base bands. Your point is the across and up.
 14. **Exchange** by the check card. **Shared key:** walk your key over the base bands (steps 11 to 13). Fold the across: Serious drops rows F to I onto A to D, Toy and Hobby row C onto A. The key is rows A to E (Serious) or A to B.
 
-**Hands:** a finger may hold your place, but park the cursor ships before you let go.
+**Hands:** a finger may hold your place, but park the cursor ships before you let go. Never let go while rolling your key (step 10).
 
 ---
 

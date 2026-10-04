@@ -285,6 +285,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 > **Ships may touch**, side by side or end to end, as in Hasbro's rules. They never overlap: a ship only ever grows into open holes.
 
 * **The d12 is exact:** its thirds and halves give each open heading and sea exactly the weights of "grow until it bumps", and its odd/even (the bow) is independent of them. This is checked exactly in all 25 room states and on whole builds (`randomizer-kit/`, part B; derivation in `key-selection/NOTES.md` §5).
+* **Shared with ECBS.** ECBS rolls its key with the same row cup and keypad rule, and `ecbs.sudo` copies `bs.sudo`'s `is_empty`, `is_trits`, `keypad_first` and `keypad_second`. One shared imported module is tracked in SHARED-MODULE-ISSUE-TBD; until it lands, no further copies are added.
 * **Why the row cup is exact.** Faces 1–9 correspond one-to-one to pairs of trits (3 × 3). A 0 is re-thrown on its own face only, which is rejection sampling. So every hole gets an exactly uniform, independent trit.
 * A ship laid at the cursor covers only the cursor hole and holes after it, none of which has a peg yet. Pegs behind the cursor are never in a ship's way, because ships grow only right or down.
 * The literal dice of this section (`ships-pegs/keygrid.py`, d12 + row cup): layout and peg chi-squares against the exact model on 2×2, 2×3, 3×2, 1×5 and 5×1 all within |z| < 2 (`ships-pegs/keygrid_check.py`).

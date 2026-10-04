@@ -115,8 +115,11 @@ jobs:
           - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
           - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
           - { name: bs, dir: proofs/key_exchange/bs/lean/Generated, test: bs_test }
-          # ECBS: emitted TAP only; no Link 2 package yet (proofs/key_exchange/ecbs/README.md).
-          - { name: ecbs, dir: proofs/key_exchange/ecbs/lean/Generated, test: ecbs_test }
+          # ECBS (proofs/key_exchange/ecbs/lean/Generated) is emitted but NOT built here yet: with
+          # the sudoc pin its Ecbs.lean does not elaborate in reasonable time (`deriving Repr` on the
+          # 48-field Board record; heartbeat/recursion limits in call_step, report, exchange). See
+          # proofs/key_exchange/ecbs/evidence/README.md#lean. Re-add after the emitter fix:
+          # - { name: ecbs, dir: proofs/key_exchange/ecbs/lean/Generated, test: ecbs_test }
           # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property; not an
           # attack, so no witness package): emitted TAP only (proofs/deprecated/doubledeal-v11/).
           - { name: doubledeal-v11, dir: proofs/deprecated/doubledeal-v11/lean/Generated, test: doubledeal_v11_test }

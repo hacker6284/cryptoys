@@ -145,9 +145,8 @@ try {
             }
             adapter.view()?.rememberSeated?.();
             await adapter.enter({ snap: reduced || skippedStart });
-            // Release the live follow started above. DoubleDeal's enter
-            // clears it itself; Scramble's does not, and while it is set
-            // the pose controller keeps orbit disabled (drag does nothing).
+            // startAlgo started the live follow, so startAlgo ends it.
+            // While it is set the pose controller keeps orbit off.
             poses.followLive?.(null);
             starting = false;
             markBeat("enter-done");

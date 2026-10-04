@@ -40,7 +40,7 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 | 4 | §6 | K restated; the uniform shared-point model is unchanged because λ − 1 is a unit mod ℓ |
 | 5 | Exchange (§5.2) | BS PR #152 §3.1 calling as revised after DHH's review: clear the receiving homes, a calling-in-progress hole, cursor parked at the next hole to call, holes named by grid and coordinate. C is called into the base bands first; A into the bottom and gap after both players have certified |
 | 6 | Control (§2) | One ladder, one tally, a phase hole and a calling hole, in one control row (row J of the workspace grids; Demo rows I–J). The trace ladder, second tally and 3-hole protocol marker are gone |
-| 7 | Numbers (§2, §5) | Check per person 1,890 / 15,293 / 92,867 / 758,385 moves (Demo / Toy / Hobby / Serious; the trace check cost 3.93 M at Serious). Per person 5,916 / 0.142 M / 1.71 M / 40.3 M. Peak 7 bands in every phase; grids 2 / 5 / 9 / 22 (game sets ½ / 2 / 3 / 6) |
+| 7 | Numbers (§2, §5) | Check per person 1,890 / 15,293 / 92,867 / 758,385 moves (Demo / Toy / Hobby / Serious; the trace check cost 3.93 M at Serious). Per person 5,916 / 0.142 M / 1.71 M / 40.3 M. Peak 7 bands in every phase; grids 2 / 5 / 9 / 22 (game sets 1 / 2 / 3 / 6) |
 | 8 | R6 | One inversion ladder, laid in the spare from n − 1 pegs, leftover thrown away; rungs in build order in the control row; climbed from the last made with the parking hole; one tally, no rebuild rule |
 | 9 | §5.1 | The root strip lives in the across; white-red-white-red goes in the first four key cells; the script marker counts strip steps; the base point is made before the key is rolled |
 | 10 | R7, §8 | The chord rule appears only in the certificate (Toy–Serious) and in the Demo walk. Receiver-chain and trace rows dropped; certificate and calling rows added |
@@ -79,7 +79,7 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 - **Seven homes**, from the top: across, up, bottom, base across, base up, gap, spare. A finished result **slides** into a named home ("same hole, other band").
 - Hobby and Serious use **double grids**: two grids side by side treated as adjacent, rows running on **[assume; confirmed by Zachary]**.
 - Grids are numbered from the workbench's first grid; calls name them (§5.2).
-- **Demo (½ set):** one target grid in five 2-wide lanes. Lane 1 is the workbench; homes are the 4-row slots of lanes 2–5 (rows A–D: across, up, bottom, base across; rows E–H: base up, gap, spare; lane 5 rows E–H free). The key is 2 cells of the ocean grid.
+- **Demo (one kit, 2 grids; 1 game set as BS counts):** one target grid in five 2-wide lanes. Lane 1 is the workbench; homes are the 4-row slots of lanes 2–5 (rows A–D: across, up, bottom, base across; rows E–H: base up, gap, spare; lane 5 rows E–H free). The key is 2 cells of the ocean grid.
 
 **Control row** (state of the procedure, all in pegs). Row J of the workspace grids, run on grid to grid; at Demo rows I and J of lanes 2–5, row I first. From the left: **script marker** (15 holes; Demo 5), **phase hole**, **calling hole**, **ladder** (one rung per hole), **parking hole**, **tally**.
 
@@ -102,7 +102,7 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 
 | Tier | Key | Walk | Workspace + key grids | Game sets ⌈grids/4⌉ | Moves per person (mean; range) | Control-row moves (extra) | Hand time @ 1 move/s |
 |---|---|---|---|---|---|---|---|
-| Demo | pegs-only 2 | chord | **1 + 1 = 2** | ½ (one kit) | 5,916 (5,064–6,788; all 128 people) | 234 | ≈ 1.6 h |
+| Demo | pegs-only 2 | chord | **1 + 1 = 2** | 1 (one kit, 2 grids) | 5,916 (5,064–6,788; all 128 people) | 234 | ≈ 1.6 h |
 | Toy | pegs-only 16 | F-form | **4 + 1 = 5** | 2 | 141,822 (100,208–170,550) | 1,302 | ≈ 39 h |
 | Hobby | pegs-only 51 | F-form | **8 + 1 = 9** | 3 | 1,714,807 (1.36–1.97 M) | 3,367 | ≈ 476 h |
 | Serious | pegs-only 162 | F-form | **20 + 2 = 22** | 6 | 40,287,769 (37.2–44.0 M) | 10,564 | ≈ 11,191 h |
@@ -360,7 +360,7 @@ The "Verified" column names the Phase-1 scripts under `proofs/key_exchange/ecbs/
 - §7.1 class (ii): what a receiver that skipped the curve test would compute is not analysed (moot with the curve test).
 - Summation-polynomial / index-calculus attacks in characteristic 3: literature-based, unverified.
 - The 3√q character-sum constant is the reviewer's proof, not re-derived here.
-- BS main has since removed letting go from its §3.1 calling (#175); ECBS keeps the #152-as-revised rule with cursor ships and resume (§5.2).
+- **Awaiting Zachary:** BS main has since removed letting go from its §3.1 calling (#175); ECBS keeps the #152-as-revised rule with cursor ships and resume (§5.2).
 
 ---
 

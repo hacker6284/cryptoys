@@ -43,7 +43,7 @@ As v2 §1, with these differences:
 
 # 2. Public API
 
-Unchanged from v2 §2: `Hash` / `MegaDreifach`, `HashDeck` / `MegaDreifachDeck`, `HashDeckBody` / `MegaDreifachBody`, `HashDeckBodyFrom` / `MegaDreifachBodyFrom`.
+Unchanged from v2 §2: `Hash` / `MegaDreifach`, `HashDeck` / `MegaDreifachDeck`, `HashDeckBody` / `MegaDreifachBody`, `HashDeckBodyFrom` / `MegaDreifachBodyFrom`. Added in v3, a pure API addition that changes no digest or KAT: `HashDecksBody(deals)`, the Davies–Meyer cascade of a non-empty list of whole 52-card deals from IV-COOK12, one `dm_step` per deal, no byte pad and no φ; one deal gives `HashDeckBody`. DoubleDeal-CBC-Sandwich v2 uses it for its MAC.
 
 `HashDeckBodyFrom` remains a free-start analysis surface, not a security API.
 
@@ -75,7 +75,7 @@ The hand procedure needs none of these tables.
 
 1. φ(chunk) → a 52-card deal.
 2. `e ← E_m(h) = W·h`: start at position h. Run the 52 card steps (§5.3), then the 26 echoes (§5.4).
-3. `h ← compose(h, e)`. In the sudo, steps 2–3 are `dm_step(h, deal)`, used by `Hash`, `HashDeckBody` and `HashDeckBodyFrom`.
+3. `h ← compose(h, e)`. In the sudo, steps 2–3 are `dm_step(h, deal)`, used by `Hash`, `HashDeckBody`, `HashDeckBodyFrom` and `HashDecksBody`.
 
 Merkle–Damgård chaining is as in v2 §3, and the digest as in v2 §6.
 

@@ -3,7 +3,7 @@
 
 Toy Encrypt-then-MAC on decks: **deck-CBC** (each plaintext deck Composed with the previous ciphertext deck, then [DoubleDeal](../../cipher/doubledeal/SPEC.md)), then a **Sandwich MAC** on one [MegaDreifach v3](../../hash/megadreifach/v3/SPEC.md) chain (the key deck, the message decks, the key deck turned over). Two user-supplied key decks; a fresh truly shuffled IV deck per message. No XOR. Not for real use. Scope, rules and security honesty: [`SPEC.md`](SPEC.md).
 
-The directory and file names keep v1's `doubledeal-cbc-hmac` (renaming is left to review; see the SPEC). Frozen v1 (DoubleDeal-CBC-HMAC): [`v1/`](v1/SPEC.md).
+The directory and file names keep v1's `doubledeal-cbc-hmac` (a separate pure `git mv` pull request renames them after #182 and #151 land; see the SPEC). Frozen v1 (DoubleDeal-CBC-HMAC): [`v1/`](v1/SPEC.md).
 
 | File | Role |
 | --- | --- |

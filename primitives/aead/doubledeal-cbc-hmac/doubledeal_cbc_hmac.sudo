@@ -1,5 +1,5 @@
-// DoubleDeal-CBC-Sandwich v2 (proposed name; directory and file keep the v1 name
-// doubledeal-cbc-hmac for now). The rules are primitives/aead/doubledeal-cbc-hmac/SPEC.md.
+// DoubleDeal-CBC-Sandwich v2 (the directory and file keep the v1 name
+// doubledeal-cbc-hmac; the SPEC intro says why). The rules are primitives/aead/doubledeal-cbc-hmac/SPEC.md.
 // Toy Encrypt-then-MAC on decks: deck-CBC (Compose with the previous ciphertext deck),
 // then a Sandwich MAC on one MegaDreifach megaminx. Not for real use. No XOR anywhere.
 // Frozen v1 (DoubleDeal-CBC-HMAC v1): v1/doubledeal_cbc_hmac.sudo.
@@ -305,7 +305,7 @@ func length_deck(n: int) -> List<int>
         rest = rest / 256
     return unrank_reduce(w)
 
-// S = version deck || AAD decks || IV || C_0 .. C_{n-1} || length deck (SPEC section 5.1).
+// S = version deck || AAD decks || IV || C_0 .. C_{n-1} || length deck (SPEC section 5).
 export func mac_decks(aad: List<int>, iv: List<int>, cdecks: List<List<int>>) -> List<List<int>>
     require_deck(iv)
     assert cdecks.length > 0

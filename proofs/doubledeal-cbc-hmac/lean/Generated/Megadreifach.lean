@@ -3247,7 +3247,7 @@ def v_MegaDreifachBodyFrom (deal : Array (Int)) (h : Position) : Except SudoRt.T
 
 def v_HashDecksBody (deals : Array (Array (Int))) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _as925 ← SudoRt.sudoAssert (decide ((SudoRt.listLen deals) > (0 : Int))) 796
+    let _as925 ← SudoRt.sudoAssert (decide ((SudoRt.listLen deals) > (0 : Int))) 794
     let _t926 ← iv_cook12
     let h := _t926
     let _t932 ← SudoRt.subI (SudoRt.listLen deals) (1 : Int)

@@ -47,7 +47,7 @@ node primitives/cipher/doubledeal/encoding.test.mjs
 AEAD_OUT=/tmp/ddch-test node primitives/aead/doubledeal-cbc-hmac/aead.test.mjs
 AEAD_OUT=/tmp/ddch-test node primitives/aead/doubledeal-cbc-hmac/kats/regen.mjs --check
 # The SPEC §8 Sandwich tests on MegaDreifach v3: a small fixed-seed slice, compared with its log.
-MD_OUT=/tmp/megadreifach-v3 node proofs/doubledeal-cbc-hmac/security/sandwich_v3_stats.mjs --check proofs/doubledeal-cbc-hmac/security/logs/ci_slice.log
+MD_OUT=/tmp/megadreifach-v3 node proofs/doubledeal-cbc-hmac/security/sandwich_v3_stats.mjs --check proofs/doubledeal-cbc-hmac/security/logs/ci_slice.log ci 85000000
 python3 primitives/aead/doubledeal-cbc-hmac/kats/check.py
 test -f demos/scramble/generated/scramble.mjs
 test -f demos/doubledeal/generated/doubledeal.mjs

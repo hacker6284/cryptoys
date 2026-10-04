@@ -43,7 +43,7 @@ As v2 §1, with these differences:
 
 # 2. Public API
 
-Unchanged from v2 §2: `Hash` / `MegaDreifach`, `HashDeck` / `MegaDreifachDeck`, `HashDeckBody` / `MegaDreifachBody`, `HashDeckBodyFrom` / `MegaDreifachBodyFrom`. Added in v3, a pure API addition that changes no digest or KAT: `HashDecksBody(deals)`, the Davies–Meyer cascade of a non-empty list of whole 52-card deals from IV-COOK12, one `dm_step` per deal, no byte pad and no φ; one deal gives `HashDeckBody`. DoubleDeal-CBC-Sandwich v2 uses it for its MAC.
+Unchanged from v2 §2: `Hash` / `MegaDreifach`, `HashDeck` / `MegaDreifachDeck`, `HashDeckBody` / `MegaDreifachBody`, `HashDeckBodyFrom` / `MegaDreifachBodyFrom`. Added in v3, a pure API addition that changes no digest or KAT: `HashDecksBody(deals)`, the Davies–Meyer cascade of a non-empty list of whole 52-card deals from IV-COOK12, one `dm_step` per deal, no byte pad and no φ; one deal gives `HashDeckBody`. It has no `MegaDreifach*` alias. DoubleDeal-CBC-Sandwich v2 uses it for its MAC.
 
 `HashDeckBodyFrom` remains a free-start analysis surface, not a security API.
 

@@ -1,6 +1,6 @@
 # DoubleDeal-CBC-HMAC v1 (frozen, superseded)
 
-> **Frozen and superseded by [DoubleDeal-CBC-Sandwich v2](../SPEC.md).** This is the v1 text as it stood at `7f958f2`, kept for the frozen v1 sudo [`doubledeal_cbc_hmac.sudo`](doubledeal_cbc_hmac.sudo) and its Link 2 proofs in [`proofs/deprecated/doubledeal-cbc-hmac-v1/`](../../../../proofs/deprecated/doubledeal-cbc-hmac-v1/README.md). v1 is superseded, not attacked: v2 replaces the byte-XOR chain with a deck chain, the HMAC with a Sandwich MAC, and the derived key with two user-supplied key decks. Do not change this file or the v1 sudo. Paths below are v1's: the byte-domain v1 host (`aead.mjs` over `demos/doubledeal/cards.js`) and the v1 KAT file were replaced by v2 in place and are only in git history (`7f958f2`); the v1 sudo and its own tests (including the published HMAC tag) are still built and run by `tools/generate-demos.sh` and the `cbc-hmac-v1-generated` CI job. `proofs/doubledeal-cbc-hmac/` below is now `proofs/deprecated/doubledeal-cbc-hmac-v1/`.
+> **Frozen and superseded by [DoubleDeal-CBC-Sandwich v2](../SPEC.md).** This is the v1 text as it stood on main before v2 replaced it in place (`7f958f2`, with #181's MegaDreifach-version wording), kept for the frozen v1 sudo [`doubledeal_cbc_hmac.sudo`](doubledeal_cbc_hmac.sudo) and its Link 2 proofs in [`proofs/deprecated/doubledeal-cbc-hmac-v1/`](../../../../proofs/deprecated/doubledeal-cbc-hmac-v1/README.md). v1 is superseded, not attacked: v2 replaces the byte-XOR chain with a deck chain, the HMAC with a Sandwich MAC, and the derived key with two user-supplied key decks. The v1 construction, the v1 sudo and its vectors are frozen; only this file's prose may change. Paths below are v1's: the byte-domain v1 host (`aead.mjs` over `demos/doubledeal/cards.js`) and the v1 KAT file were replaced by v2 in place and are only in git history (`7f958f2`); the v1 sudo and its own tests (including the published HMAC tag) are still built and run by `tools/generate-demos.sh` and the `cbc-hmac-v1-generated` CI job.
 
 This document is the normative specification. `doubledeal_cbc_hmac.sudo` is the conformance implementation of HMAC-MegaDreifach, the key schedule, CBC byte helpers, ISO/IEC 7816-4 padding, and the Encrypt-then-MAC input. Byte-domain CBC that must rank a deck uses the §5.3 encoding in `demos/doubledeal/cards.js` (same limitation DoubleDeal records: `52!` does not fit in a sudocode `int`). A mismatch is a bug in the implementation.
 
@@ -26,7 +26,7 @@ DoubleDeal-CBC-HMAC is a toy Encrypt-then-MAC construction. It makes no cryptogr
 - No DoubleDeal-SCM / SMAC. Those names stay reserved for a later construction.
 - No CFB / OFB.
 - No constant-time claim. Tag compare is a full-length equality; this is a toy.
-- AEAD security theorems are out of scope here. Generated Lean for HMAC / KDF / pad is under `proofs/doubledeal-cbc-hmac/`, with Link-2 refinement proofs of those functions to a hand-written model of this SPEC; they are not security theorems. For HMAC and the KDF they prove the wiring around the hash; the hash itself is only as independent as the MegaDreifach model `vhashAlg`, a transliteration of the MegaDreifach sudo.
+- AEAD security theorems are out of scope here. Generated Lean for HMAC / KDF / pad is under `proofs/deprecated/doubledeal-cbc-hmac-v1/`, with Link-2 refinement proofs of those functions to a hand-written model of this SPEC; they are not security theorems. For HMAC and the KDF they prove the wiring around the hash; the hash itself is only as independent as the MegaDreifach model `vhashAlg`, a transliteration of the MegaDreifach sudo.
 
 ---
 
@@ -35,7 +35,7 @@ DoubleDeal-CBC-HMAC is a toy Encrypt-then-MAC construction. It makes no cryptogr
 | Item | Value |
 | --- | --- |
 | Construction | DoubleDeal in CBC, then Encrypt-then-MAC |
-| Hash | MegaDreifach `Hash` (`primitives/hash/megadreifach/`) |
+| Hash | MegaDreifach v2 `Hash` (`primitives/hash/megadreifach/megadreifach.sudo`; v2 is deprecated, v3 is current) |
 | HMAC block size \(B\) | **28** (MegaDreifach pad / compression block) |
 | HMAC tag | full MegaDreifach digest, **29 bytes** |
 | CBC message block | **28 bytes** (§5.3 injective capacity) |
@@ -227,7 +227,7 @@ A failed tag, a 29-byte integer \(\ge 52!\), a decrypted deck with rank \(\ge 2^
 
 `kats/doubledeal_cbc_hmac_kats.json` is generated from the conformance sudo plus the §5.3 encoding. JS tests assert round-trips and negative tag / AAD / IV / ciphertext tampers.
 
-**Hash version.** The vectors and the published HMAC test tag in `doubledeal_cbc_hmac.sudo` use the current MegaDreifach, **v2**. They were regenerated when MegaDreifach v1 was deprecated; every tag and blob changed, and vectors made with MegaDreifach v1 no longer verify. Nothing else in this construction changed, and the version label stays `DoubleDeal-CBC-HMAC/v1`.
+**Hash version.** The vectors and the published HMAC test tag in `doubledeal_cbc_hmac.sudo` use MegaDreifach **v2** (`primitives/hash/megadreifach/megadreifach.sudo`). v2 is now deprecated and v3 is current, but this construction stays on v2 until a separate decision moves it; that move would change every tag and blob. They were regenerated when MegaDreifach v1 was deprecated; every tag and blob changed, and vectors made with MegaDreifach v1 no longer verify. Nothing else in this construction changed, and the version label stays `DoubleDeal-CBC-HMAC/v1`.
 
 ---
 
@@ -258,14 +258,14 @@ AEAD_OUT=/tmp/ddch node primitives/aead/doubledeal-cbc-hmac/aead.test.mjs
 
 | Artifact | Path | Role |
 | --- | --- | --- |
-| This specification | `primitives/aead/doubledeal-cbc-hmac/SPEC.md` | Normative AEAD rules |
-| Conformance sudo | `primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo` | HMAC, KDF, pad, MAC input, CBC byte helpers |
-| Generated Lean | `proofs/doubledeal-cbc-hmac/lean/Generated/` | Emitted HMAC / KDF / pad + TAP. Not AEAD security. |
-| Link 2 | `proofs/doubledeal-cbc-hmac/lean/DoubleDealCbcHmac/` | Emitted functions = hand-written model, byte inputs. HMAC / KDF: the wiring around the hash; the hash is only as independent as `vhashAlg` (a transliteration of the sudo). Not AEAD security. |
+| This specification | `primitives/aead/doubledeal-cbc-hmac/v1/SPEC.md` | Normative AEAD rules |
+| Conformance sudo | `primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo` | HMAC, KDF, pad, MAC input, CBC byte helpers |
+| Generated Lean | `proofs/deprecated/doubledeal-cbc-hmac-v1/lean/Generated/` | Emitted HMAC / KDF / pad + TAP. Not AEAD security. |
+| Link 2 | `proofs/deprecated/doubledeal-cbc-hmac-v1/lean/DoubleDealCbcHmac/` | Emitted functions = hand-written model, byte inputs. HMAC / KDF: the wiring around the hash; the hash is only as independent as `vhashAlg` (a transliteration of the sudo). Not AEAD security. |
 | Byte-domain AEAD | `primitives/aead/doubledeal-cbc-hmac/aead.mjs` | CBC over §5.3 + sudo HMAC |
 | KATs | `primitives/aead/doubledeal-cbc-hmac/kats/doubledeal_cbc_hmac_kats.json` | Published vectors |
 | DoubleDeal rounds | `primitives/cipher/doubledeal/doubledeal.sudo` | `encrypt` / `decrypt` |
-| MegaDreifach | `primitives/hash/megadreifach/megadreifach.sudo` | `Hash` |
+| MegaDreifach v2 (deprecated) | `primitives/hash/megadreifach/megadreifach.sudo` | `Hash` |
 | §5.3 encoding | `demos/doubledeal/cards.js` | 28-byte / 29-byte ranks |
 
 ---

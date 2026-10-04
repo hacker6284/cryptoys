@@ -789,9 +789,7 @@ export func MegaDreifachBodyFrom(deal: List<int>, h: Position) -> List<int>
     return HashDeckBodyFrom(deal, h)
 
 // Davies–Meyer cascade of whole 52-card deals from IV-COOK12: no byte pad, no phi, one
-// block per deal (dm_step), digest = the final position's 29-byte rank. The keyed
-// card-native use (DoubleDeal-CBC-Sandwich v2) absorbs key || message decks || key turned
-// over here.
+// block per deal (dm_step), digest = the final position's 29-byte rank.
 export func HashDecksBody(deals: List<List<int>>) -> List<int>
     assert deals.length > 0
     h = iv_cook12()

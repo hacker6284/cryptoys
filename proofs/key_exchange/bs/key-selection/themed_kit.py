@@ -1,6 +1,7 @@
 """Checks for the themed three-state fleet key's dice (a candidate key that was not chosen;
 NOTES.md): the face rules of the d20 / d8 / d4 readings and the former BS §4.1 full-restart
-placement, said to be ECBS §1.3 [unverified: not in this repository], with the spec d10 and
+placement (an older note said ECBS's draft §1.3 used it too; ECBS dropped fleet keys, ECBS
+HISTORY.md §4.3, and its SPEC §4 has no fleet placement), with the spec d10 and
 the best-fit along-dice (part D of the former randomizer-kit script).  ecbs13_kit.py is the same placement end to end."""
 import json, random, collections, math
 from fractions import Fraction as F

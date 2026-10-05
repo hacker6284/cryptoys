@@ -11,7 +11,7 @@ namespace Bs
 structure Field where
   sudo_5Field_1n : Int
   sudo_5Field_4toll : Array (Int)
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Field where
   default := { sudo_5Field_1n := default, sudo_5Field_4toll := default }
@@ -30,7 +30,7 @@ inductive Shot : Type where
   | Sudo_4Shot_3Hit
   | Sudo_4Shot_4Miss
   | Sudo_4Shot_7Misfire
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Shot where
   default := Shot.Sudo_4Shot_3Hit
@@ -65,7 +65,7 @@ instance : SudoRt.Canon Shot where
 structure Called where
   sudo_6Called_5shots : Array (Shot)
   sudo_6Called_1y : Array (Int)
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Called where
   default := { sudo_6Called_5shots := default, sudo_6Called_1y := default }
@@ -86,7 +86,7 @@ inductive Kind : Type where
   | Sudo_4Kind_7Cruiser
   | Sudo_4Kind_10Battleship
   | Sudo_4Kind_7Carrier
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Kind where
   default := Kind.Sudo_4Kind_9Destroyer
@@ -132,7 +132,7 @@ structure Ship where
   sudo_4Ship_3row : Int
   sudo_4Ship_3col : Int
   sudo_4Ship_8bow_last : Bool
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Ship where
   default := { sudo_4Ship_4kind := default, sudo_4Ship_4down := default, sudo_4Ship_3row := default, sudo_4Ship_3col := default, sudo_4Ship_8bow_last := default }
@@ -150,7 +150,7 @@ instance : SudoRt.Canon Ship where
 structure KeyGrid where
   sudo_7KeyGrid_5ships : Array (Ship)
   sudo_7KeyGrid_4pegs : Array (Int)
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited KeyGrid where
   default := { sudo_7KeyGrid_5ships := default, sudo_7KeyGrid_4pegs := default }
@@ -172,7 +172,7 @@ structure Dice where
   sudo_4Dice_6next12 : Int
   sudo_4Dice_5next6 : Int
   sudo_4Dice_6next10 : Int
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Dice where
   default := { sudo_4Dice_3d12 := default, sudo_4Dice_2d6 := default, sudo_4Dice_3d10 := default, sudo_4Dice_6next12 := default, sudo_4Dice_5next6 := default, sudo_4Dice_6next10 := default }
@@ -192,7 +192,7 @@ structure Built where
   sudo_5Built_6used12 : Int
   sudo_5Built_5used6 : Int
   sudo_5Built_6used10 : Int
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Built where
   default := { sudo_5Built_4grid := default, sudo_5Built_6used12 := default, sudo_5Built_5used6 := default, sudo_5Built_6used10 := default }
@@ -218,7 +218,7 @@ structure Exchange where
   sudo_8Exchange_6base_b : Array (Int)
   sudo_8Exchange_8secret_a : Array (Int)
   sudo_8Exchange_8secret_b : Array (Int)
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Exchange where
   default := { sudo_8Exchange_8public_a := default, sudo_8Exchange_8public_b := default, sudo_8Exchange_7shots_a := default, sudo_8Exchange_10received_a := default, sudo_8Exchange_7shots_b := default, sudo_8Exchange_10received_b := default, sudo_8Exchange_6base_a := default, sudo_8Exchange_6base_b := default, sudo_8Exchange_8secret_a := default, sudo_8Exchange_8secret_b := default }
@@ -236,7 +236,7 @@ instance : SudoRt.Canon Exchange where
 inductive Phase : Type where
   | Sudo_5Phase_6Public
   | Sudo_5Phase_6Shared (sudo_12Phase_Shared_4base : Array (Int))
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Phase where
   default := Phase.Sudo_5Phase_6Public
@@ -1592,7 +1592,7 @@ def roll_hole_die (d : Dice) : Except SudoRt.Trap ((Int) × (Dice)) :=
     let _t371 ← SudoRt.atL (d).sudo_4Dice_3d12 (d).sudo_4Dice_6next12
     let face := _t371
     let _t372 ← SudoRt.addI (d).sudo_4Dice_6next12 (1 : Int)
-    let _t373 := { d with sudo_4Dice_6next12 := _t372 }
+    let _t373 := ({ d with sudo_4Dice_6next12 := _t372 } : Dice)
     let d := _t373
     let _t375 ← (if (decide (face ≥ (1 : Int))) then (do
   pure (decide (face ≤ (12 : Int)))) else pure false)
@@ -1604,7 +1604,7 @@ def roll_d6 (d : Dice) : Except SudoRt.Trap ((Int) × (Dice)) :=
     let _t378 ← SudoRt.atL (d).sudo_4Dice_2d6 (d).sudo_4Dice_5next6
     let face := _t378
     let _t379 ← SudoRt.addI (d).sudo_4Dice_5next6 (1 : Int)
-    let _t380 := { d with sudo_4Dice_5next6 := _t379 }
+    let _t380 := ({ d with sudo_4Dice_5next6 := _t379 } : Dice)
     let d := _t380
     let _t382 ← (if (decide (face ≥ (1 : Int))) then (do
   pure (decide (face ≤ (6 : Int)))) else pure false)
@@ -1632,7 +1632,7 @@ def throw_d10 (d : Dice) : Except SudoRt.Trap ((Int) × (Dice)) :=
   let _t386 ← SudoRt.atL (d).sudo_4Dice_3d10 t
   let face := _t386
   let _t387 ← SudoRt.addI t (1 : Int)
-  let _t388 := { d with sudo_4Dice_6next10 := _t387 }
+  let _t388 := ({ d with sudo_4Dice_6next10 := _t387 } : Dice)
   let d := _t388
   let _t390 ← (if (decide (face ≥ (0 : Int))) then (do
   pure (decide (face ≤ (9 : Int)))) else pure false)

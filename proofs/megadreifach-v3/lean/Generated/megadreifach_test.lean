@@ -1287,19 +1287,19 @@ def test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_
   let _ix389 := p
   let _t390 ← SudoRt.atL (g).sudo_8Position_2ep s
   let _t391 ← SudoRt.putL (g).sudo_8Position_2ep _ix389 _t390
-  let _t392 := { g with sudo_8Position_2ep := _t391 }
+  let _t392 := ({ g with sudo_8Position_2ep := _t391 } : Position)
   let g := _t392
   let _ix393 := p
   let _t394 ← SudoRt.putL (g).sudo_8Position_2eo _ix393 (0 : Int)
-  let _t395 := { g with sudo_8Position_2eo := _t394 }
+  let _t395 := ({ g with sudo_8Position_2eo := _t394 } : Position)
   let g := _t395
   let _ix396 := s
   let _t397 ← SudoRt.putL (g).sudo_8Position_2ep _ix396 p
-  let _t398 := { g with sudo_8Position_2ep := _t397 }
+  let _t398 := ({ g with sudo_8Position_2ep := _t397 } : Position)
   let g := _t398
   let _ix399 := s
   let _t400 ← SudoRt.putL (g).sudo_8Position_2eo _ix399 o
-  let _t401 := { g with sudo_8Position_2eo := _t400 }
+  let _t401 := ({ g with sudo_8Position_2eo := _t400 } : Position)
   let g := _t401
   let _t402 ← edge_face_of g a b x
   let f1 := _t402
@@ -1372,19 +1372,19 @@ def test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_
   let _ix420 := p
   let _t421 ← SudoRt.atL (g).sudo_8Position_2ep s
   let _t422 ← SudoRt.putL (g).sudo_8Position_2ep _ix420 _t421
-  let _t423 := { g with sudo_8Position_2ep := _t422 }
+  let _t423 := ({ g with sudo_8Position_2ep := _t422 } : Position)
   let g := _t423
   let _ix424 := p
   let _t425 ← SudoRt.putL (g).sudo_8Position_2eo _ix424 (0 : Int)
-  let _t426 := { g with sudo_8Position_2eo := _t425 }
+  let _t426 := ({ g with sudo_8Position_2eo := _t425 } : Position)
   let g := _t426
   let _ix427 := s
   let _t428 ← SudoRt.putL (g).sudo_8Position_2ep _ix427 p
-  let _t429 := { g with sudo_8Position_2ep := _t428 }
+  let _t429 := ({ g with sudo_8Position_2ep := _t428 } : Position)
   let g := _t429
   let _ix430 := s
   let _t431 ← SudoRt.putL (g).sudo_8Position_2eo _ix430 o
-  let _t432 := { g with sudo_8Position_2eo := _t431 }
+  let _t432 := ({ g with sudo_8Position_2eo := _t431 } : Position)
   let g := _t432
   let _t433 ← edge_face_of g a b x
   let f1 := _t433
@@ -1513,19 +1513,19 @@ def test_read_words_spec_v3_5_8_for_every_piece_and_ordered_pair_of_its_colours_
   let _ix457 := p
   let _t458 ← SudoRt.atL (g).sudo_8Position_2cp s
   let _t459 ← SudoRt.putL (g).sudo_8Position_2cp _ix457 _t458
-  let _t460 := { g with sudo_8Position_2cp := _t459 }
+  let _t460 := ({ g with sudo_8Position_2cp := _t459 } : Position)
   let g := _t460
   let _ix461 := p
   let _t462 ← SudoRt.putL (g).sudo_8Position_2co _ix461 (0 : Int)
-  let _t463 := { g with sudo_8Position_2co := _t462 }
+  let _t463 := ({ g with sudo_8Position_2co := _t462 } : Position)
   let g := _t463
   let _ix464 := s
   let _t465 ← SudoRt.putL (g).sudo_8Position_2cp _ix464 p
-  let _t466 := { g with sudo_8Position_2cp := _t465 }
+  let _t466 := ({ g with sudo_8Position_2cp := _t465 } : Position)
   let g := _t466
   let _ix467 := s
   let _t468 ← SudoRt.putL (g).sudo_8Position_2co _ix467 o
-  let _t469 := { g with sudo_8Position_2co := _t468 }
+  let _t469 := ({ g with sudo_8Position_2co := _t468 } : Position)
   let g := _t469
   let _t470 ← SudoRt.atL cols i1
   let _t471 ← corner_face_of g a b c _t470

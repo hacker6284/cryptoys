@@ -20,7 +20,7 @@ structure Step where
   sudo_4Step_5total : Int
   sudo_4Step_4card : Int
   sudo_4Step_4flag : Int
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Step where
   default := { sudo_4Step_4kind := default, sudo_4Step_5label := default, sudo_4Step_7message := default, sudo_4Step_3key := default, sudo_4Step_4hand := default, sudo_4Step_3row := default, sudo_4Step_3col := default, sudo_4Step_6amount := default, sudo_4Step_5total := default, sudo_4Step_4card := default, sudo_4Step_4flag := default }

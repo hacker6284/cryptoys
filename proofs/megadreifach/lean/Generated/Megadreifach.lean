@@ -13,7 +13,7 @@ structure Position where
   sudo_8Position_2co : Array (Int)
   sudo_8Position_2ep : Array (Int)
   sudo_8Position_2eo : Array (Int)
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited Position where
   default := { sudo_8Position_2cp := default, sudo_8Position_2co := default, sudo_8Position_2ep := default, sudo_8Position_2eo := default }
@@ -31,7 +31,7 @@ instance : SudoRt.Canon Position where
 structure BigInt where
   sudo_6BigInt_8negative : Bool
   sudo_6BigInt_5limbs : Array (Int)
-  deriving BEq, Repr
+  deriving BEq
 
 instance : Inhabited BigInt where
   default := { sudo_6BigInt_8negative := default, sudo_6BigInt_5limbs := default }

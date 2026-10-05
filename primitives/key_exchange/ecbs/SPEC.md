@@ -102,10 +102,10 @@ The card v3 certificate check replaces the trace check. Changes against the 2026
 
 | Tier | Key | Walk | Workspace + key grids | Game sets ⌈grids/4⌉ | Moves per person (mean; range) | Control-row moves (extra) | Hand time @ 1 move/s |
 |---|---|---|---|---|---|---|---|
-| Demo | pegs-only 2 | chord | **1 + 1 = 2** | 1 (one kit, 2 grids) | 5,916 (5,064–6,788; all 128 people) | 234 | ≈ 1.6 h |
-| Toy | pegs-only 16 | F-form | **4 + 1 = 5** | 2 | 141,822 (100,208–170,550) | 1,302 | ≈ 39 h |
-| Hobby | pegs-only 51 | F-form | **8 + 1 = 9** | 3 | 1,714,807 (1.36–1.97 M) | 3,367 | ≈ 476 h |
-| Serious | pegs-only 162 | F-form | **20 + 2 = 22** | 6 | 40,287,769 (37.2–44.0 M) | 10,564 | ≈ 11,191 h |
+| Demo | pegs-only 2 | chord | **1 + 1 = 2** | 1 (one kit, 2 grids) | 5,916 (5,064–6,788; all 128 people) | 204 | ≈ 1.6 h |
+| Toy | pegs-only 16 | F-form | **4 + 1 = 5** | 2 | 141,822 (100,208–170,550) | 1,208 | ≈ 39 h |
+| Hobby | pegs-only 51 | F-form | **8 + 1 = 9** | 3 | 1,714,807 (1.36–1.97 M) | 3,129 | ≈ 476 h |
+| Serious | pegs-only 162 | F-form | **20 + 2 = 22** | 6 | 40,287,769 (37.2–44.0 M) | 9,846 | ≈ 11,191 h |
 
 [run: evidence/card_sim (all tiers); grid counts: the generated `tier()`'s `geowork` (workspace grids) and `geokey` (key grids), and every hole a call names lies inside them (`coordinate()`, asserted by evidence/calling_check (c)); hand time = mean ÷ 3600, an assumption of 1 move/s]. Move convention: place, lift or drop a peg = 1; slide or jump = 2 per peg; clear = 1 per peg; calls move no pegs (laying an answer = 1).
 

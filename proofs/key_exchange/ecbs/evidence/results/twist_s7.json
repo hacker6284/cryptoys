@@ -373,21 +373,21 @@
  "provenance_by_part": {
   "B": {
    "source": "primitives/key_exchange/ecbs/ecbs.sudo",
-   "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
+   "sudo_sha256": "bd5c62aeceefa63ef9a0b088cd73788745498f440b473acbbec1247c40355e94",
    "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
    "target": "sudoc js",
    "sudo_tests": "# 16/16 passed"
   },
   "C": {
    "source": "primitives/key_exchange/ecbs/ecbs.sudo",
-   "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
+   "sudo_sha256": "bd5c62aeceefa63ef9a0b088cd73788745498f440b473acbbec1247c40355e94",
    "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
    "target": "sudoc js",
    "sudo_tests": "# 16/16 passed"
   },
   "A": {
    "source": "primitives/key_exchange/ecbs/ecbs.sudo",
-   "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
+   "sudo_sha256": "bd5c62aeceefa63ef9a0b088cd73788745498f440b473acbbec1247c40355e94",
    "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
    "target": "sudoc js",
    "sudo_tests": "# 16/16 passed"

@@ -1,7 +1,7 @@
 {
  "provenance": {
   "source": "primitives/key_exchange/ecbs/ecbs.sudo",
-  "sudo_sha256": "32ef2a046eae5a9353118694938b7646ede2b9f2d2b290643faa4b342098413c",
+  "sudo_sha256": "bd5c62aeceefa63ef9a0b088cd73788745498f440b473acbbec1247c40355e94",
   "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
   "target": "sudoc js",
   "sudo_tests": "# 16/16 passed"
@@ -38,7 +38,7 @@
     "fold": 4
    },
    "check_moves_mean": 15293,
-   "control_moves_mean": 1302,
+   "control_moves_mean": 1208,
    "ladder_build_once": 65,
    "calls_per_receiver": [
     92
@@ -145,8 +145,8 @@
      }
     },
     "ctrl": {
-     "A": 1291,
-     "B": 1015
+     "A": 1197,
+     "B": 921
     },
     "key_grid": {
      "A": 19,
@@ -155,10 +155,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -271,8 +267,8 @@
      }
     },
     "ctrl": {
-     "A": 1219,
-     "B": 1411
+     "A": 1125,
+     "B": 1317
     },
     "key_grid": {
      "A": 17,
@@ -281,10 +277,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -397,8 +389,8 @@
      }
     },
     "ctrl": {
-     "A": 1411,
-     "B": 1411
+     "A": 1317,
+     "B": 1317
     },
     "key_grid": {
      "A": 21,
@@ -407,10 +399,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -523,8 +511,8 @@
      }
     },
     "ctrl": {
-     "A": 1171,
-     "B": 1219
+     "A": 1077,
+     "B": 1125
     },
     "key_grid": {
      "A": 16,
@@ -533,10 +521,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -649,8 +633,8 @@
      }
     },
     "ctrl": {
-     "A": 1315,
-     "B": 1459
+     "A": 1221,
+     "B": 1365
     },
     "key_grid": {
      "A": 19,
@@ -659,10 +643,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -775,8 +755,8 @@
      }
     },
     "ctrl": {
-     "A": 1267,
-     "B": 1399
+     "A": 1173,
+     "B": 1305
     },
     "key_grid": {
      "A": 18,
@@ -785,10 +765,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -901,8 +877,8 @@
      }
     },
     "ctrl": {
-     "A": 1363,
-     "B": 1267
+     "A": 1269,
+     "B": 1173
     },
     "key_grid": {
      "A": 20,
@@ -911,10 +887,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -1027,8 +999,8 @@
      }
     },
     "ctrl": {
-     "A": 1363,
-     "B": 1363
+     "A": 1269,
+     "B": 1269
     },
     "key_grid": {
      "A": 20,
@@ -1037,10 +1009,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -1153,8 +1121,8 @@
      }
     },
     "ctrl": {
-     "A": 1363,
-     "B": 1219
+     "A": 1269,
+     "B": 1125
     },
     "key_grid": {
      "A": 20,
@@ -1163,10 +1131,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -1279,8 +1243,8 @@
      }
     },
     "ctrl": {
-     "A": 1363,
-     "B": 1147
+     "A": 1269,
+     "B": 1053
     },
     "key_grid": {
      "A": 20,
@@ -1289,10 +1253,6 @@
     "calls": {
      "A": 92,
      "B": 92
-    },
-    "cursor_steps": {
-     "A": 94,
-     "B": 94
     },
     "stale_cleared": {
      "A": 0,
@@ -1346,7 +1306,7 @@
     "fold": 12
    },
    "check_moves_mean": 92867,
-   "control_moves_mean": 3367,
+   "control_moves_mean": 3129,
    "ladder_build_once": 173,
    "calls_per_receiver": [
     236
@@ -1453,8 +1413,8 @@
      }
     },
     "ctrl": {
-     "A": 3148,
-     "B": 3232
+     "A": 2910,
+     "B": 2994
     },
     "key_grid": {
      "A": 35,
@@ -1463,10 +1423,6 @@
     "calls": {
      "A": 236,
      "B": 236
-    },
-    "cursor_steps": {
-     "A": 238,
-     "B": 238
     },
     "stale_cleared": {
      "A": 0,
@@ -1579,8 +1535,8 @@
      }
     },
     "ctrl": {
-     "A": 3424,
-     "B": 3628
+     "A": 3186,
+     "B": 3390
     },
     "key_grid": {
      "A": 41,
@@ -1589,10 +1545,6 @@
     "calls": {
      "A": 236,
      "B": 236
-    },
-    "cursor_steps": {
-     "A": 238,
-     "B": 238
     },
     "stale_cleared": {
      "A": 0,
@@ -1705,8 +1657,8 @@
      }
     },
     "ctrl": {
-     "A": 3484,
-     "B": 3100
+     "A": 3246,
+     "B": 2862
     },
     "key_grid": {
      "A": 42,
@@ -1715,10 +1667,6 @@
     "calls": {
      "A": 236,
      "B": 236
-    },
-    "cursor_steps": {
-     "A": 238,
-     "B": 238
     },
     "stale_cleared": {
      "A": 0,
@@ -1831,8 +1779,8 @@
      }
     },
     "ctrl": {
-     "A": 3340,
-     "B": 3532
+     "A": 3102,
+     "B": 3294
     },
     "key_grid": {
      "A": 39,
@@ -1841,10 +1789,6 @@
     "calls": {
      "A": 236,
      "B": 236
-    },
-    "cursor_steps": {
-     "A": 238,
-     "B": 238
     },
     "stale_cleared": {
      "A": 0,
@@ -1957,8 +1901,8 @@
      }
     },
     "ctrl": {
-     "A": 3616,
-     "B": 2992
+     "A": 3378,
+     "B": 2754
     },
     "key_grid": {
      "A": 45,
@@ -1967,10 +1911,6 @@
     "calls": {
      "A": 236,
      "B": 236
-    },
-    "cursor_steps": {
-     "A": 238,
-     "B": 238
     },
     "stale_cleared": {
      "A": 0,
@@ -2083,8 +2023,8 @@
      }
     },
     "ctrl": {
-     "A": 3436,
-     "B": 3472
+     "A": 3198,
+     "B": 3234
     },
     "key_grid": {
      "A": 41,
@@ -2093,10 +2033,6 @@
     "calls": {
      "A": 236,
      "B": 236
-    },
-    "cursor_steps": {
-     "A": 238,
-     "B": 238
     },
     "stale_cleared": {
      "A": 0,
@@ -2150,7 +2086,7 @@
     "fold": 52
    },
    "check_moves_mean": 758385,
-   "control_moves_mean": 10564,
+   "control_moves_mean": 9846,
    "ladder_build_once": 533,
    "calls_per_receiver": [
     716
@@ -2257,8 +2193,8 @@
      }
     },
     "ctrl": {
-     "A": 10174,
-     "B": 11038
+     "A": 9456,
+     "B": 10320
     },
     "key_grid": {
      "A": 104,
@@ -2267,10 +2203,6 @@
     "calls": {
      "A": 716,
      "B": 716
-    },
-    "cursor_steps": {
-     "A": 718,
-     "B": 718
     },
     "stale_cleared": {
      "A": 0,
@@ -2383,8 +2315,8 @@
      }
     },
     "ctrl": {
-     "A": 10606,
-     "B": 10270
+     "A": 9888,
+     "B": 9552
     },
     "key_grid": {
      "A": 113,
@@ -2393,10 +2325,6 @@
     "calls": {
      "A": 716,
      "B": 716
-    },
-    "cursor_steps": {
-     "A": 718,
-     "B": 718
     },
     "stale_cleared": {
      "A": 0,
@@ -2509,8 +2437,8 @@
      }
     },
     "ctrl": {
-     "A": 10366,
-     "B": 10990
+     "A": 9648,
+     "B": 10272
     },
     "key_grid": {
      "A": 108,
@@ -2519,10 +2447,6 @@
     "calls": {
      "A": 716,
      "B": 716
-    },
-    "cursor_steps": {
-     "A": 718,
-     "B": 718
     },
     "stale_cleared": {
      "A": 0,
@@ -2635,8 +2559,8 @@
      }
     },
     "ctrl": {
-     "A": 10606,
-     "B": 10462
+     "A": 9888,
+     "B": 9744
     },
     "key_grid": {
      "A": 113,
@@ -2645,10 +2569,6 @@
     "calls": {
      "A": 716,
      "B": 716
-    },
-    "cursor_steps": {
-     "A": 718,
-     "B": 718
     },
     "stale_cleared": {
      "A": 0,

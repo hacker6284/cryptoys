@@ -14,8 +14,9 @@
  * ./placements.js), pinned by ../library.test.mjs.
  */
 import settings from "./settings.js";
+import { seatPose } from "../poses.js";
 import {
-    add, clamp01, lerp3, obbOf, quatAngle, quatDot, seatY, slerp, smootherStep, smootherStepD, worstDepth,
+    add, clamp01, lerp3, obbOf, quatAngle, quatDot, slerp, smootherStep, smootherStepD, worstDepth,
 } from "../geom.js";
 
 export { settings };
@@ -39,10 +40,8 @@ export function riseFor(horizM, t = timing) {
     return Math.min(t.riseMaxM, t.riseM + t.risePerM * horizM);
 }
 
-/** A seated pose: the drawn bottom on surfaceY + gap at (x, z) with orientation q. */
-export function seatPose({ x, z, q, surfaceY, gap = 0.001 }, shape) {
-    return { p: [x, seatY(surfaceY + gap, q, shape), z], q };
-}
+// A seated pose (from ../poses.js, re-exported for callers of carry).
+export { seatPose };
 
 function bez(P, u) {
     const s = 1 - u;

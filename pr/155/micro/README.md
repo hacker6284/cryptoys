@@ -10,8 +10,8 @@ turn sound on, and listen. `index.html` lists them.
   `scramble-turn` (viewed by `scramble-turn` and `scramble-rotate`),
   `megaminx-turn` and `doubledeal-grid-deal` (animation approved; sound on hold),
   and the general primitives `carry` and `hinge` (not yet approved; silent,
-  each looping its move with a different seeded placement every cycle and
-  checking it as drawn, see `../anim/README.md`). The rest keep their own `settings.js` until approved.
+  each showing only its own move, looped with a different seeded placement
+  every cycle and checked as drawn, see `../anim/README.md`). The rest keep their own `settings.js` until approved.
 - **Settings:** each other page's `settings.js` holds everything you hear and
   see move: one sound file per slot, `gainDb`, `offsetMs` (when the file
   starts relative to the contact moment; −peak puts the loudest sample on

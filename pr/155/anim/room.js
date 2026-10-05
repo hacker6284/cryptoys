@@ -94,6 +94,26 @@ export function roomSolids({ lidAngle = 0 } = {}) {
     return [...ROOM, { ...chestLidObb(lidAngle), kind: "box", name: "chest-lid" }];
 }
 
+/** The chest set down elsewhere on the floor: centre [x, z] and yaw (its drawn size, hinge and lid unchanged). */
+export function chestAt(centre, yaw) {
+    return { ...CHEST, centre: [centre[0], centre[1]], yaw };
+}
+
+/** The chest's outer body as one oriented box (floor to its rim). */
+export function chestBodyObb(chest = CHEST) {
+    const hx = (CHEST.outer.max[0] - CHEST.outer.min[0]) / 2, hz = (CHEST.outer.max[2] - CHEST.outer.min[2]) / 2;
+    return obbOf({ p: [chest.centre[0], 0, chest.centre[1]], q: quatFromEuler(0, chest.yaw, 0) }, { min: [-hx, 0, -hz], max: [hx, CHEST.outer.max[1], hz] });
+}
+
+/** The room with the chest at `chest` (its body one box) and its lid open by `lidAngle`. */
+export function roomSolidsWithChest(chest, { lidAngle = 0 } = {}) {
+    return [
+        ...ROOM.filter((s) => !s.name.startsWith("chest-")),
+        { ...chestBodyObb(chest), kind: "box", name: "chest-body" },
+        { ...chestLidObb(lidAngle, chest), kind: "box", name: "chest-lid" },
+    ];
+}
+
 /**
  * Seating surfaces: where a toy can be set down. y is the surface top;
  * a toy seats at y + SEAT_GAP by its drawn bottom.

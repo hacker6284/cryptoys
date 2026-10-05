@@ -1,17 +1,15 @@
 import { mountMicro } from "../shared/micro.js";
 import { settings } from "../../anim/carry/index.js";
 import { carrySchedule, DECK_BOX, DEFAULT_SEED, CYCLES } from "../../anim/carry/placements.js";
-import { planHinge } from "../../anim/hinge/index.js";
-import { CHEST, chestLidObb, roomSolids } from "../../anim/room.js";
 import { obbCorners, obbOf } from "../../anim/geom.js";
 import {
-    options, placeChest, applyPose, createRunner, createInfo, createFrameCheck, seatedFail, sizeFail, roomCheck, framePoints, chestPoints, surfacePoints,
+    options, placeChest, applyPose, createRunner, createInfo, createFrameCheck, seatedFail, sizeFail, roomCheck, framePoints, surfacePoints,
 } from "../shared/primitive.js";
 
 // P1 carry (anim/carry): the two deck boxes carried around the playroom,
 // a different start and end every cycle (anim/carry/placements.js, seeded),
-// each cycle starting where the last one ended. Cycles that reach into the
-// chest open its lid first and drop it shut after (P2 hinge).
+// each cycle starting where the last one ended. Only the carried box moves:
+// the chest is shut scenery. One primitive, nothing composed.
 const opt = options(DEFAULT_SEED);
 let schedule = null;
 let runner = null;
@@ -21,16 +19,6 @@ let loops = 0;
 const NAMES = { deck: "KEY", deck2: "MSG" };
 const results = [];
 
-function lidSet(world, angle) {
-    world.setChestLid(angle / CHEST.lidOpenAngle);
-}
-
-async function swingLid(ctx, from, to) {
-    const body = roomSolids().filter((s) => s.name !== "chest-lid");
-    const plan = planHinge({ part: "chest-lid", from, to, sweep: (a) => chestLidObb(a), solids: body });
-    return runner.run(plan.ms, (t) => lidSet(ctx.world, plan.at(t)), `lid ${from}→${to}`);
-}
-
 void mountMicro({
     id: "carry",
     title: "Carry",
@@ -38,8 +26,8 @@ void mountMicro({
     slots: [],
     silent: true,
     frame() {
-        // The union of the loop: every pose, every path, the open chest.
-        const pts = [...chestPoints(), ...surfacePoints()];
+        // The union of the loop: every pose and every path (the table and shelf).
+        const pts = [...surfacePoints()];
         for (const c of schedule.cycles) {
             pts.push(...obbCorners(obbOf(c.from, DECK_BOX)), ...obbCorners(obbOf(c.to, DECK_BOX)));
             pts.push(...c.plan.path.pts.filter((_, i) => i % 8 === 0));
@@ -68,7 +56,6 @@ void mountMicro({
         for (const c of schedule.cycles.slice(0, k)) at[c.mover] = c.to;
         applyPose(ctx.world.toys.deck, at.deck);
         applyPose(ctx.world.toys.deck2, at.deck2);
-        ctx.world.setChestLid(0);
     },
     async cycle(ctx) {
         const c = schedule.cycles[k];
@@ -80,12 +67,9 @@ void mountMicro({
         if (opt.only) await this.reset(ctx);
         if (opt.view === "cycle") {
             const pts = [...obbCorners(obbOf(c.from, DECK_BOX)), ...obbCorners(obbOf(c.to, DECK_BOX)), ...plan.path.pts.filter((_, i) => i % 4 === 0)];
-            // In and out of the chest the open lid stands between this camera and the
-            // cavity when framed close, so those cycles keep the whole-loop framing.
-            ctx.frame(c.chest ? this.frame() : framePoints(pts));
+            ctx.frame(framePoints(pts));
         }
         applyPose(toy, c.from);
-        if (c.chest && !(await swingLid(ctx, 0, 1))) return;
         const check = createFrameCheck({ name: NAMES[c.mover], solids: c.solids, shape: DECK_BOX, maxSpeed: plan.peakSpeed, ms: plan.ms, peakMs: plan.peakMs });
         const ok = await runner.run(plan.ms, (t) => {
             applyPose(toy, plan.at(t));
@@ -93,7 +77,6 @@ void mountMicro({
         }, `carry ${c.n}`);
         if (!ok) return;
         const fail = [...check.finish(), ...seatedFail(toy, c.surfaceTo, NAMES[c.mover]), ...sizeFail(toy, DECK_BOX, NAMES[c.mover]), ...c.check.fail];
-        if (c.chest && !(await swingLid(ctx, 1, 0))) return;
         results.push({ loop: loops, n: c.n, ok: fail.length === 0, fail, ms: plan.ms, L: plan.L, peakAt: check.peakAt, lawPeak: plan.peakMs });
         if (fail.length) console.error(`carry cycle ${c.n}: ${fail.join("; ")}`);
         info.set(`${head}\n${stats} · ${fail.length ? `✗ ${fail.join("; ")}` : "checks ✓ (no overlap, seated, real size, duration and peak speed on the law)"}`, fail.length === 0);

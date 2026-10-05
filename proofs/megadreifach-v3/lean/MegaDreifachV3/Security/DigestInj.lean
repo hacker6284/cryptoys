@@ -7,6 +7,7 @@
   `positionToBytes_inj_legal`). That file imports `Parity`, which imports the
   v2 hash, so it is not elaborated in this package. The lemmas are about the
   rank encoding only. They do not mention E_m.
+  NOTE: a version-neutral home for this restatement is a follow-up.
 
   `positionToBytes` is injective on `isLegal` (even corner and edge permutations,
   corner-twist sum ≡ 0 mod 3, edge-flip sum ≡ 0 mod 2). It is not claimed on

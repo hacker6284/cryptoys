@@ -9,6 +9,8 @@
   functions, so they are not imported into this package. The statements below
   are restated. The generic MD walker is not: `MDReduction.lean` imports
   `MegaDreifach.Security.MDGeneric`.
+  NOTE: a shared home for the restated parity lemmas is deferred. The v3 `Em`
+  path (`word_emBlock`, `word_dmStep`) stays in this file.
 
   `Word` is a product of face moves. v3's `emBlock` / `dmStep` are face turns
   from the chaining value (`Em.lean`), so a word stays a word (`word_dmStep`).

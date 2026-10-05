@@ -60,7 +60,7 @@ axiom) fails, as does a Lean error.
   required: the theorems its README cites (MD_V1_README_THEOREMS).
 - megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
   for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
-  README cites (MD_V3_README_THEOREMS); min is the audited count (305).
+  README cites (MD_V3_README_THEOREMS); min is the audited count (306).
   `--selftest` checks its "Emitted function" column against
   primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac-v1-deprecated: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
@@ -449,9 +449,10 @@ MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
     "word_emBlock", "word_dmStep", "word_chainPre", "isLegal_chainPre",
     "evenRank_inj", "positionToBytes_inj_legal", "positionToBytes_inj_chainPre",
     "pad_suffix_free", "blocks_suffix_free", "chainPre_eq_chR",
-    "extract_chain_evals", "extract_chain_evals_le", "vhashAlg_eq_iff",
+    "chain_block_count", "chain_block_count_le", "vhashAlg_eq_iff",
     "extract_collision_comp", "v_Hash_collision_comp",
-    "extract_second_preimage_comp", "v_Hash_second_preimage_comp"]}
+    "extract_second_preimage_comp", "v_Hash_second_preimage_comp",
+    "compValid_emBlock_of_same_h"]}
 
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
@@ -972,8 +973,8 @@ PACKAGES = {
         "known_sorry": set(),
         # sanity: the audit must see the whole package (the real audited count; raise as
         # Link 2 grows, lower only with a reason in the commit).
-        # Printed count after the constructive MD extractor.
-        "min": 305,
+        # Printed count after the same-h emBlock corollary on the MD extractor.
+        "min": 306,
         "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac-v1-deprecated": {

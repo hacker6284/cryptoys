@@ -192,11 +192,14 @@ is a reduction, not a claim that collisions are hard. `extract` is a computable
 function of two messages. On a `PadWf` digest collision of distinct messages it
 returns a compression collision (`extract_collision_comp` for the model
 `vhashAlg`, `v_Hash_collision_comp` for emitted `v_Hash`). The certificate is
-`CompValid`: `dmStep` agrees on the two φ-images, the images differ (or the
-chaining values do), both blocks are `PhiChunkWf`, both images are permutations
-so `require_permutation` returns them, both chaining values are `InjPos` and
-legal, and each side is `chainPre` of that message's pad, hence a chain from
-`ivCook12` (`chainPre_eq_chR`).
+`CompValid`: the compression inputs differ (the chaining values, or the φ-images)
+and `dmStep` agrees on those inputs. When the chaining values differ, that is a
+free-start collision; this reduction does not cancel `h`. When `c.h1 = c.h2`,
+`compValid_emBlock_of_same_h` applies A(b) (`dmStep_same_h_iff`) and the
+certificate is an `emBlock` collision. Both blocks are `PhiChunkWf`, both images
+are permutations so `require_permutation` returns them, both chaining values are
+`InjPos` and legal, and each side is `chainPre` of that message's pad, hence a
+chain from `ivCook12` (`chainPre_eq_chR`).
 
 The input condition is `PadWf`, the same hypothesis as `v_Hash_refines`. The
 length bound used inside that refinement is derived from `PadWf`; it is not an
@@ -206,11 +209,10 @@ extra hypothesis here.
 reduction with the first side on a chosen target message. They are not a
 second-preimage resistance claim.
 
-Cost, proved: one `dmBlock` per 28-byte block of each pad,
-`(pad m).length / 28 + (pad m').length / 28` (`extract_chain_evals`), which is
-at most `(pad m).length + (pad m').length` (`extract_chain_evals_le`). The
-walker recomputes tails; that bound counts the compression inputs on the two
-chains.
+Block count on the two pads (not a count of `dmBlock` calls inside `extract`,
+whose `findR` recomputes tails): `(pad m).length / 28 + (pad m').length / 28`
+(`chain_block_count`), at most `(pad m).length + (pad m').length`
+(`chain_block_count_le`).
 
 What had to be restated, because the v2 files import the v2 hash and are not
 elaborated in this package: the face-move word and the parity invariant
@@ -234,20 +236,21 @@ is imported from v2 `MDGeneric` unchanged. `pad_injective`, `pad_suffix` and
 | `chainPre` is the reversed chain from `ivCook12` | `chainPre_eq_chR` |
 | The pad is suffix-free on messages whose length field fits | `pad_suffix_free` |
 | The block lists are suffix-free on `PadWf` | `blocks_suffix_free` |
-| Chain-building cost, in blocks | `extract_chain_evals` |
-| That cost is at most the padded byte lengths | `extract_chain_evals_le` |
+| Block count on the two pads | `chain_block_count` |
+| That count is at most the padded byte lengths | `chain_block_count_le` |
 | Model-hash collision yields `extract = some (comp c)` with `CompValid` | `extract_collision_comp` |
 | The same for emitted `v_Hash` | `v_Hash_collision_comp` |
 | The same with the first side on a target message | `extract_second_preimage_comp` |
 | The same for emitted `v_Hash` | `v_Hash_second_preimage_comp` |
+| Same `h` in `CompValid` is an `emBlock` collision | `compValid_emBlock_of_same_h` |
 
 ## Where this sits
 
-- v3 is the current MegaDreifach (v2 deprecated; see PR #181 for the switch). v3 reuses the v2
-  model and the version-neutral v2 Link 2 modules (InjPos, VHashCommon, Sudo, PhiInv, Compose,
-  among the `MegaDreifachLink` roots); this PR moved shared lemmas into those modules, but v2's
-  statements are otherwise unchanged and its audit (`check_axioms.py megadreifach`) is 2745.
-  Its dependents (the frozen DoubleDeal-CBC-HMAC v1, Scramble and BS reuse its Link 2 runtime lemmas) keep
+- v3 is the current MegaDreifach (v2 deprecated; see PR #181 for the switch). v3 reuses the
+  version-neutral Link 2 modules (InjPos, VHashCommon, Sudo, PhiInv, Compose, among the
+  `MegaDreifachLink` roots); shared de-duplication of the restated Security lemmas is left
+  for later. v2's audit remains 2745 (taken on trust / CI).
+  v2's dependents (the frozen DoubleDeal-CBC-HMAC v1, Scramble, and BS, which reuse its Link 2 runtime lemmas) keep
   their audit counts. Moving v3 into `proofs/megadreifach/` and v2 into `proofs/deprecated/` is
   a separate step.
 - The emitted module is `Megadreifach`, the same name as the v1 and v2 emits; each lives in its

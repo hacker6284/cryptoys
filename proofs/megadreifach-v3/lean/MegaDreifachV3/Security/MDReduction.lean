@@ -23,14 +23,14 @@
   The v2 proofs live in `MegaDreifach.Security.MDReduction`, which imports the
   v2 hash and is not elaborated here. The pad lemmas they call (`pad_injective`,
   `pad_suffix`, `toBE_inj`) are imported unchanged.
+  NOTE: a version-neutral home for these restated pad-suffix lemmas (and for
+  `DigestInj`) is a follow-up. The v3 card-phase word in `FaceWord.lean` stays here.
 
-  Cost. Building both chains evaluates `dmBlock` once per 28-byte block:
-  `(pad m₁).length / 28 + (pad m₂).length / 28` (`extract_chain_evals`), which
-  is at most `(pad m₁).length + (pad m₂).length` (`extract_chain_evals_le`).
-  `findR` then walks those chains and stops at the first differing input.
-  The recursive equation recomputes each tail with `chR`; the bound is the
-  number of compression inputs on the two chains, not the number of times
-  the equation mentions `chR`.
+  Block count on the two pads, not a count of `dmBlock` calls inside `extract`:
+  `(pad m₁).length / 28 + (pad m₂).length / 28` (`chain_block_count`), at most
+  `(pad m₁).length + (pad m₂).length` (`chain_block_count_le`). `findR`
+  recomputes each tail with `chR`, so a run of `extract` can evaluate `dmBlock`
+  more times than that.
 
   Zero sorry. No native_decide.
 -/
@@ -46,6 +46,7 @@ import MegaDreifachV3.Link2.Codec
 import MegaDreifachV3.Link2.VHash
 import MegaDreifachV3.Security.DigestInj
 import MegaDreifachV3.Security.FaceWord
+import MegaDreifachV3.Security.DmStepSameH
 
 namespace MegaDreifachV3.Security
 
@@ -85,17 +86,20 @@ theorem blocksMsg_length (msg : List Nat) :
     (blocksMsg msg).length = (pad msg).length / 28 := by
   simp [blocksMsg, blocksOf]
 
-/-- One `dmBlock` per 28-byte block of each pad. -/
-theorem extract_chain_evals (m1 m2 : List Nat) :
+/-- Block count on the two pads: one 28-byte block per `dmBlock` input on each chain.
+    This is not a claim that `extract` evaluates `dmBlock` that many times.
+    `findR` recomputes tails. -/
+theorem chain_block_count (m1 m2 : List Nat) :
     (blocksMsg m1).length + (blocksMsg m2).length =
       (pad m1).length / 28 + (pad m2).length / 28 := by
   simp [blocksMsg_length]
 
-/-- The block count is at most the padded byte lengths. -/
-theorem extract_chain_evals_le (m1 m2 : List Nat) :
+/-- Block count on the two pads is at most the padded byte lengths.
+    Not a count of `dmBlock` evaluations inside `extract`. -/
+theorem chain_block_count_le (m1 m2 : List Nat) :
     (blocksMsg m1).length + (blocksMsg m2).length ≤
       (pad m1).length + (pad m2).length := by
-  rw [extract_chain_evals]
+  rw [chain_block_count]
   exact Nat.add_le_add (Nat.div_le_self _ _) (Nat.div_le_self _ _)
 
 theorem flatten_blocksOf (xs : List Nat) (k : Nat) :
@@ -326,12 +330,10 @@ def CompValid (m1 m2 : List Nat) (c : CompPair Position (List Nat)) : Prop :=
     block lists (`findR`) and return the first step whose compression inputs
     differ. Otherwise return the two final positions (`Break.out`).
 
-    Cost: `extract_chain_evals_le`. At most `(pad m1).length + (pad m2).length`
-    `dmBlock` evaluations to build both chains, exactly
-    `(pad m1).length / 28 + (pad m2).length / 28` (`extract_chain_evals`).
-    `findR` adds no further compression inputs; it walks the chains already
-    built. The recursive equation recomputes tails, so a literal count of
-    `chR` mentions can be larger. Not collision resistance. Not a PRF claim. -/
+    Block count on the two pads: `chain_block_count` / `chain_block_count_le`
+    (`(pad m1).length / 28 + (pad m2).length / 28`, at most the padded byte
+    lengths). That is not how many times this `def` evaluates `dmBlock`:
+    `findR` recomputes each tail. Not collision resistance. Not a PRF claim. -/
 def extract (m1 m2 : List Nat) : Option Break :=
   if chainMsg m1 = chainMsg m2 then
     (findR dmBlock Em.ivCook12 (blocksMsg m1).reverse (blocksMsg m2).reverse).map Break.comp
@@ -457,5 +459,30 @@ theorem v_Hash_second_preimage_comp (m m' : List Nat) (hp : PadWf m) (hp' : PadW
     (hd : Megadreifach.v_Hash (embed m') = Megadreifach.v_Hash (embed m)) :
     ∃ c, extract m m' = some (Break.comp c) ∧ CompValid m m' c :=
   extract_second_preimage_comp m m' hp hp' hne (vhashAlg_eq_of_v_Hash m' m hp' hp hd)
+
+/-- When `c.h1 = c.h2`, A(b) (`dmStep_same_h_iff`) turns the `CompValid` `dmStep`
+    collision into an `emBlock` collision on that same chaining value. The deals
+    differ because `CompValid` already says the inputs differ. Nothing is said
+    when the chaining values differ (free-start). Not collision resistance.
+    Not a PRF claim. A green build is not a security claim. -/
+theorem compValid_emBlock_of_same_h (m1 m2 : List Nat) (c : CompPair Position (List Nat))
+    (hv : CompValid m1 m2 c) (hh : c.h1 = c.h2) :
+    phiUnrank (fromBE c.b1) ≠ phiUnrank (fromBE c.b2) ∧
+      emBlock c.h1 (phiUnrank (fromBE c.b1)) =
+        emBlock c.h2 (phiUnrank (fromBE c.b2)) := by
+  unfold CompValid at hv
+  obtain ⟨hdist, hstep, _, _, _, _, _, _, hinj, _, _, _, _, _⟩ := hv
+  refine ⟨?_, ?_⟩
+  · rcases hdist with h | h
+    · exact absurd hh h
+    · exact h
+  · -- Rewrite only the chaining-value argument. `rw` would open `emBlock`.
+    have hstep' : dmStep c.h1 (phiUnrank (fromBE c.b1)) =
+        dmStep c.h1 (phiUnrank (fromBE c.b2)) :=
+      hstep.trans ((congrArg (fun h => dmStep h (phiUnrank (fromBE c.b2))) hh).symm)
+    have hW : emBlock c.h1 (phiUnrank (fromBE c.b1)) =
+        emBlock c.h1 (phiUnrank (fromBE c.b2)) :=
+      (dmStep_same_h_iff c.h1 hinj _ _).mp hstep'
+    exact hW.trans (congrArg (fun h => emBlock h (phiUnrank (fromBE c.b2))) hh)
 
 end MegaDreifachV3.Security

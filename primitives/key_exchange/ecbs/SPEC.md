@@ -342,7 +342,7 @@ The "Verified" column names the Phase-1 scripts under `proofs/key_exchange/ecbs/
 
 **Remaining flags:**
 - A player must remember the four lane shapes, the Serious "six rows up", the six F-form lines, the certificate's chord and the ladder rule. These are spoken rules, not tables; whether that is memorable enough is Zachary's call.
-- The card is 1,461 words (play card 1,135 + check card 326; `wc -w` of each card from its title to the next `---`) for Toy–Serious, so it is split into a play card and a check card; the single-page target is not met (the v3 notes counted 1,440 before later card edits [log: history/card/V3_NOTES.md]). The Demo section adds 391 (`wc -w`).
+- The card is 1,461 words (play card 1,135 + check card 326; `wc -w` of each card from its title to the next `---`) for Toy–Serious, so it is split into a play card and a check card; the single-page target is not met (the v3 notes counted 1,440 before later card edits [log: history/card/V3_NOTES.md]). The Demo section adds 392 (`wc -w`).
 - Not simulated: hands-off position *inside* a certificate or an inversion step (the script marker covers walks and the root strip only); the coordinate rails.
 
 ---

@@ -46,7 +46,7 @@ Toy, Hobby and Serious as written; Demo changes are listed in the last section, 
 
 ---
 
-# Demo (n = 7, the ½ set)
+# Demo (n = 7, one kit (½ set))
 
 Everything above holds at Demo except these lines.
 

@@ -80,8 +80,9 @@ void mountMicro({
         if (opt.only) await this.reset(ctx);
         if (opt.view === "cycle") {
             const pts = [...obbCorners(obbOf(c.from, DECK_BOX)), ...obbCorners(obbOf(c.to, DECK_BOX)), ...plan.path.pts.filter((_, i) => i % 4 === 0)];
-            if (c.chest) pts.push(...chestPoints());
-            ctx.frame(framePoints(pts));
+            // In and out of the chest the open lid stands between this camera and the
+            // cavity when framed close, so those cycles keep the whole-loop framing.
+            ctx.frame(c.chest ? this.frame() : framePoints(pts));
         }
         applyPose(toy, c.from);
         if (c.chest && !(await swingLid(ctx, 0, 1))) return;

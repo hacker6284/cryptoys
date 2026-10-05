@@ -16,8 +16,9 @@ permissions:
   id-token: write
 
 concurrency:
+  # Shared with republish-pages.yml on purpose (one deploy-pages at a time). cancel-in-progress must stay true so a stuck/queued deploy cannot block newer ones.
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:

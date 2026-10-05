@@ -24,9 +24,10 @@ compares two builds of one source, not two independent implementations.
 [`lean/MegaDreifachV3/Link2/Shared.lean`](lean/MegaDreifachV3/Link2/Shared.lean) states, for
 the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
 `inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
-`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 63 v2 modules,
-exactly their own import closure, that elaborate against the v3 emit; with the 18 v3 modules
-the package builds 81 modules, plus the `Generated/` package). The model side is the v2 position algebra,
+`Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 64. 63 of
+them elaborate against the v3 emit; `MegaDreifach.Security.MDGeneric` does not mention the
+emit and is a root so the MD walker builds. With the 21 v3 modules the package builds 85
+modules, plus the `Generated/` package). The model side is the v2 position algebra,
 which v3 keeps. These four functions are not exports.
 
 [`lean/MegaDreifachV3/Link2/Codec.lean`](lean/MegaDreifachV3/Link2/Codec.lean) states, for the
@@ -152,7 +153,12 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 | `MegaDreifachBodyFrom` | `v_MegaDreifachBodyFrom_refines` (same) |
 | `HashDecksBody` | `v_HashDecksBody_refines` (non-empty list of permutations of `0..51`, length `FitsLen`; on `embedDecks deals`, no `_array` form) |
 
-## Security lemma (not a security claim)
+## Security lemmas (not a security claim)
+
+These files are about the model. They are not collision resistance, not a PRF claim,
+and a green build is not a security claim. SPEC and ANALYSIS tags are unchanged.
+
+### Same-`h` cancellation
 
 [`lean/MegaDreifachV3/Security/DmStepSameH.lean`](lean/MegaDreifachV3/Security/DmStepSameH.lean)
 is one lemma about the model. It is not collision resistance, not a PRF claim, and a
@@ -179,13 +185,72 @@ chaining values differ.
 | That direction on its own | `emBlock_eq_of_dmStep_eq` |
 | The iff at `chainPre xs k` | `dmStep_same_h_iff_chainPre` |
 
+### Constructive MD extractor
+
+[`lean/MegaDreifachV3/Security/MDReduction.lean`](lean/MegaDreifachV3/Security/MDReduction.lean)
+is a reduction, not a claim that collisions are hard. `extract` is a computable
+function of two messages. On a `PadWf` digest collision of distinct messages it
+returns a compression collision (`extract_collision_comp` for the model
+`vhashAlg`, `v_Hash_collision_comp` for emitted `v_Hash`). The certificate is
+`CompValid`: the compression inputs differ (the chaining values, or the φ-images)
+and `dmStep` agrees on those inputs. When the chaining values differ, that is a
+free-start collision; this reduction does not cancel `h`. When `c.h1 = c.h2`,
+`compValid_emBlock_of_same_h` applies A(b) (`dmStep_same_h_iff`) and the
+certificate is an `emBlock` collision. Both blocks are `PhiChunkWf`, both images
+are permutations so `require_permutation` returns them, both chaining values are
+`InjPos` and legal, and each side is `chainPre` of that message's pad, hence a
+chain from `ivCook12` (`chainPre_eq_chR`).
+
+The input condition is `PadWf`, the same hypothesis as `v_Hash_refines`. The
+length bound used inside that refinement is derived from `PadWf`; it is not an
+extra hypothesis here.
+
+`extract_second_preimage_comp` and `v_Hash_second_preimage_comp` are the same
+reduction with the first side on a chosen target message. They are not a
+second-preimage resistance claim.
+
+Block count on the two pads (not a count of `dmBlock` calls inside `extract`,
+whose `findR` recomputes tails): `(pad m).length / 28 + (pad m').length / 28`
+(`chain_block_count`), at most `(pad m).length + (pad m').length`
+(`chain_block_count_le`).
+
+What had to be restated, because the v2 files import the v2 hash and are not
+elaborated in this package: the face-move word and the parity invariant
+(`word_emBlock`, `word_dmStep`, `word_chainPre`, `isLegal_chainPre`), digest
+injectivity on legal positions (`evenRank_inj`, `positionToBytes_inj_legal`,
+and on chains `positionToBytes_inj_chainPre`, `vhashAlg_eq_iff`), and pad
+suffix-freeness (`pad_suffix_free`, `blocks_suffix_free`). The walker `findR`
+is imported from v2 `MDGeneric` unchanged. `pad_injective`, `pad_suffix` and
+`toBE_inj` are imported unchanged.
+
+| What is proved | Theorem |
+| --- | --- |
+| v3 `emBlock` stays a face-move word | `word_emBlock` |
+| v3 `dmStep` stays a face-move word | `word_dmStep` |
+| `chainPre` is a face-move word from `ivCook12` | `word_chainPre` |
+| `chainPre` is a legal position | `isLegal_chainPre` |
+| `evenRank` is injective on even permutations | `evenRank_inj` |
+| The 29-byte digest is injective on legal positions | `positionToBytes_inj_legal` |
+| Hence on MD chaining values | `positionToBytes_inj_chainPre` |
+| Equal model digests iff equal chaining values | `vhashAlg_eq_iff` |
+| `chainPre` is the reversed chain from `ivCook12` | `chainPre_eq_chR` |
+| The pad is suffix-free on messages whose length field fits | `pad_suffix_free` |
+| The block lists are suffix-free on `PadWf` | `blocks_suffix_free` |
+| Block count on the two pads | `chain_block_count` |
+| That count is at most the padded byte lengths | `chain_block_count_le` |
+| Model-hash collision yields `extract = some (comp c)` with `CompValid` | `extract_collision_comp` |
+| The same for emitted `v_Hash` | `v_Hash_collision_comp` |
+| The same with the first side on a target message | `extract_second_preimage_comp` |
+| The same for emitted `v_Hash` | `v_Hash_second_preimage_comp` |
+| Same `h` in `CompValid` is an `emBlock` collision | `compValid_emBlock_of_same_h` |
+
 ## Where this sits
 
-- v3 is the current MegaDreifach (v2 deprecated; see PR #181 for the switch). v3 reuses the v2
-  model and the version-neutral v2 Link 2 modules (InjPos, VHashCommon, Sudo, PhiInv, Compose,
-  among the `MegaDreifachLink` roots); this PR moved shared lemmas into those modules, but v2's
-  statements are otherwise unchanged and its audit (`check_axioms.py megadreifach`) is 2745.
-  Its dependents (the frozen DoubleDeal-CBC-HMAC v1, Scramble and BS reuse its Link 2 runtime lemmas) keep
+- v3 is the current MegaDreifach (v2 deprecated; see PR #181 for the switch). v3 reuses the
+  version-neutral Link 2 modules (InjPos, VHashCommon, Sudo, PhiInv, Compose, among the
+  `MegaDreifachLink` roots); shared de-duplication of the restated Security lemmas is left
+  for later. v2's audit remains 2745 (taken on trust / CI).
+  v2's dependents (the frozen DoubleDeal-CBC-HMAC v1, Scramble, and BS, which reuse its Link 2 runtime lemmas) keep
   their audit counts. Moving v3 into `proofs/megadreifach/` and v2 into `proofs/deprecated/` is
   a separate step.
 - The emitted module is `Megadreifach`, the same name as the v1 and v2 emits; each lives in its

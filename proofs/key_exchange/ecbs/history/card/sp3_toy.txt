@@ -1,0 +1,58 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+Toy {
+ "honest": {
+  "trials": 30,
+  "accept": 30,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 0,
+  "peak": 7,
+  "max_check_moves": 8822
+ },
+ "C outside subgroup, correct certificate": {
+  "trials": 30,
+  "accept": 30,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 0,
+  "peak": 7,
+  "max_check_moves": 9019
+ },
+ "C outside subgroup, A = C": {
+  "trials": 30,
+  "accept": 0,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 30,
+  "peak": 7,
+  "max_check_moves": 9027
+ },
+ "C = nonzero order-5 point": {
+  "trials": 8,
+  "accept": 0,
+  "curve": 0,
+  "empty": 8,
+  "mismatch": 0,
+  "peak": 7,
+  "max_check_moves": 27
+ },
+ "A not matching pi(C) - C": {
+  "trials": 30,
+  "accept": 0,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 30,
+  "peak": 7,
+  "max_check_moves": 8703
+ },
+ "C off the curve": {
+  "trials": 30,
+  "accept": 0,
+  "curve": 30,
+  "empty": 0,
+  "mismatch": 0,
+  "peak": 7,
+  "max_check_moves": 1233
+ },
+ "secs_total": 0.4
+}

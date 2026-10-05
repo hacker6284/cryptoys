@@ -1,0 +1,215 @@
+{
+ "identities_Demo": 50,
+ "identities_Toy": 50,
+ "identities_Hobby": 50,
+ "identities_Serious": 50,
+ "badpoint_Toy": [
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ]
+ ],
+ "badpoint_Hobby": [
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ]
+ ],
+ "badpoint_Serious": [
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ]
+ ],
+ "Demo_pegs2_affine_spec chord + trace chain": {
+  "bands": {
+   "public walk": 6,
+   "validation": 8,
+   "shared walk": 6
+  },
+  "moves": 3716.25,
+  "slides": 616.7,
+  "rerolls": 5,
+  "reps": 20,
+  "tally": 3,
+  "val": 2713.1
+ },
+ "Demo_pegs2_affine_chord + trace WALK": {
+  "bands": {
+   "public walk": 6,
+   "validation": 6,
+   "shared walk": 6
+  },
+  "moves": 4960.1,
+  "slides": 843.4,
+  "rerolls": 5,
+  "reps": 20,
+  "tally": 3,
+  "val": 3888.95
+ },
+ "Demo_pegs2_affine_chord + lazy-y chain": {
+  "bands": {
+   "public walk": 6,
+   "validation": 7,
+   "shared walk": 6
+  },
+  "moves": 3724.45,
+  "slides": 634.7,
+  "rerolls": 5,
+  "reps": 20,
+  "tally": 3,
+  "val": 2721.3
+ },
+ "Demo_pegs2_proj_spec": {
+  "bands": {
+   "public walk": 9,
+   "validation": 8,
+   "shared walk": 9
+  },
+  "moves": 4094.85,
+  "slides": 766.8,
+  "rerolls": 5,
+  "reps": 20,
+  "tally": 3,
+  "val": 2724.8
+ },
+ "Demo_pegs2_proj_F-form+lazy-y": {
+  "bands": {
+   "public walk": 7,
+   "validation": 7,
+   "shared walk": 7
+  },
+  "moves": 4059.9,
+  "slides": 768.9,
+  "rerolls": 5,
+  "reps": 20,
+  "tally": 3,
+  "val": 2736.7
+ },
+ "Toy_pegs16_proj_spec": {
+  "bands": {
+   "public walk": 9,
+   "validation": 8,
+   "shared walk": 9
+  },
+  "moves": 150557.0,
+  "slides": 20401.8,
+  "rerolls": 0,
+  "reps": 10,
+  "tally": 11,
+  "val": 46870.6
+ },
+ "Toy_pegs16_proj_F-form+lazy-y": {
+  "bands": {
+   "public walk": 7,
+   "validation": 7,
+   "shared walk": 7
+  },
+  "moves": 149288.9,
+  "slides": 19327.0,
+  "rerolls": 0,
+  "reps": 10,
+  "tally": 11,
+  "val": 46925.2
+ },
+ "Toy_pegs16_proj_F-form+lazy-y, NO swap": {
+  "bands": {
+   "public walk": 7,
+   "validation": 7,
+   "shared walk": 7
+  },
+  "moves": 149288.9,
+  "slides": 19327.0,
+  "rerolls": 0,
+  "reps": 10,
+  "tally": 11,
+  "val": 46925.2
+ },
+ "Hobby_pegs51_proj_spec": {
+  "bands": {
+   "public walk": 9,
+   "validation": 8,
+   "shared walk": 9
+  },
+  "moves": 2027447.2,
+  "slides": 163809.6,
+  "rerolls": 0,
+  "reps": 5,
+  "tally": 29,
+  "val": 389604.8
+ },
+ "Hobby_pegs51_proj_F-form+lazy-y": {
+  "bands": {
+   "public walk": 7,
+   "validation": 7,
+   "shared walk": 7
+  },
+  "moves": 2019347.6,
+  "slides": 153825.2,
+  "rerolls": 0,
+  "reps": 5,
+  "tally": 29,
+  "val": 389778.0
+ },
+ "Hobby_pegs51_proj_F-form+lazy-y, NO swap": {
+  "bands": {
+   "public walk": 7,
+   "validation": 7,
+   "shared walk": 7
+  },
+  "moves": 2019347.6,
+  "slides": 153825.2,
+  "rerolls": 0,
+  "reps": 5,
+  "tally": 29,
+  "val": 389778.0
+ }
+}

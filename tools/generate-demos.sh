@@ -27,6 +27,8 @@ MD3_OUT=/tmp/megadreifach-v3 node proofs/megadreifach/security/v3/harness/zp26_s
 node /tmp/doubledeal-test/_doubledeal_impl.mjs
 "$sudoc" build --target js --tests -o /tmp/bs-test primitives/key_exchange/bs/bs.sudo
 node /tmp/bs-test/_bs_impl.mjs
+"$sudoc" build --target js --tests -o /tmp/ecbs-test primitives/key_exchange/ecbs/ecbs.sudo
+node /tmp/ecbs-test/_ecbs_impl.mjs
 "$sudoc" emit-ir --require terminates -I primitives/hash/megadreifach \
     primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo > /dev/null
 "$sudoc" build --target js --tests -o /tmp/ddch-test \

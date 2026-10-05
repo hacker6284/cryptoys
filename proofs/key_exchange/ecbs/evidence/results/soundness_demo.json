@@ -1,0 +1,128 @@
+{
+ "provenance": {
+  "source": "primitives/key_exchange/ecbs/ecbs.sudo",
+  "sudo_sha256": "bd5c62aeceefa63ef9a0b088cd73788745498f440b473acbbec1247c40355e94",
+  "sudocode_commit": "a57e336256a6c8b3ce1e9896c18a2b8b314a1ee0",
+  "target": "sudoc js",
+  "sudo_tests": "# 16/16 passed"
+ },
+ "exhaustive": {
+  "selftest_oracle_tables_vs_PARI": {
+   "add_mul_cube_ok": "3000/3000",
+   "inv_ok": "3000/3000"
+  },
+  "pairs": 4782969,
+  "curve_test_agrees_with_curve_equation": 4782969,
+  "on_curve_affine": 2104,
+  "certificate_none_exactly_when_x_in_GF3": 4782969,
+  "empty_run_on_curve": 4,
+  "honest": {
+   "accept": 2100,
+   "empty": 4,
+   "A_equals_PARI_piC_minus_C": 2100,
+   "accepted_A_in_subgroup_minus_O": 2100,
+   "distinct_accepted_A": 420,
+   "multiplicity_of_each": [
+    5
+   ]
+  },
+  "order5_points": [
+   [
+    ".......",
+    "W......"
+   ],
+   [
+    ".......",
+    "R......"
+   ],
+   [
+    "W......",
+    "W......"
+   ],
+   [
+    "W......",
+    "R......"
+   ]
+  ],
+  "A_not_matching": {
+   "trials": 8400,
+   "mismatch": 8400
+  },
+  "off_curve": {
+   "pairs": 4780865,
+   "rejected_by_curve_test": 4780865,
+   "non_empty_run": 4774308,
+   "run_empty": 6557
+  },
+  "ladder": "WR",
+  "inversion_wrong_of_2186": 0
+ },
+ "board": {
+  "every on-curve C, honest A": {
+   "trials": 2104,
+   "accept": 2100,
+   "curve": 0,
+   "empty": 4,
+   "mismatch": 0,
+   "peak": 7,
+   "max_check_moves": 1351,
+   "highest_control_hole": 12,
+   "accepted_A_is_PARI_piC_minus_C": 2100
+  },
+  "C outside <P>, A = C": {
+   "trials": 200,
+   "accept": 0,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 200,
+   "peak": 7,
+   "max_check_moves": 1243,
+   "highest_control_hole": 12,
+   "accepted_A_is_PARI_piC_minus_C": 0
+  },
+  "C outside <P>, correct certificate": {
+   "trials": 200,
+   "accept": 200,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 0,
+   "peak": 7,
+   "max_check_moves": 1243,
+   "highest_control_hole": 12,
+   "accepted_A_is_PARI_piC_minus_C": 200
+  },
+  "C = nonzero order-5 point": {
+   "trials": 8,
+   "accept": 0,
+   "curve": 0,
+   "empty": 8,
+   "mismatch": 0,
+   "peak": 7,
+   "max_check_moves": 27,
+   "highest_control_hole": 8,
+   "accepted_A_is_PARI_piC_minus_C": 0
+  },
+  "A not matching pi(C) - C": {
+   "trials": 300,
+   "accept": 0,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 300,
+   "peak": 7,
+   "max_check_moves": 1268,
+   "highest_control_hole": 12,
+   "accepted_A_is_PARI_piC_minus_C": 0
+  },
+  "C off the curve, A = the card formulas on C": {
+   "trials": 300,
+   "accept": 0,
+   "curve": 300,
+   "empty": 0,
+   "mismatch": 0,
+   "peak": 7,
+   "max_check_moves": 250,
+   "highest_control_hole": 8,
+   "accepted_A_is_PARI_piC_minus_C": 0
+  }
+ }
+}

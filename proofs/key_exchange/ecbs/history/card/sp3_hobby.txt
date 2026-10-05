@@ -1,0 +1,58 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+Hobby {
+ "honest": {
+  "trials": 15,
+  "accept": 15,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 0,
+  "peak": 7,
+  "max_check_moves": 51612
+ },
+ "C outside subgroup, correct certificate": {
+  "trials": 15,
+  "accept": 15,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 0,
+  "peak": 7,
+  "max_check_moves": 50782
+ },
+ "C outside subgroup, A = C": {
+  "trials": 15,
+  "accept": 0,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 15,
+  "peak": 7,
+  "max_check_moves": 50788
+ },
+ "C = nonzero order-5 point": {
+  "trials": 8,
+  "accept": 0,
+  "curve": 0,
+  "empty": 8,
+  "mismatch": 0,
+  "peak": 7,
+  "max_check_moves": 27
+ },
+ "A not matching pi(C) - C": {
+  "trials": 15,
+  "accept": 0,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 15,
+  "peak": 7,
+  "max_check_moves": 50851
+ },
+ "C off the curve": {
+  "trials": 15,
+  "accept": 0,
+  "curve": 15,
+  "empty": 0,
+  "mismatch": 0,
+  "peak": 7,
+  "max_check_moves": 5045
+ },
+ "secs_total": 2.9
+}

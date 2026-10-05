@@ -1,0 +1,40 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+== 1. Fold trinomials x^n = s1*x^k + s0 irreducible over GF(3)  (listed as k, n-k, s1, s0)
+  n=7: 4 irreducible; with s1=s0=+1 and n-k a whole number of 10-hole rows: []
+         all: [(2, 5, 1, 2), (2, 5, 2, 1), (5, 2, 1, 1), (5, 2, 1, 2)]
+  n=23: 12 irreducible; with s1=s0=+1 and n-k a whole number of 10-hole rows: [(3, 20, 1, 1)]
+         all: [(3, 20, 1, 1), (3, 20, 1, 2), (5, 18, 1, 1), (5, 18, 1, 2), (8, 15, 1, 2), (8, 15, 2, 1), (15, 8, 1, 1), (15, 8, 1, 2), (18, 5, 1, 2), (18, 5, 2, 1), (20, 3, 1, 2), (20, 3, 2, 1)]
+  n=59: 8 irreducible; with s1=s0=+1 and n-k a whole number of 10-hole rows: [(39, 20, 1, 1)]
+         all: [(17, 42, 1, 1), (17, 42, 1, 2), (20, 39, 1, 2), (20, 39, 2, 1), (39, 20, 1, 1), (39, 20, 1, 2), (42, 17, 1, 2), (42, 17, 2, 1)]
+  n=179: 8 irreducible; with s1=s0=+1 and n-k a whole number of 10-hole rows: [(59, 120, 1, 1)]
+         all: [(59, 120, 1, 1), (59, 120, 1, 2), (75, 104, 1, 1), (75, 104, 1, 2), (104, 75, 1, 2), (104, 75, 2, 1), (120, 59, 1, 2), (120, 59, 2, 1)]
+
+== 2. Gaussian normal bases of GF(3^n), types t <= 20 (t = 1 or 2 is 'optimal')
+  n=7: types [4, 6, 10, 16, 18]
+  n=23: types [2, 6, 12, 20]
+  n=59: types [12, 14, 18]
+  n=179: types [2, 8, 20]
+
+== 3. Can a rigid motion (any permutation of holes) be the polynomial-basis cube?
+  Demo: x^(3i) reduces to a single peg for 3 of 7 holes; 4 single pegs become 2+ pegs (max 6), so no permutation of holes can be the cube
+  Toy: x^(3i) reduces to a single peg for 8 of 23 holes; 15 single pegs become 2+ pegs (max 6), so no permutation of holes can be the cube
+  Hobby: x^(3i) reduces to a single peg for 20 of 59 holes; 39 single pegs become 2+ pegs (max 6), so no permutation of holes can be the cube
+  Serious: x^(3i) reduces to a single peg for 60 of 179 holes; 119 single pegs become 2+ pegs (max 4), so no permutation of holes can be the cube
+
+== 4. Cursor-ship recipes on the band layout, checked against Board (itself checked against PARI)
+  Demo: n=7 = 0 rows + 7 holes; band 1 rows, gap 3; fold x^7 = x^5 + 1 -> cruiser starts 2 holes back
+      30 random: multiply-accumulate 30/30, cube 30/30, subtract 30/30 correct; one multiply = 43 peg moves + 91 ship steps; one cube = 35 peg moves + 70 ship steps
+  Toy: n=23 = 2 rows + 3 holes; band 3 rows, gap 7; fold x^23 = x^15 + 1 -> cruiser starts 8 holes back
+      30 random: multiply-accumulate 30/30, cube 30/30, subtract 30/30 correct; one multiply = 359 peg moves + 851 ship steps; one cube = 117 peg moves + 230 ship steps
+  Hobby: n=59 = 5 rows + 9 holes; band 6 rows, gap 1; fold x^59 = x^39 + 1 -> cruiser starts 2 rows up
+      30 random: multiply-accumulate 30/30, cube 30/30, subtract 30/30 correct; one multiply = 1686 peg moves + 4779 ship steps; one cube = 282 peg moves + 590 ship steps
+  Serious: n=179 = 17 rows + 9 holes; band 18 rows, gap 1; fold x^179 = x^59 + 1 -> cruiser starts 12 rows up
+      30 random: multiply-accumulate 30/30, cube 30/30, subtract 30/30 correct; one multiply = 13786 peg moves + 39917 ship steps; one cube = 599 peg moves + 1790 ship steps
+
+== 5. Price of the visual fold: mean moves of one multiply / one cube (300 random inputs, same inputs per n)
+  n=23, x^23 = x^3 + 1 (n-k = 20): multiply 272, cube 80 moves
+  n=23, x^23 = x^15 + 1 (n-k = 8): multiply 272, cube 105 moves
+  n=59, x^59 = x^17 + 1 (n-k = 42): multiply 1,669, cube 195 moves
+  n=59, x^59 = x^39 + 1 (n-k = 20): multiply 1,670, cube 273 moves
+  n=179, x^179 = x^59 + 1 (n-k = 120): multiply 14,533, cube 595 moves
+  n=179, x^179 = x^75 + 1 (n-k = 104): multiply 14,532, cube 745 moves

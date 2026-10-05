@@ -1,0 +1,25 @@
+NLAB = 30093975536 (= 2^34.8088);  global max multiplicity over all 17-cell unions = 72 (exhaustive)
+
+== Toy, 1 fleet (exact enumeration): max_r0 Pr[c = e_r0] = 2.84986e-08 = 2^-25.06 (r0 = 3)  => H_inf(k) <= 25.06 bits  (spec: <= 34.13 cap; target 2*14.63 = 29.26)
+
+== Hobby, 2 fleets: H_inf(k) <= 57.96 bits
+   pair (grid 0, grid 1): delta = -18; cancel term 2^-55.05, special term 2^-57.96; boxes (dr,dc)=(-2,2) 8x8: fleets fitting 1.142e+09, sum M 3.182e+09, (dr,dc)=(-1,-8) 9x2: fleets fitting 352, sum M 1.138e+04
+   MC check of the construction (200 samples): distinct final scalars 1 (1 = the construction yields a single fixed kappa); walks hitting an exceptional addition: 3/200
+
+== Hobby, 3 fleets: H_inf(k) <= 100.69 bits
+   pair (grid 1, grid 2): delta = -18; cancel term 2^-55.05, special term 2^-57.96; boxes (dr,dc)=(-2,2) 8x8: fleets fitting 1.142e+09, sum M 3.182e+09, (dr,dc)=(-1,-8) 9x2: fleets fitting 352, sum M 1.138e+04
+   grid 0: fixed L-pattern (M = 72) with fixed signs: 2^-45.64
+   MC check of the construction (200 samples): distinct final scalars 1 (1 = the construction yields a single fixed kappa); walks hitting an exceptional addition: 0/200
+
+== Serious, 6 fleets: H_inf(k) <= 169.93 bits
+   pair (grid 0, grid 5): delta = -37; cancel term 2^-60.05, special term 2^-62.36; boxes (dr,dc)=(-4,3) 6x7: fleets fitting 3.039e+07, sum M 9.943e+07, (dr,dc)=(-3,-7) 7x3: fleets fitting 6136, sum M 5.293e+04
+   pair (grid 1, grid 3): delta = +21; cancel term 2^-53.79, special term 2^-56.87; boxes (dr,dc)=(2,1) 8x9: fleets fitting 2.825e+09, sum M 7.624e+09
+   pair (grid 2, grid 4): delta = +21; cancel term 2^-53.79, special term 2^-56.87; boxes (dr,dc)=(2,1) 8x9: fleets fitting 2.825e+09, sum M 7.624e+09
+   MC check of the construction (200 samples): distinct final scalars 1 (1 = the construction yields a single fixed kappa); walks hitting an exceptional addition: 0/200
+
+== Serious, 7 fleets: H_inf(k) <= 207.01 bits
+   pair (grid 0, grid 2): delta = +21; cancel term 2^-53.79, special term 2^-56.87; boxes (dr,dc)=(2,1) 8x9: fleets fitting 2.825e+09, sum M 7.624e+09
+   pair (grid 3, grid 5): delta = +21; cancel term 2^-53.79, special term 2^-56.87; boxes (dr,dc)=(2,1) 8x9: fleets fitting 2.825e+09, sum M 7.624e+09
+   pair (grid 4, grid 6): delta = +21; cancel term 2^-53.79, special term 2^-56.87; boxes (dr,dc)=(2,1) 8x9: fleets fitting 2.825e+09, sum M 7.624e+09
+   grid 1: fixed L-pattern (M = 72) with fixed signs: 2^-45.64
+   MC check of the construction (200 samples): distinct final scalars 1 (1 = the construction yields a single fixed kappa); walks hitting an exceptional addition: 0/200

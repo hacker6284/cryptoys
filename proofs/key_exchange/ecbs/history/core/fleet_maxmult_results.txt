@@ -1,0 +1,13 @@
+separated straight segments, top: [(36, (10, 7)), (36, (9, 8)), (20, (9, 5, 3)), (16, (7, 7, 3)), (16, (7, 5, 5)), (14, (8, 5, 4))]
+annealing max multiplicity found: 72
+   #########.
+   ........#.
+   ........#.
+   ........#.
+   ........#.
+   ........#.
+   ........#.
+   ........#.
+   ........#.
+   ..........
+=> single-fleet min-entropy (touching allowed, no aliasing) <= log2(NLAB/72) + 17 = 45.639 bits

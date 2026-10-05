@@ -1,0 +1,12 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+(a) Demo: 2 lam^(n-3) == sum_(e<n-3) lam^e mod l: True
+(a) Toy: 2 lam^(n-3) == sum_(e<n-3) lam^e mod l: True
+(a) Hobby: 2 lam^(n-3) == sum_(e<n-3) lam^e mod l: True
+(a) Serious: 2 lam^(n-3) == sum_(e<n-3) lam^e mod l: True
+(b) Demo pegs-only m = 1: injective True
+(b) Demo pegs-only m = 2: injective True
+(b) Demo pegs-only m = 3: injective True
+(b) Demo pegs-only m = 4: injective True
+(b) Demo pegs-only m = 5: injective False
+(b) Demo pegs-only m = 6: injective False
+(c) Demo exhaustive, lazy-y trace chain: 2104 affine points, accepted 420, of which in <P> 420; misclassified 0

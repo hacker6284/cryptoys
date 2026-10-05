@@ -7,8 +7,8 @@ Known-answer vectors for [`primitives/key_exchange/bs/bs.sudo`](../../../../prim
 | --- | --- |
 | `make_inputs.py` | Writes `inputs.json`: the dice faces (by kind of die) that built the keys of four recorded exchanges in [`../exchange/`](../exchange/README.md), plus arithmetic, check and call-the-shots inputs |
 | `inputs.json` | The inputs |
-| `collect_vectors.mjs` | Runs the generated `bs.mjs` over `inputs.json` (JSON conversion only) |
-| `regen.sh` | Builds `bs.sudo` at the pin, runs its tests and the collector, writes `bs_vectors.json`; `--check` fails unless the committed file is byte-identical (run in CI by `.github/workflows/proofs.yml`) |
+| `collect_vectors.mjs` | Runs the generated `bs.mjs` over `inputs.json` (JSON conversion only; the shared helpers are in [`../../vectors_common.mjs`](../../vectors_common.mjs)) |
+| `regen.sh` | Wrapper for [`../../vectors_regen.sh`](../../vectors_regen.sh) `bs` (one script for BS and ECBS): builds `bs.sudo` at the pin, runs its tests and the collector, writes `bs_vectors.json`; `--check` fails unless the committed file is byte-identical (run in CI by `.github/workflows/proofs.yml`) |
 | `bs_vectors.json` | The vectors. Do not hand-edit |
 | `check_oracle.py` | Cross-checks every vector against `pow()` and the Python evidence harness, which is not a reference: `keygrid.build` / `key_cells` (BUILD, READ) and `bspegs.py` (multiply, tidy, walk, check). It also checks the header against the pin and the `.sudo` hash (run in CI) |
 | `check_oracle_output.txt` | Its recorded output |

@@ -1,0 +1,43 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+==============================================================================
+Demo: n = 7
+==============================================================================
+trace-check chain: d1 p2 d3 final6
+honest points: exceptional steps in trace chain: none; in cofactor strip: none; sum lambda^i (i<n) mod l = 0  (0 => every B in <P> passes)
+order-5 points: Frobenius fixes them, trace = n * T5 = 2 * T5 != O  (n mod 5 = 2)
+Demo exhaustive: 2104 affine points on E; trace check accepts 420 (subgroup has 420 non-zero points); disagreements with 'l*B = O': 0; cofactor strip consistent with 5B (or rejected) on 2104/2104
+   cofactor strip hit an exceptional case (=> reject) on 4 points
+   Demo public walks hitting an exceptional case: 30/400 (re-roll rule needed)
+b' = 2 (y^2 = x^3 + 2x^2 + 2, trace 2 over GF(3)): order 2102 = 2 * 1051
+b' = 0 (y^2 = x^2 (x + 2), non-split node): smooth points form a cyclic group of order 3^n + 1 = 2^2 * 547
+b' outside GF(3): Frobenius moves the point to the curve with b'^3, so the walk is not a group operation; every such input fails the on-curve check.
+==============================================================================
+Toy: n = 23
+==============================================================================
+trace-check chain: d1 d2 p4 d5 p10 d11 final22
+honest points: exceptional steps in trace chain: none; in cofactor strip: none; sum lambda^i (i<n) mod l = 0  (0 => every B in <P> passes)
+order-5 points: Frobenius fixes them, trace = n * T5 = 3 * T5 != O  (n mod 5 = 3)
+random honest points accepted: 30/30; random B + (order-5 point) accepted: 0/30
+b' = 2 (y^2 = x^3 + 2x^2 + 2, trace 2 over GF(3)): order 94143792374 = 2 * 47071896187
+b' = 0 (y^2 = x^2 (x + 2), non-split node): smooth points form a cyclic group of order 3^n + 1 = 2^2 * 23535794707
+b' outside GF(3): Frobenius moves the point to the curve with b'^3, so the walk is not a group operation; every such input fails the on-curve check.
+==============================================================================
+Hobby: n = 59
+==============================================================================
+trace-check chain: d1 p2 d3 p6 d7 d14 p28 d29 final58
+honest points: exceptional steps in trace chain: none; in cofactor strip: none; sum lambda^i (i<n) mod l = 0  (0 => every B in <P> passes)
+order-5 points: Frobenius fixes them, trace = n * T5 = 4 * T5 != O  (n mod 5 = 4)
+random honest points accepted: 30/30; random B + (order-5 point) accepted: 0/30
+b' = 2 (y^2 = x^3 + 2x^2 + 2, trace 2 over GF(3)): order 14130386091738500818388309702 = 2 * 16993 * 3770219 * 110277623308041353(composite)
+b' = 0 (y^2 = x^2 (x + 2), non-split node): smooth points form a cyclic group of order 3^n + 1 = 2^2 * 3187 * 1108439448677340328268341
+b' outside GF(3): Frobenius moves the point to the curve with b'^3, so the walk is not a group operation; every such input fails the on-curve check.
+==============================================================================
+Serious: n = 179
+==============================================================================
+trace-check chain: d1 d2 p4 d5 p10 d11 d22 d44 p88 d89 final178
+honest points: exceptional steps in trace chain: none; in cofactor strip: none; sum lambda^i (i<n) mod l = 0  (0 => every B in <P> passes)
+order-5 points: Frobenius fixes them, trace = n * T5 = 4 * T5 != O  (n mod 5 = 4)
+random honest points accepted: 8/8; random B + (order-5 point) accepted: 0/8
+b' = 2 (y^2 = x^3 + 2x^2 + 2, trace 2 over GF(3)): order 25392449348622130779763242573538520583474931649413192357606225788662483413542352544102 = 2 * 12696224674311065389881621286769260291737465824706596178803112894331241706771176272051(composite)
+b' = 0 (y^2 = x^2 (x + 2), non-split node): smooth points form a cyclic group of order 3^n + 1 = 2^2 * 3755779 * 1690225206849373377651030756438179708089515770283501698848662415639053339378973(composite)
+b' outside GF(3): Frobenius moves the point to the curve with b'^3, so the walk is not a group operation; every such input fails the on-curve check.

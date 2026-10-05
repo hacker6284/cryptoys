@@ -1,0 +1,1366 @@
+{
+ "schema": 1,
+ "tiers": {
+  "Demo": {
+   "arith": [
+    {
+     "x": ".WRRWWW",
+     "y": "RRR..WW"
+    },
+    {
+     "x": "RRRRWWW",
+     "y": "W.RRWWW"
+    },
+    {
+     "x": "WW.WW.W",
+     "y": "RWRR.RW"
+    },
+    {
+     "x": "RRRRWRR",
+     "y": ".RR...W"
+    }
+   ],
+   "fold": [
+    "...RWWW",
+    "RR..WW.",
+    "..WRRW."
+   ],
+   "points": [
+    {
+     "why": "P",
+     "x": ".RWR.WW",
+     "y": "R..RRWR"
+    },
+    {
+     "why": "a subgroup point",
+     "x": "WR.W.RW",
+     "y": "R.RRWRR"
+    },
+    {
+     "why": "a point outside the subgroup",
+     "x": "RWWRRRR",
+     "y": "WWW..R."
+    },
+    {
+     "why": "an order-5 point (x in GF(3))",
+     "x": ".......",
+     "y": "W......"
+    },
+    {
+     "why": "off the curve",
+     "x": "RWWWWR.",
+     "y": ".R..W.W"
+    }
+   ],
+   "walks": [
+    {
+     "faces": [
+      8,
+      8,
+      9,
+      4,
+      4
+     ],
+     "base": {
+      "x": ".RWR.WW",
+      "y": "R..RRWR"
+     }
+    },
+    {
+     "faces": [
+      9,
+      1,
+      4,
+      6,
+      1
+     ],
+     "base": {
+      "x": "WWWRR..",
+      "y": "WRRW.RW"
+     }
+    }
+   ],
+   "receive": [
+    {
+     "why": "honest",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "c": {
+      "x": ".R.RWW.",
+      "y": "WWRRRWW"
+     },
+     "a": {
+      "x": "WR...WR",
+      "y": "WW.RRR."
+     }
+    },
+    {
+     "why": "A = C",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "c": {
+      "x": ".R.RWW.",
+      "y": "WWRRRWW"
+     },
+     "a": {
+      "x": ".R.RWW.",
+      "y": "WWRRRWW"
+     }
+    },
+    {
+     "why": "C outside the subgroup, correct certificate",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "c": {
+      "x": "RR..W.R",
+      "y": "W..WWWW"
+     },
+     "a": {
+      "x": "..WRW.W",
+      "y": ".RWR..R"
+     }
+    },
+    {
+     "why": "C an order-5 point",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "c": {
+      "x": ".......",
+      "y": "W......"
+     },
+     "a": {
+      "x": ".......",
+      "y": "W......"
+     }
+    },
+    {
+     "why": "C off the curve",
+     "own": {
+      "x": ".RRRW.R",
+      "y": ".RRWR.W"
+     },
+     "c": {
+      "x": "RWRRRWR",
+      "y": "WWRWR.R"
+     },
+     "a": {
+      "x": "WR...WR",
+      "y": "WW.RRR."
+     }
+    }
+   ],
+   "exchanges": [
+    {
+     "faces_a": [
+      6,
+      3,
+      4,
+      2,
+      3
+     ],
+     "faces_b": [
+      2,
+      0,
+      7,
+      6,
+      1
+     ]
+    },
+    {
+     "faces_a": [
+      7,
+      1,
+      4,
+      3,
+      6
+     ],
+     "faces_b": [
+      0,
+      1,
+      1,
+      7,
+      8
+     ]
+    }
+   ],
+   "roll": [
+    [
+     0
+    ],
+    [
+     1,
+     5,
+     4,
+     2,
+     6,
+     1,
+     7
+    ]
+   ]
+  },
+  "Toy": {
+   "arith": [
+    {
+     "x": "RWRWR..W.R.R..W.WRW.RRR",
+     "y": "R..WW.RRRR.RR..WWR.R.WW"
+    },
+    {
+     "x": "RRR..RW.RW..RRWWWWWWRR.",
+     "y": "..RRWW..RRR..WWRWRRRRWW"
+    },
+    {
+     "x": ".WWWRW..WR.WWWWRW.W.WWW",
+     "y": "RWRW...RR.WWR...WRWWRRR"
+    },
+    {
+     "x": ".RW.RR..RWRRRR.WRWWR.WR",
+     "y": ".RWW.R.W....W.R..RWRRRR"
+    }
+   ],
+   "fold": [
+    "W..W.R.RRR..WRRR..WR..W",
+    "R.R...R....W.R..W..W..R",
+    "..W.WWWWWRRW..RWWRW...R"
+   ],
+   "points": [
+    {
+     "why": "P",
+     "x": "RW..W.WWWR..W...WWWRWRR",
+     "y": "RRWWRRR..R.WRRW..RWWRRW"
+    },
+    {
+     "why": "a subgroup point",
+     "x": "WR.W.RWW.R.W.WW.WRRRR.R",
+     "y": "RWRWWW.RWW.RRWWWW..RW.W"
+    },
+    {
+     "why": "a point outside the subgroup",
+     "x": "WRWRW..R.WWWWWRWW.RW.R.",
+     "y": "WR..RW..RWR...WWWWR...."
+    },
+    {
+     "why": "an order-5 point (x in GF(3))",
+     "x": ".......................",
+     "y": "W......................"
+    },
+    {
+     "why": "off the curve",
+     "x": "RRRR.RRR.WR.WRRWWWW.W..",
+     "y": ".WRRWWRWR.RWRR.RW.R.WR."
+    }
+   ],
+   "walks": [
+    {
+     "faces": [
+      2,
+      1,
+      4,
+      1,
+      9,
+      8,
+      5,
+      5,
+      5,
+      8,
+      7,
+      6
+     ],
+     "base": {
+      "x": "RW..W.WWWR..W...WWWRWRR",
+      "y": "RRWWRRR..R.WRRW..RWWRRW"
+     }
+    },
+    {
+     "faces": [
+      8,
+      6,
+      6,
+      4,
+      2,
+      7,
+      9,
+      3,
+      6,
+      8,
+      5,
+      1
+     ],
+     "base": {
+      "x": ".WW.R...WRWR.WRW.RRW..W",
+      "y": "RRRWW..R.W..RRRRWR..W.R"
+     }
+    }
+   ],
+   "receive": [
+    {
+     "why": "honest",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "c": {
+      "x": "WR.R..WRRW..WWR.RWR...W",
+      "y": "WR.W.RW...WWWRRW..W.WR."
+     },
+     "a": {
+      "x": "W.RWW.R.WWRW..RR.W..WR.",
+      "y": "RRWWRRWWWWWRR.WWRWWW.RW"
+     }
+    },
+    {
+     "why": "A = C",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "c": {
+      "x": "WR.R..WRRW..WWR.RWR...W",
+      "y": "WR.W.RW...WWWRRW..W.WR."
+     },
+     "a": {
+      "x": "WR.R..WRRW..WWR.RWR...W",
+      "y": "WR.W.RW...WWWRRW..W.WR."
+     }
+    },
+    {
+     "why": "C outside the subgroup, correct certificate",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "c": {
+      "x": "R.RRW.R.WWRW..RWR.RWWWR",
+      "y": "R.WRW.RRW.WRR.WWWR.R.R."
+     },
+     "a": {
+      "x": ".R...R.RRWRRR..W...WRWW",
+      "y": ".W.W.WR.WWWRR.R.WRR..RR"
+     }
+    },
+    {
+     "why": "C an order-5 point",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "c": {
+      "x": ".......................",
+      "y": "W......................"
+     },
+     "a": {
+      "x": ".......................",
+      "y": "W......................"
+     }
+    },
+    {
+     "why": "C off the curve",
+     "own": {
+      "x": "R.WWW.WWR...RR.R..RRWW.",
+      "y": "R.W..WWW.WR..WWRR....WR"
+     },
+     "c": {
+      "x": "R..RRRR.RW.RR..R.RWWRR.",
+      "y": "R.R..WR..RRRW..W.WRWW.."
+     },
+     "a": {
+      "x": "W.RWW.R.WWRW..RR.W..WR.",
+      "y": "RRWWRRWWWWWRR.WWRWWW.RW"
+     }
+    }
+   ],
+   "exchanges": [
+    {
+     "faces_a": [
+      9,
+      5,
+      4,
+      6,
+      6,
+      2,
+      1,
+      2,
+      7,
+      7,
+      1,
+      3
+     ],
+     "faces_b": [
+      1,
+      6,
+      6,
+      8,
+      8,
+      2,
+      2,
+      0,
+      2,
+      9,
+      5,
+      8
+     ]
+    },
+    {
+     "faces_a": [
+      9,
+      6,
+      9,
+      5,
+      2,
+      8,
+      1,
+      5,
+      4,
+      9,
+      5,
+      6
+     ],
+     "faces_b": [
+      6,
+      3,
+      4,
+      9,
+      5,
+      5,
+      7,
+      9,
+      8,
+      4,
+      9,
+      7
+     ]
+    }
+   ],
+   "roll": [
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     5,
+     5,
+     5,
+     2,
+     3,
+     3,
+     3,
+     6,
+     5,
+     8,
+     8,
+     9,
+     4
+    ]
+   ]
+  },
+  "Hobby": {
+   "arith": [
+    {
+     "x": "RW..R.W.RRW..RWWWRRWR.W.WWW.WWW..W....R..RRRWWRRWWRWR.WWRWR",
+     "y": "R....WR.W..WWRR.WRR.WW..WWRRRWR.W.WR.W...WWWRR...RWWWRWWR.W"
+    },
+    {
+     "x": ".RRRRW....R.RRWWWW.RRWW.RWWWW..RWW.W.WRWR..W.W....RW.R.WW.W",
+     "y": "WRWW.RR.RRW..WWWRRWWR...RW..RWWW...RR....RWR.WWR......R...."
+    },
+    {
+     "x": "RRRR.WRWWWR..RRR.WW.WR.R..WRR.WWW...WRWRWWWWW....RRRRW.WWRW",
+     "y": "RR.RWR.WR..WW.WR.RR..RWR....W.RRWR.RRWWRRWWWWR..RW.RW.RW..R"
+    },
+    {
+     "x": "R...R.W..W.R.W..W.WWRW..WWR....RWRR..WRW.RW.W.W..W.WRWW.RWW",
+     "y": "RR..WW.....WWWRR.RWWWW..WWRWRRR.RWWWR.RWRWRRRRR.W.WWRRRWWR."
+    }
+   ],
+   "fold": [
+    "..W.RRRWWW.W..WRRW...RWRWRRWWRRRWWWWR.R...RWWR.RRWWW.R.RW.R",
+    "RRR.WW.WWR.RRR.WRRW.W...WWWWWWWRRR.WRRRR..WRWWRW.WRR.RRRRRW",
+    "W.RW.RW.RRW.RWRR.RWWWR.RW.WRRR.WRRWWR...W..W.R.R.R..WR....R"
+   ],
+   "points": [
+    {
+     "why": "P",
+     "x": "RRR.WWWW.RWW..WWW.WR.R.WWRW.RW...R.W.RRW.R.WR.W..R.WW..WR..",
+     "y": "WRRRRWWRRWWRWRRW.RWW.WRRRWRRRRWRR.RWR.W.W.RW.R.W.RRW.W.WWRW"
+    },
+    {
+     "why": "a subgroup point",
+     "x": "W.RRR.WWRR.WRRWR.WWR...WRW.W.WW.WWR..RW.W..WWRWW..R...R..RR",
+     "y": "W.WWRRWRRR.W.WWWW..RWWRWRW..WRR..R.W...WW..WWW.RWRWRW.RRRRR"
+    },
+    {
+     "why": "a point outside the subgroup",
+     "x": "WWW..R........RRWWR.WRRWRRWRWRR.RW..WW.R.WWWW.WRR.W.RRR.W.R",
+     "y": "RR.WWR.R..RW.WR.WR.RR.RW.RRRWWWW.WR..WW.RR.R.WRWWWRW..W..W."
+    },
+    {
+     "why": "an order-5 point (x in GF(3))",
+     "x": "...........................................................",
+     "y": "W.........................................................."
+    },
+    {
+     "why": "off the curve",
+     "x": ".R.RW....R..R.WW.RRRR.WRRWW..RWRW.R.R...WW..RRRWW.RR.RWW.W.",
+     "y": "WWRWW.RRR...R.RR...WWW..RW..RR.WWW..WRW..R.RRWRW...WRW.WRR."
+    }
+   ],
+   "walks": [
+    {
+     "faces": [
+      8,
+      9,
+      3,
+      4,
+      9,
+      3,
+      5,
+      8,
+      8,
+      3,
+      7,
+      5,
+      6,
+      8,
+      7,
+      2,
+      2,
+      4,
+      2,
+      5,
+      3,
+      5,
+      2,
+      9,
+      4,
+      1,
+      8,
+      2,
+      2,
+      4
+     ],
+     "base": {
+      "x": "RRR.WWWW.RWW..WWW.WR.R.WWRW.RW...R.W.RRW.R.WR.W..R.WW..WR..",
+      "y": "WRRRRWWRRWWRWRRW.RWW.WRRRWRRRRWRR.RWR.W.W.RW.R.W.RRW.W.WWRW"
+     }
+    }
+   ],
+   "receive": [
+    {
+     "why": "honest",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "c": {
+      "x": "RRRRWW.WWWWW.RRR.RRRR.RWRWRR.R.WR....RWWWW.WR.....WW.W.R.WR",
+      "y": "R..WRW.RR..RRRWRWWRWRR.W.W..R.R.RRW.RRR.WWW.WW..WRWRRWW.WRR"
+     },
+     "a": {
+      "x": ".R..RRWRW.WWWWRRW.WWRRRWRWWRRWR.W..W.RRRR.R.RRR..R.WRW.RWRW",
+      "y": "RRW.WWR.RR.W.W.W....RWRRRWWWWWWWRR.WW.WRR.RWWW.RRRRR....RRW"
+     }
+    },
+    {
+     "why": "A = C",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "c": {
+      "x": "RRRRWW.WWWWW.RRR.RRRR.RWRWRR.R.WR....RWWWW.WR.....WW.W.R.WR",
+      "y": "R..WRW.RR..RRRWRWWRWRR.W.W..R.R.RRW.RRR.WWW.WW..WRWRRWW.WRR"
+     },
+     "a": {
+      "x": "RRRRWW.WWWWW.RRR.RRRR.RWRWRR.R.WR....RWWWW.WR.....WW.W.R.WR",
+      "y": "R..WRW.RR..RRRWRWWRWRR.W.W..R.R.RRW.RRR.WWW.WW..WRWRRWW.WRR"
+     }
+    },
+    {
+     "why": "C outside the subgroup, correct certificate",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "c": {
+      "x": "RR.WRWRRWWRRRR.WWRRR.WW.WWWW.W.WR.RRRW.WWWRRWRRWRW.RRWWWW.W",
+      "y": ".RRW..R.W..W.RRWRRWR.RRRWRRR.WRWRR.WRWWWWWWRW.W..WRR.RWR.WR"
+     },
+     "a": {
+      "x": "RRRWR.RRR.WRR.WWW...W...W...R.WRWRRW...W.WRWW..W...WR..WR.W",
+      "y": "RW.W.WR..R.WR.W.R.WWWRR.R..R.WRRWRW.WRR.WRRRWRR.W.WW.R.RRWR"
+     }
+    },
+    {
+     "why": "C an order-5 point",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "c": {
+      "x": "...........................................................",
+      "y": "W.........................................................."
+     },
+     "a": {
+      "x": "...........................................................",
+      "y": "W.........................................................."
+     }
+    },
+    {
+     "why": "C off the curve",
+     "own": {
+      "x": "WRRW.R..R..WR...WWWWRRRR.R..WRRRWRRR..R.WW.WW.WR.RRR.RWRWWR",
+      "y": "R.RRWWWW.WRWRRR.W.R.RW.WWRW.WW..WWRWR.R.WR....R...RRRWRWW.W"
+     },
+     "c": {
+      "x": "RR.W.R.RWRRRWW.RW.W.WR.WR.R.WR..RW.WRWW.WR.WW.W.RRR.RWRWR.W",
+      "y": "WW.R.RRW.WRRWW.WW.RWR..RWRWRWR.R.R.W.WR..WWR.WRR.RWWRW..WWW"
+     },
+     "a": {
+      "x": ".R..RRWRW.WWWWRRW.WWRRRWRWWRRWR.W..W.RRRR.R.RRR..R.WRW.RWRW",
+      "y": "RRW.WWR.RR.W.W.W....RWRRRWWWWWWWRR.WW.WRR.RWWW.RRRRR....RRW"
+     }
+    }
+   ],
+   "exchanges": [
+    {
+     "faces_a": [
+      5,
+      5,
+      3,
+      4,
+      1,
+      5,
+      2,
+      8,
+      7,
+      6,
+      0,
+      6,
+      3,
+      0,
+      4,
+      7,
+      9,
+      7,
+      3,
+      8,
+      9,
+      6,
+      5,
+      1,
+      7,
+      2,
+      3,
+      7,
+      4,
+      7
+     ],
+     "faces_b": [
+      8,
+      5,
+      9,
+      3,
+      1,
+      1,
+      2,
+      9,
+      2,
+      6,
+      2,
+      1,
+      9,
+      1,
+      3,
+      7,
+      6,
+      3,
+      4,
+      1,
+      3,
+      9,
+      5,
+      1,
+      8,
+      2,
+      5,
+      6,
+      3,
+      3
+     ]
+    }
+   ],
+   "roll": [
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     5,
+     6,
+     6,
+     4,
+     5,
+     8,
+     3,
+     9,
+     5,
+     3,
+     4,
+     2,
+     3,
+     8,
+     2,
+     1,
+     9,
+     3,
+     1,
+     7,
+     8,
+     1,
+     6,
+     2,
+     7,
+     3,
+     2,
+     8,
+     5,
+     6,
+     2
+    ]
+   ]
+  },
+  "Serious": {
+   "arith": [
+    {
+     "x": "WRWRWWRWRWRRRWRWR.RR.....RWRW.RW.WR..RW.W.WWR..WR.RWW..R.W..RW.RWW.R..R.R.WW.W.RWWW.W.W.WW.RWWRWWWRR.RRWWR...R.RWWRWW.RW.RWWR..RWRR...R...WWWRW.WRWW.R.WR.RW.RWRRR.RRWWW.WWRW.WWWWW",
+     "y": "WR.W.RRR.W.R..R.W.RW.WRRRRW.WRRRRRR..R.RWWR.W...RWWW.R..R.R.WW.RW.R.RWRWR.RR.WWWRWR.W.RWWR.RWWRR.WR.WWRRW..WWRRRRWWRR.RRWRRW.W.WWWWRW..W..RR.RR.R.....W.WWRWR.R.WRWR..WRRRWRRRW.R.R"
+    },
+    {
+     "x": "..W.W.WW.WWWWWWWWR.W...RWRWRRW.WR.WWW..RWWWWWWW..W..RWR...RR..RWWWWR.R.R.RW.RRRRWRWW.RRWWRR..W.WR.WWW.WW.RR...RRR.R....R.WWW.WRW...RRWRRRR.WRRWR.WRWWWR.R.WWRWWWR.WWWWRRRW.WW.RRRRW",
+     "y": "WR.RW.RR.WR..RRWRR....WWWR..WWRWRWWWWRWW.WRR.WW.R.WWWWR.WR.R.W.R.RRWR.WWW.RRW.WW.WRR.WW..RRWRWWWWW..R.RWW.R.RW..R...R...WR..R..R.R.WRW.RW.WWW.WRRRRR..WW.WR.R.R.RW.WRRW..WWWR..WWRR"
+    },
+    {
+     "x": "....W.WR.....W..RWWWWRWR..R.WWR....RW..R..W.R..RWRW.RW.WRWRR.R.WWW.WRR..W.WWWWWRRRWRRRR.WWW..RW..WWWRRRW.R.WRWWRWW.R..R.WRW..WR.R.RRW.WR..WWR.WW..R.WWRWWRRR...R.RR..RW.WW.RRRW.RWW",
+     "y": "R..R.R..WWRR.R.RRRWWRWWRR.R.RW..RWRR.RWWRR..RRWRWRRRRRRW.RR.RW.R.W..R.WRWW.RRW.WRRRRWWRWRW.RWRWRW.WWRR.RW.RRR.W.WR.RWRRR.W.....WWR.RWW.RWRRW..RRR.WW.W.WRRR..WW.WRRW....RRR.RWW.WWW"
+    },
+    {
+     "x": "RRR..R...R.WW.RWRW...RRRR..RW..RWWWR.W..RW.R.WWRRR....RR.W.R.WWWRRW.RWRR..WR.W..R.W.WRRR.RWWW...WWR.WW.R...R.RR...RWWW...W.RRWRR..WRRW...WR.RW..RRWRWWR.RR...W...R..R.WWR.RRW.WW.WR",
+     "y": "R..WWWW.RW.R.RRWWR.WW..R.W..RR.W.WWW.WWWRRRR..WWRWR.R.R.W.W.W..WWWR..WRWR..R.WR.WWWW.R..WW.R...W.RWWWWRWWW.RRR..R..WWW.RR.R.W.....RW.RW.WRWWRRR.RR.RRWW..R.RW.RR..RRR..WWRRWW.WWR.."
+    }
+   ],
+   "fold": [
+    ".R..WR.R...WRRWWWWWRWWWWWRWWWRWW..RRWWWRRWWR.R.R..WWWWWWWWRW.RWRR.R.RW.WRW.WWWRW.RRW....RWW.WRWWW.WR.WW.RRRW..WRW..WWRR..WWW..RWR.R..WWRW..W..WWRR..RWWRRRWR.RW.RWW.RRWWW.RWRR..R.W",
+    "RW.WR.WWRRRRRWRW..RRWW.WRRRR.RR..WWR.RWWRW..RWRWWW.RW.W....R.R.RWR.WRWR.W.RRR.RW.R.WW.WWR.WWR.RWRRRRWWWW.W.RWRR.R..WWRWWWWWW.RR.WRW.RWWRW..WWW.RWRW..R.RRWW.RRW...W.RWRR.W.RWW.RRRW",
+    ".W..RWR.WW..RWWRRRWRR.....WRRWWRR.W.RW.WWRWWR.R...WWWRRRRRRW.WW.WW.RW..R.R.WW.RWRR.R.WRW.WRWWWWRRWR.RRR.WW.W..WWW.RRW.WWW.WWR.WWW.RW.RW.WWR..RW...WWWRRR.R.R..W.WWW.W.RRW..RW.WRW.R"
+   ],
+   "points": [
+    {
+     "why": "P",
+     "x": "WW..WWW.RWW.RWRRRWRWRRWRRW.W.WWRRR.RR.R..WW.R.R.WRWW.RWRR.W.W.RRW.R.RRWWW..WRW.WWRW.WRR..WWRWR..RWWW..WW.R.WRW....W.WR.WWW....R.WW..WRRRW..WWR.RWR.WR.RRWRRRWWR.R.R.W.W...WWRWRRWR.",
+     "y": "R.RWRRWRWW.WRWRR.W.W.R...RRW.WRW..RWR.WWRWR..WW.R...WR..R.RRW.W.W.WW..RWWRRW.RRW.WWWRWWWR.R...R..RRWRR..RW.WR..RRRRWW.RRW.R.WRRWRRWWW..R..RRWRRWRWR..R...WWRWRW.W.RWR.WW..WRWRRRR.."
+    },
+    {
+     "why": "a subgroup point",
+     "x": "RRWW.RR.WRRR.W.W.RWR.WWR.WW..RR..R.R.WR.R..WWRR.WR..RRW..WWRWRRW.RWWWWRR.W.R.W.WWRWRWWW.RWRR..RRWR.R.R...RR.R.WR.....W.RR..RRR.RW.WWWW..W.R.WR.W.WWR.WRWWRWR.WWRW......RRRW..RR....",
+     "y": "W..WWRRWWRW.W.WWW..WR.RRRWWWWR.RWRRWR.RW.R.R.W....RRRRW..W.RWRW..WWRW.R..RWR.RWWWRWRW...WRWRWR..W.R.RWR.WWRR..W..RRW.RRWW.W.RWWRR..R.WRR.RRWWWWRRWRWW.W.WWRWWR.RRRWW.W.W.WR.WWR.RW."
+    },
+    {
+     "why": "a point outside the subgroup",
+     "x": "WWWRRWRR..RWRRW.RRRWW.RRRR...WRRWWRR.W.WR..RR..W..WWWWW...WR.R...RWR..R.W..W.WR.WW.RW..WRRR...RW.W.RWWW.WW.WWRWRW.RW.WW.WRRWRWRWW..W....RW...RRWRWRRW.RWWWW.WRR.RRRRRRWR.RWW.R.RWW.",
+     "y": "RWWWW...W.WRRW..RWR.WW.RRR..WWRRW..RR.WRRWR..RWW..RW..WWWWWWW.WWRWWW.WRWRR.WRW.WWWRR.WW....WWW.RW.WRW..RWRRRR.W.R..WRW..RW..WRW.W.WWR.RRW.R..R.R.R.RR..WRWW..W.WRRW.WRW..WWRR..RWW."
+    },
+    {
+     "why": "an order-5 point (x in GF(3))",
+     "x": "...................................................................................................................................................................................",
+     "y": "W.................................................................................................................................................................................."
+    },
+    {
+     "why": "off the curve",
+     "x": "RRWR..RRWRWW.R.RWWRWR..W.RRRWRRR.WRRRW.WW..WWWRRWWRWWRRWWRWR..RW.W..WRWWWWRR.R.WR.R.RRRW.WRR.WRW.WWRWWWR.R.R.RW.W.RWWWRWRRRRRWW.W.RW.RRR.WR..WRW.....RRRW.W..RWR.RR..RWWWRRWR..WW.W",
+     "y": ".WW...WRR.RRWRWW..R..R.W..WRRR..WR.RRRWRR.R.RWR..RRR.RW..WR..R.WW.WR..RRRRRRRWR...WW.WRWW.W.RW..RR..RW..RRW.RWWWWW.R....R..WRRW.RWRRWWW..R.WWRRRW.R.WRR.RRWRWRW.RRR..WR.RR.RWRRRR.R"
+    }
+   ],
+   "walks": [],
+   "receive": [
+    {
+     "why": "honest",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "c": {
+      "x": "WRWR.R..W...R.WWWR..W.RWWRR.RWWWR.W.R..RWR..W..WRRR...RRR.WRR.RWR.R...WWW.W.W..WW...RRRWRRWR.W..RR.W...WR.WW.RWWW.W.W..W.W..WWR.W.WW...R.WWR.RRRWW....WR.RW.WR.WWWWRRWRRRWR...W.WR.",
+      "y": "..R.WWRR...RRRRR.WWWWRR..R.R.R.RWW.RWRW..W.RRR...R.W....W.W...WWWW...RRRWRR.R.RR.WWW..WR.....W.R.RWW..WRWW..RR...R..WWRRRWRWRR.RR.R.RW...R.WR..RWR.WRR.WRR..WRWWWR.WWW.RW.R.RW.RWWW"
+     },
+     "a": {
+      "x": "RRWW.WR.WRRR.RR....R.R..R.RW.WWRR.RWR.RRWRR.R.RW.WWR..WR..W.RRWWR.WR...W.WWWRWR..WWR..WR.RWW.W..RRRR.W.W.RWRRW..WR.WW.W.RRW.WRWRRR.RW.RWW..WRWWWWW.W..R.RRR.RRR.R..W.WWWWRR.WR..R.R",
+      "y": ".R.R.WRRWRRWW.WR..W.RR..RWWWRRRRW.WRR.RRW.R.R.RRR.W.RR.WW.W.RR.R.WRR.RWWRRWRRW...W.WWWWWWR.W..R.W.RRRRWWW.R....WRRW..WWWWR.R.RWRR.W.R..WRWRWWWR.R.R.WWW.RRRRWWWWWW.RR...RRWWWWW.R.W"
+     }
+    },
+    {
+     "why": "A = C",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "c": {
+      "x": "WRWR.R..W...R.WWWR..W.RWWRR.RWWWR.W.R..RWR..W..WRRR...RRR.WRR.RWR.R...WWW.W.W..WW...RRRWRRWR.W..RR.W...WR.WW.RWWW.W.W..W.W..WWR.W.WW...R.WWR.RRRWW....WR.RW.WR.WWWWRRWRRRWR...W.WR.",
+      "y": "..R.WWRR...RRRRR.WWWWRR..R.R.R.RWW.RWRW..W.RRR...R.W....W.W...WWWW...RRRWRR.R.RR.WWW..WR.....W.R.RWW..WRWW..RR...R..WWRRRWRWRR.RR.R.RW...R.WR..RWR.WRR.WRR..WRWWWR.WWW.RW.R.RW.RWWW"
+     },
+     "a": {
+      "x": "WRWR.R..W...R.WWWR..W.RWWRR.RWWWR.W.R..RWR..W..WRRR...RRR.WRR.RWR.R...WWW.W.W..WW...RRRWRRWR.W..RR.W...WR.WW.RWWW.W.W..W.W..WWR.W.WW...R.WWR.RRRWW....WR.RW.WR.WWWWRRWRRRWR...W.WR.",
+      "y": "..R.WWRR...RRRRR.WWWWRR..R.R.R.RWW.RWRW..W.RRR...R.W....W.W...WWWW...RRRWRR.R.RR.WWW..WR.....W.R.RWW..WRWW..RR...R..WWRRRWRWRR.RR.R.RW...R.WR..RWR.WRR.WRR..WRWWWR.WWW.RW.R.RW.RWWW"
+     }
+    },
+    {
+     "why": "C outside the subgroup, correct certificate",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "c": {
+      "x": "RWW.WR..RRRWWRRRRW.R.RRRWWRRWRW.W..RRW.R...WWWRR.W.W.R..W.WR....R.RWWRWRRRWRRWR.WWWRWWR.RW..WRWRWWWRW..RRRWRR.W.RW.RRWRRR.RR.WWWRRWWRWR.WWWWRRWRR..WR.WRW.RR.RWWWRR.RWWWW.W.WRWW.RW",
+      "y": "RRWWW.RRW.WWRRWRRRRRRWRRRWRWR.R.WRWRWW.W.W.W.RW..RWRW.RRRRW..RRWRWWW..R.WW..WR..W.W.WWW.R..RW.WWW.WWR.RRWRR.W.W..W.RWRRRWWWWW.W.R.R..RW.R.W.WRWWRW..WRWW.W..WR.RRRWWWWWWW...RR.W..W"
+     },
+     "a": {
+      "x": ".WW.W.W..R.W..W..R...RRR.R.RR.WWR..RR.R..WW.R.RR.RWRWRWWWW.W.RW..W.W..RWWRRRWW.R.WRW..WWW.WW.WWRWW.WW..RWRRWWW.RRW.WWRW.WW.WW...RWRR..WRW..WWRWW.WRRW..R.WWR.RR..W..WW..W.WRWW.W.WW",
+      "y": "..RRRRRR.WRRW..RR..WWRRWRRR.R.W.WR..R.RW.WWWWW.WW.WRRRRR....R.RRR.RW..RWR..R.R.R.WWRW.R..W....R.WW.....WW..W...RRWW.W...W..R.R.RWW.WR..RRWWRWW.RRRRRRWRW.W.RRRRWRWR.WWW..W.WRR..WW."
+     }
+    },
+    {
+     "why": "C an order-5 point",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "c": {
+      "x": "...................................................................................................................................................................................",
+      "y": "W.................................................................................................................................................................................."
+     },
+     "a": {
+      "x": "...................................................................................................................................................................................",
+      "y": "W.................................................................................................................................................................................."
+     }
+    },
+    {
+     "why": "C off the curve",
+     "own": {
+      "x": "RRRWRW..RR.WR..RW.RRR.WRR.RWRWRRWWWWRR.R...W..W.WWWWW...RWRWWRWRWWWR..R...W..WWRWWW.RW.R..RR.RR.RWWWWWWRRWWR.RRR.W..WR..RW.RRWRWR.R.R.WW.R.RW.RRW.R.R..R..RRW.WR.WR.RRRWRRW.WWRWWRW",
+      "y": ".RW..W.RRWR.W.W.W.WRW.WRWRRWWW.R.WRWR.RWRRWR.WRWWWWWRRRRW.WR.RWR.W.RRWW..RRR.RRWW.R.WRWR..WWRR.W.RRW.WWR.WW.RWWRRR.RRRR..WR.RWWR.RR.RRWWRRRW.R.WW.RR.R..WWRR..W..R.RR.R.WWRRWW..WRR"
+     },
+     "c": {
+      "x": "WWR.WRRR..RWR..R.WWRRRR..W.W.R..W.WRRRRWWW.WW..WWRWW.R.RRRRWRWRWW...RR.RRRWWWRRW.RRWR.W.R..RRR.WRW.WWRR...R.....RR.RW...WR.WR.W..W.RW.RR.WR.WRWRWWWWRW..WWWWRW.WRR.RRWWRWWWR.WWR.RR",
+      "y": "...RRWWWRWW...RR..WR..WWW.RWRW.RWRR...RR.RRW.WWW.WRR.WRR.RWW.W.RW.W.R....WWW.WRWRW..R.WR.RWR......WWW...WRRR..RWRRR....WWR.WWWR.W.RRRRRWW.RRRRRWWR.WW.W..RRRRWWRR.WR.RR.RWRRW.WWRW."
+     },
+     "a": {
+      "x": "RRWW.WR.WRRR.RR....R.R..R.RW.WWRR.RWR.RRWRR.R.RW.WWR..WR..W.RRWWR.WR...W.WWWRWR..WWR..WR.RWW.W..RRRR.W.W.RWRRW..WR.WW.W.RRW.WRWRRR.RW.RWW..WRWWWWW.W..R.RRR.RRR.R..W.WWWWRR.WR..R.R",
+      "y": ".R.R.WRRWRRWW.WR..W.RR..RWWWRRRRW.WRR.RRW.R.R.RRR.W.RR.WW.W.RR.R.WRR.RWWRRWRRW...W.WWWWWWR.W..R.W.RRRRWWW.R....WRRW..WWWWR.R.RWRR.W.R..WRWRWWWR.R.R.WWW.RRRRWWWWWW.RR...RRWWWWW.R.W"
+     }
+    }
+   ],
+   "exchanges": [
+    {
+     "faces_a": [
+      6,
+      5,
+      5,
+      2,
+      0,
+      2,
+      3,
+      8,
+      8,
+      5,
+      6,
+      5,
+      1,
+      5,
+      4,
+      9,
+      5,
+      4,
+      4,
+      4,
+      3,
+      3,
+      3,
+      4,
+      1,
+      5,
+      9,
+      9,
+      7,
+      4,
+      9,
+      7,
+      9,
+      4,
+      1,
+      1,
+      4,
+      6,
+      4,
+      8,
+      7,
+      2,
+      6,
+      8,
+      9,
+      7,
+      8,
+      7,
+      0,
+      5,
+      9,
+      3,
+      9,
+      6,
+      5,
+      4,
+      5,
+      0,
+      8,
+      5,
+      3,
+      1,
+      4,
+      5,
+      1,
+      3,
+      9,
+      1,
+      1,
+      1,
+      0,
+      7,
+      3,
+      9,
+      8,
+      5,
+      8,
+      1,
+      4,
+      3,
+      7,
+      1,
+      3,
+      4,
+      5
+     ],
+     "faces_b": [
+      5,
+      3,
+      5,
+      3,
+      2,
+      8,
+      1,
+      9,
+      4,
+      7,
+      1,
+      5,
+      4,
+      0,
+      4,
+      6,
+      1,
+      9,
+      3,
+      4,
+      1,
+      7,
+      8,
+      1,
+      9,
+      5,
+      2,
+      6,
+      8,
+      6,
+      5,
+      5,
+      3,
+      6,
+      5,
+      5,
+      6,
+      4,
+      4,
+      6,
+      4,
+      3,
+      9,
+      8,
+      8,
+      5,
+      7,
+      8,
+      7,
+      5,
+      7,
+      6,
+      8,
+      8,
+      9,
+      5,
+      5,
+      9,
+      9,
+      3,
+      3,
+      1,
+      4,
+      0,
+      2,
+      9,
+      5,
+      3,
+      1,
+      1,
+      2,
+      1,
+      4,
+      2,
+      7,
+      3,
+      2,
+      8,
+      1,
+      1,
+      3,
+      9,
+      2,
+      3,
+      7
+     ]
+    }
+   ],
+   "roll": [
+    [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     5,
+     1,
+     1,
+     6,
+     7,
+     5,
+     9,
+     9,
+     7,
+     5,
+     5,
+     9,
+     7,
+     9,
+     9,
+     6,
+     2,
+     5,
+     7,
+     2,
+     7,
+     4,
+     8,
+     8,
+     2,
+     1,
+     3,
+     4,
+     5,
+     4,
+     6,
+     1,
+     4,
+     9,
+     4,
+     2,
+     3,
+     1,
+     7,
+     8,
+     6,
+     7,
+     8,
+     1,
+     8,
+     4,
+     1,
+     1,
+     1,
+     8,
+     7,
+     2,
+     8,
+     6,
+     6,
+     8,
+     8,
+     7,
+     2,
+     4,
+     0,
+     1,
+     0,
+     8,
+     7,
+     5,
+     8,
+     1,
+     9,
+     7,
+     7,
+     5,
+     7,
+     8,
+     1,
+     3,
+     4,
+     9,
+     8,
+     4,
+     9,
+     7,
+     8,
+     1,
+     5,
+     2
+    ]
+   ]
+  }
+ }
+}

@@ -1,0 +1,366 @@
+{
+ "Hobby": [
+  {
+   "base_hole": 1,
+   "P_ok": [
+    true,
+    true
+   ],
+   "m_P": [
+    105699,
+    105699
+   ],
+   "m_pub": [
+    873028,
+    803537
+   ],
+   "m_on": [
+    4199,
+    4337
+   ],
+   "m_tr": [
+    386737,
+    385673
+   ],
+   "valid": [
+    [
+     true,
+     true
+    ],
+    [
+     true,
+     true
+    ]
+   ],
+   "m_shared": [
+    860397,
+    798018
+   ],
+   "pub_ok": [
+    true,
+    true
+   ],
+   "agree": true,
+   "matches_ref": true,
+   "tally_holes_peak": 29,
+   "peak": [
+    7,
+    7
+   ],
+   "peak_strict": [
+    7,
+    7
+   ],
+   "peak_where": [
+    "base point",
+    "gap",
+    [
+     "across",
+     "up",
+     "bottom",
+     "base across",
+     "base up",
+     "gap",
+     "spare"
+    ]
+   ],
+   "max_bench_hole": 174,
+   "benchlen": 180,
+   "tally_max": {
+    "inv": 29,
+    "trace": 29
+   },
+   "moves": [
+    2230223,
+    2097429
+   ],
+   "ctrl": [
+    2315,
+    2315
+   ],
+   "ops": {
+    "mul": 1040,
+    "cube": 1123,
+    "inv": 11,
+    "chord": 8,
+    "fadd": 73
+   },
+   "rerolls": 0,
+   "secs": 0.7,
+   "check": "trace"
+  },
+  {
+   "P_ok": [
+    true,
+    true
+   ],
+   "m_P": [
+    84,
+    84
+   ],
+   "m_pub": [
+    804926,
+    789727
+   ],
+   "m_on": [
+    3840,
+    4481
+   ],
+   "m_tr": [
+    383992,
+    383691
+   ],
+   "valid": [
+    [
+     true,
+     true
+    ],
+    [
+     true,
+     true
+    ]
+   ],
+   "m_shared": [
+    779837,
+    798402
+   ],
+   "pub_ok": [
+    true,
+    true
+   ],
+   "agree": true,
+   "matches_ref": true,
+   "tally_holes_peak": 29,
+   "peak": [
+    7,
+    7
+   ],
+   "peak_strict": [
+    7,
+    7
+   ],
+   "peak_where": [
+    "walk",
+    "gap",
+    [
+     "across",
+     "up",
+     "bottom",
+     "base across",
+     "base up",
+     "gap",
+     "spare"
+    ]
+   ],
+   "max_bench_hole": 174,
+   "benchlen": 180,
+   "tally_max": {
+    "inv": 29,
+    "trace": 29
+   },
+   "moves": [
+    1972837,
+    1976551
+   ],
+   "ctrl": [
+    2158,
+    2158
+   ],
+   "ops": {
+    "mul": 888,
+    "cube": 991,
+    "inv": 10,
+    "chord": 8,
+    "fadd": 64
+   },
+   "rerolls": 0,
+   "secs": 0.6,
+   "check": "trace"
+  },
+  {
+   "base_hole": 1,
+   "P_ok": [
+    true,
+    true
+   ],
+   "m_P": [
+    105699,
+    105699
+   ],
+   "m_pub": [
+    768329,
+    757577
+   ],
+   "m_make": [
+    43422,
+    43098
+   ],
+   "m_on": [
+    0,
+    0
+   ],
+   "m_tr": [
+    47440,
+    48226
+   ],
+   "valid": [
+    [
+     true,
+     true
+    ],
+    [
+     true,
+     true
+    ]
+   ],
+   "m_shared": [
+    776612,
+    739583
+   ],
+   "pub_ok": [
+    true,
+    true
+   ],
+   "agree": true,
+   "matches_ref": true,
+   "tally_holes_peak": 29,
+   "peak": [
+    7,
+    7
+   ],
+   "peak_strict": [
+    7,
+    7
+   ],
+   "peak_where": [
+    "base point",
+    "gap",
+    [
+     "across",
+     "up",
+     "bottom",
+     "base across",
+     "base up",
+     "gap",
+     "spare"
+    ]
+   ],
+   "max_bench_hole": 174,
+   "benchlen": 180,
+   "tally_max": {
+    "inv": 29,
+    "trace": 0
+   },
+   "moves": [
+    1741738,
+    1694429
+   ],
+   "ctrl": [
+    1029,
+    1029
+   ],
+   "ops": {
+    "mul": 872,
+    "cube": 663,
+    "inv": 5,
+    "chord": 2,
+    "fadd": 65
+   },
+   "rerolls": 0,
+   "secs": 0.6,
+   "check": "cert"
+  },
+  {
+   "P_ok": [
+    true,
+    true
+   ],
+   "m_P": [
+    84,
+    84
+   ],
+   "m_pub": [
+    760101,
+    753499
+   ],
+   "m_make": [
+    44078,
+    42072
+   ],
+   "m_on": [
+    0,
+    0
+   ],
+   "m_tr": [
+    46609,
+    48800
+   ],
+   "valid": [
+    [
+     true,
+     true
+    ],
+    [
+     true,
+     true
+    ]
+   ],
+   "m_shared": [
+    738544,
+    740184
+   ],
+   "pub_ok": [
+    true,
+    true
+   ],
+   "agree": true,
+   "matches_ref": true,
+   "tally_holes_peak": 29,
+   "peak": [
+    7,
+    7
+   ],
+   "peak_strict": [
+    7,
+    7
+   ],
+   "peak_where": [
+    "walk",
+    "gap",
+    [
+     "across",
+     "up",
+     "bottom",
+     "base across",
+     "base up",
+     "gap",
+     "spare"
+    ]
+   ],
+   "max_bench_hole": 174,
+   "benchlen": 180,
+   "tally_max": {
+    "inv": 29,
+    "trace": 0
+   },
+   "moves": [
+    1589656,
+    1584879
+   ],
+   "ctrl": [
+    872,
+    872
+   ],
+   "ops": {
+    "mul": 768,
+    "cube": 525,
+    "inv": 4,
+    "chord": 2,
+    "fadd": 60
+   },
+   "rerolls": 0,
+   "secs": 0.8,
+   "check": "cert"
+  }
+ ]
+}

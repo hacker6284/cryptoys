@@ -2,34 +2,18 @@
 // primitives/key_exchange/bs/bs.sudo, over the inputs in inputs.json. Every
 // output below comes from the generated code; this file only converts between
 // JSON and the generated host API. Do not hand-edit the JSON this writes;
-// regenerate with regen.sh.
+// regenerate with regen.sh (proofs/key_exchange/vectors_regen.sh).
 //
 // Usage: node collect_vectors.mjs <sudoc-js-outdir> > bs_vectors.json
-// Env (set by regen.sh): BS_SUDO_SHA256, SUDOCODE_COMMIT.
+// Env (set by vectors_regen.sh): BS_SUDO_SHA256, SUDOCODE_COMMIT.
 
-import { readFileSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
+import { assert, toTrits, toPegs, ROWS, load, header } from "../../vectors_common.mjs";
 
-const outDir = process.argv[2];
-if (!outDir) {
-  console.error("usage: node collect_vectors.mjs <sudoc-js-outdir>");
-  process.exit(2);
-}
 const here = path.dirname(fileURLToPath(import.meta.url));
-const bs = await import(pathToFileURL(path.resolve(outDir, "bs.mjs")).href);
-const inputs = JSON.parse(readFileSync(path.join(here, "inputs.json"), "utf8"));
-
-function assert(cond, msg) {
-  if (!cond) throw new Error(msg);
-}
-
-// Registers and cell strings: '.WR' = 0/1/2, hole 0 (or the first cell) first.
-const toTrits = (s) => [...s].map((c) => ".WR".indexOf(c));
-const toPegs = (xs) => xs.map((t) => ".WR"[t]).join("");
+const { mod: bs, inputs } = await load("bs", here);
 const shotName = (s) => s.$;
-
-const ROWS = "ABCDEFGHIJ";
 function gridOut(g) {
   const ships = g.ships.map((s) => ({
     kind: s.kind.$,
@@ -114,11 +98,7 @@ for (const v of inputs.vectors) {
 }
 
 const doc = {
-  schema: 1,
-  generated_by: "proofs/key_exchange/bs/vectors/regen.sh",
-  source: "primitives/key_exchange/bs/bs.sudo",
-  sudo_sha256: process.env.BS_SUDO_SHA256 || "",
-  sudocode_commit: process.env.SUDOCODE_COMMIT || "",
+  ...header("bs"),
   note:
     "Known-answer vectors evaluated by the sudoc JS target of bs.sudo over inputs.json. " +
     "Cross-checked by check_oracle.py against pow() and the Python evidence harness " +

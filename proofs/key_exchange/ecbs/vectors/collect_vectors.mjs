@@ -1,0 +1,109 @@
+// Collect the ECBS known-answer vectors from a sudoc JS build of
+// primitives/key_exchange/ecbs/ecbs.sudo, over the inputs in inputs.json. Every
+// output below comes from the generated code; this file only converts between
+// JSON and the generated host API. Do not hand-edit the JSON this writes;
+// regenerate with regen.sh (proofs/key_exchange/vectors_regen.sh).
+//
+// Usage: node collect_vectors.mjs <sudoc-js-outdir> > ecbs_vectors.json
+// Env (set by vectors_regen.sh): ECBS_SUDO_SHA256, SUDOCODE_COMMIT.
+
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { assert, toTrits, toPegs, ROWS, load, header } from "../../vectors_common.mjs";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const { mod: E, inputs } = await load("ecbs", here);
+const ptIn = (p) => ({ x: toTrits(p.x), y: toTrits(p.y) });
+const ptOut = (p) => ({ x: toPegs(p.x), y: toPegs(p.y) });
+const PHASES = E.phase_names();
+const OPS = E.op_names();
+const HOMES = ["across", "up", "bottom", "base across", "base up", "gap", "spare"];
+const byName = (names, xs) => Object.fromEntries(names.map((k, i) => [k, xs[i]]));
+
+function roll(t, faces) {
+  const r = E.roll_key(t, faces);
+  assert(r !== null, "roll_key ran out of faces");
+  return r;
+}
+
+function player(p) {
+  return {
+    base_hole: p.base_hole,
+    sent_C: ptOut(p.sent_c),
+    sent_A: ptOut(p.sent_a),
+    on_curve: p.on_curve,
+    rebuilt_A: ptOut(p.rebuilt),
+    matched: p.matched,
+    shared: ptOut(p.shared),
+    folded: toPegs(p.folded),
+    moves: p.cost.moves,
+    moves_by_phase: byName(PHASES, p.cost.moves_by_phase),
+    peak: p.cost.peak,
+    max_bench_hole: p.cost.max_bench_hole,
+    ctrl: p.cost.ctrl,
+    calls: p.cost.calls,
+    ladder: toPegs(p.ladder),
+    ladder_moves: p.cost.ladder_moves,
+    tally_max: p.cost.tally_max,
+    control_highest: p.cost.control_highest,
+    script_marker_max: p.cost.script_marker_max,
+    ops: byName(OPS, p.cost.ops),
+  };
+}
+
+const out = {
+  ...header("ecbs"),
+  note: "Known-answer vectors evaluated by the sudoc JS target of ecbs.sudo over inputs.json. Cross-checked against PARI/GP by check_oracle.py.",
+  numbers: "'.WR' strings, hole 0 first: '.' empty, 'W' white, 'R' red (SPEC §1)",
+  tiers: {},
+};
+
+for (const [name, tin] of Object.entries(inputs.tiers)) {
+  const t = E.tier(name);
+  const v = {};
+  v.tier = { n: t.n, k: t.k, cells: t.cells, bench: t.benchlen, control: t.control, script: t.script };
+  v.base_point = ptOut(E.base_point_of(t));
+  v.arith = tin.arith.map(({ x, y }) => ({
+    x, y,
+    product: toPegs(E.multiply(t, toTrits(x), toTrits(y))),
+    cube: toPegs(E.cube_number(t, toTrits(x))),
+    inverse: toPegs(E.invert_number(t, toTrits(x))),
+  }));
+  v.fold = tin.fold.map((x) => ({ x, folded: toPegs(E.fold(t, toTrits(x))) }));
+  v.points = tin.points.map((p) => {
+    const c = E.make_certificate(t, ptIn(p));
+    return { why: p.why, x: p.x, y: p.y, curve_test: E.curve_test(t, ptIn(p)),
+      certificate: c === null ? null : ptOut(c) };
+  });
+  v.walks = tin.walks.map((w) => {
+    const r = roll(t, w.faces);
+    const k = E.walk_key(t, r.cells, ptIn(w.base));
+    return { faces: w.faces, cells: toPegs(r.cells), faces_used: r.used, base: w.base,
+      walked: k === null ? null : ptOut(k) };
+  });
+  v.receive = tin.receive.map((r) => {
+    const c = E.receive_check(t, ptIn(r.own), ptIn(r.c), ptIn(r.a));
+    return { why: r.why, own: r.own, C: r.c, A: r.a, verdict: c.verdict.$,
+      rebuilt: c.verdict.$ === "Accept" ? ptOut(c.rebuilt) : null,
+      peak: c.peak, check_moves: c.check_moves };
+  });
+  v.exchanges = tin.exchanges.map((x) => {
+    const ra = roll(t, x.faces_a), rb = roll(t, x.faces_b);
+    const r = E.exchange(t, ra.cells, rb.cells);
+    assert(r instanceof Object && "a" in r, `exchange failed at ${name}`);
+    return { faces_a: x.faces_a, faces_b: x.faces_b, cells_a: toPegs(ra.cells), cells_b: toPegs(rb.cells),
+      P: ptOut(r.a.base), A: player(r.a), B: player(r.b) };
+  });
+  v.roll = tin.roll.map((f) => {
+    const r = E.roll_key(t, f);
+    return { faces: f, rolled: r === null ? null : { cells: toPegs(r.cells), used: r.used, rolls: r.rolls } };
+  });
+  v.coordinates = {};
+  for (let h = 0; h < HOMES.length; h++) {
+    const a = E.coordinate(t, h, 0), b = E.coordinate(t, h, t.n - 1);
+    v.coordinates[HOMES[h]] = `grid ${a.grid}, ${ROWS[a.row]}${a.col} .. grid ${b.grid}, ${ROWS[b.row]}${b.col}`;
+  }
+  out.tiers[name] = v;
+}
+
+process.stdout.write(JSON.stringify(out, null, 1) + "\n");

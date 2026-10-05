@@ -1,6 +1,6 @@
 {
   "sudo_file": "primitives/hash/scramble/scramble.sudo",
-  "sudo_sha256": "01a25998b6c57010589ce591c7242057cb337ebb263deee1d56f78ebf1352de6",
+  "sudo_sha256": "e0b44c8d1a19344ab8e2b53d04957e1a147912179fccb9020165218797e7bfaa",
   "sudocode_lean_commit": "87aaaee58029182362b2bc274689ffbc743b0b35",
   "sudocode_lean_ref": "main",
   "terminates_gate": true,

@@ -226,7 +226,7 @@ cycle `6 0 7 1 8 2 9 3` to a multiple of 8 and to at least 24. The v1 trace is n
 **Not claimed:** the Rule B steps' `up` / `front` letters and the facelet strings' letters
 (the vectors' Final facelets column); an `update` or `evaluate` after `done` (the sudo
 asserts); non-byte input (the sudo asserts, and nothing is claimed about it); the traced
-v1 constructor `scramble_v1` and the v1 trace; several v1 updates.
+v1 constructor `scramble_v1` and the v1 trace; several v1 updates; `apply_move`, the demo's face turn of a facelet string.
 
 | Emitted function | Theorem | Domain |
 | --- | --- | --- |
@@ -235,6 +235,7 @@ v1 constructor `scramble_v1` and the v1 trace; several v1 updates.
 | `update` | `update_v2_digest`, `update_v2_gen`, `updates_evaluate_v2`, `update_v1_digest` | v2 state (or digest-only v1 state with `processed = 8q`), not done, pending nybbles below 16, reachable cube; byte messages; counts fit i64 |
 | `evaluate` | `evaluate_v2_digest`, `evaluate_v2_gen`, `scramble_v2_digest_refines_digestV2`, `evaluate_v1_digest`, `scramble_v1_digest_refines_digestV1` | as `update` |
 | `solved_facelets` | `solved_facelets_ok` | none (returns 54 color letters) |
+| `apply_move` | none: the demo's face turn of a facelet string is not claimed | |
 | `scramble_v1_digest` | `scramble_v1_digest_refines`, `fresh_refines`, `scramble_v1_digest_refines_digestV1` | byte message, `2·len + 40` fits i64; one `update` |
 | `scramble_v1` | none: the traced v1 constructor is not claimed | |
 

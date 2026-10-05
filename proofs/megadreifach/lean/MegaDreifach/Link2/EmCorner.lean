@@ -52,15 +52,6 @@ theorem corner_slot_traps (a b c : Fin 12) (h : cornerSlot? a b c = none) :
 
 /-! ## `colour_on` -/
 
-private theorem sEq_ofNat' (a b : Nat) :
-    SudoRt.SEq.beq (Int.ofNat a) (Int.ofNat b) = decide (a = b) := by
-  rw [sEq_int]
-  by_cases h : a = b
-  · subst h; simp
-  · have : ¬ (Int.ofNat a = Int.ofNat b) := fun e => h (Int.ofNat.inj e)
-    simp [h]
-    exact this
-
 /-- `Generated.colour_on` refines `Em.colourOn` on all face/colour ids and twists. -/
 theorem colour_on_refines (face f0 f1 f2 c0 c1 c2 : Fin 12) (ori : Fin 3) :
     Megadreifach.colour_on (Int.ofNat face.val) (Int.ofNat f0.val) (Int.ofNat f1.val)
@@ -68,7 +59,7 @@ theorem colour_on_refines (face f0 f1 f2 c0 c1 c2 : Fin 12) (ori : Fin 3) :
         (Int.ofNat ori.val) =
       .ok (Int.ofNat (colourOn face f1 f2 c0 c1 c2 ori).val) := by
   unfold Megadreifach.colour_on colourOn
-  rw [sEq_ofNat', sEq_ofNat']
+  rw [sEq_ofNat, sEq_ofNat]
   have e1 : decide (face.val = f1.val) = decide (face = f1) := by
     by_cases h : face = f1 <;> simp [h, Fin.val_inj]
   have e2 : decide (face.val = f2.val) = decide (face = f2) := by
@@ -101,13 +92,13 @@ theorem colour_on_refines (face f0 f1 f2 c0 c1 c2 : Fin 12) (ori : Fin 3) :
 
 /-! ## `colours_at` -/
 
-private theorem atL_listOf20 (f : Fin 20 → Fin 20) (i : Fin 20) :
+theorem atL_listOf20 (f : Fin 20 → Fin 20) (i : Fin 20) :
     SudoRt.atL (embed (listOf f)) (Int.ofNat i.val) = .ok (Int.ofNat (f i).val) := by
   have hlen : i.val < (listOf f).length := by rw [listOf_length]; exact i.isLt
   rw [atL_embed (listOf f) i.val hlen]
   simp [listOf, List.getElem_map, List.getElem_range, i.isLt]
 
-private theorem atL_listOfOri20 (f : Fin 20 → Fin 3) (i : Fin 20) :
+theorem atL_listOfOri20 (f : Fin 20 → Fin 3) (i : Fin 20) :
     SudoRt.atL (embed (listOfOri f)) (Int.ofNat i.val) = .ok (Int.ofNat (f i).val) := by
   have hlen : i.val < (listOfOri f).length := by rw [listOfOri_length]; exact i.isLt
   rw [atL_embed (listOfOri f) i.val hlen]

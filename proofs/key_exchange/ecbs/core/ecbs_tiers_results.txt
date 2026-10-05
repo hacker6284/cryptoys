@@ -1,0 +1,28 @@
+Demo (n = 7, log2 l = 8.72, n-3 = 4):
+  m =   2: H_inf = 3.00 (exact); plain BSGS 2^2.58, with negation 2^2.08; E[c] = 1.500 -> modelled 2^1.79; GGM floor 2^-0.40; rho 2^2.78; key-limited (plain BSGS < rho): True (margin +0.20)
+  m =   3: H_inf = 4.70 (exact); plain BSGS 2^3.58, with negation 2^3.08; E[c] = 1.769 -> modelled 2^2.67; GGM floor 2^0.45; rho 2^2.78; key-limited (plain BSGS < rho): False (margin -0.80)
+  m =   4: H_inf = 6.32 (exact); plain BSGS 2^4.17, with negation 2^3.67; E[c] = 1.900 -> modelled 2^3.21; GGM floor 2^1.26; rho 2^2.78; key-limited (plain BSGS < rho): False (margin -1.39)
+Toy (n = 23, log2 l = 34.13, n-3 = 20):
+  m =  15: H_inf = 23.77 (exact); plain BSGS 2^13.09, with negation 2^12.59; E[c] = 2.001 -> modelled 2^12.09; GGM floor 2^9.13; rho 2^14.63; key-limited (plain BSGS < rho): True (margin +1.54)
+  m =  16: H_inf = 25.36 (exact); plain BSGS 2^13.68, with negation 2^13.18; E[c] = 2.003 -> modelled 2^12.68; GGM floor 2^9.92; rho 2^14.63; key-limited (plain BSGS < rho): True (margin +0.95)
+  m =  17: H_inf = 26.94 (exact); plain BSGS 2^14.68, with negation 2^14.18; E[c] = 2.012 -> modelled 2^13.68; GGM floor 2^10.71; rho 2^14.63; key-limited (plain BSGS < rho): False (margin -0.05)
+  m =  18: H_inf = 28.53 (exact); plain BSGS 2^15.26, with negation 2^14.76; E[c] = 2.045 -> modelled 2^14.25; GGM floor 2^11.50; rho 2^14.63; key-limited (plain BSGS < rho): False (margin -0.63)
+  m =  20: H_inf = 31.70 (exact); plain BSGS 2^16.85, with negation 2^16.35; E[c] = 2.556 -> modelled 2^15.67; GGM floor 2^13.09; rho 2^14.63; key-limited (plain BSGS < rho): False (margin -2.22)
+Hobby (n = 59, log2 l = 91.19, n-3 = 56):
+  m =  50: H_inf = 79.25 (exact); plain BSGS 2^40.62, with negation 2^40.12; E[c] = 2.002 -> modelled 2^39.62; GGM floor 2^36.18; rho 2^42.48; key-limited (plain BSGS < rho): True (margin +1.86)
+  m =  51: H_inf = 80.83 (exact); plain BSGS 2^41.62, with negation 2^41.12; E[c] = 2.006 -> modelled 2^40.62; GGM floor 2^36.98; rho 2^42.48; key-limited (plain BSGS < rho): True (margin +0.86)
+  m =  52: H_inf = 82.42 (exact); plain BSGS 2^42.21, with negation 2^41.71; E[c] = 2.020 -> modelled 2^41.20; GGM floor 2^37.77; rho 2^42.48; key-limited (plain BSGS < rho): True (margin +0.27)
+  m =  53: H_inf = 84.00 (exact); plain BSGS 2^43.21, with negation 2^42.71; E[c] = 2.062 -> modelled 2^42.19; GGM floor 2^38.56; rho 2^42.48; key-limited (plain BSGS < rho): False (margin -0.73)
+  m =  56: H_inf = 88.76 (exact); plain BSGS 2^45.38, with negation 2^44.88; E[c] = 3.889 -> modelled 2^43.90; GGM floor 2^40.94; rho 2^42.48; key-limited (plain BSGS < rho): False (margin -2.90)
+Serious (n = 179, log2 l = 281.39, n-3 = 176):
+  m = 161: H_inf = 255.18 (exact); plain BSGS 2^128.80, with negation 2^128.30; E[c] = 2.000 -> modelled 2^127.80; GGM floor 2^123.35; rho 2^136.78; key-limited (plain BSGS < rho): True (margin +7.98)
+  m = 162: H_inf = 256.76 (exact); plain BSGS 2^129.38, with negation 2^128.88; E[c] = 2.000 -> modelled 2^128.38; GGM floor 2^124.14; rho 2^136.78; key-limited (plain BSGS < rho): True (margin +7.40)
+  m = 170: H_inf = 269.44 (exact); plain BSGS 2^135.72, with negation 2^135.22; E[c] = 2.008 -> modelled 2^134.72; GGM floor 2^130.48; rho 2^136.78; key-limited (plain BSGS < rho): True (margin +1.06)
+  m = 171: H_inf = 271.03 (exact); plain BSGS 2^136.72, with negation 2^136.22; E[c] = 2.025 -> modelled 2^135.71; GGM floor 2^131.27; rho 2^136.78; key-limited (plain BSGS < rho): True (margin +0.06)
+  m = 172: H_inf = 272.61 (exact); plain BSGS 2^137.31, with negation 2^136.81; E[c] = 2.075 -> modelled 2^136.28; GGM floor 2^132.06; rho 2^136.78; key-limited (plain BSGS < rho): False (margin -0.53)
+  m = 173: H_inf = 274.20 (exact); plain BSGS 2^138.31, with negation 2^137.81; E[c] = 2.226 -> modelled 2^137.23; GGM floor 2^132.86; rho 2^136.78; key-limited (plain BSGS < rho): False (margin -1.53)
+  m = 176: H_inf = 278.95 (exact); plain BSGS 2^140.48, with negation 2^139.98; E[c] = 8.333 -> modelled 2^138.45; GGM floor 2^135.23; rho 2^136.78; key-limited (plain BSGS < rho): False (margin -3.70)
+Demo exhaustive exceptional-case check (pegs-only keys, the generated chord walk over P):
+  m = 2: 8 nonzero keys, 0 meet the exceptional case (generated walk_key), 0 of the others differ from PARI's [k]P
+  m = 3: 26 nonzero keys, 0 meet the exceptional case (generated walk_key), 0 of the others differ from PARI's [k]P
+  m = 4: 80 nonzero keys, 0 meet the exceptional case (generated walk_key), 0 of the others differ from PARI's [k]P

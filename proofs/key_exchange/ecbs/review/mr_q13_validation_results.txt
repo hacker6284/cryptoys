@@ -1,0 +1,9 @@
+n =  23 spec                  : accept(honest, honest, B+T5) = [True, True, False]; PEAK BANDS = 8
+n =  23 lazy-y                : accept(honest, honest, B+T5) = [True, True, False]; PEAK BANDS = 7
+n =  23 lazy-y, both points   : accept(honest, honest, B+T5) = [True, True, False]; PEAK BANDS = 7
+n =  59 spec                  : accept(honest, honest, B+T5) = [True, True, False]; PEAK BANDS = 8
+n =  59 lazy-y                : accept(honest, honest, B+T5) = [True, True, False]; PEAK BANDS = 7
+n =  59 lazy-y, both points   : accept(honest, honest, B+T5) = [True, True, False]; PEAK BANDS = 7
+n = 179 spec                  : accept(honest, honest, B+T5) = [True, True, False]; PEAK BANDS = 8
+n = 179 lazy-y                : accept(honest, honest, B+T5) = [True, True, False]; PEAK BANDS = 7
+n = 179 lazy-y, both points   : accept(honest, honest, B+T5) = [True, True, False]; PEAK BANDS = 7

@@ -14,6 +14,7 @@ Each primitive is a directory holding a normative specification and one [sudocod
 | DoubleDeal | Toy block cipher on a 52-card deck. | [SPEC.md](primitives/cipher/doubledeal/SPEC.md) (version history: [§7a](primitives/cipher/doubledeal/SPEC.md#7a-version-history)) | [proofs/doubledeal/](proofs/doubledeal/); frozen versions: [proofs/deprecated/](proofs/deprecated/README.md) |
 | DoubleDeal-CBC-Sandwich v2 | Toy Encrypt-then-MAC on decks: DoubleDeal in deck-CBC (Compose with the previous ciphertext deck), then a Sandwich MAC on MegaDreifach (key deck, message decks, key deck turned over). Two user-supplied key decks, a fresh shuffled IV deck. Replaces DoubleDeal-CBC-HMAC v1 (frozen). Not DoubleDeal-SCM. | [SPEC.md](primitives/aead/doubledeal-cbc-hmac/SPEC.md), [README](primitives/aead/doubledeal-cbc-hmac/README.md) | [proofs/doubledeal-cbc-hmac/](proofs/doubledeal-cbc-hmac/) |
 | BS | Toy finite-field Diffie–Hellman worked by hand on Battleship pegboards; the key is one dice-built ships+pegs grid. Vectors: [proofs/key_exchange/bs/vectors/](proofs/key_exchange/bs/vectors/README.md). | [SPEC.md](primitives/key_exchange/bs/SPEC.md) | [proofs/key_exchange/bs/](proofs/key_exchange/bs/README.md) |
+| ECBS | Toy elliptic-curve Diffie–Hellman over GF(3^n) worked by hand on Battleship pegboards; the received point is checked with a sender-made certificate. Player's card: [CARD.md](primitives/key_exchange/ecbs/CARD.md). Runnable spec: [ecbs.sudo](primitives/key_exchange/ecbs/ecbs.sudo). | [SPEC.md](primitives/key_exchange/ecbs/SPEC.md) | [proofs/key_exchange/ecbs/](proofs/key_exchange/ecbs/README.md) |
 
 ## Layout
 
@@ -42,6 +43,8 @@ sudoc build --target js --tests -o /tmp/doubledeal primitives/cipher/doubledeal/
 node /tmp/doubledeal/_doubledeal_impl.mjs
 sudoc build --target js --tests -o /tmp/bs primitives/key_exchange/bs/bs.sudo
 node /tmp/bs/_bs_impl.mjs
+sudoc build --target js --tests -o /tmp/ecbs primitives/key_exchange/ecbs/ecbs.sudo
+node /tmp/ecbs/_ecbs_impl.mjs
 ```
 
 DoubleDeal-CBC-Sandwich needs `-I primitives/hash/megadreifach/v3 -I primitives/cipher/doubledeal` and a JavaScript step; its commands are in [its README](primitives/aead/doubledeal-cbc-hmac/README.md). Building and serving the demos: [demos/README.md](demos/README.md#local).

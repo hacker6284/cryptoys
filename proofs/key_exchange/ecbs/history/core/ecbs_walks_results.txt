@@ -1,0 +1,44 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+==============================================================================
+Demo
+==============================================================================
+[three 1 proj  ] all correct x3; moves/person 0.036 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 1 rows + control 52 holes in 7 rows -> workspace 2 grids + key 1 = 3 grids (spare rows 2)
+[three 1 affine] all correct x3; moves/person 0.032 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 1 rows + control 44 holes in 6 rows -> workspace 2 grids + key 1 = 3 grids (spare rows 3)
+[pegs 3 proj  ] all correct x3; moves/person 0.005 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 1 rows + control 52 holes in 7 rows -> workspace 2 grids + key 1 = 3 grids (spare rows 2)
+[pegs 3 affine] all correct x3; moves/person 0.004 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 1 rows + control 44 holes in 6 rows -> workspace 2 grids + key 1 = 3 grids (spare rows 3)
+==============================================================================
+Toy
+==============================================================================
+[three 1 proj  ] all correct x3; moves/person 0.228 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 5 (5-wide) rows + control 64 holes in 9 rows -> workspace 4 grids + key 1 = 5 grids (spare rows 1 control rows + 1 quarter-grid(s))
+[three 1 affine] all correct x3; moves/person 0.253 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 5 (5-wide) rows + control 56 holes in 7 rows -> workspace 4 grids + key 1 = 5 grids (spare rows 3 control rows + 1 quarter-grid(s))
+[pegs 19 proj  ] all correct x3; moves/person 0.151 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 5 (5-wide) rows + control 64 holes in 9 rows -> workspace 4 grids + key 1 = 5 grids (spare rows 1 control rows + 1 quarter-grid(s))
+[pegs 19 affine] all correct x3; moves/person 0.183 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 5 (5-wide) rows + control 56 holes in 7 rows -> workspace 4 grids + key 1 = 5 grids (spare rows 3 control rows + 1 quarter-grid(s))
+==============================================================================
+Hobby
+==============================================================================
+[three 2 proj  ] all correct x3; moves/person 2.067 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 6 rows + control 86 holes in 10 rows -> workspace 8 grids + key 2 = 10 grids (spare rows 4)
+[three 2 affine] all correct x3; moves/person 3.018 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 6 rows + control 78 holes in 9 rows -> workspace 8 grids + key 2 = 10 grids (spare rows 5)
+[pegs 55 proj  ] all correct x3; moves/person 1.859 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 6 rows + control 84 holes in 10 rows -> workspace 8 grids + key 1 = 9 grids (spare rows 4)
+[pegs 55 affine] all correct x3; moves/person 3.034 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 6 rows + control 76 holes in 8 rows -> workspace 8 grids + key 1 = 9 grids (spare rows 6)
+[six 1 proj  ] all correct x3; moves/person 4.000 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 6 rows + control 84 holes in 10 rows -> workspace 8 grids + key 1 = 9 grids (spare rows 4)
+[six 1 affine] all correct x3; moves/person 6.921 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 6 rows + control 76 holes in 8 rows -> workspace 8 grids + key 1 = 9 grids (spare rows 6)
+==============================================================================
+Serious
+==============================================================================
+[three 6 proj  ] all correct x1; moves/person 41.696 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 18 rows + control 154 holes in 18 rows -> workspace 22 grids + key 6 = 28 grids (spare rows 4)
+[three 6 affine] all correct x1; moves/person 68.702 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 18 rows + control 146 holes in 16 rows -> workspace 22 grids + key 6 = 28 grids (spare rows 6)
+[three 7 proj  ] all correct x1; moves/person 48.336 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 18 rows + control 155 holes in 18 rows -> workspace 22 grids + key 7 = 29 grids (spare rows 4)
+[three 7 affine] all correct x1; moves/person 79.541 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 18 rows + control 147 holes in 16 rows -> workspace 22 grids + key 7 = 29 grids (spare rows 6)
+[pegs 175 proj  ] all correct x1; moves/person 43.310 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 18 rows + control 148 holes in 17 rows -> workspace 22 grids + key 2 = 24 grids (spare rows 5)
+[pegs 175 affine] all correct x1; moves/person 70.738 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 18 rows + control 140 holes in 15 rows -> workspace 22 grids + key 2 = 24 grids (spare rows 7)
+[pegs 200 proj  ] all correct x1; moves/person 49.721 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 18 rows + control 148 holes in 17 rows -> workspace 22 grids + key 2 = 24 grids (spare rows 5)
+[pegs 200 affine] all correct x1; moves/person 81.514 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 18 rows + control 140 holes in 15 rows -> workspace 22 grids + key 2 = 24 grids (spare rows 7)
+[six 2 proj  ] all correct x1; moves/person 66.278 M; peaks public walk: 10+1ovf, validation: 9+2ovf, shared walk: 10+1ovf; bands 11 x 18 rows + control 148 holes in 17 rows -> workspace 22 grids + key 2 = 24 grids (spare rows 5)
+[six 2 affine] all correct x1; moves/person 111.149 M; peaks public walk: 7+2ovf, validation: 9+2ovf, shared walk: 7+2ovf; bands 11 x 18 rows + control 140 holes in 15 rows -> workspace 22 grids + key 2 = 24 grids (spare rows 7)
+------------------------------------------------------------------------------
+Demo 1/2 set: DemoPB slide arithmetic (no overflow), affine walk; target grid = 10 rows x (7 register + 1 slide hole + 2 control holes)
+  validation = trace WALK (n-1 white cells over B, then Frobenius must give the mirror of B)
+  268 exchanges correct (32 of 300 key draws hit an exceptional chord and were re-rolled); worst peak 7 live registers, 0 overflow; mean moves/person 107,191
+  exhaustive over all 2104 affine points: accepted 420, of which in <P>: 420; misclassified 0; worst peak during checks 7 registers
+  honest trace-walk exceptional steps among the performed m = 1..5 (lam*s_m = +-1 mod l; m = 6 is the final check itself): none
+  one-grid hole plan: 93 of 100 holes named (7 unassigned): registers (rows 0-6, holes 0-6): 49; slide holes (col 7, rows 0-6; empty between slides): 7; cell phase + protocol phase (cols 8-9, rows 0-6): 7; walk ruler row (row 7) - reused as the trace-walk position: 10; walk ruler column (row 8): 10; row 9: tally 3 + chord-script marker 5 + inversion chain 2: 10

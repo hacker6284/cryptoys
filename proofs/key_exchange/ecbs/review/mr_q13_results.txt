@@ -1,0 +1,4 @@
+spec (ecbs_physical.PB.madd)    : correct 20/20 vs affine chord rule; multiplies 12; PEAK BANDS (outside workbench) = 9
+    trace (op: bands): copy v<-X: 6; mac v += x2*Z (twin): 6; copy u<-Y: 6; mac u += y2*Z (twin): 7; copy uc<-u: 7; mac A0 += u*uc: 8; mac A += Z*A0: 8; copy vc<-v: 8; mac vv += v*vc: 9; copy w<-v: 9; add w+=X: 9; add w+=Z: 9; mac A += vv*w: 9; copy s<-A: 9; mac s += vv*X: 9; mac X3 += v*A: 9; mac vvv += vv*v: 9; free vv: 7; mac Y3 += s*u: 8; free s: 6; mac Y3 += vvv*Y: 6; mac Z3 += vvv*Z: 6; free vvv: 4
+F-form (this review)            : correct 20/20 vs affine chord rule; multiplies 12; PEAK BANDS (outside workbench) = 7
+    trace (op: bands): mac X += x2*Z (twin): 5; mac Y += y2*Z (twin): 5; copy uc<-Y: 5; mac G += Y*uc: 6; mac P += Z*G: 6; copy vc<-X: 6; mac t += X*vc: 7; mac W += t*Z: 7; mac P += X*t: 6; add P+=W: 5; mac Z3 += X*W: 6; mac X3 += P*X: 6; mac X3 += x2*Z3 (twin): 6; mac Y3 += Y*P: 6; free Y: 4; mac Y3 += y2*Z3 (twin): 5

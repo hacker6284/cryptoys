@@ -1,0 +1,14 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+Toy      three     1: per person   0.223 M moves (runs [0.23, 0.22, 0.22]), validation 0.04 M; x1.000 vs first option; 62 h @ 1 move/s
+Toy      pegs     19: per person   0.152 M moves (runs [0.15, 0.17, 0.14]), validation 0.04 M; x0.684 vs first option; 42 h @ 1 move/s
+Hobby    three     2: per person   2.073 M moves (runs [2.05, 2.09, 2.08]), validation 0.33 M; x1.000 vs first option; 576 h @ 1 move/s
+Hobby    pegs     54: per person   2.123 M moves (runs [2.2, 2.21, 1.96]), validation 0.33 M; x1.025 vs first option; 590 h @ 1 move/s
+Hobby    pegs     55: per person   1.944 M moves (runs [1.96, 2.09, 1.78]), validation 0.34 M; x0.938 vs first option; 540 h @ 1 move/s
+Hobby    six       1: per person   4.265 M moves (runs [4.34, 4.3, 4.15]), validation 0.34 M; x2.058 vs first option; 1,185 h @ 1 move/s
+Serious  three     6: per person  42.027 M moves (runs [41.9, 42.06, 42.13]), validation 3.39 M; x1.000 vs first option; 11,674 h @ 1 move/s
+Serious  three     7: per person  48.327 M moves (runs [48.26, 48.44, 48.28]), validation 3.40 M; x1.150 vs first option; 13,424 h @ 1 move/s
+Serious  pegs    162: per person  42.212 M moves (runs [42.94, 40.2, 43.5]), validation 3.38 M; x1.004 vs first option; 11,726 h @ 1 move/s
+Serious  pegs    173: per person  44.234 M moves (runs [43.37, 41.1, 48.23]), validation 3.38 M; x1.053 vs first option; 12,287 h @ 1 move/s
+Serious  pegs    175: per person  45.665 M moves (runs [49.49, 45.58, 41.93]), validation 3.42 M; x1.087 vs first option; 12,685 h @ 1 move/s
+Serious  pegs    200: per person  51.711 M moves (runs [52.98, 51.64, 50.52]), validation 3.40 M; x1.230 vs first option; 14,364 h @ 1 move/s
+Serious  six       2: per person  64.743 M moves (runs [65.64, 63.52, 65.07]), validation 3.40 M; x1.540 vs first option; 17,984 h @ 1 move/s

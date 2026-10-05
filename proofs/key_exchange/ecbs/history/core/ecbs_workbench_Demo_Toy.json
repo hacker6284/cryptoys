@@ -1,0 +1,120 @@
+{
+ "geometry": {
+  "Demo": {
+   "w": 2,
+   "h": 4,
+   "r": 1,
+   "k": 5,
+   "fold_ok": 300,
+   "comb_ok": 300,
+   "clash": 0,
+   "strip_need": 21,
+   "workbench": 24
+  },
+  "Toy": {
+   "w": 8,
+   "h": 3,
+   "r": 1,
+   "k": 15,
+   "fold_ok": 300,
+   "comb_ok": 300,
+   "clash": 0,
+   "strip_need": 69,
+   "workbench": 72
+  },
+  "Hobby": {
+   "w": 20,
+   "h": 3,
+   "r": 1,
+   "k": 39,
+   "fold_ok": 300,
+   "comb_ok": 300,
+   "clash": 0,
+   "strip_need": 177,
+   "workbench": 180
+  },
+  "Serious": {
+   "w": 20,
+   "h": 9,
+   "r": 6,
+   "k": 59,
+   "fold_ok": 300,
+   "comb_ok": 300,
+   "clash": 0,
+   "strip_need": 537,
+   "workbench": 540
+  }
+ },
+ "w1": {
+  "trials": 300,
+  "digits_ok": 300,
+  "ambiguous_moments": 0,
+  "restored": 300
+ },
+ "Demo_three 1 affine": {
+  "bands": {
+   "public walk": 6,
+   "validation": 8,
+   "shared walk": 6
+  },
+  "moves": 39085.95,
+  "slide_last": 7204,
+  "rerolls": 4,
+  "tally": 3
+ },
+ "Demo_three 1 affine +trace-walk": {
+  "bands": {
+   "public walk": 6,
+   "validation": 6,
+   "shared walk": 6
+  },
+  "moves": 40505.0,
+  "slide_last": 7546,
+  "rerolls": 1,
+  "tally": 3
+ },
+ "Demo_three 1 proj": {
+  "bands": {
+   "public walk": 9,
+   "validation": 8,
+   "shared walk": 9
+  },
+  "moves": 46922.95,
+  "slide_last": 7844,
+  "rerolls": 0,
+  "tally": 3
+ },
+ "Toy_three 1 proj": {
+  "bands": {
+   "public walk": 9,
+   "validation": 8,
+   "shared walk": 9
+  },
+  "moves": 264392.6666666667,
+  "slide_last": 39594,
+  "rerolls": 0,
+  "tally": 11
+ },
+ "Toy_pegs 19 proj": {
+  "bands": {
+   "public walk": 9,
+   "validation": 8,
+   "shared walk": 9
+  },
+  "moves": 158443.0,
+  "slide_last": 22006,
+  "rerolls": 0,
+  "tally": 11
+ },
+ "Toy_three 1 affine": {
+  "bands": {
+   "public walk": 6,
+   "validation": 8,
+   "shared walk": 6
+  },
+  "moves": 305794.6666666667,
+  "slide_last": 46098,
+  "rerolls": 0,
+  "tally": 11
+ }
+}

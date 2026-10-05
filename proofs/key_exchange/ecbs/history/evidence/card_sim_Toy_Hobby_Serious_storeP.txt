@@ -1,0 +1,150 @@
+Toy n 23 k 15
+  {"keys": ["WWWWW..WW.R.RRW.", "RRR.W......WRWRW"], "tier": "Toy", "store_P": true, "P_ok": [true, true], "base_hole": 2, "C_ok": [true, true], "on_curve": [true, true], "A_ok": [true, true, true], "match": [true, true], "agree": true, "shared_ok": true, "fold_ref_ok": [true, true], "fold_agree": true, "peak_by_phase": {"base point": 7, "store P": 4, "own walk": 9, "swap": 8, "curve test": 9, "make certificate": 9, "rebuild theirs": 9, "shared walk": 9}, "peak": [9, 9], "peak_strict": [9, 9], "max_bench_hole": 66, "control": {"ladder": "WRRW", "park_hole": 21, "tally_first": 22, "tally_max": 11, "highest_hole_used": 32, "script_marker_max": 15, "phase_end": ["R", "R"], "calling_hole": 16}, "moves": {"A": 141902, "B": 125606}, "ctrl": {"A": 1315, "B": 1219}, "key_grid": {"A": 19, "B": 17}, "calls": {"A": 92, "B": 92}, "cursor_steps": {"A": 94, "B": 94}, "stale_cleared": {"A": 0, "B": 0}, "ladder_build_once": 65, "ops": {"mul": 355, "cube": 264, "inv": 5, "chord": 2, "fadd": 23}, "calls_ok": true, "call_example": ["grid 2, A1", "grid 2, A2"], "secs": 0.6}
+   by phase {"A": {"base point": 23400, "store P": 33, "own walk": 53060, "swap": 63, "curve test": 1228, "make certificate": 6941, "rebuild theirs": 7506, "shared walk": 49667, "fold": 4}, "B": {"base point": 23400, "store P": 33, "own walk": 44196, "swap": 55, "curve test": 817, "make certificate": 7456, "rebuild theirs": 6991, "shared walk": 42654, "fold": 4}}
+Toy summary {
+ "exchanges": 1,
+ "people": 2,
+ "all_checks_pass": 1,
+ "base_point_is_P": 2,
+ "shared_is_lam1abP": 1,
+ "band_peak": 9,
+ "peak_by_phase": {
+  "base point": 7,
+  "store P": 4,
+  "own walk": 9,
+  "swap": 8,
+  "curve test": 9,
+  "make certificate": 9,
+  "rebuild theirs": 9,
+  "shared walk": 9
+ },
+ "highest_bench_hole": 66,
+ "moves_per_person_mean": 133754,
+ "moves_min": 125606,
+ "moves_max": 141902,
+ "moves_by_phase_mean": {
+  "base point": 23400,
+  "store P": 33,
+  "own walk": 48628,
+  "swap": 59,
+  "curve test": 1022,
+  "make certificate": 7198,
+  "rebuild theirs": 7248,
+  "shared walk": 46160,
+  "fold": 4
+ },
+ "check_moves_mean": 15470,
+ "control_moves_mean": 1267,
+ "ladder_build_once": 65,
+ "calls_per_receiver": [
+  92
+ ],
+ "tally_max": 11,
+ "control_highest_hole": 32,
+ "script_marker_max": 15,
+ "same_keys_as_phase1": true,
+ "identical_to_phase1_python": "1/1",
+ "differences": [],
+ "homes_disjoint": true,
+ "secs": 0.6
+}
+Hobby n 59 k 39
+  {"keys": ["RW.RRWW.WRRRR.R.R...RRRR..R..WWR...RR..RRRWWWRWRRWR", "RWWWWW.RW..RW..RR.RWR.WRW.R.W.W.W...RW.WR..W.RWR.RW"], "tier": "Hobby", "store_P": true, "P_ok": [true, true], "base_hole": 1, "C_ok": [true, true], "on_curve": [true, true], "A_ok": [true, true, true], "match": [true, true], "agree": true, "shared_ok": true, "fold_ref_ok": [true, true], "fold_agree": true, "peak_by_phase": {"base point": 7, "store P": 4, "own walk": 9, "swap": 8, "curve test": 9, "make certificate": 9, "rebuild theirs": 9, "shared walk": 9}, "peak": [9, 9], "peak_strict": [9, 9], "max_bench_hole": 174, "control": {"ladder": "WRWRR", "park_hole": 22, "tally_first": 23, "tally_max": 29, "highest_hole_used": 51, "script_marker_max": 15, "phase_end": ["R", "R"], "calling_hole": 16}, "moves": {"A": 1866402, "B": 1767243}, "ctrl": {"A": 3532, "B": 3388}, "key_grid": {"A": 43, "B": 40}, "calls": {"A": 236, "B": 236}, "cursor_steps": {"A": 238, "B": 238}, "stale_cleared": {"A": 0, "B": 0}, "ladder_build_once": 173, "ops": {"mul": 944, "cube": 667, "inv": 5, "chord": 2, "fadd": 71}, "calls_ok": true, "call_example": ["grid 3, A1", "grid 3, A2"], "secs": 1.5}
+   by phase {"A": {"base point": 105759, "store P": 84, "own walk": 831875, "swap": 153, "curve test": 3827, "make certificate": 41687, "rebuild theirs": 45220, "shared walk": 837783, "fold": 14}, "B": {"base point": 105759, "store P": 84, "own walk": 788503, "swap": 169, "curve test": 4788, "make certificate": 45057, "rebuild theirs": 41850, "shared walk": 781019, "fold": 14}}
+Hobby summary {
+ "exchanges": 1,
+ "people": 2,
+ "all_checks_pass": 1,
+ "base_point_is_P": 2,
+ "shared_is_lam1abP": 1,
+ "band_peak": 9,
+ "peak_by_phase": {
+  "base point": 7,
+  "store P": 4,
+  "own walk": 9,
+  "swap": 8,
+  "curve test": 9,
+  "make certificate": 9,
+  "rebuild theirs": 9,
+  "shared walk": 9
+ },
+ "highest_bench_hole": 174,
+ "moves_per_person_mean": 1816822,
+ "moves_min": 1767243,
+ "moves_max": 1866402,
+ "moves_by_phase_mean": {
+  "base point": 105759,
+  "store P": 84,
+  "own walk": 810189,
+  "swap": 161,
+  "curve test": 4308,
+  "make certificate": 43372,
+  "rebuild theirs": 43535,
+  "shared walk": 809401,
+  "fold": 14
+ },
+ "check_moves_mean": 91214,
+ "control_moves_mean": 3460,
+ "ladder_build_once": 173,
+ "calls_per_receiver": [
+  236
+ ],
+ "tally_max": 29,
+ "control_highest_hole": 51,
+ "script_marker_max": 15,
+ "same_keys_as_phase1": true,
+ "identical_to_phase1_python": "1/1",
+ "differences": [],
+ "homes_disjoint": true,
+ "secs": 1.5
+}
+Serious n 179 k 59
+  {"keys": ["..WW...R.RWWRRRRRRW.WR..R..RW.WR.WRW...R.RWW..RRRWW..R..R.WR.W.WR.RWR.W.R..W..WRW.WRRWWR.W..RRW..WRRWRWW.RRR.WR.RWR.WWR...WWWR...R.R..RR.WWW...RWRR.RWRWWRWRW..RWW", "RW.R...R.W...R..RWRWW..R..RRWW.WW.RWRW..R.RRR.W.W.R.W.....WRW..RRR.WW...RWR..RRRR..R.RWW..W.WR.W.W..RWWW.RRWWWW.WRWRRRRWWR.RWR..W...W.R.W.R.W.W.WW.RR...W..RWRRWW."], "tier": "Serious", "store_P": true, "P_ok": [true, true], "base_hole": 1, "C_ok": [true, true], "on_curve": [true, true], "A_ok": [true, true, true], "match": [true, true], "agree": true, "shared_ok": true, "fold_ref_ok": [true, true], "fold_agree": true, "peak_by_phase": {"base point": 7, "store P": 4, "own walk": 9, "swap": 8, "curve test": 9, "make certificate": 9, "rebuild theirs": 9, "shared walk": 9}, "peak": [9, 9], "peak_strict": [9, 9], "max_bench_hole": 534, "control": {"ladder": "WRWWRRW", "park_hole": 24, "tally_first": 25, "tally_max": 89, "highest_hole_used": 113, "script_marker_max": 15, "phase_end": ["R", "R"], "calling_hole": 16}, "moves": {"A": 39863446, "B": 36990713}, "ctrl": {"A": 10486, "B": 10126}, "key_grid": {"A": 111, "B": 103}, "calls": {"A": 716, "B": 716}, "cursor_steps": {"A": 718, "B": 718}, "stale_cleared": {"A": 0, "B": 0}, "ladder_build_once": 533, "ops": {"mul": 2646, "cube": 2041, "inv": 5, "chord": 2, "fadd": 207}, "calls_ok": true, "call_example": ["grid 7, A1", "grid 7, A2"], "secs": 20.8}
+   by phase {"A": {"base point": 734962, "store P": 243, "own walk": 19287776, "swap": 490, "curve test": 35932, "make certificate": 364343, "rebuild theirs": 370479, "shared walk": 19069165, "fold": 56}, "B": {"base point": 734962, "store P": 243, "own walk": 17753144, "swap": 491, "curve test": 33794, "make certificate": 370002, "rebuild theirs": 364820, "shared walk": 17733201, "fold": 56}}
+Serious summary {
+ "exchanges": 1,
+ "people": 2,
+ "all_checks_pass": 1,
+ "base_point_is_P": 2,
+ "shared_is_lam1abP": 1,
+ "band_peak": 9,
+ "peak_by_phase": {
+  "base point": 7,
+  "store P": 4,
+  "own walk": 9,
+  "swap": 8,
+  "curve test": 9,
+  "make certificate": 9,
+  "rebuild theirs": 9,
+  "shared walk": 9
+ },
+ "highest_bench_hole": 534,
+ "moves_per_person_mean": 38427080,
+ "moves_min": 36990713,
+ "moves_max": 39863446,
+ "moves_by_phase_mean": {
+  "base point": 734962,
+  "store P": 243,
+  "own walk": 18520460,
+  "swap": 490,
+  "curve test": 34863,
+  "make certificate": 367172,
+  "rebuild theirs": 367650,
+  "shared walk": 18401183,
+  "fold": 56
+ },
+ "check_moves_mean": 769685,
+ "control_moves_mean": 10306,
+ "ladder_build_once": 533,
+ "calls_per_receiver": [
+  716
+ ],
+ "tally_max": 89,
+ "control_highest_hole": 113,
+ "script_marker_max": 15,
+ "same_keys_as_phase1": true,
+ "identical_to_phase1_python": "1/1",
+ "differences": [],
+ "homes_disjoint": true,
+ "secs": 20.8
+}

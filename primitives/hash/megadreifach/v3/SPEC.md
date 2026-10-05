@@ -1,6 +1,6 @@
 # MegaDreifach v3 (current)
 
-> **Status: current.** v3 is the current MegaDreifach. v2 ([`../SPEC.md`](../SPEC.md)) and v1 ([`../v1/SPEC.md`](../v1/SPEC.md)) are deprecated. DoubleDeal-CBC-Sandwich v2 uses v3 (`HashDecksBody` and `Hash`). HMAC-MegaDreifach and the frozen DoubleDeal-CBC-HMAC v1 still use v2; moving them to v3 changes their digests and is a separate decision. The Lean package models v2 only; v3 has no Lean model (§7).
+> **Status: current.** v3 is the current MegaDreifach. v2 ([`../SPEC.md`](../SPEC.md)) and v1 ([`../v1/SPEC.md`](../v1/SPEC.md)) are deprecated. DoubleDeal-CBC-Sandwich v2 uses v3 (`HashDecksBody` and `Hash`). HMAC-MegaDreifach and the frozen DoubleDeal-CBC-HMAC v1 still use v2; moving them to v3 changes their digests and is a separate decision. The Lean package `proofs/megadreifach/` models v2. v3's Lean is in `proofs/megadreifach-v3/` (§7): the code emitted from this sudo, a compiled KAT run, and refinement theorems tying every export (including `HashDecksBody`) to a hand-written model. None of it is a security claim.
 
 **What v3 changes.** v3 changes one thing: the card phase `W` inside `E_m`. The v2 card rule (grips, visual noon, slot reads, 36 F3 rounds) is replaced by **ZP26**:
 - colour-named card steps with a last-face register;
@@ -38,7 +38,7 @@ As v2 §1, with these differences:
   - It also needs "count up by a rank" on that 12-cycle. This replaces v2's "no colour-to-number arithmetic": counting up colours is the only arithmetic.
 - **Non-goals added.**
   - No claim that v3's compression function is a PRF; §8 is evidence against named distinguishers only.
-  - No Lean model of v3 (§7).
+  - No Lean security result about v3. Its Lean covers refinement only: on its input conditions, the emitted code computes a hand-written model (§7).
   - No human trials (§5.6).
 
 # 2. Public API
@@ -247,7 +247,7 @@ Unchanged from v2 §6.
 The pad lengths, block counts, IV-COOK12 digest and `|G|` are as in v2.
 
 How the vectors are made and checked:
-- **Generated** from the normative sudo: `../kats/regen_v3.mjs` imports the sudoc JS build of `megadreifach.sudo` and writes the file, including the IV-COOK12 digest. With `--check` it confirms that a fresh run reproduces the file byte for byte. CI does this in `tools/generate-demos.sh`. The repo has no other implementation of v3's `W`.
+- **Generated** from the normative sudo: `../kats/regen_v3.mjs` imports the sudoc JS build of `megadreifach.sudo` and writes the file, including the IV-COOK12 digest. With `--check` it confirms that a fresh run reproduces the file byte for byte. CI does this in `tools/generate-demos.sh`. Apart from the generated code, the only other implementation of v3's `W` in the repo is the Lean model `proofs/megadreifach-v3/lean/MegaDreifachV3/Em.lean`, which Link 2 theorems prove equal to the emitted Lean (§7). It is not used to make these vectors.
 - **Sudo tests** assert:
   - pad, φ, IV-COOK12, the rank, the group law, the API and the edge table (all as v2);
   - the piece-colour reads;
@@ -260,7 +260,7 @@ How the vectors are made and checked:
   - the eight `Hash` digests and the `HashDeck` vector;
   - two `HashDeckBody` vectors, one of them with K♦ held.
 
-**Lean coverage: none for v3.** The Lean package `proofs/megadreifach/` and its emitted `Generated/` model v2 (v2 SPEC §7), and the frozen v1 package models v1. No Lean statement is about v3, and porting is open.
+**Lean coverage for v3: refinement only.** `proofs/megadreifach-v3/` holds the Lean emitted from this sudo (checked fresh in CI), a compiled run of the KATs above (52 checks), and Link 2 theorems. They prove that each of the sudo's 11 exports, as emitted, equals a hand-written Lean model (`Em.lean`, which also uses the v2 model files in `proofs/megadreifach/`), under the input conditions listed in that package's README. Link 2 proves only generated = model. It does not check the sudo or the model against this SPEC. No Lean statement is about v3's security. `proofs/megadreifach/` and its `Generated/` model v2 (v2 SPEC §7), and the frozen v1 package models v1.
 
 ---
 
@@ -328,5 +328,5 @@ Effects smaller than these are not excluded. Comparisons with the rejected varia
 
 As v2 §9, and also:
 - that v3's `E_m` or compression function is a PRF or ideal cipher. §8 shows only that the named tests do not separate v3 from a random function at the stated power. Among them, the free-start D1/D1′ test does separate v2;
-- any Lean result about v3 (there is none, §7);
+- any Lean result about v3's security (§7 lists the Lean coverage, which is refinement only);
 - anything about human error rates or hand timing.

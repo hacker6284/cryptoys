@@ -1,0 +1,38 @@
+{
+ "per_add": 3756.25,
+ "per_F": 303.3296703296703,
+ "runs": {
+  "three1": {
+   "per_person_mean": 242071.33333333334,
+   "per_person_runs": [
+    243083.0,
+    242213.5,
+    240917.5
+   ],
+   "adds_runs": [
+    16,
+    16,
+    16
+   ],
+   "validation": 53130.0,
+   "tau_bar": 0,
+   "constant_work": 865608.8333333334
+  },
+  "pegs19": {
+   "per_person_mean": 156099.33333333334,
+   "per_person_runs": [
+    183320.0,
+    151215.0,
+    133763.0
+   ],
+   "adds_runs": [
+    14,
+    10,
+    8
+   ],
+   "validation": 53044.0,
+   "tau_bar": 0,
+   "constant_work": 211191.0
+  }
+ }
+}

@@ -15,6 +15,8 @@
     python3 proofs/doubledeal/check_axioms.py cbc-hmac-v1-deprecated  # frozen v1 package
                                           # (proofs/deprecated/doubledeal-cbc-hmac-v1/lean,
                                           # DoubleDeal-CBC-HMAC v1 Link 2)
+    python3 proofs/doubledeal/check_axioms.py megadreifach-v3  # MegaDreifach v3 package
+                                          # (proofs/megadreifach-v3/lean)
     python3 proofs/doubledeal/check_axioms.py scramble  # proofs/scramble/lean
                                           # (Scramble Link 2: v2 and v1 digest paths)
     python3 proofs/doubledeal/check_axioms.py bs  # proofs/key_exchange/bs/lean
@@ -56,6 +58,11 @@ axiom) fails, as does a Lean error.
 - megadreifach-v1-deprecated: like megadreifach (mode "all", key "full") for the
   frozen v1 package proofs/deprecated/megadreifach-v1/lean (root `MegaDreifachV1`);
   required: the theorems its README cites (MD_V1_README_THEOREMS).
+- megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
+  for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
+  README cites (MD_V3_README_THEOREMS); min is the audited count (180).
+  `--selftest` checks its "Emitted function" column against
+  primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac-v1-deprecated: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
   the frozen v1 package proofs/deprecated/doubledeal-cbc-hmac-v1/lean (root
   `DoubleDealCbcHmac`, the v1 Link 2 package, superseded by DoubleDeal-CBC-Sandwich v2);
@@ -410,6 +417,33 @@ MD_V1_README_THEOREMS = {
     "MegaDreifachV1.Security.foldl_dmBlock_sameCorners",
 }
 
+# proofs/megadreifach-v3/lean (MegaDreifach v3, the ZP26 card phase): every theorem its
+# README cites by name; `--selftest` re-derives the list the same way as MD_README_THEOREMS.
+# Link 2 of all 11 v3 exports (MegaDreifachV3.Link2) and the layers under them.
+MD_V3_LEAN = ROOT.parent / "megadreifach-v3" / "lean"
+MD_V3_README = MD_V3_LEAN.parent / "README.md"
+MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
+    "compose_refines", "face_move_refines", "face_turn_refines", "inverse_refines",
+    "pad_message_refines", "pad_message_refines_array", "require_permutation_refines",
+    "require_permutation_refines_array", "position_to_bytes_refines_gen",
+    "position_to_bytes_refines", "phi_chunk_refines", "phi_chunk_refines_array",
+    "phi_inv_refines", "phi_inv_refines_array",
+    "triples_ok", "lowest_nbr_index_refines", "suit_nbrs_refines",
+    "edge_face_of_refines", "corner_face_of_refines", "edgeFaceOf_found",
+    "cornerFaceOf_found", "corner_cover", "card_edge_found", "card_corner_found",
+    "turn_run_refines", "count_find_refines", "count_relook_refines",
+    "count_register_looks_refines", "card_colour_refines", "card_step_refines",
+    "echo_colour_refines", "em_run_refines", "em_block_refines", "emBlock_inj",
+    "dm_step_refines", "dmStep_inj",
+    "iv_cook12_refines", "v_Hash_refines", "v_Hash_refines_array", "v_MegaDreifach_refines",
+    "v_HashDeck_refines", "v_HashDeck_refines_array", "v_HashDeck_two_blocks",
+    "v_MegaDreifachDeck_refines", "body_from_refines",
+    "v_HashDeckBody_refines", "v_MegaDreifachBody_refines", "v_HashDeckBodyFrom_refines",
+    "v_MegaDreifachBodyFrom_refines"]} | {f"MegaDreifachV3.Em.{n}" for n in [
+    "edgeFaceOf_spec", "cornerFaceOf_spec", "turnedFace_countUp", "turnedFace_king",
+    "echoColour_countUp", "cardStep_g_last", "dealFold_g_last", "echoRun_g_last",
+    "emBlock_any_counters"]}
+
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
                       "multi_56", "multi_100"]}
@@ -583,7 +617,7 @@ BS_LINK2 = {
 }
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only
-# exports (S6 of the #140 review). MegaDreifach is not listed yet: its README has no
+# exports (S6 of the #140 review). MegaDreifach v2 is not listed yet: its README has no
 # "Emitted function" column (its Link 2 rows are Stone / Claim / Status). 8 of its 11
 # exports have a Link 2 `_refines` theorem (pad_message, require_permutation,
 # position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
@@ -594,6 +628,8 @@ BS_LINK2 = {
 # that gap is in the table rather than silent. BS is listed: its table has a row for each of
 # the 11 exports (build_letting_go went with letting go, SPEC §4.2: nobody lets go).
 LINK2_EXPORT_TABLES = {
+    "megadreifach-v3": (ROOT.parent.parent / "primitives" / "hash" / "megadreifach" / "v3"
+                        / "megadreifach.sudo", MD_V3_README),
     "cbc-hmac-v1-deprecated": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
                                / "v1" / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
     "scramble": (ROOT.parent.parent / "primitives" / "hash" / "scramble" / "scramble.sudo",
@@ -919,6 +955,16 @@ PACKAGES = {
         "known_sorry": set(),
         "min": 500,  # sanity: the audit must actually see the package
         "required": MD_V1_README_THEOREMS,
+    },
+    "megadreifach-v3": {
+        "dir": MD_V3_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        # sanity: the audit must see the whole package (the real audited count; raise as
+        # Link 2 grows, lower only with a reason in the commit)
+        "min": 180,
+        "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac-v1-deprecated": {
         "dir": CBC_HMAC_LEAN,
@@ -1308,6 +1354,7 @@ def selftest():
     for what, listed, readme, root in [
             ("MD_README_THEOREMS", MD_README_THEOREMS, MD_README, MD_LEAN),
             ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN),
+            ("MD_V3_README_THEOREMS", MD_V3_README_THEOREMS, MD_V3_README, MD_V3_LEAN),
             ("CBC_HMAC_LINK2", CBC_HMAC_LINK2, CBC_HMAC_LEAN.parent / "README.md",
              CBC_HMAC_LEAN),
             ("SCRAMBLE_LINK2", SCRAMBLE_LINK2, SCRAMBLE_LEAN.parent / "README.md",

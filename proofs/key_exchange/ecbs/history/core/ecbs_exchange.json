@@ -1,0 +1,405 @@
+{
+ "Demo": {
+  "ops": {
+   "mul": 40.0,
+   "cube": 30.5,
+   "inv": 366.6666666666667,
+   "ptadd": 446.0
+  },
+  "runs": [
+   {
+    "encoding": "three",
+    "param": 1,
+    "rerolls": 1,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 16,
+    "frob_A": 100,
+    "moves": {
+     "pub": 14835,
+     "on_curve": 170.5,
+     "trace": 3178,
+     "tau_bar": 0,
+     "shared": 15499,
+     "per_person": 33682.5
+    }
+   }
+  ],
+  "adversarial": {
+   "order5_on_curve": "True",
+   "order5_in_F3_visual": "True",
+   "order5_trace": "False",
+   "order5_cofactor": "True",
+   "order5_walk_leak(ref)": "(True, 'reveals sum of signs mod 5 = 2')",
+   "mixed_on_curve": "True",
+   "mixed_trace": "False",
+   "mixed_cofactor_equals_5B": "True",
+   "invalid_curve_b2_order": "(2102, [(2, 1), (1051, 1)])",
+   "invalid_on_curve_check": "False",
+   "invalid_leak": "walk output lies in <Z> of order 1051: attacker learns a value mod 1051 (index 877)"
+  }
+ },
+ "Toy": {
+  "ops": {
+   "mul": 257.5,
+   "cube": 111.6,
+   "inv": 4396.666666666667,
+   "ptadd": 2988.0
+  },
+  "runs": [
+   {
+    "encoding": "three",
+    "param": 1,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 16,
+    "frob_A": 100,
+    "moves": {
+     "pub": 95300,
+     "on_curve": 794.0,
+     "trace": 52693,
+     "tau_bar": 0,
+     "shared": 93641,
+     "per_person": 242428.0
+    }
+   },
+   {
+    "encoding": "pegs",
+    "param": 21,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 15,
+    "frob_A": 21,
+    "moves": {
+     "pub": 68123,
+     "on_curve": 913.5,
+     "trace": 53044,
+     "tau_bar": 0,
+     "shared": 69778,
+     "per_person": 191858.5
+    }
+   }
+  ],
+  "adversarial": {
+   "order5_on_curve": "True",
+   "order5_in_F3_visual": "True",
+   "order5_trace": "False",
+   "order5_cofactor": "True",
+   "order5_walk_leak(ref)": "(True, 'reveals sum of signs mod 5 = 2')",
+   "mixed_on_curve": "True",
+   "mixed_trace": "False",
+   "mixed_cofactor_equals_5B": "True",
+   "invalid_curve_b2_order": "(94143792374, [(2, 1), (47071896187, 1)])",
+   "invalid_leak": "no odd prime factor below 10^6 in the b'=2 order"
+  }
+ },
+ "Hobby": {
+  "ops": {
+   "mul": 1785.2,
+   "cube": 258.8,
+   "inv": 31274.0,
+   "ptadd": 15220.0
+  },
+  "runs": [
+   {
+    "encoding": "three",
+    "param": 2,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 33,
+    "frob_A": 200,
+    "moves": {
+     "pub": 892882,
+     "on_curve": 4018.5,
+     "trace": 430068,
+     "tau_bar": 0,
+     "shared": 905331,
+     "per_person": 2232299.5
+    }
+   },
+   {
+    "encoding": "twisted",
+    "param": 2,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 33,
+    "frob_A": 200,
+    "moves": {
+     "pub": 890589,
+     "on_curve": 3918.0,
+     "trace": 435985,
+     "tau_bar": 50953,
+     "shared": 887161,
+     "per_person": 2268606.0
+    }
+   },
+   {
+    "encoding": "pegs",
+    "param": 55,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 35,
+    "frob_A": 55,
+    "moves": {
+     "pub": 834831,
+     "on_curve": 4202.0,
+     "trace": 429763,
+     "tau_bar": 0,
+     "shared": 806956,
+     "per_person": 2075752.0
+    }
+   }
+  ],
+  "adversarial": {
+   "order5_on_curve": "True",
+   "order5_in_F3_visual": "True",
+   "order5_trace": "False",
+   "order5_cofactor": "True",
+   "order5_walk_leak(ref)": "(True, 'reveals sum of signs mod 5 = 3')",
+   "mixed_on_curve": "True",
+   "mixed_trace": "False",
+   "mixed_cofactor_equals_5B": "True",
+   "invalid_curve_b2_order": "(14130386091738500818388309702, [(2, 1), (16993, 1), (3770219, 1), (110277623308041353, 1)])",
+   "invalid_on_curve_check": "False",
+   "invalid_leak": "walk output lies in <Z> of order 16993: attacker learns a value mod 16993 (index 3375)"
+  }
+ },
+ "Serious": {
+  "ops": {
+   "mul": 15089.8,
+   "cube": 607.7,
+   "inv": 268739.3333333333,
+   "ptadd": 119094.66666666667
+  },
+  "runs": [
+   {
+    "encoding": "three",
+    "param": 6,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 101,
+    "frob_A": 600,
+    "moves": {
+     "pub": 19458365,
+     "on_curve": 30027.5,
+     "trace": 4439136,
+     "tau_bar": 0,
+     "shared": 19245236,
+     "per_person": 43172764.5
+    }
+   },
+   {
+    "encoding": "three",
+    "param": 7,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 118,
+    "frob_A": 700,
+    "moves": {
+     "pub": 22818094,
+     "on_curve": 28052.0,
+     "trace": 4440409,
+     "tau_bar": 0,
+     "shared": 22583677,
+     "per_person": 49870232.0
+    }
+   },
+   {
+    "encoding": "twisted",
+    "param": 6,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 101,
+    "frob_A": 600,
+    "moves": {
+     "pub": 19343185,
+     "on_curve": 30328.0,
+     "trace": 4422992,
+     "tau_bar": 2103470,
+     "shared": 19317639,
+     "per_person": 45217614.0
+    }
+   },
+   {
+    "encoding": "pegs",
+    "param": 162,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 103,
+    "frob_A": 162,
+    "moves": {
+     "pub": 19009932,
+     "on_curve": 29854.0,
+     "trace": 4488352,
+     "tau_bar": 0,
+     "shared": 18995169,
+     "per_person": 42523307.0
+    }
+   },
+   {
+    "encoding": "pegs",
+    "param": 175,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 107,
+    "frob_A": 175,
+    "moves": {
+     "pub": 19741596,
+     "on_curve": 27159.0,
+     "trace": 4354688,
+     "tau_bar": 0,
+     "shared": 19544288,
+     "per_person": 43667731.0
+    }
+   },
+   {
+    "encoding": "six",
+    "param": 2,
+    "pub_A_ok": true,
+    "pub_B_ok": true,
+    "on_curve": [
+     true,
+     true
+    ],
+    "trace_ok": [
+     true,
+     true
+    ],
+    "agree": true,
+    "matches_ref": true,
+    "adds_A": 171,
+    "frob_A": 400,
+    "moves": {
+     "pub": 31605660,
+     "on_curve": 29062.0,
+     "trace": 4406690,
+     "tau_bar": 0,
+     "shared": 31507837,
+     "per_person": 67549249.0
+    }
+   }
+  ],
+  "adversarial": {
+   "order5_on_curve": "True",
+   "order5_in_F3_visual": "True",
+   "order5_trace": "False",
+   "order5_cofactor": "True",
+   "order5_walk_leak(ref)": "(True, 'reveals sum of signs mod 5 = 1')",
+   "mixed_on_curve": "True",
+   "mixed_trace": "False",
+   "mixed_cofactor_equals_5B": "True",
+   "invalid_curve_b2_order": "(25392449348622130779763242573538520583474931649413192357606225788662483413542352544102, [(2, 1), (12696224674311065389881621286769260291737465824706596178803112894331241706771176272051, 1)])",
+   "invalid_leak": "no odd prime factor below 10^6 in the b'=2 order"
+  }
+ }
+}

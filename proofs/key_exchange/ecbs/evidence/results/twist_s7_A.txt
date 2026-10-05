@@ -1,0 +1,85 @@
+A {
+ "pairs_x_not_in_GF3": 4776408,
+ "GF3_defined_curves": {
+  "a4=0,a6=0": {
+   "points": 2184,
+   "isomorphic_to": "node",
+   "certificate_is_pi_minus_1_there": "400/400",
+   "passes_curve_test": false,
+   "generated_curve_test_passes": 0
+  },
+  "a4=0,a6=1": {
+   "points": 2100,
+   "isomorphic_to": "E",
+   "certificate_is_pi_minus_1_there": "400/400",
+   "passes_curve_test": true,
+   "generated_curve_test_passes": 2100
+  },
+  "a4=0,a6=2": {
+   "points": 2100,
+   "isomorphic_to": "E'",
+   "certificate_is_pi_minus_1_there": "400/400",
+   "passes_curve_test": false,
+   "generated_curve_test_passes": 0
+  },
+  "a4=1,a6=0": {
+   "points": 2184,
+   "isomorphic_to": "node",
+   "certificate_is_pi_minus_1_there": "400/400",
+   "passes_curve_test": false,
+   "generated_curve_test_passes": 0
+  },
+  "a4=1,a6=1": {
+   "points": 2100,
+   "isomorphic_to": "E",
+   "certificate_is_pi_minus_1_there": "400/400",
+   "passes_curve_test": false,
+   "generated_curve_test_passes": 0
+  },
+  "a4=1,a6=2": {
+   "points": 2100,
+   "isomorphic_to": "E'",
+   "certificate_is_pi_minus_1_there": "400/400",
+   "passes_curve_test": false,
+   "generated_curve_test_passes": 0
+  },
+  "a4=2,a6=0": {
+   "points": 2100,
+   "isomorphic_to": "E'",
+   "certificate_is_pi_minus_1_there": "400/400",
+   "passes_curve_test": false,
+   "generated_curve_test_passes": 0
+  },
+  "a4=2,a6=1": {
+   "points": 2184,
+   "isomorphic_to": "node",
+   "certificate_is_pi_minus_1_there": "400/400",
+   "passes_curve_test": false,
+   "generated_curve_test_passes": 0
+  },
+  "a4=2,a6=2": {
+   "points": 2100,
+   "isomorphic_to": "E",
+   "certificate_is_pi_minus_1_there": "400/400",
+   "passes_curve_test": false,
+   "generated_curve_test_passes": 0
+  }
+ },
+ "other_pairs": {
+  "count": 4757256,
+  "rebuilt_A_on_y2_eq_x3_minus_x2_plus_a4x_plus_a6_with_a4_a6_from_pi_C_and_minus_C": 4757256,
+  "a4_nonzero": 4757256,
+  "curve_of_A_defined_over_GF3": 0,
+  "Frobenius_moves_that_curve": 4757256,
+  "rebuilt_A_happens_to_lie_on_E": 2002,
+  "generated_curve_test_passes": 0
+ },
+ "quadratic_twist_points_x_not_in_GF3": {
+  "model_y2_eq_x3_plus_x2_plus_2": 2268,
+  "of_which_on_a_GF3_defined_curve": 0,
+  "model_minus_y2_eq_f": 2268,
+  "of_which_on_a_GF3_defined_curve_": 0,
+  "twist_order_PARI": 2271,
+  "generated_curve_test_rejects_all": true
+ }
+}

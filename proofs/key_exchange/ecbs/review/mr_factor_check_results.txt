@@ -1,0 +1,8 @@
+n=59 twist q+1+V: product matches order: True; all factors proven prime: True; log2 order 93.51; largest prime 39.25 bits (rho ~2^19.6); part below the largest prime: 54.26 bits; second-largest prime 27.37 bits
+n=59 b'=2 curve: product matches order: n/a (order from mr_orders); all factors proven prime: True; log2 order 93.51; largest prime 28.39 bits (rho ~2^14.2); part below the largest prime: 65.12 bits; second-largest prime 28.22 bits
+n=59 node q+1: product matches order: True; all factors proven prime: True; log2 order 93.51; largest prime 79.87 bits (rho ~2^39.9); part below the largest prime: 13.64 bits; second-largest prime 11.64 bits
+n=179 twist q+1+V: product matches order: True; all factors proven prime: True; log2 order 283.71; largest prime 115.38 bits (rho ~2^57.7); part below the largest prime: 168.33 bits; second-largest prime 72.92 bits
+n=179 b'=2 curve: product matches order: n/a (order from mr_orders); all factors proven prime: True; log2 order 283.71; largest prime 238.77 bits (rho ~2^119.4); part below the largest prime: 44.94 bits; second-largest prime 43.94 bits
+n=179 node q+1: product matches order: True; all factors proven prime: True; log2 order 283.71; largest prime 161.41 bits (rho ~2^80.7); part below the largest prime: 122.30 bits; second-largest prime 53.04 bits
+True
+True

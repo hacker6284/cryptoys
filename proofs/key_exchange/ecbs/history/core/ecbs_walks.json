@@ -1,0 +1,1118 @@
+{
+ "Demo_three1_proj": {
+  "moves": 36291.0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 3,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 2,
+   "trace chain row (from n)": 2,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 1,
+   "work_rows": 11,
+   "ctrl_rows": 7,
+   "work_grids": 2,
+   "total": 3,
+   "spare_rows": 2
+  },
+  "ops": {
+   "cube": 607,
+   "ptadd": 32,
+   "mul": 419,
+   "inv": 5
+  }
+ },
+ "Demo_three1_affine": {
+  "moves": 32439.0,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 3,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 2,
+   "trace chain row (from n)": 2,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 1,
+   "work_rows": 11,
+   "ctrl_rows": 6,
+   "work_grids": 2,
+   "total": 3,
+   "spare_rows": 3
+  },
+  "ops": {
+   "cube": 615,
+   "inv": 35,
+   "mul": 247
+  }
+ },
+ "Demo_pegs3_proj": {
+  "moves": 4727.333333333333,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 3,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 2,
+   "trace chain row (from n)": 2,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 1,
+   "work_rows": 11,
+   "ctrl_rows": 7,
+   "work_grids": 2,
+   "total": 3,
+   "spare_rows": 2
+  },
+  "ops": {
+   "cube": 49,
+   "ptadd": 2,
+   "mul": 59,
+   "inv": 5
+  }
+ },
+ "Demo_pegs3_affine": {
+  "moves": 4045.0,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 3,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 2,
+   "trace chain row (from n)": 2,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 1,
+   "work_rows": 11,
+   "ctrl_rows": 6,
+   "work_grids": 2,
+   "total": 3,
+   "spare_rows": 3
+  },
+  "ops": {
+   "cube": 63,
+   "inv": 7,
+   "mul": 51
+  }
+ },
+ "Toy_three1_proj": {
+  "moves": 227764.33333333334,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 11,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 4,
+   "trace chain row (from n)": 4,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": "5 (5-wide)",
+   "ctrl_rows": 9,
+   "work_grids": 4,
+   "total": 5,
+   "spare_rows": "1 control rows + 1 quarter-grid(s)"
+  },
+  "ops": {
+   "cube": 785,
+   "ptadd": 32,
+   "mul": 464,
+   "inv": 8
+  }
+ },
+ "Toy_three1_affine": {
+  "moves": 253135.33333333334,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 11,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 4,
+   "trace chain row (from n)": 4,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": "5 (5-wide)",
+   "ctrl_rows": 7,
+   "work_grids": 4,
+   "total": 5,
+   "spare_rows": "3 control rows + 1 quarter-grid(s)"
+  },
+  "ops": {
+   "cube": 1169,
+   "inv": 38,
+   "mul": 382
+  }
+ },
+ "Toy_pegs19_proj": {
+  "moves": 150685.0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 11,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 4,
+   "trace chain row (from n)": 4,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": "5 (5-wide)",
+   "ctrl_rows": 9,
+   "work_grids": 4,
+   "total": 5,
+   "spare_rows": "1 control rows + 1 quarter-grid(s)"
+  },
+  "ops": {
+   "cube": 329,
+   "ptadd": 28,
+   "mul": 416,
+   "inv": 8
+  }
+ },
+ "Toy_pegs19_affine": {
+  "moves": 182754.33333333334,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 11,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 4,
+   "trace chain row (from n)": 4,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": "5 (5-wide)",
+   "ctrl_rows": 7,
+   "work_grids": 4,
+   "total": 5,
+   "spare_rows": "3 control rows + 1 quarter-grid(s)"
+  },
+  "ops": {
+   "cube": 733,
+   "inv": 28,
+   "mul": 282
+  }
+ },
+ "Hobby_three2_proj": {
+  "moves": 2066795.6666666667,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 29,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 5,
+   "trace chain row (from n)": 5,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4,
+   "fleet index": 2
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 6,
+   "work_rows": 66,
+   "ctrl_rows": 10,
+   "work_grids": 8,
+   "total": 10,
+   "spare_rows": 4
+  },
+  "ops": {
+   "cube": 1657,
+   "ptadd": 66,
+   "mul": 912,
+   "inv": 10
+  }
+ },
+ "Hobby_three2_affine": {
+  "moves": 3018153.6666666665,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 29,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 5,
+   "trace chain row (from n)": 5,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4,
+   "fleet index": 2
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 6,
+   "work_rows": 66,
+   "ctrl_rows": 9,
+   "work_grids": 8,
+   "total": 10,
+   "spare_rows": 5
+  },
+  "ops": {
+   "cube": 5193,
+   "inv": 74,
+   "mul": 890
+  }
+ },
+ "Hobby_pegs55_proj": {
+  "moves": 1858727.6666666667,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 29,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 5,
+   "trace chain row (from n)": 5,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 6,
+   "work_rows": 66,
+   "ctrl_rows": 10,
+   "work_grids": 8,
+   "total": 9,
+   "spare_rows": 4
+  },
+  "ops": {
+   "cube": 1021,
+   "ptadd": 68,
+   "mul": 936,
+   "inv": 10
+  }
+ },
+ "Hobby_pegs55_affine": {
+  "moves": 3033549.6666666665,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 29,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 5,
+   "trace chain row (from n)": 5,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 6,
+   "work_rows": 66,
+   "ctrl_rows": 8,
+   "work_grids": 8,
+   "total": 9,
+   "spare_rows": 6
+  },
+  "ops": {
+   "cube": 5089,
+   "inv": 82,
+   "mul": 986
+  }
+ },
+ "Hobby_six1_proj": {
+  "moves": 4000147.6666666665,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 29,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 5,
+   "trace chain row (from n)": 5,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 6,
+   "work_rows": 66,
+   "ctrl_rows": 10,
+   "work_grids": 8,
+   "total": 9,
+   "spare_rows": 4
+  },
+  "ops": {
+   "cube": 1891,
+   "ptadd": 158,
+   "mul": 2016,
+   "inv": 10
+  }
+ },
+ "Hobby_six1_affine": {
+  "moves": 6920795.333333333,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 29,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 5,
+   "trace chain row (from n)": 5,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 6,
+   "work_rows": 66,
+   "ctrl_rows": 8,
+   "work_grids": 8,
+   "total": 9,
+   "spare_rows": 6
+  },
+  "ops": {
+   "cube": 11353,
+   "inv": 180,
+   "mul": 2162
+  }
+ },
+ "Serious_three6_proj": {
+  "moves": 41695971.0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4,
+   "fleet index": 6
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 18,
+   "work_grids": 22,
+   "total": 28,
+   "spare_rows": 4
+  },
+  "ops": {
+   "cube": 6057,
+   "ptadd": 202,
+   "mul": 2592,
+   "inv": 12
+  }
+ },
+ "Serious_three6_affine": {
+  "moves": 68701814.0,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4,
+   "fleet index": 6
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 16,
+   "work_grids": 22,
+   "total": 28,
+   "spare_rows": 6
+  },
+  "ops": {
+   "cube": 40457,
+   "inv": 212,
+   "mul": 2970
+  }
+ },
+ "Serious_three7_proj": {
+  "moves": 48335710.0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4,
+   "fleet index": 7
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 18,
+   "work_grids": 22,
+   "total": 29,
+   "spare_rows": 4
+  },
+  "ops": {
+   "cube": 6621,
+   "ptadd": 236,
+   "mul": 3000,
+   "inv": 12
+  }
+ },
+ "Serious_three7_affine": {
+  "moves": 79540734.0,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4,
+   "fleet index": 7
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 16,
+   "work_grids": 22,
+   "total": 29,
+   "spare_rows": 6
+  },
+  "ops": {
+   "cube": 46925,
+   "inv": 246,
+   "mul": 3446
+  }
+ },
+ "Serious_pegs175_proj": {
+  "moves": 43310035.0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 17,
+   "work_grids": 22,
+   "total": 24,
+   "spare_rows": 5
+  },
+  "ops": {
+   "cube": 3537,
+   "ptadd": 218,
+   "mul": 2784,
+   "inv": 12
+  }
+ },
+ "Serious_pegs175_affine": {
+  "moves": 70738199.0,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 15,
+   "work_grids": 22,
+   "total": 24,
+   "spare_rows": 7
+  },
+  "ops": {
+   "cube": 40569,
+   "inv": 222,
+   "mul": 3110
+  }
+ },
+ "Serious_pegs200_proj": {
+  "moves": 49720886.0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 17,
+   "work_grids": 22,
+   "total": 24,
+   "spare_rows": 5
+  },
+  "ops": {
+   "cube": 3687,
+   "ptadd": 252,
+   "mul": 3192,
+   "inv": 12
+  }
+ },
+ "Serious_pegs200_affine": {
+  "moves": 81514106.0,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 15,
+   "work_grids": 22,
+   "total": 24,
+   "spare_rows": 7
+  },
+  "ops": {
+   "cube": 46721,
+   "inv": 256,
+   "mul": 3586
+  }
+ },
+ "Serious_six2_proj": {
+  "moves": 66277740.0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 12,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 4,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 17,
+   "work_grids": 22,
+   "total": 24,
+   "spare_rows": 5
+  },
+  "ops": {
+   "cube": 4887,
+   "ptadd": 340,
+   "mul": 4248,
+   "inv": 12
+  }
+ },
+ "Serious_six2_affine": {
+  "moves": 111149467.0,
+  "peaks": {
+   "public walk": [
+    9,
+    7,
+    2
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    9,
+    7,
+    2
+   ]
+  },
+  "items": {
+   "tally (colour-flip)": 89,
+   "script line marker": 5,
+   "validation script marker (chord add)": 5,
+   "inversion chain row (from n-1)": 7,
+   "trace chain row (from n)": 7,
+   "walk ruler: row": 10,
+   "walk ruler: column": 10,
+   "cell phase (cube x, cube y[, cube Z], add)": 3,
+   "protocol phase (walk, check, walk, extract)": 4
+  },
+  "grids": {
+   "bands": 11,
+   "band_rows": 18,
+   "work_rows": 198,
+   "ctrl_rows": 15,
+   "work_grids": 22,
+   "total": 24,
+   "spare_rows": 7
+  },
+  "ops": {
+   "cube": 63897,
+   "inv": 348,
+   "mul": 4874
+  }
+ },
+ "Demo_halfset": {
+  "worst_peak": 7,
+  "runs": 268,
+  "rerolled": 32,
+  "mean_moves": 107191.43656716419
+ },
+ "Demo_exhaustive": {
+  "accepted": 420,
+  "accepted_in_subgroup": 420,
+  "misclassified": 0,
+  "peak": 7,
+  "honest_exceptional": [],
+  "plan": {
+   "registers (rows 0-6, holes 0-6)": 49,
+   "slide holes (col 7, rows 0-6; empty between slides)": 7,
+   "cell phase + protocol phase (cols 8-9, rows 0-6)": 7,
+   "walk ruler row (row 7) - reused as the trace-walk position": 10,
+   "walk ruler column (row 8)": 10,
+   "row 9: tally 3 + chord-script marker 5 + inversion chain 2": 10
+  },
+  "plan_used": 93
+ }
+}

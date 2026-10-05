@@ -1,0 +1,3 @@
+  NO SWAP Demo [three 1 proj]: bands needed public walk 10, validation 8, shared walk 10
+  NO SWAP Toy [three 1 proj]: bands needed public walk 10, validation 8, shared walk 10
+  NO SWAP Hobby [three 2 proj]: bands needed public walk 10, validation 8, shared walk 10

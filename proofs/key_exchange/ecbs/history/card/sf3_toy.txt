@@ -1,0 +1,67 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+Toy {
+ "honest": {
+  "trials": 5000,
+  "accept": 5000,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 0,
+  "accepted_A_in_subgroup": 5000,
+  "accepted_A_equals_pari_piC_minus_C": 5000
+ },
+ "C outside subgroup, correct certificate": {
+  "trials": 5000,
+  "accept": 5000,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 0,
+  "accepted_A_in_subgroup": 5000,
+  "accepted_A_equals_pari_piC_minus_C": 5000
+ },
+ "C outside subgroup, wrong certificate": {
+  "trials": 5000,
+  "accept": 0,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 5000,
+  "A = random non-subgroup point": 1724,
+  "A = minus the certificate": 1664,
+  "A = C": 1612
+ },
+ "C = nonzero order-5 point": {
+  "trials": 16,
+  "accept": 0,
+  "curve": 0,
+  "empty": 16,
+  "mismatch": 0,
+  "A = empty bands": 4,
+  "A = C": 4,
+  "A = random subgroup point": 4,
+  "A = another subgroup point": 4
+ },
+ "A not matching pi(C) - C": {
+  "trials": 5000,
+  "accept": 0,
+  "curve": 0,
+  "empty": 0,
+  "mismatch": 5000,
+  "A = certificate with one peg changed": 1028,
+  "A = minus the certificate": 1032,
+  "A = random subgroup point": 998,
+  "A = C": 934,
+  "A = non-subgroup point": 1008
+ },
+ "C off the curve (A = the card formulas on C)": {
+  "trials": 5000,
+  "accept": 0,
+  "curve": 5000,
+  "empty": 0,
+  "mismatch": 0,
+  "random (x, y)": 2496,
+  "honest C, y nudged": 2504,
+  "would_pass_without_curve_test": 5000
+ },
+ "inversion_wrong": 0,
+ "secs": 62.4,
+ "secs_total": 62.4
+}

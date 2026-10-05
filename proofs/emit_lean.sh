@@ -6,8 +6,8 @@
 #
 # Terminates gate ON: sudoc emit-ir --require terminates.
 # Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10, v11),
-# MegaDreifach (deprecated v2 and frozen v1; v3 is current and has no Lean target), Scramble,
-# DoubleDeal-CBC-Sandwich v2, frozen DoubleDeal-CBC-HMAC v1 and BS. DoubleDeal's test-only
+# MegaDreifach (current v3, deprecated v2 and frozen v1), Scramble,
+# DoubleDeal-CBC-Sandwich v2, frozen DoubleDeal-CBC-HMAC v1, BS and ECBS. DoubleDeal's test-only
 # kind-scan whiles are stripped under the gate (also when DoubleDeal is imported).
 # cbc-hmac (v2, directory name kept) imports MegaDreifach v3 and DoubleDeal via extra -I;
 # cbc-hmac-v1 (frozen) imports the deprecated MegaDreifach v2.
@@ -29,7 +29,7 @@ cd "$ROOT"
 # The targets, spelled once: name | .sudo | Generated/ | extra -I directories.
 # doubledeal-v8, -v9, -v10 are frozen, deprecated (vulnerability-proof / write-up
 # targets); doubledeal-v11 is frozen, superseded (not attacked). Do not change their .sudo.
-# megadreifach is v2 (megadreifach.sudo; deprecated, v3 is current and has no Lean target): the proof package proofs/megadreifach/.
+# megadreifach is v2 (megadreifach.sudo; deprecated, v3 is current: target megadreifach-v3 below): the proof package proofs/megadreifach/.
 # megadreifach-v1 is frozen, deprecated v1 (v1/megadreifach.sudo): the v1 weakness-proof
 # package proofs/deprecated/megadreifach-v1/. Do not change the v1 .sudo. Both files are
 # named megadreifach.sudo, so both emitted modules are `Megadreifach` (the entry is the
@@ -45,11 +45,16 @@ doubledeal-v10  primitives/cipher/doubledeal/v10/doubledeal_v10.sudo      proofs
 doubledeal-v11  primitives/cipher/doubledeal/v11/doubledeal_v11.sudo      proofs/deprecated/doubledeal-v11/lean/Generated
 megadreifach    primitives/hash/megadreifach/megadreifach.sudo            proofs/megadreifach/lean/Generated
 megadreifach-v1 primitives/hash/megadreifach/v1/megadreifach.sudo         proofs/deprecated/megadreifach-v1/lean/Generated
+megadreifach-v3 primitives/hash/megadreifach/v3/megadreifach.sudo         proofs/megadreifach-v3/lean/Generated
 scramble        primitives/hash/scramble/scramble.sudo                    proofs/scramble/lean/Generated
 cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach/v3 primitives/cipher/doubledeal
 cbc-hmac-v1     primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo proofs/deprecated/doubledeal-cbc-hmac-v1/lean/Generated primitives/hash/megadreifach
 bs              primitives/key_exchange/bs/bs.sudo                        proofs/key_exchange/bs/lean/Generated
+ecbs            primitives/key_exchange/ecbs/ecbs.sudo                    proofs/key_exchange/ecbs/lean/Generated
 "
+# megadreifach-v3 is v3 (v3/megadreifach.sudo, the ZP26 card phase): the Lean package
+# proofs/megadreifach-v3/ (generated Lean, KAT runner, Link 2 of every export). Its module is
+# also `Megadreifach`, in its own Generated/ package. Do not change the v3 .sudo here.
 # Parsed once: the names in order, and each target's .sudo, Generated/ and -I dirs.
 ALL_TARGETS=()
 declare -A T_SUDO T_GEN T_INC

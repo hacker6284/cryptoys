@@ -1,6 +1,6 @@
 # BS: Battleship Diffie–Hellman
 
-Finite-field Diffie–Hellman (powers of 3 modulo a prime p), worked by hand on Battleship pegboards. The private exponent is one dice-built **ships+pegs key grid**: a free fleet (any number of ships, built by "grow until it bumps") plus a 3-state peg in every one of the 100 holes, read as "ships, then pegs" (§4). BS is the prime-field sister of **ECBS**, a pegboard elliptic-curve design that is not in this repository. It shares these conventions, each stated in full below:
+Finite-field Diffie–Hellman (powers of 3 modulo a prime p), worked by hand on Battleship pegboards. The private exponent is one dice-built **ships+pegs key grid**: a free fleet (any number of ships, built by "grow until it bumps") plus a 3-state peg in every one of the 100 holes, read as "ships, then pegs" (§4). BS is the prime-field sister of **[ECBS](../ecbs/SPEC.md)**, the pegboard elliptic-curve design beside it. It shares these conventions, each stated in full below:
 * holes empty/white/red = 0/1/2;
 * the colour wheel;
 * fold recipes;
@@ -89,7 +89,7 @@ Unchanged: dice are a randomness source, not storage. The two-peg toy tolls are 
   - A victim who skips the check leaks e mod 2 to a p−1 attacker (4/4 trials).
 
 **Caveats, in one breath**
-* This is ~180× more hand work than ECBS for similar security [unverified: ECBS is not in this repository]. Finite-field DH is simply worse by hand than ECDH.
+* This is ~170× more hand work than ECBS for similar security (§10; [ECBS SPEC §2](../ecbs/SPEC.md#2-kit-per-player-lanes-workbench-homes-control-row)). Finite-field DH is simply worse by hand than ECDH.
 * The long-toll prime family fixes the top half of the digits. I know no attack on that, but nobody has reviewed it [est].
 * The key is a short, structured exponent: e ∈ [3^M, 2·3^M) with M ≤ 233 (one key grid). Security rests on the standard short-exponent assumption with a safe prime, and on the √ heuristic for the ship part, which is a sum of per-ship terms (§4.9, §9).
 * NFS precomputation is per-prime and amortises over all users of that prime (Logjam).
@@ -285,6 +285,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
 > **Ships may touch**, side by side or end to end, as in Hasbro's rules. They never overlap: a ship only ever grows into open holes.
 
 * **The d12 is exact:** its thirds and halves give each open heading and sea exactly the weights of "grow until it bumps", and its odd/even (the bow) is independent of them. This is checked exactly in all 25 room states and on whole builds (`randomizer-kit/`, part B; derivation in `key-selection/NOTES.md` §5).
+* **Shared with ECBS.** ECBS rolls its key with the same row cup and keypad rule, and `ecbs.sudo` copies `bs.sudo`'s `is_empty`, `is_trits`, `keypad_first` and `keypad_second`. One shared imported module is tracked in https://github.com/hacker6284/cryptoys/issues/188; until it lands, no further copies are added.
 * **Why the row cup is exact.** Faces 1–9 correspond one-to-one to pairs of trits (3 × 3). A 0 is re-thrown on its own face only, which is rejection sampling. So every hole gets an exactly uniform, independent trit.
 * A ship laid at the cursor covers only the cursor hole and holes after it, none of which has a peg yet. Pegs behind the cursor are never in a ship's way, because ships grow only right or down.
 * The literal dice of this section (`ships-pegs/keygrid.py`, d12 + row cup): layout and peg chi-squares against the exact model on 2×2, 2×3, 3×2, 1×5 and 5×1 all within |z| < 2 (`ships-pegs/keygrid_check.py`).
@@ -379,7 +380,7 @@ One key grid holds a dice-built free fleet **and** a 3-state peg (empty/white/re
   - With a safe prime the only small subgroups are {1} and {±1}. So the worst leak is one bit, e mod 2. A non-residue would also leak that bit through the Legendre symbol of K.
   - **Demonstrated** (`reference/run_bs.py`): with the check skipped, B = p − 1 gives K = ±1, and K = 1 exactly when e_A is even (4/4 trials).
 * **The fix (B8).** Square first; reject 0 and 1.
-  - This clears the cofactor 2, at the cost of one multiplication. ECBS is said to clear its cofactor 5 the same way [unverified: ECBS is not in this repository].
+  - This clears the cofactor 2, at the cost of one multiplication. ECBS does not check a received point this way: its receiver tests the curve equation and rebuilds a certificate A = π(C) − C, and π − 1 maps every curve point into the order-ℓ subgroup ([ECBS SPEC §5.3](../ecbs/SPEC.md#53-receiver-check-the-certificate)). Its cofactor-5 multiplication ("white, red, white, red") is used only to derive the base point (ECBS SPEC §5.1).
   - **Tested** (`reference/run_bs.py`): 0, 1, p − 1 and p + 1 (a non-canonical 1) are all rejected in T1, T2 and T6. A non-residue is accepted, and its square lies in the order-q subgroup.
 * Why not the full check B^q = 1: `proofs/key_exchange/bs/key-selection/NOTES.md` §5.
 * The exchange must use (B²)^a on both sides. Both sides do, so K = 3^(2ab).
@@ -559,7 +560,7 @@ Paths are under `proofs/key_exchange/bs/`.
 
 ## 10. Cost, and comparison with ECBS
 
-* **R3072 per person:** 1,048.8 multiplications of 1938-trit numbers at 6.52 M moves each (measured in the R3072 exchange, `exchange/`) gives **6.84·10⁹ moves** (§7). That is ~217 years non-stop, or ~650 years at 8 h/day. The ECBS design's own estimate is 3.9·10⁷ moves per person for ~2^136 [unverified: ECBS is not in this repository]. So BS would be ~180× more work for 128 bits [unverified: ECBS is not in this repository].
+* **R3072 per person:** 1,048.8 multiplications of 1938-trit numbers at 6.52 M moves each (measured in the R3072 exchange, `exchange/`) gives **6.84·10⁹ moves** (§7). That is ~217 years non-stop, or ~650 years at 8 h/day. ECBS Serious (128-bit, key-limited; rho 2^136.78) measures 40,287,769 moves per person (mean of its simulated exchanges, [ECBS SPEC §2](../ecbs/SPEC.md#2-kit-per-player-lanes-workbench-homes-control-row)). So BS is ~170× more work for 128 bits (6.84·10⁹ / 40,287,769 ≈ 169.8).
 * **Where it goes:**
   - ~80% cubing in the two walks (2 × ~211 cubes × 2 multiplications);
   - ~20% shared-phase hit multiplications (203.35 per grid, about 1 per cell);
@@ -574,4 +575,4 @@ Paths are under `proofs/key_exchange/bs/`.
 * **Verdict:**
   - BS is a correct, honest, fully specified DH that runs on Battleship kit.
   - It is a fine teaching toy at 1–2 boards: textbook DH, a visible toll fold, a visible small-subgroup check, and a live demonstration that the result is broken in seconds.
-  - At real sizes it is theoretically hand-doable only on multi-century timescales. For hand-scale security, ECBS is the better design by about two orders of magnitude [unverified: ECBS is not in this repository].
+  - At real sizes it is theoretically hand-doable only on multi-century timescales. For hand-scale security, ECBS is the better design by about two orders of magnitude (~170×, above).

@@ -83,6 +83,28 @@ jobs:
         run: proofs/key_exchange/bs/vectors/regen.sh --check
       - name: BS vectors agree with pow() and the Python evidence harness
         run: python3 proofs/key_exchange/bs/vectors/check_oracle.py
+      # ECBS: vectors from ecbs.sudo (about 20 s, most of it one Serious exchange), then
+      # PARI/GP as the oracle. Of the evidence drivers (proofs/key_exchange/ecbs/evidence/)
+      # only the quick ones run here (below): Demo exhaustive and the soundness classes take
+      # tens of minutes.
+      - name: ECBS vectors rebuild byte-identically from ecbs.sudo
+        run: proofs/key_exchange/ecbs/vectors/regen.sh --check
+      - name: ECBS vectors agree with PARI/GP
+        run: |
+          python3 -m venv "$RUNNER_TEMP/pari"
+          "$RUNNER_TEMP/pari/bin/pip" install --quiet cypari2
+          "$RUNNER_TEMP/pari/bin/python" proofs/key_exchange/ecbs/vectors/check_oracle.py
+      # ECBS evidence that is quick enough for CI (a few seconds): card_sim Demo (all 64 key
+      # pairs) and the calling checks at Demo and Toy, rerun on the generated code and diffed
+      # byte for byte against the recorded results (the drivers print timings to stderr only).
+      - name: ECBS card_sim Demo and calling Demo/Toy reproduce their recorded results
+        run: |
+          cd proofs/key_exchange/ecbs/evidence
+          "$RUNNER_TEMP/pari/bin/python" card_sim.py Demo > "$RUNNER_TEMP/card_sim_Demo.txt"
+          diff -u results/card_sim_Demo.txt "$RUNNER_TEMP/card_sim_Demo.txt"
+          git diff --exit-code results/card_sim_Demo.json
+          "$RUNNER_TEMP/pari/bin/python" calling_check.py Demo,Toy > "$RUNNER_TEMP/calling_Demo_Toy.txt"
+          grep -E '^(Demo|Toy) ' results/calling_check.txt | diff -u - "$RUNNER_TEMP/calling_Demo_Toy.txt"
       # Scramble (marked broken): the 10 SPEC vectors, the attack messages in logs/, the
       # `hello` twin and the decoded `cube` pose through the JS this sudoc generates from
       # scramble.sudo (about 1 s). The seeded Python attack runs (REPORT S7) are not run here.
@@ -102,6 +124,7 @@ jobs:
         include:
           - { name: doubledeal, dir: proofs/doubledeal/lean/Generated, test: doubledeal_test }
           - { name: megadreifach, dir: proofs/megadreifach/lean/Generated, test: megadreifach_test }
+          - { name: megadreifach-v3, dir: proofs/megadreifach-v3/lean/Generated, test: megadreifach_test }
           - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
           # DoubleDeal-CBC-Sandwich v2 (directory keeps its v1 name): emitted TAP only, no Link 2 yet.
           - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
@@ -109,6 +132,12 @@ jobs:
           # (its Link 2 package is checked by cbc-hmac-v1-lean).
           - { name: cbc-hmac-v1, dir: proofs/deprecated/doubledeal-cbc-hmac-v1/lean/Generated, test: doubledeal_cbc_hmac_test }
           - { name: bs, dir: proofs/key_exchange/bs/lean/Generated, test: bs_test }
+          # ECBS (proofs/key_exchange/ecbs/lean/Generated) is emitted but NOT built here yet: with
+          # the sudoc pin its Ecbs.lean does not elaborate in reasonable time (`deriving Repr` on
+          # wide records; then heartbeat/recursion limits in large bodies: end_phase, marker_step, mul). Tracked in
+          # https://github.com/hacker6284/sudocode/issues/17; see proofs/key_exchange/ecbs/evidence/README.md#lean. Re-add after
+          # the emitter fix:
+          # - { name: ecbs, dir: proofs/key_exchange/ecbs/lean/Generated, test: ecbs_test }
           # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property; not an
           # attack, so no witness package): emitted TAP only (proofs/deprecated/doubledeal-v11/).
           - { name: doubledeal-v11, dir: proofs/deprecated/doubledeal-v11/lean/Generated, test: doubledeal_v11_test }
@@ -331,6 +360,36 @@ jobs:
       # here; it is built and audited by megadreifach-heavy in proofs-heavy.yml.
       - name: Axiom audit of every MegaDreifach theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py megadreifach
+
+  megadreifach-v3-lean:
+    # MegaDreifach v3 (ZP26 card phase; proofs/megadreifach-v3): the KAT data mirrored from
+    # kats/megaminx_hash_kats_v3.json, a compiled run of the emitted v3 code on every vector
+    # (52 checks, about a second; not a kernel proof), Link 2 for all 11 exports (the v3
+    # MegaDreifachV3.Link2 files plus v2 lemmas re-elaborated against the v3 emit: 80 modules,
+    # 17 v3 and 63 v2, plus Generated/; about 4 min serial locally from clean, peak about
+    # 2.3 GB) and the axiom audit.
+    # The emitted TAP is megadreifach-v3-generated; emit freshness is generated-fresh.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/megadreifach-v3/lean --exclude Generated
+      - name: Vectors.lean matches the published v3 KAT JSON
+        run: python3 proofs/megadreifach-v3/vectors/json_to_lean.py --check
+      - name: check_axioms selftest (keying rules, README-cited theorems, v3 sudo exports vs README table)
+        run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/megadreifach-v3/lean
+      - name: v3 KATs against the compiled emitted code (Hash, HashDeck, HashDeckBody, IV digest)
+        working-directory: proofs/megadreifach-v3/lean
+        run: lake exe megadreifach_v3_kat
+      - name: The v3 KAT run fails on a planted bad digest and on emptied vector lists (by its own summary lines; a crash is not accepted)
+        run: |
+          python3 proofs/megadreifach-v3/vectors/kat_negatives.py
+          python3 proofs/megadreifach-v3/vectors/kat_negatives.py --selftest-crash
+      - name: Axiom audit of every MegaDreifachV3 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py megadreifach-v3
 
   cbc-hmac-v1-lean:
     # Frozen DoubleDeal-CBC-HMAC v1 Link 2 (proofs/deprecated/doubledeal-cbc-hmac-v1/lean): the

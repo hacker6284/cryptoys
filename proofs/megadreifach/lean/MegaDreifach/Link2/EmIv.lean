@@ -9,9 +9,6 @@ namespace MegaDreifach.Link2
 
 open MegaDreifach.Em
 
-theorem identity_refines : Megadreifach.identity = .ok (embedPos MegaDreifach.identity) := by
-  rfl
-
 /-- Identity cooked by the first `i` unit face turns. -/
 def ivPre (i : Nat) : Position :=
   (List.range i).foldl (fun g f => if hf : f < 12 then faceTurn g ⟨f, hf⟩ 1 else g)

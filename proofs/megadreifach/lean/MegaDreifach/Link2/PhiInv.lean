@@ -407,8 +407,10 @@ theorem phiInvState_zero (deal : List Nat) :
 
 private theorem fits52 : FitsLen 52 := by unfold FitsLen i64MaxNat; decide
 
-/-- Generated outer closure of `phi_inv`, in the shape the emitter leaves it. -/
-def phiInvStep (deal : Array Int) (σ : PhiInvSt) :
+/-- Generated outer closure of `phi_inv`, in the shape the emitter leaves it, with the
+    `.sudo` line of `assert found >= 0` as a parameter `line` (a trap label only; it
+    differs between emits, see `Loop.byteCheckStep`). -/
+def phiInvStep (line : Nat) (deal : Array Int) (σ : PhiInvSt) :
     Except SudoRt.Trap (SudoRt.Flow PhiInvSt (Array Int)) :=
   let i := σ.1
   let n := σ.2.1
@@ -427,7 +429,7 @@ def phiInvStep (deal : Array Int) (σ : PhiInvSt) :
           (fun σ =>
             let found := σ.2
             do
-              let _as ← SudoRt.sudoAssert (decide (found ≥ (0 : Int))) 526
+              let _as ← SudoRt.sudoAssert (decide (found ≥ (0 : Int))) line
               let idx := found
               let _t549 ← SudoRt.subI (52 : Int) i
               let _t550 ← Megadreifach.big_from_int _t549
@@ -581,9 +583,10 @@ theorem accRank_add_limbs_fits (deal : List Nat) (h : PhiInvWf deal) (i idx : Na
 
 /-! ## One outer step -/
 
-/-- One step of the outer loop, `i < 51`. -/
-theorem phiInvStep_lt (deal : List Nat) (h : PhiInvWf deal) (i : Nat) (hi : i < 51) :
-    phiInvStep (embed deal) (Int.ofNat i, phiInvState deal i) =
+/-- One step of the outer loop, `i < 51`, for any assert line. -/
+theorem phiInvStep_lt (line : Nat) (deal : List Nat) (h : PhiInvWf deal) (i : Nat)
+    (hi : i < 51) :
+    phiInvStep line (embed deal) (Int.ofNat i, phiInvState deal i) =
       .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), phiInvState deal (i + 1))) := by
   have hi52 : i < 52 := by omega
   have hile : i ≤ 51 := by omega
@@ -641,9 +644,10 @@ theorem phiInvStep_lt (deal : List Nat) (h : PhiInvWf deal) (i : Nat) (hi : i < 
   simp only [except_bind_pure, pure_find_eq_ok, ok_bind]
   rw [phiInvFinish i hi]
 
-/-- One step of the outer loop at `i = 51` (emits the full rank, breaks). -/
-theorem phiInvStep_51 (deal : List Nat) (h : PhiInvWf deal) :
-    phiInvStep (embed deal) (Int.ofNat 51, phiInvState deal 51) =
+/-- One step of the outer loop at `i = 51` (emits the full rank, breaks), for any
+    assert line. -/
+theorem phiInvStep_51 (line : Nat) (deal : List Nat) (h : PhiInvWf deal) :
+    phiInvStep line (embed deal) (Int.ofNat 51, phiInvState deal 51) =
       .ok (SudoRt.Flow.brk (Int.ofNat 51, phiInvState deal 52)) := by
   have hile : 51 ≤ 51 := Nat.le_refl _
   have hklen : 51 < deal.length := by rw [h.len]; decide
@@ -712,20 +716,20 @@ theorem phiInvState_full (deal : List Nat) (h : PhiInvWf deal) :
   rw [phiInvState, accRank_full deal h.len]
 
 /-- The outer `phi_inv` loop accumulates the Lehmer rank over 52 steps. -/
-theorem phiInv_loop_breaks (deal : List Nat) (h : PhiInvWf deal)
+theorem phiInv_loop_breaks (line : Nat) (deal : List Nat) (h : PhiInvWf deal)
     {α : Type} (after : PhiInvSt → Except SudoRt.Trap α)
     (onRet : Array Int → Except SudoRt.Trap α) :
     SudoRt.runLoopOn (ρ := Array Int) (Int.ofNat 0, phiInvState deal 0)
-      (fuelRange (Int.ofNat 0) (Int.ofNat 51)) (phiInvStep (embed deal)) after onRet =
+      (fuelRange (Int.ofNat 0) (Int.ofNat 51)) (phiInvStep line (embed deal)) after onRet =
       after (Int.ofNat 51, phiInvState deal 52) := by
   apply chain_loop (f := phiInvState deal) (fromN := 0) (toN := 51) (hle := by decide)
   · intro i _ hhi
     rcases (by omega : i < 51 ∨ i = 51) with hlt | heq
     · rw [if_neg (by omega)]
-      exact phiInvStep_lt deal h i hlt
+      exact phiInvStep_lt line deal h i hlt
     · subst heq
       rw [if_pos rfl]
-      exact phiInvStep_51 deal h
+      exact phiInvStep_51 line deal h
   · rfl
 
 /-! ## `two224` = `2^224` -/
@@ -1085,18 +1089,18 @@ theorem magCmp_lt_natLimbs (x y : Nat) (hxy : x < y)
 /-! ## Post-handler and final assembly -/
 
 /-- Generated `after` handler of `phi_inv`: assert `n < 2^224`, emit `big_to_be n 28`. -/
-def phiInvPost (σ : PhiInvSt) : Except SudoRt.Trap (Array Int) :=
+def phiInvPost (line : Nat) (σ : PhiInvSt) : Except SudoRt.Trap (Array Int) :=
   let n := σ.2.1
   let _avail := σ.2.2
   do
     let t ← Megadreifach.two224
     let c ← Megadreifach.mag_cmp n.sudo_6BigInt_5limbs t.sudo_6BigInt_5limbs
-    let _a ← SudoRt.sudoAssert (decide (c < (0 : Int))) 534
+    let _a ← SudoRt.sudoAssert (decide (c < (0 : Int))) line
     let r ← Megadreifach.big_to_be n Megadreifach.pad_block
     pure r
 
-theorem phiInvPost_ok (deal : List Nat) (h : PhiInvWf deal) :
-    phiInvPost (Int.ofNat 51, phiInvState deal 52) =
+theorem phiInvPost_ok (line : Nat) (deal : List Nat) (h : PhiInvWf deal) :
+    phiInvPost line (Int.ofNat 51, phiInvState deal 52) =
       .ok (embed (toBE 28 (lehmerRank deal))) := by
   have hx : (natLimbs (lehmerRank deal)).length ≤ 8 := by
     have h8 := accRank_limbs_le8 deal h 52 (by decide)
@@ -1132,7 +1136,7 @@ theorem phi_inv_refines (deal : List Nat) (h : PhiInvWf deal) :
   dsimp only
   rw [except_bind_pure]
   apply Eq.trans
-  · apply runLoopOn_step_pointwise (step' := phiInvStep (embed deal))
+  · apply runLoopOn_step_pointwise (step' := phiInvStep _ (embed deal))
     intro σ
     unfold phiInvStep
     dsimp
@@ -1140,8 +1144,8 @@ theorem phi_inv_refines (deal : List Nat) (h : PhiInvWf deal) :
   · rw [hinit]
     rw [show (0 : Int) = Int.ofNat 0 from rfl,
       show (51 : Int) = Int.ofNat 51 from rfl, fuelRange_eq]
-    rw [phiInv_loop_breaks deal h]
-    exact phiInvPost_ok deal h
+    rw [phiInv_loop_breaks _ deal h]
+    exact phiInvPost_ok _ deal h
 
 /-- Same refinement on a `WellFormedPhiInv` array. -/
 theorem phi_inv_refines_array (a : Array Int) (h : WellFormedPhiInv a) :
@@ -1149,5 +1153,107 @@ theorem phi_inv_refines_array (a : Array Int) (h : WellFormedPhiInv a) :
   have hr := phi_inv_refines (decode a) (phiInv_decode a h)
   simpa [embed_decode a h.nn] using hr
 
-end MegaDreifach.Link2
+/-! ## φ round trip (M4) -/
 
+/-- The Lehmer digit of `v` indexes `v` in `avail`. -/
+theorem findIdx_beq_lt {avail : List Nat} {v : Nat} (hv : v ∈ avail) :
+    avail.findIdx (· == v) < avail.length :=
+  List.findIdx_lt_length_of_exists ⟨v, hv, by simp⟩
+
+theorem getElem_findIdx_beq {avail : List Nat} {v : Nat} (hv : v ∈ avail) :
+    avail[avail.findIdx (· == v)]'(findIdx_beq_lt hv) = v := by
+  have := List.findIdx_getElem (xs := avail) (p := (· == v)) (w := findIdx_beq_lt hv)
+  simpa using this
+
+/-- After drawing `v`, the rest of a duplicate-free rearrangement is still inside the
+    remaining cards. -/
+theorem rest_mem_eraseIdx {v : Nat} {rest avail : List Nat} (hnd : (v :: rest).Nodup)
+    (hsub : ∀ x ∈ v :: rest, x ∈ avail) :
+    ∀ x ∈ rest, x ∈ avail.eraseIdx (avail.findIdx (· == v)) := by
+  have hv : v ∈ avail := hsub v (List.mem_cons_self v rest)
+  have hvr : v ∉ rest := (List.nodup_cons.mp hnd).1
+  intro x hx
+  have hxa : x ∈ avail := hsub x (List.mem_cons_of_mem v hx)
+  obtain ⟨i, hi, hix⟩ := List.getElem_of_mem hxa
+  rw [List.mem_eraseIdx_iff_getElem]
+  refine ⟨i, hi, ?_, hix⟩
+  intro hid
+  subst hid
+  have : x = v := by rw [← hix, getElem_findIdx_beq hv]
+  exact hvr (this ▸ hx)
+
+/-- Applying the Lehmer digits of `perm` (relative to `avail`) to `avail` gives
+    `perm` back, when `perm` is a duplicate-free rearrangement of `avail`. -/
+theorem applyDigits_lehmerDigits : ∀ (perm avail : List Nat),
+    avail.Nodup → perm.Nodup → perm.length = avail.length → (∀ x ∈ perm, x ∈ avail) →
+    applyDigits avail (lehmerDigits avail perm) = perm
+  | [], avail, _, _, hlen, _ => by
+      have : avail = [] := List.eq_nil_of_length_eq_zero (by simpa using hlen.symm)
+      subst this
+      rfl
+  | v :: rest, avail, hav, hnd, hlen, hsub => by
+      have hv : v ∈ avail := hsub v (List.mem_cons_self v rest)
+      have hd := findIdx_beq_lt hv
+      have hlen' : rest.length = (avail.eraseIdx (avail.findIdx (· == v))).length := by
+        rw [List.length_eraseIdx_of_lt hd]
+        simp at hlen
+        omega
+      have ih := applyDigits_lehmerDigits rest (avail.eraseIdx (avail.findIdx (· == v)))
+        (List.Nodup.eraseIdx _ hav) (List.nodup_cons.mp hnd).2 hlen'
+        (rest_mem_eraseIdx hnd hsub)
+      cases avail with
+      | nil => exact absurd hv (List.not_mem_nil v)
+      | cons a as =>
+          simp only [lehmerDigits, applyDigits, dif_pos hd]
+          rw [ih, getElem_findIdx_beq hv]
+
+/-- The Lehmer digits of a duplicate-free rearrangement of `avail` are in range for
+    the radices `|avail|, |avail| - 1, …, 1`. -/
+theorem lehmerDigits_bound : ∀ (perm avail : List Nat),
+    perm.Nodup → perm.length = avail.length → (∀ x ∈ perm, x ∈ avail) →
+    ∀ i, i < perm.length →
+      (lehmerDigits avail perm)[i]?.getD 0 < (descending avail.length)[i]?.getD 0
+  | [], _, _, _, _, i, hi => absurd hi (Nat.not_lt_zero i)
+  | v :: rest, avail, hnd, hlen, hsub, i, hi => by
+      have hv : v ∈ avail := hsub v (List.mem_cons_self v rest)
+      have hd := findIdx_beq_lt hv
+      obtain ⟨k, hk⟩ : ∃ k, avail.length = k + 1 := ⟨avail.length - 1, by omega⟩
+      have hk' : (avail.eraseIdx (avail.findIdx (· == v))).length = k := by
+        rw [List.length_eraseIdx_of_lt hd]; omega
+      cases i with
+      | zero =>
+          simp only [lehmerDigits, hk, descending_succ, List.getElem?_cons_zero, Option.getD_some]
+          omega
+      | succ i =>
+          simp only [lehmerDigits, hk, descending_succ, List.getElem?_cons_succ]
+          have := lehmerDigits_bound rest (avail.eraseIdx (avail.findIdx (· == v)))
+            (List.nodup_cons.mp hnd).2 (by rw [hk']; simp at hlen; omega)
+            (rest_mem_eraseIdx hnd hsub) i (by simp at hi; omega)
+          rw [hk'] at this
+          exact this
+
+/-- M4 round trip: Lehmer unrank after Lehmer rank is the identity on permutations
+    of `0..n-1`. -/
+theorem lehmerUnrank_lehmerRank (perm : List Nat) (hnd : perm.Nodup)
+    (hb : ∀ x ∈ perm, x < perm.length) :
+    lehmerUnrank perm.length (lehmerRank perm) = perm := by
+  have hsub : ∀ x ∈ perm, x ∈ List.range perm.length :=
+    fun x hx => List.mem_range.mpr (hb x hx)
+  have hlenR : perm.length = (List.range perm.length).length := by rw [List.length_range]
+  unfold lehmerUnrank lehmerRank
+  rw [mixDecode_encode]
+  · exact applyDigits_lehmerDigits perm _ (List.nodup_range _) hnd hlenR hsub
+  · rw [lehmerDigits_length, descending_length]
+  · intro i hi
+    rw [lehmerDigits_length] at hi
+    have := lehmerDigits_bound perm (List.range perm.length) hnd hlenR hsub i hi
+    rwa [List.length_range] at this
+
+/-- φ after φ⁻¹: `phiUnrank (lehmerRank deal) = deal` on a permutation of `0..51`. -/
+theorem phiUnrank_lehmerRank (deal : List Nat) (hl : deal.length = 52) (hnd : deal.Nodup)
+    (hb : ∀ x ∈ deal, x < 52) : phiUnrank (lehmerRank deal) = deal := by
+  have := lehmerUnrank_lehmerRank deal hnd (by rw [hl]; exact hb)
+  rw [hl] at this
+  exact this
+
+end MegaDreifach.Link2

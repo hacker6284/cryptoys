@@ -14,7 +14,7 @@
 
   Algebraic Link 2 only. Not `em_block`. Not `v_Hash`.
 -/
-import MegaDreifach.Link2.EmEdge
+import MegaDreifach.Link2.EmGrip
 
 namespace MegaDreifach.Link2
 

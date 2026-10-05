@@ -256,8 +256,9 @@ two-turn read words. An edge is placed as the sudo places it (identity, swap the
 slot with the target slot, set the target orientation) and read by
 `edgeFaceOf` then `edgeFaceOf` after `faceTurn` by 1; a corner uses `cornerFaceOf` the
 same way, over the ordered pairs of distinct colours among its three faces. The word is
-`faceTurn (faceTurn identity f1 1) f2 1`. Distinctness is a kernel `decide!` on an
-injective code of those model words (`edgeAll`, `cornerAll`).
+`faceTurn (faceTurn identity f1 1) f2 1`. Distinctness is one kernel `decide!` per
+piece and colour order (`edgeGroup_ok`, `cornerGroup_ok`), on an injective code of
+those model words.
 
 Link 2 already has `edge_face_of_refines`, `corner_face_of_refines` and
 `face_turn_refines`. On these placements the searches return `some`
@@ -269,12 +270,12 @@ collision resistance and not a PRF claim. SPEC and ANALYSIS tags are unchanged.
 
 | What is proved | Theorem |
 | --- | --- |
-| 60 edge states, one ordered colour pair, give distinct model words | `edge_read_words_injective` |
-| 60 corner states, one ordered pair of distinct colours, give distinct model words | `corner_read_words_injective` |
+| Injective on the 60 states of one edge piece and one ordered colour pair | `edge_read_words_injective` |
+| Injective on the 60 states of one corner piece and one ordered pair of distinct colours | `corner_read_words_injective` |
 | Emitted edge read equals the embedded model word | `emitted_edge_read_word_eq` |
 | Emitted corner read equals the embedded model word | `emitted_corner_read_word_eq` |
-| That injectivity transfers to the emitted edge words | `emitted_edge_read_words_injective` |
-| That injectivity transfers to the emitted corner words | `emitted_corner_read_words_injective` |
+| Injective on the 60 states, for the emitted edge words | `emitted_edge_read_words_injective` |
+| Injective on the 60 states, for the emitted corner words | `emitted_corner_read_words_injective` |
 
 ## Where this sits
 

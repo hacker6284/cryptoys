@@ -96,6 +96,19 @@ def embedPos (p : Position) : Megadreifach.Position where
   sudo_8Position_2ep := embed (listOf p.ep)
   sudo_8Position_2eo := embed (listOfOri p.eo)
 
+/-- Equal embedded tables come from equal algebraic positions. -/
+theorem embedPos_inj {a b : Position} (h : embedPos a = embedPos b) : a = b := by
+  have hcp := congrArg (fun p : Megadreifach.Position => p.sudo_8Position_2cp) h
+  have hco := congrArg (fun p : Megadreifach.Position => p.sudo_8Position_2co) h
+  have hep := congrArg (fun p : Megadreifach.Position => p.sudo_8Position_2ep) h
+  have heo := congrArg (fun p : Megadreifach.Position => p.sudo_8Position_2eo) h
+  simp only [embedPos] at hcp hco hep heo
+  apply Position.ext
+  · exact listOf_inj _ _ (embed_inj hcp)
+  · exact listOfOri_inj _ _ (embed_inj hco)
+  · exact listOf_inj _ _ (embed_inj hep)
+  · exact listOfOri_inj _ _ (embed_inj heo)
+
 /-- Trap-free domain for `Generated.compose`.
 
     `cp` / `ep` entries are legal indices into a length-20 / length-30 table.

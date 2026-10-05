@@ -60,7 +60,7 @@ axiom) fails, as does a Lean error.
   required: the theorems its README cites (MD_V1_README_THEOREMS).
 - megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
   for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
-  README cites (MD_V3_README_THEOREMS); min is the audited count (354).
+  README cites (MD_V3_README_THEOREMS); min is the audited count (355).
   `--selftest` checks its "Emitted function" column against
   primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac-v1-deprecated: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
@@ -455,7 +455,8 @@ MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
     "compValid_emBlock_of_same_h",
     "edge_read_words_injective", "corner_read_words_injective",
     "emitted_edge_read_word_eq", "emitted_corner_read_word_eq",
-    "emitted_edge_read_words_injective", "emitted_corner_read_words_injective"]}
+    "emitted_edge_read_words_injective", "emitted_corner_read_words_injective",
+    "edgeGroup_ok", "cornerGroup_ok"]}
 
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
@@ -976,8 +977,10 @@ PACKAGES = {
         "known_sorry": set(),
         # sanity: the audit must see the whole package (the real audited count; raise as
         # Link 2 grows, lower only with a reason in the commit).
-        # Printed count after two-turn read-word injectivity (plan item C).
-        "min": 354,
+        # Printed count after per-group read-word decide! (plan item C).
+        # 354 was the single decide!; +2 group theorems, −1 private embedPos_inj
+        # (that lemma now lives in MegaDreifach.Link2).
+        "min": 355,
         "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac-v1-deprecated": {

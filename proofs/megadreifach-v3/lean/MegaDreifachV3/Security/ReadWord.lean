@@ -14,9 +14,9 @@
   `faceTurn (faceTurn identity f1 1) f2 1`, where `f1` is the face carrying the first
   colour and `f2` is the face carrying the second colour after that one turn.
 
-  The distinctness check is a kernel `decide!` on `posCode` of the model words
-  (`edgeAll_ok`, `cornerAll_ok`). `posCode` is injective, so distinct codes are distinct
-  positions.
+  The distinctness check is one kernel `decide!` per piece and colour order
+  (`edgeGroup_ok`, `cornerGroup_ok`), assembled into `edgeAll_ok` and `cornerAll_ok`.
+  `posCode` is injective, so distinct codes are distinct positions.
 
   Link 2 already has `edge_face_of_refines`, `corner_face_of_refines` and
   `face_turn_refines`. On these placements the searches return `some`
@@ -26,7 +26,7 @@
 
   This is not ANALYSIS P2 (every input difference changes the turn sequence). It is not
   collision resistance and not a PRF claim. SPEC and ANALYSIS tags are unchanged.
-  Zero sorry. No native_decide.
+  Zero sorry. Kernel `decide!`, not `native_decide`.
 -/
 import MegaDreifachV3.Link2.FaceOfFound
 import MegaDreifachV3.Link2.Shared
@@ -34,6 +34,10 @@ import MegaDreifachV3.Link2.Shared
 namespace MegaDreifachV3.Security
 
 open MegaDreifach MegaDreifach.Em MegaDreifachV3.Em MegaDreifach.Link2 MegaDreifachV3.Link2
+
+-- Per-group `decide!` proofs are one kernel reduction each. Later folds must not
+-- re-reduce them under the default heartbeat cap.
+set_option maxHeartbeats 0
 
 /-! ## The sudo's placement and the two-turn word -/
 
@@ -126,12 +130,471 @@ def cornerAll : Bool :=
     else true
 
 set_option maxHeartbeats 0 in
-private theorem edgeAll_ok : edgeAll = true := by
-  decide!
+/-- One piece and one ordered colour pair: the 60 edge states have distinct read-word codes.
+    Each `decide!` is a single group, so the kernel does not reduce every piece at once. -/
+theorem edgeGroup_ok (p : Fin 30) (order : Fin 2) : edgeGroup p order = true := by
+  have hp : p.val = 0 ∨ p.val = 1 ∨ p.val = 2 ∨ p.val = 3 ∨ p.val = 4 ∨ p.val = 5 ∨ p.val = 6 ∨ p.val = 7 ∨ p.val = 8 ∨ p.val = 9 ∨ p.val = 10 ∨ p.val = 11 ∨ p.val = 12 ∨ p.val = 13 ∨ p.val = 14 ∨ p.val = 15 ∨ p.val = 16 ∨ p.val = 17 ∨ p.val = 18 ∨ p.val = 19 ∨ p.val = 20 ∨ p.val = 21 ∨ p.val = 22 ∨ p.val = 23 ∨ p.val = 24 ∨ p.val = 25 ∨ p.val = 26 ∨ p.val = 27 ∨ p.val = 28 ∨ p.val = 29 := by have := p.isLt; omega
+  have ho : order.val = 0 ∨ order.val = 1 := by have := order.isLt; omega
+  rcases hp with hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp <;> rcases ho with ho | ho
+  · rw [show p = 0 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 0 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 1 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 1 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 2 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 2 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 3 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 3 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 4 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 4 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 5 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 5 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 6 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 6 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 7 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 7 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 8 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 8 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 9 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 9 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 10 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 10 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 11 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 11 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 12 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 12 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 13 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 13 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 14 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 14 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 15 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 15 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 16 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 16 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 17 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 17 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 18 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 18 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 19 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 19 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 20 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 20 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 21 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 21 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 22 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 22 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 23 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 23 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 24 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 24 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 25 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 25 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 26 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 26 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 27 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 27 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 28 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 28 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
+  · rw [show p = 29 from Fin.ext hp, show order = 0 from Fin.ext ho]
+    decide!
+  · rw [show p = 29 from Fin.ext hp, show order = 1 from Fin.ext ho]
+    decide!
 
 set_option maxHeartbeats 0 in
+/-- One corner and one ordered pair of distinct colours: the 60 states have distinct
+    read-word codes. Equal colour indices are the sudo's skipped pairs (`i1 ≠ i2`). -/
+theorem cornerGroup_ok (p : Fin 20) (i1 i2 : Fin 3) (hne : i1 ≠ i2) :
+    cornerGroup p i1 i2 = true := by
+  have hp : p.val = 0 ∨ p.val = 1 ∨ p.val = 2 ∨ p.val = 3 ∨ p.val = 4 ∨ p.val = 5 ∨ p.val = 6 ∨ p.val = 7 ∨ p.val = 8 ∨ p.val = 9 ∨ p.val = 10 ∨ p.val = 11 ∨ p.val = 12 ∨ p.val = 13 ∨ p.val = 14 ∨ p.val = 15 ∨ p.val = 16 ∨ p.val = 17 ∨ p.val = 18 ∨ p.val = 19 := by have := p.isLt; omega
+  have ha : i1.val = 0 ∨ i1.val = 1 ∨ i1.val = 2 := by have := i1.isLt; omega
+  have hb : i2.val = 0 ∨ i2.val = 1 ∨ i2.val = 2 := by have := i2.isLt; omega
+  rcases hp with hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp | hp <;> rcases ha with ha | ha | ha <;> rcases hb with hb | hb | hb
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 0 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 0 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 0 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 0 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 0 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 0 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 1 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 1 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 1 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 1 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 1 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 1 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 2 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 2 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 2 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 2 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 2 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 2 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 3 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 3 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 3 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 3 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 3 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 3 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 4 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 4 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 4 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 4 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 4 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 4 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 5 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 5 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 5 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 5 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 5 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 5 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 6 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 6 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 6 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 6 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 6 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 6 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 7 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 7 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 7 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 7 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 7 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 7 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 8 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 8 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 8 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 8 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 8 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 8 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 9 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 9 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 9 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 9 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 9 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 9 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 10 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 10 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 10 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 10 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 10 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 10 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 11 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 11 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 11 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 11 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 11 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 11 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 12 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 12 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 12 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 12 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 12 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 12 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 13 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 13 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 13 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 13 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 13 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 13 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 14 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 14 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 14 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 14 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 14 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 14 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 15 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 15 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 15 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 15 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 15 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 15 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 16 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 16 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 16 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 16 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 16 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 16 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 17 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 17 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 17 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 17 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 17 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 17 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 18 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 18 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 18 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 18 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 18 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 18 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 19 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · rw [show p = 19 from Fin.ext hp, show i1 = 0 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 19 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+  · rw [show p = 19 from Fin.ext hp, show i1 = 1 from Fin.ext ha, show i2 = 2 from Fin.ext hb]
+    decide!
+  · rw [show p = 19 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 0 from Fin.ext hb]
+    decide!
+  · rw [show p = 19 from Fin.ext hp, show i1 = 2 from Fin.ext ha, show i2 = 1 from Fin.ext hb]
+    decide!
+  · exact absurd (Fin.ext (ha.trans hb.symm)) hne
+
+attribute [irreducible] edgeGroup cornerGroup
+
+private theorem edgeAll_ok : edgeAll = true := by
+  unfold edgeAll
+  rw [List.all_eq_true]
+  intro n hn
+  have hn30 : n < 30 := List.mem_range.mp hn
+  rw [dif_pos hn30, List.all_eq_true]
+  intro o ho
+  have ho2 : o < 2 := List.mem_range.mp ho
+  rw [dif_pos ho2]
+  exact edgeGroup_ok ⟨n, hn30⟩ ⟨o, ho2⟩
+
 private theorem cornerAll_ok : cornerAll = true := by
-  decide!
+  unfold cornerAll
+  rw [List.all_eq_true]
+  intro n hn
+  have hn20 : n < 20 := List.mem_range.mp hn
+  rw [dif_pos hn20, List.all_eq_true]
+  intro a ha
+  have ha3 : a < 3 := List.mem_range.mp ha
+  rw [dif_pos ha3, List.all_eq_true]
+  intro b hb
+  have hb3 : b < 3 := List.mem_range.mp hb
+  rw [dif_pos hb3]
+  by_cases h : (⟨a, ha3⟩ : Fin 3) = ⟨b, hb3⟩
+  · rw [cornerGroup, if_pos h]
+  · exact cornerGroup_ok ⟨n, hn20⟩ ⟨a, ha3⟩ ⟨b, hb3⟩ h
 
 /-! ## From the Bool check to unequal codes -/
 
@@ -194,28 +657,13 @@ private theorem posCode_inj {a b : Position} (h : posCode a = posCode b) : a = b
   · exact listOf_inj _ _ hep
   · exact listOfOri_inj _ _ heo
 
-private theorem edgeAll_group (p : Fin 30) (order : Fin 2) : edgeGroup p order = true := by
-  have h := edgeAll_ok
-  unfold edgeAll at h
-  rw [List.all_eq_true] at h
-  have hp := h p.val (List.mem_range.mpr p.isLt)
-  simp only [p.isLt, dite_true] at hp
-  rw [List.all_eq_true] at hp
-  have ho := hp order.val (List.mem_range.mpr order.isLt)
-  simpa [order.isLt, dite_true] using ho
+private theorem edgeAll_group (p : Fin 30) (order : Fin 2) : edgeGroup p order = true :=
+  edgeGroup_ok p order
 
 private theorem cornerAll_group (p : Fin 20) (i1 i2 : Fin 3) : cornerGroup p i1 i2 = true := by
-  have h := cornerAll_ok
-  unfold cornerAll at h
-  rw [List.all_eq_true] at h
-  have hp := h p.val (List.mem_range.mpr p.isLt)
-  simp only [p.isLt, dite_true] at hp
-  rw [List.all_eq_true] at hp
-  have h1 := hp i1.val (List.mem_range.mpr i1.isLt)
-  simp only [i1.isLt, dite_true] at h1
-  rw [List.all_eq_true] at h1
-  have h2 := h1 i2.val (List.mem_range.mpr i2.isLt)
-  simpa [i2.isLt, dite_true] using h2
+  by_cases h : i1 = i2
+  · rw [cornerGroup, if_pos h]
+  · exact cornerGroup_ok p i1 i2 h
 
 private theorem edgeIx (s : Fin 30) (o : Fin 2) :
     s.val * 2 + o.val < 60 ∧ (s.val * 2 + o.val) / 2 = s.val ∧
@@ -307,7 +755,9 @@ theorem edge_read_words_injective (p : Fin 30) (order : Fin 2) :
       rw [edgeCodes_length]; exact (edgeIx s2 o2).1
     have hdis : (edgeCodes p order)[s1.val * 2 + o1.val] ≠
         (edgeCodes p order)[s2.val * 2 + o2.val] :=
-      codesDistinct_get (by simpa [edgeGroup] using edgeAll_group p order) hi1 hi2 hix
+      codesDistinct_get (by
+        have h := edgeAll_group p order
+        rwa [edgeGroup] at h) hi1 hi2 hix
     have hcode : posCode (edgeReadWord p order s1 o1) =
         posCode (edgeReadWord p order s2 o2) := congrArg posCode hEq
     rw [← edgeCodes_get p order s1 o1, ← edgeCodes_get p order s2 o2] at hcode
@@ -327,7 +777,7 @@ theorem corner_read_words_injective (p : Fin 20) (i1 i2 : Fin 3) (hne : i1 ≠ i
       exact hst (cornerIx_inj h)
     have hcd : codesDistinct (cornerCodes p i1 i2) = true := by
       have h := cornerAll_group p i1 i2
-      simpa [cornerGroup, hne] using h
+      rwa [cornerGroup, if_neg hne] at h
     have hi1 : s1.val * 3 + o1.val < (cornerCodes p i1 i2).length := by
       rw [cornerCodes_length]; exact (cornerIx s1 o1).1
     have hi2 : s2.val * 3 + o2.val < (cornerCodes p i1 i2).length := by
@@ -397,18 +847,6 @@ private theorem corner_asked (p : Fin 20) (j : Fin 3) :
       cornerFace p.val j.val = cornerFace p.val 2 := by
   have h : j.val = 0 ∨ j.val = 1 ∨ j.val = 2 := by have := j.isLt; omega
   rcases h with h | h | h <;> simp [h]
-
-private theorem embedPos_inj {a b : Position} (h : embedPos a = embedPos b) : a = b := by
-  have hcp := congrArg (fun p : Megadreifach.Position => p.sudo_8Position_2cp) h
-  have hco := congrArg (fun p : Megadreifach.Position => p.sudo_8Position_2co) h
-  have hep := congrArg (fun p : Megadreifach.Position => p.sudo_8Position_2ep) h
-  have heo := congrArg (fun p : Megadreifach.Position => p.sudo_8Position_2eo) h
-  simp only [embedPos] at hcp hco hep heo
-  apply Position.ext
-  · exact listOf_inj _ _ (embed_inj hcp)
-  · exact listOfOri_inj _ _ (embed_inj hco)
-  · exact listOf_inj _ _ (embed_inj hep)
-  · exact listOfOri_inj _ _ (embed_inj heo)
 
 /-! ## Emitted read words -/
 

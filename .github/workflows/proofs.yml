@@ -361,8 +361,11 @@ jobs:
     # kats/megaminx_hash_kats_v3.json, a compiled run of the emitted v3 code on every vector
     # (52 checks, about a second; not a kernel proof), Link 2 for all 12 exports (the v3
     # MegaDreifachV3.Link2 files plus v2 lemmas re-elaborated against the v3 emit: 81 modules,
-    # 18 v3 and 63 v2, plus Generated/; about 4 min serial locally from clean, peak about
-    # 2.3 GB) and the axiom audit.
+    # 18 v3 and 63 v2, plus Generated/; about 4 min serial locally from clean). ReadWord's
+    # two-turn check is one kernel decide! per piece and colour order. Measured on that
+    # package build under ulimit -v 7000000: peak RSS 710452 kB (about 0.7 GB, VmHWM),
+    # peak virtual 1104064 kB (about 1.1 GB). The previous single decide! of every piece
+    # exceeded about 6.1 GB RSS. Axiom audit follows.
     # The emitted TAP is megadreifach-v3-generated; emit freshness is generated-fresh.
     runs-on: ubuntu-latest
     steps:

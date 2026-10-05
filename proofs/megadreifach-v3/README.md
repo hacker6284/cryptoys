@@ -150,24 +150,26 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 is one lemma about the model. It is not collision resistance, not a PRF claim, and a
 green build is not a security claim. SPEC and ANALYSIS tags are unchanged.
 
-Software `dmStep h deal` is `compose h (emBlock h deal)`. In the shared group that is
-`leftMul h (emBlock h deal)`: the block's permutations sit on the left of the chaining
-value (`W.cp ∘ h.cp` with `W = emBlock h deal`). That is the software feed-forward,
-not the hand 3-solve `h·W·h`.
+compose g h is g then h. `emBlock` is the board E_m = W·h, so
+`dmStep h deal = compose h (emBlock h deal)` is `h·W·h`, the hand 3-solve. Software
+and the hand schedule are that product (v2 `daviesMeyer` is `compose h e`).
 
-`leftMul_cancel` cancels a shared right factor (`leftMul T g = leftMul T' g` with
-`Injective g.cp` and `Injective g.ep` gives `T = T'`). A same-`h` collision is
-`leftMul h W = leftMul h W'`, so that lemma does not apply. The same two injectivity
-hypotheses have to be assumed of `h`. They are exactly `InjPos h`, and they are not
-silent: the theorem takes them as arguments. They hold for every reachable chaining
-value (`injPos_ivCook12`, then `dmStep_inj` and injPos_chainPre). `isLegal` adds even
-permutations and orientation parities, which this lemma does not need. Nothing is said
-when the two chaining values differ.
+Cancelling the outer `h`, a same-`h` DM collision is a same-board `emBlock` collision.
+The hypothesis is `InjPos h` (`Injective h.cp ∧ Injective h.ep`). `leftMul_cancel` is
+the other cancellation (a shared injective right factor). Left cancellation is
+`compose_left_cancel` in `Link2/InjPos.lean`. `isLegal` adds even permutations and
+orientation parities, which this lemma does not use. Nothing is said when the two
+chaining values differ.
+
+`injPos_ivCook12` is `InjPos` at the IV. `dmStep_inj` preserves it through one step.
+`injPos_chainPre` is `InjPos` for the MD chaining value `chainPre xs k`, and
+`dmStep_same_h_iff_chainPre` applies the iff there.
 
 | What is proved | Theorem |
 | --- | --- |
-| `dmStep h b = dmStep h b'` iff `emBlock h b = emBlock h b'`, for `Injective h.cp` and `Injective h.ep` | `dmStep_same_h_iff` |
+| `dmStep h b = dmStep h b'` iff `emBlock h b = emBlock h b'`, for `InjPos h` | `dmStep_same_h_iff` |
 | That direction on its own | `emBlock_eq_of_dmStep_eq` |
+| The iff at `chainPre xs k` | `dmStep_same_h_iff_chainPre` |
 
 ## Where this sits
 

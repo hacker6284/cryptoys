@@ -115,8 +115,8 @@ The proof is cheap. It evaluates only the two 7-card prefixes with plain `decide
 ### 1.4 Ideal-model combinatorics (`IdealCount.lean`)
 | theorem | content |
 |---|---|
-| `injective_surjective_fin` | Pigeonhole: an injective map on `Fin n` is surjective |
-| `compose_left_cancel` | Left cancellation in the position group (right cancellation is `Group.leftMul_cancel`) |
+| `injective_surjective_fin` | Pigeonhole: an injective map on `Fin n` is surjective. Proved in `Link2/InjPos.lean` |
+| `compose_left_cancel` | Left cancellation in the position group (right cancellation is `Group.leftMul_cancel`). Proved in `Link2/InjPos.lean`; `dm_forward_bad_count` calls it |
 | `dm_forward_bad_count` | For fixed `h`, at most \|Z\| cipher outputs `y` make `h∘y` land in a target set `Z` |
 | `dm_inverse_bad_count` | For fixed `y`, at most \|Z\| keys `h` do |
 | `reachable_rank_lt_group` | Every reachable digest rank is < \|G\|. (That the leading digest byte is therefore ≤ 0x03 is derived on paper: \|G\| < 4·2^224.) |

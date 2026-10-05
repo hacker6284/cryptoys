@@ -59,7 +59,7 @@ axiom) fails, as does a Lean error.
   required: the theorems its README cites (MD_V1_README_THEOREMS).
 - megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
   for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
-  README cites (MD_V3_README_THEOREMS); min is the audited count (185).
+  README cites (MD_V3_README_THEOREMS); min is the audited count (184).
   `--selftest` checks its "Emitted function" column against
   primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
@@ -431,7 +431,7 @@ MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
     "turn_run_refines", "count_find_refines", "count_relook_refines",
     "count_register_looks_refines", "card_colour_refines", "card_step_refines",
     "echo_colour_refines", "em_run_refines", "em_block_refines", "emBlock_inj",
-    "dm_step_refines", "dmStep_inj",
+    "dm_step_refines", "dmStep_inj", "injPos_chainPre",
     "iv_cook12_refines", "v_Hash_refines", "v_Hash_refines_array", "v_MegaDreifach_refines",
     "v_HashDeck_refines", "v_HashDeck_refines_array", "v_HashDeck_two_blocks",
     "v_MegaDreifachDeck_refines", "body_from_refines",
@@ -440,7 +440,7 @@ MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
     "edgeFaceOf_spec", "cornerFaceOf_spec", "turnedFace_countUp", "turnedFace_king",
     "echoColour_countUp", "cardStep_g_last", "dealFold_g_last", "echoRun_g_last",
     "emBlock_any_counters"]} | {f"MegaDreifachV3.Security.{n}" for n in [
-    "dmStep_same_h_iff", "emBlock_eq_of_dmStep_eq"]}
+    "dmStep_same_h_iff", "emBlock_eq_of_dmStep_eq", "dmStep_same_h_iff_chainPre"]}
 
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
@@ -958,8 +958,11 @@ PACKAGES = {
         "key": "full",
         "known_sorry": set(),
         # sanity: the audit must see the whole package (the real audited count; raise as
-        # Link 2 grows, lower only with a reason in the commit)
-        "min": 185,
+        # Link 2 grows, lower only with a reason in the commit).
+        # 185 → 184: the duplicate Fin pigeonhole `surj_of_inj_fin` moved to v2
+        # `Link2.injective_surjective_fin`, and the private `compose_cancel_left` went
+        # with it; `dmStep_same_h_iff_chainPre` is the one new v3 theorem.
+        "min": 184,
         "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac": {

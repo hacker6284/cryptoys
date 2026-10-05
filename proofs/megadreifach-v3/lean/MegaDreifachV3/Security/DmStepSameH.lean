@@ -1,108 +1,77 @@
 /-
-  SECURITY. Same-`h` cancellation for the software Davies–Meyer step of MegaDreifach v3.
+  SECURITY. Same-`h` cancellation for Davies–Meyer in MegaDreifach v3.
   Not a collision-resistance claim and not a PRF claim. A green build of this file is
   not a security claim.
 
-  `Em.dmStep h deal = compose h (Em.emBlock h deal)`. In `MegaDreifach.Group` that is
-  `leftMul h (Em.emBlock h deal)`: the block's permutations are on the left of `h`'s
-  (`(emBlock h deal).cp ∘ h.cp`). With `W = emBlock h deal`, that is the software
-  feed-forward (left-multiplication by `W` in that sense). It is not the hand 3-solve
-  product `h·W·h`.
+  `compose g h` is `g` then `h` (`MegaDreifach.Group`). `emBlock h deal` is the board
+  `E_m = W·h` (`Em.emBlock`, the sudo's `em_block`). So
+  `Em.dmStep h deal = compose h (emBlock h deal)` is `h·W·h`, the hand 3-solve
+  (v3 SPEC §5.7; v2 `daviesMeyer` is the same `compose h e`). Software and the hand
+  schedule are this one product.
 
-  For one fixed chaining value, `dmStep h b = dmStep h b'` if and only if
-  `emBlock h b = emBlock h b'`, once `h.cp` and `h.ep` are injective. Those two
-  hypotheses are exactly `InjPos h` (`MegaDreifach.Link2.InjPos`). They are not
-  assumed for a bare `Position`. `isLegal` is the same two injectivities plus even
-  permutations and orientation parities; this lemma does not use the parities.
-  Every reachable v3 chaining value is `InjPos`: `injPos_ivCook12`, then `dmStep_inj`
-  and `injPos_chainPre`. Nothing is said when the two chaining values differ.
+  What is proved: cancelling the outer `h`, a same-`h` DM collision is the same thing
+  as a same-board `emBlock` collision. The hypothesis is `InjPos h`
+  (`Injective h.cp ∧ Injective h.ep`, `Link2/PosBytesGen.lean`). It is not assumed
+  for a bare `Position`. `isLegal` adds even permutations and orientation parities,
+  which this lemma does not use.
 
-  `Group.leftMul_cancel` is the other cancellation. From `leftMul T g = leftMul T' g`
-  and `Injective g.cp`, `Injective g.ep` it concludes `T = T'` (the shared factor is
-  the right one, and that factor must be injective). A same-`h` collision is
-  `leftMul h W = leftMul h W'`, so `leftMul_cancel` does not apply. The injectivity
-  has to be assumed of `h`, and the proof is surjectivity of an injective `Fin` map
-  (`MegaDreifachV3.Link2.surj_of_inj_fin`) plus cancellation in `Fin 3` and `Fin 2`.
+  `injPos_ivCook12` gives `InjPos` at the IV. `dmStep_inj` (`EmRun.lean`) preserves it
+  through one step. `injPos_chainPre` (`VHash.lean`) gives it for every MD chaining
+  value `chainPre xs k`, and `dmStep_same_h_iff_chainPre` applies the iff there.
+  Nothing is said when the two chaining values differ.
+
+  Left cancellation is `MegaDreifach.Link2.compose_left_cancel` (`Link2/InjPos.lean`).
+  `Group.leftMul_cancel` is the other cancellation: a shared injective right factor.
 
   Zero sorry. No native_decide.
 -/
-import MegaDreifachV3.Em
-import MegaDreifachV3.Link2.FaceOfFound
+import MegaDreifach.Link2.InjPos
+import MegaDreifachV3.Link2.VHash
 
 namespace MegaDreifachV3.Security
 
-open MegaDreifach
-open MegaDreifachV3.Link2 (surj_of_inj_fin)
+open MegaDreifach MegaDreifach.Link2
 
-/-- `dmStep` is left multiplication by the chaining value, in `Group.leftMul`:
-    the block output is the right factor. -/
+/-- `dmStep h b = leftMul h (emBlock h b)`, and `leftMul` is `compose`, so this is
+    `compose h (emBlock h b)`. The board is `W·h`, so the product is `h·W·h`. -/
 private theorem dmStep_leftMul (h : Position) (b : List Nat) :
     Em.dmStep h b = leftMul h (Em.emBlock h b) := by
-  unfold Em.dmStep
-  exact (leftMul_eq_compose h (Em.emBlock h b)).symm
+  rw [Em.dmStep, ← leftMul_eq_compose]
 
-/-- Cancel a shared left factor of `compose` when that factor's permutation tables
-    are injective. See the module note for why this is not `leftMul_cancel`. -/
-private theorem compose_cancel_left (h y y' : Position) (hcp : Injective h.cp)
-    (hep : Injective h.ep) (heq : compose h y = compose h y') : y = y' := by
-  have hcpEq : y.cp ∘ h.cp = y'.cp ∘ h.cp := congrArg Position.cp heq
-  have hepEq : y.ep ∘ h.ep = y'.ep ∘ h.ep := congrArg Position.ep heq
-  have hco := congrArg Position.co heq
-  have heo := congrArg Position.eo heq
-  apply Position.ext
-  · funext t
-    obtain ⟨s, rfl⟩ := surj_of_inj_fin h.cp hcp t
-    exact congrFun hcpEq s
-  · funext t
-    obtain ⟨s, rfl⟩ := surj_of_inj_fin h.cp hcp t
-    have e := congrFun hco s
-    simp only [compose] at e
-    apply Fin.ext
-    have e' := congrArg Fin.val e
-    simp only [Fin.val_add] at e'
-    have a := (y.co (h.cp s)).isLt
-    have b := (y'.co (h.cp s)).isLt
-    have c := (h.co s).isLt
-    omega
-  · funext t
-    obtain ⟨s, rfl⟩ := surj_of_inj_fin h.ep hep t
-    exact congrFun hepEq s
-  · funext t
-    obtain ⟨s, rfl⟩ := surj_of_inj_fin h.ep hep t
-    have e := congrFun heo s
-    simp only [compose] at e
-    apply Fin.ext
-    have e' := congrArg Fin.val e
-    simp only [Fin.val_add] at e'
-    have a := (y.eo (h.ep s)).isLt
-    have b := (y'.eo (h.ep s)).isLt
-    have c := (h.eo s).isLt
-    omega
-
-/-- Same-h cancellation for software DM.
-    `dmStep h b = dmStep h b'` iff `emBlock h b = emBlock h b'`,
-    when `Injective h.cp` and `Injective h.ep` (exactly `InjPos h`).
+/-- Same-h cancellation for Davies–Meyer.
+    `dmStep h b = dmStep h b'` iff `emBlock h b = emBlock h b'`, for `InjPos h`.
+    Cancelling the outer `h`, a same-`h` DM collision is a same-board `emBlock` collision.
+    `dmStep` is `h·W·h`, the hand 3-solve.
     Says nothing when the chaining values differ.
     Not a collision-resistance claim and not a PRF claim.
     A green build is not a security claim. -/
-theorem dmStep_same_h_iff (h : Position) (hcp : Injective h.cp) (hep : Injective h.ep)
-    (b b' : List Nat) :
+theorem dmStep_same_h_iff (h : Position) (hh : InjPos h) (b b' : List Nat) :
     Em.dmStep h b = Em.dmStep h b' ↔ Em.emBlock h b = Em.emBlock h b' := by
   constructor
   · intro hstep
-    -- `leftMul_cancel h ? ?` does not match: the shared factor is the left one.
-    have hmul : leftMul h (Em.emBlock h b) = leftMul h (Em.emBlock h b') := by
-      simpa [dmStep_leftMul] using hstep
-    exact compose_cancel_left h _ _ hcp hep (by simpa [leftMul] using hmul)
+    rw [dmStep_leftMul] at hstep
+    rw [leftMul_eq_compose] at hstep
+    exact compose_left_cancel h (Em.emBlock h b) (Em.emBlock h b') hh hstep
   · intro hW
-    simp [Em.dmStep, hW]
+    -- `rw` rewrites the first occurrence, so unfold both sides, then the board.
+    rw [Em.dmStep, Em.dmStep, hW]
 
-/-- The contentful direction of `dmStep_same_h_iff`: a same-`h` `dmStep` collision
-    is an `emBlock` collision. The other direction is congruence and needs no
-    hypothesis on `h`. Not a collision-resistance claim and not a PRF claim. -/
-theorem emBlock_eq_of_dmStep_eq (h : Position) (hcp : Injective h.cp) (hep : Injective h.ep)
-    (b b' : List Nat) (hstep : Em.dmStep h b = Em.dmStep h b') :
+/-- The contentful direction of `dmStep_same_h_iff`: a same-`h` DM collision is an
+    `emBlock` collision. The other direction is congruence and needs no hypothesis on `h`.
+    Not a collision-resistance claim and not a PRF claim. -/
+theorem emBlock_eq_of_dmStep_eq (h : Position) (hh : InjPos h) (b b' : List Nat)
+    (hstep : Em.dmStep h b = Em.dmStep h b') :
     Em.emBlock h b = Em.emBlock h b' :=
-  (dmStep_same_h_iff h hcp hep b b').mp hstep
+  (dmStep_same_h_iff h hh b b').mp hstep
+
+/-- `dmStep_same_h_iff` at the MD chaining value `chainPre xs k`.
+    `injPos_chainPre` is the `InjPos` hypothesis. Not a collision-resistance claim
+    and not a PRF claim. -/
+theorem dmStep_same_h_iff_chainPre (xs : List Nat) (k : Nat) (b b' : List Nat) :
+    Em.dmStep (MegaDreifachV3.Link2.chainPre xs k) b =
+        Em.dmStep (MegaDreifachV3.Link2.chainPre xs k) b' ↔
+      Em.emBlock (MegaDreifachV3.Link2.chainPre xs k) b =
+        Em.emBlock (MegaDreifachV3.Link2.chainPre xs k) b' :=
+  dmStep_same_h_iff _ (MegaDreifachV3.Link2.injPos_chainPre xs k) b b'
 
 end MegaDreifachV3.Security

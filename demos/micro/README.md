@@ -21,7 +21,8 @@ turn sound on, and listen. `index.html` lists them.
   one page. The unapproved moves are silent and checked as drawn (in the
   page's `window.__primitive`). The old flat URLs (`carry/`,
   `scramble-turn/`, `scramble-rotate/`, `megaminx-turn/`,
-  `doubledeal-grid-deal/`) redirect to the new ones; `hinge/` is gone.
+  `doubledeal-grid-deal/`) redirect to the new ones; `hinge/` (removed)
+  sends you to this index.
   The rest keep their own `settings.js` until approved.
 - **Settings:** each other page's `settings.js` holds everything you hear and
   see move: one sound file per slot, `gainDb`, `offsetMs` (when the file

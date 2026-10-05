@@ -132,12 +132,7 @@ jobs:
           # (its Link 2 package is checked by cbc-hmac-v1-lean).
           - { name: cbc-hmac-v1, dir: proofs/deprecated/doubledeal-cbc-hmac-v1/lean/Generated, test: doubledeal_cbc_hmac_test }
           - { name: bs, dir: proofs/key_exchange/bs/lean/Generated, test: bs_test }
-          # ECBS (proofs/key_exchange/ecbs/lean/Generated) is emitted but NOT built here yet: with
-          # the sudoc pin its Ecbs.lean does not elaborate in reasonable time (`deriving Repr` on
-          # wide records; then heartbeat/recursion limits in large bodies: end_phase, marker_step, mul). Tracked in
-          # https://github.com/hacker6284/sudocode/issues/17; see proofs/key_exchange/ecbs/evidence/README.md#lean. Re-add after
-          # the emitter fix:
-          # - { name: ecbs, dir: proofs/key_exchange/ecbs/lean/Generated, test: ecbs_test }
+          - { name: ecbs, dir: proofs/key_exchange/ecbs/lean/Generated, test: ecbs_test }
           # Frozen DoubleDeal v11, superseded by v12 (PassKey related-key property; not an
           # attack, so no witness package): emitted TAP only (proofs/deprecated/doubledeal-v11/).
           - { name: doubledeal-v11, dir: proofs/deprecated/doubledeal-v11/lean/Generated, test: doubledeal_v11_test }

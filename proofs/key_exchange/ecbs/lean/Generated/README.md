@@ -6,13 +6,13 @@
 by `proofs/emit_lean.sh ecbs`.
 
 This directory is a standalone Lake package (its own `lakefile.lean`). CI checks that
-it matches a fresh emit (`proofs/emit_lean.sh --check`) but does **not** build it yet:
-at the current sudoc pin `Ecbs.lean` does not elaborate in reasonable time. A 20-minute
-retry after the 2026-10-04 `Costs` refactor was still elaborating when it was stopped (see
-[`evidence/README.md`](../../evidence/README.md#lean)). Tracked in sudocode as
-https://github.com/hacker6284/sudocode/issues/17. Once the emitter is fixed, the
-`generated` matrix entry in `.github/workflows/proofs.yml` builds it and runs the
-emitted sudo tests (`ecbs_test`, TAP). There is no Link 2 package for
+it matches a fresh emit (`proofs/emit_lean.sh --check`), builds it, and runs the
+emitted sudo tests (`ecbs_test`, TAP): the `ecbs` row of the `generated` matrix in
+`.github/workflows/proofs.yml`. sudocode#18
+(https://github.com/hacker6284/sudocode/pull/18) makes `Ecbs.lean` elaborate in a CI
+budget; it fixes https://github.com/hacker6284/sudocode/issues/17. Dated attempts
+that did not finish, at the previous pin, are in
+[`evidence/README.md`](../../evidence/README.md#lean). There is no Link 2 package for
 ECBS yet: nothing proves facts about these definitions (see
 [`proofs/key_exchange/ecbs/README.md`](../../README.md)). `lake-manifest.json` is
 committed so `lean-action` can `lake build`; do not gitignore it.

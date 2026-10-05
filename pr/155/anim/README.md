@@ -11,6 +11,10 @@ anim/
     index.js      the entry: exports settings and the hooks the demo code calls
   megaminx-turn/  (same layout)
   doubledeal-grid-deal/ (same layout)
+  carry/          P1 carry (a general primitive; placements.js: its seeded audit loop)
+  hinge/          P2 hinge (a general primitive; placements.js: its seeded audit loop)
+  geom.js         pure geometry for the primitives: quaternions (slerp), oriented boxes, overlap
+  room.js         the playroom's solids and seats, measured from the drawn meshes
   sounds/         the files the entries name (generated, see below)
   voice.js        settings.sounds → a sound.js player with contact timing
   twisty.js       cubing.js move timing shared by twisty-puzzle entries
@@ -39,6 +43,23 @@ default rules: a turn sound's audible centre at the face's peak
 velocity (`align: "peak-velocity"`), the scramble-turn landing pat; a
 moving card's sound has its audible centre where the card moves fastest.
 
+## General primitives
+
+Some entries are general primitives (`carry`, `hinge`; the agreed plan
+adds extract/insert, peel, deal, gather, shift and turn). A primitive is tuned once and plays everywhere:
+**placement is always an input** (where from, where to, any yaw, flips,
+what is around it), and what Zachary approves is its laws: the timing,
+the curves and the object's own motion. Rotations use quaternion slerp;
+arcs clear whatever is under and around the path (`room.js` solids and
+the other toys), measured from the drawn geometry, not fixed heights.
+Each primitive's microdemo loops it with a different, seeded start and
+end every cycle (real playroom poses, edge cases, random ones; the seed
+and cycle are shown small on the page; `?seed=N`, `?cycle=N`, `?only=N`,
+`?view=cycle`), from one fixed camera framing the union of the loop, and
+checks every cycle as drawn: real sizes, no overlap, seated by drawn
+geometry, nothing jumps or scales, duration and peak speed on the law.
+`library.test.mjs` runs the same checks over the seeds.
+
 ## Real-life scale
 
 Every toy an entry animates is at real-life scale; never fit a toy to
@@ -58,6 +79,15 @@ small even gaps, nothing overlapping, the cards' drawn bottoms on the felt).
 | `scramble-turn` | playroom Scramble seat (`playroom/cube-stage.js`): a click per face turn, a sound per whole-cube rotation, a muffled pat when the cube lands on the felt | `micro/scramble-turn/` (single, double and triple face turns, one step each), `micro/scramble-rotate/` (rotation) | approved by Zachary: the single face-turn click's file and gain, the landing pat and the lift timing at `af9a8fb`; the rotation sound (Sadiquecat broomstick swish, swell at mid-rotation) on 2026-10-02; it now follows the turns' rule (`align: "peak-velocity"`, `centre: "swell"`): its swell at mid-rotation for any rotation (y, y2) at any tempo, unchanged (within 1 ms) for the quarter rotation he approved. **Single, double and triple face-turn sounds approved and LOCKED at `6014bfc`** (Zachary: "All look pretty good."): their files, gains, `align: "peak-velocity"` and `nudgeMs: 0`, under his rule "the audible part of the sound should be centered over the part of the animation where the face is at maximum velocity" (each file's audible centroid half way through its turn, cubing.js smootherStep, at any tempo); pinned by `library.test.mjs` |
 | `megaminx-turn` | the megaminx in a cube stage (`playroom/cube-stage.js` with `{ voice: megaminxTurnVoice(), timing }`): a click per face turn (72°), a muffled pat when it lands. MegaDreifach's own stage is on PR #153 (held): import this entry there when it lands | `micro/megaminx-turn/` (single, double and triple turns U, U2, U3, one step each, in the Scramble seat's debug megaminx) | **Animation and sounds APPROVED and LOCKED at `a927bb2`** (Zachary approved the animation: the megaminx at its real 70 mm face to face, seated on the felt by its drawn geometry; the lift, turn tempo and settle timing and every sound as they are). **Single, double and triple face-turn sounds approved and LOCKED at `d952e6a`** (Zachary: "Sounds are ok for that one."): their files, gains, `align: "peak-velocity"` and `nudgeMs: 0` (SpaceJoe clicks centred on peak face velocity, cubing.js smootherStep, half way); pinned by `library.test.mjs`. Landing: scramble-turn's muffled pat |
 | `doubledeal-grid-deal` | `doubledeal/table.js` on the real-size layout (`doubledeal/real-layout.js`, via `playroom/card-stage.js` `stageCardTable(..., { layout: REAL_LAYOUT })`): the hand packet, a neat stack with its top card first, dealt card by card onto the message grid, column by column, each card hopping from the packet to its seat; one card-fan sound per deal (Kenney card fan), its audible centre on the mean of the cards' peak-velocity times. A per-card slot (`card`, no file chosen yet) has `align: "motion-start"`: each card's sound starts as that card leaves the packet (the file's audible onset, `sound.js` `audibleOnsetMs`, on the card's departure, scaling with the pace), and every card's sound plays, overlapping freely (no gap, a voice per card). `TABLE_TIMING` reads `dealMs` and `dealStaggerMs` from it. The playroom DoubleDeal keeps the old 4×13 layout (no sound) until its other moves have moved | `micro/doubledeal-grid-deal/` (the deal, both grids at real size, 8 columns × 13 rows) | **Animation APPROVED and LOCKED at `7b5028f`** (Zachary: "at speed it looks fine"): the motion, timing (`pace` 1.8, `dealMs` 260, `dealStaggerMs` 36, the card hop `liftHop` 0.9), the real-size layout and the camera of `0aef6e8`; pinned by `library.test.mjs`. Sound on hold project-wide: the stream sound is unapproved and the per-card sound is pending (`card: null`) |
+| `carry` | nothing yet (the playroom flights, `toy-director.js` flyToy, unbox lay/aside, move here once approved) | `micro/carry/` (the KEY and MSG deck boxes carried around the playroom: 24 seeded cycles, each from where the last left off, to the felt, the shelf and the chest, flips, half turns, shortest hop to longest flight, next to the other box; the chest lid swings open around the cycles that reach into it) | **not yet approved**: laws in `carry/settings.js` (vertical take-off and touchdown, a Bézier arc whose top is 3 cm + 18 % of the horizontal distance above the higher end, capped at 50 cm, raised until the box clears every solid by 3 cm; smootherstep pace along the path, fastest half way; duration 450 + 650 × √(path m) ms in 500–2000; slerp over the middle 12–88 % of the path) |
+| `hinge` | nothing yet (`toy-director.js` animateLid, `unbox-physical.js` unboxFlap / restow flap close move here once approved) | `micro/hinge/` (the KEY tuck box's flap opened and shut at 19 seeded poses, the box carried there by `carry`: standing, lying, on its side, on the shelf against the backboard, next to the MSG box, half swings; every fourth cycle the chest lid) | **not yet approved**: curves in `hinge/settings.js` (chest lid opens 640 ms easeInOutCubic with a 3 % overshoot settling back, drops shut in 520 ms under its weight with a 3.5 % rebound; tuck flap opens 380 ms with a 6 % overshoot, tucks shut in 300 ms; partial sweeps ms × √fraction; stops short of anything in its sweep) |
+
+**The chest in the primitive microdemos is turned to yaw π (proposed).**
+In the live playroom (yaw π/2) its lid hinges on the wall side and its
+47 cm dome swings 35 cm into the wall at full open (it meets the wall at
+26°). Turned half round against the same wall, it opens clear of the wall
+and of every flight out of it. The live room is unchanged until Zachary
+decides; `room.js` CHEST and `library.test.mjs` record both.
 
 ## Sounds
 

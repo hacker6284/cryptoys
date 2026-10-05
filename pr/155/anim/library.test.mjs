@@ -253,4 +253,104 @@ assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and L
     for (const [k, v] of Object.entries(gaps)) assert.ok(v > 0, `real layout: no overlap (${k})`);
 }
 
+// P1 carry and P2 hinge: the general primitives. NOT YET APPROVED: these
+// pin the laws as they stand and run every check over the seeded loops
+// the microdemos play (micro/carry, micro/hinge), so a change to a law,
+// the room or the placements shows up here. Update the pinned values
+// only with Zachary's sign-off once he has approved them.
+{
+    const geom = await import(new URL("geom.js", here));
+    const room = await import(new URL("room.js", here));
+    const carry = await import(new URL("carry/index.js", here));
+    const cp = await import(new URL("carry/placements.js", here));
+    const hinge = await import(new URL("hinge/index.js", here));
+    const hp = await import(new URL("hinge/placements.js", here));
+    assert.match(readme, /\| `carry` \|[^\n]*not yet approved/i, "README: carry awaits approval");
+    assert.match(readme, /\| `hinge` \|[^\n]*not yet approved/i, "README: hinge awaits approval");
+
+    // Real sizes: the shapes the primitives plan with are the toys' drawn bounds.
+    const dims = (b) => [0, 1, 2].map((k) => Math.round((b.max[k] - b.min[k]) * 10000) / 10);
+    assert.deepEqual(dims(cp.DECK_BOX), [67, 92, 20.4], "deck box 67 × 92 × 20 mm (+ its label)");
+    assert.deepEqual(dims(hp.TUCK_BOX), [67, 94.8, 21.2], "tuck box 67 × 92 × 20 mm (+ the shut flap and label)");
+
+    // The carry laws.
+    assert.deepEqual(carry.timing, { tempo: 1, baseMs: 450, perSqrtM: 650, minMs: 500, maxMs: 2000, riseM: 0.03, risePerM: 0.18, riseMaxM: 0.5, clearM: 0.03, turnFrom: 0.12, turnTo: 0.88 });
+    assert.equal(carry.carryMs(0), 500);
+    assert.equal(carry.carryMs(1), 1100);
+    assert.equal(carry.carryMs(4), 1750);
+    assert.equal(carry.carryMs(9), 2000);
+    assert.equal(carry.carryMs(1, { ...carry.timing, tempo: 2 }), 550, "÷ tempo");
+    assert.ok(Math.abs(carry.riseFor(1) - 0.21) < 1e-12 && carry.riseFor(10) === 0.5);
+    assert.ok(Math.abs(geom.smootherStepD(0.5) - carry.PEAK_RATIO) < 1e-12, "smootherstep is 1.875× the mean speed half way");
+    // Quaternion slerp along the shorter arc, three.js conventions.
+    const qa = geom.quatFromEuler(0, 0.2, 0), qb = geom.quatFromEuler(Math.PI / 2, 2.9, 0);
+    for (let i = 0; i <= 10; i++) assert.ok(Math.abs(Math.hypot(...geom.slerp(qa, qb, i / 10)) - 1) < 1e-9);
+    assert.ok(Math.abs(geom.quatAngle(qa, geom.slerp(qa, qb, 0.5)) - geom.quatAngle(qa, qb) / 2) < 1e-9, "slerp turns at a steady rate");
+
+    // Every carry of every seeded loop: no overlap, seated by drawn geometry
+    // at both ends, ends exact, duration and peak speed on the law, slerp.
+    for (const seed of [1, 2, 3, 4, 5, 6]) {
+        const sch = cp.carrySchedule(seed);
+        assert.equal(sch.cycles.length, cp.CYCLES);
+        const at = { deck: sch.poseOf(sch.start.deck), deck2: sch.poseOf(sch.start.deck2) };
+        const lengths = [], targets = new Set(), kinds = { real: 0, edge: 0, random: 0 };
+        let flips = 0;
+        for (const c of sch.cycles) {
+            assert.ok(c.check.ok, `carry seed ${seed} cycle ${c.n} (${c.label}): ${c.check.fail.join("; ")}`);
+            assert.deepEqual(c.from, at[c.mover], `carry seed ${seed} cycle ${c.n} starts where its box was left`);
+            at[c.mover] = c.to;
+            lengths.push(c.plan.L);
+            targets.add(c.target.surface);
+            kinds[c.kind] += 1;
+            if (geom.quatAngle(c.from.q, c.to.q) > Math.PI / 3) flips += 1;
+            assert.ok(c.plan.top < 2.68 - 0.06, "below the ceiling");
+        }
+        assert.deepEqual(sch.end.deck, sch.start.deck, `carry seed ${seed}: the loop ends where it starts`);
+        assert.deepEqual(sch.end.deck2, sch.start.deck2);
+        assert.ok(Math.min(...lengths) < 0.15 && Math.max(...lengths) > 4, `carry seed ${seed}: near and far (${Math.min(...lengths).toFixed(2)}–${Math.max(...lengths).toFixed(2)} m)`);
+        assert.deepEqual([...targets].sort(), ["chest", "felt", "shelf"]);
+        assert.ok(kinds.real >= 5 && kinds.edge >= 10 && kinds.random >= 6 && flips >= 4, `carry seed ${seed}: real, edge and random poses, flips`);
+    }
+
+    // The hinge curves.
+    const { parts } = hinge;
+    assert.deepEqual(parts, {
+        "chest-lid": { openRad: 1.45, stopGapM: 0.01, open: { ms: 640, curve: "swing", overshoot: 0.03, settle: 0.25 }, close: { ms: 520, curve: "fall", bounce: 0.035, settle: 0.24 } },
+        "tuck-flap": { openRad: 2.15, stopGapM: 0.001, open: { ms: 380, curve: "swing", overshoot: 0.06, settle: 0.3 }, close: { ms: 300, curve: "swing", overshoot: 0, settle: 0 } },
+    });
+    for (const p of Object.values(parts)) for (const spec of [p.open, p.close]) {
+        assert.equal(hinge.curveAt(spec, 0), 0);
+        assert.ok(Math.abs(hinge.curveAt(spec, 1) - 1) < 1e-12);
+    }
+    assert.ok(Math.abs(hinge.curvePeakAt(parts["tuck-flap"].open) - 0.35) < 1e-12 && Math.abs(hinge.curvePeakAt(parts["chest-lid"].close) - 0.76) < 1e-12);
+    assert.ok(Math.abs(Math.max(...Array.from({ length: 201 }, (_, i) => hinge.curveAt(parts["tuck-flap"].open, i / 200))) - 1.06) < 1e-3, "the flap overshoots 6 %");
+    assert.equal(hinge.hingeMs(parts["chest-lid"].open, 0.25), 320, "a quarter sweep takes half the time");
+
+    // The chest as the microdemos place it: its lid clears the walls at full
+    // open (with the overshoot). In the live room (yaw π/2) it would not.
+    const walls = room.ROOM.filter((x) => x.name.startsWith("wall") || x.name.startsWith("sconce"));
+    assert.ok(geom.worstDepth(room.chestLidObb(1.45 * 1.03), walls, 0).depth < 0, "the turned chest's lid clears the walls");
+    const live = room.chestLidObb(1.45, { ...room.CHEST, yaw: Math.PI / 2 });
+    assert.ok(geom.worstDepth(live, walls, 0).depth > 0.3, "the live chest's lid swings 30+ cm into the wall");
+
+    // Every swing of every seeded hinge loop (and the carries between them).
+    for (const seed of [1, 2, 3]) {
+        const sch = hp.hingeSchedule(seed);
+        assert.equal(sch.cycles.length, hp.CYCLES);
+        let lids = 0, stops = new Set();
+        for (const c of sch.cycles) {
+            if (c.carry) assert.ok(c.carry.check.ok, `hinge seed ${seed} cycle ${c.n} carry: ${c.carry.check.fail.join("; ")}`);
+            if (c.what === "lid") lids += 1;
+            for (const w of c.swings) {
+                assert.ok(w.check.ok, `hinge seed ${seed} cycle ${c.n} (${c.label}): ${w.check.fail.join("; ")}`);
+                if (w.plan.stopped) stops.add(w.plan.stopped);
+            }
+        }
+        assert.equal(lids, 5);
+        assert.ok(stops.has("shelf-back") && stops.has("table"), `hinge seed ${seed}: the flap meets the backboard and the felt (${[...stops]})`);
+        assert.equal(sch.cycles[0].swings[0].plan.to, parts["tuck-flap"].openRad, "a free flap opens all the way");
+        assert.equal(sch.cycles[3].swings[0].plan.to, parts["chest-lid"].openRad, "the chest lid opens all the way");
+    }
+}
+
 console.log("animation library tests ok");

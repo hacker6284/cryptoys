@@ -231,7 +231,7 @@ MD_OUT=/tmp/megadreifach-v3 node proofs/doubledeal-cbc-hmac/security/sandwich_v3
 | Conformance sudo | `primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo` | The whole construction |
 | Host wrapper | `primitives/aead/doubledeal-cbc-hmac/aead.mjs` | Fresh IV decks, `encrypt` / `decrypt` |
 | KATs | `primitives/aead/doubledeal-cbc-hmac/kats/` | Vectors, regeneration, structure check |
-| Generated Lean | `proofs/doubledeal-cbc-hmac/lean/Generated/` | Emitted v2 Lean (with the imported MegaDreifach v3 and DoubleDeal) and its sudo tests (TAP). No Link 2 yet; the Lean proofs lag v2, and MegaDreifach v3 has no Lean model. |
+| Generated Lean | `proofs/doubledeal-cbc-hmac/lean/Generated/` | Emitted v2 Lean (with the imported MegaDreifach v3 and DoubleDeal) and its sudo tests (TAP). No Link 2 for DoubleDeal-CBC-Sandwich v2 yet; the Lean proofs lag v2. MegaDreifach v3 itself has Link 2 in `proofs/megadreifach-v3/`: every v3 export, `HashDecksBody` and `Hash` included, is proved equal to a hand-written model (refinement only, no security theorem). |
 | Security argument and evidence | `proofs/doubledeal-cbc-hmac/security/` | `ARGUMENT.md`, the full §8 argument; the §8 tests on MegaDreifach v3 and the v2 positive control: harness and logs |
 | Frozen v1 | `primitives/aead/doubledeal-cbc-hmac/v1/`, `proofs/deprecated/doubledeal-cbc-hmac-v1/` | DoubleDeal-CBC-HMAC v1 and its Link 2 proofs, superseded |
 | DoubleDeal | `primitives/cipher/doubledeal/doubledeal.sudo` | `encrypt` / `decrypt` |

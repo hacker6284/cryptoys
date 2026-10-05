@@ -10,10 +10,13 @@
  *                 the view is fitted to spec.frame(ctx) (a THREE.Box3)
  *                 fill: instead of margin, fit in perspective: the box's
  *                 projection centred, filling that fraction of the
- *                 view's height or width (whichever it reaches first)
+ *                 view's height or width (whichever it reaches first);
+ *                 a box with a `points` array (THREE.Vector3) is fitted
+ *                 to those points instead of its corners
  *   spec.voice  a library entry's voice (demos/anim/<name>/): the page
  *               is then only a viewer, and the code the entry drives
  *               plays its sounds (ctx.contact is not needed)
+ *   spec.silent true: the page plays no sound (no sound prompt)
  *   spec.slots  without a voice: [{ name, gapMs, voices, jitter, perClick }]
  *               perClick: { slot, clicks(tempo) } lets settings say
  *               `{ perClick: true }`: play `slot`'s file once per click
@@ -81,7 +84,7 @@ export function fitDistance(box, target, dir, fovDeg, aspect) {
  * width, whichever binds). fitDistance above is a conservative bound
  * that leaves a long, deep box low and small in the frame.
  */
-export function perspectiveFit(box, dir, fovDeg, aspect, fill) {
+export function perspectiveFit(box, dir, fovDeg, aspect, fill, points = null) {
     const cam = new THREE.PerspectiveCamera(fovDeg, aspect, 0.01, 100);
     const target = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3()).length();
@@ -95,8 +98,10 @@ export function perspectiveFit(box, dir, fovDeg, aspect, fill) {
         cam.lookAt(target);
         cam.updateMatrixWorld(true);
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        for (let i = 0; i < 8; i++) {
-            q.set(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z).project(cam);
+        const n = points ? points.length : 8;
+        for (let i = 0; i < n; i++) {
+            if (points) q.copy(points[i]).project(cam);
+            else q.set(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z).project(cam);
             minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x); minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y);
         }
         const tanV = Math.tan((fovDeg * Math.PI) / 360);
@@ -149,11 +154,12 @@ export async function mountMicro(spec, settings) {
         }
     }
     sound.onState(syncHint);
-    setTimeout(() => {
+    if (!spec.silent) setTimeout(() => {
         shown = true;
         syncHint();
     }, 500);
     function afterGesture() {
+        if (spec.silent) return;
         clearTimeout(checkTimer);
         checkTimer = setTimeout(() => {
             if (sound.running || sound.state === "unsupported") return;
@@ -185,7 +191,7 @@ export async function mountMicro(spec, settings) {
         if (frameBox && !frameBox.isEmpty()) {
             const dir = from.clone().sub(target).normalize();
             if (cam.fill) {
-                const fit = perspectiveFit(frameBox, dir, camera.fov, camera.aspect, cam.fill);
+                const fit = perspectiveFit(frameBox, dir, camera.fov, camera.aspect, cam.fill, frameBox.points);
                 target.copy(fit.target);
                 from.copy(fit.position);
             } else {

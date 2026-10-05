@@ -113,10 +113,13 @@ The invariant `WordInv` carries `Word W` (the shared word is a product of face m
 The proof is cheap. It evaluates only the two 7-card prefixes with plain `decide` (a few seconds), not whole blocks. `phiUnrank`, the padding and the block split are small `decide`s, and the rest is `List.foldl_append`. So it lives in the default library and does not need `MegaDreifachHeavy`. The digest value itself is not evaluated in Lean; the script prints it.
 
 ### 1.4 Ideal-model combinatorics (`IdealCount.lean`)
+
+`injective_surjective_fin` and `compose_left_cancel` are defined in `Link2/InjPos.lean`; used here. The counting lemmas below stay in `IdealCount.lean`.
+
 | theorem | content |
 |---|---|
-| `injective_surjective_fin` | Pigeonhole: an injective map on `Fin n` is surjective |
-| `compose_left_cancel` | Left cancellation in the position group (right cancellation is `Group.leftMul_cancel`) |
+| `injective_surjective_fin` | Pigeonhole: an injective map on `Fin n` is surjective. defined in `Link2/InjPos.lean`; used here |
+| `compose_left_cancel` | Left cancellation in the position group (right cancellation is `Group.leftMul_cancel`). defined in `Link2/InjPos.lean`; used here |
 | `dm_forward_bad_count` | For fixed `h`, at most \|Z\| cipher outputs `y` make `h∘y` land in a target set `Z` |
 | `dm_inverse_bad_count` | For fixed `y`, at most \|Z\| keys `h` do |
 | `reachable_rank_lt_group` | Every reachable digest rank is < \|G\|. (That the leading digest byte is therefore ≤ 0x03 is derived on paper: \|G\| < 4·2^224.) |

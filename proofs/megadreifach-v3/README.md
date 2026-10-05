@@ -25,8 +25,8 @@ compares two builds of one source, not two independent implementations.
 the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
 `inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
 `Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 63 v2 modules,
-exactly their own import closure, that elaborate against the v3 emit; with the 17 v3 modules
-the package builds 80 modules, plus the `Generated/` package). The model side is the v2 position algebra,
+exactly their own import closure, that elaborate against the v3 emit; with the 18 v3 modules
+the package builds 81 modules, plus the `Generated/` package). The model side is the v2 position algebra,
 which v3 keeps. These four functions are not exports.
 
 [`lean/MegaDreifachV3/Link2/Codec.lean`](lean/MegaDreifachV3/Link2/Codec.lean) states, for the
@@ -151,6 +151,33 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 | `HashDeckBodyFrom` | `v_HashDeckBodyFrom_refines` (permutations of `0..51`, chaining value `embedPos h` with bijective tables; no `_array` form) |
 | `MegaDreifachBodyFrom` | `v_MegaDreifachBodyFrom_refines` (same) |
 | `HashDecksBody` | `v_HashDecksBody_refines` (non-empty list of permutations of `0..51`, length `FitsLen`; on `embedDecks deals`, no `_array` form) |
+
+## Security lemma (not a security claim)
+
+[`lean/MegaDreifachV3/Security/DmStepSameH.lean`](lean/MegaDreifachV3/Security/DmStepSameH.lean)
+is one lemma about the model. It is not collision resistance, not a PRF claim, and a
+green build is not a security claim. SPEC and ANALYSIS tags are unchanged.
+
+`compose g h` is g then h. `emBlock` is the board `E_m = W·h`, so
+`dmStep h deal = compose h (emBlock h deal)` is `h·W·h`, the hand 3-solve. Software
+and the hand schedule are that product (v2 `daviesMeyer` is `compose h e`).
+
+Cancelling the outer `h`, a same-`h` DM collision is a same-board `emBlock` collision.
+The hypothesis is `InjPos h` (`Injective h.cp ∧ Injective h.ep`). `leftMul_cancel` is
+the other cancellation (a shared injective right factor). Left cancellation is
+`compose_left_cancel` in `Link2/InjPos.lean`. `isLegal` adds even permutations and
+orientation parities, which this lemma does not use. Nothing is said when the two
+chaining values differ.
+
+`injPos_ivCook12` is `InjPos` at the IV. `dmStep_inj` preserves it through one step.
+`injPos_chainPre` is `InjPos` for the MD chaining value `chainPre xs k`, and
+`dmStep_same_h_iff_chainPre` applies the iff there.
+
+| What is proved | Theorem |
+| --- | --- |
+| `dmStep h b = dmStep h b'` iff `emBlock h b = emBlock h b'`, for `InjPos h` | `dmStep_same_h_iff` |
+| That direction on its own | `emBlock_eq_of_dmStep_eq` |
+| The iff at `chainPre xs k` | `dmStep_same_h_iff_chainPre` |
 
 ## Where this sits
 

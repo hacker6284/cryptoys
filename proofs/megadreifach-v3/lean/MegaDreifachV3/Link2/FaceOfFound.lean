@@ -5,31 +5,10 @@
   No native_decide.
 -/
 import MegaDreifachV3.Link2.FaceOf
-import MegaDreifach.Link2.PosBytesGen
-import MegaDreifach.Link2.EvenRankGen
+import MegaDreifach.Link2.InjPos
 
 namespace MegaDreifachV3.Link2
 open MegaDreifach MegaDreifach.Em MegaDreifach.Link2 MegaDreifachV3.Em
-
-/-- Pigeonhole on `Fin n`: injective ⇒ surjective (as in v2's Security.IdealCount). -/
-theorem surj_of_inj_fin {n : Nat} (f : Fin n → Fin n) (hf : Injective f) (t : Fin n) :
-    ∃ s, f s = t := by
-  have wf := permNWf_listOf f hf
-  have spec := availAt_specN n (listOf f) wf n (Nat.le_refl _)
-  obtain ⟨_, hlen, hmem⟩ := spec
-  rw [Nat.sub_self] at hlen
-  have hnil : availAt (listOf f) n = [] := List.eq_nil_of_length_eq_zero hlen
-  have ht : t.val ∈ (listOf f).take n := by
-    have h := hmem t.val
-    rw [hnil] at h
-    exact Decidable.byContradiction fun hc => List.not_mem_nil _ (h.mpr ⟨t.isLt, hc⟩)
-  rw [List.take_of_length_le (by rw [listOf_length]; exact Nat.le_refl _)] at ht
-  unfold listOf at ht
-  obtain ⟨i, hi, he⟩ := List.mem_map.mp ht
-  have hi' : i < n := List.mem_range.mp hi
-  refine ⟨⟨i, hi'⟩, Fin.ext ?_⟩
-  simp only [hi', dite_true] at he
-  exact he
 
 theorem lastIdx_some_of (n : Nat) (p : Nat → Bool) (t : Nat) (ht : t < n) (hp : p t = true) :
     ∃ u, lastIdx n p = some u := by
@@ -58,7 +37,7 @@ theorem edgeFaceOf_found (g : Position) (hg : Injective g.ep) (a b x : Fin 12) (
     (hs : edgeSlot? a b = some s) (hx : x = edgeFace s.val 0 ∨ x = edgeFace s.val 1) :
     ∃ y, edgeFaceOf? g a b x = some y := by
   have hpc : edgeSlot a b = s := by simp [edgeSlot, hs]
-  obtain ⟨s0, hs0⟩ := surj_of_inj_fin g.ep hg s
+  obtain ⟨s0, hs0⟩ := injective_surjective_fin g.ep hg s
   obtain ⟨sl, hl⟩ := lastIdx_some_of 30
     (fun t => decide (g.ep ⟨t % 30, Nat.mod_lt _ (by decide)⟩ = s)) s0.val s0.isLt
     (by simp [Nat.mod_eq_of_lt s0.isLt, hs0])
@@ -133,7 +112,7 @@ theorem cornerFaceOf_found (g : Position) (hg : Injective g.cp) (a b c x : Fin 1
     (hx : x = cornerFace t.val 0 ∨ x = cornerFace t.val 1 ∨ x = cornerFace t.val 2) :
     ∃ y, cornerFaceOf? g a b c x = some y := by
   have hpc : cornerSlot a b c = t := by simp [cornerSlot, ht]
-  obtain ⟨s0, hs0⟩ := surj_of_inj_fin g.cp hg t
+  obtain ⟨s0, hs0⟩ := injective_surjective_fin g.cp hg t
   obtain ⟨sl, hl⟩ := lastIdx_some_of 20
     (fun u => decide (g.cp ⟨u % 20, Nat.mod_lt _ (by decide)⟩ = t)) s0.val s0.isLt
     (by simp [Nat.mod_eq_of_lt s0.isLt, hs0])

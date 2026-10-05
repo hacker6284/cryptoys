@@ -1,18 +1,24 @@
 /**
- * The hinge microdemo's placements: a seeded loop of CYCLES swings. Most
- * cycles carry the KEY tuck box (playroom/unbox-rig.js, the real hinged
- * flap) to a new pose with P1 carry and swing its flap open and shut
- * there; every fourth swings the toy chest's lid. Poses: the real ones
- * (table centre, the shelf slot), edge cases (lying on its back so the flap
- * swings down to the felt, face down, on its side, its back 5 mm from
- * the shelf's backboard so the flap meets it, 6 mm from the MSG box so it swings just over it,
- * half-open swings, a lid closed part-way and reopened) and random ones.
- * The loop starts and ends with the box in its shelf slot.
+ * The hinge microdemo's placements: a seeded loop of CYCLES swings, one
+ * primitive and nothing else moving. Each cycle is a fresh placement (a
+ * clean cut, not motion): the KEY tuck box (playroom/unbox-rig.js, the
+ * real hinged flap) set down at a new pose, then only its flap swings;
+ * every fourth cycle the toy chest set down at a new spot on the floor,
+ * then only its lid swings. Flap poses: the real ones (table centre, the
+ * shelf slot), edge cases (lying on its back so the flap swings down to
+ * the felt, face down, on its side, its back 5 mm from the shelf's
+ * backboard so the flap meets it, 6 mm from the MSG box so it swings just
+ * over it, half-open swings, open/half-shut/reopen) and random ones. Chest
+ * spots: its corner (turned to the room), turned as the live playroom has
+ * it (the lid meets the wall), a step in front of the shelf (the lid
+ * meets the shelf board), random spots.
+ *
+ * Independent of every other primitive: only geom.js, room.js, poses.js
+ * and hinge itself.
  */
 import { rng, quatAxisAngle, quatMul, obbOf, obbCorners, worstDepth } from "../geom.js";
-import { roomSolids, SURFACES, REAL_POSES, DEN, CHEST, chestLidObb } from "../room.js";
-import { planCarry, checkPlan, seatPose } from "../carry/index.js";
-import { DECK_BOX, STAND, FACE_UP, FACE_DOWN, SIDE, orient } from "../carry/placements.js";
+import { roomSolids, roomSolidsWithChest, chestAt, chestBodyObb, SURFACES, REAL_POSES, DEN, CHEST } from "../room.js";
+import { DECK_BOX, STAND, FACE_UP, FACE_DOWN, SIDE, orient, seatPose, orientName } from "../poses.js";
 import { planHinge, checkHinge, parts } from "./index.js";
 
 export const CYCLES = 24;
@@ -63,33 +69,45 @@ const MSG_SOLID = { ...obbOf(MSG_POSE, DECK_BOX), kind: "box", name: "MSG box" }
 
 function program() {
     const flap = (label, kind, target, swings = [[0, 1], [1, 0]]) => ({ kind, label, what: "flap", target, swings });
-    const lid = (label, kind, swings) => ({ kind, label, what: "lid", swings });
+    const lid = (label, kind, spot, swings = [[0, 1], [1, 0]]) => ({ kind, label, what: "lid", spot, swings });
     return [
         flap("KEY borrowed: flap at the table centre", "real", () => ({ ...REAL_POSES.tableCentre, o: STAND })),
         flap("random", "random", "random"),
-        flap("lying on its back: the flap swings down to the felt", "edge", (s, r) => ({ ...spot(r), o: FACE_UP })),
-        lid("chest lid opens and drops shut", "real", [[0, 1], [1, 0]]),
+        flap("lying on its back: the flap swings down to the felt", "edge", (r) => ({ ...spot(r), o: FACE_UP })),
+        lid("chest in its corner, turned to the room: the lid opens and drops shut", "real", () => CHEST),
         flap("on the shelf, its back 5 mm from the backboard: the flap meets it", "edge", () => ({ surface: "shelf", x: -1.0, z: -2.28 + 0.005 + BD / 2, yaw: 0, o: STAND, minGap: 0.004 })),
         flap("random", "random", "random"),
         flap("its back 6 mm from the MSG box: the flap swings back over it", "edge", () => behind(MSG_AT, 0.006)),
-        lid("chest lid opens half way and drops shut", "edge", [[0, 0.5], [0.5, 0]]),
-        flap("lying face down", "edge", (s, r) => ({ ...spot(r), o: FACE_DOWN })),
+        lid("chest turned as the live playroom has it (yaw π/2): the lid meets the wall", "edge", () => chestAt(CHEST.centre, Math.PI / 2)),
+        flap("lying face down", "edge", (r) => ({ ...spot(r), o: FACE_DOWN })),
         flap("random", "random", "random"),
         flap("half turn, at the felt's edge", "edge", () => ({ surface: "felt", x: DEN.x + 0.8, z: DEN.z + 0.1, yaw: Math.PI / 2 + Math.PI, o: STAND })),
-        lid("chest lid: opens, drops part-way, reopened, shut", "edge", [[0, 1], [1, 0.45], [0.45, 1], [1, 0]]),
-        flap("on its side", "edge", (s, r) => ({ ...spot(r), o: SIDE })),
+        lid("chest at a random spot: the lid opens, drops part-way, reopened, shut", "random", "random", [[0, 1], [1, 0.45], [0.45, 1], [1, 0]]),
+        flap("on its side", "edge", (r) => ({ ...spot(r), o: SIDE })),
         flap("random", "random", "random"),
         flap("side by side with the MSG box (12 mm)", "edge", () => ({ surface: "felt", x: MSG_AT.x + (BW + 0.012) * Math.cos(MSG_AT.yaw), z: MSG_AT.z - (BW + 0.012) * Math.sin(MSG_AT.yaw), yaw: MSG_AT.yaw, o: STAND })),
-        lid("chest lid opens and drops shut", "real", [[0, 1], [1, 0]]),
+        lid("chest a step in front of the shelf, hinge toward it: the lid meets the shelf board", "edge", () => chestAt([-1.38, -1.25], 0)),
         flap("random, on the shelf", "random", "random-shelf"),
-        flap("flap half open and shut", "edge", (s, r) => ({ ...spot(r), o: STAND }), [[0, 0.5], [0.5, 0]]),
+        flap("flap half open and shut", "edge", (r) => ({ ...spot(r), o: STAND }), [[0, 0.5], [0.5, 0]]),
         flap("random", "random", "random"),
-        lid("chest lid opens and drops shut", "real", [[0, 1], [1, 0]]),
+        lid("chest at a random spot: the lid opens half way and drops shut", "random", "random", [[0, 0.5], [0.5, 0]]),
         flap("random", "random", "random"),
-        flap("flap opened, half shut, reopened, shut", "edge", (s, r) => ({ ...spot(r), o: STAND }), [[0, 1], [1, 0.5], [0.5, 1], [1, 0]]),
+        flap("flap opened, half shut, reopened, shut", "edge", (r) => ({ ...spot(r), o: STAND }), [[0, 1], [1, 0.5], [0.5, 1], [1, 0]]),
         flap("random", "random", "random"),
         flap("KEY home: flap in its shelf slot", "real", () => ({ ...REAL_POSES.shelfSlot, o: STAND })),
     ];
+}
+
+/** The room the chest is set down in: everything but the floor it stands on and its own home body. */
+function chestClear(chest) {
+    const solids = [...roomSolidsWithChest(chest).filter((s) => !s.name.startsWith("chest-") && s.name !== "floor"), MSG_SOLID];
+    if (worstDepth(chestBodyObb(chest), solids, 0.02).depth > 0) return false;
+    const shut = roomSolidsWithChest(chest).find((s) => s.name === "chest-lid");
+    return worstDepth(shut, solids, 0.01).depth <= 0;
+}
+
+function randomChest(r) {
+    return chestAt([-2.3 + r() * 4.6, -1.85 + r() * 3.15], r() * Math.PI * 2);
 }
 
 /** Standing in front of `m` (same yaw), its back `gap` from m's front. */
@@ -113,62 +131,71 @@ function randomTarget(r, shelf) {
     return { ...spot(r), o: o < 0.6 ? STAND : o < 0.75 ? FACE_UP : o < 0.9 ? FACE_DOWN : SIDE };
 }
 
-/** The seeded loop: per cycle the carry (flap cycles), the swings, their plans and checks. */
+/** The seeded loop: per cycle the placement (box pose or chest spot), the swings, their plans and checks. */
 export function hingeSchedule(seed = DEFAULT_SEED) {
     const r = rng(seed * 104729 + 3);
-    const start = { ...REAL_POSES.shelfSlot, o: STAND };
-    let at = { ...start };
     const cycles = [];
-    const roomForBox = (lidAngle = 0) => [...roomSolids({ lidAngle }), MSG_SOLID];
+    const roomForBox = [...roomSolids(), MSG_SOLID];
+    let last = null;
     program().forEach((step, i) => {
         const c = { n: i + 1, kind: step.kind, label: step.label, what: step.what, swings: [] };
         if (step.what === "flap") {
             let t = null;
             if (typeof step.target === "function") {
-                t = step.target(at, r);
-                if (!clear(t, seat(t), roomForBox())) throw new Error(`hinge cycle ${c.n} (${c.label}): pose not clear`);
+                t = step.target(r);
+                if (!clear(t, seat(t), roomForBox)) throw new Error(`hinge cycle ${c.n} (${c.label}): pose not clear`);
             } else {
                 for (let k = 0; k < 400 && !t; k++) {
                     const cand = randomTarget(r, step.target === "random-shelf");
-                    if (Math.hypot(cand.x - at.x, cand.z - at.z) < 0.15) continue;
-                    if (clear(cand, seat(cand), roomForBox())) t = cand;
+                    if (last && Math.hypot(cand.x - last.x, cand.z - last.z) < 0.15) continue;
+                    if (clear(cand, seat(cand), roomForBox)) t = cand;
                 }
                 if (!t) throw new Error(`hinge cycle ${c.n}: no random pose`);
-                c.label = `${t.surface}, ${t.o === STAND ? "standing" : t.o === FACE_UP ? "face up" : t.o === FACE_DOWN ? "face down" : "on its side"}`;
+                c.label = `${t.surface}, ${orientName(t.o)}`;
             }
-            const from = seat(at), to = seat(t);
-            const solids = roomForBox();
-            c.carry = { from, to, solids, surfaceFrom: SURFACES[at.surface].y, surfaceTo: SURFACES[t.surface].y };
-            c.carry.plan = planCarry({ from, to, shape: TUCK_BOX, solids });
-            c.carry.check = checkPlan(c.carry.plan, { shape: TUCK_BOX, solids, surfaceFrom: c.carry.surfaceFrom, surfaceTo: c.carry.surfaceTo });
-            c.pose = to;
+            c.pose = seat(t);
             c.target = t;
-            const fs = flapSolids(to, [MSG_SOLID]);
-            c.flapSolids = fs;
-            const sweep = (a) => flapObb(to, a);
-            const sweepFold = (a) => flapObb(to, a, FLAP_FOLD);
+            c.surfaceY = SURFACES[t.surface].y;
+            c.solids = flapSolids(c.pose, [MSG_SOLID]);
+            const sweep = (a) => flapObb(c.pose, a, FLAP_FOLD);
             let frac = 0;
-            for (const [a, b] of step.swings) {
-                const plan = planHinge({ part: "tuck-flap", from: frac, to: b, sweep: sweepFold, solids: fs });
-                const check = checkHinge(plan, { sweep: sweepFold, solids: fs });
-                c.swings.push({ plan, check });
+            for (const [, b] of step.swings) {
+                const plan = planHinge({ part: "tuck-flap", from: frac, to: b, sweep, solids: c.solids });
+                c.swings.push({ plan, check: checkHinge(plan, { sweep, solids: c.solids }) });
                 frac = plan.to / parts["tuck-flap"].openRad;
             }
-            at = t;
+            last = t;
         } else {
-            const body = roomSolids({ lidAngle: 0 }).filter((s) => s.name !== "chest-lid");
-            const sweep = (a) => chestLidObb(a);
+            let chest = null;
+            if (step.spot === "random") {
+                for (let k = 0; k < 400 && !chest; k++) {
+                    const cand = randomChest(r);
+                    if (chestClear(cand)) chest = cand;
+                }
+                if (!chest) throw new Error(`hinge cycle ${c.n}: no random chest spot`);
+            } else {
+                chest = step.spot();
+                if (!chestClear(chest)) throw new Error(`hinge cycle ${c.n} (${c.label}): chest spot not clear`);
+            }
+            c.chest = chest;
+            // What the lid must not swing into: the room, the MSG box, its own body (touching it shut is the baseline).
+            c.solids = [...roomSolidsWithChest(chest).filter((s) => s.name !== "chest-lid" && (s.name === "chest-body" || !s.name.startsWith("chest-"))), MSG_SOLID];
+            const sweep = (a) => roomLid(chest, a);
             let frac = 0;
-            for (const [a, b] of step.swings) {
-                const plan = planHinge({ part: "chest-lid", from: frac, to: b, sweep, solids: body });
-                const check = checkHinge(plan, { sweep, solids: body });
-                c.swings.push({ plan, check });
+            for (const [, b] of step.swings) {
+                const plan = planHinge({ part: "chest-lid", from: frac, to: b, sweep, solids: c.solids });
+                c.swings.push({ plan, check: checkHinge(plan, { sweep, solids: c.solids }) });
                 frac = plan.to / CHEST.lidOpenAngle;
             }
         }
         cycles.push(c);
     });
-    return { seed, start, cycles, msg: MSG_AT, msgPose: MSG_POSE };
+    return { seed, cycles, msg: MSG_AT, msgPose: MSG_POSE };
+}
+
+/** The chest lid's box at `angle` with the chest at `chest`. */
+export function roomLid(chest, angle) {
+    return roomSolidsWithChest(chest, { lidAngle: angle }).find((s) => s.name === "chest-lid");
 }
 
 export { BW, BH, BD, BODY, FLAP_FOLD, MSG_AT, MSG_POSE, MSG_SOLID };

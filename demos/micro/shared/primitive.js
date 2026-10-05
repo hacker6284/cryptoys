@@ -5,7 +5,7 @@
  * anim/room.js against the drawn meshes).
  */
 import * as THREE from "three";
-import { CHEST, chestLidObb, ROOM, FELT_Y, DEN } from "../../anim/room.js";
+import { CHEST, chestBodyObb, chestFrame, chestLidObb, ROOM, FELT_Y, DEN } from "../../anim/room.js";
 import { obbCorners, obbOf, worstDepth } from "../../anim/geom.js";
 
 /**
@@ -20,15 +20,46 @@ export function options(defaultSeed) {
 }
 
 /** Turn the chest to anim/room.js CHEST (yaw about its own centre). */
-export function placeChest(world) {
+export function placeChest(world, chest = CHEST) {
     const g = world.chest.group;
     world.setChestLid(0);
-    g.rotation.y = CHEST.yaw;
+    g.rotation.y = chest.yaw;
     g.updateMatrixWorld(true);
     const c = drawnBox(g).getCenter(new THREE.Vector3());
-    g.position.x += CHEST.centre[0] - c.x;
-    g.position.z += CHEST.centre[1] - c.z;
+    g.position.x += chest.centre[0] - c.x;
+    g.position.z += chest.centre[1] - c.z;
     g.updateMatrixWorld(true);
+}
+
+/**
+ * The drawn chest against room.js at `chest` (anim/room.js chestAt): its
+ * hinge height, and its lid's oriented box holding the drawn dome shut,
+ * half and fully open (the rounded top leaves the box's corner up to
+ * ~19 cm proud part-way open). Returns mismatches.
+ */
+export function lidCheck(world, chest = CHEST) {
+    const bad = [];
+    const g = world.chest.group;
+    let lidPivot = null;
+    g.traverse((o) => { if (o.name === "chest-lid-pivot") lidPivot = o; });
+    if (!lidPivot) return ["chest: no lid pivot"];
+    const lidAt = world.getChestLid?.() ?? 0;
+    const p = lidPivot.getWorldPosition(new THREE.Vector3());
+    const want = chestFrame(chest).pivot;
+    if (Math.abs(p.y - want[1]) > 0.003) bad.push(`chest hinge height: drawn ${p.y.toFixed(4)}, room.js ${want[1].toFixed(4)}`);
+    for (const k of [0, 0.5, 1]) {
+        world.setChestLid(k);
+        const drawn = drawnBox(lidPivot);
+        const corners = obbCorners(chestLidObb(k * CHEST.lidOpenAngle, chest));
+        const lo = [0, 1, 2].map((i) => Math.min(...corners.map((c) => c[i])));
+        const hi = [0, 1, 2].map((i) => Math.max(...corners.map((c) => c[i])));
+        ["x", "y", "z"].forEach((ax, i) => {
+            if (drawn.min[ax] < lo[i] - 0.003 || drawn.max[ax] > hi[i] + 0.003) bad.push(`chest lid at ${k}: drawn ${ax} outside its box`);
+            if (lo[i] < drawn.min[ax] - 0.2 || hi[i] > drawn.max[ax] + 0.2) bad.push(`chest lid at ${k}: box ${ax} too loose`);
+        });
+    }
+    world.setChestLid(lidAt);
+    return bad;
 }
 
 /** World box of an object's meshes (vertex-precise, the contact shadow plane left out). */
@@ -73,11 +104,8 @@ export function framePoints(points) {
 }
 
 /** The chest's points for the frame: its body's top corners and its lid open. */
-export function chestPoints(lidAngle = CHEST.lidOpenAngle) {
-    const o = CHEST.outer;
-    const pts = [];
-    for (const x of [o.min[0], o.max[0]]) for (const z of [o.min[2], o.max[2]]) pts.push([x, o.max[1], z], [x, 0, z]);
-    return [...pts, ...obbCorners(chestLidObb(lidAngle))];
+export function chestPoints(lidAngle = CHEST.lidOpenAngle, chest = CHEST) {
+    return [...obbCorners(chestBodyObb(chest)), ...obbCorners(chestLidObb(lidAngle, chest))];
 }
 
 /** The surfaces the loops use, for the frame: the felt's rim and the stretch of shelf. */
@@ -222,23 +250,7 @@ export function roomCheck(world) {
         near(body.min[k], CHEST.outer.min[i], 0.003, `chest body min ${k}`);
         near(body.max[k], CHEST.outer.max[i], 0.003, `chest body max ${k}`);
     });
-    if (lidPivot) {
-        const p = lidPivot.getWorldPosition(new THREE.Vector3());
-        for (const k of [0, 0.5, 1]) {
-            world.setChestLid(k);
-            const drawn = drawnBox(lidPivot);
-            const corners = obbCorners(chestLidObb(k * CHEST.lidOpenAngle));
-            const lo = [0, 1, 2].map((i) => Math.min(...corners.map((c) => c[i])));
-            const hi = [0, 1, 2].map((i) => Math.max(...corners.map((c) => c[i])));
-            // The lid's oriented box holds its drawn dome (its rounded top
-            // leaves the box's corner up to ~19 cm proud part-way open).
-            ["x", "y", "z"].forEach((ax, i) => {
-                if (drawn.min[ax] < lo[i] - 0.003 || drawn.max[ax] > hi[i] + 0.003) bad.push(`chest lid at ${k}: drawn ${ax} outside its box`);
-                if (lo[i] < drawn.min[ax] - 0.2 || hi[i] > drawn.max[ax] + 0.2) bad.push(`chest lid at ${k}: box ${ax} too loose`);
-            });
-        }
-        near(p.y, 0.4801, 0.003, "chest hinge height");
-    }
+    bad.push(...lidCheck(world, CHEST));
     world.setChestLid(lidAt);
     // Shelf boards, backboard and brackets: every BoxGeometry mesh in the scene
     // that is one of room.js's named boxes.

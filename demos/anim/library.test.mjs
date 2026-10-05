@@ -307,8 +307,10 @@ assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and L
         }
         assert.deepEqual(sch.end.deck, sch.start.deck, `carry seed ${seed}: the loop ends where it starts`);
         assert.deepEqual(sch.end.deck2, sch.start.deck2);
-        assert.ok(Math.min(...lengths) < 0.15 && Math.max(...lengths) > 4, `carry seed ${seed}: near and far (${Math.min(...lengths).toFixed(2)}–${Math.max(...lengths).toFixed(2)} m)`);
-        assert.deepEqual([...targets].sort(), ["chest", "felt", "shelf"]);
+        assert.ok(Math.min(...lengths) < 0.15 && Math.max(...lengths) > 3.5, `carry seed ${seed}: near and far (${Math.min(...lengths).toFixed(2)}–${Math.max(...lengths).toFixed(2)} m)`);
+        assert.deepEqual([...targets].sort(), ["felt", "shelf"], "carry only: table and shelf, never the chest");
+        const shutLid = room.roomSolids().find((x) => x.name === "chest-lid");
+        assert.ok(sch.cycles.every((c) => !("chest" in c) && c.solids.filter((x) => x.name === "chest-lid").every((x) => JSON.stringify(x) === JSON.stringify(shutLid))), "the chest stays shut");
         assert.ok(kinds.real >= 5 && kinds.edge >= 10 && kinds.random >= 6 && flips >= 4, `carry seed ${seed}: real, edge and random poses, flips`);
     }
 
@@ -333,24 +335,51 @@ assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and L
     const live = room.chestLidObb(1.45, { ...room.CHEST, yaw: Math.PI / 2 });
     assert.ok(geom.worstDepth(live, walls, 0).depth > 0.3, "the live chest's lid swings 30+ cm into the wall");
 
-    // Every swing of every seeded hinge loop (and the carries between them).
+    // Every swing of every seeded hinge loop. Each cycle is a placement and
+    // swings only: no carry. The box is seated by its drawn bottom; the chest
+    // is set down at its own spot (varied).
     for (const seed of [1, 2, 3]) {
         const sch = hp.hingeSchedule(seed);
         assert.equal(sch.cycles.length, hp.CYCLES);
-        let lids = 0, stops = new Set();
+        let lids = 0, stops = new Set(), spots = new Set(), poses = new Set();
         for (const c of sch.cycles) {
-            if (c.carry) assert.ok(c.carry.check.ok, `hinge seed ${seed} cycle ${c.n} carry: ${c.carry.check.fail.join("; ")}`);
-            if (c.what === "lid") lids += 1;
+            assert.ok(!("carry" in c), `hinge seed ${seed} cycle ${c.n}: no carrying between swings`);
+            if (c.what === "lid") {
+                lids += 1;
+                spots.add(`${c.chest.centre.map((v) => v.toFixed(2))} ${c.chest.yaw.toFixed(2)}`);
+            } else {
+                assert.ok(Math.abs(geom.obbMinY(geom.obbOf(c.pose, hp.TUCK_BOX)) - (c.surfaceY + 0.001)) < 1e-9, `hinge seed ${seed} cycle ${c.n}: seated by its drawn bottom`);
+                poses.add(c.pose.p.map((v) => v.toFixed(3)).join());
+            }
             for (const w of c.swings) {
                 assert.ok(w.check.ok, `hinge seed ${seed} cycle ${c.n} (${c.label}): ${w.check.fail.join("; ")}`);
                 if (w.plan.stopped) stops.add(w.plan.stopped);
             }
         }
         assert.equal(lids, 5);
+        assert.equal(spots.size, 5, "a different chest spot every lid cycle");
+        assert.equal(poses.size, 19, "a different box pose every flap cycle");
         assert.ok(stops.has("shelf-back") && stops.has("table"), `hinge seed ${seed}: the flap meets the backboard and the felt (${[...stops]})`);
+        assert.ok(stops.has("wall-x") && stops.has("shelf-low"), `hinge seed ${seed}: the lid meets the wall (as the live room turns the chest) and the shelf (${[...stops]})`);
         assert.equal(sch.cycles[0].swings[0].plan.to, parts["tuck-flap"].openRad, "a free flap opens all the way");
         assert.equal(sch.cycles[3].swings[0].plan.to, parts["chest-lid"].openRad, "the chest lid opens all the way");
     }
+}
+
+// Each primitive stands alone: carry's modules (and its microdemo) never
+// reach hinge, and hinge's never reach carry. Shared: geom.js, room.js,
+// poses.js (placement helpers, no motion).
+{
+    const graph = (url, seen = new Set()) => {
+        if (seen.has(url.href)) return seen;
+        seen.add(url.href);
+        for (const m of readFileSync(url, "utf8").matchAll(/^\s*(?:import|export)[^"']*?from\s+["'](\.{1,2}\/[^"']+)["']/gm)) graph(new URL(m[1], url), seen);
+        return seen;
+    };
+    const carryGraph = [...graph(new URL("carry/placements.js", here)), ...graph(new URL("carry/page.js", micro))];
+    const hingeGraph = [...graph(new URL("hinge/placements.js", here)), ...graph(new URL("hinge/page.js", micro))];
+    assert.ok(carryGraph.some((u) => u.endsWith("/anim/carry/index.js")) && !carryGraph.some((u) => /\/hinge\//.test(u)), `carry is independent of hinge: ${carryGraph.filter((u) => /hinge/.test(u))}`);
+    assert.ok(hingeGraph.some((u) => u.endsWith("/anim/hinge/index.js")) && !hingeGraph.some((u) => /\/carry\//.test(u)), `hinge is independent of carry: ${hingeGraph.filter((u) => /carry/.test(u))}`);
 }
 
 console.log("animation library tests ok");

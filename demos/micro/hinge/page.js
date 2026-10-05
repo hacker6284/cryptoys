@@ -1,18 +1,19 @@
 import { mountMicro } from "../shared/micro.js";
-import { settings, parts, planHinge } from "../../anim/hinge/index.js";
-import { hingeSchedule, flapObb, FLAP_FOLD, TUCK_BOX, DEFAULT_SEED, CYCLES } from "../../anim/hinge/placements.js";
-import { DECK_BOX } from "../../anim/carry/placements.js";
-import { CHEST, chestLidObb, roomSolids } from "../../anim/room.js";
+import { settings, parts } from "../../anim/hinge/index.js";
+import { hingeSchedule, flapObb, roomLid, FLAP_FOLD, TUCK_BOX, DEFAULT_SEED, CYCLES } from "../../anim/hinge/placements.js";
+import { DECK_BOX } from "../../anim/poses.js";
+import { CHEST } from "../../anim/room.js";
 import { obbCorners, obbOf, worstDepth } from "../../anim/geom.js";
 import { addGlow, buildBox, restowBox } from "../shared/boxes.js";
 import {
-    options, placeChest, applyPose, poseOf, createRunner, createInfo, createFrameCheck, seatedFail, sizeFail, roomCheck, drawnBox, framePoints, chestPoints, surfacePoints,
+    options, placeChest, lidCheck, applyPose, poseOf, createRunner, createInfo, seatedFail, sizeFail, roomCheck, drawnBox, framePoints, chestPoints, surfacePoints,
 } from "../shared/primitive.js";
 
-// P2 hinge (anim/hinge): the KEY tuck box's flap (playroom/unbox-rig.js)
-// opened and shut at a different pose every cycle, the box carried there
-// with P1 carry; every fourth cycle the toy chest's lid. Seeded loop:
-// anim/hinge/placements.js.
+// P2 hinge (anim/hinge): one move only. Each cycle is a fresh placement (a
+// clean cut between cycles, not motion): the KEY tuck box (playroom/
+// unbox-rig.js) set down at a new pose and only its flap swings, or (every
+// fourth) the toy chest set down at a new spot and only its lid swings.
+// Seeded loop: anim/hinge/placements.js.
 const opt = options(DEFAULT_SEED);
 let schedule = null;
 let runner = null;
@@ -21,6 +22,7 @@ let rig = null;
 let k = 0;
 const results = [];
 const HOLD_MS = 380;
+const SHOW_MS = 300; // the placement stands still this long before the swing
 const FLAP_RAD = parts["tuck-flap"].openRad;
 
 /** One swing, checked per frame: the part's box against the solids, the measured time and peak angular speed. */
@@ -57,12 +59,11 @@ void mountMicro({
     slots: [],
     silent: true,
     frame() {
-        // The union of the loop: every pose and path of the box, the MSG box, the open chest.
-        const pts = [...chestPoints(CHEST.lidOpenAngle * 1.03), ...surfacePoints(), ...obbCorners(obbOf(schedule.msgPose, DECK_BOX))];
+        // The union of the loop: every box pose with its flap open, every chest spot with its lid open, the MSG box.
+        const pts = [...surfacePoints(), ...obbCorners(obbOf(schedule.msgPose, DECK_BOX))];
         for (const c of schedule.cycles) {
-            if (!c.carry) continue;
-            pts.push(...obbCorners(obbOf(c.carry.to, TUCK_BOX)));
-            pts.push(...c.carry.plan.path.pts.filter((_, i) => i % 8 === 0));
+            if (c.what === "flap") pts.push(...obbCorners(obbOf(c.pose, TUCK_BOX)), ...obbCorners(flapObb(c.pose, FLAP_RAD)));
+            else pts.push(...chestPoints(Math.max(...c.swings.map((w) => w.plan.to)), c.chest));
         }
         return framePoints(pts);
     },
@@ -96,14 +97,10 @@ void mountMicro({
         runner?.stop();
     },
     async reset(ctx) {
+        // Each cycle places what it swings, so a reset only picks the cycle.
         const startAt = (opt.only || opt.cycle) - 1;
         k = Math.max(0, Math.min(CYCLES - 1, startAt));
-        let at = null;
-        for (const c of schedule.cycles.slice(0, k)) if (c.pose) at = c.pose;
         applyPose(ctx.world.toys.deck2, schedule.msgPose);
-        applyPose(rig.group, at || schedule.cycles[0].carry.from);
-        rig.setFlap(0);
-        ctx.world.setChestLid(0);
     },
     async cycle(ctx) {
         const c = schedule.cycles[k];
@@ -111,51 +108,39 @@ void mountMicro({
         const swings = c.swings.map((w) => `${Math.round((w.plan.from * 180) / Math.PI)}°→${Math.round((w.plan.to * 180) / Math.PI)}° ${w.plan.ms.toFixed(0)} ms${w.plan.stopped ? ` (stopped by ${w.plan.stopped})` : ""}`).join(", ");
         const stats = `${c.what === "lid" ? "chest lid" : "flap"} ${swings}`;
         info.set(`${head}\n${stats} · checking…`);
-        if (opt.only) await this.reset(ctx);
+        const fail = [];
+        // The placement: a cut, then nothing moves but the hinge.
+        if (c.what === "flap") {
+            placeChest(ctx.world);
+            rig.group.visible = true;
+            rig.setFlap(0);
+            applyPose(rig.group, c.pose);
+            fail.push(...seatedFail(rig.group, c.surfaceY, "KEY box"), ...sizeFail(rig.group, TUCK_BOX, "KEY box"));
+        } else {
+            rig.group.visible = false;
+            placeChest(ctx.world, c.chest);
+            fail.push(...lidCheck(ctx.world, c.chest));
+        }
         if (opt.view === "cycle") {
-            // The box where it is set down, its flap open, and the room just around it; or the chest.
-            const pts = c.what === "lid" ? chestPoints(CHEST.lidOpenAngle * 1.03) : [...obbCorners(obbOf(c.pose, TUCK_BOX)), ...obbCorners(flapObb(c.pose, FLAP_RAD * 1.06))];
+            const pts = c.what === "lid" ? chestPoints(CHEST.lidOpenAngle * 1.03, c.chest) : [...obbCorners(obbOf(c.pose, TUCK_BOX)), ...obbCorners(flapObb(c.pose, FLAP_RAD * 1.06))];
             if (c.what !== "lid") for (const p of [...pts]) pts.push([p[0] + 0.07, p[1] + 0.04, p[2] + 0.07], [p[0] - 0.07, p[1] - 0.01, p[2] - 0.07]);
             ctx.frame(framePoints(pts));
         }
-        const fail = [];
-        if (c.what === "flap") {
-            const plan = c.carry.plan;
-            applyPose(rig.group, c.carry.from);
-            const check = createFrameCheck({ name: "KEY box", solids: c.carry.solids, shape: TUCK_BOX, maxSpeed: plan.peakSpeed, ms: plan.ms, peakMs: plan.peakMs });
-            const ok = await runner.run(plan.ms, (t) => {
-                applyPose(rig.group, plan.at(t));
-                check.frame(rig.group, t);
-            }, `carry ${c.n}`);
-            if (!ok) return;
-            fail.push(...check.finish(), ...seatedFail(rig.group, c.carry.surfaceTo, "KEY box"), ...sizeFail(rig.group, TUCK_BOX, "KEY box"), ...c.carry.check.fail);
-            if (!(await ctx.wait(160))) return;
-            for (const [i, sw] of c.swings.entries()) {
-                const f = await swing(ctx, sw, {
-                    set: (a) => rig.setFlap(a / FLAP_RAD),
-                    sweep: (a) => flapObb(c.pose, a, FLAP_FOLD),
-                    solids: c.flapSolids,
-                    name: "flap",
-                    label: `flap ${c.n}.${i + 1}`,
-                });
-                if (!f) return;
-                fail.push(...f);
-                if (i < c.swings.length - 1 && !(await ctx.wait(HOLD_MS))) return;
-            }
-        } else {
-            const body = roomSolids().filter((s) => s.name !== "chest-lid");
-            for (const [i, sw] of c.swings.entries()) {
-                const f = await swing(ctx, sw, {
-                    set: (a) => ctx.world.setChestLid(a / CHEST.lidOpenAngle),
-                    sweep: (a) => chestLidObb(a),
-                    solids: body,
-                    name: "chest lid",
-                    label: `lid ${c.n}.${i + 1}`,
-                });
-                if (!f) return;
-                fail.push(...f);
-                if (i < c.swings.length - 1 && !(await ctx.wait(HOLD_MS + 120))) return;
-            }
+        if (!(await ctx.wait(SHOW_MS))) return;
+        const at0 = c.what === "flap" ? poseOf(rig.group) : null;
+        for (const [i, sw] of c.swings.entries()) {
+            const f = c.what === "flap"
+                ? await swing(ctx, sw, { set: (a) => rig.setFlap(a / FLAP_RAD), sweep: (a) => flapObb(c.pose, a, FLAP_FOLD), solids: c.solids, name: "flap", label: `flap ${c.n}.${i + 1}` })
+                : await swing(ctx, sw, { set: (a) => ctx.world.setChestLid(a / CHEST.lidOpenAngle), sweep: (a) => roomLid(c.chest, a), solids: c.solids, name: "chest lid", label: `lid ${c.n}.${i + 1}` });
+            if (!f) return;
+            fail.push(...f);
+            if (i < c.swings.length - 1 && !(await ctx.wait(HOLD_MS))) return;
+        }
+        if (at0) {
+            // The box itself never moved or changed size while its flap swung.
+            const at1 = poseOf(rig.group);
+            if (Math.hypot(...at1.p.map((v, i) => v - at0.p[i])) > 1e-6 || Math.abs(Math.abs(at1.q.reduce((s, v, i) => s + v * at0.q[i], 0)) - 1) > 1e-9) fail.push("KEY box moved during the swing");
+            fail.push(...sizeFail(rig.group, TUCK_BOX, "KEY box"));
         }
         const uniq = [...new Set(fail)];
         results.push({ n: c.n, ok: uniq.length === 0, fail: uniq, ms: c.swings.reduce((s, w) => s + w.plan.ms, 0), peakAt: 0, lawPeak: 0 });

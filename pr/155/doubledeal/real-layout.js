@@ -9,7 +9,7 @@
 // Positions are in the standalone DoubleDeal units (createCardTable
 // works in them: CARD_W 0.56 = 63 mm, so 1 unit = 112.5 mm); the stage
 // scales the group by UNIT_M onto the felt. Only the microdemos that have
-// moved into the library use it (demos/anim/doubledeal-*); the playroom
+// moved into the library use it (demos/anim/deck/deal); the playroom
 // DoubleDeal keeps doubledeal/layout.js until every move has moved.
 //
 // The card art is 338×489 px (1.447); a 63×88 mm card is 1.397. The stage

@@ -13,7 +13,7 @@
  *                 view's height or width (whichever it reaches first);
  *                 a box with a `points` array (THREE.Vector3) is fitted
  *                 to those points instead of its corners
- *   spec.voice  a library entry's voice (demos/anim/<name>/): the page
+ *   spec.voice  a library entry's voice (demos/anim/<object>/): the page
  *               is then only a viewer, and the code the entry drives
  *               plays its sounds (ctx.contact is not needed)
  *   spec.silent true: the page plays no sound (no sound prompt)
@@ -44,7 +44,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { mountWorld } from "../../playroom/world.js";
 import { sharedAudio } from "../../shared/sound.js";
-import { createVoice } from "../../anim/voice.js";
+import { createVoice } from "../../anim/shared/voice.js";
 
 const SOUND_BASE = new URL("../sounds/", import.meta.url);
 
@@ -129,7 +129,7 @@ export async function mountMicro(spec, settings) {
     const hint = el("button", { type: "button", class: "micro-hint", hidden: "" }, ask);
     document.body.append(el("main", { class: "micro" },
         canvas,
-        el("header", { class: "micro-head" }, el("a", { href: "../", class: "micro-back" }, "← microdemos"), el("h1", {}, spec.title)),
+        el("header", { class: "micro-head" }, el("a", { href: new URL("../", import.meta.url).href, class: "micro-back" }, "← microdemos"), el("h1", {}, spec.title)),
         status,
         hint,
     ));

@@ -2,11 +2,11 @@
  * Shared bits of the primitive microdemos (carry, hinge): the proposed
  * chest placement, a frame-driven tween, the small seed / cycle / checks
  * line, the per-frame checks, and the room check (the numbers in
- * anim/room.js against the drawn meshes).
+ * anim/shared/room.js against the drawn meshes).
  */
 import * as THREE from "three";
-import { CHEST, chestBodyObb, chestFrame, chestLidObb, ROOM, FELT_Y, DEN } from "../../anim/room.js";
-import { obbCorners, obbOf, worstDepth } from "../../anim/geom.js";
+import { CHEST, chestBodyObb, chestFrame, chestLidObb, ROOM, FELT_Y, DEN } from "../../anim/shared/room.js";
+import { obbCorners, obbOf, worstDepth } from "../../anim/shared/geom.js";
 
 /**
  * URL options: ?seed=N, ?cycle=N (start there), ?only=N (loop that
@@ -19,7 +19,7 @@ export function options(defaultSeed) {
     return { seed: num("seed", defaultSeed), cycle: num("cycle", 1), only: num("only", 0), view: q.get("view") || "loop" };
 }
 
-/** Turn the chest to anim/room.js CHEST (yaw about its own centre). */
+/** Turn the chest to anim/shared/room.js CHEST (yaw about its own centre). */
 export function placeChest(world, chest = CHEST) {
     const g = world.chest.group;
     world.setChestLid(0);
@@ -32,7 +32,7 @@ export function placeChest(world, chest = CHEST) {
 }
 
 /**
- * The drawn chest against room.js at `chest` (anim/room.js chestAt): its
+ * The drawn chest against room.js at `chest` (anim/shared/room.js chestAt): its
  * hinge height, and its lid's oriented box holding the drawn dome shut,
  * half and fully open (the rounded top leaves the box's corner up to
  * ~19 cm proud part-way open). Returns mismatches.
@@ -231,7 +231,7 @@ export function sizeFail(object, shape, name) {
 }
 
 /**
- * The room as drawn against anim/room.js: the chest (turned), its lid's
+ * The room as drawn against anim/shared/room.js: the chest (turned), its lid's
  * hinge and sweep, the shelf boards, the felt. Returns the mismatches.
  */
 export function roomCheck(world) {
@@ -265,4 +265,47 @@ export function roomCheck(world) {
     }
     near(world.table.feltTopY, FELT_Y, 0.0005, "felt height");
     return bad;
+}
+
+/**
+ * Per-frame checks of a swing as drawn: `angle()` reads the drawn angle,
+ * `sweep(a)` / `solids` the part's box and what is around it. finish(plan)
+ * → failures: overlap, duration against the law (±1 ms), fastest moment
+ * against the law (within a frame + 4 %).
+ */
+export function createSwingCheck({ name, angle, sweep, solids }) {
+    let worst = -Infinity, where = "", last = null, peak = 0, peakAt = 0, end = 0, maxDt = 0;
+    return {
+        frame(t) {
+            const a = angle();
+            const w = worstDepth(sweep(a), solids, 0);
+            if (w.depth > worst) { worst = w.depth; where = `${w.solid?.name} at ${t.toFixed(0)} ms`; }
+            if (last && t > last.t) {
+                const r = Math.abs(a - last.a) / ((t - last.t) / 1000);
+                if (r > peak) { peak = r; peakAt = (t + last.t) / 2; }
+                maxDt = Math.max(maxDt, t - last.t);
+            }
+            last = { t, a };
+            end = t;
+        },
+        finish(plan) {
+            const fail = [];
+            if (worst > 0.0005) fail.push(`${name} overlaps ${(worst * 1000).toFixed(1)} mm (${where})`);
+            if (Math.abs(end - plan.ms) > 1) fail.push(`${name} took ${end.toFixed(0)} ms, law ${plan.ms.toFixed(0)}`);
+            if (plan.ms > 120 && Math.abs(peakAt - plan.peakMs) > Math.max(40, maxDt) + plan.ms * 0.04) fail.push(`${name} fastest at ${peakAt.toFixed(0)} ms, law ${plan.peakMs.toFixed(0)}`);
+            if (last && Math.abs(last.a - plan.to) > 1e-6) fail.push(`${name} ends at ${last.a.toFixed(4)} rad, plan ${plan.to.toFixed(4)}`);
+            return fail;
+        },
+    };
+}
+
+/** Hide every playroom toy but `keep` (one object per microdemo). */
+export function onlyToy(world, keep = null) {
+    // Hide the meshes, not the toy group: its rim and travel lights (off,
+    // intensity 0) stay registered and visible, as the sealed light
+    // registry (shared/lights.js) requires.
+    for (const [name, toy] of Object.entries(world.toys)) {
+        toy.visible = true;
+        for (const child of toy.children) if (!child.isLight) child.visible = name === keep;
+    }
 }

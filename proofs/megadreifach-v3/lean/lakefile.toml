@@ -13,6 +13,9 @@ path = "Generated"
 name = "audit"
 path = "../../audit"
 
+# Root module `MegaDreifachV3.lean`. `Security/DmStepSameH.lean` (same-`h`
+# `dmStep` / `emBlock` cancellation) is imported there. It is not a
+# `MegaDreifachLink` root: those roots are the v2 modules re-elaborated below.
 [[lean_lib]]
 name = "MegaDreifachV3"
 

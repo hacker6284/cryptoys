@@ -25,8 +25,8 @@ compares two builds of one source, not two independent implementations.
 the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn_refines` and
 `inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
 `Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 63 v2 modules,
-exactly their own import closure, that elaborate against the v3 emit; with the 17 v3 modules
-the package builds 80 modules, plus the `Generated/` package). The model side is the v2 position algebra,
+exactly their own import closure, that elaborate against the v3 emit; with the 18 v3 modules
+the package builds 81 modules, plus the `Generated/` package). The model side is the v2 position algebra,
 which v3 keeps. These four functions are not exports.
 
 [`lean/MegaDreifachV3/Link2/Codec.lean`](lean/MegaDreifachV3/Link2/Codec.lean) states, for the
@@ -143,6 +143,31 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 | `MegaDreifachBody` | `v_MegaDreifachBody_refines` (on permutations of `0..51`; no `_array` form) |
 | `HashDeckBodyFrom` | `v_HashDeckBodyFrom_refines` (permutations of `0..51`, chaining value `embedPos h` with bijective tables; no `_array` form) |
 | `MegaDreifachBodyFrom` | `v_MegaDreifachBodyFrom_refines` (same) |
+
+## Security lemma (not a security claim)
+
+[`lean/MegaDreifachV3/Security/DmStepSameH.lean`](lean/MegaDreifachV3/Security/DmStepSameH.lean)
+is one lemma about the model. It is not collision resistance, not a PRF claim, and a
+green build is not a security claim. SPEC and ANALYSIS tags are unchanged.
+
+Software `dmStep h deal` is `compose h (emBlock h deal)`. In the shared group that is
+`leftMul h (emBlock h deal)`: the block's permutations sit on the left of the chaining
+value (`W.cp ∘ h.cp` with `W = emBlock h deal`). That is the software feed-forward,
+not the hand 3-solve `h·W·h`.
+
+`leftMul_cancel` cancels a shared right factor (`leftMul T g = leftMul T' g` with
+`Injective g.cp` and `Injective g.ep` gives `T = T'`). A same-`h` collision is
+`leftMul h W = leftMul h W'`, so that lemma does not apply. The same two injectivity
+hypotheses have to be assumed of `h`. They are exactly `InjPos h`, and they are not
+silent: the theorem takes them as arguments. They hold for every reachable chaining
+value (`injPos_ivCook12`, then `dmStep_inj` and injPos_chainPre). `isLegal` adds even
+permutations and orientation parities, which this lemma does not need. Nothing is said
+when the two chaining values differ.
+
+| What is proved | Theorem |
+| --- | --- |
+| `dmStep h b = dmStep h b'` iff `emBlock h b = emBlock h b'`, for `Injective h.cp` and `Injective h.ep` | `dmStep_same_h_iff` |
+| That direction on its own | `emBlock_eq_of_dmStep_eq` |
 
 ## Where this sits
 

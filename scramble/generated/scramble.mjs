@@ -74,3 +74,10 @@ export function evaluate(s) {
     return _sudo_conv_out_Evaluation(_r);
 }
 
+export function apply_move(facelets, move) {
+    facelets = _rt.host_text(facelets);
+    move = _rt.host_text(move);
+    const _r = _impl.apply_move(facelets, move);
+    return _rt.text_str(_r);
+}
+

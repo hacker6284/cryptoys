@@ -918,3 +918,61 @@ export function check(version, message, digest, faces, nsteps) {
     _rt.sudo_assert_eq(globalThis.BigInt(quick.trace.length), 0n, 594);
 }
 
+export function with_sticker(c, axis, color) {
+    if (axis === 0n) {
+        return new Cubie(c.x, c.y, c.z, color, c.xn, c.yp, c.yn, c.zp, c.zn);
+    }
+    if (axis === 1n) {
+        return new Cubie(c.x, c.y, c.z, c.xp, color, c.yp, c.yn, c.zp, c.zn);
+    }
+    if (axis === 2n) {
+        return new Cubie(c.x, c.y, c.z, c.xp, c.xn, color, c.yn, c.zp, c.zn);
+    }
+    if (axis === 3n) {
+        return new Cubie(c.x, c.y, c.z, c.xp, c.xn, c.yp, color, c.zp, c.zn);
+    }
+    if (axis === 4n) {
+        return new Cubie(c.x, c.y, c.z, c.xp, c.xn, c.yp, c.yn, color, c.zn);
+    }
+    return new Cubie(c.x, c.y, c.z, c.xp, c.xn, c.yp, c.yn, c.zp, color);
+}
+
+export function apply_move(facelets, move) {
+    _rt.sudo_assert_eq(globalThis.BigInt(facelets.length), 54n, 612);
+    let cube = solved_cube();
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = 53n;
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            let k = cubie_at(cube, _rt.at(fx, i), _rt.at(fy, i), _rt.at(fz, i));
+            _rt.put(cube, k, with_sticker(_rt.at(cube, k), _rt.at(fa, i), _rt.chk(i + 1n)));
+        }
+    }
+    {
+        const _sudo_from_face = 0n;
+        const _sudo_to_face = 5n;
+        for (let face = _sudo_from_face; face <= _sudo_to_face; face += 1n) {
+            {
+                const _sudo_from_turns = 1n;
+                const _sudo_to_turns = 3n;
+                for (let turns = _sudo_from_turns; turns <= _sudo_to_turns; turns += 1n) {
+                    if (_rt.eq(move_name(face, turns), move)) {
+                        cube = apply_turns(cube, face, turns);
+                        let out = _rt.txt("");
+                        {
+                            const _sudo_from_i = 0n;
+                            const _sudo_to_i = 53n;
+                            for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+                                out.push(_rt.at(facelets, _rt.chk(sticker_on(_rt.at(cube, cubie_at(cube, _rt.at(fx, i), _rt.at(fy, i), _rt.at(fz, i))), _rt.at(fa, i)) - 1n)));
+                            }
+                        }
+                        return _rt.dup(out);
+                    }
+                }
+            }
+        }
+    }
+    _rt.sudo_assert(false, 625);
+    return _rt.txt("");
+}
+

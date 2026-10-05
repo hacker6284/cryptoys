@@ -788,6 +788,16 @@ export func HashDeckBodyFrom(deal: List<int>, h: Position) -> List<int>
 export func MegaDreifachBodyFrom(deal: List<int>, h: Position) -> List<int>
     return HashDeckBodyFrom(deal, h)
 
+// Davies–Meyer cascade of whole 52-card deals from IV-COOK12: no byte pad, no phi, one
+// block per deal (dm_step), digest = the final position's 29-byte rank.
+export func HashDecksBody(deals: List<List<int>>) -> List<int>
+    assert deals.length > 0
+    h = iv_cook12()
+    for i = 0 to deals.length - 1
+        deal = require_permutation(deals[i])
+        h = dm_step(h, deal)
+    return position_to_bytes(h)
+
 func hex_iv() -> List<int>
     return [0, 0, 2, 26, 235, 135, 110, 183, 109, 216, 191, 131, 52, 87, 162, 192, 38, 19, 229, 86, 86, 150, 62, 2, 216, 223, 237, 181, 170]
 
@@ -936,6 +946,27 @@ test "HashDeckBodyFrom at IV matches HashDeckBody"
     from_id = HashDeckBodyFrom(deal, identity())
     assert from_id.length == digest_len
     assert from_id != from_iv
+
+test "HashDecksBody chains HashDeckBody"
+    a = range_list(52)
+    b: List<int> = []
+    for i = 0 to 51
+        b.append(51 - i)
+    assert HashDecksBody([a]) == HashDeckBody(a)
+    h1 = dm_step(iv_cook12(), a)
+    assert HashDecksBody([a, b]) == HashDeckBodyFrom(b, h1)
+    assert HashDecksBody([a, b]) != HashDecksBody([b, a])
+
+test "HashDecksBody rejects an empty list"
+    none: List<List<int>> = []
+    expect_trap AssertFailed
+        d = HashDecksBody(none)
+
+test "HashDecksBody rejects a non-deck"
+    bad = range_list(52)
+    bad[3] = 4
+    expect_trap AssertFailed
+        e = HashDecksBody([bad])
 
 test "require_permutation rejects a duplicate"
     bad = filled(52, 0)

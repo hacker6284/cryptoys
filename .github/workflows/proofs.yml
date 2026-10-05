@@ -126,7 +126,11 @@ jobs:
           - { name: megadreifach, dir: proofs/megadreifach/lean/Generated, test: megadreifach_test }
           - { name: megadreifach-v3, dir: proofs/megadreifach-v3/lean/Generated, test: megadreifach_test }
           - { name: scramble, dir: proofs/scramble/lean/Generated, test: scramble_test }
+          # DoubleDeal-CBC-Sandwich v2 (directory keeps its v1 name): emitted TAP only, no Link 2 yet.
           - { name: cbc-hmac, dir: proofs/doubledeal-cbc-hmac/lean/Generated, test: doubledeal_cbc_hmac_test }
+          # Frozen DoubleDeal-CBC-HMAC v1, superseded by v2: emitted TAP of the frozen sudo
+          # (its Link 2 package is checked by cbc-hmac-v1-lean).
+          - { name: cbc-hmac-v1, dir: proofs/deprecated/doubledeal-cbc-hmac-v1/lean/Generated, test: doubledeal_cbc_hmac_test }
           - { name: bs, dir: proofs/key_exchange/bs/lean/Generated, test: bs_test }
           # ECBS (proofs/key_exchange/ecbs/lean/Generated) is emitted but NOT built here yet: with
           # the sudoc pin its Ecbs.lean does not elaborate in reasonable time (`deriving Repr` on
@@ -360,9 +364,9 @@ jobs:
   megadreifach-v3-lean:
     # MegaDreifach v3 (ZP26 card phase; proofs/megadreifach-v3): the KAT data mirrored from
     # kats/megaminx_hash_kats_v3.json, a compiled run of the emitted v3 code on every vector
-    # (52 checks, about a second; not a kernel proof), Link 2 for all 11 exports (the v3
-    # MegaDreifachV3.Link2 files plus v2 lemmas re-elaborated against the v3 emit: 80 modules,
-    # 17 v3 and 63 v2, plus Generated/; about 4 min serial locally from clean, peak about
+    # (52 checks, about a second; not a kernel proof), Link 2 for all 12 exports (the v3
+    # MegaDreifachV3.Link2 files plus v2 lemmas re-elaborated against the v3 emit: 81 modules,
+    # 18 v3 and 63 v2, plus Generated/; about 4 min serial locally from clean, peak about
     # 2.3 GB) and the axiom audit.
     # The emitted TAP is megadreifach-v3-generated; emit freshness is generated-fresh.
     runs-on: ubuntu-latest
@@ -387,22 +391,23 @@ jobs:
       - name: Axiom audit of every MegaDreifachV3 theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py megadreifach-v3
 
-  cbc-hmac-lean:
-    # DoubleDeal-CBC-HMAC Link 2 (proofs/doubledeal-cbc-hmac/lean): the emitted functions
-    # equal the hand-written model. Rebuilds the MegaDreifach Link 2 sources it uses
+  cbc-hmac-v1-lean:
+    # Frozen DoubleDeal-CBC-HMAC v1 Link 2 (proofs/deprecated/doubledeal-cbc-hmac-v1/lean): the
+    # emitted v1 functions equal the hand-written model. v1 is superseded by
+    # DoubleDeal-CBC-Sandwich v2, which has no Link 2 yet. Rebuilds the MegaDreifach Link 2 sources it uses
     # (v_Hash_refines) against this package's own emitted Megadreifach module.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - name: No sorry / admit / native_decide (shared gate)
-        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/doubledeal-cbc-hmac/lean --exclude Generated
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/deprecated/doubledeal-cbc-hmac-v1/lean --exclude Generated
       - name: check_axioms selftest (keying rules, README-cited theorems, sudo exports vs README table)
         run: python3 proofs/doubledeal/check_axioms.py --selftest
       - uses: leanprover/lean-action@v1
         with:
-          lake-package-directory: proofs/doubledeal-cbc-hmac/lean
-      - name: Axiom audit of every DoubleDealCbcHmac theorem (only propext, Classical.choice, Quot.sound; shared gate)
-        run: python3 proofs/doubledeal/check_axioms.py cbc-hmac
+          lake-package-directory: proofs/deprecated/doubledeal-cbc-hmac-v1/lean
+      - name: Axiom audit of every DoubleDealCbcHmac (frozen v1) theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py cbc-hmac-v1-deprecated
 
   scramble-lean:
     # Scramble Link 2 (proofs/scramble/lean): the hand-written v2 and v1 models, their SPEC

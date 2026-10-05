@@ -213,4 +213,12 @@ theorem dmStep_inj (h : Position) (hh : InjPos h) (deal : List Nat) :
     InjPos (MegaDreifachV3.Em.dmStep h deal) :=
   injPos_compose _ _ hh (emBlock_inj h hh deal)
 
+/-- `foldl dmStep` keeps bijective tables. The one home for this induction;
+    `injPos_chainPre` and `injPos_decksPre` both use it. -/
+theorem injPos_foldl_dmStep (l : List (List Nat)) : ∀ h, InjPos h →
+    InjPos (l.foldl MegaDreifachV3.Em.dmStep h) := by
+  induction l with
+  | nil => intro h hh; exact hh
+  | cons d ds ih => intro h hh; exact ih _ (dmStep_inj h hh d)
+
 end MegaDreifachV3.Link2

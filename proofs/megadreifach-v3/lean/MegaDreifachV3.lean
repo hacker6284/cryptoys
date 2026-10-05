@@ -8,7 +8,7 @@
   layers: Link2/CardFacts.lean, Link2/CardTables.lean, Link2/FaceOf.lean,
   Link2/FaceOfFound.lean, Link2/RunStep.lean, Link2/EmRun.lean (em_run / em_block),
   Link2/VHash.lean (iv_cook12, Hash, MegaDreifach) and Link2/VHashDeck.lean (HashDeck,
-  HashDeckBody, HashDeckBodyFrom and aliases). Every export has a Link 2 theorem; see
+  HashDeckBody, HashDeckBodyFrom, HashDecksBody and aliases). Every export has a Link 2 theorem; see
   ../README.md.
 -/
 import MegaDreifachV3.Vectors

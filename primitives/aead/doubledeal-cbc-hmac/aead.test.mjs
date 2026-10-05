@@ -1,47 +1,60 @@
-import { bytesToHex, hexToBytes, loadAead, readKats } from "./aead_harness.mjs";
+import { bytesToHex, hexToBytes, katIvDeck, loadAead, loadModule, readKats } from "./aead_harness.mjs";
+import { randomDeck } from "./aead.mjs";
 
 function assert(cond, message) {
     if (!cond) throw new Error(message);
 }
 
-function flip(bytes, index) {
+function bump(bytes, index) {
     const out = [...bytes];
-    out[index] ^= 1;
+    out[index] = (out[index] + 1) % 256;
     return out;
 }
 
-// AEAD_OUT / DD_MJS: see aead_harness.mjs.
+function isDeck(d) {
+    return d.length === 52 && new Set(d).size === 52 && d.every((c) => Number.isInteger(c) && c >= 0 && c < 52);
+}
+
+// AEAD_OUT: see aead_harness.mjs.
 const aead = await loadAead();
+const m = await loadModule();
 const kats = readKats();
+assert(kats.product === "DoubleDeal-CBC-Sandwich" && kats.version === "v2", "KAT header");
 
-const master = hexToBytes(kats.master);
-const iv = hexToBytes(kats.iv);
+// The optional key derivation reproduces the published key decks.
+const [kEnc, kMac] = aead.deriveKeyDecks(hexToBytes(kats.master));
+assert(JSON.stringify(kEnc) === JSON.stringify(kats.k_enc), "KAT k_enc");
+assert(JSON.stringify(kMac) === JSON.stringify(kats.k_mac), "KAT k_mac");
+assert(bytesToHex(m.mac_tag(kMac, [m.version_deck()])) === kats.mac_version_only, "KAT mac_version_only");
+// The KAT IV deck is unrank(Hash("DoubleDeal-CBC-Sandwich/v2 KAT IV") mod 52!) (SPEC §9).
+assert(JSON.stringify(await katIvDeck()) === JSON.stringify(kats.iv), "KAT iv");
 
+for (const v of kats.vectors) {
+    const pt = hexToBytes(v.plaintext);
+    const aad = hexToBytes(v.aad);
+    const blob = aead.encryptWithIv(pt, kEnc, kMac, aad, kats.iv);
+    assert(bytesToHex(blob) === v.blob, `KAT encrypt ${v.name}`);
+    assert(bytesToHex(aead.decrypt(blob, kEnc, kMac, aad)) === v.plaintext, `KAT decrypt ${v.name}`);
+    assert(bytesToHex(blob.slice(0, 29)) === bytesToHex(hexToBytes(v.blob).slice(0, 29)), "IV leads the blob");
+}
 const byName = Object.fromEntries(kats.vectors.map((v) => [v.name, v]));
-const abcC = hexToBytes(byName.abc.blob).slice(0, -29);
-const abcAadC = hexToBytes(byName.abc_aad.blob).slice(0, -29);
-assert(abcC.join(",") === abcAadC.join(","), "AAD changes the tag only (Encrypt-then-MAC)");
+assert(byName.abc.blob.slice(0, -58) === byName.abc_aad.blob.slice(0, -58), "AAD changes the tag only");
 assert(byName.abc.blob !== byName.abc_aad.blob, "AAD is in the MAC");
 
-for (const vector of kats.vectors) {
-    const plaintext = hexToBytes(vector.plaintext);
-    const aad = hexToBytes(vector.aad);
-    const blob = aead.encrypt(plaintext, master, iv, aad);
-    assert(bytesToHex(blob) === vector.blob, `KAT encrypt ${vector.name}`);
-    assert(bytesToHex(aead.decrypt(blob, master, iv, aad)) === vector.plaintext, `KAT decrypt ${vector.name}`);
-}
-
-for (const text of ["", "abc", "hello", "1234567890123456789012345678", "crosses a 28-byte boundary!!"]) {
-    const plaintext = [...new TextEncoder().encode(text)];
+// User-supplied key decks: any two distinct full decks.
+const ke = randomDeck();
+const km = randomDeck();
+for (const text of ["", "abc", "1234567890123456789012345678", "crosses a 28-byte boundary!!!"]) {
+    const pt = [...new TextEncoder().encode(text)];
     const aad = [...new TextEncoder().encode("hdr")];
-    const blob = aead.encrypt(plaintext, master, iv, aad);
-    assert(aead.decrypt(blob, master, iv, aad).join(",") === plaintext.join(","), `round-trip ${JSON.stringify(text)}`);
-    const emptyAad = aead.encrypt(plaintext, master, iv, []);
-    assert(emptyAad.join(",") !== blob.join(","), "AAD is in the tag");
+    const blob = aead.encrypt(pt, ke, km, aad);
+    assert(blob.length % 29 === 0 && blob.length >= 87, "blob shape");
+    assert(aead.decrypt(blob, ke, km, aad).join(",") === pt.join(","), `round-trip ${JSON.stringify(text)}`);
+    const again = aead.encrypt(pt, ke, km, aad);
+    assert(bytesToHex(again) !== bytesToHex(blob), "a fresh IV deck every message");
 }
 
-const sample = aead.encrypt([1, 2, 3], master, iv, [9]);
-assert(sample.length >= 58 && (sample.length - 29) % 29 === 0, "blob shape");
+for (let i = 0; i < 20; i++) assert(isDeck(randomDeck()), "randomDeck is a deck");
 
 function mustReject(label, fn) {
     let rejected = false;
@@ -53,17 +66,17 @@ function mustReject(label, fn) {
     assert(rejected, label);
 }
 
-mustReject("tag flip", () => aead.decrypt(flip(sample, sample.length - 1), master, iv, [9]));
-mustReject("ciphertext flip", () => aead.decrypt(flip(sample, 0), master, iv, [9]));
-mustReject("aad flip", () => aead.decrypt(sample, master, iv, [8]));
-mustReject("iv flip", () => aead.decrypt(sample, master, flip(iv, 0), [9]));
-mustReject("truncated tag", () => aead.decrypt(sample.slice(0, -1), master, iv, [9]));
-mustReject("empty master", () => aead.encrypt([1], [], iv, []));
-mustReject("wrong master key", () => aead.decrypt(sample, flip(master, 0), iv, [9]));
+const sample = aead.encrypt([1, 2, 3], ke, km, [9]);
+mustReject("tag byte", () => aead.decrypt(bump(sample, sample.length - 1), ke, km, [9]));
+mustReject("ciphertext byte", () => aead.decrypt(bump(sample, 40), ke, km, [9]));
+mustReject("IV byte", () => aead.decrypt(bump(sample, 5), ke, km, [9]));
+mustReject("AAD", () => aead.decrypt(sample, ke, km, [8]));
+mustReject("truncated", () => aead.decrypt(sample.slice(0, -1), ke, km, [9]));
+mustReject("dropped block", () => aead.decrypt(sample.slice(29), ke, km, [9]));
+mustReject("keys swapped", () => aead.decrypt(sample, km, ke, [9]));
+mustReject("other MAC key", () => aead.decrypt(sample, ke, randomDeck(), [9]));
+mustReject("not a deck (IV = 2^232 - 1)", () => aead.decrypt(Array(29).fill(255).concat(sample.slice(29)), ke, km, [9]));
+mustReject("equal key decks", () => aead.encrypt([1], ke, ke, []));
+mustReject("key not a deck", () => aead.encrypt([1], ke.slice(1), km, []));
 
-const otherIv = flip(iv, 3);
-const other = aead.encrypt([1, 2, 3], master, otherIv, [9]);
-assert(other.join(",") !== sample.join(","), "IV changes the ciphertext");
-mustReject("wrong iv on decrypt", () => aead.decrypt(other, master, iv, [9]));
-
-console.log("doubledeal-cbc-hmac aead tests passed");
+console.log("doubledeal-cbc-sandwich v2 aead tests passed");

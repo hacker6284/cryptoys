@@ -1,6 +1,6 @@
 # MegaDreifach v3 (current)
 
-> **Status: current.** v3 is the current MegaDreifach. v2 ([`../SPEC.md`](../SPEC.md)) and v1 ([`../v1/SPEC.md`](../v1/SPEC.md)) are deprecated. HMAC-MegaDreifach and DoubleDeal-CBC-HMAC still use v2; moving them to v3 changes their digests and is a separate decision. The Lean package `proofs/megadreifach/` models v2. v3's Lean is in `proofs/megadreifach-v3/` (§7): the code emitted from this sudo, a compiled KAT run, and refinement theorems tying it to a hand-written model. None of it is a security claim.
+> **Status: current.** v3 is the current MegaDreifach. v2 ([`../SPEC.md`](../SPEC.md)) and v1 ([`../v1/SPEC.md`](../v1/SPEC.md)) are deprecated. DoubleDeal-CBC-Sandwich v2 uses v3 (`HashDecksBody` and `Hash`). HMAC-MegaDreifach and the frozen DoubleDeal-CBC-HMAC v1 still use v2; moving them to v3 changes their digests and is a separate decision. The Lean package `proofs/megadreifach/` models v2. v3's Lean is in `proofs/megadreifach-v3/` (§7): the code emitted from this sudo, a compiled KAT run, and refinement theorems tying every export (including `HashDecksBody`) to a hand-written model. None of it is a security claim.
 
 **What v3 changes.** v3 changes one thing: the card phase `W` inside `E_m`. The v2 card rule (grips, visual noon, slot reads, 36 F3 rounds) is replaced by **ZP26**:
 - colour-named card steps with a last-face register;
@@ -43,7 +43,7 @@ As v2 §1, with these differences:
 
 # 2. Public API
 
-Unchanged from v2 §2: `Hash` / `MegaDreifach`, `HashDeck` / `MegaDreifachDeck`, `HashDeckBody` / `MegaDreifachBody`, `HashDeckBodyFrom` / `MegaDreifachBodyFrom`.
+Unchanged from v2 §2: `Hash` / `MegaDreifach`, `HashDeck` / `MegaDreifachDeck`, `HashDeckBody` / `MegaDreifachBody`, `HashDeckBodyFrom` / `MegaDreifachBodyFrom`. Added in v3, a pure API addition that changes no digest or KAT: `HashDecksBody(deals)`, the Davies–Meyer cascade of a non-empty list of whole 52-card deals from IV-COOK12, one `dm_step` per deal, no byte pad and no φ; one deal gives `HashDeckBody`. It has no `MegaDreifach*` alias. DoubleDeal-CBC-Sandwich v2 uses it for its MAC.
 
 `HashDeckBodyFrom` remains a free-start analysis surface, not a security API.
 
@@ -75,7 +75,7 @@ The hand procedure needs none of these tables.
 
 1. φ(chunk) → a 52-card deal.
 2. `e ← E_m(h) = W·h`: start at position h. Run the 52 card steps (§5.3), then the 26 echoes (§5.4).
-3. `h ← compose(h, e)`. In the sudo, steps 2–3 are `dm_step(h, deal)`, used by `Hash`, `HashDeckBody` and `HashDeckBodyFrom`.
+3. `h ← compose(h, e)`. In the sudo, steps 2–3 are `dm_step(h, deal)`, used by `Hash`, `HashDeckBody`, `HashDeckBodyFrom` and `HashDecksBody`.
 
 Merkle–Damgård chaining is as in v2 §3, and the digest as in v2 §6.
 
@@ -260,7 +260,7 @@ How the vectors are made and checked:
   - the eight `Hash` digests and the `HashDeck` vector;
   - two `HashDeckBody` vectors, one of them with K♦ held.
 
-**Lean coverage for v3: refinement only.** `proofs/megadreifach-v3/` holds the Lean emitted from this sudo (checked fresh in CI), a compiled run of the KATs above (52 checks), and Link 2 theorems. They prove that each of the sudo's 11 exports, as emitted, equals a hand-written Lean model (`Em.lean`, which also uses the v2 model files in `proofs/megadreifach/`), under the input conditions listed in that package's README. Link 2 proves only generated = model. It does not check the sudo or the model against this SPEC. No Lean statement is about v3's security. `proofs/megadreifach/` and its `Generated/` model v2 (v2 SPEC §7), and the frozen v1 package models v1.
+**Lean coverage for v3: refinement only.** `proofs/megadreifach-v3/` holds the Lean emitted from this sudo (checked fresh in CI), a compiled run of the KATs above (52 checks), and Link 2 theorems. They prove that each of the sudo's 12 exports, as emitted, equals a hand-written Lean model (`Em.lean`, which also uses the v2 model files in `proofs/megadreifach/`), under the input conditions listed in that package's README. Link 2 proves only generated = model. It does not check the sudo or the model against this SPEC. No Lean statement is about v3's security. `proofs/megadreifach/` and its `Generated/` model v2 (v2 SPEC §7), and the frozen v1 package models v1.
 
 ---
 

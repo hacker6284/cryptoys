@@ -1,6 +1,6 @@
 /-
-  Axiom audit of the DoubleDeal-CBC-HMAC Link 2 package. Run by the shared gate
-  `python3 ../../doubledeal/check_axioms.py cbc-hmac` (after `lake build`). Prints the
+  Axiom audit of the frozen DoubleDeal-CBC-HMAC v1 Link 2 package. Run by the shared gate
+  `python3 ../../../doubledeal/check_axioms.py cbc-hmac-v1-deprecated` (after `lake build`). Prints the
   axioms of EVERY theorem declared in a `DoubleDealCbcHmac.*` module, private ones
   included, then `audited N`. The checker allows only propext, Classical.choice and
   Quot.sound; anything else (sorryAx, Lean.ofReduceBool from native_decide, a user

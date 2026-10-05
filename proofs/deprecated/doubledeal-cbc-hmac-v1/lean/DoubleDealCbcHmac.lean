@@ -1,7 +1,7 @@
 /-
-  PROOF-ONLY root of the DoubleDeal-CBC-HMAC Link 2 package. Imports the hand-written
+  PROOF-ONLY root of the frozen DoubleDeal-CBC-HMAC v1 Link 2 package. Imports the hand-written
   model (`DoubleDealCbcHmac.Spec`) and every Link 2 module; `Axioms.lean` audits every
-  theorem under `DoubleDealCbcHmac.*` (`check_axioms.py cbc-hmac`).
+  theorem under `DoubleDealCbcHmac.*` (`check_axioms.py cbc-hmac-v1-deprecated`).
 -/
 import DoubleDealCbcHmac.Spec
 import DoubleDealCbcHmac.Link2.Loop

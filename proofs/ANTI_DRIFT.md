@@ -90,9 +90,9 @@ shadow fix from #5 is included.
 ## Terminates gate is on
 
 `proofs/emit_lean.sh` passes `sudoc emit-ir --require terminates` for
-DoubleDeal, MegaDreifach, Scramble, DoubleDeal-CBC-Sandwich v2, and BS
-(and the frozen versions, including DoubleDeal-CBC-HMAC v1). All
-five current public `.sudo` files accept that flag on their exports.
+DoubleDeal, MegaDreifach, Scramble, DoubleDeal-CBC-Sandwich v2, BS and
+ECBS (and the frozen versions, including DoubleDeal-CBC-HMAC v1). All
+six current public `.sudo` files accept that flag on their exports.
 The CBC-Sandwich emit adds `-I primitives/hash/megadreifach/v3 -I primitives/cipher/doubledeal`
 so the imported MegaDreifach v3 and DoubleDeal are those modules, not
 handwritten second models (frozen v1 adds only `-I primitives/hash/megadreifach`, the deprecated v2).
@@ -135,7 +135,7 @@ total-fragment / terminating-subset emitter.
 | Algebraic `passToKeyCutFallback` = `Generated.passkey` | Link 2 **CLOSED** on every well-formed list (`passkey_refines`, `passkey_eq_twin_loop`; v12: every card `FitsLen` too). See [`LINK2.md`](LINK2.md). |
 | Algebraic `passToKeyCutFallbackInv` = `Generated.passkey_inv` | Link 2 **CLOSED** on every well-formed list (`passkey_inv_refines`, `passkey_inv_eq_twin_loop`; v12: every card `FitsLen` too). Algebraic correctness only — not bit-security. |
 | Algebraic `encryptDeck` / `encrypt6` = `Generated.encrypt` | Link 2 **CLOSED** on `CardBound` messages (`encrypt_refines`). Not bit-security. |
-| `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, DoubleDeal-CBC-Sandwich v2, and BS (and every frozen version). All five current publics ready (bounded `for`). |
+| `--require terminates` on these publics | ON at emit for DoubleDeal, MegaDreifach, Scramble, DoubleDeal-CBC-Sandwich v2, BS and ECBS (and every frozen version). All six current publics ready (bounded `for`). |
 | PassKey S3/S4 *about* `Except Trap` emitted defs | Link 2 **CLOSED** on `FitsLen` (length and cards) / `WellFormed` (`passkey_perm`, `passkey_leftInverse`, `passkey_rightInverse`, `passkey_injective`, and the inverse / `WellFormed` forms). Other stones about emitted defs stay open. Not bit-security. |
 | Scramble generated Lean | DONE. `proofs/scramble/lean/Generated/` + TAP. Algebraic ≃ Generated (Link 2) proved in `proofs/scramble/lean/ScrambleV2/`; see [`scramble/README.md`](scramble/README.md#link-2-leanscramblev2). |
 | BS generated Lean | DONE. `proofs/key_exchange/bs/lean/Generated/` + TAP. Partial Link 2 (arithmetic, walk, received-value check, key build and reader, exchange with its reject branches; values only, not the peg recipes) in `proofs/key_exchange/bs/lean/BsLink2/`; see [`key_exchange/bs/lean/README.md`](key_exchange/bs/lean/README.md). No security theorem. |

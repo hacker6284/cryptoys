@@ -54,11 +54,11 @@ K. Yasuda, "'Sandwich' Is Indeed Secure: How to Authenticate a Message with Just
 | chaining value in {0,1}^n | megaminx position in G, \|G\| = 2^225.90 | ARGUED (arithmetic) |
 | data block in {0,1}^d | one whole deck, S₅₂, 52! = 2^225.58 | ARGUED (arithmetic) |
 | f(v ‖ m) | f(v, D) = h·W·h, the v3 `dm_step` | definition |
-| K ∈ {0,1}^k with p = d − k > 0 | K ∈ S₅₂ fills the **whole** block: p = 0 | **deviation 1** |
+| K ∈ {0,1}^k with p = d − k > 0 | K ∈ S₅₂ fills the **whole** block: p = 0 | **deviation 1** (one of the two the proof needs) |
 | first key block K ‖ 0^p | K as it lies | |
-| last key block K ‖ π(λ), π(λ) ≠ 0^p | K∘ρ, K turned over | **deviation 2**, §2.3 |
-| M ‖ 10^ν (injective padding) | S, already whole decks, injective by §1 | ARGUED (§1) |
-| MD strengthening π(λ) | none; LENGTH_DECK is the AAD length, inside S, for framing | **deviation 3**, harmless (π is used only for ≠ 0^p) |
+| last key block K ‖ π(λ), π(λ) ≠ 0^p | K∘ρ, K turned over | **deviation 2**, §2.3 (the other the proof needs) |
+| M ‖ 10^ν (injective padding) | S, already whole decks, injective by §1 | ARGUED (§1); see §2.4 item 3 |
+| MD strengthening π(λ) | none; LENGTH_DECK is the AAD length, inside S, for framing | see §2.4 item 4; harmless (π is used only for ≠ 0^p) |
 | ⌈μ/d⌉ + 1 | ℓ = number of decks of S = a + n + 3 | |
 | 1/2^n | 1/\|G\| = 2^−225.90 | |
 
@@ -74,13 +74,14 @@ The cost: A1 below is a statement about a two-map family {K, K∘ρ}, a related-
 
 **Turned over, against the same key at both ends (ARGUED).** With the same K at both ends, the first and last calls are f(IV, K) and f(v, K). G ≡ G′ then needs v ≠ IV-COOK12 for every query. That is a probabilistic event (about q/|G| for a random-looking F̄), and cAU does not bound it, because cAU is about pairs of messages, not about hitting a fixed point. Turned over, the separation holds for every key and every v, deterministically. It also gives a hand player two visibly different key blocks.
 
-### 2.4 Other deviations from the paper
+### 2.4 Deviations from the paper (same numbering as §2.2)
 
-1. p = 0, with the reversal tweak instead of π(λ) (§2.3). The proof needs this one.
-2. No MD strengthening in the final block. That is harmless for the PRF proof (§2.1).
-3. The "padding" is deck framing, injective by §1, with the AAD length deck at the end instead of 10^ν. That is enough, because cAU needs only distinct block strings. This rests on the *unverified* Lemmas 3–4.
-4. The key space is S₅₂ and the chaining space is G, not bit-string spaces. Nothing in the proof of Lemma 2 uses bit strings. 52!/|G| = 0.80, so k ≈ n, but the key space is not the chaining space.
-5. The paper's §§8–10 variants are not used (and are *unverified*).
+1. p = 0: the key fills the whole block (§2.2). Yasuda needs p > 0. The proof needs this.
+2. Reversal tweak: the last key block is K∘ρ instead of K ‖ π(λ) with π(λ) ≠ 0^p (§2.2, §2.3). The proof needs this.
+3. The "padding" is deck framing, injective by §1, with the AAD length deck at the end instead of 10^ν. That is enough, because cAU needs only distinct block strings. This rests on the *unverified* Yasuda Lemmas 3–4.
+4. No MD strengthening in the final block. That is harmless for the PRF proof (§2.1).
+5. The key space is S₅₂ and the chaining space is G, not bit-string spaces. Nothing in the proof of Lemma 2 uses bit strings. 52!/|G| = 0.80, so k ≈ n, but the key space is not the chaining space.
+6. The paper's §§8–10 variants are not used (and are *unverified*).
 
 ### 2.5 The statement
 
@@ -136,7 +137,7 @@ The A1 bound is on one test's acceptance probability. It is not a bound on Adv^p
 ## 4. The generic birthday limit (ARGUED; numbers by arithmetic)
 
 - The collision term C(q,2)/|G| is 2^−26.9 at q = 2^100 tags, 2^−2.9 at q = 2^112, and of order 1 by about 2^113. With the ℓ factor, security is gone at about 2^113/√ℓ.
-- The framing is not prefix-free, so a generic length-extension forgery matches this. Suppose S and S′ reach the same internal chaining value before the final key block. Then S ‖ [X, L] and S′ ‖ [X, L] have equal tags, where L is S's own final length deck. Both extended sequences are valid framings: the old length deck becomes a ciphertext deck.
+- The framing is not prefix-free, so a generic length-extension forgery matches this. Suppose S and S′ reach the same internal chaining value before the final key block, and have the same AAD length (so they share the same length deck L). Then S ‖ [X, L] and S′ ‖ [X, L] have equal tags. Both extended sequences are valid framings: the old length deck becomes a ciphertext deck.
 - So no argument can give more than about 2^112 for this MAC. The tag-guessing term q_v/|G| is separate.
 
 ## 5. Encrypt-then-MAC and deck-CBC
@@ -149,7 +150,7 @@ The A1 bound is on one test's acceptance probability. It is not a bound on Adv^p
 - *Separate keys.* `aead_seal` and `aead_open` reject k_enc = k_mac (PROVED: sudo test "the two key decks must differ").
 - *Coverage and order.* The MAC covers version, AAD, IV and C; verification comes first, over the full 29 bytes; there is one reject symbol (SPEC §7). The sudo test "aead_seal then aead_open round-trips and every tamper rejects" checks the tampers it lists. That is examples, not a proof of the order.
 
-**IND-CPA of deck-CBC (ARGUED, relative to a HEURISTIC PRP assumption on DoubleDeal).** Adv ≤ 2·Adv^prp_DoubleDeal(σ) + 2σ²/52! + 2qσ·p_max. With uniform IVs (p_max = 1/52!) this is at most 2·Adv^prp + 4σ²/52!, so the birthday bound is at about 2^112.3 blocks. This is the standard CBC argument (M. Bellare, A. Desai, E. Jokipii, P. Rogaway, "A Concrete Security Treatment of Symmetric Encryption", FOCS 1997) with XOR replaced by Compose. It uses only one fact: for a fixed deck D, Compose(D, ·) is a bijection of S₅₂, so Compose(D, R) is uniform when R is uniform (Haar invariance). Then every DoubleDeal input is uniform until two inputs collide.
+**IND-CPA of deck-CBC (ARGUED, relative to a HEURISTIC PRP assumption on DoubleDeal).** Adv ≤ 2·Adv^prp_DoubleDeal(σ) + 2σ²/52! + 2qσ·p_max. With uniform IVs (p_max = 1/52!) this is at most 2·Adv^prp + 4σ²/52!. The 4σ²/52! term reaches 1 at σ ≈ 2^111.8 (and 2σ²/52! at σ ≈ 2^112.3); the SPEC rounds that to about 2^112 blocks. This is the standard CBC argument (M. Bellare, A. Desai, E. Jokipii, P. Rogaway, "A Concrete Security Treatment of Symmetric Encryption", FOCS 1997) with XOR replaced by Compose. It uses only one fact: for a fixed deck D, Compose(D, ·) is a bijection of S₅₂, so Compose(D, R) is uniform when R is uniform (Haar invariance). Then every DoubleDeal input is uniform until two inputs collide.
 
 **The IV (ARGUED).** Only the IV's min-entropy enters, through p_max. A **predictable IV is broken**: the adversary Composes its guess so that it cancels the IV. **Uniqueness is not enough.**
 

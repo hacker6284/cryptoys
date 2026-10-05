@@ -237,17 +237,16 @@ With `sudoc` on the path, from the repository root:
 
 ```sh
 sudoc emit-ir --require terminates -I primitives/hash/megadreifach \
-    primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo > /dev/null
+    primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo > /dev/null
 
-sudoc build --target js --tests -o /tmp/ddch \
+sudoc build --target js --tests -o /tmp/ddch-v1 \
     -I primitives/hash/megadreifach \
-    primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo
-node /tmp/ddch/_doubledeal_cbc_hmac_impl.mjs
+    primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo
+node /tmp/ddch-v1/_doubledeal_cbc_hmac_impl.mjs
 
-# Byte-domain AEAD (needs DoubleDeal JS from tools/build.sh as well)
-export SUDOC=/path/to/sudoc
-sh tools/build.sh
-AEAD_OUT=/tmp/ddch node primitives/aead/doubledeal-cbc-hmac/aead.test.mjs
+# Byte-domain AEAD for frozen v1: the top-level aead.mjs and KAT file are now v2.
+# The v1 host and KATs live only in git history (`7f958f2`); the sudo's own tests
+# above are what generate-demos.sh runs for v1 (same `-o /tmp/ddch-v1-test` shape).
 ```
 
 `sudoc emit-ir --require terminates` must exit 0 on this module (and on the MegaDreifach publics it imports). New loops are bounded `for`.

@@ -6,7 +6,7 @@ This tree is the library's proof ledger. Specifications under `primitives/` stay
 Nothing in this repository is for real use. A green Lean build is not a security claim.
 
 Sudo is normative. Lean *algorithm* definitions are generated from `*.sudo`
-into `proofs/*/lean/Generated/`. See [`ANTI_DRIFT.md`](ANTI_DRIFT.md). This does **not** claim sudo↔Lean semantic-equivalence theorems. The terminates gate is on at emit for DoubleDeal, MegaDreifach, Scramble, DoubleDeal-CBC-Sandwich v2, and BS (and the frozen versions, including DoubleDeal-CBC-HMAC v1). All five current publics are terminates-ready and have Generated Lean.
+into `proofs/*/lean/Generated/`. See [`ANTI_DRIFT.md`](ANTI_DRIFT.md). This does **not** claim sudo↔Lean semantic-equivalence theorems. The terminates gate is on at emit for DoubleDeal, MegaDreifach, Scramble, DoubleDeal-CBC-Sandwich v2, BS and ECBS (and the frozen versions, including DoubleDeal-CBC-HMAC v1). All six current publics are terminates-ready and have Generated Lean.
 
 Five layers of evidence. (1) and (4) are theorems; (2) and (3) are evidence; (5) is OPEN:
 

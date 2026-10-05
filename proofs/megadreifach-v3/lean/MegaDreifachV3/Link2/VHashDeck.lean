@@ -7,8 +7,9 @@
   * `body_from_refines`, `v_HashDeckBody_refines`, `v_HashDeckBodyFrom_refines` (on
     permutations of `0..51`; `BodyFrom` also on a chaining value with bijective tables): the
     digest of `dmStep h deal = compose h (emBlock h deal)` (the sudo's `dm_step`).
-  * `v_HashDecksBody_refines` (on a non-empty list of permutations of `0..51`): one
-    `dmStep` per whole deal from IV-COOK12 (`decksBody`), no pad and no φ.
+  * `v_HashDecksBody_refines` (on a non-empty list of permutations of `0..51` whose
+    length satisfies `FitsLen`): one `dmStep` per whole deal from IV-COOK12
+    (`decksBody`), no pad and no φ.
   The φ round trip lemmas are v2 PhiInv's; `padWf_toBE28` and `deckPadBlock` are in VHashCommon.
 -/
 import MegaDreifachV3.Link2.VHash
@@ -157,12 +158,6 @@ theorem decksPre_succ (deals : List (List Nat)) (i : Nat) (h : i < deals.length)
   unfold decksPre
   rw [List.take_succ, List.getElem?_eq_getElem h, List.foldl_append]
   rfl
-
-theorem injPos_foldl_dmStep (l : List (List Nat)) : ∀ h, InjPos h →
-    InjPos (l.foldl MegaDreifachV3.Em.dmStep h) := by
-  induction l with
-  | nil => intro h hh; exact hh
-  | cons d ds ih => intro h hh; exact ih _ (dmStep_inj h hh d)
 
 theorem injPos_decksPre (deals : List (List Nat)) (i : Nat) : InjPos (decksPre deals i) :=
   injPos_foldl_dmStep _ _ injPos_ivCook12

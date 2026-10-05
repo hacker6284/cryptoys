@@ -1,0 +1,99 @@
+{
+ "keypad": {
+  "card": {
+   "1": "..",
+   "2": ".W",
+   "3": ".R",
+   "4": "W.",
+   "5": "WW",
+   "6": "WR",
+   "7": "R.",
+   "8": "RW",
+   "9": "RR"
+  },
+  "kit": {
+   "1": "..",
+   "2": ".W",
+   "3": ".R",
+   "4": "W.",
+   "5": "WW",
+   "6": "WR",
+   "7": "R.",
+   "8": "RW",
+   "9": "RR"
+  },
+  "agree": true,
+  "pairs_each_once": true,
+  "six": "WR"
+ },
+ "root strip": {
+  "Toy": {
+   "len": 22,
+   "equals_card_strip": true
+  },
+  "Hobby": {
+   "len": 58,
+   "equals_card_strip": true
+  },
+  "Serious": {
+   "len": 178,
+   "equals_card_strip": true
+  }
+ },
+ "per-op moves (mean)": {
+  "Toy": {
+   "multiply": 322,
+   "cube": 131,
+   "invert (with its check)": 5267,
+   "chord add": 6567,
+   "F-form add + Frobenius": 4509
+  },
+  "Hobby": {
+   "multiply": 1797,
+   "cube": 355,
+   "invert (with its check)": 36606,
+   "chord add": 42549,
+   "F-form add + Frobenius": 22743
+  },
+  "Serious": {
+   "multiply": 15200,
+   "cube": 837,
+   "invert (with its check)": 314617,
+   "chord add": 360940,
+   "F-form add + Frobenius": 185951
+  }
+ },
+ "sparse relations at Toy (<=7 terms, killing <P>, nonzero on GF(3) points)": 0,
+ "expected number of relations (count / l)": {
+  "Toy": {
+   "2 terms": "5.37e-08",
+   "3 terms": "7.52e-07",
+   "4 terms": "7.52e-06",
+   "5 terms": "5.72e-05",
+   "6 terms": "3.43e-04",
+   "7 terms": "1.67e-03"
+  },
+  "Hobby": {
+   "2 terms": "2.42e-24",
+   "3 terms": "9.20e-23",
+   "4 terms": "2.58e-21",
+   "5 terms": "5.67e-20",
+   "6 terms": "1.02e-18",
+   "7 terms": "1.55e-17",
+   "8 terms": "2.01e-16",
+   "9 terms": "2.28e-15"
+  },
+  "Serious": {
+   "2 terms": "1.25e-80",
+   "3 terms": "1.48e-78",
+   "4 terms": "1.30e-76",
+   "5 terms": "9.12e-75",
+   "6 terms": "5.29e-73",
+   "7 terms": "2.61e-71",
+   "8 terms": "1.12e-69",
+   "9 terms": "4.27e-68",
+   "10 terms": "1.45e-66",
+   "11 terms": "4.46e-65"
+  }
+ }
+}

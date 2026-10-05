@@ -7,7 +7,7 @@
 # Terminates gate ON: sudoc emit-ir --require terminates.
 # Production paths are bounded `for` in DoubleDeal (current, and frozen v8, v9, v10, v11),
 # MegaDreifach (deprecated v2 and frozen v1; v3 is current and has no Lean target), Scramble,
-# DoubleDeal-CBC-HMAC and BS. DoubleDeal's test-only
+# DoubleDeal-CBC-HMAC, BS and ECBS. DoubleDeal's test-only
 # kind-scan whiles are stripped under the gate. CBC-HMAC imports
 # MegaDreifach via an extra -I.
 #
@@ -44,6 +44,7 @@ megadreifach-v1 primitives/hash/megadreifach/v1/megadreifach.sudo         proofs
 scramble        primitives/hash/scramble/scramble.sudo                    proofs/scramble/lean/Generated
 cbc-hmac        primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo proofs/doubledeal-cbc-hmac/lean/Generated primitives/hash/megadreifach
 bs              primitives/key_exchange/bs/bs.sudo                        proofs/key_exchange/bs/lean/Generated
+ecbs            primitives/key_exchange/ecbs/ecbs.sudo                    proofs/key_exchange/ecbs/lean/Generated
 "
 # Parsed once: the names in order, and each target's .sudo, Generated/ and -I dirs.
 ALL_TARGETS=()

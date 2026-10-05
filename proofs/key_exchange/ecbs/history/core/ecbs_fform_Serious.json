@@ -1,0 +1,111 @@
+{
+ "identities_Demo": 50,
+ "identities_Toy": 50,
+ "identities_Hobby": 50,
+ "identities_Serious": 50,
+ "badpoint_Toy": [
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ]
+ ],
+ "badpoint_Hobby": [
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ]
+ ],
+ "badpoint_Serious": [
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "honest",
+   true,
+   true
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ],
+  [
+   "B+T5",
+   true,
+   false
+  ]
+ ],
+ "Serious_pegs162_proj_spec": {
+  "bands": {
+   "public walk": 9,
+   "validation": 8,
+   "shared walk": 9
+  },
+  "moves": 44998467.8,
+  "slides": 1641883.6,
+  "rerolls": 0,
+  "reps": 5,
+  "tally": 89,
+  "val": 3933251.2
+ },
+ "Serious_pegs162_proj_F-form+lazy-y": {
+  "bands": {
+   "public walk": 7,
+   "validation": 7,
+   "shared walk": 7
+  },
+  "moves": 44886727.0,
+  "slides": 1539413.6,
+  "rerolls": 0,
+  "reps": 5,
+  "tally": 89,
+  "val": 3934154.4
+ },
+ "Serious_pegs162_proj_F-form+lazy-y, NO swap": {
+  "bands": {
+   "public walk": 7,
+   "validation": 7,
+   "shared walk": 7
+  },
+  "moves": 44886727.0,
+  "slides": 1539413.6,
+  "rerolls": 0,
+  "reps": 5,
+  "tally": 89,
+  "val": 3934154.4
+ }
+}

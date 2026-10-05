@@ -5,7 +5,8 @@ B. Ship build: the d12 hole die (and the all-d6 layout the SPEC dropped, as anal
    distribution is identical), plus a global exact enumeration on small grids.
 C. Monte Carlo counts: reads, throws (queue cups), voids/rerolls per grid for each build
    wording, and the d10 row cup at 100 holes (one key grid) and at 2/16/51/162/200 holes,
-   said to be ECBS's key sizes [unverified: not in this repository]; they are kept so the
+   2/16/51/162 being ECBS's key-cell counts (Demo/Toy/Hobby/Serious, ECBS SPEC §4; 200 is not
+   an ECBS size); they are kept so the
    seeded stream reproduces.
 The themed-fleet placement checks that used to be part D are in ../key-selection/themed_kit.py."""
 import os, sys, json, random, itertools, collections, math

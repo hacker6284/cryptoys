@@ -1,0 +1,89 @@
+{
+ "Toy": {
+  "trace honest kP": {
+   "trials": 30,
+   "agree_with_subgroup": 0,
+   "accepted": 30,
+   "two tallies": {
+    "agree": 30,
+    "peak": 7,
+    "tally_holes_peak": 22,
+    "moves": 47077,
+    "ctrl": 493
+   },
+   "replay": {
+    "agree": 30,
+    "peak": 7,
+    "tally_holes_peak": 11,
+    "moves": 47077,
+    "ctrl": 520
+   }
+  },
+  "trace kP + GF(3) point": {
+   "trials": 30,
+   "agree_with_subgroup": 0,
+   "accepted": 0,
+   "two tallies": {
+    "agree": 30,
+    "peak": 7,
+    "tally_holes_peak": 22,
+    "moves": 0,
+    "ctrl": 0
+   },
+   "replay": {
+    "agree": 30,
+    "peak": 7,
+    "tally_holes_peak": 11,
+    "moves": 0,
+    "ctrl": 0
+   }
+  },
+  "trace random curve point": {
+   "trials": 30,
+   "agree_with_subgroup": 0,
+   "accepted": 6,
+   "two tallies": {
+    "agree": 30,
+    "peak": 7,
+    "tally_holes_peak": 22,
+    "moves": 45109,
+    "ctrl": 493
+   },
+   "replay": {
+    "agree": 30,
+    "peak": 7,
+    "tally_holes_peak": 11,
+    "moves": 45109,
+    "ctrl": 520
+   }
+  },
+  "trace pure order-5 point": {
+   "trials": 4,
+   "agree_with_subgroup": 0,
+   "accepted": 0,
+   "two tallies": {
+    "agree": 4,
+    "peak": 5,
+    "tally_holes_peak": 1,
+    "moves": 0,
+    "ctrl": 0
+   },
+   "replay": {
+    "agree": 4,
+    "peak": 5,
+    "tally_holes_peak": 1,
+    "moves": 0,
+    "ctrl": 0
+   }
+  },
+  "certificate": {
+   "honest_ok": 30,
+   "forged_rejected": 30,
+   "forged": 30,
+   "peak": 7,
+   "moves_make": 7234,
+   "moves_check": 8155
+  },
+  "secs_total": 2.6
+ }
+}

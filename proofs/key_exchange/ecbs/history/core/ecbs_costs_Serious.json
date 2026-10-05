@@ -1,0 +1,134 @@
+{
+ "per_add": 177006.60396039605,
+ "per_F": 1781.5168918918919,
+ "runs": {
+  "three6": {
+   "per_person_mean": 43213280.0,
+   "per_person_runs": [
+    43161544.0,
+    43243831.0,
+    43234465.0
+   ],
+   "adds_runs": [
+    101,
+    101,
+    101
+   ],
+   "validation": 4443348.333333333,
+   "tau_bar": 0,
+   "constant_work": 219511857.54455447
+  },
+  "three7": {
+   "per_person_mean": 49667771.666666664,
+   "per_person_runs": [
+    49709424.5,
+    49657019.0,
+    49636871.5
+   ],
+   "adds_runs": [
+    118,
+    118,
+    118
+   ],
+   "validation": 4454884.666666667,
+   "tau_bar": 0,
+   "constant_work": 255349445.46864688
+  },
+  "twisted6": {
+   "per_person_mean": 45280246.5,
+   "per_person_runs": [
+    45259899.0,
+    45378081.5,
+    45202759.0
+   ],
+   "adds_runs": [
+    101,
+    101,
+    101
+   ],
+   "validation": 4469967.166666667,
+   "tau_bar": 2098452.6666666665,
+   "constant_work": 221578824.04455447
+  },
+  "pegs162": {
+   "per_person_mean": 43022769.333333336,
+   "per_person_runs": [
+    44011408.0,
+    41877759.0,
+    43179141.0
+   ],
+   "adds_runs": [
+    109,
+    102,
+    105
+   ],
+   "validation": 4436175.333333333,
+   "tau_bar": 0,
+   "constant_work": 62729504.57425743
+  },
+  "pegs173": {
+   "per_person_mean": 46803144.5,
+   "per_person_runs": [
+    49633363.0,
+    46005692.5,
+    44770378.0
+   ],
+   "adds_runs": [
+    123,
+    113,
+    110
+   ],
+   "validation": 4430919.166666667,
+   "tau_bar": 0,
+   "constant_work": 66863892.94884489
+  },
+  "pegs175": {
+   "per_person_mean": 46627479.0,
+   "per_person_runs": [
+    50538260.5,
+    44573814.0,
+    44770362.5
+   ],
+   "adds_runs": [
+    126,
+    109,
+    110
+   ],
+   "validation": 4432867.0,
+   "tau_bar": 0,
+   "constant_work": 67514258.26732674
+  },
+  "pegs200": {
+   "per_person_mean": 54427860.833333336,
+   "per_person_runs": [
+    54833667.5,
+    53546345.0,
+    54903570.0
+   ],
+   "adds_runs": [
+    137,
+    134,
+    137
+   ],
+   "validation": 4433668.166666667,
+   "tau_bar": 0,
+   "constant_work": 76730692.93234324
+  },
+  "six2": {
+   "per_person_mean": 63661521.0,
+   "per_person_runs": [
+    66279781.5,
+    60865334.0,
+    63839447.5
+   ],
+   "adds_runs": [
+    168,
+    153,
+    160
+   ],
+   "validation": 4431180.0,
+   "tau_bar": 0,
+   "constant_work": 148152673.29042906
+  }
+ }
+}

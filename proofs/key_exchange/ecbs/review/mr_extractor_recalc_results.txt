@@ -1,0 +1,9 @@
+Toy (n = 23, log2 l = 34.13)
+  c = 4: m=16: SD<=2^-2.23; m=8: SD<=2^-8.57; largest m with SD<=2^-64: None, with SD<=2^-128: None
+  c = 3: m=16: SD<=2^-2.64; m=8: SD<=2^-8.98; largest m with SD<=2^-64: None, with SD<=2^-128: None
+Hobby (n = 59, log2 l = 91.19)
+  c = 4: m=40: SD<=2^-11.74; m=20: SD<=2^-27.58; largest m with SD<=2^-64: None, with SD<=2^-128: None
+  c = 3: m=40: SD<=2^-12.15; m=20: SD<=2^-28.00; largest m with SD<=2^-64: None, with SD<=2^-128: None
+Serious (n = 179, log2 l = 281.39)
+  c = 4: m=100: SD<=2^-59.28; m=94: SD<=2^-64.04; m=80: SD<=2^-75.13; m=60: SD<=2^-90.98; m=13: SD<=2^-128.23; largest m with SD<=2^-64: 94, with SD<=2^-128: 13
+  c = 3: m=100: SD<=2^-59.70; m=94: SD<=2^-64.45; m=80: SD<=2^-75.55; m=60: SD<=2^-91.40; m=13: SD<=2^-128.64; largest m with SD<=2^-64: 94, with SD<=2^-128: 13

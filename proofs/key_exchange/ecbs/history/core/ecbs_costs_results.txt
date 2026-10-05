@@ -1,0 +1,17 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+Toy: mean in-walk mixed addition = 3,756 moves; Frobenius step = 303 moves   [re-run 2026-09-30: visual-edition taps Toy x^23 = x^15 + 1, Hobby x^59 = x^39 + 1; base point by rule]
+  three       1: additions/walk [16, 16, 16]; per person   0.24 M moves (runs [0.24, 0.24, 0.24]) of which validation 0.05 M, tau-bar 0.00 M;  = 67 h @ 1 move/s;  constant-work model 0.9 M
+  pegs       19: additions/walk [14, 10, 8]; per person   0.16 M moves (runs [0.18, 0.15, 0.13]) of which validation 0.05 M, tau-bar 0.00 M;  = 43 h @ 1 move/s;  constant-work model 0.2 M
+Hobby: mean in-walk mixed addition = 21,666 moves; Frobenius step = 822 moves   [re-run 2026-09-30: visual-edition taps Toy x^23 = x^15 + 1, Hobby x^59 = x^39 + 1; base point by rule]
+  three       2: additions/walk [33, 33, 33]; per person   2.22 M moves (runs [2.2, 2.24, 2.23]) of which validation 0.43 M, tau-bar 0.00 M;  = 617 h @ 1 move/s;  constant-work model 9.4 M
+  twisted     2: additions/walk [33, 33, 33]; per person   2.26 M moves (runs [2.28, 2.27, 2.23]) of which validation 0.43 M, tau-bar 0.05 M;  = 627 h @ 1 move/s;  constant-work model 9.5 M
+  pegs       55: additions/walk [35, 40, 41]; per person   2.22 M moves (runs [2.04, 2.29, 2.33]) of which validation 0.43 M, tau-bar 0.00 M;  = 616 h @ 1 move/s;  constant-work model 2.9 M
+Serious: mean in-walk mixed addition = 177,007 moves; Frobenius step = 1,782 moves   [earlier run: random base point; Serious tap unchanged]
+  three       6: additions/walk [101, 101, 101]; per person  43.21 M moves (runs [43.16, 43.24, 43.23]) of which validation 4.44 M, tau-bar 0.00 M;  = 12,004 h @ 1 move/s;  constant-work model 219.5 M
+  three       7: additions/walk [118, 118, 118]; per person  49.67 M moves (runs [49.71, 49.66, 49.64]) of which validation 4.45 M, tau-bar 0.00 M;  = 13,797 h @ 1 move/s;  constant-work model 255.3 M
+  twisted     6: additions/walk [101, 101, 101]; per person  45.28 M moves (runs [45.26, 45.38, 45.2]) of which validation 4.47 M, tau-bar 2.10 M;  = 12,578 h @ 1 move/s;  constant-work model 221.6 M
+  pegs      162: additions/walk [109, 102, 105]; per person  43.02 M moves (runs [44.01, 41.88, 43.18]) of which validation 4.44 M, tau-bar 0.00 M;  = 11,951 h @ 1 move/s;  constant-work model 62.7 M
+  pegs      173: additions/walk [123, 113, 110]; per person  46.80 M moves (runs [49.63, 46.01, 44.77]) of which validation 4.43 M, tau-bar 0.00 M;  = 13,001 h @ 1 move/s;  constant-work model 66.9 M
+  pegs      175: additions/walk [126, 109, 110]; per person  46.63 M moves (runs [50.54, 44.57, 44.77]) of which validation 4.43 M, tau-bar 0.00 M;  = 12,952 h @ 1 move/s;  constant-work model 67.5 M
+  pegs      200: additions/walk [137, 134, 137]; per person  54.43 M moves (runs [54.83, 53.55, 54.9]) of which validation 4.43 M, tau-bar 0.00 M;  = 15,119 h @ 1 move/s;  constant-work model 76.7 M
+  six         2: additions/walk [168, 153, 160]; per person  63.66 M moves (runs [66.28, 60.87, 63.84]) of which validation 4.43 M, tau-bar 0.00 M;  = 17,684 h @ 1 move/s;  constant-work model 148.2 M

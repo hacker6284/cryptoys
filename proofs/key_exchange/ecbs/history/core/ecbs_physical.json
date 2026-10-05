@@ -1,0 +1,362 @@
+{
+ "Demo_three1": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 34691,
+  "ctrl": 1352,
+  "pub": 17077,
+  "val": 1783,
+  "tally_max": 3,
+  "keygrids": 1,
+  "n": 7,
+  "worst_aligned": 2,
+  "worst_packed": 1,
+  "ctrl_holes": 39
+ },
+ "Demo_pegs3": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 4467,
+  "ctrl": 184,
+  "pub": 956,
+  "val": 2437,
+  "tally_max": 3,
+  "keygrids": 1,
+  "n": 7,
+  "worst_aligned": 2,
+  "worst_packed": 1,
+  "ctrl_holes": 39
+ },
+ "Toy_three1": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 219674,
+  "ctrl": 1910,
+  "pub": 90644,
+  "val": 39219,
+  "tally_max": 11,
+  "keygrids": 1,
+  "n": 23,
+  "worst_aligned": 3,
+  "worst_packed": 3,
+  "ctrl_holes": 47
+ },
+ "Toy_pegs19": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 136596,
+  "ctrl": 1274,
+  "pub": 47008,
+  "val": 41222,
+  "tally_max": 11,
+  "keygrids": 1,
+  "n": 23,
+  "worst_aligned": 3,
+  "worst_packed": 3,
+  "ctrl_holes": 47
+ },
+ "Hobby_three2": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 2077634,
+  "ctrl": 4636,
+  "pub": 880403,
+  "val": 329452,
+  "tally_max": 29,
+  "keygrids": 2,
+  "n": 59,
+  "worst_aligned": 11,
+  "worst_packed": 7,
+  "ctrl_holes": 65
+ },
+ "Hobby_pegs55": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 2008854,
+  "ctrl": 4212,
+  "pub": 825765,
+  "val": 343729,
+  "tally_max": 29,
+  "keygrids": 1,
+  "n": 59,
+  "worst_aligned": 11,
+  "worst_packed": 7,
+  "ctrl_holes": 65
+ },
+ "Hobby_six1": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 3985772,
+  "ctrl": 7028,
+  "pub": 1854527,
+  "val": 334396,
+  "tally_max": 29,
+  "keygrids": 1,
+  "n": 59,
+  "worst_aligned": 11,
+  "worst_packed": 7,
+  "ctrl_holes": 65
+ },
+ "Serious_three6": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 42230897,
+  "ctrl": 15220,
+  "pub": 19197557,
+  "val": 3423716,
+  "tally_max": 89,
+  "keygrids": 6,
+  "n": 179,
+  "worst_aligned": 22,
+  "worst_packed": 20,
+  "ctrl_holes": 125
+ },
+ "Serious_pegs175": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 47452711,
+  "ctrl": 14560,
+  "pub": 22090128,
+  "val": 3385893,
+  "tally_max": 89,
+  "keygrids": 2,
+  "n": 179,
+  "worst_aligned": 22,
+  "worst_packed": 20,
+  "ctrl_holes": 125
+ },
+ "Serious_six2": {
+  "ok": [
+   true,
+   true,
+   true,
+   true
+  ],
+  "leaks": 0,
+  "peaks": {
+   "public walk": [
+    11,
+    10,
+    1
+   ],
+   "validation": [
+    11,
+    9,
+    2
+   ],
+   "shared walk": [
+    11,
+    10,
+    1
+   ]
+  },
+  "moves": 65060354,
+  "ctrl": 17852,
+  "pub": 30789676,
+  "val": 3416320,
+  "tally_max": 89,
+  "keygrids": 2,
+  "n": 179,
+  "worst_aligned": 22,
+  "worst_packed": 20,
+  "ctrl_holes": 125
+ }
+}

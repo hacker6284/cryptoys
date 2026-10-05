@@ -1,0 +1,68 @@
+{
+ "Serious": {
+  "honest": {
+   "trials": 1000,
+   "accept": 1000,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 0,
+   "accepted_A_in_subgroup": 1000,
+   "accepted_A_equals_pari_piC_minus_C": 1000
+  },
+  "C outside subgroup, correct certificate": {
+   "trials": 1000,
+   "accept": 1000,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 0,
+   "accepted_A_in_subgroup": 1000,
+   "accepted_A_equals_pari_piC_minus_C": 1000
+  },
+  "C outside subgroup, wrong certificate": {
+   "trials": 1000,
+   "accept": 0,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 1000,
+   "A = C": 328,
+   "A = minus the certificate": 335,
+   "A = random non-subgroup point": 337
+  },
+  "C = nonzero order-5 point": {
+   "trials": 16,
+   "accept": 0,
+   "curve": 0,
+   "empty": 16,
+   "mismatch": 0,
+   "A = empty bands": 4,
+   "A = C": 4,
+   "A = random subgroup point": 4,
+   "A = another subgroup point": 4
+  },
+  "A not matching pi(C) - C": {
+   "trials": 1000,
+   "accept": 0,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 1000,
+   "A = non-subgroup point": 189,
+   "A = random subgroup point": 201,
+   "A = certificate with one peg changed": 213,
+   "A = C": 197,
+   "A = minus the certificate": 200
+  },
+  "C off the curve (A = the card formulas on C)": {
+   "trials": 1000,
+   "accept": 0,
+   "curve": 1000,
+   "empty": 0,
+   "mismatch": 0,
+   "random (x, y)": 499,
+   "honest C, y nudged": 501,
+   "would_pass_without_curve_test": 1000
+  },
+  "inversion_wrong": 0,
+  "secs": 607.3,
+  "secs_total": 607.5
+ }
+}

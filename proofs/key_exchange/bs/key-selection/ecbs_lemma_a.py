@@ -3,7 +3,8 @@
 ECBS Lemma A with digit differences D = 2 on positions 0..npos-1: B = sum 2*3^(p/2); the key map
 is certified injective mod l when B^2 < l.  A free-fleet page needs up to 134 positions (133 cells +
 marker); a ships+pegs page up to 234.  The curve orders l and field degrees n are copied from the
-ECBS spec's tier table (ECBS is not in this repository); this script reads no ECBS files."""
+ECBS SPEC §1 tier table (primitives/key_exchange/ecbs/SPEC.md; equal to
+proofs/key_exchange/ecbs/core/ecbs_curve_results.txt); this script reads no ECBS files."""
 ECBS = {  # tier: (n, l)
     "Serious": (179, 5078489869724426155952648514707704116694985077007329814177591439556413097455105423907),
     "Hobby": (59, 2826077218347794449447657747),

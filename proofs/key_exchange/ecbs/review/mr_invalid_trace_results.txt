@@ -1,0 +1,6 @@
+n =  23 node b'=0: accept(cofactor-4 multiple) = [True, True, True, True]; accept(raw random point) = [False, True, False, False]
+n =  23 E' b'=2: accept(cofactor-2 multiple) = [True, True, True, True]; accept(raw random point) = [True, True, False, False]
+n =  59 node b'=0: accept(cofactor-4 multiple) = [True, True, True, True]; accept(raw random point) = [True, False, False, False]
+n =  59 E' b'=2: accept(cofactor-2 multiple) = [True, True, True, True]; accept(raw random point) = [True, True, False, False]
+n = 179 node b'=0: accept(cofactor-4 multiple) = [True, True, True, True]; accept(raw random point) = [False, False, False, False]
+n = 179 E' b'=2: accept(cofactor-2 multiple) = [True, True, True, True]; accept(raw random point) = [True, False, True, True]

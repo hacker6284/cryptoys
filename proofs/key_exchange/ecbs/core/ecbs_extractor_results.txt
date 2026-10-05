@@ -1,0 +1,44 @@
+== 1. Demo exact (all 420 points of <P> minus O)
+  max |character sum| over all 2186 nonzero functionals = 65.82 = 1.407 sqrt(q)  (bound 3 sqrt(q) = 140.3)
+  m=1: exact SD from uniform = 0.0048 (bound 2^-2.08); exact H_inf = 1.564 bits (lower bound 0.583, max 1.585)
+  m=2: exact SD from uniform = 0.0730 (bound 2^-1.08); exact H_inf = 2.670 bits (lower bound 1.168, max 3.170)
+  m=3: exact SD from uniform = 0.1630 (bound 2^-0.23); exact H_inf = 3.807 bits (lower bound 1.430, max 4.755)
+  m=4: exact SD from uniform = 0.2529 (bound 2^0.58); exact H_inf = 4.714 bits (lower bound 2.959, max 6.340)
+  m=5: exact SD from uniform = 0.3745 (bound 2^1.38); exact H_inf = 6.129 bits (lower bound 4.544, max 7.925)
+  m=6: exact SD from uniform = 0.7298 (bound 2^2.17); exact H_inf = 6.129 bits (lower bound 6.129, max 9.510)
+  m=7: exact SD from uniform = 0.9040 (bound 2^2.97); exact H_inf = 7.714 bits (lower bound 7.714, max 11.095)
+
+== 2. Character-sum constant (bound 3 sqrt(q)), empirical: full character spectrum of prime-order subgroups
+  GF(3^7): #E = 2105 = 5 * 421; subgroup of order 421: max |sum| = 65.8 = 1.407 sqrt(q); whole group: max |sum| = 105.4 = 2.254 sqrt(q)
+  GF(3^11): #E = 177215 = 2645 * 67; subgroup of order 67: max |sum| = 38.1 = 0.091 sqrt(q) (trivially below 3 sqrt(q): the subgroup is smaller than 3 sqrt(q)); whole group: max |sum| = 1225.7 = 2.912 sqrt(q)
+  GF(3^13): #E = 1592765 = 785 * 2029; subgroup of order 2029: max |sum| = 225.2 = 0.178 sqrt(q) (trivially below 3 sqrt(q): the subgroup is smaller than 3 sqrt(q)); whole group: max |sum| = 3603.5 = 2.854 sqrt(q)
+
+== 3. Bounds per tier, for K uniform on <P> minus O  [model; see review C19]
+  Demo: no fold (m = n = 7): H_inf(x) = log2((l-1)/2) = 7.71 bits exactly; per-trit SD <= 2^-2.1
+    m =   4 trits (   6.3 bits max) [2-wide lane: drop rows C-D onto rows A-B]: SD <= 2^0.6; H_inf >= 3.0 bits
+    m =   2 trits (   3.2 bits max) [then drop row B onto row A]: SD <= 2^-1.1; H_inf >= 1.2 bits
+    largest m with SD bound <= 2^-40: None
+    largest m with SD bound <= 2^-64: None
+    largest m with SD bound <= 2^-128: None
+  Toy: no fold (m = n = 23): H_inf(x) = log2((l-1)/2) = 33.13 bits exactly; per-trit SD <= 2^-14.8
+    m =  16 trits (  25.4 bits max) [8-wide lane: drop row C onto row A]: SD <= 2^-2.6; H_inf >= 22.0 bits
+    m =   8 trits (  12.7 bits max) [drop rows B and C onto row A]: SD <= 2^-9.0; H_inf >= 12.3 bits
+    largest m with SD bound <= 2^-40: None
+    largest m with SD bound <= 2^-64: None
+    largest m with SD bound <= 2^-128: None
+  Hobby: no fold (m = n = 59): H_inf(x) = log2((l-1)/2) = 90.19 bits exactly; per-trit SD <= 2^-43.3
+    m =  40 trits (  63.4 bits max) [20-wide double grid: drop row C onto row A]: SD <= 2^-12.2; H_inf >= 60.1 bits
+    m =  20 trits (  31.7 bits max) [drop rows B and C onto row A]: SD <= 2^-28.0; H_inf >= 31.7 bits
+    largest m with SD bound <= 2^-40: 4 (6.3 bits)
+    largest m with SD bound <= 2^-64: None
+    largest m with SD bound <= 2^-128: None
+  Serious: no fold (m = n = 179): H_inf(x) = log2((l-1)/2) = 280.39 bits exactly; per-trit SD <= 2^-138.4
+    m = 100 trits ( 158.5 bits max) [20-wide double grid: drop rows F-I onto rows A-D (keep rows A-E)]: SD <= 2^-59.7; H_inf >= 155.2 bits
+    m =  80 trits ( 126.8 bits max) [then also drop row E onto row A (keep rows A-D)]: SD <= 2^-75.5; H_inf >= 126.8 bits
+    m =  60 trits (  95.1 bits max) [or drop rows D-I onto rows A-C in turn (keep rows A-C)]: SD <= 2^-91.4; H_inf >= 95.1 bits
+    largest m with SD bound <= 2^-40: 124 (196.5 bits)
+    largest m with SD bound <= 2^-64: 94 (149.0 bits)
+    largest m with SD bound <= 2^-128: 13 (20.6 bits)
+
+== 4. Toy Monte-Carlo bias test (200,000 uniform K = kP), m = 5 fold (i mod 5)
+  chi-square over 243 outputs = 240.3 (df 242, p = 0.519); max per-trit deviation from 1/3 = 0.0020 (1/sqrt(N) = 0.0022)

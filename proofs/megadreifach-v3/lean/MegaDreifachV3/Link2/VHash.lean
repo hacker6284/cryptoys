@@ -76,17 +76,12 @@ theorem chainPre_succ (xs : List Nat) (k : Nat) :
 def vhashAlg (msg : List Nat) : List Nat :=
   positionToBytes (chainPre (pad msg) ((pad msg).length / 28))
 
-theorem injPos_dmBlock (h : Position) (blk : List Nat) (hh : InjPos h) : InjPos (dmBlock h blk) :=
-  dmStep_inj h hh _
-
-theorem injPos_foldl_dmBlock (l : List (List Nat)) : ∀ h, InjPos h →
-    InjPos (l.foldl dmBlock h) := by
-  induction l with
-  | nil => intro h hh; exact hh
-  | cons b bs ih => intro h hh; exact ih _ (injPos_dmBlock h _ hh)
-
-theorem injPos_chainPre (xs : List Nat) (k : Nat) : InjPos (chainPre xs k) :=
-  injPos_foldl_dmBlock _ _ injPos_ivCook12
+/-- `chainPre` keeps bijective tables. `dmBlock` is `dmStep` after `phiUnrank ∘ fromBE`,
+    so this is `injPos_foldl_dmStep` on the mapped blocks (EmRun). -/
+theorem injPos_chainPre (xs : List Nat) (k : Nat) : InjPos (chainPre xs k) := by
+  unfold chainPre dmBlock
+  rw [← List.foldl_map]
+  exact injPos_foldl_dmStep _ _ injPos_ivCook12
 
 theorem v_Hash_refines (msg : List Nat) (hp : PadWf msg) :
     Megadreifach.v_Hash (embed msg) = .ok (embed (vhashAlg msg)) := by

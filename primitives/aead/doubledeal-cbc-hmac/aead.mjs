@@ -1,108 +1,51 @@
-// Byte-domain DoubleDeal-CBC-HMAC. SPEC.md is normative.
-// HMAC / KDF / pad / MAC input come from doubledeal_cbc_hmac.sudo.
-// 28-byte / 29-byte ranks are DoubleDeal §5.3 (cards.js): 52! is not a sudo int.
+// Host wrapper for DoubleDeal-CBC-Sandwich v2. SPEC.md is normative and
+// doubledeal_cbc_hmac.sudo is the whole algorithm (aead_seal / aead_open / mac_tag /
+// derive_key_decks). This file only adds what sudo cannot do: draw a fresh,
+// uniformly shuffled IV deck from the platform CSPRNG, and turn aead_open's
+// (false, []) into one error. It does not re-implement any step.
 
-export function createAead({
-    HMAC,
-    derive_keys,
-    pad_iso7816,
-    unpad_iso7816,
-    mac_input,
-    xor_bytes,
-    cbc_chain_from_cipher_block,
-    tags_equal,
-    encrypt,
-    decrypt,
-    bytesToDeck,
-    deckToMessageBytes,
-    deckToCipherBytes,
-    cipherBytesToDeck,
-}) {
-    function requireBytes(name, xs, length) {
-        if (!Array.isArray(xs) && !(xs instanceof Uint8Array)) {
-            throw new Error(`${name} must be bytes.`);
-        }
-        const out = [...xs];
-        if (length !== undefined && out.length !== length) {
-            throw new Error(`${name} must be ${length} bytes.`);
-        }
-        for (const byte of out) {
-            if (!Number.isInteger(byte) || byte < 0 || byte > 255) {
-                throw new Error(`${name} contains a non-byte.`);
-            }
-        }
-        return out;
+// A uniform deck: Fisher-Yates driven by crypto.getRandomValues, with rejection
+// so every index is exactly uniform (the software stand-in for a true shuffle).
+export function randomDeck(randomValues = (a) => globalThis.crypto.getRandomValues(a)) {
+    const deck = Array.from({ length: 52 }, (_, i) => i);
+    const word = new Uint32Array(1);
+    for (let i = 51; i > 0; i--) {
+        const n = i + 1;
+        const limit = Math.floor(0x100000000 / n) * n;
+        let x;
+        do {
+            randomValues(word);
+            x = word[0];
+        } while (x >= limit);
+        const j = x % n;
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return deck;
+}
+
+export function createAead({ seal, open, derive_key_decks }) {
+    // The only public encrypt: a fresh IV deck for every message.
+    function encrypt(plaintext, kEnc, kMac, aad = []) {
+        return seal([...plaintext], [...kEnc], [...kMac], [...aad], randomDeck());
     }
 
-    function splitBlob(blob) {
-        const bytes = requireBytes("blob", blob);
-        if (bytes.length < 58 || (bytes.length - 29) % 29 !== 0) {
-            throw new Error("The blob is ciphertext blocks of 29 bytes, then a 29-byte tag.");
-        }
-        return { ciphertext: bytes.slice(0, -29), tag: bytes.slice(-29) };
+    // Deterministic entry point for KATs and tests only. The IV MUST be a freshly and
+    // truly shuffled deck in real use; a unique or predictable IV is not enough.
+    function encryptWithIv(plaintext, kEnc, kMac, aad, iv) {
+        return seal([...plaintext], [...kEnc], [...kMac], [...aad], [...iv]);
     }
 
-    function cbcEncrypt(padded, iv, keyDeck) {
-        const ciphertext = [];
-        let chain = iv;
-        for (let i = 0; i < padded.length; i += 28) {
-            const block = padded.slice(i, i + 28);
-            const xored = xor_bytes(block, chain);
-            const deck = bytesToDeck(xored);
-            const cipherDeck = encrypt(deck, keyDeck);
-            const ranked = deckToCipherBytes(cipherDeck);
-            ciphertext.push(...ranked);
-            chain = cbc_chain_from_cipher_block(ranked);
-        }
-        return ciphertext;
+    function decrypt(blob, kEnc, kMac, aad = []) {
+        const [ok, plaintext] = open([...blob], [...kEnc], [...kMac], [...aad]);
+        if (!ok) throw new Error("reject");
+        return plaintext;
     }
 
-    function cbcDecrypt(ciphertext, iv, keyDeck) {
-        if (ciphertext.length === 0 || ciphertext.length % 29 !== 0) {
-            throw new Error("CBC ciphertext is a positive multiple of 29 bytes.");
-        }
-        const padded = [];
-        let chain = iv;
-        for (let i = 0; i < ciphertext.length; i += 29) {
-            const ranked = ciphertext.slice(i, i + 29);
-            const cipherDeck = cipherBytesToDeck(ranked);
-            const plainDeck = decrypt(cipherDeck, keyDeck);
-            const xored = deckToMessageBytes(plainDeck);
-            padded.push(...xor_bytes(xored, chain));
-            chain = cbc_chain_from_cipher_block(ranked);
-        }
-        return padded;
+    // Optional: two key decks from a byte master secret (software only). Security
+    // assumes uniformly random key decks, however they are obtained.
+    function deriveKeyDecks(master) {
+        return derive_key_decks([...master]);
     }
 
-    function encryptAead(plaintext, key, iv, aad = []) {
-        const pt = requireBytes("plaintext", plaintext);
-        const master = requireBytes("key", key);
-        const ivb = requireBytes("iv", iv, 28);
-        const aadb = requireBytes("aad", aad);
-        if (master.length === 0) throw new Error("The master key is empty.");
-        const [encBytes, macKey] = derive_keys(master);
-        const keyDeck = bytesToDeck(encBytes);
-        const padded = pad_iso7816(pt);
-        const ciphertext = cbcEncrypt(padded, ivb, keyDeck);
-        const tag = HMAC(macKey, mac_input(aadb, ivb, ciphertext));
-        return ciphertext.concat(tag);
-    }
-
-    function decryptAead(blob, key, iv, aad = []) {
-        const master = requireBytes("key", key);
-        const ivb = requireBytes("iv", iv, 28);
-        const aadb = requireBytes("aad", aad);
-        if (master.length === 0) throw new Error("The master key is empty.");
-        const { ciphertext, tag } = splitBlob(blob);
-        const [encBytes, macKey] = derive_keys(master);
-        const expected = HMAC(macKey, mac_input(aadb, ivb, ciphertext));
-        if (!tags_equal(tag, expected)) {
-            throw new Error("The tag is not valid.");
-        }
-        const keyDeck = bytesToDeck(encBytes);
-        const padded = cbcDecrypt(ciphertext, ivb, keyDeck);
-        return unpad_iso7816(padded);
-    }
-
-    return { encrypt: encryptAead, decrypt: decryptAead, splitBlob };
+    return { encrypt, encryptWithIv, decrypt, deriveKeyDecks };
 }

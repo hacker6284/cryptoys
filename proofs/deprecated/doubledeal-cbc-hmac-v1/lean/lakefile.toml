@@ -8,7 +8,7 @@ path = "Generated"
 
 [[require]]
 name = "audit"
-path = "../../audit"
+path = "../../../audit"
 
 [[lean_lib]]
 name = "DoubleDealCbcHmac"
@@ -19,6 +19,6 @@ name = "DoubleDealCbcHmac"
 # modules DoubleDealCbcHmac imports.
 [[lean_lib]]
 name = "MegaDreifachLink"
-srcDir = "../../megadreifach/lean"
+srcDir = "../../../megadreifach/lean"
 roots = []
 globs = ["MegaDreifach.+"]

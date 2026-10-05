@@ -4,7 +4,7 @@
 >
 > v2 stays here. What is frozen is v2's definition, [`megadreifach.sudo`](megadreifach.sudo) and the KATs (every vector and digest in [`kats/megaminx_hash_kats_v2.json`](kats/megaminx_hash_kats_v2.json); only its `status` line now says deprecated). This file's prose is not frozen: it carries the deprecation notes. The header comments of the frozen `.sudo` files, "MegaDreifach v2 (current)" in `megadreifach.sudo` and "Current: ../megadreifach.sudo (v2)" in `v1/megadreifach.sudo`, predate this deprecation and stay as they are.
 >
-> Still on v2: DoubleDeal-CBC-HMAC and the HMAC-MegaDreifach inside it; the MegaDreifach Lean package [`proofs/megadreifach/`](../../../proofs/megadreifach/README.md); the Scramble and BS Lean packages, through v2's Link 2 lemmas; `proofs/sudo_py.py --selftest`; and v3 itself, whose SPEC points here for pad, φ, Merkle–Damgård and the digest. Moving any of them to v3 is a separate decision.
+> Still on v2: the frozen DoubleDeal-CBC-HMAC v1 ([`../../aead/doubledeal-cbc-hmac/v1/`](../../aead/doubledeal-cbc-hmac/v1/SPEC.md)) and the HMAC-MegaDreifach inside it (its successor, DoubleDeal-CBC-Sandwich v2, uses v3); the MegaDreifach Lean package [`proofs/megadreifach/`](../../../proofs/megadreifach/README.md); the Scramble and BS Lean packages, through v2's Link 2 lemmas; `proofs/sudo_py.py --selftest`; and v3 itself, whose SPEC points here for pad, φ, Merkle–Damgård and the digest. Moving any of them to v3 is a separate decision.
 
 > **v1 is deprecated (broken)** and frozen at [`v1/`](v1/SPEC.md) (KATs: [`kats/megaminx_hash_kats_v1.json`](kats/megaminx_hash_kats_v1.json)). Why, with the #119 evidence: the banner of [`v1/SPEC.md`](v1/SPEC.md).
 
@@ -22,7 +22,7 @@ This document is the normative specification. `megadreifach.sudo` is the conform
 
 The product name **MegaDreifach** is locked. The puzzle, group, and library stay called **megaminx**.
 
-Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. **HMAC-MegaDreifach** is that construction: standard HMAC with this `Hash`, block size \(B=28\), tag = the 29-byte digest. It lives in `primitives/aead/doubledeal-cbc-hmac/` as part of DoubleDeal-CBC-HMAC (not a second hash). Under v2 every HMAC-MegaDreifach tag and every DoubleDeal-CBC-HMAC vector changed; that package's HMAC test tag and KAT blobs were regenerated in the same change that made v2 current. A green Lean build is not a security claim. What the Lean covers: §7. Hand-written Lean is not a proof that the sudo text equals the Lean model.
+Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. **HMAC-MegaDreifach** is that construction: standard HMAC with this `Hash`, block size \(B=28\), tag = the 29-byte digest. It lives in `primitives/aead/doubledeal-cbc-hmac/v1/` as part of the frozen DoubleDeal-CBC-HMAC v1 (not a second hash). Under v2 every HMAC-MegaDreifach tag and every DoubleDeal-CBC-HMAC vector changed; that package's HMAC test tag and KAT blobs were regenerated in the same change that made v2 current. A green Lean build is not a security claim. What the Lean covers: §7. Hand-written Lean is not a proof that the sudo text equals the Lean model.
 
 ---
 

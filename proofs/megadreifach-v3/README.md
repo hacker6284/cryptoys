@@ -150,7 +150,7 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 is one lemma about the model. It is not collision resistance, not a PRF claim, and a
 green build is not a security claim. SPEC and ANALYSIS tags are unchanged.
 
-compose g h is g then h. `emBlock` is the board E_m = W·h, so
+`compose g h` is g then h. `emBlock` is the board `E_m = W·h`, so
 `dmStep h deal = compose h (emBlock h deal)` is `h·W·h`, the hand 3-solve. Software
 and the hand schedule are that product (v2 `daviesMeyer` is `compose h e`).
 

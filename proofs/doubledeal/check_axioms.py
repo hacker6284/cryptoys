@@ -60,7 +60,7 @@ axiom) fails, as does a Lean error.
   required: the theorems its README cites (MD_V1_README_THEOREMS).
 - megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
   for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
-  README cites (MD_V3_README_THEOREMS); min is the audited count (180).
+  README cites (MD_V3_README_THEOREMS); min is the audited count (187).
   `--selftest` checks its "Emitted function" column against
   primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
 - cbc-hmac-v1-deprecated: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
@@ -419,7 +419,7 @@ MD_V1_README_THEOREMS = {
 
 # proofs/megadreifach-v3/lean (MegaDreifach v3, the ZP26 card phase): every theorem its
 # README cites by name; `--selftest` re-derives the list the same way as MD_README_THEOREMS.
-# Link 2 of all 11 v3 exports (MegaDreifachV3.Link2) and the layers under them.
+# Link 2 of all 12 v3 exports (MegaDreifachV3.Link2) and the layers under them.
 MD_V3_LEAN = ROOT.parent / "megadreifach-v3" / "lean"
 MD_V3_README = MD_V3_LEAN.parent / "README.md"
 MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
@@ -439,7 +439,7 @@ MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
     "v_HashDeck_refines", "v_HashDeck_refines_array", "v_HashDeck_two_blocks",
     "v_MegaDreifachDeck_refines", "body_from_refines",
     "v_HashDeckBody_refines", "v_MegaDreifachBody_refines", "v_HashDeckBodyFrom_refines",
-    "v_MegaDreifachBodyFrom_refines"]} | {f"MegaDreifachV3.Em.{n}" for n in [
+    "v_MegaDreifachBodyFrom_refines", "v_HashDecksBody_refines", "injPos_decksPre"]} | {f"MegaDreifachV3.Em.{n}" for n in [
     "edgeFaceOf_spec", "cornerFaceOf_spec", "turnedFace_countUp", "turnedFace_king",
     "echoColour_countUp", "cardStep_g_last", "dealFold_g_last", "echoRun_g_last",
     "emBlock_any_counters"]}
@@ -963,7 +963,7 @@ PACKAGES = {
         "known_sorry": set(),
         # sanity: the audit must see the whole package (the real audited count; raise as
         # Link 2 grows, lower only with a reason in the commit)
-        "min": 180,
+        "min": 187,
         "required": MD_V3_README_THEOREMS,
     },
     "cbc-hmac-v1-deprecated": {

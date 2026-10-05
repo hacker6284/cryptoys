@@ -260,7 +260,7 @@ How the vectors are made and checked:
   - the eight `Hash` digests and the `HashDeck` vector;
   - two `HashDeckBody` vectors, one of them with K♦ held.
 
-**Lean coverage for v3: refinement only.** `proofs/megadreifach-v3/` holds the Lean emitted from this sudo (checked fresh in CI), a compiled run of the KATs above (52 checks), and Link 2 theorems. They prove that each of the sudo's 11 exports, as emitted, equals a hand-written Lean model (`Em.lean`, which also uses the v2 model files in `proofs/megadreifach/`), under the input conditions listed in that package's README. Link 2 proves only generated = model. It does not check the sudo or the model against this SPEC. No Lean statement is about v3's security. `proofs/megadreifach/` and its `Generated/` model v2 (v2 SPEC §7), and the frozen v1 package models v1.
+**Lean coverage for v3: refinement only.** `proofs/megadreifach-v3/` holds the Lean emitted from this sudo (checked fresh in CI), a compiled run of the KATs above (52 checks), and Link 2 theorems. They prove that each of the sudo's 12 exports, as emitted, equals a hand-written Lean model (`Em.lean`, which also uses the v2 model files in `proofs/megadreifach/`), under the input conditions listed in that package's README. Link 2 proves only generated = model. It does not check the sudo or the model against this SPEC. No Lean statement is about v3's security. `proofs/megadreifach/` and its `Generated/` model v2 (v2 SPEC §7), and the frozen v1 package models v1.
 
 ---
 

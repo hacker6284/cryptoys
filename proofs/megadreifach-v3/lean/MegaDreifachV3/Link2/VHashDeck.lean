@@ -1,5 +1,5 @@
 /-
-  MegaDreifach v3 Link 2: `HashDeck`, `HashDeckBody`, `HashDeckBodyFrom` and the
+  MegaDreifach v3 Link 2: `HashDeck`, `HashDeckBody`, `HashDeckBodyFrom`, `HashDecksBody` and the
   `MegaDreifach*` aliases.
   * `v_HashDeck_refines` (on `PhiInvWf`): `HashDeck(deal) = Hash(φ⁻¹(deal))`, i.e. `vhashAlg`
     of the deal's 28-byte Lehmer rank; `v_HashDeck_two_blocks`: one v3 DM block keyed by the
@@ -7,6 +7,8 @@
   * `body_from_refines`, `v_HashDeckBody_refines`, `v_HashDeckBodyFrom_refines` (on
     permutations of `0..51`; `BodyFrom` also on a chaining value with bijective tables): the
     digest of `dmStep h deal = compose h (emBlock h deal)` (the sudo's `dm_step`).
+  * `v_HashDecksBody_refines` (on a non-empty list of permutations of `0..51`): one
+    `dmStep` per whole deal from IV-COOK12 (`decksBody`), no pad and no φ.
   The φ round trip lemmas are v2 PhiInv's; `padWf_toBE28` and `deckPadBlock` are in VHashCommon.
 -/
 import MegaDreifachV3.Link2.VHash
@@ -124,5 +126,75 @@ theorem v_MegaDreifachBodyFrom_refines (deal : List Nat) (h : Position) (hh : In
   unfold Megadreifach.v_MegaDreifachBodyFrom
   rw [v_HashDeckBodyFrom_refines deal h hh hp, ok_bind]
   rfl
+
+/-! ## Decks body (`HashDecksBody`) -/
+
+/-- A list of decks as the emitted `List<List<int>>`. -/
+def embedDecks (deals : List (List Nat)) : Array (Array Int) := Array.mk (deals.map embed)
+
+theorem listLen_embedDecks (deals : List (List Nat)) :
+    SudoRt.listLen (embedDecks deals) = Int.ofNat deals.length := by
+  rw [listLen_eq]
+  simp [embedDecks]
+
+theorem atL_embedDecks (deals : List (List Nat)) (i : Nat) (h : i < deals.length) :
+    SudoRt.atL (embedDecks deals) (Int.ofNat i) = .ok (embed (deals[i])) := by
+  have hsz : i < (embedDecks deals).size := by simp [embedDecks, h]
+  rw [atL_ofNat _ i hsz]
+  simp [embedDecks]
+
+/-- The model of `HashDecksBody`: one v3 Davies–Meyer step (`dmStep`, the sudo's `dm_step`)
+    per whole deal, from IV-COOK12, no pad and no φ; digest = the 29-byte rank. -/
+def decksBody (deals : List (List Nat)) : List Nat :=
+  positionToBytes (deals.foldl MegaDreifachV3.Em.dmStep Em.ivCook12)
+
+/-- Chaining value after the first `i` deals. -/
+def decksPre (deals : List (List Nat)) (i : Nat) : Position :=
+  (deals.take i).foldl MegaDreifachV3.Em.dmStep Em.ivCook12
+
+theorem decksPre_succ (deals : List (List Nat)) (i : Nat) (h : i < deals.length) :
+    decksPre deals (i + 1) = MegaDreifachV3.Em.dmStep (decksPre deals i) (deals[i]) := by
+  unfold decksPre
+  rw [List.take_succ, List.getElem?_eq_getElem h, List.foldl_append]
+  rfl
+
+theorem injPos_foldl_dmStep (l : List (List Nat)) : ∀ h, InjPos h →
+    InjPos (l.foldl MegaDreifachV3.Em.dmStep h) := by
+  induction l with
+  | nil => intro h hh; exact hh
+  | cons d ds ih => intro h hh; exact ih _ (dmStep_inj h hh d)
+
+theorem injPos_decksPre (deals : List (List Nat)) (i : Nat) : InjPos (decksPre deals i) :=
+  injPos_foldl_dmStep _ _ injPos_ivCook12
+
+/-- `HashDecksBody` on a non-empty list of permutations of `0..51` (whose length fits the
+    emitted `int`): the model `decksBody`. -/
+theorem v_HashDecksBody_refines (deals : List (List Nat)) (hne : 0 < deals.length)
+    (hfit : FitsLen deals.length) (hp : ∀ d ∈ deals, isPermutation52 d) :
+    Megadreifach.v_HashDecksBody (embedDecks deals) = .ok (embed (decksBody deals)) := by
+  unfold Megadreifach.v_HashDecksBody
+  rw [listLen_embedDecks, decide_ofNat_pos, decide_eq_true hne, sudoAssert_true, ok_bind,
+    iv_cook12_refines, ok_bind]
+  dsimp only
+  rw [subI_ofNat_one _ hne hfit, ok_bind, except_bind_pure]
+  have h0 : Em.ivCook12 = decksPre deals 0 := by
+    unfold decksPre; rw [List.take_zero, List.foldl_nil]
+  rw [h0]
+  apply chain_loop (f := fun i => embedPos (decksPre deals i)) (fromN := 0)
+    (toN := deals.length - 1) (hle := Nat.zero_le _)
+  · intro i _ hi
+    have hil : i < deals.length := by omega
+    have hpi := hp (deals[i]) (List.getElem_mem hil)
+    dsimp only
+    rw [if_neg (ofNat_not_gt hi), atL_embedDecks deals i hil, ok_bind,
+      (require_permutation_refines _ hpi).1, ok_bind,
+      dm_step_refines _ (injPos_decksPre _ _) _ (by rw [hpi.1]; exact Nat.le_refl _) hpi.2.2,
+      ok_bind, ← decksPre_succ deals i hil, pure_bind]
+    exact loopTailN i _ hi (FitsLen.succ_le hil hfit) _
+  · dsimp only
+    rw [position_to_bytes_refines_gen _ (injPos_decksPre _ _), ok_bind, Nat.sub_add_cancel hne]
+    unfold decksBody decksPre
+    rw [List.take_of_length_le (Nat.le_refl _)]
+    rfl
 
 end MegaDreifachV3.Link2

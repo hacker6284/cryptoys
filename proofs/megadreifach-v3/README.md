@@ -9,7 +9,7 @@ export has a Link 2 theorem, under the input conditions listed in the export tab
 
 | Piece | What it is | Checked by |
 | --- | --- | --- |
-| `lean/Generated/` | Lean emitted from the v3 sudo by `proofs/emit_lean.sh` (target `megadreifach-v3`), with `EMITTED_FROM.json`. Do not edit. | CI `generated-fresh` (`emit_lean.sh --check`); CI `megadreifach-v3-generated` builds it and runs the 23 sudo tests (TAP) |
+| `lean/Generated/` | Lean emitted from the v3 sudo by `proofs/emit_lean.sh` (target `megadreifach-v3`), with `EMITTED_FROM.json`. Do not edit. | CI `generated-fresh` (`emit_lean.sh --check`); CI `megadreifach-v3-generated` builds it and runs the 26 sudo tests (TAP) |
 | `lean/MegaDreifachV3/Vectors.lean` | The v3 KAT file `kats/megaminx_hash_kats_v3.json` as Lean data, written by `vectors/json_to_lean.py` | CI `megadreifach-v3-lean` (`json_to_lean.py --check`) |
 | `lean/MegaDreifachV3/KatRun.lean` | Runs the compiled emitted code on every vector: 8 `Hash` messages (and `MegaDreifach`, `pad_message` length), the `hash_deck` vector, all 8 `body_vectors` (`HashDeckBody`, `MegaDreifachBody`, `HashDeckBodyFrom` at IV-COOK12) and the IV-COOK12 digest: 52 checks, and it fails unless exactly 52 ran | CI `megadreifach-v3-lean` (`lake exe megadreifach_v3_kat`; `vectors/kat_negatives.py` plants a bad digest and empty vector lists and requires the run to fail with exit 1 and the matching summary line, "N/52 checks passed" with N < 52 or "FAIL: expected 52 checks"; `--selftest-crash` checks that a crashing runner is reported as an error) |
 
@@ -100,8 +100,8 @@ The card-phase layers:
   at most 12, so every iteration meets the `card_step_refines` side conditions. `emBlock_inj`:
   `E_m` keeps bijective tables.
   `dm_step_refines`: the sudo's Davies–Meyer step
-  `dm_step(h, deal) = compose(h, em_block(h, deal))` (used by `Hash`, `HashDeckBody` and
-  `HashDeckBodyFrom`) is the model `dmStep`, under the same conditions. `dmStep_inj`: it
+  `dm_step(h, deal) = compose(h, em_block(h, deal))` (used by `Hash`, `HashDeckBody`,
+  `HashDeckBodyFrom` and `HashDecksBody`) is the model `dmStep`, under the same conditions. `dmStep_inj`: it
   keeps bijective tables.
 - `Hash` (`Link2/VHash.lean`). `iv_cook12_refines`: the emitted IV is `Em.ivCook12` (v3 keeps
   the v2 IV). `v_Hash_refines` (on `PadWf`): the emitted `Hash` returns `vhashAlg msg`, i.e. pad,
@@ -115,7 +115,14 @@ The card-phase layers:
   block `deckPadBlock`. `body_from_refines`, `v_HashDeckBody_refines` and
   `v_HashDeckBodyFrom_refines`: on a permutation of `0..51` (and, for `BodyFrom`, a chaining
   value with bijective tables) the digest of `dmStep h deal`.
-  Scope: the body exports are stated on `embed deal` only (there are no `_array` forms), and
+  `v_HashDecksBody_refines`: on a non-empty list of permutations of `0..51` whose length fits
+  the emitted `int` (`FitsLen`), `HashDecksBody` returns `decksBody deals`, the digest of one
+  `dmStep` per whole deal from `ivCook12` (no pad, no φ). Its deal loop is driven by
+  `chain_loop`; each step is `require_permutation_refines` then `dm_step_refines`, every
+  chaining value keeps bijective tables (`injPos_decksPre`), and the digest is
+  `position_to_bytes_refines_gen`.
+  Scope: the body exports are stated on `embed deal` only, and `HashDecksBody` on
+  `embedDecks deals` (the list of embedded deals); there are no `_array` forms. And
   `HashDeckBodyFrom` / `MegaDreifachBodyFrom` only for chaining values of the form `embedPos h`
   (an emitted `Position` record that is not such an embedding is not covered).
 
@@ -143,6 +150,7 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
 | `MegaDreifachBody` | `v_MegaDreifachBody_refines` (on permutations of `0..51`; no `_array` form) |
 | `HashDeckBodyFrom` | `v_HashDeckBodyFrom_refines` (permutations of `0..51`, chaining value `embedPos h` with bijective tables; no `_array` form) |
 | `MegaDreifachBodyFrom` | `v_MegaDreifachBodyFrom_refines` (same) |
+| `HashDecksBody` | `v_HashDecksBody_refines` (non-empty list of permutations of `0..51`, length `FitsLen`; on `embedDecks deals`, no `_array` form) |
 
 ## Where this sits
 
@@ -150,7 +158,7 @@ Every `export func` of the v3 sudo, and its Link 2 theorem.
   model and the version-neutral v2 Link 2 modules (InjPos, VHashCommon, Sudo, PhiInv, Compose,
   among the `MegaDreifachLink` roots); this PR moved shared lemmas into those modules, but v2's
   statements are otherwise unchanged and its audit (`check_axioms.py megadreifach`) is 2745.
-  Its dependents (DoubleDeal-CBC-HMAC, Scramble and BS reuse its Link 2 runtime lemmas) keep
+  Its dependents (the frozen DoubleDeal-CBC-HMAC v1, Scramble and BS reuse its Link 2 runtime lemmas) keep
   their audit counts. Moving v3 into `proofs/megadreifach/` and v2 into `proofs/deprecated/` is
   a separate step.
 - The emitted module is `Megadreifach`, the same name as the v1 and v2 emits; each lives in its

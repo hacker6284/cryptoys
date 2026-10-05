@@ -3556,7 +3556,7 @@ def «with_sticker» (c : Cubie) (axis : Int) (color : Int) : Except SudoRt.Trap
 
 def «apply_move» (facelets : Array (Int)) (move : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
   do
-    let _as1256 ← SudoRt.sudoAssertEq (SudoRt.listLen facelets) (54 : Int) 613
+    let _as1256 ← SudoRt.sudoAssertEq (SudoRt.listLen facelets) (54 : Int) 612
     let _t1257 ← solved_cube
     let cube := _t1257
     let _fromV := (0 : Int)
@@ -3688,7 +3688,7 @@ def «apply_move» (facelets : Array (Int)) (move : Array (Int)) : Except SudoRt
               pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
     let cube := σ.2
     do
-      let _as1289 ← SudoRt.sudoAssert false 626
+      let _as1289 ← SudoRt.sudoAssert false 625
       pure (#[] : Array Int)) (fun r => pure r))
       pure _out) (fun r => pure r))
     pure _out

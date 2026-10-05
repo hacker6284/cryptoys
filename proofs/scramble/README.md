@@ -226,7 +226,7 @@ cycle `6 0 7 1 8 2 9 3` to a multiple of 8 and to at least 24. The v1 trace is n
 **Not claimed:** the Rule B steps' `up` / `front` letters and the facelet strings' letters
 (the vectors' Final facelets column); an `update` or `evaluate` after `done` (the sudo
 asserts); non-byte input (the sudo asserts, and nothing is claimed about it); the traced
-v1 constructor `scramble_v1` and the v1 trace; several v1 updates.
+v1 constructor `scramble_v1` and the v1 trace; several v1 updates; `apply_move`, the demo's face turn of a facelet string.
 
 | Emitted function | Theorem | Domain |
 | --- | --- | --- |

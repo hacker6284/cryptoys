@@ -96,7 +96,7 @@ export const LID_CLOSE_MS = 560;
 export const GATHER_MS = 680;
 export const RESTOW_MS = 380;
 // The cube's lift for face turns (TURN_LIFT, TURN_LIFT_MS, SETTLE_HOLD_MS)
-// is in the animation library: demos/anim/scramble-turn/settings.js.
+// is in the animation library: demos/anim/cube/settings.js.
 // Brief hub hold so a lift reads in the landing frame before the
 // shared follow-cam starts chasing. Click/Escape still skip after LIFT_MS.
 export const HOLD_MS = 760;

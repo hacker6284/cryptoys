@@ -10,7 +10,7 @@ import {
     edgeGap,
     restingClearance,
 } from "./layout.js";
-import { timing as GRID_DEAL } from "../anim/doubledeal-grid-deal/index.js";
+import { timing as GRID_DEAL } from "../anim/deck/deal/index.js";
 
 const SUIT_FILE = ["club", "heart", "spade", "diamond"];
 const RANK_FILE = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
@@ -105,7 +105,7 @@ export async function loadCardTextures(anisotropy = 1, { aspect = null } = {}) {
 
 // The standalone layout (doubledeal/layout.js): 4×13 grids side by side,
 // the hand packet fanned at z 2.4. doubledeal/real-layout.js is the
-// real-size one the library entries (demos/anim/doubledeal-*) use.
+// real-size one the library entries (demos/anim/deck/deal) use.
 const STANDALONE_LAYOUT = {
     name: "standalone",
     cardW: CARD_W,
@@ -149,7 +149,7 @@ function disposeMaterial(mat) {
  * mutable object so the microdemos (demos/micro/doubledeal-*) can tune
  * it live; tuned values paste straight back here. The moves that have
  * moved into the animation library read theirs from the entry
- * (demos/anim/doubledeal-grid-deal: dealMs, dealStaggerMs).
+ * (demos/anim/deck/deal: dealMs, dealStaggerMs).
  */
 export const TABLE_TIMING = {
     stepMs: 280,

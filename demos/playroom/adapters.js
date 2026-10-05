@@ -5,7 +5,7 @@ import { lucideSvg } from "../shared/icons.js";
 import { createBeatClock, yieldFrame } from "./beat-clock.js";
 import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
-import { timing as scrambleTurnTiming } from "../anim/scramble-turn/index.js";
+import { timing as scrambleTurnTiming } from "../anim/cube/index.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";

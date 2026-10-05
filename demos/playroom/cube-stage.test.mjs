@@ -4,7 +4,7 @@ globalThis.window = { setTimeout, clearTimeout };
 globalThis.requestAnimationFrame = (fn) => setTimeout(() => fn(performance.now()), 16);
 
 const { CUBE_STAGE_TIMING, stageCubeView } = await import(new URL("./cube-stage.js", import.meta.url));
-const scrambleTurn = await import(new URL("../anim/scramble-turn/index.js", import.meta.url));
+const scrambleTurn = await import(new URL("../anim/cube/index.js", import.meta.url));
 const calls = [];
 const rig = {
     group: { position: { y: 0 }, userData: {} },

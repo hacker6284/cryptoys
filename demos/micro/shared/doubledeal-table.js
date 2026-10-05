@@ -27,7 +27,7 @@ export const ORDER = (() => {
  *         step(ctx, loop, pace) → { step, contacts: [[slot, msFromStart]] } }
  * settings.timing: pace plus any TABLE_TIMING keys (written into it).
  *
- * A library entry's viewer (demos/anim/doubledeal-*) passes instead
+ * A library entry's viewer (demos/anim/deck/deal) passes instead
  *   voice   the entry's voice (its settings are the page's), no slots
  *   layout  doubledeal/real-layout.js REAL_LAYOUT: real-size cards
  *   camera  { position, target, fov, margin } override

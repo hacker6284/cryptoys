@@ -2,14 +2,14 @@ import { mountMicro } from "./micro.js";
 import { createScrambleAdapter } from "../../playroom/adapters.js";
 import { CUBE_STAGE_TIMING } from "../../playroom/cube-stage.js";
 import { DEN } from "../../playroom/constants.js";
-import { amountOf, cubingMs, slotOf, twistySlots } from "../../anim/twisty.js";
+import { amountOf, cubingMs, slotOf, twistySlots } from "../../anim/shared/twisty.js";
 
 /**
  * Twisty face-turn page (Scramble 3×3 or the megaminx), on the real
  * playroom adapter: one lift per step, cubing.js leaves at the dock
  * speed (tempo), settle on the felt. Each loop undoes the last.
  *
- * With page.voice (a library entry, e.g. demos/anim/scramble-turn) the
+ * With page.voice (a library entry, e.g. demos/anim/cube) the
  * page only watches: cube-stage.js plays the entry's timings and
  * sounds, exactly as in the playroom. Without it (megaminx-turn, not
  * yet in the library) the page passes its own timing and sounds.

@@ -1,4 +1,4 @@
-import { scrambleTurnVoice, timing as scrambleTurnTiming } from "../anim/scramble-turn/index.js";
+import { scrambleTurnVoice, timing as scrambleTurnTiming } from "../anim/cube/index.js";
 
 function easeInOut(t) {
     return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
@@ -24,7 +24,7 @@ function tween(ms, step, snap) {
 /**
  * Lift/settle timings (TURN_LIFT, TURN_LIFT_MS, SETTLE_HOLD_MS), read at
  * call time: the scramble-turn entry in the animation library
- * (demos/anim/scramble-turn/settings.js).
+ * (demos/anim/cube/settings.js).
  */
 export const CUBE_STAGE_TIMING = scrambleTurnTiming;
 

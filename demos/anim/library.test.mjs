@@ -1,36 +1,36 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 
-// The library is the one place an animation's values live: each entry
-// has settings.js and index.js, its microdemo keeps no copy, and the
-// README says whether Zachary has approved it.
+// The library is the one place an animation's values live, organised by
+// object (deck, deck/box, deck/card, chest, cube, megaminx): each entry
+// (a folder with settings.js) has index.js, its microdemos keep no copy,
+// and the README says whether Zachary has approved it.
 const here = new URL("./", import.meta.url);
 const micro = new URL("../micro/", import.meta.url);
 const readme = readFileSync(new URL("README.md", here), "utf8");
-const entries = readdirSync(here, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && d.name !== "sounds")
-    .map((d) => d.name);
-assert.ok(entries.includes("scramble-turn"), "scramble-turn is in the library");
+const walk = (dir, rel = "") => readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
+    if (!d.isDirectory() || d.name === "sounds" || d.name === "shared") return [];
+    const name = rel + d.name;
+    const sub = new URL(`${d.name}/`, dir);
+    return [...(existsSync(new URL("settings.js", sub)) ? [name] : []), ...walk(sub, `${name}/`)];
+});
+const entries = walk(here);
+assert.deepEqual([...entries].sort(), ["chest", "cube", "deck/box", "deck/carry", "deck/deal", "megaminx"], "the library's entries, by object");
+assert.ok(!existsSync(new URL("hinge/", here)), "no generic hinge entry");
 for (const name of entries) {
-    assert.ok(existsSync(new URL(`${name}/settings.js`, here)), `${name}: settings.js`);
     assert.ok(existsSync(new URL(`${name}/index.js`, here)), `${name}: index.js`);
-    assert.ok(!existsSync(new URL(`${name}/settings.js`, micro)), `${name}: the microdemo keeps no copy of the settings`);
-    const viewer = new URL(`${name}/page.js`, micro);
-    if (existsSync(viewer)) {
-        assert.match(readFileSync(viewer, "utf8"), new RegExp(`anim/${name}/index\\.js`), `${name}: the microdemo views the entry`);
-    }
     assert.match(readme, new RegExp("\\| `" + name + "` \\|"), `${name}: listed in README.md`);
 }
-
+for (const obj of ["deck", "deck/card"]) assert.ok(existsSync(new URL(`${obj}/index.js`, here)), `${obj}: index.js`);
 // scramble-turn is approved as Zachary heard it at af9a8fb.
-assert.match(readme, /\| `scramble-turn` \|[^\n]*approved[^\n]*af9a8fb/);
-assert.match(readme, /\| `scramble-turn` \|[^\n]*face-turn sounds approved and LOCKED at `6014bfc`/, "README records the face-turn lock");
+assert.match(readme, /\| `cube` \|[^\n]*approved[^\n]*af9a8fb/);
+assert.match(readme, /\| `cube` \|[^\n]*face-turn sounds approved and LOCKED at `6014bfc`/, "README records the face-turn lock");
 
-const { settings, timing, slots } = await import(new URL("scramble-turn/index.js", here));
+const { settings, timing, slots } = await import(new URL("cube/index.js", here));
 assert.equal(timing, settings.timing, "timing is the settings object itself");
 assert.deepEqual(slots.map((s) => s.name), ["single", "double", "triple", "rotation", "lift", "settle"]);
 
-const { slotOf, clickTimes } = await import(new URL("twisty.js", here));
+const { slotOf, clickTimes } = await import(new URL("shared/twisty.js", here));
 assert.equal(slotOf("R"), "single");
 assert.equal(slotOf("R'"), "single");
 assert.equal(slotOf("R2"), "double");
@@ -46,11 +46,11 @@ assert.equal(Math.round(half), -750, "a double turn's first click is at half way
 // cubing.js's smootherStep is fastest at exactly half of each move; every
 // face-turn sound's audible centroid lands there, at any tempo. Do not
 // loosen this test to fit a new value; change the rule with Zachary.
-const { stretchContact, fileStart } = await import(new URL("voice.js", here));
-const { PEAK_VELOCITY, smootherStep } = await import(new URL("twisty.js", here));
+const { stretchContact, fileStart } = await import(new URL("shared/voice.js", here));
+const { PEAK_VELOCITY, smootherStep } = await import(new URL("shared/twisty.js", here));
 assert.ok(Math.abs(PEAK_VELOCITY - 0.5) < 1e-3, "smootherStep turns fastest half way");
 assert.ok(Math.abs((smootherStep(0.5 + 1e-6) - smootherStep(0.5 - 1e-6)) / 2e-6 - 1.875) < 1e-6, "1.875× the mean speed there");
-const { turnContacts } = await import(new URL("scramble-turn/index.js", here));
+const { turnContacts } = await import(new URL("cube/index.js", here));
 // APPROVED and LOCKED at 6014bfc (Zachary: "All look pretty good."):
 // exactly these entries; nothing else may move them.
 assert.deepEqual(
@@ -115,12 +115,12 @@ assert.equal(stretchContact(1000, -482, 127.6, 1), 1000, "offsetMs sounds: uncha
 // megaminx-turn: the default rules from the start. Its single, double and
 // triple sounds are APPROVED and LOCKED at d952e6a (Zachary: "Sounds are ok
 // for that one."): exactly these entries; nothing else may move them.
-assert.match(readme, /\| `megaminx-turn` \|[^\n]*sounds approved and LOCKED at `d952e6a`/, "README records the megaminx lock");
+assert.match(readme, /\| `megaminx` \|[^\n]*sounds approved and LOCKED at `d952e6a`/, "README records the megaminx lock");
 // The whole entry (animation and sounds) is APPROVED and LOCKED at a927bb2
 // (Zachary approved the animation at the real 70 mm size, seated on the felt).
-assert.match(readme, /\| `megaminx-turn` \|[^\n]*Animation and sounds APPROVED and LOCKED at `a927bb2`/, "README records the megaminx animation lock");
+assert.match(readme, /\| `megaminx` \|[^\n]*Animation and sounds APPROVED and LOCKED at `a927bb2`/, "README records the megaminx animation lock");
 {
-    const mm = await import(new URL("megaminx-turn/index.js", here));
+    const mm = await import(new URL("megaminx/index.js", here));
     assert.deepEqual(
         { single: mm.settings.sounds.single, double: mm.settings.sounds.double, triple: mm.settings.sounds.triple },
         {
@@ -157,9 +157,9 @@ assert.match(readme, /\| `megaminx-turn` \|[^\n]*Animation and sounds APPROVED a
 // doubledeal-grid-deal: ANIMATION APPROVED and LOCKED at 7b5028f
 // (Zachary: "at speed it looks fine"): the motion, timing, real-size
 // layout and camera of 0aef6e8. Sound is on hold (card: null pending).
-assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and LOCKED at `7b5028f`/, "README records the grid-deal animation lock");
+assert.match(readme, /\| `deck\/deal` \|[^\n]*Animation APPROVED and LOCKED at `7b5028f`/, "README records the grid-deal animation lock");
 {
-    const gd = await import(new URL("doubledeal-grid-deal/index.js", here));
+    const gd = await import(new URL("deck/deal/index.js", here));
     const { REAL_LAYOUT, REAL_MM, UNIT_M } = await import(new URL("../doubledeal/real-layout.js", here));
     assert.deepEqual({ ...gd.settings.timing }, { pace: 1.8, dealMs: 260, dealStaggerMs: 36 }, "the approved grid-deal timing (7b5028f) is unchanged");
     assert.equal(gd.settings.loopGapMs, 700);
@@ -176,7 +176,7 @@ assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and L
     assert.deepEqual(corners.map((p) => [mm(p.x), mm(p.z)]), [[-252.5, -552], [-51.5, 552], [51.5, -552], [252.5, 552]], "the approved seats (mm)");
     const p0 = REAL_LAYOUT.pile("hand", 0, 52);
     assert.deepEqual([mm(p0.x), mm(p0.z)], [-152, 720], "the approved hand packet (mm)");
-    const page = readFileSync(new URL("../micro/doubledeal-grid-deal/page.js", here), "utf8");
+    const page = readFileSync(new URL("../micro/deck/deal/page.js", here), "utf8");
     assert.match(page, /camera: \{ position: \[DEN\.x, 1\.672, DEN\.z \+ 1\.0\], target: \[DEN\.x, 0\.772, DEN\.z\], fov: 40, fill: 0\.88 \}/, "the approved camera");
     assert.match(page, /frameAll: true,/);
     assert.match(page, /frameLift: TABLE_TIMING\.liftHop \* REAL_LAYOUT\.scale,/);
@@ -189,7 +189,7 @@ assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and L
 // long enough that its speed peaks half way, and the stream's audible
 // centre lands on the mean of the 52 cards' peaks at any pace.
 {
-    const gd = await import(new URL("doubledeal-grid-deal/index.js", here));
+    const gd = await import(new URL("deck/deal/index.js", here));
     const { REAL_LAYOUT } = await import(new URL("../doubledeal/real-layout.js", here));
     assert.equal(gd.timing, gd.settings.timing);
     assert.equal(gd.PEAK_VELOCITY, 0.5);
@@ -253,25 +253,38 @@ assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and L
     for (const [k, v] of Object.entries(gaps)) assert.ok(v > 0, `real layout: no overlap (${k})`);
 }
 
-// P1 carry and P2 hinge: the general primitives. NOT YET APPROVED: these
-// pin the laws as they stand and run every check over the seeded loops
-// the microdemos play (micro/carry, micro/hinge), so a change to a law,
-// the room or the placements shows up here. Update the pinned values
-// only with Zachary's sign-off once he has approved them.
+// deck/carry, deck/box (open/close flap), chest (open/close lid). NOT YET
+// APPROVED: these pin the laws as they stand and run every check over the
+// placements their microdemos play, so a change to a law, the room or the
+// placements shows up here. Update the pinned values only with Zachary's
+// sign-off once he has approved them.
 {
-    const geom = await import(new URL("geom.js", here));
-    const room = await import(new URL("room.js", here));
-    const carry = await import(new URL("carry/index.js", here));
-    const cp = await import(new URL("carry/placements.js", here));
-    const hinge = await import(new URL("hinge/index.js", here));
-    const hp = await import(new URL("hinge/placements.js", here));
-    assert.match(readme, /\| `carry` \|[^\n]*not yet approved/i, "README: carry awaits approval");
-    assert.match(readme, /\| `hinge` \|[^\n]*not yet approved/i, "README: hinge awaits approval");
+    const geom = await import(new URL("shared/geom.js", here));
+    const room = await import(new URL("shared/room.js", here));
+    const poses = await import(new URL("shared/poses.js", here));
+    const swing = await import(new URL("shared/swing.js", here));
+    const carry = await import(new URL("deck/carry/index.js", here));
+    const cp = await import(new URL("deck/carry/placements.js", here));
+    const box = await import(new URL("deck/box/index.js", here));
+    const bp = await import(new URL("deck/box/placements.js", here));
+    const chest = await import(new URL("chest/index.js", here));
+    const lp = await import(new URL("chest/placements.js", here));
+    const lib = await import(new URL("index.js", here));
+    for (const name of ["deck/carry", "deck/box", "chest"]) assert.match(readme, new RegExp("\\| `" + name + "` \\|[^\\n]*not yet approved", "i"), `README: ${name} awaits approval`);
+    // The by-object API.
+    assert.equal(lib.deck.box.openFlap, box.openFlap);
+    assert.equal(lib.deck.box.closeFlap, box.closeFlap);
+    assert.equal(lib.chest.openLid, chest.openLid);
+    assert.equal(lib.chest.closeLid, chest.closeLid);
+    assert.equal(lib.deck.carry, carry.carry);
+    assert.equal(lib.deck.deal.settings.timing.dealMs, 260);
+    assert.equal(lib.cube.timing, (await import(new URL("cube/index.js", here))).timing);
 
-    // Real sizes: the shapes the primitives plan with are the toys' drawn bounds.
+    // Real sizes: the shapes the moves plan with are the toys' drawn bounds.
     const dims = (b) => [0, 1, 2].map((k) => Math.round((b.max[k] - b.min[k]) * 10000) / 10);
-    assert.deepEqual(dims(cp.DECK_BOX), [67, 92, 20.4], "deck box 67 × 92 × 20 mm (+ its label)");
-    assert.deepEqual(dims(hp.TUCK_BOX), [67, 94.8, 21.2], "tuck box 67 × 92 × 20 mm (+ the shut flap and label)");
+    assert.deepEqual(dims(poses.DECK_BOX), [67, 92, 20.4], "deck box 67 × 92 × 20 mm (+ its label)");
+    assert.deepEqual(dims(box.TUCK_BOX), [67, 94.8, 21.2], "tuck box 67 × 92 × 20 mm (+ the shut flap and label)");
+    assert.deepEqual(dims(room.CHEST.lid), [899.4, 470, 899.3], "chest lid as drawn");
 
     // The carry laws.
     assert.deepEqual(carry.timing, { tempo: 1, baseMs: 450, perSqrtM: 650, minMs: 500, maxMs: 2000, riseM: 0.03, risePerM: 0.18, riseMaxM: 0.5, clearM: 0.03, turnFrom: 0.12, turnTo: 0.88 });
@@ -289,6 +302,8 @@ assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and L
 
     // Every carry of every seeded loop: no overlap, seated by drawn geometry
     // at both ends, ends exact, duration and peak speed on the law, slerp.
+    // Carry is the one move whose microdemo varies the placement each cycle
+    // (changing place is the move); the chest stays shut.
     for (const seed of [1, 2, 3, 4, 5, 6]) {
         const sch = cp.carrySchedule(seed);
         assert.equal(sch.cycles.length, cp.CYCLES);
@@ -314,19 +329,18 @@ assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and L
         assert.ok(kinds.real >= 5 && kinds.edge >= 10 && kinds.random >= 6 && flips >= 4, `carry seed ${seed}: real, edge and random poses, flips`);
     }
 
-    // The hinge curves.
-    const { parts } = hinge;
-    assert.deepEqual(parts, {
-        "chest-lid": { openRad: 1.45, stopGapM: 0.01, open: { ms: 640, curve: "swing", overshoot: 0.03, settle: 0.25 }, close: { ms: 520, curve: "fall", bounce: 0.035, settle: 0.24 } },
-        "tuck-flap": { openRad: 2.15, stopGapM: 0.001, open: { ms: 380, curve: "swing", overshoot: 0.06, settle: 0.3 }, close: { ms: 300, curve: "swing", overshoot: 0, settle: 0 } },
-    });
-    for (const p of Object.values(parts)) for (const spec of [p.open, p.close]) {
-        assert.equal(hinge.curveAt(spec, 0), 0);
-        assert.ok(Math.abs(hinge.curveAt(spec, 1) - 1) < 1e-12);
+    // The swing curves (shared/swing.js, a private helper: no constants of
+    // its own) with each object's own constants.
+    assert.deepEqual(box.flap, { openRad: 2.15, stopGapM: 0.001, open: { ms: 380, curve: "swing", overshoot: 0.06, settle: 0.3 }, close: { ms: 300, curve: "swing", overshoot: 0, settle: 0 } });
+    assert.deepEqual(chest.lid, { openRad: 1.45, stopGapM: 0.01, open: { ms: 640, curve: "swing", overshoot: 0.03, settle: 0.25 }, close: { ms: 520, curve: "fall", bounce: 0.035, settle: 0.24 } });
+    assert.ok(!Object.keys(swing).some((k) => /settings|parts|timing/.test(k)), "swing.js holds no constants");
+    for (const p of [box.flap, chest.lid]) for (const spec of [p.open, p.close]) {
+        assert.equal(swing.curveAt(spec, 0), 0);
+        assert.ok(Math.abs(swing.curveAt(spec, 1) - 1) < 1e-12);
     }
-    assert.ok(Math.abs(hinge.curvePeakAt(parts["tuck-flap"].open) - 0.35) < 1e-12 && Math.abs(hinge.curvePeakAt(parts["chest-lid"].close) - 0.76) < 1e-12);
-    assert.ok(Math.abs(Math.max(...Array.from({ length: 201 }, (_, i) => hinge.curveAt(parts["tuck-flap"].open, i / 200))) - 1.06) < 1e-3, "the flap overshoots 6 %");
-    assert.equal(hinge.hingeMs(parts["chest-lid"].open, 0.25), 320, "a quarter sweep takes half the time");
+    assert.ok(Math.abs(swing.curvePeakAt(box.flap.open) - 0.35) < 1e-12 && Math.abs(swing.curvePeakAt(chest.lid.close) - 0.76) < 1e-12);
+    assert.ok(Math.abs(Math.max(...Array.from({ length: 201 }, (_, i) => swing.curveAt(box.flap.open, i / 200))) - 1.06) < 1e-3, "the flap overshoots 6 %");
+    assert.equal(swing.swingMs(chest.lid.open, 0.25), 320, "a quarter sweep takes half the time");
 
     // The chest as the microdemos place it: its lid clears the walls at full
     // open (with the overshoot). In the live room (yaw π/2) it would not.
@@ -335,51 +349,77 @@ assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and L
     const live = room.chestLidObb(1.45, { ...room.CHEST, yaw: Math.PI / 2 });
     assert.ok(geom.worstDepth(live, walls, 0).depth > 0.3, "the live chest's lid swings 30+ cm into the wall");
 
-    // Every swing of every seeded hinge loop. Each cycle is a placement and
-    // swings only: no carry. The box is seated by its drawn bottom; the chest
-    // is set down at its own spot (varied).
-    for (const seed of [1, 2, 3]) {
-        const sch = hp.hingeSchedule(seed);
-        assert.equal(sch.cycles.length, hp.CYCLES);
-        let lids = 0, stops = new Set(), spots = new Set(), poses = new Set();
-        for (const c of sch.cycles) {
-            assert.ok(!("carry" in c), `hinge seed ${seed} cycle ${c.n}: no carrying between swings`);
-            if (c.what === "lid") {
-                lids += 1;
-                spots.add(`${c.chest.centre.map((v) => v.toFixed(2))} ${c.chest.yaw.toFixed(2)}`);
-            } else {
-                assert.ok(Math.abs(geom.obbMinY(geom.obbOf(c.pose, hp.TUCK_BOX)) - (c.surfaceY + 0.001)) < 1e-9, `hinge seed ${seed} cycle ${c.n}: seated by its drawn bottom`);
-                poses.add(c.pose.p.map((v) => v.toFixed(3)).join());
-            }
-            for (const w of c.swings) {
-                assert.ok(w.check.ok, `hinge seed ${seed} cycle ${c.n} (${c.label}): ${w.check.fail.join("; ")}`);
-                if (w.plan.stopped) stops.add(w.plan.stopped);
-            }
-        }
-        assert.equal(lids, 5);
-        assert.equal(spots.size, 5, "a different chest spot every lid cycle");
-        assert.equal(poses.size, 19, "a different box pose every flap cycle");
-        assert.ok(stops.has("shelf-back") && stops.has("table"), `hinge seed ${seed}: the flap meets the backboard and the felt (${[...stops]})`);
-        assert.ok(stops.has("wall-x") && stops.has("shelf-low"), `hinge seed ${seed}: the lid meets the wall (as the live room turns the chest) and the shelf (${[...stops]})`);
-        assert.equal(sch.cycles[0].swings[0].plan.to, parts["tuck-flap"].openRad, "a free flap opens all the way");
-        assert.equal(sch.cycles[3].swings[0].plan.to, parts["chest-lid"].openRad, "the chest lid opens all the way");
+    // deck/box open-close-flap: one fixed placement per seed. The box seated
+    // by its drawn bottom, clear of the room, the flap's swings checked.
+    const flapStops = new Set(), flapPoses = new Set();
+    for (let seed = 1; seed <= 12; seed++) {
+        const P = bp.flapPlacement(seed);
+        assert.equal(bp.flapPlacement(seed).pose.p.join(), P.pose.p.join(), `flap seed ${seed}: deterministic`);
+        assert.ok(Math.abs(geom.obbMinY(geom.obbOf(P.pose, box.TUCK_BOX)) - (P.surfaceY + 0.001)) < 1e-9, `flap seed ${seed}: seated by its drawn bottom`);
+        assert.ok(geom.worstDepth(geom.obbOf(P.pose, box.TUCK_BOX), P.solids, 0).depth <= 0.0005, `flap seed ${seed}: the box overlaps nothing`);
+        for (const c of P.checks) assert.ok(c.ok, `flap seed ${seed} (${P.label}): ${c.fail.join("; ")}`);
+        assert.ok(Math.abs(P.close.from - P.open.to) < 1e-12 && P.close.to === 0, `flap seed ${seed}: closes from where it opened`);
+        if (P.open.stopped) flapStops.add(P.open.stopped);
+        flapPoses.add(P.pose.p.map((v) => v.toFixed(3)).join());
     }
+    assert.equal(flapPoses.size, 12, "a different box pose per seed");
+    assert.ok(flapStops.has("shelf-back") && flapStops.has("table"), `the flap meets the backboard and the felt (${[...flapStops]})`);
+    assert.equal(bp.flapPlacement(1).open.to, box.flap.openRad, "a free flap opens all the way");
+
+    // chest open-close-lid: one fixed spot per seed, in view of the page's
+    // camera (the table not in between), clear of the room.
+    const lidStops = new Set(), spots = new Set();
+    for (let seed = 1; seed <= 10; seed++) {
+        const P = lp.lidPlacement(seed);
+        assert.ok(lp.inView(P.at), `lid seed ${seed}: in view`);
+        assert.ok(geom.worstDepth(room.chestBodyObb(P.at), P.solids.filter((x) => x.name !== "floor"), 0).depth <= 0, `lid seed ${seed}: the chest overlaps nothing`);
+        for (const c of P.checks) assert.ok(c.ok, `lid seed ${seed} (${P.label}): ${c.fail.join("; ")}`);
+        assert.ok(Math.abs(P.close.from - P.open.to) < 1e-12 && P.close.to === 0);
+        if (P.open.stopped) lidStops.add(P.open.stopped);
+        spots.add(`${P.at.centre.map((v) => v.toFixed(2))} ${P.at.yaw.toFixed(2)}`);
+    }
+    assert.equal(spots.size, 10, "a different chest spot per seed");
+    assert.ok(lidStops.has("wall-x") && lidStops.has("shelf-low"), `the lid meets the wall (as the live room turns the chest) and the shelf (${[...lidStops]})`);
+    assert.equal(lp.lidPlacement(1).open.to, chest.lid.openRad, "the chest lid opens all the way in its corner");
 }
 
-// Each primitive stands alone: carry's modules (and its microdemo) never
-// reach hinge, and hinge's never reach carry. Shared: geom.js, room.js,
-// poses.js (placement helpers, no motion).
+// Each object stands alone: no object's modules reach another object's
+// folder (deck's own index gathers its sub-objects; deck/box, deck/card,
+// deck/carry and deck/deal never reach each other). Shared: anim/shared/.
+// Each microdemo shows one object: its page reaches only that object's
+// entry and anim/shared/.
 {
+    // Followed through the library and the microdemo code only (the real
+    // demo code a page builds its scene with, e.g. doubledeal/table.js for
+    // card textures, imports what it plays itself).
     const graph = (url, seen = new Set()) => {
-        if (seen.has(url.href)) return seen;
+        if (seen.has(url.href) || !url.href.endsWith(".js") && !url.href.endsWith(".mjs")) return seen;
         seen.add(url.href);
+        if (!url.href.startsWith(here.href) && !url.href.startsWith(micro.href)) return seen;
         for (const m of readFileSync(url, "utf8").matchAll(/^\s*(?:import|export)[^"']*?from\s+["'](\.{1,2}\/[^"']+)["']/gm)) graph(new URL(m[1], url), seen);
         return seen;
     };
-    const carryGraph = [...graph(new URL("carry/placements.js", here)), ...graph(new URL("carry/page.js", micro))];
-    const hingeGraph = [...graph(new URL("hinge/placements.js", here)), ...graph(new URL("hinge/page.js", micro))];
-    assert.ok(carryGraph.some((u) => u.endsWith("/anim/carry/index.js")) && !carryGraph.some((u) => /\/hinge\//.test(u)), `carry is independent of hinge: ${carryGraph.filter((u) => /hinge/.test(u))}`);
-    assert.ok(hingeGraph.some((u) => u.endsWith("/anim/hinge/index.js")) && !hingeGraph.some((u) => /\/carry\//.test(u)), `hinge is independent of carry: ${hingeGraph.filter((u) => /carry/.test(u))}`);
+    const animFiles = (urls) => [...urls].filter((u) => u.startsWith(here.href)).map((u) => u.slice(here.href.length));
+    for (const name of entries) {
+        const roots = ["index.js", "placements.js"].map((f) => new URL(`${name}/${f}`, here)).filter((u) => existsSync(u));
+        const reach = animFiles(roots.flatMap((r) => [...graph(r)]));
+        const foreign = reach.filter((f) => !f.startsWith(`${name}/`) && !f.startsWith("shared/"));
+        assert.deepEqual(foreign, [], `${name} reaches only itself and anim/shared/`);
+    }
+    const pages = {
+        "deck/carry": "deck/carry", "deck/deal": "deck/deal", "deck/box/open-close-flap": "deck/box",
+        "chest/open-close-lid": "chest", "cube/face-turn": "cube", "cube/rotate": "cube", "megaminx/face-turn": "megaminx",
+    };
+    for (const [page, entry] of Object.entries(pages)) {
+        const url = new URL(`${page}/page.js`, micro);
+        assert.ok(existsSync(url), `micro/${page}/page.js`);
+        assert.ok(!existsSync(new URL(`${page}/settings.js`, micro)), `micro/${page}: keeps no copy of the settings`);
+        const reach = animFiles(graph(url));
+        assert.ok(reach.some((f) => f.startsWith(`${entry}/`)), `micro/${page} views ${entry}`);
+        const foreign = reach.filter((f) => !f.startsWith(`${entry}/`) && !f.startsWith("shared/"));
+        assert.deepEqual(foreign, [], `micro/${page} shows only ${entry}`);
+    }
+    assert.ok(!existsSync(new URL("hinge/page.js", micro)), "no mixed hinge microdemo");
 }
 
 console.log("animation library tests ok");

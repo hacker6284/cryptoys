@@ -3,6 +3,15 @@
 // its table moves to the real-size layout, see ../README.md). Edit a value
 // and reload the microdemo.
 //
+// ANIMATION APPROVED and LOCKED at 7b5028f (Zachary: "at speed it looks
+// fine"): the motion, timing, layout and camera of 0aef6e8 (timing below;
+// the real-size layout in ../../doubledeal/real-layout.js; the card hop
+// liftHop 0.9 in ../../doubledeal/table.js; the camera and framing in
+// ../../micro/doubledeal-grid-deal/page.js). Do not change them without
+// his sign-off; ../library.test.mjs pins them. Sound is ON HOLD
+// project-wide (animations first): the stream keeps its file unapproved,
+// and the per-card sound stays card: null until sound work resumes.
+//
 // sounds: file = path under demos/anim/sounds/ (no extension; run
 //   tools/sync-micro-sounds.py after changing it). gainDb = loudness
 //   (+ louder). Placement, from the slot's contact:
@@ -39,8 +48,9 @@ export default {
     sounds: {
         // The grid stream (one per deal): Kenney card fan.
         stream: { file: "doubledeal-grid-deal/fan-1_kenney-card-fan-1", gainDb: 5.5, align: "peak-velocity", nudgeMs: 0 },
-        // Per card, as it leaves the packet. Off until Zachary picks one
-        // (candidates: { file, gainDb, align: "motion-start", nudgeMs: 0 }).
+        // Per card, as it leaves the packet. PENDING (sound on hold): off
+        // until Zachary picks one ({ file, gainDb, align: "motion-start",
+        // nudgeMs: 0 }; 14 candidates rendered, none chosen).
         card: null,
     },
 };

@@ -154,7 +154,36 @@ assert.match(readme, /\| `megaminx-turn` \|[^\n]*Animation and sounds APPROVED a
     assert.ok(!JSON.stringify(mm.settings.sounds).includes("emapuree"), "no wooden-block thud");
 }
 
-// doubledeal-grid-deal (not yet approved): the same rule for a moving
+// doubledeal-grid-deal: ANIMATION APPROVED and LOCKED at 7b5028f
+// (Zachary: "at speed it looks fine"): the motion, timing, real-size
+// layout and camera of 0aef6e8. Sound is on hold (card: null pending).
+assert.match(readme, /\| `doubledeal-grid-deal` \|[^\n]*Animation APPROVED and LOCKED at `7b5028f`/, "README records the grid-deal animation lock");
+{
+    const gd = await import(new URL("doubledeal-grid-deal/index.js", here));
+    const { REAL_LAYOUT, REAL_MM, UNIT_M } = await import(new URL("../doubledeal/real-layout.js", here));
+    assert.deepEqual({ ...gd.settings.timing }, { pace: 1.8, dealMs: 260, dealStaggerMs: 36 }, "the approved grid-deal timing (7b5028f) is unchanged");
+    assert.equal(gd.settings.loopGapMs, 700);
+    assert.deepEqual({ ...gd.settings.choices }, { major: "deal" });
+    const table = readFileSync(new URL("../doubledeal/table.js", here), "utf8");
+    assert.match(table, /liftHop: 0\.9,/, "the approved card hop (liftHop 0.9 units = 101 mm)");
+    assert.deepEqual(REAL_MM, { card: [63, 88, 0.3], gap: 4, gutter: 40, pileGap: 80, grid: [8, 13] }, "the approved real-size layout");
+    assert.ok(Math.abs(UNIT_M - 0.1125) < 1e-12);
+    assert.equal(REAL_LAYOUT.artAspect, 63 / 88);
+    assert.equal(REAL_LAYOUT.liftM, 0.0005);
+    assert.equal(REAL_LAYOUT.seatY, REAL_LAYOUT.cardT / 2);
+    const corners = [[0, 0, "message"], [3, 12, "message"], [0, 0, "key"], [3, 12, "key"]].map(([r, c, side]) => REAL_LAYOUT.cell(r, c, side));
+    const mm = (v) => Math.round(v * UNIT_M * 1e4) / 10;
+    assert.deepEqual(corners.map((p) => [mm(p.x), mm(p.z)]), [[-252.5, -552], [-51.5, 552], [51.5, -552], [252.5, 552]], "the approved seats (mm)");
+    const p0 = REAL_LAYOUT.pile("hand", 0, 52);
+    assert.deepEqual([mm(p0.x), mm(p0.z)], [-152, 720], "the approved hand packet (mm)");
+    const page = readFileSync(new URL("../micro/doubledeal-grid-deal/page.js", here), "utf8");
+    assert.match(page, /camera: \{ position: \[DEN\.x, 1\.672, DEN\.z \+ 1\.0\], target: \[DEN\.x, 0\.772, DEN\.z\], fov: 40, fill: 0\.88 \}/, "the approved camera");
+    assert.match(page, /frameAll: true,/);
+    assert.match(page, /frameLift: TABLE_TIMING\.liftHop \* REAL_LAYOUT\.scale,/);
+    assert.match(page, /kind === "deal" \? "scoopcm" : "scooprm"/, "each loop starts from the neat hand packet");
+}
+
+// doubledeal-grid-deal: the same rule for a moving
 // card. Each card slides with easeInOutQuad (fastest half way) while it
 // hops sin(πt) × liftHop; on the real-size layout every card's path is
 // long enough that its speed peaks half way, and the stream's audible

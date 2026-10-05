@@ -193,6 +193,8 @@ In sudo the state is an explicit parameter: `update(s, bytes)` and `evaluate(s)`
 
 Text and hexadecimal parsing belong to the demo. Text is UTF-8. Hex ignores a leading `0x`, spaces, and underscores, and a leading zero is added when the remaining length is odd. An empty hex field is the empty message. Any other character is an error.
 
+`apply_move(facelets, move)` turns any 54-letter facelet string by one Singmaster move. An unknown name traps.
+
 ## scramble_v1
 
 Superseded by v2.

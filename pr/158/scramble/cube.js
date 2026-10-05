@@ -53,12 +53,12 @@ export function quarterSpin(face) {
 }
 
 // apply_move only moves letters between facelets, so each move's map is read once,
-// from 54 distinct letters, and reused: shortSolve makes about 65,000 moves.
-const LABELS = String.fromCharCode(...Array.from({ length: 54 }, (_, i) => 48 + i));
+// from these 54 distinct letters, and reused: shortSolve makes about 65,000 moves.
+export const LETTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR";
 const FROM = new Map();
 
 export function applyMove(facelets, move) {
-    if (!FROM.has(move)) FROM.set(move, Array.from(apply_move(LABELS, move), (ch) => ch.charCodeAt(0) - 48));
+    if (!FROM.has(move)) FROM.set(move, Array.from(apply_move(LETTERS, move), (ch) => LETTERS.indexOf(ch)));
     return FROM.get(move).map((i) => facelets[i]).join("");
 }
 

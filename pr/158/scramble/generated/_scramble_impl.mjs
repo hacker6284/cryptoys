@@ -938,7 +938,7 @@ export function with_sticker(c, axis, color) {
 }
 
 export function apply_move(facelets, move) {
-    _rt.sudo_assert_eq(globalThis.BigInt(facelets.length), 54n, 613);
+    _rt.sudo_assert_eq(globalThis.BigInt(facelets.length), 54n, 612);
     let cube = solved_cube();
     {
         const _sudo_from_i = 0n;
@@ -972,7 +972,7 @@ export function apply_move(facelets, move) {
             }
         }
     }
-    _rt.sudo_assert(false, 626);
+    _rt.sudo_assert(false, 625);
     return _rt.txt("");
 }
 

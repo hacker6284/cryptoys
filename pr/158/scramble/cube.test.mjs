@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
 import { apply_move, solved_facelets } from "./generated/scramble.mjs";
-import { applyMove } from "./cube.js";
+import { applyMove, LETTERS } from "./cube.js";
 
 // Recorded from the hand-written turn code cube.js had before it used apply_move:
-// each move on 54 distinct letters, then three sequences.
-const LETTERS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR";
+// each move on LETTERS, then three sequences.
 const ONE = {
     "U": "258147036ijkcdefghABClmnopqrstuvwxyzJKLDEFGHI9abMNOPQR",
     "U'": "630741852JKLcdefgh9ablmnopqrstuvwxyzijkDEFGHIABCMNOPQR",

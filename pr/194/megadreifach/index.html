@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MegaDreifach</title>
+  <!--
+    MegaDreifach v3 lives in the playroom only: three megaminxes and a
+    real deck on the table (no 2D deal strip), so this page forwards there.
+  -->
+  <script>
+    (function () {
+      var dest = new URL("../", location.href);
+      dest.searchParams.set("algo", "megadreifach");
+      location.replace(dest.pathname + dest.search);
+    })();
+  </script>
+</head>
+<body>
+  <p>MegaDreifach is in the <a href="../?algo=megadreifach">playroom</a>.</p>
+</body>
+</html>

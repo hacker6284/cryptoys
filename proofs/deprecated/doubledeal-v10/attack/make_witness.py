@@ -2,15 +2,16 @@
 
 Finds, with a fixed seed, a deck d on which the transposition sigma = K♣↔K♦ (card ids 12 and 51)
 commutes with v10 GridCycle, GC(sigma d) = sigma GC(d), with both cards away from the always-surviving
-tail (walk positions < 40), and writes ../witness_v10.json. Uses the repo port
-proofs/doubledeal/security/checks/ddport.py (checked in CI against the v10 vectors).
+tail (walk positions < 40), and writes ../witness_v10.json. Uses sudoc's Python output of the
+frozen v10 sudo (proofs/sudo_py.py).
 usage: python3 make_witness.py [--check]"""
 import json, random, sys
 from pathlib import Path
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[2] / 'doubledeal/security/checks'))
-import ddport as P
-sys.path.insert(0, str(P.REPO / 'tools'))
+sys.path.insert(0, str(HERE.parents[2]))
+import sudo_py
+V = sudo_py.doubledeal(10)
+sys.path.insert(0, str(sudo_py.REPO / 'tools'))
 from gencheck import parser, emit
 args = parser(__doc__).parse_args()
 
@@ -24,8 +25,8 @@ def find(seed=10):
         tries += 1
         d = list(range(52)); rng.shuffle(d)
         if max(d.index(A), d.index(B)) >= 40: continue
-        out = P.mix_columns(d, 10)
-        if P.mix_columns(sw(d), 10) == sw(out):
+        out = V.mix_columns(d)
+        if V.mix_columns(sw(d)) == sw(out):
             return d, out, tries
 
 d, out, tries = find()

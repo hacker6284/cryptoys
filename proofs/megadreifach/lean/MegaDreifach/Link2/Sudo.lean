@@ -223,6 +223,13 @@ theorem sEq_ofNat_zero (n : Nat) :
     SudoRt.SEq.beq (Int.ofNat n) (0 : Int) = decide (n = 0) := by
   rw [sEq_int, decide_eq_decide, ofNat_eq_zero_iff]
 
+/-- `==` on two embedded naturals. One public copy: FaceTurn, EmSpin, EmCorner, EmEdge and v3's
+FaceOf used to restate it privately. -/
+theorem sEq_ofNat (a b : Nat) :
+    SudoRt.SEq.beq (Int.ofNat a) (Int.ofNat b) = decide (a = b) := by
+  rw [sEq_int, decide_eq_decide]
+  exact ⟨fun e => Int.ofNat.inj e, fun e => e ▸ rfl⟩
+
 theorem decide_ofNat_pos (n : Nat) :
     decide (Int.ofNat n > (0 : Int)) = decide (0 < n) := by
   rw [decide_eq_decide, ofNat_pos_iff]

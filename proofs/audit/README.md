@@ -13,3 +13,8 @@ One small core-only Lean package with the `#audit_all Root` command
 The single gate that parses this output and applies the allowlist is
 [`../doubledeal/check_axioms.py`](../doubledeal/check_axioms.py). Do not add
 dependencies here: this package must stay core-only so every consumer can use it.
+
+It also holds `UnfoldMatchers.lean`, the `unfold_matchers` / `unfold_matchers at h` proof
+tactic (unfold every generated `match` auxiliary by `isMatcher`, without naming it; fails
+when nothing was unfolded). It declares no theorems. MegaDreifach's `Link2/PadRef.lean`
+uses it under both the v2 and the v3 emit.

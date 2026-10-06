@@ -2,22 +2,22 @@
 
 The JSON carries the witness (sigma, key, message, cipher, sigma M, sigma C) and, as
 hints for the Lean kernel check, the round keys K1..K6 and the state after each stage for
-both runs (computed with dd_v9.py). The kernel re-derives every hint from the emitted
-Lean, so a wrong hint makes the Lean build fail; nothing here is trusted by Lean.
+both runs (computed with sudoc's Python output of the frozen v9 sudo, via v9.py). The kernel
+re-derives every hint from the emitted Lean, so a wrong hint makes the Lean build fail; nothing
+here is trusted by Lean.
 usage: python3 make_witness.py [INDEX]
 """
 import json, pathlib, sys
 HERE = pathlib.Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
-import dd_v9 as V
+from v9 import V, swap, encrypt_stages
 idx = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 run = json.loads((HERE / "results/F6_KcQh_witnesses.json").read_text())
 w = run["witnesses"][idx]
-x, y = run["swap"]; sg = V.swap(x, y)
+x, y = run["swap"]; sg = swap(x, y)
 key, msg = w["key"], w["message"]
 keys = V.expand_keys(key)
-A = V.encrypt_stages(msg, key)
-B = V.encrypt_stages([sg(c) for c in msg], key)
+A = encrypt_stages(msg, key)
+B = encrypt_stages([sg(c) for c in msg], key)
 assert A[-1] == w["cipher"] and B[-1] == w["cipher2"] == [sg(c) for c in A[-1]]
 doc = {
     "sigma": [x, y],

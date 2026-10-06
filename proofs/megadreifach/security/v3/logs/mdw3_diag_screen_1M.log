@@ -1,0 +1,69 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SAF0: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+diag SAR26: N=1000000, seeds 41000000+...; cost {'steps': 78, 'turns': 390, 'piece_turn_clicks': 312, 'card_clicks': '130 + sum of echo amounts (echo amount = suit of the held card, so 130 + m*k)', 'face_lookups': 312, 'pieces_found_per_step': 2, 'regrips': 0, 'solves': 3}
+  check: #coinciding corners == #fully fixed corners of Q in 1000000/1000000
+  fully fixed corners of Q: mean 0.33273 (ideal 0.33333, excess -0.00060 +- 0.00113); edges 0.50035 (ideal 0.50000, excess +0.00035 +- 0.00139)  [approx. null sd: sqrt(mean)]
+  last step's corner coincides:   0.01693 [0.01668,0.01719] (ideal 0.01667, excess +0.00027)
+  last step's edge coincides:     0.01686 [0.01661,0.01712] (ideal 0.01667, excess +0.00020)
+  second-to-last step's corner (if a different piece): 0.01530; edge: 0.01535 (ideal (1/60) x P(different piece); for card-named pieces of the bare NRk naming 0.01610 corners)
+  final registers equal: 0.08347 [0.08293,0.08402] (ideal 0.08333, excess +0.00014); given equal: last corner coincides 0.02990, mean coinciding corners 0.34551
+wall time 277 s, workers 4
+
+real	4m38.050s
+user	15m25.200s
+sys	0m0.146s
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SAF0: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+diag SBR26: N=1000000, seeds 41000000+...; cost {'steps': 78, 'turns': 468, 'piece_turn_clicks': 390, 'card_clicks': '130 + sum of echo amounts (echo amount = suit of the held card, so 130 + m*k)', 'face_lookups': 390, 'pieces_found_per_step': 2, 'regrips': 0, 'solves': 3}
+  check: #coinciding corners == #fully fixed corners of Q in 1000000/1000000
+  fully fixed corners of Q: mean 0.33346 (ideal 0.33333, excess +0.00013 +- 0.00113); edges 0.50098 (ideal 0.50000, excess +0.00098 +- 0.00139)  [approx. null sd: sqrt(mean)]
+  last step's corner coincides:   0.01673 [0.01648,0.01698] (ideal 0.01667, excess +0.00006)
+  last step's edge coincides:     0.01686 [0.01661,0.01711] (ideal 0.01667, excess +0.00019)
+  second-to-last step's corner (if a different piece): 0.01491; edge: 0.01517 (ideal (1/60) x P(different piece); for card-named pieces of the bare NRk naming 0.01610 corners)
+  final registers equal: 0.08332 [0.08278,0.08386] (ideal 0.08333, excess -0.00001); given equal: last corner coincides 0.01725, mean coinciding corners 0.33817
+wall time 319 s, workers 4
+
+real	5m20.736s
+user	17m47.344s
+sys	0m0.151s
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SAF0: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+diag SCR26: N=1000000, seeds 41000000+...; cost {'steps': 78, 'turns': 390, 'piece_turn_clicks': 312, 'card_clicks': '130 + sum of echo amounts (echo amount = suit of the held card, so 130 + m*k)', 'face_lookups': 390, 'pieces_found_per_step': 2, 'regrips': 0, 'solves': 3}
+  check: #coinciding corners == #fully fixed corners of Q in 1000000/1000000
+  fully fixed corners of Q: mean 0.33265 (ideal 0.33333, excess -0.00068 +- 0.00113); edges 0.50054 (ideal 0.50000, excess +0.00054 +- 0.00139)  [approx. null sd: sqrt(mean)]
+  last step's corner coincides:   0.01675 [0.01650,0.01700] (ideal 0.01667, excess +0.00008)
+  last step's edge coincides:     0.01668 [0.01643,0.01693] (ideal 0.01667, excess +0.00001)
+  second-to-last step's corner (if a different piece): 0.01456; edge: 0.01491 (ideal (1/60) x P(different piece); for card-named pieces of the bare NRk naming 0.01610 corners)
+  final registers equal: 0.08319 [0.08265,0.08373] (ideal 0.08333, excess -0.00015); given equal: last corner coincides 0.01706, mean coinciding corners 0.33519
+wall time 316 s, workers 4
+
+real	5m17.373s
+user	16m34.937s
+sys	0m0.810s

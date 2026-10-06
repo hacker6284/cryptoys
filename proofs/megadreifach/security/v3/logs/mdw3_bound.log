@@ -1,0 +1,20 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SAF0: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+|G| = 100669616553523347122516032313645505168688116411019768627200000000000 = 2^225.90
+Bare single pass, cards 51 and 52 swapped: steps 1..50 are identical, so W = T.P and W'' = T''.P with the same
+prefix P, and Q = W^-1 W'' = P^-1 (T^-1 T'') P is a conjugate of T^-1 T'', a word of at most 4s face turns (s = turns
+per step; 48 generators).  Element-level support (NOT a bound on conjugacy-invariant statistics, which see only the
+class; the D2 failure itself is measured by d2scan):
+  VAR A: s = 5: words of length <= 20: <= 2^111.7 elements, a fraction <= 2^-114.2 of G
+  VAR B: s = 6: words of length <= 24: <= 2^134.1 elements, a fraction <= 2^-91.8 of G
+  VAR C: s = 5: words of length <= 20: <= 2^111.7 elements, a fraction <= 2^-114.2 of G
+  VAR D: s = 3: words of length <= 12: <= 2^67.0 elements, a fraction <= 2^-158.9 of G

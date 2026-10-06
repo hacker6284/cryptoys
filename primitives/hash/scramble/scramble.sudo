@@ -593,6 +593,38 @@ func check(version: int, message: List<int>, digest: List<int>, faces: text, nst
     assert quick.digest == digest
     assert quick.trace.length == 0
 
+func with_sticker(c: Cubie, axis: int, color: int) -> Cubie
+    if axis == 0
+        return Cubie(c.x, c.y, c.z, color, c.xn, c.yp, c.yn, c.zp, c.zn)
+    if axis == 1
+        return Cubie(c.x, c.y, c.z, c.xp, color, c.yp, c.yn, c.zp, c.zn)
+    if axis == 2
+        return Cubie(c.x, c.y, c.z, c.xp, c.xn, color, c.yn, c.zp, c.zn)
+    if axis == 3
+        return Cubie(c.x, c.y, c.z, c.xp, c.xn, c.yp, color, c.zp, c.zn)
+    if axis == 4
+        return Cubie(c.x, c.y, c.z, c.xp, c.xn, c.yp, c.yn, color, c.zn)
+    return Cubie(c.x, c.y, c.z, c.xp, c.xn, c.yp, c.yn, c.zp, color)
+
+// Face turn of a 54-letter facelet string (Singmaster name as move_name spells it). The demo calls this.
+// Sits after check so Scramble.lean only appends.
+export func apply_move(facelets: text, move: text) -> text
+    assert facelets.length == 54
+    cube = solved_cube()
+    for i = 0 to 53
+        k = cubie_at(cube, fx[i], fy[i], fz[i])
+        cube[k] = with_sticker(cube[k], fa[i], i + 1)
+    for face = 0 to 5
+        for turns = 1 to 3
+            if move_name(face, turns) == move
+                cube = apply_turns(cube, face, turns)
+                out = ""
+                for i = 0 to 53
+                    out.append(facelets[sticker_on(cube[cubie_at(cube, fx[i], fy[i], fz[i])], fa[i]) - 1])
+                return out
+    assert false
+    return ""
+
 test "solved facelets are the start pose"
     assert solved_facelets() == "WWWWWWWWWRRRRRRRRRGGGGGGGGGYYYYYYYYYOOOOOOOOOBBBBBBBBB"
 
@@ -703,3 +735,11 @@ test "a byte above 255 traps"
     s = scramble_v2()
     expect_trap AssertFailed
         update(s, [256])
+
+test "apply_move"
+    letters = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR"
+    assert apply_move(letters, "U") == "258147036ijkcdefghABClmnopqrstuvwxyzJKLDEFGHI9abMNOPQR"
+    got = apply_move("WWWWWWWWWRRRRRRRRRGGGGGGGGGYYYYYYYYYOOOOOOOOOBBBBBBBBB", "R")
+    assert apply_move(got, "U") == "GGGWWWWWWGGYRRRRRROOOGGYGGYYYBYYBYYBWBBOOOOOORRRWBBWBB"
+    expect_trap AssertFailed
+        apply_move(letters, "X")

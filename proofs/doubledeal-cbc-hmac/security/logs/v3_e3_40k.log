@@ -1,0 +1,9 @@
+# command: e3 40000 3000000
+build: HashDeckBody(new-deck order) = 0286e85ac12530b60a3c706a8f339cd238203e1eb2bf4f2b877341cf60; block = build dm_step; HashDecksBody present
+selfcheck: compose(h, inverse(h)) == identity (legality of h: by uniformH's construction, not checked) and block == build HashDeckBodyFrom: 8/8
+e3 N=40000 SEED0=3000000: 80 chunks of <= 500, chunk c uses seed SEED0 + c
+E3: t = f*(IV-COOK12, [K, D, L, K turned over]), t' with D's cards 51 and 52 swapped; z = t^-1 t'
+  fixE: n=40000 P(fixE>=2) = 0.2626 [0.2583,0.2670] ideal 0.264241 adv -0.0016 (95% half-width 0.0043); mean 0.9964 +- 0.0098 (ideal 1)
+  fixC: n=40000 P(fixC>=2) = 0.2609 [0.2566,0.2652] ideal 0.264241 adv -0.0033 (95% half-width 0.0043); mean 0.9867 +- 0.0098 (ideal 1)
+  equal outputs (collisions): 0/40000; self-check vs build HashDeckBodyFrom: 80 chunks; vs build HashDecksBody: 80 chunks
+# time e3: 1298.3 s, 4 workers

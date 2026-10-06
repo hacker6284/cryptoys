@@ -1,6 +1,7 @@
 /-
-  The stem as a position map, and the support gap of its relabelling differences (research
-  item (b), first slice; security README, "Roadmap", M7 "Open"). Structure only.
+  The stem as a position map, and the support gap of its relabelling differences (first slice
+  towards the off-diagonal stem column bound; security README, "Roadmap", the M7
+  row). Structure only.
 
   NO BOUND ON `dpFCount` (OR ANY OTHER DIFFERENTIAL COUNT) IS PROVED HERE. Every statement is
   exact and deck-by-deck; nothing is counted over decks or keys.
@@ -30,7 +31,7 @@
     `q = stemPerm x * (stemPerm (β·x))⁻¹`, the ratio of the two decks' position maps.
     The hypothesis is exactly the filter predicate of `FullCipher.dpFCount β γ`
     (`Differential.dpCount unkeyedNoMix β γ`) at the deck `permDeck π`, the count in the
-    hypothesis `hoff` of `FullCipher.fullDiffCount_le_64_of_offDiag`, and it is the one-deck
+    off-diagonal stem bound (`StemUnion.dpFCount_le_of_ne`), and it is the one-deck
     form of "the stem is exactly covariant from `β` to `γ`". In prose (not a separate
     theorem): since `stemPos m = cmFlat ∘ S_m ∘ inSeat` with `S_m` the seat map of `m`, the
     fixed layer `inSeat` cancels in the ratio, and `q = cmFlat ∘ (S_x ∘ S_(β·x)⁻¹) ∘ cmFlat⁻¹`:
@@ -41,19 +42,20 @@
     row-shifted copy of rows × columns, of the same size, not literally that product).
   * `card_fixed_eq`: under the same hypothesis, `γ⁻¹ * β` fixes exactly
     `zRows x (β·x) * zCols x (β·x)` cards; `card_moved_eq`: it moves `52 - zRows · zCols`.
-  * `card_moved_zero_or_ge_four`: so it moves `0` cards or at least `4`. Never moving
-    exactly 1 card holds for every permutation; the content is "never exactly 2 or 3"
-    (`zRows ≤ 4`, `zCols ≤ 13`, and no product of such numbers is 49 or 50). This is only a
-    slice of `card_moved_eq`: the values `52 - a·b` with `a ≤ 4`, `b ≤ 13` also exclude the
-    moved counts 5, 6, 7, 9, 10, 11, 14, 15, 17, 18, 21, 23, 27, 29, 33 and 35, which is
-    not stated here.
+  * `card_moved_cases`: so it moves `0` cards, exactly `4` cards with
+    `(zRows, zCols) = (4, 12)`, or at least `8` cards (`zRows ≤ 4`, `zCols ≤ 13`, and the only
+    such product in `45..51` is `48 = 4 · 12`). `card_moved_zero_or_ge_four` (`0` or at
+    least `4`) is its corollary; never moving exactly 1 card holds for every permutation, so
+    its content is "never exactly 2 or 3". The values `52 - a·b` also exclude the moved
+    counts 9, 10, 11, 14, 15, 17, 18, 21, 23, 27, 29, 33 and 35, which is not stated here.
 
   NOT proved, and limits:
   * No count of decks: nothing here bounds `dpFCount β γ` or any differential probability.
-    This proves no part of `hoff`. It would give `dpFCount β γ = 0` only when the support
+    This proves no part of the off-diagonal stem bound. It would give `dpFCount β γ = 0` only when the support
     size of `γ⁻¹ * β` is not of the form `52 - a·b` (`a ≤ 4`, `b ≤ 13`), e.g. 2 or 3 (a
-    transposition or a 3-cycle); that corollary is not stated or proved here, and nothing
-    here says anything for any other `β`.
+    transposition or a 3-cycle). For supports 1–3 and 5–7 that corollary is
+    `StemSupportFour.dpFCount_eq_zero_of_support_lt_eight_ne_four`; for the other excluded
+    values it is not stated. Nothing here says anything for any other `β`.
   * Which pairs `(zRows, zCols)` actually occur for a given `β` is not studied; the amounts
     of `x` and `β·x` are not related to `β` here.
   * About the stem (the final no-mix round) only, not GridCycle or a mix round.
@@ -64,6 +66,7 @@ import Mathlib.Data.Fintype.BigOperators
 import Mathlib.Tactic.IntervalCases
 import Mathlib.Algebra.Group.Fin.Basic
 import Mathlib.Algebra.BigOperators.Ring
+import Mathlib.GroupTheory.Perm.Support
 import DoubleDealSecurity.SumRanksV10Iff
 
 namespace DoubleDeal.Security.StemPosition
@@ -177,6 +180,29 @@ theorem unkeyedNoMix_eq_comp (m : Fin 52 → Nat) :
     colRotate_rowRotate_apply, layColumnMajor]
   rfl
 
+/-- The row of column 0 that the last column step brings to the top (seat 0). -/
+def c0Row (m : Fin 52 → Nat) : Fin 4 := srcRow (colAmts m) 0 0
+
+/-- The seat `(ρ, t ρ % 13)` of row `ρ`. -/
+def rowSeat (t : Fin 4 → Nat) (ρ : Fin 4) : Fin 52 :=
+  cmFlat ρ ⟨t ρ % 13, Nat.mod_lt _ (by decide)⟩
+
+/-- (PROVED) `unkeyedNoMix_eq_comp` at output position 0: stem cell 0 of any packet `m` is
+    `m` at the seat `(ρ, rowAmts m ρ % 13)` of the row `ρ = c0Row m` (column 0 is turned
+    only by the last column step; ShiftRows does not move row 0). -/
+theorem stemPos_zero (m : Fin 52 → Nat) :
+    unkeyedNoMix m 0 = m (rowSeat (rowAmts m) (c0Row m)) := by
+  rw [unkeyedNoMix_eq_comp]
+  show m (cmFlat (seatMap (rowAmts m) (colAmts m) (inSeat 0)).1
+    (seatMap (rowAmts m) (colAmts m) (inSeat 0)).2) = _
+  have h0 : inSeat 0 = (0, 0) := rfl
+  rw [h0]
+  unfold rowSeat c0Row seatMap
+  congr 2
+  apply Fin.ext
+  simp only [Fin.val_zero, Nat.zero_add]
+  exact Nat.mod_eq_of_lt (Nat.mod_lt _ (by decide))
+
 theorem inSeat_injective : Function.Injective inSeat := by
   intro k1 k2 h
   simp only [inSeat, Prod.mk.injEq, Fin.ext_iff, cmRow, cmCol] at h
@@ -206,13 +232,25 @@ theorem stemPosOf_eq_iff (t t' : Fin 4 → Nat) (s s' : Fin 13 → Nat) (k : Fin
     stemPosOf t s k = stemPosOf t' s' k ↔ seatMap t s (inSeat k) = seatMap t' s' (inSeat k) :=
   ⟨fun h => cmFlat_inj2 h, fun h => by unfold stemPosOf; rw [h]⟩
 
-/-- (PROVED) The stem's position map is injective, for every packet. -/
-theorem stemPos_injective (m : Fin 52 → Nat) : Function.Injective (stemPos m) :=
+/-- (PROVED) The position map for row amounts `t` and column amounts `s` is injective. -/
+theorem stemPosOf_injective (t : Fin 4 → Nat) (s : Fin 13 → Nat) :
+    Function.Injective (stemPosOf t s) :=
   fun _ _ h => inSeat_injective (seatMap_injective _ _ (cmFlat_inj2 h))
 
-/-- `stemPos m` as a permutation of the positions. -/
+/-- `stemPosOf t s` as a permutation of the positions. -/
+noncomputable def seatPerm (t : Fin 4 → Nat) (s : Fin 13 → Nat) : Equiv.Perm (Fin 52) :=
+  Equiv.ofBijective (stemPosOf t s) (Finite.injective_iff_bijective.mp (stemPosOf_injective t s))
+
+theorem seatPerm_apply (t : Fin 4 → Nat) (s : Fin 13 → Nat) (k : Fin 52) :
+    seatPerm t s k = stemPosOf t s k := rfl
+
+/-- (PROVED) The stem's position map is injective, for every packet. -/
+theorem stemPos_injective (m : Fin 52 → Nat) : Function.Injective (stemPos m) :=
+  stemPosOf_injective _ _
+
+/-- `stemPos m` as a permutation of the positions: the seat permutation of `m`'s amounts. -/
 noncomputable def stemPerm (m : Fin 52 → Nat) : Equiv.Perm (Fin 52) :=
-  Equiv.ofBijective (stemPos m) (Finite.injective_iff_bijective.mp (stemPos_injective m))
+  seatPerm (rowAmts m) (colAmts m)
 
 theorem stemPerm_apply (m : Fin 52 → Nat) (k : Fin 52) : stemPerm m k = stemPos m k := rfl
 
@@ -322,26 +360,42 @@ theorem zCols_le (m m' : Fin 52 → Nat) : zCols m m' ≤ 13 :=
     `52 - zRows x (β·x) * zCols x (β·x)` cards (`x = permDeck π`). -/
 theorem card_moved_eq {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))) :
-    (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card =
+    (γ⁻¹ * β).support.card =
       52 - zRows (permDeck π) (rel β (permDeck π)) * zCols (permDeck π) (rel β (permDeck π)) := by
   have e := filter_card_add_filter_neg_card_eq_card (s := (univ : Finset (Fin 52)))
     (fun a : Fin 52 => (γ⁻¹ * β) a = a)
   rw [card_fixed_eq h, card_univ, Fintype.card_fin] at e
+  show (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = _
   simp only [ne_eq]
   omega
 
 /-- (PROVED) The support gap: under the hypothesis of `conj_of_stem_rel`, `γ⁻¹ * β` moves no
-    card or at least 4 cards. (Never exactly 1 holds for every permutation; the content is
-    never exactly 2 or 3. `card_moved_eq` excludes more values; not stated here.) -/
-theorem card_moved_zero_or_ge_four {β γ π : Equiv.Perm (Fin 52)}
+    card, exactly 4 cards with `(zRows, zCols) = (4, 12)`, or at least 8 cards. (`card_moved_eq`
+    excludes more values, e.g. 9–11; not stated here.) -/
+theorem card_moved_cases {β γ π : Equiv.Perm (Fin 52)}
     (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))) :
-    (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card = 0 ∨
-      4 ≤ (univ.filter fun a : Fin 52 => (γ⁻¹ * β) a ≠ a).card := by
-  rw [card_moved_eq h]
+    (γ⁻¹ * β).support.card = 0 ∨
+      ((γ⁻¹ * β).support.card = 4 ∧ zRows (permDeck π) (rel β (permDeck π)) = 4 ∧
+        zCols (permDeck π) (rel β (permDeck π)) = 12) ∨
+      8 ≤ (γ⁻¹ * β).support.card := by
+  have e : (γ⁻¹ * β).support.card =
+      52 - zRows (permDeck π) (rel β (permDeck π)) * zCols (permDeck π) (rel β (permDeck π)) :=
+    card_moved_eq h
+  rw [e]
   have h1 := zRows_le (permDeck π) (rel β (permDeck π))
   have h2 := zCols_le (permDeck π) (rel β (permDeck π))
   generalize zRows (permDeck π) (rel β (permDeck π)) = a at h1 ⊢
   generalize zCols (permDeck π) (rel β (permDeck π)) = b at h2 ⊢
   interval_cases a <;> omega
+
+/-- (PROVED) Corollary of `card_moved_cases`: `γ⁻¹ * β` moves no card or at least 4 cards.
+    (Never exactly 1 holds for every permutation; the content is never exactly 2 or 3.) -/
+theorem card_moved_zero_or_ge_four {β γ π : Equiv.Perm (Fin 52)}
+    (h : unkeyedNoMix (rel β (permDeck π)) = rel γ (unkeyedNoMix (permDeck π))) :
+    (γ⁻¹ * β).support.card = 0 ∨ 4 ≤ (γ⁻¹ * β).support.card := by
+  rcases card_moved_cases h with e | ⟨e, -⟩ | e
+  · exact Or.inl e
+  · exact Or.inr e.ge
+  · exact Or.inr (le_trans (by decide) e)
 
 end DoubleDeal.Security.StemPosition

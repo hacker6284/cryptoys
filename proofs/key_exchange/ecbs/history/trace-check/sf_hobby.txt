@@ -1,0 +1,40 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+Hobby {
+ "inversion_wrong": 0,
+ "trace honest kP": {
+  "trials": 3000,
+  "in_subgroup": 3000,
+  "accepted": 3000,
+  "rejected": 0
+ },
+ "trace kP + GF(3) point": {
+  "trials": 3000,
+  "in_subgroup": 0,
+  "accepted": 0,
+  "rejected": 3000
+ },
+ "trace random curve point": {
+  "trials": 3000,
+  "in_subgroup": 622,
+  "accepted": 622,
+  "rejected": 2378
+ },
+ "trace pure order-5 point": {
+  "trials": 4,
+  "in_subgroup": 0,
+  "accepted": 0,
+  "rejected": 4
+ },
+ "trace secs": 275.4,
+ "certificate": {
+  "honest_accepted": 3000,
+  "of": 3000,
+  "adversary_images_in_subgroup": 3000,
+  "adversary_images_exceptional": 0,
+  "nonsubgroup_A_accepted": 0,
+  "gf3_C_accepted": 0,
+  "secs": 196.6
+ },
+ "lemma": "image of (tau-1) on E(GF(3^n)) lies in <P>: every adversary image in subgroup",
+ "secs_total": 478.5
+}

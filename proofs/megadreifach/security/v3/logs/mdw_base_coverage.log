@@ -1,0 +1,63 @@
+tables: Em.lean face turns, 60 rotations, neighbours, opposites and corner faces == ../tables.py (v1 sudo): yes
+fast engine C36 vs v2 KATs: 8/8 Hash digests, HashDeck vector, IV-COOK12 digest and |G|: OK
+slow reference (m9_search, Em.lean transliteration) vs v2 KATs: 8/8 Hash digests: OK
+fast engine C36 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A_vn vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine C76 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+Hash('') and Hash('abc') prefixes of rules A_vn, C36, A == the review engine md3.py (its out/md3_selfcheck.txt): yes
+mdfix_lib: Ct(36)==C36, Ct(76)==C76 (200 blocks), fast==slow ref for t in 36,76,0,12, inv_st==md.inverse, sweep tour covers 50 slots, 60 turn pairs (c1,c2) distinct: OK
+mdw_lib CF24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NP24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NPL24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NPr13: fast == slow literal transliteration on 12/12 random blocks
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+read->turn encodings: for every piece and ordered pair of its colours, the 60 piece states give 60 distinct two-turn words (NP) and the first turn alone takes all 12 faces, 5 states each (NPL): OK
+read coverage per block: distinct pieces of the puzzle read during E (seeds 30_000_000 + 1000*k + chunk)
+COV v2 card phase (52 reads) rand n=100000: distinct pieces read mean 32.298 of 50 (min 23, max 43); P(>=1 unread) 1.00000 [0.99996,1.00000]; mean unread corners 5.273, edges 12.430  [3s]
+     distribution of #distinct pieces read: 25:0.0008, 26:0.0033, 27:0.0099, 28:0.0269, 29:0.0589, 30:0.1031, 31:0.1523, 32:0.1800, 33:0.1729, 34:0.1368, 35:0.0855, 36:0.0437, 37:0.0189, 38:0.0054, 39:0.0012
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.275, c15 0.270, c7 0.267, c5 0.267 | e1 0.417, e10 0.416, e17 0.416, e2 0.416, e11 0.416, e22 0.416 | least-missed: c12 0.259, e13 0.412
+COV v2 card phase (52 reads) IV n=100000: distinct pieces read mean 32.307 of 50 (min 23, max 41); P(>=1 unread) 1.00000 [0.99996,1.00000]; mean unread corners 5.269, edges 12.424  [3s]
+     distribution of #distinct pieces read: 25:0.0009, 26:0.0033, 27:0.0100, 28:0.0262, 29:0.0581, 30:0.1040, 31:0.1527, 32:0.1780, 33:0.1719, 34:0.1371, 35:0.0876, 36:0.0440, 37:0.0181, 38:0.0060, 39:0.0013
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.271, c11 0.268, c5 0.268, c9 0.268 | e24 0.418, e3 0.417, e8 0.417, e11 0.416, e1 0.416, e21 0.416 | least-missed: c1 0.260, e12 0.410
+COV C36 = v2 (88 reads) rand n=100000: distinct pieces read mean 41.167 of 50 (min 32, max 50); P(>=1 unread) 0.99999 [0.99994,1.00000]; mean unread corners 2.095, edges 6.738  [4s]
+     distribution of #distinct pieces read: 34:0.0008, 35:0.0032, 36:0.0103, 37:0.0274, 38:0.0600, 39:0.1075, 40:0.1592, 41:0.1860, 42:0.1796, 43:0.1368, 44:0.0791, 45:0.0346, 46:0.0116, 47:0.0029, 48:0.0006
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c7 0.108, c15 0.108, c9 0.107, c0 0.106 | e14 0.226, e1 0.226, e24 0.226, e22 0.226, e12 0.226, e3 0.226 | least-missed: c19 0.103, e9 0.222
+COV C36 = v2 (88 reads) IV n=100000: distinct pieces read mean 41.168 of 50 (min 33, max 49); P(>=1 unread) 1.00000 [0.99996,1.00000]; mean unread corners 2.086, edges 6.746  [3s]
+     distribution of #distinct pieces read: 34:0.0008, 35:0.0033, 36:0.0100, 37:0.0280, 38:0.0606, 39:0.1074, 40:0.1589, 41:0.1857, 42:0.1784, 43:0.1367, 44:0.0793, 45:0.0357, 46:0.0118, 47:0.0027, 48:0.0006
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c7 0.108, c0 0.108, c9 0.107, c5 0.105 | e26 0.229, e17 0.227, e1 0.227, e5 0.226, e14 0.226, e0 0.226 | least-missed: c18 0.102, e2 0.222
+COV CF cards (52 reads) rand n=100000: distinct pieces read mean 32.479 of 50 (min 23, max 41); P(>=1 unread) 1.00000 [0.99996,1.00000]; mean unread corners 5.232, edges 12.290  [4s]
+     distribution of #distinct pieces read: 25:0.0006, 26:0.0021, 27:0.0079, 28:0.0218, 29:0.0509, 30:0.0955, 31:0.1453, 32:0.1787, 33:0.1761, 34:0.1460, 35:0.0960, 36:0.0493, 37:0.0209, 38:0.0063, 39:0.0020
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.272, c6 0.269, c8 0.267, c7 0.264 | e0 0.423, e6 0.421, e7 0.418, e9 0.415, e8 0.415, e1 0.414 | least-missed: c2 0.257, e27 0.400
+COV CF cards (52 reads) IV n=100000: distinct pieces read mean 32.474 of 50 (min 24, max 41); P(>=1 unread) 1.00000 [0.99996,1.00000]; mean unread corners 5.222, edges 12.304  [3s]
+     distribution of #distinct pieces read: 25:0.0006, 26:0.0024, 27:0.0076, 28:0.0224, 29:0.0513, 30:0.0948, 31:0.1429, 32:0.1797, 33:0.1798, 34:0.1464, 35:0.0938, 36:0.0483, 37:0.0211, 38:0.0068, 39:0.0016
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.272, c8 0.269, c6 0.268, c5 0.266 | e0 0.428, e6 0.422, e7 0.418, e10 0.416, e22 0.415, e8 0.415 | least-missed: c13 0.254, e25 0.403
+COV CF24 (76 reads) rand n=100000: distinct pieces read mean 37.271 of 50 (min 26, max 46); P(>=1 unread) 1.00000 [0.99996,1.00000]; mean unread corners 3.239, edges 9.490  [5s]
+     distribution of #distinct pieces read: 29:0.0006, 30:0.0020, 31:0.0054, 32:0.0134, 33:0.0314, 34:0.0609, 35:0.1032, 36:0.1451, 37:0.1708, 38:0.1662, 39:0.1353, 40:0.0882, 41:0.0480, 42:0.0200, 43:0.0071, 44:0.0017
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.167, c5 0.167, c6 0.165, c15 0.165 | e0 0.326, e7 0.324, e6 0.323, e8 0.322, e16 0.320, e21 0.320 | least-missed: c11 0.158, e28 0.310
+COV CF24 (76 reads) IV n=100000: distinct pieces read mean 37.270 of 50 (min 26, max 46); P(>=1 unread) 1.00000 [0.99996,1.00000]; mean unread corners 3.239, edges 9.491  [5s]
+     distribution of #distinct pieces read: 29:0.0007, 30:0.0016, 31:0.0055, 32:0.0141, 33:0.0300, 34:0.0619, 35:0.1040, 36:0.1455, 37:0.1688, 38:0.1688, 39:0.1333, 40:0.0883, 41:0.0477, 42:0.0207, 43:0.0068, 44:0.0017
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.169, c6 0.168, c12 0.166, c10 0.166 | e0 0.328, e7 0.324, e6 0.324, e10 0.322, e9 0.321, e5 0.320 | least-missed: c2 0.158, e28 0.311
+COV CF48 (100 reads) rand n=100000: distinct pieces read mean 40.094 of 50 (min 26, max 49); P(>=1 unread) 1.00000 [0.99996,1.00000]; mean unread corners 2.161, edges 7.745  [7s]
+     distribution of #distinct pieces read: 30:0.0008, 31:0.0020, 32:0.0034, 33:0.0065, 34:0.0107, 35:0.0192, 36:0.0340, 37:0.0601, 38:0.0999, 39:0.1384, 40:0.1661, 41:0.1652, 42:0.1353, 43:0.0877, 44:0.0453, 45:0.0184, 46:0.0051, 47:0.0013
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.112, c5 0.111, c15 0.110, c14 0.110 | e7 0.265, e6 0.264, e13 0.263, e0 0.262, e10 0.262, e12 0.262 | least-missed: c3 0.106, e28 0.253
+COV CF48 (100 reads) IV n=100000: distinct pieces read mean 40.092 of 50 (min 26, max 49); P(>=1 unread) 1.00000 [0.99996,1.00000]; mean unread corners 2.160, edges 7.748  [6s]
+     distribution of #distinct pieces read: 30:0.0008, 31:0.0018, 32:0.0035, 33:0.0063, 34:0.0104, 35:0.0190, 36:0.0345, 37:0.0610, 38:0.0978, 39:0.1396, 40:0.1674, 41:0.1658, 42:0.1344, 43:0.0879, 44:0.0451, 45:0.0174, 46:0.0054, 47:0.0011
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c6 0.112, c10 0.111, c8 0.111, c15 0.110 | e0 0.269, e7 0.265, e6 0.264, e10 0.264, e5 0.263, e9 0.262 | least-missed: c17 0.105, e29 0.252
+COV NP cards (104 reads) rand n=100000: distinct pieces read mean 50.000 of 50 (min 50, max 50); P(>=1 unread) 0.00000 [0.00000,0.00003]; mean unread corners 0.000, edges 0.000  [9s]
+     distribution of #distinct pieces read: 50:1.0000
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.000, c1 0.000, c2 0.000, c3 0.000 | e0 0.000, e1 0.000, e2 0.000, e3 0.000, e4 0.000, e5 0.000 | least-missed: c19 0.000, e29 0.000
+COV NP cards (104 reads) IV n=100000: distinct pieces read mean 50.000 of 50 (min 50, max 50); P(>=1 unread) 0.00000 [0.00000,0.00003]; mean unread corners 0.000, edges 0.000  [8s]
+     distribution of #distinct pieces read: 50:1.0000
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.000, c1 0.000, c2 0.000, c3 0.000 | e0 0.000, e1 0.000, e2 0.000, e3 0.000, e4 0.000, e5 0.000 | least-missed: c19 0.000, e29 0.000
+COV NPL cards (104 reads) rand n=100000: distinct pieces read mean 50.000 of 50 (min 50, max 50); P(>=1 unread) 0.00000 [0.00000,0.00003]; mean unread corners 0.000, edges 0.000  [6s]
+     distribution of #distinct pieces read: 50:1.0000
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.000, c1 0.000, c2 0.000, c3 0.000 | e0 0.000, e1 0.000, e2 0.000, e3 0.000, e4 0.000, e5 0.000 | least-missed: c19 0.000, e29 0.000
+COV NPL cards (104 reads) IV n=100000: distinct pieces read mean 50.000 of 50 (min 50, max 50); P(>=1 unread) 0.00000 [0.00000,0.00003]; mean unread corners 0.000, edges 0.000  [5s]
+     distribution of #distinct pieces read: 50:1.0000
+     most-missed input slots (corner c<slot>, edge e<slot> = SPEC 5.6 numbering; miss rate): c0 0.000, c1 0.000, c2 0.000, c3 0.000 | e0 0.000, e1 0.000, e2 0.000, e3 0.000, e4 0.000, e5 0.000 | least-missed: c19 0.000, e29 0.000
+wall time 72 s, workers 4
+
+real	1m12.143s
+user	3m59.425s
+sys	0m0.065s

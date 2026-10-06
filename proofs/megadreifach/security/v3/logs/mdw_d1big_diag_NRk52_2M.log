@@ -1,0 +1,26 @@
+tables: Em.lean face turns, 60 rotations, neighbours, opposites and corner faces == ../tables.py (v1 sudo): yes
+fast engine C36 vs v2 KATs: 8/8 Hash digests, HashDeck vector, IV-COOK12 digest and |G|: OK
+slow reference (m9_search, Em.lean transliteration) vs v2 KATs: 8/8 Hash digests: OK
+fast engine C36 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A_vn vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine C76 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+Hash('') and Hash('abc') prefixes of rules A_vn, C36, A == the review engine md3.py (its out/md3_selfcheck.txt): yes
+mdfix_lib: Ct(36)==C36, Ct(76)==C76 (200 blocks), fast==slow ref for t in 36,76,0,12, inv_st==md.inverse, sweep tour covers 50 slots, 60 turn pairs (c1,c2) distinct: OK
+mdw_lib NRk52: fast == slow literal transliteration on 12/12 random blocks
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+read->turn encodings: for every piece and ordered pair of its colours, the 60 piece states give 60 distinct two-turn words (NP) and the first turn alone takes all 12 faces, 5 states each (NPL): OK
+diag NRk52: D1 left, N=2000000, 20 chunks of 100000, chunk c seed 38952000+c; coincide = same (slot, orientation) in X = E(h) and X'' = E(gh); ideal 1/60 corners, 1/60 edges
+  check: #coinciding corners == #fully fixed corners of Q in 2000000/2000000 samples
+  mean fully fixed corners of Q 0.33533 (ideal 0.33333, excess +0.00200); edges 0.50021 (ideal 0.50000, excess +0.00021)
+  last card's corner coincides: 0.01689 [0.01671,0.01707] (ideal 0.01667, excess +0.00022)
+  last card's edge coincides:   0.01666 [0.01648,0.01684] (ideal 0.01667, excess -0.00001)
+  second-to-last card's corner (if different) coincides: 0.01747 (ideal about 0.01667 x P(different))
+  other 19 corners, mean per corner: 0.016760 (ideal 0.016667, excess +0.000093; excess x 19 = +0.00177)
+  final registers equal (last face R = R''): 0.08341 [0.08303,0.08380] (ideal 0.08333, excess +0.00008)
+  given R = R'': last corner coincides 0.20247 [0.20055,0.20440] (ideal 0.20000, excess +0.00247); other corners per corner 0.016831; mean coinciding corners 0.52227 | given R != R'': mean coinciding corners 0.31832
+wall time 706 s, workers 4
+
+real	11m46.908s
+user	39m18.966s
+sys	0m0.135s

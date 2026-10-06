@@ -587,4 +587,8 @@ theorem compose_refines_array (g h : Megadreifach.Position) (hg : PosWf g) (hh :
   have hr := compose_refines (decodePos g hg) (decodePos h hh)
   simpa [embedPos_decode g hg, embedPos_decode h hh] using hr
 
+/-- The emitted `identity` is the embedded identity position (shared by v2's EmIv and v3). -/
+theorem identity_refines : Megadreifach.identity = .ok (embedPos MegaDreifach.identity) := by
+  rfl
+
 end MegaDreifach.Link2

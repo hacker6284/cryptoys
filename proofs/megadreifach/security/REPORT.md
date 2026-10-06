@@ -1,6 +1,6 @@
 # MegaDreifach hash: security review (reductions, proofs and cryptanalysis)
 
-> **Status update.** Everything in this report is about **MegaDreifach v1**, which is now **deprecated** and frozen at `primitives/hash/megadreifach/v1/` (SPEC + `megadreifach.sudo`). "As published" and "current" below mean v1 as it was when this report was written. The current version is v2 (`primitives/hash/megadreifach/SPEC.md`), which this report does not analyse; the v2 measurements are in [`v2/`](v2/README.md). `md.py` and `tables.py` model v1; `md.py` reads the v1 KAT file `kats/megaminx_hash_kats_v1.json` (renamed from `kats/megaminx_hash_kats.json`, contents unchanged). Card names use CHaSeD suit order (id % 4: 0 ♣, 1 ♥, 2 ♠, 3 ♦). The file count in §1 ("Files are in `proofs/megadreifach/lean/MegaDreifach/Security/`: 9 modules") and its audit count ("2,371 theorems audited") are v1-era snapshots.
+> **Status update.** Everything in this report is about **MegaDreifach v1**, which is now **deprecated** and frozen at `primitives/hash/megadreifach/v1/` (SPEC + `megadreifach.sudo`). "As published" and "current" below mean v1 as it was when this report was written. v2 (`primitives/hash/megadreifach/SPEC.md`), which this report does not analyse, superseded v1 and is now deprecated itself; the current version is v3 (`primitives/hash/megadreifach/v3/SPEC.md`, evidence in [`v3/`](v3/README.md)); the v2 measurements are in [`v2/`](v2/README.md). `md.py` and `tables.py` model v1; `md.py` reads the v1 KAT file `kats/megaminx_hash_kats_v1.json` (renamed from `kats/megaminx_hash_kats.json`, contents unchanged). Card names use CHaSeD suit order (id % 4: 0 ♣, 1 ♥, 2 ♠, 3 ♦). The file count in §1 ("Files are in `proofs/megadreifach/lean/MegaDreifach/Security/`: 9 modules") and its audit count ("2,371 theorems audited") are v1-era snapshots.
 
 Subject: MegaDreifach v1 (`primitives/hash/megadreifach/v1/`, deprecated). Its block map E_m uses the **v1 Recipe A grip rule**, called "v1 of the grip rule" (or just "v1") below. Recipe A re-grips by reading one corner cubie, after the card's held-face, noon and Front turns. ("v1" here names the grip rule only; it is unrelated to the v1 SPEC's "Public v1 Body" API name.)
 Lean: the v1 results below are in the frozen package `proofs/deprecated/megadreifach-v1/lean` (Lean v4.14.0, namespace `MegaDreifachV1`, files in `MegaDreifachV1/Security/`); the rule-independent files of §1.5 were ported to v2 in the main package `proofs/megadreifach/lean`; the scripts are in this directory (`proofs/megadreifach/security/`), with their recorded outputs in `logs/` (§7).
@@ -113,10 +113,13 @@ The invariant `WordInv` carries `Word W` (the shared word is a product of face m
 The proof is cheap. It evaluates only the two 7-card prefixes with plain `decide` (a few seconds), not whole blocks. `phiUnrank`, the padding and the block split are small `decide`s, and the rest is `List.foldl_append`. So it lives in the default library and does not need `MegaDreifachHeavy`. The digest value itself is not evaluated in Lean; the script prints it.
 
 ### 1.4 Ideal-model combinatorics (`IdealCount.lean`)
+
+`injective_surjective_fin` and `compose_left_cancel` are defined in `Link2/InjPos.lean`; used here. The counting lemmas below stay in `IdealCount.lean`.
+
 | theorem | content |
 |---|---|
-| `injective_surjective_fin` | Pigeonhole: an injective map on `Fin n` is surjective |
-| `compose_left_cancel` | Left cancellation in the position group (right cancellation is `Group.leftMul_cancel`) |
+| `injective_surjective_fin` | Pigeonhole: an injective map on `Fin n` is surjective. defined in `Link2/InjPos.lean`; used here |
+| `compose_left_cancel` | Left cancellation in the position group (right cancellation is `Group.leftMul_cancel`). defined in `Link2/InjPos.lean`; used here |
 | `dm_forward_bad_count` | For fixed `h`, at most \|Z\| cipher outputs `y` make `h∘y` land in a target set `Z` |
 | `dm_inverse_bad_count` | For fixed `y`, at most \|Z\| keys `h` do |
 | `reachable_rank_lt_group` | Every reachable digest rank is < \|G\|. (That the leading digest byte is therefore ≤ 0x03 is derived on paper: \|G\| < 4·2^224.) |

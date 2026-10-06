@@ -12,8 +12,15 @@
                                           # `lake build MegaDreifachHeavy`)
     python3 proofs/doubledeal/check_axioms.py megadreifach-v1-deprecated  # frozen v1 package
                                           # (proofs/deprecated/megadreifach-v1/lean)
-    python3 proofs/doubledeal/check_axioms.py cbc-hmac  # proofs/doubledeal-cbc-hmac/lean
-                                          # (DoubleDeal-CBC-HMAC Link 2)
+    python3 proofs/doubledeal/check_axioms.py cbc-hmac-v1-deprecated  # frozen v1 package
+                                          # (proofs/deprecated/doubledeal-cbc-hmac-v1/lean,
+                                          # DoubleDeal-CBC-HMAC v1 Link 2)
+    python3 proofs/doubledeal/check_axioms.py megadreifach-v3  # MegaDreifach v3 package
+                                          # (proofs/megadreifach-v3/lean)
+    python3 proofs/doubledeal/check_axioms.py scramble  # proofs/scramble/lean
+                                          # (Scramble Link 2: v2 and v1 digest paths)
+    python3 proofs/doubledeal/check_axioms.py bs  # proofs/key_exchange/bs/lean
+                                          # (BS Link 2: arithmetic, walk, check, exchange)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -28,10 +35,10 @@ axiom) fails, as does a Lean error.
   (the kernel-checked single-deck K♣↔K♦ witness on the emitted frozen v10 mix_columns).
 - security: security/Axioms.lean audits EVERY theorem declared in a
   `DoubleDealSecurity.*` module, private ones included (`#audit_all`), and the
-  parsed report count must equal the `audited N` line Lean prints. Exception, by exact name: the
-  theorems in KNOWN_SORRY may also use `sorryAx`. A KNOWN_SORRY entry that is
-  not reported, or no longer uses sorryAx, fails (stale allowlist); so does any
-  `axiom` declared in the package, used or not.
+  parsed report count must equal the `audited N` line Lean prints. KNOWN_SORRY (names
+  that may also use `sorryAx`) is EMPTY for this package, so no theorem may use
+  `sorryAx`. A KNOWN_SORRY entry that is not reported, or no longer uses sorryAx, fails
+  (stale allowlist); so does any `axiom` declared in the package, used or not.
 - security-heavy: security/AxiomsHeavy.lean audits every theorem declared in a
   `DoubleDealSecurityHeavy.*` module (the heavy kernel witnesses, not a default
   build target), with the same rules and no KNOWN_SORRY. Every theorem declared in
@@ -51,11 +58,29 @@ axiom) fails, as does a Lean error.
 - megadreifach-v1-deprecated: like megadreifach (mode "all", key "full") for the
   frozen v1 package proofs/deprecated/megadreifach-v1/lean (root `MegaDreifachV1`);
   required: the theorems its README cites (MD_V1_README_THEOREMS).
-- cbc-hmac: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
-  proofs/doubledeal-cbc-hmac/lean (root `DoubleDealCbcHmac`, the Link 2 package);
-  required: the Link 2 theorem of every exported sudo function (CBC_HMAC_LINK2).
+- megadreifach-v3: like megadreifach-v1-deprecated (mode "all", key "full", no KNOWN_SORRY)
+  for proofs/megadreifach-v3/lean (root `MegaDreifachV3`); required: the theorems its
+  README cites (MD_V3_README_THEOREMS); min is the audited count (306).
+  `--selftest` checks its "Emitted function" column against
+  primitives/hash/megadreifach/v3/megadreifach.sudo (LINK2_EXPORT_TABLES).
+- cbc-hmac-v1-deprecated: like megadreifach (mode "all", key "full", no KNOWN_SORRY) for
+  the frozen v1 package proofs/deprecated/doubledeal-cbc-hmac-v1/lean (root
+  `DoubleDealCbcHmac`, the v1 Link 2 package, superseded by DoubleDeal-CBC-Sandwich v2);
+  required: the Link 2 theorem of every exported function of the frozen
+  v1/doubledeal_cbc_hmac.sudo (CBC_HMAC_LINK2).
   `--selftest` also requires every `export func` of the package's sudo to appear in
   its README's "Emitted function" column, and only exports there (LINK2_EXPORT_TABLES).
+- scramble: like cbc-hmac-v1-deprecated (mode "all", key "full", no KNOWN_SORRY) for
+  proofs/scramble/lean (root `ScrambleV2`, the Scramble Link 2 package: v2 digest-only
+  and traced headlines, several updates, v1 digest-only; trace step fields, not letters);
+  required: the theorems proofs/scramble/README.md cites
+  (SCRAMBLE_LINK2). `--selftest` checks its "Emitted function" column against
+  primitives/hash/scramble/scramble.sudo too (LINK2_EXPORT_TABLES).
+- bs: like scramble (mode "all", key "full", no KNOWN_SORRY) for
+  proofs/key_exchange/bs/lean (root `BsLink2`, the BS Link 2 package); required: the
+  theorems proofs/key_exchange/bs/lean/README.md cites (BS_LINK2). `--selftest` checks
+  its "Emitted function" column against primitives/key_exchange/bs/bs.sudo
+  (LINK2_EXPORT_TABLES).
 
 `#audit_all` is the one command in the core-only package proofs/audit (required by
 path by both the security package and MegaDreifach); in mode "all" this script
@@ -136,71 +161,79 @@ HEAVY_THEOREMS = {
     "DoubleDeal.Security.FullCipher.realFullTrail_card_le_64",
     "DoubleDeal.Security.FullCipher.realFullStaysInV10_card_le_4420",
     # DoubleDealSecurityHeavy/CovariantNarrow.lean and the generated CovariantNarrowChecks.lean
-    # (check_e*, checks_all: cell0_witness.py --lean): the covariant round conjecture for
-    # every transposition, and the reduction to the remaining prime-order case
-    "DoubleDeal.Security.CovariantNarrow.goodPairsCheck_ok",
-    "DoubleDeal.Security.CovariantNarrow.check_e1",
-    "DoubleDeal.Security.CovariantNarrow.check_e2",
-    "DoubleDeal.Security.CovariantNarrow.check_e3",
-    "DoubleDeal.Security.CovariantNarrow.check_e4",
-    "DoubleDeal.Security.CovariantNarrow.check_e5",
-    "DoubleDeal.Security.CovariantNarrow.check_e6",
-    "DoubleDeal.Security.CovariantNarrow.check_e7",
-    "DoubleDeal.Security.CovariantNarrow.check_e8",
-    "DoubleDeal.Security.CovariantNarrow.check_e9",
-    "DoubleDeal.Security.CovariantNarrow.check_e10",
-    "DoubleDeal.Security.CovariantNarrow.check_e11",
-    "DoubleDeal.Security.CovariantNarrow.check_e12",
-    "DoubleDeal.Security.CovariantNarrow.check_e13",
-    "DoubleDeal.Security.CovariantNarrow.check_e14",
-    "DoubleDeal.Security.CovariantNarrow.check_e15",
-    "DoubleDeal.Security.CovariantNarrow.check_e16",
-    "DoubleDeal.Security.CovariantNarrow.check_e17",
-    "DoubleDeal.Security.CovariantNarrow.check_e18",
-    "DoubleDeal.Security.CovariantNarrow.check_e19",
-    "DoubleDeal.Security.CovariantNarrow.check_e20",
-    "DoubleDeal.Security.CovariantNarrow.check_e21",
-    "DoubleDeal.Security.CovariantNarrow.check_e22",
-    "DoubleDeal.Security.CovariantNarrow.check_e23",
-    "DoubleDeal.Security.CovariantNarrow.check_e24",
-    "DoubleDeal.Security.CovariantNarrow.check_e25",
-    "DoubleDeal.Security.CovariantNarrow.check_e26",
-    "DoubleDeal.Security.CovariantNarrow.check_e27",
-    "DoubleDeal.Security.CovariantNarrow.check_e28",
-    "DoubleDeal.Security.CovariantNarrow.check_e29",
-    "DoubleDeal.Security.CovariantNarrow.check_e30",
-    "DoubleDeal.Security.CovariantNarrow.check_e31",
-    "DoubleDeal.Security.CovariantNarrow.check_e32",
-    "DoubleDeal.Security.CovariantNarrow.check_e33",
-    "DoubleDeal.Security.CovariantNarrow.check_e34",
-    "DoubleDeal.Security.CovariantNarrow.check_e35",
-    "DoubleDeal.Security.CovariantNarrow.check_e36",
-    "DoubleDeal.Security.CovariantNarrow.check_e37",
-    "DoubleDeal.Security.CovariantNarrow.check_e38",
-    "DoubleDeal.Security.CovariantNarrow.check_e39",
-    "DoubleDeal.Security.CovariantNarrow.check_e40",
-    "DoubleDeal.Security.CovariantNarrow.check_e41",
-    "DoubleDeal.Security.CovariantNarrow.check_e42",
-    "DoubleDeal.Security.CovariantNarrow.check_e43",
-    "DoubleDeal.Security.CovariantNarrow.check_e44",
-    "DoubleDeal.Security.CovariantNarrow.check_e45",
-    "DoubleDeal.Security.CovariantNarrow.check_e46",
-    "DoubleDeal.Security.CovariantNarrow.check_e47",
-    "DoubleDeal.Security.CovariantNarrow.check_e48",
-    "DoubleDeal.Security.CovariantNarrow.check_e49",
-    "DoubleDeal.Security.CovariantNarrow.check_e50",
-    "DoubleDeal.Security.CovariantNarrow.check_e51",
+    # (pair_ok_*, cell0PairsCheck_ok, check_e*, checks_all: cell0_witness.py --lean): the
+    # covariant round statement for every transposition, and the reduction to the
+    # remaining prime-order case. The pair list is cell0Pairs (CovariantNarrowLists.lean).
+    *(f"DoubleDeal.Security.CovariantNarrow.pair_ok_{i}_{j}"
+      for i, j in ((1, 2), (1, 3), (1, 5), (1, 8), (1, 12), (1, 34))),
+    "DoubleDeal.Security.CovariantNarrow.cell0PairsCheck_ok",
+    *(f"DoubleDeal.Security.CovariantNarrow.check_e{e}" for e in range(1, 52)),
     "DoubleDeal.Security.CovariantNarrow.checks_all",
     "DoubleDeal.Security.CovariantNarrow.cov0Checks_ok",
     "DoubleDeal.Security.CovariantNarrow.roundBody_not_covariant_swap",
     "DoubleDeal.Security.CovariantNarrow.roundBody_not_commutes_swap",
     "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime_nonswap",
     "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff",
+    # DoubleDealSecurityHeavy/CovariantAffine.lean and the generated CovariantAffineChecks.lean
+    # (check_lin_k_g for the 71 (k, g) != (0, 0), lin_checks_all: aff_witness.py --lean): the
+    # covariant round statement for the 3692 affine relabellings outside v10Sym (the
+    # normalizer of v10Sym minus v10Sym; true by the holomorph count, not a Lean theorem)
+    *(f"DoubleDeal.Security.CovariantAffine.check_lin_{n // 6}_{n % 6}" for n in range(1, 72)),
+    "DoubleDeal.Security.CovariantAffine.lin_checks_all",
+    "DoubleDeal.Security.CovariantAffine.affChecks_ok",
+    "DoubleDeal.Security.CovariantAffine.not_cell0Cov_lin",
+    "DoubleDeal.Security.CovariantAffine.roundBody_not_covariant_affine",
+    "DoubleDeal.Security.CovariantAffine.roundBody_not_covariant_affine_right",
+    "DoubleDeal.Security.CovariantAffine.roundBody_covariant_affine_iff",
+    # DoubleDealSecurityHeavy/RankPartition.lean and the generated RankPartitionChecks.lean
+    # (fam_struct_D, fam_c0_D_k_i: rank_family.py --lean): a sigma with Cell0Cov sigma tau
+    # (in particular every covariant sigma) permutes the 13 rank classes; one step toward
+    # PrimeNonSwapCase, NOT the covariant round statement
+    *(f"DoubleDeal.Security.RankPartition.fam_struct_{d}" for d in range(3)),
+    *(f"DoubleDeal.Security.RankPartition.fam_c0_{n // 9}_{n // 3 % 3}_{n % 3}"
+      for n in range(27)),
+    "DoubleDeal.Security.RankPartition.fam_c0_all",
+    "DoubleDeal.Security.RankPartition.rankChecks_ok",
+    "DoubleDeal.Security.RankPartition.cell0Cov_rank",
+    "DoubleDeal.Security.RankPartition.cell0Cov_rank_iff",
+    "DoubleDeal.Security.RankPartition.covariant_rank",
+    "DoubleDeal.Security.RankPartition.cell0Subgroup_le_rankStab",
+    # DoubleDealSecurityHeavy/V10Sym.lean and the generated V10SymChecks.lean (aff_struct,
+    # aff_c0_k_i, tau_g0_i, tau_cand_l, lab_struct, lab_kill_e: v10sym_witness.py --lean):
+    # every sigma with Cell0Cov sigma tau is a v10Sym and tau = sigma, hence
+    # roundBody_covariant_iff_id (not stated in the default library) and the unconditional
+    # fullRound_commutes_iff_id and encrypt6_commutes_iff_id (from the default-library
+    # _of_covariant reductions)
+    "DoubleDeal.Security.RankAffine.aff_struct",
+    *(f"DoubleDeal.Security.RankAffine.aff_c0_{n // 3}_{n % 3}" for n in range(9)),
+    "DoubleDeal.Security.RankAffine.aff_c0_all",
+    "DoubleDeal.Security.RankAffine.affRankChecks_ok",
+    *(f"DoubleDeal.Security.TauEq.tau_g0_{i}" for i in range(2)),
+    *(f"DoubleDeal.Security.TauEq.tau_cand_{l}" for l in range(1, 13)),
+    "DoubleDeal.Security.TauEq.tau_cand_all",
+    "DoubleDeal.Security.TauEq.tauChecks_ok",
+    "DoubleDeal.Security.LabelStep.lab_struct",
+    *(f"DoubleDeal.Security.LabelStep.lab_kill_{e}" for e in range(1, 4)),
+    "DoubleDeal.Security.LabelStep.lab_kill_all",
+    "DoubleDeal.Security.LabelStep.labelChecks_ok",
+    "DoubleDeal.Security.RankAffine.cell0Cov_rk_affine",
+    "DoubleDeal.Security.TauEq.cell0Cov_tau",
+    "DoubleDeal.Security.LabelStep.v10SymChecks_ok",
+    "DoubleDeal.Security.LabelStep.cell0Cov_mem_v10Sym",
+    "DoubleDeal.Security.LabelStep.cell0Cov_iff",
+    "DoubleDeal.Security.roundBody_covariant_iff_id",
+    "DoubleDeal.Security.fullRound_commutes_iff_id",
+    "DoubleDeal.Security.encrypt6_commutes_iff_id",
+    "DoubleDeal.Security.CovariantNarrow.primeNonSwapCase",
 }
 # Lean-generated theorems of the heavy modules (no source declaration; see the comment
 # above HEAVY_THEOREMS). chunkOK.eq_1: `of_chunks` unfolds `chunkOK` with `simp only`.
 HEAVY_GENERATED = {
     "DoubleDeal.Security.GridCycleSurvival.chunkOK.eq_1",
+    # cell0PairsCheck_ok (generated CovariantNarrowChecks.lean) unfolds `pairsCheck` and
+    # `cell0Pairs` with `simp only`.
+    "DoubleDeal.Security.CovariantNarrow.pairsCheck.eq_1",
+    "DoubleDeal.Security.CovariantNarrow.cell0Pairs.eq_1",
 }
 # proofs/megadreifach/lean (MegaDreifach v2): the 8 v2 hash KATs in
 # MegaDreifachHeavy/Kat.lean. The names match the vectors of
@@ -264,6 +297,7 @@ MD_README_THEOREMS = {
     "MegaDreifach.Link2.chain_loop",
     "MegaDreifach.Link2.colour_on_refines",
     "MegaDreifach.Link2.colours_at_refines",
+    "MegaDreifach.Link2.compose_left_cancel",
     "MegaDreifach.Link2.compose_refines",
     "MegaDreifach.Link2.compose_refines_array",
     "MegaDreifach.Link2.corner_after_noon_refines",
@@ -285,6 +319,7 @@ MD_README_THEOREMS = {
     "MegaDreifach.Link2.g2_step_refines",
     "MegaDreifach.Link2.gripOk_f3Step",
     "MegaDreifach.Link2.gripOk_g2Step",
+    "MegaDreifach.Link2.injective_surjective_fin",
     "MegaDreifach.Link2.inverse_refines",
     "MegaDreifach.Link2.iv_cook12_refines",
     "MegaDreifach.Link2.lehmerUnrank_lehmerRank",
@@ -384,31 +419,233 @@ MD_V1_README_THEOREMS = {
     "MegaDreifachV1.Security.foldl_dmBlock_sameCorners",
 }
 
+# proofs/megadreifach-v3/lean (MegaDreifach v3, the ZP26 card phase): every theorem its
+# README cites by name; `--selftest` re-derives the list the same way as MD_README_THEOREMS.
+# Link 2 of all 12 v3 exports (MegaDreifachV3.Link2) and the layers under them.
+MD_V3_LEAN = ROOT.parent / "megadreifach-v3" / "lean"
+MD_V3_README = MD_V3_LEAN.parent / "README.md"
+MD_V3_README_THEOREMS = {f"MegaDreifachV3.Link2.{n}" for n in [
+    "compose_refines", "face_move_refines", "face_turn_refines", "inverse_refines",
+    "pad_message_refines", "pad_message_refines_array", "require_permutation_refines",
+    "require_permutation_refines_array", "position_to_bytes_refines_gen",
+    "position_to_bytes_refines", "phi_chunk_refines", "phi_chunk_refines_array",
+    "phi_inv_refines", "phi_inv_refines_array",
+    "triples_ok", "lowest_nbr_index_refines", "suit_nbrs_refines",
+    "edge_face_of_refines", "corner_face_of_refines", "edgeFaceOf_found",
+    "cornerFaceOf_found", "corner_cover", "card_edge_found", "card_corner_found",
+    "turn_run_refines", "count_find_refines", "count_relook_refines",
+    "count_register_looks_refines", "card_colour_refines", "card_step_refines",
+    "echo_colour_refines", "em_run_refines", "em_block_refines", "emBlock_inj",
+    "dm_step_refines", "dmStep_inj", "injPos_chainPre",
+    "iv_cook12_refines", "v_Hash_refines", "v_Hash_refines_array", "v_MegaDreifach_refines",
+    "v_HashDeck_refines", "v_HashDeck_refines_array", "v_HashDeck_two_blocks",
+    "v_MegaDreifachDeck_refines", "body_from_refines",
+    "v_HashDeckBody_refines", "v_MegaDreifachBody_refines", "v_HashDeckBodyFrom_refines",
+    "v_MegaDreifachBodyFrom_refines", "v_HashDecksBody_refines", "injPos_decksPre"]} | {f"MegaDreifachV3.Em.{n}" for n in [
+    "edgeFaceOf_spec", "cornerFaceOf_spec", "turnedFace_countUp", "turnedFace_king",
+    "echoColour_countUp", "cardStep_g_last", "dealFold_g_last", "echoRun_g_last",
+    "emBlock_any_counters"]} | {f"MegaDreifachV3.Security.{n}" for n in [
+    "dmStep_same_h_iff", "emBlock_eq_of_dmStep_eq", "dmStep_same_h_iff_chainPre",
+    "word_emBlock", "word_dmStep", "word_chainPre", "isLegal_chainPre",
+    "evenRank_inj", "positionToBytes_inj_legal", "positionToBytes_inj_chainPre",
+    "pad_suffix_free", "blocks_suffix_free", "chainPre_eq_chR",
+    "chain_block_count", "chain_block_count_le", "vhashAlg_eq_iff",
+    "extract_collision_comp", "v_Hash_collision_comp",
+    "extract_second_preimage_comp", "v_Hash_second_preimage_comp",
+    "compValid_emBlock_of_same_h"]}
+
 MD_HEAVY_THEOREMS = {f"MegaDreifach.Link2.Kat.kat_{k}" for k in
                      ["empty", "short_abc", "short_one", "edge_27", "edge_28", "edge_29",
                       "multi_56", "multi_100"]}
-# proofs/doubledeal-cbc-hmac/lean: the Link 2 theorems, one per exported function of
-# primitives/aead/doubledeal-cbc-hmac/doubledeal_cbc_hmac.sudo (the generated code equals
+# proofs/deprecated/doubledeal-cbc-hmac-v1/lean (frozen): the v1 Link 2 theorems, one per
+# exported function of primitives/aead/doubledeal-cbc-hmac/v1/doubledeal_cbc_hmac.sudo
+# (frozen v1; v2 is DoubleDeal-CBC-Sandwich and has no Link 2 yet) (the generated code equals
 # the hand-written model `DoubleDealCbcHmac.Spec` on byte inputs), plus the empty-master
-# rejection and the full unpad characterization. Cited by proofs/doubledeal-cbc-hmac/README.md.
-CBC_HMAC_LEAN = ROOT.parent / "doubledeal-cbc-hmac" / "lean"
+# rejection and the full unpad characterization. Cited by
+# proofs/deprecated/doubledeal-cbc-hmac-v1/README.md.
+CBC_HMAC_LEAN = ROOT.parent / "deprecated" / "doubledeal-cbc-hmac-v1" / "lean"
 CBC_HMAC_LINK2 = {f"DoubleDealCbcHmac.Link2.{n}" for n in [
     "xor_bytes_refines", "hmac_normalize_key_refines", "v_HMAC_refines",
     "v_HMAC_MegaDreifach_refines", "pad_iso7816_refines", "unpad_iso7816_char",
     "unpad_iso7816_refines", "unpad_iso7816_rejects", "mac_input_refines",
     "derive_keys_refines", "derive_keys_empty", "cbc_chain_from_cipher_block_refines",
     "tags_equal_refines"]}
+# proofs/scramble/lean (Scramble Link 2; scope in its README): every theorem
+# proofs/scramble/README.md cites by name; `--selftest` re-derives the list the same way
+# as MD_README_THEOREMS.
+SCRAMBLE_LEAN = ROOT.parent / "scramble" / "lean"
+SCRAMBLE_LINK2 = {
+    "ScrambleV2.Kat.kat_empty",
+    "ScrambleV2.Kat.kat_a",
+    "ScrambleV2.Kat.kat_A7",
+    "ScrambleV2.Kat.kat_hello",
+    "ScrambleV2.Kat.kat_cube",
+    "ScrambleV2.Link2.digestV2_isSome",
+    "ScrambleV2.Link2.reach_solved",
+    "ScrambleV2.Link2.reach_quarter",
+    "ScrambleV2.Link2.reach_rotate",
+    "ScrambleV2.Link2.centerOf_reach",
+    "ScrambleV2.Link2.cubieAt_reach",
+    "ScrambleV2.Link2.rotateTo_reach",
+    "ScrambleV2.Link2.ruleB_reach",
+    "ScrambleV2.Link2.turn_cubie_refines",
+    "ScrambleV2.Link2.quarter_refines",
+    "ScrambleV2.Link2.apply_turns_refines",
+    "ScrambleV2.Link2.cross_refines",
+    "ScrambleV2.Link2.dot_refines",
+    "ScrambleV2.Link2.mul_vec_refines",
+    "ScrambleV2.Link2.apply_matrix_refines",
+    "ScrambleV2.Link2.reorient_refines",
+    "ScrambleV2.Link2.fresh_refines",
+    "ScrambleV2.Link2.scramble_v2_refines",
+    "ScrambleV2.Link2.scramble_v2_digest_refines",
+    "ScrambleV2.Link2.push_step_digest",
+    "ScrambleV2.Link2.push_step_traced",
+    "ScrambleV2.Link2.do_move_refines",
+    "ScrambleV2.Link2.do_rule_digest",
+    "ScrambleV2.Link2.apply_v2_symbol_digest",
+    "ScrambleV2.Link2.cubie_at_refines",
+    "ScrambleV2.Link2.is_center_refines",
+    "ScrambleV2.Link2.has_color_refines",
+    "ScrambleV2.Link2.hasCode_posed",
+    "ScrambleV2.Link2.center_dir_refines",
+    "ScrambleV2.Link2.sticker_on_refines",
+    "ScrambleV2.Link2.color_char_refines",
+    "ScrambleV2.Link2.is_ud_refines",
+    "ScrambleV2.Link2.edge_bit_refines",
+    "ScrambleV2.Link2.corner_piece_refines",
+    "ScrambleV2.Link2.edge_piece_refines",
+    "ScrambleV2.Link2.fact_refines",
+    "ScrambleV2.Link2.rank_perm_refines",
+    "ScrambleV2.Link2.digest_bytes_refines",
+    "ScrambleV2.Link2.index_bytes_refines",
+    "ScrambleV2.Link2.Reach.index_bytes",
+    "ScrambleV2.Link2.Reach.facelets_of",
+    "ScrambleV2.Link2.solved_cube_refines",
+    "ScrambleV2.Link2.solved_facelets_ok",
+    "ScrambleV2.Link2.letter_refines",
+    "ScrambleV2.Link2.hex_digit_refines",
+    "ScrambleV2.Link2.move_name_refines",
+    "ScrambleV2.Link2.pad_v2",
+    "ScrambleV2.Link2.padV2_eq",
+    "ScrambleV2.Link2.apply_ready_v2_digest",
+    "ScrambleV2.Link2.update_v2_digest",
+    "ScrambleV2.Link2.finish_digest",
+    "ScrambleV2.Link2.evaluate_v2_digest",
+    "ScrambleV2.Link2.scramble_v2_digest_refines_digestV2",
+    "ScrambleV2.Link2.push_step_gen",
+    "ScrambleV2.Link2.do_move_gen",
+    "ScrambleV2.Link2.do_rule_gen",
+    "ScrambleV2.Link2.apply_v2_symbol_gen",
+    "ScrambleV2.Link2.apply_ready_v2_gen",
+    "ScrambleV2.Link2.update_v2_gen",
+    "ScrambleV2.Link2.finish_gen",
+    "ScrambleV2.Link2.evaluate_v2_gen",
+    "ScrambleV2.Link2.updates_v2",
+    "ScrambleV2.Link2.updates_evaluate_v2",
+    "ScrambleV2.Link2.scramble_v2_refines_digestV2",
+    "ScrambleV2.Link2.padV2_length",
+    "ScrambleV2.Kat.kat_v1_empty",
+    "ScrambleV2.Kat.kat_v1_a",
+    "ScrambleV2.Kat.kat_v1_A7",
+    "ScrambleV2.Kat.kat_v1_hello",
+    "ScrambleV2.Kat.kat_v1_cube",
+    "ScrambleV2.Link2.apply_v1_block_digest",
+    "ScrambleV2.Link2.apply_ready_v1_digest",
+    "ScrambleV2.Link2.pad_v1",
+    "ScrambleV2.Link2.padV1_eq",
+    "ScrambleV2.Link2.update_v1_digest",
+    "ScrambleV2.Link2.evaluate_v1_digest",
+    "ScrambleV2.Link2.walkV1_append8",
+    "ScrambleV2.Link2.scramble_v1_digest_refines",
+    "ScrambleV2.Link2.scramble_v1_digest_refines_digestV1",
+}
+
+# proofs/key_exchange/bs/lean (BS Link 2; scope in its README): every theorem that README
+# cites by name; `--selftest` re-derives the list the same way as MD_README_THEOREMS.
+BS_LEAN = ROOT.parent / "key_exchange" / "bs" / "lean"
+BS_LINK2 = {
+    "BsLink2.Spec.T1_p",
+    "BsLink2.Spec.T2_p",
+    "BsLink2.Link2.tier_T1_refines",
+    "BsLink2.Link2.tier_T2_refines",
+    "BsLink2.Link2.tier_T6_wf",
+    "BsLink2.Link2.multiply_refines",
+    "BsLink2.Link2.tidy_refines",
+    "BsLink2.Link2.check_received_refines",
+    "BsLink2.Link2.send_public_value_refines",
+    "BsLink2.Link2.public_value_refines",
+    "BsLink2.Link2.shared_secret_refines",
+    "BsLink2.Link2.exchange_agree_of_accepted",
+    "BsLink2.Link2.drop_spec",
+    "BsLink2.Link2.lay_spec",
+    "BsLink2.Link2.pay_toll_spec",
+    "BsLink2.Link2.multiply_spec",
+    "BsLink2.Link2.slide_spec",
+    "BsLink2.Link2.tidy_spec",
+    "BsLink2.Link2.cube_spec",
+    "BsLink2.Link2.walk_public_spec",
+    "BsLink2.Link2.walk_shared_spec",
+    "BsLink2.Link2.call_the_shots_spec",
+    "BsLink2.Link2.is_trits_spec",
+    "BsLink2.Link2.is_empty_spec",
+    "BsLink2.Link2.is_lone_white_spec",
+    "BsLink2.Link2.eq_embed_toReg",
+    "BsLink2.Link2.read_key_spec",
+    "BsLink2.Link2.readKey_trits",
+    "BsLink2.Link2.expOf_readKey_pos",
+    "BsLink2.Link2.expOf_readKey_ge",
+    "BsLink2.Link2.length_readKey_le",
+    "BsLink2.Link2.ship_holes_spec",
+    "BsLink2.Link2.ship_pass_spec",
+    "BsLink2.Link2.peg_pass_spec",
+    "BsLink2.Link2.public_value_refines_of_read",
+    "BsLink2.Link2.shared_secret_refines_of_read",
+    "BsLink2.Link2.exchange_cells_refines",
+    "BsLink2.Link2.exchange_refines",
+    "BsLink2.Link2.exchange_alice_rejects",
+    "BsLink2.Link2.exchange_bob_rejects",
+    "BsLink2.Link2.dice_refines",
+    "BsLink2.Link2.build_key_grid_refines",
+    "BsLink2.Link2.build_key_grid_dice",
+    "BsLink2.Link2.build_key_grid_wf",
+    "BsLink2.Link2.build_spec",
+    "BsLink2.Link2.hole_step_spec",
+    "BsLink2.Link2.row_step_spec",
+    "BsLink2.Link2.throw_row_cup_spec",
+    "BsLink2.Link2.grow_until_it_bumps_spec",
+    "BsLink2.Link2.build_eq",
+    "BsLink2.Link2.build_wf",
+    "BsLink2.Link2.growUntilItBumps_room",
+    "BsLink2.Spec.TollPi.T6_toll_eq",
+    "BsLink2.Spec.TollPi.pi50_le_lower",
+    "BsLink2.Spec.TollPi.upper_lt_pi50_succ",
+    "BsLink2.Spec.TollPi.lower_lt_upper",
+    "BsLink2.Spec.TollPi.floor_eq_pi50",
+    "BsLink2.Spec.TollPi.lower_in_bracket",
+    "BsLink2.Spec.TollPi.pi50_leading_digits",
+}
 # Link 2 packages whose README has an "Emitted function" table: every `export func` of
 # the sudo must appear (backticked) in that column, and the column must name only
-# exports (S6 of the #140 review). MegaDreifach is not listed yet: its README has no
+# exports (S6 of the #140 review). MegaDreifach v2 is not listed yet: its README has no
 # "Emitted function" column (its Link 2 rows are Stone / Claim / Status). 8 of its 11
 # exports have a Link 2 `_refines` theorem (pad_message, require_permutation,
 # position_to_bytes, Hash, MegaDreifach, HashDeck, MegaDreifachDeck, HashDeckBody); the
 # one-line wrappers MegaDreifachBody, HashDeckBodyFrom and MegaDreifachBodyFrom have
 # none. Registering it (wrapper theorems plus an 11-row table) is a planned follow-up.
+# Scramble is listed: its table has a row for each of the 8 exports. `scramble_v1_digest`
+# has three theorems; the traced `scramble_v1` and the demo's `apply_move` rows say they are
+# not claimed (no theorem), so those gaps are in the table rather than silent. BS is listed: its table has a row for each of
+# the 11 exports (build_letting_go went with letting go, SPEC §4.2: nobody lets go).
 LINK2_EXPORT_TABLES = {
-    "cbc-hmac": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
-                 / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
+    "megadreifach-v3": (ROOT.parent.parent / "primitives" / "hash" / "megadreifach" / "v3"
+                        / "megadreifach.sudo", MD_V3_README),
+    "cbc-hmac-v1-deprecated": (ROOT.parent.parent / "primitives" / "aead" / "doubledeal-cbc-hmac"
+                               / "v1" / "doubledeal_cbc_hmac.sudo", CBC_HMAC_LEAN.parent / "README.md"),
+    "scramble": (ROOT.parent.parent / "primitives" / "hash" / "scramble" / "scramble.sudo",
+                 SCRAMBLE_LEAN.parent / "README.md"),
+    "bs": (ROOT.parent.parent / "primitives" / "key_exchange" / "bs" / "bs.sudo",
+           BS_LEAN / "README.md"),
 }
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
@@ -419,13 +656,12 @@ PACKAGES = {
     "security": {
         "dir": ROOT / "security",
         "mode": "all",
-        # The open conjecture (DRAFT-SORRY) and the two theorems that rest on it.
-        # Keep in sync with ALLOWED_SORRY in security/checks/scan_sorry.py.
-        "known_sorry": {
-            "DoubleDeal.Security.roundBody_covariant_iff_id",  # the conjecture
-            "DoubleDeal.Security.fullRound_commutes_iff_id",   # its case tau = sigma
-            "DoubleDeal.Security.encrypt6_commutes_iff_id",    # via round_covariant_of_encrypt6
-        },
+        # Empty: the package has no sorry. roundBody_covariant_iff_id (formerly the one
+        # DRAFT-SORRY) is proved in the heavy library (HEAVY_THEOREMS), with
+        # fullRound_commutes_iff_id and encrypt6_commutes_iff_id; the default library has
+        # their _of_covariant reductions (required below). Keep in sync with ALLOWED_SORRY
+        # in security/checks/scan_sorry.py.
+        "known_sorry": set(),
         "min": 100,  # sanity: the audit must actually see the package
         # Headline theorems that must be reported (and axiom-clean) by the audit.
         "required": {
@@ -433,11 +669,69 @@ PACKAGES = {
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_le'",
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_threeCycle",
             "DoubleDeal.Security.SumRanksDP.sumRanksV10_survival_lower",
-            # CovariantNarrow (roadmap M4): reductions of the open conjecture
+            # CovariantNarrow (roadmap M4): reductions of the covariant round statement
             "DoubleDeal.Security.CovariantNarrow.prime_case_iff",
             "DoubleDeal.Security.CovariantNarrow.roundBody_covariant_iff_id_of_prime",
             "DoubleDeal.Security.CovariantNarrow.not_covariant_swap_of_check",
             "DoubleDeal.Security.CovariantNarrow.prime_nonswap_case_iff_of_check",
+            # the consequences of the covariant round statement, as reductions (hypothesis
+            # hcov : CovariantOnlyId, a def in Rounds.lean, not audited; unconditional forms in
+            # the heavy library, HEAVY_THEOREMS)
+            "DoubleDeal.Security.fullRound_commutes_iff_id_of_covariant",
+            "DoubleDeal.Security.encrypt6_commutes_iff_id_of_covariant",
+            # RankPartition: rank classes are preserved, GIVEN the finite checks RankChecks
+            # (discharged in the heavy library); not the covariant round statement
+            "DoubleDeal.Security.StemPosition.stemPos_zero",
+            "DoubleDeal.Security.StemCoupling.rowRead_congr",
+            "DoubleDeal.Security.StemCoupling.agree_row",
+            "DoubleDeal.Security.StemCoupling.rowAmts_eq_of_agree",
+            "DoubleDeal.Security.rel_permDeck",
+            "DoubleDeal.Security.RankPartition.rank_eq_of_family",
+            "DoubleDeal.Security.RankPartition.family_of_checks",
+            "DoubleDeal.Security.RankPartition.cell0Cov_rank_of_checks",
+            "DoubleDeal.Security.RankPartition.cell0Cov_rank_iff_of_checks",
+            "DoubleDeal.Security.RankPartition.covariant_rank_of_checks",
+            "DoubleDeal.Security.RankPartition.cell0Subgroup_le_rankStab_of_checks",
+            # the one home of the v10Sym seat-26 fact and of conjugation (CovariantNarrow)
+            "DoubleDeal.Security.CovariantNarrow.cell0Cov_v10Sym",
+            "DoubleDeal.Security.CovariantNarrow.v10Sym_mem_cell0Subgroup",
+            "DoubleDeal.Security.CovariantNarrow.cell0Cov_conj",
+            # RankAffine, TauEq, LabelStep: every sigma with Cell0Cov sigma tau is a v10Sym
+            # and tau = sigma, GIVEN the finite checks V10SymChecks (discharged in the heavy
+            # library, which proves roundBody_covariant_iff_id from it)
+            # the card coordinates (one home: SumRanksV10.lean)
+            "DoubleDeal.Security.rk_eq_iff",
+            "DoubleDeal.Security.rk_v10Sym",
+            "DoubleDeal.Security.rk_v10Sym_inv",
+            "DoubleDeal.Security.rk_cardOfRk",
+            "DoubleDeal.Security.rank_scaleP",
+            "DoubleDeal.Security.crd_ri_lbl",
+            "DoubleDeal.Security.ext_crd",
+            "DoubleDeal.Security.v10Sym_crd",
+            "DoubleDeal.Security.xor4_eq_iff",
+            "DoubleDeal.Security.RankPartition.FamilyQ.wsum_eq",
+            "DoubleDeal.Security.RankPartition.Family.toQ",
+            "DoubleDeal.Security.RankAffine.rk_sum_of_family2",
+            "DoubleDeal.Security.RankAffine.family2_of_checks",
+            "DoubleDeal.Security.RankAffine.affine_of_second_diff",
+            "DoubleDeal.Security.RankAffine.cell0Cov_rk_affine_of_checks",
+            "DoubleDeal.Security.TauEq.rowAmts_congr",
+            "DoubleDeal.Security.TauEq.cand_of_cell0Cov",
+            "DoubleDeal.Security.TauEq.tau_step",
+            "DoubleDeal.Security.TauEq.tau_eq_of_rk",
+            "DoubleDeal.Security.TauEq.cell0Cov_tau_of_checks",
+            "DoubleDeal.Security.LabelStep.colAmt_congr_label",
+            "DoubleDeal.Security.LabelStep.conj_tr",
+            "DoubleDeal.Security.LabelStep.chain_const",
+            "DoubleDeal.Security.LabelStep.c0Row_tr_eq",
+            "DoubleDeal.Security.LabelStep.d01_of_cell0",
+            "DoubleDeal.Security.LabelStep.tr_const_of_mem",
+            "DoubleDeal.Security.LabelStep.perm4_xor",
+            "DoubleDeal.Security.LabelStep.rankPres_mem_v10Sym",
+            "DoubleDeal.Security.LabelStep.cell0Cov_mem_v10Sym_of_checks",
+            "DoubleDeal.Security.LabelStep.cell0Cov_iff_of_checks",
+            "DoubleDeal.Security.LabelStep.roundBody_covariant_iff_id_of_checks",
+            "DoubleDeal.Security.LabelStep.primeNonSwapCase_of_checks",
             # RealSchedule (roadmap M5): real PassKey schedule
             "DoubleDeal.Security.RealSchedule.masterList_injective",
             "DoubleDeal.Security.RealSchedule.exists_masterList_eq",
@@ -527,23 +821,96 @@ PACKAGES = {
             "DoubleDeal.Security.FullCipher.fullDiffCount_one_left",
             "DoubleDeal.Security.FullCipher.fullDiffCount_to_one",
             "DoubleDeal.Security.FullCipher.fullDiffCount_eq_card_beforeFinal",
-            # column transfer through the final round: REDUCTIONS (hypothesis unproved);
-            # not_col_v10Sym says the route is closed into v10Sym
+            # column transfer through the final round: a REDUCTION (the column hypothesis is
+            # StemUnion.dpFCount_col_le_64 outside v10Sym); not_col_v10Sym says the route is
+            # closed into v10Sym
             "DoubleDeal.Security.FullCipher.fullDiffCount_le_of_col",
-            "DoubleDeal.Security.FullCipher.fullDiffCount_le_64_of_offDiag",
             "DoubleDeal.Security.FullCipher.not_col_v10Sym",
-            # StemPosition (research item (b), first slice): the stem as a position map and
+            # StemPosition (off-diagonal stem bound, first slice): the stem as a position map and
             # the support gap of gamma^-1 * beta; structure only, no count of decks, no part
-            # of hoff (helpers srcRow / cmFlat_inj2 are named apart from SumRanksDP.rowOf /
+            # of the off-diagonal stem bound (helpers srcRow / cmFlat_inj2 are named apart from SumRanksDP.rowOf /
             # SumRanksDP.cmFlat_injective)
             "DoubleDeal.Security.StemPosition.unkeyedNoMix_eq_comp",
+            "DoubleDeal.Security.StemPosition.stemPosOf_injective",
             "DoubleDeal.Security.StemPosition.stemPos_injective",
             "DoubleDeal.Security.StemPosition.conj_of_stem_rel",
             "DoubleDeal.Security.StemPosition.seatMap_eq_iff",
             "DoubleDeal.Security.StemPosition.card_seatMap_eq",
             "DoubleDeal.Security.StemPosition.card_fixed_eq",
             "DoubleDeal.Security.StemPosition.card_moved_eq",
+            "DoubleDeal.Security.StemPosition.card_moved_cases",
             "DoubleDeal.Security.StemPosition.card_moved_zero_or_ge_four",
+            # StemCoupling (off-diagonal stem bound, second slice): decks with a prescribed conjugate
+            # q (moving <= 1 position per row) and prescribed row amounts are at most 81/4096
+            # of the decks with that conjugate; no bound on dpFCount by itself (the support-4
+            # assembly is StemSupportFour below)
+            "DoubleDeal.Security.StemCoupling.rowAmts_eq_iff",
+            "DoubleDeal.Security.StemCoupling.card_hit_le_three",
+            "DoubleDeal.Security.StemCoupling.double_count",
+            "DoubleDeal.Security.StemCoupling.card_cond_act_le",
+            "DoubleDeal.Security.StemCoupling.coupling",
+            # StemSupportFour (off-diagonal stem bound, third slice): the 4-card case of the off-diagonal stem bound,
+            # 64 * dpFCount beta gamma <= 52! when gamma^-1 * beta moves exactly 4 cards, and
+            # supports 1-3, 5-7 count no deck (support >= 8: StemUnion below)
+            "DoubleDeal.Security.StemSupportFour.qPerm_moves_le_one",
+            "DoubleDeal.Security.StemSupportFour.ratio_eq_qPerm",
+            "DoubleDeal.Security.StemSupportFour.ratio_eq_qPerm_of_support_four",
+            "DoubleDeal.Security.StemSupportFour.ratio_moves_le_one_of_support_four",
+            "DoubleDeal.Security.StemSupportFour.card_conjSet_le_odd",
+            "DoubleDeal.Security.StemSupportFour.card_conjSet_le_two",
+            "DoubleDeal.Security.StemSupportFour.sum_card_conjSet_le",
+            "DoubleDeal.Security.StemSupportFour.dpFCount_bound_of_support_four",
+            "DoubleDeal.Security.StemSupportFour.dpFCount_le_of_support_four",
+            "DoubleDeal.Security.StemSupportFour.dpFCount_eq_zero_of_support_lt_eight_ne_four",
+            # StemUnion (off-diagonal stem bound, final slice): the support >= 8 case by a
+            # union bound (general ratio formula, agreement count, cycle-representative
+            # bound); the column bound into gamma outside v10Sym, hence
+            # 64 * fullDiffCount <= 52!^(n+2) for alpha != 1 and gamma outside v10Sym
+            # (independent keys; the same 1/64 for every n, nothing proved about decay;
+            # gamma in v10Sym not covered; not a security claim)
+            "DoubleDeal.Security.StemUnion.seatMap_shift",
+            "DoubleDeal.Security.StemUnion.ratio_eq_ratioQ",
+            "DoubleDeal.Security.StemUnion.exists_rep",
+            "DoubleDeal.Security.StemUnion.apply_rep_not_rep",
+            "DoubleDeal.Security.StemUnion.two_mul_card_reps_le",
+            "DoubleDeal.Security.StemUnion.card_conjSet_le_reps",
+            "DoubleDeal.Security.StemUnion.card_agree_eq",
+            "DoubleDeal.Security.StemUnion.card_zR_eq",
+            "DoubleDeal.Security.StemUnion.card_zC_eq",
+            "DoubleDeal.Security.StemUnion.card_params",
+            "DoubleDeal.Security.StemUnion.paramCount_check",
+            "DoubleDeal.Security.StemUnion.zRows_eq_zR",
+            "DoubleDeal.Security.StemUnion.zCols_eq_zC",
+            "DoubleDeal.Security.StemUnion.mem_ratioCell",
+            "DoubleDeal.Security.StemUnion.dpFCount_le_union",
+            "DoubleDeal.Security.StemUnion.dpFCount_le_of_support_ge_eight",
+            "DoubleDeal.Security.StemUnion.dpFCount_le_of_ne",
+            "DoubleDeal.Security.StemUnion.dpFCount_col_le_64",
+            "DoubleDeal.Security.StemUnion.fullDiffCount_le_64",
+            # OneRoundDP (roadmap B1, one mix round): any eps_1 < 1 implies the covariant round
+            # statement (proved in the heavy library), and on the rows outside v10Sym alone already does; the 51 v10Sym rows
+            # are bounded (1/52, and 1/17 for v10Sym 0 3); rows outside v10Sym are NOT proved;
+            # not a security claim
+            "DoubleDeal.Security.OneRoundDP.dp1Count_eq_of_covPair",
+            "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1_lt",
+            "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1Bound",
+            "DoubleDeal.Security.OneRoundDP.scoop_rmFlat",
+            "DoubleDeal.Security.OneRoundDP.rmFlat_inj",
+            "DoubleDeal.Security.OneRoundDP.mixColumns_seat2",
+            "DoubleDeal.Security.OneRoundDP.seat2_ne_start",
+            "DoubleDeal.Security.OneRoundDP.seat2Idx_ne_26",
+            "DoubleDeal.Security.OneRoundDP.mixRound_v10Sym_reads",
+            "DoubleDeal.Security.OneRoundDP.card_seat_link_le",
+            "DoubleDeal.Security.OneRoundDP.sameSeat2_subset",
+            "DoubleDeal.Security.OneRoundDP.sameSeat2_eq_empty",
+            "DoubleDeal.Security.OneRoundDP.card_agree_le_fifty",
+            "DoubleDeal.Security.OneRoundDP.dp1Count_v10Sym_le_sum",
+            "DoubleDeal.Security.OneRoundDP.dp1Count_v10Sym_self_le",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym_zero_three",
+            "DoubleDeal.Security.OneRoundDP.dp1_le_v10Sym_all",
+            "DoubleDeal.Security.OneRoundDP.seat2_eq_of_seat2Idx_eq",
+            "DoubleDeal.Security.OneRoundDP.covariant_iff_id_of_dp1_lt_off_v10Sym",
             # row/column sums of fullDiffCount (used by LinearMasks, M8b)
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount",
             "DoubleDeal.Security.FullCipher.sum_fullDiffCount_left",
@@ -551,6 +918,9 @@ PACKAGES = {
             # decks to decks, and (for _to_one) an explicit injectivity hypothesis
             "DoubleDeal.Security.Differential.dpCount_one_left",
             "DoubleDeal.Security.Differential.dpCount_to_one",
+            # layer outputs as permutations (shared by D4 and OneRoundDP)
+            "DoubleDeal.Security.Differential.permDeck_layerPerm",
+            "DoubleDeal.Security.Differential.layerPerm_injective",
             # Linear (roadmap M8a): sums of squared correlations as autocorrelations weighted
             # by differential counts; L1 and the final-key step for arbitrary layers that
             # send decks to decks, L2-L4 for DoubleDeal's encryptL; independent full-permutation keys only; no numeric
@@ -596,13 +966,40 @@ PACKAGES = {
         "min": 500,  # sanity: the audit must actually see the package
         "required": MD_V1_README_THEOREMS,
     },
-    "cbc-hmac": {
+    "megadreifach-v3": {
+        "dir": MD_V3_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        # sanity: the audit must see the whole package (the real audited count; raise as
+        # Link 2 grows, lower only with a reason in the commit).
+        # Printed count after the same-h emBlock corollary on the MD extractor.
+        "min": 306,
+        "required": MD_V3_README_THEOREMS,
+    },
+    "cbc-hmac-v1-deprecated": {
         "dir": CBC_HMAC_LEAN,
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
         "min": 50,  # sanity: the audit must actually see the package
         "required": CBC_HMAC_LINK2,
+    },
+    "scramble": {
+        "dir": SCRAMBLE_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": 100,  # sanity: the audit must actually see the package
+        "required": SCRAMBLE_LINK2,
+    },
+    "bs": {
+        "dir": BS_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": 150,  # sanity: the audit must actually see the package
+        "required": BS_LINK2,
     },
     "megadreifach-heavy": {
         "dir": MD_LEAN,
@@ -857,6 +1254,30 @@ elab "#list_file_theorems" : command => do
 """
 
 
+def axiom_problems(expected, seen, known_sorry):
+    """Per-theorem axiom rules: each expected name must be reported and use only ALLOWED;
+    a KNOWN_SORRY name may (and must) also use sorryAx, nothing else. Returns
+    (problems, number of clean theorems, one line per allowlisted known-sorry theorem)."""
+    bad, ok, known = [], 0, []
+    for name in expected:
+        if name not in seen:
+            bad.append(f"no axiom report for {name}")
+            continue
+        axs = seen[name]
+        if name in known_sorry:
+            if axs - ALLOWED - {"sorryAx"}:
+                bad.append(f"{name} uses {sorted(axs - ALLOWED - {'sorryAx'})}")
+            elif "sorryAx" not in axs:
+                bad.append(f"{name} is in KNOWN_SORRY but no longer uses sorryAx; remove it")
+            else:
+                known.append(f"known-sorry {name}: {sorted(axs)}")
+        elif axs - ALLOWED:
+            bad.append(f"{name} uses {sorted(axs - ALLOWED)}")
+        else:
+            ok += 1
+    return bad, ok, known
+
+
 def selftest_lean():
     """Elaborate HEAVY_SCAN_FIXTURE with `lean` (core only; run from a directory whose
     lean-toolchain is the audited one) and require its theorems to be exactly
@@ -895,6 +1316,31 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} key={'full' if full else 'user'} "
               f"{names}: {len(bad)} problem(s), expected {want}")
+    # Per-theorem axiom rules (axiom_problems), on synthetic reports: first with a scratch
+    # allowlist {"A.c"}, then with the real (empty) KNOWN_SORRY of the security package.
+    std = {"propext", "Classical.choice", "Quot.sound"}
+    for what, seen_, known_sorry, want, want_known in [
+            ("clean", {"A.t": std}, set(), [], 0),
+            ("allowlisted sorry", {"A.t": std, "A.c": std | {"sorryAx"}}, {"A.c"}, [], 1),
+            ("sorry not allowlisted", {"A.t": {"sorryAx"}}, set(), ["A.t uses ['sorryAx']"], 0),
+            ("allowlisted, sorry gone", {"A.c": std}, {"A.c"}, ["no longer uses sorryAx"], 0),
+            ("allowlisted, other axiom", {"A.c": {"sorryAx", "Lean.ofReduceBool"}}, {"A.c"},
+             ["A.c uses ['Lean.ofReduceBool']"], 0),
+            ("native_decide", {"A.t": {"Lean.ofReduceBool"}}, set(), ["A.t uses ['Lean.ofReduceBool']"], 0),
+            ("security KNOWN_SORRY: the former conjecture with sorry",
+             {"DoubleDeal.Security.roundBody_covariant_iff_id": std | {"sorryAx"}},
+             PACKAGES["security"]["known_sorry"],
+             ["DoubleDeal.Security.roundBody_covariant_iff_id uses ['sorryAx']"], 0)]:
+        bad, _, known_l = axiom_problems(sorted(seen_), seen_, known_sorry)
+        ok = (len(bad) == len(want) and all(w in b for w, b in zip(want, bad))
+              and len(known_l) == want_known)
+        failed += not ok
+        print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} axiom rules ({what}): "
+              f"{len(bad)} problem(s), expected {len(want)}" + ("" if ok else f": {bad}"))
+    empty = not PACKAGES["security"]["known_sorry"]
+    failed += not empty
+    print(f"check_axioms selftest: {'ok' if empty else 'FAIL'} security KNOWN_SORRY is empty"
+          + ("" if empty else f": {sorted(PACKAGES['security']['known_sorry'])}"))
     # security-heavy: audited = HEAVY_THEOREMS + HEAVY_GENERATED, exactly.
     lst, gen = {"A.t"}, {"A.f.eq_1"}
     for what, audited, listed, want in [
@@ -912,14 +1358,19 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} HEAVY_GENERATED {what}: "
               f"{len(bad)} problem(s), expected {len(want)}")
-    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 must be exactly the
-    # theorems the MegaDreifach README / the frozen v1 package's README / the
-    # DoubleDeal-CBC-HMAC proofs README cites.
+    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 / SCRAMBLE_LINK2 / BS_LINK2 must be
+    # exactly the theorems the MegaDreifach README / the frozen v1 package's README / the
+    # DoubleDeal-CBC-HMAC proofs README / the Scramble proofs README / the BS Link 2 README
+    # (proofs/key_exchange/bs/lean/README.md) cites.
     for what, listed, readme, root in [
             ("MD_README_THEOREMS", MD_README_THEOREMS, MD_README, MD_LEAN),
             ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN),
+            ("MD_V3_README_THEOREMS", MD_V3_README_THEOREMS, MD_V3_README, MD_V3_LEAN),
             ("CBC_HMAC_LINK2", CBC_HMAC_LINK2, CBC_HMAC_LEAN.parent / "README.md",
-             CBC_HMAC_LEAN)]:
+             CBC_HMAC_LEAN),
+            ("SCRAMBLE_LINK2", SCRAMBLE_LINK2, SCRAMBLE_LEAN.parent / "README.md",
+             SCRAMBLE_LEAN),
+            ("BS_LINK2", BS_LINK2, BS_LEAN / "README.md", BS_LEAN)]:
         cited, bad = md_readme_cited(readme=readme, root=root)
         for b in bad:
             print(f"check_axioms selftest: FAIL {b}")
@@ -961,14 +1412,14 @@ def selftest():
          table + "| `b_c` | x |\n\nText.\n\n" + table + "| `b_c` | x |\n",
          ["2 README tables have"]),
         ("no exports", "func a(x: int) -> int\n", table, ["the sudo has no"])]
-    sudo, readme = LINK2_EXPORT_TABLES["cbc-hmac"]
+    sudo, readme = LINK2_EXPORT_TABLES["cbc-hmac-v1-deprecated"]
     real_readme = readme.read_text()
     dropped = [l for l in real_readme.splitlines() if l.startswith("| `tags_equal` |")]
     cases.append(("real cbc-hmac README without the tags_equal row", sudo.read_text(),
                   "\n".join(l for l in real_readme.splitlines() if l not in dropped),
                   ["export tags_equal is not"] if len(dropped) == 1 else ["(fixture row absent)"]))
     for what, sudo_text, readme_text, want in cases:
-        if what.startswith("real cbc-hmac") and real_bad["cbc-hmac"]:
+        if what.startswith("real cbc-hmac") and real_bad["cbc-hmac-v1-deprecated"]:
             print(f"check_axioms selftest: skipped export table ({what}): the real table "
                   "already fails above")
             continue
@@ -1063,24 +1514,11 @@ def main(argv) -> int:
         bad.append(f"KNOWN_SORRY entry {name} was not reported (renamed or removed?)")
     for name in re.findall(r"'(\S+?)' is an axiom declared in the package", out):
         bad.append(f"axiom declared in the package: {name}")
-    ok = known = 0
-    for name in expected:
-        if name not in seen:
-            bad.append(f"no axiom report for {name}")
-            continue
-        axs = seen[name]
-        if name in known_sorry:
-            if axs - ALLOWED - {"sorryAx"}:
-                bad.append(f"{name} uses {sorted(axs - ALLOWED - {'sorryAx'})}")
-            elif "sorryAx" not in axs:
-                bad.append(f"{name} is in KNOWN_SORRY but no longer uses sorryAx; remove it")
-            else:
-                known += 1
-                print(f"known-sorry {name}: {sorted(axs)}")
-        elif axs - ALLOWED:
-            bad.append(f"{name} uses {sorted(axs - ALLOWED)}")
-        else:
-            ok += 1
+    probs, ok, known_lines = axiom_problems(expected, seen, known_sorry)
+    bad += probs
+    known = len(known_lines)
+    for line in known_lines:
+        print(line)
     for b in bad:
         print(f"check_axioms: FAIL {b}", file=sys.stderr)
     print(f"check_axioms: {pkg}: {len(expected)} theorems audited, {ok} use only "

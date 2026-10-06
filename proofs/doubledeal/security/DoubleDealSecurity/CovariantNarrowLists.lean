@@ -4,16 +4,19 @@
 
   Witness seat pairs for `CovariantNarrow.cov0Check`: for representative `e`
   (1 ≤ e ≤ 51), `covW[e] = (i, j)` names the deck `posSwapDeck i j` (the identity
-  deck with seats `i`, `j` exchanged). `goodPairs` lists the 4 pairs used.
-  Entry 0 of `covW` is unused. These lists are data, not trusted: the heavy library
-  checks every entry by kernel `decide!` (`goodPairsCheck_ok`, `check_e1` …
-  `check_e51`), so a wrong entry fails the heavy build.
+  deck with seats `i`, `j` exchanged). `cell0Pairs` lists the 6 pairs used by
+  `covW` or by `CovariantAffine.affW` (`aff_witness.py`), so one check A covers both.
+  Entry 0 of `covW` is unused (set to the first pair). These lists are data, not
+  trusted: the heavy library checks every entry by kernel `decide!`
+  (`cell0PairsCheck_ok`, `check_e1` … `check_e51`), so a wrong entry fails the heavy
+  build.
 -/
 namespace DoubleDeal.Security.CovariantNarrow
 
-/-- The seat pairs used by `covW` (each keeps stem cell 0 of the identity deck). -/
-def goodPairs : List (Fin 52 × Fin 52) :=
-  [(1, 2), (1, 3), (1, 5), (1, 34)]
+/-- The seat pairs used by `covW` and `affW` (each keeps stem cell 0 of the identity
+    deck: check A, `pairsCheck cell0Pairs`). -/
+def cell0Pairs : List (Fin 52 × Fin 52) :=
+  [(1, 2), (1, 3), (1, 5), (1, 8), (1, 12), (1, 34)]
 
 /-- The witness seat pair for each representative `e` (entry 0 unused). -/
 def covW : List (Fin 52 × Fin 52) :=

@@ -2,7 +2,7 @@
   E_m — the MegaDreifach v2 block map (G2 body + F3 tail) over `Position`.
 
   A typed transliteration of `primitives/hash/megadreifach/megadreifach.sudo`
-  (v2, current; normative), not an independent specification: same procedures, same
+  (v2, deprecated; normative), not an independent specification: same procedures, same
   control flow, tables copied verbatim. The Link 2 theorems show that the emitted code
   computes this function; they do not validate the sudo's design. It covers:
   `face_move`, `face_turn`, `inverse`, `visual_noon`, `spin_about_up`,
@@ -25,7 +25,7 @@
 
   Algebraic layer only; Link 2 refinements live in `Link2/FaceTurn.lean`,
   `Link2/Inverse.lean`, `Link2/EmHelpers.lean`, `Link2/EmCorner.lean`,
-  `Link2/EmEdge.lean`, `Link2/EmRecipe.lean`, `Link2/EmSpin.lean`,
+  `Link2/EmEdge.lean`, `Link2/EmGrip.lean`, `Link2/EmRecipe.lean`, `Link2/EmSpin.lean`,
   `Link2/EmStep.lean`, `Link2/EmInv.lean` (the `GripOk` invariant),
   `Link2/EmIv.lean` and `Link2/EmBlock.lean` (the whole block).  Zero sorry.
   No native_decide.

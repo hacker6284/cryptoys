@@ -1,0 +1,25 @@
+== Lemma A exact injectivity thresholds (pegs-only windows, digit differences in [-2,2])
+Demo     n=  7: lattice points of I with N <= B_n^2: 74; norm certificate (C5) gives m <= 3; EXACT: first relation at length m* = 5  => pegs-only injective (H_inf = m log2 3 exactly) iff m <= 4
+          shortest relation alpha = -11 + -12 tau, N(alpha)/l = 1; digits (e=0 first) = -200+1-2
+          => H_inf(m = 4) = 6.34 bits exact; m = 5: H_inf <= 6.92 (a collision exists) and >= 6.34
+Toy      n= 23: lattice points of I with N <= B_n^2: 74; norm certificate (C5) gives m <= 19; EXACT: first relation at length m* = 21  => pegs-only injective (H_inf = m log2 3 exactly) iff m <= 20
+          shortest relation alpha = 120197 + -23115 tau, N(alpha)/l = 1; digits (e=0 first) = -1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1+2
+          => H_inf(m = 20) = 31.70 bits exact; m = 21: H_inf <= 32.28 (a collision exists) and >= 31.70
+Hobby    n= 59: lattice points of I with N <= B_n^2: 74; norm certificate (C5) gives m <= 55; EXACT: first relation at length m* = 57  => pegs-only injective (H_inf = m log2 3 exactly) iff m <= 56
+          shortest relation alpha = -47578201548307 + -23751967208187 tau, N(alpha)/l = 1; digits (e=0 first) = -1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1+2
+          => H_inf(m = 56) = 88.76 bits exact; m = 57: H_inf <= 89.34 (a collision exists) and >= 88.76
+Serious  n=179: lattice points of I with N <= B_n^2: 74; norm certificate (C5) gives m <= 175; EXACT: first relation at length m* = 177  => pegs-only injective (H_inf = m log2 3 exactly) iff m <= 176
+          shortest relation alpha = 1014424911923903328063181125550724115960413 + 1343121753516350645131915067577057451084773 tau, N(alpha)/l = 1; digits (e=0 first) = -1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1+2
+          => H_inf(m = 176) = 278.95 bits exact; m = 177: H_inf <= 279.54 (a collision exists) and >= 278.95
+
+== Same with |d| <= 1 (sign-only differences, e.g. halved sign sums)
+Demo    : norm certificate m <= 5; exact first relation at m* = 7
+Toy     : norm certificate m <= 20; exact first relation at m* = 23
+Hobby   : norm certificate m <= 56; exact first relation at m* = 59
+Serious : norm certificate m <= 176; exact first relation at m* = 179
+
+== Cross-check 1: Demo brute force (is the m-trit walk injective?)
+    {1: True, 2: True, 3: True, 4: True, 5: False, 6: False, 7: False}  -> largest injective m = 4
+== Cross-check 2: Toy meet-in-the-middle over d in [-2,2]^m
+   m = 20: nonzero relation exists: False
+   m = 21: nonzero relation exists: True

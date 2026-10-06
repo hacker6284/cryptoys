@@ -1,0 +1,4 @@
+== ECBS Serious: n=179, Lemma A (D=2) holds for up to 175 positions; a free-fleet page needs up to 134: OK, injective mod l
+== ECBS Serious: n=179, Lemma A (D=2) holds for up to 175 positions; a ships+pegs page needs up to 234: NOT certified
+== ECBS Hobby: n=59, Lemma A (D=2) holds for up to 55 positions; a free-fleet page needs up to 134: NOT certified
+== ECBS Hobby: n=59, Lemma A (D=2) holds for up to 55 positions; a ships+pegs page needs up to 234: NOT certified

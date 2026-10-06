@@ -1,0 +1,79 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+mdw4_lib ZB0F1N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3R3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH0F0E5: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZE3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F1S9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0R2S8: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every block reads all 50)
+mdw4_lib board register: the 60 states of the (Ace, n1) edge slot give each of the 12 colours 5 times
+big ZP3F0E13: N=400000, seeds 70500000+...; cost {'turns': 390, 'clicks': '455 + echo card clicks (m*k)', 'piece_finds': 130, 'slot_reads': 13, 'regrips': 0, 'solves': 3}
+[1/4 chunks] cumulative n=100000  [137s]
+  D1  left  Q = W(h)^-1 W(gh)   n=100000: exact prediction 0 [0.00e+00,3.00e-05] | P(fixE>=2) 0.26542 [0.26269,0.26817] adv +0.00118 | P(fixC>=2) 0.26459 [0.26187,0.26733] adv +0.00035
+     mean fixE 1.00161 +- 0.00618, mean fixC 1.00372 +- 0.00622 (ideal 1) | mean moved 49.16689 +- 0.00564 (ideal 49.16667, diff +0.00022)
+     chi2 cyc-type E 479.2/508 p=0.82, C 184.7/172 p=0.24 | fixE-hist 3.9/5 p=0.56, fixC-hist 5.2/5 p=0.39
+     fixC hist (obs/ideal): 0:0.36657/0.36788, 1:0.36884/0.36788, 2:0.18263/0.18394, 3:0.06260/0.06131, 4:0.01569/0.01533
+     per-slot 'position fixed': corners 0.04915..0.05202 (ideal 0.05000, 1-slot 95% hw 0.00135), edges 0.03245..0.03465 (ideal 0.03333) | max |z| 2.93 at slot 8, Bonferroni p 0.17; sum z^2 38.4/50 (chi2_50 p=0.89; slots not independent)
+     per-slot 'fixed, orientation 0': corners 0.01572..0.01753 (ideal 0.01667, 1-slot 95% hw 0.00079), edges 0.01571..0.01772 (ideal 0.01667) | max |z| 2.60 at slot 33, Bonferroni p 0.46; sum z^2 53.7/50 (chi2_50 p=0.33; slots not independent)
+  D1' right Delta = W(hg)W(h)^-1 n=100000: exact prediction 0 [0.00e+00,3.00e-05] | P(fixE>=2) 0.26545 [0.26272,0.26820] adv +0.00121 | P(fixC>=2) 0.26554 [0.26281,0.26829] adv +0.00130
+     mean fixE 1.00141 +- 0.00620, mean fixC 1.00317 +- 0.00622 (ideal 1) | mean moved 49.16410 +- 0.00566 (ideal 49.16667, diff -0.00257)
+     chi2 cyc-type E 506.3/508 p=0.51, C 172.7/172 p=0.47 | fixE-hist 2.8/5 p=0.73, fixC-hist 1.2/5 p=0.95
+     fixC hist (obs/ideal): 0:0.36702/0.36788, 1:0.36744/0.36788, 2:0.18470/0.18394, 3:0.06166/0.06131, 4:0.01540/0.01533
+     per-slot 'position fixed': corners 0.04893..0.05123 (ideal 0.05000, 1-slot 95% hw 0.00135), edges 0.03223..0.03443 (ideal 0.03333) | max |z| 1.94 at slot 30, Bonferroni p 1; sum z^2 45.9/50 (chi2_50 p=0.64; slots not independent)
+     per-slot 'fixed, orientation 0': corners 0.01584..0.01733 (ideal 0.01667, 1-slot 95% hw 0.00079), edges 0.01593..0.01748 (ideal 0.01667) | max |z| 2.04 at slot 14, Bonferroni p 1; sum z^2 48.4/50 (chi2_50 p=0.54; slots not independent)
+  paired D1 - D1' (same deal, h, g): P(fixC>=2) diff -0.00095 +- 0.00386; mean moved diff +0.00279 +- 0.00797
+[2/4 chunks] cumulative n=200000  [137s]
+  D1  left  Q = W(h)^-1 W(gh)   n=200000: exact prediction 0 [0.00e+00,1.50e-05] | P(fixE>=2) 0.26543 [0.26349,0.26736] adv +0.00118 | P(fixC>=2) 0.26493 [0.26300,0.26686] adv +0.00068
+     mean fixE 1.00154 +- 0.00439, mean fixC 1.00280 +- 0.00439 (ideal 1) | mean moved 49.16642 +- 0.00399 (ideal 49.16667, diff -0.00025)
+     chi2 cyc-type E 606.6/673 p=0.97, C 168.5/196 p=0.92 | fixE-hist 3.2/5 p=0.67, fixC-hist 2.9/5 p=0.71
+     fixC hist (obs/ideal): 0:0.36665/0.36788, 1:0.36843/0.36788, 2:0.18383/0.18394, 3:0.06205/0.06131, 4:0.01533/0.01533
+     per-slot 'position fixed': corners 0.04884..0.05081 (ideal 0.05000, 1-slot 95% hw 0.00096), edges 0.03259..0.03425 (ideal 0.03333) | max |z| 2.38 at slot 5, Bonferroni p 0.86; sum z^2 53.0/50 (chi2_50 p=0.36; slots not independent)
+     per-slot 'fixed, orientation 0': corners 0.01586..0.01706 (ideal 0.01667, 1-slot 95% hw 0.00056), edges 0.01613..0.01757 (ideal 0.01667) | max |z| 3.16 at slot 33, Bonferroni p 0.08; sum z^2 62.2/50 (chi2_50 p=0.11; slots not independent)
+  D1' right Delta = W(hg)W(h)^-1 n=200000: exact prediction 0 [0.00e+00,1.50e-05] | P(fixE>=2) 0.26381 [0.26188,0.26574] adv -0.00044 | P(fixC>=2) 0.26484 [0.26291,0.26678] adv +0.00060
+     mean fixE 0.99862 +- 0.00437, mean fixC 1.00191 +- 0.00438 (ideal 1) | mean moved 49.16931 +- 0.00399 (ideal 49.16667, diff +0.00264)
+     chi2 cyc-type E 683.5/673 p=0.38, C 195.6/196 p=0.49 | fixE-hist 2.4/5 p=0.79, fixC-hist 2.5/5 p=0.77
+     fixC hist (obs/ideal): 0:0.36660/0.36788, 1:0.36856/0.36788, 2:0.18465/0.18394, 3:0.06123/0.06131, 4:0.01520/0.01533
+     per-slot 'position fixed': corners 0.04891..0.05151 (ideal 0.05000, 1-slot 95% hw 0.00096), edges 0.03256..0.03409 (ideal 0.03333) | max |z| 3.09 at slot 4, Bonferroni p 0.1; sum z^2 55.5/50 (chi2_50 p=0.28; slots not independent)
+     per-slot 'fixed, orientation 0': corners 0.01594..0.01735 (ideal 0.01667, 1-slot 95% hw 0.00056), edges 0.01614..0.01710 (ideal 0.01667) | max |z| 2.54 at slot 14, Bonferroni p 0.56; sum z^2 57.8/50 (chi2_50 p=0.21; slots not independent)
+  paired D1 - D1' (same deal, h, g): P(fixC>=2) diff +0.00009 +- 0.00273; mean moved diff -0.00289 +- 0.00563
+[3/4 chunks] cumulative n=300000  [137s]
+  D1  left  Q = W(h)^-1 W(gh)   n=300000: exact prediction 0 [0.00e+00,9.99e-06] | P(fixE>=2) 0.26504 [0.26347,0.26663] adv +0.00080 | P(fixC>=2) 0.26500 [0.26342,0.26658] adv +0.00076
+     mean fixE 1.00106 +- 0.00358, mean fixC 1.00303 +- 0.00358 (ideal 1) | mean moved 49.16575 +- 0.00326 (ideal 49.16667, diff -0.00092)
+     chi2 cyc-type E 743.1/796 p=0.91, C 189.5/205 p=0.77 | fixE-hist 3.6/5 p=0.61, fixC-hist 4.7/5 p=0.46
+     fixC hist (obs/ideal): 0:0.36636/0.36788, 1:0.36865/0.36788, 2:0.18397/0.18394, 3:0.06197/0.06131, 4:0.01541/0.01533
+     per-slot 'position fixed': corners 0.04916..0.05102 (ideal 0.05000, 1-slot 95% hw 0.00078), edges 0.03265..0.03416 (ideal 0.03333) | max |z| 2.56 at slot 8, Bonferroni p 0.52; sum z^2 65.0/50 (chi2_50 p=0.075; slots not independent)
+     per-slot 'fixed, orientation 0': corners 0.01623..0.01702 (ideal 0.01667, 1-slot 95% hw 0.00046), edges 0.01619..0.01736 (ideal 0.01667) | max |z| 2.98 at slot 33, Bonferroni p 0.14; sum z^2 60.2/50 (chi2_50 p=0.15; slots not independent)
+  D1' right Delta = W(hg)W(h)^-1 n=300000: exact prediction 0 [0.00e+00,9.99e-06] | P(fixE>=2) 0.26387 [0.26230,0.26545] adv -0.00037 | P(fixC>=2) 0.26442 [0.26284,0.26600] adv +0.00018
+     mean fixE 0.99859 +- 0.00357, mean fixC 1.00131 +- 0.00358 (ideal 1) | mean moved 49.16786 +- 0.00326 (ideal 49.16667, diff +0.00119)
+     chi2 cyc-type E 793.6/796 p=0.52, C 199.5/205 p=0.6 | fixE-hist 3.1/5 p=0.68, fixC-hist 1.6/5 p=0.9
+     fixC hist (obs/ideal): 0:0.36700/0.36788, 1:0.36859/0.36788, 2:0.18408/0.18394, 3:0.06123/0.06131, 4:0.01538/0.01533
+     per-slot 'position fixed': corners 0.04933..0.05119 (ideal 0.05000, 1-slot 95% hw 0.00078), edges 0.03268..0.03396 (ideal 0.03333) | max |z| 3.00 at slot 4, Bonferroni p 0.14; sum z^2 56.9/50 (chi2_50 p=0.23; slots not independent)
+     per-slot 'fixed, orientation 0': corners 0.01632..0.01730 (ideal 0.01667, 1-slot 95% hw 0.00046), edges 0.01613..0.01710 (ideal 0.01667) | max |z| 2.70 at slot 16, Bonferroni p 0.35; sum z^2 58.0/50 (chi2_50 p=0.2; slots not independent)
+  paired D1 - D1' (same deal, h, g): P(fixC>=2) diff +0.00058 +- 0.00223; mean moved diff -0.00211 +- 0.00460
+[4/4 chunks] cumulative n=400000  [137s]
+  D1  left  Q = W(h)^-1 W(gh)   n=400000: exact prediction 0 [0.00e+00,7.49e-06] | P(fixE>=2) 0.26519 [0.26383,0.26656] adv +0.00095 | P(fixC>=2) 0.26511 [0.26375,0.26649] adv +0.00087
+     mean fixE 1.00134 +- 0.00310, mean fixC 1.00264 +- 0.00310 (ideal 1) | mean moved 49.16573 +- 0.00283 (ideal 49.16667, diff -0.00094)
+     chi2 cyc-type E 838.8/886 p=0.87, C 211.3/215 p=0.56 | fixE-hist 6.1/5 p=0.3, fixC-hist 3.5/5 p=0.62
+     fixC hist (obs/ideal): 0:0.36707/0.36788, 1:0.36781/0.36788, 2:0.18407/0.18394, 3:0.06187/0.06131, 4:0.01549/0.01533
+     per-slot 'position fixed': corners 0.04927..0.05096 (ideal 0.05000, 1-slot 95% hw 0.00068), edges 0.03268..0.03418 (ideal 0.03333) | max |z| 2.97 at slot 44, Bonferroni p 0.15; sum z^2 68.4/50 (chi2_50 p=0.043; slots not independent)
+     per-slot 'fixed, orientation 0': corners 0.01630..0.01699 (ideal 0.01667, 1-slot 95% hw 0.00040), edges 0.01614..0.01718 (ideal 0.01667) | max |z| 2.58 at slot 39, Bonferroni p 0.5; sum z^2 55.2/50 (chi2_50 p=0.29; slots not independent)
+  D1' right Delta = W(hg)W(h)^-1 n=400000: exact prediction 0 [0.00e+00,7.49e-06] | P(fixE>=2) 0.26418 [0.26281,0.26555] adv -0.00006 | P(fixC>=2) 0.26449 [0.26313,0.26586] adv +0.00025
+     mean fixE 0.99962 +- 0.00309, mean fixC 1.00128 +- 0.00310 (ideal 1) | mean moved 49.16650 +- 0.00283 (ideal 49.16667, diff -0.00017)
+     chi2 cyc-type E 929.3/886 p=0.15, C 210.4/215 p=0.58 | fixE-hist 6.9/5 p=0.23, fixC-hist 1.6/5 p=0.9
+     fixC hist (obs/ideal): 0:0.36695/0.36788, 1:0.36856/0.36788, 2:0.18415/0.18394, 3:0.06134/0.06131, 4:0.01533/0.01533
+     per-slot 'position fixed': corners 0.04935..0.05111 (ideal 0.05000, 1-slot 95% hw 0.00068), edges 0.03280..0.03395 (ideal 0.03333) | max |z| 3.21 at slot 4, Bonferroni p 0.065; sum z^2 62.0/50 (chi2_50 p=0.12; slots not independent)
+     per-slot 'fixed, orientation 0': corners 0.01649..0.01726 (ideal 0.01667, 1-slot 95% hw 0.00040), edges 0.01627..0.01712 (ideal 0.01667) | max |z| 2.96 at slot 4, Bonferroni p 0.16; sum z^2 68.1/50 (chi2_50 p=0.045; slots not independent)
+  paired D1 - D1' (same deal, h, g): P(fixC>=2) diff +0.00062 +- 0.00193; mean moved diff -0.00077 +- 0.00399
+wall time 137 s, workers 4
+
+real	2m18.524s
+user	9m9.206s
+sys	0m0.120s

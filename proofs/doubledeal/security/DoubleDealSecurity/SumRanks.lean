@@ -233,6 +233,10 @@ def permDeck (π : Equiv.Perm (Fin 52)) : Fin 52 → Nat := fun k => (π k).val
 theorem isDeck_permDeck (π : Equiv.Perm (Fin 52)) : IsDeck (permDeck π) :=
   ⟨fun k => (π k).isLt, fun _ _ h => π.injective (Fin.ext h)⟩
 
+/-- Relabelling the deck of `π` by `α` is the deck of `α * π`. -/
+theorem rel_permDeck (α π : Equiv.Perm (Fin 52)) : rel α (permDeck π) = permDeck (α * π) :=
+  funext fun i => app_fin α (π i)
+
 theorem isDeck_lay_permDeck (π : Equiv.Perm (Fin 52)) :
     IsDeck (scoopColumnMajor (layColumnMajor (permDeck π))) := by
   rw [scoop_lay_columnMajor]; exact isDeck_permDeck π
@@ -438,6 +442,8 @@ def v9SymFn (a : Fin 13) (b : Fin 4) (c : Fin 52) : Fin 52 :=
   ⟨13 * ((su + b.val + 16 - a.val + wrap) % 4) + (r0 + a.val) % 13, by omega⟩
 
 def neg13 (a : Fin 13) : Fin 13 := ⟨(13 - a.val) % 13, Nat.mod_lt _ (by decide)⟩
+
+theorem neg13_eq : ∀ a : Fin 13, neg13 a = -a := by decide
 def neg4 (b : Fin 4) : Fin 4 := ⟨(4 - b.val) % 4, Nat.mod_lt _ (by decide)⟩
 
 theorem v9SymFn_left : ∀ (a : Fin 13) (b : Fin 4) (c : Fin 52),

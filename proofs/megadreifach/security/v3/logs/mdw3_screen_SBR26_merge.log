@@ -1,0 +1,32 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SAF0: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SAR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SCR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDF26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib SDR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+merge SBR26: N=25000, seeds 43100000+...; cost {'steps': 78, 'turns': 468, 'piece_turn_clicks': 390, 'card_clicks': '130 + sum of echo amounts (echo amount = suit of the held card, so 130 + m*k)', 'face_lookups': 390, 'pieces_found_per_step': 2, 'regrips': 0, 'solves': 3}
+  merge SBR26 IV   swap at  1: mean differing slots 49.1715, P(<=46) 0.01036 (ideal 0.01042), state equal right after the pair 0, collisions 0  [7s]
+  merge SBR26 IV   swap at  2: mean differing slots 49.1600, P(<=46) 0.01128 (ideal 0.01042), state equal right after the pair 0, collisions 0  [8s]
+  merge SBR26 IV   swap at 13: mean differing slots 49.1800, P(<=46) 0.00948 (ideal 0.01042), state equal right after the pair 0, collisions 0  [9s]
+  merge SBR26 IV   swap at 26: mean differing slots 49.1509, P(<=46) 0.01028 (ideal 0.01042), state equal right after the pair 0, collisions 0  [10s]
+  merge SBR26 IV   swap at 27: mean differing slots 49.1683, P(<=46) 0.01016 (ideal 0.01042), state equal right after the pair 0, collisions 0  [10s]
+  merge SBR26 IV   swap at 39: mean differing slots 49.1703, P(<=46) 0.00976 (ideal 0.01042), state equal right after the pair 0, collisions 0  [11s]
+  merge SBR26 IV   swap at 50: mean differing slots 49.1535, P(<=46) 0.01052 (ideal 0.01042), state equal right after the pair 0, collisions 0  [12s]
+  merge SBR26 IV   swap at 51: mean differing slots 49.1654, P(<=46) 0.01020 (ideal 0.01042), state equal right after the pair 0, collisions 0  [13s]
+  merge SBR26 rand swap at  1: mean differing slots 49.1723, P(<=46) 0.01028 (ideal 0.01042), state equal right after the pair 0, collisions 0  [8s]
+  merge SBR26 rand swap at  2: mean differing slots 49.1625, P(<=46) 0.01012 (ideal 0.01042), state equal right after the pair 0, collisions 0  [8s]
+  merge SBR26 rand swap at 13: mean differing slots 49.1683, P(<=46) 0.00964 (ideal 0.01042), state equal right after the pair 0, collisions 0  [9s]
+  merge SBR26 rand swap at 26: mean differing slots 49.1628, P(<=46) 0.01096 (ideal 0.01042), state equal right after the pair 0, collisions 0  [10s]
+  merge SBR26 rand swap at 27: mean differing slots 49.1648, P(<=46) 0.00984 (ideal 0.01042), state equal right after the pair 0, collisions 0  [10s]
+  merge SBR26 rand swap at 39: mean differing slots 49.1680, P(<=46) 0.01056 (ideal 0.01042), state equal right after the pair 0, collisions 0  [11s]
+  merge SBR26 rand swap at 50: mean differing slots 49.1611, P(<=46) 0.01040 (ideal 0.01042), state equal right after the pair 0, collisions 0  [12s]
+  merge SBR26 rand swap at 51: mean differing slots 49.1789, P(<=46) 0.01008 (ideal 0.01042), state equal right after the pair 0, collisions 0  [12s]
+merge SBR26: 400000 adjacent-swap pairs (8 positions [1, 2, 13, 26, 27, 39, 50, 51] x IV/uniform x 25000); state equal right after the swapped pair 0; output collisions 0; 0-hit 95% bound per pair 7.49e-06; hits []
+  IV   differing output slots: mean 49.1650 (ideal 49.1667); [0-40] 0.00000 (ideal 0.00000); [41-44] 0.00023 (ideal 0.00023); [45-46] 0.01002 (ideal 0.01019); [47-47] 0.04149 (ideal 0.04192); [48-48] 0.15213 (ideal 0.15090); [49-49] 0.36322 (ideal 0.36217); [50-50] 0.43289 (ideal 0.43460)
+  rand differing output slots: mean 49.1673 (ideal 49.1667); [0-40] 0.00000 (ideal 0.00000); [41-44] 0.00017 (ideal 0.00023); [45-46] 0.01006 (ideal 0.01019); [47-47] 0.04208 (ideal 0.04192); [48-48] 0.15085 (ideal 0.15090); [49-49] 0.36183 (ideal 0.36217); [50-50] 0.43500 (ideal 0.43460)
+wall time 158 s, workers 4

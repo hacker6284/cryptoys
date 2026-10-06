@@ -1,0 +1,265 @@
+{
+ "Demo_three 1 affine": {
+  "items": {
+   "tally": 3,
+   "script row": 7,
+   "inversion ladder": 2,
+   "trace ladder": 2,
+   "protocol phase": 3,
+   "parking hole (W1)": 1
+  },
+  "need": 18,
+  "avail": 16,
+  "bands": 8,
+  "work": 1,
+  "key": 1,
+  "total": 2,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": false
+ },
+ "Demo_three 1 affine +trace-walk": {
+  "items": {
+   "tally": 3,
+   "script row": 7,
+   "inversion ladder": 2,
+   "trace ladder": 0,
+   "protocol phase": 3,
+   "parking hole (W1)": 1
+  },
+  "need": 16,
+  "avail": 24,
+  "bands": 6,
+  "work": 1,
+  "key": 1,
+  "total": 2,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": true
+ },
+ "Demo_three 1 proj": {
+  "items": {
+   "tally": 3,
+   "script row": 15,
+   "inversion ladder": 2,
+   "trace ladder": 2,
+   "protocol phase": 3,
+   "parking hole (W1)": 1
+  },
+  "need": 26,
+  "avail": 16,
+  "bands": 9,
+  "work": null,
+  "key": 1,
+  "total": null,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "note": "does not fit: more than 8 register slots"
+ },
+ "Toy_three 1 proj": {
+  "items": {
+   "tally": 11,
+   "script row": 15,
+   "inversion ladder": 4,
+   "trace ladder": 4,
+   "protocol phase": 3,
+   "parking hole (W1)": 1
+  },
+  "need": 38,
+  "avail": 112,
+  "bands": 9,
+  "work": 4,
+  "key": 1,
+  "total": 5,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": true
+ },
+ "Toy_pegs 19 proj": {
+  "items": {
+   "tally": 11,
+   "script row": 15,
+   "inversion ladder": 4,
+   "trace ladder": 4,
+   "protocol phase": 3
+  },
+  "need": 37,
+  "avail": 112,
+  "bands": 9,
+  "work": 4,
+  "key": 1,
+  "total": 5,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true
+ },
+ "Toy_three 1 affine": {
+  "items": {
+   "tally": 11,
+   "script row": 7,
+   "inversion ladder": 4,
+   "trace ladder": 4,
+   "protocol phase": 3,
+   "parking hole (W1)": 1
+  },
+  "need": 30,
+  "avail": 112,
+  "bands": 8,
+  "work": 4,
+  "key": 1,
+  "total": 5,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": true
+ },
+ "Hobby_three 2 proj": {
+  "items": {
+   "tally": 29,
+   "script row": 15,
+   "inversion ladder": 5,
+   "trace ladder": 5,
+   "protocol phase": 3,
+   "parking hole (W1)": 1
+  },
+  "need": 58,
+  "avail": 80,
+  "bands": 9,
+  "work": 8,
+  "key": 2,
+  "total": 10,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": true
+ },
+ "Hobby_pegs 55 proj": {
+  "items": {
+   "tally": 29,
+   "script row": 15,
+   "inversion ladder": 5,
+   "trace ladder": 5,
+   "protocol phase": 3
+  },
+  "need": 57,
+  "avail": 80,
+  "bands": 9,
+  "work": 8,
+  "key": 1,
+  "total": 9,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true
+ },
+ "Hobby_six 1 proj": {
+  "items": {
+   "tally": 29,
+   "script row": 15,
+   "inversion ladder": 5,
+   "trace ladder": 5,
+   "protocol phase": 3,
+   "coordinate rails": 20
+  },
+  "need": 77,
+  "avail": 80,
+  "bands": 9,
+  "work": 8,
+  "key": 1,
+  "total": 9,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": true
+ },
+ "Serious_three 6 proj": {
+  "items": {
+   "tally": 89,
+   "script row": 15,
+   "inversion ladder": 7,
+   "trace ladder": 7,
+   "protocol phase": 3,
+   "parking hole (W1)": 1
+  },
+  "need": 122,
+  "avail": 240,
+  "bands": 9,
+  "work": 24,
+  "key": 6,
+  "total": 30,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": true
+ },
+ "Serious_three 7 proj": {
+  "items": {
+   "tally": 89,
+   "script row": 15,
+   "inversion ladder": 7,
+   "trace ladder": 7,
+   "protocol phase": 3,
+   "parking hole (W1)": 1
+  },
+  "need": 122,
+  "avail": 240,
+  "bands": 9,
+  "work": 24,
+  "key": 7,
+  "total": 31,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": true
+ },
+ "Serious_pegs 175 proj": {
+  "items": {
+   "tally": 89,
+   "script row": 15,
+   "inversion ladder": 7,
+   "trace ladder": 7,
+   "protocol phase": 3
+  },
+  "need": 121,
+  "avail": 240,
+  "bands": 9,
+  "work": 24,
+  "key": 2,
+  "total": 26,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true
+ },
+ "Serious_pegs 200 proj": {
+  "items": {
+   "tally": 89,
+   "script row": 15,
+   "inversion ladder": 7,
+   "trace ladder": 7,
+   "protocol phase": 3,
+   "coordinate rails": 20
+  },
+  "need": 141,
+  "avail": 240,
+  "bands": 9,
+  "work": 24,
+  "key": 2,
+  "total": 26,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": true
+ },
+ "Serious_six 2 proj": {
+  "items": {
+   "tally": 89,
+   "script row": 15,
+   "inversion ladder": 7,
+   "trace ladder": 7,
+   "protocol phase": 3,
+   "coordinate rails": 20
+  },
+  "need": 141,
+  "avail": 240,
+  "bands": 9,
+  "work": 24,
+  "key": 2,
+  "total": 26,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "fits": true
+ }
+}

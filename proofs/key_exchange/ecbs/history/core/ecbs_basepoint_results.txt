@@ -1,0 +1,25 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+Demo: x^7 = x^5 + 1
+  root-strip digits of (3^n+1)/4 = R.R.RW (n-1 = 6 digits); equals 'red, empty' repeated then 'red, white': True
+  tries: hole 1: y*y = rhs False (355 moves); hole 2: y*y = rhs True (313 moves)
+  P = white-red-white-red strip over (x, y): 2,009 moves; equals 5(x,y) and has order l (PARI): True
+  halving ladder from n-1 = 6: RW (Itoh-Tsujii program RW: True); from n = 7: RR (trace-chain program RR: True)
+  test vector P: x = .RWR.WW  y = R..RRWR  (hole 0 first)
+Toy: x^23 = x^15 + 1
+  root-strip digits of (3^n+1)/4 = R.R.R.R.R.R.R.R.R.R.RW (n-1 = 22 digits); equals 'red, empty' repeated then 'red, white': True
+  tries: hole 1: y*y = rhs False (3,380 moves); hole 2: y*y = rhs True (3,566 moves)
+  P = white-red-white-red strip over (x, y): 12,663 moves; equals 5(x,y) and has order l (PARI): True
+  halving ladder from n-1 = 22: WRRW (Itoh-Tsujii program WRRW: True); from n = 23: WRRR (trace-chain program WRRR: True)
+  test vector P: x = RW..W.WWWR..W...WWWRWRR  y = RRWWRRR..R.WRRW..RWWRRW  (hole 0 first)
+Hobby: x^59 = x^39 + 1
+  root-strip digits of (3^n+1)/4 = R.R.R.R.R.R.R.R.R.R.R.R.... (n-1 = 58 digits); equals 'red, empty' repeated then 'red, white': True
+  tries: hole 1: y*y = rhs True (24,154 moves)
+  P = white-red-white-red strip over (x, y): 67,198 moves; equals 5(x,y) and has order l (PARI): True
+  halving ladder from n-1 = 58: RRWRW (Itoh-Tsujii program RRWRW: True); from n = 59: RRWRR (trace-chain program RRWRR: True)
+  test vector P: x = RRR.WWWW.RWW..WWW.WR.R.WWRW.RW...  y = WRRRRWWRRWWRWRRW.RWW.WRRRWRRRR...  sha256(x|y)[:16] = e6635080e15e0cd7
+Serious: x^179 = x^59 + 1
+  root-strip digits of (3^n+1)/4 = R.R.R.R.R.R.R.R.R.R.R.R.... (n-1 = 178 digits); equals 'red, empty' repeated then 'red, white': True
+  tries: hole 1: y*y = rhs True (181,904 moves)
+  P = white-red-white-red strip over (x, y): 440,048 moves; equals 5(x,y) and has order l (PARI): True
+  halving ladder from n-1 = 178: WRRWWRW (Itoh-Tsujii program WRRWWRW: True); from n = 179: WRRWWRR (trace-chain program WRRWWRR: True)
+  test vector P: x = WW..WWW.RWW.RWRRRWRWRRWRRW.W.W...  y = R.RWRRWRWW.WRWRR.W.W.R...RRW.W...  sha256(x|y)[:16] = 345ec55420cdd25e

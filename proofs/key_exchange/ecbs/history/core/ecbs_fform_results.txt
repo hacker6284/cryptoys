@@ -1,0 +1,27 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+== 1. F-form scale identities (PARI, random points of <P>)
+  Demo: 50/50 additions satisfy run, rise, gap = v^2 Z (x3 - x2), X3/Z3 = x3, Y3/Z3 = y3 = -(y2 + slope*gap), equal PARI
+  Toy: 50/50 additions satisfy run, rise, gap = v^2 Z (x3 - x2), X3/Z3 = x3, Y3/Z3 = y3 = -(y2 + slope*gap), equal PARI
+  Hobby: 50/50 additions satisfy run, rise, gap = v^2 Z (x3 - x2), X3/Z3 = x3, Y3/Z3 = y3 = -(y2 + slope*gap), equal PARI
+  Serious: 50/50 additions satisfy run, rise, gap = v^2 Z (x3 - x2), X3/Z3 = x3, Y3/Z3 = y3 = -(y2 + slope*gap), equal PARI
+
+== 2. Receiver check with lazy y: honest accepted, B + T5 rejected
+  Toy: honest: on-curve True, trace True; honest: on-curve True, trace True; B+T5: on-curve True, trace False; B+T5: on-curve True, trace False
+  Hobby: honest: on-curve True, trace True; honest: on-curve True, trace True; B+T5: on-curve True, trace False; B+T5: on-curve True, trace False
+  Serious: honest: on-curve True, trace True; honest: on-curve True, trace True; B+T5: on-curve True, trace False; B+T5: on-curve True, trace False
+
+== 3. Full exchanges on the workbench board (pegs-only keys), spec schedule vs F-form + lazy y
+  Demo    pegs   2 affine [spec chord + trace chain  ] correct x20 (+5 re-rolls): bands public walk 6, validation 8, shared walk 6; moves/person 0.0037 M incl. slides 0.0006 M; validation 0.0027 M; tally 3
+  Demo    pegs   2 affine [chord + trace WALK        ] correct x20 (+5 re-rolls): bands public walk 6, validation 6, shared walk 6; moves/person 0.0050 M incl. slides 0.0008 M; validation 0.0039 M; tally 3
+  Demo    pegs   2 affine [chord + lazy-y chain      ] correct x20 (+5 re-rolls): bands public walk 6, validation 7, shared walk 6; moves/person 0.0037 M incl. slides 0.0006 M; validation 0.0027 M; tally 3
+  Demo    pegs   2 proj   [spec                      ] correct x20 (+5 re-rolls): bands public walk 9, validation 8, shared walk 9; moves/person 0.0041 M incl. slides 0.0008 M; validation 0.0027 M; tally 3
+  Demo    pegs   2 proj   [F-form+lazy-y             ] correct x20 (+5 re-rolls): bands public walk 7, validation 7, shared walk 7; moves/person 0.0041 M incl. slides 0.0008 M; validation 0.0027 M; tally 3
+  Toy     pegs  16 proj   [spec                      ] correct x10 (+0 re-rolls): bands public walk 9, validation 8, shared walk 9; moves/person 0.1506 M incl. slides 0.0204 M; validation 0.0469 M; tally 11
+  Toy     pegs  16 proj   [F-form+lazy-y             ] correct x10 (+0 re-rolls): bands public walk 7, validation 7, shared walk 7; moves/person 0.1493 M incl. slides 0.0193 M; validation 0.0469 M; tally 11
+  Toy     pegs  16 proj   [F-form+lazy-y, NO swap    ] correct x10 (+0 re-rolls): bands public walk 7, validation 7, shared walk 7; moves/person 0.1493 M incl. slides 0.0193 M; validation 0.0469 M; tally 11
+  Hobby   pegs  51 proj   [spec                      ] correct x5 (+0 re-rolls): bands public walk 9, validation 8, shared walk 9; moves/person 2.0274 M incl. slides 0.1638 M; validation 0.3896 M; tally 29
+  Hobby   pegs  51 proj   [F-form+lazy-y             ] correct x5 (+0 re-rolls): bands public walk 7, validation 7, shared walk 7; moves/person 2.0193 M incl. slides 0.1538 M; validation 0.3898 M; tally 29
+  Hobby   pegs  51 proj   [F-form+lazy-y, NO swap    ] correct x5 (+0 re-rolls): bands public walk 7, validation 7, shared walk 7; moves/person 2.0193 M incl. slides 0.1538 M; validation 0.3898 M; tally 29
+  Serious pegs 162 proj   [spec                      ] correct x5 (+0 re-rolls): bands public walk 9, validation 8, shared walk 9; moves/person 44.9985 M incl. slides 1.6419 M; validation 3.9333 M; tally 89
+  Serious pegs 162 proj   [F-form+lazy-y             ] correct x5 (+0 re-rolls): bands public walk 7, validation 7, shared walk 7; moves/person 44.8867 M incl. slides 1.5394 M; validation 3.9342 M; tally 89
+  Serious pegs 162 proj   [F-form+lazy-y, NO swap    ] correct x5 (+0 re-rolls): bands public walk 7, validation 7, shared walk 7; moves/person 44.8867 M incl. slides 1.5394 M; validation 3.9342 M; tally 89

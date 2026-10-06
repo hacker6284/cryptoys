@@ -1,0 +1,101 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+== 0. Curve over GF(3): y^2 = x^3 + 2x^2 + 1
+   affine points [(0, 1), (0, 2), (1, 1), (1, 2)]; #E(F_3) = 5; trace t = -1
+   Delta = -a2^3 a6 = 1 (mod 3), j = -a2^3/a6 = 1 (mod 3): j != 0 => ordinary over every extension
+
+== 1. Trace: exact Z[tau] power vs recurrence vs brute force
+   n= 1: Tr(tau^n) =     -1 = V_n; #E = 5; brute force 5 OK; twist y^2=x^3+x^2+2: formula 3, brute 3 OK
+   n= 2: Tr(tau^n) =     -5 = V_n; #E = 15; brute force 15 OK
+   n= 3: Tr(tau^n) =      8 = V_n; #E = 20; brute force 20 OK; twist y^2=x^3+x^2+2: formula 36, brute 36 OK
+   n= 4: Tr(tau^n) =      7 = V_n; #E = 75; brute force 75 OK
+   n= 5: Tr(tau^n) =    -31 = V_n; #E = 275; brute force 275 OK; twist y^2=x^3+x^2+2: formula 213, brute 213 OK
+   n= 6: Tr(tau^n) =     10 = V_n; #E = 720; brute force 720 OK
+   n= 7: Tr(tau^n) =     83 = V_n; #E = 2105; brute force 2105 OK; twist y^2=x^3+x^2+2: formula 2271, brute 2271 OK
+   n= 8: Tr(tau^n) =   -113 = V_n; #E = 6675; brute force 6675 OK
+   n= 9: Tr(tau^n) =   -136 = V_n; #E = 19820; brute force 19820 OK; twist y^2=x^3+x^2+2: formula 19548, brute 19548 OK
+   n=10: Tr(tau^n) =    475 = V_n; #E = 58575; brute force 58575 OK
+   n=11: Tr(tau^n) =    -67 = V_n; #E = 177215; brute force 177215 OK
+   (4.3s)
+
+== 2. Tiers
+
+-- Demo: n = 7, n prime True
+   trace V_n = 83; V_n mod 3 = 2 (ordinary iff != 0); |V_n| <= 2 sqrt(q): True
+   #E = 2105
+   #E mod 5 = 0, #E mod 25 = 5; l = 421
+   l prime? FLINT(proving) True, sympy BPSW True, PARI APR-CL True; bits 9, log2 l = 8.7177
+   anomalous (#E == q)? False;  l == 3? False;  l == 5? False
+   l - 1 = 2^2 * 3 * 5 * 7  (every factor prime by all three tests: True)
+   embedding degree k = ord_l(q) = 15; log2 k = 3.91; (l-1)/k = 28
+   ord_l(3) = 105; is 3 in <lambda>? (ord_l(3) | n): False
+   roots of x^2+x+3 mod l: 2; with lambda^n = 1: 1; lambdabar = -1-lambda has lambdabar^n = 1? False
+   lambdabar = 3/lambda mod l: True
+   quadratic twist (y^2 = x^3 + x^2 + 2) order q+1+V_n = 2271 = 3 * 757
+   b'=2 curve (trace 2 over F_3) order = 2 * 1051
+   node (b'=0) nonsingular points: order q+1 = 2^2 * 547
+   rho expected iterations log2: plain sqrt(pi l/2) 4.68; +-1 classes 4.18; +-tau^i classes (2n) 2.78
+   2*rho(2n) = 5.56 bits
+   base point rule: first hole j = 2; P = 5R has order l: True; strip tau^3-tau^2+tau-1 == 5 on R: True; tau(P) == lambda P: True
+      P: x = .RWR.WW  y = R..RRWR
+
+-- Toy: n = 23, n prime True
+   trace V_n = 268133; V_n mod 3 = 2 (ordinary iff != 0); |V_n| <= 2 sqrt(q): True
+   #E = 94142910695
+   #E mod 5 = 0, #E mod 25 = 20; l = 18828582139
+   l prime? FLINT(proving) True, sympy BPSW True, PARI APR-CL True; bits 35, log2 l = 34.1322
+   anomalous (#E == q)? False;  l == 3? False;  l == 5? False
+   l - 1 = 2 * 3^3 * 23 * 67 * 226267  (every factor prime by all three tests: True)
+   embedding degree k = ord_l(q) = 818634006; log2 k = 29.61; (l-1)/k = 23
+   ord_l(3) = l-1; is 3 in <lambda>? (ord_l(3) | n): False
+   roots of x^2+x+3 mod l: 2; with lambda^n = 1: 1; lambdabar = -1-lambda has lambdabar^n = 1? False
+   lambdabar = 3/lambda mod l: True
+   quadratic twist (y^2 = x^3 + x^2 + 2) order q+1+V_n = 94143446961 = 3 * 47^2 * 14206043
+   b'=2 curve (trace 2 over F_3) order = 2 * 47071896187
+   node (b'=0) nonsingular points: order q+1 = 2^2 * 23535794707
+   rho expected iterations log2: plain sqrt(pi l/2) 17.39; +-1 classes 16.89; +-tau^i classes (2n) 14.63
+   2*rho(2n) = 29.26 bits
+   base point rule: first hole j = 2; P = 5R has order l: True; strip tau^3-tau^2+tau-1 == 5 on R: True; tau(P) == lambda P: True
+      P: x = RW..W.WWWR..W...WWWRWRR  y = RRWWRRR..R.WRRW..RWWRRW
+
+-- Hobby: n = 59, n prime True
+   trace V_n = -237742473477667; V_n mod 3 = 2 (ordinary iff != 0); |V_n| <= 2 sqrt(q): True
+   #E = 14130386091738972247238288735
+   #E mod 5 = 0, #E mod 25 = 10; l = 2826077218347794449447657747
+   l prime? FLINT(proving) True, sympy BPSW True, PARI APR-CL True; bits 92, log2 l = 91.1909
+   anomalous (#E == q)? False;  l == 3? False;  l == 5? False
+   l - 1 = 2 * 3^3 * 41 * 59 * 1759 * 12107 * 1015902464920517  (every factor prime by all three tests: True)
+   embedding degree k = ord_l(q) = 15966537956767200279365298; log2 k = 83.72; (l-1)/k = 177
+   ord_l(3) = 942025739449264816482552582; is 3 in <lambda>? (ord_l(3) | n): False
+   roots of x^2+x+3 mod l: 2; with lambda^n = 1: 1; lambdabar = -1-lambda has lambdabar^n = 1? False
+   lambdabar = 3/lambda mod l: True
+   quadratic twist (y^2 = x^3 + x^2 + 2) order q+1+V_n = 14130386091738496762291333401 = 3 * 6373 * 6491 * 113861590519948781269[C67]
+   b'=2 curve (trace 2 over F_3) order = 2 * 16993 * 3770219 * 110277623308041353[C57]
+   node (b'=0) nonsingular points: order q+1 = 2^2 * 3187 * 1108439448677340328268341
+   rho expected iterations log2: plain sqrt(pi l/2) 45.92; +-1 classes 45.42; +-tau^i classes (2n) 42.48
+   2*rho(2n) = 84.96 bits
+   base point rule: first hole j = 1; P = 5R has order l: True; strip tau^3-tau^2+tau-1 == 5 on R: True; tau(P) == lambda P: True
+      P digits sha256(x|y)[:16] = e6635080e15e0cd7  (hash format may differ from the spec's)
+
+-- Serious: n = 179, n prime True
+   trace V_n = 8415761749837112564717203646960402152220333; V_n mod 3 = 2 (ordinary iff != 0); |V_n| <= 2 sqrt(q): True
+   #E = 25392449348622130779763242573538520583474925385036649070887957197782065487275527119535
+   #E mod 5 = 0, #E mod 25 = 10; l = 5078489869724426155952648514707704116694985077007329814177591439556413097455105423907
+   l prime? FLINT(proving) True, sympy BPSW True, PARI APR-CL True; bits 282, log2 l = 281.3864
+   anomalous (#E == q)? False;  l == 3? False;  l == 5? False
+   l - 1 = 2 * 3^2 * 47 * 179 * 10125222756042811 * 703353447714603929148486975269 * 4709046612308978229431976119158651  (every factor prime by all three tests: True)
+   embedding degree k = ord_l(q) = 28371451786169978524875131367082145903323938977694579967472577874616832946676566614; log2 k = 273.90; (l-1)/k = 179
+   ord_l(3) = l-1; is 3 in <lambda>? (ord_l(3) | n): False
+   roots of x^2+x+3 mod l: 2; with lambda^n = 1: 1; lambdabar = -1-lambda has lambdabar^n = 1? False
+   lambdabar = 3/lambda mod l: True
+   quadratic twist (y^2 = x^3 + x^2 + 2) order q+1+V_n = 25392449348622130779763242573538520583474942216560148745113086632189359408079831560201 = 3 * 1433 * 5906594405355229304434343469071533050354720217855349789512232294065912865336085499[C272]
+   b'=2 curve (trace 2 over F_3) order = 2 * 12696224674311065389881621286769260291737465824706596178803112894331241706771176272051[C283]
+   node (b'=0) nonsingular points: order q+1 = 2^2 * 3755779 * 1690225206849373377651030756438179708089515770283501698848662415639053339378973[C260]
+   rho expected iterations log2: plain sqrt(pi l/2) 141.02; +-1 classes 140.52; +-tau^i classes (2n) 136.78
+   2*rho(2n) = 273.55 bits
+   base point rule: first hole j = 1; P = 5R has order l: True; strip tau^3-tau^2+tau-1 == 5 on R: True; tau(P) == lambda P: True
+      P digits sha256(x|y)[:16] = 345ec55420cdd25e  (hash format may differ from the spec's)
+
+== 3. Family scan: prime n < 200 with #E = 5 * prime
+   n = [2, 7, 23, 59, 179]
+
+(total 22.3s)

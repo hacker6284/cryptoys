@@ -1,0 +1,14 @@
+Demo    pegs   2 affine [spec chord + trace chain  ] bands 8; control need 17 of 16 holes; => workspace 1 + key 1 = 2 grids (CONTROL DOES NOT FIT); moves/person 0.0037 M
+Demo    pegs   2 affine [chord + trace WALK        ] bands 6; control need 15 of 24 holes; => workspace 1 + key 1 = 2 grids; moves/person 0.0050 M
+Demo    pegs   2 affine [chord + lazy-y chain      ] bands 7; control need 17 of 24 holes; => workspace 1 + key 1 = 2 grids; moves/person 0.0037 M
+Demo    pegs   2 proj   [spec                      ] bands 9: does not fit: more than 8 register slots; moves/person 0.0041 M
+Demo    pegs   2 proj   [F-form+lazy-y             ] bands 7; control need 25 of 24 holes; => workspace 1 + key 1 = 2 grids (CONTROL DOES NOT FIT); moves/person 0.0041 M
+Toy     pegs  16 proj   [spec                      ] bands 9; control need 37 of 112 holes; => workspace 4 + key 1 = 5 grids; moves/person 0.1506 M
+Toy     pegs  16 proj   [F-form+lazy-y             ] bands 7; control need 37 of 112 holes; => workspace 4 + key 1 = 5 grids; moves/person 0.1493 M
+Toy     pegs  16 proj   [F-form+lazy-y, NO swap    ] bands 7; control need 37 of 112 holes; => workspace 4 + key 1 = 5 grids; moves/person 0.1493 M
+Hobby   pegs  51 proj   [spec                      ] bands 9; control need 57 of 80 holes; => workspace 8 + key 1 = 9 grids; moves/person 2.0274 M
+Hobby   pegs  51 proj   [F-form+lazy-y             ] bands 7; control need 57 of 80 holes; => workspace 8 + key 1 = 9 grids; moves/person 2.0193 M
+Hobby   pegs  51 proj   [F-form+lazy-y, NO swap    ] bands 7; control need 57 of 80 holes; => workspace 8 + key 1 = 9 grids; moves/person 2.0193 M
+Serious pegs 162 proj   [spec                      ] bands 9; control need 121 of 240 holes; => workspace 24 + key 2 = 26 grids; moves/person 44.9985 M
+Serious pegs 162 proj   [F-form+lazy-y             ] bands 7; control need 121 of 200 holes; => workspace 20 + key 2 = 22 grids; moves/person 44.8867 M
+Serious pegs 162 proj   [F-form+lazy-y, NO swap    ] bands 7; control need 121 of 200 holes; => workspace 20 + key 2 = 22 grids; moves/person 44.8867 M

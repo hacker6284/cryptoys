@@ -1,0 +1,25 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+== A. Lane fold + comb cube (Toymaster F1/F2/C1), re-implemented here
+  Demo: x^7 = x^5 + 1, lane 2 wide, band 4 rows less its last hole, tap 1 row(s) up: fold 300/300, comb cube 300/300 equal Board (PARI-checked); patrol-boat clashes 0; cube strip + comb gap 21 <= workbench 24: True
+  Toy: x^23 = x^15 + 1, lane 8 wide, band 3 rows less its last hole, tap 1 row(s) up: fold 300/300, comb cube 300/300 equal Board (PARI-checked); patrol-boat clashes 0; cube strip + comb gap 69 <= workbench 72: True
+  Hobby: x^59 = x^39 + 1, lane 20 wide, band 3 rows less its last hole, tap 1 row(s) up: fold 300/300, comb cube 300/300 equal Board (PARI-checked); patrol-boat clashes 0; cube strip + comb gap 177 <= workbench 180: True
+  Serious: x^179 = x^59 + 1, lane 20 wide, band 9 rows less its last hole, tap 6 row(s) up: fold 300/300, comb cube 300/300 equal Board (PARI-checked); patrol-boat clashes 0; cube strip + comb gap 537 <= workbench 540: True
+
+== B. W1 ship-grid cursor
+   {'trials': 300, 'digits_ok': 300, 'ambiguous_moments': 0, 'restored': 300}
+
+== C. Workbench schedule: register bands needed (live registers NOT on the workbench), per phase
+  Demo    [three 1 affine          ] correct x20 (+4 re-rolls); bands needed: public walk 6, validation 8, shared walk 6; moves/person 0.039 M incl. slides (slides in last run 0.007 M); tally max 3
+  Demo    [three 1 affine +trace-walk] correct x20 (+1 re-rolls); bands needed: public walk 6, validation 6, shared walk 6; moves/person 0.040 M incl. slides (slides in last run 0.007 M); tally max 3
+  Demo    [three 1 proj            ] correct x20 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 0.048 M incl. slides (slides in last run 0.008 M); tally max 3
+  Toy     [three 1 proj            ] correct x3 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 0.267 M incl. slides (slides in last run 0.040 M); tally max 11
+  Toy     [pegs 19 proj            ] correct x3 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 0.162 M incl. slides (slides in last run 0.022 M); tally max 11
+  Toy     [three 1 affine          ] correct x3 (+0 re-rolls); bands needed: public walk 6, validation 8, shared walk 6; moves/person 0.306 M incl. slides (slides in last run 0.047 M); tally max 11
+  Hobby   [three 2 proj            ] correct x3 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 2.323 M incl. slides (slides in last run 0.233 M); tally max 29
+  Hobby   [pegs 55 proj            ] correct x3 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 2.145 M incl. slides (slides in last run 0.175 M); tally max 29
+  Hobby   [six 1 proj              ] correct x3 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 4.487 M incl. slides (slides in last run 0.364 M); tally max 29
+  Serious [three 6 proj            ] correct x1 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 44.072 M incl. slides (slides in last run 2.199 M); tally max 89
+  Serious [three 7 proj            ] correct x1 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 50.845 M incl. slides (slides in last run 2.462 M); tally max 89
+  Serious [pegs 175 proj           ] correct x1 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 49.261 M incl. slides (slides in last run 1.717 M); tally max 89
+  Serious [pegs 200 proj           ] correct x1 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 56.849 M incl. slides (slides in last run 1.831 M); tally max 89
+  Serious [six 2 proj              ] correct x1 (+0 re-rolls); bands needed: public walk 9, validation 8, shared walk 9; moves/person 67.292 M incl. slides (slides in last run 2.461 M); tally max 89

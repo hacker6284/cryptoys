@@ -1,0 +1,117 @@
+name = "MegaDreifachV3"
+version = "0.1.0"
+defaultTargets = ["MegaDreifachV3", "MegaDreifachLink", "megadreifach_v3_kat"]
+
+# MegaDreifach v3 (ZP26 card phase). Path-requires the Lean emitted from
+# primitives/hash/megadreifach/v3/megadreifach.sudo (do not edit Generated/). See ../README.md.
+[[require]]
+name = "sudo"
+path = "Generated"
+
+# `#audit_all` for Axioms.lean (gate: proofs/doubledeal/check_axioms.py megadreifach-v3).
+[[require]]
+name = "audit"
+path = "../../audit"
+
+# Root module `MegaDreifachV3.lean`. `Security/` is imported there:
+# `DmStepSameH.lean` (same-`h` `dmStep` / `emBlock` cancellation) and the
+# constructive MD extractor (`FaceWord.lean`, `DigestInj.lean`, `MDReduction.lean`).
+# None of these is a `MegaDreifachLink` root: those roots are the v2 modules
+# re-elaborated below. `MDReduction.lean` imports `MegaDreifach.Security.MDGeneric`
+# (the grip-independent `findR`); that module is not a root because it does not
+# mention the emit.
+[[lean_lib]]
+name = "MegaDreifachV3"
+
+# Compiled KAT runner (MegaDreifachV3/KatRun.lean): not a kernel proof.
+[[lean_exe]]
+name = "megadreifach_v3_kat"
+root = "Main"
+
+
+# v2 Link 2 layers re-elaborated against the v3 emit (this package's Generated/, module
+# `Megadreifach`): the sources stay in ../../megadreifach/lean, the .olean files are built
+# here. Explicit roots, not a `MegaDreifach.+` glob: the roots are exactly the modules
+# (with their full import closure) that elaborate against the v3 emit. The step lemmas of
+# RequirePerm, PadRef, EvenRank(Gen), PosBytes, PhiChunk and PhiInv take the .sudo assert
+# line as a parameter, so they hold for both emits. EmHelpers, EmCorner and EmEdge are the
+# generic face / corner / edge tables (the grip lemmas are in EmGrip). IV holds the
+# v2 IV-COOK12 constant data that v3's iv_cook12 reuses. InjPos (bijective tables kept by
+# face turns) and VHashCommon (chunk-copy loop, deck pad block) are the version-neutral parts
+# of InjInv and VHash / VHashDeck; Compose has `identity_refines`. Not listed, because
+# they name v2-only emitted functions: EmGrip, EmSpin, EmRecipe, EmStep, EmInv, EmBlock,
+# EmIv, InjInv, VHash, VHashDeck. See ../README.md.
+# MegaDreifach.Em (the v2 model, grips included) is re-elaborated because the reused layers
+# take faceTurn / inverse / nbr / cornerSlot / edgeSlot from it; it states nothing about
+# v3's card phase.
+[[lean_lib]]
+name = "MegaDreifachLink"
+srcDir = "../../megadreifach/lean"
+roots = [
+  "MegaDreifach.Basic",
+  "MegaDreifach.NatUtil",
+  "MegaDreifach.Position",
+  "MegaDreifach.Group",
+  "MegaDreifach.Link2.Embed",
+  "MegaDreifach.Link2.Sudo",
+  "MegaDreifach.Link2.Loop",
+  "MegaDreifach.Pad",
+  "MegaDreifach.Link2.Bytes",
+  "MegaDreifach.Link2.Helpers",
+  "MegaDreifach.Link2.Compose",
+  "MegaDreifach.Em",
+  "MegaDreifach.Link2.FaceTurn",
+  "MegaDreifach.Link2.Inverse",
+  "MegaDreifach.Factoradic",
+  "MegaDreifach.Rank",
+  "MegaDreifach.Link2.Big",
+  "MegaDreifach.Link2.Be",
+  "MegaDreifach.Link2.PackOri",
+  "MegaDreifach.Link2.NatLimbs",
+  "MegaDreifach.Link2.Factorial",
+  "MegaDreifach.Link2.DivWide",
+  "MegaDreifach.Link2.MulSmall",
+  "MegaDreifach.Link2.DivInd",
+  "MegaDreifach.Link2.MulWide",
+  "MegaDreifach.Link2.MulLeft",
+  "MegaDreifach.Link2.MulGenMath",
+  "MegaDreifach.Link2.MulGen",
+  "MegaDreifach.Link2.PeelLimb",
+  "MegaDreifach.Link2.FactTwo",
+  "MegaDreifach.Link2.PeelFact",
+  "MegaDreifach.Link2.FactThree",
+  "MegaDreifach.Link2.AccThree",
+  "MegaDreifach.Link2.PeelCube",
+  "MegaDreifach.Link2.PeelZeroThree",
+  "MegaDreifach.Link2.PeelBelow",
+  "MegaDreifach.Link2.PeelOne",
+  "MegaDreifach.Link2.MagSub",
+  "MegaDreifach.Link2.MagAdd",
+  "MegaDreifach.Link2.FromBe",
+  "MegaDreifach.Link2.FromBeShort",
+  "MegaDreifach.Link2.FromBeLimb2",
+  "MegaDreifach.Link2.FromBePad",
+  "MegaDreifach.Link2.Fact51",
+  "MegaDreifach.Link2.Peel51",
+  "MegaDreifach.Link2.ToBePad",
+  "MegaDreifach.Domain",
+  "MegaDreifach.DaviesMeyer",
+  "MegaDreifach.Chain",
+  "MegaDreifach.Link2.RequirePerm",
+  "MegaDreifach.Link2.PadRef",
+  "MegaDreifach.Link2.EvenRank",
+  "MegaDreifach.Link2.EvenRankGen",
+  "MegaDreifach.Link2.PosBytes",
+  "MegaDreifach.Link2.PosBytesGen",
+  "MegaDreifach.Link2.PhiChunk",
+  "MegaDreifach.Link2.PhiInv",
+  "MegaDreifach.Link2.InjPos",
+  "MegaDreifach.Link2.VHashCommon",
+  # Grip-independent MD walker (`findR`). No emit, no E_m. Imported by
+  # MegaDreifachV3.Security.MDReduction. Not part of the v2-emit closure;
+  # it is a root so this package builds its olean.
+  "MegaDreifach.Security.MDGeneric",
+  "MegaDreifach.Link2.EmHelpers",
+  "MegaDreifach.Link2.EmCorner",
+  "MegaDreifach.Link2.EmEdge",
+  "MegaDreifach.IV"]

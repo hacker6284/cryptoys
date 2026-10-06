@@ -279,8 +279,8 @@ theorem evenRank_edge (ep : List Nat) (h : EdgeZero ep) : evenRank ep = 0 := by
 
 private theorem zero_lt_limb : (0 : Nat) < limbBase := by decide
 
-private theorem edgeRankStep (ep : List Nat) (h : EdgeZero ep) (i : Nat) (hi : i ≤ 27) :
-    rankStep (embed ep) (Int.ofNat 30) (Int.ofNat 27)
+private theorem edgeRankStep (line : Nat) (ep : List Nat) (h : EdgeZero ep) (i : Nat) (hi : i ≤ 27) :
+    rankStep line (embed ep) (Int.ofNat 30) (Int.ofNat 27)
         (Int.ofNat i, bigNat 0, embed ((List.range 30).drop i)) =
       if i = 27 then
         .ok (SudoRt.Flow.brk (Int.ofNat i,
@@ -364,11 +364,11 @@ private theorem edgeRankStep (ep : List Nat) (h : EdgeZero ep) (i : Nat) (hi : i
     rw [ofNat_eq_natCast i] at haddI
     simp [beq_int_iff, hneI, haddI, pure_eq_ok, ok_bind, heq]
 
-private theorem edgeRun (ep : List Nat) (h : EdgeZero ep) :
+private theorem edgeRun (line : Nat) (ep : List Nat) (h : EdgeZero ep) :
     SudoRt.runLoopOn (ρ := Megadreifach.BigInt)
       (Int.ofNat 0, (bigNat 0, embed ((List.range 30).drop 0)))
       (fuelRange (Int.ofNat 0) (Int.ofNat 27))
-      (rankStep (embed ep) (Int.ofNat 30) (Int.ofNat 27))
+      (rankStep line (embed ep) (Int.ofNat 30) (Int.ofNat 27))
       (fun σ => pure σ.2.1)
       (fun r => pure r) =
       .ok (bigNat 0) := by
@@ -377,7 +377,7 @@ private theorem edgeRun (ep : List Nat) (h : EdgeZero ep) :
     (fromN := 0) (toN := 27) (hle := by decide)
     (goal := .ok (bigNat 0))
   · intro i _ hi
-    simpa using edgeRankStep ep h i hi
+    simpa using edgeRankStep line ep h i hi
   · rfl
 
 /-- `even_perm_rank_big` is zero on an edge list whose Lehmer prefix is the identity. -/
@@ -397,14 +397,14 @@ theorem even_perm_rank_big_edge (ep : List Nat) (h : EdgeZero ep) :
   rw [← hfuel, except_bind_pure]
   apply Eq.trans
   · apply runLoopOn_step_pointwise
-      (step' := rankStep (embed ep) (Int.ofNat 30) (Int.ofNat 27))
+      (step' := rankStep _ (embed ep) (Int.ofNat 30) (Int.ofNat 27))
     intro σ
     unfold rankStep findPerm rankAfter eraseStep
     dsimp
     rfl
   · rw [show bigOf [] = bigNat 0 from bigNat_zero.symm]
     rw [show embed (List.range 30) = embed ((List.range 30).drop 0) by simp]
-    exact edgeRun ep h
+    exact edgeRun _ ep h
 
 /-! ## Domain -/
 

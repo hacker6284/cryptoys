@@ -1,0 +1,20 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+mdw4_lib ZB0F1N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3R3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F1S9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0R2S8: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every block reads all 50)
+mdw4_lib board register: the 60 states of the (Ace, n1) edge slot give each of the 12 colours 5 times
+d2 ZB3F0E26: N=400000, seeds 51000000+...; cost {'turns': 468, 'clicks': '520 + echo card clicks (m*k)', 'piece_finds': 156, 'slot_reads': 78, 'regrips': 0, 'solves': 3}
+D2 ZB3F0E26 n= 400000  P(fixE>=2) 0.2661 [0.2647,0.2674] adv +0.0018 | P(fixC>=2) 0.2640 [0.2626,0.2653] adv -0.0003 | mean fixE 1.0035, fixC 1.0006 (ideal 1 +-0.0031) | mean moved 49.1643 +- 0.0028 (ideal 49.1667, diff -0.0024) | chi2 cyc-type E 925.3/886 p=0.17, C 198.1/215 p=0.79 | chi2 fixE-hist p=0.11, fixC-hist p=0.67  [106s]
+wall time 106 s, workers 4
+
+real	1m47.256s
+user	6m53.774s
+sys	0m0.108s

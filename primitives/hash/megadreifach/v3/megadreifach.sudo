@@ -1129,3 +1129,220 @@ test "read words (SPEC v3 §5.8): for every piece and ordered pair of its colour
                             f2 = corner_face_of(face_turn(g, f1, 1), a, b, c, cols[i2])
                             words.add(face_turn(face_turn(identity(), f1, 1), f2, 1))
                     assert words.size == 60
+
+// ---- Animation trace (demo only; approved by Zachary, 2026-10-06) ----
+// trace_hash replays Hash block by block for the demo's animation. It is its own path:
+// Hash, em_run, card_step, echo_colour and dm_step are unchanged and never build a trace.
+// trace_card_step makes the same six turns as card_step and also writes them down; the
+// tests below assert that it returns exactly card_step's run at every step of every KAT,
+// and that replaying the written turns gives em_block, dm_step and Hash.
+
+// One step at deal position pos: 1..52 the card steps, 53..78 the echoes. card: the card in
+// hand (deal[pos - 1], or the held card 52 for an echo). base: the face counted up from (the
+// last face, or the echo colour P). colour: the naming colour c (the card's colour, or P).
+// x, y: an echo's look (X = the face carrying the held edge's n-sticker, Y = the same for the
+// held corner); -1 for a card step. n, n2: the suit neighbours of colour. turns: flat
+// [face, clicks, ...], the six turns in order (k clicks, then five single clicks).
+// last: the new last face (the face of the sixth turn).
+record TraceStep
+    pos: int
+    card: int
+    base: int
+    colour: int
+    x: int
+    y: int
+    n: int
+    n2: int
+    turns: List<int>
+    last: int
+
+// One compression. h is the chaining value in, e = E_m(h) = W·h, h_next = compose(h, e).
+// The inverses are the 3-solve's B puzzle before and after.
+record TraceBlock
+    chunk: List<int>
+    deal: List<int>
+    h: Position
+    h_inv: Position
+    e: Position
+    h_next: Position
+    h_next_inv: Position
+    steps: List<TraceStep>
+
+// iv_turns: IV-COOK12 as flat [face, clicks]. digest = Hash(msg).
+record Trace
+    iv_turns: List<int>
+    blocks: List<TraceBlock>
+    digest: List<int>
+
+// card_step (SPEC v3 §5.3) with its six turns written to `turns`.
+func trace_card_step(r: Run, base: int, rank: int, k: int, c: int, turns: inout List<int>) -> Run
+    turned = opposites[base]
+    if rank < 12
+        turned = (base + rank) mod 12
+    turns.append(turned)
+    turns.append(k)
+    r = turn_run(r, turned, k)
+    n, n2 = suit_nbrs(c, k)
+    r = count_find(r)
+    f = edge_face_of(r.g, c, n, c)
+    turns.append(f)
+    turns.append(1)
+    r = turn_run(r, f, 1)
+    f = edge_face_of(r.g, c, n, n)
+    turns.append(f)
+    turns.append(1)
+    r = turn_run(r, f, 1)
+    r = count_find(r)
+    f = corner_face_of(r.g, c, n, n2, c)
+    turns.append(f)
+    turns.append(1)
+    r = turn_run(r, f, 1)
+    f = corner_face_of(r.g, c, n, n2, n)
+    turns.append(f)
+    turns.append(1)
+    r = turn_run(r, f, 1)
+    r = count_relook(r)
+    f = edge_face_of(r.g, c, n, n)
+    turns.append(f)
+    turns.append(1)
+    return turn_run(r, f, 1)
+
+func trace_em(h: Position, deal: List<int>, steps: inout List<TraceStep>) -> Position
+    r = start_run(h)
+    for i = 0 to 51
+        card = deal[i]
+        c = card_colour(card)
+        n, n2 = suit_nbrs(c, card mod 4 + 1)
+        base = r.last
+        turns: List<int> = []
+        r = trace_card_step(r, base, card / 4, card mod 4 + 1, c, turns)
+        steps.append(TraceStep(i + 1, card, base, c, -1, -1, n, n2, turns, r.last))
+    held = deal[51]
+    hc = card_colour(held)
+    hn, hn2 = suit_nbrs(hc, held mod 4 + 1)
+    for j = 1 to echo_count
+        x = edge_face_of(r.g, hc, hn, hn)
+        y = corner_face_of(r.g, hc, hn, hn2, hn)
+        p = echo_colour(r.g, held)
+        r = count_register_looks(r)
+        pn, pn2 = suit_nbrs(p, held mod 4 + 1)
+        turns: List<int> = []
+        r = trace_card_step(r, p, held / 4, held mod 4 + 1, p, turns)
+        steps.append(TraceStep(52 + j, held, p, p, x, y, pn, pn2, turns, r.last))
+    return r.g
+
+func trace_hash(msg: List<int>) -> Trace
+    padded = pad_message(msg)
+    h = iv_cook12()
+    iv_turns: List<int> = []
+    for f = 0 to 11
+        iv_turns.append(f)
+        iv_turns.append(1)
+    blocks: List<TraceBlock> = []
+    nblocks = padded.length / pad_block
+    for b = 0 to nblocks - 1
+        chunk: List<int> = []
+        for j = 0 to 27
+            chunk.append(padded[b * pad_block + j])
+        deal = phi_chunk(chunk)
+        steps: List<TraceStep> = []
+        e = trace_em(h, deal, steps)
+        h_next = compose(h, e)
+        blocks.append(TraceBlock(chunk, deal, h, inverse(h), e, h_next, inverse(h_next), steps))
+        h = h_next
+    return Trace(iv_turns, blocks, position_to_bytes(h))
+
+func replay_turns(g: Position, turns: List<int>) -> Position
+    out = g
+    for i = 0 to turns.length / 2 - 1
+        out = face_turn(out, turns[2 * i], (turns[2 * i + 1] + 5) mod 5)
+    return out
+
+test "trace_hash matches Hash, em_block, dm_step and IV-COOK12 on every KAT"
+    for n = 0 to 7
+        msg = kat_msg(n)
+        tr = trace_hash(msg)
+        assert tr.digest == kat_v3_digest(n)
+        assert tr.digest == Hash(msg)
+        assert replay_turns(identity(), tr.iv_turns) == iv_cook12()
+        padded = pad_message(msg)
+        assert tr.blocks.length * pad_block == padded.length
+        h = iv_cook12()
+        for b = 0 to tr.blocks.length - 1
+            blk = tr.blocks[b]
+            assert blk.h == h
+            assert blk.deal == phi_chunk(blk.chunk)
+            assert blk.e == em_block(h, blk.deal)
+            assert blk.steps.length == body_len + echo_count
+            g = h
+            for s = 0 to blk.steps.length - 1
+                st = blk.steps[s]
+                assert st.pos == s + 1
+                assert st.turns.length == 12
+                g = replay_turns(g, st.turns)
+                assert st.last == st.turns[10]
+            assert g == blk.e
+            assert blk.h_next == dm_step(h, blk.deal)
+            assert compose(blk.h, blk.h_inv) == identity()
+            assert compose(blk.h_next, blk.h_next_inv) == identity()
+            h = blk.h_next
+
+test "trace_card_step returns card_step's run at every step of the KAT blocks"
+    for n = 0 to 7
+        padded = pad_message(kat_msg(n))
+        h = iv_cook12()
+        for b = 0 to padded.length / pad_block - 1
+            chunk: List<int> = []
+            for j = 0 to 27
+                chunk.append(padded[b * pad_block + j])
+            deal = phi_chunk(chunk)
+            r = start_run(h)
+            t = start_run(h)
+            for i = 0 to 51
+                card = deal[i]
+                turns: List<int> = []
+                r = card_step(r, r.last, card / 4, card mod 4 + 1, card_colour(card))
+                t = trace_card_step(t, t.last, card / 4, card mod 4 + 1, card_colour(card), turns)
+                assert t == r
+            held = deal[51]
+            for j = 1 to echo_count
+                p = echo_colour(r.g, held)
+                r = count_register_looks(r)
+                t = count_register_looks(t)
+                turns: List<int> = []
+                r = card_step(r, p, held / 4, held mod 4 + 1, p)
+                t = trace_card_step(t, p, held / 4, held mod 4 + 1, p, turns)
+                assert t == r
+            assert r == em_run(h, deal)
+            h = dm_step(h, deal)
+
+// SPEC §5.7 by hand: B is cooked backwards (Q .. A, each -1); the 3-solve, each solve done by
+// undoing (the undo of a position is its inverse), leaves (A, B, C) = (h', h'^-1, solved).
+test "cook B backwards is IV-COOK12 inverse and the 3-solve leaves h', h'^-1, solved"
+    b = identity()
+    for i = 0 to 11
+        b = face_turn(b, 11 - i, 4)
+    assert b == inverse(iv_cook12())
+    for n = 0 to 7
+        tr = trace_hash(kat_msg(n))
+        pa = iv_cook12()
+        pb = b
+        pc = identity()
+        for k = 0 to tr.blocks.length - 1
+            blk = tr.blocks[k]
+            assert pa == blk.h
+            assert compose(pa, pb) == identity()
+            assert pc == identity()
+            pa = blk.e
+            pa = compose(inverse(pb), pa)
+            pb = identity()
+            assert pa == blk.h_next
+            s2 = inverse(pa)
+            pa = identity()
+            pb = compose(s2, pb)
+            pc = compose(s2, pc)
+            pa = compose(inverse(pc), pa)
+            pc = identity()
+            assert pa == blk.h_next
+            assert pb == blk.h_next_inv
+        assert position_to_bytes(pa) == kat_v3_digest(n)

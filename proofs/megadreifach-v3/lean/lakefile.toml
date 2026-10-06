@@ -14,8 +14,9 @@ name = "audit"
 path = "../../audit"
 
 # Root module `MegaDreifachV3.lean`. `Security/` is imported there:
-# `DmStepSameH.lean` (same-`h` `dmStep` / `emBlock` cancellation) and the
-# constructive MD extractor (`FaceWord.lean`, `DigestInj.lean`, `MDReduction.lean`).
+# `DmStepSameH.lean` (same-`h` `dmStep` / `emBlock` cancellation), the
+# constructive MD extractor (`FaceWord.lean`, `DigestInj.lean`, `MDReduction.lean`),
+# and `ReadWord.lean` (two-turn read-word injectivity; not ANALYSIS P2).
 # None of these is a `MegaDreifachLink` root: those roots are the v2 modules
 # re-elaborated below. `MDReduction.lean` imports `MegaDreifach.Security.MDGeneric`
 # (the grip-independent `findR`); that module is not a root because it does not

@@ -9,8 +9,9 @@
   Link2/FaceOfFound.lean, Link2/RunStep.lean, Link2/EmRun.lean (em_run / em_block),
   Link2/VHash.lean (iv_cook12, Hash, MegaDreifach) and Link2/VHashDeck.lean (HashDeck,
   HashDeckBody, HashDeckBodyFrom, HashDecksBody and aliases). Every export has a Link 2 theorem; see
-  ../README.md. Security/ is not a security claim: DmStepSameH (same-h cancellation) and the
-  constructive MD extractor (FaceWord, DigestInj, MDReduction).
+  ../README.md. Security/ is not a security claim: DmStepSameH (same-h cancellation), the
+  constructive MD extractor (FaceWord, DigestInj, MDReduction), and ReadWord (two-turn
+  read-word injectivity, plan item C; not ANALYSIS P2).
 -/
 import MegaDreifachV3.Vectors
 import MegaDreifachV3.KatRun
@@ -31,3 +32,4 @@ import MegaDreifachV3.Security.DmStepSameH
 import MegaDreifachV3.Security.FaceWord
 import MegaDreifachV3.Security.DigestInj
 import MegaDreifachV3.Security.MDReduction
+import MegaDreifachV3.Security.ReadWord

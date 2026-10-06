@@ -9,7 +9,7 @@ export has a Link 2 theorem, under the input conditions listed in the export tab
 
 | Piece | What it is | Checked by |
 | --- | --- | --- |
-| `lean/Generated/` | Lean emitted from the v3 sudo by `proofs/emit_lean.sh` (target `megadreifach-v3`), with `EMITTED_FROM.json`. Do not edit. | CI `generated-fresh` (`emit_lean.sh --check`); CI `megadreifach-v3-generated` builds it and runs the 26 sudo tests (TAP) |
+| `lean/Generated/` | Lean emitted from the v3 sudo by `proofs/emit_lean.sh` (target `megadreifach-v3`), with `EMITTED_FROM.json`. Do not edit. | CI `generated-fresh` (`emit_lean.sh --check`); CI `megadreifach-v3-generated` builds it and runs the 29 sudo tests (TAP; three of them check the demo-only `trace_hash`) |
 | `lean/MegaDreifachV3/Vectors.lean` | The v3 KAT file `kats/megaminx_hash_kats_v3.json` as Lean data, written by `vectors/json_to_lean.py` | CI `megadreifach-v3-lean` (`json_to_lean.py --check`) |
 | `lean/MegaDreifachV3/KatRun.lean` | Runs the compiled emitted code on every vector: 8 `Hash` messages (and `MegaDreifach`, `pad_message` length), the `hash_deck` vector, all 8 `body_vectors` (`HashDeckBody`, `MegaDreifachBody`, `HashDeckBodyFrom` at IV-COOK12) and the IV-COOK12 digest: 52 checks, and it fails unless exactly 52 ran | CI `megadreifach-v3-lean` (`lake exe megadreifach_v3_kat`; `vectors/kat_negatives.py` plants a bad digest and empty vector lists and requires the run to fail with exit 1 and the matching summary line, "N/52 checks passed" with N < 52 or "FAIL: expected 52 checks"; `--selftest-crash` checks that a crashing runner is reported as an error) |
 
@@ -26,7 +26,7 @@ the **v3** emitted functions, `compose_refines`, `face_move_refines`, `face_turn
 `inverse_refines`. Their proofs are the v2 lemmas, re-elaborated against this package's
 `Generated/` by the `MegaDreifachLink` lib (`lakefile.toml`, explicit roots: 64. 63 of
 them elaborate against the v3 emit; `MegaDreifach.Security.MDGeneric` does not mention the
-emit and is a root so the MD walker builds. With the 21 v3 modules the package builds 85
+emit and is a root so the MD walker builds. With the 22 v3 modules the package builds 86
 modules, plus the `Generated/` package). The model side is the v2 position algebra,
 which v3 keeps. These four functions are not exports.
 
@@ -243,6 +243,39 @@ is imported from v2 `MDGeneric` unchanged. `pad_injective`, `pad_suffix` and
 | The same with the first side on a target message | `extract_second_preimage_comp` |
 | The same for emitted `v_Hash` | `v_Hash_second_preimage_comp` |
 | Same `h` in `CompValid` is an `emBlock` collision | `compValid_emBlock_of_same_h` |
+
+### Two-turn read words (plan item C)
+
+[`lean/MegaDreifachV3/Security/ReadWord.lean`](lean/MegaDreifachV3/Security/ReadWord.lean)
+is plan item C of A(b) → A(a) → C → B. A(b) and A(a) are on main. This file does not
+start B.
+
+It is the Lean form of the sudo test "read words" (SPEC v3 §5.8): for every piece and
+every ordered pair of its colours, the 60 states of that piece give 60 distinct
+two-turn read words. An edge is placed as the sudo places it (identity, swap the home
+slot with the target slot, set the target orientation) and read by
+`edgeFaceOf` then `edgeFaceOf` after `faceTurn` by 1; a corner uses `cornerFaceOf` the
+same way, over the ordered pairs of distinct colours among its three faces. The word is
+`faceTurn (faceTurn identity f1 1) f2 1`. Distinctness is one kernel `decide!` per
+piece and colour order (`edgeGroup_ok`, `cornerGroup_ok`), on an injective code of
+those model words.
+
+Link 2 already has `edge_face_of_refines`, `corner_face_of_refines` and
+`face_turn_refines`. On these placements the searches return `some`
+(`edgeFaceOf_found`, `cornerFaceOf_found`), so the emitted reads equal the embedding of
+the model word, and injectivity transfers along `embedPos`.
+
+This is not ANALYSIS P2. It is not full `card_step` injectivity (that is B). It is not
+collision resistance and not a PRF claim. SPEC and ANALYSIS tags are unchanged.
+
+| What is proved | Theorem |
+| --- | --- |
+| Injective on the 60 states of one edge piece and one ordered colour pair | `edge_read_words_injective` |
+| Injective on the 60 states of one corner piece and one ordered pair of distinct colours | `corner_read_words_injective` |
+| Emitted edge read equals the embedded model word | `emitted_edge_read_word_eq` |
+| Emitted corner read equals the embedded model word | `emitted_corner_read_word_eq` |
+| Injective on the 60 states, for the emitted edge words | `emitted_edge_read_words_injective` |
+| Injective on the 60 states, for the emitted corner words | `emitted_corner_read_words_injective` |
 
 ## Where this sits
 

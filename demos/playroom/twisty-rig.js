@@ -139,6 +139,9 @@ function noopHighlight() {}
 export async function adoptTwistyPuzzle(seat, {
     puzzle = "3x3x3",
     alg = "",
+    // Default matches the locked cube/megaminx speed (anim/*/settings.js
+    // timing.speed). Callers that care (cube-stage, micros) pass the entry's
+    // value via setTempo; leave this default alone so locked behaviour holds.
     tempoScale = 1.4,
     onRenderScheduled,
     onFitChange,

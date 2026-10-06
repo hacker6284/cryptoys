@@ -1,7 +1,7 @@
 // Viewer for the megaminx library entry (demos/anim/megaminx):
 // loops it on the real playroom code, the megaminx in the Scramble seat
-// (the adapter's debug puzzle path; MegaDreifach's own stage is on PR
-// #153). The values are in demos/anim/megaminx/settings.js. The
+// (the adapter's debug puzzle path; MegaDreifach's own stage is on
+// PR #194). The values are in demos/anim/megaminx/settings.js. The
 // default loop (choices.move "U-U2-U3") is a single, double and triple
 // turn, one step each, with its sound and landing pat.
 import { mountTwistyTurn } from "../../shared/twisty-turn.js";

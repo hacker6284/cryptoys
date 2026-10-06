@@ -174,9 +174,18 @@ test("KAT menu: longer vectors are marked digest only", { skip: !ready }, async 
     session.dispose();
 });
 
-test("no trace in the generated code: digest only, says why", { skip: !ready }, async (t) => {
-    const { root, session, traced } = await setup();
-    if (traced) return t.skip("this build has trace_hash");
+test("no trace in the generated code: digest only, says why", { skip: !ready }, async () => {
+    // A hasher whose generated module had no trace_hash (the fallback).
+    globalThis.window ??= { addEventListener() {}, removeEventListener() {} };
+    const { answer } = await import("./worker.js");
+    const { createMegaDreifachSession } = await import("./session.js");
+    const hasher = {
+        digest: async (bytes) => ({ ...answer({ op: "digest", bytes }), traced: false }),
+        show: async () => ({ show: null, reason: "no-trace" }),
+    };
+    const root = makeRoot();
+    const view = stubView();
+    const session = createMegaDreifachSession({ view, root, specUrl: "SPEC.md", hasher, katsUrl: "kats.json" });
     const $ = root.byId;
     await session.pickKat("short_abc");
     await settle();
@@ -186,9 +195,9 @@ test("no trace in the generated code: digest only, says why", { skip: !ready }, 
     session.dispose();
 });
 
-test("with the trace: skip, reset, play every beat to the end, step opens teach", { skip: !ready }, async (t) => {
+test("with the trace: skip, reset, play every beat to the end, step opens teach", { skip: !ready }, async () => {
     const { root, view, session, traced } = await setup();
-    if (!traced) return t.skip("the committed v3 .sudo has no trace_hash");
+    assert.ok(traced, "the generated v3 module has trace_hash");
     const $ = root.byId;
     await session.pickKat("short_abc");
     await settle();

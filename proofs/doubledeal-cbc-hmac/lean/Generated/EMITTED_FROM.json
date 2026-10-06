@@ -12,7 +12,7 @@
   "imported_sudo": [
     {
       "sudo_file": "primitives/hash/megadreifach/v3/megadreifach.sudo",
-      "sudo_sha256": "dbd1783e08b84e58163fd22da3e89ad39728b19786544ee3622b57eb0c8c1745"
+      "sudo_sha256": "30ec09140948363d32a0a7632dffc538f8aacdcb168a3c579f1313b88dee6daa"
     },
     {
       "sudo_file": "primitives/cipher/doubledeal/doubledeal.sudo",

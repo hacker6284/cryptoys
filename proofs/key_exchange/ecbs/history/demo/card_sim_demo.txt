@@ -1,0 +1,74 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+{
+ "exchanges": 64,
+ "people": 128,
+ "key_pairs": "all 8 x 8 non-empty 2-cell keys",
+ "base_point_is_P": 128,
+ "sent_C_ok": 128,
+ "sent_A_ok": 128,
+ "A_is_piC_minus_C": 128,
+ "curve_test_passed": 128,
+ "rebuilt_A_matches": 128,
+ "shared_agree": 64,
+ "shared_is_lam1abP": 64,
+ "fold_ref_ok": 128,
+ "fold_agree": 64,
+ "calls_ok": 64,
+ "call_example": [
+  "grid 1, A3",
+  "grid 1, A4",
+  "grid 1, B3"
+ ],
+ "calls_per_receiver": [
+  28
+ ],
+ "cursor_steps_per_receiver": [
+  30
+ ],
+ "stale_cleared": 0,
+ "band_peak": 7,
+ "peak_by_phase": {
+  "base point": 7,
+  "own walk": 7,
+  "swap": 6,
+  "curve test": 7,
+  "make certificate": 7,
+  "rebuild theirs": 7,
+  "shared walk": 7
+ },
+ "highest_bench_hole": 18,
+ "benchlen": 20,
+ "moves_per_person_mean": 5916,
+ "moves_min": 5064,
+ "moves_max": 6788,
+ "moves_by_phase_mean": {
+  "base point": 3208,
+  "own walk": 390,
+  "swap": 18,
+  "curve test": 190,
+  "make certificate": 842,
+  "rebuild theirs": 858,
+  "shared walk": 409,
+  "fold": 2
+ },
+ "check_share": 0.3194,
+ "base_point_share": 0.5422,
+ "control_moves_mean": 234,
+ "ladder_build_once": 17,
+ "control": {
+  "holes": 16,
+  "script_holes": 5,
+  "ladder": "WR",
+  "layout": "script 0-4, phase 5, calling 6, ladder 7-8, parking 9, tally 10-12",
+  "tally_max": 3,
+  "script_marker_peak": 5,
+  "highest_hole_used": 12,
+  "need_with_measured_script": 13,
+  "need_with_15_hole_script": 23,
+  "phase_end": [
+   "R"
+  ]
+ },
+ "secs": 0.6
+}
+15-hole script row at Demo: overrun while laying the ladder: script 0-14, phase 15, calling 16, ladder from 17 in a 16-hole row (IndexError)

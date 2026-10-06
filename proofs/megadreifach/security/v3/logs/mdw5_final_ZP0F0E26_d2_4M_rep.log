@@ -1,0 +1,27 @@
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+mdw3_lib SBR26: fast == slow literal transliteration on 12/12 random blocks
+mdw3_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every pass)
+mdw4_lib ZB0F1N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3R3N0: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F2E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZH0F0E5: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZE3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP3F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP3F0E13: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP0F0E9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZP0F0E26: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB3F1S9: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib ZB0R2S8: fast == slow literal transliteration on 8/8 random blocks
+mdw4_lib naming: the 48 non-King card steps name 30/30 edges and 20/20 corners (every block reads all 50)
+mdw4_lib board register: the 60 states of the (Ace, n1) edge slot give each of the 12 colours 5 times
+d2 ZP0F0E26: N=4000000, seeds 85000000+...; cost {'turns': 390, 'clicks': '442 + echo card clicks (m*k)', 'piece_finds': 156, 'slot_reads': 26, 'regrips': 0, 'solves': 3}
+D2 ZP0F0E26 n=4000000  P(fixE>=2) 0.2653 [0.2648,0.2657] adv +0.0010 | P(fixC>=2) 0.2643 [0.2638,0.2647] adv +0.0000 | mean fixE 1.0028, fixC 1.0002 (ideal 1 +-0.0010) | mean moved 49.1651 +- 0.0009 (ideal 49.1667, diff -0.0015) | chi2 cyc-type E 1498.8/1374 p=0.01, C 259.6/252 p=0.36 | chi2 fixE-hist p=2.2e-06, fixC-hist p=0.53  [1615s]
+wall time 1615 s, workers 4
+
+real	26m56.931s
+user	90m50.938s
+sys	0m0.528s

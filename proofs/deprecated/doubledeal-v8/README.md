@@ -56,7 +56,7 @@ Other relations tried (`attack/gen_attack.py`, `attack/per_layer.py`, logs along
 | `witness_v8.json` | \(\tau\), key, message, cipher, \(\tau M\), \(\tau C\) |
 | `lean/` | Lake package: `DoubleDealV8/WitnessData.lean` (generated from `witness_v8.json` by `witness_to_lean.py`; do not edit), `DoubleDealV8/Witness.lean` (`enc` = emitted v8 `encrypt`, kernel facts `messageTauJson_eq`, `cipherTauJson_eq`, `cipherTau_ne`), `WitnessMain.lean` (compiled TAP check). Path-requires `lean/Generated/` (emitted, do not edit). |
 | `vectors/doubledeal_v8_vectors.json` | Frozen v8 known-answer vectors (29). `proofs/doubledeal/vectors/regen.sh v8 --check` rebuilds them from `v8/doubledeal_v8.sudo` via the sudoc JS target and requires a byte-identical file |
-| `attack/dd_v8.py` | Python port of `v8/doubledeal_v8.sudo` (29/29 on the frozen vectors via `check_vectors.py`, which also checks their `sudo_sha256`) |
+| `attack/dd_v8.py` | Hand-written Python port of `v8/doubledeal_v8.sudo` (to be removed, issue #176). `check_vectors.py` checks their `sudo_sha256`, then sudoc's Python output of the sudo (via `proofs/sudo_py.py`) and `dd_v8.py` on the frozen vectors (29/29 each) |
 | `attack/find_witness.py` | Search that produced the witness (739 trials) |
 | `attack/check_witness.mjs` | JS target of `doubledeal_v8.sudo` on the witness |
 | `attack/relabel_attack.py`, `success_rate.py`, `gen_attack.py`, `per_layer.py` | Evidence scripts (deterministic seeds) and their `.log` outputs |

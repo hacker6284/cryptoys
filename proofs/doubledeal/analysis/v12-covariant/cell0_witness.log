@@ -1,4 +1,5 @@
 g(identity deck) = 0; single position swaps (i, j) keeping g: 235 of 1326
 witness found for all 51 representatives (0 e); position pairs used: [(1, 2), (1, 3), (1, 5), (1, 34)]
+cell0Pairs (union with the pairs of aff_witness.py): [(1, 2), (1, 3), (1, 5), (1, 8), (1, 12), (1, 34)]
 covW = [(1, 2), (1, 5), (1, 5), (1, 34), (1, 2), (1, 2), (1, 3), (1, 2), (1, 2), (1, 2), (1, 3), (1, 5), (1, 2), (1, 2), (1, 2), (1, 3), (1, 2), (1, 2), (1, 3), (1, 3), (1, 2), (1, 2), (1, 2), (1, 3), (1, 3), (1, 2), (1, 2), (1, 3), (1, 2), (1, 2), (1, 2), (1, 2), (1, 2), (1, 5), (1, 2), (1, 2), (1, 2), (1, 2), (1, 2), (1, 3), (1, 2), (1, 2), (1, 3), (1, 5), (1, 2), (1, 2), (1, 3), (1, 2), (1, 2), (1, 2), (1, 3), (1, 5)]
 v10Sym-conjugation orbits of the 1326 transpositions: 27 (sizes: {26: 3, 52: 24}); the 51 representatives are not minimal

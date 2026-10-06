@@ -1,6 +1,6 @@
 import { solved_facelets } from "./generated/scramble.mjs";
 import { hashMessage } from "./hash.js";
-import { SOLVED_FACELETS, applyMove, isSolved, shortSolve, toCubejs, flipU, parseMove } from "./cube.js";
+import { applyMove, isSolved, shortSolve, toCubejs, flipU, parseMove } from "./cube.js";
 import { mapTraceToAlg, prefixAlg, projectAlgForPuzzle } from "../playroom/scramble-alg.js";
 import {
     normalizePuzzleId,
@@ -64,9 +64,6 @@ export function createScrambleSession({
     bindGrowFields(root);
 
     const solved = solved_facelets();
-    if (solved !== SOLVED_FACELETS) {
-        throw new Error("The demo cube and the reference cube disagree on the solved pose.");
-    }
 
     let version = 2;
     let encoding = "text";

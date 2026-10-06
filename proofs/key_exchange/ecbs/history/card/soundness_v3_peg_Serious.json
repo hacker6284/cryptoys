@@ -1,0 +1,59 @@
+{
+ "Serious": {
+  "honest": {
+   "trials": 6,
+   "accept": 6,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 0,
+   "peak": 7,
+   "max_check_moves": 408569
+  },
+  "C outside subgroup, correct certificate": {
+   "trials": 6,
+   "accept": 6,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 0,
+   "peak": 7,
+   "max_check_moves": 405523
+  },
+  "C outside subgroup, A = C": {
+   "trials": 6,
+   "accept": 0,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 6,
+   "peak": 7,
+   "max_check_moves": 405541
+  },
+  "C = nonzero order-5 point": {
+   "trials": 8,
+   "accept": 0,
+   "curve": 0,
+   "empty": 8,
+   "mismatch": 0,
+   "peak": 7,
+   "max_check_moves": 27
+  },
+  "A not matching pi(C) - C": {
+   "trials": 6,
+   "accept": 0,
+   "curve": 0,
+   "empty": 0,
+   "mismatch": 6,
+   "peak": 7,
+   "max_check_moves": 404651
+  },
+  "C off the curve": {
+   "trials": 6,
+   "accept": 0,
+   "curve": 6,
+   "empty": 0,
+   "mismatch": 0,
+   "peak": 7,
+   "max_check_moves": 35758
+  },
+  "secs_total": 8.6
+ }
+}

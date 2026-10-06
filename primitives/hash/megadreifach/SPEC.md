@@ -1,8 +1,14 @@
 # MegaDreifach
 
+> **v2 (this file) is deprecated. MegaDreifach v3 supersedes it** ([`v3/SPEC.md`](v3/SPEC.md), KATs [`kats/megaminx_hash_kats_v3.json`](kats/megaminx_hash_kats_v3.json)). Why: v2's compression step is distinguishable from random in the free-start setting, because a block reads only some of the 50 pieces and flipping unread pieces of the chaining value leaves the output predictable (§8). v3's ZP26 card phase fixes that: every block reads all 50 pieces (PROVED by a v3 sudo test), and the same free-start test finds no bias on v3 (measured with out-of-tree code, v3 SPEC §8).
+>
+> v2 stays here. What is frozen is v2's definition, [`megadreifach.sudo`](megadreifach.sudo) and the KATs (every vector and digest in [`kats/megaminx_hash_kats_v2.json`](kats/megaminx_hash_kats_v2.json); only its `status` line now says deprecated). This file's prose is not frozen: it carries the deprecation notes. The header comments of the frozen `.sudo` files, "MegaDreifach v2 (current)" in `megadreifach.sudo` and "Current: ../megadreifach.sudo (v2)" in `v1/megadreifach.sudo`, predate this deprecation and stay as they are.
+>
+> Still on v2: the frozen DoubleDeal-CBC-HMAC v1 ([`../../aead/doubledeal-cbc-hmac/v1/`](../../aead/doubledeal-cbc-hmac/v1/SPEC.md)) and the HMAC-MegaDreifach inside it (its successor, DoubleDeal-CBC-Sandwich v2, uses v3); the MegaDreifach Lean package [`proofs/megadreifach/`](../../../proofs/megadreifach/README.md); the Scramble and BS Lean packages, through v2's Link 2 lemmas; `proofs/sudo_py.py --selftest`; and v3 itself, whose SPEC points here for pad, φ, Merkle–Damgård and the digest. Moving any of them to v3 is a separate decision.
+
 > **v1 is deprecated (broken)** and frozen at [`v1/`](v1/SPEC.md) (KATs: [`kats/megaminx_hash_kats_v1.json`](kats/megaminx_hash_kats_v1.json)). Why, with the #119 evidence: the banner of [`v1/SPEC.md`](v1/SPEC.md).
 
-**This is MegaDreifach v2, the current version.** It is final in the sense that its definition and KATs (`kats/megaminx_hash_kats_v2.json`) are fixed; that is not a security claim (§8). One change from v1: the grip rule inside `E_m` (§5). Three parts:
+**This is MegaDreifach v2, deprecated (superseded by v3; see the banner above).** It is final in the sense that its definition and KATs (`kats/megaminx_hash_kats_v2.json`) are fixed; that is not a security claim (§8). One change from v1: the grip rule inside `E_m` (§5). Three parts:
 
 1. **Visual noon** replaces the table noon everywhere (§5.2).
 2. **Read at once, alternating.** The piece is read right after the held-face turn (King: after the Up counter-turn and the spin), before the noon and Front turns. Odd positions read the clockwise-noon **corner**, even positions the noon **edge** (§5.3).
@@ -16,7 +22,7 @@ This document is the normative specification. `megadreifach.sudo` is the conform
 
 The product name **MegaDreifach** is locked. The puzzle, group, and library stay called **megaminx**.
 
-Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. **HMAC-MegaDreifach** is that construction: standard HMAC with this `Hash`, block size \(B=28\), tag = the 29-byte digest. It lives in `primitives/aead/doubledeal-cbc-hmac/` as part of DoubleDeal-CBC-HMAC (not a second hash). Under v2 every HMAC-MegaDreifach tag and every DoubleDeal-CBC-HMAC vector changed; that package's HMAC test tag and KAT blobs were regenerated in the same change that made v2 current. A green Lean build is not a security claim. What the Lean covers: §7. Hand-written Lean is not a proof that the sudo text equals the Lean model.
+Length extension on bare `Hash` is **accepted by design** (SHA-2-shaped). Use a keyed construction if you need to stop it. **HMAC-MegaDreifach** is that construction: standard HMAC with this `Hash`, block size \(B=28\), tag = the 29-byte digest. It lives in `primitives/aead/doubledeal-cbc-hmac/v1/` as part of the frozen DoubleDeal-CBC-HMAC v1 (not a second hash). Under v2 every HMAC-MegaDreifach tag and every DoubleDeal-CBC-HMAC vector changed; that package's HMAC test tag and KAT blobs were regenerated in the same change that made v2 current. A green Lean build is not a security claim. What the Lean covers: §7. Hand-written Lean is not a proof that the sudo text equals the Lean model.
 
 ---
 
@@ -61,7 +67,7 @@ Cards appear after φ, or as a deal body for `HashDeckBody`. There is no arbitra
 
 | Item | Value |
 | --- | --- |
-| Version | **v2** (current). v1 deprecated (broken), frozen at `v1/` |
+| Version | **v2** (deprecated, superseded by v3 at `v3/`). v1 deprecated (broken), frozen at `v1/` |
 | Pad | SHA-2-style **B=28**: `M ‖ 0x80 ‖ 0x00^z ‖ 8-byte BE bit length` |
 | φ | Each 28-byte chunk → BE integer `n < 2^{224} < 52!` → Lehmer unrank → 52-card deal |
 | Card ids | `0..51` → `(rank = id // 4, suit = id % 4)`. Amount `k = suit + 1 ∈ {1,2,3,4}`. Ranks 0–12 are A, 2, …, 10, J, Q, K. Suits are named in **CHaSeD** order: 0 = Clubs ♣, 1 = Hearts ♥, 2 = Spades ♠, 3 = Diamonds ♦, so `k` is ♣ 1, ♥ 2, ♠ 3, ♦ 4 (e.g. id 46 = Q♠, id 47 = Q♦). The names are new in v2's text (v1 left suits unnamed); they change no digest |
@@ -196,7 +202,7 @@ Edge slot `s` lies between the two faces `edge_faces(s)` below; the first is its
 
 **IV-COOK12 by hand.** From solved, in the home grip, turn each face +1 once, in card order A, 2, 3, …, Q (Up, Front, the upper ring, the lower ring, Down). No re-grip.
 
-**3-solve hand (informal).** Between blocks, puzzles `(A,B,C) = (h, h⁻¹, id)`. Run E_m on A; solve B onto A; solve A onto B and C; solve C onto A. Software is `compose(h, e)`.
+**3-solve hand (informal).** Between blocks, megaminxes `(A,B,C) = (h, h⁻¹, id)`. Run E_m on A; solve B, making each of its turns on A as well; solve A, making each of its turns on B and C as well; solve C, making each of its turns on A as well. Solve each megaminx by any method you know. Software is `compose(h, e)`.
 
 **Cost per block** (v1 → v2): 168 → 192 face turns (246 → 270 clicks), 64 → 88 pieces read, 64 → 88 whole-puzzle re-grips. These are exact for every block, since every deal holds each card once ([`cost.log`](../../../proofs/megadreifach/security/v2/logs/cost.log)).
 

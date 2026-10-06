@@ -3,7 +3,8 @@
 Evidence (sampled, not a proof) for the hypothesis `hcell` of the Lean reduction
 `CovariantNarrow.roundBody_covariant_iff_id_of_cell0_prime`: every σ of prime order
 p <= 52 with `Cell0Cov σ τ` for some τ is a v10Sym. That hypothesis is a
-SUFFICIENT condition for the conjecture, not known to be true or necessary.
+SUFFICIENT condition for the conjecture; it is proved in the heavy library (finite checks
+by kernel `decide!`, `LabelStep.cell0Cov_mem_v10Sym`, all σ, not only prime order).
 
 For sampled relabellings s of prime order, searches for two decks m1, m2 with
 g(m1) = g(m2) and g(s.m1) != g(s.m2), g(m) = stem(m)[0]; such a pair shows that

@@ -1,0 +1,9 @@
+n=3: PARI ellcard E True, twist y^2=x^3+x^2+2 True, E' True
+n=5: PARI ellcard E True, twist y^2=x^3+x^2+2 True, E' True
+n=7: PARI ellcard E True, twist y^2=x^3+x^2+2 True, E' True
+n=59 twist : order 2^93.51 = 3*6373*6491*173829577*655018509997  [all prime, product = order]; largest prime 39.25 bits (rho ~2^19.6)
+n=59 Eprime: order 2^93.51 = 2*16993*3770219*312996889*352328177  [all prime, product = order]; largest prime 28.39 bits (rho ~2^14.2); odd part passes the trace check: primes < 2^60 give k mod a 92.5-bit number for ~2^14.2 work
+n=59 node  : order 2^93.51 = 2*2*3187*p80  [all prime, product = order]; largest prime 79.87 bits (rho ~2^39.9); odd part passes the trace check: primes < 2^60 give k mod a 11.6-bit number for ~2^5.8 work
+n=179 twist : order 2^283.71 = 3*1433*160881263*p57*p73*p116  [all prime, product = order]; largest prime 115.38 bits (rho ~2^57.7)
+n=179 Eprime: order 2^283.71 = 2*p44*p239  [all prime, product = order]; largest prime 238.77 bits (rho ~2^119.4); odd part passes the trace check: primes < 2^60 give k mod a 43.9-bit number for ~2^22.0 work
+n=179 node  : order 2^283.71 = 2*2*3755779*p46*p54*p162  [all prime, product = order]; largest prime 161.41 bits (rho ~2^80.7); odd part passes the trace check: primes < 2^60 give k mod a 120.3-bit number for ~2^26.5 work

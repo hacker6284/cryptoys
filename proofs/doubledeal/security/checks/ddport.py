@@ -26,17 +26,33 @@ def turn_column(g, j, s):
     col = [g[i][j] for i in range(4)]
     for i in range(4): g[i][j] = col[(i - s) % 4]
 
-def sum_ranks_v10(g):
+def row_stage_v10(g):
+    """The v10 row stage: (row amounts T, new grid). Rows 1, 2, 3, 0, each turned left by
+    `row_turn` of the previous (already turned) row."""
     g = [row[:] for row in g]
-    for i in (1, 2, 3, 0): g[i] = rotl(g[i], row_turn(g[(i + 3) % 4]))
+    T = [0] * 4
+    for i in (1, 2, 3, 0):
+        T[i] = row_turn(g[(i + 3) % 4])
+        g[i] = rotl(g[i], T[i])
+    return T, g
+
+def inv_row_stage_v10(g):
+    g = [row[:] for row in g]
+    for i in (0, 3, 2, 1): g[i] = rotl(g[i], -row_turn(g[(i + 3) % 4]))
+    return g
+
+def column_stage_v10(g):
+    g = [row[:] for row in g]
     for j in list(range(1, 13)) + [0]: turn_column(g, j, column_turn(g, j))
     return g
 
-def inv_sum_ranks_v10(g):
+def inv_column_stage_v10(g):
     g = [row[:] for row in g]
     for j in [0] + list(range(12, 0, -1)): turn_column(g, j, -column_turn(g, j))
-    for i in (0, 3, 2, 1): g[i] = rotl(g[i], -row_turn(g[(i + 3) % 4]))
     return g
+
+def sum_ranks_v10(g): return column_stage_v10(row_stage_v10(g)[1])
+def inv_sum_ranks_v10(g): return inv_row_stage_v10(inv_column_stage_v10(g))
 
 def sum_ranks(g, v):
     if v >= 10: return sum_ranks_v10(g)

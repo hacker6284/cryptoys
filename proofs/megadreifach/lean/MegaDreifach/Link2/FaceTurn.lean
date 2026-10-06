@@ -117,15 +117,6 @@ theorem faceTurn_loop (T g : Position) (a : Nat) (ha : a < 5) (ha0 : 0 < a) :
 
 /-! ## `face_turn` -/
 
-private theorem sEq_ofNat (a b : Nat) :
-    SudoRt.SEq.beq (Int.ofNat a) (Int.ofNat b) = decide (a = b) := by
-  rw [sEq_int]
-  by_cases h : a = b
-  · subst h; simp
-  · have : ¬ (Int.ofNat a = Int.ofNat b) := fun e => h (Int.ofNat.inj e)
-    simp [h]
-    exact this
-
 /-- `Generated.face_turn` refines `Em.faceTurn` on every algebraic position,
     face `f : Fin 12`, and amount `amount` (reduced `mod 5`). -/
 theorem face_turn_refines (g : Position) (f : Fin 12) (amount : Nat) :

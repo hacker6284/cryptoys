@@ -1,0 +1,268 @@
+{
+ "Demo_pegs2_affine_spec chord + trace chain": {
+  "items": {
+   "tally": 3,
+   "script row": 7,
+   "inversion ladder": 2,
+   "trace ladder": 2,
+   "protocol phase": 3
+  },
+  "need": 17,
+  "avail": 16,
+  "bands": 8,
+  "work": 1,
+  "key": 1,
+  "total": 2,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": false,
+  "moves": 3716.25
+ },
+ "Demo_pegs2_affine_chord + trace WALK": {
+  "items": {
+   "tally": 3,
+   "script row": 7,
+   "inversion ladder": 2,
+   "trace ladder": 0,
+   "protocol phase": 3
+  },
+  "need": 15,
+  "avail": 24,
+  "bands": 6,
+  "work": 1,
+  "key": 1,
+  "total": 2,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 4960.1
+ },
+ "Demo_pegs2_affine_chord + lazy-y chain": {
+  "items": {
+   "tally": 3,
+   "script row": 7,
+   "inversion ladder": 2,
+   "trace ladder": 2,
+   "protocol phase": 3
+  },
+  "need": 17,
+  "avail": 24,
+  "bands": 7,
+  "work": 1,
+  "key": 1,
+  "total": 2,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 3724.45
+ },
+ "Demo_pegs2_proj_spec": {
+  "items": {
+   "tally": 3,
+   "script row": 15,
+   "inversion ladder": 2,
+   "trace ladder": 2,
+   "protocol phase": 3
+  },
+  "need": 25,
+  "avail": 16,
+  "bands": 9,
+  "work": null,
+  "key": 1,
+  "total": null,
+  "extra_control_grids": 0,
+  "rails_in_key": false,
+  "note": "does not fit: more than 8 register slots",
+  "moves": 4094.85
+ },
+ "Demo_pegs2_proj_F-form+lazy-y": {
+  "items": {
+   "tally": 3,
+   "script row": 15,
+   "inversion ladder": 2,
+   "trace ladder": 2,
+   "protocol phase": 3
+  },
+  "need": 25,
+  "avail": 24,
+  "bands": 7,
+  "work": 1,
+  "key": 1,
+  "total": 2,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": false,
+  "moves": 4059.9
+ },
+ "Toy_pegs16_proj_spec": {
+  "items": {
+   "tally": 11,
+   "script row": 15,
+   "inversion ladder": 4,
+   "trace ladder": 4,
+   "protocol phase": 3
+  },
+  "need": 37,
+  "avail": 112,
+  "bands": 9,
+  "work": 4,
+  "key": 1,
+  "total": 5,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 150557.0
+ },
+ "Toy_pegs16_proj_F-form+lazy-y": {
+  "items": {
+   "tally": 11,
+   "script row": 15,
+   "inversion ladder": 4,
+   "trace ladder": 4,
+   "protocol phase": 3
+  },
+  "need": 37,
+  "avail": 112,
+  "bands": 7,
+  "work": 4,
+  "key": 1,
+  "total": 5,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 149288.9
+ },
+ "Toy_pegs16_proj_F-form+lazy-y, NO swap": {
+  "items": {
+   "tally": 11,
+   "script row": 15,
+   "inversion ladder": 4,
+   "trace ladder": 4,
+   "protocol phase": 3
+  },
+  "need": 37,
+  "avail": 112,
+  "bands": 7,
+  "work": 4,
+  "key": 1,
+  "total": 5,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 149288.9
+ },
+ "Hobby_pegs51_proj_spec": {
+  "items": {
+   "tally": 29,
+   "script row": 15,
+   "inversion ladder": 5,
+   "trace ladder": 5,
+   "protocol phase": 3
+  },
+  "need": 57,
+  "avail": 80,
+  "bands": 9,
+  "work": 8,
+  "key": 1,
+  "total": 9,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 2027447.2
+ },
+ "Hobby_pegs51_proj_F-form+lazy-y": {
+  "items": {
+   "tally": 29,
+   "script row": 15,
+   "inversion ladder": 5,
+   "trace ladder": 5,
+   "protocol phase": 3
+  },
+  "need": 57,
+  "avail": 80,
+  "bands": 7,
+  "work": 8,
+  "key": 1,
+  "total": 9,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 2019347.6
+ },
+ "Hobby_pegs51_proj_F-form+lazy-y, NO swap": {
+  "items": {
+   "tally": 29,
+   "script row": 15,
+   "inversion ladder": 5,
+   "trace ladder": 5,
+   "protocol phase": 3
+  },
+  "need": 57,
+  "avail": 80,
+  "bands": 7,
+  "work": 8,
+  "key": 1,
+  "total": 9,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 2019347.6
+ },
+ "Serious_pegs162_proj_spec": {
+  "items": {
+   "tally": 89,
+   "script row": 15,
+   "inversion ladder": 7,
+   "trace ladder": 7,
+   "protocol phase": 3
+  },
+  "need": 121,
+  "avail": 240,
+  "bands": 9,
+  "work": 24,
+  "key": 2,
+  "total": 26,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 44998467.8
+ },
+ "Serious_pegs162_proj_F-form+lazy-y": {
+  "items": {
+   "tally": 89,
+   "script row": 15,
+   "inversion ladder": 7,
+   "trace ladder": 7,
+   "protocol phase": 3
+  },
+  "need": 121,
+  "avail": 200,
+  "bands": 7,
+  "work": 20,
+  "key": 2,
+  "total": 22,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 44886727.0
+ },
+ "Serious_pegs162_proj_F-form+lazy-y, NO swap": {
+  "items": {
+   "tally": 89,
+   "script row": 15,
+   "inversion ladder": 7,
+   "trace ladder": 7,
+   "protocol phase": 3
+  },
+  "need": 121,
+  "avail": 200,
+  "bands": 7,
+  "work": 20,
+  "key": 2,
+  "total": 22,
+  "extra_control_grids": 0,
+  "rails_in_key": true,
+  "fits": true,
+  "moves": 44886727.0
+ }
+}

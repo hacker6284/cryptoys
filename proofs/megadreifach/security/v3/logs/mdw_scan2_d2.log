@@ -1,0 +1,23 @@
+tables: Em.lean face turns, 60 rotations, neighbours, opposites and corner faces == ../tables.py (v1 sudo): yes
+fast engine C36 vs v2 KATs: 8/8 Hash digests, HashDeck vector, IV-COOK12 digest and |G|: OK
+slow reference (m9_search, Em.lean transliteration) vs v2 KATs: 8/8 Hash digests: OK
+fast engine C36 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A_vn vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine C76 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+Hash('') and Hash('abc') prefixes of rules A_vn, C36, A == the review engine md3.py (its out/md3_selfcheck.txt): yes
+mdfix_lib: Ct(36)==C36, Ct(76)==C76 (200 blocks), fast==slow ref for t in 36,76,0,12, inv_st==md.inverse, sweep tour covers 50 slots, 60 turn pairs (c1,c2) distinct: OK
+mdw_lib CF24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NP24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NPL24: fast == slow literal transliteration on 12/12 random blocks
+mdw_lib NPr13: fast == slow literal transliteration on 12/12 random blocks
+naming: the 48 non-King cards name 30/30 edges and 20/20 corners; 52 cards name 30 edges, 20 corners
+read->turn encodings: for every piece and ordered pair of its colours, the 60 piece states give 60 distinct two-turn words (NP) and the first turn alone takes all 12 faces, 5 states each (NPL): OK
+D2 scan 2 (200k pairs each; seeds 31_000_000 + 100_000*kind + 1000*t + 500 + chunk)
+D2 NPr39    n= 200000  P(fixE>=2) 0.2663 [0.2644,0.2683] adv +0.0021 | P(fixC>=2) 0.2645 [0.2626,0.2664] adv +0.0002 | mean fixE 1.0185, fixC 1.0094 (ideal 1 +-0.0044) | mean moved 49.1384 +- 0.0067 (ideal 49.1667, diff -0.0283) | chi2 cyc-type E 678.7/673 p=0.43, C 233.1/196 p=0.036 | chi2 fixE-hist p=6.7e-05, fixC-hist p=0.0003  [58s]
+D2 NPr52    n= 200000  P(fixE>=2) 0.2631 [0.2611,0.2650] adv -0.0012 | P(fixC>=2) 0.2637 [0.2618,0.2656] adv -0.0006 | mean fixE 1.0045, fixC 1.0030 (ideal 1 +-0.0044) | mean moved 49.1522 +- 0.0051 (ideal 49.1667, diff -0.0145) | chi2 cyc-type E 629.5/673 p=0.88, C 226.7/196 p=0.066 | chi2 fixE-hist p=1.2e-05, fixC-hist p=0.00022  [95s]
+wall time 154 s, workers 4
+
+real	2m34.261s
+user	6m51.749s
+sys	0m0.404s

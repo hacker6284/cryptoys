@@ -1,0 +1,53 @@
+{
+ "T1": {
+  "arith": {
+   "mul": "300/300",
+   "mul_nudge": "300/300",
+   "worst_case_all_red_x_all_red_nudge2": true,
+   "tidy": "313/313"
+  },
+  "malicious": {
+   "0": "rejected",
+   "1": "rejected",
+   "p-1 (order 2)": "rejected",
+   "p+1 (non-canonical 1)": "rejected",
+   "non-residue 31": "accepted; square in order-q subgroup: True",
+   "unchecked B=p-1: K = +-1 reveals a mod 2 (4 trials)": "4/4"
+  },
+  "seconds": 0.8
+ },
+ "T2": {
+  "arith": {
+   "mul": "300/300",
+   "mul_nudge": "300/300",
+   "worst_case_all_red_x_all_red_nudge2": true,
+   "tidy": "506/506"
+  },
+  "malicious": {
+   "0": "rejected",
+   "1": "rejected",
+   "p-1 (order 2)": "rejected",
+   "p+1 (non-canonical 1)": "rejected",
+   "non-residue 5": "accepted; square in order-q subgroup: True",
+   "unchecked B=p-1: K = +-1 reveals a mod 2 (4 trials)": "4/4"
+  },
+  "seconds": 1.5
+ },
+ "T6demo": {
+  "arith": {
+   "mul": "100/100",
+   "mul_nudge": "100/100",
+   "worst_case_all_red_x_all_red_nudge2": true,
+   "tidy": "306/306"
+  },
+  "malicious": {
+   "0": "rejected",
+   "1": "rejected",
+   "p-1 (order 2)": "rejected",
+   "p+1 (non-canonical 1)": "rejected",
+   "non-residue 2": "accepted; square in order-q subgroup: True",
+   "unchecked B=p-1: K = +-1 reveals a mod 2 (4 trials)": "4/4"
+  },
+  "seconds": 14.0
+ }
+}

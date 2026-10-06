@@ -8,8 +8,12 @@
   over all permutations, while the rest of `encrypt6` stays an injective map,
   shows: if σ commutes with `encrypt6` for all permutation keys, then the
   unkeyed round body is σ-covariant (`F(σ·m) = τ·F(m)` for one fixed τ). The
-  output relabelling τ need not equal σ, which is why the open conjecture is
-  stated in covariant form (`roundBody_covariant_iff_id`).
+  output relabelling τ need not equal σ, which is why the round statement is
+  in covariant form (`roundBody_covariant_iff_id`, proved in the heavy library). The
+  default library states the consequence as the reduction
+  `encrypt6_commutes_iff_id_of_covariant` (hard direction of the round statement,
+  `CovariantOnlyId`, as the hypothesis `hcov`); the unconditional `encrypt6_commutes_iff_id` is in the heavy library
+  (`DoubleDealSecurityHeavy/V10Sym.lean`).
 
   Scope: keys are independent `Equiv.Perm (Fin 52)` per round. That is a
   superset of the round keys a real key schedule (`expand_keys` of one master
@@ -162,15 +166,18 @@ theorem round_covariant_of_encrypt6 (σ : Relabel)
   rw [← hconst m hm]
   exact (hκ m hm i).symm
 
-/-- (PROVED modulo the covariant round conjecture) No nontrivial σ gives
-    `E_K(σM) = σ E_K(M)` for all permutation round keys and decks. -/
-theorem encrypt6_commutes_iff_id (σ : Relabel) :
+/-- (PROVED, a reduction; GIVEN `hcov : CovariantOnlyId` (`Rounds.lean`), the hard direction
+    of the covariant round statement, proved in the heavy library as
+    `roundBody_covariant_iff_id`) No nontrivial σ gives `E_K(σM) = σ E_K(M)` for all
+    permutation round keys and decks. Unconditional form: heavy library,
+    `encrypt6_commutes_iff_id`. -/
+theorem encrypt6_commutes_iff_id_of_covariant (hcov : CovariantOnlyId) (σ : Relabel) :
     (∀ k0 kMix kF, CommutesOnDecks σ (fun m => encrypt6P m k0 kMix kF)) ↔ σ = 1 := by
   constructor
-  · intro h; exact (roundBody_covariant_iff_id σ).1 (round_covariant_of_encrypt6 σ h)
+  · intro h; exact hcov σ (round_covariant_of_encrypt6 σ h)
   · rintro rfl _ _ _; exact commutesOnDecks_one _
 
-/-- (PROVED, no conjecture) No nontrivial σ that commutes with v10 SumRanks
+/-- (PROVED, no hypothesis) No nontrivial σ that commutes with v10 SumRanks
     (e.g. no nontrivial `v10Sym a x`) gives `E_K(σM) = σ E_K(M)` for all
     permutation round keys. -/
 theorem encrypt6_not_commutes_of_stem (σ : Relabel) (hid : σ ≠ 1)

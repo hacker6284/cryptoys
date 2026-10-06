@@ -1,9 +1,9 @@
 /-
-  Narrowing the covariant round conjecture `roundBody_covariant_iff_id`
-  (`Rounds.lean`, DRAFT-SORRY; roadmap milestone M4 (security README, Roadmap)).
+  Narrowing the covariant round statement `roundBody_covariant_iff_id` (roadmap
+  milestone M4 (security README, Roadmap); proved in the heavy library,
+  `DoubleDealSecurityHeavy/V10Sym.lean`, and not stated in the default library).
 
-  The conjecture itself is NOT proved here, and its statement, name and `sorry` are
-  not touched. This file proves separate theorems around it (`F = unkeyedWithMix`,
+  The statement itself is NOT proved here. This file proves separate theorems around it (`F = unkeyedWithMix`,
   the unkeyed round body, GridCycle ∘ stem):
 
   A. Algebra of covariance (no computation).
@@ -11,9 +11,14 @@
      * `covPair_one_iff`: τ = 1 ↔ σ = 1.
      * `covPair_mul`, `covPair_inv`, `covSubgroup`: the covariant σ form a subgroup
        of the 52! relabellings; likewise the commuting σ (`commSubgroup`).
-     * `roundBody_covariant_iff_id_of_prime`: the conjecture follows from its
-       special case for σ of prime order p ≤ 52 (the hypothesis `h`; not proved).
-       `prime_case_iff` proves that `h` is EQUIVALENT to the conjecture, so this is
+     * The seat-26 condition `Cell0Cov` (used in C): `cell0Cov_of_covPair`,
+       `cell0Cov_one`, `cell0Cov_mul`, `cell0Cov_inv`, `cell0Cov_self_of_commutes`,
+       `cell0Cov_v10Sym`, `cell0Cov_conj`, `cell0Subgroup` (the σ with
+       some τ form a subgroup) and `v10Sym_mem_cell0Subgroup`.
+     * `roundBody_covariant_iff_id_of_prime`: the covariant round statement follows from its
+       special case for σ of prime order p ≤ 52 (the hypothesis `h` here; it follows from
+       `roundBody_covariant_iff_id`, heavy library).
+       `prime_case_iff` proves that `h` is EQUIVALENT to the statement, so this is
        a reformulation, not a weaker target. Same for the commuting case:
        `roundBody_commutes_iff_id_of_prime`.
   B. The commuting case (τ = σ) and survival.
@@ -21,25 +26,35 @@
        deck SumRanks commutes with σ iff GridCycle commutes with σ at the stem
        output, and so (`commutes_card_survivors_eq`) the SumRanks and GridCycle
        survivor sets of σ have the same size.
-  C. The covariant case for every transposition (any τ), GIVEN `Cov0Checks`
+  C. The generic two-deck witness check (`pairsCheck`, `witnessCheck`,
+     `not_cell0Cov_of_checks`; also used by `CovariantAffine.lean`), and
+     the covariant case for every transposition (any τ), GIVEN `Cov0Checks`
      (`not_covariant_swap_of_check`; unconditional in the heavy library:
      `roundBody_not_covariant_swap`, and its commuting corollary
      `roundBody_not_commutes_swap`), via the seat-26 condition `Cell0Cov`.
      `roundBody_covariant_iff_id_of_prime_nonswap_of_check`: given `Cov0Checks`,
-     the conjecture follows from its special case for σ of prime order p ≤ 52 that
-     are neither a transposition nor a `v10Sym` (the hypothesis; not proved;
-     `prime_nonswap_case_iff_of_check`: equivalent to the conjecture). Unconditional
+     the covariant round statement follows from its special case for σ of prime order p ≤ 52 that
+     are neither a transposition nor a `v10Sym` (the hypothesis here; proved in the heavy
+     library: `CovariantNarrow.primeNonSwapCase`;
+     `prime_nonswap_case_iff_of_check`: equivalent to the statement). Unconditional
      form in the heavy library: `roundBody_covariant_iff_id_of_prime_nonswap`.
-  D. `roundBody_covariant_iff_id_of_cell0` and `…_of_cell0_prime`: the conjecture
+  D. `roundBody_covariant_iff_id_of_cell0` and `…_of_cell0_prime`: the covariant round statement
      follows from a single-cell SumRanks statement `hcell` (all σ, resp. σ of prime
-     order p ≤ 52). `hcell` is a SUFFICIENT condition, not known to be true or
-     necessary: `hcell` implies the conjecture; the converse is not known (`Cell0Cov`
-     is weaker than covariance, so `hcell` might be false even if the conjecture is true).
+     order p ≤ 52). `hcell` is a SUFFICIENT condition (`Cell0Cov` is weaker than
+     covariance). It is a hypothesis here; the full `hcell`
+     is proved in the heavy library (finite checks by kernel `decide!`; `LabelStep.cell0Cov_mem_v10Sym`;
+     in the default library given `V10SymChecks`: `LabelStep.cell0Cov_mem_v10Sym_of_checks`).
 
-  Open after this file: the conjecture for σ of prime order p ≤ 52 that are neither
-  a transposition nor a `v10Sym` (exactly the hypothesis of
-  `roundBody_covariant_iff_id_of_prime_nonswap`). Write-up:
-  `../analysis/v12-covariant/NOTES.md`.
+  Not covered by this file alone: the statement for σ of prime order p ≤ 52 that are
+  neither a transposition nor a `v10Sym` (exactly the hypothesis of
+  `roundBody_covariant_iff_id_of_prime_nonswap`). The full statement is proved in the heavy
+  library (finite checks by kernel `decide!`; `roundBody_covariant_iff_id`); in the default
+  library it is proved only given `V10SymChecks` (`LabelStep.roundBody_covariant_iff_id_of_checks`),
+  and its consequences are the `_of_covariant` reductions (`fullRound_commutes_iff_id_of_covariant`,
+  `encrypt6_commutes_iff_id_of_covariant`). Write-up:
+  `../analysis/v12-covariant/NOTES.md`. The affine relabellings outside `v10Sym` (all
+  orders; the prime-order ones lie inside that case) are handled in
+  `CovariantAffine.lean` (`../analysis/v12-primenonswap/NOTES.md`).
 -/
 import DoubleDealSecurity.GridCycleSurvival
 import DoubleDealSecurity.SumRanksDP.Main
@@ -100,6 +115,51 @@ theorem covPair_inv {σ τ : Relabel} (h : CovPair σ τ) : CovPair σ⁻¹ τ�
   rw [← rel_mul, mul_inv_cancel, rel_one] at e
   rw [e, ← rel_mul, inv_mul_cancel, rel_one]
 
+/-! ### The seat-26 condition (a necessary condition for covariance, used in C) -/
+
+/-- The necessary condition read off GridCycle's output seat 26 (walk card 0):
+    `stem(σ·m)₀ = τ(stem(m)₀)` on every deck. -/
+def Cell0Cov (σ τ : Relabel) : Prop :=
+  ∀ m, IsDeck m → unkeyedNoMix (rel σ m) 0 = τ.app (unkeyedNoMix m 0)
+
+/-- (PROVED) Covariance implies the seat-26 condition. -/
+theorem cell0Cov_of_covPair {σ τ : Relabel} (h : CovPair σ τ) : Cell0Cov σ τ := by
+  intro m hm
+  have e := congrFun (h m hm) 26
+  simp only [unkeyedWithMix, rel] at e
+  rwa [mixColumns_seat26, mixColumns_seat26] at e
+
+theorem app_inv_app (ρ : Relabel) (n : Nat) : ρ⁻¹.app (ρ.app n) = n := by
+  rw [← app_mul, inv_mul_cancel, app_one]
+
+theorem cell0Cov_one : Cell0Cov 1 1 := fun m _ => by rw [rel_one, app_one]
+
+/-- (PROVED) Products. -/
+theorem cell0Cov_mul {σ τ σ' τ' : Relabel} (h : Cell0Cov σ τ) (h' : Cell0Cov σ' τ') :
+    Cell0Cov (σ * σ') (τ * τ') := by
+  intro m hm
+  rw [rel_mul, h _ (isDeck_rel σ' hm), h' m hm, app_mul]
+
+/-- (PROVED) Inverses. -/
+theorem cell0Cov_inv {σ τ : Relabel} (h : Cell0Cov σ τ) : Cell0Cov σ⁻¹ τ⁻¹ := by
+  intro m hm
+  have e := h _ (isDeck_rel σ⁻¹ hm)
+  rw [← rel_mul, mul_inv_cancel, rel_one] at e
+  rw [e, app_inv_app]
+
+/-- (PROVED) A relabelling that commutes with SumRanks (e.g. every `v10Sym a x`)
+    satisfies the seat-26 condition with τ = itself. -/
+theorem cell0Cov_self_of_commutes {ρ : Relabel} (hsr : CommutesG ρ sumRanksV10) :
+    Cell0Cov ρ ρ := by
+  intro m hm
+  rw [unkeyedNoMix_commutes ρ hsr m hm.1]
+  rfl
+
+/-- (PROVED) Every `v10Sym a x` satisfies the seat-26 condition with τ = itself (the one
+    home of this fact: `cell0Cov_self_of_commutes` with `sumRanksV10_commutes_v10Sym`). -/
+theorem cell0Cov_v10Sym (a : Fin 13) (x : Fin 4) : Cell0Cov (v10Sym a x) (v10Sym a x) :=
+  cell0Cov_self_of_commutes (sumRanksV10_commutes_v10Sym a x)
+
 /-- (PROVED) τ = 1 exactly when σ = 1. -/
 theorem covPair_one_iff {σ τ : Relabel} (h : CovPair σ τ) : τ = 1 ↔ σ = 1 := by
   constructor
@@ -116,6 +176,19 @@ def covSubgroup : Subgroup Relabel where
   one_mem' := ⟨1, covPair_one⟩
   mul_mem' := fun ⟨τ, h⟩ ⟨τ', h'⟩ => ⟨τ * τ', covPair_mul h h'⟩
   inv_mem' := fun ⟨τ, h⟩ => ⟨τ⁻¹, covPair_inv h⟩
+
+/-- (PROVED) The σ that satisfy the seat-26 condition for some τ form a subgroup
+    (it contains every covariant σ, `cell0Cov_of_covPair`, and every SumRanks-commuting
+    one, `cell0Cov_self_of_commutes`). -/
+def cell0Subgroup : Subgroup Relabel where
+  carrier := {σ | ∃ τ, Cell0Cov σ τ}
+  one_mem' := ⟨1, cell0Cov_one⟩
+  mul_mem' := fun ⟨τ, h⟩ ⟨τ', h'⟩ => ⟨τ * τ', cell0Cov_mul h h'⟩
+  inv_mem' := fun ⟨τ, h⟩ => ⟨τ⁻¹, cell0Cov_inv h⟩
+
+/-- (PROVED) Every `v10Sym a x` lies in `cell0Subgroup` (`cell0Cov_v10Sym`). -/
+theorem v10Sym_mem_cell0Subgroup (a : Fin 13) (x : Fin 4) : v10Sym a x ∈ cell0Subgroup :=
+  ⟨_, cell0Cov_v10Sym a x⟩
 
 /-- (PROVED) The σ that commute with the round body on every deck form a subgroup. -/
 def commSubgroup : Subgroup Relabel where
@@ -142,9 +215,10 @@ theorem eq_one_of_no_prime_order (H : Subgroup Relabel)
   have hp52 : p ≤ 52 := (Nat.Prime.dvd_factorial hp).1 hdvd
   exact h (x : Relabel) x.2 p hp hp52 ((Subgroup.orderOf_coe x).trans hx)
 
-/-- (PROVED, a reduction) The covariant round conjecture follows from its special
+/-- (PROVED, a reduction) The covariant round statement follows from its special
     case for relabellings of prime order `p ≤ 52`. The special case is the
-    HYPOTHESIS `h`; it is not proved here. -/
+    HYPOTHESIS `h`; it is not proved here (it follows from
+    `roundBody_covariant_iff_id`, heavy library). -/
 theorem roundBody_covariant_iff_id_of_prime
     (h : ∀ σ : Relabel, ∀ p : ℕ, p.Prime → p ≤ 52 → orderOf σ = p →
       ¬ Covariant σ unkeyedWithMix)
@@ -164,7 +238,7 @@ theorem ne_one_of_orderOf_prime {σ : Relabel} {p : ℕ} (hp : p.Prime) (ho : or
   exact hp.one_lt.ne ho
 
 /-- (PROVED) The hypothesis of `roundBody_covariant_iff_id_of_prime` is EQUIVALENT to
-    the conjecture (the statement of `roundBody_covariant_iff_id`, for all σ). -/
+    the covariant round statement `roundBody_covariant_iff_id` (for all σ). -/
 theorem prime_case_iff :
     (∀ σ : Relabel, ∀ p : ℕ, p.Prime → p ≤ 52 → orderOf σ = p →
       ¬ Covariant σ unkeyedWithMix) ↔
@@ -275,47 +349,16 @@ theorem commutes_gc_le_of_not_v10Sym {σ : Relabel} (hc : CommutesOnDecks σ unk
 
 /-! ## C. The covariant case for transpositions (any output relabelling) -/
 
-/-- The suit-label shift sending card 0's suit to suit `s` (from `ddport.v10sym`). -/
-def yOf (s : Nat) : Fin 4 := if s = 0 then 0 else if s = 1 then 2 else if s = 2 then 3 else 1
-
-theorem v10SymFn_zero_table :
-    ∀ a : Fin 52, v10SymFn ⟨a.val % 13, Nat.mod_lt _ (by decide)⟩ (yOf (a.val / 13)) 0 = a := by
-  decide
-
 theorem exists_v10Sym_zero (a : Fin 52) : ∃ r : Fin 13, ∃ y : Fin 4, v10SymFn r y 0 = a :=
-  ⟨_, _, v10SymFn_zero_table a⟩
-
-/-- The necessary condition read off GridCycle's output seat 26 (walk card 0):
-    `stem(σ·m)₀ = τ(stem(m)₀)` on every deck. -/
-def Cell0Cov (σ τ : Relabel) : Prop :=
-  ∀ m, IsDeck m → unkeyedNoMix (rel σ m) 0 = τ.app (unkeyedNoMix m 0)
-
-/-- (PROVED) Covariance implies the seat-26 condition. -/
-theorem cell0Cov_of_covPair {σ τ : Relabel} (h : CovPair σ τ) : Cell0Cov σ τ := by
-  intro m hm
-  have e := congrFun (h m hm) 26
-  simp only [unkeyedWithMix, rel] at e
-  rwa [mixColumns_seat26, mixColumns_seat26] at e
-
-theorem app_inv_app (ρ : Relabel) (n : Nat) : ρ⁻¹.app (ρ.app n) = n := by
-  rw [← app_mul, inv_mul_cancel, app_one]
+  ⟨ri a, lbl a, crd_ri_lbl a⟩
 
 /-- (PROVED) The seat-26 condition is invariant under conjugation by any relabelling
     that commutes with SumRanks (e.g. every `v10Sym a x`). -/
 theorem cell0Cov_conj {ρ σ τ : Relabel} (hsr : CommutesG ρ sumRanksV10)
     (h : Cell0Cov (ρ * σ * ρ⁻¹) τ) : Cell0Cov σ (ρ⁻¹ * τ * ρ) := by
-  intro m hm
-  have hM := h (rel ρ m) (isDeck_rel ρ hm)
-  have e1 : rel (ρ * σ * ρ⁻¹) (rel ρ m) = rel ρ (rel σ m) := by
-    rw [← rel_mul, ← rel_mul]
-    simp only [mul_assoc, inv_mul_cancel, mul_one]
-  have hs : Cards (rel σ m) := fun i => app_lt _ (hm.1 i)
-  rw [e1, unkeyedNoMix_commutes ρ hsr (rel σ m) hs,
-    unkeyedNoMix_commutes ρ hsr m hm.1] at hM
-  simp only [rel] at hM
-  have := congrArg ρ⁻¹.app hM
-  rw [app_inv_app] at this
-  rw [this, app_mul, app_mul]
+  simpa only [mul_assoc, inv_mul_cancel_left, inv_mul_cancel, mul_one] using
+    cell0Cov_mul (cell0Cov_mul (cell0Cov_inv (cell0Cov_self_of_commutes hsr)) h)
+      (cell0Cov_self_of_commutes hsr)
 
 /-- Two decks with the same stem cell 0 whose σ-images have different stem cell 0
     rule out the seat-26 condition for every τ. -/
@@ -337,26 +380,45 @@ theorem g0_eq (m : Fin 52 → Nat) : g0 m = unkeyedNoMix m 0 := by
 /-- The identity deck with seats `i` and `j` exchanged. -/
 def posSwapDeck (i j : Fin 52) : Fin 52 → Nat := permDeck (Equiv.swap i j)
 
-/-! `goodPairs` and `covW` are generated data in `CovariantNarrowLists.lean`
-    (`analysis/v12-covariant/cell0_witness.py --lean`). -/
+/-! ### Generic two-deck witness checks (used here and in `CovariantAffine.lean`)
 
-/-- Finite check A: each used position swap keeps stem cell 0 of the identity deck. -/
-def goodPairsCheck : Bool :=
-  goodPairs.all fun p => g0 (posSwapDeck p.1 p.2) == g0 idDeck
+`cell0Pairs` and `covW` are generated data in `CovariantNarrowLists.lean`
+(`analysis/v12-covariant/cell0_witness.py --lean`). -/
 
-/-- Finite check B for `e`: the witness pair is one of `goodPairs`, and the
-    `swap 0 e`-images of the two decks have different stem cell 0. -/
+/-- Finite check A for a list of seat pairs: each position swap keeps stem cell 0 of
+    the identity deck. -/
+def pairsCheck (ps : List (Fin 52 × Fin 52)) : Bool :=
+  ps.all fun p => g0 (posSwapDeck p.1 p.2) == g0 idDeck
+
+/-- Finite check B for σ and the seat pair `p`: `p` is one of `ps`, and the σ-images of
+    the identity deck and of `posSwapDeck p.1 p.2` have different stem cell 0. -/
+def witnessCheck (ps : List (Fin 52 × Fin 52)) (σ : Relabel) (p : Fin 52 × Fin 52) : Bool :=
+  ps.contains p && !(g0 (rel σ idDeck) == g0 (rel σ (posSwapDeck p.1 p.2)))
+
+/-- (PROVED) The two finite checks rule out the seat-26 condition for every τ. -/
+theorem not_cell0Cov_of_checks {ps : List (Fin 52 × Fin 52)} {σ : Relabel}
+    {p : Fin 52 × Fin 52} (hA : pairsCheck ps = true) (hB : witnessCheck ps σ p = true)
+    (τ : Relabel) : ¬ Cell0Cov σ τ := by
+  unfold witnessCheck at hB
+  simp only [Bool.and_eq_true, Bool.not_eq_true', beq_eq_false_iff_ne] at hB
+  obtain ⟨hmem, hne⟩ := hB
+  unfold pairsCheck at hA
+  rw [List.all_eq_true] at hA
+  have hsame := hA p (List.elem_iff.1 hmem)
+  rw [beq_iff_eq, g0_eq, g0_eq] at hsame
+  rw [g0_eq, g0_eq] at hne
+  exact not_cell0Cov_of_witness isDeck_idDeck (isDeck_permDeck _) hsame.symm hne τ
+
+/-- Finite check B for the transposition `swap 0 e`, with the witness pair `covW[e]`. -/
 def cov0Check (e : Fin 52) : Bool :=
-  let p := covW.getD e.val (0, 0)
-  goodPairs.contains p &&
-    !(g0 (rel (Equiv.swap 0 e) idDeck) == g0 (rel (Equiv.swap 0 e) (posSwapDeck p.1 p.2)))
+  witnessCheck cell0Pairs (Equiv.swap 0 e) (covW.getD e.val (0, 0))
 
 /-- Both finite checks (discharged by kernel `decide!` in the heavy library). -/
-def Cov0Checks : Prop := goodPairsCheck = true ∧ ∀ e : Fin 52, e ≠ 0 → cov0Check e = true
+def Cov0Checks : Prop := pairsCheck cell0Pairs = true ∧ ∀ e : Fin 52, e ≠ 0 → cov0Check e = true
 
 /-- (PROVED, given the finite checks `Cov0Checks` as a hypothesis) No transposition
     of two card values is covariant for the unkeyed round body, for ANY output
-    relabelling: the conjecture `roundBody_covariant_iff_id` holds for every
+    relabelling: the statement `roundBody_covariant_iff_id` holds for every
     transposition. (Unconditional form: heavy library,
     `roundBody_not_covariant_swap`.) -/
 theorem not_covariant_swap_of_check (hchk : Cov0Checks) (a b : Fin 52) (hab : a ≠ b) :
@@ -373,31 +435,19 @@ theorem not_covariant_swap_of_check (hchk : Cov0Checks) (a b : Fin 52) (hab : a 
     rw [← hρ0, ← hρe]; exact Equiv.swap_apply_apply ρ 0 e
   have hsr : CommutesG ρ sumRanksV10 := sumRanksV10_commutes_v10Sym r y
   have hc0 : Cell0Cov (ρ * Equiv.swap 0 e * ρ⁻¹) τ := hσ ▸ cell0Cov_of_covPair hτ
-  have hc := cell0Cov_conj hsr hc0
-  -- the witness
-  have hB := hchk.2 e he0
-  unfold cov0Check at hB
-  set p := covW.getD e.val (0, 0)
-  simp only [Bool.and_eq_true, Bool.not_eq_true', beq_eq_false_iff_ne] at hB
-  obtain ⟨hmem, hne⟩ := hB
-  have hA := hchk.1
-  unfold goodPairsCheck at hA
-  rw [List.all_eq_true] at hA
-  have hsame := hA p (List.elem_iff.1 hmem)
-  rw [beq_iff_eq, g0_eq, g0_eq] at hsame
-  rw [g0_eq, g0_eq] at hne
-  exact not_cell0Cov_of_witness isDeck_idDeck (isDeck_permDeck _) hsame.symm hne _ hc
+  exact not_cell0Cov_of_checks hchk.1 (hchk.2 e he0) _ (cell0Cov_conj hsr hc0)
 
-/-- The prime-order case left open after the transpositions and the `v10Sym`:
+/-- The prime-order case that remains after the transpositions and the `v10Sym`:
     no σ of prime order `p ≤ 52` that is neither a transposition nor a `v10Sym` is
-    covariant. -/
+    covariant. Proved in the heavy library: `CovariantNarrow.primeNonSwapCase`. -/
 def PrimeNonSwapCase : Prop :=
   ∀ σ : Relabel, ∀ p : ℕ, p.Prime → p ≤ 52 → orderOf σ = p →
     (∀ a b : Fin 52, σ ≠ Equiv.swap a b) → (∀ (a : Fin 13) (x : Fin 4), σ ≠ v10Sym a x) →
     ¬ Covariant σ unkeyedWithMix
 
 /-- (PROVED, a reduction; GIVEN the finite checks `Cov0Checks` as a hypothesis) The
-    conjecture follows from `PrimeNonSwapCase` (the hypothesis `h`; not proved).
+    covariant round statement follows from `PrimeNonSwapCase` (the hypothesis `h` here; proved in the heavy
+    library: `CovariantNarrow.primeNonSwapCase`).
     Transpositions are handled by `not_covariant_swap_of_check`, nontrivial `v10Sym`
     by `roundBody_not_covariant_of_stem` (every τ), and the rest of the argument is
     `roundBody_covariant_iff_id_of_prime`. Unconditional form (heavy library):
@@ -418,7 +468,7 @@ theorem roundBody_covariant_iff_id_of_prime_nonswap_of_check (hchk : Cov0Checks)
   push_neg at hs hv
   exact h σ p hp hp52 ho hs hv
 
-/-- (PROVED; GIVEN `Cov0Checks`) `PrimeNonSwapCase` is EQUIVALENT to the conjecture. -/
+/-- (PROVED; GIVEN `Cov0Checks`) `PrimeNonSwapCase` is EQUIVALENT to the covariant round statement. -/
 theorem prime_nonswap_case_iff_of_check (hchk : Cov0Checks) :
     PrimeNonSwapCase ↔ (∀ σ : Relabel, Covariant σ unkeyedWithMix ↔ σ = 1) := by
   constructor
@@ -426,14 +476,15 @@ theorem prime_nonswap_case_iff_of_check (hchk : Cov0Checks) :
   · intro h σ p hp _ ho _ _ hc
     exact ne_one_of_orderOf_prime hp ho ((h σ).1 hc)
 
-/-! ## D. Sufficient single-cell conditions (not known to be true or necessary) -/
+/-! ## D. Sufficient single-cell conditions (hypotheses here; the full one is proved in `LabelStep`) -/
 
-/-- (PROVED, a reduction) The conjecture follows from the single-cell statement
+/-- (PROVED, a reduction) The covariant round statement follows from the single-cell statement
     `hcell`: every σ satisfying the seat-26 condition `Cell0Cov σ τ` for some τ is a
-    `v10Sym`. `hcell` is a HYPOTHESIS and is NOT proved. It is a SUFFICIENT
-    condition, not known to be true or necessary: `hcell` implies the conjecture;
-    the converse is not known (`Cell0Cov` is weaker than covariance, so `hcell`
-    might be false even if the conjecture is true). -/
+    `v10Sym`. `hcell` is a HYPOTHESIS of this theorem and a SUFFICIENT condition
+    (`Cell0Cov` is weaker than covariance). It is proved in the heavy library (finite
+    checks by kernel `decide!`; `LabelStep.cell0Cov_mem_v10Sym`), which gives
+    `roundBody_covariant_iff_id`; in the default library it is a
+    hypothesis (`LabelStep.cell0Cov_mem_v10Sym_of_checks`, given `V10SymChecks`). -/
 theorem roundBody_covariant_iff_id_of_cell0
     (hcell : ∀ σ τ : Relabel, Cell0Cov σ τ → ∃ a x, σ = v10Sym a x)
     (σ : Relabel) : Covariant σ unkeyedWithMix ↔ σ = 1 := by
@@ -446,8 +497,9 @@ theorem roundBody_covariant_iff_id_of_cell0
     exact ⟨1, covPair_one⟩
 
 /-- (PROVED, a reduction) As `roundBody_covariant_iff_id_of_cell0`, with `hcell`
-    only for σ of prime order `p ≤ 52`. `hcell` is a HYPOTHESIS, NOT proved, and a
-    SUFFICIENT condition not known to be true or necessary (as above). It is the
+    only for σ of prime order `p ≤ 52`. `hcell` is a HYPOTHESIS of this theorem and a
+    SUFFICIENT condition; it follows from the full one, proved in the heavy library (finite
+    checks by kernel `decide!`; `LabelStep.cell0Cov_mem_v10Sym`). It is the
     statement sampled by `../analysis/v12-covariant/cell0_sample.py`: a seat-26
     witness for a sampled σ refutes `Cell0Cov σ τ` for every τ for that σ only. -/
 theorem roundBody_covariant_iff_id_of_cell0_prime

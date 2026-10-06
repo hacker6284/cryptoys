@@ -1,0 +1,27 @@
+tables: Em.lean face turns, 60 rotations, neighbours, opposites and corner faces == ../tables.py (v1 sudo): yes
+fast engine C36 vs v2 KATs: 8/8 Hash digests, HashDeck vector, IV-COOK12 digest and |G|: OK
+slow reference (m9_search, Em.lean transliteration) vs v2 KATs: 8/8 Hash digests: OK
+fast engine C36 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A_vn vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine C76 vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+fast engine A vs slow reference: 10/10 random (uniform h, random deal) blocks with identical E_m and grip sequence
+Hash('') and Hash('abc') prefixes of rules A_vn, C36, A == the review engine md3.py (its out/md3_selfcheck.txt): yes
+mdfix_lib: Ct(36)==C36, Ct(76)==C76 (200 blocks), fast==slow ref for t in 36,76,0,12, inv_st==md.inverse, sweep tour covers 50 slots, 60 turn pairs (c1,c2) distinct: OK
+side check: earlier D1 flip h2[20+e]^=1 equals g*h = compose(g,h) in 1000/1000 cases and h*g = compose(h,g) in 1/1000 (equal only when h maps e1,e2 to themselves)
+identity check C36: W unchanged in 154/3000 pairs; among them X'' == X*g in 154/154 and Delta == Q'' Q^-1 (Q from the puzzle states) in 154/154
+identity check SWBb60: W unchanged in 534/3000 pairs; among them X'' == X*g in 534/534 and Delta == Q'' Q^-1 (Q from the puzzle states) in 534/534
+C36: seeds 20036000+chunk (10 chunks)
+D1' C36     n=1000000: Delta = identity 51821 (0.05182 [0.05139,0.05226]) | P(fixE>=2) 0.3438 [0.3429,0.3447] adv +0.0796 | P(fixC>=2) 0.3192 [0.3183,0.3201] adv +0.0550 | mean fixE 2.7236, fixC 2.0585 (ideal 1 +-0.0020) | mean moved 46.3639 +- 0.0216 (ideal 49.1667) | chi2 cyc-type E 1136083.1/1106 p=0, C 10892398.5/228 p=0 | chi2 fixE-hist p=0, fixC-hist p=0  [213s]
+     per-slot 'position fixed' rates: corners mean 0.10292 (ideal 0.05000) range [0.10208,0.10339], edges mean 0.09079 (ideal 0.03333) range [0.09025,0.09112]; max |z| 321.91 at slot 46 (Bonferroni p over 50 slots 0); sum z^2 = 4252776.8 on 50 slots
+     per-slot 'fixed with orientation 0' rates: corners mean 0.07049 (ideal 0.01667) range [0.07027,0.07070], edges mean 0.07421 (ideal 0.01667) range [0.07383,0.07447]; max |z| 451.54 at slot 46 (Bonferroni p over 50 slots 0); sum z^2 = 9596429.1 on 50 slots
+D1R C36     n=1000000: right-side exact prediction 51821/1000000 = 0.05182 [0.05139,0.05226] | Qs: P(fixE>=2) 0.3438 [0.3429,0.3447] adv +0.0796, P(fixC>=2) 0.3192 [0.3183,0.3201] adv +0.0550, mean fixE 2.7236, fixC 2.0585, mean moved 46.3639 +- 0.0216
+SWBb60: seeds 20160000+chunk (10 chunks)
+D1' SWBb60  n=1000000: Delta = identity 0 (0.00000 [0.00000,0.00000]) | P(fixE>=2) 0.2651 [0.2642,0.2660] adv +0.0009 | P(fixC>=2) 0.2641 [0.2633,0.2650] adv -0.0001 | mean fixE 1.0022, fixC 0.9997 (ideal 1 +-0.0020) | mean moved 49.1654 +- 0.0018 (ideal 49.1667) | chi2 cyc-type E 1104.1/1106 p=0.51, C 192.6/228 p=0.96 | chi2 fixE-hist p=0.089, fixC-hist p=0.95  [293s]
+     per-slot 'position fixed' rates: corners mean 0.04999 (ideal 0.05000) range [0.04970,0.05044], edges mean 0.03341 (ideal 0.03333) range [0.03315,0.03375]; max |z| 2.32 at slot 48 (Bonferroni p over 50 slots 1); sum z^2 = 37.6 on 50 slots
+     per-slot 'fixed with orientation 0' rates: corners mean 0.01668 (ideal 0.01667) range [0.01633,0.01687], edges mean 0.01670 (ideal 0.01667) range [0.01640,0.01689]; max |z| 2.65 at slot 5 (Bonferroni p over 50 slots 0.41); sum z^2 = 49.6 on 50 slots
+D1R SWBb60  n=1000000: right-side exact prediction 0/1000000 = 0.00000 [0.00000,0.00000] | Qs: P(fixE>=2) 0.2651 [0.2642,0.2660] adv +0.0009, P(fixC>=2) 0.2641 [0.2633,0.2650] adv -0.0001, mean fixE 1.0022, fixC 0.9997, mean moved 49.1654 +- 0.0018
+wall time 508 s, workers 4
+
+real	8m40.221s
+user	15m11.375s
+sys	0m0.959s

@@ -16,8 +16,10 @@ permissions:
   id-token: write
 
 concurrency:
+  # Shared with republish-pages.yml so only one deploy-pages runs at a time.
+  # A newer main deploy cancels whatever holds the group, even a queued run with no runner.
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:

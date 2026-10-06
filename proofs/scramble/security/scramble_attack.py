@@ -257,8 +257,8 @@ def main():
     args = ap.parse_args()
     rng = random.Random(args.seed)
     log = lambda s: print(s, flush=True)
-    assert S.selfcheck(verbose=False), 'reference KATs failed'
-    log(f"[{args.mode}] seed {args.seed}; reference self-check: 10/10 SPEC KATs ok")
+    assert S.selfcheck(verbose=False), 'engine KATs failed'
+    log(f"[{args.mode}] seed {args.seed}; engine self-check: 10/10 SPEC KATs ok")
     t0 = time.time(); STEPS[0] = 0
     if args.mode == 'collision':
         t = args.t or 22

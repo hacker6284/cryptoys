@@ -1,0 +1,88 @@
+PARI stack size set to 2000000000 bytes, maximum size set to 2000003072
+Hobby {
+ "trace honest kP": {
+  "trials": 15,
+  "agree_with_subgroup": 0,
+  "accepted": 15,
+  "two tallies": {
+   "agree": 15,
+   "peak": 7,
+   "tally_holes_peak": 58,
+   "moves": 392669,
+   "ctrl": 1521
+  },
+  "replay": {
+   "agree": 15,
+   "peak": 7,
+   "tally_holes_peak": 29,
+   "moves": 392669,
+   "ctrl": 1600
+  }
+ },
+ "trace kP + GF(3) point": {
+  "trials": 15,
+  "agree_with_subgroup": 0,
+  "accepted": 0,
+  "two tallies": {
+   "agree": 15,
+   "peak": 7,
+   "tally_holes_peak": 58,
+   "moves": 0,
+   "ctrl": 0
+  },
+  "replay": {
+   "agree": 15,
+   "peak": 7,
+   "tally_holes_peak": 29,
+   "moves": 0,
+   "ctrl": 0
+  }
+ },
+ "trace random curve point": {
+  "trials": 15,
+  "agree_with_subgroup": 0,
+  "accepted": 4,
+  "two tallies": {
+   "agree": 15,
+   "peak": 7,
+   "tally_holes_peak": 58,
+   "moves": 387515,
+   "ctrl": 1521
+  },
+  "replay": {
+   "agree": 15,
+   "peak": 7,
+   "tally_holes_peak": 29,
+   "moves": 387515,
+   "ctrl": 1600
+  }
+ },
+ "trace pure order-5 point": {
+  "trials": 4,
+  "agree_with_subgroup": 0,
+  "accepted": 0,
+  "two tallies": {
+   "agree": 4,
+   "peak": 5,
+   "tally_holes_peak": 1,
+   "moves": 0,
+   "ctrl": 0
+  },
+  "replay": {
+   "agree": 4,
+   "peak": 5,
+   "tally_holes_peak": 1,
+   "moves": 0,
+   "ctrl": 0
+  }
+ },
+ "certificate": {
+  "honest_ok": 15,
+  "forged_rejected": 15,
+  "forged": 15,
+  "peak": 7,
+  "moves_make": 45419,
+  "moves_check": 49357
+ },
+ "secs_total": 10.1
+}

@@ -1,0 +1,54 @@
+{
+ "Toy": {
+  "resume_every_hole": true,
+  "calls_in_session": 46,
+  "stale_trials": 200,
+  "stale_copy_wrong_without_clearing": 200,
+  "stale_copy_wrong_with_rule": 0,
+  "homes_disjoint": true,
+  "never_row_J": true,
+  "published_bands": {
+   "across": "grid 2, A1 .. grid 2, C7",
+   "up": "grid 2, D1 .. grid 2, F7"
+  },
+  "key_grids": [
+   5
+  ],
+  "workspace_grids": 4
+ },
+ "Hobby": {
+  "resume_every_hole": true,
+  "calls_in_session": 118,
+  "stale_trials": 200,
+  "stale_copy_wrong_without_clearing": 200,
+  "stale_copy_wrong_with_rule": 0,
+  "homes_disjoint": true,
+  "never_row_J": true,
+  "published_bands": {
+   "across": "grid 3, A1 .. grid 4, C9",
+   "up": "grid 3, D1 .. grid 4, F9"
+  },
+  "key_grids": [
+   9
+  ],
+  "workspace_grids": 8
+ },
+ "Serious": {
+  "resume_every_hole": true,
+  "calls_in_session": 358,
+  "stale_trials": 200,
+  "stale_copy_wrong_without_clearing": 200,
+  "stale_copy_wrong_with_rule": 0,
+  "homes_disjoint": true,
+  "never_row_J": true,
+  "published_bands": {
+   "across": "grid 7, A1 .. grid 8, I9",
+   "up": "grid 9, A1 .. grid 10, I9"
+  },
+  "key_grids": [
+   21,
+   22
+  ],
+  "workspace_grids": 20
+ }
+}

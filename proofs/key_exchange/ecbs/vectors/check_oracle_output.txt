@@ -1,0 +1,7 @@
+ecbs_vectors.json: sudocode 87aaaee, tiers Demo, Toy, Hobby, Serious
+pinned SPEC 1/4 values (n, k, cells, l): tap irreducible over GF(3), l prime (PARI isprime), l = #E/5, generated tier() equal: Demo, Toy, Hobby, Serious
+ok  Demo: tier 1/1, base point 1/1, arith 4/4, fold 3/3, points 5/5, walks 2/2, receive 5/5, exchanges 2/2, roll 2/2
+ok  Toy: tier 1/1, base point 1/1, arith 4/4, fold 3/3, points 5/5, walks 2/2, receive 5/5, exchanges 2/2, roll 2/2
+ok  Hobby: tier 1/1, base point 1/1, arith 4/4, fold 3/3, points 5/5, walks 1/1, receive 5/5, exchanges 1/1, roll 2/2
+ok  Serious: tier 1/1, base point 1/1, arith 4/4, fold 3/3, points 5/5, receive 5/5, exchanges 1/1, roll 2/2
+all vectors agree with PARI/GP

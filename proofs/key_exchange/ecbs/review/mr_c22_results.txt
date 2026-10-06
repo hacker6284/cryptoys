@@ -1,0 +1,4 @@
+n =   7: x^7 - x^5 - 1 irreducible over F_3: True; holes i with x^(3i) a single peg: 3/7; GNB types <= 20: [4, 6, 10, 16, 18]
+n =  23: x^23 - x^15 - 1 irreducible over F_3: True; holes i with x^(3i) a single peg: 8/23; GNB types <= 20: [2, 6, 12, 20]
+n =  59: x^59 - x^39 - 1 irreducible over F_3: True; holes i with x^(3i) a single peg: 20/59; GNB types <= 20: [12, 14, 18]
+n = 179: x^179 - x^59 - 1 irreducible over F_3: True; holes i with x^(3i) a single peg: 60/179; GNB types <= 20: [2, 8, 20]

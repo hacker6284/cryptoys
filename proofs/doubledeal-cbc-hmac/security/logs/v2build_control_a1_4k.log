@@ -1,0 +1,8 @@
+# command: a1 4000 500
+build: HashDeckBody(new-deck order) = 004f8ed392d8aadb2a533271c283d62ff8a2f6f308195e9f6c86614a51; block = build compose(h, em_block(h, deal)) (no dm_step: a v2 build); HashDecksBody absent
+selfcheck: compose(h, inverse(h)) == identity (legality of h: by uniformH's construction, not checked) and block == build HashDeckBodyFrom: 8/8
+a1 N=4000 SEED0=500: 8 chunks of <= 500, chunk c uses seed SEED0 + c
+A1 (f' = f(., K turned over), 2-edge-flip prediction): accepted 213/4000 = 5.325e-2; 95% CI (Wilson) [4.67e-2, 6.06e-2]
+  accepted == (W unchanged by the flip) in every game; W unchanged 213/4000; ideal 1/|G| ~ 2^-225.9
+  self-check y1 == build HashDeckBodyFrom: 8 chunks
+# time a1: 8.3 s, 4 workers

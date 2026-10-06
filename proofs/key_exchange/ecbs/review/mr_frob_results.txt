@@ -1,0 +1,18 @@
+== 1. Rotation model at Serious (n = 179): c(k) = #{i : lambda^i k in S}
+   m = 162: E[c] = 2.000 (exact); MC E[c] = 2.004; E[1/c] = 0.6642; #classes/|S| (+-, rotations) = E[1/c]/2 = 0.3321; saving over negation-only BSGS/rho-on-S <= sqrt(1/E[1/c]) = 2^0.30, <= sqrt(E[c]) = 2^0.50
+   m = 170: E[c] = 2.008 (exact); MC E[c] = 2.014; E[1/c] = 0.6626; #classes/|S| (+-, rotations) = E[1/c]/2 = 0.3313; saving over negation-only BSGS/rho-on-S <= sqrt(1/E[1/c]) = 2^0.30, <= sqrt(E[c]) = 2^0.50
+   m = 173: E[c] = 2.226 (exact); MC E[c] = 2.221; E[1/c] = 0.6184; #classes/|S| (+-, rotations) = E[1/c]/2 = 0.3092; saving over negation-only BSGS/rho-on-S <= sqrt(1/E[1/c]) = 2^0.35, <= sqrt(E[c]) = 2^0.58
+   m = 175: E[c] = 4.086 (exact); MC E[c] = 4.086; E[1/c] = 0.3555; #classes/|S| (+-, rotations) = E[1/c]/2 = 0.1778; saving over negation-only BSGS/rho-on-S <= sqrt(1/E[1/c]) = 2^0.75, <= sqrt(E[c]) = 2^1.02
+   m = 176: E[c] = 8.333 (exact); MC E[c] = 8.364; E[1/c] = 0.1487; #classes/|S| (+-, rotations) = E[1/c]/2 = 0.0743; saving over negation-only BSGS/rho-on-S <= sqrt(1/E[1/c]) = 2^1.37, <= sqrt(E[c]) = 2^1.53
+
+== 2. Model test: true membership vs rotation model, all 3^m keys
+   n = 23, m = 12: keys 531441; c_true == c_rot for 531427 keys; max excess 2; E[c_true] = 2.0000, E[c_rot] = 2.0000, exact formula 2.0000
+   n = 23, m = 14: keys 4782969; c_true == c_rot for 4778887 keys; max excess 6; E[c_true] = 2.0013, E[c_rot] = 2.0002, exact formula 2.0002
+   n = 23, m = 15: keys 14348907; c_true == c_rot for 14299765 keys; max excess 8; E[c_true] = 2.0056, E[c_rot] = 2.0008, exact formula 2.0008
+   n = 59, m = 10: keys 59049; c_true == c_rot for 59049 keys; max excess 0; E[c_true] = 2.0006, E[c_rot] = 2.0006, exact formula 2.0006
+
+== 3. Summary numbers for the report (Serious)
+   m = 162: H_inf = 256.76; BSGS (no symmetry) 2^129.38; with negation 2^128.88; hypothetical ideal Frobenius class search 2^128.38; rho on the curve 2^136.78
+   m = 173: H_inf = 274.20; BSGS (no symmetry) 2^138.31; with negation 2^137.81; hypothetical ideal Frobenius class search 2^137.23; rho on the curve 2^136.78
+   m = 175: H_inf = 277.37; BSGS (no symmetry) 2^139.89; with negation 2^139.39; hypothetical ideal Frobenius class search 2^138.38; rho on the curve 2^136.78
+   m = 176: H_inf = 278.95; BSGS (no symmetry) 2^140.48; with negation 2^139.98; hypothetical ideal Frobenius class search 2^138.45; rho on the curve 2^136.78

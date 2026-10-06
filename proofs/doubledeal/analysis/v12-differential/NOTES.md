@@ -113,20 +113,25 @@ CHARACTERISTIC is `(1/64)² ≈ 2.4e-4`; nothing numeric is proved for the DIFFE
 
 * Any numeric bound on the full differential. Pushing a one-round column bound
   (`p · dp1Count γ β ≤ 52!` for every `γ ≠ 1`) through the Markov recursion gives the
-  same bound for `R` rounds by convexity, with no decay; for `β ≠ 1` and `p ≥ 2` its
-  hypothesis would already imply the `τ = β` case of the open covariant conjecture
-  `roundBody_covariant_iff_id` (and, for every `β ≠ 1`, the whole conjecture), so it is
-  neither proved nor claimed.
+  same bound for `R` rounds by convexity (the same bound for every `R`; it does not decay); for `β ≠ 1` and `p ≥ 2` its
+  hypothesis would already imply the `τ = β` case of the covariant round statement
+  `roundBody_covariant_iff_id` (and, for every `β ≠ 1`, the whole statement; that statement
+  is now proved in the heavy library by finite checks, but the column bound itself is not),
+  so it is neither proved nor claimed.
   This applies to a column bound for the MIX round (`dp1Count`). For the whole cipher
   (`encryptL`, which ends with the stem and no GridCycle), a column bound for the final
   round's stem is enough for outputs outside `v10Sym`. That is a statement about SumRanks
-  alone. It is not known to imply `roundBody_covariant_iff_id`; it does imply that no β
-  outside `v10Sym` is exactly stem-covariant into γ ≠ β, which is also unproved
-  (`sumRanksV10_commutes_iff` rules out only γ = β). See `FullCipher.fullDiffCount_le_of_col`,
-  `fullDiffCount_le_64_of_offDiag` (PROVED reductions; the off-diagonal stem hypothesis is
-  NOT proved). Into `v10Sym` columns this route gives nothing (`not_col_v10Sym`).
+  alone. No proof of `roundBody_covariant_iff_id` goes through it (that statement is proved
+  in the heavy library, `roundBody_covariant_iff_id`); it does imply that no β
+  outside `v10Sym` is exactly stem-covariant into γ ≠ β, which now follows from
+  `StemUnion.dpFCount_le_of_ne` (not stated as a separate theorem; `sumRanksV10_commutes_iff`
+  rules out γ = β). See `FullCipher.fullDiffCount_le_of_col` (a PROVED reduction; the off-diagonal stem hypothesis is now
+  PROVED, `StemUnion.dpFCount_le_of_ne`, and with the diagonal it is the column bound
+  `StemUnion.dpFCount_col_le_64`, giving `StemUnion.fullDiffCount_le_64`: the same 1/64 for every n (the bound does not decay; nothing is proved about decay),
+  independent keys, outputs outside `v10Sym`). Into `v10Sym` columns this route gives nothing (`not_col_v10Sym`).
 * Paths through differences outside `v10Sym` (the only proved multi-round bound covers
   paths that stay inside `v10Sym`).
 * The real schedule at `R ≥ 2` beyond the one-round bounds. (The final no-mix round
-  and the link from `rounds` to `encryptN`: M7, `FullCipher.lean`; no numeric bound
-  there either.)
+  and the link from `rounds` to `encryptN`: M7, `FullCipher.lean`; there the only numeric
+  bound is `StemUnion.fullDiffCount_le_64`, the same 1/64 for every n (the bound does not decay; nothing is proved about decay), independent keys,
+  outputs outside `v10Sym`.)

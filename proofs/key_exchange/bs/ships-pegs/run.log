@@ -1,0 +1,47 @@
+== brute-force sanity checks ==
+  1x2: {'A': 3, 'B': 2, 'C': 2, 'D': 1, 'DA': 2, 'A_KPlabels': 3}  (dict DP and numpy DP agree)
+  2x1: {'A': 3, 'B': 2, 'C': 2, 'D': 1, 'DA': 2, 'A_KPlabels': 3}  (dict DP and numpy DP agree)
+  2x2: {'A': 17, 'B': 7, 'C': 7, 'D': 2, 'DA': 8, 'A_KPlabels': 15}  (dict DP and numpy DP agree)
+  1x5: {'A': 55, 'B': 21, 'C': 19, 'D': 5, 'DA': 18, 'A_KPlabels': 55}  (dict DP and numpy DP agree)
+  2x3: {'A': 139, 'B': 38, 'C': 38, 'D': 7, 'DA': 40, 'A_KPlabels': 127}  (dict DP and numpy DP agree)
+  3x2: {'A': 139, 'B': 38, 'C': 38, 'D': 7, 'DA': 40, 'A_KPlabels': 127}  (dict DP and numpy DP agree)
+  1x7: {'A': 359, 'B': 92, 'C': 76, 'D': 12, 'DA': 72, 'A_KPlabels': 359}  (dict DP and numpy DP agree)
+  1x10: {'A': 6025, 'B': 846, 'C': 622, 'D': 57, 'DA': 700, 'A_KPlabels': 6025}  (dict DP and numpy DP agree)
+  3x3: {'A': 3073, 'B': 431, 'C': 431, 'D': 40, 'DA': 512, 'A_KPlabels': 2711}  (dict DP and numpy DP agree)
+  2x5: {'A': 6915, 'B': 835, 'C': 717, 'D': 51, 'DA': 852, 'A_KPlabels': 6191}  (dict DP and numpy DP agree)
+  2x6: {'A': 49601, 'B': 3917, 'C': 3170, 'D': 144, 'DA': 4096, 'A_KPlabels': 43783}  (dict DP and numpy DP agree)
+  3x4: {'A': 64557, 'B': 4822, 'C': 4395, 'D': 198, 'DA': 5592, 'A_KPlabels': 56249}  (dict DP and numpy DP agree)
+  4x4: {'A': 3996513, 'B': 127694, 'C': 102876, 'D': 1778, 'DA': 147488, 'A_KPlabels': 3387007}  (dict DP and numpy DP agree)
+  numpy DP == big-int dict DP on 5x5, 6x4, 4x7 (A,B,C,D)
+  standard-fleet DP == brute force on [('4x4', ['D', 'S', 'C'], 1608), ('5x5', ['D', 'S', 'C', 'B'], 92480), ('5x6', ['D', 'S', 'C', 'B', 'A'], 862416)]
+== 10x10 exact counts ==
+  10x10 A: 5 primes, 22.5s, float est log2=150.1875
+  A = 1625293215817106661401142990327492500859040945   log2 = 150.187464
+  10x10 B: 5 primes, 22.6s, float est log2=118.9869
+  B = 658589750414677416564297551258722656   log2 = 118.986863
+  10x10 D: 4 primes, 11.8s, float est log2=84.7760
+  D = 33121211791731215537932202   log2 = 84.775958
+  10x10 DA: 5 primes, 21.9s, float est log2=123.4589
+  DA = 14616444583902939896182008565616082944   log2 = 123.458932
+  standard fleet (one of each kind, no bow) = 30093975536  log2=34.808756
+== variant C: exact on small squares, 10 x w strips ==
+  2x2: C=7  B=7  C/B=1.000000
+  3x3: C=431  B=431  C/B=1.000000
+  4x4: C=102876  B=127694  C/B=0.805645
+  5x5: C=146561528  B=216242714  C/B=0.677764
+  6x6: C=1103907322973  B=2076491254069  C/B=0.531621
+  7x7: C=45209257299060475  B=113845363298653961  C/B=0.397111
+  10x1: log2 C=9.280771 log2 B=9.724514
+  10x2: log2 C=20.206839 log2 B=20.867666
+  10x3: log2 C=32.367469 log2 B=33.078969
+  10x4: log2 C=44.266914 log2 B=45.337118
+  10x5: log2 C=56.251534 log2 B=57.618327
+  10x6: log2 C=68.203048 log2 B=69.892226
+  10x7: log2 C=80.150052 log2 B=82.164627
+  10x8: log2 C=92.094120 log2 B=94.438975
+  strip extrapolation: log2 C(10x10) ~ 115.9772 (naive 115.9823); same method on B gives 118.9877 (naive 118.9877) vs exact 118.9869
+exact stage done 294.2500727176666
+== Monte Carlo on 10x10 (exact sampler, 100000 samples per distribution) ==
+  E_A[1/multiplicity of (kind,part) labelling] = 0.39361 +- 0.00101
+  P_B[layout satisfies C]                     = 0.12663 +- 0.00105
+  => log2 #(kind,part)-labellings ~ 148.8423 +- 0.0037;  log2 C ~ 116.0056 +- 0.0120

@@ -22,6 +22,7 @@ const results = [];
 void mountMicro({
     id: "chest-open-close-lid",
     title: "Chest: open and close the lid",
+    badge: "not yet approved",
     camera: CAMERA,
     slots: [],
     silent: true,

@@ -5,12 +5,11 @@
  *
  * - `digest`: the generated Hash, so typing never stalls the room.
  * - `show`: the generated trace_hash (one pass, as long as Hash), turned
- *   into the show's move lists by plan.js. trace_hash is NOT in the v3
- *   sudo yet (a demo-only trace needs Zachary's OK; see the PR). Until it
- *   is, `show` answers { show: null, reason: "no-trace" } and the dock
- *   says so: the digest and the KAT check still run on the generated Hash.
- *   A message longer than TRACE_BLOCKS blocks is never traced (too long to
- *   animate turn for turn): { show: null, reason: "too-long" }.
+ *   into the show's move lists by plan.js when present. Otherwise
+ *   { show: null, reason: "no-trace" } (this build has no trace) or
+ *   { show: null, reason: "too-long" } (message longer than TRACE_BLOCKS
+ *   blocks; too long to animate turn for turn). The digest and the KAT
+ *   check still run on the generated Hash either way.
  *
  * The marks the view draws (where the card's edge and corner are when the
  * step names them, where the held edge and corner are when an echo looks)
@@ -26,7 +25,7 @@ import { BLOCK_BYTES, TRACE_BLOCKS, buildShow } from "./plan.js";
 let faceTurns = null;
 let oneBlock = null;
 
-/** True when the generated module has the (proposed) trace_hash. */
+/** True when the generated module exports trace_hash. */
 export function hasTrace() {
     return typeof raw.trace_hash === "function";
 }

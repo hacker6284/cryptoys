@@ -1,8 +1,8 @@
 // plan.js on the generated v3 module. Without trace_hash in the generated
-// build (the committed v3 sudo has none yet), only the trace-free parts run
-// and the worker must say "no-trace". With it (the proposed sudo), every
-// KAT that is short enough to trace is replayed move by move with the
-// generated face turns, against the trace's h, W·h, h′, h′⁻¹ and solved.
+// build, only the trace-free parts run and the worker must say "no-trace".
+// With it, every KAT that is short enough to trace is replayed move by
+// move with the generated face turns, against the trace's h, W·h, h′,
+// h′⁻¹ and solved.
 import assert from "node:assert/strict";
 import { FACE_MOVE } from "./minx.js";
 import { CARD_STEPS, ECHOES, PUZZLES, TRACE_BLOCKS, buildShow, pairs, undo } from "./plan.js";

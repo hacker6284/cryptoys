@@ -2,7 +2,7 @@
  * The playroom's solid geometry for the motion primitives: what a carry
  * must clear and what a hinge must not swing into. Numbers are measured
  * from the drawn meshes (playroom/world.js, the chest GLB) and checked
- * against them when a microdemo loads (micro/shared/room-check.js), so a
+ * against them when a microdemo loads (roomCheck in micro/shared/primitive.js), so a
  * change to the room shows up there and in ../anim/library.test.mjs.
  * Metres, world axes.
  */

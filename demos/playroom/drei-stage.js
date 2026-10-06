@@ -1,44 +1,42 @@
 import * as THREE from "three";
-import { CARD_D, DREI_GAP, DREI_SEAT_XZ, MINX } from "./constants.js";
+import { DREI_DEAL, DREI_HELD_X, DREI_ROW_Z, DREI_SEAT_XZ, MINX } from "./constants.js";
 import { measureLocalBox } from "./motion.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
-import { HOME, PUZZLES, ffBlockAt, ffMillis } from "../megadreifach/plan.js";
-import { setSetupPosition } from "../megadreifach/pattern.js";
-import { FACE_MOVE, FACE_NORMAL, cardFaceIndex, gripQuaternion, pieceDirection } from "../megadreifach/minx.js";
+import { stageCubeView } from "./cube-stage.js";
+import { timing as MINX_TURN } from "../anim/megaminx/index.js";
+import { box as deckBox, card as deckCard, deal as deckDeal } from "../anim/deck/index.js";
+import { CARD_STEPS, PUZZLES } from "../megadreifach/plan.js";
+import { FACE_NORMAL, pieceDirection } from "../megadreifach/minx.js";
 
 /**
- * MegaDreifach's toys in the room: three cubing.js megaminxes standing
- * on the felt in a row (B | A | C) and a real 52-card deck
- * whose deal is laid on the felt in four rows of thirteen. The session
- * hands this view the show (plan.js) and it plays each beat exactly:
- * cubing.js plays the face turns (by colour, so grips never change an
- * alg); the view rotates A's `lift` group for the re-grips and King
- * spins, marks the piece read, and takes or turns each card as it
- * drives its step. It computes nothing about the hash.
+ * MegaDreifach v3's toys in the room: three cubing.js megaminxes standing
+ * on the felt in a row (B | A | C), the DEAL deck's tuck box one gap left
+ * of B, the held card's seat one gap right of C, and the block's deal
+ * laid face down on the felt in front, four rows of thirteen at real
+ * size with 4 mm between cards (nothing overlaps). The session hands this
+ * view the show (megaminx/plan.js, built from the sudoc-generated trace)
+ * and it plays each beat exactly: cubing.js plays every face turn,
+ * lifted and set down by playroom/cube-stage.js with the library's
+ * megaminx timing (demos/anim/megaminx); the cards move with
+ * demos/anim/deck (box flap, deal law, card turnOver / move / straight).
+ * It computes nothing about the hash.
  */
 
-// Seat centres in the row (from the row centre, x and z).
-const SEAT_XZ = DREI_SEAT_XZ;
-// Puzzles always rest on the felt: face turns happen seated (as on a
-// table), and a re-grip picks the puzzle up just clear of the felt
-// (REGRIP_HOP: a dodecahedron's corners reach 9 mm below its resting
-// face while it rolls), rotates it, and sets it down again.
-const REGRIP_HOP = 0.014;
-const CARD_T = 0.00135;
-// The deal: 4 rows × 13, read left to right, far row first.
-// Pitch leaves each card's index corner showing (63 × 88 mm cards).
-const COL_PITCH = 0.025;
-const ROW_PITCH = 0.05;
-// Grid centre from the row centre: far row one gap in front of the
-// puzzles. The grid (12 × COL_PITCH + a card) is as wide as the row.
-export const DEAL_OFFSET = { x: 0, z: MINX / 2 + DREI_GAP + CARD_D / 2 + 1.5 * ROW_PITCH };
+const CARD_T = 0.00135; // unbox-rig.js (a known exception to real size: 52 × 1.35 mm fills the box)
+// The deal's hop: DoubleDeal's liftHop (doubledeal/table.js, 0.9 table
+// units of 63 / 0.56 mm), the height the locked grid deal arcs to.
+const DEAL_HOP = 0.9 * (0.063 / 0.56);
+// The tuck box (anim/deck/box BH): a card standing in it clears the mouth
+// when its centre is half a card plus clearM above the box's top.
+const BOX_H = deckBox.BH;
+const CARD_D = 0.088;
 
 /**
  * MegaDreifach's megaminx toys. The shelf toy `drei` is A alone (its
  * origin on the surface it stands on, the row's centre); B and C are toys
- * of their own (`dreiB`, `dreiC`) that wait in the toy chest and fly to
- * their places in the row on enter. All three stand straight on the felt:
- * no tray, no cups, no labels. Seats adopt cubing.js later.
+ * of their own (`dreiB`, `dreiC`) that wait in the toy chest and come out
+ * to their places in the row on enter. All three stand straight on the
+ * felt: no tray, no cups, no labels. Seats adopt cubing.js later.
  */
 export function createDreiToy() {
     const group = new THREE.Group();
@@ -46,18 +44,17 @@ export function createDreiToy() {
     const seats = {};
     const extras = {};
     for (const p of PUZZLES) {
-        const seat = createTwistySeat({ edge: MINX });
-        const [x, z] = SEAT_XZ[p];
+        const seat = createTwistySeat({ puzzle: "megaminx" });
+        const [x, z] = DREI_SEAT_XZ[p];
         seat.group.name = `minx-${p}`;
         seat.base = 0;
         if (p === "A") {
-            seat.group.position.set(x, MINX * 0.42, z);
+            seat.group.position.set(x, MINX / 2, z);
             group.add(seat.group);
         } else {
-            // Its own toy: origin on the felt, puzzle above it.
             const toy = new THREE.Group();
             toy.name = `drei${p}`;
-            seat.group.position.set(0, MINX * 0.42, 0);
+            seat.group.position.set(0, MINX / 2, 0);
             toy.add(seat.group);
             toy.userData.keepFitted = () => seat.group.userData.keepFitted?.();
             extras[`drei${p}`] = toy;
@@ -68,23 +65,24 @@ export function createDreiToy() {
     return { group, seats, extras };
 }
 
-function frame() {
-    return new Promise((resolve) => requestAnimationFrame(resolve));
-}
-
-function easeInOut(t) {
-    return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
-}
-
-function slotLocal(index) {
-    const row = Math.floor(index / 13);
-    const col = index % 13;
+/** Deal slot `index` (0 … 51; far row first, left to right) in the deal group's frame. */
+export function slotLocal(index) {
+    const row = Math.floor(index / DREI_DEAL.cols);
+    const col = index % DREI_DEAL.cols;
     return {
-        x: (col - 6) * COL_PITCH,
-        // Later cards and nearer rows lie on top.
-        y: CARD_T / 2 + 0.0002 + col * 0.00032 + row * 0.0045,
-        z: (row - 1.5) * ROW_PITCH,
+        x: (col - (DREI_DEAL.cols - 1) / 2) * DREI_DEAL.colPitch,
+        y: CARD_T / 2 + 0.0002,
+        z: DREI_DEAL.farZ + row * DREI_DEAL.rowPitch,
     };
+}
+
+/** The held card's seat in the deal group's frame (one gap right of C, on the row's line). */
+export function heldLocal() {
+    return { x: DREI_HELD_X, y: CARD_T / 2 + 0.0002, z: DREI_ROW_Z };
+}
+
+function easeInOutQuad(t) {
+    return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
 }
 
 /**
@@ -94,42 +92,46 @@ function slotLocal(index) {
  */
 export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     const rigs = {};
+    const views = {};
     let deck = null;
-    let sound = null;
-    const hear = (name) => sound?.play(name);
-    let tempo = 1;
+    let tempo = MINX_TURN.speed;
     let show = null;
     let leafAt = null;
     let gen = 0;
     let adoptPromise = null;
-    const heldQuat = new THREE.Quaternion();
-    const q0 = new THREE.Quaternion();
-    const q1 = new THREE.Quaternion();
-    const restY = { A: 0, B: 0, C: 0 };
+    // The deal group: its origin on the felt at the den (constants.js
+    // layout is from DEN), unrotated.
     const dealGroup = new THREE.Group();
     dealGroup.name = "drei-deal";
-    let dealt = null; // { block, faceUp: Set }
+    let dealt = null; // { block, deal, up: Set<index>, held: bool }
+    const FACE_DOWN = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI);
+    const FACE_UP = new THREE.Quaternion();
 
-    const marker = new THREE.Mesh(
-        new THREE.SphereGeometry(0.0042, 16, 12),
-        new THREE.MeshBasicMaterial({ color: 0xfff1c9, depthTest: false, transparent: true, opacity: 0.95 }),
-    );
-    marker.renderOrder = 10;
-    marker.visible = false;
-    const halo = new THREE.Mesh(
-        new THREE.RingGeometry(0.0055, 0.0075, 24),
-        new THREE.MeshBasicMaterial({ color: 0xffc36b, side: THREE.DoubleSide, depthTest: false, transparent: true }),
-    );
-    halo.renderOrder = 10;
-    marker.add(halo);
+    // ---- marks: the face turned (a ring) and the pieces named (dots) ---
 
-    // The face being turned: a warm ring round its centre, on the puzzle's
-    // lift so it follows re-grips. A faint copy draws through the puzzle
-    // for faces turned away from the camera.
+    function dot(color) {
+        const m = new THREE.Mesh(
+            new THREE.SphereGeometry(0.005, 16, 12),
+            new THREE.MeshBasicMaterial({ color, depthTest: false, transparent: true, opacity: 0.95 }),
+        );
+        m.renderOrder = 10;
+        const halo = new THREE.Mesh(
+            new THREE.RingGeometry(0.0068, 0.0092, 24),
+            new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, depthTest: false, transparent: true, opacity: 0.85 }),
+        );
+        halo.renderOrder = 10;
+        m.add(halo);
+        m.userData.halo = halo;
+        m.visible = false;
+        return m;
+    }
+    const edgeDot = dot(0xfff1c9);
+    const cornerDot = dot(0x7fd6ff);
+
     const rings = {};
     function ringFor(p) {
         if (rings[p]) return rings[p];
-        const geo = new THREE.RingGeometry(0.0082, 0.0118, 40);
+        const geo = new THREE.RingGeometry(0.0085, 0.0122, 40);
         const ring = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
             color: 0xffc36b, side: THREE.DoubleSide, transparent: true, opacity: 0.95,
             polygonOffset: true, polygonOffsetFactor: -2,
@@ -153,43 +155,55 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         const ring = ringFor(p);
         const n = FACE_NORMAL[face];
         nrm.set(n[0], n[1], n[2]).normalize();
-        ring.position.copy(nrm).multiplyScalar(MINX * 0.455);
+        // On the face's centre cap, a hair above the sticker (inradius 35 mm).
+        ring.position.copy(nrm).multiplyScalar(MINX / 2 + 0.0006);
         ring.quaternion.setFromUnitVectors(Z, nrm);
         ring.visible = true;
     }
     function hideRings() {
         for (const p of PUZZLES) if (rings[p]) rings[p].visible = false;
     }
+    function placeDot(m, faces, r) {
+        if (!faces || faces.length < 2) return;
+        const dir = pieceDirection(faces);
+        m.position.set(dir[0] * r, dir[1] * r, dir[2] * r);
+        m.userData.halo.lookAt(m.position.clone().multiplyScalar(3));
+        if (m.parent !== drei.seats.A.lift) drei.seats.A.lift.add(m);
+        m.visible = true;
+    }
+    function showPieces(marks) {
+        if (!marks) return;
+        // Edge pieces' stickers sit about 38 mm out, corners about 41 mm.
+        placeDot(edgeDot, marks.edge, 0.0395);
+        placeDot(cornerDot, marks.corner, 0.0425);
+    }
+    function hideMarks() {
+        edgeDot.visible = false;
+        cornerDot.visible = false;
+        hideRings();
+    }
 
-    // Puzzles keep what they were turned to (SPEC §5.7: a puzzle is only
-    // solved by undoing). On leave each keeps its turns since it was last
-    // solved; the next enter undoes them in the scene.
-    const leftover = { A: [], B: [], C: [] };
-    // After a fast-forward the puzzles hold the trace's final positions as
-    // setup states (no move list reaches them in reasonable time).
-    let leftoverFinal = false;
-    let finalOn = false;
-    let cursor = -1;
+    // ---- puzzles ------------------------------------------------------
 
     function reduced() {
         return Boolean(prefersReducedMotion?.());
     }
 
-    function ms(base) {
-        return reduced() ? 0 : Math.max(40, base / Math.max(0.25, tempo));
+    function cardTempo() {
+        return tempo / MINX_TURN.speed;
     }
 
     function tween(duration, step, mine = gen) {
-        if (!duration) {
+        if (!duration || reduced()) {
             step(1);
-            return Promise.resolve(true);
+            return Promise.resolve(mine === gen);
         }
         return new Promise((resolve) => {
             const start = performance.now();
             function tick(now) {
                 if (mine !== gen) return resolve(false);
                 const t = Math.min(1, (now - start) / duration);
-                step(easeInOut(t));
+                step(t);
                 if (t < 1) requestAnimationFrame(tick);
                 else resolve(true);
             }
@@ -198,17 +212,25 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     }
 
     function wait(duration, mine = gen) {
-        return tween(duration, () => {}, mine);
+        return tween(reduced() ? 0 : duration, () => {}, mine);
+    }
+
+    // A clock for the library's moves that stops with this stage's beats.
+    function runner(mine) {
+        return (ms, step) => tween(ms, (t) => step(t * ms), mine);
     }
 
     function measureRest(p) {
         // Local TRS only (the fit wrapper centres the puzzle on the lift
-        // origin): the puzzle's lowest point, resting on its D face.
+        // origin): the puzzle's lowest point, resting on a face.
         const seat = drei.seats[p];
         const box = measureLocalBox(seat.fit);
         const drop = -box?.min?.y;
         if (!Number.isFinite(drop) || drop <= 0 || drop > MINX) return;
-        seat.group.position.y = seat.base + drop;
+        const y = seat.base + drop;
+        seat.group.userData.seatedY = y;
+        if (!seat.group.userData.easeBusy) seat.group.position.y = y;
+        views[p]?.rememberSeated();
     }
 
     function adopt() {
@@ -227,6 +249,9 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
                 throw new Error("cubing.js rig missing timeline API");
             }
             rigs[p] = rig;
+            // Lift, turn, settle: the library's megaminx face turn (LOCKED
+            // timing). Sound is on hold, so no voice.
+            views[p] = stageCubeView(rig, { poses: null, prefersReducedMotion, timing: MINX_TURN, voice: null });
             measureRest(p);
             return rig;
         })).then(() => rigs).catch((err) => {
@@ -236,68 +261,30 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         return adoptPromise;
     }
 
-    function setGrip(grip) {
-        const q = gripQuaternion(grip.up, grip.front);
-        drei.seats.A.lift.quaternion.set(q[0], q[1], q[2], q[3]);
-    }
-
-    async function gripTo(grip, duration, { hop = REGRIP_HOP } = {}) {
-        const lift = drei.seats.A.lift;
-        const q = gripQuaternion(grip.up, grip.front);
-        q0.copy(lift.quaternion);
-        q1.set(q[0], q[1], q[2], q[3]);
-        const baseY = lift.position.y;
-        if (q0.angleTo(q1) > 1e-3) hear("regrip");
-        return tween(duration, (t) => {
-            lift.quaternion.slerpQuaternions(q0, q1, t);
-            lift.position.y = baseY + Math.sin(Math.PI * t) * hop;
-        });
-    }
-
-    function showMarker(read) {
-        const faces = [read.held, read.noon];
-        if (read.corner && read.third >= 0) faces.push(read.third);
-        const dir = pieceDirection(faces);
-        const r = MINX * (read.corner ? 0.56 : 0.5);
-        marker.position.set(dir[0] * r, dir[1] * r, dir[2] * r);
-        halo.lookAt(marker.position.clone().multiplyScalar(3));
-        if (marker.parent !== drei.seats.A.lift) drei.seats.A.lift.add(marker);
-        marker.visible = true;
-    }
-
-    function hideMarker() {
-        marker.visible = false;
+    function settlePuzzles({ snap = true } = {}) {
+        for (const p of PUZZLES) views[p]?.settle({ snap });
     }
 
     // ---- cards ----------------------------------------------------------
 
     function ensureDealGroup() {
-        if (dealGroup.parent) return;
-        world.scene.add(dealGroup);
-    }
-
-    function placeDealGroup() {
-        const toy = world.toys.drei;
-        dealGroup.position.set(
-            toy.position.x + DEAL_OFFSET.x,
-            world.table.feltTopY + 0.0005,
-            toy.position.z + DEAL_OFFSET.z,
-        );
+        if (!dealGroup.parent) world.scene.add(dealGroup);
+        const den = world.table.den;
+        dealGroup.position.set(den.x, world.table.feltTopY + 0.0005, den.z);
         dealGroup.rotation.set(0, 0, 0);
         dealGroup.updateMatrixWorld(true);
     }
 
-    function cardMesh(card) {
-        return deck.cards[card];
+    const tmp = new THREE.Vector3();
+    function vec(o) {
+        return new THREE.Vector3(o.x, o.y, o.z);
     }
 
-    function setCardSlot(card, index, faceUp) {
-        const mesh = cardMesh(card);
+    function setCard(card, local, faceUp) {
+        const mesh = deck.cards[card];
         if (mesh.parent !== dealGroup) dealGroup.attach(mesh);
-        const s = slotLocal(index);
-        mesh.position.set(s.x, s.y, s.z);
-        mesh.rotation.set(0, 0, faceUp ? 0 : Math.PI);
-        mesh.quaternion.setFromEuler(mesh.rotation);
+        mesh.position.set(local.x, local.y, local.z);
+        mesh.quaternion.copy(faceUp ? FACE_UP : FACE_DOWN);
         mesh.visible = true;
     }
 
@@ -306,99 +293,115 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         if (!deck) return;
         deck.restow();
         deck.group.visible = true;
-        dealt = null;
     }
 
-    function snapDeal(block, faceUpCount) {
-        if (!deck) return;
+    /** Snap the deal to a state: `up` = indices face up, `held` = card 52 on its seat. */
+    function snapDeal(st) {
+        if (!deck || !show) return;
         ensureDealGroup();
-        placeDealGroup();
-        const beat = show.beats.find((b) => b.kind === "deal" && b.block === block);
-        beat.deal.forEach((card, i) => setCardSlot(card, i, i < faceUpCount));
-        deck.packet.visible = true;
-        dealt = { block, faceUp: faceUpCount };
+        const beat = show.beats.find((b) => b.kind === "deal" && b.block === st.block);
+        deck.restow();
+        beat.deal.forEach((card, i) => {
+            if (i === CARD_STEPS - 1 && st.held) setCard(card, heldLocal(), true);
+            else setCard(card, slotLocal(i), st.up.has(i));
+        });
+        dealt = { block: st.block, deal: beat.deal, up: new Set(st.up), held: st.held };
     }
+
+    // Cards inside the box. unbox-rig's packet is 52 × 1.35 mm thick (its
+    // known exception to real size), deeper than the 20 mm box, so it stays
+    // hidden; a card being dealt or gathered stands inside the box in one
+    // of eleven 1.4 mm lanes (by its place in the deal, so the cards in
+    // flight at once never share a lane), and is seen only above the mouth.
+    const LANES = 11;
+    function inBoxLocal(i) {
+        return new THREE.Vector3(0, 0.001, ((i % LANES) - (LANES - 1) / 2) * 0.0014);
+    }
+    function mouthLocal(i) {
+        const p = inBoxLocal(i);
+        p.y = 0.001 + BOX_H / 2 + CARD_D / 2 + deckCard.settings.straight.clearM;
+        return p;
+    }
+    const STAND = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
 
     async function dealCards(beat, mine) {
         if (!deck) return;
         ensureDealGroup();
-        placeDealGroup();
-        deck.packet.visible = true;
-        const flap = ms(260);
-        await tween(flap, (t) => deck.setFlap(t), mine);
-        const start = new THREE.Vector3();
-        deck.group.getWorldPosition(start);
-        dealGroup.worldToLocal(start);
-        start.y += 0.05;
-        const stagger = ms(38);
-        const flight = ms(320);
-        const jobs = beat.deal.map((card, i) => (async () => {
-            if (stagger) await wait(stagger * i, mine);
-            if (mine !== gen) return;
-            const mesh = cardMesh(card);
+        deck.restow();
+        const run = runner(mine);
+        const pace = deckDeal.timing.pace * cardTempo();
+        await deckBox.openFlap(deck, { tempo: cardTempo(), run });
+        if (mine !== gen) return;
+        dealt = { block: beat.block, deal: beat.deal, up: new Set(), held: false };
+        // deck/deal's law: card i leaves at i × dealStaggerMs ÷ pace and
+        // slides (easeInOutQuad, hopping sin(πu) × DoubleDeal's liftHop)
+        // to its seat in dealMs ÷ pace. Out of a box, each card first
+        // slides straight up out of the mouth (deck/card straight).
+        const flight = deckDeal.timing.dealMs / pace;
+        const stagger = deckDeal.timing.dealStaggerMs / pace;
+        await Promise.all(beat.deal.map(async (card, i) => {
+            if (!(await wait(stagger * i, mine)) && stagger * i) return;
+            const mesh = deck.cards[card];
+            deck.group.add(mesh);
+            mesh.position.copy(inBoxLocal(i));
+            mesh.quaternion.copy(STAND);
+            mesh.visible = true;
+            if (!(await deckCard.straight(mesh, mouthLocal(i), { tempo: cardTempo(), run }))) return;
             dealGroup.attach(mesh);
-            hear("deal");
             const from = mesh.position.clone();
             const fromQ = mesh.quaternion.clone();
-            const s = slotLocal(i);
-            const toQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI));
-            await tween(flight, (t) => {
-                const arc = Math.sin(Math.PI * t) * 0.05;
-                mesh.position.set(
-                    from.x + (s.x - from.x) * t,
-                    from.y + (s.y - from.y) * t + arc,
-                    from.z + (s.z - from.z) * t,
-                );
-                mesh.quaternion.slerpQuaternions(fromQ, toQ, t);
+            const to = vec(slotLocal(i));
+            await tween(flight, (u) => {
+                const s = easeInOutQuad(u);
+                mesh.position.lerpVectors(from, to, s);
+                mesh.position.y += Math.sin(Math.PI * u) * DEAL_HOP;
+                mesh.quaternion.slerpQuaternions(fromQ, FACE_DOWN, s);
             }, mine);
-        })());
-        await Promise.all(jobs);
-        await tween(flap, (t) => deck.setFlap(1 - t), mine);
-        if (mine === gen) dealt = { block: beat.block, faceUp: 0 };
+        }));
+        if (mine !== gen) return;
+        await deckBox.closeFlap(deck, { tempo: cardTempo(), run });
     }
 
-    async function turnCard(beat, mine) {
-        if (!deck) return;
-        const index = beat.pos - 1;
-        const mesh = cardMesh(beat.card);
-        if (mesh.parent !== dealGroup) setCardSlot(beat.card, index, false);
-        const s = slotLocal(index);
-        const fromQ = mesh.quaternion.clone();
-        const toQ = new THREE.Quaternion();
-        await tween(ms(300), (t) => {
-            mesh.position.y = s.y + Math.sin(Math.PI * t) * 0.04;
-            mesh.quaternion.slerpQuaternions(fromQ, toQ, t);
-        }, mine);
-        mesh.position.y = s.y;
-        hear("felt");
-        if (dealt) dealt.faceUp = beat.pos;
+    async function turnCard(index, faceUp, mine) {
+        if (!deck || !dealt) return;
+        const mesh = deck.cards[dealt.deal[index]];
+        if (mesh.parent !== dealGroup) setCard(dealt.deal[index], slotLocal(index), !faceUp);
+        const ok = await deckCard.turnOver(mesh, { faceUp, tempo: cardTempo(), run: runner(mine) });
+        if (!ok) return;
+        if (faceUp) dealt.up.add(index);
+        else dealt.up.delete(index);
+    }
+
+    async function holdCard(mine) {
+        if (!deck || !dealt) return;
+        const mesh = deck.cards[dealt.deal[CARD_STEPS - 1]];
+        const ok = await deckCard.move(mesh, vec(heldLocal()), FACE_UP, { tempo: cardTempo(), run: runner(mine) });
+        if (ok) dealt.held = true;
     }
 
     async function gatherCards(mine) {
-        if (!dealt || !deck || !show) {
+        if (!dealt || !deck) {
             restowCards();
             return;
         }
-        const target = new THREE.Vector3();
-        deck.group.getWorldPosition(target);
-        dealGroup.worldToLocal(target);
-        const cards = show.beats.find((b) => b.kind === "deal" && b.block === dealt.block).deal;
-        const flight = ms(420);
-        const stagger = ms(10);
-        await tween(ms(200), (t) => deck.setFlap(t), mine);
-        await Promise.all(cards.map((card, i) => (async () => {
-            if (stagger) await wait(stagger * i, mine);
-            const mesh = cardMesh(card);
-            if (i % 6 === 0) hear("deal");
-            const from = mesh.position.clone();
-            await tween(flight, (t) => {
-                mesh.position.set(
-                    from.x + (target.x - from.x) * t,
-                    from.y + (target.y + 0.02 - from.y) * t + Math.sin(Math.PI * t) * 0.03,
-                    from.z + (target.z - from.z) * t,
-                );
-            }, mine);
-        })()));
+        const run = runner(mine);
+        const cards = dealt.deal.slice().reverse();
+        await deckBox.openFlap(deck, { tempo: cardTempo(), run });
+        if (mine !== gen) return;
+        // Last dealt first, one after another (deal stagger), each hopping
+        // to the box's mouth standing and sliding down into its place.
+        const stagger = deckDeal.timing.dealStaggerMs / (deckDeal.timing.pace * cardTempo());
+        await Promise.all(cards.map(async (card, i) => {
+            if (i && !(await wait(stagger * i, mine))) return;
+            const mesh = deck.cards[card];
+            deck.group.attach(mesh);
+            if (!(await deckCard.move(mesh, mouthLocal(i), STAND, { tempo: cardTempo(), run }))) return;
+            if (!(await deckCard.straight(mesh, inBoxLocal(i), { tempo: cardTempo(), run }))) return;
+            // Down in the box: out of sight until restow puts it back in the packet.
+            mesh.visible = false;
+        }));
+        if (mine !== gen) return;
+        await deckBox.closeFlap(deck, { tempo: cardTempo(), run });
         if (mine !== gen) return;
         restowCards();
     }
@@ -417,26 +420,28 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     }
 
     function stateAt(index) {
-        let grip = { ...HOME };
         let block = -1;
-        let faceUp = 0;
+        let up = new Set();
+        let held = false;
         let onTable = false;
         for (let i = 0; i <= index; i++) {
             const beat = show.beats[i];
             if (beat.kind === "deal") {
                 block = beat.block;
-                faceUp = 0;
+                up = new Set();
+                held = false;
                 onTable = true;
             } else if (beat.kind === "card") {
-                faceUp = beat.pos;
-            } else if (beat.next) {
-                // spin, grip, home
-                grip = { ...beat.next };
+                up.add(beat.pos - 1);
+            } else if (beat.kind === "hold") {
+                held = true;
+            } else if (beat.kind === "count") {
+                up.delete(CARD_STEPS - 1 - beat.counter);
             } else if (beat.kind === "gather") {
                 onTable = false;
             }
         }
-        return { grip, block, faceUp, onTable };
+        return { block, up, held, onTable };
     }
 
     async function jumpRigs(index) {
@@ -446,10 +451,10 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         }));
     }
 
-    /** Highlight what beat `index` did: the face turned, or the piece read. */
+    /** Highlight what beat `index` did: the face turned, or the pieces named. */
     function markBeat(beat) {
         if (!beat) return;
-        if (beat.kind === "read") showMarker(beat.read);
+        if (beat.marks) showPieces(beat.marks);
         else if (beat.face !== undefined) showRing(beat.puzzle ?? "A", beat.face);
         else if (beat.kind === "solve") {
             const last = beat.turns[beat.turns.length - 1];
@@ -457,170 +462,23 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         }
     }
 
-    function hideMarks() {
-        hideMarker();
-        hideRings();
-    }
+    // Puzzles keep what they were turned to (SPEC §5.7: a puzzle is only
+    // solved by undoing). On leave each keeps its turns since it was last
+    // solved; the next enter undoes them in the scene.
+    const leftover = { A: [], B: [], C: [] };
+    let cursor = -1;
 
     function hasLeftover() {
-        return leftoverFinal || PUZZLES.some((p) => leftover[p].length);
+        return PUZZLES.some((p) => leftover[p].length);
     }
 
-    // From the fast-forward beat on, each rig shows its final position (A =
-    // h, B = h⁻¹, C solved) with an empty alg; before it, block 1's alg.
-    async function setFinal(on) {
-        if (!show || on === finalOn) return;
-        finalOn = on;
-        await Promise.all(PUZZLES.map(async (p) => {
-            const rig = rigs[p];
-            rig.pause?.();
-            if (on) {
-                rig.setAlg("");
-                await setSetupPosition(rig.player, show.final[p] ?? null, show.faceTurns);
-                await rig.jumpToLeaf(-1);
-            } else {
-                await setSetupPosition(rig.player, null);
-                rig.setAlg(show.moves[p].join(" "));
-            }
-        }));
-    }
-
-    const yAxis = new THREE.Vector3(0, 1, 0);
-    const spinQ = new THREE.Quaternion();
-
-    /**
-     * The three puzzles spin about the vertical in a blur and bob on the
-     * felt, speeding up then slowing to rest on whole turns (so A ends in
-     * its grip). onMid runs at full speed: the moment to swap positions.
-     */
-    async function spinTrio(duration, mine, { onTick, onMid } = {}) {
-        const base = {};
-        for (const p of PUZZLES) base[p] = drei.seats[p].lift.quaternion.clone();
-        const revs = Math.max(2, Math.round(duration / 380));
-        let mid = false;
-        let lastClick = 0;
-        const ok = await new Promise((resolve) => {
-            const start = performance.now();
-            function tick(now) {
-                if (mine !== gen) return resolve(false);
-                const t = Math.min(1, (now - start) / duration);
-                const turn = revs * (t - Math.sin(2 * Math.PI * t) / (2 * Math.PI));
-                PUZZLES.forEach((p, i) => {
-                    const lift = drei.seats[p].lift;
-                    spinQ.setFromAxisAngle(yAxis, 2 * Math.PI * turn * (i === 1 ? -1 : 1));
-                    lift.quaternion.copy(spinQ).multiply(base[p]);
-                    lift.position.y = restY[p] + Math.sin(Math.PI * t) * 0.022 + Math.abs(Math.sin(18 * Math.PI * t)) * 0.004;
-                });
-                if (now - lastClick > 170 && t > 0.05 && t < 0.95) {
-                    lastClick = now;
-                    hear("turn");
-                }
-                onTick?.(t);
-                if (!mid && t >= 0.5) {
-                    mid = true;
-                    onMid?.();
-                }
-                if (t < 1) requestAnimationFrame(tick);
-                else resolve(true);
-            }
-            requestAnimationFrame(tick);
-        });
-        for (const p of PUZZLES) {
-            drei.seats[p].lift.quaternion.copy(base[p]);
-            drei.seats[p].lift.position.y = restY[p];
-        }
-        return ok;
-    }
-
-    /**
-     * Cards during the fast-forward: the deck deals face down and gathers
-     * again, over and over, until the counter is done. Only backs show:
-     * these are not the blocks' real deals.
-     */
-    async function shuffleDeals(duration, mine) {
-        if (!deck) return;
-        ensureDealGroup();
-        placeDealGroup();
-        deck.packet.visible = true;
-        const home = new THREE.Vector3();
-        deck.group.getWorldPosition(home);
-        dealGroup.worldToLocal(home);
-        home.y += 0.02;
-        const down = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI));
-        const meshes = deck.cards.slice(0, 52);
-        for (const mesh of meshes) {
-            dealGroup.attach(mesh);
-            mesh.quaternion.copy(down);
-            mesh.position.copy(home);
-            mesh.visible = true;
-        }
-        await tween(Math.min(200, duration * 0.1), (t) => deck.setFlap(t), mine);
-        const cycles = Math.max(1, Math.round(duration / 900));
-        const cycle = Math.max(300, (duration * 0.8) / cycles);
-        const spread = 0.45; // share of each half-cycle the start times are spread over
-        for (let c = 0; c < cycles && mine === gen; c++) {
-            await tween(cycle, (t) => {
-                // 0..0.5 out to the rows, 0.5..1 back to the box.
-                meshes.forEach((mesh, i) => {
-                    const half = t < 0.5 ? t * 2 : (t - 0.5) * 2;
-                    const lag = (i / 52) * spread;
-                    const k = Math.min(1, Math.max(0, (half - lag) / (1 - spread)));
-                    const u = t < 0.5 ? k : 1 - k;
-                    const sl = slotLocal(i);
-                    mesh.position.set(
-                        home.x + (sl.x - home.x) * u,
-                        home.y + (sl.y - home.y) * u + Math.sin(Math.PI * u) * 0.035,
-                        home.z + (sl.z - home.z) * u,
-                    );
-                });
-                if (Math.random() < 0.08) hear("deal");
-            }, mine);
-        }
-        await tween(Math.min(200, duration * 0.1), (t) => deck.setFlap(1 - t), mine);
-        restowCards();
-    }
-
-    /** Blocks 2–N: a marked fast-forward to the trace's real end state. */
-    async function fastForward(beat, mine, progress) {
-        hideMarks();
-        restowCards();
-        const quick = reduced();
-        const total = quick ? 0 : ffMillis(beat.from, beat.to, tempo);
-        if (total) {
-            let shown = -1;
-            await Promise.all([
-                spinTrio(total, mine, {
-                    onTick: (t) => {
-                        const block = ffBlockAt(t, beat.from, beat.to);
-                        if (block !== shown) progress?.(shown = block);
-                    },
-                    onMid: () => void setFinal(true),
-                }),
-                shuffleDeals(total, mine),
-            ]);
-        }
-        if (mine !== gen) return;
-        await setFinal(true);
-        setGrip(HOME);
-        progress?.(beat.to);
-    }
-
-    // Fold the current show's turns (up to the cursor) into the leftovers
-    // and leave the rigs showing them.
     function keepTurns() {
         if (!show || !leafAt) return;
         const at = Math.min(cursor, show.beats.length - 1);
-        const grip = stateAt(at).grip;
-        if (finalOn) {
-            // The rigs already show the final positions with empty algs.
-            leftoverFinal = true;
-        } else {
-            for (const p of PUZZLES) {
-                const n = at < 0 ? 0 : leafAt[p][at];
-                leftover[p].push(...show.moves[p].slice(0, n));
-            }
+        for (const p of PUZZLES) {
+            const n = at < 0 ? 0 : leafAt[p][at];
+            leftover[p].push(...show.moves[p].slice(0, n));
         }
-        finalOn = false;
         show = null;
         leafAt = null;
         cursor = -1;
@@ -631,7 +489,6 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
             rig.setAlg(leftover[p].join(" "));
             void rig.jumpToLeaf(leftover[p].length - 1);
         }
-        setGrip(grip);
     }
 
     function inverseMove(move) {
@@ -640,52 +497,32 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
 
     /**
      * Undo every leftover turn in the scene: each puzzle plays its turns
-     * backwards (fast, about 1.2 s at any length) and A goes back to the
-     * home grip. Reduced motion snaps.
+     * backwards, literally, one after another, at the dock's tempo.
+     * Reduced motion snaps.
      */
     async function resetPuzzles({ snap = false } = {}) {
-        if (!hasLeftover()) {
-            if (!show) setGrip(HOME);
-            return;
-        }
+        if (!hasLeftover()) return;
         await adopt();
         const mine = ++gen;
         hideMarks();
         const quick = snap || reduced();
-        if (leftoverFinal) {
-            // No word short enough to undo a fast-forwarded position: the
-            // puzzles spin back to solved, as the fast-forward spun them on.
-            const clear = () => Promise.all(PUZZLES.map((p) => setSetupPosition(rigs[p].player, null)));
-            if (quick) await clear();
-            else await spinTrio(ms(1100), mine, { onMid: () => void clear() });
-            await clear();
-            leftoverFinal = false;
-        }
-        const jobs = PUZZLES.map(async (p) => {
-            const rig = rigs[p];
+        await Promise.all(PUZZLES.map(async (p) => {
             const turns = leftover[p];
             if (!turns.length) return;
             const back = turns.slice().reverse().map(inverseMove);
-            rig.setAlg([...turns, ...back].join(" "));
-            await rig.jumpToLeaf(turns.length - 1);
+            rigs[p].setAlg([...turns, ...back].join(" "));
+            await rigs[p].jumpToLeaf(turns.length - 1);
             if (quick) return;
-            // Base move ≈ 1 s at tempo 1 in cubing.js; aim for ~1.2 s in all.
-            rig.setTempo(Math.max(tempo, turns.length / 1.2));
-            await rig.playLeaves(turns.length, turns.length * 2, {
-                onLeaf: (i) => { if (p === "A" && i % 3 === 0) hear("turn"); },
-            });
-        });
-        await Promise.all([...jobs, gripTo(HOME, quick ? 0 : 900)]);
+            await views[p].playLeaves(turns.length, turns.length * 2);
+        }));
         for (const p of PUZZLES) {
             leftover[p] = [];
             if (!rigs[p]) continue;
-            rigs[p].setTempo(tempo);
             if (mine === gen || quick) {
                 rigs[p].setAlg("");
                 void rigs[p].jumpToLeaf(-1);
             }
         }
-        setGrip(HOME);
     }
 
     async function loadShow(next) {
@@ -694,7 +531,6 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         await resetPuzzles();
         gen += 1;
         show = next;
-        finalOn = false;
         computeLeafAt();
         for (const p of PUZZLES) {
             rigs[p].setAlg(next.moves[p].join(" "));
@@ -708,13 +544,10 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         hideMarks();
         if (!show) return;
         cursor = index;
-        const atEnd = Boolean(show.final) && index >= show.ffAt;
-        await setFinal(atEnd);
-        if (!atEnd) await jumpRigs(index);
+        settlePuzzles();
+        await jumpRigs(index);
         const st = stateAt(index);
-        setGrip(st.grip);
-        for (const p of PUZZLES) drei.seats[p].lift.position.y = restY[p];
-        if (st.onTable) snapDeal(st.block, st.faceUp);
+        if (st.onTable) snapDeal(st);
         else restowCards();
         markBeat(show.beats[index]);
     }
@@ -724,29 +557,23 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         gen += 1;
         hideMarks();
         keepTurns();
-        for (const p of PUZZLES) drei.seats[p].lift.position.y = restY[p];
+        settlePuzzles();
         restowCards();
     }
 
-    // Only the puzzle whose turns are being read out clicks; copies are silent.
-    async function play(p, range, mine, { voiced = true, onLeaf } = {}) {
+    async function play(p, range, mine, { onLeaf } = {}) {
         if (!range || mine !== gen) return;
-        await rigs[p].playLeaves(range[0], range[1], {
-            onLeaf: (i) => {
-                if (voiced) hear("turn");
-                onLeaf?.(i);
-            },
-        });
+        await views[p].playLeaves(range[0], range[1], { onLeaf });
     }
 
-    async function playBeat(beat, index, { progress } = {}) {
+    async function playBeat(beat, index) {
         const mine = ++gen;
         hideMarks();
         if (Number.isInteger(index)) cursor = index;
-        const done = () => mine === gen;
         switch (beat.kind) {
         case "cook":
         case "turn":
+        case "echo":
             showRing(beat.puzzle ?? "A", beat.face);
             await play(beat.puzzle ?? "A", beat.ranges[beat.puzzle ?? "A"], mine);
             break;
@@ -754,23 +581,25 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
             await dealCards(beat, mine);
             break;
         case "card":
-            await turnCard(beat, mine);
-            if (!done()) return;
+            // The step's card turns face up where it lies, then its turn.
+            await turnCard(beat.pos - 1, true, mine);
+            if (mine !== gen) return;
             showRing("A", beat.face);
             await play("A", beat.ranges.A, mine);
             break;
-        case "spin":
-            await gripTo(beat.next, ms(640));
+        case "name":
+        case "look":
+            showPieces(beat.marks);
+            await wait(900 / cardTempo(), mine);
             break;
-        case "read":
-            showMarker(beat.read);
-            await wait(ms(480), mine);
+        case "hold":
+            await holdCard(mine);
             break;
-        case "grip":
-            await gripTo(beat.next, ms(560));
+        case "count":
+            await turnCard(CARD_STEPS - 1 - beat.counter, false, mine);
             break;
-        case "home":
-            await gripTo(HOME, ms(620));
+        case "done-w":
+            await wait(700 / cardTempo(), mine);
             break;
         case "solve": {
             const first = beat.ranges[beat.leader][0];
@@ -780,7 +609,6 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
                 if (turn) for (const p of targets) showRing(p, turn[0]);
             };
             await Promise.all(targets.map((p) => play(p, beat.ranges[p], mine, {
-                voiced: p === beat.leader,
                 onLeaf: p === beat.leader ? mark : undefined,
             })));
             break;
@@ -788,16 +616,13 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         case "gather":
             await gatherCards(mine);
             break;
-        case "ff":
-            await fastForward(beat, mine, progress);
-            break;
         default:
             break;
         }
     }
 
     function setTempo(next) {
-        tempo = Number(next) || 1;
+        tempo = Number(next) || MINX_TURN.speed;
         for (const p of PUZZLES) rigs[p]?.setTempo(tempo);
     }
 
@@ -807,11 +632,11 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
             if (delay) await clock.wait(delay, enterGen);
             const lift = drei.seats[p].lift;
             await clock.tween(420, (t) => {
-                lift.position.y = restY[p] + Math.sin(Math.PI * t) * 0.03;
+                lift.position.y = Math.sin(Math.PI * t) * 0.03;
             }, { generation: enterGen, ease: (t) => t });
-            lift.position.y = restY[p];
+            lift.position.y = 0;
         };
-        await Promise.all([hop("A", 0), hop("B", 170), hop("C", 340)]);
+        await Promise.all([hop("B", 0), hop("A", 170), hop("C", 340)]);
     }
 
     function settle() {
@@ -819,8 +644,17 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         hideMarks();
         for (const p of PUZZLES) {
             rigs[p]?.pause?.();
-            drei.seats[p].lift.position.y = restY[p];
+            drei.seats[p].lift.position.y = 0;
         }
+        settlePuzzles();
+    }
+
+    /** How long gatherCards takes at the current tempo (the leave's follow shot waits for it). */
+    function gatherMs() {
+        const k = Math.max(0.25, cardTempo());
+        const flap = (deckBox.flap.open.ms + deckBox.flap.close.ms) / k;
+        const stagger = (51 * deckDeal.timing.dealStaggerMs) / (deckDeal.timing.pace * cardTempo());
+        return Math.round(flap + stagger + (deckCard.settings.move.ms + deckCard.settings.straight.ms) / k);
     }
 
     function dispose() {
@@ -832,6 +666,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         group: drei.group,
         adopt,
         rigs,
+        views,
         loadShow,
         seek,
         playBeat,
@@ -841,27 +676,27 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
             return hasLeftover();
         },
         setTempo,
+        get tempo() {
+            return tempo;
+        },
         rollCall,
         settle,
         restowCards,
         setDeck(next) {
             deck = next;
         },
-        setSound(next) {
-            sound = next;
-        },
-        /** Leave beat: any dealt cards fly home to the box. */
+        /** Leave beat: any dealt cards go home to the box. */
         gather() {
             return gatherCards(++gen);
         },
         dispose,
+        gatherMs,
         get dealt() {
             return dealt;
         },
+        dealGroup,
         rememberSeated() {
             drei.group.userData.seatedY = drei.group.position.y;
         },
     };
 }
-
-export { COL_PITCH, ROW_PITCH, REGRIP_HOP, slotLocal };

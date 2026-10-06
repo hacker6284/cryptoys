@@ -2,26 +2,23 @@
  * MegaDreifach session: the dock, the live digest and the show.
  *
  * The digest comes from the generated Hash in a worker (hasher.js). Play
- * asks the worker for the generated trace_hash and plays every turn of
- * block 1 on the view: the cook, the deal, 52 card steps and 36 F3 rounds,
- * and the full 3-solve. Longer messages then fast-forward blocks 2–N, with
- * a block counter, to the trace's real end state. No algorithm step is
- * computed here.
+ * asks the worker for the generated trace (trace_hash, when the v3 .sudo
+ * has it) and plays every turn of a one-block message on the view: the
+ * cook, the deal, 52 card steps, 26 echoes and the full 3-solve, never
+ * truncated or time-lapsed. Longer messages are too long to trace: they
+ * get the digest only, with no animation. No algorithm step is computed
+ * here.
  */
 import { bindGrowFields } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
 import { openSpec, renderTeachCard, sessionScope } from "../shared/session.js";
 import { bindTeachKeys, setDisabled } from "../shared/teach.js";
 import { createHasher } from "./hasher.js";
-import { FULL_BLOCKS } from "./plan.js";
 
 const EMPTY_STATUS = "Type a message, or pick a known answer.";
-const READY_STATUS = "Play shows every turn: cook, deal, 88 steps, 3-solve.";
-const READY_FF_STATUS = "Play shows block 1 turn for turn, then fast-forwards to the end.";
-
-function blockRange(from, to) {
-    return from === to ? `block ${to}` : `blocks ${from}–${to}`;
-}
+const READY_STATUS = "Play shows every turn: cook, deal, 52 cards, 26 echoes, 3-solve.";
+const DIGEST_ONLY_STATUS = "Digest only: too long to show turn for turn.";
+const NO_TRACE_STATUS = "Digest only: this build has no trace to animate.";
 
 function hexOf(bytes) {
     return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -34,7 +31,6 @@ export function createMegaDreifachSession({
     exposeTeach = false,
     hasher = createHasher(),
     katsUrl = new URL("./generated/kats.json", import.meta.url).href,
-    sound = null,
     // Optional words naming the puzzles where they stand (the playroom's
     // table has no labels): shown ahead of the empty-message status.
     cast = "",
@@ -45,7 +41,6 @@ export function createMegaDreifachSession({
     const statusEl = $("#status");
     const errorEl = $("#error");
     const animNote = $("#anim-note");
-    const ffEl = $("#ff-counter");
     const ioNote = $("#io-note");
     const teachEl = $("#teach");
     const teachCard = $("#teach-card");
@@ -54,7 +49,6 @@ export function createMegaDreifachSession({
     const speed = $("#speed");
     const katMenu = $("#kat-menu");
     bindGrowFields(root);
-    const unbindSound = sound?.bindToggle?.($("#sound")) ?? (() => {});
 
     let encoding = "text";
     let kat = null;
@@ -97,31 +91,18 @@ export function createMegaDreifachSession({
         return Boolean(kat) || String(input?.value ?? "").length > 0;
     }
 
-    function animatable() {
+    function digested() {
         return Boolean(info && info.gen === gen);
     }
 
-    // The fast-forward's own line: "Fast-forward: blocks 2–N", then the
-    // block it has reached. Hidden before the fast-forward beat.
-    function ffCounter(block) {
-        if (!ffEl) return;
-        if (!show?.final || block == null) {
-            ffEl.hidden = true;
-            ffEl.textContent = "";
-            ffEl.classList.remove("is-running");
-            return;
-        }
-        const beat = show.beats[show.ffAt];
-        const doneAll = block >= beat.to;
-        ffEl.hidden = false;
-        ffEl.classList.toggle("is-running", !doneAll);
-        ffEl.textContent = `Fast-forward: ${blockRange(beat.from, beat.to)} · `
-            + (doneAll ? `done, ${beat.to} of ${beat.to}` : `block ${block} of ${beat.to}`);
+    function tooLong() {
+        return digested() && info.blocks > info.traceBlocks;
     }
 
-    function ffAtCursor() {
-        if (!show?.final || cursor < show.ffAt) return null;
-        return show.beats[show.ffAt].to;
+    // Animated only when the generated code has a trace and the message
+    // is short enough to trace turn for turn (one block).
+    function animatable() {
+        return digested() && info.traced && !tooLong();
     }
 
     function syncControls() {
@@ -140,14 +121,15 @@ export function createMegaDreifachSession({
             playBtn.title = playing ? "Pause" : "Play";
         }
         if (animNote) {
-            const long = Boolean(info && info.gen === gen && info.blocks > FULL_BLOCKS && hasMessage());
-            animNote.hidden = !long;
-            animNote.textContent = long
-                ? `${info.blocks} blocks. The show plays block 1 turn for turn `
-                    + `(a one-block message is up to ${info.oneBlock} bytes), `
-                    + `then fast-forwards ${blockRange(FULL_BLOCKS + 1, info.blocks)} without showing their turns `
-                    + "and lands on the real end state: A holds the digest above, B its inverse, C solved."
-                : "";
+            const shown = digested() && hasMessage() && !animatable();
+            animNote.hidden = !shown;
+            animNote.textContent = !shown ? ""
+                : tooLong()
+                    ? `${info.blocks} blocks: too long to trace. The show plays a message of up to `
+                        + `${info.oneBlock} bytes (one block, about 1,500 turns) turn for turn; `
+                        + "the digest above comes from the generated code."
+                    : "This build's generated code has no trace (trace_hash is not in the v3 .sudo yet), "
+                        + "so the turns cannot be shown. The digest above comes from the generated Hash.";
         }
     }
 
@@ -160,7 +142,8 @@ export function createMegaDreifachSession({
             const verdict = ok ? "digest matches the KAT file ✓" : "DIGEST DIFFERS FROM THE KAT FILE";
             return `Known answer “${kat.name}”, ${blocks}: ${verdict}`;
         }
-        return `${bytes.length} bytes · ${blocks} · ${info.blocks > FULL_BLOCKS ? READY_FF_STATUS : READY_STATUS}`;
+        const how = tooLong() ? DIGEST_ONLY_STATUS : info.traced ? READY_STATUS : NO_TRACE_STATUS;
+        return `${bytes.length} bytes · ${blocks} · ${how}`;
     }
 
     function dropShow() {
@@ -170,7 +153,6 @@ export function createMegaDreifachSession({
         showGen = -1;
         loading = null;
         cursor = -1;
-        ffCounter(null);
         setTeaching(false);
         void view?.clearShow?.();
     }
@@ -214,9 +196,11 @@ export function createMegaDreifachSession({
         try {
             const reply = await hasher.digest(bytes.slice());
             if (disposed || mine !== gen) return;
-            info = { gen: mine, digest: reply.digest, blocks: reply.blocks, oneBlock: reply.oneBlock };
+            info = {
+                gen: mine, digest: reply.digest, blocks: reply.blocks, oneBlock: reply.oneBlock,
+                traceBlocks: reply.traceBlocks, traced: Boolean(reply.traced),
+            };
             if (digestEl) digestEl.value = hexOf(reply.digest);
-            if (kat && hexOf(reply.digest) === kat.digest_hex) sound?.play("chime");
             status(describeReady());
         } catch (err) {
             if (mine === gen) error(err.message || "Hashing failed.");
@@ -268,8 +252,7 @@ export function createMegaDreifachSession({
             math: "",
             why: show
                 ? "A will carry the hash, B its inverse; C stays solved. "
-                    + `${show.blocks} block${show.blocks === 1 ? "" : "s"}`
-                    + (show.final ? `: block 1 turn for turn, then a fast-forward.` : ".")
+                    + "The deck deals one block's 52 cards; every turn is shown."
                 : "A will carry the hash, B its inverse; C stays solved.",
             spec: "5.7 By hand: the cook and the 3-solve",
         };
@@ -289,7 +272,6 @@ export function createMegaDreifachSession({
         job += 1;
         playing = false;
         cursor = Math.max(-1, Math.min(show.beats.length - 1, index));
-        ffCounter(ffAtCursor());
         await view.seek(cursor);
         status(captionAt(cursor));
         renderTeach();
@@ -301,16 +283,7 @@ export function createMegaDreifachSession({
         status(captionAt(cursor));
         renderTeach();
         syncControls();
-        const beat = show.beats[cursor];
-        if (beat.kind === "ff") {
-            ffCounter(beat.from);
-            await view.playBeat(beat, cursor, {
-                progress: (block) => { if (mine === job) ffCounter(block); },
-            });
-            if (mine === job) ffCounter(beat.to);
-        } else {
-            await view.playBeat(beat, cursor);
-        }
+        await view.playBeat(show.beats[cursor], cursor);
         return mine === job;
     }
 
@@ -333,7 +306,6 @@ export function createMegaDreifachSession({
             playing = false;
             if (cursor >= show.beats.length - 1) {
                 status(`Done. A holds the digest ${hexOf(show.digest)}.`);
-                sound?.play("chime");
             }
             syncControls();
         }
@@ -427,9 +399,8 @@ export function createMegaDreifachSession({
             button.type = "button";
             button.className = "kat-pick";
             button.dataset.kat = vector.name;
-            const ff = vector.n_blocks > FULL_BLOCKS;
             const blocks = `${vector.n_blocks} block${vector.n_blocks === 1 ? "" : "s"}`;
-            const suffix = ff ? " (fast-forward after block 1)" : "";
+            const suffix = vector.n_blocks > 1 ? " (digest only)" : "";
             button.textContent = `${vector.name} · ${vector.msg_len} B · ${blocks}${suffix}`;
             button.addEventListener("click", () => pickKat(vector), listen);
             katMenu.append(button);
@@ -487,7 +458,7 @@ export function createMegaDreifachSession({
         home: () => { if (teaching) void seek(-1); },
         end: () => { if (teaching && show) void seek(show.beats.length - 1); },
     }, listen);
-    speed?.addEventListener("input", () => view.setTempo?.(Number(speed.value) || 1), listen);
+    speed?.addEventListener("input", () => view.setTempo?.(Number(speed.value) || undefined), listen);
     bindCappedInput(input, {
         noteEl: ioNote,
         onChange: () => {
@@ -498,7 +469,7 @@ export function createMegaDreifachSession({
     });
 
     setEncoding("text");
-    view.setTempo?.(Number(speed?.value) || 1);
+    view.setTempo?.(Number(speed?.value) || undefined);
     void refreshDigest();
 
     const api = {
@@ -523,12 +494,15 @@ export function createMegaDreifachSession({
             teaching,
             beats: show?.beats.length ?? 0,
             blocks: info?.blocks ?? 0,
+            traced: Boolean(info?.traced),
+            animatable: animatable(),
+            digest: info ? hexOf(info.digest) : "",
+            kat: kat?.name ?? "",
             gen,
             hasShow: Boolean(show),
         }),
         dispose() {
             disposed = true;
-            unbindSound();
             job += 1;
             playing = false;
             abort.abort();

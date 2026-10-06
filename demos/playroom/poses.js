@@ -44,23 +44,20 @@ export const POSES = {
         fov: 30,
         overlays: { title: true, menu: false, teach: true },
     },
-    // MegaDreifach: high enough to read the 4×13 deal in front of the
-    // puzzles, close enough that a megaminx face and its read piece read.
-    // Puzzle row at DEN.z − 0.13, deal centred at DEN.z + 0.05, deck box left.
+    // MegaDreifach v3: the whole table at real size, deck box | B A C |
+    // held card on the back line and the 13 × 4 deal (0.87 m wide) in
+    // front, ~45° down, aimed right of the set's centre so it sits in the
+    // frame's left part, clear of the dock on the right.
     drei: {
-        // Square-on to the tidy table (deck | B A C over the deal),
-        // ~40° down, aimed right of centre so the set sits in the frame's
-        // left part, clear of the dock on the right.
-        position: [DEN.x + 0.07, 1.315, DEN.z + 0.614],
-        target: [DEN.x + 0.07, 0.78, DEN.z + 0.02],
+        position: [DEN.x + 0.16, 1.78, DEN.z + 0.94],
+        target: [DEN.x + 0.16, 0.78, DEN.z - 0.11],
         fov: 32,
         overlays: { title: true, menu: false, teach: true },
-        // Phones: steeper (~55°), centred on the whole set (deck to C),
-        // aimed below it so deck, puzzles and deal sit above the transport
-        // and dock.
+        // Phones: steeper, centred on the whole set, aimed below it so
+        // the set sits above the transport and dock.
         portrait: {
-            position: [DEN.x - 0.05, 1.825, DEN.z + 0.746],
-            target: [DEN.x - 0.05, 0.76, DEN.z + 0.227],
+            position: [DEN.x, 2.55, DEN.z + 0.95],
+            target: [DEN.x, 0.76, DEN.z + 0.12],
             fov: 50,
         },
     },

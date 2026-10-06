@@ -1,9 +1,9 @@
 /**
  * Megaminx presentation data for the MegaDreifach demo: names, colours,
  * the cubing.js move letters and the face directions of the cubing.js
- * megaminx. No algorithm step lives here: the turns, reads and grips all
- * come from the generated `trace_hash`. minx.test.mjs checks every table
- * below against the generated face tables (neighbours, opposites, spin).
+ * megaminx. No algorithm step lives here: the turns all come from the
+ * generated `trace_hash`. minx.test.mjs checks every table below against
+ * the generated face tables (neighbours, opposites).
  */
 
 // Sudo face id (= centre colour id, SPEC §4) → cubing.js megaminx move
@@ -74,6 +74,10 @@ function direction(move) {
 export const FACE_NORMAL = FACE_MOVE.map(direction);
 
 const PIPS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+
+// v3 (SPEC v3 §4): colour r carries rank r, so face id f is also the rank
+// A, 2, …, 10, J, Q (no centre is a King).
+export const RANK_NAME = PIPS.slice(0, 12);
 const SUITS = ["♣", "♥", "♠", "♦"];
 const SUIT_NAMES = ["clubs", "hearts", "spades", "diamonds"];
 
@@ -84,6 +88,11 @@ export function cardRank(card) {
 
 export function cardSuit(card) {
     return card % 4;
+}
+
+/** SPEC §3: the suit amount k = suit + 1 (clubs 1, hearts 2, spades 3, diamonds 4). */
+export function suitAmount(card) {
+    return cardSuit(card) + 1;
 }
 
 export function cardLabel(card) {
@@ -111,82 +120,9 @@ export function turnText(face, clicks) {
     return `${FACE_NAME[face]} ${clicks > 0 ? "+" : "−"}${Math.abs(clicks)}`;
 }
 
-function dot(a, b) {
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
-
-function cross(a, b) {
-    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-}
-
 function norm(a) {
     const l = Math.hypot(a[0], a[1], a[2]) || 1;
     return [a[0] / l, a[1] / l, a[2] / l];
-}
-
-/**
- * Rotation (row-major 3×3) that holds the puzzle with face `up` on top
- * and face `front` toward you: up's direction goes to +y, front's goes
- * into the y–z plane facing +z.
- */
-export function gripMatrix(up, front) {
-    const u = FACE_NORMAL[up];
-    const f0 = FACE_NORMAL[front];
-    const f = norm([f0[0] - dot(f0, u) * u[0], f0[1] - dot(f0, u) * u[1], f0[2] - dot(f0, u) * u[2]]);
-    const s = cross(u, f);
-    return [s, u, f];
-}
-
-/** Quaternion [x, y, z, w] of a row-major rotation matrix. */
-export function matrixQuaternion(m) {
-    const [[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]] = m;
-    const trace = m00 + m11 + m22;
-    let x;
-    let y;
-    let z;
-    let w;
-    if (trace > 0) {
-        const s = 0.5 / Math.sqrt(trace + 1);
-        w = 0.25 / s;
-        x = (m21 - m12) * s;
-        y = (m02 - m20) * s;
-        z = (m10 - m01) * s;
-    } else if (m00 > m11 && m00 > m22) {
-        const s = 2 * Math.sqrt(1 + m00 - m11 - m22);
-        w = (m21 - m12) / s;
-        x = 0.25 * s;
-        y = (m01 + m10) / s;
-        z = (m02 + m20) / s;
-    } else if (m11 > m22) {
-        const s = 2 * Math.sqrt(1 + m11 - m00 - m22);
-        w = (m02 - m20) / s;
-        x = (m01 + m10) / s;
-        y = 0.25 * s;
-        z = (m12 + m21) / s;
-    } else {
-        const s = 2 * Math.sqrt(1 + m22 - m00 - m11);
-        w = (m10 - m01) / s;
-        x = (m02 + m20) / s;
-        y = (m12 + m21) / s;
-        z = 0.25 * s;
-    }
-    return [x, y, z, w];
-}
-
-export function gripQuaternion(up, front) {
-    return matrixQuaternion(gripMatrix(up, front));
-}
-
-/** A King's spin: k clicks about Up, each bringing the face on your left to the front. */
-export function spinMatrix(clicks) {
-    const a = (clicks * 2 * Math.PI) / 5;
-    const c = Math.cos(a);
-    const s = Math.sin(a);
-    return [[c, 0, s], [0, 1, 0], [-s, 0, c]];
-}
-
-export function mulMatrix(a, b) {
-    return a.map((row) => [0, 1, 2].map((j) => row[0] * b[0][j] + row[1] * b[1][j] + row[2] * b[2][j]));
 }
 
 /** Direction of a piece: the sum of its faces' directions (puzzle frame). */

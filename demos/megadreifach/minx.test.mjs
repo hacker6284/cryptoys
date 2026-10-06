@@ -6,10 +6,9 @@ import {
     FACE_NORMAL,
     cardFaceIndex,
     cardLabel,
-    gripMatrix,
-    gripQuaternion,
-    mulMatrix,
-    spinMatrix,
+    RANK_NAME,
+    pieceDirection,
+    suitAmount,
     turnMove,
 } from "./minx.js";
 import { loadGenerated } from "./gen.test-helper.mjs";
@@ -41,16 +40,11 @@ assert.equal(cardLabel(51), "K♦");
 assert.equal(cardFaceIndex(46), 2 * 13 + 11); // spade_queen in loadCardTextures order
 assert.equal(cardFaceIndex(0), 0);
 
-// Unit normals, grip matrices are rotations.
+// Unit normals; a piece points between its faces.
 for (const n of FACE_NORMAL) assert.ok(close(dot(n, n), 1));
-const aNeighbour = (up) => FACE_NORMAL.findIndex((n) => close(dot(n, FACE_NORMAL[up]), 1 / Math.sqrt(5)));
-for (let up = 0; up < 12; up++) {
-    const m = gripMatrix(up, aNeighbour(up));
-    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) assert.ok(close(dot(m[i], m[j]), i === j ? 1 : 0));
-    const q = gripQuaternion(up, aNeighbour(up));
-    assert.ok(close(Math.hypot(...q), 1));
-}
-assert.deepEqual(gripQuaternion(0, 1).map((v) => Math.round(v * 1e9) / 1e9), [0, 0, 0, 1]);
+for (const d of [pieceDirection([0, 1]), pieceDirection([0, 1, 2])]) assert.ok(close(Math.hypot(...d), 1));
+assert.deepEqual(RANK_NAME, ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q"]);
+assert.deepEqual([0, 1, 2, 3, 51].map(suitAmount), [1, 2, 3, 4, 4]);
 
 const gen = await loadGenerated();
 if (!gen) {
@@ -83,15 +77,5 @@ if (!gen) {
     const start = ring.indexOf("red");
     assert.deepEqual([...ring.slice(start), ...ring.slice(0, start)], ["red", "green", "purple", "yellow", "blue"]);
 
-    // Generated: spin_about_up(o, 1) brings hold position 2 (left of Front) to Front.
-    const home = [...Array(12).keys()];
-    for (let k = 1; k <= 4; k++) {
-        const o = gen.spin(home, k);
-        assert.equal(o[0], 0);
-        const drawn = mulMatrix(spinMatrix(k), gripMatrix(0, 1));
-        // The face now facing front in the drawing is the generated o[1].
-        const facing = FACE_NORMAL.map((n, f) => [f, dot(drawn[2], n)]).sort((a, b) => b[1] - a[1])[0][0];
-        assert.equal(facing, o[1], `spin ${k}`);
-    }
 }
 console.log("minx.test: ok");

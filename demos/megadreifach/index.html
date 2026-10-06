@@ -4,101 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MegaDreifach</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../shared/tokens.css">
-  <link rel="stylesheet" href="../shared/base.css">
-  <link rel="stylesheet" href="../shared/grow-field.css">
-  <link rel="stylesheet" href="../shared/step.css">
-  <link rel="stylesheet" href="./style.css">
+  <!--
+    MegaDreifach v3 lives in the playroom only: three megaminxes and a
+    real deck on the table (no 2D deal strip), so this page forwards there.
+  -->
   <script>
     (function () {
-      var params = new URLSearchParams(location.search);
-      if (params.get("standalone") === "1") return;
       var dest = new URL("../", location.href);
       dest.searchParams.set("algo", "megadreifach");
       location.replace(dest.pathname + dest.search);
     })();
   </script>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-      }
-    }
-  </script>
 </head>
 <body>
-  <header class="site-chrome">
-    <nav class="site-nav" aria-label="Site">
-      <a class="site-brand" href="../">cryptoys</a>
-      <span class="site-sep" aria-hidden="true">/</span>
-      <span class="site-current">MegaDreifach</span>
-    </nav>
-    <button id="spec-btn" class="chrome-action" type="button">Spec</button>
-    <button id="sound" class="chrome-action" type="button" aria-pressed="true" title="Sound is on: mute">Sound</button>
-  </header>
-  <div class="shell">
-    <section class="stage">
-      <header class="stage-head">
-        <p class="eyebrow">v2 · toy hash · three megaminxes and a deck</p>
-        <h1>MegaDreifach</h1>
-        <p class="drei-warning" role="note">Toy hash, not secure: its compression step is known to be distinguishable from random. A fix is in progress.</p>
-      </header>
-      <div class="trio" id="trio">
-        <figure class="minx" data-puzzle="A"><div class="minx-host"></div><figcaption>A · <span data-grip="A">white up, green front</span></figcaption></figure>
-        <figure class="minx" data-puzzle="B"><div class="minx-host"></div><figcaption>B</figcaption></figure>
-        <figure class="minx" data-puzzle="C"><div class="minx-host"></div><figcaption>C · stays solved</figcaption></figure>
-      </div>
-      <p class="drei-ff" id="ff-counter" role="status" aria-live="polite" hidden></p>
-      <div class="deal" id="deal" role="img" aria-label="The block's deal, read left to right, top row first"></div>
-      <p class="read" id="read" aria-live="polite"></p>
-      <div class="teach" id="teach" hidden>
-        <article class="teach-card" id="teach-card"></article>
-        <div class="transport" id="transport">
-          <button type="button" data-jump="round-back" title="Previous block" aria-label="Previous block">«</button>
-          <button type="button" data-jump="stage-back" title="Previous stage" aria-label="Previous stage">‹</button>
-          <button type="button" data-jump="back">Back</button>
-          <span class="pos" id="teach-pos">—</span>
-          <button type="button" data-jump="fwd">Forward</button>
-          <button type="button" data-jump="stage-fwd" title="Next stage" aria-label="Next stage">›</button>
-          <button type="button" data-jump="round-fwd" title="Next block" aria-label="Next block">»</button>
-        </div>
-      </div>
-    </section>
-    <aside class="panel">
-      <div class="row">
-        <button id="play" class="primary" type="button">Play</button>
-        <button id="skip-end" type="button">Skip to end</button>
-        <button id="step" type="button">Step</button>
-        <button id="reset" type="button">Reset</button>
-        <button id="digest-btn" type="button">Copy</button>
-        <button id="kat" type="button" aria-controls="kat-menu" aria-expanded="false">KAT</button>
-      </div>
-      <label class="slider">Speed <input id="speed" type="range" min="0.5" max="12" step="0.1" value="2"></label>
-      <div class="row">
-        <button type="button" class="on" data-encoding="text">text</button>
-        <button type="button" data-encoding="hex">hex</button>
-      </div>
-      <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="Type a message to hash"></textarea>
-      <p id="io-note" class="io-note" hidden></p>
-      <div id="kat-menu" class="drei-kat-menu" role="group" aria-label="Known-answer tests" hidden></div>
-      <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" placeholder="No message yet"></textarea>
-      <p id="anim-note" class="drei-anim-note" role="status" hidden></p>
-      <p id="status" class="status" aria-live="polite">Type a message, or pick a known answer.</p>
-      <p id="error" class="error" role="alert"></p>
-      <p class="fine">A carries the hash, B its inverse, C stays solved. Each block deals 52 cards; every card turns A, then the 3-solve feeds the result forward.</p>
-    </aside>
-  </div>
-  <dialog id="spec">
-    <div class="spec-bar">
-      <strong>Specification</strong>
-      <button id="spec-close" type="button">Close</button>
-    </div>
-    <article id="spec-body"></article>
-  </dialog>
-  <script type="module" src="./app.js"></script>
+  <p>MegaDreifach is in the <a href="../?algo=megadreifach">playroom</a>.</p>
 </body>
 </html>

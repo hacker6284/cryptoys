@@ -1,44 +1,31 @@
 /**
- * Turn a generated `trace_hash` into the demo's show: every face turn of
- * the three puzzles (as cubing.js moves, one list per puzzle) and the
- * beats that play them. The turns of the cook and of E_m are the trace's
- * own; the 3-solve applies SPEC §5.7's hand rule, "solve by undoing":
- * each puzzle keeps the turns it has had since it was last solved, and
- * its solve is that list backwards with every click reversed, copied by
- * colour onto the other puzzles. plan.test.mjs replays every list with
+ * Turn a generated v3 `trace_hash` into the demo's show: every face turn
+ * of the three puzzles (as cubing.js moves, one list per puzzle) and the
+ * beats that play them, one action per beat.
+ *
+ * Every turn of the cook and of E_m (the 52 card steps and the 26 echoes,
+ * six turns each) is the trace's own. The 3-solve applies SPEC §5.7's hand
+ * rule, "solve each megaminx by any method you know", with the method
+ * "undo": each puzzle keeps the turns it has had since it was last solved,
+ * and its solve is that list backwards with every click reversed, copied
+ * by colour onto the other puzzles. plan.test.mjs replays every list with
  * the generated face turns and checks A, B, C against the trace's h, h⁻¹
- * and the solved position after each block.
+ * and solved after each block. Nothing here computes a step of the hash:
+ * the captions only name what the trace already did.
  */
-import { FACE_NAME, cardLabel, cardRank, turnMove, turnText } from "./minx.js";
+import { FACE_NAME, RANK_NAME, cardLabel, cardRank, suitAmount, turnMove, turnText } from "./minx.js";
 
-// Block 1 plays turn for turn, for any message. Every later block more
-// than doubles the undo-solves (block 2 alone adds 1,656 leader turns, a
-// third 3,696), so blocks 2–N are a marked fast-forward instead: the
-// puzzles land on the trace's real final h (A), h⁻¹ (B) and solved (C),
-// with the digest. No turns or cards of those blocks are shown.
-export const FULL_BLOCKS = 1;
+// A message is traced and played turn for turn, never cut short or sped
+// through, up to TRACE_BLOCKS blocks (a one-block message is up to 19
+// bytes). Longer messages are too long to trace: block 1 alone plays
+// 1,488 face turns, and the undo-solves more than double every block
+// after it. They get the digest only, with no animation.
+export const TRACE_BLOCKS = 1;
 export const BLOCK_BYTES = 28;
+export const CARD_STEPS = 52;
+export const ECHOES = 26;
 export const SOLVE_CHUNK = 12;
 export const PUZZLES = ["A", "B", "C"];
-export const HOME = { up: 0, front: 1 };
-
-/**
- * Length of the fast-forward over blocks from..to: long enough to read the
- * counter, short at any length (1.8 s for one block, at most 5 s at
- * tempo 1). Speed shortens it only gently, never under 1.4 s.
- */
-export function ffMillis(from, to, tempo = 1) {
-    const n = Math.max(1, to - from + 1);
-    const base = Math.min(5000, 1800 + 160 * (n - 1));
-    const speedUp = Math.min(2, Math.max(1, Math.sqrt(Number(tempo) || 1)));
-    return Math.max(1400, base / speedUp);
-}
-
-/** The block the fast-forward counter shows at progress t (0..1). */
-export function ffBlockAt(t, from, to) {
-    const n = to - from + 1;
-    return Math.min(to, from + Math.floor(Math.max(0, t) * n));
-}
 
 export function undo(turns) {
     const out = [];
@@ -46,7 +33,7 @@ export function undo(turns) {
     return out;
 }
 
-function pairs(flat) {
+export function pairs(flat) {
     const out = [];
     for (let i = 0; i + 1 < flat.length; i += 2) out.push([flat[i], flat[i + 1]]);
     return out;
@@ -56,52 +43,49 @@ function hex(bytes) {
     return bytes.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Teach captions: one action per step, the words a player would say to
-// themselves. The view rings the face being turned and dots the piece
-// being read, so captions never list moves; the status line carries the
-// count ("turns 61–72 of 216").
-const SPEC_CARD = "5.3 Card step (card number i = 1 … 52)";
-const SPEC_F3 = "5.4 F3 blank rounds (t = 36, round r = 1 … 36)";
-const SPEC_HAND = "5.7 By hand: the cook and the 3-solve";
+/** A face named by its centre colour and the rank it carries: "green (2)". */
+export function faceText(face) {
+    return `${FACE_NAME[face]} (${RANK_NAME[face]})`;
+}
+
+const SPEC_CARD = "5.3 Card step";
+const SPEC_PIECES = "5.2 A card's two pieces";
+const SPEC_ECHO = "5.4 Deal once, then 26 echoes";
+const SPEC_HAND = "5.7 Hand details: IV-COOK12 and the 3-solve (same turns as v2)";
+const SPEC_COMP = "5. Compression";
 
 function note(kicker, title, why, spec, short, math = "") {
     return { kicker, title, math, why, spec, short };
 }
 
-function clicks(n) {
-    return `${n > 0 ? "+" : "−"}${Math.abs(n)}`;
-}
-
-function gripWords(grip) {
-    return `Hold ${FACE_NAME[grip.up]} up, ${FACE_NAME[grip.front]} front`;
-}
-
 const SOLVE_WORDS = {
     1: {
         leader: "B", copies: ["A"], name: "Solve B onto A",
-        title: "Undo B, copying each turn onto A",
-        why: "B ends solved; A becomes h′.",
+        title: "Solve B by undoing its turns, making each turn on A as well",
+        why: "B ends solved; A becomes h′ = h·W·h.",
     },
     2: {
         leader: "A", copies: ["B", "C"], name: "Solve A onto B and C",
-        title: "Undo A, copying each turn onto B and C",
+        title: "Solve A by undoing its turns, making each turn on B and C as well",
         why: "A ends solved; B and C become h′⁻¹.",
     },
     3: {
         leader: "C", copies: ["A"], name: "Solve C onto A",
-        title: "Undo C, copying each turn onto A",
-        why: "C ends solved; A holds h′ again.",
+        title: "Solve C by undoing its turns, making each turn on A as well",
+        why: "C ends solved; A holds h′ again, B its inverse.",
     },
 };
 
+const PIECE_WORDS = ["edge", "edge", "corner", "corner", "edge again"];
+
 /**
  * @param trace host `trace_hash` output (plain numbers)
- * @returns {{ moves, beats, digest, blocks, final, ffAt }} `final` (A = h, B = h⁻¹ after
- *   the last block) and `ffAt` (the fast-forward beat) are set when blocks > 1.
+ * @param marks per block, per step: { edge, corner, lookEdge?, lookCorner? } slot faces (worker.js)
+ * @returns {{ moves, beats, digest, blocks, held }}
  */
-export function buildShow(trace) {
+export function buildShow(trace, marks = []) {
     const blocks = trace.blocks.length;
-    const shown = trace.blocks.slice(0, FULL_BLOCKS);
+    if (blocks > TRACE_BLOCKS) throw new RangeError(`too long to trace: ${blocks} blocks`);
     const moves = { A: [], B: [], C: [] };
     const hist = { A: [], B: [], C: [] };
     const beats = [];
@@ -125,108 +109,98 @@ export function buildShow(trace) {
         const from = mark();
         turn("A", face, clicks);
         beats.push({
-            kind: "cook", puzzle: "A", block: -1, stage: "cook-a", ranges: ranges(from),
-            face,
-            caption: note(`Cook A · turn ${i + 1} of 12`, `Turn ${turnText(face, clicks)}`,
-                "Every face once, in card order: A becomes the starting value.", SPEC_HAND,
-                `Cook A · turn ${i + 1} of 12`),
+            kind: "cook", puzzle: "A", block: -1, stage: "cook-a", ranges: ranges(from), face, clicks,
+            caption: note(`Cook A · turn ${i + 1} of 12`, `On A, turn ${turnText(face, clicks)}`,
+                "IV-COOK12: every face +1 once, in the rank order of the centre colours (A, 2, …, Q).", SPEC_HAND,
+                `Cook A · ${turnText(face, clicks)} (${i + 1} of 12)`),
         });
     });
-    const back = undo(iv);
-    back.forEach(([face, clicks], i) => {
+    undo(iv).forEach(([face, clicks], i) => {
         const from = mark();
         turn("B", face, clicks);
         beats.push({
-            kind: "cook", puzzle: "B", block: -1, stage: "cook-b", ranges: ranges(from),
-            face,
-            caption: note(`Cook B backwards · turn ${i + 1} of 12`, `Turn ${turnText(face, clicks)}`,
-                "A's cook undone, last turn first: B holds A's inverse.", SPEC_HAND,
-                `Cook B backwards · turn ${i + 1} of 12`),
+            kind: "cook", puzzle: "B", block: -1, stage: "cook-b", ranges: ranges(from), face, clicks,
+            caption: note(`Cook B backwards · turn ${i + 1} of 12`, `On B, turn ${turnText(face, clicks)}`,
+                "A's cook undone, last turn first: B holds A's inverse. C stays solved.", SPEC_HAND,
+                `Cook B backwards · ${turnText(face, clicks)} (${i + 1} of 12)`),
         });
     });
 
-    shown.forEach((blk, b) => {
+    trace.blocks.forEach((blk, b) => {
+        const blockMarks = marks[b] || [];
+        const held = blk.deal[CARD_STEPS - 1];
+        const B = `Block ${b + 1} of ${blocks}`;
         beats.push({
-            kind: "deal", block: b, stage: `deal-${b}`, ranges: {},
-            chunk: blk.chunk.slice(), deal: blk.deal.slice(),
-            caption: note(`Block ${b + 1} of ${blocks}`, "Deal 52 cards face down, in four rows",
-                "The block's 28 bytes pick the order. Work left to right, far row first.", "5. Compression",
-                `Block ${b + 1} · deal`, `Bytes ${hex(blk.chunk)}`),
+            kind: "deal", block: b, stage: `deal-${b}`, ranges: {}, deal: blk.deal.slice(), chunk: blk.chunk.slice(),
+            caption: note(B, "Lay out the block's deal face down, 13 to a row",
+                "φ turns the block's 28 bytes into the order of the 52 cards. Far row first, left to right.", SPEC_COMP,
+                `${B} · lay out the deal`, `Bytes ${hex(blk.chunk)}`),
         });
-        let grip = { ...HOME };
-        for (const step of blk.steps) {
-            const isCard = step.card >= 0;
-            const turns = pairs(step.turns);
-            const where = isCard
-                ? `Block ${b + 1} · card ${step.pos} of 52`
-                : `Block ${b + 1} · blank round ${step.pos - 52} of 36`;
-            const spec = isCard ? SPEC_CARD : SPEC_F3;
-            const tag = isCard ? cardLabel(step.card) : `Round ${step.pos - 52}/36`;
-            const base = {
-                block: b, stage: `${isCard ? "cards" : "f3"}-${b}`, pos: step.pos, card: step.card,
-                step: `${b}:${step.pos}`,
-            };
-            const push = (kind, extra, caption) => {
-                beats.push({ kind, ...base, ranges: {}, grip: { ...grip }, ...extra, caption });
-            };
-            const turnBeat = (kind, [face, n], caption) => {
+        blk.steps.forEach((st, s) => {
+            const echo = st.pos > CARD_STEPS;
+            const j = st.pos - CARD_STEPS;
+            const where = echo ? `${B} · echo ${j} of ${ECHOES}` : `${B} · card ${st.pos} of ${CARD_STEPS}`;
+            const tag = cardLabel(st.card);
+            const turns = pairs(st.turns);
+            const m = blockMarks[s] || {};
+            const base = { block: b, stage: `${echo ? "echo" : "cards"}-${b}`, pos: st.pos, card: st.card, step: `${b}:${st.pos}` };
+            const push = (kind, extra, caption) => beats.push({ kind, ...base, ranges: {}, ...extra, caption });
+            const turnBeat = (kind, [face, n], caption, extra = {}) => {
                 const from = mark();
                 turn("A", face, n);
-                push(kind, { ranges: ranges(from), face, clicks: n }, caption);
+                push(kind, { ranges: ranges(from), face, clicks: n, ...extra }, caption);
             };
-            // 1. The held face (a card's face and suit clicks; F3: Up +1).
-            const [held, heldClicks] = turns[0];
-            if (isCard) {
-                turnBeat("card", turns[0], note(where, `${tag}: turn ${turnText(held, heldClicks)}`,
-                    cardRank(step.card) === 12
-                        ? "A King turns Up back by its suit, then spins."
-                        : "The number picks the face (ringed); the suit, how far.",
-                    spec, `${tag} · turn ${turnText(held, heldClicks)}`));
-            } else {
-                turnBeat("turn", turns[0], note(where, `Turn Up (${FACE_NAME[held]}) +1`,
-                    "No card: a blank round turns Up.", spec, `${tag} · turn Up +1`));
+            const spec = echo ? SPEC_ECHO : SPEC_CARD;
+            const c = FACE_NAME[st.colour];
+            const n = FACE_NAME[st.n];
+            const n2 = FACE_NAME[st.n2];
+            const rank = cardRank(st.card);
+            const k = suitAmount(st.card);
+            if (echo) {
+                push("count", { counter: j }, note(where, `Count a card off the dealt pile (${j} of ${ECHOES})`,
+                    "Unread: the counter pile only counts the echoes.", SPEC_ECHO, `Echo ${j} · count a card off`));
+                push("look", { marks: { edge: m.lookEdge, corner: m.lookCorner } }, note(where,
+                    `Look: X = ${faceText(st.x)}, Y = ${faceText(st.y)}, so P = ${faceText(st.base)}`,
+                    `X carries the held edge's ${FACE_NAME[blk.steps[CARD_STEPS - 1].n]} sticker, Y the held corner's. `
+                        + "Count up from X by Y's rank: that colour is P.", SPEC_ECHO,
+                    `Echo ${j} · look: P = ${FACE_NAME[st.base]}`));
             }
-            if (step.spin) {
-                const spun = { up: step.up, front: step.noon };
-                push("spin", { next: spun, spin: step.spin }, note(where,
-                    `Spin ${step.spin} click${step.spin === 1 ? "" : "s"}: the left face comes to the front`,
-                    "Kings then turn the whole puzzle about Up.", spec, `${tag} · spin ${step.spin}`));
-                grip = spun;
-            }
-            // 2. Read the noon piece: its first two colours set the next grip.
-            const piece = step.corner ? "corner" : "edge";
-            push("read", {
-                read: { held: step.held, noon: step.noon, third: step.third, corner: step.corner },
-                c1: step.c1, c2: step.c2,
-            }, note(where, `Read the noon ${piece}: ${FACE_NAME[step.c1]}, ${FACE_NAME[step.c2]}`,
-                `${step.pos % 2 ? "Odd" : "Even"} steps read the ${piece}: first the colour on the face just turned, then its noon.`,
-                spec, `${tag} · read ${FACE_NAME[step.c1]}, ${FACE_NAME[step.c2]}`));
-            // 3–4. The rest of the step's turns, one at a time.
-            const rest = turns.slice(1);
-            rest.forEach(([face, n], i) => {
-                const isFront = i === rest.length - 1;
-                const twice = rest.length === 2 && rest[0][0] === rest[1][0];
-                let title = `Turn the noon face (${FACE_NAME[face]}) ${clicks(n)}`;
-                let why = "The noon face: the neighbour the held face points to.";
-                if (isFront) {
-                    title = `Turn Front (${FACE_NAME[face]}) ${clicks(n)}`;
-                    why = twice ? "Front again: +2 in all." : "Front: the face looking at you.";
-                } else if (twice) {
-                    title = `Turn the noon face, Front (${FACE_NAME[face]}), ${clicks(n)}`;
-                    why = "Here the noon is Front, so Front turns twice.";
-                }
-                turnBeat("turn", [face, n], note(where, title, why, spec, `${tag} · turn ${turnText(face, n)}`));
+            // Step 1: the turn the card's rank and suit pick.
+            const [f1, k1] = turns[0];
+            const from = echo ? `P, ${FACE_NAME[st.base]}` : `the last face, ${FACE_NAME[st.base]}`;
+            const pick = rank === 12
+                ? `the face opposite ${from} is ${faceText(f1)}`
+                : `count up from ${from}, by ${RANK_NAME[rank]} → ${faceText(f1)}`;
+            turnBeat(echo ? "echo" : "card", turns[0], note(where, `${tag}: ${pick}; turn it +${k1}`,
+                rank === 12
+                    ? "A King turns the face opposite; the suit says how many clicks (clubs 1 … diamonds 4)."
+                    : "The rank counts up the colour order; the suit says how many clicks (clubs 1 … diamonds 4).",
+                spec, `${tag} · ${turnText(f1, k1)}`), { k, turnUp: !echo });
+            // Step 2: name the edge and the corner by their colours.
+            push("name", { marks: { edge: m.edge, corner: m.corner } }, note(where,
+                `Name the pieces: edge ${c}–${n}, corner ${c}–${n}–${n2}`,
+                `${echo ? "P" : "The card's colour"} is ${c}; the suit picks ${n} among its neighbours `
+                    + "(clubs: the lowest-ranked, then clockwise), and the corner adds the next one clockwise.",
+                SPEC_PIECES, `${tag} · edge ${c}–${n}, corner ${c}–${n}–${n2}`));
+            // Steps 3–5: five single clicks, each on the face a named sticker is on now.
+            turns.slice(1).forEach(([face, clicks], i) => {
+                const sticker = i === 0 || i === 2 ? c : n;
+                const piece = PIECE_WORDS[i];
+                const last = i === 4;
+                turnBeat("turn", [face, clicks], note(where,
+                    `${piece[0].toUpperCase()}${piece.slice(1)}: turn the face its ${sticker} sticker is on, ${faceText(face)}, +1`,
+                    last ? `${FACE_NAME[face]} is the new last face.` : "Find the piece wherever it is now.",
+                    spec, `${tag} · ${piece} · ${turnText(face, clicks)}`), { role: i });
             });
-            // 5. Re-grip.
-            const next = { up: step.c1, front: step.c2 };
-            push("grip", { next }, note(where, gripWords(next),
-                "Pick A up and set it down that way.", spec, `${tag} · ${gripWords(next).toLowerCase()}`));
-            grip = next;
-        }
+            if (!echo && st.pos === CARD_STEPS) {
+                push("hold", { held }, note(where, `Keep the ${tag} in hand: the held card`,
+                    "Card 52 is not put on the pile. Its echoes come next.", SPEC_ECHO, `${tag} · held`));
+            }
+        });
         beats.push({
-            kind: "home", block: b, stage: `home-${b}`, ranges: {}, grip: { ...grip }, next: { ...HOME },
-            caption: note(`Block ${b + 1} · cards done`, gripWords(HOME),
-                "A now holds e. The home grip starts the 3-solve.", SPEC_HAND, `Block ${b + 1} · home grip`),
+            kind: "done-w", block: b, stage: `wdone-${b}`, ranges: {},
+            caption: note(`${B} · W done`, "A now holds W·h",
+                "Next the 3-solve feeds h forward: h′ = h·W·h.", SPEC_HAND, `${B} · W done: A holds W·h`),
         });
         for (const stage of [1, 2, 3]) {
             const words = SOLVE_WORDS[stage];
@@ -238,61 +212,33 @@ export function buildShow(trace) {
                 for (const [face, clicks] of part) for (const p of targets) turn(p, face, clicks);
                 beats.push({
                     kind: "solve", block: b, stage: `solve${stage}-${b}`, solve: stage,
-                    leader: words.leader, copies: words.copies.slice(), ranges: ranges(from),
-                    turns: part,
-                    caption: note(`Block ${b + 1} · 3-solve ${stage} of 3 · ${words.name}`, words.title,
-                        words.why, SPEC_HAND,
+                    leader: words.leader, copies: words.copies.slice(), ranges: ranges(from), turns: part,
+                    caption: note(`${B} · 3-solve ${stage} of 3 · ${words.name}`, words.title, words.why, SPEC_HAND,
                         `${words.name} · turns ${i + 1}–${i + part.length} of ${word.length}`),
                 });
             }
             hist[words.leader] = [];
         }
         beats.push({
-            kind: "gather", block: b, stage: `gather-${b}`, ranges: {},
+            kind: "gather", block: b, stage: `gather-${b}`, ranges: {}, deal: blk.deal.slice(),
             caption: b + 1 < blocks
-                ? note(`Block ${b + 1} done`, "Gather the cards", `A carries h′ into block ${b + 2}.`, SPEC_HAND,
-                    `Block ${b + 1} done`)
-                : note("Done", "A holds the digest", "Read it off A (§6).", SPEC_HAND, "Done: A holds the digest",
-                    hex(trace.digest)),
+                ? note(`${B} done`, "Gather the cards", `A carries h′ into block ${b + 2}.`, SPEC_HAND, `${B} done`)
+                : note("Done", "A holds the digest", "Gather the cards. Read the digest off A (§6).", SPEC_HAND,
+                    "Done: A holds the digest", hex(trace.digest)),
         });
     });
 
-    let final = null;
-    let ffAt = -1;
-    if (blocks > shown.length) {
-        // Blocks 2–N: no turns, no cards. The puzzles settle on the trace's
-        // own last chaining value, its inverse, and solved.
-        const last = trace.blocks[blocks - 1];
-        final = { A: last.h_next, B: last.h_next_inv };
-        const from = shown.length + 1;
-        const range = from === blocks ? `block ${blocks}` : `blocks ${from}–${blocks}`;
-        ffAt = beats.length;
-        beats.push({
-            kind: "ff", block: shown.length, stage: "ff", ranges: {}, from, to: blocks,
-            caption: note(`Fast-forward · ${range}`, `Fast-forward: ${range}`,
-                `Each block deals 52 cards, plays 88 steps and the 3-solve, just as block 1 did. Those turns are not shown; the puzzles land on the real result.`,
-                SPEC_HAND, `Fast-forward: ${range}`),
-        });
-        beats.push({
-            kind: "done", block: blocks - 1, stage: "done", ranges: {},
-            caption: note("Done", "A holds the digest",
-                `After block ${blocks}: A is h, B its inverse, C solved. Read the digest off A (§6).`, SPEC_HAND,
-                "Done: A holds the digest", hex(trace.digest)),
-        });
-    }
-
-    return { moves, beats, digest: trace.digest.slice(), blocks, final, ffAt };
+    return {
+        moves, beats, digest: trace.digest.slice(), blocks,
+        deals: trace.blocks.map((blk) => blk.deal.slice()),
+        final: { A: trace.blocks.at(-1)?.h_next, B: trace.blocks.at(-1)?.h_next_inv },
+    };
 }
 
-/** Beats per stage key, for the transport's stage jumps. */
 export function stageKey(beat) {
     return beat?.stage ?? "";
 }
 
 export function blockKey(beat) {
     return beat ? String(beat.block) : "";
-}
-
-export function leaderTurns(show) {
-    return show.moves.A.length;
 }

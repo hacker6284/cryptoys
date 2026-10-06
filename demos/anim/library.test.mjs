@@ -15,7 +15,7 @@ const walk = (dir, rel = "") => readdirSync(dir, { withFileTypes: true }).flatMa
     return [...(existsSync(new URL("settings.js", sub)) ? [name] : []), ...walk(sub, `${name}/`)];
 });
 const entries = walk(here);
-assert.deepEqual([...entries].sort(), ["chest", "cube", "deck/box", "deck/carry", "deck/deal", "megaminx"], "the library's entries, by object");
+assert.deepEqual([...entries].sort(), ["chest", "cube", "deck/box", "deck/card", "deck/carry", "deck/deal", "megaminx"], "the library's entries, by object");
 assert.ok(!existsSync(new URL("hinge/", here)), "no generic hinge entry");
 for (const name of entries) {
     assert.ok(existsSync(new URL(`${name}/index.js`, here)), `${name}: index.js`);

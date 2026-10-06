@@ -868,21 +868,19 @@ export function createMegaDreifachAdapter() {
             <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"
               placeholder="No message yet"></textarea>
           </label>
-          <p class="drei-warning" role="note">Toy hash, not secure: its compression step is known to be
-            distinguishable from random. A fix is in progress.</p>
+          <p class="drei-warning" role="note">MegaDreifach v3, a toy hash: it makes no cryptographic
+            security claim and is not for protecting anything.</p>
           <p id="anim-note" class="drei-anim-note" role="status" hidden></p>
-          <p id="ff-counter" class="drei-ff" role="status" aria-live="polite" hidden></p>
           <p id="status" class="status drei-status" aria-live="polite">Type a message, or pick a known answer.</p>`,
         digestButton: "Copy",
         hint: "Step to see each turn.",
         roundName: "block",
-        speed: { min: 0.5, max: 12, value: 2 },
+        // Starts at the library's megaminx tempo (demos/anim/megaminx, 1.4).
+        speed: { min: 0.5, max: 12, value: 1.4 },
         digin: '<button id="kat" class="playroom-digin" type="button" aria-controls="kat-menu" aria-expanded="false">'
             + 'KAT</button>'
             + '<button id="recentre" class="playroom-digin" type="button" title="Back to the table view">'
-            + 'Recentre</button>'
-            + '<button id="sound" class="playroom-digin drei-sound" type="button" aria-pressed="true"'
-            + ' title="Sound is on: mute">Sound</button>',
+            + 'Recentre</button>',
     });
     let world = null;
     let poses = null;
@@ -898,7 +896,6 @@ export function createMegaDreifachAdapter() {
     let enterGen = 0;
     let cancelEnter = false;
     let recentreBound = null;
-    let sound = null;
     const castCaption = dreiCastCaption();
 
     async function preload() {
@@ -1010,7 +1007,7 @@ export function createMegaDreifachAdapter() {
         },
         leaveMs({ snap = false } = {}) {
             if (snap || Boolean(poses?.prefersReducedMotion?.())) return 0;
-            return stage?.dealt ? GATHER_MS : 0;
+            return stage?.dealt ? stage.gatherMs() : 0;
         },
         view() {
             return stage;
@@ -1040,24 +1037,15 @@ export function createMegaDreifachAdapter() {
                 // same pose, and asking for it again used to skip() the
                 // shot, a one-frame cut (3.5 m, 44°, 8° of fov in one frame,
                 // measured frame by frame against Scramble, which glides).
-                // 700 ms: the deck's flap lifts and settles (2 × 260 ms).
-                // Once B and C are down: A, B, C hop in turn (0 / 170 /
-                // 340 ms, 420 ms each) while the status line names them left
-                // to right (the table has no labels). If the puzzles kept turns
-                // from last time, they undo them in place (~1.2 s, A back to
-                // the home grip). Then the dock.
+                // Once B and C are down: B, A, C hop in turn, left to right
+                // (0 / 170 / 340 ms, 420 ms each) while the caption names
+                // them (the table has no labels). If the puzzles kept turns
+                // from last time, they undo them in place, turn by turn.
+                // Then the dock.
                 markBeat("drei-present");
                 poses?.followLive?.(null);
                 poses?.releaseFrame?.();
                 const seated = continueTo(poses, "drei", { duration: reduced ? 480 : 1400, restart: true });
-                const flap = (async () => {
-                    if (reduced || !deck) return;
-                    await clock.wait(700, enterGen);
-                    markBeat("deck-flap");
-                    await clock.tween(260, (t) => deck.setFlap(t * 0.8), { generation: enterGen });
-                    await clock.tween(260, (t) => deck.setFlap(0.8 * (1 - t)), { generation: enterGen });
-                    deck.setFlap(0);
-                })();
                 // B and C must be down before the roll call.
                 for (const name of ["dreiB", "dreiC"]) await waitToyIdle(world.toys[name], clock, enterGen);
                 const statusEl = root.querySelector("#status");
@@ -1068,7 +1056,6 @@ export function createMegaDreifachAdapter() {
                     markBeat("drei-reset");
                     await stage.resetPuzzles({ snap: reduced });
                 }
-                await flap;
                 await seated;
                 // The caption stays a moment once the camera is on the table.
                 const castGen = enterGen;
@@ -1079,18 +1066,12 @@ export function createMegaDreifachAdapter() {
                     castCaption.hide();
                     return session;
                 }
-                // Sound (new): Web Audio, unlocked by the next gesture.
-                if (!sound) {
-                    const { createSound } = await import("../megadreifach/sound.js");
-                    sound = createSound();
-                }
-                stage.setSound(sound);
+                // Sound is on hold project-wide: none here.
                 session = mod.createMegaDreifachSession({
                     view: stage,
                     specUrl,
                     root,
                     exposeTeach: true,
-                    sound,
                     cast: DREI_CAST,
                 });
                 stage.rememberSeated();
@@ -1120,7 +1101,6 @@ export function createMegaDreifachAdapter() {
                 await stage.gather();
             }
             stage?.settle();
-            stage?.setSound(null);
             await stage?.clearShow();
             deck?.restow();
         },

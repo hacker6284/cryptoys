@@ -32,12 +32,12 @@ export async function loadGenerated() {
     return {
         host,
         raw,
+        rtList: (xs) => rt.host_list(xs, (v) => rt.host_int(v)),
         list,
         identity: () => fromPos(raw.identity()),
         faceTurn: (p, face, clicks) => fromPos(raw.face_turn(toPos(p), BigInt(face), BigInt(((clicks % 5) + 5) % 5))),
         nbrs: (f) => list(raw.face_nbrs(BigInt(f))),
         opposite: (f) => num([...raw.opposites][f]),
-        spin: (o, k) => list(raw.spin_about_up(rt.lst(o.map(BigInt)), BigInt(k))),
         kats: () => JSON.parse(readFileSync(join(here, "generated/kats.json"), "utf8")),
     };
 }

@@ -14,6 +14,7 @@ build_one() {
 
 build_one scramble "$root/primitives/hash/scramble/scramble.sudo"
 build_one doubledeal "$root/primitives/cipher/doubledeal/doubledeal.sudo"
-build_one megadreifach "$root/primitives/hash/megadreifach/megadreifach.sudo"
-# The KAT button checks the live digest against the known-answer file.
-cp "$root/primitives/hash/megadreifach/kats/megaminx_hash_kats_v2.json" "$root/demos/megadreifach/generated/kats.json"
+# MegaDreifach v3 (current); build_one copies v3/SPEC.md beside the page.
+build_one megadreifach "$root/primitives/hash/megadreifach/v3/megadreifach.sudo"
+# The KAT button checks the live digest against the v3 known-answer file.
+cp "$root/primitives/hash/megadreifach/kats/megaminx_hash_kats_v3.json" "$root/demos/megadreifach/generated/kats.json"

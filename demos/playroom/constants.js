@@ -55,24 +55,38 @@ export const CUBE = REAL_SIZES["3x3x3"].m;
 // Each MegaDreifach megaminx at its own real size (REAL_SIZES.megaminx:
 // 70 mm face to face).
 export const MINX = REAL_SIZES.megaminx.m;
-// MegaDreifach layout (metres, from the row centre). The three megaminxes
-// stand straight on the felt in one row, symmetric about the table axis:
-// B | A | C, A (the working puzzle) in the middle next to both solve
-// partners. The row is exactly as wide as the 13-column deal (12 × 25 mm
-// + a 63 mm card = 363 mm): B's and C's outer sides line up with the
-// deal's side edges, and the deal's far row lies 22 mm in front of the
-// puzzles. The DEAL box stands square on the row's line, one gap left of
-// B. No tray, no cups, no labels: only toys on the table. A flies from
-// the shelf; B and C (one megaminx each) come out of the toy chest.
-export const DREI_ROW_W = 0.363;
-export const DREI_ROW_Z = -0.13; // row centre line, from DEN.z
+// MegaDreifach v3 layout (metres; x from DEN.x, z from DEN.z, +z toward
+// the seat). Every toy and card at its real size, nothing overlapping:
+//   - the puzzle row, B | A | C, on DREI_ROW_Z, DREI_PITCH apart (a 70 mm
+//     megaminx is at most 88 mm across, so neighbours stay >= 50 mm
+//     apart, also while one lifts for a turn);
+//   - the DEAL tuck box (67 x 20 mm standing) one gap left of B, and the
+//     held card's seat (63 x 88 mm, face up) one gap right of C;
+//   - the deal: 52 cards in 13 columns x 4 rows, 4 mm apart (as
+//     doubledeal/real-layout.js), its far row DREI_GAP in front of the
+//     puzzles. 867 x 364 mm: well inside the 0.945 m felt radius.
+// No tray, no cups, no labels: only toys on the table.
+export const DREI_PITCH = 0.14;
+export const DREI_ROW_Z = -0.25; // row centre line, from DEN.z
 export const DREI_SEAT_XZ = {
     A: [0, 0],
-    B: [-(DREI_ROW_W - MINX) / 2, 0],
-    C: [(DREI_ROW_W - MINX) / 2, 0],
+    B: [-DREI_PITCH, 0],
+    C: [DREI_PITCH, 0],
 };
-export const DREI_GAP = 0.022;
-export const DREI_DECK_X = -(DREI_ROW_W / 2 + 0.03 + 0.067 / 2); // from DEN.x
+export const DREI_GAP = 0.04;
+// A megaminx's widest footprint (corner to corner, 70 mm face to face).
+export const MINX_SPAN = 0.088;
+export const DREI_DECK_X = -(DREI_PITCH + MINX_SPAN / 2 + DREI_GAP + REAL_SIZES.deckBox.w / 2);
+export const DREI_HELD_X = DREI_PITCH + MINX_SPAN / 2 + DREI_GAP + REAL_SIZES.card.w / 2;
+// The deal grid: card pitch (63 + 4, 88 + 4 mm) and the far row's centre.
+export const DREI_DEAL = {
+    cols: 13,
+    rows: 4,
+    gap: 0.004,
+    colPitch: REAL_SIZES.card.w + 0.004,
+    rowPitch: REAL_SIZES.card.d + 0.004,
+    farZ: DREI_ROW_Z + MINX_SPAN / 2 + DREI_GAP + REAL_SIZES.card.d / 2,
+};
 export const DREI_EXTRA = { dreiB: "B", dreiC: "C" };
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = REAL_SIZES.deckBox.h;

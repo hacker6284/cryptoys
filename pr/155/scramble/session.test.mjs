@@ -1,40 +1,6 @@
 import assert from "node:assert/strict";
-import { mkdirSync, writeFileSync, existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
 
-const SOLVED = "WWWWWWWWWRRRRRRRRRGGGGGGGGGYYYYYYYYYOOOOOOOOOBBBBBBBBB";
-const here = dirname(fileURLToPath(import.meta.url));
-const generated = join(here, "generated/scramble.mjs");
-const impl = join(here, "generated/_scramble_impl.mjs");
-
-// Without a local build this mock stands in for the generated module; its
-// digest only encodes version + length. CI builds the real one first.
-if (!existsSync(impl)) {
-    mkdirSync(dirname(generated), { recursive: true });
-    writeFileSync(generated, `
-export function solved_facelets() {
-    return ${JSON.stringify(SOLVED)};
-}
-export function scramble_v1() { return { v: 1, bytes: [] }; }
-export function scramble_v2() { return { v: 2, bytes: [] }; }
-export function update(state, bytes) { state.bytes = bytes; }
-export function evaluate(state) {
-    const digest = [0x00, 0xab, state.v, state.bytes?.length || 0];
-    const facelets = ${JSON.stringify(SOLVED)};
-    const move = (state.bytes?.length || 0) % 2 === 0 ? "U" : "R";
-    return {
-        digest,
-        trace: [
-            { kind: "move", move, nybble: "0", block: 0, index: 0, facelets },
-            { kind: "closer", move: "F2", facelets },
-            { kind: "canonicalize", facelets },
-        ],
-    };
-}
-`, "utf8");
-}
-
+// Runs on the real generated/scramble.mjs: build it first (tools/build.sh; CI does).
 function el(tag = "div", extras = {}) {
     const node = {
         nodeName: tag.toUpperCase(),

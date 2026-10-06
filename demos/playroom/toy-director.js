@@ -64,9 +64,17 @@ function samplePath(from, lift, mid, to, t, { ease = easeOutCubic, duration = FL
     };
 }
 
+// Chest extras after the first leave this far apart.
+export const EXTRA_STAGGER_MS = 260;
+
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function recipeMotionMs(demo) {
     if (!demo?.chest) return FLY_MS;
-    return LID_OPEN_MS + FLY_MS + LID_CLOSE_MS;
+    const extras = Math.max(0, (demo.toys?.length ?? 1) - 2);
+    return LID_OPEN_MS + FLY_MS + LID_CLOSE_MS + extras * EXTRA_STAGGER_MS;
 }
 
 // demos: the DEMOS registry (demos.js); the director reads toys and chest.
@@ -231,19 +239,22 @@ export function createToyDirector(world, demos, { timing = DIRECTOR_TIMING } = {
                 markBeat("lid-open");
                 await animateLid(1, { snap, duration: timing.LID_OPEN_MS });
                 if (token !== borrowGen || startedSkip !== skipGen) return;
-                for (const name of extras) {
+                // One extra flies alone (DoubleDeal's MSG); several leave
+                // the chest one after another, EXTRA_STAGGER_MS apart.
+                await Promise.all(extras.map(async (name, i) => {
+                    if (i && !snap) await delay(EXTRA_STAGGER_MS * i);
                     if (token !== borrowGen || startedSkip !== skipGen) return;
                     world.setSlotEmpty(name, true);
                     if (world.toys[name]) world.toys[name].userData.seatSurface = "table";
-                    markBeat("msg-out");
+                    markBeat(i ? `chest-out-${name}` : "msg-out");
                     await flyToy(name, world.getTablePose(name), { snap, duration: timing.FLY_MS - 200 });
-                }
+                }));
                 if (token !== borrowGen || startedSkip !== skipGen) return;
                 markBeat("lid-close");
                 await animateLid(0, { snap, duration: timing.LID_CLOSE_MS });
             })();
         }
-        markBeat(primary === "cube" ? "cube-fly" : "key-fly");
+        markBeat(primary === "cube" ? "cube-fly" : primary === "drei" ? "drei-fly" : "key-fly");
         if (world.toys[primary]) world.toys[primary].userData.seatSurface = "table";
         await flyToy(primary, world.getTablePose(primary), { snap });
         if (snap && extraJob) await extraJob;

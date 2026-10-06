@@ -52,13 +52,37 @@ export const CARD_D = REAL_SIZES.card.d;
 // The Scramble 3×3's real edge. Not a size for any other toy: each puzzle
 // is fitted to its own REAL_SIZES entry (twisty-rig adoptTwistyPuzzle).
 export const CUBE = REAL_SIZES["3x3x3"].m;
+// Each MegaDreifach megaminx at its own real size (REAL_SIZES.megaminx:
+// 70 mm face to face).
+export const MINX = REAL_SIZES.megaminx.m;
+// MegaDreifach layout (metres, from the row centre). The three megaminxes
+// stand straight on the felt in one row, symmetric about the table axis:
+// B | A | C, A (the working puzzle) in the middle next to both solve
+// partners. The row is exactly as wide as the 13-column deal (12 × 25 mm
+// + a 63 mm card = 363 mm): B's and C's outer sides line up with the
+// deal's side edges, and the deal's far row lies 22 mm in front of the
+// puzzles. The DEAL box stands square on the row's line, one gap left of
+// B. No tray, no cups, no labels: only toys on the table. A flies from
+// the shelf; B and C (one megaminx each) come out of the toy chest.
+export const DREI_ROW_W = 0.363;
+export const DREI_ROW_Z = -0.13; // row centre line, from DEN.z
+export const DREI_SEAT_XZ = {
+    A: [0, 0],
+    B: [-(DREI_ROW_W - MINX) / 2, 0],
+    C: [(DREI_ROW_W - MINX) / 2, 0],
+};
+export const DREI_GAP = 0.022;
+export const DREI_DECK_X = -(DREI_ROW_W / 2 + 0.03 + 0.067 / 2); // from DEN.x
+export const DREI_EXTRA = { dreiB: "B", dreiC: "C" };
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = REAL_SIZES.deckBox.h;
 
 // Fallback only, when a toy cannot be measured: seatOnSurface seats from
 // the live post-scale shape (a megaminx's own height, not the cube's).
 export function toyHalfHeight(name) {
-    return name === "deck" || name === "deck2" ? DECK_H / 2 : CUBE / 2;
+    if (name === "deck" || name === "deck2" || name === "deck3") return DECK_H / 2;
+    if (name === "drei" || name === "dreiB" || name === "dreiC") return MINX / 2;
+    return CUBE / 2;
 }
 
 export const DEN = { x: -0.35, z: 0.15 };
@@ -79,6 +103,8 @@ export const SHELF_TOP = SHELF_Y1 + SHELF_THICK / 2;
 export const SLOTS = {
     deck: { x: -1.35, y: SHELF_Y1 },
     cube: { x: -0.55, y: SHELF_Y1 },
+    // MegaDreifach's megaminx A; B, C and its deck wait in the chest.
+    drei: { x: -0.04, y: SHELF_Y1 },
 };
 
 // Shared rAF step cap. 60fps is unchanged (~16ms). Software-GL and

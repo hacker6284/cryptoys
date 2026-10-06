@@ -107,4 +107,46 @@ assert.ok(finalStep <= Math.max(...settleSteps) + 1e-9, "final frame is not the 
     assert.equal(controls.enabled, true, "snap ends the live follow");
 }
 
+// Enter: asking again for the pose a follow shot is flying to must not
+// cut. `restart` eases on from the live camera (MegaDreifach's enter).
+{
+    const cam = makeCamera();
+    cam.aspect = 1.6;
+    const pc = createPoseController(cam);
+    pc.snap("landing");
+    pc.followTo("drei", { track: { x: 0.2, y: 0.8, z: -0.3, r: 1.2 }, duration: 4000, delay: 0 });
+    let t = performance.now();
+    for (let i = 0; i < 60; i++) pc.update((t += 16));
+    const before = cam.position.clone();
+    pc.goTo("drei", { duration: 1400, restart: true });
+    pc.update((t += 16));
+    assert.ok(step(cam.position, before) < 0.01, "restart does not jump the camera");
+    let biggest = 0;
+    let last = cam.position.clone();
+    const [px, py, pz] = POSES.drei.position;
+    const dist = step(last, { x: px, y: py, z: pz });
+    while (pc.busy) {
+        pc.update((t += 16));
+        biggest = Math.max(biggest, step(cam.position, last));
+        last = cam.position.clone();
+    }
+    // easeInOutCubic peaks at 3× the mean speed; a cut would be ~87×.
+    const mean = dist / (1400 / 16);
+    assert.ok(biggest < 3.2 * mean, `restart glides (biggest frame step ${biggest.toFixed(3)} m, mean ${mean.toFixed(3)})`);
+    assert.ok(step(cam.position, { x: px, y: py, z: pz }) < 1e-9, "restart lands on the pose");
+    // Without restart the same call still skips (other demos rely on it).
+    pc.followTo("landing", { duration: 4000 });
+    pc.update((t += 16));
+    pc.goTo("landing");
+    assert.equal(pc.busy, false);
+}
+
+// Portrait variants are opt-in: drei swaps on a phone, scramble never does.
+for (const [name, aspect, fov] of [["drei", 0.46, POSES.drei.portrait.fov], ["drei", 1.6, POSES.drei.fov], ["scramble", 0.46, POSES.scramble.fov]]) {
+    const cam = makeCamera();
+    cam.aspect = aspect;
+    createPoseController(cam).snap(name);
+    assert.equal(cam.fov, fov, `${name} at aspect ${aspect}`);
+}
+
 console.log("pose-controller tests ok");

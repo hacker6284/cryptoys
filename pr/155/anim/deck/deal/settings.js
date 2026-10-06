@@ -6,7 +6,7 @@
 // ANIMATION APPROVED and LOCKED at 7b5028f (Zachary: "at speed it looks
 // fine"): the motion, timing, layout and camera of 0aef6e8 (timing below;
 // the real-size layout in ../../doubledeal/real-layout.js; the card hop
-// liftHop 0.9 in ../../doubledeal/table.js; the camera and framing in
+// liftHop 0.9 below; the camera and framing in
 // ../../../micro/deck/deal/page.js). Do not change them without
 // his sign-off; ../../library.test.mjs pins them. Sound is ON HOLD
 // project-wide (animations first): the stream keeps its file unapproved,
@@ -44,6 +44,7 @@ export default {
         pace: 1.8, // ×
         dealMs: 260,
         dealStaggerMs: 36,
+        liftHop: 0.9, // card hop height in table units (0.9 × 0.1125 m ≈ 101 mm)
     },
     sounds: {
         // The grid stream (one per deal): Kenney card fan.

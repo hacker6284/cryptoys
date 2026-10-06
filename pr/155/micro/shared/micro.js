@@ -127,9 +127,11 @@ export async function mountMicro(spec, settings) {
     const touch = globalThis.matchMedia?.("(pointer: coarse)").matches;
     const ask = touch ? "Tap to turn sound on" : "Click to turn sound on";
     const hint = el("button", { type: "button", class: "micro-hint", hidden: "" }, ask);
+    const headKids = [el("a", { href: new URL("../", import.meta.url).href, class: "micro-back" }, "← microdemos"), el("h1", {}, spec.title)];
+    if (spec.badge) headKids.push(el("p", { class: "micro-badge" }, spec.badge));
     document.body.append(el("main", { class: "micro" },
         canvas,
-        el("header", { class: "micro-head" }, el("a", { href: new URL("../", import.meta.url).href, class: "micro-back" }, "← microdemos"), el("h1", {}, spec.title)),
+        el("header", { class: "micro-head" }, ...headKids),
         status,
         hint,
     ));

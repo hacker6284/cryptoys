@@ -175,7 +175,7 @@ test("KAT menu: longer vectors are marked digest only", { skip: !ready }, async 
 });
 
 test("no trace in the generated code: digest only, says why", { skip: !ready }, async () => {
-    // A hasher whose generated module had no trace_hash (the fallback).
+    // A hasher whose generated module has no trace_hash (the fallback).
     globalThis.window ??= { addEventListener() {}, removeEventListener() {} };
     const { answer } = await import("./worker.js");
     const { createMegaDreifachSession } = await import("./session.js");
@@ -191,7 +191,7 @@ test("no trace in the generated code: digest only, says why", { skip: !ready }, 
     await settle();
     assert.equal($.play.disabled, true);
     assert.equal($["anim-note"].hidden, false);
-    assert.match($["anim-note"].textContent, /no trace \(trace_hash is not in the v3 \.sudo yet\)/);
+    assert.match($["anim-note"].textContent, /no trace to animate/);
     session.dispose();
 });
 

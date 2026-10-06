@@ -51,7 +51,7 @@ export function faceText(face) {
 const SPEC_CARD = "5.3 Card step";
 const SPEC_PIECES = "5.2 A card's two pieces";
 const SPEC_ECHO = "5.4 Deal once, then 26 echoes";
-const SPEC_HAND = "5.7 Hand details: IV-COOK12 and the 3-solve (same turns as v2)";
+const SPEC_HAND = "5.7 Hand details: IV-COOK12 and the 3-solve";
 const SPEC_COMP = "5. Compression";
 
 function note(kicker, title, why, spec, short, math = "") {

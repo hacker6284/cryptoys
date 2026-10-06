@@ -2,8 +2,8 @@
  * MegaDreifach session: the dock, the live digest and the show.
  *
  * The digest comes from the generated Hash in a worker (hasher.js). Play
- * asks the worker for the generated trace (trace_hash, when the v3 .sudo
- * has it) and plays every turn of a one-block message on the view: the
+ * asks the worker for the generated trace (trace_hash) and plays every
+ * turn of a one-block message on the view: the
  * cook, the deal, 52 card steps, 26 echoes and the full 3-solve, never
  * truncated or time-lapsed. Longer messages are too long to trace: they
  * get the digest only, with no animation. No algorithm step is computed
@@ -128,8 +128,8 @@ export function createMegaDreifachSession({
                     ? `${info.blocks} blocks: too long to trace. The show plays a message of up to `
                         + `${info.oneBlock} bytes (one block, about 1,500 turns) turn for turn; `
                         + "the digest above comes from the generated code."
-                    : "This build's generated code has no trace (trace_hash is not in the v3 .sudo yet), "
-                        + "so the turns cannot be shown. The digest above comes from the generated Hash.";
+                    : "This build has no trace to animate, so the turns cannot be shown. "
+                        + "The digest above comes from the generated Hash.";
         }
     }
 

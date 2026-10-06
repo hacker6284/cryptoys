@@ -39,9 +39,9 @@ export class Run {
 
 export class TraceStep {
     static _sudoKind = ["r", "TraceStep"];
-    static _sudoFields = ["pos", "card", "base", "colour", "x", "y", "n", "n2", "turns", "last"];
+    static _sudoFields = ["pos", "card", "base", "colour", "x", "y", "n", "n2", "turns"];
     static _sudoShared = true;
-    constructor(pos, card, base, colour, x, y, n, n2, turns, last) {
+    constructor(pos, card, base, colour, x, y, n, n2, turns) {
         this.pos = pos;
         this.card = card;
         this.base = base;
@@ -51,7 +51,6 @@ export class TraceStep {
         this.n = n;
         this.n2 = n2;
         this.turns = turns;
-        this.last = last;
     }
 }
 
@@ -1059,23 +1058,47 @@ export function count_register_looks(r) {
     return new Run(_rt.dup(r.g), r.last, r.turns, r.clicks, r.finds, r.relooks, _rt.chk(r.register_looks + 2n));
 }
 
-export function card_step(r, base, rank, k, c) {
+export function card_turns(r, base, rank, k, c, turns) {
     let turned = _rt.at(opposites, base);
     if (rank < 12n) {
         turned = _rt.mod_i64(_rt.chk(base + rank), 12n);
     }
+    turns.push(turned);
+    turns.push(k);
     r = turn_run(r, turned, k);
     let n;
     let n2;
     [n, n2] = suit_nbrs(c, k);
     r = count_find(r);
-    r = turn_run(r, edge_face_of(r.g, c, n, c), 1n);
-    r = turn_run(r, edge_face_of(r.g, c, n, n), 1n);
+    let f = edge_face_of(r.g, c, n, c);
+    turns.push(f);
+    turns.push(1n);
+    r = turn_run(r, f, 1n);
+    f = edge_face_of(r.g, c, n, n);
+    turns.push(f);
+    turns.push(1n);
+    r = turn_run(r, f, 1n);
     r = count_find(r);
-    r = turn_run(r, corner_face_of(r.g, c, n, n2, c), 1n);
-    r = turn_run(r, corner_face_of(r.g, c, n, n2, n), 1n);
+    f = corner_face_of(r.g, c, n, n2, c);
+    turns.push(f);
+    turns.push(1n);
+    r = turn_run(r, f, 1n);
+    f = corner_face_of(r.g, c, n, n2, n);
+    turns.push(f);
+    turns.push(1n);
+    r = turn_run(r, f, 1n);
     r = count_relook(r);
-    return turn_run(r, edge_face_of(r.g, c, n, n), 1n);
+    f = edge_face_of(r.g, c, n, n);
+    turns.push(f);
+    turns.push(1n);
+    return [turn_run(r, f, 1n), turns];
+}
+
+export function card_step(r, base, rank, k, c) {
+    let turns = _rt.lst([]);
+    let _sudo_h0;
+    [_sudo_h0, turns] = card_turns(r, base, rank, k, c, turns);
+    return _sudo_h0;
 }
 
 export function card_colour(card) {
@@ -1129,8 +1152,8 @@ export function dm_step(h, deal) {
 
 export function Hash(msg) {
     let padded = pad_message(msg);
-    _rt.sudo_assert(globalThis.BigInt(padded.length) > 0n, 751);
-    _rt.sudo_assert_eq(_rt.mod_i64(globalThis.BigInt(padded.length), pad_block), 0n, 752);
+    _rt.sudo_assert(globalThis.BigInt(padded.length) > 0n, 775);
+    _rt.sudo_assert_eq(_rt.mod_i64(globalThis.BigInt(padded.length), pad_block), 0n, 776);
     let h = iv_cook12();
     let nblocks = _rt.div(globalThis.BigInt(padded.length), pad_block);
     {
@@ -1191,7 +1214,7 @@ export function MegaDreifachBodyFrom(deal, h) {
 }
 
 export function HashDecksBody(deals) {
-    _rt.sudo_assert(globalThis.BigInt(deals.length) > 0n, 794);
+    _rt.sudo_assert(globalThis.BigInt(deals.length) > 0n, 818);
     let h = iv_cook12();
     {
         const _sudo_from_i = 0n;
@@ -1277,42 +1300,6 @@ export function kat_msg(index) {
     return _rt.dup(out);
 }
 
-export function trace_card_step(r, base, rank, k, c, turns) {
-    let turned = _rt.at(opposites, base);
-    if (rank < 12n) {
-        turned = _rt.mod_i64(_rt.chk(base + rank), 12n);
-    }
-    turns.push(turned);
-    turns.push(k);
-    r = turn_run(r, turned, k);
-    let n;
-    let n2;
-    [n, n2] = suit_nbrs(c, k);
-    r = count_find(r);
-    let f = edge_face_of(r.g, c, n, c);
-    turns.push(f);
-    turns.push(1n);
-    r = turn_run(r, f, 1n);
-    f = edge_face_of(r.g, c, n, n);
-    turns.push(f);
-    turns.push(1n);
-    r = turn_run(r, f, 1n);
-    r = count_find(r);
-    f = corner_face_of(r.g, c, n, n2, c);
-    turns.push(f);
-    turns.push(1n);
-    r = turn_run(r, f, 1n);
-    f = corner_face_of(r.g, c, n, n2, n);
-    turns.push(f);
-    turns.push(1n);
-    r = turn_run(r, f, 1n);
-    r = count_relook(r);
-    f = edge_face_of(r.g, c, n, n);
-    turns.push(f);
-    turns.push(1n);
-    return [turn_run(r, f, 1n), turns];
-}
-
 export function trace_em(h, deal, steps) {
     let r = start_run(h);
     {
@@ -1326,8 +1313,8 @@ export function trace_em(h, deal, steps) {
             [n, n2] = suit_nbrs(c, _rt.chk(_rt.mod_i64(card, 4n) + 1n));
             let base = r.last;
             let turns = _rt.lst([]);
-            [r, turns] = trace_card_step(r, base, _rt.div(card, 4n), _rt.chk(_rt.mod_i64(card, 4n) + 1n), c, turns);
-            steps.push(new TraceStep(_rt.chk(i + 1n), card, base, c, _rt.neg(1n), _rt.neg(1n), n, n2, _rt.dup(turns), r.last));
+            [r, turns] = card_turns(r, base, _rt.div(card, 4n), _rt.chk(_rt.mod_i64(card, 4n) + 1n), c, turns);
+            steps.push(new TraceStep(_rt.chk(i + 1n), card, base, c, _rt.neg(1n), _rt.neg(1n), n, n2, _rt.dup(turns)));
         }
     }
     let held = _rt.at(deal, 51n);
@@ -1347,8 +1334,8 @@ export function trace_em(h, deal, steps) {
             let pn2;
             [pn, pn2] = suit_nbrs(p, _rt.chk(_rt.mod_i64(held, 4n) + 1n));
             let turns = _rt.lst([]);
-            [r, turns] = trace_card_step(r, p, _rt.div(held, 4n), _rt.chk(_rt.mod_i64(held, 4n) + 1n), p, turns);
-            steps.push(new TraceStep(_rt.chk(52n + j), held, p, p, x, y, pn, pn2, _rt.dup(turns), r.last));
+            [r, turns] = card_turns(r, p, _rt.div(held, 4n), _rt.chk(_rt.mod_i64(held, 4n) + 1n), p, turns);
+            steps.push(new TraceStep(_rt.chk(52n + j), held, p, p, x, y, pn, pn2, _rt.dup(turns)));
         }
     }
     return [_rt.dup(r.g), steps];
@@ -1384,7 +1371,7 @@ export function trace_hash(msg) {
             let steps = _rt.lst([]);
             let e;
             [e, steps] = trace_em(h, deal, steps);
-            let h_next = compose(h, e);
+            let h_next = dm_step(h, deal);
             blocks.push(new TraceBlock(_rt.dup(chunk), _rt.dup(deal), _rt.dup(h), inverse(h), _rt.dup(e), _rt.dup(h_next), inverse(h_next), _rt.dup(steps)));
             h = _rt.dup(h_next);
         }
@@ -1398,7 +1385,7 @@ export function replay_turns(g, turns) {
         const _sudo_from_i = 0n;
         const _sudo_to_i = _rt.chk(_rt.div(globalThis.BigInt(turns.length), 2n) - 1n);
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            out = face_turn(out, _rt.at(turns, _rt.chk(2n * i)), _rt.mod_i64(_rt.chk(_rt.at(turns, _rt.chk(_rt.chk(2n * i) + 1n)) + 5n), 5n));
+            out = face_turn(out, _rt.at(turns, _rt.chk(2n * i)), _rt.at(turns, _rt.chk(_rt.chk(2n * i) + 1n)));
         }
     }
     return _rt.dup(out);

@@ -49,7 +49,7 @@ export const POSES = {
     // front, ~45° down, aimed right of the set's centre so it sits in the
     // frame's left part, clear of the dock on the right.
     drei: {
-        position: [DEN.x + 0.16, 1.78, DEN.z + 0.94],
+        position: [DEN.x + 0.16, 1.90, DEN.z + 1.07],
         target: [DEN.x + 0.16, 0.78, DEN.z - 0.11],
         fov: 32,
         overlays: { title: true, menu: false, teach: true },

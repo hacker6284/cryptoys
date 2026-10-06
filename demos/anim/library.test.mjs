@@ -161,11 +161,11 @@ assert.match(readme, /\| `deck\/deal` \|[^\n]*Animation APPROVED and LOCKED at `
 {
     const gd = await import(new URL("deck/deal/index.js", here));
     const { REAL_LAYOUT, REAL_MM, UNIT_M } = await import(new URL("../doubledeal/real-layout.js", here));
-    assert.deepEqual({ ...gd.settings.timing }, { pace: 1.8, dealMs: 260, dealStaggerMs: 36 }, "the approved grid-deal timing (7b5028f) is unchanged");
+    assert.deepEqual({ ...gd.settings.timing }, { pace: 1.8, dealMs: 260, dealStaggerMs: 36, liftHop: 0.9 }, "the approved grid-deal timing (7b5028f) is unchanged");
     assert.equal(gd.settings.loopGapMs, 700);
     assert.deepEqual({ ...gd.settings.choices }, { major: "deal" });
     const table = readFileSync(new URL("../doubledeal/table.js", here), "utf8");
-    assert.match(table, /liftHop: 0\.9,/, "the approved card hop (liftHop 0.9 units = 101 mm)");
+    assert.match(table, /liftHop: GRID_DEAL\.liftHop/, "TABLE_TIMING.liftHop reads the entry");
     assert.deepEqual(REAL_MM, { card: [63, 88, 0.3], gap: 4, gutter: 40, pileGap: 80, grid: [8, 13] }, "the approved real-size layout");
     assert.ok(Math.abs(UNIT_M - 0.1125) < 1e-12);
     assert.equal(REAL_LAYOUT.artAspect, 63 / 88);
@@ -226,8 +226,7 @@ assert.match(readme, /\| `deck\/deal` \|[^\n]*Animation APPROVED and LOCKED at `
         assert.ok(Math.abs(at - (25.5 * gd.timing.dealStaggerMs + 0.5 * gd.timing.dealMs) / pace) < 1e-9);
         assert.ok(Math.abs(fileStart(s, at, { centroidMs: 300 }) + 300 - at) < 1e-9, `stream centre on the mean peak at ${pace}×`);
     }
-    const table = readFileSync(new URL("../doubledeal/table.js", here), "utf8");
-    const hop = Number(table.match(/liftHop: ([\d.]+)/)[1]);
+    const hop = gd.timing.liftHop;
     const ease = (t) => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2);
     for (const major of ["col", "row"]) {
         for (let i = 0; i < 52; i++) {

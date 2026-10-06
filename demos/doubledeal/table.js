@@ -154,7 +154,7 @@ function disposeMaterial(mat) {
  * mutable object so the microdemos (demos/micro/doubledeal-*) can tune
  * it live; tuned values paste straight back here. The moves that have
  * moved into the animation library read theirs from the entry
- * (demos/anim/deck/deal: dealMs, dealStaggerMs).
+ * (demos/anim/deck/deal: dealMs, dealStaggerMs, liftHop).
  */
 export const TABLE_TIMING = {
     stepMs: 280,
@@ -172,7 +172,7 @@ export const TABLE_TIMING = {
     markMs: 180,
     scanMs: 8,
     hop: 0.25,
-    liftHop: 0.9,
+    liftHop: GRID_DEAL.liftHop,
     zeroShiftHop: 0.18,
     dropY: 1.4,
 };

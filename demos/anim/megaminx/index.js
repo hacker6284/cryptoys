@@ -5,8 +5,8 @@
  *
  * Played by playroom/cube-stage.js around a megaminx rig (pass
  * { voice: megaminxTurnVoice(), timing } to stageCubeView) and audited by
- * demos/micro/megaminx/face-turn. MegaDreifach's own stage (PR #153) should
- * import it from here when it lands.
+ * demos/micro/megaminx/face-turn. MegaDreifach's own stage (PR #194)
+ * imports it from here.
  */
 import settings from "./settings.js";
 import { twistySlots } from "../shared/twisty.js";

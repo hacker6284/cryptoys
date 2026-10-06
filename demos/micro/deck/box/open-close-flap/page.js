@@ -24,6 +24,7 @@ const results = [];
 void mountMicro({
     id: "deck-box-open-close-flap",
     title: "Deck box: open and close the flap",
+    badge: "not yet approved",
     camera: { position: [0.9, 2.3, 3.1], target: [-1.15, 0.8, -0.25], fov: 40, fill: 0.92 },
     slots: [],
     silent: true,

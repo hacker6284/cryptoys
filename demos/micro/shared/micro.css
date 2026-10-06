@@ -4,6 +4,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0e0b09; col
 .micro-canvas { display: block; width: 100%; height: 100%; }
 .micro-head { position: absolute; left: 14px; top: 10px; pointer-events: none; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
 .micro-head h1 { margin: 2px 0 0; font-size: 16px; font-weight: 600; }
+.micro-badge { margin: 4px 0 0; font-size: 11px; font-weight: 500; color: #c9a878; letter-spacing: 0.02em; }
 .micro-back { pointer-events: auto; color: #c9a878; text-decoration: none; font-size: 12px; }
 .micro-status, .micro-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); margin: 0; padding: 5px 11px; border-radius: 6px; background: rgba(14, 11, 9, 0.72); font-size: 12px; pointer-events: none; }
 .micro-hint { color: #ffc36b; pointer-events: auto; cursor: pointer; border: 1px solid rgba(255, 195, 107, 0.35); font: inherit; font-size: 12px; touch-action: manipulation; }

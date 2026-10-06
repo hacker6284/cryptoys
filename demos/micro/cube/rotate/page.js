@@ -1,6 +1,7 @@
-// Viewer for the scramble-turn library entry's whole-cube rotation
-// (its rotation slot): the cube lifts, turns over as one piece the way
-// the playroom's Scramble does, and sets down. The values are in
+// Viewer for the cube library entry's whole-cube rotation (demos/anim/cube
+// rotation slot): the cube lifts, turns over as one piece the way the
+// playroom's Scramble does, and sets down. Rotation sound approved
+// 2026-10-02; face-turn sounds locked at 6014bfc. The values are in
 // demos/anim/cube/settings.js (choices.rotation picks the move).
 import { mountTwistyTurn } from "../../shared/twisty-turn.js";
 import { settings, scrambleTurnVoice } from "../../../anim/cube/index.js";

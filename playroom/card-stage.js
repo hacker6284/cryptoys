@@ -10,10 +10,12 @@ import { DEAL_SCALE } from "./constants.js";
  * cards start hidden and stream from the boxes, never a hide-prop /
  * show-table snap.
  */
-export function stageCardTable(world, textures, { poses, visible = true } = {}) {
+export function stageCardTable(world, textures, { poses, visible = true, layout = null } = {}) {
     const group = new THREE.Group();
-    group.position.set(world.table.den.x, world.table.feltTopY + 0.003, world.table.den.z);
-    group.scale.setScalar(DEAL_SCALE);
+    // layout (doubledeal/real-layout.js REAL_LAYOUT): real-size cards whose
+    // bottoms rest liftM above the felt; else the standalone table at DEAL_SCALE.
+    group.position.set(world.table.den.x, world.table.feltTopY + (layout ? layout.liftM : 0.003), world.table.den.z);
+    group.scale.setScalar(layout ? layout.scale : DEAL_SCALE);
     group.visible = visible;
     world.scene.add(group);
 
@@ -22,6 +24,7 @@ export function stageCardTable(world, textures, { poses, visible = true } = {}) 
         faces: textures.faces,
         navy: textures.navy,
         red: textures.red,
+        ...(layout ? { layout } : {}),
     });
     table.setCardsVisible(false);
 

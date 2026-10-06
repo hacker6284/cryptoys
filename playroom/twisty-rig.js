@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { CUBE } from "./constants.js";
-import { fitToLocalEdge, keepFitted, measureWorldBox } from "./motion.js";
+import { realSizeOf } from "./constants.js";
+import { fitToRealSize, keepFitted, measureWorldBox } from "./motion.js";
 import { PUZZLES, PUZZLE_IDS, normalizePuzzleId } from "./puzzles.js";
 
 export { PUZZLES, PUZZLE_IDS, normalizePuzzleId };
@@ -44,7 +44,7 @@ export async function loadTwisty() {
     return twistyMod;
 }
 
-export function createTwistySeat({ edge = CUBE } = {}) {
+export function createTwistySeat({ puzzle = "3x3x3" } = {}) {
     const group = new THREE.Group();
     group.name = "twisty-seat";
     const lift = new THREE.Group();
@@ -53,7 +53,7 @@ export function createTwistySeat({ edge = CUBE } = {}) {
     fit.name = "twisty-fit";
     group.add(lift);
     lift.add(fit);
-    return { group, lift, fit, edge, placeholder: null };
+    return { group, lift, fit, size: realSizeOf(normalizePuzzleId(puzzle)), placeholder: null };
 }
 
 function hidePlayerHost(player) {
@@ -104,14 +104,15 @@ export function meshBox(object) {
     return measureWorldBox(object);
 }
 
-export { fitToLocalEdge, keepFitted };
+export { fitToRealSize, keepFitted };
 
 /**
- * Scale `wrapper` so the child's *local* max edge equals `edge`
- * (playroom `CUBE`, 57 mm). Local TRS only — see `fitToLocalEdge`.
+ * Scale `wrapper` so the child shows at its real size `size` ({ m,
+ * measure } from REAL_SIZES in constants.js). Local TRS only — see
+ * `fitToRealSize`.
  */
-export function frameInWrapper(wrapper, object, edge) {
-    return fitToLocalEdge(wrapper, object, edge);
+export function frameInWrapper(wrapper, object, size) {
+    return fitToRealSize(wrapper, object, size);
 }
 
 function enableShadows(root) {
@@ -130,12 +131,17 @@ function noopHighlight() {}
  *   lift   — local Y hook. Playroom #25 lifts `group` for turns; this stays
  *            available so cubing animation and room motion need not share
  *            a transform.
- *   fit    — `CUBE` (57 mm) scale. Do not scale the cubing object itself.
+ *   fit    — real-size scale: the puzzle's own REAL_SIZES entry (constants.js;
+ *            3×3 57 mm edge, megaminx 70 mm face to face, pyraminx 97 mm
+ *            edge), never another toy's box. Do not scale the cubing object itself.
  *   puzzle — cubing.js Object3D. Do not keyframe; TwistyPlayer owns motion.
  */
 export async function adoptTwistyPuzzle(seat, {
     puzzle = "3x3x3",
     alg = "",
+    // Default matches the locked cube/megaminx speed (anim/*/settings.js
+    // timing.speed). Callers that care (cube-stage, micros) pass the entry's
+    // value via setTempo; leave this default alone so locked behaviour holds.
     tempoScale = 1.4,
     onRenderScheduled,
     onFitChange,
@@ -143,7 +149,10 @@ export async function adoptTwistyPuzzle(seat, {
     adoptTimeoutMs = 20000,
 } = {}) {
     const spec = PUZZLES[normalizePuzzleId(puzzle)] || PUZZLES["3x3x3"];
-    const edge = seat.edge ?? CUBE;
+    // Every toy at real-life scale (constants.js REAL_SIZES): the puzzle's
+    // own real measure, never the cube's box.
+    const size = realSizeOf(spec.id);
+    seat.size = size;
     onStage?.("import cubing/twisty");
     const { TwistyPlayer } = await loadTwisty();
     onStage?.("construct TwistyPlayer");
@@ -192,11 +201,11 @@ export async function adoptTwistyPuzzle(seat, {
         seat.fit.add(puzzleObject);
         // Cube3D's native edge is ~3 units. Pre-fit so the first host
         // frame is not a meter-scale spawn that later gets crushed.
-        if (seat.fit.scale.x === 1) seat.fit.scale.setScalar(edge / 3);
-        let framed = fitToLocalEdge(seat.fit, puzzleObject, edge);
+        if (seat.fit.scale.x === 1) seat.fit.scale.setScalar(size.m / 3);
+        let framed = fitToRealSize(seat.fit, puzzleObject, size);
         enableShadows(puzzleObject);
         seat.group.userData.boundsDirty = true;
-        seat.group.userData.fittedEdge = framed.fittedMax;
+        seat.group.userData.realSize = { ...size, native: framed.nativeMeasure };
         function keepPuzzleFitted() {
             if (disposed) return framed;
             try {
@@ -209,12 +218,12 @@ export async function adoptTwistyPuzzle(seat, {
             const turning = seat.group.userData.turnBusy || seat.group.userData.easeBusy;
             const next = turning
                 ? { ...framed, changed: false }
-                : keepFitted(seat.fit, puzzleObject, edge, framed);
+                : keepFitted(seat.fit, puzzleObject, size, framed);
             if (turning) seat.fit.updateMatrixWorld?.(true);
             if (next.changed) {
                 framed = next;
                 seat.group.userData.boundsDirty = true;
-                seat.group.userData.fittedEdge = next.fittedMax;
+                seat.group.userData.realSize = { ...size, native: next.nativeMeasure };
                 onFitChange?.(next);
             } else {
                 seat.fit.updateMatrixWorld?.(true);
@@ -281,7 +290,14 @@ export async function adoptTwistyPuzzle(seat, {
         requestTimestamp(indexer.indexToMoveStartTimestamp(leaf) + indexer.moveDuration(leaf));
     }
 
-    async function playLeaves(from, to, { snap = false } = {}) {
+    // onStart({ at, durations, tempo, leaves }): called as playback starts
+    // (performance.now(), each leaf's duration in ms at tempo 1, the tempo
+    // and each leaf's move, e.g. "R'"), so callers can time per-leaf
+    // effects such as sound.
+    // beforeStart(info): asked once the leaves are ready, before they
+    // play ({ durations, tempo, leaves }); playback starts when it
+    // resolves, and not at all if it resolves false.
+    async function playLeaves(from, to, { snap = false, onStart = null, beforeStart = null } = {}) {
         if (disposed) return { index: 0, total: 0 };
         const mine = seekGen;
         seat.group.userData.turnBusy = true;
@@ -308,7 +324,29 @@ export async function adoptTwistyPuzzle(seat, {
             let duration = 0;
             for (let i = start; i < end; i++) duration += indexer.moveDuration(i);
             if (disposed || mine !== seekGen) return { index: start, total };
+            const durations = [];
+            const leaves = [];
+            for (let i = start; i < end; i++) {
+                durations.push(indexer.moveDuration(i));
+                leaves.push(String(indexer.getAnimLeaf?.(i) ?? ""));
+            }
+            if (beforeStart) {
+                let go = true;
+                try {
+                    go = await beforeStart({ durations, tempo, leaves });
+                } catch (err) {
+                    console.warn("playLeaves beforeStart failed", err);
+                }
+                if (go === false || disposed || mine !== seekGen) return { index: start, total };
+            }
             player.play();
+            if (onStart) {
+                try {
+                    onStart({ at: performance.now(), durations, tempo, leaves });
+                } catch (err) {
+                    console.warn("playLeaves onStart failed", err);
+                }
+            }
             const budget = Math.min(30000, Math.max(120, duration / tempo + 180));
             const deadline = performance.now() + budget;
             while (performance.now() < deadline) {
@@ -379,11 +417,11 @@ export async function adoptTwistyPuzzle(seat, {
         },
         playLeaves,
         jumpToLeaf: jumpToLeafEnd,
-        async playMoves(moves, { setup = "", snap = false } = {}) {
+        async playMoves(moves, { setup = "", snap = false, onStart = null, beforeStart = null } = {}) {
             player.experimentalSetupAlg = String(setup || "");
             player.alg = Array.isArray(moves) ? moves.join(" ") : String(moves || "");
             const { indexer } = await timeline();
-            return playLeaves(0, indexer.numAnimatedLeaves(), { snap });
+            return playLeaves(0, indexer.numAnimatedLeaves(), { snap, onStart, beforeStart });
         },
         setLifted(on, offset = 0.12) {
             seat.lift.position.y = on ? offset : 0;
@@ -405,7 +443,6 @@ export async function adoptTwistyPuzzle(seat, {
         async swapPuzzle(nextId, nextAlg = "") {
             const next = await createTwistyRig({
                 puzzle: nextId,
-                edge,
                 alg: nextAlg,
                 tempoScale,
                 onRenderScheduled,
@@ -443,6 +480,6 @@ export async function adoptTwistyPuzzle(seat, {
 
 /** One-shot: new seat + adopt. Playroom install uses the split so the seat exists before adopt. */
 export async function createTwistyRig(opts = {}) {
-    const seat = opts.seat || createTwistySeat({ edge: opts.edge });
+    const seat = opts.seat || createTwistySeat({ puzzle: opts.puzzle });
     return adoptTwistyPuzzle(seat, opts);
 }

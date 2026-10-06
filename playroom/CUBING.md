@@ -24,7 +24,7 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 | Tempo | `player.tempoScale` (speed slider) |
 | Seat / fly | translate `rig.group` (toy-director from motion #25) |
 | Lift-off-felt | `stageCubeView` still lifts `rig.group.y` (#25). `rig.lift` is the local hook. |
-| Size | scale `rig.fit` only — never the adopted Object3D. Target edge is `CUBE` (57 mm, real-life 3×3). Fit from **local** TRS (`fitToLocalEdge` / `keepFitted`), then re-apply on every Twisty `render-scheduled` and again in `world.render` so a post-spawn layout cannot permanently crush the cube. |
+| Size | scale `rig.fit` only — never the adopted Object3D. Every toy is at real-life scale (invariant; never fit a toy to another toy's box): each puzzle is fitted to its own real measure from `REAL_SIZES` in `constants.js` (3×3 57 mm edge, megaminx 70 mm face to face, pyraminx 97 mm edge), measured on that true measure, not the bounding box. Fit from **local** TRS (`fitToRealSize` / `keepFitted`), then re-apply on every Twisty `render-scheduled` and again in `world.render` so a post-spawn layout cannot permanently crush the puzzle. |
 
 Session moves (including Rule B / seat as `x`/`y`/`z`) become `player.alg`.
 `createScrambleSession` drives that timeline via `playLeaves` / `jumpToLeaf`.
@@ -50,14 +50,21 @@ only. MegaDreifach is a different product; this UI does not run it.
 - Host stays a tiny in-viewport canvas (`80×56`, opacity `0.02`).
   `display:none` / `visibility:hidden` hang adopt forever.
 - Do not write the adopted Object3D matrix. Twisty keeps writing it; a
-  wrapper (`rig.fit`) is how we hit the playroom `CUBE` edge. Mutating the puzzle object made
+  wrapper (`rig.fit`) is how we hit the puzzle's real size. Mutating the puzzle object made
   pyraminx vanish on the spike.
-- Fit from the puzzle's **local** AABB (parent-space TRS), not a
-  rotated world box. Shelf yaw used to inflate the measured edge and
+- Fit from the puzzle's **local** shape (parent-space TRS), not a
+  rotated world box: its face-to-face width (narrowest across its face
+  normals) or its edge (longest line across), per `REAL_SIZES`.
+- Measure and seat only what three.js draws (`drawnRanges` in
+  `motion.js`). cubing.js keeps hidden geometry in the same buffers
+  (hint stickers behind invisible group materials). Counting it fitted
+  the megaminx's visible faces to 52.7 mm instead of 70 and seated it
+  9.6 mm above the felt. Seating uses the exact drawn vertices, not a
+  mesh bounding box. Shelf yaw used to inflate the measured edge and
   lock in an undersized scale for the rest of the scene.
 - `keepFitted` runs on Twisty's render-scheduled callback and on every
-  host frame. Rest-pose `nativeMax` is locked; only a *root*
-  `puzzle.scale` change remesures. Face-turn cubie AABB swell cannot
+  host frame. Rest-pose `nativeMeasure` is locked; only a *root*
+  `puzzle.scale` change remeasures. Face-turn cubie AABB swell cannot
   pulse scale. `playLeaves` sets `turnBusy` so mid-turn frames skip
   remesure entirely.
 - Seat surface is explicit (`userData.seatSurface`). Borrow writes

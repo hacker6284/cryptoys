@@ -35,8 +35,15 @@ function lerp(a, b, t) {
     return a + (b - a) * t;
 }
 
-function samplePath(from, lift, mid, to, t, { ease = easeOutCubic, duration = FLY_MS } = {}) {
-    const liftEnd = Math.min(0.28, LIFT_MS / Math.max(1, duration));
+/**
+ * Flight and chest-lid timings, read at call time. The microdemos
+ * (demos/micro/playroom-*) pass their own copy; tuned values paste back
+ * into constants.js.
+ */
+export const DIRECTOR_TIMING = { FLY_MS, LID_OPEN_MS, LID_CLOSE_MS, LIFT_MS };
+
+function samplePath(from, lift, mid, to, t, { ease = easeOutCubic, duration = FLY_MS, liftMs = LIFT_MS } = {}) {
+    const liftEnd = Math.min(0.28, liftMs / Math.max(1, duration));
     if (t <= liftEnd) {
         const u = ease(t / liftEnd);
         return {
@@ -63,7 +70,7 @@ export function recipeMotionMs(demo) {
 }
 
 // demos: the DEMOS registry (demos.js); the director reads toys and chest.
-export function createToyDirector(world, demos) {
+export function createToyDirector(world, demos, { timing = DIRECTOR_TIMING } = {}) {
     let highlightId = null;
     let flights = [];
     let lidAnim = null;
@@ -116,7 +123,8 @@ export function createToyDirector(world, demos) {
         const { toy, from, lift, mid, to } = item;
         const p = samplePath(from.position, lift, mid, to.position, t, {
             ease: item.ease || easeOutCubic,
-            duration: item.duration || FLY_MS,
+            duration: item.duration || timing.FLY_MS,
+            liftMs: timing.LIFT_MS,
         });
         toy.position.set(p.x, p.y, p.z);
         toy.rotation.set(
@@ -144,7 +152,7 @@ export function createToyDirector(world, demos) {
         item.onDone?.();
     }
 
-    function flyToy(name, to, { snap, duration = FLY_MS, ease = easeOutCubic } = {}) {
+    function flyToy(name, to, { snap, duration = timing.FLY_MS, ease = easeOutCubic } = {}) {
         const toy = world.toys[name];
         if (!toy || !to) return Promise.resolve();
         const from = poseOf(toy);
@@ -221,18 +229,18 @@ export function createToyDirector(world, demos) {
         if (demo.chest && extras.length) {
             extraJob = (async () => {
                 markBeat("lid-open");
-                await animateLid(1, { snap, duration: LID_OPEN_MS });
+                await animateLid(1, { snap, duration: timing.LID_OPEN_MS });
                 if (token !== borrowGen || startedSkip !== skipGen) return;
                 for (const name of extras) {
                     if (token !== borrowGen || startedSkip !== skipGen) return;
                     world.setSlotEmpty(name, true);
                     if (world.toys[name]) world.toys[name].userData.seatSurface = "table";
                     markBeat("msg-out");
-                    await flyToy(name, world.getTablePose(name), { snap, duration: FLY_MS - 200 });
+                    await flyToy(name, world.getTablePose(name), { snap, duration: timing.FLY_MS - 200 });
                 }
                 if (token !== borrowGen || startedSkip !== skipGen) return;
                 markBeat("lid-close");
-                await animateLid(0, { snap, duration: LID_CLOSE_MS });
+                await animateLid(0, { snap, duration: timing.LID_CLOSE_MS });
             })();
         }
         markBeat(primary === "cube" ? "cube-fly" : "key-fly");
@@ -276,7 +284,7 @@ export function createToyDirector(world, demos) {
             const names = demo.toys.filter((name) => world.toys[name]);
             if (demo.chest) {
                 markBeat("lid-receive");
-                await animateLid(1, { snap, duration: LID_OPEN_MS });
+                await animateLid(1, { snap, duration: timing.LID_OPEN_MS });
             }
             markBeat("fly-home");
             await Promise.all(names.map((name) => {
@@ -290,7 +298,7 @@ export function createToyDirector(world, demos) {
             for (const name of names) world.setSlotEmpty(name, false);
             if (demo.chest) {
                 markBeat("lid-shut");
-                await animateLid(0, { snap, duration: LID_CLOSE_MS });
+                await animateLid(0, { snap, duration: timing.LID_CLOSE_MS });
             }
             occupied = null;
             writeFlightDebug("", world.toys[names[0]]);
@@ -370,6 +378,10 @@ export function createToyDirector(world, demos) {
         prepareHome,
         skip,
         update,
+        /** Ease the chest lid to `to` (0 shut, 1 open); the borrow/home beat. */
+        lid(to, { snap = false, duration } = {}) {
+            return animateLid(to, { snap, duration: duration ?? (to ? timing.LID_OPEN_MS : timing.LID_CLOSE_MS) });
+        },
         borrowMs(id) {
             return recipeMotionMs(demoOf(id));
         },

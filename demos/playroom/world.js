@@ -4,6 +4,7 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import {
     ASSET_BASE,
     DECK_H,
+    REAL_SIZES,
     DEN,
     SHELF_Z,
     SHELF_THICK,
@@ -97,9 +98,10 @@ function applyWoodMaps(mat, maps, tint = 0xffffff) {
 
 function makeDeckBox(bodyColor, labelText) {
     const group = new THREE.Group();
-    const bw = 0.067;
+    // Real poker tuck box (constants.js REAL_SIZES.deckBox).
+    const bw = REAL_SIZES.deckBox.w;
     const bh = DECK_H;
-    const bd = 0.020;
+    const bd = REAL_SIZES.deckBox.d;
     const cardboard = new THREE.MeshStandardMaterial({
         color: bodyColor,
         roughness: 0.82,
@@ -543,7 +545,9 @@ export async function mountWorld(canvas) {
     chestGroup.position.set(CHEST.x, 0, CHEST.z);
     chestGroup.rotation.y = Math.PI / 2;
     const chestRoot = chestGltf.scene;
-    fitToSize(chestRoot, 0.95);
+    // Its own real size (REAL_SIZES.chest: a 95 cm toy chest), not a box
+    // borrowed from another toy.
+    fitToSize(chestRoot, REAL_SIZES.chest.m);
     groundObject(chestRoot);
     enableShadows(chestRoot, true, true);
     chestRoot.traverse((object) => {

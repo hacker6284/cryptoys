@@ -179,18 +179,75 @@ function finishBox(minX, minY, minZ, maxX, maxY, maxZ, hits) {
     };
 }
 
+/**
+ * The vertex ranges the renderer actually draws for a mesh: null = all of
+ * them; [] = none; else [[start, count], …] in draw order (index space if
+ * indexed). cubing.js puzzles carry hidden geometry in the same buffer
+ * (hint stickers, outer copies) behind invisible materials; measuring it
+ * made the megaminx fit and seat on faces nobody sees.
+ */
+export function drawnRanges(node) {
+    const geo = node?.geometry;
+    if (!geo) return [];
+    const mat = node.material;
+    const total = geo.index ? geo.index.count : (geo.attributes?.position?.count || 0);
+    const dr = geo.drawRange || { start: 0, count: Infinity };
+    const lo = Math.max(0, dr.start || 0);
+    const hi = Math.min(total, lo + (Number.isFinite(dr.count) ? dr.count : Infinity));
+    const clip = (a, n) => {
+        const s0 = Math.max(a, lo);
+        const e0 = Math.min(a + n, hi);
+        return e0 > s0 ? [s0, e0 - s0] : null;
+    };
+    if (Array.isArray(mat)) {
+        const groups = geo.groups?.length ? geo.groups : [{ start: 0, count: total, materialIndex: 0 }];
+        const out = [];
+        for (const g of groups) {
+            const m = mat[g.materialIndex ?? 0];
+            if (!m || m.visible === false) continue;
+            const r = clip(g.start, Number.isFinite(g.count) ? g.count : total - g.start);
+            if (r) out.push(r);
+        }
+        return out;
+    }
+    if (mat && mat.visible === false) return [];
+    if (lo === 0 && hi === total) return null;
+    const r = clip(0, total);
+    return r ? [r] : [];
+}
+
+/** Calls fn(vertexIndex) for each drawn vertex of the mesh. */
+function eachDrawnVertex(node, fn) {
+    const geo = node.geometry;
+    const count = geo?.attributes?.position?.count || 0;
+    const ranges = drawnRanges(node);
+    const index = geo?.index?.array;
+    if (ranges === null) {
+        if (index) for (let i = 0; i < index.length; i += 1) fn(index[i]);
+        else for (let i = 0; i < count; i += 1) fn(i);
+        return;
+    }
+    for (const [start, n] of ranges) {
+        for (let k = start; k < start + n; k += 1) fn(index ? index[k] : k);
+    }
+}
+
 function absorbGeometry(node, e, absorb, absorbBox) {
     const geo = (node.isMesh || node.isInstancedMesh) ? node.geometry : null;
     if (!geo || !e || e.length < 16) return;
     const pos = geo.attributes?.position;
     const count = pos?.count || 0;
-    if (count > 0 && count <= 256 && pos.array) {
+    const ranges = drawnRanges(node);
+    if (ranges && !ranges.length) return;
+    // Exact drawn vertices (not the geometry's bounding box, which also
+    // covers hidden parts and swells when rotated), unless huge.
+    if (count > 0 && count <= 20000 && pos.array) {
         const stride = pos.itemSize || 3;
         const arr = pos.array;
-        for (let i = 0; i < arr.length; i += stride) {
-            const w = transformPoint(e, arr[i], arr[i + 1], arr[i + 2]);
+        eachDrawnVertex(node, (i) => {
+            const w = transformPoint(e, arr[i * stride], arr[i * stride + 1], arr[i * stride + 2]);
             absorb(w.x, w.y, w.z);
-        }
+        });
         return;
     }
     if (geo.boundingBox) absorbBox(e, geo.boundingBox);
@@ -314,18 +371,124 @@ export function measureWorldBox(object) {
 }
 
 /**
- * Scale `wrapper` so the child's *local* max edge equals `edge`.
- * Parent-space TRS only — never `matrixWorld` — so ancestor yaw and
- * Twisty world writes cannot inflate the box and crush the cube.
- * Does not reset wrapper.scale to 1 (that flash is spawn-then-shrink).
+ * Every vertex of `object` (visible meshes) in its parent space from
+ * local TRS, like `measureLocalBox` (never `matrixWorld`), plus the
+ * distinct triangle normals there (a direction and its opposite are one).
  */
-export function fitToLocalEdge(wrapper, object, edge) {
-    const box = measureLocalBox(object);
-    const size = box?.size || { x: 1, y: 1, z: 1 };
-    const center = box?.center || { x: 0, y: 0, z: 0 };
-    const max = Math.max(size.x, size.y, size.z);
-    const nativeMax = Number.isFinite(max) && max > 1e-6 ? max : 1;
-    const scale = edge / nativeMax;
+export function measureLocalShape(object) {
+    const points = [];
+    const normals = new Map();
+    function normalOf(a, b, c) {
+        const ux = b.x - a.x, uy = b.y - a.y, uz = b.z - a.z;
+        const vx = c.x - a.x, vy = c.y - a.y, vz = c.z - a.z;
+        let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+        const len = Math.hypot(nx, ny, nz);
+        if (!(len > 1e-12)) return;
+        nx /= len; ny /= len; nz /= len;
+        const flip = nx < -1e-9 || (Math.abs(nx) <= 1e-9 && (ny < -1e-9 || (Math.abs(ny) <= 1e-9 && nz < 0)));
+        if (flip) { nx = -nx; ny = -ny; nz = -nz; }
+        const key = `${nx.toFixed(3)},${ny.toFixed(3)},${nz.toFixed(3)}`;
+        if (!normals.has(key) && normals.size < 2048) normals.set(key, { x: nx, y: ny, z: nz });
+    }
+    function walk(node, parentE) {
+        if (!node || node.visible === false) return;
+        const local = localMatrixOf(node);
+        const e = parentE ? multiply4(parentE, local) : local;
+        const geo = (node.isMesh || node.isInstancedMesh) ? node.geometry : null;
+        const pos = geo?.attributes?.position;
+        if (pos?.array && pos.count > 0) {
+            // Only what the renderer draws (see drawnRanges).
+            const stride = pos.itemSize || 3;
+            const arr = pos.array;
+            const at = new Map();
+            const vert = (i) => {
+                let w = at.get(i);
+                if (!w) {
+                    w = transformPoint(e, arr[i * stride], arr[i * stride + 1], arr[i * stride + 2]);
+                    at.set(i, w);
+                    points.push(w);
+                }
+                return w;
+            };
+            const tri = [];
+            eachDrawnVertex(node, (i) => {
+                tri.push(vert(i));
+                if (tri.length === 3) {
+                    normalOf(tri[0], tri[1], tri[2]);
+                    tri.length = 0;
+                }
+            });
+        }
+        for (const child of node.children || []) walk(child, e);
+    }
+    walk(object, null);
+    return { points, normals: [...normals.values()] };
+}
+
+/**
+ * The toy's real measure, in `object`'s parent space (see REAL_SIZES in
+ * constants.js):
+ *   "face-to-face" — the distance between opposite parallel faces: the
+ *     narrowest width across the mesh's face normals (and x, y, z). A
+ *     cube's edge; a megaminx's face-to-face.
+ *   "edge" — the longest straight distance across the toy: a
+ *     tetrahedron's (pyraminx's) edge.
+ */
+export function measureReal(object, measure = "face-to-face") {
+    const { points, normals } = measureLocalShape(object);
+    if (!points.length) return null;
+    let minX = Infinity, minY = Infinity, minZ = Infinity;
+    let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+    for (const p of points) {
+        if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.z < minZ) minZ = p.z;
+        if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y; if (p.z > maxZ) maxZ = p.z;
+    }
+    const box = finishBox(minX, minY, minZ, maxX, maxY, maxZ, points.length);
+    let value;
+    if (measure === "edge") {
+        const step = Math.max(1, Math.ceil(points.length / 4000));
+        let d2 = 0;
+        for (let i = 0; i < points.length; i += step) {
+            const a = points[i];
+            for (let j = i + step; j < points.length; j += step) {
+                const b = points[j];
+                const dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
+                const q = dx * dx + dy * dy + dz * dz;
+                if (q > d2) d2 = q;
+            }
+        }
+        value = Math.sqrt(d2);
+    } else if (measure === "face-to-face") {
+        value = Math.min(box.size.x, box.size.y, box.size.z);
+        for (const n of normals) {
+            let lo = Infinity, hi = -Infinity;
+            for (const p of points) {
+                const s = p.x * n.x + p.y * n.y + p.z * n.z;
+                if (s < lo) lo = s;
+                if (s > hi) hi = s;
+            }
+            if (hi - lo > 1e-9 && hi - lo < value) value = hi - lo;
+        }
+    } else {
+        throw new Error(`unknown real measure "${measure}"`);
+    }
+    return { value, box };
+}
+
+/**
+ * Scale `wrapper` so the toy shows at its declared real size:
+ * `size` = { m, measure } from REAL_SIZES (constants.js). The invariant
+ * is that every toy in the room is at real-life scale; a toy is never
+ * fitted to another toy's box. Parent-space TRS only — never
+ * `matrixWorld` — so ancestor yaw and Twisty world writes cannot
+ * inflate the measure. Does not reset wrapper.scale to 1 (that flash is
+ * spawn-then-shrink).
+ */
+export function fitToRealSize(wrapper, object, size) {
+    const measured = measureReal(object, size.measure);
+    const center = measured?.box?.center || { x: 0, y: 0, z: 0 };
+    const native = Number.isFinite(measured?.value) && measured.value > 1e-6 ? measured.value : 1;
+    const scale = size.m / native;
     wrapper.scale.setScalar(scale);
     if (Number.isFinite(center.x)) {
         wrapper.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
@@ -334,19 +497,20 @@ export function fitToLocalEdge(wrapper, object, edge) {
     }
     wrapper.updateMatrixWorld?.(true);
     return {
-        size: { ...size },
+        size: { ...(measured?.box?.size || { x: 1, y: 1, z: 1 }) },
         center: { ...center },
-        nativeMax,
-        fittedMax: edge,
+        measure: size.measure,
+        nativeMeasure: native,
+        fitted: size.m,
         scale,
         changed: true,
         rootScale: Number(object?.scale?.x),
     };
 }
 
-function applyLockedFit(wrapper, edge, previous) {
-    const nativeMax = previous.nativeMax || 1;
-    const scale = edge / nativeMax;
+function applyLockedFit(wrapper, size, previous) {
+    const native = previous.nativeMeasure || 1;
+    const scale = size.m / native;
     const center = previous.center || { x: 0, y: 0, z: 0 };
     wrapper.scale.setScalar(scale);
     if (Number.isFinite(center.x)) {
@@ -355,25 +519,25 @@ function applyLockedFit(wrapper, edge, previous) {
     wrapper.updateMatrixWorld?.(true);
     return {
         ...previous,
-        nativeMax,
-        fittedMax: edge,
+        nativeMeasure: native,
+        fitted: size.m,
         scale,
         changed: true,
     };
 }
 
 /**
- * Re-apply the presentation edge if cubing.js changed *root* puzzle
- * scale after the first paint. Rest-pose `nativeMax` is locked so a
- * mid-turn cubie AABB swell cannot pulse wrapper.scale.
+ * Re-apply the real size if cubing.js changed *root* puzzle scale after
+ * the first paint. The rest-pose `nativeMeasure` is locked so a
+ * mid-turn cubie swell cannot pulse wrapper.scale.
  */
-export function keepFitted(wrapper, object, edge, previous = null) {
+export function keepFitted(wrapper, object, size, previous = null) {
     const rootScale = Number(object?.scale?.x);
     const rootChanged = Number.isFinite(rootScale)
         && Number.isFinite(previous?.rootScale)
         && Math.abs(rootScale - previous.rootScale) > 1e-4;
-    if (previous?.nativeMax && !rootChanged) {
-        const scale = edge / previous.nativeMax;
+    if (previous?.nativeMeasure && !rootChanged) {
+        const scale = size.m / previous.nativeMeasure;
         const have = wrapper?.scale?.x;
         const drifted = !Number.isFinite(have) || Math.abs(have - scale) > Math.abs(scale) * 0.02;
         if (!drifted) {
@@ -381,17 +545,16 @@ export function keepFitted(wrapper, object, edge, previous = null) {
             return {
                 ...previous,
                 changed: false,
-                nativeMax: previous.nativeMax,
                 scale: have,
                 rootScale: Number.isFinite(rootScale) ? rootScale : previous.rootScale,
             };
         }
         return {
-            ...applyLockedFit(wrapper, edge, previous),
+            ...applyLockedFit(wrapper, size, previous),
             rootScale: Number.isFinite(rootScale) ? rootScale : previous.rootScale,
         };
     }
-    const fitted = fitToLocalEdge(wrapper, object, edge);
+    const fitted = fitToRealSize(wrapper, object, size);
     return {
         ...fitted,
         rootScale: Number.isFinite(rootScale) ? rootScale : fitted.rootScale,

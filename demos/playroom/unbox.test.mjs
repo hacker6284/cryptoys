@@ -217,7 +217,7 @@ assert.match(motion, /export function hopTo/);
 assert.match(motion, /export function onMarkBeat/);
 assert.match(motion, /export function seatOnSurface/);
 assert.match(motion, /export function measureLocalBox/);
-assert.match(motion, /export function fitToLocalEdge/);
+assert.match(motion, /export function fitToRealSize/);
 assert.match(motion, /export function keepFitted/);
 assert.match(motion, /export function measureWorldBox/);
 assert.match(motion, /export function followEnter/);

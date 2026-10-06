@@ -59,6 +59,120 @@ function busy(rig, on) {
 }
 
 /**
+ * Unbox beat timings (ms at 1×) and easing names. One mutable object so
+ * the microdemos (demos/micro/doubledeal-*) can tune it live; tuned
+ * values paste straight back here.
+ */
+export const UNBOX_TIMING = {
+    settleMs: 90,
+    holdMs: 320,
+    flapMs: 680,
+    flapEase: "easeOutCubic",
+    flapPauseMs: 120,
+    extractMs: 760,
+    extractEase: "easeOutQuart",
+    extractRise: 0.086,
+    extractLead: 0.006,
+    layMs: 600,
+    layLift: 0.04,
+    layEase: "easeInOutCubic",
+    asideMs: 780,
+    asideLift: 0.055,
+    asideEase: "easeInOutCubic",
+    dealStaggerMs: 64,
+    dealMs: 560,
+    dealLift: 0.07,
+    dealEase: "easeOutCubic",
+    dimMs: 280,
+};
+
+export const UNBOX_EASES = {
+    easeOutCubic,
+    easeInOutCubic,
+    easeOutQuart,
+    linear: (t) => t,
+};
+
+function easeOf(name, fallback) {
+    return UNBOX_EASES[name] || fallback;
+}
+
+/** Flap opens (the tuck tab lifts); the packet shows inside. */
+export async function unboxFlap({ rig, clock, gen, keyLight, name = "deck", timing = UNBOX_TIMING } = {}) {
+    markBeat(name === "deck2" ? "msg-flap" : "flap");
+    rig.packet.visible = true;
+    await clock.tween(timing.flapMs, (t) => {
+        rig.setFlap(t);
+        if (keyLight && !clock.dead(gen)) keyLight.intensity = lerp(2.15, 2.55, t);
+    }, { ease: easeOf(timing.flapEase, easeOutCubic), generation: gen });
+}
+
+/** The short packet rises out of the open sleeve. */
+export async function unboxExtract({ rig, clock, gen, name = "deck", timing = UNBOX_TIMING } = {}) {
+    markBeat(name === "deck2" ? "msg-extract" : "extract");
+    const packet = rig.packet;
+    packet.visible = true;
+    packet.userData.unboxBusy = true;
+    const fromY = packet.position.y;
+    const rise = easeOf(timing.extractEase, easeOutQuart);
+    await clock.tween(timing.extractMs, (t) => {
+        packet.position.y = lerp(fromY, timing.extractRise, rise(t));
+        // Top card leads a few millimetres so the stack is not a brick.
+        for (let i = 0; i < rig.cards.length; i++) {
+            const lead = (i / Math.max(1, rig.cards.length - 1)) * timing.extractLead * t;
+            rig.cards[i].position.y = 0.001 + lead;
+        }
+    }, { ease: (t) => t, generation: gen });
+}
+
+/** The packet is laid face-down on the felt in front of the box. */
+export async function unboxLay({ world, rig, clock, gen, name = "deck", pile, timing = UNBOX_TIMING } = {}) {
+    markBeat(name === "deck2" ? "msg-lay" : "lay");
+    const packet = rig.packet;
+    world.scene.attach(packet);
+    const layTo = {
+        x: pile.x,
+        y: feltY(world) + CARD_T * rig.cards.length * 0.5 + 0.002,
+        z: pile.z + 0.07,
+        rx: -Math.PI / 2,
+        ry: name === "deck2" ? -0.08 : 0.08,
+        rz: 0,
+    };
+    await hopTo(packet, layTo, clock, gen, { ms: timing.layMs, lift: timing.layLift, ease: easeOf(timing.layEase, easeInOutCubic) });
+}
+
+/** The empty sleeve hops aside to its rest pose. */
+export function unboxAside({ world, rig, clock, gen, name = "deck", timing = UNBOX_TIMING } = {}) {
+    markBeat(name === "deck2" ? "msg-aside" : "aside");
+    const rest = world.getBoxRestPose?.(name);
+    return rest
+        ? hopTo(rig.group, rest, clock, gen, { ms: timing.asideMs, lift: timing.asideLift, ease: easeOf(timing.asideEase, easeInOutCubic) })
+        : Promise.resolve();
+}
+
+/** The packet's cards hop face-up into a short fan, one every stagger. */
+export function unboxDeal({ world, rig, clock, gen, name = "deck", pile, timing = UNBOX_TIMING } = {}) {
+    markBeat(name === "deck2" ? "msg-deal" : "deal");
+    const surfaceY = feltY(world);
+    const dests = rig.cards.map((_, i) => cardSeat(i, rig.cards.length, pile, surfaceY));
+    const jobs = [];
+    for (let i = 0; i < rig.cards.length; i++) {
+        const mesh = rig.cards[i];
+        const dest = dests[i];
+        jobs.push((async () => {
+            await clock.wait(timing.dealStaggerMs * i, gen);
+            world.scene.attach(mesh);
+            await hopTo(mesh, dest, clock, gen, {
+                ms: timing.dealMs,
+                lift: timing.dealLift,
+                ease: easeOf(timing.dealEase, easeOutCubic),
+            });
+        })());
+    }
+    return Promise.all(jobs);
+}
+
+/**
  * Shared physical unbox: hold the landed tuck-box, open the flap,
  * extract a short packet, rest the empty sleeve, hop the faces.
  * KEY and MSG both use this — no closed-box fly-in for the second deck.
@@ -72,21 +186,22 @@ export async function playUnbox({
     keyLight,
     name = "deck",
     origin,
+    timing = UNBOX_TIMING,
 } = {}) {
     if (!rig || !world) return;
     const pile = origin || packetOrigin(world, name);
-    const surfaceY = feltY(world);
+    const beat = { world, rig, clock, gen, keyLight, name, pile, timing };
 
     busy(rig, true);
     markBeat(name === "deck2" ? "msg-settle" : "settle");
-    await clock.wait(90, gen);
+    await clock.wait(timing.settleMs, gen);
     if (clock.dead(gen)) {
         busy(rig, false);
         return;
     }
 
     markBeat(name === "deck2" ? "msg-unbox-hold" : "unbox-hold");
-    await clock.tween(320, (t) => {
+    await clock.tween(timing.holdMs, (t) => {
         if (keyLight && !clock.dead(gen)) keyLight.intensity = lerp(keyLight.intensity || 0.2, 2.15, t);
         if (rig.innerGlow && !clock.dead(gen)) rig.innerGlow.intensity = lerp(0, 0.55, t);
     }, { ease: easeOutCubic, generation: gen });
@@ -95,82 +210,34 @@ export async function playUnbox({
         return;
     }
 
-    markBeat(name === "deck2" ? "msg-flap" : "flap");
-    rig.packet.visible = true;
-    await clock.tween(680, (t) => {
-        rig.setFlap(t);
-        if (keyLight && !clock.dead(gen)) keyLight.intensity = lerp(2.15, 2.55, t);
-    }, { ease: easeOutCubic, generation: gen });
-    await clock.wait(120, gen);
+    await unboxFlap(beat);
+    await clock.wait(timing.flapPauseMs, gen);
     if (clock.dead(gen)) {
         busy(rig, false);
         return;
     }
 
-    markBeat(name === "deck2" ? "msg-extract" : "extract");
-    const packet = rig.packet;
-    packet.visible = true;
-    packet.userData.unboxBusy = true;
-    const fromY = packet.position.y;
-    await clock.tween(760, (t) => {
-        packet.position.y = lerp(fromY, 0.086, easeOutQuart(t));
-        // Top card leads a few millimetres so the stack is not a brick.
-        for (let i = 0; i < rig.cards.length; i++) {
-            const lead = (i / Math.max(1, rig.cards.length - 1)) * 0.006 * t;
-            rig.cards[i].position.y = 0.001 + lead;
-        }
-    }, { ease: (t) => t, generation: gen });
+    await unboxExtract(beat);
     if (clock.dead(gen)) {
         busy(rig, false);
         return;
     }
 
-    markBeat(name === "deck2" ? "msg-lay" : "lay");
-    world.scene.attach(packet);
-    const layTo = {
-        x: pile.x,
-        y: surfaceY + CARD_T * rig.cards.length * 0.5 + 0.002,
-        z: pile.z + 0.07,
-        rx: -Math.PI / 2,
-        ry: name === "deck2" ? -0.08 : 0.08,
-        rz: 0,
-    };
-    await hopTo(packet, layTo, clock, gen, { ms: 600, lift: 0.04, ease: easeInOutCubic });
+    await unboxLay(beat);
     if (clock.dead(gen)) {
         busy(rig, false);
         return;
     }
 
-    markBeat(name === "deck2" ? "msg-aside" : "aside");
-    const rest = world.getBoxRestPose?.(name);
-    const slide = rest
-        ? hopTo(rig.group, rest, clock, gen, { ms: 780, lift: 0.055, ease: easeInOutCubic })
-        : Promise.resolve();
-
-    markBeat(name === "deck2" ? "msg-deal" : "deal");
-    const dests = rig.cards.map((_, i) => cardSeat(i, rig.cards.length, pile, surfaceY));
-    const jobs = [slide];
-    for (let i = 0; i < rig.cards.length; i++) {
-        const mesh = rig.cards[i];
-        const dest = dests[i];
-        jobs.push((async () => {
-            await clock.wait(64 * i, gen);
-            world.scene.attach(mesh);
-            await hopTo(mesh, dest, clock, gen, {
-                ms: 560,
-                lift: 0.07,
-                ease: easeOutCubic,
-            });
-        })());
-    }
-    await Promise.all(jobs);
+    const slide = unboxAside(beat);
+    await Promise.all([slide, unboxDeal(beat)]);
     if (clock.dead(gen)) {
         busy(rig, false);
         return;
     }
 
     if (keyLight) {
-        await clock.tween(280, (t) => {
+        await clock.tween(timing.dimMs, (t) => {
             if (!clock.dead(gen)) keyLight.intensity = lerp(keyLight.intensity, 0.45, t);
         }, { generation: gen });
     }

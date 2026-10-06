@@ -6,7 +6,8 @@
 **Do not publish ungenerated `demos/` from `main`, and do not take the
 `gh-pages` shortcut.** `demos/**/generated/` and the copied `demos/**/SPEC.md`
 files are gitignored. Scramble imports `./generated/scramble.mjs`; DoubleDeal
-imports `./generated/doubledeal.mjs`. A deploy that skips generate 404s those
+imports `./generated/doubledeal.mjs`; MegaDreifach imports
+`./generated/megadreifach.mjs` and fetches `./generated/kats.json`. A deploy that skips generate 404s those
 modules and three.js never boots.
 
 ## What the build must do
@@ -23,6 +24,8 @@ Same path as GitHub Pages (`.github/actions/generate-demos` →
    ```text
    demos/scramble/generated/scramble.mjs
    demos/doubledeal/generated/doubledeal.mjs
+   demos/megadreifach/generated/megadreifach.mjs
+   demos/megadreifach/generated/kats.json
    ```
 
 `tools/render-build.sh` is that sequence for Render (install rustup if `cargo`
@@ -59,6 +62,7 @@ Smoke-check (expect HTTP 200, JavaScript):
 ```text
 https://cryptoygraphy.com/scramble/generated/scramble.mjs
 https://cryptoygraphy.com/doubledeal/generated/doubledeal.mjs
+https://cryptoygraphy.com/megadreifach/generated/megadreifach.mjs
 ```
 
 Apply `render.yaml` only to this existing service. A new Blueprint site would

@@ -9,13 +9,14 @@ import { timing as scrambleTurnTiming } from "../anim/cube/index.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";
+import { createDreiToy, stageDrei } from "./drei-stage.js";
 import { formSessionTable, gatherSessionTable } from "./table-form.js";
 import { pickHandTextures, pickMsgTextures } from "./unbox-hand.js";
 import { createDealerKey, playDualUnbox, playRestow, restBoxes } from "./unbox-physical.js";
 import { createInnerGlow, createUnboxRig } from "./unbox-rig.js";
 
 /**
- * Demo adapters — Scramble and DoubleDeal share the playroom shell.
+ * Demo adapters — Scramble, DoubleDeal and MegaDreifach share the playroom shell.
  *
  * Thin shells that place toys on the felt and drive step state.
  * Crypto stays in `demos/scramble/` and `demos/doubledeal/`.
@@ -149,17 +150,22 @@ function mountDock(algo, { controls, fields, digestButton, hint, tape = "", roun
               <span class="icon-play">${lucideSvg("play")}</span>
               <span class="icon-pause">${lucideSvg("pause")}</span>
             </button>
-            <button id="skip-end" class="icon-btn" type="button" aria-label="Skip to end" title="Skip to end">${lucideSvg("skip-forward")}</button>
-            <button id="step" class="icon-btn" type="button" aria-label="Step" title="Step">${lucideSvg("chevron-right")}</button>
-            <button id="reset" class="icon-btn" type="button" aria-label="Reset" title="Reset">${lucideSvg("rotate-ccw")}</button>
+            <button id="skip-end" class="icon-btn" type="button" aria-label="Skip to end"
+              title="Skip to end">${lucideSvg("skip-forward")}</button>
+            <button id="step" class="icon-btn" type="button" aria-label="Step"
+              title="Step">${lucideSvg("chevron-right")}</button>
+            <button id="reset" class="icon-btn" type="button" aria-label="Reset"
+              title="Reset">${lucideSvg("rotate-ccw")}</button>
           </div>
-          <label class="slider">Speed <input id="speed" type="range" min="${speed.min}" max="${speed.max}" step="0.1" value="${speed.value}"></label>
+          <label class="slider">Speed <input id="speed" type="range" min="${speed.min}" max="${speed.max}" step="0.1"
+            value="${speed.value}"></label>
         </div>
       </div>
       <div class="playroom-digins">
         ${digin}
         <button id="spec-btn" class="playroom-digin" type="button">Spec</button>
-        <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false" title="Teach">${lucideSvg("info", 18)}</button>
+        <button type="button" class="playroom-info icon-btn" id="teach-info" aria-label="Teach" aria-expanded="false"
+          title="Teach">${lucideSvg("info", 18)}</button>
       </div>
       <dialog id="spec">
         <div class="spec-bar">
@@ -255,7 +261,8 @@ export function createScrambleAdapter() {
             <label class="playroom-label" for="message">Message</label>
             <div class="playroom-message-row">
               <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
-              <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file" title="Hash a file">${lucideSvg("paperclip", 16)}</button>
+              <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file"
+                title="Hash a file">${lucideSvg("paperclip", 16)}</button>
             </div>
             <div id="message-file" class="file-chip" hidden>
               <span id="message-file-name"></span>
@@ -266,7 +273,8 @@ export function createScrambleAdapter() {
           <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label">Digest</span>
-            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false"
+              autocomplete="off"></textarea>
           </label>
           <p id="puzzle-note" class="playroom-puzzle-note" hidden>Digest is 3×3 Scramble. This puzzle is visual.</p>
           <p id="status" class="status playroom-status">Solved start · white up, green front, red right</p>`,
@@ -509,7 +517,8 @@ export function createDoubleDealAdapter() {
           </div>
           <label class="playroom-ctl playroom-ctl--field" for="digest">
             <span class="playroom-label" id="output-label">Digest</span>
-            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false"
+              autocomplete="off"></textarea>
           </label>
           <p id="status" class="status playroom-status">Plaintext on the left. Key on the right.</p>`,
         digestButton: "Copy",
@@ -794,6 +803,311 @@ export function createDoubleDealAdapter() {
             if (unbox2) unbox2.restow();
             if (world?.toys.deck) world.toys.deck.visible = true;
             if (world?.toys.deck2) world.toys.deck2.visible = true;
+        },
+    };
+}
+
+/**
+ * MegaDreifach: three megaminxes standing on the felt in a row, B | A | C
+ * (A carries h, B its inverse, C stays solved), and a real deck for each
+ * block's deal. Only toys: no tray, no label cards. A (the shelf's only
+ * megaminx) flies off the shelf; B, C and the boxed deck come out of the
+ * toy chest; enter lands them on the felt, then the three puzzles hop in
+ * turn (A, B, C) under a caption naming them left to right, and the deck's flap
+ * lifts while the camera settles on the `drei` seat. Hashing and tracing
+ * run in a worker on the generated module (demos/megadreifach/).
+ */
+// The roll call's caption, and the start of the idle status: which
+// puzzle is which, left to right as seen from the seat (the table has no
+// labels).
+const DREI_CAST = "Left to right: B, A, C. A carries h, B its inverse, C stays solved.";
+
+/** A brief on-screen caption over the room for the roll call. */
+function dreiCastCaption() {
+    let el = null;
+    return {
+        show() {
+            if (typeof document === "undefined") return;
+            if (!el) {
+                el = document.createElement("p");
+                el.className = "drei-cast";
+                el.setAttribute("role", "status");
+                el.innerHTML = '<span class="drei-cast-row"><b>B</b><b>A</b><b>C</b></span>'
+                    + '<span class="drei-cast-note">left to right · A carries h, B its inverse, C stays solved</span>';
+                document.body.append(el);
+            }
+            void el.offsetWidth;
+            el.classList.add("on");
+        },
+        hide() {
+            el?.classList.remove("on");
+        },
+    };
+}
+
+export function createMegaDreifachAdapter() {
+    const dock = createDock("megadreifach", {
+        controls: `
+            <div class="playroom-ctl">
+              <span class="playroom-label" id="enc-legend">Encoding</span>
+              <div class="playroom-seg" role="group" aria-labelledby="enc-legend">
+                <button type="button" class="seg-btn on" data-encoding="text">Text</button>
+                <button type="button" class="seg-btn" data-encoding="hex">Hex</button>
+              </div>
+            </div>`,
+        fields: `
+          <label class="playroom-ctl playroom-ctl--field" for="message">
+            <span class="playroom-label">Message</span>
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false"
+              placeholder="Type a message to hash"></textarea>
+          </label>
+          <p id="io-note" class="io-note" hidden></p>
+          <div id="kat-menu" class="drei-kat-menu" role="group" aria-label="Known-answer tests" hidden></div>
+          <label class="playroom-ctl playroom-ctl--field" for="digest">
+            <span class="playroom-label">Digest</span>
+            <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"
+              placeholder="No message yet"></textarea>
+          </label>
+          <p class="drei-warning" role="note">MegaDreifach v3, a toy hash: it makes no cryptographic
+            security claim and is not for protecting anything.</p>
+          <p id="anim-note" class="drei-anim-note" role="status" hidden></p>
+          <p id="status" class="status drei-status" aria-live="polite">Type a message, or pick a known answer.</p>`,
+        digestButton: "Copy",
+        hint: "Step to see each turn.",
+        roundName: "block",
+        // Starts at the library's megaminx tempo (demos/anim/megaminx, 1.4).
+        speed: { min: 0.5, max: 12, value: 1.4 },
+        digin: '<button id="kat" class="playroom-digin" type="button" aria-controls="kat-menu" aria-expanded="false">'
+            + 'KAT</button>'
+            + '<button id="recentre" class="playroom-digin" type="button" title="Back to the table view">'
+            + 'Recentre</button>',
+    });
+    let world = null;
+    let poses = null;
+    let drei = null;
+    let stage = null;
+    let deck = null;
+    let session = null;
+    let sessionMod = null;
+    let textures = null;
+    let preloadPromise = null;
+    let entering = false;
+    let clock = null;
+    let enterGen = 0;
+    let cancelEnter = false;
+    let recentreBound = null;
+    const castCaption = dreiCastCaption();
+
+    async function preload() {
+        if (sessionMod && textures) return { sessionMod, textures };
+        if (!preloadPromise) {
+            preloadPromise = (async () => {
+                const [{ loadCardTextures }, mod] = await Promise.all([
+                    import("../doubledeal/table.js"),
+                    import("../megadreifach/session.js"),
+                ]);
+                sessionMod = mod;
+                textures = await loadCardTextures(4);
+                return { sessionMod, textures };
+            })().catch((err) => {
+                preloadPromise = null;
+                throw err;
+            });
+        }
+        return preloadPromise;
+    }
+
+    async function waitAdopted() {
+        try {
+            await stage?.adopt();
+        } catch (err) {
+            console.warn("cubing.js megaminx adopt failed", err);
+            throw err;
+        }
+        // Seat heights move once the real puzzles are measured.
+        for (const name of ["drei", "dreiB", "dreiC"]) {
+            const toy = world?.toys?.[name];
+            if (toy && !toy.userData.flightBusy && toy.userData.seatSurface !== "table") world.shelfHome(name);
+        }
+        return stage;
+    }
+
+    async function prepareEnter() {
+        if (!world) return null;
+        await waitAdopted();
+        if (deck) return deck;
+        const loaded = await preload();
+        const anisotropy = Math.min(8, world.renderer?.capabilities?.getMaxAnisotropy?.() || 4);
+        // The deck's cards in card-id order (rank × 4 + suit), backs navy.
+        const faces = [];
+        for (let card = 0; card < 52; card++) faces.push(loaded.textures.faces[(card % 4) * 13 + Math.floor(card / 4)]);
+        deck = await createUnboxRig({
+            anisotropy,
+            textures: { faces, back: loaded.textures.navy },
+            sharedMaps: true,
+            label: "DEAL",
+            bodyHex: "#3a2140",
+            innerGlow: world.lights.get("glow:deck3"),
+        });
+        const prev = world.toys.deck3;
+        if (prev) {
+            deck.group.position.copy(prev.position);
+            deck.group.quaternion.copy(prev.quaternion);
+            deck.group.rotation.copy(prev.rotation);
+        }
+        world.replaceToy("deck3", deck.group);
+        disposeObject(prev);
+        deck.restow();
+        stage.setDeck(deck);
+        if (!deck.group.userData.flightBusy) world.shelfHome("deck3");
+        await yieldFrame();
+        return deck;
+    }
+
+    function recentre() {
+        continueTo(poses, "drei", { duration: 900 });
+    }
+
+    return {
+        install(nextWorld, { poses: nextPoses, prefersReducedMotion } = {}) {
+            world = nextWorld;
+            poses = nextPoses;
+            // The deck's sleeve glow, registered dark before the seal.
+            world.lights.add("glow:deck3", createInnerGlow());
+            drei = createDreiToy();
+            const prev = world.toys.drei;
+            world.replaceToy("drei", drei.group);
+            if (prev) disposeObject(prev);
+            world.shelfHome("drei");
+            // B and C wait in the toy chest.
+            for (const [name, toy] of Object.entries(drei.extras)) {
+                const old = world.toys[name];
+                world.replaceToy(name, toy);
+                if (old) disposeObject(old);
+                world.shelfHome(name);
+            }
+            stage = stageDrei(world, drei, { prefersReducedMotion });
+            return drei.group;
+        },
+        async ready() {
+            try {
+                await waitAdopted();
+            } catch {
+                // enter reports it; the hub still loads.
+            }
+            return stage;
+        },
+        preload,
+        prepareEnter,
+        skipEnter() {
+            clock?.skip();
+        },
+        get busy() {
+            return Boolean(entering && clock && !clock.dead(enterGen));
+        },
+        leaveMs({ snap = false } = {}) {
+            if (snap || Boolean(poses?.prefersReducedMotion?.())) return 0;
+            return stage?.dealt ? stage.gatherMs() : 0;
+        },
+        view() {
+            return stage;
+        },
+        async enter({ snap = false } = {}) {
+            if (session || entering) return session;
+            entering = true;
+            cancelEnter = false;
+            try {
+                if (!deck) await prepareEnter();
+                const root = dock.mount();
+                const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
+                poses?.lockOrbit?.();
+                clock = createBeatClock({ reduced });
+                enterGen = clock.begin();
+                const { sessionMod: mod } = await preload();
+                const specUrl = await dock.specUrl();
+                if (cancelEnter) return session;
+                // Beat sheet (full motion): the director has flown A off the
+                // shelf and, out of the toy chest, B, C and the DEAL deck
+                // (260 ms apart) onto the felt, B left and C right of A, the
+                // deck left of B; the app's follow shot (wide enough for the
+                // chest) is still under way.
+                // 0 ms: live follow ends (as DoubleDeal's enter does) and
+                // the camera eases from wherever it is onto the drei seat
+                // (1,400 ms, about Scramble's glide). `restart`: the follow shot is flying to this
+                // same pose, and asking for it again used to skip() the
+                // shot, a one-frame cut (3.5 m, 44°, 8° of fov in one frame,
+                // measured frame by frame against Scramble, which glides).
+                // Once B and C are down: B, A, C hop in turn, left to right
+                // (0 / 170 / 340 ms, 420 ms each) while the caption names
+                // them (the table has no labels). If the puzzles kept turns
+                // from last time, they undo them in place, turn by turn.
+                // Then the dock.
+                markBeat("drei-present");
+                poses?.followLive?.(null);
+                poses?.releaseFrame?.();
+                const seated = continueTo(poses, "drei", { duration: reduced ? 480 : 1400, restart: true });
+                // B and C must be down before the roll call.
+                for (const name of ["dreiB", "dreiC"]) await waitToyIdle(world.toys[name], clock, enterGen);
+                const statusEl = root.querySelector("#status");
+                if (statusEl) statusEl.textContent = DREI_CAST;
+                castCaption.show();
+                if (!reduced) await stage.rollCall(clock, enterGen);
+                if (stage.hasLeftover && !cancelEnter) {
+                    markBeat("drei-reset");
+                    await stage.resetPuzzles({ snap: reduced });
+                }
+                await seated;
+                // The caption stays a moment once the camera is on the table.
+                const castGen = enterGen;
+                setTimeout(() => {
+                    if (castGen === enterGen) castCaption.hide();
+                }, 1600);
+                if (cancelEnter) {
+                    castCaption.hide();
+                    return session;
+                }
+                // Sound is on hold project-wide: none here.
+                session = mod.createMegaDreifachSession({
+                    view: stage,
+                    specUrl,
+                    root,
+                    exposeTeach: true,
+                    cast: DREI_CAST,
+                });
+                stage.rememberSeated();
+                const button = root.querySelector("#recentre");
+                if (button && recentreBound !== button) {
+                    button.addEventListener("click", recentre);
+                    recentreBound = button;
+                }
+                dock.show();
+                return session;
+            } finally {
+                entering = false;
+                clock = null;
+                poses?.unlockOrbit?.();
+            }
+        },
+        async leave({ snap = false } = {}) {
+            cancelEnter = true;
+            castCaption.hide();
+            clock?.skip();
+            const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
+            session?.dispose();
+            session = null;
+            dock.close();
+            if (stage?.dealt && !reduced) {
+                markBeat("leave-gather");
+                await stage.gather();
+            }
+            stage?.settle();
+            await stage?.clearShow();
+            deck?.restow();
+        },
+        revealShelf() {
+            deck?.restow();
+            if (world?.toys.drei) world.toys.drei.visible = true;
+            if (world?.toys.deck3) world.toys.deck3.visible = true;
         },
     };
 }

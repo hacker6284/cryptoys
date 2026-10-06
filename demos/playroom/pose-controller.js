@@ -19,9 +19,14 @@ function toVec(value) {
     return new THREE.Vector3(value[0], value[1], value[2]);
 }
 
-function readPose(name) {
-    const spec = POSES[name];
-    if (!spec) return null;
+// A pose may carry a `portrait` variant (position / target / fov) for
+// narrow viewports; only poses that opt in change.
+const PORTRAIT_ASPECT = 0.75;
+
+function readPose(name, aspect = 1) {
+    const base = POSES[name];
+    if (!base) return null;
+    const spec = base.portrait && aspect < PORTRAIT_ASPECT ? { ...base, ...base.portrait } : base;
     return {
         name,
         position: toVec(spec.position),
@@ -219,7 +224,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     }
 
     function emit(name, { tweening, next }) {
-        const pose = readPose(name);
+        const pose = readPose(name, camera.aspect);
         onChange?.({
             name,
             next: next ?? name,
@@ -239,7 +244,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
     function snap(name) {
         liveFollow = null;
         const resolved = resolvePoseName(name, current);
-        const pose = readPose(resolved);
+        const pose = readPose(resolved, camera.aspect);
         if (!pose) return current;
         finishTween(resolved, { emitChange: false });
         current = resolved;
@@ -251,10 +256,12 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
 
     function goTo(name, opts = {}) {
         const resolved = resolvePoseName(name, current);
-        const pose = readPose(resolved);
+        const pose = readPose(resolved, camera.aspect);
         if (!pose) return current;
         if (resolved === current && !tween && !opts.track) return current;
-        if (tween && tween.to.name === resolved && !opts.track) {
+        // Asking again for the pose already being flown to skips (snaps)
+        // there, unless `restart`: a fresh ease from the live camera.
+        if (tween && tween.to.name === resolved && !opts.track && !opts.restart) {
             skip();
             return current;
         }
@@ -265,7 +272,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
         const viaName = opts.via ? resolvePoseName(opts.via) : null;
         tween = {
             from: capture(),
-            via: viaName ? readPose(viaName) : null,
+            via: viaName ? readPose(viaName, camera.aspect) : null,
             viaT: opts.viaT ?? 0.36,
             to: pose,
             delay: opts.delay || 0,
@@ -283,7 +290,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
 
     function followTo(name, opts = {}) {
         const resolved = resolvePoseName(name, current);
-        const pose = readPose(resolved);
+        const pose = readPose(resolved, camera.aspect);
         if (!pose) return current;
         if (opts.snap || prefersReducedMotion()) return snap(resolved);
         if (tween) finishTween(current, { emitChange: false });
@@ -320,7 +327,7 @@ export function createPoseController(camera, { duration = TWEEN_MS, onChange, do
 
     function applyLiveFollow(dtMs) {
         if (!liveFollow) return;
-        const pose = readPose(current) || readPose("seated");
+        const pose = readPose(current, camera.aspect) || readPose("seated", camera.aspect);
         if (!pose) return;
         const trackPos = readTrack(liveFollow);
         if (!trackPos) return;

@@ -6,6 +6,15 @@ import {
     CUBE,
     DEAL_SCALE,
     DEN,
+    DREI_DEAL,
+    DREI_DECK_X,
+    DREI_GAP,
+    DREI_HELD_X,
+    DREI_PITCH,
+    DREI_ROW_Z,
+    DREI_SEAT_XZ,
+    MINX_SPAN,
+    REAL_SIZES,
     FLY_MS,
     LID_CLOSE_MS,
     LID_OPEN_MS,
@@ -13,13 +22,14 @@ import {
     SHELF_Z,
     SLOTS,
     TABLE_R,
+    MINX,
     TOP_Y,
     toyHalfHeight,
 } from "./constants.js";
 import { POSES, resolvePoseName } from "./poses.js";
 import { seatOnSurface } from "./motion.js";
 import { stubThree } from "./three-stub.mjs";
-import { createToyDirector, recipeMotionMs } from "./toy-director.js";
+import { createToyDirector, EXTRA_STAGGER_MS, recipeMotionMs } from "./toy-director.js";
 
 // The registry holds the adapters; they touch three only once installed.
 stubThree();
@@ -81,6 +91,48 @@ assert.equal(DEMOS.doubledeal.pose, "doubledeal");
 assert.equal(DEMOS.scramble.toys[0], "cube");
 assert.equal(recipeMotionMs(DEMOS.scramble), FLY_MS);
 assert.equal(recipeMotionMs(DEMOS.doubledeal), LID_OPEN_MS + FLY_MS + LID_CLOSE_MS);
+// MegaDreifach: one megaminx (A) from the shelf; B, C and the DEAL deck
+// come out of the chest, 2 staggers after the first extra. Only toys: no
+// tray, cups or label cards anywhere in the recipe.
+assert.deepEqual(DEMOS.megadreifach.toys, ["drei", "dreiB", "dreiC", "deck3"]);
+// B | A | C straight on the felt, symmetric, square to the seat, and as
+// wide as the 13-column deal (12 × 25 mm pitch + a 63 mm card).
+assert.deepEqual(DREI_SEAT_XZ.A, [0, 0]);
+assert.equal(DREI_SEAT_XZ.B[0], -DREI_SEAT_XZ.C[0]);
+assert.equal(DREI_SEAT_XZ.B[1], 0);
+assert.equal(DREI_SEAT_XZ.C[1], 0);
+// MegaDreifach v3's table, all at real size and nothing overlapping:
+// deck box | B A C | held card on one line, the 13 × 4 deal in front.
+{
+    const card = REAL_SIZES.card;
+    const box = REAL_SIZES.deckBox;
+    assert.ok(Math.abs(MINX - 0.07) < 1e-9, "megaminx 70 mm face to face");
+    assert.ok(Math.abs(card.w - 0.063) < 1e-9 && Math.abs(card.d - 0.088) < 1e-9, "cards 63 × 88 mm");
+    assert.ok(MINX_SPAN >= 0.088 - 1e-9, "a megaminx's footprint is its corner-to-corner span");
+    assert.ok(DREI_PITCH - MINX_SPAN >= DREI_GAP - 1e-9, "puzzles a gap apart");
+    assert.ok(-DREI_PITCH - MINX_SPAN / 2 - (DREI_DECK_X + box.w / 2) >= DREI_GAP - 1e-9, "deck box a gap left of B");
+    assert.ok(DREI_HELD_X - card.w / 2 - (DREI_PITCH + MINX_SPAN / 2) >= DREI_GAP - 1e-9, "held card a gap right of C");
+    assert.ok(DREI_DEAL.colPitch > card.w && DREI_DEAL.rowPitch > card.d, "dealt cards never overlap");
+    assert.ok(DREI_DEAL.farZ - card.d / 2 - (DREI_ROW_Z + MINX_SPAN / 2) >= DREI_GAP - 1e-9, "deal a gap in front of the row");
+    const felt = TABLE_R - 0.08;
+    const halfW = ((DREI_DEAL.cols - 1) / 2) * DREI_DEAL.colPitch + card.w / 2;
+    const nearZ = DREI_DEAL.farZ + (DREI_DEAL.rows - 1) * DREI_DEAL.rowPitch + card.d / 2;
+    const corners = [
+        [-halfW, DREI_DEAL.farZ - card.d / 2], [halfW, DREI_DEAL.farZ - card.d / 2], [-halfW, nearZ], [halfW, nearZ],
+        [DREI_DECK_X - box.w / 2, DREI_ROW_Z - box.d / 2], [DREI_DECK_X - box.w / 2, DREI_ROW_Z + box.d / 2],
+        [DREI_HELD_X + card.w / 2, DREI_ROW_Z - card.d / 2], [DREI_HELD_X + card.w / 2, DREI_ROW_Z + card.d / 2],
+    ];
+    for (const [x, z] of corners) {
+        assert.ok(Math.hypot(DEN.x + x, DEN.z + z) < felt - 0.01, `on the felt: ${(DEN.x + x).toFixed(3)}, ${(DEN.z + z).toFixed(3)}`);
+    }
+}
+assert.equal(toyHalfHeight("drei"), MINX / 2);
+for (const prop of ["tray", "tent", "cup"]) {
+    assert.ok(!new RegExp(`\\b${prop}s?\\b`, "i").test(readFileSync(new URL("./drei-stage.js", import.meta.url), "utf8")
+        .replace(/no tray, no cups, no labels/g, "")), `drei-stage.js: no ${prop}`);
+}
+assert.equal(DEMOS.megadreifach.chest, true);
+assert.equal(recipeMotionMs(DEMOS.megadreifach), LID_OPEN_MS + FLY_MS + LID_CLOSE_MS + 2 * EXTRA_STAGGER_MS);
 const idleDirector = createToyDirector({}, DEMOS);
 assert.equal(idleDirector.borrowMs("doubledeal"), idleDirector.homeMs("doubledeal"));
 assert.equal(CLOCK_STEP_MS, 50);

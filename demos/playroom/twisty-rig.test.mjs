@@ -89,6 +89,7 @@ assert.equal(held.fitted, 0.057, "late 1/3 still targets 57 mm");
 assert.equal(midTurn.fitted, 0.057, "mid-turn lock stays 57 mm");
 
 assert.match(src, /turnBusy/, "playLeaves marks the turn so keep-fit can skip");
+assert.match(src, /hear\(indexer\.timestampToIndex\(info\.timestamp\)\)/, "playLeaves reports each leaf only when asked (MegaDreifach turn sound)");
 
 const hostRemove = src.indexOf("hidePlayerHost(player)");
 const tryAt = src.indexOf("try {", hostRemove);

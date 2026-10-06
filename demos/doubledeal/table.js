@@ -15,6 +15,11 @@ import { timing as GRID_DEAL } from "../anim/deck/deal/index.js";
 const SUIT_FILE = ["club", "heart", "spade", "diamond"];
 const RANK_FILE = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
 
+/** Face image file for a card: suit 0..3 (clubs, hearts, spades, diamonds), rank 0..12 (ace..king). */
+export function cardFile(suit, rank) {
+    return `${SUIT_FILE[suit]}_${RANK_FILE[rank]}.png`;
+}
+
 function loadImage(url) {
     return new Promise((resolve, reject) => {
         const image = new Image();
@@ -90,7 +95,7 @@ export function cardAssetUrl(file) {
  */
 export async function loadCardTextures(anisotropy = 1, { aspect = null } = {}) {
     const faceImages = await Promise.all(
-        SUIT_FILE.flatMap((suit) => RANK_FILE.map((rank) => loadImage(cardAssetUrl(`${suit}_${rank}.png`)))),
+        SUIT_FILE.flatMap((_, suit) => RANK_FILE.map((_, rank) => loadImage(cardAssetUrl(cardFile(suit, rank))))),
     );
     const [navyImage, redImage] = await Promise.all([
         loadImage(cardAssetUrl("back-navy.png")),

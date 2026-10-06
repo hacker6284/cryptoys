@@ -21,6 +21,7 @@ on:
       - "demos/**"
       - "primitives/hash/scramble/**"
       - "primitives/cipher/doubledeal/**"
+      - "primitives/hash/megadreifach/**"
       - "proofs/SUDOCODE_PIN"
       - "proofs/sudocode_pin.sh"
       - "tools/build.sh"

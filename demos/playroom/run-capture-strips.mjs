@@ -6,6 +6,7 @@
  *   CAPTURE_URL=http://127.0.0.1:4173 \
  *   CAPTURE_OUT=/opt/cursor/artifacts/strips \
  *   CAPTURE_TAG=before \
+ *   CAPTURE_ALGOS=doubledeal,scramble,megadreifach \
  *   node demos/playroom/run-capture-strips.mjs
  *
  * Needs puppeteer-core + Chrome. Does not change production motion.
@@ -67,11 +68,11 @@ const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
 page.on("pageerror", (err) => console.warn("pageerror", err.message));
 
-async function waitPred(fn, { timeout, label } = {}) {
+async function waitPred(fn, { timeout, label, arg } = {}) {
     const start = Date.now();
     while (Date.now() - start < timeout) {
         try {
-            if (await page.evaluate(fn)) return;
+            if (await page.evaluate(fn, arg)) return;
         } catch (err) {
             console.warn(label, "evaluate", err.message);
         }
@@ -120,45 +121,31 @@ try {
         { timeout: 60000, label: "ready" },
     );
 
-    console.log("doubledeal enter");
-    await page.click('[data-algo="doubledeal"]');
-    await waitPred(
-        () => document.querySelector("#doubledeal-dock.on")
-            && document.documentElement.dataset.playroomTween !== "1"
-            && window.__playroomCapture?.sequences?.["doubledeal-enter"],
-        { timeout: 480000, label: "doubledeal-enter" },
-    );
-    await dumpSequence("doubledeal-enter");
+    // CAPTURE_ALGOS=megadreifach (comma list) runs only those demos.
+    const timeouts = { doubledeal: [480000, 360000], scramble: [300000, 300000], megadreifach: [480000, 360000] };
+    const algos = (process.env.CAPTURE_ALGOS || "doubledeal,scramble").split(",").map((a) => a.trim()).filter(Boolean);
+    for (const algo of algos) {
+        const [enterMs, leaveMs] = timeouts[algo] || [480000, 360000];
+        console.log(`${algo} enter`);
+        await page.click(`[data-algo="${algo}"]`);
+        await waitPred(
+            (id) => document.querySelector(`#${id}-dock.on`)
+                && document.documentElement.dataset.playroomTween !== "1"
+                && window.__playroomCapture?.sequences?.[`${id}-enter`],
+            { timeout: enterMs, label: `${algo}-enter`, arg: algo },
+        );
+        await dumpSequence(`${algo}-enter`);
 
-    console.log("doubledeal leave");
-    await page.click("#back");
-    await waitPred(
-        () => document.documentElement.dataset.pose === "landing"
-            && !document.documentElement.dataset.algo
-            && window.__playroomCapture?.sequences?.["doubledeal-leave"],
-        { timeout: 360000, label: "doubledeal-leave" },
-    );
-    await dumpSequence("doubledeal-leave");
-
-    console.log("scramble enter");
-    await page.click('[data-algo="scramble"]');
-    await waitPred(
-        () => document.querySelector("#scramble-dock.on")
-            && document.documentElement.dataset.playroomTween !== "1"
-            && window.__playroomCapture?.sequences?.["scramble-enter"],
-        { timeout: 300000, label: "scramble-enter" },
-    );
-    await dumpSequence("scramble-enter");
-
-    console.log("scramble leave");
-    await page.click("#back");
-    await waitPred(
-        () => document.documentElement.dataset.pose === "landing"
-            && !document.documentElement.dataset.algo
-            && window.__playroomCapture?.sequences?.["scramble-leave"],
-        { timeout: 300000, label: "scramble-leave" },
-    );
-    await dumpSequence("scramble-leave");
+        console.log(`${algo} leave`);
+        await page.click("#back");
+        await waitPred(
+            (id) => document.documentElement.dataset.pose === "landing"
+                && !document.documentElement.dataset.algo
+                && window.__playroomCapture?.sequences?.[`${id}-leave`],
+            { timeout: leaveMs, label: `${algo}-leave`, arg: algo },
+        );
+        await dumpSequence(`${algo}-leave`);
+    }
     console.log("done", join(OUT, TAG));
 } catch (err) {
     console.error(err);

@@ -10,7 +10,7 @@ import MegaDreifachV3.Link2.RunSimp
   `start_run`, `turn_run`, `count_find`, `count_relook`, `count_register_looks` refine their
   model counterparts while each counter update fits in an Int64 (`FitsLen`); `counterCap`
   (2^40) is a uniform bound under which every update of one card step fits.
-  `card_colour_refines` is exact on every `Nat`. `card_step_refines`: on a position with
+  `card_colour_refines` is exact on every `Nat`. `card_turns_refines` and `card_step_refines`: on a position with
   bijective corner and edge tables and counters ≤ `counterCap`, the emitted `card_step` returns
   the model `cardStep` for every base face, rank ≤ 12, suit amount `k ∈ 1..4` and colour.
   The piece searches inside it use the found-invariants of `Link2/FaceOfFound.lean`.
@@ -185,49 +185,114 @@ def cardTail (r : Run) (f : Fin 12) (k : Nat) (c : Fin 12) : Run :=
 theorem cardStep_eq_cardTail (r : Run) (base : Fin 12) (rank k : Nat) (c : Fin 12) :
     cardStep r base rank k c = cardTail r (turnedFace base rank) k c := rfl
 
-/-- The emitted `card_step` after its `if`: both branches of the generated body continue with this
-same block, only the `turned` face differs. Restated here (as `chunkStep` in
-`MegaDreifach/Link2/VHashCommon.lean` restates the emitted chunk loop) so the shared rewrite
-chain is proved once, in `card_step_tail_refines`; if the emitter changes the block, the
-`exact`s in `card_step_refines` fail. The emitted temporaries (`_t824` … `_t838` in the first
-branch) have readable names here; binder names do not matter to the `exact`. -/
-def cardStepTailE (r : Megadreifach.Run) (turned k c : Int) :
-    Except SudoRt.Trap Megadreifach.Run := do
-  let rTurned ← Megadreifach.turn_run r turned k
-  let r := rTurned
-  let nbrs ← Megadreifach.suit_nbrs c k
-  let ⟨n, n2⟩ := nbrs
-  let rFind1 ← Megadreifach.count_find r
-  let r := rFind1
-  let fEdgeC ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n c
-  let rEdgeC ← Megadreifach.turn_run r fEdgeC (1 : Int)
-  let r := rEdgeC
-  let fEdgeN ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n n
-  let rEdgeN ← Megadreifach.turn_run r fEdgeN (1 : Int)
-  let r := rEdgeN
-  let rFind2 ← Megadreifach.count_find r
-  let r := rFind2
-  let fCornerC ← Megadreifach.corner_face_of (r).sudo_3Run_1g c n n2 c
-  let rCornerC ← Megadreifach.turn_run r fCornerC (1 : Int)
-  let r := rCornerC
-  let fCornerN ← Megadreifach.corner_face_of (r).sudo_3Run_1g c n n2 n
-  let rCornerN ← Megadreifach.turn_run r fCornerN (1 : Int)
-  let r := rCornerN
-  let rRelook ← Megadreifach.count_relook r
-  let r := rRelook
-  let fLast ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n n
-  let rLast ← Megadreifach.turn_run r fLast (1 : Int)
-  pure rLast
+/-- The emitted `card_turns` after its `if`: both branches continue with this same block, only
+the `turned` face differs. Restated from the generated body (temporaries as emitted; binder names
+do not matter to the `exact`), so the rewrite chain is proved once, in `card_turns_tail_refines`;
+if the emitter changes the block, the `exact`s in `card_turns_refines` fail. -/
+def cardTurnsTailE (r : Megadreifach.Run) (turned k c : Int) (turns : Array Int) :
+    Except SudoRt.Trap (Megadreifach.Run × Array Int) := do
+  let _mb836 := SudoRt.appendL turns turned
+  let ⟨_nr837, _⟩ := _mb836
+  let turns := _nr837
+  let _hm820 := ()
+  let _u838 := _hm820
+  let _mb839 := SudoRt.appendL turns k
+  let ⟨_nr840, _⟩ := _mb839
+  let turns := _nr840
+  let _hm821 := ()
+  let _u841 := _hm821
+  let _t842 ← Megadreifach.turn_run r turned k
+  let r := _t842
+  let _t843 ← Megadreifach.suit_nbrs c k
+  let ⟨n, n2⟩ := _t843
+  let _t844 ← Megadreifach.count_find r
+  let r := _t844
+  let _t845 ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n c
+  let f := _t845
+  let _mb846 := SudoRt.appendL turns f
+  let ⟨_nr847, _⟩ := _mb846
+  let turns := _nr847
+  let _hm822 := ()
+  let _u848 := _hm822
+  let _mb849 := SudoRt.appendL turns (1 : Int)
+  let ⟨_nr850, _⟩ := _mb849
+  let turns := _nr850
+  let _hm823 := ()
+  let _u851 := _hm823
+  let _t852 ← Megadreifach.turn_run r f (1 : Int)
+  let r := _t852
+  let _t853 ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n n
+  let f := _t853
+  let _mb854 := SudoRt.appendL turns f
+  let ⟨_nr855, _⟩ := _mb854
+  let turns := _nr855
+  let _hm824 := ()
+  let _u856 := _hm824
+  let _mb857 := SudoRt.appendL turns (1 : Int)
+  let ⟨_nr858, _⟩ := _mb857
+  let turns := _nr858
+  let _hm825 := ()
+  let _u859 := _hm825
+  let _t860 ← Megadreifach.turn_run r f (1 : Int)
+  let r := _t860
+  let _t861 ← Megadreifach.count_find r
+  let r := _t861
+  let _t862 ← Megadreifach.corner_face_of (r).sudo_3Run_1g c n n2 c
+  let f := _t862
+  let _mb863 := SudoRt.appendL turns f
+  let ⟨_nr864, _⟩ := _mb863
+  let turns := _nr864
+  let _hm826 := ()
+  let _u865 := _hm826
+  let _mb866 := SudoRt.appendL turns (1 : Int)
+  let ⟨_nr867, _⟩ := _mb866
+  let turns := _nr867
+  let _hm827 := ()
+  let _u868 := _hm827
+  let _t869 ← Megadreifach.turn_run r f (1 : Int)
+  let r := _t869
+  let _t870 ← Megadreifach.corner_face_of (r).sudo_3Run_1g c n n2 n
+  let f := _t870
+  let _mb871 := SudoRt.appendL turns f
+  let ⟨_nr872, _⟩ := _mb871
+  let turns := _nr872
+  let _hm828 := ()
+  let _u873 := _hm828
+  let _mb874 := SudoRt.appendL turns (1 : Int)
+  let ⟨_nr875, _⟩ := _mb874
+  let turns := _nr875
+  let _hm829 := ()
+  let _u876 := _hm829
+  let _t877 ← Megadreifach.turn_run r f (1 : Int)
+  let r := _t877
+  let _t878 ← Megadreifach.count_relook r
+  let r := _t878
+  let _t879 ← Megadreifach.edge_face_of (r).sudo_3Run_1g c n n
+  let f := _t879
+  let _mb880 := SudoRt.appendL turns f
+  let ⟨_nr881, _⟩ := _mb880
+  let turns := _nr881
+  let _hm830 := ()
+  let _u882 := _hm830
+  let _mb883 := SudoRt.appendL turns (1 : Int)
+  let ⟨_nr884, _⟩ := _mb883
+  let turns := _nr884
+  let _hm831 := ()
+  let _u885 := _hm831
+  let _t886 ← Megadreifach.turn_run r f (1 : Int)
+  pure (_t886, turns)
 
-/-- The shared tail of `card_step_refines`: from any face `f`, the emitted block refines
-`cardTail`. -/
-theorem card_step_tail_refines (r : Run) (hg : InjPos r.g) (hb : CountersLe r counterCap)
-    (f : Fin 12) (k : Nat) (hk1 : 1 ≤ k) (hk4 : k ≤ 4) (c : Fin 12) :
-    cardStepTailE (embedRun r) (Int.ofNat f.val) (Int.ofNat k) (Int.ofNat c.val)
-      = .ok (embedRun (cardTail r f k c)) := by
+/-- The shared tail of `card_turns_refines`: from any face `f`, the emitted block's run is
+`cardTail` (the turns it writes down are whatever they are; `card_step` drops them). -/
+theorem card_turns_tail_refines (r : Run) (hg : InjPos r.g) (hb : CountersLe r counterCap)
+    (f : Fin 12) (k : Nat) (hk1 : 1 ≤ k) (hk4 : k ≤ 4) (c : Fin 12) (turns : Array Int) :
+    ∃ t, cardTurnsTailE (embedRun r) (Int.ofNat f.val) (Int.ofNat k) (Int.ofNat c.val) turns
+      = .ok (embedRun (cardTail r f k c), t) := by
   obtain ⟨b1, b2, b3, b4, b5⟩ := hb
   unfold counterCap at b1 b2 b3 b4 b5
-  unfold cardStepTailE
+  apply Exists.intro
+  unfold cardTurnsTailE
+  simp only [SudoRt.appendL]
   rw [turn_run_refines _ _ _ ?_ ?_, ok_bind, suit_nbrs_refines c k hk1 hk4, ok_bind]
   dsimp only
   rw [count_find_refines _ ?_, ok_bind,
@@ -237,21 +302,19 @@ theorem card_step_tail_refines (r : Run) (hg : InjPos r.g) (hb : CountersLe r co
     corner_face_of_run _ ?_ c k hk1 hk4 c (Or.inl rfl), ok_bind, turn_run_refines1 _ _ ?_ ?_, ok_bind,
     corner_face_of_run _ ?_ c k hk1 hk4 _ (Or.inr rfl), ok_bind, turn_run_refines1 _ _ ?_ ?_, ok_bind,
     count_relook_refines _ ?_, ok_bind,
-    edge_face_of_run _ ?_ c k hk1 hk4 _ (Or.inr rfl), ok_bind, turn_run_refines1 _ _ ?_ ?_]
+    edge_face_of_run _ ?_ c k hk1 hk4 _ (Or.inr rfl), ok_bind, turn_run_refines1 _ _ ?_ ?_, ok_bind]
   · rfl
   all_goals run_side
 
-/-- One card step. The hypotheses are sufficient, not necessary: bijective tables make the piece
-    searches succeed, counters ≤ `counterCap` keep every counter update in Int64, and
-    `rank ≤ 12`, `1 ≤ k ≤ 4` are the ranges a deal or an echo produces (a rank above 12 would
-    also take the King branch on both sides). -/
-theorem card_step_refines (r : Run) (hg : InjPos r.g) (hb : CountersLe r counterCap)
-    (base : Fin 12) (rank k : Nat) (hrank : rank ≤ 12) (hk1 : 1 ≤ k) (hk4 : k ≤ 4) (c : Fin 12) :
-    Megadreifach.card_step (embedRun r) (Int.ofNat base.val) (Int.ofNat rank) (Int.ofNat k)
-      (Int.ofNat c.val) = .ok (embedRun (cardStep r base rank k c)) := by
+/-- One card step with its turns written down: the run is the model `cardStep`. -/
+theorem card_turns_refines (r : Run) (hg : InjPos r.g) (hb : CountersLe r counterCap)
+    (base : Fin 12) (rank k : Nat) (hrank : rank ≤ 12) (hk1 : 1 ≤ k) (hk4 : k ≤ 4) (c : Fin 12)
+    (turns : Array Int) :
+    ∃ t, Megadreifach.card_turns (embedRun r) (Int.ofNat base.val) (Int.ofNat rank) (Int.ofNat k)
+      (Int.ofNat c.val) turns = .ok (embedRun (cardStep r base rank k c), t) := by
   obtain ⟨b1, b2, b3, b4, b5⟩ := hb
   unfold counterCap at b1 b2 b3 b4 b5
-  unfold Megadreifach.card_step
+  unfold Megadreifach.card_turns
   rw [atL_opposites, ok_bind]
   by_cases hr : rank < 12
   · have hd : decide (Int.ofNat rank < 12) = true := by simp; omega
@@ -260,11 +323,25 @@ theorem card_step_refines (r : Run) (hg : InjPos r.g) (hb : CountersLe r counter
       modI_ofNat _ (b := 12) (by decide), ok_bind,
       show Int.ofNat ((base.val + rank) % 12) = Int.ofNat (turnedFace base rank).val by
         simp [turnedFace, hr]]
-    exact card_step_tail_refines r hg ⟨b1, b2, b3, b4, b5⟩ _ k hk1 hk4 c
+    exact card_turns_tail_refines r hg ⟨b1, b2, b3, b4, b5⟩ _ k hk1 hk4 c turns
   · have hd : decide (Int.ofNat rank < 12) = false := by simp; omega
     rw [hd, if_neg (by decide),
       show Int.ofNat (opp base).val = Int.ofNat (turnedFace base rank).val by
         simp [turnedFace, hr]]
-    exact card_step_tail_refines r hg ⟨b1, b2, b3, b4, b5⟩ _ k hk1 hk4 c
+    exact card_turns_tail_refines r hg ⟨b1, b2, b3, b4, b5⟩ _ k hk1 hk4 c turns
+
+/-- One card step. The hypotheses are sufficient, not necessary: bijective tables make the piece
+    searches succeed, counters ≤ `counterCap` keep every counter update in Int64, and
+    `rank ≤ 12`, `1 ≤ k ≤ 4` are the ranges a deal or an echo produces (a rank above 12 would
+    also take the King branch on both sides). `card_step` is `card_turns` with the turns dropped. -/
+theorem card_step_refines (r : Run) (hg : InjPos r.g) (hb : CountersLe r counterCap)
+    (base : Fin 12) (rank k : Nat) (hrank : rank ≤ 12) (hk1 : 1 ≤ k) (hk4 : k ≤ 4) (c : Fin 12) :
+    Megadreifach.card_step (embedRun r) (Int.ofNat base.val) (Int.ofNat rank) (Int.ofNat k)
+      (Int.ofNat c.val) = .ok (embedRun (cardStep r base rank k c)) := by
+  obtain ⟨t, ht⟩ := card_turns_refines r hg hb base rank k hrank hk1 hk4 c #[]
+  unfold Megadreifach.card_step
+  dsimp only
+  rw [ht, ok_bind]
+  rfl
 
 end MegaDreifachV3.Link2

@@ -27,12 +27,9 @@ jobs:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     concurrency:
-      # Job-level: a called workflow joins this group here, and a direct
-      # run does too. The caller job must not use group `pages` — with
-      # cancel-in-progress that cancels the caller when this job starts.
-      # Every deploy checks out current gh-pages HEAD, so cancelling the
-      # running holder (stuck queue, #192) or replacing the one pending
-      # deploy still publishes the newest tree.
+      # Job-level so a called run and a direct run both join `pages`.
+      # The caller job must not use this group. Every deploy checks out
+      # gh-pages HEAD, so cancelling or replacing a run is safe.
       group: pages
       cancel-in-progress: true
     environment:

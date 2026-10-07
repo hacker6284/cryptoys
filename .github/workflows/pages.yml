@@ -3,10 +3,9 @@
 # generate path (tools/render-build.sh → tools/generate-demos.sh) before
 # publishing demos/. See .github/RENDER.md.
 #
-# No workflow-level concurrency. build and publish-branch always run;
-# only the deploy joins group `pages` (republish-pages.yml). A pending
-# pages run in that group was cancelled by republish before any job
-# started, so that main commit never reached gh-pages.
+# No workflow-level concurrency: a pending run in a shared group is
+# replaced, which would drop build and publish too. Only the deploy
+# joins group `pages` (republish-pages.yml).
 
 name: pages
 
@@ -51,8 +50,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     concurrency:
+      # One pending job per group by default, and these writes differ,
+      # so queue instead of replacing each other.
       group: gh-pages-publish
       cancel-in-progress: false
+      queue: max
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -71,8 +73,8 @@ jobs:
 
   deploy:
     needs: publish-branch
-    # `uses` does not inherit workflow permissions. Without this block the
-    # called workflow gets the default token and cannot elevate it.
+    # With no permissions key, the called workflow gets the default
+    # GITHUB_TOKEN, not this file's permissions, and cannot elevate them.
     # contents: read checks out gh-pages; pages and id-token deploy it.
     permissions:
       contents: read

@@ -29,7 +29,7 @@ function forwardFrom(href, algo) {
             href: url.href,
             search: url.search,
             hash: url.hash,
-            replace: (to) => replaced.push(to),
+            replace: (to) => { const u = new URL(to, url); replaced.push(u.pathname + u.search + u.hash); },
         },
     };
     vm.runInNewContext(forwardJs, context);

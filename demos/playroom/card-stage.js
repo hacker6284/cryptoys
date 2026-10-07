@@ -67,7 +67,7 @@ export function stageCardTable(world, textures, { poses, visible = true, layout 
         showDecks: table.showDecks,
         play: (step) => table.play(step, TABLE_PACE * speed, TABLE_PACE),
         setSpeed(multiplier) {
-            speed = Number(multiplier) > 0 ? Number(multiplier) : 1;
+            speed = multiplier;
         },
         measure: table.measure,
         snapshot: table.snapshot,

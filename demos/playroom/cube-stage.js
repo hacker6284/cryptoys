@@ -283,11 +283,8 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         setSetup: call("setSetup"),
         setTempo: call("setTempo"),
         setSpeed(multiplier) {
-            speed = Number(multiplier) > 0 ? Number(multiplier) : 1;
+            speed = multiplier;
             rig.setTempo?.((timing.speed || 1) * speed);
-        },
-        get speed() {
-            return speed;
         },
         status: call("status"),
         resetTimeline: stopping("reset"),

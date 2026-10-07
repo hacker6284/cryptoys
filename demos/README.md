@@ -40,7 +40,7 @@ sh tools/build.sh
 
 A demo supplies:
 
-- `<id>/index.html`: a forwarder to the playroom's demo (`<script src="../shared/forward.js" data-algo="<id>">`, which keeps the other query parameters and the hash), and `<id>/session.js`, the session the dock drives. There is one implementation of each demo, the room's (Zachary, 2026-10-07: "There shouldn't be copies like this."); no standalone page, view or controls (`playroom/one-copy.test.mjs`).
+- `<id>/index.html`: a forwarder to the playroom's demo (`<script src="../shared/forward.js" data-algo="<id>">`, which keeps the other query parameters and the hash), and `<id>/session.js`, the session the dock drives. Each demo has exactly one implementation, the room's: no standalone page, view or controls (`playroom/one-copy.test.mjs`).
 - Speed: the dock's one shared slider ([`shared/speed.js`](shared/speed.js)), 0.1× to 100× on a log scale, 1× (a third of the way along) by default, the multiplier shown beside it. 1× is the demo's locked default tempo; the session hands the multiplier to its view (`view.setSpeed`), which maps it onto its own units. Every pause, hold and motion of Play scales with it; one shorter than a frame jumps to its end and passes its time on [`shared/pacer.js`](shared/pacer.js)'s clock, so every step still applies, in order, and 100× really runs a hundred times faster.
 - A camera pose in [`playroom/poses.js`](playroom/poses.js), unless it reuses one.
 - An adapter in [`playroom/adapters.js`](playroom/adapters.js). Required:

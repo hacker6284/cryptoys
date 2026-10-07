@@ -15,7 +15,7 @@ export const SPEED_DEFAULT = 1;
 const LOG_MIN = Math.log10(SPEED_MIN);
 const LOG_MAX = Math.log10(SPEED_MAX);
 // Slider steps in log10 units: 300 steps from 0.1× to 100× (≈2.3 % each).
-export const SPEED_STEP = 0.01;
+const SPEED_STEP = 0.01;
 
 function clamp(value, lo, hi) {
     return Math.min(hi, Math.max(lo, value));
@@ -25,7 +25,7 @@ function clamp(value, lo, hi) {
 export function speedFromSlider(value) {
     const v = Number(value);
     if (!Number.isFinite(v)) return SPEED_DEFAULT;
-    return clamp(10 ** clamp(v, LOG_MIN, LOG_MAX), SPEED_MIN, SPEED_MAX);
+    return 10 ** clamp(v, LOG_MIN, LOG_MAX);
 }
 
 /** The slider value (log10 units) for a multiplier. */
@@ -55,14 +55,14 @@ export function speedSliderMarkup() {
 }
 
 /** The multiplier the slider shows now (1 when there is no slider). */
-export function readSpeed(input) {
+function readSpeed(input) {
     if (!input) return SPEED_DEFAULT;
     return speedFromSlider(input.value);
 }
 
 /**
  * Keeps the readout in step with the slider and calls onChange(multiplier)
- * now and on every move. Returns a reader for the current multiplier.
+ * now and on every move.
  */
 export function bindSpeedSlider(root, onChange, listen) {
     const input = root.querySelector("#speed");
@@ -73,9 +73,7 @@ export function bindSpeedSlider(root, onChange, listen) {
         if (out) out.textContent = shown;
         input?.setAttribute?.("aria-valuetext", shown);
         onChange?.(m);
-        return m;
     };
     input?.addEventListener("input", sync, listen);
     sync();
-    return () => readSpeed(input);
 }

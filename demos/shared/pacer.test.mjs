@@ -56,4 +56,23 @@ assert.equal(skipMs(300, 100, { floor: false }), 3);
     await pacedWait(10);
     assert.equal(fired, 10);
 }
+// A stall is not paid back in one burst: the debt is capped at a frame, so
+// after the thread blocks for 400 ms the chain goes on taking real time.
+{
+    let afterStall = 0;
+    let t1 = 0;
+    for (let i = 0; i < 1000; i++) {
+        await pacedWait(1);
+        if (i === 100) {
+            const until = performance.now() + 400;
+            while (performance.now() < until) { /* block the thread */ }
+            afterStall = performance.now();
+        }
+        if (i === 400) t1 = performance.now();
+    }
+    const ms = t1 - afterStall;
+    // Uncapped, the 300 waits after the stall fall inside its 400 ms debt and
+    // release at once (a few ms); capped, they take about 300 ms.
+    assert.ok(ms >= 250, `300 × 1 ms after a 400 ms stall: ${ms.toFixed(0)} ms`);
+}
 console.log("pacer tests ok");

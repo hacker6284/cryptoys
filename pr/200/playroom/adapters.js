@@ -809,7 +809,7 @@ export function createDoubleDealAdapter() {
  * block's deal. Only toys: no tray, no label cards. A (the shelf's only
  * megaminx) flies off the shelf; B, C and the boxed deck come out of the
  * toy chest; enter lands them on the felt, then the three puzzles hop in
- * turn (A, B, C), and the deck's flap
+ * turn (B, A, C, left to right), and the deck's flap
  * lifts while the camera settles on the `drei` seat. Hashing and tracing
  * run in a worker on the generated module (demos/megadreifach/).
  */
@@ -1016,9 +1016,7 @@ export function createMegaDreifachAdapter() {
                     await stage.resetPuzzles({ snap: reduced });
                 }
                 await seated;
-                if (cancelEnter) {
-                    return session;
-                }
+                if (cancelEnter) return session;
                 // Sound is on hold project-wide: none here.
                 session = mod.createMegaDreifachSession({
                     view: stage,

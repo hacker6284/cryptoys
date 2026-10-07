@@ -49,8 +49,7 @@ MegaDreifach ([`drei-stage.js`](drei-stage.js)) seats **three** megaminx
 rigs (`createTwistySeat`, edge `MINX` 72 mm): A (the shelf toy `drei`),
 B and C as their own toys (`dreiB`, `dreiC`) that fly from the toy chest.
 All three stand straight on the felt in one row, B | A | C, as wide as
-the deal (no tray, cups or label cards; the roll call's status line names
-them left to right). Each gets its
+the deal (no tray, cups or label cards). Each gets its
 own player and alg (the show's A / B / C move lists, literal turns such
 as `U2'`); grips are a quaternion on `rig.lift`, never on the adopted
 object. Adopting three players costs about three times the 3×3 boot on

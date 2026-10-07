@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { realSizeOf } from "./constants.js";
 import { fitToRealSize, keepFitted, measureWorldBox } from "./motion.js";
 import { PUZZLES, PUZZLE_IDS, normalizePuzzleId } from "./puzzles.js";
+import { pacedWait, skipMs } from "../shared/pacer.js";
 
 export { PUZZLES, PUZZLE_IDS, normalizePuzzleId };
 export {
@@ -245,6 +246,10 @@ export async function adoptTwistyPuzzle(seat, {
         seat.group.userData.keepFitted = keepPuzzleFitted;
 
         let currentAlg = String(alg ?? spec.alg ?? "");
+        // The tempo it was made at is its 1× (the locked speed); setTempo
+        // moves tempoNow. Above it, turns shorter than a frame skip frames.
+        const baseTempo = Number(tempoScale) || 1.4;
+        let tempoNow = baseTempo;
 
     async function timeline() {
         const [indexer, info] = await Promise.all([
@@ -290,6 +295,39 @@ export async function adoptTwistyPuzzle(seat, {
         requestTimestamp(indexer.indexToMoveStartTimestamp(leaf) + indexer.moveDuration(leaf));
     }
 
+    async function skipLeaves({ indexer, start, end, total, startTs, endTs, skip, mine, onStart, beforeStart, onLeaf }) {
+        player.pause();
+        requestTimestamp(startTs);
+        const durations = [];
+        const leaves = [];
+        for (let i = start; i < end; i++) {
+            durations.push(indexer.moveDuration(i));
+            leaves.push(String(indexer.getAnimLeaf?.(i) ?? ""));
+        }
+        const info = { durations, tempo: tempoNow, leaves, skipped: true };
+        if (beforeStart) {
+            let go = true;
+            try {
+                go = await beforeStart(info);
+            } catch (err) {
+                console.warn("playLeaves beforeStart failed", err);
+            }
+            if (go === false || disposed || mine !== seekGen) return { index: start, total };
+        }
+        requestTimestamp(endTs);
+        if (onStart) {
+            try {
+                onStart({ at: performance.now(), ...info });
+            } catch (err) {
+                console.warn("playLeaves onStart failed", err);
+            }
+        }
+        if (onLeaf) for (let i = start; i < end; i++) onLeaf(i);
+        await pacedWait(skip);
+        if (disposed || mine !== seekGen) return { index: start, total };
+        return { index: end - 1, total };
+    }
+
     // onStart({ at, durations, tempo, leaves }): called as playback starts
     // (performance.now(), each leaf's duration in ms at tempo 1, the tempo
     // and each leaf's move, e.g. "R'"), so callers can time per-leaf
@@ -310,6 +348,15 @@ export async function adoptTwistyPuzzle(seat, {
             if (end <= start) return { index: start, total };
             const startTs = indexer.indexToMoveStartTimestamp(start);
             const endTs = indexer.indexToMoveStartTimestamp(end - 1) + indexer.moveDuration(end - 1);
+            if (!snap) {
+                // Faster than 1× and shorter than a frame: no in-between
+                // frames. Every leaf still lands, in order (onLeaf for each),
+                // and its time passes on the pacer's clock.
+                let span = 0;
+                for (let i = start; i < end; i++) span += indexer.moveDuration(i);
+                const skip = skipMs(span / baseTempo, tempoNow / baseTempo);
+                if (skip !== null) return await skipLeaves({ indexer, start, end, total, startTs, endTs, skip, mine, onStart, beforeStart, onLeaf });
+            }
             player.pause();
             requestTimestamp(snap ? endTs : startTs);
             await frame();
@@ -427,7 +474,8 @@ export async function adoptTwistyPuzzle(seat, {
             player.experimentalSetupAlg = String(setup || "");
         },
         setTempo(scale) {
-            player.tempoScale = Number(scale) || 1;
+            tempoNow = Number(scale) || 1;
+            player.tempoScale = tempoNow;
         },
         playLeaves,
         jumpToLeaf: jumpToLeafEnd,

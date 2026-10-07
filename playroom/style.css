@@ -645,6 +645,14 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   background: #f3efe6;
 }
 
+/* The speed readout (shared/speed.js): fixed width so the slider never shifts. */
+.speed-slider output {
+  display: inline-block;
+  min-width: 2.6rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 .playroom-dock .outline {
   display: none;
 }

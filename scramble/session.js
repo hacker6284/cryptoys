@@ -12,6 +12,7 @@ import {
 import { bindGrowFields } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
 import { createLiveDigest } from "../shared/live-digest.js";
+import { bindSpeedSlider } from "../shared/speed.js";
 import {
     bindSegmented,
     bindTransport,
@@ -54,7 +55,6 @@ export function createScrambleSession({
     const status = $("#status");
     const digestEl = $("#digest");
     const errorEl = $("#error");
-    const speed = $("#speed");
     const teachEl = $("#teach");
     const tapeEl = $("#tape");
     const outlineEl = $("#outline");
@@ -82,6 +82,8 @@ export function createScrambleSession({
     let messageBytes = [];
     let fileBytes = null;
     let fileAbort = null;
+    // The dock's speed multiplier (shared/speed.js); 1× is the view's locked tempo.
+    let speed = 1;
     const live = createLiveDigest();
 
     function bytesOf(text) {
@@ -186,7 +188,7 @@ export function createScrambleSession({
     function bindAlg() {
         if (!usesTimeline()) return;
         view.setAlg(projectedAlg.alg);
-        view.setTempo?.(Number(speed?.value) || 1.4);
+        view.setSpeed?.(speed);
         void view.jumpToLeaf?.(-1);
     }
 
@@ -501,9 +503,10 @@ export function createScrambleSession({
         refreshDigest();
     }
 
+    // Views without a timeline: a turn's length (700 / 900 ms at pace 1;
+    // 1× is pace 1.4, the cube's locked tempo).
     function duration(kind) {
-        const pace = Number(speed.value);
-        return (kind === "move" || kind === "closer" ? 700 : 900) / pace;
+        return (kind === "move" || kind === "closer" ? 700 : 900) / (1.4 * speed);
     }
 
     async function playStep(token) {
@@ -716,7 +719,10 @@ export function createScrambleSession({
         if (typeof swapPuzzle === "function") {
             try {
                 const nextView = await swapPuzzle(nextId);
-                if (nextView) view = nextView;
+                if (nextView) {
+                    view = nextView;
+                    view.setSpeed?.(speed);
+                }
             } catch (err) {
                 errorEl.textContent = err.message || "Could not switch puzzle.";
                 return;
@@ -751,8 +757,9 @@ export function createScrambleSession({
         showStatus(caption());
     }
 
-    speed?.addEventListener("input", () => {
-        view.setTempo?.(Number(speed.value) || 1);
+    bindSpeedSlider(root, (multiplier) => {
+        speed = multiplier;
+        view.setSpeed?.(multiplier);
     }, listen);
     $("#digest-btn")?.addEventListener("click", async () => {
         try {
@@ -802,7 +809,10 @@ export function createScrambleSession({
         enterTeach,
         recompute: refreshDigest,
         setView(next) {
-            if (next) view = next;
+            if (next) {
+                view = next;
+                view.setSpeed?.(speed);
+            }
             live.dropTimeline();
             if (teaching) ensureTimeline();
         },

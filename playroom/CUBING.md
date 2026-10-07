@@ -21,7 +21,7 @@ Spike that proved adopt-into-scene (isolated page, not this path):
 | Step / session leaf | `experimentalModel.indexer` + `detailedTimelineInfo` + `timestampRequest.set` |
 | setAlg | `player.alg = "…"` |
 | Setup (Solve) | `player.experimentalSetupAlg` |
-| Tempo | `player.tempoScale` (speed slider) |
+| Tempo | `player.tempoScale` (the dock's speed × the locked 1.4; `shared/speed.js`) |
 | Seat / fly | translate `rig.group` (toy-director from motion #25) |
 | Lift-off-felt | `stageCubeView` still lifts `rig.group.y` (#25). `rig.lift` is the local hook. |
 | Size | scale `rig.fit` only — never the adopted Object3D. Every toy is at real-life scale (invariant; never fit a toy to another toy's box): each puzzle is fitted to its own real measure from `REAL_SIZES` in `constants.js` (3×3 57 mm edge, megaminx 70 mm face to face, pyraminx 97 mm edge), measured on that true measure, not the bounding box. Fit from **local** TRS (`fitToRealSize` / `keepFitted`), then re-apply on every Twisty `render-scheduled` and again in `world.render` so a post-spawn layout cannot permanently crush the puzzle. |
@@ -108,12 +108,11 @@ world box measured mid-flight left C floating.
 Layer / cubie / Rule B glow has no cubing.js equivalent. Those view methods
 are no-ops. Teach copy still names the turn.
 
-## `createCubeRig`
+## One drawing path
 
-Playroom has one drawing path: cubing.js `TwistyPlayer`. There is no
-`?legacyCube=1` fallback and no hand-rolled hub mesh. Standalone
-`scramble/?standalone=1` still uses `createCubeRig` for the teaching
-page (not a playroom twisty toy).
+Scramble has one drawing path: cubing.js `TwistyPlayer`. There is no
+`?legacyCube=1` fallback and no hand-rolled mesh; the standalone page's
+`createCubeRig` went with it (`scramble/` forwards to the playroom).
 
 ## Deps / license
 

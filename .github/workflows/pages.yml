@@ -2,6 +2,11 @@
 # Render static site `cryptoys` deploys from main and must run the same
 # generate path (tools/render-build.sh → tools/generate-demos.sh) before
 # publishing demos/. See .github/RENDER.md.
+#
+# No workflow-level concurrency. build and publish-branch always run;
+# only the deploy joins group `pages` (republish-pages.yml). A pending
+# pages run in that group was cancelled by republish before any job
+# started, so this commit never reached gh-pages.
 
 name: pages
 
@@ -14,12 +19,6 @@ permissions:
   contents: write
   pages: write
   id-token: write
-
-concurrency:
-  # Shared with republish-pages.yml so only one deploy-pages runs at a time.
-  # A newer main deploy cancels whatever holds the group, even a queued run with no runner.
-  group: pages
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -42,9 +41,6 @@ jobs:
             rm -rf demos/pr
             cp -a .gh-pages/pr demos/pr
           fi
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: demos
       - uses: actions/upload-artifact@v4
         with:
           name: site
@@ -74,11 +70,12 @@ jobs:
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
 
   deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+    needs: publish-branch
+    # `uses` does not inherit workflow permissions. Without this block the
+    # called workflow gets the default token and cannot elevate it.
+    # contents: read checks out gh-pages; pages and id-token deploy it.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/republish-pages.yml

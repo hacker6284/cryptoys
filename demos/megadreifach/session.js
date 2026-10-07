@@ -16,7 +16,6 @@ import { bindSpeedSlider } from "../shared/speed.js";
 import { bindTeachKeys, setDisabled } from "../shared/teach.js";
 import { createHasher } from "./hasher.js";
 
-const EMPTY_STATUS = "Type a message, or pick a known answer.";
 const READY_STATUS = "Play shows every turn: cook, deal, 52 cards, 26 echoes, 3-solve.";
 const DIGEST_ONLY_STATUS = "Digest only: too long to show turn for turn.";
 const NO_TRACE_STATUS = "Digest only: this build has no trace to animate.";
@@ -32,9 +31,6 @@ export function createMegaDreifachSession({
     exposeTeach = false,
     hasher = createHasher(),
     katsUrl = new URL("./generated/kats.json", import.meta.url).href,
-    // Optional words naming the puzzles where they stand (the playroom's
-    // table has no labels): shown ahead of the empty-message status.
-    cast = "",
 } = {}) {
     const { abort, listen, $, $$ } = sessionScope(root);
     const input = $("#message");
@@ -64,7 +60,6 @@ export function createMegaDreifachSession({
     let job = 0;
     let disposed = false;
     let kats = [];
-    const emptyStatus = cast ? `${cast} ${EMPTY_STATUS}` : EMPTY_STATUS;
 
     function status(text) {
         if (statusEl) statusEl.textContent = text;
@@ -134,7 +129,7 @@ export function createMegaDreifachSession({
     }
 
     function describeReady() {
-        if (!hasMessage()) return emptyStatus;
+        if (!hasMessage()) return "";
         if (!info || info.gen !== gen) return "Hashing…";
         const blocks = `${info.blocks} block${info.blocks === 1 ? "" : "s"}`;
         if (kat) {
@@ -182,7 +177,7 @@ export function createMegaDreifachSession({
         if (!hasMessage()) {
             info = null;
             if (digestEl) digestEl.value = "";
-            status(emptyStatus);
+            status("");
             syncControls();
             return;
         }

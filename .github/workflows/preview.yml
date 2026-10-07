@@ -75,6 +75,7 @@ jobs:
     concurrency:
       group: gh-pages-publish
       cancel-in-progress: false
+      queue: max
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -188,6 +189,7 @@ jobs:
     concurrency:
       group: gh-pages-publish
       cancel-in-progress: false
+      queue: max
     steps:
       - name: Remove pr/${{ github.event.pull_request.number || inputs.pr_number }}/
         env:

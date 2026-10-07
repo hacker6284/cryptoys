@@ -1,12 +1,15 @@
 # Deploy the gh-pages tree (production root + pr/<N>/ previews) through
-# the official Pages artifact. Runs on main so it satisfies the
-# github-pages environment branch policy.
+# the official Pages artifact. pages.yml calls this after publish-branch;
+# a successful preview run and workflow_dispatch run it directly. Every
+# path checks out gh-pages when the deploy job starts.
 #
-# Triggered after the preview workflow writes or removes a PR folder.
+# github-pages allows only main. workflow_call uses the caller's
+# GITHUB_REF (pages pushes main). workflow_run uses the default branch.
 
 name: republish-pages
 
 on:
+  workflow_call:
   workflow_run:
     workflows: [preview]
     types: [completed]
@@ -17,16 +20,18 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  # Shared with pages.yml. Stays false so a preview republish never cancels a main deploy;
-  # the next pages run clears a stuck republish.
-  group: pages
-  cancel-in-progress: false
-
 jobs:
   deploy:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # workflow_call reuses the caller's event, so a pages push is `push`,
+    # not `workflow_call`. Skip only a preview workflow_run that did not succeed.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    concurrency:
+      # Job-level so a called run and a direct run both join `pages`.
+      # The caller job must not use this group. Every deploy checks out
+      # gh-pages HEAD, so cancelling or replacing a run is safe.
+      group: pages
+      cancel-in-progress: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

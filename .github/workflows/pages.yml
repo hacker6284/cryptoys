@@ -2,6 +2,9 @@
 # Render static site `cryptoys` deploys from main and must run the same
 # generate path (tools/render-build.sh → tools/generate-demos.sh) before
 # publishing demos/. See .github/RENDER.md.
+#
+# Own group so the newest main wins. Only the deploy joins the shared
+# `pages` group (republish-pages.yml).
 
 name: pages
 
@@ -16,9 +19,7 @@ permissions:
   id-token: write
 
 concurrency:
-  # Shared with republish-pages.yml so only one deploy-pages runs at a time.
-  # A newer main deploy cancels whatever holds the group, even a queued run with no runner.
-  group: pages
+  group: pages-main
   cancel-in-progress: true
 
 jobs:
@@ -42,9 +43,6 @@ jobs:
             rm -rf demos/pr
             cp -a .gh-pages/pr demos/pr
           fi
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: demos
       - uses: actions/upload-artifact@v4
         with:
           name: site
@@ -55,8 +53,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     concurrency:
+      # One pending job per group by default, and these writes differ,
+      # so queue instead of replacing each other.
       group: gh-pages-publish
       cancel-in-progress: false
+      queue: max
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -74,11 +75,10 @@ jobs:
           user_email: 41898282+github-actions[bot]@users.noreply.github.com
 
   deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+    needs: publish-branch
+    # Least privilege for the deploy: read gh-pages, deploy Pages.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/republish-pages.yml

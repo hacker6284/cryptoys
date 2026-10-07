@@ -52,13 +52,51 @@ export const CARD_D = REAL_SIZES.card.d;
 // The Scramble 3×3's real edge. Not a size for any other toy: each puzzle
 // is fitted to its own REAL_SIZES entry (twisty-rig adoptTwistyPuzzle).
 export const CUBE = REAL_SIZES["3x3x3"].m;
+// Each MegaDreifach megaminx at its own real size (REAL_SIZES.megaminx:
+// 70 mm face to face).
+export const MINX = REAL_SIZES.megaminx.m;
+// MegaDreifach v3 layout (metres; x from DEN.x, z from DEN.z, +z toward
+// the seat). Every toy and card at its real size, nothing overlapping:
+//   - the puzzle row, B | A | C, on DREI_ROW_Z, DREI_PITCH apart (a 70 mm
+//     megaminx is at most 88 mm across, so neighbours stay >= 50 mm
+//     apart, also while one lifts for a turn);
+//   - the DEAL tuck box (67 x 20 mm standing) one gap left of B, and the
+//     held card's seat (63 x 88 mm, face up) one gap right of C;
+//   - the deal: 52 cards in 13 columns x 4 rows, 4 mm apart (as
+//     doubledeal/real-layout.js), its far row DREI_GAP in front of the
+//     puzzles. 867 x 364 mm: well inside the 0.945 m felt radius.
+// No tray, no cups, no labels: only toys on the table.
+export const DREI_PITCH = 0.14;
+export const DREI_ROW_Z = -0.25; // row centre line, from DEN.z
+export const DREI_SEAT_XZ = {
+    A: [0, 0],
+    B: [-DREI_PITCH, 0],
+    C: [DREI_PITCH, 0],
+};
+export const DREI_GAP = 0.04;
+// A megaminx's widest footprint (corner to corner, 70 mm face to face).
+export const MINX_SPAN = 0.088;
+export const DREI_DECK_X = -(DREI_PITCH + MINX_SPAN / 2 + DREI_GAP + REAL_SIZES.deckBox.w / 2);
+export const DREI_HELD_X = DREI_PITCH + MINX_SPAN / 2 + DREI_GAP + REAL_SIZES.card.w / 2;
+// The deal grid: card pitch (63 + 4, 88 + 4 mm) and the far row's centre.
+export const DREI_DEAL = {
+    cols: 13,
+    rows: 4,
+    gap: 0.004,
+    colPitch: REAL_SIZES.card.w + 0.004,
+    rowPitch: REAL_SIZES.card.d + 0.004,
+    farZ: DREI_ROW_Z + MINX_SPAN / 2 + DREI_GAP + REAL_SIZES.card.d / 2,
+};
+export const DREI_EXTRA = { dreiB: "B", dreiC: "C" };
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = REAL_SIZES.deckBox.h;
 
 // Fallback only, when a toy cannot be measured: seatOnSurface seats from
 // the live post-scale shape (a megaminx's own height, not the cube's).
 export function toyHalfHeight(name) {
-    return name === "deck" || name === "deck2" ? DECK_H / 2 : CUBE / 2;
+    if (name === "deck" || name === "deck2" || name === "deck3") return DECK_H / 2;
+    if (name === "drei" || name === "dreiB" || name === "dreiC") return MINX / 2;
+    return CUBE / 2;
 }
 
 export const DEN = { x: -0.35, z: 0.15 };
@@ -79,6 +117,8 @@ export const SHELF_TOP = SHELF_Y1 + SHELF_THICK / 2;
 export const SLOTS = {
     deck: { x: -1.35, y: SHELF_Y1 },
     cube: { x: -0.55, y: SHELF_Y1 },
+    // MegaDreifach's megaminx A; B, C and its deck wait in the chest.
+    drei: { x: -0.04, y: SHELF_Y1 },
 };
 
 // Shared rAF step cap. 60fps is unchanged (~16ms). Software-GL and

@@ -55,6 +55,7 @@ A demo supplies:
   - `busy`: true while enter choreography runs, so click / Escape can skip it.
   - `leaveMs({ snap })`: length of `leave()`'s own beats; the camera's shot home spans them plus the flight home.
   - `revealShelf()`: after the toys are home (or a failed enter), shows its shelf props again.
+- Toys: the hub shelf holds exactly **one** copy of each toy. Extra copies live in the toy chest (kept in boxes where the toy has one) and come out when a demo needs them (`chest: true`; every toy after the first in `toys` flies from the chest). Strength settings that need more toys pull them from the chest inside the scene.
 - One entry in [`playroom/demos.js`](playroom/demos.js) (fields described there). Every name in `toys` must already be in `world.toys`. A new toy means [`playroom/world.js`](playroom/world.js) work (the toy with its `rim:<name>` light, its shelf pose for `shelfHome`), a `SLOTS` entry in [`playroom/constants.js`](playroom/constants.js), and maybe a fly beat.
 
 Still manual:
@@ -63,13 +64,15 @@ Still manual:
 - The `build_one` line in [`tools/build.sh`](../tools/build.sh) and the `test -f` lines in [`tools/generate-demos.sh`](../tools/generate-demos.sh).
 - The primitive's path in the `paths` filter of [`preview.yml`](../.github/workflows/preview.yml). Its PR comment links only Scramble's generated module.
 - The required generated files in [`.github/RENDER.md`](../.github/RENDER.md).
-- Demo-named branches: `writeQuery` in `playroom/app.js` keeps `?puzzle=` only for `scramble`; [`playroom/toy-director.js`](playroom/toy-director.js) names the `cube-fly` / `key-fly` and `msg-out` beats (`capture-strip.test.mjs` reads `cube-fly`).
+- Demo-named branches: `writeQuery` in `playroom/app.js` keeps `?puzzle=` only for `scramble`; [`playroom/toy-director.js`](playroom/toy-director.js) names the `cube-fly` / `key-fly` / `drei-fly` and `msg-out` beats (`capture-strip.test.mjs` reads `cube-fly`).
 
 ## Production
 
 https://hacker6284.github.io/cryptoys/ and https://cryptoygraphy.com/ (`cryptoys.onrender.com`).
 
-Scramble and DoubleDeal both run in the room (`?algo=scramble`, `?algo=doubledeal`). The standalone teaching pages remain at `scramble/?standalone=1` and `doubledeal/?standalone=1`.
+Scramble, DoubleDeal and MegaDreifach all run in the room (`?algo=scramble`, `?algo=doubledeal`, `?algo=megadreifach`). The standalone teaching pages remain at `scramble/?standalone=1` and `doubledeal/?standalone=1`; MegaDreifach is room-only (`megadreifach/` forwards to it), since its deck must be a real toy on the table, not a 2D strip.
+
+MegaDreifach shows **v3 (ZP26)**, the current version (SPEC: `primitives/hash/megadreifach/v3/SPEC.md`, copied beside the page by `tools/build.sh`). Three cubing.js megaminxes (A carries `h`, B `h⁻¹`, C stays solved) stand straight on the felt, plus the DEAL deck in its tuck box: only toys, at real size (megaminx 70 mm face to face, cards 63 × 88 mm), no tray, pedestals or label cards. The shelf holds A (toy `drei`); B and C (`dreiB`, `dreiC`) and the DEAL deck (`deck3`) come out of the toy chest and land on the felt in one line: deck box | B A C | the held card's seat, with the deal's 13 × 4 grid in front (4 mm between cards, nothing overlaps; `playroom/constants.js` has the layout and `playroom/room.test.mjs` checks it fits on the felt). As the three hop in turn, a caption names them left to right (B, A, C). Hashing runs in a Web Worker on the sudoc-generated module ([`megadreifach/worker.js`](megadreifach/worker.js)); the KAT menu checks the live digest against `megaminx_hash_kats_v3.json`. The message box opens empty. Play uses only the generated `trace_hash` (non-exported, demo-only; v3 sudo, with three sudo tests tying it to `Hash` on every KAT). A one-block message (up to 19 bytes) plays every turn, literally and at the dock's tempo, never truncated or time-lapsed (about 1,500 turns): cook A (IV-COOK12) and B backwards; the deal laid face down from the box (`anim/deck/deal`'s locked law); 52 card steps (each card turns face up where it lies, then its six turns: the rank-and-suit turn, the edge and corner named by colour, five single clicks); card 52 moves to the held seat; 26 echoes (a dealt card turns face down as the counter, the look marks the held pieces' stickers X and Y that give P, then P's six turns); and the 3-solve (B onto A; A onto B and C; C onto A). The cards go back in the box. Longer messages are too long to trace and get the digest only. Every face turn lifts and sets down with `anim/megaminx`'s locked timing via `playroom/cube-stage.js`; the cards use `anim/deck` (box flap, deal, and `deck/card` turnOver / move / straight, not yet approved). Teach mode gives one action per step, rings the face being turned and dots the named edge (cream) and corner (blue). On **Back** the cards go into their box, B and C into the chest, A to the shelf; the puzzles stay as they were and the next enter undoes their turns in place. No sound (on hold).
 
 DoubleDeal enter is continuous: KEY tuck-box off the shelf, MSG deck out of the toy chest, physical unbox / packet deal, boxes set standing on the felt, then the live 4×13 lays from those two decks. No opacity fades and no hide-prop / show-table cut. Shared playroom motion helpers ([`playroom/motion.js`](playroom/motion.js): hop, hold, camera track, rest seat) drive that path; flap/extract and 4×13 form stay DoubleDeal-only. Skip / reduced-motion use a shorter continuous path (shared pose controller may still instant-seat for `prefers-reduced-motion`).
 
@@ -102,7 +105,7 @@ https://hacker6284.github.io/cryptoys/pr/<N>/
 
 The workflow leaves a sticky PR comment with that link.
 
-**Review:** open the preview URL, click **Scramble**, and confirm the generated module loads (teach dock appears; no import / 404 error). Then **Back** and click **DoubleDeal** — the deck should leave the shelf and the same Maps dock should run the card tool in-room. Smoke-check `scramble/generated/scramble.mjs` and `doubledeal/generated/doubledeal.mjs` — they should be HTTP 200 and JavaScript.
+**Review:** open the preview URL, click **Scramble**, and confirm the generated module loads (teach dock appears; no import / 404 error). Then **Back** and click **DoubleDeal** — the deck should leave the shelf and the same Maps dock should run the card tool in-room. Then **MegaDreifach** — three megaminxes and a deck land on the felt (no tray, no labels), the three puzzles hop, and KAT → any vector says “digest matches the KAT file ✓”. Smoke-check `scramble/generated/scramble.mjs`, `doubledeal/generated/doubledeal.mjs` and `megadreifach/generated/megadreifach.mjs` — they should be HTTP 200 and JavaScript.
 
 Files land on the `gh-pages` branch under `pr/<N>/`. Official Pages is a single artifact from `main`, so the `github.io` URL appears after `republish-pages` (or the next `pages` deploy) copies that branch. Closing the PR deletes `pr/<N>/`.
 

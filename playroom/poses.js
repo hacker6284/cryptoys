@@ -44,6 +44,23 @@ export const POSES = {
         fov: 30,
         overlays: { title: true, menu: false, teach: true },
     },
+    // MegaDreifach v3: the whole table at real size, deck box | B A C |
+    // held card on the back line and the 13 × 4 deal (0.87 m wide) in
+    // front, ~45° down, aimed right of the set's centre so it sits in the
+    // frame's left part, clear of the dock on the right.
+    drei: {
+        position: [DEN.x + 0.16, 1.90, DEN.z + 1.07],
+        target: [DEN.x + 0.16, 0.78, DEN.z - 0.11],
+        fov: 32,
+        overlays: { title: true, menu: false, teach: true },
+        // Phones: steeper, centred on the whole set, aimed below it so
+        // the set sits above the transport and dock.
+        portrait: {
+            position: [DEN.x, 2.55, DEN.z + 0.95],
+            target: [DEN.x, 0.76, DEN.z + 0.12],
+            fov: 50,
+        },
+    },
     // Legacy named travel shot. Production enter uses followTo and
     // does not snap or ease through this pose.
     unbox_travel: {
@@ -81,6 +98,8 @@ const ALIASES = {
     lean_cube: "scramble",
     doubledeal: "doubledeal",
     lean_deck: "doubledeal",
+    drei: "drei",
+    megadreifach: "drei",
     unbox_travel: "unbox_travel",
     unbox: "unbox",
     unbox_deal: "unbox_deal",

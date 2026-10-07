@@ -11,6 +11,7 @@ import {
     restingClearance,
 } from "./layout.js";
 import { timing as GRID_DEAL } from "../anim/deck/deal/index.js";
+import { pacedWait, skipMs } from "../shared/pacer.js";
 
 const SUIT_FILE = ["club", "heart", "spade", "diamond"];
 const RANK_FILE = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"];
@@ -178,6 +179,12 @@ export const TABLE_TIMING = {
 };
 
 /**
+ * DoubleDeal's 1× pace, the dock's locked default: 1.8, the pace the
+ * approved deal plays at (demos/anim/deck/deal timing.pace).
+ */
+export const TABLE_PACE = GRID_DEAL.pace;
+
+/**
  * Live 52+52 card table. Positions stay in the standalone DoubleDeal
  * units; the playroom adapter scales the parent group onto the felt.
  */
@@ -235,7 +242,22 @@ export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMIN
     const grid = [Array(13).fill(null), Array(13).fill(null), Array(13).fill(null), Array(13).fill(null)];
     let packet = [];
     let pace = 1;
+    // The pace that counts as 1× (play's third argument): above it, motions
+    // and waits shorter than a frame skip frames (shared/pacer.js).
+    let basePace = 1;
     let generation = 0;
+
+    function speedUp() {
+        return pace / basePace;
+    }
+
+    // A wait of ms (at pace 1); never a frame floor.
+    function after(ms, fn) {
+        const scaled = ms / pace;
+        const skip = skipMs(ms / basePace, speedUp(), { floor: false });
+        if (skip === null) setTimeout(fn, scaled);
+        else void pacedWait(skip).then(fn);
+    }
 
     function faceUp(mesh) { mesh.rotation.set(0, 0, 0); }
     function faceDown(mesh) { mesh.rotation.set(Math.PI, 0, 0); }
@@ -243,6 +265,11 @@ export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMIN
     function tween(ms, step) {
         const gen = generation;
         const scaled = ms / pace;
+        const skip = skipMs(ms / basePace, speedUp());
+        if (skip !== null) {
+            step(1);
+            return pacedWait(skip);
+        }
         return new Promise((resolve) => {
             const start = performance.now();
             function tick(now) {
@@ -285,10 +312,10 @@ export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMIN
             const row = major === "row" ? Math.floor(index / 13) : index % 4;
             const col = major === "row" ? index % 13 : Math.floor(index / 4);
             grid[row][col] = mesh;
-            setTimeout(() => {
+            after(index * timing.dealStaggerMs, () => {
                 if (gen !== generation) resolve();
                 else moveTo(mesh, gridPos(row, col, MESSAGE_X), timing.dealMs, true).then(resolve);
-            }, index * (timing.dealStaggerMs / pace));
+            });
         })));
     }
 
@@ -850,8 +877,11 @@ export function createCardTable({ parent, faces, navy, red, timing = TABLE_TIMIN
         return { within, between, designed: L.restingClearance() };
     }
 
-    async function play(step, nextPace) {
+    // nextPace: the dock's pace; base: the pace that is 1× (default: this
+    // one, so callers that pass no base never skip frames).
+    async function play(step, nextPace, base = nextPace) {
         pace = nextPace || 1;
+        basePace = base || pace;
         const ms = timing.stepMs;
         if (step.kind === "reset") {
             await resetKey(step, ms);

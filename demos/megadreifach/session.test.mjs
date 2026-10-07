@@ -61,9 +61,9 @@ function el(tag, id = "", dataset = {}) {
 function makeRoot() {
     const ids = ["message", "digest", "status", "error", "anim-note", "io-note", "teach", "teach-card",
         "teach-pos", "play", "step", "skip-end", "reset", "speed", "kat", "kat-menu", "spec", "spec-body",
-        "spec-btn", "spec-close", "digest-btn"];
+        "spec-btn", "spec-close", "digest-btn", "speed-out"];
     const byId = Object.fromEntries(ids.map((id) => [id, el(id === "message" || id === "digest" ? "textarea" : "div", id)]));
-    byId.speed.value = "12";
+    byId.speed.value = "0"; // the shared log slider (shared/speed.js): 1×
     byId["anim-note"].hidden = true;
     const enc = ["text", "hex"].map((e) => el("button", "", { encoding: e }));
     const jumps = ["back", "fwd", "stage-back", "stage-fwd", "round-back", "round-fwd"].map((j) => el("button", "", { jump: j }));
@@ -84,7 +84,7 @@ function stubView() {
         seek: async (i) => { calls.push(["seek", i]); },
         playBeat: async (beat, i) => { calls.push(["beat", i, beat.kind]); },
         clearShow: async () => { calls.push(["clear"]); },
-        setTempo: (t) => { calls.push(["tempo", t]); },
+        setSpeed: (m) => { calls.push(["speed", m]); },
     };
 }
 
@@ -121,6 +121,18 @@ test("empty state: no prefilled message, no digest, transport off", { skip: !rea
     assert.equal($.message.value, "", "no prefilled message");
     assert.equal($.play.disabled, true);
     assert.equal($["anim-note"].hidden, true);
+    session.dispose();
+});
+
+test("the dock's speed reaches the stage as a multiplier (1× at start)", { skip: !ready }, async () => {
+    const { root, view, session } = await setup();
+    const $ = root.byId;
+    assert.deepEqual(view.calls.find(([kind]) => kind === "speed"), ["speed", 1], "1× at start");
+    assert.equal($["speed-out"].textContent, "1×");
+    $.speed.value = "2";
+    $.speed.fire("input");
+    assert.deepEqual(view.calls.filter(([kind]) => kind === "speed").at(-1), ["speed", 100], "the top end is 100×");
+    assert.equal($["speed-out"].textContent, "100×");
     session.dispose();
 });
 

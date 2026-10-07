@@ -2,10 +2,10 @@ import { GATHER_MS, RESTOW_MS } from "./constants.js";
 import { SOLVED_FACELETS } from "../scramble/cube.js";
 import { bindGrowFields } from "../shared/grow-field.js";
 import { lucideSvg } from "../shared/icons.js";
+import { speedSliderMarkup } from "../shared/speed.js";
 import { createBeatClock, yieldFrame } from "./beat-clock.js";
 import { stageCardTable } from "./card-stage.js";
 import { stageCubeView } from "./cube-stage.js";
-import { timing as scrambleTurnTiming } from "../anim/cube/index.js";
 import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } from "./puzzles.js";
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";
@@ -113,7 +113,7 @@ function jumpButton(jump, label, icon) {
 
 /** Shared dock markup; each demo passes its controls, fields and labels.
  * Markup chunks start with a newline so the rendered dock stays byte-identical to the old per-demo docks. */
-function mountDock(algo, { controls, fields, digestButton, hint, tape = "", roundName, speed, digin }) {
+function mountDock(algo, { controls, fields, digestButton, hint, tape = "", roundName, digin }) {
     let root = document.querySelector(`#${algo}-dock`);
     if (root) return root;
     root = document.createElement("div");
@@ -157,8 +157,7 @@ function mountDock(algo, { controls, fields, digestButton, hint, tape = "", roun
             <button id="reset" class="icon-btn" type="button" aria-label="Reset"
               title="Reset">${lucideSvg("rotate-ccw")}</button>
           </div>
-          <label class="slider">Speed <input id="speed" type="range" min="${speed.min}" max="${speed.max}" step="0.1"
-            value="${speed.value}"></label>
+          ${speedSliderMarkup()}
         </div>
       </div>
       <div class="playroom-digins">
@@ -260,7 +259,7 @@ export function createScrambleAdapter() {
           <div class="playroom-ctl playroom-ctl--field">
             <label class="playroom-label" for="message">Message</label>
             <div class="playroom-message-row">
-              <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+              <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello"></textarea>
               <button type="button" class="file-btn" id="message-file-btn" aria-label="Hash a file"
                 title="Hash a file">${lucideSvg("paperclip", 16)}</button>
             </div>
@@ -283,7 +282,6 @@ export function createScrambleAdapter() {
         tape: `
           <div id="tape" class="tape" aria-label="Message tape"></div>`,
         roundName: "symbol",
-        speed: { min: 0.5, max: 4, value: scrambleTurnTiming.speed },
         digin: '<button id="solve" class="playroom-digin" type="button">Solve</button>',
     });
     let rig = null;
@@ -502,7 +500,7 @@ export function createDoubleDealAdapter() {
         fields: `
           <label class="playroom-ctl playroom-ctl--field" for="message">
             <span class="playroom-label" id="input-label">Message</span>
-            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello">hello</textarea>
+            <textarea id="message" class="grow-field" rows="1" spellcheck="false" placeholder="hello"></textarea>
           </label>
           <p id="io-note" class="io-note" hidden></p>
           <label class="playroom-ctl playroom-ctl--field" for="key">
@@ -524,7 +522,6 @@ export function createDoubleDealAdapter() {
         digestButton: "Copy",
         hint: "Step to see each table beat.",
         roundName: "round",
-        speed: { min: 0.6, max: 8, value: 1.8 },
         digin: '<button id="random-key" class="playroom-digin" type="button">Random key</button>',
     });
     let world = null;
@@ -715,7 +712,6 @@ export function createDoubleDealAdapter() {
                         specUrl,
                         root,
                         exposeTeach: true,
-                        liveDigest: true,
                     });
                     table.rememberSeated?.();
                 })();
@@ -875,8 +871,6 @@ export function createMegaDreifachAdapter() {
         digestButton: "Copy",
         hint: "Step to see each turn.",
         roundName: "block",
-        // Starts at the library's megaminx tempo (demos/anim/megaminx, 1.4).
-        speed: { min: 0.5, max: 12, value: 1.4 },
         digin: '<button id="kat" class="playroom-digin" type="button" aria-controls="kat-menu" aria-expanded="false">'
             + 'KAT</button>'
             + '<button id="recentre" class="playroom-digin" type="button" title="Back to the table view">'

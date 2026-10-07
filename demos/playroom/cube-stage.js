@@ -1,13 +1,20 @@
 import { scrambleTurnVoice, timing as scrambleTurnTiming } from "../anim/cube/index.js";
+import { pacedTimer, pacedWait, skipMs } from "../shared/pacer.js";
 
 function easeInOut(t) {
     return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
 }
 
-function tween(ms, step, snap) {
+// skip: a skipMs() result (shorter than a frame at a fast speed): jump to
+// the end and let that time pass on the pacer's clock.
+function tween(ms, step, snap, skip = null) {
     if (snap) {
         step(1);
         return Promise.resolve();
+    }
+    if (skip !== null) {
+        step(1);
+        return pacedWait(skip);
     }
     return new Promise((resolve) => {
         const start = performance.now();
@@ -36,6 +43,11 @@ export const CUBE_STAGE_TIMING = scrambleTurnTiming;
  * voice: the sounds for it, by default the scramble-turn library entry's
  * (a click per turn, a pat when the cube lands on the felt), on the
  * page's shared AudioContext; null for none.
+ *
+ * setSpeed(multiplier): the dock's speed (shared/speed.js; 1× = the
+ * entry's locked timing.speed). The turns play at timing.speed ×
+ * multiplier, and the lift and the hold before setting down scale with
+ * it; a lift shorter than a frame jumps (shared/pacer.js).
  */
 export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_STAGE_TIMING, voice: voiceOpt } = {}) {
     let seatedY = null;
@@ -46,7 +58,17 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
     // Bumped whenever playback stops or ends, so clicks still waiting
     // for a later turn stay quiet.
     let turnGen = 0;
+    let speed = 1;
     const voice = voiceOpt === undefined ? scrambleTurnVoice() : voiceOpt;
+
+    // The lift's and the hold's length at the dock's speed (1×: the locked values).
+    function liftMs() {
+        return timing.TURN_LIFT_MS / speed;
+    }
+
+    function liftSkip() {
+        return skipMs(timing.TURN_LIFT_MS, speed);
+    }
 
     function reduced() {
         return Boolean(prefersReducedMotion?.());
@@ -66,9 +88,15 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         return seatedY == null ? rig.group.position.y : seatedY;
     }
 
+    function clearSettle() {
+        if (typeof settleTimer === "function") settleTimer();
+        else window.clearTimeout(settleTimer);
+        settleTimer = 0;
+    }
+
     function cancelEase() {
         token += 1;
-        window.clearTimeout(settleTimer);
+        clearSettle();
         rig.group.userData.easeBusy = false;
     }
 
@@ -93,11 +121,11 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
             return true;
         }
         rig.group.userData.easeBusy = true;
-        if (onMove && !(snap || reduced())) onMove(performance.now() + timing.TURN_LIFT_MS, () => my === token);
-        await tween(timing.TURN_LIFT_MS, (t) => {
+        if (onMove && !(snap || reduced())) onMove(performance.now() + liftMs(), () => my === token);
+        await tween(liftMs(), (t) => {
             if (my !== token) return;
             toy.position.y = fromY + (toY - fromY) * t;
-        }, snap || reduced());
+        }, snap || reduced(), liftSkip());
         if (my !== token) return false;
         toy.position.y = toY;
         rig.group.userData.easeBusy = false;
@@ -105,7 +133,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
     }
 
     async function lift() {
-        window.clearTimeout(settleTimer);
+        clearSettle();
         engageFrame();
         if (seatedY == null) rememberSeated();
         const up = destY() + timing.TURN_LIFT;
@@ -120,7 +148,7 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
     }
 
     async function setDown({ snap = false } = {}) {
-        window.clearTimeout(settleTimer);
+        clearSettle();
         const dest = destY();
         // The pat sounds where the cube touches the felt: the end of the set-down.
         const ok = await moveY(dest, {
@@ -134,15 +162,23 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
 
     function settle({ snap = false } = {}) {
         epoch += 1;
-        window.clearTimeout(settleTimer);
+        clearSettle();
         return setDown({ snap });
     }
 
     function scheduleSetDown() {
-        window.clearTimeout(settleTimer);
-        settleTimer = window.setTimeout(() => {
+        clearSettle();
+        const hold = timing.SETTLE_HOLD_MS / speed;
+        const skip = skipMs(timing.SETTLE_HOLD_MS, speed, { floor: false });
+        if (skip === null) {
+            settleTimer = window.setTimeout(() => {
+                void setDown();
+            }, hold);
+            return;
+        }
+        settleTimer = pacedTimer(() => {
             void setDown();
-        }, timing.SETTLE_HOLD_MS);
+        }, hold, skip);
     }
 
     // Per-move lift; the settle-hold timer is cleared by the next lift so a
@@ -183,12 +219,20 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         const live = () => mine === epoch && gen === turnGen;
         const up = destY() + timing.TURN_LIFT;
         const tweening = Math.abs(rig.group.position.y - up) >= 1e-3 && !reduced();
-        const liftEndsAt = performance.now() + (tweening ? timing.TURN_LIFT_MS : 0);
+        // A lift shorter than a frame jumps; its time passes on the pacer's clock.
+        const jumping = tweening && liftSkip() !== null;
+        const liftEndsAt = performance.now() + (tweening ? liftMs() : 0);
         const lifting = lift();
         // Without a lead-in the voice hears the turn as it really starts
         // (onStart), as before; with one, at the planned start.
         let planned = false;
         const beforeStart = async (info) => {
+            if (jumping) {
+                await lifting;
+                if (!live()) return false;
+                await opts.beforeStart?.(info);
+                return true;
+            }
             // Never a pre-turn wait: during a lift the lead-in fits inside
             // it; with the cube already up the turn starts now and a file
             // that should have begun earlier skips its head.
@@ -206,7 +250,8 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         };
         try {
             const onStart = (info) => {
-                if (!planned) voice?.turns(info, live);
+                // Turns too short for a frame (info.skipped) play silent.
+                if (!planned && !info.skipped) voice?.turns(info, live);
                 opts.onStart?.(info);
             };
             const result = await play({ ...opts, beforeStart, onStart, snap: Boolean(opts.snap) || reduced() });
@@ -237,6 +282,10 @@ export function stageCubeView(rig, { poses, prefersReducedMotion, timing = CUBE_
         setAlg: call("setAlg"),
         setSetup: call("setSetup"),
         setTempo: call("setTempo"),
+        setSpeed(multiplier) {
+            speed = multiplier;
+            rig.setTempo?.((timing.speed || 1) * speed);
+        },
         status: call("status"),
         resetTimeline: stopping("reset"),
         pauseTimeline: stopping("pause"),

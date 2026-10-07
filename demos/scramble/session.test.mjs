@@ -55,7 +55,7 @@ const nodes = {
     status: el("p", { id: "status" }),
     digest: el("textarea", { id: "digest" }),
     error: el("p", { id: "error" }),
-    speed: el("input", { id: "speed", value: "1.4" }),
+    speed: el("input", { id: "speed", value: "0" }),
     teach: el("div", { id: "teach" }),
     tape: el("div", { id: "tape" }),
     "teach-card": el("article", { id: "teach-card" }),
@@ -120,11 +120,12 @@ const root = {
 
 const algs = [];
 const jumps = [];
+const speeds = [];
 const view = {
     setAlg(alg) { algs.push(String(alg || "")); },
     async playLeaves() { return { index: 0, total: 1 }; },
     async jumpToLeaf(index) { jumps.push(index); },
-    setTempo() {},
+    setSpeed(m) { speeds.push(m); },
     pauseTimeline() {},
     resetTimeline() {},
     settle() {},
@@ -142,6 +143,7 @@ const session = createScrambleSession({
 });
 
 assert.ok(nodes.digest.value.startsWith("0x"), "initial Digest is live hex");
+assert.deepEqual(speeds, [1], "the dock's speed reaches the view as a multiplier: 1× at start");
 assert.equal(algs.length, 0, "session start does not setAlg");
 
 nodes.message.value = "hello world";

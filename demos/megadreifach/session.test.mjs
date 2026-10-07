@@ -116,7 +116,7 @@ test("empty state: no prefilled message, no digest, transport off", { skip: !rea
     const { root, session } = await setup();
     await settle();
     const $ = root.byId;
-    assert.equal($.status.textContent, "Type a message, or pick a known answer.");
+    assert.equal($.status.textContent, "");
     assert.equal($.digest.value, "");
     assert.equal($.message.value, "", "no prefilled message");
     assert.equal($.play.disabled, true);

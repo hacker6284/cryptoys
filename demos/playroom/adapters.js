@@ -813,11 +813,6 @@ export function createDoubleDealAdapter() {
  * lifts while the camera settles on the `drei` seat. Hashing and tracing
  * run in a worker on the generated module (demos/megadreifach/).
  */
-// The roll call's caption, and the start of the idle status: which
-// puzzle is which, left to right as seen from the seat (the table has no
-// labels).
-const DREI_CAST = "Left to right: B, A, C. A carries h, B its inverse, C stays solved.";
-
 /** A brief on-screen caption over the room for the roll call. */
 function dreiCastCaption() {
     let el = null;
@@ -864,10 +859,8 @@ export function createMegaDreifachAdapter() {
             <textarea id="digest" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"
               placeholder="No message yet"></textarea>
           </label>
-          <p class="drei-warning" role="note">MegaDreifach v3, a toy hash: it makes no cryptographic
-            security claim and is not for protecting anything.</p>
           <p id="anim-note" class="drei-anim-note" role="status" hidden></p>
-          <p id="status" class="status drei-status" aria-live="polite">Type a message, or pick a known answer.</p>`,
+          <p id="status" class="status drei-status" aria-live="polite"></p>`,
         digestButton: "Copy",
         hint: "Step to see each turn.",
         roundName: "block",
@@ -1042,8 +1035,6 @@ export function createMegaDreifachAdapter() {
                 const seated = continueTo(poses, "drei", { duration: reduced ? 480 : 1400, restart: true });
                 // B and C must be down before the roll call.
                 for (const name of ["dreiB", "dreiC"]) await waitToyIdle(world.toys[name], clock, enterGen);
-                const statusEl = root.querySelector("#status");
-                if (statusEl) statusEl.textContent = DREI_CAST;
                 castCaption.show();
                 if (!reduced) await stage.rollCall(clock, enterGen);
                 if (stage.hasLeftover && !cancelEnter) {
@@ -1066,7 +1057,6 @@ export function createMegaDreifachAdapter() {
                     specUrl,
                     root,
                     exposeTeach: true,
-                    cast: DREI_CAST,
                 });
                 stage.rememberSeated();
                 const button = root.querySelector("#recentre");

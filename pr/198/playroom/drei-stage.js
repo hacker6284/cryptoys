@@ -643,7 +643,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
 
     /** The dock's speed (shared/speed.js): 1× is the library's megaminx tempo (1.4). */
     function setSpeed(multiplier) {
-        setTempo(MINX_TURN.speed * (Number(multiplier) > 0 ? Number(multiplier) : 1));
+        setTempo(MINX_TURN.speed * multiplier);
     }
 
     /** Enter beat: A, B, C hop in turn so the trio reads as three toys. */

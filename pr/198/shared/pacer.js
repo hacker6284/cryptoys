@@ -68,7 +68,7 @@ function hop() {
 }
 
 /** Virtual now: the due time of the event being released, else the wall clock. */
-export function virtualNow() {
+function virtualNow() {
     return current ?? now();
 }
 
@@ -86,7 +86,10 @@ async function drive() {
                 continue;
             }
             const due = queue[0].due;
-            current = due;
+            // After a stall (a long task, a background tab) the debt is
+            // capped at one frame: what follows takes real time again
+            // instead of being paid back in one burst.
+            current = Math.max(due, t - FRAME_MS);
             while (queue.length && queue[0].due === due) queue.shift().resolve();
             await hop();
         }

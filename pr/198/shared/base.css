@@ -18,46 +18,6 @@ a:hover { color: var(--fg); }
   outline-offset: 2px;
 }
 
-/* Site chrome: cryptoys / <name> */
-.site-chrome {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: var(--chrome-height);
-  padding: 0 28px;
-  border-bottom: 1px solid var(--line);
-  background: var(--bg);
-}
-
-.site-nav {
-  display: flex;
-  align-items: baseline;
-  gap: 0;
-  font-family: var(--font-mono);
-  font-size: 14px;
-}
-
-.site-brand {
-  color: var(--accent);
-  font-weight: 500;
-  text-decoration: none;
-}
-
-.site-brand:hover {
-  color: var(--fg);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.site-sep {
-  color: var(--muted);
-  margin: 0 0.55em;
-  user-select: none;
-}
-
-.site-current { color: var(--fg); }
-
 button.chrome-action {
   border: 0;
   background: transparent;
@@ -94,18 +54,6 @@ button.on {
   color: var(--fg);
 }
 
-button.primary {
-  background: var(--accent);
-  color: var(--accent-fg);
-  border-color: var(--accent);
-}
-
-button.primary:hover {
-  filter: brightness(1.08);
-  background: var(--accent);
-  color: var(--accent-fg);
-}
-
 button.inline-link {
   display: inline;
   padding: 0;
@@ -136,15 +84,6 @@ textarea, input[type="text"] {
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.45;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--muted);
 }
 
 .slider {

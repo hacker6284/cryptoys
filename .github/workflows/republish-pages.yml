@@ -23,7 +23,7 @@ permissions:
 jobs:
   deploy:
     # workflow_call reuses the caller's event, so a pages push is `push`,
-    # not `workflow_call`. Skip only a preview workflow_run that failed.
+    # not `workflow_call`. Skip only a preview workflow_run that did not succeed.
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     concurrency:

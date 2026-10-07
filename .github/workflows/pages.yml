@@ -6,7 +6,7 @@
 # No workflow-level concurrency. build and publish-branch always run;
 # only the deploy joins group `pages` (republish-pages.yml). A pending
 # pages run in that group was cancelled by republish before any job
-# started, so this commit never reached gh-pages.
+# started, so that main commit never reached gh-pages.
 
 name: pages
 

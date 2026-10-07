@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="data:,">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>cryptoys microdemos</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./shared/micro.css">
+</head>
+<body>
+  <main class="micro-index">
+    <h1>Microdemos</h1>
+    <p class="note">Each page loops one animation from the playroom with its sound. Click once on a page to turn sound on.</p>
+    <h2>Animation library, by object</h2>
+    <p class="note">One page per object move: one object, one move, one fixed placement, looping. <code>?seed=N</code> picks another placement on load (carry varies its flights, since changing place is the move).</p>
+    <ul>
+      <li><a href="./deck/carry/">Deck: carry</a>: the KEY and MSG deck boxes carried between poses on the felt and the shelf, a different flight every cycle (seeded: real poses, flips, half turns, shortest hop to longest flight); the chest stays shut and nothing else moves; each flight checked as drawn. <em>deck/carry; not yet approved.</em></li>
+      <li><a href="./deck/deal/">Deck: deal into the grid</a>: the hand packet is dealt card by card into the message grid; real 63×88 mm cards, the two grids 8 columns × 13 rows. <em>deck/deal; animation approved and locked at 7b5028f (sound on hold).</em></li>
+      <li><a href="./deck/box/open-close-flap/">Deck box: open and close the flap</a>: one tuck box in one placement opens its flap and closes it, looping; seeds 1–7 are table centre, shelf slot, lying on its back (felt stops it), against the shelf's backboard (backboard stops it), face down, on its side, at the felt edge; checked as drawn. <em>deck/box; not yet approved.</em></li>
+      <li><a href="./chest/open-close-lid/">Chest: open and close the lid</a>: the toy chest, set down at one spot, opens its lid and lets it fall shut, looping; seeds 1–3 are its corner, its live spot (the wall stops the lid) and under the shelf (the shelf stops it); checked as drawn. <em>chest; not yet approved.</em></li>
+      <li><a href="./cube/face-turn/">Cube: face turn</a>: the cube lifts, turns R, settles; then R2 (double), then R3 (triple), each its own step with its own sound and landing pat. <em>cube; animation and sounds approved and locked at 6014bfc (face turns); rotation approved 2026-10-02.</em></li>
+      <li><a href="./cube/rotate/">Cube: whole-cube rotation</a>: the cube lifts, turns over as one piece (y), settles; the next loop turns it back. <em>cube; rotation sound approved 2026-10-02; face turns locked at 6014bfc.</em></li>
+      <li><a href="./megaminx/face-turn/">Megaminx: face turn</a>: the megaminx lifts, turns U, settles; then U2 (double), then U3 (triple), each its own step with its own sound and landing pat. <em>megaminx; animation and sounds approved and locked at a927bb2 (real 70 mm, seated on the felt).</em></li>
+    </ul>
+    <h2>Other pages (own settings, not in the library yet)</h2>
+    <ul>
+      <li><a href="./doubledeal-row-slide/">Row slide</a>: a row of the grid slides three places along the felt and back.</li>
+      <li><a href="./doubledeal-scoop/">Scoop</a>: the whole grid is swept into the hand pile.</li>
+      <li><a href="./doubledeal-place/">Place a card</a>: a card hops from the hand pile to its seat in the grid.</li>
+      <li><a href="./doubledeal-take/">Take a card</a>: a seated card hops onto the hand pile.</li>
+      <li><a href="./doubledeal-unbox/">Unbox</a>: the deck box flap opens, the deck slides out and is set down.</li>
+      <li><a href="./doubledeal-restow/">Put the decks back</a>: the grids gather onto both boxes and the flaps close.</li>
+      <li><a href="./megadreifach-deck-flap/">MegaDreifach deck flap</a>: the deck box flap opens for a deal and closes.</li>
+      <li><a href="./playroom-chest/">Toy chest</a>: the lid opens, a deck flies out onto the table, the lid closes.</li>
+      <li><a href="./peg/">Peg</a>: a peg is pushed into a grid hole and pulled out.</li>
+      <li><a href="./dice-cup/">Dice cup</a>: the cup shakes and pours dice into the felt tray.</li>
+    </ul>
+    <p class="note">Sounds: credits for the <a href="../anim/sounds/LICENSE.md">library</a> and the <a href="./sounds/LICENSE.md">other pages</a> (all CC0).</p>
+  </main>
+</body>
+</html>

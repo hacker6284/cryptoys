@@ -60,7 +60,6 @@ export function createMegaDreifachSession({
     let job = 0;
     let disposed = false;
     let kats = [];
-    const emptyStatus = "";
 
     function status(text) {
         if (statusEl) statusEl.textContent = text;
@@ -130,7 +129,7 @@ export function createMegaDreifachSession({
     }
 
     function describeReady() {
-        if (!hasMessage()) return emptyStatus;
+        if (!hasMessage()) return "";
         if (!info || info.gen !== gen) return "Hashing…";
         const blocks = `${info.blocks} block${info.blocks === 1 ? "" : "s"}`;
         if (kat) {
@@ -178,7 +177,7 @@ export function createMegaDreifachSession({
         if (!hasMessage()) {
             info = null;
             if (digestEl) digestEl.value = "";
-            status(emptyStatus);
+            status("");
             syncControls();
             return;
         }

@@ -28,21 +28,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/generate-demos
-      - name: Keep existing PR previews
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -eu
-          if ! git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/gh-pages >/dev/null; then
-            echo "gh-pages does not exist yet; no previews to keep"
-            exit 0
-          fi
-          git clone --depth 1 --branch gh-pages \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .gh-pages
-          if [ -d .gh-pages/pr ]; then
-            rm -rf demos/pr
-            cp -a .gh-pages/pr demos/pr
-          fi
       - uses: actions/upload-artifact@v4
         with:
           name: site
@@ -63,6 +48,23 @@ jobs:
         with:
           name: site
           path: demos
+      # Snapshot pr/ inside this job: it holds gh-pages-publish, so nothing
+      # can land between the copy and the push.
+      - name: Keep existing PR previews
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          if ! git ls-remote --exit-code "https://github.com/${GITHUB_REPOSITORY}.git" refs/heads/gh-pages >/dev/null; then
+            echo "gh-pages does not exist yet; no previews to keep"
+            exit 0
+          fi
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .gh-pages
+          if [ -d .gh-pages/pr ]; then
+            rm -rf demos/pr
+            cp -a .gh-pages/pr demos/pr
+          fi
       - name: Publish site tree to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:

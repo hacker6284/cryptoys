@@ -803,16 +803,6 @@ export function createDoubleDealAdapter() {
     };
 }
 
-/**
- * MegaDreifach: three megaminxes standing on the felt in a row, B | A | C
- * (A carries h, B its inverse, C stays solved), and a real deck for each
- * block's deal. Only toys: no tray, no label cards. A (the shelf's only
- * megaminx) flies off the shelf; B, C and the boxed deck come out of the
- * toy chest; enter lands them on the felt, then the three puzzles hop in
- * turn (A, B, C) under a caption naming them left to right, and the deck's flap
- * lifts while the camera settles on the `drei` seat. Hashing and tracing
- * run in a worker on the generated module (demos/megadreifach/).
- */
 /** A brief on-screen caption over the room for the roll call. */
 function dreiCastCaption() {
     let el = null;
@@ -836,6 +826,16 @@ function dreiCastCaption() {
     };
 }
 
+/**
+ * MegaDreifach: three megaminxes standing on the felt in a row, B | A | C
+ * (A carries h, B its inverse, C stays solved), and a real deck for each
+ * block's deal. Only toys: no tray, no label cards. A (the shelf's only
+ * megaminx) flies off the shelf; B, C and the boxed deck come out of the
+ * toy chest; enter lands them on the felt, then the three puzzles hop in
+ * turn (A, B, C) under a caption naming them left to right, and the deck's flap
+ * lifts while the camera settles on the `drei` seat. Hashing and tracing
+ * run in a worker on the generated module (demos/megadreifach/).
+ */
 export function createMegaDreifachAdapter() {
     const dock = createDock("megadreifach", {
         controls: `

@@ -7,6 +7,7 @@ import { timing as MINX_TURN } from "../anim/megaminx/index.js";
 import { box as deckBox, card as deckCard, deal as deckDeal } from "../anim/deck/index.js";
 import { CARD_STEPS, PUZZLES } from "../megadreifach/plan.js";
 import { FACE_NORMAL, pieceDirection } from "../megadreifach/minx.js";
+import { pacedWait, skipMs } from "../shared/pacer.js";
 
 /**
  * MegaDreifach v3's toys in the room: three cubing.js megaminxes standing
@@ -193,10 +194,19 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         return tempo / MINX_TURN.speed;
     }
 
-    function tween(duration, step, mine = gen) {
+    // duration: already at the dock's speed. Faster than 1× and shorter
+    // than a frame, a motion jumps to its end and its time passes on the
+    // pacer's clock (a wait: no frame floor).
+    function tween(duration, step, mine = gen, { floor = true } = {}) {
         if (!duration || reduced()) {
             step(1);
             return Promise.resolve(mine === gen);
+        }
+        const speed = cardTempo();
+        const skip = skipMs(duration * speed, speed, { floor });
+        if (skip !== null) {
+            step(1);
+            return pacedWait(skip).then(() => mine === gen);
         }
         return new Promise((resolve) => {
             const start = performance.now();
@@ -212,7 +222,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     }
 
     function wait(duration, mine = gen) {
-        return tween(reduced() ? 0 : duration, () => {}, mine);
+        return tween(reduced() ? 0 : duration, () => {}, mine, { floor: false });
     }
 
     // A clock for the library's moves that stops with this stage's beats.
@@ -237,9 +247,10 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         if (adoptPromise) return adoptPromise;
         adoptPromise = Promise.all(PUZZLES.map(async (p) => {
             const seat = drei.seats[p];
+            // Made at the locked tempo (its 1×); the dock's speed comes via setTempo.
             const rig = await adoptTwistyPuzzle(seat, {
                 puzzle: "megaminx",
-                tempoScale: tempo,
+                tempoScale: MINX_TURN.speed,
                 onFitChange() {
                     measureRest(p);
                 },
@@ -252,6 +263,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
             // Lift, turn, settle: the library's megaminx face turn (LOCKED
             // timing). Sound is on hold, so no voice.
             views[p] = stageCubeView(rig, { poses: null, prefersReducedMotion, timing: MINX_TURN, voice: null });
+            views[p].setSpeed(cardTempo());
             measureRest(p);
             return rig;
         })).then(() => rigs).catch((err) => {
@@ -623,7 +635,15 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
 
     function setTempo(next) {
         tempo = Number(next) || MINX_TURN.speed;
-        for (const p of PUZZLES) rigs[p]?.setTempo(tempo);
+        for (const p of PUZZLES) {
+            if (views[p]) views[p].setSpeed(cardTempo());
+            else rigs[p]?.setTempo(tempo);
+        }
+    }
+
+    /** The dock's speed (shared/speed.js): 1× is the library's megaminx tempo (1.4). */
+    function setSpeed(multiplier) {
+        setTempo(MINX_TURN.speed * (Number(multiplier) > 0 ? Number(multiplier) : 1));
     }
 
     /** Enter beat: A, B, C hop in turn so the trio reads as three toys. */
@@ -676,6 +696,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
             return hasLeftover();
         },
         setTempo,
+        setSpeed,
         get tempo() {
             return tempo;
         },

@@ -2,6 +2,7 @@ import { ecb_encrypt, ecb_decrypt, ctr_encrypt, ctr_decrypt, trace_ecb, trace_ct
 import { decksToHex, decksToText, hexToDecks, randomHex, textToDecks, textToKey, textToNonce } from "./cards.js";
 import { bindGrowFields, growField } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
+import { bindSpeedSlider } from "../shared/speed.js";
 import {
     bindSegmented,
     bindTransport,
@@ -18,21 +19,19 @@ export function createDoubleDealSession({
     specUrl,
     root = document,
     exposeTeach = false,
-    liveDigest = false,
 } = {}) {
-    const { abort, listen, $, $$ } = sessionScope(root);
+    const { abort, listen, $ } = sessionScope(root);
 
     const messageEl = $("#message");
     const keyEl = $("#key");
     const nonceEl = $("#nonce");
-    const outputEl = $("#digest") || $("#output");
+    const outputEl = $("#digest");
     const errorEl = $("#error");
     const nonceField = $("#nonce-field");
-    const captionEl = $("#caption") || $("#status");
-    const speedEl = $("#speed");
+    const captionEl = $("#status");
     const inputLabel = $("#input-label");
     const outputLabel = $("#output-label");
-    const copyButton = $("#copy") || $("#digest-btn");
+    const copyButton = $("#digest-btn");
     const teachEl = $("#teach");
     const outlineEl = $("#outline");
     const ioNote = $("#io-note");
@@ -74,13 +73,11 @@ export function createDoubleDealSession({
 
     function markPlay(on) {
         playing = on;
-        const playBtn = $("#play") || $("#start");
+        const playBtn = $("#play");
         playBtn?.classList.toggle("is-playing", on);
         if (playBtn?.classList.contains("icon-btn")) {
             playBtn.setAttribute("aria-label", on ? "Pause" : "Play");
             playBtn.title = on ? "Pause" : "Play";
-        } else if (playBtn && playBtn.id === "play") {
-            playBtn.textContent = on ? "Pause" : "Play";
         }
     }
 
@@ -117,9 +114,6 @@ export function createDoubleDealSession({
         const encrypting = direction === "encrypt";
         if (inputLabel) inputLabel.textContent = encrypting ? "Plaintext" : "Ciphertext";
         if (outputLabel) outputLabel.textContent = encrypting ? "Ciphertext" : "Plaintext";
-        if (copyButton && !copyButton.classList.contains("icon-btn") && copyButton.id !== "digest-btn") {
-            copyButton.textContent = "Copy";
-        }
     }
 
     function stageKey(step) {
@@ -583,30 +577,24 @@ export function createDoubleDealSession({
                 view.showDecks(blocks[0], key);
                 const extra = blocks.length > 1 ? ` First of ${blocks.length} blocks.` : "";
                 showCaption(`Plaintext on the left. Key on the right.${extra}`);
-                if (liveDigest) {
-                    const result = mode === "ecb" ? ecb_encrypt(blocks, key) : ctr_encrypt(blocks, key, readNonce());
-                    setOutput(decksToHex(result));
-                }
+                const result = mode === "ecb" ? ecb_encrypt(blocks, key) : ctr_encrypt(blocks, key, readNonce());
+                setOutput(decksToHex(result));
                 return;
             }
             if (!messageEl?.value.trim()) {
                 showCaption("Key on the right. Ciphertext goes in the input.");
-                if (liveDigest) setOutput("");
+                setOutput("");
                 return;
             }
             const blocks = hexToDecks(messageEl.value);
             view.showDecks(blocks[0], key);
             const extra = blocks.length > 1 ? ` First of ${blocks.length} blocks.` : "";
             showCaption(`Ciphertext on the left. Key on the right.${extra}`);
-            if (liveDigest) {
-                const result = mode === "ecb" ? ecb_decrypt(blocks, key) : ctr_decrypt(blocks, key, readNonce());
-                setOutput(decksToText(result));
-            }
+            const result = mode === "ecb" ? ecb_decrypt(blocks, key) : ctr_decrypt(blocks, key, readNonce());
+            setOutput(decksToText(result));
         } catch (err) {
-            if (liveDigest) setOutput("");
-            if (direction === "encrypt" || liveDigest) {
-                setError(err instanceof Error ? err.message : "That input could not be read.");
-            }
+            setOutput("");
+            setError(err instanceof Error ? err.message : "That input could not be read.");
         }
     }
 
@@ -643,7 +631,7 @@ export function createDoubleDealSession({
             cursor = i;
             showCaption(caption(trace[i]));
             if (teaching) refreshTeach();
-            await view.play(trace[i], Number(speedEl?.value || 1));
+            await view.play(trace[i]);
         }
         markPlay(false);
         if (token === job && laidEnd) showEnd();
@@ -723,7 +711,7 @@ export function createDoubleDealSession({
             const token = ++job;
             cursor = next;
             showCaption(caption(trace[cursor]));
-            await view.play(trace[cursor], Number(speedEl?.value || 1));
+            await view.play(trace[cursor]);
             if (token !== job) {
                 busy = false;
                 return;
@@ -767,16 +755,11 @@ export function createDoubleDealSession({
         preview();
     }, listen);
 
-    $("#start")?.addEventListener("click", () => void start(), listen);
-    $("#stop")?.addEventListener("click", () => stopPlay(), listen);
+    // The dock's speed (shared/speed.js); the view plays at 1× = its locked pace.
+    bindSpeedSlider(root, (multiplier) => view.setSpeed?.(multiplier), listen);
     $("#random-key")?.addEventListener("click", () => {
         if (keyEl) keyEl.value = "0x" + randomHex(14);
         preview();
-    }, listen);
-    $("#random-nonce")?.addEventListener("click", () => {
-        if (nonceEl) nonceEl.value = "0x" + randomHex(8);
-        setError("");
-        if (liveDigest) preview();
     }, listen);
     copyButton?.addEventListener("click", async () => {
         if (!outputValue()) {
@@ -803,7 +786,7 @@ export function createDoubleDealSession({
     bindCappedInput(nonceEl, {
         noteEl: ioNote,
         onChange: () => {
-            if (liveDigest && mode === "ctr") preview();
+            if (mode === "ctr") preview();
         },
         signal: abort.signal,
     });
@@ -835,10 +818,6 @@ export function createDoubleDealSession({
         stageKey,
         roundKey,
     }, listen);
-
-    $$("[data-open-spec]").forEach((el) => {
-        el.addEventListener("click", () => showSpec(), listen);
-    });
 
     applyLabels();
     preview();

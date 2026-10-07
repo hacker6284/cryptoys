@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { createCardTable } from "../doubledeal/table.js";
+import { TABLE_PACE, createCardTable } from "../doubledeal/table.js";
 import { DEAL_SCALE } from "./constants.js";
 
 /**
@@ -29,6 +29,8 @@ export function stageCardTable(world, textures, { poses, visible = true, layout 
     table.setCardsVisible(false);
 
     const scratch = new THREE.Vector3();
+    // The dock's speed (shared/speed.js): 1× plays at TABLE_PACE.
+    let speed = 1;
 
     function pileAtWorld(messageOrder, keyOrder, messageWorld, keyWorld) {
         group.updateMatrixWorld(true);
@@ -63,7 +65,10 @@ export function stageCardTable(world, textures, { poses, visible = true, layout 
     return {
         group,
         showDecks: table.showDecks,
-        play: table.play,
+        play: (step) => table.play(step, TABLE_PACE * speed, TABLE_PACE),
+        setSpeed(multiplier) {
+            speed = Number(multiplier) > 0 ? Number(multiplier) : 1;
+        },
         measure: table.measure,
         snapshot: table.snapshot,
         restore: table.restore,

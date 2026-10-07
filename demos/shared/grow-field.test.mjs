@@ -63,12 +63,4 @@ const doubleSession = readFileSync(new URL("../doubledeal/session.js", import.me
 assert.match(scrambleSession, /bindGrowFields/);
 assert.match(doubleSession, /bindGrowFields/);
 
-const scrambleHtml = readFileSync(new URL("../scramble/index.html", import.meta.url), "utf8");
-const doubleHtml = readFileSync(new URL("../doubledeal/index.html", import.meta.url), "utf8");
-assert.match(scrambleHtml, /grow-field\.css/);
-assert.match(doubleHtml, /grow-field\.css/);
-assert.match(scrambleHtml, /class="grow-field"/);
-assert.match(doubleHtml, /id="message" class="grow-field"/);
-assert.match(doubleHtml, /id="output" class="grow-field"/);
-
 console.log("grow-field tests ok");

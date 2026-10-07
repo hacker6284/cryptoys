@@ -12,6 +12,7 @@
 import { bindGrowFields } from "../shared/grow-field.js";
 import { bindCappedInput } from "../shared/input-cap.js";
 import { openSpec, renderTeachCard, sessionScope } from "../shared/session.js";
+import { bindSpeedSlider } from "../shared/speed.js";
 import { bindTeachKeys, setDisabled } from "../shared/teach.js";
 import { createHasher } from "./hasher.js";
 
@@ -46,7 +47,6 @@ export function createMegaDreifachSession({
     const teachCard = $("#teach-card");
     const teachPos = $("#teach-pos");
     const playBtn = $("#play");
-    const speed = $("#speed");
     const katMenu = $("#kat-menu");
     bindGrowFields(root);
 
@@ -458,7 +458,6 @@ export function createMegaDreifachSession({
         home: () => { if (teaching) void seek(-1); },
         end: () => { if (teaching && show) void seek(show.beats.length - 1); },
     }, listen);
-    speed?.addEventListener("input", () => view.setTempo?.(Number(speed.value) || undefined), listen);
     bindCappedInput(input, {
         noteEl: ioNote,
         onChange: () => {
@@ -469,7 +468,8 @@ export function createMegaDreifachSession({
     });
 
     setEncoding("text");
-    view.setTempo?.(Number(speed?.value) || undefined);
+    // The dock's speed (shared/speed.js); 1× is the stage's locked megaminx tempo.
+    bindSpeedSlider(root, (multiplier) => view.setSpeed?.(multiplier), listen);
     void refreshDigest();
 
     const api = {

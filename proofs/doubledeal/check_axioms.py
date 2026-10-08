@@ -673,6 +673,8 @@ ECBS_LINK2 = {
     "EcbsLink2.Link2.place_refines",
     "EcbsLink2.Link2.put_refines",
     "EcbsLink2.Link2.value_held_refines",
+    "EcbsLink2.Link2.value_after_set",
+    "EcbsLink2.Link2.home_set_read",
     "EcbsLink2.Link2.laneDest_eq",
     "EcbsLink2.Link2.laneDest2_eq",
     "EcbsLink2.Link2.schoolCol_refines",

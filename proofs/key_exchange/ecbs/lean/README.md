@@ -12,7 +12,7 @@ python3 ../../../doubledeal/check_axioms.py ecbs # every EcbsLink2 theorem: prop
 python3 ../../../doubledeal/security/checks/scan_sorry.py --root . --exclude Generated
 ```
 
-No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432428 kB RSS.
+No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432292 kB RSS.
 
 ## Generated Lean
 
@@ -70,6 +70,8 @@ Not exported, so not in the column above. Each is the emitted function on the st
 - `occupied_refines`: how many of homes `0 .. 6` are held. The held array must cover those seven slots. Home `7` is a real slot (`home_count` is 8) and is not counted; `note_peak` uses only this count.
 - `put_refines`: the same record update as `place_refines`, without the outer `pure`.
 - `value_held_refines`: `band` without the outer `pure`, on a held home.
+- `home_set_read`: the elaborated bind. `atL` of `a.set i v` at `Int.ofNat i` returns `v`.
+- `value_after_set`: a held home whose array is the length-`n` prefix. `get_number` reads that home, `home_set_read` is the bind, and `prefix_refines` returns the prefix. `n` fits an i64 and `n ≤` the source length. This is the read after `settle` writes the bench prefix into an empty home and sets it held.
 - `laneDest_eq`: with `0 < w`, `0 < h` and `w·h − 1 ≤ e`, "one band up and one hole on" (end-of-row carry included) equals `e − (w·h − 1)`.
 - `laneDest2_eq`: with `0 < w` and `r ≤ e / w`, "r rows up, same column" equals `e − r·w`.
 - `schoolCol_refines`: one schoolbook row, columns `0 .. n`, mirror bit included, one move per nonzero cell. `n > 0`, the first number covers `n` trits, the cell `i+(n−1)` is on the strip, and the index and move sums fit an i64.

@@ -160,6 +160,40 @@ theorem value_held_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat) (n : Na
   rw [except_bind_pure] at hb
   exact hb
 
+/-- The elaborated home read: `atL` of `a.set i v` at `i` returns `v`. -/
+theorem home_set_read {α : Type} (a : Array α) (i : Nat) (v : α) (h : i < a.size) :
+    (do
+        let x ← SudoRt.atL (a.set ⟨i, h⟩ v) (Int.ofNat i)
+        Except.ok x) =
+      Except.ok v := by
+  have hsz : i < (a.set ⟨i, h⟩ v).size := by rw [Array.size_set]; exact h
+  rw [atL_ofNat _ i hsz]
+  have hget : (a.set ⟨i, h⟩ v)[i]'hsz = v := by
+    rw [Array.getElem_set]; simp
+  simp [hget, ok_bind]
+
+/-- `value` of a held home whose array was just set to the length-`n` prefix.
+    `get_number` reads that home; `home_set_read` is the bind; `prefix_refines` is the rest. -/
+theorem value_after_set (b : Ecbs.Board) (home : Nat) (xs : List Nat) (n : Nat)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (hheld : b.sudo_5Board_4held[home] = true)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat n)
+    (hf : FitsLen n)
+    (hlen : n ≤ xs.length) :
+    Ecbs.value
+        { b with sudo_5Board_4home :=
+            b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n)) }
+        (home : Int) =
+      .ok (embed (xs.take n)) := by
+  unfold Ecbs.value Ecbs.get_number Ecbs.where_bench
+  rw [show (home : Int) = Int.ofNat home from ofNat_eq_natCast home,
+    atL_ofNat _ home hD, hheld]
+  simp only [ok_bind, ite_true, pure_eq_ok, Bool.false_eq_true, if_false]
+  rw [home_set_read, ok_bind, hn,
+    prefix_refines (xs.take n) n (by rw [List.length_take]; omega) hf, ok_bind,
+    List.take_take, Nat.min_self]
+
 /-- Neither held nor the aimed bench: `where_bench` asserts, kind `AssertFailed`. -/
 theorem band_traps (b : Ecbs.Board) (home : Nat)
     (hheldSz : home < b.sudo_5Board_4held.size)

@@ -986,7 +986,7 @@ private theorem climb_loop {β} (start len : Nat)
     have hz : start + len - start = len := by omega
     rw [ha, hz]
 
-private theorem climb_holes_refines (b : Ecbs.Board) (start len : Nat)
+theorem climb_holes_refines (b : Ecbs.Board) (start len : Nat)
     (h0 : b.sudo_5Board_7ladder0 = Int.ofNat start)
     (hnr : b.sudo_5Board_6nrungs = Int.ofNat len)
     (hstart : 0 < start) (hfit0 : FitsLen start) (hfit : FitsLen (start + len)) :

@@ -382,8 +382,10 @@ def cubeTimes (n k bench : Nat) (x : List Nat) : Nat → List Nat
   | 0 => x
   | t + 1 => fieldCube n k bench (cubeTimes n k bench x t)
 
-/-- One rung of the Itoh–Tsujii climb, in climb order. `last` skips doubling the tally
-    and the extra peg. A red rung (`2`) also cubes the gap and multiplies by the original `x`. -/
+/-- One rung of the emitted climb, in climb order (last rung made, first). `last` skips
+    doubling the tally and the extra peg, matching `invert`. A red rung (`2`) also cubes
+    the gap and multiplies by the original `x`. This is the list of steps the code runs,
+    not a proof that the result is a field inverse. -/
 def invRung (n k bench : Nat) (x g : List Nat) (tally rung : Nat) (last : Bool) :
     List Nat × Nat :=
   let s := cubeTimes n k bench g tally
@@ -401,15 +403,18 @@ def invClimb (n k bench : Nat) (x : List Nat) : List Nat × Nat → List Nat →
   | (g, tally), r :: rs =>
     invClimb n k bench x (invRung n k bench x g tally r rs.isEmpty) rs
 
-/-- The gap `invert` leaves before the sign check: climb `rungList (n − 1)` reversed, then cube. -/
+/-- The gap array `invert` leaves before the hole-0 check: climb `(rungList (n − 1)).reverse`,
+    then one more cube. Same steps as the emitted function. -/
 def invGap (n k bench : Nat) (x : List Nat) : List Nat :=
   fieldCube n k bench (invClimb n k bench x (x, 1) (rungList (n - 1)).reverse).1
 
 def mirrorTrits (xs : List Nat) : List Nat :=
   xs.map fun c => if c = 0 then 0 else 3 - c
 
-/-- `invert_checked`. The product of the gap with `x` must be one peg in hole 0.
-    A red peg (`2`) mirrors the gap; any other product is outside the theorem. -/
+/-- The list `invert_checked` returns when its hole-0 check passes. `g` is `invGap`.
+    The code asserts that `fieldMul g x` is a single peg in hole 0, and mirrors `g` when
+    that peg is red (`2`). This does not prove `fieldMul g x` is one; a product that is
+    not exactly `[1]` or `[2]` followed by zeros is `none`. -/
 def fieldInv (n k bench : Nat) (x : List Nat) : Option (List Nat) :=
   let g := invGap n k bench x
   let v := fieldMul n k bench g x

@@ -458,21 +458,22 @@ jobs:
     # fold) against `Spec.fieldCube`. `folded_read` is settle then value.
     # `new_board_refines` is emitted `Ecbs.new_board` on `BoardOk`, tied to
     # `Spec.rungList` (control row in build order, ladder array reversed).
-    # Park and the one-peg tally steps are tied. Doubling the tally, the rung
-    # loop, invert_number, fold and the exchange are not claimed yet. Short: no heavy checks.
+    # Park, the one-peg tally steps, and the red-to-white half of doubling are
+    # tied. Laying the new pegs, the rung loop, invert_number, fold and the
+    # exchange are not claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 481984 kB (about 0.46 GB). The job builds `place`, the schoolbook loop
+    # 481924 kB (about 0.46 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,
     # `mulPipeline_spec`, `mul_refines`, `copy_band_refines`, `comb_loop_refines`,
     # `cube_refines`, `folded_read`, `value_after_set`, `settle_refines`, and
     # `new_board_refines`, `multiply_refines`, and `cube_number_refines`,
-    # plus park / unpark and the one-peg tally steps.
-    # Doubling the tally, the rung loop, invert_number, fold, and the exchange
-    # are not theorems yet.
+    # plus park / unpark, the one-peg tally steps, and the red-to-white half of
+    # doubling. Laying the new pegs, the rung loop, invert_number, fold, and the
+    # exchange are not theorems yet.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

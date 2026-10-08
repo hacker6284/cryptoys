@@ -515,4 +515,270 @@ theorem tally_add_one_raise (b : Ecbs.Board) (t0 len high control ctrl tmax : Na
   rw [tally_note_raise _ (len + 1) tmax rfl (by simpa using hMax) hNote, ok_bind, pure_eq_ok]
   simp [ofNat_eq_natCast]
 
+private theorem array_set_congr {a b : Array Int} (h : a = b) (i : Nat)
+    (ha : i < a.size) (v : Int) :
+    a.set ⟨i, ha⟩ v = b.set ⟨i, h ▸ ha⟩ v := by
+  subst h
+  rfl
+
+/-- Write `1` into `count` holes starting at `start`. Used for both halves of `tally_double`. -/
+def paintOnes (xs : List Nat) (start : Nat) : Nat → List Nat
+  | 0 => xs
+  | k + 1 => (paintOnes xs start k).set (start + k) 1
+
+theorem paintOnes_length (xs : List Nat) (start k : Nat) :
+    (paintOnes xs start k).length = xs.length := by
+  induction k with
+  | zero => rfl
+  | succ k ih => simp [paintOnes, ih, List.length_set]
+
+theorem paintOnes_get_hi (xs : List Nat) (start k j : Nat)
+    (hk : start + k ≤ j) (hj : j < xs.length) :
+    (paintOnes xs start k)[j]'(by rw [paintOnes_length]; exact hj) = xs[j] := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    have hne : start + k ≠ j := by omega
+    simp [paintOnes, List.getElem_set, hne, ih (by omega)]
+
+/-- One red tally peg turned white. The hole does not beat the recorded high. -/
+theorem tally_mark_white (b : Ecbs.Board) (xs : List Nat) (t0 j ctrl high control : Nat)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hRow : b.sudo_5Board_3row = embed xs)
+    (hAt : t0 + j < xs.length)
+    (hCell : xs[t0 + j] = 2)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + j < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 + j ≤ high)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hfit : FitsLen (t0 + j))
+    (hfitC : FitsLen (ctrl + 1)) :
+    (do
+        let ix ← SudoRt.addI b.sudo_5Board_6tally0 (Int.ofNat j)
+        let c ← SudoRt.atL b.sudo_5Board_3row ix
+        if SudoRt.SEq.beq c (2 : Int) then
+          do
+            let b ← Ecbs.tally_put b (Int.ofNat j) (1 : Int)
+            let ctrl ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+            pure (SudoRt.Flow.cont (ρ := Ecbs.Board)
+              ({ b with
+                sudo_5Board_4cost := { b.sudo_5Board_4cost with
+                  sudo_5Costs_4ctrl := ctrl } } : Ecbs.Board))
+        else
+          pure (SudoRt.Flow.cont (ρ := Ecbs.Board) b)) =
+      .ok (SudoRt.Flow.cont (ρ := Ecbs.Board)
+        { b with
+          sudo_5Board_3row := embed (xs.set (t0 + j) 1)
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } }) := by
+  conv =>
+    lhs
+    rw [hT0, hRow, ← ofNat_eq_natCast t0]
+  rw [addI_ofNat t0 j hfit, ok_bind]
+  have hsz : t0 + j < (embed xs).size := by rw [size_embed]; exact hAt
+  rw [atL_ofNat _ (t0 + j) hsz, ok_bind]
+  have hget : (embed xs)[t0 + j] = (2 : Int) := by
+    rw [show (embed xs)[t0 + j] = Int.ofNat (xs[t0 + j]) by
+      simp [embed, Array.getElem_mk, List.getElem_map], hCell]
+    rfl
+  rw [hget]
+  have hbeq : SudoRt.SEq.beq (2 : Int) (2 : Int) = true := by
+    rw [sEq_int]; exact decide_eq_true rfl
+  simp only [hbeq, if_true]
+  conv =>
+    pattern (Ecbs.tally_put b (Int.ofNat j) (1 : Int))
+    rw [ofNat_eq_natCast j, show (1 : Int) = ((1 : Nat) : Int) from rfl]
+  rw [tally_put_keep b t0 j 1 high control hT0
+      (by rw [hRow, size_embed]; exact hAt) hCtrlN hic hHigh hle hfit, ok_bind]
+  conv => zeta
+  dsimp only
+  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hfitC, ok_bind, pure_eq_ok]
+  have hset (ha : t0 + j < (embed xs).size) :
+      (embed xs).set ⟨t0 + j, ha⟩ ((1 : Nat) : Int) = embed (xs.set (t0 + j) 1) := by
+    apply Array.ext
+    · simp [embed, size_embed, List.length_set]
+    · intro i hi hi'
+      simp [embed, Array.getElem_set, List.getElem_set, ofNat_eq_natCast]
+  rw [array_set_congr hRow, hset]
+
+private theorem row_ctrl_id (b : Ecbs.Board) (row : Array Int) (ctrl : Int)
+    (hR : b.sudo_5Board_3row = row)
+    (hC : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = ctrl) :
+    ({ b with
+        sudo_5Board_3row := row
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := ctrl } } : Ecbs.Board) = b := by
+  rw [← hR, ← hC]
+
+/-- Replace the control row and the ctrl counter, leaving every other field. -/
+def touchRow (b : Ecbs.Board) (row : Array Int) (ctrl : Int) : Ecbs.Board :=
+  { b with
+    sudo_5Board_3row := row
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with sudo_5Costs_4ctrl := ctrl } }
+
+/-- One pass of the red-to-white loop inside `tally_double`, `j = 0` to `m - 1`. -/
+def whitenStep (toV : Int) (σ : Int × Ecbs.Board) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Ecbs.Board) Ecbs.Board) :=
+  do
+    if σ.1 > toV then
+      pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (σ.1, σ.2))
+    else
+      match ← (do
+        let ix ← SudoRt.addI σ.2.sudo_5Board_6tally0 σ.1
+        let c ← SudoRt.atL σ.2.sudo_5Board_3row ix
+        if SudoRt.SEq.beq c (2 : Int) then
+          do
+            let b ← Ecbs.tally_put σ.2 σ.1 (1 : Int)
+            let ctrl ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+            pure (SudoRt.Flow.cont (ρ := Ecbs.Board)
+              ({ b with sudo_5Board_4cost :=
+                  { b.sudo_5Board_4cost with sudo_5Costs_4ctrl := ctrl } } : Ecbs.Board))
+        else
+          pure (SudoRt.Flow.cont (ρ := Ecbs.Board) σ.2)) with
+      | .ret r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r)
+      | .brk fs => pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (σ.1, fs))
+      | .cont fs => do
+          if σ.1 == toV then
+            pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (σ.1, fs))
+          else do
+            let j' ← SudoRt.addI σ.1 (1 : Int)
+            pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (j', fs))
+
+/-- The first half of `tally_double`: each of the `m` red pegs (value `2`) goes back to
+    white. Those holes do not beat the recorded high, so the high stays. `m > 0`. -/
+theorem tally_whiten_loop {β}
+    (b : Ecbs.Board) (xs : List Nat) (t0 m ctrl high control : Nat)
+    (after : Int × Ecbs.Board → Except SudoRt.Trap β)
+    (onRet : Ecbs.Board → Except SudoRt.Trap β)
+    (hm : 0 < m)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hRow : b.sudo_5Board_3row = embed xs)
+    (hRoom : t0 + m ≤ xs.length)
+    (hRed : ∀ j (hj : j < m), xs[t0 + j]'(by omega) = 2)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hTop : high = t0 + m - 1)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hIn : t0 + m ≤ control)
+    (hfit : FitsLen (t0 + m))
+    (hfitC : FitsLen (ctrl + m))
+    (hfitM : FitsLen m) :
+    SudoRt.runLoopOn (Int.ofNat 0, b)
+      (fuelRange (Int.ofNat 0) (Int.ofNat (m - 1)))
+      (whitenStep (Int.ofNat (m - 1)))
+      after onRet =
+    after (Int.ofNat (m - 1),
+      touchRow b (embed (paintOnes xs t0 m)) (Int.ofNat (ctrl + m))) := by
+  refine asc_goal (fromN := 0) (toN := m - 1)
+    (fun i s => s = touchRow b (embed (paintOnes xs t0 i)) (Int.ofNat (ctrl + i)))
+    (Nat.zero_le _) ?_ ?_ ?_
+  · have hC : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl := by
+      rw [hCtrl, ← ofNat_eq_natCast]
+    change b = touchRow b (embed (paintOnes xs t0 0)) (Int.ofNat (ctrl + 0))
+    rw [show paintOnes xs t0 0 = xs from rfl, show ctrl + 0 = ctrl by omega]
+    exact (row_ctrl_id b (embed xs) (Int.ofNat ctrl) hRow hC).symm
+  · intro i s _ hi hI
+    have him : i < m := by omega
+    have hAt : t0 + i < xs.length := by omega
+    have hcell : (paintOnes xs t0 i)[t0 + i]'(by rw [paintOnes_length]; exact hAt) = 2 := by
+      rw [paintOnes_get_hi xs t0 i (t0 + i) (by omega) hAt]
+      exact hRed i him
+    have hle : t0 + i ≤ high := by omega
+    have hic : t0 + i < control := by omega
+    have hfi : FitsLen (t0 + i) := FitsLen.of_le hfit (by omega)
+    have hfc : FitsLen (ctrl + i + 1) := FitsLen.of_le hfitC (by omega)
+    have hft : FitsLen (i + 1) := FitsLen.of_le hfitM (by omega)
+    have hT : s.sudo_5Board_6tally0 = (t0 : Int) := by
+      rw [hI]; simp [touchRow, hT0]
+    have hRw : s.sudo_5Board_3row = embed (paintOnes xs t0 i) := by
+      rw [hI]; rfl
+    have hCN : s.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
+      rw [hI]; exact hCtrlN
+    have hHi : s.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) := by
+      rw [hI]; exact hHigh
+    have hCt : s.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + i) := by
+      rw [hI]; rfl
+    unfold whitenStep
+    dsimp only
+    split
+    · next hgt => exact absurd hgt (not_gt_cast hi)
+    · have hAtP : t0 + i < (paintOnes xs t0 i).length := by
+        rw [paintOnes_length]; exact hAt
+      have hmark := tally_mark_white s (paintOnes xs t0 i) t0 i (ctrl + i) high control
+          hT hRw hAtP hcell hCN hic hHi hle hCt hfi hfc
+      rw [hmark, ok_bind]
+      dsimp only
+      have hpaint : (paintOnes xs t0 i).set (t0 + i) 1 = paintOnes xs t0 (i + 1) := rfl
+      have htouch :
+          ({ s with
+              sudo_5Board_3row := embed ((paintOnes xs t0 i).set (t0 + i) 1)
+              sudo_5Board_4cost := { s.sudo_5Board_4cost with
+                sudo_5Costs_4ctrl := Int.ofNat (ctrl + i + 1) } }) =
+            touchRow b (embed (paintOnes xs t0 (i + 1))) (Int.ofNat (ctrl + (i + 1))) := by
+        rw [hI, hpaint, show ctrl + i + 1 = ctrl + (i + 1) by omega]
+        rfl
+      rw [htouch]
+      refine ⟨touchRow b (embed (paintOnes xs t0 (i + 1))) (Int.ofNat (ctrl + (i + 1))), rfl, ?_⟩
+      simp only [pure_eq_ok]
+      exact asc_tail (m - 1) i hft
+        (touchRow b (embed (paintOnes xs t0 (i + 1))) (Int.ofNat (ctrl + (i + 1))))
+  · intro s hI
+    have hm1 : m - 1 + 1 = m := by omega
+    rw [hI, hm1]
+
+/-- Lay one white peg in an empty tally hole strictly above the recorded high. -/
+theorem tally_lay_white (b : Ecbs.Board) (xs : List Nat) (t0 j ctrl high control : Nat)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hRow : b.sudo_5Board_3row = embed xs)
+    (hAt : t0 + j < xs.length)
+    (hCell : xs[t0 + j] = 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + j < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hgt : high < t0 + j)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hfit : FitsLen (t0 + j))
+    (hfitC : FitsLen (ctrl + 1)) :
+    (do
+        let ix ← SudoRt.addI b.sudo_5Board_6tally0 (Int.ofNat j)
+        let c ← SudoRt.atL b.sudo_5Board_3row ix
+        let _ ← SudoRt.sudoAssertEq c (Int.ofNat 0) 359
+        let b ← Ecbs.tally_put b (Int.ofNat j) (1 : Int)
+        let ctrl ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+        pure (SudoRt.Flow.cont (ρ := Ecbs.Board)
+          ({ b with
+            sudo_5Board_4cost := { b.sudo_5Board_4cost with
+              sudo_5Costs_4ctrl := ctrl } } : Ecbs.Board))) =
+      .ok (SudoRt.Flow.cont (ρ := Ecbs.Board)
+        { b with
+          sudo_5Board_3row := embed (xs.set (t0 + j) 1)
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_15control_highest := ((t0 + j : Nat) : Int)
+            sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } }) := by
+  conv =>
+    lhs
+    rw [hT0, hRow, ← ofNat_eq_natCast t0]
+  rw [addI_ofNat t0 j hfit, ok_bind]
+  have hsz : t0 + j < (embed xs).size := by rw [size_embed]; exact hAt
+  rw [atL_ofNat _ (t0 + j) hsz, ok_bind]
+  have hget : (embed xs)[t0 + j] = (0 : Int) := by
+    simp [embed, Array.getElem_mk, List.getElem_map, hCell]
+  rw [hget, show (0 : Int) = Int.ofNat 0 from rfl, sudoAssertEq_int rfl 359, ok_bind]
+  conv =>
+    pattern (Ecbs.tally_put b (Int.ofNat j) (1 : Int))
+    rw [ofNat_eq_natCast j, show (1 : Int) = ((1 : Nat) : Int) from rfl]
+  rw [tally_put_raise b t0 j 1 high control hT0
+      (by rw [hRow, size_embed]; exact hAt) hCtrlN hic hHigh hgt hfit, ok_bind]
+  conv => zeta
+  dsimp only
+  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hfitC, ok_bind, pure_eq_ok]
+  have hset (ha : t0 + j < (embed xs).size) :
+      (embed xs).set ⟨t0 + j, ha⟩ ((1 : Nat) : Int) = embed (xs.set (t0 + j) 1) := by
+    apply Array.ext
+    · simp [embed, size_embed, List.length_set]
+    · intro i hi hi'
+      simp [embed, Array.getElem_set, List.getElem_set, ofNat_eq_natCast]
+  rw [array_set_congr hRow, hset]
+
 end EcbsLink2.Link2

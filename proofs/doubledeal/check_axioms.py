@@ -687,6 +687,7 @@ ECBS_LINK2 = {
     "EcbsLink2.Link2.laneFold_high",
     "EcbsLink2.Link2.mulPipeline_spec",
     "EcbsLink2.Link2.mul_refines",
+    "EcbsLink2.Link2.mul_refines_nocopy",
     "EcbsLink2.Link2.comb_cell",
     "EcbsLink2.Link2.comb_loop_refines",
     "EcbsLink2.Link2.cube_refines",
@@ -1072,7 +1073,7 @@ PACKAGES = {
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
-        "min": 609,  # measured: check_axioms.py ecbs reports 609 theorems
+        "min": 612,  # measured: check_axioms.py ecbs reports 612 theorems
         "required": ECBS_LINK2,
     },
     "megadreifach-heavy": {

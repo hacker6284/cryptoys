@@ -781,4 +781,240 @@ theorem tally_lay_white (b : Ecbs.Board) (xs : List Nat) (t0 j ctrl high control
       simp [embed, Array.getElem_set, List.getElem_set, ofNat_eq_natCast]
   rw [array_set_congr hRow, hset]
 
+/-- Replace the control row, the ctrl counter, and the recorded high. -/
+def touchGrow (b : Ecbs.Board) (row : Array Int) (ctrl high : Int) : Ecbs.Board :=
+  { b with
+    sudo_5Board_3row := row
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := ctrl
+      sudo_5Costs_15control_highest := high } }
+
+private theorem touch_grow_id (b : Ecbs.Board) (row : Array Int) (ctrl high : Int)
+    (hR : b.sudo_5Board_3row = row)
+    (hC : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = ctrl)
+    (hH : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = high) :
+    touchGrow b row ctrl high = b := by
+  unfold touchGrow
+  rw [← hR, ← hC, ← hH]
+
+/-- The second half of `tally_double`: `m` empty holes, starting at `tally0 + m`,
+    each become white and the recorded high walks up with them. `m > 0`. -/
+def layStep (toV : Int) (σ : Int × Ecbs.Board) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Ecbs.Board) Ecbs.Board) :=
+  do
+    if σ.1 > toV then
+      pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (σ.1, σ.2))
+    else
+      match ← (do
+        let ix ← SudoRt.addI σ.2.sudo_5Board_6tally0 σ.1
+        let c ← SudoRt.atL σ.2.sudo_5Board_3row ix
+        let _ ← SudoRt.sudoAssertEq c (Int.ofNat 0) 359
+        let b ← Ecbs.tally_put σ.2 σ.1 (1 : Int)
+        let ctrl ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+        pure (SudoRt.Flow.cont (ρ := Ecbs.Board)
+          ({ b with sudo_5Board_4cost :=
+              { b.sudo_5Board_4cost with sudo_5Costs_4ctrl := ctrl } } : Ecbs.Board))) with
+      | .ret r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r)
+      | .brk fs => pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (σ.1, fs))
+      | .cont fs => do
+          if σ.1 == toV then
+            pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (σ.1, fs))
+          else do
+            let j' ← SudoRt.addI σ.1 (1 : Int)
+            pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (j', fs))
+
+theorem tally_lay_loop {β}
+    (b : Ecbs.Board) (ys : List Nat) (t0 m c0 control : Nat)
+    (after : Int × Ecbs.Board → Except SudoRt.Trap β)
+    (onRet : Ecbs.Board → Except SudoRt.Trap β)
+    (hm : 0 < m)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hRow : b.sudo_5Board_3row = embed ys)
+    (hRoom : t0 + 2 * m ≤ ys.length)
+    (hZero : ∀ k (hk : k < m), ys[t0 + m + k]'(by omega) = 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = ((t0 + m - 1 : Nat) : Int))
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c0 : Int))
+    (hIn : t0 + 2 * m ≤ control)
+    (hfit : FitsLen (t0 + 2 * m))
+    (hfitC : FitsLen (c0 + m))
+    (hfitM : FitsLen (2 * m)) :
+    SudoRt.runLoopOn (Int.ofNat m, b)
+      (fuelRange (Int.ofNat m) (Int.ofNat (2 * m - 1)))
+      (layStep (Int.ofNat (2 * m - 1)))
+      after onRet =
+    after (Int.ofNat (2 * m - 1),
+      touchGrow b (embed (paintOnes ys (t0 + m) m))
+        (Int.ofNat (c0 + m)) ((t0 + 2 * m - 1 : Nat) : Int)) := by
+  have hCtrlI : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := hCtrlN
+  refine asc_goal (fromN := m) (toN := 2 * m - 1)
+    (fun i s => s = touchGrow b (embed (paintOnes ys (t0 + m) (i - m)))
+        (Int.ofNat (c0 + (i - m))) ((t0 + i - 1 : Nat) : Int))
+    (by omega) ?_ ?_ ?_
+  · change b = touchGrow b (embed (paintOnes ys (t0 + m) (m - m)))
+      (Int.ofNat (c0 + (m - m))) ((t0 + m - 1 : Nat) : Int)
+    rw [show m - m = 0 by omega, show paintOnes ys (t0 + m) 0 = ys from rfl,
+      show c0 + 0 = c0 by omega]
+    have hC : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c0 := by
+      rw [hCtrl, ← ofNat_eq_natCast]
+    exact (touch_grow_id b (embed ys) (Int.ofNat c0) ((t0 + m - 1 : Nat) : Int)
+      hRow hC hHigh).symm
+  · intro i s hlo hi hI
+    have him : i < 2 * m := by omega
+    have hkm : i - m < m := by omega
+    have hAt : t0 + i < ys.length := by omega
+    have hcell : (paintOnes ys (t0 + m) (i - m))[t0 + i]'(by
+        rw [paintOnes_length]; exact hAt) = 0 := by
+      rw [paintOnes_get_hi ys (t0 + m) (i - m) (t0 + i) (by omega) hAt]
+      have hk : i - m < m := hkm
+      simpa [show t0 + m + (i - m) = t0 + i by omega] using hZero (i - m) hk
+    have hgt : t0 + i - 1 < t0 + i := by omega
+    have hic : t0 + i < t0 + 2 * m := by omega
+    have hfi : FitsLen (t0 + i) := FitsLen.of_le hfit (by omega)
+    have hfc : FitsLen (c0 + (i - m) + 1) := FitsLen.of_le hfitC (by omega)
+    have hft : FitsLen (i + 1) := FitsLen.of_le hfitM (by omega)
+    have hT : s.sudo_5Board_6tally0 = (t0 : Int) := by
+      rw [hI]; simp [touchGrow, hT0]
+    have hRw : s.sudo_5Board_3row = embed (paintOnes ys (t0 + m) (i - m)) := by
+      rw [hI]; rfl
+    have hCN : s.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
+      rw [hI]; exact hCtrlI
+    have hHi : s.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        ((t0 + i - 1 : Nat) : Int) := by rw [hI]; rfl
+    have hCt : s.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + (i - m)) := by
+      rw [hI]; rfl
+    unfold layStep
+    dsimp only
+    split
+    · next hgt' =>
+        exact absurd hgt' (not_gt_cast (by omega : i ≤ 2 * m - 1))
+    · have hAtP : t0 + i < (paintOnes ys (t0 + m) (i - m)).length := by
+        rw [paintOnes_length]; exact hAt
+      have hmark := tally_lay_white s (paintOnes ys (t0 + m) (i - m)) t0 i
+          (c0 + (i - m)) (t0 + i - 1) control
+          hT hRw hAtP hcell hCN (by omega) hHi (by omega) hCt hfi hfc
+      rw [hmark, ok_bind]
+      dsimp only
+      have hpaint : (paintOnes ys (t0 + m) (i - m)).set (t0 + i) 1 =
+          paintOnes ys (t0 + m) (i - m + 1) := by
+        rw [show t0 + i = (t0 + m) + (i - m) by omega]
+        rfl
+      have hsub : i - m + 1 = i + 1 - m := by omega
+      have htouch :
+          ({ s with
+              sudo_5Board_3row := embed ((paintOnes ys (t0 + m) (i - m)).set (t0 + i) 1)
+              sudo_5Board_4cost := { s.sudo_5Board_4cost with
+                sudo_5Costs_15control_highest := ((t0 + i : Nat) : Int)
+                sudo_5Costs_4ctrl := Int.ofNat (c0 + (i - m) + 1) } }) =
+            touchGrow b (embed (paintOnes ys (t0 + m) (i + 1 - m)))
+              (Int.ofNat (c0 + (i + 1 - m))) ((t0 + (i + 1) - 1 : Nat) : Int) := by
+        rw [hI, hpaint, hsub]
+        rw [show c0 + (i - m) + 1 = c0 + (i + 1 - m) by omega]
+        rw [show t0 + (i + 1) - 1 = t0 + i by omega]
+        rfl
+      rw [htouch]
+      refine ⟨touchGrow b (embed (paintOnes ys (t0 + m) (i + 1 - m)))
+          (Int.ofNat (c0 + (i + 1 - m))) ((t0 + (i + 1) - 1 : Nat) : Int), rfl, ?_⟩
+      simp only [pure_eq_ok]
+      exact asc_tail (2 * m - 1) i hft _
+  · intro s hI
+    have hm1 : 2 * m - 1 + 1 = 2 * m := by omega
+    rw [hI, hm1, show 2 * m - m = m by omega]
+
+/-- `tally_double` when the tally pegs are all red, the next `m` holes are empty,
+    and the recorded high is the last red peg. Both halves run, the length becomes
+    `2 · m`, and that length beats `tally_max`. -/
+theorem tally_double_refines (b : Ecbs.Board) (xs : List Nat)
+    (t0 m c0 high control tmax : Nat)
+    (hm : 0 < m)
+    (hLen : b.sudo_5Board_9tally_len = (m : Int))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hRow : b.sudo_5Board_3row = embed xs)
+    (hRoom : t0 + 2 * m ≤ xs.length)
+    (hRed : ∀ j (hj : j < m), xs[t0 + j]'(by omega) = 2)
+    (hZero : ∀ k (hk : k < m), xs[t0 + m + k]'(by omega) = 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hTop : high = t0 + m - 1)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c0 : Int))
+    (hIn : t0 + 2 * m ≤ control)
+    (hfit : FitsLen (t0 + 2 * m))
+    (hfitC : FitsLen (c0 + 2 * m))
+    (hfitM : FitsLen (2 * m))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
+    (hNote : tmax < 2 * m) :
+    Ecbs.tally_double b =
+      .ok { b with
+        sudo_5Board_3row := embed (paintOnes (paintOnes xs t0 m) (t0 + m) m)
+        sudo_5Board_9tally_len := Int.ofNat (2 * m)
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := Int.ofNat (c0 + 2 * m)
+          sudo_5Costs_15control_highest := ((t0 + 2 * m - 1 : Nat) : Int)
+          sudo_5Costs_9tally_max := Int.ofNat (2 * m) } } := by
+  unfold Ecbs.tally_double
+  conv =>
+    lhs
+    rw [hLen]
+  conv =>
+    lhs
+    zeta
+  rw [← ofNat_eq_natCast m, subI_ofNat_one m hm (FitsLen.of_le hfitM (by omega)), ok_bind]
+  rw [show (0 : Int) = Int.ofNat 0 from rfl, fuelRange_eq]
+  conv =>
+    lhs
+    pattern (fun σ : Int × Ecbs.Board => _)
+    change whitenStep (Int.ofNat (m - 1))
+  have hRoom1 : t0 + m ≤ xs.length := by omega
+  have hIn1 : t0 + m ≤ control := by omega
+  have hfit1 : FitsLen (t0 + m) := FitsLen.of_le hfit (by omega)
+  have hfitC1 : FitsLen (c0 + m) := FitsLen.of_le hfitC (by omega)
+  rw [tally_whiten_loop b xs t0 m c0 high control _ _ hm hT0 hRow hRoom1 hRed
+      hCtrlN hHigh hTop hCtrl hIn1 hfit1 hfitC1 (FitsLen.of_le hfitM (by omega))]
+  dsimp only
+  rw [show (2 : Int) = Int.ofNat 2 from rfl,
+    mulI_ofNat 2 m (FitsLen.of_le hfitM (by omega)), ok_bind]
+  rw [subI_ofNat_one (2 * m) (by omega) hfitM, ok_bind]
+  rw [fuelRange_eq]
+  conv =>
+    pattern (fun σ : Int × Ecbs.Board => _)
+    change layStep (Int.ofNat (2 * m - 1))
+  let bW := touchRow b (embed (paintOnes xs t0 m)) (Int.ofNat (c0 + m))
+  conv =>
+    pattern (touchRow b (embed (paintOnes xs t0 m)) (Int.ofNat (c0 + m)))
+    change bW
+  have hT0W : bW.sudo_5Board_6tally0 = (t0 : Int) := by
+    simp [bW, touchRow, hT0]
+  have hRowW : bW.sudo_5Board_3row = embed (paintOnes xs t0 m) := by
+    simp [bW, touchRow]
+  have hZeroW : ∀ k (hk : k < m),
+      (paintOnes xs t0 m)[t0 + m + k]'(by rw [paintOnes_length]; omega) = 0 := by
+    intro k hk
+    rw [paintOnes_get_hi xs t0 m (t0 + m + k) (by omega) (by omega)]
+    exact hZero k hk
+  have hCtrlW : bW.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
+    simp [bW, touchRow, hCtrlN]
+  have hHighW : bW.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      ((t0 + m - 1 : Nat) : Int) := by
+    simp [bW, touchRow, hHigh, hTop, ofNat_eq_natCast]
+  have hCtW : bW.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((c0 + m : Nat) : Int) := by
+    simp [bW, touchRow, ofNat_eq_natCast]
+  rw [tally_lay_loop bW (paintOnes xs t0 m) t0 m (c0 + m) control _ _ hm
+      hT0W hRowW (by rw [paintOnes_length]; exact hRoom) hZeroW hCtrlW hHighW hCtW
+      hIn hfit (FitsLen.of_le hfitC (by omega)) hfitM]
+  dsimp only
+  rw [ok_bind]
+  let bG := touchGrow bW (embed (paintOnes (paintOnes xs t0 m) (t0 + m) m))
+      (Int.ofNat (c0 + m + m)) ((t0 + 2 * m - 1 : Nat) : Int)
+  let bL : Ecbs.Board := { bG with sudo_5Board_9tally_len := Int.ofNat (2 * m) }
+  conv =>
+    pattern (Ecbs.tally_note _)
+    change Ecbs.tally_note bL
+  have hlen : bL.sudo_5Board_9tally_len = ((2 * m : Nat) : Int) := by
+    simp [bL, ofNat_eq_natCast]
+  have hmax : bL.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    simp [bL, bG, touchGrow, bW, touchRow, hMax]
+  rw [tally_note_raise bL (2 * m) tmax hlen hmax hNote, ok_bind, pure_eq_ok]
+  have hc : c0 + m + m = c0 + 2 * m := by omega
+  simp [bL, bG, touchGrow, bW, touchRow, ofNat_eq_natCast, hc]
+
 end EcbsLink2.Link2

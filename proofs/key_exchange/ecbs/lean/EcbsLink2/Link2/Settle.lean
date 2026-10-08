@@ -292,4 +292,221 @@ theorem settle_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat)
       rw [pure_eq_ok, ← hto, ← hbench, ← hpeak]
       simp [hpk]
 
+theorem cost_ext (a b : Ecbs.Costs)
+    (hmoves : a.sudo_5Costs_5moves = b.sudo_5Costs_5moves)
+    (hslides : a.sudo_5Costs_6slides = b.sudo_5Costs_6slides)
+    (hctrl : a.sudo_5Costs_4ctrl = b.sudo_5Costs_4ctrl)
+    (hcalls : a.sudo_5Costs_5calls = b.sudo_5Costs_5calls)
+    (hstale : a.sudo_5Costs_13stale_cleared = b.sudo_5Costs_13stale_cleared)
+    (hkey : a.sudo_5Costs_14key_grid_moves = b.sudo_5Costs_14key_grid_moves)
+    (hlad : a.sudo_5Costs_12ladder_moves = b.sudo_5Costs_12ladder_moves)
+    (hpeak : a.sudo_5Costs_4peak = b.sudo_5Costs_4peak)
+    (hstrict : a.sudo_5Costs_11peak_strict = b.sudo_5Costs_11peak_strict)
+    (hhole : a.sudo_5Costs_14max_bench_hole = b.sudo_5Costs_14max_bench_hole)
+    (hhigh : a.sudo_5Costs_15control_highest = b.sudo_5Costs_15control_highest)
+    (hmark : a.sudo_5Costs_17script_marker_max = b.sudo_5Costs_17script_marker_max)
+    (htally : a.sudo_5Costs_9tally_max = b.sudo_5Costs_9tally_max)
+    (hmbp : a.sudo_5Costs_14moves_by_phase = b.sudo_5Costs_14moves_by_phase)
+    (hpbp : a.sudo_5Costs_13peak_by_phase = b.sudo_5Costs_13peak_by_phase)
+    (hops : a.sudo_5Costs_3ops = b.sudo_5Costs_3ops) :
+    a = b := by
+  cases a
+  cases b
+  subst hmoves hslides hctrl hcalls hstale hkey hlad hpeak hstrict hhole hhigh hmark
+    htally hmbp hpbp hops
+  rfl
+
+theorem board_ext (a b : Ecbs.Board)
+    (ht : a.sudo_5Board_1t = b.sudo_5Board_1t)
+    (hhome : a.sudo_5Board_4home = b.sudo_5Board_4home)
+    (hheld : a.sudo_5Board_4held = b.sudo_5Board_4held)
+    (hon : a.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on)
+    (hto : a.sudo_5Board_8bench_to = b.sudo_5Board_8bench_to)
+    (hbench : a.sudo_5Board_5bench = b.sudo_5Board_5bench)
+    (hcost : a.sudo_5Board_4cost = b.sudo_5Board_4cost)
+    (hphase : a.sudo_5Board_5phase = b.sudo_5Board_5phase)
+    (hm0 : a.sudo_5Board_8phase_m0 = b.sudo_5Board_8phase_m0)
+    (hpk : a.sudo_5Board_8phase_pk = b.sudo_5Board_8phase_pk)
+    (hrow : a.sudo_5Board_3row = b.sudo_5Board_3row)
+    (hph : a.sudo_5Board_10phase_hole = b.sudo_5Board_10phase_hole)
+    (hcall : a.sudo_5Board_12calling_hole = b.sudo_5Board_12calling_hole)
+    (hl0 : a.sudo_5Board_7ladder0 = b.sudo_5Board_7ladder0)
+    (hnr : a.sudo_5Board_6nrungs = b.sudo_5Board_6nrungs)
+    (hpark : a.sudo_5Board_9park_hole = b.sudo_5Board_9park_hole)
+    (ht0 : a.sudo_5Board_6tally0 = b.sudo_5Board_6tally0)
+    (hmarker : a.sudo_5Board_6marker = b.sudo_5Board_6marker)
+    (hfrom : a.sudo_5Board_11parked_from = b.sudo_5Board_11parked_from)
+    (hlen : a.sudo_5Board_9tally_len = b.sudo_5Board_9tally_len)
+    (hmon : a.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on)
+    (hridx : a.sudo_5Board_8rung_idx = b.sudo_5Board_8rung_idx)
+    (hlad : a.sudo_5Board_6ladder = b.sudo_5Board_6ladder)
+    (hlog : a.sudo_5Board_3log = b.sudo_5Board_3log) :
+    a = b := by
+  cases a
+  cases b
+  subst ht hhome hheld hon hto hbench hcost hphase hm0 hpk hrow hph hcall hl0 hnr hpark
+    ht0 hmarker hfrom hlen hmon hridx hlad hlog
+  rfl
+
+private theorem set_fin {α : Type} (a : Array α) (i : Nat) (h₁ h₂ : i < a.size) (v : α) :
+    a.set ⟨i, h₁⟩ v = a.set ⟨i, h₂⟩ v := by
+  have hfin : (⟨i, h₁⟩ : Fin a.size) = ⟨i, h₂⟩ := Fin.ext rfl
+  rw [hfin]
+
+private theorem set_on_eq {α : Type} {a b : Array α} (hab : a = b) (i : Nat)
+    (ha : i < a.size) (v : α) :
+    a.set ⟨i, ha⟩ v = b.set ⟨i, hab ▸ ha⟩ v := by
+  subst hab
+  rfl
+
+/-- The operation-count bump writes one cell of the ops array and leaves every other field. -/
+def bumpOp (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) : Ecbs.Board :=
+  { b with sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_3ops :=
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨i, hops⟩ (Int.ofNat (cOps + 1)) } }
+
+theorem bumpOp_ops (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨i, hops⟩ (Int.ofNat (cOps + 1)) := rfl
+
+theorem bumpOp_moves (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_5moves =
+      b.sudo_5Board_4cost.sudo_5Costs_5moves := rfl
+
+theorem bumpOp_peak (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_4peak =
+      b.sudo_5Board_4cost.sudo_5Costs_4peak := rfl
+
+theorem bumpOp_held (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i cOps hops).sudo_5Board_4held = b.sudo_5Board_4held := rfl
+
+theorem bumpOp_home (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i cOps hops).sudo_5Board_4home = b.sudo_5Board_4home := rfl
+
+theorem bumpOp_bench (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i cOps hops).sudo_5Board_8bench_on = b.sudo_5Board_8bench_on ∧
+      (bumpOp b i cOps hops).sudo_5Board_5bench = b.sudo_5Board_5bench ∧
+      (bumpOp b i cOps hops).sudo_5Board_8bench_to = b.sudo_5Board_8bench_to := by
+  exact ⟨rfl, rfl, rfl⟩
+
+/-- `settleBoard` when the held-count after the slide is strictly above the incoming peak.
+    The new peak is that count. Ops are not written. -/
+theorem settle_peak (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat)
+    (hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) :
+    settleBoard b home hH hD xs n moves slides peak =
+      { b with
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+        sudo_5Board_8bench_on := false
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+          sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n))
+          sudo_5Costs_4peak :=
+            Int.ofNat (countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) } } := by
+  unfold settleBoard
+  rw [if_pos hpk]
+
+/-- `settleBoard` when the incoming peak is already at least the held-count. Peak stays.
+    Ops are not written. -/
+theorem settle_keep (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat)
+    (hnk : ¬ peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) :
+    settleBoard b home hH hD xs n moves slides peak =
+      { b with
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+        sudo_5Board_8bench_on := false
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+          sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n)) } } := by
+  unfold settleBoard
+  rw [if_neg hnk]
+
+theorem settle_ops (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
+  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+
+theorem bump_home_lt (b : Ecbs.Board) (i cOps home : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hH : home < b.sudo_5Board_4home.size) :
+    home < (bumpOp b i cOps hops).sudo_5Board_4home.size := by
+  simpa [bumpOp] using hH
+
+theorem bump_held_lt (b : Ecbs.Board) (i cOps home : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hD : home < b.sudo_5Board_4held.size) :
+    home < (bumpOp b i cOps hops).sudo_5Board_4held.size := by
+  simpa [bumpOp] using hD
+
+theorem settle_ops_lt (b : Ecbs.Board) (i home : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    i < (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  rw [settle_ops]; exact hops
+
+/-- `settle` after an ops bump is the ops bump after `settle`. The peak test depends on
+    the held array and the incoming peak, neither of which the bump writes. -/
+theorem settle_bump_comm (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (home : Nat) (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    settleBoard (bumpOp b i cOps hops) home
+        (bump_home_lt b i cOps home hops hH) (bump_held_lt b i cOps home hops hD)
+        xs n moves slides peak =
+      bumpOp (settleBoard b home hH hD xs n moves slides peak) i cOps
+        (settle_ops_lt b i home hops hH hD xs n moves slides peak) := by
+  let bB := bumpOp b i cOps hops
+  let hHB := bump_home_lt b i cOps home hops hH
+  let hDB := bump_held_lt b i cOps home hops hD
+  have hcount :
+      countHeld (bB.sudo_5Board_4held.set ⟨home, hDB⟩ true) 7 =
+        countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7 := by
+    rfl
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  · have hpkB : peak < countHeld (bB.sudo_5Board_4held.set ⟨home, hDB⟩ true) 7 := by
+      rw [hcount]; exact hpk
+    apply Eq.trans (settle_peak bB home hHB hDB xs n moves slides peak hpkB)
+    apply board_ext
+    case pos.hcost =>
+      simp only [bumpOp, bB, settle_peak b home hH hD xs n moves slides peak hpk]
+      apply cost_ext <;> first
+        | rfl
+        | exact congrArg Int.ofNat hcount
+        | (let v := Int.ofNat (cOps + 1)
+           let hs := settle_ops b home hH hD xs n moves slides peak
+           let hlt := settle_ops_lt b i home hops hH hD xs n moves slides peak
+           exact ((set_fin b.sudo_5Board_4cost.sudo_5Costs_3ops i hops (hs ▸ hlt) v).trans
+             (set_on_eq hs i hlt v).symm).trans (set_fin _ i hlt _ v))
+    all_goals simp only [bumpOp, bB, settle_peak b home hH hD xs n moves slides peak hpk]
+  · have hnkB : ¬ peak < countHeld (bB.sudo_5Board_4held.set ⟨home, hDB⟩ true) 7 := by
+      rw [hcount]; exact hpk
+    apply Eq.trans (settle_keep bB home hHB hDB xs n moves slides peak hnkB)
+    apply board_ext
+    case neg.hcost =>
+      simp only [bumpOp, bB, settle_keep b home hH hD xs n moves slides peak hpk]
+      apply cost_ext <;> first
+        | rfl
+        | (let v := Int.ofNat (cOps + 1)
+           let hs := settle_ops b home hH hD xs n moves slides peak
+           let hlt := settle_ops_lt b i home hops hH hD xs n moves slides peak
+           exact ((set_fin b.sudo_5Board_4cost.sudo_5Costs_3ops i hops (hs ▸ hlt) v).trans
+             (set_on_eq hs i hlt v).symm).trans (set_fin _ i hlt _ v))
+    all_goals simp only [bumpOp, bB, settle_keep b home hH hD xs n moves slides peak hpk]
+
 end EcbsLink2.Link2

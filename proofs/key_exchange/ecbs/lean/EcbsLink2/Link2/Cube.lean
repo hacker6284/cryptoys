@@ -1054,7 +1054,8 @@ theorem cube_refines_live (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       b'.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b'.sudo_5Board_3row = b.sudo_5Board_3row := by
   rw [cube_live_eq b dst src xs n moves slides peak cOps hmk hon hto hH hD h7 hempty hbench
       hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hops hop1 hfops]
   let bS := settleBoard b src hH hD xs n moves slides peak
@@ -1111,18 +1112,24 @@ theorem cube_refines_live (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by rw [htS]; exact hkF
   have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
     rw [settle_hole_eq b src hH hD xs n moves slides peak]; exact hHole
-  obtain ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, hsl, ht, hsz, _hhome', hhd, _hmk', _hrow', _hop',
+  obtain ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, hsl, ht, hsz, _hhome', hhd, _hmk', hrow', _hop',
       htally', hhigh', hctrl'⟩ :=
     cube_refines bS dst src ys w h r n k mv hole bench pk peakS cOps cg
       hmkS hoffS hopsS hop1S hfops hblS hcgS hspan hFs hHomes hHF hArr h7S hn0 hnS hleny hf
       hmovS hpkS hstrict hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hwS hhS hrS hkS hholeS
       hsm hnsm hfitB hfold
-  refine ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, ?_, ?_, ?_, hhd, ?_, ?_, ?_⟩
+  refine ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, ?_, ?_, ?_, hhd, ?_, ?_, ?_, ?_⟩
   · rw [hsl, settle_slides_eq b src hH hD xs n moves slides peak]
   · rw [ht, settle_tier_eq b src hH hD xs n moves slides peak]
   · rw [hsz, settle_home_eq b src hH hD xs n moves slides peak, Array.size_set]
   · rw [htally', settle_tally_eq b src hH hD xs n moves slides peak]
   · rw [hhigh', settle_high_eq b src hH hD xs n moves slides peak]
   · rw [hctrl', settle_ctrl_eq b src hH hD xs n moves slides peak]
+  · rw [hrow']
+    by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨src, hD⟩ true) 7
+    · rw [show bS = settleBoard b src hH hD xs n moves slides peak from rfl,
+        settle_peak b src hH hD xs n moves slides peak hpk]
+    · rw [show bS = settleBoard b src hH hD xs n moves slides peak from rfl,
+        settle_keep b src hH hD xs n moves slides peak hpk]
 
 end EcbsLink2.Link2

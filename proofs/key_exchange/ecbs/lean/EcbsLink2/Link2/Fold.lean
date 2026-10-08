@@ -93,6 +93,45 @@ def foldGeom (w h r e : Nat) : Except SudoRt.Trap (Int × Int) :=
         let d2 ← SudoRt.addI v col
         pure (d1, d2)
 
+/-- The same block as `Ecbs.lane_fold` writes it: an index, then the tier widths. -/
+def laneGeom (e w h r : Int) : Except SudoRt.Trap (Int × Int) :=
+  do
+    let row0 ← SudoRt.divI e w
+    let row := row0
+    let col0 ← SudoRt.modI e w
+    let col := col0
+    let r0 ← SudoRt.subI row h
+    let r1 := r0
+    let c0 ← SudoRt.addI col (1 : Int)
+    let c1 := c0
+    if SudoRt.SEq.beq c1 w then
+      do
+        let r2 ← SudoRt.addI r1 (1 : Int)
+        let r1 := r2
+        let c1 := (0 : Int)
+        let t ← SudoRt.mulI r1 w
+        let d0 ← SudoRt.addI t c1
+        let d1 := d0
+        let u ← SudoRt.subI row r
+        let v ← SudoRt.mulI u w
+        let d3 ← SudoRt.addI v col
+        let d2 := d3
+        pure (d1, d2)
+    else
+      do
+        let t ← SudoRt.mulI r1 w
+        let d0 ← SudoRt.addI t c1
+        let d1 := d0
+        let u ← SudoRt.subI row r
+        let v ← SudoRt.mulI u w
+        let d3 ← SudoRt.addI v col
+        let d2 := d3
+        pure (d1, d2)
+
+theorem laneGeom_eq (w h r e : Nat) :
+    laneGeom (Int.ofNat e) (Int.ofNat w) (Int.ofNat h) (Int.ofNat r) = foldGeom w h r e := by
+  rfl
+
 theorem foldGeom_refines (w h r e : Nat) (hw : 0 < w) (hh : 0 < h) (hr : r < h)
     (he : w * h - 1 ≤ e) (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ e ≤ 1000000) :
     foldGeom w h r e = .ok (Int.ofNat (laneDest w h e), Int.ofNat (laneDest2 w r e)) := by

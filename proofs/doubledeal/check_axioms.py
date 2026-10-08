@@ -681,6 +681,7 @@ ECBS_LINK2 = {
     "EcbsLink2.Link2.foldGeom_dest",
     "EcbsLink2.Link2.fold_loop_refines",
     "EcbsLink2.Link2.lane_fold_refines",
+    "EcbsLink2.Link2.lane_fold_eq",
     "EcbsLink2.Link2.laneFold_high",
     "EcbsLink2.Link2.mulPipeline_spec",
     "EcbsLink2.Link2.mulSchool_step",

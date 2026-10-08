@@ -221,39 +221,51 @@ private theorem foldDown_at (n gap : Nat) (strip : List Nat) (i : Nat) (hi : i <
   have hidx : strip.length - 1 - (strip.length - (i + 1)) = i := by omega
   rw [← hk, foldDown_succ, hidx]
 
-/-- One hole of the descending fold. `foldGeom` is the emitted `d1`/`d2` block. -/
+/-- One hole of the descending fold. The `d1`/`d2` block is `foldGeom`; the asserts
+    and the two image adds are the emitted tail, including the subs inside the
+    `d1 = e − n` branch. -/
 def foldPeg (w h r n k : Nat) (strip : Array Int) (e : Nat) (b : Ecbs.Board) :
     Except SudoRt.Trap (SudoRt.Flow (Array Int × Ecbs.Board) (Ecbs.Board × Array Int)) :=
   do
-    let c ← SudoRt.atL strip (Int.ofNat e)
+    let _t443 ← SudoRt.atL strip (Int.ofNat e)
+    let c := _t443
     if !(SudoRt.SEq.beq c (0 : Int)) then
       do
-        let strip ← SudoRt.putL strip (Int.ofNat e) (0 : Int)
-        let mv ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_5moves (1 : Int)
-        let b := withMoves b mv
+        let _ix445 := Int.ofNat e
+        let _t446 ← SudoRt.putL strip _ix445 (0 : Int)
+        let strip := _t446
+        let _t447 ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_5moves (1 : Int)
+        let b := withMoves b _t447
         let geom ← foldGeom w h r e
         let d1 := geom.1
         let d2 := geom.2
-        let en ← SudoRt.subI (Int.ofNat e) (Int.ofNat n)
-        let eq1 := SudoRt.SEq.beq d1 en
-        let gv ← SudoRt.subI (Int.ofNat n) (Int.ofNat k)
-        let eg ← SudoRt.subI (Int.ofNat e) gv
-        let eq2 ← if eq1 then pure (SudoRt.SEq.beq d2 eg) else pure false
-        let _u ← SudoRt.sudoAssert eq2 530
-        let r1 ← if decide (d1 ≥ (0 : Int)) then pure (decide (d1 < Int.ofNat e)) else pure false
-        let r2 ← if r1 then pure (decide (d2 ≥ (0 : Int))) else pure false
-        let r3 ← if r2 then pure (decide (d2 < Int.ofNat e)) else pure false
-        let _v ← SudoRt.sudoAssert r3 531
-        let cur ← SudoRt.atL strip d1
-        let sum ← SudoRt.addI cur c
-        let q ← SudoRt.modI sum (3 : Int)
-        let strip ← SudoRt.putL strip d1 q
-        let cur2 ← SudoRt.atL strip d2
-        let sum2 ← SudoRt.addI cur2 c
-        let q2 ← SudoRt.modI sum2 (3 : Int)
-        let strip ← SudoRt.putL strip d2 q2
-        let mv ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_5moves (2 : Int)
-        let b := withMoves b mv
+        let _t461 ← SudoRt.subI (Int.ofNat e) (Int.ofNat n)
+        let _t463 ← (if (SudoRt.SEq.beq d1 _t461) then (do
+          let _t464 ← SudoRt.subI (Int.ofNat n) (Int.ofNat k)
+          let _t465 ← SudoRt.subI (Int.ofNat e) _t464
+          pure (SudoRt.SEq.beq d2 _t465)) else pure false)
+        let _u ← SudoRt.sudoAssert _t463 530
+        let _t469 ← (if (decide (d1 ≥ (0 : Int))) then (do
+          pure (decide (d1 < Int.ofNat e))) else pure false)
+        let _t471 ← (if _t469 then (do
+          pure (decide (d2 ≥ (0 : Int)))) else pure false)
+        let _t473 ← (if _t471 then (do
+          pure (decide (d2 < Int.ofNat e))) else pure false)
+        let _v ← SudoRt.sudoAssert _t473 531
+        let _ix476 := d1
+        let _t477 ← SudoRt.atL strip d1
+        let _t478 ← SudoRt.addI _t477 c
+        let _t479 ← SudoRt.modI _t478 (3 : Int)
+        let _t480 ← SudoRt.putL strip _ix476 _t479
+        let strip := _t480
+        let _ix481 := d2
+        let _t482 ← SudoRt.atL strip d2
+        let _t483 ← SudoRt.addI _t482 c
+        let _t484 ← SudoRt.modI _t483 (3 : Int)
+        let _t485 ← SudoRt.putL strip _ix481 _t484
+        let strip := _t485
+        let _t486 ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_5moves (2 : Int)
+        let b := withMoves b _t486
         pure (SudoRt.Flow.cont (strip, b))
     else
       pure (SudoRt.Flow.cont (strip, b))
@@ -262,7 +274,9 @@ private theorem foldPeg_zero (xs : List Nat) (w h r n k e : Nat) (b : Ecbs.Board
     (he : e < xs.length) (hz : xs[e] = 0) :
     foldPeg w h r n k (embed xs) e b = .ok (.cont (embed xs, b)) := by
   unfold foldPeg
-  rw [atL_embed xs e he, ok_bind, sEq_ofNat_zero, hz]
+  rw [atL_embed xs e he, ok_bind]
+  dsimp only
+  rw [sEq_ofNat_zero, hz]
   simp only [decide_True, Bool.not_true, Bool.false_eq_true, if_false, pure_eq_ok]
 
 private theorem foldPeg_nz (xs : List Nat) (w h r n k e m : Nat) (b : Ecbs.Board)
@@ -282,7 +296,9 @@ private theorem foldPeg_nz (xs : List Nat) (w h r n k e m : Nat) (b : Ecbs.Board
   have hgle : n - k ≤ e := by omega
   have hc2 : xs[e] ≤ 2 := hs _ (List.getElem_mem he)
   unfold foldPeg
-  rw [atL_embed xs e he, ok_bind, sEq_ofNat_zero]
+  rw [atL_embed xs e he, ok_bind]
+  dsimp only
+  rw [sEq_ofNat_zero]
   simp only [hz, decide_False, Bool.not_false, if_true, ok_bind]
   rw [embed_put_zero xs e he, ok_bind, hm, addI_ofNat_one m hf1, ok_bind,
     foldGeom_dest w h r k e hw hh hr (by rw [← hn]; exact hgap) (by rw [← hn]; exact hen) hsm,
@@ -306,12 +322,11 @@ private theorem foldPeg_nz (xs : List Nat) (w h r n k e m : Nat) (b : Ecbs.Board
     rw [decide_eq_true_eq]; exact Int.ofNat_nonneg _
   have hge2 : decide (Int.ofNat (e - (n - k)) ≥ (0 : Int)) = true := by
     rw [decide_eq_true_eq]; exact Int.ofNat_nonneg _
-  simp only [hge1, hdlt1, hge2, hdlt2, if_pos rfl, pure_eq_ok, ok_bind, sudoAssert_true, ok_bind]
+  simp only [hge1, hdlt1, hge2, hdlt2, if_pos rfl, pure_eq_ok, ok_bind, sudoAssert_true, if_true]
   have hcleared : allTritList (xs.set e 0) := trit_set hs he (by decide : (0 : Nat) ≤ 2)
   have hd1 : e - n < (xs.set e 0).length := by rw [List.length_set]; omega
   have hcell1 : coeff (xs.set e 0) (e - n) ≤ 2 := by
     rw [coeff_get _ _ hd1]; exact hcleared _ (List.getElem_mem hd1)
-  simp only [if_true]
   have hsum1 : (xs.set e 0)[e - n] + xs[e] ≤ 1000000 := by
     have := hcell1
     rw [coeff_get _ _ hd1] at this
@@ -468,33 +483,36 @@ private theorem top_below (xs : List Nat) (benchlen : Nat)
     omega
   · exact Nat.lt_of_lt_of_le (topIdx_lt xs (Nat.pos_of_ne_zero h0)) hlen
 
-/-- One step of the ascending highest-hole scan. -/
+/-- One step of the ascending highest-hole scan. The return channel is the same
+    `Board × Array` the emitted scan uses; the body only continues. -/
 def topBody (strip : Array Int) (i top : Int) :
-    Except SudoRt.Trap (SudoRt.Flow Int Unit) :=
+    Except SudoRt.Trap (SudoRt.Flow Int (Ecbs.Board × Array Int)) :=
   do
     let c ← SudoRt.atL strip i
     if !(SudoRt.SEq.beq c (0 : Int)) then
-      pure (SudoRt.Flow.cont i)
+      do
+        let top := i
+        pure (SudoRt.Flow.cont (ρ := Ecbs.Board × Array Int) top)
     else
-      pure (SudoRt.Flow.cont top)
+      pure (SudoRt.Flow.cont (ρ := Ecbs.Board × Array Int) top)
 
 def topStep (strip : Array Int) (toV : Int) (σ : Int × Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Int × Int) Unit) :=
+    Except SudoRt.Trap (SudoRt.Flow (Int × Int) (Ecbs.Board × Array Int)) :=
   let i := σ.1
   let top := σ.2
   do
     if i > toV then
-      pure (SudoRt.Flow.brk (i, top))
+      pure (SudoRt.Flow.brk (ρ := Ecbs.Board × Array Int) (i, top))
     else
       match ← topBody strip i top with
-      | .ret r => pure (SudoRt.Flow.ret r)
-      | .brk fs => pure (SudoRt.Flow.brk (i, fs))
+      | .ret r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board × Array Int) r)
+      | .brk fs => pure (SudoRt.Flow.brk (ρ := Ecbs.Board × Array Int) (i, fs))
       | .cont fs => do
           if i == toV then
-            pure (SudoRt.Flow.brk (i, fs))
+            pure (SudoRt.Flow.brk (ρ := Ecbs.Board × Array Int) (i, fs))
           else do
             let i' ← SudoRt.addI i (1 : Int)
-            pure (SudoRt.Flow.cont (i', fs))
+            pure (SudoRt.Flow.cont (ρ := Ecbs.Board × Array Int) (i', fs))
 
 /-- Highest nonzero hole, or `0` when the strip is empty. -/
 def topScan (strip : Array Int) : Except SudoRt.Trap Int :=
@@ -503,7 +521,7 @@ def topScan (strip : Array Int) : Except SudoRt.Trap Int :=
     let last ← SudoRt.subI (SudoRt.listLen strip) (1 : Int)
     let fromV := (0 : Int)
     let fuel : Nat := if fromV > last then 1 else (last - fromV).natAbs + 1
-    let out ← SudoRt.runLoopOn (ρ := Unit) (fromV, top) fuel (topStep strip last)
+    let out ← SudoRt.runLoopOn (ρ := Ecbs.Board × Array Int) (fromV, top) fuel (topStep strip last)
       (fun σ => pure σ.2) (fun _ => pure 0)
     pure out
 
@@ -569,6 +587,57 @@ private theorem top_scan_refines (xs : List Nat) (hfit : FitsLen xs.length) :
       exact ⟨Int.ofNat (topAt xs (i + 1)), rfl, hstep⟩
     · intro top hI
       rw [pure_eq_ok, hI, topIdx_eq]
+      have : xs.length - 1 + 1 = xs.length := by omega
+      rw [this]
+
+/-- The scan's `after` may read the highest hole. `onRet` is unused: the step never returns. -/
+private theorem top_join {α : Type} (xs : List Nat) (hfit : FitsLen xs.length)
+    (body : Int → Except SudoRt.Trap α)
+    (onRet : Ecbs.Board × Array Int → Except SudoRt.Trap α) :
+    (do
+      let top := (0 : Int)
+      let last ← SudoRt.subI (SudoRt.listLen (embed xs)) (1 : Int)
+      let fromV := (0 : Int)
+      let fuel : Nat := if fromV > last then 1 else (last - fromV).natAbs + 1
+      SudoRt.runLoopOn (fromV, top) fuel (topStep (embed xs) last)
+        (fun σ => body σ.2) onRet) =
+      body (Int.ofNat (topIdx xs)) := by
+  rw [listLen_embed]
+  by_cases h0 : xs.length = 0
+  · rw [h0, show Int.ofNat 0 = (0 : Int) from rfl, subI_zero_one, ok_bind]
+    have hgt : (0 : Int) > (-1) := by decide
+    dsimp only
+    rw [if_pos hgt, show (1 : Nat) = 0 + 1 from rfl, runLoopOn_succ]
+    have hstep : topStep (embed xs) (-1) ((0 : Int), (0 : Int)) =
+        .ok (.brk ((0 : Int), (0 : Int))) := by
+      unfold topStep
+      dsimp only
+      rw [if_pos hgt, pure_eq_ok]
+    rw [hstep]
+    dsimp
+    unfold topIdx
+    simp [h0, List.range_zero]
+  · have hpos : 0 < xs.length := Nat.pos_of_ne_zero h0
+    rw [subI_ofNat_one xs.length hpos hfit, ok_bind]
+    rw [show (0 : Int) = Int.ofNat 0 from rfl]
+    dsimp only
+    have hfuel :
+        (if Int.ofNat 0 > Int.ofNat (xs.length - 1) then 1
+          else (Int.ofNat (xs.length - 1) - Int.ofNat 0).natAbs + 1) =
+        fuelRange (Int.ofNat 0) (Int.ofNat (xs.length - 1)) := rfl
+    rw [hfuel]
+    refine asc_goal (fun i top => top = Int.ofNat (topAt xs i)) (Nat.zero_le _) rfl ?_ ?_
+    · intro i top _ hi hI
+      have hiL : i < xs.length := by omega
+      have hfiti : FitsLen (i + 1) := FitsLen.of_le hfit (by omega)
+      rw [hI]
+      have hnext : (if xs[i] = 0 then topAt xs i else i) = topAt xs (i + 1) := by
+        rw [topAt, coeff_get xs i hiL]
+      have hstep := topStep_at xs (xs.length - 1) i (topAt xs i) hiL (by omega) hfiti
+      rw [hnext] at hstep
+      exact ⟨Int.ofNat (topAt xs (i + 1)), rfl, hstep⟩
+    · intro top hI
+      rw [hI, topIdx_eq]
       have : xs.length - 1 + 1 = xs.length := by omega
       rw [this]
 
@@ -933,5 +1002,261 @@ theorem laneFold_high (n gap : Nat) (strip : List Nat) (i : Nat)
     coeff (laneFold n gap strip) i = 0 := by
   rw [← foldDown_lane n gap strip hn]
   exact foldDown_cleared n gap strip hn0 hg hn (strip.length - n) (Nat.le_refl _) i (by omega) hi
+
+
+/-! ### Emitted `lane_fold` is the model scan and `foldLoop` -/
+
+def lanePeg (strip : Array Int) (e : Int) (b : Ecbs.Board) (w h r n k : Int) :
+    Except SudoRt.Trap (SudoRt.Flow (Array Int × Ecbs.Board) (Ecbs.Board × Array Int)) :=
+  do
+  let _t443 ← SudoRt.atL strip e
+  let c := _t443
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _ix445 := e
+      let _t446 ← SudoRt.putL strip _ix445 (0 : Int)
+      let strip := _t446
+      let _t447 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t448 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t447 } : Ecbs.Costs)
+      let _t449 := ({ b with sudo_5Board_4cost := _t448 } : Ecbs.Board)
+      let b := _t449
+      let _t450 ← SudoRt.divI e w
+      let row := _t450
+      let _t451 ← SudoRt.modI e w
+      let col := _t451
+      let _t452 ← SudoRt.subI row h
+      let r1 := _t452
+      let _t453 ← SudoRt.addI col (1 : Int)
+      let c1 := _t453
+      if (SudoRt.SEq.beq c1 w) then
+        do
+          let _t455 ← SudoRt.addI r1 (1 : Int)
+          let r1 := _t455
+          let c1 := (0 : Int)
+          let _t456 ← SudoRt.mulI r1 w
+          let _t457 ← SudoRt.addI _t456 c1
+          let d1 := _t457
+          let _t458 ← SudoRt.subI row r
+          let _t459 ← SudoRt.mulI _t458 w
+          let _t460 ← SudoRt.addI _t459 col
+          let d2 := _t460
+          let _t461 ← SudoRt.subI e n
+          let _t463 ← (if (SudoRt.SEq.beq d1 _t461) then (do
+  let _t464 ← SudoRt.subI n k
+  let _t465 ← SudoRt.subI e _t464
+  pure (SudoRt.SEq.beq d2 _t465)) else pure false)
+          let _as467 ← SudoRt.sudoAssert _t463 530
+          let _t469 ← (if (decide (d1 ≥ (0 : Int))) then (do
+  pure (decide (d1 < e))) else pure false)
+          let _t471 ← (if _t469 then (do
+  pure (decide (d2 ≥ (0 : Int)))) else pure false)
+          let _t473 ← (if _t471 then (do
+  pure (decide (d2 < e))) else pure false)
+          let _as475 ← SudoRt.sudoAssert _t473 531
+          let _ix476 := d1
+          let _t477 ← SudoRt.atL strip d1
+          let _t478 ← SudoRt.addI _t477 c
+          let _t479 ← SudoRt.modI _t478 (3 : Int)
+          let _t480 ← SudoRt.putL strip _ix476 _t479
+          let strip := _t480
+          let _ix481 := d2
+          let _t482 ← SudoRt.atL strip d2
+          let _t483 ← SudoRt.addI _t482 c
+          let _t484 ← SudoRt.modI _t483 (3 : Int)
+          let _t485 ← SudoRt.putL strip _ix481 _t484
+          let strip := _t485
+          let _t486 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (2 : Int)
+          let _t487 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t486 } : Ecbs.Costs)
+          let _t488 := ({ b with sudo_5Board_4cost := _t487 } : Ecbs.Board)
+          let b := _t488
+          pure (SudoRt.Flow.cont (ρ := Ecbs.Board × (Array Int)) (strip, b))
+      else
+        do
+          let _t489 ← SudoRt.mulI r1 w
+          let _t490 ← SudoRt.addI _t489 c1
+          let d1 := _t490
+          let _t491 ← SudoRt.subI row r
+          let _t492 ← SudoRt.mulI _t491 w
+          let _t493 ← SudoRt.addI _t492 col
+          let d2 := _t493
+          let _t494 ← SudoRt.subI e n
+          let _t496 ← (if (SudoRt.SEq.beq d1 _t494) then (do
+  let _t497 ← SudoRt.subI n k
+  let _t498 ← SudoRt.subI e _t497
+  pure (SudoRt.SEq.beq d2 _t498)) else pure false)
+          let _as500 ← SudoRt.sudoAssert _t496 530
+          let _t502 ← (if (decide (d1 ≥ (0 : Int))) then (do
+  pure (decide (d1 < e))) else pure false)
+          let _t504 ← (if _t502 then (do
+  pure (decide (d2 ≥ (0 : Int)))) else pure false)
+          let _t506 ← (if _t504 then (do
+  pure (decide (d2 < e))) else pure false)
+          let _as508 ← SudoRt.sudoAssert _t506 531
+          let _ix509 := d1
+          let _t510 ← SudoRt.atL strip d1
+          let _t511 ← SudoRt.addI _t510 c
+          let _t512 ← SudoRt.modI _t511 (3 : Int)
+          let _t513 ← SudoRt.putL strip _ix509 _t512
+          let strip := _t513
+          let _ix514 := d2
+          let _t515 ← SudoRt.atL strip d2
+          let _t516 ← SudoRt.addI _t515 c
+          let _t517 ← SudoRt.modI _t516 (3 : Int)
+          let _t518 ← SudoRt.putL strip _ix514 _t517
+          let strip := _t518
+          let _t519 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (2 : Int)
+          let _t520 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t519 } : Ecbs.Costs)
+          let _t521 := ({ b with sudo_5Board_4cost := _t520 } : Ecbs.Board)
+          let b := _t521
+          pure (SudoRt.Flow.cont (ρ := Ecbs.Board × (Array Int)) (strip, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Ecbs.Board × (Array Int)) (strip, b))
+
+def laneFoldStep (w h r n k toV : Int)
+    (σ : Int × (Array Int × Ecbs.Board)) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × (Array Int × Ecbs.Board)) (Ecbs.Board × Array Int)) :=
+  let e := σ.1
+  let strip := σ.2.1
+  let b := σ.2.2
+  do
+    if e < toV then
+      pure (SudoRt.Flow.brk (ρ := Ecbs.Board × Array Int) (e, (strip, b)))
+    else
+      match ← lanePeg strip e b w h r n k with
+      | .ret r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board × Array Int) r)
+      | .brk fs => pure (SudoRt.Flow.brk (ρ := Ecbs.Board × Array Int) (e, fs))
+      | .cont fs => do
+          if e == toV then
+            pure (SudoRt.Flow.brk (ρ := Ecbs.Board × Array Int) (e, fs))
+          else do
+            let i' ← SudoRt.subI e (1 : Int)
+            pure (SudoRt.Flow.cont (ρ := Ecbs.Board × Array Int) (i', fs))
+
+
+theorem lanePeg_fold (w h r n k e : Nat) (strip : Array Int) (b : Ecbs.Board) :
+    lanePeg strip (Int.ofNat e) b (Int.ofNat w) (Int.ofNat h) (Int.ofNat r)
+        (Int.ofNat n) (Int.ofNat k) =
+      foldPeg w h r n k strip e b := by
+  simp [lanePeg, foldPeg, laneGeom, foldGeom, bind, Except.bind, withMoves]
+  repeat (first | rfl | split)
+
+theorem laneFold_step_at (w h r n k i : Nat) (toV : Int) (strip : Array Int) (b : Ecbs.Board) :
+    laneFoldStep (Int.ofNat w) (Int.ofNat h) (Int.ofNat r) (Int.ofNat n) (Int.ofNat k) toV
+        (Int.ofNat i, (strip, b)) =
+      foldStep w h r n k toV (Int.ofNat i, (strip, b)) := by
+  unfold laneFoldStep foldStep
+  dsimp only
+  rw [show (Int.ofNat i).natAbs = i from Int.natAbs_ofNat i, lanePeg_fold]
+
+theorem laneFold_step (w h r n k : Nat) :
+    laneFoldStep (Int.ofNat w) (Int.ofNat h) (Int.ofNat r) (Int.ofNat n) (Int.ofNat k)
+        (Int.ofNat n) =
+      foldStep w h r n k (Int.ofNat n) := by
+  funext σ
+  cases σ with
+  | mk e st =>
+    cases st with
+    | mk strip b =>
+      by_cases hlt : e < Int.ofNat n
+      · unfold laneFoldStep foldStep
+        dsimp only
+        rw [if_pos hlt, if_pos hlt]
+      · have hge : Int.ofNat n ≤ e := (Int.not_lt).mp hlt
+        have hnn : 0 ≤ e := Int.le_trans (Int.ofNat_nonneg n) hge
+        have he : e = ↑e.natAbs := (Int.natAbs_of_nonneg hnn).symm
+        rw [he]
+        exact laneFold_step_at w h r n k e.natAbs (Int.ofNat n) strip b
+
+def descBlock
+    (step : Int × (Array Int × Ecbs.Board) →
+      Except SudoRt.Trap (SudoRt.Flow (Int × (Array Int × Ecbs.Board)) (Ecbs.Board × Array Int)))
+    (nI : Int) (strip : Array Int) (b : Ecbs.Board) :
+    Except SudoRt.Trap (Ecbs.Board × Array Int) :=
+  do
+    let fromV ← SudoRt.subI (SudoRt.listLen strip) (1 : Int)
+    let fuel : Nat := if fromV < nI then 1 else (fromV - nI).natAbs + 1
+    let out ← SudoRt.runLoopOn (ρ := Ecbs.Board × Array Int) (fromV, (strip, b)) fuel step
+      (fun σ =>
+        let strip := σ.2.1
+        let b := σ.2.2
+        pure (b, strip))
+      (fun r => pure r)
+    pure out
+
+theorem descBlock_fold (w h r n k : Nat) (strip : Array Int) (b : Ecbs.Board) :
+    descBlock (foldStep w h r n k (Int.ofNat n)) (Int.ofNat n) strip b =
+      foldLoop w h r n k strip b (Int.ofNat n) := by
+  unfold descBlock foldLoop
+  rfl
+
+theorem descBlock_emit (w h r n k : Nat) (strip : Array Int) (b : Ecbs.Board) :
+    descBlock (laneFoldStep (Int.ofNat w) (Int.ofNat h) (Int.ofNat r) (Int.ofNat n) (Int.ofNat k)
+        (Int.ofNat n)) (Int.ofNat n) strip b =
+      foldLoop w h r n k strip b (Int.ofNat n) := by
+  rw [laneFold_step, descBlock_fold]
+
+def laneFoldEmit (w h r n k bench : Int) (b : Ecbs.Board) (strip : Array Int) :
+    Except SudoRt.Trap (Ecbs.Board × Array Int) :=
+  do
+    let top := (0 : Int)
+    let last ← SudoRt.subI (SudoRt.listLen strip) (1 : Int)
+    let fromV := (0 : Int)
+    let toV := last
+    let fuel : Nat := if fromV > toV then 1 else (toV - fromV).natAbs + 1
+    let out ← SudoRt.runLoopOn (ρ := Ecbs.Board × Array Int) (fromV, top) fuel
+      (topStep strip toV)
+      (fun σ =>
+        let top := σ.2
+        do
+          if decide (top > b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) then
+            do
+              let b := withHole b top
+              let _u ← SudoRt.sudoAssert (decide (top < bench)) 515
+              descBlock (laneFoldStep w h r n k n) n strip b
+          else
+            do
+              let _u ← SudoRt.sudoAssert (decide (top < bench)) 515
+              descBlock (laneFoldStep w h r n k n) n strip b)
+      (fun r => pure r)
+    pure out
+
+theorem laneFold_emit (b : Ecbs.Board) (strip : Array Int) :
+    Ecbs.lane_fold b strip =
+      laneFoldEmit b.sudo_5Board_1t.sudo_4Tier_1w b.sudo_5Board_1t.sudo_4Tier_1h
+        b.sudo_5Board_1t.sudo_4Tier_1r b.sudo_5Board_1t.sudo_4Tier_1n
+        b.sudo_5Board_1t.sudo_4Tier_1k b.sudo_5Board_1t.sudo_4Tier_8benchlen b strip := by
+  unfold laneFoldEmit descBlock laneFoldStep lanePeg topStep topBody withHole
+  rfl
+
+
+/-- Emitted `Ecbs.lane_fold`: the inlined geometry is `laneFoldStep` / `foldPeg`,
+    both hole branches are `foldLoop`, and the scan is `topScan`. `lane_fold_refines`
+    then reads this as `Spec.laneFold`. -/
+theorem lane_fold_eq (xs : List Nat) (w h r n k benchlen : Nat) (b : Ecbs.Board)
+    (hfit : FitsLen xs.length)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat n)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat benchlen) :
+    Ecbs.lane_fold b (embed xs) =
+      laneFoldGo w h r n k (Int.ofNat benchlen) b (embed xs) := by
+  rw [laneFold_emit, hw, hh, hr, hn, hk, hbl]
+  unfold laneFoldEmit laneFoldGo
+  simp only [descBlock_emit, except_bind_pure]
+  rw [top_scan_refines xs hfit, ok_bind]
+  exact top_join xs hfit
+    (fun top =>
+      if decide (top > b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) = true then
+        (do
+          SudoRt.sudoAssert (decide (top < Int.ofNat benchlen)) 515
+          foldLoop w h r n k (embed xs) (withHole b top) (Int.ofNat n))
+      else
+        (do
+          SudoRt.sudoAssert (decide (top < Int.ofNat benchlen)) 515
+          foldLoop w h r n k (embed xs) b (Int.ofNat n)))
+    (fun r => pure r)
 
 end EcbsLink2.Link2

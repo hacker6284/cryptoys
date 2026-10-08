@@ -448,4 +448,178 @@ theorem multiply_refines (t : Spec.Tier) (lay : FieldLay t) (xs ys : List Nat)
   change Except.ok (embed (List.take n (laneFold n (n - k) sch))) = _
   rw [htake]
 
+private theorem ax_tier (t : Spec.Tier) (xs : List Nat) :
+    (boardAcross t xs).sudo_5Board_1t = embTier t := by
+  simp [boardAcross, builtBoard, midBoard, placed, blankOf]
+
+private theorem ax_off (t : Spec.Tier) (xs : List Nat) :
+    (boardAcross t xs).sudo_5Board_9marker_on = false ∧
+    (boardAcross t xs).sudo_5Board_8bench_on = false ∧
+    (boardAcross t xs).sudo_5Board_4cost.sudo_5Costs_11peak_strict = 0 ∧
+    (boardAcross t xs).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = 0 ∧
+    (boardAcross t xs).sudo_5Board_4cost.sudo_5Costs_6slides = 0 := by
+  simp [boardAcross, builtBoard, midBoard, placed, blankOf]
+
+private theorem ax_ops (t : Spec.Tier) (xs : List Nat) :
+    (boardAcross t xs).sudo_5Board_4cost.sudo_5Costs_3ops = Array.mkArray 5 0 := by
+  simp [boardAcross, built_ops0]
+
+private theorem ax_sz (t : Spec.Tier) (xs : List Nat) :
+    (boardAcross t xs).sudo_5Board_4held.size = 8 ∧
+    (boardAcross t xs).sudo_5Board_4home.size = 8 := by
+  simp [boardAcross, built_held, built_home, Array.size_set, Array.size_mkArray]
+
+private theorem ax_at0 (t : Spec.Tier) (xs : List Nat)
+    (_hD : 0 < (boardAcross t xs).sudo_5Board_4held.size)
+    (hH : 0 < (boardAcross t xs).sudo_5Board_4home.size) :
+    (boardAcross t xs).sudo_5Board_4held[0] = true ∧
+    (boardAcross t xs).sudo_5Board_4home[0] = embed xs := by
+  simp [boardAcross, built_held, built_home, Array.getElem_set, Array.getElem_mkArray]
+
+/-- `cube_number`: `new_board`, across `put`, `cube` of that home onto itself, `settle`, `value`.
+    The array is embedded `Spec.fieldCube`. The comb reach `3·(n−1) + combgap < benchlen` is
+    the check the emitted cube asserts. -/
+theorem cube_number_refines (t : Spec.Tier) (lay : FieldLay t) (xs : List Nat)
+    (hx : xs.length = t.n) (hxs : allTritList xs)
+    (hspan : 3 * (t.n - 1) + t.combgap < t.benchlen) :
+    Ecbs.cube_number (embTier t) (embed xs) =
+      .ok (embed (fieldCube t.n t.k t.benchlen xs)) := by
+  let n := t.n
+  let k := t.k
+  let w := t.w
+  let h := t.h
+  let r := t.r
+  let bench := t.benchlen
+  let cg := t.combgap
+  let px := pegCount xs
+  have hpx : px ≤ n := by simpa [px, n, hx] using pegCount_le xs
+  have hnsm : n ≤ 1000000 := lay.n_small
+  have hbnd : bench ≤ 1000001 := lay.small.2.2.2
+  have hnb : n ≤ bench := by have := lay.mul_span; omega
+  have hprod : n * (n + 1) ≤ 1000000 * 1000001 := Nat.mul_le_mul hnsm (by omega)
+  have hfn : FitsLen n := fits_small hnsm
+  have h3 : FitsLen (3 * (n - 1)) := fits_budget (by omega)
+  have hfm : FitsLen (px + 2 * n) := fits_budget (by omega)
+  have hfold : FitsLen (px + 2 * n + 3 * (bench - n)) := fits_budget (by omega)
+  have hfitB : FitsLen bench := fits_budget (by omega)
+  have hpeg : FitsLen px := fits_budget (by omega)
+  unfold Ecbs.cube_number
+  rw [new_board_refines t lay.board]
+  simp only [ok_bind, pure_eq_ok]
+  have hAcross := put_built_across t lay.board xs hx hpeg
+  conv =>
+    pattern (Ecbs.put _ Ecbs.across _)
+    change Ecbs.put (builtBoard t) ((0 : Nat) : Int) (embed xs)
+  rw [hAcross]
+  simp only [ok_bind]
+  rw [boardAcross_eq]
+  let bA := boardAcross t xs
+  have hHeld8 : bA.sudo_5Board_4held.size = 8 := by
+    change (boardAcross t xs).sudo_5Board_4held.size = 8
+    exact (ax_sz t xs).1
+  have hHome8 : bA.sudo_5Board_4home.size = 8 := by
+    change (boardAcross t xs).sudo_5Board_4home.size = 8
+    exact (ax_sz t xs).2
+  have hD0 : 0 < bA.sudo_5Board_4held.size := by rw [hHeld8]; decide
+  have hH0 : 0 < bA.sudo_5Board_4home.size := by rw [hHome8]; decide
+  have h7b : 7 ≤ bA.sudo_5Board_4held.size := by rw [hHeld8]; decide
+  have hcube := cube_refines bA 0 0 xs w h r n k px 0 bench 1 0 0 cg
+    (ax_off t xs).1 (ax_off t xs).2.1
+    (by simp [bA, ax_ops, Array.size_mkArray])
+    (by simp [bA, ax_ops, Array.getElem_mkArray, ofNat_eq_natCast])
+    (fits_small (by decide))
+    (by rw [ax_tier]; rfl)
+    (by rw [ax_tier]; rfl)
+    hspan
+    hD0 hH0 (ax_at0 t xs hD0 hH0).1 (ax_at0 t xs hD0 hH0).2
+    h7b lay.board.n_pos
+    (by rw [ax_tier]; exact ofNat_eq_natCast _)
+    hx hfn
+    (by simp [bA, boardAcross, ofNat_eq_natCast])
+    (by simp [bA, boardAcross, built_peak, ofNat_eq_natCast])
+    (by
+      have := (ax_off t xs).2.2.1
+      simpa [bA, ofNat_eq_natCast] using this)
+    hxs h3 hfm
+    lay.w_pos lay.h_pos lay.r_lt lay.r_pos lay.n_eq lay.k_le lay.gap_eq
+    (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl)
+    (by
+      have := (ax_off t xs).2.2.2.1
+      simpa [bA, ofNat_eq_natCast] using this)
+    lay.small hnsm hfitB hfold
+  obtain ⟨b', hok, hon, hto, hbench, _htake, hhigh, hmov, hpeakM, hslides, ht, hhome, hheld⟩ :=
+    hcube
+  conv =>
+    pattern (Ecbs.cube _ _ _)
+    change Ecbs.cube bA ((0 : Nat) : Int) ((0 : Nat) : Int)
+  rw [hok]
+  simp only [ok_bind, pure_eq_ok]
+  let sch := combStrip n bench xs
+  let lane := laneFold n (n - k) sch
+  have hlenS : sch.length = bench := by
+    simp [sch, combStrip_length]
+  have hlenL : lane.length = bench := by
+    simpa [lane, hlenS] using laneFold_length n (n - k) sch (by rw [hlenS]; exact hnb)
+  have h0H : 0 < b'.sudo_5Board_4home.size := by rw [hhome, hHome8]; decide
+  have h0D : 0 < b'.sudo_5Board_4held.size := by
+    rw [hheld, Array.size_set, hHeld8]; decide
+  have h7' : 7 ≤ b'.sudo_5Board_4held.size := by rw [hheld, Array.size_set, hHeld8]; decide
+  have hempty : b'.sudo_5Board_4held[0] = false := by
+    have hpre : 0 < (bA.sudo_5Board_4held.set ⟨0, hD0⟩ false).size := by
+      simp [Array.size_set, hHeld8]
+    have hget := array_get_congr hheld.symm 0 hpre
+    rw [← hget]
+    simp [Array.getElem_set]
+  have hslides0 : b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat 0 := by
+    rw [hslides]
+    simp [bA, boardAcross, builtBoard, midBoard, placed, blankOf, ofNat_eq_natCast]
+  have hn' : b'.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    rw [ht]
+    change (boardAcross t xs).sudo_5Board_1t.sudo_4Tier_1n = (n : Int)
+    rw [ax_tier]
+    exact ofNat_eq_natCast _
+  have hpegN : pegCount (lane.take n) ≤ n := by
+    have hle := pegCount_le (lane.take n)
+    rw [List.length_take, hlenL] at hle
+    exact Nat.le_trans hle (Nat.min_le_left _ _)
+  have hmovN : cubeMoves px xs n k bench + 2 * pegCount (lane.take n) ≤
+      1000000 * 1000001 + 10 * 1000001 := by
+    have hlaid : laidCount xs n ≤ n := laidCount_le xs n
+    have hfc : foldCharge n (n - k) sch ≤ 3 * (sch.length - n) := foldCharge_bound _ _ _
+    simp only [cubeMoves, sch] at *
+    rw [hlenS] at hfc
+    omega
+  have hread := folded_read b' 0 lane n (cubeMoves px xs n k bench) 0
+      (raisedPeak 1 (countHeld (bA.sudo_5Board_4held.set ⟨0, hD0⟩ false) 7))
+      h0H h0D h7' hon hto hempty
+      (by simpa [lane, sch] using hbench)
+      hn'
+      (by rw [hlenL]; have := lay.mul_span; omega)
+      (by rw [hlenL]; exact hnb)
+      (by
+        intro i hi hii
+        have hc := hhigh i hi (by rw [hlenL] at hii; exact hii)
+        rw [coeff_at lane i hii] at hc
+        exact hc)
+      hfn (by rw [hlenL]; exact hfitB)
+      hmov hslides0 hpeakM
+      (fits_budget (by omega)) (fits_budget hmovN) (fits_budget (by omega))
+  conv =>
+    lhs
+    arg 2
+    intro _io
+    arg 2
+    intro _v
+    rw [← pure_eq_ok]
+  conv =>
+    lhs
+    arg 2
+    intro _io
+    rw [except_bind_pure]
+  rw [show Ecbs.across = ((0 : Nat) : Int) from rfl]
+  rw [hread]
+  change Except.ok (embed (List.take n (laneFold n (n - k) sch))) = _
+  unfold fieldCube
+  rfl
+
 end EcbsLink2.Link2

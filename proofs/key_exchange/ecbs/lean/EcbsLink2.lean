@@ -14,4 +14,5 @@ import EcbsLink2.Link2.Lane
 import EcbsLink2.Link2.Mul
 import EcbsLink2.Link2.Cube
 import EcbsLink2.Link2.BoardBuild
+import EcbsLink2.Link2.Invert
 import EcbsLink2.Link2.Export

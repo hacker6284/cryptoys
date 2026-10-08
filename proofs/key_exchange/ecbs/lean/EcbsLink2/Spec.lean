@@ -377,6 +377,46 @@ def combStrip (n bench : Nat) (x : List Nat) : List Nat :=
 def fieldCube (n k bench : Nat) (x : List Nat) : List Nat :=
   (reduceStrip n (n - k) (combStrip n bench x)).take n
 
+/-- Cube `x`, `t` times. Zero times is `x`. -/
+def cubeTimes (n k bench : Nat) (x : List Nat) : Nat → List Nat
+  | 0 => x
+  | t + 1 => fieldCube n k bench (cubeTimes n k bench x t)
+
+/-- One rung of the Itoh–Tsujii climb, in climb order. `last` skips doubling the tally
+    and the extra peg. A red rung (`2`) also cubes the gap and multiplies by the original `x`. -/
+def invRung (n k bench : Nat) (x g : List Nat) (tally rung : Nat) (last : Bool) :
+    List Nat × Nat :=
+  let s := cubeTimes n k bench g tally
+  let g1 := fieldMul n k bench g s
+  let tally1 := if last then tally else 2 * tally
+  if rung = 2 then
+    let s2 := fieldCube n k bench g1
+    (fieldMul n k bench x s2, if last then tally1 else tally1 + 1)
+  else
+    (g1, tally1)
+
+/-- Climb `rungs` from the last rung made. The pair is `(gap, tally)`. -/
+def invClimb (n k bench : Nat) (x : List Nat) : List Nat × Nat → List Nat → List Nat × Nat
+  | st, [] => st
+  | (g, tally), r :: rs =>
+    invClimb n k bench x (invRung n k bench x g tally r rs.isEmpty) rs
+
+/-- The gap `invert` leaves before the sign check: climb `rungList (n − 1)` reversed, then cube. -/
+def invGap (n k bench : Nat) (x : List Nat) : List Nat :=
+  fieldCube n k bench (invClimb n k bench x (x, 1) (rungList (n - 1)).reverse).1
+
+def mirrorTrits (xs : List Nat) : List Nat :=
+  xs.map fun c => if c = 0 then 0 else 3 - c
+
+/-- `invert_checked`. The product of the gap with `x` must be one peg in hole 0.
+    A red peg (`2`) mirrors the gap; any other product is outside the theorem. -/
+def fieldInv (n k bench : Nat) (x : List Nat) : Option (List Nat) :=
+  let g := invGap n k bench x
+  let v := fieldMul n k bench g x
+  if v = 1 :: List.replicate (n - 1) 0 then some g
+  else if v = 2 :: List.replicate (n - 1) 0 then some (mirrorTrits g)
+  else none
+
 /-! ### Lists -/
 
 def nnz : List Int → Nat

@@ -455,9 +455,10 @@ jobs:
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 432412 kB (about 0.42 GB). The job builds `place`, the lane-fold geometry,
-    # and the schoolbook loop (`schoolCol_refines`, `school_loop_refines`).
-    # `lane_fold`, `mul`, `new_board` and the exchange are not theorems yet.
+    # 432424 kB (about 0.42 GB). The job builds `place`, the schoolbook loop
+    # (`schoolCol_refines`, `school_loop_refines`), and the lane-fold index block
+    # (`foldGeom_refines`). The descending `lane_fold` loop, `mul`, `new_board`
+    # and the exchange are not theorems yet.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

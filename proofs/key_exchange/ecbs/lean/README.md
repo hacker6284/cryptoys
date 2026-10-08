@@ -12,7 +12,7 @@ python3 ../../../doubledeal/check_axioms.py ecbs # every EcbsLink2 theorem: prop
 python3 ../../../doubledeal/security/checks/scan_sorry.py --root . --exclude Generated
 ```
 
-No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432412 kB RSS.
+No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432424 kB RSS.
 
 ## Generated Lean
 
@@ -74,7 +74,9 @@ Not exported, so not in the column above. Each is the emitted function on the st
 - `laneDest2_eq`: with `0 < w` and `r ≤ e / w`, "r rows up, same column" equals `e − r·w`.
 - `schoolCol_refines`: one schoolbook row, columns `0 .. n`, mirror bit included, one move per nonzero cell. `n > 0`, the first number covers `n` trits, the cell `i+(n−1)` is on the strip, and the index and move sums fit an i64.
 - `school_loop_refines`: the descending loop `i = n−1 downto 0` around that row. A zero second-coefficient is skipped; a nonzero one is lifted (one move) and laid with mirror `decide (c = 2) != mirror`. The strip is `Spec.school`. The final state is what `after` sees; `onRet` is unused. This is the stepper every inlined copy in `mul` is.
+- `foldGeom_refines`: the emitted `d1`/`d2` block (wrap and non-wrap) equals `laneDest` and `laneDest2`. `0 < w`, `0 < h`, `r < h`, `w·h − 1 ≤ e`, and `w, h, r, e ≤ 1000000`.
+- `foldGeom_dest`: under `(w·h − 1) − k = w·r`, those indices are `e − (w·h − 1)` and `e − ((w·h − 1) − k)`. The descending `lane_fold` loop that calls this block is not yet a theorem.
 
-`laneDest_eq` and `laneDest2_eq` are the equalities `lane_fold` asserts (`d1 = e − n`, `d2 = e − (n − k)` when `n = w·h − 1` and `n − k = w·r`). They are not yet applied to the emitted loop.
+`laneDest_eq` and `laneDest2_eq` are the equalities `lane_fold` asserts (`d1 = e − n`, `d2 = e − (n − k)` when `n = w·h − 1` and `n − k = w·r`). `foldGeom_refines` shows the emitted row/column block computes those indices. The descending loop around that block is not yet a theorem.
 
 No SPEC/code disagreement showed up on the functions above. `coordinate` matches §5.2, including Demo. The keypad's integer subtraction on face `0` is outside the SPEC's `1 .. 9` and outside the theorem.

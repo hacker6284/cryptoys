@@ -355,6 +355,14 @@ def foldHigh (n gap e : Nat) (strip : List Nat) : List Nat :=
 def reduceStrip (n gap : Nat) (strip : List Nat) : List Nat :=
   (List.range (strip.length - n)).foldr (fun d st => foldHigh n gap (n + d) st) strip
 
+/-- SPEC §3 R3, the lane fold: `reduceStrip` under `gap = n - k`. -/
+def laneFold (n gap : Nat) (strip : List Nat) : List Nat :=
+  reduceStrip n gap strip
+
+/-- Highest nonzero hole, or `0` when the strip is empty or all zeros. The scan in `lane_fold`. -/
+def topIdx (strip : List Nat) : Nat :=
+  (List.range strip.length).foldl (fun t i => if coeff strip i = 0 then t else i) 0
+
 /-- R4, `onto = false` and `mirror = false`: the product in the first `n` holes. -/
 def fieldMul (n k bench : Nat) (x y : List Nat) : List Nat :=
   (reduceStrip n (n - k) (school n x y (List.replicate bench 0) false)).take n

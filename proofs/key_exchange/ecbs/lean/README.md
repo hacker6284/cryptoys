@@ -1,7 +1,7 @@
 <!-- Owns: the scope of the ECBS Link 2 proofs (proofs/key_exchange/ecbs/lean) and their export table. Maintenance rules: ../../../../DOCS.md. -->
 # ECBS Link 2: emitted tier, coordinate, band, place and keypad against a hand-written model
 
-Status: **in progress.** The Lean below proves that the code `sudoc` emits from [`ecbs.sudo`](../../../../primitives/key_exchange/ecbs/ecbs.sudo) (in [`Generated/`](Generated/README.md)) computes what a hand-written model in [`EcbsLink2/Spec.lean`](EcbsLink2/Spec.lean) says, for the functions and domains in the table. `place` includes the record update. The schoolbook inside `mul` is one generic loop (`schoolCol_refines`, `school_loop_refines`) equal to `Spec.school`; it is not yet composed with `lane_fold` into `mul` or `multiply`. The ladder, the fold and the exchange are not tied to the emitted loops yet. The lane-fold geometry those loops assert is proved as `Nat` arithmetic. The model is numbers and lists of trits (hole 0 first), written from [SPEC](../../../../primitives/key_exchange/ecbs/SPEC.md) §§1, 2, 4, 5.2 and 6. It is **correctness of the emitted code on that domain, not a security claim**: nothing here says the curve's discrete log is hard, that a key has entropy, or that the fold extracts.
+Status: **in progress.** The Lean below proves that the code `sudoc` emits from [`ecbs.sudo`](../../../../primitives/key_exchange/ecbs/ecbs.sudo) (in [`Generated/`](Generated/README.md)) computes what a hand-written model in [`EcbsLink2/Spec.lean`](EcbsLink2/Spec.lean) says, for the functions and domains in the table. `place` includes the record update. The schoolbook inside `mul` is one generic loop (`schoolCol_refines`, `school_loop_refines`) equal to `Spec.school`. The descending lane fold is one loop (`fold_loop_refines`) equal to `Spec.laneFold`, and both `max_bench_hole` branches are that loop (`lane_fold_refines`, including the highest-hole scan and the move counter). Neither is composed into `mul` or `multiply` yet. The ladder, the fold and the exchange are not tied to the emitted loops yet. The lane-fold geometry those loops assert is proved as `Nat` arithmetic. The model is numbers and lists of trits (hole 0 first), written from [SPEC](../../../../primitives/key_exchange/ecbs/SPEC.md) §§1, 2, 4, 5.2 and 6. It is **correctness of the emitted code on that domain, not a security claim**: nothing here says the curve's discrete log is hard, that a key has entropy, or that the fold extracts.
 
 Build and audit (Lean 4.14.0, no Mathlib):
 
@@ -12,7 +12,7 @@ python3 ../../../doubledeal/check_axioms.py ecbs # every EcbsLink2 theorem: prop
 python3 ../../../doubledeal/security/checks/scan_sorry.py --root . --exclude Generated
 ```
 
-No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432424 kB RSS.
+No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432416 kB RSS.
 
 ## Generated Lean
 
@@ -52,7 +52,7 @@ Every `export func` of `ecbs.sudo` has a row. `check_axioms.py --selftest` check
 | `base_point_of` | none: the root-strip search is not tied | |
 | `walk_key` | none: the key walk is not tied | |
 | `invert_number` | none: the emitted inverse is not tied | |
-| `multiply` | none: `mul` is not yet composed with `lane_fold` | The six inlined schoolbook copies are the one loop `school_loop_refines` (`Spec.school`, plus the move counter). The flag plumbing, `lane_fold`, `settle` and `value` are not yet a theorem that `multiply` returns `Spec.fieldMul`. |
+| `multiply` | none: `mul` is not yet composed with `lane_fold` | The six inlined schoolbook copies are the one loop `school_loop_refines` (`Spec.school`, plus the move counter). The descending fold is `fold_loop_refines` / `lane_fold_refines` (`Spec.laneFold`, the top scan, both images, the move counter). The flag plumbing, `settle` and `value` are not yet a theorem that `multiply` returns `Spec.fieldMul`. |
 | `cube_number` | none: the emitted `cube` and `lane_fold` are not tied | |
 | `fold` | none: `fold` starts with `new_board` and `fold_key`, and neither loop nest is tied | `Spec.foldKey` is the §6 row drop (read the original across, add in GF(3), keep `keeprows` rows). It is not a theorem about the emitted function. |
 
@@ -75,8 +75,10 @@ Not exported, so not in the column above. Each is the emitted function on the st
 - `schoolCol_refines`: one schoolbook row, columns `0 .. n`, mirror bit included, one move per nonzero cell. `n > 0`, the first number covers `n` trits, the cell `i+(n−1)` is on the strip, and the index and move sums fit an i64.
 - `school_loop_refines`: the descending loop `i = n−1 downto 0` around that row. A zero second-coefficient is skipped; a nonzero one is lifted (one move) and laid with mirror `decide (c = 2) != mirror`. The strip is `Spec.school`. The final state is what `after` sees; `onRet` is unused. This is the stepper every inlined copy in `mul` is.
 - `foldGeom_refines`: the emitted `d1`/`d2` block (wrap and non-wrap) equals `laneDest` and `laneDest2`. `0 < w`, `0 < h`, `r < h`, `w·h − 1 ≤ e`, and `w, h, r, e ≤ 1000000`.
-- `foldGeom_dest`: under `(w·h − 1) − k = w·r`, those indices are `e − (w·h − 1)` and `e − ((w·h − 1) − k)`. The descending `lane_fold` loop that calls this block is not yet a theorem.
+- `foldGeom_dest`: under `(w·h − 1) − k = w·r`, those indices are `e − (w·h − 1)` and `e − ((w·h − 1) − k)`.
+- `fold_loop_refines`: the descending loop from the last hole down through hole `n`. A zero peg is skipped. A nonzero peg is cleared, added at both images, and charged three moves. The strip is `Spec.laneFold`. A strip no longer than `n` breaks at once. `0 < w`, `0 < h`, `0 < r < h`, `n = w·h − 1`, `k ≤ n`, `n − k = w·r`, every entry a trit, `w, h, r ≤ 1000000`, the length at most `1000001`, `n ≤ 1000000`, and `moves + 3·(length − n)` fits an i64.
+- `lane_fold_refines`: the highest-hole scan, the check that the hole is inside the bench, then `fold_loop_refines`. Both `max_bench_hole` branches are that one loop. When the scan is strictly above the recorded hole, the record becomes the scan. The strip is at most `benchlen` long and `benchlen > 0`.
 
-`laneDest_eq` and `laneDest2_eq` are the equalities `lane_fold` asserts (`d1 = e − n`, `d2 = e − (n − k)` when `n = w·h − 1` and `n − k = w·r`). `foldGeom_refines` shows the emitted row/column block computes those indices. The descending loop around that block is not yet a theorem.
+`laneDest_eq` and `laneDest2_eq` are the equalities `lane_fold` asserts (`d1 = e − n`, `d2 = e − (n − k)` when `n = w·h − 1` and `n − k = w·r`). `foldGeom_refines` shows the emitted row/column block computes those indices. `fold_loop_refines` is the descending loop around that block, and `lane_fold_refines` runs it after the scan.
 
 No SPEC/code disagreement showed up on the functions above. `coordinate` matches §5.2, including Demo. The keypad's integer subtraction on face `0` is outside the SPEC's `1 .. 9` and outside the theorem.

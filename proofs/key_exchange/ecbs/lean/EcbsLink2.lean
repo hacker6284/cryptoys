@@ -9,3 +9,4 @@ import EcbsLink2.Link2.Layout
 import EcbsLink2.Link2.School
 import EcbsLink2.Link2.Fold
 import EcbsLink2.Link2.Lane
+import EcbsLink2.Link2.Mul

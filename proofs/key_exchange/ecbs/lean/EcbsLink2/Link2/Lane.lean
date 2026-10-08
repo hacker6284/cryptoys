@@ -863,4 +863,75 @@ theorem lane_fold_refines (xs : List Nat) (w h r n k moves hole benchlen : Nat) 
     simp only [hdec, Bool.false_eq_true, if_false, ok_bind, htop, sudoAssert_true, ok_bind]
     rw [fold_loop_refines xs w h r n k moves b hw hh hr hr0 hn hk hgap hs hm hsm hnsm hfm]
 
+private theorem coeff_set_same (xs : List Nat) (i v : Nat) (hi : i < xs.length) :
+    coeff (xs.set i v) i = v := by
+  have hi' : i < (xs.set i v).length := by rw [List.length_set]; exact hi
+  rw [coeff_get _ _ hi', List.getElem_set_self]
+
+private theorem coeff_set_ne (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
+    coeff (xs.set i v) j = coeff xs j := by
+  have hj' : j < (xs.set i v).length := by rw [List.length_set]; exact hj
+  rw [coeff_get _ _ hj', List.getElem_set, if_neg hne, ← coeff_get xs j hj]
+
+private theorem foldHigh_above (n gap e i : Nat) (strip : List Nat)
+    (hi : i < strip.length) (hgt : e < i) :
+    coeff (foldHigh n gap e strip) i = coeff strip i := by
+  unfold foldHigh
+  by_cases hz : coeff strip e = 0
+  · simp [hz]
+  · by_cases hlt : e < n
+    · simp [hz, hlt]
+    · simp only [hz, hlt, false_or, ite_false]
+      have hne1 : e ≠ i := Nat.ne_of_lt hgt
+      have hne2 : e - n ≠ i := by omega
+      have hne3 : e - gap ≠ i := by omega
+      rw [coeff_set_ne _ (e - gap) _ i (by rw [List.length_set, List.length_set]; exact hi) hne3,
+        coeff_set_ne _ (e - n) _ i (by rw [List.length_set]; exact hi) hne2,
+        coeff_set_ne _ e 0 i hi hne1]
+
+/-- A high peg is cleared, and both images sit strictly below it when `n` and the gap are positive. -/
+private theorem foldHigh_clear (n gap e : Nat) (strip : List Nat)
+    (he : e < strip.length) (hn : 0 < n) (hg : 0 < gap) (hen : n ≤ e) :
+    coeff (foldHigh n gap e strip) e = 0 := by
+  unfold foldHigh
+  by_cases hz : coeff strip e = 0
+  · simp [hz, coeff_get strip e he]
+  · have hlt : ¬ e < n := by omega
+    simp only [hz, hlt, false_or, ite_false]
+    have hne2 : e - n ≠ e := by omega
+    have hne3 : e - gap ≠ e := by omega
+    rw [coeff_set_ne _ (e - gap) _ e (by rw [List.length_set, List.length_set]; exact he) hne3,
+      coeff_set_ne _ (e - n) _ e (by rw [List.length_set]; exact he) hne2,
+      coeff_set_same _ e 0 he]
+
+private theorem foldDown_cleared (n gap : Nat) (strip : List Nat)
+    (hn0 : 0 < n) (hg : 0 < gap) (hn : n ≤ strip.length) :
+    ∀ m, m ≤ strip.length - n → ∀ i, strip.length - m ≤ i → i < strip.length →
+      coeff (foldDown n gap strip m) i = 0 := by
+  intro m hm
+  induction m with
+  | zero =>
+    intro i hlo hi
+    omega
+  | succ m ih =>
+    intro i hlo hi
+    rw [foldDown_succ]
+    have he : strip.length - 1 - m < strip.length := by omega
+    have hen : n ≤ strip.length - 1 - m := by omega
+    by_cases hgt : strip.length - 1 - m < i
+    · have hi' : i < (foldDown n gap strip m).length := by rw [foldDown_length]; exact hi
+      rw [foldHigh_above n gap (strip.length - 1 - m) i (foldDown n gap strip m) hi' hgt]
+      exact ih (Nat.le_of_succ_le hm) i (by omega) hi
+    · have heq : i = strip.length - 1 - m := by omega
+      rw [heq, foldHigh_clear n gap (strip.length - 1 - m) (foldDown n gap strip m)
+        (by rw [foldDown_length]; exact he) hn0 hg hen]
+
+/-- After the lane fold, every hole at or above `n` is empty. That is the tail `settle` checks. -/
+theorem laneFold_high (n gap : Nat) (strip : List Nat) (i : Nat)
+    (hn0 : 0 < n) (hg : 0 < gap) (hn : n ≤ strip.length)
+    (hlo : n ≤ i) (hi : i < strip.length) :
+    coeff (laneFold n gap strip) i = 0 := by
+  rw [← foldDown_lane n gap strip hn]
+  exact foldDown_cleared n gap strip hn0 hg hn (strip.length - n) (Nat.le_refl _) i (by omega) hi
+
 end EcbsLink2.Link2

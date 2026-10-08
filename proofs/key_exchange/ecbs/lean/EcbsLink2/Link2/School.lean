@@ -729,5 +729,21 @@ theorem school_loop_refines {β}
       · exact hI.1
     rw [hst]
 
+theorem school_length (first second strip : List Nat) (mirror : Bool) (n : Nat) :
+    (school n first second strip mirror).length = strip.length := by
+  rw [← schoolDown_school first second strip mirror n]
+  exact schoolDown_length first second mirror n strip n
+
+theorem school_trits (first second strip : List Nat) (mirror : Bool) (n : Nat)
+    (hs : allTritList strip)
+    (hbench : ∀ i, i < n → i + (n - 1) < strip.length) :
+    allTritList (school n first second strip mirror) := by
+  rw [← schoolDown_school first second strip mirror n]
+  exact schoolDown_trits first second mirror n strip hs hbench n (Nat.le_refl n)
+
+theorem schoolMoves_bound (first second : List Nat) (n : Nat) :
+    schoolMoves first second n n ≤ n * (n + 1) :=
+  schoolMoves_le first second n n
+
 end EcbsLink2.Link2
 

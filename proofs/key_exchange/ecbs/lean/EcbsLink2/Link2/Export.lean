@@ -548,7 +548,7 @@ theorem cube_number_refines (t : Spec.Tier) (lay : FieldLay t) (xs : List Nat)
       simpa [bA, ofNat_eq_natCast] using this)
     lay.small hnsm hfitB hfold
   obtain ⟨b', hok, hon, hto, hbench, _htake, hhigh, hmov, hpeakM, hslides, ht, hhome, _hhomeArr, hheld, _hmk', _hrow', _hop',
-      _htally', _hhigh'⟩ :=
+      _htally', _hhigh', _hctrl'⟩ :=
     hcube
   conv =>
     pattern (Ecbs.cube _ _ _)

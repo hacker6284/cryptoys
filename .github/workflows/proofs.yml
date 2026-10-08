@@ -462,12 +462,13 @@ jobs:
     # the settle/ops-bump frame are tied. cube and nocopy mul with the bench
     # already on (aimed at the home about to be read, zero tail) slide first
     # and then match the bench-off lemmas; the prefix is fieldCube / fieldMul
-    # of that length-n prefix. invert_number, fold and the exchange are not
+    # of that length-n prefix. tally0 and control_highest survive both calls,
+    # and cube empties only the source home. invert_number, fold and the exchange are not
     # claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 500492 kB (about 0.48 GB). The job builds `place`, the schoolbook loop
+    # 500660 kB (about 0.48 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,

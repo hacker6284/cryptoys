@@ -3,6 +3,7 @@
   Not a security claim.
 -/
 import EcbsLink2.Link2.Board
+import EcbsLink2.Link2.Cube
 
 namespace EcbsLink2.Link2
 
@@ -1226,5 +1227,131 @@ theorem tally_clear_refines (b : Ecbs.Board) (xs : List Nat)
     have hm1 : m - 1 + 1 = m := by omega
     rw [hI, hm1]
     rfl
+
+/-- One peg of the climb's cube loop, with the bench off. `Ecbs.cube` of `src` onto
+    `dst`, then `tally_put` of `2` at peg `j` (a keep: the cell is at or below the
+    recorded high), then the control counter increases by one. The prefix is
+    `Spec.fieldCube`. The source home ends empty. `tally0` and `control_highest` stay. -/
+theorem cube_tally_peg (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (w h r n k moves hole bench peak peakS cOps cg : Nat)
+    (t0 j high control ctrl : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hcg : b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg)
+    (hspan : 3 * (n - 1) + cg < bench)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[src] = true)
+    (hArr : b.sudo_5Board_4home[src] = embed xs)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hn0 : 0 < n)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenx : xs.length = n)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hxsT : allTritList xs)
+    (h3 : FitsLen (3 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * n))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hkF : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * n + 3 * (bench - n)))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 + j < b.sudo_5Board_3row.size)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + j < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 + j ≤ high)
+    (hfitJ : FitsLen (t0 + j))
+    (hCtrlV : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hfctrl : FitsLen (ctrl + 1)) :
+    ∃ b',
+      (do
+        let b1 ← Ecbs.cube b (dst : Int) (src : Int)
+        let b2 ← Ecbs.tally_put b1 (j : Int) (2 : Int)
+        let v ← SudoRt.addI b2.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+        pure { b2 with sudo_5Board_4cost :=
+          { b2.sudo_5Board_4cost with sudo_5Costs_4ctrl := v } }) = .ok b' ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = (dst : Int) ∧
+      b'.sudo_5Board_5bench =
+        embed (laneFold n (n - k) (combStrip n bench xs)) ∧
+      (laneFold n (n - k) (combStrip n bench xs)).take n = fieldCube n k bench xs ∧
+      (∀ i, n ≤ i → i < bench →
+        coeff (laneFold n (n - k) (combStrip n bench xs)) i = 0) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat (cubeMoves moves xs n k bench) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak =
+        Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4home = b.sudo_5Board_4home.set ⟨src, hHome⟩ #[] ∧
+      b'.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨src, hF⟩ false ∧
+      b'.sudo_5Board_9marker_on = false ∧
+      b'.sudo_5Board_3row = b.sudo_5Board_3row.set ⟨t0 + j, hrow⟩ (2 : Int) ∧
+      b'.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 1) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) := by
+  obtain ⟨b1, hb, hon, hto, hbench, hpre, hhi, hmov, hpeakR, hslides, ht, _hsz, hhome, hheld,
+      hmk, hrowEq, hop, htally, hhigh, hctrlB⟩ :=
+    cube_refines b dst src xs w h r n k moves hole bench peak peakS cOps cg
+      hmk hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf
+      hmoves hpeak hpeakS hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF hHole
+      hsm hnsm hfitB hfold
+  rw [hb, ok_bind]
+  have hT0' : b1.sudo_5Board_6tally0 = (t0 : Int) := by rw [htally]; exact hT0
+  have hrow1 : t0 + j < b1.sudo_5Board_3row.size := by rw [hrowEq]; exact hrow
+  have hCtrl' : b1.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
+    rw [ht]; exact hCtrlN
+  have hHigh' : b1.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) := by
+    rw [hhigh]; exact hHigh
+  conv =>
+    pattern (Ecbs.tally_put b1 _ _)
+    rw [show (2 : Int) = ((2 : Nat) : Int) from ofNat_eq_natCast 2]
+  rw [tally_put_keep b1 t0 j 2 high control hT0' hrow1 hCtrl' hic hHigh' hle hfitJ, ok_bind]
+  have hctrl2 :
+      ({ b1 with sudo_5Board_3row :=
+          b1.sudo_5Board_3row.set ⟨t0 + j, hrow1⟩ (2 : Int) }).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        Int.ofNat ctrl := by
+    rw [hctrlB, hCtrlV, ofNat_eq_natCast]
+  rw [hctrl2, addI_ofNat_one ctrl hfctrl, ok_bind, pure_eq_ok]
+  refine ⟨_, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · simpa using hon
+  · simpa using hto
+  · simpa using hbench
+  · simpa using hpre
+  · simpa using hhi
+  · simpa using hmov
+  · simpa using hpeakR
+  · simpa using hslides
+  · simpa using ht
+  · simpa using hhome
+  · simpa using hheld
+  · simpa using hmk
+  · apply Array.ext
+    · rw [Array.size_set, Array.size_set, hrowEq]
+    · intro i hi1 hi2
+      by_cases hi : i = t0 + j
+      · simp [hi, Array.getElem_set]
+      · simp [Array.getElem_set, hi, hrowEq]
+  · simpa using htally
+  · simpa using hhigh
+  · rfl
+  · simpa using hop
 
 end EcbsLink2.Link2

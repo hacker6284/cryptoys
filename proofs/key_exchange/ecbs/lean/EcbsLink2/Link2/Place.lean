@@ -173,4 +173,51 @@ theorem put_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat)
   rw [except_bind_pure] at hp
   exact hp
 
+/-- `clear` of a held home. The workbench branch is not taken, because the home is held.
+    Moves grow by the nonzero count. The home array becomes empty and the flag falls. -/
+theorem clear_held_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (hheld : b.sudo_5Board_4held[home] = true)
+    (harr : b.sudo_5Board_4home[home] = embed xs)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hf : FitsLen xs.length)
+    (hfit : FitsLen (moves + pegCount xs)) :
+    Ecbs.clear b (home : Int) =
+      .ok { b with
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ #[]
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ false
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_5moves := Int.ofNat (moves + pegCount xs) } } := by
+  unfold Ecbs.clear
+  by_cases hb : b.sudo_5Board_8bench_on = true
+  · simp only [hb, if_true]
+    by_cases hto : SudoRt.SEq.beq b.sudo_5Board_8bench_to (home : Int) = true
+    · simp only [hto, if_true, atL_cast _ _ hD, hheld]
+      simp only [Bool.not_true, if_true, pure_eq_ok, ok_bind, Bool.false_eq_true, if_false]
+      simp only [sudoAssert_true, ok_bind]
+      rw [atL_cast _ _ hH, harr, ok_bind]
+      have hfs : FitsLen (embed xs).size := by rw [size_embed]; exact hf
+      rw [npeg_refines (embed xs) hfs, pegCount_embed, ok_bind, hmoves,
+        addI_cast_ofNat _ _ hfit, ok_bind]
+      rw [putL_cast _ _ _ hD, ok_bind, putL_cast _ _ _ hH]
+      rfl
+    · simp only [hto, if_false, pure_eq_ok, ok_bind, Bool.false_eq_true, if_false]
+      rw [atL_cast _ _ hD, hheld, ok_bind, sudoAssert_true, ok_bind]
+      rw [atL_cast _ _ hH, harr, ok_bind]
+      have hfs : FitsLen (embed xs).size := by rw [size_embed]; exact hf
+      rw [npeg_refines (embed xs) hfs, pegCount_embed, ok_bind, hmoves,
+        addI_cast_ofNat _ _ hfit, ok_bind]
+      rw [putL_cast _ _ _ hD, ok_bind, putL_cast _ _ _ hH]
+      rfl
+  · have hbf : b.sudo_5Board_8bench_on = false := eq_false_of_ne_true hb
+    simp only [hbf, if_false, pure_eq_ok, ok_bind, Bool.false_eq_true, if_false]
+    rw [atL_cast _ _ hD, hheld, ok_bind, sudoAssert_true, ok_bind]
+    rw [atL_cast _ _ hH, harr, ok_bind]
+    have hfs : FitsLen (embed xs).size := by rw [size_embed]; exact hf
+    rw [npeg_refines (embed xs) hfs, pegCount_embed, ok_bind, hmoves,
+      addI_cast_ofNat _ _ hfit, ok_bind]
+    rw [putL_cast _ _ _ hD, ok_bind, putL_cast _ _ _ hH]
+    rfl
+
 end EcbsLink2.Link2

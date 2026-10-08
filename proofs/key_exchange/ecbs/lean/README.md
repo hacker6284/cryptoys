@@ -1,7 +1,7 @@
 <!-- Owns: the scope of the ECBS Link 2 proofs (proofs/key_exchange/ecbs/lean) and their export table. Maintenance rules: ../../../../DOCS.md. -->
-# ECBS Link 2: emitted tier, coordinate, band and keypad against a hand-written model
+# ECBS Link 2: emitted tier, coordinate, band, place and keypad against a hand-written model
 
-Status: **a first slice, not the board machine.** The Lean below proves that the code `sudoc` emits from [`ecbs.sudo`](../../../../primitives/key_exchange/ecbs/ecbs.sudo) (in [`Generated/`](Generated/README.md)) computes what a hand-written model in [`EcbsLink2/Spec.lean`](EcbsLink2/Spec.lean) says, for the functions and domains in the table. The model is numbers and lists of trits (hole 0 first), written from [SPEC](../../../../primitives/key_exchange/ecbs/SPEC.md) §§1, 2, 4, 5.2 and 6. It is **correctness of the emitted code on that domain, not a security claim**: nothing here says the curve's discrete log is hard, that a key has entropy, or that the fold extracts. The ladder, the fold and the row-cup filler are modelled and not claimed; the emitted `mul`, `cube`, `invert` and the exchange are not tied.
+Status: **a first slice.** The Lean below proves that the code `sudoc` emits from [`ecbs.sudo`](../../../../primitives/key_exchange/ecbs/ecbs.sudo) (in [`Generated/`](Generated/README.md)) computes what a hand-written model in [`EcbsLink2/Spec.lean`](EcbsLink2/Spec.lean) says, for the functions and domains in the table. `place` includes the record update. The ladder, the fold, multiplication and the exchange are not tied to the emitted loops yet; the lane-fold geometry those loops assert is proved as `Nat` arithmetic. The model is numbers and lists of trits (hole 0 first), written from [SPEC](../../../../primitives/key_exchange/ecbs/SPEC.md) §§1, 2, 4, 5.2 and 6. It is **correctness of the emitted code on that domain, not a security claim**: nothing here says the curve's discrete log is hard, that a key has entropy, or that the fold extracts. The ladder, the fold and the row-cup filler are modelled and not claimed; the emitted `mul`, `cube`, `invert` and the exchange are not tied.
 
 Build and audit (Lean 4.14.0, no Mathlib):
 
@@ -12,7 +12,7 @@ python3 ../../../doubledeal/check_axioms.py ecbs # every EcbsLink2 theorem: prop
 python3 ../../../doubledeal/security/checks/scan_sorry.py --root . --exclude Generated
 ```
 
-No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432396 kB RSS.
+No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432468 kB RSS.
 
 ## Generated Lean
 
@@ -67,6 +67,12 @@ Not exported, so not in the column above. Each is the emitted function on the st
 - `is_trits_refines`: true iff every entry is in `0 .. 2`. The length fits an i64.
 - `npeg_refines`: the number of nonzero entries (`Spec.nnz`). The length fits an i64.
 - `keypad_first_refines`, `keypad_second_refines`: faces `1 .. 9` only.
-- `occupied_refines`: how many of homes `0 .. 6` are held. The held array must cover those seven slots. Home `7` is a real slot (`home_count` is 8) and is not counted; `note_peak` uses only this count. `place_refines` is the record update that calls it.
+- `occupied_refines`: how many of homes `0 .. 6` are held. The held array must cover those seven slots. Home `7` is a real slot (`home_count` is 8) and is not counted; `note_peak` uses only this count.
+- `put_refines`: the same record update as `place_refines`, without the outer `pure`.
+- `value_held_refines`: `band` without the outer `pure`, on a held home.
+- `laneDest_eq`: with `0 < w`, `0 < h` and `w·h − 1 ≤ e`, "one band up and one hole on" (end-of-row carry included) equals `e − (w·h − 1)`.
+- `laneDest2_eq`: with `0 < w` and `r ≤ e / w`, "r rows up, same column" equals `e − r·w`.
+
+`laneDest_eq` and `laneDest2_eq` are the equalities `lane_fold` asserts (`d1 = e − n`, `d2 = e − (n − k)` when `n = w·h − 1` and `n − k = w·r`). They are not yet applied to the emitted loop.
 
 No SPEC/code disagreement showed up on the functions above. `coordinate` matches §5.2, including Demo. The keypad's integer subtraction on face `0` is outside the SPEC's `1 .. 9` and outside the theorem.

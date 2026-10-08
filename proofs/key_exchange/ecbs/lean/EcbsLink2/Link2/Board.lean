@@ -146,6 +146,20 @@ theorem band_bench_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat) (n : Na
     prefix_cast xs n hlen hf, ok_bind, pure_eq_ok, ok_bind]
   rw [pure_eq_ok]
 
+/-- `band` is `value` and then the array. -/
+theorem value_held_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat) (n : Nat)
+    (hheldSz : home < b.sudo_5Board_4held.size)
+    (hhomeSz : home < b.sudo_5Board_4home.size)
+    (hheld : b.sudo_5Board_4held[home] = true)
+    (harr : b.sudo_5Board_4home[home] = embed xs)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlen : n ≤ xs.length) (hf : FitsLen n) :
+    Ecbs.value b (home : Int) = .ok (embed (xs.take n)) := by
+  have hb := band_held_refines b home xs n hheldSz hhomeSz hheld harr hn hlen hf
+  unfold Ecbs.band at hb
+  rw [except_bind_pure] at hb
+  exact hb
+
 /-- Neither held nor the aimed bench: `where_bench` asserts, kind `AssertFailed`. -/
 theorem band_traps (b : Ecbs.Board) (home : Nat)
     (hheldSz : home < b.sudo_5Board_4held.size)

@@ -107,4 +107,24 @@ theorem place_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat)
     rw [hcI]
     simp only [Bool.false_eq_true, if_false, ite_false, ok_bind, hlt]
 
+/-- `place` is `put` and then the board. -/
+theorem put_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat)
+    (moves peak : Nat)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[home] = false)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (xs.length : Int))
+    (hf : FitsLen xs.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hfit : FitsLen (moves + pegCount xs)) :
+    Ecbs.put b (home : Int) (embed xs) =
+      .ok (placeBoard b home hH hD xs moves peak) := by
+  have hp := place_refines b home xs moves peak hH hD h7 hempty hn hf hmoves hpeak hfit
+  unfold Ecbs.place at hp
+  dsimp only at hp
+  rw [except_bind_pure] at hp
+  exact hp
+
 end EcbsLink2.Link2

@@ -307,6 +307,68 @@ def foldRows (w : Nat) (x : List Nat) (pairs : List (Nat × Nat)) : List Nat :=
 def foldKey (t : Tier) (x : List Nat) : List Nat :=
   (foldRows t.w x (t.foldsrc.zip t.folddst)).take (t.keeprows * t.w)
 
+/-! ### Field arithmetic (SPEC §§3 R3–R5)
+
+Schoolbook multiplication and the lane fold, as list operations. `fieldMul` / `fieldCube`
+are what `multiply` and `cube_number` return when the emitted board procedure agrees
+with these lists. They are not a hardness or extractor claim. -/
+
+/-- Colour flip on a trit: empty stays empty, white ↔ red. -/
+def flipTrit (c : Nat) : Nat := if c = 0 then 0 else 3 - c
+
+def tritAdd (a b : Nat) : Nat := (a + b) % 3
+
+def coeff (xs : List Nat) (i : Nat) : Nat := xs.getD i 0
+
+/-- Lay one trit `d` (already flipped when the peg is red) onto hole `idx`. -/
+def layCell (strip : List Nat) (idx d : Nat) : List Nat :=
+  strip.set idx (tritAdd (coeff strip idx) d)
+
+/-- One column of "lay this number from hole `i`": `j` runs through `0 .. n`. -/
+def schoolStep (a : List Nat) (i : Nat) (mir : Bool) (strip : List Nat) (j : Nat) : List Nat :=
+  let d := coeff a j
+  if d = 0 then strip
+  else layCell strip (i + j) (if mir then flipTrit d else d)
+
+def schoolRow (n : Nat) (a : List Nat) (i : Nat) (mir : Bool) (strip : List Nat) : List Nat :=
+  (List.range n).foldl (fun s j => schoolStep a i mir s j) strip
+
+/-- Lift `second` from the high end. A red peg (`2`) mirrors `first` unless `mirror`
+    already asked for a mirror, in which case the two agree and the peg is laid as is. -/
+def school (n : Nat) (first second strip : List Nat) (mirror : Bool) : List Nat :=
+  (List.range n).foldr (fun i st =>
+      let c := coeff second i
+      if c = 0 then st else schoolRow n first i (decide (c = 2) != mirror) st)
+    strip
+
+/-- One high peg of the lane fold: `x^e = x^{e-n} + x^{e-(n-k)}` in this basis.
+    `gap = n - k`. A zero peg, or a peg still inside the number, is left alone. -/
+def foldHigh (n gap e : Nat) (strip : List Nat) : List Nat :=
+  let c := coeff strip e
+  if c = 0 ∨ e < n then strip
+  else
+    let cleared := strip.set e 0
+    let once := cleared.set (e - n) (tritAdd (coeff cleared (e - n)) c)
+    once.set (e - gap) (tritAdd (coeff once (e - gap)) c)
+
+/-- Fold every hole from the far end down through hole `n`. -/
+def reduceStrip (n gap : Nat) (strip : List Nat) : List Nat :=
+  (List.range (strip.length - n)).foldr (fun d st => foldHigh n gap (n + d) st) strip
+
+/-- R4, `onto = false` and `mirror = false`: the product in the first `n` holes. -/
+def fieldMul (n k bench : Nat) (x y : List Nat) : List Nat :=
+  (reduceStrip n (n - k) (school n x y (List.replicate bench 0) false)).take n
+
+/-- R5: `(∑ a_i X^i)^3 = ∑ a_i X^{3i}` before the same fold. -/
+def combStrip (n bench : Nat) (x : List Nat) : List Nat :=
+  (List.range n).foldl (fun s i =>
+      let c := coeff x i
+      if c = 0 then s else s.set (3 * i) c)
+    (List.replicate bench 0)
+
+def fieldCube (n k bench : Nat) (x : List Nat) : List Nat :=
+  (reduceStrip n (n - k) (combStrip n bench x)).take n
+
 /-! ### Lists -/
 
 def nnz : List Int → Nat
@@ -316,9 +378,6 @@ def nnz : List Int → Nat
 def allEqZero (a : List Int) : Prop := ∀ x ∈ a, x = 0
 
 def allTrits (a : List Int) : Prop := ∀ x ∈ a, 0 ≤ x ∧ x ≤ 2
-
-/-- Colour flip on a trit: empty stays empty, white ↔ red. -/
-def flipTrit (c : Nat) : Nat := if c = 0 then 0 else 3 - c
 
 /-! ### Phase and operation names (ASCII) -/
 

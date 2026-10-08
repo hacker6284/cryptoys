@@ -5,3 +5,4 @@ import EcbsLink2.Link2.Coordinate
 import EcbsLink2.Link2.Keypad
 import EcbsLink2.Link2.Board
 import EcbsLink2.Link2.Place
+import EcbsLink2.Link2.Layout

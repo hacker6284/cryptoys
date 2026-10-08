@@ -150,7 +150,9 @@ private theorem note_strict_keeps (b : Ecbs.Board) (peakS : Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
         b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
       b'.sudo_5Board_4cost.sudo_5Costs_4peak = b.sudo_5Board_4cost.sudo_5Costs_4peak ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides := by
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops := by
   unfold Ecbs.note_strict
   rw [occupied_refines b h7, ok_bind, hp]
   dsimp only
@@ -159,12 +161,12 @@ private theorem note_strict_keeps (b : Ecbs.Board) (peakS : Nat)
   · have hc : decide (peakS < countHeld b.sudo_5Board_4held 7) = true :=
       decide_eq_true hlt
     rw [hc, if_pos rfl, pure_eq_ok]
-    refine ⟨_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+    refine ⟨_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
   · have hc : decide (peakS < countHeld b.sudo_5Board_4held 7) = false := by
       rw [decide_eq_false_iff_not]; exact hlt
     rw [hc]
     simp only [Bool.false_eq_true, if_false, pure_eq_ok]
-    refine ⟨b, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+    refine ⟨b, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 /-- `peak` becomes `occ` when the held-count of homes `0 .. 6` is strictly larger. -/
 def raisedPeak (peak occ : Nat) : Nat :=
@@ -352,7 +354,7 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     unfold placeBoard
     dsimp only
     split <;> simp [bCopy, hpeakS]
-  obtain ⟨bS, hbS, hbenchS, hhomeS, hheldS, hmovS, honS, htoS, htS, hmkS, hholeS, hpeakKeep, hslidesS⟩ :=
+  obtain ⟨bS, hbS, hbenchS, hhomeS, hheldS, hmovS, honS, htoS, htS, hmkS, hholeS, hpeakKeep, hslidesS, _hrowS, _hopS⟩ :=
     note_strict_keeps bP peakS h7b hpB
   rw [hbS]
   simp only [ok_bind, pure_eq_ok]
@@ -686,7 +688,11 @@ theorem mul_refines_nocopy (b : Ecbs.Board) (dst first second : Nat) (xs ys : Li
         b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
       b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
-      b'.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨second, hS⟩ false := by
+      b'.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨second, hS⟩ false ∧
+      b'.sudo_5Board_9marker_on = false ∧
+      b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) := by
   unfold Ecbs.mul Ecbs.log_op
   simp only [hmk, hoff, Bool.false_eq_true, if_false, pure_eq_ok, toPure_eq_ok, ok_bind]
   rw [show Ecbs.op_mul = Int.ofNat 0 from rfl, atL_ofNat _ 0 hops, hop0, ok_bind,
@@ -720,7 +726,7 @@ theorem mul_refines_nocopy (b : Ecbs.Board) (dst first second : Nat) (xs ys : Li
   have h7c : 7 ≤ bCopy.sudo_5Board_4held.size := by simpa [bCopy] using h7
   have hpC : bCopy.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
     simpa [bCopy] using hpeakS
-  obtain ⟨bS, hbS, _hbenchS, hhomeS, hheldS, hmovS, honS, htoS, htS, _hmkS, hholeS, hpeakKeep, hslidesS⟩ :=
+  obtain ⟨bS, hbS, _hbenchS, hhomeS, hheldS, hmovS, honS, htoS, htS, _hmkS, hholeS, hpeakKeep, hslidesS, hrowS, hopS⟩ :=
     note_strict_keeps bCopy peakS h7c hpC
   rw [hbS]
   simp only [ok_bind, pure_eq_ok]
@@ -882,13 +888,26 @@ theorem mul_refines_nocopy (b : Ecbs.Board) (dst first second : Nat) (xs ys : Li
         (Int.ofNat (mvF + foldCharge n (n - k) sch))).sudo_5Board_4home.size = _
     unfold noteBench withMoves withHole
     split <;> simp [bF, withMoves, bL, Array.size_set, hhomeS, bCopy]
+  have hmkN : bN.sudo_5Board_9marker_on = false := by
+    dsimp [bN, nb]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, withMoves, bL, _hmkS, bCopy]
+  have hrowN : bN.sudo_5Board_3row = b.sudo_5Board_3row := by
+    dsimp [bN, nb]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, withMoves, bL, hrowS, bCopy]
+  have hopN : bN.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) := by
+    dsimp [bN, nb]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, withMoves, bL, hopS, bCopy]
   unfold Ecbs.note_peak
   rw [occupied_refines bN h7N, ok_bind, hpeakN]
   conv => zeta
   rw [ofNat_eq_natCast peak, decide_gt_nat]
   by_cases hlt : peak < countHeld bN.sudo_5Board_4held 7
   · rw [decide_eq_true hlt, if_pos rfl, pure_eq_ok, ok_bind]
-    refine ⟨_, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨_, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · unfold fieldMul; rfl
     · intro i hlo hi
       have hgap0 : 0 < n - k := by rw [hgap]; exact Nat.mul_pos hw0 hrP
@@ -914,9 +933,15 @@ theorem mul_refines_nocopy (b : Ecbs.Board) (dst first second : Nat) (xs ys : Li
       exact hhomeSz
     · change bN.sudo_5Board_4held = _
       exact hheldN
+    · change bN.sudo_5Board_9marker_on = false
+      exact hmkN
+    · change bN.sudo_5Board_3row = _
+      exact hrowN
+    · change bN.sudo_5Board_4cost.sudo_5Costs_3ops = _
+      exact hopN
   · rw [(decide_eq_false_iff_not).mpr hlt]
     simp only [Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
-    refine ⟨bN, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨bN, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · unfold fieldMul; rfl
     · intro i hlo hi
       have hgap0 : 0 < n - k := by rw [hgap]; exact Nat.mul_pos hw0 hrP
@@ -937,6 +962,9 @@ theorem mul_refines_nocopy (b : Ecbs.Board) (dst first second : Nat) (xs ys : Li
     · exact htN
     · exact hhomeSz
     · exact hheldN
+    · exact hmkN
+    · exact hrowN
+    · exact hopN
 
 /-- `mul` with `onto = false` on a live bench equals `mul` after that bench has been
     slid into `second`. The opening op-count bump and `settle` commute, and with the
@@ -1190,7 +1218,7 @@ theorem mul_refines_nocopy_live (b : Ecbs.Board) (dst first second : Nat)
   have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by rw [htS]; exact hkF
   have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
     rw [settle_hole_eq b second hH hD ys n moves slides peak]; exact hHole
-  obtain ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, hsl, ht, hsz, hhd⟩ :=
+  obtain ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, hsl, ht, hsz, hhd, _hmk', _hrow', _hop'⟩ :=
     mul_refines_nocopy bS dst first second xs zp w h r n k mv hole bench pk peakS cOps
       hmkS hoffS hopsS hop0S hfops hblS hF1 hHome1 hHF1 hArr1 hFs hHomes hHS hYs h7S hne
       hn0 hnS hlenx hlenz hf hmovS hpkS hstrict hspan hxsT hfi hfm hw0 hh0 hrR hrP hnE hkLe

@@ -445,3 +445,26 @@ jobs:
           lake-package-directory: proofs/key_exchange/bs/lean
       - name: Axiom audit of every BsLink2 theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py bs
+
+  ecbs-lean:
+    # ECBS Link 2 (proofs/key_exchange/ecbs/lean): the hand-written model of SPEC §§1, 4
+    # and 5.2, and the refinement of the emitted tier, phase and op names, coordinate,
+    # band (held, bench, and the AssertFailed trichotomy), flip, prefix, is_empty,
+    # is_trits, npeg, the keypad for faces 1..9, and occupied. new_board, place, fold,
+    # multiply, cube, invert and the exchange are not claimed. Short: no heavy checks.
+    # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
+    # this package's own emitted SudoRt.
+    # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
+    # 432396 kB (about 0.42 GB).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/key_exchange/ecbs/lean --exclude Generated
+      - name: Axiom gate keying rules; ECBS_LINK2 equals the README-cited theorems; export table
+        run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/key_exchange/ecbs/lean
+      - name: Axiom audit of every EcbsLink2 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py ecbs

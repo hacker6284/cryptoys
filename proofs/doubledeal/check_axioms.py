@@ -21,6 +21,8 @@
                                           # (Scramble Link 2: v2 and v1 digest paths)
     python3 proofs/doubledeal/check_axioms.py bs  # proofs/key_exchange/bs/lean
                                           # (BS Link 2: arithmetic, walk, check, exchange)
+    python3 proofs/doubledeal/check_axioms.py ecbs  # proofs/key_exchange/ecbs/lean
+                                          # (ECBS Link 2: tier, coordinate, band, keypad)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -641,6 +643,34 @@ BS_LINK2 = {
 # has three theorems; the traced `scramble_v1` and the demo's `apply_move` rows say they are
 # not claimed (no theorem), so those gaps are in the table rather than silent. BS is listed: its table has a row for each of
 # the 11 exports (build_letting_go went with letting go, SPEC §4.2: nobody lets go).
+# ECBS is listed: its table has a row for each of the 19 exports. The board machine
+# (new_board, place, fold, multiply, the exchange) says it is not claimed.
+
+# proofs/key_exchange/ecbs/lean (ECBS Link 2; scope in its README): every theorem that
+# README cites by name. `--selftest` re-derives the list.
+ECBS_LEAN = ROOT.parent / "key_exchange" / "ecbs" / "lean"
+ECBS_LINK2 = {
+    "EcbsLink2.Link2.tier_demo_refines",
+    "EcbsLink2.Link2.tier_toy_refines",
+    "EcbsLink2.Link2.tier_hobby_refines",
+    "EcbsLink2.Link2.tier_serious_refines",
+    "EcbsLink2.Link2.tier_rejects",
+    "EcbsLink2.Link2.phase_names_refines",
+    "EcbsLink2.Link2.op_names_refines",
+    "EcbsLink2.Link2.with_script_refines",
+    "EcbsLink2.Link2.flip_refines",
+    "EcbsLink2.Link2.prefix_refines",
+    "EcbsLink2.Link2.is_empty_refines",
+    "EcbsLink2.Link2.is_trits_refines",
+    "EcbsLink2.Link2.npeg_refines",
+    "EcbsLink2.Link2.coordinate_refines",
+    "EcbsLink2.Link2.keypad_first_refines",
+    "EcbsLink2.Link2.keypad_second_refines",
+    "EcbsLink2.Link2.occupied_refines",
+    "EcbsLink2.Link2.band_held_refines",
+    "EcbsLink2.Link2.band_bench_refines",
+    "EcbsLink2.Link2.band_traps",
+}
 LINK2_EXPORT_TABLES = {
     "megadreifach-v3": (ROOT.parent.parent / "primitives" / "hash" / "megadreifach" / "v3"
                         / "megadreifach.sudo", MD_V3_README),
@@ -650,6 +680,8 @@ LINK2_EXPORT_TABLES = {
                  SCRAMBLE_LEAN.parent / "README.md"),
     "bs": (ROOT.parent.parent / "primitives" / "key_exchange" / "bs" / "bs.sudo",
            BS_LEAN / "README.md"),
+    "ecbs": (ROOT.parent.parent / "primitives" / "key_exchange" / "ecbs" / "ecbs.sudo",
+             ECBS_LEAN / "README.md"),
 }
 PACKAGES = {
     "lean": {"dir": ROOT / "lean", "mode": "list", "known_sorry": set(), "min": 1},
@@ -1006,6 +1038,14 @@ PACKAGES = {
         "known_sorry": set(),
         "min": 150,  # sanity: the audit must actually see the package
         "required": BS_LINK2,
+    },
+    "ecbs": {
+        "dir": ECBS_LEAN,
+        "mode": "all",
+        "key": "full",
+        "known_sorry": set(),
+        "min": 194,  # measured: check_axioms.py ecbs reports 194 theorems
+        "required": ECBS_LINK2,
     },
     "megadreifach-heavy": {
         "dir": MD_LEAN,
@@ -1364,10 +1404,10 @@ def selftest():
         failed += not ok
         print(f"check_axioms selftest: {'ok' if ok else 'FAIL'} HEAVY_GENERATED {what}: "
               f"{len(bad)} problem(s), expected {len(want)}")
-    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 / SCRAMBLE_LINK2 / BS_LINK2 must be
-    # exactly the theorems the MegaDreifach README / the frozen v1 package's README / the
-    # DoubleDeal-CBC-HMAC proofs README / the Scramble proofs README / the BS Link 2 README
-    # (proofs/key_exchange/bs/lean/README.md) cites.
+    # MD_README_THEOREMS / MD_V1_README_THEOREMS / CBC_HMAC_LINK2 / SCRAMBLE_LINK2 / BS_LINK2 /
+    # ECBS_LINK2 must be exactly the theorems the MegaDreifach README / the frozen v1
+    # package's README / the DoubleDeal-CBC-HMAC proofs README / the Scramble proofs README /
+    # the BS Link 2 README / the ECBS Link 2 README cites.
     for what, listed, readme, root in [
             ("MD_README_THEOREMS", MD_README_THEOREMS, MD_README, MD_LEAN),
             ("MD_V1_README_THEOREMS", MD_V1_README_THEOREMS, MD_V1_README, MD_V1_LEAN),
@@ -1376,7 +1416,8 @@ def selftest():
              CBC_HMAC_LEAN),
             ("SCRAMBLE_LINK2", SCRAMBLE_LINK2, SCRAMBLE_LEAN.parent / "README.md",
              SCRAMBLE_LEAN),
-            ("BS_LINK2", BS_LINK2, BS_LEAN / "README.md", BS_LEAN)]:
+            ("BS_LINK2", BS_LINK2, BS_LEAN / "README.md", BS_LEAN),
+            ("ECBS_LINK2", ECBS_LINK2, ECBS_LEAN / "README.md", ECBS_LEAN)]:
         cited, bad = md_readme_cited(readme=readme, root=root)
         for b in bad:
             print(f"check_axioms selftest: FAIL {b}")

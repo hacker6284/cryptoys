@@ -938,4 +938,266 @@ theorem mul_refines_nocopy (b : Ecbs.Board) (dst first second : Nat) (xs ys : Li
     · exact hhomeSz
     · exact hheldN
 
+/-- `mul` with `onto = false` on a live bench equals `mul` after that bench has been
+    slid into `second`. The opening op-count bump and `settle` commute, and with the
+    marker off `log_op` is the identity, so `mul_refines_nocopy` applies to the slid board. -/
+theorem mul_live_eq (b : Ecbs.Board) (dst first second : Nat) (ys : List Nat)
+    (n moves slides peak cOps : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (second : Int))
+    (hH : second < b.sudo_5Board_4home.size)
+    (hD : second < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[second] = false)
+    (hbench : b.sudo_5Board_5bench = embed ys)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hpos : 0 < ys.length) (hnle : n ≤ ys.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen ys.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (ys.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (ys.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (ys.take n)))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1)) :
+    Ecbs.mul b (dst : Int) (first : Int) (second : Int) false false false =
+      Ecbs.mul (settleBoard b second hH hD ys n moves slides peak)
+        (dst : Int) (first : Int) (second : Int) false false false := by
+  let bS := settleBoard b second hH hD ys n moves slides peak
+  have hmkS : bS.sudo_5Board_9marker_on = false := by
+    by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7
+    · rw [show bS = settleBoard b second hH hD ys n moves slides peak from rfl,
+        settle_peak b second hH hD ys n moves slides peak hpk, hmk]
+    · rw [show bS = settleBoard b second hH hD ys n moves slides peak from rfl,
+        settle_keep b second hH hD ys n moves slides peak hpk, hmk]
+  have hmkRaw :
+      (settleBoard b second hH hD ys n moves slides peak).sudo_5Board_9marker_on = false :=
+    hmkS
+  unfold Ecbs.mul Ecbs.log_op
+  simp only [hmk, hmkRaw, Bool.false_eq_true, if_false, pure_eq_ok, toPure_eq_ok, ok_bind]
+  have hopsS : 0 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
+    settle_ops_lt b 0 second hops hH hD ys n moves slides peak
+  have hop0S : bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsS = (cOps : Int) := by
+    exact (array_get_congr (settle_ops b second hH hD ys n moves slides peak) 0 hopsS).trans hop0
+  conv =>
+    lhs
+    rw [show Ecbs.op_mul = Int.ofNat 0 from rfl, atL_ofNat _ 0 hops, hop0, ok_bind,
+      ← ofNat_eq_natCast cOps, addI_ofNat_one cOps hfops, ok_bind,
+      putL_ofNat _ 0 (Int.ofNat (cOps + 1)) hops, ok_bind]
+  conv =>
+    rhs
+    rw [show Ecbs.op_mul = Int.ofNat 0 from rfl, atL_ofNat _ 0 hopsS, hop0S, ok_bind,
+      ← ofNat_eq_natCast cOps, addI_ofNat_one cOps hfops, ok_bind,
+      putL_ofNat _ 0 (Int.ofNat (cOps + 1)) hopsS, ok_bind]
+  let bL : Ecbs.Board :=
+    { b with
+      sudo_5Board_9marker_on := false
+      sudo_5Board_4cost := { b.sudo_5Board_4cost with
+        sudo_5Costs_3ops :=
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) } }
+  conv =>
+    lhs
+    pattern (Ecbs.settle _)
+    change Ecbs.settle bL
+  have hbL : bL = bumpOp b 0 cOps hops := by
+    apply board_ext
+    case hmon => simp [bL, bumpOp, hmk]
+    all_goals simp [bL, bumpOp]
+  rw [hbL]
+  have hsetL := settle_refines (bumpOp b 0 cOps hops) second ys n moves slides peak
+      (bump_home_lt b 0 cOps second hops hH) (bump_held_lt b 0 cOps second hops hD) h7
+      (by simp [bumpOp, hon]) (by simp [bumpOp, hto]) (by simpa [bumpOp] using hempty)
+      (by simp [bumpOp, hbench]) hn hpos hnle hzero hf hfitL
+      (by simp [bumpOp, hmoves]) (by simp [bumpOp, hslides]) (by simp [bumpOp, hpeak])
+      hpeg hfitM hfitS
+  rw [hsetL, ok_bind]
+  rw [settle_bump_comm b 0 cOps hops second hH hD ys n moves slides peak]
+  have hoffS : bS.sudo_5Board_8bench_on = false := by
+    by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7
+    · rw [show bS = settleBoard b second hH hD ys n moves slides peak from rfl,
+        settle_peak b second hH hD ys n moves slides peak hpk]
+    · rw [show bS = settleBoard b second hH hD ys n moves slides peak from rfl,
+        settle_keep b second hH hD ys n moves slides peak hpk]
+  let bR : Ecbs.Board :=
+    { bS with
+      sudo_5Board_9marker_on := false
+      sudo_5Board_4cost := { bS.sudo_5Board_4cost with
+        sudo_5Costs_3ops :=
+          bS.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hopsS⟩ (Int.ofNat (cOps + 1)) } }
+  conv =>
+    rhs
+    zeta
+    pattern (Ecbs.settle _)
+    change Ecbs.settle bR
+  have hbR : bR = bumpOp bS 0 cOps hopsS := by
+    apply board_ext
+    case hmon => simp [bR, bumpOp, hmkS]
+    all_goals simp [bR, bumpOp]
+  rw [hbR]
+  rw [settle_off (bumpOp bS 0 cOps hopsS) (by simp [bumpOp, hoffS]), ok_bind]
+  rw [settle_tier_eq b second hH hD ys n moves slides peak]
+
+/-- Bench on and aimed at `second`, with a zero tail. `Ecbs.mul` (`copy_second = false`,
+    `onto = false`, `mirror = false`) first slides that bench into `second`, then multiplies
+    exactly as `mul_refines_nocopy` does on the slid board. The prefix is `Spec.fieldMul`
+    of `xs` and `ys.take n`. Moves add the slide and then `mulMovesNo`. Slides grow by the
+    slide only. The peak is `raisedPeak` for the slide, then again for `note_peak`. -/
+theorem mul_refines_nocopy_live (b : Ecbs.Board) (dst first second : Nat)
+    (xs ys : List Nat)
+    (w h r n k moves slides hole bench peak peakS cOps : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (second : Int))
+    (hH : second < b.sudo_5Board_4home.size)
+    (hD : second < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[second] = false)
+    (hbench : b.sudo_5Board_5bench = embed ys)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hn0 : 0 < n)
+    (hpos : 0 < ys.length) (hnle : n ≤ ys.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen ys.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (ys.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (ys.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (ys.take n)))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hF : first < b.sudo_5Board_4held.size) (hHome : first < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs)
+    (hne : first ≠ second)
+    (hlenx : xs.length = n)
+    (hspan : 2 * (n - 1) < bench)
+    (hxsT : allTritList xs)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * pegCount (ys.take n) + n * (n + 1)))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hkF : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * pegCount (ys.take n) + n * (n + 1) + 3 * (bench - n))) :
+    let zp := ys.take n
+    let mv := moves + 2 * pegCount zp
+    let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7)
+    let bS := settleBoard b second hH hD ys n moves slides peak
+    let hFs := settle_held_lt b second hH hD ys n moves slides peak
+    ∃ b', Ecbs.mul b (dst : Int) (first : Int) (second : Int) false false false = .ok b' ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = (dst : Int) ∧
+      b'.sudo_5Board_5bench =
+        embed (laneFold n (n - k) (school n xs zp (List.replicate bench 0) false)) ∧
+      (laneFold n (n - k) (school n xs zp (List.replicate bench 0) false)).take n =
+        fieldMul n k bench xs zp ∧
+      (∀ i, n ≤ i → i < bench →
+        coeff (laneFold n (n - k) (school n xs zp (List.replicate bench 0) false)) i = 0) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (mulMovesNo mv xs zp n k bench) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak =
+        Int.ofNat (raisedPeak pk (countHeld (bS.sudo_5Board_4held.set ⟨second, hFs⟩ false) 7)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat (slides + 2 * pegCount zp) ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      b'.sudo_5Board_4held = bS.sudo_5Board_4held.set ⟨second, hFs⟩ false := by
+  rw [mul_live_eq b dst first second ys n moves slides peak cOps hmk hon hto hH hD h7 hempty
+      hbench hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hops hop0 hfops]
+  let bS := settleBoard b second hH hD ys n moves slides peak
+  let zp := ys.take n
+  let mv := moves + 2 * pegCount zp
+  let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7)
+  let hFs := settle_held_lt b second hH hD ys n moves slides peak
+  have hHomes := settle_home_lt b second hH hD ys n moves slides peak
+  have hlenz : zp.length = n := by
+    simp [zp, List.length_take, Nat.min_eq_left hnle]
+  have htS := settle_tier_eq b second hH hD ys n moves slides peak
+  have hmkS : bS.sudo_5Board_9marker_on = false := by
+    rw [settle_marker_eq b second hH hD ys n moves slides peak]; exact hmk
+  have hoffS : bS.sudo_5Board_8bench_on = false :=
+    settle_bench_off b second hH hD ys n moves slides peak
+  have hopsS : 0 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
+    settle_ops_lt b 0 second hops hH hD ys n moves slides peak
+  have hop0S : bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsS = (cOps : Int) := by
+    exact (array_get_congr (settle_ops b second hH hD ys n moves slides peak) 0 hopsS).trans hop0
+  have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
+    rw [settle_held_eq b second hH hD ys n moves slides peak, Array.size_set]; exact h7
+  have hHS : bS.sudo_5Board_4held[second]'hFs = true := by
+    have hset : bS.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨second, hD⟩ true :=
+      settle_held_eq b second hH hD ys n moves slides peak
+    have hFsB : second < bS.sudo_5Board_4held.size := hFs
+    rw [show bS.sudo_5Board_4held[second] =
+        (b.sudo_5Board_4held.set ⟨second, hD⟩ true)[second]'(hset ▸ hFsB) from
+      array_get_congr hset second hFsB]
+    simp [Array.getElem_set]
+  have hYs : bS.sudo_5Board_4home[second]'hHomes = embed zp := by
+    have hset : bS.sudo_5Board_4home =
+        b.sudo_5Board_4home.set ⟨second, hH⟩ (embed (ys.take n)) :=
+      settle_home_eq b second hH hD ys n moves slides peak
+    have hHomeB : second < bS.sudo_5Board_4home.size := hHomes
+    rw [show bS.sudo_5Board_4home[second] =
+        (b.sudo_5Board_4home.set ⟨second, hH⟩ (embed (ys.take n)))[second]'(hset ▸ hHomeB) from
+      array_get_congr hset second hHomeB]
+    simp [zp, Array.getElem_set]
+  have hF1 : first < bS.sudo_5Board_4held.size := by
+    rw [settle_held_eq b second hH hD ys n moves slides peak, Array.size_set]; exact hF
+  have hHome1 : first < bS.sudo_5Board_4home.size := by
+    rw [settle_home_eq b second hH hD ys n moves slides peak, Array.size_set]; exact hHome
+  have hHF1 : bS.sudo_5Board_4held[first]'hF1 = true := by
+    have hset : bS.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨second, hD⟩ true :=
+      settle_held_eq b second hH hD ys n moves slides peak
+    rw [show bS.sudo_5Board_4held[first] =
+        (b.sudo_5Board_4held.set ⟨second, hD⟩ true)[first]'(hset ▸ hF1) from
+      array_get_congr hset first hF1]
+    rw [Array.getElem_set, if_neg (by simpa using hne.symm)]
+    exact hHF
+  have hArr1 : bS.sudo_5Board_4home[first]'hHome1 = embed xs := by
+    have hset : bS.sudo_5Board_4home =
+        b.sudo_5Board_4home.set ⟨second, hH⟩ (embed (ys.take n)) :=
+      settle_home_eq b second hH hD ys n moves slides peak
+    rw [show bS.sudo_5Board_4home[first] =
+        (b.sudo_5Board_4home.set ⟨second, hH⟩ (embed (ys.take n)))[first]'(hset ▸ hHome1) from
+      array_get_congr hset first hHome1]
+    rw [Array.getElem_set, if_neg (by simpa using hne.symm)]
+    exact hArr
+  have hmovS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) := by
+    rw [settle_moves_eq b second hH hD ys n moves slides peak]
+    simp [mv, zp, ofNat_eq_natCast]
+  have hpkS : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) := by
+    rw [settle_peak_eq b second hH hD ys n moves slides peak hpeak]
+    simp [pk, raisedPeak, ofNat_eq_natCast]
+  have hstrict : bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
+    rw [settle_strict_eq b second hH hD ys n moves slides peak]; exact hpeakS
+  have hblS : bS.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by rw [htS]; exact hbl
+  have hnS : bS.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by rw [htS]; exact hn
+  have hwS : bS.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by rw [htS]; exact hwF
+  have hhS : bS.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h := by rw [htS]; exact hhF
+  have hrS : bS.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by rw [htS]; exact hrF
+  have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by rw [htS]; exact hkF
+  have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
+    rw [settle_hole_eq b second hH hD ys n moves slides peak]; exact hHole
+  obtain ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, hsl, ht, hsz, hhd⟩ :=
+    mul_refines_nocopy bS dst first second xs zp w h r n k mv hole bench pk peakS cOps
+      hmkS hoffS hopsS hop0S hfops hblS hF1 hHome1 hHF1 hArr1 hFs hHomes hHS hYs h7S hne
+      hn0 hnS hlenx hlenz hf hmovS hpkS hstrict hspan hxsT hfi hfm hw0 hh0 hrR hrP hnE hkLe
+      hgap hwS hhS hrS hkS hholeS hsm hnsm hfitB hfold
+  refine ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, ?_, ?_, ?_, hhd⟩
+  · rw [hsl, settle_slides_eq b second hH hD ys n moves slides peak]
+  · rw [ht, settle_tier_eq b second hH hD ys n moves slides peak]
+  · rw [hsz, settle_home_eq b second hH hD ys n moves slides peak, Array.size_set]
+
 end EcbsLink2.Link2

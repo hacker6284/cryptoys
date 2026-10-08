@@ -458,13 +458,14 @@ jobs:
     # fold) against `Spec.fieldCube`. `folded_read` is settle then value.
     # `new_board_refines` is emitted `Ecbs.new_board` on `BoardOk`, tied to
     # `Spec.rungList` (control row in build order, ladder array reversed).
-    # Park, the one-peg tally steps, and emitted doubling (red pegs, empty
-    # extension, high on the last red peg) are tied. The rung loop,
-    # invert_number, fold and the exchange are not claimed yet. Short: no heavy checks.
+    # Park, the tally steps, emitted doubling, the white-peg check, and
+    # tally_clear are tied. The rung loop still settles a live bench inside
+    # cube and mul. invert_number, fold and the exchange are not claimed yet.
+    # Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 481892 kB (about 0.46 GB). The job builds `place`, the schoolbook loop
+    # 481908 kB (about 0.46 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,

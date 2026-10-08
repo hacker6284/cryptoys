@@ -448,15 +448,16 @@ jobs:
 
   ecbs-lean:
     # ECBS Link 2 (proofs/key_exchange/ecbs/lean): tier, coordinate, band, place (the
-    # record update), keypad for faces 1..9, list helpers, and the lane-fold geometry
-    # as Nat arithmetic. new_board, fold, multiply, cube, invert and the exchange are
-    # not claimed yet. Short: no heavy checks.
+    # record update), keypad for faces 1..9, list helpers, the lane-fold geometry
+    # as Nat arithmetic, and the schoolbook loop inside mul (one generic column
+    # loop and the descending outer loop). lane_fold, mul, cube, invert, new_board,
+    # fold and the exchange are not claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 432468 kB (about 0.42 GB). The job builds `place` and the lane-fold
-    # geometry as well as the first slice. `mul`, `lane_fold`, `new_board` and the
-    # exchange are not in this build as theorems yet.
+    # 432412 kB (about 0.42 GB). The job builds `place`, the lane-fold geometry,
+    # and the schoolbook loop (`schoolCol_refines`, `school_loop_refines`).
+    # `lane_fold`, `mul`, `new_board` and the exchange are not theorems yet.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

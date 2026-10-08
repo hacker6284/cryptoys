@@ -675,6 +675,8 @@ ECBS_LINK2 = {
     "EcbsLink2.Link2.value_held_refines",
     "EcbsLink2.Link2.laneDest_eq",
     "EcbsLink2.Link2.laneDest2_eq",
+    "EcbsLink2.Link2.schoolCol_refines",
+    "EcbsLink2.Link2.school_loop_refines",
 }
 LINK2_EXPORT_TABLES = {
     "megadreifach-v3": (ROOT.parent.parent / "primitives" / "hash" / "megadreifach" / "v3"
@@ -1049,7 +1051,7 @@ PACKAGES = {
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
-        "min": 205,  # measured: check_axioms.py ecbs reports 205 theorems
+        "min": 269,  # measured: check_axioms.py ecbs reports 269 theorems
         "required": ECBS_LINK2,
     },
     "megadreifach-heavy": {

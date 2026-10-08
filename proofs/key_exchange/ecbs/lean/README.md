@@ -1,7 +1,7 @@
 <!-- Owns: the scope of the ECBS Link 2 proofs (proofs/key_exchange/ecbs/lean) and their export table. Maintenance rules: ../../../../DOCS.md. -->
 # ECBS Link 2: emitted tier, coordinate, band, place and keypad against a hand-written model
 
-Status: **a first slice.** The Lean below proves that the code `sudoc` emits from [`ecbs.sudo`](../../../../primitives/key_exchange/ecbs/ecbs.sudo) (in [`Generated/`](Generated/README.md)) computes what a hand-written model in [`EcbsLink2/Spec.lean`](EcbsLink2/Spec.lean) says, for the functions and domains in the table. `place` includes the record update. The ladder, the fold, multiplication and the exchange are not tied to the emitted loops yet; the lane-fold geometry those loops assert is proved as `Nat` arithmetic. The model is numbers and lists of trits (hole 0 first), written from [SPEC](../../../../primitives/key_exchange/ecbs/SPEC.md) §§1, 2, 4, 5.2 and 6. It is **correctness of the emitted code on that domain, not a security claim**: nothing here says the curve's discrete log is hard, that a key has entropy, or that the fold extracts. The ladder, the fold and the row-cup filler are modelled and not claimed; the emitted `mul`, `cube`, `invert` and the exchange are not tied.
+Status: **in progress.** The Lean below proves that the code `sudoc` emits from [`ecbs.sudo`](../../../../primitives/key_exchange/ecbs/ecbs.sudo) (in [`Generated/`](Generated/README.md)) computes what a hand-written model in [`EcbsLink2/Spec.lean`](EcbsLink2/Spec.lean) says, for the functions and domains in the table. `place` includes the record update. The schoolbook inside `mul` is one generic loop (`schoolCol_refines`, `school_loop_refines`) equal to `Spec.school`; it is not yet composed with `lane_fold` into `mul` or `multiply`. The ladder, the fold and the exchange are not tied to the emitted loops yet. The lane-fold geometry those loops assert is proved as `Nat` arithmetic. The model is numbers and lists of trits (hole 0 first), written from [SPEC](../../../../primitives/key_exchange/ecbs/SPEC.md) §§1, 2, 4, 5.2 and 6. It is **correctness of the emitted code on that domain, not a security claim**: nothing here says the curve's discrete log is hard, that a key has entropy, or that the fold extracts.
 
 Build and audit (Lean 4.14.0, no Mathlib):
 
@@ -12,7 +12,7 @@ python3 ../../../doubledeal/check_axioms.py ecbs # every EcbsLink2 theorem: prop
 python3 ../../../doubledeal/security/checks/scan_sorry.py --root . --exclude Generated
 ```
 
-No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432468 kB RSS.
+No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 432412 kB RSS.
 
 ## Generated Lean
 
@@ -52,7 +52,7 @@ Every `export func` of `ecbs.sudo` has a row. `check_axioms.py --selftest` check
 | `base_point_of` | none: the root-strip search is not tied | |
 | `walk_key` | none: the key walk is not tied | |
 | `invert_number` | none: the emitted inverse is not tied | |
-| `multiply` | none: the emitted `mul` inlines each flag combination and is not tied | |
+| `multiply` | none: `mul` is not yet composed with `lane_fold` | The six inlined schoolbook copies are the one loop `school_loop_refines` (`Spec.school`, plus the move counter). The flag plumbing, `lane_fold`, `settle` and `value` are not yet a theorem that `multiply` returns `Spec.fieldMul`. |
 | `cube_number` | none: the emitted `cube` and `lane_fold` are not tied | |
 | `fold` | none: `fold` starts with `new_board` and `fold_key`, and neither loop nest is tied | `Spec.foldKey` is the §6 row drop (read the original across, add in GF(3), keep `keeprows` rows). It is not a theorem about the emitted function. |
 
@@ -72,6 +72,8 @@ Not exported, so not in the column above. Each is the emitted function on the st
 - `value_held_refines`: `band` without the outer `pure`, on a held home.
 - `laneDest_eq`: with `0 < w`, `0 < h` and `w·h − 1 ≤ e`, "one band up and one hole on" (end-of-row carry included) equals `e − (w·h − 1)`.
 - `laneDest2_eq`: with `0 < w` and `r ≤ e / w`, "r rows up, same column" equals `e − r·w`.
+- `schoolCol_refines`: one schoolbook row, columns `0 .. n`, mirror bit included, one move per nonzero cell. `n > 0`, the first number covers `n` trits, the cell `i+(n−1)` is on the strip, and the index and move sums fit an i64.
+- `school_loop_refines`: the descending loop `i = n−1 downto 0` around that row. A zero second-coefficient is skipped; a nonzero one is lifted (one move) and laid with mirror `decide (c = 2) != mirror`. The strip is `Spec.school`. The final state is what `after` sees; `onRet` is unused. This is the stepper every inlined copy in `mul` is.
 
 `laneDest_eq` and `laneDest2_eq` are the equalities `lane_fold` asserts (`d1 = e − n`, `d2 = e − (n − k)` when `n = w·h − 1` and `n − k = w·r`). They are not yet applied to the emitted loop.
 

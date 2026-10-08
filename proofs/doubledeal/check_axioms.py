@@ -670,6 +670,7 @@ ECBS_LINK2 = {
     "EcbsLink2.Link2.band_held_refines",
     "EcbsLink2.Link2.band_bench_refines",
     "EcbsLink2.Link2.band_traps",
+    "EcbsLink2.Link2.place_refines",
 }
 LINK2_EXPORT_TABLES = {
     "megadreifach-v3": (ROOT.parent.parent / "primitives" / "hash" / "megadreifach" / "v3"

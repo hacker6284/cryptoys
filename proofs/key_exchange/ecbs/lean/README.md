@@ -41,7 +41,7 @@ Every `export func` of `ecbs.sudo` has a row. `check_axioms.py --selftest` check
 | `op_names` | `op_names_refines` | The five operation names, in index order. |
 | `new_board` | none: the emitted ladder (spare, halving, `lay_rung`, `clear`, `climb_holes`) is not tied to `Spec.rungList` | The published tiers satisfy the arithmetic side condition that the ladder indices fit the control row. A longer script can make the first rung assert; that trap is not a theorem here. |
 | `coordinate` | `coordinate_refines` | For `home < 7` and `i < n` on a `GridOk` tier, `coordinate` is `Spec.coordinate`, including Demo's lane table and the `geodouble` split at column 10. |
-| `place` | none: `put` plus `note_peak` is not tied | `place` is `put`. It does not clear `bench_on`. The move increment is `npeg` and the peak reads `occupied`; those two are claimed below, the record update is not. |
+| `place` | `place_refines` | On an empty home, `xs` of length `n` (fits an i64), and moves/peak that are naturals whose sum with the nonzero count fits an i64: writes `xs` into that home, sets held, adds the nonzero count to moves, and raises peak to the held-count of homes `0 .. 6` when that count is strictly larger. `bench_on` is unchanged. |
 | `band` | `band_held_refines`, `band_bench_refines`, `band_traps` | Held: the first `n` entries of that home. Not held, and the bench is on and aimed at this home: the first `n` entries of the bench. Otherwise kind `AssertFailed`. An index past the array is `OutOfBounds` and is not claimed. |
 | `call_in` | none: the calling loop is not tied | |
 | `roll_key` | none: the three nested read loops are not tied | The keypad map they call is claimed for faces `1 .. 9` (`keypad_first_refines`, `keypad_second_refines`). Face `0` is the blank the row cup skips before those calls. The functions themselves do not assert the range. |
@@ -67,6 +67,6 @@ Not exported, so not in the column above. Each is the emitted function on the st
 - `is_trits_refines`: true iff every entry is in `0 .. 2`. The length fits an i64.
 - `npeg_refines`: the number of nonzero entries (`Spec.nnz`). The length fits an i64.
 - `keypad_first_refines`, `keypad_second_refines`: faces `1 .. 9` only.
-- `occupied_refines`: how many of homes `0 .. 6` are held. The held array must cover those seven slots. Home `7` is a real slot (`home_count` is 8) and is not counted; `note_peak` uses only this count.
+- `occupied_refines`: how many of homes `0 .. 6` are held. The held array must cover those seven slots. Home `7` is a real slot (`home_count` is 8) and is not counted; `note_peak` uses only this count. `place_refines` is the record update that calls it.
 
 No SPEC/code disagreement showed up on the functions above. `coordinate` matches §5.2, including Demo. The keypad's integer subtraction on face `0` is outside the SPEC's `1 .. 9` and outside the theorem.

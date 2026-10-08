@@ -745,5 +745,116 @@ theorem schoolMoves_bound (first second : List Nat) (n : Nat) :
     schoolMoves first second n n ≤ n * (n + 1) :=
   schoolMoves_le first second n n
 
-end EcbsLink2.Link2
 
+
+/-- The schoolbook stepper text that `Ecbs.mul` inlines six times. The copies differ
+    only in generated binder names and indentation. -/
+def mulSchoolStep (a s : Array Int) (mirror : Bool) (n toV : Int)
+    (σ : Int × (Ecbs.Board × Array Int)) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × (Ecbs.Board × Array Int)) Ecbs.Board) :=
+    let i := σ.1
+    let b := σ.2.1
+    let _sp688 := σ.2.2
+    let strip := _sp688
+    do
+      if i < toV then
+        pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (i, (b, strip)))
+      else
+        match ← ((do
+  let _t647 ← SudoRt.atL s i
+  let c := _t647
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _t649 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t650 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t649 } : Ecbs.Costs)
+      let _t651 := ({ b with sudo_5Board_4cost := _t650 } : Ecbs.Board)
+      let b := _t651
+      let mir := (!(SudoRt.SEq.beq (SudoRt.SEq.beq c (2 : Int)) mirror))
+      let _t678 ← SudoRt.subI n (1 : Int)
+      let _fromV := (0 : Int)
+      let toV := _t678
+      let fuel : Nat := if _fromV > toV then 1 else (toV - _fromV).natAbs + 1
+      let _init681 := (_fromV, (strip, b))
+      let _out ← (SudoRt.runLoopOn (ρ := Ecbs.Board) _init681 fuel (fun σ =>
+    let j := σ.1
+    let strip := σ.2.1
+    let _sp679 := σ.2.2
+    let b := _sp679
+    do
+      if j > toV then
+        pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (j, (strip, b)))
+      else
+        match ← ((do
+  let _t655 ← SudoRt.atL a j
+  let d := _t655
+  if (!(SudoRt.SEq.beq d (0 : Int))) then
+    do
+      if mir then
+        do
+          let _t657 ← Ecbs.flip d
+          let d := _t657
+          let _t658 ← SudoRt.addI i j
+          let _ix659 := _t658
+          let _t660 ← SudoRt.addI i j
+          let _t661 ← SudoRt.atL strip _t660
+          let _t662 ← SudoRt.addI _t661 d
+          let _t663 ← SudoRt.modI _t662 (3 : Int)
+          let _t664 ← SudoRt.putL strip _ix659 _t663
+          let strip := _t664
+          let _t665 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t666 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t665 } : Ecbs.Costs)
+          let _t667 := ({ b with sudo_5Board_4cost := _t666 } : Ecbs.Board)
+          let b := _t667
+          pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (strip, b))
+      else
+        do
+          let _t668 ← SudoRt.addI i j
+          let _ix669 := _t668
+          let _t670 ← SudoRt.addI i j
+          let _t671 ← SudoRt.atL strip _t670
+          let _t672 ← SudoRt.addI _t671 d
+          let _t673 ← SudoRt.modI _t672 (3 : Int)
+          let _t674 ← SudoRt.putL strip _ix669 _t673
+          let strip := _t674
+          let _t675 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t676 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t675 } : Ecbs.Costs)
+          let _t677 := ({ b with sudo_5Board_4cost := _t676 } : Ecbs.Board)
+          let b := _t677
+          pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (strip, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (strip, b))) : Except SudoRt.Trap (SudoRt.Flow _ (Ecbs.Board))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (j, _fs))
+        | .cont _fs => do
+            if j == toV then
+              pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp680 := σ.2.2
+    let b := _sp680
+    do
+      pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (b, strip))) (fun r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r)))
+      pure _out
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (b, strip))) : Except SudoRt.Trap (SudoRt.Flow _ (Ecbs.Board))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (i, _fs))
+        | .cont _fs => do
+            if i == toV then
+              pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (i, _fs))
+            else do
+              let i' ← SudoRt.subI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (i', _fs))
+
+/-- All six inlined copies are this stepper, hence `rowStep` at whatever mirror flag
+    the copy closed over. -/
+theorem mulSchool_step (a s : Array Int) (mirror : Bool) (n toV : Int) :
+    mulSchoolStep a s mirror n toV = rowStep a s mirror n toV := by
+  funext σ
+  rfl
+
+end EcbsLink2.Link2

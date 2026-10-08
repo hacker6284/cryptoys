@@ -40,9 +40,9 @@ private theorem withMoves_hole (b : Ecbs.Board) (m : Int) :
   unfold withMoves
   rfl
 
-/-- Schoolbook on a zero bench, then the one lane-fold loop. The bench prefix is
-    `Spec.fieldMul`, and every hole from `n` up is empty. -/
-theorem mul_refines (xs ys : List Nat) (w h r n k moves hole bench : Nat) (b : Ecbs.Board)
+/-- Shared-loop pipeline for a fresh bench and `mirror = false`. The bench prefix is
+    `Spec.fieldMul`, and every hole from `n` up is empty. This is not `Ecbs.mul`. -/
+theorem mulPipeline_spec (xs ys : List Nat) (w h r n k moves hole bench : Nat) (b : Ecbs.Board)
     (hw : 0 < w) (hh : 0 < h) (hr : r < h) (hr0 : 0 < r)
     (hn : n = w * h - 1) (hk : k ≤ n) (hgap : n - k = w * r)
     (hn0 : 0 < n) (hx : n ≤ xs.length) (hy : n ≤ ys.length)

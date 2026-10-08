@@ -452,16 +452,16 @@ jobs:
     # as Nat arithmetic, the schoolbook loop inside mul (one generic column
     # loop and the descending outer loop), and the descending lane_fold loop
     # (one stepper, reused by both max_bench_hole branches) and the export-path
-    # product `mul_refines` (fresh bench, schoolbook, that fold, `Spec.fieldMul`).
+    # product `mulPipeline_spec` (fresh bench, schoolbook, that fold, `Spec.fieldMul`).
     # The inlined `Ecbs.mul`, settle's slide, cube, invert,
     # new_board, fold and the exchange are not claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 432412 kB (about 0.42 GB). The job builds `place`, the schoolbook loop
+    # 432424 kB (about 0.42 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
-    # (`fold_loop_refines`, `lane_fold_refines`), and `mul_refines`.
+    # (`fold_loop_refines`, `lane_fold_refines`), and `mulPipeline_spec`.
     # The inlined `Ecbs.mul`, `settle`, `new_board` and the exchange are not theorems yet.
     runs-on: ubuntu-latest
     steps:

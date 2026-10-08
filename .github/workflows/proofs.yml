@@ -456,17 +456,19 @@ jobs:
     # `lane_fold_eq` is emitted `Ecbs.lane_fold`. `mul_refines` is `Ecbs.mul` on
     # the export flags. `cube_refines` is emitted `Ecbs.cube` (comb, then that
     # fold) against `Spec.fieldCube`. `folded_read` is settle then value.
-    # Invert, new_board, fold and the exchange are not claimed yet. Short: no heavy checks.
+    # `new_board_refines` is emitted `Ecbs.new_board` on `BoardOk`, tied to
+    # `Spec.rungList` (control row in build order, ladder array reversed).
+    # Invert, fold and the exchange are not claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 432396 kB (about 0.42 GB). The job builds `place`, the schoolbook loop
+    # 432416 kB (about 0.42 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,
     # `mulPipeline_spec`, `mul_refines`, `copy_band_refines`, `comb_loop_refines`,
-    # `cube_refines`, `folded_read`, `value_after_set`, and `settle_refines`.
-    # `new_board` and the exchange are not theorems yet.
+    # `cube_refines`, `folded_read`, `value_after_set`, `settle_refines`, and
+    # `new_board_refines`. The exchange is not a theorem yet.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

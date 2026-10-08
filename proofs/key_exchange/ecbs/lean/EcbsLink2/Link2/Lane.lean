@@ -420,6 +420,18 @@ private theorem foldCharge_lo (n gap : Nat) (xs : List Nat) (h : xs.length ≤ n
     foldCharge n gap xs = 0 := by
   rw [foldCharge, if_neg (Nat.not_lt.mpr h)]
 
+/-- Each folded hole charges at most three moves, and only holes at or above `n` fold. -/
+theorem foldCharge_bound (n gap : Nat) (strip : List Nat) :
+    foldCharge n gap strip ≤ 3 * (strip.length - n) := by
+  unfold foldCharge
+  split
+  · exact foldMoves_le n gap strip (strip.length - n)
+  · exact Nat.zero_le _
+
+theorem laneFold_length (n gap : Nat) (strip : List Nat) (hn : n ≤ strip.length) :
+    (laneFold n gap strip).length = strip.length := by
+  rw [← foldDown_lane n gap strip hn, foldDown_length]
+
 private theorem laneFold_short (n gap : Nat) (xs : List Nat) (h : xs.length ≤ n) :
     laneFold n gap xs = xs := by
   unfold laneFold reduceStrip

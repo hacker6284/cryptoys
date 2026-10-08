@@ -5,6 +5,7 @@ import EcbsLink2.Link2.Coordinate
 import EcbsLink2.Link2.Keypad
 import EcbsLink2.Link2.Board
 import EcbsLink2.Link2.Place
+import EcbsLink2.Link2.Settle
 import EcbsLink2.Link2.Layout
 import EcbsLink2.Link2.School
 import EcbsLink2.Link2.Fold

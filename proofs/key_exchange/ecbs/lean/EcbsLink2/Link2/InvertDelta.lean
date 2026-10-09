@@ -276,4 +276,107 @@ theorem serious_ctrl_fit :
   unfold FitsLen i64MaxNat
   decide!
 
+/-- Setting the same ops index twice keeps the later value. -/
+theorem ops_set_set (a : Array Int) (i : Nat) (h : i < a.size) (u v : Int)
+    (h' : i < (a.set ⟨i, h⟩ u).size) :
+    (a.set ⟨i, h⟩ u).set ⟨i, h'⟩ v = a.set ⟨i, h⟩ v := by
+  apply Array.ext
+  · simp [Array.size_set]
+  · intro j hj1 hj2
+    simp only [Array.getElem_set]
+    split <;> rfl
+
+/-- A one-slot write transports along an array equality. -/
+theorem ops_set_transport {a b : Array Int} (h : a = b) (i : Nat)
+    (ha : i < a.size) (hb : i < b.size) (v v' : Int) (hv : v = v') :
+    a.set ⟨i, ha⟩ v = b.set ⟨i, hb⟩ v' := by
+  subst h
+  subst hv
+  rfl
+
+/-- The first peg is the bench-off cube: ops slot 1 becomes the incoming count plus one. -/
+theorem offPeg_ops (c : PegCtx) :
+    (offPeg c).sudo_5Board_4cost.sudo_5Costs_3ops =
+      c.b0.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, c.hops0⟩
+        (Int.ofNat (c.cOps0 + 1)) := by
+  unfold offPeg pegStep
+  rw [cube_off_ops]
+
+/-- Each later peg is the live cube of the board the previous peg left.
+    Ops slot 1 becomes that board's cube count plus one. -/
+theorem livePeg_ops (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) :
+    (livePegBoard c d hi).sudo_5Board_4cost.sudo_5Costs_3ops =
+      d.b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, d.hops⟩
+        (Int.ofNat (d.cOps + 1)) := by
+  unfold livePegBoard pegStep
+  rw [cube_live_ops]
+
+/-- After `k` cube-pegs the ops array is the input with slot 1 replaced by
+    `cOps0 + k`. The first peg uses `cube_off_ops`; every later peg uses
+    `cube_live_ops` on the board the previous peg left. -/
+theorem pegPack_ops_eq (c : PegCtx) (k : Nat) (h0 : 0 < k) (hle : k ≤ c.m) :
+    (pegPack c k h0 hle).b.sudo_5Board_4cost.sudo_5Costs_3ops =
+      c.b0.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, c.hops0⟩
+        (Int.ofNat (c.cOps0 + k)) := by
+  revert h0 hle
+  induction k with
+  | zero =>
+    intro h0
+    exact absurd h0 (Nat.not_lt_zero 0)
+  | succ k ih =>
+    intro h0 hle
+    by_cases hk : k = 0
+    · subst hk
+      have hp : pegPack c 1 h0 hle = pegFromOff c := rfl
+      rw [hp, pegFromOff]
+      exact offPeg_ops c
+    · obtain ⟨j, rfl⟩ := Nat.exists_eq_succ_of_ne_zero hk
+      have hle1 : j + 1 ≤ c.m := Nat.le_of_succ_le hle
+      have hiLt : j + 1 < c.m := Nat.lt_of_succ_le hle
+      let d := pegPack c (j + 1) (Nat.succ_pos j) hle1
+      have hp : pegPack c (Nat.succ (j + 1)) h0 hle = pegNext c d hiLt := rfl
+      rw [hp]
+      rw [show (pegNext c d hiLt).b = livePegBoard c d hiLt from rfl]
+      rw [livePeg_ops c d hiLt]
+      have hih := ih (Nat.succ_pos j) hle1
+      have hv : Int.ofNat (d.cOps + 1) = Int.ofNat (c.cOps0 + Nat.succ (j + 1)) := by
+        have hc := d.hcOps
+        apply congrArg Int.ofNat
+        omega
+      have hb : 1 <
+          (c.b0.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, c.hops0⟩
+            (Int.ofNat (c.cOps0 + (j + 1)))).size := by
+        rw [Array.size_set]
+        exact c.hops0
+      rw [ops_set_transport hih 1 d.hops hb (Int.ofNat (d.cOps + 1))
+        (Int.ofNat (c.cOps0 + Nat.succ (j + 1))) hv]
+      exact ops_set_set c.b0.sudo_5Board_4cost.sudo_5Costs_3ops 1 c.hops0
+        (Int.ofNat (c.cOps0 + (j + 1)))
+        (Int.ofNat (c.cOps0 + Nat.succ (j + 1))) hb
+
+/-- A slot other than 1 is the value the peg loop was given. -/
+theorem pegPack_ops_ne (c : PegCtx) (k : Nat) (h0 : 0 < k) (hle : k ≤ c.m)
+    (j : Nat) (hne : j ≠ 1)
+    (hj : j < c.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (pegPack c k h0 hle).b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'(by
+      rw [pegPack_ops_eq c k h0 hle, Array.size_set]; exact hj) =
+      c.b0.sudo_5Board_4cost.sudo_5Costs_3ops[j] := by
+  have hOps := pegPack_ops_eq c k h0 hle
+  have hlt : j < (pegPack c k h0 hle).b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hOps, Array.size_set]; exact hj
+  have hget {a c : Array Int} (eq : a = c) (i : Nat) (ha : i < a.size) :
+      a[i] = c[i]'(eq ▸ ha) := by subst eq; rfl
+  rw [hget hOps j hlt, Array.getElem_set, if_neg (Ne.symm hne)]
+
+/-- Ops slot 1 is the incoming cube count plus the number of pegs. -/
+theorem pegPack_ops_one (c : PegCtx) (k : Nat) (h0 : 0 < k) (hle : k ≤ c.m) :
+    (pegPack c k h0 hle).b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'
+      ((pegPack c k h0 hle).hops) = ((c.cOps0 + k : Nat) : Int) := by
+  have hOps := pegPack_ops_eq c k h0 hle
+  have hlt : 1 < (pegPack c k h0 hle).b.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
+    (pegPack c k h0 hle).hops
+  have hget {a c : Array Int} (eq : a = c) (i : Nat) (ha : i < a.size) :
+      a[i] = c[i]'(eq ▸ ha) := by subst eq; rfl
+  rw [hget hOps 1 hlt, Array.getElem_set, if_pos rfl, ofNat_eq_natCast]
+
 end EcbsLink2.Link2

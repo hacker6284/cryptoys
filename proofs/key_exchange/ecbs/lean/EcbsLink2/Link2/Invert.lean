@@ -3523,6 +3523,20 @@ theorem mul_bench_gap (n k bench : Nat) (xs ys : List Nat)
   have hpad := take_zero_pad L n hz
   rw [hpad, hpre, hlen]
 
+/-- The bench a live nocopy mul leaves is that `fieldMul`, then zeros. -/
+theorem mul_live_bench_gap (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hn0 : 0 < n) (hgap0 : 0 < n - k) (hn : n ≤ bench) :
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_5bench =
+      embed (fieldMul n k bench xs (ys.take n) ++ List.replicate (bench - n) 0) := by
+  have hB := mul_live_bench b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops
+  have hL := mul_bench_gap n k bench xs ys hn0 hgap0 hn
+  dsimp only at hB
+  rw [hL] at hB
+  exact hB
+
 private theorem mulOff_book (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
     (n k moves hole bench peak peakS cOps : Nat)
     (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
@@ -6208,9 +6222,13 @@ theorem clear_after_gap_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     ∃ (bLoop bMul bClear : Ecbs.Board),
       Ecbs.mul bLoop ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
           false false false = .ok bMul ∧
-      Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClear := by
+      Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClear ∧
+      bClear.sudo_5Board_5bench =
+        embed (fieldMul s.n s.k s.benchlen s.gap
+          (cubeTimes s.n s.k s.benchlen s.gap s.tally) ++
+          List.replicate (s.benchlen - s.n) 0) := by
   obtain ⟨c, bLoop, ys, moves, slides, hole, peak, peakS, cMul, hH, hD, hops,
-      _hcopy, _hsrc, _hg, hmEq, hn, _hkN, hbch, _hpeg, _hys, hGap, _hX, _hFit, hMov,
+      _hcopy, _hsrc, hg, hmEq, hn, hkN, hbch, _hpeg, hysEq, hGap, _hX, _hFit, hMov,
       _hSFit, _hSLe,       _hOp, _hRow, _htier, _hmk, _h7, _hop0, _hOpsLe,       _hctrl0, _hhigh0, _hcontrol, _hlen0, _hmax0, _ht0, hmul⟩ :=
     mul_of_shape h hm hT hhome
   let bMul := mulNoLiveBoard bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
@@ -6285,7 +6303,22 @@ theorem clear_after_gap_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   have hfitC : FitsLen (mvC + pegCount c.g) := FitsLen.of_le base.fitM hbudget
   have hclear := clear_held_refines bMul 5 c.g mvC hKeep.homeLt hKeep.heldLt
     hKeep.held hKeep.arr hmvC hfitN hfitC
-  exact ⟨bLoop, bMul, _, hmul, hclear⟩
+  have hpre : ys.take c.n = cubeTimes c.n c.k c.bench c.g c.m := by
+    rw [hysEq]
+    exact cubeBenchIter_prefix c.n c.k c.bench c.g c.hlenx c.m
+  have hgapB : bMul.sudo_5Board_5bench =
+      embed (fieldMul c.n c.k c.bench c.g (cubeTimes c.n c.k c.bench c.g c.m) ++
+        List.replicate (c.bench - c.n) 0) := by
+    have hraw := mul_live_bench_gap bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
+      peak peakS cMul hH hD hops c.hn0 c.gap_pos c.n_le
+    simpa [bMul, hpre] using hraw
+  rw [hn, hkN, hbch, hg, hmEq] at hgapB
+  refine ⟨bLoop, bMul, _, hmul, hclear, ?_⟩
+  · show bMul.sudo_5Board_5bench =
+      embed (fieldMul s.n s.k s.benchlen s.gap
+        (cubeTimes s.n s.k s.benchlen s.gap s.tally) ++
+        List.replicate (s.benchlen - s.n) 0)
+    exact hgapB
 
 /-- Moves through the red mul: the tight pre-mul bound, one `mulCharge`, the
     clear's `n`, one `pegCharge`, and the red `mulCharge`. That is one

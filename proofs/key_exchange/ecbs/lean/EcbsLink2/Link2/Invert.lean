@@ -3441,7 +3441,7 @@ private theorem place_home_here (b : Ecbs.Board) (home : Nat)
     split <;> rfl
   simpa [Array.getElem_set] using idx_get hEq home hF
 
-private theorem place_held_other (b : Ecbs.Board) (home other : Nat)
+theorem place_held_other (b : Ecbs.Board) (home other : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat)
     (hne : home ≠ other)
@@ -3458,7 +3458,7 @@ private theorem place_held_other (b : Ecbs.Board) (home other : Nat)
       (b.sudo_5Board_4held.set ⟨home, hD⟩ true)[other]'(hEq ▸ hF) from idx_get hEq other hF]
   rw [Array.getElem_set, if_neg hne]
 
-private theorem place_home_other (b : Ecbs.Board) (home other : Nat)
+theorem place_home_other (b : Ecbs.Board) (home other : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat)
     (hne : home ≠ other)
@@ -5757,7 +5757,7 @@ private theorem livePeg_keep (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < 
 
 /-- After every positive number of cube-pegs, a home other than `src` is unchanged
     and ops slot 0 is the count the loop started with. -/
-private theorem pegPack_keep (c : PegCtx) (first : Nat) (xs0 : List Nat) (cMul : Nat)
+theorem pegPack_keep (c : PegCtx) (first : Nat) (xs0 : List Nat) (cMul : Nat)
     (i : Nat) (h0 : 0 < i) (hle : i ≤ c.m)
     (hFD : first < c.b0.sudo_5Board_4held.size)
     (hFH : first < c.b0.sudo_5Board_4home.size)
@@ -6099,7 +6099,7 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
     hmul⟩
 
 /-- A live nocopy mul clears the second home. A different home, and the array it holds, stay. -/
-private theorem mulLive_keep (b : Ecbs.Board) (dst second first : Nat) (xs ys : List Nat)
+theorem mulLive_keep (b : Ecbs.Board) (dst second first : Nat) (xs ys : List Nat)
     (n k moves slides hole bench peak peakS cOps : Nat) (xs0 : List Nat)
     (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
     (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
@@ -6357,7 +6357,7 @@ private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := 
   decide
 
 /-- `clear` writes one home. A different home, and the array it holds, stay. -/
-private theorem clearCell_keep (b : Ecbs.Board) (home first : Nat) (xs : List Nat)
+theorem clearCell_keep (b : Ecbs.Board) (home first : Nat) (xs : List Nat)
     (moves : Nat) (xs0 : List Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (hne : home ≠ first) (hk : CellKeep b first xs0) :
@@ -6380,7 +6380,7 @@ private theorem clearCell_keep (b : Ecbs.Board) (home first : Nat) (xs : List Na
   exact { heldLt, held, homeLt, arr }
 
 /-- A live cube clears `src`. A different home, and the array it holds, stay. -/
-private theorem cubeLive_keep (b : Ecbs.Board) (dst src first : Nat) (xs : List Nat)
+theorem cubeLive_keep (b : Ecbs.Board) (dst src first : Nat) (xs : List Nat)
     (n k moves slides hole bench peak peakS cOps : Nat) (xs0 : List Nat)
     (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
     (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)

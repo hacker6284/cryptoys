@@ -498,7 +498,8 @@ jobs:
     # that bench into the gap before the peg loop. The induction carries the
     # spare, the gap home, the held input, the tier layout, and the tally
     # segment. park_rung is the idle keep on rung 0 and the unpark-then-park
-    # later. The peg context, the mul, the red branch, the ladder
+    # later. The bench-off cube-peg context is PegCtx once the spare holds
+    # the gap. The mul, the red branch, the ladder
     # for, invert_number, fold, and the exchange are not tied yet.
     # The live tally peg after a named live cube is.
     runs-on: ubuntu-latest

@@ -4382,6 +4382,28 @@ structure ParkRead (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
   l0pos : 0 < base.ladder0
   fitL0 : FitsLen base.ladder0
   fitLR : FitsLen (base.ladder0 + base.R)
+
+/-- Naturals the cube-peg loop reads: ops slot 1, the strict peak, the recorded
+    bench hole, the trit gap, and the i64 room for one loop. -/
+structure PegRead (b : Ecbs.Board) (s : ClimbModel) (base : ClimbBudget) : Prop where
+  opsGt : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+  cOps : ∃ (c : Nat), b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(opsGt) = (c : Int)
+  peakS : ∃ (p : Nat), b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int)
+  holeM : ∃ (h : Nat), b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int)
+  trits : allTritList s.gap
+  top : 0 < s.tally → s.t0 + s.tally - 1 ≤ s.high
+  fitRow : FitsLen (s.t0 + s.tally)
+  fitTall : FitsLen s.tally
+  fitCtrl : FitsLen (s.ctrl + s.tally)
+  n_pos : 0 < s.n
+  span : 3 * (s.n - 1) + base.cg < s.benchlen
+  small : base.w ≤ 1000000 ∧ base.h ≤ 1000000 ∧ base.r ≤ 1000000 ∧
+    s.benchlen ≤ 1000001
+  n_small : s.n ≤ 1000000
+  fitN : FitsLen s.n
+  fitBn : FitsLen s.benchlen
+  fit3 : FitsLen (3 * (s.n - 1))
+
 /-- What one rung reads off the board, beyond the gap polynomial and the counters.
     The spare (home 6) is empty. When the gap sits on the bench, home 5 is clear.
     When it sits in the home, the bench is off. The input home stays held. The
@@ -4421,7 +4443,7 @@ structure ClimbShape (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
   k_le : s.k ≤ s.n
   gap_eq : s.n - s.k = base.w * base.r
   park : ParkRead b s rest base
-
+  peg : PegRead b s base
 
 /-- Induction hypothesis after the prefix `done`, with `rest` still to run.
     The tally length is `climbTallyPrefix`, proved from the rung list. The
@@ -4907,7 +4929,8 @@ theorem shape_refresh {b : Ecbs.Board} {s : ClimbModel} {done : List Nat}
     (hCg : b'.sudo_5Board_1t.sudo_4Tier_7combgap = (base.cg : Int))
     (hC : b'.sudo_5Board_1t.sudo_4Tier_7control = (base.control : Int))
     (hrow : s'.row.length = base.control)
-    (hpark : ParkRead b' s' rest base) :
+    (hpark : ParkRead b' s' rest base)
+    (hpeg : PegRead b' s' base) :
     ClimbShape b' s' rest base := by
   refine
     { spareH := hspareH
@@ -4940,7 +4963,8 @@ theorem shape_refresh {b : Ecbs.Board} {s : ClimbModel} {done : List Nat}
       n_eq := by rw [hn]; exact h.n_eq
       k_le := by rw [hk, hn]; exact h.k_le
       gap_eq := by rw [hn, hk]; exact h.gap_eq
-      park := hpark }
+      park := hpark
+      peg := hpeg }
 
 /-- Later rung: the gap is on the bench and home 5 is clear, so the spare copy
     reads the bench. The spare is empty. `place` leaves the bench aimed at the gap. -/
@@ -5070,6 +5094,163 @@ theorem park_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     · simp [unparkedBoard, ofNat_eq_natCast]
     · intro hlt
       omega
+
+/-- The bench-off cube-peg loop's context, once the spare holds the gap.
+    Moves, slides, and the cube-op fit are the climb budget. The strict peak,
+    the bench hole, and ops slot 1 are the naturals `PegRead` records. -/
+theorem peg_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget} (h : ClimbInvK done (r :: rest) b s base)
+    (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hHF : b.sudo_5Board_4held[6]'(h.shape.spareD) = true)
+    (hArr : b.sudo_5Board_4home[6]'(h.shape.spareH) = embed s.gap) :
+    ∃ c : PegCtx, c.b0 = b ∧ c.src = 6 ∧ c.g = s.gap ∧ c.m = s.tally ∧
+      c.row0 = s.row := by
+  obtain ⟨mv, hmv, hmvLe⟩ := h.moves
+  obtain ⟨sl, hsl, hslLe⟩ := h.slides
+  obtain ⟨cOps, hcOps⟩ := h.shape.peg.cOps
+  obtain ⟨pkS, hpkS⟩ := h.shape.peg.peakS
+  obtain ⟨holeM, hhole⟩ := h.shape.peg.holeM
+  obtain ⟨pk, hpk, _⟩ := h.peak
+  have hk : done.length + 1 ≤ base.R := by
+    have hlen := h.kLe
+    rw [List.length_append, List.length_cons] at hlen
+    omega
+  have hcharge : s.tally * pegCharge s.n s.benchlen ≤
+      rungCharge base.n base.bench base.mMax := by
+    unfold rungCharge
+    have hmul : s.tally * pegCharge s.n s.benchlen ≤
+        (base.mMax + 1) * pegCharge s.n s.benchlen :=
+      Nat.mul_le_mul_right _ (Nat.le_succ_of_le hT)
+    have hrest : (base.mMax + 1) * pegCharge s.n s.benchlen ≤
+        2 * s.n + (base.mMax + 1) * pegCharge s.n s.benchlen +
+          2 * mulCharge s.n s.benchlen :=
+      Nat.le_trans (Nat.le_add_left _ (2 * s.n))
+        (Nat.le_add_right _ _)
+    have hn : s.n = base.n := h.hn
+    have hb : s.benchlen = base.bench := h.hbench
+    exact Nat.le_trans hmul (by simpa [hn, hb] using hrest)
+  have hmovFit : FitsLen (mv + s.tally * pegCharge s.n s.benchlen) := by
+    apply FitsLen.of_le base.fitM
+    have hle : mv + s.tally * pegCharge s.n s.benchlen ≤
+        base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax := by
+      have hstep : (done.length + 1) * rungCharge base.n base.bench base.mMax =
+          done.length * rungCharge base.n base.bench base.mMax +
+            rungCharge base.n base.bench base.mMax := by
+        rw [Nat.succ_mul]
+      omega
+    have hR : (done.length + 1) * rungCharge base.n base.bench base.mMax ≤
+        base.R * rungCharge base.n base.bench base.mMax :=
+      Nat.mul_le_mul_right _ hk
+    omega
+  refine ⟨{
+    b0 := b
+    src := 6
+    g := s.gap
+    row0 := s.row
+    w := base.w
+    h := base.h
+    r := base.r
+    n := s.n
+    k := s.k
+    bench := s.benchlen
+    cg := base.cg
+    moves0 := mv
+    slides0 := sl
+    hole0 := holeM
+    peak0 := pk
+    peakS0 := pkS
+    cOps0 := cOps
+    t0 := s.t0
+    high := s.high
+    control := base.control
+    ctrl0 := s.ctrl
+    m := s.tally
+    hm := hm
+    hmk := h.inv.marker
+    hoff := hoff
+    hops0 := h.shape.peg.opsGt
+    hop10 := hcOps
+    hbl := by rw [h.shape.tierB]; exact ofNat_eq_natCast s.benchlen
+    hcg := by rw [h.shape.tierCg]; exact ofNat_eq_natCast base.cg
+    hspan := h.shape.peg.span
+    hF := h.shape.spareD
+    hHome := h.shape.spareH
+    hHF := hHF
+    hArr := hArr
+    h7 := h.shape.h7
+    hn0 := h.shape.peg.n_pos
+    hn := h.shape.tierN
+    hlenx := h.shape.gapLen
+    hf := h.shape.peg.fitN
+    hmoves0 := by rw [hmv]
+    hpeak0 := by rw [hpk]
+    hpeakS0 := hpkS
+    hxsT := h.shape.peg.trits
+    h3 := h.shape.peg.fit3
+    hw0 := h.shape.w0
+    hh0 := h.shape.h0
+    hrR := h.shape.rlt
+    hrP := h.shape.r0
+    hnE := h.shape.n_eq
+    hkLe := h.shape.k_le
+    hgap := h.shape.gap_eq
+    hwF := by rw [h.shape.tierW]; exact ofNat_eq_natCast base.w
+    hhF := by rw [h.shape.tierH]; exact ofNat_eq_natCast base.h
+    hrF := by rw [h.shape.tierR]; exact ofNat_eq_natCast base.r
+    hkF := by rw [h.shape.tierK]; exact ofNat_eq_natCast s.k
+    hHole0 := hhole
+    hsm := by
+      have hs := h.shape.peg.small
+      have hb : s.benchlen = base.bench := h.hbench
+      simpa [hb] using hs
+    hnsm := h.shape.peg.n_small
+    hfitB := h.shape.peg.fitBn
+    hT0 := h.inv.t0
+    hRow := h.inv.row
+    hRoom := h.shape.seg.room
+    hCtrlN := h.shape.tierC
+    hHigh := h.inv.high
+    hTop := h.shape.peg.top hm
+    hIn := by rw [← h.shape.rowLen]; exact h.shape.seg.room
+    hCtrl0 := h.inv.ctrl
+    hslides0 := by rw [hsl]; exact ofNat_eq_natCast sl
+    hfitRow := h.shape.peg.fitRow
+    hfitM := h.shape.peg.fitTall
+    hBudget := hmovFit
+    hSlide := by
+      apply FitsLen.of_le base.fitS
+      have hslide : s.tally * (2 * s.n) ≤ rungSlideCharge base.n base.mMax := by
+        unfold rungSlideCharge
+        have hn : s.n = base.n := h.hn
+        have hmul : s.tally * (2 * s.n) ≤ (base.mMax + 3) * (2 * s.n) :=
+          Nat.mul_le_mul_right _ (Nat.le_trans hT (Nat.le_add_right _ _))
+        simpa [hn] using hmul
+      have hstep : sl + s.tally * (2 * s.n) ≤
+          base.slides0 + (done.length + 1) * rungSlideCharge base.n base.mMax := by
+        have hsucc : (done.length + 1) * rungSlideCharge base.n base.mMax =
+            done.length * rungSlideCharge base.n base.mMax +
+              rungSlideCharge base.n base.mMax := by rw [Nat.succ_mul]
+        omega
+      have hR : (done.length + 1) * rungSlideCharge base.n base.mMax ≤
+          base.R * rungSlideCharge base.n base.mMax :=
+        Nat.mul_le_mul_right _ hk
+      omega
+    hOpsB := by
+      obtain ⟨c0, hc0, hcle⟩ := h.ops 1 h.shape.peg.opsGt
+      have hc : cOps = c0 := ofNat_inj_nat (hcOps.symm.trans hc0)
+      apply FitsLen.of_le base.fitO
+      have hstep : cOps + s.tally ≤
+          base.ops0 + (done.length + 1) * (base.mMax + 3) := by
+        have hsucc : (done.length + 1) * (base.mMax + 3) =
+            done.length * (base.mMax + 3) + (base.mMax + 3) := by rw [Nat.succ_mul]
+        have ht : s.tally ≤ base.mMax + 3 := Nat.le_trans hT (Nat.le_add_right _ _)
+        omega
+      have hR : (done.length + 1) * (base.mMax + 3) ≤ base.R * (base.mMax + 3) :=
+        Nat.mul_le_mul_right _ hk
+      omega
+    hCtrlB := h.shape.peg.fitCtrl
+  }, rfl, rfl, rfl, rfl, rfl⟩
 
 /-- While rungs remain, the tally segment is white, so the scan in the next rung
     leaves the board unchanged. -/

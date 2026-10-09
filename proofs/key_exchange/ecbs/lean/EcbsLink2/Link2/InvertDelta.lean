@@ -2142,4 +2142,50 @@ theorem red_mul_emit
   · rw [← h.hbench]; exact h.shape.peg.fitBn
   · exact FitsLen.of_le base.fitM hMulFit.2.2.2
 
+/-- The gap mul leaves `fieldMul` of the gap by `cubeTimes` on the bench, then zeros.
+    A white rung stores that list. A red cube reads it. -/
+theorem gap_bench_prefix
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax) (hhome : s.onBench = false) :
+    ∃ (bM : Ecbs.Board) (ys : List Nat)
+      (moves slides hole peak peakS cOps : Nat)
+      (hH : 6 < bM.sudo_5Board_4home.size)
+      (hD : 6 < bM.sudo_5Board_4held.size)
+      (hops : 0 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      Ecbs.mul bM ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+          false false false =
+        .ok (mulNoLiveBoard bM 5 6 s.gap ys s.n s.k moves slides hole s.benchlen
+          peak peakS cOps hH hD hops) ∧
+      ys.take s.n = cubeTimes s.n s.k s.benchlen s.gap s.tally ∧
+      (mulNoLiveBoard bM 5 6 s.gap ys s.n s.k moves slides hole s.benchlen
+          peak peakS cOps hH hD hops).sudo_5Board_5bench =
+        embed (fieldMul s.n s.k s.benchlen s.gap (ys.take s.n) ++
+          List.replicate (s.benchlen - s.n) 0) := by
+  obtain ⟨c, bM, ys, moves, slides, hole, peak, peakS, cOps, hH, hD, hops,
+      _hcopy, _hsrc, hg, hmEq, hn, hk, hbch, _hbM, hysEq, _hGap, _hX, _hFit, _hMov,
+      _hSFit, _hSLe, _hOp, _hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, _hctrl0, _hhigh0,
+      _hcontrol, _hlen0, _hmax0, _ht0, hmul⟩ :=
+    mul_of_shape h hm hT hhome
+  have hpre : ys.take c.n = cubeTimes c.n c.k c.bench c.g c.m := by
+    rw [hysEq]
+    exact cubeBenchIter_prefix c.n c.k c.bench c.g c.hlenx c.m
+  have hList : laneFold c.n (c.n - c.k)
+      (school c.n c.g (ys.take c.n) (List.replicate c.bench 0) false) =
+      fieldMul c.n c.k c.bench c.g (ys.take c.n) ++ List.replicate (c.bench - c.n) 0 :=
+    mul_bench_gap c.n c.k c.bench c.g ys c.hn0 c.gap_pos c.n_le
+  have hBench := mul_live_bench bM 5 6 c.g ys c.n c.k moves slides hole c.bench
+    peak peakS cOps hH hD hops
+  have hBench' :
+      (mulNoLiveBoard bM 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cOps hH hD hops).sudo_5Board_5bench =
+        embed (fieldMul c.n c.k c.bench c.g (ys.take c.n) ++
+          List.replicate (c.bench - c.n) 0) := by
+    dsimp only at hBench
+    rw [hList] at hBench
+    exact hBench
+  rw [hg, hmEq, hn, hk, hbch] at hpre
+  rw [hg, hn, hk, hbch] at hBench' hmul
+  exact ⟨bM, ys, moves, slides, hole, peak, peakS, cOps, hH, hD, hops, hmul, hpre, hBench'⟩
+
 end EcbsLink2.Link2

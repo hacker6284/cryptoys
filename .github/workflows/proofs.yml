@@ -483,7 +483,7 @@ jobs:
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 1382696 kB (about 1.32 GB). The job builds `place`, the schoolbook loop
+    # 1382724 kB (about 1.32 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,
@@ -513,7 +513,8 @@ jobs:
     # that cleared board is the live cube. The emitted mul of that cube is the
     # live nocopy mul. In the delta file those two board definitions are
     # irreducible, so later proofs use the projection lemmas instead of
-    # reducing the board body. A non-final white
+    # reducing the board body. The gap mul leaves the product of the gap by
+    # its iterated cube on the bench, with a zero tail. A non-final white
     # rung doubles the cleared board. A non-final red rung keeps the delta
     # through the double and the extra peg.
     # The climb step hypothesis and the ladder for are still open.

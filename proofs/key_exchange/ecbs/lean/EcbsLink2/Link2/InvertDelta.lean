@@ -2260,6 +2260,20 @@ theorem red_mul_emit
   · rw [← h.hbench]; exact h.shape.peg.fitBn
   · exact FitsLen.of_le base.fitM hMulFit.2.2.2
 
+/-- A final red rung stores the product of the input by the cube of the gap product.
+    The tally length does not change. The polynomial sits on the bench. -/
+theorem model_red_gap (s : ClimbModel) (x : List Nat) (hole : Nat) :
+    (modelRung s x 2 hole true).gap =
+      fieldMul s.n s.k s.benchlen x
+        (fieldCube s.n s.k s.benchlen
+          (fieldMul s.n s.k s.benchlen s.gap
+            (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ∧
+    (modelRung s x 2 hole true).onBench = true ∧
+    (modelRung s x 2 hole true).tally = s.tally ∧
+    (modelRung s x 2 hole true).n = s.n ∧
+    (modelRung s x 2 hole true).benchlen = s.benchlen := by
+  simp [modelRung, invRung]
+
 /-- The gap mul leaves `fieldMul` of the gap by `cubeTimes` on the bench, then zeros.
     A white rung stores that list. A red cube reads it. -/
 theorem gap_bench_prefix
@@ -2305,5 +2319,63 @@ theorem gap_bench_prefix
   rw [hg, hmEq, hn, hk, hbch] at hpre
   rw [hg, hn, hk, hbch] at hBench' hmul
   exact ⟨bM, ys, moves, slides, hole, peak, peakS, cOps, hH, hD, hops, hmul, hpre, hBench'⟩
+
+theorem fieldMul_len (n k bench : Nat) (x y : List Nat) (hn : n ≤ bench) :
+    (fieldMul n k bench x y).length = n := by
+  have hsch : (school n x y (List.replicate bench 0) false).length = bench := by
+    simpa [List.length_replicate] using
+      school_length x y (List.replicate bench 0) false n
+  have hll := laneFold_length n (n - k) (school n x y (List.replicate bench 0) false)
+    (by rw [hsch]; exact hn)
+  rw [hsch] at hll
+  unfold fieldMul
+  rw [List.length_take, show reduceStrip n (n - k)
+      (school n x y (List.replicate bench 0) false) =
+      laneFold n (n - k) (school n x y (List.replicate bench 0) false) from rfl, hll,
+    Nat.min_eq_left hn]
+
+/-- On a final red rung the emitted mul's bench is the model gap, padded with zeros,
+    and the bench is on and aimed at the gap. -/
+theorem red_final_gap_bench
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [2] b s base)
+    (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax) (hhome : s.onBench = false)
+    (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
+    ∃ (bCube bRed : Ecbs.Board),
+      Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
+          false false false = .ok bRed ∧
+      bRed.sudo_5Board_8bench_on = true ∧
+      bRed.sudo_5Board_8bench_to = (5 : Int) ∧
+      bRed.sudo_5Board_5bench =
+        embed ((modelRung s base.x 2 0 true).gap.take s.n ++
+          List.replicate (s.benchlen - s.n) 0) := by
+  obtain ⟨bCube, bRed, hmul, hon, hto, hbench⟩ :=
+    red_mul_emit h hm hT hhome hxLen hxT
+  have hmod := (model_red_gap s base.x 0).1
+  have hnle : s.n ≤ s.benchlen :=
+    span_n_le s.n base.cg s.benchlen h.shape.peg.n_pos h.shape.peg.span
+  have hlenG : (modelRung s base.x 2 0 true).gap.length = s.n := by
+    rw [hmod]
+    exact fieldMul_len s.n s.k s.benchlen base.x
+      (fieldCube s.n s.k s.benchlen
+        (fieldMul s.n s.k s.benchlen s.gap
+          (cubeTimes s.n s.k s.benchlen s.gap s.tally))) hnle
+  have htake : (modelRung s base.x 2 0 true).gap.take s.n =
+      (modelRung s base.x 2 0 true).gap := by
+    rw [← hlenG]
+    exact List.take_length _
+  have hpad : (modelRung s base.x 2 0 true).gap.take s.n ++
+      List.replicate (s.benchlen - s.n) 0 =
+      fieldMul base.n s.k base.bench base.x
+        (fieldCube base.n s.k base.bench
+          (fieldMul base.n s.k base.bench s.gap
+            (cubeTimes base.n s.k base.bench s.gap s.tally))) ++
+        List.replicate (base.bench - base.n) 0 := by
+    rw [htake, hmod, h.hn, h.hbench]
+  have hbench' : bRed.sudo_5Board_5bench =
+      embed ((modelRung s base.x 2 0 true).gap.take s.n ++
+        List.replicate (s.benchlen - s.n) 0) := by
+    rw [hbench, hpad]
+  exact ⟨bCube, bRed, hmul, hon, hto, hbench'⟩
 
 end EcbsLink2.Link2

@@ -3818,4 +3818,367 @@ theorem rung_step_refines (pre : Except SudoRt.Trap Ecbs.Board) (bC bD bCubeF bM
       simp only [Bool.false_eq_true, if_false, pure_eq_ok]
       simp [rungStepBoard, hLf, hR]
 
+/-- Tally length `invRung` leaves. A final rung keeps it. A non-final rung doubles
+    it, and a non-final red rung adds one. -/
+def tallyAfter (tally rung : Nat) (last : Bool) : Nat :=
+  let tally1 := if last then tally else 2 * tally
+  if rung = 2 then (if last then tally1 else tally1 + 1) else tally1
+
+theorem invRung_tally (n k bench : Nat) (x g : List Nat) (tally rung : Nat) (last : Bool) :
+    (invRung n k bench x g tally rung last).2 = tallyAfter tally rung last := by
+  unfold invRung tallyAfter
+  by_cases hL : last <;> by_cases hR : rung = 2 <;> simp [hL, hR]
+
+theorem modelRung_tally (s : ClimbModel) (x : List Nat) (rung hole : Nat) (last : Bool) :
+    (modelRung s x rung hole last).tally = tallyAfter s.tally rung last := by
+  simp [modelRung, invRung_tally]
+
+theorem tallyAfter_le (tally rung : Nat) (last : Bool) :
+    tallyAfter tally rung last ≤ 2 * tally + 1 := by
+  unfold tallyAfter
+  by_cases hL : last <;> by_cases hR : rung = 2 <;> simp [hL, hR] <;> omega
+
+/-- Tally length along a rung list. The head is the next rung; `last` is the
+    empty tail, so the final element of the list is the final rung. -/
+def climbTally (tally : Nat) : List Nat → Nat
+  | [] => tally
+  | r :: rs => climbTally (tallyAfter tally r rs.isEmpty) rs
+
+/-- Tally length after the prefix `done`, with `rest` still to come, so a rung
+    in `done` is final only when nothing remains after it in `done ++ rest`. -/
+def climbTallyPrefix (tally : Nat) : List Nat → List Nat → Nat
+  | [], _ => tally
+  | r :: done, rest =>
+    climbTallyPrefix (tallyAfter tally r ((done ++ rest).isEmpty)) done rest
+
+theorem climbTallyPrefix_nil (tally : Nat) (rest : List Nat) :
+    climbTallyPrefix tally [] rest = tally := rfl
+
+theorem climbTallyPrefix_snoc (tally : Nat) (done rest : List Nat) (r : Nat) :
+    climbTallyPrefix tally (done ++ [r]) rest =
+      tallyAfter (climbTallyPrefix tally done (r :: rest)) r rest.isEmpty := by
+  induction done generalizing tally with
+  | nil =>
+    simp [climbTallyPrefix]
+  | cons h done ih =>
+    simp [climbTallyPrefix, List.cons_append, ih]
+
+theorem climbTallyPrefix_full (tally : Nat) (rs : List Nat) :
+    climbTallyPrefix tally rs [] = climbTally tally rs := by
+  induction rs generalizing tally with
+  | nil => rfl
+  | cons r rs ih =>
+    simp [climbTally, climbTallyPrefix, ih]
+
+theorem climbTallyPrefix_le (tally : Nat) (done rest : List Nat) :
+    climbTallyPrefix tally done rest ≤ (tally + 1) * 2 ^ done.length := by
+  induction done generalizing tally rest with
+  | nil =>
+    simp [climbTallyPrefix]
+  | cons r done ih =>
+    simp [climbTallyPrefix]
+    have hAfter := tallyAfter_le tally r ((done ++ rest).isEmpty)
+    have hih := ih (tallyAfter tally r ((done ++ rest).isEmpty)) rest
+    have hstep : tallyAfter tally r ((done ++ rest).isEmpty) + 1 ≤ 2 * (tally + 1) := by
+      omega
+    calc
+      climbTallyPrefix (tallyAfter tally r ((done ++ rest).isEmpty)) done rest
+          ≤ (tallyAfter tally r ((done ++ rest).isEmpty) + 1) * 2 ^ done.length := hih
+      _ ≤ (2 * (tally + 1)) * 2 ^ done.length :=
+          Nat.mul_le_mul_right _ hstep
+      _ = (tally + 1) * 2 ^ (done.length + 1) := by
+          rw [Nat.mul_comm 2 (tally + 1), Nat.mul_assoc, Nat.pow_succ,
+            Nat.mul_comm (2 ^ done.length) 2]
+
+theorem invClimb_tally (n k bench : Nat) (x g : List Nat) (tally : Nat) (rs : List Nat) :
+    (invClimb n k bench x (g, tally) rs).2 = climbTally tally rs := by
+  induction rs generalizing g tally with
+  | nil => simp [invClimb, climbTally]
+  | cons r rs ih =>
+    have h2 := invRung_tally n k bench x g tally r rs.isEmpty
+    simp [invClimb, climbTally, h2, ih]
+
+/-- Fold `modelRung`. The hole does not affect the gap or the tally. -/
+def modelClimb (s : ClimbModel) (x : List Nat)
+    (hole : ClimbModel → Nat → Bool → Nat) : List Nat → ClimbModel
+  | [] => s
+  | r :: rs =>
+    modelClimb (modelRung s x r (hole s r rs.isEmpty) rs.isEmpty) x hole rs
+
+theorem modelClimb_spec (s : ClimbModel) (x : List Nat)
+    (hole : ClimbModel → Nat → Bool → Nat) (rs : List Nat) :
+    ((modelClimb s x hole rs).gap, (modelClimb s x hole rs).tally) =
+      invClimb s.n s.k s.benchlen x (s.gap, s.tally) rs := by
+  induction rs generalizing s with
+  | nil => simp [modelClimb, invClimb]
+  | cons r rs ih =>
+    rw [modelClimb]
+    have ih' := ih (modelRung s x r (hole s r rs.isEmpty) rs.isEmpty)
+    rw [ih']
+    simp [modelRung, invClimb, modelRung_value]
+
+theorem modelClimb_tally (s : ClimbModel) (x : List Nat)
+    (hole : ClimbModel → Nat → Bool → Nat) (rs : List Nat) :
+    (modelClimb s x hole rs).tally = climbTally s.tally rs := by
+  rw [← invClimb_tally, ← modelClimb_spec]
+
+/-- `raisedPeak` against a count of at most seven homes stays at most `max(peak, 7)`. -/
+theorem raisedPeak_carry (peak occ : Nat) (ho : occ ≤ 7) :
+    raisedPeak peak occ ≤ max peak 7 := by
+  unfold raisedPeak
+  by_cases h : peak < occ
+  · simp [h]
+    exact Nat.le_trans ho (Nat.le_max_right peak 7)
+  · simp [h]
+    exact Nat.le_max_left _ _
+
+theorem countHeld_seven (held : Array Bool) : countHeld held 7 ≤ 7 := by
+  have : ∀ i, countHeld held i ≤ i := by
+    intro i
+    induction i with
+    | zero => simp [countHeld]
+    | succ i ih =>
+      unfold countHeld
+      have : (if held.getD i false then 1 else 0) ≤ 1 := by split <;> decide
+      omega
+  exact this 7
+
+theorem peak_carry (peak0 pk pk' : Nat) (h : pk ≤ max peak0 7) (h' : pk' ≤ max pk 7) :
+    pk' ≤ max peak0 7 := by
+  have hmax : max pk 7 ≤ max peak0 7 := by
+    apply Nat.max_le.mpr
+    exact ⟨h, Nat.le_max_right _ _⟩
+  exact Nat.le_trans h' hmax
+
+/-- Budgets for one climb. `mMax` is the tally bound proved from a list of
+    length `R` that starts at `tally0`: `(tally0 + 1) · 2 ^ R`. The three
+    `FitsLen` facts are the moves, slides, and ops fit in the domain of
+    `invert_number_refines`. -/
+structure ClimbBudget where
+  n : Nat
+  bench : Nat
+  moves0 : Nat
+  slides0 : Nat
+  ops0 : Nat
+  peak0 : Nat
+  tally0 : Nat
+  R : Nat
+  mMax : Nat
+  mMax_eq : mMax = (tally0 + 1) * 2 ^ R
+  fitM : FitsLen (moves0 + R * rungCharge n bench mMax)
+  fitS : FitsLen (slides0 + R * rungSlideCharge n mMax)
+  fitO : FitsLen (ops0 + R * (mMax + 3))
+
+/-- One rung's counter growth: at most one `rungCharge` of the current tally,
+    one slide charge, `mMax + 3` on every ops slot, and a peak that is
+    `raisedPeak` against at most seven homes. -/
+structure RungDelta (b b' : Ecbs.Board) (base : ClimbBudget) (m : Nat) : Prop where
+  moves : ∃ (mv mv' : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+    b'.sudo_5Board_4cost.sudo_5Costs_5moves = (mv' : Int) ∧
+    mv' ≤ mv + rungCharge base.n base.bench m
+  slides : ∃ (sl sl' : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
+    b'.sudo_5Board_4cost.sudo_5Costs_6slides = (sl' : Int) ∧
+    sl' ≤ sl + rungSlideCharge base.n m
+  opsSize : b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+    b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+  ops : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+    ∃ (c c' : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(opsSize ▸ hi) = (c' : Int) ∧
+      c' ≤ c + (base.mMax + 3)
+  peak : ∃ (pk pk' : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
+    b'.sudo_5Board_4cost.sudo_5Costs_4peak = (pk' : Int) ∧
+    pk' ≤ max pk 7
+
+/-- Induction hypothesis after the prefix `done`, with `rest` still to run.
+    The tally length is `climbTallyPrefix`, proved from the rung list. The
+    counters are at most `done.length` charges. -/
+structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
+    (base : ClimbBudget) : Prop where
+  inv : ClimbInv b s
+  idx : s.ridx = done.length
+  hn : s.n = base.n
+  hbench : s.benchlen = base.bench
+  htally0 : s.tally = climbTallyPrefix base.tally0 done rest
+  kLe : (done ++ rest).length ≤ base.R
+  moves : ∃ (mv : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+    mv ≤ base.moves0 + done.length * rungCharge base.n base.bench base.mMax
+  slides : ∃ (sl : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
+    sl ≤ base.slides0 + done.length * rungSlideCharge base.n base.mMax
+  ops : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+    ∃ (c : Nat), b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+      c ≤ base.ops0 + done.length * (base.mMax + 3)
+  peak : ∃ (pk : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
+    pk ≤ max base.peak0 7
+
+theorem ClimbInvK.tally_le {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget} (h : ClimbInvK done rest b s base) :
+    s.tally ≤ base.mMax := by
+  rw [h.htally0, base.mMax_eq]
+  have hpre := climbTallyPrefix_le base.tally0 done rest
+  have hlen : done.length ≤ base.R := by
+    have := h.kLe
+    simp at this
+    omega
+  have hpow : 2 ^ done.length ≤ 2 ^ base.R :=
+    Nat.pow_le_pow_right (by decide : 0 < 2) hlen
+  exact Nat.le_trans hpre (Nat.mul_le_mul_left _ hpow)
+
+theorem ClimbInvK.moves_fit {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget} (h : ClimbInvK done rest b s base) :
+    ∃ (mv : Nat), b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧ FitsLen mv := by
+  obtain ⟨mv, heq, hle⟩ := h.moves
+  have hk : done.length ≤ base.R := by
+    have := h.kLe
+    simp at this
+    omega
+  exact ⟨mv, heq, rung_budget_fit base.moves0 done.length base.R
+    (rungCharge base.n base.bench base.mMax) mv hk hle base.fitM⟩
+
+/-- One rung preserves the counter bounds. The new tally is the model's
+    `tallyAfter`, so it stays under `mMax` by `climbTallyPrefix_le`. -/
+theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
+    {s : ClimbModel} {base : ClimbBudget} {x : List Nat} {hole : Nat}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hinv : ClimbInv b' (modelRung s x r hole rest.isEmpty))
+    (hδ : RungDelta b b' base s.tally) :
+    ClimbInvK (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
+  have hT := h.tally_le
+  have hm : rungCharge base.n base.bench s.tally ≤
+      rungCharge base.n base.bench base.mMax :=
+    rungCharge_mono base.n base.bench s.tally base.mMax hT
+  have hs : rungSlideCharge base.n s.tally ≤ rungSlideCharge base.n base.mMax :=
+    rungSlideCharge_mono base.n s.tally base.mMax hT
+  refine
+    { inv := hinv
+      idx := ?_
+      hn := ?_
+      hbench := ?_
+      htally0 := ?_
+      kLe := ?_
+      moves := ?_
+      slides := ?_
+      ops := ?_
+      peak := ?_ }
+  · simp [modelRung, h.idx, List.length_append]
+  · simp [modelRung, h.hn]
+  · simp [modelRung, h.hbench]
+  · rw [modelRung_tally, h.htally0]
+    exact (climbTallyPrefix_snoc base.tally0 done rest r).symm
+  · simpa [List.length_append, List.cons_append] using h.kLe
+  · obtain ⟨mv, mv', hb, hb', hle⟩ := hδ.moves
+    obtain ⟨mv0, hb0, hbound⟩ := h.moves
+    have hmv : mv = mv0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨mv', hb', ?_⟩
+    have hlen : (done ++ [r]).length = done.length + 1 := by simp
+    rw [hlen]
+    have : mv' ≤ base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax := by
+      have h1 : mv' ≤ mv + rungCharge base.n base.bench s.tally := hle
+      have h2 : mv + rungCharge base.n base.bench s.tally ≤
+          mv + rungCharge base.n base.bench base.mMax := Nat.add_le_add_left hm _
+      have h3 : mv ≤ base.moves0 + done.length * rungCharge base.n base.bench base.mMax := by
+        rw [hmv]; exact hbound
+      have h4 : (done.length + 1) * rungCharge base.n base.bench base.mMax =
+          done.length * rungCharge base.n base.bench base.mMax +
+            rungCharge base.n base.bench base.mMax := by
+        rw [Nat.succ_mul]
+      omega
+    exact this
+  · obtain ⟨sl, sl', hb, hb', hle⟩ := hδ.slides
+    obtain ⟨sl0, hb0, hbound⟩ := h.slides
+    have hsl : sl = sl0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨sl', hb', ?_⟩
+    have hlen : (done ++ [r]).length = done.length + 1 := by simp
+    rw [hlen]
+    have : sl' ≤ base.slides0 + (done.length + 1) * rungSlideCharge base.n base.mMax := by
+      have h1 : sl' ≤ sl + rungSlideCharge base.n s.tally := hle
+      have h4 : (done.length + 1) * rungSlideCharge base.n base.mMax =
+          done.length * rungSlideCharge base.n base.mMax +
+            rungSlideCharge base.n base.mMax := by
+        rw [Nat.succ_mul]
+      omega
+    exact this
+  · intro i hi
+    have hi0 : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      rw [← hδ.opsSize]; exact hi
+    obtain ⟨c, c', hc, hc', hle⟩ := hδ.ops i hi0
+    obtain ⟨c0, hc0, hbound⟩ := h.ops i hi0
+    have hcEq : c = c0 := ofNat_inj_nat (hc.symm.trans hc0)
+    refine ⟨c', hc', ?_⟩
+    have hlen : (done ++ [r]).length = done.length + 1 := by simp
+    rw [hlen]
+    have h4 : (done.length + 1) * (base.mMax + 3) =
+        done.length * (base.mMax + 3) + (base.mMax + 3) := by
+      rw [Nat.succ_mul]
+    omega
+  · obtain ⟨pk, pk', hb, hb', hle⟩ := hδ.peak
+    obtain ⟨pk0, hb0, hbound⟩ := h.peak
+    have hpk : pk = pk0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨pk', hb', peak_carry base.peak0 pk pk' (by rw [hpk]; exact hbound) hle⟩
+
+/-- The emitted climb, one rung at a time. `last` is the empty tail. -/
+def climbEmit (step : Ecbs.Board → Nat → Bool → Except SudoRt.Trap Ecbs.Board)
+    (b : Ecbs.Board) : List Nat → Except SudoRt.Trap Ecbs.Board
+  | [] => .ok b
+  | r :: rs => do
+      let b ← step b r rs.isEmpty
+      climbEmit step b rs
+
+/-- Induction over a rung list. The list is the climb order, which for `invert`
+    is `(rungList (n − 1)).reverse`, so the final rung is last. Each step is an
+    emitted rung (`rung_step_refines` under that rung's domain) whose counters
+    grow by at most one charge and whose board satisfies `ClimbInv` for
+    `modelRung`. The tally bound is the model's, not a separate assumption. -/
+theorem climb_refines
+    (step : Ecbs.Board → Nat → Bool → Except SudoRt.Trap Ecbs.Board)
+    (rs : List Nat) (b0 : Ecbs.Board) (s0 : ClimbModel) (base : ClimbBudget)
+    (x : List Nat) (hole : ClimbModel → Nat → Bool → Nat)
+    (h0 : ClimbInvK [] rs b0 s0 base)
+    (hR : rs.length = base.R)
+    (hn : s0.n = base.n) (hbench : s0.benchlen = base.bench)
+    (hstep : ∀ (done rest : List Nat) (r : Nat) (b : Ecbs.Board) (s : ClimbModel),
+      rs = done ++ r :: rest →
+      ClimbInvK done (r :: rest) b s base →
+      ∃ b', step b r rest.isEmpty = .ok b' ∧
+        ClimbInv b' (modelRung s x r (hole s r rest.isEmpty) rest.isEmpty) ∧
+        RungDelta b b' base s.tally) :
+    ∃ b' s', climbEmit step b0 rs = .ok b' ∧ s' = modelClimb s0 x hole rs ∧
+      ClimbInvK rs [] b' s' base ∧
+      (s'.gap, s'.tally) = invClimb s0.n s0.k s0.benchlen x (s0.gap, s0.tally) rs ∧
+      s'.tally ≤ base.mMax := by
+  have hmain : ∀ (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel),
+      rs = done ++ rest →
+      ClimbInvK done rest b s base →
+      ∃ b' s', climbEmit step b rest = .ok b' ∧
+        s' = modelClimb s x hole rest ∧
+        ClimbInvK (done ++ rest) [] b' s' base := by
+    intro done rest
+    induction rest generalizing done with
+    | nil =>
+      intro b s hrs h
+      exact ⟨b, s, by simp [climbEmit], rfl, by simpa using h⟩
+    | cons r rest ih =>
+      intro b s hrs h
+      obtain ⟨b1, hb1, hinv, hδ⟩ := hstep done rest r b s hrs h
+      have hK := climbInvK_succ h hinv hδ
+      have hrs' : rs = (done ++ [r]) ++ rest := by
+        simp [hrs, List.append_assoc]
+      obtain ⟨b', s', hfold, hs', hK'⟩ := ih (done ++ [r]) b1
+        (modelRung s x r (hole s r rest.isEmpty) rest.isEmpty) hrs' hK
+      refine ⟨b', s', ?_, ?_, ?_⟩
+      · rw [climbEmit, hb1, ok_bind]
+        exact hfold
+      · simp [modelClimb, hs']
+      · simpa [List.append_assoc] using hK'
+  obtain ⟨b', s', hfold, hs', hK⟩ := hmain [] rs b0 s0 (by simp) h0
+  refine ⟨b', s', hfold, hs', hK, ?_, hK.tally_le⟩
+  rw [hs']
+  exact modelClimb_spec s0 x hole rs
+
 end EcbsLink2.Link2

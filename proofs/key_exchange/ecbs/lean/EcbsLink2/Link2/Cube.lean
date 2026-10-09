@@ -390,43 +390,81 @@ private theorem decide_gt_nat (a b : Nat) :
   rw [decide_eq_decide, show (b : Int) = Int.ofNat b from ofNat_eq_natCast b]
   exact ofNat_lt_iff b a
 
-/-- `note_strict` touches only `peak_strict`. -/
-private theorem note_strict_keeps (b : Ecbs.Board) (peakS : Nat)
+/-- `note_strict` writes `peak_strict` to `raisedPeak` of the old value and the
+    held-count of homes `0 .. 6`. Every other field stays. -/
+def strictBoard (b : Ecbs.Board) (peakS : Nat) : Ecbs.Board :=
+  { b with sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_11peak_strict :=
+        Int.ofNat (raisedPeak peakS (countHeld b.sudo_5Board_4held 7)) } }
+
+private theorem note_strict_eq (b : Ecbs.Board) (peakS : Nat)
     (h7 : 7 ≤ b.sudo_5Board_4held.size)
     (hp : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int)) :
-    ∃ b', Ecbs.note_strict b = .ok b' ∧
-      b'.sudo_5Board_5bench = b.sudo_5Board_5bench ∧
-      b'.sudo_5Board_4home = b.sudo_5Board_4home ∧
-      b'.sudo_5Board_4held = b.sudo_5Board_4held ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_5moves = b.sudo_5Board_4cost.sudo_5Costs_5moves ∧
-      b'.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on ∧
-      b'.sudo_5Board_8bench_to = b.sudo_5Board_8bench_to ∧
-      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
-      b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
-        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4peak = b.sudo_5Board_4cost.sudo_5Costs_4peak ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
-      b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
-      b'.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
-  unfold Ecbs.note_strict
+    Ecbs.note_strict b = .ok (strictBoard b peakS) := by
+  unfold Ecbs.note_strict strictBoard
   rw [occupied_refines b h7, ok_bind, hp]
   dsimp only
   rw [decide_gt_nat]
   by_cases hlt : peakS < countHeld b.sudo_5Board_4held 7
-  · have hc : decide (peakS < countHeld b.sudo_5Board_4held 7) = true :=
-      decide_eq_true hlt
-    rw [hc, if_pos rfl, pure_eq_ok]
-    refine ⟨_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-  · have hc : decide (peakS < countHeld b.sudo_5Board_4held 7) = false := by
-      rw [decide_eq_false_iff_not]; exact hlt
-    rw [hc]
+  · rw [decide_eq_true hlt, if_pos rfl, pure_eq_ok, raisedPeak, if_pos hlt]
+  · rw [(decide_eq_false_iff_not).mpr hlt]
     simp only [Bool.false_eq_true, if_false, pure_eq_ok]
-    refine ⟨b, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+    apply congrArg Except.ok
+    rw [raisedPeak, if_neg hlt]
+    apply board_ext
+    case neg.hcost =>
+      apply cost_ext
+      case hstrict => simpa [ofNat_eq_natCast] using hp
+      all_goals rfl
+    all_goals rfl
+
+/-- `note_peak` writes `peak` to `raisedPeak` of the old value and the held-count.
+    Every other field stays. -/
+def peakBoard (b : Ecbs.Board) (peak : Nat) : Ecbs.Board :=
+  { b with sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4peak :=
+        Int.ofNat (raisedPeak peak (countHeld b.sudo_5Board_4held 7)) } }
+
+private theorem note_peak_eq (b : Ecbs.Board) (peak : Nat)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hp : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int)) :
+    Ecbs.note_peak b = .ok (peakBoard b peak) := by
+  unfold Ecbs.note_peak peakBoard
+  rw [occupied_refines b h7, ok_bind, hp]
+  dsimp only
+  rw [decide_gt_nat]
+  by_cases hlt : peak < countHeld b.sudo_5Board_4held 7
+  · rw [decide_eq_true hlt, if_pos rfl, pure_eq_ok, raisedPeak, if_pos hlt]
+  · rw [(decide_eq_false_iff_not).mpr hlt]
+    simp only [Bool.false_eq_true, if_false, pure_eq_ok]
+    apply congrArg Except.ok
+    rw [raisedPeak, if_neg hlt]
+    apply board_ext
+    case neg.hcost =>
+      apply cost_ext
+      case hpeak => simpa [ofNat_eq_natCast] using hp
+      all_goals rfl
+    all_goals rfl
+
+/-- `max_bench_hole` after `noteBench`: the scanned top when it is strictly higher. -/
+def raisedHole (hole top : Nat) : Nat :=
+  if hole < top then top else hole
+
+private theorem set_on {α : Type} {a b : Array α} (hab : a = b) (i : Nat)
+    (ha : i < a.size) (v : α) :
+    a.set ⟨i, ha⟩ v = b.set ⟨i, hab ▸ ha⟩ v := by
+  subst hab
+  rfl
+
+private theorem overwrite {α : Type} (a : Array α) (i : Nat) (h : i < a.size) (v w : α)
+    (h2 : i < (a.set ⟨i, h⟩ v).size) :
+    (a.set ⟨i, h⟩ v).set ⟨i, h2⟩ w = a.set ⟨i, h⟩ w := by
+  apply Array.ext
+  · rw [Array.size_set, Array.size_set, Array.size_set]
+  · intro j _hj1 _hj2
+    by_cases hje : i = j
+    · simp [Array.getElem_set, hje]
+    · simp [Array.getElem_set, hje]
 
 private theorem withMoves_tier (b : Ecbs.Board) (m : Int) :
     (withMoves b m).sudo_5Board_1t = b.sudo_5Board_1t := by
@@ -449,11 +487,168 @@ def cubeMoves (moves : Nat) (xs : List Nat) (n k bench : Nat) : Nat :=
   let sch := combStrip n bench xs
   moves + 2 * laidCount xs n + foldCharge n (n - k) sch
 
-/-- Marker off, bench off. `Ecbs.cube` combs `xs` onto every third hole, folds, and leaves
-    the bench on, aimed at `dst`. The prefix is `Spec.fieldCube`. Holes from `n` up are empty.
-    The move counter is `cubeMoves`. The peak is `raisedPeak` of the incoming peak and the
-    held-count after the source home is cleared. Slides and the tier stay. -/
-theorem cube_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+/-- Marker off, bench off. The board `Ecbs.cube` returns: ops slot 1 bumped, the source
+    home cleared, the bench on and aimed at `dst` holding the folded comb. `peak_strict`
+    is the held-count before that clear. `peak` is the held-count after it. -/
+def cubeOffBoard (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) : Ecbs.Board :=
+  let sch := combStrip n bench xs
+  { b with
+    sudo_5Board_4home := b.sudo_5Board_4home.set ⟨src, hHome⟩ #[]
+    sudo_5Board_4held := b.sudo_5Board_4held.set ⟨src, hF⟩ false
+    sudo_5Board_8bench_on := true
+    sudo_5Board_8bench_to := (dst : Int)
+    sudo_5Board_5bench := embed (laneFold n (n - k) sch)
+    sudo_5Board_9marker_on := false
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_5moves := Int.ofNat (cubeMoves moves xs n k bench)
+      sudo_5Costs_4peak :=
+        Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7))
+      sudo_5Costs_11peak_strict :=
+        Int.ofNat (raisedPeak peakS (countHeld b.sudo_5Board_4held 7))
+      sudo_5Costs_14max_bench_hole := Int.ofNat (raisedHole hole (topIdx sch))
+      sudo_5Costs_3ops :=
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) } }
+
+theorem cube_off_bench (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_5bench =
+      embed (laneFold n (n - k) (combStrip n bench xs)) := rfl
+
+theorem cube_off_prefix (n k bench : Nat) (xs : List Nat) :
+    (laneFold n (n - k) (combStrip n bench xs)).take n = fieldCube n k bench xs := by
+  unfold fieldCube laneFold
+  rfl
+
+theorem cube_off_high (xs : List Nat) (n k bench : Nat) (hn0 : 0 < n) (hgap0 : 0 < n - k) :
+    ∀ i, n ≤ i → i < bench →
+      coeff (laneFold n (n - k) (combStrip n bench xs)) i = 0 := by
+  intro i hlo hi
+  have hlen : (combStrip n bench xs).length = bench := combStrip_length n bench xs
+  exact laneFold_high n (n - k) (combStrip n bench xs) i hn0 hgap0
+    (by rw [hlen]; omega) hlo (by rw [hlen]; exact hi)
+
+theorem cube_off_home (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨src, hHome⟩ #[] := rfl
+
+theorem cube_off_held (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4held =
+      b.sudo_5Board_4held.set ⟨src, hF⟩ false := rfl
+
+theorem cube_off_moves (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (cubeMoves moves xs n k bench) := rfl
+
+theorem cube_off_slides (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_6slides =
+      b.sudo_5Board_4cost.sudo_5Costs_6slides := rfl
+
+theorem cube_off_peak (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7)) := rfl
+
+theorem cube_off_tally (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_6tally0 =
+      b.sudo_5Board_6tally0 := rfl
+
+theorem cube_off_highest (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b.sudo_5Board_4cost.sudo_5Costs_15control_highest := rfl
+
+theorem cube_off_row (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_3row =
+      b.sudo_5Board_3row := rfl
+
+theorem cube_off_tier (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_1t =
+      b.sudo_5Board_1t := rfl
+
+theorem cube_off_ctrl (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := rfl
+
+theorem cube_off_marker (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_9marker_on =
+      false := rfl
+
+theorem cube_off_on (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_8bench_on =
+      true := rfl
+
+theorem cube_off_to (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_8bench_to =
+      (dst : Int) := rfl
+
+theorem cube_off_ops (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) := rfl
+
+/-- Marker off, bench off. `Ecbs.cube` returns `cubeOffBoard`: it combs `xs` onto every
+    third hole, folds, and leaves the bench on, aimed at `dst`. -/
+theorem cube_off_eq (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     (w h r n k moves hole bench peak peakS cOps cg : Nat)
     (hmk : b.sudo_5Board_9marker_on = false)
     (hoff : b.sudo_5Board_8bench_on = false)
@@ -489,31 +684,8 @@ theorem cube_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     (hnsm : n ≤ 1000000)
     (hfitB : FitsLen bench)
     (hfold : FitsLen (moves + 2 * n + 3 * (bench - n))) :
-    ∃ b', Ecbs.cube b (dst : Int) (src : Int) = .ok b' ∧
-      b'.sudo_5Board_8bench_on = true ∧
-      b'.sudo_5Board_8bench_to = (dst : Int) ∧
-      b'.sudo_5Board_5bench =
-        embed (laneFold n (n - k) (combStrip n bench xs)) ∧
-      (laneFold n (n - k) (combStrip n bench xs)).take n =
-        fieldCube n k bench xs ∧
-      (∀ i, n ≤ i → i < bench →
-        coeff (laneFold n (n - k) (combStrip n bench xs)) i = 0) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat (cubeMoves moves xs n k bench) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4peak =
-        Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7)) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
-      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
-      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
-      b'.sudo_5Board_4home = b.sudo_5Board_4home.set ⟨src, hHome⟩ #[] ∧
-      b'.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨src, hF⟩ false ∧
-      b'.sudo_5Board_9marker_on = false ∧
-      b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
-        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) ∧
-      b'.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+    Ecbs.cube b (dst : Int) (src : Int) =
+      .ok (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome) := by
   unfold Ecbs.cube Ecbs.log_op
   simp only [hmk, hoff, Bool.false_eq_true, if_false, pure_eq_ok, toPure_eq_ok, ok_bind]
   rw [show Ecbs.op_cube = Int.ofNat 1 from rfl, atL_ofNat _ 1 hops, hop1, ok_bind,
@@ -536,10 +708,33 @@ theorem cube_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   have h7₁ : 7 ≤ b1.sudo_5Board_4held.size := by simpa [b1] using h7
   have hp1 : b1.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
     simpa [b1] using hpeakS
-  obtain ⟨bS, hbS, _hbenchS, hhomeS, hheldS, hmovS, _honS, _htoS, htS, _hmkS, hholeS, hpeakKeep, hslidesS, hrowS, hopS, htallyS, hhighS, hctrlS⟩ :=
-    note_strict_keeps b1 peakS h7₁ hp1
-  rw [hbS]
+  rw [note_strict_eq b1 peakS h7₁ hp1]
   simp only [ok_bind, pure_eq_ok]
+  let bS := strictBoard b1 peakS
+  have hS : strictBoard b1 peakS = bS := rfl
+  conv =>
+    pattern (strictBoard b1 peakS)
+    rw [hS]
+  have hheldS : bS.sudo_5Board_4held = b1.sudo_5Board_4held := rfl
+  have hhomeS : bS.sudo_5Board_4home = b1.sudo_5Board_4home := rfl
+  have hmovS : bS.sudo_5Board_4cost.sudo_5Costs_5moves =
+      b1.sudo_5Board_4cost.sudo_5Costs_5moves := rfl
+  have htS : bS.sudo_5Board_1t = b1.sudo_5Board_1t := rfl
+  have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b1.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := rfl
+  have hpeakKeep : bS.sudo_5Board_4cost.sudo_5Costs_4peak =
+      b1.sudo_5Board_4cost.sudo_5Costs_4peak := rfl
+  have hslidesS : bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+      b1.sudo_5Board_4cost.sudo_5Costs_6slides := rfl
+  have hrowS : bS.sudo_5Board_3row = b1.sudo_5Board_3row := rfl
+  have hopS : bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b1.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
+  have htallyS : bS.sudo_5Board_6tally0 = b1.sudo_5Board_6tally0 := rfl
+  have hhighS : bS.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b1.sudo_5Board_4cost.sudo_5Costs_15control_highest := rfl
+  have hctrlS : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b1.sudo_5Board_4cost.sudo_5Costs_4ctrl := rfl
+  have hmkS : bS.sudo_5Board_9marker_on = b1.sudo_5Board_9marker_on := rfl
   have hFs : src < bS.sudo_5Board_4held.size := by rw [hheldS]; simpa [b1] using hF
   have hHome1 : src < b1.sudo_5Board_4home.size := by simpa [b1] using hHome
   have hHomes : src < bS.sudo_5Board_4home.size := by rw [hhomeS]; exact hHome1
@@ -669,13 +864,13 @@ theorem cube_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     unfold noteBench withMoves withHole
     dsimp [bF, bW]
     split <;> rfl
-  have hhigh : ∀ i, n ≤ i → i < bench → coeff (laneFold n (n - k) sch) i = 0 := by
+  have _hhigh : ∀ i, n ≤ i → i < bench → coeff (laneFold n (n - k) sch) i = 0 := by
     intro i hlo hi
     have hgap0 : 0 < n - k := by rw [hgap]; exact Nat.mul_pos hw0 hrP
     have hnb : n ≤ bench := by omega
     exact laneFold_high n (n - k) sch i hn0 hgap0 (by rw [hlenS]; exact hnb) hlo
       (by rw [hlenS]; exact hi)
-  have hpre : (laneFold n (n - k) sch).take n = fieldCube n k bench xs := by
+  have _hpre : (laneFold n (n - k) sch).take n = fieldCube n k bench xs := by
     unfold fieldCube laneFold sch
     rfl
   have hpeakN : bN.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
@@ -702,7 +897,7 @@ theorem cube_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     dsimp [bN, nb]
     unfold noteBench withMoves withHole
     split <;> simp [bF, bW, withMoves, bC, htS, b1]
-  have hhomeSz : bN.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
+  have _hhomeSz : bN.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
     dsimp [bN, nb]
     unfold noteBench withMoves withHole
     split <;> simp [bF, bW, withMoves, bC, hhomeS, b1, Array.size_set]
@@ -713,7 +908,7 @@ theorem cube_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   have hmkN : bN.sudo_5Board_9marker_on = false := by
     dsimp [bN, nb]
     unfold noteBench withMoves withHole
-    split <;> simp [bF, bW, withMoves, bC, _hmkS, b1]
+    split <;> simp [bF, bW, withMoves, bC, hmkS, b1]
   have hrowN : bN.sudo_5Board_3row = b.sudo_5Board_3row := by
     dsimp [bN, nb]
     unfold noteBench withMoves withHole
@@ -737,70 +932,195 @@ theorem cube_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     dsimp [bN, nb]
     unfold noteBench withMoves withHole
     split <;> simp [bF, bW, withMoves, bC, hctrlS, b1]
-  unfold Ecbs.note_peak
-  rw [occupied_refines bN h7N, ok_bind, hpeakN]
-  conv => zeta
-  rw [decide_gt_nat]
-  by_cases hlt : peak < countHeld bN.sudo_5Board_4held 7
-  · rw [decide_eq_true hlt, if_pos rfl, pure_eq_ok, ok_bind]
-    refine ⟨_, rfl, honN, htoN, rfl, hpre, hhigh, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-    · change bN.sudo_5Board_4cost.sudo_5Costs_5moves = _
-      rw [hmovN, hmovEq]
-    · change (countHeld bN.sudo_5Board_4held 7 : Int) =
-        Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7))
-      rw [← ofNat_eq_natCast (countHeld bN.sudo_5Board_4held 7)]
-      apply congrArg Int.ofNat
-      have hlt' : peak < countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7 := by
-        rw [← hheldN]; exact hlt
-      rw [hheldN]
-      unfold raisedPeak
-      exact (if_pos (c := peak < countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7)
-        (t := countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7) (e := peak) hlt').symm
-    · change bN.sudo_5Board_4cost.sudo_5Costs_6slides = _
-      exact hslidesN
-    · exact htN
-    · change bN.sudo_5Board_4home.size = _
-      exact hhomeSz
-    · change bN.sudo_5Board_4home = _
-      exact hhomeN
-    · change bN.sudo_5Board_4held = _
-      exact hheldN
-    · change bN.sudo_5Board_9marker_on = false
-      exact hmkN
-    · change bN.sudo_5Board_3row = _
-      exact hrowN
-    · change bN.sudo_5Board_4cost.sudo_5Costs_3ops = _
-      exact hopN
-    · change bN.sudo_5Board_6tally0 = _
-      exact htallyN
-    · change bN.sudo_5Board_4cost.sudo_5Costs_15control_highest = _
-      exact hhighN
-    · change bN.sudo_5Board_4cost.sudo_5Costs_4ctrl = _
-      exact hctrlN
-  · rw [(decide_eq_false_iff_not).mpr hlt]
-    simp only [Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
-    refine ⟨bN, rfl, honN, htoN, rfl, hpre, hhigh, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-    · rw [hmovN, hmovEq]
-    · rw [hpeakN, ofNat_eq_natCast]
-      change (peak : Int) =
-        (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7) : Int)
-      apply congrArg
-      have hlt' : ¬ peak < countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7 := by
-        rw [← hheldN]; exact hlt
-      unfold raisedPeak
-      exact (if_neg (c := peak < countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7)
-        (t := countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7) (e := peak) hlt').symm
+  have hstrictN : bN.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      Int.ofNat (raisedPeak peakS (countHeld b.sudo_5Board_4held 7)) := by
+    dsimp [bN, nb]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  have hholeN : bN.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      Int.ofNat (raisedHole hole (topIdx sch)) := by
+    dsimp [bN, nb]
+    unfold noteBench withMoves withHole
+    rw [hholeF]
+    by_cases hgt : hole < topIdx sch
+    · have hdec : decide (↑(topIdx sch) > Int.ofNat hole) = true := by
+        rw [decide_eq_true_eq, ← ofNat_eq_natCast (topIdx sch)]
+        exact (ofNat_lt_iff hole (topIdx sch)).mpr hgt
+      rw [hdec]
+      rw [if_pos rfl]
+      unfold raisedHole
+      rw [if_pos hgt]
+    · have hdec : decide (↑(topIdx sch) > Int.ofNat hole) = false := by
+        rw [decide_eq_false_iff_not]
+        intro hgtI
+        rw [← ofNat_eq_natCast (topIdx sch)] at hgtI
+        exact hgt ((ofNat_lt_iff hole (topIdx sch)).mp hgtI)
+      rw [hdec]
+      simp only [Bool.false_eq_true, if_false]
+      unfold raisedHole
+      rw [if_neg hgt]
+      simp [bW, withMoves, bC, hholeS, b1, hHole, ofNat_eq_natCast]
+  rw [note_peak_eq bN peak h7N hpeakN]
+  simp only [ok_bind, pure_eq_ok]
+  apply congrArg Except.ok
+  apply board_ext
+  · exact htN
+  · exact hhomeN
+  · exact hheldN
+  · exact honN
+  · exact htoN
+  · dsimp [bN]; rfl
+  · apply cost_ext
+    · exact hmovN.trans (congrArg Int.ofNat hmovEq)
     · exact hslidesN
-    · exact htN
-    · exact hhomeSz
-    · exact hhomeN
-    · exact hheldN
-    · exact hmkN
-    · exact hrowN
-    · exact hopN
-    · exact htallyN
-    · exact hhighN
     · exact hctrlN
+    · dsimp [bN, nb, peakBoard]
+      unfold noteBench withMoves withHole
+      split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+    · dsimp [bN, nb, peakBoard]
+      unfold noteBench withMoves withHole
+      split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+    · dsimp [bN, nb, peakBoard]
+      unfold noteBench withMoves withHole
+      split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+    · dsimp [bN, nb, peakBoard]
+      unfold noteBench withMoves withHole
+      split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+    · exact congrArg (fun held => Int.ofNat (raisedPeak peak (countHeld held 7))) hheldN
+    · exact hstrictN
+    · exact hholeN
+    · exact hhighN
+    · dsimp [bN, nb, peakBoard]
+      unfold noteBench withMoves withHole
+      split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+    · dsimp [bN, nb, peakBoard]
+      unfold noteBench withMoves withHole
+      split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+    · dsimp [bN, nb, peakBoard]
+      unfold noteBench withMoves withHole
+      split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+    · dsimp [bN, nb, peakBoard]
+      unfold noteBench withMoves withHole
+      split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+    · exact hopN
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · exact hrowN
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · exact htallyN
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · exact hmkN
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+  · dsimp [bN, nb, peakBoard]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, bW, withMoves, bC, bS, strictBoard, b1, cubeOffBoard]
+
+/-- The field-by-field reading of `cubeOffBoard`. Callers that still open an
+    existential use this; the equation is `cube_off_eq`. -/
+theorem cube_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (w h r n k moves hole bench peak peakS cOps cg : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hcg : b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg)
+    (hspan : 3 * (n - 1) + cg < bench)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[src] = true)
+    (hArr : b.sudo_5Board_4home[src] = embed xs)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hn0 : 0 < n)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenx : xs.length = n)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hxsT : allTritList xs)
+    (h3 : FitsLen (3 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * n))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hkF : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * n + 3 * (bench - n))) :
+    ∃ b', Ecbs.cube b (dst : Int) (src : Int) = .ok b' ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = (dst : Int) ∧
+      b'.sudo_5Board_5bench =
+        embed (laneFold n (n - k) (combStrip n bench xs)) ∧
+      (laneFold n (n - k) (combStrip n bench xs)).take n =
+        fieldCube n k bench xs ∧
+      (∀ i, n ≤ i → i < bench →
+        coeff (laneFold n (n - k) (combStrip n bench xs)) i = 0) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat (cubeMoves moves xs n k bench) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak =
+        Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hF⟩ false) 7)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      b'.sudo_5Board_4home = b.sudo_5Board_4home.set ⟨src, hHome⟩ #[] ∧
+      b'.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨src, hF⟩ false ∧
+      b'.sudo_5Board_9marker_on = false ∧
+      b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) ∧
+      b'.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+  rw [cube_off_eq b dst src xs w h r n k moves hole bench peak peakS cOps cg
+      hmk hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf
+      hmoves hpeak hpeakS hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF
+      hHole hsm hnsm hfitB hfold]
+  refine ⟨_, rfl, rfl, rfl, rfl, ?_, ?_, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  · unfold fieldCube laneFold
+    rfl
+  · exact cube_off_high xs n k bench hn0 (by rw [hgap]; exact Nat.mul_pos hw0 hrP)
+  · simp [cubeOffBoard, Array.size_set]
 
 /-- `settle` then `value` on a bench whose tail is empty. `settle_refines` writes the
     length-`n` prefix and sets the home held; `value_after_set` reads it back. -/
@@ -985,12 +1305,24 @@ theorem cube_live_eq (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   rw [hbR]
   rw [settle_off (bumpOp bS 1 cOps hopsS) (by simp [bumpOp, hoffS]), ok_bind]
 
-/-- Bench on and aimed at `src`, with a zero tail. `Ecbs.cube` first slides that bench
-    into `src`, then combs and folds exactly as `cube_refines` does on the slid board.
-    The prefix is `Spec.fieldCube` of `xs.take n`. Moves add the slide and then `cubeMoves`
-    of the prefix. Slides grow by the slide only. The peak is `raisedPeak` twice: once for
-    the slide, then for the cube's `note_peak`. -/
-theorem cube_refines_live (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+/-- `Ecbs.cube` on a live bench: slide into `src`, then the bench-off cube.
+    The op-count bump is the one inside `cubeOffBoard`, applied to the slid board. -/
+def cubeLiveBoard (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size)
+    (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) : Ecbs.Board :=
+  let bS := settleBoard b src hH hD xs n moves slides peak
+  let ys := xs.take n
+  let mv := moves + 2 * pegCount ys
+  let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hD⟩ true) 7)
+  cubeOffBoard bS dst src ys n k mv hole bench pk peakS cOps
+    (settle_ops_lt b 1 src hops hH hD xs n moves slides peak)
+    (settle_held_lt b src hH hD xs n moves slides peak)
+    (settle_home_lt b src hH hD xs n moves slides peak)
+
+/-- Bench on and aimed at `src`, with a zero tail. `Ecbs.cube` returns `cubeLiveBoard`. -/
+theorem cube_eq_live (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     (w h r n k moves slides hole bench peak peakS cOps cg : Nat)
     (hmk : b.sudo_5Board_9marker_on = false)
     (hon : b.sudo_5Board_8bench_on = true)
@@ -1032,30 +1364,8 @@ theorem cube_refines_live (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     (hnsm : n ≤ 1000000)
     (hfitB : FitsLen bench)
     (hfold : FitsLen (moves + 2 * pegCount (xs.take n) + 2 * n + 3 * (bench - n))) :
-    let ys := xs.take n
-    let mv := moves + 2 * pegCount ys
-    let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hD⟩ true) 7)
-    let bS := settleBoard b src hH hD xs n moves slides peak
-    let hFs := settle_held_lt b src hH hD xs n moves slides peak
-    ∃ b', Ecbs.cube b (dst : Int) (src : Int) = .ok b' ∧
-      b'.sudo_5Board_8bench_on = true ∧
-      b'.sudo_5Board_8bench_to = (dst : Int) ∧
-      b'.sudo_5Board_5bench = embed (laneFold n (n - k) (combStrip n bench ys)) ∧
-      (laneFold n (n - k) (combStrip n bench ys)).take n = fieldCube n k bench ys ∧
-      (∀ i, n ≤ i → i < bench →
-        coeff (laneFold n (n - k) (combStrip n bench ys)) i = 0) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat (cubeMoves mv ys n k bench) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4peak =
-        Int.ofNat (raisedPeak pk (countHeld (bS.sudo_5Board_4held.set ⟨src, hFs⟩ false) 7)) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat (slides + 2 * pegCount ys) ∧
-      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
-      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
-      b'.sudo_5Board_4held = bS.sudo_5Board_4held.set ⟨src, hFs⟩ false ∧
-      b'.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
-      b'.sudo_5Board_3row = b.sudo_5Board_3row := by
+    Ecbs.cube b (dst : Int) (src : Int) =
+      .ok (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops) := by
   rw [cube_live_eq b dst src xs n moves slides peak cOps hmk hon hto hH hD h7 hempty hbench
       hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hops hop1 hfops]
   let bS := settleBoard b src hH hD xs n moves slides peak
@@ -1112,24 +1422,161 @@ theorem cube_refines_live (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by rw [htS]; exact hkF
   have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
     rw [settle_hole_eq b src hH hD xs n moves slides peak]; exact hHole
-  obtain ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, hsl, ht, hsz, _hhome', hhd, _hmk', hrow', _hop',
-      htally', hhigh', hctrl'⟩ :=
-    cube_refines bS dst src ys w h r n k mv hole bench pk peakS cOps cg
+  rw [cube_off_eq bS dst src ys w h r n k mv hole bench pk peakS cOps cg
       hmkS hoffS hopsS hop1S hfops hblS hcgS hspan hFs hHomes hHF hArr h7S hn0 hnS hleny hf
       hmovS hpkS hstrict hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hwS hhS hrS hkS hholeS
-      hsm hnsm hfitB hfold
-  refine ⟨b', hb, hon', hto', hbn, hpre, hhi, hmv, hpk, ?_, ?_, ?_, hhd, ?_, ?_, ?_, ?_⟩
-  · rw [hsl, settle_slides_eq b src hH hD xs n moves slides peak]
-  · rw [ht, settle_tier_eq b src hH hD xs n moves slides peak]
-  · rw [hsz, settle_home_eq b src hH hD xs n moves slides peak, Array.size_set]
-  · rw [htally', settle_tally_eq b src hH hD xs n moves slides peak]
-  · rw [hhigh', settle_high_eq b src hH hD xs n moves slides peak]
-  · rw [hctrl', settle_ctrl_eq b src hH hD xs n moves slides peak]
-  · rw [hrow']
-    by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨src, hD⟩ true) 7
-    · rw [show bS = settleBoard b src hH hD xs n moves slides peak from rfl,
-        settle_peak b src hH hD xs n moves slides peak hpk]
-    · rw [show bS = settleBoard b src hH hD xs n moves slides peak from rfl,
-        settle_keep b src hH hD xs n moves slides peak hpk]
+      hsm hnsm hfitB hfold]
+  rfl
+
+private theorem settle_row_eq (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_3row =
+      b.sudo_5Board_3row := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
+  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+
+theorem cube_live_bench (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    let ys := xs.take n
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_5bench =
+      embed (laneFold n (n - k) (combStrip n bench ys)) := by
+  simp [cubeLiveBoard, cube_off_bench]
+
+theorem cube_live_prefix (n k bench : Nat) (xs : List Nat) :
+    (laneFold n (n - k) (combStrip n bench (xs.take n))).take n =
+      fieldCube n k bench (xs.take n) :=
+  cube_off_prefix n k bench (xs.take n)
+
+theorem cube_live_home (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨src, hH⟩ #[] := by
+  unfold cubeLiveBoard
+  rw [cube_off_home]
+  rw [set_on (settle_home_eq b src hH hD xs n moves slides peak) src
+      (settle_home_lt b src hH hD xs n moves slides peak) (#[])]
+  exact overwrite b.sudo_5Board_4home src hH (embed (xs.take n)) #[]
+    (settle_home_eq b src hH hD xs n moves slides peak ▸
+      settle_home_lt b src hH hD xs n moves slides peak)
+
+theorem cube_live_held (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    let hFs := settle_held_lt b src hH hD xs n moves slides peak
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4held =
+      (settleBoard b src hH hD xs n moves slides peak).sudo_5Board_4held.set ⟨src, hFs⟩ false := by
+  simp [cubeLiveBoard, cube_off_held]
+
+theorem cube_live_moves (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    let ys := xs.take n
+    let mv := moves + 2 * pegCount ys
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (cubeMoves mv ys n k bench) := by
+  simp [cubeLiveBoard, cube_off_moves]
+
+theorem cube_live_slides (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    let ys := xs.take n
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (slides + 2 * pegCount ys) := by
+  unfold cubeLiveBoard
+  rw [cube_off_slides, settle_slides_eq]
+
+theorem cube_live_peak (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    let bS := settleBoard b src hH hD xs n moves slides peak
+    let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hD⟩ true) 7)
+    let hFs := settle_held_lt b src hH hD xs n moves slides peak
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak pk (countHeld (bS.sudo_5Board_4held.set ⟨src, hFs⟩ false) 7)) := by
+  simp [cubeLiveBoard, cube_off_peak]
+
+theorem cube_live_tally (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_6tally0 =
+      b.sudo_5Board_6tally0 := by
+  unfold cubeLiveBoard
+  rw [cube_off_tally, settle_tally_eq]
+
+theorem cube_live_highest (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+  unfold cubeLiveBoard
+  rw [cube_off_highest, settle_high_eq]
+
+theorem cube_live_row (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_3row =
+      b.sudo_5Board_3row := by
+  unfold cubeLiveBoard
+  rw [cube_off_row, settle_row_eq]
+
+theorem cube_live_tier (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_1t =
+      b.sudo_5Board_1t := by
+  unfold cubeLiveBoard
+  rw [cube_off_tier, settle_tier_eq]
+
+theorem cube_live_ctrl (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+  unfold cubeLiveBoard
+  rw [cube_off_ctrl, settle_ctrl_eq]
+
+theorem cube_live_marker (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9marker_on =
+      false := by
+  simp [cubeLiveBoard, cube_off_marker]
+
+theorem cube_live_on (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_8bench_on =
+      true := by
+  simp [cubeLiveBoard, cube_off_on]
+
+theorem cube_live_to (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_8bench_to =
+      (dst : Int) := by
+  simp [cubeLiveBoard, cube_off_to]
+
+theorem cube_live_high (xs : List Nat) (n k bench : Nat) (hn0 : 0 < n) (hgap0 : 0 < n - k) :
+    ∀ i, n ≤ i → i < bench →
+      coeff (laneFold n (n - k) (combStrip n bench (xs.take n))) i = 0 :=
+  cube_off_high (xs.take n) n k bench hn0 hgap0
 
 end EcbsLink2.Link2

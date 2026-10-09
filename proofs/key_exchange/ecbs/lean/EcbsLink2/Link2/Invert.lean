@@ -1354,4 +1354,141 @@ theorem cube_tally_peg (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   · rfl
   · simpa using hop
 
+/-- The same peg step when the bench is already on and aimed at `src`, with a zero
+    tail. `cube_eq_live` names the slid cube; the peg and the control counter are
+    the keep-write and `addI` on that board. -/
+theorem cube_tally_peg_live (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (w h r n k moves slides hole bench peak peakS cOps cg : Nat)
+    (t0 j high control ctrl : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (src : Int))
+    (hH : src < b.sudo_5Board_4home.size)
+    (hD : src < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[src] = false)
+    (hbench : b.sudo_5Board_5bench = embed xs)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hn0 : 0 < n)
+    (hpos : 0 < xs.length) (hnle : n ≤ xs.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen xs.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (xs.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (xs.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (xs.take n)))
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hcg : b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg)
+    (hspan : 3 * (n - 1) + cg < bench)
+    (hxsT : allTritList (xs.take n))
+    (h3 : FitsLen (3 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * pegCount (xs.take n) + 2 * n))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hkF : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * pegCount (xs.take n) + 2 * n + 3 * (bench - n)))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 + j < b.sudo_5Board_3row.size)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + j < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 + j ≤ high)
+    (hfitJ : FitsLen (t0 + j))
+    (hCtrlV : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hfctrl : FitsLen (ctrl + 1)) :
+    let ys := xs.take n
+    let mv := moves + 2 * pegCount ys
+    let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hD⟩ true) 7)
+    let bS := settleBoard b src hH hD xs n moves slides peak
+    let hFs := settle_held_lt b src hH hD xs n moves slides peak
+    ∃ b',
+      (do
+        let b1 ← Ecbs.cube b (dst : Int) (src : Int)
+        let b2 ← Ecbs.tally_put b1 (j : Int) (2 : Int)
+        let v ← SudoRt.addI b2.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+        pure { b2 with sudo_5Board_4cost :=
+          { b2.sudo_5Board_4cost with sudo_5Costs_4ctrl := v } }) = .ok b' ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = (dst : Int) ∧
+      b'.sudo_5Board_5bench = embed (laneFold n (n - k) (combStrip n bench ys)) ∧
+      (laneFold n (n - k) (combStrip n bench ys)).take n = fieldCube n k bench ys ∧
+      (∀ i, n ≤ i → i < bench →
+        coeff (laneFold n (n - k) (combStrip n bench ys)) i = 0) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat (cubeMoves mv ys n k bench) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak =
+        Int.ofNat (raisedPeak pk (countHeld (bS.sudo_5Board_4held.set ⟨src, hFs⟩ false) 7)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat (slides + 2 * pegCount ys) ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4held = bS.sudo_5Board_4held.set ⟨src, hFs⟩ false ∧
+      b'.sudo_5Board_3row = b.sudo_5Board_3row.set ⟨t0 + j, hrow⟩ (2 : Int) ∧
+      b'.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 1) := by
+  let bC := cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  rw [cube_eq_live b dst src xs w h r n k moves slides hole bench peak peakS cOps cg
+      hmk hon hto hH hD h7 hempty hbench hn hn0 hpos hnle hzero hf hfitL
+      hmoves hslides hpeak hpeg hfitM hfitS hops hop1 hfops hbl hcg hspan hxsT h3 hfm
+      hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF hHole hpeakS hsm hnsm hfitB hfold]
+  rw [show cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops = bC from rfl]
+  have hT0' : bC.sudo_5Board_6tally0 = (t0 : Int) := by
+    rw [cube_live_tally b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops]
+    exact hT0
+  have hrowC :=
+    cube_live_row b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  have hrow1 : t0 + j < bC.sudo_5Board_3row.size := by rw [hrowC]; exact hrow
+  have hCtrl' : bC.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
+    rw [cube_live_tier b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops]
+    exact hCtrlN
+  have hHigh' : bC.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) := by
+    rw [cube_live_highest b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops]
+    exact hHigh
+  rw [show (2 : Int) = ((2 : Nat) : Int) from rfl]
+  simp only [ok_bind]
+  rw [tally_put_keep bC t0 j 2 high control hT0' hrow1 hCtrl' hic hHigh' hle hfitJ, ok_bind]
+  have hctrl2 :
+      ({ bC with sudo_5Board_3row :=
+          bC.sudo_5Board_3row.set ⟨t0 + j, hrow1⟩ (2 : Int) }).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        Int.ofNat ctrl := by
+    rw [cube_live_ctrl b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      hCtrlV, ofNat_eq_natCast]
+  rw [hctrl2, addI_ofNat_one ctrl hfctrl, ok_bind, pure_eq_ok]
+  refine ⟨_, rfl,
+      cube_live_on b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      cube_live_to b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      cube_live_bench b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      cube_live_prefix n k bench xs,
+      cube_live_high xs n k bench hn0 (by rw [hgap]; exact Nat.mul_pos hw0 hrP),
+      cube_live_moves b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      cube_live_peak b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      cube_live_slides b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      cube_live_tier b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      cube_live_held b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      ?_, cube_live_tally b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      cube_live_highest b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops, rfl⟩
+  · apply Array.ext
+    · rw [Array.size_set, Array.size_set, hrowC]
+    · intro i hi1 hi2
+      by_cases hi : i = t0 + j
+      · simp [hi, Array.getElem_set]
+      · have hne : t0 + j ≠ i := fun h => hi h.symm
+        rw [Array.getElem_set, if_neg (by simpa using hne),
+          Array.getElem_set, if_neg (by simpa using hne)]
+        have hget {a c : Array Int} (h : a = c) (k : Nat) (ha : k < a.size) :
+            a[k] = c[k]'(h ▸ ha) := by subst h; rfl
+        exact hget hrowC i (by rw [Array.size_set] at hi1; exact hi1)
+
 end EcbsLink2.Link2

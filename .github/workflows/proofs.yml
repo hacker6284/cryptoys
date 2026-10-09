@@ -463,12 +463,15 @@ jobs:
     # already on (aimed at the home about to be read, zero tail) slide first
     # and then match the bench-off lemmas; the prefix is fieldCube / fieldMul
     # of that length-n prefix. tally0 and control_highest survive both calls,
-    # and cube empties only the source home. invert_number, fold and the exchange are not
+    # and cube empties only the source home. A bench-off cube returns a named board;
+    # a live cube returns that board of the slid state. One cube then a red tally peg
+    # and ctrl+1 is tied for both, by rewriting those projections. Live nocopy mul is
+    # still an existential. invert_number, fold and the exchange are not
     # claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 500660 kB (about 0.48 GB). The job builds `place`, the schoolbook loop
+    # 500728 kB (about 0.48 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,
@@ -477,6 +480,7 @@ jobs:
     # `new_board_refines`, `multiply_refines`, and `cube_number_refines`,
     # plus park / unpark, the one-peg tally steps, and emitted doubling.
     # The rung loop, invert_number, fold, and the exchange are not theorems yet.
+    # The live tally peg after a named live cube is.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

@@ -2085,6 +2085,8 @@ theorem red_mul_emit
     ∃ (bCube bRed : Ecbs.Board),
       Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
           false false false = .ok bRed ∧
+      bRed.sudo_5Board_8bench_on = true ∧
+      bRed.sudo_5Board_8bench_to = (5 : Int) ∧
       bRed.sudo_5Board_5bench =
         embed (fieldMul base.n s.k base.bench base.x
           (fieldCube base.n s.k base.bench
@@ -2186,8 +2188,10 @@ theorem red_mul_emit
         List.replicate (base.bench - base.n) 0) :=
     hraw.trans (embed_mul_cast base.n k s.k base.bench base.x (ys.take base.n)
       (fieldCube base.n s.k base.bench gapA) hk hysTake)
+  have hAim := gap_mul_aimed bCube 5 6 base.x ys base.n k mvCube slCube holeRed base.bench
+    pkCube peakSRed cOps0 h6 hD6 hops0
   refine ⟨bCube, mulNoLiveBoard bCube 5 6 base.x ys base.n k mvCube slCube holeRed base.bench
-      pkCube peakSRed cOps0 h6 hD6 hops0, ?_, hRed⟩
+      pkCube peakSRed cOps0 h6 hD6 hops0, ?_, hAim.1, hAim.2, hRed⟩
   apply mul_eq_live bCube 5 base.xHome 6 base.x ys base.w base.h base.r base.n k mvCube slCube
     holeRed base.bench pkCube peakSRed cOps0
   · exact cube_live_marker bClear 6 5 xs base.n k mvC slC hole base.bench pkC peakS cOps1

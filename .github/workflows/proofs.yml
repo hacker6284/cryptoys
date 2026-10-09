@@ -465,13 +465,13 @@ jobs:
     # of that length-n prefix. tally0 and control_highest survive both calls,
     # and cube empties only the source home. A bench-off cube returns a named board;
     # a live cube returns that board of the slid state. One cube then a red tally peg
-    # and ctrl+1 is tied for both, by rewriting those projections. Live nocopy mul is
-    # still an existential. invert_number, fold and the exchange are not
+    # and ctrl+1 is tied for both, by rewriting those projections. Nocopy mul, bench
+    # off or live, likewise returns a named board. invert_number, fold and the exchange are not
     # claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 500728 kB (about 0.48 GB). The job builds `place`, the schoolbook loop
+    # 537356 kB (about 0.51 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,

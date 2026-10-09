@@ -1665,6 +1665,14 @@ def rungCtrl (ctrl tally colour : Nat) (last parked : Bool) : Nat :=
   let doubled := if last then base else base + 2 * tally
   if !last && colour = 2 then doubled + 1 else doubled
 
+/-- One rung of `rungCtrl` adds at most `3 · tally + 5`: the park write (at most 4),
+    the `tally` red pegs, the doubled white segment, and one extra peg. -/
+theorem rungCtrl_inc (ctrl tally colour : Nat) (last parked : Bool) :
+    rungCtrl ctrl tally colour last parked ≤ ctrl + 3 * tally + 5 := by
+  unfold rungCtrl
+  by_cases hL : last <;> by_cases hP : parked <;> by_cases hR : colour = 2 <;>
+    simp [hL, hP, hR] <;> omega
+
 /-- Recorded high after that rung. A final rung does not move it. A non-final
     rung's double ends on the last new peg; a non-final red rung's extra peg
     is one past that. -/
@@ -3977,6 +3985,68 @@ theorem op_open_red (m : Nat) : m + 1 + 2 ≤ rungOpCharge m := by
   unfold rungOpCharge
   omega
 
+/-- With `n > 0`, one `rungCharge` dominates one `rungCtrl` step. -/
+theorem rungCharge_ge_ctrl (n bench m : Nat) (hn : 0 < n) :
+    3 * m + 5 ≤ rungCharge n bench m := by
+  have h4n : 4 ≤ 4 * n := by
+    have : 1 ≤ n := hn
+    omega
+  have hpeg : 4 ≤ 4 * n + 3 * (bench - n) := Nat.le_trans h4n (Nat.le_add_right _ _)
+  have hmul : (m + 1) * 4 ≤ (m + 1) * (4 * n + 3 * (bench - n)) :=
+    Nat.mul_le_mul_left _ hpeg
+  have h2 : 2 ≤ 2 * n := by omega
+  unfold rungCharge pegCharge
+  have hlow : 2 * n + (m + 1) * 4 ≤
+      2 * n + (m + 1) * (4 * n + 3 * (bench - n)) :=
+    Nat.add_le_add_left hmul _
+  have hrest : 2 * n + (m + 1) * (4 * n + 3 * (bench - n)) ≤
+      2 * n + (m + 1) * (4 * n + 3 * (bench - n)) +
+        2 * mulCharge n bench :=
+    Nat.le_add_right _ _
+  have hnum : 3 * m + 5 ≤ 2 + (m + 1) * 4 := by omega
+  have h2n : 2 + (m + 1) * 4 ≤ 2 * n + (m + 1) * 4 := Nat.add_le_add_right h2 _
+  exact Nat.le_trans hnum (Nat.le_trans h2n (Nat.le_trans hlow hrest))
+
+/-- `2 · tally + 1` fits an i64 because it is at most one `rungCharge`, and the
+    budget fits `R` of those. -/
+theorem double_len_fit {moves0 R n bench m tally : Nat}
+    (hn : 0 < n) (hR : 0 < R) (ht : tally ≤ m)
+    (hf : FitsLen (moves0 + R * rungCharge n bench m)) :
+    FitsLen (2 * tally + 1) := by
+  have hstep := rungCharge_ge_ctrl n bench m hn
+  have h1 : 2 * tally + 1 ≤ 3 * m + 5 := by omega
+  have h2 : rungCharge n bench m ≤ R * rungCharge n bench m :=
+    Nat.le_mul_of_pos_left (rungCharge n bench m) hR
+  exact FitsLen.of_le hf (by omega)
+
+/-- An index strictly below the control row fits an i64 when `control + 1` does.
+    That is the tier's `fits_control`. -/
+theorem double_index_fit {t0 m control : Nat}
+    (h : t0 + 2 * m < control) (hc : FitsLen (control + 1)) :
+    FitsLen (t0 + 2 * m) ∧ FitsLen (2 * m) ∧ FitsLen (2 * m + 1) := by
+  refine ⟨FitsLen.of_le hc (by omega), FitsLen.of_le hc (by omega),
+    FitsLen.of_le hc (by omega)⟩
+
+/-- The running counter plus one extra peg fits when the budget's `fitCtrl` does. -/
+theorem double_ctrl_fit {ctrl tally ctrl0 done R mMax : Nat}
+    (hctrl : ctrl ≤ ctrl0 + done * (3 * mMax + 5))
+    (ht : tally ≤ mMax) (hd : done ≤ R)
+    (hf : FitsLen (ctrl0 + (R + 1) * (3 * mMax + 5))) :
+    FitsLen (ctrl + 3 * tally) ∧
+      FitsLen (ctrl + tally + 2 * tally + 1) := by
+  have hS : 3 * tally + 1 ≤ 3 * mMax + 5 := by omega
+  have hbody : ctrl + 3 * tally + 1 ≤
+      ctrl0 + (done + 1) * (3 * mMax + 5) := by
+    have hmul : (done + 1) * (3 * mMax + 5) =
+        done * (3 * mMax + 5) + (3 * mMax + 5) := by
+      rw [Nat.succ_mul]
+    omega
+  have hdone : ctrl0 + (done + 1) * (3 * mMax + 5) ≤
+      ctrl0 + (R + 1) * (3 * mMax + 5) := by
+    have hle : done + 1 ≤ R + 1 := by omega
+    exact Nat.add_le_add_left (Nat.mul_le_mul_right _ hle) _
+  refine ⟨FitsLen.of_le hf (by omega), FitsLen.of_le hf (by omega)⟩
+
 theorem rungCharge_mono (n bench m mMax : Nat) (h : m ≤ mMax) :
     rungCharge n bench m ≤ rungCharge n bench mMax := by
   unfold rungCharge
@@ -4424,6 +4494,10 @@ structure ClimbBudget where
   fitM : FitsLen (moves0 + R * rungCharge n bench mMax)
   fitS : FitsLen (slides0 + R * rungSlideCharge n mMax)
   fitO : FitsLen (ops0 + R * (mMax + 3))
+  /-- Counter at the start of the climb. One `rungCtrl` step is at most
+      `3 · mMax + 5`, so the counter after every rung still fits an i64. -/
+  ctrl0 : Nat
+  fitCtrl : FitsLen (ctrl0 + (R + 1) * (3 * mMax + 5))
   x : List Nat
   xHome : Nat
   w : Nat
@@ -4431,6 +4505,9 @@ structure ClimbBudget where
   r : Nat
   cg : Nat
   control : Nat
+  /-- Control-row length plus one fits an i64. This is `BoardOk.fits_control`
+      for each shipped tier. -/
+  fitControl : FitsLen (control + 1)
   ladder0 : Nat
 
 /-- One rung's counter growth: at most one `rungCharge` of the current tally,
@@ -4591,6 +4668,9 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   tmaxLt : ∃ tmax : Nat,
     b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
       (0 < s.tally → tmax < 2 * s.tally)
+  /-- The control counter stays within `ctrl0` plus one `rungCtrl` step per
+      finished rung. -/
+  ctrlLe : s.ctrl ≤ base.ctrl0 + done.length * (3 * base.mMax + 5)
 
 /-- The geometric envelope is a legal cap for whatever list is being climbed. -/
 theorem climbCap_geom (tally0 R mMax : Nat) (rs done rest : List Nat)
@@ -4714,7 +4794,8 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       highTop := modelRung_highTop s x r hole rest.isEmpty h.highTop
       openRoom := hopen
       openZero := hzero
-      tmaxLt := htmax }
+      tmaxLt := htmax
+      ctrlLe := ?_ }
   · simp [modelRung, h.idx, List.length_append]
   · simp [modelRung, h.hn]
   · simp [modelRung, h.hbench]
@@ -4770,6 +4851,27 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     obtain ⟨pk0, hb0, hbound⟩ := h.peak
     have hpk : pk = pk0 := ofNat_inj_nat (hb.symm.trans hb0)
     refine ⟨pk', hb', peak_carry base.peak0 pk pk' (by rw [hpk]; exact hbound) hle⟩
+  · have hctrl : (modelRung s x r hole rest.isEmpty).ctrl =
+        rungCtrl s.ctrl s.tally r rest.isEmpty (decide (0 ≤ s.fromHole)) := by
+      simp [modelRung]
+    rw [hctrl]
+    have hlen : (done ++ [r]).length = done.length + 1 := by simp
+    rw [hlen]
+    have hinc := rungCtrl_inc s.ctrl s.tally r rest.isEmpty (decide (0 ≤ s.fromHole))
+    have hmul : 3 * s.tally + 5 ≤ 3 * base.mMax + 5 := by
+      have := Nat.mul_le_mul_left 3 hT
+      omega
+    have hgrow : s.ctrl + 3 * s.tally + 5 ≤
+        base.ctrl0 + done.length * (3 * base.mMax + 5) + (3 * base.mMax + 5) := by
+      have hle := h.ctrlLe
+      omega
+    have hsum : done.length * (3 * base.mMax + 5) + (3 * base.mMax + 5) =
+        (done.length + 1) * (3 * base.mMax + 5) := by
+      rw [← Nat.succ_mul]
+    apply Nat.le_trans hinc
+    apply Nat.le_trans hgrow
+    rw [Nat.add_assoc, hsum]
+    exact Nat.le_refl _
 
 /-- The emitted climb, one rung at a time. `last` is the empty tail. -/
 def climbEmit (step : Ecbs.Board → Nat → Bool → Except SudoRt.Trap Ecbs.Board)
@@ -6046,7 +6148,7 @@ private theorem mul_live_aimed (b : Ecbs.Board) (dst second : Nat) (xs ys : List
         (settle_held_lt b second hH hD ys n moves slides peak)
         (settle_home_lt b second hH hD ys n moves slides peak)
 
-private theorem mulMovesNo_bound (moves n k bench : Nat) (xs ys : List Nat)
+theorem mulMovesNo_bound (moves n k bench : Nat) (xs ys : List Nat)
     (hn : n ≤ bench) :
     mulMovesNo (moves + 2 * pegCount (ys.take n)) xs (ys.take n) n k bench ≤
       moves + 2 * pegCount (ys.take n) + n * (n + 1) + 3 * (bench - n) := by
@@ -7064,16 +7166,13 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     gap board. The recorded high, the empty tail, and `tally_max` are read from
     `ClimbInvK`. The spare cube and the mul by the input on that doubled board
     are the corollary `red_doubled_cube_mul`; this theorem stops at the double.
-    The three `FitsLen` hypotheses are the i64 checks on the counter, the index,
-    and the new length. -/
+    The i64 fits on the counter, the index, and the new length follow from
+    `fitCtrl`, `fitControl`, and the running `rungCharge` bound. -/
 theorem red_open_double {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     {s : ClimbModel} {base : ClimbBudget}
     (h : ClimbInvK done (r :: rest) b s base)
     (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
-    (hhome : s.onBench = false) (hrest : rest ≠ [])
-    (hFitC : FitsLen (s.ctrl + 3 * s.tally))
-    (hFitI : FitsLen (s.t0 + 2 * s.tally))
-    (hFitM : FitsLen (2 * s.tally)) :
+    (hhome : s.onBench = false) (hrest : rest ≠ []) :
     ∃ (bLoop bMul bClear bD : Ecbs.Board),
       Ecbs.mul bLoop ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
           false false false = .ok bMul ∧
@@ -7087,6 +7186,22 @@ theorem red_open_double {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   have hHighEq : s.high = s.t0 + s.tally - 1 := h.highTop hm
   obtain ⟨tmax, hMax, hNote0⟩ := h.tmaxLt
   have hNote : tmax < 2 * s.tally := hNote0 hm
+  have hRpos : 0 < base.R := by
+    have hk := h.kLe
+    rw [List.length_append, List.length_cons] at hk
+    omega
+  have hn0 : 0 < base.n := by rw [← h.hn]; exact h.shape.peg.n_pos
+  have hFitL1 : FitsLen (2 * s.tally + 1) :=
+    double_len_fit hn0 hRpos hT base.fitM
+  have hFitM : FitsLen (2 * s.tally) := FitsLen.of_le hFitL1 (by omega)
+  have hFitI : FitsLen (s.t0 + 2 * s.tally) :=
+    (double_index_fit hRoom base.fitControl).1
+  have hdone : done.length ≤ base.R := by
+    have hk := h.kLe
+    rw [List.length_append] at hk
+    omega
+  have hCtrlPair := double_ctrl_fit h.ctrlLe hT hdone base.fitCtrl
+  have hFitC : FitsLen (s.ctrl + 3 * s.tally) := hCtrlPair.1
   obtain ⟨c, bLoop, ys, moves, slides, hole, peak, peakS, cMul, hH, hD, hops,
       _hcopy, _hsrc, _hg, hmEq, hn, _hkN, hbch, hpegB, _hys, hGap, _hX, _hFit, hMov,
       _hSFit, _hSLe, _hOp, hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, hctrl0, hhighS,
@@ -7242,11 +7357,6 @@ theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     (h : ClimbInvK done (r :: rest) b s base)
     (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false) (hrest : rest ≠ [])
-    (hFitC : FitsLen (s.ctrl + 3 * s.tally))
-    (hFitI : FitsLen (s.t0 + 2 * s.tally))
-    (hFitM : FitsLen (2 * s.tally))
-    (hFitC1 : FitsLen (s.ctrl + s.tally + 2 * s.tally + 1))
-    (hFitL1 : FitsLen (2 * s.tally + 1))
     (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
     ∃ (bClear bD bCube bRed bAdd : Ecbs.Board),
       Ecbs.tally_double bClear = .ok bD ∧
@@ -7266,6 +7376,23 @@ theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   have hHighEq : s.high = s.t0 + s.tally - 1 := h.highTop hm
   obtain ⟨tmax, hMax, hNote0⟩ := h.tmaxLt
   have hNote : tmax < 2 * s.tally := hNote0 hm
+  have hRpos : 0 < base.R := by
+    have hk := h.kLe
+    rw [List.length_append, List.length_cons] at hk
+    omega
+  have hn0 : 0 < base.n := by rw [← h.hn]; exact h.shape.peg.n_pos
+  have hFitL1 : FitsLen (2 * s.tally + 1) :=
+    double_len_fit hn0 hRpos hT base.fitM
+  have hFitM : FitsLen (2 * s.tally) := FitsLen.of_le hFitL1 (by omega)
+  have hFitI : FitsLen (s.t0 + 2 * s.tally) :=
+    (double_index_fit hRoom base.fitControl).1
+  have hdone : done.length ≤ base.R := by
+    have hk := h.kLe
+    rw [List.length_append] at hk
+    omega
+  have hCtrlPair := double_ctrl_fit h.ctrlLe hT hdone base.fitCtrl
+  have hFitC : FitsLen (s.ctrl + 3 * s.tally) := hCtrlPair.1
+  have hFitC1 : FitsLen (s.ctrl + s.tally + 2 * s.tally + 1) := hCtrlPair.2
   obtain ⟨_bLoop, _bMul, bClear, bCube0, bRed0, _hmul, _hclear, _hcube, _hred,
       _hbounds, hlenC, ht0C, hrowC, hctrlN, hhighC, hctrlC, hmaxC,
       ht0Cube, ht0Red, htierCube, htierRed, hcubeF, hmulF⟩ :=

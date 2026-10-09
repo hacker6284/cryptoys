@@ -1600,10 +1600,63 @@ theorem peg_step_eq (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   unfold pegStep
   rfl
 
+/-- Paint `count` tally pegs red, starting at `start`. -/
+def paintRed (xs : List Nat) (start : Nat) : Nat → List Nat
+  | 0 => xs
+  | k + 1 => (paintRed xs start k).set (start + k) 2
+
+theorem paintRed_length (xs : List Nat) (start k : Nat) :
+    (paintRed xs start k).length = xs.length := by
+  induction k with
+  | zero => rfl
+  | succ k ih => simp [paintRed, ih, List.length_set]
+
+theorem paintRed_succ (xs : List Nat) (start k : Nat) :
+    paintRed xs start (k + 1) = (paintRed xs start k).set (start + k) 2 := rfl
+
+/-- Control counter added by one emitted rung. A later rung unparks first (`+2`)
+    and then parks (`+2`); the first rung only parks. The cube loop adds one per
+    tally peg. A non-final rung doubles the tally (`+2 · tally`). A non-final red
+    rung also lays one more peg (`+1`). -/
+def rungCtrl (ctrl tally colour : Nat) (last parked : Bool) : Nat :=
+  let base := ctrl + (if parked then 4 else 2) + tally
+  let doubled := if last then base else base + 2 * tally
+  if !last && colour = 2 then doubled + 1 else doubled
+
+/-- Recorded high after that rung. A final rung does not move it. A non-final
+    rung's double ends on the last new peg; a non-final red rung's extra peg
+    is one past that. -/
+def rungHigh (high t0 tally colour : Nat) (last : Bool) : Nat :=
+  if last then high
+  else if colour = 2 then t0 + 2 * tally
+  else t0 + 2 * tally - 1
+
+/-- Put a parked colour back, then lift `colour` from `hole` into the parking hole. -/
+def afterPark (row : List Nat) (fromHole : Int) (park hole colour : Nat) : List Nat :=
+  let base :=
+    if fromHole < 0 then row
+    else (row.set fromHole.toNat (row.getD park 0)).set park 0
+  (base.set park colour).set hole 0
+
+/-- Tally colours one rung leaves. The cube loop paints the current segment red.
+    A non-final rung then whitens that segment and lays as many white pegs again.
+    A non-final red rung adds one white peg past that. -/
+def afterTally (row : List Nat) (t0 tally colour : Nat) (last : Bool) : List Nat :=
+  let reds := paintRed row t0 tally
+  if last then reds
+  else
+    let wide := paintOnes (paintOnes reds t0 tally) (t0 + tally) tally
+    if colour = 2 then wide.set (t0 + 2 * tally) 1 else wide
+
+def rungRow (row : List Nat) (fromHole : Int) (park hole t0 tally colour : Nat)
+    (last : Bool) : List Nat :=
+  afterTally (afterPark row fromHole park hole colour) t0 tally colour last
+
 /-- The model state one rung of the climb carries: the gap polynomial, where the
-    working value sits, the tally length, the parked colour's hole, and the
-    control row. `invRung` updates the gap and the tally length; it does not
-    mention the control row. -/
+    working value sits, the tally length, the park, and the control row the
+    emitted rung actually leaves (park swap, red pegs, optional double and extra
+    white). `fromHole < 0` means nothing is parked. The value pair is still
+    `invRung`; `fieldInv` is not changed. -/
 structure ClimbModel where
   n : Nat
   k : Nat
@@ -1615,13 +1668,16 @@ structure ClimbModel where
   t0 : Nat
   parkAt : Nat
   parked : Nat
+  fromHole : Int
+  ridx : Nat
   ctrl : Nat
   high : Nat
   row : List Nat
 
 /-- Board shape for `ClimbModel`. The gap value is in home 5 when `onBench` is
     false, and on the bench aimed at home 5 when `onBench` is true. The bench
-    list is that value in the first `n` holes and zeros after it. Marker off. -/
+    list is that value in the first `n` holes and zeros after it. The control
+    row and the control counter are the model's, exactly. Marker off. -/
 structure ClimbInv (b : Ecbs.Board) (s : ClimbModel) : Prop where
   hG : 5 < b.sudo_5Board_4home.size
   hGs : 5 < b.sudo_5Board_4held.size
@@ -1632,6 +1688,8 @@ structure ClimbInv (b : Ecbs.Board) (s : ClimbModel) : Prop where
   t0 : b.sudo_5Board_6tally0 = (s.t0 : Int)
   row : b.sudo_5Board_3row = embed s.row
   park : b.sudo_5Board_9park_hole = (s.parkAt : Int)
+  fromP : b.sudo_5Board_11parked_from = s.fromHole
+  ridx : b.sudo_5Board_8rung_idx = (s.ridx : Int)
   gapHome : s.onBench = false →
     b.sudo_5Board_4held[5]'(hGs) = true ∧
       b.sudo_5Board_4home[5]'(hG) = embed s.gap
@@ -1642,30 +1700,49 @@ structure ClimbInv (b : Ecbs.Board) (s : ClimbModel) : Prop where
         embed (s.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0) ∧
       s.work = s.gap
 
-/-- One step of `invRung`: the new gap polynomial and the new tally length.
-    The control row, the park, and the counter stay in the model; the emitted
-    rung repaints the row on its way through the pegs and the double. -/
-def modelRung (n k bench : Nat) (x : List Nat) (s : ClimbModel) (rung : Nat)
-    (last : Bool) : ClimbModel :=
-  let st := invRung n k bench x s.gap s.tally rung last
-  { s with gap := st.1, work := st.1, onBench := true, tally := st.2 }
+/-- One emitted rung. The gap and the tally length are `invRung`. The row, the
+    counter, the recorded high, the parked-from hole, and the rung index are the
+    bookkeeping that rung leaves. `hole` is the climb hole whose colour is `rung`. -/
+def modelRung (s : ClimbModel) (x : List Nat) (rung hole : Nat) (last : Bool) : ClimbModel :=
+  let st := invRung s.n s.k s.benchlen x s.gap s.tally rung last
+  let parked := decide (0 ≤ s.fromHole)
+  { s with
+    gap := st.1
+    work := st.1
+    onBench := true
+    tally := st.2
+    fromHole := (hole : Int)
+    parked := rung
+    ridx := s.ridx + 1
+    ctrl := rungCtrl s.ctrl s.tally rung last parked
+    high := rungHigh s.high s.t0 s.tally rung last
+    row := rungRow s.row s.fromHole s.parkAt hole s.t0 s.tally rung last }
 
 /-- The board after that model step. The new polynomial is on the bench aimed
-    at the gap, and the tally length is `invRung`'s. Other fields stay. -/
-def postRungBoard (b : Ecbs.Board) (s : ClimbModel) (n k bench : Nat) (x : List Nat)
-    (rung : Nat) (last : Bool) : Ecbs.Board :=
-  let st := invRung n k bench x s.gap s.tally rung last
+    at the gap. The control row and the counter are `rungRow` and `rungCtrl`. -/
+def postRungBoard (b : Ecbs.Board) (s : ClimbModel) (x : List Nat)
+    (rung hole : Nat) (last : Bool) : Ecbs.Board :=
+  let st := invRung s.n s.k s.benchlen x s.gap s.tally rung last
+  let parked := decide (0 ≤ s.fromHole)
   { b with
     sudo_5Board_9tally_len := (st.2 : Int)
     sudo_5Board_8bench_on := true
     sudo_5Board_8bench_to := (5 : Int)
     sudo_5Board_5bench :=
-      embed (st.1.take s.n ++ List.replicate (s.benchlen - s.n) 0) }
+      embed (st.1.take s.n ++ List.replicate (s.benchlen - s.n) 0)
+    sudo_5Board_3row :=
+      embed (rungRow s.row s.fromHole s.parkAt hole s.t0 s.tally rung last)
+    sudo_5Board_11parked_from := (hole : Int)
+    sudo_5Board_8rung_idx := ((s.ridx + 1 : Nat) : Int)
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := ((rungCtrl s.ctrl s.tally rung last parked : Nat) : Int)
+      sudo_5Costs_15control_highest :=
+        ((rungHigh s.high s.t0 s.tally rung last : Nat) : Int) } }
 
 theorem climbInv_post (b : Ecbs.Board) (s : ClimbModel) (x : List Nat)
-    (rung : Nat) (last : Bool) (h : ClimbInv b s) :
-    ClimbInv (postRungBoard b s s.n s.k s.benchlen x rung last)
-      (modelRung s.n s.k s.benchlen x s rung last) := by
+    (rung hole : Nat) (last : Bool) (h : ClimbInv b s) :
+    ClimbInv (postRungBoard b s x rung hole last)
+      (modelRung s x rung hole last) := by
   refine
     { hG := ?_
       hGs := ?_
@@ -1676,22 +1753,34 @@ theorem climbInv_post (b : Ecbs.Board) (s : ClimbModel) (x : List Nat)
       t0 := ?_
       row := ?_
       park := ?_
+      fromP := ?_
+      ridx := ?_
       gapHome := ?_
       gapBench := ?_ }
   · simpa [postRungBoard] using h.hG
   · simpa [postRungBoard] using h.hGs
   · simpa [postRungBoard] using h.marker
   · rfl
-  · simpa [postRungBoard] using h.ctrl
-  · simpa [postRungBoard] using h.high
+  · rfl
+  · rfl
   · simpa [postRungBoard] using h.t0
-  · simpa [postRungBoard] using h.row
+  · rfl
   · simpa [postRungBoard] using h.park
+  · rfl
+  · rfl
   · intro hOff
     simp [modelRung] at hOff
   · intro _
     refine ⟨rfl, rfl, ?_, rfl⟩
     simp [modelRung, postRungBoard]
+
+/-- The gap and the tally length of one model rung are exactly `invRung`, the
+    step `invClimb` folds and `fieldInv` is built from. The bookkeeping fields
+    are not part of that pair. -/
+theorem modelRung_value (s : ClimbModel) (x : List Nat) (rung hole : Nat) (last : Bool) :
+    ((modelRung s x rung hole last).gap, (modelRung s x rung hole last).tally) =
+      invRung s.n s.k s.benchlen x s.gap s.tally rung last := by
+  simp [modelRung, invRung]
 
 /-- The white-peg scan inside one rung. Holes `tally0 .. tally0 + m - 1` are `1`.
     The board is unchanged. `m > 0`. -/
@@ -1725,20 +1814,6 @@ theorem climbInv_white (b : Ecbs.Board) (s : ClimbModel) (xs : List Nat)
   have hT0 : b.sudo_5Board_6tally0 = (s.t0 : Int) := h.t0
   have hR : b.sudo_5Board_3row = embed xs := by rw [h.row, hRow]
   exact white_scan_loop_refines b xs s.t0 s.tally hm hT0 hR hRoom hWhite hfit hfitM
-
-/-- Paint `count` tally pegs red, starting at `start`. -/
-def paintRed (xs : List Nat) (start : Nat) : Nat → List Nat
-  | 0 => xs
-  | k + 1 => (paintRed xs start k).set (start + k) 2
-
-theorem paintRed_length (xs : List Nat) (start k : Nat) :
-    (paintRed xs start k).length = xs.length := by
-  induction k with
-  | zero => rfl
-  | succ k ih => simp [paintRed, ih, List.length_set]
-
-theorem paintRed_succ (xs : List Nat) (start k : Nat) :
-    paintRed xs start (k + 1) = (paintRed xs start k).set (start + k) 2 := rfl
 
 /-- Moves one live cube can add: two per prefix peg, two per comb peg, three per folded hole. -/
 def pegCharge (n bench : Nat) : Nat := 4 * n + 3 * (bench - n)

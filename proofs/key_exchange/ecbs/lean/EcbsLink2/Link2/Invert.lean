@@ -3409,4 +3409,40 @@ theorem climbInv_rung_final (b : Ecbs.Board) (s : ClimbModel) (x : List Nat)
       rw [htake]
     · rw [hMod.2.2.2.1, hMod.1]
 
+/-- `tally_double` after a rung that has already returned `.ok b`. For a non-final
+    white rung, `step` is the park-copy-scan-cube-mul-clear composition. -/
+theorem rung_double_refines (step : Except SudoRt.Trap Ecbs.Board) (b : Ecbs.Board)
+    (xs : List Nat) (t0 m c0 high control tmax : Nat)
+    (hStep : step = .ok b)
+    (hm : 0 < m)
+    (hLen : b.sudo_5Board_9tally_len = (m : Int))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hRow : b.sudo_5Board_3row = embed xs)
+    (hRoom : t0 + 2 * m ≤ xs.length)
+    (hRed : ∀ j (hj : j < m), xs[t0 + j]'(by omega) = 2)
+    (hZero : ∀ k (hk : k < m), xs[t0 + m + k]'(by omega) = 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hTop : high = t0 + m - 1)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c0 : Int))
+    (hIn : t0 + 2 * m ≤ control)
+    (hfit : FitsLen (t0 + 2 * m))
+    (hfitC : FitsLen (c0 + 2 * m))
+    (hfitM : FitsLen (2 * m))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
+    (hNote : tmax < 2 * m) :
+    (do
+        let b ← step
+        Ecbs.tally_double b) =
+      .ok { b with
+        sudo_5Board_3row := embed (paintOnes (paintOnes xs t0 m) (t0 + m) m)
+        sudo_5Board_9tally_len := Int.ofNat (2 * m)
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := Int.ofNat (c0 + 2 * m)
+          sudo_5Costs_15control_highest := ((t0 + 2 * m - 1 : Nat) : Int)
+          sudo_5Costs_9tally_max := Int.ofNat (2 * m) } } := by
+  rw [hStep, ok_bind,
+    tally_double_refines b xs t0 m c0 high control tmax hm hLen hT0 hRow hRoom hRed hZero
+      hCtrlN hHigh hTop hCtrl hIn hfit hfitC hfitM hMax hNote]
+
 end EcbsLink2.Link2

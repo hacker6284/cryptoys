@@ -1726,4 +1726,145 @@ theorem cube_live_op0 (b bC : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   have h1 := array_get_congr hOps 0 hlt
   rw [h1, Array.getElem_set, if_neg (by decide : (1 : Nat) ≠ 0)]
 
+/-- A bench-off cube copies the tally fields and does not read them. -/
+theorem cubeOffBoard_withTally (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int)
+    (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size) (hHome : src < b.sudo_5Board_4home.size) :
+    cubeOffBoard (withTally b row len ctrl high tmax) dst src xs n k moves hole bench peak peakS
+        cOps
+        (withTally_ops b row len ctrl high tmax ▸ hops)
+        (withTally_held b row len ctrl high tmax ▸ hF)
+        (withTally_home b row len ctrl high tmax ▸ hHome) =
+      withTally (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome)
+        row len ctrl high tmax := by
+  unfold cubeOffBoard
+  simp [withTally]
+
+private theorem cubeOffBoard_transport
+    {b b' : Ecbs.Board} (hbb : b = b')
+    (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome =
+      cubeOffBoard b' dst src xs n k moves hole bench peak peakS cOps
+        (hbb ▸ hops) (hbb ▸ hF) (hbb ▸ hHome) := by
+  cases hbb
+  rfl
+
+/-- A live cube copies the tally fields and does not read them. -/
+theorem cubeLiveBoard_withTally (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int)
+    (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    cubeLiveBoard (withTally b row len ctrl high tmax) dst src xs n k moves slides hole bench
+        peak peakS cOps
+        (withTally_home b row len ctrl high tmax ▸ hH)
+        (withTally_held b row len ctrl high tmax ▸ hD)
+        (withTally_ops b row len ctrl high tmax ▸ hops) =
+      withTally (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops)
+        row len ctrl high tmax := by
+  unfold cubeLiveBoard
+  let bW := withTally b row len ctrl high tmax
+  let hHW := withTally_home b row len ctrl high tmax ▸ hH
+  let hDW := withTally_held b row len ctrl high tmax ▸ hD
+  let hopsW := withTally_ops b row len ctrl high tmax ▸ hops
+  let bS := settleBoard b src hH hD xs n moves slides peak
+  let bSW := settleBoard bW src hHW hDW xs n moves slides peak
+  let ys := xs.take n
+  let mv := moves + 2 * pegCount ys
+  let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨src, hD⟩ true) 7)
+  have hs : bSW = withTally bS row len ctrl high tmax :=
+    settleBoard_withTally b row len ctrl high tmax src hH hD xs n moves slides peak
+  have hpk : raisedPeak peak (countHeld (bW.sudo_5Board_4held.set ⟨src, hDW⟩ true) 7) = pk := by
+    simp [pk, bW, hDW, withTally]
+  change
+    cubeOffBoard bSW dst src ys n k mv hole bench
+        (raisedPeak peak (countHeld (bW.sudo_5Board_4held.set ⟨src, hDW⟩ true) 7))
+        peakS cOps
+        (settle_ops_lt bW 1 src hopsW hHW hDW xs n moves slides peak)
+        (settle_held_lt bW src hHW hDW xs n moves slides peak)
+        (settle_home_lt bW src hHW hDW xs n moves slides peak) =
+      withTally
+        (cubeOffBoard bS dst src ys n k mv hole bench pk peakS cOps
+          (settle_ops_lt b 1 src hops hH hD xs n moves slides peak)
+          (settle_held_lt b src hH hD xs n moves slides peak)
+          (settle_home_lt b src hH hD xs n moves slides peak))
+        row len ctrl high tmax
+  rw [hpk]
+  exact Eq.trans
+    (cubeOffBoard_transport hs dst src ys n k mv hole bench pk peakS cOps
+      (settle_ops_lt bW 1 src hopsW hHW hDW xs n moves slides peak)
+      (settle_held_lt bW src hHW hDW xs n moves slides peak)
+      (settle_home_lt bW src hHW hDW xs n moves slides peak))
+    (cubeOffBoard_withTally bS row len ctrl high tmax dst src ys n k mv hole bench
+      pk peakS cOps
+      (settle_ops_lt b 1 src hops hH hD xs n moves slides peak)
+      (settle_held_lt b src hH hD xs n moves slides peak)
+      (settle_home_lt b src hH hD xs n moves slides peak))
+
+/-- `Ecbs.cube` does not read the tally fields. On a board that agrees with `b`
+    on every field the live cube reads, the result is the live cube of `b`
+    with those tally fields copied across. -/
+theorem cube_eq_live_withTally (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (w h r n k moves slides hole bench peak peakS cOps cg : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (src : Int))
+    (hH : src < b.sudo_5Board_4home.size)
+    (hD : src < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[src] = false)
+    (hbench : b.sudo_5Board_5bench = embed xs)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hn0 : 0 < n)
+    (hpos : 0 < xs.length) (hnle : n ≤ xs.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen xs.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (xs.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (xs.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (xs.take n)))
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hcg : b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg)
+    (hspan : 3 * (n - 1) + cg < bench)
+    (hxsT : allTritList (xs.take n))
+    (h3 : FitsLen (3 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * pegCount (xs.take n) + 2 * n))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hkF : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * pegCount (xs.take n) + 2 * n + 3 * (bench - n)))
+    (row : Array Int) (len ctrl high tmax : Int) :
+    Ecbs.cube (withTally b row len ctrl high tmax) (dst : Int) (src : Int) =
+      .ok (withTally
+        (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops)
+        row len ctrl high tmax) := by
+  have hlive := cubeLiveBoard_withTally b row len ctrl high tmax dst src xs n k moves slides
+    hole bench peak peakS cOps hH hD hops
+  have hcube := cube_eq_live (withTally b row len ctrl high tmax) dst src xs
+    w h r n k moves slides hole bench peak peakS cOps cg
+    hmk hon hto hH hD h7 hempty hbench hn hn0 hpos hnle hzero hf hfitL hmoves hslides hpeak
+    hpeg hfitM hfitS hops hop1 hfops hbl hcg hspan hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap
+    hwF hhF hrF hkF hHole hpeakS hsm hnsm hfitB hfold
+  rw [hcube]
+  exact congrArg Except.ok hlive
+
 end EcbsLink2.Link2

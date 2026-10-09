@@ -6210,12 +6210,85 @@ private theorem cubeLive_keep (b : Ecbs.Board) (dst src first : Nat) (xs : List 
     exact hArr
   exact { heldLt, held, homeLt, arr }
 
+private theorem pegStep_tmax (bC : Ecbs.Board) (t0 j : Nat)
+    (hrow : t0 + j < bC.sudo_5Board_3row.size) (ctrl : Nat) :
+    (pegStep bC t0 j hrow ctrl).sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      bC.sudo_5Board_4cost.sudo_5Costs_9tally_max := rfl
+
+private theorem cubeOff_tmax (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size) (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := rfl
+
+private theorem settle_tmax (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+  unfold settleBoard
+  split <;> rfl
+
+private theorem cubeLive_tmax (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+  unfold cubeLiveBoard
+  rw [cubeOff_tmax, settle_tmax]
+
+private theorem pegPack_tmax (c : PegCtx) (i : Nat) (h0 : 0 < i) (hle : i ≤ c.m) :
+    (pegPack c i h0 hle).b.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      c.b0.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+  match i with
+  | 0 => exact absurd h0 (Nat.not_lt_zero 0)
+  | 1 =>
+    simp only [pegPack, pegBoard, pegFromOff, hle, dite_true]
+    unfold offPeg
+    rw [pegStep_tmax, cubeOff_tmax]
+  | n + 2 =>
+    have hle1 : n + 1 ≤ c.m := Nat.le_of_succ_le hle
+    have h0' : 0 < n + 1 := Nat.succ_pos n
+    have ih := pegPack_tmax c (n + 1) h0' hle1
+    simp only [pegPack, pegBoard, pegNext, hle, dite_true]
+    unfold livePegBoard
+    rw [pegStep_tmax, cubeLive_tmax]
+    exact ih
+
+private theorem place_tmax (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+  unfold placeBoard
+  dsimp only
+  split <;> rfl
+
+private theorem mulLive_tmax (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+  unfold mulNoLiveBoard mulNoOffBoard
+  rw [settle_tmax]
+
+private theorem clear_tmax (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size) :
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := rfl
+
 set_option maxHeartbeats 1000000 in
-/-- After the gap mul and the clear, a red rung cubes that product onto the spare
-    and multiplies the cube by the held input. Both results are the named live
-    boards. The input's length and trits are the per-call reads of that mul;
-    `ClimbInvK` does not store them. Moves and slides stay within one
-    `rungCharge` of this rung. -/
+/-- Final rung. After the gap mul and the clear, the emitter cubes that product
+    onto the spare and multiplies the cube by the held input. This rung does not
+    double the tally. Both results are the named live boards, and the same live
+    results hold for any board that agrees on the fields the cube and the mul
+    read: replacing the row, tally length, control counter, recorded high, and
+    `tally_max` copies those fields onto the result. The input's length and trits
+    are the per-call reads of that mul; `ClimbInvK` does not store them. Moves
+    and slides stay within one `rungCharge` of this rung. -/
 theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     {s : ClimbModel} {base : ClimbBudget}
     (h : ClimbInvK done (r :: rest) b s base)
@@ -6229,14 +6302,32 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       Ecbs.cube bClear ((6 : Nat) : Int) ((5 : Nat) : Int) = .ok bCube ∧
       Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
           false false false = .ok bRed ∧
-      ∃ (mv sl : Nat),
+      (∃ (mv sl : Nat),
         bRed.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
         bRed.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
         mv ≤ base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax ∧
-        sl ≤ base.slides0 + (done.length + 1) * rungSlideCharge base.n base.mMax := by
+        sl ≤ base.slides0 + (done.length + 1) * rungSlideCharge base.n base.mMax) ∧
+      bClear.sudo_5Board_9tally_len = (s.tally : Int) ∧
+      bClear.sudo_5Board_6tally0 = (s.t0 : Int) ∧
+      bClear.sudo_5Board_3row = embed (paintRed s.row s.t0 s.tally) ∧
+      bClear.sudo_5Board_1t.sudo_4Tier_7control = (base.control : Int) ∧
+      bClear.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) ∧
+      bClear.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((s.ctrl + s.tally : Nat) : Int) ∧
+      bClear.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+        b.sudo_5Board_4cost.sudo_5Costs_9tally_max ∧
+      (∀ (row : Array Int) (len ctrl high tmax : Int),
+        Ecbs.cube (withTally bClear row len ctrl high tmax)
+            ((6 : Nat) : Int) ((5 : Nat) : Int) =
+          .ok (withTally bCube row len ctrl high tmax)) ∧
+      (∀ (row : Array Int) (len ctrl high tmax : Int),
+        Ecbs.mul (withTally bCube row len ctrl high tmax)
+            ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
+            false false false =
+          .ok (withTally bRed row len ctrl high tmax)) := by
   obtain ⟨c, bLoop, ys, moves, slides, hole, peak, peakS, cMul, hH, hD, hops,
-      _hcopy, _hsrc, _hg, hmEq, hn, _hkN, hbch, _hpeg, _hys, hGap, hX, _hFit, hMov,
-      _hSFit, hSLe, hOp, hRow, htier, _hmk, h7, _hop0, hOpsLe,       hctrl0, hhighS, hcontrol, _hlen0, _hmax0, _ht0, hmulG⟩ :=
+      _hcopy, _hsrc, _hg, hmEq, hn, _hkN, hbch, hpegB, _hys, hGap, hX, _hFit, hMov,
+      _hSFit, hSLe, hOp, hRow, htier, _hmk, h7, _hop0, hOpsLe, hctrl0, hhighS,
+      hcontrol, hlen0, hmax0, ht0, hmulG⟩ :=
     mul_of_shape h hm hT hhome
   let bMul := mulNoLiveBoard bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
     peak peakS cMul hH hD hops
@@ -6775,87 +6866,93 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     have hle : slRed ≤ slides + 2 * pegCount (ys.take c.n) + 2 * pegL + 2 * pegY := by
       simp [slRed, slidesCube]
     exact Nat.le_trans hle hthree
+  have hcubeAny : ∀ (row : Array Int) (len ctrl high tmax : Int),
+      Ecbs.cube (withTally bClear row len ctrl high tmax)
+          ((6 : Nat) : Int) ((5 : Nat) : Int) =
+        .ok (withTally bCube row len ctrl high tmax) := by
+    intro row len ctrl high tmax
+    simpa [bCube] using
+      cube_eq_live_withTally bClear 6 5 L c.w c.h c.r c.n c.k movesC slidesC holeC
+        c.bench peakC peakSC cCube c.cg
+        hmkC honC htoC hH5 hD5 h7C hemptyC hbenchC
+        hnC c.hn0 hposL hnleL hzeroL
+        c.hf hfitL hmovesC hslidesC hpeakC
+        (by simpa [pegL] using hpegF) (by simpa [pegL] using hfitMC)
+        (by simpa [pegL] using hfitSC)
+        hopsC hop1C hCubeFit
+        hblC hcgC c.hspan htriL c.h3 hfmC
+        c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap
+        hwC hhC hrC hkC
+        hholeC hstrictC c.hsm c.hnsm c.hfitB (by simpa [pegL] using hfoldC)
+        row len ctrl high tmax
+  have hmulAny : ∀ (row : Array Int) (len ctrl high tmax : Int),
+      Ecbs.mul (withTally bCube row len ctrl high tmax)
+          ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
+          false false false =
+        .ok (withTally bRed row len ctrl high tmax) := by
+    intro row len ctrl high tmax
+    simpa [bRed] using
+      mul_eq_live_withTally bCube 5 base.xHome 6 base.x ysC c.w c.h c.r c.n c.k
+        mvCube slidesCube holeRed c.bench peakCube peakSRed (cMul + 1)
+        hmkR honR htoR hH6R hD6R h7R hempty6R hbenchR
+        (by rw [htierR]; exact hnC) c.hn0 hposY hnleY hzeroY
+        c.hf hfitY hmvCube hslidesCube hpeakR
+        hpegFR hfitMR hfitSR
+        hops0R hop0R hfopsR
+        (by rw [htierR]; exact hblC)
+        hXCube.heldLt hXCube.homeLt hXCube.held hXCube.arr h.shape.xNe6
+        hlenx hspan2 hxT hfi hfmR
+        c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap
+        (by rw [htierR]; exact hwC) (by rw [htierR]; exact hhC)
+        (by rw [htierR]; exact hrC) (by rw [htierR]; exact hkC)
+        hholeR hstrictR c.hsm c.hnsm c.hfitB hfoldR
+        row len ctrl high tmax
+  have hbookM := mulLive_book bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
+    peak peakS cMul hH hD hops
+  have hbookC := clearHeld_book bMul 5 c.g mvC hKeep.homeLt hKeep.heldLt
+  let dp := pegPack c c.m c.hm (Nat.le_refl _)
+  have hpb := pegPack_board c c.m c.hm (Nat.le_refl _)
+  have hbPack : dp.b = bLoop := hpb.1.trans hpegB.symm
+  have hlenC : bClear.sudo_5Board_9tally_len = (s.tally : Int) := by
+    rw [hbookC.2.2.2.1, hbookM.2.2.1, ← hbPack, hpb.2.2.2.1, hlen0]
+  have hhighC : bClear.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) := by
+    rw [hbookC.2.2.2.2.2.2.1, hbookM.2.2.2.2.2.1, ← hbPack, hpb.2.2.2.2.2.2.1,
+      c.hHigh, hhighS]
+  have hctrlC : bClear.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      ((s.ctrl + s.tally : Nat) : Int) := by
+    have hpack : dp.b.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        ((s.ctrl + s.tally : Nat) : Int) := by
+      rw [dp.hctrl, dp.hctrlN, hctrl0, hmEq]
+    rw [hbookC.2.2.2.2.2.2.2.1, hbookM.2.2.2.2.2.2.1, ← hbPack, hpack]
+  have ht0C : bClear.sudo_5Board_6tally0 = (s.t0 : Int) := by
+    rw [hbookC.2.2.2.2.1, hbookM.2.2.2.1, ← hbPack, hpb.2.2.2.2.1, c.hT0, ht0]
+  have hrowC : bClear.sudo_5Board_3row = embed (paintRed s.row s.t0 s.tally) := by
+    rw [hbookC.1, hbookM.2.2.2.2.2.2.2, hRow]
+  have hctrlN : bClear.sudo_5Board_1t.sudo_4Tier_7control = (base.control : Int) := by
+    have htM : bMul.sudo_5Board_1t = bLoop.sudo_5Board_1t := by
+      simpa [bMul] using
+        mul_live_tier bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cMul
+          hH hD hops
+    have htC : bClear.sudo_5Board_1t = bMul.sudo_5Board_1t := by
+      simp [bClear, clearHeldBoard]
+    rw [htC, htM, htier, c.hCtrlN, hcontrol]
+  have hmaxC : bClear.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+    rw [clear_tmax, mulLive_tmax, ← hbPack, pegPack_tmax c c.m c.hm (Nat.le_refl _), hmax0]
   refine ⟨bLoop, bMul, bClear, bCube, bRed, hmulG, hclearEq, hcubeEq, hmulEq,
-    ⟨mvRed, slRed, ?_, ?_, hmvRedLe, hslRedLe⟩⟩
+    ⟨mvRed, slRed, ?_, ?_, hmvRedLe, hslRedLe⟩,
+    hlenC, ht0C, hrowC, hctrlN, hhighC, hctrlC, hmaxC, hcubeAny, hmulAny⟩
   · simpa [ofNat_eq_natCast] using hmvRed
   · simpa [ofNat_eq_natCast] using hslRed
 
 
 
-private theorem pegStep_tmax (bC : Ecbs.Board) (t0 j : Nat)
-    (hrow : t0 + j < bC.sudo_5Board_3row.size) (ctrl : Nat) :
-    (pegStep bC t0 j hrow ctrl).sudo_5Board_4cost.sudo_5Costs_9tally_max =
-      bC.sudo_5Board_4cost.sudo_5Costs_9tally_max := rfl
-
-private theorem cubeOff_tmax (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
-    (n k moves hole bench peak peakS cOps : Nat)
-    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
-    (hF : src < b.sudo_5Board_4held.size) (hHome : src < b.sudo_5Board_4home.size) :
-    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_9tally_max =
-      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := rfl
-
-private theorem settle_tmax (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
-    (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_9tally_max =
-      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
-  unfold settleBoard
-  split <;> rfl
-
-private theorem cubeLive_tmax (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
-    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_9tally_max =
-      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
-  unfold cubeLiveBoard
-  rw [cubeOff_tmax, settle_tmax]
-
-private theorem pegPack_tmax (c : PegCtx) (i : Nat) (h0 : 0 < i) (hle : i ≤ c.m) :
-    (pegPack c i h0 hle).b.sudo_5Board_4cost.sudo_5Costs_9tally_max =
-      c.b0.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
-  match i with
-  | 0 => exact absurd h0 (Nat.not_lt_zero 0)
-  | 1 =>
-    simp only [pegPack, pegBoard, pegFromOff, hle, dite_true]
-    unfold offPeg
-    rw [pegStep_tmax, cubeOff_tmax]
-  | n + 2 =>
-    have hle1 : n + 1 ≤ c.m := Nat.le_of_succ_le hle
-    have h0' : 0 < n + 1 := Nat.succ_pos n
-    have ih := pegPack_tmax c (n + 1) h0' hle1
-    simp only [pegPack, pegBoard, pegNext, hle, dite_true]
-    unfold livePegBoard
-    rw [pegStep_tmax, cubeLive_tmax]
-    exact ih
-
-private theorem place_tmax (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
-    (xs : List Nat) (moves peak : Nat) :
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_9tally_max =
-      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
-  unfold placeBoard
-  dsimp only
-  split <;> rfl
-
-private theorem mulLive_tmax (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_9tally_max =
-      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
-  unfold mulNoLiveBoard mulNoOffBoard
-  rw [settle_tmax]
-
-private theorem clear_tmax (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size) :
-    (clearHeldBoard b home xs moves hH hD).sudo_5Board_4cost.sudo_5Costs_9tally_max =
-      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := rfl
-
-/-- A non-final red rung doubles the red tally on the cleared gap board, before
-    `cube spare gap`. The high is exactly the last red peg, the next `tally`
-    holes exist and are empty, and `tally_max` is still below `2 · tally`.
-    `ClimbInvK` only keeps `t0 + tally - 1 ≤ high` and `t0 + tally ≤` the row. -/
+/-- Non-final rung, before `cube spare gap`. Doubles the red tally on the cleared
+    gap board. The high is exactly the last red peg, the next `tally` holes exist
+    and are empty, and `tally_max` is still below `2 · tally`. The spare cube and
+    the mul by the input on that doubled board are the corollary
+    `red_doubled_cube_mul`; this theorem stops at the double. `ClimbInvK` only
+    keeps `t0 + tally - 1 ≤ high` and `t0 + tally ≤` the row. -/
 theorem red_open_double {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     {s : ClimbModel} {base : ClimbBudget}
     (h : ClimbInvK done (r :: rest) b s base)
@@ -7017,6 +7114,86 @@ theorem red_open_double {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     hRed hZero hctrlN hhighC rfl hctrlC (Nat.le_of_lt hRoom) hFitI
     hfitC0 hFitM hmaxC hNote
   exact ⟨bLoop, bMul, bClear, _, hmul, hclearEq, htally⟩
+
+/-- Non-final rung. `tally_double` changes only the row, the tally length, the
+    control counter, the recorded high, and `tally_max`. The live spare cube and
+    the live mul by the input on that doubled board are the final-rung results
+    (`red_cube_mul`) with those fields copied across. -/
+theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
+    {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false) (hrest : rest ≠ [])
+    (hHighEq : s.high = s.t0 + s.tally - 1)
+    (hRoom : s.t0 + 2 * s.tally < base.control)
+    (hFitC : FitsLen (s.ctrl + 3 * s.tally))
+    (hFitI : FitsLen (s.t0 + 2 * s.tally))
+    (hFitM : FitsLen (2 * s.tally))
+    (tmax : Nat)
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
+    (hNote : tmax < 2 * s.tally)
+    (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
+    ∃ (bClear bD bCube bRed : Ecbs.Board),
+      Ecbs.tally_double bClear = .ok bD ∧
+      Ecbs.cube bD ((6 : Nat) : Int) ((5 : Nat) : Int) = .ok bCube ∧
+      Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
+          false false false = .ok bRed := by
+  have _hopen : rest ≠ [] := hrest
+  obtain ⟨_bLoop, _bMul, bClear, bCube0, bRed0, _hmul, _hclear, _hcube, _hred,
+      _hbounds, hlenC, ht0C, hrowC, hctrlN, hhighC, hctrlC, hmaxC, hcubeF, hmulF⟩ :=
+    red_cube_mul h hm hT hhome hxLen hxT
+  let xs := paintRed s.row s.t0 s.tally
+  have hRed : ∀ j (hj : j < s.tally),
+      xs[s.t0 + j]'(by
+        simp [xs, paintRed_length]
+        exact Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj s.t0) h.shape.seg.room) = 2 := by
+    intro j hj
+    simpa [xs] using paintRed_get_lo s.row s.t0 s.tally j hj h.shape.seg.room
+  have hZero : ∀ k (hk : k < s.tally),
+      xs[s.t0 + s.tally + k]'(by
+        simp [xs, paintRed_length, h.shape.rowLen]
+        omega) = 0 := by
+    intro k hk
+    have hlen : s.row.length = base.control := h.shape.rowLen
+    have hix : s.t0 + (s.tally + k) < s.row.length := by
+      rw [hlen]
+      omega
+    have hsrc := h.shape.seg.beyond rfl (s.tally + k) (Nat.le_add_right _ _) hix
+    have hsrc' : s.row[s.t0 + s.tally + k]'(by omega) = 0 := by
+      simpa [Nat.add_assoc] using hsrc
+    have hget := paintRed_get_hi s.row s.t0 s.tally (s.t0 + s.tally + k)
+      (by omega) (by omega)
+    simpa [xs] using hget.trans hsrc'
+  have hhighTop : bClear.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      ((s.t0 + s.tally - 1 : Nat) : Int) := by
+    rw [hhighC, hHighEq]
+  have hmaxNat : bClear.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) :=
+    hmaxC.trans hMax
+  have hfitC0 : FitsLen (s.ctrl + s.tally + 2 * s.tally) :=
+    FitsLen.of_le hFitC (by omega)
+  have htally := tally_double_refines bClear xs s.t0 s.tally (s.ctrl + s.tally)
+    (s.t0 + s.tally - 1) base.control tmax hm hlenC ht0C hrowC
+    (by
+      change s.t0 + 2 * s.tally ≤ (paintRed s.row s.t0 s.tally).length
+      rw [paintRed_length, h.shape.rowLen]
+      exact Nat.le_of_lt hRoom)
+    hRed hZero hctrlN hhighTop rfl hctrlC (Nat.le_of_lt hRoom) hFitI
+    hfitC0 hFitM hmaxNat hNote
+  let rowD := embed (paintOnes (paintOnes xs s.t0 s.tally) (s.t0 + s.tally) s.tally)
+  let lenD : Int := Int.ofNat (2 * s.tally)
+  let ctrlD : Int := Int.ofNat (s.ctrl + s.tally + 2 * s.tally)
+  let highD : Int := ((s.t0 + 2 * s.tally - 1 : Nat) : Int)
+  let maxD : Int := Int.ofNat (2 * s.tally)
+  have htallyW : Ecbs.tally_double bClear =
+      .ok (withTally bClear rowD lenD ctrlD highD maxD) := by
+    simpa [rowD, lenD, ctrlD, highD, maxD, withTally] using htally
+  let bD := withTally bClear rowD lenD ctrlD highD maxD
+  let bCube := withTally bCube0 rowD lenD ctrlD highD maxD
+  let bRed := withTally bRed0 rowD lenD ctrlD highD maxD
+  refine ⟨bClear, bD, bCube, bRed, ?_, ?_, ?_⟩
+  · simpa [bD] using htallyW
+  · simpa [bD, bCube] using hcubeF rowD lenD ctrlD highD maxD
+  · simpa [bCube, bRed] using hmulF rowD lenD ctrlD highD maxD
 
 /-- While rungs remain, the tally segment is white, so the scan in the next rung
     leaves the board unchanged. -/

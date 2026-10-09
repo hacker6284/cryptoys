@@ -645,4 +645,102 @@ theorem settle_home_lt (b : Ecbs.Board) (home : Nat)
   rw [settle_home_eq b home hH hD xs n moves slides peak, Array.size_set]
   exact hH
 
+/-- Replace the fields `tally_double` writes. A live `Ecbs.cube` and a live nocopy
+    `Ecbs.mul` do not read them; they copy them onto the result. -/
+def withTally (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) : Ecbs.Board :=
+  { b with
+    sudo_5Board_3row := row
+    sudo_5Board_9tally_len := len
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := ctrl
+      sudo_5Costs_15control_highest := high
+      sudo_5Costs_9tally_max := tmax } }
+
+theorem withTally_home (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4home = b.sudo_5Board_4home := rfl
+
+theorem withTally_held (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4held = b.sudo_5Board_4held := rfl
+
+theorem withTally_ops (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
+
+theorem withTally_marker (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := rfl
+
+theorem withTally_on (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_8bench_on = b.sudo_5Board_8bench_on := rfl
+
+theorem withTally_to (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_8bench_to = b.sudo_5Board_8bench_to := rfl
+
+theorem withTally_bench (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_5bench = b.sudo_5Board_5bench := rfl
+
+theorem withTally_tier (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_1t = b.sudo_5Board_1t := rfl
+
+theorem withTally_moves (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_5moves =
+      b.sudo_5Board_4cost.sudo_5Costs_5moves := rfl
+
+theorem withTally_slides (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_6slides =
+      b.sudo_5Board_4cost.sudo_5Costs_6slides := rfl
+
+theorem withTally_peak (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_4peak =
+      b.sudo_5Board_4cost.sudo_5Costs_4peak := rfl
+
+theorem withTally_hole (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := rfl
+
+theorem withTally_strict (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := rfl
+
+theorem withTally_row (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_3row = row := rfl
+
+theorem withTally_len (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_9tally_len = len := rfl
+
+theorem withTally_ctrl (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_4ctrl = ctrl := rfl
+
+theorem withTally_high (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_15control_highest = high := rfl
+
+theorem withTally_max (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_9tally_max = tmax := rfl
+
+/-- `settleBoard` does not read the tally fields, and it copies them onto the result. -/
+theorem settleBoard_withTally (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int)
+    (home : Nat) (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    settleBoard (withTally b row len ctrl high tmax) home
+        (withTally_home b row len ctrl high tmax ▸ hH)
+        (withTally_held b row len ctrl high tmax ▸ hD) xs n moves slides peak =
+      withTally (settleBoard b home hH hD xs n moves slides peak) row len ctrl high tmax := by
+  let bT := withTally b row len ctrl high tmax
+  let hHT : home < bT.sudo_5Board_4home.size := withTally_home b row len ctrl high tmax ▸ hH
+  let hDT : home < bT.sudo_5Board_4held.size := withTally_held b row len ctrl high tmax ▸ hD
+  have hcount :
+      countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 =
+        countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7 := by
+    simp [bT, withTally]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  · have hpkT : peak < countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 := by
+      simpa [hcount] using hpk
+    rw [settle_peak bT home hHT hDT xs n moves slides peak hpkT,
+      settle_peak b home hH hD xs n moves slides peak hpk]
+    simp [bT, withTally]
+  · have hpkT : ¬ peak < countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 := by
+      simpa [hcount] using hpk
+    rw [settle_keep bT home hHT hDT xs n moves slides peak hpkT,
+      settle_keep b home hH hD xs n moves slides peak hpk]
+    simp [bT, withTally]
+
 end EcbsLink2.Link2

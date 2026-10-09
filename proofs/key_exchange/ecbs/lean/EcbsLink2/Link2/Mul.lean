@@ -1717,4 +1717,39 @@ theorem mul_live_home (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
       rw [hget hhome i hiS]
       rw [Array.getElem_set, if_neg (by simpa using hie)]
 
+/-- The strict peak a live nocopy mul records: the incoming strict peak, raised
+    against the held-count on the settled board. -/
+theorem mul_live_strict (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      Int.ofNat (raisedPeak peakS
+        (countHeld (settleBoard b second hH hD ys n moves slides peak).sudo_5Board_4held 7)) := by
+  unfold mulNoLiveBoard mulNoOffBoard
+  rfl
+
+/-- A live nocopy mul does not change the tier. -/
+theorem mul_live_tier (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_1t =
+      b.sudo_5Board_1t := by
+  unfold mulNoLiveBoard mulNoOffBoard
+  exact settle_tier_eq b second hH hD ys n moves slides peak
+
+/-- Ops after a live nocopy mul: slot 0 is the incoming count plus one.
+    Settle does not write ops, and the mul writes only slot 0. -/
+theorem mul_live_ops (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_3ops =
+      (settleBoard b second hH hD ys n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops.set
+        ⟨0, settle_ops_lt b 0 second hops hH hD ys n moves slides peak⟩
+        (Int.ofNat (cOps + 1)) := by
+  unfold mulNoLiveBoard
+  rw [mul_no_ops]
+
 end EcbsLink2.Link2

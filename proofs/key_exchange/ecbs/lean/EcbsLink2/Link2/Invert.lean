@@ -5603,6 +5603,8 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
       bM.sudo_5Board_1t = c.b0.sudo_5Board_1t ∧
       bM.sudo_5Board_9marker_on = false ∧
       7 ≤ bM.sudo_5Board_4held.size ∧
+      bM.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int) ∧
+      cOps ≤ base.ops0 + done.length * (base.mMax + 3) ∧
       Ecbs.mul bM ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
           false false false =
         .ok (mulNoLiveBoard bM 5 6 c.g ys c.n c.k moves slides hole c.bench
@@ -5867,6 +5869,7 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
     (by
       rw [hPack.2.2.2.2.2.2.2.2]
       exact c.h7),
+    hkeep.op0, hcLe,
     hmul⟩
 
 /-- A live nocopy mul clears the second home. A different home, and the array it holds, stay. -/
@@ -5982,7 +5985,7 @@ theorem clear_after_gap_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClear := by
   obtain ⟨c, bLoop, ys, moves, slides, hole, peak, peakS, cMul, hH, hD, hops,
       _hcopy, _hsrc, _hg, hmEq, hn, _hkN, hbch, _hpeg, _hys, hGap, _hX, _hFit, hMov,
-      _hSFit, _hSLe, _hOp, _hRow, _htier, _hmk, _h7, hmul⟩ :=
+      _hSFit, _hSLe,       _hOp, _hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, hmul⟩ :=
     mul_of_shape h hm hT hhome
   let bMul := mulNoLiveBoard bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
     peak peakS cMul hH hD hops
@@ -6057,6 +6060,710 @@ theorem clear_after_gap_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   have hclear := clear_held_refines bMul 5 c.g mvC hKeep.homeLt hKeep.heldLt
     hKeep.held hKeep.arr hmvC hfitN hfitC
   exact ⟨bLoop, bMul, _, hmul, hclear⟩
+
+/-- Moves through the red mul: the tight pre-mul bound, one `mulCharge`, the
+    clear's `n`, one `pegCharge`, and the red `mulCharge`. That is one
+    `rungCharge` on top of the rungs already run. -/
+private theorem redMulBudget (moves0 doneLen n bench mMax tally moves mvC pegG pegL : Nat)
+    (hT : tally ≤ mMax)
+    (hMov : moves ≤ moves0 + doneLen * rungCharge n bench mMax + n + tally * pegCharge n bench)
+    (hmv : mvC ≤ moves + mulCharge n bench) (hpeg : pegG ≤ n)
+    (hcube : 2 * pegL + 2 * n + 3 * (bench - n) ≤ pegCharge n bench) :
+    mvC + pegG + 2 * pegL + 2 * n + 3 * (bench - n) + mulCharge n bench ≤
+      moves0 + (doneLen + 1) * rungCharge n bench mMax := by
+  have hclear : mvC + pegG ≤ moves + mulCharge n bench + n := by omega
+  have hU : mvC + pegG + 2 * pegL + 2 * n + 3 * (bench - n) ≤
+      moves + mulCharge n bench + n + pegCharge n bench := by omega
+  have hWith : mvC + pegG + 2 * pegL + 2 * n + 3 * (bench - n) + mulCharge n bench ≤
+      moves + mulCharge n bench + n + pegCharge n bench + mulCharge n bench := by omega
+  have hmov' : moves + mulCharge n bench + n + pegCharge n bench + mulCharge n bench ≤
+      moves0 + doneLen * rungCharge n bench mMax +
+        (n + tally * pegCharge n bench + mulCharge n bench + n + pegCharge n bench +
+          mulCharge n bench) := by omega
+  have hpiece : n + tally * pegCharge n bench + mulCharge n bench + n + pegCharge n bench +
+      mulCharge n bench ≤ rungCharge n bench mMax := by
+    have hred := charge_final_red n bench mMax
+    have hmul := Nat.mul_le_mul_right (pegCharge n bench) hT
+    omega
+  have hsucc : moves0 + doneLen * rungCharge n bench mMax + rungCharge n bench mMax =
+      moves0 + (doneLen + 1) * rungCharge n bench mMax := by
+    rw [Nat.add_assoc, ← Nat.succ_mul]
+  have hjoin : mvC + pegG + 2 * pegL + 2 * n + 3 * (bench - n) + mulCharge n bench ≤
+      moves0 + doneLen * rungCharge n bench mMax + rungCharge n bench mMax := by
+    exact Nat.le_trans hWith (Nat.le_trans hmov' (Nat.add_le_add_left hpiece _))
+  exact Nat.le_trans hjoin (Nat.le_of_eq hsucc)
+
+/-- Slides through the red mul: the peg loop, then one `2 · n` each for the gap
+    mul, the red cube, and the red mul. -/
+private theorem redSlideBudget (slides0 doneLen n mMax tally slides pegY pegL pegZ : Nat)
+    (hT : tally ≤ mMax)
+    (hS : slides ≤ slides0 + doneLen * rungSlideCharge n mMax + tally * (2 * n))
+    (hY : 2 * pegY ≤ 2 * n) (hL : 2 * pegL ≤ 2 * n) (hZ : 2 * pegZ ≤ 2 * n) :
+    slides + 2 * pegY + 2 * pegL + 2 * pegZ ≤
+      slides0 + (doneLen + 1) * rungSlideCharge n mMax := by
+  have hsum : slides + 2 * pegY + 2 * pegL + 2 * pegZ ≤
+      slides0 + doneLen * rungSlideCharge n mMax + tally * (2 * n) + 2 * n + 2 * n + 2 * n := by
+    omega
+  have hpiece : tally * (2 * n) + 2 * n + 2 * n + 2 * n ≤ rungSlideCharge n mMax := by
+    unfold rungSlideCharge
+    have ht : tally + 3 ≤ mMax + 3 := by omega
+    have hsplit : (tally + 3) * (2 * n) = tally * (2 * n) + 3 * (2 * n) := by
+      rw [Nat.add_mul]
+    have h3 : 3 * (2 * n) = 2 * n + 2 * n + 2 * n := by omega
+    have hmul := Nat.mul_le_mul_right (2 * n) ht
+    omega
+  have hsum' : slides + 2 * pegY + 2 * pegL + 2 * pegZ ≤
+      slides0 + doneLen * rungSlideCharge n mMax +
+        (tally * (2 * n) + 2 * n + 2 * n + 2 * n) := by
+    simpa [Nat.add_assoc] using hsum
+  have hjoin : slides + 2 * pegY + 2 * pegL + 2 * pegZ ≤
+      slides0 + doneLen * rungSlideCharge n mMax + rungSlideCharge n mMax := by
+    exact Nat.le_trans hsum' (Nat.add_le_add_left hpiece _)
+  have hsucc : slides0 + doneLen * rungSlideCharge n mMax + rungSlideCharge n mMax =
+      slides0 + (doneLen + 1) * rungSlideCharge n mMax := by
+    rw [Nat.add_assoc, ← Nat.succ_mul]
+  exact Nat.le_trans hjoin (Nat.le_of_eq hsucc)
+
+private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := by
+  intro x hx
+  simp [List.mem_replicate] at hx
+  rcases hx with ⟨_, rfl⟩
+  decide
+
+/-- `clear` writes one home. A different home, and the array it holds, stay. -/
+private theorem clearCell_keep (b : Ecbs.Board) (home first : Nat) (xs : List Nat)
+    (moves : Nat) (xs0 : List Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hne : home ≠ first) (hk : CellKeep b first xs0) :
+    CellKeep (clearHeldBoard b home xs moves hH hD) first xs0 := by
+  let bC := clearHeldBoard b home xs moves hH hD
+  have hHeldEq : bC.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨home, hD⟩ false := by
+    simp [bC, clearHeldBoard]
+  have hHomeEq : bC.sudo_5Board_4home = b.sudo_5Board_4home.set ⟨home, hH⟩ #[] := by
+    simp [bC, clearHeldBoard]
+  have heldLt : first < bC.sudo_5Board_4held.size := by
+    rw [hHeldEq, Array.size_set]; exact hk.heldLt
+  have held : bC.sudo_5Board_4held[first]'heldLt = true := by
+    rw [idx_get hHeldEq first heldLt, Array.getElem_set, if_neg hne]
+    exact hk.held
+  have homeLt : first < bC.sudo_5Board_4home.size := by
+    rw [hHomeEq, Array.size_set]; exact hk.homeLt
+  have arr : bC.sudo_5Board_4home[first]'homeLt = embed xs0 := by
+    rw [idx_get hHomeEq first homeLt, Array.getElem_set, if_neg hne]
+    exact hk.arr
+  exact { heldLt, held, homeLt, arr }
+
+/-- A live cube clears `src`. A different home, and the array it holds, stay. -/
+private theorem cubeLive_keep (b : Ecbs.Board) (dst src first : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat) (xs0 : List Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hne : first ≠ src)
+    (hFD : first < b.sudo_5Board_4held.size)
+    (hFH : first < b.sudo_5Board_4home.size)
+    (hHeld : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs0) :
+    CellKeep (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops)
+      first xs0 := by
+  let bC := cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  have hHeldC := cube_live_held b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  have hS := settle_held_eq b src hH hD xs n moves slides peak
+  have hHomeC := cube_live_home b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  have heldLt : first < bC.sudo_5Board_4held.size := by
+    have hsz : bC.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+      rw [hHeldC]
+      simp only [Array.size_set]
+      rw [hS]
+      simp only [Array.size_set]
+    rw [hsz]
+    exact hFD
+  have held : bC.sudo_5Board_4held[first]'heldLt = true := by
+    have h1 := idx_get hHeldC first heldLt
+    rw [h1, Array.getElem_set, if_neg (Ne.symm hne)]
+    have hsz : first <
+        (settleBoard b src hH hD xs n moves slides peak).sudo_5Board_4held.size := by
+      rw [hS, Array.size_set]; exact hFD
+    have h2 := idx_get hS first hsz
+    rw [h2, Array.getElem_set, if_neg (Ne.symm hne)]
+    exact hHeld
+  have homeLt : first < bC.sudo_5Board_4home.size := by
+    rw [hHomeC, Array.size_set]; exact hFH
+  have arr : bC.sudo_5Board_4home[first]'homeLt = embed xs0 := by
+    have h1 := idx_get hHomeC first homeLt
+    rw [h1, Array.getElem_set, if_neg (Ne.symm hne)]
+    exact hArr
+  exact { heldLt, held, homeLt, arr }
+
+set_option maxHeartbeats 1000000 in
+/-- After the gap mul and the clear, a red rung cubes that product onto the spare
+    and multiplies the cube by the held input. Both results are the named live
+    boards. The input's length and trits are the per-call reads of that mul;
+    `ClimbInvK` does not store them. Moves and slides stay within one
+    `rungCharge` of this rung. -/
+theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
+    {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false)
+    (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
+    ∃ (bLoop bMul bClear bCube bRed : Ecbs.Board),
+      Ecbs.mul bLoop ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+          false false false = .ok bMul ∧
+      Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClear ∧
+      Ecbs.cube bClear ((6 : Nat) : Int) ((5 : Nat) : Int) = .ok bCube ∧
+      Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
+          false false false = .ok bRed ∧
+      ∃ (mv sl : Nat),
+        bRed.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+        bRed.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
+        mv ≤ base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax ∧
+        sl ≤ base.slides0 + (done.length + 1) * rungSlideCharge base.n base.mMax := by
+  obtain ⟨c, bLoop, ys, moves, slides, hole, peak, peakS, cMul, hH, hD, hops,
+      _hcopy, _hsrc, _hg, hmEq, hn, _hkN, hbch, _hpeg, _hys, hGap, hX, _hFit, hMov,
+      _hSFit, hSLe, hOp, _hRow, htier, _hmk, h7, _hop0, hOpsLe, hmulG⟩ :=
+    mul_of_shape h hm hT hhome
+  let bMul := mulNoLiveBoard bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
+    peak peakS cMul hH hD hops
+  have hKeep := mulLive_keep bLoop 5 6 5 c.g ys c.n c.k moves slides hole c.bench
+    peak peakS cMul c.g hH hD hops (by decide) hGap.heldLt hGap.homeLt hGap.held hGap.arr
+  have hXMul := mulLive_keep bLoop 5 6 base.xHome c.g ys c.n c.k moves slides hole c.bench
+    peak peakS cMul base.x hH hD hops h.shape.xNe6 hX.heldLt hX.homeLt hX.held hX.arr
+  let mvC := mulMovesNo (moves + 2 * pegCount (ys.take c.n)) c.g (ys.take c.n)
+    c.n c.k c.bench
+  have hmvC : bMul.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvC := by
+    simpa [bMul, mvC] using
+      mul_live_moves bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cMul
+        hH hD hops
+  have hlenG : c.g.length = c.n := c.hlenx
+  have hfitN : FitsLen c.g.length := by rw [hlenG]; exact c.hf
+  have hpegN : pegCount c.g ≤ c.n := by rw [← hlenG]; exact pegCount_le c.g
+  have hmvC_le : mvC ≤ moves + mulCharge c.n c.bench := by
+    have hstep := mulMovesNo_bound moves c.n c.k c.bench c.g ys c.n_le
+    have hrest : 2 * pegCount (ys.take c.n) + c.n * (c.n + 1) + 3 * (c.bench - c.n) ≤
+        mulCharge c.n c.bench := by
+      unfold mulCharge
+      have hp := pegCount_take_le ys c.n
+      omega
+    omega
+  have hcn : c.n = base.n := hn.trans h.hn
+  have hcb : c.bench = base.bench := hbch.trans h.hbench
+  have hk : done.length + 1 ≤ base.R := by
+    have hlen := h.kLe
+    rw [List.length_append, List.length_cons] at hlen
+    omega
+  let L := laneFold c.n (c.n - c.k)
+    (school c.n c.g (ys.take c.n) (List.replicate c.bench 0) false)
+  have hschLen : (school c.n c.g (ys.take c.n) (List.replicate c.bench 0) false).length =
+      c.bench := by
+    simpa [List.length_replicate] using
+      school_length c.g (ys.take c.n) (List.replicate c.bench 0) false c.n
+  have hlenL : L.length = c.bench := by
+    simpa [L, hschLen] using
+      laneFold_length c.n (c.n - c.k)
+        (school c.n c.g (ys.take c.n) (List.replicate c.bench 0) false)
+        (by rw [hschLen]; exact c.n_le)
+  have hzeroL : ∀ i, c.n ≤ i → ∀ hi : i < L.length, L[i] = 0 := by
+    intro i hlo hi
+    have hcoeff := mul_no_high c.g (ys.take c.n) c.n c.k c.bench c.hn0 c.gap_pos i hlo
+      (hlenL ▸ hi)
+    exact (coeff_eq_get L i hi).symm.trans hcoeff
+  have hposL : 0 < L.length := by
+    rw [hlenL]; exact Nat.lt_of_lt_of_le c.hn0 c.n_le
+  have hnleL : c.n ≤ L.length := by rw [hlenL]; exact c.n_le
+  have hfitL : FitsLen L.length := by rw [hlenL]; exact c.hfitB
+  have htriL : allTritList (L.take c.n) := by
+    have hrep : allTritList (List.replicate c.bench 0) := replicate_trits c.bench
+    have hwide : ∀ i, i < c.n → i + (c.n - 1) < (List.replicate c.bench 0).length := by
+      intro i hi
+      rw [List.length_replicate]
+      have h2 : 2 * (c.n - 1) < c.bench := by
+        have hs := c.hspan
+        omega
+      omega
+    have hschT := school_trits c.g (ys.take c.n) (List.replicate c.bench 0) false c.n hrep hwide
+    have hfoldT := laneFold_trits c.n (c.n - c.k)
+      (school c.n c.g (ys.take c.n) (List.replicate c.bench 0) false)
+      hschT (Nat.sub_le _ _) (by rw [hschLen]; exact c.n_le)
+    exact allTritList_take hfoldT c.n
+  let pegL := pegCount (L.take c.n)
+  have hpegL : 2 * pegL ≤ 2 * c.n := by
+    have hp := pegCount_take_le L c.n
+    simp only [pegL] at hp
+    omega
+  have hcubeLe : 2 * pegL + 2 * c.n + 3 * (c.bench - c.n) ≤ pegCharge c.n c.bench := by
+    unfold pegCharge
+    omega
+  have hpegY : 2 * pegCount (ys.take c.n) ≤ 2 * c.n := by
+    have hp := pegCount_take_le ys c.n
+    omega
+  have hMovN : moves ≤ base.moves0 + done.length * rungCharge base.n base.bench base.mMax +
+      base.n + s.tally * pegCharge base.n base.bench := hMov
+  have hSLeN : slides ≤ base.slides0 + done.length * rungSlideCharge base.n base.mMax +
+      s.tally * (2 * base.n) := hSLe
+  have hmvN : mvC ≤ moves + mulCharge base.n base.bench := by
+    rw [← show mulCharge c.n c.bench = mulCharge base.n base.bench by rw [hcn, hcb]]
+    exact hmvC_le
+  have hpegBase : pegCount c.g ≤ base.n := by rw [← hcn]; exact hpegN
+  have hcubeBase : 2 * pegL + 2 * base.n + 3 * (base.bench - base.n) ≤
+      pegCharge base.n base.bench := by
+    rw [← hcn, ← hcb]; exact hcubeLe
+  have hRedU := redMulBudget base.moves0 done.length base.n base.bench base.mMax s.tally
+    moves mvC (pegCount c.g) pegL hT hMovN hmvN hpegBase hcubeBase
+  have hSlideU := redSlideBudget base.slides0 done.length base.n base.mMax s.tally
+    slides (pegCount (ys.take c.n)) pegL 0 hT hSLeN
+    (by rw [← hcn]; exact hpegY) (by rw [← hcn]; exact hpegL) (by omega : 2 * 0 ≤ 2 * base.n)
+  let movesC := mvC + pegCount c.g
+  let slidesC := slides + 2 * pegCount (ys.take c.n)
+  let bSettle := settleBoard bLoop 6 hH hD ys c.n moves slides peak
+  let peakC := raisedPeak
+    (raisedPeak peak (countHeld (bLoop.sudo_5Board_4held.set ⟨6, hD⟩ true) 7))
+    (countHeld (bSettle.sudo_5Board_4held.set
+      ⟨6, settle_held_lt bLoop 6 hH hD ys c.n moves slides peak⟩ false) 7)
+  let holeC := raisedHole hole
+    (topIdx (school c.n c.g (ys.take c.n) (List.replicate c.bench 0) false))
+  let peakSC := raisedPeak peakS (countHeld bSettle.sudo_5Board_4held 7)
+  have hpeakM : bMul.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakC := by
+    simpa [bMul, peakC, bSettle] using
+      mul_live_peak bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cMul hH hD hops
+  have hslidesM : bMul.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slidesC := by
+    simpa [bMul, slidesC] using
+      mul_live_slides bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cMul hH hD hops
+  have hholeM : bMul.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeC := by
+    simpa [bMul, holeC] using
+      mul_live_hole bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cMul hH hD hops
+  have hstrictM : bMul.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakSC := by
+    simpa [bMul, peakSC, bSettle] using
+      mul_live_strict bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cMul hH hD hops
+  have hbenchM : bMul.sudo_5Board_5bench = embed L := by
+    simpa [bMul, L] using
+      mul_live_bench bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cMul hH hD hops
+  have hmkM : bMul.sudo_5Board_9marker_on = false := by
+    simpa [bMul] using
+      mul_live_marker bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cMul hH hD hops
+  have haim := mul_live_aimed bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
+    peak peakS cMul hH hD hops
+  have htierM : bMul.sudo_5Board_1t = bLoop.sudo_5Board_1t := by
+    simpa [bMul] using
+      mul_live_tier bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cMul hH hD hops
+  have hbudget : mvC + pegCount c.g ≤
+      base.moves0 + base.R * rungCharge base.n base.bench base.mMax := by
+    have hsmall : mvC + pegCount c.g ≤
+        mvC + pegCount c.g + 2 * pegL + 2 * base.n + 3 * (base.bench - base.n) +
+          mulCharge base.n base.bench := by
+      omega
+    exact Nat.le_trans hsmall
+      (Nat.le_trans hRedU (Nat.add_le_add_left (Nat.mul_le_mul_right _ hk) _))
+  have hfitC : FitsLen (mvC + pegCount c.g) := FitsLen.of_le base.fitM hbudget
+  have hclear := clear_held_refines bMul 5 c.g mvC hKeep.homeLt hKeep.heldLt
+    hKeep.held hKeep.arr hmvC hfitN hfitC
+  let bClear := clearHeldBoard bMul 5 c.g mvC hKeep.homeLt hKeep.heldLt
+  have hclearEq : Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClear := by
+    simpa [bClear, clearHeldBoard] using hclear
+  have hXClear : CellKeep bClear base.xHome base.x :=
+    clearCell_keep bMul 5 base.xHome c.g mvC base.x hKeep.homeLt hKeep.heldLt
+      (Ne.symm h.shape.xNe5) hXMul
+  have hH5 : 5 < bClear.sudo_5Board_4home.size := by
+    simp [bClear, clearHeldBoard, Array.size_set]
+    exact hKeep.homeLt
+  have hD5 : 5 < bClear.sudo_5Board_4held.size := by
+    simp [bClear, clearHeldBoard, Array.size_set]
+    exact hKeep.heldLt
+  have hemptyC : bClear.sudo_5Board_4held[5]'hD5 = false := by
+    have hEq : bClear.sudo_5Board_4held =
+        bMul.sudo_5Board_4held.set ⟨5, hKeep.heldLt⟩ false := by
+      simp [bClear, clearHeldBoard]
+    rw [show bClear.sudo_5Board_4held[5] =
+        (bMul.sudo_5Board_4held.set ⟨5, hKeep.heldLt⟩ false)[5]'(hEq ▸ hD5) from
+      idx_get hEq 5 hD5]
+    simp [Array.getElem_set]
+  have h7C : 7 ≤ bClear.sudo_5Board_4held.size := by
+    have hszC : bClear.sudo_5Board_4held.size = bMul.sudo_5Board_4held.size := by
+      simp [bClear, clearHeldBoard, Array.size_set]
+    rw [hszC]
+    have hHeld := mul_live_held bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
+      peak peakS cMul hH hD hops
+    have hS := settle_held_eq bLoop 6 hH hD ys c.n moves slides peak
+    have hsz : bMul.sudo_5Board_4held.size = bLoop.sudo_5Board_4held.size := by
+      rw [hHeld]
+      simp only [Array.size_set]
+      rw [hS]
+      simp only [Array.size_set]
+    rw [hsz]
+    exact h7
+  have hmkC : bClear.sudo_5Board_9marker_on = false := by
+    simp [bClear, clearHeldBoard, hmkM]
+  have honC : bClear.sudo_5Board_8bench_on = true := by
+    simp [bClear, clearHeldBoard]
+    exact haim.1
+  have htoC : bClear.sudo_5Board_8bench_to = (5 : Int) := by
+    simp [bClear, clearHeldBoard]
+    exact haim.2
+  have hbenchC : bClear.sudo_5Board_5bench = embed L := by
+    simp [bClear, clearHeldBoard, hbenchM]
+  have hmovesC : bClear.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat movesC := by
+    simp [bClear, clearHeldBoard, movesC]
+  have hslidesC : bClear.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slidesC := by
+    simp [bClear, clearHeldBoard, hslidesM]
+  have hpeakC : bClear.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakC := by
+    simp [bClear, clearHeldBoard, hpeakM]
+  have hholeC : bClear.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeC := by
+    simp [bClear, clearHeldBoard, hholeM]
+  have hstrictC : bClear.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakSC : Int) := by
+    simpa [bClear, clearHeldBoard, ofNat_eq_natCast] using hstrictM
+  have htierC : bClear.sudo_5Board_1t = c.b0.sudo_5Board_1t := by
+    have h1 : bClear.sudo_5Board_1t = bMul.sudo_5Board_1t := by
+      simp [bClear, clearHeldBoard]
+    rw [h1, htierM, htier]
+  have hnC : bClear.sudo_5Board_1t.sudo_4Tier_1n = (c.n : Int) := by rw [htierC]; exact c.hn
+  have hblC : bClear.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat c.bench := by
+    rw [htierC]; exact c.hbl
+  have hcgC : bClear.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat c.cg := by
+    rw [htierC]; exact c.hcg
+  have hwC : bClear.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat c.w := by rw [htierC]; exact c.hwF
+  have hhC : bClear.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat c.h := by rw [htierC]; exact c.hhF
+  have hrC : bClear.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat c.r := by rw [htierC]; exact c.hrF
+  have hkC : bClear.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat c.k := by rw [htierC]; exact c.hkF
+  obtain ⟨cCube, h1Loop, hop1Loop, hCubeFit⟩ := hOp
+  have hMulOps := mul_live_ops bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
+    peak peakS cMul hH hD hops
+  have hSettleOps := settle_ops bLoop 6 hH hD ys c.n moves slides peak
+  have hop1M : ∀ (h1 : 1 < bMul.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      bMul.sudo_5Board_4cost.sudo_5Costs_3ops[1] = (cCube : Int) := by
+    intro h1
+    have hget := idx_get hMulOps 1 h1
+    rw [hget, Array.getElem_set, if_neg (by decide : (0 : Nat) ≠ 1)]
+    have hsz : 1 < (settleBoard bLoop 6 hH hD ys c.n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      rw [hSettleOps]; exact h1Loop
+    exact (idx_get hSettleOps 1 hsz).trans hop1Loop
+  have hOpsEq : bClear.sudo_5Board_4cost.sudo_5Costs_3ops =
+      bMul.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    simp [bClear, clearHeldBoard]
+  have hopsC : 1 < bClear.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    have hsz : bClear.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        bLoop.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      rw [hOpsEq, hMulOps, Array.size_set, hSettleOps]
+    rw [hsz]; exact h1Loop
+  have hop1C : bClear.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hopsC = (cCube : Int) :=
+    (idx_get hOpsEq 1 hopsC).trans (hop1M _)
+  have hUfit : movesC + 2 * pegL + 2 * c.n + 3 * (c.bench - c.n) ≤
+      base.moves0 + base.R * rungCharge base.n base.bench base.mMax := by
+    have hle : movesC + 2 * pegL + 2 * c.n + 3 * (c.bench - c.n) ≤
+        movesC + 2 * pegL + 2 * base.n + 3 * (base.bench - base.n) +
+          mulCharge base.n base.bench := by
+      rw [hcn, hcb]
+      exact Nat.le_add_right _ _
+    have hrest : movesC + 2 * pegL + 2 * base.n + 3 * (base.bench - base.n) +
+        mulCharge base.n base.bench ≤
+        base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax := by
+      simpa [movesC] using hRedU
+    exact Nat.le_trans hle (Nat.le_trans hrest
+      (Nat.add_le_add_left (Nat.mul_le_mul_right _ hk) _))
+  have hfoldC : FitsLen (movesC + 2 * pegL + 2 * c.n + 3 * (c.bench - c.n)) :=
+    FitsLen.of_le base.fitM (by simpa [pegL] using hUfit)
+  have hfmC : FitsLen (movesC + 2 * pegL + 2 * c.n) := FitsLen.of_le hfoldC (by omega)
+  have hfitMC : FitsLen (movesC + 2 * pegL) := FitsLen.of_le hfmC (by omega)
+  have hpegF : FitsLen (2 * pegL) := FitsLen.of_le hfitMC (by omega)
+  have hslideFit : slidesC + 2 * pegL ≤
+      base.slides0 + base.R * rungSlideCharge base.n base.mMax := by
+    have h0 : slides + 2 * pegCount (ys.take c.n) + 2 * pegL ≤
+        base.slides0 + (done.length + 1) * rungSlideCharge base.n base.mMax := by
+      simpa [Nat.mul_zero, Nat.add_zero] using hSlideU
+    have hEq : slidesC + 2 * pegL =
+        slides + 2 * pegCount (ys.take c.n) + 2 * pegL := by
+      simp [slidesC]
+    rw [hEq]
+    exact Nat.le_trans h0 (Nat.add_le_add_left (Nat.mul_le_mul_right _ hk) _)
+  have hfitSC : FitsLen (slidesC + 2 * pegL) := FitsLen.of_le base.fitS (by
+    simpa [pegL] using hslideFit)
+  have hcube := cube_eq_live bClear 6 5 L c.w c.h c.r c.n c.k movesC slidesC holeC
+    c.bench peakC peakSC cCube c.cg
+    hmkC honC htoC hH5 hD5 h7C hemptyC hbenchC
+    hnC c.hn0 hposL hnleL hzeroL
+    c.hf hfitL hmovesC hslidesC hpeakC
+    (by simpa [pegL] using hpegF) (by simpa [pegL] using hfitMC)
+    (by simpa [pegL] using hfitSC)
+    hopsC hop1C hCubeFit
+    hblC hcgC c.hspan htriL c.h3 hfmC
+    c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap
+    hwC hhC hrC hkC
+    hholeC hstrictC c.hsm c.hnsm c.hfitB (by simpa [pegL] using hfoldC)
+  let bCube := cubeLiveBoard bClear 6 5 L c.n c.k movesC slidesC holeC c.bench
+    peakC peakSC cCube hH5 hD5 hopsC
+  have hcubeEq : Ecbs.cube bClear ((6 : Nat) : Int) ((5 : Nat) : Int) = .ok bCube := by
+    simpa [bCube] using hcube
+  let mvCube := cubeMoves (movesC + 2 * pegL) (L.take c.n) c.n c.k c.bench
+  have hmvCube : bCube.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvCube := by
+    rw [show bCube = cubeLiveBoard bClear 6 5 L c.n c.k movesC slidesC holeC c.bench
+        peakC peakSC cCube hH5 hD5 hopsC from rfl]
+    simpa [mvCube, pegL] using
+      cube_live_moves bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  let slidesCube := slidesC + 2 * pegL
+  have hslidesCube : bCube.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slidesCube := by
+    simpa [bCube, slidesCube, pegL] using
+      cube_live_slides bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  let ysC := laneFold c.n (c.n - c.k) (combStrip c.n c.bench (L.take c.n))
+  have hbenchR : bCube.sudo_5Board_5bench = embed ysC := by
+    simpa [bCube, ysC] using
+      cube_live_bench bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  have hlenY : ysC.length = c.bench := by
+    have hcomb : (combStrip c.n c.bench (L.take c.n)).length = c.bench :=
+      combStrip_length c.n c.bench (L.take c.n)
+    simpa [ysC, hcomb] using
+      laneFold_length c.n (c.n - c.k) (combStrip c.n c.bench (L.take c.n))
+        (by rw [hcomb]; exact c.n_le)
+  have hzeroY : ∀ i, c.n ≤ i → ∀ hi : i < ysC.length, ysC[i] = 0 := by
+    intro i hlo hi
+    have hcoeff := cube_live_high L c.n c.k c.bench c.hn0 c.gap_pos i hlo (hlenY ▸ hi)
+    exact (coeff_eq_get ysC i hi).symm.trans hcoeff
+  have hposY : 0 < ysC.length := by
+    rw [hlenY]; exact Nat.lt_of_lt_of_le c.hn0 c.n_le
+  have hnleY : c.n ≤ ysC.length := by rw [hlenY]; exact c.n_le
+  have hfitY : FitsLen ysC.length := by rw [hlenY]; exact c.hfitB
+  have htriY : allTritList (ysC.take c.n) := by
+    have hcomb := combStrip_trits (L.take c.n) c.n c.bench htriL c.span3
+    have hlenC : (combStrip c.n c.bench (L.take c.n)).length = c.bench :=
+      combStrip_length c.n c.bench (L.take c.n)
+    have hfold := laneFold_trits c.n (c.n - c.k) (combStrip c.n c.bench (L.take c.n))
+      hcomb (Nat.sub_le _ _) (by rw [hlenC]; exact c.n_le)
+    simpa [ysC] using allTritList_take hfold c.n
+  let bSCube := settleBoard bClear 5 hH5 hD5 L c.n movesC slidesC peakC
+  let peakCube := raisedPeak
+    (raisedPeak peakC (countHeld (bClear.sudo_5Board_4held.set ⟨5, hD5⟩ true) 7))
+    (countHeld (bSCube.sudo_5Board_4held.set
+      ⟨5, settle_held_lt bClear 5 hH5 hD5 L c.n movesC slidesC peakC⟩ false) 7)
+  let peakSRed := raisedPeak peakSC (countHeld bSCube.sudo_5Board_4held 7)
+  let holeRed := raisedHole holeC (topIdx (combStrip c.n c.bench (L.take c.n)))
+  have hpeakR : bCube.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakCube := by
+    simpa [bCube, peakCube, bSCube] using
+      cube_live_peak bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  have hstrictR : bCube.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakSRed : Int) := by
+    simpa [bCube, peakSRed, bSCube, ofNat_eq_natCast] using
+      cube_live_strict bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  have hholeR : bCube.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeRed := by
+    simpa [bCube, holeRed] using
+      cube_live_hole bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  have hmkR : bCube.sudo_5Board_9marker_on = false := by
+    simpa [bCube] using
+      cube_live_marker bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  have honR : bCube.sudo_5Board_8bench_on = true := by
+    simpa [bCube] using
+      cube_live_on bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  have htoR : bCube.sudo_5Board_8bench_to = (6 : Int) := by
+    simpa [bCube] using
+      cube_live_to bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  have htierR : bCube.sudo_5Board_1t = bClear.sudo_5Board_1t := by
+    simpa [bCube] using
+      cube_live_tier bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+        hH5 hD5 hopsC
+  have hXCube : CellKeep bCube base.xHome base.x :=
+    cubeLive_keep bClear 6 5 base.xHome L c.n c.k movesC slidesC holeC c.bench
+      peakC peakSC cCube base.x hH5 hD5 hopsC h.shape.xNe5
+      hXClear.heldLt hXClear.homeLt hXClear.held hXClear.arr
+  have hH6C : 6 < bClear.sudo_5Board_4home.size := by
+    have hHomeM := mul_live_home bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
+      peak peakS cMul hH hD hops
+    have hszM : bMul.sudo_5Board_4home.size = bLoop.sudo_5Board_4home.size := by
+      rw [hHomeM, Array.size_set]
+    have hszC : bClear.sudo_5Board_4home.size = bMul.sudo_5Board_4home.size := by
+      simp [bClear, clearHeldBoard, Array.size_set]
+    rw [hszC, hszM]; exact hH
+  have hD6C : 6 < bClear.sudo_5Board_4held.size := by
+    rw [show bClear.sudo_5Board_4held.size = bMul.sudo_5Board_4held.size by
+      simp [bClear, clearHeldBoard, Array.size_set]]
+    have hHeld := mul_live_held bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
+      peak peakS cMul hH hD hops
+    have hS := settle_held_eq bLoop 6 hH hD ys c.n moves slides peak
+    have hsz : bMul.sudo_5Board_4held.size = bLoop.sudo_5Board_4held.size := by
+      rw [hHeld]; simp only [Array.size_set]; rw [hS]; simp only [Array.size_set]
+    rw [hsz]; exact hD
+  have hempty6C : bClear.sudo_5Board_4held[6]'hD6C = false := by
+    have hHeld := mul_live_held bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
+      peak peakS cMul hH hD hops
+    have h6M : 6 < bMul.sudo_5Board_4held.size := by
+      rw [show bClear.sudo_5Board_4held.size = bMul.sudo_5Board_4held.size by
+        simp [bClear, clearHeldBoard, Array.size_set]] at hD6C
+      exact hD6C
+    have hget := idx_get hHeld 6 h6M
+    have hfalse : bMul.sudo_5Board_4held[6] = false := by
+      rw [hget, Array.getElem_set, if_pos rfl]
+    have hEq : bClear.sudo_5Board_4held =
+        bMul.sudo_5Board_4held.set ⟨5, hKeep.heldLt⟩ false := by
+      simp [bClear, clearHeldBoard]
+    rw [show bClear.sudo_5Board_4held[6] =
+        (bMul.sudo_5Board_4held.set ⟨5, hKeep.heldLt⟩ false)[6]'(hEq ▸ hD6C) from
+      idx_get hEq 6 hD6C]
+    rw [Array.getElem_set, if_neg (by decide : (5 : Nat) ≠ 6)]
+    exact hfalse
+  have hH6R : 6 < bCube.sudo_5Board_4home.size := by
+    rw [show bCube.sudo_5Board_4home =
+        bClear.sudo_5Board_4home.set ⟨5, hH5⟩ #[] by
+      simpa [bCube] using
+        cube_live_home bClear 6 5 L c.n c.k movesC slidesC holeC c.bench peakC peakSC cCube
+          hH5 hD5 hopsC]
+    simp [Array.size_set]
+    exact hH6C
+  have hD6R : 6 < bCube.sudo_5Board_4held.size := by
+    have hHeld := cube_live_held bClear 6 5 L c.n c.k movesC slidesC holeC c.bench
+      peakC peakSC cCube hH5 hD5 hopsC
+    have hsz : bCube.sudo_5Board_4held.size = bClear.sudo_5Board_4held.size := by
+      rw [hHeld]
+      simp only [Array.size_set]
+      rw [settle_held_eq bClear 5 hH5 hD5 L c.n movesC slidesC peakC]
+      simp only [Array.size_set]
+    rw [hsz]; exact hD6C
+  have hother6 := cube_live_held_other bClear bCube 6 5 6 L c.n c.k movesC slidesC holeC c.bench
+      peakC peakSC cCube hH5 hD5 hopsC rfl (by decide) hD6C hD6R
+  have hempty6R := hother6.trans hempty6C
+  have h7R : 7 ≤ bCube.sudo_5Board_4held.size := by
+    have hHeld := cube_live_held bClear 6 5 L c.n c.k movesC slidesC holeC c.bench
+      peakC peakSC cCube hH5 hD5 hopsC
+    have hsz : bCube.sudo_5Board_4held.size = bClear.sudo_5Board_4held.size := by
+      rw [hHeld]
+      simp only [Array.size_set]
+      rw [settle_held_eq bClear 5 hH5 hD5 L c.n movesC slidesC peakC]
+      simp only [Array.size_set]
+    rw [hsz]
+    exact h7C
+  have hCubeOps := cube_live_ops bClear 6 5 L c.n c.k movesC slidesC holeC c.bench
+    peakC peakSC cCube hH5 hD5 hopsC
+  have hops0R : 0 < bCube.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hCubeOps, Array.size_set]
+    exact Nat.lt_trans (by decide : (0 : Nat) < 1) hopsC
+  have h0C : 0 < bClear.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
+    Nat.lt_trans (by decide : (0 : Nat) < 1) hopsC
+  have hopMul : ∀ (h0 : 0 < bMul.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      bMul.sudo_5Board_4cost.sudo_5Costs_3ops[0] = ((cMul + 1 : Nat) : Int) := by
+    intro h0
+    have hg := idx_get hMulOps 0 h0
+    rw [hg, Array.getElem_set]
+    simp [ofNat_eq_natCast]
+  have hopClear := (idx_get hOpsEq 0 h0C).trans (hopMul _)
+  have hop0FromCube := cube_live_op0 bClear bCube 6 5 L c.n c.k movesC slidesC holeC c.bench
+    peakC peakSC cCube hH5 hD5 hopsC rfl hops0R
+  have hop0R := hop0FromCube.trans hopClear
+  have hfopsR : FitsLen ((cMul + 1) + 1) := by
+    apply FitsLen.of_le base.fitO
+    have hstep : cMul + 2 ≤ base.ops0 + (done.length + 1) * (base.mMax + 3) := by
+      have hsucc : (done.length + 1) * (base.mMax + 3) =
+          done.length * (base.mMax + 3) + (base.mMax + 3) := by rw [Nat.succ_mul]
+      omega
+    have hR : (done.length + 1) * (base.mMax + 3) ≤ base.R * (base.mMax + 3) :=
+      Nat.mul_le_mul_right _ hk
+    omega
+  let pegY := pegCount (ysC.take c.n)
+  have hpegZ : 2 * pegY ≤ 2 * c.n := by
+    have hp := pegCount_take_le ysC c.n
+    simp only [pegY] at hp
+    omega
+  have hmvCubeLe : mvCube ≤ movesC + 2 * pegL + 2 * c.n + 3 * (c.bench - c.n) := by
+    have hle := cubeMoves_le (movesC + 2 * pegL) (L.take c.n) c.n c.k c.bench
+    simpa [mvCube, Nat.add_assoc] using hle
+  have hRedFit : mvCube + 2 * pegY + c.n * (c.n + 1) + 3 * (c.bench - c.n) ≤
+      base.moves0 + base.R * rungCharge base.n base.bench base.mMax := by
+    have hmulLe : 2 * pegY + c.n * (c.n + 1) + 3 * (c.bench - c.n) ≤ mulCharge c.n c.bench := by
+      unfold mulCharge
+      omega
+    have hsum : mvCube + 2 * pegY + c.n * (c.n + 1) + 3 * (c.bench - c.n) ≤
+        movesC + 2 * pegL + 2 * c.n + 3 * (c.bench - c.n) + mulCharge c.n c.bench := by
+      omega
+    have hU : movesC + 2 * pegL + 2 * c.n + 3 * (c.bench - c.n) + mulCharge c.n c.bench ≤
+        base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax := by
+      rw [hcn, hcb]
+      simpa [movesC] using hRedU
+    exact Nat.le_trans hsum (Nat.le_trans hU
+      (Nat.add_le_add_left (Nat.mul_le_mul_right _ hk) _))
+  have hfoldR : FitsLen (mvCube + 2 * pegY + c.n * (c.n + 1) + 3 * (c.bench - c.n)) :=
+    FitsLen.of_le base.fitM hRedFit
+  have hfmR : FitsLen (mvCube + 2 * pegY + c.n * (c.n + 1)) :=
+    FitsLen.of_le hfoldR (by omega)
+  have hfitMR : FitsLen (mvCube + 2 * pegY) := FitsLen.of_le hfmR (by omega)
+  have hpegFR : FitsLen (2 * pegY) := FitsLen.of_le hfitMR (by omega)
+  have hslideR : slidesCube + 2 * pegY ≤
+      base.slides0 + base.R * rungSlideCharge base.n base.mMax := by
+    have hZ : 2 * pegY ≤ 2 * base.n := by rw [← hcn]; exact hpegZ
+    have hthree := redSlideBudget base.slides0 done.length base.n base.mMax s.tally
+      slides (pegCount (ys.take c.n)) pegL pegY hT hSLeN
+      (by rw [← hcn]; exact hpegY) (by rw [← hcn]; exact hpegL) hZ
+    have hle : slidesCube + 2 * pegY ≤
+        slides + 2 * pegCount (ys.take c.n) + 2 * pegL + 2 * pegY := by
+      simp [slidesCube]
+    exact Nat.le_trans hle (Nat.le_trans hthree
+      (Nat.add_le_add_left (Nat.mul_le_mul_right _ hk) _))
+  have hfitSR : FitsLen (slidesCube + 2 * pegY) := FitsLen.of_le base.fitS hslideR
+  have hlenx : base.x.length = c.n := by rw [hxLen, ← hcn]
+  have hspan2 : 2 * (c.n - 1) < c.bench := by
+    have hs := c.hspan
+    omega
+  have hfi : FitsLen (2 * (c.n - 1)) := FitsLen.of_le c.h3 (by omega)
+  have hmulR := mul_eq_live bCube 5 base.xHome 6 base.x ysC c.w c.h c.r c.n c.k
+    mvCube slidesCube holeRed c.bench peakCube peakSRed (cMul + 1)
+    hmkR honR htoR hH6R hD6R h7R hempty6R hbenchR
+    (by rw [htierR]; exact hnC) c.hn0 hposY hnleY hzeroY
+    c.hf hfitY hmvCube hslidesCube hpeakR
+    hpegFR hfitMR hfitSR
+    hops0R hop0R hfopsR
+    (by rw [htierR]; exact hblC)
+    hXCube.heldLt hXCube.homeLt hXCube.held hXCube.arr h.shape.xNe6
+    hlenx hspan2 hxT hfi hfmR
+    c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap
+    (by rw [htierR]; exact hwC) (by rw [htierR]; exact hhC)
+    (by rw [htierR]; exact hrC) (by rw [htierR]; exact hkC)
+    hholeR hstrictR c.hsm c.hnsm c.hfitB hfoldR
+  let bRed := mulNoLiveBoard bCube 5 6 base.x ysC c.n c.k mvCube slidesCube holeRed
+    c.bench peakCube peakSRed (cMul + 1) hH6R hD6R hops0R
+  have hmulEq : Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
+      false false false = .ok bRed := by
+    simpa [bRed] using hmulR
+  let mvRed := mulMovesNo (mvCube + 2 * pegY) base.x (ysC.take c.n) c.n c.k c.bench
+  have hmvRed : bRed.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvRed := by
+    simpa [bRed, mvRed, pegY] using
+      mul_live_moves bCube 5 6 base.x ysC c.n c.k mvCube slidesCube holeRed c.bench
+        peakCube peakSRed (cMul + 1) hH6R hD6R hops0R
+  let slRed := slidesCube + 2 * pegY
+  have hslRed : bRed.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slRed := by
+    simpa [bRed, slRed, pegY] using
+      mul_live_slides bCube 5 6 base.x ysC c.n c.k mvCube slidesCube holeRed c.bench
+        peakCube peakSRed (cMul + 1) hH6R hD6R hops0R
+  have hmvRedLe : mvRed ≤ base.moves0 + (done.length + 1) *
+      rungCharge base.n base.bench base.mMax := by
+    have hstep := mulMovesNo_bound mvCube c.n c.k c.bench base.x ysC c.n_le
+    have hrest : 2 * pegY + c.n * (c.n + 1) + 3 * (c.bench - c.n) ≤ mulCharge c.n c.bench := by
+      unfold mulCharge
+      simp only [pegY] at hpegZ
+      omega
+    have h1 : mvRed ≤ mvCube + mulCharge c.n c.bench := by
+      simpa [mvRed, pegY] using Nat.le_trans hstep (by omega)
+    have h2 : mvCube + mulCharge c.n c.bench ≤
+        movesC + 2 * pegL + 2 * c.n + 3 * (c.bench - c.n) + mulCharge c.n c.bench := by
+      omega
+    have h3 : movesC + 2 * pegL + 2 * c.n + 3 * (c.bench - c.n) + mulCharge c.n c.bench ≤
+        base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax := by
+      rw [hcn, hcb]
+      simpa [movesC] using hRedU
+    exact Nat.le_trans h1 (Nat.le_trans h2 h3)
+  have hslRedLe : slRed ≤ base.slides0 + (done.length + 1) *
+      rungSlideCharge base.n base.mMax := by
+    have hZ : 2 * pegY ≤ 2 * base.n := by rw [← hcn]; exact hpegZ
+    have hthree := redSlideBudget base.slides0 done.length base.n base.mMax s.tally
+      slides (pegCount (ys.take c.n)) pegL pegY hT hSLeN
+      (by rw [← hcn]; exact hpegY) (by rw [← hcn]; exact hpegL) hZ
+    have hle : slRed ≤ slides + 2 * pegCount (ys.take c.n) + 2 * pegL + 2 * pegY := by
+      simp [slRed, slidesCube]
+    exact Nat.le_trans hle hthree
+  refine ⟨bLoop, bMul, bClear, bCube, bRed, hmulG, hclearEq, hcubeEq, hmulEq,
+    ⟨mvRed, slRed, ?_, ?_, hmvRedLe, hslRedLe⟩⟩
+  · simpa [ofNat_eq_natCast] using hmvRed
+  · simpa [ofNat_eq_natCast] using hslRed
+
 
 
 /-- While rungs remain, the tally segment is white, so the scan in the next rung

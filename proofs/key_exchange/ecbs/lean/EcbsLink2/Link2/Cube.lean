@@ -1547,6 +1547,26 @@ theorem cube_live_held (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       (settleBoard b src hH hD xs n moves slides peak).sudo_5Board_4held.set ⟨src, hFs⟩ false := by
   simp [cubeLiveBoard, cube_off_held]
 
+/-- A live cube writes `src` only. Another held flag is the one on the incoming board.
+    `bC` is named so a caller can pass the live board without unfolding it. -/
+theorem cube_live_held_other (b bC : Ecbs.Board) (dst src other : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hC : bC = cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops)
+    (hne : src ≠ other) (hO : other < b.sudo_5Board_4held.size)
+    (hlt : other < bC.sudo_5Board_4held.size) :
+    bC.sudo_5Board_4held[other] = b.sudo_5Board_4held[other] := by
+  subst hC
+  have hHeld := cube_live_held b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  have hS := settle_held_eq b src hH hD xs n moves slides peak
+  have h1 := array_get_congr hHeld other hlt
+  rw [h1, Array.getElem_set, if_neg hne]
+  have hsz : other < (settleBoard b src hH hD xs n moves slides peak).sudo_5Board_4held.size := by
+    rw [hS, Array.size_set]; exact hO
+  have h2 := array_get_congr hS other hsz
+  rw [h2, Array.getElem_set, if_neg hne]
+
 theorem cube_live_moves (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     (n k moves slides hole bench peak peakS cOps : Nat)
     (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
@@ -1691,5 +1711,19 @@ theorem cube_live_ops (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       have hget {a c : Array Int} (h : a = c) (k : Nat) (ha : k < a.size) :
           a[k] = c[k]'(h ▸ ha) := by subst h; rfl
       exact hget hs i (by rw [Array.size_set] at hi1; exact hi1)
+
+/-- A live cube bumps ops slot 1. Slot 0 stays the incoming value.
+    `bC` is named so a caller can pass the live board without unfolding it. -/
+theorem cube_live_op0 (b bC : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hC : bC = cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops)
+    (hlt : 0 < bC.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    bC.sudo_5Board_4cost.sudo_5Costs_3ops[0] = b.sudo_5Board_4cost.sudo_5Costs_3ops[0] := by
+  subst hC
+  have hOps := cube_live_ops b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  have h1 := array_get_congr hOps 0 hlt
+  rw [h1, Array.getElem_set, if_neg (by decide : (1 : Nat) ≠ 0)]
 
 end EcbsLink2.Link2

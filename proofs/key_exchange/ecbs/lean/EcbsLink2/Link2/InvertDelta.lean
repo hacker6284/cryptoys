@@ -2378,4 +2378,27 @@ theorem red_final_gap_bench
     rw [hbench, hpad]
   exact ⟨bCube, bRed, hmul, hon, hto, hbench'⟩
 
+/-- A live cube then a live nocopy mul copies the row, the tally origin, and the
+    control counter. Those fields on the red board are the cleared board's. -/
+theorem cube_mul_row
+    (b : Ecbs.Board) (xs ys x : List Nat)
+    (n k moves slides hole bench peak peakS cOps moves2 slides2 hole2 peak2 peakS2 cOps2 : Nat)
+    (hH : 5 < b.sudo_5Board_4home.size) (hD : 5 < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h6 : 6 < (cubeLiveBoard b 6 5 xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4home.size)
+    (hD6 : 6 < (cubeLiveBoard b 6 5 xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4held.size)
+    (hops0 : 0 < (cubeLiveBoard b 6 5 xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    let bC := cubeLiveBoard b 6 5 xs n k moves slides hole bench peak peakS cOps hH hD hops
+    let bR := mulNoLiveBoard bC 5 6 x ys n k moves2 slides2 hole2 bench peak2 peakS2 cOps2 h6 hD6 hops0
+    bR.sudo_5Board_3row = b.sudo_5Board_3row ∧
+    bR.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
+    bR.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+  refine ⟨?_, ?_, ?_⟩
+  · exact (mul_live_row _ 5 6 x ys n k moves2 slides2 hole2 bench peak2 peakS2 cOps2 h6 hD6 hops0).trans
+      (cube_live_row b 6 5 xs n k moves slides hole bench peak peakS cOps hH hD hops)
+  · exact (mul_live_tally _ 5 6 x ys n k moves2 slides2 hole2 bench peak2 peakS2 cOps2 h6 hD6 hops0).trans
+      (cube_live_tally b 6 5 xs n k moves slides hole bench peak peakS cOps hH hD hops)
+  · exact (mul_live_ctrl _ 5 6 x ys n k moves2 slides2 hole2 bench peak2 peakS2 cOps2 h6 hD6 hops0).trans
+      (cube_live_ctrl b 6 5 xs n k moves slides hole bench peak peakS cOps hH hD hops)
+
 end EcbsLink2.Link2

@@ -2401,4 +2401,24 @@ theorem cube_mul_row
   · exact (mul_live_ctrl _ 5 6 x ys n k moves2 slides2 hole2 bench peak2 peakS2 cOps2 h6 hD6 hops0).trans
       (cube_live_ctrl b 6 5 xs n k moves slides hole bench peak peakS cOps hH hD hops)
 
+/-- The gap-mul board's row is the tally painted red. The mul does not write the row. -/
+theorem gap_mul_row
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax) (hhome : s.onBench = false) :
+    ∃ (bM bMul : Ecbs.Board),
+      Ecbs.mul bM ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+          false false false = .ok bMul ∧
+      bMul.sudo_5Board_3row = embed (paintRed s.row s.t0 s.tally) := by
+  obtain ⟨c, bM, ys, moves, slides, hole, peak, peakS, cOps, hH, hD, hops,
+      _hcopy, _hsrc, _hg, _hmEq, _hn, _hk, _hbch, _hbM, _hys, _hGap, _hX, _hFit, _hMov,
+      _hSFit, _hSLe, _hOp, hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, _hctrl0, _hhigh0,
+      _hcontrol, _hlen0, _hmax0, _ht0, hmul⟩ :=
+    mul_of_shape h hm hT hhome
+  have hkeep := (mul_live_row bM 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cOps
+    hH hD hops).trans hRow
+  exact ⟨bM, mulNoLiveBoard bM 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cOps
+    hH hD hops, hmul, hkeep⟩
+
 end EcbsLink2.Link2

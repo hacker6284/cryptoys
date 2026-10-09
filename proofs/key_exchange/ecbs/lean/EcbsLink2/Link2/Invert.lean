@@ -1491,6 +1491,115 @@ theorem cube_tally_peg_live (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
             a[k] = c[k]'(h ▸ ha) := by subst h; rfl
         exact hget hrowC i (by rw [Array.size_set] at hi1; exact hi1)
 
+/-- One live cube of `src` onto `dst`, then a red tally peg at `j` and `ctrl + 1`. -/
+def pegStep (bC : Ecbs.Board) (t0 j : Nat)
+    (hrow : t0 + j < bC.sudo_5Board_3row.size) (ctrl : Nat) : Ecbs.Board :=
+  { bC with
+    sudo_5Board_3row := bC.sudo_5Board_3row.set ⟨t0 + j, hrow⟩ ((2 : Nat) : Int)
+    sudo_5Board_4cost := { bC.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } }
+
+/-- The live cube-then-red-peg step is `pegStep` of the named live cube board. -/
+theorem peg_step_eq (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (w h r n k moves slides hole bench peak peakS cOps cg : Nat)
+    (t0 j high control ctrl : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (src : Int))
+    (hH : src < b.sudo_5Board_4home.size)
+    (hD : src < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[src] = false)
+    (hbench : b.sudo_5Board_5bench = embed xs)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hn0 : 0 < n)
+    (hpos : 0 < xs.length) (hnle : n ≤ xs.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen xs.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (xs.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (xs.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (xs.take n)))
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hcg : b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg)
+    (hspan : 3 * (n - 1) + cg < bench)
+    (hxsT : allTritList (xs.take n))
+    (h3 : FitsLen (3 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * pegCount (xs.take n) + 2 * n))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hkF : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * pegCount (xs.take n) + 2 * n + 3 * (bench - n)))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 + j < b.sudo_5Board_3row.size)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + j < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 + j ≤ high)
+    (hfitJ : FitsLen (t0 + j))
+    (hCtrlV : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hfctrl : FitsLen (ctrl + 1)) :
+    (do
+        let b1 ← Ecbs.cube b (dst : Int) (src : Int)
+        let b2 ← Ecbs.tally_put b1 (j : Int) (2 : Int)
+        let v ← SudoRt.addI b2.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+        pure { b2 with sudo_5Board_4cost :=
+          { b2.sudo_5Board_4cost with sudo_5Costs_4ctrl := v } }) =
+      .ok (pegStep
+        (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops)
+        t0 j
+        (by
+          rw [cube_live_row b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops]
+          exact hrow)
+        ctrl) := by
+  let bC := cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  rw [cube_eq_live b dst src xs w h r n k moves slides hole bench peak peakS cOps cg
+      hmk hon hto hH hD h7 hempty hbench hn hn0 hpos hnle hzero hf hfitL
+      hmoves hslides hpeak hpeg hfitM hfitS hops hop1 hfops hbl hcg hspan hxsT h3 hfm
+      hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF hHole hpeakS hsm hnsm hfitB hfold]
+  conv =>
+    lhs
+    rw [show cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops = bC from rfl]
+  have hT0' : bC.sudo_5Board_6tally0 = (t0 : Int) := by
+    rw [cube_live_tally b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops]
+    exact hT0
+  have hrowC :=
+    cube_live_row b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  have hrow1 : t0 + j < bC.sudo_5Board_3row.size := by rw [hrowC]; exact hrow
+  have hCtrl' : bC.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
+    rw [cube_live_tier b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops]
+    exact hCtrlN
+  have hHigh' : bC.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) := by
+    rw [cube_live_highest b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops]
+    exact hHigh
+  conv =>
+    lhs
+    rw [show (2 : Int) = ((2 : Nat) : Int) from rfl]
+  simp only [ok_bind]
+  rw [tally_put_keep bC t0 j 2 high control hT0' hrow1 hCtrl' hic hHigh' hle hfitJ, ok_bind]
+  have hctrl2 :
+      ({ bC with sudo_5Board_3row :=
+          bC.sudo_5Board_3row.set ⟨t0 + j, hrow1⟩ (2 : Int) }).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        Int.ofNat ctrl := by
+    rw [cube_live_ctrl b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+      hCtrlV, ofNat_eq_natCast]
+  rw [hctrl2, addI_ofNat_one ctrl hfctrl, ok_bind, pure_eq_ok]
+  unfold pegStep
+  rfl
+
 /-- The model state one rung of the climb carries: the gap polynomial, where the
     working value sits, the tally length, the parked colour's hole, and the
     control row. `invRung` updates the gap and the tally length; it does not
